@@ -52,8 +52,10 @@ import { BlockSpecRegistry } from '../core/block-spec-registry'
 import type { SavedState } from '../core/storage'
 import { describeRefusal } from '../core/refusal-message'
 import { LocaleLoader } from '../i18n/loader'
-import { setMessageSource } from '../core/messages'
-import { installDialogs } from './prompt-dialog'
+import { setMessageSource, msg } from '../core/messages'
+import { SyncCoordinator } from '../core/sync-coordinator'
+import { viewsWith } from '../core/view-registry'
+import { installDialogs, showChoice } from './prompt-dialog'
 import type { StyleSelector } from './toolbar/style-selector'
 import type { TopicSelector } from './toolbar/topic-selector'
 import type { StylePreset } from '../core/types'
@@ -109,6 +111,11 @@ export class App {
   private currentTarget: Target
   private executionController: ExecutionController | null = null
   private currentTree: SemanticNode | null = null
+  /**
+   * 同步的三態。🔴 **來源清單是導出的**——`viewsWith('editable')` 的第一個消費者
+   * （在此之前那個宣告有三個宣告者而零個讀取點）。
+   */
+  private syncCoordinator = new SyncCoordinator(() => viewsWith('editable').map((v) => v.viewId))
   private blocksDirty = false
   private codeDirty = false
   private autoSync = true
@@ -342,9 +349,14 @@ export class App {
 
     // 9. Wire panel change events
     this.wireBlocklyChangeHandler()
+    this.wireHostSyncCommands()
     this.codeView.onChange(() => {
       if (this._codeToBlocksInProgress) return
       this.codeDirty = true
+      // 🔴 記下「誰被編輯」——來源是導出的，而暫停期間這筆會累積成分岔
+      // ⚠️ `CodeView` 是宿主注入的介面，不保證是 `ViewHost`——用登錄表裡那個
+      //    可編輯而**不是積木**的視圖當來源（網頁版是 monaco，擴充是 vscode-code-view）
+      this.syncCoordinator.noteEdit(this.codeViewId())
       this.updateSyncHints()
       if (this.autoSync) this.scheduleCodeToBlocksSync()
     })
@@ -373,15 +385,7 @@ export class App {
 
     // 11. Setup toolbar + selectors
     setupToolbarButtons({
-      onSyncBlocks: () => {
-        this.syncBlocksToCodeWithMappings()
-        this.blocksDirty = false
-        this.updateSyncHints()
-      },
-      onSyncCode: () => {
-        this.syncController?.syncCodeToBlocks(this.codeView?.getCode())
-      },
-      onToggleAutoSync: () => this.toggleAutoSync(),
+      onOpenSyncMenu: () => this.openSyncMenu(),
       onUndo: () => this.blocklyPanel?.undo(),
       onRedo: () => this.blocklyPanel?.redo(),
       onClear: () => this.blocklyPanel?.clear(),
@@ -832,14 +836,16 @@ export class App {
     //
     // > **兩邊不一致時，不能拿「已知是壞的那一邊」當來源。**
     //
-    // ⚠️ 恢復的辦法是按「程式碼→積木」重載一次（成功就會解除）。
+    // ⚠️ 恢復的辦法是從**同步選單**選「以此為準：程式碼」重載一次（成功就會解除）。
+    //    🔴 這一行原本寫「按『程式碼→積木』」——而那顆按鈕 2026-08-25 退場了。
+    //    **一條指向不存在的按鈕的錯誤訊息，比沒有訊息更糟。**
     // ⚠️ **兩種殘只有一種該出聲**（2026-08-24，使用者：「每次重新整理都會跳出一條」）：
     //    開機時工作區還沒被畫過，那是**正常的過渡狀態**——擋住寫回是對的，
     //    而對使用者喊「積木沒有完整載入」是錯的。見 `staleReason`。
     const stale = this.blocklyPanel?.staleReason
     if (stale) {
       if (stale === 'load-failed') {
-        showToast('積木沒有完整載入，暫停同步到程式碼——請按「程式碼→積木」重載', 'error')
+        showToast('積木沒有完整載入，暫停同步到程式碼——請從同步選單選「以此為準：程式碼」重載', 'error')
       } else {
         // 🟢 不出聲，而**不是靜默**：留一行給開發者，使用者不需要看到它
         console.debug('[semorphe] 工作區還沒畫過，這一次不寫回程式碼（開機時的正常狀態）')
@@ -860,6 +866,16 @@ export class App {
   private wireBlocklyChangeHandler(): void {
     this.blocklyPanel?.onChange(() => {
       if (this._codeToBlocksInProgress) return
+      // 🔴 **記錄「誰編輯了」要在殘態守衛【之前】**（2026-08-25 瀏覽器實測抓到）。
+      //
+      // 下面那個守衛擋的是「殘的工作區不得**覆蓋程式碼**」——那是對的。
+      // 而第一版把 `noteEdit` 放在它後面，於是**暫停期間的積木編輯完全沒被記錄**
+      // （暫停時工作區還沒被匯流排畫過，`staleReason === 'not-rendered'`），
+      // 分岔因此永遠偵測不到。
+      //
+      // > **「不要拿它去寫」與「不要記得它被改過」是兩件事，
+      // > 而一個 early return 把它們寫成了同一件。**
+      this.syncCoordinator.noteEdit(this.blocklyPanel?.viewId ?? 'blockly-panel')
       // 🔴 同 `syncBlocksToCodeWithMappings`：殘的工作區不得覆蓋程式碼。
       //    ⚠️ 自動同步這條路才是真正危險的——它不需要使用者按任何東西。
       if (this.blocklyPanel?.isStateStale) return
@@ -876,7 +892,54 @@ export class App {
 
   private refreshStatusBar(): void {
     updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name, this.mobileMenu,
-      languagePack(this.currentTopic.language)?.name ?? this.currentTopic.language)
+      languagePack(this.currentTopic.language)?.name ?? this.currentTopic.language,
+      // 🔴 三態要**一直看得見**——一個沒被顯示的狀態，使用者會當成壞掉
+      this.syncCoordinator.snapshot())
+  }
+
+  /**
+   * 程式碼那一側的視圖 id——**問登錄表，不寫死**。
+   *
+   * 🔴 網頁版是 `monaco-panel`，擴充是 `vscode-code-view`：寫死任何一個
+   * 都會讓另一個宿主的來源顯示成錯的那一顆。
+   */
+  private codeViewId(): string {
+    const blocks = this.blocklyPanel?.viewId
+    return viewsWith('editable').map((v) => v.viewId).find((id) => id !== blocks) ?? 'monaco-panel'
+  }
+
+  /**
+   * 三態變了就重畫狀態列——它是那三態唯一的常駐顯示處。
+   *
+   * 🔴 而**宿主也要知道**：VSCode／Theia 的狀態列住在主行程，
+   * 由它畫（`vscode/panel.ts` 的 `updateSyncStatusBar`）。
+   * ⚠️ 用**能力探測**而不是宿主判斷——這一層不認識任何一個具體的宿主。
+   */
+  private refreshSyncStatus(): void {
+    this.refreshStatusBar()
+    const snap = this.syncCoordinator.snapshot()
+    const view = this.codeView as unknown as {
+      reportSyncPhase?: (p: 'live' | 'paused' | 'diverged', s: string | null) => void
+    }
+    view.reportSyncPhase?.(snap.phase, snap.source)
+  }
+
+  /**
+   * 接宿主下的同步指令（VSCode／Theia 的狀態列與命令面板）。
+   *
+   * 🔴 **同一個機制、兩個入口**——網頁版點自己的狀態列，擴充走宿主的。
+   * 我一度以為擴充那側不必做，理由是「那裡真相是文件」——
+   * **那只推得掉「誰是來源」那一格**（`core/sync-coordinator.ts` 的檔頭記著）。
+   */
+  private wireHostSyncCommands(): void {
+    const view = this.codeView as unknown as {
+      onSyncCommand?: (cb: (cmd: { action: 'pause' | 'resume' | 'use'; viewId?: string }) => void) => void
+    }
+    view.onSyncCommand?.((cmd) => {
+      if (cmd.action === 'pause') this.setSyncPaused(true)
+      else if (cmd.action === 'resume') this.setSyncPaused(false)
+      else if (cmd.viewId) this.useAsSource(cmd.viewId)
+    })
   }
 
   private setupBidirectionalHighlight(): void {
@@ -1066,17 +1129,79 @@ export class App {
     }, 800)
   }
 
-  private toggleAutoSync(): void {
-    this.autoSync = !this.autoSync
-    for (const id of ['auto-sync-btn', 'mobile-sync-btn']) {
-      const btn = document.getElementById(id)
-      if (btn) {
-        btn.classList.toggle('auto-sync-on', this.autoSync)
-        btn.classList.toggle('auto-sync-off', !this.autoSync)
-        btn.title = this.autoSync ? '自動同步：開啟' : '自動同步：關閉'
-      }
+  /**
+   * 同步的選單——**一個入口，N 個來源**。
+   *
+   * 🔴 清單由 `viewsWith('editable')` 導出（第六十二條護欄盯著）：
+   * 加第三個可編輯視圖時**這裡一個字都不用改**。
+   */
+  private openSyncMenu(): void {
+    const snap = this.syncCoordinator.snapshot()
+    const label = (viewId: string): string => msg(`SYNC_SOURCE_${viewId.replace(/-/g, '_').toUpperCase()}`, viewId)
+    const options: { text: string; run: () => void }[] = []
+    options.push(
+      snap.phase === 'paused'
+        ? { text: msg('SYNC_RESUME', '▶ 恢復自動同步'), run: () => this.setSyncPaused(false) }
+        : { text: msg('SYNC_PAUSE', '⏸ 暫停自動同步'), run: () => this.setSyncPaused(true) },
+    )
+    for (const viewId of snap.candidates) {
+      options.push({ text: `⟳ ${msg('SYNC_USE_AS_SOURCE', '以此為準')}：${label(viewId)}`, run: () => this.useAsSource(viewId) })
     }
-    if (!this.autoSync) return
+    showChoice(
+      snap.phase === 'diverged'
+        ? msg('SYNC_DIVERGED_ASK', '兩邊都改過了——要以哪一邊為準？')
+        : msg('SYNC_MENU_TITLE', '同步'),
+      options,
+    )
+  }
+
+  /** 🔴 選定來源＝把那一邊寫進真實，其餘重建 */
+  private useAsSource(viewId: string): void {
+    this.syncCoordinator.resolve(viewId)
+    if (viewId === this.blocklyPanel?.viewId) {
+      // 🔴 **使用者明確選了來源，寫不回去就必須出聲**（2026-08-25 實測抓到）。
+      //
+      // 同一個殘態守衛有兩個呼叫者，而「不出聲」只對其中一個是對的：
+      // 開機時自動寫回不出聲是對的（正常過渡）；
+      // **而使用者按了一個按鈕卻什麼都沒發生，他會以為程式壞了。**
+      //
+      // > **同一個守衛、兩個呼叫者——沉默只對其中一個是正確的。**
+      if (this.blocklyPanel?.isStateStale) {
+        showToast('積木還沒被畫過，這一次不能以它為準——請先讓它顯示出來', 'warning')
+        return
+      }
+      this.syncBlocksToCodeWithMappings()
+      this.blocksDirty = false
+    } else {
+      this.syncController?.syncCodeToBlocks(this.codeView?.getCode())
+      this.codeDirty = false
+    }
+    this.updateSyncHints()
+    this.refreshSyncStatus()
+  }
+
+  private setSyncPaused(paused: boolean): void {
+    if (paused) this.syncCoordinator.pause()
+    else this.syncCoordinator.resume()
+    this.autoSync = !paused
+    this.updateSyncHints()
+    this.refreshSyncStatus()
+    if (!paused) this.applyResumeSync()
+  }
+
+  /**
+   * 🔴 **恢復時不自己挑來源**（2026-08-25）。
+   *
+   * 舊的 `toggleAutoSync` 在恢復時**把兩邊都同步一次**——而「兩邊都髒」正是
+   * 分岔，它等於安靜地讓後跑的那一邊贏。
+   *
+   * > **有暫停，就一定要有手動來源；而分岔之後系統該【問】，不該【推】。**
+   */
+  private applyResumeSync(): void {
+    if (this.syncCoordinator.snapshot().phase === 'diverged') {
+      this.openSyncMenu()
+      return
+    }
     if (this.blocksDirty) {
       this.syncBlocksToCodeWithMappings()
       this.blocksDirty = false; this.updateSyncHints()

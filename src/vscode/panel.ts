@@ -364,6 +364,7 @@ class SemorpheSession {
     //
     // > **「重送目前的狀態」與「重新決定狀態是什麼」是兩件事
     // > ——而後者在焦點不在編輯器上時，答案是錯的。**
+    if (m.type === 'syncPhase') { updateSyncStatusBar(m.phase, m.source); return }
     if (m.type === 'ready') { this.resend(); return }
     if (m.type === 'requestDocument') {
       // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
@@ -588,6 +589,11 @@ class SemorpheSession {
     this.send({ type: 'requestDiagnostics' })
   }
 
+  /** 把同步指令送進 webview——三態的機制住在那裡（`core/sync-coordinator.ts`） */
+  sendSync(cmd: { action: 'pause' | 'resume' | 'use'; viewId?: string }): void {
+    this.send({ type: 'syncCommand', ...cmd })
+  }
+
   reveal(column: vscode.ViewColumn): void {
     this.panel.reveal(column)
   }
@@ -599,6 +605,67 @@ class SemorpheSession {
     for (const d of this.disposables) d.dispose()
     current = undefined
   }
+}
+
+/**
+ * 同步三態的狀態列項目。
+ *
+ * 🔴 **它住在主行程而不是 webview**——狀態列是**宿主都有的 chrome**
+ * （VSCode／Theia／網頁版），而我們自己畫在面板裡的工具列不是。
+ * 使用者 2026-08-25：「全域，**不放在面板裡面的**」。
+ *
+ * ⚠️ 而「暫停中必須看得見」是這一刀的驗收——一個沒被顯示的狀態，
+ * 使用者會當成壞掉。
+ */
+/**
+ * ⚠️ 指令 id 定在**這裡**而不是 `extension.ts`：狀態列項目要用它，
+ * 而 `extension.ts` import 這個檔——反過來會是循環相依。
+ */
+export const SYNC_MENU_COMMAND = 'semorphe.syncMenu'
+
+let syncItem: vscode.StatusBarItem | undefined
+
+function updateSyncStatusBar(phase: 'live' | 'paused' | 'diverged', source: string | null): void {
+  if (!syncItem) {
+    syncItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
+    syncItem.command = SYNC_MENU_COMMAND
+  }
+  const text =
+    phase === 'paused' ? '$(debug-pause) 同步：已暫停'
+      : phase === 'diverged' ? '$(warning) 同步：兩邊都改了'
+        : `$(sync) 同步中${source ? `（${source}）` : ''}`
+  syncItem.text = text
+  syncItem.tooltip = '點一下開同步選單'
+  // ⚠️ 分岔要**看得出來不一樣**——它不是一個更花俏的「同步中」
+  syncItem.backgroundColor = phase === 'diverged'
+    ? new vscode.ThemeColor('statusBarItem.warningBackground')
+    : undefined
+  syncItem.show()
+}
+
+/** 主行程 → webview 的同步指令。⚠️ 沒有面板時要說得出來，不得靜默 */
+export async function openSyncMenu(): Promise<void> {
+  if (!current) {
+    OUTPUT.appendLine('Semorphe 同步：面板還沒打開')
+    OUTPUT.show(true)
+    return
+  }
+  const paused = syncItem?.text.includes('已暫停') === true
+  // 🔴 **來源清單不寫在這裡**——主行程不認識任何一個具體的面板。
+  //    它只送 `use`，而 webview 那側用 `viewsWith('editable')` 決定有哪些。
+  const picked = await vscode.window.showQuickPick(
+    [
+      paused ? '▶ 恢復自動同步' : '⏸ 暫停自動同步',
+      '⟳ 以文件為準（重建積木）',
+      '⟳ 以這個面板為準（寫回文件）',
+    ],
+    { title: '同步' },
+  )
+  if (!picked) return
+  if (picked.startsWith('⏸')) current.sendSync({ action: 'pause' })
+  else if (picked.startsWith('▶')) current.sendSync({ action: 'resume' })
+  else if (picked.includes('文件為準')) current.sendSync({ action: 'use', viewId: 'vscode-code-view' })
+  else current.sendSync({ action: 'use', viewId: 'blockly-panel' })
 }
 
 /** 讓指令問得到目前的面板。⚠️ 沒有面板時什麼都不做——**而要說得出來**。 */

@@ -142,7 +142,23 @@ export class VscodeCodeView implements CodeView, ViewHost {
     postToHost(m)
   }
 
+  /** 主行程下的同步指令——由組裝點接（`app.ts`），這裡只轉交 */
+  private syncCmdCb: ((cmd: { action: 'pause' | 'resume' | 'use'; viewId?: string }) => void) | null = null
+
+  onSyncCommand(cb: (cmd: { action: 'pause' | 'resume' | 'use'; viewId?: string }) => void): void {
+    this.syncCmdCb = cb
+  }
+
+  /** 三態變了就報給主行程——狀態列住在那裡 */
+  reportSyncPhase(phase: 'live' | 'paused' | 'diverged', source: string | null): void {
+    postToHost({ type: 'syncPhase', phase, source })
+  }
+
   private receive(m: HostMessage): void {
+    if (m.type === 'syncCommand') {
+      this.syncCmdCb?.({ action: m.action, viewId: m.viewId })
+      return
+    }
     if (m.type === 'document') {
       this.mirror = m.text
       this.version = m.version

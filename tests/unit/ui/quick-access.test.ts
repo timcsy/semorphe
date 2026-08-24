@@ -21,11 +21,13 @@ describe('QuickAccessBar (block toolbar)', () => {
     expect(parent.querySelector('.quick-access-bar')).toBeTruthy()
   })
 
-  it('should contain sync buttons', () => {
+  it('同步是**一顆**入口，而不是每個方向一顆（2026-08-25）', () => {
     const el = bar.getElement()
-    expect(el.querySelector('#auto-sync-btn')).toBeTruthy()
-    expect(el.querySelector('#sync-blocks-btn')).toBeTruthy()
-    expect(el.querySelector('#sync-code-btn')).toBeTruthy()
+    expect(el.querySelector('#sync-menu-btn'), '同步的入口不見了').toBeTruthy()
+    // 🔴 方向按鈕退場：方向是 N²、來源只有 N（第六十二條護欄守著這條）
+    expect(el.querySelector('#sync-blocks-btn'), '方向按鈕該退場了').toBeNull()
+    expect(el.querySelector('#sync-code-btn')).toBeNull()
+    expect(el.querySelector('#auto-sync-btn'), '暫停改由同步選單提供').toBeNull()
   })
 
   it('should contain level selector mount', () => {

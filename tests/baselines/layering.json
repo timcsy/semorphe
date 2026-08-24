@@ -1,11 +1,11 @@
 {
   "_meta": {
     "guard": "layering",
-    "measuredAt": "2026-08-24",
+    "measuredAt": "2026-08-25",
     "rule": "相依只准往下：core 不得 import ui／languages／components／vscode；languages 與 components 不得 import ui／vscode；ui 不得 import languages／vscode。組裝點（src/ui/app.ts）具名豁免，而豁免附上數字。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。\n🔴 **剩下的 5 筆是同一團**：`src/languages/style.ts` 的 `CodingStyle` 與 `core/types.ts` 的 `StylePreset` 是**兩份描述同一件事的型別**（`'iostream'|'cstdio'` vs `'cout'|'printf'`），中間靠一個轉換函式。\n2026-08-24 已經把轉換從 `sync-controller` 搬進語言那側（`detectStyleExceptionsForPreset`），於是引擎不再認識 C++ 的詞彙；**剩下四個 UI 檔仍直接 import 那個型別**，而根治要先答「這兩份型別哪一份是真的」。\n第五筆 `core/language-executors.ts → languages/cpp/builtins` 是既有的 P9 債。\n⚠️ **組裝點豁免今天是 10**——它印出來是為了讓「它是組裝點所以沒關係」有一個上限。"
   },
-  "掃描檔數": 1163,
+  "掃描檔數": 1164,
   "跨層相依": 5,
   "組裝點豁免": 10
 }

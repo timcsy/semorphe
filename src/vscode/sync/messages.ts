@@ -30,6 +30,17 @@ import type { ViewState } from './view-state'
 
 export type HostMessage =
   | {
+      /**
+       * 主行程下的同步指令——來自狀態列或命令面板。
+       *
+       * ⚠️ `use` 帶的是**視圖 id**，而那份清單由 webview 那側的
+       * `viewsWith('editable')` 導出——**主行程不認識任何一個具體的面板**。
+       */
+      type: 'syncCommand'
+      action: 'pause' | 'resume' | 'use'
+      viewId?: string
+    }
+  | {
       type: 'document'
       uri: string
       languageId: string
@@ -85,7 +96,26 @@ export type HostMessage =
 
 // ─── Webview → 主行程 ───
 
+/**
+ * 同步的三態——**由 webview 報給主行程**，主行程把它畫在狀態列上。
+ *
+ * 🔴 為什麼狀態列住在主行程：它是**宿主都有的 chrome**（VSCode／Theia／網頁版），
+ * 而我們自己畫的工具列不是。使用者 2026-08-25：「全域，**不放在面板裡**」。
+ *
+ * ⚠️ 而三態在這一側同樣需要——我一度以為不必（「這裡真相是文件」），
+ * 那只推得掉「誰是來源」那一格：**暫停**（收到 `document` 就重 lift，排版沒了）
+ * 與**分岔**（文件還會被 git／別人改）在這一側**更常見**。
+ */
+export type SyncPhaseWire = 'live' | 'paused' | 'diverged'
+
 export type WebviewMessage =
+  | {
+      /** 三態變了——主行程據此更新狀態列 */
+      type: 'syncPhase'
+      phase: SyncPhaseWire
+      /** 目前的來源（`null` ＝ 暫停中或分岔中）。**沒有來源不是一種來源** */
+      source: string | null
+    }
   | {
       type: 'applyEdit'
       span: RewriteSpan

@@ -32,13 +32,22 @@ export interface QuickAccessBarOptions {
 export class QuickAccessBar {
   private container: HTMLElement
 
+  /**
+   * 🔴 **同步從三顆變一顆**（2026-08-25）。
+   *
+   * 舊的兩顆是【方向】（N²）：`sync-blocks-btn` / `sync-code-btn`。
+   * 新的一顆問的是【來源】（N）——清單由 `viewsWith('editable')` 導出，
+   * **加第三個可編輯視圖時不必新增按鈕**。
+   *
+   * 而三態（同步中／已暫停／分岔了）顯示在**狀態列**：它是全域的、永遠看得見，
+   * 而「暫停中必須看得見」是這一刀的驗收之一。
+   * 機制見 `core/sync-coordinator.ts`。
+   */
   constructor(parent: HTMLElement, options: QuickAccessBarOptions) {
     this.container = document.createElement('div')
     this.container.className = 'quick-access-bar'
     this.container.innerHTML = `
-      <button id="auto-sync-btn" class="auto-sync-on" title="自動同步：開啟">⇄ 自動</button>
-      <button id="sync-blocks-btn" title="積木 → 程式碼">積木→程式碼</button>
-      <button id="sync-code-btn" title="程式碼 → 積木">程式碼→積木</button>
+      <button id="sync-menu-btn" title="同步">⇄ 同步</button>
       <span class="toolbar-separator"></span>
       <span id="level-selector-mount"></span>
       <span class="toolbar-separator"></span>

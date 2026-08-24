@@ -51,9 +51,8 @@ export interface AppShellCallbacks {
   onStyleChange: (style: StylePreset) => void
   onBlockStyleChange: (preset: BlockStylePreset, toolbox: object) => void
   onLocaleChange: (locale: string) => void
-  onSyncBlocks: () => void
-  onSyncCode: () => void
-  onToggleAutoSync: () => void
+  /** 🔴 一個入口，而不是每個方向一顆——見 `core/sync-coordinator.ts` */
+  onOpenSyncMenu: () => void
   onUndo: () => void
   onRedo: () => void
   onClear: () => void
@@ -689,7 +688,7 @@ export function setupSelectors(
   return { topicSelector, styleSelector }
 }
 
-export function setupToolbarButtons(callbacks: Pick<AppShellCallbacks, 'onSyncBlocks' | 'onSyncCode' | 'onToggleAutoSync' | 'onUndo' | 'onRedo' | 'onClear'>): void {
+export function setupToolbarButtons(callbacks: Pick<AppShellCallbacks, 'onOpenSyncMenu' | 'onUndo' | 'onRedo' | 'onClear'>): void {
   const replaceBtn = (id: string) => {
     const el = document.getElementById(id)
     if (el) {
@@ -700,15 +699,13 @@ export function setupToolbarButtons(callbacks: Pick<AppShellCallbacks, 'onSyncBl
     return null
   }
 
-  replaceBtn('auto-sync-btn')?.addEventListener('click', callbacks.onToggleAutoSync)
-  replaceBtn('sync-blocks-btn')?.addEventListener('click', callbacks.onSyncBlocks)
-  replaceBtn('sync-code-btn')?.addEventListener('click', callbacks.onSyncCode)
+  replaceBtn('sync-menu-btn')?.addEventListener('click', callbacks.onOpenSyncMenu)
   replaceBtn('undo-btn')?.addEventListener('click', callbacks.onUndo)
   replaceBtn('redo-btn')?.addEventListener('click', callbacks.onRedo)
   replaceBtn('clear-btn')?.addEventListener('click', callbacks.onClear)
 
   // Mobile sync button — toggles auto-sync (same as desktop)
-  replaceBtn('mobile-sync-btn')?.addEventListener('click', callbacks.onToggleAutoSync)
+  replaceBtn('mobile-sync-btn')?.addEventListener('click', callbacks.onOpenSyncMenu)
 }
 
 export function setupFileButtons(
@@ -810,10 +807,22 @@ export function updateStatusBar(
    * > **一個只出現在狀態列的字串，只有截圖抓得到。**
    */
   languageName = 'C++',
+  /**
+   * 同步的三態。🔴 **它必須一直看得見**——
+   * 一個沒被顯示的狀態，使用者會當成壞掉（開機誤報那一刀的同一條）。
+   */
+  sync?: { phase: 'live' | 'paused' | 'diverged'; source: string | null },
 ): void {
   const styleName = currentStylePreset.name[currentLocale] || currentStylePreset.name['zh-TW'] || currentStylePreset.id
   const blockStyleLabel = (Blockly.Msg as Record<string, string>)[`BLOCK_STYLE_${currentBlockStyleId.toUpperCase()}`] || currentBlockStyleId
-  const summaryText = `${languageName} | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}`
+  const syncText = sync
+    ? sync.phase === 'paused'
+      ? ` | ⏸ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_PAUSED'] || '已暫停'}`
+      : sync.phase === 'diverged'
+        ? ` | ⚠️ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_DIVERGED'] || '兩邊都改了'}`
+        : ` | ⇄ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_LIVE'] || '同步中'}`
+    : ''
+  const summaryText = `${languageName} | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}${syncText}`
 
   const statusBar = document.getElementById('status-bar')
   if (statusBar) {

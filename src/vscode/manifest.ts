@@ -52,7 +52,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.9.4'
+export const EXTENSION_VERSION = '0.9.5'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -181,6 +181,13 @@ export function buildManifest(): ExtensionManifest {
         {
           command: 'semorphe.showDiagnostics',
           title: '顯示同步診斷',
+          category: DISPLAY_NAME,
+        },
+        // 🔴 同步的入口在**宿主的 chrome** 上：狀態列點一下、或從這裡叫。
+        //    使用者 2026-08-25：「全域，**不放在面板裡面的**」。
+        {
+          command: 'semorphe.syncMenu',
+          title: '同步：暫停／以哪一邊為準',
           category: DISPLAY_NAME,
         },
       ],

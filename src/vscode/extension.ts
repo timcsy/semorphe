@@ -23,16 +23,20 @@
  * 而**宿主層本來就要認識宿主**。方向是單向的。
  */
 import * as vscode from 'vscode'
-import { openBlocksPanel, requestDiagnostics } from './panel'
+import { openBlocksPanel, requestDiagnostics, openSyncMenu, SYNC_MENU_COMMAND } from './panel'
 
 export const OPEN_COMMAND = 'semorphe.openBlocks'
 export const DIAGNOSTICS_COMMAND = 'semorphe.showDiagnostics'
+/** 🔴 同步的入口在**宿主的 chrome** 上（狀態列／命令面板），不在面板裡。id 定在 `panel.ts` */
+export { SYNC_MENU_COMMAND }
 
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(OPEN_COMMAND, () => openBlocksPanel(context)),
     // 🔴 診斷是一個**指令**，不是面板上的一塊——見 `panel.ts` 的 `OUTPUT`。
     vscode.commands.registerCommand(DIAGNOSTICS_COMMAND, () => requestDiagnostics()),
+    // 🔴 **一個註冊了卻沒有宣告在 manifest 的指令，使用者按不到**（`manifest.ts:173`）
+    vscode.commands.registerCommand(SYNC_MENU_COMMAND, () => openSyncMenu()),
   )
 }
 

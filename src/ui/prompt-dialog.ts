@@ -32,6 +32,53 @@ export function installDialogs(): void {
   })
 }
 
+/**
+ * **選一個**——QuickPick 的頁內替身。
+ *
+ * 🔴 與 `showPrompt` 同一個理由：`window.confirm` 只有兩個答案，
+ * 而**這裡的答案數是 N**（可編輯視圖有幾個就有幾個來源）。
+ * 而原生對話框在 VSCode 的 webview 裡還是停用的。
+ */
+export function showChoice(message: string, options: { text: string; run: () => void }[]): void {
+  const overlay = document.createElement('div')
+  overlay.className = 'semorphe-dialog-overlay'
+  const box = document.createElement('div')
+  box.className = 'semorphe-dialog'
+  const label = document.createElement('div')
+  label.className = 'semorphe-dialog-msg'
+  label.textContent = message
+  box.appendChild(label)
+
+  let done = false
+  const close = (): void => {
+    if (done) return
+    done = true
+    overlay.remove()
+  }
+  for (const o of options) {
+    const b = document.createElement('button')
+    b.className = 'semorphe-dialog-btn semorphe-dialog-choice'
+    b.textContent = o.text
+    b.addEventListener('click', () => {
+      close()
+      o.run()
+    })
+    box.appendChild(b)
+  }
+  overlay.appendChild(box)
+  overlay.addEventListener('mousedown', (e) => {
+    if (e.target === overlay) close()
+  })
+  document.addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') {
+      document.removeEventListener('keydown', esc)
+      close()
+    }
+  })
+  document.body.appendChild(overlay)
+  ;(box.querySelector('.semorphe-dialog-choice') as HTMLElement | null)?.focus()
+}
+
 function showPrompt(message: string, defaultValue: string, callback: (value: string | null) => void): void {
   const overlay = document.createElement('div')
   overlay.className = 'semorphe-dialog-overlay'
