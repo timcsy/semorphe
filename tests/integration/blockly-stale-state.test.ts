@@ -62,10 +62,18 @@ describe('殘的工作區不得覆蓋程式碼', () => {
     expect(PANEL_RAW, '🔴 旗標沒有對外的讀法').toContain('get isStateStale()')
   })
 
-  it('🔴 兩條寫回程式碼的路【都】要問它——自動同步那條才是危險的', () => {
+  it('🔴 每一條寫回程式碼的路【都】要問它——自動同步那條才是危險的', () => {
     // ① 使用者按「積木→程式碼」　② autoSync 在積木變動時自己跑
-    const hits = APP.match(/isStateStale/g) ?? []
-    expect(hits.length, `🔴 只有 ${hits.length} 條路問了——另一條會繞過去`).toBeGreaterThanOrEqual(2)
+    //   ③ 換目標／還原之後的 `resyncAfterTopicChange`（2026-08-24 才補上安全網）
+    //
+    // ⚠️ **兩個名字都算**（2026-08-24）：`isStateStale` 是「殘不殘」，
+    // `staleReason` 是「為什麼殘」——後者是為了讓**開機時不要誤報**而分出來的
+    // （見 `startup-no-false-alarm.test.ts`），而它同樣是在問這件事。
+    //
+    // 🔴 這一條 2026-08-24 真的紅過一次：改名之後計數掉到 1。
+    //    **那正是它該做的事**——而修法是把新名字也算進來，不是把數字調低。
+    const hits = APP.match(/isStateStale|staleReason/g) ?? []
+    expect(hits.length, `🔴 只有 ${hits.length} 條路問了——其餘的會繞過去`).toBeGreaterThanOrEqual(3)
   })
 
   it('成功載入要把旗標清掉——否則一次失敗會讓面板永遠停在唯讀', () => {

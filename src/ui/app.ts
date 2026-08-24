@@ -662,6 +662,17 @@ export class App {
 
   /** Resync blocks/code after topic/branch change; async-parses if needed for depth 0→1+ */
   private resyncAfterTopicChange(): void {
+    // 🔴 **安全網原本只掛在 `syncBlocksToCodeWithMappings` 一條路上**（2026-08-24 補）。
+    //    這一條同樣是「從積木產生程式碼並寫回去」，而它一次都沒問過工作區殘不殘
+    //    ——`setState` 失敗（載了一半）之後走到這裡，半份積木照樣蓋掉程式碼。
+    //
+    // > **一張只蓋住一條路的安全網，與沒有安全網的差別，
+    // > 只在缺陷走的是哪一條路。**
+    //
+    // ⚠️ 只擋 `load-failed`：`not-rendered` 在還原路徑上是**正常的**
+    //    （積木剛 `setState` 進來、匯流排還沒畫），而這一條正是那時候
+    //    負責把程式碼生出來的人。
+    if (this.blocklyPanel?.staleReason === 'load-failed') return
     const tree = this.blocklyPanel?.extractSemanticTree()
     if (!tree) return
     const code = this.codeView?.getCode() ?? ''
@@ -807,8 +818,17 @@ export class App {
     // > **兩邊不一致時，不能拿「已知是壞的那一邊」當來源。**
     //
     // ⚠️ 恢復的辦法是按「程式碼→積木」重載一次（成功就會解除）。
-    if (this.blocklyPanel?.isStateStale) {
-      showToast('積木沒有完整載入，暫停同步到程式碼——請按「程式碼→積木」重載', 'error')
+    // ⚠️ **兩種殘只有一種該出聲**（2026-08-24，使用者：「每次重新整理都會跳出一條」）：
+    //    開機時工作區還沒被畫過，那是**正常的過渡狀態**——擋住寫回是對的，
+    //    而對使用者喊「積木沒有完整載入」是錯的。見 `staleReason`。
+    const stale = this.blocklyPanel?.staleReason
+    if (stale) {
+      if (stale === 'load-failed') {
+        showToast('積木沒有完整載入，暫停同步到程式碼——請按「程式碼→積木」重載', 'error')
+      } else {
+        // 🟢 不出聲，而**不是靜默**：留一行給開發者，使用者不需要看到它
+        console.debug('[semorphe] 工作區還沒畫過，這一次不寫回程式碼（開機時的正常狀態）')
+      }
       return
     }
     const tree = this.blocklyPanel?.extractSemanticTree()
@@ -953,6 +973,13 @@ export class App {
     this._restoringState = false
 
     // 3. Generate code from restored blocks, then resync for the restored topic
+    //
+    // ⚠️ **第一個呼叫在這個時點必然空轉**：積木剛 `setState` 進來，而匯流排
+    //    還沒畫過它（`staleReason === 'not-rendered'`），於是它會擋下寫回。
+    //    真正把程式碼生出來的是下面那一行。
+    //    🔴 留著它是因為「擋下寫回」本身是對的；而在 2026-08-24 之前它會
+    //    **每一次重新整理都彈一條紅色的錯誤訊息**——使用者：「我覺得這會讓
+    //    使用者有誤會，以為剛開啟的時候系統錯誤。」
     this.syncBlocksToCodeWithMappings()
     this.resyncAfterTopicChange()
   }

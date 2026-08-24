@@ -616,7 +616,32 @@ export class BlocklyPanel implements ViewHost {
     //
     // 🟢 這與 `host-no-overwrite`（擋「用舊存檔蓋掉」）和安全網（擋「用空狀態
     //    蓋掉」）是同一條性質的第三半：**擋「用還沒載入的狀態蓋掉」**。
-    return this.stateLoadFailed || !this.hasRendered
+    return this.staleReason !== null
+  }
+
+  /**
+   * **殘的理由**——兩種殘要分得出來，因為**它們該對使用者說的話不一樣**。
+   *
+   * ```
+   * 'load-failed'   真的載壞了      → 要出聲：畫面上的積木不是完整的
+   * 'not-rendered'  還沒畫過（開機） → 【不要】出聲：那是正常的過渡狀態
+   * ```
+   *
+   * 🔴 使用者 2026-08-24：「**我每次重新整理下面都會跳出一條這個**，
+   * 我覺得這會讓使用者有誤會，以為剛開啟的時候系統錯誤。」
+   *
+   * 那條紅字寫著「積木沒有完整載入」——而積木完整得很，它只是**還沒畫**。
+   *
+   * > **一個把「還沒發生」講成「失敗了」的訊息，
+   * > 每一次正常開機都在教使用者不要相信錯誤訊息。**
+   *
+   * ⚠️ **擋寫回這件事兩種都要擋**（`isStateStale` 仍然兩種都為真）——
+   * 分開的是「說什麼」，不是「擋不擋」。
+   */
+  get staleReason(): 'load-failed' | 'not-rendered' | null {
+    if (this.stateLoadFailed) return 'load-failed'
+    if (!this.hasRendered) return 'not-rendered'
+    return null
   }
 
   /** 手勢／編輯進行中累積的變動——結束之後補寫一次。見 `userChanged`。 */
