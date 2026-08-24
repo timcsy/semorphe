@@ -1,6 +1,6 @@
 /** `python:with` 的 **generate** 路——`with open(p) as f:`。 */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { generateExpression, generateBody, indent, indented } from '../../../core/projection/code-generator'
+import { generateExpression, generateBody, indent, indented, trackOwnText} from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:with', (node, ctx) => {
@@ -10,6 +10,10 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     // ⚠️ **主體要另一層縮排**，而空主體要有 `pass`——空的區塊在 Python 是語法錯誤
     const kids = node.children.body ?? []
     const inner = indented(ctx)
+    // 🔴 **標頭那一行要先算進行號**（2026-08-24）——否則主體裡每一顆的
+    //    對應都往上偏一行，使用者按下積木時**反白到上一行**。
+    //    見 `core/projection/code-generator.ts` 的 `trackOwnText`。
+    trackOwnText(ctx, head)
     return head + (kids.length > 0 ? generateBody(kids, inner) : `${indent(inner)}pass\n`)
   })
 }

@@ -1,6 +1,6 @@
 /** `python:func_def` 的 **generate** 路。 */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { indent, indented, generateBody } from '../../../core/projection/code-generator'
+import { indent, indented, generateBody, trackOwnText} from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:func_def', (node, ctx) => {
@@ -23,8 +23,12 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       .filter(Boolean)
     const body = node.children.body ?? []
     const inner = indented(ctx)
-    const bodyCode = body.length > 0 ? generateBody(body, inner) : `${indent(inner)}pass\n`
     const returns = String(node.properties.returns ?? '')
-    return `${indent(ctx)}def ${name}(${params.join(', ')})${returns ? ` -> ${returns}` : ''}:\n${bodyCode}`
+    // 🔴 **每一段標頭都要先算進行號**（2026-08-24）——否則那一段主體裡每一顆的
+    //    對應都往上偏一行，使用者按下積木時**反白到上一行**。
+    const head = `${indent(ctx)}def ${name}(${params.join(', ')})${returns ? ` -> ${returns}` : ''}:\n`
+    trackOwnText(ctx, head)
+    const bodyCode = body.length > 0 ? generateBody(body, inner) : `${indent(inner)}pass\n`
+    return head + bodyCode
   })
 }
