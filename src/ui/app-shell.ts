@@ -5,6 +5,7 @@ import { LayoutManager } from './layout/layout-manager'
 import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
 import { ConsolePanel } from './panels/console-panel'
 import { VariablePanel } from './panels/variable-panel'
+import { FlowPanel } from './panels/flow-panel'
 import { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
@@ -35,6 +36,7 @@ export interface AppShellElements {
   codeView: CodeView
   consolePanel: ConsolePanel
   variablePanel: VariablePanel
+  flowPanel: FlowPanel
   bottomPanel: BottomPanel
   quickAccessBar: QuickAccessBar
   layoutManager: LayoutManager
@@ -201,6 +203,12 @@ export function createAppLayout(
   const variableEl = document.createElement('div')
   const variablePanel = new VariablePanel(variableEl)
   bottomPanel.addTab({ id: 'variables', label: Blockly.Msg['PANEL_VARIABLES'] || 'Variables', panel: variableEl })
+
+  // 🔴 **第三個投影**。它出現在這裡只是因為要有一格 DOM——
+  //    接線由 `registerViewsIn` 掃出來（見下面的回傳物件），不是這裡硬接的。
+  const flowEl = document.createElement('div')
+  const flowPanel = new FlowPanel(flowEl, blockSpecRegistry)
+  bottomPanel.addTab({ id: 'flow', label: Blockly.Msg['PANEL_FLOW'] || 'Flow', panel: flowEl })
 
   // Mobile layout: create mobile containers and tab bar
   // These are created once but only shown when in mobile mode
@@ -633,7 +641,7 @@ export function createAppLayout(
     })
   }
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, mobileMenu, codeKeyboard }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, mobileMenu, codeKeyboard }
 }
 
 export function setupSelectors(

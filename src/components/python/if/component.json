@@ -15,6 +15,7 @@
   "owner": "(python)",
   "_owner_why": "⚠️ 章要蓋 `(python)` 不是 `(core)`。工具箱的來源段落寫著 `{ from: '(python)' }`。",
   "annotations": {
+    "control_flow": "branch",
     "debug_step": true
   },
   "paths": {

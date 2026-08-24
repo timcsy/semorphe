@@ -279,3 +279,43 @@ export function componentsDeclaringVariables(): { componentId: string; fields: s
     .map((c) => ({ componentId: c.componentId, fields: variableNameFields(c.componentId) }))
     .filter((x) => x.fields.length > 0)
 }
+
+/**
+ * 這顆元件的**身體插槽**——子槽裡裝的是語句的那些，依宣告順序。
+ *
+ * 🔴 **流程圖靠這個知道「哪一條是流程」**，而它讀的是膠囊自己的宣告
+ * （`component.json` 的 `children`），不是一份「哪些概念有身體」的清單。
+ * 那份清單如果存在，它會住在視圖層而且用語言專屬的名字——
+ * 那正是 P9（視圖層不得認識語言）擋掉的形狀。
+ *
+ * ⚠️ 子槽的宣告有**兩種寫法**（378 個字串、41 個物件），兩種都要認：
+ *
+ * ```json
+ * "then_body": "statements"
+ * "body":      { "allowed": ["statement"], "min": 0 }
+ * ```
+ *
+ * 只認前者的話，寫成物件的那一顆會安靜地變成「沒有身體」——
+ * 而症狀是流程圖少畫一段，不是報錯。
+ */
+export function bodySlotsOf(componentId: string): string[] {
+  return slotsOf(componentId).filter((s) => s.isBody).map((s) => s.slot)
+}
+
+/**
+ * 這顆元件宣告的**全部子槽**，依宣告順序，並標出哪些裝語句。
+ *
+ * 節點圖要的是這一份：裝語句的變成**執行接點**，其餘的變成**資料接點**。
+ * 兩者的分界不在視圖的判斷裡，在膠囊的宣告裡。
+ */
+export function slotsOf(componentId: string): { slot: string; isBody: boolean }[] {
+  const c = registeredComponents().find((x) => x.componentId === componentId)
+  const children = (c?.manifest as { children?: Record<string, unknown> } | undefined)?.children
+  if (!children) return []
+  const isBody = (v: unknown): boolean => {
+    if (typeof v === 'string') return v === 'statements' || v === 'statement'
+    const allowed = (v as { allowed?: unknown[] } | null)?.allowed
+    return Array.isArray(allowed) && allowed.some((a) => a === 'statement' || a === 'statements')
+  }
+  return Object.entries(children).map(([slot, v]) => ({ slot, isBody: isBody(v) }))
+}

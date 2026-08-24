@@ -27,5 +27,8 @@
   "traits": {
     "defaultCase": true
   },
-  "_traits_why": "**「我是 switch 裡兜底的那一支」是我自己的宣告**，不是 switch 該寫死的身分。"
+  "_traits_why": "**「我是 switch 裡兜底的那一支」是我自己的宣告**，不是 switch 該寫死的身分。",
+  "annotations": {
+    "control_flow": "sequence"
+  }
 }

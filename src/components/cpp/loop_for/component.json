@@ -10,6 +10,7 @@
   },
   "role": "statement",
   "annotations": {
+    "control_flow": "loop",
     "debug_step": true
   },
   "owner": "(core)",

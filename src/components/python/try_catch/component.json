@@ -19,5 +19,8 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json"
   },
-  "_children_why": "🔴 **`handlers` 是可變數量的分支（每一個是同族的例外分支元件）**（2026-08-21）。\n第一版只收一個 `except`，理由寫著「收一半會產出少了分支的合法程式」——那是對的，所以多分支整顆降級。而**教學語料的第一段就有兩個**（`except ValueError` ／ `except ZeroDivisionError`），所以邊界往前推。\n🟢 **`else`／`finally` 也收了**（2026-08-22）：`orelse` 是「沒出錯才跑」，`ensure` 是「出不出錯都跑」。\n⚠️ **名字刻意不叫 `else`／`finally`**——那是兩個語言關鍵字，而接點名是語義槽的名字。"
+  "_children_why": "🔴 **`handlers` 是可變數量的分支（每一個是同族的例外分支元件）**（2026-08-21）。\n第一版只收一個 `except`，理由寫著「收一半會產出少了分支的合法程式」——那是對的，所以多分支整顆降級。而**教學語料的第一段就有兩個**（`except ValueError` ／ `except ZeroDivisionError`），所以邊界往前推。\n🟢 **`else`／`finally` 也收了**（2026-08-22）：`orelse` 是「沒出錯才跑」，`ensure` 是「出不出錯都跑」。\n⚠️ **名字刻意不叫 `else`／`finally`**——那是兩個語言關鍵字，而接點名是語義槽的名字。",
+  "annotations": {
+    "control_flow": "branch"
+  }
 }

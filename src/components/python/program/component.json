@@ -8,7 +8,9 @@
     "body": "statement"
   },
   "role": "statement",
-  "annotations": [],
+  "annotations": {
+    "control_flow": "sequence"
+  },
   "owner": "(python)",
   "traits": {
     "programRoot": true,

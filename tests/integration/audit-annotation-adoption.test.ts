@@ -126,7 +126,12 @@ const zeroReaders = rows.filter((r) => r.readers === 0)
 
 /** 產生基線時用的理由表——改這裡要同時說得出為什麼 */
 const KNOWN_REASONS: Record<string, string> = {
-  control_flow: 'pending-consumer:9.1 DataFlow 視圖',
+  // 🪦 `control_flow` 於 2026-08-24 離開這張表——**它等到消費者了**：
+  //    `src/ui/panels/flow-panel.ts` 經 `core/flow/node-graph.ts` 讀它（執行接點依它分色）。
+  //
+  //    ⚠️ 而它等的理由寫的是「9.1 DataFlow 視圖」，來的卻是**流程圖面板**。
+  //    > **一份宣告等的那個消費者，來的常常是另一個。**
+  //    所以這個理由該記的是「還沒有人讀」，而不是「誰會來讀」——後者是預測。
 }
 
 const r_in = (b: AdoptionBaseline, n: string): boolean => n in b.zeroReaders

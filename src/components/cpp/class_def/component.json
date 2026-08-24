@@ -32,5 +32,8 @@
     "execute": "./execute.ts",
     "lift": "./lift-pattern.json",
     "liftStrategy": "./lift-strategy.ts"
+  },
+  "annotations": {
+    "control_flow": "sequence"
   }
 }

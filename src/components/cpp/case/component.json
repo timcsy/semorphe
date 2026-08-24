@@ -24,5 +24,8 @@
     "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建case`）——判別留在共用檔。",
     "execute": null,
     "_execute_why": "**顯式的空，不是遺漏。**"
+  },
+  "annotations": {
+    "control_flow": "sequence"
   }
 }

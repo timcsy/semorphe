@@ -1,12 +1,10 @@
 {
   "_meta": {
     "guard": "annotation-adoption",
-    "measuredAt": "2026-08-06",
+    "measuredAt": "2026-08-24",
     "rule": "宣告者 = 概念定義的 annotations 裡有這個鍵。讀取點 = 原始碼呼叫 `hasAnnotation(…, '名字')` 或 `annotationOf(…, '名字')`。**字串剛好出現在某處不算讀取**——那可能只是另一個沒人消費的宣告。",
     "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 ⚠️ 這條護欄的健康檢查是下面那三支合成注入，**不是報表上的數字**。讀取點的比對若寫錯（例如漏了 `annotationOf`），每個標註都會顯示 0 個讀取點，而「全部都沒人用」與「比對壞了」產出完全一樣。"
   },
-  "zeroReaders": {
-    "control_flow": "pending-consumer:9.1 DataFlow 視圖"
-  },
+  "zeroReaders": {},
   "total": 3
 }

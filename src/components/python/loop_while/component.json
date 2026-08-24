@@ -10,6 +10,7 @@
   "role": "statement",
   "owner": "(python)",
   "annotations": {
+    "control_flow": "loop",
     "debug_step": true
   },
   "paths": {

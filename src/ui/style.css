@@ -1555,3 +1555,158 @@ html, body {
   }
 
 }
+
+/* ─── 節點圖面板（使用者叫它「流程圖」）─────────────────────────
+   ⚠️ 節點標頭的**填色不寫在這裡**——它由面板從積木那張表（blockDef.colour）
+   當場填成屬性。這裡只管形狀、線、文字。 */
+.flow-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1a1a1a;
+  border-top: 1px solid #3c3c3c;
+  overflow: auto;
+}
+
+.flow-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  background: #252526;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.flow-scope {
+  background: #3c3c3c;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 12px;
+  max-width: 240px;
+}
+
+.flow-btn {
+  background: #3c3c3c;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.flow-btn:hover {
+  background: #4a4a4a;
+}
+
+.flow-empty {
+  padding: 20px;
+  color: #888;
+  font-size: 13px;
+}
+
+.flow-svg {
+  display: block;
+  /* 🔴 **不准縮**——面板是 flex 直欄，而 SVG 是可縮的 flex item：
+     少了這一行，整張圖會被壓成面板高度那麼扁（實測踩到）。 */
+  flex: none;
+}
+
+.fc-node {
+  cursor: grab;
+}
+
+.fc-node:active {
+  cursor: grabbing;
+}
+
+.fc-node-body {
+  fill: #2b2b2b;
+  stroke: #4a4a4a;
+  stroke-width: 1;
+}
+
+/* 🔴 `:not([fill])` 不可省。顏色是面板**當場從積木那張表填成屬性**的，
+   而 **CSS 的宣告贏過呈現屬性**——少了這個選擇器，整張圖會統一成這個灰。 */
+.fc-node-header:not([fill]) {
+  fill: #4a6fa5;
+}
+
+.fc-node.fc-on .fc-node-body {
+  stroke: #ffd700;
+  stroke-width: 2.5;
+}
+
+.fc-node-title {
+  fill: #fff;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fc-field {
+  fill: #d4d4d4;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fc-port-label {
+  fill: #9a9a9a;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 10px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fc-port-exec-label {
+  fill: #cfcfcf;
+}
+
+.fc-port-data {
+  fill: #7fb3d5;
+  stroke: #1a1a1a;
+  stroke-width: 1;
+}
+
+.fc-port-exec {
+  fill: #e0e0e0;
+  stroke: #1a1a1a;
+  stroke-width: 1;
+}
+
+/* 兩種線：**執行**是實的白線，**資料**是細的藍線 */
+.fc-wire {
+  fill: none;
+}
+
+.fc-wire-exec {
+  stroke: #e0e0e0;
+  stroke-width: 2;
+}
+
+.fc-wire-data {
+  stroke: #7fb3d5;
+  stroke-width: 1.4;
+}
+
+/* 執行接點依**膠囊宣告的** control_flow 分色——迴圈與分支不該長得一樣 */
+.fc-port-exec.fc-flow-loop {
+  fill: #b58bd0;
+}
+
+.fc-port-exec.fc-flow-branch {
+  fill: #f0c674;
+}
+
+.fc-wire-exec.fc-flow-loop {
+  stroke: #b58bd0;
+}

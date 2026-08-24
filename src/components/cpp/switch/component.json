@@ -8,6 +8,7 @@
   },
   "role": "statement",
   "annotations": {
+    "control_flow": "branch",
     "debug_step": true
   },
   "owner": "(core)",

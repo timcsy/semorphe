@@ -82,6 +82,22 @@ export function hasAnnotation(componentId: string, key: string): boolean {
   return annotations.get(componentId)?.[key] === true
 }
 
+/**
+ * 這個概念的某個標註**是什麼值**。
+ *
+ * ⚠️ 它與 `hasAnnotation` 是**兩種標註**，不是同一件事的兩個寫法：
+ * `debug_step`／`introduces_scope` 是布林（有沒有），而 `control_flow` 是
+ * **封閉詞彙裡的一個值**（`branch`／`loop`／`sequence`）。用 `hasAnnotation`
+ * 讀後者會永遠得到 `false`——`'branch' === true` 不成立，而**那個假不會報錯**。
+ *
+ * 🔴 沒有宣告時回 `undefined`（不是猜一個看起來合理的預設）——
+ * 「沒宣告」與「宣告成順序」在流程圖上是不同的兩件事：後者是判斷過的，
+ * 前者該誠實地畫成未知（P6 誠實降級）。
+ */
+export function annotationOf(componentId: string, key: string): unknown {
+  return annotations.get(componentId)?.[key]
+}
+
 /** 測試用 */
 export function resetAnnotations(): void {
   annotations.clear()

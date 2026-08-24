@@ -34,5 +34,8 @@
   "skipReasons": {
     "execute": "consumed-by-parent"
   },
-  "_properties_why": "**例外的名字是一個【標籤】不是一個變數**：`except ValueError:` 的那個名字在這個直譯器裡不對應任何值。\n🔴 `kind` 因此是 `string` 不是 `identifier`——命名護欄用「第一個 identifier 屬性」推斷接收者，而這一格不是接收者。空字串表示 `except:`（全抓）。\n🔴 **而 `alias`（`except ValueError as e:` 的那個 `e`）是【第二格】不是同一格**（2026-08-22）：壓成一個字串的話來回轉換仍然一字不差，而**執行時 `e` 是一個沒有宣告的變數**——語料抓到的症狀是「印錯誤訊息」那一行整個炸掉。\n> **一個把兩件事壓成一個字串的欄位，會在需要【用】其中一件的那天才出聲。**"
+  "_properties_why": "**例外的名字是一個【標籤】不是一個變數**：`except ValueError:` 的那個名字在這個直譯器裡不對應任何值。\n🔴 `kind` 因此是 `string` 不是 `identifier`——命名護欄用「第一個 identifier 屬性」推斷接收者，而這一格不是接收者。空字串表示 `except:`（全抓）。\n🔴 **而 `alias`（`except ValueError as e:` 的那個 `e`）是【第二格】不是同一格**（2026-08-22）：壓成一個字串的話來回轉換仍然一字不差，而**執行時 `e` 是一個沒有宣告的變數**——語料抓到的症狀是「印錯誤訊息」那一行整個炸掉。\n> **一個把兩件事壓成一個字串的欄位，會在需要【用】其中一件的那天才出聲。**",
+  "annotations": {
+    "control_flow": "sequence"
+  }
 }

@@ -19,5 +19,8 @@
     "generate": "./generate.ts",
     "execute": "./execute.ts",
     "lift": "./lift.ts"
+  },
+  "annotations": {
+    "control_flow": "branch"
   }
 }

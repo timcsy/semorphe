@@ -322,7 +322,7 @@ export class SyncController {
             const convRender = renderToBlocklyState(this.enhanceDisplayTree(convDisplay))
             this.blockMappings = convRender.blockMappings
       
-            this.bus.emit('semantic:update', { tree: converted, blockState: convRender, source: 'code', mappings: this.codeMappings })
+            this.bus.emit('semantic:update', { tree: converted, code, blockState: convRender, source: 'code', mappings: this.codeMappings })
           }
         }
       }
@@ -367,7 +367,14 @@ export class SyncController {
       // 而視圖自己接手「執行到哪一行」之後，漏掉它的症狀是
       // **打程式碼之後執行，程式碼那邊不會高亮，而積木那邊會**
       // ——一個只在單一方向出現的不對稱。
-      this.bus.emit('semantic:update', { tree, blockState: renderResult, source: 'code', mappings: this.codeMappings })
+      // ⚠️ `code` 也不可漏，而它漏掉的方式與 `mappings` 一模一樣：
+      // **對映是行號，而行號要有那份文字才有意義。** 少了它，一個
+      // 「拿對映去查那一行寫什麼」的視圖（流程圖）在 code 方向會全部退回
+      // 內部名字（`var_assign`），**而在 blocks 方向是好的**——又是一個
+      // 只在單一方向出現的不對稱。
+      //
+      // 🟢 程式碼面板不受影響：它只在 `blocks`／`resync` 才回寫（見 monaco-panel）。
+      this.bus.emit('semantic:update', { tree, code, blockState: renderResult, source: 'code', mappings: this.codeMappings })
     } finally {
       this.syncing = false
     }
