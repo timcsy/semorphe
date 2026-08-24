@@ -12,7 +12,8 @@
         {
           "type": "field_dynamic_dropdown",
           "name": "RETURN_TYPE",
-          "source": "cpp_return_types"
+          "source": "cpp_return_types",
+          "allowCustom": true
         },
         {
           "type": "field_input",
@@ -42,7 +43,8 @@
           {
             "type": "field_dynamic_dropdown",
             "name": "TYPE_{i}",
-            "source": "cpp_param_types"
+            "source": "cpp_param_types",
+            "allowCustom": true
           },
           {
             "type": "field_input",

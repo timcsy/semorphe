@@ -5,9 +5,9 @@
     "measuredAt": "2026-08-24"
   },
   "scanned": {
-    "files": 39,
-    "importLines": 205,
-    "anyMethodCalls": 2664
+    "files": 40,
+    "importLines": 209,
+    "anyMethodCalls": 2689
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,

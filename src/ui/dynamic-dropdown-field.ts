@@ -27,6 +27,7 @@
  */
 import * as Blockly from 'blockly'
 import { dropdownSource } from '../core/dropdown-sources'
+import { msg } from '../core/messages'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -42,18 +43,74 @@ export { declareDropdownSource, dropdownSourceNames } from '../core/dropdown-sou
 
 const FIELD_TYPE = 'field_dynamic_dropdown'
 
-/** 讓 Blockly 認得 `{ "type": "field_dynamic_dropdown", "name": "NAME", "source": "vars" }`。 */
+/** 「自訂…」那一筆的哨兵值——**不可能與任何真的選項撞**（真值不會長這樣） */
+const CUSTOM_VALUE = '\u0000__custom__'
+const CUSTOM_LABEL = (): string => msg('FIELD_CUSTOM_VALUE', '自訂…')
+const CUSTOM_PROMPT = (): string => msg('FIELD_CUSTOM_PROMPT', '輸入自訂的值')
+
+/**
+ * 讓 Blockly 認得這三種寫法：
+ *
+ * ```json
+ * { "type": "field_dynamic_dropdown", "name": "VAR",  "source": "vars" }
+ * { "type": "field_dynamic_dropdown", "name": "TYPE", "options": [["int","int"]] }
+ * { "type": "field_dynamic_dropdown", "name": "TYPE", "options": [...], "allowCustom": true }
+ * ```
+ *
+ * ## ⚠️ 為什麼靜態清單也走這個欄位（2026-08-24）
+ *
+ * 使用者：「C++ 那邊的 function return type 是不是**無法自訂**？例如我要 `int**` 就找不到了。」
+ *
+ * 實測：語義樹與積木狀態**都收得下** `int**`，卡在 Blockly 的 `field_dropdown`
+ * ——它把清單外的值當成非法。於是這個系統的行為是
+ *
+ * > **讀得回來，寫不出去。**
+ *
+ * 而值域**在現實中開放**的欄位有 29 個（型別、標頭檔、函式名、裝置…），
+ * 值域封閉的有 33 個（`+ - * /`、`public/private`、`begin/end`）。
+ * **封閉的那些下拉是對的**——清單外的值本來就不該存在。
+ *
+ * 判準見 `concepts/投影.md`「可逆性量不到使用者造不造得出來」：
+ * **一個投影可以完全可逆，而同時是一個不完備的編輯器。**
+ */
 export function registerDynamicDropdownField(): void {
   if ((Blockly.fieldRegistry as any).fromJson?.__semorpheRegistered) return
   class DynamicDropdown extends Blockly.FieldDropdown {
-    constructor(source: string) {
+    private allowCustom_: boolean
+
+    constructor(spec: { source?: string; options?: Array<[string, string]>; allowCustom?: boolean }) {
+      const allowCustom = spec.allowCustom === true
       super(() => {
-        const gen = dropdownSource(source)
-        if (!gen) throw new Error(`下拉來源沒註冊：${source}——組裝點要先呼叫 declareDropdownSource`)
-        const opts = gen()
+        const base = spec.source
+          ? (() => {
+              const gen = dropdownSource(spec.source as string)
+              if (!gen) throw new Error(`下拉來源沒註冊：${spec.source}——組裝點要先呼叫 declareDropdownSource`)
+              return gen()
+            })()
+          : (spec.options ?? []).map((o) => [o[0], o[1]] as [string, string])
+        const opts = allowCustom ? [...base, [CUSTOM_LABEL(), CUSTOM_VALUE] as [string, string]] : base
         // Blockly 不接受空的選項清單
         return opts.length > 0 ? opts : [['(自訂)', '']]
       })
+      this.allowCustom_ = allowCustom
+    }
+
+    /**
+     * 選到「自訂…」時問使用者要什麼。
+     *
+     * ⚠️ **不驗合法性**——P6：我們不是編譯器。使用者打 `int**`／`vector<vector<int>>`／
+     * 一個自訂類別名，都直接收下。**驗它等於把「我們沒實作」講成「你寫錯了」。**
+     */
+    protected override onItemSelected_(menu: never, menuItem: never): void {
+      const value = (menuItem as unknown as { getValue(): string }).getValue()
+      if (this.allowCustom_ && value === CUSTOM_VALUE) {
+        const current = String(this.getValue() ?? '')
+        Blockly.dialog.prompt(CUSTOM_PROMPT(), current, (text) => {
+          if (text !== null && text.trim() !== '') this.setValue(text.trim())
+        })
+        return
+      }
+      super.onItemSelected_(menu, menuItem)
     }
     /**
      * 🔴 **它是一個會查外部的下拉**。
@@ -76,9 +133,13 @@ export function registerDynamicDropdownField(): void {
     // ⚠️ 簽章要與 Blockly 的 `FieldDropdown.fromJson` 相容，
     //    所以參數型別放寬、在函式內收窄——**收窄發生在邊界**。
     static override fromJson(o: never): DynamicDropdown {
-      const source = (o as unknown as { source?: string }).source
-      if (!source) throw new Error('field_dynamic_dropdown 少了 `source`——它要說選項從哪來')
-      return new DynamicDropdown(source)
+      const spec = o as unknown as { source?: string; options?: Array<[string, string]>; allowCustom?: boolean }
+      // 🔴 兩種來源**至少要有一種**——都沒有的話它是一個永遠空的下拉，
+      //    而空下拉與「還沒接上」長得一模一樣（同這個檔原本那條）。
+      if (!spec.source && !spec.options) {
+        throw new Error('field_dynamic_dropdown 要嘛給 `source`（動態）要嘛給 `options`（靜態清單）')
+      }
+      return new DynamicDropdown(spec)
     }
   }
   Blockly.fieldRegistry.register(FIELD_TYPE, DynamicDropdown as never)

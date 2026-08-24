@@ -1,0 +1,390 @@
+{
+  "_why": "每一個下拉的**值域在現實中封閉嗎**。開放 → 有限選項只能是建議；封閉 → 它是限制，正確。 判準與四層設計見 knowledge/draft/2026-08-24-開放值域的下拉.md ＋ concepts/投影.md。 ⚠️ 沒有判定的下拉是硬性零：每一個都要有人判過，而判定要說得出理由。",
+  "decisions": {
+    "cpp_arithmetic.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "cpp_array_assign.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_array_at.NAME": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "🔴 只有一個假選項的死文字下拉，本來就該跟著工作區長（比對護欄 spec 163 點名過）"
+    },
+    "cpp_builtin_constant.VALUE": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_cast.TARGET_TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_class_def.BASE_ACCESS": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_compare.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "cpp_container_iter.WHICH": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_dht_read.QUANTITY": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_exception_make.KIND": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "任何第三方都可以有一個——清單不可能完備"
+    },
+    "cpp_func_call.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_func_call_expression.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_func_def.RETURN_TYPE": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_func_def.TYPE_{i}": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_include.HEADER": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "任何第三方都可以有一個——清單不可能完備"
+    },
+    "cpp_increment.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_increment.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "cpp_increment.POSITION": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_increment_expression.NAME": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "🔴 只有一個假選項的死文字下拉，本來就該跟著工作區長（比對護欄 spec 163 點名過）"
+    },
+    "cpp_increment_expression.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "cpp_increment_expression.POSITION": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_lcd_declare.DECL_TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "任何第三方都可以有一個——清單不可能完備"
+    },
+    "cpp_logic.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "cpp_loop_count.BOUND": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_loop_range.VAR_TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_malloc.SIZEOF_TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_malloc.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_map_declare.KEY_TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_map_declare.VALUE_TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_math_binary.FUNC": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "任何第三方都可以有一個——清單不可能完備"
+    },
+    "cpp_math_unary.FUNC": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "任何第三方都可以有一個——清單不可能完備"
+    },
+    "cpp_member_static.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_negate.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "cpp_operator_overload.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是封閉集合，⚠️ 而這份清單不全——該補齊，不是開放自訂"
+    },
+    "cpp_pair_declare.TYPE1": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_pair_declare.TYPE2": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_pin_attach.DEVICE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "任何第三方都可以有一個——清單不可能完備"
+    },
+    "cpp_pin_attach.STYLE": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_pin_constant.VALUE": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_pointer_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_priority_queue_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_queue_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_serial_print.NEWLINE": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_set_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_stack_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_string_at.OBJ": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "🔴 只有一個假選項的死文字下拉，本來就該跟著工作區長（比對護欄 spec 163 點名過）"
+    },
+    "cpp_var_assign.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_var_assign_compound.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_var_assign_compound.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "cpp_var_assign_compound_expression.NAME": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "🔴 只有一個假選項的死文字下拉，本來就該跟著工作區長（比對護欄 spec 163 點名過）"
+    },
+    "cpp_var_assign_compound_expression.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "cpp_var_declare_const.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_var_declare_constexpr.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_var_declare_expression.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_var_declare_ref.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_var_declare_static.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_var_ref.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_wifi_read.QUANTITY": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "python_arithmetic.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "python_cast.TARGET_TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "python_compare.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "python_compare_chain.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "python_compare_chain.OP2": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "python_container_find.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "python_func_call.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "python_func_call_expression.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "python_func_def.PARAM_TYPE_{i}": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "python_func_def.RETURNS": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "python_literal_bool.VALUE": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "python_logic.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "python_map_iter.KIND": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "python_splat.KIND": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "python_string_fill.METHOD": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "語言／裝置定義的固定集合"
+    },
+    "python_type_is.TARGET_TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "python_var_assign_compound.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "python_var_assign_compound.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
+    },
+    "python_var_ref.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    }
+  }
+}

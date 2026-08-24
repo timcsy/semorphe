@@ -53,6 +53,7 @@ import type { SavedState } from '../core/storage'
 import { describeRefusal } from './refusal-message'
 import { LocaleLoader } from '../i18n/loader'
 import { setMessageSource } from '../core/messages'
+import { installDialogs } from './prompt-dialog'
 import type { StyleSelector } from './toolbar/style-selector'
 import type { TopicSelector } from './toolbar/topic-selector'
 import type { StylePreset } from '../core/types'
@@ -157,6 +158,9 @@ export class App {
     // ⚠️ 沒接的宿主拿到的是 fallback，而**那不是降級，是預設行為**：
     // 一個沒有 UI 的宿主本來就沒有翻譯表。
     setMessageSource((key) => (Blockly.Msg as Record<string, string>)[key])
+    // 🔴 **問人這件事要走頁面，不走瀏覽器的原生對話框**——
+    //    `window.prompt` 在 VSCode 的 webview 裡是停用的（見 `prompt-dialog.ts`）。
+    installDialogs()
     this.storageService = this.profile.createStorage()
     this.topicRegistry = new TopicRegistry()
     this.targetRegistry = new TargetRegistry()

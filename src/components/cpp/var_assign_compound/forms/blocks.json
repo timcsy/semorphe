@@ -104,14 +104,9 @@
       "type": "cpp_var_assign_compound_expression",
       "args0": [
         {
-          "type": "field_dropdown",
+          "type": "field_dynamic_dropdown",
           "name": "NAME",
-          "options": [
-            [
-              "x",
-              "x"
-            ]
-          ]
+          "source": "vars"
         },
         {
           "type": "field_dropdown",

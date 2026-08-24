@@ -1710,3 +1710,64 @@ html, body {
 .fc-wire-exec.fc-flow-loop {
   stroke: #b58bd0;
 }
+
+/* ─── 頁內對話框（取代 window.prompt，見 prompt-dialog.ts）─────── */
+.semorphe-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.semorphe-dialog {
+  background: #252526;
+  color: #ddd;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 16px;
+  min-width: 300px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.semorphe-dialog-msg {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.semorphe-dialog-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #1e1e1e;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+.semorphe-dialog-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.semorphe-dialog-btn {
+  background: #3c3c3c;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 4px 14px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.semorphe-dialog-btn.semorphe-dialog-primary {
+  background: #0e639c;
+  color: #fff;
+  border-color: #1177bb;
+}

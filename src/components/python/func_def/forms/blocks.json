@@ -20,7 +20,8 @@
         {
           "type": "field_dynamic_dropdown",
           "name": "RETURNS",
-          "source": "python_types"
+          "source": "python_types",
+          "allowCustom": true
         },
         {
           "type": "input_dummy",
@@ -48,7 +49,8 @@
           {
             "type": "field_dynamic_dropdown",
             "name": "PARAM_TYPE_{i}",
-            "source": "python_types"
+            "source": "python_types",
+            "allowCustom": true
           },
           {
             "type": "field_label",

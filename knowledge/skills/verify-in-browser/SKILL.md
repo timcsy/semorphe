@@ -100,6 +100,42 @@ function allBranchIds(n, acc=[]) { acc.push(n.id); for (const c of n.children||[
 | ⑤ | 程式化 `newBlock` **不發事件** | 「使用者操作才觸發」的東西驗不到，必須真的拖曳 |
 | ⑥ | dev server 要先起 | 改完程式碼要 **reload**，不是只等 HMR |
 
+### 🔴 把一段程式碼灌進網頁版的編輯器——**打字是不行的**（2026-08-24，手做十次之後）
+
+打字會被編輯器的自動縮排毀掉，而症狀是**它產生一段合法但不同的程式**：
+
+```
+你想貼          實際變成
+if x > 3:       if x > 3:
+    print(..)   print("big")else:      ← 縮排被吃掉、行被併起來
+else:
+```
+
+⚠️ 而 `navigator.clipboard.writeText` 會**掛住**（權限提示），
+`cmd+v` 則要那個權限已經給過。
+
+🟢 **穩定的作法是合成一個 `paste` 事件**：
+
+```js
+const ta = document.querySelector('.monaco-editor textarea')
+ta.focus()                                   // ⚠️ 有時要先用滑鼠真的點一下編輯器
+const dt = new DataTransfer()
+dt.setData('text/plain', code)
+ta.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }))
+```
+
+⚠️ **兩個附帶條件**：
+- **貼之前先 `cmd+a`**，否則它接在既有骨架後面 → 出現**兩個 `main`**，
+  而執行的是空的那一個（症狀：跑完沒有輸出）
+- **改完程式碼會觸發 HMR reload**，reload 中途貼會沒反應——先等頁面穩定
+
+### 🔴 不要觸發瀏覽器的原生對話框（`alert`／`confirm`／`prompt`）
+
+它們**凍住整個頁面**，自動化工具從此收不到任何事件。
+⚠️ 而這也是一個**產品的判準**：`window.prompt` 在 **VSCode 的 webview 裡是停用的**
+——一個用它問問題的功能，在擴充裡是「點了沒反應」。
+2026-08-24 因此做了 `src/ui/prompt-dialog.ts`（頁內對話框）。
+
 ⚠️ **⑦（2026-08-19 新增）**：`window.__app` 的方法名在某些橋接下會被遮蔽成
 `[BLOCKED: Base64 encoded data]`。**那時就改用真的 UI**
 ——而那本來就是人工驗收該做的事，不是退路。
