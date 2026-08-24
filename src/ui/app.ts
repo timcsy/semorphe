@@ -890,11 +890,25 @@ export class App {
     })
   }
 
+  /**
+   * 重畫狀態列——**面板那條與宿主那條，由同一個函式寫**。
+   *
+   * 🔴 原本它們是兩個函式（`refreshStatusBar` ／ `refreshSyncStatus`），
+   * 而**開機那條路徑只呼叫了其中一個**：於是擴充裡的宿主狀態列
+   * 在使用者主動去動同步之前**一格都沒有**——而面板裡那條照常畫著。
+   *
+   * > **同一份狀態的兩個投影，如果由兩個函式寫，
+   * > 遲早會有一條路徑只走到其中一個。**
+   */
   private refreshStatusBar(): void {
-    updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name, this.mobileMenu,
+    const detail = updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name, this.mobileMenu,
       languagePack(this.currentTopic.language)?.name ?? this.currentTopic.language,
       // 🔴 三態要**一直看得見**——一個沒被顯示的狀態，使用者會當成壞掉
       this.syncCoordinator.snapshot())
+    // 🔴 **宿主那條也是同一份狀態的投影**——⚠️ 用能力探測，
+    //    這一層不認識任何一個具體的宿主（`host-profile.ts`：id 不得拿來分支）。
+    const snapshot = this.syncCoordinator.snapshot()
+    this.codeView?.reportSyncPhase?.(snapshot.phase, snapshot.source, detail)
   }
 
   /**
@@ -909,22 +923,6 @@ export class App {
   }
 
   /**
-   * 三態變了就重畫狀態列——它是那三態唯一的常駐顯示處。
-   *
-   * 🔴 而**宿主也要知道**：VSCode／Theia 的狀態列住在主行程，
-   * 由它畫（`vscode/panel.ts` 的 `updateSyncStatusBar`）。
-   * ⚠️ 用**能力探測**而不是宿主判斷——這一層不認識任何一個具體的宿主。
-   */
-  private refreshSyncStatus(): void {
-    this.refreshStatusBar()
-    const snap = this.syncCoordinator.snapshot()
-    const view = this.codeView as unknown as {
-      reportSyncPhase?: (p: 'live' | 'paused' | 'diverged', s: string | null) => void
-    }
-    view.reportSyncPhase?.(snap.phase, snap.source)
-  }
-
-  /**
    * 接宿主下的同步指令（VSCode／Theia 的狀態列與命令面板）。
    *
    * 🔴 **同一個機制、兩個入口**——網頁版點自己的狀態列，擴充走宿主的。
@@ -932,10 +930,7 @@ export class App {
    * **那只推得掉「誰是來源」那一格**（`core/sync-coordinator.ts` 的檔頭記著）。
    */
   private wireHostSyncCommands(): void {
-    const view = this.codeView as unknown as {
-      onSyncCommand?: (cb: (cmd: { action: 'pause' | 'resume' | 'use'; viewId?: string }) => void) => void
-    }
-    view.onSyncCommand?.((cmd) => {
+    this.codeView?.onSyncCommand?.((cmd) => {
       if (cmd.action === 'pause') this.setSyncPaused(true)
       else if (cmd.action === 'resume') this.setSyncPaused(false)
       else if (cmd.viewId) this.useAsSource(cmd.viewId)
@@ -1177,7 +1172,7 @@ export class App {
       this.codeDirty = false
     }
     this.updateSyncHints()
-    this.refreshSyncStatus()
+    this.refreshStatusBar()
   }
 
   private setSyncPaused(paused: boolean): void {
@@ -1185,7 +1180,7 @@ export class App {
     else this.syncCoordinator.resume()
     this.autoSync = !paused
     this.updateSyncHints()
-    this.refreshSyncStatus()
+    this.refreshStatusBar()
     if (!paused) this.applyResumeSync()
   }
 

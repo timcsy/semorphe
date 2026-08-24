@@ -147,6 +147,22 @@ console.log(`\n程式碼 → 積木：畫布上 ${lifted} 顆積木 ${lifted > 0
 // > **一個只跑一次的檢查，測不到「第二次才壞」的東西。**
 //
 // 觸發用真的控制項：清空（第一筆）→ 復原（第二筆）。
+// 🔴 **面板不畫狀態列的宿主，三態必須送得出去**（2026-08-25）
+//
+// ⚠️ 這一格**必須在清空 `sent` 之前**量——要看的就是【開機那一筆】，
+//    而它正是這一刀修的東西：原本開機那條路徑只重畫面板那條，
+//    宿主那條在使用者主動去動同步之前**一格都沒有**。
+//
+// > **一個「面板不畫、宿主也沒收到」的狀態，
+// > 使用者讀到的不是「少一條狀態列」，是「同步壞了」。**
+const syncPhase = await page.evaluate(() =>
+  window.__HOST__.sent.find((m) => m.type === 'syncPhase') ?? null)
+const phaseReached = !!syncPhase && typeof syncPhase.detail === 'string' && syncPhase.detail.length > 0
+console.log(`\n同步三態 → 宿主：${phaseReached
+  ? `🟢 ${syncPhase.phase}｜tooltip「${syncPhase.detail}」`
+  : syncPhase ? '🔴 送了但 detail 是空的——語言／風格／主題那幾格被丟掉了'
+    : '🔴 一筆都沒送——面板不畫、宿主也不知道，三態沒有顯示處'}`)
+
 await page.evaluate(() => { window.__HOST__.sent.length = 0; window.__HOST__.accepted = 0; window.__HOST__.rejected = 0 })
 await page.locator('#clear-btn').click()
 await page.waitForTimeout(1200)
@@ -214,8 +230,11 @@ console.log(`Console 錯誤：${errors.length ? '\n  ' + errors.join('\n  ') : '
 if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}`) }
 
 const ok = !fatal && errors.length === 0 && failures.length === 0
-  && blocks.工具列 && blocks.狀態列 && blocks.積木畫布
+  && blocks.工具列 && blocks.積木畫布
   && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1 && twoWay && untouched && sketchBlocks > 0
+  // 🔴 這個宿主**自己有狀態列**——面板裡再畫一條就是同一件事講兩次，
+  //    ⚠️ 而 `phaseReached` 是它的另一半：不畫的義務是「交出去」。
+  && !blocks.狀態列 && phaseReached
   && !blocks.程式碼編輯區 && !blocks.檔案按鈕
   && lifted > 0 && !!assetBase.media && !!assetBase.assets
 if (!ok) console.log('🔴 預檢不通過')

@@ -115,6 +115,13 @@ export type WebviewMessage =
       phase: SyncPhaseWire
       /** 目前的來源（`null` ＝ 暫停中或分岔中）。**沒有來源不是一種來源** */
       source: string | null
+      /**
+       * 面板狀態列本來那一行的其餘部分（語言｜風格｜積木風格｜主題｜語系）。
+       *
+       * 🔴 面板在這個宿主裡**不畫狀態列**（`features.statusBar: false`），
+       * 而那些字不該跟著消失——它們進宿主狀態列的 tooltip。
+       */
+      detail: string
     }
   | {
       type: 'applyEdit'

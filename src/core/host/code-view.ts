@@ -30,6 +30,7 @@
  */
 import type { SemanticBus } from '../semantic-bus'
 import type { ExecutionAtNodeEvent, SemanticUpdateEvent } from '../view-host'
+import type { SyncPhase } from '../sync-coordinator'
 
 /**
  * 高亮的來由——決定顏色與優先序。
@@ -39,6 +40,17 @@ import type { ExecutionAtNodeEvent, SemanticUpdateEvent } from '../view-host'
  * （`core/view-host.ts:94`）。
  */
 export type HighlightVariant = 'block-to-code' | 'code-to-block'
+
+/**
+ * 宿主那側能下的同步指令。
+ *
+ * 🔴 **`use` 不帶一份來源清單**——主行程不認識任何一個具體的面板，
+ * 它只說「以這個 viewId 為準」，而有哪些 viewId 由 `viewsWith('editable')` 決定。
+ */
+export interface HostSyncCommand {
+  action: 'pause' | 'resume' | 'use'
+  viewId?: string
+}
 
 /** 可選能力的名字。⚠️ 它同時是 `absentReasons` 的鍵，兩邊必須對得上。 */
 export type OptionalCodeViewCapability =
@@ -78,6 +90,24 @@ export interface CodeView {
   dispose(): void
   onSemanticUpdate(event: SemanticUpdateEvent): void
   onExecutionAtNode?(event: ExecutionAtNodeEvent): void
+
+  // ─── E：宿主橋——**只有「面板自己不畫狀態列」的宿主需要** ───
+
+  /**
+   * 把同步三態交給宿主的狀態列。
+   *
+   * 🔴 **它與 `HostFeatures.statusBar` 是同一件事的兩端**——面板不畫，
+   * 就一定要有人畫。⚠️ 兩端由 `tests/integration/audit-status-bar-owner.test.ts`
+   * **對釘**，否則一個 `statusBar: false` 的新宿主會讓三態**安靜地消失**
+   * ——而「安靜」正是最糟的那一種，使用者只會覺得同步壞了。
+   *
+   * `detail` 是狀態列本來那一行的其餘部分（語言｜風格｜積木風格｜主題｜語系）。
+   * 🔴 **常駐顯示的是三態，其餘進 tooltip**（P4 漸進揭露）——**不是丟掉**。
+   */
+  reportSyncPhase?(phase: SyncPhase, source: string | null, detail: string): void
+
+  /** 宿主那側下的同步指令（它的狀態列／命令面板）。 */
+  onSyncCommand?(callback: (command: HostSyncCommand) => void): void
 
   // ─── C：可選——**沒有的要說得出為什麼** ───
 

@@ -364,7 +364,7 @@ class SemorpheSession {
     //
     // > **「重送目前的狀態」與「重新決定狀態是什麼」是兩件事
     // > ——而後者在焦點不在編輯器上時，答案是錯的。**
-    if (m.type === 'syncPhase') { updateSyncStatusBar(m.phase, m.source); return }
+    if (m.type === 'syncPhase') { updateSyncStatusBar(m.phase, m.source, m.detail); return }
     if (m.type === 'ready') { this.resend(); return }
     if (m.type === 'requestDocument') {
       // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
@@ -625,7 +625,7 @@ export const SYNC_MENU_COMMAND = 'semorphe.syncMenu'
 
 let syncItem: vscode.StatusBarItem | undefined
 
-function updateSyncStatusBar(phase: 'live' | 'paused' | 'diverged', source: string | null): void {
+function updateSyncStatusBar(phase: 'live' | 'paused' | 'diverged', source: string | null, detail: string): void {
   if (!syncItem) {
     syncItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
     syncItem.command = SYNC_MENU_COMMAND
@@ -635,7 +635,9 @@ function updateSyncStatusBar(phase: 'live' | 'paused' | 'diverged', source: stri
       : phase === 'diverged' ? '$(warning) 同步：兩邊都改了'
         : `$(sync) 同步中${source ? `（${source}）` : ''}`
   syncItem.text = text
-  syncItem.tooltip = '點一下開同步選單'
+  // 🔴 **常駐顯示三態，其餘進 tooltip**（P4 漸進揭露）——面板不畫狀態列了，
+  //    而語言／風格／主題／語系那幾格**不是丟掉，是換一層揭露**。
+  syncItem.tooltip = `${detail}\n點一下開同步選單`
   // ⚠️ 分岔要**看得出來不一樣**——它不是一個更花俏的「同步中」
   syncItem.backgroundColor = phase === 'diverged'
     ? new vscode.ThemeColor('statusBarItem.warningBackground')

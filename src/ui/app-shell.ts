@@ -127,10 +127,15 @@ export function createAppLayout(
   const splitPane = new SplitPane(main, profile.features.codeEditorPane ? 'horizontal' : 'vertical')
 
   // Create status bar
-  const statusBar = document.createElement('footer')
-  statusBar.id = 'status-bar'
-  statusBar.innerHTML = '<span>Loading...</span>'
-  appEl.appendChild(statusBar)
+  // 🔴 關掉 ＝ **不建**（FR-006），不是建了再藏起來——宿主自己有一條。
+  //    ⚠️ 而「不建」有一個義務跟著：三態要改由 `reportSyncPhase` 送出去，
+  //       否則它會**安靜地消失**。見 `core/host/host-profile.ts` 的 `statusBar`。
+  if (profile.features.statusBar) {
+    const statusBar = document.createElement('footer')
+    statusBar.id = 'status-bar'
+    statusBar.innerHTML = '<span>Loading...</span>'
+    appEl.appendChild(statusBar)
+  }
 
   // Left panel: QuickAccessBar + Blockly
   const leftPanel = splitPane.getLeftPanel()
@@ -812,7 +817,14 @@ export function updateStatusBar(
    * 一個沒被顯示的狀態，使用者會當成壞掉（開機誤報那一刀的同一條）。
    */
   sync?: { phase: 'live' | 'paused' | 'diverged'; source: string | null },
-): void {
+  /**
+   * 回傳**扣掉三態的那一段**（語言｜風格｜積木風格｜主題｜語系）。
+   *
+   * 🔴 為什麼要回傳：不畫狀態列的宿主**仍然要拿得到這些字**
+   * ——它們進宿主狀態列的 tooltip。
+   * ⚠️ **「不畫」不等於「不算」**：一旦這裡提早 return，那些資訊就真的沒了。
+   */
+): string {
   const styleName = currentStylePreset.name[currentLocale] || currentStylePreset.name['zh-TW'] || currentStylePreset.id
   const blockStyleLabel = (Blockly.Msg as Record<string, string>)[`BLOCK_STYLE_${currentBlockStyleId.toUpperCase()}`] || currentBlockStyleId
   const syncText = sync
@@ -822,7 +834,8 @@ export function updateStatusBar(
         ? ` | ⚠️ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_DIVERGED'] || '兩邊都改了'}`
         : ` | ⇄ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_LIVE'] || '同步中'}`
     : ''
-  const summaryText = `${languageName} | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}${syncText}`
+  const contextText = `${languageName} | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}`
+  const summaryText = `${contextText}${syncText}`
 
   const statusBar = document.getElementById('status-bar')
   if (statusBar) {
@@ -833,4 +846,6 @@ export function updateStatusBar(
   if (mobileMenu) {
     mobileMenu.setSummary(summaryText)
   }
+
+  return contextText
 }

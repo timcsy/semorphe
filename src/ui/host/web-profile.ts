@@ -37,6 +37,7 @@ export const webProfile: HostProfile = {
     mobileLayout: true,
     codeKeyboard: true,
     codeEditorPane: true,
+    statusBar: true,
   },
   featureReasons: {},
 }

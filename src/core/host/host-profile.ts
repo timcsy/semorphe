@@ -65,6 +65,17 @@ export interface HostFeatures {
    * 就是把版面浪費掉。
    */
   codeEditorPane: boolean
+  /**
+   * 面板自己要不要畫底下那條狀態列。
+   *
+   * 🔴 **`false` 的意思不是「那些資訊消失」**——是**宿主自己有一條**，
+   * 而同一件事畫兩處，其中一處遲早會過期。
+   *
+   * ⚠️ 所以關掉它有一個**硬性的義務**：那個宿主的 `CodeView` 必須實作
+   * `reportSyncPhase`，否則同步三態就真的沒有人顯示了。
+   * 由 `tests/integration/audit-status-bar-owner.test.ts` 對釘。
+   */
+  statusBar: boolean
 }
 
 export type HostFeatureName = keyof HostFeatures

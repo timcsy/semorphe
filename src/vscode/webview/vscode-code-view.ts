@@ -150,8 +150,10 @@ export class VscodeCodeView implements CodeView, ViewHost {
   }
 
   /** 三態變了就報給主行程——狀態列住在那裡 */
-  reportSyncPhase(phase: 'live' | 'paused' | 'diverged', source: string | null): void {
-    postToHost({ type: 'syncPhase', phase, source })
+  reportSyncPhase(phase: 'live' | 'paused' | 'diverged', source: string | null, detail: string): void {
+    // ⚠️ `detail` 是狀態列本來那一行的其餘部分——🔴 面板不畫了，
+    //    但那些字不會憑空消失：它們進宿主狀態列的 tooltip。
+    postToHost({ type: 'syncPhase', phase, source, detail })
   }
 
   private receive(m: HostMessage): void {
