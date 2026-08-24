@@ -1,4 +1,7 @@
 {
   "U_FUNC_CALL_MSG0": "呼叫函式 %1（%2）",
-  "U_FUNC_CALL_TOOLTIP": "執行指定的函式，可以傳入參數"
+  "U_FUNC_CALL_TOOLTIP": "執行指定的函式，可以傳入參數",
+  "U_FUNC_CALL_LABEL": "呼叫函式",
+  "U_FUNC_CALL_OPEN": "（",
+  "U_FUNC_CALL_CLOSE": "）"
 }

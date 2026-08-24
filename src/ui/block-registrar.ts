@@ -533,6 +533,13 @@ export class BlockRegistrar {
           nextStatement: bd.nextStatement as string | undefined,
           output: bd.output as string | undefined,
           minCount: bd.minCount as number | undefined,
+          // ⚠️ 有插槽時才出現的一對括號——見 `VariadicSpec` 的說明
+          openLabelKey: bd.openLabelKey as string | undefined,
+          openLabelFallback: bd.openLabelFallback as string | undefined,
+          closeLabelKey: bd.closeLabelKey as string | undefined,
+          closeLabelFallback: bd.closeLabelFallback as string | undefined,
+          // ⚠️ 存檔契約：接手既有積木時要沿用它原本的計數鍵
+          countKey: bd.countKey as string | undefined,
         }
         if (Array.isArray(bd.args0) && bd.args0.length > 0) {
           Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
@@ -1723,155 +1730,18 @@ export class BlockRegistrar {
 
     // cpp_func_call
     {
-      Blockly.Blocks['cpp_func_call'] = {
-        argCount_: 0,
-        init: function (this: any) {
-          this.argCount_ = 0
-          this.appendDummyInput('LABEL')
-            .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-            .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.functions)
-          this.setTooltip(Blockly.Msg['U_FUNC_CALL_TOOLTIP'] || '呼叫函式')
-        },
-        rebuildArgLabels_: function (this: any) {
-          if (this.getInput('LABEL')) this.removeInput('LABEL')
-          if (this.getInput('TAIL')) this.removeInput('TAIL')
-          if (this.argCount_ > 0) {
-            this.appendDummyInput('LABEL')
-              .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions(this.getFieldValue('NAME'))) as Blockly.Field, 'NAME')
-              .appendField(Blockly.Msg['U_FUNC_CALL_OPEN'] || '（')
-            this.appendDummyInput('TAIL')
-              .appendField(Blockly.Msg['U_FUNC_CALL_CLOSE'] || '）')
-              .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
-              .appendField(new Blockly.FieldImage(MINUS_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
-          } else {
-            this.appendDummyInput('LABEL')
-              .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions(this.getFieldValue('NAME'))) as Blockly.Field, 'NAME')
-            this.appendDummyInput('TAIL')
-              .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
-              .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
-          }
-          this.moveInputBefore('LABEL', 'ARG_0')
-        },
-        plusArg_: function (this: any) {
-          const idx = this.argCount_
-          const savedName = this.getFieldValue('NAME') || 'myFunction'
-          this.appendValueInput(`ARG_${idx}`)
-            .appendField(idx > 0 ? ',' : '')
-          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
-          this.argCount_++
-          if (this.argCount_ === 1) {
-            this.rebuildArgLabels_()
-            this.setFieldValue(savedName, 'NAME')
-          }
-          setMinusState(this, false)
-        },
-        minusArg_: function (this: any) {
-          if (this.argCount_ <= 0) return
-          const savedName = this.getFieldValue('NAME') || 'myFunction'
-          this.argCount_--
-          this.removeInput(`ARG_${this.argCount_}`)
-          if (this.argCount_ === 0) {
-            this.rebuildArgLabels_()
-            this.setFieldValue(savedName, 'NAME')
-          }
-          setMinusState(this, this.argCount_ <= 0)
-        },
-        saveExtraState: function (this: any) {
-          if (this.argCount_ > 0) return { argCount: this.argCount_ }
-          return null
-        },
-        loadExtraState: function (this: any, state: { argCount?: number }) {
-          const count = state?.argCount ?? 0
-          while (this.argCount_ < count) {
-            this.plusArg_()
-          }
-        },
-      }
-    }
-
-    // cpp_func_call_expression
-    {
-      Blockly.Blocks['cpp_func_call_expression'] = {
-        argCount_: 0,
-        init: function (this: any) {
-          this.argCount_ = 0
-          this.appendDummyInput('LABEL')
-            .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-            .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions()) as Blockly.Field, 'NAME')
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setOutput(true, 'Expression')
-          this.setColour(CATEGORY_COLORS.functions)
-          this.setTooltip(Blockly.Msg['U_FUNC_CALL_EXPR_TOOLTIP'] || '呼叫函式（回傳值）')
-        },
-        rebuildArgLabels_: function (this: any) {
-          if (this.getInput('LABEL')) this.removeInput('LABEL')
-          if (this.getInput('TAIL')) this.removeInput('TAIL')
-          if (this.argCount_ > 0) {
-            this.appendDummyInput('LABEL')
-              .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions(this.getFieldValue('NAME'))) as Blockly.Field, 'NAME')
-              .appendField(Blockly.Msg['U_FUNC_CALL_OPEN'] || '（')
-            this.appendDummyInput('TAIL')
-              .appendField(Blockly.Msg['U_FUNC_CALL_CLOSE'] || '）')
-              .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
-              .appendField(new Blockly.FieldImage(MINUS_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
-          } else {
-            this.appendDummyInput('LABEL')
-              .appendField(Blockly.Msg['U_FUNC_CALL_LABEL'] || '呼叫函式')
-              .appendField(self.createOpenDropdown(() => self.getWorkspaceFuncOptions(this.getFieldValue('NAME'))) as Blockly.Field, 'NAME')
-            this.appendDummyInput('TAIL')
-              .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusArg_()))
-              .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusArg_()), 'MINUS_BTN')
-          }
-          this.moveInputBefore('LABEL', 'ARG_0')
-        },
-        plusArg_: function (this: any) {
-          const idx = this.argCount_
-          const savedName = this.getFieldValue('NAME') || 'myFunction'
-          this.appendValueInput(`ARG_${idx}`)
-            .appendField(idx > 0 ? ',' : '')
-          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
-          this.argCount_++
-          if (this.argCount_ === 1) {
-            this.rebuildArgLabels_()
-            this.setFieldValue(savedName, 'NAME')
-          }
-          setMinusState(this, false)
-        },
-        minusArg_: function (this: any) {
-          if (this.argCount_ <= 0) return
-          const savedName = this.getFieldValue('NAME') || 'myFunction'
-          this.argCount_--
-          this.removeInput(`ARG_${this.argCount_}`)
-          if (this.argCount_ === 0) {
-            this.rebuildArgLabels_()
-            this.setFieldValue(savedName, 'NAME')
-          }
-          setMinusState(this, this.argCount_ <= 0)
-        },
-        saveExtraState: function (this: any) {
-          if (this.argCount_ > 0) return { argCount: this.argCount_ }
-          return null
-        },
-        loadExtraState: function (this: any, state: { argCount?: number }) {
-          const count = state?.argCount ?? 0
-          while (this.argCount_ < count) {
-            this.plusArg_()
-          }
-        },
-      }
+      // 🪦 **`cpp_func_call` 與 `cpp_func_call_expression` 的命令式定義已於
+      //    2026-08-24 刪除**——比對護欄確認一模一樣。換成宣告：
+      //    `components/cpp/func_call/forms/blocks.json` 的 `builder: "variadic"`
+      //    ＋ `field_dynamic_dropdown`（`funcs`）＋ 具名的 `LABEL` 那一列。
+      //
+      // 🔴 **那對括號差點掉了**：命令式在 `rebuildArgLabels_`（只在加減引數時跑）
+      //    才長出 `（`／`）`，而比對護欄只比「剛建好的樣子」——0 個引數時兩邊都沒有括號，
+      //    於是它說「一模一樣」。是 `retire-imperative-block` 第 3 步那一問
+      //    （「它有沒有一段只在別的時機才跑的邏輯？」）把它問出來的。
+      //    🟢 建構子因此多了 `openLabel*`／`closeLabel*`（有插槽時才出現）。
+      //
+      // ⚠️ 判準是「比對護欄說一模一樣」＋「那一問」——**兩個都要**。
     }
 
     // cpp_method_call / cpp_method_call_expression

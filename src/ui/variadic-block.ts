@@ -67,6 +67,36 @@ export interface VariadicSpec {
   /** 這顆是運算式（有 output）而不是語句 */
   output?: string
   /**
+   * `extraState` 裡那個計數的**鍵名**，預設 `itemCount`。
+   *
+   * 🔴 **接手既有的命令式積木時必須指定成它原本的鍵**——那是**存檔契約**，
+   * 而渲染那一路（`renderMapping.dynamicRules.countSource`）也認同一個鍵。
+   *
+   * ⚠️ 不指定的症狀**不是報錯**：積木建起來是 0 格，而載入時
+   * `MissingConnection: … is missing a(n) ARG_0 connection`
+   * ——**整個工作區一片空白**（2026-08-24 開瀏覽器撞到的）。
+   *
+   * > **一個「換個名字也能跑」的鍵，只要有人存過檔就不是了。**
+   */
+  countKey?: string
+  /**
+   * **有插槽時才出現的一對括號**（`呼叫函式 f （ ⟨引數⟩ ）`）。
+   *
+   * 🔴 為什麼是「有插槽時才出現」：`f()` 那一格空著時，一對空括號讀起來
+   * 像一個沒填完的欄位；而有引數時，括號是**這是一次呼叫**的視覺線索。
+   *
+   * ⚠️ 這件事**比對護欄看不到**——它只比「剛建好的樣子」（0 個插槽），
+   * 而括號是在 `plus_` 之後才長出來的。
+   * 🔴 它是被 `retire-imperative-block` 第 3 步那一問抓到的：
+   * 「**它有沒有一段只在別的時機才跑的邏輯？**」——命令式那份的
+   * `rebuildArgLabels_` 正是。少了這一段就會**在使用者加第一個引數的那一刻**
+   * 看見差異，而測試全綠。
+   */
+  openLabelKey?: string
+  openLabelFallback?: string
+  closeLabelKey?: string
+  closeLabelFallback?: string
+  /**
    * 第一個插槽**前面**的一個欄位（spec 168）。
    *
    * 🔴 第二個語言的呼叫積木需要它：`呼叫 [名字下拉] (引數…)` ——
@@ -200,6 +230,25 @@ export function attachVariadic(type: string, spec: VariadicSpec): void {
   const baseInit = proto.init
   const min = spec.minCount ?? 1
 
+  const msg = Blockly.Msg as Record<string, string>
+  const label = (k?: string, f?: string): string => ((k ? msg[k] || f : f) ?? '')
+  const openText = label(spec.openLabelKey, spec.openLabelFallback)
+  const closeText = label(spec.closeLabelKey, spec.closeLabelFallback)
+
+  /** 有插槽時才有括號——`（` 掛在第一個插槽前面那一列的尾巴，`）` 在 `TAIL` 開頭。 */
+  const syncParens = (b: any): void => {
+    if (!openText && !closeText) return
+    const head = b.inputList[0]
+    const tail = b.getInput('TAIL')
+    const want = b.itemCount_ > 0
+    const hasOpen = head?.fieldRow.some((f: any) => f.name === 'VA_OPEN')
+    const hasClose = tail?.fieldRow.some((f: any) => f.name === 'VA_CLOSE')
+    if (want && !hasOpen && head && openText) head.appendField(new Blockly.FieldLabel(openText) as Blockly.Field, 'VA_OPEN')
+    if (!want && hasOpen) head.removeField('VA_OPEN')
+    if (want && !hasClose && tail && closeText) tail.insertFieldAt(0, new Blockly.FieldLabel(closeText) as Blockly.Field, 'VA_CLOSE')
+    if (!want && hasClose) tail.removeField('VA_CLOSE')
+  }
+
   proto.itemCount_ = 0
   proto.init = function (this: any): void {
     baseInit.call(this)
@@ -209,6 +258,7 @@ export function attachVariadic(type: string, spec: VariadicSpec): void {
       .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
     for (let i = 0; i < min; i++) this.plus_()
     setMinusState(this, this.itemCount_ <= min)
+    syncParens(this)
   }
 
   proto.plus_ = function (this: any): void {
@@ -218,6 +268,7 @@ export function attachVariadic(type: string, spec: VariadicSpec): void {
     this.moveInputBefore(n, 'TAIL')
     this.itemCount_++
     setMinusState(this, false)
+    syncParens(this)
   }
 
   proto.minus_ = function (this: any): void {
@@ -225,14 +276,17 @@ export function attachVariadic(type: string, spec: VariadicSpec): void {
     this.itemCount_--
     this.removeInput(inputName(spec.inputPattern, this.itemCount_))
     setMinusState(this, this.itemCount_ <= min)
+    syncParens(this)
   }
 
-  // ⚠️ **格式與從零建的那一種一字不差**（`{ itemCount }`）——存檔契約。
-  proto.saveExtraState = function (this: any): { itemCount: number } {
-    return { itemCount: this.itemCount_ }
+  // ⚠️ **格式與從零建的那一種一字不差**（預設 `{ itemCount }`）——存檔契約。
+  //    接手既有積木時由 `countKey` 指定（見它的說明）。
+  const countKey = spec.countKey ?? 'itemCount'
+  proto.saveExtraState = function (this: any): Record<string, number> {
+    return { [countKey]: this.itemCount_ }
   }
-  proto.loadExtraState = function (this: any, state: { itemCount?: number }): void {
-    const count = state?.itemCount ?? min
+  proto.loadExtraState = function (this: any, state: Record<string, number> | undefined): void {
+    const count = state?.[countKey] ?? min
     while (this.itemCount_ < count) this.plus_()
     while (this.itemCount_ > count) this.minus_()
   }

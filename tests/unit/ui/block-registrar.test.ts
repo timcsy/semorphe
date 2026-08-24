@@ -24,9 +24,11 @@ describe('BlockRegistrar', () => {
     const content = fs.readFileSync(filePath, 'utf-8')
     const expectedTypes = [
        'cpp_input', 'cpp_var_declare',
-      'cpp_func_def', 'cpp_func_call', 'cpp_print_formatted', 'cpp_input_formatted', 'cpp_loop_count',
+      'cpp_func_def', 'cpp_print_formatted', 'cpp_input_formatted', 'cpp_loop_count',
       'cpp_raw_code',
     ]
+    // 🪦 **`cpp_func_call`（含運算式形態）於 2026-08-24 退場**——改用
+    //    `builder: "variadic"` ＋ 活下拉 ＋ 具名的 `LABEL` 列。
     // 🪦 **`cpp_if` 於 2026-08-24 退場**（比對護欄確認一模一樣，換成 `branchList` 宣告）。
     //    ⚠️ 從這張清單拿掉一個名字**必須附理由**——否則「它不見了」與
     //    「它被誰不小心刪掉了」在這支測試裡長得一模一樣。

@@ -39,7 +39,10 @@ describe('T031: Locale Integration', () => {
       expect(msg['U_FUNC_DEF_LABEL']).toBe('定義函式')
       expect(msg['U_FUNC_DEF_RETURN_LABEL']).toBe('回傳型別')
       expect(msg['U_FUNC_DEF_PARAMS_LABEL']).toBe('參數')
-      expect(msg['U_FUNC_CALL_LABEL']).toBe('呼叫函式')
+      // 🪦 `U_FUNC_CALL_LABEL` 於 2026-08-24 搬進膠囊（`components/cpp/func_call/labels/`）
+      //    ——命令式那顆退場，標籤跟著走。**這一支載的是共用的 `src/i18n`**，
+      //    所以它不再在這裡，而**那正是就近性護欄要求的**（兩份會漂移）。
+      //    ⚠️ 從這張清單拿掉一個鍵要附理由：否則「搬走了」與「弄丟了」長得一樣。
       expect(msg['U_INPUT_LABEL']).toBe('讀取輸入 → 變數')
       expect(msg['U_VAR_REF_CUSTOM']).toBe('(自訂)')
       expect(msg['U_VAR_DECLARE_HEADER']).toBe('宣告')

@@ -94,7 +94,11 @@ function declarableKeys(spec: unknown): string[] {
   const def = sp?.blockDef
   if (def?.branchList) { keys.add('elseifCount'); keys.add('hasElse') }
   if (def?.paramList) keys.add('paramCount')
-  if (def?.builder === 'variadic') keys.add('itemCount')
+  // ⚠️ **要用它【實際會用】的那個鍵**，不是兩個都加。
+  //    🔴 兩個都加 = 這一維變成「超集合檢查」，於是
+  //    「命令式存 `argCount`、建構子存 `itemCount`」被判成一模一樣
+  //    ——而使用者看到的是**一片空白的工作區**（2026-08-24 開瀏覽器撞到）。
+  if (def?.builder === 'variadic') keys.add((def.countKey as string) ?? 'itemCount')
   return [...keys].sort()
 }
 
@@ -207,6 +211,12 @@ function fromDeclaration(type: string): Shape | null {
         nextStatement: def.nextStatement as string | undefined,
         output: def.output as string | undefined,
         minCount: def.minCount as number | undefined,
+        // ⚠️ 少傳一個鍵，比對器就會再一次指控宣告（今天剛付過這個學費）
+        openLabelKey: def.openLabelKey as string | undefined,
+        openLabelFallback: def.openLabelFallback as string | undefined,
+        closeLabelKey: def.closeLabelKey as string | undefined,
+        closeLabelFallback: def.closeLabelFallback as string | undefined,
+        countKey: def.countKey as string | undefined,
       } as never)
     }
   }

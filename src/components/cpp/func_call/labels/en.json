@@ -1,4 +1,7 @@
 {
   "U_FUNC_CALL_MSG0": "call function %1(%2)",
-  "U_FUNC_CALL_TOOLTIP": "Execute the specified function, optionally passing arguments"
+  "U_FUNC_CALL_TOOLTIP": "Execute the specified function, optionally passing arguments",
+  "U_FUNC_CALL_LABEL": "call function",
+  "U_FUNC_CALL_OPEN": "(",
+  "U_FUNC_CALL_CLOSE": ")"
 }
