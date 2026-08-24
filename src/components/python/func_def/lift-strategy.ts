@@ -13,6 +13,14 @@ import { createNode } from '../../../core/semantic-tree'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftFuncDef', (node, ctx) => {
+    // 🔴 **`async def` 整顆走誠實降級**（2026-08-24，第五十五條護欄第一次跑抓到的）。
+    //    `async` 是 `function_definition` 的一個**匿名子節點**，而這顆元件沒有地方放它
+    //    ——收一半的症狀是 `async def f()` 產回 `def f()`：**協程變成普通函式**，
+    //    合法、測試全綠、而**行為不同**。
+    //
+    // > **一個關鍵字被安靜吃掉，與一段程式碼被安靜丟掉是同一件事。**
+    if (node.children.some((c) => !c.isNamed && c.text === 'async')) return null
+
     const name = node.childForFieldName('name')?.text ?? 'f'
 
     // 🔴 **預設值 2026-08-21 收進來了**。在那之前這裡的註解寫著理由：

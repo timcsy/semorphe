@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
-    "syntaxComplete": 523,
+    "syntaxComplete": 524,
     "syntaxErrorFragments": 501,
-    "totalChars": 79061
+    "totalChars": 79077
   },
   "residual2": {
     "charCount": 357,

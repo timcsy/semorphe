@@ -16,6 +16,21 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       if (catchClause) {
         const paramList = catchClause.childForFieldName('parameters')
           ?? catchClause.namedChildren.find(c => c.type === 'parameter_list')
+        // 🔴 **`catch (...)` 整顆走誠實降級**（2026-08-24，第五十五條護欄第一次跑抓到的）。
+        //    捕獲全部**沒有參數宣告**，於是它掉進下面那兩個預設值，產回去變成
+        //    `catch (exception& e)`——**捕獲全部縮成只捕獲一種**。
+        //
+        //    ```cpp
+        //    try { throw 1; } catch (...) { return 1; }   // 原文：接得住
+        //    try { throw 1; } catch (exception& e) { … }   // 產出：接不住，程式終止
+        //    ```
+        //
+        // > **一個「看起來合理」的預設值，正是 P6 禁止的那種結構**
+        // > （`principles.md`：不確定時標記 raw_code，禁止給出看起來合理的結構）。
+        //
+        // ⚠️ 想收下它的話要動的是**三路**：這裡、產生器的 `catch (${type} ${name})`、
+        //    以及積木上那兩格欄位裝不裝得下 `...`。收一半就是現在這個 bug。
+        if (paramList?.text.includes('...')) return null
         if (paramList) {
           const param = paramList.namedChildren.find(c => c.type === 'parameter_declaration')
           if (param) {

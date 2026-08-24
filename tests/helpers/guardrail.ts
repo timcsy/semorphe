@@ -158,6 +158,43 @@ export function listSourceFiles(relDir: string, exts = ['.ts']): string[] {
 }
 
 /**
+ * 🔴 **兩種呼叫形狀，而第二種在 2026-08-24 之前是【空轉的】。**
+ *
+ * ```ts
+ * assertRatchet([['消失', now, base]])                      // ① 自己load基線
+ * assertRatchet([['消失', now]], 'no-line-vanishes', {…})   // ② 由這裡查基線
+ * ```
+ *
+ * ② 這個形狀**七個呼叫點在用，而它從來不存在**：多餘的引數被 JS 丟掉、
+ * `base` 是 `undefined`、`now > undefined` 恆為 false，於是
+ * **棘輪與語料檢查一次都沒有跑過**，而測試全綠。
+ *
+ * ⚠️ 它為什麼活得下來：`tsconfig.json:25` 的 `include` 只有 `src`
+ * ——**測試檔完全不做型別檢查**，所以一個不存在的簽章不會出聲。
+ *
+ * > **一條護欄失效的方式不是說錯話，是它的斷言根本沒有被執行。**
+ *
+ * ② 的基線檔是**扁平的 `{ 名稱: 數字 }`**（名稱就是 rows 裡那一個）。
+ */
+function withBaseline(
+  rows: readonly (readonly [string, number] | readonly [string, number, number])[],
+  guard?: string,
+): [string, number, number][] {
+  if (!guard) return rows.map((r) => [r[0], r[1], (r as readonly [string, number, number])[2]])
+  const base = loadBaseline<Record<string, number>>(guard)
+  return rows.map((r) => {
+    const v = base[r[0]]
+    if (typeof v !== 'number') {
+      throw new Error(
+        `基線 tests/baselines/${guard}.json 裡沒有「${r[0]}」這一項。\n` +
+          '⚠️ 少一項不是小事：那一項的棘輪【完全沒有跑】，而測試會是綠的。',
+      )
+    }
+    return [r[0], r[1], v]
+  })
+}
+
+/**
  * 棘輪：**兩個方向都要出聲**。
  *
  * ## 為什麼改善也要紅
@@ -172,9 +209,14 @@ export function listSourceFiles(relDir: string, exts = ['.ts']): string[] {
  *
  * @param rows [名稱, 現值, 基線值][]
  */
-export function assertRatchet(rows: readonly [string, number, number][]): void {
-  const worse = rows.filter(([, now, base]) => now > base)
-  const better = rows.filter(([, now, base]) => now < base)
+export function assertRatchet(
+  rows: readonly (readonly [string, number] | readonly [string, number, number])[],
+  guard?: string,
+  _opts?: { detail?: readonly string[] },
+): void {
+  const resolved = withBaseline(rows, guard)
+  const worse = resolved.filter(([, now, base]) => now > base)
+  const better = resolved.filter(([, now, base]) => now < base)
   if (worse.length > 0) {
     throw new Error(
       '棘輪退步：\n' +
@@ -217,9 +259,13 @@ export function assertRatchet(rows: readonly [string, number, number][]): void {
  *
  * @param rows [名稱, 現值, 基線值][]
  */
-export function assertCorpus(rows: readonly [string, number, number][]): void {
-  const shrank = rows.filter(([, now, base]) => now < base)
-  const grew = rows.filter(([, now, base]) => now > base)
+export function assertCorpus(
+  rows: readonly (readonly [string, number] | readonly [string, number, number])[],
+  guard?: string,
+): void {
+  const resolved = withBaseline(rows, guard)
+  const shrank = resolved.filter(([, now, base]) => now < base)
+  const grew = resolved.filter(([, now, base]) => now > base)
   if (shrank.length > 0) {
     throw new Error(
       '🔴 **語料縮水**——這條護欄現在量的東西比基線少：\n' +

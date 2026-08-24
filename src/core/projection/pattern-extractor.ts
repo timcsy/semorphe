@@ -14,12 +14,13 @@ export interface BlockState {
   /**
    * **積木上的註解泡泡**——Blockly 自己的欄位（`icons.comment`）。
    *
-   * 🔴 使用者寫的行末註解住在這裡，**不住在 `extraState`**：
-   * 沒有 mutation 的積木**根本沒有 `extraState` 這條路**（Blockly 只在積木
-   * 自己實作 `save/loadExtraState` 時才理它），於是那些註解會在
-   * 「積木→程式碼」之後安靜消失。
+   * ⚠️ **行末註解不住在這裡**（2026-08-24 起）：它在抬升那一路就變成
+   * **一顆自己的註解積木**了（`lift/lifter.ts`，使用者：「用灰色註解積木就好」）。
    *
-   * 🟢 而註解泡泡是 Blockly 原生會存檔的東西，**而且使用者看得到、改得動**。
+   * 🪦 這一格原本寫著「使用者寫的行末註解住在這裡」——那是它撐了一天的角色。
+   *
+   * 🟢 今天它剩下的用途是**使用者自己從右鍵選單加的那一個**：Blockly 原生會存檔，
+   * 所以照樣要撿回來，否則他打的字會在「積木→程式碼」之後消失。
    */
   icons?: { comment?: { text: string; pinned?: boolean; height?: number; width?: number } }
   extraState?: Record<string, unknown>
