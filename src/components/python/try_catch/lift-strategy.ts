@@ -25,9 +25,9 @@ import { buildExceptionCase } from '../exception_case/build'
  */
 function withNote(clause: AstNode | null | undefined, kids: SemanticNode[], ctx: LiftContext): SemanticNode[] {
   if (!clause) return kids
-  const row = clause.startPosition.row
+  // ⚠️ **這一支的直接子註解全部收**，不只同一列那顆（2026-08-24，與 `if` 同一條）
   const notes = clause.namedChildren
-    .filter((k) => k.type === 'comment' && k.startPosition.row === row)
+    .filter((k) => k.type === 'comment')
     .map((k) => ctx.lift(k))
     .filter((n): n is SemanticNode => n !== null)
   return notes.length > 0 ? [...notes, ...kids] : kids

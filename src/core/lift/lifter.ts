@@ -337,6 +337,21 @@ export class Lifter {
         }
       }
 
+      // 🔴 **註解藏在運算式裡面時，整句誠實降級**（2026-08-24）。
+      //
+      // ```python
+      // x = (1 +  # 加
+      //      2)
+      // ```
+      //
+      // 那顆註解不是任何一個語句的直接子節點，也不在任何 `block` 裡
+      // ——**沒有一行可以放它**。在此之前它被**安靜丟掉**：產出 `x = 1 + 2`，
+      // 合法、來回無誤、而使用者打的字沒了。
+      //
+      // > **「還不支援」與「支援一半」在程式碼上長得一樣，在使用者的檔案裡差一句話。**
+      //
+      // 🟢 降級把原文逐字留著，而它是**看得見的灰色**（P6：不確定時標記
+      //    `raw_code` 並保留原始文字，禁止給出一個看起來合理的結構）。
       const lifted = this.liftWithContext(node, contextData)
       if (!lifted) continue
 
@@ -372,6 +387,15 @@ export class Lifter {
       // （那一支由那顆元件自己的策略處理，因為只有它知道那是第幾支）。
       this.attachHeaderComments(node, lifted, contextData)
 
+      // 🔴 **收完之後再問一次「有沒有哪一句註解沒有人收」**（2026-08-24）。
+      //    有的話整句誠實降級——原文逐字留著，而不是安靜地少一句。
+      //    ⚠️ 例：`x = (1 +  # 加⏎     2)`——那顆註解埋在運算式裡，沒有一行放它。
+      if (node.type !== 'comment' && lifted.componentId !== 'raw_code'
+          && lifted.componentId !== 'unresolved' && this.commentsLost(node, lifted)) {
+        results.push(this.degradeToRaw(node))
+        continue
+      }
+
       if (lifted.componentId === '_compound') {
         const standalone = node.type === 'compound_statement' && node.parent?.type === 'compound_statement'
         if (standalone) results.push(buildStandaloneBlock(lifted.children.body ?? []))
@@ -401,16 +425,108 @@ export class Lifter {
    */
   private attachHeaderComments(node: AstNode, lifted: SemanticNode, ctx: LiftContextData): void {
     if (lifted.componentId === 'raw_code' || lifted.componentId === 'unresolved') return
+    // 🔴 **`_compound` 的主體就是它自己的子節點**——那些註解已經被當成語句收過了，
+    //    再收一次就是**同一句話出現兩次**。
+    //    ⚠️ 而它是**指數的**：每來回一趟翻一倍（實測 1 → 2 → 4）。
+    //    症狀不是「多一行」，是**一段程式碼每存一次就長大一點**。
+    if (lifted.componentId === '_compound') return
     const body = lifted.children.body
     if (!body) return
-    const row = node.startPosition.row
+    // 🔴 **`block` 之前的註解也在這裡**（2026-08-24，使用者：「Python 程式碼到積木
+    //    會丟失註解」）——不是只有同一列那一顆。實測的 AST：
+    //
+    // ```
+    // if_statement @0
+    //   identifier @0 "a"
+    //   :(anon)    @0
+    //   comment    @1  "# 首"   ← 區塊第一行的註解掛在【這裡】
+    //   block      @2           ← 而不是在區塊裡面
+    //     expression_statement @2
+    // ```
+    //
+    // 於是「區塊第一行是註解」的每一種（`if`／`def`／`for`／`while`）都掉字，
+    // 而「區塊最後一行是註解」好好的——**因為那一顆真的在 `block` 裡**。
+    //
+    // > **一個「同一列」的判準，答得出「它屬於哪一行」，
+    // > 答不出「它屬於誰」——而後者才是要收它的人。**
+    //
+    // ⚠️ 依原文順序收，全部放到主體最前面（它們本來就在主體之前）。
     const notes: SemanticNode[] = []
     for (const kid of node.namedChildren) {
-      if (kid.type !== 'comment' || kid.startPosition.row !== row) continue
+      if (kid.type !== 'comment') continue
       const made = this.liftWithContext(kid, ctx)
       if (made) notes.push(made)
     }
     if (notes.length > 0) lifted.children.body = [...notes, ...body]
+  }
+
+
+  /**
+   * **這一句裡有註解沒有被收進去嗎**——用量的，不是用猜結構的。
+   *
+   * 🔴 第一版猜結構：「跳過底下有 `block` 的子樹」。而 `block` 是 **Python 的**
+   * 節點名，C++ 的是 `compound_statement`——於是 C++ 那側**整批誤降級**
+   * （52 支測試當場紅）。
+   *
+   * > **一個寫死了某個語言節點名的判準，放在核心裡就是一顆定時炸彈
+   * > ——而它會在第二個語言走到那一行的那天爆。**（P9 四項獨立性）
+   *
+   * 🟢 改成**比對**：原文的每一句註解，在抬升出來的子樹裡找不找得到。
+   * 找不到 → 沒有人收它 → 整句誠實降級（原文逐字留著）。
+   * **這個判準不認識任何語言**，而且它問的正是要問的那件事。
+   */
+  private commentsLost(node: AstNode, lifted: SemanticNode): boolean {
+    const texts: string[] = []
+    const collect = (n: AstNode): void => {
+      if (n.type === 'comment') texts.push(n.text.trim())
+      for (const k of n.namedChildren) collect(k)
+    }
+    collect(node)
+    if (texts.length === 0) return false
+    // 抬升出來的子樹裡，所有字串屬性與原文備份（降級節點）
+    const kept: string[] = []
+    const walk = (n: SemanticNode): void => {
+      for (const v of Object.values(n.properties ?? {})) if (typeof v === 'string') kept.push(v)
+      // ⚠️ **只認降級節點的原文**——`metadata.rawCode` **每一顆節點都有**
+      //    （那是它的原文範圍），照單全收的話這個判定永遠說「沒掉」。
+      //    🔴 同一個坑今天撞第二次（第一次在 `attachHeaderComments` 的去重）。
+      const raw = n.metadata?.rawCode
+      if (typeof raw === 'string'
+          && (n.componentId === 'raw_code' || n.componentId === 'unresolved')) kept.push(raw)
+      for (const ks of Object.values(n.children ?? {})) ks.forEach(walk)
+    }
+    walk(lifted)
+    // ⚠️ **比的是內容，不是形式**——而「形式」比想像中多：
+    //    `# x` 剝掉井號、`/* … */` 剝掉兩端、區塊註解每一行前面還可能有 `*`。
+    //    🔴 第一版只剝了開頭的 `#`／`/`，於是 Arduino 語料的檔頭區塊註解
+    //    對不上 → 整段誤降級（探針當場紅）。
+    //
+    // 🟢 正規化掉**所有非文字字元**：註解符號、空白、換行全部消失，
+    //    剩下的就是「使用者打的那些字」——而那正是要比的東西。
+    const norm = (x: string): string => x.replace(/[^\p{L}\p{N}]+/gu, '')
+    const keptNorm = kept.map(norm)
+    return texts.some((t) => {
+      const body = norm(t)
+      // 內容全是符號的註解（`# ---`）正規化之後是空的——不判它掉了（寧可漏報不誤報）
+      return body.length > 0 && !keptNorm.some((k) => k.includes(body))
+    })
+  }
+
+  /** 把一個節點降成 `raw_code`（原文逐字留著）。 */
+  private degradeToRaw(node: AstNode): SemanticNode {
+    const raw = createNode('raw_code', {})
+    const endLine = node.endPosition.column === 0 && node.endPosition.row > node.startPosition.row
+      ? node.endPosition.row - 1 : node.endPosition.row
+    raw.metadata = {
+      rawCode: node.text,
+      confidence: 'raw_code',
+      degradationCause: this.determineDegradationCause(node),
+      sourceRange: {
+        startLine: node.startPosition.row, startColumn: node.startPosition.column,
+        endLine, endColumn: node.endPosition.column,
+      },
+    }
+    return raw
   }
 
   /** Determine why a node was degraded to raw_code */

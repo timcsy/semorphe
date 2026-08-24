@@ -69,7 +69,13 @@ export function attachBranchList(type: string, spec: BranchListSpec): void {
   if (!proto) throw new Error(`attachBranchList：積木型別 ${type} 還沒被定義——順序反了`)
   const msg = Blockly.Msg as Record<string, string>
   const baseInit = proto.init
-  const text = (k: string | undefined, f: string | undefined): string => (k ? msg[k] || f : f) ?? ''
+  // ⚠️ **齒輪裡的標題不能直接借積木的訊息鍵**——那些鍵帶著 `%1`（插槽的位置），
+  //    而小積木上沒有插槽，於是使用者看到的是字面的「如果 %1」。
+  //    🔴 開瀏覽器看到的（2026-08-23）；宣告已改成專屬的鍵，這裡是第二道。
+  //    ⚠️ 而它 2026-08-24 被一次整批回退**連坐退掉過一次**——所以這一行的
+  //    存在理由要寫在這裡，不要只寫在 commit 訊息裡。
+  const text = (k: string | undefined, f: string | undefined): string =>
+    ((k ? msg[k] || f : f) ?? '').replace(/\s*%\d+/g, '')
 
   const setMinus = (b: any): void => {
     const f = b.getField('BL_MINUS')

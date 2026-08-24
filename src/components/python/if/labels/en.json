@@ -3,5 +3,6 @@
   "PYTHON_IF_THEN": "then",
   "PYTHON_IF_ELIF": "else if",
   "PYTHON_IF_ELSE": "else",
-  "PYTHON_IF_TOOLTIP": "Run the inner steps when the condition holds. Press + for another branch, E for else"
+  "PYTHON_IF_TOOLTIP": "Run the inner steps when the condition holds. Press + for another branch, E for else",
+  "PYTHON_IF_MUTATOR_TITLE": "If"
 }

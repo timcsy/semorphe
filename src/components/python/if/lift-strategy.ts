@@ -39,10 +39,13 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     // 🔴 **`elif …:  # 為什麼` 的註解＝那一支區塊裡的第一顆註解積木**（2026-08-23）。
     //    核心那條規則只看得到 `if` 那一行——`elif`／`else` 的註解在子句裡，
     //    而**只有這裡知道它屬於哪一支**。
+    // ⚠️ **這一支的直接子註解全部收**，不只同一列那顆（2026-08-24）：
+    //    `else:` 底下第一行的註解掛在 `else_clause` 上、排在 `block` 之前
+    //    ——與核心那一側同一個 AST 形狀（見 `lift/lifter.ts` 的說明）。
     const withNote = (clause: any, kids: SemanticNode[]): SemanticNode[] => {
       const notes: SemanticNode[] = []
       for (const kid of clause.namedChildren as any[]) {
-        if (kid.type !== 'comment' || kid.startPosition.row !== clause.startPosition.row) continue
+        if (kid.type !== 'comment') continue
         const made = ctx.lift(kid)
         if (made) notes.push(made)
       }

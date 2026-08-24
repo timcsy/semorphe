@@ -95,6 +95,15 @@ const PY_PROBES: readonly (readonly [string, string])[] = [
   ['yield', 'def gen():\n    yield 1\n'],
   ['條件式 import', 'if a:\n    import os\nelse:\n    import sys\n'],
   ['帶 else 的三元 ＋ 推導式', 'ys = [x if x > 0 else -x for x in xs]\nprint(ys)\n'],
+  // 🔴 2026-08-24 使用者回報「程式碼到積木會丟失註解」——區塊第一行的註解
+  //    掛在【語句】上而不在區塊裡，於是每一種區塊都掉字。探針補上這一族。
+  ['註解在 if 體第一行', 'if a:\n    # 首\n    x = 1\n'],
+  ['註解在 def 體第一行', 'def f():\n    # 首\n    return 1\n'],
+  ['註解在 for 體第一行', 'for i in xs:\n    # 首\n    print(i)\n'],
+  ['註解在 else 體第一行', 'if a:\n    x = 1\nelse:\n    # 首\n    y = 2\n'],
+  ['註解在 except 體第一行', 'try:\n    x = 1\nexcept ValueError:\n    # 首\n    x = 2\n'],
+  ['整個區塊只有一句註解', 'if a:\n    # 只有\n    pass\n'],
+  ['註解埋在運算式裡', 'x = (1 +  # 加\n     2)\n'],
 ]
 
 /**

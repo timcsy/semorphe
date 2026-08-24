@@ -92,6 +92,43 @@ describe('Python 的註解在來回一趟之後還在', () => {
     }
   })
 
+  /**
+   * 🔴 **區塊的第一行是註解時，它掛在【語句】上而不在區塊裡**（2026-08-24）。
+   *
+   * 使用者：「我還發現 **Python 程式碼到積木會丟失註解**。」量到的 AST：
+   *
+   * ```
+   * if_statement @0
+   *   :(anon)  @0
+   *   comment  @1  "# 首"   ← 在這裡
+   *   block    @2           ← 而不是在這裡
+   * ```
+   *
+   * 於是「區塊第一行是註解」的每一種都掉字，而「最後一行是註解」好好的。
+   *
+   * > **一個「同一列」的判準，答得出「它屬於哪一行」，答不出「它屬於誰」。**
+   */
+  it('🔴 註解在區塊的【第一行】——四種區塊 ＋ 兩種子句', async () => {
+    for (const code of [
+      'if a:\n    # 首\n    x = 1\n',
+      'if a:\n    # 只有\n    pass\n',
+      'def f():\n    # 首\n    return 1\n',
+      'for i in xs:\n    # 首\n    print(i)\n',
+      'while a:\n    # 首\n    a = 0\n',
+      'if a:\n    x = 1\nelse:\n    # 首\n    y = 2\n',
+      'if a:\n    x = 1\nelif b:\n    # 首\n    y = 2\n',
+      'try:\n    # 首\n    x = 1\nexcept ValueError:\n    # 也是首\n    x = 2\n',
+    ]) {
+      expect((await roundTrip(code)).trim(), code).toBe(code.trim())
+    }
+  })
+
+  it('🔴 註解埋在【運算式】裡沒有一行放它——整句誠實降級，不准安靜丟掉', async () => {
+    // ⚠️ 這一條釘的是「不可以是中間狀態」：要嘛收下、要嘛原文逐字留著。
+    const code = 'x = (1 +  # 加\n     2)\n'
+    expect(await keepsComments(code), '安靜丟掉＝產出合法而使用者打的字沒了').toEqual([])
+  })
+
   it('★ 使用者回報的那一段（一元二次方程式）——每一句註解都要在', async () => {
     const code = `if a != 0:      # 如果 a 不等於 0
     r = b**2 - 4*a*c      # 計算開根號內的數值

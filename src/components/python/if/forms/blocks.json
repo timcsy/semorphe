@@ -37,7 +37,7 @@
         "elseInput": "ELSE_BODY",
         "elseLabelKey": "PYTHON_IF_ELSE",
         "elseLabelFallback": "否則",
-        "containerLabelKey": "PYTHON_IF_MSG0",
+        "containerLabelKey": "PYTHON_IF_MUTATOR_TITLE",
         "containerLabelFallback": "如果",
         "colour": "#FFAB19"
       }
