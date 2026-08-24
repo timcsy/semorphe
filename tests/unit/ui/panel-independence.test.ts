@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 const panelsDir = path.resolve(__dirname, '../../../src/ui/panels')
-const syncControllerPath = path.resolve(__dirname, '../../../src/ui/sync-controller.ts')
+const syncControllerPath = path.resolve(__dirname, '../../../src/core/sync-controller.ts')
 
 const panelFiles = ['blockly-panel.ts', 'monaco-panel.ts', 'console-panel.ts', 'variable-panel.ts']
 
@@ -43,7 +43,7 @@ describe('Panel independence', () => {
   })
 
   it('toolbox-builder should not import blockly', () => {
-    const filePath = path.resolve(__dirname, '../../../src/ui/toolbox-builder.ts')
+    const filePath = path.resolve(__dirname, '../../../src/core/toolbox-builder.ts')
     const imports = getImports(filePath)
     for (const imp of imports) {
       expect(imp).not.toContain('blockly')

@@ -5,7 +5,7 @@
  * don't match the current coding style. If alternatives exist (can be lifted),
  * offers the user the option to convert.
  */
-import type { SemanticNode } from '../../core/types'
+import type { SemanticNode, StylePreset } from '../../core/types'
 import type { CodingStyle } from '../style'
 import type { ModuleRegistry } from './std/module-registry'
 import { isStringLiteral } from './core/node-traits'
@@ -237,6 +237,31 @@ const IO_MODULE_HEADERS = new Set(['<iostream>', '<cstdio>'])
  * When a ModuleRegistry is provided, uses module-based borrowing detection:
  * if a component belongs to a non-preferred I/O module, it's flagged as a borrowing.
  */
+/**
+ * **給視圖層用的門面**——收核心的 `StylePreset`，自己翻成 C++ 的 `CodingStyle`。
+ *
+ * 🔴 在此之前這個轉換住在 `core/sync-controller.ts` 裡，於是**即時互轉的引擎
+ * 認識 `'iostream'`／`'cstdio'`／`'bits'` 這些 C++ 專屬的字**（2026-08-24 第六十條護欄量到）。
+ *
+ * > **一個轉換函式住在哪一層，那一層就認識兩邊的詞彙。**
+ */
+export function detectStyleExceptionsForPreset(
+  root: SemanticNode,
+  preset: StylePreset,
+  registry?: ModuleRegistry,
+): StyleException[] {
+  return detectStyleExceptions(root, {
+    id: preset.id,
+    nameKey: preset.id,
+    ioPreference: preset.io_style === 'printf' ? 'cstdio' : 'iostream',
+    namingConvention: preset.naming_convention,
+    braceStyle: preset.brace_style,
+    indent: preset.indent_size,
+    useNamespaceStd: preset.namespace_style === 'using',
+    headerStyle: preset.header_style === 'bits' ? 'bits' : 'iostream',
+  }, registry)
+}
+
 export function detectStyleExceptions(
   root: SemanticNode,
   style: CodingStyle,

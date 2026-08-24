@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
-import { buildToolbox } from '../../../src/ui/toolbox-builder'
-import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
+import { buildToolbox } from '../../../src/core/toolbox-builder'
+import { CATEGORY_COLORS } from '../../../src/core/category-colors'
 import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
 import { getVisibleComponents } from '../../../src/core/level-tree'
 // ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——
@@ -147,7 +147,7 @@ describe('ToolboxBuilder', () => {
   })
 
   it('should NOT import blockly (zero UI framework dependency)', () => {
-    const filePath = path.resolve(__dirname, '../../../src/ui/toolbox-builder.ts')
+    const filePath = path.resolve(__dirname, '../../../src/core/toolbox-builder.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     const importLines = content.match(/^import\s+.*from\s+['"]([^'"]+)['"]/gm) ?? []
     for (const line of importLines) {

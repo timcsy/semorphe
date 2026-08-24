@@ -5,7 +5,7 @@ import type { SemanticNode, BlockSpec, DegradationCause, ConfidenceLevel, Annota
 import { createNode } from '../../core/semantic-tree'
 import { companionFor } from '../../core/component/companion-blocks'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
-import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../theme/category-colors'
+import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../../core/category-colors'
 import { formatMessage } from '../../i18n/messages'
 import type { BlockStylePreset } from '../../languages/style'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent } from '../../core/view-host'

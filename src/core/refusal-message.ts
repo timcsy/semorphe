@@ -1,4 +1,4 @@
-import type { LoadOutcome } from '../core/storage'
+import type { LoadOutcome } from './storage'
 
 /**
  * 把拒絕的理由講成使用者看得懂的一句話。

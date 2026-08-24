@@ -1,7 +1,6 @@
-import type { SemanticNode, StylePreset, Topic } from '../core/types'
-import { flattenLevelTree, getVisibleComponents } from '../core/level-tree'
-import type { ProgramScaffold, ScaffoldResult } from '../core/program-scaffold'
-import type { CodingStyle } from '../languages/style'
+import type { SemanticNode, StylePreset, Topic } from './types'
+import { flattenLevelTree, getVisibleComponents } from './level-tree'
+import type { ProgramScaffold, ScaffoldResult } from './program-scaffold'
 // 🔴 **不再 import 語言套件**（spec 153）——風格分析由組裝點推進來。
 //
 // ⚠️ 兩種做法都論證過：
@@ -11,7 +10,7 @@ import type { CodingStyle } from '../languages/style'
 //      `skip-declarations`／`comment-syntax`／`language-executors` 同一個形狀
 //
 // > **機制跨不過分層時，讓特例自己帶著宣告來**（`experience`）。
-import type { StyleException, StyleConformance } from '../core/types'
+import type { StyleException, StyleConformance } from './types'
 // 🔴 **一個語言套件的匯入都不剩**（spec 153）。
 //    原本連 `StyleConformance` 的型別都從語言套件來——而這一層
 //    **只讀 `verdict`**，其餘欄位只是轉交。
@@ -23,31 +22,22 @@ import type { StyleException, StyleConformance } from '../core/types'
 
 /** 風格分析——由組裝點推進來（spec 153）。 */
 export interface StyleAnalyzer {
-  detectStyleExceptions: (tree: SemanticNode, style: CodingStyle) => StyleException[]
+  // 🔴 收的是**核心的** `StylePreset`，不是語言的 `CodingStyle`（2026-08-24）。
+  // 在此之前這個檔 import 了 `languages/style` 並自己做轉換，於是
+  // **即時互轉的引擎認識 C++ 的詞彙**（`'iostream'`／`'cstdio'`／`'bits'`）。
+  // 收窄留在語言那側——組裝點那句註解本來就寫著「**收窄發生在組裝點**」。
+  detectStyleExceptions: (tree: SemanticNode, style: StylePreset) => StyleException[]
   applyStyleConversions: (tree: SemanticNode, exceptions: StyleException[]) => SemanticNode
   analyzeIoConformance: (code: string, pref: string) => StyleConformance
 }
-import { generateCodeWithMapping } from '../core/projection/code-generator'
+import { generateCodeWithMapping } from './projection/code-generator'
 
-/** Convert StylePreset (core/types) → CodingStyle (languages/style) for style exception detection */
-function toCodingStyle(preset: StylePreset): CodingStyle {
-  return {
-    id: preset.id,
-    nameKey: preset.id,
-    ioPreference: preset.io_style === 'printf' ? 'cstdio' : 'iostream',
-    namingConvention: preset.naming_convention,
-    braceStyle: preset.brace_style,
-    indent: preset.indent_size,
-    useNamespaceStd: preset.namespace_style === 'using',
-    headerStyle: preset.header_style === 'bits' ? 'bits' : 'iostream',
-  }
-}
-import type { CodeMapping, BlockMapping } from '../core/projection/code-generator'
-import { renderToBlocklyState } from '../core/projection/block-renderer'
-import { Lifter } from '../core/lift/lifter'
-import { SemanticBus } from '../core/semantic-bus'
-import { abstractComponentOf, variableTypeOf } from '../core/language-executors'
-import { isFunctionDefinition } from '../core/component/traits'
+import type { CodeMapping, BlockMapping } from './projection/code-generator'
+import { renderToBlocklyState } from './projection/block-renderer'
+import { Lifter } from './lift/lifter'
+import { SemanticBus } from './semantic-bus'
+import { abstractComponentOf, variableTypeOf } from './language-executors'
+import { isFunctionDefinition } from './component/traits'
 
 /** Scaffold node filter type — strips scaffold nodes for L0 display */
 export type ScaffoldNodeFilter = (tree: SemanticNode) => SemanticNode
@@ -113,7 +103,7 @@ export class SyncController {
   private onErrorCallback: ((errors: SyncError[]) => void) | null = null
   private onStyleExceptionsCallback: ((exceptions: StyleException[], apply: () => void) => void) | null = null
   private onIoConformanceCallback: ((result: StyleConformance) => void) | null = null
-  private codingStyle: CodingStyle | null = null
+  private codingStyle: StylePreset | null = null
   private programScaffold: ProgramScaffold | null = null
   private currentTopic: Topic | null = null
   private enabledBranches: Set<string> = new Set()
@@ -155,7 +145,7 @@ export class SyncController {
   }
 
   setCodingStyle(preset: StylePreset): void {
-    this.codingStyle = toCodingStyle(preset)
+    this.codingStyle = preset
   }
 
   setProgramScaffold(scaffold: ProgramScaffold): void {
@@ -296,7 +286,7 @@ export class SyncController {
       // Code-level I/O conformance check (before lift — 借音/轉調 detection)
       let ioResult: StyleConformance | null = null
       if (this.codingStyle) {
-        const result = this.styleAnalyzer!.analyzeIoConformance(code, this.codingStyle.ioPreference)
+        const result = this.styleAnalyzer!.analyzeIoConformance(code, this.codingStyle.io_style)
         if (result.verdict !== 'conforming') {
           ioResult = result
         }

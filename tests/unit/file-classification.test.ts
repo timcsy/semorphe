@@ -38,7 +38,7 @@ describe('檔案分類', () => {
     // 而就近性會回報零擴散——與一個完美集中的系統長得一模一樣。
     expect(classifyFile('src/languages/cpp/std/vector/executors.ts'), '執行器是實作').toBe('實作')
     expect(classifyFile('src/core/foo.ts')).toBe('實作')
-    expect(classifyFile('src/ui/toolbox-builder.ts'), '**組工具箱的程式碼是實作**——只有那份清單資料才是清單').toBe('實作')
+    expect(classifyFile('src/core/toolbox-builder.ts'), '**組工具箱的程式碼是實作**——只有那份清單資料才是清單').toBe('實作')
     // ⚠️ 2026-08-10 改判：測試自成一類（`'測試'`），不再算「實作」。
     // 觸發它的是元件膠囊——自證測住在膠囊裡，而它的**負向斷言必然提到別的
     // 元件身分**（「`stack<int> s` 不得被認成 vector」）。算成實作擴散的話，

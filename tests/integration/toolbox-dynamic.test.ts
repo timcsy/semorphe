@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 import { pythonCategoryDefs } from '../../src/languages/python/toolbox-categories'
-import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
+import { CATEGORY_COLORS } from '../../src/core/category-colors'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 
 describe('Toolbox 動態生成與顏色集中管理', () => {

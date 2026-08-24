@@ -25,7 +25,7 @@
 import { describe, it, expect } from 'vitest'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 import { pythonCategoryDefs } from '../../src/languages/python/toolbox-categories'
-import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
+import { CATEGORY_COLORS } from '../../src/core/category-colors'
 import { componentBlocks } from '../../src/core/component/registry'
 import { printReport, assertRatchet } from '../helpers/guardrail'
 import type { ToolboxCategoryDef } from '../../src/core/types'

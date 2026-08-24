@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { renderToBlocklyState } from '../../src/core/projection/block-renderer'
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
-import { DEGRADATION_VISUALS } from '../../src/ui/theme/category-colors'
+import { DEGRADATION_VISUALS } from '../../src/core/category-colors'
 
 describe('降級視覺區分 — extraState.degradationCause 傳遞', () => {
   function makeRawCode(code: string, cause?: string): SemanticNode {

@@ -5,7 +5,7 @@
  * 以及**原檔還在不在**。少任何一件，訊息就等於沒說。
  */
 import { describe, it, expect } from 'vitest'
-import { describeRefusal } from '../../../src/ui/refusal-message'
+import { describeRefusal } from '../../../src/core/refusal-message'
 import type { LoadOutcome } from '../../../src/core/storage'
 
 type Refused = Extract<LoadOutcome, { kind: 'refused' }>

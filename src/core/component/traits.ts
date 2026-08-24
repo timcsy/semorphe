@@ -149,7 +149,7 @@ export function isFunctionDefinition(componentId: string): boolean {
  *
  * ⚠️ **它住在核心，是因為它一個 C++ 的字都不認識**——只是把膠囊宣告的
  * `ioRole`／`ioStyle` 讀出來。它原本住在 `languages/cpp/core/node-traits.ts`，
- * 而它的消費者是 `ui/toolbox-builder.ts`（決定 I/O 積木的排序偏好），
+ * 而它的消費者是 `core/toolbox-builder.ts`（決定 I/O 積木的排序偏好），
  * 於是**視圖層為了問一句「這顆是哪種 I/O」而 import 了整個 C++ 語言套件**
  * ——P9 語言獨立性的字面違反（第三十九條護欄抓到）。
  *

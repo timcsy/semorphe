@@ -1,7 +1,7 @@
-import type { BlockSpecRegistry } from '../core/block-spec-registry'
-import type { BlockSpec, ToolboxCategoryDef } from '../core/types'
-import { KNOWN_AXES } from '../core/projection/form-selection'
-import { ioTraitOf } from '../core/component/traits'
+import type { BlockSpecRegistry } from './block-spec-registry'
+import type { BlockSpec, ToolboxCategoryDef } from './types'
+import { KNOWN_AXES } from './projection/form-selection'
+import { ioTraitOf } from './component/traits'
 
 export type { ToolboxCategoryDef }
 

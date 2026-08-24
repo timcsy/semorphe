@@ -11,13 +11,13 @@
  */
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { filterByTarget } from '../../src/core/component/traits'
-import { buildToolbox } from '../../src/ui/toolbox-builder'
+import { buildToolbox } from '../../src/core/toolbox-builder'
 import { toolboxCategoriesOf, declaredToolboxLanguages } from '../../src/core/toolbox-categories'
 // ⚠️ **副作用匯入**：讓 Python 的分類宣告自己（與 `all-declarations.ts` 的
 // 身分改名表同一個形狀）。少了它，`declaredToolboxLanguages()` 看不到 python，
 // 而可拿性護欄會說 `python_print` 拿不到——**而它其實有分類，只是沒人載入宣告**。
 import '../../src/languages/python/toolbox-categories'
-import { CATEGORY_COLORS } from '../../src/ui/theme/category-colors'
+import { CATEGORY_COLORS } from '../../src/core/category-colors'
 import type { ToolboxCategoryDef } from '../../src/core/types'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalBlocks, UNIVERSAL_OWNER } from '../../src/core/universal'

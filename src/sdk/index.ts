@@ -46,7 +46,7 @@ export type { SemanticNode, StylePreset, LiftPattern } from '../core/types'
 export type { CodeMapping, BlockMapping } from '../core/projection/code-generator'
 
 // ── 即時互轉 ──────────────────────────────────────────────────
-export { SyncController } from '../ui/sync-controller'
+export { SyncController } from '../core/sync-controller'
 export { Lifter } from '../core/lift/lifter'
 export { PatternLifter } from '../core/lift/pattern-lifter'
 export { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry } from '../core/registry'

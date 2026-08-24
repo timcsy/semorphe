@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
-import { SyncController } from '../../../src/ui/sync-controller'
+import { SyncController } from '../../../src/core/sync-controller'
 import { cppStripScaffoldNodes as stripScaffoldNodes } from '../../../src/languages/cpp/cpp-scaffold-filter'
-import type { CodeParser, SyncError } from '../../../src/ui/sync-controller'
+import type { CodeParser, SyncError } from '../../../src/core/sync-controller'
 import type { StylePreset } from '../../../src/core/types'
 import type { CodeMapping, BlockMapping } from '../../../src/core/projection/code-generator'
 import { createNode } from '../../../src/core/semantic-tree'
@@ -10,7 +10,7 @@ import { SemanticBus } from '../../../src/core/semantic-bus'
 //    ——⚠️ 這三支測的是**同步控制器怎麼用分析器**（真行為），
 //    不是被刪掉的功能，所以它們**留著並裝上分析器**，而不是退場。
 import {
-  detectStyleExceptions, applyStyleConversions, analyzeIoConformance,
+  detectStyleExceptionsForPreset, applyStyleConversions, analyzeIoConformance,
 } from '../../../src/languages/cpp/style-exceptions'
 import { Lifter } from '../../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
@@ -39,9 +39,13 @@ describe('SyncController (bus-based)', () => {
     bus = new SemanticBus()
     controller = new SyncController(bus, 'cpp', mockStyle)
     controller.setStyleAnalyzer({
-      detectStyleExceptions,
+      // ⚠️ **要與產品那條組裝一致**（`src/ui/app.ts`）：引擎現在講核心的
+      //    `StylePreset`，收窄留在語言那側。這裡手接一份是既有的債
+      //    （第三十七條護欄在數它），而**手接的那份必須跟著產品改**。
+      detectStyleExceptions: detectStyleExceptionsForPreset,
       applyStyleConversions,
-      analyzeIoConformance: (code, pref) => analyzeIoConformance(code, pref as never),
+      analyzeIoConformance: (code, pref) =>
+        analyzeIoConformance(code, (pref === 'printf' ? 'cstdio' : 'iostream') as never),
     })
   })
 
@@ -50,7 +54,7 @@ describe('SyncController (bus-based)', () => {
       const b = new SemanticBus()
       const c = new SyncController(b, 'cpp', mockStyle)
       c.setStyleAnalyzer({
-        detectStyleExceptions,
+        detectStyleExceptions: detectStyleExceptionsForPreset,
         applyStyleConversions,
         analyzeIoConformance: (code, pref) => analyzeIoConformance(code, pref as never),
       })

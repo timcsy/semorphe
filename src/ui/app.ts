@@ -2,8 +2,8 @@ import * as Blockly from 'blockly'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
-import { SyncController } from './sync-controller'
-import type { SyncError } from './sync-controller'
+import { SyncController } from '../core/sync-controller'
+import type { SyncError } from '../core/sync-controller'
 import { SemanticBus } from '../core/semantic-bus'
 import { showToast } from './toolbar/toast'
 import { showStyleActionBar } from './toolbar/style-action-bar'
@@ -22,7 +22,7 @@ import {
   C_COMPOUND_ASSIGN_EXPR_INPUTS, C_VAR_DECLARE_EXPR_INPUTS,
 } from '../languages/cpp/block-input-names'
 import {
-  detectStyleExceptions, applyStyleConversions, analyzeIoConformance,
+  detectStyleExceptionsForPreset, applyStyleConversions, analyzeIoConformance,
 } from '../languages/cpp/style-exceptions'
 import { setLanguageInputNames } from './block-registrar'
 import { TopicRegistry } from '../core/topic-registry'
@@ -50,16 +50,16 @@ import type { LiftPattern } from '../core/types'
 import { BlockSpecRegistry } from '../core/block-spec-registry'
 
 import type { SavedState } from '../core/storage'
-import { describeRefusal } from './refusal-message'
+import { describeRefusal } from '../core/refusal-message'
 import { LocaleLoader } from '../i18n/loader'
 import { setMessageSource } from '../core/messages'
 import { installDialogs } from './prompt-dialog'
 import type { StyleSelector } from './toolbar/style-selector'
 import type { TopicSelector } from './toolbar/topic-selector'
 import type { StylePreset } from '../core/types'
-import { CATEGORY_COLORS } from './theme/category-colors'
+import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
-import { buildToolbox } from './toolbox-builder'
+import { buildToolbox } from '../core/toolbox-builder'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
@@ -253,11 +253,13 @@ export class App {
     // 6. Create sync controller + wire scaffold + connect panels to bus
     this.syncController = new SyncController(this.bus, this.currentTopic.language, DEFAULT_STYLE)
     this.syncController.setStyleAnalyzer({
-      detectStyleExceptions,
+      // ⚠️ 用吃 `StylePreset` 的那個門面——收窄發生在語言那側，不是這裡也不是引擎裡
+      detectStyleExceptions: detectStyleExceptionsForPreset,
       applyStyleConversions,
       // ⚠️ **收窄發生在組裝點**——`IoPreferenceKey` 是語言專屬的型別，
       //    而視圖層那一側的簽章是中立的 `string`。
-      analyzeIoConformance: (code, pref) => analyzeIoConformance(code, pref as never),
+      analyzeIoConformance: (code, pref) =>
+        analyzeIoConformance(code, (pref === 'printf' ? 'cstdio' : 'iostream') as never),
     })
     // 面板的降級路徑要產生程式碼文字，用的必須是**同一組**語言與風格
     // ——面板自己不得寫死一個（FR-003）。見 specs/060-panel-parallel-generator/

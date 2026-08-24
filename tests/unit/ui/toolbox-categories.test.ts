@@ -3,9 +3,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import { cppCategoryDefs } from '../../../src/languages/cpp/toolbox-categories'
-import { buildToolbox } from '../../../src/ui/toolbox-builder'
+import { buildToolbox } from '../../../src/core/toolbox-builder'
 import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
-import { CATEGORY_COLORS } from '../../../src/ui/theme/category-colors'
+import { CATEGORY_COLORS } from '../../../src/core/category-colors'
 import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
 import { getVisibleComponents } from '../../../src/core/level-tree'
 // ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——

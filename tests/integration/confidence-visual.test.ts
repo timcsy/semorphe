@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
-import { CONFIDENCE_VISUALS } from '../../src/ui/theme/category-colors'
+import { CONFIDENCE_VISUALS } from '../../src/core/category-colors'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 
 beforeAll(() => {

@@ -1,4 +1,4 @@
-import type { DegradationCause, ConfidenceLevel } from '../../core/types'
+import type { DegradationCause, ConfidenceLevel } from './types'
 
 // ─── 集中的類別顏色映射 ───
 
