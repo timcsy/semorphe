@@ -1,4 +1,8 @@
 {
-  "U_IF_MSG0": "如果 %1 就",
-  "U_IF_TOOLTIP": "如果條件成立，就執行裡面的積木"
+  "U_IF_MSG0": "如果 %1",
+  "U_IF_TOOLTIP": "如果條件成立，就執行裡面的積木",
+  "U_IF_THEN": "則",
+  "U_IF_MUTATOR_TITLE": "如果",
+  "U_IF_ELSEIF": "否則，如果",
+  "U_IF_ELSE": "否則"
 }

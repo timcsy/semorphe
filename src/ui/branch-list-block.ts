@@ -60,11 +60,20 @@ export interface BranchListSpec {
   containerLabelKey?: string
   containerLabelFallback?: string
   colour: string | number
+  /**
+   * `⊕⊖` 那一列的插槽名，預設 `BL_TAIL`。
+   *
+   * ⚠️ **接手一顆既有的命令式積木時要指定成它原本的名字**——那一列沒有接點、
+   * 不會進存檔，而**比對護欄比的是名字**：不一致就永遠到不了「一模一樣」，
+   * 於是那顆命令式定義**退不了場**。
+   */
+  tailInput?: string
 }
 
 const at = (p: string, i: number): string => p.replace('{i}', String(i))
 
 export function attachBranchList(type: string, spec: BranchListSpec): void {
+  const TAIL = spec.tailInput ?? 'BL_TAIL'
   const proto = Blockly.Blocks[type] as any
   if (!proto) throw new Error(`attachBranchList：積木型別 ${type} 還沒被定義——順序反了`)
   const msg = Blockly.Msg as Record<string, string>
@@ -83,9 +92,9 @@ export function attachBranchList(type: string, spec: BranchListSpec): void {
   }
 
   proto.rebuildTail_ = function (this: any): void {
-    if (this.getInput('BL_TAIL')) this.removeInput('BL_TAIL')
+    if (this.getInput(TAIL)) this.removeInput(TAIL)
     const hadElse = this.hasElse_ === true && this.getInput(spec.elseInput) !== null
-    this.appendDummyInput('BL_TAIL')
+    this.appendDummyInput(TAIL)
       .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusBranch_()))
       .appendField(
         new Blockly.FieldImage(
@@ -95,7 +104,7 @@ export function attachBranchList(type: string, spec: BranchListSpec): void {
       )
     // ⚠️ 重建之後 `BL_TAIL` 會跑到最後——**再把它移回 else 之前**，
     //    否則每次加減分支都會讓 `⊕⊖` 與 `否則` 交換位置。
-    if (hadElse) this.moveInputBefore('BL_TAIL', spec.elseInput)
+    if (hadElse) this.moveInputBefore(TAIL, spec.elseInput)
   }
 
   // 🔴 **mutator 對話框裡的三顆小積木**——與 C++ 那顆一模一樣的形狀
@@ -171,8 +180,8 @@ export function attachBranchList(type: string, spec: BranchListSpec): void {
       .setCheck('Statement')
       .appendField(text(spec.bodyLabelKey, spec.bodyLabelFallback))
     // ⚠️ 兩個都要移到尾巴前面，而且**順序不能顛倒**——顛倒的話語句插槽會跑到條件上面。
-    this.moveInputBefore(at(spec.conditionPattern, i), 'BL_TAIL')
-    this.moveInputBefore(at(spec.bodyPattern, i), 'BL_TAIL')
+    this.moveInputBefore(at(spec.conditionPattern, i), TAIL)
+    this.moveInputBefore(at(spec.bodyPattern, i), TAIL)
     this.elseifCount_++
     setMinus(this)
   }

@@ -1,8 +1,6 @@
 {
   "U_VAR_ASSIGN_LABEL": "把變數",
   "U_VAR_ASSIGN_SET_LABEL": "設成",
-  "U_IF_ELSE_IF_LABEL": "如果",
-  "U_IF_ELSE_ELSEIF_MSG": "否則，如果",
   "C_INCREMENT_VAR_LABEL": "變數",
   "C_COMPOUND_ASSIGN_VAR_LABEL": "把變數",
   "CPP_VECTOR_PUSH_BACK_MSG0": "在列表 %1 尾端加入 %2",
@@ -58,8 +56,6 @@
   "C_SCANF_FORMAT_LABEL": "格式化輸入 (scanf)",
   "U_PRINT_MSG": "輸出",
   "U_INPUT_MSG": "輸入",
-  "U_IF_MSG": "如果",
-  "U_IF_THEN": "則",
   "U_WHILE_MSG": "當",
   "U_WHILE_DO": "重複",
   "U_WHILE_TOOLTIP": "當條件成立時持續執行",

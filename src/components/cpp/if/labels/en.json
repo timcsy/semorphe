@@ -1,4 +1,8 @@
 {
-  "U_IF_MSG0": "if %1 then",
-  "U_IF_TOOLTIP": "If the condition is true, execute the blocks inside"
+  "U_IF_MSG0": "if %1",
+  "U_IF_TOOLTIP": "If the condition is true, execute the blocks inside",
+  "U_IF_THEN": "then",
+  "U_IF_MUTATOR_TITLE": "If",
+  "U_IF_ELSEIF": "else if",
+  "U_IF_ELSE": "else"
 }

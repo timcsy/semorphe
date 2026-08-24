@@ -27,6 +27,9 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import * as Blockly from 'blockly'
+import { attachBranchList } from '../../src/ui/branch-list-block'
+import { attachParamList } from '../../src/ui/param-list-block'
+import { attachVariadic } from '../../src/ui/variadic-block'
 // 🔴 **選用欄位要另外註冊**——`field_multilinetext` 不在 Blockly 主套件裡。
 // ⚠️ 少了它，`cpp_block_comment` 的欄位**整個建不出來**（`getField('TEXT')` 回 null），
 // 而比對報表印成「一邊有 comment，一邊沒有」——**看起來像宣告漏了預設值**。
@@ -76,13 +79,22 @@ function extraStateKeys(def: Record<string, unknown> | undefined): string[] {
 
 /** 宣告**表達得出**哪些 extraState 鍵。 */
 function declarableKeys(spec: unknown): string[] {
-  const rm = (spec as { renderMapping?: {
-    dynamicRules?: { countSource?: string }[]
-    extraStateFlags?: Record<string, string>
-  } })?.renderMapping
+  const sp = spec as {
+    renderMapping?: { dynamicRules?: { countSource?: string }[]; extraStateFlags?: Record<string, string> }
+    blockDef?: Record<string, unknown>
+  }
+  const rm = sp?.renderMapping
   const keys = new Set<string>()
   for (const r of rm?.dynamicRules ?? []) if (r.countSource) keys.add(r.countSource)
   for (const k of Object.keys(rm?.extraStateFlags ?? {})) keys.add(k)
+  // 🔴 **宣告式建構子自己就存得住那些鍵**（2026-08-24）——`branchList` 實作了
+  //    `save/loadExtraState`，鍵與命令式那份**一字不差**（那是刻意的，見
+  //    `branch-list-block.ts` 的檔頭）。不算進來的話，一顆已經表達得出的積木
+  //    會永遠掛在「宣告表達不出」那一欄——**而那是比對器在說謊**。
+  const def = sp?.blockDef
+  if (def?.branchList) { keys.add('elseifCount'); keys.add('hasElse') }
+  if (def?.paramList) keys.add('paramCount')
+  if (def?.builder === 'variadic') keys.add('itemCount')
   return [...keys].sort()
 }
 
@@ -158,13 +170,46 @@ beforeAll(() => {
   ws = new Blockly.Workspace()
 })
 
-/** 用膠囊的 `blockDef` 建一顆（`jsonInit` 那條路）。 */
+/**
+ * 用膠囊的 `blockDef` 建一顆——**走產品那條路，不是只有 `jsonInit`**。
+ *
+ * 🔴 **2026-08-24 修的量測缺口**：這裡原本只跑 `jsonInit`，而三個宣告式建構子
+ * （`branchList`／`paramList`／`variadic`）是**接在 `jsonInit` 之後**才長出
+ * 插槽與 `extraState` 的。於是每一顆用建構子的積木，比對器都說
+ * 「宣告少了插槽、宣告表達不出 extraState」——**而那是比對器自己沒接上**。
+ *
+ * > **比對之前，要先把【產品那側需要的每一樣東西】都備齊；
+ * > 少一樣，比對就會指控宣告。**（`retire-imperative-block` 第 2.5 步，
+ * > 那條規矩自己記著它被撞過四次——這是第五次。）
+ *
+ * ⚠️ 而它的代價是方向性的：它會讓人以為「宣告式那條路走不通」，
+ * 於是那顆命令式定義永遠退不了場。
+ */
 function fromDeclaration(type: string): Shape | null {
-  const spec = reg.getByBlockType(type) as { blockDef?: Record<string, unknown> } | undefined
+  const spec = reg.getByBlockType(type) as { blockDef?: Record<string, unknown>; renderMapping?: unknown } | undefined
   const def = spec?.blockDef
   if (!def || !def.message0) return null
   const probe = `__decl_${type}`
   Blockly.Blocks[probe] = { init: function (this: Blockly.Block) { (this as unknown as { jsonInit: (d: unknown) => void }).jsonInit({ ...def, type: probe }) } }
+  // ⚠️ 順序與 `block-registrar` 一致：先定義、再接建構子
+  if (def.branchList) attachBranchList(probe, def.branchList as never)
+  else if (def.paramList) attachParamList(probe, def.paramList as never)
+  else if (def.builder === 'variadic') {
+    const rules = (spec?.renderMapping as { dynamicRules?: { inputPattern?: string }[] } | undefined)?.dynamicRules
+    const sole = rules?.length === 1 ? rules[0] : undefined
+    if (sole?.inputPattern && Array.isArray(def.args0) && def.args0.length > 0) {
+      attachVariadic(probe, {
+        inputPattern: sole.inputPattern,
+        check: (def.slotCheck as string) ?? 'Expression',
+        colour: (def.colour as string) ?? '#5CB1D6',
+        inputsInline: def.inputsInline as boolean | undefined,
+        previousStatement: def.previousStatement as string | undefined,
+        nextStatement: def.nextStatement as string | undefined,
+        output: def.output as string | undefined,
+        minCount: def.minCount as number | undefined,
+      } as never)
+    }
+  }
   const b = ws.newBlock(probe)
   const s = shapeOf(b)
   b.dispose(false)
@@ -250,7 +295,7 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     const n = await import('../../src/languages/cpp/block-input-names')
     setLanguageInputNames({
       compoundAssign: n.C_COMPOUND_ASSIGN_INPUTS, compoundAssignExpr: n.C_COMPOUND_ASSIGN_EXPR_INPUTS,
-      varDeclareExpr: n.C_VAR_DECLARE_EXPR_INPUTS, ifBlock: n.IF_INPUTS, whileBlock: n.WHILE_INPUTS,
+      varDeclareExpr: n.C_VAR_DECLARE_EXPR_INPUTS, whileBlock: n.WHILE_INPUTS,
       countLoop: n.COUNT_LOOP_INPUTS, funcDef: n.FUNDEF_INPUTS, returnBlock: n.RETURN_INPUTS,
       arrayAccess: n.ARRAY_ACCESS_INPUTS, arrayAssign: n.ARRAY_ASSIGN_INPUTS, varAssign: n.VAR_ASSIGN_INPUTS,
     })
@@ -351,7 +396,11 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     expect(withLoad,
       '⚠️ 這一維瞎了，或某顆的宣告補上了。前者是護欄壞掉，後者要改這份清單'
       + '——**而兩者長得一樣，所以要指名**。')
-      .toEqual(['cpp_doc_comment', 'cpp_if', 'cpp_if_else', 'cpp_raw_code'])
+      // 🪦 **`cpp_if`／`cpp_if_else` 於 2026-08-24 退場**（比對護欄確認一模一樣）
+      //    ——它們的命令式定義沒了，所以這一維量不到它們，**那是對的**。
+      //    ⚠️ 而清單要跟著改**並附理由**：這一則指名的存在理由就是
+      //    「一條只擋變差的棘輪，擋不住量得更少」——名字一夕消失必須有人說得出為什麼。
+      .toEqual(['cpp_doc_comment', 'cpp_raw_code'])
   })
 
   it('★ 報表：哪些積木的宣告【建得起來】', () => {

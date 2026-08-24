@@ -34,7 +34,6 @@ type InputNames = { value: string[]; statement: string[] }
 //    🟢 所以 `registerAll` 會在沒注入時**當場拋錯**，不是默默用佔位值。
 let C_COMPOUND_ASSIGN_EXPR_INPUTS: InputNames = { value: ['VALUE'], statement: [] }
 let C_VAR_DECLARE_EXPR_INPUTS: InputNames = { value: ['INIT_0'], statement: [] }
-let IF_INPUTS: InputNames = { value: ['CONDITION'], statement: ['THEN', 'ELSE'] }
 let FUNDEF_INPUTS: InputNames = { value: [], statement: ['BODY'] }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
@@ -52,12 +51,10 @@ let inputNamesInjected = false
 export function setLanguageInputNames(names: {
   compoundAssignExpr: InputNames
   varDeclareExpr: InputNames
-  ifBlock: InputNames
   funcDef: InputNames
 }): void {
   C_COMPOUND_ASSIGN_EXPR_INPUTS = names.compoundAssignExpr
   C_VAR_DECLARE_EXPR_INPUTS = names.varDeclareExpr
-  IF_INPUTS = names.ifBlock
   FUNDEF_INPUTS = names.funcDef
   inputNamesInjected = true
 }
@@ -1425,149 +1422,21 @@ export class BlockRegistrar {
     //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
     //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
 
-    // cpp_if
-    {
-      Blockly.Blocks['u_if_container'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField(Blockly.Msg['U_IF_ELSE_IF_LABEL'] || '如果')
-          this.appendStatementInput('STACK')
-          this.setColour(CATEGORY_COLORS.control)
-          this.contextMenu = false
-        },
-      }
-      Blockly.Blocks['u_if_elseif_input'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField(Blockly.Msg['U_IF_ELSE_ELSEIF_MSG'] || '否則，如果')
-          this.setPreviousStatement(true)
-          this.setNextStatement(true)
-          this.setColour(CATEGORY_COLORS.control)
-          this.contextMenu = false
-        },
-      }
-      Blockly.Blocks['u_if_else_input'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField(Blockly.Msg['U_IF_ELSE_MSG2'] || '否則')
-          this.setPreviousStatement(true)
-          this.setColour(CATEGORY_COLORS.control)
-          this.contextMenu = false
-        },
-      }
-
-      Blockly.Blocks['cpp_if'] = {
-        elseifCount_: 0,
-        hasElse_: false,
-        init: function (this: any) {
-          this.elseifCount_ = 0
-          this.hasElse_ = false
-          this.appendValueInput(IF_INPUTS.value[0])
-            .appendField(Blockly.Msg['U_IF_MSG'] || '如果')
-          this.appendStatementInput(IF_INPUTS.statement[0])
-            .appendField(Blockly.Msg['U_IF_THEN'] || '則')
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusElseIf_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusElseIf_()), 'MINUS_BTN')
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.control)
-          this.setTooltip(Blockly.Msg['U_IF_TOOLTIP'] || '條件判斷')
-          this.setMutator(new Blockly.icons.MutatorIcon(
-            ['u_if_elseif_input', 'u_if_else_input'],
-            this as unknown as Blockly.BlockSvg,
-          ))
-        },
-        plusElseIf_: function (this: any) {
-          const idx = this.elseifCount_
-          this.elseifCount_++
-          this.appendValueInput(`ELSEIF_CONDITION_${idx}`)
-            .appendField(Blockly.Msg['U_IF_ELSE_ELSEIF_MSG'] || '否則，如果')
-          this.appendStatementInput(`ELSEIF_THEN_${idx}`)
-            .appendField(Blockly.Msg['U_IF_THEN'] || '則')
-          this.moveInputBefore(`ELSEIF_CONDITION_${idx}`, 'TAIL')
-          this.moveInputBefore(`ELSEIF_THEN_${idx}`, 'TAIL')
-          setMinusState(this, false)
-        },
-        minusElseIf_: function (this: any) {
-          if (this.elseifCount_ <= 0) return
-          this.elseifCount_--
-          const idx = this.elseifCount_
-          this.removeInput(`ELSEIF_THEN_${idx}`)
-          this.removeInput(`ELSEIF_CONDITION_${idx}`)
-          setMinusState(this, this.elseifCount_ <= 0)
-        },
-        updateShape_: function (this: any) {
-          let i = 0
-          while (this.getInput(`ELSEIF_CONDITION_${i}`)) {
-            this.removeInput(`ELSEIF_CONDITION_${i}`)
-            this.removeInput(`ELSEIF_THEN_${i}`)
-            i++
-          }
-          if (this.getInput('ELSE')) this.removeInput('ELSE')
-          if (this.getInput('TAIL')) this.removeInput('TAIL')
-          for (let j = 0; j < this.elseifCount_; j++) {
-            this.appendValueInput(`ELSEIF_CONDITION_${j}`)
-              .appendField(Blockly.Msg['U_IF_ELSE_ELSEIF_MSG'] || '否則，如果')
-            this.appendStatementInput(`ELSEIF_THEN_${j}`)
-              .appendField(Blockly.Msg['U_IF_THEN'] || '則')
-          }
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusElseIf_()))
-            .appendField(new Blockly.FieldImage(
-              this.elseifCount_ <= 0 ? MINUS_DISABLED_IMG : MINUS_IMG,
-              20, 20, '-', () => this.minusElseIf_()), 'MINUS_BTN')
-          if (this.hasElse_) {
-            this.appendStatementInput('ELSE')
-              .appendField(Blockly.Msg['U_IF_ELSE_MSG2'] || '否則')
-          }
-        },
-        saveExtraState: function (this: any) {
-          if (this.elseifCount_ === 0 && !this.hasElse_) return null
-          const state: Record<string, unknown> = {}
-          if (this.elseifCount_ > 0) state.elseifCount = this.elseifCount_
-          if (this.hasElse_) state.hasElse = true
-          return state
-        },
-        loadExtraState: function (this: any, state: Record<string, unknown>) {
-          this.elseifCount_ = (state?.elseifCount as number) ?? 0
-          this.hasElse_ = state?.hasElse === true
-          this.updateShape_()
-        },
-        decompose: function (this: any, workspace: Blockly.WorkspaceSvg) {
-          const containerBlock = workspace.newBlock('u_if_container')
-          containerBlock.initSvg()
-          let connection = containerBlock.getInput('STACK')!.connection!
-          for (let i = 0; i < this.elseifCount_; i++) {
-            const elseifBlock = workspace.newBlock('u_if_elseif_input')
-            elseifBlock.initSvg()
-            connection.connect(elseifBlock.previousConnection!)
-            connection = elseifBlock.nextConnection!
-          }
-          if (this.hasElse_) {
-            const elseBlock = workspace.newBlock('u_if_else_input')
-            elseBlock.initSvg()
-            connection.connect(elseBlock.previousConnection!)
-          }
-          return containerBlock
-        },
-        compose: function (this: any, containerBlock: Blockly.Block) {
-          let elseifCount = 0
-          let hasElse = false
-          let clauseBlock = containerBlock.getInputTargetBlock('STACK')
-          while (clauseBlock) {
-            if (clauseBlock.type === 'u_if_elseif_input') {
-              elseifCount++
-            } else if (clauseBlock.type === 'u_if_else_input') {
-              hasElse = true
-            }
-            clauseBlock = clauseBlock.getNextBlock()
-          }
-          this.elseifCount_ = elseifCount
-          this.hasElse_ = hasElse
-          this.updateShape_()
-        },
-      }
-
-      Blockly.Blocks['cpp_if_else'] = Blockly.Blocks['cpp_if']
-    }
+    // 🪦 **`cpp_if` 的命令式定義已於 2026-08-24 刪除**——比對護欄確認一模一樣。
+    //
+    //    它換成宣告：`components/cpp/if/forms/blocks.json` 的 `branchList`
+    //    （插槽名 `ELSEIF_CONDITION_{i}`／`ELSEIF_THEN_{i}`／`ELSE`／`TAIL`
+    //    **沿用命令式那一份**，存檔與渲染策略吐的鍵因此一字不差）。
+    //
+    //    一起走的還有三顆 mutator 小積木（`u_if_container`／`u_if_elseif_input`／
+    //    `u_if_else_input`）——建構子自己會長一組同形狀的。
+    //
+    // ⚠️ **`cpp_if_else` 原本是它的別名**，現在回到自己的宣告（靜態的
+    //    如果／則／否則）。它**不在工具箱裡**（`toolbox-categories.ts` 逐字
+    //    「被下面三個帶 extraState 的 cpp_if 入口取代」），只剩舊存檔會用到它。
+    //
+    // 🔴 **判準是「比對護欄說它們一模一樣」**，不是「看起來很像」——
+    //    而在那之前修的是**比對器**：它原本只跑 `jsonInit`，看不到三個建構子。
 
     // 🪦 **`cpp_loop_while` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
     //    ⚠️ **用語改成宣告的「持續執行」**（人拍板 2026-08-20）：與它自己的 tooltip 一致，

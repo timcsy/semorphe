@@ -15,7 +15,7 @@
           "check": "Expression"
         }
       ],
-      "message1": "%1",
+      "message1": "%{BKY_U_IF_THEN} %1",
       "args1": [
         {
           "type": "input_statement",
@@ -26,7 +26,22 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FFAB19",
-      "tooltip": "%{BKY_U_IF_TOOLTIP}"
+      "tooltip": "%{BKY_U_IF_TOOLTIP}",
+      "branchList": {
+        "conditionPattern": "ELSEIF_CONDITION_{i}",
+        "bodyPattern": "ELSEIF_THEN_{i}",
+        "conditionLabelKey": "U_IF_ELSEIF",
+        "conditionLabelFallback": "否則，如果",
+        "bodyLabelKey": "U_IF_THEN",
+        "bodyLabelFallback": "則",
+        "elseInput": "ELSE",
+        "elseLabelKey": "U_IF_ELSE",
+        "elseLabelFallback": "否則",
+        "containerLabelKey": "U_IF_MUTATOR_TITLE",
+        "containerLabelFallback": "如果",
+        "colour": "#FFAB19",
+        "tailInput": "TAIL"
+      }
     },
     "renderMapping": {
       "fields": {},
@@ -37,6 +52,7 @@
         "THEN": "then_body"
       },
       "strategy": "cpp:renderIf"
-    }
+    },
+    "_why": "🔴 **插槽名沿用命令式那一份**（`ELSEIF_CONDITION_{i}`／`ELSEIF_THEN_{i}`／`ELSE`），**不是抄 Python 那顆的名字**——使用者的存檔裡是這些名字，換掉的話 Blockly 會**安靜地**把接在上面的積木丟掉。建構子的插槽名是參數化的，正是為了這件事。\n🟢 **「如果／則」是命令式那一份對**（2026-08-24 逐筆判）：① 使用者今天看到的就是它（命令式後跑、會覆蓋宣告）；② 與第二個語言那顆同名積木的「如果／則」一致——`branch-list-block.ts` 檔頭逐字「兩個語言的同一顆積木，互動方式不該不一樣」；③ elif 那幾列本來就需要一個主體標籤，而「就」貼在條件尾巴的寫法在那幾列排不出來。"
   }
 ]

@@ -23,10 +23,13 @@ describe('BlockRegistrar', () => {
     const filePath = path.resolve(__dirname, '../../../src/ui/block-registrar.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     const expectedTypes = [
-       'cpp_input', 'cpp_var_declare', 'cpp_if',
+       'cpp_input', 'cpp_var_declare',
       'cpp_func_def', 'cpp_func_call', 'cpp_print_formatted', 'cpp_input_formatted', 'cpp_loop_count',
       'cpp_raw_code',
     ]
+    // 🪦 **`cpp_if` 於 2026-08-24 退場**（比對護欄確認一模一樣，換成 `branchList` 宣告）。
+    //    ⚠️ 從這張清單拿掉一個名字**必須附理由**——否則「它不見了」與
+    //    「它被誰不小心刪掉了」在這支測試裡長得一模一樣。
     // ⚠️ 🪦 `cpp_print`（162）、`cpp_array_at`／`cpp_continue`／`cpp_endl`／
     //    `cpp_literal_string`（163）、cpp_break／cpp_return／cpp_var_ref（164）、
     //    cpp_loop_while 等七顆（165）從這份清單移除——它不再是命令式的，

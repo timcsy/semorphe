@@ -1,8 +1,6 @@
 {
   "U_VAR_ASSIGN_LABEL": "set variable",
   "U_VAR_ASSIGN_SET_LABEL": "to",
-  "U_IF_ELSE_IF_LABEL": "if",
-  "U_IF_ELSE_ELSEIF_MSG": "else if",
   "C_INCREMENT_VAR_LABEL": "variable",
   "C_COMPOUND_ASSIGN_VAR_LABEL": "variable",
   "CPP_VECTOR_PUSH_BACK_MSG0": "append %2 to vector %1",
@@ -58,8 +56,6 @@
   "C_SCANF_FORMAT_LABEL": "Formatted input (scanf)",
   "U_PRINT_MSG": "Print",
   "U_INPUT_MSG": "read input ->",
-  "U_IF_MSG": "if",
-  "U_IF_THEN": "then",
   "U_WHILE_MSG": "while",
   "U_WHILE_DO": "do",
   "U_WHILE_TOOLTIP": "Repeat while the condition is true",

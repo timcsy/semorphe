@@ -20,7 +20,7 @@ import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeader
 import { registerCppExtractStrategies } from '../languages/cpp/extractors/extract-strategies'
 import {
   C_COMPOUND_ASSIGN_EXPR_INPUTS, C_VAR_DECLARE_EXPR_INPUTS,
-  IF_INPUTS, FUNDEF_INPUTS,
+  FUNDEF_INPUTS,
 } from '../languages/cpp/block-input-names'
 import {
   detectStyleExceptions, applyStyleConversions, analyzeIoConformance,
@@ -142,7 +142,6 @@ export class App {
       compoundAssignExpr: C_COMPOUND_ASSIGN_EXPR_INPUTS,
       varDeclareExpr: C_VAR_DECLARE_EXPR_INPUTS,
       // 🔴 spec 154：這九個原本住在 `core/block-input-names.ts`
-      ifBlock: IF_INPUTS,
       funcDef: FUNDEF_INPUTS,
     })
     this.blockRegistrar = new BlockRegistrar(this.blockSpecRegistry)
