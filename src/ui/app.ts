@@ -52,6 +52,7 @@ import { BlockSpecRegistry } from '../core/block-spec-registry'
 import type { SavedState } from '../core/storage'
 import { describeRefusal } from './refusal-message'
 import { LocaleLoader } from '../i18n/loader'
+import { setMessageSource } from '../core/messages'
 import type { StyleSelector } from './toolbar/style-selector'
 import type { TopicSelector } from './toolbar/topic-selector'
 import type { StylePreset } from '../core/types'
@@ -147,6 +148,15 @@ export class App {
     //    ——兩邊如果各查各的，遲早會有一邊落後。
     this.blockRegistrar.setBoardProvider(() => this.currentTarget.board)
     this.localeLoader = new LocaleLoader()
+    // 🔴 **把翻譯表接到核心的訊息埠上**（2026-08-24）。
+    //
+    // 語言套件原本自己 `import * as Blockly` 只為了讀 `Blockly.Msg`，
+    // 於是「載入一個語言」＝「載入整個 Blockly ＋ jsdom」——那在 Node 宿主
+    // 直接爆掉（`examples/bring-your-own-view/` 量到的）。
+    //
+    // ⚠️ 沒接的宿主拿到的是 fallback，而**那不是降級，是預設行為**：
+    // 一個沒有 UI 的宿主本來就沒有翻譯表。
+    setMessageSource((key) => (Blockly.Msg as Record<string, string>)[key])
     this.storageService = this.profile.createStorage()
     this.topicRegistry = new TopicRegistry()
     this.targetRegistry = new TargetRegistry()

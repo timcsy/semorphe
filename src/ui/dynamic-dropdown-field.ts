@@ -26,25 +26,19 @@
  * > **一個會把它不認得的值換掉的下拉，等於在使用者沒看的時候改掉他的程式。**
  */
 import * as Blockly from 'blockly'
+import { dropdownSource } from '../core/dropdown-sources'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-/** 選項來源——**由組裝點注入**，這個模組一個 C++ 的字都不認識。 */
-const SOURCES = new Map<string, () => Array<[string, string]>>()
-
-/**
- * 註冊一個選項來源。
- *
- * ⚠️ **沒註冊就丟錯**，不回空陣列——一個空的下拉與「還沒接上」長得一模一樣，
- * 而使用者會以為是自己沒宣告變數。
- */
-export function declareDropdownSource(name: string, options: () => Array<[string, string]>): void {
-  SOURCES.set(name, options)
-}
-
-export function dropdownSourceNames(): string[] {
-  return [...SOURCES.keys()]
-}
+// 🔴 **登記處搬到 `core/dropdown-sources.ts` 了**（2026-08-24）。
+//
+// 理由不是分層潔癖，是一個在 Node 裡量到的事實：語言套件只需要那張 Map，
+// 而它住在這個檔案裡，於是 `languages/<lang>/pack.ts` 為了登記一個下拉
+// **把整個 Blockly（連帶 jsdom）拖進了出貨的核心**。
+//
+// ⚠️ 這裡**轉出**它們，是因為既有呼叫端（積木宣告、比對器、護欄）都指著這個檔。
+// 一個檔案可以既是實作的家、又是別人的門面——但**登記處不該與它的欄位綁在一起**。
+export { declareDropdownSource, dropdownSourceNames } from '../core/dropdown-sources'
 
 const FIELD_TYPE = 'field_dynamic_dropdown'
 
@@ -54,7 +48,7 @@ export function registerDynamicDropdownField(): void {
   class DynamicDropdown extends Blockly.FieldDropdown {
     constructor(source: string) {
       super(() => {
-        const gen = SOURCES.get(source)
+        const gen = dropdownSource(source)
         if (!gen) throw new Error(`下拉來源沒註冊：${source}——組裝點要先呼叫 declareDropdownSource`)
         const opts = gen()
         // Blockly 不接受空的選項清單

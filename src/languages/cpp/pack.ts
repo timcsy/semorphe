@@ -12,8 +12,8 @@
  */
 import type { Topic, Target, StylePreset } from '../../core/types'
 import { declareLanguagePack } from '../../core/language-packs'
-import { declareDropdownSource } from '../../ui/dynamic-dropdown-field'
-import * as Blockly from 'blockly'
+import { declareDropdownSource } from '../../core/dropdown-sources'
+import { msg } from '../../core/messages'
 import { cppCategoryDefs } from './toolbox-categories'
 import { CppParser } from './parser'
 import { registerCppLanguage } from './generators'
@@ -53,7 +53,6 @@ import cPreset from './styles/c.json'
  * ⚠️ **認不得的值不會被換掉**（`dynamic-dropdown-field` 的既有行為）：
  * 學生打過的 `MyStruct*` 照樣留著。所以這裡不必窮舉。
  */
-const msg = (key: string, fallback: string): string => (Blockly.Msg as Record<string, string>)[key] || fallback
 
 declareDropdownSource('cpp_param_types', () => [
   [msg('U_FUNC_DEF_PARAM_TYPE_INT', 'int'), 'int'],

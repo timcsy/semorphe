@@ -20,3 +20,7 @@ Thumbs.db
 
 # Blockly 的圖示與音效——由 vite.config.ts 從 node_modules 複製（產物，不是原始碼）
 public/blockly-media/
+
+# 出貨產物與範例的建置輸出——由 `npm run build:sdk` 與範例自己的 build.mjs 產生
+dist-sdk/
+examples/**/dist/

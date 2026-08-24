@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:sdk": "node tools/build-sdk.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",

@@ -14,8 +14,8 @@ import { declareExpressionStatement } from '../../core/expression-statement'
 import { declareBuiltinConstants } from '../../core/language-executors'
 // ⚠️ 下拉的**選項來源**是一個中立的登記處（那個模組一個語言的字都不認識），
 //    而**選項本身是語言的知識**——所以宣告在這裡。
-import { declareDropdownSource } from '../../ui/dynamic-dropdown-field'
-import * as Blockly from 'blockly'
+import { declareDropdownSource } from '../../core/dropdown-sources'
+import { msg } from '../../core/messages'
 import { PYTHON_GLOBALS } from './builtins'
 import { pythonCommentSyntax } from './comment-syntax'
 import { registerPythonTransforms } from './transforms'
@@ -59,7 +59,6 @@ declareBuiltinConstants(PYTHON_GLOBALS)
  * 「加一顆這個語言的積木不准動它」（P3）。語言自己的清單，語言自己說。
  */
 declareDropdownSource('python_types', () => {
-  const msg = (key: string, fallback: string): string => Blockly.Msg[key] || fallback
   return [
     // ⚠️ 第一筆是**清掉註記**——沒有它的話，選過之後就取消不掉了
     [msg('PY_TYPE_NONE_GIVEN', '（不指定）'), ''],

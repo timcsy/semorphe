@@ -1,0 +1,14 @@
+{
+  "//": "型別出貨——`dist-sdk/semorphe.mjs` 的那一面。消費者拿到值也拿到型別。",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "allowImportingTsExtensions": false,
+    "outDir": "dist-sdk/types",
+    "rootDir": "src"
+  },
+  "include": ["src/sdk/index.ts"],
+  "exclude": ["src/scripts", "src/**/*.test.ts"]
+}

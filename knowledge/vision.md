@@ -456,12 +456,19 @@ languages/{lang}/
       「本身就有 Blockly 或是 Flow 了，**但是想要加入程式碼即時互轉功能**」
       ——**那個情境一個面板都不需要**，它要的是引擎 ＋ 自己實作 `ViewHost`。
       設計見 [draft/可嵌入與可插拔的四個軸](draft/2026-08-24-可嵌入與可插拔的四個軸.md)。
-      - [ ] 🔴 **驗收：`examples/bring-your-own-view/` 在非 Vite 專案編譯並跑通即時互轉**
-            （用 textarea 假面板；編不過就是紅——**demo 即規格，也是護欄**）
-            ⚠️ 它會逼掉三個硬阻礙：`import.meta.glob` 是 Vite 專屬
-            （`core/component/registry.ts:54`，檔頭記著 esbuild → CJS 會炸）·
-            登錄表是模組全域（一頁兩個實例會互污）·
-            語言中立的宣告掛在 C++ 的 registrar 底下（[history/121](history/121-Python的執行期而十七顆執行器第一次被跑過.md)）
+      - [x] 🔴 **驗收：`examples/bring-your-own-view/` 在非 Vite 專案編譯並跑通即時互轉**
+            —— **2026-08-24 交付**（第五十八條護欄 `audit-portable-core`，硬性零）
+            🔴 **而需求被推導錯了一格**：不是「核心要戒掉 `import.meta.glob`」，
+            是「出貨打包好的產物」——`vite build --lib` → `dist-sdk/semorphe.mjs`，
+            **核心一行沒改**。見 [history/149](history/149-核心第一次在別人的建置工具下跑起來.md)。
+            🟢 順手修掉的架構債：**語言套件不再 import 視圖層**
+            （`languages/<lang>/pack.ts` → `ui/dynamic-dropdown-field` → `blockly` → `jsdom`）
+            ——拆成 `core/dropdown-sources.ts`（登記處）＋ `core/messages.ts`（訊息埠）
+      - [ ] **組裝要收成一個入口，或者漏了要能出聲**（例子照出來的 ③④）
+            膠囊的 lift 策略、產生器（`pack.install()`）今天都要消費者自己登記，
+            而**漏掉的症狀是降級不是錯誤**：`if` 變 `unresolved`、產出變 `⟨unknown component⟩`
+      - [ ] **登錄表實例化**（`view-registry.ts:52`／`skip-declarations.ts:22,73`／
+            `component/registry.ts:63` 四處模組全域）——教學網站**一頁多題**才逼得出來
       - [ ] 面板只 import 協定——`ViewConfig` 長出 `t` / `appearance` / `schema` 三個 port，
             **`flow-panel` 是第一個實例**（今天它 import 了 Blockly、`BlockSpecRegistry`、`core/traits`）
       - [ ] 版面登錄表（`viewId → slot`）：面板宣告**偏好**不宣告位置；宿主各自渲染區域樹
