@@ -1,4 +1,5 @@
 import * as monaco from 'monaco-editor'
+import { preserveBlankLines } from '../../core/projection/preserve-blank-lines'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent } from '../../core/view-host'
 import type { CodeMapping } from '../../core/projection/code-generator'
 import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
@@ -71,7 +72,22 @@ export class MonacoPanel implements ViewHost, CodeView {
     // ⚠️ `resync` 不可漏——它原本由 `app.ts` 的第二條線補。
     // 兩條線的條件不一樣，而那種不一致只會在其中一條被刪掉時才現形。
     if ((event.source === 'blocks' || event.source === 'resync') && event.code !== undefined) {
-      this.setCode(event.code)
+      // 🔴 **空行要還回去**（2026-08-24，使用者拍板）。
+      //
+      // 這個問題掛了幾天，而它的形式是「網頁版的程式碼面板，是**使用者的東西**
+      // 還是**投影的產物**？」——如果是前者，排版屬於他，要保留；
+      // 如果是後者，它每次都可以重生。
+      //
+      // 使用者逐字：「**網頁版的程式碼面板也是投影的產物，與 VSCode 的面板
+      // 應該行為一致**」——**兩個判斷合起來才是答案**：
+      // 它是投影，而**投影的行為只有一套**。
+      //
+      // > **同一個東西在兩個宿主裡有兩種行為，那不是兩個實作，是一個沒被回答的問題。**
+      //
+      // ⚠️ 機制早就存在（`preserve-blank-lines.ts`，2026-08-19 為擴充那側做的），
+      //    而網頁版**一直沒接**——見那個檔頭：「一個機制只接了一個宿主，
+      //    那它的另一半是不存在的」。
+      this.setCode(preserveBlankLines(this.getCode(), event.code))
       if (event.scaffoldResult) {
         this.applyScaffoldDecorations(event.code, event.scaffoldResult)
       }
