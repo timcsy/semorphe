@@ -7335,3 +7335,27 @@ Blockly.Python['cv2_create_knn'] = function(block) {
   出貨給外人之前，組裝要嘛收成一個入口，要嘛漏了要能出聲。
 
 - **來源**：[history/149](history/149-核心第一次在別人的建置工具下跑起來.md)
+
+### 一個 fallback 預設值，會讓「沒找到」與「本來就沒有」長得一模一樣
+
+- **實例（2026-08-24，同一個根因三處）**：`int**` 的 AST 是**巢狀**的
+  `pointer_declarator`，而三處都寫 `namedChildren.find(c => c.type === 'identifier')`
+  ——對單層成立，對多層**找不到**：
+
+  ```
+  int** p;         → pointer_declare{ name: "ptr", type: "int" }   名字掉了、少一顆星
+  int f(int** a)   → param_decl{ type: "int*", name: "" }          參數少一顆星、名字空的
+  ```
+
+- 🔴 **症狀是「產出一段合法但不同的程式」**（`int* ptr;`）——不是錯誤、不是降級標記，
+  所以**編譯器不會幫你發現，來回轉換的測試也看起來是綠的**。
+
+- **判準**：寫 `?? '預設值'` 時停一下問：
+  **「這個預設值，會不會與一個真實存在的合法輸入撞在一起？」**
+  會 → 那個 fallback 正在製造假資料。該做的是**降級並說出來**，不是給一個看起來合理的值。
+
+- **怎麼找同類**：`CLAUDE.md` 已經點名這個反模式（`'x'` 那一族）。
+  找法是搜 `?? '` 後面接一個**看起來像合法識別字**的字串常數。
+
+- **來源**：[draft/開放值域的下拉 §五](draft/2026-08-24-開放值域的下拉.md)
+  ／`tests/integration/cpp-multi-pointer.test.ts`

@@ -136,6 +136,42 @@ function degrade(node: SemanticNode, reason: string): SemanticNode {
   return node
 }
 
+/**
+ * 剝開**巢狀**的指標宣告子，數出有幾顆星。
+ *
+ * 🔴 `int** p` 的 AST 是巢狀的，不是「一個帶兩顆星的節點」：
+ *
+ * ```
+ * pointer_declarator
+ *   pointer_declarator
+ *     identifier "p"
+ * ```
+ *
+ * 在此之前三處都寫 `namedChildren.find(c => c.type === 'identifier')`
+ * ——**對單層成立，對多層找不到**，於是名字退回 `'ptr'`／`''`、星數少算。
+ *
+ * > **`?? 'ptr'` 讓「沒找到」與「本來就沒有」長得一模一樣**
+ * > （`CLAUDE.md` 的靜默降級反模式），而症狀是**產出一段合法但不同的程式**。
+ */
+function unwrapPointers(decl: AstNode): { stars: number; inner: AstNode } {
+  let inner = decl
+  let stars = 0
+  while (inner.type === 'pointer_declarator') {
+    stars++
+    const next = inner.namedChildren.find(
+      (c) =>
+        c.type === 'pointer_declarator' ||
+        c.type === 'array_declarator' ||
+        c.type === 'reference_declarator' ||
+        c.type === 'function_declarator' ||
+        c.type === 'identifier',
+    )
+    if (!next) break
+    inner = next
+  }
+  return { stars, inner }
+}
+
 function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): SemanticNode {
   // **膠囊自己的判別先問**——「宣告子長成這樣時是我」是元件的知識。
   const claim = tryDeclaratorBranches(decl, type, ctx)
@@ -154,14 +190,14 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     // ⚠️ `int* a[3]` 的 pointer_declarator 裡包的是 **array_declarator**，
     // 不是 identifier。只找 identifier 的話名字取不到，落到預設 `'ptr'`
     // ——**名字與大小都掉了**，而產出的 `int* ptr;` 看起來像一段合法程式。
-    const inner = decl.namedChildren.find(c => c.type === 'array_declarator')
-    if (inner) {
+    const { stars, inner } = unwrapPointers(decl)
+    if (inner.type === 'array_declarator') {
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
-      return buildArrayDeclare(`${type}*`, inner, ctx)
+      return buildArrayDeclare(`${type}${'*'.repeat(stars)}`, inner, ctx)
     }
-    const ptrIdent = decl.namedChildren.find(c => c.type === 'identifier')
-    const name = ptrIdent?.text ?? 'ptr'
-    return buildPointerDeclare(name, type)
+    const name = inner.type === 'identifier' ? inner.text : 'ptr'
+    // 🔴 這顆元件的產生器**自己會補一顆星**（`${type}* ${name}`），所以少算一顆
+    return buildPointerDeclare(name, type + '*'.repeat(stars - 1))
   }
 
   // Bare reference declarator without init: int& ref; (rare, usually has init)
@@ -192,19 +228,23 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
     // ⚠️ `int* a[3]` 的 pointer_declarator 裡包的是 **array_declarator**，
     // 不是 identifier。只找 identifier 的話名字取不到，落到預設 `'ptr'`
     // ——**名字與大小都掉了**，而產出的 `int* ptr;` 看起來像一段合法程式。
-    const inner = nameNode.namedChildren.find(c => c.type === 'array_declarator')
-    if (inner) {
+    const { stars, inner } = unwrapPointers(nameNode)
+    if (inner.type === 'array_declarator') {
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
-      return attachInitializer(buildArrayDeclare(`${type}*`, inner, ctx), decl.childForFieldName('value'), ctx)
+      return attachInitializer(
+        buildArrayDeclare(`${type}${'*'.repeat(stars)}`, inner, ctx),
+        decl.childForFieldName('value'),
+        ctx,
+      )
     }
-    const ptrIdent = nameNode.namedChildren.find(c => c.type === 'identifier')
-    name = ptrIdent?.text ?? 'ptr'
+    name = inner.type === 'identifier' ? inner.text : 'ptr'
+    const ptrType = type + '*'.repeat(stars - 1)
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
       const value = ctx.lift(valueNode)
-      return buildPointerDeclare(name, type, value)
+      return buildPointerDeclare(name, ptrType, value)
     }
-    return buildPointerDeclare(name, type)
+    return buildPointerDeclare(name, ptrType)
   }
 
   // Array init_declarator: int arr[10] = {...}
@@ -1011,9 +1051,13 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
 
     if (declNode) {
       if (declNode.type === 'pointer_declarator') {
-        type += '*'
-        const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
-        name = innerIdent?.text ?? ''
+        // 🔴 多層指標（`int** a`）的 AST 是巢狀的——見 `unwrapPointers`。
+        //    只加一顆星、只找直接子的 identifier 的話，**型別少一顆星而名字是空的**。
+        const { stars, inner } = unwrapPointers(declNode)
+        type += '*'.repeat(stars)
+        name = inner.type === 'identifier'
+          ? inner.text
+          : inner.namedChildren.find((c) => c.type === 'identifier')?.text ?? ''
       } else if (declNode.type === 'reference_declarator') {
         type += '&'
         const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
