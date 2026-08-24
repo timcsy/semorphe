@@ -1,4 +1,3 @@
-import type { SemanticNode } from './types'
 import { CURRENT_VERSION, judgeJSON, upgrade } from './storage-version'
 
 const STORAGE_KEY = 'semorphe-state'
@@ -38,8 +37,18 @@ function definedOnly<T extends object>(obj: T): Partial<T> {
 
 export interface SavedState {
   version: number
-  tree: SemanticNode | null
+  /**
+   * 積木工作區的狀態——**side-car，而它是快取不是真相**（v11 起）。
+   *
+   * 🔴 在 v11 之前這裡還存著一份 `tree`，而**沒有任何還原路徑在讀它**
+   * （8 個升級步驟認真地改寫了它 8 次）。真相是 `code`，樹是導出的。
+   *
+   * ⚠️ 失效條件是 `codeHash`：對不上就**寧可重排版**，
+   * 也不要拿一份與程式碼不一致的積木——那會變成第二份真相。
+   */
   blocklyState: object
+  /** `blocklyState` 對應的那份程式碼的雜湊——見上 */
+  codeHash?: string
   code: string
   language: string
   styleId: string
@@ -78,7 +87,6 @@ export class StorageService {
       const existing = this.load()
       const defaults: SavedState = {
         version: CURRENT_VERSION,
-        tree: null,
         blocklyState: {},
         code: '',
         language: this.defaultLanguage,

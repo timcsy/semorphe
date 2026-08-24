@@ -55,6 +55,9 @@ describe('SC-003：v2 存檔升級後產出不變', () => {
   // ⚠️ 走**完整的升級鏈**，不是只呼叫 `UPGRADES[2]`。
   // D1 之後 v2 的目標（`lang:*`）又被 v4→v5 帶到 `cpp:*`——
   // 只跑一段會停在中繼點上，而那個 id 不存在。
+  // ⚠️ **升到 v10 為止，不是最新**：v11 把 `tree` 從存檔裡拿掉了
+  //    （沒有任何還原路徑在讀它），而這一支要驗的正是 v1→v9 那八個改寫 `tree` 的步驟。
+  //    **一個沒有辦法被單獨驗證的升級步驟，等於沒有被驗證過。**
   const rise = (tree: unknown): SemanticNode => {
     // ⚠️ `upgrade()` 走完鏈之後會用 `judge()` 驗形狀，所以必填欄位要齊——
     // 只給 `{ version, tree }` 會以「升級後仍然不是可用的存檔」失敗，
@@ -65,6 +68,7 @@ describe('SC-003：v2 存檔升級後產出不變', () => {
         styleId: 'apcs', lastModified: 0,
       } as Record<string, unknown>,
       2,
+      10, // ⚠️ 停在 `tree` 還在的最後一版——見上面那段
     )
     if (!r.ok) throw new Error(`升級失敗：${r.reason}`)
     return (r.value as { tree: SemanticNode }).tree

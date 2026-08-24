@@ -69,7 +69,7 @@ import { ExecutionController } from './execution-controller'
 // Semantic layer
 import { allCppComponents, allCppProjections } from '../languages/cpp/all-declarations'
 // Projection layer
-import { CURRENT_VERSION } from '../core/storage-version'
+import { CURRENT_VERSION, hashCode } from '../core/storage-version'
 
 /**
  * 全部語言的風格預設——**從語言套件收，不逐個 import**。
@@ -391,7 +391,9 @@ export class App {
     if (this.profile.features.fileButtons) setupFileButtons(this.storageService, {
       getExportState: () => this.buildSaveState(),
       importState: (state: SavedState) => {
-        if (state.blocklyState && Object.keys(state.blocklyState).length > 0) this.blocklyPanel?.setState(state.blocklyState)
+        // ⚠️ 匯入那條路走**同一個**失效判定——兩條路徑鬆緊度不同是這個模組的老病
+        //    （`storage-version.ts` 檔頭記著：自動載入那條什麼都不檢查）
+        if (this.sideCarUsable(state)) this.blocklyPanel?.setState(state.blocklyState)
         if (state.code) this.codeView?.setCode(state.code)
       },
       onUploadCustomBlocks: (blocks: object[]) => {
@@ -914,9 +916,31 @@ export class App {
    *
    * 2026-08-11 錄 v9 存檔樣本時發現：localStorage 裡是 9，匯出的檔是 1。
    */
+  /**
+   * side-car 還用得嗎——**快取的失效條件**（v11 起）。
+   *
+   * 🔴 `blocklyState` 不是第二份真相，是一份**快取**：它讓開檔又快又精確
+   * （不必重 lift、座標原樣回來）。而快取要有失效條件，否則它就是第二份真相。
+   *
+   * > **對不上的時候，寧可重排版，也不要拿一份與程式碼不一致的積木。**
+   *
+   * ⚠️ 舊存檔（v10 升上來）的 `codeHash` 由遷移補上，所以這裡不需要「沒有就當有效」
+   * 的寬鬆分支——**那種寬鬆會讓失效條件變成裝飾**。
+   */
+  private sideCarUsable(state: SavedState): boolean {
+    if (!state.blocklyState || Object.keys(state.blocklyState).length === 0) return false
+    if (state.codeHash === undefined) return false
+    return state.codeHash === hashCode(state.code)
+  }
+
   private buildSaveState(): SavedState {
-    return { version: CURRENT_VERSION, tree: this.syncController?.getCurrentTree() ?? null,
-      blocklyState: this.blocklyPanel?.getState() ?? {}, code: this.codeView?.getCode() ?? '',
+    // 🔴 **`tree` 不再存**（v11）：它是從 `code` 導出的，而在此之前它被存了
+    //    10 個世代、被遷移改寫 8 次，**而沒有任何還原路徑在讀它**。
+    // ⚠️ `codeHash` 是 side-car 的失效條件——積木狀態與程式碼對不上時
+    //    寧可重排版，也不要拿一份不一致的積木當第二份真相。
+    const code = this.codeView?.getCode() ?? ''
+    return { version: CURRENT_VERSION, codeHash: hashCode(code),
+      blocklyState: this.blocklyPanel?.getState() ?? {}, code,
       language: this.currentTopic.language, styleId: this.currentStylePreset.id,
       topicId: this.currentTopic.id, targetId: this.currentTarget.id, enabledBranches: [...this.enabledBranches],
       lastModified: new Date().toISOString(), blockStyleId: this.currentBlockStyleId, locale: this.currentLocale }
@@ -941,8 +965,25 @@ export class App {
     const state = outcome.state
 
     // 1. Restore blocks FIRST (before level change triggers resync)
-    if (state.blocklyState && Object.keys(state.blocklyState).length > 0) {
+    //
+    // 🔴 **快取對不上就走另一條路**（v11，2026-08-24）。
+    //
+    // ⚠️ 在此之前這個還原路徑**從來沒有用過 `state.code`**——步驟 3 是
+    //    「從積木產生程式碼」，於是存檔裡那份程式碼只是輸出，不是輸入。
+    //    那正是 `view-state.ts:5` 記的那句話：「網頁版沒有檔案 ⟹
+    //    **積木的擺放【就是】真相**」。
+    //
+    // 🔴 而它讓「不用快取」變成一件危險的事：積木沒還原 → 工作區是空的
+    //    → 步驟 3 從空工作區產生程式碼 → **把使用者的程式蓋成一個空骨架**。
+    //    （2026-08-24 用真的 v9 存檔實測到，413 字的程式當場消失。）
+    //
+    // > **一個「從投影重建真相」的還原路徑，在投影缺席時會把真相抹掉。**
+    const useSideCar = this.sideCarUsable(state)
+    if (useSideCar) {
       this.blocklyPanel?.setState(state.blocklyState)
+    } else if (state.code) {
+      // 程式碼才是真相——先把它放回去，積木在步驟 3 從它重建
+      this.codeView?.setCode(state.code)
     }
 
     // 2. Restore topic and branches WITHOUT triggering resyncAfterTopicChange
@@ -993,8 +1034,23 @@ export class App {
     //    🔴 留著它是因為「擋下寫回」本身是對的；而在 2026-08-24 之前它會
     //    **每一次重新整理都彈一條紅色的錯誤訊息**——使用者：「我覺得這會讓
     //    使用者有誤會，以為剛開啟的時候系統錯誤。」
-    this.syncBlocksToCodeWithMappings()
-    this.resyncAfterTopicChange()
+    if (useSideCar) {
+      this.syncBlocksToCodeWithMappings()
+      this.resyncAfterTopicChange()
+    } else if (state.code) {
+      // 🔴 **方向要反過來，而順序也要反過來**（2026-08-24 實測兩次才對）。
+      //
+      // 快取失效時是程式碼餵積木，不是積木餵程式碼。而光是換方向還不夠——
+      // `resyncAfterTopicChange()` 自己會**從積木重新產生程式碼**，於是它會
+      // 在最後一刻把還原好的程式碼蓋成一個空骨架。
+      //
+      // > **在這條路上，最後一個寫程式碼的必須是真相本身。**
+      this.resyncAfterTopicChange()
+      this.codeView?.setCode(state.code)
+      this.syncController?.syncCodeToBlocks(state.code)
+    } else {
+      this.resyncAfterTopicChange()
+    }
   }
 
   private updateSyncHints(): void {

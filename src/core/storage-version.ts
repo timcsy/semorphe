@@ -15,7 +15,7 @@ import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../migrations/block-type-migrat
 import { mergedIdentities } from '../migrations/merged-identities'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 10
+export const CURRENT_VERSION = 11
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -34,8 +34,8 @@ type RequiredKeys<T> = {
  */
 export const SAVED_STATE_FIELDS = {
   version: 1,
-  tree: 1,
   blocklyState: 1,
+  codeHash: 1,
   code: 1,
   language: 1,
   styleId: 1,
@@ -47,10 +47,52 @@ export const SAVED_STATE_FIELDS = {
   locale: 1,
 } satisfies Record<keyof Required<SavedState>, 1>
 
+/**
+ * **每一個欄位屬於誰**——四種歸屬，而它們的生命週期不同。
+ *
+ * ## 為什麼要宣告它（2026-08-24）
+ *
+ * 規劃「網頁版有檔案」時查證這個型別，發現一份存檔裡**混了四種歸屬**：
+ *
+ * ```
+ * document   屬於【那個檔案】        換一個檔案就換一份
+ * sideCar    屬於【那個檔案的外觀】  可以丟，丟了重算
+ * user       屬於【使用者】          跨檔案不變
+ * context    屬於【現在在上哪一課】  🔴 歸屬待判——它兩邊都不完全屬於
+ * meta       存檔機制自己的
+ * ```
+ *
+ * 🔴 **不宣告的代價會在「多檔案」那天一次付清**：那時每一個欄位都要回答
+ * 「跟著檔案走還是跟著使用者走」，而**沒有人記得當初是怎麼想的**。
+ *
+ * ⚠️ **值域是封閉的**（第六十一條護欄盯著）。第五個值出現時要先問
+ * 「它是不是一個新的歸屬」，而不是順手加進來
+ * （`concepts/執行機構.md:279`：第三個值就是在替「還沒做」找一個體面的名字）。
+ *
+ * 設計見 `knowledge/draft/2026-08-24-版面與檔案.md`。
+ */
+export const FIELD_OWNERSHIP = {
+  version: 'meta',
+  lastModified: 'meta',
+  // 【檔案】——它就是真相
+  code: 'document',
+  language: 'document',
+  // 【外觀】——side-car。⚠️ 它是**快取**不是第二份真相，失效條件是 `codeHash`
+  blocklyState: 'sideCar',
+  codeHash: 'sideCar',
+  // 【使用者】——換一個檔案不該變
+  styleId: 'user',
+  blockStyleId: 'user',
+  locale: 'user',
+  // 🔴 【教學情境】——歸屬待判：換檔案不該換課程，而換課程時它要換
+  topicId: 'context',
+  targetId: 'context',
+  enabledBranches: 'context',
+} satisfies Record<keyof Required<SavedState>, 'document' | 'sideCar' | 'user' | 'context' | 'meta'>
+
 /** 必填欄位——形狀驗證用。同樣由編譯器釘住 */
 export const REQUIRED_FIELDS = {
   version: 1,
-  tree: 1,
   blocklyState: 1,
   code: 1,
   language: 1,
@@ -279,6 +321,35 @@ export const UPGRADES: Record<number, Upgrade> = {
     }
     return { ...raw, blocklyState: newState, version: 10 }
   },
+  // 10 → 11：**`tree` 停止儲存**（2026-08-24）。
+  //
+  // 🔴 查證：**沒有任何還原路徑在讀它**（`app.ts` 的兩處還原只讀
+  //    `blocklyState` 與 `code`），而上面**有 8 個升級步驟在認真地改寫它**。
+  //
+  // > **一個沒有人讀的存檔欄位，會被每一次遷移認真地搬運下去。**
+  //
+  // 而拿掉它不只是清理——它是**真相模型的改變**：
+  // 從「樹是存下來的」變成「樹是**從程式碼導出的**」。
+  // ⚠️ 同時把 `blocklyState` 降格成**帶失效條件的快取**（`codeHash`）：
+  //    程式碼變了而快取沒跟上時，**寧可重排版也不要拿一份對不上的積木**。
+  10: (raw) => {
+    const { tree: _dropped, ...rest } = raw as Record<string, unknown>
+    return { ...rest, codeHash: hashCode(String((rest as { code?: string }).code ?? '')), version: 11 }
+  },
+}
+
+/**
+ * side-car 的失效條件。
+ *
+ * ⚠️ **不是雜湊學上的雜湊**——它只要在「同一份程式碼」上穩定、
+ * 在「不同程式碼」上幾乎必然不同就夠了。
+ *
+ * > **side-car 是快取，不是第二份真相——而快取要有失效條件。**
+ */
+export function hashCode(code: string): string {
+  let h = 0
+  for (let i = 0; i < code.length; i++) h = (Math.imul(31, h) + code.charCodeAt(i)) | 0
+  return `${code.length.toString(36)}_${(h >>> 0).toString(36)}`
 }
 
 export type VersionVerdict =
@@ -342,9 +413,17 @@ export function judgeJSON(json: string): { verdict: VersionVerdict; value: unkno
 export function upgrade(
   raw: Record<string, unknown>,
   from: number,
+  /**
+   * 升到哪一版為止——**預設是最新**。
+   *
+   * ⚠️ 它存在的理由是一個**具名的例外**：v11 拿掉了 `tree`，而 v1→v9 那八個
+   * 步驟改寫的正是它。要驗那八步仍然正確，只能停在 `tree` 還在的最後一版（10）。
+   * **一個沒有辦法被單獨驗證的升級步驟，等於沒有被驗證過。**
+   */
+  to: number = CURRENT_VERSION,
 ): { ok: true; value: Record<string, unknown> } | { ok: false; reason: string } {
   let current = raw
-  for (let v = from; v < CURRENT_VERSION; v++) {
+  for (let v = from; v < to; v++) {
     const step = UPGRADES[v]
     if (!step) return { ok: false, reason: `沒有從版本 ${v} 到 ${v + 1} 的升級路徑` }
     try {
@@ -353,6 +432,9 @@ export function upgrade(
       return { ok: false, reason: `版本 ${v} → ${v + 1} 的升級失敗：${String(e)}` }
     }
   }
+  // ⚠️ **只有升到最新才驗形狀**——停在中途（具名例外，見 `to`）的結果
+  //    本來就不是一份「可用的存檔」，拿完整性判定去驗它會得到一個誤導的訊息。
+  if (to !== CURRENT_VERSION) return { ok: true, value: current }
   const after = judge(current)
   if (after.kind !== 'ok') {
     return { ok: false, reason: `升級後仍然不是可用的存檔：${describeVerdict(after)}` }

@@ -349,6 +349,9 @@ describe('端到端：v2 的存檔走完整條鏈（順序不能倒）', () => {
         blocklyState: {}, code: '', language: 'cpp', styleId: 'apcs', lastModified: 0,
       } as Record<string, unknown>,
       2,
+      // ⚠️ **停在 v10**：v11 把 `tree` 從存檔裡拿掉了（沒有還原路徑在讀它），
+      //    而這一支要驗的正是 v1→v9 那八個改寫 `tree` 的步驟。
+      10,
     )
     expect(r.ok, r.ok ? '' : (r as { reason: string }).reason).toBe(true)
     const tree = (r as { value: { tree: { componentId: string; properties: Record<string, string> } } }).value.tree

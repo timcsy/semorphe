@@ -83,7 +83,11 @@ describe('v9 → v10：積木狀態遷移的四個契約', () => {
   it('★ 前提：v10 這一步真的存在，而且 CURRENT_VERSION 跟上了', () => {
     // ⚠️ 錨在「機制在不在」上，不是錨在「還有幾筆沒改名」上。
     expect(UPGRADES[9], '缺 9 → 10 的升級步驟').toBeTypeOf('function')
-    expect(CURRENT_VERSION).toBe(10)
+    // ⚠️ **錨在「這一步存在」上，不是錨在「它是最後一步」上**——
+    //    後者會在下一次改版的那天變紅，而那正是 `build-guardrail` 第 2 步
+    //    的簽名：斷言的那個數字，是不是這條檢查想推動的東西？
+    //    （2026-08-24 v11 加進來時它真的紅了。）
+    expect(CURRENT_VERSION).toBeGreaterThanOrEqual(10)
   })
 
   it('C1：表上的舊型別**全部**被換掉——含巢狀 inputs／shadow／next', () => {
@@ -168,15 +172,32 @@ describe('回歸樣本：改名前的真實 v9 存檔還打得開', () => {
     expect(types.has('u_if'), '只差前綴').toBe(true)
   })
 
-  it('★ 從 v9 升到最新版不丟錯，而且語義樹不變', () => {
+  it('★ v9 → v10 不丟錯，而且語義樹不變（這一步只該改投影）', () => {
     const s = JSON.parse(fs.readFileSync(samplePath, 'utf8')) as Record<string, unknown>
     const treeBefore = JSON.stringify(s.tree)
-    const r = upgrade({ ...s }, 9)
+    // ⚠️ 停在 10：v11 把 `tree` 拿掉了，而這一條要驗的是「v9→v10 沒有碰它」
+    const r = upgrade({ ...s }, 9, 10)
     expect(r.ok, `升級失敗：${r.ok ? '' : (r as { reason: string }).reason}`).toBe(true)
     if (r.ok) {
       const v = r.value as Record<string, unknown>
-      expect(v.version).toBe(CURRENT_VERSION)
+      expect(v.version).toBe(10)
       expect(JSON.stringify(v.tree), '語義樹被碰了——這一步只該改投影').toBe(treeBefore)
     }
+  })
+
+  it('★ 一路升到最新版：`tree` 被拿掉，而積木狀態與程式碼還在', () => {
+    const s = JSON.parse(fs.readFileSync(samplePath, 'utf8')) as Record<string, unknown>
+    const r = upgrade({ ...s }, 9)
+    expect(r.ok, `升級失敗：${r.ok ? '' : (r as { reason: string }).reason}`).toBe(true)
+    if (!r.ok) return
+    const v = r.value as Record<string, unknown>
+    expect(v.version).toBe(CURRENT_VERSION)
+    // 🔴 v11 的實質：樹不再被儲存——它是從程式碼導出的
+    expect('tree' in v, '`tree` 還在存檔裡——v11 的實質就是把它拿掉').toBe(false)
+    // ⚠️ 而使用者的東西**不准跟著掉**
+    expect(v.blocklyState, '積木狀態掉了——那是使用者的工作區').toBeTruthy()
+    expect(typeof v.code, '程式碼掉了——它是真相').toBe('string')
+    // side-car 的失效條件要跟著補上，否則舊存檔一升級就整個作廢
+    expect(v.codeHash, '舊存檔升上來沒有 codeHash → side-car 會被判成失效，積木白白重排').toBeTruthy()
   })
 })
