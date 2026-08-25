@@ -10,9 +10,9 @@
       "message0": "%{BKY_C_COMPOUND_ASSIGN_MSG0}",
       "args0": [
         {
-          "type": "field_dynamic_dropdown",
-          "name": "NAME",
-          "source": "vars"
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
         },
         {
           "type": "field_dropdown",
@@ -50,57 +50,10 @@
       "nextStatement": "Statement",
       "colour": "#59C059",
       "tooltip": "%{BKY_C_COMPOUND_ASSIGN_TOOLTIP}",
-      "altLayout": {
-        "stateKey": "hasIndex",
-        "message0": "%{BKY_C_COMPOUND_ASSIGN_INDEXED_MSG0}",
-        "args0": [
-          {
-            "type": "field_dynamic_dropdown",
-            "name": "NAME",
-            "source": "vars"
-          },
-          {
-            "type": "input_value",
-            "name": "INDEX",
-            "check": "Expression"
-          },
-          {
-            "type": "field_dropdown",
-            "name": "OP",
-            "options": [
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_PLUS_EQ}",
-                "+="
-              ],
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_MINUS_EQ}",
-                "-="
-              ],
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_TIMES_EQ}",
-                "*="
-              ],
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_DIVIDE_EQ}",
-                "/="
-              ],
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_REMAINDER_EQ}",
-                "%="
-              ]
-            ]
-          },
-          {
-            "type": "input_value",
-            "name": "VALUE",
-            "check": "Expression"
-          }
-        ],
-        "inputsInline": true
-      }
+      "inputsInline": true
     },
     "codeTemplate": {
-      "pattern": "${NAME} ${OP} ${VALUE};",
+      "pattern": "${TARGET} ${OP} ${VALUE};",
       "imports": [],
       "order": 0
     },
@@ -110,9 +63,9 @@
       "constraints": [],
       "fieldMappings": [
         {
-          "semantic": "name",
+          "semantic": "target",
           "ast": "left",
-          "extract": "text"
+          "extract": "lift"
         },
         {
           "semantic": "operator",
@@ -128,19 +81,15 @@
     },
     "renderMapping": {
       "expressionCounterpart": "cpp_var_assign_compound_expression",
-      "extraStateFlags": {
-        "hasIndex": "index"
-      },
       "inputs": {
-        "INDEX": "index",
+        "TARGET": "target",
         "VALUE": "value"
       },
       "fields": {
-        "NAME": "name",
         "OP": "operator"
       }
     },
-    "_why": "🔴 **spec 166：靜態 `field_input` → 動態下拉**（與 `cpp_var_assign` 同一條）。\n\n🟢 而它的 `hasIndex` extraState **宣告本來就表達得出**（`extraStateFlags`）——我一度以為它像 `cpp_raw_code` 一樣有「載入時才長出來的東西」，**而護欄的新那一維證明了不是**。\n> **一個猜測被護欄否證，比被護欄證實更有價值。**"
+    "_why": "🟢 **2026-08-25：`NAME` 那顆變數下拉換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。\n🪦 **`altLayout` 隨之退場**——它是 2026-08-25 早上為了讓 `a[i] += 2` 的索引\n顯示出來而補的「依 extraState 換一整份佈局」，而**那是這個病的症狀**：\n左值變成接點之後，`a[i]` 就只是插在 `TARGET` 上的一顆 `cpp_array_at`，沒有第二份佈局。\n🔴 而下拉列的是變數清單——`o.x += 1` 那顆點一下，成員存取就沒了。"
   },
   {
     "id": "cpp_var_assign_compound_expression",
@@ -152,9 +101,9 @@
       "type": "cpp_var_assign_compound_expression",
       "args0": [
         {
-          "type": "field_dynamic_dropdown",
-          "name": "NAME",
-          "source": "vars"
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
         },
         {
           "type": "field_dropdown",
@@ -189,66 +138,14 @@
         }
       ],
       "inputsInline": true,
-      "output": "Expression",
-      "altLayout": {
-        "stateKey": "hasIndex",
-        "message0": "%{BKY_C_COMPOUND_ASSIGN_INDEXED_MSG0}",
-        "args0": [
-          {
-            "type": "field_dynamic_dropdown",
-            "name": "NAME",
-            "source": "vars"
-          },
-          {
-            "type": "input_value",
-            "name": "INDEX",
-            "check": "Expression"
-          },
-          {
-            "type": "field_dropdown",
-            "name": "OP",
-            "options": [
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_PLUS_EQ}",
-                "+="
-              ],
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_MINUS_EQ}",
-                "-="
-              ],
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_TIMES_EQ}",
-                "*="
-              ],
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_DIVIDE_EQ}",
-                "/="
-              ],
-              [
-                "%{BKY_C_COMPOUND_ASSIGN_OP_REMAINDER_EQ}",
-                "%="
-              ]
-            ]
-          },
-          {
-            "type": "input_value",
-            "name": "VALUE",
-            "check": "Expression"
-          }
-        ],
-        "inputsInline": true
-      }
+      "output": "Expression"
     },
     "renderMapping": {
-      "extraStateFlags": {
-        "hasIndex": "index"
-      },
       "inputs": {
-        "INDEX": "index",
+        "TARGET": "target",
         "VALUE": "value"
       },
       "fields": {
-        "NAME": "name",
         "OP": "operator"
       }
     },
@@ -256,6 +153,6 @@
       "axis": "role",
       "value": "expression"
     },
-    "_why": "🔴 **spec 166：靜態 `field_input` → 動態下拉**（與 `cpp_var_assign` 同一條）。\n\n🟢 而它的 `hasIndex` extraState **宣告本來就表達得出**（`extraStateFlags`）——我一度以為它像 `cpp_raw_code` 一樣有「載入時才長出來的東西」，**而護欄的新那一維證明了不是**。\n> **一個猜測被護欄否證，比被護欄證實更有價值。**"
+    "_why": "🟢 **2026-08-25：`NAME` 那顆變數下拉換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。\n🪦 **`altLayout` 隨之退場**——它是 2026-08-25 早上為了讓 `a[i] += 2` 的索引\n顯示出來而補的「依 extraState 換一整份佈局」，而**那是這個病的症狀**：\n左值變成接點之後，`a[i]` 就只是插在 `TARGET` 上的一顆 `cpp_array_at`，沒有第二份佈局。\n🔴 而下拉列的是變數清單——`o.x += 1` 那顆點一下，成員存取就沒了。"
   }
 ]

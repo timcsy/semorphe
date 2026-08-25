@@ -867,7 +867,10 @@ describe('Compound Assignment & Increment', () => {
       expect(node).not.toBeNull()
       // Should be cpp_compound_assign, NOT var_assign
       expect(node!.componentId).toBe('cpp:var_assign_compound')
-      expect(node!.properties.name).toBe('x')
+      // 🟢 **左值是接點**（2026-08-25）——這裡本來釘 `properties.name === 'x'`。
+      expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(node!.children.target[0].componentId).toBe('cpp:var_ref')
+      expect(node!.children.target[0].properties.name).toBe('x')
       expect(node!.properties.operator).toBe('+=')
     })
 
@@ -889,7 +892,9 @@ describe('Compound Assignment & Increment', () => {
       const mainBlock = state.blocks?.blocks?.[0]
       const compBlock = mainBlock?.inputs?.BODY?.block
       expect(compBlock?.type).toBe('cpp_var_assign_compound')
-      expect(compBlock?.fields?.NAME).toBe('x')
+      // 🟢 `NAME` 那顆變數下拉換成 `TARGET` 接點（2026-08-25）
+      expect(compBlock?.fields?.NAME, '🔴 欄位長回來了').toBeUndefined()
+      expect(compBlock?.inputs?.TARGET?.block?.type).toBe('cpp_var_ref')
       expect(compBlock?.fields?.OP).toBe('+=')
     })
   })

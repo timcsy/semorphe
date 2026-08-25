@@ -511,14 +511,30 @@ target 節點的形狀。每多一種左值形狀就要多一個執行器分支�
 
 - [x] 🟢 **第七十三條護欄已蓋**（`audit-lvalue-slot`，2026-08-25）——棘輪 **12 → 0**
       機制是 `traits.writesTo`（宣告驅動，不是用名字認）；第一次跑**紅的**，逐項指名 12 顆。
-- [ ] 🔴 **驗收①：那 12 筆還到 0**
+- [ ] 🔴 **驗收①：那 12 筆還到 0**——🎯 **今天 12 → 10**
+      🟢 `python:var_assign_compound`（`a.b += 1`／`nums[i+1] += 1`／`grid[1][2] += 1`）
+      🟢 `cpp:var_assign_compound`（`a[i]`／`o.x`／`p->x`／`*q`／`a[i][j]`／`s[i]` 六種形狀）
+      🪦 而 `altLayout` **隨第二筆退場**——它是這個病的症狀（驗收④先到了）
+      ⚠️ 剩下 10 筆裡，`python:var_assign`／`var_assign_expr` 的左邊被 `constraints`
+      限成 `identifier`，**依建構就是原子**——換它們是齊一性不是修缺陷，
+      而真正的解是**把三顆合併成一顆**（`member_assign`／`container_assign` 的
+      存在理由就是左值的形狀）。🔴 **那是元件身分的決定，要人拍板。**
       ⚠️ 走**棘輪不走硬性零**——build-guardrail §6.8 的第二問「修一筆要付多少？」：
       每一筆跨 `lift`／`generate`／`execute`／`render` 四條路徑，**規範成立 ＋ 每一筆都要驗行為 → 棘輪**
-- [ ] **驗收②：左值解析器是扣除式的**——加一種新左值形狀**不改**任何既有執行器
+- [x] 🟢 **驗收②：左值解析器是扣除式的**——`core/component/lvalue-nodes.ts` 的登記
+      從三個寫死的 `kind` 換成**一個解析函式**，每顆左值節點在自己的膠囊裡宣告。
+      🔴 **證據**：`cpp-lvalue-slot.test.ts` 第一次跑時 `a[i][j]` 與 `s[i]` 都紅
+      （「這個東西不能被指定值」），而修法是各加一個 `declareLvalue`
+      ——**沒有動任何一支賦值執行器**。
 - [ ] 🔴 **驗收③：一次性轉換**（`principles.md:158` 逐字：「這種變更 MUST 附**一次性的轉換**」）
       舊存檔的 `name: "o.x"` 載入後變成巢狀節點，而**同一份檔案載入前後產出的程式碼一字不變**
       —— 🛠 **用 `migrate-storage`**，不要現場想
-- [ ] **驗收④：`altLayout` 退場**——它是這個病的症狀（draft §四），
+      🟢 **做法定了（2026-08-25）**：`blocklyState` 是**帶失效條件的快取**（v11），
+      所以形狀變了就**丟掉快取**讓它從程式碼重 lift——不必在遷移裡寫一個 parser。
+      `migrations/block-shape-changes.ts`；v12（Python）· v13（C++）。
+      🔴 **開瀏覽器用真的 v11 存檔驗過**，並證實了它是承重的（不丟的話左值變成空插槽）。
+- [x] 🟢 **驗收④：`altLayout` 已退場**（2026-08-25，隨 `cpp:var_assign_compound` 那一刀）
+- [ ] ~~驗收④~~ 原文留存：**`altLayout` 退場**——它是這個病的症狀（draft §四），
       左值變接點之後 `cpp_increment`／`cpp_var_assign_compound` 不再需要「依 extraState 換佈局」
 - [ ] ⚠️ **不在本項**：型別那 15 個字串屬性（乙族）——draft §八逐字
       「**同樣是『字串裝著文法』，會出事的是那個【被投影成選單】的**」，

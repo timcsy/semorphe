@@ -223,7 +223,9 @@ describe('block-renderer', () => {
     const forLoop = createNode('cpp:loop_for', {}, {
       init: [createNode('cpp:var_ref', { name: 'i' })],
       cond: [createNode('cpp:var_ref', { name: 'x' })],
-      update: [createNode('cpp:var_assign_compound', { name: 'j', operator: '+=' }, {
+      update: [createNode('cpp:var_assign_compound', { operator: '+=' }, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `name: 'j'`
+        target: [createNode('cpp:var_ref', { name: 'j' })],
         value: [createNode('cpp:var_ref', { name: 'i' })],
       })],
       body: [createNode('cpp:break', {})],
@@ -233,7 +235,10 @@ describe('block-renderer', () => {
     const updateBlock = block.inputs.UPDATE?.block
     expect(updateBlock).toBeDefined()
     expect(updateBlock.type).toBe('cpp_var_assign_compound_expression')
-    expect(updateBlock.fields.NAME).toBe('j')
+    // 🟢 **左值是接點**（2026-08-25）——`NAME` 那顆變數下拉換成 `TARGET`。
+    //    釘接點比釘欄位強：它證明左邊真的被渲成一顆積木，而不是一段文字。
+    expect(updateBlock.fields.NAME, '🔴 欄位長回來了').toBeUndefined()
+    expect(updateBlock.inputs.TARGET?.block?.type).toBe('cpp_var_ref')
     expect(updateBlock.fields.OP).toBe('+=')
   })
 

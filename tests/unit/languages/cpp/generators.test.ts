@@ -146,7 +146,9 @@ describe('C++ statements generator', () => {
   })
 
   it('should generate cpp_compound_assign', () => {
-    const stmt = createNode('cpp:var_assign_compound', { name: 'x', operator: '+=' }, {
+    const stmt = createNode('cpp:var_assign_compound', { operator: '+=' }, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `name: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
       value: [createNode('cpp:literal_number', { value: '5' })],
     })
     const code = generateCode(makeProgram(stmt), 'cpp', apcsStyle)
@@ -327,7 +329,9 @@ describe('C++ expression generators (for expression blocks)', () => {
   })
 
   it('should generate cpp_compound_assign_expr', () => {
-    const node = createNode('cpp:var_assign_compound', { name: 'j', operator: '+=' }, {
+    const node = createNode('cpp:var_assign_compound', { operator: '+=' }, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `name: 'j'`
+        target: [createNode('cpp:var_ref', { name: 'j' })],
       value: [createNode('cpp:var_ref', { name: 'i' })],
     })
     const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
@@ -365,7 +369,9 @@ describe('C++ expression generators (for expression blocks)', () => {
         })],
         right: [createNode('cpp:var_ref', { name: 'max' })],
       })],
-      update: [createNode('cpp:var_assign_compound', { name: 'j', operator: '+=' }, {
+      update: [createNode('cpp:var_assign_compound', { operator: '+=' }, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `name: 'j'`
+        target: [createNode('cpp:var_ref', { name: 'j' })],
         value: [createNode('cpp:var_ref', { name: 'i' })],
       })],
       body: [createNode('cpp:break', {})],
@@ -531,7 +537,9 @@ describe('C++ expression generators (for expression blocks)', () => {
         left: [createNode('cpp:var_ref', { name: 'j' })],
         right: [createNode('cpp:var_ref', { name: 'max' })],
       })],
-      update: [createNode('cpp:var_assign_compound', { name: 'j', operator: '+=' }, {
+      update: [createNode('cpp:var_assign_compound', { operator: '+=' }, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `name: 'j'`
+        target: [createNode('cpp:var_ref', { name: 'j' })],
         value: [createNode('cpp:var_ref', { name: 'i' })],
       })],
       body: [createNode('cpp:array_assign', { obj: 'sieve' }, {

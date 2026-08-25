@@ -9,7 +9,7 @@
  * 判準（`migrate-storage` 第 3／4／5 步）：冪等 · 只改確定的位置 · 表空時不亂丟。
  */
 import { describe, it, expect } from 'vitest'
-import { staleShapeIn, SHAPE_CHANGES_V12 } from '../../../src/migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13 } from '../../../src/migrations/block-shape-changes'
 import { UPGRADES, CURRENT_VERSION } from '../../../src/core/storage-version'
 
 const oldState = {
@@ -86,8 +86,39 @@ describe('v11 → v12：形狀變了的快取', () => {
     expect(twice.code).toBe(once.code)
   })
 
-  it('★ 錨點：這一版真的是 12（否則上面每一條都在測一個沒被接上的步驟）', () => {
-    expect(CURRENT_VERSION).toBe(12)
-    expect(UPGRADES[11]).toBeTypeOf('function')
+  it('★ 錨點：升級鏈接得上（否則上面每一條都在測一個沒被接上的步驟）', () => {
+    // ⚠️ **不釘死版號**——每加一筆形狀改動就開一個新版，
+    //    釘死的話這一條會在**下一次正確的改動**變紅（build-guardrail 簽名三）。
+    expect(CURRENT_VERSION).toBeGreaterThanOrEqual(13)
+    for (let v = 1; v < CURRENT_VERSION; v++) {
+      expect(UPGRADES[v], `🔴 升級鏈缺了 ${v} → ${v + 1} 這一格`).toBeTypeOf('function')
+    }
+  })
+
+  /**
+   * `v12 → v13`：C++ 的複合指定。⚠️ **不能加進 v12**——已經升到 v12 的存檔
+   * 不會再跑一次 v12，所以同一個版號裡加第二筆是無效的。
+   */
+  it('★ v13：C++ 的舊形狀（含 altLayout 的 INDEX 佈局）也認得出來', () => {
+    const twoLayouts = [
+      { type: 'cpp_var_assign_compound', fields: { NAME: 'x', OP: '+=' } },
+      { type: 'cpp_var_assign_compound', fields: { NAME: 'a', OP: '+=' },
+        inputs: { INDEX: { block: { type: 'cpp_var_ref', fields: { NAME: 'i' } } } } },
+      { type: 'cpp_var_assign_compound_expression', fields: { NAME: 'x', OP: '+=' } },
+    ]
+    for (const b of twoLayouts) {
+      expect(staleShapeIn({ blocks: { blocks: [b] } }, SHAPE_CHANGES_V13),
+        `🔴 認不出來 → ${b.type} 的左值會安靜地消失`).not.toBeNull()
+    }
+    const raw = { version: 12, code: 'a[i] += 2;\n', blocklyState: { blocks: { blocks: twoLayouts } } }
+    const up = UPGRADES[12](raw)
+    expect(up.version).toBe(13)
+    expect(Object.keys(up.blocklyState as object)).toEqual([])
+  })
+
+  it('🔴 v12 的表不得認 v13 的積木（版號各管各的）', () => {
+    const cpp = { blocks: { blocks: [{ type: 'cpp_var_assign_compound', fields: { NAME: 'x' } }] } }
+    expect(staleShapeIn(cpp, SHAPE_CHANGES_V12),
+      '🔴 兩張表混在一起 → 已經升過 v12 的存檔會被重複丟快取').toBeNull()
   })
 })

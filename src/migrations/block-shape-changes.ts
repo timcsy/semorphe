@@ -104,3 +104,28 @@ export function staleShapeIn(
   if (blocks && Array.isArray(blocks.blocks)) (blocks.blocks as unknown[]).forEach(oneBlock)
   return hit
 }
+
+/**
+ * `v12 → v13`：**C++ 的複合指定**（同一個路線圖項目的第二筆）。
+ *
+ * ⚠️ **為什麼不加進 `SHAPE_CHANGES_V12`**：`v12` 已經送出去了，
+ * 而**已經升到 v12 的存檔不會再跑一次 v12**。同一個版號裡加第二筆是無效的。
+ *
+ * 🪦 這兩顆的舊形狀還帶著 `altLayout`（依 `extraState` 換一整份佈局，
+ * 為了讓 `a[i] += 2` 的索引顯示出來）——**那是這個病的症狀**，
+ * 左值變成接點之後它一起退場。所以舊快取裡可能有 `fields.NAME`
+ * ＋ 一個 `inputs.INDEX`，兩種佈局都靠 `NAME` 認得出來。
+ */
+export const SHAPE_CHANGES_V13: ShapeChange[] = [
+  {
+    blockType: 'cpp_var_assign_compound',
+    retiredFields: ['NAME'],
+    why: '左值 `NAME`（變數下拉）＋ 可有可無的 `INDEX` 換成一個 `TARGET` 接點——'
+      + '那兩格是左值形狀的列舉，而它列了兩種（`o.x`／`p->x`／`*q`／`a[i][j]` 都不在內）。',
+  },
+  {
+    blockType: 'cpp_var_assign_compound_expression',
+    retiredFields: ['NAME'],
+    why: '同上——運算式形態。',
+  },
+]

@@ -236,20 +236,10 @@
       "field": "field_dynamic_dropdown",
       "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
     },
-    "cpp_var_assign_compound.NAME": {
-      "decision": "open",
-      "field": "field_dynamic_dropdown",
-      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
-    },
     "cpp_var_assign_compound.OP": {
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
-    },
-    "cpp_var_assign_compound_expression.NAME": {
-      "decision": "open",
-      "field": "field_dropdown",
-      "reason": "🔴 只有一個假選項的死文字下拉，本來就該跟著工作區長（比對護欄 spec 163 點名過）"
     },
     "cpp_var_assign_compound_expression.OP": {
       "decision": "closed",

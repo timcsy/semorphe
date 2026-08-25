@@ -2,6 +2,7 @@
 import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
+import { resolvePlace } from '../../../interpreter/lvalue'
 import { defaultValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
@@ -51,12 +52,38 @@ export function registerLvalue(): void {
     // 先問接點（`a[i][j]` 的外層容器是一顆節點），沒有才退回字串屬性。
     const objNode = (node.children.obj ?? [])[0]
     const name = String(node.properties.obj ?? '')
-    const container = objNode ? await ctx.evaluate(objNode) : ctx.scope.get(name)
+    // 🔴 **容器本身也解成一個位置**，不只求值——字串那一格要寫回去時
+    //    得把整個字串重建再寫回**變數**（這個直譯器裡字串是不可變的）。
+    const containerPlace = objNode
+      ? await resolvePlace(objNode, ctx)
+      : { read: () => ctx.scope.get(name), write: (v: RuntimeValue) => ctx.scope.set(name, v) }
+    const container = containerPlace.read()
+    const idxNode = (node.children.index ?? [])[0]
+    const idx = idxNode ? Math.trunc(ctx.toNumber(await ctx.evaluate(idxNode))) : 0
+
+    // `s[i] -= 7` —— C++ 的 `string::operator[]` 回的是參照，所以它**是**左值。
+    if (container.type === 'string' && typeof container.value === 'string') {
+      const text = container.value
+      if (idx < 0 || idx >= text.length) {
+        throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(idx) })
+      }
+      return {
+        // ⚠️ **回碼位**——`char` 在這個直譯器裡是碼位（見 `cpp:string_at`）
+        read: (): RuntimeValue => ({ type: 'char', value: text.charCodeAt(idx) }),
+        write: (v) => {
+          const code = (v as RuntimeValue).type === 'char'
+            ? Number((v as RuntimeValue).value)
+            : ctx.toNumber(v as RuntimeValue)
+          const chars = text.split('')
+          chars[idx] = String.fromCharCode(Math.trunc(code))
+          containerPlace.write({ type: 'string', value: chars.join('') })
+        },
+      }
+    }
+
     if (container.type !== 'array' || !Array.isArray(container.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${name || '這個東西'} 不是容器` })
     }
-    const idxNode = (node.children.index ?? [])[0]
-    const idx = idxNode ? Math.trunc(ctx.toNumber(await ctx.evaluate(idxNode))) : 0
     const cells = container.value as RuntimeValue[]
     if (idx < 0 || idx >= cells.length) {
       throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(idx) })

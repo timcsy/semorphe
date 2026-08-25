@@ -998,7 +998,9 @@ describe('Interpreter - more edge cases', () => {
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
         initializer: [createNode('cpp:literal_number', { value: '10' }, {})]
       }),
-      createNode('compound_assign', { name: 'x', operator: '+=' }, {
+      createNode('compound_assign', { operator: '+=' }, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `name: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
         value: [createNode('cpp:literal_number', { value: '5' }, {})]
       }),
       createNode('cpp:print', {}, {
@@ -1092,7 +1094,9 @@ describe('Interpreter - expression components in for-loop', () => {
           right: [createNode('cpp:literal_number', { value: '3' })],
         })],
         update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
-        body: [createNode('cpp:var_assign_compound', { name: 's', operator: '+=' }, {
+        body: [createNode('cpp:var_assign_compound', { operator: '+=' }, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `name: 's'`
+        target: [createNode('cpp:var_ref', { name: 's' })],
           value: [createNode('cpp:var_ref', { name: 'i' })],
         })],
       }),

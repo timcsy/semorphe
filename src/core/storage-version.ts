@@ -13,10 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../migrations/block-type-migrations'
 import { mergedIdentities } from '../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12 } from '../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13 } from '../migrations/block-shape-changes'
+import type { ShapeChange } from '../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 12
+export const CURRENT_VERSION = 13
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -351,12 +352,22 @@ export const UPGRADES: Record<number, Upgrade> = {
   //    ——所以丟掉它之後會從程式碼重 lift，**免費得到正確的巢狀左值**。
   // ⚠️ 代價是**那一份的積木排版會重算**（座標屬於 `sideCar`，本來就可以丟）。
   // ⚠️ **冪等**：丟過之後這裡找不到東西，第二次跑是 no-op。
-  11: (raw) => {
-    const stale = staleShapeIn(raw.blocklyState, SHAPE_CHANGES_V12)
-    if (!stale) return { ...raw, version: 12 }
-    const { blocklyState: _dropped, ...rest } = raw as Record<string, unknown>
-    return { ...rest, blocklyState: {}, version: 12 }
-  },
+  11: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V12, 12),
+  // 12 → 13：**C++ 的複合指定**——同一個路線圖項目的第二筆。
+  // ⚠️ 不能加進 v12：**已經升到 v12 的存檔不會再跑一次 v12**。
+  12: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V13, 13),
+}
+
+/**
+ * 積木的骨架變了 → **丟掉快取**，讓它從程式碼重 lift。
+ * 見 `migrations/block-shape-changes.ts` 的檔頭。⚠️ 冪等。
+ */
+function dropStaleCache(
+  raw: Record<string, unknown>, changes: ShapeChange[], to: number,
+): Record<string, unknown> {
+  if (!staleShapeIn(raw.blocklyState, changes)) return { ...raw, version: to }
+  const { blocklyState: _dropped, ...rest } = raw
+  return { ...rest, blocklyState: {}, version: to }
 }
 
 /**

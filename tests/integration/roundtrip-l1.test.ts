@@ -157,7 +157,11 @@ describe('L1 Block Roundtrip', () => {
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
       expect(sem!.componentId).toBe('cpp:var_assign_compound')
-      expect(sem!.properties.name).toBe('x')
+      // 🟢 **左值是接點**（2026-08-25）——這裡本來釘的是 `properties.name === 'x'`。
+      //    釘接點比釘字串強：它同時證明了左邊**被 lift 過**，而不是被 `.text` 抄走。
+      expect(sem!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(sem!.children.target).toHaveLength(1)
+      expect(sem!.children.target[0].componentId).toBe('cpp:var_ref')
       expect(sem!.children.value).toHaveLength(1)
     })
   })

@@ -1,8 +1,11 @@
 /** `cpp:pointer_deref` 的 **execute** 路——從共用檔原封剪過來（批次第三十二批：一元運算子族）。 */
-import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/executor-registry'
+import type { RuntimeValue } from '../../../interpreter/types'
+import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
+  registerLvalue()
   register('cpp:pointer_deref', async (node, ctx) => {
       const ptrNodes = node.children.ptr ?? []
       if (ptrNodes.length > 0) {
@@ -42,4 +45,39 @@ export function registerExecute(register: (component: string, executor: Componen
       // ptr 子節點缺失＝語義樹壞掉，與別處的缺子節點退路同形（防禦性）。
       return { type: 'int', value: 0 }
     })
+}
+
+/**
+ * **我可以被寫回**——`*p = 1`／`*p += 1`。
+ *
+ * ⚠️ **兩種指標並存**（見上面執行器的說明）：符號式的走 `pointerTargets`，
+ * 實體式的（`new`／`malloc` 配的）是一塊 `array`，`*p` 是它的第 `offset` 格。
+ * 兩種都要寫得回去，而**寫回的位置在解析當下定住**。
+ */
+export function registerLvalue(): void {
+  declareLvalue('cpp:pointer_deref', async (node, ctx: ExecutionContext) => {
+    const ptrNodes = node.children.ptr ?? []
+    if (ptrNodes.length === 0) {
+      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個解參考沒有指標' })
+    }
+    const ptrVal = await ctx.evaluate(ptrNodes[0])
+    if (ptrVal.type === ('pointer' as never) && typeof ptrVal.value === 'string') {
+      const targetName = ptrVal.value
+      const owner = ctx.pointerTargets.get(targetName) ?? ctx.scope
+      return {
+        read: () => owner.get(targetName),
+        write: (v) => { owner.set(targetName, v as RuntimeValue) },
+      }
+    }
+    if (ptrVal.type === 'array' && Array.isArray(ptrVal.value)) {
+      const cells = ptrVal.value as RuntimeValue[]
+      const at = ptrVal.offset ?? 0
+      if (at < 0 || at >= cells.length) {
+        throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(at) })
+      }
+      return { read: () => cells[at], write: (v) => { cells[at] = v as RuntimeValue } }
+    }
+    // ⚠️ **不是指標卻被解參考——出聲**（與求值那一側同一個判斷）
+    throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'pointer' })
+  })
 }

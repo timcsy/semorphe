@@ -20,18 +20,13 @@ export function registerDeclarationLifters(lifter: Lifter): void {
     const value = right ? ctx.lift(right) : null
 
     // Compound assignment: +=, -=, *=, /=, %=
+    //
+    // 🟢 **左邊就 lift**（2026-08-25）——不再判它長什麼樣。
+    // 🪦 這裡本來有一段 `subscript_expression` 的特例，而**左值不只兩種**：
+    //    `o.x`／`p->x`／`*q`／`a[i][j]` 全部合法，而它們全部被 `left.text`
+    //    壓進一個字串，於是執行期去查一個叫 `p->x` 的變數。
     if (op !== '=') {
-      // Array element compound assign: arr[i] += value
-      if (left?.type === 'subscript_expression') {
-        const arrayNode = left.childForFieldName('argument') ?? left.namedChildren[0]
-        const arrName = arrayNode?.text ?? 'arr'
-        const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')
-        const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
-        const index = indexNode ? ctx.lift(indexNode) : null
-        return buildVarAssignCompound(arrName, op, value, index)
-      }
-      const name = left?.text ?? 'x'
-      return buildVarAssignCompound(name, op, value)
+      return buildVarAssignCompound(op, value, left ? ctx.lift(left) : null)
     }
 
     if (left?.type === 'subscript_expression') {

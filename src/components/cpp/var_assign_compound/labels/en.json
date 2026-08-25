@@ -1,10 +1,9 @@
 {
-  "C_COMPOUND_ASSIGN_MSG0": "variable %1 %2 %3",
+  "C_COMPOUND_ASSIGN_MSG0": "%1 %2 %3",
   "C_COMPOUND_ASSIGN_TOOLTIP": "Add to, subtract from, multiply by, divide by, or take remainder of the variable's value and store it back",
   "C_COMPOUND_ASSIGN_OP_PLUS_EQ": "add (+=)",
   "C_COMPOUND_ASSIGN_OP_MINUS_EQ": "subtract (-=)",
   "C_COMPOUND_ASSIGN_OP_TIMES_EQ": "multiply (*=)",
   "C_COMPOUND_ASSIGN_OP_DIVIDE_EQ": "divide (/=)",
-  "C_COMPOUND_ASSIGN_OP_REMAINDER_EQ": "remainder (%=)",
-  "C_COMPOUND_ASSIGN_INDEXED_MSG0": "variable %1 [ %2 ] %3 %4"
+  "C_COMPOUND_ASSIGN_OP_REMAINDER_EQ": "remainder (%=)"
 }

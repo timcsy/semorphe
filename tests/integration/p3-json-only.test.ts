@@ -222,7 +222,9 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       const result = lifter.tryLift(node, liftCtx())
       expect(result).not.toBeNull()
       expect(result!.componentId).toBe('cpp:var_assign_compound')
-      expect(result!.properties.name).toBe('x')
+      // 🟢 **左值是接點**（2026-08-25）
+      expect(result!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(result!.children.target[0].componentId).toBe('cpp:var_ref')
       expect(result!.children.value).toHaveLength(1)
       expect(result!.children.value[0].componentId).toBe('cpp:literal_number')
     })

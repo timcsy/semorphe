@@ -1,9 +1,9 @@
 {
   "_meta": {
-    "note": "字串屬性不得裝結構。「非原子」不等於錯——判定在 tests/assets/string-property-decisions.json。\n🔴 而語料乾淨不代表模型對：它代表語料是照著模型長的。",
+    "note": "字串屬性不得裝結構。「非原子」不等於錯——判定在 tests/assets/string-property-decisions.json。\n🔴 而語料乾淨不代表模型對：它代表語料是照著模型長的。\n⚠️ 2026-08-25：1042 → 1045，新增 tests/integration/cpp-lvalue-slot.test.ts。語料變大。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
-  "語料段數": 1042,
+  "語料段數": 1045,
   "要看": 35,
   "孤兒判定": 0,
   "details": [
