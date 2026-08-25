@@ -18,5 +18,5 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json"
   },
-  "_children_why": "🔴 **沒有 `index` 接點**（C++ 那顆有）——`nums[0] += 1` 的左邊在 AST 上是 `subscript` 而不是 `identifier`，而樣式比對只認後者，所以那種寫法走**誠實降級**。\n加一個接點卻沒有路徑把值放進去，會讓「支援了」與「宣告了」分不出來。"
+  "_children_why": "🔴 **左邊是一個字串，而它裝得下整個文法**——2026-08-25 實測：`a.b`、`a.b.c`、`self.n`、`nums[0]`、`d[\"k\"]` 全部被壓進 `name` 這個 `literal`。\n⚠️ 這裡原本寫著「沒有 `index` 接點，所以 `nums[0] += 1` 走**誠實降級**」——**它沒有降級**，它比對成功並把 `nums[0]` 當成變數名。那句話在 2026-08-21 拿掉 `constraints` 的那天就過期了。\n🟢 修法不是「補一個 `index` 接點」（那是把 lvalue 的形狀再列舉一次），是把 `name` 換成 `target: expression`——**普通指派的那一顆已經是那個形狀**，證明它走得通（刻意不寫它的身分，見就近性護欄）。見 `knowledge/draft/2026-08-25-lvalue的形狀被列舉了.md`。"
 }
