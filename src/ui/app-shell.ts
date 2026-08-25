@@ -179,7 +179,28 @@ export function createAppLayout(
   //    有：左右分（積木 ‖ 程式碼＋主控台）——網頁版。
   //    沒有：上下分（積木在上、主控台在下）——否則主控台會霸佔右半整條，
   //    而那不是「像網頁版」，是把空出來的位置留給了錯的東西。
-  const splitPane = new SplitPane(main, profile.features.codeEditorPane ? 'horizontal' : 'vertical')
+  /**
+   * 程式碼那一欄**有沒有東西**。
+   *
+   * 🔴 而「有沒有」是兩件事的聯集：那一格編輯器，以及下方面板。
+   *
+   * ⚠️ 2026-08-25 之前這裡只問了前者——而主控台與變數搬去宿主之後，
+   * 那一欄**整個是空的**，卻仍然分掉了半個高度：
+   * 使用者看到的是「積木上面一大塊空白」。
+   *
+   * > **一個切成兩半的版面，只有在兩半都有東西的時候才是「分割」；
+   * > 否則它只是把一半送走。**
+   */
+  const bottomTabsExist = CONTROLS
+    .filter((c) => c.id === 'console' || c.id === 'variables')
+    .some((c) => surfaceOf(c, surfaces) === 'panelBottom')
+  const codeSideHasContent = profile.features.codeEditorPane || bottomTabsExist
+
+  // 方向由「有沒有程式碼那一格」決定：有＝左右分、沒有＝上下分。
+  // 🔴 而**兩邊都要有東西才切**——否則不切。
+  const splitPane = codeSideHasContent
+    ? new SplitPane(main, profile.features.codeEditorPane ? 'horizontal' : 'vertical')
+    : null
 
   // Create status bar
   // 🔴 關掉 ＝ **不建**（FR-006），不是建了再藏起來——宿主自己有一條。
@@ -239,7 +260,8 @@ export function createAppLayout(
   //
   // > **一個叫做 `blocksColumn` 而其實在右邊的變數，
   // > 會讓下一個人把版面讀反。**
-  const blocksColumn = splitPane.getRightPanel()
+  // ⚠️ 不切的時候，積木**就是** `main` 本身——不是「一個佔滿的子欄」。
+  const blocksColumn = splitPane ? splitPane.getRightPanel() : main
   blocksColumn.style.display = 'flex'
   blocksColumn.style.flexDirection = 'column' 
 
@@ -276,7 +298,9 @@ export function createAppLayout(
   blocklyPanel.init(toolbox)
 
   // Right panel: Monaco + BottomPanel
-  const codeColumn = splitPane.getLeftPanel()
+  // 🔴 沒有切的時候它是一個**沒掛進 DOM 的容器**——程式碼視圖的建構子
+  //    仍然收得到一個容器（那本來就是契約：「即使那個實作不在上面畫任何東西」）。
+  const codeColumn = splitPane ? splitPane.getLeftPanel() : document.createElement('div')
   codeColumn.classList.add('code-column')
 
   const monacoWrapper = document.createElement('div')
@@ -334,7 +358,9 @@ export function createAppLayout(
     //    🔴 那不是「早知道就建」：直到探測失敗之前，不建是對的。
     if (!bottomPanel) {
       bottomPanel = new BottomPanel(bottomContainer)
-      codeColumn.appendChild(bottomContainer)
+      // 🔴 **沒有切版面時，程式碼那一欄沒掛進 DOM**——掛過去會看不見。
+      //    ⚠️ 那時它跟在積木下面（`main` 本身就是直向的 flex）。
+      ;(codeSideHasContent ? codeColumn : blocksColumn).appendChild(bottomContainer)
       // 🔴 **執行控制器手上是建構當時的那一份**——不通知它的話，
       //    `showTab('console')` 會打在一個 `null` 上，而輸出看起來像沒有跑。
       onBottomPanelCreated?.(bottomPanel)

@@ -96,6 +96,17 @@ const blocks = await page.evaluate(() => {
     '#toolbar select, #toolbar button, .quick-access-bar select, .quick-access-bar button').length,
   狀態列: seen('footer'),
   積木畫布: seen('.injectionDiv'),
+  // 🔴 **畫布要佔滿**——2026-08-25 使用者截圖：積木上面一大塊空白，
+  //    那是「程式碼那一欄」，而它在這個宿主裡什麼都沒有。
+  //
+  // > 一個切成兩半的版面，只有在兩半都有東西的時候才是「分割」；
+  // > 否則它只是把一半送走。
+  畫布佔比: (() => {
+    const el = document.querySelector('.injectionDiv')
+    const main = document.getElementById('editors')
+    if (!el || !main) return 0
+    return Math.round((el.getBoundingClientRect().height / main.getBoundingClientRect().height) * 100)
+  })(),
   工具箱分類: document.querySelectorAll('.blocklyToolboxCategory').length,
   快速列按鈕: document.querySelectorAll('.quick-access-bar button').length,
   // 🔴 選擇器 2026-08-18 修正過一次：原本寫 `[id*=tab]`，而它配到的是
@@ -272,6 +283,8 @@ const ok = !fatal && errors.length === 0 && failures.length === 0
   && blocks.積木畫布
   // 🔴 **控制項在這個宿主裡歸零**——驗收②。⚠️ 而工具箱與畫布不變（下面兩格）。
   && blocks.面板內控制項 === 0 && !blocks.工具列 && !blocks.快速列
+  // 🔴 畫布沒佔滿＝有一塊空白在跟它分高度（使用者 2026-08-25 截圖）
+  && blocks.畫布佔比 >= 90
   // 🔴 而它們要真的到了宿主手上——**「消失」與「搬家」的差別就在這一格**。
   && controlIds.length >= 5 && 值域齊全 && problemsSent
   && !blocks.主控台分頁 && !blocks.變數分頁
