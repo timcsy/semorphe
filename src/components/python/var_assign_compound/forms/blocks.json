@@ -10,9 +10,9 @@
       "message0": "%{BKY_PY_COMPOUND_ASSIGN_MSG0}",
       "args0": [
         {
-          "type": "field_dynamic_dropdown",
-          "name": "NAME",
-          "source": "vars"
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
         },
         {
           "type": "field_dropdown",
@@ -58,13 +58,13 @@
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name",
         "OP": "operator"
       },
       "inputs": {
+        "TARGET": "target",
         "VALUE": "value"
       }
     },
-    "_why": "🟢 顏色與分類抄同族的指派元件（`#FF8C1A` ／ `data`）。\n⚠️ **多一個 `//=`**（整除）——C++ 那顆沒有這個運算子，而 Python 的整數除法是它。"
+    "_why": "🟢 顏色與分類抄同族的指派元件（`#FF8C1A` ／ `data`）。\n⚠️ **多一個 `//=`**（整除）——C++ 那顆沒有這個運算子，而 Python 的整數除法是它。\n🟢 **2026-08-25：`NAME` 那顆變數下拉換成 `TARGET` 接點。**下拉列的是變數清單，而左值可以是 `a[i]`／`o.x`／`a.b.c`——點一下下拉就把它們毀掉。見 `knowledge/concepts/左值.md`。"
   }
 ]

@@ -1,5 +1,6 @@
 /** `cpp:var_ref` 的 **execute** 路——從共用檔原封剪過來（批次第三十八批）。 */
-import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/executor-registry'
+import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import type { RuntimeValue, Callable } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { pinConstantValue } from '../../../languages/cpp/core/runtime/arduino-pins'
@@ -38,6 +39,10 @@ const STREAMS: Record<string, string> = {
 }
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
+  // 🔴 **與執行器同一個生命週期**——左值解析要用到執行環境，
+  //    而「這種節點可以被寫回」與「這種節點怎麼求值」是同一顆元件的兩面。
+  registerLvalue()
+
   register('cpp:var_ref', async (node, ctx) => {
       const name = String(node.properties.name)
       // **一個識別字也可能是函式名**——`sort(v.begin(), v.end(), cmp)` 的 `cmp`。
@@ -101,4 +106,21 @@ export function registerExecute(register: (component: string, executor: Componen
         return { type: 'function', value: callable } as RuntimeValue
       }
     })
+}
+
+/**
+ * **我可以被寫回**——一個名字（`x`），寫回作用域。
+ *
+ * 🔴 **2026-08-25：從一個 `kind` 字串換成這個函式。** 第一版的登記處只認得
+ * 三種寫死的形狀（`name` / `element` / `field`），而那仍然是列舉式：
+ * `*q`、`a.b.c`、`d["k"]` 各要一個新的 kind。見 `core/component/lvalue-nodes.ts`。
+ */
+export function registerLvalue(): void {
+  declareLvalue('cpp:var_ref', async (node, ctx: ExecutionContext) => {
+    const name = String(node.properties.name)
+    return {
+      read: () => ctx.scope.get(name),
+      write: (v) => { ctx.scope.set(name, v as never) },
+    }
+  })
 }

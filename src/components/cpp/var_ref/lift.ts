@@ -6,15 +6,17 @@
  */
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
-import { declareLvalue } from '../../../core/component/lvalue-nodes'
 
 export function buildVarRef(name: string): SemanticNode {
   return createNode('cpp:var_ref', { name })
 }
 
-/** 判別走 pattern；這裡只提供建構子。 */
+/**
+ * 判別走 pattern；這裡只提供建構子。
+ *
+ * 🪦 **「我可以被寫回」的宣告已於 2026-08-25 搬到 `execute.ts`**——
+ * 它從一個 `kind` 字串變成一個**解析函式**，而函式要用到執行環境。
+ */
 export function registerLift(): void {
-  // **這種節點可以被寫回**——一個名字（`x`）——寫回作用域。
-  // 宣告在這裡而不是寫進共用檔，否則這顆元件永遠搬不動。
-  declareLvalue('cpp:var_ref', 'name')
+  // 這顆沒有其他 lift 期的登記——建構子由共用檔直接 import。
 }

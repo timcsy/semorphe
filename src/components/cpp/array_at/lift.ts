@@ -6,15 +6,16 @@
  */
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
-import { declareLvalue } from '../../../core/component/lvalue-nodes'
 
 export function buildArrayAt(obj: string, children: Record<string, SemanticNode[]>): SemanticNode {
   return createNode('cpp:array_at', { obj }, children)
 }
 
-/** 這顆由共用檔**呼叫**建構子，不是被問判別。 */
+/**
+ * 這顆由共用檔**呼叫**建構子，不是被問判別。
+ *
+ * 🪦 **「我可以被寫回」的宣告已於 2026-08-25 搬到 `execute.ts`**（見那邊的檔頭）。
+ */
 export function registerLift(): void {
-  // **這種節點可以被寫回**——下標存取（`a[i]`）——容器名在 `obj` 屬性，索引在 `index` 接點。
-  // 宣告在這裡而不是寫進共用檔，否則這顆元件永遠搬不動。
-  declareLvalue('cpp:array_at', 'element')
+  // 這顆沒有其他 lift 期的登記。
 }

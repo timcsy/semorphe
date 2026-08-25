@@ -371,11 +371,6 @@
       "field": "field_dropdown",
       "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
     },
-    "python_var_assign_compound.NAME": {
-      "decision": "open",
-      "field": "field_dynamic_dropdown",
-      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
-    },
     "python_var_assign_compound.OP": {
       "decision": "closed",
       "field": "field_dropdown",

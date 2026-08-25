@@ -7,58 +7,43 @@
  *
  * ⚠️ 共用的那支複合指派執行器（C++ 在用的那個）**不能重用**：它的 `/=`
  * 是整數除法、`%=` 是 C 的取餘、而且沒有 `//=`。
+ *
+ * ## 🪦 這裡本來有一個【寫在執行器裡的 parser】
+ *
+ * 2026-08-25 之前左邊是一個字串，於是這支執行器用 regex 手拆它：
+ *
+ * ```
+ * /^([A-Za-z_]\w*)\[(.+)\]$/     ← 認 nums[0]
+ * name.lastIndexOf('.')          ← 認 self.n
+ * ```
+ *
+ * 而它的註解自己承認「索引是一個字面或一個變數名——**複雜的運算式還沒收**」。
+ * `nums[i+1] += 1` 在那一版是壞的，而**沒有任何東西會出聲**。
+ *
+ * > **一個需要 parse 回結構才能用的字串，就不該是字串。**
+ *
+ * 換成接點之後這整段消失，而支援的左值形狀從「三種」變成
+ * 「**任何宣告了自己怎麼被寫回的節點**」——見 `core/component/lvalue-nodes.ts`。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { applyPythonBinary } from '../arithmetic/apply'
-import type { ObjectFields, RuntimeValue } from '../../../interpreter/types'
+import { resolvePlace } from '../../../interpreter/lvalue'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:var_assign_compound', async (node, ctx) => {
-    const name = String(node.properties.name)
+    const targetNode = (node.children.target ?? [])[0]
+    if (!targetNode) {
+      // 認得出來而拆不開＝上游給了一個沒有左邊的節點，**出聲不要猜**
+      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這一行沒有左邊' })
+    }
     const op = String(node.properties.operator ?? '+=').replace(/=$/, '')
+    // 🔴 **順序照 CPython**：`a[i] += f()` 先定住容器與索引、載入 `a[i]`，
+    //    **然後**才算右邊，最後用**同一個**位置存回去。
+    //    反過來的話 `f()` 改掉 `i` 會讓它讀一格、寫另一格。
+    const place = await resolvePlace(targetNode, ctx)
+    const cur = place.read()
     const rhs = await ctx.evaluate(node.children.value[0])
-
-    // `nums[0] += 5` —— 左邊整段被當成名字存著（lift 那側用 `text`）。
-    // 🔴 **收了就要做對**：不做的話執行時說「沒有名為 `nums[0]` 的變數」
-    //    ——那句話讀起來像使用者打錯字。
-    const idx = /^([A-Za-z_]\w*)\[(.+)\]$/.exec(name)
-    if (idx) {
-      const container = ctx.scope.has(idx[1]) ? ctx.scope.get(idx[1]) : null
-      if (container?.type === 'array') {
-        const arr = container.value as RuntimeValue[]
-        // 索引是一個字面或一個變數名——複雜的運算式還沒收（見 component.json）
-        const k = /^-?\d+$/.test(idx[2])
-          ? Number(idx[2])
-          : ctx.scope.has(idx[2]) ? Math.trunc(ctx.toNumber(ctx.scope.get(idx[2]))) : NaN
-        const at = k < 0 ? arr.length + k : k
-        if (Number.isNaN(at) || at < 0 || at >= arr.length) {
-          throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': idx[2] })
-        }
-        arr[at] = applyPythonBinary(op, arr[at], rhs, ctx)
-        return
-      }
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${idx[1]} 不是一個可以用位置取的東西` })
-    }
-
-    // `self.n += k` —— 讀寫的是那個物件的欄位（與同族的單一指派同一條路）
-    const dot = name.lastIndexOf('.')
-    if (dot > 0) {
-      const recvName = name.slice(0, dot)
-      const field = name.slice(dot + 1)
-      if (ctx.scope.has(recvName)) {
-        const recv = ctx.scope.get(recvName)
-        if (recv.type === 'object') {
-          const fields = recv.value as ObjectFields
-          const cur = fields.get(field)
-          if (cur === undefined) throw new RuntimeError(RUNTIME_ERRORS.KEY_NOT_FOUND, { '%1': field })
-          fields.set(field, applyPythonBinary(op, cur, rhs, ctx))
-          return
-        }
-      }
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${recvName} 不是一個可以存欄位的東西` })
-    }
-
-    ctx.scope.set(name, applyPythonBinary(op, ctx.scope.get(name), rhs, ctx))
+    place.write(applyPythonBinary(op, cur, rhs, ctx))
   })
 }

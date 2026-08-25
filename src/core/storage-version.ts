@@ -13,9 +13,10 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../migrations/block-type-migrations'
 import { mergedIdentities } from '../migrations/merged-identities'
+import { staleShapeIn, SHAPE_CHANGES_V12 } from '../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 11
+export const CURRENT_VERSION = 12
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -335,6 +336,26 @@ export const UPGRADES: Record<number, Upgrade> = {
   10: (raw) => {
     const { tree: _dropped, ...rest } = raw as Record<string, unknown>
     return { ...rest, codeHash: hashCode(String((rest as { code?: string }).code ?? '')), version: 11 }
+  },
+  // 11 → 12：**左值從欄位換成接點**（路線圖「左值是接點，不是字串」，2026-08-25）。
+  //
+  // 🔴 **這一版不改寫快取，它【丟掉】快取。** 理由在
+  //    `migrations/block-shape-changes.ts` 的檔頭：`python_var_assign_compound`
+  //    的 `NAME` 欄位不見了，而那一格裝的是 `nums[0]`／`self.n`／`a.b.c`
+  //    ——**要把它搬過去，就得在遷移裡寫一個 parser**，而那正是這一刀在刪的東西。
+  //
+  // > **要把一個字串 parse 回結構才能搬運的存檔欄位，
+  // > 代表那個欄位不該是被搬運的那一份。**
+  //
+  // 🟢 而 v11 已經把 `blocklyState` 降格成**帶失效條件的快取**，真相是 `code`
+  //    ——所以丟掉它之後會從程式碼重 lift，**免費得到正確的巢狀左值**。
+  // ⚠️ 代價是**那一份的積木排版會重算**（座標屬於 `sideCar`，本來就可以丟）。
+  // ⚠️ **冪等**：丟過之後這裡找不到東西，第二次跑是 no-op。
+  11: (raw) => {
+    const stale = staleShapeIn(raw.blocklyState, SHAPE_CHANGES_V12)
+    if (!stale) return { ...raw, version: 12 }
+    const { blocklyState: _dropped, ...rest } = raw as Record<string, unknown>
+    return { ...rest, blocklyState: {}, version: 12 }
   },
 }
 

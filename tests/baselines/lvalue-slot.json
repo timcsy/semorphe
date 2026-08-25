@@ -1,10 +1,10 @@
 {
   "_meta": {
-    "note": "一顆會寫入的元件，它的左值必須是接點。\n🔴 走棘輪不走硬性零：每一筆跨 lift／generate／execute／render 四條路徑，\n   而且動的是語義詞彙本身（principles.md:158），MUST 附一次性轉換。\n⚠️ 「疑似漏宣告」只是名字網子，不是判定機制——它是要有人去看的。",
+    "note": "一顆會寫入的元件，它的左值必須是接點。\n🔴 走棘輪不走硬性零：每一筆跨 lift／generate／execute／render 四條路徑，\n   而且動的是語義詞彙本身（principles.md:158），MUST 附一次性轉換。\n⚠️ 「疑似漏宣告」只是名字網子，不是判定機制——它是要有人去看的。\n🎯 2026-08-25：12 → 11。`python:var_assign_compound` 的左值換成 `target` 接點，\n   而執行器裡那段用 regex 手拆字串的 parser 整段刪掉（它自己承認「複雜的運算式還沒收」）。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "註冊表顆數": 332,
-  "左值是字串": 12,
+  "左值是字串": 11,
   "左值懸空": 0,
   "疑似漏宣告": 0,
   "details": [
@@ -18,7 +18,6 @@
     "cpp:var_assign.obj",
     "cpp:var_assign_compound.name",
     "python:var_assign.obj",
-    "python:var_assign_compound.name",
     "python:var_assign_expr.obj"
   ]
 }

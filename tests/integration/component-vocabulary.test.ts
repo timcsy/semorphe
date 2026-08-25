@@ -180,6 +180,7 @@ describe('spec 159 · 整個 concept 家族退場', () => {
     expect(exemptOutsideBaselines.sort(),
       '基線目錄以外的豁免必須逐一具名——多一個就是靠路徑規則順便放過').toEqual([
       'src/languages/cpp/id-migrations.ts',
+      'src/migrations/block-shape-changes.ts',
       'src/migrations/block-type-migrations.ts',
       'src/migrations/id-migrations.ts',
       'src/migrations/merged-identities.ts',
