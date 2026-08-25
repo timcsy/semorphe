@@ -146,6 +146,12 @@ export const SHAPE_CHANGES_V13: ShapeChange[] = [
  */
 export const SHAPE_CHANGES_V14: ShapeChange[] = [
   {
+    blockType: 'cpp:input_line',
+    retiredFields: ['NAME'],
+    why: '`getline(cin, …)` 讀進去的那一格換成 `TARGET` 接點——'
+      + '`getline(cin, o.name)` 在 C++ 合法，而它本來被抄成字串。',
+  },
+  {
     blockType: 'cpp_var_assign',
     retiredFields: ['NAME'],
     why: '左值 `NAME`（變數下拉）換成 `TARGET` 接點——語料上那個字串裝著 12 種'

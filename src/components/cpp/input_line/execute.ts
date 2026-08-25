@@ -18,19 +18,28 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
+import { resolvePlace } from '../../../interpreter/lvalue'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:input_line', async (node, ctx) => {
-      const name = String(node.properties.name)
+      // 🟢 讀進去的那一格是**一個位置**（2026-08-25）——`getline(cin, o.name)` 合法。
+      //    🪦 在此之前是 `ctx.scope.set(name)`／`declare(name)`，於是
+      //    `o.name` 會在作用域裡**長出一個叫 `o.name` 的變數**，而那個欄位沒動。
+      const targetNode = (node.children.target ?? [])[0]
       // 流已經失敗：`getline` 立刻回，變數一個字都不動
       if (ctx.cinFailed) return
+      if (!targetNode) return
       // 🔴 兩層：先讀預餵的，沒有才【等】使用者
       const line = ctx.io.read() ?? (await ctx.awaitInput())
       if (line === null) ctx.failCin()
       const value: RuntimeValue = { type: 'string', value: line ?? '' }
+      // ⚠️ **`getline` 也會宣告一個還不存在的變數**（這個直譯器的既有行為）——
+      //    所以先試位置，解不出來（例如那個名字還沒宣告）才 declare。
       try {
-        ctx.scope.set(name, value)
+        const place = await resolvePlace(targetNode, ctx)
+        place.write(value)
       } catch {
+        const name = String(targetNode.properties?.name ?? 'str')
         ctx.scope.declare(name, value)
       }
     })

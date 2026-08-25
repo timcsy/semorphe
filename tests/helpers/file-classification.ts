@@ -85,7 +85,11 @@ export function classifyFile(rel: string): FileClass {
   // ⚠️ 它 2026-08-11 之前住在 `storage-version.ts` 裡——**一張凍結的名冊
   // 住在機制檔裡，會讓它列到的每一顆元件都多背一筆擴散**，
   // 而那些元件一行實作都不在那裡。搬出來之後這一條才寫得出來。
-  if (/(id-migrations|merged-identities)\.ts$/.test(rel)) return '清單'
+  // 🟢 `block-shape-changes.ts`（哪幾顆積木在哪一版換了骨架）**同一類**：
+  //    它是一張**按版號凍結的名冊**，而不是任何一顆元件的實作。
+  //    ⚠️ 它會列到積木型別，而**有一顆積木的型別字面就是它的元件身分**
+  //    （`cpp:input_line`）——那讓一張名冊看起來像一次擴散。
+  if (/(id-migrations|merged-identities|block-shape-changes)\.ts$/.test(rel)) return '清單'
   if (/^tests\/(baselines|assets|reports)\//.test(rel)) return '清冊'
   if (/\.test\.ts$/.test(rel)) return '測試'
   return '實作'

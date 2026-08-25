@@ -10,18 +10,19 @@
       "message0": "%{BKY_CPP_GETLINE_MSG0}",
       "args0": [
         {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "str"
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
         }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#5B80A5",
-      "tooltip": "%{BKY_CPP_GETLINE_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_GETLINE_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
-      "pattern": "getline(std::cin, ${NAME});",
+      "pattern": "getline(std::cin, ${TARGET});",
       "imports": [
         "iostream",
         "string"
@@ -29,9 +30,11 @@
       "order": 0
     },
     "renderMapping": {
-      "fields": {
-        "NAME": "name"
+      "fields": {},
+      "inputs": {
+        "TARGET": "target"
       }
-    }
+    },
+    "_why": "🟢 **2026-08-25：`NAME` 換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。"
   }
 ]

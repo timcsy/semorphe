@@ -240,7 +240,9 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:input_line')
       expect(node).not.toBeNull()
-      expect(node!.properties.name).toBe('line')
+      // 🟢 **讀進去的那一格是接點**（2026-08-25）——`getline(cin, o.name)` 合法。
+      expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(node!.children.target[0].properties.name).toBe('line')
     })
 
     it('should generate code containing getline()', () => {
@@ -256,7 +258,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:input_line')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.name).toBe('line')
+      expect(node2!.children.target[0].properties.name).toBe('line')
     })
   })
 
