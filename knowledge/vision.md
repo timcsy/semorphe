@@ -477,104 +477,36 @@ languages/{lang}/
       🪦 原本的判準句留在 [146](history/146-網頁版的程式碼面板也是投影.md)：
       （同一個問題的另一個實例：[面板協定](draft/2026-08-20-面板協定的三個頻道.md) §二的接線圖擺放位置。）
 
-#### 🎯 左值是接點，不是字串（2026-08-25 升格，使用者拍板「做完關於 lvalue 的部分」）
+#### ✅ 左值必須被結構表達（2026-08-25 升格 · 2026-08-26 判準改寫並完成）
 
-> 使用者 2026-08-24 逐字：「**我的意思是 lvalue 的型態應該百百種吧，這樣不就寫死了？**」
-> 隔天 8/25：「我希望用『**的**』來做到 `.` 的功能……有時候我們要串好幾個 `.`」
-> ——**兩句是同一件事**：`.` 是二元運算子，左值是運算式；用字串就永遠要列舉。
+> 使用者 2026-08-24：「**我的意思是 lvalue 的型態應該百百種吧，這樣不就寫死了？**」
+> 2026-08-26 拍板判準：「**應該是左值必須被結構表達吧**」
 >
-> 設計脈絡：[draft/lvalue的形狀被列舉了](draft/2026-08-25-lvalue的形狀被列舉了.md)（**in-flight**）
+> 設計脈絡：[draft/lvalue的形狀被列舉了](draft/2026-08-25-lvalue的形狀被列舉了.md)
+> 概念：[concepts/左值](concepts/左值.md)　轉變：[157](history/157-左值的判準從必須是接點改成必須被結構表達.md)
 
-**範圍是扣除式的，不是列舉式的**（`experience.md:603`「這個分派是列舉式的還是扣除式的？」）：
+🟢 **第七十三條護欄 `audit-lvalue-structure`——硬性零，今天 0。**
 
-> **一顆會【寫入】的元件，它的左值必須是接點。**
-> 「其餘」＝ 沒有左值的元件——那是定義得出來的集合。
+| 交付 | 結果 |
+|---|---|
+| 左值解析器改成**扣除式** | 加一種新左值形狀**不改任何既有執行器**（`a[i][j]`／`s[i]` 各加一個 `declareLvalue`） |
+| 七顆元件的左值換成接點 | python 複合指定 · cpp 複合指定／遞增／指派／`getline` · `array_at`／`array_2d_at`／`struct_at_member` |
+| 四顆複合元件**留下** ＋ 加判別 | 容器不是名字時**讓給組合形式**（`obj.arr[i]`／`*(p + 1)`） |
+| 兩支 I/O 執行器的手拆形狀退場 | `cin`／`scanf` 走 `resolvePlace`，`isIndexedAccess` 的消費者歸零 |
+| 🪦 `altLayout` 兩顆都退場 | 它是這個病的症狀 |
+| 🪦 兩顆命令式定義退場 | 它們的存在理由就是那個 `hasIndex_` mutator（`dual-truth` 13 → 11） |
+| 一次性轉換 `v11 → v14` | **丟掉快取**讓它從程式碼重 lift——不必在遷移裡寫 parser |
 
-實測的全集（2026-08-25，**15 顆**——第一版寫 13，漏掉 `cin >> x` 那兩顆）：
+順帶下降：第七十二條 35 → 33 · 第三十四條 10 → 6 · 第五十九條「開放而不保值」3 → **0**
+· 下拉總數 77 → 70 · `dual-truth` 13 → 11。
 
-```
-接點 ✅          3   python: container_assign · member_assign · var_assign_sequence
-字串 ＋ 下拉 🔴   5   cpp: array_assign · increment · var_assign · var_assign_compound
-                    python: var_assign_compound
-                    ↑ 下拉列的是變數清單，點一下就毀掉成員存取
-字串 ＋ 文字框 🟡  7   cpp: array_2d_assign · map_assign · pointer_assign · input · input_line
-                    python: var_assign · var_assign_expr
-```
+🔴 **而這一項最大的收穫是護欄自己換了量測方式**：從**讀宣告**改成**主動探測**
+——`kind: 'identifier'` 只是一句主張，而改完當天就抓到四筆漏。
 
-⚠️ **`cin >> x` 的 `x` 也是左值**（`cin >> a[i]`、`cin >> o.f` 都合法）
-——第一版用「元件名字含 assign」去想，就漏掉了它們。**那正是列舉式的症狀。**
+> **「這一格是原子」是一句主張，而主張要有人去試著推翻它。**
 
-🔴 **而執行面今天是列舉式的**：`member_assign` 與 `container_assign` **各自手拆**
-target 節點的形狀。每多一種左值形狀就要多一個執行器分支。
-→ 要一個**左值解析器**（給一顆 target 節點，回傳「可讀可寫的那一格」），
-按 `componentId` 分派、可登記——那才是 P3 說的「不修改既有程式碼」。
-
-- [x] 🟢 **第七十三條護欄已蓋**（`audit-lvalue-slot`，2026-08-25）——棘輪 **12 → 0**
-      機制是 `traits.writesTo`（宣告驅動，不是用名字認）；第一次跑**紅的**，逐項指名 12 顆。
-- [ ] 🔴 **驗收①：那 12 筆還到 0**——🎯 **今天 12 → 7**
-      🟢 `python:var_assign_compound`（`a.b += 1`／`nums[i+1] += 1`／`grid[1][2] += 1`）
-      🟢 `cpp:var_assign_compound`（`a[i]`／`o.x`／`p->x`／`*q`／`a[i][j]`／`s[i]` 六種形狀）
-      🟢 `cpp:increment`（`a[i]++`／`o.x++`／`p->x++`／`(*q)++`／`s[i]++`）
-      🟢 `cpp:var_assign`（`o.x = 7`／`p->x = 8`／`*q = 9`／`a[i][j] = 1`）
-      🟢 `cpp:input_line`——`getline(cin, o.name)` 在此之前會**在作用域裡長出
-      一個叫 `o.name` 的變數**，而那個欄位一個字都沒動
-      ——**它是語料上真的在掉東西的那一顆**（第七十二條量到非原子 12 種），
-      而它的執行器用 `indexOf('.')` 只認得**一個**點號。第七十二條因此 35 → 34
-      （那 35 筆裡**第一個被真的解掉**的，其餘目前只是被判定過）。
-      🪦 而 `altLayout` **兩顆都退場了**——它是這個病的症狀（驗收④先到了）
-      🪦 順帶：`cpp_increment_expression` 與 `cpp_var_assign_compound_expression` 的
-      **命令式定義刪除**（`dual-truth` 13 → 11）——它們的存在理由就是那個 `hasIndex_` mutator
-      🔴 **而剩下的 8 筆，每一筆都卡在同一個【要人拍板】的問題上**：
-
-      ```
-      cpp: array_assign · array_2d_assign · map_assign · pointer_assign   4 筆
-        它們的 `writesTo` 指著 `obj`，而**被寫的其實是 `a[i]`／`m[k]`／`*p`**
-        ——`obj` 只是那個左值的一部分。換句話說：**這四顆就是左值形狀的列舉**，
-        而 `cpp:var_assign` 現在的 `target` 接點已經表達得出它們全部。
-        → 該做的是【退場】，不是【轉換】。而那是元件身分的決定。
-
-      python: var_assign · var_assign_expr                                2 筆
-        左邊被 `constraints` 限成 `identifier`，**依建構就是原子**
-        ——換它們是齊一性不是修缺陷。而真正的解一樣是合併：
-        `member_assign`／`container_assign` 坐在**同一個 AST 節點**上，
-        只差左邊的節點型別（`attribute`／`subscript`）——**那是寫出來的列舉**。
-        ⚠️ 而拿掉 `var_assign` 的 constraint 會與那兩顆**產生比對歧義**，
-        違反 P3「歧義在註冊時仲裁」——所以不能只做一半。
-
-      cpp: input                                                          1 筆
-        `cin >> a[i]` 合法，所以那也是左值。
-        ⚠️ 而 `cpp_input` 是**剩下四顆命令式積木之一**（它缺「多模式的插槽」）
-        ——兩件事交纏，該一起做。而它的 `writesTo: name` 本身也是誤宣告：
-        `cin >> a >> b` 有**兩個**寫入目標，而 `name` 只裝得下第一個。
-      ```
-
-      > **一個列舉式的分派，清到最後剩下的不是「還沒轉換的欄位」，
-      > 是「當初被列舉出來的那些元件本身」。**
-      ⚠️ 走**棘輪不走硬性零**——build-guardrail §6.8 的第二問「修一筆要付多少？」：
-      每一筆跨 `lift`／`generate`／`execute`／`render` 四條路徑，**規範成立 ＋ 每一筆都要驗行為 → 棘輪**
-- [x] 🟢 **驗收②：左值解析器是扣除式的**——`core/component/lvalue-nodes.ts` 的登記
-      從三個寫死的 `kind` 換成**一個解析函式**，每顆左值節點在自己的膠囊裡宣告。
-      🔴 **證據**：`cpp-lvalue-slot.test.ts` 第一次跑時 `a[i][j]` 與 `s[i]` 都紅
-      （「這個東西不能被指定值」），而修法是各加一個 `declareLvalue`
-      ——**沒有動任何一支賦值執行器**。
-- [ ] 🔴 **驗收③：一次性轉換**（`principles.md:158` 逐字：「這種變更 MUST 附**一次性的轉換**」）
-      舊存檔的 `name: "o.x"` 載入後變成巢狀節點，而**同一份檔案載入前後產出的程式碼一字不變**
-      —— 🛠 **用 `migrate-storage`**，不要現場想
-      🟢 **做法定了（2026-08-25）**：`blocklyState` 是**帶失效條件的快取**（v11），
-      所以形狀變了就**丟掉快取**讓它從程式碼重 lift——不必在遷移裡寫一個 parser。
-      `migrations/block-shape-changes.ts`；v12（Python）· v13（C++）。
-      🔴 **開瀏覽器用真的 v11 存檔驗過**，並證實了它是承重的（不丟的話左值變成空插槽）。
-- [x] 🟢 **驗收④：`altLayout` 已退場**（2026-08-25，隨 `cpp:var_assign_compound` 那一刀）
-- [ ] ~~驗收④~~ 原文留存：**`altLayout` 退場**——它是這個病的症狀（draft §四），
-      左值變接點之後 `cpp_increment`／`cpp_var_assign_compound` 不再需要「依 extraState 換佈局」
-- [ ] ⚠️ **不在本項**：型別那 15 個字串屬性（乙族）——draft §八逐字
-      「**同樣是『字串裝著文法』，會出事的是那個【被投影成選單】的**」，
-      而型別那格今天沒有這個問題（`allowCustom` 已解掉可寫性）
-- [ ] ⚠️ **不在本項**：`range_*` 那 13 個原子 0 的屬性、`cpp:var_declare.name = "f()"`（未查）
-
-🔴 **而護欄看不到起點那一顆**：`cpp:var_assign_compound.name` 與
-`python:var_assign_compound.name` **不在第七十二條的 35 筆裡**——語料裡沒有 `o.x += 1`。
-那正是它自己的基線寫著的：「**語料乾淨不代表模型對：它代表語料是照著模型長的**」。
+- [ ] 🟡 **還開著的一格**：`cpp:input` 是剩下四顆命令式積木之一（缺「多模式的插槽」）
+      ——它的左值已經是接點了（`values`），而**那顆積木本身**還在命令式那一刀上。
 
 #### 階段 8：外部套件生態
 
