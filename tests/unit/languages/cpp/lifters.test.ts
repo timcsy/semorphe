@@ -249,7 +249,9 @@ describe('C++ Expression Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:array_at')
-    expect(result!.properties.obj).toBe('arr')
+    // 🟢 **容器是接點**（2026-08-26）——釘接點比釘字串強。
+    expect(result!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
+    expect(result!.children.obj[0].properties.name).toBe('arr')
     expect(result!.children.index).toHaveLength(1)
   })
 })

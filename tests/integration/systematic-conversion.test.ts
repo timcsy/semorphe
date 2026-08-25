@@ -361,7 +361,10 @@ describe('Expressions', () => {
       const n = liftExpr('arr[i]')
       expect(n).not.toBeNull()
       expect(n!.componentId).toBe('cpp:array_at')
-      expect(n!.properties.obj).toBe('arr')
+      // 🟢 **容器是接點**（2026-08-26）——`obj.arr[i]` 的容器是一個成員存取，
+      //    而它本來被抄成字串（連讀都是壞的：`scope.get("obj.arr")`）。
+      expect(n!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(n!.children.obj[0].properties.name).toBe('arr')
     })
 
     it('roundtrips arr[i] in expression', () => {
@@ -377,7 +380,9 @@ describe('Expressions', () => {
       const initInput = declBlock?.inputs?.INIT_0?.block
       expect(initInput).toBeDefined()
       expect(initInput?.type).toBe('cpp_array_at')
-      expect(initInput?.fields?.NAME).toBe('arr')
+      // 🟢 容器從欄位換成接點（2026-08-26）
+      expect(initInput?.fields?.NAME, '🔴 欄位長回來了').toBeUndefined()
+      expect(initInput?.inputs?.OBJ?.block?.fields?.NAME).toBe('arr')
     })
   })
 

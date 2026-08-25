@@ -1,5 +1,4 @@
 {
   "C_STRUCT_MEMBER_ACCESS_MSG0": "結構 %1 的欄位 %2",
-  "C_STRUCT_MEMBER_ACCESS_TOOLTIP": "取得或設定結構裡某個欄位的值",
-  "CPP_STRUCT_AT_MEMBER_MSG1": "（%1）"
+  "C_STRUCT_MEMBER_ACCESS_TOOLTIP": "取得或設定結構裡某個欄位的值"
 }

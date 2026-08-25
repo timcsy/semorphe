@@ -8,14 +8,16 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   registerLvalue()
   register('cpp:array_2d_at', async (node, ctx) => {
-      const name = String(node.properties.obj)
+      // 🟢 容器是一顆節點（2026-08-26）
+      const objNodes0 = node.children.obj ?? []
+      const name = String(objNodes0[0]?.properties?.name ?? '')
       const rowNodes = node.children.row
       const colNodes = node.children.col
       if (!rowNodes?.length || !colNodes?.length) return defaultValue('int')
 
       const row = ctx.toNumber(await ctx.evaluate(rowNodes[0]))
       const col = ctx.toNumber(await ctx.evaluate(colNodes[0]))
-      const arr = ctx.scope.get(name)
+      const arr = objNodes0.length > 0 ? await ctx.evaluate(objNodes0[0]) : ctx.scope.get(name)
 
       if (arr.type !== 'array' || !Array.isArray(arr.value)) {
         throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
@@ -35,7 +37,8 @@ export function registerExecute(register: (component: string, executor: Componen
  */
 export function registerLvalue(): void {
   declareLvalue('cpp:array_2d_at', async (node, ctx: ExecutionContext) => {
-    const name = String(node.properties.obj)
+    const objN = (node.children.obj ?? [])[0]
+    const name = String(objN?.properties?.name ?? '')
     const rowNodes = node.children.row ?? []
     const colNodes = node.children.col ?? []
     if (!rowNodes.length || !colNodes.length) {
@@ -43,7 +46,7 @@ export function registerLvalue(): void {
     }
     const row = Math.trunc(ctx.toNumber(await ctx.evaluate(rowNodes[0])))
     const col = Math.trunc(ctx.toNumber(await ctx.evaluate(colNodes[0])))
-    const arr = ctx.scope.get(name)
+    const arr = objN ? await ctx.evaluate(objN) : ctx.scope.get(name)
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
     }

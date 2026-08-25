@@ -23,6 +23,13 @@ export function registerLift(): void {
     const right = node.childForFieldName('right')
     const value = right ? ctx.lift(right) : null
     const arrayNode = innerNode.childForFieldName('argument') ?? innerNode.namedChildren[0]
+    // 🔴 **只有「兩層下標一個名字」時才是我**（2026-08-26，第七十三條抓到）。
+    //
+    // `obj.arr[i][j] = 1` 的容器是一個成員存取，而這顆的 `obj` 是一個**原子**。
+    // 回 `null` 之後路由器會落到 `cpp:var_assign（target = cpp:array_2d_at）`。
+    //
+    // > **一個複合元件的存在條件，是它的每一格都真的裝得下自己那一格。**
+    if (arrayNode?.type !== 'identifier') return null
     const rowIndices = innerNode.namedChildren.find((c) => c.type === 'subscript_argument_list')
     const rowNode = rowIndices?.namedChildren[0] ?? innerNode.namedChildren[1]
     const colIndices = left.namedChildren.find((c) => c.type === 'subscript_argument_list')

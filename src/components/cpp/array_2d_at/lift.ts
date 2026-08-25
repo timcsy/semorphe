@@ -20,7 +20,10 @@ export function registerLift(): void {
     const colNode = colIndices?.namedChildren[0] ?? node.namedChildren[1]
     const row = rowNode ? ctx.lift(rowNode) : null
     const col = colNode ? ctx.lift(colNode) : null
-    return createNode('cpp:array_2d_at', { obj: innerArrayNode?.text ?? 'arr' }, {
+    // 🟢 **容器一律 lift**（2026-08-26）——見 `component.json` 的說明。
+    const container = innerArrayNode ? ctx.lift(innerArrayNode) : null
+    return createNode('cpp:array_2d_at', {}, {
+      obj: container ? [container] : [],
       row: row ? [row] : [],
       col: col ? [col] : [],
     })

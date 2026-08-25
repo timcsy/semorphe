@@ -96,7 +96,9 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     const body = tree!.children.body ?? []
     const init = body[0].children.initializer?.[0]
     expect(init?.componentId).toBe('cpp:array_2d_at')
-    expect(init?.properties.obj).toBe('arr')
+    // 🟢 **容器是接點**（2026-08-26）——釘接點比釘字串強。
+    expect(init?.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
+    expect(init?.children.obj[0].properties.name).toBe('arr')
 
     const code = generateCode(tree!, 'cpp', style)
     expect(code).toContain('arr[0][1]')

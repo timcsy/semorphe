@@ -7,8 +7,10 @@
  * 而那是 `array_at` 的性質，不是這顆該認得的身分。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { isIndexedAccess } from '../../../languages/cpp/core/node-traits'
+// 🪦 `isIndexedAccess` 的匯入已於 2026-08-26 刪除——那一支手拆形狀的分支
+//    換成了 `resolvePlace`，而它是**扣除式**的：加一種新的左值形狀不改這個檔。
 import { defaultValue, parseInputValue } from '../../../interpreter/types'
+import { resolvePlace } from '../../../interpreter/lvalue'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   const execScanf: ComponentExecutor = async (node, ctx) => {
@@ -40,25 +42,27 @@ export function registerExecute(register: (component: string, executor: Componen
       const lastVal = parseInputValue(raw, targetType) ?? defaultValue(targetType)
       itemsRead++
 
-      if (isIndexedAccess(argNode.componentId)) {
-        const arrName = String(argNode.properties.obj)
-        const arr = ctx.scope.get(arrName)
-        if (arr.type === 'array' && Array.isArray(arr.value)) {
-          const indexVal = await ctx.evaluate((argNode.children.index ?? [])[0])
-          const index = ctx.toNumber(indexVal)
-          if (index >= 0 && index < arr.value.length) {
-            arr.value[index] = lastVal
-          }
-        }
-      } else {
-        const varName = String(argNode.properties.name ?? 'x')
+      // 🟢 **每一個 `&x` 都是一個【位置】**（2026-08-26）——走 `resolvePlace`。
+      //
+      // 🪦 在此之前這裡手拆形狀：`isIndexedAccess(...)` 那一支讀
+      // `argNode.properties.obj`（陣列的名字，一個字串），而**它只認得那一種**
+      // ——`scanf("%d", &obj.arr[i])`／`&p->x` 都走不通。
+      //
+      // ⚠️ 型別要**先讀出來**再解析：`%d` 讀進 `double` 的變數時，
+      // 既有行為是照那個變數現在的型別重解一次。
+      let place: Awaited<ReturnType<typeof resolvePlace>> | null = null
+      try { place = await resolvePlace(argNode, ctx) } catch { place = null }
+      if (place) {
+        let refined = lastVal
         if (targetType === 'int') {
-          try { const existing = ctx.scope.get(varName); targetType = existing.type } catch { /* default int */ }
-          const refinedVal = parseInputValue(raw!, targetType) ?? defaultValue(targetType)
-          ctx.scope.set(varName, refinedVal)
-        } else {
-          ctx.scope.set(varName, lastVal)
+          const cur = place.read().type
+          refined = parseInputValue(raw!, cur) ?? defaultValue(cur)
         }
+        place.write(refined)
+      } else {
+        // 位置解不出來（多半是那個名字還沒宣告）——`scanf` 在這個直譯器裡
+        // 會順手宣告它，所以留一條退路。
+        ctx.scope.set(String(argNode.properties.name ?? 'x'), lastVal)
       }
     }
     return { type: 'int', value: itemsRead }

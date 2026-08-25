@@ -25,8 +25,9 @@
 import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { defaultValue, parseInputValue } from '../../../interpreter/types'
-import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { isIndexedAccess } from '../../../core/component/traits'
+// 🪦 `RuntimeError`／`isIndexedAccess` 的匯入已於 2026-08-26 刪除——
+//    那一支手拆形狀的分支換成了 `resolvePlace`，兩個消費者一起消失。
+import { resolvePlace } from '../../../interpreter/lvalue'
 
 /**
  * 一次 `>>` 的結果。
@@ -84,30 +85,33 @@ export function registerExecute(register: (component: string, executor: Componen
       if (valueNodes.length > 0) {
         let itemsRead = 0
         for (const varRefNode of valueNodes) {
-          if (isIndexedAccess(varRefNode.componentId)) {
-            const arrName = String(varRefNode.properties.obj)
-            const arr = ctx.scope.get(arrName)
-            if (arr.type !== 'array' || !Array.isArray(arr.value)) {
-              throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-            }
-            const indexVal = await ctx.evaluate((varRefNode.children.index ?? [])[0])
-            const index = ctx.toNumber(indexVal)
-            const elemType = arr.value.length > 0 ? arr.value[0].type : 'int'
-            const got = await extractOne(ctx, elemType)
-            if (got.value !== null && index >= 0 && index < arr.value.length) {
-              arr.value[index] = got.value
-            }
-            if (!got.ok) return { type: 'int', value: 0 }
-            itemsRead++
-            continue
+          // 🟢 **每一個目標都是一個【位置】**（2026-08-26）——走 `resolvePlace`。
+          //
+          // 🪦 在此之前這裡手拆形狀：`isIndexedAccess(...)` 那一支讀
+          // `varRefNode.properties.obj`（陣列的名字，一個字串）＋ `index` 接點，
+          // 而**它只認得那一種**：`cin >> obj.arr[i]`／`cin >> p->x` 都走不通。
+          //
+          // > **一個「先判它長什麼形狀、再各自處理」的迴圈，
+          // > 就是列舉式分派換了一個位置。**
+          //
+          // ⚠️ **型別要先讀出來**：`cin >> x` 讀進去的東西要照 `x` 現在的型別解析
+          // （`int` 讀一個整數、`string` 讀一個詞），而那要先看得到那一格。
+          let place: Awaited<ReturnType<typeof resolvePlace>> | null = null
+          let targetType = 'string'
+          try {
+            place = await resolvePlace(varRefNode, ctx)
+            targetType = place.read().type
+          } catch {
+            // 位置解不出來（多半是那個名字還沒宣告）——`cin >> x` 在這個
+            // 直譯器裡會順手宣告它，所以留一條退路，見下面。
+            place = null
           }
 
-          const varName = String(varRefNode.properties.name ?? 'x')
-          let targetType = 'string'
-          try { const existing = ctx.scope.get(varName); targetType = existing.type } catch { /* variable might not exist yet */ }
-
           const got = await extractOne(ctx, targetType)
-          if (got.value !== null) ctx.scope.set(varName, got.value)
+          if (got.value !== null) {
+            if (place) place.write(got.value)
+            else ctx.scope.set(String(varRefNode.properties.name ?? 'x'), got.value)
+          }
           if (!got.ok) return { type: 'int', value: 0 }
           itemsRead++
         }

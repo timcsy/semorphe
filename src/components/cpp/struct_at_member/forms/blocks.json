@@ -10,9 +10,9 @@
       "message0": "%{BKY_C_STRUCT_MEMBER_ACCESS_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "obj"
+          "check": "Expression"
         },
         {
           "type": "field_input",
@@ -23,15 +23,7 @@
       "inputsInline": true,
       "output": "Expression",
       "colour": "#CF63CF",
-      "tooltip": "%{BKY_C_STRUCT_MEMBER_ACCESS_TOOLTIP}",
-      "message1": "%{BKY_CPP_STRUCT_AT_MEMBER_MSG1}",
-      "args1": [
-        {
-          "type": "input_value",
-          "name": "OBJ_EXPR",
-          "check": "Expression"
-        }
-      ]
+      "tooltip": "%{BKY_C_STRUCT_MEMBER_ACCESS_TOOLTIP}"
     },
     "codeTemplate": {
       "pattern": "${OBJ}.${MEMBER}",
@@ -40,12 +32,12 @@
     },
     "renderMapping": {
       "fields": {
-        "MEMBER": "member",
-        "OBJ": "obj"
+        "MEMBER": "member"
       },
       "inputs": {
-        "OBJ_EXPR": "obj"
+        "OBJ": "obj"
       }
-    }
+    },
+    "_why": "🟢 **2026-08-26：`OBJ` 從欄位換成接點**，而積木的**第二列**（`message1: \"（%1）\"` ＋ 一個裝「不是名字的那一種」的插槽）一併消失——它在常見情況下永遠是空的，使用者看到的是一個掛在後面的 `?`。"
   }
 ]

@@ -52,7 +52,7 @@ const make = (varName: string, tag: number, type = 'C'): SemanticNode[] => [
   // 🟢 **左值是接點**（2026-08-25）——在此之前是 `{ obj, member }` 這對屬性，
   //    而那個 `member` 是第三十四條護欄長年報的「讀了沒宣告」之一。
   n('cpp:var_assign', {}, {
-    target: [n('cpp:struct_at_member', { obj: varName, member: 'tag' }, {})],
+    target: [n('cpp:struct_at_member', { member: 'tag' }, { obj: [n('cpp:var_ref', { name: varName }, {})] })],
     value: [num(tag)],
   }),
 ]

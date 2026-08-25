@@ -31,6 +31,18 @@ export function registerDeclarationLifters(lifter: Lifter): void {
 
     if (left?.type === 'subscript_expression') {
       const innerNode = left.childForFieldName('argument') ?? left.namedChildren[0]
+      // 🔴 **只有「下標一個名字」時才用那顆複合元件**（2026-08-26，第七十三條抓到）。
+      //
+      // `obj.arr[i] = 1` 的容器是一個成員存取，而 `cpp:array_assign` 的 `obj`
+      // 是一個**原子**（陣列的名字）——把 `obj.arr` 塞進去，那一格就裝著文法了。
+      //
+      // > **一個複合元件的存在條件，是它的每一格都真的裝得下自己那一格。**
+      //
+      // 落下去會走 `cpp:var_assign（target = cpp:array_at）`，它表達得出任意容器。
+      if (innerNode?.type !== 'identifier') {
+        const t = ctx.lift(left)
+        return buildVarAssign({ target: t ? [t] : [], value: value ? [value] : [] })
+      }
       // 1D Array element assignment: arr[i] = value
       const name = innerNode?.text ?? 'arr'
       const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')

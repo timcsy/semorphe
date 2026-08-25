@@ -3,24 +3,13 @@
   "abstractComponent": null,
   "properties": [
     {
-      "name": "obj",
-      "kind": "identifier",
-      "default": "obj"
-    },
-    {
       "name": "member",
       "kind": "literal",
       "default": "field"
     }
   ],
   "children": {
-    "obj": {
-      "allowed": [
-        "expression"
-      ],
-      "min": 0,
-      "max": 1
-    }
+    "obj": "expression"
   },
   "role": "expression",
   "owner": "(core)",
@@ -31,5 +20,5 @@
     "execute": "./execute.ts",
     "lift": "./lift.ts"
   },
-  "_children_why": "🔴 **`obj` 同時是屬性與接點，而那不是重複。**\n\n單純的識別字（`p.first`）走屬性（一個名字字串）；而 `v[0].first`／`f().x` 這種**接收者本身是運算式**的，掛成接點——判別看 AST 的節點型別（見 `lift.ts`）。\n\n⚠️ 2026-08-18 我一度**把這個接點刪掉**，理由是「產生器只讀 `properties.obj`」——而那個理由只查了一半：**lift 真的會產出它**。宣告完整性護欄當場糾正（「產出 [obj] 而宣告裡沒有」）。\n\n> **要判斷一個接點是不是死的，兩端都要查——\n> 只看產生器的話，「lift 產出而 generate 丟掉」會被誤判成「沒有人用」。**\n\n🔴 而真正的缺陷是**產生器沒有讀它**：`v[0].first` 會產出 `v[0]`… 見 `generate.ts`。"
+  "_children_why": "🟢 **接收者是一個接點**（2026-08-26）——在此之前它是**字串屬性與接點並存**，而那個混合形狀有兩個代價：\n① `m[k].y` 的接收者被寫成字串 `\"m[k]\"`（第七十三條抓到）\n② 積木上因此需要**第二列**（`message1: \"（%1）\"` ＋ 一個 `OBJ_EXPR` 插槽）來裝「不是名字的那一種」——而它在常見情況下永遠是空的，**使用者看到的是一個掛在後面的 `?`**。\n> **一個混合形狀會在投影上長出一個「另一半的位置」，而那個位置多數時候是空的。**\n🟢 接收者一律是接點之後，第二列整個消失。"
 }

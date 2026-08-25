@@ -4,7 +4,8 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:array_2d_at', (node, ctx) => {
-      const name = node.properties.obj ?? 'arr'
+      const objs2 = node.children.obj ?? []
+      const name = objs2.length > 0 ? generateExpression(objs2[0], ctx) : 'arr'
       const rowNodes = node.children.row ?? []
       const colNodes = node.children.col ?? []
       const row = rowNodes.length > 0 ? generateExpression(rowNodes[0], ctx) : '0'

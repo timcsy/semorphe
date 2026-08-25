@@ -12,13 +12,15 @@ export function registerExecute(register: (component: string, executor: Componen
   registerLvalue()
 
   register('cpp:array_at', async (node, ctx) => {
-      const name = String(node.properties.obj)
+      // 🟢 容器是一顆節點（2026-08-26）——`obj.arr[i]` 本來會去查一個叫 `obj.arr` 的變數
+      const objNodes = node.children.obj ?? []
+      const name = String(objNodes[0]?.properties?.name ?? '')
       const indexNodes = node.children.index
       if (!indexNodes || indexNodes.length === 0) return defaultValue('int')
 
       const indexVal = await ctx.evaluate(indexNodes[0])
       const index = ctx.toNumber(indexVal)
-      const container = ctx.scope.get(name)
+      const container = objNodes.length > 0 ? await ctx.evaluate(objNodes[0]) : ctx.scope.get(name)
 
       // String subscript: s[i] returns char
       if (container.type === 'string' && typeof container.value === 'string') {
@@ -51,12 +53,11 @@ export function registerLvalue(): void {
   declareLvalue('cpp:array_at', async (node, ctx: ExecutionContext) => {
     // 先問接點（`a[i][j]` 的外層容器是一顆節點），沒有才退回字串屬性。
     const objNode = (node.children.obj ?? [])[0]
-    const name = String(node.properties.obj ?? '')
+    const name = String(objNode?.properties?.name ?? '')
+    if (!objNode) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個下標沒有容器' })
     // 🔴 **容器本身也解成一個位置**，不只求值——字串那一格要寫回去時
     //    得把整個字串重建再寫回**變數**（這個直譯器裡字串是不可變的）。
-    const containerPlace = objNode
-      ? await resolvePlace(objNode, ctx)
-      : { read: () => ctx.scope.get(name), write: (v: RuntimeValue) => ctx.scope.set(name, v) }
+    const containerPlace = await resolvePlace(objNode, ctx)
     const container = containerPlace.read()
     const idxNode = (node.children.index ?? [])[0]
     const idx = idxNode ? Math.trunc(ctx.toNumber(await ctx.evaluate(idxNode))) : 0

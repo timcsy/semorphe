@@ -12,12 +12,11 @@ export function registerExecute(register: (component: string, executor: Componen
 
   /** `p.x` */
     register('cpp:struct_at_member', async (node, ctx) => {
-      const objName = String(node.properties.obj)
-      // ⚠️ **先問接點**：`v[0].first` 的 obj 是一個運算式，不是一個名字。
-      // 字串屬性裝不下它（`ctx.scope.get("v[0]")` 查不到，丟 UNDECLARED_VAR）。
-      // 見 `lift.ts` 的檔頭——兩種並存是刻意的。
+      // 🟢 **接收者一律是接點**（2026-08-26）——混合形狀退場，字串回退跟著消失。
       const objNode = (node.children.obj ?? [])[0]
-      const o = objNode ? await ctx.evaluate(objNode) : ctx.scope.get(objName)
+      if (!objNode) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個取成員沒有接收者' })
+      const o = await ctx.evaluate(objNode)
+      const objName = String(objNode.properties?.name ?? '')
       return getMember(o, String(node.properties.member), objName, ctx.structs.staticsOf(o.structName ?? ''))
     })
 }
@@ -33,8 +32,9 @@ export function registerExecute(register: (component: string, executor: Componen
 export function registerLvalue(): void {
   declareLvalue('cpp:struct_at_member', async (node, ctx: ExecutionContext) => {
     const objNode = (node.children.obj ?? [])[0]
-    const objName = String(node.properties.obj ?? '')
-    const o = objNode ? await ctx.evaluate(objNode) : ctx.scope.get(objName)
+    if (!objNode) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個取成員沒有接收者' })
+    const o = await ctx.evaluate(objNode)
+    const objName = String(objNode.properties?.name ?? '')
     if (o.type !== 'object' || !(o.value instanceof Map)) {
       throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName}（不是一個結構）` })
     }

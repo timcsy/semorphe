@@ -233,21 +233,25 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp_struct_at_member', () => {
     it('should render and extract struct member access', () => {
-      const sem = createNode('cpp:struct_at_member', { obj: 'p', member: 'x' })
+      const sem = createNode('cpp:struct_at_member', { member: 'x' }, { obj: [createNode('cpp:var_ref', { name: 'p' })] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_struct_at_member')
-      expect(block!.fields?.OBJ).toBe('p')
+      // 🟢 `OBJ` 從欄位換成接點（2026-08-26）
+      expect(block!.fields?.OBJ, '🔴 欄位長回來了').toBeUndefined()
+      expect(block!.inputs?.OBJ?.block?.fields?.NAME).toBe('p')
       expect(block!.fields?.MEMBER).toBe('x')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.componentId).toBe('cpp:struct_at_member')
-      expect(sem2!.properties.obj).toBe('p')
+      // 🟢 **接收者是接點**（2026-08-26）
+      expect(sem2!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(sem2!.children.obj[0].properties.name).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:struct_at_member', { obj: 'point', member: 'y' })
+      const sem = createNode('cpp:struct_at_member', { member: 'y' }, { obj: [createNode('cpp:var_ref', { name: 'point' })] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('point.y')
     })
@@ -273,10 +277,14 @@ describe('L2 Block Roundtrip', () => {
       const sem = tryAstBranches('field_expression', ast, liftCtx())
       expect(sem, 'field_expression 的分支沒有認領它').not.toBeNull()
       expect(sem!.componentId).toBe('cpp:struct_at_member')
-      expect(sem!.properties.obj).toBe('p')
-      // ★ 反向：單純的識別字仍然走**字串屬性**，不掛接點
-      // ——掛了的話 `p.first` 這種最常見的寫法會多一層而產生器讀不到。
-      expect(sem!.children?.obj).toBeUndefined()
+      // 🟢 **接收者一律是接點**（2026-08-26）。
+      // 🪦 這裡本來釘的是反向：「單純的識別字仍然走字串屬性，不掛接點」
+      // ——那個混合形狀有兩個代價：`m[k].y` 的接收者被寫成字串，
+      // 以及積木上多一列「（ ? ）」——那一列是為了裝「不是名字的那一種」，
+      // 而它在常見情況下永遠是空的。見 `history/157`。
+      expect(sem!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(sem!.children.obj[0].componentId).toBe('cpp:var_ref')
+      expect(sem!.children.obj[0].properties.name).toBe('p')
     })
   })
 

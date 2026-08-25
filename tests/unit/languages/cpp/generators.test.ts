@@ -37,7 +37,7 @@ describe('C++ declarations generator', () => {
   })
 
   it('should generate array access in expression', () => {
-    const access = createNode('cpp:array_at', { obj: 'arr' }, {
+    const access = createNode('cpp:array_at', {}, { obj: [createNode('cpp:var_ref', { name: 'arr' })],
       index: [createNode('cpp:var_ref', { name: 'i' })],
     })
     const assign = createNode('cpp:var_assign', {}, {
@@ -489,7 +489,7 @@ describe('C++ expression generators (for expression blocks)', () => {
           right: [createNode('cpp:var_ref', { name: 'max' })],
         })],
         right: [createNode('cpp:logic_not', {}, {
-          operand: [createNode('cpp:array_at', { obj: 'sieve' }, {
+          operand: [createNode('cpp:array_at', {}, { obj: [createNode('cpp:var_ref', { name: 'sieve' })],
             index: [createNode('cpp:var_ref', { name: 'i' })],
           })],
         })],

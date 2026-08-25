@@ -28,16 +28,11 @@ export function registerLift(): void {
     // `s.member`——**沒有 `->` 時是我**（判別寫成具體的，不是「其餘」）
     if (node.children.find((c) => c.type === '->')) return null
     const argNode = node.childForFieldName('argument')
-    const props = {
-      obj: argNode?.text ?? '',
-      member: node.childForFieldName('field')?.text ?? '',
-    }
-    // 單純的識別字（`p.first`）走既有的字串路徑；其餘（`v[0].first`、
-    // `f().x`）掛成接點——⚠️ **判別看 AST 的節點型別，不 parse 那個字串**。
-    if (argNode && argNode.type !== 'identifier') {
-      const lifted = ctx.lift(argNode)
-      if (lifted) return createNode('cpp:struct_at_member', props, { obj: [lifted] })
-    }
-    return createNode('cpp:struct_at_member', props)
+    // 🟢 **接收者一律 lift**（2026-08-26）——不再「單純的名字走字串、其餘走接點」。
+    //    那個混合讓 `m[k].y` 的接收者被寫成字串 `"m[k]"`，而積木上永遠掛著一個空插槽。
+    const recv = argNode ? ctx.lift(argNode) : null
+    return createNode('cpp:struct_at_member',
+      { member: node.childForFieldName('field')?.text ?? '' },
+      { obj: recv ? [recv] : [] })
   })
 }

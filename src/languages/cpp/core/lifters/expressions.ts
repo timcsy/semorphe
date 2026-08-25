@@ -272,7 +272,13 @@ export function registerExpressionLifters(lifter: Lifter): void {
     if (isStringVar(name, node)) {
       return buildStringIndex(name, index)
     }
-    return buildArrayAt(name, {
+    // 🟢 **容器一律 lift**（2026-08-26）——`obj.arr[i]` 的容器是一個成員存取，
+    //    而它本來被 `.text` 抄成字串（連讀都是壞的）。
+    //    ⚠️ `isStringVar(name, node)` 仍然用**字串**判斷——那是 lift 期看 AST 的
+    //    啟發式，與節點的形狀無關。
+    const container = arrayNode ? ctx.lift(arrayNode) : null
+    return buildArrayAt({
+      obj: container ? [container] : [],
       index: index ? [index] : [],
     })
   })

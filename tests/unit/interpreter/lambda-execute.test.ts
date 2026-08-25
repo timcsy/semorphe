@@ -42,7 +42,9 @@ const lvalue = (name: string): SemanticNode => {
   const arrow = name.indexOf('->')
   if (arrow > 0) return n('cpp:struct_at_ptr', { obj: name.slice(0, arrow), member: name.slice(arrow + 2) }, {})
   const dot = name.indexOf('.')
-  if (dot > 0) return n('cpp:struct_at_member', { obj: name.slice(0, dot), member: name.slice(dot + 1) }, {})
+  // 🟢 接收者是接點（2026-08-26）
+  if (dot > 0) return n('cpp:struct_at_member', { member: name.slice(dot + 1) },
+    { obj: [n('cpp:var_ref', { name: name.slice(0, dot) }, {})] })
   return n('cpp:var_ref', { name }, {})
 }
 const assign = (name: string, v: SemanticNode): SemanticNode =>

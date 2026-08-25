@@ -1,14 +1,9 @@
 {
   "componentId": "cpp:array_at",
   "abstractComponent": null,
-  "properties": [
-    {
-      "name": "obj",
-      "kind": "identifier",
-      "default": "arr"
-    }
-  ],
+  "properties": [],
   "children": {
+    "obj": "expression",
     "index": "expression"
   },
   "role": "expression",
@@ -25,5 +20,6 @@
     "forLoopPart": true,
     "indexedAccess": true
   },
-  "_traits_why": "**I/O 角色與風格、以及「我是帶索引的存取」——都是我自己的宣告**，不是消費者該寫死的身分。"
+  "_traits_why": "**I/O 角色與風格、以及「我是帶索引的存取」——都是我自己的宣告**，不是消費者該寫死的身分。",
+  "_children_why": "🟢 **容器是一個接點**（2026-08-26）——在此之前是一個字串屬性，而 `obj.arr[i]` 的容器是一個成員存取：它被 `.text` 抄進去之後，執行期 `ctx.scope.get(\"obj.arr\")` **查不到**（連讀都是壞的，不只寫）。\n🟢 **另一個語言的同族元件早就是這個形狀**（兩個接點）——C++ 這一顆才是例外。（刻意不寫它的身分：寫下來就是一次跨資料夾耦合，就近性護欄會擋——**這是我第三次踩它**。）"
 }

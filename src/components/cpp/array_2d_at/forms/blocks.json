@@ -10,9 +10,9 @@
       "message0": "%{BKY_C_ARRAY_2D_ACCESS_MSG0}",
       "args0": [
         {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "arr"
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
         },
         {
           "type": "input_value",
@@ -36,13 +36,13 @@
       "order": 20
     },
     "renderMapping": {
-      "fields": {
-        "NAME": "obj"
-      },
+      "fields": {},
       "inputs": {
+        "OBJ": "obj",
         "COL": "col",
         "ROW": "row"
       }
-    }
+    },
+    "_why": "🟢 **2026-08-26：容器從欄位換成接點**（見 `component.json` 的說明）。"
   }
 ]

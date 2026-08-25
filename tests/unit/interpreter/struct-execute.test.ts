@@ -67,7 +67,9 @@ const lvalue = (name: string): SemanticNode => {
   const arrow = name.indexOf('->')
   if (arrow > 0) return n('cpp:struct_at_ptr', { obj: name.slice(0, arrow), member: name.slice(arrow + 2) }, {})
   const dot = name.indexOf('.')
-  if (dot > 0) return n('cpp:struct_at_member', { obj: name.slice(0, dot), member: name.slice(dot + 1) }, {})
+  // 🟢 接收者是接點（2026-08-26）
+  if (dot > 0) return n('cpp:struct_at_member', { member: name.slice(dot + 1) },
+    { obj: [n('cpp:var_ref', { name: name.slice(0, dot) }, {})] })
   return n('cpp:var_ref', { name }, {})
 }
 
@@ -81,7 +83,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
       prog(
         point(),
         n('cpp:var_declare', { name: 'p', type: 'Point' }),
-        show(n('cpp:struct_at_member', { obj: 'p', member: 'x' })),
+        show(n('cpp:struct_at_member', { member: 'x' }, { obj: [n('cpp:var_ref', { name: 'p' })] })),
       ),
     )
     expect(out, '結構變數的欄位沒有預設值——int 應該是 0').toContain('0')
@@ -93,7 +95,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
         point(),
         n('cpp:var_declare', { name: 'p', type: 'Point' }),
         n('cpp:var_assign', {}, { target: [lvalue('p.x')], value: [num(7)] }),
-        show(n('cpp:struct_at_member', { obj: 'p', member: 'x' })),
+        show(n('cpp:struct_at_member', { member: 'x' }, { obj: [n('cpp:var_ref', { name: 'p' })] })),
       ),
     )
     expect(out).toContain('7')
@@ -105,7 +107,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
         point(),
         n('cpp:var_declare', { name: 'p', type: 'Point' }),
         n('cpp:var_assign', {}, { target: [lvalue('p.x')], value: [num(7)] }),
-        show(n('cpp:struct_at_member', { obj: 'p', member: 'y' })),
+        show(n('cpp:struct_at_member', { member: 'y' }, { obj: [n('cpp:var_ref', { name: 'p' })] })),
       ),
     )
     expect(out.trim(), 'y 被 x 的指派改到了').toBe('0')
@@ -118,7 +120,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
         n('cpp:var_declare', { name: 'a', type: 'Point' }),
         n('cpp:var_declare', { name: 'b', type: 'Point' }),
         n('cpp:var_assign', {}, { target: [lvalue('a.x')], value: [num(3)] }),
-        show(n('cpp:struct_at_member', { obj: 'b', member: 'x' })),
+        show(n('cpp:struct_at_member', { member: 'x' }, { obj: [n('cpp:var_ref', { name: 'b' })] })),
       ),
     )
     expect(out.trim(), 'b.x 被 a.x 的指派改到了——兩個實例共用同一份欄位').toBe('0')
@@ -131,7 +133,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
     try {
       await run(
         prog(point(), n('cpp:var_declare', { name: 'p', type: 'Point' }),
-          show(n('cpp:struct_at_member', { obj: 'p', member: '沒有這個欄位' }))),
+          show(n('cpp:struct_at_member', { member: '沒有這個欄位' }, { obj: [n('cpp:var_ref', { name: 'p' })] }))),
       )
     } catch (e) {
       message = (e as Error).message
@@ -147,7 +149,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
           members: [n('cpp:var_declare', { name: 'from', type: 'Point' })],
         }),
         n('cpp:var_declare', { name: 'l', type: 'Line' }),
-        show(n('cpp:struct_at_member', { obj: 'l', member: 'from' })),
+        show(n('cpp:struct_at_member', { member: 'from' }, { obj: [n('cpp:var_ref', { name: 'l' })] })),
       ),
     )
     expect(out, '巢狀結構的欄位沒有被建出來').not.toBe('')

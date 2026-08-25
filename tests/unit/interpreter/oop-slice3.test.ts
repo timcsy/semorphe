@@ -36,7 +36,9 @@ const lvalue = (name: string): SemanticNode => {
   const arrow = name.indexOf('->')
   if (arrow > 0) return n('cpp:struct_at_ptr', { obj: name.slice(0, arrow), member: name.slice(arrow + 2) }, {})
   const dot = name.indexOf('.')
-  if (dot > 0) return n('cpp:struct_at_member', { obj: name.slice(0, dot), member: name.slice(dot + 1) }, {})
+  // 🟢 接收者是接點（2026-08-26）
+  if (dot > 0) return n('cpp:struct_at_member', { member: name.slice(dot + 1) },
+    { obj: [n('cpp:var_ref', { name: name.slice(0, dot) }, {})] })
   return n('cpp:var_ref', { name }, {})
 }
 const assign = (name: string, v: SemanticNode): SemanticNode =>
@@ -169,7 +171,7 @@ describe('繼承與虛擬方法', () => {
     const out = await run(
       prog(base, derived, n('cpp:var_declare', { name: 'd', type: 'D' }),
         n('cpp:method_call', { obj: 'd', method: 'setV' }, { args: [] }),
-        show(n('cpp:struct_at_member', { obj: 'd', member: 'v' }))),
+        show(n('cpp:struct_at_member', { member: 'v' }, { obj: [n('cpp:var_ref', { name: 'd' })] }))),
     )
     expect(out.trim(), '衍生類別沒有繼承基底的欄位或方法').toBe('8')
   })
@@ -195,7 +197,7 @@ describe('運算子多載', () => {
         n('cpp:operator_overload', { operator: '+', return_type: 'V', param_type: 'V', param_name: 'o' }, {
           body: [ret(n('cpp:arithmetic', { operator: '+' }, {
             left: [ref('x')],
-            right: [n('cpp:struct_at_member', { obj: 'o', member: 'x' })],
+            right: [n('cpp:struct_at_member', { member: 'x' }, { obj: [n('cpp:var_ref', { name: 'o' })] })],
           }))],
         }),
       ],
@@ -231,7 +233,7 @@ describe('靜態成員', () => {
         n('cpp:var_declare', { name: 'b', type: 'C' }),
         n('cpp:method_call', { obj: 'a', method: 'inc' }, { args: [] }),
         n('cpp:method_call', { obj: 'b', method: 'inc' }, { args: [] }),
-        show(n('cpp:struct_at_member', { obj: 'a', member: 'count' }))),
+        show(n('cpp:struct_at_member', { member: 'count' }, { obj: [n('cpp:var_ref', { name: 'a' })] }))),
     )
     expect(out.trim(), '靜態成員沒有共用——它變成了每個實例各一份').toBe('2')
   })
