@@ -1,3 +1,4 @@
+import { CONTROLS, RUN_MODES, hostCommandId, runModeCommandId } from '../core/host/controls'
 /**
  * 擴充的宣告——**它是 TypeScript，不是一份散落的 JSON**。
  *
@@ -52,7 +53,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.9.7'
+export const EXTENSION_VERSION = '0.9.8'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -80,6 +81,8 @@ export const EXTENSION_VERSION = '0.9.7'
  * 而 `resourceLangId` **不帶**（`cpp`）。兩者格式不同是 VSCode 的既定，
  * 不是筆誤。
  */
+const PANEL_WHEN = "activeWebviewPanelId == 'semorphe.blocks'"
+
 const EDITOR_WHEN = [
   ...['.ino', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp'].map(
     (ext) => `resourceExtname == ${ext}`,
@@ -130,7 +133,8 @@ function configProperties(): Record<string, unknown> {
     'semorphe.topic': prop('課程清單。留空則跟著目標', null),
     'semorphe.style': prop('程式碼風格。留空則跟著目標', null),
     'semorphe.blockStyle': prop('積木外觀', 'default'),
-    'semorphe.locale': prop('積木的語言', 'zh-TW'),
+    // 🔴 `follow-host` 是**一個值**——「跟隨 IDE 的顯示語言」。
+    'semorphe.locale': prop('積木的語言（follow-host ＝ 跟隨 IDE）', 'follow-host'),
   }
 }
 
@@ -190,6 +194,27 @@ export function buildManifest(): ExtensionManifest {
           title: '同步：暫停／以哪一邊為準',
           category: DISPLAY_NAME,
         },
+        // 🔴 **控制項的指令由登錄表產生**（`core/host/controls.ts`）。
+        //
+        // 使用者 2026-08-25：「Style、語言等等我想要不放在現在這邊，
+        // 因為放在現在這邊會進積木面板，這樣在 VSCode 不是很好」。
+        //
+        // ⚠️ 手寫這一段的話，「有哪些控制項」就會有第二個真相
+        // ——而這個檔案是**建置期**執行的，登錄表 import 得進來。
+        ...CONTROLS
+          .filter((c) => c.kind !== 'indicator')   // ⚠️ sync 上面已經有自己那一條
+          .map((c) => ({
+            command: hostCommandId(c.id),
+            title: c.hostTitle,
+            category: DISPLAY_NAME,
+            ...(c.icon ? { icon: c.icon } : {}),
+          })),
+        // 執行模式各自一個指令——**那正是 ▷ 下拉的做法**。
+        ...RUN_MODES.map((m) => ({
+          command: runModeCommandId(m.id),
+          title: `執行：${m.label}`,
+          category: DISPLAY_NAME,
+        })),
       ],
       configuration: {
         title: DISPLAY_NAME,
@@ -208,12 +233,38 @@ export function buildManifest(): ExtensionManifest {
         //
         // > **當一個東西不會出聲，先拆掉沒被驗過的那一塊，
         // > 不是先替沒被驗過的那一塊辯護。**
+        // 🔴 **面板自己的標題列**——動作住在這裡，不佔畫布。
+        //
+        // ⚠️ `when` 用 `activeWebviewPanelId`：這些指令只在積木面板是
+        // 目前分頁時才成立，**而它們對一般的編輯器沒有意義**。
         'editor/title': [
           {
             command: 'semorphe.openBlocks',
             when: EDITOR_WHEN,
             group: 'navigation',
           },
+          ...CONTROLS
+            .filter((c) => c.kind === 'action' && c.id !== 'run')
+            .map((c) => ({
+              command: hostCommandId(c.id),
+              when: PANEL_WHEN,
+              group: 'navigation',
+            })),
+        ],
+        // 🔴 執行是**一顆按鈕 ＋ 一個下拉**（人拍板：「像 C/C++ 的 VSCode 外掛那樣」）。
+        //
+        // ⚠️ `editor/title/run` 就是那個長相：群組裡多於一個指令時，
+        // VSCode 畫成 ▷ 加一個 ▾。
+        // 🔴 **而它本來是給編輯器分頁的**——它在 webview 分頁上、以及在
+        // Theia 裡的行為**沒有被證明過**。退路是把整組移到 `editor/title`。
+        // 由使用者在 Arduino IDE 裡人工按一次（`ship-extension` 第 7 步）。
+        'editor/title/run': [
+          { command: hostCommandId('run'), when: PANEL_WHEN, group: 'navigation@1' },
+          ...RUN_MODES.map((m, i) => ({
+            command: runModeCommandId(m.id),
+            when: PANEL_WHEN,
+            group: `semorphe@${i + 1}`,
+          })),
         ],
         'editor/context': [
           {

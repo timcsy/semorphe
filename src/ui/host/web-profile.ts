@@ -37,7 +37,13 @@ export const webProfile: HostProfile = {
     mobileLayout: true,
     codeKeyboard: true,
     codeEditorPane: true,
-    statusBar: true,
   },
   featureReasons: {},
+
+  // 🔴 網頁版**自己畫全部**——這一張表就是今天的行為，一格都不能變。
+  controlSurfaces: {
+    picker: 'panelToolbar',
+    action: 'panelToolbar',
+    indicator: 'panelStatusBar',
+  },
 }

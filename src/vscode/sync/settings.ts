@@ -30,7 +30,19 @@ export interface PanelConfig {
   topicId: string | null
   styleId: string | null
   blockStyleId: string
+  /**
+   * 使用者選的語系**偏好**——⚠️ 它可以是 `follow-host`。
+   *
+   * 🔴 預設就是 `follow-host`（2026-08-25 人拍板「跟宿主走，但是還是可以選」）。
+   */
   locale: string
+  /**
+   * 宿主的顯示語言（`vscode.env.language`）——`follow-host` 解析成什麼看它。
+   *
+   * ⚠️ 它**不是設定**，是環境。所以它不在 `RawSettings` 裡，
+   * 由主行程直接填。
+   */
+  hostLocale: string
 }
 
 /**
@@ -58,7 +70,10 @@ export const DEFAULT_CONFIG: PanelConfig = {
   topicId: null,
   styleId: null,
   blockStyleId: 'default',
-  locale: 'zh-TW',
+  // 🔴 預設跟隨宿主——而「跟隨」是**一個值**，不是「沒有值」。
+  locale: 'follow-host',
+  // ⚠️ 空字串 ＝ 這個宿主沒說（網頁版就是這樣）。
+  hostLocale: '',
 }
 
 /**
@@ -116,12 +131,13 @@ export function defaultTargetForPath(path: string | undefined): string {
   return DEFAULT_CONFIG.targetId
 }
 
-export function resolveConfig(raw: RawSettings, documentPath?: string): PanelConfig {
+export function resolveConfig(raw: RawSettings, documentPath?: string, hostLocale?: string): PanelConfig {
   return {
     targetId: pick(raw.target, defaultTargetForPath(documentPath)),
     topicId: pick(raw.topic, DEFAULT_CONFIG.topicId as string | null),
     styleId: pick(raw.style, DEFAULT_CONFIG.styleId as string | null),
     blockStyleId: pick(raw.blockStyle, DEFAULT_CONFIG.blockStyleId),
     locale: pick(raw.locale, DEFAULT_CONFIG.locale),
+    hostLocale: hostLocale ?? DEFAULT_CONFIG.hostLocale,
   }
 }

@@ -87,7 +87,13 @@ const blocks = await page.evaluate(() => {
   //
   // > **一個只問「存在嗎」的檢查，答得出「在」，
   // > 答不出「使用者看得到嗎」——而後者才是驗收。**
+  // 🔴 這個宿主的**控制項全部投影出去了**，所以工具列與快速列都不該存在。
+  //    ⚠️ 量「有沒有那條列」還不夠——⬇️ 下面數的是**控制項**，
+  //       因為一條只剩商標的列也是浪費，而它 `seen()` 為真。
   工具列: seen('header'),
+  快速列: seen('.quick-access-bar'),
+  面板內控制項: document.querySelectorAll(
+    '#toolbar select, #toolbar button, .quick-access-bar select, .quick-access-bar button').length,
   狀態列: seen('footer'),
   積木畫布: seen('.injectionDiv'),
   工具箱分類: document.querySelectorAll('.blocklyToolboxCategory').length,
@@ -157,6 +163,20 @@ console.log(`\n程式碼 → 積木：畫布上 ${lifted} 顆積木 ${lifted > 0
 // > 使用者讀到的不是「少一條狀態列」，是「同步壞了」。**
 const syncPhase = await page.evaluate(() =>
   window.__HOST__.sent.find((m) => m.type === 'syncPhase') ?? null)
+// 🔴 **控制項有沒有交到宿主手上**（2026-08-25，「控制項離開積木面板」）。
+//    ⚠️ 同樣要在清空 `sent` 之前量——它跟著開機那一次狀態刷新送出。
+//
+// > **「面板裡沒有了」只是一半；另一半是「宿主收到了」。
+// > 只驗前一半的話，一顆消失的控制項會被判成成功。**
+const controls = await page.evaluate(() =>
+  window.__HOST__.sent.find((m) => m.type === 'controls') ?? null)
+const controlIds = controls ? controls.items.map((i) => i.id) : []
+const 值域齊全 = controls
+  ? controls.items.filter((i) => i.kind === 'picker').every((i) => (i.options ?? []).length > 0)
+  : false
+console.log(`\n控制項 → 宿主：${controls
+  ? `${controlIds.length} 顆（${controlIds.join(', ')}）｜值域${值域齊全 ? '齊全 🟢' : '有空的 🔴 宿主會開出一個空選單'}`
+  : '🔴 一顆都沒送——面板不畫、宿主也不知道'}`)
 const phaseReached = !!syncPhase && typeof syncPhase.detail === 'string' && syncPhase.detail.length > 0
 console.log(`\n同步三態 → 宿主：${phaseReached
   ? `🟢 ${syncPhase.phase}｜tooltip「${syncPhase.detail}」`
@@ -164,9 +184,17 @@ console.log(`\n同步三態 → 宿主：${phaseReached
     : '🔴 一筆都沒送——面板不畫、宿主也不知道，三態沒有顯示處'}`)
 
 await page.evaluate(() => { window.__HOST__.sent.length = 0; window.__HOST__.accepted = 0; window.__HOST__.rejected = 0 })
-await page.locator('#clear-btn').click()
+// 🔴 **改走宿主那條路**（2026-08-25）——清空／復原已經搬到分頁標題列，
+//    面板裡那兩顆按鈕在這個宿主**不存在**。
+//
+// ⚠️ 而這一改讓這一段變強了：它現在同時驗
+//    「宿主按得動控制項」與「連續兩筆編輯都收得下」。
+//
+// > **一個因為按鈕搬家而壞掉的檢查，
+// > 修法是走新的那條路，不是把按鈕留下來給它按。**
+await page.evaluate(() => window.postMessage({ type: 'controlInvoke', id: 'clear' }, '*'))
 await page.waitForTimeout(1200)
-await page.locator('#undo-btn').click()
+await page.evaluate(() => window.postMessage({ type: 'controlInvoke', id: 'undo' }, '*'))
 await page.waitForTimeout(1800)
 const host = await page.evaluate(() => ({
   types: window.__HOST__.sent.map((m) => m.type),
@@ -230,7 +258,11 @@ console.log(`Console 錯誤：${errors.length ? '\n  ' + errors.join('\n  ') : '
 if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}`) }
 
 const ok = !fatal && errors.length === 0 && failures.length === 0
-  && blocks.工具列 && blocks.積木畫布
+  && blocks.積木畫布
+  // 🔴 **控制項在這個宿主裡歸零**——驗收②。⚠️ 而工具箱與畫布不變（下面兩格）。
+  && blocks.面板內控制項 === 0 && !blocks.工具列 && !blocks.快速列
+  // 🔴 而它們要真的到了宿主手上——**「消失」與「搬家」的差別就在這一格**。
+  && controlIds.length >= 5 && 值域齊全
   && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1 && twoWay && untouched && sketchBlocks > 0
   // 🔴 這個宿主**自己有狀態列**——面板裡再畫一條就是同一件事講兩次，
   //    ⚠️ 而 `phaseReached` 是它的另一半：不畫的義務是「交出去」。

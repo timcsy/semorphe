@@ -1,3 +1,4 @@
+import { LOCALES, FOLLOW_HOST_LOCALE } from '../../core/host/controls'
 export class LocaleSelector {
   private select: HTMLSelectElement
   private onChangeCallback: ((locale: string) => void) | null = null
@@ -7,12 +8,15 @@ export class LocaleSelector {
     this.select.className = 'toolbar-select'
     this.select.title = '語言'
 
-    const locales = [
-      { id: 'zh-TW', label: '中文' },
-      { id: 'en', label: 'English' },
-    ]
-
-    for (const loc of locales) {
+    // 🔴 **清單來自登錄表**（`core/host/controls.ts`）——宿主那側要同一份，
+    //    而抄第二次就是讓「有哪些語系」有兩個真相。
+    //
+    // ⚠️ **而 `follow-host` 不在這一顆裡**：面板自己畫這顆下拉的宿主，
+    //    正是那個「沒有宿主可跟」的（網頁版）。
+    //
+    // > **一個選了也沒有意義的選項，比少一個選項更糟
+    // > ——使用者會以為自己選錯了。**
+    for (const loc of LOCALES.filter((l) => l.id !== FOLLOW_HOST_LOCALE)) {
       const option = document.createElement('option')
       option.value = loc.id
       option.textContent = loc.label

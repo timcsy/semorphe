@@ -2,6 +2,10 @@ import * as Blockly from 'blockly'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
+import {
+  CONTROLS, LOCALES, FOLLOW_HOST_LOCALE, drawnByPanel,
+  type ControlSpec, type ControlState, type ControlInvoke, type ControlOption,
+} from '../core/host/controls'
 import { SyncController } from '../core/sync-controller'
 import type { SyncError } from '../core/sync-controller'
 import { SemanticBus } from '../core/semantic-bus'
@@ -28,7 +32,7 @@ import { setLanguageInputNames } from './block-registrar'
 import { TopicRegistry } from '../core/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
-import { getVisibleComponents, flattenLevelTree } from '../core/level-tree'
+import { getVisibleComponents, flattenLevelTree, levelNodesWithDepth, resolveEnabledBranches } from '../core/level-tree'
 import type { Target, Topic } from '../core/types'
 // spec 142：三塊板子。⚠️ 它們**共用** `arduino` 課程清單，差別只在 `provides`
 //（不新增三份幾乎相同的 topic JSON——見 specs/142 的 research.md R1）。
@@ -65,7 +69,8 @@ import { buildToolbox } from '../core/toolbox-builder'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
-import type { AppShellElements } from './app-shell'
+import type { AppShellElements, AppShellCallbacks } from './app-shell'
+import { BlockStyleSelector } from './toolbar/block-style-selector'
 import { isFunctionDefinition } from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
 // Semantic layer
@@ -130,6 +135,22 @@ export class App {
   private topicSelector: TopicSelector | null = null
   private currentBlockStyleId: string = 'scratch'
   private currentLocale: string = 'zh-TW'
+
+  /**
+   * 使用者**選的**語系——⚠️ 它可能是 `follow-host`，而那時 `currentLocale`
+   * 是解析後的結果。
+   *
+   * 🔴 兩者必須分開存：只留 `currentLocale` 的話，
+   * 「跟隨宿主」在下一次開機就退化成一個固定值，而使用者不會發現。
+   */
+  private localePreference: string = 'zh-TW'
+
+  /** 宿主的顯示語言（`vscode.env.language`）。`null` ＝ 這個宿主沒說。 */
+  private hostLocale: string | null = null
+
+  /** 控制項的回呼——面板的下拉與宿主的 QuickPick **共用這一組**。 */
+  private controlCallbacks: Pick<AppShellCallbacks,
+    'onTargetChange' | 'onBranchesChange' | 'onStyleChange' | 'onBlockStyleChange' | 'onLocaleChange'> | null = null
   /**
    * 目前語言的解析器。
    *
@@ -386,9 +407,10 @@ export class App {
     // 11. Setup toolbar + selectors
     setupToolbarButtons({
       onOpenSyncMenu: () => this.openSyncMenu(),
-      onUndo: () => this.blocklyPanel?.undo(),
-      onRedo: () => this.blocklyPanel?.redo(),
-      onClear: () => this.blocklyPanel?.clear(),
+      // 🔴 **與宿主那側同一支**（`wireHostControls`）——不是兩個入口各寫一次。
+      onUndo: () => this.doUndo(),
+      onRedo: () => this.doRedo(),
+      onClear: () => this.doClear(),
     })
 
     // 🔴 這個宿主沒有檔案按鈕就【不接線】——DOM 根本不存在。
@@ -407,7 +429,14 @@ export class App {
       },
     })
 
-    const selectors = setupSelectors(STYLE_PRESETS, this.targetRegistry, this.topicRegistry, this.currentTarget, this.enabledBranches, {
+    // 🔴 **抽成一個物件**：同一組回呼有兩個入口——面板上的下拉，
+    //    以及**宿主那側的 QuickPick／標題列**。
+    //
+    // > **同一件事有兩個入口時，要嘛共用一個實作，
+    // > 要嘛就會有兩個「切換之後畫面長什麼樣」的真相。**
+    //
+    // ⚠️ 那句話本來就寫在 `handleTargetChange` 的註解上——這裡是它的第二次應用。
+    this.controlCallbacks = {
       // 🔴 **選一次而不是三次**：一個目標同時決定課程清單與風格。
       // ⚠️ 而它**不新寫第三條路**——底下走的仍然是既有的兩條
       //（課程清單那條在這裡、風格那條是 `applyStyle`），
@@ -459,9 +488,13 @@ export class App {
         this.syncBlocksToCodeWithMappings()
         this.refreshStatusBar()
       },
-    })
+    }
+    const selectors = setupSelectors(STYLE_PRESETS, this.targetRegistry, this.topicRegistry,
+      this.currentTarget, this.enabledBranches, this.controlCallbacks)
     this.styleSelector = selectors.styleSelector
     this.topicSelector = selectors.topicSelector
+    // 🔴 宿主那側的入口——⚠️ 走的是**同一組回呼**。
+    this.wireHostControls()
 
     // 12. Setup bidirectional highlighting
     this.setupBidirectionalHighlight()
@@ -804,7 +837,11 @@ export class App {
    *
    * ⚠️ 認不得的 ID **回退到現況**，不崩潰也不留空白（與 `restoreState` 同一條規矩）。
    */
-  applyHostConfig(cfg: { targetId?: string }): void {
+  applyHostConfig(cfg: { targetId?: string; locale?: string; hostLocale?: string }): void {
+    // 🔴 語系先處理——⚠️ 它與目標**互不相干**，而早期的版本因為
+    //    `if (!cfg.targetId) return` 寫在最前面，讓它整段被跳過。
+    if (cfg.hostLocale) this.hostLocale = cfg.hostLocale
+    if (cfg.locale && cfg.locale !== this.localePreference) void this.applyLocalePreference(cfg.locale)
     if (!cfg.targetId) return
     const target = this.targetRegistry.get(cfg.targetId)
     if (!target || target.id === this.currentTarget.id) return
@@ -909,6 +946,162 @@ export class App {
     //    這一層不認識任何一個具體的宿主（`host-profile.ts`：id 不得拿來分支）。
     const snapshot = this.syncCoordinator.snapshot()
     this.codeView?.reportSyncPhase?.(snapshot.phase, snapshot.source, detail)
+    // 🔴 **控制項也是同一份狀態的投影**——同一個函式寫，理由見上面那段。
+    this.publishControls()
+  }
+
+  // 🔴 三顆視圖動作——**兩個入口共用**（面板的快速列 · 宿主的分頁標題列）。
+  private doUndo(): void { this.blocklyPanel?.undo() }
+  private doRedo(): void { this.blocklyPanel?.redo() }
+  private doClear(): void { this.blocklyPanel?.clear() }
+
+  /**
+   * 把控制項的完整狀態交給宿主——🔴 **與面板那條狀態列由同一個函式驅動**。
+   *
+   * ⚠️ 這一條是同一天學到的教訓的第二次應用：
+   *
+   * > **同一份狀態的兩個投影，如果由兩個函式寫，
+   * > 遲早會有一條路徑只走到其中一個。**
+   *
+   * ⚠️ **`indicator` 不在這裡送**——同步三態走自己的頻道
+   * （`reportSyncPhase`，它有三態與 tooltip 的契約）。兩邊都送的話，
+   * 宿主的狀態列會出現**兩個同步項目**。
+   */
+  private publishControls(): void {
+    if (!this.controlCallbacks) return
+    const states = CONTROLS
+      .filter((c) => !drawnByPanel(c, this.profile.controlSurfaces))
+      .filter((c) => c.kind !== 'indicator')
+      .map((c) => this.controlStateOf(c))
+    if (states.length > 0) this.codeView?.reportControls?.(states)
+  }
+
+  /** 一顆控制項現在的樣子 ＋ **它的值域**。 */
+  private controlStateOf(spec: ControlSpec): ControlState {
+    switch (spec.id) {
+      case 'target': {
+        const options: ControlOption[] = this.targetRegistry.all().map((t) => ({ value: t.id, label: t.name }))
+        return { id: spec.id, kind: spec.kind, label: this.currentTarget.name, value: this.currentTarget.id, options }
+      }
+      case 'branches': {
+        const nodes = levelNodesWithDepth(this.currentTopic.levelTree)
+        const options: ControlOption[] = nodes.map(({ node, depth }) => ({
+          value: node.id,
+          // ⚠️ 縮排是**樹的唯一線索**——QuickPick 是平的
+          label: `${'　'.repeat(depth)}${node.label}（${node.components.length}）`,
+        }))
+        return {
+          id: spec.id, kind: spec.kind, multi: true,
+          label: `層級 ${this.enabledBranches.size}/${nodes.length}`,
+          picked: nodes.map(({ node }) => node.id).filter((id) => this.enabledBranches.has(id)),
+          options,
+        }
+      }
+      case 'style': {
+        const name = (p: StylePreset): string => p.name[this.currentLocale] || p.name['zh-TW'] || p.id
+        return {
+          id: spec.id, kind: spec.kind,
+          label: name(this.currentStylePreset), value: this.currentStylePreset.id,
+          options: STYLE_PRESETS.map((p) => ({ value: p.id, label: name(p) })),
+        }
+      }
+      case 'blockStyle':
+        // 🔴 值域**問已經有它的那個類別**——不為了一份清單多 import 一次語言套件。
+        return {
+          id: spec.id, kind: spec.kind,
+          label: BlockStyleSelector.labelOf(this.currentBlockStyleId),
+          value: this.currentBlockStyleId,
+          options: BlockStyleSelector.options(),
+        }
+      case 'locale': {
+        const picked = LOCALES.find((l) => l.id === this.localePreference)
+        return {
+          id: spec.id, kind: spec.kind,
+          // 🔴 跟隨時要**看得出跟到了什麼**——只寫「跟隨宿主」的話，
+          //    使用者無從知道它解析成哪一個。
+          label: this.localePreference === FOLLOW_HOST_LOCALE
+            ? `${picked?.label ?? FOLLOW_HOST_LOCALE}（${this.currentLocale}）`
+            : (picked?.label ?? this.currentLocale),
+          value: this.localePreference,
+          options: LOCALES.map((l) => ({ value: l.id, label: l.label })),
+        }
+      }
+      default:
+        // action：`run` / `undo` / `redo` / `clear`
+        return { id: spec.id, kind: spec.kind, label: spec.id }
+    }
+  }
+
+  /**
+   * 接宿主那側按下的控制項。
+   *
+   * 🔴 **走的是與面板下拉同一組回呼**——不是第二條路。
+   */
+  private wireHostControls(): void {
+    this.codeView?.onControlInvoke?.((invoke: ControlInvoke) => {
+      const cb = this.controlCallbacks
+      if (!cb) return
+      switch (invoke.id) {
+        case 'target': {
+          const target = this.targetRegistry.get(invoke.value ?? '')
+          const topic = target ? this.topicRegistry.get(target.topic) : null
+          if (!target || !topic) return
+          cb.onTargetChange(target, topic, new Set(flattenLevelTree(topic.levelTree).map((n) => n.id)))
+          break
+        }
+        case 'branches': {
+          // ⚠️ 走與勾選框同一支正規化——否則「只勾了子節點」會產生一棵不合法的樹。
+          const picked = resolveEnabledBranches(this.currentTopic.levelTree, new Set(invoke.values ?? []))
+          cb.onBranchesChange(picked)
+          break
+        }
+        case 'style': {
+          const style = STYLE_PRESETS.find((p) => p.id === invoke.value)
+          if (style) cb.onStyleChange(style)
+          break
+        }
+        case 'blockStyle': {
+          const preset = BlockStyleSelector.byId(invoke.value ?? '')
+          if (preset) cb.onBlockStyleChange(preset, {})
+          break
+        }
+        case 'locale':
+          if (invoke.value) void this.applyLocalePreference(invoke.value)
+          break
+        case 'run':
+          this.executionController?.runFromHost(invoke.value)
+          break
+        case 'undo': this.doUndo(); break
+        case 'redo': this.doRedo(); break
+        case 'clear': this.doClear(); break
+      }
+    })
+  }
+
+  /**
+   * 套用語系**偏好**——⚠️ 它與「目前實際的語系」是兩件事。
+   *
+   * 🔴 `follow-host` 是**一個值**，不是「沒有值」：使用者 2026-08-25
+   * 拍板「跟宿主走，但是還是可以選」，而教學情境要的正是
+   * 「介面英文、積木中文」——那在「只存結果」的模型裡表達不出來。
+   */
+  private async applyLocalePreference(preference: string): Promise<void> {
+    this.localePreference = preference
+    const effective = preference === FOLLOW_HOST_LOCALE ? this.resolvedHostLocale() : preference
+    await this.controlCallbacks?.onLocaleChange(effective)
+  }
+
+  /**
+   * 宿主的顯示語言映射到我們支援的語系。
+   *
+   * ⚠️ 宿主給的是 BCP-47（`zh-tw` / `zh-cn` / `en-us`），而我們只有兩個
+   * ——🔴 **對不上時回 `en`，不是回「現在這個」**：後者會讓
+   * 「跟隨宿主」在宿主換語言時安靜地不動。
+   */
+  private resolvedHostLocale(): string {
+    const raw = (this.hostLocale ?? '').toLowerCase()
+    if (raw.startsWith('zh')) return 'zh-TW'
+    return 'en'
   }
 
   /**

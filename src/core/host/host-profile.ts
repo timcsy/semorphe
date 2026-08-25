@@ -22,6 +22,7 @@
  */
 import type { CodeView } from './code-view'
 import type { SavedState, LoadOutcome } from '../storage'
+import type { ControlSurfaces } from './controls'
 
 /**
  * 存檔服務這個角色。
@@ -65,17 +66,6 @@ export interface HostFeatures {
    * 就是把版面浪費掉。
    */
   codeEditorPane: boolean
-  /**
-   * 面板自己要不要畫底下那條狀態列。
-   *
-   * 🔴 **`false` 的意思不是「那些資訊消失」**——是**宿主自己有一條**，
-   * 而同一件事畫兩處，其中一處遲早會過期。
-   *
-   * ⚠️ 所以關掉它有一個**硬性的義務**：那個宿主的 `CodeView` 必須實作
-   * `reportSyncPhase`，否則同步三態就真的沒有人顯示了。
-   * 由 `tests/integration/audit-status-bar-owner.test.ts` 對釘。
-   */
-  statusBar: boolean
 }
 
 export type HostFeatureName = keyof HostFeatures
@@ -98,4 +88,18 @@ export interface HostProfile {
    * ——多一個是說謊，少一個是遺漏。
    */
   readonly featureReasons: Partial<Record<HostFeatureName, string>>
+
+  /**
+   * 🔴 **每一種控制項投影到哪個表面**——三列，一個宿主一張。
+   *
+   * ⚠️ 這一格取代了原本的 `features.statusBar`（2026-08-25 同日）：
+   * 「面板要不要畫狀態列」與「控制項投影到哪」**是同一件事**，
+   * 而留成兩份宣告，它們遲早會互相矛盾。
+   *
+   * ⚠️ 投影到 `host*` 的每一種，宿主那側都背一個**接手的義務**
+   * ——由 `tests/integration/audit-status-bar-owner.test.ts` 對釘。
+   * 症狀不對釘的話是「面板那顆不見了、宿主那顆沒出現」，
+   * 而使用者讀到的不是「少一顆按鈕」，是「**壞了**」。
+   */
+  readonly controlSurfaces: ControlSurfaces
 }

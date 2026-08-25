@@ -41,6 +41,13 @@ export type HostMessage =
       viewId?: string
     }
   | {
+      /** 宿主那側按了控制項（狀態列的 QuickPick／標題列的按鈕）。 */
+      type: 'controlInvoke'
+      id: string
+      value?: string
+      values?: string[]
+    }
+  | {
       type: 'document'
       uri: string
       languageId: string
@@ -108,6 +115,17 @@ export type HostMessage =
  */
 export type SyncPhaseWire = 'live' | 'paused' | 'diverged'
 
+/** ⚠️ 線上的形狀刻意與 `core/host/controls.ts` 的 `ControlState` 一致。 */
+export interface ControlStateWire {
+  id: string
+  kind: 'picker' | 'action' | 'indicator'
+  label: string
+  value?: string
+  options?: { value: string; label: string }[]
+  multi?: boolean
+  picked?: string[]
+}
+
 export type WebviewMessage =
   | {
       /** 三態變了——主行程據此更新狀態列 */
@@ -122,6 +140,16 @@ export type WebviewMessage =
        * 而那些字不該跟著消失——它們進宿主狀態列的 tooltip。
        */
       detail: string
+    }
+  | {
+      /**
+       * 控制項的完整狀態（含值域）——主行程據此建狀態列項目與標題列按鈕。
+       *
+       * 🔴 **每次都送整份**，不送差異：一份會漂移的差異流，
+       * 遠比一份小小的整份昂貴。
+       */
+      type: 'controls'
+      items: ControlStateWire[]
     }
   | {
       type: 'applyEdit'

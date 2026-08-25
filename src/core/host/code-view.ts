@@ -31,6 +31,7 @@
 import type { SemanticBus } from '../semantic-bus'
 import type { ExecutionAtNodeEvent, SemanticUpdateEvent } from '../view-host'
 import type { SyncPhase } from '../sync-coordinator'
+import type { ControlState, ControlInvoke } from './controls'
 
 /**
  * 高亮的來由——決定顏色與優先序。
@@ -108,6 +109,20 @@ export interface CodeView {
 
   /** 宿主那側下的同步指令（它的狀態列／命令面板）。 */
   onSyncCommand?(callback: (command: HostSyncCommand) => void): void
+
+  /**
+   * 把控制項的**完整狀態**（含值域）交給宿主。
+   *
+   * 🔴 **值域要跟著送**——宿主不認得目標登錄表／風格預設／語系清單，
+   * 而讓它認得，就是把那些真相搬到第二個地方。
+   *
+   * ⚠️ 與 `HostProfile.controlSurfaces` 是同一件事的兩端：投影到 `host*`
+   * 的每一種，這裡就要交得出去。由第六十三條護欄對釘。
+   */
+  reportControls?(states: readonly ControlState[]): void
+
+  /** 宿主那側按了控制項。 */
+  onControlInvoke?(callback: (invoke: ControlInvoke) => void): void
 
   // ─── C：可選——**沒有的要說得出為什麼** ───
 

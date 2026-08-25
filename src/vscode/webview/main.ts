@@ -77,7 +77,7 @@ async function boot(): Promise<void> {
   // 🔴 **宿主的組態要有人讀。** `semorphe.target` 早就宣告了，而 spec 140 把這裡
   //    縮成薄殼時消費它的那一段掉了——於是在 Arduino IDE 裡開 `.ino`，
   //    面板仍然用 `C++（預設）`，**鷹架把 setup()／loop() 包進了 int main()**。
-  window.addEventListener('message', (e: MessageEvent<{ type?: string; config?: { targetId?: string } }>) => {
+  window.addEventListener('message', (e: MessageEvent<{ type?: string; config?: { targetId?: string; locale?: string; hostLocale?: string } }>) => {
     if (e.data?.type === 'config' && e.data.config) app.applyHostConfig(e.data.config)
   })
 

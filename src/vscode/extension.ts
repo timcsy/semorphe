@@ -23,7 +23,8 @@
  * 而**宿主層本來就要認識宿主**。方向是單向的。
  */
 import * as vscode from 'vscode'
-import { openBlocksPanel, requestDiagnostics, openSyncMenu, SYNC_MENU_COMMAND } from './panel'
+import { openBlocksPanel, requestDiagnostics, openSyncMenu, pickControl, invokeControl, SYNC_MENU_COMMAND } from './panel'
+import { CONTROLS, RUN_MODES, hostCommandId, runModeCommandId } from '../core/host/controls'
 
 export const OPEN_COMMAND = 'semorphe.openBlocks'
 export const DIAGNOSTICS_COMMAND = 'semorphe.showDiagnostics'
@@ -37,6 +38,19 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand(DIAGNOSTICS_COMMAND, () => requestDiagnostics()),
     // 🔴 **一個註冊了卻沒有宣告在 manifest 的指令，使用者按不到**（`manifest.ts:173`）
     vscode.commands.registerCommand(SYNC_MENU_COMMAND, () => openSyncMenu()),
+    // 🔴 **控制項的指令由同一份登錄表產生**——manifest 那側也是它。
+    //    ⚠️ 兩邊各寫一次的話，「宣告了而沒註冊」會是一個**執行期才炸**的錯，
+    //    而使用者看到的是「指令面板上有，按了說找不到指令」。
+    ...CONTROLS
+      .filter((c) => c.kind !== 'indicator')
+      .map((c) => vscode.commands.registerCommand(
+        hostCommandId(c.id),
+        // picker 開選單，action 直接做——⚠️ 分辨由**登錄表**決定，不是由 id。
+        c.kind === 'picker' ? () => void pickControl(c.id) : () => invokeControl(c.id),
+      )),
+    // 執行模式：帶著模式走同一支執行。
+    ...RUN_MODES.map((m) => vscode.commands.registerCommand(
+      runModeCommandId(m.id), () => invokeControl('run', m.id))),
   )
 }
 

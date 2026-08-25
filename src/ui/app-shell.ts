@@ -9,6 +9,7 @@ import { FlowPanel } from './panels/flow-panel'
 import { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
+import { CONTROLS, RUN_MODES, drawnByPanel, panelControls, type ControlId } from '../core/host/controls'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
 import { TopicSelector } from './toolbar/topic-selector'
 import { StyleSelector } from './toolbar/style-selector'
@@ -38,7 +39,8 @@ export interface AppShellElements {
   variablePanel: VariablePanel
   flowPanel: FlowPanel
   bottomPanel: BottomPanel
-  quickAccessBar: QuickAccessBar
+  /** 🔴 **這個宿主可能一顆快速列控制項都沒有**——那時它不存在，不是空的。 */
+  quickAccessBar: QuickAccessBar | null
   layoutManager: LayoutManager
   mobileTabBar: MobileTabBar | null
   mobileMenu: MobileMenu | null
@@ -59,6 +61,23 @@ export interface AppShellCallbacks {
   getExportState: () => SavedState
   importState: (state: SavedState) => void
   onUploadCustomBlocks: (blocks: object[]) => void
+}
+
+/**
+ * 執行模式的選單標記——🔴 **由 `RUN_MODES` 產生，不再手寫**。
+ *
+ * ⚠️ 在此之前那份清單散在三處（這裡的標記、`execution-controller.ts` 的
+ * 型別聯集與標籤查表），而宿主那側還要第四份。
+ */
+function runGroupMarkup(): string {
+  const options = RUN_MODES.map((m) =>
+    `${m.separatorBefore ? '<div class="run-mode-separator"></div>' : ''}` +
+    `<div class="run-mode-option" data-mode="${m.id}">${m.label}</div>`).join('')
+  return `<div class="run-group">
+        <button id="run-btn" class="exec-btn run" title="執行">▶ 執行</button>
+        <button id="run-mode-btn" class="exec-btn run run-mode-arrow" title="執行模式">▾</button>
+        <div id="run-mode-menu" class="run-mode-menu" style="display:none">${options}</div>
+      </div>`
 }
 
 export function createAppLayout(
@@ -85,36 +104,42 @@ export function createAppLayout(
   const layoutManager = new LayoutManager()
 
   // Create toolbar
-  const toolbar = document.createElement('header')
-  toolbar.id = 'toolbar'
-  toolbar.innerHTML = `
+  //
+  // 🔴 **每一顆控制項建不建，問登錄表**（`core/host/controls.ts`）——
+  //    不是問「現在是哪個宿主」，也不是每一顆各給一格布林。
+  //    ⚠️ 關掉 ＝ **不建那些 DOM**（FR-006），不是建了再藏起來。
+  const surfaces = profile.controlSurfaces
+  const inPanel = (id: ControlId): boolean => {
+    const spec = CONTROLS.find((c) => c.id === id)
+    return !!spec && drawnByPanel(spec, surfaces)
+  }
+  const headerActions = [
+    inPanel('style') ? '<span id="style-selector-mount"></span>' : '',
+    inPanel('locale') ? '<span id="locale-selector-mount"></span>' : '',
+    inPanel('run') ? `<span class="toolbar-separator"></span>${runGroupMarkup()}` : '',
+    // ⚠️ 這兩顆屬於行動版，不是控制項登錄表的成員——它們的開關一直是 `mobileLayout`。
+    profile.features.mobileLayout
+      ? '<button id="mobile-sync-btn" class="exec-btn auto-sync-on" title="自動同步：開啟" style="display:none">⇄ 自動</button>' +
+        '<button id="hamburger-btn" class="hamburger-btn" title="選單">☰</button>'
+      : '',
+  ].join('')
+
+  // 🔴 **一條沒有任何控制項的工具列，剩下的只有商標**——而分頁標題已經寫著
+  //    「Semorphe 積木」。在一個窄面板裡那一條就是純粹的浪費。
+  //    ⚠️ 所以是**不建**，同一條規則。
+  let toolbar: HTMLElement | null = null
+  if (headerActions !== '') {
+    toolbar = document.createElement('header')
+    toolbar.id = 'toolbar'
+    toolbar.innerHTML = `
     <div class="toolbar-left">
       <img src="logo.svg" alt="Semorphe" class="toolbar-logo">
       <span class="toolbar-title">Semorphe</span>
     </div>
-    <div class="toolbar-actions">
-      <span id="style-selector-mount"></span>
-      <span id="locale-selector-mount"></span>
-      <span class="toolbar-separator"></span>
-      <div class="run-group">
-        <button id="run-btn" class="exec-btn run" title="執行">▶ 執行</button>
-        <button id="run-mode-btn" class="exec-btn run run-mode-arrow" title="執行模式">▾</button>
-        <div id="run-mode-menu" class="run-mode-menu" style="display:none">
-          <div class="run-mode-option" data-mode="run">▶ 執行</div>
-          <div class="run-mode-option" data-mode="debug">🔍 除錯</div>
-          <div class="run-mode-separator"></div>
-          <div class="run-mode-option" data-mode="animate-slow">▷ 動畫（慢）</div>
-          <div class="run-mode-option" data-mode="animate-medium">▷ 動畫（中）</div>
-          <div class="run-mode-option" data-mode="animate-fast">▷ 動畫（快）</div>
-          <div class="run-mode-separator"></div>
-          <div class="run-mode-option" data-mode="step">⏭ 逐步</div>
-        </div>
-      </div>
-      <button id="mobile-sync-btn" class="exec-btn auto-sync-on" title="自動同步：開啟" style="display:none">⇄ 自動</button>
-      <button id="hamburger-btn" class="hamburger-btn" title="選單">☰</button>
-    </div>
+    <div class="toolbar-actions">${headerActions}</div>
   `
-  appEl.appendChild(toolbar)
+    appEl.appendChild(toolbar)
+  }
 
   // Create main area with split pane
   const main = document.createElement('main')
@@ -130,7 +155,7 @@ export function createAppLayout(
   // 🔴 關掉 ＝ **不建**（FR-006），不是建了再藏起來——宿主自己有一條。
   //    ⚠️ 而「不建」有一個義務跟著：三態要改由 `reportSyncPhase` 送出去，
   //       否則它會**安靜地消失**。見 `core/host/host-profile.ts` 的 `statusBar`。
-  if (profile.features.statusBar) {
+  if (profile.controlSurfaces.indicator === 'panelStatusBar') {
     const statusBar = document.createElement('footer')
     statusBar.id = 'status-bar'
     statusBar.innerHTML = '<span>Loading...</span>'
@@ -142,7 +167,11 @@ export function createAppLayout(
   leftPanel.style.display = 'flex'
   leftPanel.style.flexDirection = 'column'
 
-  const quickAccessBar = new QuickAccessBar(leftPanel, { fileButtons: profile.features.fileButtons })
+  // 🔴 一顆控制項都不剩的話**不建這條列**——一條空的列只是把版面吃掉。
+  const quickAccessNeeded = panelControls(surfaces).some((c) => c.bar === 'quickAccess')
+  const quickAccessBar = (quickAccessNeeded || profile.features.fileButtons)
+    ? new QuickAccessBar(leftPanel, { fileButtons: profile.features.fileButtons, inPanel })
+    : null
 
   const blocklyContainer = document.createElement('div')
   blocklyContainer.id = 'blockly-panel'
@@ -389,8 +418,9 @@ export function createAppLayout(
   const hamburgerBtn = document.getElementById('hamburger-btn')
   let mobileMenu: MobileMenu | null = null
   // 🔴 沒有行動版版面就沒有漢堡選單——**連按鈕都不該在**（FR-006）。
-  if (!profile.features.mobileLayout) hamburgerBtn?.remove()
-  else if (hamburgerBtn) {
+  //    ⚠️ 2026-08-25 起它在**標記那一層**就不建了（見上面的 `headerActions`），
+  //       所以這裡不再需要「建了再 remove」——那本來就是次好的做法。
+  if (hamburgerBtn && toolbar) {
     mobileMenu = new MobileMenu(toolbar)
     hamburgerBtn.addEventListener('click', (e) => {
       e.stopPropagation()
@@ -421,7 +451,7 @@ export function createAppLayout(
     // > 與讓它不執行，是兩件事——而前者會留下半套狀態。**
     if (!profile.features.mobileLayout) return
     // Move blockly panel elements to mobile container
-    mobileBlocksContainer.appendChild(quickAccessBar.getElement())
+    if (quickAccessBar) mobileBlocksContainer.appendChild(quickAccessBar.getElement())
     mobileBlocksContainer.appendChild(blocklyContainer)
     mobileBlocksContainer.classList.add('active')
 
@@ -523,7 +553,7 @@ export function createAppLayout(
     // 同上——沒有行動版就沒有「切回桌面版」這件事。
     if (!profile.features.mobileLayout) return
     // Move panels back to desktop containers (order matters: monaco before bottomPanel)
-    leftPanel.appendChild(quickAccessBar.getElement())
+    if (quickAccessBar) leftPanel.appendChild(quickAccessBar.getElement())
     leftPanel.appendChild(blocklyContainer)
     // Ensure correct order: monaco first, then bottom panel
     rightColumn.appendChild(monacoWrapper)

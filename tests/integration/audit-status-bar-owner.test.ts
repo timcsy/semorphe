@@ -4,20 +4,27 @@
  * ⚠️ **預設環境是 `node`**（`vitest.config.ts`）——這個檔碰 DOM，所以顯式加回來。
  */
 /**
- * 第六十三條護欄：**狀態列一定要有人畫**。
+ * 第六十三條護欄：**投影出去的每一顆，宿主都要接得住**。
  *
  * ## 它守的是什麼
  *
- * `features.statusBar: false` 的意思是「這個宿主自己有一條，面板別畫」
- * ——而那句話有一個**義務跟著**：三態要改由 `CodeView.reportSyncPhase`
- * 交出去。兩端沒對上的話，症狀是：
+ * `HostProfile.controlSurfaces` 說「這一種控制項由宿主畫」——而那句話
+ * 有一個**義務跟著**：那個宿主的 `CodeView` 要交得出對應的能力。
  *
- * > **面板裡那條不見了，宿主那條沒出現，於是同步三態一個顯示處都沒有。**
- * > 而使用者看到的不是「少了一條狀態列」，是「**同步好像壞了**」。
+ * ```
+ * indicator → host*   ⇒  reportSyncPhase          同步三態
+ * picker    → host*   ⇒  reportControls ＋ onControlInvoke
+ * action    → host*   ⇒  同上
+ * ```
  *
- * 這正是這一刀的來由（2026-08-25，使用者截圖）：
- * 擴充裡的宿主狀態列在使用者主動去動同步之前**一格都沒有**，
- * 因為開機那條路徑只呼叫了兩個重畫函式的其中一個。
+ * 兩端沒對上的話，症狀是：
+ *
+ * > **面板裡那顆不見了，宿主那顆沒出現，於是它一個顯示處都沒有。**
+ * > 而使用者看到的不是「少了一顆按鈕」，是「**壞了**」。
+ *
+ * 🔴 這條護欄**先於**「控制項離開積木面板」那一刀存在（2026-08-25 上午蓋的，
+ * 當時只管狀態列），而那一刀下午就靠它擋住了三次漏接。
+ * ⚠️ **護欄先蓋、功能後做**——`build-guardrail` 6.5 的那一條。
  *
  * ## 🔴 自我否證
  *
@@ -30,9 +37,9 @@
  *
  * ## 本護欄不檢測什麼
  *
- * - ❌ **不驗宿主那條狀態列真的畫出來了**——那在另一個行程裡，
+ * - ❌ **不驗宿主那側真的畫出來了**——那在另一個行程裡，
  *   而 `ship-extension` 記著：「驗得到我送了什麼，驗不到對面怎麼處理」。
- * - ❌ **不驗 tooltip 的文字好不好讀**——只驗那些字沒有被丟掉。
+ * - ❌ **不驗 QuickPick／標題列按鈕在 Theia 能不能用**——只有人按得到。
  * - ❌ **不驗網頁版的 `HostProfile`**（它 import 編輯器套件，這裡解析不了）
  *   ——那一格改用原始碼檢查，⚠️ **而那比較弱：它讀的是文字，不是行為**。
  */
@@ -40,6 +47,7 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import { updateStatusBar } from '../../src/ui/app-shell'
 import { vscodeProfile } from '../../src/vscode/vscode-profile'
+import { CONTROLS } from '../../src/core/host/controls'
 import type { StylePreset } from '../../src/core/types'
 
 interface ProfileFile { path: string; text: string }
@@ -60,29 +68,40 @@ function profileFiles(): ProfileFile[] {
   return out
 }
 
-// ─── 偵測器：純函式，好讓注入餵得進zz-fake-false違規 ───
+// ─── 偵測器：純函式，好讓注入餵得進合成的假違規 ───
 
-/** unstated的：宣告了宿主，而沒說誰畫狀態列。 */
+/** 沒表態的：宣告了宿主，而沒說控制項投影到哪。 */
 function unstated(files: ProfileFile[]): string[] {
-  return files.filter((f) => !/\bstatusBar:\s*(true|false)/.test(f.text)).map((f) => f.path)
+  return files
+    .filter((f) => !(/\bpicker:\s*'/.test(f.text) && /\baction:\s*'/.test(f.text) && /\bindicator:\s*'/.test(f.text)))
+    .map((f) => f.path)
 }
 
 /**
- * 宣告不畫、而它的程式碼視圖**cannotReportPhase**的。
+ * 宣告投影到宿主、而它的程式碼視圖**交不出對應能力**的。
  *
  * `readImpl` 依類別名取得那份實作的原始碼——⚠️ 抽成參數是為了讓注入
  * 餵合成的來源進來，而不是去真的檔案系統造一個假檔。
  */
 function cannotReportPhase(files: ProfileFile[], readImpl: (className: string) => string | null): string[] {
-  return files
-    .filter((f) => /\bstatusBar:\s*false/.test(f.text))
-    .filter((f) => {
-      const m = f.text.match(/new\s+(\w+)\(container\)/)
-      if (!m) return true          // 🔴 判不出來就算違規（保守——`build-guardrail` 第 5 步）
-      const impl = readImpl(m[1])
-      return impl === null || !impl.includes('reportSyncPhase(')
-    })
-    .map((f) => f.path)
+  const offenders: string[] = []
+  for (const f of files) {
+    // 🔴 **投影到宿主的每一種，都要有對應的能力**——三種投影，三組義務。
+    const required = new Set<string>()
+    if (/\bindicator:\s*'host/.test(f.text)) required.add('reportSyncPhase(')
+    if (/\b(picker|action):\s*'host/.test(f.text)) {
+      required.add('reportControls(')
+      required.add('onControlInvoke(')
+    }
+    if (required.size === 0) continue
+    const m = f.text.match(/new\s+(\w+)\(container\)/)
+    // 🔴 判不出來就算違規（保守——`build-guardrail` 第 5 步）
+    const impl = m ? readImpl(m[1]) : null
+    for (const cap of required) {
+      if (impl === null || !impl.includes(cap)) offenders.push(`${f.path} → ${cap.replace('(', '')}`)
+    }
+  }
+  return offenders
 }
 
 /** 依類別名去 `src/` 找那份實作。⚠️ 找不到回 `null`，**不是回空字串**——兩者要分得出來。 */
@@ -98,31 +117,62 @@ const SYNTHETIC_STYLE = {
   name: { 'zh-TW': '__PROBE_STYLE__', en: '__PROBE_STYLE__' },
 } as unknown as StylePreset
 
-describe('第六十三條：狀態列一定要有人畫', () => {
+describe('第六十三條：投影出去的每一顆，宿主都要接得住', () => {
   it('入口條件：真的掃到宿主宣告了（否則下面整組空過）', () => {
     // ⚠️ 錨在**掃到幾個檔**上——它不會因為違規被修好而變小。
     expect(profileFiles().length, '🔴 一個 HostProfile 都沒掃到＝掃描器壞了')
       .toBeGreaterThanOrEqual(2)
   })
 
-  it('🔴 每一份宿主宣告都要表態——`statusBar` 不得省略', () => {
-    expect(unstated(profileFiles()), '🔴 unstated＝不知道誰要畫').toEqual([])
+  it('🔴 每一份宿主宣告都要表態——三種投影一個都不得省略', () => {
+    expect(unstated(profileFiles()), '🔴 沒表態＝不知道誰要畫').toEqual([])
   })
 
-  it('🔴 硬性零：宣告不畫的宿主，必須把三態交得出去', () => {
+  it('🔴 加一顆控制項，不得再多一格布林——`HostFeatures` 只准下降', () => {
+    // 這是「控制項離開積木面板」那一刀的**第一條驗收**：
+    //
+    // > **五格布林、再搬四顆就是九格——而它們講的是同一件事：
+    // > 這顆控制項在這個宿主投影到哪裡。**
+    //
+    // ⚠️ 數字 4 是那一刀之後的實測值（原本 5，`statusBar` 收進了
+    //    `controlSurfaces`）。🔴 **它是上限，不是缺陷計數**
+    //    ——所以它不會在成功的那天變紅（`build-guardrail` 簽名一）。
+    expect(Object.keys(vscodeProfile.features).length,
+      '🔴 又用布林解決了一顆控制項——那條路會爆炸，登錄表才不會')
+      .toBeLessThanOrEqual(4)
+    // 正向錨點：而它不是空的（否則這一條可能是「features 整個沒了」而空過）
+    expect(Object.keys(vscodeProfile.features).length).toBeGreaterThan(0)
+  })
+
+  it('🔴 登錄表裡的每一顆，都要投影得到一個表面', () => {
+    const surfaces = vscodeProfile.controlSurfaces
+    const homeless = CONTROLS.filter((c) => !surfaces[c.kind])
+    expect(homeless.map((c) => c.id), '🔴 這幾顆沒有家——它們會安靜地消失').toEqual([])
+    // ⚠️ 而每一顆都要說得出「按下去在宿主的指令面板上叫什麼」
+    const nameless = CONTROLS.filter((c) => (c.hostTitle ?? '').trim().length < 2)
+    expect(nameless.map((c) => c.id), '🔴 沒有標題的指令，使用者在指令面板上讀不懂').toEqual([])
+  })
+
+  it('🔴 硬性零：投影到宿主的每一種，都要交得出對應的能力', () => {
     // 判準：留一個不交的宿主，這條規範就不成立——它的三態**完全沒有顯示處**。
-    expect(vscodeProfile.features.statusBar, '前置：這一份確實宣告不畫').toBe(false)
+    expect(vscodeProfile.controlSurfaces.indicator, '前置：這一份確實投影到宿主').toBe('hostStatusBar')
+    expect(vscodeProfile.controlSurfaces.picker).toBe('hostStatusBar')
+    expect(vscodeProfile.controlSurfaces.action).toBe('hostTitleBar')
     const view = vscodeProfile.createCodeView(document.createElement('div'))
-    // 🟢 這一格是**行為的**：真的建一個實作出來看它有沒有那個方法。
+    // 🟢 這一格是**行為的**：真的建一個實作出來看它有沒有那些方法。
     expect(typeof view.reportSyncPhase, '🔴 面板不畫、宿主也收不到＝三態消失')
       .toBe('function')
     expect(typeof view.onSyncCommand, '🔴 只能看不能操作的狀態列是死的')
       .toBe('function')
+    expect(typeof view.reportControls, '🔴 控制項投影到宿主，而交不出去＝它們消失')
+      .toBe('function')
+    expect(typeof view.onControlInvoke, '🔴 只能看不能按的控制項是死的')
+      .toBe('function')
   })
 
-  it('⚠️ 其餘不畫的宿主用原始碼檢查——比較弱，弱在它讀的是文字不是行為', () => {
+  it('⚠️ 其餘投影到宿主的用原始碼檢查——比較弱，弱在它讀的是文字不是行為', () => {
     const others = profileFiles().filter((f) => !f.path.endsWith('vscode-profile.ts'))  // 那一份上面**實測**過了
-    expect(cannotReportPhase(others, readImplFromDisk), '🔴 宣告不畫，而它的程式碼視圖cannotReportPhase').toEqual([])
+    expect(cannotReportPhase(others, readImplFromDisk), '🔴 投影到宿主，而它的程式碼視圖交不出那些能力').toEqual([])
   })
 
   it('🔴 「不畫」不等於「不算」——沒有狀態列時仍然算得出那一行字', () => {
@@ -174,40 +224,52 @@ describe('第六十三條：狀態列一定要有人畫', () => {
 
   // ─── ★ 注入：證明偵測器認得出違規，而且不亂報 ───
 
-  it('★ 注入①：宣告不畫、而視圖cannotReportPhase的，必須被報出', () => {
+  it('★ 注入①：投影到宿主、而視圖交不出那些能力的，必須被報出', () => {
     const synthetic: ProfileFile[] = [{
       path: 'zz/zz-fake-bad-host.ts',
-      text: 'export const p: HostProfile = {\n createCodeView(container) { return new ZzFakeView(container) },\n features: { statusBar: false },\n}',
+      text: `export const p: HostProfile = {
+ createCodeView(container) { return new ZzFakeView(container) },
+ controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar' },
+}`,
     }]
     expect(cannotReportPhase(synthetic, () => 'class ZzFakeView { getCode() { return "" } }'))
-      .toEqual(['zz/zz-fake-bad-host.ts'])
+      .toEqual(['zz/zz-fake-bad-host.ts → reportSyncPhase', 'zz/zz-fake-bad-host.ts → reportControls', 'zz/zz-fake-bad-host.ts → onControlInvoke'])
   })
 
   it('★ 注入②：交得出三態的、以及自己畫狀態列的，都不得被報', () => {
     const canReport: ProfileFile = {
       path: 'zz/zz-fake-good-host.ts',
-      text: 'export const p: HostProfile = {\n createCodeView(container) { return new ZzFakeView(container) },\n features: { statusBar: false },\n}',
+      text: `export const p: HostProfile = {
+ createCodeView(container) { return new ZzFakeView(container) },
+ controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar' },
+}`,
     }
     const drawsItself: ProfileFile = {
       path: 'zz/zz-fake-web.ts',
-      text: 'export const p: HostProfile = {\n createCodeView(container) { return new ZzFakeView(container) },\n features: { statusBar: true },\n}',
+      text: `export const p: HostProfile = {
+ createCodeView(container) { return new ZzFakeView(container) },
+ controlSurfaces: { picker: 'panelToolbar', action: 'panelToolbar', indicator: 'panelStatusBar' },
+}`,
     }
-    expect(cannotReportPhase([canReport, drawsItself], () => 'class ZzFakeView { reportSyncPhase(a, b, c) {} }'))
+    expect(cannotReportPhase([canReport, drawsItself], () => 'class ZzFakeView { reportSyncPhase(a, b, c) {} reportControls(s) {} onControlInvoke(cb) {} }'))
       .toEqual([])
   })
 
   it('★ 注入③：找不到那份實作時**算違規**——判不出來不得計入安全', () => {
     const synthetic: ProfileFile[] = [{
       path: 'zz/zz-fake-missing.ts',
-      text: 'export const p: HostProfile = {\n createCodeView(container) { return new ZzMissing(container) },\n features: { statusBar: false },\n}',
+      text: `export const p: HostProfile = {
+ createCodeView(container) { return new ZzMissing(container) },
+ controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar' },
+}`,
     }]
-    expect(cannotReportPhase(synthetic, () => null)).toEqual(['zz/zz-fake-missing.ts'])
+    expect(cannotReportPhase(synthetic, () => null)).toEqual(['zz/zz-fake-missing.ts → reportSyncPhase', 'zz/zz-fake-missing.ts → reportControls', 'zz/zz-fake-missing.ts → onControlInvoke'])
   })
 
-  it('★ 注入④：unstated的會被報，表了態的不會', () => {
+  it('★ 注入④：沒表態的會被報，表了態的不會', () => {
     const silent: ProfileFile = { path: 'zz/zz-fake-silent.ts', text: 'const p: HostProfile = { features: { fileButtons: true } }' }
-    const saysTrue: ProfileFile = { path: 'zz/zz-fake-true.ts', text: 'const p: HostProfile = { features: { statusBar: true } }' }
-    const saysFalse: ProfileFile = { path: 'zz/zz-fake-false.ts', text: 'const p: HostProfile = { features: { statusBar: false } }' }
+    const saysTrue: ProfileFile = { path: 'zz/zz-fake-true.ts', text: `const p: HostProfile = { controlSurfaces: { picker: 'panelToolbar', action: 'panelToolbar', indicator: 'panelStatusBar' } }` }
+    const saysFalse: ProfileFile = { path: 'zz/zz-fake-false.ts', text: `const p: HostProfile = { controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar' } }` }
     expect(unstated([silent, saysTrue, saysFalse])).toEqual(['zz/zz-fake-silent.ts'])
   })
 })

@@ -1,3 +1,4 @@
+import { RUN_MODES } from '../core/host/controls'
 import * as Blockly from 'blockly'
 import type { BoardPinModel } from '../core/types'
 import { SemanticInterpreter } from '../interpreter/interpreter'
@@ -588,6 +589,21 @@ export class ExecutionController {
     }
   }
 
+  /**
+   * 宿主那側按了執行（分頁標題列的 ▷ 或它的下拉）。
+   *
+   * 🔴 **走的是同一支執行**——帶模式時只是先切模式，
+   * 不新開一條「宿主專用的執行路徑」。
+   */
+  runFromHost(mode?: string): void {
+    if (mode && RUN_MODES.some((m) => m.id === mode)) {
+      this.runMode = mode as typeof this.runMode
+      // ⚠️ 面板裡那顆按鈕在這個宿主不存在——那支函式本來就有守衛。
+      this.updateRunButtonLabel()
+    }
+    this.executeWithCurrentMode()
+  }
+
   private executeWithCurrentMode(): void {
     switch (this.runMode) {
       case 'run':
@@ -718,14 +734,7 @@ export class ExecutionController {
   private updateRunButtonLabel(): void {
     const btn = document.getElementById('run-btn')
     if (!btn) return
-    const labels: Record<string, string> = {
-      'run': '▶ 執行',
-      'debug': '🔍 除錯',
-      'animate-slow': '▷ 動畫（慢）',
-      'animate-medium': '▷ 動畫（中）',
-      'animate-fast': '▷ 動畫（快）',
-      'step': '⏭ 逐步',
-    }
+    const labels: Record<string, string> = Object.fromEntries(RUN_MODES.map((m) => [m.id, m.label]))
     btn.textContent = labels[this.runMode] ?? '▶ 執行'
   }
 

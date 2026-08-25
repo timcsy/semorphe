@@ -27,7 +27,16 @@ const FILE_MENU_MARKUP = `
 export interface QuickAccessBarOptions {
   /** 要不要建檔案選單。⚠️ `false` ＝ **不建那些 DOM**。 */
   fileButtons: boolean
+  /**
+   * 這一顆控制項要不要建。
+   *
+   * 🔴 **問登錄表，不是問宿主**（`core/host/controls.ts`）——
+   * 一旦這裡寫成 `if (host === 'vscode')`，那份宣告就退化成一個標籤。
+   */
+  inPanel: (id: ControlId) => boolean
 }
+
+import type { ControlId } from '../../core/host/controls'
 
 export class QuickAccessBar {
   private container: HTMLElement
@@ -46,16 +55,20 @@ export class QuickAccessBar {
   constructor(parent: HTMLElement, options: QuickAccessBarOptions) {
     this.container = document.createElement('div')
     this.container.className = 'quick-access-bar'
+    // 🔴 **一群一群地建**——⚠️ 分隔線跟著它前面那一群走，
+    //    否則關掉中間某一群會留下兩條連在一起的分隔線。
+    const groups = [
+      options.inPanel('sync') ? '<button id="sync-menu-btn" title="同步">⇄ 同步</button>' : '',
+      options.inPanel('target') ? '<span id="level-selector-mount"></span>' : '',
+      options.inPanel('blockStyle') ? '<span id="block-style-selector-mount"></span>' : '',
+      [
+        options.inPanel('undo') ? '<button id="undo-btn" title="復原">↩</button>' : '',
+        options.inPanel('redo') ? '<button id="redo-btn" title="重做">↪</button>' : '',
+        options.inPanel('clear') ? '<button id="clear-btn" title="清空">清空</button>' : '',
+      ].join(''),
+    ].filter((g) => g !== '')
     this.container.innerHTML = `
-      <button id="sync-menu-btn" title="同步">⇄ 同步</button>
-      <span class="toolbar-separator"></span>
-      <span id="level-selector-mount"></span>
-      <span class="toolbar-separator"></span>
-      <span id="block-style-selector-mount"></span>
-      <span class="toolbar-separator"></span>
-      <button id="undo-btn" title="復原">↩</button>
-      <button id="redo-btn" title="重做">↪</button>
-      <button id="clear-btn" title="清空">清空</button>
+      ${groups.join('\n      <span class="toolbar-separator"></span>\n      ')}
       ${options.fileButtons ? FILE_MENU_MARKUP : ''}
     `
     parent.appendChild(this.container)

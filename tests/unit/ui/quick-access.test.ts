@@ -14,7 +14,8 @@ describe('QuickAccessBar (block toolbar)', () => {
 
   beforeEach(() => {
     parent = document.createElement('div')
-    bar = new QuickAccessBar(parent, { fileButtons: true })
+    // ⚠️ `inPanel` ＝ 這個宿主自己畫哪幾顆——網頁版是全部（2026-08-25 起）
+    bar = new QuickAccessBar(parent, { fileButtons: true, inPanel: () => true })
   })
 
   it('should create bar element', () => {
@@ -67,7 +68,7 @@ describe('QuickAccessBar (block toolbar)', () => {
     // > **一個長得一樣而按下去沒反應的按鈕，比沒有那顆按鈕更糟
     // > ——因為它讓「像」變成一個謊。**
     const el = document.createElement('div')
-    new QuickAccessBar(el, { fileButtons: false })
+    new QuickAccessBar(el, { fileButtons: false, inPanel: () => true })
     expect(el.querySelector('#file-menu-btn'), '🔴 不該建出來').toBeNull()
     expect(el.querySelector('#export-btn')).toBeNull()
     // 正向錨點：其餘的按鈕還在（否則這條可能是「整個都沒建」而空過）

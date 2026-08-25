@@ -44,6 +44,7 @@ import { preserveBlankLines } from '../../core/projection/preserve-blank-lines'
 import { postToHost } from './host-bridge'
 import { textFingerprint } from '../sync/fingerprint'
 import type { CodeView, HighlightVariant } from '../../core/host/code-view'
+import type { ControlState, ControlInvoke } from '../../core/host/controls'
 import type { SemanticBus } from '../../core/semantic-bus'
 import type { SemanticUpdateEvent, ExecutionAtNodeEvent, ViewHost, ViewCapabilities } from '../../core/view-host'
 import type { HostMessage, WebviewMessage } from '../sync/messages'
@@ -156,9 +157,24 @@ export class VscodeCodeView implements CodeView, ViewHost {
     postToHost({ type: 'syncPhase', phase, source, detail })
   }
 
+  reportControls(states: readonly ControlState[]): void {
+    // 🔴 每次送整份——⚠️ 值域也一起，主行程不認得任何一個登錄表。
+    postToHost({ type: 'controls', items: states as never })
+  }
+
+  onControlInvoke(callback: (invoke: ControlInvoke) => void): void {
+    this.controlCb = callback
+  }
+
+  private controlCb: ((invoke: ControlInvoke) => void) | null = null
+
   private receive(m: HostMessage): void {
     if (m.type === 'syncCommand') {
       this.syncCmdCb?.({ action: m.action, viewId: m.viewId })
+      return
+    }
+    if (m.type === 'controlInvoke') {
+      this.controlCb?.({ id: m.id as never, value: m.value, values: m.values })
       return
     }
     if (m.type === 'document') {

@@ -72,13 +72,31 @@ export const vscodeProfile: HostProfile = {
     mobileLayout: false,
     codeKeyboard: false,
     codeEditorPane: false,
-    statusBar: false,
   },
   featureReasons: {
     fileButtons: '開檔／存檔／匯入匯出由 IDE 擔任——面板再放一份會有兩個「目前的檔案」',
     mobileLayout: '這個宿主是桌面應用，沒有行動版',
     codeKeyboard: '輔助輸入鍵盤要操作底層編輯器，而這裡的編輯器不歸我們管',
     codeEditorPane: '程式碼在 IDE 的編輯器裡——面板留一格空白給它只是浪費版面',
-    statusBar: 'IDE 自己就有一條狀態列——面板裡再畫一條，同一件事會有兩個顯示處，而其中一條遲早過期',
+  },
+
+  /**
+   * 🔴 **控制項全部投影到宿主**。
+   *
+   * 使用者 2026-08-25：「Style、語言等等我想要不放在現在這邊，
+   * 因為放在現在這邊會進積木面板，這樣在 VSCode 不是很好」。
+   *
+   * ```
+   * picker      → 狀態列    IDE 自己的語言／編碼就放在那裡，這是原生的位置
+   * action      → 標題列    分頁自己的動作，不佔畫布
+   * indicator   → 狀態列    同步三態（2026-08-25 已交付）
+   * ```
+   *
+   * ⚠️ 於是面板裡**只剩工具箱與畫布**——而那才是它該是的東西。
+   */
+  controlSurfaces: {
+    picker: 'hostStatusBar',
+    action: 'hostTitleBar',
+    indicator: 'hostStatusBar',
   },
 }

@@ -33,7 +33,7 @@ import { resolveConfig, type RawSettings } from './sync/settings'
 import { textFingerprint } from './sync/fingerprint'
 import { applySpan } from '../core/projection/rewrite-span'
 import { ViewStateStore, type KeyValueStore, type ViewState } from './sync/view-state'
-import type { HostMessage, WebviewMessage } from './sync/messages'
+import type { HostMessage, WebviewMessage, ControlStateWire } from './sync/messages'
 
 /**
  * 積木 → 程式碼的高亮。
@@ -260,7 +260,7 @@ class SemorpheSession {
       locale: layered<string>('locale'),
     }
     // 🔴 傳檔名進去——`.ino` 的預設目標是 Arduino，不是 C++（見 `settings.ts`）。
-    this.send({ type: 'config', config: resolveConfig(raw, doc?.uri.path) })
+    this.send({ type: 'config', config: resolveConfig(raw, doc?.uri.path, vscode.env.language) })
   }
 
   /**
@@ -365,6 +365,7 @@ class SemorpheSession {
     // > **「重送目前的狀態」與「重新決定狀態是什麼」是兩件事
     // > ——而後者在焦點不在編輯器上時，答案是錯的。**
     if (m.type === 'syncPhase') { updateSyncStatusBar(m.phase, m.source, m.detail); return }
+    if (m.type === 'controls') { updateControlSurfaces(m.items); return }
     if (m.type === 'ready') { this.resend(); return }
     if (m.type === 'requestDocument') {
       // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
@@ -594,6 +595,11 @@ class SemorpheSession {
     this.send({ type: 'syncCommand', ...cmd })
   }
 
+  /** 宿主那側按了控制項——原封不動送進 webview。 */
+  sendControl(msg: Extract<HostMessage, { type: 'controlInvoke' }>): void {
+    this.send(msg)
+  }
+
   reveal(column: vscode.ViewColumn): void {
     this.panel.reveal(column)
   }
@@ -610,6 +616,7 @@ class SemorpheSession {
     // > **一個在說謊的狀態指示器，比沒有那個指示器更糟：
     // > 它讓人停止確認。**
     hideSyncStatusBar()
+    hideControlSurfaces()
   }
 }
 
@@ -654,6 +661,95 @@ function updateSyncStatusBar(phase: 'live' | 'paused' | 'diverged', source: stri
     ? new vscode.ThemeColor('statusBarItem.warningBackground')
     : undefined
   syncItem.show()
+}
+
+/**
+ * 投影到宿主的控制項 —— **狀態列的 picker ＋ 標題列的動作**。
+ *
+ * ## 為什麼值域也從 webview 送過來
+ *
+ * 主行程**不認得**目標登錄表、風格預設、語系清單、層級樹。
+ * 讓它認得，就是把那幾份真相搬到第二個地方——而它們會漂移。
+ *
+ * > **主行程知道「有一顆叫做 target 的 picker」就夠了；
+ * > 「它有哪些值」永遠是 webview 的事。**
+ */
+const controlItems = new Map<string, vscode.StatusBarItem>()
+let controlStates: ControlStateWire[] = []
+
+function updateControlSurfaces(items: ControlStateWire[]): void {
+  controlStates = items
+  const seen = new Set<string>()
+  // ⚠️ 由後往前給優先序，讓它們在狀態列上的順序與登錄表一致
+  //    （VSCode 的右側是優先序愈大愈靠左）。
+  items.filter((i) => i.kind === 'picker').forEach((item, index) => {
+    seen.add(item.id)
+    let bar = controlItems.get(item.id)
+    if (!bar) {
+      bar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99 - index)
+      bar.command = { command: `semorphe.control.${item.id}`, title: item.label }
+      controlItems.set(item.id, bar)
+    }
+    bar.text = item.label
+    bar.tooltip = `${item.label}\n— 點一下更換`
+    bar.show()
+  })
+  // 🔴 **不再出現的要收起來**——一個指著不存在的東西的狀態列項目在說謊。
+  for (const [id, bar] of controlItems) if (!seen.has(id)) bar.hide()
+}
+
+/** 面板關了：控制項也不該留在狀態列上。 */
+function hideControlSurfaces(): void {
+  for (const bar of controlItems.values()) bar.hide()
+  controlStates = []
+}
+
+/**
+ * 使用者點了狀態列上的某一顆 picker。
+ *
+ * ⚠️ 沒有面板時要**說得出來**，不得靜默——與 `openSyncMenu` 同一條。
+ */
+export async function pickControl(id: string): Promise<void> {
+  if (!current) {
+    OUTPUT.appendLine(`Semorphe 控制項「${id}」：面板還沒打開`)
+    OUTPUT.show(true)
+    return
+  }
+  const state = controlStates.find((c) => c.id === id)
+  if (!state?.options) {
+    // 🔴 沒有值域就**不要開一個空的選單**——空選單看起來像壞掉。
+    OUTPUT.appendLine(`Semorphe 控制項「${id}」：面板還沒送來值域`)
+    OUTPUT.show(true)
+    return
+  }
+  type Item = vscode.QuickPickItem & { value: string }
+  if (state.multi) {
+    const items: Item[] = state.options.map((o) => ({
+      label: o.label, value: o.value, picked: state.picked?.includes(o.value) ?? false,
+    }))
+    const picked = await vscode.window.showQuickPick<Item>(items, { title: state.label, canPickMany: true })
+    if (!picked) return
+    current.sendControl({ type: 'controlInvoke', id, values: picked.map((p) => p.value) })
+    return
+  }
+  const items: Item[] = state.options.map((o) => ({
+    label: o.label, value: o.value,
+    // ⚠️ 目前值標一個記號——QuickPick 沒有「目前選中」的原生表達
+    description: o.value === state.value ? '目前' : undefined,
+  }))
+  const choice = await vscode.window.showQuickPick<Item>(items, { title: state.label })
+  if (!choice) return
+  current.sendControl({ type: 'controlInvoke', id, value: choice.value })
+}
+
+/** 標題列按了一個動作（含執行模式）。 */
+export function invokeControl(id: string, value?: string): void {
+  if (!current) {
+    OUTPUT.appendLine(`Semorphe 動作「${id}」：面板還沒打開`)
+    OUTPUT.show(true)
+    return
+  }
+  current.sendControl({ type: 'controlInvoke', id, value })
 }
 
 /** 面板關了：狀態列不得繼續宣稱有東西在同步。 */

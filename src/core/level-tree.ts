@@ -23,6 +23,22 @@ function collectComponents(node: LevelNode, enabledBranches: Set<string>, result
   }
 }
 
+/**
+ * 展平，**而且保留深度**。
+ *
+ * 🔴 深度是樹的唯一線索——把層級樹投影到一個**平的** QuickPick 時，
+ * 沒有深度就沒有結構，使用者看到的是一串扁掉的名字。
+ */
+export function levelNodesWithDepth(root: LevelNode): { node: LevelNode; depth: number }[] {
+  const out: { node: LevelNode; depth: number }[] = []
+  const walk = (node: LevelNode, depth: number): void => {
+    out.push({ node, depth })
+    for (const child of node.children) walk(child, depth + 1)
+  }
+  walk(root, 0)
+  return out
+}
+
 export function flattenLevelTree(root: LevelNode): LevelNode[] {
   const result: LevelNode[] = []
   flatten(root, result)
