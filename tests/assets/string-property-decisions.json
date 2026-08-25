@@ -1,0 +1,47 @@
+[
+  {
+    "key": "cpp:literal_string.value",
+    "decision": "文字本來就是字串",
+    "reason": "字串常值的【內容】就是文字——它在原始碼裡也是一個 atom（一個 token）。這一格若改成結構，等於替字串發明一個文法。"
+  },
+  {
+    "key": "cpp:comment.text",
+    "decision": "文字本來就是字串",
+    "reason": "註解是散文。沒有文法可以結構化它，而硬要結構化就是替使用者的話發明語法。"
+  },
+  {
+    "key": "cpp:block_comment.text",
+    "decision": "文字本來就是字串",
+    "reason": "區塊註解也是散文，多行不改變這一點——沒有文法可以結構化一段人寫的話。"
+  },
+  {
+    "key": "cpp:doc_comment.brief",
+    "decision": "文字本來就是字串",
+    "reason": "文件註解的說明是散文。"
+  },
+  {
+    "key": "cpp:doc_comment.param_0_desc",
+    "decision": "文字本來就是字串",
+    "reason": "參數說明是散文。⚠️ 而【參數本身】已經是結構（paramList），只有說明是文字。"
+  },
+  {
+    "key": "cpp:doc_comment.param_1_desc",
+    "decision": "文字本來就是字串",
+    "reason": "參數說明是散文——與 param_0_desc 同一個理由：參數本身已經是結構（paramList），只有那句說明是文字。"
+  },
+  {
+    "key": "cpp:doc_comment.return_desc",
+    "decision": "文字本來就是字串",
+    "reason": "回傳說明是散文。"
+  },
+  {
+    "key": "cpp:print_formatted.format",
+    "decision": "文字本來就是字串",
+    "reason": "🟡 格式字串【是】一個迷你語言（%d／%s），而它在原始碼裡本來就是一個字串常值——把它拆成結構會讓積木上出現一個學生沒學過的第二套語法。⚠️ 這一筆是有疑問的豁免，不是乾淨的。"
+  },
+  {
+    "key": "cpp:input_formatted.format",
+    "decision": "文字本來就是字串",
+    "reason": "🟡 與 print_formatted.format 同一筆有疑問的豁免：格式字串【是】一個迷你語言，而它在原始碼裡本來就是字串常值，拆開會讓積木上出現第二套語法。"
+  }
+]
