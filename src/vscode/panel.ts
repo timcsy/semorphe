@@ -604,6 +604,12 @@ class SemorpheSession {
     ed?.setDecorations(EXECUTING, [])
     for (const d of this.disposables) d.dispose()
     current = undefined
+    // 🔴 **面板關了就沒有東西在同步了**——而狀態列項目建好之後從來沒有人藏它，
+    //    於是它會繼續說「⇄ 同步中」，指著一個已經不存在的面板。
+    //
+    // > **一個在說謊的狀態指示器，比沒有那個指示器更糟：
+    // > 它讓人停止確認。**
+    hideSyncStatusBar()
   }
 }
 
@@ -637,12 +643,22 @@ function updateSyncStatusBar(phase: 'live' | 'paused' | 'diverged', source: stri
   syncItem.text = text
   // 🔴 **常駐顯示三態，其餘進 tooltip**（P4 漸進揭露）——面板不畫狀態列了，
   //    而語言／風格／主題／語系那幾格**不是丟掉，是換一層揭露**。
-  syncItem.tooltip = `${detail}\n點一下開同步選單`
+  // ⚠️ **Theia 把 `\n` 吃掉**（2026-08-25 兩邊對照截圖：VSCode 兩行、Arduino IDE 一行）
+  //    ——所以提示前面留一個分隔號，**擠成一行時仍然讀得斷**。
+  //
+  // > **一個只在其中一個宿主排得好看的字串，
+  // > 在另一個宿主是黏在一起的一句話。**
+  syncItem.tooltip = `${detail}\n— 點一下開同步選單`
   // ⚠️ 分岔要**看得出來不一樣**——它不是一個更花俏的「同步中」
   syncItem.backgroundColor = phase === 'diverged'
     ? new vscode.ThemeColor('statusBarItem.warningBackground')
     : undefined
   syncItem.show()
+}
+
+/** 面板關了：狀態列不得繼續宣稱有東西在同步。 */
+function hideSyncStatusBar(): void {
+  syncItem?.hide()
 }
 
 /** 主行程 → webview 的同步指令。⚠️ 沒有面板時要說得出來，不得靜默 */

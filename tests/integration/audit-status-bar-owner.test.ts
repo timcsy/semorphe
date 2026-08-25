@@ -162,6 +162,16 @@ describe('第六十三條：狀態列一定要有人畫', () => {
     expect(refresh![0], '🔴 重畫狀態列時沒有同時通知宿主').toContain('reportSyncPhase')
   })
 
+  it('🔴 面板關了，宿主狀態列不得繼續宣稱「同步中」', () => {
+    // ⚠️ 這一條讀原始碼（比較弱）——那個項目住在主行程，這裡跑不起來。
+    //    而它擋的是一個真的缺陷：`syncItem` 建好之後從來沒有人藏它，
+    //    關掉面板之後狀態列會指著一個已經不存在的面板。
+    const src = fs.readFileSync('src/vscode/panel.ts', 'utf8')
+    const dispose = src.match(/\n  dispose\(\): void \{[\s\S]*?\n  \}/)
+    expect(dispose, '🔴 找不到 dispose＝這條護欄的錨爛了').toBeTruthy()
+    expect(dispose![0], '🔴 關掉面板而狀態列還在說同步中').toContain('hideSyncStatusBar')
+  })
+
   // ─── ★ 注入：證明偵測器認得出違規，而且不亂報 ───
 
   it('★ 注入①：宣告不畫、而視圖cannotReportPhase的，必須被報出', () => {
