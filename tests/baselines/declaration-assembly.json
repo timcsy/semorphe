@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "note": "各自列宣告來源、而沒把膠囊算進去的測試檔數。\n處方：改用 `allCppComponents()` / `allCppProjections()`（它們含膠囊）。\n⚠️ 這個數字只准下降，而**下降必須是因為改用組裝函式**，不是因為那支測試被刪掉了。\n【2026-08-24】網頁版接上 `preserveBlankLines`（多一個 import、多一個呼叫、多一支測試檔）——**母體變大，不是耦合變差**。見 history/146。\n⚠️ 2026-08-25：測試檔數 370 → 371，同上（新增第六十三條護欄）。\n⚠️ 2026-08-25：371 → 372，新增 tests/unit/core/locale-preference.test.ts。語料變大。\n⚠️ 2026-08-25：372 → 373，新增 tests/unit/core/diagnostic-projection.test.ts。\n⚠️ 2026-08-25「行動版的選單改成往下鑽的 QuickPick」：刪除 `ui/toolbar/mobile-menu.ts` 與其測試、`renderSheetControls`、`mobile-sync-btn`。🔴 **語料縮水而正當**——已確認是「東西真的被刪了」。",
+    "note": "各自列宣告來源、而沒把膠囊算進去的測試檔數。\n處方：改用 `allCppComponents()` / `allCppProjections()`（它們含膠囊）。\n⚠️ 這個數字只准下降，而**下降必須是因為改用組裝函式**，不是因為那支測試被刪掉了。\n【2026-08-24】網頁版接上 `preserveBlankLines`（多一個 import、多一個呼叫、多一支測試檔）——**母體變大，不是耦合變差**。見 history/146。\n⚠️ 2026-08-25：測試檔數 370 → 371，同上（新增第六十三條護欄）。\n⚠️ 2026-08-25：371 → 372，新增 tests/unit/core/locale-preference.test.ts。語料變大。\n⚠️ 2026-08-25：372 → 373，新增 tests/unit/core/diagnostic-projection.test.ts。\n⚠️ 2026-08-25「行動版的選單改成往下鑽的 QuickPick」：刪除 `ui/toolbar/mobile-menu.ts` 與其測試、`renderSheetControls`、`mobile-sync-btn`。🔴 **語料縮水而正當**——已確認是「東西真的被刪了」。\n⚠️ 2026-08-25：372 → 373，新增 tests/unit/ui/declared-field-types.test.ts。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。",
     "measuredAt": "2026-08-25"
   },
   "scanned": {
-    "testFileCount": 372
+    "testFileCount": 373
   },
   "adHocAssembly": 0,
   "details": []

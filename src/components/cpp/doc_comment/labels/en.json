@@ -1,4 +1,7 @@
 {
-  "C_COMMENT_DOC_MSG0": "doc comment %1",
-  "C_COMMENT_DOC_TOOLTIP": "Emit a /** ... */ documentation comment"
+  "C_COMMENT_DOC_TOOLTIP": "Emit a /** ... */ documentation comment",
+  "C_COMMENT_DOC_LABEL": "doc comment",
+  "C_COMMENT_DOC_BRIEF": "brief",
+  "C_COMMENT_DOC_PARAM": "param",
+  "C_COMMENT_DOC_RETURN": "returns"
 }

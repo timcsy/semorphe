@@ -144,6 +144,18 @@ export interface ParamListSpec {
   openInput?: string
   tailInput?: string
   /**
+   * 要不要那一列 `+`／`−`（預設 **要**）。
+   *
+   * 🔴 **`false` ＝ 只有齒輪**——2026-08-25 為 `cpp_doc_comment` 加的：
+   * 那顆命令式定義只有齒輪，而多一列 `+`／`−` 會讓比對護欄永遠說不出
+   * 「一模一樣」，於是它退不了場。
+   *
+   * ⚠️ 而「`+`／`−` 是不是比較好」**是另一個問題**——`retire-imperative-block`
+   * 明令：**不要為了讓比對變綠而改行為，也不要在退場那一刀順手改 UX**。
+   * 那個問題記在 `draft/`。
+   */
+  plusMinus?: boolean
+  /**
    * **最少要有幾格**（預設 0）。
    *
    * 🔴 `for` 迴圈是 1：**零個名字的 for 不是合法的 Python**（`for  in xs:`），
@@ -207,6 +219,16 @@ export interface ParamListSpec {
     stateKey?: string
     labelKey?: string
     labelFallback: string
+    /**
+     * 這一列的欄位——🔴 **給了就代表「用完才建」，不是「藏起來」**。
+     *
+     * ⚠️ 兩者對**比對護欄**是不同的形狀：藏起來的那一格仍然在插槽清單裡，
+     * 而命令式那些積木是 `appendDummyInput` / `removeInput`
+     * ——於是「剛建好的樣子」永遠對不上，那顆命令式定義就退不了場。
+     *
+     * > **「看不見」與「不存在」在使用者眼裡一樣，在比對器眼裡不一樣。**
+     */
+    fields?: { type: string; name: string; text?: string }[]
   }[]
 }
 
@@ -236,6 +258,24 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
 
   const minCount = spec.minCount ?? 0
   const blockOptions = spec.blockOptions ?? []
+  /**
+   * 新加的參數列要排在**誰前面**。
+   *
+   * ```
+   * 有 +／− 那一列   →  排在它前面
+   * 沒有（只有齒輪） →  排在「用完才建」的那幾列前面（例如「回傳」）
+   * 都沒有           →  null ＝ 就接在最後
+   * ```
+   *
+   * 🔴 這一支存在的理由：`moveInputBefore` 指到一個**不存在**的插槽會丟錯，
+   * 而那個錯發生在**載入存檔**的路上——症狀是整段程式碼進不了工作區
+   *（第五十一條護欄 2026-08-25 抓到四段）。
+   */
+  const anchorInput = (block: any): string | null => {
+    if (block.getInput(TAIL)) return TAIL
+    for (const o of blockOptions) if (block.getInput(o.input)) return o.input
+    return null
+  }
   proto.paramCount_ = 0
 
   /** 某個 input 上的所有欄位——`blockOptions` 要靠它掛驗證器。 */
@@ -251,6 +291,8 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
       this.appendDummyInput(OPEN).appendField(open)
       this.moveInputBefore(OPEN, name(spec.itemPattern, 0))
     }
+    // 🔴 只有齒輪的那一種**不建這一列**（見 `plusMinus`）。
+    if (spec.plusMinus === false) return
     const tail = this.appendDummyInput(TAIL)
     // ⚠️ 閉括號只在**有參數時**顯示——零參數時 `def f():` 的括號由產生器補，
     //    而積木上顯示一對空括號會讓「沒有參數」看起來像「有一個空參數」。
@@ -350,9 +392,14 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
       }
     }
 
-    this.moveInputBefore(name(spec.itemPattern, i), TAIL)
+    // 🔴 **沒有 `+`／`−` 那一列時，錨點是「用完才建」的那幾列**（`plusMinus: false`）。
+    //    ⚠️ 直接指著 `TAIL` 會丟 `Reference input "…" not found`
+    //    ——而症狀不是畫面歪掉，是**整段語料載不進工作區**
+    //    （第五十一條護欄 2026-08-25 抓到四段）。
+    const anchor = anchorInput(this)
+    if (anchor) this.moveInputBefore(name(spec.itemPattern, i), anchor)
     for (const g of groups) {
-      if (this.getInput(optName(i, g.key))) this.moveInputBefore(optName(i, g.key), TAIL)
+      if (anchor && this.getInput(optName(i, g.key))) this.moveInputBefore(optName(i, g.key), anchor)
     }
     this.paramCount_++
     this.rebuildTail_()
@@ -390,10 +437,34 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
    */
   proto.setBlockOption_ = function (this: any, key: string, show: boolean): void {
     const o = blockOptions.find((x) => x.key === key)
-    const input = o ? this.getInput(o.input) : null
-    if (!o || !input) return
+    if (!o) return
     this.blockOpts_ = this.blockOpts_ ?? {}
     this.blockOpts_[key] = show
+
+    // 🔴 **宣告了 `fields` ＝「用完才建」**（見那一格的說明）：
+    //    這一列在關掉時**不存在**，不是藏起來——比對護欄看得出差別。
+    if (o.fields) {
+      const existing = this.getInput(o.input)
+      if (show && !existing) {
+        const row = this.appendDummyInput(o.input)
+        for (const f of o.fields) {
+          if (f.type === 'field_label') row.appendField(String(f.text ?? ''), f.name)
+          else row.appendField(new Blockly.FieldTextInput(String(f.text ?? '')) as Blockly.Field, f.name)
+        }
+        // ⚠️ 這一列永遠在最後——參數列與 `+`／`−` 都排在它前面。
+      } else if (!show && existing) {
+        // 值先收起來：關掉再打開時使用者打的字要回得來。
+        this.blockOptText_ = this.blockOptText_ ?? {}
+        for (const f of fieldsOfInput(this, o.input)) {
+          if (f.EDITABLE && f.name && typeof f.getValue?.() === 'string') this.blockOptText_[f.name] = f.getValue()
+        }
+        this.removeInput(o.input)
+      }
+      return
+    }
+
+    const input = this.getInput(o.input)
+    if (!input) return
     if (input.isVisible() === show) return
     if (!show) {
       // 🔴 **只清可編輯的欄位**：標籤（`回傳型別` 那四個字）也是一個 field，

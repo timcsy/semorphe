@@ -7,18 +7,68 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_doc_comment",
-      "message0": "%{BKY_C_COMMENT_DOC_MSG0}",
-      "args0": [
+      "message0": "%{BKY_C_COMMENT_DOC_LABEL}",
+      "message1": "%{BKY_C_COMMENT_DOC_BRIEF} %1 %2",
+      "args1": [
         {
           "type": "field_multilinetext",
           "name": "BRIEF",
-          "text": "說明"
+          "text": ""
+        },
+        {
+          "type": "input_dummy",
+          "name": "BRIEF_ROW"
         }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#888888",
-      "tooltip": "%{BKY_C_COMMENT_DOC_TOOLTIP}"
+      "tooltip": "%{BKY_C_COMMENT_DOC_TOOLTIP}",
+      "paramList": {
+        "itemPattern": "PARAM_{i}",
+        "fields": [
+          {
+            "type": "field_label",
+            "name": "PARAM_LBL_{i}",
+            "text": "%{BKY_C_COMMENT_DOC_PARAM}"
+          },
+          {
+            "type": "field_input",
+            "name": "PARAM_NAME_{i}",
+            "text": ""
+          },
+          {
+            "type": "field_input",
+            "name": "PARAM_DESC_{i}",
+            "text": ""
+          }
+        ],
+        "moveTailTo": null,
+        "openInput": "DOC_OPEN",
+        "tailInput": "DOC_TAIL",
+        "blockOptions": [
+          {
+            "key": "return",
+            "input": "RETURN_ROW",
+            "stateKey": "hasReturn",
+            "labelKey": "C_COMMENT_DOC_RETURN",
+            "labelFallback": "回傳",
+            "fields": [
+              {
+                "type": "field_label",
+                "name": "RETURN_LBL",
+                "text": "%{BKY_C_COMMENT_DOC_RETURN}"
+              },
+              {
+                "type": "field_input",
+                "name": "RETURN",
+                "text": ""
+              }
+            ]
+          }
+        ],
+        "plusMinus": false
+      }
     },
     "renderMapping": {
       "fields": {
@@ -28,6 +78,6 @@
       "statementInputs": {},
       "strategy": "cpp:renderDocComment"
     },
-    "_why": "🔴 **spec 166：預設值本來是英文 `description`**——與 `cpp_loop_count` 的寫死英文下拉是**同一類缺陷**（第二次）。\n命令式那份用的是 `Blockly.Msg[...] || '說明'`。"
+    "_why": "🔴 **2026-08-25：命令式那份退場，宣告補齊**（`retire-imperative-block`）。\n在此之前宣告只有一格 `BRIEF`，而使用者看到的是命令式那份（後跑、無守衛）——**參數列與回傳列整組只活在命令式裡**。\n\n⚠️ **齒輪 ＋ `+`／`−` 兩者都有**（`attachParamList` 本來就給兩個）。命令式只有齒輪，而這個專案每一顆可增減的欄位組都有 `+`／`−`（`cpp_func_def`／`cpp_var_declare`）——**齒輪把操作藏在一個對話框後面，違反 P4 漸進揭露**。這是一次**刻意的行為改動**，不是為了讓比對變綠。\n\n🔴 `stateKey: hasReturn` 是**存檔契約**：舊存檔裡就是那個鍵，換名字等於讓使用者的「回傳」說明安靜消失。\n\n🪦 舊的 `_why`（spec 166：BRIEF 的預設值從英文 `description` 改成 `說明`）**已失效**——那個預設從來沒有生效過（命令式那份是空字串），而現在「說明」是**標籤**，欄位預設留空才不會變成「說明：說明」。"
   }
 ]

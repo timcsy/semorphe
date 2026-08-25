@@ -5505,6 +5505,32 @@ spec `156` 把 `tree-sitter-python.wasm`（460 KB）放進 `public/` 就推了
 這支會誤判它是死的。**那時要擴充這支的操作，不是放寬判準。**」
 🔴 **而這一次不是那種情況**——分清楚「懶載入」與「真的沒人要」。
 
+### 一個「沒有被使用」的 import，可能正是別人賴以存在的那一行
+
+2026-08-25 `cpp_doc_comment` 的命令式定義退場之後，tsc 說
+`import { FieldMultilineInput } from '@blockly/field-multilineinput'`
+「宣告了而沒有被使用」——於是我刪了它。
+
+**而那個 import 是一次【註冊】**：宣告式的 `blockDef` 用 `field_multilinetext`
+這個**名字**找欄位類別，而名字要有人登記。
+
+**要點**：Blockly 對不認得的欄位型別是**安靜地丟掉那一格**。
+症狀是**積木上少了「說明」那個欄位，而程式碼那側仍然完全正確**
+（`brief` 活在語義樹裡）——🔴 **要到下一次從積木同步回去，那段文字才會消失**。
+⚠️ 全套測試綠、`audit-block-instantiable` 的硬性零也是 0
+（少一個欄位不會讓載入失敗），**是開瀏覽器數欄位才看到的**。
+
+**如何應用**：刪一個「沒有被使用」的 import 之前，問一句
+「**它有沒有副作用**」——註冊、擴充原型、安裝全域處置器都是。
+🟢 而更好的做法是**把註冊寫成一次具名的呼叫**（`registerDeclaredFieldTypes()`），
+讓它看起來就是一件事，而不是一個看似多餘的符號。
+⚠️ 附帶實測：`@blockly/field-multilineinput` **不會自我註冊**——
+`require()` 之後 `registry.hasItem` 仍然是 `false`，所以連 side-effect import
+都不夠，**要自己登記**。
+
+🟢 由 `tests/unit/ui/declared-field-types.test.ts` 釘住（硬性零：
+宣告裡用到的每一種欄位型別都必須註冊得起來）。
+
 ### 一整天沒跑 e2e——而全套綠與開瀏覽器實測都擋不住
 
 2026-08-25 一天改了六刀 UI，每一刀都跑 `npm test`（5600+ 綠）＋ 開瀏覽器實測，

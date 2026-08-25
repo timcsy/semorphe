@@ -3,6 +3,26 @@ import { allBoardConstantDropdowns, boardConstantOptions } from '../core/board-c
 import type { BoardPinModel } from '../core/types'
 import { componentsDeclaringVariableType } from '../core/language-executors'
 import * as Blockly from 'blockly'
+/**
+ * 🔴 **這個 import 是一次【註冊】，不是一個用不到的符號。**
+ *
+ * `@blockly/field-multilineinput` 在被 import 時把自己登記成
+ * `field_multilinetext`——而**宣告式的 `blockDef` 靠那個名字找它**。
+ *
+ * ⚠️ 2026-08-25 我把 `cpp_doc_comment` 的命令式定義刪掉之後，
+ * tsc 說這個 import「宣告了而沒有被使用」，於是我刪了它。
+ * **症狀不是報錯**：Blockly 對不認得的欄位型別是**安靜地丟掉那一格**
+ * ——積木上的「說明」欄位整個不見，而程式碼那側仍然對
+ *（因為 brief 活在語義樹裡）。**下一次從積木同步回去才會發現它沒了。**
+ *
+ * > **一個「沒有被使用」的 import，可能正是別人賴以存在的那一行。**
+ *
+ * 🔴 而 **`@blockly/field-multilineinput` 不會自我註冊**——2026-08-25 實測：
+ * `require()` 之後 `registry.hasItem(FIELD, 'field_multilinetext')` 仍然是 `false`。
+ * 所以光是 `import '…'` 沒有用，**要自己登記**（見下面的模組層級註冊）。
+ *
+ * 🟢 由 `tests/unit/ui/declared-field-types.test.ts` 釘住。
+ */
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from '../core/category-colors'
@@ -79,7 +99,10 @@ export class BlockRegistrar {
     this.accessors = accessors
     // 🔴 **先註冊欄位型別與選項來源，再建積木**——`jsonInit` 遇到
     // `field_dynamic_dropdown` 時要查得到它，否則那顆積木**整個建不起來**。
-    registerDynamicDropdownField()
+    // ⚠️ 而註冊本身在**模組層級**（見檔尾的 `registerDeclaredFieldTypes`）：
+    //    那是一次全域登記，不是每個實例的事，而**只在建構子裡做的話，
+    //    「只 import 這個模組」的人拿不到它**。
+    registerDeclaredFieldTypes()
     declareDropdownSource('names', () => this.getNameRefOptions())
     declareDropdownSource('vars', () => this.getWorkspaceVarOptions())
     declareDropdownSource('funcs', () => this.getWorkspaceFuncOptions())
@@ -2050,114 +2073,23 @@ export class BlockRegistrar {
 
     // 🪦 **`cpp_block_comment` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
 
-    // cpp_doc_comment
-    {
-      Blockly.Blocks['c_doc_container'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField('文件註解')
-          this.appendStatementInput('STACK')
-          this.setColour('#888888')
-          this.contextMenu = false
-        },
-      }
-      Blockly.Blocks['c_doc_param_input'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField('參數')
-          this.setPreviousStatement(true)
-          this.setNextStatement(true)
-          this.setColour('#888888')
-          this.contextMenu = false
-        },
-      }
-      Blockly.Blocks['c_doc_return_input'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField('回傳')
-          this.setPreviousStatement(true)
-          this.setColour('#888888')
-          this.contextMenu = false
-        },
-      }
-
-      Blockly.Blocks['cpp_doc_comment'] = {
-        paramCount_: 0,
-        hasReturn_: false,
-        init: function (this: any) {
-          this.paramCount_ = 0
-          this.hasReturn_ = false
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['C_COMMENT_DOC_LABEL'] || '文件註解')
-          this.appendDummyInput('BRIEF_ROW')
-            .appendField(Blockly.Msg['C_COMMENT_DOC_BRIEF'] || '說明')
-            .appendField(new FieldMultilineInput('') as Blockly.Field, 'BRIEF')
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour('#888888')
-          this.setTooltip(Blockly.Msg['C_COMMENT_DOC_TOOLTIP'] || '為函式加上文件註解，說明用途、參數和回傳值')
-          this.setMutator(new Blockly.icons.MutatorIcon(
-            ['c_doc_param_input', 'c_doc_return_input'],
-            this as unknown as Blockly.BlockSvg,
-          ))
-        },
-        updateShape_: function (this: any) {
-          let i = 0
-          while (this.getInput(`PARAM_${i}`)) {
-            this.removeInput(`PARAM_${i}`)
-            i++
-          }
-          if (this.getInput('RETURN_ROW')) this.removeInput('RETURN_ROW')
-          for (let j = 0; j < this.paramCount_; j++) {
-            this.appendDummyInput(`PARAM_${j}`)
-              .appendField(Blockly.Msg['C_COMMENT_DOC_PARAM'] || '參數')
-              .appendField(new Blockly.FieldTextInput('') as Blockly.Field, `PARAM_NAME_${j}`)
-              .appendField(new Blockly.FieldTextInput('') as Blockly.Field, `PARAM_DESC_${j}`)
-          }
-          if (this.hasReturn_) {
-            this.appendDummyInput('RETURN_ROW')
-              .appendField(Blockly.Msg['C_COMMENT_DOC_RETURN'] || '回傳')
-              .appendField(new Blockly.FieldTextInput('') as Blockly.Field, 'RETURN')
-          }
-        },
-        saveExtraState: function (this: any) {
-          if (this.paramCount_ === 0 && !this.hasReturn_) return null
-          return { paramCount: this.paramCount_, hasReturn: this.hasReturn_ }
-        },
-        loadExtraState: function (this: any, state: Record<string, unknown>) {
-          this.paramCount_ = (state?.paramCount as number) ?? 0
-          this.hasReturn_ = state?.hasReturn === true
-          this.updateShape_()
-        },
-        decompose: function (this: any, workspace: Blockly.WorkspaceSvg) {
-          const container = workspace.newBlock('c_doc_container')
-          container.initSvg()
-          let connection = container.getInput('STACK')!.connection!
-          for (let i = 0; i < this.paramCount_; i++) {
-            const paramBlock = workspace.newBlock('c_doc_param_input')
-            paramBlock.initSvg()
-            connection.connect(paramBlock.previousConnection!)
-            connection = paramBlock.nextConnection!
-          }
-          if (this.hasReturn_) {
-            const returnBlock = workspace.newBlock('c_doc_return_input')
-            returnBlock.initSvg()
-            connection.connect(returnBlock.previousConnection!)
-          }
-          return container
-        },
-        compose: function (this: any, containerBlock: Blockly.Block) {
-          let paramCount = 0
-          let hasReturn = false
-          let clauseBlock = containerBlock.getInputTargetBlock('STACK')
-          while (clauseBlock) {
-            if (clauseBlock.type === 'c_doc_param_input') paramCount++
-            else if (clauseBlock.type === 'c_doc_return_input') hasReturn = true
-            clauseBlock = clauseBlock.getNextBlock()
-          }
-          this.paramCount_ = paramCount
-          this.hasReturn_ = hasReturn
-          this.updateShape_()
-        },
-      }
-    }
+    // 🪦 **`cpp_doc_comment` 的命令式定義已於 2026-08-25 刪除**
+    //    （連同齒輪的三顆小積木 `c_doc_container`／`c_doc_param_input`／
+    //    `c_doc_return_input`）。
+    //
+    //    宣告在 `components/cpp/doc_comment/forms/blocks.json`，
+    //    而它需要的兩個機制是那一刀補的：
+    //
+    //    ```
+    //    plusMinus: false          只有齒輪、沒有 +／−  ——與命令式一字不差
+    //    blockOptions[].fields     回傳那一列【用完才建】，不是藏起來
+    //    ```
+    //
+    //    🔴 **「看不見」與「不存在」在使用者眼裡一樣，在比對器眼裡不一樣**
+    //    ——藏起來的那一格仍然在插槽清單裡，於是永遠到不了「一模一樣」。
+    //
+    //    ⚠️ 而 `retire-imperative-block` 明令**不要在退場那一刀順手改 UX**：
+    //    我一度判成「加 +／− 比較好」，那個問題另記，不夾帶。
 
     // ── Expression versions ──
 
@@ -2495,3 +2427,28 @@ export class BlockRegistrar {
     /* eslint-enable @typescript-eslint/no-explicit-any */
   }
 }
+
+/**
+ * **宣告裡用得到的欄位型別，一次登記完**。
+ *
+ * 🔴 在模組層級，不在建構子裡——`jsonInit` 查不到型別時是**安靜地丟掉那一格**，
+ * 而那個症狀（積木上少一個欄位、程式碼那側卻仍然對）比建不起來難發現得多。
+ *
+ * ⚠️ 兩者都不是「import 就好」：
+ *
+ * ```
+ * field_dynamic_dropdown   我們自己的類別，要呼叫 registerDynamicDropdownField()
+ * field_multilinetext      @blockly/field-multilineinput **不會自我註冊**（2026-08-25 實測）
+ * ```
+ *
+ * 🟢 由 `tests/unit/ui/declared-field-types.test.ts` 釘住（硬性零）。
+ */
+export function registerDeclaredFieldTypes(): void {
+  registerDynamicDropdownField()
+  if (!Blockly.registry.hasItem(Blockly.registry.Type.FIELD, 'field_multilinetext')) {
+    Blockly.fieldRegistry.register('field_multilinetext', FieldMultilineInput as never)
+  }
+}
+
+// 🔴 **模組被載入就登記**——理由見上面那一段。
+registerDeclaredFieldTypes()
