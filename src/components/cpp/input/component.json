@@ -25,12 +25,14 @@
   "traits": {
     "ioRole": "input",
     "ioStyle": "iostream",
-    "streamInput": true
+    "streamInput": true,
+    "writesTo": "name"
   },
   "_traits_why": "**I/O 角色與風格、我是不是 include 指示詞、我是不是串流輸入——都是我自己的宣告。**",
   "requires": [
     "<iostream>"
   ],
   "_requires_why": "⚠️ 原本是 `std/index.ts` 裡一句手寫的 `registerComponentMapping`——**一個例外**，因為這顆的宣告不在 iostream 模組裡。搬進膠囊之後它就是這顆元件自己的 `requires`。",
-  "_owner_why": "⚠️ **`owner` 是工具箱段落的鍵，不是「這顆屬於哪一層」。**\nio 分類的來源寫著 `{ from: '(universal)' }`——`cout`／`cin` 的積木列在那裡。\n而 `requires` 是**另一件事**（`#include` 解析），兩者剛好都在這個檔裡。\n蓋成 `<iostream>` 的話積木從工具箱消失，而 `#include` 仍然正確——\n**兩個問題各自答對一半，症狀只出現在使用者那一側。**"
+  "_owner_why": "⚠️ **`owner` 是工具箱段落的鍵，不是「這顆屬於哪一層」。**\nio 分類的來源寫著 `{ from: '(universal)' }`——`cout`／`cin` 的積木列在那裡。\n而 `requires` 是**另一件事**（`#include` 解析），兩者剛好都在這個檔裡。\n蓋成 `<iostream>` 的話積木從工具箱消失，而 `#include` 仍然正確——\n**兩個問題各自答對一半，症狀只出現在使用者那一側。**",
+  "_writesTo_why": "🔴 **這一格是【左值】**——賦值寫進去的那一格。文法允許它是任意運算式（`a[i]`／`o.x`／`p->x`／`*q`／`a.b.c`），所以它**必須是接點**；存成屬性就是把整個運算式文法壓進一個字串。見 `knowledge/concepts/左值.md` 與第七十三條護欄。\n⚠️ **綁定一個新名字不算**（`for (int x : v)` 的 x、函式參數名、宣告的名字）——那些的文法只允許識別字，字串是對的。"
 }

@@ -8,6 +8,9 @@
     "value": "expression"
   },
   "role": "statement",
+  "traits": {
+    "writesTo": "target"
+  },
   "owner": "(python)",
   "annotations": {
     "debug_step": true
@@ -20,5 +23,6 @@
     "extract": "./forms/blocks.json"
   },
   "_children_why": "🔴 **被指派的那一邊是一個【接點】不是一個字串**——`grid[1][1] = 9` 的左邊是一整個運算式，而壓成字串的話**每一種新的左邊都會變成一道新的解析題**（同族的一般指派用正規表示式拆，`grid[1][1]` 拆出來的名字是 `1][1`）。",
-  "_lift_why": "左邊是 `attribute`（`self.name`／`d.age`）——**整段用 `lift`**，於是接收者可以是任何運算式。"
+  "_lift_why": "左邊是 `attribute`（`self.name`／`d.age`）——**整段用 `lift`**，於是接收者可以是任何運算式。",
+  "_writesTo_why": "🔴 **這一格是【左值】**——賦值寫進去的那一格。文法允許它是任意運算式（`a[i]`／`o.x`／`p->x`／`*q`／`a.b.c`），所以它**必須是接點**；存成屬性就是把整個運算式文法壓進一個字串。見 `knowledge/concepts/左值.md` 與第七十三條護欄。\n⚠️ **綁定一個新名字不算**（`for (int x : v)` 的 x、函式參數名、宣告的名字）——那些的文法只允許識別字，字串是對的。"
 }

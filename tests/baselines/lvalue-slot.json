@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "note": "一顆會寫入的元件，它的左值必須是接點。\n🔴 走棘輪不走硬性零：每一筆跨 lift／generate／execute／render 四條路徑，\n   而且動的是語義詞彙本身（principles.md:158），MUST 附一次性轉換。\n⚠️ 「疑似漏宣告」只是名字網子，不是判定機制——它是要有人去看的。",
+    "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+  },
+  "註冊表顆數": 332,
+  "左值是字串": 12,
+  "左值懸空": 0,
+  "疑似漏宣告": 0,
+  "details": [
+    "cpp:array_2d_assign.obj",
+    "cpp:array_assign.obj",
+    "cpp:increment.name",
+    "cpp:input.name",
+    "cpp:input_line.name",
+    "cpp:map_assign.obj",
+    "cpp:pointer_assign.obj",
+    "cpp:var_assign.obj",
+    "cpp:var_assign_compound.name",
+    "python:var_assign.obj",
+    "python:var_assign_compound.name",
+    "python:var_assign_expr.obj"
+  ]
+}

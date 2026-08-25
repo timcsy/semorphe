@@ -3,13 +3,24 @@
   "abstractComponent": null,
   "_abstractComponent_why": "與 C++ 那顆同名的元件形狀一樣，而**運算的規則不同**（真除法、餘數跟著除數的正負號、多一個整除）——指同一個抽象父會讓「它們可以互換」這句話變成假的。",
   "properties": [
-    { "name": "name", "kind": "literal", "default": "x" },
-    { "name": "operator", "kind": "enum", "default": "+=" }
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "x"
+    },
+    {
+      "name": "operator",
+      "kind": "enum",
+      "default": "+="
+    }
   ],
   "children": {
     "value": "expression"
   },
   "role": "statement",
+  "traits": {
+    "writesTo": "name"
+  },
   "owner": "(python)",
   "paths": {
     "lift": "./lift-pattern.json",
@@ -18,5 +29,6 @@
     "render": "./forms/blocks.json",
     "extract": "./forms/blocks.json"
   },
-  "_children_why": "🔴 **左邊是一個字串，而它裝得下整個文法**——2026-08-25 實測：`a.b`、`a.b.c`、`self.n`、`nums[0]`、`d[\"k\"]` 全部被壓進 `name` 這個 `literal`。\n⚠️ 這裡原本寫著「沒有 `index` 接點，所以 `nums[0] += 1` 走**誠實降級**」——**它沒有降級**，它比對成功並把 `nums[0]` 當成變數名。那句話在 2026-08-21 拿掉 `constraints` 的那天就過期了。\n🟢 修法不是「補一個 `index` 接點」（那是把 lvalue 的形狀再列舉一次），是把 `name` 換成 `target: expression`——**普通指派的那一顆已經是那個形狀**，證明它走得通（刻意不寫它的身分，見就近性護欄）。見 `knowledge/draft/2026-08-25-lvalue的形狀被列舉了.md`。"
+  "_children_why": "🔴 **左邊是一個字串，而它裝得下整個文法**——2026-08-25 實測：`a.b`、`a.b.c`、`self.n`、`nums[0]`、`d[\"k\"]` 全部被壓進 `name` 這個 `literal`。\n⚠️ 這裡原本寫著「沒有 `index` 接點，所以 `nums[0] += 1` 走**誠實降級**」——**它沒有降級**，它比對成功並把 `nums[0]` 當成變數名。那句話在 2026-08-21 拿掉 `constraints` 的那天就過期了。\n🟢 修法不是「補一個 `index` 接點」（那是把 lvalue 的形狀再列舉一次），是把 `name` 換成 `target: expression`——**普通指派的那一顆已經是那個形狀**，證明它走得通（刻意不寫它的身分，見就近性護欄）。見 `knowledge/draft/2026-08-25-lvalue的形狀被列舉了.md`。",
+  "_writesTo_why": "🔴 **這一格是【左值】**——賦值寫進去的那一格。文法允許它是任意運算式（`a[i]`／`o.x`／`p->x`／`*q`／`a.b.c`），所以它**必須是接點**；存成屬性就是把整個運算式文法壓進一個字串。見 `knowledge/concepts/左值.md` 與第七十三條護欄。\n⚠️ **綁定一個新名字不算**（`for (int x : v)` 的 x、函式參數名、宣告的名字）——那些的文法只允許識別字，字串是對的。"
 }
