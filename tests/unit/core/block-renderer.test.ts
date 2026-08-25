@@ -40,13 +40,17 @@ describe('block-renderer', () => {
   })
 
   it('should render var_assign', () => {
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, {
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
       value: [createNode('cpp:var_ref', { name: 'y' })],
     })
     const state = renderToBlocklyState(makeProgram(assign))
     const block = state.blocks.blocks[0]
     expect(block.type).toBe('cpp_var_assign')
-    expect(block.fields.NAME).toBe('x')
+    // 🟢 `NAME` 那顆變數下拉換成 `TARGET` 接點（2026-08-25）
+    expect(block.fields.NAME, '🔴 欄位長回來了').toBeUndefined()
+    expect(block.inputs.TARGET.block.fields.NAME).toBe('x')
     expect(block.inputs.VALUE.block.type).toBe('cpp_var_ref')
   })
 
@@ -55,7 +59,9 @@ describe('block-renderer', () => {
       left: [createNode('cpp:var_ref', { name: 'a' })],
       right: [createNode('cpp:literal_number', { value: '1' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [expr] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [expr] })
     const state = renderToBlocklyState(makeProgram(assign))
     const block = state.blocks.blocks[0]
     expect(block.inputs.VALUE.block.type).toBe('cpp_arithmetic')

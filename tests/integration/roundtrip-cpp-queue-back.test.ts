@@ -55,7 +55,9 @@ describe('cpp_queue_back — generate (block→code)', () => {
     const node = createNode('cpp:queue_back', { obj: 'q' }, {})
     const program = makeProgram([
       createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      createNode('cpp:var_assign', { obj: 'x' }, { value: [node] }),
+      createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [node] }),
     ])
     const code = generateCode(program, 'cpp', style)
     expect(code).toContain('.back()')

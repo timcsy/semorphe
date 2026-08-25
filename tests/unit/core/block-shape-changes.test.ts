@@ -9,7 +9,7 @@
  * 判準（`migrate-storage` 第 3／4／5 步）：冪等 · 只改確定的位置 · 表空時不亂丟。
  */
 import { describe, it, expect } from 'vitest'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13 } from '../../../src/migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14 } from '../../../src/migrations/block-shape-changes'
 import { UPGRADES, CURRENT_VERSION } from '../../../src/core/storage-version'
 
 const oldState = {
@@ -113,6 +113,14 @@ describe('v11 → v12：形狀變了的快取', () => {
     const raw = { version: 12, code: 'a[i] += 2;\n', blocklyState: { blocks: { blocks: twoLayouts } } }
     const up = UPGRADES[12](raw)
     expect(up.version).toBe(13)
+    expect(Object.keys(up.blocklyState as object)).toEqual([])
+  })
+
+  it('★ v14：普通指派的舊形狀也認得出來', () => {
+    const st = { blocks: { blocks: [{ type: 'cpp_var_assign', fields: { NAME: 'x' } }] } }
+    expect(staleShapeIn(st, SHAPE_CHANGES_V14)).not.toBeNull()
+    const up = UPGRADES[13]({ version: 13, code: 'o.x = 1;\n', blocklyState: st })
+    expect(up.version).toBe(14)
     expect(Object.keys(up.blocklyState as object)).toEqual([])
   })
 

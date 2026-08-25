@@ -66,7 +66,9 @@ describe('Interpreter - basics', () => {
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
         initializer: [createNode('cpp:literal_number', { value: '1' }, {})]
       }),
-      createNode('cpp:var_assign', { obj: 'x' }, {
+      createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
         value: [createNode('cpp:literal_number', { value: '10' }, {})]
       }),
       createNode('cpp:print', {}, {
@@ -259,7 +261,9 @@ describe('Interpreter - control flow', () => {
           createNode('cpp:print', {}, {
             values: [createNode('cpp:var_ref', { name: 'n' }, {})]
           }),
-          createNode('cpp:var_assign', { obj: 'n' }, {
+          createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'n'`
+        target: [createNode('cpp:var_ref', { name: 'n' })],
             value: [createNode('cpp:arithmetic', { operator: '-' }, {
               left: [createNode('cpp:var_ref', { name: 'n' }, {})],
               right: [createNode('cpp:literal_number', { value: '1' }, {})],
@@ -564,7 +568,9 @@ describe('Interpreter - cpp_for_loop', () => {
         initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
       }),
       createNode('cpp:loop_for', {}, {
-        init: [createNode('cpp:var_assign', { obj: 'i' }, {
+        init: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'i'`
+        target: [createNode('cpp:var_ref', { name: 'i' })],
           value: [createNode('cpp:literal_number', { value: '0' }, {})]
         })],
         cond: [createNode('cpp:compare', { operator: '<' }, {
@@ -588,7 +594,9 @@ describe('Interpreter - cpp_for_loop', () => {
         initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
       }),
       createNode('cpp:loop_for', {}, {
-        init: [createNode('cpp:var_assign', { obj: 'i' }, {
+        init: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'i'`
+        target: [createNode('cpp:var_ref', { name: 'i' })],
           value: [createNode('cpp:literal_number', { value: '0' }, {})]
         })],
         cond: [createNode('cpp:compare', { operator: '<' }, {
@@ -619,7 +627,9 @@ describe('Interpreter - cpp_for_loop', () => {
         initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
       }),
       createNode('cpp:loop_for', {}, {
-        init: [createNode('cpp:var_assign', { obj: 'i' }, {
+        init: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'i'`
+        target: [createNode('cpp:var_ref', { name: 'i' })],
           value: [createNode('cpp:literal_number', { value: '0' }, {})]
         })],
         cond: [createNode('cpp:compare', { operator: '<' }, {
@@ -650,7 +660,9 @@ describe('Interpreter - cpp_for_loop', () => {
         initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
       }),
       createNode('cpp:loop_for', {}, {
-        init: [createNode('cpp:var_assign', { obj: 'i' }, {
+        init: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'i'`
+        target: [createNode('cpp:var_ref', { name: 'i' })],
           value: [createNode('cpp:literal_number', { value: '0' }, {})]
         })],
         cond: [createNode('cpp:compare', { operator: '<' }, {
@@ -1254,7 +1266,9 @@ describe('Interpreter - abort', () => {
         condition: [createNode('cpp:input', {}, {
           values: [createNode('cpp:var_ref', { name: 'x' })],
         })],
-        body: [createNode('cpp:var_assign', { obj: 'sum' }, {
+        body: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'sum'`
+        target: [createNode('cpp:var_ref', { name: 'sum' })],
           value: [createNode('cpp:arithmetic', { operator: '+' }, {
             left: [createNode('cpp:var_ref', { name: 'sum' })],
             right: [createNode('cpp:var_ref', { name: 'x' })],

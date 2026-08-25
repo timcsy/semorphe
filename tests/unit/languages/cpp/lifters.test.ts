@@ -147,7 +147,9 @@ describe('C++ Declaration Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:var_assign')
-    expect(result!.properties.obj).toBe('x')
+    // 🟢 **左值是接點**（2026-08-25）——釘接點比釘字串強：它同時證明左邊被 lift 過。
+    expect(result!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
+    expect(result!.children.target[0].componentId).toBe('cpp:var_ref')
     expect(result!.children.value).toHaveLength(1)
   })
 })

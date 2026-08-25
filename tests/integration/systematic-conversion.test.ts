@@ -229,7 +229,9 @@ describe('Declarations', () => {
       const node = liftFirst('x = 10;')
       expect(node).not.toBeNull()
       expect(node!.componentId).toBe('cpp:var_assign')
-      expect(node!.properties.obj).toBe('x')
+      // 🟢 **左值是接點**（2026-08-25）——釘接點比釘字串強。
+      expect(node!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(node!.children.target[0].properties.name).toBe('x')
     })
 
     it('roundtrips x = 10;', () => {

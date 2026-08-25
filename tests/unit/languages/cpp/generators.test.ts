@@ -40,7 +40,9 @@ describe('C++ declarations generator', () => {
     const access = createNode('cpp:array_at', { obj: 'arr' }, {
       index: [createNode('cpp:var_ref', { name: 'i' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [access] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [access] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = arr[i];')
   })
@@ -52,7 +54,9 @@ describe('C++ expressions generator', () => {
       left: [createNode('cpp:var_ref', { name: 'a' })],
       right: [createNode('cpp:literal_number', { value: '0' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'result' }, { value: [cmp] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'result'`
+        target: [createNode('cpp:var_ref', { name: 'result' })], value: [cmp] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('result = a >= 0;')
   })
@@ -62,7 +66,9 @@ describe('C++ expressions generator', () => {
       left: [createNode('cpp:var_ref', { name: 'a' })],
       right: [createNode('cpp:var_ref', { name: 'b' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [logic] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [logic] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = a || b;')
   })
@@ -71,7 +77,9 @@ describe('C++ expressions generator', () => {
     const notExpr = createNode('cpp:logic_not', {}, {
       operand: [createNode('cpp:var_ref', { name: 'done' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [notExpr] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [notExpr] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = !done;')
   })
@@ -80,7 +88,9 @@ describe('C++ expressions generator', () => {
     const neg = createNode('cpp:negate', {}, {
       value: [createNode('cpp:var_ref', { name: 'x' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'y' }, { value: [neg] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'y'`
+        target: [createNode('cpp:var_ref', { name: 'y' })], value: [neg] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('y = -x;')
   })
@@ -97,8 +107,12 @@ describe('C++ statements generator', () => {
   it('should generate if-else', () => {
     const ifStmt = createNode('cpp:if', {}, {
       condition: [createNode('cpp:var_ref', { name: 'x' })],
-      then_body: [createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:literal_number', { value: '1' })] })],
-      else_body: [createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:literal_number', { value: '2' })] })],
+      then_body: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'y'`
+        target: [createNode('cpp:var_ref', { name: 'y' })], value: [createNode('cpp:literal_number', { value: '1' })] })],
+      else_body: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'y'`
+        target: [createNode('cpp:var_ref', { name: 'y' })], value: [createNode('cpp:literal_number', { value: '2' })] })],
     })
     const code = generateCode(makeProgram(ifStmt), 'cpp', apcsStyle)
     expect(code).toContain('if (x) {')
@@ -130,7 +144,9 @@ describe('C++ statements generator', () => {
 
   it('should generate cpp_for_loop (three-part)', () => {
     const loop = createNode('cpp:loop_for', {}, {
-      init: [createNode('cpp:var_assign', { obj: 'i' }, {
+      init: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'i'`
+        target: [createNode('cpp:var_ref', { name: 'i' })],
         value: [createNode('cpp:literal_number', { value: '0' })],
       })],
       cond: [createNode('cpp:compare', { operator: '<' }, {
@@ -316,14 +332,18 @@ describe('C++ expression generators (for expression blocks)', () => {
   it('should generate cpp_increment_expr postfix', () => {
     // Expression context: no indent, no semicolons
     const node = createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = i++;')
   })
 
   it('should generate cpp_increment_expr prefix', () => {
     const node = createNode('cpp:increment', { operator: '--', position: 'prefix' }, { target: [createNode('cpp:var_ref', { name: 'j' })] })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = --j;')
   })
@@ -334,7 +354,9 @@ describe('C++ expression generators (for expression blocks)', () => {
         target: [createNode('cpp:var_ref', { name: 'j' })],
       value: [createNode('cpp:var_ref', { name: 'i' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = j += i;')
   })
@@ -343,7 +365,9 @@ describe('C++ expression generators (for expression blocks)', () => {
     const node = createNode('cpp:input_formatted', { format: '%d' }, {
       args: [createNode('cpp:var_ref', { name: 'n' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = scanf("%d", &n);')
   })
@@ -352,7 +376,9 @@ describe('C++ expression generators (for expression blocks)', () => {
     const node = createNode('cpp:var_declare', { name: 'i', type: 'int' }, {
       initializer: [createNode('cpp:literal_number', { value: '2' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = int i = 2;')
   })

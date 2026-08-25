@@ -140,3 +140,15 @@ export const SHAPE_CHANGES_V13: ShapeChange[] = [
     why: '同上——運算式形態。',
   },
 ]
+
+/**
+ * `v13 → v14`：**普通指派**的左值（同一個路線圖項目的第四筆）。
+ */
+export const SHAPE_CHANGES_V14: ShapeChange[] = [
+  {
+    blockType: 'cpp_var_assign',
+    retiredFields: ['NAME'],
+    why: '左值 `NAME`（變數下拉）換成 `TARGET` 接點——語料上那個字串裝著 12 種'
+      + '非原子的值（`r.x`／`p.x`…），而執行器只認得一個點號。',
+  },
+]

@@ -43,9 +43,12 @@ export function registerDeclarationLifters(lifter: Lifter): void {
       })
     }
 
-    // Simple variable assignment: x = value
-    const name = left?.text ?? 'x'
-    return buildVarAssign(name, {
+    // 🟢 **左邊就 lift**（2026-08-25）——不再把它抄成一個字串。
+    // 🪦 在此之前這裡是 `left?.text ?? 'x'`，而語料上那個字串裝著
+    //    12 種非原子的值（`r.x`／`p.x`…）——執行器只認得**一個**點號。
+    const target = left ? ctx.lift(left) : null
+    return buildVarAssign({
+      target: target ? [target] : [],
       value: value ? [value] : [],
     })
   })

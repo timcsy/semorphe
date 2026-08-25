@@ -52,6 +52,18 @@ async function run(src: string): Promise<string> {
   return i.getOutput().join('')
 }
 
+/** 找出那顆普通指派節點——找不到回 null，讓斷言指名。 */
+function findAssign(n: SemanticNode): SemanticNode | null {
+  if (n.componentId === 'cpp:var_assign') return n
+  for (const kids of Object.values(n.children ?? {})) {
+    for (const k of kids as SemanticNode[]) {
+      const hit = findAssign(k)
+      if (hit) return hit
+    }
+  }
+  return null
+}
+
 /** 找出那顆遞增節點——找不到回 null，讓斷言指名。 */
 function findIncrement(n: SemanticNode): SemanticNode | null {
   if (n.componentId === 'cpp:increment') return n
@@ -174,5 +186,35 @@ describe('C++ 的左值是接點', () => {
     for (const line of ['a[i]++;', 'o.x++;', 'p->x++;', '(*q)++;', '--i;']) {
       expect(out, `🔴 產不回 ${line}`).toContain(line)
     }
+  })
+
+  /**
+   * 🎯 **普通指派的左邊也是左值**（2026-08-25，同一刀的第四顆）。
+   *
+   * 🪦 `cpp:var_assign` 的執行器本來這樣拆它的字串左值：
+   *
+   * ```
+   * const dot = name.indexOf('.')   // ← 只認【一個】點
+   * ```
+   *
+   * 🔴 而第七十二條護欄量到那個字串**在語料上裝著 12 種非原子的值**
+   * （`r.x`／`p.x`…）。下面的 `a.b.c = 1`／`p->x = 1`／`*q = 1`
+   * 在那一版全部走不通，**而 `ctx.scope.set("p->x", val)` 會安靜地
+   * 在作用域裡長出一個叫 `p->x` 的變數**。
+   */
+  it.each([
+    ['o.x', `${IO}${P}int main(){ P o; o.x = 7; cout << o.x; }`, '7'],
+    ['p->x', `${IO}${P}int main(){ P o; P* p = &o; p->x = 7; cout << o.x; }`, '7'],
+    ['*q', `${IO}int main(){ int i = 1; int* q = &i; *q = 7; cout << i; }`, '7'],
+    ['a[i][j]', `${IO}int main(){ int a[2][2]; a[1][0] = 7; cout << a[1][0]; }`, '7'],
+  ])('🎯 普通指派的左值是 %s——舊版會安靜地長出一個叫它的變數', async (_s, src, want) => {
+    expect(await run(src)).toBe(want)
+  })
+
+  it('🔴 左值不再是字串屬性——那一格已經沒有了', () => {
+    const node = findAssign(lift(`${IO}${P}int main(){ P o; o.x = 7; }`))
+    expect(node, '正向錨點——沒有它，下面的負向會空過').toBeTruthy()
+    expect(node!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
+    expect(node!.children.target[0].componentId).toBe('cpp:struct_at_member')
   })
 })

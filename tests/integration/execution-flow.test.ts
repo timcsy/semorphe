@@ -41,7 +41,9 @@ describe('Execution flow integration', () => {
       createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
         initializer: [createNode('cpp:literal_number', { value: '10' }, {})]
       }),
-      createNode('cpp:var_assign', { obj: 'x' }, {
+      createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
         value: [createNode('cpp:literal_number', { value: '20' }, {})]
       }),
     ]))

@@ -1,14 +1,9 @@
 {
   "componentId": "cpp:var_assign",
   "abstractComponent": null,
-  "properties": [
-    {
-      "name": "obj",
-      "kind": "identifier",
-      "default": "x"
-    }
-  ],
+  "properties": [],
   "children": {
+    "target": "expression",
     "value": "expression"
   },
   "role": "statement",
@@ -26,8 +21,9 @@
   "traits": {
     "precedence": 2,
     "forLoopPart": true,
-    "writesTo": "obj"
+    "writesTo": "target"
   },
   "_traits_why": "**「我是換行標記」「我放得進 for 的三格」——都是我自己的性質**，不是消費者該寫死的身分。",
-  "_writesTo_why": "🔴 **這一格是【左值】**——賦值寫進去的那一格。文法允許它是任意運算式（`a[i]`／`o.x`／`p->x`／`*q`／`a.b.c`），所以它**必須是接點**；存成屬性就是把整個運算式文法壓進一個字串。見 `knowledge/concepts/左值.md` 與第七十三條護欄。\n⚠️ **綁定一個新名字不算**（`for (int x : v)` 的 x、函式參數名、宣告的名字）——那些的文法只允許識別字，字串是對的。"
+  "_writesTo_why": "🟢 **已還**——左值是 `target` 接點。判準見 `knowledge/concepts/左值.md`。",
+  "_children_why": "🟢 **左邊是一個接點**（2026-08-25，路線圖「左值是接點，不是字串」）。\n🪦 在此之前是 `obj: identifier`，而**語料上它裝著 12 種非原子的值**（`r.x`／`p.x`…，第七十二條護欄量到的）。執行器因此長出一段手拆：\n```\nconst dot = name.indexOf('.')   // ← 只認一個點\n```\n——`a.b.c = 1`／`p->x = 1`／`*q = 1` 全部走不通，而**沒有任何東西會出聲**。\n⚠️ 而它的註解自己寫著「字串編碼結構是既有的技術債……**不在這一刀的範圍**」\n> **一句「不在這一刀的範圍」，如果沒有一條護欄記著它，就是永遠。**"
 }

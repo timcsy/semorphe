@@ -1,4 +1,4 @@
 {
-  "U_VAR_ASSIGN_MSG0": "把變數 %1 設成 %2",
+  "U_VAR_ASSIGN_MSG0": "把 %1 設成 %2",
   "U_VAR_ASSIGN_TOOLTIP": "把已經建立的變數改成新的值"
 }

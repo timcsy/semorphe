@@ -60,6 +60,17 @@ async function run(tree: SemanticNode): Promise<string> {
   return interp.getOutput().join('')
 }
 
+// 🟢 **左值是接點**（2026-08-25）——在此之前是 `{ obj: name }`。
+//    ⚠️ `name` 可能是 `p.x` 這種**帶點號的**字串（也可能是 `p->x`），
+//    而那正是這一刀在解的：舊版執行器用 `indexOf('.')` 手拆它。
+const lvalue = (name: string): SemanticNode => {
+  const arrow = name.indexOf('->')
+  if (arrow > 0) return n('cpp:struct_at_ptr', { obj: name.slice(0, arrow), member: name.slice(arrow + 2) }, {})
+  const dot = name.indexOf('.')
+  if (dot > 0) return n('cpp:struct_at_member', { obj: name.slice(0, dot), member: name.slice(dot + 1) }, {})
+  return n('cpp:var_ref', { name }, {})
+}
+
 describe('結構：宣告型別、實例化、讀寫欄位', () => {
   it('★ 宣告一個結構型別本身不得出錯', async () => {
     await expect(run(prog(point()))).resolves.toBeDefined()
@@ -81,7 +92,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
       prog(
         point(),
         n('cpp:var_declare', { name: 'p', type: 'Point' }),
-        n('cpp:var_assign', { obj: 'p.x' }, { value: [num(7)] }),
+        n('cpp:var_assign', {}, { target: [lvalue('p.x')], value: [num(7)] }),
         show(n('cpp:struct_at_member', { obj: 'p', member: 'x' })),
       ),
     )
@@ -93,7 +104,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
       prog(
         point(),
         n('cpp:var_declare', { name: 'p', type: 'Point' }),
-        n('cpp:var_assign', { obj: 'p.x' }, { value: [num(7)] }),
+        n('cpp:var_assign', {}, { target: [lvalue('p.x')], value: [num(7)] }),
         show(n('cpp:struct_at_member', { obj: 'p', member: 'y' })),
       ),
     )
@@ -106,7 +117,7 @@ describe('結構：宣告型別、實例化、讀寫欄位', () => {
         point(),
         n('cpp:var_declare', { name: 'a', type: 'Point' }),
         n('cpp:var_declare', { name: 'b', type: 'Point' }),
-        n('cpp:var_assign', { obj: 'a.x' }, { value: [num(3)] }),
+        n('cpp:var_assign', {}, { target: [lvalue('a.x')], value: [num(3)] }),
         show(n('cpp:struct_at_member', { obj: 'b', member: 'x' })),
       ),
     )

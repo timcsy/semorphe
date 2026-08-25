@@ -13,11 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../migrations/block-type-migrations'
 import { mergedIdentities } from '../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13 } from '../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14 } from '../migrations/block-shape-changes'
 import type { ShapeChange } from '../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 13
+export const CURRENT_VERSION = 14
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -356,6 +356,8 @@ export const UPGRADES: Record<number, Upgrade> = {
   // 12 → 13：**C++ 的複合指定**——同一個路線圖項目的第二筆。
   // ⚠️ 不能加進 v12：**已經升到 v12 的存檔不會再跑一次 v12**。
   12: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V13, 13),
+  // 13 → 14：**普通指派**的左值。⚠️ 一樣要開新版號，不能塞進 v13。
+  13: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V14, 14),
 }
 
 /**

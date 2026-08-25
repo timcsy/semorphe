@@ -80,8 +80,10 @@ describe('TemplateGenerator', () => {
         imports: [],
         order: 0,
       })
+      // ⚠️ **合成的樣板**：這一支測的是 `${BODY}` 的縮排，而它借用了一顆
+      //    真的元件身分。左值接點化之後 `${obj}` 沒有對應的屬性了。
       gen.registerTemplate('cpp:var_assign', {
-        pattern: '${obj} = ${VALUE};',
+        pattern: '${TARGET} = ${VALUE};',
         imports: [],
         order: 0,
       })
@@ -92,7 +94,9 @@ describe('TemplateGenerator', () => {
       })
 
       const assignVal = createNode('cpp:literal_number', { value: '1' })
-      const assignNode = createNode('cpp:var_assign', { obj: 'x' }, { VALUE: [assignVal] })
+      const assignNode = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], VALUE: [assignVal] })
       const condNode = createNode('cpp:var_ref', { name: 'running' })
       gen.registerTemplate('cpp:var_ref', { pattern: '${name}', imports: [], order: 20 })
 

@@ -52,7 +52,9 @@ describe('generateCode', () => {
 
   it('should generate var assignment', () => {
     const value = createNode('cpp:literal_number', { value: '10' })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [value] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [value] })
     const tree = makeProgram(assign)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('x = 10;')
@@ -62,7 +64,9 @@ describe('generateCode', () => {
     const left = createNode('cpp:var_ref', { name: 'a' })
     const right = createNode('cpp:var_ref', { name: 'b' })
     const expr = createNode('cpp:arithmetic', { operator: '+' }, { left: [left], right: [right] })
-    const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [expr] })
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })], value: [expr] })
     const tree = makeProgram(assign)
     const code = generateCode(tree, 'cpp', defaultStyle)
     expect(code).toContain('x = a + b;')
@@ -70,7 +74,9 @@ describe('generateCode', () => {
 
   it('should generate if statement', () => {
     const cond = createNode('cpp:var_ref', { name: 'x' })
-    const body = createNode('cpp:var_assign', { obj: 'y' }, { value: [createNode('cpp:literal_number', { value: '1' })] })
+    const body = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'y'`
+        target: [createNode('cpp:var_ref', { name: 'y' })], value: [createNode('cpp:literal_number', { value: '1' })] })
     const ifStmt = createNode('cpp:if', {}, {
       condition: [cond],
       then_body: [body],
@@ -87,7 +93,9 @@ describe('generateCode', () => {
       left: [createNode('cpp:var_ref', { name: 'i' })],
       right: [createNode('cpp:literal_number', { value: '10' })],
     })
-    const body = createNode('cpp:var_assign', { obj: 'i' }, {
+    const body = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'i'`
+        target: [createNode('cpp:var_ref', { name: 'i' })],
       value: [createNode('cpp:arithmetic', { operator: '+' }, {
         left: [createNode('cpp:var_ref', { name: 'i' })],
         right: [createNode('cpp:literal_number', { value: '1' })],

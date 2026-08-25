@@ -10,9 +10,9 @@
       "message0": "%{BKY_U_VAR_ASSIGN_MSG0}",
       "args0": [
         {
-          "type": "field_dynamic_dropdown",
-          "name": "NAME",
-          "source": "vars"
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
         },
         {
           "type": "input_value",
@@ -27,13 +27,12 @@
       "tooltip": "%{BKY_U_VAR_ASSIGN_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": {
-        "NAME": "obj"
-      },
+      "fields": {},
       "inputs": {
+        "TARGET": "target",
         "VALUE": "value"
       }
     },
-    "_why": "🔴 **spec 165：靜態 `field_input` → 動態下拉**（與 `cpp_var_ref` 同一條，spec 164）。\n命令式那份是 `createOpenDropdown(() => getWorkspaceVarOptions())`——**列出工作區裡真的變數**。"
+    "_why": "🔴 **spec 165：靜態 `field_input` → 動態下拉**（與 `cpp_var_ref` 同一條，spec 164）。\n命令式那份是 `createOpenDropdown(() => getWorkspaceVarOptions())`——**列出工作區裡真的變數**。\n🟢 **2026-08-25：`NAME` 那顆變數下拉換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。🔴 下拉列的是變數清單，而它裝的是 `p.x` 這種東西——點一下就毀掉。"
   }
 ]

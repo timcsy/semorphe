@@ -29,7 +29,18 @@ const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { b
 const num = (v: number): SemanticNode => n('cpp:literal_number', { value: v })
 const ref = (name: string): SemanticNode => n('cpp:var_ref', { name })
 const show = (x: SemanticNode): SemanticNode => n('cpp:print', {}, { values: [x] })
-const assign = (name: string, v: SemanticNode): SemanticNode => n('cpp:var_assign', { obj: name }, { value: [v] })
+// 🟢 **左值是接點**（2026-08-25）——在此之前是 `{ obj: name }`。
+//    ⚠️ `name` 可能是 `p.x` 這種**帶點號的**字串（也可能是 `p->x`），
+//    而那正是這一刀在解的：舊版執行器用 `indexOf('.')` 手拆它。
+const lvalue = (name: string): SemanticNode => {
+  const arrow = name.indexOf('->')
+  if (arrow > 0) return n('cpp:struct_at_ptr', { obj: name.slice(0, arrow), member: name.slice(arrow + 2) }, {})
+  const dot = name.indexOf('.')
+  if (dot > 0) return n('cpp:struct_at_member', { obj: name.slice(0, dot), member: name.slice(dot + 1) }, {})
+  return n('cpp:var_ref', { name }, {})
+}
+const assign = (name: string, v: SemanticNode): SemanticNode =>
+  n('cpp:var_assign', {}, { target: [lvalue(name)], value: [v] })
 const ret = (v: SemanticNode): SemanticNode => n('cpp:return', {}, { value: [v] })
 
 beforeAll(() => {
@@ -84,7 +95,7 @@ describe('指標取成員 `p->x`', () => {
       prog(
         point(),
         n('cpp:var_declare', { name: 'p', type: 'Point' }),
-        n('cpp:var_assign', { obj: 'p.x' }, { value: [num(9)] }),
+        n('cpp:var_assign', {}, { target: [lvalue('p.x')], value: [num(9)] }),
         n('cpp:pointer_declare', { name: 'ptr', type: 'Point' }, {
           initializer: [n('cpp:address_of', {}, { var: [ref('p')] })],
         }),
@@ -194,8 +205,8 @@ describe('運算子多載', () => {
       prog(vec,
         n('cpp:var_declare', { name: 'a', type: 'V' }),
         n('cpp:var_declare', { name: 'b', type: 'V' }),
-        n('cpp:var_assign', { obj: 'a.x' }, { value: [num(3)] }),
-        n('cpp:var_assign', { obj: 'b.x' }, { value: [num(4)] }),
+        n('cpp:var_assign', {}, { target: [lvalue('a.x')], value: [num(3)] }),
+        n('cpp:var_assign', {}, { target: [lvalue('b.x')], value: [num(4)] }),
         show(n('cpp:arithmetic', { operator: '+' }, { left: [ref('a')], right: [ref('b')] }))),
     )
     expect(out.trim(), '兩個物件相加沒有走多載的運算子').toBe('7')

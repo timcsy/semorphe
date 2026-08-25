@@ -36,12 +36,6 @@
       "param": "operator",
       "direction": "讀了沒宣告",
       "where": "src/languages/cpp/core/generators/expressions.ts:100"
-    },
-    {
-      "componentId": "cpp:var_assign",
-      "param": "member",
-      "direction": "讀了沒宣告",
-      "where": "src/interpreter/executors/variables.ts:129"
     }
   ],
   "fallbackContradicts": [
@@ -65,6 +59,6 @@
     }
   ],
   "_meta": {
-    "note": "\n\n【2026-08-10 / specs/112】讀了沒宣告下降一筆，**因為宣告了**（不是因為實作了）：第三十四條護欄逼出 cpp:include.local 的漏宣告，補在 components.json 的 properties。系統一行行為都沒變。\n🎯 2026-08-25：讀了沒宣告 10 → 7，三筆都是 `cpp:increment`。\n   · `NAME` —— 左值換成 `target` 接點，那個屬性不存在了。\n   · `OP`／`POSITION` —— **大寫的回退是遺留**：抽取器的 `renderMapping`\n     早就把欄位映成小寫的屬性名，那兩個回退**永遠不會命中**。\n   > 一個永遠不會命中的回退，是一份沒有人會發現已經過期的宣告。"
+    "note": "\n\n【2026-08-10 / specs/112】讀了沒宣告下降一筆，**因為宣告了**（不是因為實作了）：第三十四條護欄逼出 cpp:include.local 的漏宣告，補在 components.json 的 properties。系統一行行為都沒變。\n🎯 2026-08-25：讀了沒宣告 10 → 7，三筆都是 `cpp:increment`。\n   · `NAME` —— 左值換成 `target` 接點，那個屬性不存在了。\n   · `OP`／`POSITION` —— **大寫的回退是遺留**：抽取器的 `renderMapping`\n     早就把欄位映成小寫的屬性名，那兩個回退**永遠不會命中**。\n   > 一個永遠不會命中的回退，是一份沒有人會發現已經過期的宣告。\n🎯 2026-08-25：7 → 6。`cpp:var_assign` 的 `member` 不再被讀——\n   那是舊執行器手拆帶點號字串時留下的第二條路（「兩種都認」），\n   而**沒有任何生產者會產出那個形狀**（它自己的註解就寫著）。左值接點化之後整段消失。"
   }
 }

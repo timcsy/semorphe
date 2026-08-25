@@ -48,10 +48,14 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
         left: [createNode('cpp:var_ref', { name: 'a' })],
         right: [createNode('cpp:literal_number', { value: '0' })],
       })],
-      then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+      then_body: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
         value: [createNode('cpp:literal_number', { value: '1' })],
       })],
-      else_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+      else_body: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
         value: [createNode('cpp:literal_number', { value: '2' })],
       })],
     })
@@ -125,7 +129,9 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
         left: [createNode('cpp:var_ref', { name: 'a' })],
         right: [createNode('cpp:literal_number', { value: '0' })],
       })],
-      then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+      then_body: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
         value: [createNode('cpp:literal_number', { value: '1' })],
       })],
       else_body: [createNode('cpp:if', { isElseIf: 'true' }, {
@@ -133,7 +139,9 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
           left: [createNode('cpp:var_ref', { name: 'b' })],
           right: [createNode('cpp:literal_number', { value: '0' })],
         })],
-        then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+        then_body: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
           value: [createNode('cpp:literal_number', { value: '2' })],
         })],
         else_body: [createNode('cpp:if', { isElseIf: 'true' }, {
@@ -141,10 +149,14 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
             left: [createNode('cpp:var_ref', { name: 'c' })],
             right: [createNode('cpp:literal_number', { value: '0' })],
           })],
-          then_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+          then_body: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
             value: [createNode('cpp:literal_number', { value: '3' })],
           })],
-          else_body: [createNode('cpp:var_assign', { obj: 'x' }, {
+          else_body: [createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
+        target: [createNode('cpp:var_ref', { name: 'x' })],
             value: [createNode('cpp:literal_number', { value: '4' })],
           })],
         })],
@@ -195,7 +207,9 @@ describe('serialize roundtrip: rendered block state matches runtime input names'
     const negateExpr = createNode('cpp:negate', {}, {
       value: [createNode('cpp:var_ref', { name: 'b' })],
     })
-    const assign = createNode('cpp:var_assign', { obj: 'result' }, {
+    const assign = createNode('cpp:var_assign', {}, {
+        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'result'`
+        target: [createNode('cpp:var_ref', { name: 'result' })],
       value: [negateExpr],
     })
     const state = renderToBlocklyState(makeProgram(assign))

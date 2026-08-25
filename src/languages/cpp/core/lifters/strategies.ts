@@ -318,7 +318,9 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
         const valueNode = valueHolder?.namedChildren[0] ?? valueHolder
         const value = valueNode ? ctx.lift(valueNode) : null
         if (!field || !value) continue
-        inits.push(buildVarAssign(field, { value: [value] }))
+        // 🟢 建構式的初始化列（`: x(1)`）——左值是那個欄位的名字，
+        //    而它現在也是一顆節點（2026-08-25，左值接點化）。
+        inits.push(buildVarAssign({ target: [buildVarRef(field)], value: [value] }))
       }
       const body = extractBody(bodyNode, ctx)
       return buildConstructor({ class_name: className }, { params, inits, body })

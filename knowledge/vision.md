@@ -511,17 +511,42 @@ target 節點的形狀。每多一種左值形狀就要多一個執行器分支�
 
 - [x] 🟢 **第七十三條護欄已蓋**（`audit-lvalue-slot`，2026-08-25）——棘輪 **12 → 0**
       機制是 `traits.writesTo`（宣告驅動，不是用名字認）；第一次跑**紅的**，逐項指名 12 顆。
-- [ ] 🔴 **驗收①：那 12 筆還到 0**——🎯 **今天 12 → 9**
+- [ ] 🔴 **驗收①：那 12 筆還到 0**——🎯 **今天 12 → 8**
       🟢 `python:var_assign_compound`（`a.b += 1`／`nums[i+1] += 1`／`grid[1][2] += 1`）
       🟢 `cpp:var_assign_compound`（`a[i]`／`o.x`／`p->x`／`*q`／`a[i][j]`／`s[i]` 六種形狀）
       🟢 `cpp:increment`（`a[i]++`／`o.x++`／`p->x++`／`(*q)++`／`s[i]++`）
+      🟢 `cpp:var_assign`（`o.x = 7`／`p->x = 8`／`*q = 9`／`a[i][j] = 1`）
+      ——**它是語料上真的在掉東西的那一顆**（第七十二條量到非原子 12 種），
+      而它的執行器用 `indexOf('.')` 只認得**一個**點號。第七十二條因此 35 → 34
+      （那 35 筆裡**第一個被真的解掉**的，其餘目前只是被判定過）。
       🪦 而 `altLayout` **兩顆都退場了**——它是這個病的症狀（驗收④先到了）
       🪦 順帶：`cpp_increment_expression` 與 `cpp_var_assign_compound_expression` 的
       **命令式定義刪除**（`dual-truth` 13 → 11）——它們的存在理由就是那個 `hasIndex_` mutator
-      ⚠️ 剩下 10 筆裡，`python:var_assign`／`var_assign_expr` 的左邊被 `constraints`
-      限成 `identifier`，**依建構就是原子**——換它們是齊一性不是修缺陷，
-      而真正的解是**把三顆合併成一顆**（`member_assign`／`container_assign` 的
-      存在理由就是左值的形狀）。🔴 **那是元件身分的決定，要人拍板。**
+      🔴 **而剩下的 8 筆，每一筆都卡在同一個【要人拍板】的問題上**：
+
+      ```
+      cpp: array_assign · array_2d_assign · map_assign · pointer_assign   4 筆
+        它們的 `writesTo` 指著 `obj`，而**被寫的其實是 `a[i]`／`m[k]`／`*p`**
+        ——`obj` 只是那個左值的一部分。換句話說：**這四顆就是左值形狀的列舉**，
+        而 `cpp:var_assign` 現在的 `target` 接點已經表達得出它們全部。
+        → 該做的是【退場】，不是【轉換】。而那是元件身分的決定。
+
+      python: var_assign · var_assign_expr                                2 筆
+        左邊被 `constraints` 限成 `identifier`，**依建構就是原子**
+        ——換它們是齊一性不是修缺陷。而真正的解一樣是合併：
+        `member_assign`／`container_assign` 坐在**同一個 AST 節點**上，
+        只差左邊的節點型別（`attribute`／`subscript`）——**那是寫出來的列舉**。
+        ⚠️ 而拿掉 `var_assign` 的 constraint 會與那兩顆**產生比對歧義**，
+        違反 P3「歧義在註冊時仲裁」——所以不能只做一半。
+
+      cpp: input · input_line                                             2 筆
+        `cin >> a[i]`／`getline(cin, o.name)` 都合法，所以那也是左值。
+        ⚠️ 而 `cpp_input` 是**剩下四顆命令式積木之一**（它缺「多模式的插槽」）
+        ——兩件事交纏，該一起做。
+      ```
+
+      > **一個列舉式的分派，清到最後剩下的不是「還沒轉換的欄位」，
+      > 是「當初被列舉出來的那些元件本身」。**
       ⚠️ 走**棘輪不走硬性零**——build-guardrail §6.8 的第二問「修一筆要付多少？」：
       每一筆跨 `lift`／`generate`／`execute`／`render` 四條路徑，**規範成立 ＋ 每一筆都要驗行為 → 棘輪**
 - [x] 🟢 **驗收②：左值解析器是扣除式的**——`core/component/lvalue-nodes.ts` 的登記

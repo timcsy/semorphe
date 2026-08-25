@@ -28,7 +28,16 @@ const prog = (...body: SemanticNode[]): SemanticNode => n('cpp:program', {}, { b
 const num = (v: number): SemanticNode => n('cpp:literal_number', { value: v })
 const ref = (name: string): SemanticNode => n('cpp:var_ref', { name })
 const show = (x: SemanticNode): SemanticNode => n('cpp:print', {}, { values: [x] })
-const assign = (name: string, v: SemanticNode): SemanticNode => n('cpp:var_assign', { obj: name }, { value: [v] })
+// 🟢 **左值是接點**（2026-08-25）——在此之前這裡是 `{ obj: name }`。
+//    ⚠️ `name` 可能是 `this.val` 這種**帶點號的**字串，而它現在要拆成節點：
+//    那正是這一刀在做的事——舊版的執行器用 `indexOf('.')` 手拆它。
+const assign = (name: string, v: SemanticNode): SemanticNode => {
+  const dot = name.indexOf('.')
+  const target = dot > 0
+    ? n('cpp:struct_at_member', { obj: name.slice(0, dot), member: name.slice(dot + 1) }, {})
+    : n('cpp:var_ref', { name }, {})
+  return n('cpp:var_assign', {}, { target: [target], value: [v] })
+}
 
 /**
  * class Counter {

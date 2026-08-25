@@ -35,8 +35,18 @@ const show = (x: SemanticNode): SemanticNode => n('cpp:print', {}, { values: [x]
 const ret = (v: SemanticNode): SemanticNode => n('cpp:return', {}, { value: [v] })
 const decl = (name: string, init?: SemanticNode): SemanticNode =>
   n('cpp:var_declare', { name, type: 'int' }, init ? { initializer: [init] } : {})
+// 🟢 **左值是接點**（2026-08-25）——在此之前是 `{ obj: name }`。
+//    ⚠️ `name` 可能是 `p.x` 這種**帶點號的**字串（也可能是 `p->x`），
+//    而那正是這一刀在解的：舊版執行器用 `indexOf('.')` 手拆它。
+const lvalue = (name: string): SemanticNode => {
+  const arrow = name.indexOf('->')
+  if (arrow > 0) return n('cpp:struct_at_ptr', { obj: name.slice(0, arrow), member: name.slice(arrow + 2) }, {})
+  const dot = name.indexOf('.')
+  if (dot > 0) return n('cpp:struct_at_member', { obj: name.slice(0, dot), member: name.slice(dot + 1) }, {})
+  return n('cpp:var_ref', { name }, {})
+}
 const assign = (name: string, v: SemanticNode): SemanticNode =>
-  n('cpp:var_assign', { obj: name }, { value: [v] })
+  n('cpp:var_assign', {}, { target: [lvalue(name)], value: [v] })
 const call = (name: string, ...args: SemanticNode[]): SemanticNode =>
   n('cpp:func_call', { name }, { args })
 
