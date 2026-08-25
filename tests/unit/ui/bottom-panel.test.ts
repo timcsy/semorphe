@@ -63,4 +63,27 @@ describe('BottomPanel', () => {
     panel.activateTab('tab1')
     expect(panel.isCollapsed()).toBe(false)
   })
+
+  it('🔴 這個宿主沒有那一格時，`showTab` 什麼都不做', () => {
+    // 「主控台 → 終端機」那一刀讓 IDE 不再建主控台分頁，
+    // ⚠️ 而 `execution-controller` 有四處還在呼叫 `showTab('console')`。
+    //
+    // > **移走一格 UI 而沒有移走它的呼叫端，那些呼叫不會報錯
+    // > ——它們會把版面弄成一個沒有人要的形狀。**
+    //
+    // 舊實作照樣展開、照樣把每一格的內容藏起來 → 半個高度的空面板。
+    const panel = new BottomPanel(document.createElement('div'))
+    const only = document.createElement('div')
+    panel.addTab({ id: 'variables', label: '變數', panel: only })
+    panel.collapse()
+
+    panel.showTab('console')          // ← 這個宿主沒有這一格
+    expect(panel.isCollapsed(), '🔴 展開了一塊空的').toBe(true)
+    expect(panel.getActiveTabId(), '🔴 切到了一個不存在的分頁').not.toBe('console')
+
+    // 正向錨點：而**有**的那一格照常切得動（否則這條可能是「整支壞掉」而空過）
+    panel.showTab('variables')
+    expect(panel.isCollapsed()).toBe(false)
+    expect(panel.getActiveTabId()).toBe('variables')
+  })
 })

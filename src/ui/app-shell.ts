@@ -11,7 +11,6 @@ import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
 import { CONTROLS, RUN_MODES, surfaceOf, panelControls, type ControlId } from '../core/host/controls'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
-import { MobileMenu } from './toolbar/mobile-menu'
 import { CodeKeyboard } from './panels/code-keyboard'
 import type { StorageLike } from '../core/host/host-profile'
 import type { SavedState } from '../core/storage'
@@ -37,10 +36,11 @@ export interface AppShellElements {
   quickAccessBar: QuickAccessBar | null
   layoutManager: LayoutManager
   mobileTabBar: MobileTabBar | null
-  mobileMenu: MobileMenu | null
   codeKeyboard: CodeKeyboard | null
   /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
   showProjection: (which: 'blocks' | 'flow') => void
+  /** 把主控台那一格加回下方面板（宿主打不開終端機時）。 */
+  enableConsoleTab: () => void
 }
 
 export interface AppShellCallbacks {
@@ -143,8 +143,11 @@ export function createAppLayout(
     inToolbar('run') ? `<span class="toolbar-separator"></span>${runGroupMarkup()}` : '',
     // ⚠️ 這兩顆屬於行動版，不是控制項登錄表的成員——它們的開關一直是 `mobileLayout`。
     profile.features.mobileLayout
-      ? '<button id="mobile-sync-btn" class="exec-btn auto-sync-on" title="自動同步：開啟" style="display:none">⇄ 自動</button>' +
-        '<button id="hamburger-btn" class="hamburger-btn" title="選單">☰</button>'
+      // 🔴 **同步那顆拿掉了**（2026-08-25）：行動版的狀態列已經有一顆，
+      //    而它同時是顯示處與入口。
+      //
+      // > **同一件事在同一個畫面上有兩個開關，是一個必然會不一致的東西。**
+      ? '<button id="hamburger-btn" class="hamburger-btn" title="設定">☰</button>' 
       : '',
   ].join('')
 
@@ -302,7 +305,19 @@ export function createAppLayout(
   // > 把它們寫成同一件，會讓執行在那個宿主上直接沒有出口。**
   const consoleEl = document.createElement('div')
   const consolePanel = new ConsolePanel(consoleEl)
-  if (surfaceOf(CONTROLS.find((c) => c.id === 'console')!, surfaces) === 'panelBottom') {
+  /**
+   * 把主控台那一格加進下方面板。
+   *
+   * 🔴 **它可以晚一點才發生**——`controlSurfaces.output` 說的是
+   * 「這個宿主**應該**有終端機」，而某些宿主**實際上**打不開它
+   *（Arduino IDE，2026-08-25 使用者實測）。那時主控台要還回來。
+   *
+   * ⚠️ 而重複呼叫是安全的：加過就不再加。
+   */
+  let consoleTabAdded = false
+  const enableConsoleTab = (): void => {
+    if (consoleTabAdded) return
+    consoleTabAdded = true
     bottomPanel.addTab({
       id: 'console',
       label: Blockly.Msg['PANEL_CONSOLE'] || 'Console',
@@ -312,6 +327,9 @@ export function createAppLayout(
         { icon: Blockly.Msg['PANEL_CLEAR'] || '清除', title: 'Clear', onClick: () => consolePanel.clear() },
       ],
     })
+  }
+  if (surfaceOf(CONTROLS.find((c) => c.id === 'console')!, surfaces) === 'panelBottom') {
+    enableConsoleTab()
   }
 
   const variableEl = document.createElement('div')
@@ -533,17 +551,15 @@ export function createAppLayout(
 
   // Create mobile menu
   const hamburgerBtn = document.getElementById('hamburger-btn')
-  let mobileMenu: MobileMenu | null = null
-  // 🔴 沒有行動版版面就沒有漢堡選單——**連按鈕都不該在**（FR-006）。
-  //    ⚠️ 2026-08-25 起它在**標記那一層**就不建了（見上面的 `headerActions`），
-  //       所以這裡不再需要「建了再 remove」——那本來就是次好的做法。
-  if (hamburgerBtn && toolbar) {
-    mobileMenu = new MobileMenu(toolbar)
-    hamburgerBtn.addEventListener('click', (e) => {
-      e.stopPropagation()
-      mobileMenu!.toggle()
-    })
-  }
+  // 🪦 `MobileMenu` 已於 2026-08-25 刪除。
+  //
+  // 它是「從工具列往下掉的覆蓋選單」——而點一列又跳出底部的 QuickPick。
+  //
+  // > **一次操作裡換兩種介面，使用者要重新找一次「按哪裡」。**
+  //
+  // 現在兩層都是同一張 QuickPick（`layout/status-bar-controls.ts` 的 `openSettings`）。
+  // ⚠️ 接線在 `setupToolbarButtons`（與其餘按鈕同一處）——**不要第二個接線處**。
+  void hamburgerBtn
 
   // 🪦 `selectorMounts` / `selectorOriginalParents` 已於 2026-08-25 刪除。
   //
@@ -692,7 +708,6 @@ export function createAppLayout(
     if (toolboxDiv) toolboxDiv.style.display = ''
 
     // Close mobile menu
-    mobileMenu?.close()
 
     // Restore desktop layout
     blocksColumn.style.display = 'flex'
@@ -775,7 +790,7 @@ export function createAppLayout(
   //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
   showProjection('blocks')
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, mobileMenu, codeKeyboard, showProjection }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, enableConsoleTab }
 }
 
 /*
@@ -791,7 +806,11 @@ export function createAppLayout(
  */
 
 export function setupToolbarButtons(
-  callbacks: Pick<AppShellCallbacks, 'onOpenSyncMenu'> & { onAction: (id: ControlId) => void },
+  callbacks: Pick<AppShellCallbacks, 'onOpenSyncMenu'> & {
+    onAction: (id: ControlId) => void
+    /** 行動版的設定清單。 */
+    onOpenSettings: () => void
+  },
 ): void {
   const replaceBtn = (id: string) => {
     const el = document.getElementById(id)
@@ -804,13 +823,14 @@ export function setupToolbarButtons(
   }
 
   replaceBtn('sync-menu-btn')?.addEventListener('click', callbacks.onOpenSyncMenu)
+  // 行動版的設定——⚠️ 它不是控制項登錄表的一員，是**行動版的 chrome**
+  //（與分頁列同一類），所以在這裡具名接。
+  replaceBtn('hamburger-btn')?.addEventListener('click', callbacks.onOpenSettings)
   for (const spec of CONTROLS) {
     if (spec.kind !== 'action' || spec.id === 'run') continue
     replaceBtn(spec.mountId)?.addEventListener('click', () => callbacks.onAction(spec.id))
   }
 
-  // Mobile sync button — toggles auto-sync (same as desktop)
-  replaceBtn('mobile-sync-btn')?.addEventListener('click', callbacks.onOpenSyncMenu)
 }
 
 export function setupFileButtons(
@@ -902,7 +922,7 @@ export function updateStatusBar(
   currentLocale: string,
   currentBlockStyleId: string,
   topicName: string,
-  mobileMenu?: MobileMenu | null,
+  /** 🪦 `mobileMenu` 參數已於 2026-08-25 移除——那個選單退場了。 */
   /**
    * 目前語言的顯示名。
    *
@@ -957,10 +977,10 @@ export function updateStatusBar(
     if (statusBar) statusBar.innerHTML = `<span>${summaryText}</span>`
   }
 
-  // Also update mobile menu summary (visible when status bar is hidden)
-  if (mobileMenu) {
-    mobileMenu.setSummary(summaryText)
-  }
+  // 🪦 行動版的摘要那一行已刪除——它把五顆控制項各講了一次，
+  //    而那五顆就在同一張清單裡。
+  //
+  // > **一段重複旁邊那份資料的摘要，只會比它先過期。**
 
   return contextText
 }

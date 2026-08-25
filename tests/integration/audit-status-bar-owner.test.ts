@@ -99,6 +99,9 @@ function cannotReportPhase(files: ProfileFile[], readImpl: (className: string) =
     if (/\boutput:\s*'host/.test(f.text)) {
       required.add('reportConsole(')
       required.add('onConsoleInput(')
+      // 🔴 **而「宿主應該有」不等於「實際上做得到」**——Arduino IDE 打不開
+      //    終端機（2026-08-25 使用者實測）。沒有這條退路，執行會沒有出口。
+      required.add('onConsoleFallback(')
     }
     if (required.size === 0) continue
     const m = f.text.match(/new\s+(\w+)\(container\)/)
@@ -179,6 +182,17 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
       .toBe('function')
     expect(typeof view.onConsoleInput, '🔴 只能輸出不能輸入的主控台，`cin` 就沒有家')
       .toBe('function')
+    expect(typeof view.onConsoleFallback, '🔴 終端機打不開就沒有退路＝執行沒有出口')
+      .toBe('function')
+    // ⚠️ 而主行程那側要**真的探測**，不是猜宿主是誰（原始碼檢查，比較弱）
+    const panelSrc = fs.readFileSync('src/vscode/panel.ts', 'utf8')
+    expect(panelSrc, '🔴 沒有探測＝「應該有」被當成「一定有」').toContain('ptyOpened')
+    // ⚠️ **註解裡提到它不算**（那是說明，不是分支）——與第 60 條的
+    //    `profile.id ===` 掃描同一個形狀。第一版沒排掉註解，配到自己寫的說明。
+    const branching = panelSrc.split('\n')
+      .filter((line) => !/^\s*(\*|\/\/|\/\*)/.test(line))
+      .filter((line) => /vscode\.env\.(appName|appHost)/.test(line))
+    expect(branching, '🔴 用身分猜能力——那正是這個專案明令禁止的').toEqual([])
   })
 
   it('⚠️ 其餘投影到宿主的用原始碼檢查——比較弱，弱在它讀的是文字不是行為', () => {
@@ -190,7 +204,7 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
     // ⚠️ 這一條抓的是**提早 return**：一旦有人在 `updateStatusBar` 開頭寫
     //    `if (!statusBar) return`，宿主那條的 tooltip 就永遠是空的。
     expect(document.getElementById('status-bar'), '前置：這個環境裡沒有狀態列').toBeNull()
-    const detail = updateStatusBar(SYNTHETIC_STYLE, 'zh-TW', '__PROBE_BS__', '__PROBE_TOPIC__', null,
+    const detail = updateStatusBar(SYNTHETIC_STYLE, 'zh-TW', '__PROBE_BS__', '__PROBE_TOPIC__',
       '__PROBE_LANG__', { phase: 'paused', source: null })
     // 🔴 自我否證的錨點——**合成的記號**，不隨任何修復失效
     expect(detail, '🔴 找不到合成記號＝根本沒呼叫到被測函式').toContain('__PROBE_LANG__')
@@ -205,7 +219,7 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
     footer.id = 'status-bar'
     document.body.appendChild(footer)
     try {
-      updateStatusBar(SYNTHETIC_STYLE, 'zh-TW', '__PROBE_BS__', '__PROBE_TOPIC__', null,
+      updateStatusBar(SYNTHETIC_STYLE, 'zh-TW', '__PROBE_BS__', '__PROBE_TOPIC__',
         '__PROBE_LANG__', { phase: 'diverged', source: null })
       expect(footer.textContent, '🔴 三態沒被畫出來').toContain('兩邊都改了')
       expect(footer.textContent).toContain('__PROBE_LANG__')
@@ -270,7 +284,7 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
 }`,
     }]
     expect(cannotReportPhase(synthetic, () => 'class ZzFakeView { getCode() { return "" } }'))
-      .toEqual(['zz/zz-fake-bad-host.ts → reportSyncPhase', 'zz/zz-fake-bad-host.ts → reportControls', 'zz/zz-fake-bad-host.ts → onControlInvoke', 'zz/zz-fake-bad-host.ts → reportConsole', 'zz/zz-fake-bad-host.ts → onConsoleInput'])
+      .toEqual(['zz/zz-fake-bad-host.ts → reportSyncPhase', 'zz/zz-fake-bad-host.ts → reportControls', 'zz/zz-fake-bad-host.ts → onControlInvoke', 'zz/zz-fake-bad-host.ts → reportConsole', 'zz/zz-fake-bad-host.ts → onConsoleInput', 'zz/zz-fake-bad-host.ts → onConsoleFallback'])
   })
 
   it('★ 注入②：交得出三態的、以及自己畫狀態列的，都不得被報', () => {
@@ -288,7 +302,7 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
  controlSurfaces: { picker: 'panelToolbar', action: 'panelToolbar', indicator: 'panelStatusBar', output: 'panelBottom' },
 }`,
     }
-    expect(cannotReportPhase([canReport, drawsItself], () => 'class ZzFakeView { reportSyncPhase(a, b, c) {} reportControls(s) {} onControlInvoke(cb) {} reportConsole(c) {} onConsoleInput(cb) {} }'))
+    expect(cannotReportPhase([canReport, drawsItself], () => 'class ZzFakeView { reportSyncPhase(a, b, c) {} reportControls(s) {} onControlInvoke(cb) {} reportConsole(c) {} onConsoleInput(cb) {} onConsoleFallback(cb) {} }'))
       .toEqual([])
   })
 
@@ -300,7 +314,7 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
  controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar', output: 'hostTerminal' },
 }`,
     }]
-    expect(cannotReportPhase(synthetic, () => null)).toEqual(['zz/zz-fake-missing.ts → reportSyncPhase', 'zz/zz-fake-missing.ts → reportControls', 'zz/zz-fake-missing.ts → onControlInvoke', 'zz/zz-fake-missing.ts → reportConsole', 'zz/zz-fake-missing.ts → onConsoleInput'])
+    expect(cannotReportPhase(synthetic, () => null)).toEqual(['zz/zz-fake-missing.ts → reportSyncPhase', 'zz/zz-fake-missing.ts → reportControls', 'zz/zz-fake-missing.ts → onControlInvoke', 'zz/zz-fake-missing.ts → reportConsole', 'zz/zz-fake-missing.ts → onConsoleInput', 'zz/zz-fake-missing.ts → onConsoleFallback'])
   })
 
   it('★ 注入④：沒表態的會被報，表了態的不會', () => {

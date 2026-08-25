@@ -53,6 +53,15 @@ export type HostMessage =
       line: string
     }
   | {
+      /**
+       * 🔴 **這個宿主打不開終端機**——主控台還給面板。
+       *
+       * ⚠️ 它是**探測的結果**，不是設定：`Pseudoterminal.open()` 沒有被呼叫。
+       * 使用者 2026-08-25 在 Arduino IDE 實測到的。
+       */
+      type: 'consoleFallback'
+    }
+  | {
       type: 'document'
       uri: string
       languageId: string

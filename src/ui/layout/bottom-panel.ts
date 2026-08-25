@@ -101,8 +101,26 @@ export class BottomPanel {
     window.dispatchEvent(new Event('resize'))
   }
 
-  /** Switch to a tab and ensure the panel is expanded (no toggle). */
+  /**
+   * 切到某個分頁並展開（不 toggle）。
+   *
+   * 🔴 **這個宿主沒有那一格時，什麼都不做**（2026-08-25）。
+   *
+   * ## 它修的是什麼
+   *
+   * 「主控台 → 終端機」那一刀讓 IDE 不再建主控台分頁，⚠️ **而
+   * `execution-controller` 有四處還在呼叫 `showTab('console')`**。
+   * 舊的實作照樣 `collapsed = false`、照樣把每一個分頁的內容藏起來
+   * ——症狀是**面板展開了半個高度，而裡面是空的**（使用者截圖抓到）。
+   *
+   * > **移走一格 UI 而沒有移走它的呼叫端，
+   * > 那些呼叫不會報錯——它們會把版面弄成一個沒有人要的形狀。**
+   *
+   * ⚠️ 而這裡回傳而不是丟錯：「這個宿主沒有那一格」是**宣告過的狀態**
+   *（`controlSurfaces.output`），不是缺陷。
+   */
   showTab(id: string): void {
+    if (!this.tabs.some((t) => t.id === id)) return
     this.activeTabId = id
     this.collapsed = false
     this.applyHeight()

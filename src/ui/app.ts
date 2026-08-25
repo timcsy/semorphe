@@ -68,7 +68,7 @@ import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
 import type { AppShellElements, AppShellCallbacks } from './app-shell'
-import { renderStatusControls, renderSheetControls } from './layout/status-bar-controls'
+import { renderStatusControls, openSettings } from './layout/status-bar-controls'
 import type { ConsolePanel } from './panels/console-panel'
 import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
@@ -147,8 +147,26 @@ export class App {
   /** 宿主的顯示語言（`vscode.env.language`）。`null` ＝ 這個宿主沒說。 */
   private hostLocale: string | null = null
 
+  /** 最近一次算出來的控制項狀態——行動版的設定清單開啟時讀它。 */
+  private latestControlStates: ControlState[] = []
+
+  /**
+   * 行動版的設定 —— **一張往下鑽的 QuickPick**（2026-08-25）。
+   *
+   * 使用者：「目前行動版的選單，我覺得使用者體驗不好」——舊的是
+   * 從工具列往下掉的漢堡選單，而點一列又跳出底部的 QuickPick：
+   *
+   * > **一次操作裡換兩種介面，使用者要重新找一次「按哪裡」。**
+   */
+  private openSettingsMenu(): void {
+    openSettings(this.latestControlStates, (invoke) => this.handleControlInvoke(invoke))
+  }
+
   /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
   private showProjection: ((which: 'blocks' | 'flow') => void) | null = null
+
+  /** 把主控台那一格加回下方面板——宿主打不開終端機時。 */
+  private enableConsoleTab: (() => void) | null = null
 
   /** 控制項的回呼——面板的下拉與宿主的 QuickPick **共用這一組**。 */
   private controlCallbacks: Pick<AppShellCallbacks,
@@ -162,7 +180,6 @@ export class App {
   private currentParser: { parse(code: string): Promise<{ rootNode: unknown }> } | null = null
   private codeParserCache: { _lastTree: unknown } | null = null
   private patternRenderer: PatternRenderer | null = null
-  private mobileMenu: import('./toolbar/mobile-menu').MobileMenu | null = null
 
   constructor(profile: HostProfile) {
     this.profile = profile
@@ -278,8 +295,8 @@ export class App {
       })
     this.blocklyPanel = elements.blocklyPanel
     this.showProjection = elements.showProjection
+    this.enableConsoleTab = elements.enableConsoleTab
     this.codeView = elements.codeView
-    this.mobileMenu = elements.mobileMenu
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
     this.syncController = new SyncController(this.bus, this.currentTopic.language, DEFAULT_STYLE)
@@ -412,6 +429,7 @@ export class App {
       onOpenSyncMenu: () => this.openSyncMenu(),
       // 🔴 **與宿主那側走同一支**（`handleControlInvoke`）——一個入口，不是兩個。
       onAction: (id) => this.handleControlInvoke({ id }),
+      onOpenSettings: () => this.openSettingsMenu(),
     })
 
     // 🔴 這個宿主沒有檔案按鈕就【不接線】——DOM 根本不存在。
@@ -933,7 +951,7 @@ export class App {
    * > 遲早會有一條路徑只走到其中一個。**
    */
   private refreshStatusBar(): void {
-    const detail = updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name, this.mobileMenu,
+    const detail = updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name,
       languagePack(this.currentTopic.language)?.name ?? this.currentTopic.language,
       // 🔴 三態要**一直看得見**——一個沒被顯示的狀態，使用者會當成壞掉
       this.syncCoordinator.snapshot())
@@ -986,10 +1004,12 @@ export class App {
     const invoke = (i: ControlInvoke): void => this.handleControlInvoke(i)
     const slot = document.getElementById('status-controls')
     if (slot) renderStatusControls(slot, onBar, invoke)
-    // ③ 行動版的設定表——🔴 **同一份 `ControlState`，第三個渲染器**。
-    //    ⚠️ 它與狀態列**同時存在**：CSS 決定哪一個看得到，
-    //    而兩者由同一次重畫餵資料，所以不會有一個過期。
-    if (this.mobileMenu) renderSheetControls(this.mobileMenu.getControlsContainer(), onBar, invoke)
+    // ③ 行動版的設定——🔴 **不預先畫**：它是一張按了才開的 QuickPick，
+    //    所以這裡只把最新的一份**存起來**，開的時候才用。
+    //
+    // ⚠️ 存的是**每次重畫後最新的那一份**——一張開著的清單顯示過期的值，
+    //    比沒有那張清單更糟。
+    this.latestControlStates = onBar
   }
 
   /** 一顆控制項現在的樣子 ＋ **它的值域**。 */
@@ -1124,6 +1144,9 @@ export class App {
     const view = this.codeView
     if (!consolePanel || !view?.reportConsole) return
     consolePanel.onOutput((chunk: string) => view.reportConsole?.(chunk))
+    // 🔴 宿主打不開終端機 → 主控台還給面板（Arduino IDE，2026-08-25 實測）。
+    //    🟢 而輸出不會掉：`ConsolePanel` 一直都在畫，終端機只是它的鏡射。
+    view.onConsoleFallback?.(() => this.enableConsoleTab?.())
     consolePanel.onClear(() => view.clearConsole?.())
     view.onConsoleInput?.((line: string) => consolePanel.feedInput(line))
   }

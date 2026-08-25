@@ -198,6 +198,12 @@ export class VscodeCodeView implements CodeView, ViewHost {
     this.consoleCb = callback
   }
 
+  onConsoleFallback(callback: () => void): void {
+    this.consoleFallbackCb = callback
+  }
+
+  private consoleFallbackCb: (() => void) | null = null
+
   private consoleCb: ((line: string) => void) | null = null
 
   reportControls(states: readonly ControlState[]): void {
@@ -222,6 +228,10 @@ export class VscodeCodeView implements CodeView, ViewHost {
     }
     if (m.type === 'consoleInput') {
       this.consoleCb?.(m.line)
+      return
+    }
+    if (m.type === 'consoleFallback') {
+      this.consoleFallbackCb?.()
       return
     }
     if (m.type === 'document') {

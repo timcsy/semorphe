@@ -634,6 +634,11 @@ class SemorpheSession {
     DIAGNOSTICS.set(doc.uri, out)
   }
 
+  /** 🔴 這個宿主打不開終端機——請面板自己畫主控台。 */
+  sendConsoleFallback(): void {
+    this.send({ type: 'consoleFallback' })
+  }
+
   /** 終端機打的一行 → webview。 */
   sendConsoleInput(line: string): void {
     this.send({ type: 'consoleInput', line })
@@ -820,11 +825,34 @@ let terminal: vscode.Terminal | undefined
 const termWrite = new vscode.EventEmitter<string>()
 let termLine = ''
 
+/**
+ * 🔴 **宿主真的把終端機打開了嗎**——而這是一個**能力探測**，不是猜宿主是誰。
+ *
+ * ## 它修的是什麼
+ *
+ * 使用者 2026-08-25：「**Arduino IDE 那邊沒有辦法開啟終端機面板**」。
+ * 而那不是「比較難看」——**執行的輸出會完全沒有出口**。
+ *
+ * ## ⚠️ 為什麼不去看 `vscode.env.appName`
+ *
+ * 那是**用身分當能力的代理**，而這個專案明令禁止
+ *（`core/host/host-profile.ts`：「一旦有人寫 `profile.id === '…'`，
+ * 那份宣告就退化成一個標籤」）。
+ *
+ * 🟢 而這裡有一個**真的**訊號：`Pseudoterminal.open()`
+ * **只有在宿主真的把它打開時才會被呼叫**。開不起來，那個回呼永遠不來。
+ *
+ * > **一個能力該用「它做得到嗎」去問，不是用「你是誰」去猜。**
+ */
+let ptyOpened = false
+let probeDone = false
+
 function ensureTerminal(): vscode.Terminal {
   if (terminal) return terminal
   const pty: vscode.Pseudoterminal = {
     onDidWrite: termWrite.event,
-    open: () => { /* 🔴 開了就開了——輸出由 webview 推過來，這裡不主動說話 */ },
+    // 🔴 **這一格就是探測**：宿主真的把它打開了，才會走到這裡。
+    open: () => { ptyOpened = true },
     close: () => { terminal = undefined; termLine = '' },
     // 使用者在終端機打字。⚠️ 這裡要**自己回顯**：偽終端機沒有 line discipline。
     handleInput: (data: string) => {
@@ -848,6 +876,24 @@ function ensureTerminal(): vscode.Terminal {
   return terminal
 }
 
+/**
+ * 終端機開不起來就把主控台還給面板。
+ *
+ * ⚠️ **只探一次**——探失敗之後每一段輸出都再等一次，等於把每一次執行都拖慢。
+ * 🟢 而輸出**不會掉**：面板那顆 `ConsolePanel` 一直都在畫，
+ * 終端機只是它的鏡射。所以還回去的時候，內容已經在裡面了。
+ */
+function probeTerminal(): void {
+  if (probeDone) return
+  probeDone = true
+  setTimeout(() => {
+    if (ptyOpened) return
+    OUTPUT.appendLine('Semorphe：這個宿主打不開終端機，主控台還給面板。')
+    disposeTerminal()
+    current?.sendConsoleFallback()
+  }, 1500)
+}
+
 function writeToTerminal(m: { chunk?: string; clear?: boolean }): void {
   const term = ensureTerminal()
   if (m.clear) {
@@ -860,6 +906,7 @@ function writeToTerminal(m: { chunk?: string; clear?: boolean }): void {
   // 🔴 `\n` → `\r\n`，理由見檔頭（否則輸出會變成階梯狀）。
   termWrite.fire(m.chunk.replace(/\r?\n/g, '\r\n'))
   term.show(/* preserveFocus */ true)
+  probeTerminal()
 }
 
 /** 面板關了：終端機也沒有東西會再對它說話。 */

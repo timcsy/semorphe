@@ -422,43 +422,13 @@ html, body {
 }
 
 /*
- * 行動版的設定表 —— 一列是「名字 ＋ 目前的值」。
- * 🔴 與狀態列**讀同一份 `ControlState`**，差別只有版型。
+ * 🪦 `.sheet-row` 與 `.mobile-menu-controls` 已於 2026-08-25 刪除。
+ *
+ * 行動版的設定改成**一張往下鑽的 QuickPick**——第一層是控制項
+ *（名字 ＋ 目前的值），第二層是值。同一個元件、同一個位置。
+ *
+ * > **一次操作裡換兩種介面，使用者要重新找一次「按哪裡」。**
  */
-.mobile-menu-controls {
-  display: flex;
-  flex-direction: column;
-}
-
-.sheet-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border: none;
-  border-bottom: 1px solid #3a3a3a;
-  background: transparent;
-  color: #ddd;
-  font-size: 15px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.sheet-row:active {
-  background: #3a3a3a;
-}
-
-.sheet-row-name {
-  flex: none;
-}
-
-.sheet-row-value {
-  color: #9cdcfe;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 /* ─── QuickPick ─── */
 /*
