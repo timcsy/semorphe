@@ -1,4 +1,4 @@
 {
-  "PY_MEMBER_AT_MSG0": "取 %1 的 %2",
-  "PY_MEMBER_AT_TOOLTIP": "取出一個東西裡面具名的那一格，例如數學模組的圓周率。"
+  "PY_MEMBER_AT_MSG0": "%1 的 %2",
+  "PY_MEMBER_AT_TOOLTIP": "取出一個東西裡面具名的那一格，例如數學模組的圓周率。可以一直串下去：a 的 b 的 c。"
 }

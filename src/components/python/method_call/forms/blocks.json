@@ -58,7 +58,7 @@
     "blockDef": {
       "type": "python_method_call_expression",
       "inputsInline": true,
-      "message0": "%{BKY_PY_METHOD_CALL_MSG0}",
+      "message0": "%{BKY_PY_METHOD_CALL_EXPR_MSG0}",
       "args0": [
         {
           "type": "input_value",

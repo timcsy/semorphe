@@ -1,4 +1,5 @@
 {
-  "PY_METHOD_CALL_MSG0": "對 %1 做 %2",
+  "PY_METHOD_CALL_MSG0": "執行 %1 的 %2",
+  "PY_METHOD_CALL_EXPR_MSG0": "%1 的 %2",
   "PY_METHOD_CALL_TOOLTIP": "呼叫某個東西自己的功能，例如把文字轉大寫、在串列末端加一個值。右邊的格子放要傳進去的東西。"
 }
