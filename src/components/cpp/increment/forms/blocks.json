@@ -41,12 +41,62 @@
               "prefix"
             ]
           ]
+        },
+        {
+          "type": "input_dummy",
+          "name": "MAIN"
         }
       ],
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#59C059",
-      "tooltip": "%{BKY_C_INCREMENT_TOOLTIP}"
+      "tooltip": "%{BKY_C_INCREMENT_TOOLTIP}",
+      "altLayout": {
+        "stateKey": "hasIndex",
+        "message0": "%{BKY_C_INCREMENT_INDEXED_MSG0}",
+        "args0": [
+          {
+            "type": "field_dynamic_dropdown",
+            "name": "NAME",
+            "source": "vars"
+          },
+          {
+            "type": "input_value",
+            "name": "INDEX",
+            "check": "Expression"
+          },
+          {
+            "type": "field_dropdown",
+            "name": "OP",
+            "options": [
+              [
+                "%{BKY_C_INCREMENT_OP_INCREMENT}",
+                "++"
+              ],
+              [
+                "%{BKY_C_INCREMENT_OP_DECREMENT}",
+                "--"
+              ]
+            ]
+          },
+          {
+            "type": "field_dropdown",
+            "name": "POSITION",
+            "options": [
+              [
+                "%{BKY_C_INCREMENT_POS_POSTFIX}",
+                "postfix"
+              ],
+              [
+                "%{BKY_C_INCREMENT_POS_PREFIX}",
+                "prefix"
+              ]
+            ]
+          }
+        ],
+        "inputsInline": true
+      },
+      "inputsInline": true
     },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
@@ -125,7 +175,52 @@
         }
       ],
       "inputsInline": true,
-      "output": "Expression"
+      "output": "Expression",
+      "altLayout": {
+        "stateKey": "hasIndex",
+        "message0": "%{BKY_C_INCREMENT_INDEXED_MSG0}",
+        "args0": [
+          {
+            "type": "field_dynamic_dropdown",
+            "name": "NAME",
+            "source": "vars"
+          },
+          {
+            "type": "input_value",
+            "name": "INDEX",
+            "check": "Expression"
+          },
+          {
+            "type": "field_dropdown",
+            "name": "OP",
+            "options": [
+              [
+                "%{BKY_C_INCREMENT_OP_INCREMENT}",
+                "++"
+              ],
+              [
+                "%{BKY_C_INCREMENT_OP_DECREMENT}",
+                "--"
+              ]
+            ]
+          },
+          {
+            "type": "field_dropdown",
+            "name": "POSITION",
+            "options": [
+              [
+                "%{BKY_C_INCREMENT_POS_POSTFIX}",
+                "postfix"
+              ],
+              [
+                "%{BKY_C_INCREMENT_POS_PREFIX}",
+                "prefix"
+              ]
+            ]
+          }
+        ],
+        "inputsInline": true
+      }
     },
     "renderMapping": {
       "extraStateFlags": {

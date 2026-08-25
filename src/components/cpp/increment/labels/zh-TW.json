@@ -1,8 +1,9 @@
 {
-  "C_INCREMENT_MSG0": "變數 %1 %2 %3",
+  "C_INCREMENT_MSG0": "變數 %1 %2 %3 %4",
   "C_INCREMENT_TOOLTIP": "讓變數的值加 1 或減 1",
   "C_INCREMENT_OP_INCREMENT": "加 1（++）",
   "C_INCREMENT_OP_DECREMENT": "減 1（--）",
   "C_INCREMENT_POS_POSTFIX": "後置",
-  "C_INCREMENT_POS_PREFIX": "前置"
+  "C_INCREMENT_POS_PREFIX": "前置",
+  "C_INCREMENT_INDEXED_MSG0": "變數 %1 的第 %2 格 %3 %4"
 }

@@ -28,6 +28,7 @@ import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS, DEGRADATION_VISUALS } from '../core/category-colors'
 import { attachBranchList } from './branch-list-block'
 import { attachParamList, registerParamMutatorBlocks, MUTATOR_CONTAINER } from './param-list-block'
+import { attachAltLayout } from './alt-layout-block'
 import { preserveForeignExtraState } from '../core/foreign-extra-state'
 import { defineVariadicBlock, attachVariadic } from './variadic-block'
 import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
@@ -525,6 +526,20 @@ export class BlockRegistrar {
       if (branchSpec) {
         Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
         attachBranchList(blockType, branchSpec as unknown as Parameters<typeof attachBranchList>[1])
+        continue
+      }
+
+      // 🔴 **第四種形狀：依 `extraState` 換一整份佈局**（2026-08-25）
+      //    —— `a += 2` 與 `a[i] += 2` 是同一顆積木，而欄位會換到別的插槽上。
+      //    ⚠️ 在此之前宣告表達不出它，**而 spec 166 以為表達得出**：
+      //       第五維證明的是「extraState 的鍵對得上」，不是「那一格會出現」。
+      const altSpec = (blockDef as { altLayout?: Record<string, unknown> }).altLayout
+      if (altSpec) {
+        Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
+        attachAltLayout(blockType, blockDef as never, {
+          stateKey: altSpec.stateKey as string,
+          alt: altSpec as never,
+        })
         continue
       }
 
@@ -1958,80 +1973,22 @@ export class BlockRegistrar {
     // 🪦 **`cpp_var_assign` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
     //    ⚠️ 宣告本來是靜態 `field_input`，已改成 `field_dynamic_dropdown`。
 
-    // cpp_increment
-    {
-      Blockly.Blocks['cpp_increment'] = {
-        hasIndex_: false,
-        init: function (this: any) {
-          this.hasIndex_ = false
-          this.buildInputs_()
-          this.setPreviousStatement(true, null)
-          this.setNextStatement(true, null)
-          this.setColour(CATEGORY_COLORS.operators)
-          this.setTooltip(Blockly.Msg['C_INCREMENT_TOOLTIP'] || '讓變數的值加 1 或減 1')
-        },
-        buildInputs_: function (this: any) {
-          // Save current field values before rebuild
-          const savedName = this.getField('NAME') ? this.getFieldValue('NAME') : null
-          const savedOp = this.getField('OP') ? this.getFieldValue('OP') : null
-          const savedPos = this.getField('POSITION') ? this.getFieldValue('POSITION') : null
-          const savedIndex = this.getInput('INDEX') ? this.getInputTargetBlock('INDEX') : null
-          // Remove existing inputs
-          if (this.getInput('MAIN')) this.removeInput('MAIN')
-          if (this.getInput('INDEX')) this.removeInput('INDEX', true)
-          if (this.getInput('TAIL')) this.removeInput('TAIL')
-
-          if (this.hasIndex_) {
-            this.appendValueInput('INDEX')
-              .setCheck('Expression')
-              .appendField(Blockly.Msg['C_INCREMENT_VAR_LABEL'] || '變數')
-              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
-              .appendField('的第 [')
-            this.appendDummyInput('TAIL')
-              .appendField('] 格')
-              .appendField(new Blockly.FieldDropdown([
-                [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '加 1（++）', '++'],
-                [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '減 1（--）', '--'],
-              ]) as Blockly.Field, 'OP')
-              .appendField(new Blockly.FieldDropdown([
-                [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
-                [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
-              ]) as Blockly.Field, 'POSITION')
-          } else {
-            this.appendDummyInput('MAIN')
-              .appendField(Blockly.Msg['C_INCREMENT_VAR_LABEL'] || '變數')
-              .appendField(new Blockly.FieldDropdown(() => self.getWorkspaceVarOptions()) as Blockly.Field, 'NAME')
-              .appendField(new Blockly.FieldDropdown([
-                [Blockly.Msg['C_INCREMENT_OP_INCREMENT'] || '加 1（++）', '++'],
-                [Blockly.Msg['C_INCREMENT_OP_DECREMENT'] || '減 1（--）', '--'],
-              ]) as Blockly.Field, 'OP')
-              .appendField(new Blockly.FieldDropdown([
-                [Blockly.Msg['C_INCREMENT_POS_POSTFIX'] || '後置', 'postfix'],
-                [Blockly.Msg['C_INCREMENT_POS_PREFIX'] || '前置', 'prefix'],
-              ]) as Blockly.Field, 'POSITION')
-          }
-          this.setInputsInline(true)
-          // Restore saved values
-          if (savedName) this.setFieldValue(savedName, 'NAME')
-          if (savedOp) this.setFieldValue(savedOp, 'OP')
-          if (savedPos) this.setFieldValue(savedPos, 'POSITION')
-          if (savedIndex && this.getInput('INDEX')) {
-            this.getInput('INDEX')!.connection?.connect(savedIndex.outputConnection)
-          }
-        },
-        saveExtraState: function (this: any) {
-          if (!this.hasIndex_) return {}
-          return { hasIndex: true }
-        },
-        loadExtraState: function (this: any, state: { hasIndex?: boolean }) {
-          const needIndex = !!state?.hasIndex
-          if (needIndex !== this.hasIndex_) {
-            this.hasIndex_ = needIndex
-            this.buildInputs_()
-          }
-        },
-      }
-    }
+    // 🪦 **`cpp_increment` 的命令式定義已於 2026-08-25 刪除**
+    //    （比對護欄確認一模一樣）。宣告在
+    //    `components/cpp/increment/forms/blocks.json`。
+    //
+    //    它需要的機制是那一刀補的：**`altLayout` —— 依 `extraState` 換一整份佈局**
+    //    （`a++` 與 `a[i]++` 是同一顆積木，而欄位會換到別的插槽上）。
+    //
+    // 🔴 **而做它的時候發現 `cpp_var_assign_compound` 在 spec 166 退場時就壞了**：
+    //    那顆的宣告裡沒有 `INDEX` 這一格，於是 `a[i] += 2` 的索引安靜地掉。
+    //    墓碑寫著「宣告表達得出（第五維證明的）」——⚠️ **而第五維證明的是
+    //    「extraState 的鍵對得上」，不是「那一格會出現」**。
+    //
+    // > **一條護欄的能力邊界被讀成比它大的東西，比沒有那條護欄更危險
+    // > ——它讓人停止懷疑。**
+    //
+    //    🟢 由 `tests/integration/audit-optional-slot.test.ts` 釘住（硬性零）。
 
     // 🪦 **`cpp_var_assign_compound` 的命令式定義已於 spec 166 刪除**（比對護欄確認一模一樣）。
     //    ⚠️ 而它的 `hasIndex`（載入時加／移除 `INDEX` 插槽）**宣告表達得出**

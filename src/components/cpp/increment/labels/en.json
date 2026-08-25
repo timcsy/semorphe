@@ -1,8 +1,9 @@
 {
-  "C_INCREMENT_MSG0": "variable %1 %2 %3",
+  "C_INCREMENT_MSG0": "variable %1 %2 %3 %4",
   "C_INCREMENT_TOOLTIP": "Increase or decrease the variable's value by 1",
   "C_INCREMENT_OP_INCREMENT": "increment (++)",
   "C_INCREMENT_OP_DECREMENT": "decrement (--)",
   "C_INCREMENT_POS_POSTFIX": "postfix",
-  "C_INCREMENT_POS_PREFIX": "prefix"
+  "C_INCREMENT_POS_PREFIX": "prefix",
+  "C_INCREMENT_INDEXED_MSG0": "variable %1 [ %2 ] %3 %4"
 }

@@ -5,5 +5,6 @@
   "C_COMPOUND_ASSIGN_OP_MINUS_EQ": "subtract (-=)",
   "C_COMPOUND_ASSIGN_OP_TIMES_EQ": "multiply (*=)",
   "C_COMPOUND_ASSIGN_OP_DIVIDE_EQ": "divide (/=)",
-  "C_COMPOUND_ASSIGN_OP_REMAINDER_EQ": "remainder (%=)"
+  "C_COMPOUND_ASSIGN_OP_REMAINDER_EQ": "remainder (%=)",
+  "C_COMPOUND_ASSIGN_INDEXED_MSG0": "variable %1 [ %2 ] %3 %4"
 }

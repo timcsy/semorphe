@@ -29,6 +29,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import * as Blockly from 'blockly'
 import { attachBranchList } from '../../src/ui/branch-list-block'
 import { attachParamList } from '../../src/ui/param-list-block'
+import { attachAltLayout } from '../../src/ui/alt-layout-block'
 import { attachVariadic } from '../../src/ui/variadic-block'
 // 🔴 **選用欄位要另外註冊**——`field_multilinetext` 不在 Blockly 主套件裡。
 // ⚠️ 少了它，`cpp_block_comment` 的欄位**整個建不出來**（`getField('TEXT')` 回 null），
@@ -231,6 +232,15 @@ function fromDeclaration(type: string): Shape | null {
   const probe = `__decl_${type}`
   Blockly.Blocks[probe] = { init: function (this: Blockly.Block) { (this as unknown as { jsonInit: (d: unknown) => void }).jsonInit({ ...def, type: probe }) } }
   // ⚠️ 順序與 `block-registrar` 一致：先定義、再接建構子
+  // 🔴 第四種形狀（2026-08-25）：依 `extraState` 換一整份佈局。
+  //    ⚠️ 不接的話比對器會說「宣告少了 INDEX」——而那是**它自己沒接上**，
+  //       `retire-imperative-block` 第 2.5 步那條規矩的第六次。
+  if (def.altLayout) {
+    attachAltLayout(probe, def as never, {
+      stateKey: (def.altLayout as { stateKey: string }).stateKey,
+      alt: def.altLayout as never,
+    })
+  }
   if (def.branchList) attachBranchList(probe, def.branchList as never)
   else if (def.paramList) attachParamList(probe, def.paramList as never)
   else if (def.builder === 'variadic') {

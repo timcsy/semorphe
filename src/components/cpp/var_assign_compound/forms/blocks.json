@@ -49,7 +49,55 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#59C059",
-      "tooltip": "%{BKY_C_COMPOUND_ASSIGN_TOOLTIP}"
+      "tooltip": "%{BKY_C_COMPOUND_ASSIGN_TOOLTIP}",
+      "altLayout": {
+        "stateKey": "hasIndex",
+        "message0": "%{BKY_C_COMPOUND_ASSIGN_INDEXED_MSG0}",
+        "args0": [
+          {
+            "type": "field_dynamic_dropdown",
+            "name": "NAME",
+            "source": "vars"
+          },
+          {
+            "type": "input_value",
+            "name": "INDEX",
+            "check": "Expression"
+          },
+          {
+            "type": "field_dropdown",
+            "name": "OP",
+            "options": [
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_PLUS_EQ}",
+                "+="
+              ],
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_MINUS_EQ}",
+                "-="
+              ],
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_TIMES_EQ}",
+                "*="
+              ],
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_DIVIDE_EQ}",
+                "/="
+              ],
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_REMAINDER_EQ}",
+                "%="
+              ]
+            ]
+          },
+          {
+            "type": "input_value",
+            "name": "VALUE",
+            "check": "Expression"
+          }
+        ],
+        "inputsInline": true
+      }
     },
     "codeTemplate": {
       "pattern": "${NAME} ${OP} ${VALUE};",
@@ -141,7 +189,55 @@
         }
       ],
       "inputsInline": true,
-      "output": "Expression"
+      "output": "Expression",
+      "altLayout": {
+        "stateKey": "hasIndex",
+        "message0": "%{BKY_C_COMPOUND_ASSIGN_INDEXED_MSG0}",
+        "args0": [
+          {
+            "type": "field_dynamic_dropdown",
+            "name": "NAME",
+            "source": "vars"
+          },
+          {
+            "type": "input_value",
+            "name": "INDEX",
+            "check": "Expression"
+          },
+          {
+            "type": "field_dropdown",
+            "name": "OP",
+            "options": [
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_PLUS_EQ}",
+                "+="
+              ],
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_MINUS_EQ}",
+                "-="
+              ],
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_TIMES_EQ}",
+                "*="
+              ],
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_DIVIDE_EQ}",
+                "/="
+              ],
+              [
+                "%{BKY_C_COMPOUND_ASSIGN_OP_REMAINDER_EQ}",
+                "%="
+              ]
+            ]
+          },
+          {
+            "type": "input_value",
+            "name": "VALUE",
+            "check": "Expression"
+          }
+        ],
+        "inputsInline": true
+      }
     },
     "renderMapping": {
       "extraStateFlags": {
