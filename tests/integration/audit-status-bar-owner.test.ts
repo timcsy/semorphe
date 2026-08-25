@@ -235,6 +235,19 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
     expect(apply![0]).toContain('this.localePreference = preference')
   })
 
+  it('🔴 診斷有交給宿主——它的家是 Problems，不是面板裡的一塊', () => {
+    // > 搬面板只是換了個位置；走管道才拿得到 F8、紅色波浪線、
+    // > 以及使用者已經會的每一個快捷鍵。
+    const view = vscodeProfile.createCodeView(document.createElement('div'))
+    expect(typeof view.onDiagnostics, '🔴 診斷沒有出口＝它只活在面板裡').toBe('function')
+    // ⚠️ 而主行程那側要真的接住——原始碼檢查（比較弱，它讀的是文字）
+    const src = fs.readFileSync('src/vscode/panel.ts', 'utf8')
+    expect(src, '🔴 沒有 DiagnosticCollection＝送過去也沒有人收')
+      .toContain('createDiagnosticCollection')
+    expect(src, '🔴 面板關了，診斷會留在 Problems 上指著一個不存在的面板')
+      .toMatch(/DIAGNOSTICS\.delete/)
+  })
+
   // ─── ★ 注入：證明偵測器認得出違規，而且不亂報 ───
 
   it('★ 注入①：投影到宿主、而視圖交不出那些能力的，必須被報出', () => {

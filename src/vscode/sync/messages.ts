@@ -115,6 +115,17 @@ export type HostMessage =
  */
 export type SyncPhaseWire = 'live' | 'paused' | 'diverged'
 
+/** ⚠️ 線上的形狀刻意與 `core/projection/diagnostic-projection.ts` 的 `CodeDiagnostic` 一致。 */
+export interface CodeDiagnosticWire {
+  startLine: number
+  startColumn: number
+  endLine: number
+  /** `null` ＝ 到行尾。⚠️ **只有主行程知道行尾在哪**（它有文件）。 */
+  endColumn: number | null
+  severity: 'warning' | 'error'
+  message: string
+}
+
 /** ⚠️ 線上的形狀刻意與 `core/host/controls.ts` 的 `ControlState` 一致。 */
 export interface ControlStateWire {
   id: string
@@ -150,6 +161,16 @@ export type WebviewMessage =
        */
       type: 'controls'
       items: ControlStateWire[]
+    }
+  | {
+      /**
+       * 診斷 → 主行程 → **IDE 的 Problems**。
+       *
+       * 🔴 **每次送整份**：`DiagnosticCollection.set` 的語義是取代，
+       * 所以「診斷變少了」會自動反映，不需要另外送一則「清掉」。
+       */
+      type: 'problems'
+      items: CodeDiagnosticWire[]
     }
   | {
       type: 'applyEdit'

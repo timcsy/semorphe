@@ -2,21 +2,12 @@ import * as monaco from 'monaco-editor'
 import { preserveBlankLines } from '../../core/projection/preserve-blank-lines'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent } from '../../core/view-host'
 import type { CodeMapping } from '../../core/projection/code-generator'
+import { mappingFor, codeDiagnosticMessage } from '../../core/projection/diagnostic-projection'
 import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
 import { isResidualCause } from '../../core/diagnostics'
 import type { SemanticBus } from '../../core/semantic-bus'
 import type { SemanticNode } from '../../core/types'
-import { formatMessage } from '../../i18n/messages'
 
-
-/** 這棵子樹裡有沒有這個 id。 */
-function containsNodeId(node: SemanticNode, targetId: string): boolean {
-  if (node.id === targetId) return true
-  for (const children of Object.values(node.children)) {
-    for (const child of children) if (containsNodeId(child, targetId)) return true
-  }
-  return false
-}
 import type { ScaffoldResult, ScaffoldItem } from '../../core/program-scaffold'
 import type { CodeView } from '../../core/host/code-view'
 
@@ -295,27 +286,18 @@ export class MonacoPanel implements ViewHost, CodeView {
    * **不需要認識 Blockly**。
    */
   diagnosticMessage(d: DiagnosticsEvent['diagnostics'][number]): string {
-    return formatMessage(`DIAG_${d.rule}_CODE`, d.params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
+    // 🔴 實作在核心——**兩個程式碼視圖必須說同一句話**。
+    return codeDiagnosticMessage(d)
   }
 
-  /** nodeId → 行區間。表達式節點往上找最近有對映的祖先（見 `onExecutionAtNode` ②）。 */
+  /**
+   * nodeId → 行區間。表達式節點往上找最近有對映的祖先（見 `onExecutionAtNode` ②）。
+   *
+   * 🔴 **實作在核心**（`core/projection/diagnostic-projection.ts`）——
+   * 擴充裡那個沒有畫布的程式碼視圖需要同一段（2026-08-25「診斷 → Problems」）。
+   */
   private mappingFor(nodeId: string): CodeMapping | undefined {
-    const direct = this.codeMappings.find((x) => x.nodeId === nodeId)
-    if (direct) return direct
-    if (!this.currentTree) return undefined
-    const ancestorId = this.findAncestorWithCodeMapping(this.currentTree, nodeId)
-    return ancestorId ? this.codeMappings.find((x) => x.nodeId === ancestorId) : undefined
-  }
-
-  private findAncestorWithCodeMapping(node: SemanticNode, targetId: string): string | null {
-    if (!containsNodeId(node, targetId)) return null
-    for (const children of Object.values(node.children)) {
-      for (const child of children) {
-        const found = this.findAncestorWithCodeMapping(child, targetId)
-        if (found) return found
-      }
-    }
-    return this.codeMappings.some((m) => m.nodeId === node.id) ? node.id : null
+    return mappingFor(this.codeMappings, this.currentTree ?? null, nodeId)
   }
 
   onExecutionState(_event: ExecutionStateEvent): void {

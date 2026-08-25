@@ -45,6 +45,10 @@ import { postToHost } from './host-bridge'
 import { textFingerprint } from '../sync/fingerprint'
 import type { CodeView, HighlightVariant } from '../../core/host/code-view'
 import type { ControlState, ControlInvoke } from '../../core/host/controls'
+import type { CodeMapping } from '../../core/projection/code-generator'
+import type { SemanticNode } from '../../core/types'
+import type { DiagnosticsEvent } from '../../core/view-host'
+import { projectDiagnostics } from '../../core/projection/diagnostic-projection' 
 import type { SemanticBus } from '../../core/semantic-bus'
 import type { SemanticUpdateEvent, ExecutionAtNodeEvent, ViewHost, ViewCapabilities } from '../../core/view-host'
 import type { HostMessage, WebviewMessage } from '../sync/messages'
@@ -155,6 +159,31 @@ export class VscodeCodeView implements CodeView, ViewHost {
     // ⚠️ `detail` 是狀態列本來那一行的其餘部分——🔴 面板不畫了，
     //    但那些字不會憑空消失：它們進宿主狀態列的 tooltip。
     postToHost({ type: 'syncPhase', phase, source, detail })
+  }
+
+  private codeMappings: CodeMapping[] = []
+  private currentTree: SemanticNode | null = null
+
+  /**
+   * 診斷 → **宿主的 Problems**（2026-08-25）。
+   *
+   * ## 為什麼是 Problems 而不是面板裡的一塊
+   *
+   * > **搬面板只是換了個位置；走管道才拿得到 F8、紅色波浪線，
+   * > 以及使用者已經會的每一個快捷鍵。**
+   *
+   * ⚠️ 而它**不需要新的頻道**：`onDiagnostics` 早就是廣播
+   * （`app.ts` 的 `runAllDiagnostics` 對每個登錄的視圖發），
+   * 這裡只是第二個接收者。
+   *
+   * 🔴 **對映不到的那些直接不送**——見 `mappingFor` 的檔頭：
+   * 一個指錯地方的波浪比沒有波浪更糟。
+   */
+  onDiagnostics(event: DiagnosticsEvent): void {
+    const items = projectDiagnostics(event.diagnostics, this.codeMappings, this.currentTree)
+    // ⚠️ **每次送整份**——宿主那側的語義是取代，所以「診斷變少了」
+    //    會自動反映，不需要另外清。
+    postToHost({ type: 'problems', items })
   }
 
   reportControls(states: readonly ControlState[]): void {
@@ -355,6 +384,11 @@ export class VscodeCodeView implements CodeView, ViewHost {
   }
 
   onSemanticUpdate(event: SemanticUpdateEvent): void {
+    // 🔴 **對映與樹要留著**——診斷是用 `nodeId` 錨的，而 IDE 的 Problems
+    //    要的是行號。⚠️ 這一格與 `MonacoPanel` 做同一件事，
+    //    而**投影的實作在核心**（`core/projection/diagnostic-projection.ts`）。
+    if (event.mappings) this.codeMappings = event.mappings
+    if (event.tree) this.currentTree = event.tree
     // 應用透過匯流排說「樹變了，程式碼是這個」——而寫回走 `setCode`。
     // ⚠️ `source === 'code'` 代表這一輪【是程式碼那側發動的】，寫回去就是迴圈。
     if (event.source === 'code') return

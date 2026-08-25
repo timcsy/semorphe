@@ -33,7 +33,7 @@ import { resolveConfig, type RawSettings } from './sync/settings'
 import { textFingerprint } from './sync/fingerprint'
 import { applySpan } from '../core/projection/rewrite-span'
 import { ViewStateStore, type KeyValueStore, type ViewState } from './sync/view-state'
-import type { HostMessage, WebviewMessage, ControlStateWire } from './sync/messages'
+import type { HostMessage, WebviewMessage, ControlStateWire, CodeDiagnosticWire } from './sync/messages'
 
 /**
  * 積木 → 程式碼的高亮。
@@ -64,6 +64,15 @@ const EXECUTING = vscode.window.createTextEditorDecorationType({
  * 🔴 **量測沒有被丟掉，是搬家**——由 `semorphe.showDiagnostics` 指令取用。
  */
 const OUTPUT = vscode.window.createOutputChannel('Semorphe')
+
+/**
+ * 🔴 **診斷的家是 IDE 的 Problems，不是面板裡的一塊**（2026-08-25）。
+ *
+ * `draft/版面與檔案` §六之六：VSCode 把「狀態層」拆成四個原生的家，
+ * 而診斷那一格是 `DiagnosticCollection`。接上之後：錯誤進 Problems、
+ * 檔案總管標紅、`F8` 逐個跳——**那些是使用者已經會的操作**。
+ */
+const DIAGNOSTICS = vscode.languages.createDiagnosticCollection('semorphe')
 
 const VIEW_TYPE = 'semorphe.blocks'
 const TITLE = 'Semorphe 積木'
@@ -366,6 +375,7 @@ class SemorpheSession {
     // > ——而後者在焦點不在編輯器上時，答案是錯的。**
     if (m.type === 'syncPhase') { updateSyncStatusBar(m.phase, m.source, m.detail); return }
     if (m.type === 'controls') { updateControlSurfaces(m.items); return }
+    if (m.type === 'problems') { this.publishDiagnostics(m.items); return }
     if (m.type === 'ready') { this.resend(); return }
     if (m.type === 'requestDocument') {
       // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
@@ -595,6 +605,34 @@ class SemorpheSession {
     this.send({ type: 'syncCommand', ...cmd })
   }
 
+  /**
+   * 診斷 → **IDE 的 Problems**（2026-08-25）。
+   *
+   * > **搬面板只是換了個位置；走管道才拿得到 F8、紅色波浪線、
+   * > 檔案總管上的紅點，以及使用者已經會的每一個快捷鍵。**
+   *
+   * ⚠️ `endColumn` 是 `null` 時代表「到行尾」——**只有這裡知道行尾在哪**，
+   * 因為文件在主行程。webview 那側不猜。
+   */
+  private publishDiagnostics(items: CodeDiagnosticWire[]): void {
+    const doc = this.doc
+    if (!doc) return
+    const out = items.map((d) => {
+      const endLine = Math.min(d.endLine, doc.lineCount - 1)
+      const endColumn = d.endColumn ?? doc.lineAt(Math.max(0, endLine)).text.length
+      const diag = new vscode.Diagnostic(
+        new vscode.Range(d.startLine, d.startColumn, endLine, endColumn),
+        d.message,
+        d.severity === 'error' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning,
+      )
+      // 🔴 具名來源——Problems 上會顯示 `semorphe`，而**使用者要分得出
+      //    這一條是誰報的**（同一個檔可能同時有 C/C++ 擴充的診斷）。
+      diag.source = 'Semorphe'
+      return diag
+    })
+    DIAGNOSTICS.set(doc.uri, out)
+  }
+
   /** 宿主那側按了控制項——原封不動送進 webview。 */
   sendControl(msg: Extract<HostMessage, { type: 'controlInvoke' }>): void {
     this.send(msg)
@@ -617,6 +655,8 @@ class SemorpheSession {
     // > 它讓人停止確認。**
     hideSyncStatusBar()
     hideControlSurfaces()
+    // 🔴 面板關了，診斷也不該留在 Problems 上——**它們是這個面板算出來的**。
+    if (this.doc) DIAGNOSTICS.delete(this.doc.uri)
   }
 }
 
