@@ -194,6 +194,14 @@ export class VscodeCodeView implements CodeView, ViewHost {
     postToHost({ type: 'console', clear: true })
   }
 
+  reportConsoleAwaitingInput(prompt: string): void {
+    postToHost({ type: 'console', awaitingInput: prompt })
+  }
+
+  reportVariables(groups: readonly { name: string; collapsed: boolean; variables: readonly { name: string; type: string; value: string }[] }[]): void {
+    postToHost({ type: 'variables', groups: groups as never })
+  }
+
   onConsoleInput(callback: (line: string) => void): void {
     this.consoleCb = callback
   }

@@ -23,6 +23,7 @@
  *   （它掃全部的 (身分, 參數) 組合），這裡只釘**課文引用到的那一句**。
  */
 import { test, expect, type Page } from '@playwright/test'
+import { useAsSource } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -51,7 +52,7 @@ async function fresh(page: Page): Promise<void> {
 
 async function run(page: Page, code: string): Promise<string> {
   await page.evaluate((c) => (window as never as { __app: any }).__app.codeView.setCode(c), code)
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(900)
   await page.getByText('執行').first().click()
   await page.waitForTimeout(1800)

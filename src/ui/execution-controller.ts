@@ -790,6 +790,17 @@ export class ExecutionController {
     this.broadcastAtNode(null, false)
   }
 
+  /**
+   * 下方面板**晚一點才建**時換上新的那一份。
+   *
+   * ⚠️ 這在「宿主打不開終端機、主控台還給面板」時會發生
+   *（2026-08-25，Arduino IDE）。不換的話 `showTab` 打在 `null` 上，
+   * **而輸出看起來像沒有跑**。
+   */
+  attachBottomPanel(panel: BottomPanel): void {
+    this.panels.bottomPanel = panel
+  }
+
   dispose(): void {
     this.debugToolbar.dispose()
   }

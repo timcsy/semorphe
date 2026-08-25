@@ -19,13 +19,13 @@
  * 而這支只點名這一顆——它是唯一實測撞到的。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp } from './helpers'
+import { freshApp, selectTarget } from './helpers'
 
 test.use({ permissions: ['clipboard-read', 'clipboard-write'] })
 
 test('🔴 清單裡沒有的標頭要【留著】，不得被換成第一項', async ({ page }) => {
   await freshApp(page)
-  await page.locator('select.topic-dropdown').selectOption('esp32')
+  await selectTarget(page, 'esp32')
   await page.evaluate(async () => {
     await navigator.clipboard.writeText(
       '#include <WiFi.h>\n\nvoid setup() {\n  WiFi.begin("a", "b");\n}\n\nvoid loop() {\n}\n')

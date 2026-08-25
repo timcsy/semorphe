@@ -377,6 +377,7 @@ class SemorpheSession {
     if (m.type === 'controls') { updateControlSurfaces(m.items); return }
     if (m.type === 'problems') { this.publishDiagnostics(m.items); return }
     if (m.type === 'console') { writeToTerminal(m); return }
+    if (m.type === 'variables') { variablesView.update(m.groups); return }
     if (m.type === 'ready') { this.resend(); return }
     if (m.type === 'requestDocument') {
       // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
@@ -888,13 +889,74 @@ function probeTerminal(): void {
   probeDone = true
   setTimeout(() => {
     if (ptyOpened) return
-    OUTPUT.appendLine('Semorphe：這個宿主打不開終端機，主控台還給面板。')
+    OUTPUT.appendLine('Semorphe：這個宿主打不開終端機，主控台改用一個編輯器分頁。')
     disposeTerminal()
-    current?.sendConsoleFallback()
+    consoleMode = 'editor'
+    // 🔴 已經送過的輸出**不會掉**——它一直在 `consoleBuffer` 裡。
+    void showConsoleEditor()
   }, 1500)
 }
 
-function writeToTerminal(m: { chunk?: string; clear?: boolean }): void {
+/**
+ * 主控台的**退路：一個編輯器分頁**（2026-08-25）。
+ *
+ * > 使用者：「Arduino IDE 那邊還是看不到終端機，**或許可以用新編輯器取代**」
+ *
+ * 🔴 **比「塞回積木面板」好**：它仍然在 IDE 的編輯器區，
+ * 使用者可以把它拉到旁邊、split、關掉——那些都是他已經會的操作。
+ *
+ * ⚠️ 而虛擬文件**天生唯讀**，所以輸入要另外問：程式喊「我在等輸入」時
+ * 跳一個輸入框。**一個唯讀的輸出格會讓輸入沒有家——除非有人去問。**
+ */
+const CONSOLE_SCHEME = 'semorphe-console'
+const CONSOLE_URI = vscode.Uri.parse(`${CONSOLE_SCHEME}:/Semorphe 主控台`)
+let consoleMode: 'terminal' | 'editor' = 'terminal'
+let consoleBuffer = ''
+const consoleChanged = new vscode.EventEmitter<vscode.Uri>()
+
+export function registerConsoleDocument(context: vscode.ExtensionContext): void {
+  context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(CONSOLE_SCHEME, {
+    onDidChange: consoleChanged.event,
+    provideTextDocumentContent: () => consoleBuffer || '（還沒有輸出）',
+  }))
+}
+
+async function showConsoleEditor(): Promise<void> {
+  try {
+    const doc = await vscode.workspace.openTextDocument(CONSOLE_URI)
+    // ⚠️ `preserveFocus` ＝ 不要把游標從程式碼上搶走。
+    await vscode.window.showTextDocument(doc, { preview: false, preserveFocus: true, viewColumn: vscode.ViewColumn.Beside })
+  } catch (e) {
+    // 🔴 連編輯器都開不起來——**那時才把主控台還給面板**，不是靜靜地掉輸出。
+    OUTPUT.appendLine(`Semorphe：編輯器分頁也開不起來（${String(e)}），主控台還給面板。`)
+    consoleMode = 'terminal'
+    current?.sendConsoleFallback()
+  }
+}
+
+/** 程式在等輸入，而這個宿主的主控台是唯讀的——去問。 */
+async function askConsoleInput(prompt: string): Promise<void> {
+  const line = await vscode.window.showInputBox({
+    title: 'Semorphe 主控台',
+    prompt: prompt || '程式在等一行輸入',
+    ignoreFocusOut: true,
+  })
+  // ⚠️ 取消也要回一行（空字串）——**不然程式會永遠停在那裡等**。
+  current?.sendConsoleInput(line ?? '')
+}
+
+function writeToTerminal(m: { chunk?: string; clear?: boolean; awaitingInput?: string }): void {
+  if (m.awaitingInput !== undefined) {
+    // 終端機模式下不必問——使用者直接在裡面打字。
+    if (consoleMode === 'editor') void askConsoleInput(m.awaitingInput)
+    return
+  }
+  if (m.clear) { consoleBuffer = '' } else if (m.chunk) { consoleBuffer += m.chunk }
+  if (consoleMode === 'editor') {
+    consoleChanged.fire(CONSOLE_URI)
+    void showConsoleEditor()
+    return
+  }
   const term = ensureTerminal()
   if (m.clear) {
     // ⚠️ `\x1b[2J\x1b[H` ＝ 清畫面 ＋ 游標回原點。**清空是使用者按的**，
@@ -914,6 +976,70 @@ function disposeTerminal(): void {
   terminal?.dispose()
   terminal = undefined
   termLine = ''
+}
+
+/**
+ * 變數 —— **`panel` 區的一個視圖，與終端機同一排**（2026-08-25）。
+ *
+ * > 使用者：「變數面板還是放在那邊呀，我要的是放在主控台跟終端機一起
+ * > （**在還沒做 DAP 的時候**）」
+ *
+ * 🔴 而「在還沒做 DAP 的時候」不是把它當成暫時的將就——
+ * `panel` 區本來就是 VSCode 放「執行時看的東西」的地方
+ *（`draft/版面與檔案` §六：`panel  主控台 · 變數 · 圖解`）。
+ *
+ * ⚠️ 它是一個**很薄的 webview**：只畫表格，不載入任何積木機制。
+ * 資料由主 webview 推過來——**主行程不算變數，它只轉送**。
+ */
+class VariablesView implements vscode.WebviewViewProvider {
+  private view: vscode.WebviewView | undefined
+  private groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[] = []
+
+  resolveWebviewView(view: vscode.WebviewView): void {
+    this.view = view
+    view.webview.options = { enableScripts: false }
+    this.render()
+  }
+
+  update(groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[]): void {
+    this.groups = groups
+    this.render()
+  }
+
+  private render(): void {
+    if (!this.view) return
+    // ⚠️ **不開 script**——這一格只顯示，沒有互動。開了就要管 CSP 與 nonce，
+    //    而那是為了一張表格付的過頭的代價。
+    const rows = this.groups.flatMap((g) => [
+      ...(g.name ? [`<tr class="scope"><td colspan="3">${esc(g.name)}</td></tr>`] : []),
+      ...g.variables.map((v) =>
+        `<tr><td class="n">${esc(v.name)}</td><td class="t">${esc(v.type)}</td><td class="v">${esc(v.value)}</td></tr>`),
+    ]).join('')
+    this.view.webview.html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+body { font-family: var(--vscode-editor-font-family); font-size: 12px; color: var(--vscode-foreground); padding: 4px 8px; }
+table { width: 100%; border-collapse: collapse; }
+td { padding: 2px 6px 2px 0; vertical-align: top; }
+.n { color: var(--vscode-symbolIcon-variableForeground); white-space: nowrap; }
+.t { color: var(--vscode-descriptionForeground); white-space: nowrap; }
+.v { color: var(--vscode-charts-blue); word-break: break-all; }
+.scope td { color: var(--vscode-descriptionForeground); padding-top: 6px; }
+.empty { color: var(--vscode-descriptionForeground); }
+</style></head><body>${rows ? `<table>${rows}</table>` : '<div class="empty">執行時這裡會顯示變數。</div>'}</body></html>`
+  }
+}
+
+/** ⚠️ HTML 轉義——**變數的值是使用者的資料**，直接塞進 HTML 就是一個注入。 */
+function esc(text: string): string {
+  return text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c))
+}
+
+const variablesView = new VariablesView()
+
+export function registerVariablesView(context: vscode.ExtensionContext): void {
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('semorphe.variables', variablesView),
+  )
 }
 
 /** 面板關了：狀態列不得繼續宣稱有東西在同步。 */

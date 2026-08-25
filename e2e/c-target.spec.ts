@@ -41,6 +41,7 @@
  * - **只走一個樣本**——它守的是「兩條路徑都改到了」，不是覆蓋率
  */
 import { test, expect, type Page } from '@playwright/test'
+import { useAsSource } from './helpers'
 
 /**
  * C++ 專屬、而 C 裡不存在的積木——選 C 之後這些都不該出現在工具箱裡。
@@ -68,19 +69,23 @@ async function ready(page: Page): Promise<void> {
 }
 
 /** 選一個目標。回傳 `false` 代表**選單裡沒有它**。 */
+/**
+ * 依**標籤**選一個目標。
+ *
+ * ⚠️ 2026-08-25 起走的是**狀態列的 QuickPick**，不是 `<select>`。
+ * 🔴 而這一支仍然依標籤配對（不是依 id）——它要驗的正是
+ * 「選單裡**有沒有**『C 語言教學』這一項」，而那是標籤的問題。
+ */
 async function pickTarget(page: Page, label: RegExp): Promise<boolean> {
-  const ok = await page.evaluate((src) => {
-    const re = new RegExp(src)
-    const sel = [...document.querySelectorAll('select')]
-      .find((s) => [...s.options].some((o) => re.test(o.textContent ?? '')))
-    if (!sel) return false
-    const opt = [...sel.options].find((o) => re.test(o.textContent ?? ''))!
-    sel.value = opt.value
-    sel.dispatchEvent(new Event('change', { bubbles: true }))
-    return true
-  }, label.source)
+  await page.locator('#status-controls .status-item-btn[data-control-id="target"]').click()
+  const row = page.locator('.quick-pick-item').filter({ hasText: label })
+  if (await row.count() === 0) {
+    await page.keyboard.press('Escape')
+    return false
+  }
+  await row.first().click()
   await page.waitForTimeout(1500)
-  return ok
+  return true
 }
 
 /**
@@ -110,7 +115,7 @@ test('★ 選 C 目標 → 產出是乾淨的 C（而不是換了 printf 的 C++
   await page.evaluate(() =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } })
       .__app.codeView.setCode('int main(){ bool b = 1 == 2; cout << b << endl; return 0; }'))
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(900)
 
   // ★ 入口條件：C 目標**選得到**（合成量——2026-08-17 才接上選單）
@@ -159,11 +164,11 @@ test('★ 使用者自己寫的 #include，在 C 目標下也要換掉', async (
   await page.evaluate(() =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } })
       .__app.codeView.setCode('#include <iostream>\nint main(){ int n = 3; cout << n << endl; return 0; }'))
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(1200)
 
   expect(await pickTarget(page, /C 語言教學/), '🔴 選單裡沒有「C 語言教學」').toBe(true)
-  await page.getByText('積木→程式碼').click()
+  await useAsSource(page, '積木')
   await page.waitForTimeout(1200)
 
   const code = await page.evaluate(() =>
@@ -221,8 +226,10 @@ test('★ 選 C 目標 → 工具箱裡拿不到 C 沒有的東西', async ({ pa
 test('★ 選擇器沒有變多——目標是把三次收成一次，不是多加一個下拉', async ({ page }) => {
   await ready(page)
   // 反目標（SC-009）：目標若是**多**一個選擇器，它就沒有收攏任何東西。
-  const selects = await page.locator('.toolbar-select').count()
-  expect(selects, `🔴 工具列的選擇器變成 ${selects} 個`).toBeLessThanOrEqual(4)
+  // ⚠️ 2026-08-25 起它們是**狀態列的項目**，不是工具列的 `<select>`
+  //    ——量的東西換了位置，而**要守的那條規則沒變**。
+  const items = await page.locator('#status-controls .status-item-btn').count()
+  expect(items, `🔴 狀態列的控制項變成 ${items} 個`).toBeLessThanOrEqual(5)
 })
 
 test('★ 重新整理之後，選的目標還在', async ({ page }) => {
@@ -237,9 +244,8 @@ test('★ 重新整理之後，選的目標還在', async ({ page }) => {
   )
   await page.waitForTimeout(1500)
 
-  const selected = await page.evaluate(() =>
-    [...document.querySelectorAll('select')]
-      .flatMap((s) => [...s.options].filter((o) => o.selected).map((o) => o.textContent ?? ''))
-      .join(' | '))
-  expect(selected, '🔴 重新整理之後目標跑掉了——存檔沒記住 targetId').toMatch(/C 語言教學/)
+  // ⚠️ 2026-08-25：目標不再是一顆 `<select>`——它是**狀態列上的一個項目**，
+  //    而項目的文字就是目前的值。要驗的那件事沒變：**重新整理之後它還在**。
+  const selected = await page.locator('#status-controls .status-item-btn[data-control-id="target"]').textContent()
+  expect(selected ?? '', '🔴 重新整理之後目標跑掉了——存檔沒記住 targetId').toMatch(/C 語言教學/)
 })

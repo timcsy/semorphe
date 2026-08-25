@@ -101,5 +101,8 @@ export const vscodeProfile: HostProfile = {
     // 🔴 **終端機，不是 Output 面板**——我們的程式會讀 `cin`，
     //    而一個唯讀的輸出格會讓「輸入」沒有家。
     output: 'hostTerminal',
+    // 🔴 **`panel` 區，與終端機同一排**——而不是積木面板裡的一格。
+    //    ⚠️ 它的終局是 DAP 的 Variables 視圖；這一格是在那之前的家。
+    inspector: 'hostPanel',
   },
 }

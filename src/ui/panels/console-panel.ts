@@ -140,6 +140,13 @@ export class ConsolePanel implements ViewHost {
     this.outputCb = cb
   }
 
+  /** 程式開始等輸入了。⚠️ 給「唯讀的主控台」的宿主用。 */
+  onInputRequested(cb: ((prompt: string) => void) | null): void {
+    this.inputRequestCb = cb
+  }
+
+  private inputRequestCb: ((prompt: string) => void) | null = null
+
   /** 清空時通知（終端機那側也要跟著清）。 */
   onClear(cb: (() => void) | null): void {
     this.clearCb = cb
@@ -276,6 +283,10 @@ export class ConsolePanel implements ViewHost {
       if (prompt) {
         this.log(prompt)
       }
+      // 🔴 **告訴宿主「現在在等輸入」**——⚠️ 只有在宿主用【編輯器】當主控台時
+      //    它才需要知道：終端機自己就收得到打字，而編輯器是唯讀的。
+      //    處置在主行程（`vscode/panel.ts`）——這裡只是說一聲。
+      this.inputRequestCb?.(prompt ?? '')
 
       // If there are queued lines from a multi-line paste, auto-submit immediately
       if (this.pendingInputLines.length > 0) {

@@ -61,12 +61,31 @@ export class VariablePanel implements ViewHost {
     }
   }
 
+  /**
+   * 有新的變數快照時通知——🔴 **給「變數在宿主那邊」的宿主用**。
+   *
+   * ⚠️ 它是**鏡射**不是搬家：面板那一格仍然自己畫，
+   * 而建不建由 `controlSurfaces.inspector` 決定。
+   */
+  onSnapshot(cb: ((groups: ScopeGroup[]) => void) | null): void {
+    this.snapshotCb = cb
+  }
+
+  private snapshotCb: ((groups: ScopeGroup[]) => void) | null = null
+
+  /** ⚠️ 一律轉成分組的形狀送出去——**兩種形狀會讓收件端長出兩條路徑**。 */
+  private emit(groups: ScopeGroup[]): void {
+    this.snapshotCb?.(groups)
+  }
+
   update(variables: VariableEntry[]): void {
     this.renderFlat(variables)
+    this.emit([{ name: '', collapsed: false, variables }])
   }
 
   updateFromSnapshot(snapshot: { name: string; type: string; value: string }[]): void {
     this.renderFlat(snapshot)
+    this.emit([{ name: '', collapsed: false, variables: snapshot }])
   }
 
   updateWithScopes(groups: ScopeGroup[]): void {
@@ -95,9 +114,11 @@ export class VariablePanel implements ViewHost {
     }
 
     this.updatePreviousValues(groups.flatMap(g => g.variables))
+    this.emit(groups)
   }
 
   clear(): void {
+    this.emit([])
     this.previousValues.clear()
     this.contentEl.innerHTML = ''
     this.renderEmpty()

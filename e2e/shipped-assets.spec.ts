@@ -61,6 +61,7 @@
  *   **那時要擴充這支的操作，不是放寬判準。**
  */
 import { test, expect } from '@playwright/test'
+import { useAsSource } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -81,7 +82,7 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
   await page.evaluate(() =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } })
       .__app.codeView.setCode('int main(){ cout << 1; }'))
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(2500)
 
   // 🔴 **Python 的 wasm 只有切到 Python 目標才會被要**（spec 160）。
@@ -99,15 +100,20 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
   // **而測試回報「切換成功」**。症狀是 wasm 依然沒人要，而原因看起來像別的。
   //
   // > **一個用寬鬆樣式挑控制項的測試，會安靜地操作錯的那一個。**
-  const switched = await page.evaluate(() => {
-    const sel = [...document.querySelectorAll('select')]
-      .find((s) => [...s.options].some((o) => /^Python 入門$/.test((o.textContent ?? '').trim())))
-    if (!sel) return false
-    const opt = [...sel.options].find((o) => /^Python 入門$/.test((o.textContent ?? '').trim()))!
-    sel.value = opt.value
-    sel.dispatchEvent(new Event('change', { bubbles: true }))
-    return true
-  })
+  // ⚠️ 2026-08-25：那幾顆 `<select>` 退場，改成狀態列的項目 ＋ QuickPick。
+  //    🟢 **而「要認目標選單、不是任何含 Python 的選單」這條規則變得更硬了**：
+  //    現在是 `data-control-id="target"`，**沒有猜的空間**。
+  //
+  // > 一個用寬鬆樣式挑控制項的測試，會安靜地操作錯的那一個。
+  await page.locator('#status-controls .status-item-btn[data-control-id="target"]').click()
+  const pythonRow = page.locator('.quick-pick-item').filter({ hasText: /^Python 入門$/ })
+  const switched = await pythonRow.count() > 0
+  if (switched) {
+    await pythonRow.first().click()
+    await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  } else {
+    await page.keyboard.press('Escape')
+  }
   expect(switched, '🔴 選單裡沒有 Python 目標——那顆 wasm 就【真的】沒有人要').toBe(true)
   // ★ 而且要真的切過去了——不是「按了一個看起來對的東西」
   expect(
@@ -118,7 +124,7 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
   await page.evaluate(() =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } })
       .__app.codeView.setCode('print("hi")'))
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(2500)
 
   const shipped = fs.readdirSync(path.join(process.cwd(), 'dist'))

@@ -31,7 +31,8 @@ export interface AppShellElements {
   consolePanel: ConsolePanel
   variablePanel: VariablePanel
   flowPanel: FlowPanel
-  bottomPanel: BottomPanel
+  /** 🔴 這個宿主可能一格都不需要——那時它不存在，不是空的。 */
+  bottomPanel: BottomPanel | null
   /** 🔴 **這個宿主可能一顆快速列控制項都沒有**——那時它不存在，不是空的。 */
   quickAccessBar: QuickAccessBar | null
   layoutManager: LayoutManager
@@ -41,6 +42,8 @@ export interface AppShellElements {
   showProjection: (which: 'blocks' | 'flow') => void
   /** 把主控台那一格加回下方面板（宿主打不開終端機時）。 */
   enableConsoleTab: () => void
+  /** 那條列**晚一點才建**時通知——執行控制器手上是建構當時的那一份。 */
+  onBottomPanelReady: (cb: (panel: BottomPanel) => void) => void
 }
 
 export interface AppShellCallbacks {
@@ -292,9 +295,17 @@ export function createAppLayout(
   // 🔴 **由宿主決定這一格是誰**——這個檔不認識任何一個具體的編輯器。
   const codeView = profile.createCodeView(monacoWrapper)
 
+  // 🔴 **下方面板是一個容器，它的存在取決於裡面有沒有東西**。
+  //
+  // ⚠️ 主控台去了終端機、變數去了 `panel` 區之後，IDE 那側它是**空的**
+  //    ——而一條空的分頁列仍然吃掉高度。與快速列同一條規則：不建。
+  //
+  // > **一個沒有內容的容器不是「比較小的容器」，它是純粹的浪費。**
+  const bottomTabs = CONTROLS.filter((c) => (c.id === 'console' || c.id === 'variables'))
+    .filter((c) => surfaceOf(c, surfaces) === 'panelBottom')
   const bottomContainer = document.createElement('div')
-  codeColumn.appendChild(bottomContainer)
-  const bottomPanel = new BottomPanel(bottomContainer)
+  let bottomPanel = bottomTabs.length > 0 ? new BottomPanel(bottomContainer) : null
+  if (bottomPanel) codeColumn.appendChild(bottomContainer)
 
   // 🔴 **主控台那一格建不建，問登錄表**（`controlSurfaces.output`）。
   //
@@ -315,10 +326,20 @@ export function createAppLayout(
    * ⚠️ 而重複呼叫是安全的：加過就不再加。
    */
   let consoleTabAdded = false
+  let onBottomPanelCreated: ((panel: BottomPanel) => void) | null = null
   const enableConsoleTab = (): void => {
     if (consoleTabAdded) return
     consoleTabAdded = true
-    bottomPanel.addTab({
+    // ⚠️ 這條列可能根本沒建（主控台與變數都去了宿主）——**現在需要它了**。
+    //    🔴 那不是「早知道就建」：直到探測失敗之前，不建是對的。
+    if (!bottomPanel) {
+      bottomPanel = new BottomPanel(bottomContainer)
+      codeColumn.appendChild(bottomContainer)
+      // 🔴 **執行控制器手上是建構當時的那一份**——不通知它的話，
+      //    `showTab('console')` 會打在一個 `null` 上，而輸出看起來像沒有跑。
+      onBottomPanelCreated?.(bottomPanel)
+    }
+    bottomPanel?.addTab({
       id: 'console',
       label: Blockly.Msg['PANEL_CONSOLE'] || 'Console',
       panel: consoleEl,
@@ -332,9 +353,14 @@ export function createAppLayout(
     enableConsoleTab()
   }
 
+  // 🔴 **變數那一格建不建，也問登錄表**（`controlSurfaces.inspector`）。
+  //    IDE 那側它住在 `panel` 區、與終端機同一排——**不是積木面板裡的一格**。
+  //    使用者 2026-08-25：「我要的是放在主控台跟終端機一起」。
   const variableEl = document.createElement('div')
   const variablePanel = new VariablePanel(variableEl)
-  bottomPanel.addTab({ id: 'variables', label: Blockly.Msg['PANEL_VARIABLES'] || 'Variables', panel: variableEl })
+  if (surfaceOf(CONTROLS.find((c) => c.id === 'variables')!, surfaces) === 'panelBottom') {
+    bottomPanel?.addTab({ id: 'variables', label: Blockly.Msg['PANEL_VARIABLES'] || 'Variables', panel: variableEl })
+  }
 
   // 🔴 **第三個投影**。它出現在這裡只是因為要有一格 DOM——
   //    接線由 `registerViewsIn` 掃出來（見下面的回傳物件），不是這裡硬接的。
@@ -590,7 +616,7 @@ export function createAppLayout(
     mobileCodeContainer.classList.remove('active')
 
     // Move console/variable (bottom panel) to mobile container (keyboard must stay below)
-    mobileConsoleContainer.insertBefore(bottomContainer, consoleKeyboard?.getElement() ?? null)
+    if (bottomPanel) mobileConsoleContainer.insertBefore(bottomContainer, consoleKeyboard?.getElement() ?? null)
     mobileConsoleContainer.classList.remove('active')
 
     // 🔴 流程有自己的一格——⚠️ 而它在桌機是**同一欄裡的另一個投影**，
@@ -681,7 +707,7 @@ export function createAppLayout(
     blocksColumn.appendChild(blocklyContainer)
     // Ensure correct order: monaco first, then bottom panel
     codeColumn.appendChild(monacoWrapper)
-    codeColumn.appendChild(bottomContainer)
+    if (bottomPanel) codeColumn.appendChild(bottomContainer)
     // 🔴 流程回到積木那一欄——**而它回去的時候是「沒被選中的那個投影」**，
     //    所以由 `showProjection` 決定顯不顯示，不是留著行動版那個 `display: ''`。
     blocksColumn.appendChild(flowEl)
@@ -790,7 +816,7 @@ export function createAppLayout(
   //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
   showProjection('blocks')
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, enableConsoleTab }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
 }
 
 /*

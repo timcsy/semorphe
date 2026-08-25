@@ -189,10 +189,17 @@ export type WebviewMessage =
       items: CodeDiagnosticWire[]
     }
   | {
+      /** 變數快照 → 主行程 → `panel` 區的視圖。 */
+      type: 'variables'
+      groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[]
+    }
+  | {
       /** 程式的輸出 → 宿主的終端機。`clear: true` ＝ 清空。 */
       type: 'console'
       chunk?: string
       clear?: boolean
+      /** 程式在等輸入。⚠️ 只有「唯讀的主控台」需要據此去問使用者。 */
+      awaitingInput?: string
     }
   | {
       type: 'applyEdit'

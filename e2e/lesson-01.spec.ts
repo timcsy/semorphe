@@ -38,6 +38,7 @@
  * 那張**單獨手畫並標明「示意圖，不是實際畫面」**。
  */
 import { test, expect, type Page } from '@playwright/test'
+import { useAsSource } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -67,7 +68,7 @@ test('第一課：照著走，最後印出 Hello!', async ({ page }) => {
 
   // 第一步：骨架。⚠️ 課文明說這一步【不會】出現積木——那是實測出來的
   await page.evaluate(() => (window as never as { __app: any }).__app.codeView.setCode('int main() {\n    return 0;\n}\n'))
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(800)
   const afterSkeleton = await page.evaluate(
     () => (window as never as { __app: any }).__app.blocklyPanel.workspace.getAllBlocks(false).length)
@@ -79,7 +80,7 @@ test('第一課：照著走，最後印出 Hello!', async ({ page }) => {
 
   // 第二步：加 cout
   await page.evaluate((c) => (window as never as { __app: any }).__app.codeView.setCode(c), STEP2)
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(900)
   const blocks = await page.evaluate(
     () => (window as never as { __app: any }).__app.blocklyPanel.workspace.getAllBlocks(false).map((b: { type: string }) => b.type))
@@ -105,7 +106,7 @@ test('第一課的「換你了」：換成自己的名字也要跑得起來', as
   await fresh(page)
   await page.evaluate(() => (window as never as { __app: any }).__app.codeView.setCode(
     'int main() {\n    cout << "timcsy" << endl;\n    return 0;\n}\n'))
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(800)
   await page.getByText('執行').first().click()
   await page.waitForTimeout(1600)

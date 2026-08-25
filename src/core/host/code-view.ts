@@ -139,6 +139,23 @@ export interface CodeView {
   onConsoleInput?(callback: (line: string) => void): void
 
   /**
+   * 程式在等輸入了。
+   *
+   * ⚠️ **只有「唯讀的主控台」的宿主需要它**：終端機自己收得到打字，
+   * 而一個當成主控台用的編輯器分頁是唯讀的——那時要由宿主去問。
+   */
+  reportConsoleAwaitingInput?(prompt: string): void
+
+  /**
+   * 變數快照交給宿主的 `panel` 區。
+   *
+   * 🔴 **與 `controlSurfaces.inspector` 是同一件事的兩端**。
+   * ⚠️ 它的終局是 DAP 的 Variables 視圖——而在那之前，
+   * 「跟終端機同一排」已經是一個真的位置，不是暫時的將就。
+   */
+  reportVariables?(groups: readonly { name: string; collapsed: boolean; variables: readonly { name: string; type: string; value: string }[] }[]): void
+
+  /**
    * 🔴 **這個宿主打不開終端機**——面板要自己把主控台畫回來。
    *
    * ⚠️ 它是**能力探測的結果**，不是設定。`controlSurfaces.output` 說的是

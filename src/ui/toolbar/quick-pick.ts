@@ -78,6 +78,9 @@ export function showQuickPick(
     visible.forEach((item, index) => {
       const row = document.createElement('div')
       row.className = 'quick-pick-item' + (index === active ? ' active' : '')
+      // ⚠️ **給測試選得到的把手**：標籤會隨語系換，而值不會。
+      //    🔴 沒有它的話 e2e 只能用中文標籤配對——而那是一個會隨翻譯壞掉的測試。
+      row.dataset.value = item.value
       const mark = document.createElement('span')
       mark.className = 'quick-pick-mark'
       // ⚠️ 單選也標記目前值——**「哪一個是現在的」在清單裡看不出來的話**，

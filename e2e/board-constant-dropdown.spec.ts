@@ -16,14 +16,10 @@
  * ```
  */
 import { test, expect } from '@playwright/test'
-import { freshApp } from './helpers'
+import { freshApp, selectTarget } from './helpers'
 
-/** 走 UI 的目標選擇器——⚠️ 不要自己呼叫 `handleTargetChange`，那會跳過選擇器那一半。 */
-async function selectTarget(page: import('@playwright/test').Page, id: string): Promise<void> {
-  const sel = page.locator('select.topic-dropdown')
-  await sel.selectOption(id)
-  await expect(sel).toHaveValue(id)
-}
+// 🪦 本地的 `selectTarget` 已刪除——2026-08-25 那幾顆 `<select>` 退場，
+//    改走狀態列的 QuickPick。共用實作在 `helpers.ts`。
 
 /** 這顆積木此刻的下拉選項——走 Blockly 真的會用的那條路（`getOptions`）。 */
 async function pinConstantOptions(page: import('@playwright/test').Page): Promise<string[]> {

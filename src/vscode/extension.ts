@@ -23,7 +23,7 @@
  * 而**宿主層本來就要認識宿主**。方向是單向的。
  */
 import * as vscode from 'vscode'
-import { openBlocksPanel, requestDiagnostics, openSyncMenu, pickControl, invokeControl, SYNC_MENU_COMMAND } from './panel'
+import { openBlocksPanel, requestDiagnostics, openSyncMenu, pickControl, invokeControl, registerConsoleDocument, registerVariablesView, SYNC_MENU_COMMAND } from './panel'
 import { CONTROLS, RUN_MODES, hostCommandId, runModeCommandId } from '../core/host/controls'
 
 export const OPEN_COMMAND = 'semorphe.openBlocks'
@@ -32,6 +32,11 @@ export const DIAGNOSTICS_COMMAND = 'semorphe.showDiagnostics'
 export { SYNC_MENU_COMMAND }
 
 export function activate(context: vscode.ExtensionContext): void {
+  // 🔴 主控台的退路：一份虛擬文件（宿主打不開終端機時當成編輯器分頁開）。
+  //    ⚠️ 要在**啟用時**就註冊——內容提供者不能等到要用的時候才註冊。
+  registerConsoleDocument(context)
+  // 🔴 變數住在 `panel` 區，與終端機同一排（在 DAP 之前）。
+  registerVariablesView(context)
   context.subscriptions.push(
     vscode.commands.registerCommand(OPEN_COMMAND, () => openBlocksPanel(context)),
     // 🔴 診斷是一個**指令**，不是面板上的一塊——見 `panel.ts` 的 `OUTPUT`。

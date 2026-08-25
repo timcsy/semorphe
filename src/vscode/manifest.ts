@@ -53,7 +53,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.10.1'
+export const EXTENSION_VERSION = '0.10.2'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -216,6 +216,19 @@ export function buildManifest(): ExtensionManifest {
           category: DISPLAY_NAME,
         })),
       ],
+      // 🔴 **變數住在 `panel` 區**——與終端機／Problems 同一排。
+      //    使用者 2026-08-25：「我要的是放在主控台跟終端機一起」。
+      //    ⚠️ `panel` 這個容器位置**就是 VSCode 放「執行時看的東西」的地方**。
+      viewsContainers: {
+        panel: [
+          { id: 'semorphe-panel', title: DISPLAY_NAME, icon: 'assets/logo-dark-theme.svg' },
+        ],
+      },
+      views: {
+        'semorphe-panel': [
+          { type: 'webview', id: 'semorphe.variables', name: '變數' },
+        ],
+      },
       configuration: {
         title: DISPLAY_NAME,
         properties: configProperties(),

@@ -61,5 +61,7 @@ export const webProfile: HostProfile = {
     indicator: 'panelStatusBar',
     // 主控台就是下方面板那一格——**網頁版沒有終端機可以交給它**。
     output: 'panelBottom',
+    // 變數也在下方面板——**網頁版沒有第二個面板區可以放它**。
+    inspector: 'panelBottom',
   },
 }

@@ -20,6 +20,7 @@
  * 那是另一條線，今天沒有防線。**寫在這裡，不讓它假裝做了。**
  */
 import { test, expect, type Page } from '@playwright/test'
+import { useAsSource } from './helpers'
 
 async function freshApp(page: Page): Promise<void> {
   await page.goto('/')
@@ -38,8 +39,8 @@ test('一則診斷同時出現在積木側與程式碼側', async ({ page }) => 
     app.codeView?.setCode('using namespace std;\nint main() {\n    int x = 1;\n    return 0;\n}\n')
   })
   // ⚠️ **`setCode` 不會觸發同步**——它只換文字。走使用者真的走的那條路：
-  // 點「程式碼→積木」。（第一版只 setCode 就等，等了 30 秒零顆積木。）
-  await page.getByText('程式碼→積木').click()
+  // 以【程式碼】為準。（第一版只 setCode 就等，等了 30 秒零顆積木。）
+  await useAsSource(page, '程式碼')
   await page.waitForFunction(
     () => ((window as never as { __app: any }).__app?.blocklyPanel?.workspace?.getAllBlocks(false)?.length ?? 0) > 0,
     undefined, { timeout: 30_000 },
@@ -165,7 +166,7 @@ test('少一個分號 → 程式碼面板出現【錯誤級】波浪', async ({ 
     // 🔴 而那個缺口本身要另外追，見 `knowledge/history/063`。
     app.codeView?.setCode('#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    cout << x;\n    return 0;\n}\n')
   })
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForFunction(
     () => ((window as never as { __app: any }).__app?.blocklyPanel?.workspace?.getAllBlocks(false)?.length ?? 0) > 0,
     undefined, { timeout: 30_000 },
@@ -222,7 +223,7 @@ test('少分號的程式：按執行 → 不執行', async ({ page }) => {
     return true
   })
   expect(before).toBe(true)
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(800)
   await page.getByText('執行').first().click()
   await page.waitForTimeout(1500)
@@ -234,7 +235,7 @@ test('少分號的程式：按執行 → 不執行', async ({ page }) => {
     const app = (window as never as { __app: any }).__app
     app.codeView?.setCode('#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    cout << x;\n    return 0;\n}\n')
   })
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(800)
 
   const r = await page.evaluate(async () => {
@@ -279,7 +280,7 @@ test('同一段程式：只編輯不按執行 → 不出現任何拒絕', async 
     const app = (window as never as { __app: any }).__app
     app.codeView?.setCode('#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    cout << x;\n    return 0;\n}\n')
   })
-  await page.getByText('程式碼→積木').click()
+  await useAsSource(page, '程式碼')
   await page.waitForTimeout(1200)
 
   const text = await page.evaluate(() => document.body.innerText)
@@ -312,7 +313,7 @@ for (const [name, code] of Object.entries({
       const app = (window as never as { __app: any }).__app
       app.codeView?.setCode(c)
     }, code)
-    await page.getByText('程式碼→積木').click()
+    await useAsSource(page, '程式碼')
     await page.waitForTimeout(900)
 
     // ★ 入口條件：這段程式真的被標記了（合成量）。沒標記的話這支測的是辨識層，

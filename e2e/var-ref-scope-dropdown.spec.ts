@@ -16,13 +16,10 @@
  * ```
  */
 import { test, expect, type Page } from '@playwright/test'
-import { freshApp } from './helpers'
+import { freshApp, selectTarget } from './helpers'
 
-async function selectTarget(page: Page, id: string): Promise<void> {
-  const sel = page.locator('select.topic-dropdown')
-  await sel.selectOption(id)
-  await expect(sel).toHaveValue(id)
-}
+// 🪦 本地的 `selectTarget` 已刪除——2026-08-25 那幾顆 `<select>` 退場，
+//    改走狀態列的 QuickPick。共用實作在 `helpers.ts`。
 
 /** 貼一段真的程式碼進去（走使用者那條路，不是 `newBlock`）。 */
 async function pasteCode(page: Page, code: string): Promise<void> {

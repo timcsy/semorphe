@@ -296,6 +296,7 @@ export class App {
     this.blocklyPanel = elements.blocklyPanel
     this.showProjection = elements.showProjection
     this.enableConsoleTab = elements.enableConsoleTab
+    elements.onBottomPanelReady((panel) => this.executionController?.attachBottomPanel(panel))
     this.codeView = elements.codeView
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
@@ -510,6 +511,8 @@ export class App {
     this.wireHostControls()
     // 🔴 主控台 ↔ 宿主的終端機——⚠️ 用**能力探測**，這一層不認識任何宿主。
     this.wireHostConsole(elements.consolePanel)
+    // 🔴 變數 → 宿主的 `panel` 區（與終端機同一排）。
+    elements.variablePanel?.onSnapshot((groups) => this.codeView?.reportVariables?.(groups))
 
     // 12. Setup bidirectional highlighting
     this.setupBidirectionalHighlight()
@@ -1148,6 +1151,7 @@ export class App {
     //    🟢 而輸出不會掉：`ConsolePanel` 一直都在畫，終端機只是它的鏡射。
     view.onConsoleFallback?.(() => this.enableConsoleTab?.())
     consolePanel.onClear(() => view.clearConsole?.())
+    consolePanel.onInputRequested((prompt) => view.reportConsoleAwaitingInput?.(prompt))
     view.onConsoleInput?.((line: string) => consolePanel.feedInput(line))
   }
 

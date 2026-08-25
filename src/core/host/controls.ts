@@ -26,7 +26,14 @@
  * action      做一件事        → 宿主的分頁標題列
  * indicator   看一個狀態      → 宿主的狀態列（點得下去，但主要是給人看的）
  * output      程式在講話      → 宿主的終端機
+ * inspector   執行時看的東西  → 宿主的面板區（終端機旁邊那一排）
  * ```
+ *
+ * ## ⚠️ `output` 與 `inspector` 為什麼是兩種
+ *
+ * 它們在網頁版是同一格（下方面板），**而在 IDE 不是**：
+ * 程式的輸出屬於終端機，而變數屬於 `panel` 區的一個視圖。
+ * 🔴 表面由 `kind` 決定，所以「兩個東西的宿主表面不同」＝**它們是兩種**。
  *
  * ## 🔴 `output` 為什麼是終端機，不是 Output 面板
  *
@@ -41,7 +48,7 @@
  */
 
 /** 使用者拿它做什麼——🔴 **表面由這一格決定**。 */
-export type ControlKind = 'picker' | 'action' | 'indicator' | 'output'
+export type ControlKind = 'picker' | 'action' | 'indicator' | 'output' | 'inspector'
 
 /**
  * 它管的範圍。⚠️ **不決定表面**——它是「為什麼不該待在積木面板」的理由。
@@ -62,6 +69,7 @@ export type ControlSurface =
   | 'hostStatusBar'
   | 'hostTitleBar'
   | 'hostTerminal'
+  | 'hostPanel'
 
 export type ControlId =
   | 'target' | 'branches' | 'style' | 'blockStyle' | 'locale'
@@ -69,6 +77,7 @@ export type ControlId =
   | 'viewBlocks' | 'viewFlow'
   | 'sync'
   | 'console'
+  | 'variables'
 
 export interface ControlSpec {
   readonly id: ControlId
@@ -121,6 +130,10 @@ export const CONTROLS: readonly ControlSpec[] = [
   { id: 'viewFlow', kind: 'action', domain: 'view', mountId: 'view-flow-btn', bar: 'quickAccess', hostTitle: '顯示流程', icon: '$(type-hierarchy)' },
   // 🔴 **程式在講話的地方**（2026-08-25，`draft/版面與檔案` §六之六）。
   { id: 'console', kind: 'output', domain: 'project', mountId: 'console-panel', bar: 'quickAccess', hostTitle: '主控台' },
+  // 🔴 **執行時看的東西**——它的終局是 DAP 的 Variables 視圖（第五刀），
+  //    而在那之前它的家是 `panel` 區的一個視圖，**與終端機同一排**。
+  //    使用者 2026-08-25：「我要的是放在主控台跟終端機一起（在還沒做 DAP 的時候）」。
+  { id: 'variables', kind: 'inspector', domain: 'project', mountId: 'variable-panel', bar: 'quickAccess', hostTitle: '變數' },
   { id: 'sync', kind: 'indicator', domain: 'project', mountId: 'sync-menu-btn', bar: 'quickAccess', hostTitle: '同步：暫停／以哪一邊為準' },
 ]
 

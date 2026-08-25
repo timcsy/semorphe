@@ -23,7 +23,7 @@ export async function freshApp(page: Page): Promise<void> {
  * ——實測第一版打多行，lift 出來是 `raw_code`，
  * 而錯誤訊息（`RUNTIME_ERR_UNKNOWN_COMPONENT`）看起來像產品的 bug。
  *
- * 打完按「積木→程式碼」讓它重新產生：那一步同時
+ * 打完之後**以積木為準**讓它重新產生：那一步同時
  * ① 把單行攤成多行（行號才有意義）
  * ② 走一次 `resync`，確保 `codeMappings` 是當前的
  */
@@ -34,7 +34,7 @@ export async function typeAndFormat(page: Page, oneLineCode: string): Promise<vo
   await page.keyboard.type(oneLineCode)
   await expect(page.locator('.blocklyDraggable').first()).toBeVisible({ timeout: 15_000 })
 
-  await page.getByRole('button', { name: '積木→程式碼' }).click()
+  await useAsSource(page, '積木')
   // 攤成多行了 ＝ 行數超過 1
   await expect(page.locator('.view-line').nth(5)).toBeVisible({ timeout: 10_000 })
 }
@@ -112,3 +112,45 @@ export async function setBreakpoint(page: Page, line: number): Promise<void> {
 /** 一個有迴圈、輸出可預期（1+2+3=6）的程式。單行——見 `typeAndFormat`。 */
 export const LOOP_PROGRAM =
   'int main() { int total = 0; for (int i = 1; i <= 3; i++) { total = total + i; } cout << total << endl; return 0; }'
+
+/**
+ * 走 UI 選一個控制項的值（目標／風格／語系……）。
+ *
+ * 🔴 **不要自己呼叫 `handleTargetChange`**——那會跳過控制項那一半，
+ * 而這個專案已經撞過四次「機制有了沒人接上」。
+ *
+ * ⚠️ 2026-08-25 起這條路變了：那幾顆 `<select>` 退場，改成
+ * **狀態列的文字項目 ＋ QuickPick**（`draft/版面與檔案` §六之四）。
+ * 🔴 而 CI 的 e2e 是**唯一抓到這件事的東西**——單元測試與手動實測都放它過。
+ */
+export async function pickControlValue(page: Page, controlId: string, value: string): Promise<void> {
+  await page.locator(`#status-controls .status-item-btn[data-control-id="${controlId}"]`).click()
+  await page.locator(`.quick-pick-item[data-value="${value}"]`).click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  await page.waitForTimeout(900)
+}
+
+/** 選目標——最常用的那一個。 */
+export async function selectTarget(page: Page, id: string): Promise<void> {
+  await pickControlValue(page, 'target', id)
+}
+
+/**
+ * 以某一邊為準，讓它重新產生另一邊。
+ *
+ * ## 🔴 為什麼不是按「程式碼→積木」
+ *
+ * 那兩顆**方向**按鈕已於 2026-08-25 退場——同步從「方向」（N²）
+ * 換成「來源」（N），而第六十二條護欄守著它們不准回來。
+ *
+ * > **加第三個可編輯視圖時不必新增按鈕。**
+ *
+ * ⚠️ 而 e2e 是**唯一抓到 e2e 沒跟上的東西**：單元測試與手動實測
+ * 都放它過了整整一天（CI 從 2026-08-25 00:20 起紅）。
+ */
+export async function useAsSource(page: Page, which: '程式碼' | '積木'): Promise<void> {
+  await page.locator('#sync-menu-btn').click()
+  await page.locator('.quick-pick-item').filter({ hasText: new RegExp(`以此為準：${which}`) }).first().click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  await page.waitForTimeout(600)
+}
