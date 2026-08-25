@@ -155,18 +155,20 @@ describe('Migration roundtrip: print with dynamicRules', () => {
 })
 
 describe('Migration roundtrip: input with dynamicRules', () => {
-  it('extract → component identity preserved for cin with select vars', () => {
+  /**
+   * 🔄 **`cin >>` 的記憶方式換了**（2026-08-26）：`{ args: [{mode,text}] }`
+   * → `{ itemCount }` ＋ `ARG_{i}` 接點。理由是它改用了與 `cout <<`
+   * 同一個可變參數建構子——**兩個鏡像的運算，投影不該長得不一樣**。
+   */
+  it('extract → cin 的每一格都是接點，身分與名字都保住', () => {
+    const varRef = (n: string, id: string) =>
+      ({ type: 'cpp_var_ref', id, fields: { NAME: n }, inputs: {} })
     const blockState = {
       type: 'cpp_input',
       id: 'in1',
       fields: {},
-      inputs: {},
-      extraState: {
-        args: [
-          { mode: 'select', text: 'x' },
-          { mode: 'select', text: 'y' },
-        ],
-      },
+      inputs: { ARG_0: { block: varRef('x', 'v0') }, ARG_1: { block: varRef('y', 'v1') } },
+      extraState: { itemCount: 2 },
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
@@ -174,6 +176,7 @@ describe('Migration roundtrip: input with dynamicRules', () => {
     expect(result!.children.values).toHaveLength(2)
     expect(result!.children.values[0].componentId).toBe('cpp:var_ref')
     expect(result!.children.values[0].properties.name).toBe('x')
+    expect(result!.children.values[1].properties.name, '🔴 第二格掉了').toBe('y')
   })
 
   it('render → extract roundtrip for input', () => {

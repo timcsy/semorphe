@@ -1,12 +1,7 @@
 {
   "componentId": "cpp:input",
   "abstractComponent": null,
-  "properties": [
-    {
-      "name": "name",
-      "kind": "literal"
-    }
-  ],
+  "properties": [],
   "children": {
     "values": "expressions"
   },
@@ -34,5 +29,6 @@
   ],
   "_requires_why": "⚠️ 原本是 `std/index.ts` 裡一句手寫的 `registerComponentMapping`——**一個例外**，因為這顆的宣告不在 iostream 模組裡。搬進膠囊之後它就是這顆元件自己的 `requires`。",
   "_owner_why": "⚠️ **`owner` 是工具箱段落的鍵，不是「這顆屬於哪一層」。**\nio 分類的來源寫著 `{ from: '(universal)' }`——`cout`／`cin` 的積木列在那裡。\n而 `requires` 是**另一件事**（`#include` 解析），兩者剛好都在這個檔裡。\n蓋成 `<iostream>` 的話積木從工具箱消失，而 `#include` 仍然正確——\n**兩個問題各自答對一半，症狀只出現在使用者那一側。**",
-  "_writesTo_why": "🟢 **`cin >> a >> b` 有【兩個】寫入目標，而它們在 `values` 接點裡**（2026-08-26）。\n⚠️ 在此之前這裡寫著 `writesTo: \"name\"`——而 lift **從來沒有填過那個屬性**（實測 `cin >> obj.arr[i]` 的 properties 是空的）。\n> **一個指著沒有人填的欄位的宣告，會讓一條護欄以為它看過了那一格。**\n判準見 `knowledge/concepts/左值.md`。"
+  "_writesTo_why": "🟢 **`cin >> a >> b` 有【兩個】寫入目標，而它們在 `values` 接點裡**（2026-08-26）。\n⚠️ 在此之前這裡寫著 `writesTo: \"name\"`——而 lift **從來沒有填過那個屬性**（實測 `cin >> obj.arr[i]` 的 properties 是空的）。\n> **一個指著沒有人填的欄位的宣告，會讓一條護欄以為它看過了那一格。**\n判準見 `knowledge/concepts/左值.md`。",
+  "_properties_why": "🪦 **`name` 已於 2026-08-26 刪除**——**lift 從來沒有填過它**（實測 `cin >> a >> b` 的 properties 是空的，目標全在 `values` 接點裡）。\n> **一個沒有人填的屬性，會讓每一條讀宣告的護欄以為它看過了那一格。**"
 }

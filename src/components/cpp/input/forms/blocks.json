@@ -7,43 +7,30 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_input",
-      "message0": "%{BKY_U_INPUT_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "x"
-        }
-      ],
+      "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#5CB1D6",
-      "tooltip": "%{BKY_U_INPUT_TOOLTIP}"
+      "tooltip": "%{BKY_U_INPUT_TOOLTIP}",
+      "builder": "variadic",
+      "labelKey": "U_INPUT_LABEL",
+      "labelFallback": "讀取輸入 →",
+      "slotCheck": "Expression"
     },
     "renderMapping": {
-      "fields": {
-        "NAME": "name"
-      },
+      "fields": {},
       "inputs": {},
       "statementInputs": {},
       "expressionCounterpart": "cpp_input_expression",
       "dynamicRules": [
         {
-          "countSource": "args.length",
+          "countSource": "itemCount",
           "childSlot": "values",
-          "modeSource": "args[{i}].mode",
-          "modes": {
-            "select": {
-              "field": "args[{i}].text",
-              "wrapTrait": "variableRef"
-            },
-            "compose": {
-              "input": "ARG_{i}"
-            }
-          }
+          "inputPattern": "ARG_{i}"
         }
       ]
-    }
+    },
+    "_why": "🟢 **2026-08-26：改成與 `cout << a << b` 同一個建構子**（`builder: \"variadic\"`）。\n⚠️ 路線圖本來寫著這顆缺「**多模式的插槽**」（一格可以是下拉、也可以是接點），而那個判斷是 2026-08-24 做的——**在左值接點化之前**。\n🔴 左值接點化之後 `cin >> x` 的語義樹已經是 `values: [cpp:var_ref{x}]`，而每一顆賦值積木都改成用接點裝它的左值。於是那顆「select 模式的下拉」\n**只剩下一個理由：少一層巢狀**——而它的代價是\n`cin >> x >> y` 顯示成下拉、而它的鏡像 `cout << x << y` 顯示成接點。\n> **兩個鏡像的運算，投影不該長得不一樣。**\n🟢 變數下拉沒有消失——它在 `cpp_var_ref` 積木上。"
   },
   {
     "id": "cpp_input_expression",
@@ -52,7 +39,15 @@
     "category": "io",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_input_expression"
+      "type": "cpp_input_expression",
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_U_INPUT_TOOLTIP}",
+      "builder": "variadic",
+      "labelKey": "U_INPUT_LABEL",
+      "labelFallback": "讀取輸入 →",
+      "slotCheck": "Expression"
     },
     "renderMapping": {
       "fields": {},
@@ -60,24 +55,16 @@
       "statementInputs": {},
       "dynamicRules": [
         {
-          "countSource": "args.length",
+          "countSource": "itemCount",
           "childSlot": "values",
-          "modeSource": "args[{i}].mode",
-          "modes": {
-            "select": {
-              "field": "args[{i}].text",
-              "wrapTrait": "variableRef"
-            },
-            "compose": {
-              "input": "ARG_{i}"
-            }
-          }
+          "inputPattern": "ARG_{i}"
         }
       ]
     },
     "form": {
       "axis": "role",
       "value": "expression"
-    }
+    },
+    "_why": "🟢 **2026-08-26：改成與 `cout << a << b` 同一個建構子**（`builder: \"variadic\"`）。\n⚠️ 路線圖本來寫著這顆缺「**多模式的插槽**」（一格可以是下拉、也可以是接點），而那個判斷是 2026-08-24 做的——**在左值接點化之前**。\n🔴 左值接點化之後 `cin >> x` 的語義樹已經是 `values: [cpp:var_ref{x}]`，而每一顆賦值積木都改成用接點裝它的左值。於是那顆「select 模式的下拉」\n**只剩下一個理由：少一層巢狀**——而它的代價是\n`cin >> x >> y` 顯示成下拉、而它的鏡像 `cout << x << y` 顯示成接點。\n> **兩個鏡像的運算，投影不該長得不一樣。**\n🟢 變數下拉沒有消失——它在 `cpp_var_ref` 積木上。"
   }
 ]

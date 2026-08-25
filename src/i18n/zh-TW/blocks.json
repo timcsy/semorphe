@@ -27,7 +27,7 @@
   "CPP_SET_EMPTY_TOOLTIP": "檢查集合是否為空（回傳是/否）",
   "U_PRINT_LABEL": "輸出",
   "U_FUNC_DEF_PARAMS_LABEL": "參數",
-  "U_INPUT_LABEL": "讀取輸入 → 變數",
+  "U_INPUT_LABEL": "讀取輸入 →",
   "U_VAR_REF_CUSTOM": "(自訂)",
   "U_VAR_DECLARE_HEADER": "宣告",
   "U_VAR_DECLARE_VAR_LABEL": "變數",

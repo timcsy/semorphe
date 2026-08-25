@@ -2,7 +2,6 @@ import type { SemanticNode } from '../../../core/types'
 import type { PatternExtractor, BlockState, ExtractContext } from '../../../core/projection/pattern-extractor'
 import { buildDocComment } from '../../../components/cpp/doc_comment/lift'
 import { buildVarRef } from '../../../components/cpp/var_ref/lift'
-import { buildInput } from '../../../components/cpp/input/lift'
 import { buildIf } from '../../../components/cpp/if/lift'
 import { buildVarDeclare } from '../../../components/cpp/var_declare/lift'
 
@@ -74,34 +73,22 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
   extractor.registerExtractStrategy('cpp_if', extractIf)
   extractor.registerExtractStrategy('cpp_if_else', extractIf)
 
-  // ── I/O (input with select mode fallback) ──
-  const extractInput = (block: BlockState, ctx: ExtractContext): SemanticNode | null => {
-    const extraState = block.extraState as { args?: Array<{ mode: string; text?: string; selectedVar?: string }> } | undefined
-    const args = extraState?.args ?? []
-    const valueNodes: SemanticNode[] = []
-    for (let i = 0; i < args.length; i++) {
-      const a = args[i]
-      if (a.mode === 'select') {
-        const name = a.text ?? a.selectedVar
-        if (name) valueNodes.push(buildVarRef(name))
-      } else if (a.mode === 'compose') {
-        const inputData = block.inputs[`ARG_${i}`]
-        if (inputData?.block) {
-          const extracted = ctx.extract(inputData.block)
-          if (extracted) valueNodes.push(extracted)
-        }
-      }
-    }
-    if (valueNodes.length === 0) {
-      // Fallback: try SEL_0 field (dynamic dropdown), then NAME field (JSON blockDef)
-      const singleVar = (block.fields.SEL_0 as string) ?? (block.fields.NAME as string) ?? 'x'
-      valueNodes.push(buildVarRef(singleVar))
-    }
-    const firstVarName = String((valueNodes[0] as any)?.properties?.name ?? 'x')
-    return buildInput(valueNodes, { variable: firstVarName })
-  }
-  extractor.registerExtractStrategy('cpp_input', extractInput)
-  extractor.registerExtractStrategy('cpp_input_expression', extractInput)
+  // 🪦 **`extractInput` 已於 2026-08-26 刪除**——`cin >>` 改用可變參數建構子之後
+  //    `extraState.args` 這個鍵不存在了，而宣告的 `dynamicRules`
+  //    （`countSource: itemCount` ＋ `inputPattern: ARG_{i}`）表達得完。
+  //
+  // 🔴 **而它壞掉的方式正是這個專案記過的那一種**：它的退路是
+  //
+  //        const singleVar = block.fields.SEL_0 ?? block.fields.NAME ?? 'x'
+  //
+  //    於是 `cin >> a;` 來回轉換之後變成 `cin >> x;`——**變數名安靜地換成預設值**。
+  //    抓到它的是「來回轉換逐字相同」那個對照組，不是型別檢查。
+  //
+  // > **多層 fallback 都用同一個預設值，會互相掩蓋，
+  // > 讓真正的資料遺失點無法定位。**（`experience`「靜默降級是 bug 的藏身之處」）
+  //
+  // ⚠️ 它還順手塞了一個 `{ variable: … }` 屬性——那是第三十四條長年報的
+  //    「讀了沒宣告」之一，一併消失。
 
   // ── Doc comment (flat property model) ──
   extractor.registerExtractStrategy('cpp_doc_comment', (block: BlockState) => {

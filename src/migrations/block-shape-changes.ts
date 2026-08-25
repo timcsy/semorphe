@@ -42,6 +42,16 @@ export interface ShapeChange {
   blockType: string
   /** 已經退場的欄位名 */
   retiredFields: string[]
+  /**
+   * 已經退場的 `extraState` 鍵（2026-08-26 加）。
+   *
+   * 🔴 **一顆積木的骨架不只有欄位**：`cpp_input` 的命令式定義存的是
+   * `{ args: [{ mode, text }] }`，而宣告式的可變參數建構子存的是
+   * `{ itemCount }`——**沒有任何欄位改變**，而舊快取載進去會少掉格子。
+   *
+   * > **一個只看得見欄位的失效判定，看不見「同一顆積木換了記憶方式」。**
+   */
+  retiredExtraState?: string[]
   /** 為什麼——會被印進報表 */
   why: string
 }
@@ -81,11 +91,14 @@ export function staleShapeIn(
     if (hit || !b || typeof b !== 'object' || Array.isArray(b)) return
     const n = b as Record<string, unknown>
     const change = typeof n.type === 'string' ? byType.get(n.type) : undefined
-    if (change && n.fields && typeof n.fields === 'object') {
-      const fields = n.fields as Record<string, unknown>
-      // 🔴 **合取**：型別對得上 ＋ 身上真的有那個退場欄位。
+    if (change) {
+      // 🔴 **合取**：型別對得上 ＋ 身上真的有那個退場的東西。
       //    少了後半，一顆已經是新形狀的積木也會讓整份快取被丟掉。
+      const fields = (n.fields && typeof n.fields === 'object') ? n.fields as Record<string, unknown> : {}
       if (change.retiredFields.some((f) => f in fields)) { hit = change; return }
+      const extra = (n.extraState && typeof n.extraState === 'object')
+        ? n.extraState as Record<string, unknown> : {}
+      if ((change.retiredExtraState ?? []).some((k) => k in extra)) { hit = change; return }
     }
     if (n.inputs && typeof n.inputs === 'object') {
       for (const v of Object.values(n.inputs as Record<string, unknown>)) {
@@ -156,5 +169,28 @@ export const SHAPE_CHANGES_V14: ShapeChange[] = [
     retiredFields: ['NAME'],
     why: '左值 `NAME`（變數下拉）換成 `TARGET` 接點——語料上那個字串裝著 12 種'
       + '非原子的值（`r.x`／`p.x`…），而執行器只認得一個點號。',
+  },
+]
+
+/**
+ * `v14 → v15`：**`cin >>` 改成與 `cout <<` 同一個建構子**。
+ *
+ * 🔴 這一筆**沒有任何欄位改變**——舊的命令式定義存 `{ args: [{ mode, text }] }`，
+ * 而可變參數建構子存 `{ itemCount }`。`select` 模式那些還多一個 `SEL_i` 欄位，
+ * 而 `compose` 模式的**一個欄位都沒有**：只靠欄位判的話會漏掉一半。
+ */
+export const SHAPE_CHANGES_V15: ShapeChange[] = [
+  {
+    blockType: 'cpp_input',
+    retiredFields: ['SEL_0'],
+    retiredExtraState: ['args'],
+    why: '`cin >> a >> b` 改成與 `cout << a << b` 同一個可變參數建構子——'
+      + '每一格從「變數下拉／接點二選一」變成單純的接點。',
+  },
+  {
+    blockType: 'cpp_input_expression',
+    retiredFields: ['SEL_0'],
+    retiredExtraState: ['args'],
+    why: '同上——運算式形態。',
   },
 ]

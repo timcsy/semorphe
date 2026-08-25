@@ -544,19 +544,19 @@ describe('I/O', () => {
       expect(code).not.toMatch(/if\s*\(.*;\s*\)/)
     })
 
-    it('renders input block with args extraState for multiple vars', () => {
+    it('renders input block with slots for multiple vars', () => {
       const state = blocks('int main() { cin >> a >> b; }')
       const topBlocks = state.blocks?.blocks ?? []
       const mainBlock = topBlocks[0]
       const bodyChain = mainBlock?.inputs?.BODY?.block
       expect(bodyChain).toBeDefined()
       expect(bodyChain!.type).toBe('cpp_input')
-      // extraState.args matches cpp_input's loadExtraState format
-      const args = bodyChain!.extraState?.args as Array<{ mode: string; text: string }>
-      expect(args).toBeDefined()
-      expect(args.length).toBe(2)
-      expect(args[0]).toEqual({ mode: 'select', text: 'a' })
-      expect(args[1]).toEqual({ mode: 'select', text: 'b' })
+      // 🔄 **2026-08-26：`cin >>` 改用與 `cout <<` 同一個可變參數建構子**
+      //    ——`{args:[{mode,text}]}` 換成 `{itemCount}` ＋ `ARG_{i}` 接點。
+      expect(bodyChain!.extraState?.args, '🔴 舊的記憶方式長回來了').toBeUndefined()
+      expect(bodyChain!.extraState?.itemCount).toBe(2)
+      expect(bodyChain!.inputs?.ARG_0?.block?.fields?.NAME).toBe('a')
+      expect(bodyChain!.inputs?.ARG_1?.block?.fields?.NAME).toBe('b')
     })
   })
 

@@ -27,7 +27,7 @@
   "CPP_SET_EMPTY_TOOLTIP": "Check if the set has no elements (returns true/false)",
   "U_PRINT_LABEL": "Print",
   "U_FUNC_DEF_PARAMS_LABEL": "parameters",
-  "U_INPUT_LABEL": "read input -> variable",
+  "U_INPUT_LABEL": "read input ->",
   "U_VAR_REF_CUSTOM": "(custom)",
   "U_VAR_DECLARE_HEADER": "declare",
   "U_VAR_DECLARE_VAR_LABEL": "variable",

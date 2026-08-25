@@ -45,7 +45,8 @@ describe('T031: Locale Integration', () => {
       //    ——命令式那顆退場，標籤跟著走。**這一支載的是共用的 `src/i18n`**，
       //    所以它不再在這裡，而**那正是就近性護欄要求的**（兩份會漂移）。
       //    ⚠️ 從這張清單拿掉一個鍵要附理由：否則「搬走了」與「弄丟了」長得一樣。
-      expect(msg['U_INPUT_LABEL']).toBe('讀取輸入 → 變數')
+      expect(msg['U_INPUT_LABEL']).toBe('讀取輸入 →'  /* 🔄 2026-08-26：`cin >>` 的每一格從變數下拉換成接點，
+        那個「變數」原本是下拉的抬頭，接點化之後會讀成「讀取輸入 → 變數 變數 x」 */)
       expect(msg['U_VAR_REF_CUSTOM']).toBe('(自訂)')
       expect(msg['U_VAR_DECLARE_HEADER']).toBe('宣告')
       expect(msg['U_VAR_DECLARE_VAR_LABEL']).toBe('變數')

@@ -30,7 +30,7 @@ import * as Blockly from 'blockly'
 import { attachBranchList } from '../../src/ui/branch-list-block'
 import { attachParamList } from '../../src/ui/param-list-block'
 import { attachAltLayout } from '../../src/ui/alt-layout-block'
-import { attachVariadic } from '../../src/ui/variadic-block'
+import { attachVariadic, defineVariadicBlock } from '../../src/ui/variadic-block'
 // 🔴 **選用欄位要另外註冊**——`field_multilinetext` 不在 Blockly 主套件裡。
 // ⚠️ 少了它，`cpp_block_comment` 的欄位**整個建不出來**（`getField('TEXT')` 回 null），
 // 而比對報表印成「一邊有 comment，一邊沒有」——**看起來像宣告漏了預設值**。
@@ -228,9 +228,27 @@ beforeAll(() => {
 function fromDeclaration(type: string): Shape | null {
   const spec = reg.getByBlockType(type) as { blockDef?: Record<string, unknown>; renderMapping?: unknown } | undefined
   const def = spec?.blockDef
-  if (!def || !def.message0) return null
+  // 🔴 **一個用建構子的宣告【沒有 `message0`】——那是正常的**（2026-08-26）。
+  //
+  // 形狀由建構子長出來（`variadic` 用 `labelKey` ＋ `inputPattern`），
+  // 所以 `message0` 是空的。而這裡原本寫 `if (!def.message0) return null`
+  // ——於是**整個退場計畫的目標類別，這條護欄一顆都看不到**：
+  // 它們被歸進「沒有 message0 或建不起來」那一桶，而那一桶不進比對。
+  //
+  // > **一條護欄的能力邊界，如果剛好切掉它要驗的那一類，
+  // > 它的綠燈就與「沒有人在看」等價。**
+  //
+  // ⚠️ 這是 `retire-imperative-block` 第 2.5 步的**第七次**——而前六次都是
+  // 「比對器缺一樣東西所以指控宣告」，這一次是「**比對器直接不看**」，
+  // 症狀因此更難發現：報表上少一行，而沒有任何東西變紅。
+  const hasBuilder = Boolean(def?.builder || def?.branchList || def?.paramList)
+  if (!def || (!def.message0 && !hasBuilder)) return null
   const probe = `__decl_${type}`
-  Blockly.Blocks[probe] = { init: function (this: Blockly.Block) { (this as unknown as { jsonInit: (d: unknown) => void }).jsonInit({ ...def, type: probe }) } }
+  // ⚠️ 沒有 `message0` 時**不跑 `jsonInit`**——Blockly 會抱怨，而形狀本來
+  //    就全部由建構子負責（顏色／前後接點也一起傳給它）。
+  Blockly.Blocks[probe] = def.message0
+    ? { init: function (this: Blockly.Block) { (this as unknown as { jsonInit: (d: unknown) => void }).jsonInit({ ...def, type: probe }) } }
+    : { init: function () { /* 形狀全部由下面的建構子長出來 */ } }
   // ⚠️ 順序與 `block-registrar` 一致：先定義、再接建構子
   // 🔴 第四種形狀（2026-08-25）：依 `extraState` 換一整份佈局。
   //    ⚠️ 不接的話比對器會說「宣告少了 INDEX」——而那是**它自己沒接上**，
@@ -246,8 +264,15 @@ function fromDeclaration(type: string): Shape | null {
   else if (def.builder === 'variadic') {
     const rules = (spec?.renderMapping as { dynamicRules?: { inputPattern?: string }[] } | undefined)?.dynamicRules
     const sole = rules?.length === 1 ? rules[0] : undefined
-    if (sole?.inputPattern && Array.isArray(def.args0) && def.args0.length > 0) {
-      attachVariadic(probe, {
+    // 🔴 **照抄產品那條路的分岔**（`block-registrar.ts`）：
+    //    `args0` 非空 → jsonInit ＋ `attachVariadic`；否則 → `defineVariadicBlock`。
+    //    ⚠️ 這裡原本只有前半，於是**全部由建構子長出來的那些**（`cpp_print`／
+    //    `cpp_input`）比對器建不起來——而它們正是退場計畫的目標類別。
+    //
+    // > **比對之前，要先把【產品那側需要的每一樣東西】都備齊；
+    // > 少一樣，比對就會指控宣告。**（第 2.5 步，這是第七次）
+    if (sole?.inputPattern) {
+      const common = {
         inputPattern: sole.inputPattern,
         check: (def.slotCheck as string) ?? 'Expression',
         colour: (def.colour as string) ?? '#5CB1D6',
@@ -262,7 +287,21 @@ function fromDeclaration(type: string): Shape | null {
         closeLabelKey: def.closeLabelKey as string | undefined,
         closeLabelFallback: def.closeLabelFallback as string | undefined,
         countKey: def.countKey as string | undefined,
-      } as never)
+      }
+      if (Array.isArray(def.args0) && def.args0.length > 0) {
+        attachVariadic(probe, common as never)
+      } else {
+        defineVariadicBlock(probe, {
+          ...common,
+          labelKey: def.labelKey as string | undefined,
+          labelFallback: def.labelFallback as string | undefined,
+          tooltipKey: typeof def.tooltip === 'string' && def.tooltip.startsWith('%{BKY_')
+            ? def.tooltip.slice(6, -1) : undefined,
+          tooltipFallback: typeof def.tooltip === 'string' && !def.tooltip.startsWith('%{BKY_')
+            ? def.tooltip : undefined,
+          leadingField: def.leadingField as { type: string; name: string } | undefined,
+        } as never)
+      }
     }
   }
   const b = ws.newBlock(probe)

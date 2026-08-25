@@ -9,7 +9,7 @@
  * 判準（`migrate-storage` 第 3／4／5 步）：冪等 · 只改確定的位置 · 表空時不亂丟。
  */
 import { describe, it, expect } from 'vitest'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14 } from '../../../src/migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15 } from '../../../src/migrations/block-shape-changes'
 import { UPGRADES, CURRENT_VERSION } from '../../../src/core/storage-version'
 
 const oldState = {
@@ -121,6 +121,38 @@ describe('v11 → v12：形狀變了的快取', () => {
     expect(staleShapeIn(st, SHAPE_CHANGES_V14)).not.toBeNull()
     const up = UPGRADES[13]({ version: 13, code: 'o.x = 1;\n', blocklyState: st })
     expect(up.version).toBe(14)
+    expect(Object.keys(up.blocklyState as object)).toEqual([])
+  })
+
+  /**
+   * 🔴 **一顆積木的骨架不只有欄位**：`cin >>` 換建構子時**沒有任何欄位改變**
+   * （`compose` 模式的格子連一個欄位都沒有），變的是 `extraState` 的記憶方式
+   * （`{args:[…]}` → `{itemCount}`）。
+   *
+   * > **一個只看得見欄位的失效判定，看不見「同一顆積木換了記憶方式」。**
+   */
+  it('★ v15：只有 `extraState` 變了（一個欄位都沒動）也要認得出來', () => {
+    const composeOnly = { blocks: { blocks: [{
+      type: 'cpp_input',
+      // ⚠️ **沒有 fields**——舊的 compose 模式就是這樣存的
+      extraState: { args: [{ mode: 'compose' }, { mode: 'compose' }] },
+      inputs: { ARG_0: { block: { type: 'cpp_var_ref', fields: { NAME: 'x' } } } },
+    }] } }
+    expect(staleShapeIn(composeOnly, SHAPE_CHANGES_V15),
+      '🔴 只看欄位 → 舊快取載進去會少掉格子，而沒有任何東西出聲').not.toBeNull()
+
+    const selectMode = { blocks: { blocks: [{
+      type: 'cpp_input', fields: { SEL_0: 'x' }, extraState: { args: [{ mode: 'select', text: 'x' }] },
+    }] } }
+    expect(staleShapeIn(selectMode, SHAPE_CHANGES_V15)).not.toBeNull()
+
+    // ★ 反向：已經是新形狀的（`{itemCount}`）不得被亂丟
+    const fresh = { blocks: { blocks: [{ type: 'cpp_input', extraState: { itemCount: 2 } }] } }
+    expect(staleShapeIn(fresh, SHAPE_CHANGES_V15),
+      '🔴 誤判 → 每一個使用者的排版都會無故重算').toBeNull()
+
+    const up = UPGRADES[14]({ version: 14, code: 'cin >> x;\n', blocklyState: selectMode })
+    expect(up.version).toBe(15)
     expect(Object.keys(up.blocklyState as object)).toEqual([])
   })
 

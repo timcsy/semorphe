@@ -1177,91 +1177,25 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_input
-    {
-      Blockly.Blocks['cpp_input'] = {
-        argCount_: 1,
-        argSlots_: [{ mode: 'select' }] as ArgSlotState[],
-        init: function (this: any) {
-          this.argCount_ = 1
-          this.argSlots_ = [{ mode: 'select', selectedVar: 'x' }]
-          buildArgSlot(this, 0, 'select', {
-            getVarOptions: () => self.getWorkspaceVarOptions(),
-            inputPrefix: Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →',
-            defaultVar: 'x',
-          })
-          setFieldSafely(this, 'SEL_0', 'x')
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.io)
-          this.setTooltip(Blockly.Msg['U_INPUT_TOOLTIP'] || '讀取輸入')
-        },
-        plus_: function (this: any) {
-          const idx = this.argCount_
-          this.argSlots_[idx] = { mode: 'select', selectedVar: 'v' + idx }
-          buildArgSlot(this, idx, 'select', {
-            getVarOptions: () => self.getWorkspaceVarOptions(),
-            defaultVar: 'v' + idx,
-          })
-          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
-          setFieldSafely(this, `SEL_${idx}`, 'v' + idx)
-          this.argCount_++
-          setMinusState(this, false)
-        },
-        minus_: function (this: any) {
-          if (this.argCount_ <= 1) return
-          this.argCount_--
-          const idx = this.argCount_
-          if (this.getInput(`ARG_${idx}`)) this.removeInput(`ARG_${idx}`)
-          this.argSlots_.length = this.argCount_
-          setMinusState(this, this.argCount_ <= 1)
-        },
-        saveExtraState: function (this: any) {
-          const args: ArgSlotState[] = []
-          for (let i = 0; i < this.argCount_; i++) {
-            const slot = this.argSlots_[i]
-            if (slot.mode === 'select') {
-              const val = this.getFieldValue(`SEL_${i}`)
-              args.push({ mode: 'select', text: val })
-            } else if (slot.mode === 'custom') {
-              args.push({ mode: 'custom', text: this.getFieldValue(`TEXT_${i}`) ?? '' })
-            } else {
-              args.push({ mode: 'compose' })
-            }
-          }
-          return { args }
-        },
-        loadExtraState: function (this: any, state: { args?: ArgSlotState[] }) {
-          const args = state?.args ?? [{ mode: 'select', text: 'x' }]
-          for (let i = this.argCount_ - 1; i >= 0; i--) {
-            if (this.getInput(`ARG_${i}`)) this.removeInput(`ARG_${i}`)
-          }
-          this.argCount_ = args.length
-          // Normalize: ensure selectedVar is set for select mode (buildArgSlot reads it)
-          this.argSlots_ = args.map(a =>
-            a.mode === 'select' ? { ...a, selectedVar: a.text ?? a.selectedVar } : { ...a }
-          )
-          for (let i = 0; i < args.length; i++) {
-            const a = args[i]
-            buildArgSlot(this, i, a.mode, {
-              getVarOptions: () => self.getWorkspaceVarOptions(),
-              inputPrefix: i === 0 ? (Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →') : undefined,
-              defaultVar: a.text ?? 'x',
-              customDefault: a.text ?? '',
-            })
-            this.moveInputBefore(`ARG_${i}`, 'TAIL')
-            if (a.mode === 'select' && a.text) {
-              setFieldSafely(this, `SEL_${i}`, a.text)
-            }
-          }
-          setMinusState(this, this.argCount_ <= 1)
-        },
-      }
-    }
+    // 🪦 **`cpp_input` 與 `cpp_input_expression` 的命令式定義已於 2026-08-26 刪除**
+    //    ——它們改由 `ui/variadic-block.ts` 依膠囊的 `builder: "variadic"` 建，
+    //    與 `cpp_print`（`cout << a << b`）**同一個建構子**。
+    //
+    // 🔴 **這一刀不是「宣告與命令式一模一樣了」，是【判哪一邊對】**
+    //    （`retire-imperative-block` 第 1 步）。路線圖本來寫著這顆缺
+    //    「**多模式的插槽**」——一格可以是變數下拉、也可以是接點。
+    //    而那個判斷是 2026-08-24 做的，**在左值接點化之前**。
+    //
+    //    左值接點化之後 `cin >> x` 的語義樹已經是 `values: [cpp:var_ref{x}]`，
+    //    而每一顆賦值積木都改成用**接點**裝它的左值。於是那個 select 模式
+    //    只剩一個理由：少一層巢狀——而它的代價是
+    //    **`cin >> x >> y` 顯示成下拉，而它的鏡像 `cout << x << y` 顯示成接點**。
+    //
+    // > **兩個鏡像的運算，投影不該長得不一樣。**
+    //
+    // ⚠️ 而變數下拉**沒有消失**——它在 `cpp_var_ref` 積木上。
+    // ⚠️ `custom` 模式（一個純文字欄位）一併退場：它從來不在宣告的 `modes` 裡，
+    //    是命令式那份自己多出來的第三種。
 
     // cpp_print_formatted
     {
@@ -2063,89 +1997,6 @@ export class BlockRegistrar {
     // > **兩份定義的落差，不一定表現成「長得不一樣」——
     // > 也可能表現成「一份產出的東西，另一份收不下」。**
 
-    // cpp_input_expression
-    {
-      Blockly.Blocks['cpp_input_expression'] = {
-        argCount_: 1,
-        argSlots_: [{ mode: 'select' }] as ArgSlotState[],
-        init: function (this: any) {
-          this.argCount_ = 1
-          this.argSlots_ = [{ mode: 'select', selectedVar: 'x' }]
-          buildArgSlot(this, 0, 'select', {
-            getVarOptions: () => self.getWorkspaceVarOptions(),
-            inputPrefix: Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →',
-            defaultVar: 'x',
-          })
-          setFieldSafely(this, 'SEL_0', 'x')
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setOutput(true, 'Expression')
-          this.setColour(CATEGORY_COLORS.io)
-          this.setTooltip(Blockly.Msg['U_INPUT_EXPR_TOOLTIP'] || '讀取輸入（運算式，可作為條件）')
-        },
-        plus_: function (this: any) {
-          const idx = this.argCount_
-          this.argSlots_[idx] = { mode: 'select', selectedVar: 'v' + idx }
-          buildArgSlot(this, idx, 'select', {
-            getVarOptions: () => self.getWorkspaceVarOptions(),
-            defaultVar: 'v' + idx,
-          })
-          this.moveInputBefore(`ARG_${idx}`, 'TAIL')
-          setFieldSafely(this, `SEL_${idx}`, 'v' + idx)
-          this.argCount_++
-          setMinusState(this, false)
-        },
-        minus_: function (this: any) {
-          if (this.argCount_ <= 1) return
-          this.argCount_--
-          const idx = this.argCount_
-          this.argSlots_.splice(idx, 1)
-          this.removeInput(`ARG_${idx}`)
-          setMinusState(this, this.argCount_ <= 1)
-        },
-        saveExtraState: function (this: any) {
-          const args: ArgSlotState[] = []
-          for (let i = 0; i < this.argCount_; i++) {
-            const slot = this.argSlots_[i]
-            if (slot.mode === 'select') {
-              const val = this.getFieldValue(`SEL_${i}`)
-              args.push({ mode: 'select', text: val ?? slot.selectedVar ?? 'x' })
-            } else if (slot.mode === 'custom') {
-              args.push({ mode: 'custom', text: this.getFieldValue(`TEXT_${i}`) ?? '' })
-            } else {
-              args.push({ mode: 'compose' })
-            }
-          }
-          return { args }
-        },
-        loadExtraState: function (this: any, state: { args?: ArgSlotState[] }) {
-          const args = state.args ?? [{ mode: 'select' }]
-          this.argSlots_ = args.map(s => ({ ...s }))
-          this.argCount_ = args.length
-          let i = 0
-          while (this.getInput(`ARG_${i}`)) { this.removeInput(`ARG_${i}`); i++ }
-          if (this.getInput('TAIL')) this.removeInput('TAIL')
-          for (let j = 0; j < this.argCount_; j++) {
-            const slot = this.argSlots_[j]
-            buildArgSlot(this, j, slot.mode, {
-              getVarOptions: () => self.getWorkspaceVarOptions(),
-              inputPrefix: j === 0 ? (Blockly.Msg['U_INPUT_LABEL'] || '讀取輸入 →') : undefined,
-              defaultVar: slot.text ?? slot.selectedVar ?? ('v' + j),
-            })
-            if (slot.mode === 'select' && (slot.text || slot.selectedVar)) {
-              setFieldSafely(this, `SEL_${j}`, slot.text ?? slot.selectedVar)
-            }
-          }
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(
-              this.argCount_ <= 1 ? MINUS_DISABLED_IMG : MINUS_IMG,
-              20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-        },
-      }
-    }
 
     // cpp_input_formatted_expression
     {
