@@ -40,9 +40,23 @@ export const webProfile: HostProfile = {
   },
   featureReasons: {},
 
-  // 🔴 網頁版**自己畫全部**——這一張表就是今天的行為，一格都不能變。
+  /**
+   * 網頁版自己畫全部——**而畫在哪裡分兩處**（2026-08-25 使用者拍板）。
+   *
+   * > 「**網頁版也照 §六 把 picker 移到狀態列，但是行動版可以另外設計**」
+   *
+   * `knowledge/draft/2026-08-24-版面與檔案.md` §六 的 slot 詞彙逐字：
+   * `statusBar  語言 · 風格 · 同步狀態 · 目前主體`。
+   *
+   * 🔴 於是「工作階段的設定」離開積木那一區——與 IDE 那側是**同一個判準**，
+   * 只是網頁版沒有外層 chrome，那條 footer 就是它的宿主狀態列。
+   *
+   * ⚠️ **行動版另有設計**：它本來就把選擇器搬進漢堡選單，而狀態列在窄螢幕
+   * 是隱藏的——那條路徑不受這一格影響（`switchToMobile` 記的是「原本的父節點」，
+   * 不是「工具列」）。
+   */
   controlSurfaces: {
-    picker: 'panelToolbar',
+    picker: 'panelStatusBar',
     action: 'panelToolbar',
     indicator: 'panelStatusBar',
   },

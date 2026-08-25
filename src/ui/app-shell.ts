@@ -9,7 +9,7 @@ import { FlowPanel } from './panels/flow-panel'
 import { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
-import { CONTROLS, RUN_MODES, drawnByPanel, panelControls, type ControlId } from '../core/host/controls'
+import { CONTROLS, RUN_MODES, surfaceOf, panelControls, type ControlId } from '../core/host/controls'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
 import { TopicSelector } from './toolbar/topic-selector'
 import { StyleSelector } from './toolbar/style-selector'
@@ -109,14 +109,43 @@ export function createAppLayout(
   //    不是問「現在是哪個宿主」，也不是每一顆各給一格布林。
   //    ⚠️ 關掉 ＝ **不建那些 DOM**（FR-006），不是建了再藏起來。
   const surfaces = profile.controlSurfaces
-  const inPanel = (id: ControlId): boolean => {
+  /** 這一顆畫在**工具列**上嗎。⚠️ 畫在狀態列上的不算——那是另一個表面。 */
+  const inToolbar = (id: ControlId): boolean => {
     const spec = CONTROLS.find((c) => c.id === id)
-    return !!spec && drawnByPanel(spec, surfaces)
+    return !!spec && surfaceOf(spec, surfaces) === 'panelToolbar'
   }
+  /** 這一顆畫在**面板自己的狀態列**上嗎。 */
+  const inStatusBar = (id: ControlId): boolean => {
+    const spec = CONTROLS.find((c) => c.id === id)
+    return !!spec && surfaceOf(spec, surfaces) === 'panelStatusBar'
+  }
+  /**
+   * 檔案選單——🔴 **在標題右邊，像一般視窗軟體的功能表列**
+   * （使用者 2026-08-25：「應該放在 Semorphe 右邊，像是一般視窗軟體那樣」）。
+   *
+   * ⚠️ 它原本在積木上方那條快速列裡，而那是「操作積木的地方」
+   * ——**開檔存檔跟積木沒有關係**，與這一刀把 picker 移出去是同一個判準。
+   *
+   * 🔴 而它是一個【可以不存在】的東西：一個「檔案由 IDE 管」的宿主裡，
+   * 面板再放一份會有兩個「目前的檔案」。⚠️ 處置是**不建**，不是 `display:none`：
+   *
+   * > **一個長得一樣而按下去沒反應的按鈕，比沒有那顆按鈕更糟
+   * > ——因為它讓「像」變成一個謊。**
+   */
+  const fileMenu = profile.features.fileButtons ? `
+      <div class="file-menu-group">
+        <button id="file-menu-btn" title="檔案">檔案 ▾</button>
+        <div id="file-menu" class="file-menu" style="display:none">
+          <div class="file-menu-option" id="export-btn">匯出</div>
+          <div class="file-menu-option" id="import-btn">匯入</div>
+          <div class="file-menu-option" id="upload-blocks-btn">上傳自訂積木</div>
+        </div>
+      </div>` : ''
+
   const headerActions = [
-    inPanel('style') ? '<span id="style-selector-mount"></span>' : '',
-    inPanel('locale') ? '<span id="locale-selector-mount"></span>' : '',
-    inPanel('run') ? `<span class="toolbar-separator"></span>${runGroupMarkup()}` : '',
+    inToolbar('style') ? '<span id="style-selector-mount"></span>' : '',
+    inToolbar('locale') ? '<span id="locale-selector-mount"></span>' : '',
+    inToolbar('run') ? `<span class="toolbar-separator"></span>${runGroupMarkup()}` : '',
     // ⚠️ 這兩顆屬於行動版，不是控制項登錄表的成員——它們的開關一直是 `mobileLayout`。
     profile.features.mobileLayout
       ? '<button id="mobile-sync-btn" class="exec-btn auto-sync-on" title="自動同步：開啟" style="display:none">⇄ 自動</button>' +
@@ -128,13 +157,13 @@ export function createAppLayout(
   //    「Semorphe 積木」。在一個窄面板裡那一條就是純粹的浪費。
   //    ⚠️ 所以是**不建**，同一條規則。
   let toolbar: HTMLElement | null = null
-  if (headerActions !== '') {
+  if (headerActions !== '' || fileMenu !== '') {
     toolbar = document.createElement('header')
     toolbar.id = 'toolbar'
     toolbar.innerHTML = `
     <div class="toolbar-left">
       <img src="logo.svg" alt="Semorphe" class="toolbar-logo">
-      <span class="toolbar-title">Semorphe</span>
+      <span class="toolbar-title">Semorphe</span>${fileMenu}
     </div>
     <div class="toolbar-actions">${headerActions}</div>
   `
@@ -158,26 +187,87 @@ export function createAppLayout(
   if (profile.controlSurfaces.indicator === 'panelStatusBar') {
     const statusBar = document.createElement('footer')
     statusBar.id = 'status-bar'
-    statusBar.innerHTML = '<span>Loading...</span>'
+    // 🔴 **投影到這條列的 picker 畫在這裡**（`draft/版面與檔案` §六：
+    //    `statusBar  語言 · 風格 · 同步狀態 · 目前主體`）。
+    //
+    // ⚠️ 而它們是**文字項目 ＋ QuickPick**，不是 `<select>`
+    //    ——使用者 2026-08-25：「狀態列長得跟 IDE 盡可能一樣」「選單也是學 IDE」。
+    //    內容由 `layout/status-bar-controls.ts` 依 `ControlState` 畫，
+    //    **與 VSCode 那側讀同一份描述**。
+    //
+    // 🔴 **同步是這條列上的一顆按鈕，不是一段字**。
+    //    ⚠️ 第一版把 picker 搬進來，而把 `⇄ 同步` 那顆留在工具列的判斷刪掉了
+    //    ——於是三態還看得見，**而按不下去**：入口整個沒了。
+    //
+    // > **把一顆按鈕換成一段長得一樣的字，
+    // > 使用者要按到第二次才會發現它壞了。**
+    //
+    // 沿用 `sync-menu-btn` 這個 id——`setupToolbarButtons` 因此照樣接得上。
+    const syncBtn = inStatusBar('sync')
+      ? '<button id="sync-menu-btn" class="status-item-btn status-sync-btn" title="同步">⇄ 同步</button>'
+      : ''
+    // 🔴 **整組靠右**，而且順序照 IDE 那側（使用者 2026-08-25：「應該靠右，
+    //    跟 IDE 一樣」）：`vscode/panel.ts` 給同步的優先序是 100、給 picker
+    //    是 99 遞減，而 VSCode 右側**優先序愈大愈靠左**——
+    //    於是那邊的順序就是「同步 → 五顆 picker」。這裡逐字對上。
+    //    ⚠️ 語言掛在最右，那是 VSCode 擺語言模式的位置。
+    statusBar.innerHTML =
+      '<span class="status-spacer"></span>' +
+      `${syncBtn}` +
+      '<span id="status-controls" class="status-controls"></span>' +
+      '<span id="status-summary">Loading...</span>' 
     appEl.appendChild(statusBar)
   }
 
+  // 🔴 **行動版的投影暫存處**。
+  //
+  // 使用者 2026-08-25：「**行動版可以另外設計**」——所以行動版維持原樣：
+  // 那四顆下拉在漢堡選單裡。而桌機版的狀態列已經改成文字項目，
+  // 於是它們在桌機時**沒有地方可待**。
+  //
+  // ⚠️ 這一格只在**有行動版版面的宿主**才建（IDE 不建）：
+  // 它不是「建了再藏起來」，是「還沒輪到它的那個投影」
+  // ——而視窗寬度隨時可能跨過斷點，所以它是真的隨時會用到。
+  if (profile.features.mobileLayout) {
+    const parking = document.createElement('div')
+    parking.id = 'mobile-selector-parking'
+    parking.hidden = true
+    parking.innerHTML = CONTROLS
+      .filter((c) => c.kind === 'picker')
+      .filter((c, i, all) => all.findIndex((x) => x.mountId === c.mountId) === i)
+      .map((c) => `<span id="${c.mountId}"></span>`)
+      .join('')
+    appEl.appendChild(parking)
+  }
+
   // Left panel: QuickAccessBar + Blockly
-  const leftPanel = splitPane.getLeftPanel()
-  leftPanel.style.display = 'flex'
-  leftPanel.style.flexDirection = 'column'
+  // 🔴 **程式碼在左、積木在右**（使用者 2026-08-25：「程式碼視圖應該預設在
+  //    左邊，像一般 IDE 的習慣」）。
+  //
+  // ⚠️ 而它與 IDE 那側是同一個版面：VSCode 的編輯器在左，積木面板開在右。
+  //    於是「在網頁版練熟的手」直接搬得過去。
+  //
+  // 🔴 變數名跟著改成 `blocksColumn` / `codeColumn`——**不再叫左右**：
+  //
+  // > **一個叫做 `blocksColumn` 而其實在右邊的變數，
+  // > 會讓下一個人把版面讀反。**
+  const blocksColumn = splitPane.getRightPanel()
+  blocksColumn.style.display = 'flex'
+  blocksColumn.style.flexDirection = 'column' 
 
   // 🔴 一顆控制項都不剩的話**不建這條列**——一條空的列只是把版面吃掉。
-  const quickAccessNeeded = panelControls(surfaces).some((c) => c.bar === 'quickAccess')
-  const quickAccessBar = (quickAccessNeeded || profile.features.fileButtons)
-    ? new QuickAccessBar(leftPanel, { fileButtons: profile.features.fileButtons, inPanel })
+  const quickAccessNeeded = panelControls(surfaces)
+    .filter((c) => surfaceOf(c, surfaces) === 'panelToolbar')
+    .some((c) => c.bar === 'quickAccess')
+  const quickAccessBar = quickAccessNeeded
+    ? new QuickAccessBar(blocksColumn, { inPanel: inToolbar })
     : null
 
   const blocklyContainer = document.createElement('div')
   blocklyContainer.id = 'blockly-panel'
   blocklyContainer.style.flex = '1'
   blocklyContainer.style.overflow = 'hidden'
-  leftPanel.appendChild(blocklyContainer)
+  blocksColumn.appendChild(blocklyContainer)
 
   // 🔴 **`media` 不傳的話，Blockly 會去 `blockly-demo.appspot.com` 抓圖示與音效**
   // ——而離線時那些圖示會壞掉，壞得很安靜（只是變破圖，功能還在）。
@@ -198,8 +288,8 @@ export function createAppLayout(
   blocklyPanel.init(toolbox)
 
   // Right panel: Monaco + BottomPanel
-  const rightColumn = splitPane.getRightPanel()
-  rightColumn.classList.add('right-column')
+  const codeColumn = splitPane.getLeftPanel()
+  codeColumn.classList.add('code-column')
 
   const monacoWrapper = document.createElement('div')
   monacoWrapper.className = 'monaco-wrapper'
@@ -212,13 +302,13 @@ export function createAppLayout(
     monacoWrapper.style.height = '0'
     monacoWrapper.style.overflow = 'hidden'
   }
-  rightColumn.appendChild(monacoWrapper)
+  codeColumn.appendChild(monacoWrapper)
 
   // 🔴 **由宿主決定這一格是誰**——這個檔不認識任何一個具體的編輯器。
   const codeView = profile.createCodeView(monacoWrapper)
 
   const bottomContainer = document.createElement('div')
-  rightColumn.appendChild(bottomContainer)
+  codeColumn.appendChild(bottomContainer)
   const bottomPanel = new BottomPanel(bottomContainer)
 
   const consoleEl = document.createElement('div')
@@ -312,8 +402,8 @@ export function createAppLayout(
   }
   const imeToggleBtn = createImeToggle(mobileCodeContainer)
   const consoleImeToggleBtn = createImeToggle(mobileConsoleContainer)
-  // Desktop-touch IME toggle (lives in rightColumn)
-  const desktopImeToggleBtn = createImeToggle(rightColumn)
+  // Desktop-touch IME toggle (lives in codeColumn)
+  const desktopImeToggleBtn = createImeToggle(codeColumn)
 
   // Suppress native keyboard on a target element
   const suppressNativeKB = (el: HTMLElement | null) => {
@@ -531,8 +621,8 @@ export function createAppLayout(
     activateMobilePanel(activeTab)
 
     // Hide desktop layout elements
-    leftPanel.style.display = 'none'
-    rightColumn.style.display = 'none'
+    blocksColumn.style.display = 'none'
+    codeColumn.style.display = 'none'
 
     // Apply mobile-friendly Monaco options (reduce IME issues)
     codeView.applyMobileOptions?.()
@@ -553,11 +643,11 @@ export function createAppLayout(
     // 同上——沒有行動版就沒有「切回桌面版」這件事。
     if (!profile.features.mobileLayout) return
     // Move panels back to desktop containers (order matters: monaco before bottomPanel)
-    if (quickAccessBar) leftPanel.appendChild(quickAccessBar.getElement())
-    leftPanel.appendChild(blocklyContainer)
+    if (quickAccessBar) blocksColumn.appendChild(quickAccessBar.getElement())
+    blocksColumn.appendChild(blocklyContainer)
     // Ensure correct order: monaco first, then bottom panel
-    rightColumn.appendChild(monacoWrapper)
-    rightColumn.appendChild(bottomContainer)
+    codeColumn.appendChild(monacoWrapper)
+    codeColumn.appendChild(bottomContainer)
 
     // Move selectors back to original toolbar positions
     for (const info of Object.values(selectorMounts)) {
@@ -600,8 +690,8 @@ export function createAppLayout(
     mobileMenu?.close()
 
     // Restore desktop layout
-    leftPanel.style.display = 'flex'
-    rightColumn.style.display = ''
+    blocksColumn.style.display = 'flex'
+    codeColumn.style.display = ''
 
     // Restore desktop Monaco options
     codeView.applyDesktopOptions?.()
@@ -614,7 +704,7 @@ export function createAppLayout(
 
     if (layoutManager.isTouchDevice()) {
       // Desktop-touch: move code keyboard to right column, show it
-      rightColumn.insertBefore(codeKeyboard!.getElement(), desktopImeToggleBtn)
+      codeColumn.insertBefore(codeKeyboard!.getElement(), desktopImeToggleBtn)
       codeKeyboard?.detachInput()
       showCodeKeyboard()
     } else {
@@ -670,7 +760,7 @@ export function createAppLayout(
   } else if (layoutManager.isTouchDevice()) {
     // Desktop-touch: show code keyboard in right column on initial load
     requestAnimationFrame(() => {
-      rightColumn.insertBefore(codeKeyboard!.getElement(), desktopImeToggleBtn)
+      codeColumn.insertBefore(codeKeyboard!.getElement(), desktopImeToggleBtn)
       showCodeKeyboard()
     })
   }
@@ -857,19 +947,34 @@ export function updateStatusBar(
 ): string {
   const styleName = currentStylePreset.name[currentLocale] || currentStylePreset.name['zh-TW'] || currentStylePreset.id
   const blockStyleLabel = (Blockly.Msg as Record<string, string>)[`BLOCK_STYLE_${currentBlockStyleId.toUpperCase()}`] || currentBlockStyleId
-  const syncText = sync
+  const syncLabel = sync
     ? sync.phase === 'paused'
-      ? ` | ⏸ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_PAUSED'] || '已暫停'}`
+      ? `⏸ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_PAUSED'] || '已暫停'}`
       : sync.phase === 'diverged'
-        ? ` | ⚠️ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_DIVERGED'] || '兩邊都改了'}`
-        : ` | ⇄ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_LIVE'] || '同步中'}`
+        ? `⚠️ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_DIVERGED'] || '兩邊都改了'}`
+        : `⇄ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_LIVE'] || '同步中'}`
     : ''
+  const syncText = syncLabel === '' ? '' : ` | ${syncLabel}`
   const contextText = `${languageName} | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}`
   const summaryText = `${contextText}${syncText}`
 
-  const statusBar = document.getElementById('status-bar')
-  if (statusBar) {
-    statusBar.innerHTML = `<span>${summaryText}</span>`
+  // 🔴 **不得覆寫整條列**——picker 就掛在它裡面（2026-08-25 起）。
+  //
+  // > **一個用 `innerHTML =` 更新文字的地方，
+  // > 在那塊區域長出第二個東西的那一天，會安靜地把它清掉。**
+  const summarySlot = document.getElementById('status-summary')
+  const syncBtn = document.getElementById('sync-menu-btn')
+  if (summarySlot) {
+    // 有 picker 的那條列：語言與三態**不是 picker**，所以只留這兩格；
+    // 其餘那幾格已經是列上的控制項了，再寫一次就是講兩次。
+    summarySlot.textContent = languageName
+    // ⚠️ 三態寫進**那顆按鈕**——它同時是顯示處與入口，與 VSCode 那側同形。
+    if (syncBtn) syncBtn.textContent = syncLabel
+    else summarySlot.textContent = `${languageName}${syncText}`
+  } else {
+    // ⚠️ 沒有 `#status-summary` ＝ 舊的／裸的那條列（測試會這樣建）。
+    const statusBar = document.getElementById('status-bar')
+    if (statusBar) statusBar.innerHTML = `<span>${summaryText}</span>`
   }
 
   // Also update mobile menu summary (visible when status bar is hidden)

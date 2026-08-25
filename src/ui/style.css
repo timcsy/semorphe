@@ -296,12 +296,221 @@ html, body {
 #status-bar {
   display: flex;
   align-items: center;
-  padding: 0 12px;
-  height: 22px;
+  padding: 0 8px;
+  /* ⚠️ 22 → 26：這條列現在裝的是【控制項】，不只是一行字（2026-08-25）。 */
+  height: 26px;
   background: #007acc;
   color: white;
   font-size: 12px;
   flex-shrink: 0;
+  gap: 2px;
+}
+
+/* ─── 狀態列上的控制項 ─── */
+/*
+ * 🔴 它們是**原本那幾顆選擇器**，只是搬了家（`draft/版面與檔案` §六）。
+ *
+ * ⚠️ 所以樣式要把 `<select>` 洗成「狀態列項目」的樣子——**不是做一個新元件**：
+ *
+ * > 需要的是換一個位置，不是換一套互動。
+ *   換互動會連層級樹的勾選彈出一起賠掉。
+ */
+#status-bar .status-mount {
+  display: inline-flex;
+  align-items: center;
+}
+
+#status-bar select,
+#status-bar .toolbar-select,
+#status-bar .topic-dropdown {
+  /*
+   * 🔴 **洗成「一段可以按的字」**——VSCode 的狀態列項目沒有框、沒有箭頭。
+   *
+   * ⚠️ `appearance: none` ＋ 拿掉 `background-image` 兩者缺一不可：
+   * 前者拿掉原生外框，而**箭頭是 `.toolbar-select` 自己畫的背景圖**，
+   * 只做前者的話箭頭會留在原地。
+   *
+   * > 要像的不是「一個比較樸素的下拉」，是**一段字**。
+   */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: none !important;
+  height: 20px;
+  padding: 0 6px;
+  border: none !important;
+  border-radius: 3px;
+  background-color: transparent !important;
+  color: white !important;
+  font-size: 12px;
+  cursor: pointer;
+  max-width: 170px;
+  text-overflow: ellipsis;
+}
+
+#status-bar select:hover {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* 下拉選單本身是宿主畫的，⚠️ 深色文字要留著，否則展開後是白字白底 */
+#status-bar select option {
+  color: #1f1f1f;
+  background: white;
+}
+
+/*
+ * ⚠️ 這裡要用 `!important`——**因為被覆寫的那一條也用了**（`.topic-tree-btn`
+ * 整組是 `!important`）。🔴 而正確的修法是把那條的 `!important` 拿掉，
+ * 那是另一刀：它現在被工具列與行動選單兩處依賴著。
+ */
+#status-bar .topic-tree-btn {
+  height: 20px !important;
+  min-width: 18px !important;
+  padding: 0 4px !important;
+  border: none !important;
+  border-radius: 3px !important;
+  background: transparent !important;
+  color: white !important;
+  font-size: 11px !important;
+  cursor: pointer;
+}
+
+#status-bar .topic-tree-btn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+/*
+ * 狀態列項目 —— **一段可以按的字**，照 VSCode 的形狀。
+ * 沒有框、沒有箭頭、沒有分隔線；hover 才浮出一塊淡底。
+ */
+.status-controls {
+  display: inline-flex;
+  align-items: center;
+}
+
+#status-bar .status-item-btn {
+  height: 22px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: white;
+  font-size: 12px;
+  line-height: 22px;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#status-bar .status-item-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ─── QuickPick ─── */
+/*
+ * 🔴 位置與比例照 VSCode：**視窗頂端置中的一張窄清單**，不是畫面正中的對話框。
+ * ⚠️ 那個位置不是美感——**它讓清單離「你剛才按的那顆狀態列項目」很遠**，
+ *    而 VSCode 就是這樣，使用者的肌肉記憶在那裡。
+ */
+.quick-pick-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: transparent;
+}
+
+.quick-pick {
+  margin-top: 8px;
+  width: min(600px, 90vw);
+  background: #252526;
+  border: 1px solid #454545;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-pick-filter {
+  margin: 6px;
+  padding: 4px 8px;
+  background: #3c3c3c;
+  border: 1px solid #007fd4;
+  border-radius: 2px;
+  color: #ccc;
+  font-size: 13px;
+  outline: none;
+}
+
+.quick-pick-list {
+  max-height: 44vh;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+.quick-pick-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  color: #ccc;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: pre;
+}
+
+.quick-pick-item.active {
+  background: #04395e;
+  color: #fff;
+}
+
+.quick-pick-mark {
+  width: 14px;
+  flex: none;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.quick-pick-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-pick-desc {
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+/* 同步：這條列上唯一的動作——它同時是顯示處與入口。 */
+#status-bar .status-sync-btn {
+  height: 20px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#status-bar .status-sync-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* 語言：靠最右，那是 VSCode 擺語言模式的位置。⚠️ 它不是 picker，所以不可按。 */
+#status-summary {
+  padding: 0 8px;
+  opacity: 0.9;
+}
+
+#status-bar .topic-selector {
+  display: inline-flex;
+  align-items: center;
 }
 
 .status-item {
@@ -611,13 +820,13 @@ html, body {
 
 /* ─── Right side layout ─── */
 
-.right-column {
+.code-column {
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.right-column > .monaco-wrapper {
+.code-column > .monaco-wrapper {
   flex: 1;
   overflow: hidden;
 }
@@ -1067,9 +1276,32 @@ html, body {
   background: #404040;
 }
 
-/* File dropdown menu in block toolbar */
+/*
+ * 檔案選單 —— 🔴 **在標題右邊，像一般視窗軟體的功能表列**（2026-08-25）。
+ * ⚠️ 它原本在積木上方那條快速列裡，樣式也掛在 `.quick-access-bar button` 上
+ * ——搬家之後**那條樣式就不再適用**，而症狀是一顆瀏覽器預設的灰框按鈕。
+ *
+ * > **搬動一個元素等於搬離它的樣式作用域；
+ * > 而「功能還在」會讓人以為搬完了。**
+ */
 .file-menu-group {
   position: relative;
+}
+
+#toolbar #file-menu-btn {
+  padding: 3px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #ccc;
+  font-size: 13px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+#toolbar #file-menu-btn:hover {
+  background: #3a3a3a;
+  color: #fff;
 }
 
 .file-menu {
@@ -1471,7 +1703,9 @@ html, body {
   body:not(.host-no-mobile-layout) .quick-access-bar #sync-code-btn,
   body:not(.host-no-mobile-layout) .quick-access-bar #level-selector-mount,
   body:not(.host-no-mobile-layout) .quick-access-bar #block-style-selector-mount,
-  body:not(.host-no-mobile-layout) .quick-access-bar .file-menu-group {
+  body:not(.host-no-mobile-layout) .quick-access-bar .file-menu-group,
+  /* ⚠️ 搬到標題列之後，行動版隱藏的規則也要跟著搬——維持原本的行為 */
+  body:not(.host-no-mobile-layout) .toolbar-left .file-menu-group {
     display: none !important;
   }
 

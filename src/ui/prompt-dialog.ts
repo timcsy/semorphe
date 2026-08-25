@@ -32,53 +32,17 @@ export function installDialogs(): void {
   })
 }
 
-/**
- * **選一個**——QuickPick 的頁內替身。
+/*
+ * 🪦 `showChoice` 已於 2026-08-25 刪除。
  *
- * 🔴 與 `showPrompt` 同一個理由：`window.confirm` 只有兩個答案，
- * 而**這裡的答案數是 N**（可編輯視圖有幾個就有幾個來源）。
- * 而原生對話框在 VSCode 的 webview 裡還是停用的。
+ * 它是「VSCode 的 QuickPick 在網頁版沒有對應」的第一版答案（置中對話框）。
+ * 而使用者看到兩邊並排之後說「**選單也是學 IDE**」——於是有了
+ * `ui/toolbar/quick-pick.ts`：頂端置中、可過濾、鍵盤可走、支援多選。
+ *
+ * ⚠️ 留這個墓碑是因為**下一個人會問「那時候為什麼不直接做 QuickPick」**：
+ * 因為那時只需要「三個選項的一次詢問」，而 QuickPick 的成本要等到
+ * 狀態列長出五顆 picker 才划算。
  */
-export function showChoice(message: string, options: { text: string; run: () => void }[]): void {
-  const overlay = document.createElement('div')
-  overlay.className = 'semorphe-dialog-overlay'
-  const box = document.createElement('div')
-  box.className = 'semorphe-dialog'
-  const label = document.createElement('div')
-  label.className = 'semorphe-dialog-msg'
-  label.textContent = message
-  box.appendChild(label)
-
-  let done = false
-  const close = (): void => {
-    if (done) return
-    done = true
-    overlay.remove()
-  }
-  for (const o of options) {
-    const b = document.createElement('button')
-    b.className = 'semorphe-dialog-btn semorphe-dialog-choice'
-    b.textContent = o.text
-    b.addEventListener('click', () => {
-      close()
-      o.run()
-    })
-    box.appendChild(b)
-  }
-  overlay.appendChild(box)
-  overlay.addEventListener('mousedown', (e) => {
-    if (e.target === overlay) close()
-  })
-  document.addEventListener('keydown', function esc(e) {
-    if (e.key === 'Escape') {
-      document.removeEventListener('keydown', esc)
-      close()
-    }
-  })
-  document.body.appendChild(overlay)
-  ;(box.querySelector('.semorphe-dialog-choice') as HTMLElement | null)?.focus()
-}
-
 function showPrompt(message: string, defaultValue: string, callback: (value: string | null) => void): void {
   const overlay = document.createElement('div')
   overlay.className = 'semorphe-dialog-overlay'

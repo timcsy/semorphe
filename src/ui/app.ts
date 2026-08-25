@@ -3,7 +3,7 @@ import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
 import {
-  CONTROLS, LOCALES, FOLLOW_HOST_LOCALE, drawnByPanel,
+  CONTROLS, LOCALES, FOLLOW_HOST_LOCALE, surfaceOf,
   type ControlSpec, type ControlState, type ControlInvoke, type ControlOption,
 } from '../core/host/controls'
 import { SyncController } from '../core/sync-controller'
@@ -59,7 +59,7 @@ import { LocaleLoader } from '../i18n/loader'
 import { setMessageSource, msg } from '../core/messages'
 import { SyncCoordinator } from '../core/sync-coordinator'
 import { viewsWith } from '../core/view-registry'
-import { installDialogs, showChoice } from './prompt-dialog'
+import { installDialogs } from './prompt-dialog'
 import type { StyleSelector } from './toolbar/style-selector'
 import type { TopicSelector } from './toolbar/topic-selector'
 import type { StylePreset } from '../core/types'
@@ -70,6 +70,8 @@ import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
 import type { AppShellElements, AppShellCallbacks } from './app-shell'
+import { renderStatusControls } from './layout/status-bar-controls'
+import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
 import { isFunctionDefinition } from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
@@ -965,11 +967,24 @@ export class App {
    */
   private publishControls(): void {
     if (!this.controlCallbacks) return
-    const states = CONTROLS
-      .filter((c) => !drawnByPanel(c, this.profile.controlSurfaces))
-      .filter((c) => c.kind !== 'indicator')
+    const surfaces = this.profile.controlSurfaces
+    // ⚠️ `indicator` 不在這裡送——同步三態走自己的頻道（見上）。
+    const pickersAndActions = CONTROLS.filter((c) => c.kind !== 'indicator')
+
+    // ① 交給宿主的那些
+    const toHost = pickersAndActions
+      .filter((c) => surfaceOf(c, surfaces).startsWith('host'))
       .map((c) => this.controlStateOf(c))
-    if (states.length > 0) this.codeView?.reportControls?.(states)
+    if (toHost.length > 0) this.codeView?.reportControls?.(toHost)
+
+    // ② 畫在**面板自己的狀態列**上的那些——🔴 讀的是**同一份 `ControlState`**。
+    //    > 兩邊長得一樣，不是因為有人照著抄，是因為它們畫的是同一份東西。
+    const slot = document.getElementById('status-controls')
+    if (!slot) return
+    const onBar = pickersAndActions
+      .filter((c) => surfaceOf(c, surfaces) === 'panelStatusBar')
+      .map((c) => this.controlStateOf(c))
+    renderStatusControls(slot, onBar, (invoke) => this.handleControlInvoke(invoke))
   }
 
   /** 一顆控制項現在的樣子 ＋ **它的值域**。 */
@@ -1034,7 +1049,16 @@ export class App {
    * 🔴 **走的是與面板下拉同一組回呼**——不是第二條路。
    */
   private wireHostControls(): void {
-    this.codeView?.onControlInvoke?.((invoke: ControlInvoke) => {
+    this.codeView?.onControlInvoke?.((invoke) => this.handleControlInvoke(invoke))
+  }
+
+  /**
+   * 按了一顆控制項——**宿主的 QuickPick 與網頁版狀態列走同一支**。
+   *
+   * 🔴 走的是與面板下拉同一組回呼，不是第二條路。
+   */
+  private handleControlInvoke(invoke: ControlInvoke): void {
+    {
       const cb = this.controlCallbacks
       if (!cb) return
       switch (invoke.id) {
@@ -1072,7 +1096,7 @@ export class App {
         case 'redo': this.doRedo(); break
         case 'clear': this.doClear(); break
       }
-    })
+    }
   }
 
   /**
@@ -1345,11 +1369,24 @@ export class App {
     for (const viewId of snap.candidates) {
       options.push({ text: `⟳ ${msg('SYNC_USE_AS_SOURCE', '以此為準')}：${label(viewId)}`, run: () => this.useAsSource(viewId) })
     }
-    showChoice(
-      snap.phase === 'diverged'
-        ? msg('SYNC_DIVERGED_ASK', '兩邊都改過了——要以哪一邊為準？')
-        : msg('SYNC_MENU_TITLE', '同步'),
-      options,
+    // 🔴 **走 QuickPick，與狀態列上其餘那幾顆同一個機制**（2026-08-25）。
+    //
+    // ⚠️ 一度它是置中的對話框、而 picker 是 QuickPick——同一條狀態列上
+    // 兩顆按鈕、兩種選單。使用者：「選單也是學 IDE」。
+    //
+    // > **同一條列上的東西按起來要是同一件事；
+    // > 兩種選單會讓人以為它們是兩種東西。**
+    showQuickPick(
+      {
+        title: snap.phase === 'diverged'
+          ? msg('SYNC_DIVERGED_ASK', '兩邊都改過了——要以哪一邊為準？')
+          : msg('SYNC_MENU_TITLE', '同步'),
+        items: options.map((o, i) => ({ value: String(i), label: o.text })),
+      },
+      (values) => {
+        if (values === null) return
+        options[Number(values[0])]?.run()
+      },
     )
   }
 

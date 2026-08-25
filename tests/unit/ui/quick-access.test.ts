@@ -15,7 +15,7 @@ describe('QuickAccessBar (block toolbar)', () => {
   beforeEach(() => {
     parent = document.createElement('div')
     // ⚠️ `inPanel` ＝ 這個宿主自己畫哪幾顆——網頁版是全部（2026-08-25 起）
-    bar = new QuickAccessBar(parent, { fileButtons: true, inPanel: () => true })
+    bar = new QuickAccessBar(parent, { inPanel: () => true })
   })
 
   it('should create bar element', () => {
@@ -46,32 +46,14 @@ describe('QuickAccessBar (block toolbar)', () => {
     expect(el.querySelector('#clear-btn')).toBeTruthy()
   })
 
-  it('should contain file dropdown with export/import/upload', () => {
+  it('🪦 檔案選單**不在這條列上**——它搬到標題右邊了（2026-08-25）', () => {
+    // 使用者：「應該放在 Semorphe 右邊，像是一般視窗軟體那樣」。
+    // ⚠️ 判準與「picker 移出去」同一條：**開檔存檔跟積木沒有關係**，
+    //    而這條列是操作積木的地方。
     const el = bar.getElement()
-    expect(el.querySelector('#file-menu-btn')).toBeTruthy()
-    expect(el.querySelector('#file-menu')).toBeTruthy()
-    expect(el.querySelector('#export-btn')).toBeTruthy()
-    expect(el.querySelector('#import-btn')).toBeTruthy()
-    expect(el.querySelector('#upload-blocks-btn')).toBeTruthy()
-  })
-
-  it('should not contain style or locale selectors', () => {
-    const el = bar.getElement()
-    expect(el.querySelector('#style-selector-mount')).toBeNull()
-    expect(el.querySelector('#locale-selector-mount')).toBeNull()
-  })
-
-  it('🔴 `fileButtons: false` → 檔案選單的 DOM【不存在】，不是藏起來', () => {
-    // ⚠️ FR-006：在這個宿主裡沒有意義的控制項**不該出現**，
-    //    而不是出現了按下去沒反應。
-    //
-    // > **一個長得一樣而按下去沒反應的按鈕，比沒有那顆按鈕更糟
-    // > ——因為它讓「像」變成一個謊。**
-    const el = document.createElement('div')
-    new QuickAccessBar(el, { fileButtons: false, inPanel: () => true })
-    expect(el.querySelector('#file-menu-btn'), '🔴 不該建出來').toBeNull()
+    expect(el.querySelector('#file-menu-btn'), '🔴 又跑回來了').toBeNull()
     expect(el.querySelector('#export-btn')).toBeNull()
-    // 正向錨點：其餘的按鈕還在（否則這條可能是「整個都沒建」而空過）
+    // 正向錨點：而這條列真的建出來了（否則這一條會空過）
     expect(el.querySelector('#undo-btn')).not.toBeNull()
   })
 })

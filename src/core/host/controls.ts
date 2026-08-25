@@ -102,6 +102,11 @@ export const CONTROLS: readonly ControlSpec[] = [
 /** 每一種控制項投影到哪個表面。🔴 **一個宿主一張，三列**。 */
 export type ControlSurfaces = Readonly<Record<ControlKind, ControlSurface>>
 
+/** 這一顆投影到哪個表面。 */
+export function surfaceOf(spec: ControlSpec, surfaces: ControlSurfaces): ControlSurface {
+  return surfaces[spec.kind]
+}
+
 /** 這個宿主要不要自己畫這一顆。 */
 export function drawnByPanel(spec: ControlSpec, surfaces: ControlSurfaces): boolean {
   return surfaces[spec.kind] === 'panelToolbar' || surfaces[spec.kind] === 'panelStatusBar'
