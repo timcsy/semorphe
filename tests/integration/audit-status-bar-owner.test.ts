@@ -73,7 +73,8 @@ function profileFiles(): ProfileFile[] {
 /** 沒表態的：宣告了宿主，而沒說控制項投影到哪。 */
 function unstated(files: ProfileFile[]): string[] {
   return files
-    .filter((f) => !(/\bpicker:\s*'/.test(f.text) && /\baction:\s*'/.test(f.text) && /\bindicator:\s*'/.test(f.text)))
+    .filter((f) => !(/\bpicker:\s*'/.test(f.text) && /\baction:\s*'/.test(f.text)
+      && /\bindicator:\s*'/.test(f.text) && /\boutput:\s*'/.test(f.text)))
     .map((f) => f.path)
 }
 
@@ -92,6 +93,12 @@ function cannotReportPhase(files: ProfileFile[], readImpl: (className: string) =
     if (/\b(picker|action):\s*'host/.test(f.text)) {
       required.add('reportControls(')
       required.add('onControlInvoke(')
+    }
+    // 🔴 `output → hostTerminal` 的義務：程式在講話而沒有人聽得到，
+    //    比「面板少一格」嚴重得多——**執行會直接沒有出口**。
+    if (/\boutput:\s*'host/.test(f.text)) {
+      required.add('reportConsole(')
+      required.add('onConsoleInput(')
     }
     if (required.size === 0) continue
     const m = f.text.match(/new\s+(\w+)\(container\)/)
@@ -167,6 +174,10 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
     expect(typeof view.reportControls, '🔴 控制項投影到宿主，而交不出去＝它們消失')
       .toBe('function')
     expect(typeof view.onControlInvoke, '🔴 只能看不能按的控制項是死的')
+      .toBe('function')
+    expect(typeof view.reportConsole, '🔴 程式在講話而宿主聽不到＝執行沒有出口')
+      .toBe('function')
+    expect(typeof view.onConsoleInput, '🔴 只能輸出不能輸入的主控台，`cin` 就沒有家')
       .toBe('function')
   })
 
@@ -255,11 +266,11 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
       path: 'zz/zz-fake-bad-host.ts',
       text: `export const p: HostProfile = {
  createCodeView(container) { return new ZzFakeView(container) },
- controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar' },
+ controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar', output: 'hostTerminal' },
 }`,
     }]
     expect(cannotReportPhase(synthetic, () => 'class ZzFakeView { getCode() { return "" } }'))
-      .toEqual(['zz/zz-fake-bad-host.ts → reportSyncPhase', 'zz/zz-fake-bad-host.ts → reportControls', 'zz/zz-fake-bad-host.ts → onControlInvoke'])
+      .toEqual(['zz/zz-fake-bad-host.ts → reportSyncPhase', 'zz/zz-fake-bad-host.ts → reportControls', 'zz/zz-fake-bad-host.ts → onControlInvoke', 'zz/zz-fake-bad-host.ts → reportConsole', 'zz/zz-fake-bad-host.ts → onConsoleInput'])
   })
 
   it('★ 注入②：交得出三態的、以及自己畫狀態列的，都不得被報', () => {
@@ -267,17 +278,17 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
       path: 'zz/zz-fake-good-host.ts',
       text: `export const p: HostProfile = {
  createCodeView(container) { return new ZzFakeView(container) },
- controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar' },
+ controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar', output: 'hostTerminal' },
 }`,
     }
     const drawsItself: ProfileFile = {
       path: 'zz/zz-fake-web.ts',
       text: `export const p: HostProfile = {
  createCodeView(container) { return new ZzFakeView(container) },
- controlSurfaces: { picker: 'panelToolbar', action: 'panelToolbar', indicator: 'panelStatusBar' },
+ controlSurfaces: { picker: 'panelToolbar', action: 'panelToolbar', indicator: 'panelStatusBar', output: 'panelBottom' },
 }`,
     }
-    expect(cannotReportPhase([canReport, drawsItself], () => 'class ZzFakeView { reportSyncPhase(a, b, c) {} reportControls(s) {} onControlInvoke(cb) {} }'))
+    expect(cannotReportPhase([canReport, drawsItself], () => 'class ZzFakeView { reportSyncPhase(a, b, c) {} reportControls(s) {} onControlInvoke(cb) {} reportConsole(c) {} onConsoleInput(cb) {} }'))
       .toEqual([])
   })
 
@@ -286,16 +297,16 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
       path: 'zz/zz-fake-missing.ts',
       text: `export const p: HostProfile = {
  createCodeView(container) { return new ZzMissing(container) },
- controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar' },
+ controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar', output: 'hostTerminal' },
 }`,
     }]
-    expect(cannotReportPhase(synthetic, () => null)).toEqual(['zz/zz-fake-missing.ts → reportSyncPhase', 'zz/zz-fake-missing.ts → reportControls', 'zz/zz-fake-missing.ts → onControlInvoke'])
+    expect(cannotReportPhase(synthetic, () => null)).toEqual(['zz/zz-fake-missing.ts → reportSyncPhase', 'zz/zz-fake-missing.ts → reportControls', 'zz/zz-fake-missing.ts → onControlInvoke', 'zz/zz-fake-missing.ts → reportConsole', 'zz/zz-fake-missing.ts → onConsoleInput'])
   })
 
   it('★ 注入④：沒表態的會被報，表了態的不會', () => {
     const silent: ProfileFile = { path: 'zz/zz-fake-silent.ts', text: 'const p: HostProfile = { features: { fileButtons: true } }' }
-    const saysTrue: ProfileFile = { path: 'zz/zz-fake-true.ts', text: `const p: HostProfile = { controlSurfaces: { picker: 'panelToolbar', action: 'panelToolbar', indicator: 'panelStatusBar' } }` }
-    const saysFalse: ProfileFile = { path: 'zz/zz-fake-false.ts', text: `const p: HostProfile = { controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar' } }` }
+    const saysTrue: ProfileFile = { path: 'zz/zz-fake-true.ts', text: `const p: HostProfile = { controlSurfaces: { picker: 'panelToolbar', action: 'panelToolbar', indicator: 'panelStatusBar', output: 'panelBottom' } }` }
+    const saysFalse: ProfileFile = { path: 'zz/zz-fake-false.ts', text: `const p: HostProfile = { controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar', output: 'hostTerminal' } }` }
     expect(unstated([silent, saysTrue, saysFalse])).toEqual(['zz/zz-fake-silent.ts'])
   })
 })

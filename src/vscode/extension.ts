@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext): void {
     //    ⚠️ 兩邊各寫一次的話，「宣告了而沒註冊」會是一個**執行期才炸**的錯，
     //    而使用者看到的是「指令面板上有，按了說找不到指令」。
     ...CONTROLS
-      .filter((c) => c.kind !== 'indicator')
+      .filter((c) => c.kind === 'picker' || c.kind === 'action')  // ⚠️ indicator 有自己的指令；output 不是使用者按的東西
       .map((c) => vscode.commands.registerCommand(
         hostCommandId(c.id),
         // picker 開選單，action 直接做——⚠️ 分辨由**登錄表**決定，不是由 id。

@@ -376,6 +376,7 @@ class SemorpheSession {
     if (m.type === 'syncPhase') { updateSyncStatusBar(m.phase, m.source, m.detail); return }
     if (m.type === 'controls') { updateControlSurfaces(m.items); return }
     if (m.type === 'problems') { this.publishDiagnostics(m.items); return }
+    if (m.type === 'console') { writeToTerminal(m); return }
     if (m.type === 'ready') { this.resend(); return }
     if (m.type === 'requestDocument') {
       // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
@@ -633,6 +634,11 @@ class SemorpheSession {
     DIAGNOSTICS.set(doc.uri, out)
   }
 
+  /** 終端機打的一行 → webview。 */
+  sendConsoleInput(line: string): void {
+    this.send({ type: 'consoleInput', line })
+  }
+
   /** 宿主那側按了控制項——原封不動送進 webview。 */
   sendControl(msg: Extract<HostMessage, { type: 'controlInvoke' }>): void {
     this.send(msg)
@@ -657,6 +663,7 @@ class SemorpheSession {
     hideControlSurfaces()
     // 🔴 面板關了，診斷也不該留在 Problems 上——**它們是這個面板算出來的**。
     if (this.doc) DIAGNOSTICS.delete(this.doc.uri)
+    disposeTerminal()
   }
 }
 
@@ -790,6 +797,76 @@ export function invokeControl(id: string, value?: string): void {
     return
   }
   current.sendControl({ type: 'controlInvoke', id, value })
+}
+
+/**
+ * 主控台 —— **一台偽終端機**（2026-08-25，`draft/版面與檔案` §六之六）。
+ *
+ * ## 🔴 為什麼是終端機，不是 Output channel
+ *
+ * **我們的程式會讀輸入**（`cin`）。而 Output channel 是唯讀的：
+ *
+ * > **一個唯讀的輸出格會讓「輸入」沒有家
+ * > ——而那正是主控台今天存在的理由。**
+ *
+ * 搬進 Output 等於把它一半的功能丟掉。
+ *
+ * ## ⚠️ 終端機吃的是 `\r\n`
+ *
+ * 而程式吐的是 `\n`。只送 `\n` 的症狀是**階梯狀的輸出**
+ * ——每一行都從上一行的結尾開始。
+ */
+let terminal: vscode.Terminal | undefined
+const termWrite = new vscode.EventEmitter<string>()
+let termLine = ''
+
+function ensureTerminal(): vscode.Terminal {
+  if (terminal) return terminal
+  const pty: vscode.Pseudoterminal = {
+    onDidWrite: termWrite.event,
+    open: () => { /* 🔴 開了就開了——輸出由 webview 推過來，這裡不主動說話 */ },
+    close: () => { terminal = undefined; termLine = '' },
+    // 使用者在終端機打字。⚠️ 這裡要**自己回顯**：偽終端機沒有 line discipline。
+    handleInput: (data: string) => {
+      for (const ch of data) {
+        if (ch === '\r') {
+          termWrite.fire('\r\n')
+          const line = termLine
+          termLine = ''
+          current?.sendConsoleInput(line)
+        } else if (ch === '\u007f' || ch === '\b') {
+          // Backspace：往回一格、蓋掉、再往回一格
+          if (termLine.length > 0) { termLine = termLine.slice(0, -1); termWrite.fire('\b \b') }
+        } else if (ch >= ' ') {
+          termLine += ch
+          termWrite.fire(ch)
+        }
+      }
+    },
+  }
+  terminal = vscode.window.createTerminal({ name: 'Semorphe', pty })
+  return terminal
+}
+
+function writeToTerminal(m: { chunk?: string; clear?: boolean }): void {
+  const term = ensureTerminal()
+  if (m.clear) {
+    // ⚠️ `\x1b[2J\x1b[H` ＝ 清畫面 ＋ 游標回原點。**清空是使用者按的**，
+    //    所以順便把終端機叫到前面來。
+    termWrite.fire('\x1b[2J\x1b[H')
+    return
+  }
+  if (!m.chunk) return
+  // 🔴 `\n` → `\r\n`，理由見檔頭（否則輸出會變成階梯狀）。
+  termWrite.fire(m.chunk.replace(/\r?\n/g, '\r\n'))
+  term.show(/* preserveFocus */ true)
+}
+
+/** 面板關了：終端機也沒有東西會再對它說話。 */
+function disposeTerminal(): void {
+  terminal?.dispose()
+  terminal = undefined
+  termLine = ''
 }
 
 /** 面板關了：狀態列不得繼續宣稱有東西在同步。 */

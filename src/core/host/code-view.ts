@@ -124,6 +124,20 @@ export interface CodeView {
   /** 宿主那側按了控制項。 */
   onControlInvoke?(callback: (invoke: ControlInvoke) => void): void
 
+  /**
+   * 程式的輸出交給宿主的終端機。
+   *
+   * 🔴 **與 `controlSurfaces.output` 是同一件事的兩端**——宣告
+   * `hostTerminal` 的宿主必須實作這一組，否則程式在講話而沒有人聽得到。
+   */
+  reportConsole?(chunk: string): void
+
+  /** 宿主要求清空終端機那一側。 */
+  clearConsole?(): void
+
+  /** 使用者在宿主的終端機打了一行。 */
+  onConsoleInput?(callback: (line: string) => void): void
+
   // ─── C：可選——**沒有的要說得出為什麼** ───
 
   /** 版面變了要重排。⚠️ 編輯器不歸我們管的宿主沒有這一格。 */

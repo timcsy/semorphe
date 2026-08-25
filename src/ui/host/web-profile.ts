@@ -59,5 +59,7 @@ export const webProfile: HostProfile = {
     picker: 'panelStatusBar',
     action: 'panelToolbar',
     indicator: 'panelStatusBar',
+    // 主控台就是下方面板那一格——**網頁版沒有終端機可以交給它**。
+    output: 'panelBottom',
   },
 }

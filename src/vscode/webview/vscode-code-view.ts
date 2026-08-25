@@ -186,6 +186,20 @@ export class VscodeCodeView implements CodeView, ViewHost {
     postToHost({ type: 'problems', items })
   }
 
+  reportConsole(chunk: string): void {
+    postToHost({ type: 'console', chunk })
+  }
+
+  clearConsole(): void {
+    postToHost({ type: 'console', clear: true })
+  }
+
+  onConsoleInput(callback: (line: string) => void): void {
+    this.consoleCb = callback
+  }
+
+  private consoleCb: ((line: string) => void) | null = null
+
   reportControls(states: readonly ControlState[]): void {
     // 🔴 每次送整份——⚠️ 值域也一起，主行程不認得任何一個登錄表。
     postToHost({ type: 'controls', items: states as never })
@@ -204,6 +218,10 @@ export class VscodeCodeView implements CodeView, ViewHost {
     }
     if (m.type === 'controlInvoke') {
       this.controlCb?.({ id: m.id as never, value: m.value, values: m.values })
+      return
+    }
+    if (m.type === 'consoleInput') {
+      this.consoleCb?.(m.line)
       return
     }
     if (m.type === 'document') {

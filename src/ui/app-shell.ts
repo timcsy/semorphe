@@ -293,17 +293,26 @@ export function createAppLayout(
   codeColumn.appendChild(bottomContainer)
   const bottomPanel = new BottomPanel(bottomContainer)
 
+  // 🔴 **主控台那一格建不建，問登錄表**（`controlSurfaces.output`）。
+  //
+  // ⚠️ 而 `ConsolePanel` **本身照建**：它是執行的輸出／輸入端點，
+  //    宿主那側的終端機是它的鏡射。
+  //
+  // > **「不畫那一格」與「沒有主控台」是兩件事；
+  // > 把它們寫成同一件，會讓執行在那個宿主上直接沒有出口。**
   const consoleEl = document.createElement('div')
   const consolePanel = new ConsolePanel(consoleEl)
-  bottomPanel.addTab({
-    id: 'console',
-    label: Blockly.Msg['PANEL_CONSOLE'] || 'Console',
-    panel: consoleEl,
-    actions: [
-      { icon: '📋', title: '複製輸出', onClick: () => consolePanel.copyOutput() },
-      { icon: Blockly.Msg['PANEL_CLEAR'] || '清除', title: 'Clear', onClick: () => consolePanel.clear() },
-    ],
-  })
+  if (surfaceOf(CONTROLS.find((c) => c.id === 'console')!, surfaces) === 'panelBottom') {
+    bottomPanel.addTab({
+      id: 'console',
+      label: Blockly.Msg['PANEL_CONSOLE'] || 'Console',
+      panel: consoleEl,
+      actions: [
+        { icon: '📋', title: '複製輸出', onClick: () => consolePanel.copyOutput() },
+        { icon: Blockly.Msg['PANEL_CLEAR'] || '清除', title: 'Clear', onClick: () => consolePanel.clear() },
+      ],
+    })
+  }
 
   const variableEl = document.createElement('div')
   const variablePanel = new VariablePanel(variableEl)

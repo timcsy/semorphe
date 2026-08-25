@@ -48,6 +48,11 @@ export type HostMessage =
       values?: string[]
     }
   | {
+      /** 使用者在終端機打了一行（不含換行）。 */
+      type: 'consoleInput'
+      line: string
+    }
+  | {
       type: 'document'
       uri: string
       languageId: string
@@ -173,6 +178,12 @@ export type WebviewMessage =
        */
       type: 'problems'
       items: CodeDiagnosticWire[]
+    }
+  | {
+      /** 程式的輸出 → 宿主的終端機。`clear: true` ＝ 清空。 */
+      type: 'console'
+      chunk?: string
+      clear?: boolean
     }
   | {
       type: 'applyEdit'

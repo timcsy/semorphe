@@ -69,6 +69,7 @@ import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
 import type { AppShellElements, AppShellCallbacks } from './app-shell'
 import { renderStatusControls, renderSheetControls } from './layout/status-bar-controls'
+import type { ConsolePanel } from './panels/console-panel'
 import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
 import { isFunctionDefinition } from '../core/component/traits'
@@ -489,6 +490,8 @@ export class App {
     // （桌機狀態列／IDE 狀態列／行動版設定表）。回呼留著，它們是**共用的那一組**。
     // 🔴 宿主那側的入口——⚠️ 走的是**同一組回呼**。
     this.wireHostControls()
+    // 🔴 主控台 ↔ 宿主的終端機——⚠️ 用**能力探測**，這一層不認識任何宿主。
+    this.wireHostConsole(elements.consolePanel)
 
     // 12. Setup bidirectional highlighting
     this.setupBidirectionalHighlight()
@@ -963,7 +966,10 @@ export class App {
     if (!this.controlCallbacks) return
     const surfaces = this.profile.controlSurfaces
     // ⚠️ `indicator` 不在這裡送——同步三態走自己的頻道（見上）。
-    const pickersAndActions = CONTROLS.filter((c) => c.kind !== 'indicator')
+    // 🔴 只有 `picker` 與 `action` 是**使用者按的東西**。
+    //    ⚠️ `indicator` 有自己的頻道；`output` 是一條資料流，不是一顆控制項
+    //       ——把它當控制項送出去，宿主會替它產生一個按了沒事的指令。
+    const pickersAndActions = CONTROLS.filter((c) => c.kind === 'picker' || c.kind === 'action')
 
     // ① 交給宿主的那些
     const toHost = pickersAndActions
@@ -1100,6 +1106,26 @@ export class App {
         case 'viewFlow': this.showProjection?.('flow'); break
       }
     }
+  }
+
+  /**
+   * 把主控台接到宿主的終端機。
+   *
+   * 🔴 **鏡射，不是搬家**：面板那一格建不建由
+   * `controlSurfaces.output` 決定，而輸出**兩邊都收得到**
+   * ——那讓「面板那格被關掉」與「終端機沒接上」分得出來。
+   *
+   * ⚠️ 輸入走 `feedInput`，而它與面板那顆輸入框**共用同一個 resolve**：
+   *
+   * > **同一件事有兩個入口時，要嘛共用一個實作，
+   * > 要嘛就會有兩個「誰在等輸入」的真相。**
+   */
+  private wireHostConsole(consolePanel: ConsolePanel | null): void {
+    const view = this.codeView
+    if (!consolePanel || !view?.reportConsole) return
+    consolePanel.onOutput((chunk: string) => view.reportConsole?.(chunk))
+    consolePanel.onClear(() => view.clearConsole?.())
+    view.onConsoleInput?.((line: string) => consolePanel.feedInput(line))
   }
 
   /**

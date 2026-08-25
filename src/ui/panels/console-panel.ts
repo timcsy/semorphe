@@ -127,6 +127,42 @@ export class ConsolePanel implements ViewHost {
   }
 
   /** Register a handler for terminal signals (Ctrl+C → SIGINT, Ctrl+D → EOF) */
+  private outputCb: ((text: string) => void) | null = null
+  private clearCb: (() => void) | null = null
+
+  /**
+   * 有輸出時通知——🔴 **給「主控台在宿主那邊」的宿主用**。
+   *
+   * ⚠️ 它是**鏡射**不是搬家：面板那一格仍然自己畫。
+   * 由 `HostProfile.controlSurfaces.output` 決定那一格建不建。
+   */
+  onOutput(cb: ((text: string) => void) | null): void {
+    this.outputCb = cb
+  }
+
+  /** 清空時通知（終端機那側也要跟著清）。 */
+  onClear(cb: (() => void) | null): void {
+    this.clearCb = cb
+  }
+
+  /**
+   * 從外面餵一行輸入進來（終端機打的字）。
+   *
+   * 🔴 **與面板那顆輸入框走同一個 resolve**——不是第二條路。
+   * ⚠️ 沒有人在等的時候**排進佇列**，不是丟掉：終端機可以先貼好幾行。
+   */
+  feedInput(line: string): void {
+    if (this.inputResolve) {
+      const resolve = this.inputResolve
+      this.inputResolve = null
+      this.removeInlineInput()
+      this.removeInputRow()
+      resolve(line)
+      return
+    }
+    this.pendingInputLines.push(line)
+  }
+
   onSignal(handler: ((signal: ConsoleSignal) => void) | null): void {
     this.signalHandler = handler
   }
@@ -167,6 +203,10 @@ export class ConsolePanel implements ViewHost {
    */
   write(text: string): void {
     if (!text) return
+    // 🔴 **鏡射給宿主**（2026-08-25）——IDE 那側的主控台是**終端機**。
+    //    ⚠️ 放在最前面：底下有多個提早 return 的分支，而
+    //    「有些輸出沒有出現在終端機上」比「完全沒接上」難查得多。
+    this.outputCb?.(text)
 
     const parts = text.split('\n')
 
@@ -193,6 +233,7 @@ export class ConsolePanel implements ViewHost {
 
   /** Log a complete line (always gets its own div, like traditional console) */
   log(text: string): void {
+    this.outputCb?.(text + '\n')
     this.lines.push(text)
     this.currentLineEl = null
     const line = document.createElement('div')
@@ -215,6 +256,7 @@ export class ConsolePanel implements ViewHost {
   }
 
   clear(): void {
+    this.clearCb?.()
     this.lines = []
     this.outputEl.innerHTML = ''
     this.currentLineEl = null

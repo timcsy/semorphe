@@ -98,5 +98,8 @@ export const vscodeProfile: HostProfile = {
     picker: 'hostStatusBar',
     action: 'hostTitleBar',
     indicator: 'hostStatusBar',
+    // 🔴 **終端機，不是 Output 面板**——我們的程式會讀 `cin`，
+    //    而一個唯讀的輸出格會讓「輸入」沒有家。
+    output: 'hostTerminal',
   },
 }

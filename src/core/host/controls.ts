@@ -25,7 +25,15 @@
  * picker      選一個值        → 宿主的狀態列（VSCode 自己的語言／編碼就是這樣放的）
  * action      做一件事        → 宿主的分頁標題列
  * indicator   看一個狀態      → 宿主的狀態列（點得下去，但主要是給人看的）
+ * output      程式在講話      → 宿主的終端機
  * ```
+ *
+ * ## 🔴 `output` 為什麼是終端機，不是 Output 面板
+ *
+ * **我們的程式會讀輸入**（`cin`）。而 VSCode 的 Output channel 是唯讀的：
+ *
+ * > **一個唯讀的輸出格會讓「輸入」沒有家
+ * > ——而那正是主控台今天存在的理由。**
  *
  * ⚠️ 而 `domain` 是**另一個軸**，它不決定表面，它回答「為什麼不該待在積木面板」：
  * 一顆 `session` 的控制項（這個檔案用什麼語言）**跟積木沒有關係**，
@@ -33,7 +41,7 @@
  */
 
 /** 使用者拿它做什麼——🔴 **表面由這一格決定**。 */
-export type ControlKind = 'picker' | 'action' | 'indicator'
+export type ControlKind = 'picker' | 'action' | 'indicator' | 'output'
 
 /**
  * 它管的範圍。⚠️ **不決定表面**——它是「為什麼不該待在積木面板」的理由。
@@ -50,14 +58,17 @@ export type ControlDomain = 'session' | 'view' | 'project'
 export type ControlSurface =
   | 'panelToolbar'
   | 'panelStatusBar'
+  | 'panelBottom'
   | 'hostStatusBar'
   | 'hostTitleBar'
+  | 'hostTerminal'
 
 export type ControlId =
   | 'target' | 'branches' | 'style' | 'blockStyle' | 'locale'
   | 'run' | 'undo' | 'redo' | 'clear'
   | 'viewBlocks' | 'viewFlow'
   | 'sync'
+  | 'console'
 
 export interface ControlSpec {
   readonly id: ControlId
@@ -108,6 +119,8 @@ export const CONTROLS: readonly ControlSpec[] = [
   //    而「現在看哪一個」是**這個視圖的動作**，它的家是分頁的標題列。
   { id: 'viewBlocks', kind: 'action', domain: 'view', mountId: 'view-blocks-btn', bar: 'quickAccess', hostTitle: '顯示積木', icon: '$(symbol-structure)' },
   { id: 'viewFlow', kind: 'action', domain: 'view', mountId: 'view-flow-btn', bar: 'quickAccess', hostTitle: '顯示流程', icon: '$(type-hierarchy)' },
+  // 🔴 **程式在講話的地方**（2026-08-25，`draft/版面與檔案` §六之六）。
+  { id: 'console', kind: 'output', domain: 'project', mountId: 'console-panel', bar: 'quickAccess', hostTitle: '主控台' },
   { id: 'sync', kind: 'indicator', domain: 'project', mountId: 'sync-menu-btn', bar: 'quickAccess', hostTitle: '同步：暫停／以哪一邊為準' },
 ]
 
@@ -121,7 +134,7 @@ export function surfaceOf(spec: ControlSpec, surfaces: ControlSurfaces): Control
 
 /** 這個宿主要不要自己畫這一顆。 */
 export function drawnByPanel(spec: ControlSpec, surfaces: ControlSurfaces): boolean {
-  return surfaces[spec.kind] === 'panelToolbar' || surfaces[spec.kind] === 'panelStatusBar'
+  return surfaces[spec.kind].startsWith('panel')
 }
 
 /** 這個宿主的面板要建哪些控制項。 */

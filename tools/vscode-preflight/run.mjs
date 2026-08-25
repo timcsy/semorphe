@@ -106,6 +106,10 @@ const blocks = await page.evaluate(() => {
   // > **一個選擇器如果會配到別的東西，它報的數字是真的，
   // > 而它報的【意義】是假的。**
   下方分頁: document.querySelectorAll('.bottom-tab-btn').length,
+  // 🔴 主控台在這個宿主是**終端機**——面板裡不該有那一格（2026-08-25）。
+  //    ⚠️ 而變數那一格還在（DAP 是第五刀），所以下方分頁不會是 0。
+  主控台分頁: [...document.querySelectorAll('.bottom-tab-btn')]
+    .some((b) => (b.textContent ?? '').includes('主控台')),
   程式碼編輯區: !!document.querySelector('.monaco-editor'),
   檔案按鈕: !!document.getElementById('file-menu-btn'),
  })
@@ -267,6 +271,7 @@ const ok = !fatal && errors.length === 0 && failures.length === 0
   && blocks.面板內控制項 === 0 && !blocks.工具列 && !blocks.快速列
   // 🔴 而它們要真的到了宿主手上——**「消失」與「搬家」的差別就在這一格**。
   && controlIds.length >= 5 && 值域齊全 && problemsSent
+  && !blocks.主控台分頁
   && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1 && twoWay && untouched && sketchBlocks > 0
   // 🔴 這個宿主**自己有狀態列**——面板裡再畫一條就是同一件事講兩次，
   //    ⚠️ 而 `phaseReached` 是它的另一半：不畫的義務是「交出去」。

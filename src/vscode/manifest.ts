@@ -202,7 +202,7 @@ export function buildManifest(): ExtensionManifest {
         // ⚠️ 手寫這一段的話，「有哪些控制項」就會有第二個真相
         // ——而這個檔案是**建置期**執行的，登錄表 import 得進來。
         ...CONTROLS
-          .filter((c) => c.kind !== 'indicator')   // ⚠️ sync 上面已經有自己那一條
+          .filter((c) => c.kind === 'picker' || c.kind === 'action')   // ⚠️ sync 有自己那一條；console 是資料流不是控制項
           .map((c) => ({
             command: hostCommandId(c.id),
             title: c.hostTitle,
