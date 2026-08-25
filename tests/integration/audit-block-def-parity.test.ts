@@ -361,8 +361,7 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     const { BlockRegistrar, setLanguageInputNames } = await import('../../src/ui/block-registrar')
     const n = await import('../../src/languages/cpp/block-input-names')
     setLanguageInputNames({
-      compoundAssign: n.C_COMPOUND_ASSIGN_INPUTS, compoundAssignExpr: n.C_COMPOUND_ASSIGN_EXPR_INPUTS,
-      varDeclareExpr: n.C_VAR_DECLARE_EXPR_INPUTS, whileBlock: n.WHILE_INPUTS,
+        varDeclareExpr: n.C_VAR_DECLARE_EXPR_INPUTS, whileBlock: n.WHILE_INPUTS,
       countLoop: n.COUNT_LOOP_INPUTS, returnBlock: n.RETURN_INPUTS,
       arrayAccess: n.ARRAY_ACCESS_INPUTS, arrayAssign: n.ARRAY_ASSIGN_INPUTS, varAssign: n.VAR_ASSIGN_INPUTS,
     })

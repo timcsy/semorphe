@@ -51,8 +51,16 @@ function getInputs(blockType: string): InputNames {
 }
 
 export const CPP_STRING_AT_INPUTS = getInputs('cpp_string_at')
-export const C_COMPOUND_ASSIGN_INPUTS = getInputs('cpp_var_assign_compound')
-export const C_COMPOUND_ASSIGN_EXPR_INPUTS = getInputs('cpp_var_assign_compound_expression')
+// 🪦 **`C_COMPOUND_ASSIGN_INPUTS` 與 `C_COMPOUND_ASSIGN_EXPR_INPUTS` 已於 2026-08-25 刪除。**
+//
+// 它們的唯一消費者是那兩顆積木的**命令式定義**，而它們隨「左值換成接點」退場了。
+//
+// > **一個沒有消費者的注入欄位，會讓組裝點以為它還要提供那份資料
+// > ——而那份資料從此沒有人驗。**（`retire-imperative-block` §4）
+//
+// ⚠️ 而它還藏著一個更難看見的東西：`.value[0]` 是**順序相依**的。
+//    左值變成 `TARGET` 之後那個 `[0]` 從 `VALUE` 變成 `TARGET`，
+//    **而型別檢查看不到**——兩個都是 string。
 export const C_VAR_DECLARE_EXPR_INPUTS = getInputs('cpp_var_declare_expression')
 
 // ── 🔴 spec 154：從 `core/block-input-names.ts` 搬過來的九個 ──────────────

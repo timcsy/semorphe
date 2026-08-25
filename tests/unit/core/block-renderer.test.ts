@@ -205,7 +205,7 @@ describe('block-renderer', () => {
         left: [createNode('cpp:var_ref', { name: 'i' })],
         right: [createNode('cpp:literal_number', { value: '10' })],
       })],
-      update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
+      update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
       body: [createNode('cpp:break', {})],
     })
     const state = renderToBlocklyState(makeProgram(forLoop))
@@ -215,7 +215,9 @@ describe('block-renderer', () => {
     const updateBlock = block.inputs.UPDATE?.block
     expect(updateBlock).toBeDefined()
     expect(updateBlock.type).toBe('cpp_increment_expression')
-    expect(updateBlock.fields.NAME).toBe('i')
+    // 🟢 **運算元是接點**（2026-08-25）——`NAME` 那顆變數下拉換成 `TARGET`。
+    expect(updateBlock.fields.NAME, '🔴 欄位長回來了').toBeUndefined()
+    expect(updateBlock.inputs.TARGET?.block?.type).toBe('cpp_var_ref')
     expect(updateBlock.fields.OP).toBe('++')
   })
 

@@ -23,7 +23,7 @@ import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeader
 //    ⚠️ 組裝點認得語言是**設計如此**（護欄明寫「可見，不入棘輪」）。
 import { registerCppExtractStrategies } from '../languages/cpp/extractors/extract-strategies'
 import {
-  C_COMPOUND_ASSIGN_EXPR_INPUTS, C_VAR_DECLARE_EXPR_INPUTS,
+  C_VAR_DECLARE_EXPR_INPUTS,
 } from '../languages/cpp/block-input-names'
 import {
   detectStyleExceptionsForPreset, applyStyleConversions, analyzeIoConformance,
@@ -187,7 +187,6 @@ export class App {
     this.blockSpecRegistry = new BlockSpecRegistry()
     // ⚠️ **必須在 `registerAll` 之前**——註冊時就會讀這些名字。
     setLanguageInputNames({
-      compoundAssignExpr: C_COMPOUND_ASSIGN_EXPR_INPUTS,
       varDeclareExpr: C_VAR_DECLARE_EXPR_INPUTS,
       // 🔴 spec 154：這九個原本住在 `core/block-input-names.ts`
     })

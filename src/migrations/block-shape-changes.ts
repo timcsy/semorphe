@@ -128,4 +128,15 @@ export const SHAPE_CHANGES_V13: ShapeChange[] = [
     retiredFields: ['NAME'],
     why: '同上——運算式形態。',
   },
+  {
+    blockType: 'cpp_increment',
+    retiredFields: ['NAME'],
+    why: '運算元 `NAME`（變數下拉）＋ 可有可無的 `INDEX` 換成一個 `TARGET` 接點——'
+      + '`++` 的運算元是一個左值（`o.x++`／`p->x++`／`(*q)++` 都合法），而它列了兩種。',
+  },
+  {
+    blockType: 'cpp_increment_expression',
+    retiredFields: ['NAME'],
+    why: '同上——運算式形態。',
+  },
 ]

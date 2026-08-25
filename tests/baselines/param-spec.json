@@ -14,24 +14,6 @@
       "where": "src/languages/cpp/core/executors/structs.ts:192"
     },
     {
-      "componentId": "cpp:increment",
-      "param": "NAME",
-      "direction": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:318"
-    },
-    {
-      "componentId": "cpp:increment",
-      "param": "OP",
-      "direction": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:319"
-    },
-    {
-      "componentId": "cpp:increment",
-      "param": "POSITION",
-      "direction": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/statements.ts:320"
-    },
-    {
       "componentId": "cpp:input",
       "param": "from",
       "direction": "讀了沒宣告",
@@ -83,6 +65,6 @@
     }
   ],
   "_meta": {
-    "note": "\n\n【2026-08-10 / specs/112】讀了沒宣告下降一筆，**因為宣告了**（不是因為實作了）：第三十四條護欄逼出 cpp:include.local 的漏宣告，補在 components.json 的 properties。系統一行行為都沒變。"
+    "note": "\n\n【2026-08-10 / specs/112】讀了沒宣告下降一筆，**因為宣告了**（不是因為實作了）：第三十四條護欄逼出 cpp:include.local 的漏宣告，補在 components.json 的 properties。系統一行行為都沒變。\n🎯 2026-08-25：讀了沒宣告 10 → 7，三筆都是 `cpp:increment`。\n   · `NAME` —— 左值換成 `target` 接點，那個屬性不存在了。\n   · `OP`／`POSITION` —— **大寫的回退是遺留**：抽取器的 `renderMapping`\n     早就把欄位映成小寫的屬性名，那兩個回退**永遠不會命中**。\n   > 一個永遠不會命中的回退，是一份沒有人會發現已經過期的宣告。"
   }
 }

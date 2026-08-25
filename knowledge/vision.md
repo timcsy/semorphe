@@ -511,10 +511,13 @@ target 節點的形狀。每多一種左值形狀就要多一個執行器分支�
 
 - [x] 🟢 **第七十三條護欄已蓋**（`audit-lvalue-slot`，2026-08-25）——棘輪 **12 → 0**
       機制是 `traits.writesTo`（宣告驅動，不是用名字認）；第一次跑**紅的**，逐項指名 12 顆。
-- [ ] 🔴 **驗收①：那 12 筆還到 0**——🎯 **今天 12 → 10**
+- [ ] 🔴 **驗收①：那 12 筆還到 0**——🎯 **今天 12 → 9**
       🟢 `python:var_assign_compound`（`a.b += 1`／`nums[i+1] += 1`／`grid[1][2] += 1`）
       🟢 `cpp:var_assign_compound`（`a[i]`／`o.x`／`p->x`／`*q`／`a[i][j]`／`s[i]` 六種形狀）
-      🪦 而 `altLayout` **隨第二筆退場**——它是這個病的症狀（驗收④先到了）
+      🟢 `cpp:increment`（`a[i]++`／`o.x++`／`p->x++`／`(*q)++`／`s[i]++`）
+      🪦 而 `altLayout` **兩顆都退場了**——它是這個病的症狀（驗收④先到了）
+      🪦 順帶：`cpp_increment_expression` 與 `cpp_var_assign_compound_expression` 的
+      **命令式定義刪除**（`dual-truth` 13 → 11）——它們的存在理由就是那個 `hasIndex_` mutator
       ⚠️ 剩下 10 筆裡，`python:var_assign`／`var_assign_expr` 的左邊被 `constraints`
       限成 `identifier`，**依建構就是原子**——換它們是齊一性不是修缺陷，
       而真正的解是**把三顆合併成一顆**（`member_assign`／`container_assign` 的

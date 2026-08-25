@@ -116,11 +116,13 @@ describe('L1 Block Roundtrip', () => {
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.componentId).toBe('cpp:increment')
-      expect(sem2!.properties.name).toBe('i')
+      // 🟢 **運算元是接點**（2026-08-25）——釘接點比釘字串強：它證明左邊被 lift 過。
+      expect(sem2!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(sem2!.children.target[0].properties.name).toBe('i')
     })
 
     it('should generate code for cpp_increment (hand-written generator for prefix/postfix)', () => {
-      const node = createNode('cpp:increment', { NAME: 'j', OP: '--' })
+      const node = createNode('cpp:increment', { operator: '--' }, { target: [createNode('cpp:var_ref', { name: 'j' })] })
       const generators = new Map<string, NodeGenerator>()
       const style = { indent_size: 4, brace_style: 'K&R' } as StylePreset
     for (const reg of componentGenerateRegistrars())

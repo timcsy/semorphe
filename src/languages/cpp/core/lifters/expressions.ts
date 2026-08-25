@@ -210,18 +210,10 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const firstChild = node.children[0]
     const position = (!firstChild?.isNamed && (firstChild?.text === '++' || firstChild?.text === '--')) ? 'prefix' : 'postfix'
 
-    // Array element increment: arr[i]++ / --arr[i]
-    if (nameNode?.type === 'subscript_expression') {
-      const arrayNode = nameNode.childForFieldName('argument') ?? nameNode.namedChildren[0]
-      const arrName = arrayNode?.text ?? 'arr'
-      const indicesNode = nameNode.namedChildren.find(c => c.type === 'subscript_argument_list')
-      const indexNode = indicesNode?.namedChildren[0] ?? nameNode.childForFieldName('index') ?? nameNode.namedChildren[1]
-      const index = indexNode ? ctx.lift(indexNode) : null
-      return buildIncrement(arrName, op, position, index)
-    }
-
-    const name = nameNode?.text ?? 'i'
-    return buildIncrement(name, op, position)
+    // 🟢 **運算元就 lift**（2026-08-25）——不再判它長什麼樣。
+    // 🪦 這裡本來有一段 `subscript_expression` 的特例，而 `++` 的運算元
+    //    是一個**左值**：`o.x++`／`p->x++`／`(*q)++`／`a[i][j]++` 全部合法。
+    return buildIncrement(op, position, nameNode ? ctx.lift(nameNode) : null)
   })
 
   // parenthesized_expression — handled by JSON unwrap pattern (cpp_unwrap_parens)

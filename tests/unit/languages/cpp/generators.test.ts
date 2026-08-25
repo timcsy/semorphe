@@ -137,7 +137,7 @@ describe('C++ statements generator', () => {
         left: [createNode('cpp:var_ref', { name: 'i' })],
         right: [createNode('cpp:literal_number', { value: '10' })],
       })],
-      update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
+      update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
       body: [createNode('cpp:break', {})],
     })
     const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
@@ -165,7 +165,7 @@ describe('C++ statements generator', () => {
   })
 
   it('should generate cpp_increment', () => {
-    const stmt = createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })
+    const stmt = createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })
     const code = generateCode(makeProgram(stmt), 'cpp', apcsStyle)
     expect(code).toBe('i++;')
   })
@@ -315,14 +315,14 @@ describe('C++ header deduplication', () => {
 describe('C++ expression generators (for expression blocks)', () => {
   it('should generate cpp_increment_expr postfix', () => {
     // Expression context: no indent, no semicolons
-    const node = createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })
+    const node = createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })
     const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = i++;')
   })
 
   it('should generate cpp_increment_expr prefix', () => {
-    const node = createNode('cpp:increment', { name: 'j', operator: '--', position: 'prefix' })
+    const node = createNode('cpp:increment', { operator: '--', position: 'prefix' }, { target: [createNode('cpp:var_ref', { name: 'j' })] })
     const assign = createNode('cpp:var_assign', { obj: 'x' }, { value: [node] })
     const code = generateCode(makeProgram(assign), 'cpp', apcsStyle)
     expect(code).toBe('x = --j;')
@@ -389,7 +389,7 @@ describe('C++ expression generators (for expression blocks)', () => {
         left: [createNode('cpp:var_ref', { name: 'm' })],
         right: [createNode('cpp:literal_number', { value: '10' })],
       })],
-      update: [createNode('cpp:increment', { name: 'm', operator: '++', position: 'postfix' })],
+      update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'm' })] })],
       body: [createNode('cpp:break', {})],
     })
     const code = generateCode(makeProgram(loop), 'cpp', apcsStyle)
@@ -426,7 +426,7 @@ describe('C++ expression generators (for expression blocks)', () => {
 
   it('should generate cpp_increment inside do-while body via template fallback', () => {
     const doWhile = createNode('cpp:loop_do_while', {}, {
-      body: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
+      body: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
       cond: [createNode('cpp:var_ref', { name: 'x' })],
     })
     const code = generateCode(makeProgram(doWhile), 'cpp', apcsStyle)
@@ -453,7 +453,7 @@ describe('C++ expression generators (for expression blocks)', () => {
 
   it('should generate do-while with array_access and logic_not in condition', () => {
     const doWhile = createNode('cpp:loop_do_while', {}, {
-      body: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
+      body: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
       cond: [createNode('cpp:logic', { operator: '&&' }, {
         left: [createNode('cpp:compare', { operator: '<=' }, {
           left: [createNode('cpp:arithmetic', { operator: '*' }, {

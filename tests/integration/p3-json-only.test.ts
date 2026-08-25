@@ -114,11 +114,13 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       const result = lifter.tryLift(node, liftCtx())
       expect(result).not.toBeNull()
       expect(result!.componentId).toBe('cpp:increment')
-      expect(result!.properties.name).toBe('i')
+      // 🟢 **運算元是接點**（2026-08-25）——釘接點比釘字串強：它證明左邊被 lift 過。
+      expect(result!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(result!.children.target[0].properties.name).toBe('i')
     })
 
     it('should generate code from semantic node (hand-written generator for prefix/postfix)', () => {
-      const node = createNode('cpp:increment', { NAME: 'i', OP: '++' })
+      const node = createNode('cpp:increment', { operator: '++' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })
       const generators = new Map<string, NodeGenerator>()
       const style = { indent_size: 4, io_style: 'cout', brace_style: 'K&R' } as StylePreset
     for (const reg of componentGenerateRegistrars())
@@ -135,11 +137,13 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     })
 
     it('should render semantic to block state', () => {
-      const node = createNode('cpp:increment', { name: 'i', operator: '++' })
+      const node = createNode('cpp:increment', { operator: '++' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })
       const block = renderer.render(node)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_increment')
-      expect(block!.fields.NAME).toBe('i')
+      // 🟢 **運算元是接點**（2026-08-25）——釘接點比釘字串強：它證明左邊被 lift 過。
+      expect(block!.fields.NAME, '🔴 欄位長回來了').toBeUndefined()
+      expect(block!.inputs.TARGET.block.fields.NAME).toBe('i')
       expect(block!.fields.OP).toBe('++')
     })
 
@@ -147,13 +151,15 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       const block = {
         type: 'cpp_increment',
         id: 'test_1',
-        fields: { NAME: 'i', OP: '++' },
-        inputs: {},
+        // 🟢 **運算元是接點**（2026-08-25）——`NAME` 那顆變數下拉換成 `TARGET`。
+        fields: { OP: '++' },
+        inputs: { TARGET: { block: { type: 'cpp_var_ref', id: 't2', fields: { NAME: 'i' }, inputs: {} } } },
       }
       const node = extractor.extract(block as any)
       expect(node).not.toBeNull()
       expect(node!.componentId).toBe('cpp:increment')
-      expect(node!.properties.name).toBe('i')
+      // 🟢 **運算元是接點**（2026-08-25）——釘接點比釘字串強：它證明左邊被 lift 過。
+      expect(node!.children.target[0].properties.name).toBe('i')
       expect(node!.properties.operator).toBe('++')
     })
 
@@ -177,7 +183,8 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       const semantic2 = extractor.extract(block!)
       expect(semantic2).not.toBeNull()
       expect(semantic2!.componentId).toBe('cpp:increment')
-      expect(semantic2!.properties.name).toBe('i')
+      // 🟢 **運算元是接點**（2026-08-25）——釘接點比釘字串強：它證明左邊被 lift 過。
+      expect(semantic2!.children.target[0].properties.name).toBe('i')
     })
   })
 

@@ -571,7 +571,7 @@ describe('Interpreter - cpp_for_loop', () => {
           left: [createNode('cpp:var_ref', { name: 'i' }, {})],
           right: [createNode('cpp:literal_number', { value: '3' }, {})],
         })],
-        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
         body: [
           createNode('cpp:print', {}, {
             values: [createNode('cpp:var_ref', { name: 'i' }, {})]
@@ -595,7 +595,7 @@ describe('Interpreter - cpp_for_loop', () => {
           left: [createNode('cpp:var_ref', { name: 'i' }, {})],
           right: [createNode('cpp:literal_number', { value: '10' }, {})],
         })],
-        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
         body: [
           createNode('cpp:if', {}, {
             condition: [createNode('cpp:compare', { operator: '==' }, {
@@ -626,7 +626,7 @@ describe('Interpreter - cpp_for_loop', () => {
           left: [createNode('cpp:var_ref', { name: 'i' }, {})],
           right: [createNode('cpp:literal_number', { value: '5' }, {})],
         })],
-        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
         body: [
           createNode('cpp:if', {}, {
             condition: [createNode('cpp:compare', { operator: '==' }, {
@@ -657,7 +657,7 @@ describe('Interpreter - cpp_for_loop', () => {
           left: [createNode('cpp:var_ref', { name: 'i' }, {})],
           right: [createNode('cpp:literal_number', { value: '3' }, {})],
         })],
-        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' }, {})],
+        update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
         body: [],
       })
     ])
@@ -1015,7 +1015,7 @@ describe('Interpreter - more edge cases', () => {
       createNode('cpp:var_declare', { name: 'n', type: 'int' }, {
         initializer: [createNode('cpp:literal_number', { value: '5' }, {})]
       }),
-      createNode('cpp:increment', { name: 'n', operator: '++', position: 'postfix' }, {}),
+      createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'n' })] }),
       createNode('cpp:print', {}, {
         values: [createNode('cpp:var_ref', { name: 'n' }, {})]
       })
@@ -1047,7 +1047,7 @@ describe('Interpreter - expression components in for-loop', () => {
           left: [createNode('cpp:var_ref', { name: 'i' })],
           right: [createNode('cpp:literal_number', { value: '3' })],
         })],
-        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
+        update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
         body: [createNode('cpp:print', {}, {
           values: [createNode('cpp:var_ref', { name: 'i' })],
         })],
@@ -1068,7 +1068,7 @@ describe('Interpreter - expression components in for-loop', () => {
           left: [createNode('cpp:var_ref', { name: 'i' })],
           right: [createNode('cpp:literal_number', { value: '3' })],
         })],
-        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
+        update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
         body: [],
       }),
       createNode('cpp:print', {}, {
@@ -1093,7 +1093,7 @@ describe('Interpreter - expression components in for-loop', () => {
           left: [createNode('cpp:var_ref', { name: 'i' })],
           right: [createNode('cpp:literal_number', { value: '3' })],
         })],
-        update: [createNode('cpp:increment', { name: 'i', operator: '++', position: 'postfix' })],
+        update: [createNode('cpp:increment', { operator: '++', position: 'postfix' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })],
         body: [createNode('cpp:var_assign_compound', { operator: '+=' }, {
         // 🟢 左值是接點（2026-08-25）——在此之前是 `name: 's'`
         target: [createNode('cpp:var_ref', { name: 's' })],

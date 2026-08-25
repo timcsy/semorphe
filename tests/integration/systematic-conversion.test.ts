@@ -906,7 +906,9 @@ describe('Compound Assignment & Increment', () => {
       const node = mainBody[0]
       expect(node).not.toBeNull()
       expect(node!.componentId).toBe('cpp:increment')
-      expect(node!.properties.name).toBe('i')
+      // 🟢 **運算元是接點**（2026-08-25）——`++` 的運算元是一個左值。
+      expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
+      expect(node!.children.target[0].properties.name).toBe('i')
       expect(node!.properties.operator).toBe('++')
     })
 
@@ -928,7 +930,9 @@ describe('Compound Assignment & Increment', () => {
       const mainBlock = state.blocks?.blocks?.[0]
       const incBlock = mainBlock?.inputs?.BODY?.block
       expect(incBlock?.type).toBe('cpp_increment')
-      expect(incBlock?.fields?.NAME).toBe('i')
+      // 🟢 `NAME` 那顆變數下拉換成 `TARGET` 接點（2026-08-25）
+      expect(incBlock?.fields?.NAME, '🔴 欄位長回來了').toBeUndefined()
+      expect(incBlock?.inputs?.TARGET?.block?.fields?.NAME).toBe('i')
     })
   })
 })

@@ -23,26 +23,26 @@ describe('TemplateGenerator', () => {
 
   describe('property substitution', () => {
     it('should substitute ${FIELD} with properties', () => {
-      gen.registerTemplate('cpp:increment', {
+      gen.registerTemplate('demo:increment', {
         pattern: '${NAME}${OP}',
         imports: [],
         order: 8,
       })
 
-      const node = createNode('cpp:increment', { NAME: 'i', OP: '++' })
+      const node = createNode('demo:increment', { NAME: 'i', OP: '++' })
       const result = gen.generate(node, { indent: 0, style: defaultStyle })
       expect(result).toBe('i++')
     })
 
     it('should substitute multiple fields', () => {
-      gen.registerTemplate('cpp:var_assign_compound', {
+      gen.registerTemplate('demo:compound_assign', {
         pattern: '${NAME} ${OP} ${VALUE};',
         imports: [],
         order: 0,
       })
 
       const valueNode = createNode('cpp:literal_number', { value: '5' })
-      const node = createNode('cpp:var_assign_compound', { NAME: 'x', OP: '+=' }, { VALUE: [valueNode] })
+      const node = createNode('demo:compound_assign', { NAME: 'x', OP: '+=' }, { VALUE: [valueNode] })
 
       // Register child generator
       gen.registerTemplate('cpp:literal_number', { pattern: '${value}', imports: [], order: 20 })

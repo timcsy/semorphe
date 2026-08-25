@@ -3,62 +3,6 @@ import type { RuntimeValue } from '../types'
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 import { resolvePlace } from '../lvalue'
 
-export const execIncrement: ComponentExecutor = async (node, ctx) => {
-  const name = String(node.properties.name)
-  const op = String(node.properties.operator)
-  const position = String(node.properties.position ?? 'postfix')
-
-  // Array/string element increment
-  const indexNodes = node.children.index ?? []
-  if (indexNodes.length > 0) {
-    const container = ctx.scope.get(name)
-    const indexVal = await ctx.evaluate(indexNodes[0])
-    const index = ctx.toNumber(indexVal)
-
-    // String subscript increment: s[i]++ (operates on char code)
-    if (container.type === 'string' && typeof container.value === 'string') {
-      if (index >= 0 && index < container.value.length) {
-        const charCode = container.value.charCodeAt(index)
-        const newCharCode = op === '++' ? charCode + 1 : charCode - 1
-        const chars = container.value.split('')
-        const oldChar = chars[index]
-        chars[index] = String.fromCharCode(newCharCode)
-        ctx.scope.set(name, { type: 'string', value: chars.join('') })
-        const oldRv: RuntimeValue = { type: 'char', value: oldChar }
-        const newRv: RuntimeValue = { type: 'char', value: chars[index] }
-        return position === 'prefix' ? newRv : oldRv
-      }
-      return { type: 'char', value: '' }
-    }
-
-    if (container.type !== 'array' || !Array.isArray(container.value)) {
-      throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
-    }
-    if (index >= 0 && index < container.value.length) {
-      const current = container.value[index]
-      const val = ctx.toNumber(current)
-      const newVal = op === '++' ? val + 1 : val - 1
-      const newRv: RuntimeValue = current.type === 'int'
-        ? { type: 'int', value: Math.trunc(newVal) }
-        : { type: 'double', value: newVal }
-      const oldRv: RuntimeValue = { ...current }
-      container.value[index] = newRv
-      return position === 'prefix' ? newRv : oldRv
-    }
-    return { type: 'int', value: 0 }
-  }
-
-  const current = ctx.scope.get(name)
-  const val = ctx.toNumber(current)
-  const newVal = op === '++' ? val + 1 : val - 1
-  const newRv: RuntimeValue = current.type === 'int'
-    ? { type: 'int', value: Math.trunc(newVal) }
-    : { type: 'double', value: newVal }
-  const oldRv: RuntimeValue = { type: current.type as any, value: val }
-  ctx.scope.set(name, newRv)
-  return position === 'prefix' ? newRv : oldRv
-}
-
 function computeCompound(op: string, lv: number, rv: number): number {
 switch (op) {
   case '+=': return lv + rv
@@ -80,22 +24,41 @@ switch (op) {
 }
 
 /**
- * 複合指定（`x += 1`／`a[i] *= 2`／`o.x -= 3`／`*q /= 2`／`s[i] -= 7`）。
+ * 遞增／遞減（`i++`／`a[i]--`／`o.x++`／`(*q)++`／`s[i]++`）。
  *
- * ## 🪦 這裡本來列舉左值的形狀
+ * ## 🪦 這裡本來列舉運算元的形狀
  *
  * 舊版讀 `properties.name`（一個字串）＋ 一個可有可無的 `index` 接點，
- * 於是它只認得**兩種**左值：一個名字、或「一個名字加一個下標」。
- * `o.x += 1`／`p->x += 1`／`*q += 1`／`a[i][j] += 1` 全部會去
- * `ctx.scope.get("o.x")` 查一個不存在的變數名。
+ * 於是它只認得**兩種**：一個名字、或「一個名字加一個下標」。
  *
- * 🟢 2026-08-25：左值是 `target` 接點，解析走 `resolvePlace`
+ * 🟢 2026-08-25：運算元是 `target` 接點，解析走 `resolvePlace`
  * ——**加一種新的左值形狀不改這個檔**。見 `knowledge/concepts/左值.md`。
  *
- * ⚠️ 兩個特例留著，而它們現在表達在 `Place` 上：
- * - **字串那一格**（`s[i] -= 7`）——`cpp:array_at` 的解法會重建整個字串再寫回
- * - **字串的 `+=` 是串接不是相加**——見下面那一段（它踩過兩次）
+ * ⚠️ **前綴與後綴回傳的東西不同**：`++i` 給新值，`i++` 給舊值。
+ * 🔴 而**字元那一格要保持 char**（`s[i]++` 加完仍然是一個字元）——
+ * `cpp:string_at` 的解法讀寫都用碼位，所以這裡只要不改型別就對了。
  */
+export const execIncrement: ComponentExecutor = async (node, ctx) => {
+  const op = String(node.properties.operator)
+  const position = String(node.properties.position ?? 'postfix')
+  const targetNode = (node.children.target ?? [])[0]
+  if (!targetNode) {
+    // 認得出來而拆不開＝上游給了一個沒有運算元的節點，**出聲不要猜**
+    throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個遞增沒有運算元' })
+  }
+  const place = await resolvePlace(targetNode, ctx)
+  const current = place.read()
+  const delta = op === '++' ? 1 : -1
+  const n = ctx.toNumber(current) + delta
+  const next: RuntimeValue = current.type === 'char'
+    ? { type: 'char', value: Math.trunc(n) }
+    : current.type === 'int'
+      ? { type: 'int', value: Math.trunc(n) }
+      : { type: 'double', value: n }
+  place.write(next)
+  return position === 'prefix' ? next : current
+}
+
 export const execCompoundAssign: ComponentExecutor = async (node, ctx) => {
   const op = String(node.properties.operator)
   const targetNode = (node.children.target ?? [])[0]

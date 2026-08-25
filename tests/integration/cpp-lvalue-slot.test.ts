@@ -52,6 +52,18 @@ async function run(src: string): Promise<string> {
   return i.getOutput().join('')
 }
 
+/** 找出那顆遞增節點——找不到回 null，讓斷言指名。 */
+function findIncrement(n: SemanticNode): SemanticNode | null {
+  if (n.componentId === 'cpp:increment') return n
+  for (const kids of Object.values(n.children ?? {})) {
+    for (const k of kids as SemanticNode[]) {
+      const hit = findIncrement(k)
+      if (hit) return hit
+    }
+  }
+  return null
+}
+
 /** 找出那顆複合指定節點——找不到回 null，讓斷言指名。 */
 function findCompound(n: SemanticNode): SemanticNode | null {
   if (n.componentId === 'cpp:var_assign_compound') return n
@@ -125,6 +137,41 @@ describe('C++ 的左值是接點', () => {
       + `a[i] += 1;\no.x += 1;\np->x += 1;\n*q += 1;\ni += 1;\n}`
     const out = generateCode(lift(src), 'cpp', googleStyle as unknown as StylePreset)
     for (const line of ['a[i] += 1;', 'o.x += 1;', 'p->x += 1;', '*q += 1;', 'i += 1;']) {
+      expect(out, `🔴 產不回 ${line}`).toContain(line)
+    }
+  })
+
+  /**
+   * 🎯 **`++` 的運算元也是一個左值**（2026-08-25，同一刀的第二顆）。
+   *
+   * 🪦 `cpp:increment` 的 lift 那側本來也寫著「⚠️ 兩種形狀：`i++` 與 `arr[i]++`」
+   * ——而 `o.x++`／`p->x++`／`(*q)++`／`a[i][j]++`／`s[i]++` 全部合法。
+   * 🪦 **第二個 `altLayout` 隨這一刀退場**。
+   */
+  it.each([
+    ['a[i]++', 'cpp:array_at', `${IO}int main(){ int a[3]={1,2,3}; int i=1; a[i]++; cout << a[1]; }`, '3'],
+    ['o.x++', 'cpp:struct_at_member', `${IO}${P}int main(){ P o; o.x = 1; o.x++; cout << o.x; }`, '2'],
+    ['p->x++', 'cpp:struct_at_ptr', `${IO}${P}int main(){ P o; o.x = 1; P* p = &o; p->x++; cout << o.x; }`, '2'],
+    ['(*q)++', 'cpp:pointer_deref', `${IO}int main(){ int i = 1; int* q = &i; (*q)++; cout << i; }`, '2'],
+  ])('🎯 遞增的運算元是 %s → 巢狀成 %s，而且算得對', async (_shape, componentId, src, want) => {
+    const node = findIncrement(lift(src))
+    expect(node, '🔴 沒 lift 出遞增').toBeTruthy()
+    expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
+    expect(node!.children.target[0].componentId).toBe(componentId)
+    expect(await run(src), '🔴 lift 對了而執行錯了').toBe(want)
+  })
+
+  it('⚠️ 前綴給新值、後綴給舊值——而字元那一格要保持 char', async () => {
+    expect(await run(`${IO}int main(){ int i = 1; int b = i++; cout << b << i; }`), '後綴給舊值').toBe('12')
+    expect(await run(`${IO}int main(){ int i = 1; int b = ++i; cout << b << i; }`), '前綴給新值').toBe('22')
+    expect(await run(`${S}int main(){ string s = "a"; s[0]++; cout << s; }`), '字元加完仍是字元').toBe('b')
+  })
+
+  it('🎯 遞增也產得回去——五種運算元', () => {
+    const src = `${IO}${P}int main(){ int a[3]; int i=0; P o; P* p=&o; int* q=&i;\n`
+      + `a[i]++;\no.x++;\np->x++;\n(*q)++;\n--i;\n}`
+    const out = generateCode(lift(src), 'cpp', googleStyle as unknown as StylePreset)
+    for (const line of ['a[i]++;', 'o.x++;', 'p->x++;', '(*q)++;', '--i;']) {
       expect(out, `🔴 產不回 ${line}`).toContain(line)
     }
   })

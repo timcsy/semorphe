@@ -94,7 +94,18 @@ function isVariadicSlot(slotType: unknown): boolean {
   return t.endsWith('s') || t === 'param_decl' || t.includes(':')
 }
 
-function fillerFor(slotType: string): SemanticNode {
+function fillerFor(slotType: string, lvalueOf?: string): SemanticNode {
+  // 🔴 **左值那一格不能填字面**——`1++` 與 `1 += 2` 都不是合法的 C++，
+  //    於是產出的樣本 lift 回來會**降級成 `raw_code`**，而那看起來像
+  //    「這顆元件的 lift 是個殼」。
+  //
+  // > **一個「這一格必須是左值」的插槽，用一個字面去填它，
+  // > 量到的是那個字面不合法，不是那顆元件不完備。**
+  //
+  // 🟢 而**哪一格是左值有宣告**（`traits.writesTo`）——不用猜。
+  //    ⚠️ 這裡用 `<scope>:var_ref` 組名字：那是**測試鷹架的簡化**，
+  //    不是一條契約。哪天有語言的變數參照不叫這個名字，這裡要改。
+  if (lvalueOf) return createNode(`${lvalueOf}:var_ref`, { name: 'i' })
   const t = (slotType || '').toLowerCase()
   // 🔴 **接點型別直接指名一顆概念時，就合成那一顆。**
   //
@@ -160,7 +171,10 @@ export function synthMinimalNode(def: ComponentDefJSON): SynthResult {
       // > **一個「可以有很多個」的接點，用一個去驗它，
       // > 驗的是它退化成單數時的行為——而那常常是另一條路。**
       const n = isVariadicSlot(slotType) ? 2 : 1
-      children[slot] = Array.from({ length: n }, () => fillerFor(String(slotType)))
+      // 🔴 這一格是**左值**嗎——由元件自己宣告（`traits.writesTo`），見 `fillerFor`。
+      const writesTo = (def as { traits?: { writesTo?: string } }).traits?.writesTo
+      const lvalueOf = writesTo === slot ? def.componentId.split(':')[0] : undefined
+      children[slot] = Array.from({ length: n }, () => fillerFor(String(slotType), lvalueOf))
     } catch {
       notes.push(`子槽 ${slot} 無法合成填充節點`)
     }

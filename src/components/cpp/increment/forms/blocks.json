@@ -10,9 +10,9 @@
       "message0": "%{BKY_C_INCREMENT_MSG0}",
       "args0": [
         {
-          "type": "field_dynamic_dropdown",
-          "name": "NAME",
-          "source": "vars"
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
         },
         {
           "type": "field_dropdown",
@@ -41,61 +41,12 @@
               "prefix"
             ]
           ]
-        },
-        {
-          "type": "input_dummy",
-          "name": "MAIN"
         }
       ],
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#59C059",
       "tooltip": "%{BKY_C_INCREMENT_TOOLTIP}",
-      "altLayout": {
-        "stateKey": "hasIndex",
-        "message0": "%{BKY_C_INCREMENT_INDEXED_MSG0}",
-        "args0": [
-          {
-            "type": "field_dynamic_dropdown",
-            "name": "NAME",
-            "source": "vars"
-          },
-          {
-            "type": "input_value",
-            "name": "INDEX",
-            "check": "Expression"
-          },
-          {
-            "type": "field_dropdown",
-            "name": "OP",
-            "options": [
-              [
-                "%{BKY_C_INCREMENT_OP_INCREMENT}",
-                "++"
-              ],
-              [
-                "%{BKY_C_INCREMENT_OP_DECREMENT}",
-                "--"
-              ]
-            ]
-          },
-          {
-            "type": "field_dropdown",
-            "name": "POSITION",
-            "options": [
-              [
-                "%{BKY_C_INCREMENT_POS_POSTFIX}",
-                "postfix"
-              ],
-              [
-                "%{BKY_C_INCREMENT_POS_PREFIX}",
-                "prefix"
-              ]
-            ]
-          }
-        ],
-        "inputsInline": true
-      },
       "inputsInline": true
     },
     "astPattern": {
@@ -104,9 +55,9 @@
       "constraints": [],
       "fieldMappings": [
         {
-          "semantic": "name",
+          "semantic": "target",
           "ast": "argument",
-          "extract": "text"
+          "extract": "lift"
         },
         {
           "semantic": "operator",
@@ -117,19 +68,15 @@
     },
     "renderMapping": {
       "expressionCounterpart": "cpp_increment_expression",
-      "extraStateFlags": {
-        "hasIndex": "index"
-      },
       "inputs": {
-        "INDEX": "index"
+        "TARGET": "target"
       },
       "fields": {
-        "NAME": "name",
         "OP": "operator",
         "POSITION": "position"
       }
     },
-    "_why": "🔴 **spec 169：靜態 `field_input` → 宣告式的動態下拉。**\n命令式那份是 `FieldDropdown(() => getWorkspaceVarOptions())`——**跟著工作區長的下拉**，而宣告只能退成一個死的文字框（預設 `i`）。比對護欄逐字印出：`變數,⟨活下拉⟩ vs 變數,i`。\n🟢 `field_dynamic_dropdown`（spec 164 的機制）讓宣告表達得出這件事——**這一顆不需要可變參數，所以它是這批裡最便宜的一筆。**"
+    "_why": "🟢 **2026-08-25：`NAME` 那顆變數下拉換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。\n🪦 **`altLayout` 隨之退場**——`a[i]++` 就只是插在 `TARGET` 上的一顆 `cpp_array_at`。"
   },
   {
     "id": "cpp_increment_expression",
@@ -139,11 +86,12 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_increment_expression",
+      "message0": "%{BKY_C_INCREMENT_MSG0}",
       "args0": [
         {
-          "type": "field_dynamic_dropdown",
-          "name": "NAME",
-          "source": "vars"
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
         },
         {
           "type": "field_dropdown",
@@ -175,62 +123,13 @@
         }
       ],
       "inputsInline": true,
-      "output": "Expression",
-      "altLayout": {
-        "stateKey": "hasIndex",
-        "message0": "%{BKY_C_INCREMENT_INDEXED_MSG0}",
-        "args0": [
-          {
-            "type": "field_dynamic_dropdown",
-            "name": "NAME",
-            "source": "vars"
-          },
-          {
-            "type": "input_value",
-            "name": "INDEX",
-            "check": "Expression"
-          },
-          {
-            "type": "field_dropdown",
-            "name": "OP",
-            "options": [
-              [
-                "%{BKY_C_INCREMENT_OP_INCREMENT}",
-                "++"
-              ],
-              [
-                "%{BKY_C_INCREMENT_OP_DECREMENT}",
-                "--"
-              ]
-            ]
-          },
-          {
-            "type": "field_dropdown",
-            "name": "POSITION",
-            "options": [
-              [
-                "%{BKY_C_INCREMENT_POS_POSTFIX}",
-                "postfix"
-              ],
-              [
-                "%{BKY_C_INCREMENT_POS_PREFIX}",
-                "prefix"
-              ]
-            ]
-          }
-        ],
-        "inputsInline": true
-      }
+      "output": "Expression"
     },
     "renderMapping": {
-      "extraStateFlags": {
-        "hasIndex": "index"
-      },
       "inputs": {
-        "INDEX": "index"
+        "TARGET": "target"
       },
       "fields": {
-        "NAME": "name",
         "OP": "operator",
         "POSITION": "position"
       }
@@ -238,6 +137,7 @@
     "form": {
       "axis": "role",
       "value": "expression"
-    }
+    },
+    "_why": "🟢 **2026-08-25：`NAME` 那顆變數下拉換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。\n🪦 **`altLayout` 隨之退場**——`a[i]++` 就只是插在 `TARGET` 上的一顆 `cpp_array_at`。\n🔴 **2026-08-25 補上 `message0`**：它本來沒有，因為**命令式那份在提供它**。那份隨這一刀退場，而第五十一條護欄當場紅——「args0 must have a corresponding message」。\n> **一份宣告的完整性，可能一直被另一份定義撐著。**"
   }
 ]

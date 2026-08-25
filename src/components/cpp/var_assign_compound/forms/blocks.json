@@ -99,6 +99,7 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_var_assign_compound_expression",
+      "message0": "%{BKY_C_COMPOUND_ASSIGN_MSG0}",
       "args0": [
         {
           "type": "input_value",
@@ -153,6 +154,6 @@
       "axis": "role",
       "value": "expression"
     },
-    "_why": "🟢 **2026-08-25：`NAME` 那顆變數下拉換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。\n🪦 **`altLayout` 隨之退場**——它是 2026-08-25 早上為了讓 `a[i] += 2` 的索引\n顯示出來而補的「依 extraState 換一整份佈局」，而**那是這個病的症狀**：\n左值變成接點之後，`a[i]` 就只是插在 `TARGET` 上的一顆 `cpp_array_at`，沒有第二份佈局。\n🔴 而下拉列的是變數清單——`o.x += 1` 那顆點一下，成員存取就沒了。"
+    "_why": "🟢 **2026-08-25：`NAME` 那顆變數下拉換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。\n🪦 **`altLayout` 隨之退場**——它是 2026-08-25 早上為了讓 `a[i] += 2` 的索引\n顯示出來而補的「依 extraState 換一整份佈局」，而**那是這個病的症狀**：\n左值變成接點之後，`a[i]` 就只是插在 `TARGET` 上的一顆 `cpp_array_at`，沒有第二份佈局。\n🔴 而下拉列的是變數清單——`o.x += 1` 那顆點一下，成員存取就沒了。\n🔴 **2026-08-25 補上 `message0`**：它本來沒有，因為**命令式那份在提供它**。那份隨這一刀退場，而第五十一條護欄當場紅——「args0 must have a corresponding message」。\n> **一份宣告的完整性，可能一直被另一份定義撐著。**"
   }
 ]

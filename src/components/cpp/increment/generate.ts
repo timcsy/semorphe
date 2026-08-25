@@ -1,28 +1,26 @@
-/** `cpp:increment` 的 **generate** 路——從共用檔原封剪過來（批次第三十四批）。 */
+/**
+ * `cpp:increment` 的 **generate** 路。
+ *
+ * 🟢 **運算元是一顆節點**（2026-08-25）——`a[i]++`／`o.x++`／`p->x++`
+ * 都由同一支產生器產得出來，因為它走的是**一般的運算式產生**。
+ * 🪦 在此之前這裡有一段 `${name}[${idx}]` 的字串拼裝——那是形狀的列舉。
+ */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:increment', (node, ctx) => {
-      // ⚠️ **這三個大寫退路不是死的——不要刪。** 我刪過一次，來回轉換當場紅。
-      //
-      // 大寫是**積木欄位名**，而 `cpp_increment` 的 `renderMapping` 沒有 `fields`
-      // 對應，所以抽取器產出的就是大寫鍵。真正的修法是把對應宣告出來，
-      // 而那要連同「`properties` 會驅動 `deriveRenderMapping`」一起處理——
-      // 見 specs/102-param-spec/research.md 決定 6。
-      const name = (node.properties.name ?? node.properties.NAME ?? 'i') as string
-      const op = (node.properties.operator ?? node.properties.OP ?? '++') as string
-      const pos = (node.properties.position ?? node.properties.POSITION ?? 'postfix') as string
-      // Array element increment: arr[i]++
-      const indexNodes = node.children.index ?? []
-      if (indexNodes.length > 0) {
-        const idx = generateExpression(indexNodes[0], ctx)
-        const expr = pos === 'prefix' ? `${op}${name}[${idx}]` : `${name}[${idx}]${op}`
-        if (ctx.isExpression) return expr
-        return `${indent(ctx)}${expr};\n`
-      }
-      const expr = pos === 'prefix' ? `${op}${name}` : `${name}${op}`
-      if (ctx.isExpression) return expr
-      return `${indent(ctx)}${expr};\n`
-    })
+    // 🪦 **大寫的回退（`OP`／`POSITION`）已於 2026-08-25 刪除**——
+    //    它們是遺留：抽取器的 `renderMapping` 早就把欄位映成小寫的屬性名，
+    //    而第三十四條護欄把它們報成「讀了沒宣告」。
+    // > **一個永遠不會命中的回退，是一份沒有人會發現已經過期的宣告。**
+    const op = String(node.properties.operator ?? '++')
+    const pos = String(node.properties.position ?? 'postfix')
+    const targets = node.children.target ?? []
+    // ⚠️ 運算元缺席時退回 `i`——與同族一致，而**不是**靜默丟掉這一行。
+    const target = targets.length > 0 ? generateExpression(targets[0], ctx) : 'i'
+    const expr = pos === 'prefix' ? `${op}${target}` : `${target}${op}`
+    if (ctx.isExpression) return expr
+    return `${indent(ctx)}${expr};\n`
+  })
 }
