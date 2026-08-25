@@ -204,6 +204,10 @@ const host = await page.evaluate(() => ({
   resent: window.__HOST__.resent,
 }))
 const twoWay = host.accepted >= 2 && host.rejected === 0 && host.resent === 0
+// 🔴 **診斷有沒有走到宿主**（2026-08-25「診斷 → Problems」）。
+//    ⚠️ 它跟著同一批編輯送出，所以在這裡量得到。
+const problemsSent = host.types.includes('problems')
+console.log(`\n診斷 → 宿主：${problemsSent ? '🟢 有送（進 Problems）' : '🔴 一則都沒送——診斷只活在面板裡'}`)
 console.log(`\n積木 → 程式碼：宿主收下 ${host.accepted} 筆、丟掉 ${host.rejected} 筆 ` +
   `${twoWay ? '🟢' : '🔴 ' + (host.rejected > 0 ? '版本對不上 → 第二筆之後全被丟掉'
     : host.resent > 0 ? `鏡像對不上（要求重送 ${host.resent} 次）→ 範圍編輯會錯位` : '沒送出去')}` +
@@ -262,7 +266,7 @@ const ok = !fatal && errors.length === 0 && failures.length === 0
   // 🔴 **控制項在這個宿主裡歸零**——驗收②。⚠️ 而工具箱與畫布不變（下面兩格）。
   && blocks.面板內控制項 === 0 && !blocks.工具列 && !blocks.快速列
   // 🔴 而它們要真的到了宿主手上——**「消失」與「搬家」的差別就在這一格**。
-  && controlIds.length >= 5 && 值域齊全
+  && controlIds.length >= 5 && 值域齊全 && problemsSent
   && blocks.工具箱分類 >= 1 && blocks.下方分頁 >= 1 && twoWay && untouched && sketchBlocks > 0
   // 🔴 這個宿主**自己有狀態列**——面板裡再畫一條就是同一件事講兩次，
   //    ⚠️ 而 `phaseReached` 是它的另一半：不畫的義務是「交出去」。

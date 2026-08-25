@@ -56,6 +56,7 @@ export type ControlSurface =
 export type ControlId =
   | 'target' | 'branches' | 'style' | 'blockStyle' | 'locale'
   | 'run' | 'undo' | 'redo' | 'clear'
+  | 'viewBlocks' | 'viewFlow'
   | 'sync'
 
 export interface ControlSpec {
@@ -96,6 +97,17 @@ export const CONTROLS: readonly ControlSpec[] = [
   { id: 'undo', kind: 'action', domain: 'view', mountId: 'undo-btn', bar: 'quickAccess', hostTitle: '復原', icon: '$(discard)' },
   { id: 'redo', kind: 'action', domain: 'view', mountId: 'redo-btn', bar: 'quickAccess', hostTitle: '重做', icon: '$(redo)' },
   { id: 'clear', kind: 'action', domain: 'view', mountId: 'clear-btn', bar: 'quickAccess', hostTitle: '清空積木', icon: '$(clear-all)' },
+  // 🔴 **切換 editor 區顯示哪一個投影**（2026-08-25，`draft/版面與檔案` §六之五）。
+  //
+  // 流程原本是**下方面板的一個分頁**，與主控台、變數並排——而那是狀態層。
+  //
+  // > **把關係層塞進狀態層那一格，等於宣稱「流程是執行的產物」
+  // > ——而它不是，它是程式的另一個投影。**
+  //
+  // ⚠️ 它們是 `action` 不是 `picker`：picker 投影到狀態列（工作階段的設定），
+  //    而「現在看哪一個」是**這個視圖的動作**，它的家是分頁的標題列。
+  { id: 'viewBlocks', kind: 'action', domain: 'view', mountId: 'view-blocks-btn', bar: 'quickAccess', hostTitle: '顯示積木', icon: '$(symbol-structure)' },
+  { id: 'viewFlow', kind: 'action', domain: 'view', mountId: 'view-flow-btn', bar: 'quickAccess', hostTitle: '顯示流程', icon: '$(type-hierarchy)' },
   { id: 'sync', kind: 'indicator', domain: 'project', mountId: 'sync-menu-btn', bar: 'quickAccess', hostTitle: '同步：暫停／以哪一邊為準' },
 ]
 
@@ -193,7 +205,15 @@ export interface ControlOption {
 export interface ControlState {
   readonly id: ControlId
   readonly kind: ControlKind
-  /** 表面上顯示的字（狀態列的文字／標題列的提示）。 */
+  /**
+   * **這顆控制項叫什麼**（「選擇程式風格」）。
+   *
+   * ⚠️ 與 `label` 是兩件事：`label` 是**目前的值**（「Google 風格」）。
+   * 🔴 狀態列上只放得下值，而選單的標題與設定清單的列名要的是名字
+   * ——**兩者混用的症狀是「一張標題寫著目前值的選單」**。
+   */
+  readonly title: string
+  /** 表面上顯示的字（狀態列的文字／標題列的提示）＝**目前的值**。 */
   readonly label: string
   readonly value?: string
   readonly options?: readonly ControlOption[]

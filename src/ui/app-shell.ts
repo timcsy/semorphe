@@ -11,18 +11,12 @@ import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
 import { CONTROLS, RUN_MODES, surfaceOf, panelControls, type ControlId } from '../core/host/controls'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
-import { TopicSelector } from './toolbar/topic-selector'
-import { StyleSelector } from './toolbar/style-selector'
-import { BlockStyleSelector } from './toolbar/block-style-selector'
-import { LocaleSelector } from './toolbar/locale-selector'
 import { MobileMenu } from './toolbar/mobile-menu'
 import { CodeKeyboard } from './panels/code-keyboard'
 import type { StorageLike } from '../core/host/host-profile'
 import type { SavedState } from '../core/storage'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import type { StylePreset, Target, Topic } from '../core/types'
-import type { TopicRegistry } from '../core/topic-registry'
-import type { TargetRegistry } from '../core/target-registry'
 import type { BlockStylePreset } from '../languages/style'
 import { showToast } from './toolbar/toast'
 
@@ -45,6 +39,8 @@ export interface AppShellElements {
   mobileTabBar: MobileTabBar | null
   mobileMenu: MobileMenu | null
   codeKeyboard: CodeKeyboard | null
+  /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
+  showProjection: (which: 'blocks' | 'flow') => void
 }
 
 export interface AppShellCallbacks {
@@ -55,9 +51,8 @@ export interface AppShellCallbacks {
   onLocaleChange: (locale: string) => void
   /** 🔴 一個入口，而不是每個方向一顆——見 `core/sync-coordinator.ts` */
   onOpenSyncMenu: () => void
-  onUndo: () => void
-  onRedo: () => void
-  onClear: () => void
+  /** 🪦 `onUndo`／`onRedo`／`onClear` 已於 2026-08-25 刪除——它們變成登錄表的一列，
+   *  由 `setupToolbarButtons` 一次接完（見那裡的檔頭）。 */
   getExportState: () => SavedState
   importState: (state: SavedState) => void
   onUploadCustomBlocks: (blocks: object[]) => void
@@ -219,26 +214,13 @@ export function createAppLayout(
     appEl.appendChild(statusBar)
   }
 
-  // 🔴 **行動版的投影暫存處**。
+  // 🪦 `#mobile-selector-parking` 已於 2026-08-25 刪除。
   //
-  // 使用者 2026-08-25：「**行動版可以另外設計**」——所以行動版維持原樣：
-  // 那四顆下拉在漢堡選單裡。而桌機版的狀態列已經改成文字項目，
-  // 於是它們在桌機時**沒有地方可待**。
+  // 它存在的理由是「桌機的狀態列改成文字項目之後，那四顆 `<select>`
+  // 沒有地方可待」——而現在**根本沒有那四顆**：行動版讀同一份宣告。
   //
-  // ⚠️ 這一格只在**有行動版版面的宿主**才建（IDE 不建）：
-  // 它不是「建了再藏起來」，是「還沒輪到它的那個投影」
-  // ——而視窗寬度隨時可能跨過斷點，所以它是真的隨時會用到。
-  if (profile.features.mobileLayout) {
-    const parking = document.createElement('div')
-    parking.id = 'mobile-selector-parking'
-    parking.hidden = true
-    parking.innerHTML = CONTROLS
-      .filter((c) => c.kind === 'picker')
-      .filter((c, i, all) => all.findIndex((x) => x.mountId === c.mountId) === i)
-      .map((c) => `<span id="${c.mountId}"></span>`)
-      .join('')
-    appEl.appendChild(parking)
-  }
+  // > **一個「暫存處」通常是在替另一個機制的存在付租金。**
+
 
   // Left panel: QuickAccessBar + Blockly
   // 🔴 **程式碼在左、積木在右**（使用者 2026-08-25：「程式碼視圖應該預設在
@@ -329,9 +311,38 @@ export function createAppLayout(
 
   // 🔴 **第三個投影**。它出現在這裡只是因為要有一格 DOM——
   //    接線由 `registerViewsIn` 掃出來（見下面的回傳物件），不是這裡硬接的。
+  //
+  // ⚠️ 2026-08-25 它**搬出下方面板**（`draft/版面與檔案` §六之五）：
+  //    流程是**關係層**，與積木（空間層）同級——兩者都是程式本身的投影、
+  //    都需要面積、都可編輯。而主控台與變數是**狀態層**。
+  //
+  // > **把關係層塞進狀態層那一格，等於宣稱「流程是執行的產物」
+  // > ——而它不是。**
   const flowEl = document.createElement('div')
+  flowEl.id = 'flow-panel'
+  flowEl.style.flex = '1'
+  flowEl.style.overflow = 'hidden'
+  flowEl.style.display = 'none'
   const flowPanel = new FlowPanel(flowEl, blockSpecRegistry)
-  bottomPanel.addTab({ id: 'flow', label: Blockly.Msg['PANEL_FLOW'] || 'Flow', panel: flowEl })
+  blocksColumn.appendChild(flowEl)
+
+  /**
+   * editor 區現在顯示哪一個投影。
+   *
+   * 🔴 **切換而不是並排**：這一欄只有一格。要並排的人**用宿主的 split**
+   * ——那是 §六 的分工：「VSCode 那側的佈局工作幾乎是零，
+   * 積木／流程是編輯器分頁，split 是原生的」。
+   *
+   * ⚠️ 切回積木時要**叫 Blockly 重新量尺寸**：它在 `display: none` 期間
+   * 量到的是 0×0，而那個症狀是「切回去之後畫布空白，拖一下才出現」。
+   */
+  const showProjection = (which: 'blocks' | 'flow'): void => {
+    blocklyContainer.style.display = which === 'blocks' ? '' : 'none'
+    flowEl.style.display = which === 'flow' ? '' : 'none'
+    document.getElementById('view-blocks-btn')?.classList.toggle('active', which === 'blocks')
+    document.getElementById('view-flow-btn')?.classList.toggle('active', which === 'flow')
+    if (which === 'blocks') requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
+  }
 
   // Mobile layout: create mobile containers and tab bar
   // These are created once but only shown when in mobile mode
@@ -349,6 +360,13 @@ export function createAppLayout(
   mobileConsoleContainer.className = 'mobile-panel-container'
   mobileConsoleContainer.id = 'mobile-console'
   main.appendChild(mobileConsoleContainer)
+
+  // 🔴 **關係層有自己的一格**（2026-08-25）——在此之前行動版只有三個分頁，
+  //    而流程從來沒有進來過（它住在下方面板裡）。見 `mobile-tab-bar.ts` 的 `TABS`。
+  const mobileFlowContainer = document.createElement('div')
+  mobileFlowContainer.className = 'mobile-panel-container'
+  mobileFlowContainer.id = 'mobile-flow'
+  main.appendChild(mobileFlowContainer)
 
   // 行動版的分頁列。
   //
@@ -518,16 +536,13 @@ export function createAppLayout(
     })
   }
 
-  // Selector mount points — saved for moving between toolbar ↔ mobile menu
-  const selectorMounts = {
-    topic: { id: 'level-selector-mount', label: '主題' },
-    style: { id: 'style-selector-mount', label: '風格' },
-    blockStyle: { id: 'block-style-selector-mount', label: '積木風格' },
-    locale: { id: 'locale-selector-mount', label: '語言' },
-  }
-
-  // Remember original parent elements for each selector mount
-  const selectorOriginalParents = new Map<string, { parent: HTMLElement; nextSibling: Node | null }>()
+  // 🪦 `selectorMounts` / `selectorOriginalParents` 已於 2026-08-25 刪除。
+  //
+  // 那是「桌機的下拉搬進漢堡選單、再搬回來」的機制——而行動版現在讀
+  // **同一份 `ControlState`**（`layout/status-bar-controls.ts` 的 `renderSheetControls`），
+  // 於是沒有東西需要搬。
+  //
+  // > **行動版不是「桌機版縮小」，是同一份宣告的第三個渲染器。**
 
   // Panel DOM references for mobile switching
   const switchToMobile = () => {
@@ -553,21 +568,15 @@ export function createAppLayout(
     mobileConsoleContainer.insertBefore(bottomContainer, consoleKeyboard?.getElement() ?? null)
     mobileConsoleContainer.classList.remove('active')
 
-    // Move selectors into mobile menu
-    if (mobileMenu) {
-      for (const info of Object.values(selectorMounts)) {
-        const mount = document.getElementById(info.id)
-        if (mount && mount.parentElement) {
-          // Save original position for restoration
-          selectorOriginalParents.set(info.id, {
-            parent: mount.parentElement,
-            nextSibling: mount.nextSibling,
-          })
-          mobileMenu.addSelectorMount(info.label, mount)
-        }
-      }
-    }
+    // 🔴 流程有自己的一格——⚠️ 而它在桌機是**同一欄裡的另一個投影**，
+    //    在行動版是**另一個分頁**：搬過去之後 `display` 要放開，
+    //    因為顯示與否改由分頁的 `.active` 決定。
+    mobileFlowContainer.appendChild(flowEl)
+    flowEl.style.display = ''
+    mobileFlowContainer.classList.remove('active')
 
+    // 🪦 「把選擇器搬進漢堡選單」那段已刪除——行動版的設定表由
+    //    `renderSheetControls` 依 `ControlState` 直接畫（2026-08-25）。
     // Show tab bar
     if (tabBarContainer) tabBarContainer.style.display = ''
 
@@ -648,25 +657,12 @@ export function createAppLayout(
     // Ensure correct order: monaco first, then bottom panel
     codeColumn.appendChild(monacoWrapper)
     codeColumn.appendChild(bottomContainer)
+    // 🔴 流程回到積木那一欄——**而它回去的時候是「沒被選中的那個投影」**，
+    //    所以由 `showProjection` 決定顯不顯示，不是留著行動版那個 `display: ''`。
+    blocksColumn.appendChild(flowEl)
+    showProjection('blocks')
 
-    // Move selectors back to original toolbar positions
-    for (const info of Object.values(selectorMounts)) {
-      const mount = document.getElementById(info.id)
-      const saved = selectorOriginalParents.get(info.id)
-      if (mount && saved) {
-        // Remove the mobile-menu-item wrapper
-        const wrapper = mount.parentElement
-        if (wrapper?.classList.contains('mobile-menu-item')) {
-          if (saved.nextSibling) {
-            saved.parent.insertBefore(mount, saved.nextSibling)
-          } else {
-            saved.parent.appendChild(mount)
-          }
-          wrapper.remove()
-        }
-      }
-    }
-    selectorOriginalParents.clear()
+    // 🪦 「把選擇器搬回工具列」那段已刪除——同上。
 
     // Hide mobile containers
     mobileBlocksContainer.classList.remove('active')
@@ -721,6 +717,7 @@ export function createAppLayout(
     mobileBlocksContainer.classList.toggle('active', tab === 'blocks')
     mobileCodeContainer.classList.toggle('active', tab === 'code')
     mobileConsoleContainer.classList.toggle('active', tab === 'console')
+    mobileFlowContainer.classList.toggle('active', tab === 'flow')
     // Use requestAnimationFrame to ensure DOM is fully updated before resize
     requestAnimationFrame(() => {
       window.dispatchEvent(new Event('resize'))
@@ -765,55 +762,28 @@ export function createAppLayout(
     })
   }
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, mobileMenu, codeKeyboard }
+  // 🔴 **預設是積木**——⚠️ 而這一行同時把分頁的 active 樣式設對；
+  //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
+  showProjection('blocks')
+
+  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, mobileMenu, codeKeyboard, showProjection }
 }
 
-export function setupSelectors(
-  stylePresets: StylePreset[],
-  targetRegistry: TargetRegistry,
-  topicRegistry: TopicRegistry,
-  currentTarget: Target,
-  currentBranches: Set<string>,
-  callbacks: Pick<AppShellCallbacks, 'onTargetChange' | 'onBranchesChange' | 'onStyleChange' | 'onBlockStyleChange' | 'onLocaleChange'>,
-): { topicSelector: TopicSelector | null; styleSelector: StyleSelector | null } {
-  let topicSelector: TopicSelector | null = null
-  let styleSelector: StyleSelector | null = null
+/*
+ * 🪦 `setupSelectors` 已於 2026-08-25 刪除。
+ *
+ * 它建的是四顆 `<select>`（目標／風格／積木風格／語系）——而那四顆現在
+ * 是**同一份 `ControlState` 的三個渲染器**：桌機狀態列、IDE 狀態列、
+ * 行動版設定表。加一顆 picker 不再需要動任何一個渲染器。
+ *
+ * ⚠️ 而 `TopicSelector` 的層級樹彈出也一起退場——它變成 QuickPick 的
+ * **多選 ＋ 全形空格縮排**。🔴 那是有損失的：勾選框的樹狀結構比一串
+ * 縮排清楚。**而收益是「三個宿主同一個互動」**，這一筆交換是明的。
+ */
 
-  const topicMount = document.getElementById('level-selector-mount')
-  if (topicMount) {
-    // ⚠️ 課程清單由目標**查出來**，不再由使用者直接選——目標就是那個具名的配對。
-    const topicOf = (t: Target): Topic => topicRegistry.get(t.topic)!
-    topicSelector = new TopicSelector(topicMount, targetRegistry.all(), topicOf, currentTarget, currentBranches)
-    topicSelector.onTargetChange((target, topic, branches) => callbacks.onTargetChange(target, topic, branches))
-    topicSelector.onBranchesChange((branches) => callbacks.onBranchesChange(branches))
-  }
-
-  const styleMount = document.getElementById('style-selector-mount')
-  if (styleMount) {
-    styleSelector = new StyleSelector(styleMount, stylePresets)
-    styleSelector.onChange(callbacks.onStyleChange)
-  }
-
-  const blockStyleMount = document.getElementById('block-style-selector-mount')
-  if (blockStyleMount) {
-    const selector = new BlockStyleSelector(blockStyleMount)
-    selector.onChange((preset: BlockStylePreset) => {
-      callbacks.onBlockStyleChange(preset, {})
-    })
-  }
-
-  const localeMount = document.getElementById('locale-selector-mount')
-  if (localeMount) {
-    const selector = new LocaleSelector(localeMount)
-    selector.onChange(async (locale) => {
-      callbacks.onLocaleChange(locale)
-    })
-  }
-
-  return { topicSelector, styleSelector }
-}
-
-export function setupToolbarButtons(callbacks: Pick<AppShellCallbacks, 'onOpenSyncMenu' | 'onUndo' | 'onRedo' | 'onClear'>): void {
+export function setupToolbarButtons(
+  callbacks: Pick<AppShellCallbacks, 'onOpenSyncMenu'> & { onAction: (id: ControlId) => void },
+): void {
   const replaceBtn = (id: string) => {
     const el = document.getElementById(id)
     if (el) {
@@ -825,9 +795,10 @@ export function setupToolbarButtons(callbacks: Pick<AppShellCallbacks, 'onOpenSy
   }
 
   replaceBtn('sync-menu-btn')?.addEventListener('click', callbacks.onOpenSyncMenu)
-  replaceBtn('undo-btn')?.addEventListener('click', callbacks.onUndo)
-  replaceBtn('redo-btn')?.addEventListener('click', callbacks.onRedo)
-  replaceBtn('clear-btn')?.addEventListener('click', callbacks.onClear)
+  for (const spec of CONTROLS) {
+    if (spec.kind !== 'action' || spec.id === 'run') continue
+    replaceBtn(spec.mountId)?.addEventListener('click', () => callbacks.onAction(spec.id))
+  }
 
   // Mobile sync button — toggles auto-sync (same as desktop)
   replaceBtn('mobile-sync-btn')?.addEventListener('click', callbacks.onOpenSyncMenu)

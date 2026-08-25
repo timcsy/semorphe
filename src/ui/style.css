@@ -306,6 +306,20 @@ html, body {
   gap: 2px;
 }
 
+/*
+ * editor 區的投影分頁（積木 ｜ 流程）—— 🔴 **它們不是「面板的裝飾」**：
+ * 兩個都是程式本身的投影，只是問的問題不同（空間層 ／ 關係層）。
+ */
+.quick-access-bar .view-tab {
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+}
+
+.quick-access-bar .view-tab.active {
+  color: #fff;
+  border-bottom-color: #007acc;
+}
+
 /* ─── 狀態列上的控制項 ─── */
 /*
  * 🔴 它們是**原本那幾顆選擇器**，只是搬了家（`draft/版面與檔案` §六）。
@@ -407,6 +421,45 @@ html, body {
   background: rgba(255, 255, 255, 0.18);
 }
 
+/*
+ * 行動版的設定表 —— 一列是「名字 ＋ 目前的值」。
+ * 🔴 與狀態列**讀同一份 `ControlState`**，差別只有版型。
+ */
+.mobile-menu-controls {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid #3a3a3a;
+  background: transparent;
+  color: #ddd;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet-row:active {
+  background: #3a3a3a;
+}
+
+.sheet-row-name {
+  flex: none;
+}
+
+.sheet-row-value {
+  color: #9cdcfe;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ─── QuickPick ─── */
 /*
  * 🔴 位置與比例照 VSCode：**視窗頂端置中的一張窄清單**，不是畫面正中的對話框。
@@ -450,6 +503,34 @@ html, body {
   max-height: 44vh;
   overflow-y: auto;
   padding-bottom: 4px;
+}
+
+/*
+ * 🔴 **手機版從下往上、佔滿寬度**——⚠️ 這是行動版**唯一該不一樣的地方**。
+ *
+ * 理由是拇指：頂端置中的清單在手機上按不到，而**一個按不到的選單
+ * 與一個不存在的選單，在單手拿著手機的那個人身上是同一件事。**
+ */
+@media (max-width: 768px) {
+  .quick-pick-overlay {
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .quick-pick {
+    margin-top: 0;
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .quick-pick-list {
+    max-height: 60vh;
+  }
+
+  .quick-pick-item {
+    padding: 10px 14px;
+    font-size: 15px;
+  }
 }
 
 .quick-pick-item {
@@ -1693,7 +1774,26 @@ html, body {
     display: none !important;
   }
 
-  body:not(.host-no-mobile-layout) #status-bar {
+  /*
+   * 🔴 **手機版留一條狀態列，而只有一格：同步三態**（2026-08-25）。
+   *
+   * 判準與桌機同一條：它**會自己變**（你沒動它也會掉到「兩邊都改了」），
+   * 而且**沒有別的顯示處**。其餘那幾格是設定，它們的家是設定表。
+   *
+   * ⚠️ 在此之前整條列是隱藏的——於是暫停中的三態在手機上**看不見**。
+   */
+  /*
+   * 🔴 **手機版由分頁列管「看哪一個投影」**——欄內那兩顆是桌機的機制。
+   * ⚠️ 兩個都在的話，使用者會有兩個「切到流程」的入口而它們狀態不同步。
+   *
+   * > **同一件事在同一個畫面上有兩個開關，是一個必然會不一致的東西。**
+   */
+  body:not(.host-no-mobile-layout) .quick-access-bar .view-tab {
+    display: none !important;
+  }
+
+  body:not(.host-no-mobile-layout) #status-controls,
+  body:not(.host-no-mobile-layout) #status-summary {
     display: none !important;
   }
 

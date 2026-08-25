@@ -20,6 +20,33 @@ import { showQuickPick } from '../toolbar/quick-pick'
 import type { ControlState, ControlInvoke } from '../../core/host/controls'
 
 /**
+ * 打開一顆控制項的清單。🔴 **狀態列與設定表共用這一支**。
+ */
+function openPicker(state: ControlState, onInvoke: (invoke: ControlInvoke) => void): void {
+  const options = state.options ?? []
+  // 🔴 沒有值域就**不要開一張空清單**——空清單看起來像壞掉。
+  //    ⚠️ 與 `vscode/panel.ts` 的 `pickControl` 同一條。
+  if (options.length === 0) return
+  showQuickPick(
+    {
+      title: state.title,
+      multi: state.multi,
+      items: options.map((o) => ({
+        value: o.value,
+        label: o.label,
+        picked: state.multi ? state.picked?.includes(o.value) : o.value === state.value,
+        description: !state.multi && o.value === state.value ? '目前' : undefined,
+      })),
+    },
+    (values) => {
+      if (values === null) return          // 取消
+      if (state.multi) onInvoke({ id: state.id, values })
+      else if (values[0] !== undefined) onInvoke({ id: state.id, value: values[0] })
+    },
+  )
+}
+
+/**
  * 把狀態列上的控制項畫出來（每次整份重畫）。
  *
  * 🔴 **整份重畫而不是逐項更新**——這些項目一輪最多五顆，
@@ -36,30 +63,38 @@ export function renderStatusControls(
     btn.className = 'status-item-btn'
     btn.dataset.controlId = state.id
     btn.textContent = state.label
-    btn.title = state.label
-    btn.addEventListener('click', () => {
-      const options = state.options ?? []
-      // 🔴 沒有值域就**不要開一張空清單**——空清單看起來像壞掉。
-      //    ⚠️ 與 `vscode/panel.ts` 的 `pickControl` 同一條。
-      if (options.length === 0) return
-      showQuickPick(
-        {
-          title: state.label,
-          multi: state.multi,
-          items: options.map((o) => ({
-            value: o.value,
-            label: o.label,
-            picked: state.multi ? state.picked?.includes(o.value) : o.value === state.value,
-            description: !state.multi && o.value === state.value ? '目前' : undefined,
-          })),
-        },
-        (values) => {
-          if (values === null) return          // 取消
-          if (state.multi) onInvoke({ id: state.id, values })
-          else if (values[0] !== undefined) onInvoke({ id: state.id, value: values[0] })
-        },
-      )
-    })
+    btn.title = state.title
+    btn.addEventListener('click', () => openPicker(state, onInvoke))
     container.appendChild(btn)
+  }
+}
+
+/**
+ * 行動版的**設定表**——同一份 `ControlState`，第三個渲染器。
+ *
+ * 🔴 與狀態列的差別只有**版型**：一列是「名字 ＋ 目前的值」，
+ * 而點下去開的是同一個 QuickPick。
+ *
+ * > **行動版不是「桌機版縮小」，是同一份宣告的第三個渲染器。**
+ */
+export function renderSheetControls(
+  container: HTMLElement,
+  states: readonly ControlState[],
+  onInvoke: (invoke: ControlInvoke) => void,
+): void {
+  container.innerHTML = ''
+  for (const state of states) {
+    const row = document.createElement('button')
+    row.className = 'sheet-row'
+    row.dataset.controlId = state.id
+    const name = document.createElement('span')
+    name.className = 'sheet-row-name'
+    name.textContent = state.title
+    const value = document.createElement('span')
+    value.className = 'sheet-row-value'
+    value.textContent = state.label
+    row.append(name, value)
+    row.addEventListener('click', () => openPicker(state, onInvoke))
+    container.appendChild(row)
   }
 }

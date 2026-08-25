@@ -130,6 +130,8 @@ export interface CodeDiagnosticWire {
 export interface ControlStateWire {
   id: string
   kind: 'picker' | 'action' | 'indicator'
+  /** 這顆控制項**叫什麼**（選單的標題）。⚠️ 與 `label`（目前的值）是兩件事。 */
+  title: string
   label: string
   value?: string
   options?: { value: string; label: string }[]

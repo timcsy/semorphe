@@ -47,13 +47,15 @@ describe('MobileMenu', () => {
     expect(menu.isMenuOpen()).toBe(false)
   })
 
-  it('should add selector mount', () => {
-    const sel = document.createElement('select')
-    menu.addSelectorMount('語言', sel)
-    const items = menu.getElement().querySelectorAll('.mobile-menu-item')
-    expect(items.length).toBe(1)
-    expect(items[0].querySelector('label')?.textContent).toBe('語言')
-    expect(items[0].contains(sel)).toBe(true)
+  it('🪦 不再自己裝控制項——它只提供一格容器（2026-08-25）', () => {
+    // > 行動版不是「桌機版縮小」，是同一份宣告的第三個渲染器。
+    //
+    // 內容由 `layout/status-bar-controls.ts` 的 `renderSheetControls`
+    // 依 `ControlState` 畫——與狀態列讀同一份。
+    const box = menu.getControlsContainer()
+    expect(box.className).toBe('mobile-menu-controls')
+    // 正向錨點：同一顆容器，不是每次都新建一個
+    expect(menu.getControlsContainer()).toBe(box)
   })
 
   it('should set summary text', () => {

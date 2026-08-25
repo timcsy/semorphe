@@ -35,6 +35,12 @@ export class QuickAccessBar {
     //    否則關掉中間某一群會留下兩條連在一起的分隔線。
     const groups = [
       options.inPanel('sync') ? '<button id="sync-menu-btn" title="同步">⇄ 同步</button>' : '',
+      // 🔴 **editor 區看哪一個投影**——積木（空間層）／流程（關係層）。
+      //    ⚠️ 它是這一欄的分頁列，不是「面板的裝飾」：兩個都是**程式本身**的投影。
+      [
+        options.inPanel('viewBlocks') ? '<button id="view-blocks-btn" class="view-tab" title="積木">積木</button>' : '',
+        options.inPanel('viewFlow') ? '<button id="view-flow-btn" class="view-tab" title="流程">流程</button>' : '',
+      ].join(''),
       options.inPanel('target') ? '<span id="level-selector-mount"></span>' : '',
       options.inPanel('blockStyle') ? '<span id="block-style-selector-mount"></span>' : '',
       [

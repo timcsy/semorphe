@@ -16,9 +16,15 @@ describe('MobileTabBar', () => {
     tabBar = new MobileTabBar(container)
   })
 
-  it('should render 3 tabs', () => {
-    const tabs = container.querySelectorAll('.mobile-tab-item')
-    expect(tabs.length).toBe(3)
+  it('🔴 四個分頁，而順序是**理解的四個層次**（2026-08-25）', () => {
+    // 使用者 2026-08-24 逐字：「程式碼、流程、積木、主控台這個順序是我用
+    // 元素、關係、空間、動力來思考，**代表理解的不同層次**，不是誰比較重要」
+    // ——同日收斂為「元素、關係、空間、**狀態**」。
+    //
+    // ⚠️ 在此之前只有三個：**流程從來沒有進來過**（它住在下方面板＝狀態層）。
+    const items = [...container.querySelectorAll('.mobile-tab-item')]
+    expect(items.map((el) => el.getAttribute('data-tab')))
+      .toEqual(['code', 'flow', 'blocks', 'console'])
   })
 
   it('should have blocks tab active by default', () => {

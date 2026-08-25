@@ -1,6 +1,15 @@
 /**
- * MobileMenu — 漢堡下拉式覆蓋選單
- * 行動裝置上收納次要控制項（選擇器、設定摘要）
+ * MobileMenu —— 行動版的**設定表**。
+ *
+ * ## 🔴 它不再自己裝控制項
+ *
+ * 2026-08-25 之前它的內容是「從工具列搬過來的四顆 `<select>`」，
+ * 而那讓行動版變成**第三個機制**：桌機一種、IDE 一種、手機一種。
+ *
+ * > **行動版不是「桌機版縮小」，是同一份宣告的第三個渲染器。**
+ *
+ * 現在它提供一格容器，內容由 `layout/status-bar-controls.ts` 的
+ * `renderSheetControls` 依 `ControlState` 畫——**與狀態列讀同一份**。
  */
 export class MobileMenu {
   private overlay: HTMLElement
@@ -53,18 +62,18 @@ export class MobileMenu {
   }
 
   /**
-   * Move a selector element into the mobile menu.
-   * Returns a wrapper div for the item.
+   * 設定表的容器——**內容不歸這個類別管**。
+   *
+   * ⚠️ 它建在摘要**之前**，這樣摘要永遠在最底下。
    */
-  addSelectorMount(label: string, selectorEl: HTMLElement): HTMLElement {
-    const item = document.createElement('div')
-    item.className = 'mobile-menu-item'
-    const labelEl = document.createElement('label')
-    labelEl.textContent = label
-    item.appendChild(labelEl)
-    item.appendChild(selectorEl)
-    this.overlay.appendChild(item)
-    return item
+  getControlsContainer(): HTMLElement {
+    let box = this.overlay.querySelector('.mobile-menu-controls') as HTMLElement | null
+    if (!box) {
+      box = document.createElement('div')
+      box.className = 'mobile-menu-controls'
+      this.overlay.prepend(box)
+    }
+    return box
   }
 
   /**

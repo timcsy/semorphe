@@ -60,17 +60,15 @@ import { setMessageSource, msg } from '../core/messages'
 import { SyncCoordinator } from '../core/sync-coordinator'
 import { viewsWith } from '../core/view-registry'
 import { installDialogs } from './prompt-dialog'
-import type { StyleSelector } from './toolbar/style-selector'
-import type { TopicSelector } from './toolbar/topic-selector'
 import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
-import { createAppLayout, setupSelectors, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
+import { createAppLayout, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
 import type { AppShellElements, AppShellCallbacks } from './app-shell'
-import { renderStatusControls } from './layout/status-bar-controls'
+import { renderStatusControls, renderSheetControls } from './layout/status-bar-controls'
 import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
 import { isFunctionDefinition } from '../core/component/traits'
@@ -133,8 +131,6 @@ export class App {
   private _codeToBlocksInProgress = false
   private _restoringState = false
   private currentStylePreset: StylePreset = DEFAULT_STYLE
-  private styleSelector: StyleSelector | null = null
-  private topicSelector: TopicSelector | null = null
   private currentBlockStyleId: string = 'scratch'
   private currentLocale: string = 'zh-TW'
 
@@ -149,6 +145,9 @@ export class App {
 
   /** 宿主的顯示語言（`vscode.env.language`）。`null` ＝ 這個宿主沒說。 */
   private hostLocale: string | null = null
+
+  /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
+  private showProjection: ((which: 'blocks' | 'flow') => void) | null = null
 
   /** 控制項的回呼——面板的下拉與宿主的 QuickPick **共用這一組**。 */
   private controlCallbacks: Pick<AppShellCallbacks,
@@ -277,6 +276,7 @@ export class App {
         installExtractStrategies: registerCppExtractStrategies as never,
       })
     this.blocklyPanel = elements.blocklyPanel
+    this.showProjection = elements.showProjection
     this.codeView = elements.codeView
     this.mobileMenu = elements.mobileMenu
 
@@ -409,10 +409,8 @@ export class App {
     // 11. Setup toolbar + selectors
     setupToolbarButtons({
       onOpenSyncMenu: () => this.openSyncMenu(),
-      // 🔴 **與宿主那側同一支**（`wireHostControls`）——不是兩個入口各寫一次。
-      onUndo: () => this.doUndo(),
-      onRedo: () => this.doRedo(),
-      onClear: () => this.doClear(),
+      // 🔴 **與宿主那側走同一支**（`handleControlInvoke`）——一個入口，不是兩個。
+      onAction: (id) => this.handleControlInvoke({ id }),
     })
 
     // 🔴 這個宿主沒有檔案按鈕就【不接線】——DOM 根本不存在。
@@ -487,10 +485,8 @@ export class App {
       //    宿主那顆可能送 `follow-host`，而**兩者都是「使用者選的」**。
       onLocaleChange: (locale) => this.applyLocalePreference(locale),
     }
-    const selectors = setupSelectors(STYLE_PRESETS, this.targetRegistry, this.topicRegistry,
-      this.currentTarget, this.enabledBranches, this.controlCallbacks)
-    this.styleSelector = selectors.styleSelector
-    this.topicSelector = selectors.topicSelector
+// 🪦 `setupSelectors` 已退場——那四顆下拉變成 `ControlState` 的渲染器
+    // （桌機狀態列／IDE 狀態列／行動版設定表）。回呼留著，它們是**共用的那一組**。
     // 🔴 宿主那側的入口——⚠️ 走的是**同一組回呼**。
     this.wireHostControls()
 
@@ -653,7 +649,6 @@ export class App {
     this.syncController?.setStyle(preset)
     this.blocklyPanel?.setCodeContext(this.currentTopic.language, preset)  // 同上
     this.syncController?.setCodingStyle(preset)
-    this.styleSelector?.setValue(preset.id)
     this.refreshStatusBar()
     const ioPref = preset.io_style === 'printf' ? 'cstdio' : 'iostream'
     if (ioPref !== this.currentIoPreference) { this.currentIoPreference = ioPref; this.updateToolbox() }
@@ -860,7 +855,6 @@ export class App {
     } finally {
       this._restoringState = false
     }
-    this.topicSelector?.setTarget(target, this.enabledBranches)
   }
 
   private syncBlocksToCodeWithMappings(): void {
@@ -979,20 +973,26 @@ export class App {
 
     // ② 畫在**面板自己的狀態列**上的那些——🔴 讀的是**同一份 `ControlState`**。
     //    > 兩邊長得一樣，不是因為有人照著抄，是因為它們畫的是同一份東西。
-    const slot = document.getElementById('status-controls')
-    if (!slot) return
     const onBar = pickersAndActions
       .filter((c) => surfaceOf(c, surfaces) === 'panelStatusBar')
       .map((c) => this.controlStateOf(c))
-    renderStatusControls(slot, onBar, (invoke) => this.handleControlInvoke(invoke))
+    if (onBar.length === 0) return
+    const invoke = (i: ControlInvoke): void => this.handleControlInvoke(i)
+    const slot = document.getElementById('status-controls')
+    if (slot) renderStatusControls(slot, onBar, invoke)
+    // ③ 行動版的設定表——🔴 **同一份 `ControlState`，第三個渲染器**。
+    //    ⚠️ 它與狀態列**同時存在**：CSS 決定哪一個看得到，
+    //    而兩者由同一次重畫餵資料，所以不會有一個過期。
+    if (this.mobileMenu) renderSheetControls(this.mobileMenu.getControlsContainer(), onBar, invoke)
   }
 
   /** 一顆控制項現在的樣子 ＋ **它的值域**。 */
   private controlStateOf(spec: ControlSpec): ControlState {
+    const title = spec.hostTitle
     switch (spec.id) {
       case 'target': {
         const options: ControlOption[] = this.targetRegistry.all().map((t) => ({ value: t.id, label: t.name }))
-        return { id: spec.id, kind: spec.kind, label: this.currentTarget.name, value: this.currentTarget.id, options }
+        return { id: spec.id, kind: spec.kind, title, label: this.currentTarget.name, value: this.currentTarget.id, options }
       }
       case 'branches': {
         const nodes = levelNodesWithDepth(this.currentTopic.levelTree)
@@ -1002,7 +1002,7 @@ export class App {
           label: `${'　'.repeat(depth)}${node.label}（${node.components.length}）`,
         }))
         return {
-          id: spec.id, kind: spec.kind, multi: true,
+          id: spec.id, kind: spec.kind, title, multi: true,
           label: `層級 ${this.enabledBranches.size}/${nodes.length}`,
           picked: nodes.map(({ node }) => node.id).filter((id) => this.enabledBranches.has(id)),
           options,
@@ -1011,7 +1011,7 @@ export class App {
       case 'style': {
         const name = (p: StylePreset): string => p.name[this.currentLocale] || p.name['zh-TW'] || p.id
         return {
-          id: spec.id, kind: spec.kind,
+          id: spec.id, kind: spec.kind, title,
           label: name(this.currentStylePreset), value: this.currentStylePreset.id,
           options: STYLE_PRESETS.map((p) => ({ value: p.id, label: name(p) })),
         }
@@ -1019,7 +1019,7 @@ export class App {
       case 'blockStyle':
         // 🔴 值域**問已經有它的那個類別**——不為了一份清單多 import 一次語言套件。
         return {
-          id: spec.id, kind: spec.kind,
+          id: spec.id, kind: spec.kind, title,
           label: BlockStyleSelector.labelOf(this.currentBlockStyleId),
           value: this.currentBlockStyleId,
           options: BlockStyleSelector.options(),
@@ -1027,7 +1027,7 @@ export class App {
       case 'locale': {
         const picked = LOCALES.find((l) => l.id === this.localePreference)
         return {
-          id: spec.id, kind: spec.kind,
+          id: spec.id, kind: spec.kind, title,
           // 🔴 跟隨時要**看得出跟到了什麼**——只寫「跟隨宿主」的話，
           //    使用者無從知道它解析成哪一個。
           label: this.localePreference === FOLLOW_HOST_LOCALE
@@ -1039,7 +1039,7 @@ export class App {
       }
       default:
         // action：`run` / `undo` / `redo` / `clear`
-        return { id: spec.id, kind: spec.kind, label: spec.id }
+        return { id: spec.id, kind: spec.kind, title, label: title }
     }
   }
 
@@ -1095,6 +1095,9 @@ export class App {
         case 'undo': this.doUndo(); break
         case 'redo': this.doRedo(); break
         case 'clear': this.doClear(); break
+        // 🔴 editor 區看哪一個投影——積木（空間層）／流程（關係層）
+        case 'viewBlocks': this.showProjection?.('blocks'); break
+        case 'viewFlow': this.showProjection?.('flow'); break
       }
     }
   }
@@ -1307,7 +1310,6 @@ export class App {
     }
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
     this.syncController?.setTopic(this.currentTopic, this.enabledBranches)
-    this.topicSelector?.setTarget(this.currentTarget, this.enabledBranches)
     this.updateToolbox()
     this._restoringState = false
 

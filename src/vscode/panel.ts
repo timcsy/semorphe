@@ -727,11 +727,11 @@ function updateControlSurfaces(items: ControlStateWire[]): void {
     let bar = controlItems.get(item.id)
     if (!bar) {
       bar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99 - index)
-      bar.command = { command: `semorphe.control.${item.id}`, title: item.label }
+      bar.command = { command: `semorphe.control.${item.id}`, title: item.title }
       controlItems.set(item.id, bar)
     }
     bar.text = item.label
-    bar.tooltip = `${item.label}\n— 點一下更換`
+    bar.tooltip = `${item.title}\n— 點一下更換`
     bar.show()
   })
   // 🔴 **不再出現的要收起來**——一個指著不存在的東西的狀態列項目在說謊。
@@ -767,7 +767,7 @@ export async function pickControl(id: string): Promise<void> {
     const items: Item[] = state.options.map((o) => ({
       label: o.label, value: o.value, picked: state.picked?.includes(o.value) ?? false,
     }))
-    const picked = await vscode.window.showQuickPick<Item>(items, { title: state.label, canPickMany: true })
+    const picked = await vscode.window.showQuickPick<Item>(items, { title: state.title, canPickMany: true })
     if (!picked) return
     current.sendControl({ type: 'controlInvoke', id, values: picked.map((p) => p.value) })
     return
@@ -777,7 +777,7 @@ export async function pickControl(id: string): Promise<void> {
     // ⚠️ 目前值標一個記號——QuickPick 沒有「目前選中」的原生表達
     description: o.value === state.value ? '目前' : undefined,
   }))
-  const choice = await vscode.window.showQuickPick<Item>(items, { title: state.label })
+  const choice = await vscode.window.showQuickPick<Item>(items, { title: state.title })
   if (!choice) return
   current.sendControl({ type: 'controlInvoke', id, value: choice.value })
 }
