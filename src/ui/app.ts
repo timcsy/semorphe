@@ -481,13 +481,9 @@ export class App {
         this.currentBlockStyleId = preset.id
         this.refreshStatusBar()
       },
-      onLocaleChange: async (locale) => {
-        await this.localeLoader.load(locale)
-        this.currentLocale = locale
-        this.updateToolbox()
-        this.syncBlocksToCodeWithMappings()
-        this.refreshStatusBar()
-      },
+      // 🔴 **兩個入口都走偏好那一支**——面板的下拉送的是一個具體語系，
+      //    宿主那顆可能送 `follow-host`，而**兩者都是「使用者選的」**。
+      onLocaleChange: (locale) => this.applyLocalePreference(locale),
     }
     const selectors = setupSelectors(STYLE_PRESETS, this.targetRegistry, this.topicRegistry,
       this.currentTarget, this.enabledBranches, this.controlCallbacks)
@@ -1066,7 +1062,8 @@ export class App {
           break
         }
         case 'locale':
-          if (invoke.value) void this.applyLocalePreference(invoke.value)
+          // ⚠️ 與其餘四顆同形——都走 `controlCallbacks`，沒有第二條路。
+          if (invoke.value) void cb.onLocaleChange(invoke.value)
           break
         case 'run':
           this.executionController?.runFromHost(invoke.value)
@@ -1086,9 +1083,22 @@ export class App {
    * 「介面英文、積木中文」——那在「只存結果」的模型裡表達不出來。
    */
   private async applyLocalePreference(preference: string): Promise<void> {
+    // 🔴 **偏好與結果都要記**——只記結果的話，「跟隨宿主」在下一次
+    //    重畫狀態列時就退化成一個固定值，而使用者不會發現。
+    //
+    // ⚠️ 而這裡曾經是**兩條路**：面板的下拉直接改 `currentLocale`，
+    //    只有宿主那條會經過這裡。於是網頁版選了 English 之後，
+    //    「使用者選的是什麼」這一格仍然停在 `zh-TW`。
+    //
+    // > **同一件事有兩個入口，而只有一個記得使用者的選擇——
+    // > 那個沒記的，遲早會被當成真相。**
     this.localePreference = preference
     const effective = preference === FOLLOW_HOST_LOCALE ? this.resolvedHostLocale() : preference
-    await this.controlCallbacks?.onLocaleChange(effective)
+    await this.localeLoader.load(effective)
+    this.currentLocale = effective
+    this.updateToolbox()
+    this.syncBlocksToCodeWithMappings()
+    this.refreshStatusBar()
   }
 
   /**

@@ -222,6 +222,19 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
     expect(dispose![0], '🔴 關掉面板而狀態列還在說同步中').toContain('hideSyncStatusBar')
   })
 
+  it('🔴 語系只有一個入口——面板的下拉也要記得「使用者選的是什麼」', () => {
+    // ⚠️ 原始碼檢查（比較弱）。它擋的是一個真的洞：兩個入口，
+    //    而只有宿主那條經過 `applyLocalePreference`，於是網頁版選了
+    //    English 之後 `localePreference` 仍然停在 `zh-TW`。
+    const src = fs.readFileSync('src/ui/app.ts', 'utf8')
+    expect(src, '🔴 面板那條又繞過偏好了')
+      .toContain('onLocaleChange: (locale) => this.applyLocalePreference(locale)')
+    // 正向錨點：而那一支真的會記
+    const apply = src.match(/private async applyLocalePreference[\s\S]*?\n  \}/)
+    expect(apply, '🔴 找不到 applyLocalePreference＝這條護欄的錨爛了').toBeTruthy()
+    expect(apply![0]).toContain('this.localePreference = preference')
+  })
+
   // ─── ★ 注入：證明偵測器認得出違規，而且不亂報 ───
 
   it('★ 注入①：投影到宿主、而視圖交不出那些能力的，必須被報出', () => {
