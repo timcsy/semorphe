@@ -53,7 +53,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.10.3'
+export const EXTENSION_VERSION = '0.10.4'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -190,6 +190,11 @@ export function buildManifest(): ExtensionManifest {
         // 🔴 同步的入口在**宿主的 chrome** 上：狀態列點一下、或從這裡叫。
         //    使用者 2026-08-25：「全域，**不放在面板裡面的**」。
         {
+          command: 'semorphe.showConsole',
+          title: '開啟主控台',
+          category: DISPLAY_NAME,
+        },
+        {
           command: 'semorphe.syncMenu',
           title: '同步：暫停／以哪一邊為準',
           category: DISPLAY_NAME,
@@ -271,8 +276,11 @@ export function buildManifest(): ExtensionManifest {
         // 🔴 **而它本來是給編輯器分頁的**——它在 webview 分頁上、以及在
         // Theia 裡的行為**沒有被證明過**。退路是把整組移到 `editor/title`。
         // 由使用者在 Arduino IDE 裡人工按一次（`ship-extension` 第 7 步）。
+        // 🔴 主控台要**一鍵到得了**——⚠️ 而它不是控制項登錄表的一員
+        //    （`output` 是一條資料流，不是一顆按鈕），所以在這裡具名接。
         'editor/title/run': [
           { command: hostCommandId('run'), when: PANEL_WHEN, group: 'navigation@1' },
+          { command: 'semorphe.showConsole', when: PANEL_WHEN, group: 'semorphe@0' },
           ...RUN_MODES.map((m, i) => ({
             command: runModeCommandId(m.id),
             when: PANEL_WHEN,

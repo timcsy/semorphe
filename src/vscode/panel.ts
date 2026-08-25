@@ -957,18 +957,50 @@ function writeToTerminal(m: { chunk?: string; clear?: boolean; awaitingInput?: s
     void showConsoleEditor()
     return
   }
-  const term = ensureTerminal()
-  if (m.clear) {
-    // ⚠️ `\x1b[2J\x1b[H` ＝ 清畫面 ＋ 游標回原點。**清空是使用者按的**，
-    //    所以順便把終端機叫到前面來。
-    termWrite.fire('\x1b[2J\x1b[H')
-    return
+  // 🔴 **整段包起來**：`createTerminal({ pty })` 在某些宿主上會丟
+  //    ——而一個丟在訊息處理器裡的例外會**把後面全部吃掉**，
+  //    包含那個本來要救場的探測。症狀就是「主控台完全沒出現」。
+  //
+  // > **退路寫在 `catch` 之外，等於沒有退路。**
+  try {
+    const term = ensureTerminal()
+    if (m.clear) {
+      // ⚠️ `\x1b[2J\x1b[H` ＝ 清畫面 ＋ 游標回原點。
+      termWrite.fire('\x1b[2J\x1b[H')
+    } else if (m.chunk) {
+      // 🔴 `\n` → `\r\n`，理由見檔頭（否則輸出會變成階梯狀）。
+      termWrite.fire(m.chunk.replace(/\r?\n/g, '\r\n'))
+    }
+    term.show(/* preserveFocus */ true)
+    // ⚠️ **清空也要探**——執行開始時送的就是 `clear`，
+    //    只在有輸出時才探的話，「按了執行而什麼都沒出現」會多等一輪。
+    probeTerminal()
+  } catch (e) {
+    OUTPUT.appendLine(`Semorphe：這個宿主開不了終端機（${String(e)}），主控台改用一個編輯器分頁。`)
+    probeDone = true
+    consoleMode = 'editor'
+    consoleChanged.fire(CONSOLE_URI)
+    void showConsoleEditor()
   }
-  if (!m.chunk) return
-  // 🔴 `\n` → `\r\n`，理由見檔頭（否則輸出會變成階梯狀）。
-  termWrite.fire(m.chunk.replace(/\r?\n/g, '\r\n'))
-  term.show(/* preserveFocus */ true)
-  probeTerminal()
+}
+
+/**
+ * 手動打開主控台。
+ *
+ * 🔴 **它在此之前只有「有輸出」才會生出來**——而那是一個退步：
+ * 面板裡那一格從前一直都在，即使是空的。
+ *
+ * > **一個要先做對事情才看得到的東西，找不到它的人不會知道自己該做什麼。**
+ */
+export async function showConsole(): Promise<void> {
+  if (consoleMode === 'editor') { await showConsoleEditor(); return }
+  try {
+    ensureTerminal().show(false)
+    probeTerminal()
+  } catch {
+    consoleMode = 'editor'
+    await showConsoleEditor()
+  }
 }
 
 /** 面板關了：終端機也沒有東西會再對它說話。 */

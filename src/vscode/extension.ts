@@ -23,7 +23,7 @@
  * 而**宿主層本來就要認識宿主**。方向是單向的。
  */
 import * as vscode from 'vscode'
-import { openBlocksPanel, requestDiagnostics, openSyncMenu, pickControl, invokeControl, registerConsoleDocument, registerVariablesView, SYNC_MENU_COMMAND } from './panel'
+import { openBlocksPanel, requestDiagnostics, openSyncMenu, pickControl, invokeControl, registerConsoleDocument, registerVariablesView, showConsole, SYNC_MENU_COMMAND } from './panel'
 import { CONTROLS, RUN_MODES, hostCommandId, runModeCommandId } from '../core/host/controls'
 
 export const OPEN_COMMAND = 'semorphe.openBlocks'
@@ -43,6 +43,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand(DIAGNOSTICS_COMMAND, () => requestDiagnostics()),
     // 🔴 **一個註冊了卻沒有宣告在 manifest 的指令，使用者按不到**（`manifest.ts:173`）
     vscode.commands.registerCommand(SYNC_MENU_COMMAND, () => openSyncMenu()),
+    // 🔴 主控台要**找得到**，不能只在有輸出時才生出來。
+    vscode.commands.registerCommand('semorphe.showConsole', () => void showConsole()),
     // 🔴 **控制項的指令由同一份登錄表產生**——manifest 那側也是它。
     //    ⚠️ 兩邊各寫一次的話，「宣告了而沒註冊」會是一個**執行期才炸**的錯，
     //    而使用者看到的是「指令面板上有，按了說找不到指令」。

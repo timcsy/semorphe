@@ -147,5 +147,13 @@ export function showQuickPick(
   overlay.appendChild(box)
   document.body.appendChild(overlay)
   render()
-  filter.focus()
+  // 🔴 **行動版不自動聚焦**（使用者 2026-08-25）。
+  //
+  // 桌機上自動聚焦是好的：打字就能過濾。而在手機上它會**叫出虛擬鍵盤**，
+  // 而鍵盤蓋掉的正是那張清單——**使用者要先收鍵盤才看得到自己要選的東西**。
+  //
+  // > **一個「幫你準備好打字」的貼心，在只想點一下的人身上是一道門。**
+  //
+  // ⚠️ 斷點與 CSS 那條**刻意相同**：版面在哪裡換，行為就在哪裡換。
+  if (!window.matchMedia('(max-width: 768px)').matches) filter.focus()
 }
