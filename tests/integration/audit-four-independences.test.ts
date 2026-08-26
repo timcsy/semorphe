@@ -151,7 +151,26 @@ interface Baseline {
   otherUiImportsLanguage: number
   crossViewImports: number
   directViewCalls: number
-  visibleNotRatcheted: { compositionRootImportsLanguage: number }
+  visibleNotRatcheted: {
+    compositionRootImportsLanguage: number
+    /**
+     * 🔴 **組裝點呼叫視圖**（2026-08-26 從 `directViewCalls` 分出來）。
+     *
+     * 分欄的證據是這條護欄**自己的基線**：`directViewCalls` 五天內被
+     * **上調四次**（67→68→70→73→75），而每一次的理由都是
+     * 「組裝點把兩端接起來」——**一個正確的動作**。
+     *
+     * > **一個每次做對事情都要上調的數字，量的是兩件事。**
+     *
+     * ⚠️ **這 56 筆搬到這一欄【不是】清償**——它們一筆都沒有消失。
+     * 搬的是「哪些數字回答哪個問題」：組裝點接線本來就會隨功能長，
+     * 而「一個控制器指揮視圖」不該。
+     *
+     * （與上面 `compositionRootImportsLanguage` 同一個處置，
+     *  而那一欄的說明逐字是「composition root 知道自己裝了什麼是正常的」。）
+     */
+    compositionRootViewCalls: number
+  }
   details: {
     viewImportsLanguage: string[]
     otherUiImportsLanguage: string[]
@@ -215,6 +234,7 @@ function measure(): Baseline {
   const crossViewImports: string[] = []
   const directViewCalls: string[] = []
   let compositionRootImportsLanguage = 0
+  const compositionRootViewCalls: string[] = []
   let importLines = 0
   let anyMethodCalls = 0
 
@@ -237,12 +257,25 @@ function measure(): Baseline {
         }
         if (isView && isCrossViewImport(line)) crossViewImports.push(key)
       }
-      // 跨層通訊：面板自己的檔案不算（那是視圖內部）
-      if (!isView) {
-      }
+      // 🔴 **註解不算呼叫**（2026-08-26）。
+      //
+      //    實測：`execution-controller.ts` 的三筆
+      //    `blocklyPanel.highlightBlock`／`clearHighlight`／`monacoPanel.revealLine`
+      //    **全部來自一段區塊註解**——而那段註解正在說明
+      //    「**不呼叫任何面板**」，它是在解釋自己【不再】那樣做。
+      //
+      // > **一條把「解釋自己不再那樣做」的註解算成違規的護欄，
+      // > 會讓寫下那個解釋的人付代價。**
+      //
+      //    ⚠️ 隔壁的 `audit-language-plugin` 一開始就跳過註解
+      //    （`line.trimStart().startsWith('*')`）——**同一個掃描問題，
+      //    兩條護欄，一條跳一條不跳**。
+      const t = line.trimStart()
+      const isComment = t.startsWith('*') || t.startsWith('//') || t.startsWith('/*')
       // ⚠️ 見 `Baseline.scanned.anyMethodCalls` 的註解：錨必須與違規**無關**，不是它的超集。
       anyMethodCalls += (line.match(/\b\w+[?!]?\.\w+\(/g) ?? []).length
-      if (!isView) {
+      if (!isView && !isComment) {
+        // 🔴 分欄：組裝點接線 vs 其餘（見 `visibleNotRatcheted.compositionRootViewCalls`）
         // ⚠️ 鍵是「檔案 → 視圖.method」，**不是行號**。
         // 第一版用行號，於是把 32 處搬上匯流排之後**剩下的每一行都被判成「added」**
         // ——一次正確的清償讓護欄整片變紅。
@@ -251,7 +284,10 @@ function measure(): Baseline {
         // > 報的不是違規，是 diff。**
         //
         // 行號留在報表裡給人看，識別用不到它。
-        for (const method of crossLayerCalls(line)) directViewCalls.push(`${rel} → ${method}`)
+        for (const method of crossLayerCalls(line)) {
+          if (isCompositionRoot) compositionRootViewCalls.push(`${rel} → ${method}`)
+          else directViewCalls.push(`${rel} → ${method}`)
+        }
       }
     })
   }
@@ -291,7 +327,10 @@ function measure(): Baseline {
     otherUiImportsLanguage: otherUiImportsLanguage.length,
     crossViewImports: crossViewImports.length,
     directViewCalls: directViewCalls.length,
-    visibleNotRatcheted: { compositionRootImportsLanguage },
+    visibleNotRatcheted: {
+      compositionRootImportsLanguage,
+      compositionRootViewCalls: compositionRootViewCalls.length,
+    },
     details: { viewImportsLanguage, otherUiImportsLanguage, crossViewImports, directViewCalls },
   }
 }
@@ -373,6 +412,7 @@ describe('第三十九條護欄：P9 四項獨立性', () => {
       `   其餘 UI 檔          ${r.otherUiImportsLanguage}（Baseline ${baselineOf('otherUiImportsLanguage')}）⚠️ 無法確定，保守計入`,
       ...r.details.otherUiImportsLanguage.map((x) => `     ? ${x}`),
       `   組裝點 app.ts       ${r.visibleNotRatcheted.compositionRootImportsLanguage}（可見，不入棘輪）`,
+      `   組裝點呼叫視圖      ${r.visibleNotRatcheted.compositionRootViewCalls}（可見，不入棘輪——見型別的說明）`,
       `② 視圖獨立性          ${r.crossViewImports}（硬性零）`,
       `④ 跨層通訊只走 Bus`,
       `   直接呼叫視圖        ${r.directViewCalls}（Baseline ${baselineOf('directViewCalls')}）`,

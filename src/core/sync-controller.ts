@@ -576,25 +576,18 @@ export class SyncController {
     return { blockId, startLine: cm.startLine, endLine: cm.endLine }
   }
 
-  /** Node→Block+Code: nodeId → blockId (if block exists) + startLine/endLine (if code exists) */
-  getMappingForNode(nodeId: string): { blockId: string | null; startLine: number | null; endLine: number | null } | null {
-    const bm = this.blockMappings.find(m => m.nodeId === nodeId)
-    let cm = this.codeMappings.find(m => m.nodeId === nodeId)
-
-    // Fallback: expression nodes don't have codeMappings — walk up the tree to find
-    // the nearest ancestor that does (e.g., while_loop containing a scanf expression)
-    if (!cm && this.currentTree) {
-      const ancestorId = this.findAncestorWithCodeMapping(this.currentTree, nodeId)
-      if (ancestorId) cm = this.codeMappings.find(m => m.nodeId === ancestorId)
-    }
-
-    if (!bm && !cm) return null
-    return {
-      blockId: bm?.blockId ?? null,
-      startLine: cm?.startLine ?? null,
-      endLine: cm?.endLine ?? null,
-    }
-  }
+  // 🪦 **`getMappingForNode` 已於 2026-08-26 刪除——它是那張中央對映表的殘骸。**
+  //
+  //    它回傳 `{ blockId, startLine, endLine }`——**一次回答兩個視圖的座標**，
+  //    而那正是 `execution:at-node` 那一刀要拆掉的東西：
+  //
+  //    > **執行器同時說了兩遍，因為它知道有兩個視圖。**
+  //
+  //    ⚠️ 而刪它的理由不是「重構完了」，是**它今天零個消費者**（實測）：
+  //    收攏成 `execution:at-node` 廣播之後，每個視圖自己查自己那一維
+  //    （程式碼視圖用下面的 `codeRangeForNode`，只回程式碼那一維）。
+  //
+  // > **一個「一次回答所有視圖」的查詢，它的存在本身就是那張中央對映表。**
 
   /** Walk tree to find the nearest ancestor of targetId that has a codeMapping */
   private findAncestorWithCodeMapping(node: SemanticNode, targetId: string): string | null {
