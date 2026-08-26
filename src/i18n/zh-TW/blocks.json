@@ -252,5 +252,7 @@
   "EXEC_UNKNOWN_PAUSE": "這一塊我還不會執行（{component}）——先停在這裡。你可以在「變數」那一頁調整狀態，然後按繼續；或是直接停止。",
   "EXEC_UNKNOWN_CONTINUED": "（{component} 這一行沒有執行，是你選擇繼續的）",
   "EXEC_SET_VAR_REFUSED": "改不動「{name}」——「{value}」不是它的型別接得住的值，或者這個名字現在不在可見範圍裡。",
-  "EXEC_INTERVENTIONS": "⚠️ 這次執行有 {count} 筆是你手動填進去的，所以上面的結果不是這支程式單獨跑出來的。"
+  "EXEC_INTERVENTIONS": "⚠️ 這次執行有 {count} 筆是你手動填進去的，所以上面的結果不是這支程式單獨跑出來的。",
+  "EXEC_UNSYNC_SYNC": "⟳ 先同步再執行",
+  "EXEC_UNSYNC_AS_IS": "▶ 就跑現在這一份"
 }

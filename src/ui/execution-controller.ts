@@ -7,6 +7,8 @@ import { DebugToolbar } from './debug-toolbar'
 import type { StepInfo, ExecutionSpeed } from '../interpreter/types'
 import type { SemanticNode as InterpreterNode } from '../core/types'
 import { RuntimeError } from '../interpreter/errors'
+import { showQuickPick } from './toolbar/quick-pick'
+import { msg } from '../core/messages'
 import { showToast } from './toolbar/toast'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
@@ -318,10 +320,7 @@ export class ExecutionController {
   }
 
   private async handleRun(): Promise<void> {
-    if (this.getBlocksDirty()) {
-      const sync = confirm(Blockly.Msg['EXEC_UNSYNC_PROMPT'] || 'Blocks have changed. Sync before running?')
-      if (sync) this.syncBeforeRun()
-    }
+    if (this.getBlocksDirty() && (await this.askSyncBeforeRun())) this.syncBeforeRun()
 
     // Execution is a projection of the canonical semantic tree — not biased to any view
     const tree = this.panels.syncController?.getCurrentTree()
@@ -407,10 +406,7 @@ export class ExecutionController {
       return
     }
 
-    if (this.getBlocksDirty()) {
-      const sync = confirm(Blockly.Msg['EXEC_UNSYNC_PROMPT'] || 'Blocks have changed. Sync before running?')
-      if (sync) this.syncBeforeRun()
-    }
+    if (this.getBlocksDirty() && (await this.askSyncBeforeRun())) this.syncBeforeRun()
 
     // Execution is a projection of the canonical semantic tree — not biased to any view
     const tree = this.panels.syncController?.getCurrentTree()
@@ -652,10 +648,7 @@ export class ExecutionController {
       return
     }
 
-    if (this.getBlocksDirty()) {
-      const sync = confirm(Blockly.Msg['EXEC_UNSYNC_PROMPT'] || 'Blocks have changed. Sync before running?')
-      if (sync) this.syncBeforeRun()
-    }
+    if (this.getBlocksDirty() && (await this.askSyncBeforeRun())) this.syncBeforeRun()
 
     // Execution is a projection of the canonical semantic tree — not biased to any view
     const tree = this.panels.syncController?.getCurrentTree()
@@ -833,6 +826,49 @@ export class ExecutionController {
     const edits = inputs.filter((i) => i.kind === 'set-variable').length
     if (edits === 0) return
     this.broadcastOutput(describeInterventions(edits) + '\n', 'stderr')
+  }
+
+  /**
+   * **積木改過了，要先同步嗎**——頁內的問句，不是 `window.confirm`。
+   *
+   * ## 為什麼換掉（2026-08-26，第七十七條護欄）
+   *
+   * `ui/prompt-dialog.ts:4` 為 `window.prompt` 做過同一件事，
+   * 而 `ui/toolbar/style-action-bar.ts:3` 逐字寫著它
+   * 「**Replaces confirm() dialogs**」——**兩次替換都做了，而這裡還有三處**。
+   *
+   * 用得上的理由只有**已驗證的那一半**：`confirm()` **凍住整個頁面**，
+   * 自動化工具也一起凍住。🔴 而 e2e 對這三處**零覆蓋**——那不是巧合：
+   * **一個會凍住 Playwright 的東西，測試寫不下去。**
+   *
+   * ⚠️ **沒拿來當理由的那一半**：它在 VSCode 的 webview 裡會不會「點了沒反應」。
+   * `prompt-dialog.ts` 的那個證據是關於 `window.prompt`，**不是 `confirm`**，
+   * 而我沒有驗過。**沒驗過的前提不拿來推事情。**
+   *
+   * ## ⚠️ 這一刀【只換載體】，答案的語義一個字都沒改
+   *
+   * ```
+   * 今天的 confirm   確定 → 先同步再跑    取消 → 【就跑現在這一份】
+   * 換完的 QuickPick 一樣                Esc  → 【就跑現在這一份】（照舊）
+   * ```
+   *
+   * 🟡 **而「Esc 等於照舊跑下去」是一個可以再談的設計**：從一個選單逃出來，
+   * 多數人期待的是「什麼都不要發生」。**這一刀刻意不動它**——換載體的那一刀
+   * 如果順手改了語義，紅了就無法歸因。留在這裡當一個看得見的問句。
+   */
+  private askSyncBeforeRun(): Promise<boolean> {
+    return new Promise((resolve) => {
+      showQuickPick(
+        {
+          title: msg('EXEC_UNSYNC_PROMPT', '積木改過了，要先同步再執行嗎？'),
+          items: [
+            { value: 'sync', label: msg('EXEC_UNSYNC_SYNC', '⟳ 先同步再執行') },
+            { value: 'as-is', label: msg('EXEC_UNSYNC_AS_IS', '▶ 就跑現在這一份') },
+          ],
+        },
+        (picked) => resolve(picked?.[0] === 'sync'),
+      )
+    })
   }
 
   private async pauseOnUnknown(component: string, nodeId: string | null): Promise<'continue' | 'stop'> {
