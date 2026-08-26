@@ -145,11 +145,6 @@
     "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
   },
   {
-    "type": "gnu_asm_expression",
-    "cause": "語言有而這個工具不做",
-    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
-  },
-  {
     "type": "gnu_asm_goto_list",
     "cause": "語言有而這個工具不做",
     "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
@@ -171,11 +166,6 @@
   },
   {
     "type": "gnu_asm_output_operand_list",
-    "cause": "語言有而這個工具不做",
-    "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
-  },
-  {
-    "type": "gnu_asm_qualifier",
     "cause": "語言有而這個工具不做",
     "reason": "GNU 內嵌組語。它是編譯器擴充，不是 C++，而教學與競賽都不寫。"
   },

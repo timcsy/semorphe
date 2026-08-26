@@ -12,7 +12,7 @@ import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { ConsolePanel } from './panels/console-panel'
 import { canExecute } from '../core/diagnostics'
-import { describeExecutionRefusal, describeUnknownPause, describeUnknownContinued, describeSetVariableRefused } from '../core/refusal-message'
+import { describeExecutionRefusal, describeUnknownPause, describeUnknownContinued, describeSetVariableRefused, describeInterventions } from '../core/refusal-message'
 // 🔴 **不得直接推 `e.message`**——那是給開發者看的湊合字串（身分 ＋ JSON）。
 // 三個顯示點各查一次表就是三個會忘記的地方，所以收成一個具名函式，
 // 而第四十四條護欄的第二支測試正是「不得有人繞過它」。
@@ -380,6 +380,7 @@ export class ExecutionController {
     try {
       await this.interpreter.execute(tree as unknown as InterpreterNode)
       this.clearHighlights()
+      this.reportInterventions()
       this.broadcastState({ status: 'completed' })
       showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
     } catch (e) {
@@ -581,6 +582,7 @@ export class ExecutionController {
     this.broadcastAtNode(step.nodeId ?? null, this.debugToolbar.isAutoScrollEnabled() ?? false)
 
     if (this.stepController?.getStatus() === 'completed') {
+      this.reportInterventions()
       this.broadcastState({ status: 'completed' })
       this.showExecButtons(false)
     }
@@ -723,6 +725,7 @@ export class ExecutionController {
 
     try {
       await this.interpreter.execute(tree as unknown as InterpreterNode)
+      this.reportInterventions()
       this.broadcastState({ status: 'completed' })
     } catch (e) {
       if (e instanceof RuntimeError) {
@@ -811,6 +814,27 @@ export class ExecutionController {
    * ④ 等一個【明確的】決定   而不是預設繼續
    * ```
    */
+  /**
+   * **這次執行有沒有人插手過——有的話說出來。**
+   *
+   * `principles.md:135` 逐字：「降級必須單調遞減、**必須可見**」。
+   * 一個手填過變數的執行，它的輸出**不是這支程式單獨產生的**
+   * ——而畫面上如果不說，那個結果會被當成程式的結果。
+   *
+   * ⚠️ **刻意不問任何問題**，只陳述。昨天剛學到的：
+   * 「別新增一個問句——『要不要繼續？』正是前一刀拿掉的東西。」
+   *
+   * 🪦 而「**重播上一次**」today 還沒有一個按鈕：引擎那一半做完了
+   * （`setReplayInputs`，第七十六條護欄在守），而**觸發它的動作是新的 UI**，
+   * 那是另一刀。這裡先讓那份紀錄**看得見**。
+   */
+  private reportInterventions(): void {
+    const inputs = this.interpreter?.getRecordedInputs() ?? []
+    const edits = inputs.filter((i) => i.kind === 'set-variable').length
+    if (edits === 0) return
+    this.broadcastOutput(describeInterventions(edits) + '\n', 'stderr')
+  }
+
   private async pauseOnUnknown(component: string, nodeId: string | null): Promise<'continue' | 'stop'> {
     this.broadcastOutput(describeUnknownPause(component) + '\n', 'stderr')
     this.broadcastAtNode(nodeId, true)

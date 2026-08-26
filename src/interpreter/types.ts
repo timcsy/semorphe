@@ -140,6 +140,33 @@ export interface StepInfo {
   scopeSnapshot: { name: string; type: string; value: string }[]
 }
 
+/**
+ * **這次執行從外面拿到的東西**——按發生順序。
+ *
+ * ## 為什麼需要它
+ *
+ * `concepts/模擬的誠實.md:23`：「**一個每次讀到不同值的模擬器，測不出任何東西。**」
+ *
+ * 🔴 2026-08-26 讓使用者在暫停時**手填執行期變數**，而那個值直接落進 `scope`
+ * ——**同一支程式跑兩次會得到不同答案**。它與 `analogRead` 抖動的差別
+ * 只在「要有人按按鈕才會發生」，而那不是一個原則上的差別。
+ *
+ * ## ⚠️ 記的是「不可重現的那些」，不是全部輸入
+ *
+ * ```
+ * 🔴 要記   awaitInput()           人現在打的字
+ * 🔴 要記   setVariableFromHost    人現在改的狀態
+ * 🔴 要記   暫停時的決定            繼續還是停止
+ * ✅ 不記   io.read()              跑之前就排好的佇列——【它本身就是一份紀錄】
+ * ```
+ *
+ * ⚠️ **順序就是語義**：同一組值換個順序餵進去是另一次執行。
+ */
+export type ExecutionInput =
+  | { kind: 'stdin'; value: string }
+  | { kind: 'set-variable'; name: string; value: string }
+  | { kind: 'pause-decision'; decision: 'continue' | 'stop' }
+
 /** 建立預設 RuntimeValue */
 export function defaultValue(type: string): RuntimeValue {
   switch (type) {

@@ -82,3 +82,19 @@ export function describeSetVariableRefused(name: string, value: string): string 
   return msg('EXEC_SET_VAR_REFUSED', '改不動「{name}」——「{value}」不是它的型別接得住的值，或者這個名字現在不在可見範圍裡。')
     .replace('{name}', name).replace('{value}', value)
 }
+
+/**
+ * **這次執行有人插手過的那一句。**
+ *
+ * 🔴 `principles.md:135`：「降級必須……**必須可見**」。
+ * 一個手填過變數的執行，輸出**不是這支程式單獨產生的**——
+ * 畫面上不說的話，那個結果會被當成程式的結果。
+ *
+ * ⚠️ 它**只陳述，不問**（2026-08-26 的教訓：別新增一個問句）。
+ */
+export function describeInterventions(count: number): string {
+  return msg(
+    'EXEC_INTERVENTIONS',
+    '⚠️ 這次執行有 {count} 筆是你手動填進去的，所以上面的結果不是這支程式單獨跑出來的。',
+  ).replace('{count}', String(count))
+}

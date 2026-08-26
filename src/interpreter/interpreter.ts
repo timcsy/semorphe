@@ -6,6 +6,7 @@ import { allLanguageExecutors, allBuiltinConstants, isBuiltinName } from '../cor
 import { universalComponents } from '../core/universal'
 import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
 import { defaultValue, valueToString, parseInputValue } from './types'
+import type { ExecutionInput } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
 import { Scope } from './scope'
 import { IOSystem } from './io'
@@ -63,6 +64,15 @@ export class SemanticInterpreter implements ExecutionContext {
   private aborted = false
   private abortReject: ((reason: RuntimeError) => void) | null = null
   private waitingCallback: ((nodeId: string | null) => void) | null = null
+  /**
+   * **這次執行從外面拿到的東西**，按發生順序。見 `types.ts` 的 `ExecutionInput`。
+   * ⚠️ 它是**唯一**讓一次執行重現得出來的東西——沒有它，
+   * 一個有人介入過的執行與一個沒有的長得一模一樣。
+   */
+  private recordedInputs: ExecutionInput[] = []
+  /** 重播中要照著吃的那份紀錄；`null` ＝ 這是一次新的執行。 */
+  private replayInputs: ExecutionInput[] | null = null
+  private replayIndex = 0
   private unknownComponentPause:
     | ((component: string, nodeId: string | null) => Promise<'continue' | 'stop'>)
     | null = null
@@ -157,6 +167,11 @@ export class SemanticInterpreter implements ExecutionContext {
 
   /** Await input provider with abort support. Returns null on EOF (\x04) or if no provider. */
   awaitInput(): Promise<string | null> {
+    // 🔴 **重播中直接從紀錄取，不問任何人**（2026-08-26，第七十六條護欄）。
+    //    ⚠️ 放在 `inputProvider` 檢查【之前】：一次重播不需要宿主，
+    //    而那正是「跑得起來的重播」與「重跑」的差別。
+    const replayed = this.nextReplay('stdin')
+    if (replayed) return Promise.resolve(replayed.value)
     if (!this.inputProvider) return Promise.resolve(null)
     if (this.aborted) return Promise.reject(new RuntimeError(RUNTIME_ERRORS.ABORTED))
     this.waitingCallback?.(this.currentNode?.id ?? null)
@@ -165,7 +180,11 @@ export class SemanticInterpreter implements ExecutionContext {
       this.inputProvider!().then(val => {
         this.abortReject = null
         if (val === '\x04') resolve(null)
-        else resolve(val)
+        else {
+          // 🔴 **記下來**——沒有這一行，這次執行重現不出來。
+          this.recordedInputs.push({ kind: 'stdin', value: val })
+          resolve(val)
+        }
       }, reject)
     })
   }
@@ -216,8 +235,32 @@ export class SemanticInterpreter implements ExecutionContext {
    * ⚠️ **沒有宿主就回 `'stop'`**：沒有人可以問時，正確處置是停止。
    */
   pauseForUnrecognized = async (label: string, nodeId: string | null): Promise<'continue' | 'stop'> => {
+    // 🔴 **重播中照紀錄走**：先把當時改過的狀態套回去，再照當時的決定。
+    //    ⚠️ 順序不可反——決定是在那些改動【之後】做的。
+    if (this.replayInputs) {
+      for (let e = this.nextReplay('set-variable'); e; e = this.nextReplay('set-variable')) {
+        this.applyVariable(e.name, e.value)
+      }
+      const decided = this.nextReplay('pause-decision')
+      if (decided) return decided.decision
+    }
     if (!this.unknownComponentPause) return 'stop'
-    return this.unknownComponentPause(label, nodeId)
+    const decision = await this.unknownComponentPause(label, nodeId)
+    this.recordedInputs.push({ kind: 'pause-decision', decision })
+    return decision
+  }
+
+  /** 把一個值寫進作用域——記錄與重播共用，**不再記一次**。 */
+  private applyVariable(name: string, raw: string): boolean {
+    try {
+      const current = this.scope.get(name)
+      const next = parseInputValue(raw, current.type)
+      if (!next) return false
+      this.scope.set(name, next)
+      return true
+    } catch {
+      return false
+    }
   }
 
   /**
@@ -244,15 +287,36 @@ export class SemanticInterpreter implements ExecutionContext {
    * 一個「按了沒反應」的編輯框，比一個唯讀的更糟。
    */
   setVariableFromHost(name: string, raw: string): boolean {
-    try {
-      const current = this.scope.get(name)
-      const next = parseInputValue(raw, current.type)
-      if (!next) return false
-      this.scope.set(name, next)
-      return true
-    } catch {
-      return false
-    }
+    if (!this.applyVariable(name, raw)) return false
+    // 🔴 **記下來**——這一行就是 2026-08-26 那個洞被補起來的地方：
+    //    在此之前手填的值直接落進 `scope`，於是同一支程式跑兩次答案不同。
+    this.recordedInputs.push({ kind: 'set-variable', name, value: raw })
+    return true
+  }
+
+  /** 這次執行拿到的外部輸入（按順序）。宿主拿它去重播。 */
+  getRecordedInputs(): readonly ExecutionInput[] {
+    return this.recordedInputs
+  }
+
+  /**
+   * **照著一份紀錄重播**——傳 `null` 回到「這是一次新的執行」。
+   *
+   * ⚠️ 重播時**不問任何人**：`awaitInput` 直接從紀錄取、暫停直接照紀錄的決定走。
+   * 🔴 而紀錄用完之後就**回到會問人**——一份短的紀錄不該讓後面的執行變成不可判定。
+   */
+  setReplayInputs(inputs: readonly ExecutionInput[] | null): void {
+    this.replayInputs = inputs ? [...inputs] : null
+    this.replayIndex = 0
+  }
+
+  /** 重播時取下一筆；不是重播、或紀錄用完了就回 `null`。 */
+  private nextReplay<K extends ExecutionInput['kind']>(kind: K): Extract<ExecutionInput, { kind: K }> | null {
+    if (!this.replayInputs) return null
+    const next = this.replayInputs[this.replayIndex]
+    if (!next || next.kind !== kind) return null
+    this.replayIndex++
+    return next as Extract<ExecutionInput, { kind: K }>
   }
 
   setInputProvider(provider: (() => Promise<string>) | null): void {
