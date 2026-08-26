@@ -176,6 +176,16 @@ export interface ExecutionAtNodeEvent {
 
 // ─── ViewHost Interface ───
 
+/**
+ * **一個可編輯視圖這一側的真相**——形狀由視圖自己宣告。
+ *
+ * 🔴 兩種形狀不是實作細節，是**真的不一樣**：積木手上就是結構，
+ * 程式碼手上是文字而樹要靠解析。見 `ViewHost.readSource` 的說明。
+ */
+export type EditableSource =
+  | { kind: 'tree'; tree: SemanticNode }
+  | { kind: 'code'; code: string }
+
 export interface ViewHost {
   readonly viewId: string
   readonly viewType: string
@@ -195,6 +205,45 @@ export interface ViewHost {
    * 而在意圖上完全相反。** 沒有這個方法 ＝ 明確地不接。
    */
   onExecutionAtNode?(event: ExecutionAtNodeEvent): void
+
+  /**
+   * **交出這個視圖這一側的真相**——`capabilities.editable` 的另一半。
+   *
+   * ## 為什麼它非得是契約不可
+   *
+   * `editable` 這個旗標宣告了「這個視圖可以當**真相來源**」，而它有九個消費者
+   * （同步協調器、`以此為準` 的 QuickPick、狀態列、VSCode 主行程…），
+   * 還有第六十二條護欄盯著「同步的入口不得硬編視圖的名字」。
+   *
+   * 🔴 **而在此之前「拿東西出來」那一步靠叫一個具體面板的名字**：
+   * `app.ts` 三處逐字 `this.blocklyPanel?.extractSemanticTree()`。
+   *
+   * > **一個能力旗標宣告了「這個視圖可以當真相來源」，
+   * > 而拿東西出來那一步靠叫一個具體面板的名字
+   * > ——那個旗標在替一個不存在的契約背書。**
+   *
+   * ## 🔴 為什麼回的是一個【判別聯集】，而不是一棵樹
+   *
+   * 第一版寫成 `extractSemanticTree(): SemanticNode`，而護欄第一次跑就抓到：
+   * **`monaco-panel` 宣告 `editable: true` 而它交不出樹**。
+   *
+   * ```
+   * 積木     手上就是結構      → 交【樹】     syncBlocksToCode(tree, …)
+   * 程式碼   手上是文字         → 交【文字】   syncCodeToBlocks(code) ——樹由管線解析
+   * ```
+   *
+   * > **「可以當真相來源」與「手上有一棵樹」是兩件事，
+   * > 而把它們合成一個方法，會逼其中一種視圖說謊。**
+   *
+   * ⚠️ 流程面板將來是**樹形**的那一種（與積木同側）。
+   *
+   * ## ⚠️ 可選，而它的可選有一個【硬性】的意思
+   *
+   * 與 `onExecutionAtNode` 那種「我不接這個事件」不同：
+   * **宣告 `editable: true` 就必須有這個方法**（第七十九條護欄的硬性零）。
+   * 可選是給 `editable: false` 的視圖（主控台、變數）用的。
+   */
+  readSource?(): EditableSource | null
 
   /**
    * 診斷變了。**可選**——理由與 `onExecutionAtNode` 同一條：

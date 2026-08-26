@@ -1,6 +1,6 @@
 import * as monaco from 'monaco-editor'
 import { preserveBlankLines } from '../../core/projection/preserve-blank-lines'
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent } from '../../core/view-host'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent, EditableSource } from '../../core/view-host'
 import type { CodeMapping } from '../../core/projection/code-generator'
 import { mappingFor, codeDiagnosticMessage } from '../../core/projection/diagnostic-projection'
 import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
@@ -373,6 +373,20 @@ export class MonacoPanel implements ViewHost, CodeView {
 
   onPin(callback: (code: string) => void): void {
     this.onPinCallback = callback
+  }
+
+  /**
+   * **契約那一支**（`ViewHost.readSource`）——程式碼這一側交的是**文字**。
+   *
+   * 🔴 它交不出樹，而那**不是缺陷**：程式碼的樹是**解析出來的**
+   * （`syncCodeToBlocks(code)` → `handleEditCode` → lifter），不在這個視圖手上。
+   *
+   * ⚠️ 第七十九條護欄第一次跑就是抓到這一顆：契約本來寫成
+   * `extractSemanticTree(): SemanticNode`，而那會逼這個面板說謊。
+   * > **「可以當真相來源」與「手上有一棵樹」是兩件事。**
+   */
+  readSource(): EditableSource {
+    return { kind: 'code', code: this.getCode() }
   }
 
   getCode(): string {

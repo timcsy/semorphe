@@ -40,6 +40,7 @@ import type { SemanticNode } from '../../core/types'
 import type { CodeMapping } from '../../core/projection/code-generator'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { buildNodeGraph, type NodeGraph, type GraphNode, type GraphPort } from '../../core/flow/node-graph'
+import { labelSourceFromSpecs, type FlowLabelSource } from '../../core/flow/vocabulary'
 import { bodySlotsOf } from '../../core/component/traits'
 import { msg } from '../../core/messages'
 
@@ -170,7 +171,7 @@ export class FlowPanel implements ViewHost {
   private rebuild(): void {
     this.syncLabels()
     this.syncScopeOptions()
-    this.graph = buildNodeGraph(this.rootBody())
+    this.graph = buildNodeGraph(this.rootBody(), this.labelSource())
     // 拖曳位移只留給還在的節點——刪掉的節點不該留著一個看不見的位移
     const alive = new Set(this.graph.nodes.map((n) => n.id))
     for (const id of [...this.offsets.keys()]) if (!alive.has(id)) this.offsets.delete(id)
@@ -283,22 +284,26 @@ export class FlowPanel implements ViewHost {
     if (colour) header.setAttribute('fill', colour)
     g.appendChild(header)
 
-    g.appendChild(text('fc-node-title', n.w / 2, HEADER_H - 8, truncate(n.title, 20), 'middle'))
+    // 🔴 **沒有標題就不畫標題**——而不是把身分印上去（第七十八條護欄）。
+    if (n.title) g.appendChild(text('fc-node-title', n.w / 2, HEADER_H - 8, truncate(n.title, 20), 'middle'))
 
     let row = 0
     for (const p of n.ports) {
       if (p.kind === 'data' && p.side === 'in') {
-        g.appendChild(text('fc-port-label', 10, p.dy + 4, truncate(p.label, 12), 'start'))
+        // ⚠️ 位置名沒設計過就**不顯示名字**——而那一列仍然佔位（接點還在那裡）。
+        if (p.label) g.appendChild(text('fc-port-label', 10, p.dy + 4, truncate(p.label, 12), 'start'))
         row++
       }
     }
     for (const f of n.fields) {
-      g.appendChild(text('fc-field', 10, HEADER_H + row * ROW_H + ROW_H / 2 + 4, truncate(`${f.key}: ${f.value}`, 20), 'start'))
+      // 沒有位置名 → **只顯示值**（`FALSE` 那類已經在 core 換成顯示文字了）
+      const shown = f.label ? `${f.label}：${f.value}` : f.value
+      g.appendChild(text('fc-field', 10, HEADER_H + row * ROW_H + ROW_H / 2 + 4, truncate(shown, 20), 'start'))
       row++
     }
     for (const p of n.ports) {
       if (p.kind === 'exec' && p.side === 'out' && p.key !== '__next__') {
-        g.appendChild(text('fc-port-label fc-port-exec-label', n.w - 10, p.dy + 4, truncate(p.label, 12), 'end'))
+        if (p.label) g.appendChild(text('fc-port-label fc-port-exec-label', n.w - 10, p.dy + 4, truncate(p.label, 12), 'end'))
       }
       g.appendChild(this.renderPort(p))
     }
@@ -329,6 +334,18 @@ export class FlowPanel implements ViewHost {
     c.setAttribute('cy', String(p.dy))
     c.setAttribute('r', '4.5')
     return c
+  }
+
+  /**
+   * **問積木那張表**的埠（`core/flow/vocabulary.ts` 的 `FlowLabelSource`）。
+   *
+   * 🔴 `core/flow` 不認識 `BlockSpecRegistry`——它只知道「有人回得出那句話」。
+   * 這正是路線圖那條「面板只 import 協定」的 `appearance` 那一格：
+   * ⚠️ 而查證發現**它本來就已經是注入的**（`import type` ＋ 建構子參數），
+   * 這一刀只是把它**具名**成一個埠。
+   */
+  private labelSource(): FlowLabelSource {
+    return labelSourceFromSpecs((id) => this.specs?.getByComponentId(id))
   }
 
   /** 顏色問**積木那張表**——不是這裡的一份色票 */

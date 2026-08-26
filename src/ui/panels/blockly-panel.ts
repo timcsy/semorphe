@@ -8,7 +8,7 @@ import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../../core/category-colors'
 import { formatMessage } from '../../i18n/messages'
 import type { BlockStylePreset } from '../../languages/style'
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent } from '../../core/view-host'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent, EditableSource } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 import type { BlockState as ExtractorBlockState } from '../../core/projection/pattern-extractor'
@@ -752,6 +752,18 @@ export class BlocklyPanel implements ViewHost {
    */
   setNodeIdLookup(blockIdToNodeId: Map<string, string>): void {
     this._blockIdToNodeId = blockIdToNodeId
+  }
+
+  /**
+   * **契約那一支**（`ViewHost.readSource`）——積木這一側交的是**樹**。
+   *
+   * ⚠️ 它與下面那支 `extractSemanticTree()` 不是重複：後者是這個面板自己的方法，
+   * 組裝點（`app.ts`）走它，因為那條路還要 `getBlockMappings()`／`staleReason`
+   * ——**那是組裝點份內的事**（`history/167`）。
+   * 契約這一支是給**不認識這個面板的消費者**用的。
+   */
+  readSource(): EditableSource {
+    return { kind: 'tree', tree: this.extractSemanticTree() }
   }
 
   /** Extract semantic tree from workspace blocks, plus blockMappings for nodeId↔blockId */

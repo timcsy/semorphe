@@ -32,6 +32,7 @@
 import type { SemanticNode } from '../types'
 import { slotsOf, roleOf } from '../component/traits'
 import { annotationOf } from '../skip-declarations'
+import { flowTitle, flowSlotName, flowValue, type FlowLabelSource } from './vocabulary'
 
 export type PortKind = 'exec' | 'data'
 
@@ -52,7 +53,8 @@ function flowKindOf(componentId: string): FlowKind | undefined {
 
 export interface GraphPort {
   key: string
-  label: string
+  /** 設計過的位置名；`null` ＝ 沒設計過，**不畫名字**。⚠️ `__in__` 這種內部接點一律 `null`。 */
+  label: string | null
   kind: PortKind
   side: 'in' | 'out'
   /** 執行出口才有：它通往的是分支的一臂、迴圈的身體，還是一段順序 */
@@ -65,12 +67,24 @@ export interface GraphPort {
 export interface GraphNode {
   id: string
   componentId: string
-  /** 節點標頭：元件身分的後半段（`python:compare` → `compare`） */
-  title: string
+  /**
+   * 節點標頭——**設計過的名字**，否則退到積木那句話（插槽換成「…」）。
+   * 🔴 兩個都沒有時是 `null`：**畫一個沒有標題的盒子，而不是把身分印上去**
+   * （2026-08-26，第七十八條護欄）。
+   */
+  title: string | null
   /** 這顆宣告的執行形狀（沒宣告就是 `undefined`——**不補預設值**） */
   flow?: FlowKind
-  /** 節點身上的欄位（宣告的 `properties`）——`operator: >`、`name: x` */
-  fields: { key: string; value: string }[]
+  /**
+   * 節點身上的欄位（宣告的 `properties`）。
+   *
+   * `label` 是**設計過的位置名**；`null` ＝ 還沒設計過，**這一列只顯示值**
+   * ——因為一個插槽在積木上根本沒有名字（它是句子裡的一個空格），
+   * 硬要顯示只能顯示 `initializer`，那就是代號。
+   *
+   * `value` 是**顯示文字**：下拉的話已經換成積木上那一格的字（`FALSE` → 「到（不含）」）。
+   */
+  fields: { key: string; label: string | null; value: string }[]
   ports: GraphPort[]
   w: number
   h: number
@@ -115,11 +129,15 @@ function heightOf(rows: number): number {
   return HEADER_H + Math.max(rows, 1) * ROW_H + PAD_Y
 }
 
-function build(node: SemanticNode): Built {
+function build(node: SemanticNode, labels?: FlowLabelSource): Built {
   const slots = slotsOf(node.componentId)
   const fields = Object.entries(node.properties ?? {})
     .filter(([, v]) => v !== null && v !== undefined && v !== '')
-    .map(([key, v]) => ({ key, value: String(v) }))
+    .map(([key, v]) => ({
+      key,
+      label: flowSlotName(node.componentId, key),
+      value: flowValue(node.componentId, key, String(v), labels),
+    }))
 
   const dataSlots = slots.filter((s) => !s.isBody)
   const bodySlots = slots.filter((s) => s.isBody)
@@ -128,10 +146,10 @@ function build(node: SemanticNode): Built {
   // 語句才有執行接點。**表達式沒有**——它不「被執行到」，它被取值。
   const isStatement = roleOf(node.componentId) !== 'expression'
   if (isStatement) {
-    ports.push({ key: '__in__', label: '', kind: 'exec', side: 'in', dx: 0, dy: EXEC_DY })
-    ports.push({ key: '__next__', label: '', kind: 'exec', side: 'out', dx: NODE_W, dy: EXEC_DY })
+    ports.push({ key: '__in__', label: null, kind: 'exec', side: 'in', dx: 0, dy: EXEC_DY })
+    ports.push({ key: '__next__', label: null, kind: 'exec', side: 'out', dx: NODE_W, dy: EXEC_DY })
   } else {
-    ports.push({ key: '__out__', label: '', kind: 'data', side: 'out', dx: NODE_W, dy: EXEC_DY })
+    ports.push({ key: '__out__', label: null, kind: 'data', side: 'out', dx: NODE_W, dy: EXEC_DY })
   }
 
   let row = 0
@@ -143,9 +161,15 @@ function build(node: SemanticNode): Built {
     if (kids.length === 0) continue
     kids.forEach((kid, i) => {
       const key = kids.length > 1 ? `${s.slot}[${i}]` : s.slot
-      ports.push({ key, label: key, kind: 'data', side: 'in', dx: 0, dy: HEADER_H + row * ROW_H + ROW_H / 2 })
+      // ⚠️ 一個子槽裝好幾個值時鍵是 `values[0]`，而**名字問的是子槽本身**
+      //    ——`values[0]` 不是一個詞彙，`values` 才是。
+      ports.push({
+        key,
+        label: flowSlotName(node.componentId, s.slot),
+        kind: 'data', side: 'in', dx: 0, dy: HEADER_H + row * ROW_H + ROW_H / 2,
+      })
       row++
-      sources.push(build(kid))
+      sources.push(build(kid, labels))
     })
   }
   const fieldRows = fields.length
@@ -155,13 +179,13 @@ function build(node: SemanticNode): Built {
   // 🔴 這與「節點編輯器都把接點畫滿」不同，理由是**這張圖是導出的，不是接出來的**：
   //    使用者不會去接那個接點，它只會是雜訊。
   const bodies = bodySlots
-    .map((s) => ({ port: s.slot, nodes: (node.children[s.slot] ?? []).map(build) }))
+    .map((s) => ({ port: s.slot, nodes: (node.children[s.slot] ?? []).map((k) => build(k, labels)) }))
     .filter((b) => b.nodes.length > 0)
   const flow = flowKindOf(node.componentId)
   for (const b of bodies) {
     ports.push({
       key: b.port,
-      label: b.port,
+      label: flowSlotName(node.componentId, b.port),
       kind: 'exec',
       side: 'out',
       flow,
@@ -175,7 +199,7 @@ function build(node: SemanticNode): Built {
     node: {
       id: node.id,
       componentId: node.componentId,
-      title: node.componentId.split(':').pop() ?? node.componentId,
+      title: flowTitle(node.componentId, labels),
       flow,
       fields,
       ports,
@@ -246,9 +270,15 @@ function collectDataWires(src: Built, consumer: Built, wires: GraphWire[]): void
   for (const s of src.sources) collectDataWires(s, src, wires)
 }
 
-/** 一串語句 → 一張節點圖 */
-export function buildNodeGraph(statements: SemanticNode[]): NodeGraph {
-  const built = statements.map(build)
+/**
+ * 一串語句 → 一張節點圖。
+ *
+ * `labels` 是**問積木那張表**的埠（標題的退路、下拉的顯示文字）——
+ * 沒接的宿主拿到的是「沒有標題的盒子 ＋ 只有值的欄位」，
+ * 🔴 **而不是一個印著 `func_def` 的盒子**（第七十八條護欄）。
+ */
+export function buildNodeGraph(statements: SemanticNode[], labels?: FlowLabelSource): NodeGraph {
+  const built = statements.map((n) => build(n, labels))
   const nodes: GraphNode[] = []
   const wires: GraphWire[] = []
   const cur: Cursor = { y: 0, maxRight: 0 }
