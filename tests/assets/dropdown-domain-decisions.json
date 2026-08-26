@@ -276,6 +276,11 @@
       "field": "field_dynamic_dropdown",
       "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
     },
+    "cpp_vector_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "元素型別在現實中開放（`vector<MyStruct>`／`vector<vector<int>>`）。⚠️ 2026-08-26 之前它是靜態六選一，而**它的六個中文型別名一次都沒生效過**——命令式那份讀的鍵少了開頭的 `C`"
+    },
     "cpp_wifi_read.QUANTITY": {
       "decision": "closed",
       "field": "field_dropdown",

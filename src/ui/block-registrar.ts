@@ -876,74 +876,22 @@ export class BlockRegistrar {
     //    **兩顆同族積木的型別清單不一樣，而那不是設計，是各寫各的。**
     //    兩顆現在都指向 `cpp_var_types`。
 
-    // cpp_vector_declare —— `vector<int> v = {1,2,3}`
-    {
-      Blockly.Blocks['cpp_vector_declare'] = {
-        itemCount_: 0,
-        init: function (this: any) {
-          this.itemCount_ = 0
-          this.appendDummyInput('HEAD')
-            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_CREATE'] || '建立')
-            .appendField(new Blockly.FieldDropdown([
-              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_INT'] || 'int', 'int'],
-              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_FLOAT'] || 'float', 'float'],
-              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
-              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_CHAR'] || 'char', 'char'],
-              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_STRING'] || 'std::string', 'std::string'],
-              [Blockly.Msg['PP_VECTOR_DECLARE_TYPE_LONG_LONG'] || 'long long', 'long long']
-            ]), 'TYPE')
-            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_LIST'] || '列表')
-            .appendField(new Blockly.FieldTextInput('vec'), 'NAME')
-          // 🔴 **這三格是宣告裡一直都有的**（`renderMapping.inputs`），而命令式的
-          //    init **從來沒有建出來**——於是 `vector<int> v(5, 0)` 投影出來的
-          //    積木狀態指向不存在的插槽，**整個工作區載入失敗**（紅色橫幅，
-          //    2026-08-23 由第五十一條護欄的 C++ 那一維抓到）。
-          //    ⚠️ 與 `cpp_array_declare` 的 `SIZE` 同一個做法：**固定存在、留空即無**。
-          //    > **宣告式的對映表與命令式的 init 是同一顆積木的兩份真相。**
-          this.appendValueInput('SIZE')
-            .setCheck('Expression')
-            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_SIZE'] || '大小')
-          this.appendValueInput('FILL')
-            .setCheck('Expression')
-            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_FILL'] || '每格填')
-          this.appendValueInput('SOURCE')
-            .setCheck('Expression')
-            .appendField(Blockly.Msg['CPP_VECTOR_DECLARE_SOURCE'] || '複製自')
-          // ⚠️ **「初始值」的標籤不在這裡**——TAIL 只放按鈕。
-          // 動態插槽是 `moveInputBefore(…, 'TAIL')` 插進來的，所以放在 TAIL 上的
-          // 標籤會**跑到所有值的後面**（`大小 3 [1][2][3] 初始值 ⊕⊖`）。
-          // 標籤跟著**第一個插槽**走（見 `plus_`），與 `cpp_print` 同一個做法。
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.containers)
-          this.setTooltip(Blockly.Msg['CPP_VECTOR_DECLARE_TOOLTIP'] || '建立一個列表')
-        },
-        plus_: function (this: any) {
-          const idx = this.itemCount_
-          const inp = this.appendValueInput('EXPR' + idx).setCheck('Expression')
-          // **標籤跟著第一個插槽**——沒有初始值時它也不該出現
-          if (idx === 0) inp.appendField(Blockly.Msg['CPP_VECTOR_DECLARE_INIT'] || '初始值')
-          this.moveInputBefore('EXPR' + idx, 'TAIL')
-          this.itemCount_++
-          setMinusState(this, false)
-        },
-        minus_: function (this: any) {
-          if (this.itemCount_ <= 0) return
-          this.itemCount_--
-          this.removeInput('EXPR' + this.itemCount_)
-          setMinusState(this, this.itemCount_ <= 0)
-        },
-        saveExtraState: function (this: any) { return { itemCount: this.itemCount_ } },
-        loadExtraState: function (this: any, state: { itemCount?: number }) {
-          const count = state?.itemCount ?? 0
-          while (this.itemCount_ < count) this.plus_()
-        },
-      }
-    }
+    // 🪦 **`cpp_vector_declare` 的命令式定義已於 2026-08-26 刪除**
+    //    ——與兩顆陣列宣告同一天、同一條（`attachVariadic` ＋ `openLabelOnFirstSlot`）。
+    //
+    // 🔴 **順帶修掉一個從來沒生效過的標籤**：它讀的是 `PP_VECTOR_DECLARE_TYPE_INT`
+    //    ——**少了開頭那個 `C`**。膠囊裡定義的六個中文型別名（`int（整數）`…）
+    //    **一次都沒有出現過**，畫面上一直是 fallback 的 `int`／`std::string`。
+    //
+    // > **一個查不到就有備案的讀法（`Msg[key] || '預設'`），
+    // > 會把打錯的鍵藏一輩子——它不拋錯，也不會讓任何測試變紅。**
+    //
+    //    ⚠️ 這是同一天的**第三個**「標籤鍵從來不存在」
+    //    （`cpp_forward_decl` 的三個 · 這裡的六個）。
+    //
+    // 🔴 **`TYPE` 的差異就是目的**：靜態六選一 → `cpp_var_types` ＋ `allowCustom`
+    //    （五顆宣告類積木從此共用同一份型別清單）。
+    //    ⚠️ 選單裡的 `std::string` 因此變成 `string`，而**既有的值不會被換掉**。
 
     // 🪦 **`cpp_array_declare` 的命令式定義已於 2026-08-26 刪除。**
     //

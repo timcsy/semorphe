@@ -7,28 +7,59 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_vector_declare",
-      "previousStatement": "Statement",
-      "nextStatement": "Statement",
-      "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_VECTOR_DECLARE_TOOLTIP}",
-      "message1": "%1 %2 %3",
-      "args1": [
+      "message0": "%{BKY_CPP_VECTOR_DECLARE_CREATE} %1 %{BKY_CPP_VECTOR_DECLARE_LIST} %2 %3",
+      "args0": [
         {
-          "type": "input_value",
-          "name": "SOURCE",
-          "check": "Expression"
+          "type": "field_dynamic_dropdown",
+          "name": "TYPE",
+          "source": "cpp_var_types",
+          "allowCustom": true
         },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "vec"
+        },
+        {
+          "type": "input_dummy",
+          "name": "HEAD"
+        }
+      ],
+      "message1": "%{BKY_CPP_VECTOR_DECLARE_SIZE} %1",
+      "args1": [
         {
           "type": "input_value",
           "name": "SIZE",
           "check": "Expression"
-        },
+        }
+      ],
+      "message2": "%{BKY_CPP_VECTOR_DECLARE_FILL} %1",
+      "args2": [
         {
           "type": "input_value",
           "name": "FILL",
           "check": "Expression"
         }
-      ]
+      ],
+      "message3": "%{BKY_CPP_VECTOR_DECLARE_SOURCE} %1",
+      "args3": [
+        {
+          "type": "input_value",
+          "name": "SOURCE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_VECTOR_DECLARE_TOOLTIP}",
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "minCount": 0,
+      "openLabelKey": "CPP_VECTOR_DECLARE_INIT",
+      "openLabelFallback": "初始值",
+      "openLabelOnFirstSlot": true
     },
     "codeTemplate": {
       "pattern": "std::vector<${TYPE}> ${NAME};",
@@ -55,6 +86,6 @@
         "FILL": "fill"
       }
     },
-    "_why": "⚠️ **命令式註冊**（`ui/block-registrar.ts`）——初始值需要動態插槽，而宣告式的 `args0` 只描述固定欄位。與 `cpp_print` 同一個形狀。"
+    "_why": "🟢 **2026-08-26：形狀補上，命令式定義退場**（`attachVariadic` ＋ `openLabelOnFirstSlot`，\n與兩顆陣列宣告同一天、同一條）。上一版的 `_why` 說的「宣告式的 `args0` 只描述\n固定欄位」那個限制已經不在。\n\n🔴 **順帶修掉一個從來沒生效過的標籤**：命令式那份讀的是 `PP_VECTOR_DECLARE_TYPE_INT`\n——**少了開頭那個 `C`**。於是這個檔裡的六個中文型別名（`int（整數）`…）\n**一次都沒有出現過**，畫面上一直是 fallback 的 `int`／`std::string`。\n⚠️ 而它不會拋錯也不會變紅：`Blockly.Msg[不存在的鍵]` 回 `undefined`，\n   `|| 'int'` 接住它——**一個查不到就有備案的讀法，會把打錯的鍵藏一輩子**。\n\n🔴 **型別清單改指 `cpp_var_types`**（與另外四顆宣告類積木同一份）。\n⚠️ 選單裡的 `std::string` 因此變成 `string`——而**既有的值不會被換掉**\n   （`field_dynamic_dropdown` 的既有行為），`vector<std::string> s;` 來回照舊。"
   }
 ]
