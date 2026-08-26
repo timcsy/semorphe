@@ -872,16 +872,19 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const nameNode = funcDeclarator.namedChildren.find(c => c.type === 'identifier')
       const paramList = funcDeclarator.childForFieldName('parameters')
         ?? funcDeclarator.namedChildren.find(c => c.type === 'parameter_list')
-      const paramChildren: SemanticNode[] = []
-      if (paramList) {
-        for (const p of paramList.namedChildren) {
-          if (p.type === 'parameter_declaration') {
-            const { type: pType, name: pName } = parseParamDeclaration(p)
-            paramChildren.push(createNode('param_decl', { type: pType, name: pName }))
-          }
-        }
-      }
-      return buildForwardDecl(type, nameNode?.text ?? 'f', paramChildren)
+      // 🔴 **這裡本來是手抄的第三份參數解析，而它漏了帶預設值的那個分支**
+      //    （2026-08-26 量到）。`int add(int a, int b = 10);` 的第二個參數
+      //    是 `optional_parameter_declaration`，於是這個迴圈**整格跳過它**
+      //    ——語義樹裡只剩一個參數，產回去變成 `int add(int a);`。
+      //
+      //    ⚠️ 而**一模一樣的修法 2026-08-23 就做過了**，做在 `liftParamList` 上
+      //    （那次是函式定義；這一份是宣告）。兩份程式碼逐字相同，只差那個分支。
+      //
+      // > **一個被抄過的解析，不會跟著原本那份一起被修好
+      // > ——而它壞掉的樣子與原本那份當初一模一樣。**
+      //
+      // → 改成呼叫那一份，缺陷與重複一起消失。
+      return buildForwardDecl(type, nameNode?.text ?? 'f', liftParamList(paramList ?? null, ctx))
     }
 
     const declarators = node.namedChildren.filter(c =>

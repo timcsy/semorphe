@@ -1,4 +1,7 @@
 {
-  "C_FORWARD_DECL_MSG0": "declare %1",
-  "C_FORWARD_DECL_TOOLTIP": "Forward declare a function so the compiler knows it exists (define it later)"
+  "C_FORWARD_DECL_MSG0": "declare %1 %2 %3",
+  "C_FORWARD_DECL_TOOLTIP": "Forward declare a function so the compiler knows it exists (define it later)",
+  "C_FORWARD_DECL_PARAMS_OPEN": "( params",
+  "C_FORWARD_DECL_PARAMS_CLOSE": ")",
+  "C_FORWARD_DECL_PARAM_DEFAULT_LABEL": "default"
 }

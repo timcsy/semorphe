@@ -1,4 +1,7 @@
 {
-  "C_FORWARD_DECL_MSG0": "函式宣告 %1",
-  "C_FORWARD_DECL_TOOLTIP": "預先宣告函式，讓編譯器知道這個函式的存在（稍後再定義實作）"
+  "C_FORWARD_DECL_MSG0": "函式宣告 %1 %2 %3",
+  "C_FORWARD_DECL_TOOLTIP": "預先宣告函式，讓編譯器知道這個函式的存在（稍後再定義實作）",
+  "C_FORWARD_DECL_PARAMS_OPEN": "（參數",
+  "C_FORWARD_DECL_PARAMS_CLOSE": "）",
+  "C_FORWARD_DECL_PARAM_DEFAULT_LABEL": "預設值"
 }

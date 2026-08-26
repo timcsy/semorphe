@@ -27,7 +27,12 @@ import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import { CATEGORY_COLORS } from '../core/category-colors'
 import { attachBranchList } from './branch-list-block'
-import { attachParamList, registerParamMutatorBlocks, MUTATOR_CONTAINER } from './param-list-block'
+// 🪦 `registerParamMutatorBlocks`／`MUTATOR_CONTAINER` 於 2026-08-26 從這裡的 import
+//    移除——它們的呼叫點在 `defParamList` 工廠裡，而那個工廠隨 `cpp_forward_decl` 退場。
+//    ⚠️ **查過了才刪**（`cpp_doc_comment` 那次的教訓：刪掉一個「沒被使用」的 import
+//    把一個欄位取消註冊了，而測試全綠）——宣告式那條路的 `attachParamList`
+//    **自己會呼叫** `registerParamMutatorBlocks`，不靠這裡的 import。
+import { attachParamList } from './param-list-block'
 import { attachAltLayout } from './alt-layout-block'
 import { preserveForeignExtraState } from '../core/foreign-extra-state'
 import { defineVariadicBlock, attachVariadic } from './variadic-block'
@@ -1212,239 +1217,28 @@ export class BlockRegistrar {
     //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
     //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
 
-    const getParamTypeOptions = (currentVal?: string): Array<[string, string]> => {
-      const opts: Array<[string, string]> = [
-        [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_INT'] || 'int', 'int'],
-        [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_FLOAT'] || 'float', 'float'],
-        [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_DOUBLE'] || 'double', 'double'],
-        [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_CHAR'] || 'char', 'char'],
-        [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_BOOL'] || 'bool', 'bool'],
-        [Blockly.Msg['U_FUNC_DEF_PARAM_TYPE_STRING'] || 'string', 'string'],
-        ['int*', 'int*'],
-        ['char*', 'char*'],
-        ['double*', 'double*'],
-        ['void*', 'void*'],
-      ]
-      if (currentVal && !opts.some(o => o[1] === currentVal)) {
-        opts.unshift([currentVal, currentVal])
-      }
-      return opts
-    }
 
-    /**
-     * **參數列**——「型別下拉（＋可選的名字輸入）× N，外面包括號，右邊一組 ＋／−」
-     *
-     * ## 為什麼是工廠
-     *
-     * `cpp_func_def` 與 `cpp_forward_decl` 原本各有一份，而它們是**同一份程式碼的
-     * 兩份拷貝**：`loadExtraState` 100% 相同、`minusParam_` 96%、`plusParam_` 89%。
-     *
-     * 而**兩份已經開始漂移**——`cpp_forward_decl` 的括號寫死 `'('`／`')'`，
-     * `cpp_func_def` 走 `Blockly.Msg`。那不是設計，是抄過去的時候漏掉的。
-     *
-     * > 抽出來不是為了讓第三顆好加，是**因為它已經重複了**。
-     * > （判準見 `knowledge/history/033`：一個操作值不值得固化，看的不是重複幾次，
-     * > 而是**重做時會不會漏掉上次學到的東西**——抄的時候就漏了 i18n。）
-     *
-     * ## 三個變異點，全部是資料
-     *
-     * | | `cpp_func_def` | `cpp_forward_decl` |
-     * |---|---|---|
-     * | 帶名字欄位 | ✅ `int a` | ❌ `int f(int, int);` |
-     * | 括號標籤 | `（參數`／`）` | `(`／`)` |
-     * | `PARAMS_END` 移到誰之前 | `'BODY'` | 不移 |
-     *
-     * ## ⚠️ 這一段沒有自動化測試
-     *
-     * `happy-dom` 跑不動 Blockly 12 的 FocusManager，而 `renderToBlocklyState`
-     * 產的是純 JSON、**完全不經過 `Blockly.Blocks`**。
-     * `tests/unit/ui/block-registrar.test.ts` 的四支測試是 **grep 這個檔的文字**。
-     *
-     * **它們全綠不代表這裡是對的。改這一段必須開瀏覽器。**
-     */
-    const defParamList = (
-      target: any,
-      config: {
-        /** 每個參數要不要一個名字輸入框 */
-        withNameField: boolean
-        /** 開括號的 i18n 鍵與 fallback。⚠️ fallback 必須是原本顯示的字元 */
-        openParen: [key: string, rawChar: string]
-        closeParen: [key: string, rawChar: string]
-        /** `PARAMS_END` 要移到哪個 input 之前；`null` = 不移 */
-        moveTailTo: string | null
-      },
-    ): void => {
-      const message = ([key, original]: [string, string]): string => Blockly.Msg[key] || original
+    // 🪦 **`defParamList` 這個工廠已於 2026-08-26 刪除**——它的兩個消費者
+    //    （`cpp_func_def` 2026-08-24、`cpp_forward_decl` 2026-08-26）都退場了。
+    //
+    //    它當初是為了**已經重複**而抽出來的（`cpp_func_def` 與 `cpp_forward_decl`
+    //    的 `loadExtraState` 100% 相同、`minusParam_` 96%、`plusParam_` 89%），
+    //    而抄過去的時候就漏了 i18n——`cpp_forward_decl` 的括號寫死 `'('`／`')'`。
+    //
+    // 🔴 **而它列的三個「變異點」裡，有一個其實是缺陷**：
+    //
+    //    | | `cpp_func_def` | `cpp_forward_decl` |
+    //    |---|---|---|
+    //    | 帶名字欄位 | ✅ | ❌ ← **這一格不是設定，是資料在掉** |
+    //
+    //    2026-08-26 量到：渲染器吐出 `PARAM_0:"a"`，而那顆積木上沒有那個欄位
+    //    ——`int add(int a, int b);` 經過積木一趟變成 `int add(int, int);`。
+    //
+    // > **一張「三個變異點」的表，會讓其中的缺陷看起來像一個選項。**
+    //
+    //    宣告式的 `paramList`（`ui/param-list-block.ts`）取代了它，
+    //    而那三個變異點全部變成宣告裡的資料。
 
-      target.paramCount_ = 0
-
-      // 🔴 **齒輪要在原本的 `init` 之後掛上**——這個工廠是在積木定義好之後
-      //    才接上去的，所以包一層。⚠️ 只有帶名字欄位的那些才有預設值可談。
-      if (config.withNameField) {
-        const baseParamInit = target.init
-        target.init = function (this: any): void {
-          baseParamInit.call(this)
-          this.setMutator(new Blockly.icons.MutatorIcon(
-            [registerParamMutatorBlocks([{
-              key: 'default',
-              labelKey: 'U_FUNC_DEF_PARAM_DEFAULT_LABEL',
-              labelFallback: '預設值',
-            }])],
-            this as Blockly.BlockSvg,
-          ))
-        }
-      }
-
-      target.rebuildParamLabels_ = function (this: any): void {
-        const wasAtMin = this.paramCount_ <= 0
-        if (this.getInput('PARAMS_LABEL')) this.removeInput('PARAMS_LABEL')
-        if (this.getInput('PARAMS_END')) this.removeInput('PARAMS_END')
-        if (this.paramCount_ > 0) {
-          this.appendDummyInput('PARAMS_LABEL').appendField(message(config.openParen))
-          this.moveInputBefore('PARAMS_LABEL', 'PARAM_0')
-          this.appendDummyInput('PARAMS_END')
-            .appendField(message(config.closeParen))
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
-            .appendField(
-              new Blockly.FieldImage(wasAtMin ? MINUS_DISABLED_IMG : MINUS_IMG, 20, 20, '-', () => this.minusParam_()),
-              'MINUS_BTN',
-            )
-        } else {
-          this.appendDummyInput('PARAMS_LABEL')
-          this.appendDummyInput('PARAMS_END')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
-            .appendField(
-              new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusParam_()),
-              'MINUS_BTN',
-            )
-        }
-        if (config.moveTailTo) this.moveInputBefore('PARAMS_END', config.moveTailTo)
-      }
-
-      target.plusParam_ = function (this: any): void {
-        const idx = this.paramCount_
-        const input = this.appendDummyInput(`PARAM_${idx}`)
-        if (idx > 0) input.appendField(',')
-        input.appendField(self.createOpenDropdown(getParamTypeOptions) as Blockly.Field, `TYPE_${idx}`)
-        if (config.withNameField) {
-          input.appendField(new Blockly.FieldTextInput(`p${idx}`) as Blockly.Field, `PARAM_${idx}`)
-          // 🔴 **預設值那一格**（2026-08-23）：抬升與產生都收 `int b = 10`，
-          //    而積木上沒有那一格——於是「程式碼→積木→程式碼」把 `= 10` 吃掉，
-          //    而 `f(1)` 從此少一個引數。與另一個語言那顆函式定義的型別註記同一個形狀。
-          //    ⚠️ 這一行**不准提到那個語言的名字**——這個檔有一條護欄在看（P3）。
-          //    ⚠️ **留空 ＝ 沒有預設值**，不是「還沒填」。
-          //
-          // 🔴 **它住在自己的 input，而且預設是收起來的**：
-          //    固定長在那裡的話，沒有預設值的參數後面會掛著一個
-          //    `＝` 加一個空框——那個空框什麼都沒說（使用者回報）。
-          //    ⚠️ 用 `input.setVisible`（公開 API）而不是 `field.setVisible`
-          //    （後者標著 `@internal`，而且不會重新排版）。
-          // 🔴 **開關在齒輪上，不在每一格**（2026-08-23，使用者提的）：
-          //    這個 repo 的既有分工是「**齒輪管形狀，`＋`／`−` 管數量**」
-          //    ——與同族的變數宣告那顆一致。每一格塞一個小圖示的話，
-          //    三個參數就有三個圖示排在那裡，而它們說的是同一件事。
-          const defInput = this.appendDummyInput(`PARAM_DEF_${idx}`)
-          defInput.appendField('＝')
-          defInput.appendField(
-            // ⚠️ **驗證器不是為了驗證**：它是「值被設進來」的唯一通知，
-            //    而存檔還原時 Blockly 正是這樣把預設值放回去的
-            //    ——少了它，載回來的積木會把 `= 10` 藏起來。
-            new Blockly.FieldTextInput('', (v: string) => {
-              if (v) queueMicrotask(() => this.showDefault_(idx, true))
-              return v
-            }) as Blockly.Field,
-            `PARAM_DEFAULT_${idx}`,
-          )
-          defInput.setVisible(false)
-        }
-        this.moveInputBefore(`PARAM_${idx}`, 'PARAMS_END')
-        if (this.getInput(`PARAM_DEF_${idx}`)) this.moveInputBefore(`PARAM_DEF_${idx}`, 'PARAMS_END')
-        this.paramCount_++
-        if (this.paramCount_ === 1) this.rebuildParamLabels_()
-        setMinusState(this, false)
-      }
-
-      /** 把某一格的預設值欄位打開或收起來（收起來時**一併清掉值**）。 */
-      target.showDefault_ = function (this: any, idx: number, show: boolean): void {
-        const input = this.getInput(`PARAM_DEF_${idx}`)
-        if (!input || input.isVisible() === show) return
-        if (!show) this.getField(`PARAM_DEFAULT_${idx}`)?.setValue('')
-        input.setVisible(show)
-        // ⚠️ 這一步是必要的：`setVisible` 只改狀態，畫面要自己叫它重排
-        this.queueRender?.()
-      }
-
-      // ── 齒輪：一個參數一顆小積木，勾選格說它有沒有預設值 ──────────
-      //    ⚠️ 小積木的型別由**勾選格的組合**決定（見那個工廠的檔頭）
-      //    ——這裡只有「預設值」一格，而另一個語言那顆有兩格。
-      const gearGroups = [{
-        key: 'default',
-        labelKey: 'U_FUNC_DEF_PARAM_DEFAULT_LABEL',
-        labelFallback: '預設值',
-      }]
-
-      target.decompose = function (this: any, workspace: Blockly.WorkspaceSvg): Blockly.Block {
-        const container = workspace.newBlock(MUTATOR_CONTAINER)
-        ;(container as Blockly.BlockSvg).initSvg()
-        let connection = container.getInput('STACK')!.connection!
-        for (let i = 0; i < this.paramCount_; i++) {
-          const item = workspace.newBlock(registerParamMutatorBlocks(gearGroups))
-          ;(item as Blockly.BlockSvg).initSvg()
-          item.setFieldValue(String(this.getFieldValue(`PARAM_${i}`) ?? `#${i + 1}`), 'PL_NAME')
-          item.setFieldValue(this.getInput(`PARAM_DEF_${i}`)?.isVisible() ? 'TRUE' : 'FALSE', 'OPT_default')
-          connection.connect(item.previousConnection!)
-          connection = item.nextConnection!
-        }
-        return container
-      }
-
-      target.compose = function (this: any, container: Blockly.Block): void {
-        const wants: boolean[] = []
-        let item = container.getInputTargetBlock('STACK')
-        while (item) {
-          wants.push(item.getFieldValue('OPT_default') === 'TRUE')
-          item = item.getNextBlock()
-        }
-        // ⚠️ **先對齊數量再對齊形狀**——反過來的話，多出來的那幾格還不存在
-        while (this.paramCount_ < wants.length) this.plusParam_()
-        while (this.paramCount_ > wants.length) this.minusParam_()
-        for (let i = 0; i < wants.length; i++) this.showDefault_(i, wants[i])
-        setMinusState(this, this.paramCount_ <= 0)
-      }
-
-      target.minusParam_ = function (this: any): void {
-        if (this.paramCount_ <= 0) return
-        this.paramCount_--
-        this.removeInput(`PARAM_${this.paramCount_}`)
-        // ⚠️ 預設值那一格是**另一個 input**——少刪它的話，
-        //    下一次 `＋` 會撞到一個已經存在的名字（Blockly 會丟錯）。
-        if (this.getInput(`PARAM_DEF_${this.paramCount_}`)) this.removeInput(`PARAM_DEF_${this.paramCount_}`)
-        if (this.paramCount_ === 0) this.rebuildParamLabels_()
-        setMinusState(this, this.paramCount_ <= 0)
-      }
-
-      target.saveExtraState = function (this: any): { paramCount: number } | null {
-        return this.paramCount_ > 0 ? { paramCount: this.paramCount_ } : null
-      }
-
-      // ⚠️ **靠反覆呼叫 `plusParam_` 重建，不要改成直接設 `paramCount_`。**
-      // 舊存檔只存了數字，插槽是這裡長出來的——改掉這個機制，舊存檔就載不回來。
-      target.loadExtraState = function (this: any, state: { paramCount?: number }): void {
-        const count = state?.paramCount ?? 0
-        while (this.paramCount_ < count) this.plusParam_()
-      }
-    }
-
-    const getReturnTypeOptions = (): Array<[string, string]> => [
-      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_VOID'] || 'void', 'void'],
-      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_INT'] || 'int', 'int'],
-      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_FLOAT'] || 'float', 'float'],
-      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_DOUBLE'] || 'double', 'double'],
-      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_CHAR'] || 'char', 'char'],
-      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_BOOL'] || 'bool', 'bool'],
-      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_LONG_LONG'] || 'long long', 'long long'],
-      [Blockly.Msg['U_FUNC_DEF_RETURN_TYPE_STRING'] || 'string', 'string'],
-    ]
 
     // 🪦 **`cpp_func_def` 的命令式定義已於 2026-08-24 刪除**——比對護欄確認一模一樣。
     //
@@ -1458,7 +1252,6 @@ export class BlockRegistrar {
     //    ⚠️ 那不是順手清理：**宣告式的下拉只拿得到「宣告過的來源」**，
     //    於是它逼著那份清單回家。
     //
-    // ⚠️ **`defParamList` 這個工廠留著**——`cpp_forward_decl` 還在用它。
     // cpp_func_call
     {
       // 🪦 **`cpp_func_call` 與 `cpp_func_call_expression` 的命令式定義已於
@@ -1693,37 +1486,26 @@ export class BlockRegistrar {
     //    ⚠️ 而它的 `hasIndex`（載入時加／移除 `INDEX` 插槽）**宣告表達得出**
     //    （`extraStateFlags`）——那一點是**護欄新增的第五維**證明的，不是我猜的。
 
-    // cpp_forward_decl
-    {
-      Blockly.Blocks['cpp_forward_decl'] = {
-        paramCount_: 0,
-        init: function (this: any) {
-          this.paramCount_ = 0
-          this.appendDummyInput('HEADER')
-            .appendField(Blockly.Msg['C_FORWARD_DECL_LABEL'] || '函式宣告')
-            .appendField(self.createOpenDropdown(getReturnTypeOptions) as Blockly.Field, 'RETURN_TYPE')
-            .appendField(new Blockly.FieldTextInput('f') as Blockly.Field, 'NAME')
-          this.appendDummyInput('PARAMS_LABEL')
-          this.appendDummyInput('PARAMS_END')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plusParam_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minusParam_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.functions)
-          this.setTooltip(Blockly.Msg['C_FORWARD_DECL_TOOLTIP'] || '函式前向宣告')
-        },
-      }
-      // 參數列（只有型別，沒有名字——前向宣告不需要）由同一個工廠提供。
-      // ⚠️ 括號改走 `Blockly.Msg`，**fallback 是原本的 `(`／`)`**——
-      // 翻譯鍵補上之前顯示完全不變。原本沒走 i18n 是抄過去時漏掉的。
-      defParamList(Blockly.Blocks['cpp_forward_decl'], {
-        withNameField: false,
-        openParen: ['C_FORWARD_DECL_PARAMS_OPEN', '('],
-        closeParen: ['C_FORWARD_DECL_PARAMS_CLOSE', ')'],
-        moveTailTo: null,
-      })
-    }
+    // 🪦 **`cpp_forward_decl` 的命令式定義已於 2026-08-26 刪除——而這一顆是【判命令式錯了】。**
+    //
+    //    它用 `withNameField: false`，每格參數**只有型別下拉**，
+    //    而它原本的註解說「前向宣告不需要名字」。那句話對 C++ 文法成立，
+    //    **對這個系統不成立**：語義樹的 `param_decl` 帶著 `name`／`default`，
+    //    抬升讀得到、產生器印得出，**而積木收不下**。
+    //
+    //    實測 `int add(int a, int b);`：渲染器吐出 `PARAM_0:"a"`，
+    //    積木上只有 `RETURN_TYPE / NAME / TYPE_0 / TYPE_1`，`PARAM_0` 讀回來是 `null`
+    //    ——經過積木一趟就變成 `int add(int, int);`。
+    //
+    // > **一顆積木「不需要」某個欄位，與那個欄位「不會被送進來」是兩件事
+    // > ——而前者寫在註解裡，後者要量才看得到。**
+    //
+    // ⚠️ 而比對護欄那天說「一模一樣」——因為參數欄位**只在載入時才長出來**，
+    //    而它只比「剛建好的樣子」（`retire-imperative-block` §3）。
+    //
+    // 🪦 連同 `defParamList` 工廠、`getParamTypeOptions`、`getReturnTypeOptions`
+    //    一起退場——它們的唯一消費者就是這一顆。
+    //    型別清單住在 `languages/cpp/pack.ts` 的 `cpp_param_types`／`cpp_return_types`。
 
     // 🪦 **`cpp_comment` 的命令式定義已於 spec 165 刪除**（比對護欄確認一模一樣）。
 

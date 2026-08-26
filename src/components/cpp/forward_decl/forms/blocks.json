@@ -7,8 +7,71 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_forward_decl",
+      "message0": "%{BKY_C_FORWARD_DECL_MSG0}",
+      "args0": [
+        {
+          "type": "field_dynamic_dropdown",
+          "name": "RETURN_TYPE",
+          "source": "cpp_return_types",
+          "allowCustom": true
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "f"
+        },
+        {
+          "type": "input_dummy",
+          "name": "HEADER"
+        }
+      ],
+      "paramList": {
+        "itemPattern": "PARAM_{i}",
+        "fields": [
+          {
+            "type": "field_dynamic_dropdown",
+            "name": "TYPE_{i}",
+            "source": "cpp_param_types",
+            "allowCustom": true
+          },
+          {
+            "type": "field_input",
+            "name": "PARAM_{i}",
+            "text": "p{i}"
+          },
+          {
+            "type": "field_label",
+            "name": "PARAM_EQ_{i}",
+            "text": "＝"
+          },
+          {
+            "type": "field_input",
+            "name": "PARAM_DEFAULT_{i}",
+            "text": ""
+          }
+        ],
+        "separator": ",",
+        "openLabelKey": "C_FORWARD_DECL_PARAMS_OPEN",
+        "openLabelFallback": "（參數",
+        "closeLabelKey": "C_FORWARD_DECL_PARAMS_CLOSE",
+        "closeLabelFallback": "）",
+        "moveTailTo": null,
+        "openInput": "PARAMS_LABEL",
+        "tailInput": "PARAMS_END",
+        "optionalGroups": [
+          {
+            "key": "default",
+            "fromField": "PARAM_EQ_{i}",
+            "labelKey": "C_FORWARD_DECL_PARAM_DEFAULT_LABEL",
+            "labelFallback": "預設值"
+          }
+        ]
+      },
+      "inputsInline": true,
       "previousStatement": "Statement",
-      "nextStatement": "Statement"
+      "nextStatement": "Statement",
+      "colour": "#FF6680",
+      "tooltip": "%{BKY_C_FORWARD_DECL_TOOLTIP}"
     },
     "renderMapping": {
       "fields": {
@@ -30,6 +93,6 @@
         }
       ]
     },
-    "_why": "⚠️ **每一格參數有三個欄位**（型別／名字／預設值，2026-08-23 補第三個）：只有前兩個的話 `int add(int a, int b = 10)` 在積木來回之後**預設值靜默消失**——而那時產出的程式仍然合法，只是 `add(1)` 少一個引數。"
+    "_why": "⚠️ **每一格參數有三個欄位**（型別／名字／預設值，2026-08-23 補第三個）：只有前兩個的話 `int add(int a, int b = 10)` 在積木來回之後**預設值靜默消失**——而那時產出的程式仍然合法，只是 `add(1)` 少一個引數。\n\n🟢 **2026-08-26：形狀補上，命令式定義退場。** 這裡本來只有上下接點——形狀 100% 住在 `block-registrar.ts`，於是比對護欄把它當成「沒有宣告」而**略過**。\n🔴 **而那兩份不一樣，差異就是這一刀的目的**：命令式那份用 `withNameField: false`，每格參數**只有型別下拉**——而上面那條 `_why` 講的三個欄位，它一個都建不出來。\n實測 `int add(int a, int b);` 渲出 `PARAM_0:\"a\"`，而積木上只有 `RETURN_TYPE / NAME / TYPE_0 / TYPE_1`，**`PARAM_0` 讀回來是 `null`**——經過積木一趟就變成 `int add(int, int);`。"
   }
 ]
