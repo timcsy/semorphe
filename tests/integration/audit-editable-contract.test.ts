@@ -46,6 +46,7 @@ import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 import { REPO_ROOT, printReport } from '../helpers/guardrail'
+import zhTW from '../../src/i18n/zh-TW/blocks.json'
 
 interface ViewDecl {
   file: string
@@ -105,6 +106,28 @@ describe('第七十九條護欄：可編輯的視圖要交得出那棵樹', () =
         readonly capabilities = { editable: false }
       }`)
     expect(ro!.editable, '唯讀的視圖不必實作').toBe(false)
+  })
+
+  it('🔴 硬性零：可編輯的視圖必須有一個【給人看的名字】', () => {
+    // 🔴 2026-08-26 開瀏覽器抓到：流程面板一變成可編輯，
+    //    同步選單就出現「**以此為準：flow**」——`flow` 是原始 viewId。
+    //
+    //    機制本來就是對的（`SYNC_SOURCE_<VIEWID>`），**缺的是那個鍵**，
+    //    而退路正好是 viewId 本身。
+    //
+    // > **一個「查不到就用鍵本身」的退路，會在有人新增一個鍵的那天把代號推上畫面。**
+    //
+    // ⚠️ 這一條是 `principles.md:126`（使用者看得到的所有文字都是介面）
+    //    在**同步選單**上的投影——與第七十八條在流程視圖上的那一條同一個原則。
+    const table = zhTW as unknown as Record<string, string>
+    const missing = views
+      .filter((v) => v.editable)
+      .map((v) => `SYNC_SOURCE_${v.viewId.replace(/-/g, '_').toUpperCase()}`)
+      .filter((k) => !table[k])
+    expect(
+      missing,
+      '這些可編輯視圖在同步選單上會顯示**原始的 viewId**：\n  ' + missing.join('\n  '),
+    ).toEqual([])
   })
 
   it('硬性零：宣告 `editable: true` 的視圖必須實作 `readSource`', () => {

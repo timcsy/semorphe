@@ -545,6 +545,11 @@ export class App {
     //    面板自己**不認識執行器**——P9：跨層通訊只走 Bus（`principles.md:177`）。
     elements.variablePanel?.onEditValue((name, value) =>
       this.bus.emit('execution:set-variable', { name, value }))
+    // 🔴 **流程面板改了一格 → 匯流排**（2026-08-26，(b) 改欄位）。
+    //    ⚠️ 走 `edit:tree` 這個**通用**事件，不是 `edit:flow`
+    //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。
+    elements.flowPanel?.onEdit((tree) =>
+      this.bus.emit('edit:tree', { viewId: 'flow-panel', tree }))
 
     // 12. Setup bidirectional highlighting
     this.setupBidirectionalHighlight()

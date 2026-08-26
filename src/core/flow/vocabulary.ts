@@ -187,7 +187,12 @@ export function labelSourceFromSpecs(
         for (const opt of a.options as Array<[string, string]>) {
           if (opt[1] === value) {
             // 選項的顯示文字也可能是 `%{BKY_X}`
-            return /^%\{BKY_/.test(opt[0]) ? collapseBlockMessage(opt[0]) : opt[0]
+            const shown = /^%\{BKY_/.test(opt[0]) ? collapseBlockMessage(opt[0]) : opt[0]
+            // 🔴 **查不到就回 `null`，讓呼叫端用原始值**——不是回空字串。
+            //    2026-08-26 實測：宿主沒載膠囊標籤時那一格**整格空白**，
+            //    而空白比顯示 `FALSE` 更糟：使用者連「那裡有一個值」都看不到。
+            //    > **一個查不到就顯示空白的退路，比沒有退路更糟。**
+            return shown || null
           }
         }
       }

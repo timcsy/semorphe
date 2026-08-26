@@ -126,12 +126,12 @@ describe('SemanticBus', () => {
 
     it('should have correct ViewRequests keys', () => {
       const _check: keyof ViewRequests = 'edit:code'
-      const _check2: keyof ViewRequests = 'edit:blocks'
+      const _check2: keyof ViewRequests = 'edit:tree'
       const _check3: keyof ViewRequests = 'execution:run'
       const _check4: keyof ViewRequests = 'execution:input'
       const _check5: keyof ViewRequests = 'config:change'
       expect(_check).toBe('edit:code')
-      expect(_check2).toBe('edit:blocks')
+      expect(_check2).toBe('edit:tree')
       expect(_check3).toBe('execution:run')
       expect(_check4).toBe('execution:input')
       expect(_check5).toBe('config:change')

@@ -135,7 +135,7 @@ export class SyncController {
     this.style = style
 
     // Subscribe to view requests
-    bus.on('edit:blocks', (data) => this.handleEditBlocks(data))
+    bus.on('edit:tree', (data) => this.handleEditTree(data))
     bus.on('edit:code', (data) => this.handleEditCode(data))
   }
 
@@ -234,13 +234,17 @@ export class SyncController {
   }
 
 
-  /** Handle edit:blocks event — sync blocks → semantic tree → code */
-  private handleEditBlocks(data: { blocklyState: unknown }): void {
+  /**
+   * **某個視圖把樹改了 → 產生程式碼**（2026-08-26 由 `handleEditBlocks` 改名）。
+   *
+   * 🔴 它收的**一直都是一棵樹**——只有名字是視圖專屬的。
+   * 流程面板成為第二個樹形來源時，照舊命名就會長出第二個處理函式。
+   */
+  private handleEditTree(data: { viewId?: string; tree: SemanticNode; blockMappings?: BlockMapping[] }): void {
     if (this.syncing) return
     this.syncing = true
     try {
-      const blocklyState = data.blocklyState as { tree: SemanticNode; blockMappings?: BlockMapping[] }
-      const tree = blocklyState.tree
+      const tree = data.tree
       // ⚠️ **還原被降級的身分**——否則使用者拖一下積木，真實就變成降級後的樣子。
       //
       // > **閉環的系統裡，輸出端的損失會從輸入端回來。**
@@ -255,8 +259,8 @@ export class SyncController {
       this.codeMappings = mappings
 
       // Use blockMappings from extraction if provided
-      if (blocklyState.blockMappings) {
-        this.blockMappings = blocklyState.blockMappings
+      if (data.blockMappings) {
+        this.blockMappings = data.blockMappings
       }
 
 
@@ -455,7 +459,7 @@ export class SyncController {
   syncBlocksToCode(tree?: SemanticNode, blockMappings?: BlockMapping[]): void {
     const t = tree ?? this.currentTree
     if (!t) return
-    this.handleEditBlocks({ blocklyState: { tree: t, blockMappings } })
+    this.handleEditTree({ viewId: 'blockly-panel', tree: t, blockMappings })
   }
 
   /**

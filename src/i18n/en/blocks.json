@@ -254,5 +254,6 @@
   "EXEC_SET_VAR_REFUSED": "Could not set \"{name}\" — \"{value}\" does not fit its type, or that name is not in scope right now.",
   "EXEC_INTERVENTIONS": "⚠️ {count} value(s) in this run were filled in by hand, so the result above is not what this program produces on its own.",
   "EXEC_UNSYNC_SYNC": "⟳ Sync first, then run",
-  "EXEC_UNSYNC_AS_IS": "▶ Run what is here now"
+  "EXEC_UNSYNC_AS_IS": "▶ Run what is here now",
+  "SYNC_SOURCE_FLOW": "Flow"
 }

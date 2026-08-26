@@ -1,4 +1,5 @@
 import type { SemanticNode } from './types'
+import type { BlockMapping } from './projection/code-generator'
 import type { ExecutionStatus, StepInfo } from '../interpreter/types'
 import type { ExecutionReason, ExecutionAtNodeEvent, SemanticUpdateEvent } from './view-host'
 import type { Diagnostic } from './diagnostics'
@@ -41,7 +42,19 @@ export interface SemanticEvents {
 /** View → Core: request events */
 export interface ViewRequests {
   'edit:code': { code: string }
-  'edit:blocks': { blocklyState: unknown }
+  /**
+   * **某個視圖把【樹】改了**（2026-08-26 由 `edit:blocks` 改名）。
+   *
+   * 🔴 改名的理由：這個事件收的**一直都是一棵樹**（`{ tree, blockMappings }`），
+   * 只有名字是視圖專屬的。而流程面板要成為第二個樹形的真相來源時，
+   * 照舊命名就會長出 `edit:flow`——**每多一個視圖多一個事件名**。
+   *
+   * > **一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。**
+   *
+   * ⚠️ `viewId` 是**誰改的**，不是「要同步到哪」——收件端用它避免回打自己。
+   * `blockMappings` 是那個視圖自己的對映（有就給，沒有就沒有）。
+   */
+  'edit:tree': { viewId: string; tree: SemanticNode; blockMappings?: BlockMapping[] }
   'execution:run': { command: 'run' | 'step' | 'stop' | 'reset' }
   'execution:input': { text: string }
   /**

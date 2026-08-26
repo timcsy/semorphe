@@ -2086,3 +2086,15 @@ html, body {
   border: 1px solid #007acc; border-radius: 2px;
   font-family: inherit; font-size: inherit; padding: 0 2px;
 }
+
+/* ─── 流程面板：改一格的值（2026-08-26，(b) 改欄位） ───
+   🔴 判準與變數面板同一條：**看得出來能點**。
+   一個能改而看不出來的東西，與一個不能改的，在使用者眼裡是同一個。 */
+.fc-field-editable { cursor: text; }
+.fc-node:hover .fc-field-editable { text-decoration: underline dashed #6a6a6a; }
+.flow-field-input {
+  position: absolute; z-index: 20; min-width: 120px;
+  background: #1e1e1e; color: #d4d4d4;
+  border: 1px solid #007acc; border-radius: 2px;
+  font-family: inherit; font-size: 12px; padding: 1px 3px;
+}

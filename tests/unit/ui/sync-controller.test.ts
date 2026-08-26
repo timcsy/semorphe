@@ -63,8 +63,8 @@ describe('SyncController (bus-based)', () => {
     })
   })
 
-  describe('edit:blocks → semantic:update (blocks→code)', () => {
-    it('should emit semantic:update with code when receiving edit:blocks', () => {
+  describe('edit:tree → semantic:update (blocks→code)', () => {
+    it('should emit semantic:update with code when receiving edit:tree', () => {
       const handler = vi.fn()
       bus.on('semantic:update', handler)
 
@@ -73,7 +73,7 @@ describe('SyncController (bus-based)', () => {
       })
       const blockState = renderToBlocklyState(tree)
 
-      bus.emit('edit:blocks', { blocklyState: { tree } })
+      bus.emit('edit:tree', { viewId: 'blockly-panel', tree })
 
       expect(handler).toHaveBeenCalled()
       const data = handler.mock.calls[0][0]
@@ -85,7 +85,7 @@ describe('SyncController (bus-based)', () => {
 
     it('should store current tree after blocks→code sync', () => {
       const tree = createNode('cpp:program', {}, { body: [] })
-      bus.emit('edit:blocks', { blocklyState: { tree } })
+      bus.emit('edit:tree', { viewId: 'blockly-panel', tree })
       expect(controller.getCurrentTree()).not.toBeNull()
     })
 
@@ -96,7 +96,7 @@ describe('SyncController (bus-based)', () => {
       const tree = createNode('cpp:program', {}, {
         body: [createNode('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [] })],
       })
-      bus.emit('edit:blocks', { blocklyState: { tree } })
+      bus.emit('edit:tree', { viewId: 'blockly-panel', tree })
 
       const data = handler.mock.calls[0][0]
       expect(data.mappings).toBeDefined()
@@ -208,11 +208,11 @@ describe('SyncController (bus-based)', () => {
       bus.on('semantic:update', () => {
         callCount.blocks++
         // Simulate a panel re-emitting (should be ignored)
-        bus.emit('edit:blocks', { blocklyState: { tree: createNode('cpp:program', {}, { body: [] }) } })
+        bus.emit('edit:tree', { viewId: 'blockly-panel', tree: createNode('cpp:program', {}, { body: [] }) })
       })
 
       const tree = createNode('cpp:program', {}, { body: [] })
-      bus.emit('edit:blocks', { blocklyState: { tree } })
+      bus.emit('edit:tree', { viewId: 'blockly-panel', tree })
 
       // Should only be called once (re-entrant call blocked)
       expect(callCount.blocks).toBe(1)
@@ -534,7 +534,7 @@ describe('SyncController (bus-based)', () => {
       const blockMappings: BlockMapping[] = [{ nodeId: decl.id, blockId: 'blk_1' }]
 
       // Trigger blocks→code sync with blockMappings
-      bus.emit('edit:blocks', { blocklyState: { tree, blockMappings } })
+      bus.emit('edit:tree', { viewId: 'blockly-panel', tree, blockMappings })
 
       // codeMappings should use nodeId
       const codeMappings = controller.getCodeMappings()
@@ -559,7 +559,7 @@ describe('SyncController (bus-based)', () => {
       const tree = createNode('cpp:program', {}, { body: [decl] })
       const blockMappings: BlockMapping[] = [{ nodeId: decl.id, blockId: 'blk_1' }]
 
-      bus.emit('edit:blocks', { blocklyState: { tree, blockMappings } })
+      bus.emit('edit:tree', { viewId: 'blockly-panel', tree, blockMappings })
 
       // getMappingForLine should find a mapping for line 0 via nodeId join
       const mapping = controller.getMappingForLine(0)
@@ -572,7 +572,7 @@ describe('SyncController (bus-based)', () => {
 
     it('getMappingForBlock should return null for unknown blockId', () => {
       const tree = createNode('cpp:program', {}, { body: [] })
-      bus.emit('edit:blocks', { blocklyState: { tree } })
+      bus.emit('edit:tree', { viewId: 'blockly-panel', tree })
 
       const result = controller.getMappingForBlock('nonexistent')
       expect(result).toBeNull()
@@ -581,7 +581,7 @@ describe('SyncController (bus-based)', () => {
     it('codeMappings should not contain blockId field (FR-001)', () => {
       const decl = createNode('cpp:var_declare', { name: 'x', type: 'int' }, { initializer: [] })
       const tree = createNode('cpp:program', {}, { body: [decl] })
-      bus.emit('edit:blocks', { blocklyState: { tree } })
+      bus.emit('edit:tree', { viewId: 'blockly-panel', tree })
 
       const codeMappings = controller.getCodeMappings()
       for (const cm of codeMappings) {
