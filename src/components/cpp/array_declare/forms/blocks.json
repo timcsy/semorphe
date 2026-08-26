@@ -7,11 +7,43 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_array_declare",
+      "message0": "%{BKY_U_ARRAY_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dynamic_dropdown",
+          "name": "TYPE",
+          "source": "cpp_var_types",
+          "allowCustom": true
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "arr"
+        },
+        {
+          "type": "input_dummy",
+          "name": "HEAD"
+        }
+      ],
+      "message1": "%{BKY_U_ARRAY_DECLARE_MSG1}",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        }
+      ],
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FF661A",
-      "tooltip": "%{BKY_U_ARRAY_DECLARE_TOOLTIP}"
+      "tooltip": "%{BKY_U_ARRAY_DECLARE_TOOLTIP}",
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "minCount": 0,
+      "openLabelKey": "U_ARRAY_DECLARE_INIT",
+      "openLabelFallback": "初始值",
+      "openLabelOnFirstSlot": true
     },
     "renderMapping": {
       "fields": {
@@ -29,6 +61,6 @@
         }
       ]
     },
-    "_why": "⚠️ **改成命令式註冊**（`ui/block-registrar.ts`），因為初始值需要**動態插槽**（`+`／`-` 按鈕），而宣告式的 `args0` 只描述固定欄位。與 `cpp_print` 同一個形狀。\n🔴 不改的話 `= {1,2,3}` 在積木上不存在——**一動積木重生成就掉了**。"
+    "_why": "🟢 **2026-08-26：形狀補上，命令式定義退場。**\n上一版的 `_why` 說「因為初始值需要**動態插槽**，而宣告式的 `args0` 只描述固定欄位」\n——**那個限制已經不在**：`attachVariadic` 就是為「固定前段（`args0`）＋ 可變尾段」而在。\n\n🔴 **而它逼出一格新機制 `openLabelOnFirstSlot`**：這一顆的固定前段有兩列\n（`建立 int 陣列 arr` ＋ `大小 ⟨size⟩`），而「初始值」要在第二列**之後**。\n既有的 `openLabelKey` 掛在第一列尾巴，會變成 `建立 int 陣列 arr 初始值 大小 3 …`。\n⚠️ 那不是新機制，是同一件事（「有插槽時才出現的開頭標籤」）的第二種擺法\n——命令式那份寫成 `if (idx === 0) inp.appendField(…)`。\n\n🔴 **`TYPE` 從靜態五選一換成開放下拉**（`cpp_var_types` ＋ `allowCustom`）\n——與 `cpp_var_declare_expression` 同一條：`string arr[3]`／`bool`／自訂型別\n本來就合法，而靜態清單把它們當成非法值。**照舊寫成靜態的等於明知故犯。**"
   }
 ]

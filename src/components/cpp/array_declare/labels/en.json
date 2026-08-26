@@ -1,5 +1,5 @@
 {
-  "U_ARRAY_DECLARE_MSG0": "create %1 array %2 size %3",
+  "U_ARRAY_DECLARE_MSG0": "create %1 array %2 %3",
   "U_ARRAY_DECLARE_TOOLTIP": "Create a fixed-size array (a row of consecutive slots), indexed starting from 0",
   "U_ARRAY_DECLARE_TYPE_INT": "int (integer)",
   "U_ARRAY_DECLARE_TYPE_FLOAT": "float (decimal)",
@@ -9,5 +9,6 @@
   "U_ARRAY_DECLARE_CREATE": "create",
   "U_ARRAY_DECLARE_ARRAY": "array",
   "U_ARRAY_DECLARE_SIZE": "size",
-  "U_ARRAY_DECLARE_INIT": "initial values"
+  "U_ARRAY_DECLARE_INIT": "initial values",
+  "U_ARRAY_DECLARE_MSG1": "size %1"
 }

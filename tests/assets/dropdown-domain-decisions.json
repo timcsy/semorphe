@@ -11,6 +11,11 @@
       "field": "field_dynamic_dropdown",
       "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
     },
+    "cpp_array_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "陣列元素的型別在現實中開放（`string arr[3]`／`bool`／自訂型別）。⚠️ 2026-08-26 之前它是**靜態五選一**（int／float／double／char／long long）——連 `string` 與 `bool` 都選不到，而那兩個是課程裡就會用的"
+    },
     "cpp_builtin_constant.VALUE": {
       "decision": "closed",
       "field": "field_dropdown",

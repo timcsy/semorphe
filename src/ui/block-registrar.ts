@@ -594,6 +594,7 @@ export class BlockRegistrar {
           closeLabelFallback: bd.closeLabelFallback as string | undefined,
           // ⚠️ 存檔契約：接手既有積木時要沿用它原本的計數鍵
           countKey: bd.countKey as string | undefined,
+          openLabelOnFirstSlot: bd.openLabelOnFirstSlot as boolean | undefined,
         }
         if (Array.isArray(bd.args0) && bd.args0.length > 0) {
           Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
@@ -993,67 +994,23 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_array_declare —— `int a[3] = {1,2,3}`
+    // 🪦 **`cpp_array_declare` 的命令式定義已於 2026-08-26 刪除。**
     //
-    // ⚠️ **從宣告式改成命令式**（2026-08-14），理由是初始值需要**動態插槽**。
-    // 🔴 不改的話 `= {1,2,3}` 在積木上不存在，而**一動積木重生成就掉了**
-    // ——使用者開瀏覽器實測撞到的正是這個。
-    {
-      Blockly.Blocks['cpp_array_declare'] = {
-        itemCount_: 0,
-        init: function (this: any) {
-          this.itemCount_ = 0
-          this.appendDummyInput('HEAD')
-            .appendField(Blockly.Msg['U_ARRAY_DECLARE_CREATE'] || '建立')
-            .appendField(new Blockly.FieldDropdown([
-              [Blockly.Msg['_ARRAY_DECLARE_TYPE_INT'] || 'int', 'int'],
-              [Blockly.Msg['_ARRAY_DECLARE_TYPE_FLOAT'] || 'float', 'float'],
-              [Blockly.Msg['_ARRAY_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
-              [Blockly.Msg['_ARRAY_DECLARE_TYPE_CHAR'] || 'char', 'char'],
-              [Blockly.Msg['_ARRAY_DECLARE_TYPE_LONG_LONG'] || 'long long', 'long long']
-            ]), 'TYPE')
-            .appendField(Blockly.Msg['U_ARRAY_DECLARE_ARRAY'] || '陣列')
-            .appendField(new Blockly.FieldTextInput('arr'), 'NAME')
-          this.appendValueInput('SIZE')
-            .setCheck('Expression')
-            .appendField(Blockly.Msg['U_ARRAY_DECLARE_SIZE'] || '大小')
-          // ⚠️ **「初始值」的標籤不在這裡**——TAIL 只放按鈕。
-          // 動態插槽是 `moveInputBefore(…, 'TAIL')` 插進來的，所以放在 TAIL 上的
-          // 標籤會**跑到所有值的後面**（`大小 3 [1][2][3] 初始值 ⊕⊖`）。
-          // 標籤跟著**第一個插槽**走（見 `plus_`），與 `cpp_print` 同一個做法。
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.arrays)
-          this.setTooltip(Blockly.Msg['U_ARRAY_DECLARE_TOOLTIP'] || '建立一個固定大小的陣列')
-        },
-        plus_: function (this: any) {
-          const idx = this.itemCount_
-          const inp = this.appendValueInput('EXPR' + idx).setCheck('Expression')
-          // **標籤跟著第一個插槽**——沒有初始值時它也不該出現
-          if (idx === 0) inp.appendField(Blockly.Msg['U_ARRAY_DECLARE_INIT'] || '初始值')
-          this.moveInputBefore('EXPR' + idx, 'TAIL')
-          this.itemCount_++
-          setMinusState(this, false)
-        },
-        minus_: function (this: any) {
-          if (this.itemCount_ <= 0) return
-          this.itemCount_--
-          this.removeInput('EXPR' + this.itemCount_)
-          setMinusState(this, this.itemCount_ <= 0)
-        },
-        saveExtraState: function (this: any) {
-          return { itemCount: this.itemCount_ }
-        },
-        loadExtraState: function (this: any, state: { itemCount?: number }) {
-          const count = state?.itemCount ?? 0
-          while (this.itemCount_ < count) this.plus_()
-        },
-      }
-    }
+    //    宣告那份的 `_why` 本來寫著「因為初始值需要動態插槽，而宣告式的
+    //    `args0` 只描述固定欄位」——**那個限制已經不在**：`attachVariadic`
+    //    就是為「固定前段（`args0`）＋ 可變尾段」而在。
+    //
+    // 🔴 **它逼出一格機制 `openLabelOnFirstSlot`**：這一顆的固定前段有兩列，
+    //    而「初始值」要在第二列**之後**；既有的 `openLabelKey` 掛在第一列尾巴，
+    //    會變成 `建立 int 陣列 arr 初始值 大小 3 …`。
+    //    ⚠️ 那不是新機制，是同一件事的第二種擺法——命令式這份寫成
+    //    `if (idx === 0) inp.appendField(…)`。
+    //
+    // 🔴 **而 `TYPE` 的差異就是這一刀的目的**：命令式是靜態五選一
+    //    （int／float／double／char／long long），宣告換成開放下拉
+    //    （`cpp_var_types` ＋ `allowCustom`）。`string arr[3]`／`bool`／自訂型別
+    //    本來就合法，而靜態清單把它們當成非法值——**照舊寫成靜態的等於明知故犯**
+    //    （`cpp_var_declare_expression` 同一天剛修過同一條）。
 
     // 🪦 **`cpp_initializer_list` 的命令式定義已於 2026-08-26 刪除。**
     //

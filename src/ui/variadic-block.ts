@@ -113,6 +113,18 @@ export interface VariadicSpec {
   closeLabelKey?: string
   closeLabelFallback?: string
   /**
+   * 開頭標籤掛在**第一個插槽自己**前面，而不是第一列的尾巴（2026-08-26）。
+   *
+   * 🔴 為什麼要能選：`cpp_array_declare` 的固定前段有**兩列**
+   * （`建立 int 陣列 arr` ＋ `大小 ⟨size⟩`），而「初始值」要在第二列**之後**。
+   * 掛在第一列尾巴會變成 `建立 int 陣列 arr 初始值 大小 3 [1][2][3]`。
+   *
+   * ⚠️ 而它與括號那一組是**同一件事的兩種擺法**，不是兩個機制：
+   * 都是「有插槽時才出現的開頭標籤」。命令式那份寫成
+   * `if (idx === 0) inp.appendField(…)`。
+   */
+  openLabelOnFirstSlot?: boolean
+  /**
    * 第一個插槽**前面**的一個欄位（spec 168）。
    *
    * 🔴 第二個語言的呼叫積木需要它：`呼叫 [名字下拉] (引數…)` ——
@@ -257,12 +269,20 @@ export function attachVariadic(type: string, spec: VariadicSpec): void {
   /** 有插槽時才有括號——`（` 掛在第一個插槽前面那一列的尾巴，`）` 在 `TAIL` 開頭。 */
   const syncParens = (b: any): void => {
     if (!openText && !closeText) return
-    const head = b.inputList[0]
+    // ⚠️ `openLabelOnFirstSlot` 時目標是**第一個插槽自己**，而它可能還不存在
+    //    （itemCount 為 0 那一刻）——那時本來就不該有標籤，所以 `undefined` 是對的。
+    const head = spec.openLabelOnFirstSlot
+      ? b.getInput(inputName(spec.inputPattern, 0))
+      : b.inputList[0]
     const tail = b.getInput('TAIL')
     const want = b.itemCount_ > 0
     const hasOpen = head?.fieldRow.some((f: any) => f.name === 'VA_OPEN')
     const hasClose = tail?.fieldRow.some((f: any) => f.name === 'VA_CLOSE')
-    if (want && !hasOpen && head && openText) head.appendField(new Blockly.FieldLabel(openText) as Blockly.Field, 'VA_OPEN')
+    // 掛在插槽自己身上時要**插在最前面**——附在後面的話它會跑到那一格的值後面。
+    if (want && !hasOpen && head && openText) {
+      if (spec.openLabelOnFirstSlot) head.insertFieldAt(0, new Blockly.FieldLabel(openText) as Blockly.Field, 'VA_OPEN')
+      else head.appendField(new Blockly.FieldLabel(openText) as Blockly.Field, 'VA_OPEN')
+    }
     if (!want && hasOpen) head.removeField('VA_OPEN')
     if (want && !hasClose && tail && closeText) tail.insertFieldAt(0, new Blockly.FieldLabel(closeText) as Blockly.Field, 'VA_CLOSE')
     if (!want && hasClose) tail.removeField('VA_CLOSE')

@@ -1,5 +1,5 @@
 {
-  "U_ARRAY_DECLARE_MSG0": "建立 %1 陣列 %2 大小 %3",
+  "U_ARRAY_DECLARE_MSG0": "建立 %1 陣列 %2 %3",
   "U_ARRAY_DECLARE_TOOLTIP": "建立一個固定大小的陣列（一排連續的格子），索引從 0 開始",
   "U_ARRAY_DECLARE_TYPE_INT": "int（整數）",
   "U_ARRAY_DECLARE_TYPE_FLOAT": "float（小數）",
@@ -9,5 +9,6 @@
   "U_ARRAY_DECLARE_CREATE": "建立",
   "U_ARRAY_DECLARE_ARRAY": "陣列",
   "U_ARRAY_DECLARE_SIZE": "大小",
-  "U_ARRAY_DECLARE_INIT": "初始值"
+  "U_ARRAY_DECLARE_INIT": "初始值",
+  "U_ARRAY_DECLARE_MSG1": "大小 %1"
 }
