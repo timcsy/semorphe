@@ -868,62 +868,13 @@ export class BlockRegistrar {
         },
       }
 
-    // cpp_array_2d_declare —— `int a[2][3] = {{1,2,3},{4,5,6}}`
-    // ⚠️ 命令式，理由與 `cpp_array_declare` 相同（初始值要動態插槽）。
-    // 🔴 而它的插槽接的是**一顆 `cpp_initializer_list` 積木**——那就是巢狀。
-    {
-      Blockly.Blocks['cpp_array_2d_declare'] = {
-        itemCount_: 0,
-        init: function (this: any) {
-          this.itemCount_ = 0
-          this.appendDummyInput('HEAD')
-            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_CREATE'] || '建立')
-            .appendField(new Blockly.FieldDropdown([
-              [Blockly.Msg['_VAR_DECLARE_TYPE_INT'] || 'int', 'int'],
-              [Blockly.Msg['_VAR_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
-              [Blockly.Msg['_VAR_DECLARE_TYPE_CHAR'] || 'char', 'char']
-            ]), 'TYPE')
-            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_ARRAY'] || '二維陣列')
-            .appendField(new Blockly.FieldTextInput('arr'), 'NAME')
-            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_ROWS'] || '列數')
-            .appendField(new Blockly.FieldTextInput('3'), 'ROWS')
-            .appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_COLS'] || '行數')
-            .appendField(new Blockly.FieldTextInput('4'), 'COLS')
-          // ⚠️ **「初始值」的標籤不在這裡**——TAIL 只放按鈕。
-          // 動態插槽是 `moveInputBefore(…, 'TAIL')` 插進來的，所以放在 TAIL 上的
-          // 標籤會**跑到所有值的後面**（`大小 3 [1][2][3] 初始值 ⊕⊖`）。
-          // 標籤跟著**第一個插槽**走（見 `plus_`），與 `cpp_print` 同一個做法。
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.arrays)
-          this.setTooltip(Blockly.Msg['C_ARRAY_2D_DECLARE_TOOLTIP'] || '建立一個二維陣列')
-        },
-        plus_: function (this: any) {
-          const idx = this.itemCount_
-          const inp = this.appendValueInput('EXPR' + idx).setCheck('Expression')
-          // **標籤跟著第一個插槽**——沒有初始值時它也不該出現
-          if (idx === 0) inp.appendField(Blockly.Msg['C_ARRAY_2D_DECLARE_INIT'] || '初始值')
-          this.moveInputBefore('EXPR' + idx, 'TAIL')
-          this.itemCount_++
-          setMinusState(this, false)
-        },
-        minus_: function (this: any) {
-          if (this.itemCount_ <= 0) return
-          this.itemCount_--
-          this.removeInput('EXPR' + this.itemCount_)
-          setMinusState(this, this.itemCount_ <= 0)
-        },
-        saveExtraState: function (this: any) { return { itemCount: this.itemCount_ } },
-        loadExtraState: function (this: any, state: { itemCount?: number }) {
-          const count = state?.itemCount ?? 0
-          while (this.itemCount_ < count) this.plus_()
-        },
-      }
-    }
+    // 🪦 **`cpp_array_2d_declare` 的命令式定義已於 2026-08-26 刪除**
+    //    ——與一維那顆同一天、同一條（`attachVariadic` ＋ `openLabelOnFirstSlot`）。
+    //
+    // 🔴 **`TYPE` 的差異就是目的**：這一顆是靜態**三**選一（int／double／char），
+    //    而隔壁一維那顆是**五**選一（多了 float／long long）。
+    //    **兩顆同族積木的型別清單不一樣，而那不是設計，是各寫各的。**
+    //    兩顆現在都指向 `cpp_var_types`。
 
     // cpp_vector_declare —— `vector<int> v = {1,2,3}`
     {

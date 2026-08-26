@@ -2,7 +2,7 @@
   "U_VAR_DECLARE_TYPE_INT": "int（整數）",
   "U_VAR_DECLARE_TYPE_DOUBLE": "double（精確小數）",
   "U_VAR_DECLARE_TYPE_CHAR": "char（字元）",
-  "C_ARRAY_2D_DECLARE_MSG0": "建立 %1 二維陣列 %2 [ %3 ][ %4 ]",
+  "C_ARRAY_2D_DECLARE_MSG0": "建立 %1 二維陣列 %2 列數 %3 行數 %4 %5",
   "C_ARRAY_2D_DECLARE_TOOLTIP": "建立一個二維陣列（值的方格表）",
   "C_ARRAY_2D_DECLARE_CREATE": "建立",
   "C_ARRAY_2D_DECLARE_ARRAY": "二維陣列",

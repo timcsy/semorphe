@@ -6,6 +6,11 @@
       "field": "field_dropdown",
       "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
     },
+    "cpp_array_2d_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "同一維陣列那顆。⚠️ 2026-08-26 之前它是**靜態三選一**（int／double／char），而隔壁一維那顆是**五**選一——**兩顆同族積木的型別清單不一樣，而那不是設計，是各寫各的**"
+    },
     "cpp_array_assign.NAME": {
       "decision": "open",
       "field": "field_dynamic_dropdown",

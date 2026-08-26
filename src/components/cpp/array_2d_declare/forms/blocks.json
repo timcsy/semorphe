@@ -7,11 +7,45 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_array_2d_declare",
+      "message0": "%{BKY_C_ARRAY_2D_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dynamic_dropdown",
+          "name": "TYPE",
+          "source": "cpp_var_types",
+          "allowCustom": true
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "arr"
+        },
+        {
+          "type": "field_input",
+          "name": "ROWS",
+          "text": "3"
+        },
+        {
+          "type": "field_input",
+          "name": "COLS",
+          "text": "4"
+        },
+        {
+          "type": "input_dummy",
+          "name": "HEAD"
+        }
+      ],
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": "#4C97FF",
-      "tooltip": "%{BKY_C_ARRAY_2D_DECLARE_TOOLTIP}"
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_C_ARRAY_2D_DECLARE_TOOLTIP}",
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "minCount": 0,
+      "openLabelKey": "C_ARRAY_2D_DECLARE_INIT",
+      "openLabelFallback": "初始值",
+      "openLabelOnFirstSlot": true
     },
     "codeTemplate": {
       "pattern": "${TYPE} ${NAME}[${ROWS}][${COLS}];",
@@ -33,6 +67,6 @@
         }
       ]
     },
-    "_why": "⚠️ **命令式註冊**（`ui/block-registrar.ts`）——初始值需要動態插槽，而宣告式的 `args0` 只描述固定欄位。與 `cpp_print` 同一個形狀。"
+    "_why": "🟢 **2026-08-26：形狀補上，命令式定義退場。** 上一版的 `_why` 說「初始值需要動態插槽，\n而宣告式的 `args0` 只描述固定欄位」——**那個限制已經不在**（`attachVariadic`，\n與 `cpp_array_declare` 同一天、同一條）。\n🔴 **`TYPE` 從靜態三選一（int／double／char）換成開放下拉**——連 `float`／`long long`\n都選不到，而隔壁那顆一維陣列的清單有五個。**兩顆同族積木的型別清單不一樣，\n而那不是設計，是各寫各的。**"
   }
 ]
