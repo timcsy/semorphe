@@ -48,7 +48,21 @@ function identityFilter(tree: SemanticNode): SemanticNode {
 }
 
 export interface CodeParser {
-  parse(code: string): { rootNode: unknown }
+  /**
+   * 🔴 **非同步**（2026-08-26）。
+   *
+   * 它本來宣告成同步的，而**每一個真的 parser 都是非同步的**（要抓 wasm）。
+   * 於是**兩個消費者各做了一份一模一樣的轉接**：先在外面 `await` 解析，
+   * 把結果塞進一個假的 parser（`{ _lastTree, parse() { return { rootNode: this._lastTree } } }`），
+   * 再呼叫這裡。
+   *
+   * > **一個介面如果每個實作者都要在它前面加同一層轉接，
+   * > 那層轉接就是介面的一部分。**
+   *
+   * ⚠️ 那個非同步**本來就在跑**（`app.ts` 的 wrapper 幾週前就這樣做）——
+   * 這一刀不是把同步改成非同步，是**把一段已經在跑的非同步搬進介面裡**。
+   */
+  parse(code: string): Promise<{ rootNode: unknown }>
 }
 
 export class SyncController {
@@ -267,12 +281,14 @@ export class SyncController {
   }
 
   /** Handle edit:code event — sync code → semantic tree → blocks */
-  private handleEditCode(data: { code: string }): void {
+  private async handleEditCode(data: { code: string }): Promise<void> {
     if (this.syncing || !this.lifter || !this.parser) return
+    // ⚠️ **`syncing` 的設定與清除要包住整段 `await`**——重入守衛的窗口
+    //    因為非同步而變長了，而 `try/finally` 已經在外面（見函式尾）。
     this.syncing = true
     try {
       const code = data.code
-      const parseResult = this.parser.parse(code)
+      const parseResult = await this.parser.parse(code)
       const rootNode = parseResult.rootNode as import('../core/lift/types').AstNode
 
       // Report parse errors but continue sync — lifter degrades ERROR nodes to raw_code.
@@ -448,7 +464,9 @@ export class SyncController {
    * - depth 1+: blocks show full tree, code shows full
    * When switching FROM depth 0 TO deeper, re-lifts from code to recover full tree.
    */
-  resyncForTopic(extractedTree: SemanticNode, currentCode: string): void {
+  // ⚠️ **非同步**（2026-08-26， 改成 Promise 之後）。
+  //    三個呼叫點（`app.ts:770/771/773`）都是 fire-and-forget，回傳值沒有人接。
+  async resyncForTopic(extractedTree: SemanticNode, currentCode: string): Promise<void> {
     if (this.syncing) return
     this.syncing = true
     try {
@@ -460,7 +478,7 @@ export class SyncController {
         n => isFunctionDefinition(n.componentId) && n.properties.name === 'main'
       )
       if (this.getScaffoldDepth() > 0 && !hasMainFunc && this.lifter && this.parser) {
-        const parseResult = this.parser.parse(currentCode)
+        const parseResult = await this.parser.parse(currentCode)
         const rootNode = parseResult.rootNode as import('../core/lift/types').AstNode
         if (rootNode) {
           const lifted = this.lifter.lift(rootNode)
@@ -504,11 +522,17 @@ export class SyncController {
     }
   }
 
-  /** Convenience: trigger code→blocks sync from external code (e.g., app.ts) */
-  syncCodeToBlocks(code?: string): boolean {
+  /**
+   * Convenience: trigger code→blocks sync from external code (e.g., app.ts)
+   *
+   * ⚠️ **非同步**（2026-08-26）——`handleEditCode` 要 `await` 解析。
+   * 七個呼叫點都是 fire-and-forget（回傳值沒有人接），而**組裝點要接**：
+   * 它在同步完成之後才補相依、清旗標。
+   */
+  async syncCodeToBlocks(code?: string): Promise<boolean> {
     if (!this.lifter || !this.parser) return false
     if (code !== undefined) {
-      this.handleEditCode({ code })
+      await this.handleEditCode({ code })
       return true
     }
     return false

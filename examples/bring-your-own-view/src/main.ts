@@ -104,14 +104,19 @@ async function main(): Promise<void> {
   const style: StylePreset = pack.styles[0]
   const sync = new SyncController(bus, 'python', style)
 
-  // ⚠️ **第二個發現**：`setCodeToBlocksPipeline` 收的 parser 介面是**同步**的
-  // （`parse(code): { rootNode }`），而每一個真的 parser 都是非同步的
-  // （要抓 wasm）。於是每個消費者都得自己做同一個 shim——網頁版的組裝點
-  // 也有一份一模一樣的（`src/ui/app.ts` 的 `codeParser`）。
+  // 🟢 **第二個發現已修（2026-08-26）**——這裡本來要包一層轉接：
   //
-  // > **一個介面如果每個實作者都要在它前面加同一層轉接，那層轉接就是介面的一部分。**
-  const shim = { tree: null as unknown, parse(_code: string) { return { rootNode: this.tree } } }
-  sync.setCodeToBlocksPipeline(lifter, shim as never)
+  //     const shim = { tree: null, parse(_code) { return { rootNode: this.tree } } }
+  //
+  //    因為 `CodeParser.parse` 宣告成**同步**，而每一個真的 parser 都是非同步的
+  //    （要抓 wasm）。於是每個消費者都得先在外面 await、把結果塞進去、再呼叫
+  //    ——**網頁版的組裝點也有一份一模一樣的**。
+  //
+  // > **一個介面如果每個實作者都要在它前面加同一層轉接，
+  // > 那層轉接就是介面的一部分。**
+  //
+  //    現在直接把真的 parser 交進去。
+  sync.setCodeToBlocksPipeline(lifter, parser as never)
 
   // ② 自帶的視圖——**由掃描器收，不是被硬接的**
   resetViews()
@@ -121,8 +126,14 @@ async function main(): Promise<void> {
   connectViews(bus)
 
   // ③ 程式碼 → 語義樹
-  shim.tree = (await parser.parse(SOURCE)).rootNode
-  bus.emit('edit:code', { code: SOURCE })
+  //
+  // ⚠️ **用可等待的那一支，不要 `bus.emit('edit:code')`**（2026-08-26）：
+  //    解析變成非同步之後，那個匯流排事件的處理器也是非同步的，
+  //    而 `emit` **沒有完成訊號**——`emit` 完馬上讀樹會讀到還沒到的東西。
+  //
+  // > **一個非同步的處理器掛在一個 fire-and-forget 的事件上，
+  // > 發送端就沒有辦法知道它做完了沒。**
+  await sync.syncCodeToBlocks(SOURCE)
   const afterLift = view.tree
   if (!afterLift) throw new Error('視圖沒有收到語義樹')
 

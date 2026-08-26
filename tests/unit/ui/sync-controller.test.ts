@@ -116,26 +116,38 @@ describe('SyncController (bus-based)', () => {
         startPosition: { row: 0, column: 0 },
         endPosition: { row: 0, column: 0 },
       }
-      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
+      const mockParser: CodeParser = { parse: vi.fn(async () => ({ rootNode })) }
       const lifter = new Lifter()
       lifter.register('translation_unit', () => createNode('cpp:program', {}, { body: [] }))
       controller.setCodeToBlocksPipeline(lifter, mockParser)
     }
 
-    it('should not emit if no pipeline configured', () => {
+    it('should not emit if no pipeline configured', async () => {
       const handler = vi.fn()
       bus.on('semantic:update', handler)
 
+      // ⚠️ **解析變成非同步之後，`emit` 沒有完成訊號**（2026-08-26）
+      //    ——`emit` 完馬上斷言會斷在還沒到的東西上。
+      //    🟢 而**這個不對稱是真的**（不是測試的權宜）：一個非同步的處理器
+      //       掛在 fire-and-forget 的事件上，發送端就是沒有完成訊號。
+      //       產品那側因此走可等待的 `syncCodeToBlocks(code)`。
       bus.emit('edit:code', { code: 'int x;' })
+      await new Promise((r) => setTimeout(r, 0))
       expect(handler).not.toHaveBeenCalled()
     })
 
-    it('should emit semantic:update with blockState when receiving edit:code', () => {
+    it('should emit semantic:update with blockState when receiving edit:code', async () => {
       setupPipeline()
       const handler = vi.fn()
       bus.on('semantic:update', handler)
 
+      // ⚠️ **解析變成非同步之後，`emit` 沒有完成訊號**（2026-08-26）
+      //    ——`emit` 完馬上斷言會斷在還沒到的東西上。
+      //    🟢 而**這個不對稱是真的**（不是測試的權宜）：一個非同步的處理器
+      //       掛在 fire-and-forget 的事件上，發送端就是沒有完成訊號。
+      //       產品那側因此走可等待的 `syncCodeToBlocks(code)`。
       bus.emit('edit:code', { code: '' })
+      await new Promise((r) => setTimeout(r, 0))
 
       expect(handler).toHaveBeenCalled()
       const data = handler.mock.calls[0][0]
@@ -144,7 +156,7 @@ describe('SyncController (bus-based)', () => {
       expect(data.blockState).toBeDefined()
     })
 
-    it('should call error callback on parse errors', () => {
+    it('should call error callback on parse errors', async () => {
       const errorNode = {
         type: 'ERROR',
         text: 'bad',
@@ -165,7 +177,7 @@ describe('SyncController (bus-based)', () => {
         startPosition: { row: 0, column: 0 },
         endPosition: { row: 2, column: 3 },
       }
-      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
+      const mockParser: CodeParser = { parse: vi.fn(async () => ({ rootNode })) }
       const lifter = new Lifter()
       lifter.register('translation_unit', (_node, ctx) => {
         return createNode('program', {}, { body: ctx.liftChildren(_node.namedChildren) })
@@ -175,7 +187,13 @@ describe('SyncController (bus-based)', () => {
       controller.setCodeToBlocksPipeline(lifter, mockParser)
       controller.onError(errorCallback)
 
+      // ⚠️ **解析變成非同步之後，`emit` 沒有完成訊號**（2026-08-26）
+      //    ——`emit` 完馬上斷言會斷在還沒到的東西上。
+      //    🟢 而**這個不對稱是真的**（不是測試的權宜）：一個非同步的處理器
+      //       掛在 fire-and-forget 的事件上，發送端就是沒有完成訊號。
+      //       產品那側因此走可等待的 `syncCodeToBlocks(code)`。
       bus.emit('edit:code', { code: 'bad' })
+      await new Promise((r) => setTimeout(r, 0))
 
       expect(errorCallback).toHaveBeenCalled()
       const errors: SyncError[] = errorCallback.mock.calls[0][0]
@@ -335,7 +353,7 @@ describe('SyncController (bus-based)', () => {
   })
 
   describe('style exception detection', () => {
-    it('should call onStyleExceptions when non-conforming nodes found', () => {
+    it('should call onStyleExceptions when non-conforming nodes found', async () => {
       const apcsStyle: StylePreset = {
         ...mockStyle,
         id: 'apcs',
@@ -361,12 +379,18 @@ describe('SyncController (bus-based)', () => {
         startPosition: { row: 0, column: 0 },
         endPosition: { row: 0, column: 0 },
       }
-      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
+      const mockParser: CodeParser = { parse: vi.fn(async () => ({ rootNode })) }
       const lifter = new Lifter()
       lifter.register('translation_unit', () => tree)
 
       controller.setCodeToBlocksPipeline(lifter, mockParser)
+      // ⚠️ **解析變成非同步之後，`emit` 沒有完成訊號**（2026-08-26）
+      //    ——`emit` 完馬上斷言會斷在還沒到的東西上。
+      //    🟢 而**這個不對稱是真的**（不是測試的權宜）：一個非同步的處理器
+      //       掛在 fire-and-forget 的事件上，發送端就是沒有完成訊號。
+      //       產品那側因此走可等待的 `syncCodeToBlocks(code)`。
       bus.emit('edit:code', { code: '' })
+      await new Promise((r) => setTimeout(r, 0))
 
       expect(exceptionsCallback).toHaveBeenCalled()
       const [exceptions] = exceptionsCallback.mock.calls[0]
@@ -374,7 +398,7 @@ describe('SyncController (bus-based)', () => {
       expect(exceptions[0].label).toContain('printf')
     })
 
-    it('should NOT call onStyleExceptions when all nodes conform', () => {
+    it('should NOT call onStyleExceptions when all nodes conform', async () => {
       controller.setCodingStyle(mockStyle)
 
       const exceptionsCallback = vi.fn()
@@ -394,12 +418,18 @@ describe('SyncController (bus-based)', () => {
         startPosition: { row: 0, column: 0 },
         endPosition: { row: 0, column: 0 },
       }
-      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
+      const mockParser: CodeParser = { parse: vi.fn(async () => ({ rootNode })) }
       const lifter = new Lifter()
       lifter.register('translation_unit', () => tree)
 
       controller.setCodeToBlocksPipeline(lifter, mockParser)
+      // ⚠️ **解析變成非同步之後，`emit` 沒有完成訊號**（2026-08-26）
+      //    ——`emit` 完馬上斷言會斷在還沒到的東西上。
+      //    🟢 而**這個不對稱是真的**（不是測試的權宜）：一個非同步的處理器
+      //       掛在 fire-and-forget 的事件上，發送端就是沒有完成訊號。
+      //       產品那側因此走可等待的 `syncCodeToBlocks(code)`。
       bus.emit('edit:code', { code: '' })
+      await new Promise((r) => setTimeout(r, 0))
 
       expect(exceptionsCallback).not.toHaveBeenCalled()
     })
@@ -417,7 +447,7 @@ describe('SyncController (bus-based)', () => {
         startPosition: { row: 0, column: 0 },
         endPosition: { row: 0, column: 0 },
       }
-      const mockParser: CodeParser = { parse: vi.fn(() => ({ rootNode })) }
+      const mockParser: CodeParser = { parse: vi.fn(async () => ({ rootNode })) }
       const lifter = new Lifter()
       lifter.register('translation_unit', () => createNode('cpp:program', {}, { body: [] }))
       controller.setCodeToBlocksPipeline(lifter, mockParser)
@@ -425,48 +455,72 @@ describe('SyncController (bus-based)', () => {
       return code
     }
 
-    it('should fire bulk_deviation when code mostly uses cstdio in iostream preset', () => {
+    it('should fire bulk_deviation when code mostly uses cstdio in iostream preset', async () => {
       controller.setCodingStyle(mockStyle) // io_style: 'cout' → iostream
       const ioCallback = vi.fn()
       controller.onIoConformance(ioCallback)
 
       const code = setupWithCode('printf("a"); scanf("%d", &x); printf("b"); cout << z;')
+      // ⚠️ **解析變成非同步之後，`emit` 沒有完成訊號**（2026-08-26）
+      //    ——`emit` 完馬上斷言會斷在還沒到的東西上。
+      //    🟢 而**這個不對稱是真的**（不是測試的權宜）：一個非同步的處理器
+      //       掛在 fire-and-forget 的事件上，發送端就是沒有完成訊號。
+      //       產品那側因此走可等待的 `syncCodeToBlocks(code)`。
       bus.emit('edit:code', { code })
+      await new Promise((r) => setTimeout(r, 0))
 
       expect(ioCallback).toHaveBeenCalledTimes(1)
       expect(ioCallback.mock.calls[0][0].verdict).toBe('bulk_deviation')
     })
 
-    it('should fire minor_exception when code has one cstdio in iostream preset', () => {
+    it('should fire minor_exception when code has one cstdio in iostream preset', async () => {
       controller.setCodingStyle(mockStyle)
       const ioCallback = vi.fn()
       controller.onIoConformance(ioCallback)
 
       const code = setupWithCode('cout << x << endl; cin >> y; cout << z; scanf("%d", &w);')
+      // ⚠️ **解析變成非同步之後，`emit` 沒有完成訊號**（2026-08-26）
+      //    ——`emit` 完馬上斷言會斷在還沒到的東西上。
+      //    🟢 而**這個不對稱是真的**（不是測試的權宜）：一個非同步的處理器
+      //       掛在 fire-and-forget 的事件上，發送端就是沒有完成訊號。
+      //       產品那側因此走可等待的 `syncCodeToBlocks(code)`。
       bus.emit('edit:code', { code })
+      await new Promise((r) => setTimeout(r, 0))
 
       expect(ioCallback).toHaveBeenCalledTimes(1)
       expect(ioCallback.mock.calls[0][0].verdict).toBe('minor_exception')
     })
 
-    it('should NOT fire when code fully conforms to preset', () => {
+    it('should NOT fire when code fully conforms to preset', async () => {
       controller.setCodingStyle(mockStyle)
       const ioCallback = vi.fn()
       controller.onIoConformance(ioCallback)
 
       const code = setupWithCode('cout << "hello" << endl; cin >> x;')
+      // ⚠️ **解析變成非同步之後，`emit` 沒有完成訊號**（2026-08-26）
+      //    ——`emit` 完馬上斷言會斷在還沒到的東西上。
+      //    🟢 而**這個不對稱是真的**（不是測試的權宜）：一個非同步的處理器
+      //       掛在 fire-and-forget 的事件上，發送端就是沒有完成訊號。
+      //       產品那側因此走可等待的 `syncCodeToBlocks(code)`。
       bus.emit('edit:code', { code })
+      await new Promise((r) => setTimeout(r, 0))
 
       expect(ioCallback).not.toHaveBeenCalled()
     })
 
-    it('should NOT fire when code has no I/O at all', () => {
+    it('should NOT fire when code has no I/O at all', async () => {
       controller.setCodingStyle(mockStyle)
       const ioCallback = vi.fn()
       controller.onIoConformance(ioCallback)
 
       const code = setupWithCode('int x = 5; return 0;')
+      // ⚠️ **解析變成非同步之後，`emit` 沒有完成訊號**（2026-08-26）
+      //    ——`emit` 完馬上斷言會斷在還沒到的東西上。
+      //    🟢 而**這個不對稱是真的**（不是測試的權宜）：一個非同步的處理器
+      //       掛在 fire-and-forget 的事件上，發送端就是沒有完成訊號。
+      //       產品那側因此走可等待的 `syncCodeToBlocks(code)`。
       bus.emit('edit:code', { code })
+      await new Promise((r) => setTimeout(r, 0))
 
       expect(ioCallback).not.toHaveBeenCalled()
     })

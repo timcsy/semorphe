@@ -469,17 +469,13 @@ languages/{lang}/
             ——throw 把內容整個弄丟，比降級更糟。
             → [167](history/167-一個都不認得不是降級是沒接上.md)
             **驗收**：例子刪掉那一行而第五十八條護欄（硬性零）仍然綠。
-      - [ ] 🔴 **`CodeParser` 的同步／非同步轉接**（例子照出來的 ②，2026-08-26 開）
-            `CodeParser.parse` 是**同步**的，而每一個真的 parser 都是非同步的（要抓 wasm）。
-            於是**兩個消費者各做了一份一模一樣的 shim**
-            （`examples/.../main.ts` 的 `shim` · `src/ui/app.ts:616` 的 `codeParser`）。
-            > **一個介面如果每個實作者都要在它前面加同一層轉接，
-            > 那層轉接就是介面的一部分。**
-            ⚠️ **它動的是同步路徑**（`sync-controller` 裡 3 處 `this.parser.parse`、
-            7 個 `syncCodeToBlocks` 呼叫點都是 fire-and-forget），
-            而這個 repo 的教訓是那條路上的錯**測試全綠也看不到**——自己一刀。
-            **驗收**：兩個消費者都不必再包 shim；瀏覽器實測貼碼、切 Block Style、
-            以此為準三條路都還在。
+      - [x] ✅ **`CodeParser` 的同步／非同步轉接**（2026-08-26 開、同日結案）
+            `parse` 回 `Promise`，兩份一模一樣的 shim（例子 · `app.ts`）刪除。
+            🟢 **這不是「把同步改成非同步」**——那個非同步本來就在 `app.ts` 的
+            wrapper 裡跑了幾週，這一刀是把它**搬進介面**。
+            🔴 而它逼出一個真的不對稱：`bus.emit` 沒有完成訊號，於是
+            「emit 之後同步讀結果」的**五支測試 ＋ 那個例子**都紅了。
+            → [168](history/168-那層轉接就是介面的一部分.md)
       - [ ] **登錄表實例化**（`view-registry.ts:52`／`skip-declarations.ts:22,73`／
             `component/registry.ts:63` 四處模組全域）——教學網站**一頁多題**才逼得出來
       - [ ] 面板只 import 協定——`ViewConfig` 長出 `t` / `appearance` / `schema` 三個 port，

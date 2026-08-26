@@ -6,6 +6,7 @@ import {
   CONTROLS, LOCALES, FOLLOW_HOST_LOCALE, surfaceOf,
   type ControlSpec, type ControlState, type ControlInvoke, type ControlOption,
 } from '../core/host/controls'
+import type { CodeParser } from '../core/sync-controller'
 import { SyncController } from '../core/sync-controller'
 import type { SyncError } from '../core/sync-controller'
 import { SemanticBus } from '../core/semantic-bus'
@@ -166,8 +167,6 @@ export class App {
    * ⚠️ **原本叫 `cppParser`**——那個名字本身就是「組裝點知道語言的名字」。
    * 而它的用途（重新解析程式碼以重建語義樹）**與語言無關**。
    */
-  private currentParser: { parse(code: string): Promise<{ rootNode: unknown }> } | null = null
-  private codeParserCache: { _lastTree: unknown } | null = null
   private patternRenderer: PatternRenderer | null = null
 
   constructor(profile: HostProfile) {
@@ -611,24 +610,36 @@ export class App {
     // `e2e/shipped-assets.spec.ts` 的判準是「出貨的每一個 wasm 都要有人真的去要它」，
     // 而在有這一行之前，Python 的 wasm 放進 `public/` 只是死重
     // ——**護欄當場把它抓出來，那正是它存在的原因。**
-    const parser = await this.parserFor(this.currentTopic.language)
-    this.currentParser = parser
-    const codeParser = { _lastTree: null as unknown, parse(_code: string) { return { rootNode: this._lastTree } } }
-    this.codeParserCache = codeParser
+    // ⚠️ 這裡仍然先 await 一次——那是為了**及早發現 wasm 抓不到**，
+    //    而不是為了把結果留著（那份留著的東西就是剛拆掉的 shim）。
+    await this.parserFor(this.currentTopic.language)
+    // 🟢 **2026-08-26：那層 shim 拆掉了。**
+    //
+    //    這裡本來是一個假的 parser——`{ _lastTree, parse() { return { rootNode: this._lastTree } } }`
+    //    ——因為 `CodeParser.parse` 宣告成同步，而真的 parser 是非同步的。
+    //    於是每個消費者都得先在外面 await、把結果塞進去、再呼叫。
+    //    `examples/bring-your-own-view` 有一份**一模一樣的**。
+    //
+    // > **一個介面如果每個實作者都要在它前面加同一層轉接，
+    // > 那層轉接就是介面的一部分。**
+    //
+    // 🔴 **而「每次都問一次這個語言的解析器」這件事留著**——切目標時語言會變，
+    //    而在此之前這裡抓的是啟動時建好的那一顆（寫死 `CppParser`）。
+    //    ⚠️ 症狀不是報錯，是**用 C++ 的文法去解析 Python**：
+    //    `print("hi")` 會被解析成一個運算式陳述，然後靜靜地降級。
+    const codeParser: CodeParser = {
+      parse: (code: string) => this.parserFor(this.currentTopic.language).then((p) => p.parse(code)),
+    }
     this.syncController!.setCodeToBlocksPipeline(lifter, codeParser)
     const originalSync = this.syncController!.syncCodeToBlocks.bind(this.syncController!)
     const codeView = this.codeView!
 
+    // ⚠️ **這個 wrapper 留著，而它剩下的職責不是轉接**：補相依、保游標、
+    //    清那三個旗標——那些是**組裝點的事**，不是 parser 介面的事。
     this.syncController!.syncCodeToBlocks = (codeArg?: string) => {
       const code = codeArg ?? codeView.getCode()
       this._codeToBlocksInProgress = true
-      // 🔴 **每次都問一次「這個語言的解析器」**——切目標時語言會變，
-      // 而在此之前這裡抓的是啟動時建好的那一顆（寫死 `CppParser`）。
-      // ⚠️ 症狀不是報錯，是**用 C++ 的文法去解析 Python**：
-      // `print("hi")` 會被解析成一個運算式陳述，然後靜靜地降級。
-      this.parserFor(this.currentTopic.language).then(p => p.parse(code)).then(tree => {
-        codeParser._lastTree = tree.rootNode
-        originalSync(code)
+      originalSync(code).then(() => {
         const patched = this.syncController?.patchMissingDependencies(code)
         if (patched) {
           const linesDelta = patched.split('\n').length - code.split('\n').length
@@ -638,11 +649,11 @@ export class App {
         this.blocksDirty = false
         this.updateSyncHints()
         setTimeout(() => { this._codeToBlocksInProgress = false }, 300)
-      }).catch(err => {
+      }).catch((err: unknown) => {
         console.error('Parse error:', err)
         this._codeToBlocksInProgress = false
       })
-      return false
+      return Promise.resolve(false)
     }
 
     this.syncController!.onError((errors: SyncError[]) => {
@@ -764,14 +775,10 @@ export class App {
       (n: { componentId: string; properties: Record<string, unknown> }) =>
         isFunctionDefinition(n.componentId) && n.properties.name === 'main'
     )
-    if (needsRelift && this.currentParser && code.trim()) {
-      this.currentParser.parse(code).then((parsed: { rootNode: unknown }) => {
-        if (this.codeParserCache) this.codeParserCache._lastTree = parsed.rootNode
-        this.syncController?.resyncForTopic(tree, code)
-      }).catch(() => this.syncController?.resyncForTopic(tree, code))
-    } else {
-      this.syncController?.resyncForTopic(tree, code)
-    }
+    // 🟢 **2026-08-26：不再需要先解析一次再塞進快取**——`resyncForTopic`
+    //    自己會 `await this.parser.parse(...)`（那個 parser 現在是真的）。
+    void needsRelift
+    this.syncController?.resyncForTopic(tree, code)
   }
 
   /** Extract tree + blockMappings and sync to code */
