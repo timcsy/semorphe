@@ -204,6 +204,14 @@ beforeAll(() => {
   // > **一個從母體裡消失的項目，看起來與「沒有問題」一模一樣。**
   declareDropdownSource('cpp_param_types', () => [['int', 'int']])
   declareDropdownSource('cpp_return_types', () => [['void', 'void']])
+  // 🔴 **而上面那段話沒有擋住第八次**（2026-08-26）：`python_types` 漏了，
+  //    於是 `python_func_def` **從來沒有被比對過**——它在報表上不存在。
+  //
+  // > **一段寫著「這個病會這樣發生」的註解，擋不住它再發生一次
+  // > ——擋得住的是一支會紅的斷言。**
+  //
+  // 🟢 抓到它的是這個檔最下面新加的**入口條件**（「用建構子的宣告一顆都不能被略過」）。
+  declareDropdownSource('python_types', () => [['int', 'int']])
   Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
   reg = new BlockSpecRegistry()
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
@@ -523,11 +531,68 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     for (const s of reg.getAll() as { blockDef?: { type?: string; message0?: string } }[]) {
       const t = s.blockDef?.type
       if (!t) continue
-      if (!s.blockDef?.message0) { noDecl.push(t); continue }
+      const bd = s.blockDef as Record<string, unknown>
+      const hasBuilder = Boolean(bd.builder || bd.branchList || bd.paramList)
+      if (!bd.message0 && !hasBuilder) { noDecl.push(t); continue }
       try { if (fromDeclaration(t)) buildable.push(t) } catch { noDecl.push(t + '(建不起來)') }
     }
     // eslint-disable-next-line no-console
     console.log(`\n  宣告建得起來 ${buildable.length} 顆｜沒有 message0 或建不起來 ${noDecl.length} 顆`)
     expect(buildable.length, '一顆都建不起來 → 是 jsonInit 那條路壞了').toBeGreaterThan(50)
+  })
+
+  /**
+   * 🔴 **入口斷言：用建構子的宣告，必須【全部】進得了比對。**
+   *
+   * ## 它從哪來（2026-08-26，`retire-imperative-block` §2.5 的第七次）
+   *
+   * 這個檔的建置函式第一行本來是 `if (!def.message0) return null`。
+   * 而**用宣告式建構子的積木本來就沒有 `message0`**——形狀由建構子長出來。
+   * 於是它們被歸進「沒有 message0 或建不起來」那一桶，**而那一桶不進比對**。
+   *
+   * ```
+   * 前六次   比對器缺一樣東西 → 【指控宣告】   → 報表上多一行，會紅
+   * 第七次   比對器【直接不看】那一類        → 報表上【少】一行，什麼都不會發生
+   * ```
+   *
+   * > **一條護欄的能力邊界，如果剛好切掉它要驗的那一類，
+   * > 它的綠燈就與「沒有人在看」等價。**
+   *
+   * ⚠️ 而這一類**正是那把刀的產物**：每退一顆命令式定義，就多一顆
+   * 「只有建構子」的宣告——**那把刀用得越成功，這條護欄看得到的就越少**。
+   *
+   * ## 🔴 自我否證
+   *
+   * > **如果「用建構子的宣告」是 0 顆，代表登錄表沒載入，這一條不算數
+   * > ——不是「大家都不用建構子」。**
+   *
+   * ⚠️ 錨在**宣告了建構子的顆數**（合成量）——它不會因為缺陷被修好而變小，
+   * 而且**它只會隨著那把刀越用越多**（`build-guardrail` 簽名三）。
+   */
+  it('🔴 入口條件：用建構子的宣告【一顆都不能被比對器略過】', () => {
+    const withBuilder: string[] = []
+    const skipped: string[] = []
+    for (const s of reg.getAll() as { blockDef?: Record<string, unknown> }[]) {
+      const bd = s.blockDef
+      const t = bd?.type as string | undefined
+      if (!t || !bd) continue
+      if (!(bd.builder || bd.branchList || bd.paramList)) continue
+      withBuilder.push(t)
+      // ⚠️ **把原因帶進報表**——「建不起來」有兩種（回 null／擲例外），
+      //    而它們的修法完全不同。只報名字的話下一個人要重查一次。
+      let why = ''
+      let built = false
+      try { built = Boolean(fromDeclaration(t)); if (!built) why = '回 null' }
+      catch (e) { why = String((e as Error).message).slice(0, 120) }
+      if (!built) skipped.push(`${t}（${why}）`)
+    }
+    // ★ 入口條件——見上面的自我否證
+    expect(withBuilder.length,
+      '🔴 一顆用建構子的宣告都沒有 → 登錄表沒載入，這一條不算數').toBeGreaterThan(3)
+    expect(skipped,
+      '🔴 這幾顆用了宣告式建構子，而比對器【建不起來】——'
+      + '於是它們在報表上不會出現，也不會變紅。\n'
+      + '   ⚠️ 症狀是「報表上少一行」，不是「多一行」——那正是第七次的形狀。')
+      .toEqual([])
   })
 })
