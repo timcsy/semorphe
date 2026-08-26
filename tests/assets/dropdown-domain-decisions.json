@@ -246,6 +246,11 @@
       "field": "field_dropdown",
       "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
     },
+    "cpp_var_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "變數型別在現實中開放（`unsigned`／`MyStruct*`／`vector<vector<int>>`）。2026-08-26 起五顆宣告類積木共用 `cpp_var_types`"
+    },
     "cpp_var_declare_const.TYPE": {
       "decision": "open",
       "field": "field_dropdown",

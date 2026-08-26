@@ -25,7 +25,8 @@ import * as Blockly from 'blockly'
  */
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
-import { CATEGORY_COLORS } from '../core/category-colors'
+// 🪦 `CATEGORY_COLORS` 的匯入已於 2026-08-26 刪除——最後一顆命令式積木定義
+//    （`cpp_var_declare`）退場，顏色從此**只住在宣告裡**。
 import { attachBranchList } from './branch-list-block'
 // 🪦 `registerParamMutatorBlocks`／`MUTATOR_CONTAINER` 於 2026-08-26 從這裡的 import
 //    移除——它們的呼叫點在 `defParamList` 工廠裡，而那個工廠隨 `cpp_forward_decl` 退場。
@@ -702,171 +703,11 @@ export class BlockRegistrar {
     //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
     //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
 
-    const getTypeOptions = (currentVal?: string): Array<[string, string]> => {
-        const opts: Array<[string, string]> = [
-          [Blockly.Msg['U_VAR_DECLARE_TYPE_INT'] || 'int', 'int'],
-          [Blockly.Msg['U_VAR_DECLARE_TYPE_FLOAT'] || 'float', 'float'],
-          [Blockly.Msg['U_VAR_DECLARE_TYPE_DOUBLE'] || 'double', 'double'],
-          [Blockly.Msg['U_VAR_DECLARE_TYPE_CHAR'] || 'char', 'char'],
-          [Blockly.Msg['U_VAR_DECLARE_TYPE_BOOL'] || 'bool', 'bool'],
-          [Blockly.Msg['U_VAR_DECLARE_TYPE_STRING'] || 'string', 'string'],
-          [Blockly.Msg['U_VAR_DECLARE_TYPE_LONG_LONG'] || 'long long', 'long long'],
-        ]
-        if (currentVal && !opts.some(o => o[1] === currentVal)) {
-          opts.unshift([currentVal, currentVal])
-        }
-        return opts
-      }
+    // 🪦 **`getTypeOptions` 已於 2026-08-26 刪除**——那份 C++ 型別清單回到
+    //    `languages/cpp/pack.ts` 的 `cpp_var_types`（與參數／回傳兩份同一條路）。
+    //    它的最後一個消費者是 `cpp_var_declare` 的命令式定義，而它今天退場了。
 
-      Blockly.Blocks['u_var_declare_container'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField(Blockly.Msg['U_VAR_DECLARE_HEADER'] || '宣告')
-          this.appendStatementInput('STACK')
-          this.setColour(CATEGORY_COLORS.data)
-          this.contextMenu = false
-        },
-      }
-      Blockly.Blocks['u_var_declare_var_input'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField(Blockly.Msg['U_VAR_DECLARE_VAR_LABEL'] || '變數')
-          this.setPreviousStatement(true)
-          this.setNextStatement(true)
-          this.setColour(CATEGORY_COLORS.data)
-          this.contextMenu = false
-        },
-      }
-      Blockly.Blocks['u_var_declare_var_init_input'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput().appendField(Blockly.Msg['U_VAR_DECLARE_VAR_INIT_LABEL'] || '變數 = 值')
-          this.setPreviousStatement(true)
-          this.setNextStatement(true)
-          this.setColour(CATEGORY_COLORS.data)
-          this.contextMenu = false
-        },
-      }
 
-      Blockly.Blocks['cpp_var_declare'] = {
-        items_: ['var_init'] as string[],
-        init: function (this: any) {
-          this.items_ = ['var_init']
-          this.appendDummyInput('HEADER')
-            .appendField(Blockly.Msg['U_VAR_DECLARE_HEADER'] || '宣告')
-            .appendField(self.createOpenDropdown(() => getTypeOptions()) as Blockly.Field, 'TYPE')
-            .appendField(Blockly.Msg['U_VAR_DECLARE_VAR_WORD'] || '變數')
-          this.appendValueInput('INIT_0')
-            .appendField(new Blockly.FieldTextInput('x') as Blockly.Field, 'NAME_0')
-            .appendField('=')
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.data)
-          this.setTooltip(Blockly.Msg['U_VAR_DECLARE_TOOLTIP'] || '宣告變數')
-          this.setMutator(new Blockly.icons.MutatorIcon(
-            ['u_var_declare_var_input', 'u_var_declare_var_init_input'],
-            this as unknown as Blockly.BlockSvg,
-          ))
-        },
-        plus_: function (this: any) {
-          const idx = this.items_.length
-          this.items_.push('var_init')
-          this.appendValueInput(`INIT_${idx}`)
-            .appendField(',')
-            .appendField(new Blockly.FieldTextInput(`v${idx}`) as Blockly.Field, `NAME_${idx}`)
-            .appendField('=')
-          this.moveInputBefore(`INIT_${idx}`, 'TAIL')
-          setMinusState(this, false)
-        },
-        minus_: function (this: any) {
-          if (this.items_.length <= 1) return
-          const idx = this.items_.length - 1
-          this.items_.pop()
-          if (this.getInput(`INIT_${idx}`)) this.removeInput(`INIT_${idx}`)
-          if (this.getInput(`VAR_${idx}`)) this.removeInput(`VAR_${idx}`)
-          setMinusState(this, this.items_.length <= 1)
-        },
-        saveExtraState: function (this: any) {
-          return { items: this.items_ }
-        },
-        loadExtraState: function (this: any, state: { items?: string[] }) {
-          this.items_ = state?.items ?? ['var_init']
-          this.rebuildInputs_()
-        },
-        rebuildInputs_: function (this: any) {
-          const savedBlocks: (Blockly.Block | null)[] = []
-          const savedNames: string[] = []
-          for (let i = 0; ; i++) {
-            const initInput = this.getInput(`INIT_${i}`)
-            const varInput = this.getInput(`VAR_${i}`)
-            if (!initInput && !varInput) break
-            savedNames.push(this.getFieldValue(`NAME_${i}`) ?? `v${i}`)
-            if (initInput) {
-              savedBlocks.push(initInput.connection?.targetBlock() ?? null)
-            } else {
-              savedBlocks.push(null)
-            }
-          }
-          for (let i = 0; ; i++) {
-            if (!this.getInput(`INIT_${i}`) && !this.getInput(`VAR_${i}`)) break
-            if (this.getInput(`INIT_${i}`)) this.removeInput(`INIT_${i}`)
-            if (this.getInput(`VAR_${i}`)) this.removeInput(`VAR_${i}`)
-          }
-          if (this.getInput('TAIL')) this.removeInput('TAIL')
-          for (let j = 0; j < this.items_.length; j++) {
-            const name = savedNames[j] ?? `v${j}`
-            if (this.items_[j] === 'var_init') {
-              const input = this.appendValueInput(`INIT_${j}`)
-              if (j > 0) input.appendField(',')
-              input.appendField(new Blockly.FieldTextInput(name) as Blockly.Field, `NAME_${j}`)
-                .appendField('=')
-              if (savedBlocks[j] && this.getInput(`INIT_${j}`)?.connection) {
-                this.getInput(`INIT_${j}`)!.connection!.connect(savedBlocks[j]!.outputConnection!)
-              }
-            } else {
-              const input = this.appendDummyInput(`VAR_${j}`)
-              if (j > 0) input.appendField(',')
-              input.appendField(new Blockly.FieldTextInput(name) as Blockly.Field, `NAME_${j}`)
-            }
-          }
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(
-              this.items_.length <= 1 ? MINUS_DISABLED_IMG : MINUS_IMG,
-              20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-        },
-        decompose: function (this: any, workspace: Blockly.WorkspaceSvg) {
-          const containerBlock = workspace.newBlock('u_var_declare_container')
-          containerBlock.initSvg()
-          let connection = containerBlock.getInput('STACK')!.connection!
-          for (let i = 0; i < this.items_.length; i++) {
-            const type = this.items_[i] === 'var_init'
-              ? 'u_var_declare_var_init_input'
-              : 'u_var_declare_var_input'
-            const itemBlock = workspace.newBlock(type)
-            itemBlock.initSvg()
-            connection.connect(itemBlock.previousConnection!)
-            connection = itemBlock.nextConnection!
-          }
-          return containerBlock
-        },
-        compose: function (this: any, containerBlock: Blockly.Block) {
-          const newItems: string[] = []
-          let clauseBlock = containerBlock.getInputTargetBlock('STACK')
-          while (clauseBlock) {
-            if (clauseBlock.type === 'u_var_declare_var_init_input') {
-              newItems.push('var_init')
-            } else if (clauseBlock.type === 'u_var_declare_var_input') {
-              newItems.push('var')
-            }
-            clauseBlock = clauseBlock.getNextBlock()
-          }
-          if (newItems.length === 0) newItems.push('var_init')
-          this.items_ = newItems
-          this.rebuildInputs_()
-        },
-      }
 
     // 🪦 **`cpp_array_2d_declare` 的命令式定義已於 2026-08-26 刪除**
     //    ——與一維那顆同一天、同一條（`attachVariadic` ＋ `openLabelOnFirstSlot`）。

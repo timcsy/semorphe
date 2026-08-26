@@ -54,6 +54,60 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_var_declare",
+      "message0": "%{BKY_U_VAR_DECLARE_HEADER} %1 %{BKY_U_VAR_DECLARE_VAR_WORD} %2",
+      "args0": [
+        {
+          "type": "field_dynamic_dropdown",
+          "name": "TYPE",
+          "source": "cpp_var_types",
+          "allowCustom": true
+        },
+        {
+          "type": "input_dummy",
+          "name": "HEADER"
+        }
+      ],
+      "paramList": {
+        "itemPattern": "VAR_{i}",
+        "fields": [
+          {
+            "type": "field_input",
+            "name": "NAME_{i}",
+            "text": "v{i}",
+            "firstText": "x"
+          },
+          {
+            "type": "field_label",
+            "name": "VAR_EQ_{i}",
+            "text": "="
+          }
+        ],
+        "separator": ",",
+        "minCount": 1,
+        "openInput": "PARAMS_LABEL",
+        "tailInput": "TAIL",
+        "optionalGroups": [
+          {
+            "key": "init",
+            "fromField": "VAR_EQ_{i}",
+            "labelKey": "U_VAR_DECLARE_INIT_LABEL",
+            "labelFallback": "初始值",
+            "defaultOpen": true,
+            "valueInput": {
+              "name": "INIT_{i}",
+              "check": "Expression",
+              "replacesItem": true
+            }
+          }
+        ],
+        "itemsAs": {
+          "key": "items",
+          "group": "init",
+          "open": "var_init",
+          "closed": "var"
+        }
+      },
+      "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FF8C1A",
@@ -65,6 +119,7 @@
       "statementInputs": {},
       "strategy": "cpp:renderVarDeclare",
       "expressionCounterpart": "cpp_var_declare_expression"
-    }
+    },
+    "_why": "🟢 **2026-08-26：形狀補上，命令式定義退場**——命令式積木退場計畫的**最後一顆**。\n🔴 它用 `paramList`，而 `optionalGroups` 這一輪補了兩格才表達得完：\n  ① `valueInput`——那一段的結尾是**接點**（`= ⟨運算式⟩`）而不是欄位群。\n     ⚠️ `optionalGroups` 的 doc 本來就拿這顆積木當齒輪設計的例子\n     （「齒輪選『變數』還是『變數 = 值』」），而它一直只建得出啞輸入。\n  ② `itemsAs`——存檔照舊寫成 `{ items: ['var_init','var'] }`。\n     🟢 **那是既有的存檔契約，而用它原本的形狀寫就不必遷移**\n     （渲染那一路 `cpp:renderVarDeclare` 吐的也是這個鍵與 `INIT_{i}` 這個插槽名）。"
   }
 ]

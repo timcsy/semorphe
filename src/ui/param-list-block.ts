@@ -124,7 +124,11 @@ export interface ParamListSpec {
   /** 每一格的 input 名（`PARAM_{i}`） */
   itemPattern: string
   /** 每一格裡的欄位。`{i}` 會換成序號 */
-  fields: { type: string; name: string; text?: string; source?: string; options?: unknown }[]
+  fields: {
+    type: string; name: string; text?: string; source?: string; options?: unknown
+    /** **第一格**的預設值——沒宣告就跟其餘一樣走 `text` 的 `{i}` 代換。 */
+    firstText?: string
+  }[]
   /** 每一格之間的分隔字（第一格前面不放） */
   separator?: string
   /** 開／閉括號的 i18n 鍵與 fallback。**沒有參數時兩者都不顯示** */
@@ -187,7 +191,66 @@ export interface ParamListSpec {
    *
    * 每一段：`fromField` 起（含）到下一段之前的欄位，整段一起顯示／隱藏。
    */
-  optionalGroups?: { key: string; fromField: string; labelKey?: string; labelFallback: string }[]
+  optionalGroups?: {
+    key: string
+    fromField: string
+    labelKey?: string
+    labelFallback: string
+    /**
+     * **新加出來的那一格預設就是開著的**（2026-08-26）。
+     *
+     * 🔴 `cpp_var_declare` 的命令式那份預設是 `['var_init']`——新宣告一個變數
+     * 通常**就是**要給它初始值，而 `int x;`（不給）才是那個少見的形態。
+     * ⚠️ 其餘用 `optionalGroups` 的積木（函式的預設值、型別註記）預設是**關著**的
+     * ——那是刻意的，見上面「固定長在那裡的話每個參數後面都掛著空框」。
+     */
+    defaultOpen?: boolean
+    /**
+     * **這一段的結尾是一個接點，不是一個欄位**（2026-08-26）。
+     *
+     * 🔴 為什麼要能是接點：`cpp_var_declare` 的齒輪選的正是
+     * 「變數」還是「變數 **= ⟨運算式⟩**」——而上面那段 doc 本來就拿它當例子。
+     * 在此之前這裡只建得出啞輸入，於是**那顆積木退不了場**。
+     *
+     * `name` 用 `{i}`（例如 `INIT_{i}`）——⚠️ **接手既有積木時要沿用它原本的插槽名**，
+     * 因為渲染那一路吐的就是那個名字（`cpp:renderVarDeclare` 吐 `INIT_0`）。
+     *
+     * ⚠️ **收起來時不清值**（與欄位那一支不同）：一顆接上去的積木清掉就沒了，
+     * 而「一個救不回來的動作，不該藏在一個勾選格後面」——見 `setBlockOption_`。
+     */
+    valueInput?: {
+      name: string
+      check?: string
+      /**
+       * **這一段【取代】那一格本身**，而不是在它後面多一列（2026-08-26）。
+       *
+       * 🔴 為什麼需要：`cpp_var_declare` 的命令式那份，一格**要嘛**是
+       * `INIT_j`（接點，`NAME_j = ⟨⟩`）**要嘛**是 `VAR_j`（啞輸入，只有 `NAME_j`）
+       * ——**never both**。而 `paramList` 預設會建「那一格 ＋ 選用段」兩列。
+       *
+       * 兩者**畫面一樣**（`inputsInline`），而插槽名的清單不一樣，
+       * 於是比對護欄永遠報 differ。
+       *
+       * > **一個使用者看不見的形狀差異，仍然會讓那顆命令式定義退不了場
+       * > ——而靠上調棘輪吃掉它，與「把宣告改成跟命令式一樣」是同一件事的鏡像。**
+       *
+       * ⚠️ 開關時要**重建那一格**（換另一種輸入），而欄位的值與接上去的積木
+       * 都要接回來——那正是命令式那份 `rebuildInputs_` 在做的事。
+       */
+      replacesItem?: boolean
+    }
+  }[]
+  /**
+   * **存檔寫成一份具名的「形態清單」**，而不是 `{ paramCount, paramOpts }`。
+   *
+   * 🔴 **接手既有積木時這是存檔契約**：`cpp_var_declare` 的舊存檔長成
+   * `{ items: ['var_init', 'var'] }`——每一格是哪一種形態，而不是「幾格 ＋ 開了哪些」。
+   *
+   * 兩者**攜帶同一份資訊**，所以這是一次純粹的重新編碼：
+   * `items[i] = 那一格開著 group 嗎 ? open : closed`。
+   * ⚠️ 而它讓舊存檔**不必遷移**——那正是選這條路而不是改渲染策略的理由。
+   */
+  itemsAs?: { key: string; group: string; open: string; closed: string }
   /**
    * **整顆積木層級的「要不要顯示」**——與參數無關的那些（2026-08-23，使用者提的）。
    *
@@ -351,9 +414,21 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     ? spec.fields.findIndex((f) => f.name === groups[0].fromField)
     : -1
   /** 某一格某一段的 input 名。 */
-  const optName = (i: number, key: string): string => `${name(spec.itemPattern, i)}_OPT_${key}`
+  const optName = (i: number, key: string): string => {
+    // ⚠️ **接點群用宣告給的插槽名**——渲染那一路吐的就是那個名字
+    //    （`cpp:renderVarDeclare` 吐 `INIT_0`），衍生一個 `PARAM_0_OPT_init` 會對不上。
+    const g = (spec.optionalGroups ?? []).find((x) => x.key === key)
+    if (g?.valueInput) return name(g.valueInput.name, i)
+    return `${name(spec.itemPattern, i)}_OPT_${key}`
+  }
 
   /** 這一格開著哪幾段——**沒有宣告就永遠是空的**。 */
+  /** 取代模式下那一格可能用的**兩個**名字（其餘情況只有一個）。 */
+  const itemNamesOf = (i: number): string[] => {
+    const g = (spec.optionalGroups ?? []).find((x) => x.valueInput?.replacesItem)
+    return g ? [name(spec.itemPattern, i), name(g.valueInput!.name, i)] : [name(spec.itemPattern, i)]
+  }
+
   const optsOf = (blk: any, i: number): Record<string, boolean> => {
     blk.paramOpts_ = blk.paramOpts_ ?? []
     blk.paramOpts_[i] = blk.paramOpts_[i] ?? {}
@@ -362,12 +437,36 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
 
   proto.plusParam_ = function (this: any): void {
     const i = this.paramCount_
-    const input = this.appendDummyInput(name(spec.itemPattern, i))
+    // 🔴 **取代模式**（`replacesItem`）：那一格**要嘛是接點要嘛是啞輸入**，
+    //    而不是「啞輸入 ＋ 後面多一列」——見 `valueInput.replacesItem` 的說明。
+    const replaceG = (spec.optionalGroups ?? []).find((x) => x.valueInput?.replacesItem)
+    // ⚠️ **`defaultOpen` 只在「這一格還沒有意見」時生效**——載入舊存檔時
+    //    `loadExtraState` 會在建完之後把每一格設成存檔裡的形態，
+    //    而那時這裡已經跑過了，所以兩者不會打架。
+    for (const g of spec.optionalGroups ?? []) {
+      if (g.defaultOpen && optsOf(this, i)[g.key] === undefined) optsOf(this, i)[g.key] = true
+    }
+    const replaceOpen = replaceG ? optsOf(this, i)[replaceG.key] === true : false
+    const input = replaceG
+      ? (replaceOpen
+          ? this.appendValueInput(name(replaceG.valueInput!.name, i))
+          : this.appendDummyInput(name(spec.itemPattern, i)))
+      : this.appendDummyInput(name(spec.itemPattern, i))
+    if (replaceG && replaceOpen && replaceG.valueInput!.check) input.setCheck(replaceG.valueInput!.check)
     if (i > 0 && spec.separator) input.appendField(spec.separator)
 
     const addField = (target: any, f: ParamListSpec['fields'][number]): void => {
       const json = { ...f, name: f.name.replace('{i}', String(i)) } as Record<string, unknown>
+      // ⚠️ **第一格的預設值可以不一樣**（2026-08-26）：`cpp_var_declare` 的命令式
+      //    第一格叫 `x`（`component.json` 的 `name` 預設也是 `x`），加出來的才是 `v1`／`v2`。
+      //    少了這一格，工具箱裡那顆積木會從 `int x;` 變成 `int v0;`
+      //    ——**一個沒有人會說它壞了、而它確實變差了的改動**。
+      if (i === 0 && typeof (f as { firstText?: string }).firstText === 'string') {
+        json.text = (f as { firstText?: string }).firstText
+        delete (json as { firstText?: unknown }).firstText
+      }
       if (typeof json.text === 'string') json.text = (json.text as string).replace('{i}', String(i))
+      delete (json as { firstText?: unknown }).firstText
       const field = Blockly.fieldRegistry.fromJson(json as never)
       if (field) target.appendField(field, json.name as string)
     }
@@ -375,7 +474,16 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     for (const f of fixed) addField(input, f)
 
     for (const g of groups) {
-      const opt = this.appendDummyInput(optName(i, g.key))
+      const decl = (spec.optionalGroups ?? []).find((x) => x.key === g.key)
+      // 取代模式：這一段的欄位掛在**那一格自己**上（開著時），關著時整段不存在。
+      if (decl?.valueInput?.replacesItem) {
+        if (replaceOpen) for (const f of g.fields) addField(input, f)
+        continue
+      }
+      const opt = decl?.valueInput
+        ? this.appendValueInput(optName(i, g.key))
+        : this.appendDummyInput(optName(i, g.key))
+      if (decl?.valueInput?.check) opt.setCheck(decl.valueInput.check)
       for (const f of g.fields) addField(opt, f)
       opt.setVisible(optsOf(this, i)[g.key] === true)
       // ⚠️ **驗證器不是為了驗證**：它是「值被設進來」的唯一通知，而
@@ -397,8 +505,12 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     //    ——而症狀不是畫面歪掉，是**整段語料載不進工作區**
     //    （第五十一條護欄 2026-08-25 抓到四段）。
     const anchor = anchorInput(this)
-    if (anchor) this.moveInputBefore(name(spec.itemPattern, i), anchor)
+    // ⚠️ 取代模式下那一格的名字**跟著形態走**——用寫死的 `itemPattern` 會丟
+    //    `Reference input not found`（而症狀是整段語料載不進工作區）。
+    const itemName = replaceG && replaceOpen ? name(replaceG.valueInput!.name, i) : name(spec.itemPattern, i)
+    if (anchor) this.moveInputBefore(itemName, anchor)
     for (const g of groups) {
+      if ((spec.optionalGroups ?? []).find((x) => x.key === g.key)?.valueInput?.replacesItem) continue
       if (anchor && this.getInput(optName(i, g.key))) this.moveInputBefore(optName(i, g.key), anchor)
     }
     this.paramCount_++
@@ -408,11 +520,73 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
   /** 打開或關掉某一格的某一段（關掉時**一併清掉值**）。 */
   proto.setOptional_ = function (this: any, i: number, key: string, show: boolean): void {
     const g = groups.find((x) => x.key === key)
+    if (!g) return
+    // 🔴 **取代模式：換形態＝重建那一格**（命令式那份的 `rebuildInputs_` 在做同一件事）。
+    //    ⚠️ 欄位的值與**接上去的積木**都要接回來——後者清掉就沒了。
+    const decl = (spec.optionalGroups ?? []).find((x) => x.key === key)
+    if (decl?.valueInput?.replacesItem) {
+      if (optsOf(this, i)[key] === show) return
+      const oldName = itemNamesOf(i).find((n) => this.getInput(n))
+      const savedFields: Record<string, string> = {}
+      for (const f of spec.fields) {
+        const fn = f.name.replace('{i}', String(i))
+        const v = this.getFieldValue(fn)
+        if (typeof v === 'string') savedFields[fn] = v
+      }
+      // 🔴 **接上去的那顆積木要【寄放】起來，不是丟著**（2026-08-26）。
+      //    第一版只 `disconnect()`——於是關掉 `x = 1` 之後那顆 `1`
+      //    **浮成工作區裡的一顆孤兒積木**，而再打開時 `x = ?`。
+      //    ⚠️ 命令式那份更糟：`removeInput` 直接把它 dispose 掉。
+      //    > **一個救不回來的動作，不該藏在一個勾選格後面**（同檔 `setBlockOption_`）。
+      this.itemStash_ = this.itemStash_ ?? {}
+      const savedBlock = oldName ? this.getInput(oldName)?.connection?.targetBlock() ?? null : null
+      if (savedBlock) {
+        savedBlock.outputConnection?.disconnect()
+        if (!show) {
+          this.itemStash_[i] = Blockly.serialization.blocks.save(savedBlock)
+          savedBlock.dispose(false)
+        }
+      }
+      if (oldName) this.removeInput(oldName)
+      optsOf(this, i)[key] = show
+      // 重建：把那一格從尾巴長回來，再搬到原本的位置
+      const newName = show ? name(decl.valueInput.name, i) : name(spec.itemPattern, i)
+      const input = show ? this.appendValueInput(newName) : this.appendDummyInput(newName)
+      if (show && decl.valueInput.check) input.setCheck(decl.valueInput.check)
+      if (i > 0 && spec.separator) input.appendField(spec.separator)
+      const wanted = show ? spec.fields : spec.fields.slice(0, firstOptionalIndex < 0 ? spec.fields.length : firstOptionalIndex)
+      for (const f of wanted) {
+        const fn = f.name.replace('{i}', String(i))
+        const json = { ...f, name: fn } as Record<string, unknown>
+        if (typeof json.text === 'string') json.text = (json.text as string).replace('{i}', String(i))
+        delete (json as { firstText?: unknown }).firstText
+        const field = Blockly.fieldRegistry.fromJson(json as never)
+        if (field) input.appendField(field, fn)
+        if (savedFields[fn] !== undefined && this.getField(fn)?.setValue) this.getField(fn).setValue(savedFields[fn])
+      }
+      // 位置：排在下一格（或尾巴）之前
+      const after = itemNamesOf(i + 1).find((n) => this.getInput(n)) ?? anchorInput(this)
+      if (after && this.getInput(after)) this.moveInputBefore(newName, after)
+      if (show) {
+        const back = savedBlock ?? (this.itemStash_[i]
+          ? Blockly.serialization.blocks.append(this.itemStash_[i], this.workspace)
+          : null)
+        if (back) input.connection?.connect(back.outputConnection)
+        delete this.itemStash_[i]
+      }
+      this.queueRender?.()
+      return
+    }
     const opt = this.getInput(optName(i, key))
-    if (!g || !opt) return
+    if (!opt) return
     optsOf(this, i)[key] = show
     if (opt.isVisible() === show) return
-    if (!show) {
+    // 🔴 **接點群不清值**（2026-08-26）：那一格接的是一顆積木，
+    //    清掉就沒了，而 Blockly 照樣把隱藏插槽底下的積木存進存檔
+    //    ——收起來再打開，它會回來。
+    //    > **一個救不回來的動作，不該藏在一個勾選格後面。**
+    const isValueGroup = Boolean((spec.optionalGroups ?? []).find((x) => x.key === key)?.valueInput)
+    if (!show && !isValueGroup) {
       for (const f of g.fields) {
         const field = this.getField(f.name.replace('{i}', String(i))) as any
         // 🔴 標籤（`：`／`＝`）也是 field——清掉它等於把那個符號抹掉（見上面同一條）
@@ -541,7 +715,8 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
   proto.minusParam_ = function (this: any): void {
     if (this.paramCount_ <= minCount) return
     this.paramCount_--
-    this.removeInput(name(spec.itemPattern, this.paramCount_))
+    // ⚠️ 取代模式：那一格可能叫 `INIT_i`（開著）或 `VAR_i`（關著）——兩個都試。
+    for (const n of itemNamesOf(this.paramCount_)) if (this.getInput(n)) this.removeInput(n)
     // ⚠️ 可有可無那幾段各自是**另一個 input**——少刪的話，
     //    下一次 `＋` 會撞到一個已經存在的名字（Blockly 會丟錯）。
     for (const g of groups) {
@@ -549,6 +724,8 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
       if (this.getInput(n)) this.removeInput(n)
     }
     this.paramOpts_?.splice(this.paramCount_, 1)
+    // ⚠️ 寄放是**按格號**的——少刪一格，下一次那個號會拿到別人的東西
+    if (this.itemStash_) delete this.itemStash_[this.paramCount_]
     this.rebuildTail_()
     setMinusState(this, this.paramCount_ <= minCount)
   }
@@ -563,6 +740,15 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
     //    ⚠️ **寄放的字也算「有東西」**——否則 `def f()` 收起來的那句註解會在存檔時蒸發
     if (this.paramCount_ <= 0 && Object.keys(stash).length === 0
         && blockOptions.every((o) => !this.getInput(o.input)?.isVisible())) return null
+    // 🔴 **具名的形態清單**（`itemsAs`）——接手既有積木時的存檔契約。
+    //    `{ items: ['var_init','var'] }` 與 `{ paramCount, paramOpts }` 攜帶同一份資訊，
+    //    而**用它原本的形狀寫，舊存檔就不必遷移**。
+    if (spec.itemsAs) {
+      const a = spec.itemsAs
+      const items = Array.from({ length: this.paramCount_ }, (_, i) =>
+        optsOf(this, i)[a.group] ? a.open : a.closed)
+      return { [a.key]: items } as never
+    }
     const base = { paramCount: this.paramCount_ }
     if (groups.length === 0 && blockOptions.length === 0) return base
     // ⚠️ **沒有任何一段被打開時不寫這個鍵**——`{ paramCount }` 是與命令式那份
@@ -586,6 +772,21 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
   }
 
   proto.loadExtraState = function (this: any, state: { paramCount?: number; paramOpts?: string[][]; blockOpts?: string[]; blockOptText?: Record<string, string> } | null): void {
+    // 🔴 **具名形態清單那一支**（`itemsAs`）——見 `saveExtraState` 的說明。
+    if (spec.itemsAs) {
+      const a = spec.itemsAs
+      const items = (state as Record<string, unknown> | null)?.[a.key]
+      const list = Array.isArray(items) ? (items as string[]) : []
+      // ⚠️ 舊存檔沒有這個鍵時退到**最少幾格**，不是 0——與下面同一條。
+      const n = Math.max(list.length, minCount)
+      while (this.paramCount_ < n) this.plusParam_()
+      while (this.paramCount_ > n) this.minusParam_()
+      for (let i = 0; i < n; i++) {
+        // ⚠️ **沒寫到的那幾格維持預設**——不是被判成 closed 再關一次
+        if (i < list.length) this.setOptional_(i, a.group, list[i] === a.open)
+      }
+      return
+    }
     this.blockOptText_ = { ...(state?.blockOptText ?? {}) }
     // ⚠️ **舊存檔沒有這個鍵時要退到【最少幾格】不是 0**——`for` 的舊檔
     //    若被載回 0 格，產出的會是 `for  in xs:`。

@@ -94,7 +94,12 @@ function declarableKeys(spec: unknown): string[] {
   //    會永遠掛在「宣告表達不出」那一欄——**而那是比對器在說謊**。
   const def = sp?.blockDef
   if (def?.branchList) { keys.add('elseifCount'); keys.add('hasElse') }
-  if (def?.paramList) keys.add('paramCount')
+  // ⚠️ **同一條規則**（用它實際會用的那個鍵）：`paramList` 宣告了 `itemsAs` 時
+  //    存的是那份具名的形態清單（`{ items: [...] }`），不是 `paramCount`。
+  if (def?.paramList) {
+    const pl = def.paramList as { itemsAs?: { key?: string } }
+    keys.add(pl.itemsAs?.key ?? 'paramCount')
+  }
   // ⚠️ **要用它【實際會用】的那個鍵**，不是兩個都加。
   //    🔴 兩個都加 = 這一維變成「超集合檢查」，於是
   //    「命令式存 `argCount`、建構子存 `itemCount`」被判成一模一樣
