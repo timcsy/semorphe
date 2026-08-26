@@ -331,6 +331,29 @@ languages/{lang}/
          → 比對器把它們略過，**而略過與通過在報表上長得一模一樣**。
          `block-def-parity.json` 的 `hollowDeclaration` 逐顆指名它們，
          而它與 `differ` **必須一起看**（宣告退成空殼會讓 `differ` 下降而像進步）。
+
+      🎯 **同日 7 → 1**（`hollowDeclaration`）：`cpp_forward_decl` · `cpp_initializer_list` ·
+         `cpp_var_declare_expression` · `cpp_array_declare` · `cpp_array_2d_declare` ·
+         `cpp_vector_declare` 六顆退場。→ [160](history/160-最後一顆命令式積木退場而清單歸零不等於清乾淨.md)
+         🟢 **「宣告的詞彙表封頂了」這個假設，在六顆上成立**——只補了**一格**機制
+         （`openLabelOnFirstSlot`），而它是既有 `openLabelKey` 的第二種擺法，不是新概念。
+         🔴 **而六顆裡有四顆的差異不是「宣告躺著」，是【命令式那份錯了】**：
+         參數名字收不下（真的在掉資料）· 型別下拉是靜態的（`int**` 寫不出去）·
+         六個中文標籤讀了一個打錯的鍵 · 兩顆同族積木的型別清單一個五選一一個三選一。
+         🟢 五顆宣告類積木從此共用同一份型別清單（`cpp_var_types`，住在語言套件）。
+
+      - [ ] 🔴 **最後一顆 `cpp_var_declare` 需要一個【還不存在的建構子】**
+            ```
+            存檔契約   { items: ('var_init'|'var')[] }   ← 是一份【形態清單】，不是計數
+            每一格     var_init → NAME_i = ⟨接點⟩
+                       var      → NAME_i（只有名字，沒有接點）
+            齒輪       兩種子積木（u_var_declare_var_input／…_var_init_input）
+            ```
+            `variadic` 的每一格同形、`paramList` 的 `optionalGroups` 只做得出**欄位**群
+            （這裡每一格要的是**接點**）——**兩個建構子都表達不完**。
+            ⚠️ 那三顆 `u_var_declare_*` 子積木也是命令式的，會跟著這一刀一起走。
+            **驗收**：`hollowDeclaration` 1 → 0 且 `dual-truth` 兩處都有定義 1 → 0；
+            `block-registrar.ts` 的命令式賦值歸零，第七條與比對護欄可以退休。
       🟢 **而護欄現在有五維**：spec `166` 補上「載入時的狀態」
       （→ [117](history/117-一次靠運氣攔下的迴歸.md)），
       `cpp_raw_code` 因此從「可刪」變成「有差異」——**它原本是靠 tsc 抱怨未用的 import
