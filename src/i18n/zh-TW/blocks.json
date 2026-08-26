@@ -255,5 +255,9 @@
   "EXEC_INTERVENTIONS": "⚠️ 這次執行有 {count} 筆是你手動填進去的，所以上面的結果不是這支程式單獨跑出來的。",
   "EXEC_UNSYNC_SYNC": "⟳ 先同步再執行",
   "EXEC_UNSYNC_AS_IS": "▶ 就跑現在這一份",
-  "SYNC_SOURCE_FLOW": "流程"
+  "SYNC_SOURCE_FLOW": "流程",
+  "FLOW_REFUSE_NO_SUCH_SLOT": "這條線接不上：那一格不是這顆積木有的位置。你的程式沒有被改動。",
+  "FLOW_REFUSE_WOULD_CYCLE": "這條線接不上：它會繞回自己身上，而程式沒有辦法那樣執行。你的程式沒有被改動。",
+  "FLOW_REFUSE_NOT_PARENT_CHILD": "這條線接不上：這兩顆之間沒有「誰放在誰裡面」的關係，而這張圖只畫得出那一種。你的程式沒有被改動。",
+  "FLOW_REFUSE_WRONG_KIND": "這條線接不上：那一格要的是「一件事」而你接的是「一個值」（或反過來）。你的程式沒有被改動。"
 }

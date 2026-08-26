@@ -129,7 +129,7 @@ function heightOf(rows: number): number {
   return HEADER_H + Math.max(rows, 1) * ROW_H + PAD_Y
 }
 
-function build(node: SemanticNode, labels?: FlowLabelSource): Built {
+function build(node: SemanticNode, labels?: FlowLabelSource, opts?: GraphOptions): Built {
   const slots = slotsOf(node.componentId)
   const fields = Object.entries(node.properties ?? {})
     .filter(([, v]) => v !== null && v !== undefined && v !== '')
@@ -158,7 +158,17 @@ function build(node: SemanticNode, labels?: FlowLabelSource): Built {
     const kids = node.children[s.slot] ?? []
     // ⚠️ 一個子槽可能裝**好幾個**值（`print` 的 `values`）——每一個各自一個接點，
     //    不是把它們併成一條線。併起來的話「第二個引數是誰」在圖上就消失了。
-    if (kids.length === 0) continue
+    if (kids.length === 0) {
+      if (!opts?.emptySlots) continue
+      // 空的資料位置——**可編輯時要長一個接點**，否則沒有地方下手
+      ports.push({
+        key: s.slot,
+        label: flowSlotName(node.componentId, s.slot),
+        kind: 'data', side: 'in', dx: 0, dy: HEADER_H + row * ROW_H + ROW_H / 2,
+      })
+      row++
+      continue
+    }
     kids.forEach((kid, i) => {
       const key = kids.length > 1 ? `${s.slot}[${i}]` : s.slot
       // ⚠️ 一個子槽裝好幾個值時鍵是 `values[0]`，而**名字問的是子槽本身**
@@ -169,18 +179,26 @@ function build(node: SemanticNode, labels?: FlowLabelSource): Built {
         kind: 'data', side: 'in', dx: 0, dy: HEADER_H + row * ROW_H + ROW_H / 2,
       })
       row++
-      sources.push(build(kid, labels))
+      sources.push(build(kid, labels, opts))
     })
   }
   const fieldRows = fields.length
-  // ⚠️ **空的插槽不長接點**——與資料接點同一條規則。
-  // `python:if` 宣告了三個身體（`body`／`elif_body`／`else_body`），
-  // 而一段沒有 elif 的程式若照樣長出那個接點，圖上會多一個**永遠沒有線的洞**。
-  // 🔴 這與「節點編輯器都把接點畫滿」不同，理由是**這張圖是導出的，不是接出來的**：
-  //    使用者不會去接那個接點，它只會是雜訊。
+  // ⚠️ **空的插槽本來不長接點**——`python:if` 宣告了三個身體
+  // （`body`／`elif_body`／`else_body`），而一段沒有 elif 的程式若照樣長出那個接點，
+  // 圖上會多一個**永遠沒有線的洞**。原本的理由逐字是：
+  // 「這張圖是導出的，不是接出來的：**使用者不會去接那個接點**，它只會是雜訊。」
+  //
+  // 🔴 **而那句話 2026-08-26 變成假的了**：流程面板可以編輯之後，
+  //    使用者**會**去接那個接點——沒有接點就沒有地方下手。
+  //
+  // > **一個機制的存在理由，可能在另一條線做完的那天消失
+  // > ——而它不會自己出聲。**
+  //
+  // → 所以「空插槽長不長接點」變成**呼叫端的決定**（`opts.emptySlots`）：
+  //   唯讀的宿主照舊（不長，圖乾淨），可編輯的長出來（有地方下手）。
   const bodies = bodySlots
-    .map((s) => ({ port: s.slot, nodes: (node.children[s.slot] ?? []).map((k) => build(k, labels)) }))
-    .filter((b) => b.nodes.length > 0)
+    .map((s) => ({ port: s.slot, nodes: (node.children[s.slot] ?? []).map((k) => build(k, labels, opts)) }))
+    .filter((b) => b.nodes.length > 0 || opts?.emptySlots === true)
   const flow = flowKindOf(node.componentId)
   for (const b of bodies) {
     ports.push({
@@ -277,8 +295,22 @@ function collectDataWires(src: Built, consumer: Built, wires: GraphWire[]): void
  * 沒接的宿主拿到的是「沒有標題的盒子 ＋ 只有值的欄位」，
  * 🔴 **而不是一個印著 `func_def` 的盒子**（第七十八條護欄）。
  */
-export function buildNodeGraph(statements: SemanticNode[], labels?: FlowLabelSource): NodeGraph {
-  const built = statements.map((n) => build(n, labels))
+export interface GraphOptions {
+  /**
+   * **空的插槽要不要長出接點**（2026-08-26）。
+   *
+   * 唯讀 → `false`（圖乾淨，沒有永遠沒有線的洞）。
+   * 可編輯 → `true`（**沒有接點就沒有地方下手**）。
+   */
+  emptySlots?: boolean
+}
+
+export function buildNodeGraph(
+  statements: SemanticNode[],
+  labels?: FlowLabelSource,
+  opts?: GraphOptions,
+): NodeGraph {
+  const built = statements.map((n) => build(n, labels, opts))
   const nodes: GraphNode[] = []
   const wires: GraphWire[] = []
   const cur: Cursor = { y: 0, maxRight: 0 }

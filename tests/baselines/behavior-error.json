@@ -2,14 +2,14 @@
   "_meta": {
     "referenceCompiler": "Apple clang version 16.0.0 (clang-1600.0.26.6)",
     "flag": "-std=c++17",
-    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。 ⚠️ 2026-08-13 誤差 14 → 13、缺口 18 → 5。移除一筆孤兒判定（理由曾是「未定位——單獨測通過，組合才壞」）——**今天定位了**：`cpp:new` 回傳固定字串 `heap_int`，兩次 `new int` 撞在一起。已改成配置真的儲存體。 ⚠️ 2026-08-13（第二輪）誤差 13 → 9：`cpp:string_at` 回錯型別（`{type:\"string\"}` 而非 char 的碼位），於是 `s[i] - 32` 走 `Number(\"a\")||0` 變成 0。移除 4 筆孤兒判定——其中兩筆的理由曾猜「可能是 islower 未定義或**字元轉型**」，**字元轉型猜對了**，只是當時沒有定位。 ⚠️ 2026-08-13（第三輪）缺口 5 → 3：指標算術（`p = p + 2` 移的是 offset，底下的陣列不複製）＋ `vector<int> v(5)`（**建構子引數原本被「正確地排除」之後沒有人接住**——「這不屬於那個接點」與「這不需要接點」是兩件事，而一個 else-if 排除法把它們寫成了同一件）。 ⚠️ 2026-08-13（第四輪）缺口 3 → 2：移除 cpp:struct_at_member 的 astPattern（與 registerAstBranch 是兩份 lift 宣告，astPattern 贏，於是膠囊那一份從未被呼叫）。 ⚠️ 2026-08-13（第五輪）誤差 9 → 8：`string += char` 改成串接。**這一筆在 string_at 改回碼位之後症狀變了但沒變好**——原本是 `Number(\"a\")||0` 也錯，改後是「把碼位當數字加」。同一個缺陷的兩種面貌，而兩次都不報錯。 ⚠️ 2026-08-13（第六輪）誤差 8 → 7：無號型別的轉型截斷（ 是 255 不是 -1）。**原本那些型別一個都沒被認出來**，落到 numericCast 尾端的  原封回傳，而 -1 看起來就像一個成功的轉型結果。 ⚠️ 2026-08-13（第七輪）誤差 7 → 6：`sizeof(3.14)` 給 4。**`sizeof(3.14f)` 之所以「已經對了」是巧合**——float 是 4，而查不到時的退路也是 4。一個退路值若剛好等於某些正確答案，那些案例會看起來像通過的。 ⚠️ 2026-08-13（第八輪）新增 `unstableReference` 一欄：不一致時**先確認參照那一側自己是穩定的**（重跑一次比對）。讀未初始化變數是 UB，真編譯器印垃圾值而直譯器回 0——把它算成誤差是**指控一個沒有唯一答案的問題有唯一答案**，而受指控的還是比較誠實的那一邊。🔴 **而今天這一欄是 0**：那筆 UB 的垃圾值在同一台機器上是穩定的，跑兩次一樣。所以這個機制擋的是「真的每次不同」那一種（時間／位址／未初始化的堆），**能力邊界寫在那支注入裡**——沒有它，一個 0 與「什麼都沒量到」產出相同。 ⚠️ 2026-08-13（第九輪）誤差 6 → 5：`cpp:compare` 沒有問運算子多載，而 `cpp:arithmetic` 早就在做。兩個物件比較於是走 `toNumber` 都變 NaN，`==` 恆假、`!=` 恆真——**`operator==` 寫了也沒用**，而輸出是「not equal 印成 also equal」這種看起來像業務邏輯的錯。**機制本來就齊了（memberRole:\"operator\" ＋ splitMember），缺的只是這一顆去問。一個機制的消費者少一個，那個機制就對那條路徑不存在。** ⚠️ 2026-08-13（第十輪）誤差 5 → 4：**獨立的 `{ … }` 被展平了**，於是裡面宣告的物件掛到外層作用域，解構子印在 `main end` 之後。新增 `cpp:block` 膠囊 ＋ 讓 `lifter.ts` 只展平「結構的 body」（判準看父節點）。⚠️ 影響不只解構子——`int main(){ { int x=1; } cout << x; }` 在真編譯器是編譯錯誤，而展平之後會印出 1。**一個作用域少了，症狀不是「變數不見」而是「變數活太久」——而活太久不會報錯。** ⚠️ 2026-08-13（第十一輪）誤差 4 → 3：`cpp:arithmetic` 的 `+` 對字串也要串接。**與第五輪修的 `+=` 是同一個根因的另一半，而當時只修了複合形式。一個運算子有複合形式與二元形式時，修一個不會修到另一個——而它們錯的是同一件事。** ⚠️ 2026-08-13（第十二輪）誤差 3 → 2：四種命名轉型的 `char` 改回字元。`cast.ts` 的檔頭逐字說那是「**既有行為，未經檢驗是否正確**——保留，不在搬家的 diff 裡改」，而今天檢驗了：真編譯器對 `static_cast<char>(66)` 也印 `B`。**「未經檢驗是否正確」的東西被原樣保留了五個月——而保留它的那句話本身就是它可以被檢驗的證據。** ⚠️ 2026-08-13（第十三輪）誤差 2 → 1：`cpp:container_empty` 對非 array **無條件回 true**，而 `s.empty()` 走的正是這條路（容器方法表按方法名分派，不按接收者型別）。於是 `if (from.empty()) return s;` 對一個非空字串成立，整個 `replaceAll` 一次都沒替換就回傳——**而輸出是原字串，看起來像「沒有東西需要替換」**。⚠️ 順帶把那個無條件回退改成出聲。**一個回退值若剛好是某些情況的正確答案，它會偽裝成正確很久。** ⚠️ 2026-08-13（第十四輪）缺口 2 → 1：新增 `cpp:exception_make` 膠囊（`runtime_error(\"…\")` 等六種標準例外）。⚠️ 第一版用純資料的 `fieldMappings` 寫 `\"ast\": \"arguments.0\"`——**那個路徑語法不存在**（`extract:\"lift\"` 只認 `$namedChildren[N]` 或欄位名），於是訊息永遠是空字串，而 `caught: ` 印出來看起來只是「訊息剛好是空的」。**一個宣告式的機制表達不了的東西，硬塞給它會變成一個看起來有值而其實是空的欄位。** 改用具名策略。 🎉 2026-08-13（第十五輪）**缺口 1 → 0**：樣板類別（`template<typename T> class`）交給既有的 class 路徑，`Container<int> c;` 查型別時剝掉樣板引數。⚠️ **這不是「支援泛型」，是讓它跑得動**——型別在這個直譯器裡是裝飾。順帶修掉 `class C { vector<int> data; }` 的成員被建成 `int 0`（樣板型別的預設值是空容器）。\n\n🔴 **2026-08-14 不一致筆數 1 → 0，而那不是修好了缺陷**：唯一那筆是 UB（讀未初始化變數），**它被移出分子**（另立 `environmentDependent` 一欄）。\n起因是 CI 紅而本機綠：macOS 的 clang 印堆疊垃圾（算一筆不一致），Ubuntu 的 gcc 印 0（一致）——**同一條規則、兩台機器、兩個結果**。\n⚠️ 而那讓基線無解：記 1 則 CI 說「有改善請下調」，記 0 則本機說「退步」。\n**因為分子裡混了一個沒有唯一答案的樣本。** 處置與 `undecidable`（讀 cin／rand）同一條。\n語料來源是 `roundtrip-variables-ops.test.ts` 的 `executes uninitialized int as 0`——一支刻意在測「我們自己定義的行為」的測試，被這條護欄拿去與參照編譯器對答案。\n\n【2026-08-14 / specs/120】新增 onlyOurs——「只有直譯器跑得動」的那些，按【參照為什麼拒絕】分類。⚠️ 而那個數字【不要照字面讀】：\nprogramIsIllegal: 25，而拆開看 22 筆是 `use of undeclared identifier 'cout'` 等【語料片段缺 #include】——那正是 auto-include 刻意處理的東西，不是「使用者寫了不合法的程式」。\n🔴 所以它【不是】一條棘輪，是一份報表：語料換了這個數字就會變，而那不代表模型變好或變壞。\n要量「寫錯的程式跑不跑得起來」不能用這批語料——語料來自我們自己的測試檔（knowledge/history/057：一份缺陷清單只包含被記下來的缺陷）。\n直接量的結果寫在 specs/120-reject-invalid-programs/spec.md「T012 檢查點的結論」。\n\n🔴 **2026-08-26：整批重產，而理由是【這條護欄一直在量一半】。**\n語料收集器的正規式是 /`([^`]{4,600})`/g——**把長度條件寫進配對規則裡**。\n於是一段少於四個字元的反引號片語（註解或測試名字裡的 `&x`）不匹配，\n那個開頭的反引號沒有被消耗，它的結尾反引號變成下一段的**開頭**，\n從此整個檔案的配對錯開一格，把後面真正的語料整段吞掉。\n\n> **把一個【內容的條件】寫進【配對的規則】裡，\n> 不符合條件的那一段不會被丟掉——它會讓後面的每一段都錯位。**\n\n修好之後語料 **345 → 619 段**（幾乎翻倍），而它當場照出三個東西：\n  ① `freq[c]++` 丟「這個東西不能被指定值」——`cpp:map_at` 沒宣告左值解法\n     （2026-08-26 左值接點化的迴歸，**而沒有任何測試變紅**）\n  ② `for (char c : s)` 迴圈一次都不跑——`cpp:loop_range` 只認 array，\n     而它**沒有出聲**：程式跑完了，輸出是空的\n  ③ `std::map` 是有序的，而我們是插入序——`mapInsertSorted`\n三個都修了。剩下的一筆誤差是 `int` 溢位（模型的決定，已具名判定）。\n\n⚠️ **這一次是整批重產而不是逐格上調**（`build-guardrail` 通常否決前者）：\n理由是**量測本身換了**，不是世界變了——而那正是要寫在這裡的東西。\n⚠️ 2026-08-26：語料 619 → 621（第七十六條護欄帶進兩支合成 C++）。**真的變大**，而兩支各自誠實地落位：\n  · 讀兩個 cin 的那支 → 【不可判定】98 → 99（沒有輸入時兩邊都判不了，與既有規則一致）\n  · 含 asm 的那支 → 【參照跑得動而我們跑不動】11 → 12，gaps 11 → 12（execute）\n    🔴 那是一筆**真的能力缺口**（GNU 內嵌組語），不是這一刀引入的缺陷——\n    在此之前它只是【沒有被量到】。\n  🟢 mismatch（1）與 environmentDependent（1）都沒有動。",
+    "note": "行為的誤差：直譯器輸出與參照編譯器輸出不一致的筆數，也就是模型**理解錯**的部分。\n⚠️ 這不是殘差。誤差高＝模型是錯的（系統會騙人）；殘差高＝模型還沒長到那裡（系統仍然正確）。\n殘差在 projection-residual.json，**兩者不可合併**——混起來的話，多蓋幾顆元件會讓「會騙人」的數字看起來在改善。\n⚠️ 四欄語料統計缺一不可。只記不一致筆數的話，**讓直譯器多壞掉幾段就能讓誤差下降**——縮分母比修分子容易。\n⚠️ 參照編譯器記的是**版本字串原文**：macOS 的 /usr/bin/g++ 是 Apple clang 的別名，\n記成「g++」的話，換一台機器跑出不同數字時沒有人查得出原因。\n哪一筆是「真的」誤差要人判，落點在 tests/assets/behavior-error-decisions.json，每一筆必須有理由。 ⚠️ 2026-08-13 誤差 14 → 13、缺口 18 → 5。移除一筆孤兒判定（理由曾是「未定位——單獨測通過，組合才壞」）——**今天定位了**：`cpp:new` 回傳固定字串 `heap_int`，兩次 `new int` 撞在一起。已改成配置真的儲存體。 ⚠️ 2026-08-13（第二輪）誤差 13 → 9：`cpp:string_at` 回錯型別（`{type:\"string\"}` 而非 char 的碼位），於是 `s[i] - 32` 走 `Number(\"a\")||0` 變成 0。移除 4 筆孤兒判定——其中兩筆的理由曾猜「可能是 islower 未定義或**字元轉型**」，**字元轉型猜對了**，只是當時沒有定位。 ⚠️ 2026-08-13（第三輪）缺口 5 → 3：指標算術（`p = p + 2` 移的是 offset，底下的陣列不複製）＋ `vector<int> v(5)`（**建構子引數原本被「正確地排除」之後沒有人接住**——「這不屬於那個接點」與「這不需要接點」是兩件事，而一個 else-if 排除法把它們寫成了同一件）。 ⚠️ 2026-08-13（第四輪）缺口 3 → 2：移除 cpp:struct_at_member 的 astPattern（與 registerAstBranch 是兩份 lift 宣告，astPattern 贏，於是膠囊那一份從未被呼叫）。 ⚠️ 2026-08-13（第五輪）誤差 9 → 8：`string += char` 改成串接。**這一筆在 string_at 改回碼位之後症狀變了但沒變好**——原本是 `Number(\"a\")||0` 也錯，改後是「把碼位當數字加」。同一個缺陷的兩種面貌，而兩次都不報錯。 ⚠️ 2026-08-13（第六輪）誤差 8 → 7：無號型別的轉型截斷（ 是 255 不是 -1）。**原本那些型別一個都沒被認出來**，落到 numericCast 尾端的  原封回傳，而 -1 看起來就像一個成功的轉型結果。 ⚠️ 2026-08-13（第七輪）誤差 7 → 6：`sizeof(3.14)` 給 4。**`sizeof(3.14f)` 之所以「已經對了」是巧合**——float 是 4，而查不到時的退路也是 4。一個退路值若剛好等於某些正確答案，那些案例會看起來像通過的。 ⚠️ 2026-08-13（第八輪）新增 `unstableReference` 一欄：不一致時**先確認參照那一側自己是穩定的**（重跑一次比對）。讀未初始化變數是 UB，真編譯器印垃圾值而直譯器回 0——把它算成誤差是**指控一個沒有唯一答案的問題有唯一答案**，而受指控的還是比較誠實的那一邊。🔴 **而今天這一欄是 0**：那筆 UB 的垃圾值在同一台機器上是穩定的，跑兩次一樣。所以這個機制擋的是「真的每次不同」那一種（時間／位址／未初始化的堆），**能力邊界寫在那支注入裡**——沒有它，一個 0 與「什麼都沒量到」產出相同。 ⚠️ 2026-08-13（第九輪）誤差 6 → 5：`cpp:compare` 沒有問運算子多載，而 `cpp:arithmetic` 早就在做。兩個物件比較於是走 `toNumber` 都變 NaN，`==` 恆假、`!=` 恆真——**`operator==` 寫了也沒用**，而輸出是「not equal 印成 also equal」這種看起來像業務邏輯的錯。**機制本來就齊了（memberRole:\"operator\" ＋ splitMember），缺的只是這一顆去問。一個機制的消費者少一個，那個機制就對那條路徑不存在。** ⚠️ 2026-08-13（第十輪）誤差 5 → 4：**獨立的 `{ … }` 被展平了**，於是裡面宣告的物件掛到外層作用域，解構子印在 `main end` 之後。新增 `cpp:block` 膠囊 ＋ 讓 `lifter.ts` 只展平「結構的 body」（判準看父節點）。⚠️ 影響不只解構子——`int main(){ { int x=1; } cout << x; }` 在真編譯器是編譯錯誤，而展平之後會印出 1。**一個作用域少了，症狀不是「變數不見」而是「變數活太久」——而活太久不會報錯。** ⚠️ 2026-08-13（第十一輪）誤差 4 → 3：`cpp:arithmetic` 的 `+` 對字串也要串接。**與第五輪修的 `+=` 是同一個根因的另一半，而當時只修了複合形式。一個運算子有複合形式與二元形式時，修一個不會修到另一個——而它們錯的是同一件事。** ⚠️ 2026-08-13（第十二輪）誤差 3 → 2：四種命名轉型的 `char` 改回字元。`cast.ts` 的檔頭逐字說那是「**既有行為，未經檢驗是否正確**——保留，不在搬家的 diff 裡改」，而今天檢驗了：真編譯器對 `static_cast<char>(66)` 也印 `B`。**「未經檢驗是否正確」的東西被原樣保留了五個月——而保留它的那句話本身就是它可以被檢驗的證據。** ⚠️ 2026-08-13（第十三輪）誤差 2 → 1：`cpp:container_empty` 對非 array **無條件回 true**，而 `s.empty()` 走的正是這條路（容器方法表按方法名分派，不按接收者型別）。於是 `if (from.empty()) return s;` 對一個非空字串成立，整個 `replaceAll` 一次都沒替換就回傳——**而輸出是原字串，看起來像「沒有東西需要替換」**。⚠️ 順帶把那個無條件回退改成出聲。**一個回退值若剛好是某些情況的正確答案，它會偽裝成正確很久。** ⚠️ 2026-08-13（第十四輪）缺口 2 → 1：新增 `cpp:exception_make` 膠囊（`runtime_error(\"…\")` 等六種標準例外）。⚠️ 第一版用純資料的 `fieldMappings` 寫 `\"ast\": \"arguments.0\"`——**那個路徑語法不存在**（`extract:\"lift\"` 只認 `$namedChildren[N]` 或欄位名），於是訊息永遠是空字串，而 `caught: ` 印出來看起來只是「訊息剛好是空的」。**一個宣告式的機制表達不了的東西，硬塞給它會變成一個看起來有值而其實是空的欄位。** 改用具名策略。 🎉 2026-08-13（第十五輪）**缺口 1 → 0**：樣板類別（`template<typename T> class`）交給既有的 class 路徑，`Container<int> c;` 查型別時剝掉樣板引數。⚠️ **這不是「支援泛型」，是讓它跑得動**——型別在這個直譯器裡是裝飾。順帶修掉 `class C { vector<int> data; }` 的成員被建成 `int 0`（樣板型別的預設值是空容器）。\n\n🔴 **2026-08-14 不一致筆數 1 → 0，而那不是修好了缺陷**：唯一那筆是 UB（讀未初始化變數），**它被移出分子**（另立 `environmentDependent` 一欄）。\n起因是 CI 紅而本機綠：macOS 的 clang 印堆疊垃圾（算一筆不一致），Ubuntu 的 gcc 印 0（一致）——**同一條規則、兩台機器、兩個結果**。\n⚠️ 而那讓基線無解：記 1 則 CI 說「有改善請下調」，記 0 則本機說「退步」。\n**因為分子裡混了一個沒有唯一答案的樣本。** 處置與 `undecidable`（讀 cin／rand）同一條。\n語料來源是 `roundtrip-variables-ops.test.ts` 的 `executes uninitialized int as 0`——一支刻意在測「我們自己定義的行為」的測試，被這條護欄拿去與參照編譯器對答案。\n\n【2026-08-14 / specs/120】新增 onlyOurs——「只有直譯器跑得動」的那些，按【參照為什麼拒絕】分類。⚠️ 而那個數字【不要照字面讀】：\nprogramIsIllegal: 25，而拆開看 22 筆是 `use of undeclared identifier 'cout'` 等【語料片段缺 #include】——那正是 auto-include 刻意處理的東西，不是「使用者寫了不合法的程式」。\n🔴 所以它【不是】一條棘輪，是一份報表：語料換了這個數字就會變，而那不代表模型變好或變壞。\n要量「寫錯的程式跑不跑得起來」不能用這批語料——語料來自我們自己的測試檔（knowledge/history/057：一份缺陷清單只包含被記下來的缺陷）。\n直接量的結果寫在 specs/120-reject-invalid-programs/spec.md「T012 檢查點的結論」。\n\n🔴 **2026-08-26：整批重產，而理由是【這條護欄一直在量一半】。**\n語料收集器的正規式是 /`([^`]{4,600})`/g——**把長度條件寫進配對規則裡**。\n於是一段少於四個字元的反引號片語（註解或測試名字裡的 `&x`）不匹配，\n那個開頭的反引號沒有被消耗，它的結尾反引號變成下一段的**開頭**，\n從此整個檔案的配對錯開一格，把後面真正的語料整段吞掉。\n\n> **把一個【內容的條件】寫進【配對的規則】裡，\n> 不符合條件的那一段不會被丟掉——它會讓後面的每一段都錯位。**\n\n修好之後語料 **345 → 619 段**（幾乎翻倍），而它當場照出三個東西：\n  ① `freq[c]++` 丟「這個東西不能被指定值」——`cpp:map_at` 沒宣告左值解法\n     （2026-08-26 左值接點化的迴歸，**而沒有任何測試變紅**）\n  ② `for (char c : s)` 迴圈一次都不跑——`cpp:loop_range` 只認 array，\n     而它**沒有出聲**：程式跑完了，輸出是空的\n  ③ `std::map` 是有序的，而我們是插入序——`mapInsertSorted`\n三個都修了。剩下的一筆誤差是 `int` 溢位（模型的決定，已具名判定）。\n\n⚠️ **這一次是整批重產而不是逐格上調**（`build-guardrail` 通常否決前者）：\n理由是**量測本身換了**，不是世界變了——而那正是要寫在這裡的東西。\n⚠️ 2026-08-26：語料 619 → 621（第七十六條護欄帶進兩支合成 C++）。**真的變大**，而兩支各自誠實地落位：\n  · 讀兩個 cin 的那支 → 【不可判定】98 → 99（沒有輸入時兩邊都判不了，與既有規則一致）\n  · 含 asm 的那支 → 【參照跑得動而我們跑不動】11 → 12，gaps 11 → 12（execute）\n    🔴 那是一筆**真的能力缺口**（GNU 內嵌組語），不是這一刀引入的缺陷——\n    在此之前它只是【沒有被量到】。\n  🟢 mismatch（1）與 environmentDependent（1）都沒有動。\n⚠️ 2026-08-26：語料 621 → 622（第八十條護欄的合成 C++）。**輸入量變大**。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
     "undecidable": 99,
     "bothRun": 438,
     "onlyReferenceRuns": 12,
-    "onlyInterpreterRuns": 56,
+    "onlyInterpreterRuns": 57,
     "neitherRuns": 16
   },
   "mismatch": {
@@ -115,10 +115,10 @@
     ]
   },
   "onlyOurs": {
-    "count": 56,
+    "count": 57,
     "byClass": {
       "toolCannotRun": 2,
-      "programIsIllegal": 51,
+      "programIsIllegal": 52,
       "unclassified": 3
     },
     "details": [
@@ -127,392 +127,399 @@
         "corpus": "int main",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_73.cpp:1:1: error: main cannot be declared as global variable⏎    1 | int main⏎      | ^⏎/tmp/semorphe-refcc/a56355_73.cpp:1:9: error"
+        "message": "/tmp/semorphe-refcc/a6182_73.cpp:1:1: error: main cannot be declared as global variable⏎    1 | int main⏎      | ^⏎/tmp/semorphe-refcc/a6182_73.cpp:1:9: error: "
       },
       {
         "corpusKey": "#include <stack> int main() { std::stack<int> s; s.pop(); }#w8vya6",
         "corpus": "#include <stack>⏎int main() { std::stack<int> s; s.pop(); }",
         "refClass": "toolCannotRun",
         "stage": "run",
-        "message": "/bin/sh: line 1: 58451 Segmentation fault: 11  /tmp/semorphe-refcc/a56355_134 < /dev/null⏎"
+        "message": "/bin/sh: line 1:  8389 Segmentation fault: 11  /tmp/semorphe-refcc/a6182_134 < /dev/null⏎"
       },
       {
         "corpusKey": "#include <algorithm> int main() { int x = min(1, 2); }#ux9v2w",
         "corpus": "#include <algorithm>⏎int main() { int x = min(1, 2); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_168.cpp:2:22: error: use of undeclared identifier 'min'; did you mean 'fmin'?⏎    2 | int main() { int x = min(1, 2); }⏎      |      "
+        "message": "/tmp/semorphe-refcc/a6182_168.cpp:2:22: error: use of undeclared identifier 'min'; did you mean 'fmin'?⏎    2 | int main() { int x = min(1, 2); }⏎      |       "
       },
       {
         "corpusKey": "#include <algorithm> int main() { int x = max(1, 2); }#n2t9l2",
         "corpus": "#include <algorithm>⏎int main() { int x = max(1, 2); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_169.cpp:2:22: error: use of undeclared identifier 'max'; did you mean 'fmax'?⏎    2 | int main() { int x = max(1, 2); }⏎      |      "
+        "message": "/tmp/semorphe-refcc/a6182_169.cpp:2:22: error: use of undeclared identifier 'max'; did you mean 'fmax'?⏎    2 | int main() { int x = max(1, 2); }⏎      |       "
       },
       {
         "corpusKey": "#include <algorithm> int main() { int a = 1; int b = 2; swap#45ucjp",
         "corpus": "#include <algorithm>⏎int main() { int a = 1; int b = 2; swap(a, b); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_170.cpp:2:36: error: use of undeclared identifier 'swap'; did you mean 'std::swap'?⏎    2 | int main() { int a = 1; int b = 2; swap(a"
+        "message": "/tmp/semorphe-refcc/a6182_170.cpp:2:36: error: use of undeclared identifier 'swap'; did you mean 'std::swap'?⏎    2 | int main() { int a = 1; int b = 2; swap(a,"
       },
       {
         "corpusKey": "#include <numeric> int main() { int g = __gcd(12, 8); }#1yxbsnt",
         "corpus": "#include <numeric>⏎int main() { int g = __gcd(12, 8); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_189.cpp:2:22: error: use of undeclared identifier '__gcd'; did you mean 'std::__gcd'?⏎    2 | int main() { int g = __gcd(12, 8); }⏎  "
+        "message": "/tmp/semorphe-refcc/a6182_189.cpp:2:22: error: use of undeclared identifier '__gcd'; did you mean 'std::__gcd'?⏎    2 | int main() { int g = __gcd(12, 8); }⏎   "
       },
       {
         "corpusKey": "#include <numeric> int main() { int l = lcm(12, 8); }#1ik4cek",
         "corpus": "#include <numeric>⏎int main() { int l = lcm(12, 8); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_190.cpp:2:22: error: use of undeclared identifier 'lcm'; did you mean 'std::lcm'?⏎    2 | int main() { int l = lcm(12, 8); }⏎      | "
+        "message": "/tmp/semorphe-refcc/a6182_190.cpp:2:22: error: use of undeclared identifier 'lcm'; did you mean 'std::lcm'?⏎    2 | int main() { int l = lcm(12, 8); }⏎      |  "
       },
       {
         "corpusKey": "#include <vector> int main() { std::vector<int> v; int x = v#1v8q7ns",
         "corpus": "#include <vector>⏎int main() { std::vector<int> v; int x = v.back(); }",
         "refClass": "toolCannotRun",
         "stage": "run",
-        "message": "/bin/sh: line 1: 59347 Segmentation fault: 11  /tmp/semorphe-refcc/a56355_194 < /dev/null⏎"
+        "message": "/bin/sh: line 1:  9209 Segmentation fault: 11  /tmp/semorphe-refcc/a6182_194 < /dev/null⏎"
       },
       {
         "corpusKey": "#include <utility> int main() { auto p = make_pair(1, 2); }#1nskwog",
         "corpus": "#include <utility>⏎int main() { auto p = make_pair(1, 2); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_208.cpp:2:23: error: use of undeclared identifier 'make_pair'; did you mean 'std::make_pair'?⏎    2 | int main() { auto p = make_pair"
+        "message": "/tmp/semorphe-refcc/a6182_208.cpp:2:23: error: use of undeclared identifier 'make_pair'; did you mean 'std::make_pair'?⏎    2 | int main() { auto p = make_pair("
+      },
+      {
+        "corpusKey": "int main(int)#4ojk8o",
+        "corpus": "int main(int)",
+        "refClass": "programIsIllegal",
+        "stage": "compile",
+        "message": "/tmp/semorphe-refcc/a6182_211.cpp:1:14: error: expected function body after function declarator⏎    1 | int main(int)⏎      |              ^⏎1 error generated.⏎"
       },
       {
         "corpusKey": "#include <iostream> using namespace std; class Counter { pub#1lendkj",
         "corpus": "#include <iostream>⏎using namespace std;⏎class Counter {⏎public:⏎    static int total;⏎    int id;⏎    void reg() {⏎        total = total + 1;⏎        id = tota",
         "refClass": "unclassified",
         "stage": "compile",
-        "message": "Undefined symbols for architecture arm64:⏎  \"Counter::total\", referenced from:⏎      Counter::reg() in a56355_326-6d6af7.o⏎ld: symbol(s) not found for architect"
+        "message": "Undefined symbols for architecture arm64:⏎  \"Counter::total\", referenced from:⏎      Counter::reg() in a6182_327-b37fa3.o⏎ld: symbol(s) not found for architectu"
       },
       {
         "corpusKey": "int main(){ char c = 66; cout << c; }#1vqmikf",
         "corpus": "int main(){ char c = 66; cout << c; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_359.cpp:1:26: error: use of undeclared identifier 'cout'⏎    1 | int main(){ char c = 66; cout << c; }⏎      |                       "
+        "message": "/tmp/semorphe-refcc/a6182_360.cpp:1:26: error: use of undeclared identifier 'cout'⏎    1 | int main(){ char c = 66; cout << c; }⏎      |                        "
       },
       {
         "corpusKey": "int main(){ char c = 'B'; cout << c; }#p61vx3",
         "corpus": "int main(){ char c = 'B'; cout << c; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_360.cpp:1:27: error: use of undeclared identifier 'cout'⏎    1 | int main(){ char c = 'B'; cout << c; }⏎      |                      "
+        "message": "/tmp/semorphe-refcc/a6182_361.cpp:1:27: error: use of undeclared identifier 'cout'⏎    1 | int main(){ char c = 'B'; cout << c; }⏎      |                       "
       },
       {
         "corpusKey": "int main(){ cout << (char)('a' - 32); }#1krq5au",
         "corpus": "int main(){ cout << (char)('a' - 32); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_361.cpp:1:13: error: use of undeclared identifier 'cout'⏎    1 | int main(){ cout << (char)('a' - 32); }⏎      |             ^⏎1 erro"
+        "message": "/tmp/semorphe-refcc/a6182_362.cpp:1:13: error: use of undeclared identifier 'cout'⏎    1 | int main(){ cout << (char)('a' - 32); }⏎      |             ^⏎1 error"
       },
       {
         "corpusKey": "int main(){ double d = 1.0/3; cout << d; }#5z3vr1",
         "corpus": "int main(){ double d = 1.0/3; cout << d; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_362.cpp:1:31: error: use of undeclared identifier 'cout'⏎    1 | int main(){ double d = 1.0/3; cout << d; }⏎      |                  "
+        "message": "/tmp/semorphe-refcc/a6182_363.cpp:1:31: error: use of undeclared identifier 'cout'⏎    1 | int main(){ double d = 1.0/3; cout << d; }⏎      |                   "
       },
       {
         "corpusKey": "int main(){ double d = 1.0; cout << d; }#vz71zt",
         "corpus": "int main(){ double d = 1.0; cout << d; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_363.cpp:1:29: error: use of undeclared identifier 'cout'⏎    1 | int main(){ double d = 1.0; cout << d; }⏎      |                    "
+        "message": "/tmp/semorphe-refcc/a6182_364.cpp:1:29: error: use of undeclared identifier 'cout'⏎    1 | int main(){ double d = 1.0; cout << d; }⏎      |                     "
       },
       {
         "corpusKey": "int main(){ int n = 1000000; cout << n; }#1kjbcyd",
         "corpus": "int main(){ int n = 1000000; cout << n; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_364.cpp:1:30: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int n = 1000000; cout << n; }⏎      |                   "
+        "message": "/tmp/semorphe-refcc/a6182_365.cpp:1:30: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int n = 1000000; cout << n; }⏎      |                    "
       },
       {
         "corpusKey": "int main(){ try { throw 10; } catch (int e) { cout << e; } }#1uqqh2b",
         "corpus": "int main(){ try { throw 10; } catch (int e) { cout << e; } }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_365.cpp:1:47: error: use of undeclared identifier 'cout'⏎    1 | int main(){ try { throw 10; } catch (int e) { cout << e; } }⏎      |"
+        "message": "/tmp/semorphe-refcc/a6182_366.cpp:1:47: error: use of undeclared identifier 'cout'⏎    1 | int main(){ try { throw 10; } catch (int e) { cout << e; } }⏎      | "
       },
       {
         "corpusKey": "int main(){ try { throw 2.5; } catch (double e) { cout << e;#1doqpwj",
         "corpus": "int main(){ try { throw 2.5; } catch (double e) { cout << e; } }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_366.cpp:1:51: error: use of undeclared identifier 'cout'⏎    1 | int main(){ try { throw 2.5; } catch (double e) { cout << e; } }⏎   "
+        "message": "/tmp/semorphe-refcc/a6182_367.cpp:1:51: error: use of undeclared identifier 'cout'⏎    1 | int main(){ try { throw 2.5; } catch (double e) { cout << e; } }⏎    "
       },
       {
         "corpusKey": "int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(#1hh86gb",
         "corpus": "int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(v.begin(), v.end(), 0); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_367.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(v.begin(), v.end("
+        "message": "/tmp/semorphe-refcc/a6182_368.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(v.begin(), v.end()"
       },
       {
         "corpusKey": "int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.be#wtaevx",
         "corpus": "int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.begin(), v.end(), 100); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_368.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.begin(), v.end(), 1"
+        "message": "/tmp/semorphe-refcc/a6182_369.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.begin(), v.end(), 10"
       },
       {
         "corpusKey": "class A { public: A(){ cout << \"ctor\"; } }; int main(){ A a;#1rwknvh",
         "corpus": "class A { public: A(){ cout << \"ctor\"; } }; int main(){ A a; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_369.cpp:1:24: error: use of undeclared identifier 'cout'⏎    1 | class A { public: A(){ cout << \"ctor\"; } }; int main(){ A a; }⏎     "
+        "message": "/tmp/semorphe-refcc/a6182_370.cpp:1:24: error: use of undeclared identifier 'cout'⏎    1 | class A { public: A(){ cout << \"ctor\"; } }; int main(){ A a; }⏎      "
       },
       {
         "corpusKey": "class A { public: int v; A(int x){ v = x; } }; int main(){ A#wnqx79",
         "corpus": "class A { public: int v; A(int x){ v = x; } }; int main(){ A a(5); cout << a.v; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_370.cpp:1:68: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v; A(int x){ v = x; } }; int main(){ A a(5); c"
+        "message": "/tmp/semorphe-refcc/a6182_371.cpp:1:68: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v; A(int x){ v = x; } }; int main(){ A a(5); co"
       },
       {
         "corpusKey": "class A { public: int v = 7; }; int main(){ A a; cout << a.v#1clt6nm",
         "corpus": "class A { public: int v = 7; }; int main(){ A a; cout << a.v; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_371.cpp:1:50: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v = 7; }; int main(){ A a; cout << a.v; }⏎    "
+        "message": "/tmp/semorphe-refcc/a6182_372.cpp:1:50: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v = 7; }; int main(){ A a; cout << a.v; }⏎     "
       },
       {
         "corpusKey": "struct P { int x = 3; int y = 4; }; int main(){ P p; cout <<#1bug5uf",
         "corpus": "struct P { int x = 3; int y = 4; }; int main(){ P p; cout << p.x << p.y; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_372.cpp:1:54: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x = 3; int y = 4; }; int main(){ P p; cout << p.x << "
+        "message": "/tmp/semorphe-refcc/a6182_373.cpp:1:54: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x = 3; int y = 4; }; int main(){ P p; cout << p.x << p"
       },
       {
         "corpusKey": "class A { public: int v = 7; A(int n){ v = n; } }; int main(#idq4yh",
         "corpus": "class A { public: int v = 7; A(int n){ v = n; } }; int main(){ A a(9); cout << a.v; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_373.cpp:1:72: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v = 7; A(int n){ v = n; } }; int main(){ A a(9"
+        "message": "/tmp/semorphe-refcc/a6182_374.cpp:1:72: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v = 7; A(int n){ v = n; } }; int main(){ A a(9)"
       },
       {
         "corpusKey": "struct S { string n; int s; }; int main(){ S arr[2] = {{\"a\",#2zt78t",
         "corpus": "struct S { string n; int s; }; int main(){ S arr[2] = {{\"a\",90},{\"b\",80}}; cout << arr[0].n << arr[1].s; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_374.cpp:1:12: error: unknown type name 'string'⏎    1 | struct S { string n; int s; }; int main(){ S arr[2] = {{\"a\",90},{\"b\",80}}; co"
+        "message": "/tmp/semorphe-refcc/a6182_375.cpp:1:12: error: unknown type name 'string'⏎    1 | struct S { string n; int s; }; int main(){ S arr[2] = {{\"a\",90},{\"b\",80}}; cou"
       },
       {
         "corpusKey": "struct P { int x; int y; }; int main(){ P a[1] = {{7,9}}; co#1d3nw7x",
         "corpus": "struct P { int x; int y; }; int main(){ P a[1] = {{7,9}}; cout << a[0].x << a[0].y; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_375.cpp:1:59: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; int y; }; int main(){ P a[1] = {{7,9}}; cout << a["
+        "message": "/tmp/semorphe-refcc/a6182_376.cpp:1:59: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; int y; }; int main(){ P a[1] = {{7,9}}; cout << a[0"
       },
       {
         "corpusKey": "struct P { int x; }; int main(){ P a{3}; cout << a.x; }#d0jswn",
         "corpus": "struct P { int x; }; int main(){ P a{3}; cout << a.x; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_376.cpp:1:42: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; }; int main(){ P a{3}; cout << a.x; }⏎      |     "
+        "message": "/tmp/semorphe-refcc/a6182_377.cpp:1:42: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; }; int main(){ P a{3}; cout << a.x; }⏎      |      "
       },
       {
         "corpusKey": "int main(){ map<string,int> m; m[\"a\"]=1; m[\"b\"]=2; for(auto&#1adp0ze",
         "corpus": "int main(){ map<string,int> m; m[\"a\"]=1; m[\"b\"]=2; for(auto& kv : m) cout << kv.first << kv.second; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_377.cpp:1:17: error: use of undeclared identifier 'string'⏎    1 | int main(){ map<string,int> m; m[\"a\"]=1; m[\"b\"]=2; for(auto& kv : "
+        "message": "/tmp/semorphe-refcc/a6182_378.cpp:1:17: error: use of undeclared identifier 'string'⏎    1 | int main(){ map<string,int> m; m[\"a\"]=1; m[\"b\"]=2; for(auto& kv : m"
       },
       {
         "corpusKey": "int main(){ priority_queue<int, vector<int>, greater<int>> p#1cl7iw8",
         "corpus": "int main(){ priority_queue<int, vector<int>, greater<int>> pq; pq.push(3); pq.push(1); pq.push(5); cout << pq.top(); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_378.cpp:1:33: error: use of undeclared identifier 'vector'⏎    1 | int main(){ priority_queue<int, vector<int>, greater<int>> pq; pq."
+        "message": "/tmp/semorphe-refcc/a6182_379.cpp:1:33: error: use of undeclared identifier 'vector'⏎    1 | int main(){ priority_queue<int, vector<int>, greater<int>> pq; pq.p"
       },
       {
         "corpusKey": "int main(){ priority_queue<int> pq; pq.push(3); pq.push(1); #1wiq1f3",
         "corpus": "int main(){ priority_queue<int> pq; pq.push(3); pq.push(1); pq.push(5); cout << pq.top(); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_379.cpp:1:13: error: no template named 'priority_queue'⏎    1 | int main(){ priority_queue<int> pq; pq.push(3); pq.push(1); pq.push(5"
+        "message": "/tmp/semorphe-refcc/a6182_380.cpp:1:13: error: no template named 'priority_queue'⏎    1 | int main(){ priority_queue<int> pq; pq.push(3); pq.push(1); pq.push(5)"
       },
       {
         "corpusKey": "int main(){ priority_queue<int> pq; pq.push(3); pq.push(5); #1gv7s1x",
         "corpus": "int main(){ priority_queue<int> pq; pq.push(3); pq.push(5); pq.push(1); pq.pop(); cout << pq.top(); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_380.cpp:1:13: error: no template named 'priority_queue'⏎    1 | int main(){ priority_queue<int> pq; pq.push(3); pq.push(5); pq.push(1"
+        "message": "/tmp/semorphe-refcc/a6182_381.cpp:1:13: error: no template named 'priority_queue'⏎    1 | int main(){ priority_queue<int> pq; pq.push(3); pq.push(5); pq.push(1)"
       },
       {
         "corpusKey": "int main(){ priority_queue<int, vector<int>, greater<int>> p#189iwxq",
         "corpus": "int main(){ priority_queue<int, vector<int>, greater<int>> pq; pq.push(3); pq.push(1); pq.push(5); pq.pop(); cout << pq.top(); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_381.cpp:1:33: error: use of undeclared identifier 'vector'⏎    1 | int main(){ priority_queue<int, vector<int>, greater<int>> pq; pq."
+        "message": "/tmp/semorphe-refcc/a6182_382.cpp:1:33: error: use of undeclared identifier 'vector'⏎    1 | int main(){ priority_queue<int, vector<int>, greater<int>> pq; pq.p"
       },
       {
         "corpusKey": "int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2]#1oml8n1",
         "corpus": "int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2]; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_382.cpp:1:46: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2]; }⏎    "
+        "message": "/tmp/semorphe-refcc/a6182_383.cpp:1:46: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2]; }⏎     "
       },
       {
         "corpusKey": "int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; int s=0; for(in#1yco2ic",
         "corpus": "int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; int s=0; for(int i=0;i<2;i++) for(int j=0;j<3;j++) s+=a[i][j]; cout << s; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_383.cpp:1:109: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; int s=0; for(int i=0;i"
+        "message": "/tmp/semorphe-refcc/a6182_384.cpp:1:109: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int a[2][3] = {{1,2,3},{4,5,6}}; int s=0; for(int i=0;i<"
       },
       {
         "corpusKey": "int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][#1xomfwx",
         "corpus": "int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][0]; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_384.cpp:1:37: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][0]; }⏎  "
+        "message": "/tmp/semorphe-refcc/a6182_385.cpp:1:37: error: use of undeclared identifier 'cout'⏎    1 | int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][0]; }⏎   "
       },
       {
         "corpusKey": "struct Node { int v; Node(int x) : v(x) {} }; int main(){ No#1szofp9",
         "corpus": "struct Node { int v; Node(int x) : v(x) {} }; int main(){ Node n(5); cout << n.v; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_389.cpp:1:70: error: use of undeclared identifier 'cout'⏎    1 | struct Node { int v; Node(int x) : v(x) {} }; int main(){ Node n(5);"
+        "message": "/tmp/semorphe-refcc/a6182_390.cpp:1:70: error: use of undeclared identifier 'cout'⏎    1 | struct Node { int v; Node(int x) : v(x) {} }; int main(){ Node n(5); "
       },
       {
         "corpusKey": "class P { public: int x, y; P(int a, int b) : x(a), y(b) {} #13oabps",
         "corpus": "class P { public: int x, y; P(int a, int b) : x(a), y(b) {} }; int main(){ P p(3,4); cout << p.x << p.y; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_390.cpp:1:86: error: use of undeclared identifier 'cout'⏎    1 | class P { public: int x, y; P(int a, int b) : x(a), y(b) {} }; int m"
+        "message": "/tmp/semorphe-refcc/a6182_391.cpp:1:86: error: use of undeclared identifier 'cout'⏎    1 | class P { public: int x, y; P(int a, int b) : x(a), y(b) {} }; int ma"
       },
       {
         "corpusKey": "class A { public: int v; A(int n) : v(n) { v = 9; } }; int m#17k5f67",
         "corpus": "class A { public: int v; A(int n) : v(n) { v = 9; } }; int main(){ A a(1); cout << a.v; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_391.cpp:1:76: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v; A(int n) : v(n) { v = 9; } }; int main(){ A"
+        "message": "/tmp/semorphe-refcc/a6182_392.cpp:1:76: error: use of undeclared identifier 'cout'⏎    1 | class A { public: int v; A(int n) : v(n) { v = 9; } }; int main(){ A "
       },
       {
         "corpusKey": "int main(){ vector<int> v={1,3,2}; sort(v.begin(), v.end(), #ojx4dp",
         "corpus": "int main(){ vector<int> v={1,3,2}; sort(v.begin(), v.end(), [](int a, int b){ return a > b; }); cout << v[0]; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_393.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v={1,3,2}; sort(v.begin(), v.end(), [](int a, int b){"
+        "message": "/tmp/semorphe-refcc/a6182_394.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v={1,3,2}; sort(v.begin(), v.end(), [](int a, int b){ "
       },
       {
         "corpusKey": "int main(){ vector<int> v={3,1,2}; sort(v.begin(),v.end()); #epxwrx",
         "corpus": "int main(){ vector<int> v={3,1,2}; sort(v.begin(),v.end()); cout << v[0] << v[2]; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_394.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v={3,1,2}; sort(v.begin(),v.end()); cout << v[0] << v"
+        "message": "/tmp/semorphe-refcc/a6182_395.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v={3,1,2}; sort(v.begin(),v.end()); cout << v[0] << v["
       },
       {
         "corpusKey": "int main(){ vector<pair<int,int>> v; v.push_back({2,1}); v.p#sws1wc",
         "corpus": "int main(){ vector<pair<int,int>> v; v.push_back({2,1}); v.push_back({1,5}); sort(v.begin(),v.end()); cout << v[0].first << v[0].second; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_395.cpp:1:20: error: use of undeclared identifier 'pair'; did you mean 'main'?⏎    1 | int main(){ vector<pair<int,int>> v; v.push_ba"
+        "message": "/tmp/semorphe-refcc/a6182_396.cpp:1:20: error: use of undeclared identifier 'pair'; did you mean 'main'?⏎    1 | int main(){ vector<pair<int,int>> v; v.push_bac"
       },
       {
         "corpusKey": "int main(){ vector<pair<int,int>> v; v.push_back({1,1}); v.p#xrw1iw",
         "corpus": "int main(){ vector<pair<int,int>> v; v.push_back({1,1}); v.push_back({1,2}); v.push_back({0,9}); sort(v.begin(),v.end(),[](pair<int,int> a, pair<int,int> b){ re",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_397.cpp:1:20: error: use of undeclared identifier 'pair'; did you mean 'main'?⏎    1 | int main(){ vector<pair<int,int>> v; v.push_ba"
+        "message": "/tmp/semorphe-refcc/a6182_398.cpp:1:20: error: use of undeclared identifier 'pair'; did you mean 'main'?⏎    1 | int main(){ vector<pair<int,int>> v; v.push_bac"
       },
       {
         "corpusKey": "class A { public: ~A(){ cout << \"dtor\"; } }; int main(){ A a#paheck",
         "corpus": "class A { public: ~A(){ cout << \"dtor\"; } }; int main(){ A a; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_398.cpp:1:25: error: use of undeclared identifier 'cout'⏎    1 | class A { public: ~A(){ cout << \"dtor\"; } }; int main(){ A a; }⏎    "
+        "message": "/tmp/semorphe-refcc/a6182_399.cpp:1:25: error: use of undeclared identifier 'cout'⏎    1 | class A { public: ~A(){ cout << \"dtor\"; } }; int main(){ A a; }⏎     "
       },
       {
         "corpusKey": "struct P { int x; }; int main(){ P p; p.x = 3; cout << p.x; #zvv8nt",
         "corpus": "struct P { int x; }; int main(){ P p; p.x = 3; cout << p.x; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_399.cpp:1:48: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; }; int main(){ P p; p.x = 3; cout << p.x; }⏎      "
+        "message": "/tmp/semorphe-refcc/a6182_400.cpp:1:48: error: use of undeclared identifier 'cout'⏎    1 | struct P { int x; }; int main(){ P p; p.x = 3; cout << p.x; }⏎      |"
       },
       {
         "corpusKey": "#include <iostream> enum Mode { DHT11 = 99 }; int main() { c#8rzira",
         "corpus": "#include <iostream>⏎enum Mode { DHT11 = 99 };⏎int main() { cout << DHT11 << endl; return 0; }⏎",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_446.cpp:3:14: error: use of undeclared identifier 'cout'; did you mean 'std::cout'?⏎    3 | int main() { cout << DHT11 << endl; retur"
+        "message": "/tmp/semorphe-refcc/a6182_447.cpp:3:14: error: use of undeclared identifier 'cout'; did you mean 'std::cout'?⏎    3 | int main() { cout << DHT11 << endl; return"
       },
       {
         "corpusKey": "#include <iostream> using namespace std; int main() { int a #bdu9ze",
         "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int a = 12, b = 8;⏎    int g = __gcd(a, b);⏎    cout << \"GCD: \" << g << endl;⏎    return 0;⏎}",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_450.cpp:5:13: error: use of undeclared identifier '__gcd'⏎    5 |     int g = __gcd(a, b);⏎      |             ^⏎1 error generated.⏎"
+        "message": "/tmp/semorphe-refcc/a6182_451.cpp:5:13: error: use of undeclared identifier '__gcd'⏎    5 |     int g = __gcd(a, b);⏎      |             ^⏎1 error generated.⏎"
       },
       {
         "corpusKey": "#include <iostream> using namespace std; int main() { int re#1p5s1mw",
         "corpus": "#include <iostream>⏎using namespace std;⏎int main() {⏎    int result = __gcd(12, 18);⏎    result = __gcd(result, 24);⏎    cout << \"GCD: \" << result << endl;⏎   ",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_451.cpp:4:18: error: use of undeclared identifier '__gcd'⏎    4 |     int result = __gcd(12, 18);⏎      |                  ^⏎/tmp/sem"
+        "message": "/tmp/semorphe-refcc/a6182_452.cpp:4:18: error: use of undeclared identifier '__gcd'⏎    4 |     int result = __gcd(12, 18);⏎      |                  ^⏎/tmp/semo"
       },
       {
         "corpusKey": "#include <iostream> #include <numeric> #include <vector> usi#ocjdti",
         "corpus": "#include <iostream>⏎#include <numeric>⏎#include <vector>⏎using namespace std;⏎int main() {⏎    vector<int> v(5);⏎    iota(v.begin(), v.end(), 1);⏎    int sum = ",
         "refClass": "unclassified",
         "stage": "compile",
-        "message": "In file included from /tmp/semorphe-refcc/a56355_456.cpp:2:⏎In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric"
+        "message": "In file included from /tmp/semorphe-refcc/a6182_457.cpp:2:⏎In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric:"
       },
       {
         "corpusKey": "#include <iostream> #include <numeric> using namespace std; #1l17v2t",
         "corpus": "#include <iostream>⏎#include <numeric>⏎using namespace std;⏎int main() {⏎    int x = 15, y = 20;⏎    cout << \"GCD: \" << __gcd(x, y) << endl;⏎    cout << \"LCM: \"",
         "refClass": "unclassified",
         "stage": "compile",
-        "message": "In file included from /tmp/semorphe-refcc/a56355_457.cpp:2:⏎In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric"
+        "message": "In file included from /tmp/semorphe-refcc/a6182_458.cpp:2:⏎In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric:"
       },
       {
         "corpusKey": "int main(){ string s=\"abc\"; cout << s.size(); }#1n9xf76",
         "corpus": "int main(){ string s=\"abc\"; cout << s.size(); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_515.cpp:1:13: error: unknown type name 'string'⏎    1 | int main(){ string s=\"abc\"; cout << s.size(); }⏎      |             ^⏎/tmp/se"
+        "message": "/tmp/semorphe-refcc/a6182_516.cpp:1:13: error: unknown type name 'string'⏎    1 | int main(){ string s=\"abc\"; cout << s.size(); }⏎      |             ^⏎/tmp/sem"
       },
       {
         "corpusKey": "int main(){ string s=\"abc\"; cout << s.length(); }#3waulp",
         "corpus": "int main(){ string s=\"abc\"; cout << s.length(); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_516.cpp:1:13: error: unknown type name 'string'⏎    1 | int main(){ string s=\"abc\"; cout << s.length(); }⏎      |             ^⏎/tmp/"
+        "message": "/tmp/semorphe-refcc/a6182_517.cpp:1:13: error: unknown type name 'string'⏎    1 | int main(){ string s=\"abc\"; cout << s.length(); }⏎      |             ^⏎/tmp/s"
       },
       {
         "corpusKey": "int main(){ string s=\"abc\"; for(int i=0;i<s.size();i++) cout#612dyn",
         "corpus": "int main(){ string s=\"abc\"; for(int i=0;i<s.size();i++) cout<<s[i]; }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_517.cpp:1:13: error: unknown type name 'string'⏎    1 | int main(){ string s=\"abc\"; for(int i=0;i<s.size();i++) cout<<s[i]; }⏎      |"
+        "message": "/tmp/semorphe-refcc/a6182_518.cpp:1:13: error: unknown type name 'string'⏎    1 | int main(){ string s=\"abc\"; for(int i=0;i<s.size();i++) cout<<s[i]; }⏎      | "
       },
       {
         "corpusKey": "int main(){ vector<int> v={1,2,3}; cout << v.size(); }#16gw18j",
         "corpus": "int main(){ vector<int> v={1,2,3}; cout << v.size(); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_518.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v={1,2,3}; cout << v.size(); }⏎      |             ^⏎"
+        "message": "/tmp/semorphe-refcc/a6182_519.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v={1,2,3}; cout << v.size(); }⏎      |             ^⏎/"
       },
       {
         "corpusKey": "int main(){ vector<int> v; cout << v.size(); }#4fc3nk",
         "corpus": "int main(){ vector<int> v; cout << v.size(); }",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_519.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v; cout << v.size(); }⏎      |             ^⏎/tmp/sem"
+        "message": "/tmp/semorphe-refcc/a6182_520.cpp:1:13: error: no template named 'vector'⏎    1 | int main(){ vector<int> v; cout << v.size(); }⏎      |             ^⏎/tmp/semo"
       },
       {
         "corpusKey": "int main()#ntr74b",
         "corpus": "int main()",
         "refClass": "programIsIllegal",
         "stage": "compile",
-        "message": "/tmp/semorphe-refcc/a56355_541.cpp:1:11: error: expected function body after function declarator⏎    1 | int main()⏎      |           ^⏎1 error generated.⏎"
+        "message": "/tmp/semorphe-refcc/a6182_542.cpp:1:11: error: expected function body after function declarator⏎    1 | int main()⏎      |           ^⏎1 error generated.⏎"
       }
     ]
   },

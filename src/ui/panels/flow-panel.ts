@@ -41,6 +41,7 @@ import type { CodeMapping } from '../../core/projection/code-generator'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { buildNodeGraph, type NodeGraph, type GraphNode, type GraphPort } from '../../core/flow/node-graph'
 import { labelSourceFromSpecs, collapseBlockMessage, type FlowLabelSource } from '../../core/flow/vocabulary'
+import { tryConnect, refusalKeyOf, type RefusalReason } from '../../core/flow/connect'
 import { bodySlotsOf } from '../../core/component/traits'
 import { msg } from '../../core/messages'
 
@@ -281,7 +282,7 @@ export class FlowPanel implements ViewHost {
   private rebuild(): void {
     this.syncLabels()
     this.syncScopeOptions()
-    this.graph = buildNodeGraph(this.rootBody(), this.labelSource())
+    this.graph = buildNodeGraph(this.rootBody(), this.labelSource(), { emptySlots: this.capabilities.editable })
     // 拖曳位移只留給還在的節點——刪掉的節點不該留著一個看不見的位移
     const alive = new Set(this.graph.nodes.map((n) => n.id))
     for (const id of [...this.offsets.keys()]) if (!alive.has(id)) this.offsets.delete(id)
@@ -426,7 +427,7 @@ export class FlowPanel implements ViewHost {
       if (p.kind === 'exec' && p.side === 'out' && p.key !== '__next__') {
         if (p.label) g.appendChild(text('fc-port-label fc-port-exec-label', n.w - 10, p.dy + 4, truncate(p.label, 12), 'end'))
       }
-      g.appendChild(this.renderPort(p))
+      g.appendChild(this.renderPort(p, n.id))
     }
 
     const line = this.codeLineOf(n.id)
@@ -438,7 +439,7 @@ export class FlowPanel implements ViewHost {
     return g
   }
 
-  private renderPort(p: GraphPort): SVGElement {
+  private renderPort(p: GraphPort, nodeId: string): SVGElement {
     if (p.kind === 'exec') {
       // 執行接點畫成箭頭——**與資料接點的圓形一眼分得出來**
       const tri = document.createElementNS(SVG_NS, 'path')
@@ -447,6 +448,7 @@ export class FlowPanel implements ViewHost {
       //    ——而它抓到過一次，就是這一刀改寫時我把讀取拿掉的那次。
       tri.setAttribute('class', `fc-port fc-port-exec fc-port-${p.side}${p.flow ? ` fc-flow-${p.flow}` : ''}`)
       tri.setAttribute('d', `M ${p.dx - 5} ${p.dy - 6} L ${p.dx + 5} ${p.dy} L ${p.dx - 5} ${p.dy + 6} Z`)
+      this.attachWire(tri, nodeId, p)
       return tri
     }
     const c = document.createElementNS(SVG_NS, 'circle')
@@ -454,7 +456,152 @@ export class FlowPanel implements ViewHost {
     c.setAttribute('cx', String(p.dx))
     c.setAttribute('cy', String(p.dy))
     c.setAttribute('r', '4.5')
+    this.attachWire(c, nodeId, p)
     return c
+  }
+
+  /**
+   * **從一個接點拉一條線到另一個接點**——(c) 改接線。
+   *
+   * 🔴 **能不能接由 `core/flow/connect.ts` 判**，這裡只負責手勢與畫面。
+   * 那條規則先於這個功能存在，理由寫在它的檔頭：
+   * 先做拉線的話，「這條線存哪」會在寫 UI 的時候被順手決定，
+   * **而最順手的地方就是 `metadata`**（第八十條護欄的硬性零）。
+   *
+   * ⚠️ 拒絕時**說出理由並且不動樹**——`history/017`：
+   * 一道會拒絕的檢查必須同時回答「被拒絕的東西去哪了」。
+   */
+  private attachWire(el: SVGElement, nodeId: string, port: GraphPort): void {
+    // 🔴 **哪些接點可以拉**（2026-08-26 第一版判錯）：
+    //
+    // ```
+    // 具名的鍵（initializer／body／left…）  目標——「放進這一格」
+    // __out__（運算式的值出口）             來源——【第一版把它跳過了，於是一條線都接不上】
+    // __in__（語句的入口）                  來源——把這一句放進某個身體
+    // __next__（語句的下一個）              留給 (e) 語句重排，這一刀不接
+    // ```
+    //
+    // > **一個「跳過內部接點」的規則，跳掉了唯一能當來源的那一個。**
+    if (port.key === '__next__') return
+    el.classList.add('fc-port-wirable')
+    el.addEventListener('pointerdown', (ev) => {
+      ev.preventDefault()
+      ev.stopPropagation()   // ⚠️ 不然它會變成「拖節點」
+      this.wireFrom = { nodeId, port }
+      const move = (e: PointerEvent): void => this.paintWirePreview(e)
+      const up = (e: PointerEvent): void => {
+        window.removeEventListener('pointermove', move)
+        window.removeEventListener('pointerup', up)
+        this.clearWirePreview()
+        const to = this.portUnder(e)
+        const from = this.wireFrom
+        this.wireFrom = null
+        if (from && to) this.commitWire(from, to)
+      }
+      window.addEventListener('pointermove', move)
+      window.addEventListener('pointerup', up)
+    })
+  }
+
+  private wireFrom: { nodeId: string; port: GraphPort } | null = null
+
+  /**
+   * **放開的位置底下是哪一個接點。**
+   *
+   * ⚠️ 名字刻意不叫 `portAt`——那個名字已經被「算某個接點的座標」用掉了。
+   * 兩個「portAt」會讓下一個人在改其中一個時改到另一個。
+   */
+  private portUnder(e: PointerEvent): { nodeId: string; port: GraphPort } | null {
+    const el = document.elementFromPoint(e.clientX, e.clientY)
+    const g = el?.closest('[data-node]') as SVGGElement | null
+    if (!g || !el?.classList.contains('fc-port')) return null
+    const nodeId = g.getAttribute('data-node')!
+    const node = this.graph?.nodes.find((n) => n.id === nodeId)
+    const idx = [...g.querySelectorAll('.fc-port')].indexOf(el)
+    const port = node?.ports[idx]
+    return node && port ? { nodeId, port } : null
+  }
+
+  /**
+   * 接上去——**而大多數的線接不上**。
+   *
+   * ⚠️ 方向：一條線的意思永遠是「**把來源放進目標的那一格**」，
+   * 所以 `in` 的那一端是目標。兩端都是 `in`（或都是 `out`）＝ 兄弟連兄弟，
+   * 而**語義樹沒有那種東西**。
+   */
+  private commitWire(
+    a: { nodeId: string; port: GraphPort },
+    b: { nodeId: string; port: GraphPort },
+  ): void {
+    if (!this.tree) return
+    // ⚠️ **方向由「哪一端是具名的格子」決定，不由 `side`**：
+    //    身體的接點是掛在**父節點**上的 `side: 'out'`，
+    //    而它仍然是目標（「語句放進這裡」）。第一版用 `side` 判，
+    //    於是「把一句話放進迴圈的身體」永遠被拒絕。
+    const named = (x: { port: GraphPort }): boolean => !x.port.key.startsWith('__')
+    if (named(a) === named(b)) { this.refuse('not-parent-child'); return }
+    const target = named(a) ? a : b
+    const source = named(a) ? b : a
+    const verdict = tryConnect(this.tree, source.nodeId, target.nodeId, target.port.key)
+    if (!verdict.ok) { this.refuse(verdict.reason); return }
+    this.moveInto(source.nodeId, target.nodeId, verdict.slot)
+    this.rebuild()
+    this.editCb?.(this.tree)
+  }
+
+  /** 說出拒絕的理由——**不動樹**。 */
+  private refuse(reason: RefusalReason): void {
+    this.showNotice(msg(refusalKeyOf(reason), '這條線接不上。你的程式沒有被改動。'))
+  }
+
+  /**
+   * 把來源從它現在的位置搬到目標的那一格。
+   *
+   * ⚠️ **先摘下來再放進去**——不然它會同時出現在兩個地方，
+   * 而那棵樹就不是樹了。
+   */
+  private moveInto(sourceId: string, targetId: string, slot: string): void {
+    if (!this.tree) return
+    const detach = (n: SemanticNode): SemanticNode | null => {
+      for (const [k, bucket] of Object.entries(n.children ?? {})) {
+        const i = (bucket ?? []).findIndex((c) => c.id === sourceId)
+        if (i >= 0) return (n.children[k] as SemanticNode[]).splice(i, 1)[0]
+        for (const c of bucket ?? []) { const hit = detach(c); if (hit) return hit }
+      }
+      return null
+    }
+    const node = detach(this.tree)
+    if (!node) return
+    const target = this.findNode(this.tree, targetId)
+    if (!target) return
+    const bucket = (target.children[slot] ??= [])
+    bucket.push(node)
+  }
+
+  private paintWirePreview(e: PointerEvent): void {
+    this.clearWirePreview()
+    const r = this.svg.getBoundingClientRect()
+    const l = document.createElementNS(SVG_NS, 'line')
+    l.setAttribute('class', 'fc-wire-preview')
+    l.setAttribute('x1', String(e.clientX - r.left))
+    l.setAttribute('y1', String(e.clientY - r.top))
+    l.setAttribute('x2', String(e.clientX - r.left))
+    l.setAttribute('y2', String(e.clientY - r.top))
+    this.svg.appendChild(l)
+  }
+
+  private clearWirePreview(): void {
+    this.svg.querySelector('.fc-wire-preview')?.remove()
+  }
+
+  /** 一句話，疊在面板上。⚠️ 不用原生對話框（第七十七條護欄）。 */
+  private showNotice(text: string): void {
+    this.container.querySelector('.flow-notice')?.remove()
+    const el = document.createElement('div')
+    el.className = 'flow-notice'
+    el.textContent = text
+    this.container.appendChild(el)
+    setTimeout(() => el.remove(), 6000)
   }
 
   /**

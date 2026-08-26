@@ -325,7 +325,7 @@ export function bodySlotsOf(componentId: string): string[] {
  * 節點圖要的是這一份：裝語句的變成**執行接點**，其餘的變成**資料接點**。
  * 兩者的分界不在視圖的判斷裡，在膠囊的宣告裡。
  */
-export function slotsOf(componentId: string): { slot: string; isBody: boolean }[] {
+export function slotsOf(componentId: string): { slot: string; isBody: boolean; allowed: string[] }[] {
   const c = registeredComponents().find((x) => x.componentId === componentId)
   const children = (c?.manifest as { children?: Record<string, unknown> } | undefined)?.children
   if (!children) return []
@@ -334,5 +334,23 @@ export function slotsOf(componentId: string): { slot: string; isBody: boolean }[
     const allowed = (v as { allowed?: unknown[] } | null)?.allowed
     return Array.isArray(allowed) && allowed.some((a) => a === 'statement' || a === 'statements')
   }
-  return Object.entries(children).map(([slot, v]) => ({ slot, isBody: isBody(v) }))
+  /**
+   * **那一格宣告要什麼**（2026-08-26 補）。
+   *
+   * 🔴 它一直都寫在宣告裡（`params: "param_decl"`、`initializer: "expression"`），
+   * 而在此之前**沒有任何消費者**——於是流程視圖上可以把一個數字接進
+   * `main` 的參數格，產出 `int main(int)`。
+   *
+   * > **一個宣告了而沒有人讀的型別，與沒有宣告是同一件事。**
+   */
+  const allowedOf = (v: unknown): string[] => {
+    if (typeof v === 'string') return [v]
+    const a = (v as { allowed?: unknown[] } | null)?.allowed
+    return Array.isArray(a) ? a.map(String) : []
+  }
+  return Object.entries(children).map(([slot, v]) => ({
+    slot,
+    isBody: isBody(v),
+    allowed: allowedOf(v),
+  }))
 }

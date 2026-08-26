@@ -2098,3 +2098,14 @@ html, body {
   border: 1px solid #007acc; border-radius: 2px;
   font-family: inherit; font-size: 12px; padding: 1px 3px;
 }
+
+/* ─── 流程面板：拉線（2026-08-26，(c) 改接線 ＋ (f) 誠實拒絕） ─── */
+.fc-port-wirable { cursor: crosshair; }
+.fc-port-wirable:hover { stroke: #007acc; stroke-width: 2; }
+.fc-wire-preview { stroke: #007acc; stroke-width: 2; stroke-dasharray: 4 3; pointer-events: none; }
+/* 🔴 拒絕要看得見，而**不是一個對話框**（第七十七條護欄）。 */
+.flow-notice {
+  position: absolute; left: 12px; bottom: 12px; right: 12px; z-index: 30;
+  background: #3a2d2d; color: #f0c0c0; border: 1px solid #a04040;
+  border-radius: 3px; padding: 6px 10px; font-size: 12px; line-height: 1.5;
+}

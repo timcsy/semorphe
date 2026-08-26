@@ -255,5 +255,9 @@
   "EXEC_INTERVENTIONS": "⚠️ {count} value(s) in this run were filled in by hand, so the result above is not what this program produces on its own.",
   "EXEC_UNSYNC_SYNC": "⟳ Sync first, then run",
   "EXEC_UNSYNC_AS_IS": "▶ Run what is here now",
-  "SYNC_SOURCE_FLOW": "Flow"
+  "SYNC_SOURCE_FLOW": "Flow",
+  "FLOW_REFUSE_NO_SUCH_SLOT": "Can't connect: that component has no such slot. Your program was not changed.",
+  "FLOW_REFUSE_WOULD_CYCLE": "Can't connect: it would loop back on itself, and a program can't run that way. Your program was not changed.",
+  "FLOW_REFUSE_NOT_PARENT_CHILD": "Can't connect: these two have no containing relationship, and this chart can only draw that one. Your program was not changed.",
+  "FLOW_REFUSE_WRONG_KIND": "Can't connect: that slot wants a statement and you gave a value (or the other way round). Your program was not changed."
 }

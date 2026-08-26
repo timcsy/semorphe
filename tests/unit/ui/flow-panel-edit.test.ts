@@ -24,6 +24,9 @@ import { setMessageSource, resetMessageSource } from '../../../src/core/messages
 import zhTW from '../../../src/i18n/zh-TW/blocks.json'
 import { componentLabels } from '../../../src/core/component/labels'
 import type { SemanticNode } from '../../../src/core/types'
+import { tryConnect, refusalKeyOf } from '../../../src/core/flow/connect'
+import { msg } from '../../../src/core/messages'
+import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 
 const loopTree = (): SemanticNode =>
   ({
@@ -42,6 +45,8 @@ function registry(): BlockSpecRegistry {
   reg.loadFromSplit(allCppComponents(), allCppProjections())
   return reg
 }
+
+registerCppLanguage()
 
 describe('流程面板：改一格的值', () => {
   let host: HTMLElement
@@ -110,5 +115,63 @@ describe('流程面板：改一格的值', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     expect(fired, '按了 Escape 而它還是送出去了').toBe(0)
     resetMessageSource()
+  })
+})
+
+/**
+ * **(c) 改接線 ＋ (f) 誠實拒絕**——而第二支是重點。
+ *
+ * `history/017` 逐字：「一道檢查一旦會**拒絕**，就必須同時回答
+ * **被拒絕的東西去哪了**。」——這裡的答案是「**哪裡都沒去**」，
+ * 而那句話要能被驗證，不能只寫在註解裡。
+ */
+describe('流程面板：拉線', () => {
+  const twoNodes = (): SemanticNode =>
+    ({
+      id: 'root', componentId: 'cpp:program', properties: {},
+      children: {
+        body: [
+          { id: 'D', componentId: 'cpp:var_declare', properties: { name: 'x' }, children: {} },
+          { id: 'N', componentId: 'cpp:literal_number', properties: { value: '7' }, children: {} },
+        ],
+      },
+    }) as unknown as SemanticNode
+
+  let host: HTMLElement
+  let panel: FlowPanel
+
+  beforeEach(() => {
+    const table = { ...(zhTW as unknown as Record<string, string>), ...componentLabels('zh-TW') }
+    setMessageSource((k) => table[k])
+    host = document.createElement('div')
+    panel = new FlowPanel(host, registry())
+    panel.onSemanticUpdate({ tree: twoNodes() } as never)
+  })
+
+  it('★ 入口條件：接點真的畫出來了，而且是可以拉的', () => {
+    const ports = host.querySelectorAll('.fc-port-wirable')
+    expect(ports.length, '一個可拉的接點都沒有 → 下面在測空的').toBeGreaterThan(0)
+  })
+
+  it('🔴 (f) 接不上的線 → 說出理由，而**樹一個字都沒動**', () => {
+    let fired = 0
+    panel.onEdit(() => { fired++ })
+    const before = JSON.stringify(panel.readSource())
+
+    // 直接問那條規則（UI 的手勢在 happy-dom 裡模擬不了 pointer 的座標命中）
+    const v = tryConnect(twoNodes(), 'D', 'N', 'value')
+    expect(v.ok, '這一條【應該】被拒絕').toBe(false)
+
+    expect(fired, '拒絕了而它還是送出去了 → 樹被動到了').toBe(0)
+    expect(JSON.stringify(panel.readSource()), '樹變了').toBe(before)
+  })
+
+  it('🔴 每一個拒絕理由都查得到一句人話（畫面上不得出現代號）', () => {
+    for (const r of ['no-such-slot', 'would-cycle', 'not-parent-child', 'wrong-kind'] as const) {
+      const line = msg(refusalKeyOf(r), '')
+      expect(line, `${r} 沒有文案`).not.toBe('')
+      expect(line, `${r} 的文案裡出現了代號`).not.toContain(r)
+      expect(line, '拒絕必須回答「被拒絕的東西去哪了」').toContain('沒有被改動')
+    }
   })
 })
