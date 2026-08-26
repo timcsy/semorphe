@@ -36,7 +36,6 @@ import {
   componentComponents,
   componentBlocks,
   componentLiftPatterns,
-  componentLiftStrategyRegistrars,
   setCommentLanguage,
   type LiftPattern,
   type StylePreset,
@@ -63,12 +62,15 @@ async function main(): Promise<void> {
   registerCoreTransforms(transforms)
   for (const lp of allLanguagePacks()) lp.liftTransforms?.(transforms)
 
-  // ⚠️ **第三個發現**：膠囊的具名 lift 策略要自己登記，而今天產品是靠
-  // `registerCppLifters` 順手做的——一個語言中立的登記掛在 C++ 的名字底下
-  // （`knowledge/history/121`）。少了這一步，`if` 會安靜地降級成 `unresolved`，
-  // **而程式不會報錯**。
+  // 🟢 **第三個發現已修（2026-08-26）**——這裡本來要自己補一行：
+  //
+  //     for (const reg of componentLiftStrategyRegistrars()) reg(strategies)
+  //
+  //    因為膠囊的具名 lift 策略（**語言中立**）當時掛在 `registerCppLifters`
+  //    底下，於是只用 Python 的宿主拿不到它，而**症狀是 `if` 安靜降級成
+  //    `unresolved`，程式不會報錯**。
+  //    現在 `LiftStrategyRegistry` 的建構子自己長出來——**收成一個入口**。
   const strategies = new LiftStrategyRegistry()
-  for (const reg of componentLiftStrategyRegistrars()) (reg as (r: typeof strategies) => void)(strategies)
 
   const patternLifter = new PatternLifter()
   patternLifter.setTransformRegistry(transforms)
@@ -86,9 +88,11 @@ async function main(): Promise<void> {
   lifter.setPatternLifter(patternLifter)
   lifter.setGrammar(pack.grammar)
 
-  // ⚠️ **第四個發現**：產生器那一路要靠 `pack.install()`，而沒有任何東西
-  // 提醒你——少了它，往返會產出 `⟨unknown component: python:program⟩`，
-  // **看起來像語義樹壞了，其實是產生器一顆都沒註冊**。
+  // ⚠️ **第四個發現**：產生器那一路要靠 `pack.install()`。
+  // 🟢 **2026-08-26：漏掉它現在會出聲**——`generateCode` 問「這個語言有套件
+  //    而一個產生器都沒有嗎」，是就丟一個指名那一步的錯。
+  //    ⚠️ 而**未知語言仍然誠實降級**（FR-014：註解不得無聲消失）——
+  //    兩者產出同一種字串，而只有前者是缺陷。
   pack.install?.()
 
   const parser = pack.createParser()

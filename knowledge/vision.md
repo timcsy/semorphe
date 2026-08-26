@@ -459,9 +459,27 @@ languages/{lang}/
             🟢 順手修掉的架構債：**語言套件不再 import 視圖層**
             （`languages/<lang>/pack.ts` → `ui/dynamic-dropdown-field` → `blockly` → `jsdom`）
             ——拆成 `core/dropdown-sources.ts`（登記處）＋ `core/messages.ts`（訊息埠）
-      - [ ] **組裝要收成一個入口，或者漏了要能出聲**（例子照出來的 ③④）
-            膠囊的 lift 策略、產生器（`pack.install()`）今天都要消費者自己登記，
-            而**漏掉的症狀是降級不是錯誤**：`if` 變 `unresolved`、產出變 `⟨unknown component⟩`
+      - [x] ✅ **組裝要收成一個入口，或者漏了要能出聲**（2026-08-26 結案）
+            ③ **收成入口**：膠囊的具名 lift 策略（**語言中立**）本來掛在
+            `registerCppLifters` 底下——只用 Python 的宿主拿不到它。
+            改由 `LiftStrategyRegistry` 的建構子自己長出來。
+            ④ **出聲**：`generateCode` 問「這個語言**有套件**而一個產生器都沒有嗎」，
+            是就丟一個指名 `pack.install()` 的錯。
+            🔴 而第一版把「未知語言」也一起 throw，**當場被 FR-014 那支擋下來**
+            ——throw 把內容整個弄丟，比降級更糟。
+            → [167](history/167-一個都不認得不是降級是沒接上.md)
+            **驗收**：例子刪掉那一行而第五十八條護欄（硬性零）仍然綠。
+      - [ ] 🔴 **`CodeParser` 的同步／非同步轉接**（例子照出來的 ②，2026-08-26 開）
+            `CodeParser.parse` 是**同步**的，而每一個真的 parser 都是非同步的（要抓 wasm）。
+            於是**兩個消費者各做了一份一模一樣的 shim**
+            （`examples/.../main.ts` 的 `shim` · `src/ui/app.ts:616` 的 `codeParser`）。
+            > **一個介面如果每個實作者都要在它前面加同一層轉接，
+            > 那層轉接就是介面的一部分。**
+            ⚠️ **它動的是同步路徑**（`sync-controller` 裡 3 處 `this.parser.parse`、
+            7 個 `syncCodeToBlocks` 呼叫點都是 fire-and-forget），
+            而這個 repo 的教訓是那條路上的錯**測試全綠也看不到**——自己一刀。
+            **驗收**：兩個消費者都不必再包 shim；瀏覽器實測貼碼、切 Block Style、
+            以此為準三條路都還在。
       - [ ] **登錄表實例化**（`view-registry.ts:52`／`skip-declarations.ts:22,73`／
             `component/registry.ts:63` 四處模組全域）——教學網站**一頁多題**才逼得出來
       - [ ] 面板只 import 協定——`ViewConfig` 長出 `t` / `appearance` / `schema` 三個 port，

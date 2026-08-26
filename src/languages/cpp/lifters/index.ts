@@ -10,7 +10,7 @@ import { registerCppLiftStrategies } from '../core/lifters/strategies'
 import { registerCppRenderStrategies } from '../renderers/strategies'
 import { registerIOLifters } from './io'
 import { declareLiftPostProcessor } from '../../../core/lift/post-processors'
-import { componentLiftRegistrars, componentLiftStrategyRegistrars } from '../../../core/component/paths'
+import { componentLiftRegistrars } from '../../../core/component/paths'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { RenderStrategyRegistry } from '../../../core/registry/render-strategy-registry'
@@ -53,9 +53,11 @@ function registerCppLiftersInner(lifter: Lifter, registries?: CppRegistries): vo
   const strategyTable = registries?.liftStrategyRegistry
   if (strategyTable) {
     registerCppLiftStrategies(strategyTable)
-    // 膠囊的具名辨識策略（`lift-strategy.ts`）——與 `lift.ts` 是不同的登錄表
-    for (const reg of componentLiftStrategyRegistrars())
-      (reg as (r: typeof strategyTable) => void)(strategyTable)
+    // 🪦 **膠囊的具名辨識策略已於 2026-08-26 從這裡搬走**——它 glob 的是
+    //    `components/*/*/lift-strategy.ts`（**所有語言**），而掛在這裡等於
+    //    **一個語言中立的登記掛在 C++ 的名字底下**：只用 Python 的宿主拿不到它，
+    //    而漏掉的症狀是 `if` 安靜降級成 `unresolved`，**程式不會報錯**。
+    //    🟢 現在由 `LiftStrategyRegistry` 的建構子自己長出來（收成一個入口）。
   }
 
   // Register C++ render strategies (Layer 3)

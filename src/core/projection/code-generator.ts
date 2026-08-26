@@ -1,3 +1,4 @@
+import { languagePack } from '../language-packs'
 import { setDegradationLanguage } from '../degradation-blocks'
 import { commentSyntax, setCommentLanguage } from '../comment-syntax'
 import { expressionStatementOf } from '../expression-statement'
@@ -168,6 +169,42 @@ export function generateCode(tree: SemanticNode, language: string, style: StyleP
   setCommentLanguage(language)
   setDegradationLanguage(language)
   const factory = languageFactories.get(language)
+  // 🔴 **一顆節點不認得是誠實降級；一個都不認得是【沒接上】**（2026-08-26）。
+  //
+  //    `⟨unknown component: X⟩` 對單一節點是對的（P6：不要弄丟任何節點）。
+  //    而**沒有任何產生器**時它會套用在**每一顆節點**上，產出一整份
+  //    `⟨unknown component: …⟩`——而那時看起來像「語義樹壞了」，
+  //    其實是**組裝點忘了呼叫 `pack.install()`**。
+  //
+  //    `examples/bring-your-own-view/src/main.ts` 逐字記著這個坑：
+  //    「少了它，往返會產出 `⟨unknown component: python:program⟩`，
+  //     **看起來像語義樹壞了，其實是產生器一顆都沒註冊**。」
+  //
+  // > **一顆節點不認得，是降級；一個都不認得，是沒接上
+  // > ——而它們產出同一種字串。**
+  //
+  //    ⚠️ 這裡**不能**只在「產出裡有 unknown」時才叫——那樣一份完全合法、
+  //    只是用到一顆新元件的程式也會炸。要問的是**登記表空不空**。
+  // ⚠️ **而「未知語言」與「忘了 install」必須分開**——第一版把兩者一起 throw，
+  //    當場被一支既有測試擋下來：FR-014 釘著「**沒有語言套件時，註解不得無聲消失**」，
+  //    而 throw 把內容整個弄丟，**比降級更糟**（那正是 P6 要擋的反面）。
+  //
+  //    兩者分得開，而分界就是**那個語言有沒有套件**：
+  //    ```
+  //    套件不存在        未知語言    → 誠實降級，保住內容（既有契約）
+  //    套件在而沒產生器  忘了 install → 出聲
+  //    ```
+  //
+  // > **一個從來沒被宣告過的語言，與一個宣告了而沒接上的語言，
+  // > 產出同一種字串——而只有後者是缺陷。**
+  if (!factory && languagePack(language)) {
+    throw new Error(
+      `語言「${language}」有套件，而一個產生器都沒有註冊`
+      + '——組裝點忘了呼叫 `pack.install()` 嗎？\n'
+      + '  ⚠️ 少了它，每一顆節點都會退成 `⟨unknown component: …⟩`，\n'
+      + '     而那**看起來像語義樹壞了**（`examples/bring-your-own-view` 踩過）。',
+    )
+  }
   const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
   registerMetaComponentGenerators(generators)
   const ctx: GeneratorContext = { indent: 0, style, language, generators }
