@@ -11,6 +11,15 @@
  * 🟢 兩個語言都走同一條路之後，那九個登記處才第一次**被驗過**。
  */
 import type { Topic, Target, StylePreset } from '../../core/types'
+import { registerCppLifters } from './lifters'
+import { createPopulatedRegistry } from './std'
+import { CppScaffold } from './cpp-scaffold'
+import { cppStripScaffoldNodes } from './cpp-scaffold-filter'
+import { createCppCodePatcher, computeAutoIncludes, autoIncludeNodes } from './auto-include'
+import { allCppComponents, allCppProjections } from './all-declarations'
+import { cppDiagnosticRules } from './diagnostics'
+import { detectStyleExceptionsForPreset, applyStyleConversions, analyzeIoConformance } from './style-exceptions'
+import { registerCppExtractStrategies } from './extractors/extract-strategies'
 import { declareLanguagePack } from '../../core/language-packs'
 import { declareDropdownSource } from '../../core/dropdown-sources'
 import { msg } from '../../core/messages'
@@ -109,6 +118,36 @@ declareLanguagePack({
   grammar: 'tree-sitter-cpp',
   programRoot: 'cpp:program',
   install: registerCppLanguage,
+  // 🔴 這兩格 2026-08-26 從 `app.ts` 的寫死 import 搬過來——組裝點不再認得
+  //    「C++ 的 lifters 叫什麼名字」。⚠️ Python 兩支都**沒有**，
+  //    而那正是「順手註冊就是一個沒有被指名的組裝點」的症狀。
+  installLifters: registerCppLifters as never,
+  installExtractStrategies: registerCppExtractStrategies as never,
+  declarations: () => ({ components: allCppComponents(), projections: allCppProjections() }),
+  diagnosticRules: cppDiagnosticRules as never,
+  createCodeShaping: () => {
+    // ⚠️ 這一份登記表被**四個消費者**共用（相依解析、鷹架、修補、自動引入）
+    //    ——所以在這裡建一次，交出去，而不是讓組裝點傳來傳去。
+    const moduleRegistry = createPopulatedRegistry()
+    const patcher = createCppCodePatcher(moduleRegistry)
+    return {
+      moduleRegistry,
+      scaffold: new CppScaffold(moduleRegistry),
+      stripScaffoldNodes: cppStripScaffoldNodes as never,
+      patchCode: patcher as never,
+      autoIncludeNodes: ((tree: never) => {
+        const names = computeAutoIncludes(tree, moduleRegistry as never)
+        return names.length === 0 ? [] : autoIncludeNodes(names)
+      }) as never,
+    }
+  },
+  styleExceptions: {
+    detect: detectStyleExceptionsForPreset as never,
+    convert: applyStyleConversions as never,
+    // ⚠️ 那個 `printf → cstdio` 的對映**是 C++ 的知識**，本來寫在組裝點裡。
+    analyzeIo: ((code: string, pref: string) =>
+      analyzeIoConformance(code, (pref === 'printf' ? 'cstdio' : 'iostream') as never)) as never,
+  },
   liftPatterns: cppLiftPatterns,
   /**
    * 這些節點由手寫 lifter 或 lift-pattern 接手，**pattern 那條路要跳過**。

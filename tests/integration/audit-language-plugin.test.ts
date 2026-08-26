@@ -27,7 +27,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { REPO_ROOT } from '../helpers/guardrail'
+import { REPO_ROOT, assertRatchet } from '../helpers/guardrail'
 
 const APP = path.join(REPO_ROOT, 'src/ui/app.ts')
 const src = (): string => fs.readFileSync(APP, 'utf8')
@@ -117,11 +117,14 @@ describe('spec 161 · 加一個語言，app.ts 一行都不用改', () => {
       path.join(REPO_ROOT, 'tests/baselines/language-plugin.json'), 'utf8'))
     // eslint-disable-next-line no-console
     console.log(`\n  語言管線：${hits.length} 處（基線 ${baseline.pipeline}）\n` + show(hits))
-    expect(hits.length,
-      '⚠️ 這一項【不是】硬性零——把整個 bootstrap 搬進安裝鉤是另一刀'
-      + '（它們與 `app.ts` 自己的物件深度交織）。而它**有數字了**，'
-      + '那正是 spec 161 要買的：豁免答得出「它今天豁免了幾筆」。')
-      .toBeLessThanOrEqual(baseline.pipeline)
+    // 🔴 **這裡本來是裸的 `toBeLessThanOrEqual`，而那讓每一次改善無聲離開守備範圍**
+    //    （2026-08-26）。實測：那天刪掉 `setLanguageInputNames` 把 12 還成 9，
+    //    **而這支是綠的、基線留在 12**——它從此擋不住 9 退回 12。
+    //
+    // > **一條只擋變差的棘輪，會讓每一次改善都無聲地離開它的守備範圍。**
+    //
+    //    換成共用的 `assertRatchet`（其餘護欄都用它）：改善時會要求下調並指名。
+    assertRatchet([['語言管線', hits.length, baseline.pipeline]])
   })
 
   it('★ 兩個維度加起來要等於全部——否則有一類漏出分類', () => {
@@ -177,5 +180,59 @@ describe('spec 161 · 加一個語言，app.ts 一行都不用改', () => {
     expect(baseline.imports?.compositionRootWiring,
       '⚠️ 豁免只寫一句「它知道自己裝了什麼是正常的」而不印數字 → '
       + '它今天豁免了幾筆沒有人答得出來（experience 的判準）').toBe(0)
+  })
+  /**
+   * 🔴 **這一支問的是「可不可抽換」，不是「有幾行」**（2026-08-26）。
+   *
+   * ## 為什麼上面那些數字不夠
+   *
+   * 兩個維度今天都是 0，而**那只證明組裝點沒有寫死語言的名字**。
+   * 它答不出「拔掉 C++ 之後這個 app 起不起得來」——而那才是 P3 要買的東西。
+   *
+   * 第三十九條護欄自己踩過同一個坑（它的基線逐字記著）：
+   *
+   * > **抽介面讓一個相依【可抽換】，不是讓它【消失】
+   * > ——而一條用名字認耦合的檢查，會把前者報成後者。**
+   *
+   * ## 它怎麼問
+   *
+   * `app.ts` 需要的每一樣語言能力，都必須是 `LanguagePack` 上的一格
+   * ——**而那一格必須是可選的**（`?`）。一格是必填的，就等於
+   * 「每個語言都得有它」，而那正是不可抽換。
+   *
+   * ⚠️ **自我否證**：如果 `LanguagePack` 掃出來是 0 格，代表這支讀錯檔，
+   * 不是「契約很乾淨」。錨在**格數**（合成量），它不隨缺陷被修好而變小。
+   */
+  it('🔴 組裝點要的每一樣語言能力，都是【可選的】一格', () => {
+    const src = fs.readFileSync(path.join(REPO_ROOT, 'src/core/language-packs.ts'), 'utf8')
+    const body = src.slice(src.indexOf('export interface LanguagePack'))
+    const slots = [...body.matchAll(/^ {2}([a-zA-Z]+)(\??):/gm)].map((m) => ({ name: m[1], optional: m[2] === '?' }))
+    // ★ 入口條件——錨在格數（合成量），見上面的自我否證
+    expect(slots.length, '一格都沒掃到 → 讀錯檔，這一條不算數').toBeGreaterThan(8)
+
+    // 「這個語言是誰」那幾格是必填的，其餘每一格都該是可選的能力
+    const identity = new Set(['id', 'name', 'grammar', 'programRoot', 'order',
+      'topics', 'targets', 'styles', 'categories', 'createParser'])
+    const required = slots.filter((s) => !s.optional && !identity.has(s.name)).map((s) => s.name)
+    expect(required,
+      '🔴 這幾格是**必填的能力**——於是每一個語言都得提供它，\n'
+      + '   而「可選」正是可抽換的定義。\n'
+      + '   ⚠️ 一個沒有程式外殼的語言（沒有 `main`）不該被逼著假裝有。')
+      .toEqual([])
+  })
+
+  it('🔴 那些能力**真的**沒有第二個語言也走得通——Python 只填了它有的', () => {
+    // 🟢 這一支釘住的是**事實**，不是契約：Python 套件今天沒有 `createCodeShaping`，
+    //    而 app 起得來（全套 5763 支綠就是證據）。
+    //    ⚠️ 它會在有人把某一格改成「大家都要有」的那天變紅。
+    const py = fs.readFileSync(path.join(REPO_ROOT, 'src/languages/python/pack.ts'), 'utf8')
+    const cpp = fs.readFileSync(path.join(REPO_ROOT, 'src/languages/cpp/pack.ts'), 'utf8')
+    const has = (t: string, k: string): boolean => new RegExp(`^\\s*${k}:`, 'm').test(t)
+    const cppOnly = ['createCodeShaping', 'styleExceptions', 'diagnosticRules']
+      .filter((k) => has(cpp, k) && !has(py, k))
+    expect(cppOnly.length,
+      '🔴 C++ 有而 Python 沒有的能力一格都不剩了 → 要嘛 Python 真的補齊了（好事，改這份清單），\n'
+      + '   要嘛這一支在讀錯檔。**兩者長得一樣，所以要指名。**')
+      .toBeGreaterThan(0)
   })
 })

@@ -104,6 +104,71 @@ export interface LanguagePack {
    */
   install?: () => void
   /**
+   * **這個語言的 lifters**（判別 ＋ 建構），註冊時拿得到 lifter 與三個登記表。
+   *
+   * 🔴 在 2026-08-26 之前，組裝點**寫死 `registerCppLifters(...)`**
+   * ——而 Python 沒有那個入口。`language-packs.ts` 自己在 `liftTransforms`
+   * 那一格就寫著：
+   *
+   * > **「順手註冊」就是一個沒有被指名的組裝點。**
+   *
+   * 而那句話當時只套用在 transform 上；**判別與建構那一整批仍然是順手的**。
+   */
+  installLifters?: (lifter: unknown, registries: unknown) => void
+  /**
+   * **這個語言的抽取策略**（積木 → 樹的手寫那幾支）。
+   *
+   * ⚠️ 它由積木面板在**建構時**拿到（不是事後呼叫）——那是刻意的：
+   * 事後呼叫會多一筆「直接呼叫視圖」，而且開一個「裝了沒人接上」的窗口。
+   * 這一格只是把**誰提供它**從寫死改成宣告。
+   */
+  installExtractStrategies?: (extractor: unknown) => void
+  /**
+   * **這個語言的元件與投影宣告**——`allXxxComponents()`／`allXxxProjections()`。
+   *
+   * 🔴 組裝點在 2026-08-26 之前寫死 `allCppComponents()`，
+   * 於是**第二個語言的宣告靠的是那個 glob 剛好也掃到它**，而不是它自己說了。
+   */
+  declarations?: () => { components: unknown[]; projections: unknown[] }
+  /**
+   * **這個語言的診斷規則**（`runDiagnostics` 吃的那份）。
+   *
+   * ⚠️ 組裝點原本寫死 `cppDiagnosticRules`——於是切到別的語言時，
+   * 跑的仍然是 C++ 的規則。
+   */
+  diagnosticRules?: readonly unknown[]
+  /**
+   * **這個語言的風格例外**——偵測、轉換、以及 I/O 符合度分析。
+   *
+   * ⚠️ 三支是一組（同一個「風格」概念的三個問法），所以一格交出來。
+   */
+  styleExceptions?: {
+    detect: (...a: never[]) => unknown
+    convert: (...a: never[]) => unknown
+    analyzeIo: (code: string, pref: string) => unknown
+  }
+  /**
+   * **這個語言在使用者的碼【外面】加的那一層**——模組登記表、程式外殼（鷹架）、
+   * 鷹架節點過濾、程式碼修補、自動引入。
+   *
+   * 🔴 **為什麼是一格而不是五格**：它們共用同一份模組登記表
+   * （相依解析、自動引入、修補都要問它），而那份登記表**是語言自己建的**。
+   * 拆成五格會逼組裝點把它傳來傳去——那正是「深度交織」的來源。
+   *
+   * > **會互相咬住的幾個能力，交出來的是一個裝配好的東西，不是零件。**
+   *
+   * ⚠️ **回傳 `null` 是合法的**：一個沒有程式外殼的語言（Python 沒有 `main`）
+   * 不必假裝有——而**那正是今天沒有人問過的問題**（在此之前組裝點寫死 C++ 那一份，
+   * 於是切到 Python 時鷹架仍然是 C++ 的）。
+   */
+  createCodeShaping?: () => {
+    moduleRegistry: unknown
+    scaffold: unknown
+    stripScaffoldNodes: (...a: never[]) => unknown
+    patchCode: (...a: never[]) => unknown
+    autoIncludeNodes: (...a: never[]) => unknown
+  } | null
+  /**
    * 選單順序——**明說的，不是檔名排出來的**。
    *
    * 🔴 `import.meta.glob` 的鍵順序不保證，而**選單順序是設計出來的**

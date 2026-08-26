@@ -15,16 +15,12 @@ import { runDiagnostics, diagnosticsFromTree } from '../core/diagnostics'
 import type { SemanticNode } from '../core/types'
 import { createNode } from '../core/semantic-tree'
 import type { DiagnosticBlock } from '../core/diagnostics'
-import { cppDiagnosticRules } from '../languages/cpp/diagnostics'
+import type { ProgramScaffold } from '../core/program-scaffold'
 import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases } from '../core/projection/code-generator'
 // 🔴 **spec 153：五樣語言相關的東西在這裡接上。**
 //    它們原本散在 `blockly-panel`／`block-registrar`／`sync-controller` 裡
 //    ——而那三個檔是**視圖與 UI**，不該認得語言套件（P9 第一項）。
 //    ⚠️ 組裝點認得語言是**設計如此**（護欄明寫「可見，不入棘輪」）。
-import { registerCppExtractStrategies } from '../languages/cpp/extractors/extract-strategies'
-import {
-  detectStyleExceptionsForPreset, applyStyleConversions, analyzeIoConformance,
-} from '../languages/cpp/style-exceptions'
 import { TopicRegistry } from '../core/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
@@ -32,11 +28,6 @@ import { getVisibleComponents, flattenLevelTree, levelNodesWithDepth, resolveEna
 import type { Target, Topic } from '../core/types'
 // spec 142：三塊板子。⚠️ 它們**共用** `arduino` 課程清單，差別只在 `provides`
 //（不新增三份幾乎相同的 topic JSON——見 specs/142 的 research.md R1）。
-import { createPopulatedRegistry } from '../languages/cpp/std'
-import { CppScaffold } from '../languages/cpp/cpp-scaffold'
-import { cppStripScaffoldNodes } from '../languages/cpp/cpp-scaffold-filter'
-import { createCppCodePatcher, computeAutoIncludes, autoIncludeNodes } from '../languages/cpp/auto-include'
-import { registerCppLifters } from '../languages/cpp/lifters'
 import { Lifter } from '../core/lift/lifter'
 import { PatternLifter } from '../core/lift/pattern-lifter'
 import { PatternRenderer } from '../core/projection/pattern-renderer'
@@ -71,7 +62,6 @@ import { BlockStyleSelector } from './toolbar/block-style-selector'
 import { isFunctionDefinition } from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
 // Semantic layer
-import { allCppComponents, allCppProjections } from '../languages/cpp/all-declarations'
 // Projection layer
 import { CURRENT_VERSION, hashCode } from '../core/storage-version'
 
@@ -109,7 +99,10 @@ export class App {
    * 🔴 **一個實例，兩個持有者**（`code-generator` 的模組層 ＋ `syncController`）。
    * 換目標時要改的是「它的外殼設定」，不是換掉物件——否則會有一個沒被換到。
    */
-  private scaffold: CppScaffold | null = null
+  // ⚠️ **型別也不再指名一個語言**（2026-08-26）——組裝點知道「有一層外殼」，
+  //    不知道它是誰的。`ProgramScaffold` 是核心的介面，`setEntryShell` 是
+  //    「這個外殼要不要一個進入點」——兩者都與語言無關。
+  private scaffold: (ProgramScaffold & { setEntryShell?(shell: string): void }) | null = null
   private currentTarget: Target
   private executionController: ExecutionController | null = null
   private currentTree: SemanticNode | null = null
@@ -238,10 +231,16 @@ export class App {
     //
     // > **組裝點知道「要把每個語言接上」是正常的，知道它們各自怎麼接不是。**
     for (const lp of allLanguagePacks()) lp.install?.()
-    const registry = createPopulatedRegistry()
-    setDependencyResolver(registry)
-    this.scaffold = new CppScaffold(registry)
-    setProgramScaffold(this.scaffold)
+    // 🟢 **2026-08-26：使用者的碼【外面】那一層，改由語言套件裝配好交出來。**
+    //    在此之前這裡寫死 `createPopulatedRegistry()` ／ `new CppScaffold(...)`，
+    //    而那份登記表要傳給四個消費者——**那正是 vision 說的「深度交織」**。
+    //    ⚠️ 交織的不是程式碼，是**那份共用的登記表沒有主人**。
+    const shaping = languagePack(this.currentTopic.language)?.createCodeShaping?.() ?? null
+    if (shaping) {
+      setDependencyResolver(shaping.moduleRegistry as never)
+      this.scaffold = shaping.scaffold as never
+      setProgramScaffold(this.scaffold!)
+    }
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
     // 🔴 **標頭替換跟著目標走**（spec 150）——`<WiFi.h>` 在 ESP8266 上叫別的名字。
     setHeaderAliases(this.currentTarget.headerAliases)
@@ -249,9 +248,16 @@ export class App {
     await this.localeLoader.load('zh-TW')
 
     // 2. Load block specs (split component/projection architecture)
-    const allComponents = allCppComponents()
-    const allProjections = allCppProjections()
-    this.blockSpecRegistry.loadFromSplit(allComponents, allProjections)
+    // 🟢 **2026-08-26：從寫死的 `allCppComponents()` 換成問登記表。**
+    //    ⚠️ 在此之前第二個語言的宣告靠的是「那個 glob 剛好也掃到它」，
+    //    而不是它自己說了——**一個靠副作用成立的涵蓋，加第三個語言時會安靜地漏掉**。
+    const allComponents: unknown[] = []
+    const allProjections: unknown[] = []
+    for (const lp of allLanguagePacks()) {
+      const d = lp.declarations?.()
+      if (d) { allComponents.push(...d.components); allProjections.push(...d.projections) }
+    }
+    this.blockSpecRegistry.loadFromSplit(allComponents as never, allProjections as never)
 
     // 4. Register all blocks with Blockly
     this.blockRegistrar.registerAll({
@@ -285,7 +291,11 @@ export class App {
         // 🔴 **用建構選項而不是事後呼叫**（spec 153）：
         //    ① 不新增一筆「直接呼叫視圖」（第四項獨立性的棘輪）
         //    ② 時機回到面板建構時——**沒有「裝了沒人接上」的窗口**
-        installExtractStrategies: registerCppExtractStrategies as never,
+        // 🟢 **2026-08-26：從寫死的 `registerCppExtractStrategies` 換成問登記表**
+        //    ——組裝點知道「每個語言都可能有抽取策略」，不知道 C++ 的那支叫什麼。
+        installExtractStrategies: ((extractor: unknown) => {
+          for (const lp of allLanguagePacks()) lp.installExtractStrategies?.(extractor)
+        }) as never,
       })
     this.blocklyPanel = elements.blocklyPanel
     this.showProjection = elements.showProjection
@@ -297,35 +307,40 @@ export class App {
     this.syncController = new SyncController(this.bus, this.currentTopic.language, DEFAULT_STYLE)
     this.syncController.setStyleAnalyzer({
       // ⚠️ 用吃 `StylePreset` 的那個門面——收窄發生在語言那側，不是這裡也不是引擎裡
-      detectStyleExceptions: detectStyleExceptionsForPreset,
-      applyStyleConversions,
+      // 🟢 **2026-08-26：三支風格例外改由語言套件宣告**（`styleExceptions`）。
+      detectStyleExceptions: ((...a: never[]) =>
+        languagePack(this.currentTopic.language)?.styleExceptions?.detect(...a)) as never,
+      applyStyleConversions: ((...a: never[]) =>
+        languagePack(this.currentTopic.language)?.styleExceptions?.convert(...a)) as never,
       // ⚠️ **收窄發生在組裝點**——`IoPreferenceKey` 是語言專屬的型別，
       //    而視圖層那一側的簽章是中立的 `string`。
-      analyzeIoConformance: (code, pref) =>
-        analyzeIoConformance(code, (pref === 'printf' ? 'cstdio' : 'iostream') as never),
+      analyzeIoConformance: ((code: string, pref: string) =>
+        languagePack(this.currentTopic.language)?.styleExceptions?.analyzeIo(code, pref)) as never,
     })
     // 面板的降級路徑要產生程式碼文字，用的必須是**同一組**語言與風格
     // ——面板自己不得寫死一個（FR-003）。見 specs/060-panel-parallel-generator/
     this.blocklyPanel?.setCodeContext(this.currentTopic.language, DEFAULT_STYLE)
-    this.syncController.setProgramScaffold(this.scaffold!)
-    this.syncController.setScaffoldNodeFilter(cppStripScaffoldNodes)
-    const cppPatcher = createCppCodePatcher(registry)
-    this.syncController.setCodePatcher((code, tree) => cppPatcher(
+    if (this.scaffold) this.syncController.setProgramScaffold(this.scaffold)
+    if (shaping) {
+      this.syncController.setScaffoldNodeFilter(shaping.stripScaffoldNodes as never)
+      const patch = shaping.patchCode as (
+        code: string, tree: unknown, ns: string, depth: number, shell: string) => string
+      this.syncController.setCodePatcher(((code: string, tree: unknown) => patch(
       code, tree, this.currentStylePreset.namespace_style, this.getScaffoldDepth(),
       // 🔴 **第二個「要不要 main」的入口**——鷹架是第一個。兩邊都要問同一份宣告。
       this.currentTarget.entryShell ?? 'main',
-    ))
+      )) as never)
+    }
 
     // Inject auto-include nodes into the display tree when scaffold is visible (depth > 0).
     // Auto-includes are generated transiently by computeAutoIncludes() during code generation
     // but not stored as semantic nodes. This enhancer makes them visible as blocks whenever
     // the user is at a level that shows scaffold (i.e., not L0-only mode).
     this.syncController.setDisplayTreeEnhancer((tree, _visible, scaffoldVisible) => {
-      if (!scaffoldVisible) return tree
-      const autoIncludes = computeAutoIncludes(tree, registry)
-      if (autoIncludes.length === 0) return tree
-      // 哪個概念代表「引入」是語言套件的知識，介面層不該認得它
-      const includeNodes = autoIncludeNodes(autoIncludes)
+      if (!scaffoldVisible || !shaping) return tree
+      // 🟢 哪些引入要補、以及「引入」是哪一顆元件，都是語言套件的知識
+      const includeNodes = (shaping.autoIncludeNodes as (t: never) => SemanticNode[])(tree as never)
+      if (includeNodes.length === 0) return tree
       return {
         ...tree,
         children: { ...tree.children, body: [...includeNodes, ...(tree.children.body ?? [])] },
@@ -579,12 +594,17 @@ export class App {
       allLanguagePacks().flatMap((lp) => lp.liftPatterns ?? []) as unknown as LiftPattern[],
     )
     lifter.setPatternLifter(pl)
+    // 🟢 **2026-08-26：從寫死的 `registerCppLifters` 換成問登記表**——與上面
+    //    `lp.liftTransforms?.(...)` 同一個形狀（那一格早就是宣告的，而判別與建構
+    //    那一整批仍然是「順手註冊」）。
+    for (const lp of allLanguagePacks()) {
+      lp.installLifters?.(lifter, { transformRegistry, liftStrategyRegistry, renderStrategyRegistry })
+    }
     const pr = new PatternRenderer()
     pr.setRenderStrategyRegistry(renderStrategyRegistry)
     pr.loadBlockSpecsWithTopic(allSpecs, this.currentTopic)
     setPatternRenderer(pr)
     this.patternRenderer = pr
-    registerCppLifters(lifter, { transformRegistry, liftStrategyRegistry, renderStrategyRegistry })
     // 🔴 **解析器依【目前主題的語言】選**——在此之前它寫死 `CppParser`。
     //
     // ⚠️ 而這一行就是 `tree-sitter-python.wasm` **出貨的理由**：
@@ -788,7 +808,7 @@ export class App {
 
   private handleTargetChange(target: Target, topic: Topic, branches: Set<string>): void {
     // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
-    this.scaffold?.setEntryShell(target.entryShell ?? 'main')
+    this.scaffold?.setEntryShell?.(target.entryShell ?? 'main')
         const prevDepth = this.getScaffoldDepth()
         this.currentTarget = target
         this.currentTopic = topic
@@ -1328,7 +1348,7 @@ export class App {
     const savedTarget = state.targetId ? this.targetRegistry.get(state.targetId) : undefined
     if (savedTarget) this.currentTarget = savedTarget
     // ⚠️ 還原也要跟著換外殼——否則存檔存的是 Arduino，開起來卻套 `main()`。
-    this.scaffold?.setEntryShell(this.currentTarget.entryShell ?? 'main')
+    this.scaffold?.setEntryShell?.(this.currentTarget.entryShell ?? 'main')
     const topicId = savedTarget?.topic ?? state.topicId
     if (topicId) {
       const topic = this.topicRegistry.get(topicId)
@@ -1539,7 +1559,10 @@ export class App {
     })
 
     const diagnostics = [
-      ...runDiagnostics(allBlocks.map(adapt), cppDiagnosticRules),
+      // 🟢 **2026-08-26：診斷規則跟著【目前這個語言】走**——在此之前寫死 C++ 那份，
+      //    於是切到別的語言時跑的仍然是 C++ 的規則。
+      ...runDiagnostics(allBlocks.map(adapt),
+        (languagePack(this.currentTopic.language)?.diagnosticRules ?? []) as never),
       ...(this.currentTree ? diagnosticsFromTree(this.currentTree) : []),
     ]
     for (const v of registeredViews()) v.onDiagnostics?.({ diagnostics })
