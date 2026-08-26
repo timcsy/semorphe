@@ -105,20 +105,31 @@ beforeAll(async () => {
   Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
   registerFieldMultilineInput()
   registerDynamicDropdownField()
-  for (const k of ['names', 'vars', 'funcs', 'arrays', 'cpp_param_types', 'cpp_return_types', 'python_types']) {
+  for (const k of ['names', 'vars', 'funcs', 'arrays']) {
     declareDropdownSource(k, () => [['甲', 'a']])
   }
+  // 🔴 **語言套件要真的載進來**（2026-08-26）——這裡本來手列
+  //    `cpp_param_types`／`cpp_return_types`／`python_types` 三個樁，
+  //    而 `cpp_var_types` 一登記，這份清單就過期了。
+  //
+  //    ⚠️ **症狀不是「來源沒註冊」的錯誤**：那顆欄位的選項產生器擲例外之後
+  //    選項變空，於是「設一個清單外的值再讀回來」量到的是**不保值**
+  //    ——它被記成一筆**缺陷**，而缺陷其實在量測環境裡。
+  //
+  // > **一份必須跟著另一份手動更新的清單，
+  // > 就是那個缺陷的形狀，不是它的解藥。**
+  //
+  //    （同一個修法在 `audit-block-def-parity` 也做了，那邊還加了一支
+  //     「每個宣告引用的來源都登記過」的入口斷言。）
+  await import('../../src/languages/cpp/pack')
+  await import('../../src/languages/python/pack')
   declareDropdownSource('__probe_source__', () => [['甲', 'a']])
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
   ws = new Blockly.Workspace()
-  const { BlockRegistrar, setLanguageInputNames } = await import('../../src/ui/block-registrar')
-  const n = await import('../../src/languages/cpp/block-input-names')
-  setLanguageInputNames({
-    varDeclareExpr: n.C_VAR_DECLARE_EXPR_INPUTS, whileBlock: n.WHILE_INPUTS,
-    countLoop: n.COUNT_LOOP_INPUTS, returnBlock: n.RETURN_INPUTS,
-    arrayAccess: n.ARRAY_ACCESS_INPUTS, arrayAssign: n.ARRAY_ASSIGN_INPUTS, varAssign: n.VAR_ASSIGN_INPUTS,
-  } as never)
+  const { BlockRegistrar } = await import('../../src/ui/block-registrar')
+  // 🪦 `setLanguageInputNames(...)` 於 2026-08-26 整套刪除——那份契約最後一個
+  //    欄位的消費者（`cpp_var_declare_expression` 的命令式定義）退場了。
   new BlockRegistrar(reg).registerAll({ getWorkspace: () => ws })
   Blockly.defineBlocksWithJsonArray([
     { type: '__probe_closed__', message0: '%1', args0: [{ type: 'field_dropdown', name: 'F', options: [['甲', 'a']] }] },

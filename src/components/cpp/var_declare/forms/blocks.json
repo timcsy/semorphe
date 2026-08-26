@@ -7,40 +7,13 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_var_declare_expression",
+      "message0": "%{BKY_U_VAR_DECLARE_EXPR_MSG0}",
       "args0": [
         {
-          "type": "field_dropdown",
+          "type": "field_dynamic_dropdown",
           "name": "TYPE",
-          "options": [
-            [
-              "int",
-              "int"
-            ],
-            [
-              "double",
-              "double"
-            ],
-            [
-              "float",
-              "float"
-            ],
-            [
-              "char",
-              "char"
-            ],
-            [
-              "long long",
-              "long long"
-            ],
-            [
-              "string",
-              "string"
-            ],
-            [
-              "bool",
-              "bool"
-            ]
-          ]
+          "source": "cpp_var_types",
+          "allowCustom": true
         },
         {
           "type": "field_input",
@@ -54,7 +27,9 @@
         }
       ],
       "inputsInline": true,
-      "output": "Expression"
+      "output": "Expression",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_U_VAR_DECLARE_EXPR_TOOLTIP}"
     },
     "renderMapping": {
       "fields": {
@@ -68,7 +43,8 @@
     "form": {
       "axis": "role",
       "value": "expression"
-    }
+    },
+    "_why": "🟢 **2026-08-26：形狀補上（`message0`／顏色／提示），命令式定義退場。**\n🔴 **而 `TYPE` 從靜態 `field_dropdown` 換成 `field_dynamic_dropdown` ＋ `allowCustom`**\n   ——那個差異就是這一刀的目的：靜態清單把 `int**`／自訂類別當成非法值\n   （「讀得回來，寫不出去」），而命令式那份一直是開放的（`getTypeOptions` 會把\n   認不得的現值 unshift 進清單）。**宣告比命令式少了一項能力，不是多。**\n⚠️ 訊息刻意**不加「建立」**——命令式那份沒有前導標籤（它長在 `for` 的標頭裡），\n   而加字是一次外觀改動，不該混進退場那一刀。"
   },
   {
     "id": "cpp_var_declare",

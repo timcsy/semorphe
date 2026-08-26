@@ -104,13 +104,7 @@ beforeAll(async () => {
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
   ws = new Blockly.Workspace()
 
-  const { BlockRegistrar, setLanguageInputNames } = await import('../../src/ui/block-registrar')
-  const n = await import('../../src/languages/cpp/block-input-names')
-  setLanguageInputNames({
-    varDeclareExpr: n.C_VAR_DECLARE_EXPR_INPUTS, ifBlock: n.IF_INPUTS, whileBlock: n.WHILE_INPUTS,
-    countLoop: n.COUNT_LOOP_INPUTS, funcDef: n.FUNDEF_INPUTS, returnBlock: n.RETURN_INPUTS,
-    arrayAccess: n.ARRAY_ACCESS_INPUTS, arrayAssign: n.ARRAY_ASSIGN_INPUTS, varAssign: n.VAR_ASSIGN_INPUTS,
-  })
+  const { BlockRegistrar } = await import('../../src/ui/block-registrar')
   new BlockRegistrar(reg).registerAll({ getWorkspace: () => ws })
 
   const rsr = new RenderStrategyRegistry()

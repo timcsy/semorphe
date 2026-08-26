@@ -23,12 +23,8 @@ import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeader
 //    ⚠️ 組裝點認得語言是**設計如此**（護欄明寫「可見，不入棘輪」）。
 import { registerCppExtractStrategies } from '../languages/cpp/extractors/extract-strategies'
 import {
-  C_VAR_DECLARE_EXPR_INPUTS,
-} from '../languages/cpp/block-input-names'
-import {
   detectStyleExceptionsForPreset, applyStyleConversions, analyzeIoConformance,
 } from '../languages/cpp/style-exceptions'
-import { setLanguageInputNames } from './block-registrar'
 import { TopicRegistry } from '../core/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
@@ -185,11 +181,10 @@ export class App {
     this.profile = profile
     this.bus = new SemanticBus()
     this.blockSpecRegistry = new BlockSpecRegistry()
-    // ⚠️ **必須在 `registerAll` 之前**——註冊時就會讀這些名字。
-    setLanguageInputNames({
-      varDeclareExpr: C_VAR_DECLARE_EXPR_INPUTS,
-      // 🔴 spec 154：這九個原本住在 `core/block-input-names.ts`
-    })
+    // 🪦 **`setLanguageInputNames(...)` 已於 2026-08-26 刪除**——那份契約
+    //    從十二個插槽名一路縮到一個，而最後一個的消費者
+    //    （`cpp_var_declare_expression` 的命令式定義）今天退場了。
+    //    組裝點不再需要告訴視圖層任何一個 C++ 的插槽名。
     this.blockRegistrar = new BlockRegistrar(this.blockSpecRegistry)
     // 🔴 **與執行那側同一份來源**（`currentBoard: () => this.currentTarget.board`）
     //    ——兩邊如果各查各的，遲早會有一邊落後。

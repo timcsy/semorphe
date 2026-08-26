@@ -36,7 +36,7 @@ import { attachVariadic, defineVariadicBlock } from '../../src/ui/variadic-block
 // 而比對報表印成「一邊有 comment，一邊沒有」——**看起來像宣告漏了預設值**。
 // > **一個沒有把「產品註冊過的欄位型別」註冊齊的比對，會把它建不出來的當成「宣告寫錯」。**
 import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
-import { registerDynamicDropdownField, declareDropdownSource } from '../../src/ui/dynamic-dropdown-field'
+import { registerDynamicDropdownField, declareDropdownSource, dropdownSourceNames } from '../../src/ui/dynamic-dropdown-field'
 import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
@@ -175,7 +175,7 @@ let ws: Blockly.Workspace
 /** 上一支比對建起來的宣告——讓「載入時的狀態」那支指名得出母體。 */
 const declaredCache = new Map<string, Shape>()
 
-beforeAll(() => {
+beforeAll(async () => {
   // 🔴 **先把標籤載進 `Blockly.Msg`**——`jsonInit` 會把 `%{BKY_X}` 展開成訊息文字，
   // 而**訊息沒載入時它展不開**，於是「訊息裡沒有 %1」→ 一堆假的失敗。
   // ⚠️ 第一版沒載，11 顆裡有 8 顆報 `Message does not reference all N args`
@@ -202,16 +202,20 @@ beforeAll(() => {
   //    **它就只是不見了**，而那比誤報更難發現。
   //
   // > **一個從母體裡消失的項目，看起來與「沒有問題」一模一樣。**
-  declareDropdownSource('cpp_param_types', () => [['int', 'int']])
-  declareDropdownSource('cpp_return_types', () => [['void', 'void']])
-  // 🔴 **而上面那段話沒有擋住第八次**（2026-08-26）：`python_types` 漏了，
-  //    於是 `python_func_def` **從來沒有被比對過**——它在報表上不存在。
+  // 🔴 **第九次（2026-08-26）：`cpp_var_types` 漏了**——`cpp_var_declare_expression`
+  //    的宣告**擲例外**，於是它從比對母體裡消失。
   //
-  // > **一段寫著「這個病會這樣發生」的註解，擋不住它再發生一次
-  // > ——擋得住的是一支會紅的斷言。**
+  //    前八次的處置都是「再手寫一個樁」，而這一段的註解自己寫著
+  //    「一段寫著『這個病會這樣發生』的註解，擋不住它再發生一次」。
+  //    **手寫的樁清單本身就是那個病**：每宣告一個新來源，這裡就要有人跟著加一行。
   //
-  // 🟢 抓到它的是這個檔最下面新加的**入口條件**（「用建構子的宣告一顆都不能被略過」）。
-  declareDropdownSource('python_types', () => [['int', 'int']])
+  // > **一份必須跟著另一份手動更新的清單，就是那個缺陷的形狀，不是它的解藥。**
+  //
+  // 🟢 處置：**載入真的語言套件**（它們在模組層級呼叫 `declareDropdownSource`），
+  //    而不是列舉名字。⚠️ 而光這樣還不夠——套件沒載到的那天症狀一模一樣，
+  //    所以下面那支入口條件會**逐個來源指名**。
+  await import('../../src/languages/cpp/pack')
+  await import('../../src/languages/python/pack')
   Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
   reg = new BlockSpecRegistry()
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
@@ -407,13 +411,7 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
    * （在此之前所有 `block-registrar` 的測試都只掃檔案文字）。
    */
   it('🎯 報表：命令式定義的積木，宣告式建得出【一樣的形狀】嗎', async () => {
-    const { BlockRegistrar, setLanguageInputNames } = await import('../../src/ui/block-registrar')
-    const n = await import('../../src/languages/cpp/block-input-names')
-    setLanguageInputNames({
-        varDeclareExpr: n.C_VAR_DECLARE_EXPR_INPUTS, whileBlock: n.WHILE_INPUTS,
-      countLoop: n.COUNT_LOOP_INPUTS, returnBlock: n.RETURN_INPUTS,
-      arrayAccess: n.ARRAY_ACCESS_INPUTS, arrayAssign: n.ARRAY_ASSIGN_INPUTS, varAssign: n.VAR_ASSIGN_INPUTS,
-    })
+    const { BlockRegistrar } = await import('../../src/ui/block-registrar')
 
 
     // 🔴 **順序要對**：欄位在 `init` 的當下就抓住選項產生器，
@@ -660,6 +658,60 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
       '🔴 這幾顆用了宣告式建構子，而比對器【建不起來】——'
       + '於是它們在報表上不會出現，也不會變紅。\n'
       + '   ⚠️ 症狀是「報表上少一行」，不是「多一行」——那正是第七次的形狀。')
+      .toEqual([])
+  })
+  /**
+   * **每一個宣告引用的下拉來源，都要真的登記過。**
+   *
+   * ## 它從哪來（2026-08-26，同一種病的第九次）
+   *
+   * 前八次的處置都是「在 `beforeAll` 再手寫一個樁」。而**手寫的樁清單本身
+   * 就是那個病**：每宣告一個新來源，這裡就要有人跟著加一行，
+   * 而漏掉的症狀是**報表上少一行**——它與「沒有問題」長得一模一樣。
+   *
+   * > **一份必須跟著另一份手動更新的清單，
+   * > 就是那個缺陷的形狀，不是它的解藥。**
+   *
+   * 🟢 已改成載入真的語言套件。而這一支守的是**下一層**：
+   * 套件沒載到、或某個來源在套件裡被刪了，症狀仍然一模一樣。
+   *
+   * ## ⚠️ 自我否證
+   *
+   * > **如果「引用到的來源」是 0 個，代表登錄表沒載入或欄位規格沒被走訪，
+   * > 這一條不算數——不是「每一個都登記好了」。**
+   *
+   * 錨在**引用數**（合成量）：登記一個新來源不會讓它變小。
+   */
+  it('🔴 入口條件：宣告引用到的每一個下拉來源都登記過——逐個指名', () => {
+    const referenced = new Map<string, string[]>()
+    const walk = (v: unknown, owner: string): void => {
+      if (Array.isArray(v)) { for (const x of v) walk(x, owner); return }
+      if (!v || typeof v !== 'object') return
+      const o = v as Record<string, unknown>
+      if (o.type === 'field_dynamic_dropdown' && typeof o.source === 'string') {
+        const list = referenced.get(o.source) ?? []
+        list.push(owner)
+        referenced.set(o.source, list)
+      }
+      for (const x of Object.values(o)) walk(x, owner)
+    }
+    for (const spec of reg.getAll() as { blockDef?: Record<string, unknown> }[]) {
+      const t = spec.blockDef?.type as string | undefined
+      if (t && spec.blockDef) walk(spec.blockDef, t)
+    }
+    const registered = new Set(dropdownSourceNames())
+    const missing = [...referenced.entries()]
+      .filter(([name]) => !registered.has(name))
+      .map(([name, owners]) => `${name} ← ${[...new Set(owners)].join(', ')}`)
+
+    // ★ 入口條件——錨在引用數（合成量），見上面的自我否證
+    expect(referenced.size,
+      '🔴 一個 `field_dynamic_dropdown` 的來源都沒走訪到 → 登錄表沒載入或走訪壞了，'
+      + '這一條不算數').toBeGreaterThan(2)
+    expect(missing,
+      '🔴 這些下拉來源【沒有人登記】——用到它們的積木會擲例外，\n'
+      + '   於是從比對母體裡【消失】，而報表上既不是「一模一樣」也不是「有差異」。\n'
+      + '   ⚠️ 修法是讓宣告它的那個語言套件被 import，**不是在測試裡再寫一個樁**。')
       .toEqual([])
   })
 })

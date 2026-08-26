@@ -44,42 +44,29 @@ import { abstractComponentOf } from '../core/language-executors'
 // 🪦 `setFieldSafely` 的匯入已於 2026-08-26 刪除——它的最後幾個消費者
 //    （多模式插槽的 `SEL_i` 寫入）隨那套機制一起退場。
 import { isPlainDeclaration } from '../core/component/traits'
-// 🔴 **不再 import 語言套件**（spec 153）——三個 C 專屬的 input 名由組裝點注入。
+// 🪦 **語言插槽名的注入機制已於 2026-08-26 整套刪除**
+//    （`setLanguageInputNames`／`InputNames`／`inputNamesInjected` 的守衛）。
 //
-// ⚠️ 而「把它們搬進 `core/block-input-names`」是**錯的修法**：
-//    那個檔已經硬編了 9 個 `cpp_*` 積木型別，搬過去會讓
-//    中立性護欄的**第一維降、第二維升**——把搬家當成清償。
-//    （第二維就是 spec 153 為此加的。）
-type InputNames = { value: string[]; statement: string[] }
-
-// 🔴 **十二個插槽名全部由組裝點注入**（spec 153 三個 → spec 154 十二個）。
-//    其中九個原本住在 `core/block-input-names.ts`——而那是**位置錯**：
-//    它們一個一個都是 `cpp_*`，唯一的消費者就是這個檔。
+//    它 spec 153 開場時注入三個 C 專屬的 input 名、spec 154 長到十二個，
+//    而**每退一顆命令式積木就少一個**：
 //
-// 🔴 **這些初始值不是「預設」，是【還沒注入】的佔位**。
-//    ⚠️ 一個看起來合理的預設值，會讓「組裝點漏了」與「值本來就是這樣」
-//    長得一模一樣——而那是這個專案的**靜默降級反模式**。
-//    🟢 所以 `registerAll` 會在沒注入時**當場拋錯**，不是默默用佔位值。
-let C_VAR_DECLARE_EXPR_INPUTS: InputNames = { value: ['INIT_0'], statement: [] }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
-
-let inputNamesInjected = false
-
-/** 組裝點推進來（`app.ts`）。⚠️ 必須在 `registerAll` 之前。 */
-/**
- * 🪦 **`arrayAccess`（163）·`returnBlock`（164）·`whileBlock`／`countLoop`／`arrayAssign`／`varAssign`（165）·`compoundAssign`（166）已從契約移除**——它的唯一消費者
- * （`cpp_array_at` 的命令式定義）退場了。
- *
- * ⚠️ **一個沒有消費者的注入欄位，會讓組裝點以為它還要提供那份資料**
- * ——而那份資料從此沒有人驗，錯了也不會有人知道。
- */
-export function setLanguageInputNames(names: {
-  varDeclareExpr: InputNames
-}): void {
-  C_VAR_DECLARE_EXPR_INPUTS = names.varDeclareExpr
-  inputNamesInjected = true
-}
+//    ```
+//    arrayAccess（163）· returnBlock（164）
+//    whileBlock／countLoop／arrayAssign／varAssign（165）· compoundAssign（166）
+//    ifBlock／funcDef · varDeclareExpr（2026-08-26，最後一個）
+//    ```
+//
+//    最後一個欄位的唯一消費者是 `cpp_var_declare_expression` 的命令式定義，
+//    而它今天退場了——於是**整個契約什麼都不注入**。
+//
+// > **一個沒有消費者的注入欄位，會讓組裝點以為它還要提供那份資料
+// > ——而那份資料從此沒有人驗。**
+//
+// ⚠️ 那道「沒注入就當場拋錯」的守衛也一起走：**它守的是一份空契約**，
+//    而一個守著空契約的守衛，與沒有守衛產出一樣。
+//
+// 🟢 `core/block-input-names.ts` 與 `languages/cpp/block-input-names.ts` **留著**
+//    ——多條護欄拿它們當「插槽名的唯一真相」在比對，那是另一件事。
 
 export interface WorkspaceAccessors {
   getWorkspace: () => Blockly.Workspace | null
@@ -94,13 +81,6 @@ export class BlockRegistrar {
   }
 
   registerAll(accessors: WorkspaceAccessors): void {
-    // 🔴 **沒注入就出聲**——見上面那段的理由。
-    if (!inputNamesInjected) {
-      throw new Error(
-        'BlockRegistrar：語言的插槽名還沒注入。組裝點要先呼叫 `setLanguageInputNames(...)`'
-        + '——⚠️ 沒有它的話積木會用佔位的插槽名建起來，而那個錯只會在序列化時浮現。',
-      )
-    }
     this.accessors = accessors
     // 🔴 **先註冊欄位型別與選項來源，再建積木**——`jsonInit` 遇到
     // `field_dynamic_dropdown` 時要查得到它，否則那顆積木**整個建不起來**。
@@ -1518,22 +1498,18 @@ export class BlockRegistrar {
 
 
 
-    // cpp_var_declare_expression
-    {
-      Blockly.Blocks['cpp_var_declare_expression'] = {
-        init: function (this: Blockly.Block) {
-          this.appendValueInput(C_VAR_DECLARE_EXPR_INPUTS.value[0])
-            .setCheck('Expression')
-            .appendField(self.createOpenDropdown(() => getTypeOptions()) as Blockly.Field, 'TYPE')
-            .appendField(new Blockly.FieldTextInput('i') as Blockly.Field, 'NAME_0')
-            .appendField('=')
-          this.setInputsInline(true)
-          this.setOutput(true, 'Expression')
-          this.setColour(CATEGORY_COLORS.data)
-          this.setTooltip(Blockly.Msg['U_VAR_DECLARE_EXPR_TOOLTIP'] || '宣告變數（運算式版本）')
-        },
-      }
-    }
+    // 🪦 **`cpp_var_declare_expression` 的命令式定義已於 2026-08-26 刪除。**
+    //
+    // 🔴 **而它的差異就是這一刀的目的**：宣告那份的 `TYPE` 是**靜態**
+    //    `field_dropdown`（七個選項），而命令式那份一直是開放的
+    //    ——`getTypeOptions` 會把認不得的現值 unshift 進清單。
+    //    **宣告比命令式少了一項能力，不是多。**
+    //
+    //    換成 `field_dynamic_dropdown` ＋ `source: "cpp_var_types"` ＋ `allowCustom`
+    //    （那份型別清單也跟著回家，住進 `languages/cpp/pack.ts`——
+    //     與參數／回傳那兩份 2026-08-24 走的是同一條路）。
+    //
+    // ⚠️ 訊息刻意**不加「建立」**——命令式那份沒有前導標籤（它長在 `for` 的標頭裡）。
     /* eslint-enable @typescript-eslint/no-explicit-any */
   }
 }

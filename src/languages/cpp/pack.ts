@@ -67,6 +67,26 @@ declareDropdownSource('cpp_param_types', () => [
   ['void*', 'void*'],
 ])
 
+/**
+ * **變數的型別**——`int x;`／`vector<int> v;`／`MyStruct* p;`。
+ *
+ * 🔴 它 2026-08-26 才登記，而**在此之前那份清單住在 `ui/block-registrar.ts`**
+ * （`getTypeOptions`）——一份 C++ 的型別表寫在核心 UI 檔裡（P9 的債）。
+ * 與參數／回傳那兩份是同一批，只是那兩份 2026-08-24 就回家了。
+ *
+ * ⚠️ **認不得的值不會被換掉**（`dynamic-dropdown-field` 的既有行為），
+ * 所以這裡不必窮舉——命令式那份靠 `opts.unshift(currentVal)` 手動做同一件事。
+ */
+declareDropdownSource('cpp_var_types', () => [
+  [msg('U_VAR_DECLARE_TYPE_INT', 'int'), 'int'],
+  [msg('U_VAR_DECLARE_TYPE_FLOAT', 'float'), 'float'],
+  [msg('U_VAR_DECLARE_TYPE_DOUBLE', 'double'), 'double'],
+  [msg('U_VAR_DECLARE_TYPE_CHAR', 'char'), 'char'],
+  [msg('U_VAR_DECLARE_TYPE_BOOL', 'bool'), 'bool'],
+  [msg('U_VAR_DECLARE_TYPE_STRING', 'string'), 'string'],
+  [msg('U_VAR_DECLARE_TYPE_LONG_LONG', 'long long'), 'long long'],
+])
+
 declareDropdownSource('cpp_return_types', () => [
   [msg('U_FUNC_DEF_RETURN_TYPE_VOID', 'void'), 'void'],
   [msg('U_FUNC_DEF_RETURN_TYPE_INT', 'int'), 'int'],
