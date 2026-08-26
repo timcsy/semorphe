@@ -7,9 +7,14 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_initializer_list",
+      "inputsInline": true,
       "output": "Expression",
       "colour": "#FF661A",
-      "tooltip": "%{BKY_CPP_INITIALIZER_LIST_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_INITIALIZER_LIST_TOOLTIP}",
+      "builder": "variadic",
+      "labelKey": "CPP_INITIALIZER_LIST_MSG",
+      "labelFallback": "初始值",
+      "slotCheck": "Expression"
     },
     "renderMapping": {
       "fields": {},
@@ -21,6 +26,7 @@
           "inputPattern": "EXPR{i}"
         }
       ]
-    }
+    },
+    "_why": "🟢 **2026-08-26：形狀補上，命令式定義退場。** 這裡本來只有 `output`／`colour`／`tooltip`\n——形狀住在 `block-registrar.ts`，於是比對護欄把它當成「沒有宣告」而略過。\n🔴 **而這一顆是【宣告躺著沒被用】，不是命令式錯了**：兩份的形狀一致，\n   `itemCount` 這個存檔鍵也一致（`renderMapping.dynamicRules.countSource` 認同一個）。\n⚠️ **沒有 `slotPrefix`（逗號）是刻意的**——命令式那份就沒有，而加逗號是一次\n   **外觀改動**，不該混進退場那一刀。要加的話它是自己的一刀。"
   }
 ]

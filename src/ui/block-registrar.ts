@@ -1075,51 +1075,20 @@ export class BlockRegistrar {
       }
     }
 
-    // cpp_initializer_list —— `{1, 2, 3}`
+    // 🪦 **`cpp_initializer_list` 的命令式定義已於 2026-08-26 刪除。**
     //
-    // ⚠️ **動態插槽必須是命令式的**：`+`／`-` 按鈕要在 `init` 裡建，
-    // 而宣告式的 `args0` 只描述固定的欄位。與 `cpp_print` 同一個形狀。
+    //    換成 `builder: "variadic"`（`components/cpp/initializer_list/forms/blocks.json`）。
+    //    存檔鍵 `itemCount` 沿用——渲染那一路的 `countSource` 認同一個。
     //
-    // 🔴 而它讓**多維初始值在積木上表達得出來**：外層的插槽接一顆同型別的積木，
-    // 巢狀天然支援——插槽群沒有巢狀，所以 `{{1,2},{3,4}}` 用插槽群裝不下。
-    {
-      Blockly.Blocks['cpp_initializer_list'] = {
-        itemCount_: 1,
-        init: function (this: any) {
-          this.itemCount_ = 1
-          this.appendValueInput('EXPR0')
-            .appendField(Blockly.Msg['CPP_INITIALIZER_LIST_MSG'] || '初始值')
-          this.appendDummyInput('TAIL')
-            .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
-            .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
-          this.setInputsInline(true)
-          this.setOutput(true, 'Expression')
-          this.setColour(CATEGORY_COLORS.arrays)
-          this.setTooltip(Blockly.Msg['CPP_INITIALIZER_LIST_TOOLTIP'] || '一組依序排列的初始值')
-        },
-        plus_: function (this: any) {
-          this.appendValueInput('EXPR' + this.itemCount_)
-          this.moveInputBefore('EXPR' + this.itemCount_, 'TAIL')
-          this.itemCount_++
-          setMinusState(this, false)
-        },
-        minus_: function (this: any) {
-          if (this.itemCount_ <= 1) return
-          this.itemCount_--
-          this.removeInput('EXPR' + this.itemCount_)
-          setMinusState(this, this.itemCount_ <= 1)
-        },
-        saveExtraState: function (this: any) {
-          return { itemCount: this.itemCount_ }
-        },
-        loadExtraState: function (this: any, state: { itemCount?: number }) {
-          const count = state?.itemCount ?? 1
-          while (this.itemCount_ < count) {
-            this.plus_()
-          }
-        },
-      }
-    }
+    // 🔴 **而兩份的形狀有一格差異，那個差異就是這一刀的目的**：
+    //    命令式把「初始值」這個標籤掛在**第一個值插槽**上（`EXPR0,TAIL`），
+    //    建構子把它放在自己的啞輸入上（`HEAD,EXPR0,TAIL`）。
+    //
+    //    spec 169 已經判過這件事，而**這一顆正是它舉的例子**：
+    //    > 「一個『把標籤掛在第一個資料上』的版面，在資料可以是零個的時候就崩了。」
+    //    而 `component.json` 說 `children.values.min: 0`——`{}` 是合法的。
+    //
+    //    ⚠️ 版面沒有變（`inputsInline: true`，標籤仍然在第一格左邊）。
 
     // 🪦 **`cpp_print` 的命令式定義已於 spec 162 刪除**——它改由
     //    `variadic-block.ts` 依膠囊的 `builder: "variadic"` ＋ `dynamicRules` 建。
