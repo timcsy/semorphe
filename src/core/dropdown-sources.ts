@@ -19,7 +19,40 @@
  * 症狀是在 Node 裡才現形的（`examples/bring-your-own-view/`）：出貨的核心
  * 拖著 Blockly ＋ jsdom，而那個宿主連 DOM 都沒有。
  */
-type DropdownOptions = () => Array<[string, string]>
+/**
+ * **這顆下拉此刻長在哪裡**——用純字串描述，不帶任何 Blockly 型別。
+ *
+ * ## 為什麼下拉需要知道位置（2026-08-26）
+ *
+ * `block-registrar.ts` 上頭那段註解寫著：
+ *
+ * > **兩個下拉長得一樣，不代表它們問的是同一個問題。**
+ *
+ * 當時那個區別住在**積木型別**裡：`cpp_var_ref` 是讀（變數 ∪ 板子常數），
+ * 而 `cpp_var_assign` 的 `NAME` 是寫（只有變數，否則學生選得到 `HIGH = 5`）。
+ *
+ * 🔴 **左值接點化把那兩個型別合成了一個**：賦值的左邊現在裝的**就是一顆
+ * `cpp_var_ref`**。於是那個區別失去了它原本的載體——
+ *
+ * > **一個靠「你是哪一種積木」成立的區別，
+ * > 在那兩種積木合而為一的那天會安靜地消失。**
+ *
+ * 它不會拋錯，也不會讓任何單元測試變紅：症狀只是下拉多了幾個名字。
+ * （抓到它的是 e2e——`npm test` 5749 支全綠。）
+ *
+ * → 區別搬到**位置**：問「我坐的這一格，是不是宣告過的寫入目標」。
+ *   而「哪一格是寫入目標」由元件自己宣告（`traits.writesTo`），不是猜的。
+ */
+export interface DropdownContext {
+  /** 這顆積木自己的型別 */
+  blockType?: string
+  /** 它接在誰身上 */
+  parentBlockType?: string
+  /** 接在對方的哪一格（Blockly 的 input 名，例如 `TARGET`） */
+  parentInputName?: string
+}
+
+type DropdownOptions = (ctx?: DropdownContext) => Array<[string, string]>
 
 const sources = new Map<string, DropdownOptions>()
 

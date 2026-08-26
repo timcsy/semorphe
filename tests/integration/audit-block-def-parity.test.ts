@@ -468,10 +468,54 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     // 而清到剩 10 顆的那天它自己紅了，訊息還說「registerAll 沒跑起來」。
     // > **一個錨在「今天有多少」的錨點，會在事情變好的那天說謊。**
     // 🟢 錨在「**有沒有比到**」與「母體是不是空的」。
-    expect(same.length + differ.length, '一顆都沒比到 → registerAll 沒跑起來').toBeGreaterThan(0)
+    // 🔴 **入口條件改寫（2026-08-26）：這裡本來寫 `same + differ > 0`。**
+    //
+    // 而那個錨**在成功的那天說謊了**——最後一顆有兩份定義的積木退場之後，
+    // 交集是 0，而它報「registerAll 沒跑起來」。
+    // ⚠️ 上面那段註解自己寫著「一個錨在『今天有多少』的錨點，會在事情變好的
+    //    那天說謊」，而它換成的「有沒有比到」**仍然是同一個形狀**。
+    //
+    // > **把「今天有幾顆」換成「今天有沒有」，換掉的是刻度，不是那個病。**
+    //
+    // 🟢 錨改成**掃描讀到了多少命令式定義**（合成量，不隨清償變小——
+    //    而它變小時另有一支硬性零在看）。
+    expect(imperativeTypes.size, '命令式母體是空的 → 掃描壞了').toBeGreaterThan(5)
     expect(declared.size, '宣告一顆都沒建起來 → 是 jsonInit 那條路壞了').toBeGreaterThan(100)
 
-    // 🔴 **棘輪：差異只准下降。**
+    // 🔴 **而「有差異 0 顆」不等於「清乾淨了」**（2026-08-26 當場抓到）：
+    //    最後一顆退場之後報表說 0，而檔案裡**還有 10 顆命令式定義**
+    //    ——它們的宣告**建不起來**，於是從比對母體裡消失了。
+    //
+    // > **一個從母體裡消失的項目，看起來與「沒有問題」一模一樣。**
+    //
+    // 這一條把那個缺口封起來：**一顆命令式積木如果也有宣告，就必須進得了比對。**
+    const uncompared = [...imperativeTypes]
+      .filter((t) => reg.getByBlockType(t))
+      .filter((t) => !same.includes(t) && !differ.some((d) => d.t === t))
+      .map((t) => {
+        // ⚠️ **把原因帶進報表**——「沒比到」有三種（宣告建不起來／命令式建不起來／
+        //    宣告根本沒有 `message0`），而它們的修法完全不同。
+        let why = '未知'
+        try { why = fromDeclaration(t) ? '命令式那側建不起來' : '宣告回 null' }
+        catch (e) { why = '宣告擲例外：' + String((e as Error).message).slice(0, 90) }
+        return `${t}（${why}）`
+      })
+      .sort()
+    // 🔴 **它們不是缺陷，是【宣告還沒寫】**——實測那 7 顆的 `blockDef`
+    //    連 `message0` 都沒有（`{ type, colour, tooltip }` 之類的空殼）。
+    //    也就是說：退場計畫以為只剩 1 顆，而**實際上還差 8 顆**，
+    //    其中 7 顆一直不在報表上。
+    //
+    // > **「有差異 0 顆」不等於「清乾淨了」——
+    // > 那 7 顆是從母體裡消失的，而消失與沒問題長得一模一樣。**
+    //
+    // 走**棘輪**（每一顆都要補一整份宣告，而它們都是 mutation 重的），
+    // 並且**逐顆指名**——名字一夕消失必須有人說得出為什麼。
+    // eslint-disable-next-line no-console
+    console.log(`\n  ⚠️ 兩份定義都有、而宣告是空殼的 ${uncompared.length} 顆：\n    `
+      + uncompared.join('\n    '))
+
+    // 🔴 **棘輪：差異只准下降；而「宣告是空殼」的那些也只准下降。**
     //
     // 這 19 筆**每一筆都是一個真的落差**——宣告與命令式對同一顆積木說了不同的話，
     // 而**今天使用者看到的是命令式那份**（它沒有守衛、後跑、直接覆寫）。
@@ -484,11 +528,20 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     // 🔴 **不准用「把宣告改成跟命令式一樣」來刷數字**——那是在假設命令式是對的，
     // 而其中有幾筆（`cpp_break` 少了 `nextStatement`）**命令式才是錯的**。
     const baseline = JSON.parse(await fs.readFile(
-      pathMod.resolve(process.cwd(), 'tests/baselines/block-def-parity.json'), 'utf8')) as { differ: number }
+      pathMod.resolve(process.cwd(), 'tests/baselines/block-def-parity.json'), 'utf8')) as {
+        differ: number; hollowDeclaration: number
+      }
     expect(differ.length,
       '⚠️ 宣告與命令式的落差變多了 → 有人改了一邊沒改另一邊，'
       + '而使用者看到的是命令式那份（CLAUDE.md 的「雙重真相來源」）')
       .toBeLessThanOrEqual(baseline.differ)
+    // 🔴 **第二個棘輪：兩份定義都有、而宣告是空殼的那些**（2026-08-26）。
+    //    ⚠️ 少了它，`differ` 歸零那天報表會說「清乾淨了」——而還差 7 顆。
+    expect(uncompared.length,
+      '🔴 「兩份定義都有、而宣告是空殼」的變多了。\n'
+      + '   ⚠️ 而它與 `differ` **必須一起看**：一顆積木的宣告從「有內容但不一樣」\n'
+      + '     退成「空殼」，會讓 `differ` 下降而看起來像進步。')
+      .toBeLessThanOrEqual(baseline.hollowDeclaration)
   })
 
   /**
@@ -524,7 +577,19 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
       //    `hasReturn` 由 `blockOptions[].stateKey` 指定）。
       //    ⚠️ 那正是這一維存在的意義——它從「表達不出」變成「表達得出」，
       //    於是那顆命令式定義才刪得掉。
-      .toEqual(['cpp_raw_code'])
+      // 🪦 **`cpp_raw_code` 於 2026-08-26 退場，而理由不是「宣告補上了那兩個鍵」**
+      //    ——是**那兩個鍵不再需要積木自己保存**：
+      //    `preserveForeignExtraState` 補上了「純轉手」那一支，於是宣告式積木
+      //    也留得住 `unresolved`／`nodeType`；而視覺那一半搬進了
+      //    `blockly-panel` 的 `applyExtraStateVisuals`（本來就對每一顆積木在做）。
+      //
+      // 🔴 **而這一維現在的母體是空的**——沒有任何命令式定義存自己的 extraState。
+      //    ⚠️ 它因此**擋不住任何東西**，而它仍然該留著：
+      //    新長出一顆這種積木時，這裡會從 `[]` 變成有名字，而那正是要看見的。
+      //
+      // > **一個母體空掉的維度不是「通過了」，是「今天沒有東西可看」
+      // > ——而那兩件事在綠色的畫面上長得一樣。**
+      .toEqual([])
   })
 
   it('★ 報表：哪些積木的宣告【建得起來】', () => {

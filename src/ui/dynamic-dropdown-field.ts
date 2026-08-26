@@ -27,6 +27,7 @@
  */
 import * as Blockly from 'blockly'
 import { dropdownSource } from '../core/dropdown-sources'
+import type { DropdownContext } from '../core/dropdown-sources'
 import { msg } from '../core/messages'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -73,6 +74,30 @@ const CUSTOM_PROMPT = (): string => msg('FIELD_CUSTOM_PROMPT', '輸入自訂的�
  * 判準見 `concepts/投影.md`「可逆性量不到使用者造不造得出來」：
  * **一個投影可以完全可逆，而同時是一個不完備的編輯器。**
  */
+/**
+ * 一顆欄位此刻的位置——**接在誰的哪一格上**。
+ *
+ * ⚠️ 全部包在 try 裡：欄位在**建構期間**也會被要一次選項（Blockly 建
+ * 下拉時），而那時它還沒有 source block。拿不到就回空的，
+ * 讓來源退回「不知道位置」的那條路。
+ */
+function contextOf(field: Blockly.Field): DropdownContext {
+  try {
+    const block = field.getSourceBlock()
+    if (!block) return {}
+    const parentConn = block.outputConnection?.targetConnection
+      ?? block.previousConnection?.targetConnection
+    const parent = parentConn?.getSourceBlock()
+    return {
+      blockType: block.type,
+      parentBlockType: parent?.type,
+      parentInputName: parentConn?.getParentInput()?.name,
+    }
+  } catch {
+    return {}
+  }
+}
+
 export function registerDynamicDropdownField(): void {
   if ((Blockly.fieldRegistry as any).fromJson?.__semorpheRegistered) return
   class DynamicDropdown extends Blockly.FieldDropdown {
@@ -80,12 +105,20 @@ export function registerDynamicDropdownField(): void {
 
     constructor(spec: { source?: string; options?: Array<[string, string]>; allowCustom?: boolean }) {
       const allowCustom = spec.allowCustom === true
-      super(() => {
+      super(function (this: Blockly.FieldDropdown) {
+        // 🔴 **選項要知道自己長在哪一格**（2026-08-26，見 `core/dropdown-sources.ts`
+        //    的 `DropdownContext`）。左值接點化之後，「讀一個名字」與
+        //    「寫進一個名字」用的是**同一顆積木**，於是那個區別只剩位置。
+        //
+        // ⚠️ **這裡不能用箭頭函式**——Blockly 呼叫選項產生器時是把 `this`
+        //    綁到欄位上的，而箭頭函式會讓 `this` 停在建構子的外層。
+        //    （症狀不是拋錯，是 `ctx` 永遠是空的＝退回舊行為。）
+        const ctx = contextOf(this)
         const base = spec.source
           ? (() => {
               const gen = dropdownSource(spec.source as string)
               if (!gen) throw new Error(`下拉來源沒註冊：${spec.source}——組裝點要先呼叫 declareDropdownSource`)
-              return gen()
+              return gen(ctx)
             })()
           : (spec.options ?? []).map((o) => [o[0], o[1]] as [string, string])
         const opts = allowCustom ? [...base, [CUSTOM_LABEL(), CUSTOM_VALUE] as [string, string]] : base

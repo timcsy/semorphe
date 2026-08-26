@@ -1305,6 +1305,20 @@ export class BlocklyPanel implements ViewHost {
         ?? (block.saveExtraState?.() as Record<string, unknown> | null)
       if (!extra) continue
 
+      // 🔴 **「認不得的那一段」的視覺**（2026-08-26 從 `cpp_raw_code` 的命令式
+      //    定義搬過來）。它本來寫在那顆積木的 `loadExtraState` 裡，而**這件事
+      //    與語言無關**：任何積木的 `extraState.unresolved` 都該長成這樣。
+      //
+      // ⚠️ 而它與旁邊那兩段（降級／信心）**本來就是同一族**——只有它沒被搬。
+      //
+      // > **一個機制搬家的時候，留在原地的那一半會看起來像「它需要特別處理」。**
+      if (extra.unresolved === true) {
+        const nodeType = String(extra.nodeType ?? '')
+        const tip = ((Blockly.Msg as Record<string, string>)['U_UNRESOLVED_TOOLTIP'] ?? 'Unresolved: %1')
+          .replace('%1', nodeType)
+        block.setTooltip(tip)
+      }
+
       // 降級視覺
       const cause = extra.degradationCause as DegradationCause | undefined
       if (cause && DEGRADATION_VISUALS[cause]) {

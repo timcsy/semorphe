@@ -32,15 +32,44 @@ async function pasteCode(page: Page, code: string): Promise<void> {
     .toBeGreaterThan(1)
 }
 
-/** 某一型積木的 `NAME` 下拉此刻列了什麼。 */
+/**
+ * 某一型積木的 `NAME` 下拉此刻列了什麼。
+ *
+ * 🔴 **只認【讀】的位置**（2026-08-26）：左值接點化之後，賦值的左邊裝的
+ * **也是一顆 `cpp_var_ref`**——`getAllBlocks` 先撈到哪一顆是不定的，
+ * 而兩顆該列的東西**不一樣**。
+ *
+ * > **一個「找第一顆這型積木」的取樣，在那一型積木開始有兩種身分那天
+ * > 會安靜地量到另一個問題的答案。**
+ */
 async function optionsOf(page: Page, blockType: string): Promise<string[]> {
   return page.evaluate((t) => {
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const ws = (window as any).__app.blocklyPanel.workspace
-    const b = ws.getAllBlocks(false).find((x: any) => x.type === t)
-    if (!b) throw new Error(`工作區裡沒有 ${t}`)
+    const b = ws.getAllBlocks(false).find((x: any) =>
+      x.type === t && x.outputConnection?.targetConnection?.getParentInput()?.name !== 'TARGET')
+    if (!b) throw new Error(`工作區裡沒有【讀取位置】的 ${t}`)
     return b.getField('NAME').getOptions(false).map((o: string[]) => o[1]) as string[]
   }, blockType)
+}
+
+/**
+ * **寫入目標那一格**裡那顆積木的 `NAME` 下拉此刻列了什麼。
+ *
+ * 🪦 這支取代了 `optionsOf(page, 'cpp_var_assign')`——那顆積木的 `NAME`
+ * 下拉於 2026-08-25 退場（路線圖「左值是接點，不是字串」），寫入目標
+ * 變成 `TARGET` 那一格裡的一顆積木。**問的問題沒變，問法變了。**
+ */
+async function writeTargetOptionsOf(page: Page, parentType: string): Promise<string[]> {
+  return page.evaluate((t) => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const ws = (window as any).__app.blocklyPanel.workspace
+    const p = ws.getAllBlocks(false).find((x: any) => x.type === t)
+    if (!p) throw new Error(`工作區裡沒有 ${t}`)
+    const b = p.getInputTargetBlock('TARGET')
+    if (!b) throw new Error(`${t} 的 TARGET 那一格是空的——左值沒有被結構表達`)
+    return b.getField('NAME').getOptions(false).map((o: string[]) => o[1]) as string[]
+  }, parentType)
 }
 
 // ⚠️ **貼上那條路需要剪貼簿權限**——而它正是使用者真的走的那條。
@@ -72,7 +101,7 @@ test.describe('spec 149 · 名字的範圍', () => {
     // ★ 錨點：先證明【變數那一側真的也提供 D1】——否則「只出現一次」
     //   可能只是因為變數那側根本沒認出它，而去重從來沒被執行到。
     //   （第一版就少了這個錨點，把去重拿掉之後測試照樣綠。）
-    expect(await optionsOf(page, 'cpp_var_assign'), '變數那側沒認出 D1，這條測不到去重')
+    expect(await writeTargetOptionsOf(page, 'cpp_var_assign'), '變數那側沒認出 D1，這條測不到去重')
       .toContain('D1')
 
     const opts = await optionsOf(page, 'cpp_var_ref')
@@ -85,7 +114,7 @@ test.describe('spec 149 · 名字的範圍', () => {
     await selectTarget(page, 'wemos-d1-mini')
     await pasteCode(page, 'void setup() {\n  int speed = 3;\n  speed = 5;\n}\n\nvoid loop() {\n}\n')
     // `cpp_var_assign` 問的是「把【哪個變數】設成…」——`HIGH = 5` 不合法
-    const opts = await optionsOf(page, 'cpp_var_assign')
+    const opts = await writeTargetOptionsOf(page, 'cpp_var_assign')
     expect(opts, '寫入目標的下拉長出了常數').not.toContain('HIGH')
     expect(opts, '寫入目標的下拉長出了板子常數').not.toContain('D1')
     // ★ 錨點：而它仍然列得出學生的變數

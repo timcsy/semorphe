@@ -25,14 +25,15 @@ import * as Blockly from 'blockly'
  */
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../core/block-spec-registry'
-import { CATEGORY_COLORS, DEGRADATION_VISUALS } from '../core/category-colors'
+import { CATEGORY_COLORS } from '../core/category-colors'
 import { attachBranchList } from './branch-list-block'
 import { attachParamList, registerParamMutatorBlocks, MUTATOR_CONTAINER } from './param-list-block'
 import { attachAltLayout } from './alt-layout-block'
 import { preserveForeignExtraState } from '../core/foreign-extra-state'
 import { defineVariadicBlock, attachVariadic } from './variadic-block'
 import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
-import { componentsDeclaringVariables } from '../core/component/traits'
+import { componentsDeclaringVariables, componentTraits } from '../core/component/traits'
+import type { DropdownContext } from '../core/dropdown-sources'
 import { deriveBlockType } from '../core/component/derive-block-type'
 import { abstractComponentOf } from '../core/language-executors'
 // 🪦 `setFieldSafely` 的匯入已於 2026-08-26 刪除——它的最後幾個消費者
@@ -102,7 +103,7 @@ export class BlockRegistrar {
     //    那是一次全域登記，不是每個實例的事，而**只在建構子裡做的話，
     //    「只 import 這個模組」的人拿不到它**。
     registerDeclaredFieldTypes()
-    declareDropdownSource('names', () => this.getNameRefOptions())
+    declareDropdownSource('names', (ctx) => this.getNameRefOptions(ctx))
     declareDropdownSource('vars', () => this.getWorkspaceVarOptions())
     declareDropdownSource('funcs', () => this.getWorkspaceFuncOptions())
     declareDropdownSource('arrays', () => this.getWorkspaceArrayOptions())
@@ -134,13 +135,48 @@ export class BlockRegistrar {
    * ⚠️ **串流（`cout`）與套件常數（`DHT11`／`WL_*`）不在這裡**：
    * 前者不是值，後者不隨板子變（spec 149 明確排除）。
    */
-  getNameRefOptions(): Array<[string, string]> {
+  getNameRefOptions(ctx?: DropdownContext): Array<[string, string]> {
     const options = this.getWorkspaceVarOptions()
+    // 🔴 **坐在寫入目標那一格時，常數一個都不給**（2026-08-26）。
+    //
+    //    上面那段寫的「其餘九個是寫入目標」在**左值接點化之後失效了**：
+    //    `cpp_var_assign` 的 `NAME` 下拉不見了，賦值的左邊現在裝的**就是一顆
+    //    `cpp_var_ref`**——而它用的是這裡這份「讀」的清單。
+    //    於是學生點開賦值的左邊，看得到 `HIGH`。
+    //
+    // > **一個靠「你是哪一種積木」成立的區別，
+    // > 在那兩種積木合而為一的那天會安靜地消失。**
+    //
+    // ⚠️ 而它**不會拋錯也不會讓單元測試變紅**（5749 支全綠）——
+    //    抓到它的是 e2e 的 spec 149。
+    if (this.isWriteTargetSlot(ctx)) return options
     const names = boardConstantOptions(this.currentBoard?.())
     if (!names) return options
     const seen = new Set(options.map((o) => o[1]))
     for (const n of names) if (!seen.has(n)) options.push([n, n])
     return options
+  }
+
+  /**
+   * **這一格是不是寫入目標**——問宣告，不是問一份寫死的積木清單。
+   *
+   * 元件用 `traits.writesTo` 說自己寫進哪一格（語義插槽名，例如 `target`），
+   * 而 `renderMapping.inputs` 把 Blockly 的 input 名（`TARGET`）翻回那個名字。
+   *
+   * ⚠️ **沒宣告的一律當成「不是」**——保守：多給幾個名字是小錯，
+   * 少給是把使用者的變數藏起來。
+   */
+  private isWriteTargetSlot(ctx?: DropdownContext): boolean {
+    if (!ctx?.parentBlockType || !ctx.parentInputName) return false
+    const cid = this.componentIdOfBlockType(ctx.parentBlockType)
+    if (!cid) return false
+    const writesTo = componentTraits(cid)?.writesTo
+    if (typeof writesTo !== 'string') return false
+    const spec = this.blockSpecRegistry.getAll()
+      .find((x) => (x.blockDef as { type?: string } | undefined)?.type === ctx.parentBlockType)
+    const slot = (spec?.renderMapping?.inputs as Record<string, string> | undefined)
+      ?.[ctx.parentInputName]
+    return (slot ?? ctx.parentInputName.toLowerCase()) === writesTo
   }
 
   getWorkspaceVarOptions(): Array<[string, string]> {
@@ -1572,44 +1608,27 @@ export class BlockRegistrar {
     // > **一個只比「剛建好的樣子」的比對，看不到「載入時才長出來的東西」。**
     //
     // 🟢 重開條件：宣告表達得出「依 extraState 換視覺」（那是另一個機制）。
-    // cpp_raw_code
-    {
-      Blockly.Blocks['cpp_raw_code'] = {
-        init: function (this: Blockly.Block) {
-          this.appendDummyInput()
-            .appendField(Blockly.Msg['C_RAW_CODE_LABEL'] || '直接寫程式碼：')
-            .appendField(new Blockly.FieldTextInput('') as Blockly.Field, 'CODE')
-          this.setPreviousStatement(true, 'Statement')
-          this.setNextStatement(true, 'Statement')
-          this.setColour(CATEGORY_COLORS.special)
-          this.setTooltip(Blockly.Msg['C_RAW_CODE_TOOLTIP'] || '直接輸入程式碼')
-        },
-        saveExtraState: function (this: Blockly.Block & { unresolved_?: boolean; nodeType_?: string }) {
-          const state: Record<string, unknown> = {}
-          if (this.unresolved_) {
-            state.unresolved = true
-            state.nodeType = this.nodeType_ ?? ''
-          }
-          return state
-        },
-        loadExtraState: function (this: Blockly.Block & { unresolved_?: boolean; nodeType_?: string }, state: Record<string, unknown>) {
-          if (state.unresolved) {
-            this.unresolved_ = true
-            this.nodeType_ = (state.nodeType as string) ?? ''
-            this.setColour(CATEGORY_COLORS.special)
-            const unresolvedTip = (Blockly.Msg['U_UNRESOLVED_TOOLTIP'] || 'Unresolved: %1').replace('%1', this.nodeType_)
-            this.setTooltip(unresolvedTip)
-          }
-          const cause = state.degradationCause as string | undefined
-          if (cause && DEGRADATION_VISUALS[cause as keyof typeof DEGRADATION_VISUALS]) {
-            const visual = DEGRADATION_VISUALS[cause as keyof typeof DEGRADATION_VISUALS]
-            if (visual.colour) this.setColour(visual.colour)
-            const tooltipText = (Blockly.Msg as Record<string, string>)[visual.tooltipKey]
-            if (tooltipText) this.setTooltip(tooltipText)
-          }
-        },
-      }
-    }
+    // 🪦 **`cpp_raw_code` 的命令式定義已於 2026-08-26 刪除**——**最後一顆**。
+    //
+    // 🔴 路線圖寫著它缺一個「**依 extraState 換視覺**」的宣告機制，
+    //    而實測之後那句話只對了一半：
+    //
+    //    ① **換視覺那一半已經有了**——`blockly-panel` 的 `applyExtraStateVisuals`
+    //       對**每一顆積木**套用 `degradationCause` 與 `confidence` 的顏色與 tooltip。
+    //       這顆的 `loadExtraState` 裡那段 `degradationCause` **是重複的**。
+    //       只有 `unresolved` 那一支沒被搬過去——這一刀把它搬了。
+    //
+    //    ② **真正缺的是【存得活】**：Blockly 對一顆沒有 `save/loadExtraState`
+    //       的積木**根本不保存 `extraState`**（實測：載入再存回去得到 `{}`）。
+    //       → `preserveForeignExtraState` 補上「純轉手」那一支。
+    //
+    // ⚠️ 而 ② 是一個**比這顆積木大得多**的缺陷：
+    //    **每一顆宣告式積木都在丟掉整份 `extraState`**——包含使用者打的行末註解。
+    //    那個模組的檔頭寫的正是這個症狀，而它只修了 mutation 積木那一半。
+    //    **每退一顆命令式定義，那個洞就大一分。**
+    //
+    // > **一份路線圖項目寫著「缺的是 X」，而 X 在別的目的下被做出來了
+    // > ——那條就不再是待辦，是誤導。**（同一個項目上的第四次）
 
 
     // 🪦 **`cpp_array_at` 的命令式定義已於 spec 163 刪除。**
