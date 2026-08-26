@@ -40,8 +40,9 @@ import type { SemanticNode } from '../../core/types'
 import type { CodeMapping } from '../../core/projection/code-generator'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { buildNodeGraph, type NodeGraph, type GraphNode, type GraphPort } from '../../core/flow/node-graph'
-import { labelSourceFromSpecs, collapseBlockMessage, type FlowLabelSource } from '../../core/flow/vocabulary'
-import { tryConnect, refusalKeyOf, type RefusalReason } from '../../core/flow/connect'
+import { labelSourceFromSpecs, collapseBlockMessage, flowTitle, type FlowLabelSource } from '../../core/flow/vocabulary'
+import { paletteFromToolbox, type PaletteItem } from '../../core/flow/palette'
+import { tryConnect, tryReorder, refusalKeyOf, type RefusalReason } from '../../core/flow/connect'
 import { bodySlotsOf } from '../../core/component/traits'
 import { msg } from '../../core/messages'
 
@@ -115,6 +116,79 @@ export class FlowPanel implements ViewHost {
   }
 
   private editCb: ((tree: SemanticNode) => void) | null = null
+  private paletteEl!: HTMLElement
+  private palette: PaletteItem[] = []
+
+  /**
+   * **宿主把工具箱的輸出交進來**——palette 照著它長。
+   *
+   * ⚠️ 收的是**輸出**不是登錄表：各自從登錄表算一次的話，
+   * 同一份來源會長出兩份篩選與排序邏輯，而分岔的症狀是
+   * 「工具箱有而 palette 沒有」——**沒有人會發現，因為兩邊都看起來對**。
+   */
+  setPalette(toolbox: unknown): void {
+    this.palette = paletteFromToolbox(toolbox)
+    this.renderPalette()
+  }
+
+  private renderPalette(): void {
+    if (!this.paletteEl) return
+    this.paletteEl.innerHTML = ''
+    if (!this.capabilities.editable || this.palette.length === 0) return
+    for (const item of this.palette) {
+      const chip = document.createElement('button')
+      chip.className = 'flow-chip'
+      chip.type = 'button'
+      const cid = this.specs?.getByBlockType?.(item.blockType)?.componentMapping?.componentId
+      chip.textContent = (cid ? flowTitle(cid, this.labelSource()) : null) ?? item.blockType
+      chip.title = item.category
+      // 從 palette 拖到一個接點上——**與拉線同一條路**
+      chip.addEventListener('pointerdown', (ev) => {
+        ev.preventDefault()
+        if (!cid) return
+        // ⚠️ palette 壓在圖上是必然的（它是拖曳的起點）——
+        //    而**繞過它的方法在 `portUnder` 裡**，不在這裡改它的狀態。
+        const up = (e: PointerEvent): void => {
+          window.removeEventListener('pointerup', up)
+          this.clearWirePreview()
+          const to = this.portUnder(e)
+          if (to) this.createInto(cid, to)
+        }
+        window.addEventListener('pointerup', up)
+      })
+      this.paletteEl.appendChild(chip)
+    }
+  }
+
+  /**
+   * **從 palette 生一顆新節點，放進那一格**。
+   *
+   * 🔴 **沒有「浮在外面的節點」這種東西**：這張圖是一棵樹的投影，
+   * 而樹裡沒有無主的節點。所以新節點一定要落在某一格上
+   * ——放不進去就**不生**（而不是生出來再說）。
+   */
+  private createInto(componentId: string, target: { nodeId: string; port: GraphPort }): void {
+    if (!this.tree) return
+    if (target.port.key.startsWith('__')) { this.refuse('no-such-slot'); return }
+    const node = {
+      id: `new_${Math.random().toString(36).slice(2, 9)}`,
+      componentId, properties: {}, children: {},
+    } as unknown as SemanticNode
+    // ⚠️ 先掛進去才判得了——`tryConnect` 要在樹裡找得到它。
+    //    判不過就**原樣拿掉**，樹回到原狀。
+    const parent = this.findNode(this.tree, target.nodeId)
+    if (!parent) return
+    const bucket = (parent.children[target.port.key] ??= [])
+    bucket.push(node)
+    const verdict = tryConnect(this.tree, node.id, target.nodeId, target.port.key)
+    if (!verdict.ok) {
+      bucket.pop()
+      this.refuse(verdict.reason)
+      return
+    }
+    this.rebuild()
+    this.editCb?.(this.tree)
+  }
 
   /**
    * **改一格的值**——(b) 改欄位。
@@ -249,7 +323,13 @@ export class FlowPanel implements ViewHost {
       this.paint()
     })
 
+    // 🔴 **palette**（2026-08-26，(d)）——它**不自己決定有哪些東西**：
+    //    內容是 `buildToolbox()` 的輸出攤平來的（`core/flow/palette.ts`）。
+    //    「用同一份資料」擋不住分岔，「用同一份結果」才擋得住。
+    this.paletteEl = document.createElement('div')
+    this.paletteEl.className = 'flow-palette'
     bar.append(this.scopeSelect, auto)
+    this.container.append(this.paletteEl)
 
     this.svg = document.createElementNS(SVG_NS, 'svg')
     this.svg.classList.add('flow-svg')
@@ -482,8 +562,9 @@ export class FlowPanel implements ViewHost {
     // ```
     //
     // > **一個「跳過內部接點」的規則，跳掉了唯一能當來源的那一個。**
-    if (port.key === '__next__') return
+    // ⚠️ `__next__` 從 2026-08-26 起也可以拉——它是 (e) 語句重排那一條。
     el.classList.add('fc-port-wirable')
+    el.setAttribute('data-port', port.key)
     el.addEventListener('pointerdown', (ev) => {
       ev.preventDefault()
       ev.stopPropagation()   // ⚠️ 不然它會變成「拖節點」
@@ -512,13 +593,34 @@ export class FlowPanel implements ViewHost {
    * 兩個「portAt」會讓下一個人在改其中一個時改到另一個。
    */
   private portUnder(e: PointerEvent): { nodeId: string; port: GraphPort } | null {
-    const el = document.elementFromPoint(e.clientX, e.clientY)
+    // 🔴 **穿過去找**（2026-08-26 實測抓到）：palette 是拖曳的起點，
+    //    所以它必然壓在圖上，而 `elementFromPoint`（**單數**）打到的是它。
+    //
+    //    ⚠️ 第一版的修法是「拖曳中把 palette 設成 `pointer-events: none`」
+    //    ——而那會把**已經捕捉指標的那個元素**移出命中測試，
+    //    瀏覽器於是可能發 `pointercancel` 而不是 `pointerup`，**整個手勢消失**。
+    //    症狀是「拖了什麼都沒發生」，而且合成事件與真的滑鼠**一樣**沒反應。
+    //
+    //    > **修一個「被擋住」的問題時，不要動那個擋住的東西的狀態
+    //    > ——繞過它去看底下有什麼。**
+    const el = document
+      .elementsFromPoint(e.clientX, e.clientY)
+      .find((x) => x.classList.contains('fc-port'))
     const g = el?.closest('[data-node]') as SVGGElement | null
-    if (!g || !el?.classList.contains('fc-port')) return null
+    if (!g) return null
     const nodeId = g.getAttribute('data-node')!
     const node = this.graph?.nodes.find((n) => n.id === nodeId)
-    const idx = [...g.querySelectorAll('.fc-port')].indexOf(el)
-    const port = node?.ports[idx]
+    // 🔴 **用鍵找，不用位置找**（2026-08-26 實測抓到）。
+    //    第一版拿 `.fc-port` 在 DOM 裡的**索引**去索引 `node.ports`
+    //    ——那要求兩個順序永遠一致，而它悄悄地不一致了，
+    //    症狀是「拖到接點上什麼都沒發生」（不是報錯）。
+    //
+    //    > **一個靠位置對應模型與畫面的東西，
+    //    > 會在其中一邊多插一個元素的那天安靜地錯開。**
+    //
+    //    （同一族的教訓：`build-guardrail` §11「鍵不要用行號」。）
+    const key = el?.getAttribute('data-port')
+    const port = node?.ports.find((p) => p.key === key)
     return node && port ? { nodeId, port } : null
   }
 
@@ -534,6 +636,21 @@ export class FlowPanel implements ViewHost {
     b: { nodeId: string; port: GraphPort },
   ): void {
     if (!this.tree) return
+    // 🔴 **(e) 語句重排先判**：`__next__ → __in__` 讀作「B 接在 A 後面」，
+    //    那是**兄弟之間的順序**，不是父子關係的改變。
+    //    ⚠️ 混進 `tryConnect` 的話兩邊的拒絕理由會互相污染
+    //    ——「不是父子」對重排來說根本不是一個問題。
+    const seq = a.port.key === '__next__' && b.port.key === '__in__' ? { after: a, moved: b }
+      : b.port.key === '__next__' && a.port.key === '__in__' ? { after: b, moved: a }
+      : null
+    if (seq) {
+      const v = tryReorder(this.tree, seq.after.nodeId, seq.moved.nodeId)
+      if (!v.ok) { this.refuse(v.reason); return }
+      this.moveInto(seq.moved.nodeId, v.parentId, v.slot, v.index)
+      this.rebuild()
+      this.editCb?.(this.tree)
+      return
+    }
     // ⚠️ **方向由「哪一端是具名的格子」決定，不由 `side`**：
     //    身體的接點是掛在**父節點**上的 `side: 'out'`，
     //    而它仍然是目標（「語句放進這裡」）。第一版用 `side` 判，
@@ -560,7 +677,7 @@ export class FlowPanel implements ViewHost {
    * ⚠️ **先摘下來再放進去**——不然它會同時出現在兩個地方，
    * 而那棵樹就不是樹了。
    */
-  private moveInto(sourceId: string, targetId: string, slot: string): void {
+  private moveInto(sourceId: string, targetId: string, slot: string, index?: number): void {
     if (!this.tree) return
     const detach = (n: SemanticNode): SemanticNode | null => {
       for (const [k, bucket] of Object.entries(n.children ?? {})) {
@@ -575,7 +692,10 @@ export class FlowPanel implements ViewHost {
     const target = this.findNode(this.tree, targetId)
     if (!target) return
     const bucket = (target.children[slot] ??= [])
-    bucket.push(node)
+    // ⚠️ **摘下來之後索引可能已經往前挪了**——所以夾在範圍內，
+    //    而不是相信呼叫端算出來的那個數字。
+    if (index === undefined) bucket.push(node)
+    else bucket.splice(Math.max(0, Math.min(index, bucket.length)), 0, node)
   }
 
   private paintWirePreview(e: PointerEvent): void {

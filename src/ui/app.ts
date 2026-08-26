@@ -114,6 +114,7 @@ export class App {
    */
   private syncCoordinator = new SyncCoordinator(() => viewsWith('editable').map((v) => v.viewId))
   private blocksDirty = false
+  private flowPanel?: import('./panels/flow-panel').FlowPanel
   private codeDirty = false
   private autoSync = true
   private codeToBlocksTimer: ReturnType<typeof setTimeout> | null = null
@@ -550,6 +551,9 @@ export class App {
     //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。
     elements.flowPanel?.onEdit((tree) =>
       this.bus.emit('edit:tree', { viewId: 'flow-panel', tree }))
+    // 🔴 **palette 讀工具箱的【輸出】**（2026-08-26，(d)）——不是各自從登錄表算一次。
+    this.flowPanel = elements.flowPanel
+    this.flowPanel?.setPalette(this.buildToolboxInner())
 
     // 12. Setup bidirectional highlighting
     this.setupBidirectionalHighlight()
@@ -758,7 +762,22 @@ export class App {
     this.patternRenderer.loadBlockSpecsWithTopic(allSpecs, this.currentTopic)
   }
 
+  /**
+   * 建工具箱——**而它的輸出同時餵給流程視圖的 palette**（2026-08-26）。
+   *
+   * 🔴 餵的是**輸出**不是登錄表：各自從登錄表算一次的話，同一份來源會長出
+   * 兩份篩選與排序邏輯，而分岔的症狀是「工具箱有而 palette 沒有」
+   * ——**沒有人會發現，因為兩邊都看起來對**。
+   */
   private callBuildToolbox(): object {
+    const built = this.buildToolboxInner()
+    // ⚠️ 第一次呼叫發生在 `createAppLayout(...)` 的**參數裡**——那時面板還不存在。
+    //    所以這裡是「有就餵」，而首次的那一份由接線的地方補送（見 `flowPanel.setPalette`）。
+    this.flowPanel?.setPalette(built)
+    return built
+  }
+
+  private buildToolboxInner(): object {
     return buildToolbox({
       blockSpecRegistry: this.blockSpecRegistry,
       // 🔴 **能力過濾只加在這裡，不加進 `getVisibleComponents()`。**

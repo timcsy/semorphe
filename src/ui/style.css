@@ -2109,3 +2109,17 @@ html, body {
   background: #3a2d2d; color: #f0c0c0; border: 1px solid #a04040;
   border-radius: 3px; padding: 6px 10px; font-size: 12px; line-height: 1.5;
 }
+
+/* ─── 流程面板的 palette（2026-08-26，(d) 拉新節點） ───
+   🔴 它的內容是工具箱【輸出】的投影，不是第二份篩選邏輯。 */
+.flow-palette {
+  position: absolute; left: 8px; top: 40px; z-index: 15;
+  display: flex; flex-wrap: wrap; gap: 4px; max-width: 240px;
+  background: rgba(30,30,30,.92); border: 1px solid #3a3a3a;
+  border-radius: 3px; padding: 5px; max-height: 45%; overflow-y: auto;
+}
+.flow-chip {
+  background: #2d2d2d; color: #d4d4d4; border: 1px solid #454545;
+  border-radius: 3px; padding: 2px 6px; font-size: 11px; cursor: grab;
+}
+.flow-chip:hover { background: #3a3a3a; border-color: #007acc; }

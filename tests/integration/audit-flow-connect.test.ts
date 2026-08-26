@@ -39,7 +39,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { tryConnect, refusalKeyOf } from '../../src/core/flow/connect'
+import { tryConnect, tryReorder, refusalKeyOf } from '../../src/core/flow/connect'
+import { paletteFromToolbox } from '../../src/core/flow/palette'
 import { REPO_ROOT, printReport } from '../helpers/guardrail'
 import zhTW from '../../src/i18n/zh-TW/blocks.json'
 import type { SemanticNode } from '../../src/core/types'
@@ -124,6 +125,60 @@ describe('第八十條護欄：流程視圖上的線只有父子關係', () => {
     const table = zhTW as unknown as Record<string, string>
     const missing = reasons.map(refusalKeyOf).filter((k) => !table[k])
     expect(missing, `這些拒絕理由沒有文案，畫面上會出現代號：\n  ${missing.join('\n  ')}`).toEqual([])
+  })
+
+  it('🔴 (e) 重排：把一句話搬到另一句話後面', () => {
+    // ⚠️ 它**不是** `tryConnect` 的一種——兄弟之間沒有父子關係，
+    //    而它仍然表達得出來（換一個位置），所以不違反「樹沒有邊」。
+    const v = tryReorder(tree(), 'L', 'D')   // D 搬到 L 後面
+    expect(v.ok, '這一條【應該】做得到——不然語句就重排不了').toBe(true)
+    if (v.ok) {
+      expect(v.parentId).toBe('F')
+      expect(v.slot).toBe('body')
+      expect(v.index, 'L 在 body 的第 1 個，所以 D 要插在第 2 個').toBe(2)
+    }
+  })
+
+  it('🔴 (e) 拒絕：搬進自己的子樹 ＝ 環', () => {
+    expect(tryReorder(tree(), 'N', 'D')).toEqual({ ok: false, reason: 'would-cycle' })
+    expect(tryReorder(tree(), 'D', 'D')).toEqual({ ok: false, reason: 'would-cycle' })
+  })
+
+  it('🔴 (e) 拒絕：運算式沒有「下一句」', () => {
+    expect(tryReorder(tree(), 'N', 'L')).toEqual({ ok: false, reason: 'wrong-kind' })
+  })
+
+  it('🔴 (d) palette 必須是【工具箱輸出】的投影——不得各寫一份篩選', () => {
+    // 路線圖那條驗收的原話：「流程的 palette 與積木的工具箱**讀同一份登錄表**」。
+    // ⚠️ 而「用同一份資料」擋不住分岔，「用同一份結果」才擋得住：
+    //    各自從登錄表算一次的話，同一份來源會長出兩份篩選與排序邏輯，
+    //    **而分岔的症狀是「工具箱有而 palette 沒有」——兩邊都看起來對**。
+    const toolbox = {
+      contents: [
+        { kind: 'category', name: '資料', contents: [
+          { kind: 'block', type: 'cpp_var_declare' },
+          { kind: 'sep' },
+          { kind: 'block', type: 'cpp_var_assign' },
+        ] },
+        { kind: 'sep' },
+        { kind: 'category', name: '控制', contents: [{ kind: 'block', type: 'cpp_if' }] },
+      ],
+    }
+    expect(paletteFromToolbox(toolbox)).toEqual([
+      { category: '資料', blockType: 'cpp_var_declare' },
+      { category: '資料', blockType: 'cpp_var_assign' },
+      { category: '控制', blockType: 'cpp_if' },
+    ])
+  })
+
+  it('★ 注入：認不得的項目原樣跳過——寧可少一項，不要多一項假的', () => {
+    // 這一條不可省。沒有它，一個「什麼都收」的實作也能通過上面那條。
+    expect(paletteFromToolbox({ contents: [{ kind: 'category', name: 'X', contents: [
+      { kind: 'block' },                    // 沒有 type
+      { kind: 'button', type: 'nope' },     // 不是積木
+    ] }] }), '沒有 type 或不是積木的都不進去').toEqual([])
+    expect(paletteFromToolbox(null), '根本不是工具箱').toEqual([])
+    expect(paletteFromToolbox({ contents: [{ kind: 'sep' }] }), '只有分隔線').toEqual([])
   })
 
   it('★ 注入：判定「塞進 metadata」的那個偵測器認得出違規', () => {

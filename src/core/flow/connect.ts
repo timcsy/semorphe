@@ -127,3 +127,66 @@ function matchesKind(componentId: string, allowed: string): boolean {
 export function refusalKeyOf(reason: RefusalReason): string {
   return `FLOW_REFUSE_${reason.replace(/-/g, '_').toUpperCase()}`
 }
+
+/**
+ * **把一句話搬到另一句話後面**——(e) 語句重排。
+ *
+ * ## 為什麼它不是 `tryConnect`
+ *
+ * `A.__next__ → B.__in__` 讀作「**B 接在 A 後面**」。那看起來是一條線，
+ * 而它**不是父子關係的改變**——A 與 B 是兄弟。
+ *
+ * 🔴 而它仍然表達得出來：**B 成為 A 的父親的那個身體裡、A 的下一個**。
+ * 所以它不違反「語義樹只有樹沒有邊」——它只是換一個位置。
+ *
+ * > **一條線看起來像什麼，與它在真實裡是什麼，是兩件事。
+ * > 判準永遠是後者。**
+ *
+ * ⚠️ 它與 `tryConnect` 分開，是因為**混在一起會讓兩邊的拒絕理由互相污染**：
+ * 「不是父子」對重排來說根本不是一個問題。
+ */
+export type ReorderVerdict =
+  | { ok: true; parentId: string; slot: string; index: number }
+  | { ok: false; reason: RefusalReason }
+
+/** 找出 `id` 的父親、它在哪一格、第幾個。 */
+function locate(
+  root: SemanticNode,
+  id: string,
+): { parent: SemanticNode; slot: string; index: number } | null {
+  for (const [slot, bucket] of Object.entries(root.children ?? {})) {
+    const i = (bucket ?? []).findIndex((c) => c.id === id)
+    if (i >= 0) return { parent: root, slot, index: i }
+    for (const c of bucket ?? []) {
+      const hit = locate(c, id)
+      if (hit) return hit
+    }
+  }
+  return null
+}
+
+/**
+ * **可不可以把 `movedId` 搬到 `afterId` 的後面。**
+ *
+ * ⚠️ 只判斷不改樹——與 `tryConnect` 同一條理由：
+ * **一個又判斷又修改的函式，在拒絕的那條路上會留下改到一半的狀態。**
+ */
+export function tryReorder(root: SemanticNode, afterId: string, movedId: string): ReorderVerdict {
+  if (afterId === movedId) return { ok: false, reason: 'would-cycle' }
+  const moved = findNode(root, movedId)
+  const after = findNode(root, afterId)
+  if (!moved || !after) return { ok: false, reason: 'not-parent-child' }
+
+  // 🔴 把一句話搬進**它自己的子樹**＝環。
+  if (contains(moved, afterId)) return { ok: false, reason: 'would-cycle' }
+
+  // 兩邊都必須是語句——`__next__`／`__in__` 這對接點只有語句才有，
+  // ⚠️ 而這裡仍然要判，因為呼叫端可能拿別的東西進來。
+  if (roleOf(moved.componentId) === 'expression' || roleOf(after.componentId) === 'expression') {
+    return { ok: false, reason: 'wrong-kind' }
+  }
+
+  const spot = locate(root, afterId)
+  if (!spot) return { ok: false, reason: 'not-parent-child' }
+  return { ok: true, parentId: spot.parent.id, slot: spot.slot, index: spot.index + 1 }
+}
