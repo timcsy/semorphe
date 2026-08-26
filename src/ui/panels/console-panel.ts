@@ -11,6 +11,8 @@ export class ConsolePanel implements ViewHost {
     editable: false,
     needsLanguageProjection: false,
     consumedAnnotations: [],
+    /** 主控台＝**現在裡面裝了什麼**——`concepts/理解的層次.md` */
+    layer: 'state' as const,
   }
 
   private container: HTMLElement

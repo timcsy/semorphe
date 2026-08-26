@@ -29,6 +29,8 @@ export class MonacoPanel implements ViewHost, CodeView {
     editable: true,
     needsLanguageProjection: true,
     consumedAnnotations: [],
+    /** 程式碼＝**有哪些東西**——`concepts/理解的層次.md` */
+    layer: 'element' as const,
   }
 
   private editor: monaco.editor.IStandaloneCodeEditor | null = null

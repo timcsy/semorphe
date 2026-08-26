@@ -61,6 +61,8 @@ export class FlowPanel implements ViewHost {
     needsLanguageProjection: true,
     /** 🔴 `control_flow` 的第一個真正消費者——節點圖用它替執行接點分色 */
     consumedAnnotations: ['control_flow'],
+    /** 流程（節點圖）＝**誰跟誰有關**——`concepts/理解的層次.md` */
+    layer: 'relation' as const,
   }
 
   private container: HTMLElement

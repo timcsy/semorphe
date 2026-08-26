@@ -1,3 +1,6 @@
+import { LAYER_ORDER } from '../../core/view-host'
+import type { UnderstandingLayer } from '../../core/view-host'
+
 export type TabId = 'code' | 'flow' | 'blocks' | 'console'
 
 interface TabDef {
@@ -7,29 +10,31 @@ interface TabDef {
 }
 
 /**
- * 🔴 **順序是【理解的四個層次】**，不是「誰比較重要」。
+ * 🔴 **順序不再寫在這裡——它來自 `LAYER_ORDER`**（2026-08-26）。
  *
- * 使用者 2026-08-24 逐字：「程式碼、流程、積木、主控台這個順序是我用
- * **元素、關係、空間、動力**來思考，**代表理解的不同層次**（靈感從
- * Transformer 裡面運算的順序而來），**不是誰比較重要**」
- * ——同日收斂為「元素、關係、空間、**狀態**」。
+ * 這個檔本來有一份手寫的四元素陣列，而順序的**理由**寫在它上面的註解裡：
+ * 使用者 2026-08-24 逐字「程式碼、流程、積木、主控台這個順序是我用
+ * **元素、關係、空間、動力**來思考，**代表理解的不同層次**……**不是誰比較重要**」。
  *
- * ```
- * 元素  程式碼   有哪些東西        token／嵌入
- * 關係  流程     誰跟誰有關        attention
- * 空間  積木     怎麼被擺在一起    表示空間
- * 狀態  主控台   現在裡面裝了什麼   殘差流
- * ```
+ * > **一個寫在註解裡的理由，擋不住下一個人在陣列中間插一格。**
  *
- * ⚠️ 而 2026-08-25 之前這裡只有三個——**流程從來沒有進來過**，
- * 它住在下方面板（狀態層）裡。見 `draft/版面與檔案` §六之五。
+ * 現在順序是 `LAYER_ORDER`（`core/view-host.ts`，那也是面板自己宣告的那四個值），
+ * 而**這個檔只擁有「那一層在手機上長什麼樣」**——圖示與字。
+ *
+ * ⚠️ **那正是分界**：層次是這個系統的語義，圖示與字是這個宿主的呈現。
+ * 第二個宿主（VSCode）會把同樣四層翻成別的東西，而它不必重新決定順序。
  */
-const TABS: TabDef[] = [
-  { id: 'code', icon: '📝', label: '程式碼' },
-  { id: 'flow', icon: '🔗', label: '流程' },
-  { id: 'blocks', icon: '🧩', label: '積木' },
-  { id: 'console', icon: '▶', label: '主控台' },
-]
+const LAYER_CHROME: Record<UnderstandingLayer, TabDef> = {
+  element: { id: 'code', icon: '📝', label: '程式碼' },
+  relation: { id: 'flow', icon: '🔗', label: '流程' },
+  space: { id: 'blocks', icon: '🧩', label: '積木' },
+  state: { id: 'console', icon: '▶', label: '主控台' },
+}
+
+const TABS: TabDef[] = LAYER_ORDER.map((l) => LAYER_CHROME[l])
+
+/** 這條分頁列今天呈現哪幾層——給組裝點拿去與**真的登記了的視圖**對照。 */
+export const TAB_LAYERS: readonly UnderstandingLayer[] = LAYER_ORDER
 
 export class MobileTabBar {
   private element: HTMLElement

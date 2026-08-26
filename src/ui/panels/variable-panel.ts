@@ -19,6 +19,8 @@ export class VariablePanel implements ViewHost {
     editable: false,
     needsLanguageProjection: false,
     consumedAnnotations: [],
+    /** 變數＝**現在裡面裝了什麼**（與主控台同一層）——`concepts/理解的層次.md` */
+    layer: 'state' as const,
   }
 
   private container: HTMLElement

@@ -46,6 +46,8 @@
  * - **不管視圖的生命週期順序**——`initialize`／`dispose` 由呼叫端決定。
  *   把順序寫進登錄表等於發明一個沒有人要求的框架。
  */
+import { LAYER_ORDER } from './view-host'
+import type { UnderstandingLayer } from './view-host'
 import type { ViewHost } from './view-host'
 import type { SemanticBus } from './semantic-bus'
 
@@ -140,6 +142,28 @@ export function registerViewsIn(container: object): ViewHost[] {
  */
 export function viewsWith(capability: 'editable' | 'needsLanguageProjection'): ViewHost[] {
   return registeredViews().filter((v) => v.capabilities[capability])
+}
+
+/**
+ * **依理解的層次排好的視圖**（2026-08-26）。
+ *
+ * ## 為什麼是這一支，而不是「面板宣告偏好」
+ *
+ * 路線圖那一條寫著「面板宣告**偏好**不宣告位置」。而**偏好會讓順序變成任意的**
+ * ——而那個順序是**語義**：`concepts/理解的層次.md` 逐字記著使用者的話
+ * 「代表理解的不同層次……**不是誰比較重要**」。
+ *
+ * > **一份「各自宣告偏好」的機制，會把一個有意義的排列變成一場協商。**
+ *
+ * → 面板宣告的是**它在哪一層**（封閉的四個值），順序由 `LAYER_ORDER` 決定。
+ *   宿主拿到的是一份**排好的清單**，它只要決定「那一層在這個宿主長怎樣」。
+ *
+ * ⚠️ **同一層可以有多個視圖**（主控台與變數都是「狀態」）——回傳保留登記順序。
+ */
+export function viewsByLayer(): { layer: UnderstandingLayer; views: ViewHost[] }[] {
+  return LAYER_ORDER
+    .map((layer) => ({ layer, views: registeredViews().filter((v) => v.capabilities.layer === layer) }))
+    .filter((g) => g.views.length > 0)
 }
 
 /**

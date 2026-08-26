@@ -13,10 +13,50 @@ export interface ViewConfig {
 
 // ─── View Capabilities ───
 
+/**
+ * **理解的四個層次**——`concepts/理解的層次.md`。
+ *
+ * 🔴 **這不是「偏好」，也不是名次。** 使用者 2026-08-24 逐字：
+ *
+ * > 「程式碼、流程、積木、主控台這個順序是我用**元素、關係、空間、動力**
+ * >  來思考，**代表理解的不同層次**……**不是誰比較重要**」
+ *
+ * ```
+ * 元素  有哪些東西        程式碼        token／嵌入
+ * 關係  誰跟誰有關        流程          attention
+ * 空間  怎麼被擺在一起    積木          表示空間
+ * 狀態  現在裡面裝了什麼  主控台／變數  殘差流
+ * ```
+ *
+ * ⚠️ **為什麼宣告的是「層」而不是「位置」**：位置是宿主的詞彙
+ * （VSCode 有 `activityBar`／`panel`，網頁版有分頁與分割線，第三個宿主又不一樣）。
+ * 而**層次是這個系統自己的語義**，兩個宿主都翻譯得出來。
+ *
+ * > **一個宣告如果用了宿主的詞彙，那它就只對那一個宿主成立。**
+ *
+ * 🔴 而它**有序**——那個順序不能由各個面板各說各話決定，
+ * 所以這裡是一個**封閉的列舉**，不是一個字串。
+ */
+export type UnderstandingLayer = 'element' | 'relation' | 'space' | 'state'
+
+/** 四層的正規順序——`layer` 的宣告值就是它的位置，宿主不必自己排。 */
+export const LAYER_ORDER: readonly UnderstandingLayer[] = ['element', 'relation', 'space', 'state']
+
 export interface ViewCapabilities {
   editable: boolean
   needsLanguageProjection: boolean
   consumedAnnotations: string[]
+  /**
+   * **這個視圖在哪一層**（2026-08-26）。
+   *
+   * 在此之前「哪個面板放哪裡」寫死在**兩個宿主各一份**
+   * （`ui/layout/mobile-tab-bar.ts` 的 `TABS`、`ui/app-shell.ts` 的容器 id）
+   * ——加第三個宿主就是第三份。
+   *
+   * ⚠️ **選用**：一個不屬於任何理解層次的視圖（例如將來的設定面板）
+   * 不必假裝有——**而那正是 `undefined` 該說的話**。
+   */
+  layer?: UnderstandingLayer
 }
 
 // ─── Events: Core → View ───

@@ -1,3 +1,4 @@
+import { TAB_LAYERS } from './layout/mobile-tab-bar'
 import * as Blockly from 'blockly'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
@@ -373,6 +374,25 @@ export class App {
       throw new Error(
         'app-shell 沒有回傳任何 ViewHost——視圖登錄表是空的，而症狀是整個畫面都不更新。',
       )
+    }
+    // 🔴 **分頁列呈現的每一層，都要真的有視圖在那裡**（2026-08-26）。
+    //
+    //    手機分頁列從 `LAYER_ORDER` 長出來，而視圖各自宣告自己在哪一層。
+    //    兩邊**沒有人保證對得上**——而漏掉的症狀是**一個點了沒反應的分頁**，
+    //    不是錯誤。
+    //
+    // > **兩份從同一個詞彙長出來的東西，不會因為詞彙相同就自動對得上。**
+    //
+    //    ⚠️ 只在有手機版面時檢查——沒有分頁列時沒有東西要對。
+    if (this.profile.features.mobileLayout) {
+      const layersWithViews = new Set(registeredHosts.map((v) => v.capabilities.layer).filter(Boolean))
+      const emptyTabs = TAB_LAYERS.filter((l) => !layersWithViews.has(l))
+      if (emptyTabs.length > 0) {
+        throw new Error(
+          `手機分頁列有這幾層，而沒有任何視圖宣告自己在那裡：${emptyTabs.join('、')}\n`
+          + '  ⚠️ 症狀是**一個點了沒反應的分頁**，不是錯誤——所以這裡出聲。',
+        )
+      }
     }
     connectViews(this.bus)
     // 兩個面板還用匯流排做契約外的事，自己接：
