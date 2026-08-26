@@ -52,6 +52,19 @@ export class SplitPane {
   getLeftPanel(): HTMLElement { return this.leftPanel }
   getRightPanel(): HTMLElement { return this.rightPanel }
 
+  /**
+   * **收起／放出那條分隔線**（2026-08-26，佈局預設用）。
+   *
+   * 🔴 「專注」模式下程式碼那一欄是收起來的，而**一條沒有東西可以拖的分隔線
+   * 仍然拖得動**——拖了之後畫面會出現一條看不出是什麼的縫。
+   *
+   * > **一個功能被關掉時，它的操作介面也要一起關掉
+   * > ——不然那個介面會操作到一個不存在的東西。**
+   */
+  setDividerVisible(visible: boolean): void {
+    this.divider.style.display = visible ? '' : 'none'
+  }
+
   private setupDrag(): void {
     this.divider.addEventListener('mousedown', (e) => {
       e.preventDefault()

@@ -93,7 +93,23 @@ export function tryConnect(
   // ⚠️ 判準與 `node-graph.ts` 的接點分類同一條（`roleOf(...) !== 'expression'`）：
   //    兩處各寫一份會分岔，而分岔的症狀是「圖上接得起來，而樹裡接不上」。
   const sourceIsStatement = roleOf(source.componentId) !== 'expression'
-  if (decl.isBody !== sourceIsStatement) return { ok: false, reason: 'wrong-kind' }
+
+  // 🔴 **只有「種類槽」才用種類判**（2026-08-26，e2e 抓到）。
+  //
+  // `declarators` 宣告成 `"cpp:var_declare"`——它是一個**具名身分**的槽，
+  // 而 `isBody` 對它是 `false`（它不裝 statements），於是第一版把它當成
+  // 「要一個值」，把一顆 `cpp:var_declare`（語句）判成 `wrong-kind`。
+  //
+  // > **「這一格裝語句還是值」與「這一格要哪一種身分」是兩個問題，
+  // > 而把它們用同一個布林回答，會讓具名的槽永遠接不上。**
+  //
+  // → 宣告是具名身分時，**種類那一關不判**（下面那一關會判身分）。
+  const isKindSlot = decl.allowed.every(
+    (a) => a === 'expression' || a === 'statement' || a === 'statements',
+  )
+  if (isKindSlot && decl.isBody !== sourceIsStatement) {
+    return { ok: false, reason: 'wrong-kind' }
+  }
 
   // 🔴 **那一格宣告要【什麼】**（2026-08-26 補，開瀏覽器抓到）。
   //

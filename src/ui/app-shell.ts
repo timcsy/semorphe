@@ -10,6 +10,8 @@ import { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
 import { CONTROLS, RUN_MODES, surfaceOf, panelControls, type ControlId } from '../core/host/controls'
+import { layoutPreset, type LayoutPresetId } from '../core/host/layout-presets'
+import type { UnderstandingLayer } from '../core/view-host'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
 import { CodeKeyboard } from './panels/code-keyboard'
 import type { StorageLike } from '../core/host/host-profile'
@@ -40,6 +42,8 @@ export interface AppShellElements {
   codeKeyboard: CodeKeyboard | null
   /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
   showProjection: (which: 'blocks' | 'flow') => void
+  /** 套一個桌機佈局預設（專注／對照／三欄）。 */
+  applyLayout: (id: LayoutPresetId) => void
   /** 把主控台那一格加回下方面板（宿主打不開終端機時）。 */
   enableConsoleTab: () => void
   /** 那條列**晚一點才建**時通知——執行控制器手上是建構當時的那一份。 */
@@ -403,7 +407,28 @@ export function createAppLayout(
   flowEl.style.overflow = 'hidden'
   flowEl.style.display = 'none'
   const flowPanel = new FlowPanel(flowEl, blockSpecRegistry)
-  blocksColumn.appendChild(flowEl)
+  /**
+   * **兩個投影自己一列**（2026-08-26）。
+   *
+   * 🔴 「三欄」要讓流程與積木**並排**，而第一版直接把 `blocksColumn`
+   * 的 `flexDirection` 改成 `row`——**那一欄裡還有工具列與分頁列**，
+   * 於是它們也跟著橫排，畫面當場壞掉。
+   *
+   * > **一個容器如果裝著「內容」與「操作內容的東西」，
+   * > 改它的排列方向會把兩者一起轉過去。**
+   *
+   * → 給內容一個自己的容器，方向改在那上面。
+   */
+  const projectionRow = document.createElement('div')
+  projectionRow.id = 'projection-row'
+  projectionRow.style.flex = '1'
+  projectionRow.style.display = 'flex'
+  projectionRow.style.flexDirection = 'column'
+  projectionRow.style.minHeight = '0'
+  projectionRow.style.overflow = 'hidden'
+  blocksColumn.insertBefore(projectionRow, blocklyContainer)
+  projectionRow.appendChild(blocklyContainer)
+  projectionRow.appendChild(flowEl)
 
   /**
    * editor 區現在顯示哪一個投影。
@@ -421,6 +446,60 @@ export function createAppLayout(
     document.getElementById('view-blocks-btn')?.classList.toggle('active', which === 'blocks')
     document.getElementById('view-flow-btn')?.classList.toggle('active', which === 'flow')
     if (which === 'blocks') requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
+  }
+
+  /**
+   * **套一個佈局預設**（2026-08-26，路線圖「版面」那一項的活驗收）。
+   *
+   * 🔴 **它讀的是「哪幾層」，不是「哪幾個面板」**（`core/host/layout-presets.ts`）：
+   * 加一個面板時這裡一個字都不用改——面板自己宣告它在哪一層。
+   *
+   * ```
+   * 專注    一次一層          程式碼收起來，編輯區只留現在看的那一個投影
+   * 對照    element ＋ space  程式碼 ＋ 積木並排——**取用要相鄰**
+   * 三欄    再加上 relation   流程也攤開——**認識要面積**
+   * ```
+   *
+   * ⚠️ `state`（主控台／變數）**不受它影響**：它的家是下方的面板區，
+   * 三個預設都一樣。第八十一條護欄的硬性零盯著這一點。
+   *
+   * ⚠️ **不做自由 docking**（路線圖明文排除）：這是一個教學工具，
+   * 老師說「看左邊那一欄」時那句話要對每個人都成立。
+   */
+  const applyLayout = (id: LayoutPresetId): void => {
+    const preset = layoutPreset(id)
+    if (!preset) return
+    const wants = (l: UnderstandingLayer): boolean => preset.layers.includes(l)
+    if (id === 'focus') {
+      // 一次一層：程式碼收起來，編輯區**回到單欄**並維持現在看的那一個投影。
+      //
+      // 🔴 第一版只收了程式碼那一欄——**而兩個投影還並排著**（實測），
+      //    於是「專注」變成「三欄少一欄」。
+      //    > **「一次一層」不是「少給一層」，是【回到一層】。**
+      codeColumn.style.display = 'none'
+      splitPane?.setDividerVisible?.(false)
+      // ⚠️ **那一欄要把整個寬度吃掉**——`SplitPane` 給的是固定比例，
+      //    收起左欄之後右欄還是原本那一半，畫面右邊留一大片空白（實測）。
+      blocksColumn.style.flex = '1'
+      blocksColumn.style.width = '100%'
+      projectionRow.style.flexDirection = 'column'
+      // 哪一個投影留下來由使用者現在看的那顆分頁決定——這裡不挑。
+      const flowActive = flowEl.style.display !== 'none' && blocklyContainer.style.display === 'none'
+      showProjection(flowActive ? 'flow' : 'blocks')
+    } else {
+      codeColumn.style.display = wants('element') ? '' : 'none'
+      splitPane?.setDividerVisible?.(wants('element'))
+      // 還原「專注」動過的寬度——⚠️ 不還原的話從專注切回來右欄會吃掉整個畫面。
+      blocksColumn.style.flex = ''
+      blocksColumn.style.width = ''
+      // 三欄：流程與積木**並排**，而不是互斥
+      const both = wants('relation') && wants('space')
+      projectionRow.style.flexDirection = both ? 'row' : 'column'
+      blocklyContainer.style.display = wants('space') ? '' : 'none'
+      flowEl.style.display = wants('relation') ? '' : 'none'
+    }
+    document.body.setAttribute('data-layout', id)
+    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
   }
 
   // Mobile layout: create mobile containers and tab bar
@@ -730,13 +809,20 @@ export function createAppLayout(
     if (!profile.features.mobileLayout) return
     // Move panels back to desktop containers (order matters: monaco before bottomPanel)
     if (quickAccessBar) blocksColumn.appendChild(quickAccessBar.getElement())
-    blocksColumn.appendChild(blocklyContainer)
+    // ⚠️ **那一列自己也要回到欄裡、而且排在工具列之後**——
+    //    `appendChild` 一個已經在別處的節點會把它搬過來，順序就是呼叫順序。
+    blocksColumn.appendChild(projectionRow)
+    projectionRow.appendChild(blocklyContainer)   // 放回【投影那一列】，不是外層
     // Ensure correct order: monaco first, then bottom panel
     codeColumn.appendChild(monacoWrapper)
     if (bottomPanel) codeColumn.appendChild(bottomContainer)
-    // 🔴 流程回到積木那一欄——**而它回去的時候是「沒被選中的那個投影」**，
-    //    所以由 `showProjection` 決定顯不顯示，不是留著行動版那個 `display: ''`。
-    blocksColumn.appendChild(flowEl)
+    // 🔴 流程回到**投影那一列**——⚠️ 不是回到 `blocksColumn`：
+    //    2026-08-26 加了 `projectionRow`（讓三欄時兩個投影並排而不動到工具列），
+    //    而這裡如果放回外層，**從手機切回桌機之後三欄就排不出來**
+    //    ——症狀只在「轉過螢幕方向」之後出現，平常看不到。
+    //
+    //    > **一個「把東西放回去」的路徑，會在容器變深的那天放到錯的層。**
+    projectionRow.appendChild(flowEl)
     showProjection('blocks')
 
     // 🪦 「把選擇器搬回工具列」那段已刪除——同上。
@@ -842,7 +928,7 @@ export function createAppLayout(
   //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
   showProjection('blocks')
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, applyLayout, enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
 }
 
 /*

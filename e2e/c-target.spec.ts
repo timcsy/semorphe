@@ -228,8 +228,31 @@ test('★ 選擇器沒有變多——目標是把三次收成一次，不是多�
   // 反目標（SC-009）：目標若是**多**一個選擇器，它就沒有收攏任何東西。
   // ⚠️ 2026-08-25 起它們是**狀態列的項目**，不是工具列的 `<select>`
   //    ——量的東西換了位置，而**要守的那條規則沒變**。
-  const items = await page.locator('#status-controls .status-item-btn').count()
-  expect(items, `🔴 狀態列的控制項變成 ${items} 個`).toBeLessThanOrEqual(5)
+  //
+  // 🔴 **而它 2026-08-26 改寫過一次，因為它錨錯了**（`build-guardrail`：
+  //    「一個數字因為做對事而必須上調時，它混了兩個母體」）。
+  //
+  //    舊寫法是「狀態列的控制項 ≤ 5」。那個數字混了兩件事：
+  //
+  //    ```
+  //    🔴 這一刀有沒有多加一個【語言／板子】的選擇器   ← 反目標真正在問的
+  //    ⚪ 狀態列總共有幾個控制項                        ← 一個會隨【任何】新功能上升的量
+  //    ```
+  //
+  //    當天加「版面」picker（一個與目標無關的功能）時它就紅了，
+  //    而下調它的人每一次都會做出同一個正確的判斷——**那個錨會一直爛**。
+  //
+  // → 改成**指名**：那三個被收攏掉的選擇器不得回來。
+  //   ⚠️ 這條在「有人真的把語言選擇器加回來」時仍然會紅，而它不再因為
+  //   別的功能加一顆按鈕而紅。
+  const labels = await page.locator('#status-controls .status-item-btn').allTextContents()
+  const resurrected = labels.filter((t) =>
+    /^\s*(語言|Language)\s*$/.test(t) || /^\s*(板子|Board)\s*$/.test(t) || /^\s*(教學層級|Level)\s*$/.test(t))
+  expect(
+    resurrected,
+    `🔴 被收攏掉的選擇器又出現在狀態列上：${resurrected.join('、')}\n` +
+      '「選一次而不是三次」是這一刀的反目標——多一個選擇器就等於沒有收攏任何東西。',
+  ).toEqual([])
 })
 
 test('★ 重新整理之後，選的目標還在', async ({ page }) => {

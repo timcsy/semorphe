@@ -113,6 +113,18 @@ describe('第八十條護欄：流程視圖上的線只有父子關係', () => {
     expect(v).toEqual({ ok: false, reason: 'wrong-kind' })
   })
 
+  it('🔴 具名身分的槽：種類那一關【不判】——否則它永遠接不上', () => {
+    // 🔴 2026-08-26 e2e 抓到：`declarators` 宣告成 `"cpp:var_declare"`，
+    //    而 `isBody` 對它是 false（它不裝 statements），於是一顆
+    //    `cpp:var_declare`（語句）被判成 `wrong-kind`。
+    //    > 「裝語句還是值」與「要哪一種身分」是兩個問題，
+    //    > 用同一個布林回答會讓具名的槽永遠接不上。
+    const t = tree()
+    const d2 = { id: 'D2', componentId: 'cpp:var_declare', properties: {}, children: {} } as unknown as SemanticNode
+    ;(t.children.body[0].children.body as SemanticNode[]).push(d2)
+    expect(tryConnect(t, 'D2', 'D', 'declarators').ok, '具名身分對得上就該接得起來').toBe(true)
+  })
+
   it('🔴 拒絕：那一格要的是語句，而來的是運算式', () => {
     const v = tryConnect(tree(), 'N', 'L', 'body')
     expect(v).toEqual({ ok: false, reason: 'wrong-kind' })

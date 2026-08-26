@@ -259,5 +259,9 @@
   "FLOW_REFUSE_NO_SUCH_SLOT": "Can't connect: that component has no such slot. Your program was not changed.",
   "FLOW_REFUSE_WOULD_CYCLE": "Can't connect: it would loop back on itself, and a program can't run that way. Your program was not changed.",
   "FLOW_REFUSE_NOT_PARENT_CHILD": "Can't connect: these two have no containing relationship, and this chart can only draw that one. Your program was not changed.",
-  "FLOW_REFUSE_WRONG_KIND": "Can't connect: that slot wants a statement and you gave a value (or the other way round). Your program was not changed."
+  "FLOW_REFUSE_WRONG_KIND": "Can't connect: that slot wants a statement and you gave a value (or the other way round). Your program was not changed.",
+  "LAYOUT_PRESET_FOCUS": "Focus (one at a time)",
+  "LAYOUT_PRESET_COMPARE": "Compare (code + blocks)",
+  "LAYOUT_PRESET_THREE": "Three columns (code · flow · blocks)",
+  "LAYOUT_PICK": "Choose layout"
 }

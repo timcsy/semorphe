@@ -46,6 +46,7 @@ import type { SavedState } from '../core/storage'
 import { describeRefusal } from '../core/refusal-message'
 import { LocaleLoader } from '../i18n/loader'
 import { setMessageSource, msg } from '../core/messages'
+import { LAYOUT_PRESETS, layoutPreset, type LayoutPresetId } from '../core/host/layout-presets'
 import { SyncCoordinator } from '../core/sync-coordinator'
 import { viewsWith } from '../core/view-registry'
 import { installDialogs } from './prompt-dialog'
@@ -114,6 +115,13 @@ export class App {
    */
   private syncCoordinator = new SyncCoordinator(() => viewsWith('editable').map((v) => v.viewId))
   private blocksDirty = false
+  /**
+   * **現在用的桌機版面**（2026-08-26）。
+   * ⚠️ 預設是「對照」——那是這個工具本來的樣子（程式碼 ＋ 積木並排），
+   * 而換預設不該讓既有使用者的第一眼變成別的。
+   */
+  private currentLayout: LayoutPresetId = 'compare'
+  private applyLayout?: (id: LayoutPresetId) => void
   private flowPanel?: import('./panels/flow-panel').FlowPanel
   private codeDirty = false
   private autoSync = true
@@ -549,6 +557,7 @@ export class App {
     // 🔴 **流程面板改了一格 → 匯流排**（2026-08-26，(b) 改欄位）。
     //    ⚠️ 走 `edit:tree` 這個**通用**事件，不是 `edit:flow`
     //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。
+    this.applyLayout = elements.applyLayout
     elements.flowPanel?.onEdit((tree) =>
       this.bus.emit('edit:tree', { viewId: 'flow-panel', tree }))
     // 🔴 **palette 讀工具箱的【輸出】**（2026-08-26，(d)）——不是各自從登錄表算一次。
@@ -1106,6 +1115,16 @@ export class App {
           options,
         }
       }
+      case 'layout': {
+        // 🔴 標籤走 i18n 鍵（`nameKey`），**不得把 id 印上畫面**
+        //    ——第八十一條護欄的硬性零盯著這一點。
+        const cur = layoutPreset(this.currentLayout) ?? LAYOUT_PRESETS[0]
+        return {
+          id: spec.id, kind: spec.kind, title,
+          label: msg(cur.nameKey, cur.id), value: cur.id,
+          options: LAYOUT_PRESETS.map((p) => ({ value: p.id, label: msg(p.nameKey, p.id) })),
+        }
+      }
       case 'style': {
         const name = (p: StylePreset): string => p.name[this.currentLocale] || p.name['zh-TW'] || p.id
         return {
@@ -1196,6 +1215,17 @@ export class App {
         // 🔴 editor 區看哪一個投影——積木（空間層）／流程（關係層）
         case 'viewBlocks': this.showProjection?.('blocks'); break
         case 'viewFlow': this.showProjection?.('flow'); break
+        case 'layout': {
+          const id = (invoke.values?.[0] ?? invoke.value) as LayoutPresetId | undefined
+          if (id && layoutPreset(id)) {
+            this.currentLayout = id
+            this.applyLayout?.(id)
+            // 🔴 **重畫控制項**——不然狀態列還顯示上一個版面的名字。
+            //    ⚠️ 那不是「沒更新」，是**它在說謊**：畫面已經是三欄而它寫著對照。
+            this.publishControls()
+          }
+          break
+        }
       }
     }
   }

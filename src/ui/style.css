@@ -2112,6 +2112,11 @@ html, body {
 
 /* ─── 流程面板的 palette（2026-08-26，(d) 拉新節點） ───
    🔴 它的內容是工具箱【輸出】的投影，不是第二份篩選邏輯。 */
+/* ⚠️ **關在流程面板裡**：`.flow-palette` 是 `position: absolute`，
+   而它的定位參照是最近的 positioned 祖先。三欄版面下 `#flow-panel` 若沒有
+   `position: relative`，它會參照更外層，**壓在積木那一欄上**（2026-08-26 實測）。
+   > 一個絕對定位的東西，會在它的參照消失的那天跑到別人的地盤上。 */
+#flow-panel { position: relative; }
 .flow-palette {
   position: absolute; left: 8px; top: 40px; z-index: 15;
   display: flex; flex-wrap: wrap; gap: 4px; max-width: 240px;

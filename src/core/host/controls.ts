@@ -75,6 +75,7 @@ export type ControlId =
   | 'target' | 'branches' | 'style' | 'blockStyle' | 'locale'
   | 'run' | 'undo' | 'redo' | 'clear'
   | 'viewBlocks' | 'viewFlow'
+  | 'layout'
   | 'sync'
   | 'console'
   | 'variables'
@@ -128,6 +129,15 @@ export const CONTROLS: readonly ControlSpec[] = [
   //    而「現在看哪一個」是**這個視圖的動作**，它的家是分頁的標題列。
   { id: 'viewBlocks', kind: 'action', domain: 'view', mountId: 'view-blocks-btn', bar: 'quickAccess', hostTitle: '顯示積木', icon: '$(symbol-structure)' },
   { id: 'viewFlow', kind: 'action', domain: 'view', mountId: 'view-flow-btn', bar: 'quickAccess', hostTitle: '顯示流程', icon: '$(type-hierarchy)' },
+  // 🔴 **桌機的佈局預設**（2026-08-26，`vision` 的「版面」那一項）。
+  //
+  // ⚠️ 它是 `picker` 而**不是三顆 action**：三顆按鈕會讓「現在是哪一種」
+  // 變成一件要靠 `active` 樣式去讀的事，而它是一個**工作階段的設定**
+  // ——與風格、層級同一族。
+  //
+  // ⚠️ `domain: 'view'` 而不是 `'session'`：換一個檔案不該換掉版面，
+  // 而換一個**宿主**（VSCode）應該——那邊的版面是編輯器自己的事。
+  { id: 'layout', kind: 'picker', domain: 'view', mountId: 'layout-selector-mount', bar: 'header', hostTitle: '選擇版面' },
   // 🔴 **程式在講話的地方**（2026-08-25，`draft/版面與檔案` §六之六）。
   { id: 'console', kind: 'output', domain: 'project', mountId: 'console-panel', bar: 'quickAccess', hostTitle: '主控台' },
   // 🔴 **執行時看的東西**——它的終局是 DAP 的 Variables 視圖（第五刀），
