@@ -51,6 +51,7 @@ import { PythonParser } from '../../src/languages/python/parser'
 import { liftPython, componentIdsOf } from '../helpers/python-lift'
 import { allComponentDefs } from '../helpers/component-scan'
 import { printReport, assertRatchet, REPO_ROOT } from '../helpers/guardrail'
+import { backtickSpans } from '../helpers/backtick-corpus'
 
 /** 判定的封閉詞彙——**刻意沒有「還沒想到」**。 */
 type cause =
@@ -157,8 +158,7 @@ function cppCorpus(): string[] {
   const out: string[] = []
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.test.ts')) continue
-    for (const m of fs.readFileSync(path.join(dir, f), 'utf8').matchAll(/`([^`]{4,400})`/g)) {
-      const c = m[1]
+    for (const c of backtickSpans(fs.readFileSync(path.join(dir, f), 'utf8'))) {
       if (!/[;{]/.test(c) || c.includes('${')) continue
       out.push(c)
     }

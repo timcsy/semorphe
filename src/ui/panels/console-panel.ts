@@ -1,4 +1,4 @@
-import * as Blockly from 'blockly'
+import { msg } from '../../core/messages'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
 
@@ -68,7 +68,7 @@ export class ConsolePanel implements ViewHost {
 
   /**
    * ⚠️ 這裡原本是一個空樁。而在它是空樁的期間，**執行器替它做了這件事**
-   * ——`consolePanel.setStatus(Blockly.Msg['EXEC_STATUS_RUNNING'] || 'Running', 'running')`，
+   * ——`consolePanel.setStatus(msg('EXEC_STATUS_RUNNING', 'Running'), 'running')`，
    * 在 `execution-controller.ts` 裡出現 **24 次**。
    *
    * > **一個知道對方要顯示什麼字的發送端，換不掉那個接收端。**
@@ -76,14 +76,16 @@ export class ConsolePanel implements ViewHost {
    * 現在執行器只說「狀態是什麼、為什麼」（`status` ＋ `reason`），
    * **文案、i18n 鍵、CSS class 全部是這個視圖自己的事**。
    *
-   * ⚠️ `EXEC_STATUS_WAITING` 與 `EXEC_STATUS_ABORTED` **兩個 i18n 鍵不存在**
-   * ——所以中文介面下它們一直顯示英文 fallback。那是搬家前就有的缺陷，
-   * 這裡**照原樣搬**（`component-encapsulate`：搬移不重寫，要重寫在另一個 commit）。
+   * 🪦 **這裡本來寫著「`EXEC_STATUS_WAITING` 與 `EXEC_STATUS_ABORTED` 兩個
+   * i18n 鍵不存在」——2026-08-26 查證，兩個都在**（`i18n/{zh-TW,en}/blocks.json:153,155`）。
+   * 補上的那一刀沒有回頭改這段話。
+   *
+   * > **一句描述缺陷的註解，不會因為缺陷被修好而過期——它會繼續被相信。**
+   *
+   * ⚠️ 查字改走 `core/messages` 的埠（2026-08-26，第七十四條護欄）：
+   * 這個面板為了查三個字拉進整個 Blockly，而它與積木沒有任何關係。
    */
   onExecutionState(event: ExecutionStateEvent): void {
-    const msg = (key: string, fallback2: string): string =>
-      (Blockly.Msg[key] as string | undefined) || fallback2
-
     if (event.reason === 'awaiting-input') {
       this.setStatus(msg('EXEC_STATUS_WAITING', 'Waiting for input...'), 'running')
       return
@@ -365,11 +367,10 @@ export class ConsolePanel implements ViewHost {
       this.inlineInput = input
 
       // Show a hint in the status bar
-      // ⚠️ 這裡原本硬編中文 `'等待輸入...'`——而執行器那邊查的是
-      // `Blockly.Msg['EXEC_STATUS_WAITING']`（一個**不存在的鍵**，永遠落到英文退路）。
-      // 於是同一個狀態有兩份文案，而它們**連語言都不一樣**，
-      // 只因為這一份後執行所以看起來是對的。
-      this.setStatus((Blockly.Msg['EXEC_STATUS_WAITING'] as string | undefined) || 'Waiting for input...', 'running')
+      // ⚠️ 這裡原本硬編中文 `'等待輸入...'`，而執行器那邊查 `EXEC_STATUS_WAITING`
+      // ——於是同一個狀態有兩份文案，只因為這一份後執行所以看起來是對的。
+      // 🔴 **兩份文案要走同一條路**：現在兩邊都是 `msg(鍵, 退路)`。
+      this.setStatus(msg('EXEC_STATUS_WAITING', 'Waiting for input...'), 'running')
 
       this.scrollToBottom()
       // Notify virtual keyboard integration before focusing

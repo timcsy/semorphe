@@ -54,6 +54,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
 import { PythonParser } from '../../src/languages/python/parser'
 import { Parser } from 'web-tree-sitter'
+import { backtickSpans } from '../helpers/backtick-corpus'
 
 let reg: BlockSpecRegistry
 let ws: Blockly.Workspace
@@ -287,8 +288,7 @@ describe('第五十一條護欄：宣告的積木，Blockly 真的建得出來�
     const dir = `${REPO_ROOT}/tests/integration`
     for (const f of fs.readdirSync(dir)) {
       if (!f.endsWith('.test.ts')) continue
-      for (const m of fs.readFileSync(`${dir}/${f}`, 'utf8').matchAll(/`([^`]{4,400})`/g)) {
-        const c = m[1]
+      for (const c of backtickSpans(fs.readFileSync(`${dir}/${f}`, 'utf8'))) {
         if (!/[;{]/.test(c) || c.includes('${')) continue
         corpus.push(c)
       }

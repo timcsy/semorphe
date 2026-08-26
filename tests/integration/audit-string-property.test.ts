@@ -49,6 +49,7 @@ import path from 'node:path'
 import { Language, Parser } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE } from '../helpers/guardrail'
+import { backtickSpans } from '../helpers/backtick-corpus'
 
 const GUARD = 'string-property'
 const decisionFile = path.join(REPO_ROOT, 'tests/assets/string-property-decisions.json')
@@ -92,8 +93,7 @@ function corpus(): string[] {
   const dir = path.join(REPO_ROOT, 'tests/integration')
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.test.ts')) continue
-    for (const m of fs.readFileSync(path.join(dir, f), 'utf8').matchAll(/`([^`]{4,400})`/g)) {
-      const c = m[1]
+    for (const c of backtickSpans(fs.readFileSync(path.join(dir, f), 'utf8'))) {
       if (!/[;{]/.test(c) || c.includes('${')) continue
       out.push(c)
     }

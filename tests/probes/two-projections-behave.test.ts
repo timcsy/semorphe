@@ -72,6 +72,7 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import cStyle from '../../src/languages/cpp/styles/c.json'
 import apcsStyle from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
+import { backtickSpans } from '../helpers/backtick-corpus'
 
 const REPO_ROOT = process.cwd()
 const C = cStyle as unknown as StylePreset
@@ -95,8 +96,8 @@ function neutralCorpus(limit: number): string[] {
   const out: string[] = []
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.test.ts')) continue
-    for (const m of fs.readFileSync(path.join(dir, f), 'utf8').matchAll(/`([^`]{4,400})`/g)) {
-      const c = m[1].replace(/\\\\/g, '\\')
+    for (const raw of backtickSpans(fs.readFileSync(path.join(dir, f), 'utf8'))) {
+      const c = raw.replace(/\\\\/g, '\\')
       if (!/int\s+main/.test(c) || c.includes('${')) continue
       if (/\b(class|vector|string|try|template|namespace\s+\w|new |delete |cin\s*>>|rand\s*\()/.test(c)) continue
       out.push(c)

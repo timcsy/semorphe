@@ -41,10 +41,9 @@ import type { CodeMapping } from '../../core/projection/code-generator'
 import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { buildNodeGraph, type NodeGraph, type GraphNode, type GraphPort } from '../../core/flow/node-graph'
 import { bodySlotsOf } from '../../core/component/traits'
-import * as Blockly from 'blockly/core'
+import { msg } from '../../core/messages'
 
 /** ⚠️ 面板上的字走既有的訊息表——**沒有第二份文案** */
-const msg = (key: string, fallback: string): string => (Blockly.Msg[key] as string) || fallback
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const PAD = 24
@@ -81,6 +80,7 @@ export class FlowPanel implements ViewHost {
   private svg!: SVGSVGElement
   private scopeSelect!: HTMLSelectElement
   private empty!: HTMLElement
+  private autoBtn!: HTMLButtonElement
 
   constructor(container: HTMLElement, specs?: BlockSpecRegistry) {
     this.container = container
@@ -129,8 +129,8 @@ export class FlowPanel implements ViewHost {
     })
 
     const auto = document.createElement('button')
+    this.autoBtn = auto
     auto.className = 'flow-btn'
-    auto.textContent = `⤢ ${msg('FLOW_AUTOLAYOUT', '自動排版')}`
     auto.title = '把手拖過的位置清掉，重新排一次'
     auto.addEventListener('click', () => {
       this.offsets.clear()
@@ -144,7 +144,6 @@ export class FlowPanel implements ViewHost {
 
     this.empty = document.createElement('div')
     this.empty.className = 'flow-empty'
-    this.empty.textContent = msg('FLOW_EMPTY', '還沒有可以畫的流程。')
 
     this.container.append(bar, this.empty, this.svg)
   }
@@ -169,12 +168,29 @@ export class FlowPanel implements ViewHost {
   }
 
   private rebuild(): void {
+    this.syncLabels()
     this.syncScopeOptions()
     this.graph = buildNodeGraph(this.rootBody())
     // 拖曳位移只留給還在的節點——刪掉的節點不該留著一個看不見的位移
     const alive = new Set(this.graph.nodes.map((n) => n.id))
     for (const id of [...this.offsets.keys()]) if (!alive.has(id)) this.offsets.delete(id)
     this.paint()
+  }
+
+  /**
+   * 🔴 **面板上的固定文字要跟著每次更新重設，不能只在建構時設一次。**
+   *
+   * 2026-08-26 開瀏覽器實測抓到的：切成 English 之後粒度選單變成 `Whole program`，
+   * **而「⤢ 自動排版」還是中文**——因為 `<option>` 每次 `rebuild()` 都重建，
+   * 而那顆按鈕的文字只在 `buildDom()` 設過一次。
+   *
+   * ⚠️ `git stash` 確認過**不是迴歸**：換訊息埠之前就是這樣。
+   *
+   * > **一段「只設一次」的介面文字，會在語言換掉的那天安靜地留在原地。**
+   */
+  private syncLabels(): void {
+    this.autoBtn.textContent = `⤢ ${msg('FLOW_AUTOLAYOUT', '自動排版')}`
+    this.empty.textContent = msg('FLOW_EMPTY', '還沒有可以畫的流程。')
   }
 
   /** 粒度選單：整份 ＋ 每一顆最外層有身體的節點（函式、類別、迴圈……） */

@@ -73,6 +73,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
+import { backtickSpans } from '../helpers/backtick-corpus'
 
 const GUARD = 'declared-slots'
 
@@ -163,8 +164,7 @@ function takeCorpus(): string[] {
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.test.ts')) continue
     const src = fs.readFileSync(path.join(dir, f), 'utf8')
-    for (const m of src.matchAll(/`([^`]{4,400})`/g)) {
-      const code = m[1]
+    for (const code of backtickSpans(src)) {
       // 粗篩：看起來像 C++ 陳述或宣告的才留。
       if (!/[;{]/.test(code)) continue
       if (/\$\{/.test(code)) continue // 樣板插值，不是完整程式碼

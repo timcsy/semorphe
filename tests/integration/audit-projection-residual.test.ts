@@ -55,6 +55,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
+import { backtickSpans } from '../helpers/backtick-corpus'
 
 const GUARD_NAME = 'projection-residual'
 
@@ -81,8 +82,7 @@ function fetchCorpus(): string[] {
   const out: string[] = []
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.test.ts')) continue
-    for (const m of fs.readFileSync(path.join(dir, f), 'utf8').matchAll(/`([^`]{4,400})`/g)) {
-      const c = m[1]
+    for (const c of backtickSpans(fs.readFileSync(path.join(dir, f), 'utf8'))) {
       if (!/[;{]/.test(c)) continue // 不像程式碼
       if (c.includes('${')) continue // 樣板字串，不是完整的碼
       out.push(c)
