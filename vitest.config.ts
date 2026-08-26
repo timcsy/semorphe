@@ -56,5 +56,22 @@ export default defineConfig({
      * 執行產物那一步自己還有 5 秒的 timeout。通過時這個數字不花任何時間。
      */
     testTimeout: 60000,
+    /**
+     * 🔴 **hook 也要放寬，而它預設【不跟著 `testTimeout`】**（2026-08-26）。
+     *
+     * `audit-dropdown-domain` 單獨跑 1.4 秒，在全套的並行負載下爆掉：
+     *
+     * ```
+     * ❯ audit-dropdown-domain.test.ts (7 tests | 7 skipped) 10009ms
+     *   Error: Hook timed out in 10000ms.
+     * ```
+     *
+     * 它的 `beforeAll` 要載語言套件 ＋ 註冊欄位 ＋ 建 Blockly 工作區。
+     * ⚠️ **那七支是「7 skipped」**——檔案層級有 FAIL，而 Tests 的計數是 0 failed。
+     * 一條硬性零護欄在機器忙的時候變成「沒有人在跑」，而摘要那一行看起來還好。
+     *
+     * > **一個測不到東西的 0，與一個健康的 0，產出一模一樣。**
+     */
+    hookTimeout: 60000,
   },
 })

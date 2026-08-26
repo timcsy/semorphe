@@ -301,13 +301,6 @@ export class ExecutionController {
 
     this.resetExecution()
     this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
-    this.interpreter.setUnknownComponentHandler(async (component: string) => {
-      const msg = Blockly.Msg['EXEC_UNKNOWN_COMPONENT_PROMPT']
-        ? Blockly.Msg['EXEC_UNKNOWN_COMPONENT_PROMPT'].replace('%1', component)
-        : `Unknown component "${component}" encountered.\nClick OK to skip it and continue, or Cancel to stop execution.`
-      const skip = confirm(msg)
-      return skip ? 'skip' : 'abort'
-    })
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
       this.broadcastOutput(text, 'stdout')
@@ -395,13 +388,6 @@ export class ExecutionController {
 
     this.resetExecution()
     this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
-    this.interpreter.setUnknownComponentHandler(async (component: string) => {
-      const msg = Blockly.Msg['EXEC_UNKNOWN_COMPONENT_PROMPT']
-        ? Blockly.Msg['EXEC_UNKNOWN_COMPONENT_PROMPT'].replace('%1', component)
-        : `Unknown component "${component}" encountered.\nClick OK to skip it and continue, or Cancel to stop execution.`
-      const skip = confirm(msg)
-      return skip ? 'skip' : 'abort'
-    })
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
       this.broadcastOutput(text, 'stdout')
@@ -650,13 +636,6 @@ export class ExecutionController {
     this.animateAccelerateSkipIds = null
 
     this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
-    this.interpreter.setUnknownComponentHandler(async (component: string) => {
-      const msg = Blockly.Msg['EXEC_UNKNOWN_COMPONENT_PROMPT']
-        ? Blockly.Msg['EXEC_UNKNOWN_COMPONENT_PROMPT'].replace('%1', component)
-        : `Unknown component "${component}" encountered.\nClick OK to skip it and continue, or Cancel to stop execution.`
-      const skip = confirm(msg)
-      return skip ? 'skip' : 'abort'
-    })
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
       this.broadcastOutput(text, 'stdout')

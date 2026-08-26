@@ -48,13 +48,13 @@ describe('cpp_include_local：核心的空操作刪了，宣告接手', () => {
 
   it('★ 執行它不報錯、不中斷——行為與刪除前完全相同', async () => {
     const interp = new SemanticInterpreter({ maxSteps: 100 })
-    let unknownComponentFired = false
-    ;(interp as unknown as { unknownComponentHandler?: unknown }).unknownComponentHandler = () => {
-      unknownComponentFired = true
-      return 'skip'
-    }
-    // 宣告接手的話會靜靜返回；沒接手的話會走未知概念那條路
-    await interp.executeNode(n('cpp:include_local', { header: 'mine.h' }))
-    expect(unknownComponentFired, '宣告沒有接手——這個概念變成了未知概念，會中斷使用者的程式').toBe(false)
+    // 🪦 這裡本來塞一個假的 `unknownComponentHandler` 回 `'skip'`，看它有沒有被觸發。
+    //    2026-08-26 那個 handler 整個退場了（第七十五條護欄：沒看過就不繼續），
+    //    於是判準變得**更直接**：宣告接手的話這一行不丟；沒接手就丟 UNKNOWN_COMPONENT。
+    //    ⚠️ 而這比舊寫法強——舊的只證明「有人被通知」，新的證明「程式沒有停」。
+    await expect(
+      interp.executeNode(n('cpp:include_local', { header: 'mine.h' })),
+      '宣告沒有接手——這個概念變成了未知概念，會中斷使用者的程式',
+    ).resolves.toBeUndefined()
   })
 })

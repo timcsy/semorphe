@@ -128,18 +128,61 @@ function topLevelKeys(after: string): string[] {
   }
   if (end === -1) return []
   const body = rest.slice(open + 1, end)
+
+  // 🔴 **簡寫屬性也要算**（2026-08-26 補）。這裡本來只認 `name: value`
+  // ——找第一層的 `:`，取它前面那個識別字。於是 「component 逗號」這種簡寫 這種
+  // **簡寫**被讀成「沒有參數」。
+  //
+  // ⚠️ 而它的代價正是這個檔第 166 行自己寫下的顧慮：
+  //
+  // > 「那不會造成假違規……**而它會讓報表說謊**，
+  // >  而一份說謊的報表推導不出『使用者到底看到什麼』」
+  //
+  // 症狀是**假違規**：訊息模板裡的 那個具名佔位符 明明會被填上，
+  // 而護欄餵了一組空參數進去，於是報「未替換的具名佔位符」。
+  // **一個看不見簡寫的掃描器，會把一個正確的訊息判成缺陷。**
+  //
+  // → 做法：先用第一層逗號切段，每一段各自問「它是 `k: v` 還是一個裸識別字」。
   const keys: string[] = []
+  for (const seg of splitTopLevel(body)) {
+    const colon = topLevelColon(seg)
+    if (colon >= 0) {
+      const km = /(?:'([^']*)'|"([^"]*)"|(\w+))\s*$/.exec(seg.slice(0, colon))
+      if (km) keys.push(km[1] ?? km[2] ?? km[3])
+      continue
+    }
+    // 簡寫（`component`）——⚠️ 展開（`...x`）沒有名字，不算
+    const short = /^\s*(\w+)\s*$/.exec(seg)
+    if (short) keys.push(short[1])
+  }
+  return keys
+}
+
+/** 依**第一層**逗號切段（括號／大括號／方括號裡的逗號不算）。 */
+function splitTopLevel(body: string): string[] {
+  const segs: string[] = []
   let d = 0
+  let start = 0
   for (let i = 0; i < body.length; i++) {
     const c = body[i]
     if (c === '{' || c === '[' || c === '(') d++
     else if (c === '}' || c === ']' || c === ')') d--
-    else if (c === ':' && d === 0) {
-      const km = /(?:'([^']*)'|"([^"]*)"|(\w+))\s*$/.exec(body.slice(0, i))
-      if (km) keys.push(km[1] ?? km[2] ?? km[3])
-    }
+    else if (c === ',' && d === 0) { segs.push(body.slice(start, i)); start = i + 1 }
   }
-  return keys
+  segs.push(body.slice(start))
+  return segs
+}
+
+/** 這一段裡第一層的 `:` 在哪；沒有就回 -1。 */
+function topLevelColon(seg: string): number {
+  let d = 0
+  for (let i = 0; i < seg.length; i++) {
+    const c = seg[i]
+    if (c === '{' || c === '[' || c === '(') d++
+    else if (c === '}' || c === ']' || c === ')') d--
+    else if (c === ':' && d === 0) return i
+  }
+  return -1
 }
 
 /**
@@ -268,6 +311,22 @@ describe('第四十四條護欄：執行期停下來時說的是人話', () => {
     resetMessages()
     // 沒被替換的 %2 留在句子裡——那與代號一樣糟，而更難發現
     expect(CODE_SHAPES.some(([re]) => re.test(shown))).toBe(true)
+  })
+
+  it('★ 注入④：**簡寫屬性**必須被讀出來——不然報表會說「沒有參數」', () => {
+    // 🔴 2026-08-26：這條缺口讓一個**正確的**訊息被判成缺陷。
+    // 掃描器只認 `name: value`，於是 「component 逗號」這種簡寫 被讀成「沒有參數」，
+    // 護欄餵一組空參數進去，那個具名佔位符 沒被替換 → 報「未替換的具名佔位符」。
+    //
+    // ⚠️ 實測那天 `src/` 裡**只有一處**用簡寫——也就是說這個缺口
+    // 一直在，而**從來沒有受害者**。它不是「壞了很久沒發現」，
+    // 是「第一個踩到的人今天才出現」。
+    expect(topLevelKeys("UNKNOWN, {\n  component,\n})"), '簡寫').toEqual(['component'])
+    expect(topLevelKeys('UNKNOWN, { component, hint: 1 })'), '簡寫＋一般混用').toEqual(['component', 'hint'])
+    expect(topLevelKeys('UNKNOWN, { a: 1, ...(x ? {} : { b: 2 }) })'), '展開沒有名字，不得算進來').toEqual(['a'])
+    expect(topLevelKeys('UNKNOWN, { f: g(1, 2), h: [3, 4] })'), '巢狀裡的逗號不切段').toEqual(['f', 'h'])
+    // ★ 反向：真的沒有參數時仍然回空——否則上面那條會被一個「什麼都當簡寫」的實作矇混
+    expect(topLevelKeys('UNKNOWN)'), '根本沒有第二個引數').toEqual([])
   })
 
   it('★ 顯示端唯一性——不得有第二個地方直接推錯誤的原始訊息', () => {

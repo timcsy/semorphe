@@ -64,7 +64,6 @@ export class SemanticInterpreter implements ExecutionContext {
   private abortReject: ((reason: RuntimeError) => void) | null = null
   private waitingCallback: ((nodeId: string | null) => void) | null = null
   private stepRecordCallback: ((step: StepInfo) => Promise<void>) | null = null
-  private unknownComponentHandler: ((component: string) => Promise<'skip' | 'abort'>) | null = null
   private currentNode: SemanticNode | null = null
   private executorRegistry: ComponentExecutorRegistry
 
@@ -168,11 +167,6 @@ export class SemanticInterpreter implements ExecutionContext {
   /** Register an async callback fired after each step is recorded (for real-time animation) */
   setStepRecordCallback(callback: ((step: StepInfo) => Promise<void>) | null): void {
     this.stepRecordCallback = callback
-  }
-
-  /** Register a handler for unknown components. Returns 'skip' to continue or 'abort' to stop. */
-  setUnknownComponentHandler(handler: ((component: string) => Promise<'skip' | 'abort'>) | null): void {
-    this.unknownComponentHandler = handler
   }
 
   setInputProvider(provider: (() => Promise<string>) | null): void {
@@ -305,16 +299,25 @@ export class SemanticInterpreter implements ExecutionContext {
     // 概念自己宣告了「刻意不執行」——來源是概念檔，不是核心層的清單
     if (isSkipped(component, 'execute')) return
 
-    // 未知概念：通知使用者決定跳過或停止
-    if (this.unknownComponentHandler) {
-      const action = await this.unknownComponentHandler(component)
-      if (action === 'abort') {
-        throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_COMPONENT, { component })
-      }
-      // 'skip' — 繼續執行
-      return
-    }
-    // 無 handler 時預設報錯
+    // 🪦 **未知概念不再問人要不要跳過**（2026-08-26，第七十五條護欄）。
+    //
+    // 這裡本來掛著一個 `unknownComponentHandler`，回 `'skip' | 'abort'`，
+    // 而 UI 用一個 `confirm()` 去問學生。使用者 2026-08-24 逐字：
+    // 「**如果沒看過的東西就不要執行下去了，要誠實的說沒看過**」。
+    //
+    // 🔴 那個 `'skip'` **不是「跳過一行」，是「帶著錯的狀態繼續跑」**：
+    // 跳掉一個賦值之後，後面每一行都在讀一個錯的值——**而每一步看起來都正常**。
+    //
+    // > 跳過一個【輸出】少印一行，看得出來；
+    // > 跳過一個【賦值】看不出來，而學生會拿那個輸出當答案。
+    //
+    // ⚠️ 這**不是**把三條出口（手填／委派／停止）做掉了——那是同一個路線圖項的
+    // 後續幾刀，而它們的閘還沒開（`draft/2026-08-24-執行遇到沒看過的東西.md`
+    // 的「未決」有五題）。這一刀只做「**把錯的那個答案拿掉**」，
+    // 而問題也跟著消失：沒有選項要問，就不需要那個對話框。
+    //
+    // ⚠️ 與上面那行 `isSkipped` 是**兩件事**：那是概念自己宣告的「刻意不執行」，
+    // 這裡是「沒看過」。前者今天仍然是靜默 return，而那是另一刀（也在未決裡）。
     throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_COMPONENT, {
       component,
       // 判準是「註冊表空不空」，不是「概念名長得像什麼」——後者會讓核心
