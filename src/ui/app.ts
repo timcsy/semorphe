@@ -541,6 +541,10 @@ export class App {
     this.wireHostConsole(elements.consolePanel)
     // 🔴 變數 → 宿主的 `panel` 區（與終端機同一排）。
     elements.variablePanel?.onSnapshot((groups) => this.codeView?.reportVariables?.(groups))
+    // 🔴 **暫停中改一個變數 → 匯流排**（2026-08-26）。
+    //    面板自己**不認識執行器**——P9：跨層通訊只走 Bus（`principles.md:177`）。
+    elements.variablePanel?.onEditValue((name, value) =>
+      this.bus.emit('execution:set-variable', { name, value }))
 
     // 12. Setup bidirectional highlighting
     this.setupBidirectionalHighlight()

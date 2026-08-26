@@ -9,6 +9,19 @@ import type { IOSystem } from './io'
  */
 export interface ExecutionContext {
   /**
+   * **「我認不出這一段」——停在這裡，讓人看得到、改得動，然後決定。**
+   *
+   * 🔴 由**元件自己**呼叫，不是核心猜。`raw_code` 裝的是辨識不出來的文字，
+   * 而「那是認不出來的文字」這件事是**它的知識**，不是核心的
+   * （`concepts/宣告登記處.md`：核心讀宣告，不重新認識語言）。
+   *
+   * 回 `'stop'` 時呼叫端照原樣丟錯；回 `'continue'` 表示
+   * **人看過狀態、也改過了，決定讓這一行不執行**。
+   *
+   * ⚠️ **沒有宿主時它回 `'stop'`**——沒有人可以問的時候，正確處置是停止。
+   */
+  pauseForUnrecognized?: (label: string, nodeId: string | null) => Promise<'continue' | 'stop'>
+  /**
    * 這一次執行是在哪一塊板子上（spec 145）。
    *
    * ⚠️ **省略 ＝ 這個目標沒有板子**（`cpp`／`c`／競程）——

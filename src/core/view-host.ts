@@ -124,7 +124,20 @@ export interface SemanticUpdateEvent {
  * （2026-08-14，spec `120`）。視圖若把它們一視同仁，
  * 使用者會看到「程式中止」而不是「程式還不能執行」。
  */
-export type ExecutionReason = 'awaiting-input' | 'breakpoint' | 'aborted' | 'refused'
+/**
+ * ⚠️ 這是一份**封閉詞彙**——加值的門檻見 `concepts/執行機構.md:279`。
+ *
+ * 🔴 `'unknown-component'`（2026-08-26）：**跑到一個我們看不懂的東西，停在那裡**。
+ * 使用者逐字：「跑到那邊要有斷點，讓使用者調整完狀態才能繼續跑下去，或是直接停止」。
+ * 它與 `'breakpoint'` **走同一條暫停路，而理由不同**——前者是使用者放的，
+ * 這一個是系統自己撞到的，而畫面上要說得出差別。
+ */
+export type ExecutionReason =
+  | 'awaiting-input'
+  | 'breakpoint'
+  | 'unknown-component'
+  | 'aborted'
+  | 'refused'
 
 export interface ExecutionStateEvent {
   status: ExecutionStatus

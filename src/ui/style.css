@@ -2075,3 +2075,14 @@ html, body {
   color: #fff;
   border-color: #1177bb;
 }
+
+/* ─── 暫停中可以改的變數值（2026-08-26） ───
+   🔴 判準是「看得出來能點」——一個能改而看不出來的東西，
+   與一個不能改的東西，在使用者眼裡是同一個。 */
+.var-editable { cursor: text; border-bottom: 1px dashed #6a6a6a; }
+.var-editable:hover { background: #2a2d2e; }
+.var-value-input {
+  width: 100%; background: #1e1e1e; color: #ce9178;
+  border: 1px solid #007acc; border-radius: 2px;
+  font-family: inherit; font-size: inherit; padding: 0 2px;
+}

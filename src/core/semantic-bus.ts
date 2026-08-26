@@ -44,6 +44,17 @@ export interface ViewRequests {
   'edit:blocks': { blocklyState: unknown }
   'execution:run': { command: 'run' | 'step' | 'stop' | 'reset' }
   'execution:input': { text: string }
+  /**
+   * **把一個執行期變數改成別的值**（2026-08-26）。
+   *
+   * 🔴 它走匯流排而不是「面板呼叫控制器」，理由與 `execution:input` 同一條：
+   * 改狀態的人是**視圖**（變數面板），而執行的人是**執行器**，
+   * 兩者之間 P9 只准走這裡（`principles.md:177`「跨層通訊只走 Bus」）。
+   *
+   * ⚠️ 只在**暫停中**有意義——跑到一半改變數會讓同一支程式跑兩次結果不同，
+   * 而那正是 `concepts/模擬的誠實.md:23` 在擋的事。
+   */
+  'execution:set-variable': { name: string; value: string }
   'config:change': { key: string; value: unknown }
 }
 

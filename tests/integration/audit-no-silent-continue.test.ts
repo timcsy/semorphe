@@ -1,5 +1,28 @@
 /**
- * **第七十五條護欄**：碰到沒看過的東西，不得有「繼續」這個答案。
+ * **第七十五條護欄**：碰到沒看過的東西，不得**無聲地**繼續。
+ *
+ * ## 🔴 這條規範改寫過一次，而那不是措辭問題（2026-08-26）
+ *
+ * 它 2026-08-26 上午立的時候寫的是「**不得有「繼續」這個答案**」，
+ * 依據是使用者「沒看過的東西就不要執行下去了」。當天下午使用者把它推翻：
+ *
+ * > 「這不能直接跑，而是跑到那邊**要有斷點**，讓使用者**調整完狀態**
+ * >  才能繼續跑下去，或是**直接停止**」
+ *
+ * 也就是說：**繼續是可以的，而它有前提**。舊的規範把前提誤讀成禁令。
+ *
+ * ```
+ * 舊 'skip'   一個 confirm() 問「要不要跳過」   看不到停在哪 · 看不到變數 · 改不動
+ * 現在        停在那一行（與斷點同一條路）      看得到 · 改得動 · 然後【明確】決定
+ * ```
+ *
+ * > **差別不在那個回答叫什麼，在回答的人有沒有被給到判斷的依據。**
+ *
+ * ⚠️ 而改寫的時候**差一點就用「換個字」矇混過去**——實作改叫 `'continue'`，
+ * 這條護欄當場變綠而一個字都沒改。**那是最容易發生的那種假通過**：
+ * 護欄還在、還是綠的，而它量的東西已經與規範無關了。
+ * → 所以下面同時留了「`'skip'` 不得回來」（舊設計的墓碑）
+ *   與**真正的那條**（沒有宿主時不得返回）。
  *
  * ## 它從哪來
  *
@@ -17,7 +40,7 @@
  *
  * 而 `interpreter.ts` 那一支的註解逐字寫著 `// 'skip' — 繼續執行`。
  *
- * ## 🔴 為什麼「跳過」是這個系統裡最貴的一個選項
+ * ## 🔴 為什麼「無聲地跳過」是這個系統裡最貴的一個選項
  *
  * ```
  * 跳過一個【輸出】     少印一行            ← 看得出來
@@ -77,6 +100,12 @@ import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 import { REPO_ROOT, printReport } from '../helpers/guardrail'
+import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import type { SemanticNode } from '../../src/core/types'
+
+/** 合成的節點——⚠️ **刻意不是任何真實身分**（`build-guardrail` 簽名三）。 */
+const node = (componentId: string): SemanticNode =>
+  ({ id: 'n-probe', componentId, properties: {}, children: {} }) as unknown as SemanticNode
 
 /**
  * **具名豁免**——每一筆要寫得出理由。空的是對的：這個字現在沒有正當用途。
@@ -117,7 +146,7 @@ const scan = (): { files: string[]; chars: number; hits: string[] } => {
   return { files: files.map((f) => path.relative(REPO_ROOT, f)), chars, hits }
 }
 
-describe('第七十五條護欄：沒看過的東西不得有「繼續」這個答案', () => {
+describe('第七十五條護欄：沒看過的東西不得無聲地繼續', () => {
   const r = scan()
 
   it('★ 入口條件：掃描真的吃到東西', () => {
@@ -142,12 +171,49 @@ describe('第七十五條護欄：沒看過的東西不得有「繼續」這個�
     expect(silentContinueIn(" * 例如 `return 'skip'` 那條路"), '檔頭的散文').toBe(false)
   })
 
+  it('🔴 硬性零（行為）：**沒有宿主可問時，不得返回**', async () => {
+    // 這一條才是規範本身。上面那條只是舊設計的墓碑——
+    // ⚠️ **一個只擋字串的護欄，換個字就通過了**，而 2026-08-26 差一點就是那樣。
+    //
+    // 「無聲」的定義：**沒有任何人被問，而它繼續了**。
+    // 一個沒有 UI 的宿主（Node、測試、`examples/bring-your-own-view/`）
+    // 沒有人可以問，所以它的唯一正確處置是停止。
+    const interp = new SemanticInterpreter({ maxSteps: 100 })
+    await expect(
+      interp.executeNode(node('cpp:this_does_not_exist')),
+      '🔴 沒有註冊宿主而它沒有丟 → 那就是【無聲地繼續】',
+    ).rejects.toThrow()
+  })
+
+  it('🔴 暫停要**指得出位置**——指不出來的暫停不是斷點', async () => {
+    // 使用者要的是「跑到那邊要有斷點」。一個說得出「有東西不會跑」
+    // 而說不出「在哪一行」的暫停，學生沒有辦法對它做任何事。
+    const interp = new SemanticInterpreter({ maxSteps: 100 })
+    const seen: Array<{ component: string; nodeId: string | null }> = []
+    interp.setUnknownComponentPause(async (component, nodeId) => {
+      seen.push({ component, nodeId })
+      return 'stop'
+    })
+    await interp.executeNode(node('cpp:this_does_not_exist')).catch(() => {})
+    expect(seen).toHaveLength(1)
+    expect(seen[0].component).toBe('cpp:this_does_not_exist')
+    expect(seen[0].nodeId, '🔴 宿主拿不到節點 id → 它指不到那一顆積木上').toBe('n-probe')
+  })
+
+  it('★ 反向：宿主說「繼續」時**才**繼續——而那是它明確說的', async () => {
+    // 缺了這一條，一個「永遠丟」的實作也能通過上面兩條，
+    // 而那會讓使用者的「調整完狀態才能繼續跑下去」變成做不到。
+    const interp = new SemanticInterpreter({ maxSteps: 100 })
+    interp.setUnknownComponentPause(async () => 'continue')
+    await expect(interp.executeNode(node('cpp:this_does_not_exist'))).resolves.toBeUndefined()
+  })
+
   it('★ 具名豁免不得變成孤兒', () => {
     const orphans = Object.keys(EXEMPT).filter((f) => !fs.existsSync(path.join(REPO_ROOT, f)))
     expect(orphans, `這些豁免指著不存在的檔案：\n  ${orphans.join('\n  ')}`).toEqual([])
   })
 
-  it('硬性零：`src/` 裡不得有「跳過並繼續」這個答案', () => {
+  it('🪦 硬性零：舊設計的那個字不得回來（`\'skip\'`）', () => {
     printReport('第七十五條：沒看過就不繼續', [
       `掃到 src 檔        ${r.files.length}（${r.chars} 字）`,
       `具名豁免           ${Object.keys(EXEMPT).length}`,

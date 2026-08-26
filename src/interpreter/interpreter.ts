@@ -5,7 +5,7 @@ import { isSkipped, hasAnnotation, declareSkips, declareAnnotations } from '../c
 import { allLanguageExecutors, allBuiltinConstants, isBuiltinName } from '../core/language-executors'
 import { universalComponents } from '../core/universal'
 import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
-import { defaultValue, valueToString } from './types'
+import { defaultValue, valueToString, parseInputValue } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
 import { Scope } from './scope'
 import { IOSystem } from './io'
@@ -63,6 +63,9 @@ export class SemanticInterpreter implements ExecutionContext {
   private aborted = false
   private abortReject: ((reason: RuntimeError) => void) | null = null
   private waitingCallback: ((nodeId: string | null) => void) | null = null
+  private unknownComponentPause:
+    | ((component: string, nodeId: string | null) => Promise<'continue' | 'stop'>)
+    | null = null
   private stepRecordCallback: ((step: StepInfo) => Promise<void>) | null = null
   private currentNode: SemanticNode | null = null
   private executorRegistry: ComponentExecutorRegistry
@@ -90,9 +93,17 @@ export class SemanticInterpreter implements ExecutionContext {
     // > 後者代表這一段我們誠實地認不出來——而它們不該長得一樣。**
     reg('unresolved', async (node) => {
       const src = String(node.metadata?.rawCode ?? '').split('\n')[0].slice(0, 60)
-      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
-        '%1': src || String(node.properties?.node_type ?? '(不明)'),
-      })
+      const label = src || String(node.properties?.node_type ?? '(不明)')
+      // 🔴 **它也要停**（2026-08-26）。⚠️ 而它是這一族的**第三個**註冊點——
+      //    前兩個是 `components/{cpp,python}/raw_code/execute.ts`，
+      //    而**實測樹裡出現的是這一顆**（外層認不出、子節點認得出）：
+      //    `asm volatile("nop")` 產出的是 `unresolved`，`raw_code` 是它的子節點。
+      //
+      //    > **一族三個註冊點，改了兩個而漏掉的那一個，正好是真實語料唯一會走的。**
+      //
+      //    抓到它的不是型別檢查也不是測試，是**開瀏覽器貼一段真的程式**。
+      if (await this.pauseForUnrecognized(label, node.id ?? null) === 'continue') return
+      throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': label })
     })
 
 
@@ -167,6 +178,81 @@ export class SemanticInterpreter implements ExecutionContext {
   /** Register an async callback fired after each step is recorded (for real-time animation) */
   setStepRecordCallback(callback: ((step: StepInfo) => Promise<void>) | null): void {
     this.stepRecordCallback = callback
+  }
+
+  /**
+   * **碰到沒看過的東西時，把決定權交給宿主——而宿主要先讓人【看得到狀態】。**
+   *
+   * 使用者 2026-08-26 逐字：
+   * 「這不能直接跑，而是跑到那邊**要有斷點**，讓使用者**調整完狀態**才能繼續跑下去，
+   *  或是**直接停止**」。
+   *
+   * ## ⚠️ 這【不是】那個被拿掉的 `'skip'` 換一個字
+   *
+   * ```
+   * 舊的 'skip'   一個 confirm() 問「要不要跳過」   看不到狀態 · 改不了狀態 · 一個對話框
+   * 現在          【停在那一行】                     看得到停在哪 · 看得到變數 · 改得動它們
+   * ```
+   *
+   * > **差別不在那個回答叫什麼，在回答的人有沒有被給到判斷的依據。**
+   *
+   * 🔴 **沒有註冊宿主時仍然丟錯**——一個沒有 UI 的宿主（Node、測試、
+   * `examples/bring-your-own-view/`）沒有人可以問，而「沒有人可以問」的
+   * 正確處置是停止，不是繼續。
+   */
+  setUnknownComponentPause(
+    fn: ((component: string, nodeId: string | null) => Promise<'continue' | 'stop'>) | null,
+  ): void {
+    this.unknownComponentPause = fn
+  }
+
+  /**
+   * **元件說「我認不出這一段」時走的那條路**（`ExecutionContext` 的那一格）。
+   *
+   * 🔴 它與未知元件走**同一個宿主鉤子**，因為對使用者來說是同一件事：
+   * 「有一行我不會跑，先停在這裡」。差別只在**誰發現的**——
+   * 未知元件是核心發現的，這一條是元件自己說的。
+   *
+   * ⚠️ **沒有宿主就回 `'stop'`**：沒有人可以問時，正確處置是停止。
+   */
+  pauseForUnrecognized = async (label: string, nodeId: string | null): Promise<'continue' | 'stop'> => {
+    if (!this.unknownComponentPause) return 'stop'
+    return this.unknownComponentPause(label, nodeId)
+  }
+
+  /**
+   * **現在看得到的變數**——暫停時宿主要拿它去畫。
+   *
+   * 🔴 抽出來是因為**暫停不是一個 step**：`recordStep` 只在標了 `debug_step`
+   * 的概念上跑，而「跑到一個看不懂的東西」不在那條路上。
+   * 少了這一支，暫停時變數面板是**空的**，而「調整完狀態」就成了一句空話
+   * （2026-08-26 開瀏覽器實測抓到——工具列出來了、積木亮了、而變數一列都沒有）。
+   */
+  snapshotScope(): { name: string; type: string; value: string }[] {
+    const out: { name: string; type: string; value: string }[] = []
+    for (const [name, val] of this.scope.getAll()) {
+      if (isBuiltinName(name)) continue
+      out.push({ name, type: val.type, value: valueToString(val) })
+    }
+    return out
+  }
+
+  /**
+   * **從宿主改一個執行期變數**——「調整完狀態才能繼續」的那個「調整」。
+   *
+   * 回傳有沒有真的改到。⚠️ **改不到要說**，不要靜靜失敗：
+   * 一個「按了沒反應」的編輯框，比一個唯讀的更糟。
+   */
+  setVariableFromHost(name: string, raw: string): boolean {
+    try {
+      const current = this.scope.get(name)
+      const next = parseInputValue(raw, current.type)
+      if (!next) return false
+      this.scope.set(name, next)
+      return true
+    } catch {
+      return false
+    }
   }
 
   setInputProvider(provider: (() => Promise<string>) | null): void {
@@ -318,6 +404,19 @@ export class SemanticInterpreter implements ExecutionContext {
     //
     // ⚠️ 與上面那行 `isSkipped` 是**兩件事**：那是概念自己宣告的「刻意不執行」，
     // 這裡是「沒看過」。前者今天仍然是靜默 return，而那是另一刀（也在未決裡）。
+    // 🔴 **有宿主的話，停在這裡讓人看**（2026-08-26，使用者拍板）。
+    //
+    // 「跑到那邊要有斷點，讓使用者調整完狀態才能繼續跑下去，或是直接停止」。
+    // 宿主拿到這個呼叫時要做的是**暫停**（與斷點同一條路）：指到那一顆、
+    // 打開變數、等一個決定。`setVariableFromHost` 是那期間改狀態的入口。
+    //
+    // ⚠️ **回 `'continue'` 不等於當年的 `'skip'`**：那時是一個 `confirm()`，
+    // 看不到停在哪、看不到變數、也改不動它們。**現在回答的人有依據。**
+    // 而**沒有宿主就直接丟**——沒有人可以問時，正確處置是停止。
+    if (this.unknownComponentPause) {
+      const decision = await this.unknownComponentPause(component, node.id ?? null)
+      if (decision === 'continue') return
+    }
     throw new RuntimeError(RUNTIME_ERRORS.UNKNOWN_COMPONENT, {
       component,
       // 判準是「註冊表空不空」，不是「概念名長得像什麼」——後者會讓核心
@@ -502,11 +601,7 @@ export class SemanticInterpreter implements ExecutionContext {
     // 缺標註 → 不停，與原本「清單外不停」一致。
     if (!hasAnnotation(component, 'debug_step')) return
 
-    const scopeSnapshot: { name: string; type: string; value: string }[] = []
-    for (const [name, val] of this.scope.getAll()) {
-      if (isBuiltinName(name)) continue
-      scopeSnapshot.push({ name, type: val.type, value: valueToString(val) })
-    }
+    const scopeSnapshot = this.snapshotScope()
 
     const step: StepInfo = {
       node,

@@ -1,4 +1,5 @@
 import type { LoadOutcome } from './storage'
+import { msg } from './messages'
 
 /**
  * 把拒絕的理由講成使用者看得懂的一句話。
@@ -43,4 +44,41 @@ export function describeRefusal(outcome: Extract<LoadOutcome, { kind: 'refused' 
 export function describeExecutionRefusal(count: number): string {
   const what = count > 1 ? `這段程式有 ${count} 處語法還不完整` : '這段程式有一處語法還不完整'
   return `${what}，所以還不能執行。你打的程式沒有被改動——補好之後再按一次執行就可以了。`
+}
+
+/**
+ * **跑到一個看不懂的東西，停在那裡的那一句。**
+ *
+ * 使用者 2026-08-26 逐字：「跑到那邊要有斷點，讓使用者調整完狀態才能繼續跑下去，
+ * 或是直接停止」。所以這一句要回答三件事：**停在哪**（指名那顆元件）、
+ * **為什麼**（是系統不會，不是你寫錯）、**接下來能做什麼**（改狀態／繼續／停止）。
+ *
+ * ⚠️ **走訊息埠而不是寫死中文**——這個檔上面那兩則是寫死的（歷史遺留），
+ * 而 2026-08-26 才剛修過「中文介面顯示英文退路」那一類的缺陷。
+ * **不往那個方向再加。** 退路仍然是中文，因為沒有宿主翻譯表時它至少是可讀的。
+ */
+export function describeUnknownPause(component: string): string {
+  return msg('EXEC_UNKNOWN_PAUSE', '這一塊我還不會執行（{component}）——先停在這裡。你可以在「變數」那一頁調整狀態，然後按繼續；或是直接停止。')
+    .replace('{component}', component)
+}
+
+/**
+ * **選了繼續之後留下的痕跡。**
+ *
+ * 🔴 少了這一行，輸出看起來就像那一行真的跑過了——而
+ * `principles.md:135` 逐字：「降級必須單調遞減、**必須可見**」。
+ */
+export function describeUnknownContinued(component: string): string {
+  return msg('EXEC_UNKNOWN_CONTINUED', '（{component} 這一行沒有執行，是你選擇繼續的）')
+    .replace('{component}', component)
+}
+
+/**
+ * **改不動那個變數時的那一句。**
+ *
+ * ⚠️ 一個按了沒反應的編輯框，比一個唯讀的更糟：唯讀至少誠實。
+ */
+export function describeSetVariableRefused(name: string, value: string): string {
+  return msg('EXEC_SET_VAR_REFUSED', '改不動「{name}」——「{value}」不是它的型別接得住的值，或者這個名字現在不在可見範圍裡。')
+    .replace('{name}', name).replace('{value}', value)
 }

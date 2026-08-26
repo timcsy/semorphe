@@ -12,7 +12,7 @@ import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { ConsolePanel } from './panels/console-panel'
 import { canExecute } from '../core/diagnostics'
-import { describeExecutionRefusal } from '../core/refusal-message'
+import { describeExecutionRefusal, describeUnknownPause, describeUnknownContinued, describeSetVariableRefused } from '../core/refusal-message'
 // 🔴 **不得直接推 `e.message`**——那是給開發者看的湊合字串（身分 ＋ JSON）。
 // 三個顯示點各查一次表就是三個會忘記的地方，所以收成一個具名函式，
 // 而第四十四條護欄的第二支測試正是「不得有人繞過它」。
@@ -48,6 +48,13 @@ export class ExecutionController {
   private currentStepIndex = -1
   private animatePaused = false
   private animateResolve: (() => void) | null = null
+  /**
+   * **停在一個看不懂的東西上時，那個決定的落點**（2026-08-26）。
+   *
+   * ⚠️ 與 `animateResolve` 分開，因為它要回**答案**不只是「解除暫停」：
+   * `continue` 與 `stop` 都會解除暫停，而直譯器需要知道是哪一個。
+   */
+  private unknownResolve: ((d: 'continue' | 'stop') => void) | null = null
   private animateSpeed: ExecutionSpeed = 'medium'
   private animateAccelerateSkipIds: Set<string> | null = null
   private getBlocksDirty: () => boolean
@@ -115,6 +122,12 @@ export class ExecutionController {
     // 翻譯發生在懂「行」的那一端（`monaco-panel.推送斷點`）。
     this.bus?.on('execution:breakpoints', (d) => {
       this.breakpointNodes = new Set(d.nodeIds)
+    })
+    // 🔴 **暫停中改一個變數**（2026-08-26）——「調整完狀態才能繼續」的那個「調整」。
+    //    ⚠️ 改不到要說。一個按了沒反應的編輯框，比一個唯讀的更糟。
+    this.bus?.on('execution:set-variable', (d) => {
+      const ok = this.interpreter?.setVariableFromHost(d.name, d.value) ?? false
+      if (!ok) this.broadcastOutput(describeSetVariableRefused(d.name, d.value) + '\n', 'stderr')
     })
     this.debugToolbar = new DebugToolbar()
   }
@@ -239,6 +252,17 @@ export class ExecutionController {
       switch (action) {
         // ⚠️ 這是 `DebugAction`（繼續執行），不是元件身分 `lang:continue`
         case 'continue':
+          // 🔴 停在「看不懂的東西」上時，`繼續` 的意思是
+          //    「我看過狀態了，也改過了，那一行就讓它不執行」——
+          //    **而它與當年的 `'skip'` 的差別就在這一句的前半**。
+          if (this.unknownResolve) {
+            const r = this.unknownResolve
+            this.unknownResolve = null
+            this.debugToolbar.setMode('running')
+            this.broadcastState({ status: 'running' })
+            r('continue')
+            break
+          }
           if (this.animatePaused && this.animateResolve) {
             this.animatePaused = false
             this.debugToolbar.setMode('running')
@@ -276,6 +300,11 @@ export class ExecutionController {
           this.handleAccelerate()
           break
         case 'stop':
+          if (this.unknownResolve) {
+            const r = this.unknownResolve
+            this.unknownResolve = null
+            r('stop')
+          }
           if (this.animateResolve) {
             const resolve = this.animateResolve
             this.animateResolve = null
@@ -301,6 +330,7 @@ export class ExecutionController {
 
     this.resetExecution()
     this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
+    this.interpreter.setUnknownComponentPause((component, nodeId) => this.pauseOnUnknown(component, nodeId))
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
       this.broadcastOutput(text, 'stdout')
@@ -388,6 +418,7 @@ export class ExecutionController {
 
     this.resetExecution()
     this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
+    this.interpreter.setUnknownComponentPause((component, nodeId) => this.pauseOnUnknown(component, nodeId))
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
       this.broadcastOutput(text, 'stdout')
@@ -636,6 +667,7 @@ export class ExecutionController {
     this.animateAccelerateSkipIds = null
 
     this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
+    this.interpreter.setUnknownComponentPause((component, nodeId) => this.pauseOnUnknown(component, nodeId))
     this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
     this.interpreter.setOutputCallback((text: string) => {
       this.broadcastOutput(text, 'stdout')
@@ -753,6 +785,61 @@ export class ExecutionController {
    *
    * @returns 有沒有被擋下來
    */
+  /**
+   * **跑到一個看不懂的東西——停在那裡，讓人看得到、改得動，然後決定。**
+   *
+   * 使用者 2026-08-26 逐字：
+   * 「這不能直接跑，而是跑到那邊**要有斷點**，讓使用者**調整完狀態**才能繼續跑下去，
+   *  或是**直接停止**」。
+   *
+   * ## 它與斷點走同一條路，而理由不同
+   *
+   * ```
+   * 斷點            使用者自己放的     reason: 'breakpoint'
+   * 看不懂的東西     系統自己撞到的     reason: 'unknown-component'   ← 這一支
+   * ```
+   *
+   * 兩者的暫停機構是同一套（`animateResolve` 那條），**刻意不新做一套**——
+   * 新做一套的代價是「繼續」與「停止」要維護兩份，而它們遲早會不一樣。
+   *
+   * ## ⚠️ 這裡做的四件事，少一件這個暫停就沒有意義
+   *
+   * ```
+   * ① 說出是什麼            主控台一行，指名那顆元件
+   * ② 指到那一顆            broadcastAtNode —— 「哪裡不行」是學生要的答案
+   * ③ 打開變數面板          沒有狀態可看的話，「調整完狀態」是一句空話
+   * ④ 等一個【明確的】決定   而不是預設繼續
+   * ```
+   */
+  private async pauseOnUnknown(component: string, nodeId: string | null): Promise<'continue' | 'stop'> {
+    this.broadcastOutput(describeUnknownPause(component) + '\n', 'stderr')
+    this.broadcastAtNode(nodeId, true)
+    // 🔴 **帶著變數快照一起廣播**——暫停不是一個 step，所以沒有人會替它送快照。
+    //    實測：少了這一格，工具列出來了、積木亮了，**而變數面板是空的**。
+    this.broadcastState({
+      status: 'paused',
+      reason: 'unknown-component',
+      step: {
+        node: null as never,
+        nodeId: nodeId ?? '',
+        sourceRange: null,
+        outputLength: 0,
+        scopeSnapshot: this.interpreter?.snapshotScope() ?? [],
+      },
+    })
+    this.debugToolbar.show('paused')
+    this.panels.bottomPanel?.showTab('variables')
+    const decision = await new Promise<'continue' | 'stop'>((resolve) => {
+      this.unknownResolve = resolve
+    })
+    if (decision === 'continue') {
+      // 🔴 **繼續了要留下痕跡**——`principles.md:135`：降級必須**可見**。
+      //    少了這一行，輸出看起來就像那一行真的跑過了。
+      this.broadcastOutput(describeUnknownContinued(component) + '\n', 'stderr')
+    }
+    return decision
+  }
+
   private refuseIfBroken(tree: unknown): boolean {
     const verdict = canExecute(tree as SemanticNode)
     if (verdict.ok) return false

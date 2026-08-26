@@ -57,6 +57,10 @@ export class VariablePanel implements ViewHost {
    * 現在由視圖登錄表統一派送（`core/view-registry.ts` 的 `connectViews`）。
    */
   onExecutionState(event: ExecutionStateEvent): void {
+    // 🔴 只有**暫停中**才改得動——而它要在畫快照【之前】更新，
+    //    否則這一次的列還是照舊唯讀，使用者要等下一個事件才點得動。
+    this.paused = event.status === 'paused'
+    this.container.classList.toggle('paused', this.paused)
     const step = event.step
     if (step?.scopeSnapshot) {
       this.updateFromSnapshot(step.scopeSnapshot as VariableEntry[])
@@ -162,11 +166,59 @@ export class VariablePanel implements ViewHost {
         <td class="var-type">${this.escapeHtml(v.type)}</td>
         <td class="var-value">${this.escapeHtml(v.value)}</td>
       `
+      // 🔴 **暫停中才改得動**（2026-08-26）——「調整完狀態才能繼續」的那個「調整」。
+      //    ⚠️ 跑到一半改變數會讓同一支程式跑兩次結果不同，
+      //    而那正是 `concepts/模擬的誠實.md:23` 在擋的事。
+      if (this.paused) this.makeValueEditable(row, v)
       tbody.appendChild(row)
     }
     table.appendChild(tbody)
     return table
   }
+
+  /**
+   * **把一列的「值」變成可以打字的**——只在暫停中。
+   *
+   * ⚠️ 它**不是** `capabilities.editable`。那一格問的是「這個視圖能不能當**真相來源**」
+   * （`viewsWith('editable')` 就是「以此為準」那份清單），
+   * 而改一個執行期變數**不動語義樹一個字**。
+   *
+   * > **兩件事叫同一個名字，第一個誤會會出現在那份清單上。**
+   */
+  private makeValueEditable(row: HTMLElement, v: VariableEntry): void {
+    const cell = row.querySelector('.var-value') as HTMLElement | null
+    if (!cell) return
+    cell.classList.add('var-editable')
+    cell.title = '暫停中——可以改這個值'
+    cell.addEventListener('click', () => {
+      if (cell.querySelector('input')) return
+      const input = document.createElement('input')
+      input.className = 'var-value-input'
+      input.value = v.value
+      const commit = (): void => {
+        const next = input.value
+        cell.textContent = next
+        if (next !== v.value) this.editCb?.(v.name, next)
+      }
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { commit(); e.preventDefault() }
+        if (e.key === 'Escape') { cell.textContent = v.value; e.preventDefault() }
+      })
+      input.addEventListener('blur', commit)
+      cell.textContent = ''
+      cell.appendChild(input)
+      input.focus()
+      input.select()
+    })
+  }
+
+  /** 有人改了一個變數。**宿主把它接到匯流排上**——面板自己不認識執行器。 */
+  onEditValue(cb: ((name: string, value: string) => void) | null): void {
+    this.editCb = cb
+  }
+
+  private editCb: ((name: string, value: string) => void) | null = null
+  private paused = false
 
   private renderEmpty(): void {
     const table = document.createElement('table')
