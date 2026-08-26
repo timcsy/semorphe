@@ -9,7 +9,7 @@
  * 判準（`migrate-storage` 第 3／4／5 步）：冪等 · 只改確定的位置 · 表空時不亂丟。
  */
 import { describe, it, expect } from 'vitest'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15 } from '../../../src/migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16 } from '../../../src/migrations/block-shape-changes'
 import { UPGRADES, CURRENT_VERSION } from '../../../src/core/storage-version'
 
 const oldState = {
@@ -153,6 +153,17 @@ describe('v11 → v12：形狀變了的快取', () => {
 
     const up = UPGRADES[14]({ version: 14, code: 'cin >> x;\n', blocklyState: selectMode })
     expect(up.version).toBe(15)
+    expect(Object.keys(up.blocklyState as object)).toEqual([])
+  })
+
+  it('★ v16：兩顆格式化 I/O 也是同一個形狀（只有 extraState 變）', () => {
+    const st = { blocks: { blocks: [{
+      type: 'cpp_print_formatted', fields: { FORMAT: '%d' },
+      extraState: { args: [{ mode: 'compose' }] },
+    }] } }
+    expect(staleShapeIn(st, SHAPE_CHANGES_V16)).not.toBeNull()
+    const up = UPGRADES[15]({ version: 15, code: 'printf("%d", x);\n', blocklyState: st })
+    expect(up.version).toBe(16)
     expect(Object.keys(up.blocklyState as object)).toEqual([])
   })
 

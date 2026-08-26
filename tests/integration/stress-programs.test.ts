@@ -634,29 +634,31 @@ describe('Block Structure', () => {
     expect(forBlock.inputs.BODY).toBeDefined()
   })
 
-  it('printf blocks use compose mode for expressions', () => {
+  // 🔄 **2026-08-26：兩顆格式化 I/O 的每一格都是接點**——
+  //    `{args:[{mode,text}]}` 換成 `{itemCount}` ＋ `ARG_{i}`。
+  //    那個「select／compose 二選一」在左值接點化之後只剩「少一層巢狀」。
+  it('printf 的參數是運算式時，插在接點上', () => {
     const state = blocks(`
       printf("result=%d\\n", a + b);
     `)
     const printfBlock = state.blocks.blocks[0]
     expect(printfBlock.type).toBe('cpp_print_formatted')
     expect(printfBlock.fields.FORMAT).toBe('result=%d\\n')
-    // The a+b expression should be in compose mode
-    expect(printfBlock.extraState.args).toHaveLength(1)
-    expect(printfBlock.extraState.args[0].mode).toBe('compose')
-    expect(printfBlock.inputs.ARG_0).toBeDefined()
+    expect(printfBlock.extraState.args, '🔴 舊的記憶方式長回來了').toBeUndefined()
+    expect(printfBlock.extraState.itemCount).toBe(1)
+    expect(printfBlock.inputs.ARG_0.block.type).toBe('cpp_arithmetic')
   })
 
-  it('scanf blocks use select mode for variables', () => {
+  it('scanf 的每一個目標也是接點——`&x` 不再是一顆下拉', () => {
     const state = blocks(`
       scanf("%d %d", &x, &y);
     `)
     const scanfBlock = state.blocks.blocks[0]
     expect(scanfBlock.type).toBe('cpp_input_formatted')
     expect(scanfBlock.fields.FORMAT).toBe('%d %d')
-    expect(scanfBlock.extraState.args).toHaveLength(2)
-    expect(scanfBlock.extraState.args[0].mode).toBe('select')
-    expect(scanfBlock.extraState.args[1].mode).toBe('select')
+    expect(scanfBlock.extraState.itemCount).toBe(2)
+    expect(scanfBlock.inputs.ARG_0.block.fields.NAME).toBe('x')
+    expect(scanfBlock.inputs.ARG_1.block.fields.NAME, '🔴 第二格掉了').toBe('y')
   })
 })
 

@@ -52,6 +52,22 @@ function setMinusState(block: any, isAtMin: boolean): void {
 export interface VariadicSpec {
   /** 插槽名的樣板，`{i}` 會換成序號（來自 `dynamicRules.inputPattern`） */
   inputPattern: string
+  /**
+   * **HEAD 那個啞輸入的名字**（預設 `HEAD`）。
+   *
+   * 🔴 為什麼要能指定（2026-08-26）：命令式那些積木叫它 `FORMAT_ROW`／`LABEL`，
+   * 而比對護欄比的是**插槽名的清單**。名字對不上 → 永遠報 differ →
+   * **那顆命令式定義永遠退不了場**。
+   * ⚠️ 路線圖 2026-08-21 就記著這一條（「啞輸入的名字要對得上——建構子要能指定」）。
+   */
+  headInputName?: string
+  /**
+   * 每一個值插槽前面的一段文字（例如 `printf("%d", ␣a, ␣b)` 的逗號）。
+   *
+   * ⚠️ 它掛在**那個插槽自己**的前面，不是掛在前一格的尾巴
+   * ——後者在刪掉最後一格時會留下一個孤兒逗號。
+   */
+  slotPrefix?: string
   /** 第一個插槽前面的標籤（Blockly 訊息鍵，例如 `U_PRINT_MSG`） */
   labelKey?: string
   /** 訊息鍵查不到時的字（**沒有它就不放標籤**，不猜一個） */
@@ -148,7 +164,7 @@ export function defineVariadicBlock(type: string, spec: VariadicSpec): void {
       //      → 比對護欄永遠報 differ，那批命令式定義因此退不了場
       //
       // > **一個「把標籤掛在第一個資料上」的版面，在資料可以是零個的時候就崩了。**
-      const head = this.appendDummyInput('HEAD')
+      const head = this.appendDummyInput(spec.headInputName ?? 'HEAD')
       const label = spec.labelKey ? (msg[spec.labelKey] || spec.labelFallback) : spec.labelFallback
       if (label) head.appendField(label)
       if (spec.leadingField) {
@@ -175,6 +191,9 @@ export function defineVariadicBlock(type: string, spec: VariadicSpec): void {
     plus_: function (this: any) {
       const n = inputName(spec.inputPattern, this.itemCount_)
       const inp = this.appendValueInput(n)
+      // ⚠️ 前綴掛在**這一格自己**前面——掛在前一格尾巴的話，
+      //    刪掉最後一格會留下一個孤兒逗號。
+      if (spec.slotPrefix) inp.appendField(spec.slotPrefix)
       if (spec.check) inp.setCheck(spec.check)
       this.moveInputBefore(n, 'TAIL')
       this.itemCount_++

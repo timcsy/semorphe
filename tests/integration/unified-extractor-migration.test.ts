@@ -197,31 +197,32 @@ describe('Migration roundtrip: input with dynamicRules', () => {
 })
 
 describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
-  it('extract → component identity for scanf with select/compose args', () => {
+  /**
+   * 🔄 **2026-08-26：scanf／printf 的每一格都是接點**——
+   * `{args:[{mode,text}]}` 換成 `{itemCount}` ＋ `ARG_{i}`。
+   * 那個「select／compose 二選一」在左值接點化之後只剩「少一層巢狀」。
+   */
+  it('extract → scanf 的每一格都是接點，格式字串與兩個目標都保住', () => {
     const blockState = {
       type: 'cpp_input_formatted',
       id: 'sc1',
       fields: { FORMAT: '%d %f' },
       inputs: {
+        ARG_0: { block: { type: 'cpp_var_ref', id: 'v0', fields: { NAME: 'x' }, inputs: {} } },
         ARG_1: { block: { type: 'cpp_arithmetic', id: 'a1', fields: { OP: '+' }, inputs: {
           A: { block: { type: 'cpp_literal_number', id: 'n1', fields: { NUM: '1' }, inputs: {} } },
           B: { block: { type: 'cpp_literal_number', id: 'n2', fields: { NUM: '2' }, inputs: {} } },
         } } },
       },
-      extraState: {
-        args: [
-          { mode: 'select', text: 'x' },
-          { mode: 'compose' },
-        ],
-      },
+      extraState: { itemCount: 2 },
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:input_formatted')
     expect(result!.properties.format).toBe('%d %f')
     expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].componentId).toBe('cpp:var_ref')
-    expect(result!.children.args[1].componentId).toBe('cpp:arithmetic')
+    expect(result!.children.args[0].properties.name).toBe('x')
+    expect(result!.children.args[1].componentId, '🔴 運算式那一格掉了').toBe('cpp:arithmetic')
   })
 
   it('render → extract roundtrip for printf', () => {

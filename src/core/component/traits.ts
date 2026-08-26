@@ -78,6 +78,23 @@ export function isIndexedAccess(componentId: string): boolean {
 }
 
 /**
+ * `&` **取得到它的位址**嗎（`&x`／`&a[i]`／`&p->x`）。
+ *
+ * 🔴 為什麼需要它（2026-08-26）：`scanf("%d", &a[i])` 的產生器本來問的是
+ * 「它是不是 `variableRef`」，於是 `&a[i]` 的 `&` 掉了——來回轉換之後
+ * 變成 `scanf("%d", a[i])`，**編不過**。
+ *
+ * ⚠️ 而這一組**與「宣告了左值解法的那些」是同一組**
+ * （`interpreter/lvalue.ts` 的 `declareLvalue`）：
+ * **一個取得到位址的東西，就是一個寫得回去的位置。**
+ * 兩份宣告分開是因為它們住在不同的層（投影 vs 執行），
+ * 而它們該不該合併是一個開著的問題。
+ */
+export function isAddressable(componentId: string): boolean {
+  return componentTraits(componentId)?.addressable === true
+}
+
+/**
  * 找**宣告了這個性狀**的那顆元件身分。
  *
  * ⚠️ 找不到回 `undefined`——**不猜**。投影宣告寫 `wrapTrait: 'variableRef'`

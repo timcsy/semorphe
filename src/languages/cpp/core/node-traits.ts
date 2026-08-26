@@ -368,7 +368,9 @@ export function ioComponentFor(role: string, style: string): string | undefined 
  * **而過渡表 2026-08-11 空了**，於是兩份行為完全相同——
  * 第三十八條護欄（共用檔的殼與重複）當場指名。改成再匯出。
  */
-export { isIndexedAccess } from '../../../core/component/traits' 
+export { isIndexedAccess } from '../../../core/component/traits'
+// 🟢 `&` 取得到位址的那些（2026-08-26）——見核心那一份的說明。
+export { isAddressable } from '../../../core/component/traits' 
 
 /** 這顆是串流輸入嗎（`cin >> a >> b` 那種）。沒宣告＝不是。 */
 export function isStreamInput(componentId: string): boolean {

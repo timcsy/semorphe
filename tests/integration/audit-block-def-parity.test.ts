@@ -308,6 +308,8 @@ function fromDeclaration(type: string): Shape | null {
           tooltipFallback: typeof def.tooltip === 'string' && !def.tooltip.startsWith('%{BKY_')
             ? def.tooltip : undefined,
           leadingField: def.leadingField as { type: string; name: string } | undefined,
+          headInputName: def.headInputName as string | undefined,
+          slotPrefix: def.slotPrefix as string | undefined,
         } as never)
       }
     }

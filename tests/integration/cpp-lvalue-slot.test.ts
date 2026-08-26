@@ -217,4 +217,90 @@ describe('C++ 的左值是接點', () => {
     expect(node!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
     expect(node!.children.target[0].componentId).toBe('cpp:struct_at_member')
   })
+
+  /**
+   * 🔴 **`&a[i]` 的迴歸——而它不會出現在「答案對不對」那一欄。**
+   *
+   * 2026-08-26 把 `cpp:array_at` 的容器從字串屬性換成接點之後，
+   * `cpp:address_of` 還在讀 `properties.obj`，於是 `&arr[0]` 退到
+   * 「符號式取位址」那一支、拿不到名字、丟 `TYPE_MISMATCH: pointer`。
+   *
+   * ⚠️ 抓到它的是**第三十二條護欄的「只有參照跑得動」那一欄**（1 → 3）
+   * ——而**誤差本身仍然是 0**。
+   *
+   * > **一個「跑不動」的迴歸，不會出現在「答案對不對」那一欄
+   * > ——分子是 0，而分母悄悄少了兩段。**
+   */
+  it('🔴 `&a[i]` 取的是那一格的位址，而寫回去要影響原本的陣列', async () => {
+    expect(await run(`${IO}int main(){ int arr[3]; arr[0] = 10;\n`
+      + `int* ptr = &arr[0];\ncout << *ptr << endl;\n*ptr = *ptr + 5;\ncout << arr[0] << endl; }`))
+      .toBe('10\n15\n')
+  })
+
+  it('🔴 函式回傳 `&arr[i]`——跨作用域仍然指著同一格', async () => {
+    expect(await run(`${IO}int* firstPositive(int* a, int n) {\n`
+      + `  for (int i = 0; i < n; i++) { if (a[i] > 0) return &a[i]; }\n  return nullptr;\n}\n`
+      + `int main(){ int data[4] = {-1,-2,3,4}; int* p = firstPositive(data, 4);\n`
+      + `if (p) cout << *p << endl; }`))
+      .toBe('3\n')
+  })
+
+  /**
+   * 🔴 **`m[k]++` 的迴歸——而它是被【另一個缺陷】藏起來的。**
+   *
+   * `cpp:increment` 的運算元改成接點之後，`freq[c]++` 走 `resolvePlace`，
+   * 而 `cpp:map_at` **沒有宣告怎麼被寫回** → 丟「這個東西不能被指定值」。
+   *
+   * ⚠️ 沒有任何測試變紅。抓到它的是第三十二條護欄（行為的誤差），
+   * 而那條護欄當時正被一個壞掉的語料收集器藏著將近一半的語料。
+   *
+   * > **兩個缺陷疊在一起時，上面那個會讓下面那個看不見。**
+   */
+  it('🔴 `m[k]++` 與 `m[k] = v`——對應表的一格也是左值', async () => {
+    const M = '#include <iostream>\n#include <map>\nusing namespace std;\n'
+    expect(await run(`${M}int main(){ map<char,int> f; f['a']++; f['a']++; cout << f['a']; }`)).toBe('2')
+    expect(await run(`${M}int main(){ map<char,int> f; f['a'] = 7; cout << f['a']; }`)).toBe('7')
+  })
+
+  /**
+   * 🔴 **`for (char c : s)` 迴圈一次都不跑——而它沒有出聲。**
+   *
+   * `cpp:loop_range` 的執行器只認 `array`，字串不在內。
+   *
+   * > **一個「條件沒中就整段跳過」的執行器，
+   * > 把「還沒支援」變成了「安靜地什麼都不做」。**
+   */
+  it('🔴 字串也能 range-for，而每一格是一個字元', async () => {
+    const S2 = '#include <iostream>\n#include <string>\nusing namespace std;\n'
+    expect(await run(`${S2}int main(){ string s = "abc"; for (char c : s) cout << c; }`)).toBe('abc')
+  })
+
+  /**
+   * 🔴 **`std::map` 是有序的，而我們是插入序**——而它不會報錯，只是順序不對。
+   */
+  it('🔴 對應表走訪照鍵的順序，不是插入的順序', async () => {
+    const M = '#include <iostream>\n#include <map>\nusing namespace std;\n'
+    expect(await run(`${M}int main(){ map<char,int> f; f['r']=1; f['a']=2; f['m']=3;\n`
+      + `for (auto& p : f) cout << p.first; }`)).toBe('amr')
+  })
+
+  /**
+   * 🔴 **`scanf("%d", &a[i])` 的 `&` 掉了——而它編不過。**
+   *
+   * 產生器本來問的是「這個參數是不是 `variableRef`」，於是只有 `&x` 加得回 `&`。
+   * 而它的另一半條件 `!a.properties.noAddr` **從來沒有人設過那個屬性**。
+   *
+   * > **一個永遠不會成立的條件，讀起來像一條規則，而它什麼都沒管到。**
+   *
+   * 🟢 修法是問一個**宣告的性狀**：`traits.addressable`
+   * ——而那一組正好就是「宣告了左值解法」的那一組：
+   * **一個取得到位址的東西，就是一個寫得回去的位置。**
+   */
+  it('🔴 `scanf` 的每一個目標都要帶回 `&`——包含 `&a[i]`', () => {
+    const src = '#include <cstdio>\nint main() {\n  int a[3];\n  int i = 0;\n  int x, y;\n'
+      + '  scanf("%d %d", &x, &y);\n  scanf("%d", &a[i]);\n'
+      + '  printf("%d %d\\n", x, y);\n  printf("sum=%d\\n", x + y);\n  return 0;\n}'
+    const out = generateCode(lift(src), 'cpp', googleStyle as unknown as StylePreset)
+    expect(out.trim()).toBe(src.trim())
+  })
 })

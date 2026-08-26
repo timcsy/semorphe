@@ -48,6 +48,42 @@ export function setPairValue(pair: RuntimeValue, value: RuntimeValue): void {
   if (pair.type === 'object' && pair.value instanceof Map) pair.value.set('second', value)
 }
 
+/**
+ * **把一個新項目插到它該在的位置**——`std::map` 是**有序的**。
+ *
+ * 🔴 2026-08-26：在此之前所有插入都是 `push`（插入序），於是
+ * `for (auto& p : freq)` 走出來的順序與參照編譯器不同
+ * ——`g: 2 / m: 2 / r: 2` 變成 `r: 2 / g: 2 / m: 2`。
+ *
+ * ⚠️ 而它**不會報錯**：程式跑完了，只是順序不對。
+ * 抓到它的是第三十二條護欄（行為的誤差），而在那之前它被一個
+ * 壞掉的語料收集器藏著。
+ *
+ * ⚠️ **比較用什麼**：數值鍵比數值、其餘比字串——與 `mapFind` 的鍵判定
+ * （`valueToString`）保持同一個口徑，否則「找得到」與「排在哪」會不一致。
+ */
+export function mapInsertSorted(pairs: RuntimeValue[], pair: RuntimeValue): number {
+  const parts = pairParts(pair)
+  if (!parts) { pairs.push(pair); return pairs.length - 1 }
+  const keyOf = (p: RuntimeValue): { n: number | null; s: string } => {
+    const k = pairParts(p)?.key
+    const s = k ? valueToString(k) : ''
+    const n = k && (k.type === 'int' || k.type === 'double' || k.type === 'char')
+      ? Number(k.value) : null
+    return { n, s }
+  }
+  const a = keyOf(pair)
+  let i = 0
+  while (i < pairs.length) {
+    const b = keyOf(pairs[i])
+    const after = a.n !== null && b.n !== null ? a.n > b.n : a.s > b.s
+    if (!after) break
+    i++
+  }
+  pairs.splice(i, 0, pair)
+  return i
+}
+
 export function mapFind(pairs: RuntimeValue[], keyVal: RuntimeValue): number {
   const keyStr = valueToString(keyVal)
   for (let i = 0; i < pairs.length; i++) {

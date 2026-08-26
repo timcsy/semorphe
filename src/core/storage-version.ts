@@ -13,11 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../migrations/block-type-migrations'
 import { mergedIdentities } from '../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15 } from '../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16 } from '../migrations/block-shape-changes'
 import type { ShapeChange } from '../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 15
+export const CURRENT_VERSION = 16
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -361,6 +361,8 @@ export const UPGRADES: Record<number, Upgrade> = {
   // 14 → 15：**`cin >>` 換建構子**——⚠️ 這一筆**沒有欄位改變**，
   //    靠的是 `retiredExtraState`（`{args}` → `{itemCount}`）。
   14: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V15, 15),
+  // 15 → 16：**兩顆格式化 I/O 也換建構子**——與 v15 同一個形狀。
+  15: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V16, 16),
 }
 
 /**

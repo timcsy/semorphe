@@ -1,6 +1,6 @@
 /** `cpp:map_assign` 的 **execute** 路——從共用檔原封剪過來（批次第十批：assignment_expression 的分支）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { mapFind, makePair, setPairValue } from '../../../languages/cpp/core/runtime/map'
+import { mapFind, makePair, setPairValue, mapInsertSorted } from '../../../languages/cpp/core/runtime/map'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /**
@@ -25,7 +25,8 @@ export function registerExecute(register: (component: string, executor: Componen
       if (map.type !== 'array' || !Array.isArray(map.value)) return
       const idx = mapFind(map.value, keyVal)
       if (idx === -1) {
-        map.value.push(makePair(keyVal, val))
+        // 🔴 `std::map` 是**有序的**——插到該在的位置，不是接在後面（2026-08-26）
+        mapInsertSorted(map.value, makePair(keyVal, val))
         return
       }
       setPairValue(map.value[idx], val)

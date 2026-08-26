@@ -7,23 +7,23 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_print_formatted",
-      "message0": "%{BKY_C_PRINTF_MSG0}",
-      "args0": [
-        {
-          "type": "field_input",
-          "name": "FORMAT",
-          "text": "%d\\n"
-        },
-        {
-          "type": "field_input",
-          "name": "ARGS",
-          "text": ", x"
-        }
-      ],
+      "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#5CB1D6",
-      "tooltip": "%{BKY_C_PRINTF_TOOLTIP}"
+      "tooltip": "%{BKY_C_PRINTF_TOOLTIP}",
+      "builder": "variadic",
+      "labelKey": "C_PRINTF_FORMAT_LABEL",
+      "labelFallback": "格式化輸出 (printf)",
+      "headInputName": "FORMAT_ROW",
+      "leadingField": {
+        "type": "field_input",
+        "name": "FORMAT",
+        "text": "%d\\n"
+      },
+      "slotPrefix": ",",
+      "slotCheck": "Expression",
+      "minCount": 1
     },
     "codeTemplate": {
       "pattern": "printf(\"${FORMAT}\"${ARGS});",
@@ -50,20 +50,12 @@
       "statementInputs": {},
       "dynamicRules": [
         {
-          "countSource": "args.length",
+          "countSource": "itemCount",
           "childSlot": "args",
-          "modeSource": "args[{i}].mode",
-          "modes": {
-            "select": {
-              "field": "args[{i}].text",
-              "wrapTrait": "variableRef"
-            },
-            "compose": {
-              "input": "ARG_{i}"
-            }
-          }
+          "inputPattern": "ARG_{i}"
         }
       ]
-    }
+    },
+    "_why": "🟢 **2026-08-26：改用宣告式的可變參數建構子**（`builder: \"variadic\"`）。\n🪦 在此之前這份宣告把參數**擠進一個文字欄位**（`ARGS: field_input`），而 `component.json` 說 `children: [\"args\"]`——**參數在語義上是子節點**。\n也就是說：這一刀不是「刪掉就降」，是**判哪一邊對**（`retire-imperative-block` 第 1 步）\n——命令式那份的可變插槽是對的，而宣告那份錯了。\n⚠️ 而每一格從「變數下拉／接點二選一」變成**單純的接點**，理由與 `cin >>` 同一條：\n左值接點化之後那個 select 模式只剩「少一層巢狀」，而它的代價是同族的積木投影不一致。\n🟢 缺的兩個機制當天補上：`headInputName`（`FORMAT_ROW`）與 `slotPrefix`（逗號）。"
   }
 ]

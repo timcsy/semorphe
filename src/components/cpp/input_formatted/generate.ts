@@ -2,7 +2,7 @@
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
 // ⚠️ 問**性狀**不問身分——一顆膠囊裡寫另一顆的身分，反向檢查會指名。
-import { isVariableRef } from '../../../languages/cpp/core/node-traits'
+import { isAddressable } from '../../../languages/cpp/core/node-traits'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   // cpp_input_formatted with structured args + auto & for simple vars (0 or more)
@@ -12,11 +12,17 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       if (argNodes.length > 0) {
         const args = argNodes.map(a => {
           const expr = generateExpression(a, ctx)
-          // var_ref nodes need & prefix (unless array/string/pointer)
-          if (isVariableRef(a.componentId) && !a.properties.noAddr) {
-            return `&${expr}`
-          }
-          // no-addr var_ref, or compose/custom: user already controls &
+          // 🔴 **問「取得到位址嗎」，不問「它是不是一個變數參照」**（2026-08-26）。
+          //
+          // 這裡本來寫 `isVariableRef(a.componentId) && !a.properties.noAddr`，
+          // 而那有兩個問題：
+          //   ① `&a[i]` 的 `&` 掉了——`scanf("%d", &a[i])` 來回變成
+          //      `scanf("%d", a[i])`，**編不過**（抓到它的是來回轉換的實測）
+          //   ② `noAddr` 這個屬性**從來沒有人設過**——一個永遠是 undefined 的條件
+          //
+          // > **一個永遠不會成立的條件，讀起來像一條規則，而它什麼都沒管到。**
+          if (isAddressable(a.componentId)) return `&${expr}`
+          // 其餘（運算式、已經是位址的東西）照原樣
           return expr
         })
         const expr = `scanf("${format}", ${args.join(', ')})`

@@ -36,12 +36,23 @@ export function registerExecute(register: (component: string, executor: Componen
     // 違規（「膠囊裡混進別顆元件」＋「那顆元件出現在自己資料夾外」）——**它是對的**：
     // 一顆元件認得另一顆的身分，就是把兩者黏死。
     //
-    // 「有 `obj` 屬性又有 `index` 接點」是**索引存取**這件事的結構特徵，
+    // 「有一個**容器**又有 `index` 接點」是**索引存取**這件事的結構特徵，
     // 而任何滿足它的節點（今天是 `array_at`，明天可能是別的容器）都適用。
-    const objName = String(target.properties.obj ?? '')
+    //
+    // 🔴 **2026-08-26：容器從字串屬性換成接點**（左值那一輪）。
+    //    這裡本來只讀 `properties.obj`，於是 `&arr[0]` 當場退到下面的
+    //    「符號式」那一支、拿不到名字、丟 `TYPE_MISMATCH: pointer`。
+    //    ⚠️ 抓到它的是**第三十二條（行為的誤差）的「只有參照跑得動」那一欄**
+    //    ——它從 1 升到 3，而**誤差本身仍然是 0**：一段跑不動的程式不會產生誤差。
+    //
+    // > **一個「跑不動」的迴歸，不會出現在「答案對不對」那一欄。**
+    const objNode = (target.children.obj ?? [])[0]
+    const objName = String(objNode?.properties?.name ?? target.properties.obj ?? '')
     const idxNode = (target.children.index ?? [])[0]
-    if (objName && idxNode) {
-      const base = ctx.scope.has(objName) ? ctx.scope.get(objName) : null
+    if ((objNode || objName) && idxNode) {
+      const base = objNode
+        ? await ctx.evaluate(objNode)
+        : (ctx.scope.has(objName) ? ctx.scope.get(objName) : null)
       if (base && base.type === 'array' && Array.isArray(base.value)) {
         const i = Number((await ctx.evaluate(idxNode)).value)
         if (!Number.isInteger(i) || i < 0 || i >= base.value.length) {

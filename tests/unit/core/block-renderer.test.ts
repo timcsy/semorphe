@@ -134,6 +134,14 @@ describe('block-renderer', () => {
     expect(block.inputs.EXPR1).toBeDefined()
   })
 
+  /**
+   * 🔄 **2026-08-26：兩顆格式化 I/O 改用宣告式的可變參數建構子**——
+   * 每一格從「變數下拉／接點二選一」（`{args:[{mode,text}]}`）
+   * 變成**單純的接點**（`{itemCount}` ＋ `ARG_{i}`）。
+   *
+   * 理由與 `cin >>` 同一條：左值接點化之後那個 select 模式只剩
+   * 「少一層巢狀」，而它的代價是同族的積木投影不一致。
+   */
   it('should render cpp_printf with format and args', () => {
     const printf = createNode('cpp:print_formatted', { format: '%.2f\\n' }, {
       args: [createNode('cpp:var_ref', { name: 'x' })],
@@ -142,10 +150,9 @@ describe('block-renderer', () => {
     const block = state.blocks.blocks[0]
     expect(block.type).toBe('cpp_print_formatted')
     expect(block.fields.FORMAT).toBe('%.2f\\n')
-    expect(block.extraState).toBeDefined()
-    expect(block.extraState.args).toHaveLength(1)
-    expect(block.extraState.args[0].mode).toBe('select')
-    expect(block.extraState.args[0].text).toBe('x')
+    expect(block.extraState.args, '🔴 舊的記憶方式長回來了').toBeUndefined()
+    expect(block.extraState.itemCount).toBe(1)
+    expect(block.inputs.ARG_0.block.fields.NAME).toBe('x')
   })
 
   it('should render cpp_printf with no args', () => {
@@ -154,8 +161,9 @@ describe('block-renderer', () => {
     const block = state.blocks.blocks[0]
     expect(block.type).toBe('cpp_print_formatted')
     expect(block.fields.FORMAT).toBe('hello\\n')
-    expect(block.extraState).toBeDefined()
-    expect(block.extraState.args).toHaveLength(0)
+    // ⚠️ 沒有參數時**不設 itemCount**（渲染器的 `inputPattern` 路遇到空陣列就跳過）
+    //    ——載入時會落回 `minCount`。
+    expect(block.inputs.ARG_0).toBeUndefined()
   })
 
   it('should render cpp_scanf with format and args', () => {
@@ -169,13 +177,12 @@ describe('block-renderer', () => {
     const block = state.blocks.blocks[0]
     expect(block.type).toBe('cpp_input_formatted')
     expect(block.fields.FORMAT).toBe('%d %d')
-    expect(block.extraState).toBeDefined()
-    expect(block.extraState.args).toHaveLength(2)
-    expect(block.extraState.args[0]).toEqual({ mode: 'select', text: 'a' })
-    expect(block.extraState.args[1]).toEqual({ mode: 'select', text: 'b' })
+    expect(block.extraState.itemCount).toBe(2)
+    expect(block.inputs.ARG_0.block.fields.NAME).toBe('a')
+    expect(block.inputs.ARG_1.block.fields.NAME, '🔴 第二格掉了').toBe('b')
   })
 
-  it('should render cpp_printf with non-var_ref args in compose mode', () => {
+  it('🎯 參數是運算式時走同一條路——不再需要「另一種模式」', () => {
     const printf = createNode('cpp:print_formatted', { format: 'sum=%d\\n' }, {
       args: [createNode('cpp:arithmetic', { operator: '+' }, {
         left: [createNode('cpp:var_ref', { name: 'x' })],
@@ -184,12 +191,8 @@ describe('block-renderer', () => {
     })
     const state = renderToBlocklyState(makeProgram(printf))
     const block = state.blocks.blocks[0]
-    expect(block.type).toBe('cpp_print_formatted')
     expect(block.fields.FORMAT).toBe('sum=%d\\n')
-    expect(block.extraState.args).toHaveLength(1)
-    expect(block.extraState.args[0].mode).toBe('compose')
-    // The expression block should be in inputs.ARG_0
-    expect(block.inputs.ARG_0).toBeDefined()
+    expect(block.extraState.itemCount).toBe(1)
     expect(block.inputs.ARG_0.block.type).toBe('cpp_arithmetic')
   })
 

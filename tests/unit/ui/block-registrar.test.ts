@@ -23,10 +23,14 @@ describe('BlockRegistrar', () => {
     const filePath = path.resolve(__dirname, '../../../src/ui/block-registrar.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     const expectedTypes = [
-       'cpp_input', 'cpp_var_declare',
-      'cpp_func_def', 'cpp_print_formatted', 'cpp_input_formatted', 'cpp_loop_count',
-      'cpp_raw_code',
+      'cpp_var_declare', 'cpp_func_def', 'cpp_loop_count', 'cpp_raw_code',
     ]
+    // 🪦 **`cpp_input`（2026-08-26）· `cpp_print_formatted`／`cpp_input_formatted`
+    //    （2026-08-26）退場**——三顆都改用 `builder: "variadic"`。
+    //    ⚠️ 而這一刀**不是「一模一樣了」，是判哪一邊對**：
+    //    宣告那份把參數擠進一個文字欄位，而 `children: ['args']` 說它們是子節點。
+    //    每一格因此從「變數下拉／接點二選一」變成單純的接點
+    //    ——理由與 `cin >>` 同一條（左值接點化之後那個模式失去了理由）。
     // 🪦 **`cpp_func_call`（含運算式形態）於 2026-08-24 退場**——改用
     //    `builder: "variadic"` ＋ 活下拉 ＋ 具名的 `LABEL` 列。
     // 🪦 **`cpp_if` 於 2026-08-24 退場**（比對護欄確認一模一樣，換成 `branchList` 宣告）。

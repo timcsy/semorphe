@@ -194,3 +194,30 @@ export const SHAPE_CHANGES_V15: ShapeChange[] = [
     why: '同上——運算式形態。',
   },
 ]
+
+/**
+ * `v15 → v16`：**兩顆格式化 I/O 也改用可變參數建構子**。
+ *
+ * 與 v15 同一個形狀：`{ args: [{ mode, text }] }` → `{ itemCount }`，
+ * 而 `select` 模式那些多一個 `SEL_i` 欄位、`compose` 模式的一個欄位都沒有。
+ */
+export const SHAPE_CHANGES_V16: ShapeChange[] = [
+  {
+    blockType: 'cpp_print_formatted',
+    retiredFields: ['SEL_0'],
+    retiredExtraState: ['args'],
+    why: '`printf` 的每一格從「變數下拉／接點二選一」變成單純的接點。',
+  },
+  {
+    blockType: 'cpp_input_formatted',
+    retiredFields: ['SEL_0'],
+    retiredExtraState: ['args'],
+    why: '同上——`scanf`。',
+  },
+  {
+    blockType: 'cpp_input_formatted_expression',
+    retiredFields: ['SEL_0'],
+    retiredExtraState: ['args'],
+    why: '同上——運算式形態。',
+  },
+]

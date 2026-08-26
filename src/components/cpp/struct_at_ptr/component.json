@@ -15,6 +15,9 @@
   ],
   "children": {},
   "role": "expression",
+  "traits": {
+    "addressable": true
+  },
   "owner": "(core)",
   "paths": {
     "render": "./forms/blocks.json",
@@ -22,5 +25,6 @@
     "generate": "./generate.ts",
     "execute": "./execute.ts",
     "lift": "./lift.ts"
-  }
+  },
+  "_addressable_why": "🟢 **`&` 取得到位址的那些**（2026-08-26）——`scanf(\"%d\", &a[i])` 的產生器要問這個。\n⚠️ 它與「宣告了左值解法的那些」**是同一組**（`declareLvalue`）：\n**一個取得到位址的東西，就是一個寫得回去的位置。**\n🔴 而在此之前產生器問的是「它是不是 `variableRef`」，於是 `&a[i]` 的 `&` 掉了\n——`scanf(\"%d\", &a[i])` 來回轉換變成 `scanf(\"%d\", a[i])`，**編不過**。"
 }

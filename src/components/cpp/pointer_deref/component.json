@@ -16,7 +16,9 @@
   },
   "traits": {
     "precedence": 14,
-    "prefixOperator": true
+    "prefixOperator": true,
+    "addressable": true
   },
-  "_traits_why": "**優先級與「我是前綴符號」是我自己的性質**，不是共用排版表該列的身分。"
+  "_traits_why": "**優先級與「我是前綴符號」是我自己的性質**，不是共用排版表該列的身分。",
+  "_addressable_why": "🟢 **`&` 取得到位址的那些**（2026-08-26）——`scanf(\"%d\", &a[i])` 的產生器要問這個。\n⚠️ 它與「宣告了左值解法的那些」**是同一組**（`declareLvalue`）：\n**一個取得到位址的東西，就是一個寫得回去的位置。**\n🔴 而在此之前產生器問的是「它是不是 `variableRef`」，於是 `&a[i]` 的 `&` 掉了\n——`scanf(\"%d\", &a[i])` 來回轉換變成 `scanf(\"%d\", a[i])`，**編不過**。"
 }
