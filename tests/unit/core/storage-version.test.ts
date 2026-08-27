@@ -66,12 +66,16 @@ function savedState(version = CURRENT_VERSION, extra: Record<string, unknown> = 
 }
 
 describe('欄位清單由編譯器釘住', () => {
-  it('SAVED_STATE_FIELDS 是 12 個欄位', () => {
+  it('SAVED_STATE_FIELDS 是 13 個欄位', () => {
     // 守的是「有人把 satisfies 拿掉之後清單縮水」
     // ⚠️ 11 → 12（2026-08-17，spec 136）：新增 `targetId`。
     // **上調是刻意的**——目標取代了「課程清單 ＋ 風格」兩次分開的選擇，
     // 而存檔要記得使用者選的是哪個目標。舊存檔沒有這一格，還原時回退到 `topicId`。
-    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(12)
+    // ⚠️ 12 → 13（2026-08-27，v17）：新增 `flowLayout`——流程節點手放過的位置。
+    // **上調是刻意的**：在此之前那份佈局只活在記憶體裡，重新整理就沒了。
+    // 🔴 它與 `blocklyState` 同桶（sideCar）而**性質不同**：積木狀態導得出來
+    // （從程式碼重 lift）＝ 快取，而**沒有人算得出使用者想把盒子放哪** ＝ 狀態。
+    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(13)
   })
 
   it('REQUIRED_FIELDS 是 SAVED_STATE_FIELDS 的子集', () => {

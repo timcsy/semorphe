@@ -142,39 +142,70 @@ export function allKeys(k: KeyedNode, sameLineIndex: number): string[] {
 }
 
 /**
- * 把「改動前的節點」對到「改動後的節點」。
+ * 存檔裡的一筆手放過的位置。
  *
- * 回傳 `舊路徑 → 新節點 id`。對不到的**不在裡面**——呼叫端要看得見那件事。
+ * 🔴 `keys` 是那顆節點的三把鑰匙，**不是 `nodeId`**——id 重開之後一個都不會留。
  */
-export function matchNodes(before: KeyedNode[], after: KeyedNode[]): Map<string, string> {
-  const idxA = sameLineIndexes(before)
-  const idxB = sameLineIndexes(after)
-  /** 一個鍵在這一側出現幾次——出現超過一次就是曖昧，不算命中。 */
-  const tally = (list: KeyedNode[], idx: number[]): Map<string, number> => {
+export interface PlacedEntry {
+  keys: string[]
+  x: number
+  y: number
+}
+
+/** 一批節點各自的三把鑰匙——**存檔存的就是這個**（不是 `nodeId`，它重開就變了）。 */
+export function keysOfNodes(nodes: KeyedNode[]): string[][] {
+  const idx = sameLineIndexes(nodes)
+  return nodes.map((k, i) => allKeys(k, idx[i]))
+}
+
+/**
+ * **用鑰匙去配**——`before` 只給鑰匙，不給節點。
+ *
+ * 🔴 它是 `matchNodes` 與**存檔還原**共用的那一份實作。
+ * 存檔那條路手上沒有舊節點（只有存下來的鑰匙），而如果為它另寫一份配對，
+ * 兩份的「曖昧怎麼算」遲早會分岔——而分岔的症狀是
+ * 「編輯時對得回去，重開之後對不回去」，看起來像**兩個不同的缺陷**。
+ *
+ * 回傳 `before 的索引 → after 的節點 id`。配不到的**不在裡面**。
+ */
+export function matchByKeys(before: string[][], after: KeyedNode[]): Map<number, string> {
+  const afterKeys = keysOfNodes(after)
+  const tally = (lists: string[][]): Map<string, number> => {
     const m = new Map<string, number>()
-    list.forEach((k, i) => allKeys(k, idx[i]).forEach((key) => m.set(key, (m.get(key) ?? 0) + 1)))
+    for (const keys of lists) for (const k of keys) m.set(k, (m.get(k) ?? 0) + 1)
     return m
   }
-  const countA = tally(before, idxA)
-  const countB = tally(after, idxB)
+  const countA = tally(before)
+  const countB = tally(afterKeys)
   const byKey = new Map<string, KeyedNode>()
   after.forEach((k, i) => {
-    for (const key of allKeys(k, idxB[i])) {
-      if (countB.get(key) === 1) byKey.set(key, k)
-    }
+    for (const key of afterKeys[i]) if (countB.get(key) === 1) byKey.set(key, k)
   })
-  const out = new Map<string, string>()
+  const out = new Map<number, string>()
   const taken = new Set<string>()
-  before.forEach((k, i) => {
-    for (const key of allKeys(k, idxA[i])) {
+  before.forEach((keys, i) => {
+    for (const key of keys) {
+      // ⚠️ 曖昧的鍵一律不算命中——**寧可對不回去，不要對到別人身上**。
       if (countA.get(key) !== 1) continue
       const hit = byKey.get(key)
       if (!hit || taken.has(hit.node.id)) continue
-      out.set(k.node.id, hit.node.id)
+      out.set(i, hit.node.id)
       taken.add(hit.node.id)
       return
     }
   })
+  return out
+}
+
+/**
+ * 把「改動前的節點」對到「改動後的節點」。
+ *
+ * 回傳 `舊 id → 新 id`。對不到的**不在裡面**——呼叫端要看得見那件事。
+ */
+export function matchNodes(before: KeyedNode[], after: KeyedNode[]): Map<string, string> {
+  const byIndex = matchByKeys(keysOfNodes(before), after)
+  const out = new Map<string, string>()
+  for (const [i, newId] of byIndex) out.set(before[i].node.id, newId)
   return out
 }
 

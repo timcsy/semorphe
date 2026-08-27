@@ -17,6 +17,25 @@ export async function freshApp(page: Page): Promise<void> {
 }
 
 /**
+ * 乾淨開一次，**而後面的 `page.reload()` 不會再清掉存檔**。
+ *
+ * 🔴 `freshApp` 用的是 `addInitScript`，而那個腳本**每一次載入都跑**
+ * ——包括 `page.reload()`。所以任何「存了 → 重新整理 → 還在嗎」的測試，
+ * 用 `freshApp` 會被它自己清掉，而症狀是「還原之後是空的」，
+ * 看起來像產品壞了。
+ *
+ * > **一個「每次載入都重置」的前置動作，讓「重新整理之後還在嗎」問不出來。**
+ *
+ * ⚠️ 這一支改成**只清一次**（進站前清，之後不再掛腳本）。
+ */
+export async function appKeepingStorage(page: Page): Promise<void> {
+  await page.goto('/')
+  await page.evaluate(() => window.localStorage.clear())
+  await page.reload()
+  await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+}
+
+/**
  * 打程式碼並讓它變成規範格式。
  *
  * ⚠️ **一定要打單行**：多行輸入會被 Monaco 的自動補括號弄壞

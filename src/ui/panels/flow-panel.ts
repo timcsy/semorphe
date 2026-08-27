@@ -43,7 +43,10 @@ import { buildNodeGraph, type NodeGraph, type GraphNode, type GraphPort } from '
 import { labelSourceFromSpecs, collapseBlockMessage, flowTitle, type FlowLabelSource } from '../../core/flow/vocabulary'
 import { paletteFromToolbox, type PaletteItem } from '../../core/flow/palette'
 import { presetTree, presetKey, presetSuffixKey } from '../../core/flow/presets'
-import { walkWithPath, matchNodes, type KeyedNode } from '../../core/flow/layout-key'
+import {
+  walkWithPath, matchNodes, matchByKeys, keysOfNodes, type KeyedNode,
+} from '../../core/flow/layout-key'
+import type { PlacedEntry } from '../../core/flow/layout-key'
 import { tryConnect, tryReorder, refusalKeyOf, type RefusalReason } from '../../core/flow/connect'
 import { bodySlotsOf } from '../../core/component/traits'
 import { msg } from '../../core/messages'
@@ -710,6 +713,8 @@ export class FlowPanel implements ViewHost {
     this.paint()
     // 剛從 palette 放下的那一顆要落在手放開的地方——**要等它畫出來才算得出偏移**。
     this.applyPendingDrop()
+    // 存檔還原的那一份——**等到有節點了才套得起來**（見 `restoreLayout`）。
+    this.applyPendingLayout()
     // ⚠️ **快照要在最後拍**：下一次重建要拿「這一次的樹 ＋ 這一次的行號對映」去配對。
     this.prevKeyed = this.keyedNodes()
   }
@@ -742,6 +747,22 @@ export class FlowPanel implements ViewHost {
     const pairs = matchNodes(this.prevKeyed, now)
     // 沒有任何一顆配得上 → 這是換了一份程式，不是一次編輯。不出聲，讓它重排。
     if (pairs.size === 0) return
+    /**
+     * **這次到底是「編輯」還是「換了一份程式」**（2026-08-27 實測補）。
+     *
+     * 第一版只擋「一顆都沒配上」，而**換掉整份程式時通常還是配得上幾顆**
+     * （`cpp:program` 一定在，字面量也常撞），於是它跳出
+     * 「有 4 顆節點對不回原本的位置」——**而使用者剛剛貼了一份新程式**。
+     *
+     * > **一條在正常操作下也會響的警告，會被訓練成沒有人看
+     * > ——而那時它報的真問題也一起被忽略了。**
+     *
+     * ⚠️ 判準是**整棵樹的配對率**，而它是一個門檻值（沒有更好的辦法）：
+     * 大半配得上 ＝ 一次編輯（掉了位置值得說）；大半配不上 ＝ 換了一份程式。
+     * **代價說得出來**：改動幅度極大的一次「編輯」會被當成換程式而不出聲。
+     */
+    const matchRate = pairs.size / Math.max(this.prevKeyed.length, now.length)
+    const replaced = matchRate < 0.5
     const next = new Map<string, Placed>()
     let lost = 0
     for (const [oldId, off] of this.offsets) {
@@ -763,7 +784,7 @@ export class FlowPanel implements ViewHost {
     //    「刪除不再誤報」，而刪除是每天都在做的事。
     const deleted = Math.max(0, this.prevKeyed.length - now.length)
     const unexplained = lost - deleted
-    if (unexplained > 0) {
+    if (unexplained > 0 && !replaced) {
       this.showNotice(
         msg('FLOW_LAYOUT_LOST', '有 {n} 顆節點在這次編輯之後對不回原本的位置，它們回到自動排版。')
           .replace('{n}', String(unexplained)),
@@ -1261,6 +1282,66 @@ export class FlowPanel implements ViewHost {
     const node = this.graph?.nodes.find((n) => n.id === id)
     const base = node ? this.posOf(node) : { x: 0, y: 0 }
     this.offsets.set(id, { x: base.x + dx, y: base.y + dy })
+    this.paint()
+  }
+
+  /**
+   * **把手放過的位置存起來**——存的是**鑰匙**，不是 `nodeId`。
+   *
+   * 🔴 `nodeId` 重開之後**一個都不會留**（`generateId()` 帶著計數器與時戳），
+   * 所以存 id 等於存一份下次讀不懂的東西。存下來的是那顆節點的三把鑰匙
+   * （內容／行號／路徑），還原時用同一支配對器對回去。
+   *
+   * ⚠️ 只存**手放過的**。沒放過的節點由自動排版決定，存了只是雜訊
+   * ——而且會讓 side-car 隨程式長度膨脹。
+   */
+  saveLayout(): PlacedEntry[] {
+    if (this.offsets.size === 0) return []
+    const nodes = this.keyedNodes()
+    const keys = keysOfNodes(nodes)
+    const out: PlacedEntry[] = []
+    nodes.forEach((k, i) => {
+      const at = this.offsets.get(k.node.id)
+      if (at) out.push({ keys: keys[i], x: at.x, y: at.y })
+    })
+    return out
+  }
+
+  /**
+   * **把存下來的位置放回去**。
+   *
+   * ⚠️ 對不回去的**就不放**——回自動排版。那是 `vision.md` 的驗收條款
+   * 「**side-car 刪掉 ＝ 自動排版（不是壞掉）**」的同一條線：
+   * 一份對不上的佈局與一份不存在的佈局，**結果必須一樣**。
+   *
+   * 🟢 而它**不需要 `codeHash` 那種失效條件**（`blocklyState` 需要）：
+   * 這裡的鑰匙是內容比對，對不上自己就退回自動排版——**失效條件內建在配對裡**。
+   */
+  restoreLayout(entries: PlacedEntry[]): void {
+    if (!Array.isArray(entries) || entries.length === 0) return
+    // ⚠️ **掛起來，不要當場套**：還原時樹通常還沒到（它在 `syncCodeToBlocks`
+    //    之後才進來）。當場套的話節點是空的，這一份就白丟了。
+    //    🔴 而**時機不該由呼叫端猜**——呼叫端要知道「同步什麼時候完成」，
+    //    那是一個它不該知道的東西。所以由面板自己在下一次有節點時套。
+    this.pendingLayout = entries
+    if (this.graph && this.graph.nodes.length > 0) this.applyPendingLayout()
+  }
+
+  private pendingLayout: PlacedEntry[] | null = null
+
+  private applyPendingLayout(): void {
+    const entries = this.pendingLayout
+    if (!entries) return
+    const nodes = this.keyedNodes()
+    if (nodes.length === 0) return
+    this.pendingLayout = null
+    const pairs = matchByKeys(entries.map((e) => e.keys), nodes)
+    for (const [i, nodeId] of pairs) {
+      const e = entries[i]
+      if (typeof e?.x === 'number' && typeof e?.y === 'number') {
+        this.offsets.set(nodeId, { x: e.x, y: e.y })
+      }
+    }
     this.paint()
   }
 

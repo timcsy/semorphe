@@ -1385,6 +1385,10 @@ export class App {
     const code = this.codeView?.getCode() ?? ''
     return { version: CURRENT_VERSION, codeHash: hashCode(code),
       blocklyState: this.blocklyPanel?.getState() ?? {}, code,
+      // 🔴 **流程佈局存的是鑰匙不是 nodeId**——見 `SavedState.flowLayout`。
+      //    ⚠️ 它與 `blocklyState` 同桶而**不吃 `codeHash`**：
+      //    失效條件內建在配對裡（對不上就退回自動排版）。
+      flowLayout: this.flowPanel?.saveLayout() ?? [],
       language: this.currentTopic.language, styleId: this.currentStylePreset.id,
       topicId: this.currentTopic.id, targetId: this.currentTarget.id, enabledBranches: [...this.enabledBranches],
       lastModified: new Date().toISOString(), blockStyleId: this.currentBlockStyleId, locale: this.currentLocale }
@@ -1422,6 +1426,12 @@ export class App {
     //    （2026-08-24 用真的 v9 存檔實測到，413 字的程式當場消失。）
     //
     // > **一個「從投影重建真相」的還原路徑，在投影缺席時會把真相抹掉。**
+    // 🔴 **佈局先掛上去，而不是等同步完再放**——面板會自己等到有節點才套。
+    //    ⚠️ 在這裡「等同步完成」等於要組裝點知道同步什麼時候結束，
+    //    而那是一個它不該知道的東西。
+    // 🟢 它**不受 `sideCarUsable` 管**：那道閘守的是積木快取（對不上會變成
+    //    第二份真相），而佈局對不上只會退回自動排版——**兩者的最壞情況不同**。
+    this.flowPanel?.restoreLayout(state.flowLayout ?? [])
     const useSideCar = this.sideCarUsable(state)
     if (useSideCar) {
       this.blocklyPanel?.setState(state.blocklyState)

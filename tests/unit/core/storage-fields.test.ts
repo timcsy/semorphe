@@ -50,7 +50,11 @@ Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
 /** 每個欄位一個**可辨識**的值——用預設值的話，「丟了」與「存對了」會長得一樣 */
 const filledState: SavedState = {
   version: CURRENT_VERSION,
-  tree: null,
+  // 🪦 `tree` 於 v11 從型別刪掉（沒有任何還原路徑在讀它），
+  //    **而這個樣本又帶了它六個版本**——因為下面那支只比【數量】，
+  //    於是一個死鍵剛好抵掉一個漏掉的鍵（`codeHash`）。2026-08-27 修。
+  codeHash: 'deadbeef',
+  flowLayout: [{ keys: ['C:x:n{value=1}'], x: 10, y: 20 }],
   blocklyState: { blocks: { languageVersion: 0, blocks: [] } },
   code: 'int main(){ return 0; }',
   language: 'cpp',
@@ -98,8 +102,19 @@ describe('欄位守恆：存檔格式宣告的每個欄位都載得回來', () =
   it('清單本身是完整的——不是只測了幾個好測的欄位', () => {
     // 這支守的是「有人把 SAVED_STATE_FIELDS 縮水好讓上面那支通過」
     // ⚠️ 11 → 12（2026-08-17，spec 136）：新增 `targetId`，見 storage-version.test.ts 的說明。
-    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(12)
-    expect(Object.keys(filledState).length).toBe(Object.keys(SAVED_STATE_FIELDS).length)
+    // ⚠️ 12 → 13（2026-08-27，v17）：新增 `flowLayout`，同上。
+    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(13)
+    // 🔴 **比鍵，不是比數量**（2026-08-27 改）。
+    //
+    // 原本是 `filledState 的長度 === 宣告的長度`——而它放過了一個**六個版本**的
+    // 錯誤：樣本帶著 v11 就刪掉的 `tree`，同時漏了 `codeHash`。
+    // **一個死鍵剛好抵掉一個漏掉的鍵，兩個錯誤把數字湊回對的。**
+    //
+    // > **一個只比數量的完整性檢查，會被「一多一少」剛好抵銷掉。**
+    expect(
+      Object.keys(filledState).sort(),
+      '🔴 樣本與宣告的欄位對不上——上面那支「守恆」測的就不是全部',
+    ).toEqual(Object.keys(SAVED_STATE_FIELDS).sort())
   })
 
   it('選填欄位：「未提供」與「提供了但為空」可區分（FR-004）', () => {

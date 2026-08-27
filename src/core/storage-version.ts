@@ -17,7 +17,7 @@ import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, 
 import type { ShapeChange } from '../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 16
+export const CURRENT_VERSION = 17
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -38,6 +38,7 @@ export const SAVED_STATE_FIELDS = {
   version: 1,
   blocklyState: 1,
   codeHash: 1,
+  flowLayout: 1,
   code: 1,
   language: 1,
   styleId: 1,
@@ -82,6 +83,20 @@ export const FIELD_OWNERSHIP = {
   // 【外觀】——side-car。⚠️ 它是**快取**不是第二份真相，失效條件是 `codeHash`
   blocklyState: 'sideCar',
   codeHash: 'sideCar',
+  /**
+   * 🔴 **流程節點手放過的位置**（v17）——與 `blocklyState` 同一桶而**性質不同**。
+   *
+   * ```
+   * blocklyState   導得出來（從程式碼重 lift）→ 快取，需要 codeHash 當失效條件
+   * flowLayout     【導不出來】——沒有人算得出使用者想把盒子放哪 → 狀態
+   * ```
+   *
+   * > `experience.md`：**「狀態」與「快取」的差別不在它住在哪，在它導不導得出來。**
+   *
+   * ⚠️ **所以它不需要 `codeHash`**：存的是三把鑰匙（內容／行號／路徑），
+   * 對不上就退回自動排版——**失效條件內建在配對裡**（`core/flow/layout-key.ts`）。
+   */
+  flowLayout: 'sideCar',
   // 【使用者】——換一個檔案不該變
   styleId: 'user',
   blockStyleId: 'user',
@@ -363,6 +378,16 @@ export const UPGRADES: Record<number, Upgrade> = {
   14: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V15, 15),
   // 15 → 16：**兩顆格式化 I/O 也換建構子**——與 v15 同一個形狀。
   15: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V16, 16),
+  /**
+   * 16 → 17：**流程節點的佈局有了一格**（`flowLayout`）。
+   *
+   * ⚠️ 舊存檔沒有這一格，而**這一步刻意不補一個空陣列**：
+   * `flowLayout` 是選填的，缺席與空陣列在還原時的行為一樣（自動排版），
+   * 而**補一個空值只會讓「從來沒拖過」與「拖過又清掉」看起來一樣**。
+   *
+   * 🟢 冪等（`migrate-storage` 第 3 步）：它只改版號，跑兩次結果相同。
+   */
+  16: (raw) => ({ ...raw, version: 17 }),
 }
 
 /**

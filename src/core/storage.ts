@@ -49,6 +49,17 @@ export interface SavedState {
   blocklyState: object
   /** `blocklyState` 對應的那份程式碼的雜湊——見上 */
   codeHash?: string
+  /**
+   * **流程節點手放過的位置**（v17）——side-car，而它是**狀態不是快取**。
+   *
+   * 🔴 存的是**鑰匙不是 `nodeId`**：`generateId()` 帶著計數器與時戳，
+   * 重開之後一個 id 都不會留（實測「改一行不相干的程式碼，id 相同數 0」）。
+   * 還原時用 `core/flow/layout-key.ts` 的配對器對回去。
+   *
+   * ⚠️ **對不回去就不放**——回自動排版。那與「side-car 刪掉 ＝ 自動排版」
+   * 是同一條線：**一份對不上的佈局與一份不存在的佈局，結果必須一樣。**
+   */
+  flowLayout?: { keys: string[]; x: number; y: number }[]
   code: string
   language: string
   styleId: string
