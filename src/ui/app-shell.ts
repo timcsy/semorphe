@@ -1089,6 +1089,33 @@ export function updateStatusBar(
    */
   sync?: { phase: 'live' | 'paused' | 'diverged'; source: string | null },
   /**
+   * **目前目標的顯示名**——用來判斷語言那一格是不是廢話。
+   *
+   * 🔴 使用者 2026-08-27：「網頁版最右邊的 C++ 不能切換語言也很怪，感覺有點多餘」。
+   *
+   * ⚠️ 而它**只在某些情境下多餘**，因為 `FIELD_OWNERSHIP` 把兩者分在兩邊：
+   *
+   * ```
+   * targetId  context   「我在教什麼」
+   * language  document  「這個檔案是什麼語言」
+   *
+   * 目標 = C++（預設）  → 語言 C++     🔴 重複
+   * 目標 = Arduino UNO  → 語言 C++     🟢 有資訊（Arduino 寫的是 C++）
+   * 目標 = Python 入門  → 語言 Python  🟢 有資訊
+   * ```
+   *
+   * > **一格資訊在一種情境下重複、在另一種情境下必要
+   * > ——而它原本用同一種方式呈現兩者。**
+   *
+   * 判準是那條掃描判準的唯讀版：
+   * > 選項：每一個留在畫面上的**選項**，都要說得出「誰有意見」。
+   * > 資訊：每一個留在畫面上的**資訊**，都要說得出「它在什麼時候不是廢話」。
+   *
+   * ⚠️ 省略時**照畫**——不知道目標叫什麼的呼叫端（測試、裸的那條列）
+   * 不該因此少一格資訊。
+   */
+  targetName?: string,
+  /**
    * 回傳**扣掉三態的那一段**（語言｜風格｜積木風格｜主題｜語系）。
    *
    * 🔴 為什麼要回傳：不畫狀態列的宿主**仍然要拿得到這些字**
@@ -1109,6 +1136,19 @@ export function updateStatusBar(
   const contextText = `${languageName} | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}`
   const summaryText = `${contextText}${syncText}`
 
+  /**
+   * 目標的名字已經說出語言了嗎——說了就別再講一次。
+   *
+   * ⚠️ 比對用**寬鬆包含**而不是相等：目標叫「C++（預設）」而語言叫「C++」。
+   * 🔴 而**大小寫與全形括號**都要吃得下，所以先正規化。
+   */
+  const saysLanguage = (target: string | undefined, lang: string): boolean => {
+    if (!target) return false
+    const norm = (t: string): string => t.toLowerCase().replace(/[\s（）()［］\[\]]/g, '')
+    return norm(target).includes(norm(lang))
+  }
+  const languageCell = saysLanguage(targetName, languageName) ? '' : languageName
+
   // 🔴 **不得覆寫整條列**——picker 就掛在它裡面（2026-08-25 起）。
   //
   // > **一個用 `innerHTML =` 更新文字的地方，
@@ -1118,10 +1158,10 @@ export function updateStatusBar(
   if (summarySlot) {
     // 有 picker 的那條列：語言與三態**不是 picker**，所以只留這兩格；
     // 其餘那幾格已經是列上的控制項了，再寫一次就是講兩次。
-    summarySlot.textContent = languageName
+    summarySlot.textContent = languageCell
     // ⚠️ 三態寫進**那顆按鈕**——它同時是顯示處與入口，與 VSCode 那側同形。
     if (syncBtn) syncBtn.textContent = syncLabel
-    else summarySlot.textContent = `${languageName}${syncText}`
+    else summarySlot.textContent = `${languageCell}${syncText}`
   } else {
     // ⚠️ 沒有 `#status-summary` ＝ 舊的／裸的那條列（測試會這樣建）。
     const statusBar = document.getElementById('status-bar')

@@ -1039,7 +1039,9 @@ export class App {
     const detail = updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name,
       languagePack(this.currentTopic.language)?.name ?? this.currentTopic.language,
       // 🔴 三態要**一直看得見**——一個沒被顯示的狀態，使用者會當成壞掉
-      this.syncCoordinator.snapshot())
+      this.syncCoordinator.snapshot(),
+      // 目標的名字——讓那一格判斷得出自己是不是廢話（見 `updateStatusBar`）
+      this.currentTarget.name)
     // 🔴 **宿主那條也是同一份狀態的投影**——⚠️ 用能力探測，
     //    這一層不認識任何一個具體的宿主（`host-profile.ts`：id 不得拿來分支）。
     const snapshot = this.syncCoordinator.snapshot()

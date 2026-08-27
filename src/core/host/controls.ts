@@ -111,7 +111,28 @@ export interface ControlSpec {
 export const CONTROLS: readonly ControlSpec[] = [
   { id: 'target', kind: 'picker', domain: 'session', mountId: 'level-selector-mount', bar: 'quickAccess', hostTitle: '選擇目標（語言／板子）' },
   { id: 'branches', kind: 'picker', domain: 'session', mountId: 'level-selector-mount', bar: 'quickAccess', hostTitle: '選擇教學層級' },
-  { id: 'style', kind: 'picker', domain: 'session', mountId: 'style-selector-mount', bar: 'header', hostTitle: '選擇程式風格' },
+  // 🪦 **`style` picker 已於 2026-08-27 退場——它已經由目標決定。**
+  //
+  // 使用者：「程式風格現在先跟目標合併好了，先選目標再選課程」。
+  // 而查證下來**那個合併早就做完了**：`Target` 宣告 `style`（`types.ts:873`），
+  // 13 個目標全部填了，而 `handleTargetChange` 切目標時就會 `applyStylePreset`。
+  // `storage-version.test.ts:72` 的註解逐字寫著意圖：
+  // 「**目標取代了『課程清單 ＋ 風格』兩次分開的選擇**」。
+  //
+  // 🔴 沒收尾的地方就是這一列，而它的症狀不是「多一顆按鈕」：
+  //
+  // ```
+  // 選 arduino-uno  → style 自動變 google
+  // 手動改 style     → 目標仍然說它該是 google
+  //                    → 兩個東西不一致，而【那個狀態沒有名字】
+  // ```
+  //
+  // > **一個宣告了預設值、而又留著一顆手動選單的欄位，
+  // > 會產生「宣告說 A、實際是 B」的狀態——而它沒有名字。**
+  //
+  // 🟢 **退場不失去能力**：5 個風格，每一個都有目標指到它
+  // （apcs→cpp · c→c · competitive→cpp-competitive · google→arduino* · python→python）。
+  // ⚠️ 而 `onStyleChange` 那條線**留著**——切目標時仍然要套用那個目標的風格。
   { id: 'blockStyle', kind: 'picker', domain: 'session', mountId: 'block-style-selector-mount', bar: 'quickAccess', hostTitle: '選擇積木風格' },
   { id: 'locale', kind: 'picker', domain: 'session', mountId: 'locale-selector-mount', bar: 'header', hostTitle: '選擇介面語言' },
   { id: 'run', kind: 'action', domain: 'project', mountId: 'run-btn', bar: 'header', hostTitle: '執行', icon: '$(play)' },
