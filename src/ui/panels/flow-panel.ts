@@ -42,6 +42,7 @@ import type { BlockSpecRegistry } from '../../core/block-spec-registry'
 import { buildNodeGraph, type NodeGraph, type GraphNode, type GraphPort } from '../../core/flow/node-graph'
 import { labelSourceFromSpecs, collapseBlockMessage, flowTitle, type FlowLabelSource } from '../../core/flow/vocabulary'
 import { paletteFromToolbox, type PaletteItem } from '../../core/flow/palette'
+import { presetTree, presetKey, presetSuffixKey } from '../../core/flow/presets'
 import { tryConnect, tryReorder, refusalKeyOf, type RefusalReason } from '../../core/flow/connect'
 import { bodySlotsOf } from '../../core/component/traits'
 import { msg } from '../../core/messages'
@@ -86,6 +87,7 @@ export class FlowPanel implements ViewHost {
   private svg!: SVGSVGElement
   private scopeSelect!: HTMLSelectElement
   private empty!: HTMLElement
+  private canvas!: HTMLElement
   private autoBtn!: HTMLButtonElement
 
   constructor(container: HTMLElement, specs?: BlockSpecRegistry) {
@@ -116,7 +118,64 @@ export class FlowPanel implements ViewHost {
   }
 
   private editCb: ((tree: SemanticNode) => void) | null = null
+  /** 左邊那條**分類**（固定的，佔版面） */
+  private toolboxEl!: HTMLElement
+  /** 點了分類才彈出來的那一格（覆蓋在畫布上，拖出去就收） */
   private paletteEl!: HTMLElement
+  /**
+   * 收合分類條的那顆側邊鈕——**行動版才看得到**（CSS 管，見 `.flow-toolbox-collapse`）。
+   *
+   * 🪦 在此之前工具列上有一顆「＋ 積木盤／✕ 收起積木盤」。它 2026-08-27 退場：
+   *
+   * > 使用者逐字：「我想也不要有收起積木盤這個，
+   * >  行動版的話仿照 Blockly 那邊的收合按鈕就好」。
+   *
+   * ⚠️ 桌機上分類條**不需要收**——它靠邊排版、96px、不蓋任何東西。
+   * 一顆桌機上沒有理由按的按鈕，佔的是工具列最貴的那塊地方。
+   * 而行動版**寬度真的不夠**，所以那裡需要，形狀照抄積木那側的
+   * `.toolbox-collapse-btn`（`◀`／`▶` 貼在邊上）。
+   */
+  private paletteToggle!: HTMLButtonElement
+  private paletteOpen = false
+  private openCategory: string | null = null
+
+  /** 收合**整條分類**。⚠️ 關著的時候完全不佔版面（`display: none`）。 */
+  private setPaletteOpen(open: boolean): void {
+    this.paletteOpen = open
+    this.toolboxEl.style.display = open ? '' : 'none'
+    if (!open) this.closeFlyout()
+    this.paletteToggle.textContent = open ? '◀' : '▶'
+    this.paletteToggle.setAttribute(
+      'aria-label',
+      open ? msg('FLOW_PALETTE_CLOSE', '收起積木盤') : msg('FLOW_PALETTE_OPEN', '積木盤'),
+    )
+  }
+
+  /**
+   * **點一個分類，彈出那一格的積木**——與 Blockly 的工具箱同一個形狀。
+   *
+   * ⚠️ 再點同一個就收起來（Blockly 也是這樣），而**不是**「只能開不能關」。
+   */
+  private toggleCategory(category: string): void {
+    if (this.openCategory === category) { this.closeFlyout(); return }
+    this.openCategory = category
+    this.renderFlyout()
+  }
+
+  /**
+   * 收起彈出的那一格。
+   *
+   * 🔴 **拖曳一開始就要收**，而那不是美觀問題：
+   * 彈出格覆蓋在畫布上，不收的話使用者**看不到自己要放去哪裡**
+   * ——那正是 2026-08-26 那次「拖不動」的成因（一塊浮層蓋住畫布左上角）。
+   *
+   * > **一個浮在畫布上的東西，在使用者需要看畫布的那一刻必須讓開。**
+   */
+  private closeFlyout(): void {
+    this.openCategory = null
+    this.renderFlyout()
+  }
+
   private palette: PaletteItem[] = []
 
   /**
@@ -131,16 +190,105 @@ export class FlowPanel implements ViewHost {
     this.renderPalette()
   }
 
+  /**
+   * 分類 → 那一格有哪些積木。⚠️ **保持工具箱的順序**，不重新排。
+   *
+   * ## 🔴 一個分類裡同一個身分只出現一次
+   *
+   * 工具箱是**積木**的清單，而流程視圖處理的是**元件身分**
+   * （`createLoose` 只吃 `componentId`）。量出來的落差：
+   *
+   * ```
+   * cpp:if            cpp_if ×3          工具箱用 extraState 列了三種變體
+   * cpp:var_declare   語句形 ＋ 運算式形   同一個身分的兩個形態
+   * cpp:input         語句形 ＋ 運算式形
+   * ```
+   *
+   * 三顆「如果」擺在一起，而**按下去做的事一模一樣**。
+   *
+   * > **兩個看起來不同、做起來相同的選項，比一個選項更難用
+   * > ——使用者會停下來想「差別在哪」，而答案是「沒有」。**
+   *
+   * ⚠️ **已知的損失**：`cpp_if` 那三種變體（有沒有 else／幾個 else if）
+   * 因此**選不到**，只生得出最基本的那一顆。那是 `extraState` 的事，
+   * 而流程視圖還沒有表達它的方式——**這是一個缺口，不是一個決定**。
+   *
+   * ## ⚠️ 而查不到身分的積木**不列**
+   *
+   * 拖它的第一行就是 `if (!cid) return`——**列出來只會是一顆按了沒反應的按鈕**。
+   */
+  private byCategory(): Map<string, PaletteItem[]> {
+    const m = new Map<string, PaletteItem[]>()
+    const seen = new Set<string>()
+    for (const item of this.palette) {
+      const cid = this.componentOf(item.blockType)
+      if (!cid) continue
+      // 🔴 **去重的鍵是「按下去會發生什麼」，不是「它是誰」**（2026-08-27 修正）。
+      //    08-27 第一版用 `componentId`，於是三顆「如果」收成一顆
+      //    ——而其中**一顆是真的不同**（else-if 的骨架）。見 `flow/presets.ts`。
+      const key = `${item.category}\u0000${presetKey(item, cid)}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      const a = m.get(item.category) ?? []
+      a.push(item)
+      m.set(item.category, a)
+    }
+    return m
+  }
+
+  /**
+   * **左邊那條分類**——一顆分類一個按鈕，前面一格它自己的顏色。
+   *
+   * 🔴 顏色問**那一格第一顆積木的定義**，不是這裡一份色票——
+   * 與節點的顏色同一條路（`colourOf`）。
+   */
   private renderPalette(): void {
+    if (!this.toolboxEl) return
+    this.toolboxEl.innerHTML = ''
+    if (!this.capabilities.editable || this.palette.length === 0) {
+      this.closeFlyout()
+      return
+    }
+    // ⚠️ 重畫之後那顆開關的字要跟著現在的狀態——不然它會說「收起」而盤是關的。
+    this.setPaletteOpen(this.paletteOpen)
+    for (const [category, items] of this.byCategory()) {
+      const btn = document.createElement('button')
+      btn.className = 'flow-cat'
+      btn.type = 'button'
+      btn.dataset.category = category
+      const swatch = document.createElement('span')
+      swatch.className = 'flow-cat-swatch'
+      const firstCid = this.componentOf(items[0].blockType)
+      const colour = firstCid ? this.colourOf(firstCid) : null
+      if (colour) swatch.style.background = colour
+      btn.append(swatch, document.createTextNode(category))
+      btn.addEventListener('click', () => this.toggleCategory(category))
+      this.toolboxEl.appendChild(btn)
+    }
+    this.renderFlyout()
+  }
+
+  private componentOf(blockType: string): string | undefined {
+    return this.specs?.getByBlockType?.(blockType)?.componentMapping?.componentId
+  }
+
+  /** 彈出的那一格：現在開著的分類裡有哪些積木。沒有開就是空的。 */
+  private renderFlyout(): void {
     if (!this.paletteEl) return
     this.paletteEl.innerHTML = ''
-    if (!this.capabilities.editable || this.palette.length === 0) return
-    for (const item of this.palette) {
+    for (const btn of this.toolboxEl?.querySelectorAll('.flow-cat') ?? []) {
+      btn.classList.toggle('active', (btn as HTMLElement).dataset.category === this.openCategory)
+    }
+    if (!this.openCategory) { this.paletteEl.style.display = 'none'; return }
+    this.paletteEl.style.display = ''
+    for (const item of this.byCategory().get(this.openCategory) ?? []) {
       const chip = document.createElement('button')
       chip.className = 'flow-chip'
       chip.type = 'button'
-      const cid = this.specs?.getByBlockType?.(item.blockType)?.componentMapping?.componentId
-      chip.textContent = (cid ? flowTitle(cid, this.labelSource()) : null) ?? item.blockType
+      const cid = this.componentOf(item.blockType)
+      const base = (cid ? flowTitle(cid, this.labelSource()) : null) ?? item.blockType
+      const suffix = presetSuffixKey(item.extraState)
+      chip.textContent = suffix ? `${base}${msg(suffix, '／否則如果')}` : base
       chip.title = item.category
       // 從 palette 拖到一個接點上——**與拉線同一條路**
       chip.addEventListener('pointerdown', (ev) => {
@@ -148,12 +296,40 @@ export class FlowPanel implements ViewHost {
         if (!cid) return
         // ⚠️ palette 壓在圖上是必然的（它是拖曳的起點）——
         //    而**繞過它的方法在 `portUnder` 裡**，不在這裡改它的狀態。
+        //
+        // 🔴 **這個手勢原本是隱形的**（2026-08-27，使用者：「節點從積木盤中拖不出來」）。
+        //
+        // ```
+        // 拖的時候   沒有 pointermove → 【沒有線、沒有高亮】，畫面完全不動
+        // 放開時     if (to) …        → 沒接到就【什麼都不說】
+        // ```
+        //
+        // 而接點是半徑 6 的圓：多數人第一次都會放偏，然後看到**零反應**。
+        //
+        // > **一個沒有回饋的拖曳，與一個壞掉的拖曳，在使用者眼裡是同一件事。**
+        //
+        // 🟢 修法是兩半，缺一不可：拖的時候**看得見**（預覽線 ＋ 把能放的接點點亮），
+        //    放偏的時候**說得出話**（`history/017`：會拒絕的東西要回答「被拒絕的去哪了」）。
+        const from = { x: ev.clientX, y: ev.clientY }
+        // 🔴 **拖曳一開始就把彈出格收起來**——不收的話它蓋著畫布，
+        //    使用者看不到自己要放去哪裡（見 `closeFlyout` 的檔頭）。
+        this.closeFlyout()
+        this.setDropTargetsVisible(true)
+        const move = (e: PointerEvent): void => this.paintWirePreview(e, from)
         const up = (e: PointerEvent): void => {
+          window.removeEventListener('pointermove', move)
           window.removeEventListener('pointerup', up)
+          this.setDropTargetsVisible(false)
           this.clearWirePreview()
           const to = this.portUnder(e)
-          if (to) this.createInto(cid, to)
+          // 🔴 **放在接點上＝直接接進去；放在空白處＝拉出來先不接**（2026-08-27）。
+          //    在此之前空白處是「什麼都不生」，而那把手勢倒了過來——見 `createInto` 的墓碑。
+          if (to) this.createInto(cid, to, item.extraState)
+          else if (this.overCanvas(e)) {
+            this.createLoose(cid, { x: e.clientX, y: e.clientY }, item.extraState)
+          }
         }
+        window.addEventListener('pointermove', move)
         window.addEventListener('pointerup', up)
       })
       this.paletteEl.appendChild(chip)
@@ -163,17 +339,42 @@ export class FlowPanel implements ViewHost {
   /**
    * **從 palette 生一顆新節點，放進那一格**。
    *
-   * 🔴 **沒有「浮在外面的節點」這種東西**：這張圖是一棵樹的投影，
-   * 而樹裡沒有無主的節點。所以新節點一定要落在某一格上
-   * ——放不進去就**不生**（而不是生出來再說）。
+   * 🪦 這裡本來寫著：
+   *
+   * > 「🔴 **沒有「浮在外面的節點」這種東西**：這張圖是一棵樹的投影，
+   * >  而樹裡沒有無主的節點。所以新節點一定要落在某一格上
+   * >  ——放不進去就**不生**（而不是生出來再說）。」
+   *
+   * **那句話是錯的**（2026-08-27，使用者：「一般我們都是先拉出節點，
+   * 然後才去接邊，我現在連拉節點都不行」）。去查積木那側就知道：
+   *
+   * ```ts
+   * // blockly-panel.ts extractSemanticTree()
+   * const topBlocks = this.workspace.getTopBlocks(true)
+   * for (const block of topBlocks) body.push(...this.extractBlockChain(block))
+   * ```
+   *
+   * **一顆浮在工作區上的積木【本來就在樹裡】**——它是根的一個頂層子節點。
+   * 所以「無主的節點」一直都存在，只是它的家叫 `body` 而不是叫「浮著」。
+   *
+   * > **我用「模型不允許」擋掉了一個互動，而模型從來沒有不允許
+   * > ——不允許的是我腦中那張模型的圖。**
+   *
+   * ⚠️ 而它造成的損失不是「少一個便利功能」：**它把整個手勢倒過來了**。
+   * 節點圖的常規是「先拉出來、再接邊」，而這條規則要求使用者
+   * **在還沒看到節點之前就先命中一個半徑 6 的接點**。
+   *
+   * → `createInto` 保留（放在接點上是一條有用的捷徑），
+   *   而放在空白處走 `createLoose`。
    */
-  private createInto(componentId: string, target: { nodeId: string; port: GraphPort }): void {
+  private createInto(
+    componentId: string,
+    target: { nodeId: string; port: GraphPort },
+    extraState?: Record<string, unknown>,
+  ): void {
     if (!this.tree) return
     if (target.port.key.startsWith('__')) { this.refuse('no-such-slot'); return }
-    const node = {
-      id: `new_${Math.random().toString(36).slice(2, 9)}`,
-      componentId, properties: {}, children: {},
-    } as unknown as SemanticNode
+    const node = presetTree(componentId, extraState)
     // ⚠️ 先掛進去才判得了——`tryConnect` 要在樹裡找得到它。
     //    判不過就**原樣拿掉**，樹回到原狀。
     const parent = this.findNode(this.tree, target.nodeId)
@@ -188,6 +389,49 @@ export class FlowPanel implements ViewHost {
     }
     this.rebuild()
     this.editCb?.(this.tree)
+  }
+
+  /**
+   * **拉一顆節點出來，先不接**——2026-08-27。
+   *
+   * 它與積木那側是**同一件事**：新節點掛在根的 `body` 尾端，
+   * 就像一顆放在工作區上還沒接的積木。接不接是下一步的事。
+   *
+   * ⚠️ 落點要是**手放開的地方**，不是自動排版算出來的位置——
+   * 不然使用者會覺得「它跳走了」。用 `offsets`（面板的私有狀態，
+   * 不進語義樹、不進存檔），所以按「自動排版」就會回到隊伍裡。
+   */
+  private createLoose(
+    componentId: string,
+    at: { x: number; y: number },
+    extraState?: Record<string, unknown>,
+  ): void {
+    if (!this.tree) return
+    const node = presetTree(componentId, extraState)
+    const body = (this.tree.children.body ??= [])
+    body.push(node)
+    this.pendingDrop = { id: node.id, at }
+    this.rebuild()
+    this.editCb?.(this.tree)
+  }
+
+  /**
+   * 剛放下的那一顆要落在手放開的位置。
+   *
+   * ⚠️ **算得出偏移的時機在 `rebuild()` 之後**——在那之前它還沒有被畫出來，
+   * 量不到「自動排版把它放在哪」，也就算不出要補多少。
+   */
+  private pendingDrop: { id: string; at: { x: number; y: number } } | null = null
+
+  private applyPendingDrop(): void {
+    const drop = this.pendingDrop
+    if (!drop) return
+    this.pendingDrop = null
+    const el = this.svg.querySelector(`[data-node="${drop.id}"]`)
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    // ⚠️ 走 `moveNode`——它是面板私有狀態的**唯一**寫入口（護欄靠它證明「真的動過」）。
+    this.moveNode(drop.id, drop.at.x - (r.left + r.width / 2), drop.at.y - (r.top + r.height / 2))
   }
 
   /**
@@ -227,7 +471,19 @@ export class FlowPanel implements ViewHost {
     const at = (this.svg.querySelector(`[data-node="${nodeId}"]`) as SVGGElement | null)?.getBoundingClientRect()
     box.style.left = `${(at?.left ?? rect.left) - rect.left + 8}px`
     box.style.top = `${(at?.top ?? rect.top) - rect.top + 8}px`
+    // 🔴 **只收一次**（2026-08-27，瀏覽器實測的例外）
+    //
+    // 按 Enter → `done(true)` → `box.remove()` → **移除本身觸發 `blur`**
+    // → `done(true)` 又跑一次 → `remove()` 拋 `NotFoundError`。
+    //
+    // ⚠️ 而拋例外只是**看得見的那一半**：另一半是**同一次編輯被送出兩次**，
+    //    那一半安靜。
+    //
+    // > **一個「關掉自己」的收尾動作，會被自己觸發的事件再呼叫一次。**
+    let closed = false
     const done = (commit: boolean): void => {
+      if (closed) return
+      closed = true
       const next = box.value
       box.remove()
       if (!commit || next === shownValue) return
@@ -326,10 +582,39 @@ export class FlowPanel implements ViewHost {
     // 🔴 **palette**（2026-08-26，(d)）——它**不自己決定有哪些東西**：
     //    內容是 `buildToolbox()` 的輸出攤平來的（`core/flow/palette.ts`）。
     //    「用同一份資料」擋不住分岔，「用同一份結果」才擋得住。
+    //
+    // ⚠️ **而它 2026-08-26 從「浮在圖上」改成「預設收起來」**，
+    //    因為使用者回報「根本無法拖曳與編輯還有接線」——
+    //    量出來的根因是這一塊：它佔 240×181，**正好蓋在圖的左上角**，
+    //    而節點就從那裡開始排。點到的一直是它的按鈕。
+    //
+    //    > **一個浮在畫布上的工具盤，會把畫布最常用的那個角落變成不能點。**
+    //
+    //    🔴 它不是「調 z-index」或「移到右邊」能修的：**任何一塊浮層都會蓋住
+    //    某一塊畫布**。所以它預設收起來，要用的時候才打開。
+    this.paletteToggle = document.createElement('button')
+    this.paletteToggle.className = 'flow-palette-toggle'
+    this.paletteToggle.type = 'button'
+    this.paletteToggle.addEventListener('click', () => this.setPaletteOpen(!this.paletteOpen))
+    // 🔴 **分類條靠邊排版，彈出格才覆蓋**（2026-08-27，使用者：「積木盤能不能像 Blockly 那樣？」）
+    //
+    // 在此之前是一整面 22 顆積木浮在畫布上。那有兩個問題，而第二個比較深：
+    //
+    // ```
+    // ① 它蓋住畫布           → 2026-08-26 的「拖不動」就是這個
+    // ② 它把【分類】攤平了     → 22 顆看起來一樣重，而使用者要找的是「控制那一類」
+    // ```
+    //
+    // > **把一份有結構的清單攤平成一面按鈕，省下的是一次點擊，
+    // > 付出的是「我要找的東西在哪」。**
+    //
+    // Blockly 的形狀正好解決兩個：**分類條佔版面（不蓋任何東西）**，
+    // 而彈出格是暫時的、拖曳一開始就收。
+    this.toolboxEl = document.createElement('div')
+    this.toolboxEl.className = 'flow-toolbox'
     this.paletteEl = document.createElement('div')
     this.paletteEl.className = 'flow-palette'
     bar.append(this.scopeSelect, auto)
-    this.container.append(this.paletteEl)
 
     this.svg = document.createElementNS(SVG_NS, 'svg')
     this.svg.classList.add('flow-svg')
@@ -337,7 +622,35 @@ export class FlowPanel implements ViewHost {
     this.empty = document.createElement('div')
     this.empty.className = 'flow-empty'
 
-    this.container.append(bar, this.empty, this.svg)
+    // 🔴 **畫布自己一格，而它會捲動**（2026-08-27，瀏覽器實測的根因）
+    //
+    // 量出來的：SVG 是 **724** 寬、面板只有 **362**，而面板 `overflow: hidden`
+    // ——**13 顆節點有 7 顆落在看不到的地方，而看不到的東西也點不到**。
+    //
+    // > **一張比容器大的圖，配上 `overflow: hidden`，
+    // > 不是「畫面比較乾淨」——是「一半的功能不存在」。**
+    //
+    // ⚠️ 而**不能直接讓 `#flow-panel` 捲動**：工具列與積木盤住在它裡面，
+    //    橫向捲的時候它們會跟著滑出去。所以捲的是**只裝圖的那一層**。
+    this.canvas = document.createElement('div')
+    this.canvas.className = 'flow-canvas'
+    this.canvas.append(this.empty, this.svg)
+    // 工具區與畫布並排——⚠️ 分類條在**這一列**裡面，所以它是排版的一部分，
+    //    而不是浮在畫布上的一塊。彈出格 `position: absolute`，定位錨在這一列。
+    // 🔴 **點畫布的空白處要把彈出格收起來**（2026-08-27，使用者回報）。
+    //
+    // ⚠️ 掛在**畫布**上而不是 `document`：掛在 document 的話，
+    //    工具列上任何一次點擊都會順手收掉它，而那不是使用者的意思。
+    //
+    // ⚠️ 用 `pointerdown` 而不是 `click`：拖節點時 `click` 不會發生，
+    //    而那一刻正是最需要它讓開的時候。
+    this.canvas.addEventListener('pointerdown', () => this.closeFlyout())
+
+    const workRow = document.createElement('div')
+    workRow.className = 'flow-work'
+    workRow.append(this.toolboxEl, this.paletteToggle, this.paletteEl, this.canvas)
+    this.container.append(bar, workRow)
+    this.setPaletteOpen(true)
   }
 
   /** 這顆節點對應程式碼的哪一行——滑鼠停留時顯示（找不到就不編一句話出來） */
@@ -367,6 +680,8 @@ export class FlowPanel implements ViewHost {
     const alive = new Set(this.graph.nodes.map((n) => n.id))
     for (const id of [...this.offsets.keys()]) if (!alive.has(id)) this.offsets.delete(id)
     this.paint()
+    // 剛從 palette 放下的那一顆要落在手放開的地方——**要等它畫出來才算得出偏移**。
+    this.applyPendingDrop()
   }
 
   /**
@@ -492,14 +807,41 @@ export class FlowPanel implements ViewHost {
       // 沒有位置名 → **只顯示值**（`FALSE` 那類已經在 core 換成顯示文字了）
       const shown = f.label ? `${f.label}：${f.value}` : f.value
       const y = HEADER_H + row * ROW_H + ROW_H / 2 + 4
+      // 🔴 **命中區是一塊矩形，不是那幾個字**（2026-08-27，實測）
+      //
+      // SVG `<text>` 只有**字身**接得到指標事件——點在字距上會穿過去
+      // 落到底板。量出來的症狀是「單擊欄位沒反應」，而那與
+      // 「沒有這個功能」在使用者眼裡一樣。
+      //
+      // > **一個命中區等於字形的控制項，使用者點得到的是筆畫，不是欄位。**
+      //
+      // ⚠️ 這與「把 `dblclick` 改成 `click`」是**兩個獨立的缺陷**——
+      //    改了事件種類而命中區仍然是字身的話，它照樣沒反應。
+      const hit = document.createElementNS(SVG_NS, 'rect')
+      hit.setAttribute('class', 'fc-field-hit')
+      hit.setAttribute('x', '6')
+      hit.setAttribute('y', String(y - ROW_H / 2 - 2))
+      hit.setAttribute('width', String(n.w - 12))
+      hit.setAttribute('height', String(ROW_H))
+      g.appendChild(hit)
       const el = text('fc-field fc-field-editable', 10, y, truncate(shown, 20), 'start')
-      // 🔴 **(b) 改欄位**（2026-08-26）——雙擊那一格開一個輸入框。
-      //    ⚠️ 用**雙擊**不是單擊：單擊與拖曳節點衝突（`attachDrag` 掛在同一個 `g` 上），
-      //    而那個衝突的症狀是「想拖節點卻開了編輯框」。
-      el.addEventListener('dblclick', (ev) => {
-        ev.stopPropagation()
-        this.promptField(n.id, n.componentId, f.key, f.value)
-      })
+      // 🔴 **(b) 改欄位**——**單擊**那一格開一個輸入框（2026-08-26 改）。
+      //
+      // ⚠️ 第一版用雙擊，理由是「單擊與拖曳節點衝突」。而使用者回報
+      //    「根本無法編輯」——**一個要雙擊才有反應的東西，在使用者眼裡就是壞的**：
+      //    他單擊一次、沒反應，就不會再試第二次。
+      //
+      //    > **一個沒有人會去發現的互動，與沒有那個互動是同一件事。**
+      //
+      // 🟢 而那個「衝突」用 `stopPropagation` 就解決了（拖曳掛在 `g` 上，
+      //    這裡先攔下來）——第一版是**用限制去繞過一個修得掉的問題**。
+      for (const target of [hit, el]) {
+        target.addEventListener('pointerdown', (ev) => ev.stopPropagation())
+        target.addEventListener('click', (ev) => {
+          ev.stopPropagation()
+          this.promptField(n.id, n.componentId, f.key, f.value)
+        })
+      }
       g.appendChild(el)
       row++
     }
@@ -535,7 +877,9 @@ export class FlowPanel implements ViewHost {
     c.setAttribute('class', `fc-port fc-port-data fc-port-${p.side}`)
     c.setAttribute('cx', String(p.dx))
     c.setAttribute('cy', String(p.dy))
-    c.setAttribute('r', '4.5')
+    // ⚠️ **接點要點得到**：4.5px 的圓對滑鼠來說太小（使用者回報「接不了線」）。
+    //    放大到 6，並在下面補一個透明的加大命中區。
+    c.setAttribute('r', '6')
     this.attachWire(c, nodeId, p)
     return c
   }
@@ -573,18 +917,47 @@ export class FlowPanel implements ViewHost {
       const up = (e: PointerEvent): void => {
         window.removeEventListener('pointermove', move)
         window.removeEventListener('pointerup', up)
+        this.setDropTargetsVisible(false)
         this.clearWirePreview()
         const to = this.portUnder(e)
         const from = this.wireFrom
         this.wireFrom = null
         if (from && to) this.commitWire(from, to)
+        // 🔴 **放偏了也要說話**（2026-08-27）——同上面 palette 那一段的理由。
+        //    在此之前放在空白處是**完全靜默**的，而那看起來就是「接線壞了」。
+        else if (from) this.showNotice(msg('FLOW_DROP_MISSED', '要放在一個接點上（那些小圓點）——這條線沒有接上。'))
       }
+      this.setDropTargetsVisible(true)
       window.addEventListener('pointermove', move)
       window.addEventListener('pointerup', up)
     })
   }
 
+  /**
+   * 放開的位置**在畫布上嗎**。
+   *
+   * ⚠️ 分得出「放在圖上」與「放到面板外面」——後者是**取消**，
+   * 而把取消當成「在原點生一顆」會讓使用者以為自己手滑生了東西。
+   */
+  private overCanvas(e: PointerEvent): boolean {
+    const r = this.canvas.getBoundingClientRect()
+    return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom
+  }
+
   private wireFrom: { nodeId: string; port: GraphPort } | null = null
+
+  /**
+   * **拖曳中把能放的地方點亮**（2026-08-27）。
+   *
+   * ⚠️ 接點是半徑 6 的圓，靜止時它們刻意不搶戲（P4 漸進揭露）。
+   * 而**拖曳中**正好相反：那一刻使用者要找的就是它們。
+   *
+   * 🔴 用一個 class 掛在 `<svg>` 上，樣式住在 CSS——
+   * 不逐顆改 style，因為那要在放開時逐顆還原，而**漏還原一顆就是一個永久的亮點**。
+   */
+  private setDropTargetsVisible(on: boolean): void {
+    this.svg.classList.toggle('flow-dropping', on)
+  }
 
   /**
    * **放開的位置底下是哪一個接點。**
@@ -698,16 +1071,44 @@ export class FlowPanel implements ViewHost {
     else bucket.splice(Math.max(0, Math.min(index, bucket.length)), 0, node)
   }
 
-  private paintWirePreview(e: PointerEvent): void {
+  /**
+   * 拖曳中那條跟著手指走的線。
+   *
+   * 🔴 **它原本畫的是一條零長度的線**（2026-08-27 讀出來的）：
+   * `x1`／`x2` 與 `y1`／`y2` 都是同一個游標座標，所以
+   * **這個「預覽」從它存在的那天起就看不見**。
+   *
+   * > **一個起點與終點相同的預覽線，不是「很細」——它是【沒有】。**
+   *
+   * ⚠️ 而它不會變紅：那個元素真的被建出來、真的進了 DOM，
+   * 任何「有沒有畫出預覽」的檢查都會說有。
+   *
+   * @param origin 線的起點（螢幕座標）。省略時從 `wireFrom` 那個接點算。
+   */
+  private paintWirePreview(e: PointerEvent, origin?: { x: number; y: number }): void {
     this.clearWirePreview()
     const r = this.svg.getBoundingClientRect()
+    const start = origin ?? this.wireFromPoint()
+    if (!start) return
     const l = document.createElementNS(SVG_NS, 'line')
     l.setAttribute('class', 'fc-wire-preview')
-    l.setAttribute('x1', String(e.clientX - r.left))
-    l.setAttribute('y1', String(e.clientY - r.top))
+    l.setAttribute('x1', String(start.x - r.left))
+    l.setAttribute('y1', String(start.y - r.top))
     l.setAttribute('x2', String(e.clientX - r.left))
     l.setAttribute('y2', String(e.clientY - r.top))
     this.svg.appendChild(l)
+  }
+
+  /** 正在拉的那條線是從哪一個接點出發的（螢幕座標）。 */
+  private wireFromPoint(): { x: number; y: number } | null {
+    const from = this.wireFrom
+    if (!from) return null
+    const el = this.svg.querySelector(
+      `[data-node="${from.nodeId}"] .fc-port-wirable[data-port="${from.port.key}"]`,
+    )
+    if (!el) return null
+    const r = el.getBoundingClientRect()
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
   }
 
   private clearWirePreview(): void {

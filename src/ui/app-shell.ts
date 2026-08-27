@@ -404,6 +404,8 @@ export function createAppLayout(
   const flowEl = document.createElement('div')
   flowEl.id = 'flow-panel'
   flowEl.style.flex = '1'
+  // ⚠️ 面板本身不捲——捲的是它裡面的 `.flow-canvas`（見 `flow-panel.ts`）。
+  //    這裡留 `hidden` 是為了讓那一層自己決定，而不是讓兩層各捲各的。
   flowEl.style.overflow = 'hidden'
   flowEl.style.display = 'none'
   const flowPanel = new FlowPanel(flowEl, blockSpecRegistry)
@@ -490,8 +492,19 @@ export function createAppLayout(
       codeColumn.style.display = wants('element') ? '' : 'none'
       splitPane?.setDividerVisible?.(wants('element'))
       // 還原「專注」動過的寬度——⚠️ 不還原的話從專注切回來右欄會吃掉整個畫面。
+      //
+      // 🔴 **而寬度要交還給 `SplitPane`，不是清成空字串**（2026-08-27 實測）：
+      //    `blocksColumn` 就是 `splitPane.getRightPanel()`，那個 inline 寬度
+      //    （`calc(50% - 2px)`）是它設的。清掉之後那一欄退回 `flex: 0 1 auto`，
+      //    **縮成內容寬度**——2000px 的視窗裡積木欄只剩 213px，右邊一大片黑。
+      //
+      //    > **兩個地方寫同一個 inline 樣式，後寫的那個不知道自己在覆蓋一份狀態。**
+      //
+      // ⚠️ 而它的症狀**不會出現在切換的當下**，只在「進過專注（或三欄）再切回來」
+      //    那條路上——所以單開一個版面預設看起來都是對的。
       blocksColumn.style.flex = ''
       blocksColumn.style.width = ''
+      splitPane?.refresh?.()
       // 三欄：流程與積木**並排**，而不是互斥
       const both = wants('relation') && wants('space')
       projectionRow.style.flexDirection = both ? 'row' : 'column'

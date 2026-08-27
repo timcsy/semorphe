@@ -53,7 +53,7 @@
  * - **不檢測值的正確性**——只檢測「下拉的值有沒有換成它的顯示文字」。
  * - **不檢測版面**（接點位置、連線）——那是別的事。
  */
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { buildNodeGraph } from '../../src/core/flow/node-graph'
 import { allComponentDefs } from '../helpers/component-scan'
@@ -62,6 +62,9 @@ import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all
 import type { SemanticNode } from '../../src/core/types'
 import { designedTitle, labelSourceFromSpecs, type FlowLabelSource } from '../../src/core/flow/vocabulary'
 import { printReport, assertRatchet, writeBaseline } from '../helpers/guardrail'
+import { setMessageSource, resetMessageSource, msg } from '../../src/core/messages'
+import zhTW from '../../src/i18n/zh-TW/blocks.json'
+import { componentLabels } from '../../src/core/component/labels'
 
 const GUARD = 'flow-vocabulary'
 
@@ -122,12 +125,57 @@ function productLikeLabels(): FlowLabelSource {
   return labelSourceFromSpecs((id) => reg.getByComponentId(id) as never)
 }
 
+/**
+ * 🔴 **接上訊息來源**（2026-08-27 補，而在此之前這條護欄量不到它宣稱要量的東西）
+ *
+ * ## 它從哪來
+ *
+ * 這支自 2026-08-26 立起來就**沒有呼叫過 `setMessageSource`**。
+ * 於是 `msg(key, '')` 一律回退路，`designedTitle()` 一律 `null`，
+ * 棘輪一律 **233**——**寫滿 233 條文案它還是會印 233**。
+ *
+ * ```
+ * 注入那三支          證明「判準認得出代號」        ✅ 一直是對的
+ * 入口條件（第一版）  證明「樹轉成圖了」            ✅ 一直是對的
+ * 🔴 而沒有人證明     「那張文案表有沒有被讀進來」   ← 缺的是這一格
+ * ```
+ *
+ * > **一條量「有幾個名字被設計過」的護欄，如果沒接文案表，
+ * > 它量的是「有幾個名字」——而那個數字永遠等於元件總數。**
+ *
+ * ⚠️ 這與 `build-guardrail` §9 是同一族：
+ * 「**計數器會數 ≠ 註冊表裡有東西**」。那一節要的第三支斷言就是下面那個。
+ */
+function loadMessages(): number {
+  const table = { ...(zhTW as unknown as Record<string, string>), ...componentLabels('zh-TW') }
+  setMessageSource((k) => table[k])
+  return Object.keys(table).length
+}
+
 describe('第七十八條護欄：流程視圖上不得出現內部詞彙', () => {
+  const tableSize = loadMessages()
   const labels = productLikeLabels()
   const graph = buildNodeGraph(everyComponentNode(), labels)
 
+  afterAll(() => resetMessageSource())
+
   it('★ 入口條件：這支真的把樹轉成圖了', () => {
     expect(graph.nodes.length, '一個節點都沒建出來 → 下面的 0 是假的').toBeGreaterThan(100)
+  })
+
+  it('★ 入口條件：文案表【真的讀進來了】', () => {
+    // 🔴 錨在**表有多大**（合成量）——它不會因為有人寫了文案而變小，
+    //    而「表是空的」時它是 0。⚠️ 刻意**不**錨在「設計過幾個」，
+    //    那正是這條護欄要推向零的東西（`build-guardrail` §2 簽名一）。
+    expect(
+      tableSize,
+      '🔴 文案表是空的 → 下面兩個棘輪量的是「有幾個名字」，不是「設計過幾個」',
+    ).toBeGreaterThan(500)
+    // ★ 而它要真的接上 `msg()`——載進來卻沒接上，症狀一模一樣
+    expect(
+      msg('FLOW_SLOT_BODY', ''),
+      '🔴 表載了而 `msg()` 讀不到 → `setMessageSource` 沒接上',
+    ).not.toBe('')
   })
 
   it('★ 注入：判準認得出「顯示的就是那個鍵本身」', () => {

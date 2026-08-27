@@ -1844,6 +1844,34 @@ html, body {
     background: #444;
   }
 
+  /* 流程視圖的分類條收合鈕——**與上面那顆同一個形狀**（使用者：
+     「行動版的話仿照 Blockly 那邊的收合按鈕就好」）。
+     ⚠️ 差別只在定位：這裡的分類條是排版的一部分，所以按鈕貼在它右緣，
+     用 `flex` 的順序就位，不必像 Blockly 那顆去算 `left`。 */
+  body:not(.host-no-mobile-layout) .flow-palette-toggle {
+    display: flex;
+    align-self: center;
+    flex: none;
+    z-index: 20;
+    width: 22px;
+    height: 44px;
+    background: #333;
+    border: 1px solid #555;
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+    color: #ccc;
+    font-size: 12px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+  }
+  body:not(.host-no-mobile-layout) .flow-palette-toggle:active { background: #444; }
+
+  /* ⚠️ 行動版的畫布窄，分類條也跟著窄一點 */
+  body:not(.host-no-mobile-layout) .flow-toolbox { width: 84px; }
+  body:not(.host-no-mobile-layout) .flow-palette { left: 106px; width: 150px; }
+
   /* #editors uses flex: 1 from base styles — tab bar is now in normal
      flex flow, so #editors automatically gets the correct height */
 
@@ -2090,7 +2118,6 @@ html, body {
 /* ─── 流程面板：改一格的值（2026-08-26，(b) 改欄位） ───
    🔴 判準與變數面板同一條：**看得出來能點**。
    一個能改而看不出來的東西，與一個不能改的，在使用者眼裡是同一個。 */
-.fc-field-editable { cursor: text; }
 .fc-node:hover .fc-field-editable { text-decoration: underline dashed #6a6a6a; }
 .flow-field-input {
   position: absolute; z-index: 20; min-width: 120px;
@@ -2101,6 +2128,19 @@ html, body {
 
 /* ─── 流程面板：拉線（2026-08-26，(c) 改接線 ＋ (f) 誠實拒絕） ─── */
 .fc-port-wirable { cursor: crosshair; }
+/* 🔴 **加大命中區**：SVG 的細元素很難點中，而「點不到」與「沒有這個功能」
+   在使用者眼裡一樣。`stroke` 透明但仍然接得到事件。 */
+.fc-port-wirable { stroke: rgba(0,0,0,0); stroke-width: 10; paint-order: stroke; }
+/* 🔴 **拖曳中把能放的地方點亮**：靜止時接點刻意不搶戲（P4 漸進揭露），
+   而拖曳中使用者要找的就是它們。少了這個，接點是半徑 6 的圓——
+   多數人第一次都會放偏，然後看到零反應。 */
+.flow-dropping .fc-port-wirable { stroke: #4a9eff; stroke-width: 3; }
+.flow-dropping .fc-port-wirable:hover { fill: #4a9eff; }
+/* 欄位那一列也要好點——SVG `<text>` 的命中區只有**字身**，
+   點在字距上會穿過去。所以真正接事件的是它後面那塊 `.fc-field-hit`。 */
+.fc-field-editable { cursor: text; pointer-events: none; }
+.fc-field-hit { fill: transparent; cursor: text; }
+.fc-field-hit:hover { fill: rgba(125, 125, 125, 0.14); }
 .fc-port-wirable:hover { stroke: #007acc; stroke-width: 2; }
 .fc-wire-preview { stroke: #007acc; stroke-width: 2; stroke-dasharray: 4 3; pointer-events: none; }
 /* 🔴 拒絕要看得見，而**不是一個對話框**（第七十七條護欄）。 */
@@ -2116,12 +2156,47 @@ html, body {
    而它的定位參照是最近的 positioned 祖先。三欄版面下 `#flow-panel` 若沒有
    `position: relative`，它會參照更外層，**壓在積木那一欄上**（2026-08-26 實測）。
    > 一個絕對定位的東西，會在它的參照消失的那天跑到別人的地盤上。 */
-#flow-panel { position: relative; }
+/* 面板本身不捲——它是直欄，工具列固定在上面 */
+#flow-panel { position: relative; display: flex; flex-direction: column; }
+/* 🔴 **捲的是這一層**：圖常常比面板寬（三欄版面下量到 724 vs 362），
+   而 `overflow: hidden` 會讓超出去的節點**連點都點不到**。 */
+.flow-canvas { flex: 1; min-width: 0; min-height: 0; overflow: auto; position: relative; }
+/* 工具區與畫布並排。彈出格的定位錨在這裡。 */
+.flow-work { flex: 1; min-height: 0; display: flex; position: relative; }
+
+/* 🔴 **分類條佔版面**（不是浮層）——與 Blockly 的工具箱同一個形狀。
+   它不蓋畫布，所以不會重演 2026-08-26 那次「一塊浮層把左上角變成不能點」。 */
+.flow-toolbox {
+  flex: none; width: 96px; overflow-y: auto;
+  background: #252526; border-right: 1px solid #3c3c3c;
+  display: flex; flex-direction: column; padding: 4px 0;
+}
+.flow-cat {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; color: #ccc; cursor: pointer;
+  font-size: 12px; text-align: left; padding: 6px 8px; width: 100%;
+}
+.flow-cat:hover { background: #2d2d30; }
+.flow-cat.active { background: #37373d; color: #fff; }
+.flow-cat-swatch {
+  flex: none; width: 10px; height: 10px; border-radius: 2px; background: #666;
+}
+
+/* 🔴 **收合鈕只在行動版出現**（2026-08-27）。
+   桌機上分類條靠邊排版、96px、不蓋任何東西——**沒有理由收它**，
+   而一顆沒有理由按的按鈕佔的是工具列最貴的那塊地方。
+   形狀照抄積木那側的 `.toolbox-collapse-btn`。 */
+.flow-palette-toggle { display: none; }
+
+/* 彈出的那一格——**暫時的**：拖曳一開始就收（見 `closeFlyout`）。 */
 .flow-palette {
-  position: absolute; left: 8px; top: 40px; z-index: 15;
-  display: flex; flex-wrap: wrap; gap: 4px; max-width: 240px;
-  background: rgba(30,30,30,.92); border: 1px solid #3a3a3a;
-  border-radius: 3px; padding: 5px; max-height: 45%; overflow-y: auto;
+  position: absolute; left: 96px; top: 0; bottom: 0; z-index: 15;
+  display: flex; flex-direction: column; gap: 4px; width: 168px;
+  /* ⚠️ **不透明**：半透明的話底下的節點會透出來，畫面糊成一片
+     ——而使用者這一刻要看的是這一格裡有什麼，不是後面有什麼。 */
+  background: #1e1e1e; border-right: 1px solid #3a3a3a;
+  box-shadow: 2px 0 6px rgba(0,0,0,.4);
+  padding: 6px; overflow-y: auto;
 }
 .flow-chip {
   background: #2d2d2d; color: #d4d4d4; border: 1px solid #454545;

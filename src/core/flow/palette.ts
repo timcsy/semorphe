@@ -29,6 +29,28 @@ export interface PaletteItem {
   category: string
   /** 積木型別——⚠️ 它是**工具箱的詞彙**，這裡只用來查身分。 */
   blockType: string
+  /**
+   * 這一項的**預設狀態**（工具箱的 `extraTypes` 帶的那個）。
+   *
+   * 🔴 **它是積木的形狀，不是樹的形狀**——2026-08-27 實測：
+   *
+   * ```
+   * cpp_if {}                          接點 CONDITION/THEN/TAIL
+   * cpp_if {hasElse:true}              接點 …＋ ELSE
+   * cpp_if {elseifCount:1,hasElse:true} 接點 …＋ ELSEIF_CONDITION_0/ELSEIF_THEN_0
+   *
+   * 而三者抽出來的【語義樹完全相同】：{condition:1, then_body:0, else_body:0}
+   * ```
+   *
+   * > **`extraState` 決定積木長出哪些插槽，而樹只記錄插槽裡【有什麼】。
+   * > 空的插槽在樹裡不存在。**
+   *
+   * ⚠️ 所以流程視圖**不能照抄它**——流程的接點是宣告出來的（永遠都在），
+   * 所以「有沒有 else」在那裡不是一個選項。真正有差別的是
+   * **預先接好的骨架**（例如 else-if 是一顆巢狀的 `cpp:if`），
+   * 而那由 `flow/presets.ts` 從這裡的 `extraState` 翻譯出來。
+   */
+  extraState?: Record<string, unknown>
 }
 
 interface ToolboxLike {
@@ -36,7 +58,7 @@ interface ToolboxLike {
     kind?: string
     name?: string
     type?: string
-    contents?: Array<{ kind?: string; type?: string }>
+    contents?: Array<{ kind?: string; type?: string; extraState?: Record<string, unknown> }>
   }>
 }
 
@@ -56,7 +78,11 @@ export function paletteFromToolbox(toolbox: unknown): PaletteItem[] {
     const category = String(cat.name ?? '')
     for (const item of cat.contents ?? []) {
       if (item.kind !== 'block' || typeof item.type !== 'string') continue
-      out.push({ category, blockType: item.type })
+      out.push({
+        category,
+        blockType: item.type,
+        ...(item.extraState ? { extraState: item.extraState } : {}),
+      })
     }
   }
   return out

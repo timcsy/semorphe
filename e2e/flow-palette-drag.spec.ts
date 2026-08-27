@@ -34,7 +34,35 @@ test('★ 真人滑鼠：從 palette 拖一顆到接點上 → 語義樹真的�
 
   // 切到流程分頁——⚠️ 用**文字**認那顆分頁，而不是位置
   await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
-  await expect(page.locator('.flow-palette')).toBeVisible({ timeout: 10_000 })
+
+  // 🔴 **積木盤是 Blockly 的形狀**（2026-08-27）：左邊一條固定的**分類**，
+  //    點了才彈出那一格的積木。所以要按兩下才拿得到一顆。
+  //
+  // ⚠️ 它經過兩次形狀改變，而兩次都是使用者回報的：
+  //
+  // ```
+  // 一開始   一整面 22 顆浮在圖上   → 蓋住左上角，「根本無法拖曳與編輯還有接線」
+  // 08-26   預設收起來             → 不蓋了，而【攤平的清單仍然難找】
+  // 08-27   分類條 ＋ 彈出格        → 分類條佔版面（不蓋），彈出格拖曳時讓開
+  // ```
+  //
+  // 🟢 而**這支 e2e 是唯一抓得到這些改動的東西**——它按的正是「使用者按得到的東西」。
+  await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
+
+  /**
+   * 打開一個分類。
+   *
+   * 🔴 **每次拖曳之前都要重來一次**——拖曳一開始彈出格就收起來了，
+   * 而那是**刻意的**：它覆蓋在畫布上，不讓開的話使用者看不到自己要放去哪裡。
+   *
+   * ⚠️ 這一支第一版把它寫在測試開頭呼叫一次，於是**第二次拖曳找不到積木**
+   * ——症狀是「palette 上沒有『宣告變數』」，而 palette 是對的。
+   */
+  const openCategory = async (name: string): Promise<void> => {
+    await page.locator('.flow-cat').filter({ hasText: name }).first().click()
+    await expect(page.locator('.flow-palette')).toBeVisible({ timeout: 10_000 })
+  }
 
   /**
    * **樹裡有幾顆節點**——這一支的判準。
@@ -62,6 +90,7 @@ test('★ 真人滑鼠：從 palette 拖一顆到接點上 → 語義樹真的�
 
   /** 真的滑鼠：按下 → 移動 → 放開。與真人按滑鼠同一條路。 */
   const dragTo = async (chipText: string | RegExp, portKey: string): Promise<void> => {
+    await openCategory('資料')
     const chip = page.locator('.flow-chip').filter({ hasText: chipText }).first()
     await expect(chip, `🔴 palette 上沒有「${String(chipText)}」`).toBeVisible()
     const target = page.locator(`.fc-port-wirable[data-port="${portKey}"]`).first()
@@ -90,7 +119,11 @@ test('★ 真人滑鼠：從 palette 拖一顆到接點上 → 語義樹真的�
   //    > **一個已經滿了的位置，接得上而看不出來。**
   //    （⚠️ 那也是一個真的缺口：規則沒有判**容量**。記在路線圖上。）
   await page.evaluate(() => document.querySelector('.flow-notice')?.remove())
-  await dragTo('宣告 … 變數 …', 'declarators')
+  // ⚠️ **這個字串會隨文案改**（2026-08-27 從「宣告 … 變數 …」變成「宣告變數」）：
+  //    在那之前流程節點沒有設計過的標題，用的是**積木那句話挖掉空格**的退路。
+  //    現在 233 顆各有一個名詞片語，所以 chip 上寫的是那個名字。
+  //    🟢 而它**該**釘死字串——這支驗的正是「使用者看到那幾個字、按得下去」。
+  await dragTo('宣告變數', 'declarators')
   await expect
     .poll(nodeCount, { timeout: 8000, message: '🔴 真人拖曳之後樹沒有多一顆 → 這個手勢在真的輸入下沒有作用' })
     .toBe(before + 1)

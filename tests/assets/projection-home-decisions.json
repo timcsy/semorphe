@@ -98,5 +98,10 @@
     "key": "python:container_enumerate.start_style",
     "cause": "排版提示，不給學生編輯",
     "reason": "記的是**原文把起點寫成哪一種**（`enumerate(xs, 1)` 還是 `enumerate(xs, start=1)`）——兩種語義相同，而產回去換一種等於改了使用者的碼。⚠️ 給學生一格下拉會讓一個**寫法**看起來像一個語義選擇。"
+  },
+  {
+    "key": "cpp:if:else_body",
+    "cause": "投影走具名策略",
+    "reason": "**它在積木上有位置，而那個位置是 `extraState` 長出來的**——所以靜態掃描看不到它。實測：`cpp_if` 帶 `{hasElse:true}` 時 `inputList` 多一格 `ELSE`，不帶就沒有。\n\n🔴 而這一格 2026-08-27 之前**根本沒有被宣告**（`children` 只有 `condition` 與 `then_body`），於是流程視圖上那顆「如果」沒有 else 接點——**使用者在那裡做不出 else**。\n> 一個沒有被宣告的位置，在靠宣告長出接點的視圖裡等於不存在。\n\n⚠️ 補宣告不會讓積木多一格：積木那側仍然由 `extraState` 決定要不要畫 `ELSE`，而樹裡有沒有 `else_body` 由**那一格裡有沒有東西**決定（空插槽在樹裡不存在）。"
   }
 ]

@@ -93,6 +93,24 @@ export class SplitPane {
     })
   }
 
+  /**
+   * **把比例重新貼回去**（2026-08-27）。
+   *
+   * 🔴 它存在的理由是一次真的翻車：`applyLayout` 為了還原「專注」模式動過的
+   * 寬度，寫了 `blocksColumn.style.flex = ''` ＋ `blocksColumn.style.width = ''`
+   * ——**而 `blocksColumn` 就是這裡的 `rightPanel`**，那個 inline 寬度是這個類別的。
+   *
+   * 清掉之後它退回 `flex: 0 1 auto`，縮成**內容寬度**：實測 2000px 的視窗裡
+   * 積木欄只剩 **213px**，右邊一大片黑。
+   *
+   * > **兩個地方寫同一個 inline 樣式，後寫的那個不知道自己在覆蓋一份狀態。**
+   *
+   * → 外面要「還原」的時候呼叫這一支，而不是把它清成空字串。
+   */
+  refresh(): void {
+    this.applyRatio()
+  }
+
   private applyRatio(): void {
     const dividerSize = 4
     const first = `calc(${this.leftRatio * 100}% - ${dividerSize / 2}px)`

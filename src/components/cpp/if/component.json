@@ -4,7 +4,8 @@
   "properties": [],
   "children": {
     "condition": "expression",
-    "then_body": "statements"
+    "then_body": "statements",
+    "else_body": "statements"
   },
   "role": "statement",
   "annotations": {
