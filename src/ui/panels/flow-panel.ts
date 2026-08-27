@@ -43,6 +43,7 @@ import { buildNodeGraph, type NodeGraph, type GraphNode, type GraphPort } from '
 import { labelSourceFromSpecs, collapseBlockMessage, flowTitle, type FlowLabelSource } from '../../core/flow/vocabulary'
 import { paletteFromToolbox, type PaletteItem } from '../../core/flow/palette'
 import { presetTree, presetKey, presetSuffixKey } from '../../core/flow/presets'
+import { walkWithPath, matchNodes, type KeyedNode } from '../../core/flow/layout-key'
 import { tryConnect, tryReorder, refusalKeyOf, type RefusalReason } from '../../core/flow/connect'
 import { bodySlotsOf } from '../../core/component/traits'
 import { msg } from '../../core/messages'
@@ -54,7 +55,22 @@ const PAD = 24
 const HEADER_H = 26
 const ROW_H = 20
 
-interface Offset { dx: number; dy: number }
+/**
+ * 一顆手放過的節點在哪裡——**絕對座標，不是相對自動排版的位移**。
+ *
+ * 🔴 它 2026-08-27 從 `{dx, dy}` 換過來，而換的理由是一次量測：
+ * 手拖九顆、在程式碼末尾加一行之後，**只有七顆留在原地**——
+ * 位移都被正確搬到新 id 上了，而**自動排版把其中兩顆的底座挪了**，
+ * 於是「底座 ＋ 位移」算出來的位置跟著變。
+ *
+ * > **一個相對於「會自己動的東西」的座標，不是位置，是一個關係。
+ * > 而使用者拖的時候心裡想的是位置。**
+ *
+ * ⚠️ 節點編輯器的慣例也是這個（React Flow／n8n／ComfyUI）：拖過的節點
+ * 有絕對座標，而「自動排版」是一個**動作**，按下去覆蓋它們（那一條
+ * 2026-08-24 就寫死了：「一鍵自動排版是一個【動作】，不是一個【模式】」）。
+ */
+interface Placed { x: number; y: number }
 
 export class FlowPanel implements ViewHost {
   readonly viewId = 'flow'
@@ -78,7 +94,7 @@ export class FlowPanel implements ViewHost {
   private code = ''
   private mappings: CodeMapping[] = []
   /** 使用者手拖的位移——**面板私有**，不回寫真實 */
-  private offsets = new Map<string, Offset>()
+  private offsets = new Map<string, Placed>()
   private graph: NodeGraph | null = null
   /** 粒度：`null` ＝ 整份程式；否則是某顆節點的 id */
   private scopeId: string | null = null
@@ -678,10 +694,81 @@ export class FlowPanel implements ViewHost {
     this.graph = buildNodeGraph(this.rootBody(), this.labelSource(), { emptySlots: this.capabilities.editable })
     // 拖曳位移只留給還在的節點——刪掉的節點不該留著一個看不見的位移
     const alive = new Set(this.graph.nodes.map((n) => n.id))
+    // 🔴 **把手拖的位置搬到新的 id 上**——2026-08-27。
+    //
+    // 在此之前這裡只有下面那一行「不在新樹裡就刪掉」，而
+    // **重新解析之後【沒有一顆】節點的 id 還在**（`generateId()` 是
+    // `node_${++counter}_${Date.now()}`，兩個都會變）。實測 9→11 顆、id 相同 0。
+    //
+    // > **使用者手拖十顆節點，在程式碼裡打一個字，十顆全部跳回自動排版的位置。**
+    //
+    // 🟢 換的鑰匙是**三把一起**（`core/flow/layout-key.ts`），因為量出來
+    // 三者掉的是不同的那幾顆：路徑掉「索引位移的兄弟」、行號掉「行號變了的」、
+    // 內容掉「值被改的那一顆」——**失效條件互斥，所以聯集是 100%**。
+    this.remapOffsets()
     for (const id of [...this.offsets.keys()]) if (!alive.has(id)) this.offsets.delete(id)
     this.paint()
     // 剛從 palette 放下的那一顆要落在手放開的地方——**要等它畫出來才算得出偏移**。
     this.applyPendingDrop()
+    // ⚠️ **快照要在最後拍**：下一次重建要拿「這一次的樹 ＋ 這一次的行號對映」去配對。
+    this.prevKeyed = this.keyedNodes()
+  }
+
+  /** 上一次重建時那棵樹長什麼樣——配對用。 */
+  private prevKeyed: KeyedNode[] | null = null
+
+  private keyedNodes(): KeyedNode[] {
+    const root = this.scopedRoot()
+    if (!root) return []
+    return walkWithPath(root, (id) => {
+      const m = this.mappings.find((x) => x.nodeId === id)
+      return typeof m?.startLine === 'number' ? m.startLine : null
+    })
+  }
+
+  /**
+   * 把位移從舊 id 搬到新 id。
+   *
+   * ⚠️ **對不回去的要看得見**（P6：`principles.md:135`「降級必須……必須可見」）
+   * ——安靜地掉回自動排版，症狀是「我拖的東西自己跑掉了」，而使用者找不到原因。
+   *
+   * 🔴 只在**使用者真的拖過**（`offsets` 非空）時才出聲：
+   * 開機那一次什麼都沒拖，報「有 3 顆對不回去」只是噪音。
+   */
+  private remapOffsets(): void {
+    if (this.offsets.size === 0 || !this.prevKeyed || this.prevKeyed.length === 0) return
+    const now = this.keyedNodes()
+    if (now.length === 0) return
+    const pairs = matchNodes(this.prevKeyed, now)
+    // 沒有任何一顆配得上 → 這是換了一份程式，不是一次編輯。不出聲，讓它重排。
+    if (pairs.size === 0) return
+    const next = new Map<string, Placed>()
+    let lost = 0
+    for (const [oldId, off] of this.offsets) {
+      const newId = pairs.get(oldId)
+      if (newId) next.set(newId, off)
+      else lost += 1
+    }
+    this.offsets = next
+    // 🔴 **被刪掉的不算「掉了位置」**（2026-08-27 實測抓到的誤報）。
+    //
+    // 使用者刪掉一行 → 那顆節點配不到 → 第一版報「2 顆對不回原本的位置」。
+    // **而它們是被刪掉的，不是掉了。**
+    //
+    // > **一條在正常操作下也會響的警告，會被訓練成沒有人看
+    // > ——而那時它報的真問題也一起被忽略了。**
+    //
+    // ⚠️ 判準是**保守的近似**：樹縮小了幾顆，就先假設那幾顆是被刪的。
+    //    它會漏報「同時刪一顆又掉一顆」那種情況——而那個代價換到的是
+    //    「刪除不再誤報」，而刪除是每天都在做的事。
+    const deleted = Math.max(0, this.prevKeyed.length - now.length)
+    const unexplained = lost - deleted
+    if (unexplained > 0) {
+      this.showNotice(
+        msg('FLOW_LAYOUT_LOST', '有 {n} 顆節點在這次編輯之後對不回原本的位置，它們回到自動排版。')
+          .replace('{n}', String(unexplained)),
+      )
+    }
   }
 
   /**
@@ -725,8 +812,8 @@ export class FlowPanel implements ViewHost {
   }
 
   private posOf(n: GraphNode): { x: number; y: number } {
-    const o = this.offsets.get(n.id)
-    return { x: n.x + PAD + (o?.dx ?? 0), y: n.y + PAD + (o?.dy ?? 0) }
+    // 手放過的用它自己的絕對座標；沒放過的才問自動排版。
+    return this.offsets.get(n.id) ?? { x: n.x + PAD, y: n.y + PAD }
   }
 
   private portAt(nodeId: string, portKey: string): { x: number; y: number; port: GraphPort } | null {
@@ -1149,9 +1236,10 @@ export class FlowPanel implements ViewHost {
     g.addEventListener('pointerdown', (ev: PointerEvent) => {
       ev.preventDefault()
       const start = { x: ev.clientX, y: ev.clientY }
-      const base = this.offsets.get(id) ?? { dx: 0, dy: 0 }
+      const node = this.graph?.nodes.find((n) => n.id === id)
+      const base = node ? this.posOf(node) : { x: 0, y: 0 }
       const move = (e: PointerEvent): void => {
-        this.offsets.set(id, { dx: base.dx + (e.clientX - start.x), dy: base.dy + (e.clientY - start.y) })
+        this.offsets.set(id, { x: base.x + (e.clientX - start.x), y: base.y + (e.clientY - start.y) })
         this.paint()
       }
       const up = (): void => {
@@ -1163,10 +1251,16 @@ export class FlowPanel implements ViewHost {
     })
   }
 
-  /** 測試用：面板私有狀態的**唯一**寫入口（護欄靠它證明「真的動過」） */
+  /**
+   * 測試用：面板私有狀態的**唯一**寫入口（護欄靠它證明「真的動過」）。
+   *
+   * ⚠️ 參數仍然是**位移**（呼叫端想的是「往右移 40」），而存下去的是
+   * **它移完之後在哪**——見 `Placed` 的說明。
+   */
   moveNode(id: string, dx: number, dy: number): void {
-    const base = this.offsets.get(id) ?? { dx: 0, dy: 0 }
-    this.offsets.set(id, { dx: base.dx + dx, dy: base.dy + dy })
+    const node = this.graph?.nodes.find((n) => n.id === id)
+    const base = node ? this.posOf(node) : { x: 0, y: 0 }
+    this.offsets.set(id, { x: base.x + dx, y: base.y + dy })
     this.paint()
   }
 

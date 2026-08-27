@@ -636,5 +636,6 @@
   "FLOW_TITLE_CPP_ADDRESS_OF": "Address of",
   "FLOW_DROP_MISSED": "Drop it on a port (one of the small dots).",
   "FLOW_PRESET_ELSEIF": " / else if",
-  "FLOW_SLOT_ELSE_BODY": "Else"
+  "FLOW_SLOT_ELSE_BODY": "Else",
+  "FLOW_LAYOUT_LOST": "{n} node(s) lost their hand-placed position in this edit and went back to auto layout."
 }
