@@ -1,0 +1,17 @@
+{
+  "title": "讀進來",
+  "estimate": "20 分鐘",
+  "pins": { "target": "cpp" },
+  "components": [
+    "cpp:func_def",
+    "cpp:var_declare",
+    "cpp:input",
+    "cpp:var_ref",
+    "cpp:print",
+    "cpp:literal_string",
+    "cpp:endl",
+    "cpp:return",
+    "cpp:literal_number"
+  ],
+  "check": { "stdout": "你打的是 7\n", "stdin": ["7"] }
+}

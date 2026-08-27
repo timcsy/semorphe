@@ -1,0 +1,14 @@
+{
+  "title": "印出一句話",
+  "estimate": "20 分鐘",
+  "pins": { "target": "cpp" },
+  "components": [
+    "cpp:func_def",
+    "cpp:print",
+    "cpp:literal_string",
+    "cpp:endl",
+    "cpp:return",
+    "cpp:literal_number"
+  ],
+  "check": { "stdout": "Hello!\n", "stdin": [] }
+}

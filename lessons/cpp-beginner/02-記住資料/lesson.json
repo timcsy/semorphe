@@ -1,0 +1,16 @@
+{
+  "title": "記住資料",
+  "estimate": "25 分鐘",
+  "pins": { "target": "cpp" },
+  "components": [
+    "cpp:func_def",
+    "cpp:var_declare",
+    "cpp:literal_number",
+    "cpp:literal_char",
+    "cpp:print",
+    "cpp:var_ref",
+    "cpp:endl",
+    "cpp:return"
+  ],
+  "check": { "stdout": "16\n1.72\nA\n", "stdin": [] }
+}

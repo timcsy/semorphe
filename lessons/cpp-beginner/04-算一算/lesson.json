@@ -1,0 +1,18 @@
+{
+  "title": "算一算",
+  "estimate": "25 分鐘",
+  "pins": { "target": "cpp" },
+  "components": [
+    "cpp:func_def",
+    "cpp:var_declare",
+    "cpp:literal_number",
+    "cpp:var_assign",
+    "cpp:var_ref",
+    "cpp:arithmetic",
+    "cpp:print",
+    "cpp:literal_string",
+    "cpp:endl",
+    "cpp:return"
+  ],
+  "check": { "stdout": "分數是 100\n", "stdin": [] }
+}

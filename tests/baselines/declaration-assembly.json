@@ -5,8 +5,9 @@
     "measuredAt": "2026-08-25"
   },
   "scanned": {
-    "testFileCount": 397
+    "testFileCount": 398
   },
   "adHocAssembly": 0,
-  "details": []
+  "details": [],
+  "note": "\n⚠️ 2026-08-27：語料變大——新增 `tests/integration/audit-lessons.test.ts`（第八十三條）＋ `e2e/lessons.spec.ts` ＋ `lessons/` 四堂課。**輸入量變大，不是退步。**"
 }
