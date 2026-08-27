@@ -197,7 +197,20 @@ export class BlocklyPanel implements ViewHost {
   }
 
   onSemanticUpdate(event: SemanticUpdateEvent): void {
-    if ((event.source === 'code' || event.source === 'resync') && event.blockState) {
+    // 🔴 **跳過的是「我自己改的」，不是「某個視圖改的」**（2026-08-27）。
+    //
+    // 在此之前這裡的條件是 `source === 'code' || source === 'resync'`
+    // ——而 `source: 'blocks'` 一直被當成「樹被某個視圖改了」。
+    // 流程面板 2026-08-26 也開始送 `edit:tree` 之後，**積木把它的編輯認成自己的**：
+    // 使用者在流程改一個變數名，程式碼與流程都變了，而積木上還寫著舊名字。
+    //
+    // > **一個用「哪一類視圖」判斷來源的條件，
+    // > 在第二個同類視圖出現的那天會把別人的編輯當成自己的。**
+    //
+    // ⚠️ 而**不能改成「一律重畫」**：重畫自己的編輯會打斷拖曳、清掉復原堆疊
+    //    （下面那整段就是在處理這件事）。要跳過的只有**我自己**發的那一次。
+    const mine = event.originViewId !== undefined && event.originViewId === this.viewId
+    if (!mine && event.blockState) {
       diagNote(`🔄 重畫 ← ${event.source}｜重畫前頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆｜復原堆疊 ${this.workspace?.getUndoStack().length ?? 0} 項`)
       const prevGroup = Blockly.Events.getGroup()
       Blockly.Events.setGroup(BlocklyPanel.BUS_GROUP)

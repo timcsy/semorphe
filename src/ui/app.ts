@@ -558,8 +558,12 @@ export class App {
     //    ⚠️ 走 `edit:tree` 這個**通用**事件，不是 `edit:flow`
     //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。
     this.applyLayout = elements.applyLayout
+    // ⚠️ `viewId` 要問面板自己，**不是寫死一個字串**（2026-08-27 修）：
+    //    寫死的是 `'flow-panel'` 而面板宣告的是 `'flow'`，兩個對不上。
+    //    那在 `originViewId` 出現之前沒有人看得出來——因為沒有人讀它。
+    //    > **一個沒有人讀的識別字，錯了也不會有人知道。**
     elements.flowPanel?.onEdit((tree) =>
-      this.bus.emit('edit:tree', { viewId: 'flow-panel', tree }))
+      this.bus.emit('edit:tree', { viewId: elements.flowPanel?.viewId, tree }))
     // 🔴 **palette 讀工具箱的【輸出】**（2026-08-26，(d)）——不是各自從登錄表算一次。
     this.flowPanel = elements.flowPanel
     this.flowPanel?.setPalette(this.buildToolboxInner())

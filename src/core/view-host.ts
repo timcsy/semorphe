@@ -85,6 +85,29 @@ export interface SemanticUpdateEvent {
   code?: string
   blockState?: unknown
   source: 'blocks' | 'code' | 'resync'
+  /**
+   * **這次更新是誰改出來的**（那個視圖的 `viewId`）。
+   *
+   * ## 🔴 為什麼 `source` 不夠（2026-08-27，使用者：「流程和積木好像沒有同步到」）
+   *
+   * `source` 只有三個值，而其中的 `'blocks'` 一直被當成「樹被某個視圖改了」用。
+   * 積木面板據此**跳過**那種更新（那是它自己的編輯，重畫會打斷拖曳）：
+   *
+   * ```ts
+   * if ((event.source === 'code' || event.source === 'resync') && event.blockState) …
+   * ```
+   *
+   * 而流程面板 2026-08-26 也開始送 `edit:tree` 之後，`handleEditTree` 仍然
+   * 寫死 `source: 'blocks'`——**於是積木把流程的編輯當成自己的，跳過了**。
+   * 實測：在流程改一個變數名，程式碼與流程都變了，**而積木上還寫著舊名字**。
+   *
+   * > **一個用「哪一類視圖」當來源的欄位，在第二個同類視圖出現的那天
+   * > 會把別人的編輯認成自己的。**
+   *
+   * ⚠️ 修法**不是**讓核心去認某一顆面板的名字（那會踩到 P9 視圖獨立性），
+   * 而是把「誰改的」如實傳下去，**由每個視圖自己判斷那是不是它自己**。
+   */
+  originViewId?: string
   mappings?: CodeMapping[]
   scaffoldResult?: ScaffoldResult
 }

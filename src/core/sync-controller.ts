@@ -278,7 +278,12 @@ export class SyncController {
       const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(tree) : tree
       const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
 
-      this.bus.emit('semantic:update', { tree, code, blockState: renderResult, source: 'blocks', mappings, scaffoldResult })
+      // ⚠️ `source: 'blocks'` 保留原義（「樹被某個視圖改了」），而**誰改的**
+      //    由 `originViewId` 如實帶下去——見它的說明。
+      this.bus.emit('semantic:update', {
+        tree, code, blockState: renderResult, source: 'blocks',
+        originViewId: data.viewId, mappings, scaffoldResult,
+      })
     } finally {
       this.syncing = false
     }
