@@ -1202,7 +1202,10 @@ export class App {
    * ⚠️ 與 `scaffoldNodeIds` **共用同一份走法**（`collect`），
    * 兩份各走一次的話它們遲早會不一致。
    */
-  private scaffoldComponentIds(): Set<string> {
+  // 🔴 **公開的**——`e2e/lessons.spec.ts` 要問「這一課的哪幾顆是骨架的」，
+  //    而它**不該自己再實作一次那條規則**（`history/188`：同一個決定的第六份實作
+  //    就是這樣長出來的）。這裡是唯一的來源。
+  scaffoldComponentIds(): Set<string> {
     const ids = this.scaffoldNodeIds()
     const out = new Set<string>()
     const walk = (n: { id?: string; componentId?: string; children?: Record<string, unknown[]> }): void => {

@@ -145,9 +145,32 @@ for (const c of CASES) {
     //    （`語言:名字`，實測 332/332）。
     const used = measured.filter((x) => !x.endsWith(':program') && x.includes(':'))
 
+    // 🔴 **骨架的元件不算在課的宣告裡**（2026-08-28）。
+    //
+    // 在此之前 65 堂課每一堂都得列 `func_def` 與 `return`——因為每支程式都有
+    // `int main(){ … return 0; }`。而那張表**同時在驅動工具箱**，於是
+    // 第 1 課的工具箱裡有「函式」那一格（使用者：「為何在工具箱還看得到函式？」）。
+    //
+    // > **一張表扛兩個工作：「畫得出來」與「拿得到」。而骨架要前者、不要後者。**
+    //
+    // ⚠️ **問 app，不要在這裡自己判一次**——「哪一塊是骨架」這個決定
+    //    在 2026-08-28 之前已經有六份各自的實作了（`history/188`）。
+    const skeletonOwned = await page.evaluate(() =>
+      [...(window as never as { __app: { scaffoldComponentIds(): Set<string> } })
+        .__app.scaffoldComponentIds()])
+
+    // ★ 入口條件——這個機制沒有死掉。有骨架的語言至少要認出一顆；
+    //   全空的話下面那條斷言會**什麼都不擋**而看起來是綠的。
+    if (c.target !== 'python') {
+      expect(
+        skeletonOwned.length,
+        `🔴 ${c.name}：一顆骨架元件都認不出來 → 下面那條斷言是空過的`,
+      ).toBeGreaterThan(0)
+    }
+
     expect(
-      used.filter((x) => !declared.has(x)).sort(),
-      `🔴 ${c.name} 的程式碼用到了【沒有宣告】的元件——` +
+      used.filter((x) => !declared.has(x) && !skeletonOwned.includes(x)).sort(),
+      `🔴 ${c.name} 的程式碼用到了【沒有宣告、也不是骨架】的元件——` +
         `學生在課堂上會找不到這幾顆積木：`,
     ).toEqual([])
 
