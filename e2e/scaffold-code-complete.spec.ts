@@ -187,7 +187,7 @@ test('★ `ghost` 在積木上要真的看得出來——淡的 ＋ 動不了', 
   //    而那是**節點**的性質不是元件的性質——只掃元件身分的話它會漏掉。
   expect(
     gh.ghost.some((t) => t.includes('func_def')),
-    '🔴 `int main()` 沒有變淡——外框最重要的那一塊漏了',
+    '🔴 `int main()` 沒有變淡——骨架最重要的那一塊漏了',
   ).toBe(true)
   // 🪦 這裡曾經斷言「淡的一定要 `isMovable() === false`」——**而那條被實測推翻**。
   //    設了它，學生的積木就**插不進 `main` 與 `return` 之間**
@@ -200,6 +200,43 @@ test('★ `ghost` 在積木上要真的看得出來——淡的 ＋ 動不了', 
     gh.locked.filter((t) => /print|literal_string/.test(t)),
     '🔴 把學生自己的積木鎖住了',
   ).toEqual([])
+
+  // 🔴 **字也要淡**（使用者 2026-08-28：「我希望淡的積木那邊，**字也要是淡的**」）。
+  //
+  // 第一版的 CSS 寫的是 `.blocklyEditableField` / `.blocklyNonEditableField`
+  // ——而積木的**標籤**（「使用命名空間」「回傳」）住在 `.blocklyLabelField` 裡，
+  // **一個都沒中**。於是外框是淡的、字是亮的。
+  //
+  // > **一個對著不存在的類別名寫的規則，與沒有寫是同一件事，
+  // > 而它看起來像已經處理過了。**
+  //
+  // ⚠️ 所以這一條量的是**算出來的 opacity**，不是「CSS 裡有沒有那一行」。
+  const text = await page.evaluate(() => {
+    const rows: { block: string; label: string; opacity: number; ghost: boolean }[] = []
+    for (const g of Array.from(document.querySelectorAll('.blocklyDraggable'))) {
+      const ghost = g.classList.contains('ghost-block')
+      for (const c of Array.from(g.children)) {
+        // ⚠️ **只看直接子代**——巢狀的積木自己有自己的那一份判斷
+        if (c.classList.contains('blocklyDraggable')) continue
+        const t = c.querySelector('text')
+        if (!t?.textContent) continue
+        rows.push({ block: g.getAttribute('data-id') ?? '?', label: t.textContent, ghost,
+          opacity: Number(getComputedStyle(c).opacity) })
+      }
+    }
+    return rows
+  })
+  expect(text.length, '🔴 一個文字都沒抓到 → 這一條不算數').toBeGreaterThan(4)
+
+  const brightGhost = text.filter((r) => r.ghost && r.opacity >= 1).map((r) => r.label)
+  expect(
+    brightGhost,
+    '🔴 這些字在淡的積木上還是亮的——多半是 CSS 的類別名對不上（量一次真的 DOM，不要猜）：',
+  ).toEqual([])
+
+  // ★ 反向：**學生自己的字不得被淡掉**
+  const dimStudent = text.filter((r) => !r.ghost && r.opacity < 1).map((r) => r.label)
+  expect(dimStudent, '🔴 把學生自己的字也淡掉了').toEqual([])
 })
 
 const TWO =
@@ -372,7 +409,7 @@ test('★ `ghost`：鷹架在【最外層】也黏得住（不只在容器裡）
 test('★ Arduino 也有鷹架——`setup`／`loop` 是淡的，而「隱藏」不端出來', async ({ page }) => {
   // 🔴 使用者 2026-08-28：「**我希望 Arduino 系列也有腳手架**」。
   //
-  // 在此之前九個板子目標的 `entryShell` 都是 `'none'`——**而那是「沒有外框」**。
+  // 在此之前九個板子目標的 `skeleton` 都是 `'none'`——**而那是「沒有骨架」**。
   // 症狀：切到 Arduino、把顯示切成「淡的」，畫面上**什麼都不會變**
   // ——`scaffoldNodeIds` 認的是「函式定義 ＋ 名字叫 `main`」。
   //
@@ -392,17 +429,17 @@ test('★ Arduino 也有鷹架——`setup`／`loop` 是淡的，而「隱藏」
   await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
   const options = await page.locator('.quick-pick-item').allTextContents()
 
-  // ★ 這個語言的外框都列得出來，而 **Arduino 那一份在裡面**
+  // ★ 這個語言的骨架都列得出來，而 **Arduino 那一份在裡面**
   expect(
-    options.some((o) => o.includes('Arduino 外框')),
-    '🔴 選單裡沒有 Arduino 的外框——那九個板子還指著「沒有外框」',
+    options.some((o) => o.includes('Arduino 骨架')),
+    '🔴 選單裡沒有 Arduino 的骨架——那九個板子還指著「沒有骨架」',
   ).toBe(true)
 
   // 🔴 **「隱藏」不得出現**——Arduino 有兩個進入點，兩批語句攤平之後分不回去。
   //    使用者：「這也會**被你選什麼目標限制有哪些選擇**」。
   expect(
     options.filter((o) => o.startsWith('隱藏')),
-    '🔴 端出了一個做不到的選項——「隱藏」在兩個進入點的外框上是把資訊弄丟，不是藏起來',
+    '🔴 端出了一個做不到的選項——「隱藏」在兩個進入點的骨架上是把資訊弄丟，不是藏起來',
   ).toEqual([])
 
   await page.locator('.quick-pick-item[data-value="mode:ghost"]').click()
@@ -433,5 +470,5 @@ test('★ Arduino 也有鷹架——`setup`／`loop` 是淡的，而「隱藏」
   // ★ 狀態列同時說出兩個軸
   expect(
     await page.locator('.status-item-btn[data-control-id="scaffold"]').textContent(),
-  ).toContain('Arduino 外框')
+  ).toContain('Arduino 骨架')
 })

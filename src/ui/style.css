@@ -341,7 +341,7 @@ html, body {
    * 🔴 **洗成「一段可以按的字」**——VSCode 的狀態列項目沒有框、沒有箭頭。
    *
    * ⚠️ `appearance: none` ＋ 拿掉 `background-image` 兩者缺一不可：
-   * 前者拿掉原生外框，而**箭頭是 `.toolbar-select` 自己畫的背景圖**，
+   * 前者拿掉原生骨架，而**箭頭是 `.toolbar-select` 自己畫的背景圖**，
    * 只做前者的話箭頭會留在原地。
    *
    * > 要像的不是「一個比較樸素的下拉」，是**一段字**。
@@ -1328,17 +1328,28 @@ html, body {
  * > **一個「把這一塊變淡」的寫法，在那一塊裝得下別的東西時
  * > 會把別人的東西一起變淡。**
  *
- * 所以用**直接子代選擇器**：外框自己的路徑與欄位變淡，
+ * 所以用**直接子代選擇器**：骨架自己的路徑與欄位變淡，
  * 而巢狀的積木（Blockly 的子積木也是 `.blocklyDraggable`）不受影響。 */
 .ghost-block > .blocklyPath {
   opacity: 0.4;
   stroke-dasharray: 4 3;
 }
+/* 🔴 **類別名是量出來的，不是猜的**（2026-08-28）。
+   第一版寫 `.blocklyEditableField` / `.blocklyNonEditableField`，
+   而積木的**標籤**（「使用命名空間」「回傳」）住在 `.blocklyLabelField` 裡
+   ——**一個都沒中**，於是淡的積木上文字整片是亮的。
+
+   > 一個對著不存在的類別名寫的規則，與沒有寫是同一件事，
+   > 而它看起來像已經處理過了。
+
+   ⚠️ 而**必須是直接子代**：SVG 的 `opacity` 蓋在 `<g>` 上會吃掉整個子樹，
+   於是 `main` 裡面學生的積木也會一起變淡（2026-08-28 撞過：「裡面的東西不見了」）。 */
+.ghost-block > .blocklyLabelField,
+.ghost-block > .blocklyField,
+.ghost-block > .blocklyImageField,
+.ghost-block > .blocklyIconGroup,
 .ghost-block > text,
-.ghost-block > .blocklyText,
-.ghost-block > .blocklyEditableField,
-.ghost-block > .blocklyNonEditableField,
-.ghost-block > .blocklyIconGroup {
+.ghost-block > .blocklyText {
   opacity: 0.4;
 }
 

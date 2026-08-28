@@ -7,7 +7,7 @@
   "scanned": {
     "files": 32,
     "importLines": 203,
-    "anyMethodCalls": 2476
+    "anyMethodCalls": 2482
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,
@@ -97,5 +97,5 @@
       "src/ui/app.ts → consolePanel.onInputRequested"
     ]
   },
-  "note": "⚠️ 2026-08-28：語料變大——新增 `core/lesson.ts`／`core/load-lessons.ts`／`e2e/lesson-pins.spec.ts`／兩條護欄（第八十四、八十五條）＋ 6 份 `track.json`。**輸入量變大，不是判準放寬。**\n🟢 2026-08-28：方法呼叫數 2385 → 2383——兩份 getScaffoldDepth() 從「走一遍層級樹」變成固定回 0（它與 enabledBranches 的耦合是一個混用，見 ui/app.ts 的註解）。**真的少了兩個呼叫，不是把檔案排除在掃描外。**\n⚠️ 2026-08-28：語料變大——鷹架宣告化（`core/shell.ts` ＋ `languages/cpp/shells/{main,none,index}`）。四段外框從 `cpp-scaffold.ts` 的寫死字串搬進 JSON，而 `entryShell` 的值域從 `main|none` 打開成鷹架 id。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——新增第八十七條護欄（audit-templates：範例）＋ `core/template.ts`／`core/load-templates.ts`／`e2e/templates.spec.ts`＋ 6 份 `templates/*`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——鷹架控制項（兩個軸：外框／顯示）＋ Python 自己的鷹架宣告 ＋ `e2e/scaffold-code-complete.spec.ts`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28 上調的是【入口條件】（合成量），不是缺陷數：新增 src/ui/panels/ghost-drag-strategy.ts（ghost 鷹架的拖曳策略）。缺陷欄一筆未動。\n⚠️ 2026-08-28 上調的是【入口條件】（合成量），不是缺陷數：Arduino 的鷹架宣告（`shells/arduino.json`、`entryFunctions`、`shellFramePresent`、`canHideScaffold`）。「哪一塊是外框」原本寫死在六處 `name === 'main'`，現在問宣告。缺陷欄一筆未動。"
+  "note": "⚠️ 2026-08-28：語料變大——新增 `core/lesson.ts`／`core/load-lessons.ts`／`e2e/lesson-pins.spec.ts`／兩條護欄（第八十四、八十五條）＋ 6 份 `track.json`。**輸入量變大，不是判準放寬。**\n🟢 2026-08-28：方法呼叫數 2385 → 2383——兩份 getScaffoldDepth() 從「走一遍層級樹」變成固定回 0（它與 enabledBranches 的耦合是一個混用，見 ui/app.ts 的註解）。**真的少了兩個呼叫，不是把檔案排除在掃描外。**\n⚠️ 2026-08-28：語料變大——骨架宣告化（`core/shell.ts` ＋ `languages/cpp/skeletons/{main,none,index}`）。四段骨架從 `cpp-scaffold.ts` 的寫死字串搬進 JSON，而 `skeleton` 的值域從 `main|none` 打開成鷹架 id。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——新增第八十七條護欄（audit-templates：範例）＋ `core/template.ts`／`core/load-templates.ts`／`e2e/templates.spec.ts`＋ 6 份 `templates/*`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——鷹架控制項（兩個軸：骨架／顯示）＋ Python 自己的骨架宣告 ＋ `e2e/scaffold-code-complete.spec.ts`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28 上調的是【入口條件】（合成量），不是缺陷數：新增 src/ui/panels/ghost-drag-strategy.ts（ghost 鷹架的拖曳策略）。缺陷欄一筆未動。\n⚠️ 2026-08-28 上調的是【入口條件】（合成量），不是缺陷數：Arduino 的骨架宣告（`shells/arduino.json`、`entryFunctions`、`skeletonPresent`、`canHideScaffold`）。「哪一塊是骨架」原本寫死在六處 `name === 'main'`，現在問宣告。缺陷欄一筆未動。\n⚠️ 2026-08-28：入口條件再上調——`scaffoldComponentIds()`（範圍自動含骨架的元件，讓 65 堂課不必再各自宣告 `func_def`／`return`）。缺陷欄未動（跨層 0／直接呼叫 21）。"
 }

@@ -9,8 +9,8 @@ import type { DependencyResolver } from '../../../core/dependency-resolver'
 import { isIncludeDirective } from '../../../languages/cpp/core/node-traits'
 import { buildInclude } from '../include/lift'
 import { isFunctionDefinition } from '../../../core/component/traits'
-// 🔴 「外框已經在樹裡了嗎」由**鷹架宣告**回答（2026-08-28）
-import { shellById, shellFramePresent } from '../../../core/shell'
+// 🔴 「骨架已經在樹裡了嗎」由**骨架宣告**回答（2026-08-28）
+import { skeletonById, skeletonPresent } from '../../../core/skeleton'
 
 /**
  * 把一行 `#include <cstdio>` 換成 C 世界的名字。
@@ -60,15 +60,15 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       //
       // 🔴 而「哪一個函式是進入點」**也不該寫死在這裡**（2026-08-28）。
       //    上一版的註解說它「是整個程式的知識，不是那顆函式的性質」
-      //    ——那句話對，**而它的家是鷹架宣告，不是一個字面值**。
+      //    ——那句話對，**而它的家是骨架宣告，不是一個字面值**。
       //    Arduino 的進入點是 `setup` ＋ `loop`，寫死 `'main'` 連數量都錯。
       //
-      // ⚠️ 問的是 `shellFramePresent`（外框**已經生出來了**嗎），
+      // ⚠️ 問的是 `skeletonPresent`（骨架**已經生出來了**嗎），
       //    不是「有沒有一顆叫那個名字的函式」——見那個函式的說明：
-      //    Arduino 的外框在程式碼裡是空的，所以這條包裝路徑要一直走
+      //    Arduino 的骨架在程式碼裡是空的，所以這條包裝路徑要一直走
       //    （它同時負責吐出自動引入，少了它板子的標頭會安靜地不見）。
-      const shell = shellById(ctx.programScaffold?.entryShell?.() ?? 'main')
-      const framePresent = shellFramePresent(shell, (name) =>
+      const skeleton = skeletonById(ctx.programScaffold?.skeleton?.() ?? 'main')
+      const framePresent = skeletonPresent(skeleton, (name) =>
         body.some(n => isFunctionDefinition(n.componentId) && n.properties.name === name))
       if (ctx.programScaffold && ctx.scaffoldConfig && !framePresent) {
         // Collect manual includes from body for deduplication
@@ -159,7 +159,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
 
         // User body (excluding includes, indented inside main)
         //
-        // 🔴 **有進入點才縮排。** 目標宣告 `entryShell: 'none'`（Arduino sketch）時
+        // 🔴 **有進入點才縮排。** 目標宣告 `skeleton: 'none'`（Arduino sketch）時
         //    `entryPoint` 是空的，函式定義就是頂層——⚠️ 照舊縮排的話產出是
         //
         // ```

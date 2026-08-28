@@ -166,7 +166,7 @@ export interface LanguagePack {
     scaffold: unknown
     stripScaffoldNodes: (...a: never[]) => unknown
     /**
-     * `ghost` 模式的過濾——**外框留著，而入口點裡面的鷹架剝掉**。
+     * `ghost` 模式的過濾——**骨架留著，而入口點裡面的鷹架剝掉**。
      *
      * 🔴 那些非剝不可：它們在積木上是學生語句的**下一塊**，
      * 拖前面必然帶走它們，而「不能拖它」擋不住「被帶走」。

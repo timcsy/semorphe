@@ -10,10 +10,10 @@
  * ——說不出來的即為新機制。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { allShells } from '../../src/core/shell'
-// ⚠️ 兩個語言的宣告都要載——`entryShell` 跨語言（Python 的目標指 `python-none`）
-import '../../src/languages/cpp/shells'
-import '../../src/languages/python/shells'
+import { allSkeletons } from '../../src/core/skeleton'
+// ⚠️ 兩個語言的宣告都要載——`skeleton` 跨語言（Python 的目標指 `python-none`）
+import '../../src/languages/cpp/skeletons'
+import '../../src/languages/python/skeletons'
 import { TargetRegistry } from '../../src/core/target-registry'
 import cppTarget from '../../src/languages/cpp/targets/cpp.json'
 import cTarget from '../../src/languages/cpp/targets/c.json'
@@ -56,7 +56,7 @@ describe('目標', () => {
     // 🔴 判準沒有變（SC-005）：**每個欄位都要說得出「它今天住在哪裡」**。
     //
     // ⚠️ 而斷言的形狀在 2026-08-18 改過一次：原本是「恰好等於四個」，
-    //    那讓**選用欄位**不可能存在（`cpp.json` 沒有 `entryShell`，
+    //    那讓**選用欄位**不可能存在（`cpp.json` 沒有 `skeleton`，
     //    `arduino.json` 有 → 同一條 `toEqual` 不可能兩個都過）。
     //
     // 🟢 改成「必要的都在 ＋ 出現的都在白名單裡」——**多一個沒登記的仍然紅**，
@@ -68,16 +68,16 @@ describe('目標', () => {
       name: '標籤',
       topic: '引用——課程清單',
       style: '引用——風格',
-      // 🔴 `entryShell` **不是新機制，是替一個既有的寫死決定命名**：
+      // 🔴 `skeleton` **不是新機制，是替一個既有的寫死決定命名**：
       //    它今天住在 `languages/cpp/cpp-scaffold.ts` 的常數 `'int main() {'`
       //    與 `languages/cpp/auto-include.ts` 補丁器的第 3 步。
       //    ⚠️ 而那兩處**各自實作了同一個決定**，所以 Arduino 的 sketch 被包進
       //    `int main()`——修好一處時症狀只少一半。命名它是為了讓兩處問同一份宣告。
-      entryShell: '引用——程式外殼（原本寫死在鷹架與補丁器兩處）',
+      skeleton: '引用——程式外殼（原本寫死在鷹架與補丁器兩處）',
       // 🔴 這四格是**選單的宣告**（2026-08-28）。使用者看著那份 13 項的
       //    平清單問「這邊能不能重新設計整理一下？」，而它混著兩個軸
       //    （語言／軌道 vs 板子）。
-      //    ⚠️ 它們住在這裡而不是 UI，理由與 `entryShell` 相同：
+      //    ⚠️ 它們住在這裡而不是 UI，理由與 `skeleton` 相同：
       //    **推導會把例外歸錯組**——`arduino`（不指定板子）是硬體卻沒有板子。
       group: '標籤——選單分組（程式語言／硬體）',
       order: '標籤——組內順序（教學順序，不是註冊順序）',
@@ -105,26 +105,26 @@ describe('目標', () => {
     }
   })
 
-  it('★ 而 `entryShell` 要指得到一份【真的登記過】的外框', () => {
+  it('★ 而 `skeleton` 要指得到一份【真的登記過】的骨架', () => {
     // 🔴 **值域是開放的**（2026-08-28）。這一支原本寫死 `['main', 'none']`
-    //    ——也就是「有」跟「沒有」，而那正是鷹架宣告化要拆掉的東西。
+    //    ——也就是「有」跟「沒有」，而那正是骨架宣告化要拆掉的東西。
     //
     //    使用者：「我希望 Arduino 系列也有腳手架」→ 九個板子目標從 `'none'`
-    //    （＝沒有外框）改指 `'arduino'`（兩個進入點 `setup`／`loop`）。
+    //    （＝沒有骨架）改指 `'arduino'`（兩個進入點 `setup`／`loop`）。
     //
     // > **一個把值域寫死成清單的測試，會在第三種值出現的那天擋住它
     // > ——而那時它看起來像「你改壞了」。**
     //
-    // 🟢 改成問登記處：**新增一份外框只要多一個 JSON，這一支不必動**；
+    // 🟢 改成問登記處：**新增一份骨架只要多一個 JSON，這一支不必動**；
     //    而打錯一個 id 仍然紅。
-    const known = [...allShells().keys()]
-    expect(known.length, '🔴 一份外框都沒登記 → 語言套件沒載入，這一支不算數').toBeGreaterThanOrEqual(2)
+    const known = [...allSkeletons().keys()]
+    expect(known.length, '🔴 一份骨架都沒登記 → 語言套件沒載入，這一支不算數').toBeGreaterThanOrEqual(2)
     for (const t of TARGETS) {
-      const v = (t as { entryShell?: string }).entryShell
+      const v = (t as { skeleton?: string }).skeleton
       if (v === undefined) continue
       expect(
         known,
-        `🔴 ${(t as { id: string }).id} 的 entryShell 是 \`${v}\`，而沒有這一份外框`,
+        `🔴 ${(t as { id: string }).id} 的 skeleton 是 \`${v}\`，而沒有這一份骨架`,
       ).toContain(v)
     }
   })

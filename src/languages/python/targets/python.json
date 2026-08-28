@@ -5,6 +5,6 @@
   "order": 4,
   "topic": "python-beginner",
   "style": "python",
-  "entryShell": "python-none",
-  "_entryShell_why": "🔴 **沒有這一格的話，Python 會被套上 C++ 的 main()。**\n\n2026-08-20 瀏覽器實測：切到 Python 貼 print(\"hi\")，使用者看到的是\n`int main() { print(\"hi\") return 0; }`——而**全套測試是綠的**，因為測試直接呼叫 lifter，繞過了程式外殼。\n\n> **一個修好的投影，可能不在使用者走的那條路上。**"
+  "skeleton": "python-none",
+  "_skeleton_why": "🔴 **沒有這一格的話，Python 會被套上 C++ 的 main()。**\n\n2026-08-20 瀏覽器實測：切到 Python 貼 print(\"hi\")，使用者看到的是\n`int main() { print(\"hi\") return 0; }`——而**全套測試是綠的**，因為測試直接呼叫 lifter，繞過了程式外殼。\n\n> **一個修好的投影，可能不在使用者走的那條路上。**"
 }

@@ -1,10 +1,10 @@
 import type { SemanticNode } from '../../core/types'
 // ⚠️ 問**性狀**不問身分——一條 if 一顆元件的話，那幾顆永遠搬不進膠囊。
 import { isScaffold, isScaffoldInMain } from './core/node-traits'
-// 🔴 「樹裡哪一塊是外框」由**鷹架宣告**回答（2026-08-28）——見 `EntryFunction`
-import { shellById, canHideScaffold } from '../../core/shell'
-// ⚠️ 少了它，沒載語言套件的路徑上 `shellById` 找不到東西（與 `cpp-scaffold.ts` 同一條）
-import './shells'
+// 🔴 「樹裡哪一塊是骨架」由**骨架宣告**回答（2026-08-28）——見 `EntryFunction`
+import { skeletonById, canHideScaffold } from '../../core/skeleton'
+// ⚠️ 少了它，沒載語言套件的路徑上 `skeletonById` 找不到東西（與 `cpp-scaffold.ts` 同一條）
+import './skeletons'
 import { buildProgram } from '../../components/cpp/program/lift'
 import { isFunctionDefinition } from '../../core/component/traits'
 
@@ -31,24 +31,24 @@ import { isFunctionDefinition } from '../../core/component/traits'
 /**
  * 把鷹架從樹裡剝掉，只留學生自己的語句——`hidden` 模式用的。
  *
- * 🔴 **「哪一顆函式是外框」問宣告，不是寫死 `'main'`**（2026-08-28）。
- * 使用者要 Arduino 也有鷹架，而 Arduino 的外框是 `setup` ＋ `loop`
+ * 🔴 **「哪一顆函式是骨架」問宣告，不是寫死 `'main'`**（2026-08-28）。
+ * 使用者要 Arduino 也有鷹架，而 Arduino 的骨架是 `setup` ＋ `loop`
  * ——**兩個**進入點。原本那個 `name === 'main'` 不只是名字錯，數量也錯。
  *
  * 🔴 而**兩個進入點就剝不掉**（`canHideScaffold`）：兩批語句攤平成一串之後
  * 分不回去，那不是「藏起來」，是**把資訊弄丟**。剝不掉時原樣通過
  * ——而選單那側不會把 `hidden` 端出來（`app.ts`）。
  */
-export function cppStripScaffoldNodes(tree: SemanticNode, entryShell = 'main'): SemanticNode {
-  const shell = shellById(entryShell)
+export function cppStripScaffoldNodes(tree: SemanticNode, skeletonId = 'main'): SemanticNode {
+  const skeleton = skeletonById(skeletonId)
   const body = tree.children.body ?? []
   const userBody: SemanticNode[] = []
 
-  // 🔴 剝不掉的外框（Arduino）原樣通過——見上面的說明
-  if (!canHideScaffold(shell)) {
+  // 🔴 剝不掉的骨架（Arduino）原樣通過——見上面的說明
+  if (!canHideScaffold(skeleton)) {
     return buildProgram(body.filter((n) => !isScaffold(n.componentId)))
   }
-  const entry = shell?.entryFunctions[0]?.name
+  const entry = skeleton?.entryFunctions[0]?.name
 
   for (const node of body) {
     // 鷹架（include／using namespace…）由元件自己宣告

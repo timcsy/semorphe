@@ -83,5 +83,5 @@
       "nonstandard_but_valid": 7
     }
   },
-  "note": "⚠️ 2026-08-27：語料變大——新增 `tests/integration/audit-lessons.test.ts`（第八十三條）＋ `e2e/lessons.spec.ts` ＋ `lessons/` 四堂課。**輸入量變大，不是退步。**\n⚠️ 2026-08-28：語料變大——新增第八十六條護欄（audit-shell-declared：鷹架是一份宣告）＋ `core/shell.ts` ＋ `languages/cpp/shells/*`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——Arduino 的鷹架宣告那一刀新增的**註解**裡多了一段反引號程式碼片段。上調的是【語料量】（入口條件），缺陷欄一筆未動。"
+  "note": "⚠️ 2026-08-27：語料變大——新增 `tests/integration/audit-lessons.test.ts`（第八十三條）＋ `e2e/lessons.spec.ts` ＋ `lessons/` 四堂課。**輸入量變大，不是退步。**\n⚠️ 2026-08-28：語料變大——新增第八十六條護欄（audit-shell-declared：鷹架是一份宣告）＋ `core/shell.ts` ＋ `languages/cpp/skeletons/*`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——Arduino 的骨架宣告那一刀新增的**註解**裡多了一段反引號程式碼片段。上調的是【語料量】（入口條件），缺陷欄一筆未動。"
 }

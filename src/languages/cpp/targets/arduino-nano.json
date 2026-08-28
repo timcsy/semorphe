@@ -5,7 +5,7 @@
   "order": 2,
   "topic": "arduino",
   "style": "google",
-  "entryShell": "arduino",
+  "skeleton": "arduino",
   "provides": [],
   "board": {
     "name": "Arduino Nano",

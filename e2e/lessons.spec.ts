@@ -138,7 +138,7 @@ for (const c of CASES) {
     ).toEqual([])
 
     const declared = new Set(c.components)
-    // `cpp:program` 是每一份都有的外框，不算在課的元件裡。
+    // `cpp:program` 是每一份都有的骨架，不算在課的元件裡。
     // 🔴 **結構節點也不算**——`core/non-components.ts` 宣告的那一類
     //    （`param_decl` 之類）是別人的子節點，**學生在積木盤上看不到它們**，
     //    所以一堂課不該宣告要開它們。判準是**真元件的身分都帶冒號**

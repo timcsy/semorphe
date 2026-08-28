@@ -1442,7 +1442,7 @@ export class BlocklyPanel implements ViewHost {
    * 而那是**節點**的性質不是**元件**的性質。
    *
    * 🔴 第一版用 componentId 判斷，於是 `#include`／`using`／`return` 都標到了，
-   * **而外框最重要的那一塊 `int main()` 漏掉**。
+   * **而骨架最重要的那一塊 `int main()` 漏掉**。
    *
    * > **一個「這顆是不是鷹架」的判準，如果只看得到元件身分，
    * > 就答不出那些靠【自己的屬性】才成為鷹架的節點。**

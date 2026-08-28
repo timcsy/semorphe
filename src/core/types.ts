@@ -940,7 +940,7 @@ export interface Target {
    * > **要讓一個通用的層知道特例，辦法是讓特例自己帶著宣告來，
    * > 不是讓通用的層去記住特例的名字。**
    */
-  entryShell?: string
+  skeleton?: string
 }
 
 // ─── Topic System ───

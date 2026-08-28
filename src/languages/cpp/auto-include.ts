@@ -5,10 +5,10 @@
  * DependencyResolver to determine which #include headers are required.
  * Merges with manually placed #include blocks (deduplication).
  */
-// ⚠️ **副作用 import**——把 C++ 的鷹架宣告註冊進去。
-//    少了它，`shellById` 在沒有載語言套件的路徑上找不到東西。
-import './shells'
-import { shellById } from '../../core/shell'
+// ⚠️ **副作用 import**——把 C++ 的骨架宣告註冊進去。
+//    少了它，`skeletonById` 在沒有載語言套件的路徑上找不到東西。
+import './skeletons'
+import { skeletonById } from '../../core/skeleton'
 import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver, DependencyEdge } from '../../core/dependency-resolver'
 import { expandHeaderAliases, normalizeHeader } from './header-aliases'
@@ -75,7 +75,7 @@ export function createCppCodePatcher(
   namespaceStyle: 'using' | 'explicit',
   cogLevel?: number,
   /**
-   * 這個目標有沒有程式外殼——🔴 **由目標宣告**（`Target.entryShell`）。
+   * 這個目標有沒有程式外殼——🔴 **由目標宣告**（`Target.skeleton`）。
    *
    * ⚠️ 少了它的話，這個補丁器會在 Arduino sketch 上補出
    * `int main() { … }`，把 `setup()`／`loop()` 包進去
@@ -84,9 +84,9 @@ export function createCppCodePatcher(
    * > **同一個決定如果有兩個地方各自實作，
    * > 修好一個之後症狀只會少一半——而少一半看起來很像修好了。**
    */
-  entryShell?: string,
+  skeletonId?: string,
 ) => string | null {
-  return (code, tree, namespaceStyle, cogLevel = 1, entryShell = 'main') => {
+  return (code, tree, namespaceStyle, cogLevel = 1, skeletonId = 'main') => {
     const components = new Set<string>()
     collectComponents(tree, components)
     const edges = resolver.resolve([...components])
@@ -119,7 +119,7 @@ export function createCppCodePatcher(
 
     // 3. Patch missing entry point (L0 only — scaffold manages it)
     //
-    // 🔴 **這裡讀的是與鷹架【同一份宣告】**（`core/shell.ts`，2026-08-28）。
+    // 🔴 **這裡讀的是與鷹架【同一份宣告】**（`core/skeleton.ts`，2026-08-28）。
     //    在此之前它自己寫死 `'int main() {'` 與 `'    return 0;'`
     //    ——而鷹架那一側也各寫了一次。
     //
@@ -128,8 +128,8 @@ export function createCppCodePatcher(
     //
     // ⚠️ 「有沒有進入點」現在也問宣告：`entryPoint` 是空陣列就不補
     //    （Arduino 的 `none` 是一份空的宣告，不是一個特例的 `if`）。
-    const shell = shellById(entryShell)
-    const entry = shell?.entryPoint ?? []
+    const skeleton = skeletonById(skeletonId)
+    const entry = skeleton?.entryPoint ?? []
     if (entry.length > 0 && cogLevel === 0 && !patched.includes(entry[0].code.trim())) {
       // Extract header lines (#include, using namespace, blank) and body
       const lines = patched.split('\n')
@@ -143,7 +143,7 @@ export function createCppCodePatcher(
       patched = (header ? header + '\n' : '') +
         entry.map((l) => l.code).join('\n') + '\n' +
         (indented ? indented + '\n' : '') +
-        (shell?.epilogue ?? []).map((l) => l.code).join('\n')
+        (skeleton?.epilogue ?? []).map((l) => l.code).join('\n')
       changed = true
     }
 

@@ -61,7 +61,7 @@ import type { ControlId } from './host/controls'
  * 在此之前它是 `enabledBranches` 的函數——而那個集合同時扛著
  * 「哪些元件看得到」，於是**改其中一個永遠會偷偷改到另一個**。
  *
- * ⚠️ 而「鷹架**長什麼樣**」是另一格，它住在**目標**上（`entryShell`）：
+ * ⚠️ 而「鷹架**長什麼樣**」是另一格，它住在**目標**上（`skeleton`）：
  * Arduino 是 `setup`＋`loop`，C++ 是 `int main()`。兩件事不要混。
  *
  * ```
@@ -91,24 +91,24 @@ export interface Track {
    *
    * 🔴 預設是**露出來**，因為這 65 堂課**從第一課就在教它**
    * （C++ 第 1 課講 `main` 是起跑線，Arduino 第 1 課講 `setup`／`loop`）。
-   * ⚠️ `hidden` 是給另一種教法用的（先寫邏輯，之後才揭露程式的外框）。
+   * ⚠️ `hidden` 是給另一種教法用的（先寫邏輯，之後才揭露程式的骨架）。
    */
   readonly scaffold: ScaffoldMode
   /**
-   * 用哪一份**鷹架宣告**（`core/shell.ts` 的 id）——省略 ＝ 跟著目標走。
+   * 用哪一份**骨架宣告**（`core/skeleton.ts` 的 id）——省略 ＝ 跟著目標走。
    *
    * 🔴 兩件事不要混（2026-08-28 使用者：「鷹架應該也不只一個吧？」）：
    *
    * ```
    * scaffold   露【多少】   hidden / ghost / editable
-   * shell      長【什麼樣】 哪幾段組成外框（main / none / …）
+   * skeleton      長【什麼樣】 哪幾段組成骨架（main / none / …）
    * ```
    *
-   * ⚠️ 覆寫它的用處是「同一個目標、不同的外框」——例如競賽軌想要
+   * ⚠️ 覆寫它的用處是「同一個目標、不同的骨架」——例如競賽軌想要
    * `ios::sync_with_stdio(false)` 那份前言，而語言仍然是 C++。
-   * 今天沒有軌道用到它，而**機制在**：多一份 `shells/*.json` 就通。
+   * 今天沒有軌道用到它，而**機制在**：多一份 `skeletons/*.json` 就通。
    */
-  readonly shell?: string
+  readonly skeleton?: string
 }
 
 export function parseTrack(id: string, raw: unknown): Track {
@@ -116,8 +116,8 @@ export function parseTrack(id: string, raw: unknown): Track {
   const o = raw as Record<string, unknown>
   if (typeof o.name !== 'string' || o.name === '') throw new Error(`軌道 ${id}：缺 name`)
   if (typeof o.target !== 'string' || o.target === '') throw new Error(`軌道 ${id}：缺 target`)
-  if (o.shell !== undefined && typeof o.shell !== 'string') {
-    throw new Error(`軌道 ${id}：shell 不是字串`)
+  if (o.skeleton !== undefined && typeof o.skeleton !== 'string') {
+    throw new Error(`軌道 ${id}：skeleton 不是字串`)
   }
   const sc = o.scaffold
   if (sc !== undefined && !['hidden', 'ghost', 'editable'].includes(String(sc))) {
@@ -128,7 +128,7 @@ export function parseTrack(id: string, raw: unknown): Track {
     order: typeof o.order === 'number' ? o.order : 1e9,
     description: typeof o.description === 'string' ? o.description : undefined,
     scaffold: (sc as ScaffoldMode) ?? 'editable',
-    shell: o.shell as string | undefined,
+    skeleton: o.skeleton as string | undefined,
   }
 }
 
@@ -144,7 +144,7 @@ export interface LessonPins {
    * 這一堂要露多少鷹架——**覆寫軌道的設定**。
    *
    * ⚠️ 多數課不需要它（跟著軌道走就好）。它存在是為了那種
-   * 「同一軌裡有一課要先把外框藏起來」的情況。
+   * 「同一軌裡有一課要先把骨架藏起來」的情況。
    */
   readonly scaffold?: ScaffoldMode
 }

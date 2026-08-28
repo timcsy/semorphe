@@ -4,8 +4,8 @@
  * ## 它從哪來
  *
  * 2026-08-28 使用者問「**鷹架應該也不只一個吧？算不算是一種元件？**」。
- * 量完現況，`Target.entryShell` 的值域只有 **`'main'` 與 `'none'`**
- * ——也就是「**有**」跟「**沒有**」，而四段外框寫死在兩個地方：
+ * 量完現況，`Target.skeleton` 的值域只有 **`'main'` 與 `'none'`**
+ * ——也就是「**有**」跟「**沒有**」，而四段骨架寫死在兩個地方：
  *
  * ```
  * cpp-scaffold.ts   'using namespace std;' · 'int main() {' · '    return 0;' · '}'
@@ -13,9 +13,9 @@
  * ```
  *
  * 🔴 而 `'none'` **不是「Arduino 的鷹架」，它是「沒有鷹架」**
- * ——`if (entryShell === 'none') return {…全空}`。
+ * ——`if (skeleton === 'none') return {…全空}`。
  *
- * > **鷹架不是一顆新積木，是「哪幾段組成外框，以及它們為什麼在那裡」。**
+ * > **鷹架不是一顆新積木，是「哪幾段組成骨架，以及它們為什麼在那裡」。**
  *
  * ## ⚠️ 自我否證聲明
  *
@@ -40,7 +40,7 @@
 import { describe, it, expect } from 'vitest'
 import { printReport } from '../helpers/guardrail'
 import { findFiles } from '../helpers/find-files'
-import { parseShell, allShells } from '../../src/core/shell'
+import { parseSkeleton, allSkeletons } from '../../src/core/skeleton'
 import '../../src/core/load-language-packs'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -49,10 +49,10 @@ const ROOT = path.resolve(__dirname, '../..')
 const LANGS = path.join(ROOT, 'src/languages')
 
 describe('★ 第八十六條：鷹架是一份宣告', () => {
-  const shells = allShells()
+  const shells = allSkeletons()
   const targets = findFiles(LANGS, 'targets')
     .map((rel) => {
-      const d = JSON.parse(fs.readFileSync(path.join(LANGS, rel), 'utf8')) as { id: string; entryShell?: string; topic: string }
+      const d = JSON.parse(fs.readFileSync(path.join(LANGS, rel), 'utf8')) as { id: string; skeleton?: string; topic: string }
       // 目標的語言由它的主題說——`topic` 檔在 `topics/`
       const t = findFiles(LANGS, 'topics')
         .map((r) => ({ r, j: JSON.parse(fs.readFileSync(path.join(LANGS, r), 'utf8')) as { id: string; language?: string } }))
@@ -61,7 +61,7 @@ describe('★ 第八十六條：鷹架是一份宣告', () => {
     })
 
   it('入口條件——鷹架真的註冊進來了', () => {
-    printReport('鷹架宣告', [
+    printReport('骨架宣告', [
       `註冊了       ${shells.size} 份`,
       ...[...shells.values()].map((s) =>
         `  ${s.id.padEnd(12)} ${s.name}　${s.preamble.length}+${s.entryPoint.length}+${s.epilogue.length} 段` +
@@ -75,11 +75,11 @@ describe('★ 第八十六條：鷹架是一份宣告', () => {
 
   it('硬性零——每一個目標指到的鷹架都存在', () => {
     const bad = targets
-      .filter((t) => !shells.has(t.entryShell ?? 'main'))
-      .map((t) => `${t.id} → ${t.entryShell ?? 'main'}`)
+      .filter((t) => !shells.has(t.skeleton ?? 'main'))
+      .map((t) => `${t.id} → ${t.skeleton ?? 'main'}`)
     expect(
       bad,
-      '🔴 目標指向一份沒有登記的外框——產出會是一支少了進入點的程式，' +
+      '🔴 目標指向一份沒有登記的骨架——產出會是一支少了進入點的程式，' +
         '**而它看起來像 Arduino**：',
     ).toEqual([])
   })
@@ -99,9 +99,9 @@ describe('★ 第八十六條：鷹架是一份宣告', () => {
   })
 
   it('🔴 硬性零——每一份鷹架都宣告了 `language`', () => {
-    // 少了它，`shellById('none')` 會**跨語言撿到別人的宣告**
+    // 少了它，`skeletonById('none')` 會**跨語言撿到別人的宣告**
     // ——2026-08-28 實測：Python 撿到 C++ 的 `none`，
-    // 而症狀是「狀態列那句話碰巧是對的，**而選單裡外框那一組整個不見**」。
+    // 而症狀是「狀態列那句話碰巧是對的，**而選單裡骨架那一組整個不見**」。
     expect(
       [...shells.values()].filter((s) => !s.language).map((s) => s.id),
       '🔴 一份沒有語言的鷹架，在第二個語言進來的那天會安靜地撿到別人的宣告：',
@@ -113,16 +113,16 @@ describe('★ 第八十六條：鷹架是一份宣告', () => {
     const covered = new Set([...shells.values()].map((s) => s.language))
     expect(
       [...langs].filter((l) => !covered.has(l as string)),
-      '🔴 這些語言沒有任何鷹架宣告——使用者在那個目標上「外框」那一組是空的：',
+      '🔴 這些語言沒有任何骨架宣告——使用者在那個目標上「骨架」那一組是空的：',
     ).toEqual([])
   })
 
-  it('🪦 「沒有外框」是一份【空的宣告】，不是一個特例的 if', () => {
+  it('🪦 「沒有骨架」是一份【空的宣告】，不是一個特例的 if', () => {
     const none = shells.get('none')
     expect(none, '🔴 `none` 這份宣告不見了').toBeTruthy()
     expect(
       [none!.preamble.length, none!.entryPoint.length, none!.epilogue.length],
-      '🔴 `none` 不是空的——那它就不是「沒有外框」了',
+      '🔴 `none` 不是空的——那它就不是「沒有骨架」了',
     ).toEqual([0, 0, 0])
   })
 })
@@ -131,39 +131,39 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
   const OK = { id: 'ㄒ', name: 'ㄒ', language: 'ㄒ語', preamble: [], entryPoint: [{ code: 'a', reason: 'b' }], epilogue: [] }
 
   it('★ 注入：正確的宣告 → 讀得出來', () => {
-    expect(parseShell(OK).entryPoint[0].code).toBe('a')
+    expect(parseSkeleton(OK).entryPoint[0].code).toBe('a')
   })
 
   it('★ 注入：缺 language → 丟錯（不然它會跨語言被撿走）', () => {
     const { language: _l, ...noLang } = OK
-    expect(() => parseShell(noLang)).toThrow(/language/)
+    expect(() => parseSkeleton(noLang)).toThrow(/language/)
   })
 
   it('★ 注入：一段沒有理由 → 丟錯', () => {
-    expect(() => parseShell({ ...OK, entryPoint: [{ code: 'a' }] })).toThrow(/reason/)
-    expect(() => parseShell({ ...OK, entryPoint: [{ code: 'a', reason: '' }] })).toThrow(/reason/)
+    expect(() => parseSkeleton({ ...OK, entryPoint: [{ code: 'a' }] })).toThrow(/reason/)
+    expect(() => parseSkeleton({ ...OK, entryPoint: [{ code: 'a', reason: '' }] })).toThrow(/reason/)
   })
 
   it('★ 注入：缺 code → 丟錯', () => {
-    expect(() => parseShell({ ...OK, epilogue: [{ reason: 'x' }] })).toThrow(/code/)
+    expect(() => parseSkeleton({ ...OK, epilogue: [{ reason: 'x' }] })).toThrow(/code/)
   })
 
   it('★ 注入：某一段不是陣列 → 丟錯', () => {
-    expect(() => parseShell({ ...OK, preamble: 'x' })).toThrow(/preamble/)
+    expect(() => parseSkeleton({ ...OK, preamble: 'x' })).toThrow(/preamble/)
   })
 
-  it('★ 注入：全空是合法的（那就是「沒有外框」）', () => {
-    expect(() => parseShell({ id: 'z', name: 'z', language: 'z語', preamble: [], entryPoint: [], epilogue: [] })).not.toThrow()
+  it('★ 注入：全空是合法的（那就是「沒有骨架」）', () => {
+    expect(() => parseSkeleton({ id: 'z', name: 'z', language: 'z語', preamble: [], entryPoint: [], epilogue: [] })).not.toThrow()
   })
 })
 
 /**
- * **第八十六條的第二半**（2026-08-28）：樹裡**哪一塊是外框**也要由宣告回答。
+ * **第八十六條的第二半**（2026-08-28）：樹裡**哪一塊是骨架**也要由宣告回答。
  *
  * ## 它從哪來
  *
- * 使用者：「**我希望 Arduino 系列也有腳手架**」。量完之後：外框「長什麼樣」
- * 已經是宣告了，而「**哪一塊是外框**」寫死在**三個地方**：
+ * 使用者：「**我希望 Arduino 系列也有腳手架**」。量完之後：骨架「長什麼樣」
+ * 已經是宣告了，而「**哪一塊是骨架**」寫死在**三個地方**：
  *
  * ```
  * cpp-scaffold-filter.ts   isFunctionDefinition(n) && n.properties.name === 'main'
@@ -174,8 +174,8 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
  * 🔴 症狀：切到 Arduino、把顯示切成「淡的」，畫面上**什麼都不會變**
  * ——`setup`／`loop` 不叫 `main`。
  *
- * > **一份宣告如果只說得出「外框印出來長怎樣」，
- * > 那「畫面上哪一塊是外框」就會回去寫死在消費者身上。**
+ * > **一份宣告如果只說得出「骨架印出來長怎樣」，
+ * > 那「畫面上哪一塊是骨架」就會回去寫死在消費者身上。**
  *
  * ## ⚠️ 自我否證聲明
  *
@@ -198,7 +198,7 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
  * - **不檢測別的寫死**（`'setup'`／`'loop'` 的字面值）：那兩個字在
  *   Arduino 的元件與探針語料裡到處都是，判準會誤報。
  */
-describe('★ 第八十六條之二：樹裡哪一塊是外框，也由宣告回答', () => {
+describe('★ 第八十六條之二：樹裡哪一塊是骨架，也由宣告回答', () => {
   const SRC = path.join(ROOT, 'src')
   // 🔴 **不能用 `findFiles`**——它只列兩層（`<root>/<第一層>/<段>/`），
   //    而 `src/` 有六七層。第一版用了它，於是掃到 **0 個檔**，
@@ -220,7 +220,7 @@ describe('★ 第八十六條之二：樹裡哪一塊是外框，也由宣告回
   let chars = 0
   const hits: string[] = []
   // 🔴 認的是「**把名字比對成 main**」這個形狀，不是「出現 main 這個字」
-  //    ——`'int main() {'` 是外框的**程式碼文字**，那是正當的。
+  //    ——`'int main() {'` 是骨架的**程式碼文字**，那是正當的。
   const HARDCODED = /\.name\s*===\s*['"]main['"]|name\s*===\s*['"]main['"]/
 
   for (const rel of files) {
@@ -234,7 +234,7 @@ describe('★ 第八十六條之二：樹裡哪一塊是外框，也由宣告回
   }
 
   it('入口條件——掃描器真的讀到了 src/', () => {
-    printReport('外框的辨識', [
+    printReport('骨架的辨識', [
       `掃到       ${files.length} 個 .ts`,
       `讀進       ${chars} 字`,
       `寫死比對   ${hits.length} 處`,
@@ -245,12 +245,12 @@ describe('★ 第八十六條之二：樹裡哪一塊是外框，也由宣告回
     expect(files.length).toBeGreaterThanOrEqual(200)
   })
 
-  it('🔴 硬性零——不得把「哪一顆函式是外框」寫死成 `main`', () => {
+  it('🔴 硬性零——不得把「哪一顆函式是骨架」寫死成 `main`', () => {
     expect(
       hits,
-      '🔴 這幾處把外框的辨識寫死了。Arduino 的外框是 `setup` ＋ `loop`——\n' +
+      '🔴 這幾處把骨架的辨識寫死了。Arduino 的骨架是 `setup` ＋ `loop`——\n' +
         '**兩個**進入點，所以寫死 `main` 不只是名字錯，數量也錯。\n' +
-        '🟢 改成問宣告：`entryFunctionOf(shellById(id), node.properties.name)`。',
+        '🟢 改成問宣告：`entryFunctionOf(skeletonById(id), node.properties.name)`。',
     ).toEqual([])
   })
 
@@ -270,8 +270,8 @@ describe('★ 第八十六條之二：樹裡哪一塊是外框，也由宣告回
   })
 
   it('★ 而 Arduino 真的有【兩顆】進入點——否則上面那條規範沒有第二個形狀在撐', () => {
-    const ard = allShells().get('arduino')
-    expect(ard, '🔴 沒有 arduino 這份外框').toBeTruthy()
+    const ard = allSkeletons().get('arduino')
+    expect(ard, '🔴 沒有 arduino 這份骨架').toBeTruthy()
     expect(
       ard!.entryFunctions.map((f) => f.name),
       '🔴 Arduino 的進入點不是 setup／loop',

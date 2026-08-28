@@ -86,10 +86,10 @@ function gen(
   const tree = lifter.lift(tsParser.parse(src).rootNode as never)
   expect(tree, 'lift 回了 null → 這一條空過').not.toBeNull()
 
-  // 逐項照 `app.ts` 配置——⚠️ 2026-08-20 的第一次探針漏了 `entryShell`，
+  // 逐項照 `app.ts` 配置——⚠️ 2026-08-20 的第一次探針漏了 `skeleton`，
   //    量出「Arduino 兩條路差很多」的假差異。
   const scaffold = new CppScaffold(resolver)
-  scaffold.setEntryShell(target.entryShell ?? 'main')   // app.ts:608
+  scaffold.setSkeleton(target.skeleton ?? 'main')   // app.ts:608
   setProgramScaffold(scaffold)                          // app.ts:188
   setScaffoldConfig({ scaffoldDepth: 0 })               // app.ts:189
   setHeaderAliases(target.headerAliases)                // app.ts:191

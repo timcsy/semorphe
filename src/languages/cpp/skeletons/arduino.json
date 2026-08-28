@@ -1,0 +1,14 @@
+{
+  "id": "arduino",
+  "name": "Arduino 骨架",
+  "language": "cpp",
+  "hint": "void setup() 開機跑一次 ＋ void loop() 一直重複",
+  "_why": "🔴 使用者 2026-08-28：「我希望 Arduino 系列也有腳手架」。在此之前九個板子目標的 skeleton 都是 'none'——**而 'none' 是「沒有骨架」，不是「Arduino 的骨架」**。症狀：切到 Arduino、把顯示切成「淡的」，畫面上【什麼都不會變】，因為 scaffoldNodeIds 認的是「函式定義 ＋ 名字叫 main」。\n\n⚠️ 而它逼出了 `entryFunctions`：Arduino 有【兩個】進入點。原本那個寫死不只是名字錯，**數量也錯**。\n\n🔴 四段是空的而它【不是】'none'：`setup`／`loop` 的本體是學生寫的（或範例給的），骨架不生它們——骨架只認得它們。",
+  "entryFunctions": [
+    { "name": "setup", "reason": "開機時跑一次——接腳設定放這裡" },
+    { "name": "loop", "reason": "開機之後一直重複跑" }
+  ],
+  "preamble": [],
+  "entryPoint": [],
+  "epilogue": []
+}

@@ -55,8 +55,8 @@ import { Lifter } from './lift/lifter'
 import { SemanticBus } from './semantic-bus'
 import { abstractComponentOf, variableTypeOf } from './language-executors'
 import { isFunctionDefinition } from './component/traits'
-// 🔴 「樹裡哪一塊是外框」由**鷹架宣告**回答（2026-08-28）——見 `EntryFunction`
-import { shellById, shellFramePresent } from './shell'
+// 🔴 「樹裡哪一塊是骨架」由**骨架宣告**回答（2026-08-28）——見 `EntryFunction`
+import { skeletonById, skeletonPresent } from './skeleton'
 
 /** Scaffold node filter type — strips scaffold nodes for L0 display */
 export type ScaffoldNodeFilter = (tree: SemanticNode) => SemanticNode
@@ -243,7 +243,7 @@ export class SyncController {
    *
    * ```
    * 深度 0  hidden     整組鷹架剝掉
-   * 深度 1  ghost      外框留著，【入口點裡面的】剝掉  ← 拖不到就帶不走
+   * 深度 1  ghost      骨架留著，【入口點裡面的】剝掉  ← 拖不到就帶不走
    * 深度 2  editable   原樣
    * ```
    */
@@ -544,14 +544,14 @@ export class SyncController {
   // ⚠️ **非同步**（2026-08-26， 改成 Promise 之後）。
   //    三個呼叫點（`app.ts:770/771/773`）都是 fire-and-forget，回傳值沒有人接。
   /**
-   * 目前用哪一份外框——**「哪一顆函式是外框」問它**（2026-08-28）。
+   * 目前用哪一份骨架——**「哪一顆函式是骨架」問它**（2026-08-28）。
    *
    * ⚠️ 預設 `'main'` 與改動前逐字相同：在此之前這裡寫死 `name === 'main'`。
    */
-  private entryShellId = 'main'
+  private skeletonId = 'main'
 
-  setEntryShell(id: string): void {
-    this.entryShellId = id
+  setSkeleton(id: string): void {
+    this.skeletonId = id
   }
 
   async resyncForTopic(extractedTree: SemanticNode, currentCode: string): Promise<void> {
@@ -562,15 +562,15 @@ export class SyncController {
 
       // If switching TO L1/L2 and tree has no main func (body-only from L0),
       // re-lift from the current code to get the full tree
-      // 🔴 **「哪一顆函式是外框」問宣告**（2026-08-28）——在此之前這裡寫死
+      // 🔴 **「哪一顆函式是骨架」問宣告**（2026-08-28）——在此之前這裡寫死
       //    `name === 'main'`，而那是同一個決定的**第五份實作**
       //    （鷹架、補丁器、過濾器、`app.ts` 各一份）。
       //    症狀：Arduino 的樹永遠被判成「body-only」，於是每次都重新 lift 一遍。
       //
-      // ⚠️ 沒有進入點的外框（Python 的 `python-none`）**維持原樣**回 `false`
+      // ⚠️ 沒有進入點的骨架（Python 的 `python-none`）**維持原樣**回 `false`
       //    ——那與改動前逐字相同，不是這一刀要動的東西。
-      const shell = shellById(this.entryShellId)
-      const framePresent = shellFramePresent(shell, (name) =>
+      const skeleton = skeletonById(this.skeletonId)
+      const framePresent = skeletonPresent(skeleton, (name) =>
         (extractedTree.children.body ?? []).some(
           n => isFunctionDefinition(n.componentId) && n.properties.name === name))
       if (this.getScaffoldDepth() > 0 && !framePresent && this.lifter && this.parser) {

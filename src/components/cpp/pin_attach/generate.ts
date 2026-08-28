@@ -5,7 +5,7 @@
  *
  * 探索報告第二節查證過：`pinMode` 要落在使用者自己的 `setup()` 裡，
  * 而鷹架機制只認得它自己的四段（imports／preamble／entryPoint／epilogue）
- * ——Arduino 的 `entryShell` 是 `'none'`，`setup` 對鷹架是一個普通的頂層函式。
+ * ——Arduino 的 `skeleton` 是 `'none'`，`setup` 對鷹架是一個普通的頂層函式。
  *
  * 🟢 拍板的是「**自動長出一顆看得見的 `pinMode` 積木**」＝ UI 層的動作。
  * 產生器完全不必知道這件事，**五路保持乾淨**。
