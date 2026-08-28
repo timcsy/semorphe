@@ -51,7 +51,14 @@ const LANGS = path.join(ROOT, 'src/languages')
 describe('★ 第八十六條：鷹架是一份宣告', () => {
   const shells = allShells()
   const targets = findFiles(LANGS, 'targets')
-    .map((rel) => JSON.parse(fs.readFileSync(path.join(LANGS, rel), 'utf8')) as { id: string; entryShell?: string })
+    .map((rel) => {
+      const d = JSON.parse(fs.readFileSync(path.join(LANGS, rel), 'utf8')) as { id: string; entryShell?: string; topic: string }
+      // 目標的語言由它的主題說——`topic` 檔在 `topics/`
+      const t = findFiles(LANGS, 'topics')
+        .map((r) => ({ r, j: JSON.parse(fs.readFileSync(path.join(LANGS, r), 'utf8')) as { id: string; language?: string } }))
+        .find((x) => x.j.id === d.topic)
+      return { ...d, language: t?.j.language }
+    })
 
   it('入口條件——鷹架真的註冊進來了', () => {
     printReport('鷹架宣告', [
@@ -90,6 +97,25 @@ describe('★ 第八十六條：鷹架是一份宣告', () => {
     ).toEqual([])
   })
 
+  it('🔴 硬性零——每一份鷹架都宣告了 `language`', () => {
+    // 少了它，`shellById('none')` 會**跨語言撿到別人的宣告**
+    // ——2026-08-28 實測：Python 撿到 C++ 的 `none`，
+    // 而症狀是「狀態列那句話碰巧是對的，**而選單裡外框那一組整個不見**」。
+    expect(
+      [...shells.values()].filter((s) => !s.language).map((s) => s.id),
+      '🔴 一份沒有語言的鷹架，在第二個語言進來的那天會安靜地撿到別人的宣告：',
+    ).toEqual([])
+  })
+
+  it('🔴 硬性零——每一個語言至少有一份鷹架（否則選單那一組會整個不見）', () => {
+    const langs = new Set(targets.map((t) => t.language).filter(Boolean))
+    const covered = new Set([...shells.values()].map((s) => s.language))
+    expect(
+      [...langs].filter((l) => !covered.has(l as string)),
+      '🔴 這些語言沒有任何鷹架宣告——使用者在那個目標上「外框」那一組是空的：',
+    ).toEqual([])
+  })
+
   it('🪦 「沒有外框」是一份【空的宣告】，不是一個特例的 if', () => {
     const none = shells.get('none')
     expect(none, '🔴 `none` 這份宣告不見了').toBeTruthy()
@@ -101,10 +127,15 @@ describe('★ 第八十六條：鷹架是一份宣告', () => {
 })
 
 describe('★ 注入——證明它會報，也證明它不亂報', () => {
-  const OK = { id: 'ㄒ', name: 'ㄒ', preamble: [], entryPoint: [{ code: 'a', reason: 'b' }], epilogue: [] }
+  const OK = { id: 'ㄒ', name: 'ㄒ', language: 'ㄒ語', preamble: [], entryPoint: [{ code: 'a', reason: 'b' }], epilogue: [] }
 
   it('★ 注入：正確的宣告 → 讀得出來', () => {
     expect(parseShell(OK).entryPoint[0].code).toBe('a')
+  })
+
+  it('★ 注入：缺 language → 丟錯（不然它會跨語言被撿走）', () => {
+    const { language: _l, ...noLang } = OK
+    expect(() => parseShell(noLang)).toThrow(/language/)
   })
 
   it('★ 注入：一段沒有理由 → 丟錯', () => {
@@ -121,6 +152,6 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
   })
 
   it('★ 注入：全空是合法的（那就是「沒有外框」）', () => {
-    expect(() => parseShell({ id: 'z', name: 'z', preamble: [], entryPoint: [], epilogue: [] })).not.toThrow()
+    expect(() => parseShell({ id: 'z', name: 'z', language: 'z語', preamble: [], entryPoint: [], epilogue: [] })).not.toThrow()
   })
 })

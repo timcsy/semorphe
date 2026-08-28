@@ -55,7 +55,8 @@ import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
-import { lessonIdFromQuery, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson } from '../core/lesson'
+import { lessonIdFromQuery, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson, type ScaffoldMode } from '../core/lesson'
+import { shellById, shellsOfLanguage } from '../core/shell'
 import { lessonById, allTracks, lessonsOfTrack } from '../core/load-lessons'
 import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
@@ -178,6 +179,13 @@ export class App {
    * > **兩個決定共用一個載體時，改動其中一個永遠會偷偷改到另一個。**
    */
   private scaffoldDepth = 0
+  /**
+   * 目前用哪一份**外框**宣告。
+   *
+   * 🔴 它在 2026-08-28 之前只活在 `CppScaffold` 裡面（`setEntryShell`），
+   * 而**沒有人問得到現在是哪一份**——於是狀態列上顯示不出來。
+   */
+  private currentShellId = 'main'
   private currentIoPreference: 'iostream' | 'cstdio' = 'iostream'
   private _codeToBlocksInProgress = false
   private _restoringState = false
@@ -306,6 +314,64 @@ export class App {
   }
 
   /**
+   * 換一份外框，或換鷹架的顯示模式——**重畫投影，不動語義樹**。
+   *
+   * ## 🔴 這裡曾經呼叫 `syncBlocksToCodeWithMappings()`，而那是一個嚴重的錯
+   *
+   * 那支從**積木**產生程式碼，而積木畫的是**剝過鷹架的顯示樹**。
+   * 於是切一次顯示模式，`currentTree` 就從
+   *
+   * ```
+   * include · using_namespace · func_def     →     print
+   * ```
+   *
+   * ——**一個「顯示設定」把唯一真實給改掉了**，而方向還是反的
+   * （切成「完整」反而變少）。
+   *
+   * > **改投影的動作不得寫回真相。**
+   * > 而它的症狀是無聲的：程式碼那一側看起來還好，因為產生器
+   * > 會把鷹架補回去——**下一次同步才會發現東西不見了**。
+   *
+   * 🟢 正解是**從語義樹重新投影一次**（`refreshViews`），
+   * 那是 `useAsSource('積木')` 以外唯一該碰積木的方向。
+   */
+  private setShell(id: string): void {
+    if (!shellById(id)) { console.error(`[shell] 選了一份不存在的外框：${id}`); return }
+    this.currentShellId = id
+    this.scaffold?.setEntryShell?.(id)
+    this.reprojectFromTree()
+    this.publishControls()
+  }
+
+  /**
+   * 換鷹架的顯示模式。
+   *
+   * ⚠️ 它會**覆寫課程的設定**，而那是對的：課程說的是「這堂課建議這樣看」，
+   * 而使用者當下說的是「我現在想這樣看」。
+   */
+  private setScaffoldMode(mode: ScaffoldMode): void {
+    this.scaffoldDepth = scaffoldDepthOf(mode)
+    setScaffoldConfig({ scaffoldDepth: this.scaffoldDepth })
+    this.syncController?.setScaffoldDepth(this.scaffoldDepth)
+    this.updateToolbox()
+    this.reprojectFromTree()
+    this.publishControls()
+  }
+
+  /**
+   * **從語義樹重新投影一次**——不動樹本身。
+   *
+   * 🔴 走的是「以此為準：程式碼」那條既有的路：先從樹產生程式碼，
+   * 再讓它重新 lift 回來。⚠️ 而**不是**從積木反推
+   * ——積木畫的是剝過鷹架的顯示樹，拿它當來源會把鷹架吃掉。
+   */
+  private reprojectFromTree(): void {
+    const code = this.codeView?.getCode?.() ?? ''
+    if (code.trim() === '') return
+    void this.syncController?.syncCodeToBlocks(code)
+  }
+
+  /**
    * 套用一份範例——**把它的程式碼放進編輯器**。
    *
    * ⚠️ **會蓋掉畫布上的東西**，所以先問一句。
@@ -424,7 +490,10 @@ export class App {
     const track = allTracks().get(trackOf(lesson.id))
     this.scaffoldDepth = scaffoldDepthOf(lesson.pins.scaffold ?? track?.scaffold ?? 'editable')
     // 🔴 **課程也可以換一份【外框】**（不只是露多少）——省略就跟著目標走。
-    if (track?.shell !== undefined) this.scaffold?.setEntryShell?.(track.shell)
+    if (track?.shell !== undefined) {
+      this.currentShellId = track.shell
+      this.scaffold?.setEntryShell?.(track.shell)
+    }
   }
 
   async init(): Promise<void> {
@@ -1153,7 +1222,8 @@ export class App {
 
   private handleTargetChange(target: Target, topic: Topic, branches: Set<string>): void {
     // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
-    this.scaffold?.setEntryShell?.(target.entryShell ?? 'main')
+    this.currentShellId = target.entryShell ?? 'main'
+    this.scaffold?.setEntryShell?.(this.currentShellId)
         const prevDepth = this.getScaffoldDepth()
         this.currentTarget = target
         this.currentTopic = topic
@@ -1449,6 +1519,39 @@ export class App {
           label: cur?.name ?? '選擇課程', value: cur?.id ?? '', options,
         }
       }
+      case 'scaffold': {
+        // 🔴 **兩個軸，兩個群組，而值用前綴分開**（`shell:` / `mode:`）。
+        //    一次點擊只改一個軸——混在一起的話「我剛剛改了什麼」會說不清楚。
+        const cur = shellById(this.currentShellId)
+        const mine = shellsOfLanguage(this.currentTopic.language)
+        const MODES: readonly [ScaffoldMode, string, string][] = [
+          ['hidden', '隱藏', '積木上只留你自己的邏輯'],
+          ['ghost', '淡的', '看得到、動不了，旁邊寫著為什麼'],
+          ['editable', '完整', '整支程式，你改得動'],
+        ]
+        const mode: ScaffoldMode =
+          this.scaffoldDepth === 0 ? 'hidden' : this.scaffoldDepth === 1 ? 'ghost' : 'editable'
+        const options: ControlOption[] = [
+          // ⚠️ **外框只列這個【語言】有的**——`main` 與 `none` 都是 C++ 的，
+          //    而 Arduino 的目標與 C++ 是同一個語言。
+          ...mine.map((s) => ({
+            value: `shell:${s.id}`, label: s.name, group: '外框',
+            // 🔴 **說明由宣告自己說**——第一版用「entryPoint 是空的」推導成
+            //    「Arduino sketch」，而 Python 的空外框也被說成 Arduino。
+            description: s.hint,
+          })),
+          ...MODES.map(([m, label, desc]) => ({
+            value: `mode:${m}`, label, group: '顯示', description: desc,
+          })),
+        ]
+        return {
+          id: spec.id, kind: spec.kind, title,
+          // 🔴 標籤同時說出**兩個軸**——「目前是哪一種」問的就是這兩格
+          label: `${cur?.name ?? this.currentShellId}・${MODES.find(([m]) => m === mode)?.[1] ?? mode}`,
+          value: `mode:${mode}`,
+          options,
+        }
+      }
       case 'template': {
         const mine = [...allTemplates().values()].filter((t) => t.target === this.currentTarget.id)
         const options: ControlOption[] = mine.map((t) => ({
@@ -1560,6 +1663,12 @@ export class App {
           const topic = target ? this.topicRegistry.get(target.topic) : null
           if (!target || !topic) return
           cb.onTargetChange(target, topic, new Set(flattenLevelTree(topic.levelTree).map((n) => n.id)))
+          break
+        }
+        case 'scaffold': {
+          const v = invoke.value ?? ''
+          if (v.startsWith('shell:')) this.setShell(v.slice(6))
+          else if (v.startsWith('mode:')) this.setScaffoldMode(v.slice(5) as ScaffoldMode)
           break
         }
         case 'template': {

@@ -109,7 +109,7 @@ test('★ 三層選得到課——目標 → 課程 → 章節', async ({ page }
   await expect(
     page.locator('.status-item-btn[data-control-id="track"]'),
     '🔴 狀態列上沒有「課程」——那沒有人找得到課',
-  ).toHaveText('沒有課程')
+  ).toHaveText('選擇課程')
 
   // 🔴 **「章節」與「範例」佔同一格，不同時出現**（2026-08-28）。
   //    那一格問的是同一件事——「我從什麼開始」——只是有課的時候由課回答。

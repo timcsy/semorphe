@@ -72,7 +72,7 @@ export type ControlSurface =
   | 'hostPanel'
 
 export type ControlId =
-  | 'target' | 'track' | 'lesson' | 'template' | 'style' | 'blockStyle' | 'locale'   // 🪦 `branches` 於 2026-08-28 退場（見下面的墓碑）
+  | 'target' | 'track' | 'lesson' | 'template' | 'scaffold' | 'style' | 'blockStyle' | 'locale'   // 🪦 `branches` 於 2026-08-28 退場（見下面的墓碑）
   | 'run' | 'undo' | 'redo' | 'clear'
   | 'viewBlocks' | 'viewFlow'
   | 'layout'
@@ -132,6 +132,19 @@ export const CONTROLS: readonly ControlSpec[] = [
   // ⚠️ 它與章節**不會同時出現**——那一格問的是同一件事
   // （「我從什麼開始」），只是有課的時候由課回答。
   { id: 'template', kind: 'picker', domain: 'session', mountId: 'template-selector-mount', bar: 'quickAccess', hostTitle: '選擇範例' },
+  // 🔴 **鷹架**——它有兩個軸，而那兩個軸是同一顆 picker 的兩個群組：
+  //
+  // ```
+  // 外框   哪幾段組成程式的框架     ← 被【目標的語言】限制有哪些選擇
+  // 顯示   隱藏 / 淡的 / 完整       ← 三個一律可選
+  // ```
+  //
+  // 使用者 2026-08-28：「你可以再加一個目前是用哪一種 scaffold 的狀態嗎？
+  // 然後使用者也可以選，**這也會被你選什麼目標限制有哪些選擇**」。
+  //
+  // ⚠️ 在此之前它**完全沒有使用者入口**——只有課程設得了它，
+  //    而沒選課程的人拿到的是一個他看不見也改不了的預設。
+  { id: 'scaffold', kind: 'picker', domain: 'session', mountId: 'scaffold-selector-mount', bar: 'quickAccess', hostTitle: '鷹架' },
   // 🪦 **`branches`（選擇教學層級）已於 2026-08-28 退場。**
   //
   // 它是六個控制項裡唯一一個**連老師都答不出來**的

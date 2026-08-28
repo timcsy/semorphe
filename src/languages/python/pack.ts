@@ -4,6 +4,9 @@
  * ⚠️ 在 spec 161 之前，這六樣東西是 `app.ts` 裡的**五個 import ＋ 三行註冊**。
  */
 import type { Topic, Target, StylePreset } from '../../core/types'
+// ⚠️ **副作用 import**——把 Python 的鷹架宣告註冊進去。
+//    少了它，`shellsOfLanguage('python')` 是空的，而狀態列會撿到 C++ 的 `none`。
+import './shells'
 import { declareLanguagePack } from '../../core/language-packs'
 import { pythonCategoryDefs } from './toolbox-categories'
 import { PythonParser } from './parser'
