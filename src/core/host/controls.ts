@@ -72,7 +72,7 @@ export type ControlSurface =
   | 'hostPanel'
 
 export type ControlId =
-  | 'target' | 'track' | 'lesson' | 'style' | 'blockStyle' | 'locale'   // 🪦 `branches` 於 2026-08-28 退場（見下面的墓碑）
+  | 'target' | 'track' | 'lesson' | 'template' | 'style' | 'blockStyle' | 'locale'   // 🪦 `branches` 於 2026-08-28 退場（見下面的墓碑）
   | 'run' | 'undo' | 'redo' | 'clear'
   | 'viewBlocks' | 'viewFlow'
   | 'layout'
@@ -124,6 +124,14 @@ export const CONTROLS: readonly ControlSpec[] = [
   // ⚠️ 兩顆都**不會**被課釘住（`controlsPinnedBy` 回空）——它們是出口。
   { id: 'track', kind: 'picker', domain: 'session', mountId: 'track-selector-mount', bar: 'quickAccess', hostTitle: '選擇課程' },
   { id: 'lesson', kind: 'picker', domain: 'session', mountId: 'lesson-selector-mount', bar: 'quickAccess', hostTitle: '選擇章節' },
+  // 🔴 **範例**——沒選課程時佔「章節」那一格。
+  //
+  // 形狀抄 **Arduino IDE 的 Examples 選單**（使用者 2026-08-28：
+  // 「這就很像是 ArduinoIDE 提供的那種範例」）：分組、完整可跑、拿去改。
+  //
+  // ⚠️ 它與章節**不會同時出現**——那一格問的是同一件事
+  // （「我從什麼開始」），只是有課的時候由課回答。
+  { id: 'template', kind: 'picker', domain: 'session', mountId: 'template-selector-mount', bar: 'quickAccess', hostTitle: '選擇範例' },
   // 🪦 **`branches`（選擇教學層級）已於 2026-08-28 退場。**
   //
   // 它是六個控制項裡唯一一個**連老師都答不出來**的

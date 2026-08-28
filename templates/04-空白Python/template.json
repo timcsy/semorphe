@@ -1,0 +1,7 @@
+{
+  "name": "空白 Python",
+  "group": "基本",
+  "description": "沒有 main，從第一行開始跑",
+  "target": "python",
+  "order": 3
+}

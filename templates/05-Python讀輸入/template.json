@@ -1,0 +1,7 @@
+{
+  "name": "Python 讀輸入",
+  "group": "輸入輸出",
+  "description": "input 讀進來的是文字，要自己轉",
+  "target": "python",
+  "order": 2
+}

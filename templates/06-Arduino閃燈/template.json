@@ -1,0 +1,7 @@
+{
+  "name": "Arduino 閃燈",
+  "group": "硬體",
+  "description": "硬體的 hello world——板子上那顆內建的燈",
+  "target": "arduino-uno",
+  "order": 1
+}

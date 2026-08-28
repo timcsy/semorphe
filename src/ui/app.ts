@@ -57,6 +57,7 @@ import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson } from '../core/lesson'
 import { lessonById, allTracks, lessonsOfTrack } from '../core/load-lessons'
+import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
@@ -302,6 +303,45 @@ export class App {
       if (!lesson) console.error(`[lessons] 找不到 ${lessonId}——連結指向一堂不存在的課`)
       else this.applyLesson(lesson)
     }
+  }
+
+  /**
+   * 套用一份範例——**把它的程式碼放進編輯器**。
+   *
+   * ⚠️ **會蓋掉畫布上的東西**，所以先問一句。
+   * 🔴 「選了範例卻沒看到範例」比「被問一句」更糟，而**吃掉使用者的作品**
+   *    比兩者都糟——所以是「問」，不是「靜靜地套」也不是「靜靜地不套」。
+   */
+  private applyTemplate(id: string): void {
+    const t = templateById(id)
+    if (!t) { console.error(`[templates] 選了一份不存在的範例：${id}`); return }
+    // 🔴 **問語義樹，不問面板**——「有沒有東西」是那份唯一真實的性質，
+    //    而不是某一個投影的性質（根公理）。⚠️ 也不用戳面板的私有欄位。
+    const body = this.syncController?.getCurrentTree()?.children?.body ?? []
+    const hasWork = body.length > 0
+    const go = (): void => {
+      // 換目標（範例釘住它），再把程式碼放進去
+      const target = this.targetRegistry.all().find((x) => x.id === t.target)
+      if (target && target.id !== this.currentTarget.id) {
+        this.currentLesson = undefined
+        this.currentTrack = undefined
+        this.handleTargetChange(target, this.topicRegistry.get(target.topic)!, allBranchesOf(this.topicRegistry.get(target.topic)!))
+      }
+      this.codeView?.setCode(t.code)
+      void this.syncController?.syncCodeToBlocks(t.code)
+      this.publishControls()
+    }
+    if (!hasWork) { go(); return }
+    showQuickPick(
+      {
+        title: `套用範例「${t.name}」？畫布上現在的東西會被蓋掉`,
+        items: [
+          { value: 'yes', label: '套用（現在的內容會不見）' },
+          { value: 'no', label: '取消' },
+        ],
+      },
+      (v) => { if (v?.[0] === 'yes') go() },
+    )
   }
 
   /**
@@ -1324,6 +1364,9 @@ export class App {
     // ⚠️ `ControlSurface` 的六個值全部是「畫在哪」，**沒有一個是「不畫」**
     //    ——所以「消失」必須在產生清單的這一步做，不能靠換一個 surface。
     const pinned = new Set(this.currentLesson ? controlsPinnedBy(this.currentLesson) : [])
+    // 🔴 **「章節」與「範例」佔同一格，不同時出現。**
+    //    那一格問的是同一件事——「我從什麼開始」——只是有課的時候由課回答。
+    pinned.add(this.currentTrack ? 'template' : 'lesson')
     const pickersAndActions = CONTROLS
       .filter((c) => c.kind === 'picker' || c.kind === 'action')
       .filter((c) => !pinned.has(c.id))
@@ -1400,7 +1443,25 @@ export class App {
         const cur = this.currentLesson ? allTracks().get(trackOf(this.currentLesson.id)) : undefined
         return {
           id: spec.id, kind: spec.kind, title,
-          label: cur?.name ?? '沒有課程', value: cur?.id ?? '', options,
+          // 🔴 **祈使句，不是狀態句**（2026-08-28 使用者：「不要說『沒有課程』要說『選擇課程』」）。
+          //    「沒有課程」讀起來像「**沒有課程可選**」——一句在勸退的話，
+          //    而那一格其實是一個邀請。
+          label: cur?.name ?? '選擇課程', value: cur?.id ?? '', options,
+        }
+      }
+      case 'template': {
+        const mine = [...allTemplates().values()].filter((t) => t.target === this.currentTarget.id)
+        const options: ControlOption[] = mine.map((t) => ({
+          value: t.id,
+          label: t.name,
+          group: t.group,
+          description: t.description,
+        }))
+        return {
+          id: spec.id, kind: spec.kind, title,
+          // 🔴 **不記住選了哪一份**——套用之後那份程式碼就是使用者的了，
+          //    他改了兩行之後選單還顯示「空白程式」是一句謊話。
+          label: '選擇範例', value: '', options,
         }
       }
       case 'lesson': {
@@ -1418,7 +1479,9 @@ export class App {
           id: spec.id, kind: spec.kind, title,
           // 🔴 沒選課程的時候這一顆說「先選課程」而不是「沒有章節」
           //    ——後者看起來像「這條軌道是空的」。
-          label: this.currentLesson ? this.currentLesson.title : (tid ? '選一章' : '先選課程'),
+          // 同上——祈使句。⚠️ 而「還沒選課程」那一支現在到不了
+          //    （沒選課程時這一顆整個不畫，見 `publishControls`）。
+          label: this.currentLesson ? this.currentLesson.title : '選擇章節',
           value: this.currentLesson?.id ?? '',
           options,
         }
@@ -1497,6 +1560,10 @@ export class App {
           const topic = target ? this.topicRegistry.get(target.topic) : null
           if (!target || !topic) return
           cb.onTargetChange(target, topic, new Set(flattenLevelTree(topic.levelTree).map((n) => n.id)))
+          break
+        }
+        case 'template': {
+          this.applyTemplate(invoke.value ?? '')
           break
         }
         case 'track': {

@@ -106,11 +106,21 @@ test('★ 三層選得到課——目標 → 課程 → 章節', async ({ page }
   await freshApp(page)
   await expect(page.locator('#status-controls .status-item-btn').first()).toBeVisible({ timeout: 20_000 })
 
-  for (const [id, label] of [['track', '沒有課程'], ['lesson', '先選課程']] as const) {
-    const p = page.locator(`.status-item-btn[data-control-id="${id}"]`)
-    await expect(p, `🔴 狀態列上沒有「${id}」——那沒有人找得到課`).toHaveCount(1)
-    await expect(p, `🔴 沒選課時它該說「${label}」`).toHaveText(label)
-  }
+  await expect(
+    page.locator('.status-item-btn[data-control-id="track"]'),
+    '🔴 狀態列上沒有「課程」——那沒有人找得到課',
+  ).toHaveText('沒有課程')
+
+  // 🔴 **「章節」與「範例」佔同一格，不同時出現**（2026-08-28）。
+  //    那一格問的是同一件事——「我從什麼開始」——只是有課的時候由課回答。
+  await expect(
+    page.locator('.status-item-btn[data-control-id="template"]'),
+    '🔴 沒選課程時該有「範例」那一顆——否則那一格是空的，而它其實有一個隱形的預設',
+  ).toHaveCount(1)
+  await expect(
+    page.locator('.status-item-btn[data-control-id="lesson"]'),
+    '🔴 沒選課程時不該有「章節」——它與「範例」佔同一格',
+  ).toHaveCount(0)
 
   // 🔴 **目標選單只剩語言與板子**——`C++ 進階` 與「不指定板子的 Arduino」
   //    改成 `listed: false`，只由課程進得去。
@@ -141,6 +151,14 @@ test('★ 三層選得到課——目標 → 課程 → 章節', async ({ page }
     '🔴 選了軌道而沒有落在第一章——一個「選了課程卻沒有章節」的狀態，' +
       '畫面上與「還沒選」分不出來',
   ).toHaveText('預備')
+  await expect(
+    page.locator('.status-item-btn[data-control-id="template"]'),
+    '🔴 選了課程而「範例」還在——那一格該由課回答了',
+  ).toHaveCount(0)
+  await expect(
+    page.locator('.status-item-btn[data-control-id="template"]'),
+    '🔴 選了課程而「範例」還在——那一格該由課回答了',
+  ).toHaveCount(0)
   // 🔴 **目標與課程各說一件事，不重複**
   await expect(
     page.locator('.status-item-btn[data-control-id="target"]'),
@@ -164,7 +182,7 @@ test('★ 三層選得到課——目標 → 課程 → 章節', async ({ page }
   await expect(
     page.locator('.status-item-btn[data-control-id="track"]'),
     '🔴 換了目標而課程還留著——那條軌道不屬於這個目標',
-  ).toHaveText('沒有課程')
+  ).toHaveText('選擇課程')
 })
 
 for (const c of CASES) {

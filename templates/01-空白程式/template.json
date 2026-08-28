@@ -1,0 +1,7 @@
+{
+  "name": "空白程式",
+  "group": "基本",
+  "description": "最小的一支 C++——從這裡開始",
+  "target": "cpp",
+  "order": 1
+}

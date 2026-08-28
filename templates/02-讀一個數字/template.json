@@ -1,0 +1,7 @@
+{
+  "name": "讀一個數字",
+  "group": "輸入輸出",
+  "description": "cin 讀進來、算一下、cout 印出去",
+  "target": "cpp",
+  "order": 1
+}

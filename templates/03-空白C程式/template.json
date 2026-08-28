@@ -1,0 +1,7 @@
+{
+  "name": "空白 C 程式",
+  "group": "基本",
+  "description": "printf 那一套",
+  "target": "c",
+  "order": 2
+}

@@ -44,6 +44,7 @@ export class QuickAccessBar {
       options.inPanel('target') ? '<span id="level-selector-mount"></span>' : '',
       options.inPanel('target') ? '<span id="track-selector-mount"></span>' : '',
       options.inPanel('target') ? '<span id="lesson-selector-mount"></span>' : '',
+      options.inPanel('target') ? '<span id="template-selector-mount"></span>' : '',
       options.inPanel('blockStyle') ? '<span id="block-style-selector-mount"></span>' : '',
       [
         options.inPanel('undo') ? '<button id="undo-btn" title="復原">↩</button>' : '',
