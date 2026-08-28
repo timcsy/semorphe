@@ -17,7 +17,7 @@ import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, 
 import type { ShapeChange } from '../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 17
+export const CURRENT_VERSION = 18
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -388,6 +388,27 @@ export const UPGRADES: Record<number, Upgrade> = {
    * 🟢 冪等（`migrate-storage` 第 3 步）：它只改版號，跑兩次結果相同。
    */
   16: (raw) => ({ ...raw, version: 17 }),
+  /**
+   * 17 → 18：**`cpp-competitive` 改名成 `cpp-advanced`**（2026-08-28）。
+   *
+   * 那一軌教的是排序、二分搜、STL、圖、DP——**競賽與資料結構共用的那一層**，
+   * 而「競賽」這個名字把它窄化成了一種比賽。顯示名同步改成「C++ 進階」。
+   *
+   * 🔴 **`targetId` 與 `topicId` 住在存檔裡**，所以這是 P8 要求的一次性轉換
+   * （`history/026`：不做向後相容管投影與程式碼，**不管語義詞彙本身**）。
+   * 少了它，選過競賽目標的人重開會拿到一個**指向不存在目標的存檔**。
+   *
+   * 🟢 冪等（`migrate-storage` 第 3 步）：**先判是不是已經是新名**，
+   * 是就跳過。跑兩次結果相同。
+   *
+   * ⚠️ **只改這兩格**（`migrate-storage` 第 4 步：只改你確定是那個東西的位置）
+   * ——不做全檔字串取代。`cpp-competitive` 也可能出現在使用者的
+   * 程式碼或註解裡，而那不該被動到。
+   */
+  17: (raw) => {
+    const rename = (v: unknown): unknown => (v === 'cpp-competitive' ? 'cpp-advanced' : v)
+    return { ...raw, targetId: rename(raw.targetId), topicId: rename(raw.topicId), version: 18 }
+  },
 }
 
 /**

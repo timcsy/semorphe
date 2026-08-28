@@ -134,7 +134,7 @@ describe('工具箱（E 項的第一次回報）', () => {
     const { allCppComponents, allCppProjections } = await import('../../src/languages/cpp/all-declarations')
     const { cppCategoryDefs } = await import('../../src/languages/cpp/toolbox-categories')
     const beginner = (await import('../../src/languages/cpp/topics/cpp-beginner.json')).default
-    const competitive = (await import('../../src/languages/cpp/topics/cpp-competitive.json')).default
+    const competitive = (await import('../../src/languages/cpp/topics/cpp-advanced.json')).default
 
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(allCppComponents(), allCppProjections())

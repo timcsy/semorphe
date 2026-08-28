@@ -28,12 +28,12 @@ import { CppParser } from './parser'
 import { registerCppLanguage } from './generators'
 import cppLiftPatterns from './lift-patterns.json'
 import cppBeginnerTopic from './topics/cpp-beginner.json'
-import cppCompetitiveTopic from './topics/cpp-competitive.json'
+import cppAdvancedTopic from './topics/cpp-advanced.json'
 import cBeginnerTopic from './topics/c-beginner.json'
 import arduinoTopic from './topics/arduino.json'
 import cppTargetDef from './targets/cpp.json'
 import cTargetDef from './targets/c.json'
-import cppCompetitiveTargetDef from './targets/cpp-competitive.json'
+import cppAdvancedTargetDef from './targets/cpp-advanced.json'
 import arduinoTargetDef from './targets/arduino.json'
 import arduinoUnoTargetDef from './targets/arduino-uno.json'
 import arduinoNanoTargetDef from './targets/arduino-nano.json'
@@ -112,7 +112,7 @@ declareLanguagePack({
   name: 'C++',
   /**
    * ⚠️ **一個文法，四個教學語言**——下面 `topics` 那四筆
-   * （cpp-beginner／cpp-competitive／c-beginner／arduino）全走這一個文法。
+   * （cpp-beginner／cpp-advanced／c-beginner／arduino）全走這一個文法。
    * 這就是「文法不是語言」最直接的證據。
    */
   grammar: 'tree-sitter-cpp',
@@ -161,12 +161,12 @@ declareLanguagePack({
     'conditional_expression', 'cast_expression', 'preproc_ifdef',
   ],
   order: 0,
-  topics: [cppBeginnerTopic, cppCompetitiveTopic, cBeginnerTopic, arduinoTopic] as Topic[],
+  topics: [cppBeginnerTopic, cppAdvancedTopic, cBeginnerTopic, arduinoTopic] as Topic[],
   // ⚠️ **順序就是選單順序**——照 `app.ts` 原本的註冊順序原封搬過來。
   // 🔴 而 Python 原本插在 `arduino` 與板子之間，那是**跨語言的順序**，
   // 一個語言套件表達不出來 → 由 `app.ts` 的組裝順序決定（見那裡的註解）。
   targets: [
-    cppTargetDef, cTargetDef, cppCompetitiveTargetDef, arduinoTargetDef,
+    cppTargetDef, cTargetDef, cppAdvancedTargetDef, arduinoTargetDef,
     arduinoUnoTargetDef, arduinoNanoTargetDef, esp32TargetDef, esp32c3TargetDef,
     esp32s3TargetDef, esp32s3CamTargetDef, wemosD1MiniTargetDef, nodemcuEsp8266TargetDef,
   ] as Target[],

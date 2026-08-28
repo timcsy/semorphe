@@ -16,7 +16,7 @@ import { classifyFile } from '../helpers/file-classification'
 describe('檔案分類', () => {
   it('★ 清單：登錄表的視圖與策展', () => {
     expect(classifyFile('src/languages/cpp/topics/cpp-beginner.json'), '課程清單是策展，不是實作').toBe('清單')
-    expect(classifyFile('src/languages/cpp/topics/cpp-competitive.json')).toBe('清單')
+    expect(classifyFile('src/languages/cpp/topics/cpp-advanced.json')).toBe('清單')
     expect(classifyFile('src/languages/cpp/toolbox-categories.ts'), '工具箱清單同理').toBe('清單')
   })
 

@@ -63,7 +63,7 @@ export interface LayeredValue<T> {
 
 export const DEFAULT_CONFIG: PanelConfig = {
   // 🔴 這裡曾經寫 `'cpp-beginner'`——**而那個目標不存在**
-  //    （登錄的四個是 `cpp` / `c` / `cpp-competitive` / `arduino`）。
+  //    （登錄的四個是 `cpp` / `c` / `cpp-advanced` / `arduino`）。
   //    ⚠️ 一個認不得的 ID 在下游是「回退到現況」，所以它**不會出聲**
   //    ——設定看起來有在運作，實際上這一格從來沒有生效過。
   targetId: 'cpp',

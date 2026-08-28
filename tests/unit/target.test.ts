@@ -13,11 +13,11 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { TargetRegistry } from '../../src/core/target-registry'
 import cppTarget from '../../src/languages/cpp/targets/cpp.json'
 import cTarget from '../../src/languages/cpp/targets/c.json'
-import competitiveTarget from '../../src/languages/cpp/targets/cpp-competitive.json'
+import competitiveTarget from '../../src/languages/cpp/targets/cpp-advanced.json'
 import arduinoTarget from '../../src/languages/cpp/targets/arduino.json'
 import cppBeginner from '../../src/languages/cpp/topics/cpp-beginner.json'
 import cBeginner from '../../src/languages/cpp/topics/c-beginner.json'
-import cppCompetitive from '../../src/languages/cpp/topics/cpp-competitive.json'
+import cppAdvanced from '../../src/languages/cpp/topics/cpp-advanced.json'
 import arduinoTopic from '../../src/languages/cpp/topics/arduino.json'
 import apcsStyle from '../../src/languages/cpp/styles/apcs.json'
 import cStyle from '../../src/languages/cpp/styles/c.json'
@@ -99,7 +99,7 @@ describe('目標', () => {
   })
 
   it('★ 而那兩個引用要指得到【真的存在】的東西', () => {
-    const topics = new Set([cppBeginner, cBeginner, cppCompetitive, arduinoTopic].map((t) => (t as { id: string }).id))
+    const topics = new Set([cppBeginner, cBeginner, cppAdvanced, arduinoTopic].map((t) => (t as { id: string }).id))
     const styles = new Set([apcsStyle, cStyle, competitiveStyle, googleStyle].map((s) => (s as { id: string }).id))
     for (const t of TARGETS) {
       expect(topics.has(t.topic), `🔴 目標 ${t.id} 指向不存在的課程清單 ${t.topic}`).toBe(true)

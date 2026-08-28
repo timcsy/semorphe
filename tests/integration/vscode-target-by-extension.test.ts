@@ -30,7 +30,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { defaultTargetForPath, resolveConfig, DEFAULT_CONFIG } from '../../src/vscode/sync/settings'
 
-const targetIds = ['cpp', 'c', 'cpp-competitive', 'arduino'].map((id) =>
+const targetIds = ['cpp', 'c', 'cpp-advanced', 'arduino'].map((id) =>
   JSON.parse(readFileSync(`src/languages/cpp/targets/${id}.json`, 'utf8')) as
     { id: string; topic: string })
 

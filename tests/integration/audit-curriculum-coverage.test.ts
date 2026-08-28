@@ -45,7 +45,7 @@ import { loadToolbox, curriculumSnapshot } from '../helpers/toolbox'
 /**
  * 🔴 **課程清單是【掃】出來的，不是手寫的兩個 import。**
  *
- * ⚠️ 2026-08-17 發現：這裡原本硬寫著 `cpp-beginner` 與 `cpp-competitive` 兩個
+ * ⚠️ 2026-08-17 發現：這裡原本硬寫著 `cpp-beginner` 與 `cpp-advanced` 兩個
  * import，而 spec 136 加的 `c-beginner.json` **它從來沒看到過**——
  * 於是「這顆概念有沒有被收錄」這個問題，答案取決於**它被收進哪一份清單**。
  *

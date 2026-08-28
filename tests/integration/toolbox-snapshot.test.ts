@@ -32,7 +32,7 @@ import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 import { REPO_ROOT } from '../helpers/guardrail'
 import cppBeginner from '../../src/languages/cpp/topics/cpp-beginner.json'
-import cppCompetitive from '../../src/languages/cpp/topics/cpp-competitive.json'
+import cppAdvanced from '../../src/languages/cpp/topics/cpp-advanced.json'
 
 const BASELINE_DIR = path.join(REPO_ROOT, 'tests/baselines')
 const GENERATE = process.env.GENERATE_BASELINE === '1'
@@ -121,7 +121,7 @@ describe('起始關卡的工具箱——**使用者第一眼看到的東西**', 
   // 而「只有其中一門壞了」正是這一類 bug 最可能的形狀（可見度是逐課算的）。
   const course = [
     ['初學 C++', cppBeginner],
-    ['競程 C++', cppCompetitive],
+    ['競程 C++', cppAdvanced],
   ] as const
 
   for (const [name, topic] of course) {
@@ -156,7 +156,7 @@ describe('起始關卡的工具箱——**使用者第一眼看到的東西**', 
 describe('課程清單快照', () => {
   const snaps = [
     curriculumSnapshot(cppBeginner as never),
-    curriculumSnapshot(cppCompetitive as never),
+    curriculumSnapshot(cppAdvanced as never),
   ]
 
   it('★ 每一層的 id／標題／成員與順序一字不差', () => {

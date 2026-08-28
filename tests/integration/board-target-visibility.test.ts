@@ -23,7 +23,7 @@ import nanoTarget from '../../src/languages/cpp/targets/arduino-nano.json'
 import esp32Target from '../../src/languages/cpp/targets/esp32.json'
 import cppTarget from '../../src/languages/cpp/targets/cpp.json'
 import cTarget from '../../src/languages/cpp/targets/c.json'
-import cppCompetitiveTarget from '../../src/languages/cpp/targets/cpp-competitive.json'
+import cppAdvancedTarget from '../../src/languages/cpp/targets/cpp-advanced.json'
 
 /** ESP32 才有的五顆——四件套 PWM ＋ 觸摸 */
 const ESP32_ONLY = [
@@ -82,7 +82,7 @@ describe('spec 142 · US1：板子決定工具箱裡有什麼', () => {
   // ── 反向：非硬體目標一格都不能變（FR-006）────────────────────
   it('🔴 三個既有的非硬體目標，可見集合與「不過濾」完全相同', () => {
     const unfiltered = [...typesFor({ id: 'x', name: 'x', topic: 't', style: 's' } as Target)].sort()
-    for (const t of [cppTarget, cTarget, cppCompetitiveTarget]) {
+    for (const t of [cppTarget, cTarget, cppAdvancedTarget]) {
       expect([...typesFor(t as Target)].sort(),
         `目標 ${(t as Target).id} 因為多了 provides 這一格而少了東西 → 預設值方向寫反了`)
         .toEqual(unfiltered)

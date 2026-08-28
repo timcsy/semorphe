@@ -131,7 +131,7 @@ export const CONTROLS: readonly ControlSpec[] = [
   // > 會產生「宣告說 A、實際是 B」的狀態——而它沒有名字。**
   //
   // 🟢 **退場不失去能力**：5 個風格，每一個都有目標指到它
-  // （apcs→cpp · c→c · competitive→cpp-competitive · google→arduino* · python→python）。
+  // （apcs→cpp · c→c · competitive→cpp-advanced · google→arduino* · python→python）。
   // ⚠️ 而 `onStyleChange` 那條線**留著**——切目標時仍然要套用那個目標的風格。
   { id: 'blockStyle', kind: 'picker', domain: 'session', mountId: 'block-style-selector-mount', bar: 'quickAccess', hostTitle: '選擇積木風格' },
   { id: 'locale', kind: 'picker', domain: 'session', mountId: 'locale-selector-mount', bar: 'header', hostTitle: '選擇介面語言' },

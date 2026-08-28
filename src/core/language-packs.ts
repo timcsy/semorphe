@@ -33,7 +33,7 @@ export interface LanguagePack {
    * 🔴 **這個套件的解析器產出的 AST 屬於哪個文法。**
    *
    * ⚠️ **它與 `id` 不是同一件事，而今天就已經不是**：`cpp` 這一個套件
-   * 服務四個教學語言（c-beginner／cpp-beginner／cpp-competitive／arduino），
+   * 服務四個教學語言（c-beginner／cpp-beginner／cpp-advanced／arduino），
    * 而它們共用**一個**文法。以 `id` 當過濾鍵會讓 `c-beginner` 拿不到 C++ 的 pattern。
    *
    * > **語言是教學上的分類，文法是 `astNodeType` 那個字串的命名空間。**

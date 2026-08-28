@@ -47,7 +47,7 @@ describe('TopicRegistry', () => {
 
     it('should allow multiple topics for same language if only one default', () => {
       registry.register(makeTopic({ id: 'cpp-beginner', default: true }))
-      registry.register(makeTopic({ id: 'cpp-competitive', default: false }))
+      registry.register(makeTopic({ id: 'cpp-advanced', default: false }))
       expect(registry.listForLanguage('cpp')).toHaveLength(2)
     })
   })
@@ -83,7 +83,7 @@ describe('TopicRegistry', () => {
 
     it('should return all topics for a language', () => {
       registry.register(makeTopic({ id: 'cpp-beginner', default: true }))
-      registry.register(makeTopic({ id: 'cpp-competitive', default: false }))
+      registry.register(makeTopic({ id: 'cpp-advanced', default: false }))
       expect(registry.listForLanguage('cpp')).toHaveLength(2)
     })
 

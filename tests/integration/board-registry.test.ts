@@ -178,7 +178,7 @@ function camel(id: string): string {
 
 describe('spec 147 · 🔴 非硬體目標一個字都不能變', () => {
   it('🔴 `cpp`／`c`／競程沒有板子', () => {
-    for (const id of ['cpp', 'c', 'cpp-competitive'] as const) {
+    for (const id of ['cpp', 'c', 'cpp-advanced'] as const) {
       const t = targets.find((x) => x.id === id)
       expect(t, `找不到目標 ${id}`).toBeTruthy()
       expect(t!.board, `${id} 長出了一塊板子`).toBeUndefined()

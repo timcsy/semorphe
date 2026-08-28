@@ -1,9 +1,9 @@
 {
-  "id": "cpp-competitive",
+  "id": "cpp-advanced",
   "language": "cpp",
-  "name": "競程 C++",
+  "name": "進階 C++",
   "default": false,
-  "description": "為競賽程式設計優化的 C++ 概念層級樹，優先引入 scanf/printf、陣列和排序",
+  "description": "排序、二分搜、STL 容器、圖與動態規劃——競賽與資料結構共用的那一層",
   "levelTree": {
     "id": "L0",
     "level": 0,

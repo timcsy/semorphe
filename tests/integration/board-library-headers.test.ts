@@ -89,7 +89,7 @@ describe('spec 150 · US3：其他目標一個字都不能變', () => {
   })
 
   it('🔴 `cpp`／`c`／競程沒有替換表也沒有板子', () => {
-    for (const id of ['cpp', 'c', 'cpp-competitive'] as const) {
+    for (const id of ['cpp', 'c', 'cpp-advanced'] as const) {
       expect(byId(id).headerAliases, `${id} 長出了替換表`).toBeUndefined()
       expect(byId(id).board, `${id} 長出了板子`).toBeUndefined()
     }

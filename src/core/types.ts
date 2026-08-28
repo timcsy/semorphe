@@ -634,7 +634,7 @@ export interface UniversalTemplate {
  * **文法**——`astNodeType` 這個字串所屬的命名空間。
  *
  * 🔴 **它不是「語言」。** `cpp` 套件一個文法（tree-sitter-cpp）服務四個教學語言
- * （c-beginner／cpp-beginner／cpp-competitive／arduino）——以語言為鍵過濾，
+ * （c-beginner／cpp-beginner／cpp-advanced／arduino）——以語言為鍵過濾，
  * `c-beginner` 會拿不到 C++ 的 pattern。
  *
  * 取值採用**解析器的名字**（`tree-sitter-cpp`／`tree-sitter-python`），
