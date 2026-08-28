@@ -55,8 +55,15 @@ export function registerExecute(register: (component: string, executor: Componen
       count = Math.trunc(n)
     }
 
+    // 🔴 **結構要真的建出來，不能用 `defaultValue`。**
+    //    `defaultValue('Node')` 落到尾端的 `{ type: 'int', value: 0 }`，
+    //    於是 `new Node` 配到的那一格根本不是結構——`head->val` 之後
+    //    整條 Linked List 走不動（2026-08-28 生進階課時撞到）。
+    //    ⚠️ 判準問**登錄表**（`ctx.structs.has`），不是型別名長怎樣。
     const cells: RuntimeValue[] = []
-    for (let i = 0; i < count; i++) cells.push(defaultValue(type))
+    for (let i = 0; i < count; i++) {
+      cells.push(ctx.structs.has(type) ? ctx.structs.instantiate(type) : defaultValue(type))
+    }
     return { type: 'array', value: cells }
   })
 }

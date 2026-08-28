@@ -317,6 +317,14 @@ export class App {
     this.syncController.setStyleAnalyzer({
       // ⚠️ 用吃 `StylePreset` 的那個門面——收窄發生在語言那側，不是這裡也不是引擎裡
       // 🟢 **2026-08-26：三支風格例外改由語言套件宣告**（`styleExceptions`）。
+      // 🔴 **這條 `?.` 鏈交得出 `undefined`——Python 套件沒有 `styleExceptions`。**
+      //    介面已經宣告成 `| undefined`（2026-08-27），所以這裡不再需要 `as never`
+      //    ⚠️ 而 `as never` **還留著**：`languagePack` 那側的簽章是 `never[]`／
+      //    `unknown`，拿掉它要連著改語言套件的型別，那是另一次重構。
+      //    🟢 真正的修法在**介面**（`SyncController` 的 `StyleAnalyzer` 宣告成
+      //    `| undefined`）與**消費端**（`sync-controller.ts` 三處明確處理）。
+      //    在此之前介面宣告「一定回傳」，而代價是
+      //    **Python 的程式碼→積木整條崩掉，症狀長得像「這段程式沒有積木」**。
       detectStyleExceptions: ((...a: never[]) =>
         languagePack(this.currentTopic.language)?.styleExceptions?.detect(...a)) as never,
       applyStyleConversions: ((...a: never[]) =>

@@ -38,6 +38,27 @@ export interface MethodDecl {
   pure?: boolean
 }
 
+/**
+ * 把 **elaborated type specifier** 剝成純型別名：`struct Point` → `Point`。
+ *
+ * 🔴 C 裡面宣告一個結構變數**一定要寫 `struct`**（`struct Point p;`），
+ * 而 C++ 可以省略。兩種寫法指的是同一個型別，而登記時用的是純名字。
+ *
+ * 在此之前只認純名字，於是 C 那一側 `ctx.structs.has("struct Point")`
+ * 是 `false` → `defaultValue` 給了一個 `int 0` → 之後 `p.x` 丟出
+ * 「**變數 `p`（不是一個結構）尚未宣告**」——**而 `p` 明明宣告過了**。
+ *
+ * > **一則說「沒宣告」而其實是「型別名沒對上」的錯誤訊息，
+ * > 會讓人去找一個不存在的問題。**
+ *
+ * ⚠️ 這裡認的是 **C 家族的三個關鍵字**，而這個檔本來就是 C++ 的結構登錄表
+ * （錯誤訊息裡寫著「那在 C++ 不合法」）——不是核心中立層。
+ */
+function bareTypeName(name: string): string {
+  const m = /^\s*(?:struct|class|union)\s+(.+)$/.exec(name)
+  return m ? m[1].trim() : name
+}
+
 export class StructRegistry {
   private types = new Map<string, FieldDecl[]>()
   private methods = new Map<string, Map<string, MethodDecl>>()
@@ -68,6 +89,7 @@ export class StructRegistry {
 
   /** 這個型別（含它的基底鏈）共用的靜態成員表 */
   staticsOf(name: string): ObjectFields | undefined {
+    name = bareTypeName(name)
     for (const t of this.chain(name)) {
       const m = this.statics.get(t)
       if (m) return m
@@ -77,6 +99,7 @@ export class StructRegistry {
 
   /** 從自己往基底走的型別鏈。**擋住循環繼承**，否則這裡會無限迴圈 */
   chain(name: string): string[] {
+    name = bareTypeName(name)
     const out: string[] = []
     const seen = new Set<string>()
     let cur: string | undefined = name
@@ -90,6 +113,7 @@ export class StructRegistry {
 
   /** 找一個方法。找不到回 undefined——呼叫端要出聲，不得靜默略過 */
   method(structName: string, methodName: string): MethodDecl | undefined {
+    structName = bareTypeName(structName)
     // 沿著繼承鏈找——**自己先於基底**，那就是「覆寫蓋掉基底」
     for (const t of this.chain(structName)) {
       const m = this.methods.get(t)?.get(methodName)
@@ -181,7 +205,7 @@ export class StructRegistry {
   }
 
   has(name: string): boolean {
-    return this.types.has(name)
+    return this.types.has(bareTypeName(name))
   }
 
   /**
@@ -191,6 +215,7 @@ export class StructRegistry {
    * 「按成員宣告順序」，基底在前。
    */
   fieldsOf(name: string): FieldDecl[] {
+    name = bareTypeName(name)
     const out: FieldDecl[] = []
     for (const t of [...this.chain(name)].reverse()) out.push(...(this.types.get(t) ?? []))
     return out
@@ -204,7 +229,9 @@ export class StructRegistry {
    * 症狀是瀏覽器整個卡住而不是一則錯誤訊息。
    */
   instantiate(name: string, seen: Set<string> = new Set()): RuntimeValue {
-    if (!this.types.has(name)) return defaultValue(name)
+    const raw = name
+    name = bareTypeName(name)
+    if (!this.types.has(name)) return defaultValue(raw)
     if (seen.has(name)) {
       throw new Error(`結構 ${name} 直接或間接包含自己——那在 C++ 不合法（要用指標）`)
     }

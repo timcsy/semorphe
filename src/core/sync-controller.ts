@@ -26,9 +26,26 @@ export interface StyleAnalyzer {
   // 在此之前這個檔 import 了 `languages/style` 並自己做轉換，於是
   // **即時互轉的引擎認識 C++ 的詞彙**（`'iostream'`／`'cstdio'`／`'bits'`）。
   // 收窄留在語言那側——組裝點那句註解本來就寫著「**收窄發生在組裝點**」。
-  detectStyleExceptions: (tree: SemanticNode, style: StylePreset) => StyleException[]
-  applyStyleConversions: (tree: SemanticNode, exceptions: StyleException[]) => SemanticNode
-  analyzeIoConformance: (code: string, pref: string) => StyleConformance
+  //
+  // 🔴 **三支都可能回傳 `undefined`——因為不是每個語言都有風格例外這回事。**
+  //
+  // ⚠️ 在此之前它們宣告成「一定回傳」，而組裝點（`app.ts`）串的是
+  // `languagePack(lang)?.styleExceptions?.analyzeIo(...)`——**Python 套件
+  // 根本沒有 `styleExceptions`**，於是那條 `?.` 鏈交出 `undefined`，
+  // 而消費端直接 `result.verdict`。
+  //
+  // 症狀是 **Python 的程式碼→積木整條不通**：`print(1)` 產出一棵空的
+  // `python:program`，主控台一行 `Parse error: TypeError`，而畫面上
+  // **看起來只是「這段程式沒有積木」**。
+  //
+  // > **一個用 `as never` 蓋過去的樂觀簽章，會把「這個語言沒有這件事」
+  // > 變成一次執行期崩潰——而崩潰的地方離原因很遠。**
+  //
+  // 🔴 **修法不是在消費端補 `?.`**（那是第七十五條護欄禁的「沒看過的東西
+  // 給一個『繼續』」）——**是讓宣告說實話**，讓型別檢查逼消費端處理它。
+  detectStyleExceptions: (tree: SemanticNode, style: StylePreset) => StyleException[] | undefined
+  applyStyleConversions: (tree: SemanticNode, exceptions: StyleException[]) => SemanticNode | undefined
+  analyzeIoConformance: (code: string, pref: string) => StyleConformance | undefined
 }
 import { generateCodeWithMapping } from './projection/code-generator'
 
@@ -311,8 +328,10 @@ export class SyncController {
       // Code-level I/O conformance check (before lift — 借音/轉調 detection)
       let ioResult: StyleConformance | null = null
       if (this.codingStyle) {
+        // ⚠️ `undefined` ＝ **這個語言沒有 I/O 風格這回事**（Python），
+        //    不是「檢查失敗」。兩者處置相同（不提示），而意思不同。
         const result = this.styleAnalyzer!.analyzeIoConformance(code, this.codingStyle.io_style)
-        if (result.verdict !== 'conforming') {
+        if (result !== undefined && result.verdict !== 'conforming') {
           ioResult = result
         }
       }
@@ -324,12 +343,20 @@ export class SyncController {
       let semanticExceptions: StyleException[] = []
       let applySemanticConversions: (() => void) | null = null
       if (this.codingStyle) {
+        // ⚠️ 同上——沒有這回事的語言拿到 `undefined`，不是空陣列。
         const exceptions = this.styleAnalyzer!.detectStyleExceptions(tree, this.codingStyle)
-        if (exceptions.length > 0) {
+        if (exceptions !== undefined && exceptions.length > 0) {
           semanticExceptions = exceptions
           const currentTree = tree
           applySemanticConversions = () => {
             const converted = this.styleAnalyzer!.applyStyleConversions(currentTree, exceptions)
+            // 🔴 走到這裡代表 `detectStyleExceptions` 交出過東西，
+            //    所以同一個套件的 `convert` 不該是 undefined——真的是的話
+            //    **那是套件宣告不一致，要出聲，不要靜靜用原樹繼續**。
+            if (converted === undefined) {
+              console.error('風格轉換：套件宣告了 detect 卻沒有 convert')
+              return
+            }
             this.currentTree = converted
             const { mappings: convMappings } = generateCodeWithMapping(converted, this.language, this.style)
             this.codeMappings = convMappings

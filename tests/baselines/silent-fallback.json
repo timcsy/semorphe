@@ -5,7 +5,7 @@
   },
   "scanned": {
     "fileCount": 318,
-    "return 總數": 173
+    "return 總數": 174
   },
   "typeMismatch": 0,
   "missingChild": 20,
@@ -195,5 +195,6 @@
         "shape": "缺子節點"
       }
     ]
-  }
+  },
+  "note": "\n⚠️ 2026-08-27：帶 value 的 return 173 → 174—— 多一條回傳（char 陣列走到 \\0 為止）。**語料變大，不是退步**。\n⚠️ 2026-08-27：「return 總數」173 → 174——cpp:cstring_size 多一條回傳（char 陣列數到第一個 \\0 為止）。**語料變大，不是退步**。"
 }

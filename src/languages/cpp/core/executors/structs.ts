@@ -89,6 +89,13 @@ export function splitMember(members: SemanticNode[]): {
     } else if (role(m.componentId) === 'destructor') {
       dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
     } else if (m.properties?.name !== undefined) {
+      // 🪦 這裡曾經自己判「這個成員是不是指標」（看身分），
+      //    而**那是在補上游的洞**：lift 把 `Node* next;` 的星號放進了**名字**
+      //    （`name: "* next"`, `type: "Node"`）。修在 lift 那一側之後
+      //    （`strategies.ts` 的 `field_declaration` 用 `unwrapPointers`），
+      //    這裡拿到的本來就是 `type: "Node*"`，判斷成了死碼。
+      //    ⚠️ 而它同時違反就近性（第三十六條）——一顆膠囊化元件的身分
+      //    不該出現在自己資料夾外。**兩件事同一個修法。**
       fields.push({
         name: String(m.properties.name),
         type: String(m.properties?.type ?? 'int'),

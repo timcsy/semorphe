@@ -542,6 +542,14 @@ export class SemanticInterpreter implements ExecutionContext {
     // `while ((p = strchr(...)) != 0)` 這種寫法**一次都不跑**，
     // 而程式照樣跑完印出後面的東西。靜默降級最典型的形狀。
     if (val.type === 'pointer') return val.value === null || val.value === undefined ? 0 : 1
+    // **`new T` 配出來的那塊儲存體也是一個指標**，只是它的 `type` 是 `array`
+    // （`cpp:new` 的檔頭：「一塊連續的儲存體，在這個直譯器裡就是 `array`」）。
+    //
+    // 🔴 少了這一行，它掉到最後的 `return 0`，於是
+    // `while (p != NULL)` 對一個**剛配好的節點**是 `0 != 0` ＝ 假
+    // ——整條 Linked List 的走訪**一圈都不跑，而程式照樣跑完、沒有錯誤訊息**。
+    // 與上一行講的是同一件事：**一塊存在的儲存體不是空指標。**
+    if (val.type === 'array' && Array.isArray(val.value)) return 1
     if (typeof val.value === 'number') return val.value
     if (typeof val.value === 'boolean') return val.value ? 1 : 0
     // **`char` 在算術情境下是它的字元碼**——C++ 就是這樣（`'a' + 1` 是 98）。

@@ -188,6 +188,19 @@ export function defaultValue(type: string): RuntimeValue {
       // 核心認得一個特定語言的容器名（中立性護欄在看）。任何語言的樣板容器
       // 都吃這條。
       if (type.includes('<')) return { type: 'array', value: [] }
+      // **指標型別的預設值是空指標**，不是 0。
+      //
+      // 🔴 `struct Node { Node* next; };` 的成員 `next` 原本連型別名裡的
+      // 星號都沒有（星號在**身分**裡——`cpp:pointer_declare`——不在
+      // `properties.type` 裡），於是 `instantiate` 以為結構包含自己，
+      // 丟出「**結構 Node 直接或間接包含自己——那在 C++ 不合法（要用指標）**」。
+      //
+      // > **一則叫你去做你已經做了的事的診斷，比沒有診斷更糟
+      // > ——它讓人去改一段本來就對的程式碼。**
+      //
+      // ⚠️ 判準是「型別名以星號結尾」，與上面那條「帶尖括號」同一個層次：
+      // 看**寫法**，不看特定語言的型別名（中立性護欄在看）。
+      if (type.endsWith('*')) return { type: 'pointer' as RuntimeValue['type'], value: null }
       return { type: 'int', value: 0 }
   }
 }

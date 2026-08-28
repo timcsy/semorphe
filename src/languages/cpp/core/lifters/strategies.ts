@@ -164,7 +164,15 @@ function unwrapPointers(decl: AstNode): { stars: number; inner: AstNode } {
         c.type === 'array_declarator' ||
         c.type === 'reference_declarator' ||
         c.type === 'function_declarator' ||
-        c.type === 'identifier',
+        c.type === 'identifier' ||
+        // 🔴 **結構／類別成員的名字是 `field_identifier`，不是 `identifier`。**
+        //    少了這一行，`struct Node { Node* next; };` 剝不開——迴圈找不到
+        //    下一層就 break，`inner` 停在 `pointer_declarator` 上，
+        //    於是名字變成 **`"* next"`**（星號跑進名字裡）而型別是 `"Node"`。
+        //    下游 `instantiate` 看到「`Node` 有一個 `Node` 成員」，丟出
+        //    「結構 Node 直接或間接包含自己——那在 C++ 不合法（**要用指標**）」
+        //    ——**而它已經是指標了**（2026-08-27 生 Linked List 課時撞到）。
+        c.type === 'field_identifier',
     )
     if (!next) break
     inner = next
@@ -412,21 +420,31 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     ).filter(c => c !== typeNode) // exclude the type node itself
     if (declarators.length > 1) {
       // Multi-variable: create individual var_declare nodes wrapped in a container
-      const nodes = declarators.map(d => buildVarDeclare({ type, name: d.text }))
+      // ⚠️ 星號要搬進型別——與下面單一宣告子那條同一個理由
+      const nodes = declarators.map((d) => {
+        const { stars, inner } = unwrapPointers(d)
+        return buildVarDeclare({ type: type + '*'.repeat(stars), name: inner.text })
+      })
       // Return first and add rest — use a wrapper approach
       // Actually, we need to return multiple nodes. Use the fact that struct/class member lifting
       // collects all children. Return a compound node that generateBody will flatten.
       return createNode('_multi_field', {}, { fields: nodes })
     }
     const declNode = node.childForFieldName('declarator')
-    const name = declNode?.text ?? 'x'
+    // 🔴 **星號屬於型別，不屬於名字。**
+    //    `Node* next;` 的 declarator 是 `pointer_declarator`，而它的 `.text`
+    //    是逐字的 `"* next"`。直接拿來當名字的話，積木上會出現一個
+    //    叫 `* next` 的變數，而型別是 `"Node"`——**指標性整個消失了**。
+    const { stars, inner } = declNode ? unwrapPointers(declNode) : { stars: 0, inner: null }
+    const type2 = type + '*'.repeat(stars)
+    const name = inner?.text ?? declNode?.text ?? 'x'
     // 成員預設值：class A { int v = 7; };
     // ⚠️ `= 0` 的純虛擬已在上面被攔截，走到這裡的 default_value 一律是初始值
     const defaultValueNode = node.childForFieldName('default_value')
     const init = defaultValueNode ? ctx.lift(defaultValueNode) : null
     return init
-      ? buildVarDeclare({ type, name }, { initializer: [init] })
-      : buildVarDeclare({ type, name })
+      ? buildVarDeclare({ type: type2, name }, { initializer: [init] })
+      : buildVarDeclare({ type: type2, name })
   }
 
   // Fallback: try generic lift
@@ -774,7 +792,22 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const typeNode = node.namedChildren.find(c =>
       c.type === 'primitive_type' || c.type === 'type_identifier' ||
       c.type === 'qualified_identifier' || c.type === 'sized_type_specifier' ||
-      c.type === 'template_type'
+      c.type === 'template_type' ||
+      // 🔴 **C 宣告一個結構變數一定要寫關鍵字**：`struct Point p;`
+      //    （C++ 可以省略，而 C 不行——那是 C 軌道結構那一課的主要內容）。
+      //
+      //    在此之前這個清單沒有它，於是 `typeNode` 是 `undefined`，
+      //    `?? 'int'` 讓型別**靜靜降級成 `int`**——lift 殘差是 0、積木長得
+      //    很正常、而執行時 `p.x` 丟出「**變數 p（不是一個結構）尚未宣告**」。
+      //
+      //    > **一個 `?? '預設值'` 讓「沒認出來」與「本來就是這個」
+      //    > 長得一模一樣**（`CLAUDE.md` 的靜默降級反模式）。
+      //
+      //    ⚠️ **只認沒有本體的那種**——`struct Point { int x; };` 是一個
+      //    【定義】，由 `cpp:struct_declare` 處理；帶本體的走到這裡會被
+      //    當成型別名，而它的 `.text` 是整段結構定義。
+      ((c.type === 'struct_specifier' || c.type === 'union_specifier' ||
+        c.type === 'enum_specifier') && c.childForFieldName('body') === null)
     )
     const type = typeNode?.text ?? 'int'
 

@@ -181,8 +181,61 @@ export const PYTHON_BUILTIN_FUNCTIONS: Record<string, (args: RuntimeValue[], ctx
    * （2026-08-23 補：模糊測試的隔離出題者用了它，而它不在表裡。）
    */
   repr: (a) => str(pyStr(a[0], true)),
-  int: (a, c) => num(Math.trunc(c.toNumber(a[0]))),
-  float: (a, c) => ({ type: 'double', value: c.toNumber(a[0]) }),
+  /**
+   * 🔴 **轉不成數字要丟 `ValueError`，不是回 `NaN`。**
+   *
+   * 在此之前 `int("abc")` 回一個 `NaN`，於是
+   *
+   * ```python
+   * try:
+   *     n = int("abc")
+   *     print("沒有例外")     # ← 印的是這一句
+   * except ValueError:
+   *     print("轉換失敗")
+   * ```
+   *
+   * **`try/except` 那一課整個教不了**——課文說「這裡會出例外」，
+   * 而學生看到的是「沒有例外」。
+   *
+   * > **一個回 `NaN` 的轉換函式，把一個看得見的失敗換成一個
+   * > 會傳染下去的值。**
+   *
+   * ⚠️ 訊息照 Python 自己的說法寫（`invalid literal for int()…`）
+   * ——`exception-text` 的檔頭要求的就是這件事：學生查得到的字。
+   */
+  int: (a, c) => {
+    // 🔴 **字串要自己解析，不能走 `toNumber`。**
+    //    核心的 `toNumber` 是 `Number(x) || 0`——那對 C++ 的算術情境是刻意的，
+    //    而它讓 `int("abc")` 得到 **0**（不是 `NaN`），於是 Python 的
+    //    `try/except ValueError` 那一課整個教不了：課文說「這裡會出例外」，
+    //    而學生看到的是「沒有例外」。
+    //
+    //    ⚠️ 而 Python 的 `int()` **比「轉得成數字」更嚴**：`int("3.5")` 也丟
+    //    `ValueError`（它只吃整數字面值）。這裡照著它。
+    if (a[0]?.type === 'string') {
+      const t = String(a[0].value).trim()
+      if (!/^[+-]?\d+$/.test(t)) {
+        throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
+          '%1': `invalid literal for int() with base 10: '${String(a[0].value)}'`,
+        })
+      }
+      return num(parseInt(t, 10))
+    }
+    return num(Math.trunc(c.toNumber(a[0])))
+  },
+  float: (a, c) => {
+    if (a[0]?.type === 'string') {
+      const t = String(a[0].value).trim()
+      const n = Number(t)
+      if (t === '' || Number.isNaN(n)) {
+        throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, {
+          '%1': `could not convert string to float: '${String(a[0].value)}'`,
+        })
+      }
+      return { type: 'double', value: n }
+    }
+    return { type: 'double', value: c.toNumber(a[0]) }
+  },
   /**
    * 🔴 **容器的真假看「空不空」**，不是轉成數字。
    * `bool([1,2,3])` 用 `toNumber` 會得到 NaN → `NaN !== 0` 是 true…
