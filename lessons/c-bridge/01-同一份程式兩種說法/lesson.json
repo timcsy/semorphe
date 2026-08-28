@@ -1,0 +1,19 @@
+{
+  "title": "同一份程式，兩種說法",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "c"
+  },
+  "components": [
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:print_formatted",
+    "cpp:return",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "5",
+    "stdin": []
+  }
+}

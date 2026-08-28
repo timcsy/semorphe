@@ -1,0 +1,24 @@
+{
+  "title": "序列埠",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:compare",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:serial_count",
+    "cpp:serial_open",
+    "cpp:serial_print",
+    "cpp:serial_read",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "ready",
+    "stdin": []
+  }
+}

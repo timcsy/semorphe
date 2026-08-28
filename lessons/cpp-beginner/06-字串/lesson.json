@@ -1,0 +1,25 @@
+{
+  "title": "字串",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:print",
+    "cpp:return",
+    "cpp:string_at",
+    "cpp:string_declare",
+    "cpp:var_assign",
+    "cpp:var_ref",
+    "cpp:vector_size"
+  ],
+  "check": {
+    "stdout": "Semorphe\n8\nS\nSemorphe!\n",
+    "stdin": []
+  }
+}

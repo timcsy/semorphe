@@ -93,7 +93,16 @@ export function judgeLessons(
   const f: Finding[] = []
   for (const l of lessons) {
     for (const c of l.json.components ?? []) {
-      if (!knownComponents.has(c)) f.push({ lesson: l.dir, kind: '懸空元件', detail: c })
+      if (knownComponents.has(c)) continue
+      // 🔴 **兩種不存在要分開報**——訊息不同，修法也不同。
+      //    沒有冒號 ＝ 結構節點（`core/non-components.ts`：`param_decl` 之類），
+      //    它**存在**，只是不是元件，學生在積木盤上看不到它。
+      //    2026-08-27 生第 15 課時真的犯過：量測把 `param_decl` 算進 components。
+      f.push({
+        lesson: l.dir,
+        kind: c.includes(':') ? '懸空元件' : '結構節點不是元件',
+        detail: c,
+      })
     }
     const t = l.json.pins?.target
     if (t !== undefined && !knownTargets.has(t)) {
@@ -175,6 +184,11 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
   it('★ 注入：懸空元件 → 會報', () => {
     const bad = { ...good, json: { ...good.json, components: ['ㄒ:甲', 'ㄒ:不存在'] } }
     expect(judgeLessons([bad], C, T).map((x) => x.kind)).toContain('懸空元件')
+  })
+
+  it('★ 注入：結構節點被當成元件 → 會報（2026-08-27 真的犯過：param_decl）', () => {
+    const bad = { ...good, json: { ...good.json, components: ['ㄒ:甲', '結構節點'] } }
+    expect(judgeLessons([bad], C, T).map((x) => x.kind)).toContain('結構節點不是元件')
   })
 
   it('★ 注入：懸空目標 → 會報（2026-08-27 真的犯過：寫成主題 id）', () => {

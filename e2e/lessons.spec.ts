@@ -109,8 +109,12 @@ for (const c of CASES) {
     ).toEqual([])
 
     const declared = new Set(c.components)
-    // `cpp:program` 是每一份都有的外框，不算在課的元件裡
-    const used = measured.filter((x) => !x.endsWith(':program'))
+    // `cpp:program` 是每一份都有的外框，不算在課的元件裡。
+    // 🔴 **結構節點也不算**——`core/non-components.ts` 宣告的那一類
+    //    （`param_decl` 之類）是別人的子節點，**學生在積木盤上看不到它們**，
+    //    所以一堂課不該宣告要開它們。判準是**真元件的身分都帶冒號**
+    //    （`語言:名字`，實測 332/332）。
+    const used = measured.filter((x) => !x.endsWith(':program') && x.includes(':'))
 
     expect(
       used.filter((x) => !declared.has(x)).sort(),
@@ -126,7 +130,17 @@ for (const c of CASES) {
   })
 
   test(`★ ${c.name}：跑出來就是課文說的那樣`, async ({ page }) => {
-    test.skip(c.stdout === '', '這堂課沒宣告 check.stdout')
+    // 🔴 **沒有輸出的課不能整支跳過。**
+    //
+    // 七堂 Arduino 課只閃燈／發聲／轉馬達，主控台本來就是空的。
+    // 在此之前它們被 `test.skip` 整支跳掉，於是
+    // **一個執行期錯誤會完全溜過去**——而那正是 2026-08-27 抓到的那一類
+    // （`變數 'LED_BUILTIN' 尚未宣告`，症狀是整堂課的第一步就做不了）。
+    //
+    // > **「這堂課沒有輸出可比」不等於「這堂課不用跑跑看」。**
+    //
+    // 所以改成：有宣告 `stdout` 就比對；沒有的話**仍然跑**，
+    // 只驗它沒有把錯誤印在主控台上。
     await freshApp(page)
     if (c.target) await selectTarget(page, c.target)
 
@@ -155,6 +169,19 @@ for (const c of CASES) {
     await page.waitForTimeout(2500)
 
     const output = (await page.locator('.console-output').innerText()).trim()
+
+    // ★ 兩種課都要驗的：**主控台上不得有錯誤**
+    //   ⚠️ 認的是直譯器吐出來的那幾種說法，不是任意含「錯」的字
+    //   ——課文本身的輸出也可能有那個字。
+    const errs = output.split('\n').filter((l) =>
+      /尚未宣告|尚未定義|^Error:|不是一個結構|不合法/.test(l))
+    expect(
+      errs,
+      `🔴 ${c.name} 跑起來就出錯——學生照著課文做，第一步就卡住`,
+    ).toEqual([])
+
+    if (c.stdout.trim() === '') return   // 沒有輸出可比的課（只閃燈／發聲），驗到這裡
+
     expect(
       output,
       `🔴 ${c.name} 跑出來的東西與 check.stdout 不符——` +

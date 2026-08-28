@@ -1,0 +1,21 @@
+{
+  "title": "讀進來",
+  "estimate": "20 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:arithmetic",
+    "python:input",
+    "python:literal_string",
+    "python:print",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "你好，小明\n歡迎",
+    "stdin": [
+      "小明"
+    ]
+  }
+}

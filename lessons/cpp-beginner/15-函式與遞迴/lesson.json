@@ -1,0 +1,23 @@
+{
+  "title": "函式與遞迴",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:compare",
+    "cpp:endl",
+    "cpp:func_call",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "120\n",
+    "stdin": []
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "title": "多層迴圈",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:array_2d_at",
+    "cpp:array_2d_declare",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:initializer_list",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:loop_count",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "1 2 3 \n4 5 6 \n",
+    "stdin": []
+  }
+}

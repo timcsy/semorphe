@@ -8,6 +8,35 @@ lessons/<軌道>/<編號>-<課名>/
     lesson.md      課文——學生讀它
 ```
 
+## 六條軌道
+
+| 軌道 | 章數 | 目標 | 給誰 |
+|---|---|---|---|
+| `cpp-beginner` | 15 | `cpp` | **從頭學程式**（C++） |
+| `python-beginner` | 12 | `python` | **從頭學程式**（Python） |
+| `arduino` | 14 | `arduino-uno`（第 11 課 `esp32`） | 硬體專題，自己就是入門 |
+| `cpp-advanced` | 13 | `cpp-advanced` | 進階：排序／二分搜／STL／圖／DP |
+| `c-bridge` | 5 | `c` | **C++ → C** 銜接 |
+| `python-bridge` | 6 | `python` | **C++ → Python** 銜接 |
+
+**每一個起點都預設從頭來。** 銜接與進階另外開軌——
+所以 `python-beginner` 不假設你會別的語言，而 `python-bridge` 假設你會 C++。
+
+### 編號
+
+**每一軌各自從 `01` 開始，兩位數，不加字母前綴**
+（資料夾名已經說明是哪一軌了）。
+
+課文裡引用別課的規則：
+
+```
+同一軌      第 5 課
+跨軌        C++ 入門第 5 課 · Arduino 第 5 課 · C 銜接第 3 課 · Python 銜接第 6 課
+```
+
+⚠️ **不要寫「第五課」**（中文數字）——兩種寫法混用時，
+搜尋與批次改號都會漏掉其中一種。
+
 ## 為什麼只有兩個檔
 
 > **程式碼只寫在 `lesson.md` 裡一份。**
@@ -15,8 +44,7 @@ lessons/<軌道>/<編號>-<課名>/
 `lesson.json` **不重複那段程式碼**。護欄從 `lesson.md` 的
 `## 完成的樣子` 那一段 fenced block 把它抽出來跑，比對 `check.stdout`。
 
-⚠️ 一份寫在兩處的程式碼，遲早會有一處是舊的，而**學生看到的永遠是舊的那一處**
-（`CLAUDE.md` 的「雙重真相來源」講的就是這件事）。
+⚠️ 一份寫在兩處的程式碼，遲早會有一處是舊的，而**學生看到的永遠是舊的那一處**。
 
 ## `lesson.json`
 
@@ -24,24 +52,24 @@ lessons/<軌道>/<編號>-<課名>/
 {
   "title": "印出一句話",
   "estimate": "20 分鐘",
-  "pins":  { "target": "cpp-beginner" },   // 選了這堂課，編輯器切成這個組態
-  "components": ["cpp:func_def", "cpp:print", …],  // 🔴 量出來的，不是寫出來的
-  "check": { "stdout": "Hello!\n", "stdin": [] }
+  "pins":  { "target": "cpp" },        // 選了這堂課，編輯器切成這個組態
+  "components": ["cpp:func_def", …],   // 🔴 量出來的，不是寫出來的
+  "check": { "stdout": "Hello!\n", "stdin": [] }   // 🔴 也是量出來的
 }
 ```
 
-### 🔴 `components` 是量出來的，不是列出來的
+### 🔴 `components` 與 `stdout` 都是量出來的
 
-寫課的人不要憑印象列。**貼進編輯器、同步一次、把語義樹走一遍**，
-拿到的那份清單才是真的。
+寫課的人不要憑印象列。用 `e2e/measure-lesson-codes.spec.ts`
+（餵 `.lesson-measure/codes.json`）真的跑一次，拿到的那份才算數。
 
-實例（2026-08-27 生前四課時）：第一課憑印象是
-「`func_def` ＋ `print` ＋ `literal_string`」，
+實例：第一課憑印象是「`func_def` ＋ `print` ＋ `literal_string`」，
 而實測多一顆 **`cpp:literal_number`**——`return 0;` 的那個 `0`。
-**憑印象列的清單，會讓學生在課堂上找不到一顆他需要的積木。**
 
-護欄 `tests/integration/audit-lessons.test.ts` 會把宣告與實測對起來，
-不一致就紅。
+護欄 `tests/integration/audit-lessons.test.ts`（存不存在）與
+`e2e/lessons.spec.ts`（真的用到嗎、真的跑出那樣嗎）兩條一起守。
+
+完整做法見 `knowledge/skills/write-lesson/SKILL.md`。
 
 ## `lesson.md` 的骨架
 

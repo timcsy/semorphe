@@ -1,0 +1,20 @@
+{
+  "title": "選擇",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:compare",
+    "python:if",
+    "python:literal_number",
+    "python:literal_string",
+    "python:print",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "及格",
+    "stdin": []
+  }
+}

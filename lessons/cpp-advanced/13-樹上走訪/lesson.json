@@ -1,0 +1,29 @@
+{
+  "title": "樹上走訪",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "cpp-advanced"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:array_assign",
+    "cpp:array_at",
+    "cpp:compare",
+    "cpp:container_append",
+    "cpp:continue",
+    "cpp:endl",
+    "cpp:func_call",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:loop_range",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_ref",
+    "cpp:vector_declare"
+  ],
+  "check": {
+    "stdout": "2",
+    "stdin": []
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "title": "測距離",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:delay",
+    "cpp:func_call",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:pin_mode",
+    "cpp:pulse_read",
+    "cpp:return",
+    "cpp:serial_open",
+    "cpp:serial_print",
+    "cpp:ultrasonic_trigger",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "0\n0",
+    "stdin": []
+  }
+}

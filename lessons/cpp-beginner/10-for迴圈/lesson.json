@@ -1,0 +1,23 @@
+{
+  "title": "for迴圈",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:compare",
+    "cpp:continue",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:loop_count",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "1\n2\n4\n5\n",
+    "stdin": []
+  }
+}

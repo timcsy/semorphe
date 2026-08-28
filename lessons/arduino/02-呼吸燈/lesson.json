@@ -1,0 +1,24 @@
+{
+  "title": "呼吸燈",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:analog_write",
+    "cpp:compare",
+    "cpp:delay",
+    "cpp:func_def",
+    "cpp:increment",
+    "cpp:literal_number",
+    "cpp:loop_count",
+    "cpp:loop_for",
+    "cpp:pin_mode",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "",
+    "stdin": []
+  }
+}

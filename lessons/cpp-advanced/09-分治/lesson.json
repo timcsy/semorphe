@@ -1,0 +1,26 @@
+{
+  "title": "分治",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "cpp-advanced"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:array_at",
+    "cpp:compare",
+    "cpp:endl",
+    "cpp:func_call",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_declare",
+    "cpp:var_ref",
+    "cpp:vector_declare"
+  ],
+  "check": {
+    "stdout": "10",
+    "stdin": []
+  }
+}

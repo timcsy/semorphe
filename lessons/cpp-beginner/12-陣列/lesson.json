@@ -1,0 +1,25 @@
+{
+  "title": "陣列",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:array_at",
+    "cpp:array_declare",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:loop_count",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "14\n",
+    "stdin": []
+  }
+}

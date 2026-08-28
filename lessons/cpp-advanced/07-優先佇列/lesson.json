@@ -1,0 +1,22 @@
+{
+  "title": "優先佇列",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "cpp-advanced"
+  },
+  "components": [
+    "cpp:container_pop",
+    "cpp:container_push",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:print",
+    "cpp:priority_queue_declare",
+    "cpp:priority_queue_peek",
+    "cpp:return"
+  ],
+  "check": {
+    "stdout": "7\n3",
+    "stdin": []
+  }
+}

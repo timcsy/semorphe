@@ -1,0 +1,24 @@
+{
+  "title": "不要用 delay",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:compare",
+    "cpp:digital_write",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:millis",
+    "cpp:pin_mode",
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "",
+    "stdin": []
+  }
+}

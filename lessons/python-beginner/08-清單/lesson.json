@@ -1,0 +1,23 @@
+{
+  "title": "清單",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:array_make",
+    "python:container_append",
+    "python:container_at",
+    "python:container_size",
+    "python:container_substr",
+    "python:literal_number",
+    "python:loop_for",
+    "python:print",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "3\n5\n[3, 1, 4, 1, 5, 9]\n[1, 4]",
+    "stdin": []
+  }
+}

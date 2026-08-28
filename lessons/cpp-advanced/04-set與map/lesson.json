@@ -1,0 +1,26 @@
+{
+  "title": "set 與 map",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "cpp-advanced"
+  },
+  "components": [
+    "cpp:container_count",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:map_assign",
+    "cpp:map_at",
+    "cpp:map_declare",
+    "cpp:print",
+    "cpp:return",
+    "cpp:set_declare",
+    "cpp:set_insert",
+    "cpp:vector_size"
+  ],
+  "check": {
+    "stdout": "1\n0\n1",
+    "stdin": []
+  }
+}

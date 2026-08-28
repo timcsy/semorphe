@@ -1,0 +1,27 @@
+{
+  "title": "猜數字",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:break",
+    "cpp:compare",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:loop_while",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "猜了 7 次\n",
+    "stdin": []
+  }
+}

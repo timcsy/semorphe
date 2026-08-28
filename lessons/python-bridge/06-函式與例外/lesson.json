@@ -1,0 +1,27 @@
+{
+  "title": "函式與例外",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:arithmetic",
+    "python:cast",
+    "python:container_sum",
+    "python:exception_case",
+    "python:func_call",
+    "python:func_def",
+    "python:lambda",
+    "python:literal_number",
+    "python:literal_string",
+    "python:print",
+    "python:return",
+    "python:try_catch",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "4\n7\n6\n10\n轉換失敗",
+    "stdin": []
+  }
+}

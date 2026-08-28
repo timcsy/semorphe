@@ -24,3 +24,6 @@ public/blockly-media/
 # 出貨產物與範例的建置輸出——由 `npm run build:sdk` 與範例自己的 build.mjs 產生
 dist-sdk/
 examples/**/dist/
+
+# 生教材時的量測暫存（e2e/measure-lesson-codes.spec.ts）
+.lesson-measure/

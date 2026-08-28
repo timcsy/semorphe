@@ -1,0 +1,21 @@
+{
+  "title": "函式",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:arithmetic",
+    "python:func_call",
+    "python:func_def",
+    "python:literal_number",
+    "python:literal_string",
+    "python:print",
+    "python:return",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "7\n你好，小明",
+    "stdin": []
+  }
+}

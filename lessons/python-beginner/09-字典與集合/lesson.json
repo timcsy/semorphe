@@ -1,0 +1,25 @@
+{
+  "title": "字典與集合",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:container_assign",
+    "python:container_at",
+    "python:container_size",
+    "python:literal_number",
+    "python:literal_string",
+    "python:loop_for",
+    "python:map_make",
+    "python:pair_make",
+    "python:print",
+    "python:set_make",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "16\nming 16\nhua 17\nnew 18\n2",
+    "stdin": []
+  }
+}

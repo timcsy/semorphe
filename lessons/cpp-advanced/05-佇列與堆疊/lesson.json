@@ -1,0 +1,24 @@
+{
+  "title": "佇列與堆疊",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "cpp-advanced"
+  },
+  "components": [
+    "cpp:container_pop",
+    "cpp:container_push",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:print",
+    "cpp:queue_declare",
+    "cpp:queue_front",
+    "cpp:return",
+    "cpp:stack_declare",
+    "cpp:stack_peek"
+  ],
+  "check": {
+    "stdout": "1\n2\n2",
+    "stdin": []
+  }
+}

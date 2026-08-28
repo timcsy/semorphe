@@ -1,0 +1,23 @@
+{
+  "title": "溫濕度",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:delay",
+    "cpp:dht_declare",
+    "cpp:dht_open",
+    "cpp:dht_read",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:serial_open",
+    "cpp:serial_print",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "NaN",
+    "stdin": []
+  }
+}

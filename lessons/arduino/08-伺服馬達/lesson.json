@@ -1,0 +1,24 @@
+{
+  "title": "伺服馬達",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:delay",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:loop_count",
+    "cpp:serial_open",
+    "cpp:serial_print",
+    "cpp:servo_attach",
+    "cpp:servo_declare",
+    "cpp:servo_read",
+    "cpp:servo_write",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "90",
+    "stdin": []
+  }
+}

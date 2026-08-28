@@ -1,0 +1,23 @@
+{
+  "title": "vector",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:container_append",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:loop_range",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_ref",
+    "cpp:vector_declare",
+    "cpp:vector_size"
+  ],
+  "check": {
+    "stdout": "3\n3\n1\n4\n",
+    "stdin": []
+  }
+}

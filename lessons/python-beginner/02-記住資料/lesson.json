@@ -1,0 +1,19 @@
+{
+  "title": "記住資料",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:literal_bool",
+    "python:literal_number",
+    "python:literal_string",
+    "python:print",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "小明\n16\n1.72\nTrue",
+    "stdin": []
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "title": "蜂鳴器",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:delay",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:pin_mode",
+    "cpp:tone",
+    "cpp:tone_stop",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "",
+    "stdin": []
+  }
+}

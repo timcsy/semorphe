@@ -1,0 +1,26 @@
+{
+  "title": "四種容器",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:array_make",
+    "python:container_append",
+    "python:container_at",
+    "python:container_size",
+    "python:literal_number",
+    "python:literal_string",
+    "python:map_make",
+    "python:pair_make",
+    "python:print",
+    "python:set_make",
+    "python:tuple_make",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "3\n16\n4\n2\n2",
+    "stdin": []
+  }
+}

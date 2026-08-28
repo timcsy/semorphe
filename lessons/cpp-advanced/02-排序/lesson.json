@@ -1,0 +1,23 @@
+{
+  "title": "排序",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "cpp-advanced"
+  },
+  "components": [
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:loop_range",
+    "cpp:print",
+    "cpp:range_sort",
+    "cpp:return",
+    "cpp:var_ref",
+    "cpp:vector_declare"
+  ],
+  "check": {
+    "stdout": "1 2 5 8",
+    "stdin": []
+  }
+}

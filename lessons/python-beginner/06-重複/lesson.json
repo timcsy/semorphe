@@ -1,0 +1,20 @@
+{
+  "title": "重複",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:arithmetic",
+    "python:compare",
+    "python:literal_number",
+    "python:loop_while",
+    "python:print",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "15",
+    "stdin": []
+  }
+}

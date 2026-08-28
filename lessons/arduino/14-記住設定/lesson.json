@@ -1,0 +1,22 @@
+{
+  "title": "記住設定",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:eeprom_read",
+    "cpp:eeprom_write",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:serial_open",
+    "cpp:serial_print",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "0",
+    "stdin": []
+  }
+}

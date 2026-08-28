@@ -1,0 +1,20 @@
+{
+  "title": "for 與 range",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:arithmetic",
+    "python:literal_number",
+    "python:loop_for",
+    "python:print",
+    "python:range_make",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "1\n2\n3\n4\n5\n55",
+    "stdin": []
+  }
+}

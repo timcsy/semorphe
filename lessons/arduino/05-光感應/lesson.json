@@ -1,0 +1,24 @@
+{
+  "title": "光感應",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:analog_read",
+    "cpp:analog_write",
+    "cpp:delay",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:pin_mode",
+    "cpp:range_remap",
+    "cpp:serial_open",
+    "cpp:serial_print",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "0\n0",
+    "stdin": []
+  }
+}

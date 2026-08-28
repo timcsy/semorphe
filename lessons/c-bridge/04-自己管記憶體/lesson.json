@@ -1,0 +1,26 @@
+{
+  "title": "自己管記憶體",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "c"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:array_assign",
+    "cpp:array_at",
+    "cpp:free",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:loop_count",
+    "cpp:malloc",
+    "cpp:pointer_declare",
+    "cpp:print_formatted",
+    "cpp:return",
+    "cpp:sizeof",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "16",
+    "stdin": []
+  }
+}

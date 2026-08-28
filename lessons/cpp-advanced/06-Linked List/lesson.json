@@ -1,0 +1,28 @@
+{
+  "title": "Linked List",
+  "estimate": "40 分鐘",
+  "pins": {
+    "target": "cpp-advanced"
+  },
+  "components": [
+    "cpp:builtin_constant",
+    "cpp:compare",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:loop_while",
+    "cpp:new",
+    "cpp:pointer_declare",
+    "cpp:print",
+    "cpp:return",
+    "cpp:struct_at_ptr",
+    "cpp:struct_declare",
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "1\n2",
+    "stdin": []
+  }
+}

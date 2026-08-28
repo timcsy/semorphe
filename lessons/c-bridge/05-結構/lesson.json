@@ -1,0 +1,25 @@
+{
+  "title": "結構",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "c"
+  },
+  "components": [
+    "cpp:address_of",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:pointer_declare",
+    "cpp:print_formatted",
+    "cpp:return",
+    "cpp:struct_at_member",
+    "cpp:struct_at_ptr",
+    "cpp:struct_declare",
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "3 4\n3",
+    "stdin": []
+  }
+}

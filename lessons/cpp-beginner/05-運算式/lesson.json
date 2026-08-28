@@ -1,0 +1,23 @@
+{
+  "title": "運算式",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:compare",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:logic",
+    "cpp:logic_not",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "1\n1\n1\n",
+    "stdin": []
+  }
+}

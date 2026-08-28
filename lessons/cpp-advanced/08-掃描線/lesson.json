@@ -1,0 +1,31 @@
+{
+  "title": "掃描線",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "cpp-advanced"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:array_at",
+    "cpp:compare",
+    "cpp:container_append",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:loop_count",
+    "cpp:pair_make",
+    "cpp:print",
+    "cpp:range_sort",
+    "cpp:return",
+    "cpp:struct_at_member",
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref",
+    "cpp:vector_declare"
+  ],
+  "check": {
+    "stdout": "1",
+    "stdin": []
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "title": "組合技",
+  "estimate": "15 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:increment",
+    "cpp:literal_number",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_assign_compound",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "13\n",
+    "stdin": []
+  }
+}

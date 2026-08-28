@@ -1,0 +1,25 @@
+{
+  "title": "迴圈與可迭代",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:array_make",
+    "python:compare",
+    "python:container_enumerate",
+    "python:literal_number",
+    "python:literal_string",
+    "python:loop_for",
+    "python:loop_while",
+    "python:print",
+    "python:range_make",
+    "python:var_assign",
+    "python:var_assign_compound",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "0\n1\n2\n0 a\n1 b\n2 c\n3\n2\n1",
+    "stdin": []
+  }
+}

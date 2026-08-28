@@ -1,0 +1,20 @@
+{
+  "title": "液晶顯示",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:func_def",
+    "cpp:lcd_at",
+    "cpp:lcd_declare",
+    "cpp:lcd_open",
+    "cpp:lcd_print",
+    "cpp:literal_number",
+    "cpp:literal_string"
+  ],
+  "check": {
+    "stdout": "",
+    "stdin": []
+  }
+}

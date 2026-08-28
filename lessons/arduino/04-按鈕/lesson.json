@@ -1,0 +1,21 @@
+{
+  "title": "按鈕",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:compare",
+    "cpp:digital_read",
+    "cpp:digital_write",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:pin_mode",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "",
+    "stdin": []
+  }
+}

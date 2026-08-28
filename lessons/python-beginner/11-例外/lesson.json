@@ -1,0 +1,20 @@
+{
+  "title": "例外",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:cast",
+    "python:exception_case",
+    "python:literal_string",
+    "python:print",
+    "python:try_catch",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "那不是數字\n程式繼續",
+    "stdin": []
+  }
+}

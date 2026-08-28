@@ -1,0 +1,22 @@
+{
+  "title": "推導式",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:arithmetic",
+    "python:array_make",
+    "python:array_make_for",
+    "python:compare",
+    "python:literal_number",
+    "python:map_make_for",
+    "python:print",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "[1, 4, 9, 16, 25]\n[2, 4]",
+    "stdin": []
+  }
+}

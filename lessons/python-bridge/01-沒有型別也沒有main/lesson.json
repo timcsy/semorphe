@@ -1,0 +1,21 @@
+{
+  "title": "沒有型別，也沒有 main",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:arithmetic",
+    "python:input",
+    "python:literal_number",
+    "python:print",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "Semorphe\n17",
+    "stdin": [
+      "Semorphe"
+    ]
+  }
+}

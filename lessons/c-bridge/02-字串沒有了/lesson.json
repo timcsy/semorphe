@@ -1,0 +1,23 @@
+{
+  "title": "字串沒有了",
+  "estimate": "35 分鐘",
+  "pins": {
+    "target": "c"
+  },
+  "components": [
+    "cpp:array_declare",
+    "cpp:cstring_compare",
+    "cpp:cstring_copy",
+    "cpp:cstring_size",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:print_formatted",
+    "cpp:return",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "5\n0",
+    "stdin": []
+  }
+}

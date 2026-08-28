@@ -1,0 +1,23 @@
+{
+  "title": "選擇",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:compare",
+    "cpp:endl",
+    "cpp:func_def",
+    "cpp:if",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "及格\n",
+    "stdin": []
+  }
+}

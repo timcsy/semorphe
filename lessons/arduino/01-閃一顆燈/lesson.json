@@ -1,0 +1,19 @@
+{
+  "title": "閃一顆燈",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "arduino-uno"
+  },
+  "components": [
+    "cpp:delay",
+    "cpp:digital_write",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:pin_mode",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "",
+    "stdin": []
+  }
+}

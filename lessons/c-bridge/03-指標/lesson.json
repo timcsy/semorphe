@@ -1,0 +1,23 @@
+{
+  "title": "指標",
+  "estimate": "40 分鐘",
+  "pins": {
+    "target": "c"
+  },
+  "components": [
+    "cpp:address_of",
+    "cpp:func_def",
+    "cpp:literal_number",
+    "cpp:pointer_assign",
+    "cpp:pointer_declare",
+    "cpp:pointer_deref",
+    "cpp:print_formatted",
+    "cpp:return",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "check": {
+    "stdout": "42\n100",
+    "stdin": []
+  }
+}

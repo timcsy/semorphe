@@ -1,0 +1,24 @@
+{
+  "title": "文字處理",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:array_make",
+    "python:array_make_for",
+    "python:container_size",
+    "python:literal_string",
+    "python:print",
+    "python:string_lower",
+    "python:string_replace",
+    "python:string_split",
+    "python:string_upper",
+    "python:var_assign",
+    "python:var_ref"
+  ],
+  "check": {
+    "stdout": "HELLO, WORLD\nhello, world\n12",
+    "stdin": []
+  }
+}

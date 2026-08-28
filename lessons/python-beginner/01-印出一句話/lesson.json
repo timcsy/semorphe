@@ -1,0 +1,15 @@
+{
+  "title": "印出一句話",
+  "estimate": "20 分鐘",
+  "pins": {
+    "target": "python"
+  },
+  "components": [
+    "python:literal_string",
+    "python:print"
+  ],
+  "check": {
+    "stdout": "Hello!\n我在學 Python",
+    "stdin": []
+  }
+}
