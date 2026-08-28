@@ -1,6 +1,8 @@
 {
   "id": "esp32",
   "name": "ESP32 NodeMCU",
+  "group": "硬體",
+  "order": 3,
   "topic": "arduino",
   "style": "google",
   "entryShell": "none",

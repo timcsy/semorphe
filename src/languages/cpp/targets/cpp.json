@@ -1,6 +1,8 @@
 {
   "id": "cpp",
-  "name": "C++（預設）",
+  "name": "C++",
+  "group": "程式語言",
+  "order": 1,
   "topic": "cpp-beginner",
   "style": "apcs"
 }

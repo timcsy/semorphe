@@ -42,6 +42,8 @@ export class QuickAccessBar {
         options.inPanel('viewFlow') ? '<button id="view-flow-btn" class="view-tab" title="流程">流程</button>' : '',
       ].join(''),
       options.inPanel('target') ? '<span id="level-selector-mount"></span>' : '',
+      options.inPanel('target') ? '<span id="track-selector-mount"></span>' : '',
+      options.inPanel('target') ? '<span id="lesson-selector-mount"></span>' : '',
       options.inPanel('blockStyle') ? '<span id="block-style-selector-mount"></span>' : '',
       [
         options.inPanel('undo') ? '<button id="undo-btn" title="復原">↩</button>' : '',

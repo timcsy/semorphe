@@ -1,0 +1,8 @@
+{
+  "name": "Python 入門",
+  "target": "python",
+  "order": 4,
+  "description": "從零開始學程式",
+  "scaffold": "ghost",
+  "_scaffold_why": "同上；Python 沒有外框，而 import 帶著理由出現對初學者有用"
+}

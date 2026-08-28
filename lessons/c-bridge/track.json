@@ -1,0 +1,8 @@
+{
+  "name": "C 銜接",
+  "target": "c",
+  "order": 3,
+  "description": "會 C++ 之後，走一遍 C 少掉的那五樣",
+  "scaffold": "editable",
+  "_scaffold_why": "第 4 課就在教自己管記憶體，外框是教學內容的一部分"
+}

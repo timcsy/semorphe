@@ -519,6 +519,23 @@ html, body {
   color: #fff;
 }
 
+/* 分組標題——**它不是一個項目**：不可選、不 hover、不參與鍵盤導覽 */
+.quick-pick-group {
+  padding: 8px 10px 3px;
+  color: #8a8a8a;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-top: 1px solid #333;
+  margin-top: 4px;
+  cursor: default;
+  user-select: none;
+}
+.quick-pick-group:first-child {
+  border-top: none;
+  margin-top: 0;
+}
+
 .quick-pick-mark {
   width: 14px;
   flex: none;

@@ -1,6 +1,8 @@
 {
   "id": "esp32c3",
   "name": "ESP32-C3 Supermini",
+  "group": "硬體",
+  "order": 4,
   "topic": "arduino",
   "style": "google",
   "entryShell": "none",

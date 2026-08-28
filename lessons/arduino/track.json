@@ -1,0 +1,8 @@
+{
+  "name": "Arduino 專題",
+  "target": "arduino-uno",
+  "order": 6,
+  "description": "硬體，自己就是入門",
+  "scaffold": "ghost",
+  "_scaffold_why": "同上；setup／loop 是學生自己的函式，鷹架只有 #include"
+}

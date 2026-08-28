@@ -1,6 +1,8 @@
 {
   "id": "esp32s3",
   "name": "ESP32-S3",
+  "group": "硬體",
+  "order": 5,
   "topic": "arduino",
   "style": "google",
   "entryShell": "none",

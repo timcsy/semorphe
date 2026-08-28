@@ -1,0 +1,8 @@
+{
+  "name": "C++ 進階",
+  "target": "cpp-advanced",
+  "order": 2,
+  "description": "排序、二分搜、STL、圖、動態規劃",
+  "scaffold": "editable",
+  "_scaffold_why": "進階要控制外框——競賽的快速 IO 前言就住在那裡"
+}

@@ -1,6 +1,8 @@
 {
   "id": "c",
-  "name": "C 語言教學",
+  "name": "C",
+  "group": "程式語言",
+  "order": 3,
   "topic": "c-beginner",
   "style": "c"
 }

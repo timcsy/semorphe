@@ -1,6 +1,8 @@
 {
   "id": "nodemcu-esp8266",
   "name": "NodeMCU (ESP8266)",
+  "group": "硬體",
+  "order": 8,
   "topic": "arduino",
   "style": "google",
   "entryShell": "none",

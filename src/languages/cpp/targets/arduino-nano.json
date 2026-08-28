@@ -1,6 +1,8 @@
 {
   "id": "arduino-nano",
   "name": "Arduino Nano",
+  "group": "硬體",
+  "order": 2,
   "topic": "arduino",
   "style": "google",
   "entryShell": "none",

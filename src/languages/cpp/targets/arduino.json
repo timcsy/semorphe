@@ -1,6 +1,10 @@
 {
   "id": "arduino",
-  "name": "Arduino",
+  "name": "Arduino（不指定板子）",
+  "group": "硬體",
+  "order": 99,
+  "listed": false,
+  "hint": "沒有 LED_BUILTIN／A0 等板子常數",
   "topic": "arduino",
   "style": "google",
   "entryShell": "none"

@@ -1,6 +1,8 @@
 {
   "id": "wemos-d1-mini",
   "name": "Wemos D1 mini",
+  "group": "硬體",
+  "order": 7,
   "topic": "arduino",
   "style": "google",
   "entryShell": "none",

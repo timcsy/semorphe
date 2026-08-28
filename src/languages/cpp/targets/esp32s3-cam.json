@@ -1,6 +1,8 @@
 {
   "id": "esp32s3-cam",
   "name": "ESP32-S3 WROOM CAM",
+  "group": "硬體",
+  "order": 6,
   "topic": "arduino",
   "style": "google",
   "entryShell": "none",

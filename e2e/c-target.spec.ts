@@ -120,8 +120,8 @@ test('★ 選 C 目標 → 產出是乾淨的 C（而不是換了 printf 的 C++
 
   // ★ 入口條件：C 目標**選得到**（合成量——2026-08-17 才接上選單）
   expect(
-    await pickTarget(page, /C 語言教學/),
-    '🔴 選單裡沒有「C 語言教學」——目標在 2026-08-17 之前只活在測試裡',
+    await pickTarget(page, /^C$/),
+    '🔴 選單裡沒有「C」——目標在 2026-08-17 之前只活在測試裡',
   ).toBe(true)
 
   const code = await page.evaluate(() =>
@@ -167,7 +167,7 @@ test('★ 使用者自己寫的 #include，在 C 目標下也要換掉', async (
   await useAsSource(page, '程式碼')
   await page.waitForTimeout(1200)
 
-  expect(await pickTarget(page, /C 語言教學/), '🔴 選單裡沒有「C 語言教學」').toBe(true)
+  expect(await pickTarget(page, /^C$/), '🔴 選單裡沒有「C」').toBe(true)
   await useAsSource(page, '積木')
   await page.waitForTimeout(1200)
 
@@ -212,7 +212,7 @@ test('★ 選 C 目標 → 工具箱裡拿不到 C 沒有的東西', async ({ pa
       '層級沒有真的展開，或工具箱沒重建。**下一段的「0」什麼都沒證明。**',
   ).toBeGreaterThan(0)
 
-  expect(await pickTarget(page, /C 語言教學/), '🔴 選單裡沒有「C 語言教學」').toBe(true)
+  expect(await pickTarget(page, /^C$/), '🔴 選單裡沒有「C」').toBe(true)
 
   const cSide = await toolboxText(page)
   const leaked = CPP_ONLY_BLOCK_TEXT.filter(([, re]) => re.test(cSide)).map(([id]) => id)
@@ -257,7 +257,7 @@ test('★ 選擇器沒有變多——目標是把三次收成一次，不是多�
 
 test('★ 重新整理之後，選的目標還在', async ({ page }) => {
   await ready(page)
-  expect(await pickTarget(page, /C 語言教學/)).toBe(true)
+  expect(await pickTarget(page, /^C$/)).toBe(true)
   await page.waitForTimeout(1200)
 
   await page.reload()
@@ -270,5 +270,5 @@ test('★ 重新整理之後，選的目標還在', async ({ page }) => {
   // ⚠️ 2026-08-25：目標不再是一顆 `<select>`——它是**狀態列上的一個項目**，
   //    而項目的文字就是目前的值。要驗的那件事沒變：**重新整理之後它還在**。
   const selected = await page.locator('#status-controls .status-item-btn[data-control-id="target"]').textContent()
-  expect(selected ?? '', '🔴 重新整理之後目標跑掉了——存檔沒記住 targetId').toMatch(/C 語言教學/)
+  expect(selected ?? '', '🔴 重新整理之後目標跑掉了——存檔沒記住 targetId').toMatch(/^C$/)
 })

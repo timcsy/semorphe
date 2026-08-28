@@ -1,6 +1,10 @@
 {
   "id": "cpp-advanced",
-  "name": "C++ 進階",
+  "name": "C++",
+  "group": "程式語言",
+  "order": 2,
+  "listed": false,
   "topic": "cpp-advanced",
-  "style": "competitive"
+  "style": "competitive",
+  "_name_why": "🔴 它叫「C++」而不是「C++ 進階」——**軌道由「課程」那一顆說**。2026-08-28 拆成三層之前，「C++ 進階」擠在目標選單裡，而使用者說「目標可以更單純一些」。選了進階軌之後狀態列會是「目標: C++ · 課程: C++ 進階」——兩格各說一件事，不重複。"
 }

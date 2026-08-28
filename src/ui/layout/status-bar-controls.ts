@@ -34,8 +34,11 @@ function openPicker(state: ControlState, onInvoke: (invoke: ControlInvoke) => vo
       items: options.map((o) => ({
         value: o.value,
         label: o.label,
+        // 🔴 **分組跟著值域一起下來**——「程式語言 / 硬體」是那份宣告的一部分
+        group: o.group,
         picked: state.multi ? state.picked?.includes(o.value) : o.value === state.value,
-        description: !state.multi && o.value === state.value ? '目前' : undefined,
+        // ⚠️ 「目前」優先於選項自己的說明——**哪一個是現在的**比說明重要
+        description: !state.multi && o.value === state.value ? '目前' : o.description,
       })),
     },
     (values) => {

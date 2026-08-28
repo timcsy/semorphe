@@ -90,6 +90,18 @@ export interface HostProfile {
   readonly featureReasons: Partial<Record<HostFeatureName, string>>
 
   /**
+   * 這個宿主的「網址查詢字串」——`?lesson=…` 從這裡進來。
+   *
+   * 🔴 **核心不碰 `location`**（四項獨立性）：網頁宿主餵 `window.location.search`，
+   * 而 VSCode／測試餵 `undefined` 或一個合成的字串。
+   *
+   * ⚠️ **它是選填的，而 `undefined` 與 `''` 意思相同**（沒有選課）
+   * ——不是「這個宿主壞了」。VSCode 那側之後要選課的話，
+   * 它的入口是一個指令而不是網址，那時這一格仍然是 `undefined`。
+   */
+  readonly querySearch?: string
+
+  /**
    * 🔴 **每一種控制項投影到哪個表面**——三列，一個宿主一張。
    *
    * ⚠️ 這一格取代了原本的 `features.statusBar`（2026-08-25 同日）：

@@ -26,7 +26,8 @@ import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeader
 import { TopicRegistry } from '../core/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
-import { getVisibleComponents, flattenLevelTree, levelNodesWithDepth, resolveEnabledBranches } from '../core/level-tree'
+import { getVisibleComponents, flattenLevelTree } from '../core/level-tree'
+import { componentTraits } from '../core/component/traits'
 import type { Target, Topic } from '../core/types'
 // spec 142：三塊板子。⚠️ 它們**共用** `arduino` 課程清單，差別只在 `provides`
 //（不新增三份幾乎相同的 topic JSON——見 specs/142 的 research.md R1）。
@@ -54,6 +55,8 @@ import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
+import { lessonIdFromQuery, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson } from '../core/lesson'
+import { lessonById, allTracks, lessonsOfTrack } from '../core/load-lessons'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
@@ -78,6 +81,28 @@ loadAllLanguagePacks()
 const STYLE_PRESETS: StylePreset[] = allLanguagePacks().flatMap((p) => p.styles)
 
 const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]
+
+/**
+ * 這顆元件是**系統自己產的鷹架**嗎（`#include`／`using namespace`／main 的 `return`）。
+ *
+ * 🔴 **問性狀不問身分**——`scaffold` 與 `scaffoldInMain` 是元件在
+ * `component.json` 裡自己宣告的，所以換一個語言這裡一個字都不用改。
+ */
+function isScaffoldComponent(componentId: string): boolean {
+  const t = componentTraits(componentId)
+  return t?.scaffold === true || t?.scaffoldInMain === true
+}
+
+/**
+ * 一個主題的**全部**層級節點。
+ *
+ * 🔴 它有兩個呼叫端（開機的預設、選課之後），而**它們必須是同一份**
+ * ——各寫一次的話，其中一個哪天改了，症狀是「選課前後工具箱不一樣大」
+ * 而沒有人看得出來為什麼。
+ */
+function allBranchesOf(topic: Topic): Set<string> {
+  return new Set(flattenLevelTree(topic.levelTree).map((n) => n.id))
+}
 
 export class App {
   private bus: SemanticBus
@@ -128,6 +153,30 @@ export class App {
   private codeToBlocksTimer: ReturnType<typeof setTimeout> | null = null
   private currentTopic: Topic
   private enabledBranches: Set<string>
+  /**
+   * 這一輪選了哪一堂課——`?lesson=` 帶進來的。
+   *
+   * 🔴 `undefined` ＝ **沒有選課**，而那時整個系統要與有這一格之前**逐字相同**。
+   * ⚠️ 它是 `session` 域的（跟著這一次開啟走），**不進存檔**
+   *    ——連結本身就是那個狀態（`draft/教案是一個宣告`：「換裝置也記得，零後端」）。
+   */
+  private currentLesson: Lesson | undefined
+  /**
+   * 選了哪一條**軌道**——⚠️ 它可以在**還沒選章節**時就有值嗎？
+   * 不行：`selectTrack` 一定會接著選第一章。留這一格是為了
+   * 「章節」那顆知道要列誰，而不必從 `currentLesson` 反推。
+   */
+  private currentTrack: string | undefined
+  /**
+   * 鷹架露到第幾層——**它自己的一格**（2026-08-28 從 `enabledBranches` 拆出來）。
+   *
+   * 🔴 拆之前那個集合同時扛著「哪些元件看得到」與「鷹架露到第幾層」，
+   * 於是「預設全開」（**只想改前者**）連帶把鷹架從剝掉變成可編輯，
+   * 而症狀是**斷點停得住而變數面板是空的**。
+   *
+   * > **兩個決定共用一個載體時，改動其中一個永遠會偷偷改到另一個。**
+   */
+  private scaffoldDepth = 0
   private currentIoPreference: 'iostream' | 'cstdio' = 'iostream'
   private _codeToBlocksInProgress = false
   private _restoringState = false
@@ -227,7 +276,115 @@ export class App {
     // ——**全套測試綠，瀏覽器一開就看得見**。
     this.currentTarget = defaultTarget()!
     this.currentTopic = this.topicRegistry.get(this.currentTarget.topic)!
-    this.enabledBranches = new Set([this.currentTopic.levelTree.id])
+    // 🔴 **預設全開**（2026-08-28 使用者拍板：「我想說要預設全開」）。
+    //
+    // 在此之前預設是**只有根節點**（`層級 1/10`），而那讓一個剛打開工具的人
+    // 看到一個殘缺的工具箱，且**沒有任何線索說少了什麼**。
+    //
+    // > 使用者 2026-08-12 的原話已經否證過那個設計：
+    // > 「我會乾脆叫學生把全部都打勾，**那有沒有這個漸進揭露是沒用的**」
+    //
+    // 🎯 收窄由**課**來做（`?lesson=`），不由一個沒有人答得出來的打勾清單做。
+    this.enabledBranches = allBranchesOf(this.currentTopic)
+
+    // 🔴 **一堂課替使用者做決定**——`?lesson=<軌道>/<課>`。
+    //
+    // `principles.md:97`（P4①）逐字：「一個過濾機制若沒有附帶『條件從哪來』，
+    // 它把認知負荷搬家而不是減少。**而那個來源今天缺的是教材**」。
+    // 2026-08-28 那個來源存在了，這裡是它的入口。
+    //
+    // ⚠️ **沒有 `?lesson` 時一格都不動**——這是回歸閘。
+    const lessonId = lessonIdFromQuery(this.profile.querySearch ?? '')
+    if (lessonId !== null) {
+      const lesson = lessonById(lessonId)
+      // 🔴 **找不到要出聲**。靜靜地當成「沒有課」的話，老師貼出去的連結
+      //    會安靜地退回預設組態，而**畫面上看起來一切正常**。
+      if (!lesson) console.error(`[lessons] 找不到 ${lessonId}——連結指向一堂不存在的課`)
+      else this.applyLesson(lesson)
+    }
+  }
+
+  /**
+   * 使用者選了一條**軌道**（或「不選課程」）。
+   *
+   * 🔴 **選軌道等於選它的第一章**——一個選了課程而沒有章節的狀態，
+   * 畫面上與「還沒選」分不出來，而學生會卡在那裡。
+   */
+  private selectTrack(id: string): void {
+    if (id === '') { this.currentTrack = undefined; this.selectLesson(''); return }
+    this.currentTrack = id
+    const first = lessonsOfTrack(id)[0]
+    if (!first) {
+      console.error(`[lessons] 軌道 ${id} 一章都沒有`)
+      return
+    }
+    this.selectLesson(first.id)
+  }
+
+  /**
+   * 使用者**在畫面上**選了一堂課（或選了「不選課程」）。
+   *
+   * 🔴 **走 `handleTargetChange` 那條既有的整套重繪**，不自己再拼一次
+   * ——切目標要做的十件事（鷹架深度／風格／標頭別名／文法／語言／工具箱…）
+   * 在那裡已經是對的，而抄第二份的話它們遲早會不同意。
+   */
+  private selectLesson(id: string): void {
+    const lesson = id === '' ? undefined : lessonById(id)
+    if (id !== '' && !lesson) {
+      console.error(`[lessons] 選了一堂不存在的課：${id}`)
+      return
+    }
+    this.currentLesson = lesson
+    this.currentTrack = lesson ? trackOf(lesson.id) : this.currentTrack
+    // 課釘的目標可能與現在不同——讓 `handleTargetChange` 去處理那一整套。
+    const wantId = lesson?.pins.target ?? this.currentTarget.id
+    const target = this.targetRegistry.all().find((t) => t.id === wantId) ?? this.currentTarget
+    const topic = this.topicRegistry.get(target.topic)!
+    this.handleTargetChange(target, topic, allBranchesOf(topic))
+    // ⚠️ `handleTargetChange` 會依層級重算深度——**課的設定要蓋過它**。
+    //    （順序不能反：那個函式在後面的話，課說的話會被層級蓋掉。）
+    if (lesson) {
+      this.scaffoldDepth = scaffoldDepthOf(
+        lesson.pins.scaffold ?? allTracks().get(trackOf(lesson.id))?.scaffold ?? 'editable',
+      )
+      setScaffoldConfig({ scaffoldDepth: this.scaffoldDepth })
+      this.syncController?.setScaffoldDepth(this.scaffoldDepth)
+      this.updateToolbox()
+    }
+    // ⚠️ `handleTargetChange` 重繪工具箱，而**控制項清單要另外重送**
+    //    ——被釘住的那顆要消失／回來，而那不是目標改變的一部分。
+    this.publishControls()
+  }
+
+  /**
+   * 套用一堂課：釘住目標、收窄可見元件。
+   *
+   * ⚠️ 被釘住的控制項**消失**（`publishControls` 濾掉它），不是變灰
+   * ——「這裡有一個你不能碰的東西」仍然是負擔，而且它在嘲笑你。
+   */
+  private applyLesson(lesson: Lesson): void {
+    this.currentLesson = lesson
+    const t = lesson.pins.target
+    if (t !== undefined) {
+      const target = this.targetRegistry.all().find((x) => x.id === t)
+      if (!target) {
+        console.error(`[lessons] ${lesson.id} 釘住一個不存在的目標：${t}`)
+      } else {
+        this.currentTarget = target
+        this.currentTopic = this.topicRegistry.get(target.topic)!
+      }
+    }
+    // 🔴 **層級全開**——收窄由課的 `components` 做，不由層級做。
+    //    留一半層級一半課的話，同一件事有兩個開關，而它們會不同意。
+    this.enabledBranches = allBranchesOf(this.currentTopic)
+    // 🔴 **鷹架露多少由【課程組態】決定**（2026-08-28 使用者拍板：
+    //    「在課程的組態就可以設定要使用哪一種鷹架」）。
+    //    ⚠️ 課可以覆寫軌道；兩個都沒說就 `editable`。
+    //    而「鷹架**長什麼樣**」是另一格，住在**目標**上（`entryShell`）。
+    const track = allTracks().get(trackOf(lesson.id))
+    this.scaffoldDepth = scaffoldDepthOf(lesson.pins.scaffold ?? track?.scaffold ?? 'editable')
+    // 🔴 **課程也可以換一份【外框】**（不只是露多少）——省略就跟著目標走。
+    if (track?.shell !== undefined) this.scaffold?.setEntryShell?.(track.shell)
   }
 
   async init(): Promise<void> {
@@ -365,6 +522,8 @@ export class App {
     })
 
     this.syncController.setTopic(this.currentTopic, this.enabledBranches)
+
+    this.syncController?.setScaffoldDepth(this.scaffoldDepth)
     // ── 視圖：登錄，而不是硬編 ────────────────────────────────
     //
     // ⚠️ 這裡原本是一段硬編的 `if (source === …) this.codeView?.setCode(…)`，
@@ -759,18 +918,86 @@ export class App {
   }
 
   private getVisibleComponents(): Set<string> {
-    return getVisibleComponents(this.currentTopic, this.enabledBranches)
+    const base = getVisibleComponents(this.currentTopic, this.enabledBranches)
+    if (!this.currentLesson) return base
+    // 🔴 **交集，不是取代**——課宣告了一顆這個目標根本沒有的元件時，
+    //    它不該憑空出現。而那種不一致由 `audit-lessons` 那條護欄擋在上游。
+    const want = new Set(this.currentLesson.components)
+    // 🔴 **鷹架不是學生選的，所以它在【範圍】內——而不在【工具箱】裡。**
+    //
+    // 這個函式有兩個消費者，而它們要的不是同一件事：
+    //
+    // ```
+    // markOutOfScopeBlocks   畫布上哪幾顆被打暗   → 鷹架【要】在（它是工具自己放的）
+    // buildToolboxInner      拖得到什麼           → 鷹架【不要】在（第 1 課不教 #include）
+    // ```
+    //
+    // ⚠️ 2026-08-28 使用者看著畫面問「**為何積木變這麼暗？**」——
+    // 根因是第一版把鷹架也濾掉了，於是系統自己產的 `#include` 與
+    // `using namespace std;` 被打成 0.35 透明。
+    //
+    // > **畫面在對學生說「這顆不該在這裡」，而那顆是工具自己放的。**
+    //
+    // 🔴 而第一版的**修法**也放錯層：補進這裡的話工具箱也跟著多出 `#include`。
+    //    收窄工具箱那一半改放 `buildToolboxInner`——那正是它的註解本來就寫著的
+    //    「能力過濾只加在這裡，不加進 `getVisibleComponents()`」。
+    //
+    // 🔴 **問性狀不問身分**（`scaffold`／`scaffoldInMain` 由元件自己宣告）。
+    return new Set([...base].filter((c) => want.has(c) || isScaffoldComponent(c)))
   }
 
+  /**
+   * 工具箱該給哪些——**比畫布的範圍再窄一刀**。
+   *
+   * 選了課的時候，鷹架留在畫布的範圍內（不被打暗），
+   * 而**它不進工具箱**：第 1 課不教 `#include`，學生不該拖得到它。
+   */
+  private toolboxComponents(): Set<string> {
+    const visible = this.getVisibleComponents()
+    if (!this.currentLesson) return visible
+    const want = new Set(this.currentLesson.components)
+    return new Set([...visible].filter((c) => want.has(c)))
+  }
+
+  /**
+   * 積木上要不要看到鷹架（`#include`／`int main()`）。
+   *
+   * ```
+   * 0   剝掉      1   幽靈（看得到、動不了）      2+   可編輯
+   * ```
+   *
+   * ## 🔴 它曾經是 `enabledBranches` 的函數，而那是一個混用
+   *
+   * 那個集合同時扛了**兩個決定**：
+   *
+   * ```
+   * 哪些元件看得到     ← 使用者 2026-08-28 說的「預設全開」是這一個
+   * 鷹架露到第幾層     ← 而它跟著一起變了
+   * ```
+   *
+   * ⚠️ 於是「預設全開」那一刀**連帶把鷹架從「剝掉」變成「可編輯」**，
+   * 而症狀離原因很遠：`e2e/debug.spec.ts` 的斷點**停得住**，
+   * 而**變數面板是空的**。
+   *
+   * > **兩個決定共用一個載體時，改動其中一個永遠會偷偷改到另一個。**
+   *
+   * 🔴 它現在有**自己的一格**（`scaffoldDepth`），語意與拆開前逐字相同：
+   *
+   * ```
+   * 開機          0     剝掉        （舊的預設是只開 L0，深度就是 0）
+   * 切過目標之後   max   看得見      （`onTargetChange` 本來就傳全部的層級）
+   * ```
+   *
+   * ⚠️ **兩支 e2e 各要一邊**，而它們都是對的：
+   * `debug` 要剝掉（不然變數面板是空的），`include-header-preserved` 要看得見
+   * （不然沒有 `#include` 積木可驗）。固定成常數會壞掉其中一支。
+   *
+   * ⚠️ 而**升高它的使用者入口沒有了**：`branches` 於 2026-08-28 退場。
+   *    需要讓學生自己控制的那天，來源是**課**（`pins.scaffoldDepth`），
+   *    不是一個沒有人答得出來的打勾清單。
+   */
   private getScaffoldDepth(): number {
-    const allNodes = flattenLevelTree(this.currentTopic.levelTree)
-    let maxLevel = 0
-    for (const node of allNodes) {
-      if (this.enabledBranches.has(node.id)) {
-        maxLevel = Math.max(maxLevel, node.level)
-      }
-    }
-    return maxLevel
+    return this.scaffoldDepth
   }
 
   private markOutOfScopeBlocks(): void {
@@ -810,7 +1037,9 @@ export class App {
       //
       // ⚠️ 學生在 ESP32 下拉了一顆觸摸積木、切到 Uno，**那顆積木要留在畫布上**
       // ——切走一個目標不該吃掉他的作品。
-      visibleComponents: filterByTarget(this.getVisibleComponents(), this.currentTarget),
+      // 🔴 **課的收窄在這裡再切一刀**——`getVisibleComponents()` 為了畫布
+      //    留著鷹架，而工具箱不該讓學生拖得到 `#include`（見那個函式的註解）。
+      visibleComponents: filterByTarget(this.toolboxComponents(), this.currentTarget),
       ioPreference: this.currentIoPreference,
       msgs: Blockly.Msg as Record<string, string>,
       categoryColors: CATEGORY_COLORS,
@@ -889,6 +1118,12 @@ export class App {
         this.currentTarget = target
         this.currentTopic = topic
         this.enabledBranches = branches
+        // ⚠️ **與拆開前逐字相同**：`onTargetChange` 傳的是全部的層級，
+        //    而舊的 `getScaffoldDepth()` 讀它 → 切過目標之後鷹架看得見。
+        this.scaffoldDepth = Math.max(
+          ...flattenLevelTree(topic.levelTree)
+            .filter((n) => branches.has(n.id))
+            .map((n) => n.level), 0)
         // 風格那一半——走既有的 `applyStylePreset`（它同時更新選擇器的顯示值）
         const style = STYLE_PRESETS.find(p => p.id === target.style)
         if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
@@ -907,6 +1142,7 @@ export class App {
         this.syncController?.setLanguage(topic.language)
         this.blocklyPanel?.setCodeContext(topic.language, this.currentStylePreset)
         this.syncController?.setTopic(topic, branches)
+        this.syncController?.setScaffoldDepth(this.scaffoldDepth)
         this.reloadBlockSpecsForTopic()
         this.updateToolbox()
         this.markOutOfScopeBlocks()
@@ -1082,7 +1318,15 @@ export class App {
     // 🔴 只有 `picker` 與 `action` 是**使用者按的東西**。
     //    ⚠️ `indicator` 有自己的頻道；`output` 是一條資料流，不是一顆控制項
     //       ——把它當控制項送出去，宿主會替它產生一個按了沒事的指令。
-    const pickersAndActions = CONTROLS.filter((c) => c.kind === 'picker' || c.kind === 'action')
+    // 🔴 **被課釘住的控制項【消失】**——濾在這裡，桌機狀態列與宿主狀態列
+    //    兩個表面同時生效（它們讀的是同一份 `ControlState`）。
+    //
+    // ⚠️ `ControlSurface` 的六個值全部是「畫在哪」，**沒有一個是「不畫」**
+    //    ——所以「消失」必須在產生清單的這一步做，不能靠換一個 surface。
+    const pinned = new Set(this.currentLesson ? controlsPinnedBy(this.currentLesson) : [])
+    const pickersAndActions = CONTROLS
+      .filter((c) => c.kind === 'picker' || c.kind === 'action')
+      .filter((c) => !pinned.has(c.id))
 
     // ① 交給宿主的那些
     const toHost = pickersAndActions
@@ -1112,20 +1356,70 @@ export class App {
     const title = spec.hostTitle
     switch (spec.id) {
       case 'target': {
-        const options: ControlOption[] = this.targetRegistry.all().map((t) => ({ value: t.id, label: t.name }))
+        // 🔴 **分組，而組序是宣告的**——`targetRegistry.all()` 的順序是註冊順序，
+        //    而「程式語言在硬體前面」是一個**設計**，不該靠註冊順序碰巧成立。
+        //
+        // ⚠️ 沒宣告 `group` 的目標排在最後（保守）——新增一個語言套件而忘了
+        //    填 group 時，它會出現在清單末尾**而不是消失**。
+        const GROUP_ORDER = ['程式語言', '硬體']
+        const rank = (g?: string): number => {
+          const i = GROUP_ORDER.indexOf(g ?? '')
+          return i < 0 ? GROUP_ORDER.length : i
+        }
+        const options: ControlOption[] = [...this.targetRegistry.all()]
+          // 🔴 **`listed: false` 的不列**——它們仍然是完整的目標，
+          //    只是【只由課程進得去】（`cpp-advanced` 是一條軌道不是語言；
+          //    `arduino` 沒有板子常數，是一個陷阱）。
+          //
+          // ⚠️ 而**目前用著的那一個一定要列**——否則選單上看不到自己在哪，
+          //    那正是「選了課程之後目標就不見了」那個病的另一個形狀。
+          .filter((t) => t.listed !== false || t.id === this.currentTarget.id)
+          .map((t, i) => ({ t, i }))
+          // ⚠️ **組間看 `group`，組內看 `order`**——兩個都是宣告的。
+          //    註冊順序是套件裡 `import` 的順序（依賴關係），**不是教學順序**：
+          //    實測不排的話 `C++ 進階` 會跑到 `C` 後面。
+          //    沒宣告 `order` 的排最後（`i` 當尾綴，讓它至少穩定）。
+          .sort((a, b) =>
+            rank(a.t.group) - rank(b.t.group) ||
+            (a.t.order ?? 1e9) - (b.t.order ?? 1e9) ||
+            a.i - b.i)
+          .map(({ t }) => ({ value: t.id, label: t.name, group: t.group, description: t.hint }))
         return { id: spec.id, kind: spec.kind, title, label: this.currentTarget.name, value: this.currentTarget.id, options }
       }
-      case 'branches': {
-        const nodes = levelNodesWithDepth(this.currentTopic.levelTree)
-        const options: ControlOption[] = nodes.map(({ node, depth }) => ({
-          value: node.id,
-          // ⚠️ 縮排是**樹的唯一線索**——QuickPick 是平的
-          label: `${'　'.repeat(depth)}${node.label}（${node.components.length}）`,
+      // 🪦 `branches` 的 `ControlState` 已隨那顆控制項於 2026-08-28 退場。
+      case 'track': {
+        const tracks = [...allTracks().values()]
+        const options: ControlOption[] = [
+          { value: '', label: '（不選課程）' },
+          ...tracks.map((t) => ({
+            value: t.id,
+            label: `${t.name}（${lessonsOfTrack(t.id).length} 章）`,
+            description: t.description,
+          })),
+        ]
+        const cur = this.currentLesson ? allTracks().get(trackOf(this.currentLesson.id)) : undefined
+        return {
+          id: spec.id, kind: spec.kind, title,
+          label: cur?.name ?? '沒有課程', value: cur?.id ?? '', options,
+        }
+      }
+      case 'lesson': {
+        // 🔴 **只列【目前這條軌道】的章節**——不是全部 65 堂。
+        //    列全部的話，選單本身就變成一個新的認知負擔，
+        //    而那正是這一整刀在拆的東西。
+        const tid = this.currentTrack ?? (this.currentLesson ? trackOf(this.currentLesson.id) : undefined)
+        const mine = tid ? lessonsOfTrack(tid) : []
+        const options: ControlOption[] = mine.map((l) => ({
+          value: l.id,
+          // ⚠️ 資料夾名的 `NN-` 前綴留著——它就是章節編號
+          label: `${l.id.split('/')[1] ?? l.id}${l.estimate ? `　${l.estimate}` : ''}`,
         }))
         return {
-          id: spec.id, kind: spec.kind, title, multi: true,
-          label: `層級 ${this.enabledBranches.size}/${nodes.length}`,
-          picked: nodes.map(({ node }) => node.id).filter((id) => this.enabledBranches.has(id)),
+          id: spec.id, kind: spec.kind, title,
+          // 🔴 沒選課程的時候這一顆說「先選課程」而不是「沒有章節」
+          //    ——後者看起來像「這條軌道是空的」。
+          label: this.currentLesson ? this.currentLesson.title : (tid ? '選一章' : '先選課程'),
+          value: this.currentLesson?.id ?? '',
           options,
         }
       }
@@ -1194,16 +1488,23 @@ export class App {
       if (!cb) return
       switch (invoke.id) {
         case 'target': {
+          // 🔴 **換目標就退出課程**——課的清單是跟著目標走的
+          //    （使用者拍板的順序：「先選目標再選課程」）。
+          //    留著它的話，畫面會顯示一堂**不屬於這個目標**的課。
+          this.currentLesson = undefined
+          this.currentTrack = undefined
           const target = this.targetRegistry.get(invoke.value ?? '')
           const topic = target ? this.topicRegistry.get(target.topic) : null
           if (!target || !topic) return
           cb.onTargetChange(target, topic, new Set(flattenLevelTree(topic.levelTree).map((n) => n.id)))
           break
         }
-        case 'branches': {
-          // ⚠️ 走與勾選框同一支正規化——否則「只勾了子節點」會產生一棵不合法的樹。
-          const picked = resolveEnabledBranches(this.currentTopic.levelTree, new Set(invoke.values ?? []))
-          cb.onBranchesChange(picked)
+        case 'track': {
+          this.selectTrack(invoke.value ?? '')
+          break
+        }
+        case 'lesson': {
+          this.selectLesson(invoke.value ?? '')
           break
         }
         case 'style': {
@@ -1486,6 +1787,7 @@ export class App {
     }
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
     this.syncController?.setTopic(this.currentTopic, this.enabledBranches)
+    this.syncController?.setScaffoldDepth(this.scaffoldDepth)
     this.updateToolbox()
     this._restoringState = false
 

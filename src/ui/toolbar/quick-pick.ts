@@ -29,6 +29,17 @@ export interface QuickPickItem {
   /** 右側的淡色說明（VSCode 的 `description`）。 */
   readonly description?: string
   readonly picked?: boolean
+  /**
+   * 這一項屬於哪一組——**組名換的時候，清單上會多一列標題**。
+   *
+   * 🔴 為什麼需要它：目標選單原本是一列 13 項的平清單，而它混著
+   * **兩個不同的軸**（語言／軌道 vs 板子）。使用者 2026-08-28 看著它問
+   * 「**這邊能不能重新設計整理一下？**」
+   *
+   * ⚠️ 標題列**不可選、不參與搜尋、不佔鍵盤導覽的位置**
+   * ——一個按得下去而沒有反應的東西，比沒有它更糟。
+   */
+  readonly group?: string
 }
 
 export interface QuickPickOptions {
@@ -75,7 +86,17 @@ export function showQuickPick(
 
   const render = (): void => {
     list.innerHTML = ''
+    let lastGroup: string | undefined
     visible.forEach((item, index) => {
+      // 🔴 **組名換了就插一列標題**——它不是一個項目：
+      //    不可選、不參與搜尋、不佔鍵盤導覽的位置（`visible` 裡沒有它）。
+      if (item.group !== undefined && item.group !== lastGroup) {
+        const head = document.createElement('div')
+        head.className = 'quick-pick-group'
+        head.textContent = item.group
+        list.appendChild(head)
+      }
+      lastGroup = item.group
       const row = document.createElement('div')
       row.className = 'quick-pick-item' + (index === active ? ' active' : '')
       // ⚠️ **給測試選得到的把手**：標籤會隨語系換，而值不會。

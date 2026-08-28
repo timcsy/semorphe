@@ -40,6 +40,16 @@ export const webProfile: HostProfile = {
   },
   featureReasons: {},
 
+  // 🔴 **網址帶得動組態**——`?lesson=cpp-beginner/01-印出一句話`。
+  //    老師給學生一條連結就開始上課，而**連結本身就是那個狀態**：
+  //    換一台電腦，老師再貼一次；零後端、零帳號。
+  //    （設計脈絡：`draft/2026-08-27-教案是一個宣告.md`）
+  //
+  // ⚠️ 這裡是**整個專案唯一讀 `location` 的地方**——核心那側吃的是字串。
+  get querySearch(): string {
+    return typeof window !== 'undefined' ? window.location.search : ''
+  },
+
   /**
    * 網頁版自己畫全部——**而畫在哪裡分兩處**（2026-08-25 使用者拍板）。
    *

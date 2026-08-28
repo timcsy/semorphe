@@ -27,7 +27,7 @@
  * - **不檢測步驟中間那些示範用的程式碼片段**——只抽 `## 完成的樣子`。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, selectTarget, useAsSource } from './helpers'
+import { freshApp, useAsSource } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -70,6 +70,36 @@ function collect(): LessonCase[] {
 
 const CASES = collect()
 
+/**
+ * 開一堂課——**走 `?lesson=`，不走目標選單**。
+ *
+ * 🔴 2026-08-28 之前這裡是 `freshApp` ＋ `selectTarget(c.target)`，
+ * 而那天 `cpp-advanced` 改成 `listed: false`（它其實是一條軌道，
+ * 不是一個語言）——於是**那 26 支全部 30 秒逾時**：
+ * `.quick-pick-item[data-value="cpp-advanced"]` 不在選單裡了。
+ *
+ * > **一個靠「在選單裡點得到」開場的測試，會在那一項合法地離開選單的那天全紅。**
+ *
+ * 🟢 而 `?lesson=` 本來就是**真實路徑**（老師貼的那條連結），
+ * 課自己會把目標釘過去——這裡不必知道它是哪一個。
+ */
+async function openLesson(page: import('@playwright/test').Page, c: LessonCase): Promise<void> {
+  await freshApp(page)
+  await page.goto(`/?lesson=${encodeURIComponent(c.name)}`)
+  await page.waitForFunction(
+    () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
+    undefined, { timeout: 30_000 })
+  await page.waitForTimeout(2500)
+  // ★ 目標真的被釘過去了——否則下面驗的是另一個語言
+  if (c.target) {
+    expect(
+      await page.evaluate(() =>
+        (window as never as { __app: { currentTarget: { id: string } } }).__app.currentTarget.id),
+      `🔴 ${c.name} 的 ?lesson= 沒有把目標釘成 ${c.target}`,
+    ).toBe(c.target)
+  }
+}
+
 test('★ 入口條件——真的掃到課了', () => {
   // ⚠️ 錨在課的數量（合成量）。0 堂 ＝ 這支什麼都沒驗，不是「都對」。
   expect(CASES.length, '🔴 一堂課都沒掃到 → 下面每一支都是空過的').toBeGreaterThanOrEqual(1)
@@ -77,8 +107,7 @@ test('★ 入口條件——真的掃到課了', () => {
 
 for (const c of CASES) {
   test(`★ ${c.name}：宣告的元件 ＝ 程式碼真的用到的元件`, async ({ page }) => {
-    await freshApp(page)
-    if (c.target) await selectTarget(page, c.target)
+    await openLesson(page, c)
 
     await page.evaluate((code) =>
       (window as never as { __app: { codeView: { setCode(c: string): void } } })
@@ -141,8 +170,7 @@ for (const c of CASES) {
     //
     // 所以改成：有宣告 `stdout` 就比對；沒有的話**仍然跑**，
     // 只驗它沒有把錯誤印在主控台上。
-    await freshApp(page)
-    if (c.target) await selectTarget(page, c.target)
+    await openLesson(page, c)
 
     await page.evaluate((code) =>
       (window as never as { __app: { codeView: { setCode(c: string): void } } })

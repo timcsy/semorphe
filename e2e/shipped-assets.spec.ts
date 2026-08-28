@@ -106,7 +106,7 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
   //
   // > 一個用寬鬆樣式挑控制項的測試，會安靜地操作錯的那一個。
   await page.locator('#status-controls .status-item-btn[data-control-id="target"]').click()
-  const pythonRow = page.locator('.quick-pick-item').filter({ hasText: /^Python 入門$/ })
+  const pythonRow = page.locator('.quick-pick-item').filter({ hasText: /^Python$/ })
   const switched = await pythonRow.count() > 0
   if (switched) {
     await pythonRow.first().click()

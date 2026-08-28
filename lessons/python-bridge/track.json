@@ -1,0 +1,8 @@
+{
+  "name": "Python 銜接",
+  "target": "python",
+  "order": 5,
+  "description": "會 C++ 之後，學得快的那一條",
+  "scaffold": "editable",
+  "_scaffold_why": "已經會 C++ 的人，外框不需要被保護"
+}

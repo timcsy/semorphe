@@ -72,7 +72,7 @@ export type ControlSurface =
   | 'hostPanel'
 
 export type ControlId =
-  | 'target' | 'branches' | 'style' | 'blockStyle' | 'locale'
+  | 'target' | 'track' | 'lesson' | 'style' | 'blockStyle' | 'locale'   // 🪦 `branches` 於 2026-08-28 退場（見下面的墓碑）
   | 'run' | 'undo' | 'redo' | 'clear'
   | 'viewBlocks' | 'viewFlow'
   | 'layout'
@@ -110,7 +110,35 @@ export interface ControlSpec {
  */
 export const CONTROLS: readonly ControlSpec[] = [
   { id: 'target', kind: 'picker', domain: 'session', mountId: 'level-selector-mount', bar: 'quickAccess', hostTitle: '選擇目標（語言／板子）' },
-  { id: 'branches', kind: 'picker', domain: 'session', mountId: 'level-selector-mount', bar: 'quickAccess', hostTitle: '選擇教學層級' },
+  // 🔴 **課程與章節是兩顆**（2026-08-28 使用者：「課程可以再拆分成課程和章節」）。
+  //
+  // ```
+  // 目標   語言／板子   C++ · C · Python · Arduino Uno · ESP32…
+  // 課程   軌道         C++ 入門 · C++ 進階 · Python 入門 · Arduino 專題…
+  // 章節   課           01 印出一句話 · 02 記住資料…
+  // ```
+  //
+  // 一顆的時候「C++ 進階」只能待在**目標**選單裡，而它其實是一條軌道
+  // ——拆開之後目標就只剩語言與板子（「目標可以更單純一些」）。
+  //
+  // ⚠️ 兩顆都**不會**被課釘住（`controlsPinnedBy` 回空）——它們是出口。
+  { id: 'track', kind: 'picker', domain: 'session', mountId: 'track-selector-mount', bar: 'quickAccess', hostTitle: '選擇課程' },
+  { id: 'lesson', kind: 'picker', domain: 'session', mountId: 'lesson-selector-mount', bar: 'quickAccess', hostTitle: '選擇章節' },
+  // 🪦 **`branches`（選擇教學層級）已於 2026-08-28 退場。**
+  //
+  // 它是六個控制項裡唯一一個**連老師都答不出來**的
+  // ——`draft/教案是一個宣告` 拿「每一個留在畫面上的選項，都要說得出誰有意見」
+  // 掃過那六格，只有這一格的答案是「🔴 沒有人有意見」。
+  //
+  // 使用者 2026-08-12 的原話早就否證過它：
+  // > 「我會乾脆叫學生把全部都打勾，**那有沒有這個漸進揭露是沒用的**」
+  //
+  // 🎯 **它被「選一堂課」取代，而不是被「選得更好」**（`?lesson=`，2026-08-28）。
+  // 而在取代品存在之前它不能退——所以它等了 65 堂課。
+  //
+  // ⚠️ **`enabledBranches` 這個機制本身沒有退場**：它仍然是可見集合的載體，
+  //    只是現在**永遠全開**，收窄由課的 `components` 做。
+  //    整套退場要動存檔（`context` 歸屬）與 VSCode 設定，那是另一刀。
   // 🪦 **`style` picker 已於 2026-08-27 退場——它已經由目標決定。**
   //
   // 使用者：「程式風格現在先跟目標合併好了，先選目標再選課程」。
@@ -251,6 +279,15 @@ export const LOCALES: readonly LocaleSpec[] = [
 export interface ControlOption {
   readonly value: string
   readonly label: string
+  /**
+   * 這一項屬於哪一組——**組名換的時候，選單上會多一列標題**。
+   *
+   * ⚠️ 標題列不可選、不參與搜尋、不佔鍵盤導覽的位置。
+   * 宿主（VSCode）不支援分組的話，忽略它即可——它是**裝飾不是語義**。
+   */
+  readonly group?: string
+  /** 跟在名字後面的淡色說明（例如「沒有板子常數」）。 */
+  readonly description?: string
 }
 
 /**
