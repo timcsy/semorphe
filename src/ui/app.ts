@@ -373,12 +373,30 @@ export class App {
     }
   }
 
-  private setSkeleton(id: string): void {
-    if (!skeletonById(id)) { console.error(`[skeleton] 選了一份不存在的骨架：${id}`); return }
+  /**
+   * **換一份骨架**——三個持有者一起換。
+   *
+   * 🔴 它從哪來（2026-08-28）：`applyLesson` **直接換了 `currentTarget`**
+   * 而沒有動骨架，於是用 `?lesson=arduino/01-閃一顆燈` 開課時
+   * `currentSkeletonId` 還停在 `'main'`——**Arduino 的 `setup`／`loop`
+   * 一顆都不算骨架**（`entryFunctionOf(main 的宣告, 'setup')` 是 undefined）。
+   *
+   * ⚠️ 而症狀不會報錯：畫面上就是「切成淡的而什麼都沒變」。
+   * 抓到它的是 `lessons.spec.ts` 那條**入口條件**
+   * （「一顆骨架元件都認不出來 → 下面那條斷言是空過的」）。
+   *
+   * > **同一個決定有兩個入口時，第二個入口不會報錯——它只是安靜地少做一件事。**
+   */
+  private adoptSkeleton(id: string): void {
     this.currentSkeletonId = id
     this.scaffold?.setSkeleton?.(id)
-    // 🔴 **第三個要知道骨架的人**（鷹架、補丁器、同步器）——三個都問同一份宣告
     this.syncController?.setSkeleton?.(id)
+  }
+
+  private setSkeleton(id: string): void {
+    if (!skeletonById(id)) { console.error(`[skeleton] 選了一份不存在的骨架：${id}`); return }
+    // 🔴 **三個持有者一起換**（鷹架、補丁器、同步器）——見 `adoptSkeleton`
+    this.adoptSkeleton(id)
     this.enforceShellDepthFloor()
     this.updateToolbox()
     this.reprojectFromTree()
@@ -523,6 +541,9 @@ export class App {
       } else {
         this.currentTarget = target
         this.currentTopic = this.topicRegistry.get(target.topic)!
+        // 🔴 **骨架要跟著目標換**（2026-08-28）——在此之前這裡漏了它，
+        //    於是 `?lesson=arduino/…` 開的課停在 C++ 的骨架上。見 `adoptSkeleton`。
+        this.adoptSkeleton(target.skeleton ?? 'main')
       }
     }
     // 🔴 **層級全開**——收窄由課的 `components` 做，不由層級做。
@@ -535,10 +556,9 @@ export class App {
     const track = allTracks().get(trackOf(lesson.id))
     this.scaffoldDepth = scaffoldDepthOf(lesson.pins.scaffold ?? track?.scaffold ?? 'editable')
     // 🔴 **課程也可以換一份【骨架】**（不只是露多少）——省略就跟著目標走。
-    if (track?.skeleton !== undefined) {
-      this.currentSkeletonId = track.skeleton
-      this.scaffold?.setSkeleton?.(track.skeleton)
-    }
+    if (track?.skeleton !== undefined) this.adoptSkeleton(track.skeleton)
+    // 🔴 剝不掉的骨架（Arduino）不得停在「隱藏」——見 `enforceShellDepthFloor`
+    this.enforceShellDepthFloor()
   }
 
   async init(): Promise<void> {
@@ -1362,9 +1382,7 @@ export class App {
 
   private handleTargetChange(target: Target, topic: Topic, branches: Set<string>): void {
     // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
-    this.currentSkeletonId = target.skeleton ?? 'main'
-    this.scaffold?.setSkeleton?.(this.currentSkeletonId)
-    this.syncController?.setSkeleton?.(this.currentSkeletonId)
+    this.adoptSkeleton(target.skeleton ?? 'main')
         const prevDepth = this.getScaffoldDepth()
         this.currentTarget = target
         this.currentTopic = topic

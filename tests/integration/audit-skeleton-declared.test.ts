@@ -269,6 +269,30 @@ describe('★ 第八十六條之二：樹裡哪一塊是骨架，也由宣告回
     }
   })
 
+  it('🔴 硬性零——「現在用哪一份骨架」只准有一個指派點', () => {
+    // 🔴 它從哪來（2026-08-28）：`applyLesson` 直接換了 `currentTarget` 而**沒有動骨架**，
+    //    於是 `?lesson=arduino/01-閃一顆燈` 開的課停在 C++ 的骨架上
+    //    ——Arduino 的 `setup`／`loop` 一顆都不算骨架。
+    //
+    // ⚠️ 而它**不會報錯**：畫面上就是「切成淡的而什麼都沒變」。
+    //    抓到它的是 `lessons.spec.ts` 的一條入口條件，不是型別檢查、不是全套。
+    //
+    // > **同一個決定有兩個入口時，第二個入口不會報錯——它只是安靜地少做一件事。**
+    //
+    // 🟢 三個持有者（鷹架、補丁器、同步器）由 `adoptSkeleton` 一起換，
+    //    而這一條擋的是「有人又在別處直接指派」。
+    const app = fs.readFileSync(path.join(ROOT, 'src/ui/app.ts'), 'utf8')
+    expect(app.length, '🔴 app.ts 沒讀到 → 這一條不算數').toBeGreaterThan(10_000)
+    const sites = app.split('\n')
+      .map((l, i) => ({ l: l.trim(), i: i + 1 }))
+      .filter(({ l }) => /this\.currentSkeletonId\s*=/.test(l) && !l.startsWith('//') && !l.startsWith('*'))
+    expect(
+      sites.map((x) => `app.ts:${x.i}  ${x.l}`),
+      '🔴 「現在用哪一份骨架」有不只一個指派點——而少做一件事的那個入口不會報錯。\n' +
+        '🟢 走 `adoptSkeleton(id)`：它同時通知鷹架、補丁器與同步器。',
+    ).toHaveLength(1)
+  })
+
   it('★ 而 Arduino 真的有【兩顆】進入點——否則上面那條規範沒有第二個形狀在撐', () => {
     const ard = allSkeletons().get('arduino')
     expect(ard, '🔴 沒有 arduino 這份骨架').toBeTruthy()
