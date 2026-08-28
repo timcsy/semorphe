@@ -119,13 +119,14 @@ describe('控制項登錄表：程式風格已由目標決定', () => {
     //    改成真的去讀那兩份宣告。
     const fs = await import('node:fs')
     const path = await import('node:path')
-    const styleDir = path.join(process.cwd(), 'src/languages')
-    const styles = fs.globSync
-      ? fs.globSync('*/styles/*.json', { cwd: styleDir })
-      : []
-    const targets = fs.globSync
-      ? fs.globSync('*/targets/*.json', { cwd: styleDir })
-      : []
+    const { findFiles } = await import('../../helpers/find-files')
+    // 🔴 **錨在 `__dirname`，不是 `process.cwd()`**，而且**不用 `fs.globSync`**
+    //    ——那兩樣東西讓這一支在本機綠、在 CI（Node 24 / Linux）掃到 0，
+    //    於是入口條件當場紅，而 CI 從 2026-08-27 起一直是紅的。
+    //    見 `tests/helpers/find-files.ts` 的檔頭。
+    const styleDir = path.resolve(__dirname, '../../../src/languages')
+    const styles = findFiles(styleDir, 'styles')
+    const targets = findFiles(styleDir, 'targets')
     expect(styles.length, '入口條件：一個風格檔都沒掃到 → 下面在測空集合').toBeGreaterThan(3)
     expect(targets.length, '入口條件：一個目標檔都沒掃到').toBeGreaterThan(3)
 

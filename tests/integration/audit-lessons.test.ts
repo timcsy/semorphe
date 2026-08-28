@@ -46,6 +46,7 @@ import { printReport } from '../helpers/guardrail'
 import { loadToolbox } from '../helpers/toolbox'
 import fs from 'node:fs'
 import path from 'node:path'
+import { findFiles } from '../helpers/find-files'
 
 const ROOT = path.resolve(__dirname, '../..')
 
@@ -132,8 +133,11 @@ export function judgeLessons(
 
 function knownTargetIds(): Set<string> {
   const ids = new Set<string>()
-  for (const dir of fs.globSync('src/languages/*/targets/*.json', { cwd: ROOT })) {
-    ids.add(JSON.parse(fs.readFileSync(path.join(ROOT, dir), 'utf8')).id)
+  // 🔴 **不用 `fs.globSync`**——它在 Node 22 與 24 之間的行為不同，
+  //    而症狀是「本機綠、CI 掃到 0」。見 `tests/helpers/find-files.ts`。
+  const langs = path.join(ROOT, 'src/languages')
+  for (const rel of findFiles(langs, 'targets')) {
+    ids.add(JSON.parse(fs.readFileSync(path.join(langs, rel), 'utf8')).id)
   }
   return ids
 }
