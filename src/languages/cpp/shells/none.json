@@ -1,0 +1,8 @@
+{
+  "id": "none",
+  "name": "沒有外框",
+  "_why": "🔴 **「沒有鷹架」是一份空的宣告，不是一個特例的 if。** 在此之前 `cpp-scaffold.ts` 有一行 `if (this.entryShell === 'none') return { …全空 }`——而那讓「Arduino 的鷹架」與「沒有鷹架」在程式碼裡分不出來。Arduino 的 setup()／loop() 在頂層，是因為沒有東西包住它們。",
+  "preamble": [],
+  "entryPoint": [],
+  "epilogue": []
+}

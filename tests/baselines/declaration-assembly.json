@@ -5,9 +5,9 @@
     "measuredAt": "2026-08-25"
   },
   "scanned": {
-    "testFileCount": 398
+    "testFileCount": 402
   },
   "adHocAssembly": 0,
   "details": [],
-  "note": "\n⚠️ 2026-08-27：語料變大——新增 `tests/integration/audit-lessons.test.ts`（第八十三條）＋ `e2e/lessons.spec.ts` ＋ `lessons/` 四堂課。**輸入量變大，不是退步。**"
+  "note": "\n⚠️ 2026-08-27：語料變大——新增 `tests/integration/audit-lessons.test.ts`（第八十三條）＋ `e2e/lessons.spec.ts` ＋ `lessons/` 四堂課。**輸入量變大，不是退步。**\n⚠️ 2026-08-28：語料變大——新增 `core/lesson.ts`／`core/load-lessons.ts`／`e2e/lesson-pins.spec.ts`／兩條護欄（第八十四、八十五條）＋ 6 份 `track.json`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——新增第八十六條護欄（audit-shell-declared：鷹架是一份宣告）＋ `core/shell.ts` ＋ `languages/cpp/shells/*`。**輸入量變大，不是判準放寬。**"
 }

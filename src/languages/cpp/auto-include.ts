@@ -5,6 +5,10 @@
  * DependencyResolver to determine which #include headers are required.
  * Merges with manually placed #include blocks (deduplication).
  */
+// ⚠️ **副作用 import**——把 C++ 的鷹架宣告註冊進去。
+//    少了它，`shellById` 在沒有載語言套件的路徑上找不到東西。
+import './shells'
+import { shellById } from '../../core/shell'
 import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver, DependencyEdge } from '../../core/dependency-resolver'
 import { expandHeaderAliases, normalizeHeader } from './header-aliases'
@@ -80,7 +84,7 @@ export function createCppCodePatcher(
    * > **同一個決定如果有兩個地方各自實作，
    * > 修好一個之後症狀只會少一半——而少一半看起來很像修好了。**
    */
-  entryShell?: 'main' | 'none',
+  entryShell?: string,
 ) => string | null {
   return (code, tree, namespaceStyle, cogLevel = 1, entryShell = 'main') => {
     const components = new Set<string>()
@@ -113,9 +117,20 @@ export function createCppCodePatcher(
       changed = true
     }
 
-    // 3. Patch missing int main() wrapper (L0 only — scaffold manages main)
-    // 🔴 `entryShell === 'none'` 的目標**沒有 main**——見上面的參數說明。
-    if (entryShell !== 'none' && cogLevel === 0 && !patched.includes('int main(')) {
+    // 3. Patch missing entry point (L0 only — scaffold manages it)
+    //
+    // 🔴 **這裡讀的是與鷹架【同一份宣告】**（`core/shell.ts`，2026-08-28）。
+    //    在此之前它自己寫死 `'int main() {'` 與 `'    return 0;'`
+    //    ——而鷹架那一側也各寫了一次。
+    //
+    // > **同一個決定如果有兩個地方各自實作，
+    // > 修好一個之後症狀只會少一半——而少一半看起來很像修好了。**
+    //
+    // ⚠️ 「有沒有進入點」現在也問宣告：`entryPoint` 是空陣列就不補
+    //    （Arduino 的 `none` 是一份空的宣告，不是一個特例的 `if`）。
+    const shell = shellById(entryShell)
+    const entry = shell?.entryPoint ?? []
+    if (entry.length > 0 && cogLevel === 0 && !patched.includes(entry[0].code.trim())) {
       // Extract header lines (#include, using namespace, blank) and body
       const lines = patched.split('\n')
       const headerEnd = lines.reduce((a, l, i) => {
@@ -126,7 +141,9 @@ export function createCppCodePatcher(
       const bodyLines = lines.slice(headerEnd).filter(l => l.trim() !== '')
       const indented = bodyLines.map(l => '    ' + l).join('\n')
       patched = (header ? header + '\n' : '') +
-        'int main() {\n' + (indented ? indented + '\n' : '') + '    return 0;\n}'
+        entry.map((l) => l.code).join('\n') + '\n' +
+        (indented ? indented + '\n' : '') +
+        (shell?.epilogue ?? []).map((l) => l.code).join('\n')
       changed = true
     }
 

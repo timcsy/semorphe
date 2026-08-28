@@ -5,9 +5,9 @@
     "measuredAt": "2026-08-27"
   },
   "scanned": {
-    "auditFileCount": 83,
+    "auditFileCount": 86,
     "trueIdentityCount": 332
   },
   "badAnchor": 0,
-  "note": " | 2026-08-27：83——新增第八十三條（教案宣告的東西都要真的存在）。上調原因是【多了一條護欄】，不是判準放寬。\n⚠️ 2026-08-27：82 → 83，新增第八十三條（audit-lessons：教案宣告的東西都要真的存在）。**語料變大，不是退步**。"
+  "note": " | 2026-08-27：83——新增第八十三條（教案宣告的東西都要真的存在）。上調原因是【多了一條護欄】，不是判準放寬。\n⚠️ 2026-08-27：82 → 83，新增第八十三條（audit-lessons：教案宣告的東西都要真的存在）。**語料變大，不是退步**。\n⚠️ 2026-08-28：語料變大——新增 `core/lesson.ts`／`core/load-lessons.ts`／`e2e/lesson-pins.spec.ts`／兩條護欄（第八十四、八十五條）＋ 6 份 `track.json`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——新增第八十六條護欄（audit-shell-declared：鷹架是一份宣告）＋ `core/shell.ts` ＋ `languages/cpp/shells/*`。**輸入量變大，不是判準放寬。**"
 }

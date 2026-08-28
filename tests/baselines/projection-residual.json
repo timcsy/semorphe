@@ -5,7 +5,7 @@
   },
   "corpus": {
     "syntaxComplete": 691,
-    "syntaxErrorFragments": 222,
+    "syntaxErrorFragments": 224,
     "totalChars": 103909
   },
   "residual2": {
@@ -83,5 +83,5 @@
       "nonstandard_but_valid": 7
     }
   },
-  "note": "\n⚠️ 2026-08-27：語料變大——新增 `tests/integration/audit-lessons.test.ts`（第八十三條）＋ `e2e/lessons.spec.ts` ＋ `lessons/` 四堂課。**輸入量變大，不是退步。**"
+  "note": "\n⚠️ 2026-08-27：語料變大——新增 `tests/integration/audit-lessons.test.ts`（第八十三條）＋ `e2e/lessons.spec.ts` ＋ `lessons/` 四堂課。**輸入量變大，不是退步。**\n⚠️ 2026-08-28：語料變大——新增第八十六條護欄（audit-shell-declared：鷹架是一份宣告）＋ `core/shell.ts` ＋ `languages/cpp/shells/*`。**輸入量變大，不是判準放寬。**"
 }

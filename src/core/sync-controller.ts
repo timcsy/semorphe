@@ -1,5 +1,5 @@
 import type { SemanticNode, StylePreset, Topic } from './types'
-import { flattenLevelTree, getVisibleComponents } from './level-tree'
+import { getVisibleComponents } from './level-tree'
 import type { ProgramScaffold, ScaffoldResult } from './program-scaffold'
 // 🔴 **不再 import 語言套件**（spec 153）——風格分析由組裝點推進來。
 //
@@ -138,6 +138,12 @@ export class SyncController {
   private programScaffold: ProgramScaffold | null = null
   private currentTopic: Topic | null = null
   private enabledBranches: Set<string> = new Set()
+  /**
+   * 🔴 **由組裝點餵，不再自己從 `enabledBranches` 算。**
+   * 那是同一個決定的第二份實作——兩份都讀同一個集合時它們碰巧一致，
+   * 所以那個雙重真相一直沒有出聲，而只修一份的時候症狀不會消失。
+   */
+  private scaffoldDepth = 0
   private codePatcherFn: ((code: string, tree: SemanticNode) => string | null) | null = null
   private scaffoldNodeFilter: ScaffoldNodeFilter = identityFilter
   private displayTreeEnhancer: ((tree: SemanticNode, visible: Set<string>, scaffoldVisible: boolean) => SemanticNode) | null = null
@@ -192,17 +198,31 @@ export class SyncController {
     this.enabledBranches = enabledBranches
   }
 
-  /** Get the max enabled tree depth (for scaffold visibility). */
+  /**
+   * 積木上要不要看到鷹架（`#include`／`int main()`）：0 剝掉 · 1 幽靈 · 2+ 可編輯。
+   *
+   * ## 🔴 它曾經是 `enabledBranches` 的函數，而那是一個混用
+   *
+   * 那個集合同時扛了**兩個決定**——「哪些元件看得到」與「鷹架露到第幾層」。
+   * 於是 2026-08-28 的「預設全開」（**只想改前者**）連帶把鷹架
+   * 從「剝掉」變成「可編輯」。
+   *
+   * ⚠️ 而症狀離原因很遠：`e2e/debug.spec.ts` 的斷點**停得住**，
+   * 而**變數面板是空的**。
+   *
+   * > **兩個決定共用一個載體時，改動其中一個永遠會偷偷改到另一個。**
+   *
+   * ⚠️ **這裡與 `ui/app.ts` 是同一個決定的兩份實作**——那本身是雙重真相，
+   * 而兩份都讀 `enabledBranches` 的時候它們碰巧一致。拆開之後兩邊都固定 0，
+   * 而**真的要讓它變動的那天，來源要是同一個**（多半是課的 `pins`）。
+   */
   private getScaffoldDepth(): number {
-    if (!this.currentTopic) return 2
-    const allNodes = flattenLevelTree(this.currentTopic.levelTree)
-    let maxLevel = 0
-    for (const node of allNodes) {
-      if (this.enabledBranches.has(node.id)) {
-        maxLevel = Math.max(maxLevel, node.level)
-      }
-    }
-    return maxLevel
+    return this.scaffoldDepth
+  }
+
+  /** 由組裝點餵——**與 `ui/app.ts` 同一個來源**，不再各自從層級樹算一次。 */
+  setScaffoldDepth(depth: number): void {
+    this.scaffoldDepth = depth
   }
 
   /** Whether scaffold nodes should be stripped for display (depth 0 = only root enabled). */
