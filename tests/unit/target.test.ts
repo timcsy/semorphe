@@ -10,6 +10,10 @@
  * ——說不出來的即為新機制。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
+import { allShells } from '../../src/core/shell'
+// ⚠️ 兩個語言的宣告都要載——`entryShell` 跨語言（Python 的目標指 `python-none`）
+import '../../src/languages/cpp/shells'
+import '../../src/languages/python/shells'
 import { TargetRegistry } from '../../src/core/target-registry'
 import cppTarget from '../../src/languages/cpp/targets/cpp.json'
 import cTarget from '../../src/languages/cpp/targets/c.json'
@@ -101,11 +105,27 @@ describe('目標', () => {
     }
   })
 
-  it('★ 而 `entryShell` 的值必須是那兩個之一——不得是一個沒有人認得的字串', () => {
+  it('★ 而 `entryShell` 要指得到一份【真的登記過】的外框', () => {
+    // 🔴 **值域是開放的**（2026-08-28）。這一支原本寫死 `['main', 'none']`
+    //    ——也就是「有」跟「沒有」，而那正是鷹架宣告化要拆掉的東西。
+    //
+    //    使用者：「我希望 Arduino 系列也有腳手架」→ 九個板子目標從 `'none'`
+    //    （＝沒有外框）改指 `'arduino'`（兩個進入點 `setup`／`loop`）。
+    //
+    // > **一個把值域寫死成清單的測試，會在第三種值出現的那天擋住它
+    // > ——而那時它看起來像「你改壞了」。**
+    //
+    // 🟢 改成問登記處：**新增一份外框只要多一個 JSON，這一支不必動**；
+    //    而打錯一個 id 仍然紅。
+    const known = [...allShells().keys()]
+    expect(known.length, '🔴 一份外框都沒登記 → 語言套件沒載入，這一支不算數').toBeGreaterThanOrEqual(2)
     for (const t of TARGETS) {
       const v = (t as { entryShell?: string }).entryShell
       if (v === undefined) continue
-      expect(['main', 'none'], `🔴 ${(t as { id: string }).id} 的 entryShell 是 ${v}`).toContain(v)
+      expect(
+        known,
+        `🔴 ${(t as { id: string }).id} 的 entryShell 是 \`${v}\`，而沒有這一份外框`,
+      ).toContain(v)
     }
   })
 

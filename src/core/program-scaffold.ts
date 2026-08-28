@@ -30,6 +30,16 @@ export interface ScaffoldConfig {
 
 export interface ProgramScaffold {
   resolve(tree: SemanticNode, config: ScaffoldConfig): ScaffoldResult
+  /**
+   * 目前用的是哪一份外框宣告（各語言 `shells/` 目錄下那些 JSON 的 `id`）。
+   *
+   * 🔴 產生器要問它「**外框已經生出來了嗎**」（`shellFramePresent`）——
+   * 在此之前那裡寫死 `name === 'main'`，於是 Arduino 的 `setup`／`loop`
+   * 永遠不算外框（2026-08-28）。
+   *
+   * ⚠️ **選用**：`board-library-headers-output` 那族的假鷹架沒有它。
+   */
+  entryShell?(): string
 }
 
 /**

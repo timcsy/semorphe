@@ -9,7 +9,7 @@
     "undecidable": 99,
     "bothRun": 438,
     "onlyReferenceRuns": 12,
-    "onlyInterpreterRuns": 57,
+    "onlyInterpreterRuns": 58,
     "neitherRuns": 18
   },
   "mismatch": {
@@ -527,5 +527,5 @@
     "count": 0,
     "details": []
   },
-  "note": "\n⚠️ 2026-08-27：語料 622 → 623，長在 neitherRuns（16 → 17）——新增 audit-lessons 帶進一段跑不動的合成片段。🟢 **不可判定那一欄沒有動**（99），所以這不是「加一段讀 cin 的語料縮分母」。\n⚠️ 2026-08-28：語料變大——新增第八十七條護欄（audit-templates：範例）＋ `core/template.ts`／`core/load-templates.ts`／`e2e/templates.spec.ts`＋ 6 份 `templates/*`。**輸入量變大，不是判準放寬。**\n🟢 而它長在 `neitherRuns`（17 → 18），**不可判定那一欄沒有動**（99）——所以不是靠「加一段讀 cin 的語料縮分母」讓比率變好看。"
+  "note": "⚠️ 2026-08-27：語料 622 → 623，長在 neitherRuns（16 → 17）——新增 audit-lessons 帶進一段跑不動的合成片段。🟢 **不可判定那一欄沒有動**（99），所以這不是「加一段讀 cin 的語料縮分母」。\n⚠️ 2026-08-28：語料變大——新增第八十七條護欄（audit-templates：範例）＋ `core/template.ts`／`core/load-templates.ts`／`e2e/templates.spec.ts`＋ 6 份 `templates/*`。**輸入量變大，不是判準放寬。**\n🟢 而它長在 `neitherRuns`（17 → 18），**不可判定那一欄沒有動**（99）——所以不是靠「加一段讀 cin 的語料縮分母」讓比率變好看。\n⚠️ 2026-08-28：語料變大——Arduino 的鷹架宣告那一刀新增的**註解**裡多了一段反引號程式碼片段。上調的是【語料量】（入口條件），缺陷欄一筆未動。⚠️ 而那一段落在「只有直譯器跑得動」那一桶（57 → 58），不是「兩邊都不成」——第一版放錯桶而棘輪只看總數，**照樣綠**。"
 }

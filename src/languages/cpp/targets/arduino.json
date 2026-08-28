@@ -7,5 +7,5 @@
   "hint": "沒有 LED_BUILTIN／A0 等板子常數",
   "topic": "arduino",
   "style": "google",
-  "entryShell": "none"
+  "entryShell": "arduino"
 }

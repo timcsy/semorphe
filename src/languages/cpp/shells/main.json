@@ -4,6 +4,9 @@
   "language": "cpp",
   "hint": "#include ＋ int main() ＋ return 0",
   "_why": "🔴 這四段在 2026-08-28 之前寫死在 `cpp-scaffold.ts` 的 resolve() 裡，而 `entryShell` 的值域只有 'main' 與 'none'——也就是「有」跟「沒有」。使用者：「鷹架應該也不只一個吧？」宣告化之後，第三種外框（Python 的 __main__、競賽的快速 IO、Java 的 class）只要多一個檔。",
+  "entryFunctions": [
+    { "name": "main", "reason": "程式從這裡開始跑" }
+  ],
   "preamble": [
     {
       "code": "using namespace std;",

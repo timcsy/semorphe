@@ -16,5 +16,8 @@
 import { registerShell, parseShell } from '../../../core/shell'
 import mainShellDef from './main.json'
 import noneShellDef from './none.json'
+// 🔴 Arduino 的外框（2026-08-28）——**在此之前九個板子目標指的是 `none`**，
+//    也就是「沒有外框」。而 Arduino 是有外框的，只是它有【兩個】進入點。
+import arduinoShellDef from './arduino.json'
 
-for (const raw of [mainShellDef, noneShellDef]) registerShell(parseShell(raw))
+for (const raw of [mainShellDef, noneShellDef, arduinoShellDef]) registerShell(parseShell(raw))

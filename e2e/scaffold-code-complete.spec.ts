@@ -132,3 +132,306 @@ test('★ 改顯示模式，不得改到語義樹', async ({ page }) => {
     ).toEqual(before)
   }
 })
+
+test('★ `ghost` 在積木上要真的看得出來——淡的 ＋ 動不了', async ({ page }) => {
+  // 🔴 使用者 2026-08-28 看著畫面說「**淡的好像失效了**」。
+  //
+  // 而它**不是失效，是從來沒做過**：`ghost` 只在 Monaco（程式碼側）有實作
+  // （`.ghost-line`，opacity 0.4 ＋ 斜體），而積木這一側
+  // `grep -rn ghost src/ui/panels` 是**零筆**——
+  // 於是 `ghost` 與 `editable` 在積木上視覺完全相同。
+  //
+  // > **一個模式如果在某個視圖上與另一個模式長得一樣，
+  // > 那個視圖就沒有實作它——而選單仍然讓人選得到。**
+  await freshApp(page)
+  await page.waitForTimeout(1800)
+  await page.evaluate((c) =>
+    (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c),
+    PROGRAM)
+  await useAsSource(page, '程式碼')
+  await page.waitForTimeout(2500)
+
+  const snap = async (): Promise<{ ghost: string[]; locked: string[]; all: number }> =>
+    page.evaluate(() => {
+      const ws = (window as never as { __app: { blocklyPanel: { workspace: { getAllBlocks(b: boolean): unknown[] } } } })
+        .__app.blocklyPanel.workspace
+      const bs = ws.getAllBlocks(false).map((b) => b as { type: string; isMovable(): boolean; getSvgRoot?(): SVGElement })
+      return {
+        ghost: bs.filter((b) => b.getSvgRoot?.()?.classList.contains('ghost-block')).map((b) => b.type),
+        locked: bs.filter((b) => !b.isMovable()).map((b) => b.type),
+        all: bs.length,
+      }
+    })
+
+  const pick = async (mode: string): Promise<void> => {
+    await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
+    await page.locator(`.quick-pick-item[data-value="mode:${mode}"]`).click()
+    await page.waitForTimeout(3500)
+  }
+
+  await pick('editable')
+  const ed = await snap()
+  // ★ 入口條件——錨在**畫布上有幾塊積木**（合成量）
+  expect(ed.all, '🔴 畫布上沒有積木 → 同步沒完成，下面在比空的').toBeGreaterThanOrEqual(5)
+  expect(ed.ghost, '🔴 `editable` 模式下不該有任何淡的積木').toEqual([])
+
+  await pick('ghost')
+  const gh = await snap()
+  // 🔴 **四塊鷹架**：#include · using namespace · int main() · return 0
+  expect(
+    gh.ghost.length,
+    '🔴 `ghost` 模式下沒有任何積木變淡——那與 `editable` 長得一樣，' +
+      '而選單仍然讓人選得到',
+  ).toBeGreaterThanOrEqual(4)
+  // ⚠️ **`int main()` 那一塊是關鍵**：它靠「函式定義 ＋ 名字叫 main」才是鷹架，
+  //    而那是**節點**的性質不是元件的性質——只掃元件身分的話它會漏掉。
+  expect(
+    gh.ghost.some((t) => t.includes('func_def')),
+    '🔴 `int main()` 沒有變淡——外框最重要的那一塊漏了',
+  ).toBe(true)
+  // 🪦 這裡曾經斷言「淡的一定要 `isMovable() === false`」——**而那條被實測推翻**。
+  //    設了它，學生的積木就**插不進 `main` 與 `return` 之間**
+  //    （連接判定要能把被擠掉的那塊移走）。
+  //
+  //    > **「不能拖」與「不能被移動」在 Blockly 裡是同一個旗標，而我們只要前者。**
+  //
+  //    🟢 「拖不動」改由**拖曳策略**表達，而它由下面那三支各自驗。
+  expect(
+    gh.locked.filter((t) => /print|literal_string/.test(t)),
+    '🔴 把學生自己的積木鎖住了',
+  ).toEqual([])
+})
+
+const TWO =
+  '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "A" << endl;\n    cout << "B" << endl;\n    return 0;\n}\n'
+
+const codeOf = (page: import('@playwright/test').Page): Promise<string> => page.evaluate(() =>
+  (window as never as { __app: { codeView: { getCode?(): string } } }).__app.codeView.getCode?.() ?? '')
+
+async function ghostMode(page: import('@playwright/test').Page, program: string): Promise<void> {
+  await freshApp(page)
+  await page.waitForTimeout(1800)
+  await page.evaluate((c) =>
+    (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), program)
+  await useAsSource(page, '程式碼')
+  await page.waitForTimeout(2500)
+  await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
+  await page.locator('.quick-pick-item[data-value="mode:ghost"]').click()
+  await page.waitForTimeout(3200)
+}
+
+/** 某一型積木**自己那一塊**的左上角（不含它下面接的一串）。 */
+async function topOf(page: import('@playwright/test').Page, type: string): Promise<{ x: number; y: number } | null> {
+  return page.evaluate((ty) => {
+    const ws = (window as never as { __app: { blocklyPanel: { workspace: { getAllBlocks(b: boolean): unknown[] } } } })
+      .__app.blocklyPanel.workspace
+    const b = ws.getAllBlocks(false).map((x) => x as { type: string; getSvgRoot(): SVGGraphicsElement })
+      .find((x) => x.type === ty)
+    if (!b) return null
+    const r = b.getSvgRoot().getBoundingClientRect()
+    // ⚠️ **抓頂端不抓中點**——`getBoundingClientRect` 含整個子樹，
+    //    中點會落在下一塊上（2026-08-28 因此驗錯過兩次）。
+    return { x: r.x + 15, y: r.y + 12 }
+  }, type)
+}
+
+test('★ `ghost`：拖走學生的積木，鷹架黏在原地（而學生的整串跟著走）', async ({ page }) => {
+  // 🔴 使用者 2026-08-28：「**回傳 0 不應該一起被拉動**」
+  //    ＋「**我可能拖的不是只有一個積木喔**」。
+  //
+  // ⚠️ 第二句排除了 Blockly 內建的 `healStack`（按 Alt 拖曳）——
+  //    那會把**後面整串**都留下，而學生的積木該跟著走。
+  //
+  // 🟢 做法：拖曳開始前把鷹架**摘出那一串**，結束後接回容器尾端。
+  await ghostMode(page, TWO)
+  const before = await codeOf(page)
+  expect(before, '🔴 這支程式裡沒有兩塊 cout → 驗不出「拖多塊」').toContain('"B"')
+
+  const from = await topOf(page, 'cpp_print')
+  expect(from, '🔴 找不到第一塊 cout').toBeTruthy()
+  await page.mouse.move(from!.x, from!.y)
+  await page.mouse.down()
+  await page.mouse.move(from!.x + 140, from!.y + 340, { steps: 20 })
+  await page.mouse.up()
+  await page.waitForTimeout(2800)
+
+  const after = await codeOf(page)
+  // 🔴 兩塊 cout 都出去了
+  expect(
+    after.replace(/\s+/g, ' '),
+    '🔴 只有一塊 cout 被拖走——學生的積木沒有整串跟著',
+  ).not.toContain('int main() { cout')
+  // 🔴 而 `return 0` 還在 main 裡
+  expect(
+    after.replace(/\s+/g, ' '),
+    '🔴 `return 0` 被連帶拖走了——那支程式不能跑了',
+  ).toContain('int main() { return 0; }')
+})
+
+test('★ `ghost`：積木插得進 `main` 與 `return` 之間', async ({ page }) => {
+  // 🔴 使用者 2026-08-28：「**我的積木也要是可以插入在 main 和 return 之間的**」。
+  //
+  // ⚠️ 而這一條與上一條**互相拉扯**，那是這一整段最難的地方：
+  //
+  // > **「不能拖」與「不能被移動」在 Blockly 裡是同一個旗標，而我們只要前者。**
+  //
+  // `setMovable(false)`／`isMovable() → false` 都會讓**插入失效**
+  // （連接判定要能把被擠掉的那塊移走）。實測拿掉它，插入立刻成立。
+  // 🟢 所以留著「可動」，而把**拖曳的每一步變成沒有動作**。
+  await ghostMode(page, TWO)
+  const from = await topOf(page, 'cpp_print')
+  await page.mouse.move(from!.x, from!.y)
+  await page.mouse.down()
+  await page.mouse.move(from!.x + 140, from!.y + 340, { steps: 20 })
+  await page.mouse.up()
+  await page.waitForTimeout(2800)
+
+  const back = await topOf(page, 'cpp_print')
+  const ret = await topOf(page, 'cpp_return')
+  expect(back && ret, '🔴 找不到要拖的積木').toBeTruthy()
+  await page.mouse.move(back!.x, back!.y)
+  await page.mouse.down()
+  await page.mouse.move(ret!.x, ret!.y - 2, { steps: 25 })
+  await page.mouse.up()
+  await page.waitForTimeout(2800)
+
+  expect(
+    (await codeOf(page)).replace(/\s+/g, ' '),
+    '🔴 插不回 `main` 與 `return` 之間——多半是某個地方把鷹架設成了「不可移動」',
+  ).toContain('int main() { cout << "A" << endl; cout << "B" << endl; return 0; }')
+})
+
+test('★ `ghost`：直接拖鷹架，什麼都不會發生', async ({ page }) => {
+  await ghostMode(page, TWO)
+  const before = await codeOf(page)
+  for (const type of ['cpp_return', 'cpp_include', 'cpp_using_namespace', 'cpp_func_def']) {
+    const p = await topOf(page, type)
+    if (!p) continue
+    await page.mouse.move(p.x, p.y)
+    await page.mouse.down()
+    await page.mouse.move(p.x + 200, p.y + 250, { steps: 15 })
+    await page.mouse.up()
+    await page.waitForTimeout(1500)
+    expect(
+      await codeOf(page),
+      `🔴 拖了 ${type} 之後程式碼變了——鷹架該是拖不動的`,
+    ).toBe(before)
+  }
+})
+
+test('★ `ghost`：鷹架在【最外層】也黏得住（不只在容器裡）', async ({ page }) => {
+  // 🔴 使用者 2026-08-28 貼了這支：`int x;` 在**最外層**，
+  //    夾在 `using namespace std;` 與 `int main(){…}` 之間。
+  //    拖走 `int x`，**`main` 整顆跟著出去了**。
+  //
+  // 原因：第一版問的是「這顆鷹架在**哪個容器**裡」，而最外層沒有容器
+  // ——那個函式回 `null`，於是 `main` 根本沒被摘出來。
+  //
+  // > **「它在誰的肚子裡」與「它該接在誰後面」不是同一個問題，
+  // > 而最外層只有後者答得出來。**
+  await ghostMode(page, 'using namespace std;\nint x;\nint main() {\n    return 0;\n}\n')
+
+  const chains = (): Promise<string[]> => page.evaluate(() => {
+    const ws = (window as never as { __app: { blocklyPanel: { workspace: { getTopBlocks(o: boolean): unknown[] } } } })
+      .__app.blocklyPanel.workspace
+    return ws.getTopBlocks(true).map((b) => {
+      const out: string[] = []
+      for (let n = b as { type: string; getNextBlock(): unknown } | null; n; n = n.getNextBlock() as never) out.push(n.type)
+      return out.join(' → ')
+    })
+  })
+
+  expect(await chains(), '🔴 這支程式沒有排成一條最外層的鏈——驗不出這件事')
+    .toEqual(['cpp_using_namespace → cpp_var_declare → cpp_func_def'])
+
+  const x = await topOf(page, 'cpp_var_declare')
+  await page.mouse.move(x!.x, x!.y)
+  await page.mouse.down()
+  await page.mouse.move(x!.x + 120, x!.y + 300, { steps: 20 })
+  await page.mouse.up()
+  await page.waitForTimeout(2800)
+
+  // ★ `using` 與 `main` 併回同一條，而 `int x` 自己出去
+  expect(
+    await chains(),
+    '🔴 最外層的鷹架被連帶拖走了——「該接在誰後面」那條規則漏了最外層',
+  ).toEqual(['cpp_using_namespace → cpp_func_def', 'cpp_var_declare'])
+
+  // ★ 而它插得回兩顆鷹架**中間**
+  const b = await topOf(page, 'cpp_var_declare')
+  const fd = await topOf(page, 'cpp_func_def')
+  await page.mouse.move(b!.x, b!.y)
+  await page.mouse.down()
+  await page.mouse.move(fd!.x, fd!.y - 2, { steps: 25 })
+  await page.mouse.up()
+  await page.waitForTimeout(2800)
+  expect(await chains(), '🔴 插不回 `using` 與 `main` 之間')
+    .toEqual(['cpp_using_namespace → cpp_var_declare → cpp_func_def'])
+})
+
+test('★ Arduino 也有鷹架——`setup`／`loop` 是淡的，而「隱藏」不端出來', async ({ page }) => {
+  // 🔴 使用者 2026-08-28：「**我希望 Arduino 系列也有腳手架**」。
+  //
+  // 在此之前九個板子目標的 `entryShell` 都是 `'none'`——**而那是「沒有外框」**。
+  // 症狀：切到 Arduino、把顯示切成「淡的」，畫面上**什麼都不會變**
+  // ——`scaffoldNodeIds` 認的是「函式定義 ＋ 名字叫 `main`」。
+  //
+  // ⚠️ 而它逼出了 `entryFunctions`：Arduino 有【兩個】進入點。
+  //    原本那個寫死不只是名字錯，**數量也錯**。
+  await freshApp(page)
+  await page.waitForTimeout(1800)
+  await page.locator('.status-item-btn[data-control-id="target"]').click()
+  await page.locator('.quick-pick-item').filter({ hasText: /Arduino Uno/ }).first().click()
+  await page.waitForTimeout(2500)
+  await page.evaluate((c) =>
+    (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c),
+    'void setup() {\n    pinMode(13, OUTPUT);\n}\n\nvoid loop() {\n    digitalWrite(13, HIGH);\n    delay(1000);\n}\n')
+  await useAsSource(page, '程式碼')
+  await page.waitForTimeout(3000)
+
+  await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
+  const options = await page.locator('.quick-pick-item').allTextContents()
+
+  // ★ 這個語言的外框都列得出來，而 **Arduino 那一份在裡面**
+  expect(
+    options.some((o) => o.includes('Arduino 外框')),
+    '🔴 選單裡沒有 Arduino 的外框——那九個板子還指著「沒有外框」',
+  ).toBe(true)
+
+  // 🔴 **「隱藏」不得出現**——Arduino 有兩個進入點，兩批語句攤平之後分不回去。
+  //    使用者：「這也會**被你選什麼目標限制有哪些選擇**」。
+  expect(
+    options.filter((o) => o.startsWith('隱藏')),
+    '🔴 端出了一個做不到的選項——「隱藏」在兩個進入點的外框上是把資訊弄丟，不是藏起來',
+  ).toEqual([])
+
+  await page.locator('.quick-pick-item[data-value="mode:ghost"]').click()
+  await page.waitForTimeout(3200)
+
+  const ghosts = await page.evaluate(() => {
+    const ws = (window as never as { __app: { blocklyPanel: { workspace: { getAllBlocks(b: boolean): unknown[] } } } })
+      .__app.blocklyPanel.workspace
+    return ws.getAllBlocks(false).map((x) => x as { type: string; getSvgRoot(): SVGGraphicsElement })
+      .filter((b) => b.getSvgRoot().classList.contains('ghost-block')).map((b) => b.type)
+  })
+  // ★ **兩顆**函式定義都淡了——`setup` 與 `loop`
+  expect(
+    ghosts,
+    '🔴 Arduino 的 `setup`／`loop` 沒有變成鷹架——多半是哪裡還在問「名字是不是 main」',
+  ).toEqual(['cpp_func_def', 'cpp_func_def'])
+
+  // ★ 而學生自己的東西**一顆都沒被淡掉**
+  const solid = await page.evaluate(() => {
+    const ws = (window as never as { __app: { blocklyPanel: { workspace: { getAllBlocks(b: boolean): unknown[] } } } })
+      .__app.blocklyPanel.workspace
+    return ws.getAllBlocks(false).map((x) => x as { type: string; getSvgRoot(): SVGGraphicsElement })
+      .filter((b) => !b.getSvgRoot().classList.contains('ghost-block')).map((b) => b.type)
+  })
+  expect(solid, '🔴 把學生自己的積木也淡掉了').toContain('cpp_pin_mode')
+  expect(solid).toContain('cpp_digital_write')
+
+  // ★ 狀態列同時說出兩個軸
+  expect(
+    await page.locator('.status-item-btn[data-control-id="scaffold"]').textContent(),
+  ).toContain('Arduino 外框')
+})

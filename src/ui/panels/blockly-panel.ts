@@ -1,6 +1,7 @@
 import { generateExpressionCode, isUngeneratable, UNGENERATABLE_PREFIX } from '../../core/projection/code-generator'
 import type { StylePreset } from '../../core/types'
 import * as Blockly from 'blockly'
+import { healingDragStrategy, immovableDragStrategy } from './ghost-drag-strategy'
 import type { SemanticNode, BlockSpec, DegradationCause, ConfidenceLevel, Annotation } from '../../core/types'
 import { createNode } from '../../core/semantic-tree'
 import { companionFor } from '../../core/component/companion-blocks'
@@ -1418,6 +1419,113 @@ export class BlocklyPanel implements ViewHost {
   }
 
   /** Mark blocks whose component is not in visibleComponents as semi-transparent */
+  /**
+   * **鷹架在積木上長什麼樣**——`ghost` 時淡的 ＋ 動不了。
+   *
+   * ## 🔴 它在 2026-08-28 之前完全不存在
+   *
+   * `ghost` 只在 **Monaco（程式碼側）**有實作（`.ghost-line`，opacity 0.4 ＋ 斜體），
+   * 而積木這一側 `grep -rn ghost` 是**零筆**。
+   *
+   * 於是 `ghost` 與 `editable` 在積木上**視覺完全相同**——
+   * 使用者 2026-08-28 看著畫面說「**淡的好像失效了**」。
+   * 而它不是失效，是**從來沒做過**。
+   *
+   * > **一個模式如果在某個視圖上與另一個模式長得一樣，
+   * > 那個視圖就沒有實作它——而選單仍然讓人選得到。**
+   *
+   * ⚠️ **「動不了」與「淡的」要一起**：只淡不鎖的話學生拖得動它，
+   * 而拖動一顆「看起來不該碰」的東西之後，畫面說的話就變成假的。
+   *
+   * ⚠️ **判準吃的是 `blockId`，不是元件身分**——因為 `int main()` 這一塊
+   * 是靠「**函式定義 ＋ 名字叫 main**」認出來的（`cpp-scaffold-filter.ts:20`），
+   * 而那是**節點**的性質不是**元件**的性質。
+   *
+   * 🔴 第一版用 componentId 判斷，於是 `#include`／`using`／`return` 都標到了，
+   * **而外框最重要的那一塊 `int main()` 漏掉**。
+   *
+   * > **一個「這顆是不是鷹架」的判準，如果只看得到元件身分，
+   * > 就答不出那些靠【自己的屬性】才成為鷹架的節點。**
+   *
+   * @param scaffoldNodeIds 這些**節點**屬於鷹架（組裝點走樹算的）
+   * @param mode `ghost` 才處理；`editable` 還原成一般積木
+   */
+  /**
+   * 🪦 **這裡曾經有一套「鷹架被連帶拖走就放回去」的事件監聽——三次都壞掉。**
+   *
+   * ```
+   * ① 記「父節點」        拖走上面那塊時，鷹架的父節點【沒有變】 → 什麼都沒做
+   * ② 記「該在誰肚子裡」   放回去的時候容器是空的 → return 0 整個消失
+   * ③ …
+   * ```
+   *
+   * 🔴 **根本問題是結構的**：`return 0` 在 Blockly 裡就是學生語句的**下一塊**，
+   * 拖前面必然帶走它。用監聽器對抗框架，只會一直長出新的破口。
+   *
+   * > **同一個地方修三次而每次壞在不同的點，那是設計不對的訊號，
+   * > 不是還沒補好。**
+   *
+   * 🟢 正解在**投影**那一層：`ghost` 模式下 `main` 裡面的鷹架**不畫出來**
+   * ——拖不到，就不可能被帶走（見 `cpp-scaffold-filter.ts` 的 `ghost` 分支）。
+   */
+  /** 每一塊原本的拖曳策略——換回 `editable` 時要還原它。 */
+  private originalDragStrategy = new Map<string, ReturnType<Blockly.BlockSvg['getDragStrategy']>>()
+
+  markScaffoldBlocks(scaffoldNodeIds: ReadonlySet<string>, mode: 'ghost' | 'editable'): void {
+    if (!this.workspace) return
+    const ghostBlockIds = new Set<string>()
+    for (const block of this.workspace.getAllBlocks(false)) {
+      const svgRoot = (block as Blockly.BlockSvg).getSvgRoot?.()
+      if (!svgRoot) continue
+      // 🔴 **反查住在面板裡**——組裝點只說「哪幾個節點」，不必知道積木 id
+      const nodeId = this.getNodeIdForBlockId(block.id)
+      const isScaffold = nodeId !== null && nodeId !== undefined && scaffoldNodeIds.has(nodeId)
+      if (isScaffold && mode === 'ghost') {
+        svgRoot.classList.add('ghost-block')
+        // 🔴 **不用 `setMovable(false)`**——那個旗標會被連接判定讀去，
+        //    於是學生的積木插不進 `main` 與 `return` 之間（實測）。
+        //    「拖不動」由拖曳策略表達（見下面那一段）。
+        block.setEditable(false)
+      } else {
+        svgRoot.classList.remove('ghost-block')
+        // ⚠️ 只還原**我們鎖過的那些**——別的東西可能有自己的理由不能動
+        if (isScaffold) block.setEditable(true)
+      }
+      if (isScaffold && mode === 'ghost') ghostBlockIds.add(block.id)
+    }
+
+    // 🔴 **會出事的是鷹架【上面】那一塊**，不是鷹架自己。
+    //
+    // 鷹架 `setMovable(false)` 已經拖不動了，而 Blockly 的語義是
+    // 「拖一塊就帶走它下面接的一串」——所以要動手腳的是**前一塊**。
+    //
+    // 🟢 Blockly 本來就有這個語義（`shouldHealStack`：按著 Alt 拖曳時，
+    //    後面那一串會接回原位）。這裡只是讓它在該 heal 的時候以為有按。
+    // ⚠️ **只包住真的需要的那幾塊**——「它的 next 鏈裡有鷹架」的才換策略。
+    //    對每一塊都動手腳的話，Blockly 之後的行為改動會在意想不到的地方冒出來。
+    const needsWrap = (b: Blockly.Block): boolean => {
+      for (let n = b.getNextBlock(); n; n = n.getNextBlock()) if (ghostBlockIds.has(n.id)) return true
+      return false
+    }
+    for (const block of this.workspace.getAllBlocks(false)) {
+      const b = block as Blockly.BlockSvg
+      const orig = this.originalDragStrategy.get(b.id) ?? b.getDragStrategy()
+      // 鷹架自己 → 拖不動；它上面那一塊 → 拖走時把它摘出來
+      const isGhost = ghostBlockIds.has(b.id)
+      const wrap = mode === 'ghost' && (isGhost || needsWrap(b))
+      if (wrap && !this.originalDragStrategy.has(b.id)) this.originalDragStrategy.set(b.id, orig)
+      if (wrap) {
+        b.setDragStrategy(isGhost
+          ? immovableDragStrategy()
+          : healingDragStrategy(orig, (id) => ghostBlockIds.has(id), b))
+      }
+      else if (this.originalDragStrategy.has(b.id)) {
+        b.setDragStrategy(this.originalDragStrategy.get(b.id)!)
+        this.originalDragStrategy.delete(b.id)
+      }
+    }
+  }
+
   markOutOfScopeBlocks(visibleComponents: Set<string>): void {
     if (!this.workspace || !this.blockSpecRegistry) return
     const allBlocks = this.workspace.getAllBlocks(false)

@@ -28,16 +28,21 @@ export class CppScaffold implements ProgramScaffold {
    *    第三種外框（Python 的 `__main__`、競賽的快速 IO、Java 的 class）
    *    在那個型別下**表達不出來**。
    */
-  private entryShell = 'main'
+  private entryShellId = 'main'
 
   constructor(resolver: DependencyResolver, entryShell = 'main') {
     this.resolver = resolver
-    this.entryShell = entryShell
+    this.entryShellId = entryShell
   }
 
   /** 換目標時呼叫——⚠️ 換的是同一個實例，因為它被兩個地方持有（見 `ui/app.ts`）。 */
   setEntryShell(shell: string): void {
-    this.entryShell = shell
+    this.entryShellId = shell
+  }
+
+  /** 目前用的是哪一份外框——產生器要問它（見 `ProgramScaffold.entryShell`）。 */
+  entryShell(): string {
+    return this.entryShellId
   }
 
   resolve(tree: SemanticNode, config: ScaffoldConfig): ScaffoldResult {
@@ -79,11 +84,11 @@ export class CppScaffold implements ProgramScaffold {
     //
     // ⚠️ `imports` **不在宣告裡**——那一段是依賴解析器算出來的
     //    （你用了 `cout` 才有 `<iostream>`），不是固定的。
-    const shell = shellById(this.entryShell)
+    const shell = shellById(this.entryShellId)
     if (!shell) {
       // 🔴 **出聲**。靜靜地當成「沒有外框」的話，一個打錯的 shell id
       //    會產出一支少了 `int main()` 的程式，而那看起來像 Arduino。
-      throw new Error(`鷹架宣告 ${this.entryShell} 不存在——目標的 entryShell 指向一個沒有登記的外框`)
+      throw new Error(`鷹架宣告 ${this.entryShellId} 不存在——目標的 entryShell 指向一個沒有登記的外框`)
     }
 
     const section = (lines: readonly ShellLine[], sec: ScaffoldItem['section']): ScaffoldItem[] =>

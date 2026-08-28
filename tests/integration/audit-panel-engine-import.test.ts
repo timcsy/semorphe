@@ -97,6 +97,11 @@ const EXEMPT: Record<string, string> = {
   'src/ui/panels/blockly-panel.ts':
     '它【就是】積木投影本身——inject／serialization／WorkspaceSvg／Events 等 12 種 API。' +
     '把引擎從它身上拿掉等於刪掉這個面板。',
+  'src/ui/panels/ghost-drag-strategy.ts':
+    '它實作的是【Blockly 自己的介面】`IDragStrategy`——回傳值的型別由引擎定義，' +
+    '不是「為了查一個字」而拉進來的。與 `blockly-panel` 同一個理由：' +
+    '把引擎拿掉，這個檔就沒有東西可以實作了。' +
+    '⚠️ 而它【不是面板】，只是住在面板旁邊（唯一的消費者是 `blockly-panel`）。',
 }
 
 /** 一行 import 拉進了引擎嗎。回傳被 import 的路徑，沒有就回 null。 */

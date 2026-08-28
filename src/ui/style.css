@@ -1311,6 +1311,37 @@ html, body {
   width: 3px !important;
 }
 
+/* ─── 鷹架積木的「幽靈」樣式（`ghost` 模式）───
+ *
+ * 🔴 與 Monaco 的 `.ghost-line` 是**同一個決定的兩個投影**——
+ * 兩邊都是 opacity 0.4，所以切換視圖時「哪幾塊是鷹架」看起來一致。
+ *
+ * ⚠️ `pointer-events: none` 不用——那會讓學生連點都點不到，
+ * 而**看得到而點不到**比看得到而拖不動更困惑。鎖的是 `setMovable`。
+ */
+/* 🔴 **只淡它自己那一層，不淡子樹。**
+ *
+ * SVG 的 `opacity` 加在一個 `<g>` 上會**套用到整個子樹**——
+ * 於是把 `int main()` 打淡，它裡面學生自己的積木全部跟著淡了
+ * （使用者 2026-08-28：「**但是裡面的東西不見了**」）。
+ *
+ * > **一個「把這一塊變淡」的寫法，在那一塊裝得下別的東西時
+ * > 會把別人的東西一起變淡。**
+ *
+ * 所以用**直接子代選擇器**：外框自己的路徑與欄位變淡，
+ * 而巢狀的積木（Blockly 的子積木也是 `.blocklyDraggable`）不受影響。 */
+.ghost-block > .blocklyPath {
+  opacity: 0.4;
+  stroke-dasharray: 4 3;
+}
+.ghost-block > text,
+.ghost-block > .blocklyText,
+.ghost-block > .blocklyEditableField,
+.ghost-block > .blocklyNonEditableField,
+.ghost-block > .blocklyIconGroup {
+  opacity: 0.4;
+}
+
 /* ─── Block toolbar (above Blockly panel) ─── */
 
 .quick-access-bar {

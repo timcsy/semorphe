@@ -5,7 +5,7 @@
   "order": 6,
   "topic": "arduino",
   "style": "google",
-  "entryShell": "none",
+  "entryShell": "arduino",
   "provides": [
     "touch",
     "ledc-pwm",

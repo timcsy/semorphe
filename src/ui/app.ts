@@ -56,7 +56,7 @@ import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson, type ScaffoldMode } from '../core/lesson'
-import { shellById, shellsOfLanguage } from '../core/shell'
+import { shellById, shellsOfLanguage, canHideScaffold, entryFunctionOf } from '../core/shell'
 import { lessonById, allTracks, lessonsOfTrack } from '../core/load-lessons'
 import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
@@ -91,8 +91,28 @@ const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]
  * `component.json` 裡自己宣告的，所以換一個語言這裡一個字都不用改。
  */
 function isScaffoldComponent(componentId: string): boolean {
-  const t = componentTraits(componentId)
-  return t?.scaffold === true || t?.scaffoldInMain === true
+  return componentTraits(componentId)?.scaffold === true
+}
+
+/**
+ * 把一個節點**連同它底下的一切**加進集合。
+ *
+ * 🔴 鷹架的**引數也是鷹架**：`return 0` 的那個 `0`、`#include` 的標頭名。
+ * 少了這一層，一顆實心的 `0` 插在一塊淡的「回傳」上，
+ * 看起來像「這個數字是我要改的」——而它不是。
+ */
+function addSubtree(node: { id: string; children?: Record<string, unknown[]> }, out: Set<string>): void {
+  out.add(node.id)
+  for (const k of Object.keys(node.children ?? {})) {
+    for (const c of (node.children![k] ?? []) as { id: string; children?: Record<string, unknown[]> }[]) {
+      addSubtree(c, out)
+    }
+  }
+}
+
+/** 只有**在 main 裡面**才是鷹架的（`return`）——在別的函式裡它是使用者寫的。 */
+function isScaffoldInMainComponent(componentId: string): boolean {
+  return componentTraits(componentId)?.scaffoldInMain === true
 }
 
 /**
@@ -335,10 +355,32 @@ export class App {
    * 🟢 正解是**從語義樹重新投影一次**（`refreshViews`），
    * 那是 `useAsSource('積木')` 以外唯一該碰積木的方向。
    */
+  /**
+   * **剝不掉的外框不得停在「隱藏」。**
+   *
+   * 🔴 Arduino 有兩個進入點（`setup`／`loop`），兩批語句攤平之後分不回去
+   * ——所以 `hidden` 在選單上不端出來（`publishControls`）。而**選單不端出來
+   * 不等於狀態不會是它**：從 C++（`hidden`）切到 Arduino 就會停在那裡，
+   * 而那時畫面顯示「隱藏」卻什麼都沒藏。
+   *
+   * > **一個從選單上拿掉的選項，如果狀態還到得了它，那就只是看不到而已。**
+   */
+  private enforceShellDepthFloor(): void {
+    if (!canHideScaffold(shellById(this.currentShellId)) && this.scaffoldDepth === 0) {
+      this.scaffoldDepth = 1
+      setScaffoldConfig({ scaffoldDepth: this.scaffoldDepth })
+      this.syncController?.setScaffoldDepth(this.scaffoldDepth)
+    }
+  }
+
   private setShell(id: string): void {
     if (!shellById(id)) { console.error(`[shell] 選了一份不存在的外框：${id}`); return }
     this.currentShellId = id
     this.scaffold?.setEntryShell?.(id)
+    // 🔴 **第三個要知道外框的人**（鷹架、補丁器、同步器）——三個都問同一份宣告
+    this.syncController?.setEntryShell?.(id)
+    this.enforceShellDepthFloor()
+    this.updateToolbox()
     this.reprojectFromTree()
     this.publishControls()
   }
@@ -355,6 +397,9 @@ export class App {
     this.syncController?.setScaffoldDepth(this.scaffoldDepth)
     this.updateToolbox()
     this.reprojectFromTree()
+    // ⚠️ `reprojectFromTree` 是非同步的——重畫完才輪得到蓋視覺這一層。
+    //    🔴 少了這一句，切模式之後**要等下一次編輯**才看得到效果。
+    setTimeout(() => this.markOutOfScopeBlocks(), 900)
     this.publishControls()
   }
 
@@ -605,13 +650,21 @@ export class App {
     this.blocklyPanel?.setCodeContext(this.currentTopic.language, DEFAULT_STYLE)
     if (this.scaffold) this.syncController.setProgramScaffold(this.scaffold)
     if (shaping) {
-      this.syncController.setScaffoldNodeFilter(shaping.stripScaffoldNodes as never)
+      // 🔴 **把外框宣告一起交下去**（2026-08-28）——「哪一顆函式是外框」
+      //    在此之前寫死成 `name === 'main'`，於是 Arduino 的 `setup`／`loop`
+      //    永遠不算鷹架。與下面那個補丁器讀的是同一格。
+      this.syncController.setScaffoldNodeFilter(((tree: unknown) =>
+        (shaping.stripScaffoldNodes as (t: unknown, shell: string) => unknown)(
+          tree, this.currentShellId)) as never)
       const patch = shaping.patchCode as (
         code: string, tree: unknown, ns: string, depth: number, shell: string) => string
       this.syncController.setCodePatcher(((code: string, tree: unknown) => patch(
       code, tree, this.currentStylePreset.namespace_style, this.getScaffoldDepth(),
       // 🔴 **第二個「要不要 main」的入口**——鷹架是第一個。兩邊都要問同一份宣告。
-      this.currentTarget.entryShell ?? 'main',
+      // ⚠️ 讀的是 `currentShellId` **不是** `currentTarget.entryShell`（2026-08-28 修）：
+      //    使用者在選單上換了外框之後，目標那一格**不會變**
+      //    ——於是補丁器繼續照舊的外框補，而鷹架那側已經換了。
+      this.currentShellId,
       )) as never)
     }
 
@@ -778,6 +831,8 @@ export class App {
       onBranchesChange: (branches) => {
         const prevDepth = this.getScaffoldDepth()
         this.enabledBranches = branches
+        // 🔴 剝不掉的外框（Arduino）不得停在「隱藏」——見 `enforceShellDepthFloor`
+        this.enforceShellDepthFloor()
         const newDepth = this.getScaffoldDepth()
         setScaffoldConfig({ scaffoldDepth: newDepth })
         this.syncController?.setBranches(branches)
@@ -1109,8 +1164,53 @@ export class App {
     return this.scaffoldDepth
   }
 
+  /**
+   * 畫布上哪幾塊積木屬於**鷹架**。
+   *
+   * 🔴 **走樹，不是掃元件身分**——`int main()` 是靠
+   * 「函式定義 ＋ 名字叫 main」才成為鷹架的（`cpp-scaffold-filter.ts:20`），
+   * 而那是**節點**的性質。只看元件身分的話它會漏掉外框最重要的那一塊。
+   *
+   * ⚠️ 而 `return` 只有**在 main 裡面**才是鷹架（`scaffoldInMain`）
+   * ——在別的函式裡它是使用者寫的東西。所以這裡要看它的**位置**。
+   *
+   * 🔴 回的是**節點 id**，由面板自己反查成積木——那份對應住在面板裡
+   * （`getNodeIdForBlockId`），組裝點不該複製一份。
+   */
+  private scaffoldNodeIds(): Set<string> {
+    const out = new Set<string>()
+    const tree = this.syncController?.getCurrentTree()
+    if (!tree) return out
+    // 🔴 **「哪一顆函式是外框」問宣告**（2026-08-28）。寫死 `'main'` 的話，
+    //    Arduino 上把顯示切成「淡的」會**什麼都不變**——而那正是使用者
+    //    「我希望 Arduino 系列也有腳手架」指的那件事。
+    //    ⚠️ 它有【兩顆】（`setup`／`loop`），所以這裡不能只找一顆。
+    const shell = shellById(this.currentShellId)
+    for (const node of tree.children?.body ?? []) {
+      const n = node as { id: string; componentId: string; properties?: Record<string, unknown>; children?: Record<string, unknown[]> }
+      if (isScaffoldComponent(n.componentId)) { addSubtree(n, out); continue }
+      // 進入點那一塊：它自己 ＋ 它裡面那些「只有在進入點裡才是鷹架」的
+      if (isFunctionDefinition(n.componentId) && entryFunctionOf(shell, n.properties?.name)) {
+        out.add(n.id)
+        for (const stmt of (n.children?.body ?? []) as { id: string; componentId: string }[]) {
+          // ⚠️ **連它插著的東西一起**——`return 0` 的那個 `0` 也是鷹架的一部分。
+          //    少了它，一顆實心的 `0` 插在一塊淡的 `回傳` 上，看起來像
+          //    「這個數字是我要改的」——而它不是。
+          if (isScaffoldInMainComponent(stmt.componentId)) addSubtree(stmt, out)
+        }
+      }
+    }
+    return out
+  }
+
   private markOutOfScopeBlocks(): void {
     this.blocklyPanel?.markOutOfScopeBlocks(this.getVisibleComponents())
+    // 🔴 **鷹架的顯示模式也在這裡套用**——與「超出範圍」同一個時機
+    //    （畫完之後在既有的積木上蓋一層視覺）。
+    this.blocklyPanel?.markScaffoldBlocks(
+      this.scaffoldNodeIds(),
+      this.scaffoldDepth === 1 ? 'ghost' : 'editable',
+    )
   }
 
   private reloadBlockSpecsForTopic(): void {
@@ -1177,14 +1277,12 @@ export class App {
     const tree = this.blocklyPanel?.extractSemanticTree()
     if (!tree) return
     const code = this.codeView?.getCode() ?? ''
-    const depth = this.getScaffoldDepth()
-    const needsRelift = depth > 0 && !(tree.children.body ?? []).some(
-      (n: { componentId: string; properties: Record<string, unknown> }) =>
-        isFunctionDefinition(n.componentId) && n.properties.name === 'main'
-    )
-    // 🟢 **2026-08-26：不再需要先解析一次再塞進快取**——`resyncForTopic`
-    //    自己會 `await this.parser.parse(...)`（那個 parser 現在是真的）。
-    void needsRelift
+    // 🪦 這裡本來算一個 `needsRelift`，**算完就 `void` 掉**（2026-08-26 起）
+    //    ——`resyncForTopic` 自己會判同一件事。
+    //    🔴 而它裡面寫死了 `name === 'main'`，於是它是「哪一塊是外框」
+    //    這個決定的**第四份實作**——一份沒有人用的實作。
+    //
+    // > **一段算完就丟掉的判斷，仍然會被當成規範讀。**
     this.syncController?.resyncForTopic(tree, code)
   }
 
@@ -1224,6 +1322,7 @@ export class App {
     // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
     this.currentShellId = target.entryShell ?? 'main'
     this.scaffold?.setEntryShell?.(this.currentShellId)
+    this.syncController?.setEntryShell?.(this.currentShellId)
         const prevDepth = this.getScaffoldDepth()
         this.currentTarget = target
         this.currentTopic = topic
@@ -1524,8 +1623,14 @@ export class App {
         //    一次點擊只改一個軸——混在一起的話「我剛剛改了什麼」會說不清楚。
         const cur = shellById(this.currentShellId)
         const mine = shellsOfLanguage(this.currentTopic.language)
+        // 🔴 **`hidden` 不是每一種外框都做得到**（2026-08-28）：
+        //    Arduino 有兩個進入點，兩批語句攤平成一串之後**分不回去**
+        //    ——那不是「藏起來」，是把資訊弄丟。
+        //    使用者：「這也會**被你選什麼目標限制有哪些選擇**」。
         const MODES: readonly [ScaffoldMode, string, string][] = [
-          ['hidden', '隱藏', '積木上只留你自己的邏輯'],
+          ...(canHideScaffold(cur)
+            ? [['hidden', '隱藏', '積木上只留你自己的邏輯'] as [ScaffoldMode, string, string]]
+            : []),
           ['ghost', '淡的', '看得到、動不了，旁邊寫著為什麼'],
           ['editable', '完整', '整支程式，你改得動'],
         ]

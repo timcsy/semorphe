@@ -55,6 +55,8 @@ import { Lifter } from './lift/lifter'
 import { SemanticBus } from './semantic-bus'
 import { abstractComponentOf, variableTypeOf } from './language-executors'
 import { isFunctionDefinition } from './component/traits'
+// 🔴 「樹裡哪一塊是外框」由**鷹架宣告**回答（2026-08-28）——見 `EntryFunction`
+import { shellById, shellFramePresent } from './shell'
 
 /** Scaffold node filter type — strips scaffold nodes for L0 display */
 export type ScaffoldNodeFilter = (tree: SemanticNode) => SemanticNode
@@ -235,6 +237,25 @@ export class SyncController {
     this.scaffoldNodeFilter = fn
   }
 
+
+  /**
+   * **送去畫的那一份樹**——⚠️ 不是真相，是投影。
+   *
+   * ```
+   * 深度 0  hidden     整組鷹架剝掉
+   * 深度 1  ghost      外框留著，【入口點裡面的】剝掉  ← 拖不到就帶不走
+   * 深度 2  editable   原樣
+   * ```
+   */
+  private applyScaffoldFilter(tree: SemanticNode): SemanticNode {
+    const d = this.getScaffoldDepth()
+    if (d === 0) return this.scaffoldNodeFilter(tree)
+    // 🔴 **ghost 不剝任何東西**——使用者要它看得見（2026-08-28）。
+    //    「拖不走」由拖曳策略處理（`ghost-drag-strategy.ts`），不是靠藏起來。
+    if (d === 1) return tree
+    return tree
+  }
+
   /**
    * Set a display tree enhancer — called just before renderToBlocklyState() to inject
    * virtual nodes (e.g., auto-include cpp_include nodes) into the display tree.
@@ -312,7 +333,7 @@ export class SyncController {
       // Inject auto-include blocks and re-render so blocks panel reflects new includes.
       // Uses busUpdateInProgress flag (in blockly-panel) to prevent onChange feedback loop.
       // Note: keep blockMappings from blocklyState (set above) — don't overwrite with re-render IDs.
-      const displayTree = this.shouldStripScaffold() ? this.scaffoldNodeFilter(tree) : tree
+      const displayTree = this.applyScaffoldFilter(tree)
       const renderResult = renderToBlocklyState(this.enhanceDisplayTree(displayTree))
 
       // ⚠️ `source: 'blocks'` 保留原義（「樹被某個視圖改了」），而**誰改的**
@@ -380,7 +401,7 @@ export class SyncController {
             this.currentTree = converted
             const { mappings: convMappings } = generateCodeWithMapping(converted, this.language, this.style)
             this.codeMappings = convMappings
-            const convDisplay = this.shouldStripScaffold() ? this.scaffoldNodeFilter(converted) : converted
+            const convDisplay = this.applyScaffoldFilter(converted)
             const convRender = renderToBlocklyState(this.enhanceDisplayTree(convDisplay))
             this.blockMappings = convRender.blockMappings
       
@@ -522,6 +543,17 @@ export class SyncController {
    */
   // ⚠️ **非同步**（2026-08-26， 改成 Promise 之後）。
   //    三個呼叫點（`app.ts:770/771/773`）都是 fire-and-forget，回傳值沒有人接。
+  /**
+   * 目前用哪一份外框——**「哪一顆函式是外框」問它**（2026-08-28）。
+   *
+   * ⚠️ 預設 `'main'` 與改動前逐字相同：在此之前這裡寫死 `name === 'main'`。
+   */
+  private entryShellId = 'main'
+
+  setEntryShell(id: string): void {
+    this.entryShellId = id
+  }
+
   async resyncForTopic(extractedTree: SemanticNode, currentCode: string): Promise<void> {
     if (this.syncing) return
     this.syncing = true
@@ -530,10 +562,18 @@ export class SyncController {
 
       // If switching TO L1/L2 and tree has no main func (body-only from L0),
       // re-lift from the current code to get the full tree
-      const hasMainFunc = (extractedTree.children.body ?? []).some(
-        n => isFunctionDefinition(n.componentId) && n.properties.name === 'main'
-      )
-      if (this.getScaffoldDepth() > 0 && !hasMainFunc && this.lifter && this.parser) {
+      // 🔴 **「哪一顆函式是外框」問宣告**（2026-08-28）——在此之前這裡寫死
+      //    `name === 'main'`，而那是同一個決定的**第五份實作**
+      //    （鷹架、補丁器、過濾器、`app.ts` 各一份）。
+      //    症狀：Arduino 的樹永遠被判成「body-only」，於是每次都重新 lift 一遍。
+      //
+      // ⚠️ 沒有進入點的外框（Python 的 `python-none`）**維持原樣**回 `false`
+      //    ——那與改動前逐字相同，不是這一刀要動的東西。
+      const shell = shellById(this.entryShellId)
+      const framePresent = shellFramePresent(shell, (name) =>
+        (extractedTree.children.body ?? []).some(
+          n => isFunctionDefinition(n.componentId) && n.properties.name === name))
+      if (this.getScaffoldDepth() > 0 && !framePresent && this.lifter && this.parser) {
         const parseResult = await this.parser.parse(currentCode)
         const rootNode = parseResult.rootNode as import('../core/lift/types').AstNode
         if (rootNode) {

@@ -165,6 +165,18 @@ export interface LanguagePack {
     moduleRegistry: unknown
     scaffold: unknown
     stripScaffoldNodes: (...a: never[]) => unknown
+    /**
+     * `ghost` 模式的過濾——**外框留著，而入口點裡面的鷹架剝掉**。
+     *
+     * 🔴 那些非剝不可：它們在積木上是學生語句的**下一塊**，
+     * 拖前面必然帶走它們，而「不能拖它」擋不住「被帶走」。
+     * **拖不到，就不可能被帶走。**
+     *
+     * ⚠️ 選填——沒有宣告的語言，`ghost` 與 `editable` 在積木上相同。
+     */
+    // 🪦 `stripInMainScaffold` 已於 2026-08-28 移除——**零消費者**。
+    //    它是被使用者否決的那條路（「我又想彈的那邊也都是積木」）留下的殘骸；
+    //    見 `cpp-scaffold-filter.ts` 的墓碑。
     patchCode: (...a: never[]) => unknown
     autoIncludeNodes: (...a: never[]) => unknown
   } | null
