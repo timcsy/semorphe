@@ -1,0 +1,7 @@
+{
+  "title": "程式從哪開始",
+  "estimate": "15 分鐘",
+  "pins": { "target": "cpp" },
+  "components": ["cpp:print", "cpp:literal_string", "cpp:endl"],
+  "check": { "stdout": "Hello!\n", "stdin": [] }
+}

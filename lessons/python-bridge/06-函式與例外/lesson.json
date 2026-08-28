@@ -10,12 +10,10 @@
     "python:container_sum",
     "python:exception_case",
     "python:func_call",
-    "python:func_def",
     "python:lambda",
     "python:literal_number",
     "python:literal_string",
     "python:print",
-    "python:return",
     "python:try_catch",
     "python:var_assign",
     "python:var_ref"

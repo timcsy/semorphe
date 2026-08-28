@@ -8,7 +8,6 @@
     "cpp:analog_write",
     "cpp:compare",
     "cpp:delay",
-    "cpp:func_def",
     "cpp:increment",
     "cpp:literal_number",
     "cpp:loop_count",

@@ -6,7 +6,6 @@
   },
   "components": [
     "cpp:compare",
-    "cpp:func_def",
     "cpp:if",
     "cpp:literal_number",
     "cpp:literal_string",

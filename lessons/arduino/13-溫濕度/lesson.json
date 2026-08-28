@@ -9,7 +9,6 @@
     "cpp:dht_declare",
     "cpp:dht_open",
     "cpp:dht_read",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:serial_open",
     "cpp:serial_print",

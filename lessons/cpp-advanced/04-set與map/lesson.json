@@ -7,14 +7,12 @@
   "components": [
     "cpp:container_count",
     "cpp:endl",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:literal_string",
     "cpp:map_assign",
     "cpp:map_at",
     "cpp:map_declare",
     "cpp:print",
-    "cpp:return",
     "cpp:set_declare",
     "cpp:set_insert",
     "cpp:vector_size"

@@ -8,12 +8,10 @@
     "cpp:container_pop",
     "cpp:container_push",
     "cpp:endl",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:print",
     "cpp:priority_queue_declare",
-    "cpp:priority_queue_peek",
-    "cpp:return"
+    "cpp:priority_queue_peek"
   ],
   "check": {
     "stdout": "7\n3",

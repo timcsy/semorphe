@@ -6,13 +6,11 @@
   },
   "components": [
     "cpp:endl",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:literal_string",
     "cpp:loop_range",
     "cpp:print",
     "cpp:range_sort",
-    "cpp:return",
     "cpp:var_ref",
     "cpp:vector_declare"
   ],

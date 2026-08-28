@@ -6,11 +6,9 @@
   },
   "components": [
     "cpp:address_of",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:pointer_declare",
     "cpp:print_formatted",
-    "cpp:return",
     "cpp:struct_at_member",
     "cpp:struct_at_ptr",
     "cpp:struct_declare",

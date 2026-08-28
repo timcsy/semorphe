@@ -69,7 +69,7 @@ for i, n in enumerate(names):
 
 > ⚠️ **不要為了拿位置而寫 `for i in range(len(names))`。**
 > 那能跑，而 `enumerate` 是這個語言想要你寫的方式——
-> 少一個地方會寫錯，就是少一個 bug（C++ 入門第 13 課那句話）。
+> 少一個地方會寫錯，就是少一個 bug（C++ 入門第 14 課那句話）。
 
 ## 四、`while` 一模一樣
 

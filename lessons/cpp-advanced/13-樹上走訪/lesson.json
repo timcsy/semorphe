@@ -18,7 +18,6 @@
     "cpp:literal_number",
     "cpp:loop_range",
     "cpp:print",
-    "cpp:return",
     "cpp:var_ref",
     "cpp:vector_declare"
   ],

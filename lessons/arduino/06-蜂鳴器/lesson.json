@@ -6,7 +6,6 @@
   },
   "components": [
     "cpp:delay",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:pin_mode",
     "cpp:tone",

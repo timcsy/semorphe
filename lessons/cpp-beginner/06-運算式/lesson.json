@@ -7,12 +7,10 @@
   "components": [
     "cpp:compare",
     "cpp:endl",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:logic",
     "cpp:logic_not",
     "cpp:print",
-    "cpp:return",
     "cpp:var_declare",
     "cpp:var_ref"
   ],

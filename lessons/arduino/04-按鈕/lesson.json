@@ -8,7 +8,6 @@
     "cpp:compare",
     "cpp:digital_read",
     "cpp:digital_write",
-    "cpp:func_def",
     "cpp:if",
     "cpp:literal_number",
     "cpp:pin_mode",

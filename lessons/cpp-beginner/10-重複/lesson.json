@@ -8,11 +8,9 @@
     "cpp:arithmetic",
     "cpp:compare",
     "cpp:endl",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:loop_while",
     "cpp:print",
-    "cpp:return",
     "cpp:var_assign",
     "cpp:var_declare",
     "cpp:var_ref"

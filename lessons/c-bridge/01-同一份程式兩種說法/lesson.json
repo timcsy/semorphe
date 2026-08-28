@@ -5,10 +5,8 @@
     "target": "c"
   },
   "components": [
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:print_formatted",
-    "cpp:return",
     "cpp:var_declare",
     "cpp:var_ref"
   ],

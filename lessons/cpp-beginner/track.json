@@ -4,5 +4,5 @@
   "order": 1,
   "description": "從零開始學程式",
   "scaffold": "ghost",
-  "_scaffold_why": "第 1 課教 main，而 #include／using 一個字都沒提——看得到（教得了）、動不了（拆不壞）"
+  "_scaffold_why": "軌道的預設是 ghost，而**第 1～3 課用 pins 蓋成 hidden**：那三課一個字都沒提 #include／main，畫出來只是四塊看不懂的東西。第 4 課「程式從哪開始」就是把它們拆開的那一課——**鷹架在那裡開始撤**。（2026-08-28 使用者：「為何我選 C++ 的第一門課骨架不是隱藏的？」）"
 }

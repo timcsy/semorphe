@@ -8,12 +8,10 @@
     "cpp:compare",
     "cpp:continue",
     "cpp:endl",
-    "cpp:func_def",
     "cpp:if",
     "cpp:literal_number",
     "cpp:loop_count",
     "cpp:print",
-    "cpp:return",
     "cpp:var_ref"
   ],
   "check": {

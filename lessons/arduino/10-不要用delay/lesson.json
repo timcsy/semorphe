@@ -8,7 +8,6 @@
     "cpp:arithmetic",
     "cpp:compare",
     "cpp:digital_write",
-    "cpp:func_def",
     "cpp:if",
     "cpp:literal_number",
     "cpp:millis",

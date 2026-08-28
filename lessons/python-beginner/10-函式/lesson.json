@@ -7,11 +7,9 @@
   "components": [
     "python:arithmetic",
     "python:func_call",
-    "python:func_def",
     "python:literal_number",
     "python:literal_string",
     "python:print",
-    "python:return",
     "python:var_ref"
   ],
   "check": {

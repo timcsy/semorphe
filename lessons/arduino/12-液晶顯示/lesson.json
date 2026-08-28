@@ -5,7 +5,6 @@
     "target": "arduino-uno"
   },
   "components": [
-    "cpp:func_def",
     "cpp:lcd_at",
     "cpp:lcd_declare",
     "cpp:lcd_open",

@@ -9,13 +9,11 @@
     "cpp:break",
     "cpp:compare",
     "cpp:endl",
-    "cpp:func_def",
     "cpp:if",
     "cpp:literal_number",
     "cpp:literal_string",
     "cpp:loop_while",
     "cpp:print",
-    "cpp:return",
     "cpp:var_assign",
     "cpp:var_declare",
     "cpp:var_ref"

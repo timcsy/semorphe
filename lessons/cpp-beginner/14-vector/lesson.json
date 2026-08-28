@@ -7,11 +7,9 @@
   "components": [
     "cpp:container_append",
     "cpp:endl",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:loop_range",
     "cpp:print",
-    "cpp:return",
     "cpp:var_ref",
     "cpp:vector_declare",
     "cpp:vector_size"

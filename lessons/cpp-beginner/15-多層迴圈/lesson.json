@@ -8,13 +8,11 @@
     "cpp:array_2d_at",
     "cpp:array_2d_declare",
     "cpp:endl",
-    "cpp:func_def",
     "cpp:initializer_list",
     "cpp:literal_number",
     "cpp:literal_string",
     "cpp:loop_count",
     "cpp:print",
-    "cpp:return",
     "cpp:var_ref"
   ],
   "check": {

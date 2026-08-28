@@ -1,14 +1,18 @@
 {
   "title": "印出一句話",
   "estimate": "20 分鐘",
-  "pins": { "target": "cpp" },
+  "pins": {
+    "target": "cpp",
+    "scaffold": "hidden"
+  },
   "components": [
-    "cpp:func_def",
     "cpp:print",
     "cpp:literal_string",
-    "cpp:endl",
-    "cpp:return",
-    "cpp:literal_number"
+    "cpp:endl"
   ],
-  "check": { "stdout": "Hello!\n", "stdin": [] }
+  "check": {
+    "stdout": "Hello!\n",
+    "stdin": []
+  },
+  "_pins_scaffold_why": "第 1～3 課只給學生自己放的那幾塊；外框第 4 課才拆開"
 }

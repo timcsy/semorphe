@@ -14,7 +14,6 @@
     "cpp:container_pop",
     "cpp:container_push",
     "cpp:endl",
-    "cpp:func_def",
     "cpp:if",
     "cpp:literal_number",
     "cpp:logic_not",
@@ -23,7 +22,6 @@
     "cpp:print",
     "cpp:queue_declare",
     "cpp:queue_front",
-    "cpp:return",
     "cpp:var_declare",
     "cpp:var_ref",
     "cpp:vector_declare"

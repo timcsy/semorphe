@@ -1,16 +1,21 @@
 {
   "title": "記住資料",
   "estimate": "25 分鐘",
-  "pins": { "target": "cpp" },
+  "pins": {
+    "target": "cpp",
+    "scaffold": "hidden"
+  },
   "components": [
-    "cpp:func_def",
     "cpp:var_declare",
     "cpp:literal_number",
     "cpp:literal_char",
     "cpp:print",
     "cpp:var_ref",
-    "cpp:endl",
-    "cpp:return"
+    "cpp:endl"
   ],
-  "check": { "stdout": "16\n1.72\nA\n", "stdin": [] }
+  "check": {
+    "stdout": "16\n1.72\nA\n",
+    "stdin": []
+  },
+  "_pins_scaffold_why": "同上"
 }

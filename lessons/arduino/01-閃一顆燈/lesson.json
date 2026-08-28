@@ -7,7 +7,6 @@
   "components": [
     "cpp:delay",
     "cpp:digital_write",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:pin_mode",
     "cpp:var_ref"

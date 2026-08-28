@@ -8,7 +8,6 @@
     "cpp:analog_read",
     "cpp:analog_write",
     "cpp:delay",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:pin_mode",
     "cpp:range_remap",

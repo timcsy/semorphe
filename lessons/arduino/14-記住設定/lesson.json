@@ -8,7 +8,6 @@
     "cpp:arithmetic",
     "cpp:eeprom_read",
     "cpp:eeprom_write",
-    "cpp:func_def",
     "cpp:literal_number",
     "cpp:serial_open",
     "cpp:serial_print",
