@@ -82,6 +82,23 @@ function runGroupMarkup(): string {
       </div>`
 }
 
+/**
+ * 專案的家。⚠️ **只有一處**——第二處會在改名或搬家的那天安靜地指向舊的地方。
+ */
+const GITHUB_URL = 'https://github.com/timcsy/semorphe'
+
+/**
+ * GitHub 的商標（Octocat mark，16×16）——**內嵌**，不是一個請求。
+ *
+ * 🔴 這是「離線可用」與「要有 GitHub 標誌」兩個要求同時成立的唯一形狀：
+ * 一個 `<img src="https://github.com/…">` 會讓第四十五條當場紅，
+ * 而它換來的只是同一個圖形。
+ *
+ * ⚠️ `fill="currentColor"`：它跟著按鈕的文字色走，
+ * hover 與 focus 時不會留下一塊顏色對不上的圖。
+ */
+const GITHUB_MARK = 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z'
+
 export function createAppLayout(
   appEl: HTMLElement,
   blockSpecRegistry: BlockSpecRegistry,
@@ -144,9 +161,39 @@ export function createAppLayout(
         </div>
       </div>` : ''
 
+  /**
+   * **在 GitHub 給星星**——星星 ＋ 數字，放在「執行」**左邊**
+   * （使用者 2026-08-30 指定的位置）。
+   *
+   * 🔴 **不是 GitHub 官方那顆 iframe**（`ghbtns.com`）：它是淺色的、樣式改不到、
+   * 載不出來時是一個空洞，而且是一段別人的程式碼跑在我們的頁面上。
+   * 這裡自己畫，商標**內嵌 SVG**。
+   *
+   * 🪦 **星星數拿掉了**（使用者 2026-08-30：「我覺得不用把目前星星數寫出來」）。
+   * 而那一刀連帶把**這個專案的第一個外部請求**收掉了：
+   *
+   * ```
+   * 有數字   要打 api.github.com → 第四十五條要從「硬性零」改寫成「只准是裝飾」
+   *          ＋ 一支「把那個主機擋掉還要能用」＋ 一個具名豁免 ＋ 一份快取
+   * 沒數字   零外部請求，第四十五條【一個字都不用動】
+   * ```
+   *
+   * > **一個看起來只是「少顯示一個數字」的決定，
+   * > 收掉的是一整條相依、一次判準改寫、與一份快取。**
+   */
+  const githubStar = profile.features.projectLink ? `
+      <a class="github-star" href="${GITHUB_URL}" target="_blank" rel="noopener noreferrer"
+         title="到 GitHub 給這個專案一顆星"
+        ><svg class="github-star-mark" viewBox="0 0 16 16" width="15" height="15"
+              aria-hidden="true" focusable="false"><path fill="currentColor" d="${GITHUB_MARK}"/></svg
+        ><span class="github-star-label">Star</span></a>` : ''
+
   const headerActions = [
     inToolbar('style') ? '<span id="style-selector-mount"></span>' : '',
     inToolbar('locale') ? '<span id="locale-selector-mount"></span>' : '',
+    // 🔴 **星星在「執行」左邊**——使用者 2026-08-30 指定。
+    //    ⚠️ 而它在分隔線的**外側**：分隔線隔開的是「這個專案」與「對程式做什麼」。
+    githubStar,
     inToolbar('run') ? `<span class="toolbar-separator"></span>${runGroupMarkup()}` : '',
     // ⚠️ 這兩顆屬於行動版，不是控制項登錄表的成員——它們的開關一直是 `mobileLayout`。
     profile.features.mobileLayout

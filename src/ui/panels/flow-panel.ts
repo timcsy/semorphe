@@ -162,6 +162,8 @@ export class FlowPanel implements ViewHost {
   private setPaletteOpen(open: boolean): void {
     this.paletteOpen = open
     this.toolboxEl.style.display = open ? '' : 'none'
+    // 🔴 **收合鈕要站在「目前展開到哪裡」的最外緣**——見 `syncPaletteEdge`
+    this.container.classList.toggle('flow-palette-closed', !open)
     if (!open) this.closeFlyout()
     this.paletteToggle.textContent = open ? '◀' : '▶'
     this.paletteToggle.setAttribute(
@@ -298,6 +300,16 @@ export class FlowPanel implements ViewHost {
     for (const btn of this.toolboxEl?.querySelectorAll('.flow-cat') ?? []) {
       btn.classList.toggle('active', (btn as HTMLElement).dataset.category === this.openCategory)
     }
+    // 🔴 **第二層開著時，收合鈕要移到它的外緣**（2026-08-30，使用者：
+    //    「流程視圖 palette 行動版多階層收合位置有問題」）。
+    //
+    // 量出來的：分類條 x=0..84、**收合鈕 x=84..106**、彈出格 x=106..256。
+    // 那顆鈕收的是**整個** palette（兩層一起），而它站在**第一層**的邊緣上
+    // ——第二層一打開，它就被夾在兩層中間，看起來不屬於任何一邊。
+    //
+    // > **一顆按鈕的位置在說「我管的是這一塊」。
+    // > 它管兩層而站在第一層的邊上，那句話就是錯的。**
+    this.container.classList.toggle('flow-flyout-open', Boolean(this.openCategory))
     if (!this.openCategory) { this.paletteEl.style.display = 'none'; return }
     this.paletteEl.style.display = ''
     for (const item of this.byCategory().get(this.openCategory) ?? []) {

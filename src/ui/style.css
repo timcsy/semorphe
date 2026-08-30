@@ -1909,7 +1909,17 @@ html, body {
      用 `flex` 的順序就位，不必像 Blockly 那顆去算 `left`。 */
   body:not(.host-no-mobile-layout) .flow-palette-toggle {
     display: flex;
-    align-self: center;
+    /* 🔴 **絕對定位，而 `left` 跟著「目前展開到哪裡」走**（2026-08-30）。
+       在此之前它是 flex 的一員，於是永遠停在**分類條的右緣**
+       ——而它收的是**整個** palette（兩層）。第二層一打開，
+       它就被夾在 x=84..106 那條 22px 的縫裡，看起來不屬於任何一邊。
+
+       > 一顆按鈕的位置在說「我管的是這一塊」。
+       > 它管兩層而站在第一層的邊上，那句話就是錯的。 */
+    position: absolute;
+    left: var(--flow-toolbox-w);
+    top: 50%;
+    transform: translateY(-50%);
     flex: none;
     z-index: 20;
     width: 22px;
@@ -1927,9 +1937,28 @@ html, body {
   }
   body:not(.host-no-mobile-layout) .flow-palette-toggle:active { background: #444; }
 
-  /* ⚠️ 行動版的畫布窄，分類條也跟著窄一點 */
-  body:not(.host-no-mobile-layout) .flow-toolbox { width: 84px; }
-  body:not(.host-no-mobile-layout) .flow-palette { left: 106px; width: 150px; }
+  /* ⚠️ 行動版的畫布窄，分類條也跟著窄一點。
+     🔴 **三個數字收成變數**：收合鈕要算「展開到哪裡」，而那個座標
+     在此之前得在兩個地方各寫一次同一個數字。 */
+  body:not(.host-no-mobile-layout) {
+    --flow-toolbox-w: 84px;
+    --flow-palette-left: 106px;
+    --flow-palette-w: 150px;
+  }
+  body:not(.host-no-mobile-layout) .flow-toolbox { width: var(--flow-toolbox-w); }
+  body:not(.host-no-mobile-layout) .flow-palette {
+    left: var(--flow-palette-left);
+    width: var(--flow-palette-w);
+  }
+
+  /* ① 分類條收起來了 → 鈕貼在畫布最左邊（它是「打開積木盤」的那顆） */
+  body:not(.host-no-mobile-layout) .flow-panel.flow-palette-closed .flow-palette-toggle {
+    left: 0;
+  }
+  /* ② 第二層開著 → 鈕站在**彈出格的外緣**，而不是夾在兩層中間 */
+  body:not(.host-no-mobile-layout) .flow-panel.flow-flyout-open .flow-palette-toggle {
+    left: calc(var(--flow-palette-left) + var(--flow-palette-w));
+  }
 
   /* #editors uses flex: 1 from base styles — tab bar is now in normal
      flex flow, so #editors automatically gets the correct height */
@@ -2278,4 +2307,46 @@ html, body {
 /* 🔴 **接點不跟著變淡**——它還是連得上去的，而畫面要說出這件事。 */
 .fc-ghost .fc-port {
   opacity: 1;
+}
+
+/* ─── 在 GitHub 給星星（2026-08-30） ──────────────────────────────
+   🔴 使用者指定放在「執行」左邊。
+   ⚠️ 自己畫的，不是 `ghbtns.com` 那顆 iframe——那顆是淺色的、樣式改不到，
+   而且載不出來時是一個空洞。這裡拿不到數字就只是**少一格**。 */
+.github-star {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 9px;
+  margin-right: 4px;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #2d2d2d;
+  color: #cccccc;
+  font-size: 12px;
+  line-height: 20px;
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.github-star:hover {
+  background: #3a3a3a;
+  border-color: #4a4a4a;
+  color: #ffffff;
+}
+/* 🔴 商標是**內嵌 SVG**，跟著文字色走（`fill="currentColor"`）
+   ——一個外連的圖會讓第四十五條當場紅，而換來的是同一個圖形。 */
+.github-star-mark {
+  display: block;
+  flex: 0 0 auto;
+}
+.github-star-label {
+  line-height: 20px;
+}
+/* 🪦 `.github-star-count` 已移除（2026-08-30，使用者：「不用把目前星星數寫出來」）
+   ——而它連帶收掉了這個專案的第一個外部請求。 */
+/* ⚠️ 鍵盤走得到——它是一條連結，而 `outline: none` 會讓它走得到卻看不見 */
+.github-star:focus-visible {
+  outline: 2px solid #4a90d9;
+  outline-offset: 1px;
 }
