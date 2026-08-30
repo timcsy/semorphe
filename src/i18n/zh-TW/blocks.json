@@ -178,7 +178,6 @@
   "FIELD_CUSTOM_VALUE": "自訂…",
   "FIELD_CUSTOM_PROMPT": "輸入自訂的值",
   "PANEL_FLOW": "流程",
-  "FLOW_SCOPE_ALL": "整份程式",
   "FLOW_AUTOLAYOUT": "自動排版",
   "FLOW_EMPTY": "還沒有可以畫的流程。",
   "PANEL_CLEAR": "清除",
@@ -649,5 +648,7 @@
   "FLOW_NO_REDO": "沒有可以重做的動作了",
   "FLOW_DELETE_NODE": "刪掉這一塊（可以還原）",
   "FLOW_DELETE_WIRE": "點一下：把這一端拿掉（可以還原）",
-  "FLOW_SELECT_WIRE": "點一下選它，再按 ✕ 或 Delete 拿掉這一端"
+  "FLOW_SELECT_WIRE": "點一下選它，再按 ✕ 或 Delete 拿掉這一端",
+  "FLOW_MENU_DELETE": "刪掉這一塊",
+  "FLOW_MENU_DELETE_WIRE": "刪掉這一端"
 }

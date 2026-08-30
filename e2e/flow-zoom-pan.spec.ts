@@ -60,11 +60,19 @@ async function openFlow(page: import('@playwright/test').Page): Promise<void> {
   await page.waitForTimeout(1800)
 }
 
+/** 目前的倍率——**從鏡頭的 `transform` 讀**（2026-08-30 起 SVG 自己不再變大）。 */
 const zoomNow = (page: import('@playwright/test').Page): Promise<number> =>
   page.evaluate(() => {
-    const s = document.querySelector('.flow-svg')
-    const vb = (s?.getAttribute('viewBox') ?? '0 0 1 1').split(' ')
-    return Number(s?.getAttribute('width')) / Number(vb[2])
+    const t = document.querySelector('.fc-viewport')?.getAttribute('transform') ?? ''
+    return Number(/scale\(([-\d.]+)\)/.exec(t)?.[1] ?? '0')
+  })
+
+/** 鏡頭的位移。 */
+const panNow = (page: import('@playwright/test').Page): Promise<{ x: number; y: number }> =>
+  page.evaluate(() => {
+    const t = document.querySelector('.fc-viewport')?.getAttribute('transform') ?? ''
+    const m = /translate\(([-\d.]+),([-\d.]+)\)/.exec(t)
+    return { x: Number(m?.[1] ?? 0), y: Number(m?.[2] ?? 0) }
   })
 
 test('★ 縮放：三顆按鈕，而倍率真的變了', async ({ page }) => {
@@ -87,14 +95,43 @@ test('★ 縮放：三顆按鈕，而倍率真的變了', async ({ page }) => {
   await page.waitForTimeout(400)
   expect(await zoomNow(page), '🔴 按了縮小而沒有變小').toBeLessThan(bigger)
 
-  // 🔴 **`viewBox` 不准動**——內部座標一變，節點位置與存下來的佈局就全歪了
-  const vb = await page.locator('.flow-svg').getAttribute('viewBox')
+  // 🔴 **節點的座標不准動**——縮放只該動鏡頭。座標一變，存下來的佈局就歪了。
+  const before = await page.locator('.fc-node').first().getAttribute('transform')
   await page.locator('.flow-zoom-btn').last().click()
   await page.waitForTimeout(300)
   expect(
-    await page.locator('.flow-svg').getAttribute('viewBox'),
-    '🔴 縮放動到了 `viewBox`——那會把整個座標系一起縮，存下來的佈局會歪掉',
-  ).toBe(vb)
+    await page.locator('.fc-node').first().getAttribute('transform'),
+    '🔴 縮放動到了節點自己的座標——那會把存下來的佈局弄歪',
+  ).toBe(before)
+})
+
+test('★ 拖空白處＝推畫面，而且【不受內容大小限制】', async ({ page }) => {
+  // 🔴 使用者 2026-08-30：「手機那邊，拖曳、縮放、刪除還是很難用」。
+  //
+  // 量出來的根因（400×780）：
+  //
+  // ```
+  // 100%    縱向可捲 = 0        直的完全推不動
+  // 縮小後  橫向也 = 0          整張圖完全推不動
+  // ```
+  //
+  // 原生 `overflow: auto` 的捲動**只在內容比視窗大時存在**，而流程圖
+  // 通常比手機畫面小。
+  //
+  // > **「能不能移動畫面」不該取決於「內容夠不夠大」。**
+  //
+  // 🟢 改成 Blockly 的做法：內容放在一個 `<g>` 上用 `transform` 推。
+  await openFlow(page)
+  const from = await panNow(page)
+  await page.mouse.move(120, 600)
+  await page.mouse.down()
+  await page.mouse.move(260, 420, { steps: 12 })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+  const to = await panNow(page)
+  // ★ 1:1——手指走多少，畫面就走多少
+  expect(to.x - from.x, '🔴 橫的推不動').toBeCloseTo(140, 0)
+  expect(to.y - from.y, '🔴 直的推不動——而那正是原生捲動做不到的那一半').toBeCloseTo(-180, 0)
 })
 
 test('★ 適配：整張圖塞得進畫面', async ({ page }) => {
@@ -105,11 +142,15 @@ test('★ 適配：整張圖塞得進畫面', async ({ page }) => {
   await page.locator('.flow-zoom-label').click()
   await page.waitForTimeout(600)
   const fit = await page.evaluate(() => {
-    const c = document.querySelector('.flow-canvas') as HTMLElement
-    return { over: c.scrollWidth - c.clientWidth, top: c.scrollTop, left: c.scrollLeft }
+    const c = (document.querySelector('.flow-canvas') as HTMLElement).getBoundingClientRect()
+    const g = (document.querySelector('.fc-viewport') as SVGGElement).getBoundingClientRect()
+    // ⚠️ 鍵用英文——第四十條護欄：識別字必須是英文（2026-08-30 被它抓到）
+    return { right: g.right - c.right, bottom: g.bottom - c.bottom, left: c.left - g.left, top: c.top - g.top }
   })
-  expect(fit.over, '🔴 按了適配而圖還是比畫面寬').toBeLessThanOrEqual(1)
-  expect(fit.left + fit.top, '🔴 適配之後沒有回到左上角——使用者會看著一個空白角落').toBe(0)
+  const SIDE: Record<string, string> = { right: '超出右邊', bottom: '超出下面', left: '超出左邊', top: '超出上面' }
+  for (const [k, v] of Object.entries(fit)) {
+    expect(v, `🔴 按了適配而圖還是${SIDE[k]} ${v.toFixed(0)}px——那不叫塞得進去`).toBeLessThanOrEqual(2)
+  }
 })
 
 test('★ `touch-action`：一根手指捲動、兩根捏合、按住節點是拖曳', async ({ page }) => {
@@ -118,12 +159,15 @@ test('★ `touch-action`：一根手指捲動、兩根捏合、按住節點是�
     canvas: getComputedStyle(document.querySelector('.flow-canvas')!).touchAction,
     node: getComputedStyle(document.querySelector('.fc-node')!).touchAction,
   }))
-  // 🔴 畫布：`pan-x pan-y` ——**捲動留給瀏覽器**，而捏合（pinch-zoom）被排除掉、我們接手
+  // 🔴 畫布：`none`——**每一種手勢都由我們接**（2026-08-30 改，與 Blockly 一致）。
+  //
+  // ⚠️ 原本是 `pan-x pan-y`（把捲動交給瀏覽器）。而那個捲動**只在內容比
+  //    視窗大時存在**，於是手機上根本推不動——見上面那一支。
   expect(
     ta.canvas,
-    '🔴 畫布的 touch-action 不對。`none` 會把【捲動】一起關掉，\n' +
-      '而 `auto` 會讓瀏覽器搶走兩指捏合。',
-  ).toBe('pan-x pan-y');
+    '🔴 畫布的 touch-action 不是 none——瀏覽器會搶走捏合，\n' +
+      '而我們自己的推畫面與它會打架。',
+  ).toBe('none');
   // 🔴 節點：`none` ——不然按住它拖曳會被判成「使用者要捲畫布」
   expect(
     ta.node,

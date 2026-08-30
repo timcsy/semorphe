@@ -9,7 +9,12 @@
  * （第七十四條護欄），切成 English 驗埠有沒有接上：
  *
  * ```
- * 粒度選單   整份程式  →  Whole program     ✅ 埠接上了
+ * 🪦 粒度選單（整份程式）已於 2026-08-30 刪除——使用者：「這選單能不能先刪掉？
+ *    現在好像還看不出有什麼用」。它的兩條斷言隨之退場，而**這一支要驗的東西
+ *    沒有變**：標籤要跟著訊息埠走，不是在建構時定型。
+ *
+ * ⚠️ 留下來的錨點是「自動排版」那顆按鈕——它正是原本那個缺陷的所在
+ *    （只在建構時設一次）。少了它，這一支就沒有東西在守了。
  * 自動排版   自動排版  →  【自動排版】       🔴 沒跟著換
  * ```
  *
@@ -48,20 +53,17 @@ describe('流程面板的標籤跟著訊息埠走', () => {
     resetMessageSource()
     panel.onSemanticUpdate({ tree: tree() } as never)
     expect(labels(host).join('｜')).toContain('自動排版')
-    expect(labels(host).join('｜')).toContain('整份程式')
   })
 
   it('🔴 換一份翻譯表，**每一個標籤都要跟著換**（含只設一次的那顆按鈕）', () => {
     // 這一條是缺陷本身：修之前「自動排版」永遠留在建構時的那個值。
     setMessageSource((key) => ({
       FLOW_AUTOLAYOUT: 'Auto layout',
-      FLOW_SCOPE_ALL: 'Whole program',
       FLOW_EMPTY: 'Nothing to chart yet.',
     })[key])
     panel.onSemanticUpdate({ tree: tree() } as never)
     const seen = labels(host).join('｜')
     expect(seen, '🔴 按鈕的文字沒跟著換 → 它又只在建構時設一次了').toContain('Auto layout')
-    expect(seen).toContain('Whole program')
     expect(seen).toContain('Nothing to chart yet.')
     expect(seen, '中文殘留＝有一格沒走埠').not.toContain('自動排版')
   })

@@ -466,9 +466,26 @@ export class BlocklyPanel implements ViewHost {
           const selectEvent = event as Blockly.Events.Selected
           const selectedBlockId = selectEvent.newElementId ?? null
           this.onBlockSelectCallback?.(selectedBlockId)
-          // Emit nodeId for decoupled highlight: blockId → nodeId via block mappings
-          const nodeId = selectedBlockId ? this.getNodeIdForBlockId(selectedBlockId) : null
-          this.onNodeSelectCallback?.(nodeId)
+          // 🔴 **選到東西才往外送**（2026-08-30）。
+          //
+          // Blockly 對「點了工作區外面」（分頁按鈕、工具列…）的反應也是
+          // 一次 `SELECTED(null)`——而那個 `null` 一路清掉**每一個視圖**的反白。
+          // 使用者：「切換到流程的 tab 會全部取消選取」。
+          //
+          // > **`null` 在這個事件裡有兩個意思：「使用者取消選取了」
+          // > 與「焦點離開了這個工作區」——而它們長得一模一樣。**
+          //
+          // 🟢 而 Blockly **自己分得出來**：真正的「點空白處」會另外發一個
+          //    `CLICK` 且 `targetType === 'workspace'`。取消選取因此改由
+          //    下面那一段負責——那是一個**明確的動作**。
+          if (selectedBlockId) {
+            this.onNodeSelectCallback?.(this.getNodeIdForBlockId(selectedBlockId))
+          }
+        }
+        // 🔴 **點在工作區的空白處＝明確的取消選取**——見上面那段的說明。
+        if (event.type === Blockly.Events.CLICK
+            && (event as unknown as { targetType?: string }).targetType === 'workspace') {
+          this.onNodeSelectCallback?.(null)
         }
         return
       }

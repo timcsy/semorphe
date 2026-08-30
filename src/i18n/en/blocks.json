@@ -178,7 +178,6 @@
   "FIELD_CUSTOM_VALUE": "Custom…",
   "FIELD_CUSTOM_PROMPT": "Enter a custom value",
   "PANEL_FLOW": "Flow",
-  "FLOW_SCOPE_ALL": "Whole program",
   "FLOW_AUTOLAYOUT": "Auto layout",
   "FLOW_EMPTY": "Nothing to chart yet.",
   "PANEL_CLEAR": "Clear",
@@ -649,5 +648,7 @@
   "FLOW_NO_REDO": "Nothing left to redo",
   "FLOW_DELETE_NODE": "Delete this block (undoable)",
   "FLOW_DELETE_WIRE": "Click to remove this end (undoable)",
-  "FLOW_SELECT_WIRE": "Click to select, then press ✕ or Delete to remove this end"
+  "FLOW_SELECT_WIRE": "Click to select, then press ✕ or Delete to remove this end",
+  "FLOW_MENU_DELETE": "Delete this block",
+  "FLOW_MENU_DELETE_WIRE": "Remove this end"
 }

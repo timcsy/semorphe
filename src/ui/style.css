@@ -2000,15 +2000,7 @@ html, body {
   border-bottom: 1px solid #3c3c3c;
 }
 
-.flow-scope {
-  background: #3c3c3c;
-  color: #ccc;
-  border: 1px solid #555;
-  border-radius: 4px;
-  padding: 3px 6px;
-  font-size: 12px;
-  max-width: 240px;
-}
+/* 🪦 `.flow-scope`（「整份程式 ▾」）隨那顆下拉一起刪除（2026-08-30）。 */
 
 .flow-btn {
   background: #3c3c3c;
@@ -2249,14 +2241,19 @@ html, body {
 /* 🔴 **捲的是這一層**：圖常常比面板寬（三欄版面下量到 724 vs 362），
    而 `overflow: hidden` 會讓超出去的節點**連點都點不到**。 */
 .flow-canvas {
-  flex: 1; min-width: 0; min-height: 0; overflow: auto; position: relative;
-  /* 🔴 **一根手指捲動交給瀏覽器，兩根手指的捏合交給我們**（2026-08-30）。
-     ⚠️ 寫成 `touch-action: none` 的話**捲動也會一起沒了**，那時就得自己
-     實作慣性捲動——而那永遠比不上原生的。
+  flex: 1; min-width: 0; min-height: 0; overflow: hidden; position: relative;
+  cursor: grab;
+  /* 🔴 **每一種手勢都由我們接**（2026-08-30 改）——與 Blockly 一致。
+     ⚠️ 原本是 `pan-x pan-y`，把捲動交給瀏覽器。而實測手機上
+     **縱向可捲 = 0**：流程圖比畫面小，於是那個「捲動」根本不存在。
 
-     > 先讓瀏覽器做它做得比你好的那一半，再接手它不做的那一半。 */
-  touch-action: pan-x pan-y;
+     > 「能不能移動畫面」不該取決於「內容夠不夠大」。 */
+  touch-action: none;
 }
+.flow-canvas.fc-panning { cursor: grabbing; }
+
+/* SVG 佔滿視窗、**不隨內容變大**——鏡頭掛在裡面那個 `<g>` 上。 */
+.flow-svg { width: 100%; height: 100%; }
 
 /* 🔴 **節點自己要 `none`**：不然在觸控上，按住節點拖曳會被上面那個
    `pan-x pan-y` 判成「使用者要捲畫布」——症狀是**節點拖不動**，
@@ -2272,14 +2269,6 @@ html, body {
   font-size: 13px;
   line-height: 1;
 }
-/* 刪除鈕——⚠️ 平常很淡，滑過那顆節點才亮起來：
-   一顆隨時都很顯眼的 ✕，會讓使用者在每一次點擊時都繞開它。 */
-.fc-del {
-  fill: #fff; font-size: 12px; cursor: pointer;
-  opacity: 0.35; user-select: none;
-}
-.fc-node:hover .fc-del { opacity: 0.9; }
-.fc-del:hover { fill: #f48771; opacity: 1; }
 
 /* 🔴 **一條看不見的粗線當命中區**（2026-08-30）。
    在此之前是那條 2px 的可視線本身可點——滑鼠已經難按，觸控幾乎不可能。
@@ -2300,19 +2289,28 @@ html, body {
 /* ✕ 浮在線的中點——**平常不在**，滑過或選起來才出現。
    🔴 你點的是一顆看得見的鈕，不是一條線的某一處
    ——那一格差別在觸控上就是「會不會誤刪」。 */
-/* 🔴 ✕ 住在 `.fc-wire-tools` 這一層（畫在節點【之上】），所以它與那條線
-   **不是父子**——顯示與否改用一個明確的 class（`fc-shown`），
-   不能再靠 `.fc-wire-g:hover` 的後代選擇器。 */
-.fc-wire-del { opacity: 0; pointer-events: none; cursor: pointer; }
-.fc-wire-del.fc-shown { opacity: 1; pointer-events: auto; }
-.fc-wire-del circle { fill: #2d2d2d; stroke: #f48771; stroke-width: 1.5; }
-.fc-wire-del text { fill: #f48771; font-size: 11px; user-select: none; }
-.fc-wire-del:hover circle { fill: #f48771; }
-.fc-wire-del:hover text { fill: #fff; }
+/* 🪦 `.fc-wire-del` 與節點上的 `.fc-del` 都退場了（2026-08-30）：
+   實測手機上只有 9×15 px，而且**跟著縮放一起變小**。改用長按／右鍵選單。
+
+   > 一個會隨著畫面縮小而一起縮小的觸控目標，在最需要它的時候最小。 */
+
+/* 長按／右鍵的選單——⚠️ 它是 **DOM**，不在 SVG 裡，
+   所以它的大小**與縮放無關**，而且吃得到 44px 的觸控高度。 */
+.flow-menu {
+  position: absolute; z-index: 40; min-width: 132px;
+  background: #252526; border: 1px solid #454545; border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.5); padding: 4px 0; overflow: hidden;
+}
+.flow-menu-item {
+  display: block; width: 100%; box-sizing: border-box;
+  background: none; border: none; color: #d4d4d4; cursor: pointer;
+  font-size: 14px; text-align: left; padding: 12px 16px;
+  touch-action: manipulation;
+}
+.flow-menu-item:hover, .flow-menu-item:focus-visible { background: #37373d; color: #fff; }
 
 /* 選起來的那一個——⚠️ 觸控上沒有 hover，**選取就是讓 ✕ 現身的方式**。 */
 .fc-node.fc-sel .fc-node-body { stroke: #4a90d9; stroke-width: 2; }
-.fc-node.fc-sel .fc-del { opacity: 1; }
 /* 畫布進得了焦點才收得到 Delete 鍵——而它同時進了 Tab 的順序（無障礙本來就該有）。 */
 .flow-canvas:focus-visible { outline: 1px solid #4a90d9; outline-offset: -1px; }
 

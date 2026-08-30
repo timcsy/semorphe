@@ -64,16 +64,47 @@ async function openFlow(page: import('@playwright/test').Page): Promise<void> {
   await page.waitForTimeout(1800)
 }
 
-/** 某顆節點的 ✕ 在螢幕上的位置。 */
-const delBtn = (page: import('@playwright/test').Page, comp: string): Promise<{ x: number; y: number } | null> =>
+/**
+ * 某顆節點**標題列**的位置。
+ *
+ * 🪦 這裡原本回的是那顆 ✕ 的位置，而 ✕ 已於 2026-08-30 退場：
+ * 實測它在手機上只有 9×15 px，而且**跟著縮放一起變小**（縮到 80% 剩 6×9）。
+ *
+ * > **一個會隨著畫面縮小而一起縮小的觸控目標，在最需要它的時候最小。**
+ *
+ * 🟢 改成長按（觸控）／右鍵（桌機）選單——選單是 DOM，大小與縮放無關。
+ */
+const headOf = (page: import('@playwright/test').Page, comp: string): Promise<{ x: number; y: number } | null> =>
   page.evaluate((c) => {
     const g = (window as never as { __app: { flowPanel: { graph: { nodes: { id: string; componentId: string }[] } } } })
       .__app.flowPanel.graph
     const n = g.nodes.find((x) => x.componentId === c)
     if (!n) return null
-    const r = document.querySelector(`[data-node="${n.id}"] .fc-del`)?.getBoundingClientRect()
-    return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null
+    const head = document.querySelector(`[data-node="${n.id}"] .fc-node-header`)
+    const r = head?.getBoundingClientRect()
+    if (!r) return null
+    // ⚠️ **要確認那個點真的打得到這顆節點**——節點可能互相疊住
+    //    （2026-08-30 撞到：右鍵下去沒有開選單，因為點在別人身上）。
+    for (const f of [0.5, 0.3, 0.7, 0.15, 0.85]) {
+      const x = r.x + r.width * f
+      const y = r.y + r.height / 2
+      const top = document.elementsFromPoint(x, y)[0]
+      if (top && top.closest(`[data-node="${n.id}"]`)) return { x, y }
+    }
+    return null
   }, comp)
+
+/** 右鍵開選單，然後按下那一項。 */
+async function menuDelete(
+  page: import('@playwright/test').Page,
+  at: { x: number; y: number },
+  what = '',
+): Promise<void> {
+  await page.mouse.click(at.x, at.y, { button: 'right' })
+  await expect(page.locator('.flow-menu'), `🔴 右鍵沒有開出選單（${what}）`).toBeVisible({ timeout: 5000 })
+  await page.locator('.flow-menu-item').first().click()
+  await page.waitForTimeout(1800)
+}
 
 test('★ 刪一句話 → 還原 → 取消還原', async ({ page }) => {
   await openFlow(page)
@@ -81,10 +112,9 @@ test('★ 刪一句話 → 還原 → 取消還原', async ({ page }) => {
   // ★ 入口條件（見檔頭的自我否證）
   expect(before, '🔴 一開始就沒有那一句 → 這份報表不算數').toContain('cout')
 
-  const at = await delBtn(page, 'cpp:print')
-  expect(at, '🔴 那顆節點上沒有刪除鈕').toBeTruthy()
-  await page.mouse.click(at!.x, at!.y)
-  await page.waitForTimeout(1800)
+  const at = await headOf(page, 'cpp:print')
+  expect(at, '🔴 找不到那顆節點').toBeTruthy()
+  await menuDelete(page, at!, '節點')
   expect(await codeNow(page), '🔴 按了 ✕ 而那一句還在').not.toContain('cout')
 
   await page.locator('.flow-toolbar button[title="還原"]').click()
@@ -161,10 +191,9 @@ test('★ 語句線：點線選它，✕ 才刪——而刪掉的是【裡面】
 test('★ 值不准刪——而它要說出為什麼', async ({ page }) => {
   await openFlow(page)
   const before = await codeNow(page)
-  const at = await delBtn(page, 'cpp:literal_number')
+  const at = await headOf(page, 'cpp:literal_number')
   expect(at, '🔴 找不到那顆值節點').toBeTruthy()
-  await page.mouse.click(at!.x, at!.y)
-  await page.waitForTimeout(1500)
+  await menuDelete(page, at!, '節點')
 
   expect(
     await codeNow(page),
@@ -207,8 +236,7 @@ test('★ 點【資料線】的 ✕ → 刪掉的是那個值，不是整句', a
   const before = await codeNow(page)
   expect(before, '🔴 一開始就沒有 endl → 這一支驗不出東西').toContain('endl')
 
-  // ⚠️ **先點線把它選起來，✕ 才會現身**——那也是觸控上真正的路徑
-  //    （那裡沒有 hover）。而點線的位置要挑**沒有被節點蓋住**的那一段。
+  // ⚠️ 在**曲線上沒有被節點蓋住**的那一段按右鍵——節點是後畫的，會壓在線上。
   const onWire = await page.evaluate(() => {
     const fp = (window as never as { __app: { flowPanel: { graph: { nodes: { id: string; componentId: string }[] } } } })
       .__app.flowPanel
@@ -227,22 +255,7 @@ test('★ 點【資料線】的 ✕ → 刪掉的是那個值，不是整句', a
   })
   // ★ 這一格本身就是一條斷言：**那條線要以「值」為鍵**，不是以消費者為鍵
   expect(onWire, '🔴 找不到「換行」那條線——多半是它還掛在消費者身上').toBeTruthy()
-  await page.mouse.click(onWire!.x, onWire!.y)
-  await page.waitForTimeout(800)
-  expect(await codeNow(page), '🔴 點一下線就改了程式').toBe(before)
-
-  const at = await page.evaluate(() => {
-    const fp = (window as never as { __app: { flowPanel: { graph: { nodes: { id: string; componentId: string }[] } } } })
-      .__app.flowPanel
-    const endl = fp.graph.nodes.find((n) => n.componentId === 'cpp:endl')
-    if (!endl) return null
-    // 🔴 ✕ 住在畫在節點【之上】的那一層（`.fc-wire-tools`）——不是那條線的後代
-    const r = document.querySelector(`[data-wire-del="${endl.id}"].fc-shown`)?.getBoundingClientRect()
-    return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null
-  })
-  expect(at, '🔴 選起來了而 ✕ 沒有現身').toBeTruthy()
-  await page.mouse.click(at!.x, at!.y)
-  await page.waitForTimeout(1800)
+  await menuDelete(page, onWire!, '資料線')
 
   const after = await codeNow(page)
   expect(after, '🔴 整句 `cout` 被刪掉了——刪錯了那一端').toContain('cout')
@@ -250,17 +263,9 @@ test('★ 點【資料線】的 ✕ → 刪掉的是那個值，不是整句', a
   expect(after, '🔴 `cout << "Hello!";` 應該原封不動地留著').toContain('"Hello!"')
 
   // ★ 而**再刪一個就會把那一格清空**，那時要拒絕
-  const solo = await page.evaluate(() => {
-    const fp = (window as never as { __app: { flowPanel: { graph: { nodes: { id: string; componentId: string }[] } } } })
-      .__app.flowPanel
-    const t = fp.graph.nodes.find((n) => n.componentId === 'cpp:literal_string')
-    if (!t) return null
-    const r = document.querySelector(`[data-node="${t.id}"] .fc-del`)?.getBoundingClientRect()
-    return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null
-  })
+  const solo = await headOf(page, 'cpp:literal_string')
   expect(solo, '🔴 找不到那顆文字節點').toBeTruthy()
-  await page.mouse.click(solo!.x, solo!.y)
-  await page.waitForTimeout(1500)
+  await menuDelete(page, solo!, '文字節點')
   expect(
     await codeNow(page),
     '🔴 把 `values` 清空了——`cout;` 不是一句話',

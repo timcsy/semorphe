@@ -766,6 +766,8 @@ export class App {
     this.wireBlocklyChangeHandler()
     this.wireHostSyncCommands()
     this.codeView.onChange(() => {
+      // 🔴 記住**上一步在哪裡做的**——那一對按鈕靠它轉送（見 `lastEditor`）
+      this.lastEditor = 'code'
       if (this._codeToBlocksInProgress) return
       this.codeDirty = true
       // 🔴 記下「誰被編輯」——來源是導出的，而暫停期間這筆會累積成分岔
@@ -902,7 +904,7 @@ export class App {
     //    > **一個沒有人讀的識別字，錯了也不會有人知道。**
     elements.flowPanel?.onEdit((tree) => {
       // 🔴 記住**上一步是誰改的**——`doUndo` 靠它決定要退哪一份堆疊
-      this.lastTreeEditor = elements.flowPanel?.viewId ?? 'flow'
+      this.lastEditor = 'flow'
       this.bus.emit('edit:tree', { viewId: elements.flowPanel?.viewId, tree })
     })
     // 🔴 **流程視圖的編輯在 2026-08-30 之前完全不可還原**（實測：改一個變數名，
@@ -910,10 +912,6 @@ export class App {
     //
     // > **一個編輯得動而還原不了的視圖，比一個唯讀的視圖更危險
     // > ——使用者會以為他隨時可以退回去。**
-    elements.flowPanel?.onHistory((dir) => {
-      const ok = dir === 'undo' ? this.syncController?.undoTree() : this.syncController?.redoTree()
-      if (!ok) elements.flowPanel?.sayNothingToUndo(dir)
-    })
     // 🔴 **palette 讀工具箱的【輸出】**（2026-08-26，(d)）——不是各自從登錄表算一次。
     this.flowPanel = elements.flowPanel
     this.flowPanel?.setPalette(this.buildToolboxInner())
@@ -1551,18 +1549,38 @@ export class App {
    * > **兩份歷史合成一顆按鈕，最糟的答案是「永遠退其中一份」
    * > ——那讓另一份的每一步都變成不可逆。**
    */
-  private lastTreeEditor: string | null = null
+  /**
+   * **上一步是在哪一個視圖做的**——那一對按鈕靠它決定要退哪一份堆疊。
+   *
+   * 🔴 三份堆疊**沒辦法真的合成一份**，因為它們的「一步」不是同一個東西：
+   *
+   * ```
+   * code    一次打字（字元群組）——編輯器自己的顆粒度最好
+   * blocks  一次工作區事件
+   * flow    一次語義樹的改動（而版面位移根本不在樹裡）
+   * ```
+   *
+   * > **能共用的是那一對【按鈕】，不是底下的歷史。**
+   *
+   * ⚠️ 而這個轉送是**近似的**：連按兩次可能跨到另一份堆疊。
+   * 代價換到的是「畫面上只有一對按鈕」，而那比三對一致得多。
+   */
+  private lastEditor: 'code' | 'blocks' | 'flow' | null = null
 
-  /** 積木那側改過了 → 上一步不再是流程的（`doUndo` 因此改退 Blockly 的堆疊）。 */
-  private markBlocksEdited(): void { this.lastTreeEditor = null }
+  /** 積木那側改過了。 */
+  private markBlocksEdited(): void { this.lastEditor = 'blocks' }
 
   private doUndo(): void {
-    if (this.lastTreeEditor && this.syncController?.canUndoTree()) {
-      if (this.syncController.undoTree()) return
-    }
+    if (this.lastEditor === 'code' && this.codeView?.undo) { this.codeView.undo(); return }
+    if (this.lastEditor === 'flow' && this.syncController?.undoTree()) return
     this.blocklyPanel?.undo()
   }
-  private doRedo(): void { this.blocklyPanel?.redo() }
+
+  private doRedo(): void {
+    if (this.lastEditor === 'code' && this.codeView?.redo) { this.codeView.redo(); return }
+    if (this.lastEditor === 'flow' && this.syncController?.redoTree()) return
+    this.blocklyPanel?.redo()
+  }
   private doClear(): void { this.blocklyPanel?.clear() }
 
   /**
@@ -1974,22 +1992,79 @@ export class App {
 
   private setupBidirectionalHighlight(): void {
     // Block → Code: unified via nodeId
-    this.blocklyPanel?.onNodeSelect((nodeId) => {
-      this.codeView?.clearHighlight(); this.blocklyPanel?.clearHighlight()
-      if (!nodeId) return
-      this.blocklyPanel?.highlightByNodeId(nodeId, 'block-to-code')
+    /**
+     * **同一顆節點，在每一個視圖上一起亮。**
+     *
+     * 🔴 這條路以 `nodeId` 為鍵，早就在跑（積木 ↔ 程式碼）。
+     * 2026-08-30 把**流程視圖**接進來——在此之前它的選取只有自己看得到。
+     *
+     * > **一個只有自己看得到的選取，在多視圖的編輯器裡等於沒有選。**
+     *
+     * ⚠️ `from` 是**來源視圖**：它自己不要再被通知一次，不然兩邊會互相
+     * 通知到天亮。
+     */
+    /**
+     * **「沒有選」不是一個要廣播的消息。**
+     *
+     * 🔴 使用者 2026-08-30：「積木發出的高亮好像無法傳到流程」，
+     * 而他自己猜對了：「**切換到流程的 tab 會全部取消選取**」。
+     *
+     * 追出來的呼叫鏈逐字：
+     *
+     * ```
+     * highlightNode(null)  ←  BlocklyPanel.onNodeSelectCallback
+     * ```
+     *
+     * **點分頁按鈕就在工作區外面**，而 Blockly 對「點外面」的反應是取消選取
+     * ——於是那個 `null` 一路清掉每一個視圖的反白。
+     *
+     * ⚠️ 第一版的修法是「看不見的視圖說的話不算數」，而**那不成立**：
+     * 取消選取發生在 `display: none` **之前**，那一刻它還看得見。
+     *
+     * > **`null` 在那個事件裡有兩個意思：「使用者取消選取了」
+     * > 與「焦點離開了這個視圖」——而它們長得一模一樣。**
+     *
+     * ## 🔴 這一格改了三次，而前兩次都是「在錯的地方分辨」
+     *
+     * ```
+     * ① 看不見的視圖說的話不算數   ✗ 取消選取發生在 display:none 【之前】
+     * ② null 只清發話者自己那一側   ✗ 發話者正是積木——切回去就沒了
+     *                                （使用者：「切回積木，就沒了」）
+     * ③ 在【源頭】分辨              ✓ Blockly 自己分得出「點空白處」與「焦點離開」
+     * ```
+     *
+     * > **一個含混的訊號，要在【發出它的地方】被分辨清楚；
+     * > 在下游猜它是哪一種，每一次都會少掉一個情況。**
+     *
+     * 🟢 所以現在到得了這裡的 `null` **都是明確的**——見 `blockly-panel.ts`
+     * 裡那段 `CLICK` ＋ `targetType: 'workspace'`。
+     */
+    const linkNode = (nodeId: string | null, reason: 'block-to-code' | 'code-to-block', from: 'blocks' | 'code' | 'flow'): void => {
+      if (nodeId === null) {
+        // 🟢 到得了這裡的 `null` **都是明確的**：積木那側只在「點了工作區空白處」
+        //    才送 `null`（`CLICK` ＋ `targetType: 'workspace'`），
+        //    焦點離開造成的那一種在**源頭**就被擋掉了。
+        this.codeView?.clearHighlight()
+        this.blocklyPanel?.clearHighlight()
+        this.flowPanel?.highlightNode(null)
+        return
+      }
+      this.codeView?.clearHighlight()
+      this.blocklyPanel?.clearHighlight()
+      if (from !== 'flow') this.flowPanel?.highlightNode(nodeId)
+      this.blocklyPanel?.highlightByNodeId(nodeId, reason)
       const range = this.syncController?.codeRangeForNode(nodeId)
-      if (range) this.codeView?.addHighlight(range.startLine + 1, range.endLine + 1, 'block-to-code')
-    })
+      if (range) this.codeView?.addHighlight(range.startLine + 1, range.endLine + 1, reason)
+    }
+
+    this.blocklyPanel?.onNodeSelect((nodeId) => linkNode(nodeId, 'block-to-code', 'blocks'))
+    // 🔴 **流程視圖也是一個選得動的視圖**——它選了，另外兩邊要跟著亮
+    this.flowPanel?.onNodeSelect((nodeId: string | null) => linkNode(nodeId, 'block-to-code', 'flow'))
     // Code → Block: unified via nodeId
     this.codeView?.onCursorChange((line: number) => {
-      this.blocklyPanel?.clearHighlight(); this.codeView?.clearHighlight(); this.codeView?.dismissPendingHighlight()
       try { if (Blockly.getSelected()) Blockly.common.setSelected(null as unknown as Blockly.ISelectable) } catch { /* ignore */ }
-      const nodeId = this.syncController?.nodeIdForLine(line - 1)
-      if (!nodeId) return
-      this.blocklyPanel?.highlightByNodeId(nodeId, 'code-to-block')
-      const range = this.syncController?.codeRangeForNode(nodeId)
-      if (range) this.codeView?.addHighlight(range.startLine + 1, range.endLine + 1, 'code-to-block')
+      this.codeView?.dismissPendingHighlight()
+      linkNode(this.syncController?.nodeIdForLine(line - 1) ?? null, 'code-to-block', 'code')
     })
   }
 

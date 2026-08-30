@@ -401,6 +401,12 @@ export class MonacoPanel implements ViewHost, CodeView {
   }
 
   /** Set code while preserving cursor position, offsetting by a line delta */
+  /** 文字層的還原——見 `CodeView.undo` 的說明。 */
+  undo(): void { this.editor?.trigger('semorphe', 'undo', null) }
+
+  /** 文字層的重做。 */
+  redo(): void { this.editor?.trigger('semorphe', 'redo', null) }
+
   setCodePreserveCursor(code: string, linesDelta: number): void {
     if (!this.editor) return
     const pos = this.editor.getPosition()
@@ -644,27 +650,16 @@ export class MonacoPanel implements ViewHost, CodeView {
       }
     })
 
-    const undoBtn = document.createElement('button')
-    undoBtn.className = 'clipboard-btn'
-    undoBtn.textContent = '↩ 還原'
-    undoBtn.title = '還原 (Undo)'
-    undoBtn.addEventListener('click', () => {
-      this.editor?.trigger('clipboard-bar', 'undo', null)
-    })
-
-    const redoBtn = document.createElement('button')
-    redoBtn.className = 'clipboard-btn'
-    redoBtn.textContent = '↪ 取消還原'
-    redoBtn.title = '取消還原 (Redo)'
-    redoBtn.addEventListener('click', () => {
-      this.editor?.trigger('clipboard-bar', 'redo', null)
-    })
-
+    // 🪦 **這裡曾經有一對「還原／取消還原」**（2026-08-30 退場）。
+    //    畫面上因此有【三對】：這一對、快速列的 ↩↪、流程工具列的 ↶↷。
+    //
+    // > **同一件事在同一個畫面上有兩個開關，是一個必然會不一致的東西。**
+    //
+    // 🟢 現在只留快速列那一對，而它依「上一步在哪裡做的」轉送——
+    //    文字這一層由下面的 `undo()`／`redo()` 交出去。
     bar.appendChild(copyBtn)
     bar.appendChild(pasteInsertBtn)
     bar.appendChild(pasteReplaceBtn)
-    bar.appendChild(undoBtn)
-    bar.appendChild(redoBtn)
 
     // Insert bar before the editor container (at the top of the wrapper)
     this.container.insertBefore(bar, this.container.firstChild)

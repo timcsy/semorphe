@@ -100,11 +100,9 @@ export class FlowPanel implements ViewHost {
   private offsets = new Map<string, Placed>()
   private graph: NodeGraph | null = null
   /** 粒度：`null` ＝ 整份程式；否則是某顆節點的 id */
-  private scopeId: string | null = null
   private highlighted: string | null = null
 
   private svg!: SVGSVGElement
-  private scopeSelect!: HTMLSelectElement
   private empty!: HTMLElement
   private canvas!: HTMLElement
   private autoBtn!: HTMLButtonElement
@@ -138,16 +136,15 @@ export class FlowPanel implements ViewHost {
 
   private editCb: ((tree: SemanticNode) => void) | null = null
 
-  /** 組裝點接上「退一步／再來一次」——面板自己不記歷史。 */
-  onHistory(cb: ((dir: 'undo' | 'redo') => void) | null): void { this.historyCb = cb }
-  private historyCb: ((dir: 'undo' | 'redo') => void) | null = null
-
-  /** 沒得退的時候要**說一聲**——默默不動與壞掉長得一樣。 */
-  sayNothingToUndo(dir: 'undo' | 'redo'): void {
-    this.showNotice(dir === 'undo'
-      ? msg('FLOW_NO_UNDO', '沒有可以還原的動作了')
-      : msg('FLOW_NO_REDO', '沒有可以重做的動作了'))
-  }
+  /**
+   * 🪦 `onHistory`／`sayNothingToUndo` 已於 2026-08-30 退場。
+   *
+   * 它們是這個面板自己那一對 ↶↷ 的接線，而那一對已經拿掉了
+   * ——畫面上只留快速列那一對，由組裝點依「上一步在哪裡做的」轉送。
+   *
+   * ⚠️ 而**樹的歷史本身沒有動**：它住在 `SyncController`，
+   * 由 `app.ts` 的 `doUndo`／`doRedo` 呼叫。
+   */
   /** 左邊那條**分類**（固定的，佔版面） */
   private toolboxEl!: HTMLElement
   /** 點了分類才彈出來的那一格（覆蓋在畫布上，拖出去就收） */
@@ -180,12 +177,51 @@ export class FlowPanel implements ViewHost {
    * （拖曳的位移、拖進來的落點、連線預覽的端點）——見 `toSvgLen`。
    */
   private zoom = 1
-  private static readonly ZOOM_MIN = 0.3
-  private static readonly ZOOM_MAX = 2.5
+  private static readonly ZOOM_MIN = 0.2
+  private static readonly ZOOM_MAX = 3
 
-  /** 螢幕像素 → SVG 單位。**每一個從 `clientX/Y` 算出來的長度都要過它。** */
+  /**
+   * **鏡頭的位移**——與 `zoom` 合起來就是那個 `<g>` 的 `transform`。
+   *
+   * ## 🔴 為什麼不用原生捲動了（2026-08-30）
+   *
+   * 在此之前是 `.flow-canvas { overflow: auto }`。而**原生捲動只在
+   * 內容比視窗大的時候存在**，實測（400×780 的手機）：
+   *
+   * ```
+   * 100%    縱向可捲 = 0            直的完全推不動
+   * 縮小後  橫向也 = 0              整張圖完全推不動
+   * ```
+   *
+   * 流程圖通常**比手機畫面小**，所以那個「捲動」根本不存在。
+   *
+   * 🟢 Blockly 的做法：內容放在一個 `<g>` 上用 `transform` 推，
+   * **畫布是無限的**——你永遠拖得動它。
+   *
+   * > **「能不能移動畫面」不該取決於「內容夠不夠大」。**
+   */
+  private pan = { x: 0, y: 0 }
+
+  /** 內容的 `<g>`——`transform` 掛在它身上。 */
+  private viewport!: SVGGElement
+
+  /** 螢幕像素的**長度** → 內容單位。 */
   private toSvgLen(px: number): number {
     return px / this.zoom
+  }
+
+  /** 螢幕座標 → 內容座標。⚠️ 位移與縮放都要扣掉。 */
+  private clientToContent(x: number, y: number): { x: number; y: number } {
+    const r = this.canvas.getBoundingClientRect()
+    return {
+      x: (x - r.left - this.pan.x) / this.zoom,
+      y: (y - r.top - this.pan.y) / this.zoom,
+    }
+  }
+
+  private applyViewport(): void {
+    this.viewport?.setAttribute(
+      'transform', `translate(${this.pan.x},${this.pan.y}) scale(${this.zoom})`)
   }
 
   /** 內容的尺寸（SVG 單位）——`適配` 要用它算倍率。 */
@@ -207,24 +243,39 @@ export class FlowPanel implements ViewHost {
     if (Math.abs(z - this.zoom) < 0.001) return
     const box = this.canvas.getBoundingClientRect()
     const at = anchor ?? { x: box.left + box.width / 2, y: box.top + box.height / 2 }
-    // 錨點在**內容座標**上的位置（縮放前）
-    const cx = (this.canvas.scrollLeft + at.x - box.left) / this.zoom
-    const cy = (this.canvas.scrollTop + at.y - box.top) / this.zoom
+    // 錨點相對於畫布左上角
+    const ax = at.x - box.left
+    const ay = at.y - box.top
+    // 🔴 讓錨點底下那一點**留在原地**：`t' = a - (a - t) · (z'/z)`
+    const k = z / this.zoom
+    this.pan = { x: ax - (ax - this.pan.x) * k, y: ay - (ay - this.pan.y) * k }
     this.zoom = z
-    this.paint()
-    // 縮放後把它捲回同一個螢幕位置
-    this.canvas.scrollLeft = cx * z - (at.x - box.left)
-    this.canvas.scrollTop = cy * z - (at.y - box.top)
+    this.applyViewport()
     this.syncZoomLabel()
+  }
+
+  /** 把鏡頭推到某個位置。 */
+  private panBy(dx: number, dy: number): void {
+    this.pan = { x: this.pan.x + dx, y: this.pan.y + dy }
+    this.applyViewport()
   }
 
   /** 把整張圖塞進畫布——⚠️ **只縮不放**：小圖放大到 2.5 倍只是變模糊。 */
   private zoomToFit(): void {
     const box = this.canvas.getBoundingClientRect()
     if (!this.contentSize.w || !this.contentSize.h || !box.width) return
-    const fit = Math.min(box.width / this.contentSize.w, box.height / this.contentSize.h, 1)
-    this.setZoom(fit)
-    this.canvas.scrollTo({ left: 0, top: 0 })
+    // ⚠️ **只縮不放**：小圖放大到三倍只是變模糊。而留 16px 的邊。
+    const fit = Math.min(
+      (box.width - 32) / this.contentSize.w,
+      (box.height - 32) / this.contentSize.h, 1)
+    this.zoom = Math.min(FlowPanel.ZOOM_MAX, Math.max(FlowPanel.ZOOM_MIN, fit))
+    // 置中——`適配` 之後圖該在畫面中間，不是擠在左上角
+    this.pan = {
+      x: (box.width - this.contentSize.w * this.zoom) / 2,
+      y: (box.height - this.contentSize.h * this.zoom) / 2,
+    }
+    this.applyViewport()
+    this.syncZoomLabel()
   }
 
   /**
@@ -252,36 +303,72 @@ export class FlowPanel implements ViewHost {
    */
   private attachZoomGestures(): void {
     const el = this.canvas
-    el.addEventListener('pointerdown', (e) => {
-      if (e.pointerType !== 'touch') return
-      this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    })
-    const clear = (e: PointerEvent): void => { this.pointers.delete(e.pointerId) }
-    el.addEventListener('pointerup', clear)
-    el.addEventListener('pointercancel', clear)
-    el.addEventListener('pointerleave', clear)
 
+    // ── 一根手指／滑鼠拖空白處 ＝ 推畫面 ────────────────────────────
+    //
+    // 🔴 **Blockly 就是這樣**：畫布是無限的，你永遠拖得動它。
+    //    在此之前這裡靠原生捲動，而實測手機上**縱向可捲 = 0**
+    //    ——流程圖比畫面小，於是「捲動」根本不存在。
+    let panFrom: { x: number; y: number; pan: { x: number; y: number } } | null = null
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button === 2) return
+      if (e.pointerType === 'touch') this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      // ⚠️ 只在**空白處**才推畫面：按在節點或線上的話它們已經 `stopPropagation`
+      if (this.pointers.size > 1) { panFrom = null; return }
+      panFrom = { x: e.clientX, y: e.clientY, pan: { ...this.pan } }
+      el.classList.add('fc-panning')
+    })
+
+    const endPan = (e: PointerEvent): void => {
+      this.pointers.delete(e.pointerId)
+      panFrom = null
+      el.classList.remove('fc-panning')
+    }
+    el.addEventListener('pointerup', endPan)
+    el.addEventListener('pointercancel', endPan)
+    el.addEventListener('pointerleave', endPan)
+
+    // ── 兩根手指 ＝ 捏合縮放 ──────────────────────────────────────
+    //
+    // ⚠️ `.flow-canvas` 現在是 `touch-action: none`——**每一種手勢都由我們接**。
+    //    這與 Blockly 一致：它也把整塊注入區設成 `none` 再自己分派。
     let pinchFrom: { dist: number; zoom: number } | null = null
     el.addEventListener('pointermove', (e) => {
-      if (e.pointerType !== 'touch' || !this.pointers.has(e.pointerId)) return
-      this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (e.pointerType === 'touch' && this.pointers.has(e.pointerId)) {
+        this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      }
       const pts = [...this.pointers.values()]
-      if (pts.length !== 2) { pinchFrom = null; return }
-      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y)
-      if (!pinchFrom) { pinchFrom = { dist, zoom: this.zoom }; return }
-      if (pinchFrom.dist < 1) return
-      e.preventDefault()
-      this.setZoom(pinchFrom.zoom * (dist / pinchFrom.dist), {
-        x: (pts[0].x + pts[1].x) / 2,
-        y: (pts[0].y + pts[1].y) / 2,
-      })
+      if (pts.length === 2) {
+        panFrom = null
+        const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y)
+        if (!pinchFrom) { pinchFrom = { dist, zoom: this.zoom }; return }
+        if (pinchFrom.dist < 1) return
+        this.setZoom(pinchFrom.zoom * (dist / pinchFrom.dist), {
+          x: (pts[0].x + pts[1].x) / 2,
+          y: (pts[0].y + pts[1].y) / 2,
+        })
+        return
+      }
+      pinchFrom = null
+      if (!panFrom) return
+      this.pan = {
+        x: panFrom.pan.x + (e.clientX - panFrom.x),
+        y: panFrom.pan.y + (e.clientY - panFrom.y),
+      }
+      this.applyViewport()
     })
 
+    // ── 滾輪 ─────────────────────────────────────────────────────
+    //
+    // 🔴 **帶修飾鍵＝縮放，光滾＝推畫面**。在此之前光滾是原生捲動，
+    //    而原生捲動已經沒有了（畫布不再 `overflow: auto`），所以這裡要接手。
     el.addEventListener('wheel', (e) => {
-      // 🔴 **只有帶修飾鍵才縮放**——光滾滾輪是捲動，那是原生的、也是使用者要的
-      if (!e.ctrlKey && !e.metaKey) return
       e.preventDefault()
-      this.setZoom(this.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1), { x: e.clientX, y: e.clientY })
+      if (e.ctrlKey || e.metaKey) {
+        this.setZoom(this.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1), { x: e.clientX, y: e.clientY })
+        return
+      }
+      this.panBy(-e.deltaX, -e.deltaY)
     }, { passive: false })
   }
 
@@ -308,12 +395,89 @@ export class FlowPanel implements ViewHost {
    */
   private selection: { kind: 'node' | 'wire'; id: string } | null = null
 
+  /**
+   * **長按／右鍵選單**——使用者 2026-08-30：
+   * 「刪除的部分或許可以考慮**長按（右鍵）選單刪除**或是**選取 Delete**」。
+   *
+   * ## 🔴 為什麼那兩顆 ✕ 退場了
+   *
+   * 實測（400×780 的手機）：**刪除鈕 9×15 px，縮小之後 6×9**
+   * ——遠低於觸控目標的建議值，而且它**跟著縮放一起變小**，方向是反的。
+   *
+   * > **一個會隨著畫面縮小而一起縮小的觸控目標，
+   * > 在最需要它的時候最小。**
+   *
+   * 🟢 而 Blockly 沒有 ✕：它用**右鍵／長按選單**。這一顆選單是 DOM，
+   * 不在 SVG 裡，所以**它的大小與縮放無關**。
+   */
+  private menu: HTMLElement | null = null
+
+  private closeMenu(): void {
+    this.menu?.remove()
+    this.menu = null
+  }
+
+  private openMenu(at: { x: number; y: number }, kind: 'node' | 'wire', id: string): void {
+    this.closeMenu()
+    this.select(kind, id)
+    const box = this.container.getBoundingClientRect()
+    const el = document.createElement('div')
+    el.className = 'flow-menu'
+    el.style.left = `${at.x - box.left}px`
+    el.style.top = `${at.y - box.top}px`
+    const item = (label: string, run: () => void): void => {
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.className = 'flow-menu-item'
+      b.textContent = label
+      // ⚠️ `pointerdown` 不是 `click`——見這個檔案裡那條反覆出現的教訓
+      b.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); this.closeMenu(); run() })
+      el.appendChild(b)
+    }
+    item(kind === 'wire'
+      ? msg('FLOW_MENU_DELETE_WIRE', '刪掉這一端')
+      : msg('FLOW_MENU_DELETE', '刪掉這一塊'), () => this.deleteNode(id))
+    // 🔴 **記住它**（2026-08-30 實測抓到）：第一版建了選單卻沒有指派，
+    //    於是 `closeMenu()` 什麼都沒關——**選單會一直疊上去**。
+    //    症狀是第二次右鍵之後畫面上有兩個選單。
+    //
+    // > **一個「關閉」函式如果關的是一個從來沒有被記住的東西，
+    // > 它每一次都成功，而每一次都沒有作用。**
+    this.menu = el
+    this.container.appendChild(el)
+    // 點別處就收起來
+    setTimeout(() => {
+      const off = (): void => { this.closeMenu(); window.removeEventListener('pointerdown', off) }
+      window.addEventListener('pointerdown', off)
+    }, 0)
+  }
+
   private isSelected(kind: 'node' | 'wire', id: string): boolean {
     return this.selection?.kind === kind && this.selection.id === id
   }
 
   private select(kind: 'node' | 'wire', id: string | null): void {
     this.selection = id === null ? null : { kind, id }
+    this.paint()
+    // 🔴 **對外說一聲**——這個 app 早就有一條以 `nodeId` 為鍵的跨視圖反白
+    //    （積木選一塊 → 程式碼那一行也亮）。流程視圖在 2026-08-30 之前
+    //    **沒有加入**，於是它的選取只有自己看得到。
+    //
+    // > **一個只有自己看得到的選取，在多視圖的編輯器裡等於沒有選。**
+    this.selectCb?.(id)
+  }
+
+  /** 組裝點接上「我選了哪一顆」。 */
+  onNodeSelect(cb: ((nodeId: string | null) => void) | null): void { this.selectCb = cb }
+  private selectCb: ((nodeId: string | null) => void) | null = null
+
+  /**
+   * **別的視圖選了那一顆** → 這裡也亮起來。
+   *
+   * ⚠️ 它**不回叫** `selectCb`——不然兩個視圖會互相通知到天亮。
+   */
+  highlightNode(nodeId: string | null): void {
+    this.selection = nodeId === null ? null : { kind: 'node', id: nodeId }
     this.paint()
   }
 
@@ -812,13 +976,19 @@ export class FlowPanel implements ViewHost {
     const bar = document.createElement('div')
     bar.className = 'flow-toolbar'
 
-    this.scopeSelect = document.createElement('select')
-    this.scopeSelect.className = 'flow-scope'
-    this.scopeSelect.title = '要畫哪一段'
-    this.scopeSelect.addEventListener('change', () => {
-      this.scopeId = this.scopeSelect.value === '' ? null : this.scopeSelect.value
-      this.rebuild()
-    })
+    // 🪦 **「整份程式 ▾」那顆下拉已於 2026-08-30 刪除**（使用者：
+    //    「這選單能不能先刪掉？現在好像還看不出有什麼用」）。
+    //
+    // 它列的是「整份程式」＋**每一顆有本體的頂層節點**（也就是函式），
+    // 讓你把圖收窄到單一函式。而**今天多數程式只有 `main`**，
+    // 於是兩個選項看到的東西幾乎一樣——而它在行動版佔掉工具列最寬的一格。
+    //
+    // > **一個要等到「東西變多」才有價值的控制項，
+    // > 在那之前是純粹的成本。**
+    //
+    // 🔴 **重開條件**：一支程式真的有好幾個函式，而使用者說出
+    //    「我只想看其中一個」——**不是「又想到它了」**。
+    //    （那時它該長成什麼樣也要重想：一個下拉、還是點函式節點就聚焦。）
 
     const auto = document.createElement('button')
     this.autoBtn = auto
@@ -894,29 +1064,14 @@ export class FlowPanel implements ViewHost {
     zoomIn.title = msg('FLOW_ZOOM_IN', '放大')
     zoomIn.addEventListener('click', () => this.setZoom(this.zoom * 1.25))
 
-    /**
-     * **還原／取消還原**——它們動的是**樹**，不是這個面板的私有狀態。
-     *
-     * 🔴 所以面板**不自己記歷史**：它只發出「我要退一步」，
-     * 而堆疊住在 `SyncController`（真相的主人）。
-     * 記在這裡的話，第二個會編輯的視圖進來時要再寫一份
-     * ——而那正是 `history/188` 那個病。
-     */
-    const undo = document.createElement('button')
-    undo.className = 'flow-btn'
-    undo.type = 'button'
-    undo.textContent = '↶'
-    undo.title = msg('FLOW_UNDO', '還原')
-    undo.addEventListener('click', () => this.historyCb?.('undo'))
-
-    const redo = document.createElement('button')
-    redo.className = 'flow-btn'
-    redo.type = 'button'
-    redo.textContent = '↷'
-    redo.title = msg('FLOW_REDO', '取消還原')
-    redo.addEventListener('click', () => this.historyCb?.('redo'))
-
-    bar.append(this.scopeSelect, auto, undo, redo, zoomOut, zoomFit, zoomIn)
+    // 🪦 **這裡曾經有一對 ↶ ↷**（2026-08-30 退場）。畫面上因此有【三對】
+    //    「還原」：程式碼工具列、快速列的 ↩↪、以及這一對。
+    //
+    // > **同一件事在同一個畫面上有兩個開關，是一個必然會不一致的東西。**
+    //
+    // 🟢 只留快速列那一對，而它依「上一步在哪裡做的」轉送到這裡的樹歷史。
+    //    ⚠️ `onHistory` 的埠**留著**——它是組裝點接進來的那條線。
+    bar.append(auto, zoomOut, zoomFit, zoomIn)
     this.syncZoomLabel()
 
     this.svg = document.createElementNS(SVG_NS, 'svg')
@@ -966,9 +1121,15 @@ export class FlowPanel implements ViewHost {
     return line && line.trim() ? line.trim() : null
   }
 
+  /**
+   * 要畫哪一段——🪦 **今天永遠是整棵樹**（見上面那個下拉的墓碑）。
+   *
+   * ⚠️ 這一層**留著**：它是「收窄範圍」這件事的接縫，
+   * 重開的時候不必再把它挖回來。
+   */
   private scopedRoot(): SemanticNode | null {
     if (!this.tree) return null
-    return (this.scopeId ? findNode(this.tree, this.scopeId) : this.tree) ?? this.tree
+    return this.tree
   }
 
   private rootBody(): SemanticNode[] {
@@ -992,7 +1153,6 @@ export class FlowPanel implements ViewHost {
 
   private rebuild(): void {
     this.syncLabels()
-    this.syncScopeOptions()
     this.graph = buildNodeGraph(this.rootBody(), this.labelSource(), { emptySlots: this.capabilities.editable })
     // 拖曳位移只留給還在的節點——刪掉的節點不該留著一個看不見的位移
     const alive = new Set(this.graph.nodes.map((n) => n.id))
@@ -1108,28 +1268,7 @@ export class FlowPanel implements ViewHost {
   }
 
   /** 粒度選單：整份 ＋ 每一顆最外層有身體的節點（函式、類別、迴圈……） */
-  private syncScopeOptions(): void {
-    const opts: { value: string; text: string }[] = [{ value: '', text: msg('FLOW_SCOPE_ALL', '整份程式') }]
-    if (this.tree) {
-      for (const s of bodySlotsOf(this.tree.componentId)) {
-        for (const child of this.tree.children[s] ?? []) {
-          if (bodySlotsOf(child.componentId).length === 0) continue
-          opts.push({ value: child.id, text: truncate(this.codeLineOf(child.id) ?? child.componentId, 28) })
-        }
-      }
-    }
-    const keep = this.scopeId
-    this.scopeSelect.innerHTML = ''
-    for (const o of opts) {
-      const el = document.createElement('option')
-      el.value = o.value
-      el.textContent = o.text
-      this.scopeSelect.appendChild(el)
-    }
-    // 選過的那一段不見了 → 退回整份（而不是留著一個指不到東西的選擇）
-    this.scopeId = keep && opts.some((o) => o.value === keep) ? keep : null
-    this.scopeSelect.value = this.scopeId ?? ''
-  }
+  // 🪦 `syncScopeOptions` 隨那顆下拉一起刪除（2026-08-30）。
 
   private posOf(n: GraphNode): { x: number; y: number } {
     // 手放過的用它自己的絕對座標；沒放過的才問自動排版。
@@ -1147,6 +1286,11 @@ export class FlowPanel implements ViewHost {
   private paint(): void {
     const g = this.graph
     this.svg.innerHTML = ''
+    // 🔴 **內容全部住在這個 `<g>` 裡**——鏡頭（位移＋縮放）掛在它身上。
+    //    SVG 本身佔滿視窗、不隨內容變大（Blockly 的做法）。
+    this.viewport = document.createElementNS(SVG_NS, 'g')
+    this.viewport.setAttribute('class', 'fc-viewport')
+    this.svg.appendChild(this.viewport)
     const has = !!g && g.nodes.length > 0
     this.empty.style.display = has ? 'none' : ''
     this.svg.style.display = has ? '' : 'none'
@@ -1159,19 +1303,12 @@ export class FlowPanel implements ViewHost {
       maxX = Math.max(maxX, p.x + n.w)
       maxY = Math.max(maxY, p.y + n.h)
     }
-    // 🔴 **`viewBox` 是內容的尺寸，`width`／`height` 是畫出來的尺寸**——
-    //    兩者的比就是縮放。內部座標因此一格都不用動。
-    const contentW = maxX + PAD
-    const contentH = maxY + PAD
-    this.contentSize = { w: contentW, h: contentH }
-    this.svg.setAttribute('viewBox', `0 0 ${contentW} ${contentH}`)
-    this.svg.setAttribute('width', String(contentW * this.zoom))
-    this.svg.setAttribute('height', String(contentH * this.zoom))
+    // ⚠️ 內容尺寸只留給「適配」用——**SVG 自己不再隨它變大**。
+    this.contentSize = { w: maxX + PAD, h: maxY + PAD }
+    this.applyViewport()
 
-    // 🔴 線的 ✕ 收在這一層——它在**節點之後**才貼上去（見下面的說明）
-    const tools = document.createElementNS(SVG_NS, 'g')
-    tools.setAttribute('class', 'fc-wire-tools')
-
+    // 🪦 這裡曾經有一層 `fc-wire-tools`——線上那顆 ✕ 的家（為了畫在節點之上）。
+    //    ✕ 退場之後它就空了，2026-08-30 一起刪掉。
     for (const w of g.wires) {
       const a = this.portAt(w.from.node, w.from.port)
       const b = this.portAt(w.to.node, w.to.port)
@@ -1207,6 +1344,13 @@ export class FlowPanel implements ViewHost {
         // > **一個「用 JS 派送有效、用滑鼠按沒效」的處理器，
         // > 說的不是它壞了，是它掛在一個不會發生的事件上。**
         hit.addEventListener('pointerdown', (ev) => {
+        // 🔴 **右鍵不進來**（2026-08-30 實測抓到）：右鍵的 `pointerdown` 若
+        //    觸發選取，就會**重畫**，於是接下來要收 `contextmenu` 的那個元素
+        //    **已經被換掉了**——選單因此永遠開不出來。
+        //
+        // > **在一個會重畫的畫布上，`pointerdown` 做的事會把 `contextmenu`
+        // > 的收件人換掉。**
+        if (ev.button === 2) return
           ev.stopPropagation()
           this.select('wire', this.childEndOf(w.from.node, w.to.node) ?? w.to.node)
         })
@@ -1225,64 +1369,16 @@ export class FlowPanel implements ViewHost {
         hit.appendChild(wt)
         wire.appendChild(hit)
 
-        // 🔴 **✕ 浮在線的中點**——而不是「整條線點下去就刪」。
-        //    n8n 的做法：你點的是一顆**看得見的鈕**，不是一條線的某一處。
-        //    ⚠️ 那一格差別在觸控上是「會不會誤刪」。
+        // 🪦 **線上的 ✕ 也退場了**（2026-08-30，與節點那顆同一個理由）：
+        //    它在手機上只有 18px 直徑而且跟著縮放變小；而為了不讓它彈在
+        //    游標底下還得抬高 16px——那是一個**在補一個不該存在的東西**。
         //
-        // 🔴 **而它要畫在節點【之上】**（2026-08-30 量到）：節點是後畫的，
-        //    於是線會被壓在底下——實測那條線的中點底下是 `fc-field-hit`，
-        //    ✕ 因此**點不到**。SVG 沒有 z-index，順序就是圖層，
-        //    所以這些鈕收進一個最後才貼上去的圖層。
-        //
-        // ⚠️ 位置取**曲線上**的中點（`getPointAtLength`），不是兩端的平均
-        //    ——一條貝茲的兩端平均**不一定在那條曲線上**。
-        const probe = document.createElementNS(SVG_NS, 'path')
-        probe.setAttribute('d', d)
-        const half = (() => {
-          try {
-            const len = probe.getTotalLength()
-            return len > 0 ? probe.getPointAtLength(len / 2) : null
-          } catch { return null }
-        })()
-        const on = half ?? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
-        // 🔴 **抬離那條線 16px**（2026-08-30 實測抓到）。
-        //
-        // 貼在線上的話，滑過去的那一刻 ✕ **正好彈在游標底下**
-        // ——於是你「想選那條線」的那一按，直接刪掉了它。
-        //
-        // > **一個因為 hover 而出現、又出現在游標正下方的按鈕，
-        // > 是一台誤刪製造機。**
-        //
-        // n8n 的浮動工具列也是抬高的，同一個理由。
-        const mid = { x: on.x, y: on.y - 16 }
-        const btn = document.createElementNS(SVG_NS, 'g')
-        btn.setAttribute('class', 'fc-wire-del')
-        btn.setAttribute('transform', `translate(${mid.x},${mid.y})`)
-        const disc = document.createElementNS(SVG_NS, 'circle')
-        disc.setAttribute('r', '9')
-        btn.appendChild(disc)
-        const mark = document.createElementNS(SVG_NS, 'text')
-        mark.setAttribute('text-anchor', 'middle')
-        mark.setAttribute('y', '4')
-        mark.textContent = '✕'
-        btn.appendChild(mark)
-        const bt = document.createElementNS(SVG_NS, 'title')
-        bt.textContent = msg('FLOW_DELETE_WIRE', '把這一端拿掉（可以還原）')
-        btn.appendChild(bt)
-        btn.addEventListener('pointerdown', (ev) => {
-          ev.stopPropagation()
-          const child = this.childEndOf(w.from.node, w.to.node)
-          if (child) this.deleteNode(child)
-        })
-        btn.setAttribute('data-wire-del', childEnd)
-        if (this.isSelected('wire', childEnd)) btn.classList.add('fc-shown')
-        tools.appendChild(btn)
+        // 🟢 改成長按／右鍵選單：選單是 DOM，**大小與縮放無關**。
+        this.attachMenu(hit, 'wire', childEnd)
       }
-      this.svg.appendChild(wire)
+      this.viewport.appendChild(wire)
     }
-    for (const n of g.nodes) this.svg.appendChild(this.renderNode(n))
-    // 🔴 **最後才貼**——這樣線上的 ✕ 一定在節點之上，點得到。
-    this.svg.appendChild(tools)
+    for (const n of g.nodes) this.viewport.appendChild(this.renderNode(n))
   }
 
   private renderNode(n: GraphNode): SVGGElement {
@@ -1374,24 +1470,8 @@ export class FlowPanel implements ViewHost {
       g.appendChild(this.renderPort(p, n.id))
     }
 
-    // 🔴 **刪除鈕**——只有「可編輯」而且不是骨架的節點才有。
-    //    ⚠️ 它在**標題列的右端**，而 `pointerdown` 要攔下來：
-    //    不攔的話按它會變成「拖整顆節點」（欄位那一格早就踩過同一個坑）。
-    if (this.capabilities.editable && !ghost) {
-      const del = document.createElementNS(SVG_NS, 'text')
-      del.setAttribute('class', 'fc-del')
-      del.setAttribute('x', String(n.w - 7))
-      del.setAttribute('y', String(HEADER_H / 2 + 4))
-      del.setAttribute('text-anchor', 'end')
-      del.textContent = '✕'
-      // 🔴 同上：`pointerdown` 而不是 `click`
-      del.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); this.deleteNode(n.id) })
-      const dTitle = document.createElementNS(SVG_NS, 'title')
-      dTitle.textContent = msg('FLOW_DELETE_NODE', '刪掉這一塊（可以還原）')
-      del.appendChild(dTitle)
-      g.appendChild(del)
-    }
-
+    // 🪦 **節點上的 ✕ 退場了**（2026-08-30）——實測它在手機上只有 9×15 px，
+    //    而且**跟著縮放一起變小**（縮到 80% 就剩 6×9）。改用長按／右鍵選單。
     const line = this.codeLineOf(n.id)
     const title = document.createElementNS(SVG_NS, 'title')
     title.textContent = line ? `${n.title}\n${line}` : n.title
@@ -1411,6 +1491,8 @@ export class FlowPanel implements ViewHost {
     //
     // 🟢 所以這裡不擋拖曳，改在 `commitWire` 擋**關係的改變**。
     this.attachDrag(g, n.id)
+    // 🔴 **長按（觸控）／右鍵（桌機）→ 選單**——那兩顆 ✕ 已經退場
+    if (this.capabilities.editable && !ghost) this.attachMenu(g, 'node', n.id)
     return g
   }
 
@@ -1727,17 +1809,18 @@ export class FlowPanel implements ViewHost {
    */
   private paintWirePreview(e: PointerEvent, origin?: { x: number; y: number }): void {
     this.clearWirePreview()
-    const r = this.svg.getBoundingClientRect()
     const start = origin ?? this.wireFromPoint()
     if (!start) return
+    const s0 = this.clientToContent(start.x, start.y)
+    const s1 = this.clientToContent(e.clientX, e.clientY)
     const l = document.createElementNS(SVG_NS, 'line')
     l.setAttribute('class', 'fc-wire-preview')
-    // ⚠️ 螢幕像素 → SVG 單位（`viewBox` 不隨縮放變，所以這裡要除）
-    l.setAttribute('x1', String(this.toSvgLen(start.x - r.left)))
-    l.setAttribute('y1', String(this.toSvgLen(start.y - r.top)))
-    l.setAttribute('x2', String(this.toSvgLen(e.clientX - r.left)))
-    l.setAttribute('y2', String(this.toSvgLen(e.clientY - r.top)))
-    this.svg.appendChild(l)
+    // ⚠️ 螢幕座標 → 內容座標（位移與縮放都要扣掉）
+    l.setAttribute('x1', String(s0.x))
+    l.setAttribute('y1', String(s0.y))
+    l.setAttribute('x2', String(s1.x))
+    l.setAttribute('y2', String(s1.y))
+    this.viewport.appendChild(l)
   }
 
   /** 正在拉的那條線是從哪一個接點出發的（螢幕座標）。 */
@@ -1786,11 +1869,46 @@ export class FlowPanel implements ViewHost {
     return Number.isFinite(hue) ? `hsl(${hue}, 45%, 65%)` : null
   }
 
+  /**
+   * **長按（觸控）／右鍵（桌機）→ 選單。**
+   *
+   * ⚠️ 長按要在**移動超過門檻時取消**，不然拖曳到一半會被判成長按。
+   */
+  private attachMenu(el: SVGElement, kind: 'node' | 'wire', id: string): void {
+    el.addEventListener('contextmenu', (ev) => {
+      ev.preventDefault()
+      ev.stopPropagation()
+      this.openMenu({ x: ev.clientX, y: ev.clientY }, kind, id)
+    })
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let from = { x: 0, y: 0 }
+    const cancel = (): void => { if (timer) { clearTimeout(timer); timer = null } }
+    el.addEventListener('pointerdown', (ev: PointerEvent) => {
+      if (ev.pointerType !== 'touch') return
+      from = { x: ev.clientX, y: ev.clientY }
+      timer = setTimeout(() => { timer = null; this.openMenu(from, kind, id) }, 500)
+    })
+    el.addEventListener('pointermove', (ev: PointerEvent) => {
+      if (Math.hypot(ev.clientX - from.x, ev.clientY - from.y) > 8) cancel()
+    })
+    el.addEventListener('pointerup', cancel)
+    el.addEventListener('pointercancel', cancel)
+  }
+
   private attachDrag(g: SVGGElement, id: string): void {
     g.addEventListener('pointerdown', (ev: PointerEvent) => {
       // 🔴 **兩根手指是縮放，不是拖曳**——放手給畫布上的捏合處理
       if (this.pointers.size >= 1 && ev.pointerType === 'touch') return
+      // 🔴 右鍵不拖曳——同上：它會把 `contextmenu` 的收件人換掉
+      if (ev.button === 2) return
       ev.preventDefault()
+      // 🔴 **擋住冒泡，不然畫布也會開始推**（2026-08-30 實測）：
+      //    手指走 100px 而節點在畫面上走了 **200px**——節點自己走了 100，
+      //    畫面又被推了 100。
+      //
+      // > **兩個手勢處理器掛在同一條冒泡路徑上，
+      // > 使用者的一次動作會被算兩次。**
+      ev.stopPropagation()
       // 🔴 **抓住這根指標**（2026-08-30）：在此之前是掛在 `window` 上聽，
       //    而觸控時手指一離開那顆節點，瀏覽器就可能改發 `pointercancel`
       //    ——症狀是「拖到一半節點自己停住」。
@@ -1798,8 +1916,10 @@ export class FlowPanel implements ViewHost {
       const start = { x: ev.clientX, y: ev.clientY }
       const node = this.graph?.nodes.find((n) => n.id === id)
       const base = node ? this.posOf(node) : { x: 0, y: 0 }
+      let moved = false
       const move = (e: PointerEvent): void => {
         if (e.pointerId !== ev.pointerId) return
+        if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4) moved = true
         // ⚠️ **除以倍率**：縮到 0.5 時，手指走 100px 只該讓節點走 200 個 SVG 單位……
         //    不，是 200——而**不除的話它只走 100，看起來像「拖不動」**。
         this.offsets.set(id, {
@@ -1812,6 +1932,15 @@ export class FlowPanel implements ViewHost {
         window.removeEventListener('pointermove', move)
         window.removeEventListener('pointerup', up)
         window.removeEventListener('pointercancel', up)
+        // 🔴 **按下去沒有移動 ＝ 選取**（2026-08-30）。
+        //
+        // 在此之前選取掛在 `click` 上，而**它永遠不會發**：
+        // 上面那一行 `ev.preventDefault()` 會把相容的滑鼠事件
+        // （`mousedown`／`mouseup`／`click`）一起壓掉。
+        //
+        // > **`preventDefault()` 在 `pointerdown` 上不只擋掉預設行為，
+        // > 它把整條相容事件鏈都關掉了——包括你正要用的那一個。**
+        if (!moved) this.select('node', id)
       }
       window.addEventListener('pointermove', move)
       window.addEventListener('pointerup', up)
@@ -1914,13 +2043,6 @@ function truncate(s: string, n: number): string {
   return s.length <= n ? s : `${s.slice(0, n - 1)}…`
 }
 
-function findNode(root: SemanticNode, id: string): SemanticNode | null {
-  if (root.id === id) return root
-  for (const kids of Object.values(root.children)) {
-    for (const k of kids) {
-      const hit = findNode(k, id)
-      if (hit) return hit
-    }
-  }
-  return null
-}
+// 🪦 `findNode` 隨那顆「整份程式」下拉一起退場（2026-08-30）——它唯一的
+//    消費者是 `scopedRoot` 的收窄那一半，而收窄已經永遠是「整棵樹」了。
+
