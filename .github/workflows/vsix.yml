@@ -1,0 +1,136 @@
+# **擴充的 vsix：每次推送都打包，打 tag 才發佈。**
+#
+# 🔴 **為什麼發佈綁 tag，不綁每次推送**
+#
+# ```
+# 版本號必須唯一且遞增   每次推送都發 ＝ 每個 WIP commit 都變成一個公開版本
+# 使用者端會收到更新     一天推六次 ＝ 使用者一天被打擾六次
+# 撤回很難              Marketplace 不能刪版本，只能再發一個更新的
+# ```
+#
+# > **打 tag 是「我認為這一版可以給人用」的那個明確動作
+# > ——與這個專案對「明確的動作」的一貫判準一致。**
+#
+# ⚠️ 而**打包**要每次都跑：`ship-extension` 那支 skill 逐字記著
+# 「建置腳本裡的錯誤**可能不會讓指令失敗**」——打不出來要當天就知道，
+# 不是等到要發佈的那一刻。
+name: Extension (vsix)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build:vscode
+
+      # 🔴 **入口條件：產物真的長出來了，而且不是一個空殼。**
+      #
+      # `ship-extension` §2 逐字：「建置腳本裡的錯誤**可能不會讓指令失敗**
+      # ——回頭確認產出物真的換了」。一個 0 位元組的 vsix 會讓下面每一步
+      # 都「成功」，而使用者裝到的是空的。
+      #
+      # ⚠️ 錨在**大小與檔案數**（合成量），不錨在「有沒有壞掉」。
+      - name: 產物體檢
+        run: |
+          set -euo pipefail
+          VSIX=build/vscode/semorphe-vscode.vsix
+          test -f "$VSIX" || { echo "::error::沒有產出 $VSIX"; exit 1; }
+          SIZE=$(stat -c%s "$VSIX")
+          FILES=$(unzip -l "$VSIX" | tail -1 | awk '{print $2}')
+          echo "vsix ${SIZE} 位元組、${FILES} 個檔"
+          # 目前約 1.4 MB／數十個檔；低於這個量級代表建置只跑了一半
+          test "$SIZE" -gt 300000 || { echo "::error::vsix 只有 ${SIZE} 位元組——建置多半只跑了一半"; exit 1; }
+          test "$FILES" -gt 10 || { echo "::error::vsix 只有 ${FILES} 個檔"; exit 1; }
+          # 🔴 **面板的程式真的在裡面**——少了它擴充裝得起來而畫面是空的
+          unzip -l "$VSIX" | grep -q 'webview' || { echo "::error::vsix 裡沒有 webview 的產物"; exit 1; }
+
+      - name: 版本
+        id: ver
+        run: |
+          V=$(grep -oE "EXTENSION_VERSION = '[^']+'" src/vscode/manifest.ts | grep -oE "[0-9][^']*")
+          echo "value=$V" >> "$GITHUB_OUTPUT"
+          echo "manifest 版本：$V"
+
+      # 🔴 **tag 與 `EXTENSION_VERSION` 必須一致。**
+      #
+      # `ship-extension` §1：「換版本號——**不是可選的**。VSCode 以
+      # `(id, version)` 為鍵快取 `contributes`；版本不變就不重建，
+      # 而症狀是『改了而畫面沒變，且零錯誤』」。
+      #
+      # ⚠️ 而發佈時多一個風險：**tag 說 v0.11.0 而包裡是 0.10.4**
+      # ——使用者以為裝到新版，實際上裝到舊的，而**沒有任何東西會出聲**。
+      - name: tag 與版本要對得上
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          MAN="${{ steps.ver.outputs.value }}"
+          [ "$TAG" = "$MAN" ] || {
+            echo "::error::tag 是 v$TAG 而 manifest 是 $MAN——使用者會以為裝到新版而裝到舊的"
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: semorphe-vscode-${{ steps.ver.outputs.value }}
+          path: build/vscode/semorphe-vscode.vsix
+          if-no-files-found: error
+
+      # ── 發佈：只有 tag ────────────────────────────────────────────
+      #
+      # ⚠️ **GitHub Release 一定發**（不需要任何祕密）。
+      #    Marketplace／Open VSX 只有在祕密存在時才發——而**跳過要出聲**，
+      #    不是靜靜地不做（那會讓「我發佈了」變成一句沒有人驗證過的話）。
+      - name: GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/vscode/semorphe-vscode.vsix
+          generate_release_notes: true
+          body: |
+            ## 安裝
+
+            **VSCode**：`code --install-extension semorphe-vscode.vsix`
+            （或命令面板 → Extensions: Install from VSIX…）
+
+            ⚠️ **Arduino IDE 沒有支援的安裝通道**——它是 Theia 做的，
+            而它把擴充市集對使用者關掉了。今天的做法是把 vsix 放進它的
+            plugins 目錄再重開，而**那不是官方介面，換一版就可能失效**。
+            在那條路被驗證之前，Arduino IDE 的使用者建議直接用網頁版。
+
+      - name: 發到 Marketplace（有祕密才發）
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if [ -z "${VSCE_PAT:-}" ]; then
+            echo "::notice::沒有 VSCE_PAT，跳過 Marketplace。設了它之後 VSCode 才會自動更新。"
+            exit 0
+          fi
+          npx -y @vscode/vsce publish --packagePath build/vscode/semorphe-vscode.vsix --pat "$VSCE_PAT"
+
+      - name: 發到 Open VSX（有祕密才發）
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          if [ -z "${OVSX_PAT:-}" ]; then
+            echo "::notice::沒有 OVSX_PAT，跳過 Open VSX（VSCodium／Theia 那一族的市集）。"
+            exit 0
+          fi
+          npx -y ovsx publish build/vscode/semorphe-vscode.vsix -p "$OVSX_PAT"

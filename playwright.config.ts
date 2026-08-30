@@ -40,7 +40,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:4173/semorphe/',
+    baseURL: 'http://localhost:4173/',
     trace: 'retain-on-failure',
   },
   projects: [
@@ -62,7 +62,7 @@ export default defineConfig({
   // dev server 的熱重載會在測試中途重載頁面，而那正是手動驗證時反覆踩到的坑。
   webServer: {
     command: 'npm run build && npm run preview',
-    url: 'http://localhost:4173/semorphe/',
+    url: 'http://localhost:4173/',
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

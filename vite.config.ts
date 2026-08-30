@@ -28,7 +28,17 @@ function copyBlocklyMedia(): void {
 copyBlocklyMedia()
 
 export default defineConfig({
-  base: '/semorphe/',
+  // 🔴 **根目錄**——2026-08-30 起網站住在 `semorphe.com/`，不是
+  //    `timcsy.github.io/semorphe/`。
+  //
+  // ⚠️ 這一格改錯的症狀是**整片白**：每一個 JS／CSS／wasm 都 404，
+  //    而 HTML 本身載得起來，所以「網站有回應」而畫面是空的。
+  //
+  // 🔴 自訂網域靠 `public/CNAME`——**它一定要在 `public/`**：
+  //    這個 repo 用 Actions 部署，Pages 收的是 `dist/` 那一包。
+  //    放在 repo 根目錄不會被複製進去，而症狀是
+  //    「設定裡填了網域，過幾次部署它自己消失了」。
+  base: '/',
   build: {
     rollupOptions: {
       output: {

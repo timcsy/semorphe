@@ -3,8 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Semorphe — 唯一真實，各式投影</title>
+    <!-- 🔴 分頁標題要對【沒聽過這個東西的人】說話（2026-08-30 改）。
+         原本是「Semorphe — 唯一真實，各式投影」——那是給開發者看的公理，
+         而它出現在搜尋結果、書籤、與別人的分頁列上。 -->
+    <title>Semorphe — 程式碼、流程圖、積木，三邊同步</title>
+    <meta name="description" content="把真的 C++ 或 Python 貼進去，它變成積木；改積木，程式碼跟著變；流程圖畫的是同一支程式。三邊都能編輯，三邊即時同步。" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- 分享出去時的預覽卡。⚠️ `og:image` **必須是絕對網址**——
+         相對路徑在 LINE／Discord／Twitter 那邊取不到，而症狀是「卡片沒有圖」。 -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://semorphe.com/" />
+    <meta property="og:title" content="Semorphe — 程式碼、流程圖、積木，三邊同步" />
+    <meta property="og:description" content="把真的 C++ 或 Python 貼進去，它變成積木；改積木，程式碼跟著變。三邊都能編輯，三邊即時同步。" />
+    <meta property="og:image" content="https://semorphe.com/og.png" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="/src/ui/style.css" />
   </head>
   <body>
