@@ -638,5 +638,16 @@
   "FLOW_PRESET_ELSEIF": " / else if",
   "FLOW_SLOT_ELSE_BODY": "Else",
   "FLOW_LAYOUT_LOST": "{n} node(s) lost their hand-placed position in this edit and went back to auto layout.",
-  "FLOW_REFUSE_SCAFFOLD_LOCKED": "This is part of the program skeleton: you can move it, but its connections are locked. Your program was not changed."
+  "FLOW_REFUSE_SCAFFOLD_LOCKED": "This is part of the program skeleton: you can move it, but its connections are locked. Your program was not changed.",
+  "FLOW_ZOOM_IN": "Zoom in",
+  "FLOW_ZOOM_OUT": "Zoom out",
+  "FLOW_ZOOM_FIT": "Fit to view",
+  "FLOW_REFUSE_SLOT_WOULD_EMPTY": "This slot can't be left empty — removing it would produce something like `if ()`. To replace it, connect the new one and it will take over. Your program was not changed.",
+  "FLOW_UNDO": "Undo",
+  "FLOW_REDO": "Redo",
+  "FLOW_NO_UNDO": "Nothing left to undo",
+  "FLOW_NO_REDO": "Nothing left to redo",
+  "FLOW_DELETE_NODE": "Delete this block (undoable)",
+  "FLOW_DELETE_WIRE": "Click to remove this end (undoable)",
+  "FLOW_SELECT_WIRE": "Click to select, then press ✕ or Delete to remove this end"
 }

@@ -900,8 +900,20 @@ export class App {
     //    寫死的是 `'flow-panel'` 而面板宣告的是 `'flow'`，兩個對不上。
     //    那在 `originViewId` 出現之前沒有人看得出來——因為沒有人讀它。
     //    > **一個沒有人讀的識別字，錯了也不會有人知道。**
-    elements.flowPanel?.onEdit((tree) =>
-      this.bus.emit('edit:tree', { viewId: elements.flowPanel?.viewId, tree }))
+    elements.flowPanel?.onEdit((tree) => {
+      // 🔴 記住**上一步是誰改的**——`doUndo` 靠它決定要退哪一份堆疊
+      this.lastTreeEditor = elements.flowPanel?.viewId ?? 'flow'
+      this.bus.emit('edit:tree', { viewId: elements.flowPanel?.viewId, tree })
+    })
+    // 🔴 **流程視圖的編輯在 2026-08-30 之前完全不可還原**（實測：改一個變數名，
+    //    按還原，程式碼一個字都沒退回去）——`doUndo()` 就是 `blocklyPanel.undo()`。
+    //
+    // > **一個編輯得動而還原不了的視圖，比一個唯讀的視圖更危險
+    // > ——使用者會以為他隨時可以退回去。**
+    elements.flowPanel?.onHistory((dir) => {
+      const ok = dir === 'undo' ? this.syncController?.undoTree() : this.syncController?.redoTree()
+      if (!ok) elements.flowPanel?.sayNothingToUndo(dir)
+    })
     // 🔴 **palette 讀工具箱的【輸出】**（2026-08-26，(d)）——不是各自從登錄表算一次。
     this.flowPanel = elements.flowPanel
     this.flowPanel?.setPalette(this.buildToolboxInner())
@@ -1474,6 +1486,8 @@ export class App {
 
   private wireBlocklyChangeHandler(): void {
     this.blocklyPanel?.onChange(() => {
+      // 🔴 積木那側改過了 → 上一步不再是流程的（見 `doUndo`）
+      this.markBlocksEdited()
       if (this._codeToBlocksInProgress) return
       // 🔴 **記錄「誰編輯了」要在殘態守衛【之前】**（2026-08-25 瀏覽器實測抓到）。
       //
@@ -1525,7 +1539,29 @@ export class App {
   }
 
   // 🔴 三顆視圖動作——**兩個入口共用**（面板的快速列 · 宿主的分頁標題列）。
-  private doUndo(): void { this.blocklyPanel?.undo() }
+  /**
+   * **還原**——而「還原什麼」由**最後編輯的是誰**決定。
+   *
+   * 🔴 這個 app 有兩份堆疊：Blockly 自己的（積木），與 `SyncController` 的
+   * 樹歷史（流程視圖，2026-08-30 加的）。
+   *
+   * ⚠️ 把它們合成一份是另一刀——今天先讓那顆按鈕**做對的那一件事**：
+   * 上一步是在流程改的，就退流程那一步。
+   *
+   * > **兩份歷史合成一顆按鈕，最糟的答案是「永遠退其中一份」
+   * > ——那讓另一份的每一步都變成不可逆。**
+   */
+  private lastTreeEditor: string | null = null
+
+  /** 積木那側改過了 → 上一步不再是流程的（`doUndo` 因此改退 Blockly 的堆疊）。 */
+  private markBlocksEdited(): void { this.lastTreeEditor = null }
+
+  private doUndo(): void {
+    if (this.lastTreeEditor && this.syncController?.canUndoTree()) {
+      if (this.syncController.undoTree()) return
+    }
+    this.blocklyPanel?.undo()
+  }
   private doRedo(): void { this.blocklyPanel?.redo() }
   private doClear(): void { this.blocklyPanel?.clear() }
 

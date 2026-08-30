@@ -181,7 +181,19 @@ export function createAppLayout(
    * > **一個看起來只是「少顯示一個數字」的決定，
    * > 收掉的是一整條相依、一次判準改寫、與一份快取。**
    */
-  const githubStar = profile.features.projectLink ? `
+  // 🔴 **不新增一格布林**——第六十三條護欄逐字：
+  //    「加一顆控制項，不得再多一格布林——`HostFeatures` 只准下降」
+  //    「那條路會爆炸，登錄表才不會」。
+  //
+  //    ⚠️ 而它教的東西比字面更廣：星星**不是控制項**，可是同一個道理成立
+  //    ——它跟著「**這個宿主自己畫不畫這條工具列**」走，而那件事
+  //    `controlSurfaces` 已經宣告過了（`inToolbar('run')`：執行畫在這裡嗎）。
+  //
+  // 🟢 它就住在「執行」旁邊，所以它跟著「執行」的家走。零新增欄位。
+  //    VSCode 那側 `action → hostTitleBar`，於是這顆自然不存在——
+  //    而那是對的：**那個面板住在使用者自己的專案裡，
+  //    在那裡放一顆「給我們星星」是替自己打廣告。**
+  const githubStar = inToolbar('run') ? `
       <a class="github-star" href="${GITHUB_URL}" target="_blank" rel="noopener noreferrer"
          title="到 GitHub 給這個專案一顆星"
         ><svg class="github-star-mark" viewBox="0 0 16 16" width="15" height="15"

@@ -302,7 +302,75 @@ export class SyncController {
    * 🔴 它收的**一直都是一棵樹**——只有名字是視圖專屬的。
    * 流程面板成為第二個樹形來源時，照舊命名就會長出第二個處理函式。
    */
+  /**
+   * **樹的歷史**——`undo`／`redo` 的堆疊。
+   *
+   * ## 🔴 它從哪來（2026-08-30）
+   *
+   * 使用者要流程視圖的刪除**與還原**。量出來的：`doUndo()` 就是
+   * `blocklyPanel.undo()`——**流程視圖改的每一格都不可還原**
+   * （實測：在流程改一個變數名，按還原，程式碼一個字都沒退回去）。
+   *
+   * > **一個編輯得動而還原不了的視圖，比一個唯讀的視圖更危險
+   * > ——使用者會以為他隨時可以退回去。**
+   *
+   * ## ⚠️ 它為什麼住在這裡
+   *
+   * 歷史是**真相的性質**，不是某個視圖的功能（P1）。放在流程面板裡的話，
+   * 第二個會編輯的視圖進來時要再寫一份——而那正是 `history/188` 那個病。
+   *
+   * ⚠️ 而它**只收 `edit:tree`**：積木那側有 Blockly 自己的堆疊，
+   * 程式碼那側有編輯器自己的。三份堆疊怎麼合成一顆按鈕，是另一刀
+   * ——今天由**最後編輯的是誰**決定（`app.ts` 的 `doUndo`）。
+   */
+  private past: SemanticNode[] = []
+  private future: SemanticNode[] = []
+  private static readonly HISTORY_MAX = 50
+
+  private snapshotTree(): SemanticNode | null {
+    if (!this.currentTree) return null
+    // ⚠️ **深拷貝**——存參考的話，下一次編輯會就地改到「過去」那一份。
+    return structuredClone(this.currentTree)
+  }
+
+  canUndoTree(): boolean { return this.past.length > 0 }
+  canRedoTree(): boolean { return this.future.length > 0 }
+
+  /** 退回上一步。回傳有沒有真的退。 */
+  undoTree(): boolean {
+    const prev = this.past.pop()
+    if (!prev) return false
+    const now = this.snapshotTree()
+    if (now) this.future.push(now)
+    this.applyTree({ tree: prev })
+    return true
+  }
+
+  /** 把退掉的那一步做回來。 */
+  redoTree(): boolean {
+    const next = this.future.pop()
+    if (!next) return false
+    const now = this.snapshotTree()
+    if (now) this.past.push(now)
+    this.applyTree({ tree: next })
+    return true
+  }
+
   private handleEditTree(data: { viewId?: string; tree: SemanticNode; blockMappings?: BlockMapping[] }): void {
+    if (this.syncing) return
+    // 🔴 **先拍照再套用**——照的是【改動前】那一棵。
+    //    ⚠️ 而新的一步一定要清掉 `future`：不清的話「還原→改別的→取消還原」
+    //    會把一條已經不存在的未來接回來。
+    const before = this.snapshotTree()
+    if (before) {
+      this.past.push(before)
+      if (this.past.length > SyncController.HISTORY_MAX) this.past.shift()
+      this.future.length = 0
+    }
+    this.applyTree(data)
+  }
+
+  private applyTree(data: { viewId?: string; tree: SemanticNode; blockMappings?: BlockMapping[] }): void {
     if (this.syncing) return
     this.syncing = true
     try {
@@ -317,7 +385,29 @@ export class SyncController {
       // （2026-08-18 補上；機制早就在跑，缺的是那份被指名的文件）。
       this.restoreDowngrade(tree)
       this.currentTree = tree
-      const { code, mappings } = generateCodeWithMapping(tree, this.language, this.style)
+      const gen = generateCodeWithMapping(tree, this.language, this.style)
+      // 🔴 **樹→程式碼這條路也要補相依**（2026-08-30）。
+      //
+      // 在此之前只有**程式碼→積木**那條路會呼叫補丁器
+      // （`app.ts` 的 `syncCodeToBlocks` wrapper）。症狀：
+      //
+      // ```
+      // 在流程視圖改一個欄位  → using namespace std; 不見了 → 程式編不過
+      // 在積木上改同一個欄位  → 它還在
+      // ```
+      //
+      // ⚠️ 而**兩條路走的是同一支 `handleEditTree`**——差別在**樹**：
+      // 積木送的是剝過骨架的樹（沒有 `main`），於是走鷹架路徑、
+      // 由骨架宣告把 preamble 補回來；流程送的樹**有** `main`，走 legacy 路徑。
+      //
+      // 🔴 根因更深一層：`using namespace std;` **只活在程式碼文字裡**
+      // ——它是補丁器加上去的，從來沒有被 lift 回樹裡。
+      //
+      // > **一個只存在於某一個投影上的東西，
+      // > 在下一次「從真相重新投影」的時候就會消失。**
+      const patched = this.codePatcherFn?.(gen.code, tree) ?? null
+      const code = patched ?? gen.code
+      const mappings = gen.mappings
       this.codeMappings = mappings
 
       // Use blockMappings from extraction if provided

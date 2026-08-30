@@ -638,5 +638,16 @@
   "FLOW_PRESET_ELSEIF": "／否則如果",
   "FLOW_SLOT_ELSE_BODY": "否則",
   "FLOW_LAYOUT_LOST": "有 {n} 顆節點在這次編輯之後對不回原本的位置，它們回到自動排版。",
-  "FLOW_REFUSE_SCAFFOLD_LOCKED": "這一塊是程式的骨架：它可以移動，而它的接法鎖著。你的程式沒有被改動。"
+  "FLOW_REFUSE_SCAFFOLD_LOCKED": "這一塊是程式的骨架：它可以移動，而它的接法鎖著。你的程式沒有被改動。",
+  "FLOW_ZOOM_IN": "放大",
+  "FLOW_ZOOM_OUT": "縮小",
+  "FLOW_ZOOM_FIT": "整張圖塞進畫面",
+  "FLOW_REFUSE_SLOT_WOULD_EMPTY": "這一格不能只剩空的：把它拿掉會產出像 `if ()` 這樣的東西。要換內容的話，把新的接上去就會頂掉舊的。你的程式沒有被改動。",
+  "FLOW_UNDO": "還原",
+  "FLOW_REDO": "取消還原",
+  "FLOW_NO_UNDO": "沒有可以還原的動作了",
+  "FLOW_NO_REDO": "沒有可以重做的動作了",
+  "FLOW_DELETE_NODE": "刪掉這一塊（可以還原）",
+  "FLOW_DELETE_WIRE": "點一下：把這一端拿掉（可以還原）",
+  "FLOW_SELECT_WIRE": "點一下選它，再按 ✕ 或 Delete 拿掉這一端"
 }

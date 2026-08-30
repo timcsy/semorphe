@@ -66,17 +66,6 @@ export interface HostFeatures {
    * 就是把版面浪費掉。
    */
   codeEditorPane: boolean
-  /**
-   * 專案本身的連結（GitHub）。
-   *
-   * 🔴 **它不是編輯器的功能，是「這個東西是誰做的」**——所以它跟著
-   * 商標與標題走，不跟著「執行」那一組走。
-   *
-   * ⚠️ 而在一個**內嵌**的宿主裡它不該存在：VSCode 的面板是使用者專案的
-   * 一部分，一顆「去給我們星星」的按鈕在那裡是**替自己打廣告**，
-   * 而那個版面不是我們的。
-   */
-  projectLink: boolean
 }
 
 export type HostFeatureName = keyof HostFeatures
