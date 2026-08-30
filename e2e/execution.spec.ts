@@ -5,6 +5,8 @@
  * 驗得到就不要寫進這裡。
  */
 import { test, expect, type Page } from '@playwright/test'
+// ⚠️ 這支自己有一份 `freshApp`（見下），而同步選單那個觸發器共用 helpers 的
+import { useAsSource } from './helpers'
 
 /**
  * ⚠️ 專案把程式存在 localStorage，而**上一支測試的存檔會餵給下一支**。
@@ -20,10 +22,30 @@ async function freshApp(page: Page): Promise<void> {
 
 /** 把程式碼打進 Monaco。⚠️ 用鍵盤而不是設值——設值不會觸發 code→blocks。 */
 async function typeCode(page: Page, code: string): Promise<void> {
-  const editor = page.locator('.monaco-editor').first()
-  await editor.click()
-  await page.keyboard.press('ControlOrMeta+a')
-  await page.keyboard.type(code)
+  // 🔴 **用 API 設值 ＋「以此為準：程式碼」，不用鍵盤做整份取代。**
+  //
+  // 2026-08-31 之前這裡是「click → Cmd+A → 打字」，而它**只在編輯器本來是空的
+  // 時候成立**。開機不同步那一刀修好之後，第一次打開就有骨架，於是：
+  //
+  // ```
+  // 選全 → 打第一個字元 → 整份被取代 → code→blocks 觸發
+  //      → 積木還是舊的那棵 → 骨架回寫進來 → 剩下的字元打在它中間
+  // ```
+  //
+  // 實測結果（兩輪，第二輪壞）：
+  // `int main() {\n    return 0;\nint main() { int total = 0; ...`
+  //
+  // ⚠️ **加等待救不了它**：試過「先刪光 → 等 1.2 秒 → 再選一次 → 打」，
+  //    兩輪裡仍然壞一輪——刪光之後程式碼**會自己回來**（網頁版沒有檔案，
+  //    積木就是真相），而它回來的時機不固定。
+  //
+  // > **只要另一邊會自動回寫，用鍵盤做「整份取代」就不是原子的
+  // > ——那不是等待長度的問題，是它中間必然有一瞬間是空的。**
+  //
+  // 🟢 而「用鍵盤才觸發得了 code→blocks」這個理由已經不成立：
+  //    `useAsSource(page, '程式碼')` 就是那個觸發器，而且是明確的一次。
+  await page.evaluate((c) => (window as never as { __app: { codeView: { setCode(s: string): void } } }).__app.codeView.setCode(c), code)
+  await useAsSource(page, '程式碼')
   // 等 code→blocks 走完：積木出現
   await expect(page.locator('.blocklyDraggable').first()).toBeVisible({ timeout: 15_000 })
 }

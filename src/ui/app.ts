@@ -2132,7 +2132,35 @@ export class App {
       showToast(describeRefusal(outcome), 'warning')
       return
     }
-    if (outcome.kind === 'empty') return
+    // 🔴 **全新的一頁也要走一次同步**——而在此之前它直接 return。
+    //
+    // 2026-08-31 使用者回報：「一開始打開的時候畫面是空的，拉積木也沒反應，
+    // 我是去載入範例才開始有反應。」實測（`e2e/first-run.spec.ts`）：
+    //
+    // ```
+    // 開機   code:""  blocks:0  staleReason:'not-rendered'
+    // 拉一顆 code:""  blocks:1  staleReason:'not-rendered'   ← 積木進去了而程式碼沒動
+    // ```
+    //
+    // 機制：`hasRendered` 只在**匯流排畫過樹**時才變 true
+    // （`blockly-panel.ts:333`）。沒有存檔 ⟹ 沒有東西可畫 ⟹ 它永遠是 false
+    // ⟹ `staleReason` 永遠是 `'not-rendered'` ⟹ 每一次積木編輯都被
+    // `syncBlocksToCodeWithMappings` 的殘態守衛擋掉，而那道守衛**刻意不出聲**
+    // （它以為自己處在開機的過渡狀態）。
+    //
+    // > **一道「等畫過再說」的閘，遇到「永遠不會被畫」的情況時，
+    // > 不會變成錯誤——它會變成一個安靜的死結。**
+    //
+    // ⚠️ 而它**擋不住第一次載入範例**：那條路自己會畫一次樹，於是閘解除
+    //    ——這正是使用者說「載入範例才開始有反應」的原因。
+    //
+    // 🔴 **`refused` 那條【不能】比照辦理**：那時存檔是存在而載不進來的，
+    //    凍住是為了不讓一次自動存檔把它蓋掉（上面那段註解的理由）。
+    //    ⚠️ 兩條早退看起來一樣，而它們的最壞情況相反。
+    if (outcome.kind === 'empty') {
+      this.resyncAfterTopicChange()
+      return
+    }
 
     const state = outcome.state
 

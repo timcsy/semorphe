@@ -1872,7 +1872,33 @@ export class FlowPanel implements ViewHost {
   /**
    * **長按（觸控）／右鍵（桌機）→ 選單。**
    *
-   * ⚠️ 長按要在**移動超過門檻時取消**，不然拖曳到一半會被判成長按。
+   * ## 🔴 取消一個「還沒燒完」的計時器，擋不住已經燒完的那一個
+   *
+   * 第一版只做了「移動超過門檻 → `clearTimeout`」，而註解寫著
+   * 「⚠️ 長按要在移動超過門檻時取消，不然拖曳到一半會被判成長按」
+   * ——那句話是對的，**而它只涵蓋一半的情況**。
+   *
+   * 使用者 2026-08-31：「手機的流程節點拖曳**常常**會誤認為右鍵」。
+   * 用真的觸控事件量（`e2e/flow-touch-drag.spec.ts`）：
+   *
+   * ```
+   * 按住 200ms 再拖  →  選單沒開，節點移動 120px   ✅
+   * 按住 700ms 再拖  →  🔴 選單開了，而節點也移動了 120px
+   * ```
+   *
+   * 手指按下去先停一下再走，是**手機上最自然的起手式**——而那 500ms
+   * 在移動發生之前就燒完了。`clearTimeout` 這時已經無事可做。
+   *
+   * > **一個「取消待辦」的機制，對「已經發生的事」沒有任何效力
+   * > ——而這兩種情況在程式碼裡長得一模一樣。**
+   *
+   * ## 判準：**移動贏**
+   *
+   * 手指開始走 ⟹ 這是一次拖曳，不管選單開了沒有。所以除了取消計時器，
+   * 還要**把已經開出來的選單關掉**，讓拖曳接手。
+   *
+   * ⚠️ 反過來做（開了選單就不准拖）會更糟：節點那時已經跟著手指走了，
+   * 而使用者要的是繼續走，不是回到原位。
    */
   private attachMenu(el: SVGElement, kind: 'node' | 'wire', id: string): void {
     el.addEventListener('contextmenu', (ev) => {
@@ -1880,19 +1906,49 @@ export class FlowPanel implements ViewHost {
       ev.stopPropagation()
       this.openMenu({ x: ev.clientX, y: ev.clientY }, kind, id)
     })
-    let timer: ReturnType<typeof setTimeout> | null = null
-    let from = { x: 0, y: 0 }
-    const cancel = (): void => { if (timer) { clearTimeout(timer); timer = null } }
     el.addEventListener('pointerdown', (ev: PointerEvent) => {
       if (ev.pointerType !== 'touch') return
-      from = { x: ev.clientX, y: ev.clientY }
-      timer = setTimeout(() => { timer = null; this.openMenu(from, kind, id) }, 500)
+      const from = { x: ev.clientX, y: ev.clientY }
+      let opened = false
+      const timer = setTimeout(() => { opened = true; this.openMenu(from, kind, id) }, 500)
+      // 🔴 **這一組必須掛在 `window` 上，不能掛在 `el` 上。**
+      //
+      // 拖曳的每一次移動都會 `paint()`，而 `paint()` **把整個 SVG 重建**
+      // ——收到 `pointerdown` 的那顆元素當場被換掉，掛在它身上的監聽器
+      // 跟著消失。實測（`e2e/flow-touch-drag.spec.ts` 的探針版）：
+      //
+      // ```
+      // 節點收到 pointerdown=0  pointermove=0     ← 而節點確實移動了 120px
+      // ```
+      //
+      // 第一版把取消掛在 `el` 上，於是**只有第一次移動來得及**：
+      // 200ms 就開始走的手勢剛好被它擋掉，而先停 500ms 再走的
+      // ——選單已經開了，而那時 `el` 早就不是原來那一顆。
+      //
+      // > **一個把狀態放在「會被重畫掉的元素」上的手勢處理器，
+      // > 只在第一幀裡是對的。**
+      //
+      // ⚠️ `attachDrag` 的移動監聽掛在 `window` 上正是為了同一件事
+      //    ——它的註解記著「手指一離開那顆節點就可能改發 `pointercancel`」。
+      //    **同一個陷阱的兩個形狀。**
+      const done = (): void => {
+        clearTimeout(timer)
+        window.removeEventListener('pointermove', move)
+        window.removeEventListener('pointerup', done)
+        window.removeEventListener('pointercancel', done)
+      }
+      const move = (e: PointerEvent): void => {
+        if (e.pointerId !== ev.pointerId) return
+        if (Math.hypot(e.clientX - from.x, e.clientY - from.y) <= 8) return
+        // 🔴 **移動贏**：手指開始走 ⟹ 這是拖曳，不管選單開了沒有。
+        //    ⚠️ 反過來（開了選單就不准拖）更糟——節點那時已經跟著手指走了。
+        if (opened) { opened = false; this.closeMenu() }
+        done()
+      }
+      window.addEventListener('pointermove', move)
+      window.addEventListener('pointerup', done)
+      window.addEventListener('pointercancel', done)
     })
-    el.addEventListener('pointermove', (ev: PointerEvent) => {
-      if (Math.hypot(ev.clientX - from.x, ev.clientY - from.y) > 8) cancel()
-    })
-    el.addEventListener('pointerup', cancel)
-    el.addEventListener('pointercancel', cancel)
   }
 
   private attachDrag(g: SVGGElement, id: string): void {

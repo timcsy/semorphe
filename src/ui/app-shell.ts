@@ -574,6 +574,34 @@ export function createAppLayout(
     requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
   }
 
+  /**
+   * 🔴 **還原／重做在行動版要搬家，而不是複製一對。**
+   *
+   * 使用者 2026-08-31：「手機沒有每個視圖都顯示還原按鈕」。實測
+   * （`e2e/mobile-undo-everywhere.spec.ts`）：
+   *
+   * ```
+   * 程式碼分頁  ↩↪ 0x0      ← 看不到
+   * 積木分頁    ↩↪ 27x22    ✅
+   * 流程分頁    ↩↪ 0x0      ← 看不到
+   * ```
+   *
+   * 原因：`switchToMobile` 把**整條快速列**搬進 `mobileBlocksContainer`，
+   * 而 ↩↪ 是它的一員——於是「還原」被關進了積木那一格。
+   *
+   * > **一顆全域的按鈕，住在一個會被分頁藏起來的容器裡，
+   * > 就只是那個分頁的按鈕。**
+   *
+   * ⚠️ 而處置**不能是「在別的分頁再放一對」**：使用者 2026-08-30 才要求
+   * 把三對還原鈕合併成一對。**搬的是同一組 DOM 節點**，所以處理器、狀態、
+   * 路由（`doUndo` 依 `lastEditor` 決定）全都不變。
+   *
+   * 🟢 它本來就是全域的：還原動的是**語義樹**，不是某一個投影。
+   *
+   * 🔴 **搬回去靠的是插槽，不是記兄弟節點**——見 `quick-access-bar.ts`
+   * 裡 `#undo-slot` 那段（第一版記兄弟，而兩顆互相參照，還原時必然丟
+   * `NotFoundError`，症狀是「兩顆都沒回來」）。
+   */
   // Mobile layout: create mobile containers and tab bar
   // These are created once but only shown when in mobile mode
   const mobileBlocksContainer = document.createElement('div')
@@ -785,6 +813,14 @@ export function createAppLayout(
     if (!profile.features.mobileLayout) return
     // Move blockly panel elements to mobile container
     if (quickAccessBar) mobileBlocksContainer.appendChild(quickAccessBar.getElement())
+    // 🔴 ↩↪ 不跟著快速列進積木那一格——見上面那段註解。
+    //    ⚠️ 沒有標頭的宿主（`features.toolbar === false`）就讓它們留在原處，
+    //    **不要搬到一個不存在的地方**。
+    const headerActions = document.querySelector('#toolbar .toolbar-actions')
+    const undoGroup = document.getElementById('undo-group')
+    // ⚠️ 沒有標頭的宿主（`features.toolbar === false`）就讓它留在快速列裡，
+    //    **不要搬到一個不存在的地方**。
+    if (headerActions && undoGroup) headerActions.insertBefore(undoGroup, headerActions.firstChild)
     mobileBlocksContainer.appendChild(blocklyContainer)
     mobileBlocksContainer.classList.add('active')
 
@@ -881,8 +917,12 @@ export function createAppLayout(
     if (!profile.features.mobileLayout) return
     // Move panels back to desktop containers (order matters: monaco before bottomPanel)
     if (quickAccessBar) blocksColumn.appendChild(quickAccessBar.getElement())
-    // ⚠️ **那一列自己也要回到欄裡、而且排在工具列之後**——
-    //    `appendChild` 一個已經在別處的節點會把它搬過來，順序就是呼叫順序。
+    // ↩↪ 回到桌面版的原位——**照開機時記下的錨點放**，
+    // ⚠️ 不用 `appendChild`：那會把它們排到「清空」後面，而順序是使用者記得的東西。
+    // ↩↪ 回到那個從來沒離開過的插槽裡——見 `quick-access-bar.ts` 的 `#undo-slot`
+    const undoSlot = document.getElementById('undo-slot')
+    const grp = document.getElementById('undo-group')
+    if (undoSlot && grp) undoSlot.appendChild(grp)
     blocksColumn.appendChild(projectionRow)
     projectionRow.appendChild(blocklyContainer)   // 放回【投影那一列】，不是外層
     // Ensure correct order: monaco first, then bottom panel

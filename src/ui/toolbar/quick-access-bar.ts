@@ -48,8 +48,23 @@ export class QuickAccessBar {
       options.inPanel('target') ? '<span id="scaffold-selector-mount"></span>' : '',
       options.inPanel('blockStyle') ? '<span id="block-style-selector-mount"></span>' : '',
       [
-        options.inPanel('undo') ? '<button id="undo-btn" title="復原">↩</button>' : '',
-        options.inPanel('redo') ? '<button id="redo-btn" title="重做">↪</button>' : '',
+        // 🔴 **`#undo-slot` 是一個永遠不動的插槽，`#undo-group` 是會搬家的那一組。**
+        //
+        // 行動版把 ↩↪ 搬到全域標頭（`app-shell.ts` 的 `rememberUndoHome` 那一段
+        // 記著為什麼），而搬回來時**不能靠記兄弟節點**：
+        // `undo` 的下一個是 `redo`，而還原第一顆的時候第二顆還在標頭裡
+        // ——`insertBefore` 對一個不是自己小孩的參考節點會丟 `NotFoundError`。
+        //
+        // > **一組互相參照的錨點，還原時第一個總會指向一個還沒回家的鄰居。**
+        //
+        // 留一個空插槽就沒有這個問題：搬回去只是 `slot.appendChild(group)`，
+        // 而插槽自己從來沒離開過。
+        options.inPanel('undo') || options.inPanel('redo')
+          ? '<span id="undo-slot"><span id="undo-group">' +
+            (options.inPanel('undo') ? '<button id="undo-btn" title="復原">↩</button>' : '') +
+            (options.inPanel('redo') ? '<button id="redo-btn" title="重做">↪</button>' : '') +
+            '</span></span>'
+          : '',
         options.inPanel('clear') ? '<button id="clear-btn" title="清空">清空</button>' : '',
       ].join(''),
     ].filter((g) => g !== '')

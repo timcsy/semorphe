@@ -63,6 +63,21 @@ for (const c of CASES) {
     await page.waitForTimeout(2500)
     await page.locator('.status-item-btn[data-control-id="template"]').click()
     await page.locator(`.quick-pick-item[data-value="${c.id}"]`).click()
+    // 🔴 **套用範例會蓋掉現在的內容，所以應用會先問一次**——而它
+    //    **只在「現在有東西」時問**。
+    //
+    // 2026-08-31 之前這一步不存在：第一次打開時程式碼是空的，沒東西可蓋。
+    // 開機不同步那一刀修好之後，第一次打開就有骨架，於是確認框出現了
+    // ——而這支沒有回答它，遮罩就一直蓋著同步鈕，`useAsSource` 卡到逾時。
+    //
+    // > **一個「只在有內容時才出現」的確認框，
+    // > 在測試永遠從空白開始的世界裡是看不見的。**
+    //
+    // ⚠️ 用 `count()` 判斷而不是硬等——不同目標的內容不一樣，
+    //    問不問是應用的決定，不是這支該假設的。
+    const confirmApply = page.locator('.quick-pick-item').filter({ hasText: /^套用/ })
+    if (await confirmApply.count() > 0) await confirmApply.first().click()
+    await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
     await page.waitForTimeout(2500)
 
     // ① 目標真的切過去了

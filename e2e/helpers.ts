@@ -47,10 +47,30 @@ export async function appKeepingStorage(page: Page): Promise<void> {
  * ② 走一次 `resync`，確保 `codeMappings` 是當前的
  */
 export async function typeAndFormat(page: Page, oneLineCode: string): Promise<void> {
-  const editor = page.locator('.monaco-editor').first()
-  await editor.click()
-  await page.keyboard.press('ControlOrMeta+a')
-  await page.keyboard.type(oneLineCode)
+  // 🔴 **用 API 設值 ＋「以此為準：程式碼」，不用鍵盤做整份取代。**
+  //
+  // 2026-08-31 之前這裡是「click → Cmd+A → 打字」，而它**只在編輯器本來是空的
+  // 時候成立**。開機不同步那一刀修好之後，第一次打開就有骨架，於是：
+  //
+  // ```
+  // 選全 → 打第一個字元 → 整份被取代 → code→blocks 觸發
+  //      → 積木還是舊的那棵 → 骨架回寫進來 → 剩下的字元打在它中間
+  // ```
+  //
+  // 實測結果（兩輪，第二輪壞）：
+  // `int main() {\n    return 0;\nint main() { int total = 0; ...`
+  //
+  // ⚠️ **加等待救不了它**：試過「先刪光 → 等 1.2 秒 → 再選一次 → 打」，
+  //    兩輪裡仍然壞一輪——刪光之後程式碼**會自己回來**（網頁版沒有檔案，
+  //    積木就是真相），而它回來的時機不固定。
+  //
+  // > **只要另一邊會自動回寫，用鍵盤做「整份取代」就不是原子的
+  // > ——那不是等待長度的問題，是它中間必然有一瞬間是空的。**
+  //
+  // 🟢 而「用鍵盤才觸發得了 code→blocks」這個理由已經不成立：
+  //    `useAsSource(page, '程式碼')` 就是那個觸發器，而且是明確的一次。
+  await page.evaluate((c) => (window as never as { __app: { codeView: { setCode(s: string): void } } }).__app.codeView.setCode(c), oneLineCode)
+  await useAsSource(page, '程式碼')
   await expect(page.locator('.blocklyDraggable').first()).toBeVisible({ timeout: 15_000 })
 
   await useAsSource(page, '積木')

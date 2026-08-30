@@ -24,12 +24,36 @@ import { freshApp, selectTarget } from './helpers'
 /** 貼一段真的程式碼進去（走使用者那條路，不是 `newBlock`）。 */
 async function pasteCode(page: Page, code: string): Promise<void> {
   await page.evaluate(async (c) => { await navigator.clipboard.writeText(c) }, code)
+  // 貼之前先記下工作區長什麼樣——就緒條件比的是「它變了沒有」
+  const typesNow = (): Promise<string> => page.evaluate(() =>
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    ((window as any).__app?.blocklyPanel?.workspace?.getAllBlocks(false) ?? [])
+      .map((b: any) => b.type).join(','))
+  const before = await typesNow()
   await page.getByRole('button', { name: /覆蓋貼上/ }).click()
+  // 🔴 **等的是「貼上的內容真的出現」，不是「積木數 > 1」。**
+  //
+  // 2026-08-31：開機不同步那一刀修好之後，第一次打開就有骨架
+  // （`int main() { return 0; }`）——於是「積木數 > 1」**在貼上生效之前
+  // 就已經成立**，這支往下走時工作區裡還是骨架，而症狀是
+  // 「工作區裡沒有【讀取位置】的 cpp_var_ref」，看起來像下拉壞了。
+  //
+  // > **一個「有東西了嗎」的就緒條件，只在「一開始什麼都沒有」時
+  // > 才等得到正確的那一刻。**
+  //
+  // 錨在貼進去那段程式**最長的那一行**——它一定是內容行，不是括號。
+  const marker = code.split('\n').map((l) => l.trim())
+    .reduce((a, b) => (b.length > a.length ? b : a), '')
   await expect
     .poll(() => page.evaluate(() =>
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      ((window as any).__app?.blocklyPanel?.workspace?.getAllBlocks(false)?.length ?? 0)))
-    .toBeGreaterThan(1)
+      ((window as any).__app?.codeView?.getCode?.() ?? '')))
+    .toContain(marker)
+  // 🔴 **而程式碼那側到位【不等於】積木那側到位**（2026-08-31 實測）：
+  //    marker 出現時 `cpp_var_ref` 還沒畫出來，於是下拉查不到它。
+  //    所以第二個條件比的是**工作區的組成變了沒有**，不是「有幾顆」
+  //    ——後者被開機骨架滿足了。
+  await expect.poll(typesNow).not.toBe(before)
 }
 
 /**
