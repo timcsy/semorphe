@@ -67,6 +67,9 @@ function main(): void {
   mkdirSync(join(OUT, 'assets'), { recursive: true })
   cpSync('assets/logo/semorphe-mono.svg', join(OUT, 'assets', 'logo-light-theme.svg'))
   cpSync('assets/logo/semorphe-mono-light.svg', join(OUT, 'assets', 'logo-dark-theme.svg'))
+  // 🔴 **擴充圖示**——市集清單上那一格。與上面兩個指令圖示是不同的東西，
+  //    而它**必須是 PNG**（市集不吃 SVG，且下限 128×128）。
+  cpSync('assets/logo/semorphe-dark-256.png', join(OUT, 'assets', 'icon.png'))
 
   // 2c. tree-sitter 的 wasm —— `code → blocks` 要用它。
   //
@@ -96,12 +99,23 @@ function main(): void {
   //    ——後果是 VSCode 上的活動列圖示**沒有更新而且不報錯**。理由寫在那個檔裡。
   writeFileSync(join(OUT, 'package.json'), JSON.stringify(buildManifest(), null, 2) + '\n')
   // vsce 沒有 README 會擋下來（不是警告，是錯誤）。
-  writeFileSync(
-    join(OUT, 'README.md'),
-    '# Semorphe\n\n唯一真實，各式投影。\n\n' +
-      '⚠️ 這是階段 6.13 的**第一刀**：一個面板、一顆積木、一組效能數字。\n' +
-      '雙向同步尚未實作。\n',
-  )
+  //
+  // 🔴 **而這一份【就是市集頁面的正文】**，不是一個湊數的檔案。
+  //
+  // 2026-08-31 上架前量到的：它當時是 168 位元組，逐字寫著
+  // 「⚠️ 這是階段 6.13 的第一刀……**雙向同步尚未實作**」
+  // ——那句話寫於 2026-08-17，而雙向同步早就是這個專案的主打。
+  //
+  // > **一份「先湊著、之後再說」的 README，在上架的那一天
+  // > 會變成公開頁面上唯一有人讀的東西。**
+  //
+  // ⚠️ 圖片**必須用絕對網址**：市集不會去解析相對路徑
+  //    （`vsce` 沒有 `--baseContentUrl` 時直接擋下來）。
+  writeFileSync(join(OUT, 'README.md'), marketplaceReadme())
+  // 🔴 `license: 'MIT'` 在 manifest 裡宣告了兩個月，而**倉庫裡沒有那個檔**
+  //    ——所以打包一直靠 `--skip-license` 繞過去，而市集頁面的 License 那一欄
+  //    會是空的。2026-08-31 補上根目錄的 `LICENSE` 之後，那個旗標可以拿掉。
+  cpSync('LICENSE', join(OUT, 'LICENSE'))
 
   // 4. Chromium 預檢頁——同一份 HTML 產生器，相對路徑。
   //
@@ -138,11 +152,87 @@ function main(): void {
   //    網頁版那份 `package.json`，而那份沒有 `engines.vscode`。
   run(
     'npx',
-    ['vsce', 'package', '--no-dependencies', '--allow-missing-repository', '--skip-license',
-     '--out', 'semorphe-vscode.vsix'],
+    ['vsce', 'package', '--no-dependencies', '--out', 'semorphe-vscode.vsix'],
     {},
     OUT,
   )
+}
+
+/**
+ * 市集頁面的正文。
+ *
+ * 🔴 **與根 `README.md` 刻意不同**——那一份的讀者是「路過 GitHub 的人」，
+ * 這一份的讀者**已經在編輯器裡了**：他要知道的是「裝了之後按哪裡」。
+ *
+ * ⚠️ 圖片一律絕對網址（見呼叫端的理由），而且**不可以是 SVG**：
+ * `vsce` 直接擋下來（`SVGs are restricted in README.md`）——不是警告，是錯誤。
+ * 根 `README.md` 用的是 SVG，所以從那裡抄過來的第一版打不出包。
+ */
+function marketplaceReadme(): string {
+  const RAW = 'https://raw.githubusercontent.com/timcsy/semorphe/main'
+  return `<p align="center">
+  <img src="${RAW}/assets/logo/semorphe-dark-256.png" width="112" height="112" alt="Semorphe">
+</p>
+
+<h1 align="center">Semorphe</h1>
+
+<p align="center">
+  <strong>同一支程式，三種看法——程式碼、流程圖、積木。改哪一邊都算數。</strong>
+</p>
+
+---
+
+把真的 C++ 或 Python 貼進去，它變成積木；拖一塊積木，程式碼跟著變；
+切到流程圖，它畫的是同一支程式。**三邊都可以編輯，三邊即時同步。**
+
+<p align="center">
+  <img src="${RAW}/assets/demo.gif" width="820" alt="打字 → 積木長出來 → 在積木上改一個字 → 程式碼跟著變">
+</p>
+
+## 裝好之後按哪裡
+
+1. 開一個 \`.cpp\`、\`.py\` 或 \`.ino\`（新檔案也行，把語言選成 C++ 就會出現）
+2. 編輯器右上角的 \`<Σ>\` 圖示，或命令面板 → **Semorphe: 開啟積木面板**
+3. 面板在**編輯器區域**開起來，跟你的檔案並排——改哪一邊都會同步到另一邊
+
+狀態列上還有目標、風格、積木外觀、語言四個切換，以及 ▷ 執行。
+
+## 它跟別的積木工具差在哪
+
+多數積木工具是**單向**的：積木能變成程式碼，而程式碼變不回積木。
+少數做到雙向的，走出它支援的子集就回不去。
+
+| | |
+|---|---|
+| **三個畫面都能編輯** | 程式碼、流程圖、積木——不是「一個能改 ＋ 兩個唯讀」 |
+| **吃的是真的程式碼** | 貼一段你手邊的 \`.cpp\` 或 \`.py\` 進去，不是玩具子集 |
+| **接不住的時候它會說** | 認不出來的語法**不會被丟掉，也不會被猜**——它變成一顆灰色積木，原文一字不動地放在裡面 |
+
+第三點聽起來不像賣點，而它是：**它保證這個工具不會安靜地弄壞你的檔案。**
+
+## 還有這些
+
+- **由淺入深**——66 堂課、6 條軌道（C++ 入門／進階、C 銜接、Python 入門／銜接、Arduino 專題）。工具箱只給這一堂該有的積木
+- **骨架看得到、拆不壞**——\`#include\`、\`int main()\` 這些「不是你寫的」那幾行，可以藏起來、可以淡淡地顯示（看得到而拖不動）、也可以整個交給學生
+- **多種程式碼風格**——APCS（\`cout\`/\`cin\`）、競賽（\`printf\`/\`scanf\`）、Google、Python 一鍵切換
+- **硬體**——8 塊板子（Uno／Nano／ESP32 家族／D1 mini…），各有自己的腳位、常數與函式庫標頭
+- **離線可用**——跑起來之後**不會向外要任何東西**（有一條測試守著）
+
+## ⚠️ 現在做不到什麼
+
+- **語言**只有 C++（含 C 方言）與 Python
+- **認不出來的語法會降級成灰色積木**。它跑得動、來回轉換不會壞，但它在積木上就是一塊灰的
+- **Arduino IDE 沒有自動更新**——它把擴充市集對使用者關掉了，只能手動放 \`.vsix\`
+- **流程圖是新的**（2026-08），它的編輯能力還在長
+
+## 不想裝？
+
+<https://semorphe.com/> — 同一套東西，開瀏覽器就能用。
+
+---
+
+MIT · [原始碼與問題回報](https://github.com/timcsy/semorphe)
+`
 }
 
 

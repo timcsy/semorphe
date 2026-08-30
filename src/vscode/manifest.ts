@@ -20,7 +20,13 @@ import { CONTROLS, RUN_MODES, hostCommandId, runModeCommandId } from '../core/ho
 
 /** 擴充的識別——⚠️ 與網頁版的 `semorphe` 分開，兩者不是同一個東西。 */
 export const EXTENSION_NAME = 'semorphe-vscode'
-export const PUBLISHER = 'semorphe'
+// 🔴 **發佈之後改不了。** 擴充 ID 是 `<publisher>.<name>`，換 publisher
+// 等於換一個全新的擴充——安裝數、評價、使用者裝好的那一份全部歸零。
+//
+// 2026-08-31 上架前選的：`timcsy` 是既有的 publisher（TextBricks 掛在那裡），
+// 而 `semorphe` 那個 ID 當時還沒被佔走。選既有的理由是零額外設定，
+// 代價是市集上顯示為「Semorphe，作者 timcsy」而不是「Semorphe，Semorphe」。
+export const PUBLISHER = 'timcsy'
 export const DISPLAY_NAME = 'Semorphe'
 
 /**
@@ -53,7 +59,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.10.4'
+export const EXTENSION_VERSION = '0.11.0'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -101,6 +107,12 @@ export interface ExtensionManifest {
   license: string
   engines: { vscode: string }
   categories: string[]
+  keywords: string[]
+  icon: string
+  repository: { type: string; url: string }
+  homepage: string
+  bugs: { url: string }
+  galleryBanner: { color: string; theme: 'dark' | 'light' }
   main: string
   activationEvents: string[]
   contributes: Record<string, unknown>
@@ -142,7 +154,12 @@ export function buildManifest(): ExtensionManifest {
   return {
     name: EXTENSION_NAME,
     displayName: DISPLAY_NAME,
-    description: '唯一真實，各式投影——在編輯器裡用積木看你的程式。',
+    // 🔴 **這一行是市集清單上名字底下那一句**，而它也進搜尋索引。
+    //
+    // 2026-08-25 網頁標題從「唯一真實，各式投影」換掉時，使用者的理由是
+    // 「不然很黑話」——而**同一句話還留在這裡**，也就是留在對外的那一面。
+    // 專案內部的公理與對外的第一句話是兩個讀者。
+    description: '同一支程式，三種看法——程式碼、流程圖、積木，改哪一邊都算數。',
     version: EXTENSION_VERSION,
     publisher: PUBLISHER,
     license: 'MIT',
@@ -150,6 +167,23 @@ export function buildManifest(): ExtensionManifest {
     //    （`~/.arduinoIDE/deployedPlugins/` 底下兩個擴充都宣告這個範圍）。
     engines: { vscode: '^1.74.0' },
     categories: ['Visualization', 'Education'],
+    // 🔴 **市集的搜尋只吃 `keywords` 與 `description`／`displayName`。**
+    //
+    // 2026-08-31 上架前量到的：這個欄位**一個字都沒有**，
+    // 而使用者搜「積木」「blockly」「視覺化程式」一個都找不到我們
+    // ——擴充在市集上「存在」與「找得到」是兩件事。
+    //
+    // ⚠️ 上限 **5 個**（vsce 只送前 5 個，多的靜靜地丟掉），
+    //    所以這五個是選出來的，不是列出來的：
+    //    中文兩個（教學現場真的會打的字）＋ 英文三個（國際搜尋量）。
+    keywords: ['積木', '視覺化程式', 'blockly', 'block-based', 'flowchart'],
+    // 擴充圖示——**與指令圖示是兩回事**（那些是 `contributes.commands[].icon`）。
+    // 它自帶深色圓角底，所以市集的淺色／深色兩種佈景都看得清楚。
+    icon: 'assets/icon.png',
+    repository: { type: 'git', url: 'https://github.com/timcsy/semorphe.git' },
+    homepage: 'https://semorphe.com/',
+    bugs: { url: 'https://github.com/timcsy/semorphe/issues' },
+    galleryBanner: { color: '#1e293b', theme: 'dark' },
     main: './dist/extension.js',
     // ⚠️ **不用 `onLanguage:arduino`**：那要開了 `.ino` 才啟動。
     //    本輪要驗的是「面板打不打得開」，**啟動條件愈少變因愈少**。
