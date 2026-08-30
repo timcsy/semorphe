@@ -59,7 +59,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.11.0'
+export const EXTENSION_VERSION = '0.11.1'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -174,9 +174,26 @@ export function buildManifest(): ExtensionManifest {
     // ——擴充在市集上「存在」與「找得到」是兩件事。
     //
     // ⚠️ 上限 **5 個**（vsce 只送前 5 個，多的靜靜地丟掉），
-    //    所以這五個是選出來的，不是列出來的：
-    //    中文兩個（教學現場真的會打的字）＋ 英文三個（國際搜尋量）。
-    keywords: ['積木', '視覺化程式', 'blockly', 'block-based', 'flowchart'],
+    //    所以這五個是選出來的，不是列出來的。
+    //
+    // 🔴 **而「選出來」的判準是量到的排名，不是這個詞聽起來對不對。**
+    //    0.11.0 上架後實測（`extensionquery` API，filterType 10）：
+    //
+    //    ```
+    //    積木          共 1 筆 → 第 1 名
+    //    視覺化程式     共 1 筆 → 第 1 名
+    //    block-based  共 11 筆 → 第 2 名
+    //    blockly      共 16 筆 → 第 16 名
+    //    flowchart    共 40 筆 → 🔴 排不進前 40（被 mermaid／draw.io 那批佔滿）
+    //    ```
+    //
+    //    > **一個排不進前 40 的關鍵字，與沒有填是同一件事
+    //    > ——而它還佔掉了那五格的其中一格。**
+    //
+    //    換上 `圖形化程式`（實測競爭者 **0**，且那是 108 課綱的用詞
+    //    ——老師搜的是這個）。⚠️ 中文詞幾乎沒有競爭，這是量出來的，
+    //    不是猜的：`程式教學`／`拖曳`／`積木程式` 都是 0。
+    keywords: ['積木', '圖形化程式', '視覺化程式', 'blockly', 'block-based'],
     // 擴充圖示——**與指令圖示是兩回事**（那些是 `contributes.commands[].icon`）。
     // 它自帶深色圓角底，所以市集的淺色／深色兩種佈景都看得清楚。
     icon: 'assets/icon.png',

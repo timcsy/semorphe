@@ -65,9 +65,60 @@ Semorphe 想做的是另一件事：
 - **語言**只有 C++（含 C 方言）與 Python。加一個語言是一整刀，不是設定
 - **認不出來的語法會降級成灰色積木**。它跑得動、來回轉換不會壞，但它在積木上就是一塊灰的
 - **Arduino IDE 沒有自動更新**——它把擴充市集對使用者關掉了，只能手動放 `.vsix`
+  （步驟見[安裝](#arduino-ide)，⚠️ 更新時有一個少了會安靜失敗的步驟）
 - **流程圖是新的**（2026-08），它的編輯能力還在長
 
-## 快速開始
+## 安裝
+
+不想裝的話，[網頁版](https://semorphe.com/)就是完整的同一套東西——
+以下只在你想「在自己的編輯器裡用」時才需要。
+
+### VSCode
+
+**方法一：市集**（會自動更新）
+
+擴充商店搜 **Semorphe**，或直接開
+[市集頁面](https://marketplace.visualstudio.com/items?itemName=timcsy.semorphe-vscode)。
+
+**方法二：`.vsix` 檔**
+
+到 [Releases](https://github.com/timcsy/semorphe/releases) 下載
+`semorphe-vscode-<版本>.vsix`，然後任選一種：
+
+```bash
+code --install-extension semorphe-vscode-0.11.0.vsix
+```
+
+或在 VSCode 裡：命令面板（`Cmd/Ctrl` + `Shift` + `P`）→
+**Extensions: Install from VSIX…** → 選那個檔。
+
+⚠️ 這樣裝的**不會自動更新**，新版要再做一次。
+
+### Arduino IDE
+
+🔴 **Arduino IDE 沒有安裝擴充的介面**——它是 Theia 做的，而它把擴充市集
+對使用者關掉了。所以只能把檔案放進去：
+
+1. 到 [Releases](https://github.com/timcsy/semorphe/releases) 下載
+   `semorphe-vscode-<版本>.vsix`
+2. **完全關掉 Arduino IDE**
+3. 把檔案放進這個資料夾（不存在就自己建）：
+
+   | | |
+   |---|---|
+   | macOS / Linux | `~/.arduinoIDE/plugins/` |
+   | Windows | `%USERPROFILE%\.arduinoIDE\plugins\` |
+
+4. 重開 Arduino IDE——它會自己解壓——命令面板 → **Semorphe: 開啟積木面板**
+
+**更新**：一樣的四步，而第 3 步**先把舊的 `semorphe-vscode-*.vsix` 刪掉**。
+檔名帶版本是有意的：Theia 的解壓快取以名字為鍵，版本進到名字裡，
+新舊就不會混。
+
+> 🪦 這不是官方支援的安裝方式，**Arduino IDE 換一版就可能失效**。
+> 如果哪天它不動了，[網頁版](https://semorphe.com/)是同一套東西。
+
+## 從原始碼跑起來（開發者）
 
 ```bash
 npm install
@@ -201,9 +252,9 @@ npm run build:vscode   # 產出 .vsix
 npm run install:ide    # 裝進本機兩個 IDE
 ```
 
-⚠️ Arduino IDE 的安裝路徑是 `~/.arduinoIDE/plugins/`，
-而 **Theia 的解壓快取以「名字」為鍵**——覆蓋 `.vsix` 不會重新解，而它不報錯。
-用 `npm run install:ide`，不要自己複製。
+⚠️ **開發時不要自己複製 `.vsix`**——`install:ide` 會處理兩邊的快取失效
+（Theia 以資料夾名字為鍵、VSCode 以 `(id, version)` 為鍵，兩個都是
+「換了而不重載，且不報錯」）。使用者的手動步驟見[安裝](#arduino-ide)。
 
 > 🪦 2026-03 的那個原型已於 2026-08-16 退休（教訓見
 > [`knowledge/history/069`](knowledge/history/069-vscode原型退休而它的兩個教訓被撈出來.md)），

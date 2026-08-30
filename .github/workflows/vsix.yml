@@ -85,10 +85,31 @@ jobs:
             exit 1
           }
 
+      # 🔴 **給出去的檔名要帶版本**——而理由不是「比較好看」。
+      #
+      # Arduino IDE（Theia）的解壓快取**以資料夾名字為鍵**，而那個名字
+      # 是從 vsix 的檔名來的。所以每一版都叫 `semorphe-vscode.vsix` 的話，
+      # 使用者覆蓋掉舊檔 → 名字沒變 → **它不會重新解，而且不報錯**：
+      # 面板照開，裡面是舊版。（`tools/install-ide.mjs` 的檔頭記著我們
+      # 自己被這個坑過一次，差點拿四個版本以前的東西去測。）
+      #
+      # > **一個以名字為鍵的快取，只要讓版本進到名字裡就失效得掉。**
+      #
+      # ⚠️ 所以這不是包裝，是**把一個陷阱從使用者手上拿掉**
+      #    ——否則 README 就得叫他們去刪一個看不見的資料夾。
+      - name: 檔名帶上版本
+        id: pkg
+        run: |
+          set -euo pipefail
+          NAME="semorphe-vscode-${{ steps.ver.outputs.value }}.vsix"
+          cp build/vscode/semorphe-vscode.vsix "build/vscode/$NAME"
+          echo "path=build/vscode/$NAME" >> "$GITHUB_OUTPUT"
+          echo "給出去的檔名：$NAME"
+
       - uses: actions/upload-artifact@v4
         with:
           name: semorphe-vscode-${{ steps.ver.outputs.value }}
-          path: build/vscode/semorphe-vscode.vsix
+          path: ${{ steps.pkg.outputs.path }}
           if-no-files-found: error
 
       # ── 發佈：只有 tag ────────────────────────────────────────────
@@ -100,18 +121,18 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/vscode/semorphe-vscode.vsix
+          files: ${{ steps.pkg.outputs.path }}
           generate_release_notes: true
           body: |
             ## 安裝
 
-            **VSCode**：`code --install-extension semorphe-vscode.vsix`
-            （或命令面板 → Extensions: Install from VSIX…）
+            **VSCode**：擴充商店搜 **Semorphe**，或下載下面的 `.vsix` 後
+            `code --install-extension semorphe-vscode-<版本>.vsix`
 
-            ⚠️ **Arduino IDE 沒有支援的安裝通道**——它是 Theia 做的，
-            而它把擴充市集對使用者關掉了。今天的做法是把 vsix 放進它的
-            plugins 目錄再重開，而**那不是官方介面，換一版就可能失效**。
-            在那條路被驗證之前，Arduino IDE 的使用者建議直接用網頁版。
+            **Arduino IDE**：把 `.vsix` 放進 `~/.arduinoIDE/plugins/` 再重開。
+            ⚠️ 不是官方通道，換一版可能失效。
+
+            完整步驟見 [README 的安裝章節](https://github.com/timcsy/semorphe#安裝)。
 
       - name: 發到 Marketplace（有祕密才發）
         if: startsWith(github.ref, 'refs/tags/v')
