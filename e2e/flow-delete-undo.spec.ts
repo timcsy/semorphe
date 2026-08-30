@@ -38,6 +38,16 @@
  * > **在一棵樹上，刪一條邊與刪一個節點是同一件事——
  * > 差別只在你從哪一端去說它。**
  *
+ * ## ⚠️ 按的是【快速列】那一對，不是流程工具列
+ *
+ * 🪦 流程工具列的 ↶↷ 已於 2026-08-30 退場（三對「還原」收成一對）。
+ *
+ * ⚠️ 而這一支**因此在全套 e2e 上紅了兩支**：拿掉按鈕之後我跑了
+ * `undo-one-pair.spec.ts`，**沒有回頭跑這一支**。
+ *
+ * > **「跑與這次改動相關的那幾個檔」——而「相關」是我判的，
+ * > 我判漏的那一個不會舉手。**
+ *
  * ## ⚠️ 自我否證聲明
  *
  * > **如果一開始的程式碼裡沒有那一句 `cout`，這份報表不算數
@@ -117,7 +127,7 @@ test('★ 刪一句話 → 還原 → 取消還原', async ({ page }) => {
   await menuDelete(page, at!, '節點')
   expect(await codeNow(page), '🔴 按了 ✕ 而那一句還在').not.toContain('cout')
 
-  await page.locator('.flow-toolbar button[title="還原"]').click()
+  await page.locator('#undo-btn').click()
   await page.waitForTimeout(1800)
   expect(
     await codeNow(page),
@@ -125,7 +135,7 @@ test('★ 刪一句話 → 還原 → 取消還原', async ({ page }) => {
       '面板存的是 `event.tree` 的參考，於是「改動前」的快照拍到的是改動後。',
   ).toBe(before)
 
-  await page.locator('.flow-toolbar button[title="取消還原"]').click()
+  await page.locator('#redo-btn').click()
   await page.waitForTimeout(1800)
   expect(await codeNow(page), '🔴 取消還原沒有把它再刪掉').not.toContain('cout')
 })
@@ -183,7 +193,7 @@ test('★ 語句線：點線選它，✕ 才刪——而刪掉的是【裡面】
   expect(await codeNow(page), '🔴 Delete 鍵沒有刪掉選取的那一句').not.toContain('cout')
 
   // ③ 還原
-  await page.locator('.flow-toolbar button[title="還原"]').click()
+  await page.locator('#undo-btn').click()
   await page.waitForTimeout(1800)
   expect(await codeNow(page), '🔴 還原不回來').toBe(before)
 })
