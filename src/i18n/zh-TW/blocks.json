@@ -637,5 +637,6 @@
   "FLOW_DROP_MISSED": "要放在一個接點上（那些小圓點）。",
   "FLOW_PRESET_ELSEIF": "／否則如果",
   "FLOW_SLOT_ELSE_BODY": "否則",
-  "FLOW_LAYOUT_LOST": "有 {n} 顆節點在這次編輯之後對不回原本的位置，它們回到自動排版。"
+  "FLOW_LAYOUT_LOST": "有 {n} 顆節點在這次編輯之後對不回原本的位置，它們回到自動排版。",
+  "FLOW_REFUSE_SCAFFOLD_LOCKED": "這一塊是程式的骨架：它可以移動，而它的接法鎖著。你的程式沒有被改動。"
 }

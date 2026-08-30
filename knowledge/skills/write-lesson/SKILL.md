@@ -290,5 +290,5 @@ await box.fill(line); await box.press('Enter')
 
 - `lessons/README.md`——格式的規範本體
 - [[build-guardrail]]——第 6.5 步（第一次跑必須是紅的）、第 9 步（兩個方向都要釘）
-- `knowledge/draft/2026-08-27-教案是一個宣告.md`——為什麼教案是宣告不是硬編碼
-- `knowledge/draft/2026-08-27-課程地圖.md`——還有哪些課要生
+- `knowledge/draft/retired/2026-08-27-教案是一個宣告.md`——為什麼教案是宣告不是硬編碼
+- `knowledge/draft/retired/2026-08-27-課程地圖.md`——還有哪些課要生

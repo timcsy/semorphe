@@ -637,5 +637,6 @@
   "FLOW_DROP_MISSED": "Drop it on a port (one of the small dots).",
   "FLOW_PRESET_ELSEIF": " / else if",
   "FLOW_SLOT_ELSE_BODY": "Else",
-  "FLOW_LAYOUT_LOST": "{n} node(s) lost their hand-placed position in this edit and went back to auto layout."
+  "FLOW_LAYOUT_LOST": "{n} node(s) lost their hand-placed position in this edit and went back to auto layout.",
+  "FLOW_REFUSE_SCAFFOLD_LOCKED": "This is part of the program skeleton: you can move it, but its connections are locked. Your program was not changed."
 }

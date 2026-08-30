@@ -56,7 +56,9 @@ import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson, type ScaffoldMode } from '../core/lesson'
-import { skeletonById, skeletonsOfLanguage, canHideScaffold, entryFunctionOf } from '../core/skeleton'
+import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
+// 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
+import { scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
 import { lessonById, allTracks, lessonsOfTrack } from '../core/load-lessons'
 import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
@@ -67,7 +69,7 @@ import { renderStatusControls, openSettings } from './layout/status-bar-controls
 import type { ConsolePanel } from './panels/console-panel'
 import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
-import { isFunctionDefinition } from '../core/component/traits'
+import {} from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
 // Semantic layer
 // Projection layer
@@ -94,26 +96,11 @@ function isScaffoldComponent(componentId: string): boolean {
   return componentTraits(componentId)?.scaffold === true
 }
 
-/**
- * 把一個節點**連同它底下的一切**加進集合。
- *
- * 🔴 鷹架的**引數也是鷹架**：`return 0` 的那個 `0`、`#include` 的標頭名。
- * 少了這一層，一顆實心的 `0` 插在一塊淡的「回傳」上，
- * 看起來像「這個數字是我要改的」——而它不是。
- */
-function addSubtree(node: { id: string; children?: Record<string, unknown[]> }, out: Set<string>): void {
-  out.add(node.id)
-  for (const k of Object.keys(node.children ?? {})) {
-    for (const c of (node.children![k] ?? []) as { id: string; children?: Record<string, unknown[]> }[]) {
-      addSubtree(c, out)
-    }
-  }
-}
+// 🪦 `addSubtree` 已搬進 `core/scaffold-nodes.ts`（2026-08-30）——流程視圖也要問同一件事。
 
-/** 只有**在 main 裡面**才是鷹架的（`return`）——在別的函式裡它是使用者寫的。 */
-function isScaffoldInMainComponent(componentId: string): boolean {
-  return componentTraits(componentId)?.scaffoldInMain === true
-}
+
+// 🪦 `isScaffoldInMainComponent` 已搬進 `core/scaffold-nodes.ts`（2026-08-30）——流程視圖也要問同一件事。
+
 
 /**
  * 一個主題的**全部**層級節點。
@@ -1224,45 +1211,19 @@ export class App {
    */
   // 🔴 **公開的**——`e2e/lessons.spec.ts` 要問「這一課的哪幾顆是骨架的」，
   //    而它**不該自己再實作一次那條規則**（`history/188`：同一個決定的第六份實作
-  //    就是這樣長出來的）。這裡是唯一的來源。
+  //    就是這樣長出來的）。判定本身住在 `core/scaffold-nodes.ts`。
   scaffoldComponentIds(): Set<string> {
-    const ids = this.scaffoldNodeIds()
-    const out = new Set<string>()
-    const walk = (n: { id?: string; componentId?: string; children?: Record<string, unknown[]> }): void => {
-      if (n.id !== undefined && ids.has(n.id) && n.componentId) out.add(n.componentId)
-      for (const kids of Object.values(n.children ?? {})) {
-        for (const k of kids as { id?: string; componentId?: string }[]) walk(k)
-      }
-    }
-    const tree = this.syncController?.getCurrentTree()
-    if (tree) walk(tree as never)
-    return out
+    return coreScaffoldComponentIds(this.syncController?.getCurrentTree(), this.currentSkeletonId)
   }
 
+  /**
+   * 畫布上哪幾塊積木屬於**骨架**——判定住在 `core/scaffold-nodes.ts`。
+   *
+   * 🔴 **這裡曾經是那份判定的家**，而 2026-08-30 流程視圖也要問同一件事
+   * ——搬進 core 而不是複製一份（`history/188`：那個決定曾經有六份實作）。
+   */
   private scaffoldNodeIds(): Set<string> {
-    const out = new Set<string>()
-    const tree = this.syncController?.getCurrentTree()
-    if (!tree) return out
-    // 🔴 **「哪一顆函式是骨架」問宣告**（2026-08-28）。寫死 `'main'` 的話，
-    //    Arduino 上把顯示切成「淡的」會**什麼都不變**——而那正是使用者
-    //    「我希望 Arduino 系列也有腳手架」指的那件事。
-    //    ⚠️ 它有【兩顆】（`setup`／`loop`），所以這裡不能只找一顆。
-    const skeleton = skeletonById(this.currentSkeletonId)
-    for (const node of tree.children?.body ?? []) {
-      const n = node as { id: string; componentId: string; properties?: Record<string, unknown>; children?: Record<string, unknown[]> }
-      if (isScaffoldComponent(n.componentId)) { addSubtree(n, out); continue }
-      // 進入點那一塊：它自己 ＋ 它裡面那些「只有在進入點裡才是鷹架」的
-      if (isFunctionDefinition(n.componentId) && entryFunctionOf(skeleton, n.properties?.name)) {
-        out.add(n.id)
-        for (const stmt of (n.children?.body ?? []) as { id: string; componentId: string }[]) {
-          // ⚠️ **連它插著的東西一起**——`return 0` 的那個 `0` 也是鷹架的一部分。
-          //    少了它，一顆實心的 `0` 插在一塊淡的 `回傳` 上，看起來像
-          //    「這個數字是我要改的」——而它不是。
-          if (isScaffoldInMainComponent(stmt.componentId)) addSubtree(stmt, out)
-        }
-      }
-    }
-    return out
+    return coreScaffoldNodeIds(this.syncController?.getCurrentTree(), this.currentSkeletonId)
   }
 
   private markOutOfScopeBlocks(): void {

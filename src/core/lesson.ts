@@ -77,6 +77,16 @@ export function scaffoldDepthOf(mode: ScaffoldMode): number {
   return mode === 'hidden' ? 0 : mode === 'ghost' ? 1 : 2
 }
 
+/**
+ * 深度 → 詞彙——上面那支的**反向**。
+ *
+ * ⚠️ 它與 `scaffoldDepthOf` 必須住在一起：兩份對應各寫一次的話，
+ * 其中一份會在加第四個模式的那天被漏掉。
+ */
+export function scaffoldModeOfDepth(depth: number): ScaffoldMode {
+  return depth === 0 ? 'hidden' : depth === 1 ? 'ghost' : 'editable'
+}
+
 export interface Track {
   /** 資料夾名，例如 `cpp-beginner` */
   readonly id: string

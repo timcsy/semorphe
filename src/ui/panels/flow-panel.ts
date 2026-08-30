@@ -555,8 +555,29 @@ export class FlowPanel implements ViewHost {
     return null
   }
 
+  /**
+   * **骨架告示**——哪幾顆是骨架、使用者想看到多少（`SemanticUpdateEvent.scaffold`）。
+   *
+   * 🔴 2026-08-30 之前這個面板**完全不認得它**：實測三個模式的節點集合逐字相同，
+   * 連 `hidden` 都照樣把整組骨架畫出來。而 console 零筆錯誤
+   * ——**不是壞掉，是從來沒做過**。
+   *
+   * > **一個模式如果在某個視圖上與另一個模式長得一樣，
+   * > 那個視圖就沒有實作它——而選單仍然讓人選得到。**
+   */
+  private scaffoldIds = new Set<string>()
+  private scaffoldMode: 'hidden' | 'ghost' | 'editable' = 'editable'
+
+  private isGhostNode(id: string): boolean {
+    return this.scaffoldMode === 'ghost' && this.scaffoldIds.has(id)
+  }
+
   onSemanticUpdate(event: SemanticUpdateEvent): void {
     this.tree = event.tree
+    if (event.scaffold) {
+      this.scaffoldIds = new Set(event.scaffold.nodeIds)
+      this.scaffoldMode = event.scaffold.mode
+    }
     if (typeof event.code === 'string') this.code = event.code
     if (event.mappings) this.mappings = event.mappings
     this.rebuild()
@@ -688,7 +709,20 @@ export class FlowPanel implements ViewHost {
   private rootBody(): SemanticNode[] {
     const target = this.scopedRoot()
     if (!target) return []
-    return bodySlotsOf(target.componentId).flatMap((s) => target.children[s] ?? [])
+    const body = bodySlotsOf(target.componentId).flatMap((s) => target.children[s] ?? [])
+    if (this.scaffoldMode !== 'hidden') return body
+    // 🔴 **`hidden` ＝「只留你自己的邏輯」，而那句話要跨視圖同一個意思。**
+    //
+    // ⚠️ 這裡**不問語言**——它只用告示給的 `nodeIds`：骨架的那一顆讓位，
+    //    由它身上的（非骨架）語句遞補。`int main(){ … }` 於是被攤開，
+    //    而 `#include`／`return 0` 直接不見（它們沒有本體）。
+    //
+    // 🟢 這條規則語言無關：Arduino 的 `setup`／`loop` 各攤出自己的本體。
+    const unwrap = (nodes: SemanticNode[]): SemanticNode[] =>
+      nodes.flatMap((n) => this.scaffoldIds.has(n.id)
+        ? unwrap(bodySlotsOf(n.componentId).flatMap((s) => n.children[s] ?? []))
+        : [n])
+    return unwrap(body)
   }
 
   private rebuild(): void {
@@ -881,7 +915,9 @@ export class FlowPanel implements ViewHost {
   private renderNode(n: GraphNode): SVGGElement {
     const at = this.posOf(n)
     const g = document.createElementNS(SVG_NS, 'g')
-    g.setAttribute('class', `fc-node${n.id === this.highlighted ? ' fc-on' : ''}`)
+    const ghost = this.isGhostNode(n.id)
+    g.setAttribute('class',
+      `fc-node${n.id === this.highlighted ? ' fc-on' : ''}${ghost ? ' fc-ghost' : ''}`)
     g.setAttribute('transform', `translate(${at.x},${at.y})`)
     // 🔴 編輯框要疊在這一顆上面，所以它要找得到（2026-08-26）
     g.setAttribute('data-node', n.id)
@@ -943,8 +979,12 @@ export class FlowPanel implements ViewHost {
       //
       // 🟢 而那個「衝突」用 `stopPropagation` 就解決了（拖曳掛在 `g` 上，
       //    這裡先攔下來）——第一版是**用限制去繞過一個修得掉的問題**。
+      // 🔴 **骨架的欄位改不動**——「看得到、拆不壞」。
+      //    ⚠️ 而它仍然**停在原地攔下 pointerdown**：少了這一句，
+      //    點在欄位上會變成「拖整顆節點」，而那正是下面要擋掉的事。
       for (const target of [hit, el]) {
         target.addEventListener('pointerdown', (ev) => ev.stopPropagation())
+        if (ghost) continue
         target.addEventListener('click', (ev) => {
           ev.stopPropagation()
           this.promptField(n.id, n.componentId, f.key, f.value)
@@ -965,6 +1005,19 @@ export class FlowPanel implements ViewHost {
     title.textContent = line ? `${n.title}\n${line}` : n.title
     g.appendChild(title)
 
+    // 🔴 **骨架照樣拖得動**——使用者 2026-08-30：
+    //    「我是希望**淡的還是能移動**，只不過**彼此關係不能變**」。
+    //
+    // ⚠️ 這一格我第一版做錯了，因為把積木那一課直接套過來：
+    //
+    // ```
+    // 積木視圖   位置【就是】結構——拖一塊積木會改變程式
+    // 流程視圖   位置只是【排版】——拖一顆節點程式一個字都不會變（存進 flowLayout）
+    // ```
+    //
+    // > **同一句「不能動」，在兩個視圖上禁的不是同一件事。**
+    //
+    // 🟢 所以這裡不擋拖曳，改在 `commitWire` 擋**關係的改變**。
     this.attachDrag(g, n.id)
     return g
   }
@@ -1124,6 +1177,10 @@ export class FlowPanel implements ViewHost {
     const seq = a.port.key === '__next__' && b.port.key === '__in__' ? { after: a, moved: b }
       : b.port.key === '__next__' && a.port.key === '__in__' ? { after: b, moved: a }
       : null
+    // 🔴 **骨架不會被搬走**——`ghost` 模式下鎖的是【關係】，不是位置。
+    //    ⚠️ 判的是「**被搬的那一顆**是不是骨架」，不是「有沒有碰到骨架」：
+    //    學生把自己的節點接**進** `main` 仍然合法，那正是這個模式的用處。
+    if (seq && this.isGhostNode(seq.moved.nodeId)) { this.refuse('scaffold-locked'); return }
     if (seq) {
       const v = tryReorder(this.tree, seq.after.nodeId, seq.moved.nodeId)
       if (!v.ok) { this.refuse(v.reason); return }
@@ -1140,6 +1197,8 @@ export class FlowPanel implements ViewHost {
     if (named(a) === named(b)) { this.refuse('not-parent-child'); return }
     const target = named(a) ? a : b
     const source = named(a) ? b : a
+    // 🔴 同上：被搬的是骨架就擋，而接**進**骨架合法
+    if (this.isGhostNode(source.nodeId)) { this.refuse('scaffold-locked'); return }
     const verdict = tryConnect(this.tree, source.nodeId, target.nodeId, target.port.key)
     if (!verdict.ok) { this.refuse(verdict.reason); return }
     this.moveInto(source.nodeId, target.nodeId, verdict.slot)

@@ -57,6 +57,10 @@ import { abstractComponentOf, variableTypeOf } from './language-executors'
 import { isFunctionDefinition } from './component/traits'
 // 🔴 「樹裡哪一塊是骨架」由**骨架宣告**回答（2026-08-28）——見 `EntryFunction`
 import { skeletonById, skeletonPresent } from './skeleton'
+// 🔴 「哪幾顆是骨架」的判定住在 core——**不要在這裡再寫一次**（`history/188`）
+import { scaffoldNodeIds } from './scaffold-nodes'
+import type { SemanticUpdateEvent } from './view-host'
+import { scaffoldModeOfDepth } from './lesson'
 
 /** Scaffold node filter type — strips scaffold nodes for L0 display */
 export type ScaffoldNodeFilter = (tree: SemanticNode) => SemanticNode
@@ -339,7 +343,7 @@ export class SyncController {
       // ⚠️ `source: 'blocks'` 保留原義（「樹被某個視圖改了」），而**誰改的**
       //    由 `originViewId` 如實帶下去——見它的說明。
       this.bus.emit('semantic:update', {
-        tree, code, blockState: renderResult, source: 'blocks',
+        tree, code, blockState: renderResult, source: 'blocks', scaffold: this.scaffoldNotice(tree),
         originViewId: data.viewId, mappings, scaffoldResult,
       })
     } finally {
@@ -405,7 +409,7 @@ export class SyncController {
             const convRender = renderToBlocklyState(this.enhanceDisplayTree(convDisplay))
             this.blockMappings = convRender.blockMappings
       
-            this.bus.emit('semantic:update', { tree: converted, code, blockState: convRender, source: 'code', mappings: this.codeMappings })
+            this.bus.emit('semantic:update', { tree: converted, code, blockState: convRender, source: 'code', mappings: this.codeMappings, scaffold: this.scaffoldNotice(converted) })
           }
         }
       }
@@ -457,7 +461,7 @@ export class SyncController {
       // 只在單一方向出現的不對稱。
       //
       // 🟢 程式碼面板不受影響：它只在 `blocks`／`resync` 才回寫（見 monaco-panel）。
-      this.bus.emit('semantic:update', { tree, code, blockState: renderResult, source: 'code', mappings: this.codeMappings })
+      this.bus.emit('semantic:update', { tree, code, blockState: renderResult, source: 'code', mappings: this.codeMappings, scaffold: this.scaffoldNotice(tree) })
     } finally {
       this.syncing = false
     }
@@ -554,6 +558,19 @@ export class SyncController {
     this.skeletonId = id
   }
 
+  /**
+   * 這棵樹的骨架告示——**每一次 `semantic:update` 都帶著它**。
+   *
+   * ⚠️ 四個發送點各自組一份的話，遲早有一個會漏掉
+   * ——而漏掉的那一條路上，視圖會以為「這支程式沒有骨架」。
+   */
+  private scaffoldNotice(tree: SemanticNode): SemanticUpdateEvent['scaffold'] {
+    return {
+      nodeIds: [...scaffoldNodeIds(tree, this.skeletonId)],
+      mode: scaffoldModeOfDepth(this.getScaffoldDepth()),
+    }
+  }
+
   async resyncForTopic(extractedTree: SemanticNode, currentCode: string): Promise<void> {
     if (this.syncing) return
     this.syncing = true
@@ -612,6 +629,7 @@ export class SyncController {
       // Emit resync event — updates both code and block panels
       this.bus.emit('semantic:update', {
         tree: fullTree, code, blockState: renderResult, source: 'resync', mappings, scaffoldResult,
+        scaffold: this.scaffoldNotice(fullTree),
       })
     } finally {
       this.syncing = false

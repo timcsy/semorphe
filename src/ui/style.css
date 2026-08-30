@@ -2262,3 +2262,20 @@ html, body {
   border-radius: 3px; padding: 2px 6px; font-size: 11px; cursor: grab;
 }
 .flow-chip:hover { background: #3a3a3a; border-color: #007acc; }
+
+/* ─── 流程視圖上的骨架（2026-08-30） ─────────────────────────────────
+   🔴 使用者 2026-08-28：「其他視圖可以有相對應的顯示」。
+   而在此之前三個模式在流程視圖上長得**一模一樣**。
+
+   ⚠️ 這裡可以直接蓋在 `<g>` 上（不必像積木那側用直接子代選擇器）：
+   流程圖的節點是**平的**，一顆節點的 `<g>` 裡不會裝著另一顆節點。 */
+.fc-ghost {
+  opacity: 0.45;
+}
+.fc-ghost .fc-node-body {
+  stroke-dasharray: 4 3;
+}
+/* 🔴 **接點不跟著變淡**——它還是連得上去的，而畫面要說出這件事。 */
+.fc-ghost .fc-port {
+  opacity: 1;
+}

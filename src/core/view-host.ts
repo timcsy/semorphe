@@ -83,6 +83,28 @@ export interface ViewCapabilities {
 export interface SemanticUpdateEvent {
   tree: SemanticNode
   code?: string
+  /**
+   * **這棵樹裡哪幾顆是骨架，以及使用者想看到多少。**
+   *
+   * ## 🔴 它從哪來（2026-08-30）
+   *
+   * 使用者 2026-08-28：「程式碼的部分還是要顯示完整，而**其他視圖可以有
+   * 相對應的顯示**」。而做完的只有積木那一側——實測流程視圖上
+   * 三個模式的節點集合**逐字相同**，連 `hidden` 都照樣把整組骨架畫出來。
+   *
+   * > **一個模式如果在某個視圖上與另一個模式長得一樣，
+   * > 那個視圖就沒有實作它——而選單仍然讓人選得到。**
+   *
+   * ## ⚠️ 它只說「哪幾顆是」，不說「要怎麼畫」
+   *
+   * 那是 P1「唯一真實，各式投影」：真相說這幾顆是骨架，
+   * **每個視圖自己決定它長什麼樣**（積木是淡的＋拖不動，
+   * 流程是淡的＋拉不動／連不出線／刪不掉）。
+   *
+   * ⚠️ **積木那一側今天還走組裝點直接呼叫**（`markScaffoldBlocks`）
+   * ——搬過來是一筆債，不是這一刀。
+   */
+  scaffold?: { nodeIds: string[]; mode: 'hidden' | 'ghost' | 'editable' }
   blockState?: unknown
   source: 'blocks' | 'code' | 'resync'
   /**
