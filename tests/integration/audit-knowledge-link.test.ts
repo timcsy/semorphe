@@ -52,7 +52,8 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const ROOT = path.join(process.cwd(), 'knowledge')
+const REPO = process.cwd()
+const ROOT = path.join(REPO, 'knowledge')
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -118,9 +119,25 @@ export function relativeLinksIn(text: string): Link[] {
   return out
 }
 
-/** 這條連結指得到東西嗎？`from` 是**來源檔**的絕對路徑。 */
+/**
+ * 這條連結指得到東西嗎？`from` 是**來源檔**的絕對路徑。
+ *
+ * 🔴 **逃出 repo 的一律算死**（2026-09-01，CI 紅了才發現）。
+ *
+ * 本機有一條 `episodes/… → ../../../test/ArduinoCAD/…`，而那個目錄
+ * **剛好在我這台機器上存在**——於是本機綠、CI 紅。
+ *
+ * > **一條會去問「這台機器上有什麼」的護欄，
+ * > 它的綠是這台機器的性質，不是這個專案的性質。**
+ *
+ * ⚠️ 而 `build-guardrail` §6.8 逐字警告過這件事（「這條護欄的量測工具是外部的嗎」），
+ * 我還是踩了——因為那一節講的是**編譯器、網路、時鐘**，而「檔案系統」看起來
+ * 不像外部工具。**它是。**
+ */
 export function resolves(from: string, target: string): boolean {
-  return fs.existsSync(path.resolve(path.dirname(from), decodeURIComponent(target)))
+  const abs = path.resolve(path.dirname(from), decodeURIComponent(target))
+  if (!abs.startsWith(REPO + path.sep)) return false
+  return fs.existsSync(abs)
 }
 
 interface Dead {
@@ -164,6 +181,9 @@ describe('第九十六條護欄：知識庫的相對連結不得死', () => {
     const fakeSource = path.join(ROOT, 'draft', '__不存在的來源__.md')
     expect(resolves(fakeSource, './__絕對不存在的東西__.md'), '🔴 死連結沒被判為死').toBe(false)
     expect(resolves(fakeSource, '../__也不存在__/x.md'), '🔴 跨目錄的死連結沒被判為死').toBe(false)
+    // 🔴 **逃出 repo 的一律算死**——不管那台機器上有沒有那個檔（見 `resolves` 的說明）
+    expect(resolves(fakeSource, '../../../../../../etc/hosts'), '🔴 逃出 repo 的連結沒被判為死').toBe(false)
+    expect(resolves(fakeSource, '../../package.json'), '🔴 repo 內的檔被誤判為死').toBe(true)
   })
 
   it('★ 注入（不亂報）：指向真的存在的東西不可被判為死', () => {
@@ -218,7 +238,8 @@ describe('第九十六條護欄：知識庫的相對連結不得死', () => {
     expect(
       dead.map((d) => d.key),
       '🔴 知識庫有死連結。留一筆，「連結不可死」這句話就是假的——' +
-        '所以這一條是硬性零，不是棘輪。修法：改路徑，或把連結拿掉。',
+        '所以這一條是硬性零，不是棘輪。修法：改路徑，或把連結拿掉。\n' +
+        '⚠️ 指到 repo 外面的也算死——那種連結的死活取決於【那台機器上有什麼】。',
     ).toEqual([])
   })
 })
