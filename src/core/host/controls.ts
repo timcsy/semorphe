@@ -309,6 +309,19 @@ export interface ControlOption {
   readonly group?: string
   /** 跟在名字後面的淡色說明（例如「沒有板子常數」）。 */
   readonly description?: string
+  /**
+   * 這一項可以畫成一張**格子示意圖**（2026-08-31，spec 168）。
+   *
+   * 🔴 使用者：「我是希望有**佈局的示意圖**來給使用者選」。而它是**宣告**不是圖檔
+   * ——`areas` 就是那份版面宣告本身，所以**圖與畫面不可能不一致**。
+   *
+   * ⚠️ 宿主不支援畫圖的話忽略它即可（`label` 仍然說得出是哪一個）
+   * ——它是**呈現**，不是語義。
+   */
+  readonly previewGrid?: {
+    /** 一列一個陣列，格子裡是「這一格叫什麼」的**已翻譯**名字。 */
+    readonly areas: readonly (readonly string[])[]
+  }
 }
 
 /**

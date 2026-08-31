@@ -1864,7 +1864,16 @@ export class App {
         return {
           id: spec.id, kind: spec.kind, title,
           label: msg(cur.nameKey, cur.id), value: cur.id,
-          options: LAYOUT_PRESETS.map((p) => ({ value: p.id, label: msg(p.nameKey, p.id) })),
+          // 🔴 **示意圖從【同一份宣告】產生**（2026-08-31，spec 168）：
+          //    `areas` 就是套用時餵給 CSS 的那一份，所以圖與畫面**不可能**不一致。
+          //    ⚠️ 手畫四張圖的話，它們會與宣告漂開，而漂開時沒有任何機構會出聲。
+          options: LAYOUT_PRESETS.map((p) => ({
+            value: p.id, label: msg(p.nameKey, p.id),
+            previewGrid: {
+              areas: p.areas.map((row) => row.map((v) => msg(
+                v === '*' ? 'LAYER_SPACE' : `LAYER_${v.toUpperCase()}`, v))),
+            },
+          })),
         }
       }
       case 'style': {

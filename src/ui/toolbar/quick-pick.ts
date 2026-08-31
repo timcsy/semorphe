@@ -40,6 +40,15 @@ export interface QuickPickItem {
    * ——一個按得下去而沒有反應的東西，比沒有它更糟。
    */
   readonly group?: string
+  /**
+   * 把這一項畫成一張**小小的格子圖**（2026-08-31，spec 168）。
+   *
+   * 🔴 為什麼在這裡而不是在版面那一側自己畫：清單的開關、篩選、鍵盤導覽
+   * 全在這支裡——另外做一個「圖示網格」等於把那些**再實作一次**。
+   *
+   * ⚠️ 它只知道「畫一張幾列幾欄、格子裡有字的圖」，**不知道版面是什麼**。
+   */
+  readonly previewGrid?: { readonly areas: readonly (readonly string[])[] }
 }
 
 export interface QuickPickOptions {
@@ -50,6 +59,35 @@ export interface QuickPickOptions {
 }
 
 /** 取消回 `null`——🔴 **與「選了空的多選」分得出來**（後者回 `[]`）。 */
+/**
+ * 把一張格子表畫成小圖。
+ *
+ * 🔴 **跨格算一格**：`[['a','b'],['c','b']]` 的 `b` 是一個 2×1 的格子，不是兩個。
+ * 少了這一條，圖上會出現一條假的分隔線——而那條線在真的畫面上不存在。
+ */
+function buildPreviewGrid(areas: readonly (readonly string[])[]): HTMLElement {
+  const box = document.createElement('span')
+  box.className = 'quick-pick-preview'
+  box.style.gridTemplateColumns = `repeat(${areas[0].length}, 1fr)`
+  box.style.gridTemplateRows = `repeat(${areas.length}, 1fr)`
+  const seen = new Set<string>()
+  areas.forEach((row, r) => row.forEach((name, c) => {
+    if (seen.has(name)) return
+    seen.add(name)
+    let colSpan = 1
+    while (c + colSpan < row.length && row[c + colSpan] === name) colSpan++
+    let rowSpan = 1
+    while (r + rowSpan < areas.length && areas[r + rowSpan][c] === name) rowSpan++
+    const cell = document.createElement('span')
+    cell.className = 'quick-pick-preview-cell'
+    cell.textContent = name
+    cell.title = name
+    cell.style.gridArea = `${r + 1} / ${c + 1} / ${r + 1 + rowSpan} / ${c + 1 + colSpan}`
+    box.appendChild(cell)
+  }))
+  return box
+}
+
 export function showQuickPick(
   options: QuickPickOptions,
   onPick: (values: string[] | null) => void,
@@ -108,6 +146,8 @@ export function showQuickPick(
       //    使用者會為了確認而多開一次。
       mark.textContent = picked.has(item.value) ? (options.multi ? '☑' : '✓') : (options.multi ? '☐' : '')
       row.appendChild(mark)
+      // 🔴 **示意圖畫在標籤前面**——使用者要能「不讀文字就挑得出來」（SC-001）。
+      if (item.previewGrid) row.appendChild(buildPreviewGrid(item.previewGrid.areas))
       const text = document.createElement('span')
       text.className = 'quick-pick-label'
       text.textContent = item.label

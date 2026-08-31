@@ -240,40 +240,55 @@ html, body {
 /* ─── Main editor area ─── */
 
 #editors {
-  display: flex;
+  /* 🔴 **編輯區是一張 grid**（2026-08-31，spec 168）——四個面板是平等的直接子節點，
+     各自帶一個 `grid-area`，而版面只是一句 `grid-template-areas`。
+     🪦 取代了 `SplitPane` ＋ 巢狀 flex：那個形狀撐不到「十字」（四層各一格是二維的）。 */
+  display: grid;
   flex: 1;
-  overflow: hidden;
-}
-
-/* ─── Split pane ─── */
-
-.split-left, .split-right {
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }
 
-.split-divider {
-  width: 4px;
+/* ─── 可拖的格線（`layout/grid-dividers.ts`）─── */
+
+.grid-divider {
   background: #252526;
-  cursor: col-resize;
-  flex-shrink: 0;
+  z-index: 5;
   transition: background 0.1s;
 }
 
-.split-divider:hover {
+.grid-divider:hover {
   background: #007acc;
 }
 
-/* 直向分割（沒有程式碼那一格的宿主）——見 `split-pane.ts` 的檔頭。 */
-#editors.split-vertical {
-  flex-direction: column;
+.grid-divider-columns { cursor: col-resize; }
+.grid-divider-rows { cursor: row-resize; }
+
+/* ─── 版面示意圖（`quick-pick.ts` 的 previewGrid）─── */
+
+.quick-pick-preview {
+  display: grid;
+  width: 52px;
+  height: 34px;
+  gap: 2px;
+  flex: 0 0 auto;
+  margin-right: 10px;
+  padding: 2px;
+  background: #1b1b1c;
+  border: 1px solid #3c3c3c;
+  border-radius: 3px;
 }
 
-#editors.split-vertical > .split-divider {
-  width: auto;
-  height: 4px;
-  cursor: row-resize;
+.quick-pick-preview-cell {
+  background: #37373d;
+  border-radius: 1px;
+  font-size: 0;          /* 名字給 `title` 與螢幕閱讀器用——格子太小放不下字 */
+  overflow: hidden;
 }
+
+.quick-pick-item.active .quick-pick-preview-cell { background: #4a6b8a; }
+
 
 /* ─── Blockly panel ─── */
 
@@ -1799,7 +1814,7 @@ html, body {
    > 只關一半留下的不是「沒有那個功能」，是一個沒有人設計過的狀態。** */
 @media (max-width: 768px) {
   /* Hide desktop split pane elements */
-  body:not(.host-no-mobile-layout) .split-divider {
+  body:not(.host-no-mobile-layout) .grid-divider {
     display: none !important;
   }
 
@@ -1855,14 +1870,17 @@ html, body {
   }
 
   /* Main editor area: stack vertically for mobile panels */
+  /* 🔴 行動版是【單槽】，不走桌機那張 grid（spec 168 明文不做行動版版面）。 */
   body:not(.host-no-mobile-layout) #editors {
+    display: flex !important;
     flex-direction: column;
     position: relative;
   }
 
   /* Hide desktop panels in mobile mode — LayoutManager controls visibility */
-  body:not(.host-no-mobile-layout) .split-left,
-  body:not(.host-no-mobile-layout) .split-right {
+  body:not(.host-no-mobile-layout) #code-column,
+  body:not(.host-no-mobile-layout) #blocks-column,
+  body:not(.host-no-mobile-layout) #flow-column {
     position: absolute !important;
     width: 100% !important;
   }

@@ -223,13 +223,26 @@ export class BottomPanel {
     })
   }
 
+  /**
+   * 這一格是不是住在一張 **grid** 裡（2026-08-31，spec 168）。
+   *
+   * 🔴 是的話**高度不歸這裡管**——它是 `grid-template-rows` 的一條軌道，
+   * 而那份狀態只住在容器上。這裡再寫一次 `flex` 就是**兩個地方寫同一份狀態**，
+   * 而 `e2e/layout-preset-width.spec.ts` 記過那個病一次了。
+   *
+   * > **兩個地方寫同一個 inline 樣式，後寫的那個不知道自己在覆蓋一份狀態。**
+   */
+  private inGrid(): boolean {
+    const parent = this.container.parentElement
+    return !!parent && getComputedStyle(parent).display === 'grid'
+  }
+
   private applyHeight(): void {
-    if (this.collapsed) {
-      this.contentArea.style.display = 'none'
-      this.container.style.flex = '0 0 auto'
-    } else {
-      this.contentArea.style.display = ''
-      this.container.style.flex = `0 0 ${this.heightRatio * 100}%`
-    }
+    // ⚠️ 收合仍然由這裡管——那是「內容顯不顯示」，不是「這一格多高」
+    this.contentArea.style.display = this.collapsed ? 'none' : ''
+    // grid 之下把手交給格線（`layout/grid-dividers.ts`），這條列自己的分隔線收起來
+    this.divider.style.display = this.inGrid() ? 'none' : ''
+    if (this.inGrid()) return
+    this.container.style.flex = this.collapsed ? '0 0 auto' : `0 0 ${this.heightRatio * 100}%`
   }
 }

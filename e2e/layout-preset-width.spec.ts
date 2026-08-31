@@ -35,9 +35,21 @@
 import { test, expect } from '@playwright/test'
 import { freshApp } from './helpers'
 
-const pick = async (page: import('@playwright/test').Page, label: RegExp): Promise<void> => {
+/**
+ * ⚠️ **用 `data-value` 選，不用文字**（2026-09-01 改）。
+ *
+ * 原本是 `.filter({ hasText: /^專注/ })`，而版面選單加上**示意圖**之後那一列的文字
+ * 是「積木主控台專注（一次一個）」——`^` 的錨點對不上了。
+ *
+ * 🟢 而 quick-pick 早就備好了這個把手，它自己的註解逐字寫著：
+ * 「給測試選得到的把手：標籤會隨語系換，而值不會」。
+ *
+ * > **一個用畫面文字定位的測試，會在畫面多一個東西的時候壞掉
+ * > ——而那個東西可能完全正確。**
+ */
+const pick = async (page: import('@playwright/test').Page, id: string): Promise<void> => {
   await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
-  await page.locator('.quick-pick-item').filter({ hasText: label }).first().click()
+  await page.locator(`.quick-pick-item[data-value="${id}"]`).click()
   await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
 }
 
@@ -55,15 +67,15 @@ test('★ 專注 → 對照，積木欄要拿回它那一半（不是縮成內�
   const before = await blocksWidth(page)
   expect(before, '🔴 一開機積木欄就是 0 → 這支測的不是那條路').toBeGreaterThan(100)
 
-  await pick(page, /^專注/)
-  await pick(page, /^對照/)
+  await pick(page, 'focus')
+  await pick(page, 'compare')
 
   const after = await blocksWidth(page)
   expect(
     after,
     `🔴 切回對照之後積木欄只有 ${Math.round(after)}px（視窗 ${viewport}px）——` +
       `它退回 \`flex: 0 1 auto\` 縮成內容寬度了。` +
-      `\n⚠️ SplitPane 的 inline 寬度不可以被清成空字串，要呼叫 \`refresh()\` 交還給它。`,
+      `\n⚠️ 比例住在容器的 \`grid-template-columns\` 上——面板自己不寫寬度。`,
   ).toBeGreaterThan(viewport * 0.25)
 
   // ★ 而它要**回到原來那個值**，不是「大於某個門檻就算過」
@@ -71,12 +83,12 @@ test('★ 專注 → 對照，積木欄要拿回它那一半（不是縮成內�
 })
 
 test('★ 三欄 → 對照，同一條路', async ({ page }) => {
-  // ⚠️ 三欄與專注動到的東西不同（一個改 flexDirection、一個改 width），
-  //    而它們**共用同一個還原分支**——所以兩條都要走。
+  // ⚠️ 三欄與專注在 grid 之下走的是同一條路（重設軌道），
+  //    而它們**曾經**是兩個不同的分支——留著兩條是因為那一天的缺陷只出現在其中一條。
   await freshApp(page)
   const before = await blocksWidth(page)
-  await pick(page, /^三欄/)
-  await pick(page, /^對照/)
+  await pick(page, 'three-column')
+  await pick(page, 'compare')
   const after = await blocksWidth(page)
   expect(Math.abs(after - before), '三欄切回對照之後寬度沒還原').toBeLessThan(4)
 })

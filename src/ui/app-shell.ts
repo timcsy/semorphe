@@ -1,5 +1,5 @@
 import * as Blockly from 'blockly'
-import { SplitPane } from './layout/split-pane'
+import { installGridDividers } from './layout/grid-dividers'
 import { BottomPanel } from './layout/bottom-panel'
 import { LayoutManager } from './layout/layout-manager'
 import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
@@ -345,16 +345,24 @@ export function createAppLayout(
    * > **一個切成兩半的版面，只有在兩半都有東西的時候才是「分割」；
    * > 否則它只是把一半送走。**
    */
-  const bottomTabsExist = CONTROLS
-    .filter((c) => c.id === 'console' || c.id === 'variables')
-    .some((c) => surfaceOf(c, surfaces) === 'panelBottom')
-  const codeSideHasContent = profile.features.codeEditorPane || bottomTabsExist
 
-  // 方向由「有沒有程式碼那一格」決定：有＝左右分、沒有＝上下分。
-  // 🔴 而**兩邊都要有東西才切**——否則不切。
-  const splitPane = codeSideHasContent
-    ? new SplitPane(main, profile.features.codeEditorPane ? 'horizontal' : 'vertical')
-    : null
+  /**
+   * **編輯區是一張 CSS Grid**（2026-08-31，spec 168）。
+   *
+   * 🪦 在此之前是 `SplitPane`（兩個面板、一條分隔線）＋ 巢狀 flex。
+   * 那個形狀撐不到「十字」——四層各一格是**二維**的，而巢狀 flex 表達它的方式
+   * 是「每個版面一套 DOM 手術」，那正是使用者感覺到的不對稱的來源：
+   *
+   * > 「你現在把積木和流程用 tab 切換我不太喜歡，
+   * >  **因為這樣程式碼面板就變得比較特別了**」
+   *
+   * 🟢 grid 之下四個面板是**平等的直接子節點**，各自帶一個 `grid-area`，
+   * 而版面只是一句 `grid-template-areas`——沒有任何一層需要特別待遇。
+   */
+  main.style.display = 'grid'
+  main.style.position = 'relative'
+  main.style.minHeight = '0'
+  main.style.overflow = 'hidden'
 
   // Create status bar
   // 🔴 關掉 ＝ **不建**（FR-006），不是建了再藏起來——宿主自己有一條。
@@ -415,9 +423,17 @@ export function createAppLayout(
   // > **一個叫做 `blocksColumn` 而其實在右邊的變數，
   // > 會讓下一個人把版面讀反。**
   // ⚠️ 不切的時候，積木**就是** `main` 本身——不是「一個佔滿的子欄」。
-  const blocksColumn = splitPane ? splitPane.getRightPanel() : main
+  // 🔴 **它是 grid 的一格**（`space`），不再是「切出來的右半」——
+  //    所以 `codeSideHasContent` 不再改變它是誰。用不到的層由軌道大小 0 收掉。
+  const blocksColumn = document.createElement('div')
+  blocksColumn.id = 'blocks-column'
+  blocksColumn.style.gridArea = 'space'
   blocksColumn.style.display = 'flex'
-  blocksColumn.style.flexDirection = 'column' 
+  blocksColumn.style.flexDirection = 'column'
+  blocksColumn.style.minWidth = '0'
+  blocksColumn.style.minHeight = '0'
+  blocksColumn.style.overflow = 'hidden'
+  main.appendChild(blocksColumn)
 
   // 🔴 一顆控制項都不剩的話**不建這條列**——一條空的列只是把版面吃掉。
   const quickAccessNeeded = panelControls(surfaces)
@@ -454,8 +470,16 @@ export function createAppLayout(
   // Right panel: Monaco + BottomPanel
   // 🔴 沒有切的時候它是一個**沒掛進 DOM 的容器**——程式碼視圖的建構子
   //    仍然收得到一個容器（那本來就是契約：「即使那個實作不在上面畫任何東西」）。
-  const codeColumn = splitPane ? splitPane.getLeftPanel() : document.createElement('div')
+  const codeColumn = document.createElement('div')
+  codeColumn.id = 'code-column'
   codeColumn.classList.add('code-column')
+  codeColumn.style.gridArea = 'element'
+  codeColumn.style.display = 'flex'
+  codeColumn.style.flexDirection = 'column'
+  codeColumn.style.minWidth = '0'
+  codeColumn.style.minHeight = '0'
+  codeColumn.style.overflow = 'hidden'
+  main.appendChild(codeColumn)
 
   const monacoWrapper = document.createElement('div')
   monacoWrapper.className = 'monaco-wrapper'
@@ -481,9 +505,16 @@ export function createAppLayout(
   // > **一個沒有內容的容器不是「比較小的容器」，它是純粹的浪費。**
   const bottomTabs = CONTROLS.filter((c) => (c.id === 'console' || c.id === 'variables'))
     .filter((c) => surfaceOf(c, surfaces) === 'panelBottom')
+  // 🔴 **主控台是 grid 的一格（`state`），不再掛在程式碼那一欄底下**（spec 168）。
+  //    版面可以**搬**它（十字時在右下），但**不得關掉**它——第八十一條的 I4 盯著。
   const bottomContainer = document.createElement('div')
+  bottomContainer.id = 'bottom-container'
+  bottomContainer.style.gridArea = 'state'
+  bottomContainer.style.minWidth = '0'
+  bottomContainer.style.minHeight = '0'
+  bottomContainer.style.overflow = 'hidden'
   let bottomPanel = bottomTabs.length > 0 ? new BottomPanel(bottomContainer) : null
-  if (bottomPanel) codeColumn.appendChild(bottomContainer)
+  if (bottomPanel) main.appendChild(bottomContainer)
 
   // 🔴 **主控台那一格建不建，問登錄表**（`controlSurfaces.output`）。
   //
@@ -514,7 +545,7 @@ export function createAppLayout(
       bottomPanel = new BottomPanel(bottomContainer)
       // 🔴 **沒有切版面時，程式碼那一欄沒掛進 DOM**——掛過去會看不見。
       //    ⚠️ 那時它跟在積木下面（`main` 本身就是直向的 flex）。
-      ;(codeSideHasContent ? codeColumn : blocksColumn).appendChild(bottomContainer)
+      main.appendChild(bottomContainer)
       // 🔴 **執行控制器手上是建構當時的那一份**——不通知它的話，
       //    `showTab('console')` 會打在一個 `null` 上，而輸出看起來像沒有跑。
       onBottomPanelCreated?.(bottomPanel)
@@ -557,7 +588,7 @@ export function createAppLayout(
   // ⚠️ 面板本身不捲——捲的是它裡面的 `.flow-canvas`（見 `flow-panel.ts`）。
   //    這裡留 `hidden` 是為了讓那一層自己決定，而不是讓兩層各捲各的。
   flowEl.style.overflow = 'hidden'
-  flowEl.style.display = 'none'
+  // ⚠️ **不預設藏起來**——grid 之下藏不藏由 `flowColumn` 決定（見 `applyLayout`）
   const flowPanel = new FlowPanel(flowEl, blockSpecRegistry)
   /**
    * **兩個投影自己一列**（2026-08-26）。
@@ -571,16 +602,22 @@ export function createAppLayout(
    *
    * → 給內容一個自己的容器，方向改在那上面。
    */
-  const projectionRow = document.createElement('div')
-  projectionRow.id = 'projection-row'
-  projectionRow.style.flex = '1'
-  projectionRow.style.display = 'flex'
-  projectionRow.style.flexDirection = 'column'
-  projectionRow.style.minHeight = '0'
-  projectionRow.style.overflow = 'hidden'
-  blocksColumn.insertBefore(projectionRow, blocklyContainer)
-  projectionRow.appendChild(blocklyContainer)
-  projectionRow.appendChild(flowEl)
+  // 🪦 `projectionRow` 退場（2026-08-31）：它存在的理由是「三欄時讓流程與積木並排，
+  //    而不動到工具列」——而 grid 之下**流程本來就是自己的一格**，不需要那層容器。
+  //
+  // 🔴 而那正是使用者感覺到的不對稱的所在：流程住在積木那一欄裡，
+  //    於是它與積木**互斥**，而程式碼不必跟任何人互斥。
+  const flowColumn = document.createElement('div')
+  flowColumn.id = 'flow-column'
+  flowColumn.style.gridArea = 'relation'
+  flowColumn.style.display = 'flex'
+  flowColumn.style.flexDirection = 'column'
+  flowColumn.style.minWidth = '0'
+  flowColumn.style.minHeight = '0'
+  flowColumn.style.overflow = 'hidden'
+  flowEl.style.display = ''
+  main.appendChild(flowColumn)
+  flowColumn.appendChild(flowEl)
 
   /**
    * editor 區現在顯示哪一個投影。
@@ -592,9 +629,36 @@ export function createAppLayout(
    * ⚠️ 切回積木時要**叫 Blockly 重新量尺寸**：它在 `display: none` 期間
    * 量到的是 0×0，而那個症狀是「切回去之後畫布空白，拖一下才出現」。
    */
+  /** 現在「專注」顯示哪一層——`areas` 裡的 `'*'` 用它代換。 */
+  let focusLayer: UnderstandingLayer = 'space'
+  /** 使用者最後按的那個投影——版面裡只有其中一個時，用它決定是哪一個。 */
+  let projectionWanted: UnderstandingLayer = 'space'
+  let relayoutDividers: (() => void) | null = null
+  let applyLayoutRef: ((id: LayoutPresetId) => void) | null = null
+
   const showProjection = (which: 'blocks' | 'flow'): void => {
-    blocklyContainer.style.display = which === 'blocks' ? '' : 'none'
-    flowEl.style.display = which === 'flow' ? '' : 'none'
+    // 🔴 **「專注」顯示哪一層由這裡決定**（2026-08-31）——宣告寫的是 `'*'`，
+    //    而 `'*'` 要被代換成使用者現在看的那一層。少了這兩行，「專注」永遠是程式碼。
+    focusLayer = which === 'blocks' ? 'space' : 'relation'
+    projectionWanted = focusLayer
+    // 🔴 **grid 之下「哪一個投影看得到」由【版面】決定，不由這裡**（2026-08-31）。
+    //
+    //    在此之前這裡直接藏 `blocklyContainer`／`flowEl`——那是「兩個投影擠在同一欄、
+    //    所以要互斥」的遺產，而**那個互斥正是使用者說的那個不對稱**：
+    //
+    //    > 「你現在把積木和流程用 tab 切換我不太喜歡，
+    //    >  **因為這樣程式碼面板就變得比較特別了**」
+    //
+    //    ⚠️ 留著它的話「三欄」與「十字」會**兩個投影都不見一個**——
+    //    而那不會報錯，畫面上就是空的。
+    //
+    // 🟢 它今天只剩一件事：告訴「專注」該顯示哪一層。
+    // 🔴 **這個版面沒有那一層的話，把它【換進來】**（2026-08-31）。
+    //
+    //    ⚠️ 舊的做法是「兩個投影擠在同一欄、互斥」——而那正是使用者說的不對稱。
+    //    新的做法一樣讓那顆按鈕有用，但它換的是**版面裡的那一格**，
+    //    而不是「積木與流程共用一個位子」：三欄與十字兩個都在，這顆按鈕就不動任何東西。
+    applyLayoutRef?.(document.body.getAttribute('data-layout') as LayoutPresetId ?? 'compare')
     document.getElementById('view-blocks-btn')?.classList.toggle('active', which === 'blocks')
     document.getElementById('view-flow-btn')?.classList.toggle('active', which === 'flow')
     if (which === 'blocks') requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
@@ -618,52 +682,89 @@ export function createAppLayout(
    * ⚠️ **不做自由 docking**（路線圖明文排除）：這是一個教學工具，
    * 老師說「看左邊那一欄」時那句話要對每個人都成立。
    */
-  const applyLayout = (id: LayoutPresetId): void => {
+
+  /**
+   * 這一層在這個宿主上**存不存在**。
+   *
+   * 🔴 不存在的層，它的軌道收成 `0`——而不是「畫出來再藏起來」。
+   * ⚠️ 判準問的是**能力**（`profile.features` ／ 有沒有那個面板），不是宿主的名字。
+   */
+  const layerAvailable = (l: UnderstandingLayer): boolean =>
+    l === 'element' ? profile.features.codeEditorPane
+      : l === 'state' ? bottomPanel !== null
+        : true
+
+  applyLayoutRef = (id: LayoutPresetId): void => {
     const preset = layoutPreset(id)
     if (!preset) return
-    const wants = (l: UnderstandingLayer): boolean => preset.layers.includes(l)
-    if (id === 'focus') {
-      // 一次一層：程式碼收起來，編輯區**回到單欄**並維持現在看的那一個投影。
-      //
-      // 🔴 第一版只收了程式碼那一欄——**而兩個投影還並排著**（實測），
-      //    於是「專注」變成「三欄少一欄」。
-      //    > **「一次一層」不是「少給一層」，是【回到一層】。**
-      codeColumn.style.display = 'none'
-      splitPane?.setDividerVisible?.(false)
-      // ⚠️ **那一欄要把整個寬度吃掉**——`SplitPane` 給的是固定比例，
-      //    收起左欄之後右欄還是原本那一半，畫面右邊留一大片空白（實測）。
-      blocksColumn.style.flex = '1'
-      blocksColumn.style.width = '100%'
-      projectionRow.style.flexDirection = 'column'
-      // 哪一個投影留下來由使用者現在看的那顆分頁決定——這裡不挑。
-      const flowActive = flowEl.style.display !== 'none' && blocklyContainer.style.display === 'none'
-      showProjection(flowActive ? 'flow' : 'blocks')
-    } else {
-      codeColumn.style.display = wants('element') ? '' : 'none'
-      splitPane?.setDividerVisible?.(wants('element'))
-      // 還原「專注」動過的寬度——⚠️ 不還原的話從專注切回來右欄會吃掉整個畫面。
-      //
-      // 🔴 **而寬度要交還給 `SplitPane`，不是清成空字串**（2026-08-27 實測）：
-      //    `blocksColumn` 就是 `splitPane.getRightPanel()`，那個 inline 寬度
-      //    （`calc(50% - 2px)`）是它設的。清掉之後那一欄退回 `flex: 0 1 auto`，
-      //    **縮成內容寬度**——2000px 的視窗裡積木欄只剩 213px，右邊一大片黑。
-      //
-      //    > **兩個地方寫同一個 inline 樣式，後寫的那個不知道自己在覆蓋一份狀態。**
-      //
-      // ⚠️ 而它的症狀**不會出現在切換的當下**，只在「進過專注（或三欄）再切回來」
-      //    那條路上——所以單開一個版面預設看起來都是對的。
-      blocksColumn.style.flex = ''
-      blocksColumn.style.width = ''
-      splitPane?.refresh?.()
-      // 三欄：流程與積木**並排**，而不是互斥
-      const both = wants('relation') && wants('space')
-      projectionRow.style.flexDirection = both ? 'row' : 'column'
-      blocklyContainer.style.display = wants('space') ? '' : 'none'
-      flowEl.style.display = wants('relation') ? '' : 'none'
+    let areas = preset.areas.map((row) =>
+      row.map((v) => (v === '*' ? focusLayer : v)) as UnderstandingLayer[])
+    // 🔴 版面只放得下兩個投影其中一個時，放使用者最後按的那一個。
+    //    ⚠️ 兩個都在（三欄／十字）就什麼都不換——那才是這一刀要的：**不再互斥**。
+    const flat = areas.flat()
+    const other: Record<string, UnderstandingLayer> = { space: 'relation', relation: 'space' }
+    const present = (['space', 'relation'] as const).filter((l) => flat.includes(l))
+    if (present.length === 1 && present[0] !== projectionWanted
+        && other[present[0]] === projectionWanted) {
+      areas = areas.map((row) => row.map((v) => (v === present[0] ? projectionWanted : v)))
     }
+
+    // 一整欄（列）都是「這個宿主沒有的層」→ 軌道收成 0。
+    const colUsed = areas[0].map((_, c) => areas.some((row) => layerAvailable(row[c])))
+    const rowUsed = areas.map((row) => row.some((v) => layerAvailable(v)))
+    const size = (i: number, used: boolean[], decl?: readonly string[]): string =>
+      used[i] ? (decl?.[i] ?? '1fr') : '0px'
+
+    main.style.gridTemplateAreas = areas.map((r) => `"${r.join(' ')}"`).join(' ')
+    main.style.gridTemplateColumns = colUsed.map((_, i) => size(i, colUsed, preset.cols)).join(' ')
+    main.style.gridTemplateRows = rowUsed.map((_, i) => size(i, rowUsed, preset.rows)).join(' ')
+
+    // 沒有出現在這張版面裡的層 → 那一格不畫（grid 不會替它留位子）
+    // 🔴 **要還原成 `flex`，不是 `''`**（2026-08-31 實測）。三欄都是直向的 flex 容器
+    //    （工具列在上、內容在下），而 `''` 會把它清成 `block`——於是裡面那個
+    //    `flex: 1` 的內容量到 **0 高**，畫面上是一片空白而**沒有任何錯誤**。
+    //
+    // > **把 inline 樣式清成空字串，還的不是「原本的值」，是「沒有值」。**
+    const shown = new Set(areas.flat())
+    codeColumn.style.display = shown.has('element') && layerAvailable('element') ? 'flex' : 'none'
+    flowColumn.style.display = shown.has('relation') ? 'flex' : 'none'
+    blocksColumn.style.display = shown.has('space') ? 'flex' : 'none'
+    bottomContainer.style.display = shown.has('state') && layerAvailable('state') ? '' : 'none'
+
+    // 🔴 **切換投影的那條列，要跟著看得見的那一欄走**（2026-09-01）。
+    //
+    //    它原本住在積木那一欄裡——而切到流程時那一欄被藏起來，
+    //    於是「切回積木」的按鈕**跟著不見**。使用者被困在流程視圖裡。
+    //
+    // > **一條工具列如果住在它所操作的東西裡面，
+    // > 那個東西被藏起來的時候，你就沒有辦法把它叫回來。**
+    //
+    // ⚠️ 這與行動版還原鈕（2026-08-31）是同一類，處置也一樣：**搬**，不是複製一份。
+    const bar = document.querySelector('.quick-access-bar')
+    if (bar) {
+      const host = blocksColumn.style.display !== 'none' ? blocksColumn
+        : flowColumn.style.display !== 'none' ? flowColumn : null
+      if (host && bar.parentElement !== host) host.insertBefore(bar, host.firstChild)
+    }
+
     document.body.setAttribute('data-layout', id)
-    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
+    // ⚠️ Blockly／流程圖在 `display: none` 期間量到的是 0×0——要叫它們重量一次
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'))
+      relayoutDividers?.()
+    })
   }
+
+  // 🔴 **開機就要套一次**（2026-08-31）。grid 之下「什麼都不套」不是「預設版面」，
+  //    是**一張沒有 `grid-template-areas` 的 grid**——四格會全部疊在左上角。
+  //
+  // ⚠️ 以前不用套是因為 flex 的初始樣式**剛好長得像「對照」**。
+  //
+  // > **一個「不做任何事就是對的」的預設，換掉底層之後會變成「什麼都沒有」，
+  // > 而它不會報錯。**
+  const applyLayout = applyLayoutRef
+  applyLayout('compare')
+  relayoutDividers = installGridDividers(main)
 
   /**
    * 🔴 **還原／重做在行動版要搬家，而不是複製一對。**
@@ -1032,18 +1133,17 @@ export function createAppLayout(
     const grp = document.getElementById('undo-group')
     if (undoSlot && grp) undoSlot.appendChild(grp)
     mobileActionBar.style.display = 'none'
-    blocksColumn.appendChild(projectionRow)
-    projectionRow.appendChild(blocklyContainer)   // 放回【投影那一列】，不是外層
+    blocksColumn.appendChild(blocklyContainer)
     // Ensure correct order: monaco first, then bottom panel
     codeColumn.appendChild(monacoWrapper)
-    if (bottomPanel) codeColumn.appendChild(bottomContainer)
+    if (bottomPanel) main.appendChild(bottomContainer)
     // 🔴 流程回到**投影那一列**——⚠️ 不是回到 `blocksColumn`：
     //    2026-08-26 加了 `projectionRow`（讓三欄時兩個投影並排而不動到工具列），
     //    而這裡如果放回外層，**從手機切回桌機之後三欄就排不出來**
     //    ——症狀只在「轉過螢幕方向」之後出現，平常看不到。
     //
     //    > **一個「把東西放回去」的路徑，會在容器變深的那天放到錯的層。**
-    projectionRow.appendChild(flowEl)
+    flowColumn.appendChild(flowEl)
     showProjection('blocks')
 
     // 🪦 「把選擇器搬回工具列」那段已刪除——同上。
