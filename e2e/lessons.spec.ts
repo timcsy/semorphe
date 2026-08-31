@@ -89,7 +89,33 @@ async function openLesson(page: import('@playwright/test').Page, c: LessonCase):
   await page.waitForFunction(
     () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 30_000 })
-  await page.waitForTimeout(2500)
+  // 🔴 **等【條件】，不等固定秒數**（2026-08-31 量測之後改的）。
+  //
+  // 這裡原本是 `waitForTimeout(2500)`。整個 `lessons.spec` 是 14.8 分鐘，
+  // 而量出來**每支測試有 79～82% 是純粹在睡**：
+  //
+  // ```
+  // 元件檢查  openLesson 2500 ＋ useAsSource 600 ＋ 1500 = 4600ms ／ 實測 5.6 秒
+  // 執行輸出  2500 ＋ 1200 ＋ 400×N ＋ 2500 ≥ 6200ms      ／ 實測 7.8 秒
+  // ```
+  //
+  // 換成條件等待之後：**888 秒 → 218 秒，133 支零改判定**。
+  //
+  // ⚠️ 而它同時是**這個檔不能平行跑的原因**。對照實驗（`workers=1` vs `4`）：
+  // 序列 9/9 過，併行 3 支紅——而失敗的形狀是「產出是舊的」與
+  // 「element not found」，**不是互相覆寫**（`playwright.config.ts` 的註解
+  // 那樣寫，而那句話是錯的：Playwright 每個 worker 有自己的 context）。
+  // 是 4 個 Chromium 搶 4 個效能核，開機慢 3～4 倍，而固定等待是照閒置機器校準的。
+  //
+  // > **一個用固定秒數等待的測試，它的正確性綁在「機器現在有多閒」上
+  // > ——那既讓它慢，也讓它不能平行。同一個病，兩個症狀。**
+  //
+  // 🔴 **條件要挑「這一步真的完成了」的那個**，不是「有東西了」——
+  //    這裡等的是「目標釘好了 ＋ 樹存在」，那正是下面每一條斷言的前提。
+  await page.waitForFunction(() => {
+    const a = (window as never as Record<string, any>).__app
+    return Boolean(a?.currentTarget?.id) && Boolean(a?.syncController?.currentTree)
+  }, undefined, { timeout: 30_000 })
   // ★ 目標真的被釘過去了——否則下面驗的是另一個語言
   if (c.target) {
     expect(
@@ -113,7 +139,11 @@ for (const c of CASES) {
       (window as never as { __app: { codeView: { setCode(c: string): void } } })
         .__app.codeView.setCode(code), c.code)
     await useAsSource(page, '程式碼')
-    await page.waitForTimeout(1500)
+    // 等到樹**真的有內容**——`useAsSource` 回來時同步還在跑。
+    await page.waitForFunction(() => {
+      const t = (window as never as Record<string, any>).__app?.syncController?.currentTree
+      return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+    }, undefined, { timeout: 30_000 })
 
     const measured = await page.evaluate(() => {
       const tree = (window as never as { __app: { syncController: { currentTree: unknown } } })
@@ -199,7 +229,11 @@ for (const c of CASES) {
       (window as never as { __app: { codeView: { setCode(c: string): void } } })
         .__app.codeView.setCode(code), c.code)
     await useAsSource(page, '程式碼')
-    await page.waitForTimeout(1200)
+    // 等到樹**真的有內容**——`useAsSource` 回來時同步還在跑。
+    await page.waitForFunction(() => {
+      const t = (window as never as Record<string, any>).__app?.syncController?.currentTree
+      return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+    }, undefined, { timeout: 30_000 })
 
     await page.locator('#run-btn').click()
 
@@ -217,7 +251,12 @@ for (const c of CASES) {
       await page.waitForTimeout(400)
     }
 
-    await page.waitForTimeout(2500)
+    // 🔴 **等【執行真的結束】，不等 2.5 秒**——狀態列自己會說。
+    //    ⚠️ 三種結局都要收（完畢／錯誤／英文），否則錯誤的那一課會等滿 20 秒
+    //    然後用一個過期的輸出去比對。
+    await expect
+      .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
+      .toMatch(/程式執行完畢|錯誤|Error|Completed/)
 
     const output = (await page.locator('.console-output').innerText()).trim()
 

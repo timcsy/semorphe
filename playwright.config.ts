@@ -32,7 +32,33 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
-  // ⚠️ 序列執行：這些測試共用 localStorage（專案的存檔），平行跑會互相覆寫。
+  // ## 🔴 為什麼是序列——而 2026-08-31 之前這裡的理由是【錯的】
+  //
+  // 舊註解逐字：「這些測試共用 localStorage（專案的存檔），平行跑會互相覆寫。」
+  // **那句話不成立**：Playwright 每個 worker 有自己的 browser context，
+  // 而 `localStorage` 是 per-context per-origin，本來就隔離。
+  //
+  // 真正的原因是量出來的（`workers=1` vs `workers=4`，同一組三支）：
+  //
+  // ```
+  // 序列  9/9 過（39.9 秒）
+  // 併行  3 支紅——「產出是【舊的】」（少了 stdbool.h）、element not found ×2
+  // ```
+  //
+  // 4 個 Chromium × (Blockly ＋ tree-sitter wasm ＋ 177 顆膠囊) 擠 4 個效能核，
+  // 每次開機慢 3～4 倍——**而這些測試用固定秒數等待，那是照閒置機器校準的**。
+  //
+  // > **一個用固定秒數等待的測試，它的正確性綁在「機器現在有多閒」上
+  // > ——那既讓它慢，也讓它不能平行。同一個病，兩個症狀。**
+  //
+  // ## 所以開併行的前置是「把固定等待換掉」，不是改這兩行
+  //
+  // 全庫原本 **144 處** `waitForTimeout`，平均 1761ms。`lessons.spec` 清掉三處
+  //（888 秒 → 218 秒，133 支零改判定），**其餘 141 處還在**
+  //（含 `lessons.spec` 自己剩下的一處：餵 stdin 之間的 400ms，那一格要另外想）。
+  //
+  // ⚠️ **清完之前不要開併行**——現在開等於把不穩定寫進 CI，
+  //    而下面那行 `retries: CI ? 1 : 0` 會把它藏起來。
   workers: 1,
   fullyParallel: false,
   // CI 上失敗重跑一次——e2e 的偶發失敗多半是等待時機，不是真的壞。
