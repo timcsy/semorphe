@@ -61,7 +61,7 @@
  *   **那時要擴充這支的操作，不是放寬判準。**
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource } from './helpers'
+import { useAsSource, treeReady } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -83,7 +83,7 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
     (window as never as { __app: { codeView: { setCode(c: string): void } } })
       .__app.codeView.setCode('int main(){ cout << 1; }'))
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
+  await treeReady(page)
 
   // 🔴 **Python 的 wasm 只有切到 Python 目標才會被要**（spec 160）。
   //
@@ -125,7 +125,7 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
     (window as never as { __app: { codeView: { setCode(c: string): void } } })
       .__app.codeView.setCode('print("hi")'))
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
+  await treeReady(page)
 
   const shipped = fs.readdirSync(path.join(process.cwd(), 'dist'))
     .filter((f) => f.endsWith('.wasm'))

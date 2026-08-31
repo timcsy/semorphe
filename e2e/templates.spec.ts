@@ -20,7 +20,7 @@
  * 錨在**範例數**（合成量），不是「壞掉的份數」。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource } from './helpers'
+import { freshApp, useAsSource, appReady, treeReady, pickTarget, runAndSettle } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -55,12 +55,10 @@ test('★ 入口條件——真的掃到範例了', () => {
 for (const c of CASES) {
   test(`★ ${c.name}：套用之後系統讀得懂，而且跑起來不出錯`, async ({ page }) => {
     await freshApp(page)
-    await page.waitForTimeout(1500)
+    await appReady(page)
 
     // 從**畫面上**選它——與使用者走的是同一條路
-    await page.locator('.status-item-btn[data-control-id="target"]').click()
-    await page.locator(`.quick-pick-item[data-value="${c.target}"]`).click()
-    await page.waitForTimeout(2500)
+    await pickTarget(page, c.target)
     await page.locator('.status-item-btn[data-control-id="template"]').click()
     await page.locator(`.quick-pick-item[data-value="${c.id}"]`).click()
     // 🔴 **套用範例會蓋掉現在的內容，所以應用會先問一次**——而它
@@ -89,7 +87,7 @@ for (const c of CASES) {
 
     // ② 🔴 系統讀得懂——降級成 raw_code 代表範例在積木那一側是壞的
     await useAsSource(page, '程式碼')
-    await page.waitForTimeout(2000)
+    await treeReady(page)
     const ids = await page.evaluate(() => {
       const t = (window as never as { __app: { syncController: { getCurrentTree(): unknown } } })
         .__app.syncController.getCurrentTree()
@@ -110,8 +108,7 @@ for (const c of CASES) {
     ).toEqual([])
 
     // ③ 跑起來不出錯
-    await page.locator('#run-btn').click()
-    await page.waitForTimeout(2200)
+    await runAndSettle(page)
     const out = (await page.locator('.console-output').innerText()).trim()
     expect(
       out.split('\n').filter((l) => /尚未宣告|尚未定義|^Error:|不是一個結構|不合法/.test(l)),

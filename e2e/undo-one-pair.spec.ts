@@ -33,7 +33,7 @@
  * > **如果快速列那一顆找不到，這份報表不算數——不是「只剩一對了」。**
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, freshApp } from './helpers'
+import { useAsSource, freshApp, appReady, treeReady } from './helpers'
 
 const PROG = 'int main() {\n    int a = 1;\n    cout << a << endl;\n    return 0;\n}\n'
 const flat = (s: string): string => s.replace(/#include[^\n]*\n/g, '').replace(/\s+/g, ' ').trim()
@@ -43,7 +43,7 @@ const codeNow = async (p: import('@playwright/test').Page): Promise<string> =>
 
 test('★ 畫面上只有一對還原按鈕', async ({ page }) => {
   await freshApp(page)
-  await page.waitForTimeout(2200)
+  await appReady(page)
 
   // ★ 入口條件（見檔頭的自我否證）
   await expect(page.locator('#undo-btn'), '🔴 快速列那一顆不見了 → 這份報表不算數').toHaveCount(1)
@@ -62,11 +62,11 @@ test('★ 畫面上只有一對還原按鈕', async ({ page }) => {
 
 test('★ 在流程刪掉的，按【快速列】那一顆就退得回來', async ({ page }) => {
   await freshApp(page)
-  await page.waitForTimeout(2000)
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), PROG)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
+  await treeReady(page)
   await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
   await page.waitForTimeout(1600)
 

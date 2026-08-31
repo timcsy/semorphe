@@ -40,7 +40,7 @@
  * - **不檢測每一顆元件都 lift 得出來**——這裡只餵一段最簡單的程式。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, selectTarget, useAsSource } from './helpers'
+import { freshApp, selectTarget, useAsSource, treeReady } from './helpers'
 
 /** 每個語言一段**最簡單而一定有東西**的程式 */
 const CASES = [
@@ -74,7 +74,7 @@ for (const c of CASES) {
       (window as never as { __app: { codeView: { setCode(c: string): void } } })
         .__app.codeView.setCode(code), c.code)
     await useAsSource(page, '程式碼')
-    await page.waitForTimeout(2500)
+    await treeReady(page)
 
     const n = await page.evaluate(() => {
       const t = (window as never as { __app: { syncController: { currentTree: unknown } } })

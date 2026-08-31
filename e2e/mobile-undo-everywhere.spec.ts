@@ -45,7 +45,7 @@
  * - ⚠️ **不檢測沒有標頭的宿主**（VSCode 面板）：那時 ↩↪ 留在快速列裡是對的
  */
 import { test, expect } from '@playwright/test'
-import { freshApp } from './helpers'
+import { freshApp, appReady } from './helpers'
 
 // 🔴 **四個分頁全走一遍**（2026-08-31：「其他視圖要跟進」）。
 // 先前少了 `console`，而**它正是第二條漏網的工具列住的地方**
@@ -78,7 +78,7 @@ test.describe('行動版', () => {
   test('★ 手機：每一個分頁都看得到還原鈕，而全畫面只有一對', async ({ page }) => {
     test.setTimeout(90_000)
     await freshApp(page)
-    await page.waitForTimeout(3000)
+    await appReady(page)
 
     // ★ 入口條件——錨在合成量，見檔頭的自我否證
     expect(
@@ -312,7 +312,7 @@ test('★ 切回桌機時，還原鈕回到快速列裡的原位（不是排到�
   test.setTimeout(90_000)
   await page.setViewportSize({ width: 390, height: 844 })
   await freshApp(page)
-  await page.waitForTimeout(3000)
+  await appReady(page)
   expect(
     await page.evaluate(() => document.getElementById('undo-btn')?.closest('#mobile-action-bar') !== null),
     '🔴 手機版時還原鈕不在行動版第二列裡 → 這一次量的不是「搬回去」',

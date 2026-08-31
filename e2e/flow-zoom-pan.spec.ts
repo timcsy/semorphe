@@ -43,7 +43,7 @@
  * > **一個從容器的邊界框推算出來的座標，會落在容器裡而不在任何東西上。**
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, freshApp } from './helpers'
+import { useAsSource, freshApp, appReady, treeReady, flowReady } from './helpers'
 
 const PROG =
   '#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1;\n    cout << x << endl;\n    return 0;\n}\n'
@@ -51,13 +51,13 @@ const PROG =
 async function openFlow(page: import('@playwright/test').Page): Promise<void> {
   await page.setViewportSize({ width: 500, height: 900 })
   await freshApp(page)
-  await page.waitForTimeout(2000)
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), PROG)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
+  await treeReady(page)
   await page.locator('[data-tab="flow"]').last().click()
-  await page.waitForTimeout(1800)
+  await flowReady(page)
 }
 
 /** 目前的倍率——**從鏡頭的 `transform` 讀**（2026-08-30 起 SVG 自己不再變大）。 */

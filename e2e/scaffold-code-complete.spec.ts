@@ -34,28 +34,26 @@
  *   而那是一個還沒設計的格子（使用者：「可能要做更多的設計」）。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource } from './helpers'
+import { freshApp, useAsSource, appReady, treeReady, setScaffoldMode as pickScaffold } from './helpers'
 
 const PROGRAM =
   '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "hi" << endl;\n    return 0;\n}\n'
 
 test('★ 三種鷹架模式，程式碼逐字相同', async ({ page }) => {
   await freshApp(page)
-  await page.waitForTimeout(1800)
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c),
     PROGRAM)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2000)
+  await treeReady(page)
 
   const codeOf = async (): Promise<string> => page.evaluate(() =>
     (window as never as { __app: { codeView: { getCode?(): string } } }).__app.codeView.getCode?.() ?? '')
 
   const seen: Record<string, string> = {}
   for (const mode of ['editable', 'ghost', 'hidden'] as const) {
-    await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
-    await page.locator(`.quick-pick-item[data-value="mode:${mode}"]`).click()
-    await page.waitForTimeout(2000)
+    await pickScaffold(page, mode)
     seen[mode] = await codeOf()
   }
 
@@ -99,12 +97,12 @@ test('★ 改顯示模式，不得改到語義樹', async ({ page }) => {
   // ⚠️ 而它的症狀是**無聲的**：程式碼那一側看起來還好，
   // 因為產生器會把鷹架補回去——下一次同步才會發現東西不見了。
   await freshApp(page)
-  await page.waitForTimeout(1800)
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c),
     PROGRAM)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2000)
+  await treeReady(page)
 
   const bodyOf = async (): Promise<string[]> => page.evaluate(() => {
     const t = (window as never as {
@@ -123,9 +121,7 @@ test('★ 改顯示模式，不得改到語義樹', async ({ page }) => {
   ).toBeGreaterThan(0)
 
   for (const mode of ['editable', 'hidden', 'ghost'] as const) {
-    await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
-    await page.locator(`.quick-pick-item[data-value="mode:${mode}"]`).click()
-    await page.waitForTimeout(2000)
+    await pickScaffold(page, mode)
     expect(
       await bodyOf(),
       `🔴 切成「${mode}」之後語義樹變了——**改投影的動作寫回了真相**`,
@@ -144,12 +140,12 @@ test('★ `ghost` 在積木上要真的看得出來——淡的 ＋ 動不了', 
   // > **一個模式如果在某個視圖上與另一個模式長得一樣，
   // > 那個視圖就沒有實作它——而選單仍然讓人選得到。**
   await freshApp(page)
-  await page.waitForTimeout(1800)
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c),
     PROGRAM)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
+  await treeReady(page)
 
   const snap = async (): Promise<{ ghost: string[]; locked: string[]; all: number }> =>
     page.evaluate(() => {
@@ -163,10 +159,9 @@ test('★ `ghost` 在積木上要真的看得出來——淡的 ＋ 動不了', 
       }
     })
 
-  const pick = async (mode: string): Promise<void> => {
-    await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
-    await page.locator(`.quick-pick-item[data-value="mode:${mode}"]`).click()
-    await page.waitForTimeout(3500)
+  // 🔴 **這一支驗的是視覺**——要等 `markOutOfScopeBlocks`（產品裡的 900ms）
+  const pick = async (mode: 'editable' | 'ghost' | 'hidden'): Promise<void> => {
+    await pickScaffold(page, mode, { visual: true })
   }
 
   await pick('editable')
@@ -247,14 +242,12 @@ const codeOf = (page: import('@playwright/test').Page): Promise<string> => page.
 
 async function ghostMode(page: import('@playwright/test').Page, program: string): Promise<void> {
   await freshApp(page)
-  await page.waitForTimeout(1800)
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), program)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
-  await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
-  await page.locator('.quick-pick-item[data-value="mode:ghost"]').click()
-  await page.waitForTimeout(3200)
+  await treeReady(page)
+  await pickScaffold(page, 'ghost', { visual: true })
 }
 
 /** 某一型積木**自己那一塊**的左上角（不含它下面接的一串）。 */
@@ -416,7 +409,7 @@ test('★ Arduino 也有鷹架——`setup`／`loop` 是淡的，而「隱藏」
   // ⚠️ 而它逼出了 `entryFunctions`：Arduino 有【兩個】進入點。
   //    原本那個寫死不只是名字錯，**數量也錯**。
   await freshApp(page)
-  await page.waitForTimeout(1800)
+  await appReady(page)
   await page.locator('.status-item-btn[data-control-id="target"]').click()
   await page.locator('.quick-pick-item').filter({ hasText: /Arduino Uno/ }).first().click()
   await page.waitForTimeout(2500)
@@ -424,7 +417,7 @@ test('★ Arduino 也有鷹架——`setup`／`loop` 是淡的，而「隱藏」
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c),
     'void setup() {\n    pinMode(13, OUTPUT);\n}\n\nvoid loop() {\n    digitalWrite(13, HIGH);\n    delay(1000);\n}\n')
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(3000)
+  await treeReady(page)
 
   await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
   const options = await page.locator('.quick-pick-item').allTextContents()

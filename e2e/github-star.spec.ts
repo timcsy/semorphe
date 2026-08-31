@@ -38,7 +38,7 @@
  *   「`features` 裡為 false 的 ＝ `featureReasons` 的鍵」擋著。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp } from './helpers'
+import { freshApp, appReady } from './helpers'
 
 test('★ GitHub 星星：連得出去，而【不】發任何外部請求', async ({ page }) => {
   const external: string[] = []
@@ -48,7 +48,7 @@ test('★ GitHub 星星：連得出去，而【不】發任何外部請求', asy
   })
 
   await freshApp(page)
-  await page.waitForTimeout(2000)
+  await appReady(page)
 
   const star = page.locator('.github-star')
   // ★ 入口條件——真的有那顆，否則下面每一條都是空過的

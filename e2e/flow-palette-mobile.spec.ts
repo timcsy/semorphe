@@ -33,12 +33,12 @@
  *   那顆鈕 `display: none`（沒有理由收它）。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp } from './helpers'
+import { freshApp, appReady } from './helpers'
 
 test('★ 行動版：收合鈕站在目前展開到哪裡的最外緣', async ({ page }) => {
   await page.setViewportSize({ width: 500, height: 900 })
   await freshApp(page)
-  await page.waitForTimeout(2500)
+  await appReady(page)
   await page.locator('[data-tab="flow"]').last().click()
   await page.waitForTimeout(1500)
 

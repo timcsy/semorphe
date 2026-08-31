@@ -193,3 +193,155 @@ export async function useAsSource(page: Page, which: '程式碼' | '積木'): Pr
   await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
   await page.waitForTimeout(600)
 }
+
+/* ────────────────────────────────────────────────────────────────
+ * 等【條件】的助手——2026-08-31 那次量測之後長出來的。
+ *
+ * ## 為什麼是助手，不是逐處改
+ *
+ * 全庫原本有 **144 處** `waitForTimeout`（平均 1761ms），而它們**不是 144 個
+ * 不同的判斷**——是少數幾種形狀重複很多次：
+ *
+ * ```
+ * freshApp ＋ 1800~2500ms      等 app 起來
+ * useAsSource ＋ 1500~2500ms   等樹有內容
+ * 換一個設定 ＋ 2000~3500ms     等重畫完成
+ * ```
+ *
+ * `lessons.spec` 換掉三處之後：**888 秒 → 218 秒，133 支零改判定**。
+ *
+ * ## 🔴 而它同時是「不能平行跑」的原因
+ *
+ * 對照實驗（`workers=1` vs `4`）：序列 9/9 過，併行 3 支紅，而失敗的形狀是
+ * 「產出是舊的」與「element not found」。4 個 Chromium 搶 4 個效能核，
+ * 開機慢 3～4 倍——**而固定等待是照閒置機器校準的**。
+ *
+ * > **一個用固定秒數等待的測試，它的正確性綁在「機器現在有多閒」上
+ * > ——那既讓它慢，也讓它不能平行。同一個病，兩個症狀。**
+ *
+ * ## ⚠️ 用哪一支：問「這一步完成的【標誌】是什麼」
+ *
+ * 不要用「有東西了」當條件——那在「一開始就有東西」時會立刻成立而什麼都沒等到
+ *（`first-run` 那條護欄的檔頭記著同一個形狀）。
+ * ──────────────────────────────────────────────────────────────── */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+/** app 起來了：面板在、目標釘好了、樹存在。 */
+export async function appReady(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const a = (window as any).__app
+    return Boolean(a?.blocklyPanel) && Boolean(a?.currentTarget?.id)
+  }, undefined, { timeout: 30_000 })
+}
+
+/** 語義樹**真的有內容**了——`useAsSource` 回來時同步還在跑。 */
+export async function treeReady(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const t = (window as any).__app?.syncController?.currentTree
+    return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+  }, undefined, { timeout: 30_000 })
+}
+
+/**
+ * 換鷹架模式，並等它**真的套用了**。
+ *
+ * ⚠️ `setScaffoldMode` 裡有一個**產品自己的** `setTimeout(…, 900)`
+ *（`markOutOfScopeBlocks`）——所以「視覺蓋層」那一格不可能比 900ms 快。
+ * 這支只等**深度換過去 ＋ 選單關掉**；要驗視覺的測試自己再等那一層。
+ */
+export async function setScaffoldMode(
+  page: Page,
+  mode: 'editable' | 'ghost' | 'hidden',
+  opts: { visual?: boolean } = {},
+): Promise<void> {
+  const want = mode === 'hidden' ? 0 : mode === 'ghost' ? 1 : 2
+  await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
+  await page.locator(`.quick-pick-item[data-value="mode:${mode}"]`).click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  await page.waitForFunction(
+    (d) => (window as any).__app?.scaffoldDepth === d,
+    want, { timeout: 30_000 },
+  )
+  await treeReady(page)
+  if (!opts.visual) return
+  // 🔴 **視覺那一層要另外等，而它的條件【依模式而不同】。**
+  //
+  // 2026-08-31 實測：第一版沒有這一格，於是五支驗「淡的／動不了」的測試
+  // 當場紅——`setScaffoldMode` 只等到深度換過去，而 `markOutOfScopeBlocks`
+  // 是產品裡一個 `setTimeout(…, 900)`。
+  //
+  // > **一個「換好了」的訊號如果只涵蓋一半的效果，
+  // > 用它的測試會在另一半上看到上一個模式的畫面。**
+  //
+  // ⚠️ 而條件不能寫成「有淡的積木」——`editable`／`hidden` 下**本來就沒有**，
+  //    那樣寫等於在那兩個模式下不等待。所以正反兩面各等各的。
+  await page.waitForFunction((m) => {
+    const ws = (window as any).__app?.blocklyPanel?.workspace
+    if (!ws) return false
+    const n = ws.getAllBlocks(false)
+      .filter((b: any) => b.getSvgRoot?.()?.classList.contains('ghost-block')).length
+    return m === 'ghost' ? n > 0 : n === 0
+  }, mode, { timeout: 30_000 })
+}
+
+/** 切目標，並等它**真的換過去**——認的是 app 的狀態，不是選單關掉。 */
+export async function pickTarget(page: Page, id: string): Promise<void> {
+  await page.locator('.status-item-btn[data-control-id="target"]').click()
+  await page.locator(`.quick-pick-item[data-value="${id}"]`).click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  await page.waitForFunction(
+    (want) => (window as any).__app?.currentTarget?.id === want,
+    id, { timeout: 30_000 },
+  )
+}
+
+/**
+ * 切到流程分頁，並等它**畫出節點**。
+ *
+ * ⚠️ 條件是「節點數 > 0」而不是「面板可見」——面板一按就可見，
+ * 而那時圖還沒畫。用可見當條件等於沒等。
+ */
+export async function openFlowTab(page: Page): Promise<void> {
+  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await flowReady(page)
+}
+
+/**
+ * 流程圖**畫出節點**了。
+ *
+ * ⚠️ 這一支只等，不點——各檔點分頁的選擇器不一樣（`.first()` vs `.last()`，
+ * 那是行動版有第二條分頁列造成的）。**把點擊也收進助手會安靜地點到另一顆。**
+ */
+export async function flowReady(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => document.querySelectorAll('.flow-panel svg g').length > 1,
+    undefined, { timeout: 30_000 },
+  )
+}
+
+/**
+ * 按執行，並等它**停在一個穩定的狀態**——狀態列自己會說。
+ *
+ * 🔴 **「跑完」不是唯一的結局**，而漏掉任何一個都會等滿逾時然後拿過期的輸出去比對：
+ *
+ * ```
+ * 程式執行完畢 ／ Completed   正常結束
+ * 錯誤 ／ Error               炸了
+ * 等待輸入⋯ ／ Waiting        🔴 停在 cin——【它永遠不會「完畢」】
+ * ```
+ *
+ * ⚠️ 第三個是實測補的：2026-08-31 換掉固定等待之後，
+ * `templates.spec` 那兩個**會讀輸入**的範例當場各等滿 23 秒。
+ *
+ * > **一個「做完了嗎」的條件，如果只涵蓋一種結局，
+ * > 在其他結局上它等的是逾時。**
+ *
+ * 🟢 而「等待輸入」是一個**穩定狀態**——它就是那些測試接下來要餵字的時機。
+ */
+export async function runAndSettle(page: Page): Promise<void> {
+  await page.locator('#run-btn').click()
+  await expect
+    .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
+    .toMatch(/程式執行完畢|錯誤|Error|Completed|等待輸入|Waiting/)
+}

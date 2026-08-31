@@ -20,7 +20,7 @@
  * 那是另一條線，今天沒有防線。**寫在這裡，不讓它假裝做了。**
  */
 import { test, expect, type Page } from '@playwright/test'
-import { useAsSource } from './helpers'
+import { useAsSource, treeReady } from './helpers'
 
 async function freshApp(page: Page): Promise<void> {
   await page.goto('/')
@@ -224,7 +224,7 @@ test('少分號的程式：按執行 → 不執行', async ({ page }) => {
   })
   expect(before).toBe(true)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(800)
+  await treeReady(page)
   await page.getByText('執行').first().click()
   await page.waitForTimeout(1500)
   const cleanOut = await page.evaluate(() => document.body.innerText)
@@ -236,7 +236,7 @@ test('少分號的程式：按執行 → 不執行', async ({ page }) => {
     app.codeView?.setCode('#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    cout << x;\n    return 0;\n}\n')
   })
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(800)
+  await treeReady(page)
 
   const r = await page.evaluate(async () => {
     const app = (window as never as { __app: any }).__app
@@ -281,7 +281,7 @@ test('同一段程式：只編輯不按執行 → 不出現任何拒絕', async 
     app.codeView?.setCode('#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n    cout << x;\n    return 0;\n}\n')
   })
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(1200)
+  await treeReady(page)
 
   const text = await page.evaluate(() => document.body.innerText)
   // ★ 入口條件：畫面真的活著（不是整頁空白）
@@ -314,7 +314,7 @@ for (const [name, code] of Object.entries({
       app.codeView?.setCode(c)
     }, code)
     await useAsSource(page, '程式碼')
-    await page.waitForTimeout(900)
+    await treeReady(page)
 
     // ★ 入口條件：這段程式真的被標記了（合成量）。沒標記的話這支測的是辨識層，
     //   而那時失敗訊息會把人推去改閘門——**指錯方向的失敗訊息比失敗本身更貴**。

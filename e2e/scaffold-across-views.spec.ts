@@ -62,7 +62,7 @@
  * - **不檢測主控台／變數面板**——它們投影的是**執行**，不是程式的結構。
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, freshApp } from './helpers'
+import { useAsSource, freshApp, appReady, treeReady, openFlowTab, setScaffoldMode as pickScaffold } from './helpers'
 
 const PROGRAM =
   '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "Hi" << endl;\n    return 0;\n}\n'
@@ -99,21 +99,18 @@ test('★ 每一個投影結構的視圖，切 `ScaffoldMode` 都要看得出差
   page.on('pageerror', (e) => errs.push(String(e).slice(0, 120)))
 
   await freshApp(page)
-  await page.waitForTimeout(1800)
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), PROGRAM)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
+  await treeReady(page)
   // 🔴 流程分頁要**開著**——它關著的時候不重畫，而那會讓這支量到三個空字串
   //    （而空字串兩兩相同 → 它會報「沒實作」，一個誤報）。
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
-  await page.waitForTimeout(2000)
+  await openFlowTab(page)
 
   const seen: Record<string, Record<string, string>> = {}
   for (const mode of ['hidden', 'ghost', 'editable'] as const) {
-    await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
-    await page.locator(`.quick-pick-item[data-value="mode:${mode}"]`).click()
-    await page.waitForTimeout(3000)
+    await pickScaffold(page, mode, { visual: true })
     for (const p of PROBES) {
       seen[p.view] ??= {}
       seen[p.view][mode] = await p.read(page)
@@ -165,16 +162,13 @@ test('★ `ghost` 的骨架**拖得動**，而它的接法鎖著', async ({ page
   //
   // > **同一句「不能動」，在兩個視圖上禁的不是同一件事。**
   await freshApp(page)
-  await page.waitForTimeout(1800)
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), PROGRAM)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
-  await page.waitForTimeout(2000)
-  await page.locator('.status-item-btn[data-control-id="scaffold"]').click()
-  await page.locator('.quick-pick-item[data-value="mode:ghost"]').click()
-  await page.waitForTimeout(3000)
+  await treeReady(page)
+  await openFlowTab(page)
+  await pickScaffold(page, 'ghost', { visual: true })
 
   const nodeAt = (comp: string): Promise<{ x: number; y: number; tf: string | null } | null> =>
     page.evaluate((c) => {

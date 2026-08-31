@@ -54,7 +54,7 @@
  * > ——不是「刪除與還原都對」。**
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, freshApp } from './helpers'
+import { useAsSource, freshApp, appReady, treeReady, flowReady } from './helpers'
 
 const PROG = 'int main() {\n    int total = 1;\n    cout << total << endl;\n    return 0;\n}\n'
 
@@ -65,13 +65,13 @@ const codeNow = async (p: import('@playwright/test').Page): Promise<string> =>
 
 async function openFlow(page: import('@playwright/test').Page): Promise<void> {
   await freshApp(page)
-  await page.waitForTimeout(2000)
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), PROG)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
+  await treeReady(page)
   await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
-  await page.waitForTimeout(1800)
+  await flowReady(page)
 }
 
 /**
@@ -113,7 +113,7 @@ async function menuDelete(
   await page.mouse.click(at.x, at.y, { button: 'right' })
   await expect(page.locator('.flow-menu'), `🔴 右鍵沒有開出選單（${what}）`).toBeVisible({ timeout: 5000 })
   await page.locator('.flow-menu-item').first().click()
-  await page.waitForTimeout(1800)
+  await flowReady(page)
 }
 
 test('★ 刪一句話 → 還原 → 取消還原', async ({ page }) => {
@@ -128,7 +128,7 @@ test('★ 刪一句話 → 還原 → 取消還原', async ({ page }) => {
   expect(await codeNow(page), '🔴 按了 ✕ 而那一句還在').not.toContain('cout')
 
   await page.locator('#undo-btn').click()
-  await page.waitForTimeout(1800)
+  await flowReady(page)
   expect(
     await codeNow(page),
     '🔴 還原沒有把它救回來。⚠️ 2026-08-30 的根因是**視圖就地改了真相**：\n' +
@@ -136,7 +136,7 @@ test('★ 刪一句話 → 還原 → 取消還原', async ({ page }) => {
   ).toBe(before)
 
   await page.locator('#redo-btn').click()
-  await page.waitForTimeout(1800)
+  await flowReady(page)
   expect(await codeNow(page), '🔴 取消還原沒有把它再刪掉').not.toContain('cout')
 })
 
@@ -194,7 +194,7 @@ test('★ 語句線：點線選它，✕ 才刪——而刪掉的是【裡面】
 
   // ③ 還原
   await page.locator('#undo-btn').click()
-  await page.waitForTimeout(1800)
+  await flowReady(page)
   expect(await codeNow(page), '🔴 還原不回來').toBe(before)
 })
 
@@ -234,14 +234,14 @@ test('★ 點【資料線】的 ✕ → 刪掉的是那個值，不是整句', a
   // ⚠️ 而**我原本的三支測試抓不到它**：它們驗的是「刪語句」與「刪值被拒」，
   //    沒有一支點過資料線的 ✕。**我釘的是我想到的那幾條路。**
   await freshApp(page)
-  await page.waitForTimeout(2000)
+  await appReady(page)
   await page.evaluate(() =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView
       .setCode('int main() {\n    cout << "Hello!" << endl;\n    return 0;\n}\n'))
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
+  await treeReady(page)
   await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
-  await page.waitForTimeout(1800)
+  await flowReady(page)
 
   const before = await codeNow(page)
   expect(before, '🔴 一開始就沒有 endl → 這一支驗不出東西').toContain('endl')

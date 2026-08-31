@@ -50,7 +50,7 @@
  * - ⚠️ **不檢測「選單裡的項目按了會怎樣」**——`flow-delete-undo.spec.ts` 管
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource } from './helpers'
+import { freshApp, useAsSource, appReady, treeReady } from './helpers'
 
 test.use({ hasTouch: true, isMobile: true, viewport: { width: 500, height: 900 } })
 
@@ -61,7 +61,7 @@ async function openFlow(page: import('@playwright/test').Page): Promise<void> {
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(s: string): void } } }).__app.codeView.setCode(c), CODE)
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(3000)
+  await treeReady(page)
   await page.locator('[data-tab="flow"]').last().click()
   await page.waitForTimeout(2000)
 }
@@ -70,7 +70,7 @@ test('★ 手機：按住再拖是拖曳，純長按才是選單', async ({ page
   // 三種手勢各重載一次（每一次都要等同步完成）——預設 30 秒不夠
   test.setTimeout(150_000)
   await freshApp(page)
-  await page.waitForTimeout(2500)
+  await appReady(page)
   await openFlow(page)
 
   // ★ 入口條件——錨在合成量，見檔頭的自我否證

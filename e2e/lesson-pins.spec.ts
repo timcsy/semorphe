@@ -32,7 +32,7 @@
  *   這裡只挑三堂**跨語言**的驗那條路真的通。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource } from './helpers'
+import { freshApp, useAsSource, treeReady } from './helpers'
 
 /** 三堂跨語言的——證明這條路不是只對 C++ 通 */
 const CASES = [
@@ -237,7 +237,7 @@ for (const c of CASES) {
       (window as never as { __app: { codeView: { setCode(c: string): void } } })
         .__app.codeView.setCode(code), c.probe)
     await useAsSource(page, '程式碼')
-    await page.waitForTimeout(2500)
+    await treeReady(page)
     const dimmed = await page.evaluate(() => {
       const ws = (window as never as { __app: { blocklyPanel: { workspace: { getAllBlocks(b: boolean): unknown[] } } } })
         .__app.blocklyPanel.workspace
