@@ -59,7 +59,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.11.2'
+export const EXTENSION_VERSION = '0.11.3'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -141,7 +141,26 @@ function configProperties(): Record<string, unknown> {
     scope: 'language-overridable',
   })
   return {
-    'semorphe.target': prop('目標——課程清單與風格的具名組合（如 cpp／arduino）', 'cpp-beginner'),
+    // 🔴 **預設是 `null`，不是任何一個具名目標。**
+    //
+    // 2026-08-31 使用者：「我用 Arduino IDE 把 semorphe 開起來，
+    // 原本的 `setup` 和 `loop` 會被 C++ 預設骨架覆蓋」。
+    //
+    // 這一格原本宣告 `'cpp-beginner'`——**而那不是一個目標，是一個課程清單的 id**
+    // （登錄的目標是 `cpp`／`c`／`cpp-advanced`／`arduino`／`arduino-uno`／`esp32`…）。
+    //
+    // 認不得的 ID 在下游「回退到現況」而**不出聲**，於是目標停在 `cpp`，
+    // C++ 的骨架把 `int main()` 接到使用者的 sketch 上。
+    // 用預檢重現過（`tools/vscode-preflight`，把設定改成那個值就會紅）。
+    //
+    // ⚠️ **而 `sync/settings.ts:65` 早就診斷過同一個病、修好了 `DEFAULT_CONFIG`，
+    //    卻沒有修這一份**——兩處寫著同一個預設值，而只有一處被修。
+    //
+    // > **一個預設值如果在兩個地方各寫一次，修好的那次不會把另一次帶走。**
+    //
+    // 🟢 `null` ⟹ `pick()` 落到 `defaultTargetForPath()`：`.ino`／`.pde` 自動選
+    //    `arduino`，其餘落到 `cpp`。**那才是使用者要的行為，而且不必設定任何東西。**
+    'semorphe.target': prop('目標（如 cpp／arduino）。留空則依副檔名自動判斷：`.ino` → arduino', null),
     'semorphe.topic': prop('課程清單。留空則跟著目標', null),
     'semorphe.style': prop('程式碼風格。留空則跟著目標', null),
     'semorphe.blockStyle': prop('積木外觀', 'default'),

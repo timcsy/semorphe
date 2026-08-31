@@ -88,6 +88,32 @@ export interface CodeView {
    * ⚠️ 文字的真相若在另一個行程，實作**必須保一份本地鏡像**
    * ——而鏡像過期的處置見 `specs/140-app-in-host/contracts/code-view.md` 第三節。
    */
+  /**
+   * **這個視圖的內容來自外部文件嗎？**
+   *
+   * 🔴 `true` ⟹ **開機時不得由我們產生內容** ——那份文件是權威，而它
+   * **晚到**（宿主的 `document` 訊息是一次 postMessage 往返）。
+   *
+   * ## 它從哪來
+   *
+   * 2026-08-31 使用者回報：「我用 Arduino IDE 把 semorphe 開起來，
+   * 原本的 `setup` 和 `loop` 會被 C++ 預設骨架覆蓋」。
+   *
+   * 鏈是：`restoreState()` 沒有存檔 → 走開機同步 → 從空工作區產生
+   * `using namespace std; int main(){}` → 寫進 `codeView` →
+   * 在擴充裡那是 `setCode()`「算出範圍 → 交給宿主寫回」→ **蓋掉 .ino**。
+   *
+   * ⚠️ 而 `applyHostConfig` 早就寫著同一族的教訓：
+   * > 「一個『換設定』的動作如果順手寫了檔案，那麼在還沒讀到檔案之前換設定，
+   * >  就會把檔案寫成還沒讀到的樣子。」
+   *
+   * **這一格把那句話變成一個視圖答得出來的問題**，而不是一段
+   * `if (host === 'vscode')`——那會讓宣告退化成標籤（第六十三條護欄的判準）。
+   *
+   * 🟢 網頁版是 `undefined`／`false`：那裡沒有檔案，開機產生骨架**是對的**
+   * （它修掉了「第一次打開畫面是空的」）。
+   */
+  readonly documentBacked?: boolean
   getCode(): string
   setCode(code: string): void
   /** 換內容但盡量不動游標。`linesDelta` 是行數的變化量。 */

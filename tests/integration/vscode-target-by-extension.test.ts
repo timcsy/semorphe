@@ -59,6 +59,29 @@ describe('.ino 的預設目標是 Arduino', () => {
     expect(defaultTargetForPath(undefined)).toBe(DEFAULT_CONFIG.targetId)
   })
 
+  it('🔴 某一層明確回傳 `null` 時，仍然要落到副檔名判斷', () => {
+    // ## 它從哪來
+    //
+    // 2026-08-31 使用者：「用 Arduino IDE 開起來，原本的 setup 和 loop
+    // 會被 C++ 預設骨架覆蓋」。
+    //
+    // `semorphe.target` 的預設同日改成 `null`（原本是 `'cpp-beginner'`
+    // ——一個**不存在的目標**）。而 `pick()` 只跳過 `undefined`：
+    // 一個明確設成 `null` 的層會讓它回傳 `null`，而 `null` 到了下游是
+    // 「沒有目標」→ 面板停在 `cpp` → C++ 骨架接上 `.ino`。
+    //
+    // > **一個「沒設定」的表示法如果有兩種（`undefined` 與 `null`），
+    // > 只處理一種的判斷會在另一種上安靜地給出錯的答案。**
+    //
+    // ⚠️ 而宿主是否會把套件的預設值回報成某一層，**各家不同**
+    //    ——VSCode 分得開，Theia 未必。所以這一條不是假設性的。
+    const cfg = resolveConfig({ target: { user: null } } as never, '/x/sketch.ino')
+    expect(
+      cfg.targetId,
+      '🔴 明確的 null 被當成「有設定」→ 目標落空 → C++ 骨架會接到 .ino 上',
+    ).toBe('arduino')
+  })
+
   it('⚠️ 而它只是【預設】——設定過的話仍然照設定走', () => {
     const cfg = resolveConfig({ target: { workspace: 'cpp' } }, '/x/sketch.ino')
     expect(cfg.targetId, '🔴 預設蓋過了明講的設定').toBe('cpp')

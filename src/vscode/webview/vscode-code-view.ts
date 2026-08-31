@@ -54,6 +54,9 @@ import type { SemanticUpdateEvent, ExecutionAtNodeEvent, ViewHost, ViewCapabilit
 import type { HostMessage, WebviewMessage } from '../sync/messages'
 
 export class VscodeCodeView implements CodeView, ViewHost {
+  /** 🔴 宿主的文件是權威，而它晚到——開機時不得由我們先寫一份骨架。見埠上的說明。 */
+  readonly documentBacked = true
+
   /**
    * 🔴 **它必須是一個 `ViewHost`，否則收不到 `semantic:update`。**
    *

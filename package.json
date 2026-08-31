@@ -16,6 +16,7 @@
     "verify-components": "npx tsx src/scripts/verify-component-paths.ts",
     "test:e2e": "playwright test",
     "build:vscode": "npx tsx src/scripts/build-vscode.ts",
+    "preflight:vscode": "npm run build:vscode && node tools/vscode-preflight/run.mjs",
     "install:ide": "node tools/install-ide.mjs",
     "build:wasm:python": "tree-sitter build --wasm node_modules/tree-sitter-python -o public/tree-sitter-python.wasm"
   },

@@ -39,6 +39,26 @@ jobs:
       - run: npm ci
       - run: npm run build:vscode
 
+      # 🔴 **預檢——而它是 2026-08-31 那次資料遺失之後才接上 CI 的。**
+      #
+      # 使用者：「我用 Arduino IDE 把 semorphe 開起來，原本的 `setup` 和 `loop`
+      # 會被 C++ 預設骨架覆蓋」。而 `tools/vscode-preflight` **早就有那條檢查**
+      #（「開 .ino 面板：檔案一個字都沒改」），它也**在 ok 的閘裡**——
+      # `ship-extension` 那把刀的第 3 步就是跑它。
+      #
+      # ⚠️ **而發 v0.11.2 的時候沒有人跑它。**
+      #
+      # > **一把寫好的刀，如果只靠「記得拿起來」，
+      # > 那它擋住的缺陷數就等於「記得的次數」。**
+      #
+      # 🔴 而它同時暴露了那支檢查自己的盲點：假宿主的 URI 寫死 `probe.cpp`，
+      #    於是那段自稱「開 .ino 面板」的檢查，測的是一個 `.cpp` 檔
+      #    ——`.ino → arduino` 那條路一次都沒走過。兩件事同日修。
+      - name: 安裝瀏覽器（預檢要用）
+        run: npx playwright install --with-deps chromium
+      - name: 預檢——面板起得來，而且不動使用者的檔案
+        run: node tools/vscode-preflight/run.mjs
+
       # 🔴 **入口條件：產物真的長出來了，而且不是一個空殼。**
       #
       # `ship-extension` §2 逐字：「建置腳本裡的錯誤**可能不會讓指令失敗**

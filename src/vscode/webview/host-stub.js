@@ -34,13 +34,19 @@
  * 🔴 這個檔**只寫進預檢頁**；真面板的 HTML 不含它。
  */
 ;(function () {
-  var text = '', version = 0, config = null
+  // 🔴 **URI 要能換**——它原本寫死 `probe.cpp`，而預檢裡那段自稱
+  //    「開 .ino 面板」的檢查因此**從來沒有測到 `.ino`**：
+  //    `defaultTargetForPath()`（`.ino` → arduino）那條路一次都沒走過。
+  //
+  // > **一支測試的【名字】說它在測 A，而它餵進去的資料是 B
+  // > ——它會一直是綠的，而那個綠什麼都不保證。**
+  var text = '', version = 0, config = null, uri = 'file:///probe.cpp'
   var log = { sent: [], accepted: 0, rejected: 0, resent: 0 }
   window.__HOST__ = log
   function sendDoc() {
-    window.postMessage({ type: 'document', uri: 'file:///probe.cpp', languageId: 'cpp', text: text, version: version }, '*')
+    window.postMessage({ type: 'document', uri: uri, languageId: 'cpp', text: text, version: version }, '*')
   }
-  window.__setDocument__ = function (t) { text = t; version += 1; sendDoc() }
+  window.__setDocument__ = function (t, u) { text = t; if (u) uri = u; version += 1; sendDoc() }
   window.__setConfig__ = function (c) {
     config = c
     window.postMessage({ type: 'config', config: config }, '*')
@@ -80,7 +86,7 @@
         // 🔴 與 panel.ts 同一條判準：版本對不上就丟掉並重送文件。
         if (m.baseVersion !== version) {
           log.rejected += 1
-          window.postMessage({ type: 'document', uri: 'file:///probe.cpp', languageId: 'cpp', text: text, version: version }, '*')
+          window.postMessage({ type: 'document', uri: uri, languageId: 'cpp', text: text, version: version }, '*')
           return
         }
         applySpan(m.span)

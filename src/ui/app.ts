@@ -74,6 +74,7 @@ import { ExecutionController } from './execution-controller'
 // Semantic layer
 // Projection layer
 import { CURRENT_VERSION, hashCode } from '../core/storage-version'
+import { diagNote } from '../core/diag-log'
 
 /**
  * 全部語言的風格預設——**從語言套件收，不逐個 import**。
@@ -1427,9 +1428,27 @@ export class App {
     if (cfg.locale && cfg.locale !== this.localePreference) void this.applyLocalePreference(cfg.locale)
     if (!cfg.targetId) return
     const target = this.targetRegistry.get(cfg.targetId)
+    // 🔴 **認不得就要出聲**——回退到現況是對的，而**靜靜地回退不是**。
+    //
+    // 2026-08-31：`manifest.ts` 把 `'cpp-beginner'`（一個**課程清單**的 id）
+    // 宣告成 `semorphe.target` 的預設值。認不得 → 這一行 return → 目標停在 `cpp`
+    // → C++ 的骨架把 `int main()` 接到使用者的 `.ino` 上。
+    //
+    // 而 `sync/settings.ts:65` 早就寫下了這個病的名字：
+    // > 「一個認不得的 ID 在下游是『回退到現況』，所以它**不會出聲**
+    // >  ——設定看起來有在運作，實際上這一格從來沒有生效過。」
+    //
+    // **那句話診斷對了，而沒有人把『出聲』做出來。** 現在做。
+    if (cfg.targetId && !target) {
+      diagNote(`🔴 宿主給的目標認不得：「${cfg.targetId}」——已回退到現況「${this.currentTarget.id}」。` +
+        `登錄的目標：${this.targetRegistry.all().map((t) => t.id).join('、')}`)
+    }
     if (!target || target.id === this.currentTarget.id) return
     const topic = this.topicRegistry.get(target.topic)
-    if (!topic) return
+    if (!topic) {
+      diagNote(`🔴 目標「${target.id}」指向的課程清單「${target.topic}」不存在——已回退到現況。`)
+      return
+    }
     // 🔴 **不得由此寫回文件。** `handleTargetChange` 在正常路徑上會
     //    `syncBlocksToCodeWithMappings()`——而套用組態發生在**開機時**，
     //    那時工作區是空的，寫回去就是**把使用者的檔案清空**。
@@ -2158,7 +2177,25 @@ export class App {
     //    凍住是為了不讓一次自動存檔把它蓋掉（上面那段註解的理由）。
     //    ⚠️ 兩條早退看起來一樣，而它們的最壞情況相反。
     if (outcome.kind === 'empty') {
-      this.resyncAfterTopicChange()
+      // 🔴 **有外部文件的宿主：一個字都不准寫。**
+      //
+      // 2026-08-31 使用者：「我用 Arduino IDE 把 semorphe 開起來，
+      // 原本的 `setup` 和 `loop` 會被 C++ 預設骨架覆蓋」。
+      //
+      // 這一行（同日稍早加的）從**空工作區**產生 `int main(){}` 並寫進
+      // `codeView`——而在擴充裡那是「算出範圍 → 交給宿主寫回」，
+      // **它蓋掉了使用者的 .ino**。宿主的 `document` 訊息是一次 postMessage
+      // 往返，**必然比開機晚到**。
+      //
+      // > **一個「補一份預設內容」的動作，在內容還在路上的時候，
+      // > 補的是「還沒到」那個狀態的預設值。**
+      //
+      // ⚠️ 判準問的是**視圖的能力**，不是宿主的名字——`if (host === 'vscode')`
+      //    會讓宣告退化成標籤（第六十三條護欄的判準）。
+      //
+      // 🟢 而擴充那側**不需要**這一行：文件送到時 `changeCb` 會觸發
+      //    code→blocks，那條路自己會畫一次樹、解開那道殘態閘。
+      if (!this.codeView?.documentBacked) this.resyncAfterTopicChange()
       return
     }
 

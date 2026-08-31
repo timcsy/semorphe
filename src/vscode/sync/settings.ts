@@ -133,7 +133,16 @@ export function defaultTargetForPath(path: string | undefined): string {
 
 export function resolveConfig(raw: RawSettings, documentPath?: string, hostLocale?: string): PanelConfig {
   return {
-    targetId: pick(raw.target, defaultTargetForPath(documentPath)),
+    // 🔴 **`?? ` 不可省**：`pick()` 對一個【明確設成 null】的層會回傳 `null`
+    //    （它只跳過 `undefined`），而 `null` 到了下游是「沒有目標」——
+    //    於是面板停在預設的 `cpp`，C++ 的骨架把 `int main()` 接到 `.ino` 上。
+    //
+    // ⚠️ 而 `semorphe.target` 的預設就是 `null`（2026-08-31 改的，理由見 manifest），
+    //    所以這一格**每一次都會走到**。
+    //
+    // > **一個「沒設定」的表示法如果有兩種（`undefined` 與 `null`），
+    // > 只處理一種的判斷會在另一種上安靜地給出錯的答案。**
+    targetId: pick(raw.target, defaultTargetForPath(documentPath)) ?? defaultTargetForPath(documentPath),
     topicId: pick(raw.topic, DEFAULT_CONFIG.topicId as string | null),
     styleId: pick(raw.style, DEFAULT_CONFIG.styleId as string | null),
     blockStyleId: pick(raw.blockStyle, DEFAULT_CONFIG.blockStyleId),

@@ -255,7 +255,29 @@ page2.on('pageerror', (e) => errors2.push(`PAGEERROR ${e.message}`))
 await page2.goto(`http://localhost:${PORT}/preview.html`)
 await page2.waitForFunction(() => typeof window.__setConfig__ === 'function')
 // 🔴 在 App 起來【之前】就設好——正是真宿主的時序（面板建好就送）。
-await page2.evaluate((t) => { window.__setConfig__({ targetId: 'arduino' }); window.__setDocument__(t) }, SKETCH)
+// 🔴 **不設 targetId，而檔名是 `.ino`**——那才是真實使用者的情境：
+//    他沒有設定任何東西，目標由 `defaultTargetForPath()` 從副檔名判斷。
+//
+// ⚠️ 這一行 2026-08-31 之前是 `{ targetId: 'arduino' }`，而假宿主的 URI
+//    寫死成 `probe.cpp`——**於是這段自稱「開 .ino 面板」的檢查，
+//    測的是「已經幫你選好 arduino 目標的 .cpp 檔案」**，兩個關鍵條件都被繞過。
+//
+// > **一支測試如果幫受測系統把最難的那一步先做掉，它驗的是剩下的部分。**
+// ⚠️ **這裡送的是【宿主解析過】的組態**——`resolveConfig()` 住在宿主那側
+//    （`panel.ts`），假宿主不跑它。所以：
+//
+//    這支預檢驗的是   「給定 arduino 目標，webview 會不會動使用者的檔案」
+//    路徑→目標的判斷 由 `tests/integration/vscode-target-by-extension.test.ts` 驗
+//
+// > **兩層各驗各的，而【它們的交界要寫下來】——
+// > 否則兩邊都以為對方在驗那一格。**
+//
+// 🔴 而 URI 現在是 `.ino`（原本假宿主寫死 `probe.cpp`）：那一格寫死的時候，
+//    這段自稱「開 .ino 面板」的檢查測的是一個 `.cpp` 檔。
+await page2.evaluate((t) => {
+  window.__setConfig__({ targetId: 'arduino' })
+  window.__setDocument__(t, 'file:///sketch.ino')
+}, SKETCH)
 await page2.waitForTimeout(8000)
 const sketchAfter = await page2.evaluate((src) => {
   let t = src
