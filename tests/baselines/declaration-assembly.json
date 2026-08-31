@@ -5,9 +5,9 @@
     "measuredAt": "2026-08-25"
   },
   "scanned": {
-    "testFileCount": 406
+    "testFileCount": 407
   },
   "adHocAssembly": 0,
   "details": [],
-  "note": "⚠️ 2026-08-27：語料變大——新增 `tests/integration/audit-lessons.test.ts`（第八十三條）＋ `e2e/lessons.spec.ts` ＋ `lessons/` 四堂課。**輸入量變大，不是退步。**\n⚠️ 2026-08-28：語料變大——新增 `core/lesson.ts`／`core/load-lessons.ts`／`e2e/lesson-pins.spec.ts`／兩條護欄（第八十四、八十五條）＋ 6 份 `track.json`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——新增第八十六條護欄（audit-shell-declared：鷹架是一份宣告）＋ `core/shell.ts` ＋ `languages/cpp/skeletons/*`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——新增第八十七條護欄（audit-templates：範例）＋ `core/template.ts`／`core/load-templates.ts`／`e2e/templates.spec.ts`＋ 6 份 `templates/*`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-30：語料變大——新增第八十九條護欄 `audit-vision-wip`（vision 的「進行中」裡每一項都必須還有沒打勾的框）。輸入量，不是缺陷。\n⚠️ 2026-08-31：語料 +1——**輸入量變大，不是判準放寬**。新增第九十四條護欄（`audit-dangling-citation`：具名引用不得懸空——judge §3 明文要求而那一輪跳過了）。\n⚠️ 2026-08-31（第三次）：語料變大——**輸入量變大，不是判準放寬**。新增第九十五條護欄（`audit-manifest-defaults`）＋ `applyHostConfig` 的出聲——Arduino IDE 把 setup/loop 包進 int main() 的根因修復。"
+  "note": "⚠️ 2026-08-31：406 → 407，新增 `tests/integration/audit-knowledge-link.test.ts`（第九十六條）。**輸入量變大，不是耦合變差**——它不列宣告來源，adHocAssembly 仍是 0。\n⚠️ 2026-08-27：語料變大——新增 `tests/integration/audit-lessons.test.ts`（第八十三條）＋ `e2e/lessons.spec.ts` ＋ `lessons/` 四堂課。**輸入量變大，不是退步。**\n⚠️ 2026-08-28：語料變大——新增 `core/lesson.ts`／`core/load-lessons.ts`／`e2e/lesson-pins.spec.ts`／兩條護欄（第八十四、八十五條）＋ 6 份 `track.json`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——新增第八十六條護欄（audit-shell-declared：鷹架是一份宣告）＋ `core/shell.ts` ＋ `languages/cpp/skeletons/*`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-28：語料變大——新增第八十七條護欄（audit-templates：範例）＋ `core/template.ts`／`core/load-templates.ts`／`e2e/templates.spec.ts`＋ 6 份 `templates/*`。**輸入量變大，不是判準放寬。**\n⚠️ 2026-08-30：語料變大——新增第八十九條護欄 `audit-vision-wip`（vision 的「進行中」裡每一項都必須還有沒打勾的框）。輸入量，不是缺陷。\n⚠️ 2026-08-31：語料 +1——**輸入量變大，不是判準放寬**。新增第九十四條護欄（`audit-dangling-citation`：具名引用不得懸空——judge §3 明文要求而那一輪跳過了）。\n⚠️ 2026-08-31（第三次）：語料變大——**輸入量變大，不是判準放寬**。新增第九十五條護欄（`audit-manifest-defaults`）＋ `applyHostConfig` 的出聲——Arduino IDE 把 setup/loop 包進 int main() 的根因修復。"
 }
