@@ -234,6 +234,97 @@ export function createAppLayout(
     appEl.appendChild(toolbar)
   }
 
+  /**
+   * **行動版唯一的一條工具列**（在標頭底下、`main` 上面）。
+   *
+   * 使用者 2026-08-31：「我希望第二列也都包含原先存在的工具列，
+   * **總之整合成一個工具列**」，隨後「**然後其他視圖要跟進**」。
+   * 在此之前行動版有五條各自為政的：
+   *
+   * ```
+   * 標頭                    全域動作（而 ↩↪ 塞進去會把它擠爆）
+   * 快速列                  只在【積木】分頁裡（它被搬進 mobileBlocksContainer）
+   * 流程工具列              只在【流程】分頁裡（它住在流程面板的容器裡）
+   * 剪貼工具列              只在【程式碼】分頁裡（它貼在編輯器上面）
+   * 下方面板分頁列          只在【主控台】分頁裡（主控台／變數 ＋ 複製／清除）
+   * ```
+   *
+   * 現在五份都住進這一列，而**依分頁顯示對應的那一段**——
+   * 一條列、內容跟著你在看哪個投影走。⚠️ 而「幾乎都合併了」等於沒合併：
+   * 只要還有一個投影自己帶一條，使用者看到的就還是兩層。
+   *
+   * 🔴 ↩↪ 是**唯一全域**的那一段：還原動的是語義樹，不是某一個投影，
+   *    所以它每個分頁都在（那正是這一刀最早要解決的事）。
+   *
+   * 🔴 第一版把 ↩↪ 塞進標頭的 `.toolbar-actions`，而使用者 2026-08-31
+   * 在真的手機上（約 390px）截圖回報：**標頭被擠爆了**——「▶ 執行」折成兩行、
+   * ↩↪ 疊在一起。⚠️ 而我在 500px 的 e2e 上量到的是 32x28，看起來很正常。
+   *
+   * > **一個「量得到就算過」的寬度，不是使用者手上那一支的寬度。**
+   *
+   * 所以改成自己一列：它在標頭底下、`main` 上面，**每一個分頁都看得到**
+   * （這正是這一刀要解決的事），而不跟標頭搶那一行的寬度。
+   *
+   * ⚠️ 桌面版**不建也不顯示**——那時 ↩↪ 住在快速列的 `#undo-slot` 裡。
+   */
+  const mobileActionBar = document.createElement('div')
+  mobileActionBar.id = 'mobile-action-bar'
+  mobileActionBar.style.display = 'none'
+  appEl.appendChild(mobileActionBar)
+
+  /**
+   * **四個投影各交出自己那一段**（使用者 2026-08-31：「然後其他視圖要跟進」）。
+   *
+   * 第一版只搬了兩段（積木的快速列、流程的工具列），而另外兩個投影
+   * **各自還留著一條自己的橫列**——於是行動版看起來還是兩層：
+   *
+   * ```
+   * 程式碼分頁   #mobile-action-bar（只有 ↩↪）
+   *             .monaco-clipboard-bar   ← 自己一條，貼在編輯器上面
+   * 主控台分頁   #mobile-action-bar（只有 ↩↪）
+   *             .bottom-panel-tabs      ← 自己一條（主控台／變數＋複製／清除）
+   * ```
+   *
+   * > **「整合成一條」不是「把某幾條整合起來」——
+   * > 只要還有一個投影自己帶一條，使用者看到的就還是兩層。**
+   *
+   * 🔴 每一段配一個分頁：這一列同時只顯示**目前這個投影**那一段
+   *（見 `activateMobilePanel`）。全域的 ↩↪ 不在這張表裡——它每個分頁都在。
+   *
+   * ⚠️ 選擇器是**全文件**的，不是各自容器裡找：一段被搬進來之後就不在
+   *    原容器裡了，而這個函式要能重跑（下面那段講為什麼）。
+   */
+  const ACTION_BAR_SECTIONS: ReadonlyArray<{ sel: string; tab: TabId }> = [
+    { sel: '.quick-access-bar', tab: 'blocks' },
+    { sel: '.flow-toolbar', tab: 'flow' },
+    { sel: '.monaco-clipboard-bar', tab: 'code' },
+    { sel: '.bottom-panel-tabs', tab: 'console' },
+  ]
+
+  /**
+   * 把還沒進來的段落搬進這一列。**可以重跑，而且必須可以重跑**：
+   *
+   * 🔴 **有兩段不保證在切版面的那一刻就存在**——
+   *    `.bottom-panel-tabs` 要等 `enableConsoleTab`（宿主探測失敗才補建），
+   *    `.monaco-clipboard-bar` 要等編輯器 `init()`。晚到的那一段如果沒有
+   *    人再搬一次，它就留在原處變成第二條列——**而那正是這一刀要消滅的東西**。
+   *
+   * ⚠️ 已經在這裡的就不動：`appendChild` 對「已經是子節點」的元素仍然是
+   *    一次移除再插入，會讓裡面正在被按的按鈕失焦。
+   */
+  const adoptActionBarSections = (): void => {
+    const undoGroup = document.getElementById('undo-group')
+    // 🔴 ↩↪ 排在最前面，而且**不跟著快速列進積木那一格**：還原動的是語義樹，
+    //    不是某一個投影。⚠️ 沒有它的宿主就跳過，不要搬一個不存在的東西。
+    if (undoGroup && undoGroup.parentElement !== mobileActionBar) mobileActionBar.appendChild(undoGroup)
+    for (const { sel } of ACTION_BAR_SECTIONS) {
+      const el = document.querySelector(sel)
+      if (el && el.parentElement !== mobileActionBar) mobileActionBar.appendChild(el)
+    }
+    // ⚠️ 一段都沒有的宿主就整列不顯示——**不要留一條空的**。
+    mobileActionBar.style.display = mobileActionBar.children.length > 0 ? '' : 'none'
+  }
+
   // Create main area with split pane
   const main = document.createElement('main')
   main.id = 'editors'
@@ -812,15 +903,8 @@ export function createAppLayout(
     // > 與讓它不執行，是兩件事——而前者會留下半套狀態。**
     if (!profile.features.mobileLayout) return
     // Move blockly panel elements to mobile container
-    if (quickAccessBar) mobileBlocksContainer.appendChild(quickAccessBar.getElement())
-    // 🔴 ↩↪ 不跟著快速列進積木那一格——見上面那段註解。
-    //    ⚠️ 沒有標頭的宿主（`features.toolbar === false`）就讓它們留在原處，
-    //    **不要搬到一個不存在的地方**。
-    const headerActions = document.querySelector('#toolbar .toolbar-actions')
-    const undoGroup = document.getElementById('undo-group')
-    // ⚠️ 沒有標頭的宿主（`features.toolbar === false`）就讓它留在快速列裡，
-    //    **不要搬到一個不存在的地方**。
-    if (headerActions && undoGroup) headerActions.insertBefore(undoGroup, headerActions.firstChild)
+    // 四個投影的工具列 ＋ 全域的 ↩↪ 合成一列——見 `ACTION_BAR_SECTIONS`
+    adoptActionBarSections()
     mobileBlocksContainer.appendChild(blocklyContainer)
     mobileBlocksContainer.classList.add('active')
 
@@ -916,13 +1000,38 @@ export function createAppLayout(
     // 同上——沒有行動版就沒有「切回桌面版」這件事。
     if (!profile.features.mobileLayout) return
     // Move panels back to desktop containers (order matters: monaco before bottomPanel)
-    if (quickAccessBar) blocksColumn.appendChild(quickAccessBar.getElement())
+    if (quickAccessBar) {
+      const qa = quickAccessBar.getElement()
+      qa.style.display = ''   // ⚠️ 行動版依分頁藏過它，桌面版一定要放開
+      blocksColumn.appendChild(qa)
+    }
+    /**
+     * 其餘三段各自回家。
+     *
+     * 🔴 **每一段都是插在容器的最前面，而不是 `appendChild`**——它們原本都是
+     * 第一個子節點（工具列在內容上面）。⚠️ 唯一的例外是主控台那一條：
+     * 它上面還有一條可拖曳的分隔線，所以錨點是**內容區**，不是 `firstChild`。
+     *
+     * ⚠️ `display` 一定要放開：行動版依分頁把不屬於當前投影的段落藏起來，
+     *    而桌面版四段同時都要看得見。
+     */
+    const restoreSection = (sel: string, home: HTMLElement, anchor: Node | null): void => {
+      const el = mobileActionBar.querySelector(sel)
+      if (!(el instanceof HTMLElement)) return
+      el.style.display = ''
+      home.insertBefore(el, anchor)
+    }
+    restoreSection('.flow-toolbar', flowEl, flowEl.firstChild)
+    restoreSection('.monaco-clipboard-bar', monacoWrapper, monacoWrapper.firstChild)
+    restoreSection('.bottom-panel-tabs', bottomContainer, bottomContainer.querySelector('.bottom-panel-content'))
+    bottomPanel?.setCollapsible(true)
     // ↩↪ 回到桌面版的原位——**照開機時記下的錨點放**，
     // ⚠️ 不用 `appendChild`：那會把它們排到「清空」後面，而順序是使用者記得的東西。
     // ↩↪ 回到那個從來沒離開過的插槽裡——見 `quick-access-bar.ts` 的 `#undo-slot`
     const undoSlot = document.getElementById('undo-slot')
     const grp = document.getElementById('undo-group')
     if (undoSlot && grp) undoSlot.appendChild(grp)
+    mobileActionBar.style.display = 'none'
     blocksColumn.appendChild(projectionRow)
     projectionRow.appendChild(blocklyContainer)   // 放回【投影那一列】，不是外層
     // Ensure correct order: monaco first, then bottom panel
@@ -988,6 +1097,31 @@ export function createAppLayout(
   }
 
   const activateMobilePanel = (tab: TabId) => {
+    // 🔴 **一條工具列，內容跟著你在看哪個投影走。**
+    //
+    // ⚠️ 顯示的是「這個分頁原本就有的那一段」，不是全部一起出現：
+    //    在程式碼分頁上出現「自動排版／縮放」是純粹的噪音，而它還會
+    //    把這一列撐長到要橫捲——**整合成一列不等於把三列疊起來。**
+    //
+    // ⚠️ **每次切分頁都再收一次晚到的段落**——編輯器與主控台那兩條不保證
+    //    在切版面的那一刻就存在（見 `adoptActionBarSections`）。
+    adoptActionBarSections()
+    // 🔴 分頁列搬走了，「再按一下收起來」也要跟著關——見 `setCollapsible`。
+    //    ⚠️ 放在這裡而不是 `switchToMobile`：主控台那一格**可能晚一點才建**，
+    //    而這裡每次切分頁都會再說一次。
+    bottomPanel?.setCollapsible(false)
+    for (const { sel, tab: owner } of ACTION_BAR_SECTIONS) {
+      const el = mobileActionBar.querySelector(sel)
+      if (el instanceof HTMLElement) el.style.display = owner === tab ? '' : 'none'
+    }
+    // 🔴 **主控台那一格不給還原鈕**（使用者 2026-08-31：「主控台那邊也不需要還原按鈕」）。
+    //
+    // 它是這一列上唯一「每個分頁都在」的段落，而**主控台不是一個投影**
+    // ——那裡沒有東西可以還原：它顯示的是執行的輸出，不是程式本身。
+    //
+    // > **「全域」的意思是「每一個投影都在」，不是「每一個分頁都在」。**
+    const undoGrp = document.getElementById('undo-group')
+    if (undoGrp) undoGrp.style.display = tab === 'console' ? 'none' : ''
     mobileBlocksContainer.classList.toggle('active', tab === 'blocks')
     mobileCodeContainer.classList.toggle('active', tab === 'code')
     mobileConsoleContainer.classList.toggle('active', tab === 'console')

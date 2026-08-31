@@ -22,6 +22,7 @@ export class BottomPanel {
   private activeTabId: string | null = null
   private isDragging = false
   private collapsed = true
+  private collapsible = true
   private heightRatio = 0.35
 
   constructor(container: HTMLElement) {
@@ -70,9 +71,28 @@ export class BottomPanel {
     }
   }
 
+  /**
+   * 這條分頁列還能不能「再按一下收起來」。
+   *
+   * 🔴 **行動版是 false**（2026-08-31）：收合的意思是「把下方面板讓給程式碼」，
+   * 而行動版根本沒有「上面那一半」——主控台是一個**整頁的分頁**，收起來
+   * 就是一整片空白。⚠️ 而這一刀把分頁列搬進畫面最上面那條工具列之後更糟：
+   * 按下去像是「工具列把主控台吃掉了」，而畫面上沒有任何東西提示它收起來了。
+   *
+   * > **一個手勢的意思來自它旁邊的東西。把控制項搬到別的地方，
+   * > 它原本的意思不會跟著搬過去。**
+   *
+   * ⚠️ 關掉時如果正收著就順手展開——否則那一頁會停在空白上，
+   *    而使用者已經沒有那個「再按一下」可以救它了。
+   */
+  setCollapsible(v: boolean): void {
+    this.collapsible = v
+    if (!v && this.collapsed && this.activeTabId) this.showTab(this.activeTabId)
+  }
+
   activateTab(id: string): void {
     // Toggle collapse when clicking the already-active tab
-    if (this.activeTabId === id && !this.collapsed) {
+    if (this.collapsible && this.activeTabId === id && !this.collapsed) {
       this.collapsed = true
       this.applyHeight()
       // Remove active highlight and actions when collapsed

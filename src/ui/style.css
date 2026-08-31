@@ -2420,3 +2420,146 @@ html, body {
   outline: 2px solid #4a90d9;
   outline-offset: 1px;
 }
+
+/**
+ * **行動版的第二列**——只放全域動作（↩↪）。
+ *
+ * 🔴 它為什麼不在標頭裡：使用者 2026-08-31 在約 390px 的手機上回報標頭
+ * 被擠爆（「▶ 執行」折成兩行、↩↪ 疊在一起），而我在 500px 的 e2e 上
+ * 量到 32x28、看起來正常。**量得到就算過的寬度，不是使用者手上那一支。**
+ *
+ * ⚠️ 高度刻意壓到最小：手機的垂直空間很貴，而這一列每個分頁都在。
+ */
+#mobile-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  /* 🔴 **一個顏色，不是三個。**
+     合併之前這三條各有各的灰：標頭 #323233、快速列 #2d2d2d、
+     流程工具列 #252526。它們現在是同一條列，用快速列那一階
+     ——它比標頭暗一階，讀起來就是「標頭底下的次要工具列」。
+     ⚠️ 第一版寫 `var(--toolbar-bg, #252526)`，而**這個變數整個專案
+     沒有定義**（唯一出現的地方就是那一行），於是它退回 #252526
+     ——與標頭差了一階，使用者當場看出來「底色怪怪的」。
+     > 一個沒有人定義的 CSS 變數，不會報錯——它只是安靜地用退路那個值。 */
+  background: #2d2d2d;
+  border-bottom: 1px solid #3c3c3c;
+  flex: 0 0 auto;
+  /* 🔴 **不換行，放不下就橫捲**——換行會讓這一列忽高忽低，
+     而它上面就是標頭：高度一變，整個畫面就跳一下。 */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+#mobile-action-bar::-webkit-scrollbar { display: none; }
+
+/* 搬進來的四段自己不要再帶邊框與底色——它們現在是這一列的一部分。
+   🔴 **四段，不是兩段**（2026-08-31）：少列一個選擇器的症狀不是「沒生效」，
+   而是那一段**帶著自己的底色與邊框**坐在這一列裡，看起來像沒有合併。 */
+#mobile-action-bar > .quick-access-bar,
+#mobile-action-bar > .flow-toolbar,
+#mobile-action-bar > .monaco-clipboard-bar,
+#mobile-action-bar > .bottom-panel-tabs {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+/* 主控台那一段在桌面版是**橫跨整條**的分頁列（`flex: 1` 把分頁鈕推開、
+   動作鈕靠右）。⚠️ 在這一列裡它只是其中一段：撐開的話會把後面的東西擠出去。 */
+#mobile-action-bar .bottom-panel-tab-buttons {
+  flex: 0 0 auto;
+}
+
+#mobile-action-bar .bottom-panel-tab-actions {
+  margin-right: 0;
+}
+
+/*
+ * 🔴 **搬進來的按鈕要重新上色——不然它是瀏覽器預設的灰白。**
+ *
+ * 使用者 2026-08-31：「我希望底色不要白」。量到的（`getComputedStyle`，
+ * 不是看截圖）：
+ *
+ *   ↩ = rgb(239, 239, 239)   ← ButtonFace，瀏覽器預設
+ *   ↪ = rgb(239, 239, 239)
+ *   其他每一顆 = 透明 / rgb(60,60,60) / rgb(45,45,45)
+ *
+ * ↩↪ 原本靠 `.quick-access-bar button` 上色，搬進 `#undo-group` 之後
+ * 那條選擇器不再命中，而我的新規則只設了尺寸沒設顏色。
+ *
+ * ⚠️ **這個病這個檔案裡已經有一塊墓碑**（往下看「檔案選單」那一段）：
+ *    它 2026-08-25 從快速列搬到標頭時踩的是同一個，症狀逐字寫著
+ *    「一顆瀏覽器預設的灰框按鈕」。
+ *
+ * > **樣式掛在容器上的按鈕，搬家等於脫光。**
+ */
+/*
+ * ⚠️ **範圍只到 `#undo-group`，不是整列的每一顆按鈕。**
+ *
+ * 第一版寫 `#mobile-action-bar button { border: none; ... }`，而它掃到了
+ * 搬進來的每一段——使用者 2026-08-31 當場回報「主控台／變數的**藍色底線
+ * 不見了**」：那條底線是 `.bottom-tab-btn.active` 的
+ * `border-bottom: 2px solid #007acc`，被 `border: none` 清掉了。
+ *
+ * > **一條「幫新容器裡的按鈕補樣式」的規則，會順手拆掉那些
+ * > 本來就有樣式的按鈕——而它們搬家時是把 class 一起帶過來的。**
+ *
+ * 真正掉出選擇器的**只有 ↩↪**：它們原本靠 `.quick-access-bar button`
+ * 上色，而 `#undo-group` 是被單獨搬出來的。其餘四段連容器一起搬，
+ * 各自的 class 選擇器都還命中。
+ */
+#mobile-action-bar > #undo-group button {
+  /* 🔴 **跟鄰居對齊，不要自己一個尺寸。**
+     使用者 2026-08-31：「還原按鈕好像有點大，有點突兀」。量到的：
+       ↩↪        40x32  font 15px   ← 這一列最大的
+       清空       38x22  font 11px
+       ⤢自動排版  80x25  font 12px
+       −／＋      26x19  font 13px
+     觸控目標要夠大是對的，而**它不該大到成為這一列的主角**
+     ——還原是輔助動作，不是這個畫面的重點。 */
+  min-width: 30px;
+  min-height: 24px;
+  padding: 2px 8px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: #bbb;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+
+#mobile-action-bar > #undo-group button:hover { background: #505050; color: #fff; }
+#mobile-action-bar > #undo-group button:active { background: #404040; }
+
+/*
+ * 🔴 **下方面板那一段：分頁靠左、動作靠右。**
+ *
+ * 使用者 2026-08-31：「主控台變數的 tab 要跟其他按鈕隔開（靠左跟靠右）」。
+ * 量到的是它們貼在一起：`tab-buttons 90..194`、`tab-actions 194..280`。
+ *
+ * ⚠️ 只在這一列裡這樣排——它在下方面板自己的位置有別的版面。
+ */
+#mobile-action-bar > .bottom-panel-tabs {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+}
+
+/* ⚠️ 程式碼那一段是**帶字的**三顆（📋 複製／📥 插入／📋 覆蓋貼上），
+   而上面那條 `min-width: 40px` 是為圖示鈕訂的。16px 字級下三顆約 230px，
+   加上 ↩↪ 剛好在 390px 裡——所以這裡把左右內距收窄，讓它不必橫捲。
+   🔴 放不下時的行為仍然是**橫捲**（`flex-wrap: nowrap`），不是換行。 */
+#mobile-action-bar .clipboard-btn,
+#mobile-action-bar .bottom-tab-btn {
+  padding: 2px 6px;
+  white-space: nowrap;
+}
