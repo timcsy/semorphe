@@ -73,7 +73,7 @@
 - [x] T025 該上調的基線上調，每一筆在 `note` 寫明是**輸入量**還是**清償**（`build-guardrail` §7）
 - [x] T026 `npx tsc --noEmit` 乾淨
 - [x] T027 knowie 反流：`knowledge/draft/2026-08-31-版面的四張圖.md` 的教訓 → `experience.md`；轉變（第八十一條的兩條硬性零升成二維）→ `knowledge/history/`；路線圖那一項收成一行 ＋ 指標，draft 退場
-- [ ] T028 commit ＋ push
+- [x] T028 commit ＋ push
 
 ---
 
