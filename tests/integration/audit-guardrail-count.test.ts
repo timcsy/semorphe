@@ -137,6 +137,18 @@ describe('護欄：護欄的條數要有一個地方說了算', () => {
     // ⚠️ 只有這種會過期——而它過期時沒有任何機構會出聲。
     const NOW = /今天|目前|現行|現在/
     const roots = ['knowledge/principles.md', 'knowledge/vision.md', 'knowledge/experience.md']
+    // 🔴 **README 不在上面那張表裡，而它是最多人讀的一份**（2026-08-31 判官抓到）。
+    //
+    // 實測：`README.md` 寫著「這個專案有 **88 條護欄**」而實際是 92
+    // ——那個數字剛好等於 `audit-*` 的檔數，也就是**分母的一半**（漏掉 4 個
+    // 靠期望值認出來的）。它從 2026-08-19 這條護欄蓋好起就沒有被涵蓋過。
+    //
+    // > **一條「不准把數字宣稱成現況」的規範，漏掉了對外那一份，
+    // > 而對外那一份正是唯一有陌生人會讀的。**
+    //
+    // ⚠️ README 的寫法沒有「今天／目前」這種現在式標記（它寫「這個專案有 N 條」），
+    //    所以上面那個 `NOW` 判準抓不到它——這裡用**它自己的句型**，並且
+    //    **直接比對數字對不對**，而不只是禁止它出現。
     const hits: string[] = []
     for (const p of roots) {
       const lines = readFileSync(join(process.cwd(), p), 'utf8').split('\n')
@@ -148,5 +160,17 @@ describe('護欄：護欄的條數要有一個地方說了算', () => {
     }
     expect(hits, `\n把護欄條數宣稱成現況（改成「見 tests/integration/」或引用本護欄的報表）：\n${hits.join('\n')}\n`)
       .toEqual([])
+
+    // ── README：說得出數字可以，而它必須是對的 ──────────────────────
+    const readme = readFileSync(join(process.cwd(), 'README.md'), 'utf8')
+    const m = /這個專案有 \*\*(\d+) 條護欄\*\*/.exec(readme)
+    if (m) {
+      expect(
+        Number(m[1]),
+        `\n🔴 README 說 ${m[1]} 條，而實際是 ${guardrailFiles().length} 條。\n` +
+          '⚠️ 加了護欄就要回頭改那一行——它旁邊正好寫著「一條規範沒有機械化的檢查，\n' +
+          '它本身就是殼」。要嘛改對，要嘛把數字拿掉改成指向本護欄的報表。\n',
+      ).toBe(guardrailFiles().length)
+    }
   })
 })
