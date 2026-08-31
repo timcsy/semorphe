@@ -59,7 +59,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.11.1'
+export const EXTENSION_VERSION = '0.11.2'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
