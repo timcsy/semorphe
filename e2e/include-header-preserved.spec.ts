@@ -31,11 +31,19 @@ test('🔴 清單裡沒有的標頭要【留著】，不得被換成第一項', 
       '#include <WiFi.h>\n\nvoid setup() {\n  WiFi.begin("a", "b");\n}\n\nvoid loop() {\n}\n')
   })
   await page.getByRole('button', { name: /覆蓋貼上/ }).click()
+  // 🔴 **就緒條件要等【那一顆】，不是「積木變多了」**（2026-08-31 修）。
+  //    原本等的是 `getAllBlocks().length > 1`，而 Arduino 骨架本身就會先長出
+  //    `setup`／`loop` 兩顆——那個條件被**骨架**滿足，於是還沒等到 `#include`
+  //    就去讀欄位，讀到 `no include block`。
+  //
+  // > **一個「東西變多了」的就緒條件，會被任何一種變多滿足
+  // > ——包括不是你在等的那一種。**
   await expect
     .poll(() => page.evaluate(() =>
       /* eslint-disable @typescript-eslint/no-explicit-any */
-      ((window as any).__app?.blocklyPanel?.workspace?.getAllBlocks(false)?.length ?? 0)))
-    .toBeGreaterThan(1)
+      ((window as any).__app?.blocklyPanel?.workspace?.getAllBlocks(false) ?? [])
+        .some((b: any) => b.type === 'cpp_include')))
+    .toBe(true)
 
   const header = await page.evaluate(() => {
     /* eslint-disable @typescript-eslint/no-explicit-any */

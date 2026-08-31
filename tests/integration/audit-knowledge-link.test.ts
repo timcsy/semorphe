@@ -161,17 +161,17 @@ describe('第九十六條護欄：知識庫的相對連結不得死', () => {
 
   it('★ 注入（會報）：指向不存在的檔要被抓到', () => {
     // ⚠️ 合成路徑，不是真實檔案——真實檔案會被修好，而合成規則不會
-    const fakeSource = path.join(ROOT, 'concepts', '__不存在的來源__.md')
+    const fakeSource = path.join(ROOT, 'draft', '__不存在的來源__.md')
     expect(resolves(fakeSource, './__絕對不存在的東西__.md'), '🔴 死連結沒被判為死').toBe(false)
     expect(resolves(fakeSource, '../__也不存在__/x.md'), '🔴 跨目錄的死連結沒被判為死').toBe(false)
   })
 
   it('★ 注入（不亂報）：指向真的存在的東西不可被判為死', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上一支
-    const fromConcepts = path.join(ROOT, 'concepts', 'x.md')
-    expect(resolves(fromConcepts, 'README.md'), '🔴 同目錄的真實檔被誤判為死').toBe(true)
-    expect(resolves(fromConcepts, '../principles.md'), '🔴 上層的真實檔被誤判為死').toBe(true)
-    expect(resolves(fromConcepts, '../draft'), '🔴 指向目錄的連結被誤判為死').toBe(true)
+    const fromReal = path.join(ROOT, 'draft', 'x.md')
+    expect(resolves(fromReal, 'README.md'), '🔴 同目錄的真實檔被誤判為死').toBe(true)
+    expect(resolves(fromReal, '../principles.md'), '🔴 上層的真實檔被誤判為死').toBe(true)
+    expect(resolves(fromReal, '../history'), '🔴 指向目錄的連結被誤判為死').toBe(true)
   })
 
   it('★ 注入：外部連結與同檔錨點不可被當成相對連結', () => {
@@ -180,8 +180,8 @@ describe('第九十六條護欄：知識庫的相對連結不得死', () => {
       relativeLinksIn('[a](https://x.dev) [b](http://y) [c](#小節) [d](mailto:z@w)'),
       '🔴 判準把外部連結或錨點當成相對路徑了',
     ).toEqual([])
-    expect(relativeLinksIn('見 [x](../concepts/投影.md#三)').map((l) => l.target)).toEqual([
-      '../concepts/投影.md',
+    expect(relativeLinksIn('見 [x](../某個目錄/某份文件.md#三)').map((l) => l.target)).toEqual([
+      '../某個目錄/某份文件.md',
     ])
     expect(
       relativeLinksIn('見 [x](./a.md) 與 [y](b/c.md)').map((l) => l.target),
@@ -201,9 +201,9 @@ describe('第九十六條護欄：知識庫的相對連結不得死', () => {
       '🔴 圍籬區塊裡的連結語法被當成連結了',
     ).toEqual([])
     expect(
-      relativeLinksIn('`程式碼` 之後仍然有 [真的](../concepts/投影.md)').map((l) => l.target),
+      relativeLinksIn('`程式碼` 之後仍然有 [真的](../某個目錄/某份文件.md)').map((l) => l.target),
       '🔴 抹掉程式碼時把真的連結也抹掉了',
-    ).toEqual(['../concepts/投影.md'])
+    ).toEqual(['../某個目錄/某份文件.md'])
     expect(
       relativeLinksIn('a\n```\nb\n```\n見 [x](./y.md)')[0]?.line,
       '🔴 抹掉程式碼時行號跑掉了——報表會指到錯的行',

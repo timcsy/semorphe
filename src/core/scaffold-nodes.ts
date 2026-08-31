@@ -91,3 +91,51 @@ export function scaffoldComponentIds(tree: unknown, skeletonId: string): Set<str
   if (tree) walk(tree as Node)
   return out
 }
+
+/**
+ * **把某一份骨架的外框拆掉**，把它裡面的語句提到頂層。
+ *
+ * 🔴 它今天唯一的消費者是**換骨架前的那句問話**：「這個檔案裡除了骨架本身，
+ * 還有沒有東西？」——不扣掉框的話，一支空的 `int main(){ return 0; }`
+ * 也算「有作品」，於是每一次換骨架都會被問，而那時清掉的其實什麼都不是。
+ *
+ * > **一句「你的東西會不見」的警告，在其實沒有東西的時候，
+ * > 教會使用者的是「這個問句可以無視」。**
+ *
+ * ⚠️ **它與 `stripScaffoldNodes` 不是同一件事**，而差別是**可不可逆**：
+ *
+ * ```
+ * stripScaffoldNodes   「藏起來」——可逆，所以兩個進入點時它【不做】
+ *                        （兩批語句攤平之後分不回去 ＝ 把資訊弄丟）
+ * unwrapSkeletonFrame  「換掉」——**單向**，攤平是這個操作的定義
+ * ```
+ *
+ * > **同一個動作在可逆與不可逆的情境下，該有不同的答案。
+ * > 把它們合成一個函式，會讓其中一邊永遠拿到另一邊的保守值。**
+ *
+ * 🟢 `return 0` 這種「只在進入點裡才是骨架」的語句一起拆掉——留著它
+ * 會在新骨架裡變成一句學生沒寫過、也看不懂的程式。
+ */
+export function unwrapSkeletonFrame(tree: unknown, skeletonId: string): unknown {
+  const root = tree as { children?: Record<string, Node[]> } | null | undefined
+  if (!root?.children?.body) return tree
+  const skeleton = skeletonById(skeletonId)
+  if (!skeleton || skeleton.entryFunctions.length === 0) return tree
+  const body: Node[] = []
+  for (const node of root.children.body) {
+    // 🔴 **鷹架元件也要扣掉**（`using namespace std;`／`#include`）——它們是骨架
+    //    的一部分，換骨架時新的那份會自己補。
+    //    ⚠️ 少了這一行，一支【空程式】在「淡的」模式下也算「有作品」
+    //    （樹裡有 `using namespace`），於是每次換骨架都跳警告。
+    if (isScaffoldComponent(node.componentId)) continue
+    if (isFunctionDefinition(node.componentId) && entryFunctionOf(skeleton, node.properties?.name)) {
+      for (const stmt of (node.children?.body ?? []) as Node[]) {
+        if (isScaffoldInEntryComponent(stmt.componentId)) continue
+        body.push(stmt)
+      }
+      continue
+    }
+    body.push(node)
+  }
+  return { ...root, children: { ...root.children, body } }
+}

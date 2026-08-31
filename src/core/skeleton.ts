@@ -71,6 +71,31 @@ export interface EntryFunction {
   /** 函式的名字（`main`／`setup`／`loop`） */
   readonly name: string
   /**
+   * 這顆函式**印出來**的開頭與收尾（`int main() {` … `return 0;` `}`）。
+   *
+   * 🔴 **2026-08-31 加**。在此之前「印出來長怎樣」住在骨架層的
+   * `entryPoint`／`epilogue`——**一個**進入點包住**一個**本體，
+   * 而 Arduino 有**兩顆**。表達不出來，於是那三段被留空，
+   * 然後用一句註解說成「骨架不生它們，只認得它們」。
+   *
+   * 症狀是使用者 2026-08-31 逐字回報的：「**我選了 Arduino 骨架，但是是空的**」
+   * ——在「產出」這一維上，`arduino.json` 與 `none.json` 逐欄相同。
+   *
+   * > **一個裝不下的形狀，最常見的偽裝是一句解釋它為什麼該是空的註解。**
+   *
+   * 🟢 而 `entryPoint`／`epilogue` 現在是**從這裡導出的**，不是第二份宣告
+   * ——第九十七條護欄釘住「宣告了的進入點，空程式上都要產得出來」。
+   */
+  readonly open: readonly SkeletonLine[]
+  readonly close: readonly SkeletonLine[]
+  /**
+   * 鬆散的語句（不在任何函式裡的那些）要放進**哪一顆**。
+   *
+   * ⚠️ 一份骨架**至多一顆**為真。Arduino 是 `loop`——「一直重複跑」的那顆
+   * 才是初學者寫東西的地方；`setup` 留空。
+   */
+  readonly hostsBody?: boolean
+  /**
    * 為什麼這一顆在這裡——與 `SkeletonLine.reason` 同一條規矩。
    *
    * ⚠️ 這是學生在 `ghost` 模式下唯一會讀到的解釋
@@ -103,9 +128,12 @@ export interface Skeleton {
   readonly hint?: string
   /** 進入點**之前**（`using namespace std;`） */
   readonly preamble: readonly SkeletonLine[]
-  /** 進入點本身（`int main() {`） */
+  /**
+   * 進入點本身（`int main() {`）——🟢 **導出的，不是宣告的**（2026-08-31 起）。
+   * 它是每一顆 `entryFunctions` 的 `open` 串起來。
+   */
   readonly entryPoint: readonly SkeletonLine[]
-  /** 進入點**之後**（`return 0;`／`}`） */
+  /** 進入點**之後**（`return 0;`／`}`）——同上，由 `close` 串起來。 */
   readonly epilogue: readonly SkeletonLine[]
 
   /**
@@ -118,8 +146,8 @@ export interface Skeleton {
    * entryFunctions  樹裡【哪一塊】是骨架    → 積木視圖的淡化與剝除
    * ```
    *
-   * Arduino 的 `entryPoint` 是空的（`setup`／`loop` 由學生或範例寫，
-   * 不是骨架生出來的），而 `entryFunctions` 有兩顆。
+   * 🟢 **2026-08-31 起兩者不再是兩份宣告**：`entryPoint`／`epilogue` 由
+   * 每一顆的 `open`／`close` 導出，所以 Arduino 的兩顆函式**兩邊都認得**。
    */
   readonly entryFunctions: readonly EntryFunction[]
 }
@@ -158,16 +186,46 @@ export function parseSkeleton(raw: unknown): Skeleton {
       if (typeof f?.reason !== 'string' || f.reason === '') {
         throw new Error(`鷹架 ${String(o.id)} 的 entryFunctions[${i}]（${f.name}）缺 reason`)
       }
-      return { name: f.name, reason: f.reason }
+      // 🔴 **框架必填**——一顆印不出來的進入點，正是 2026-08-31 那個缺陷本身
+      const frame = (key: 'open' | 'close'): SkeletonLine[] =>
+        lines(f[key] ?? [], `entryFunctions[${i}].${key}`)
+      const open = frame('open')
+      if (open.length === 0) {
+        throw new Error(
+          `鷹架 ${String(o.id)} 的 entryFunctions[${i}]（${f.name}）缺 open` +
+          '——一顆宣告了卻印不出來的進入點，使用者選了骨架會看到空畫面',
+        )
+      }
+      return {
+        name: f.name, reason: f.reason, open, close: frame('close'),
+        hostsBody: f.hostsBody === true,
+      }
     })
   })()
+
+  // 🔴 **導出，不是第二份宣告**（2026-08-31）。在此之前 `main.json` 同時寫著
+  //    `entryPoint: ["int main() {"]` 與 `entryFunctions: [{name:"main"}]`
+  //    ——同一個決定的兩份資料，而 Arduino 只填了其中一份。
+  if (o.entryPoint !== undefined || o.epilogue !== undefined) {
+    throw new Error(
+      `鷹架 ${String(o.id)}：entryPoint／epilogue 已經改成由 entryFunctions 的 ` +
+      'open／close 導出——把它們搬進對應的那一顆進入點，不要兩邊各寫一份',
+    )
+  }
+  const hosts = entryFunctions.filter((f) => f.hostsBody)
+  if (hosts.length > 1) {
+    throw new Error(
+      `鷹架 ${String(o.id)}：有 ${hosts.length} 顆 entryFunctions 標了 hostsBody` +
+      '——鬆散的語句只能有一個去處',
+    )
+  }
 
   return {
     id: o.id, name: o.name, language: o.language, entryFunctions,
     hint: typeof o.hint === 'string' ? o.hint : undefined,
     preamble: lines(o.preamble, 'preamble'),
-    entryPoint: lines(o.entryPoint, 'entryPoint'),
-    epilogue: lines(o.epilogue, 'epilogue'),
+    entryPoint: entryFunctions.flatMap((f) => f.open),
+    epilogue: entryFunctions.flatMap((f) => f.close),
   }
 }
 

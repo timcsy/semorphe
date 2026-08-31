@@ -661,7 +661,16 @@ export class SyncController {
     }
   }
 
-  async resyncForTopic(extractedTree: SemanticNode, currentCode: string): Promise<void> {
+  /**
+   * @param relift 允不允許「樹裡沒有骨架 → 從程式碼重 lift 一次」。
+   *
+   * 🔴 **換骨架時要傳 `false`**（2026-08-31）：那條 relift 讀的是**還帶著舊框**
+   * 的程式碼，於是剛拆掉的框會被原封不動 lift 回來——拆框等於沒做。
+   *
+   * > **一條「資料不夠就回去讀原始輸入」的補救路徑，
+   * > 在原始輸入正是我們剛剛要改掉的東西時，會把改動整個抵銷。**
+   */
+  async resyncForTopic(extractedTree: SemanticNode, currentCode: string, relift = true): Promise<void> {
     if (this.syncing) return
     this.syncing = true
     try {
@@ -680,7 +689,7 @@ export class SyncController {
       const framePresent = skeletonPresent(skeleton, (name) =>
         (extractedTree.children.body ?? []).some(
           n => isFunctionDefinition(n.componentId) && n.properties.name === name))
-      if (this.getScaffoldDepth() > 0 && !framePresent && this.lifter && this.parser) {
+      if (relift && this.getScaffoldDepth() > 0 && !framePresent && this.lifter && this.parser) {
         const parseResult = await this.parser.parse(currentCode)
         const rootNode = parseResult.rootNode as import('../core/lift/types').AstNode
         if (rootNode) {

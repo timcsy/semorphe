@@ -128,7 +128,15 @@ describe('★ 第八十六條：鷹架是一份宣告', () => {
 })
 
 describe('★ 注入——證明它會報，也證明它不亂報', () => {
-  const OK = { id: 'ㄒ', name: 'ㄒ', language: 'ㄒ語', preamble: [], entryPoint: [{ code: 'a', reason: 'b' }], epilogue: [] }
+  // 🔴 **2026-08-31 換 schema**：`entryPoint`／`epilogue` 從「宣告的」變成
+  //    「由 `entryFunctions` 的 `open`／`close` **導出的**」——因為
+  //    「一個進入點包住一個本體」這個形狀裝不下 Arduino 的兩顆。
+  //    ⚠️ 這些注入本來寫著舊 schema，換掉它們**不是**放寬判準：
+  //    每一支釘的性質（理由必填／code 必填／型別／全空合法）逐條保留。
+  const fn = (over: object = {}) => ({
+    name: 'ㄒ函式', reason: 'ㄅ', open: [{ code: 'a', reason: 'b' }], close: [], ...over,
+  })
+  const OK = { id: 'ㄒ', name: 'ㄒ', language: 'ㄒ語', preamble: [], entryFunctions: [fn()] }
 
   it('★ 注入：正確的宣告 → 讀得出來', () => {
     expect(parseSkeleton(OK).entryPoint[0].code).toBe('a')
@@ -140,12 +148,12 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
   })
 
   it('★ 注入：一段沒有理由 → 丟錯', () => {
-    expect(() => parseSkeleton({ ...OK, entryPoint: [{ code: 'a' }] })).toThrow(/reason/)
-    expect(() => parseSkeleton({ ...OK, entryPoint: [{ code: 'a', reason: '' }] })).toThrow(/reason/)
+    expect(() => parseSkeleton({ ...OK, entryFunctions: [fn({ open: [{ code: 'a' }] })] })).toThrow(/reason/)
+    expect(() => parseSkeleton({ ...OK, entryFunctions: [fn({ open: [{ code: 'a', reason: '' }] })] })).toThrow(/reason/)
   })
 
   it('★ 注入：缺 code → 丟錯', () => {
-    expect(() => parseSkeleton({ ...OK, epilogue: [{ reason: 'x' }] })).toThrow(/code/)
+    expect(() => parseSkeleton({ ...OK, entryFunctions: [fn({ close: [{ reason: 'x' }] })] })).toThrow(/code/)
   })
 
   it('★ 注入：某一段不是陣列 → 丟錯', () => {
@@ -153,7 +161,24 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
   })
 
   it('★ 注入：全空是合法的（那就是「沒有骨架」）', () => {
-    expect(() => parseSkeleton({ id: 'z', name: 'z', language: 'z語', preamble: [], entryPoint: [], epilogue: [] })).not.toThrow()
+    expect(() => parseSkeleton({ id: 'z', name: 'z', language: 'z語', preamble: [] })).not.toThrow()
+  })
+
+  it('🆕 注入：一顆印不出來的進入點 → 丟錯', () => {
+    // 🔴 這一支釘的正是 2026-08-31 那個缺陷：宣告了 `setup`／`loop`，
+    //    而「印出來長怎樣」是空的——使用者選了骨架會看到空畫面
+    expect(() => parseSkeleton({ ...OK, entryFunctions: [fn({ open: [] })] })).toThrow(/open/)
+  })
+
+  it('🆕 注入：舊 schema（entryPoint／epilogue）→ 丟錯，不要兩邊各寫一份', () => {
+    expect(() => parseSkeleton({ ...OK, entryPoint: [{ code: 'a', reason: 'b' }] })).toThrow(/entryFunctions/)
+    expect(() => parseSkeleton({ ...OK, epilogue: [] })).toThrow(/entryFunctions/)
+  })
+
+  it('🆕 注入：兩顆都標 hostsBody → 丟錯（鬆散語句只能有一個去處）', () => {
+    expect(() => parseSkeleton({
+      ...OK, entryFunctions: [fn({ hostsBody: true }), fn({ name: 'ㄆ', hostsBody: true })],
+    })).toThrow(/hostsBody/)
   })
 })
 

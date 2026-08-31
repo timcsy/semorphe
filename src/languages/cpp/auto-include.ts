@@ -128,22 +128,41 @@ export function createCppCodePatcher(
     //
     // ⚠️ 「有沒有進入點」現在也問宣告：`entryPoint` 是空陣列就不補
     //    （Arduino 的 `none` 是一份空的宣告，不是一個特例的 `if`）。
+    // 🔴 **2026-08-31：改成問 `entryFunctions`，不是 `entryPoint`。**
+    //    使用者：「我選了 Arduino 骨架，但是是空的」——而根因就在這個閘門：
+    //    `entryPoint` 是**一個**進入點包住**一個**本體的形狀，Arduino 有兩顆，
+    //    表達不出來於是被留空，`entry.length > 0` 為假，一個字都不補。
+    //
+    // > **一個裝不下的形狀，最常見的偽裝是一句解釋它為什麼該是空的註解。**
+    //
+    //    ⚠️ 只補**缺的那幾顆**；全部都缺（＝新開的空程式）才整份重建，
+    //    否則會把已經在的那顆複製一次。
     const skeleton = skeletonById(skeletonId)
-    const entry = skeleton?.entryPoint ?? []
-    if (entry.length > 0 && cogLevel === 0 && !patched.includes(entry[0].code.trim())) {
-      // Extract header lines (#include, using namespace, blank) and body
-      const lines = patched.split('\n')
-      const headerEnd = lines.reduce((a, l, i) => {
-        const t = l.trim()
-        return (t.startsWith('#include') || t.startsWith('using ') || t === '') ? i + 1 : a
-      }, 0)
-      const header = lines.slice(0, headerEnd).join('\n')
-      const bodyLines = lines.slice(headerEnd).filter(l => l.trim() !== '')
-      const indented = bodyLines.map(l => '    ' + l).join('\n')
-      patched = (header ? header + '\n' : '') +
-        entry.map((l) => l.code).join('\n') + '\n' +
-        (indented ? indented + '\n' : '') +
-        (skeleton?.epilogue ?? []).map((l) => l.code).join('\n')
+    const entryFns = skeleton?.entryFunctions ?? []
+    const missing = entryFns.filter((f) => !patched.includes(f.open[0].code.trim()))
+    if (entryFns.length > 0 && cogLevel === 0 && missing.length > 0) {
+      const shell = (f: (typeof entryFns)[number], inner: string): string =>
+        [...f.open.map((l) => l.code), ...(inner ? [inner] : []), ...f.close.map((l) => l.code)]
+          .join('\n')
+
+      if (missing.length === entryFns.length) {
+        // Extract header lines (#include, using namespace, blank) and body
+        const lines = patched.split('\n')
+        const headerEnd = lines.reduce((a, l, i) => {
+          const t = l.trim()
+          return (t.startsWith('#include') || t.startsWith('using ') || t === '') ? i + 1 : a
+        }, 0)
+        const header = lines.slice(0, headerEnd).join('\n')
+        const bodyLines = lines.slice(headerEnd).filter(l => l.trim() !== '')
+        const indented = bodyLines.map(l => '    ' + l).join('\n')
+        // ⚠️ 鬆散的語句只有**一個**去處——由宣告指定（Arduino 是 `loop`）
+        const host = entryFns.find((f) => f.hostsBody) ?? entryFns[0]
+        patched = (header ? header + '\n' : '') +
+          entryFns.map((f) => shell(f, f === host ? indented : '')).join('\n\n')
+      } else {
+        patched = patched.replace(/\s*$/, '') + '\n\n' +
+          missing.map((f) => shell(f, '')).join('\n\n')
+      }
       changed = true
     }
 

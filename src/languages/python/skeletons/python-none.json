@@ -5,7 +5,5 @@
   "hint": "Python 從第一行開始跑",
   "_why": "🔴 Python 的程式從第一行開始跑——沒有 main、沒有 preamble。而它必須是【自己的一份宣告】，不能借 C++ 的 `none`：借的話 `skeletonById` 會跨語言撿到別人的東西，而那在多一個語言的那天會安靜地錯。",
   "entryFunctions": [],
-  "preamble": [],
-  "entryPoint": [],
-  "epilogue": []
+  "preamble": []
 }

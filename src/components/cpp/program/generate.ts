@@ -149,37 +149,44 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
           code += item.code + '\n'
         }
 
-        // Entry point
-        for (const item of scaffoldResult.entryPoint) {
-          code += item.code + '\n'
-        }
-
         // Track scaffold lines for source mapping before generating user body
         trackOwnText(ctx, code)
 
-        // User body (excluding includes, indented inside main)
-        //
-        // 🔴 **有進入點才縮排。** 目標宣告 `skeleton: 'none'`（Arduino sketch）時
-        //    `entryPoint` 是空的，函式定義就是頂層——⚠️ 照舊縮排的話產出是
-        //
-        // ```
-        // void setup() {
-        //     int x;
-        //   }            ← 多了兩格，而它會寫進使用者的 sketch
-        //   void loop() {
-        // ```
-        //
-        // > **縮排是「我在誰裡面」的投影。裡面沒有東西的時候，
-        // > 縮排就不是格式問題，是一個假的巢狀關係。**
-        //
-        // ⚠️ 判準問的是 `entryPoint` 有沒有東西（資料），不是目標叫什麼名字。
-        const hasEntryPoint = scaffoldResult.entryPoint.length > 0
         const userBody = body.filter(n => !isIncludeDirective(n.componentId))
-        code += generateBody(userBody, hasEntryPoint ? indented(ctx) : ctx)
 
-        // Epilogue
-        for (const item of scaffoldResult.epilogue) {
-          code += item.code + '\n'
+        // 進入點 ＋ 本體 ＋ 收尾——**逐顆函式**，不是把四段攤平。
+        //
+        // 🔴 **2026-08-31：這裡本來讀 `scaffoldResult.entryPoint`／`epilogue`
+        //    這兩個【攤平的】清單**，於是 Arduino 的兩顆進入點被吐成
+        //
+        // ```
+        // void setup() {      ← entryPoint[0]
+        // void loop() {       ← entryPoint[1]
+        //   …本體…
+        // }                   ← epilogue[0]
+        // }                   ← epilogue[1]
+        // ```
+        //
+        //    ——**兩顆平行的函式被寫成一個假的巢狀關係**，而使用者看到的
+        //    正是那個（「我選了 Arduino 骨架」→ `loop` 跑到 `setup` 裡面）。
+        //
+        // > **一個「開頭清單 ＋ 本體 ＋ 收尾清單」的形狀，
+        // > 只表達得出【一個】框。第二個框進來時它不會報錯，它會產出巢狀。**
+        //
+        // ⚠️ 縮排仍然問資料（有沒有框），不問目標叫什麼名字：沒有進入點時
+        //    函式定義就是頂層，縮排會變成一個假的巢狀關係。
+        const entryFns = skeleton?.entryFunctions ?? []
+        if (entryFns.length === 0) {
+          code += generateBody(userBody, ctx)
+        } else {
+          // 鬆散的語句只有**一個**去處——由宣告指定（Arduino 是 `loop`）
+          const host = entryFns.find((f) => f.hostsBody) ?? entryFns[0]
+          code += entryFns.map((f) => {
+            let block = f.open.map((l) => l.code + '\n').join('')
+            if (f === host) block += generateBody(userBody, indented(ctx))
+            block += f.close.map((l) => l.code + '\n').join('')
+            return block
+          }).join('\n')
         }
 
         return code

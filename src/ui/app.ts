@@ -58,7 +58,7 @@ import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson, type ScaffoldMode } from '../core/lesson'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
-import { scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
+import { unwrapSkeletonFrame, scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
 import { lessonById, allTracks, lessonsOfTrack } from '../core/load-lessons'
 import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
@@ -381,14 +381,83 @@ export class App {
     this.syncController?.setSkeleton?.(id)
   }
 
+  /**
+   * **換一份骨架——會把這個檔案清空，所以先問一句。**
+   *
+   * 🔴 它從哪來（2026-08-31）：使用者逐字——「換骨架就要跳出警告，
+   * 並且說要把這檔案所有內容都清除」。
+   *
+   * 在此之前它只換 id，於是舊骨架的 `int main() { … }` 原封不動留在樹裡、
+   * 新骨架又補上自己的框——**兩個框疊在一起**，而且沒有人被問過。
+   *
+   * ⚠️ **「有沒有東西」要扣掉現在那份骨架自己**（`unwrapSkeletonFrame`）：
+   * 不扣的話，一支空的 `int main(){ return 0; }` 也算「有作品」，
+   * 於是**每一次換骨架都會被問**，而那時清掉的其實什麼都不是。
+   *
+   * > **一句「你的東西會不見」的警告，在其實沒有東西的時候，
+   * > 教會使用者的是「這個問句可以無視」。**
+   *
+   * 🟢 形狀抄 `applyTemplate`——同一個決定（會蓋掉畫布）不該有第二種問法。
+   */
   private setSkeleton(id: string): void {
-    if (!skeletonById(id)) { console.error(`[skeleton] 選了一份不存在的骨架：${id}`); return }
-    // 🔴 **三個持有者一起換**（鷹架、補丁器、同步器）——見 `adoptSkeleton`
-    this.adoptSkeleton(id)
-    this.enforceShellDepthFloor()
-    this.updateToolbox()
-    this.reprojectFromTree()
-    this.publishControls()
+    const next = skeletonById(id)
+    if (!next) { console.error(`[skeleton] 選了一份不存在的骨架：${id}`); return }
+    if (id === this.currentSkeletonId) return
+
+    const tree = this.syncController?.getCurrentTree()
+    const rest = tree
+      ? (unwrapSkeletonFrame(tree, this.currentSkeletonId) as SemanticNode)
+      : undefined
+    const hasWork = (rest?.children?.body ?? []).length > 0
+
+    const go = async (): Promise<void> => {
+      // 🔴 **三個持有者一起換**（鷹架、補丁器、同步器）——見 `adoptSkeleton`
+      this.adoptSkeleton(id)
+      this.enforceShellDepthFloor()
+      this.updateToolbox()
+      if (!tree) { this.reprojectFromTree(); this.publishControls(); return }
+      // ① 清空：本體歸零，新骨架的框由產生器補上。
+      // ⚠️ 沿用原本那顆根節點——`cpp:program` 這種身分不該出現在視圖層（P9）。
+      // ⚠️ `relift: false`——那條補救路徑會回去讀**還帶著舊框**的程式碼。
+      await this.syncController?.resyncForTopic(
+        { ...tree, children: { ...tree.children, body: [] } }, '', false)
+      // ② 再從**剛產生的程式碼**抬回樹裡。
+      //
+      // 🔴 少了這一步，「淡的」模式下畫布會**空無一物**（2026-08-31 使用者：
+      //    「淡的骨架怎麼直接消失？」）——因為**骨架只活在產生出來的程式碼裡，
+      //    樹裡沒有它**，而積木是樹的投影。
+      //
+      // > **一個只存在於某一個投影裡的東西，在別的投影上不是「淡的」，是沒有。**
+      const fresh = this.codeView?.getCode?.() ?? ''
+      if (fresh.trim() !== '') await this.syncController?.syncCodeToBlocks(fresh)
+      // ③ 重新蓋上「哪幾塊是骨架」那一層視覺。
+      //
+      // 🔴 少了這一步，換完骨架的畫布上**一塊都不是淡的**（2026-08-31 使用者：
+      //    「Arduino 淡的好像不是淡的」）——而把顯示模式切走再切回來就會對，
+      //    因為那條路徑會經過 `markOutOfScopeBlocks`。
+      //
+      // > **一個「畫完之後蓋上去」的視覺層，每一條會重畫的路徑都要記得蓋。
+      // > 而漏掉的那一條不會報錯——它只是少了一層。**
+      //
+      // ⚠️ `await` 回來時**積木還沒畫完**（重畫走匯流排，比這裡晚）——
+      //    直接呼叫的話標記會蓋在還不存在的積木上，實測 ghost 是 0。
+      //    這個 900ms 與 `setScaffoldMode` 那一句是**同一個理由、同一個數字**。
+      setTimeout(() => this.markOutOfScopeBlocks(), 900)
+      this.publishControls()
+    }
+
+    if (!hasWork) { void go(); return }
+    showQuickPick(
+      {
+        // ⚠️ QuickPick 的標題是**純文字**——寫 `**粗體**` 會原樣顯示成星號
+        title: `換成「${next.name}」？這個檔案的所有內容都會被清除`,
+        items: [
+          { value: 'yes', label: '換（這個檔案的所有內容會被清除）' },
+          { value: 'no', label: '取消' },
+        ],
+      },
+      (v) => { if (v?.[0] === 'yes') void go() },
+    )
   }
 
   /**
@@ -1865,9 +1934,20 @@ export class App {
           break
         }
         case 'scaffold': {
+          // 🔴 **前綴長度用 `.length` 算，不要寫數字**（2026-08-31）。
+          //    在此之前是 `v.slice(6)`，而 `'skeleton:'` 是 **9** 個字
+          //    ——`'skeleton:arduino'.slice(6)` ＝ `'on:arduino'`，查不到那份骨架，
+          //    於是 `setSkeleton` 第一行就 return。**選骨架從來沒有真的執行過。**
+          //
+          //    ⚠️ 症狀不是報錯（console 有一行 error，而沒有人在看）：
+          //    畫面上就是「點了骨架，什麼都沒發生」。而它跟隔壁那個
+          //    `mode:`（5 個字，剛好對）在同一個 `if/else` 裡，看起來一模一樣。
+          //
+          // > **兩個手寫的長度並排時，錯的那個看起來與對的那個一樣正常。**
           const v = invoke.value ?? ''
-          if (v.startsWith('skeleton:')) this.setSkeleton(v.slice(6))
-          else if (v.startsWith('mode:')) this.setScaffoldMode(v.slice(5) as ScaffoldMode)
+          const SKELETON = 'skeleton:', MODE = 'mode:'
+          if (v.startsWith(SKELETON)) this.setSkeleton(v.slice(SKELETON.length))
+          else if (v.startsWith(MODE)) this.setScaffoldMode(v.slice(MODE.length) as ScaffoldMode)
           break
         }
         case 'template': {
