@@ -6,6 +6,24 @@ import type { LiftStrategyRegistry } from '../registry/lift-strategy-registry'
 import { componentLiftPatterns } from '../component/lift-patterns'
 import { isElseIfChainable } from '../component/traits'
 
+/**
+ * 往下拆會不會**掉字**——最後一個具名子節點是不是結束在這個節點的結尾。
+ *
+ * ```
+ * else { … }      最後一個子節點是 compound_statement，`}` 就是 else_clause 的結尾  → true
+ * goto done;      最後一個子節點是 `done`，而它結束在【分號之前】                  → false
+ * ```
+ *
+ * 🔴 它不問「這是不是一個包裝節點」——那要語法知識，而這一層沒有。
+ * **它問的是「拆完之後還完整嗎」，而那量得到。**
+ */
+function coversToEnd(node: AstNode): boolean {
+  const last = node.namedChildren[node.namedChildren.length - 1]
+  if (!last) return false
+  return last.endPosition.row === node.endPosition.row
+    && last.endPosition.column === node.endPosition.column
+}
+
 interface PatternEntry {
   /** 這一筆寫給哪個文法。🔴 沒有預設值——見 `LiftPattern.grammar`。 */
   grammar: string
@@ -702,6 +720,31 @@ export class PatternLifter {
           if (lifted && lifted.componentId === '_compound') {
             children[fm.semantic] = lifted.children.body ?? []
           } else if (lifted && lifted.componentId !== 'raw_code' && lifted.componentId !== 'unresolved') {
+            children[fm.semantic] = [lifted]
+          } else if (lifted && lifted.componentId === 'raw_code' && !coversToEnd(child)) {
+            // 🔴 **認不出來的【語句】要整段留著，不准往下拆**（2026-09-02）。
+            //
+            // 下面那條 Fallback 是為 `else_clause` 這種**文法的包裝節點**寫的
+            // ——它自己沒有 handler，而它的內容才是我們要的。
+            // ⚠️ 而它也接住了「我真的不認得這個語句」，於是往下拆：
+            //
+            // ```
+            // if (n > 2) goto done;
+            //   consequence = goto_statement
+            //   ctx.lift → raw_code「goto done;」   ✅ 對的答案
+            //   而它是 raw_code ⟹ 走 Fallback
+            //   liftChildren → [statement_identifier「done」]  🔴「goto 」不見了
+            // ```
+            //
+            // 🔴 症狀**靜靜地**發生：畫面上是一顆看起來正常的灰積木，
+            //    只是裡面少兩個字——而 README 上寫著「原文一字不動」。
+            //
+            // > **一個「認不出來就往下拆」的退路，會把「這整段我不認得」
+            // > 變成「我認得它的零件」——而零件拼不回原文。**
+            //
+            // 判準是**量得到的**：往下拆會不會掉字。包裝節點的最後一個子節點
+            // 結束在它自己的結尾（`else { … }` 的 `}` 就是 else_clause 的結尾），
+            // 而 `goto done;` 的 `done` 結束在分號**之前**。
             children[fm.semantic] = [lifted]
           } else {
             // Fallback: lift named children (handles else_clause, etc.)
