@@ -140,6 +140,53 @@ Setup(T001) → Foundational(T002–T006)
 方法呼叫數        2715 → 2706   🟢 兩次正當的下降，都核對過是「真的刪了」
 ```
 
+## 📍 接手入口（2026-09-02 收線時寫的）
+
+**T014 的路已經選定了，卡點也不再是未知——剩下的是執行。**
+
+### 決定：`mount` 進宣告，而型別化的把手由【宣告自己】交出來
+
+```ts
+// src/panels/blocks/panel.ts
+let current: BlocklyPanel | null = null
+export function instance(): BlocklyPanel | null { return current }
+export default {
+  id: 'blocks', layer: 'space', nameKey: 'LAYER_SPACE',
+  mount(container, ctx) { current = new BlocklyPanel({ container, ...ctx }); return { view: current } },
+} satisfies PanelSpec
+```
+
+🟢 **這樣不需要 `as`**：`app.ts`（組裝點）import 那五支型別化的 `instance()`，
+而 `app-shell` 只跑 `panelsFor(profile)` 的迴圈、一格 id 都不認得。
+
+⚠️ 而「組裝點認得 id」**是被允許的**——第三十九條護欄明寫
+「組裝點 `app.ts`（可見，不入棘輪）」。
+
+🔴 這推翻了 research.md 末段的甲乙丙三選一：**乙其實成立**，
+   它只在「`app-shell` 認得 id」時才是問題，而現在認得的是 `app.ts`。
+
+### 執行順序（風險由低到高）
+
+```
+① flow      建構最單純（只要容器）
+② state     BottomPanel ＋ 兩個分頁 ＋ 主控台的鍵盤接線
+③ blocks    要 blockSpecRegistry ／ languageWiring ／ media ＋ init(toolbox)
+④ code      profile.createCodeView ＋ monacoWrapper ＋ 剪貼列
+```
+
+⚠️ 每一步之間跑 `npm test` ＋ `npm run test:e2e`。
+🔴 而 `PanelContext` 要帶的就是 `createAppLayout` 的參數
+（`blockSpecRegistry`／`toolbox`／`profile`／`languageWiring`）——**不多不少**。
+
+### ⚠️ 為什麼 2026-09-02 沒有一次做完
+
+四格的建構與 `app-shell` 的接線互相纏著（快速列建在積木欄裡、
+`monacoWrapper` 在程式碼欄裡、主控台與兩個鍵盤互接），要搬的是約 250 行
+互相依賴的接線。
+
+> **一次動所有人都會經過的組裝點的重構，值得一個【專注的開始】，
+> 而不是一個很長的 session 的尾巴。**
+
 ## ⚠️ 這份任務清單最容易失敗的地方
 
 **T021／T022 變成一句話。** 如果那支測試需要 import `app-shell` 才跑得動，
