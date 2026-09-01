@@ -183,6 +183,15 @@ function configProperties(): Record<string, unknown> {
     'semorphe.blockStyle': prop('積木外觀', 'default'),
     // 🔴 `follow-host` 是**一個值**——「跟隨 IDE 的顯示語言」。
     'semorphe.locale': prop('積木的語言（follow-host ＝ 跟隨 IDE）', 'follow-host'),
+    // 🔴 **骨架與鷹架也要有家**（2026-09-01）。使用者：「為何出現的是
+    //    Arduino 的？跟下面寫的不一樣啊」——工具箱是 Arduino（`target` 有存），
+    //    而骨架寫著 C++ 標準骨架（**沒存，每個新面板回到預設**）。
+    //
+    // ⚠️ 在這個宿主裡存檔服務刻意什麼都不存（`DocumentlessStorage`——檔案才是
+    //    真相），於是這些偏好本來**沒有家**。單例時代那只是「重開就沒了」；
+    //    多面板時它變成三個面板各說各話。
+    'semorphe.skeleton': prop('骨架（如 main／none／arduino）。留空則跟著目標', null),
+    'semorphe.scaffold': prop('骨架怎麼顯示：hidden／ghost／full', null),
   }
 }
 

@@ -43,6 +43,18 @@ export interface PanelConfig {
    * 由主行程直接填。
    */
   hostLocale: string
+  /**
+   * 骨架與它的顯示方式——**`null` ＝ 使用者沒選過，保留現況**。
+   *
+   * 🔴 2026-09-01 加的。在此之前它們**沒有家**（存檔服務刻意不存），
+   * 於是每個新開的面板都從預設開始——而使用者看到的是
+   * 「工具箱是 Arduino，狀態列說 C++ 標準骨架」。
+   *
+   * ⚠️ 與上面幾格不同，這兩格**不補預設值**：補了的話，一份沒設定過的
+   * workspace 會在開面板的瞬間把使用者剛選的骨架蓋回去。
+   */
+  skeletonId: string | null
+  scaffoldMode: string | null
 }
 
 /**
@@ -74,6 +86,9 @@ export const DEFAULT_CONFIG: PanelConfig = {
   locale: 'follow-host',
   // ⚠️ 空字串 ＝ 這個宿主沒說（網頁版就是這樣）。
   hostLocale: '',
+  // ⚠️ **沒有預設**——`null` ＝ 使用者沒選過，下游保留現況（見 `PanelConfig`）。
+  skeletonId: null,
+  scaffoldMode: null,
 }
 
 /**
@@ -97,6 +112,8 @@ export interface RawSettings {
   style?: LayeredValue<string>
   blockStyle?: LayeredValue<string>
   locale?: LayeredValue<string>
+  skeleton?: LayeredValue<string>
+  scaffold?: LayeredValue<string>
 }
 
 /**
@@ -148,5 +165,8 @@ export function resolveConfig(raw: RawSettings, documentPath?: string, hostLocal
     blockStyleId: pick(raw.blockStyle, DEFAULT_CONFIG.blockStyleId),
     locale: pick(raw.locale, DEFAULT_CONFIG.locale),
     hostLocale: hostLocale ?? DEFAULT_CONFIG.hostLocale,
+    // ⚠️ 這兩格沒有預設值——`null` ＝「使用者沒選過」，下游保留現況。
+    skeletonId: pick(raw.skeleton, null),
+    scaffoldMode: pick(raw.scaffold, null),
   }
 }

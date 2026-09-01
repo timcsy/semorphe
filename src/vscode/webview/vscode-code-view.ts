@@ -217,6 +217,16 @@ export class VscodeCodeView implements CodeView, ViewHost {
 
   private consoleCb: ((line: string) => void) | null = null
 
+  /**
+   * 偏好交給宿主的設定系統（workspace settings）。
+   *
+   * 🔴 主行程那側**早就接得住** `configChanged`——而在此之前
+   * **從來沒有人送過它**。一條接好而沒有人走的路。
+   */
+  persistPreference(key: string, value: string): void {
+    postToHost({ type: 'configChanged', key, value })
+  }
+
   reportControls(states: readonly ControlState[]): void {
     // 🔴 每次送整份——⚠️ 值域也一起，主行程不認得任何一個登錄表。
     postToHost({ type: 'controls', items: states as never })

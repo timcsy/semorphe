@@ -196,6 +196,40 @@ console.log(`\n控制項 → 宿主：${controls
   ? `${controlIds.length} 顆（${controlIds.join(', ')}）｜值域${值域齊全 ? '齊全 🟢' : '有空的 🔴 宿主會開出一個空選單'}`
   : '🔴 一顆都沒送——面板不畫、宿主也不知道'}`)
 
+// ── ⑤′ 送過去的每一格組態，都要真的被吃下去 ──────────────────────
+//
+// 🔴 2026-09-01。使用者：「**為何出現的是 Arduino 的？跟下面寫的不一樣啊**」
+//    ——三個面板的工具箱是 Arduino，而狀態列寫著「C++ 標準骨架・完整」。
+//
+//    根因不只一個，而最深的那個是：**骨架／鷹架／風格／積木風格沒有家**。
+//    這個宿主的存檔服務刻意什麼都不存（檔案才是真相），而那幾格不在設定裡
+//    ——於是每個新開的面板都從預設開始。
+//
+//    ⚠️ 而 `styleId`／`blockStyleId` **本來就送過來了**，只是沒有人接。
+//
+// > **一份組態如果送了七格而只消費三格，那四格不會出錯——
+// > 它們會安靜地不生效，而設定看起來有在運作。**
+//
+// 判準：設定給什麼，狀態列上那顆就要說什麼。
+const cfgPage = await browser.newPage({ viewport: { width: 900, height: 620 } })
+await cfgPage.goto(`http://localhost:${PORT}/preview.html`, { waitUntil: 'networkidle' })
+await cfgPage.waitForFunction(() => typeof window.__setConfig__ === 'function')
+await cfgPage.evaluate(() => window.__setConfig__({
+  targetId: 'arduino', skeletonId: 'arduino', scaffoldMode: 'ghost', blockStyleId: 'default',
+}))
+await cfgPage.waitForTimeout(6000)
+const applied = await cfgPage.evaluate(() => {
+  const last = [...(window.__HOST__?.sent ?? [])].reverse().find((m) => m.type === 'controls')
+  const of = (id) => (last?.items ?? []).find((c) => c.id === id)?.label ?? '(沒送)'
+  return { target: of('target'), scaffold: of('scaffold') }
+})
+const wantsArduino = /Arduino/i.test(applied.target)
+// ⚠️ 骨架那一顆的標籤是「<骨架>・<顯示>」——兩格都要對得上
+const wantsGhost = /Arduino/.test(applied.scaffold) && /淡|ghost/i.test(applied.scaffold)
+console.log(`\n組態 → 面板：目標「${applied.target}」${wantsArduino ? '🟢' : '🔴 沒吃下去'}` +
+  `｜骨架「${applied.scaffold}」${wantsGhost ? '🟢' : '🔴 沒吃下去'}`)
+await cfgPage.close()
+
 // ── ⑤ 每一種視窗只畫它那一層，而版面交給 IDE ─────────────────────
 //
 // 🔴 2026-09-01。這一段的第一版問的是「這個宿主畫得出幾格、每條縫拖不拖得動」

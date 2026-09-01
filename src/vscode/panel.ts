@@ -37,6 +37,7 @@ import { resolveConfig, type RawSettings } from './sync/settings'
 import { textFingerprint } from './sync/fingerprint'
 import { applySpan } from '../core/projection/rewrite-span'
 import { ViewStateStore, type KeyValueStore, type ViewState } from './sync/view-state'
+import { DocPrefStore, DOC_PREF_KEYS, type PrefStore, type DocPrefs } from './sync/doc-prefs'
 import type { HostMessage, WebviewMessage, ControlStateWire, CodeDiagnosticWire } from './sync/messages'
 
 /**
@@ -185,6 +186,8 @@ class SemorpheSession {
   /** 🔴 選取的防迴圈：值相等就不再傳播（選取是冪等的）。 */
   private lastSentLine = -1
   private readonly viewStates: ViewStateStore
+  /** 這份文件上使用者選過什麼——⚠️ **所有面板共用一份**（宿主的 workspaceState）。 */
+  private readonly docPrefs: DocPrefStore
   /** ⚠️ 上一份文件的 uri——存檔那一刻要靠它做身分搬遷。 */
   private lastUri: string | undefined
 
@@ -197,6 +200,7 @@ class SemorpheSession {
     this.kind = kind
     this.extensionUri = extensionUri
     this.viewStates = new ViewStateStore(mementoStore(memento))
+    this.docPrefs = new DocPrefStore(prefStore(memento))
     this.panel.webview.html = this.html()
 
     this.panel.webview.onDidReceiveMessage(
@@ -313,6 +317,9 @@ class SemorpheSession {
    */
   private sendConfig(): void {
     const doc = this.doc
+    // ⚠️ 使用者在這份文件上選過的，**壓在設定檔之上**——他剛剛按的那一下
+    //    比一份放在那裡的預設更明確。
+    const prefs = doc ? this.docPrefs.get(doc.uri.toString()) : {}
     const scope = doc ? { uri: doc.uri, languageId: doc.languageId } : undefined
     const c = vscode.workspace.getConfiguration('semorphe', scope)
     const layered = <T>(key: string): { language?: T; workspace?: T; user?: T } => {
@@ -326,12 +333,28 @@ class SemorpheSession {
     const raw: RawSettings = {
       target: layered<string>('target'),
       topic: layered<string>('topic'),
+      skeleton: layered<string>('skeleton'),
+      scaffold: layered<string>('scaffold'),
       style: layered<string>('style'),
       blockStyle: layered<string>('blockStyle'),
       locale: layered<string>('locale'),
     }
     // 🔴 傳檔名進去——`.ino` 的預設目標是 Arduino，不是 C++（見 `settings.ts`）。
-    this.send({ type: 'config', config: resolveConfig(raw, doc?.uri.path, vscode.env.language) })
+    const resolved = resolveConfig(raw, doc?.uri.path, vscode.env.language)
+    // 🔴 **這份文件上選過的壓在最上面**——見 `configChanged` 那一段。
+    //    ⚠️ 用 `??` 而不是展開：`prefs` 的每一格都是選填，展開會把
+    //       `undefined` 蓋掉解析好的值。
+    this.send({
+      type: 'config',
+      config: {
+        ...resolved,
+        targetId: prefs.targetId ?? resolved.targetId,
+        topicId: prefs.topicId ?? resolved.topicId,
+        styleId: prefs.styleId ?? resolved.styleId,
+        skeletonId: prefs.skeletonId ?? resolved.skeletonId,
+        scaffoldMode: prefs.scaffoldMode ?? resolved.scaffoldMode,
+      },
+    })
   }
 
   /**
@@ -436,7 +459,12 @@ class SemorpheSession {
     // > **「重送目前的狀態」與「重新決定狀態是什麼」是兩件事
     // > ——而後者在焦點不在編輯器上時，答案是錯的。**
     if (m.type === 'syncPhase') { updateSyncStatusBar(m.phase, m.source, m.detail); return }
-    if (m.type === 'controls') { updateControlSurfaces(m.items); return }
+    if (m.type === 'controls') {
+      // 🔴 **記在自己名下**，而不是覆蓋一份全域的——見 `statesBySession`。
+      statesBySession.set(this.kind, m.items)
+      if (active === this) updateControlSurfaces(m.items)
+      return
+    }
     if (m.type === 'problems') { this.publishDiagnostics(m.items); return }
     // 🪦 `console` 與 `variables` 這兩則**不再有宿主端的消費者**（2026-09-01）。
     //
@@ -483,8 +511,25 @@ class SemorpheSession {
       return
     }
     if (m.type === 'configChanged') {
-      // 🔴 寫 **workspace** 層級——使用者拍板「面板內的選單直接改 workspace 設定」。
-      // ⚠️ 而 UI 上要看得出「這會影響整個專案」（Webview 那側的責任）。
+      // 🔴 **寫回的範圍不得大於它描述的東西**（2026-09-01）。
+      //
+      //    使用者開一份 C++ 的暫存檔，而狀態列寫著「Arduino（不指定板子）」
+      //    ——「**C++ 一開始要預設 C++ 吧**」。而那是前一刀弄壞的：
+      //    每顆 picker 選完就寫 **workspace 設定**，於是一次「我這個檔要用
+      //    Arduino」變成了整個專案的設定，把「依副檔名自動判斷」蓋掉。
+      //
+      // > **一份偏好寫回去的範圍，不得大於它描述的東西
+      // > ——把「這個檔」寫成「這個專案」，它就會去回答它沒被問到的問題。**
+      //
+      //    目標／骨架／鷹架／風格／課程 **描述這份文件** → 進 per-uri 的
+      //    偏好儲存體（宿主的 workspaceState，所有面板共用）。
+      //    積木外觀／語系 **描述這個人** → 才進設定檔。
+      const field = DOC_PREF_KEYS[m.key]
+      if (field && this.doc) {
+        this.docPrefs.merge(this.doc.uri.toString(), { [field]: m.value })
+        return
+      }
+      if (field) return   // 還沒綁文件 ⟹ 沒有地方記，而**寫成全域是錯的**
       await vscode.workspace.getConfiguration('semorphe')
         .update(m.key, m.value, vscode.ConfigurationTarget.Workspace)
       return
@@ -737,7 +782,8 @@ class SemorpheSession {
     ed?.setDecorations(EXECUTING, [])
     for (const d of this.disposables) d.dispose()
     sessions.delete(this.kind)
-    if (active === this) active = [...sessions.values()][0]
+    statesBySession.delete(this.kind)
+    if (active === this) { active = [...sessions.values()][0]; renderActiveControls() }
     // 🔴 **全域 chrome 只在【最後一個】面板關掉時收**（2026-09-01）。
     //
     //    ⚠️ 舊碼在任何一個面板關掉時就收——單例時代那是對的，
@@ -816,6 +862,33 @@ function updateSyncStatusBar(phase: 'live' | 'paused' | 'diverged', source: stri
 const controlItems = new Map<string, vscode.StatusBarItem>()
 let controlStates: ControlStateWire[] = []
 
+/**
+ * **每個面板各自的那一份**——狀態列畫的是「你正在看的那個」。
+ *
+ * 🔴 2026-09-01 實測。使用者：「**為何出現的是 Arduino 的？跟下面寫的不一樣啊**」
+ * ——三個面板的工具箱都是 Arduino，而狀態列寫著「C++ 標準骨架・完整」。
+ *
+ * 舊碼是一個全域的 `controlStates`，而**任何一個面板送來就覆蓋它**：
+ *
+ * ```
+ * 積木面板 開機 → 送預設（C++）→ 收到組態 → 送 Arduino
+ * 流程面板 開機 → 送預設（C++）→ 收到組態 → 送 Arduino
+ * 主控台   開機 → 送預設（C++）← 這一則【最後到】，於是狀態列停在它身上
+ * ```
+ *
+ * > **一個「最後說話的人贏」的全域狀態，在只有一個說話者的時候看起來像
+ * > 「唯一真相」——多一個說話者，它就變成一場競賽。**
+ *
+ * 🟢 處置：一個面板一份，而狀態列問 `active`。切面板時重畫。
+ */
+const statesBySession = new Map<VscodeViewKind, ControlStateWire[]>()
+
+/** 重畫狀態列——畫的是**目前看著的那個面板**的那一份。 */
+function renderActiveControls(): void {
+  const items = active ? statesBySession.get(active.kind) : undefined
+  if (items) updateControlSurfaces(items)
+}
+
 function updateControlSurfaces(items: ControlStateWire[]): void {
   controlStates = items
   const seen = new Set<string>()
@@ -848,6 +921,33 @@ function hideControlSurfaces(): void {
  *
  * ⚠️ 沒有面板時要**說得出來**，不得靜默——與 `openSyncMenu` 同一條。
  */
+/**
+ * 一顆 **picker** 選好之後，要送給誰。
+ *
+ * 🔴 **每一個面板**（2026-09-01）。使用者：「**為何出現的是 Arduino 的？
+ * 跟下面寫的不一樣啊**」——三個面板的工具箱是 Arduino，而狀態列寫著 C++。
+ *
+ * picker 那一排說的全部是**這份文件與這個人的偏好**：目標板子、骨架、風格、
+ * 積木風格、語系、課程、範例、版面。**它們不屬於某一個面板**。
+ *
+ * ⚠️ 而舊碼只送給 `active`——單例時代那沒有差別，多面板時它變成
+ * 「選一次只套到一個」，而另外兩個**繼續用舊的畫**、繼續公佈舊的狀態。
+ *
+ * > **一個設定如果描述的是【文件】，那它就不能只送給【其中一個看它的人】。**
+ *
+ * 🔴 而 **action 不能廣播**（`invokeControl` 那一支）：還原／重做／清空／執行
+ * 作用在語義樹上，廣播出去就是做三次。
+ *
+ * > **問「這件事屬於誰」——屬於文件的廣播，屬於這一次操作的只給發話的那個。**
+ */
+function broadcastControl(id: string, value?: string, values?: string[]): void {
+  for (const s of sessions.values()) {
+    s.sendControl(values
+      ? { type: 'controlInvoke', id, values }
+      : { type: 'controlInvoke', id, value })
+  }
+}
+
 export async function pickControl(id: string): Promise<void> {
   if (!active) {
     OUTPUT.appendLine(`Semorphe 控制項「${id}」：面板還沒打開`)
@@ -879,11 +979,8 @@ export async function pickControl(id: string): Promise<void> {
     }
     const picked = await vscode.window.showQuickPick<Item>(items, { title: state.title, canPickMany: true })
     if (!picked) return
-    active.sendControl({
-      type: 'controlInvoke', id,
-      // ⚠️ 分隔列沒有值——濾掉，而不是送出 `undefined`。
-      values: picked.map((p) => p.value).filter((v): v is string => v !== undefined),
-    })
+    // ⚠️ 分隔列沒有值——濾掉，而不是送出 `undefined`。
+    broadcastControl(id, undefined, picked.map((p) => p.value).filter((v): v is string => v !== undefined))
     return
   }
   // 🔴 **分組要畫出來**（2026-09-01）。使用者：「沒有辦法區分骨架和顯示，
@@ -929,7 +1026,7 @@ export async function pickControl(id: string): Promise<void> {
   // > **一個控制項的【名字】與它的【執行者】可以住在不同的地方
   // > ——而讓它們住在同一個地方，就是把宿主的知識搬進核心。**
   if (id === 'layout') { await applyEditorLayout(choice.value); return }
-  active.sendControl({ type: 'controlInvoke', id, value: choice.value })
+  broadcastControl(id, choice.value)
 }
 
 /**
@@ -1017,9 +1114,7 @@ async function applyEditorLayout(presetId: string): Promise<void> {
   //
   // ⚠️ 送給**每一個**面板，不只 `active`：狀態列由目前看的那個面板餵，
   //    只更新一個的話，切過去就會看到舊名字。
-  for (const s of sessions.values()) {
-    s.sendControl({ type: 'controlInvoke', id: 'layout', value: presetId })
-  }
+  broadcastControl('layout', presetId)
 }
 
 /** 標題列按了一個動作（含執行模式）。 */
@@ -1136,7 +1231,12 @@ export function openPanel(context: vscode.ExtensionContext, kind: VscodeViewKind
   active = session
   // 🔴 **「目前是哪一個」由【看】決定，不由【開】決定**——狀態列上那顆
   //    「骨架」按下去，使用者心裡想的是他正在看的那個面板。
-  panel.onDidChangeViewState(() => { if (panel.active) active = session }, null, context.subscriptions)
+  panel.onDidChangeViewState(() => {
+    if (!panel.active) return
+    active = session
+    // ⚠️ 切過去就要重畫——否則狀態列還在說上一個面板的事。
+    renderActiveControls()
+  }, null, context.subscriptions)
   panel.onDidDispose(() => session.dispose(), null, context.subscriptions)
 }
 
@@ -1164,6 +1264,15 @@ export function openBlocksPanel(context: vscode.ExtensionContext): void {
 function mementoStore(memento: vscode.Memento): KeyValueStore {
   return {
     get: (k) => memento.get<ViewState>(k),
+    set: (k, v) => void memento.update(k, v),
+    keys: () => memento.keys(),
+  }
+}
+
+/** 同上，給 per-document 的偏好用（`DocPrefStore` 一樣不認識 `vscode`）。 */
+function prefStore(memento: vscode.Memento): PrefStore {
+  return {
+    get: (k) => memento.get<DocPrefs>(k),
     set: (k, v) => void memento.update(k, v),
     keys: () => memento.keys(),
   }

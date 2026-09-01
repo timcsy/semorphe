@@ -1494,12 +1494,18 @@ export class App {
    *
    * ⚠️ 認不得的 ID **回退到現況**，不崩潰也不留空白（與 `restoreState` 同一條規矩）。
    */
-  applyHostConfig(cfg: { targetId?: string; locale?: string; hostLocale?: string }): void {
+  applyHostConfig(cfg: {
+    targetId?: string; locale?: string; hostLocale?: string
+    styleId?: string | null; blockStyleId?: string
+    skeletonId?: string | null; scaffoldMode?: string | null
+  }): void {
     // 🔴 語系先處理——⚠️ 它與目標**互不相干**，而早期的版本因為
     //    `if (!cfg.targetId) return` 寫在最前面，讓它整段被跳過。
     if (cfg.hostLocale) this.hostLocale = cfg.hostLocale
     if (cfg.locale && cfg.locale !== this.localePreference) void this.applyLocalePreference(cfg.locale)
-    if (!cfg.targetId) return
+    // 🔴 **其餘偏好在【目標之後】套**——見 `applyPreferences` 的說明。
+    const rest = (): void => this.applyPreferences(cfg)
+    if (!cfg.targetId) { rest(); return }
     const target = this.targetRegistry.get(cfg.targetId)
     // 🔴 **認不得就要出聲**——回退到現況是對的，而**靜靜地回退不是**。
     //
@@ -1516,10 +1522,11 @@ export class App {
       diagNote(`🔴 宿主給的目標認不得：「${cfg.targetId}」——已回退到現況「${this.currentTarget.id}」。` +
         `登錄的目標：${this.targetRegistry.all().map((t) => t.id).join('、')}`)
     }
-    if (!target || target.id === this.currentTarget.id) return
+    if (!target || target.id === this.currentTarget.id) { rest(); return }
     const topic = this.topicRegistry.get(target.topic)
     if (!topic) {
       diagNote(`🔴 目標「${target.id}」指向的課程清單「${target.topic}」不存在——已回退到現況。`)
+      rest()
       return
     }
     // 🔴 **不得由此寫回文件。** `handleTargetChange` 在正常路徑上會
@@ -1536,6 +1543,49 @@ export class App {
       this.handleTargetChange(target, topic, new Set([topic.levelTree.id]))
     } finally {
       this._restoringState = false
+    }
+    rest()
+  }
+
+  /**
+   * 風格／積木風格／骨架／鷹架——**目標套完之後才輪到它們**。
+   *
+   * 🔴 順序是量出來的（2026-09-01 預檢）：第一版把它們放在 `targetId` 那段
+   * **之前**，理由是「它們與目標互不相干」。而預檢當場打臉——設定給
+   * `scaffoldMode: 'ghost'`，面板出來仍然是 `hidden`。
+   *
+   * ⚠️ 因為**換目標會重設骨架與鷹架**（新目標有自己的骨架）。放在前面就是
+   * 「先設好，再被覆蓋」。
+   *
+   * > **兩件事「互不相干」不代表它們的順序無所謂
+   * > ——只要其中一件會【重設】另一件的狀態，順序就是它們的關係。**
+   *
+   * ⚠️ `styleId`／`blockStyleId` **本來就送過來了**（`resolveConfig` 一直有
+   * 這兩格），而在此之前從來沒有人讀它們——一條接好而沒有人走的路。
+   *
+   * > **一份組態如果送了七格而只消費三格，那四格不會出錯
+   * > ——它們會安靜地不生效，而設定看起來有在運作。**
+   */
+  private applyPreferences(cfg: {
+    styleId?: string | null; blockStyleId?: string
+    skeletonId?: string | null; scaffoldMode?: string | null
+  }): void {
+    if (cfg.styleId) {
+      const style = STYLE_PRESETS.find((p) => p.id === cfg.styleId)
+      if (style && style.id !== this.currentStylePreset.id) this.controlCallbacks?.onStyleChange(style)
+    }
+    if (cfg.blockStyleId && cfg.blockStyleId !== this.currentBlockStyleId) {
+      const preset = BlockStyleSelector.byId(cfg.blockStyleId)
+      if (preset) this.controlCallbacks?.onBlockStyleChange(preset, {})
+    }
+    // ⚠️ 骨架先於鷹架：換骨架會清空並重蓋，而鷹架是蓋在它上面的那一層。
+    if (cfg.skeletonId && cfg.skeletonId !== this.currentSkeletonId) {
+      void this.setSkeleton(cfg.skeletonId)
+    }
+    // ⚠️ 比對的是**深度**——`scaffoldDepth` 才是狀態，模式只是它的名字。
+    if (cfg.scaffoldMode
+      && scaffoldDepthOf(cfg.scaffoldMode as ScaffoldMode) !== this.scaffoldDepth) {
+      this.setScaffoldMode(cfg.scaffoldMode as ScaffoldMode)
     }
   }
 
@@ -1975,6 +2025,17 @@ export class App {
     {
       const cb = this.controlCallbacks
       if (!cb) return
+      /**
+       * 🔴 **偏好要交給宿主保存**（2026-09-01）——見 `CodeView.persistPreference`。
+       *
+       * ⚠️ 只有 **picker** 走這裡：它們說的是「這份文件與這個人的偏好」。
+       *    action（還原／重做／清空／執行）是**一次操作**，不是一份設定。
+       *
+       * 🟢 網頁版沒有實作這個方法，於是這一行什麼都不做——它的偏好走存檔。
+       */
+      const persist = (key: string, value: string | undefined): void => {
+        if (value !== undefined) this.codeView?.persistPreference?.(key, value)
+      }
       switch (invoke.id) {
         case 'target': {
           // 🔴 **換目標就退出課程**——課的清單是跟著目標走的
@@ -1986,6 +2047,7 @@ export class App {
           const topic = target ? this.topicRegistry.get(target.topic) : null
           if (!target || !topic) return
           cb.onTargetChange(target, topic, new Set(flattenLevelTree(topic.levelTree).map((n) => n.id)))
+          persist('target', invoke.value)
           break
         }
         case 'scaffold': {
@@ -2001,8 +2063,8 @@ export class App {
           // > **兩個手寫的長度並排時，錯的那個看起來與對的那個一樣正常。**
           const v = invoke.value ?? ''
           const SKELETON = 'skeleton:', MODE = 'mode:'
-          if (v.startsWith(SKELETON)) this.setSkeleton(v.slice(SKELETON.length))
-          else if (v.startsWith(MODE)) this.setScaffoldMode(v.slice(MODE.length) as ScaffoldMode)
+          if (v.startsWith(SKELETON)) { this.setSkeleton(v.slice(SKELETON.length)); persist('skeleton', v.slice(SKELETON.length)) }
+          else if (v.startsWith(MODE)) { this.setScaffoldMode(v.slice(MODE.length) as ScaffoldMode); persist('scaffold', v.slice(MODE.length)) }
           break
         }
         case 'template': {
@@ -2011,6 +2073,7 @@ export class App {
         }
         case 'track': {
           this.selectTrack(invoke.value ?? '')
+          persist('topic', invoke.value)
           break
         }
         case 'lesson': {
@@ -2019,17 +2082,17 @@ export class App {
         }
         case 'style': {
           const style = STYLE_PRESETS.find((p) => p.id === invoke.value)
-          if (style) cb.onStyleChange(style)
+          if (style) { cb.onStyleChange(style); persist('style', invoke.value) }
           break
         }
         case 'blockStyle': {
           const preset = BlockStyleSelector.byId(invoke.value ?? '')
-          if (preset) cb.onBlockStyleChange(preset, {})
+          if (preset) { cb.onBlockStyleChange(preset, {}); persist('blockStyle', invoke.value) }
           break
         }
         case 'locale':
           // ⚠️ 與其餘四顆同形——都走 `controlCallbacks`，沒有第二條路。
-          if (invoke.value) void cb.onLocaleChange(invoke.value)
+          if (invoke.value) { void cb.onLocaleChange(invoke.value); persist('locale', invoke.value) }
           break
         case 'run':
           this.executionController?.runFromHost(invoke.value)
