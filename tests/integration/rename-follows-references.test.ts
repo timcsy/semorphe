@@ -17,7 +17,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import {
-  renameReferences, scopeOf, isRenamingADefinition, isVariableReference,
+  renameReferences, scopeOf, isRenamingADefinition, isVariableReference, detectRename,
 } from '../../src/core/rename-variable'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
@@ -100,5 +100,56 @@ describe('改名跟得上參照', () => {
   it('沒有人用那個變數時，改 0 顆——而那不是失敗', () => {
     const tree = lift('int main() {\n  int unused = 1;\n  return 0;\n}')
     expect(renameReferences(tree, 'unused', 'x')).toBe(0)
+  })
+})
+
+/**
+ * 🔴 積木那一側：整棵樹重抽，所以「舊名字是什麼」只有比對前後才知道。
+ *
+ * > 同一個缺陷在兩個視圖上，可能需要兩種修法
+ * > ——而讓它們看起來一樣的，是症狀，不是原因。
+ */
+describe('比對前後兩棵樹，認出這是不是一次改名', () => {
+  const clone = (t: SemanticNode): SemanticNode => structuredClone(t)
+
+  it('🔴 只有宣告的名字變了 ⟹ 認出是改名', () => {
+    const before = lift(SRC)
+    const after = clone(before)
+    const decl = find(after, (x) => x.properties?.name === 'n' && !isVariableReference(x.componentId))
+    ;(decl!.properties as Record<string, unknown>).name = 'total'
+
+    const r = detectRename(before, after)
+    expect(r, '沒認出來').not.toBeNull()
+    expect(r!.oldName).toBe('n')
+    expect(r!.newName).toBe('total')
+  })
+
+  it('🔴 兩格同時變了就【不猜】——猜錯的代價是改掉別人的變數', () => {
+    const before = lift(SRC)
+    const after = clone(before)
+    const decl = find(after, (x) => x.properties?.name === 'n' && !isVariableReference(x.componentId))
+    ;(decl!.properties as Record<string, unknown>).name = 'total'
+    const ref = find(after, (x) => isVariableReference(x.componentId))
+    ;(ref!.properties as Record<string, unknown>).name = 'whatever'
+    expect(detectRename(before, after)).toBeNull()
+  })
+
+  it('⚠️ 形狀變了（有人增刪節點）也不猜', () => {
+    const before = lift(SRC)
+    const after = lift('int main() {\n  int n = 5;\n  return 0;\n}')
+    expect(detectRename(before, after)).toBeNull()
+  })
+
+  it('⚠️ 什麼都沒變 ⟹ 不是改名', () => {
+    const before = lift(SRC)
+    expect(detectRename(before, clone(before))).toBeNull()
+  })
+
+  it('🔴 改一個【參照】的名字不算改名——那是換一個指向', () => {
+    const before = lift(SRC)
+    const after = clone(before)
+    const ref = find(after, (x) => isVariableReference(x.componentId))
+    ;(ref!.properties as Record<string, unknown>).name = 'other'
+    expect(detectRename(before, after)).toBeNull()
   })
 })

@@ -112,3 +112,62 @@ export function renameReferences(
 export function isRenamingADefinition(componentId: string, key: string): boolean {
   return isIdentifierProperty(componentId, key) && !isVariableReference(componentId)
 }
+
+/**
+ * 比對前後兩棵樹，認出**這是不是一次改名**。
+ *
+ * ## 🔴 為什麼積木那一側需要它
+ *
+ * ```
+ * 流程   就地改一個屬性        ⟹ 改的當下就知道「舊名字是什麼」
+ * 積木   整棵樹從工作區重抽    ⟹ 只拿得到「新的那一棵」
+ * ```
+ *
+ * > **同一個缺陷在兩個視圖上，可能需要兩種修法
+ * > ——而讓它們看起來一樣的，是症狀，不是原因。**
+ *
+ * ## 判準：形狀相同，而**恰好一格** identifier 不同
+ *
+ * 🔴 **多於一格就不猜**。兩個屬性同時變了可能是「改名 ＋ 改別的」，
+ * 也可能是「換掉了兩個不相干的東西」——而猜錯的代價是**把別人的變數改掉**。
+ *
+ * > **一個靠差分推測意圖的機制，在證據不只一種解釋時，
+ * > 應該什麼都不做——而不是挑一個看起來對的。**
+ *
+ * ⚠️ 形狀不同（有人增刪了節點）也一律回 `null`：那不是一次單純的改名。
+ */
+export function detectRename(
+  before: SemanticNode, after: SemanticNode,
+): { node: SemanticNode; oldName: string; newName: string } | null {
+  const hits: { node: SemanticNode; oldName: string; newName: string }[] = []
+  let shapeDiffers = false
+
+  const pair = (a: SemanticNode, b: SemanticNode): void => {
+    if (shapeDiffers) return
+    if (a.componentId !== b.componentId) { shapeDiffers = true; return }
+    const ap = a.properties as Record<string, unknown>
+    const bp = b.properties as Record<string, unknown>
+    for (const key of new Set([...Object.keys(ap), ...Object.keys(bp)])) {
+      if (ap[key] === bp[key]) continue
+      // ⚠️ 只有 identifier 屬性算——改一個數字或一段文字不是改名。
+      if (!isIdentifierProperty(a.componentId, key)) continue
+      hits.push({ node: b, oldName: String(ap[key] ?? ''), newName: String(bp[key] ?? '') })
+    }
+    const keys = new Set([...Object.keys(a.children ?? {}), ...Object.keys(b.children ?? {})])
+    for (const k of keys) {
+      const ac = (a.children?.[k] ?? []) as SemanticNode[]
+      const bc = (b.children?.[k] ?? []) as SemanticNode[]
+      if (ac.length !== bc.length) { shapeDiffers = true; return }
+      for (let i = 0; i < ac.length; i++) if (ac[i] && bc[i]) pair(ac[i], bc[i])
+    }
+  }
+  pair(before, after)
+
+  if (shapeDiffers || hits.length !== 1) return null
+  const hit = hits[0]
+  if (hit.oldName === '' || hit.newName === '') return null
+  // 🔴 改一個**參照**的名字不是改名——那是換一個指向。
+  if (!isRenamingADefinition(hit.node.componentId, 'name')
+    && !isRenamingADefinition(hit.node.componentId, 'NAME')) return null
+  return hit
+}

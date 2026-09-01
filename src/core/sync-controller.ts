@@ -61,6 +61,7 @@ import { skeletonById, skeletonPresent } from './skeleton'
 import { scaffoldNodeIds } from './scaffold-nodes'
 import type { SemanticUpdateEvent } from './view-host'
 import { scaffoldModeOfDepth } from './lesson'
+import { detectRename, renameReferences, scopeOf } from './rename-variable'
 
 /** Scaffold node filter type — strips scaffold nodes for L0 display */
 export type ScaffoldNodeFilter = (tree: SemanticNode) => SemanticNode
@@ -384,6 +385,19 @@ export class SyncController {
       // ⚠️ 這裡原本寫「見 `降級前的身分` 的檔頭」，**而那個檔從來不存在**
       // （2026-08-18 補上；機制早就在跑，缺的是那份被指名的文件）。
       this.restoreDowngrade(tree)
+      // 🔴 **積木那一側的改名**（2026-09-02）——它不是就地改屬性，
+      //    而是整棵樹重抽，所以「舊名字是什麼」只有**比對前後**才知道。
+      //
+      //    ⚠️ 流程那一側自己就改好了（它改的當下知道舊名字），而那時
+      //    前後樹會差**好幾格**，`detectRename` 就會保守地回 `null`
+      //    ——兩條路不會互相重複做。
+      //
+      // > **一個靠差分推測意圖的機制，在證據不只一種解釋時，
+      // > 應該什麼都不做——而不是挑一個看起來對的。**
+      if (this.currentTree) {
+        const r = detectRename(this.currentTree, tree)
+        if (r) renameReferences(scopeOf(tree, r.node), r.oldName, r.newName)
+      }
       this.currentTree = tree
       const gen = generateCodeWithMapping(tree, this.language, this.style)
       // 🔴 **樹→程式碼這條路也要補相依**（2026-08-30）。
