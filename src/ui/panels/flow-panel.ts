@@ -35,6 +35,7 @@
  * > 使用者定的形式：「一開始就手拖 ＋ 記住，也可以**一鍵**自動排版」
  * > ——所以自動排版是一個**動作**，不是一個模式。
  */
+import { isRenamingADefinition, renameReferences, scopeOf } from '../../core/rename-variable'
 import { createPanelHead } from '../layout/cell-head'
 import type { ViewHost, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, EditableSource } from '../../core/view-host'
 import type { SemanticNode } from '../../core/types'
@@ -831,7 +832,22 @@ export class FlowPanel implements ViewHost {
     if (!this.tree) return
     const target = this.findNode(this.tree, nodeId)
     if (!target) return
+    const before = String((target.properties as Record<string, unknown>)[key] ?? '')
     ;(target.properties as Record<string, unknown>)[key] = rawValue
+    // 🔴 **改一個宣告的名字，參照要跟著改**（2026-09-02）。
+    //
+    //    2026-09-01 錄示範時撞到：把 `int n = 5;` 改名成 `total`，而
+    //    `for (int i = 0; i < n; i++)` 裡的 `n` 留在原地——**按執行才炸**。
+    //    ⚠️ 語義樹與三個投影當下都覺得自己是對的。
+    //
+    // > **改名是一次【重構】，而 `properties[key] = value` 只是設一個屬性
+    // > ——兩者在畫面上看起來一樣，直到你去跑它。**
+    //
+    // ⚠️ 判準來自宣告（`kind: 'identifier'` ＋ `variableRef`），
+    //    而作用域是「最近的那顆函式」——**近似的邊界寫在 `rename-variable.ts`**。
+    if (isRenamingADefinition(target.componentId, key)) {
+      renameReferences(scopeOf(this.tree, target), before, rawValue)
+    }
     this.rebuild()
     this.editCb?.(this.tree)
   }
