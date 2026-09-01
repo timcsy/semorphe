@@ -657,5 +657,7 @@
   "FLOW_MENU_DELETE": "Delete this block",
   "FLOW_MENU_DELETE_WIRE": "Remove this end",
   "SLOT_PICK": "Show in this cell",
-  "CURRENT": "current"
+  "CURRENT": "current",
+  "LAYOUT_SIDE_BY_SIDE": "Side by side",
+  "LAYOUT_STACKED": "Stacked"
 }

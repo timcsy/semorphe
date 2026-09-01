@@ -51,6 +51,57 @@ function gapOf(el: HTMLElement, axis: Axis): number {
 }
 
 /**
+ * 這條**位置**在 `at` 的縫，分開的是哪兩條軌道？
+ *
+ * ## 🔴 為什麼不能用「這是第幾條縫」
+ *
+ * 2026-09-01，使用者在 VSCode 裡回報「**這拉不動**」——而網頁版好好的。
+ *
+ * 差別是：VSCode 沒有程式碼欄與主控台（它們在 IDE 自己那裡），
+ * 於是那兩條軌道是 **0px**。而 0px 軌道**兩側都有 gap**，所以：
+ *
+ * ```
+ * 軌道   0px    1fr(流程)   1fr(積木)      ← 三欄，在 VSCode
+ * 縫    │  │  │           │           │
+ *       └──┴──┴─ 這一條在容器左緣後面 4px，被當成「第 0 條縫」
+ *                          └─ 使用者真正抓的那一條，是「第 1 條縫」
+ * ```
+ *
+ * 舊寫法拿序號去查「第 n 條有內容的軌道」：第 0 條縫→拖 1↔2（**對的那一對，
+ * 而把手在錯的地方**）；第 1 條縫→查到 2 與「沒有下一條」→ **直接 return**。
+ *
+ * ⚠️ 於是畫面上唯一看得見的那條線 **hover 會變藍、按下去什麼都不做**。
+ *
+ * > **一個「第幾個」的索引，只在【被數的東西與被指的東西一一對應時】才成立
+ * > ——而一條寬度為零的軌道，會在縫的那一側多出一條縫。**
+ *
+ * 🟢 位置沒有這個問題：把每條軌道的起點算出來，`at` 落在誰的起點上，
+ * 那條縫就在它前面。
+ *
+ * @param sizes 每條軌道的 px 寬（可能有 0）
+ * @param gap   軌道之間的縫寬
+ * @param at    這條縫右／下那一格的起點，相對於容器
+ * @returns `[前一條, 後一條]` 的軌道索引；找不到可拖的一對就回 `null`
+ */
+export function boundaryAt(sizes: number[], gap: number, at: number): [number, number] | null {
+  let offset = 0
+  for (let i = 0; i < sizes.length; i++) {
+    // 容差 1px：`getBoundingClientRect` 給的是小數，而我們比對的是四捨五入過的值。
+    if (Math.abs(offset - at) <= 1 && i > 0) {
+      // 🔴 0px 的軌道**不是**可拖的一邊——往前找到真正有內容的那一條。
+      let before = i - 1
+      while (before >= 0 && sizes[before] <= 0) before--
+      let after = i
+      while (after < sizes.length && sizes[after] <= 0) after++
+      if (before < 0 || after >= sizes.length) return null
+      return [before, after]
+    }
+    offset += sizes[i] + gap
+  }
+  return null
+}
+
+/**
  * 在容器的每一條內縫上放一個把手。
  *
  * ⚠️ **可以重複呼叫**：換版面之後軌道數會變，舊的把手要先清掉。
@@ -64,19 +115,16 @@ export function installGridDividers(container: HTMLElement): () => void {
     handles.length = 0
   }
 
-  const drag = (axis: Axis, boundary: number, startEvt: PointerEvent): void => {
+  const drag = (axis: Axis, at: number, startEvt: PointerEvent): void => {
     const sizes = tracks(container, axis)
-    // 🔴 **把手的序號數的是「縫」，而軌道裡可能有 0**（＝這個版面沒用到的層）。
-    //    直接拿序號當軌道索引，會在有隱藏欄的版面上拖錯一欄。
-    const live = sizes.map((v, i) => [v, i] as const).filter(([v]) => v > 0).map(([, i]) => i)
-    const index = live[boundary]
-    if (index === undefined || live[boundary + 1] === undefined) return
+    const pair = boundaryAt(sizes, gapOf(container, axis), at)
+    if (!pair) return
+    const [index, after] = pair
     const start = axis === 'columns' ? startEvt.clientX : startEvt.clientY
-    const a0 = sizes[index], b0 = sizes[live[boundary + 1]]
+    const a0 = sizes[index], b0 = sizes[after]
     const move = (e: PointerEvent): void => {
       const d = (axis === 'columns' ? e.clientX : e.clientY) - start
       const a = Math.max(80, a0 + d), b = Math.max(80, b0 - d)
-      const after = live[boundary + 1]
       const next = sizes.map((s, i) => (i === index ? a : i === after ? b : s))
       // 🔴 比例寫在**容器**上，面板一個字都不寫——見檔頭的 🪦 那一段
       container.style[trackProp(axis)] = next.map((s) => `${s}px`).join(' ')
@@ -144,7 +192,14 @@ export function installGridDividers(container: HTMLElement): () => void {
     }
 
     const put = (axis: Axis, seams: Seam[], gap: number): void => {
-      seams.forEach((seam, idx) => {
+      const sizes = tracks(container, axis)
+      for (const seam of seams) {
+        // 🔴 **拖不動的縫就不要放把手**。一條 0px 的軌道會在容器邊緣後面留下
+        //    一條「縫」，而它兩側沒有兩個拖得動的東西。
+        //
+        // > **一條 hover 會變色而按下去沒反應的線，比沒有那條線更糟
+        // > ——它讓「可以拖」變成一個謊。**（與 `vscode-profile.ts` 那條同一句）
+        if (!boundaryAt(sizes, gap, seam.at)) continue
         const h = document.createElement('div')
         h.className = `grid-divider grid-divider-${axis}`
         h.style.position = 'absolute'
@@ -156,10 +211,10 @@ export function installGridDividers(container: HTMLElement): () => void {
           h.style.top = `${seam.at - gap}px`; h.style.height = `${gap}px`
           h.style.left = `${seam.from}px`; h.style.width = `${seam.to - seam.from}px`
         }
-        h.addEventListener('pointerdown', (e) => { e.preventDefault(); drag(axis, idx, e) })
+        h.addEventListener('pointerdown', (e) => { e.preventDefault(); drag(axis, seam.at, e) })
         container.appendChild(h)
         handles.push(h)
-      })
+      }
     }
 
     if (gapC > 0) put('columns', collect((r) => r.left, (r) => r.top, (r) => r.bottom, box.left, box.top), gapC)

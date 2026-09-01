@@ -47,7 +47,7 @@ import type { SavedState } from '../core/storage'
 import { describeRefusal } from '../core/refusal-message'
 import { LocaleLoader } from '../i18n/loader'
 import { setMessageSource, msg } from '../core/messages'
-import { LAYOUT_PRESETS, layoutPreset, type LayoutPresetId } from '../core/host/layout-presets'
+import { layoutPreset, hostLayoutOptions, type LayoutPresetId, type HostLayoutOption } from '../core/host/layout-presets'
 import { SyncCoordinator } from '../core/sync-coordinator'
 import { viewsWith } from '../core/view-registry'
 import { installDialogs } from './prompt-dialog'
@@ -157,6 +157,9 @@ export class App {
    */
   private currentLayout: LayoutPresetId = 'compare'
   private applyLayout?: (id: LayoutPresetId) => void
+
+  /** 這個宿主提供得出來的版面——由 shell 回答（只有它知道哪一層在不在）。 */
+  private shellLayoutOptions?: () => readonly HostLayoutOption[]
   private flowPanel?: import('./panels/flow-panel').FlowPanel
   private codeDirty = false
   private autoSync = true
@@ -968,6 +971,7 @@ export class App {
     //    ⚠️ 走 `edit:tree` 這個**通用**事件，不是 `edit:flow`
     //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。
     this.applyLayout = elements.applyLayout
+    this.shellLayoutOptions = elements.layoutOptions
     // ⚠️ `viewId` 要問面板自己，**不是寫死一個字串**（2026-08-27 修）：
     //    寫死的是 `'flow-panel'` 而面板宣告的是 `'flow'`，兩個對不上。
     //    那在 `originViewId` 出現之前沒有人看得出來——因為沒有人讀它。
@@ -1860,19 +1864,36 @@ export class App {
       case 'layout': {
         // 🔴 標籤走 i18n 鍵（`nameKey`），**不得把 id 印上畫面**
         //    ——第八十一條護欄的硬性零盯著這一點。
-        const cur = layoutPreset(this.currentLayout) ?? LAYOUT_PRESETS[0]
+        // 🔴 **清單問宿主，不是問宣告**（2026-09-01）。使用者在 VSCode：
+        //    「說是四格其實根本不是」——那裡只有流程與積木兩層，
+        //    程式碼在 IDE 的編輯器、主控台是 IDE 的終端機。
+        //    見 `hostLayoutOptions` 的檔頭。
+        const opts = this.shellLayoutOptions?.() ?? hostLayoutOptions(() => true)
+        const layerName = (l: string): string => msg(`LAYER_${l.toUpperCase()}`, l)
+        /**
+         * 四層都在 ⟹ 用宣告的名字（網頁版逐字不變）。
+         * 少了層 ⟹ **名字由剩下的格子拼出來**，因為宣告的名字在那裡是假話。
+         */
+        const nameOf = (o: HostLayoutOption): { label: string; description?: string } => {
+          if (o.complete) return { label: msg(o.nameKey, o.id) }
+          // 🔴 問 `shape` 不問 `areas`——跨格不是兩格（見 `normalizeShape`）。
+          const cells = [...new Set(o.shape.flat())].map(layerName)
+          if (cells.length === 1) return { label: cells[0] }
+          if (o.shape.length === 1) return { label: cells.join(' ｜ '), description: msg('LAYOUT_SIDE_BY_SIDE', '並排') }
+          if (o.shape.every((r) => r.length === 1)) return { label: cells.join(' ／ '), description: msg('LAYOUT_STACKED', '上下') }
+          return { label: msg(o.nameKey, o.id) }
+        }
+        const cur = opts.find((o) => o.id === this.currentLayout) ?? opts[0]
         return {
           id: spec.id, kind: spec.kind, title,
-          label: msg(cur.nameKey, cur.id), value: cur.id,
+          label: nameOf(cur).label, value: cur.id,
           // 🔴 **示意圖從【同一份宣告】產生**（2026-08-31，spec 168）：
           //    `areas` 就是套用時餵給 CSS 的那一份，所以圖與畫面**不可能**不一致。
           //    ⚠️ 手畫四張圖的話，它們會與宣告漂開，而漂開時沒有任何機構會出聲。
-          options: LAYOUT_PRESETS.map((p) => ({
-            value: p.id, label: msg(p.nameKey, p.id),
-            previewGrid: {
-              areas: p.areas.map((row) => row.map((v) => msg(
-                v === '*' ? 'LAYER_SPACE' : `LAYER_${v.toUpperCase()}`, v))),
-            },
+          //    ⚠️ 而它畫的是**縮減後**的 `areas`——否則圖上四格、畫面上兩格。
+          options: opts.map((o) => ({
+            value: o.id, ...nameOf(o),
+            previewGrid: { areas: o.areas.map((row) => row.map(layerName)) },
           })),
         }
       }

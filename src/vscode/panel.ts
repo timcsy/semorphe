@@ -775,23 +775,63 @@ export async function pickControl(id: string): Promise<void> {
     OUTPUT.show(true)
     return
   }
-  type Item = vscode.QuickPickItem & { value: string }
+  // ⚠️ `value` 是選填的——分隔列（`QuickPickItemKind.Separator`）沒有值。
+  type Item = vscode.QuickPickItem & { value?: string }
   if (state.multi) {
-    const items: Item[] = state.options.map((o) => ({
-      label: o.label, value: o.value, picked: state.picked?.includes(o.value) ?? false,
-    }))
+    // ⚠️ 多選這一支也要分組——主題樹的 `group` 就是它的上層節點。
+    const items: Item[] = []
+    let g: string | undefined
+    for (const o of state.options) {
+      if (o.group && o.group !== g) {
+        items.push({ label: o.group, kind: vscode.QuickPickItemKind.Separator })
+      }
+      g = o.group
+      items.push({
+        label: o.label, value: o.value, description: o.description,
+        picked: state.picked?.includes(o.value) ?? false,
+      })
+    }
     const picked = await vscode.window.showQuickPick<Item>(items, { title: state.title, canPickMany: true })
     if (!picked) return
-    current.sendControl({ type: 'controlInvoke', id, values: picked.map((p) => p.value) })
+    current.sendControl({
+      type: 'controlInvoke', id,
+      // ⚠️ 分隔列沒有值——濾掉，而不是送出 `undefined`。
+      values: picked.map((p) => p.value).filter((v): v is string => v !== undefined),
+    })
     return
   }
-  const items: Item[] = state.options.map((o) => ({
-    label: o.label, value: o.value,
-    // ⚠️ 目前值標一個記號——QuickPick 沒有「目前選中」的原生表達
-    description: o.value === state.value ? '目前' : undefined,
-  }))
+  // 🔴 **分組要畫出來**（2026-09-01）。使用者：「沒有辦法區分骨架和顯示，
+  //    像是網頁版就可以」——而骨架那顆選單裡是**兩件事**：
+  //
+  //    ```
+  //    骨架  C++ 標準骨架／沒有骨架／Arduino 骨架   ← 選哪一個框架
+  //    顯示  隱藏／淡的／完整                       ← 那個框架給不給看
+  //    ```
+  //
+  //    攤平之後「Arduino 骨架」與「淡的」是同一層的五個選項，
+  //    ⚠️ 而它們**不互斥**——挑一個「顯示」不會取消骨架。一張平的清單在說謊。
+  //
+  // > **一份選單如果攤平了兩個維度，它就把「而且」畫成了「或者」。**
+  const items: Item[] = []
+  let group: string | undefined
+  for (const o of state.options) {
+    // ⚠️ 組名換的時候插一列標題——分隔列不可選，也不佔鍵盤導覽的位置。
+    if (o.group && o.group !== group) {
+      items.push({ label: o.group, kind: vscode.QuickPickItemKind.Separator })
+    }
+    group = o.group
+    items.push({
+      label: o.label, value: o.value,
+      // ⚠️ 目前值標一個記號——QuickPick 沒有「目前選中」的原生表達。
+      // 🔴 而它**不能佔掉 `description`**：那一格是那一項的說明
+      //    （「#include + int main() + return 0」），網頁版兩者並排。
+      description: [o.description, o.value === state.value ? '· 目前' : '']
+        .filter(Boolean).join('  ') || undefined,
+    })
+  }
   const choice = await vscode.window.showQuickPick<Item>(items, { title: state.title })
-  if (!choice) return
+  // ⚠️ 分隔列沒有 `value`——雖然它選不到，型別上仍要擋住。
+  if (!choice?.value) return
   current.sendControl({ type: 'controlInvoke', id, value: choice.value })
 }
 

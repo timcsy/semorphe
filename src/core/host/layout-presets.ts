@@ -29,7 +29,7 @@
  * **每一個使用者的畫面都不一樣**，而這是一個教學工具
  * ——老師說「看左邊那一欄」時，那句話要對每個人都成立。
  */
-import type { UnderstandingLayer } from '../view-host'
+import { LAYER_ORDER, type UnderstandingLayer } from '../view-host'
 
 export type LayoutPresetId = 'focus' | 'compare' | 'three-column' | 'grid'
 
@@ -166,4 +166,111 @@ export function occupiedLayers(
   focusLayer: UnderstandingLayer = 'element',
 ): ReadonlySet<UnderstandingLayer> {
   return new Set(preset.areas.flat().map((v) => (v === '*' ? focusLayer : v)))
+}
+
+/**
+ * 這張版面**在這個宿主上**實際會長成什麼形狀。
+ *
+ * ## 🔴 為什麼版面清單不能是一份固定的清單
+ *
+ * 2026-09-01，使用者在 VSCode 裡：「**說是四格其實根本不是**，
+ * 在 VSCode 中主控台好像只能佔領下面整片」。
+ *
+ * 而他是對的：程式碼在 IDE 的編輯器裡、主控台是 IDE 的終端機
+ * （`vscode-profile.ts` 的 `controlSurfaces` 明說），於是面板裡**只有兩層**。
+ * 「十字（四格，每一層一格）」在那裡永遠只畫得出兩格。
+ *
+ * ```
+ * 宣告的十字              VSCode 實際畫出來的
+ *   程式碼 │ 流程            流程
+ *   ───────┼─────    →      ────
+ *   主控台 │ 積木            積木
+ * ```
+ *
+ * > **一個版面的名字如果數的是【宣告裡的格數】，
+ * > 它在少了一層的宿主上就是一句假話——而畫面不會反駁它。**
+ *
+ * 🟢 所以名字從**這裡**導出：先把宿主沒有的整列整欄拿掉，再看剩下什麼。
+ *
+ * ⚠️ 而**塌成同一個形狀的版面只留一張**——在 VSCode 上「專注」與「對照」
+ * 都只剩積木一格，兩個選項長得一樣、按下去也一樣。
+ *
+ * > **兩個選項如果做的是同一件事，它們不是「兩個選擇」，是一份雜訊。**
+ */
+export interface HostLayoutOption {
+  readonly id: LayoutPresetId
+  readonly nameKey: string
+  /** 拿掉這個宿主沒有的整列整欄之後，剩下的格子（**跨格保留**——示意圖要畫它）。 */
+  readonly areas: readonly (readonly UnderstandingLayer[])[]
+  /**
+   * 同上，但**跨格收成一格**——「有幾格、怎麼排」問的是這個。
+   *
+   * 🔴 2026-09-01 實測抓到的：在 VSCode 上「三欄」縮減成
+   * `[[流程,積木],[流程,積木]]`——兩列**逐格相同**，那不是四格，
+   * 是**兩格各跨兩列**。而拿列數去判斷形狀的話，它會被當成「二維」而放棄命名，
+   * 於是名字退回宣告的「三欄（程式碼 · 流程 · 積木）」——**又在說程式碼**。
+   *
+   * ⚠️ 同一個根還讓「專注」與「對照」在那裡變成**兩個一模一樣的選項**
+   * （`[[積木]]` 與 `[[積木],[積木]]` 簽章不同、畫面相同）。
+   *
+   * > **一張矩陣裡重複的整列，說的是「這一格比較高」，不是「這裡有兩格」
+   * > ——把它當成兩格，會同時弄錯【數量】與【形狀】。**
+   */
+  readonly shape: readonly (readonly UnderstandingLayer[])[]
+  /** 這個宿主四層都在 ⟹ 用宣告的名字；否則名字要從 `areas` 導。 */
+  readonly complete: boolean
+}
+
+/**
+ * 把**跨格**收成一格：相鄰而逐格相同的列（欄）合併。
+ *
+ * ```
+ * [[積木],[積木]]          → [[積木]]           一格跨兩列
+ * [[流程,積木],[流程,積木]] → [[流程,積木]]      兩格各跨兩列
+ * [[流程],[積木]]          → [[流程],[積木]]    真的是兩格
+ * ```
+ */
+export function normalizeShape(
+  areas: readonly (readonly UnderstandingLayer[])[],
+): readonly (readonly UnderstandingLayer[])[] {
+  const rows = areas.filter((row, r) => r === 0 || row.join(' ') !== areas[r - 1].join(' '))
+  const keepCol = rows[0].map((_, c) => c === 0 || rows.some((row) => row[c] !== row[c - 1]))
+  return rows.map((row) => row.filter((_, c) => keepCol[c]))
+}
+
+/** 一張版面在這個宿主上剩下的格子（整列整欄都沒有的就拿掉）。 */
+export function reduceAreas(
+  preset: LayoutPresetSpec,
+  available: (l: UnderstandingLayer) => boolean,
+  focusLayer: UnderstandingLayer,
+): readonly (readonly UnderstandingLayer[])[] {
+  const a = preset.areas.map((row) => row.map((v) => (v === '*' ? focusLayer : v)))
+  const keepCol = a[0].map((_, c) => a.some((row) => available(row[c])))
+  const keepRow = a.map((row) => row.some((v) => available(v)))
+  return a.filter((_, r) => keepRow[r]).map((row) => row.filter((_, c) => keepCol[c]))
+}
+
+/**
+ * 這個宿主提供得出來的版面清單——**塌成同形狀的只留第一張**。
+ *
+ * ⚠️ 順序照宣告，所以「留第一張」＝ 留下宣告裡比較前面（比較簡單）的那一個。
+ */
+export function hostLayoutOptions(
+  available: (l: UnderstandingLayer) => boolean,
+  focusLayer: UnderstandingLayer = 'element',
+): readonly HostLayoutOption[] {
+  const complete = LAYER_ORDER.every((l) => available(l))
+  const seen = new Set<string>()
+  const out: HostLayoutOption[] = []
+  for (const p of LAYOUT_PRESETS) {
+    const areas = reduceAreas(p, available, focusLayer)
+    const shape = normalizeShape(areas)
+    // ⚠️ 簽章要含形狀，不只含層——「並排」與「上下」的層一樣而形狀不同。
+    // 🔴 而它問的是 `shape` 不是 `areas`：跨格與單格**畫面上是同一件事**。
+    const sig = shape.map((r) => r.join(' ')).join('|')
+    if (seen.has(sig)) continue
+    seen.add(sig)
+    out.push({ id: p.id, nameKey: p.nameKey, areas, shape, complete })
+  }
+  return out
 }

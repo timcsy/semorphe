@@ -254,6 +254,46 @@ html, body {
   background: #1b1b1c;   /* 縫裡露出來的底色 */
 }
 
+/* ─── 一格 ＝ 一個面板 ───
+
+   🔴 2026-09-01，使用者在 VSCode：「**好像面板不是真的面板，而是大家被塞在一起**」。
+
+   而在那裡它更明顯，因為 VSCode 少了兩層：剩下的兩格之間只有一條 4px 的縫，
+   兩邊的底色又一模一樣——於是兩個面板讀起來像一片。
+
+   > **兩個東西「之間有空隙」還不夠讓人看出它們是兩個東西——
+   > 要看得出【各自的邊】。**
+
+   ⚠️ 邊框畫在格子上而不是縫裡：縫是給把手住的（見下一段）。 */
+
+#editors > #code-column,
+#editors > #flow-column,
+#editors > #blocks-column,
+#editors > #bottom-container {
+  border: 1px solid #3c3c3c;
+  border-radius: 3px;
+  /* ⚠️ 邊框要算進格子的尺寸裡，否則四格等大那條（SC-005）會差 2px */
+  box-sizing: border-box;
+}
+
+/* ─── 沒有工具列的那一格，也要有一條頭 ───
+
+   🔴 VSCode 把所有控制項投影到宿主（`vscode-profile.ts`），於是快速列**不建**
+   ——而槽的視圖選擇器只好掛在那一格最前面。它是 column flex 的直接子節點，
+   於是**撐滿整欄寬、字置中**，看起來像一個浮在半空的標籤，不像面板的頭。
+
+   > **一顆按鈕如果沒有一條列可以待，它就不會看起來像一顆按鈕。** */
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3c3c3c;
+  flex-shrink: 0;
+}
+
 /* ─── 可拖的格線（`layout/grid-dividers.ts`）─── */
 
 .grid-divider {

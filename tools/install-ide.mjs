@@ -29,9 +29,11 @@ import { existsSync, readFileSync, rmSync, mkdirSync, copyFileSync, readdirSync 
 import { execFileSync } from 'node:child_process'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { isOurVscodeDir } from './install-ide.lib.mjs'
 
 const VSIX = 'build/vscode/semorphe-vscode.vsix'
 const PKG = 'build/vscode/package.json'
+
 
 if (!existsSync(VSIX) || !existsSync(PKG)) {
   console.error(`🔴 找不到 ${VSIX} —— 先跑 \`npm run build:vscode\``)
@@ -48,7 +50,8 @@ console.log(`📦 ${id} ${version}`)
 const vscodeRoot = join(homedir(), '.vscode', 'extensions')
 if (existsSync(vscodeRoot)) {
   for (const entry of readdirSync(vscodeRoot)) {
-    if (entry.startsWith(`${id}-`)) {
+    // ⚠️ 比對 `name`，**不是** `id`——理由見 `install-ide.lib.mjs`。
+    if (isOurVscodeDir(entry, name)) {
       rmSync(join(vscodeRoot, entry), { recursive: true, force: true })
       console.log(`  🗑  移除舊版 ${entry}`)
     }

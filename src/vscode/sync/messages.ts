@@ -148,7 +148,29 @@ export interface ControlStateWire {
   title: string
   label: string
   value?: string
-  options?: { value: string; label: string }[]
+  /**
+   * ⚠️ **`group` 與 `description` 要跟著過來**（2026-09-01）。
+   *
+   * 🔴 核心的 `ControlOption` 一直都有這兩格，而這一行只宣告了 `{value,label}`
+   * ——於是骨架選單在 IDE 裡是**一條沒有分組的平清單**：
+   *
+   * ```
+   * 網頁版                          VSCode（修之前）
+   *   骨架                            C++ 標準骨架
+   *     C++ 標準骨架  #include + …    沒有骨架
+   *     沒有骨架      沒有 main…      Arduino 骨架
+   *   顯示                            淡的
+   *     隱藏  目前                    完整
+   * ```
+   *
+   * 使用者：「**沒有辦法區分骨架和顯示**，像是網頁版就可以」。
+   *
+   * > **一個窄化的線上型別不會弄壞資料——它讓【已經在線上的東西】看起來不存在。**
+   *
+   * ⚠️ 資料本來就過得來（`reportControls` 送的是整顆 `ControlState`）；
+   * 少的是**宣告**與**消費**。
+   */
+  options?: { value: string; label: string; group?: string; description?: string }[]
   multi?: boolean
   picked?: string[]
 }

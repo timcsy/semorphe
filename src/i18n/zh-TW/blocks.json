@@ -657,5 +657,7 @@
   "FLOW_MENU_DELETE": "刪掉這一塊",
   "FLOW_MENU_DELETE_WIRE": "刪掉這一端",
   "SLOT_PICK": "這一格顯示",
-  "CURRENT": "目前"
+  "CURRENT": "目前",
+  "LAYOUT_SIDE_BY_SIDE": "並排",
+  "LAYOUT_STACKED": "上下"
 }

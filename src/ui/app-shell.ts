@@ -14,7 +14,7 @@ import { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
 import { CONTROLS, RUN_MODES, surfaceOf, panelControls, type ControlId } from '../core/host/controls'
-import { LAYOUT_PRESETS, layoutPreset, type LayoutPresetId } from '../core/host/layout-presets'
+import { LAYOUT_PRESETS, layoutPreset, hostLayoutOptions, type LayoutPresetId, type HostLayoutOption } from '../core/host/layout-presets'
 import type { UnderstandingLayer } from '../core/view-host'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
 import { CodeKeyboard } from './panels/code-keyboard'
@@ -48,6 +48,13 @@ export interface AppShellElements {
   showProjection: (which: 'blocks' | 'flow') => void
   /** 套一個桌機佈局預設（專注／對照／三欄）。 */
   applyLayout: (id: LayoutPresetId) => void
+  /**
+   * **這個宿主提供得出來的版面**——名字從實際的格子導出，塌成同形狀的只留一張。
+   *
+   * 🔴 由 shell 回答，因為「這一層在不在」問的是 `profile.features` ＋
+   * 有沒有那個面板——而那兩件事只有這裡知道（見 `layerAvailable`）。
+   */
+  layoutOptions: () => readonly HostLayoutOption[]
   /** 把主控台那一格加回下方面板（宿主打不開終端機時）。 */
   enableConsoleTab: () => void
   /** 那條列**晚一點才建**時通知——執行控制器手上是建構當時的那一份。 */
@@ -772,9 +779,30 @@ export function createAppLayout(
   const mountSlotPickers = (): void => {
     for (const { el, layer, bar } of SLOT_BARS) {
       const btn = slotPickers.get(layer)!
-      // 有那條列就併進去；還沒建出來就先掛在這一格最前面（下一次會再搬）
-      const host = el.querySelector(bar) ?? el
+      // 🔴 **沒有那條列就替它開一條**，而不是把按鈕丟進這一格（2026-09-01）。
+      //
+      //    VSCode 把控制項全投影到宿主，於是快速列**不建**。舊寫法退回 `el`
+      //    ——按鈕成了 column flex 的直接子節點，**撐滿整欄、字置中**，
+      //    看起來像浮在半空的標籤。使用者：「好像面板不是真的面板，
+      //    而是大家被塞在一起」。
+      //
+      // > **一個「找不到家就先放這裡」的退路，會在那個家【永遠不會出現】的
+      // > 宿主上變成常態——而它從來沒有被當成常態設計過。**
+      //
+      // ⚠️ 那條列**晚一點才建**時要讓位：真的工具列一出現就搬回去，
+      //    而空的 `.panel-head` 自己收掉。
+      const real = el.querySelector(bar)
+      let host = real
+      if (!host) {
+        const own = el.querySelector<HTMLElement>(':scope > .panel-head')
+        host = own ?? el.insertBefore(Object.assign(document.createElement('div'),
+          { className: 'panel-head' }), el.firstChild)
+      }
       if (btn.parentElement !== host) host.insertBefore(btn, host.firstChild)
+      if (real) {
+        const stale = el.querySelector<HTMLElement>(':scope > .panel-head')
+        if (stale && stale.childElementCount === 0) stale.remove()
+      }
     }
   }
 
@@ -796,15 +824,26 @@ export function createAppLayout(
     // > **一段為了舊機制而存在的補償，在新機制上線之後會安靜地抵銷它
     // > ——而它不會報錯，因為它做的正是它當初被寫下來要做的事。**
 
-    // 一整欄（列）都是「這個宿主沒有的層」→ 軌道收成 0。
-    const colUsed = areas[0].map((_, c) => areas.some((row) => layerAvailable(row[c])))
-    const rowUsed = areas.map((row) => row.some((v) => layerAvailable(v)))
-    const size = (i: number, used: boolean[], decl?: readonly string[]): string =>
-      used[i] ? (decl?.[i] ?? '1fr') : '0px'
+    // 一整欄（列）都是「這個宿主沒有的層」→ **整條拿掉**。
+    //
+    // 🪦 之前是「軌道收成 `0px`」。而一條 0px 的軌道**不是不存在**：
+    //    它兩側各留一條 gap，於是在容器邊緣後面多出一條**假的縫**。
+    //    使用者 2026-09-01 在 VSCode：「**這拉不動**」——畫面上唯一那條線
+    //    hover 會變藍而按下去沒反應，因為把手的序號被那條假縫錯開了一格
+    //    （根因與另一半的修在 `layout/grid-dividers.ts` 的 `boundaryAt`）。
+    //
+    // > **「寬度是零」不等於「不在那裡」——一個佔不到面積的東西，
+    // > 仍然佔著【序號】與【它兩側的縫】。**
+    const keepCol = areas[0].map((_, c) => areas.some((row) => layerAvailable(row[c])))
+    const keepRow = areas.map((row) => row.some((v) => layerAvailable(v)))
+    const pick = <T>(xs: readonly T[], keep: boolean[]): T[] => xs.filter((_, i) => keep[i])
+    areas = pick(areas, keepRow).map((row) => pick(row, keepCol))
+    const cols = preset.cols ? pick(preset.cols, keepCol) : undefined
+    const rows = preset.rows ? pick(preset.rows, keepRow) : undefined
 
     main.style.gridTemplateAreas = areas.map((r) => `"${r.join(' ')}"`).join(' ')
-    main.style.gridTemplateColumns = colUsed.map((_, i) => size(i, colUsed, preset.cols)).join(' ')
-    main.style.gridTemplateRows = rowUsed.map((_, i) => size(i, rowUsed, preset.rows)).join(' ')
+    main.style.gridTemplateColumns = areas[0].map((_, i) => cols?.[i] ?? '1fr').join(' ')
+    main.style.gridTemplateRows = areas.map((_, i) => rows?.[i] ?? '1fr').join(' ')
 
     // 沒有出現在這張版面裡的層 → 那一格不畫（grid 不會替它留位子）
     // 🔴 **要還原成 `flex`，不是 `''`**（2026-08-31 實測）。三欄都是直向的 flex 容器
@@ -1389,7 +1428,7 @@ export function createAppLayout(
   //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
   showProjection('blocks')
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, applyLayout, enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
 }
 
 /*
