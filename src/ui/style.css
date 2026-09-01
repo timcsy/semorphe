@@ -276,15 +276,39 @@ html, body {
   box-sizing: border-box;
 }
 
-/* ─── 沒有工具列的那一格，也要有一條頭 ───
+/* ─── 一格的頭 ───────────────────────────────────────────────────
 
-   🔴 VSCode 把所有控制項投影到宿主（`vscode-profile.ts`），於是快速列**不建**
-   ——而槽的視圖選擇器只好掛在那一格最前面。它是 column flex 的直接子節點，
-   於是**撐滿整欄寬、字置中**，看起來像一個浮在半空的標籤，不像面板的頭。
+   🔴 **四格的頭是同一種東西，所以它只有一份定義**（2026-09-01）。
 
-   > **一顆按鈕如果沒有一條列可以待，它就不會看起來像一顆按鈕。** */
+   使用者：「我覺得你把積木的工具列加回來好了，我覺得**面板統一**好像更重要
+   一點，或是你可以**統一一下這些面板的框架**嗎？」
 
-.panel-head {
+   而查了之後，「不統一」不是感覺——它是四份各自寫的樣式，長出了三個底色
+   與三個間距：
+
+   ```
+   .panel-head          #2d2d2d  gap 4  padding 2px 8px
+   .quick-access-bar    #2d2d2d  gap 4  padding 2px 8px
+   .bottom-panel-tabs   #252526  gap 0  padding 0        ← 漂走了
+   .flow-toolbar        #252526  gap 8  padding 6px 10px ← 也漂走了
+   ```
+
+   > **一個沒有人決定過的差異，不是設計，是漂移
+   > ——而四份各自寫的定義，保證會漂。**
+
+   ⚠️ 底色選 `#2d2d2d` 是有理由的：`.grid-divider` 是 `#252526`，
+      **頭不能與縫同色**，否則格子的邊讀起來會斷掉。
+
+   🪦 而這一段之前叫「沒有工具列的那一格，也要有一條頭」——那時它是個特例。
+      現在**每一格都走它**，特例變成通則。
+
+   > **一個為了特例而生的東西，如果通則長得跟它一樣，那它本來就是通則。** */
+
+.panel-head,
+.quick-access-bar,
+.bottom-panel-tabs,
+.monaco-clipboard-bar,
+.flow-toolbar {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -292,6 +316,8 @@ html, body {
   background: #2d2d2d;
   border-bottom: 1px solid #3c3c3c;
   flex-shrink: 0;
+  min-height: 28px;
+  box-sizing: border-box;
 }
 
 /* ─── 可拖的格線（`layout/grid-dividers.ts`）─── */
@@ -899,13 +925,7 @@ html, body {
   background: #fff;
 }
 
-.bottom-panel-tabs {
-  display: flex;
-  align-items: center;
-  background: #252526;
-  border-bottom: 1px solid #3c3c3c;
-  flex-shrink: 0;
-}
+/* ⚠️ 共同的部分在「一格的頭」那一段——這裡只留它自己才有的。 */
 
 .bottom-panel-tab-buttons {
   display: flex;
@@ -1435,14 +1455,9 @@ html, body {
 
 /* ─── Block toolbar (above Blockly panel) ─── */
 
+/* ⚠️ 共同的部分在「一格的頭」那一段——這裡只留它自己才有的。 */
 .quick-access-bar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  background: #2d2d2d;
-  border-bottom: 1px solid #3c3c3c;
-  flex-shrink: 0;
+  /* 🔴 快速列的東西比較多，窄視窗要換行——而**只有它**需要。 */
   flex-wrap: wrap;
 }
 
@@ -1542,14 +1557,11 @@ html, body {
 
 /* ─── Monaco clipboard bar ─── */
 
-.monaco-clipboard-bar {
-  display: flex;
-  gap: 4px;
-  padding: 6px 8px;
-  background: #1e1e1e;
-  border-bottom: 1px solid #333;
-  flex-shrink: 0;
-}
+/* ⚠️ 共同的部分在「一格的頭」那一段。
+   🔴 這一條是**第四格**（程式碼），而它是量出來才發現漏掉的：
+      統一了三格之後量到它仍然是 `37px / #1e1e1e / 6px 8px`。
+
+   > **「都改好了」如果沒有量過，它說的是「我記得的那幾個都改好了」。** */
 
 .clipboard-btn {
   background: #2d2d2d;
@@ -2077,25 +2089,12 @@ html, body {
   overflow: auto;
 }
 
-/* 🔴 **一格的頭只有一種密度**（2026-09-01）。
-   在此之前這一條是 `6px 10px`，而 `.quick-access-bar`／`.panel-head` 是 `2px 8px`
-   ——**流程那一格的頭比其他兩格各厚 8px，而那是不小心的，不是設計**。
-
-   使用者：「有標籤列跟工具列感覺很**厚重**」。⚠️ 而這一刀是**兩邊一起薄**
-   （網頁版與 IDE 版同時），所以它不需要任何「哪一邊該不一樣」的判準
-   ——那正是它比另外幾個提案好的地方。
-
-   > **一個沒有人決定過的差異，不是設計，是漂移。** */
+/* ⚠️ 共同的部分在「一格的頭」那一段——這裡只留它自己才有的。 */
 .flow-toolbar {
+  /* 🔴 流程的畫布會捲，而頭要留在上面——**只有它**需要 sticky。 */
   position: sticky;
   top: 0;
   z-index: 1;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 2px 8px;
-  background: #252526;
-  border-bottom: 1px solid #3c3c3c;
 }
 
 /* 🪦 `.flow-scope`（「整份程式 ▾」）隨那顆下拉一起刪除（2026-08-30）。 */

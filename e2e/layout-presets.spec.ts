@@ -168,3 +168,70 @@ test('🔴 選單裡有四張【示意圖】，而每張的格數與宣告一致
   expect(rows.map((r) => r.cells), '🔴 圖的格數與宣告不一致').toEqual([2, 3, 4, 4])
   expect(rows.every((r) => r.visible > 0), '🔴 圖畫出來是 0 寬 → 使用者看不到').toBe(true)
 })
+
+/**
+ * 🔴 **四格的頭是同一種東西**（2026-09-01）。
+ *
+ * 使用者：「我覺得你把積木的工具列加回來好了，我覺得**面板統一**好像更重要
+ * 一點，或是你可以**統一一下這些面板的框架**嗎？」
+ *
+ * 而「不統一」不是感覺——量出來是四份各自寫的樣式長出了三個底色與三個間距：
+ *
+ * ```
+ * .panel-head          #2d2d2d  gap 4  padding 2px 8px
+ * .quick-access-bar    #2d2d2d  gap 4  padding 2px 8px
+ * .bottom-panel-tabs   #252526  gap 0  padding 0
+ * .flow-toolbar        #252526  gap 8  padding 6px 10px
+ * .monaco-clipboard-bar #1e1e1e gap 4  padding 6px 8px   ← 統一了三格之後才量到它
+ * ```
+ *
+ * > **一個沒有人決定過的差異，不是設計，是漂移——而四份各自寫的定義，
+ * > 保證會漂。**
+ *
+ * ⚠️ 為什麼是 e2e：`getComputedStyle` 要真的套用過樣式表才答得出來，
+ *    而 happy-dom 沒有 CSS 引擎。
+ */
+test('🔴 四格的頭是同一種東西——底色、內距、間距都一樣', async ({ page }) => {
+  await freshApp(page)
+  await pick(page, 'grid')
+  const heads = await page.evaluate(() =>
+    ['.monaco-clipboard-bar', '.flow-toolbar', '.quick-access-bar', '.bottom-panel-tabs']
+      .map((sel) => {
+        const el = document.querySelector(sel)
+        if (!el) return { sel, missing: true }
+        const cs = getComputedStyle(el)
+        return {
+          sel, missing: false,
+          bg: cs.backgroundColor, padding: cs.padding, gap: cs.gap,
+          borderBottom: cs.borderBottomWidth + ' ' + cs.borderBottomColor,
+        }
+      }))
+  // 入口條件：四條都真的在畫面上（少一條的話下面的比對是空過的）
+  expect(heads.filter((h) => h.missing).map((h) => h.sel), '🔴 有一格的頭不見了').toEqual([])
+  const first = heads[0]
+  for (const h of heads.slice(1)) {
+    expect(h.bg, `🔴 ${h.sel} 的底色與 ${first.sel} 不同`).toBe(first.bg)
+    expect(h.padding, `🔴 ${h.sel} 的內距與 ${first.sel} 不同`).toBe(first.padding)
+    expect(h.gap, `🔴 ${h.sel} 的間距與 ${first.sel} 不同`).toBe(first.gap)
+    expect(h.borderBottom, `🔴 ${h.sel} 的下緣線與 ${first.sel} 不同`).toBe(first.borderBottom)
+  }
+})
+
+test('🔴 每一格都有頭——一格沒有頭，它讀起來就不是這一組的', async ({ page }) => {
+  await freshApp(page)
+  await pick(page, 'grid')
+  // ⚠️ 判準是「那一格的第一個子節點是一條頭」，不是「頁面上有幾條頭」
+  //    ——後者在某一格少一條時仍然會過。
+  for (const [cell, head] of [
+    ['code-column', '.monaco-clipboard-bar'],
+    ['flow-column', '.flow-toolbar'],
+    ['blocks-column', '.quick-access-bar'],
+    ['bottom-container', '.bottom-panel-tabs'],
+  ] as const) {
+    const has = await page.evaluate(([c, h]) => {
+      const el = document.getElementById(c)
+      return !!el?.querySelector(h)
+    }, [cell, head] as [string, string])
+    expect(has, `🔴 ${cell} 這一格沒有頭`).toBe(true)
+  }
+})

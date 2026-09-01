@@ -173,10 +173,5 @@ export const vscodeProfile: HostProfile = {
     //
     // > **一個必須被餵才畫得出來的視圖，它不是在投影。**
     inspector: 'panelBottom',
-    // 🔴 **分頁標題已經寫著「Semorphe 流程」**——我們不再畫一次。
-    //    ⚠️ 於是積木那一格整條列消失（它裡面只剩名字）；而流程與主控台
-    //       仍然各有一條，因為那兩條裝的是**動作與內容**，不是名字
-    //       ——那兩條與網頁版逐字相同。
-    identity: 'hostTitleBar',
   },
 }
