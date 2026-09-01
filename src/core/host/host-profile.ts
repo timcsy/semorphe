@@ -23,6 +23,7 @@
 import type { CodeView } from './code-view'
 import type { SavedState, LoadOutcome } from '../storage'
 import type { ControlSurfaces } from './controls'
+import type { UnderstandingLayer } from '../view-host'
 
 /**
  * 存檔服務這個角色。
@@ -114,4 +115,34 @@ export interface HostProfile {
    * 而使用者讀到的不是「少一顆按鈕」，是「**壞了**」。
    */
   readonly controlSurfaces: ControlSurfaces
+
+  /**
+   * **這個視窗畫哪幾層**——不填 ＝ `features` 允許的都畫。
+   *
+   * ## 🔴 為什麼是「視窗」不是「宿主」
+   *
+   * 2026-09-01，使用者：「我原本的期待是能不能**把面板都獨立出來**？」
+   *
+   * 在 VSCode 裡，程式碼是 IDE 的編輯器、主控台是 IDE 的終端機、變數是
+   * IDE 的一個視圖——**只有積木與流程還擠在同一個 webview 裡**，
+   * 由我們自己畫一張 grid、自己畫分隔線、自己說「這是四格」。
+   *
+   * > **一個宿主已經有版面引擎的時候，我們再帶一個進去，
+   * > 使用者要學的就是【兩套】——而且那兩套會互相說對方的壞話。**
+   *
+   * 🟢 於是一個 webview 只畫一層，版面交還給 IDE：拖到側邊、拆成兩欄、
+   * 用它自己的分隔線調整——**全部免費，而且與使用者其他的面板一致**。
+   *
+   * ## ⚠️ 它為什麼可以這麼便宜
+   *
+   * 因為**真相是文字**（網頁版存的是 `code`，`blocklyState` 只是快取；
+   * 這個宿主是那份文件）。每個面板各自 `project` 同一份文字，
+   * 而 P1 說投影是純函數——**所以每個面板要的協定都一樣：文字進、編輯出**。
+   *
+   * > **一個必須被餵才畫得出來的視圖，它不是在投影。**
+   *
+   * ⚠️ 對照組就在這個 repo 裡：`變數` 視圖是被餵的，而**餵它的面板關掉之後
+   * 沒有任何人清它**——它會停在最後一筆，看起來完全正常。
+   */
+  readonly layers?: readonly UnderstandingLayer[]
 }

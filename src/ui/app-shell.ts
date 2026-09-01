@@ -641,7 +641,10 @@ export function createAppLayout(
    * 量到的是 0×0，而那個症狀是「切回去之後畫布空白，拖一下才出現」。
    */
   /** 現在「專注」顯示哪一層——`areas` 裡的 `'*'` 用它代換。 */
-  let focusLayer: UnderstandingLayer = 'space'
+  // 🔴 **起始焦點必須是這個視窗真的有的層**（2026-09-01）。寫死 `'space'` 的話，
+  //    一個只畫流程的視窗會把「專注」解析成「專注在積木上」——而積木不在那裡。
+  let focusLayer: UnderstandingLayer =
+    profile.layers && !profile.layers.includes('space') ? profile.layers[0] : 'space'
   /** 使用者把哪一層放在哪一格——**一張置換表**，見 `core/host/slot-assignment.ts`。 */
   let assignment: SlotAssignment = identityAssignment()
   let relayoutDividers: (() => void) | null = null
@@ -754,9 +757,12 @@ export function createAppLayout(
    * ⚠️ 判準問的是**能力**（`profile.features` ／ 有沒有那個面板），不是宿主的名字。
    */
   const layerAvailable = (l: UnderstandingLayer): boolean =>
-    l === 'element' ? profile.features.codeEditorPane
-      : l === 'state' ? bottomPanel !== null
-        : true
+    // 🔴 **宿主指名了哪幾層的話，那是硬邊界**（2026-09-01）——一個只畫流程的
+    //    視窗裡，積木不是「藏起來」，是**不在那裡**。
+    profile.layers && !profile.layers.includes(l) ? false
+      : l === 'element' ? profile.features.codeEditorPane
+        : l === 'state' ? bottomPanel !== null
+          : true
 
   /**
    * 四個槽各一顆選擇器，**同一份產生器產的**（spec 169 的 SC-002）。
@@ -807,7 +813,14 @@ export function createAppLayout(
   }
 
   applyLayoutRef = (id: LayoutPresetId): void => {
-    const preset = layoutPreset(id)
+    // 🔴 **這個宿主鋪不出來的版面，換成它鋪得出來的第一張**（2026-09-01）。
+    //
+    //    開機寫死套「對照」，而在一個只畫流程的視窗裡它一層都不含——
+    //    縮減之後是空矩陣，`areas[0].map` 直接炸，**面板一片空白**。
+    //
+    // > **一個「預設值」如果是寫死的，它就假設了所有宿主都長得一樣。**
+    const usable = hostLayoutOptions(layerAvailable, focusLayer)
+    const preset = layoutPreset(usable.some((o) => o.id === id) ? id : usable[0]?.id ?? id)
     if (!preset) return
     // 🔴 **使用者的指派套在這裡**（2026-09-01，spec 169）：宣告是**預設**，
     //    而 `assignment` 是一張層與層的置換表。⚠️ 它只換名字不換形狀——

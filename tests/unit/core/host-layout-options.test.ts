@@ -72,6 +72,33 @@ describe('🔴 VSCode：只有流程與積木', () => {
   })
 })
 
+describe('🔴 只畫一層的視窗（面板獨立出來之後）', () => {
+  // 2026-09-01 實測：流程視窗**開機就炸**（`areas[0].map` of undefined）。
+  const FLOW_ONLY = (l: UnderstandingLayer): boolean => l === 'relation'
+
+  it('🔴 一格都不剩的版面不得進清單——它會讓 applyLayout 拿 areas[0] 時炸掉', () => {
+    const opts = hostLayoutOptions(FLOW_ONLY, 'relation')
+    expect(opts.every((o) => o.areas.length > 0 && o.areas[0].length > 0)).toBe(true)
+  })
+
+  it('剩下的是【一格】，而那一格就是這個視窗的層', () => {
+    const opts = hostLayoutOptions(FLOW_ONLY, 'relation')
+    expect(opts).toHaveLength(1)
+    expect(opts[0].shape).toEqual([['relation']])
+  })
+
+  it('⚠️ 對照在這裡整張是空的——縮減看得出來', () => {
+    expect(reduceAreas(layoutPreset('compare')!, FLOW_ONLY, 'relation')).toEqual([])
+  })
+
+  it('積木視窗同理', () => {
+    const BLOCKS_ONLY = (l: UnderstandingLayer): boolean => l === 'space'
+    const opts = hostLayoutOptions(BLOCKS_ONLY, 'space')
+    expect(opts).toHaveLength(1)
+    expect(opts[0].shape).toEqual([['space']])
+  })
+})
+
 describe('reduceAreas', () => {
   it('整欄都沒有的欄要整條拿掉——不是留一條 0px', () => {
     // 🔴 留 0px 的後果見 `grid-divider-boundary.test.ts`：它會多出一條假的縫。

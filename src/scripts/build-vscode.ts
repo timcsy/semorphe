@@ -147,6 +147,21 @@ function main(): void {
       csp: csp(`'self'`),
     }),
   )
+  // ⚠️ **每一種視窗各一份預檢頁**（2026-09-01）——`data-view` 是 HTML 上的
+  //    屬性，而模組一載入就讀它，所以「開好之後再改」來不及。
+  //
+  // > **一個在啟動時就被讀走的參數，測試環境必須在【啟動之前】給它。**
+  writeFileSync(
+    join(OUT, 'dist', 'preview-flow.html'),
+    renderHtml({
+      preScripts: ['./host-stub.js'],
+      scriptSrc: './webview.js',
+      styleSrc: './webview.css',
+      mediaSrc: './media/',
+      csp: csp(`'self'`),
+      view: 'flow',
+    }),
+  )
 
   // 5. 打包。⚠️ `vsce` 以 **cwd** 為擴充根目錄——不切過去的話它會讀到
   //    網頁版那份 `package.json`，而那份沒有 `engines.vscode`。

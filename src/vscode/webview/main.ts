@@ -30,7 +30,7 @@
  */
 import '../../ui/style.css'
 import { App } from '../../ui/app'
-import { vscodeProfile } from '../vscode-profile'
+import { vscodeProfileFor } from '../vscode-profile'
 import { attachDragMeter, type DragMeasurement } from './fps'
 import { postToHost } from './host-bridge'
 import { attachNoDocumentBanner } from './no-document-banner'
@@ -61,7 +61,11 @@ async function boot(): Promise<void> {
     w.__SEMORPHE_ASSET_BASE__ = media.replace(/media\/$/, '')
   }
 
-  const app = new App(vscodeProfile)
+  // 🔴 **這個視窗畫哪一層**（2026-09-01）——見 `vscodeProfileFor` 的檔頭。
+  //    ⚠️ 認不得的值退回 `blocks`：一個空白的面板比一個「畫錯東西」的面板
+  //       更難查，而這一格是宿主寫的，寫錯是我們自己的 bug。
+  const kind = appEl.dataset.view === 'flow' ? 'flow' : 'blocks'
+  const app = new App(vscodeProfileFor(kind))
   ;(window as unknown as { __app?: unknown }).__app = app
   await app.init()
 

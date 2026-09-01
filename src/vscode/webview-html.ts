@@ -109,6 +109,15 @@ export interface HtmlParts {
    * ⚠️ 必須是**外部檔案**：CSP 沒有 nonce 也沒有 `unsafe-inline`，行內腳本不會執行。
    */
   preScripts?: string[]
+
+  /**
+   * **這個視窗畫哪一層**——`blocks`（預設）或 `flow`（2026-09-01）。
+   *
+   * 🔴 走 data 屬性，與 `data-blockly-media` 同一條理由：CSP 沒有 nonce
+   * 也沒有 `unsafe-inline`，**行內腳本不會執行**——而症狀是「面板一片空白」，
+   * 沒有任何錯誤指向這裡。
+   */
+  view?: 'blocks' | 'flow'
 }
 
 const escapeAttr = (s: string): string =>
@@ -141,7 +150,7 @@ export function renderHtml(parts: HtmlParts): string {
      media 根走 data 屬性，不走行內 script：
      script-src 沒有 nonce 也沒有 unsafe-inline，所以行內腳本不會執行
      ——而症狀是「面板一片空白」，沒有任何錯誤指向這裡。 -->
-<div id="app" data-blockly-media="${escapeAttr(parts.mediaSrc)}"></div>
+<div id="app" data-blockly-media="${escapeAttr(parts.mediaSrc)}" data-view="${escapeAttr(parts.view ?? 'blocks')}"></div>
 ${(parts.preScripts ?? []).map((s) => `<script src="${escapeAttr(s)}"></script>`).join('\n')}
 <script type="module" src="${escapeAttr(parts.scriptSrc)}"></script>
 </body>

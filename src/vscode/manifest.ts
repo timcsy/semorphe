@@ -87,7 +87,23 @@ export const EXTENSION_VERSION = '0.11.7'
  * 而 `resourceLangId` **不帶**（`cpp`）。兩者格式不同是 VSCode 的既定，
  * 不是筆誤。
  */
-const PANEL_WHEN = "activeWebviewPanelId == 'semorphe.blocks'"
+/**
+ * 「目前這個分頁是 Semorphe 的某一個面板」。
+ *
+ * 🔴 **兩種都要算**（2026-09-01）。面板獨立出來之後有兩個 viewType，
+ * 而標題列那些動作（執行／還原／清空／主控台…）對兩個**都成立**
+ * ——它們作用在語義樹上，不在某一種投影上。
+ *
+ * ⚠️ 只寫 `semorphe.blocks` 的症狀是：站在流程面板上時，
+ * **整條標題列的按鈕會消失**，而使用者讀到的不是「這裡沒有那顆按鈕」，
+ * 是「壞了」。
+ *
+ * > **一個動作如果對每一種投影都成立，它的 `when` 就不能指名其中一種。**
+ */
+const PANEL_WHEN = [
+  "activeWebviewPanelId == 'semorphe.blocks'",
+  "activeWebviewPanelId == 'semorphe.flow'",
+].join(' || ')
 
 const EDITOR_WHEN = [
   ...['.ino', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp'].map(
@@ -243,6 +259,14 @@ export function buildManifest(): ExtensionManifest {
           title: '開啟積木面板',
           category: DISPLAY_NAME,
           icon: { light: 'assets/logo-light-theme.svg', dark: 'assets/logo-dark-theme.svg' },
+        },
+        // 🔴 **一種投影一個指令**（2026-09-01）。使用者：「我原本的期待是
+        //    能不能把面板都獨立出來？」——獨立的意思包含「各自開得起來」。
+        //    ⚠️ 沒有 `icon`：標題列上一顆圖示夠了，兩顆長得像的反而難認。
+        {
+          command: 'semorphe.openFlow',
+          title: '開啟流程面板',
+          category: DISPLAY_NAME,
         },
         // 🔴 **一個註冊了卻沒有宣告在這裡的指令，使用者按不到。**
         //

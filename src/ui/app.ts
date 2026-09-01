@@ -47,7 +47,7 @@ import type { SavedState } from '../core/storage'
 import { describeRefusal } from '../core/refusal-message'
 import { LocaleLoader } from '../i18n/loader'
 import { setMessageSource, msg } from '../core/messages'
-import { layoutPreset, hostLayoutOptions, type LayoutPresetId, type HostLayoutOption } from '../core/host/layout-presets'
+import { LAYOUT_PRESETS, layoutPreset, hostLayoutOptions, type LayoutPresetId, type HostLayoutOption } from '../core/host/layout-presets'
 import { SyncCoordinator } from '../core/sync-coordinator'
 import { viewsWith } from '../core/view-registry'
 import { installDialogs } from './prompt-dialog'
@@ -1868,7 +1868,32 @@ export class App {
         //    「說是四格其實根本不是」——那裡只有流程與積木兩層，
         //    程式碼在 IDE 的編輯器、主控台是 IDE 的終端機。
         //    見 `hostLayoutOptions` 的檔頭。
-        const opts = this.shellLayoutOptions?.() ?? hostLayoutOptions(() => true)
+        //
+        // 🪦 **而「這個視窗只畫一層 ⟹ 版面選單消失」那一段退場**（同日稍晚）。
+        //
+        //    使用者：「**我現在要如何切換佈局？**」→「**我要的就是這個，
+        //    你怎麼現在才聽懂？**」
+        //
+        //    我把版面選單拿掉的理由是「一個只有一個選項的選單是假的按鈕」，
+        //    而那個理由**只對一半**：它對「我們自己畫的那張 grid」成立，
+        //    卻被我推論成「所以版面這件事我們不談了」。
+        //
+        // > **把【繪製】交出去，不等於把【談論它】也交出去。**
+        //
+        // 🟢 於是：宿主自己有版面引擎時（`profile.layers` 指名了這個視窗
+        //    畫哪一層），選單端出**宣告的那四張**——它們描述的是**宿主的**
+        //    編輯器分組，由 `vscode/editor-layout.ts` 翻譯。
+        //    ⚠️ 而那四個名字在那裡第一次是**真的**：程式碼是 IDE 的編輯器、
+        //    主控台是 IDE 的終端機，所以「十字（四格）」真的有四格。
+        const hostOwnsLayout = (this.profile.layers?.length ?? 0) > 0
+        const opts = hostOwnsLayout
+          ? LAYOUT_PRESETS.map((p) => {
+            // ⚠️ `'*'`（跟著焦點走的那一格）在這裡先解析掉——示意圖畫的是層名，
+            //    而 `LAYER_*` 不是一個鍵。
+            const areas = p.areas.map((row) => row.map((v) => (v === '*' ? 'space' : v)))
+            return { id: p.id, nameKey: p.nameKey, areas, shape: areas, complete: true }
+          })
+          : this.shellLayoutOptions?.() ?? hostLayoutOptions(() => true)
         const layerName = (l: string): string => msg(`LAYER_${l.toUpperCase()}`, l)
         /**
          * 四層都在 ⟹ 用宣告的名字（網頁版逐字不變）。

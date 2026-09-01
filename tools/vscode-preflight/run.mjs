@@ -196,69 +196,58 @@ console.log(`\n控制項 → 宿主：${controls
   ? `${controlIds.length} 顆（${controlIds.join(', ')}）｜值域${值域齊全 ? '齊全 🟢' : '有空的 🔴 宿主會開出一個空選單'}`
   : '🔴 一顆都沒送——面板不畫、宿主也不知道'}`)
 
-// ── ⑤ 版面：這個宿主真的畫得出幾格，而每條縫拖不拖得動 ──────────────
+// ── ⑤ 每一種視窗只畫它那一層，而版面交給 IDE ─────────────────────
 //
-// 🔴 2026-09-01 加的，而它是那天使用者親自抓到的三件事：
+// 🔴 2026-09-01。這一段的第一版問的是「這個宿主畫得出幾格、每條縫拖不拖得動」
+//    ——而那是**上一個時代的問題**。使用者接著說：
 //
-//   「好像面板不是真的面板，而是大家被塞在一起」
-//   「然後這拉不動」
-//   「說是四格其實根本不是」
+//      「我原本的期待是能不能【把面板都獨立出來】？」
 //
-// ⚠️ 三件事**在網頁版都是對的**——差別只有「這個宿主少了兩層」。
-//    而少了層之後，宣告好好的版面會塌成別的東西，**沒有任何測試會出聲**。
+//    於是積木與流程各自一個 VSCode 面板，我們那張 grid 在這裡整組退場。
+//    ⚠️ 而舊的問題**沒有被丟掉**，它變成更嚴的：格子只准有一個、把手只准是零。
 //
-// > **一份在四層宿主上驗過的版面宣告，不保證它在兩層的宿主上還是那個形狀
-// > ——而形狀塌掉的時候，它塌得很安靜。**
+// > **把一件事交給宿主之後，該驗的不是「我做得對不對」，
+// > 是「我有沒有真的不做了」。**
 //
-// 判準：① 選單裡不得有兩個形狀一樣的選項（那是雜訊）
-//       ② 軌道裡不得有 `0px`（0px 軌道會在邊緣多長出一條假的縫）
-//       ③ **每一個畫出來的把手都要拖得動**（一條拖不動的線比沒有那條線更糟）
-const layoutPage = await browser.newPage({ viewport: { width: 1200, height: 760 } })
-await layoutPage.goto(`http://localhost:${PORT}/preview.html`, { waitUntil: 'networkidle' })
-await layoutPage.waitForSelector('#blockly-panel .blocklySvg', { timeout: 20000 })
-const layoutCtl = await layoutPage.evaluate(() => {
-  const last = [...(window.__HOST__?.sent ?? [])].reverse().find((m) => m.type === 'controls')
-  return last?.items?.find((i) => i.id === 'layout') ?? null
-})
-const layoutLabels = (layoutCtl?.options ?? []).map((o) => o.label)
-const dupLabels = layoutLabels.filter((l, i) => layoutLabels.indexOf(l) !== i)
-console.log(`\n版面 → 這個宿主：${layoutLabels.length} 張` +
-  `（${layoutLabels.join('、')}）${dupLabels.length ? `🔴 重複：${dupLabels.join('、')}` : ' 🟢'}`)
-
-const layoutReport = []
-for (const o of layoutCtl?.options ?? []) {
-  await layoutPage.evaluate((v) => window.postMessage({ type: 'controlInvoke', id: 'layout', value: v }, '*'), o.value)
-  await layoutPage.waitForTimeout(500)
-  const m = await layoutPage.evaluate(() => {
+// 判準：① 這個視窗**只有一格**，而那一格就是它宣告的那一層
+//       ② 一個把手都不准有（版面不歸我們管）
+//       ③ 版面選單**必須送到宿主，而且是宣告的那四張**
+//          🪦 這一條 2026-09-01 當天被推翻過一次：第一版寫的是「不准送」，
+//             理由是「一個只有一個選項的選單是假的按鈕」。而使用者問
+//             「**我現在要如何切換佈局？**」——版面沒有消失，它**換了執行者**。
+//             ⚠️ 那四張在這裡第一次是真的：程式碼是 IDE 的編輯器、
+//                主控台是 IDE 的終端機，所以「十字（四格）」真的有四格。
+//       ④ 兩種視窗都不准有 console 錯誤（流程視窗曾經**開機就炸**）
+const WINDOWS = [
+  { page: 'preview.html', label: '積木視窗', cell: 'blocks-column' },
+  { page: 'preview-flow.html', label: '流程視窗', cell: 'flow-column' },
+]
+console.log('\n面板獨立 → 每種視窗只畫一層：')
+for (const w of WINDOWS) {
+  const wp = await browser.newPage({ viewport: { width: 900, height: 620 } })
+  const errs = []
+  wp.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()) })
+  await wp.goto(`http://localhost:${PORT}/${w.page}`, { waitUntil: 'networkidle' })
+  await wp.waitForTimeout(5000)
+  const m = await wp.evaluate(() => {
     const el = document.getElementById('editors')
-    const cs = getComputedStyle(el)
+    const vis = ['code-column', 'flow-column', 'blocks-column', 'bottom-container']
+      .filter((i) => { const e = document.getElementById(i); return e && getComputedStyle(e).display !== 'none' })
+    const last = [...(window.__HOST__?.sent ?? [])].reverse().find((x) => x.type === 'controls')
     return {
-      cols: cs.gridTemplateColumns, rows: cs.gridTemplateRows,
-      handles: [...document.querySelectorAll('.grid-divider')].map((h) => {
-        const r = h.getBoundingClientRect()
-        return { axis: h.className.includes('columns') ? 'col' : 'row',
-          x: r.x + r.width / 2, y: r.y + r.height / 2 }
-      }),
+      vis, handles: document.querySelectorAll('.grid-divider').length,
+      layoutOptions: ((last?.items ?? []).find((c) => c.id === 'layout')?.options ?? []).length,
+      booted: !!el,
     }
   })
-  const zero = [m.cols, m.rows].join(' ').split(' ').filter((t) => parseFloat(t) === 0)
-  let stuck = 0
-  for (const h of m.handles) {
-    const prop = h.axis === 'col' ? 'gridTemplateColumns' : 'gridTemplateRows'
-    const before = await layoutPage.evaluate((k) => getComputedStyle(document.getElementById('editors'))[k], prop)
-    await layoutPage.mouse.move(h.x, h.y)
-    await layoutPage.mouse.down()
-    await layoutPage.mouse.move(h.axis === 'col' ? h.x + 100 : h.x, h.axis === 'col' ? h.y : h.y + 100, { steps: 6 })
-    await layoutPage.mouse.up()
-    await layoutPage.waitForTimeout(200)
-    const after = await layoutPage.evaluate((k) => getComputedStyle(document.getElementById('editors'))[k], prop)
-    if (before === after) stuck++
-  }
-  layoutReport.push(`  ${o.label}：${m.handles.length} 條縫` +
-    `${stuck ? ` 🔴 ${stuck} 條拖不動` : ' 🟢'}${zero.length ? ` 🔴 有 ${zero.length} 條 0px 軌道` : ''}`)
+  const ok = m.booted && m.vis.length === 1 && m.vis[0] === w.cell &&
+    m.handles === 0 && m.layoutOptions === 4 && errs.length === 0
+  console.log(`  ${w.label}：${m.booted ? m.vis.join(', ') || '🔴 一格都沒有' : '🔴 沒開起來'}` +
+    `｜把手 ${m.handles}${m.handles ? ' 🔴' : ''}` +
+    `｜版面 ${m.layoutOptions === 4 ? '四張・由 IDE 排' : `🔴 ${m.layoutOptions} 張`}` +
+    `${errs.length ? `｜🔴 ${errs.length} 則錯誤：${errs[0].slice(0, 80)}` : ''} ${ok ? '🟢' : ''}`)
+  await wp.close()
 }
-for (const line of layoutReport) console.log(line)
-await layoutPage.close()
 
 const phaseReached = !!syncPhase && typeof syncPhase.detail === 'string' && syncPhase.detail.length > 0
 console.log(`\n同步三態 → 宿主：${phaseReached

@@ -18,6 +18,7 @@
  */
 import { VscodeCodeView } from './webview/vscode-code-view'
 import type { HostProfile, StorageLike } from '../core/host/host-profile'
+import type { UnderstandingLayer } from '../core/view-host'
 import type { SavedState, LoadOutcome } from '../core/storage'
 
 /**
@@ -51,6 +52,46 @@ class DocumentlessStorage implements StorageLike {
   dumpForTest(): unknown {
     return this.prefs
   }
+}
+
+/**
+ * **這個視窗畫哪一層**（2026-09-01）。
+ *
+ * 🔴 使用者：「我原本的期待是能不能**把面板都獨立出來**？」
+ *
+ * 在這個宿主裡，四層有三層早就是 IDE 原生的東西了：
+ *
+ * ```
+ * 程式碼  IDE 的編輯器
+ * 主控台  IDE 的終端機      （因為程式要讀 cin，唯讀的輸出格讓輸入沒有家）
+ * 變數    IDE 的 panel 視圖
+ * 積木＋流程                 ← 只剩這兩個擠在同一個 webview 裡
+ * ```
+ *
+ * 而它們擠在一起的代價，使用者一次講了四句：面板不像面板、線拉不動、
+ * 說是四格其實不是、選單分不出組。**四句的根都是「我們在一個已經有版面引擎
+ * 的宿主裡，又帶了一個自己的版面引擎進去」。**
+ *
+ * 🟢 一個視窗一層之後，版面回到 IDE：拖到側邊、拆成兩欄、用它自己的分隔線
+ * ——而使用者不必再學第二套。
+ */
+export type VscodeViewKind = 'blocks' | 'flow'
+
+const LAYER_OF: Record<VscodeViewKind, UnderstandingLayer> = {
+  blocks: 'space',
+  flow: 'relation',
+}
+
+/**
+ * 一個「只畫一層」的 VSCode 宿主宣告。
+ *
+ * ⚠️ 除了 `layers` 之外**與預設的那一份逐格相同**——因為它們是同一個宿主，
+ * 差別只有「這個視窗負責哪一層」。
+ *
+ * > **兩個視窗如果只差在「畫什麼」，那就只有那一格可以不一樣。**
+ */
+export function vscodeProfileFor(kind: VscodeViewKind): HostProfile {
+  return { ...vscodeProfile, layers: [LAYER_OF[kind]] }
 }
 
 export const vscodeProfile: HostProfile = {

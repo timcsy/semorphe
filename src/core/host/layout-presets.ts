@@ -264,6 +264,16 @@ export function hostLayoutOptions(
   const out: HostLayoutOption[] = []
   for (const p of LAYOUT_PRESETS) {
     const areas = reduceAreas(p, available, focusLayer)
+    // 🔴 **一格都不剩的版面不是一個選項**（2026-09-01 實測）。
+    //
+    //    在一個只畫流程的視窗裡，「對照」（程式碼｜積木／主控台｜積木）
+    //    一層都不在——縮減之後是一張**空矩陣**。而它不只是「不好用」：
+    //    `applyLayout` 拿 `areas[0]` 去鋪軌道，於是**開機就炸**，
+    //    面板一片空白而 console 只有一行 `undefined (reading 'map')`。
+    //
+    // > **一個「把不要的拿掉」的化簡，要能回答「全部都不要」那一格
+    // > ——而它的答案通常不是「空的」，是「這件事不存在」。**
+    if (areas.length === 0 || areas[0].length === 0) continue
     const shape = normalizeShape(areas)
     // ⚠️ 簽章要含形狀，不只含層——「並排」與「上下」的層一樣而形狀不同。
     // 🔴 而它問的是 `shape` 不是 `areas`：跨格與單格**畫面上是同一件事**。
