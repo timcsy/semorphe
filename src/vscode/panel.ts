@@ -87,10 +87,14 @@ const DIAGNOSTICS = vscode.languages.createDiagnosticCollection('semorphe')
 const VIEW_TYPES: Record<VscodeViewKind, string> = {
   blocks: 'semorphe.blocks',
   flow: 'semorphe.flow',
+  state: 'semorphe.console',
 }
 const TITLES: Record<VscodeViewKind, string> = {
   blocks: 'Semorphe 積木',
   flow: 'Semorphe 流程',
+  // ⚠️ 這一格是**兩個分頁**（主控台／變數）——標題寫層的名字會太抽象，
+  //    所以寫使用者按下去最常要的那一個。
+  state: 'Semorphe 主控台',
 }
 const DIST = ['dist']
 const MEDIA = ['dist', 'media']
@@ -162,9 +166,6 @@ const sessions = new Map<VscodeViewKind, SemorpheSession>()
  */
 let active: SemorpheSession | undefined
 
-/** 終端機目前在服務誰——見 `type === 'console'` 那一段。 */
-let consoleOwner: SemorpheSession | undefined
-
 /**
  * 開過面板的那個 context。
  *
@@ -173,15 +174,6 @@ let consoleOwner: SemorpheSession | undefined
  *    而 `activate` 之前沒有人叫得到這裡。
  */
 let extensionContext: vscode.ExtensionContext | undefined
-
-/**
- * 終端機打進來的東西該給誰。
- *
- * ⚠️ 寫成一支函式而不是行內的 `(consoleOwner ?? active)?.…`——那樣寫時
- * **一行以 `(` 開頭會被接到上一行**（ASI），而症狀是
- * `Type 'String' has no call signatures`，離原因很遠。
- */
-const consoleTarget = (): SemorpheSession | undefined => consoleOwner ?? active
 
 class SemorpheSession {
   private readonly panel: vscode.WebviewPanel
@@ -446,18 +438,16 @@ class SemorpheSession {
     if (m.type === 'syncPhase') { updateSyncStatusBar(m.phase, m.source, m.detail); return }
     if (m.type === 'controls') { updateControlSurfaces(m.items); return }
     if (m.type === 'problems') { this.publishDiagnostics(m.items); return }
-    if (m.type === 'console') {
-      // 🔴 **終端機打的字要回給【剛剛在印東西的那個面板】**（2026-09-01）。
-      //
-      //    兩個面板各有自己的解譯器，而終端機只有一台。使用者在終端機打的
-      //    那一行 `cin`，屬於**正在等它的那次執行**——不是「目前看著的面板」。
-      //
-      // > **輸入的歸屬由「誰在等」決定，不由「誰在畫面上」決定。**
-      consoleOwner = this
-      writeToTerminal(m)
-      return
-    }
-    if (m.type === 'variables') { variablesView.update(m.groups); return }
+    // 🪦 `console` 與 `variables` 這兩則**不再有宿主端的消費者**（2026-09-01）。
+    //
+    // 🔴 主控台與變數是 `state` 面板裡的兩個分頁，而那個面板自己畫它們——
+    //    **沒有東西要跨過這條線**。而「兩個面板搶一台終端機，輸入該給誰」
+    //    那個問題跟著整個消失。
+    //
+    // ⚠️ 訊息本身留著不接：webview 那側在 `output` 投影到 `panelBottom` 時
+    //    根本不送它們，而**收到了也只是舊版的 webview**——靜靜地丟掉，
+    //    比拋錯好（一個舊面板不該讓宿主壞掉）。
+    if (m.type === 'console' || m.type === 'variables') return
     if (m.type === 'ready') { this.resend(); return }
     if (m.type === 'requestDocument') {
       // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
@@ -766,7 +756,6 @@ class SemorpheSession {
     hideControlSurfaces()
     // 🔴 面板關了，診斷也不該留在 Problems 上——**它們是這個面板算出來的**。
     if (this.doc) DIAGNOSTICS.delete(this.doc.uri)
-    disposeTerminal()
   }
 }
 
@@ -968,29 +957,68 @@ async function applyEditorLayout(presetId: string): Promise<void> {
   const preset = layoutPreset(presetId as LayoutPresetId)
   if (!preset) return
   // ⚠️ 「專注」的 `*` 跟著**目前這個面板**走——它就是使用者正在看的那一層。
-  const focus: UnderstandingLayer = active?.kind === 'flow' ? 'relation' : 'space'
-  const { layout, columnOf } = planEditorLayout(preset, focus)
+  const focus: UnderstandingLayer =
+    active?.kind === 'flow' ? 'relation' : active?.kind === 'state' ? 'state' : 'space'
+  const { layout, order } = planEditorLayout(preset, focus)
+
+  const ctx = extensionContext
+  const KIND_OF: Partial<Record<UnderstandingLayer, VscodeViewKind>> = {
+    relation: 'flow', space: 'blocks', state: 'state',
+  }
 
   // ② 該開的先開。🔴 沒開的話 `setEditorLayout` 會排出一格**空的編輯器**，
   //    而使用者讀到的是「壞了」，不是「這一格還沒有東西」。
-  const ctx = extensionContext
+  //    ⚠️ **只補開，不 reveal**：這一步搬動面板的話，下面那步要對付的是
+  //       一個被自己攪動過的版面。
   if (ctx) {
-    if (columnOf.has('space')) openPanel(ctx, 'blocks')
-    if (columnOf.has('relation')) openPanel(ctx, 'flow')
+    for (const layer of order) {
+      const kind = KIND_OF[layer]
+      if (kind && !sessions.has(kind)) openPanel(ctx, kind)
+    }
   }
 
   // ③ 排。
   await vscode.commands.executeCommand('vscode.setEditorLayout', layout)
 
   // ④ 各自就位。
+  //
+  // 🔴 **問 VSCode 現在有哪些組，不要自己數**（2026-09-01 實測）。
+  //
+  //    第一版拿推導時數出來的序號當 `ViewColumn`，而使用者按了十字之後：
+  //    程式碼左上 ✅、流程右上 ✅、積木右下 ✅，**主控台跑去跟流程擠同一組**，
+  //    左下留一格空的。`ViewColumn` 的號碼是 VSCode 自己的分組編號，
+  //    巢狀重排之後它與「由左到右、由上到下」不一致。
+  //
+  // > **一個「第幾個」的索引，只在【被數的東西與被指的東西一一對應時】才成立。**
+  //
+  // ⚠️ 而 `tabGroups.all` 給的順序**就是那個版面的順序**——它與 `order`
+  //    是同一棵樹走出來的兩份，所以逐項對得起來。
+  const cols = vscode.window.tabGroups.all.map((g) => g.viewColumn)
   const doc = active?.document
-  const codeColumn = columnOf.get('element')
-  if (doc && codeColumn !== undefined) {
-    await vscode.window.showTextDocument(doc, { viewColumn: codeColumn, preserveFocus: true })
+  for (let i = 0; i < order.length; i++) {
+    const col = cols[i]
+    if (col === undefined) continue
+    const layer = order[i]
+    if (layer === 'element') {
+      if (doc) await vscode.window.showTextDocument(doc, { viewColumn: col, preserveFocus: true })
+      continue
+    }
+    const kind = KIND_OF[layer]
+    if (kind) sessions.get(kind)?.reveal(col)
   }
-  for (const [layer, kind] of [['relation', 'flow'], ['space', 'blocks']] as const) {
-    const col = columnOf.get(layer)
-    if (col !== undefined) sessions.get(kind)?.reveal(col)
+
+  // ⑤ 🔴 **告訴面板它現在是哪一張**——不然狀態列上那顆會停在上一個名字。
+  //
+  //    實測：按了十字，四個分組都排對了，而狀態列仍然寫著「對照（程式碼 ＋ 積木）」
+  //    ——因為 `currentLayout` 住在 webview，而這一顆被主行程攔下來自己做了。
+  //
+  // > **攔下一個控制項的【執行】，不等於可以不回報它的【結果】
+  // > ——而一顆說著舊值的按鈕，比一顆沒反應的按鈕更難查。**
+  //
+  // ⚠️ 送給**每一個**面板，不只 `active`：狀態列由目前看的那個面板餵，
+  //    只更新一個的話，切過去就會看到舊名字。
+  for (const s of sessions.values()) {
+    s.sendControl({ type: 'controlInvoke', id: 'layout', value: presetId })
   }
 }
 
@@ -1005,273 +1033,41 @@ export function invokeControl(id: string, value?: string): void {
 }
 
 /**
- * 主控台 —— **一台偽終端機**（2026-08-25，`draft/版面與檔案` §六之六）。
+ * 🪦 **終端機那條路整條退場**（2026-09-01）—— 268 行、7 個全域狀態。
  *
- * ## 🔴 為什麼是終端機，不是 Output channel
+ * 使用者：「或許，semorphe 的主控台**不一定要用原生的**。」
  *
- * **我們的程式會讀輸入**（`cin`）。而 Output channel 是唯讀的：
+ * 這裡曾經有：一台偽終端機（`ensureTerminal`／`probeTerminal`）、一份唯讀的
+ * 虛擬文件（`semorphe-console:` scheme）當作終端機開不起來時的退路、
+ * 一顆 `showInputBox` 當作那個退路也要讀 `cin` 時的退路、一個
+ * `consoleMode: 'terminal' | 'editor'` 記著現在走哪一條，以及 `consoleOwner`
+ * （兩個面板搶一台終端機時，輸入該給誰）。
  *
- * > **一個唯讀的輸出格會讓「輸入」沒有家
- * > ——而那正是主控台今天存在的理由。**
+ * 🔴 **那一整疊都在補同一個坑**：宿主的輸出格是唯讀的，而我們的程式要讀
+ * `cin`。面板獨立出來之後，主控台是我們自己的一個 webview——它有輸入框。
  *
- * 搬進 Output 等於把它一半的功能丟掉。
+ * > **一條為了繞過某個限制而生的路，在限制消失之後不會自己消失
+ * > ——它會變成「本來就這樣」。**
  *
- * ## ⚠️ 終端機吃的是 `\r\n`
+ * ⚠️ 同一段裡的 `VariablesView` 也一起走：它是一個**被餵的**薄視圖，有自己
+ * 一份 `reportVariables` schema，而餵它的面板關掉之後**沒有人清它**
+ * ——它停在最後一筆，看起來完全正常。
  *
- * 而程式吐的是 `\n`。只送 `\n` 的症狀是**階梯狀的輸出**
- * ——每一行都從上一行的結尾開始。
+ * 🟢 而它們沒有被丟掉：它們是 `state` 面板裡的兩個分頁，
+ * **與網頁版逐格相同的那一份**（`ui/panels/console-panel.ts`）。
  */
-let terminal: vscode.Terminal | undefined
-const termWrite = new vscode.EventEmitter<string>()
-let termLine = ''
-
-/**
- * 🔴 **宿主真的把終端機打開了嗎**——而這是一個**能力探測**，不是猜宿主是誰。
- *
- * ## 它修的是什麼
- *
- * 使用者 2026-08-25：「**Arduino IDE 那邊沒有辦法開啟終端機面板**」。
- * 而那不是「比較難看」——**執行的輸出會完全沒有出口**。
- *
- * ## ⚠️ 為什麼不去看 `vscode.env.appName`
- *
- * 那是**用身分當能力的代理**，而這個專案明令禁止
- *（`core/host/host-profile.ts`：「一旦有人寫 `profile.id === '…'`，
- * 那份宣告就退化成一個標籤」）。
- *
- * 🟢 而這裡有一個**真的**訊號：`Pseudoterminal.open()`
- * **只有在宿主真的把它打開時才會被呼叫**。開不起來，那個回呼永遠不來。
- *
- * > **一個能力該用「它做得到嗎」去問，不是用「你是誰」去猜。**
- */
-let ptyOpened = false
-let probeDone = false
-
-function ensureTerminal(): vscode.Terminal {
-  if (terminal) return terminal
-  const pty: vscode.Pseudoterminal = {
-    onDidWrite: termWrite.event,
-    // 🔴 **這一格就是探測**：宿主真的把它打開了，才會走到這裡。
-    open: () => { ptyOpened = true },
-    close: () => { terminal = undefined; termLine = '' },
-    // 使用者在終端機打字。⚠️ 這裡要**自己回顯**：偽終端機沒有 line discipline。
-    handleInput: (data: string) => {
-      for (const ch of data) {
-        if (ch === '\r') {
-          termWrite.fire('\r\n')
-          const line = termLine
-          termLine = ''
-          consoleTarget()?.sendConsoleInput(line)
-        } else if (ch === '\u007f' || ch === '\b') {
-          // Backspace：往回一格、蓋掉、再往回一格
-          if (termLine.length > 0) { termLine = termLine.slice(0, -1); termWrite.fire('\b \b') }
-        } else if (ch >= ' ') {
-          termLine += ch
-          termWrite.fire(ch)
-        }
-      }
-    },
-  }
-  terminal = vscode.window.createTerminal({ name: 'Semorphe', pty })
-  return terminal
+export function showConsole(): void {
+  if (extensionContext) openPanel(extensionContext, 'state')
 }
 
-/**
- * 終端機開不起來就把主控台還給面板。
- *
- * ⚠️ **只探一次**——探失敗之後每一段輸出都再等一次，等於把每一次執行都拖慢。
- * 🟢 而輸出**不會掉**：面板那顆 `ConsolePanel` 一直都在畫，
- * 終端機只是它的鏡射。所以還回去的時候，內容已經在裡面了。
- */
-function probeTerminal(): void {
-  if (probeDone) return
-  probeDone = true
-  setTimeout(() => {
-    if (ptyOpened) return
-    OUTPUT.appendLine('Semorphe：這個宿主打不開終端機，主控台改用一個編輯器分頁。')
-    disposeTerminal()
-    consoleMode = 'editor'
-    // 🔴 已經送過的輸出**不會掉**——它一直在 `consoleBuffer` 裡。
-    void showConsoleEditor()
-  }, 1500)
-}
+// 🪦 `registerConsoleDocument` 與 `registerVariablesView` **一起退場**。
+//
+// ⚠️ 我原本把它們留成兩個空殼「讓呼叫端還編得過」——而第三十八條護欄當場
+//    抓到（空殼 2，基線 0）。它是對的：
+//
+// > **一個「留著給呼叫者」的空殼不是相容性，是欠款
+// > ——而它會讓下一個人以為那件事還在做。**
 
-/**
- * 主控台的**退路：一個編輯器分頁**（2026-08-25）。
- *
- * > 使用者：「Arduino IDE 那邊還是看不到終端機，**或許可以用新編輯器取代**」
- *
- * 🔴 **比「塞回積木面板」好**：它仍然在 IDE 的編輯器區，
- * 使用者可以把它拉到旁邊、split、關掉——那些都是他已經會的操作。
- *
- * ⚠️ 而虛擬文件**天生唯讀**，所以輸入要另外問：程式喊「我在等輸入」時
- * 跳一個輸入框。**一個唯讀的輸出格會讓輸入沒有家——除非有人去問。**
- */
-const CONSOLE_SCHEME = 'semorphe-console'
-const CONSOLE_URI = vscode.Uri.parse(`${CONSOLE_SCHEME}:/Semorphe 主控台`)
-let consoleMode: 'terminal' | 'editor' = 'terminal'
-let consoleBuffer = ''
-const consoleChanged = new vscode.EventEmitter<vscode.Uri>()
-
-export function registerConsoleDocument(context: vscode.ExtensionContext): void {
-  context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(CONSOLE_SCHEME, {
-    onDidChange: consoleChanged.event,
-    provideTextDocumentContent: () => consoleBuffer || '（還沒有輸出）',
-  }))
-}
-
-async function showConsoleEditor(): Promise<void> {
-  try {
-    const doc = await vscode.workspace.openTextDocument(CONSOLE_URI)
-    // ⚠️ `preserveFocus` ＝ 不要把游標從程式碼上搶走。
-    await vscode.window.showTextDocument(doc, { preview: false, preserveFocus: true, viewColumn: vscode.ViewColumn.Beside })
-  } catch (e) {
-    // 🔴 連編輯器都開不起來——**那時才把主控台還給面板**，不是靜靜地掉輸出。
-    OUTPUT.appendLine(`Semorphe：編輯器分頁也開不起來（${String(e)}），主控台還給面板。`)
-    consoleMode = 'terminal'
-    consoleTarget()?.sendConsoleFallback()
-  }
-}
-
-/** 程式在等輸入，而這個宿主的主控台是唯讀的——去問。 */
-async function askConsoleInput(prompt: string): Promise<void> {
-  const line = await vscode.window.showInputBox({
-    title: 'Semorphe 主控台',
-    prompt: prompt || '程式在等一行輸入',
-    ignoreFocusOut: true,
-  })
-  // ⚠️ 取消也要回一行（空字串）——**不然程式會永遠停在那裡等**。
-  consoleTarget()?.sendConsoleInput(line ?? '')
-}
-
-function writeToTerminal(m: { chunk?: string; clear?: boolean; awaitingInput?: string }): void {
-  if (m.awaitingInput !== undefined) {
-    // 終端機模式下不必問——使用者直接在裡面打字。
-    if (consoleMode === 'editor') void askConsoleInput(m.awaitingInput)
-    return
-  }
-  if (m.clear) { consoleBuffer = '' } else if (m.chunk) { consoleBuffer += m.chunk }
-  if (consoleMode === 'editor') {
-    consoleChanged.fire(CONSOLE_URI)
-    void showConsoleEditor()
-    return
-  }
-  // 🔴 **整段包起來**：`createTerminal({ pty })` 在某些宿主上會丟
-  //    ——而一個丟在訊息處理器裡的例外會**把後面全部吃掉**，
-  //    包含那個本來要救場的探測。症狀就是「主控台完全沒出現」。
-  //
-  // > **退路寫在 `catch` 之外，等於沒有退路。**
-  try {
-    const term = ensureTerminal()
-    if (m.clear) {
-      // ⚠️ `\x1b[2J\x1b[H` ＝ 清畫面 ＋ 游標回原點。
-      termWrite.fire('\x1b[2J\x1b[H')
-    } else if (m.chunk) {
-      // 🔴 `\n` → `\r\n`，理由見檔頭（否則輸出會變成階梯狀）。
-      termWrite.fire(m.chunk.replace(/\r?\n/g, '\r\n'))
-    }
-    term.show(/* preserveFocus */ true)
-    // ⚠️ **清空也要探**——執行開始時送的就是 `clear`，
-    //    只在有輸出時才探的話，「按了執行而什麼都沒出現」會多等一輪。
-    probeTerminal()
-  } catch (e) {
-    OUTPUT.appendLine(`Semorphe：這個宿主開不了終端機（${String(e)}），主控台改用一個編輯器分頁。`)
-    probeDone = true
-    consoleMode = 'editor'
-    consoleChanged.fire(CONSOLE_URI)
-    void showConsoleEditor()
-  }
-}
-
-/**
- * 手動打開主控台。
- *
- * 🔴 **它在此之前只有「有輸出」才會生出來**——而那是一個退步：
- * 面板裡那一格從前一直都在，即使是空的。
- *
- * > **一個要先做對事情才看得到的東西，找不到它的人不會知道自己該做什麼。**
- */
-export async function showConsole(): Promise<void> {
-  if (consoleMode === 'editor') { await showConsoleEditor(); return }
-  try {
-    ensureTerminal().show(false)
-    probeTerminal()
-  } catch {
-    consoleMode = 'editor'
-    await showConsoleEditor()
-  }
-}
-
-/** 面板關了：終端機也沒有東西會再對它說話。 */
-function disposeTerminal(): void {
-  terminal?.dispose()
-  terminal = undefined
-  termLine = ''
-}
-
-/**
- * 變數 —— **`panel` 區的一個視圖，與終端機同一排**（2026-08-25）。
- *
- * > 使用者：「變數面板還是放在那邊呀，我要的是放在主控台跟終端機一起
- * > （**在還沒做 DAP 的時候**）」
- *
- * 🔴 而「在還沒做 DAP 的時候」不是把它當成暫時的將就——
- * `panel` 區本來就是 VSCode 放「執行時看的東西」的地方
- *（`draft/版面與檔案` §六：`panel  主控台 · 變數 · 圖解`）。
- *
- * ⚠️ 它是一個**很薄的 webview**：只畫表格，不載入任何積木機制。
- * 資料由主 webview 推過來——**主行程不算變數，它只轉送**。
- */
-class VariablesView implements vscode.WebviewViewProvider {
-  private view: vscode.WebviewView | undefined
-  private groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[] = []
-
-  resolveWebviewView(view: vscode.WebviewView): void {
-    this.view = view
-    view.webview.options = { enableScripts: false }
-    this.render()
-  }
-
-  update(groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[]): void {
-    this.groups = groups
-    this.render()
-  }
-
-  private render(): void {
-    if (!this.view) return
-    // ⚠️ **不開 script**——這一格只顯示，沒有互動。開了就要管 CSP 與 nonce，
-    //    而那是為了一張表格付的過頭的代價。
-    const rows = this.groups.flatMap((g) => [
-      ...(g.name ? [`<tr class="scope"><td colspan="3">${esc(g.name)}</td></tr>`] : []),
-      ...g.variables.map((v) =>
-        `<tr><td class="n">${esc(v.name)}</td><td class="t">${esc(v.type)}</td><td class="v">${esc(v.value)}</td></tr>`),
-    ]).join('')
-    this.view.webview.html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<style>
-body { font-family: var(--vscode-editor-font-family); font-size: 12px; color: var(--vscode-foreground); padding: 4px 8px; }
-table { width: 100%; border-collapse: collapse; }
-td { padding: 2px 6px 2px 0; vertical-align: top; }
-.n { color: var(--vscode-symbolIcon-variableForeground); white-space: nowrap; }
-.t { color: var(--vscode-descriptionForeground); white-space: nowrap; }
-.v { color: var(--vscode-charts-blue); word-break: break-all; }
-.scope td { color: var(--vscode-descriptionForeground); padding-top: 6px; }
-.empty { color: var(--vscode-descriptionForeground); }
-</style></head><body>${rows ? `<table>${rows}</table>` : '<div class="empty">執行時這裡會顯示變數。</div>'}</body></html>`
-  }
-}
-
-/** ⚠️ HTML 轉義——**變數的值是使用者的資料**，直接塞進 HTML 就是一個注入。 */
-function esc(text: string): string {
-  return text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c))
-}
-
-const variablesView = new VariablesView()
-
-export function registerVariablesView(context: vscode.ExtensionContext): void {
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider('semorphe.variables', variablesView),
-  )
-}
 
 /** 面板關了：狀態列不得繼續宣稱有東西在同步。 */
 function hideSyncStatusBar(): void {

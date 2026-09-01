@@ -221,6 +221,9 @@ console.log(`\n控制項 → 宿主：${controls
 const WINDOWS = [
   { page: 'preview.html', label: '積木視窗', cell: 'blocks-column' },
   { page: 'preview-flow.html', label: '流程視窗', cell: 'flow-column' },
+  // 🟢 2026-09-01：主控台收回成一個面板（`output`／`inspector` → `panelBottom`）。
+  //    ⚠️ 它有**兩個分頁**（主控台／變數）——所以下面多問一句 `tabs`。
+  { page: 'preview-state.html', label: '主控台視窗', cell: 'bottom-container', tabs: 2 },
 ]
 console.log('\n面板獨立 → 每種視窗只畫一層：')
 for (const w of WINDOWS) {
@@ -237,14 +240,18 @@ for (const w of WINDOWS) {
     return {
       vis, handles: document.querySelectorAll('.grid-divider').length,
       layoutOptions: ((last?.items ?? []).find((c) => c.id === 'layout')?.options ?? []).length,
+      // ⚠️ 數**分頁按鈕那一區**，不是整條列——那條列上還有清除鈕與槽選擇器。
+      tabs: document.querySelectorAll('.bottom-panel-tab-buttons button').length,
       booted: !!el,
     }
   })
   const ok = m.booted && m.vis.length === 1 && m.vis[0] === w.cell &&
-    m.handles === 0 && m.layoutOptions === 4 && errs.length === 0
+    m.handles === 0 && m.layoutOptions === 4 && errs.length === 0 &&
+    (w.tabs === undefined || m.tabs === w.tabs)
   console.log(`  ${w.label}：${m.booted ? m.vis.join(', ') || '🔴 一格都沒有' : '🔴 沒開起來'}` +
     `｜把手 ${m.handles}${m.handles ? ' 🔴' : ''}` +
     `｜版面 ${m.layoutOptions === 4 ? '四張・由 IDE 排' : `🔴 ${m.layoutOptions} 張`}` +
+    (w.tabs === undefined ? '' : `｜分頁 ${m.tabs}${m.tabs === w.tabs ? '' : ` 🔴 該有 ${w.tabs}`}`) +
     `${errs.length ? `｜🔴 ${errs.length} 則錯誤：${errs[0].slice(0, 80)}` : ''} ${ok ? '🟢' : ''}`)
   await wp.close()
 }

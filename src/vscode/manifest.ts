@@ -103,6 +103,7 @@ export const EXTENSION_VERSION = '0.11.7'
 const PANEL_WHEN = [
   "activeWebviewPanelId == 'semorphe.blocks'",
   "activeWebviewPanelId == 'semorphe.flow'",
+  "activeWebviewPanelId == 'semorphe.console'",
 ].join(' || ')
 
 const EDITOR_WHEN = [
@@ -285,7 +286,9 @@ export function buildManifest(): ExtensionManifest {
         //    使用者 2026-08-25：「全域，**不放在面板裡面的**」。
         {
           command: 'semorphe.showConsole',
-          title: '開啟主控台',
+          // 🪦 2026-09-01 之前這一顆叫出的是**終端機**；現在它開的是
+          //    `state` 面板（主控台／變數兩個分頁）——名字跟著說實話。
+          title: '開啟主控台面板',
           category: DISPLAY_NAME,
         },
         {
@@ -315,19 +318,19 @@ export function buildManifest(): ExtensionManifest {
           category: DISPLAY_NAME,
         })),
       ],
-      // 🔴 **變數住在 `panel` 區**——與終端機／Problems 同一排。
-      //    使用者 2026-08-25：「我要的是放在主控台跟終端機一起」。
-      //    ⚠️ `panel` 這個容器位置**就是 VSCode 放「執行時看的東西」的地方**。
-      viewsContainers: {
-        panel: [
-          { id: 'semorphe-panel', title: DISPLAY_NAME, icon: 'assets/logo-dark-theme.svg' },
-        ],
-      },
-      views: {
-        'semorphe-panel': [
-          { type: 'webview', id: 'semorphe.variables', name: '變數' },
-        ],
-      },
+      // 🪦 **`viewsContainers` ＋ `views` 整組退場**（2026-09-01）。
+      //
+      // 這裡曾經宣告一個 `panel` 區的容器與 `semorphe.variables` 視圖
+      // ——那是「主控台去終端機、變數去 panel 區」那個時代的東西。
+      //
+      // 🔴 而變數在那裡是一個**被餵的**薄視圖：它有自己一份 `reportVariables`
+      //    schema，而餵它的面板關掉之後**沒有人清它**，它停在最後一筆，
+      //    看起來完全正常。
+      //
+      // > **一個必須被餵才畫得出來的視圖，它不是在投影。**
+      //
+      // 🟢 主控台與變數現在是 `state` 面板（`semorphe.console`）裡的兩個分頁
+      //    ——與網頁版**逐格相同的那一份**，而它們各自跟著自己的面板走。
       configuration: {
         title: DISPLAY_NAME,
         properties: configProperties(),

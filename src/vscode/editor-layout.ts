@@ -59,6 +59,27 @@ export interface EditorLayoutPlan {
    *
    * ⚠️ **不含 `state`**——主控台是 IDE 的終端機，它不住在編輯器區。
    */
+  /**
+   * 每一層照**分組的順序**排出來——第 0 個去第一組、第 1 個去第二組……
+   *
+   * 🔴 **它是「第幾個」，不是「第幾號」**（2026-09-01 實測之後改的）。
+   *
+   * 第一版回傳的是一張「層 → `ViewColumn` 號碼」的表，號碼由這裡自己數。
+   * 而使用者按了十字之後的實測：程式碼在左上 ✅、流程在右上 ✅、積木在右下 ✅，
+   * **主控台跑去跟流程擠同一組**，左下留了一格空的。
+   *
+   * ⚠️ 因為 `ViewColumn` 的號碼**不是我們數得出來的**——它是 VSCode 自己的
+   * 分組編號，而巢狀版面重排之後，那串號碼與「由左到右、由上到下」不一致。
+   *
+   * > **一個「第幾個」的索引，只在【被數的東西與被指的東西一一對應時】才成立。**
+   *
+   * 🔴 同一句話**同一天出現第二次**——第一次是 `ui/layout/grid-dividers.ts`
+   * 的 `boundaryAt`（把手的序號 vs 軌道的序號）。處置也一樣：**問，不要數**。
+   * 排完之後問 `vscode.window.tabGroups.all`「你現在有哪些組」，再照順序配。
+   */
+  readonly order: readonly UnderstandingLayer[]
+
+  /** 🪦 由 `order` 導出，只給測試與說明用——**執行時不要拿它當 `ViewColumn`**。 */
   readonly columnOf: ReadonlyMap<UnderstandingLayer, number>
 }
 
@@ -72,8 +93,8 @@ export interface EditorLayoutPlan {
  * ② 那一欄裡有幾種【不同的】層 → 那一組再拆幾列
  * ```
  *
- * 🔴 而 `state` 在這一步**先被拿掉**：它是終端機，不是編輯器分組。
- * ⚠️ 拿掉之後整欄空掉的話，那一欄不產生分組（否則會多出一格空白的編輯器）。
+ * ⚠️ 整欄空掉的話那一欄不產生分組（否則會多出一格空白的編輯器）——
+ *    今天四層都在，所以到不了；而它是**便宜的正確**，留著。
  *
  * > **一份宣告翻譯到另一個系統時，翻不過去的那一格不是「留白」，是「不存在」。**
  */
@@ -90,19 +111,20 @@ export function planEditorLayout(
     const cell: UnderstandingLayer[] = []
     for (const row of resolved) {
       const l = row[c]
-      if (l === 'state') continue          // 主控台 ＝ 終端機，不佔編輯器分組
+      // 相鄰而相同 ＝ **跨格**，不是兩格（`normalizeShape` 那條規矩的同一句）
       if (cell[cell.length - 1] !== l) cell.push(l)
     }
     if (cell.length > 0) columns.push(cell)
   }
 
-  // 走一遍樹，順便把「第幾組」記下來——**順序就是 VSCode 的分組編號**。
-  const columnOf = new Map<UnderstandingLayer, number>()
-  let n = 0
+  // 走一遍樹，把「第幾個分組是誰」按順序記下來。
+  // ⚠️ **只記順序，不記號碼**——號碼要問 VSCode（見 `order` 的說明）。
+  const order: UnderstandingLayer[] = []
   const groups: GroupNode[] = columns.map((cell) => {
-    if (cell.length === 1) { columnOf.set(cell[0], ++n); return {} }
-    return { groups: cell.map((l) => { columnOf.set(l, ++n); return {} }) }
+    if (cell.length === 1) { order.push(cell[0]); return {} }
+    return { groups: cell.map((l) => { order.push(l); return {} }) }
   })
 
-  return { layout: { orientation: HORIZONTAL, groups }, columnOf }
+  const columnOf = new Map(order.map((l, i) => [l, i + 1] as const))
+  return { layout: { orientation: HORIZONTAL, groups }, order, columnOf }
 }

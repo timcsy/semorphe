@@ -162,6 +162,17 @@ function main(): void {
       view: 'flow',
     }),
   )
+  writeFileSync(
+    join(OUT, 'dist', 'preview-state.html'),
+    renderHtml({
+      preScripts: ['./host-stub.js'],
+      scriptSrc: './webview.js',
+      styleSrc: './webview.css',
+      mediaSrc: './media/',
+      csp: csp(`'self'`),
+      view: 'state',
+    }),
+  )
 
   // 5. 打包。⚠️ `vsce` 以 **cwd** 為擴充根目錄——不切過去的話它會讀到
   //    網頁版那份 `package.json`，而那份沒有 `engines.vscode`。

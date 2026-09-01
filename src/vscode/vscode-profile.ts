@@ -75,11 +75,14 @@ class DocumentlessStorage implements StorageLike {
  * 🟢 一個視窗一層之後，版面回到 IDE：拖到側邊、拆成兩欄、用它自己的分隔線
  * ——而使用者不必再學第二套。
  */
-export type VscodeViewKind = 'blocks' | 'flow'
+export type VscodeViewKind = 'blocks' | 'flow' | 'state'
 
 const LAYER_OF: Record<VscodeViewKind, UnderstandingLayer> = {
   blocks: 'space',
   flow: 'relation',
+  // 🔴 主控台與變數是**同一層**（`state`）的兩個分頁——與網頁版逐格相同。
+  //    ⚠️ 它們不是兩個面板：`LAYER_ORDER` 有四層，不是五層。
+  state: 'state',
 }
 
 /**
@@ -139,11 +142,36 @@ export const vscodeProfile: HostProfile = {
     picker: 'hostStatusBar',
     action: 'hostTitleBar',
     indicator: 'hostStatusBar',
-    // 🔴 **終端機，不是 Output 面板**——我們的程式會讀 `cin`，
-    //    而一個唯讀的輸出格會讓「輸入」沒有家。
-    output: 'hostTerminal',
-    // 🔴 **`panel` 區，與終端機同一排**——而不是積木面板裡的一格。
-    //    ⚠️ 它的終局是 DAP 的 Variables 視圖；這一格是在那之前的家。
-    inspector: 'hostPanel',
+    // 🪦 **`hostTerminal` 退場**（2026-09-01）。
+    //
+    // 它當初的理由是：「終端機，不是 Output 面板——我們的程式會讀 `cin`，
+    // 而一個唯讀的輸出格會讓『輸入』沒有家。」
+    //
+    // 🔴 而那句話的對手是 **VSCode 的 Output 面板**。面板獨立出來之後，
+    //    主控台可以是**我們自己的一個 webview 面板**——它有輸入框，
+    //    `cin` 有家。**前提換掉了，結論就不跟著成立。**
+    //
+    // 使用者 2026-09-01：「或許，semorphe 的主控台**不一定要用原生的**。」
+    //
+    // 換掉買到三樣：
+    //
+    // ```
+    // ① `panel.ts` 裡 217 行（16%）與 7 個全域狀態退場
+    //    ——其中一大半是在補「唯讀」這個坑：終端機開不起來 → 改開一個
+    //      編輯器分頁 → 連編輯器都開不起來 → 還給面板，整條退路
+    // ② 「兩個面板搶一台終端機，輸入該給誰」這個問題【整個消失】
+    // ③ Theia 可攜性——`history/080` 逐字：「Theia 的 Webview 與 VSCode 的
+    //    差異沒有逐項比對過」，而 pty 正是差異最大的地方之一
+    // ```
+    //
+    // > **一條為了繞過某個限制而生的路，在限制消失之後不會自己消失
+    // > ——它會變成「本來就這樣」。**
+    output: 'panelBottom',
+    // 🪦 `hostPanel` 同上退場。變數本來是一個**被餵的**薄視圖，
+    //    有自己一份 `reportVariables` schema，而餵它的面板關掉之後
+    //    **沒有人清它**——它停在最後一筆，看起來完全正常。
+    //
+    // > **一個必須被餵才畫得出來的視圖，它不是在投影。**
+    inspector: 'panelBottom',
   },
 }

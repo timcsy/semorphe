@@ -181,17 +181,40 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
       .toBe('function')
     expect(typeof view.onControlInvoke, '🔴 只能看不能按的控制項是死的')
       .toBe('function')
-    expect(typeof view.reportConsole, '🔴 程式在講話而宿主聽不到＝執行沒有出口')
-      .toBe('function')
-    expect(typeof view.onConsoleInput, '🔴 只能輸出不能輸入的主控台，`cin` 就沒有家')
-      .toBe('function')
-    expect(typeof view.onConsoleFallback, '🔴 終端機打不開就沒有退路＝執行沒有出口')
-      .toBe('function')
-    expect(typeof view.reportVariables, '🔴 變數投影到宿主而交不出去＝那一格會是空的')
-      .toBe('function')
-    // ⚠️ 而主行程那側要**真的探測**，不是猜宿主是誰（原始碼檢查，比較弱）
+    // 🔴 **主控台與變數這兩格【問宣告】，不寫死**（2026-09-01）。
+    //
+    // 在此之前這裡無條件要求 `reportConsole`／`onConsoleFallback`／
+    // `reportVariables`，並且要求 `panel.ts` 裡出現 `ptyOpened`
+    // （＝「終端機真的打得開嗎」那個探測）。
+    //
+    // ⚠️ 而那假設了**主控台一定投影到宿主**。使用者 2026-09-01：
+    // 「或許，semorphe 的主控台不一定要用原生的」——它收回成一個面板之後，
+    // 宿主那側**沒有東西要接**，於是這條護欄開始要求一個不該存在的符號。
+    //
+    // > **一條「交出去的東西宿主要接得住」的規範，前提是【它真的交出去了】
+    // > ——把那個前提寫死，規範就會在收回來的那天反過來擋路。**
+    //
+    // 🟢 而它沒有變弱：把 `output` 改回 `hostTerminal`，下面整組要求就回來。
     const panelSrc = fs.readFileSync('src/vscode/panel.ts', 'utf8')
-    expect(panelSrc, '🔴 沒有探測＝「應該有」被當成「一定有」').toContain('ptyOpened')
+    if (vscodeProfile.controlSurfaces.output.startsWith('host')) {
+      expect(typeof view.reportConsole, '🔴 程式在講話而宿主聽不到＝執行沒有出口')
+        .toBe('function')
+      expect(typeof view.onConsoleInput, '🔴 只能輸出不能輸入的主控台，`cin` 就沒有家')
+        .toBe('function')
+      expect(typeof view.onConsoleFallback, '🔴 終端機打不開就沒有退路＝執行沒有出口')
+        .toBe('function')
+      // ⚠️ 而主行程那側要**真的探測**，不是猜宿主是誰（原始碼檢查，比較弱）
+      expect(panelSrc, '🔴 沒有探測＝「應該有」被當成「一定有」').toContain('ptyOpened')
+    } else {
+      // 🔴 **收回來就要【真的】收乾淨**——留著半條終端機的路，
+      //    它會在某次重構時被當成「還在用的東西」而復活。
+      expect(panelSrc, '🔴 主控台已經收回面板，而終端機那條路還在')
+        .not.toContain('ptyOpened')
+    }
+    if (vscodeProfile.controlSurfaces.inspector.startsWith('host')) {
+      expect(typeof view.reportVariables, '🔴 變數投影到宿主而交不出去＝那一格會是空的')
+        .toBe('function')
+    }
     // ⚠️ **註解裡提到它不算**（那是說明，不是分支）——與第 60 條的
     //    `profile.id ===` 掃描同一個形狀。第一版沒排掉註解，配到自己寫的說明。
     const branching = panelSrc.split('\n')

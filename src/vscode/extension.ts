@@ -23,7 +23,7 @@
  * 而**宿主層本來就要認識宿主**。方向是單向的。
  */
 import * as vscode from 'vscode'
-import { openBlocksPanel, openPanel, requestDiagnostics, openSyncMenu, pickControl, invokeControl, registerConsoleDocument, registerVariablesView, showConsole, SYNC_MENU_COMMAND } from './panel'
+import { openBlocksPanel, openPanel, requestDiagnostics, openSyncMenu, pickControl, invokeControl, showConsole, SYNC_MENU_COMMAND } from './panel'
 import { CONTROLS, RUN_MODES, hostCommandId, runModeCommandId } from '../core/host/controls'
 
 export const OPEN_COMMAND = 'semorphe.openBlocks'
@@ -34,11 +34,6 @@ export const DIAGNOSTICS_COMMAND = 'semorphe.showDiagnostics'
 export { SYNC_MENU_COMMAND }
 
 export function activate(context: vscode.ExtensionContext): void {
-  // 🔴 主控台的退路：一份虛擬文件（宿主打不開終端機時當成編輯器分頁開）。
-  //    ⚠️ 要在**啟用時**就註冊——內容提供者不能等到要用的時候才註冊。
-  registerConsoleDocument(context)
-  // 🔴 變數住在 `panel` 區，與終端機同一排（在 DAP 之前）。
-  registerVariablesView(context)
   context.subscriptions.push(
     vscode.commands.registerCommand(OPEN_COMMAND, () => openBlocksPanel(context)),
     vscode.commands.registerCommand(OPEN_FLOW_COMMAND, () => openPanel(context, 'flow')),
@@ -47,7 +42,8 @@ export function activate(context: vscode.ExtensionContext): void {
     // 🔴 **一個註冊了卻沒有宣告在 manifest 的指令，使用者按不到**（`manifest.ts:173`）
     vscode.commands.registerCommand(SYNC_MENU_COMMAND, () => openSyncMenu()),
     // 🔴 主控台要**找得到**，不能只在有輸出時才生出來。
-    vscode.commands.registerCommand('semorphe.showConsole', () => void showConsole()),
+    //    🪦 而它不再是「叫出終端機」——主控台是一個面板了（2026-09-01）。
+    vscode.commands.registerCommand('semorphe.showConsole', () => showConsole()),
     // 🔴 **控制項的指令由同一份登錄表產生**——manifest 那側也是它。
     //    ⚠️ 兩邊各寫一次的話，「宣告了而沒註冊」會是一個**執行期才炸**的錯，
     //    而使用者看到的是「指令面板上有，按了說找不到指令」。
