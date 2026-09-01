@@ -244,10 +244,14 @@ html, body {
      各自帶一個 `grid-area`，而版面只是一句 `grid-template-areas`。
      🪦 取代了 `SplitPane` ＋ 巢狀 flex：那個形狀撐不到「十字」（四層各一格是二維的）。 */
   display: grid;
+  /* 🔴 **格與格之間要有縫**（2026-09-01）：沒有縫的話兩欄貼在一起，
+     而分隔線只能【蓋在內容上】——它會壓掉每一欄各 2px。 */
+  gap: 4px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
   position: relative;
+  background: #1b1b1c;   /* 縫裡露出來的底色 */
 }
 
 /* ─── 可拖的格線（`layout/grid-dividers.ts`）─── */

@@ -747,12 +747,35 @@ export function createAppLayout(
       if (host && bar.parentElement !== host) host.insertBefore(bar, host.firstChild)
     }
 
+    // 🔴 **兩個投影都看得見時，那兩顆分頁沒有工作可做**（2026-09-01）。
+    //
+    //    在「三欄」與「十字」裡積木與流程各有自己的一格——按「流程」不會有任何事發生。
+    //    而一顆按下去沒有反應的按鈕，比沒有那顆按鈕更糟：使用者會以為壞了。
+    //
+    // > **一個控制項如果在某個狀態下什麼都不做，那個狀態下它就不該在。**
+    //
+    // ⚠️ 收起來的只有那兩顆分頁，**不是整條快速列**（↩↪ 與「清空」仍然要在）。
+    const bothProjections = shown.has('relation') && shown.has('space')
+    for (const id of ['view-blocks-btn', 'view-flow-btn']) {
+      const btn = document.getElementById(id)
+      if (btn) btn.style.display = bothProjections ? 'none' : ''
+    }
+
     document.body.setAttribute('data-layout', id)
+    // 🔴 **重鋪把手要【先排】，而且不能跟別人共用一個 callback**（2026-09-01 實測）。
+    //
+    //    第一版把它寫在 `requestAnimationFrame` 裡、**排在 `dispatchEvent(resize)`
+    //    後面**——而那一行只要有任何一個 resize 監聽者丟例外，**後面就不會執行**。
+    //    症狀：切了版面，把手還停在上一個版面的座標上，而 console 一句話都沒有。
+    //
+    // > **兩件事排在同一個 callback 裡，前面那件失敗會把後面那件一起帶走
+    // > ——而它們之間可能一點關係都沒有。**
+    //
+    // ⚠️ 用 macrotask 而不是 rAF：把手的位置要問 `getBoundingClientRect()`，
+    //    而那要等**版面算完**。rAF 只保證「下一次繪製之前」，實測連兩層都不夠。
+    setTimeout(() => relayoutDividers?.(), 0)
     // ⚠️ Blockly／流程圖在 `display: none` 期間量到的是 0×0——要叫它們重量一次
-    requestAnimationFrame(() => {
-      window.dispatchEvent(new Event('resize'))
-      relayoutDividers?.()
-    })
+    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
   }
 
   // 🔴 **開機就要套一次**（2026-08-31）。grid 之下「什麼都不套」不是「預設版面」，
