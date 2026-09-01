@@ -25,7 +25,7 @@
  * 一個「拿掉所有跳過條件」的實作也會通過第一支。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, typeAndFormat } from './helpers'
+import { showFlowSlot, freshApp, typeAndFormat } from './helpers'
 
 const BASE = 'int main() { int total = 0; int b = 2; int c = 3; int d = 4; return 0; }'
 
@@ -49,7 +49,7 @@ const flowFieldValue = (page: import('@playwright/test').Page): Promise<string |
 test('★ 在流程改一格 → 積木跟著變（而不是只有程式碼變）', async ({ page }) => {
   await freshApp(page)
   await typeAndFormat(page, BASE)
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
 
   // ★ 入口條件：三邊都真的看得到那個名字，否則下面在比 null
@@ -82,7 +82,7 @@ test('★ 反向：在積木改一格 → 流程跟著變，而【積木不得�
   // ——而它的症狀是拖到一半積木自己跳掉、復原堆疊被清空。
   await freshApp(page)
   await typeAndFormat(page, BASE)
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
   await expect.poll(() => declFieldValue(page), { timeout: 8000 }).toBe('total')
 

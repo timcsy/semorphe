@@ -54,7 +54,7 @@
  * > ——不是「刪除與還原都對」。**
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, freshApp, appReady, treeReady, flowReady } from './helpers'
+import { showFlowSlot, useAsSource, freshApp, appReady, treeReady, flowReady } from './helpers'
 
 const PROG = 'int main() {\n    int total = 1;\n    cout << total << endl;\n    return 0;\n}\n'
 
@@ -70,7 +70,7 @@ async function openFlow(page: import('@playwright/test').Page): Promise<void> {
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), PROG)
   await useAsSource(page, '程式碼')
   await treeReady(page)
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await flowReady(page)
 }
 
@@ -240,7 +240,7 @@ test('★ 點【資料線】的 ✕ → 刪掉的是那個值，不是整句', a
       .setCode('int main() {\n    cout << "Hello!" << endl;\n    return 0;\n}\n'))
   await useAsSource(page, '程式碼')
   await treeReady(page)
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await flowReady(page)
 
   const before = await codeNow(page)

@@ -655,5 +655,7 @@
   "FLOW_DELETE_WIRE": "Click to remove this end (undoable)",
   "FLOW_SELECT_WIRE": "Click to select, then press ✕ or Delete to remove this end",
   "FLOW_MENU_DELETE": "Delete this block",
-  "FLOW_MENU_DELETE_WIRE": "Remove this end"
+  "FLOW_MENU_DELETE_WIRE": "Remove this end",
+  "SLOT_PICK": "Show in this cell",
+  "CURRENT": "current"
 }

@@ -321,24 +321,25 @@ test('★ 切回桌機時，還原鈕回到快速列裡的原位（不是排到�
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.waitForTimeout(2000)
 
-  const order = await page.evaluate(() => {
-    const bar = document.querySelector('.quick-access-bar')
-    if (!bar) return null
-    return Array.from(bar.querySelectorAll('button'))
-      .map((b) => b.id || (b.textContent ?? '').trim())
+  // 🚚 **家搬了**（2026-09-01，spec 169）：桌機的 ↩↪ 現在住在**全域標頭**，
+  //    不是快速列——因為 `doUndo` 早就問 `lastEditor` 走三條路，它是全域的動作。
+  //
+  // ⚠️ 而**這一支要守的東西沒有變**：切回桌機時它要**回到自己的家**，
+  //    而不是被 `appendChild` 排到某條列的最後。只是「家」換了一個地址。
+  const home = await page.evaluate(() => {
+    const u = document.getElementById('undo-btn'), r = document.getElementById('redo-btn')
+    const bar = u?.closest('#toolbar, .quick-access-bar, #mobile-action-bar')
+    return {
+      bar: bar?.id || bar?.className || null,
+      inSlot: u?.closest('#undo-slot') !== null,
+      undoBeforeRedo: !!u && !!r && (u.compareDocumentPosition(r) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+      inProjection: u?.closest('#code-column,#flow-column,#blocks-column,#bottom-container')?.id ?? null,
+    }
   })
-  expect(order, '🔴 找不到快速列').not.toBeNull()
-  const u = order!.indexOf('undo-btn'), r = order!.indexOf('redo-btn'), c = order!.indexOf('clear-btn')
-  expect(u, `🔴 還原鈕沒有回到快速列。實際順序：${JSON.stringify(order)}`).toBeGreaterThanOrEqual(0)
-  expect(r, '🔴 重做鈕沒有回到快速列').toBeGreaterThan(u)
-  // ⚠️ 只在「清空」存在時比——那顆由登錄表決定建不建
-  if (c >= 0) {
-    expect(
-      c,
-      '🔴 還原／重做排到「清空」後面了——appendChild 會把節點放到最後，' +
-        `而順序是使用者記得的東西。實際：${JSON.stringify(order)}`,
-    ).toBeGreaterThan(r)
-  }
+  expect(home.bar, `🔴 還原鈕沒有回到標頭。實際：${JSON.stringify(home)}`).toBe('toolbar')
+  expect(home.inSlot, '🔴 它沒有回到那個從來沒離開過的插槽 `#undo-slot` 裡').toBe(true)
+  expect(home.undoBeforeRedo, '🔴 ↩↪ 的順序反了——順序是使用者記得的東西').toBe(true)
+  expect(home.inProjection, '🔴 它又住進某一格投影裡了——復原是全域的動作').toBeNull()
 
   /**
    * 🔴 **另外三段也要回家，而且要回到「內容上面」**（2026-08-31）。

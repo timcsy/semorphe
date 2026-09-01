@@ -17,7 +17,7 @@
  *   而那是既有行為、與這一刀無關。所以這支**先把狀態跑穩再量**。
  */
 import { test, expect } from '@playwright/test'
-import { appKeepingStorage, typeAndFormat } from './helpers'
+import { showFlowSlot, appKeepingStorage, typeAndFormat } from './helpers'
 
 type Pos = { id: string; x: number; y: number }
 
@@ -38,7 +38,7 @@ const dragAllAndSave = (page: import('@playwright/test').Page): Promise<void> =>
   })
 
 const openFlow = async (page: import('@playwright/test').Page): Promise<void> => {
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
 }
 

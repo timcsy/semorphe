@@ -302,8 +302,57 @@ export async function pickTarget(page: Page, id: string): Promise<void> {
  * ⚠️ 條件是「節點數 > 0」而不是「面板可見」——面板一按就可見，
  * 而那時圖還沒畫。用可見當條件等於沒等。
  */
+/**
+ * **只把流程搬到看得見的地方，不等它畫出節點。**
+ *
+ * ⚠️ `openFlowTab` 會等「節點數 > 0」——而**空程式沒有節點**，那時它會等到逾時。
+ * 🔴 兩支不能合成一支：等節點是為了「圖畫好了才量」，
+ * 而有些測試要驗的正是「還沒有東西的時候長什麼樣」。
+ */
+export async function showFlowSlot(page: Page): Promise<void> {
+  const already = await page.evaluate(() => {
+    const e = document.getElementById('flow-column')
+    return !!e && getComputedStyle(e).display !== 'none'
+  })
+  if (already) return
+  // ⚠️ **要第一顆【看得見】的**——`.first()` 會選到已經被藏起來的那一格，
+  //    而那顆點不下去（實測：等到逾時，而錯誤訊息說「element is not visible」）。
+  await page.locator('.slot-picker:visible').first().click()
+  await page.locator('.quick-pick-item[data-value="relation"]').click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  await page.waitForFunction(() => {
+    const e = document.getElementById('flow-column')
+    return !!e && getComputedStyle(e).display !== 'none'
+  })
+}
+
+/** 對稱的另一半——把**積木**搬到看得見的地方。 */
+export async function showBlocksSlot(page: Page): Promise<void> {
+  const already = await page.evaluate(() => {
+    const e = document.getElementById('blocks-column')
+    return !!e && getComputedStyle(e).display !== 'none'
+  })
+  if (already) return
+  await page.locator('.slot-picker:visible').first().click()
+  await page.locator('.quick-pick-item[data-value="space"]').click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  await page.waitForFunction(() => {
+    const e = document.getElementById('blocks-column')
+    return !!e && getComputedStyle(e).display !== 'none'
+  })
+}
+
 export async function openFlowTab(page: Page): Promise<void> {
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  // 🔴 **切法換了**（2026-09-01，spec 169）：以前是快速列上一對互斥的分頁
+  //    （`#view-flow-btn`），現在是**每一格自己的下拉**。
+  //    ⚠️ 而下拉的字是「流程 ▾」——`^流程$` 配不到，舊寫法會在點擊上逾時。
+  //
+  // 🟢 已經看得見就不用點：三欄與十字兩個投影都在，那時「切過去」是多餘的動作。
+  const already = await page.evaluate(() => {
+    const e = document.getElementById('flow-column')
+    return !!e && getComputedStyle(e).display !== 'none'
+  })
+  if (!already) await showFlowSlot(page)
   await flowReady(page)
 }
 

@@ -1,5 +1,9 @@
 import * as Blockly from 'blockly'
+import { LAYER_ORDER } from '../core/view-host'
+import { msg } from '../core/messages'
+import { showQuickPick } from './toolbar/quick-pick'
 import { installGridDividers } from './layout/grid-dividers'
+import { identityAssignment, swapTo, effectiveAreas, type SlotAssignment } from '../core/host/slot-assignment'
 import { BottomPanel } from './layout/bottom-panel'
 import { LayoutManager } from './layout/layout-manager'
 import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
@@ -10,7 +14,7 @@ import { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
 import { CONTROLS, RUN_MODES, surfaceOf, panelControls, type ControlId } from '../core/host/controls'
-import { layoutPreset, type LayoutPresetId } from '../core/host/layout-presets'
+import { LAYOUT_PRESETS, layoutPreset, type LayoutPresetId } from '../core/host/layout-presets'
 import type { UnderstandingLayer } from '../core/view-host'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
 import { CodeKeyboard } from './panels/code-keyboard'
@@ -631,16 +635,71 @@ export function createAppLayout(
    */
   /** 現在「專注」顯示哪一層——`areas` 裡的 `'*'` 用它代換。 */
   let focusLayer: UnderstandingLayer = 'space'
-  /** 使用者最後按的那個投影——版面裡只有其中一個時，用它決定是哪一個。 */
-  let projectionWanted: UnderstandingLayer = 'space'
+  /** 使用者把哪一層放在哪一格——**一張置換表**，見 `core/host/slot-assignment.ts`。 */
+  let assignment: SlotAssignment = identityAssignment()
   let relayoutDividers: (() => void) | null = null
   let applyLayoutRef: ((id: LayoutPresetId) => void) | null = null
+
+  /**
+   * **一個槽的視圖選擇器**——四個槽共用**同一份產生器**。
+   *
+   * 🔴 使用者 2026-09-01：「我希望**每個面板可以去選擇要哪一種視圖**」，
+   * 隨後「**我希望不是用 tab，而是用下拉式**」。
+   *
+   * 🟢 **下拉比分頁省的是寬度**：四層的分頁列在一個窄槽裡（十字每格約 300px）
+   * 會佔掉整條，而下拉只佔一顆。⚠️ 而它讀起來也比較準：
+   * 那一顆說的是「**這一格現在是什麼**」，分頁列說的是「有這些可選」。
+   *
+   * ⚠️ 用既有的 `showQuickPick`——開關、鍵盤、篩選、點外面關掉都在裡面了。
+   * 🔴 另外做一個「小下拉」等於把那些**再實作一次**，而這個專案記過那個教訓。
+   *
+   * 🟢 而「每個槽的選項一樣」由**共用同一份產生器**保證——結構，不是規範。
+   * 點一顆 ＝「把 X 放到**我這裡**」，而那是一次**對調**（`swapTo`）：
+   * 原本顯示 X 的那一格會接手我現在這一層。
+   */
+  const buildSlotPicker = (own: UnderstandingLayer): HTMLElement => {
+    const btn = document.createElement('button')
+    btn.className = 'slot-picker'
+    btn.addEventListener('click', () => {
+      showQuickPick(
+        {
+          title: msg('SLOT_PICK', '這一格顯示'),
+          // ⚠️ 選項來自**同一份**來源，四個槽逐字相同（spec 169 的 SC-002）
+          items: LAYER_ORDER.filter(layerAvailable).map((l) => ({
+            value: l,
+            label: msg(`LAYER_${l.toUpperCase()}`, l),
+            // 🔴 「目前」是**這個面板自己**——每個面板永遠顯示它自己，
+            //    置換搬的是它的**位子**，不是它的內容。
+            description: l === own ? msg('CURRENT', '目前') : undefined,
+          })),
+        },
+        (v: string[] | null) => {
+          const to = v?.[0] as UnderstandingLayer | undefined
+          if (!to || to === own) return
+          // 「把 X 放到**我這個位子**」——而我現在在的位子顯示的是我自己
+          assignment = swapTo(assignment, own, to)
+          applyLayoutRef?.(document.body.getAttribute('data-layout') as LayoutPresetId ?? 'compare')
+        },
+      )
+    })
+    return btn
+  }
 
   const showProjection = (which: 'blocks' | 'flow'): void => {
     // 🔴 **「專注」顯示哪一層由這裡決定**（2026-08-31）——宣告寫的是 `'*'`，
     //    而 `'*'` 要被代換成使用者現在看的那一層。少了這兩行，「專注」永遠是程式碼。
-    focusLayer = which === 'blocks' ? 'space' : 'relation'
-    projectionWanted = focusLayer
+    const target: UnderstandingLayer = which === 'blocks' ? 'space' : 'relation'
+    focusLayer = target
+    // 🔴 **它現在走的是同一張置換表**（2026-09-01）：宿主那顆「看積木／看流程」
+    //    與槽上的下拉**做同一件事**，所以不會有兩份狀態。
+    //    ⚠️ 而在此之前它寫一個獨立的 `projectionWanted`，於是兩邊會打架。
+    const flat = effectiveAreas(
+      layoutPreset(document.body.getAttribute('data-layout') as LayoutPresetId ?? 'compare')
+        ?? LAYOUT_PRESETS[0], assignment, focusLayer).flat()
+    if (!flat.includes(target)) {
+      const shown = (['space', 'relation'] as const).find((l) => flat.includes(l))
+      if (shown) assignment = swapTo(assignment, shown, target)
+    }
     // 🔴 **grid 之下「哪一個投影看得到」由【版面】決定，不由這裡**（2026-08-31）。
     //
     //    在此之前這裡直接藏 `blocklyContainer`／`flowEl`——那是「兩個投影擠在同一欄、
@@ -659,8 +718,6 @@ export function createAppLayout(
     //    新的做法一樣讓那顆按鈕有用，但它換的是**版面裡的那一格**，
     //    而不是「積木與流程共用一個位子」：三欄與十字兩個都在，這顆按鈕就不動任何東西。
     applyLayoutRef?.(document.body.getAttribute('data-layout') as LayoutPresetId ?? 'compare')
-    document.getElementById('view-blocks-btn')?.classList.toggle('active', which === 'blocks')
-    document.getElementById('view-flow-btn')?.classList.toggle('active', which === 'flow')
     if (which === 'blocks') requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
   }
 
@@ -694,20 +751,50 @@ export function createAppLayout(
       : l === 'state' ? bottomPanel !== null
         : true
 
+  /**
+   * 四個槽各一顆選擇器，**同一份產生器產的**（spec 169 的 SC-002）。
+   *
+   * 🔴 **併進那一格【既有的】工具列，不自己多一列**（使用者 2026-09-01：
+   * 「然後我不想換行」——與行動版那條「**只能有一列工具列**」同一條規矩）。
+   *
+   * ⚠️ 而那條列**不保證在這一刻就存在**（流程工具列與下方分頁列是面板自己建的），
+   * 所以掛載要**可以重跑**：`applyLayout` 每次都確認一遍。
+   *
+   * > **一條「等它出現再掛」的邏輯，寫成「掛一次」就會在它比較晚出現的那天失效。**
+   */
+  const SLOT_BARS = [
+    { el: codeColumn, layer: 'element' as const, bar: '.monaco-clipboard-bar' },
+    { el: flowColumn, layer: 'relation' as const, bar: '.flow-toolbar' },
+    { el: blocksColumn, layer: 'space' as const, bar: '.quick-access-bar' },
+    { el: bottomContainer, layer: 'state' as const, bar: '.bottom-panel-tabs' },
+  ]
+  const slotPickers = new Map(SLOT_BARS.map(({ layer }) => [layer, buildSlotPicker(layer)]))
+  const mountSlotPickers = (): void => {
+    for (const { el, layer, bar } of SLOT_BARS) {
+      const btn = slotPickers.get(layer)!
+      // 有那條列就併進去；還沒建出來就先掛在這一格最前面（下一次會再搬）
+      const host = el.querySelector(bar) ?? el
+      if (btn.parentElement !== host) host.insertBefore(btn, host.firstChild)
+    }
+  }
+
   applyLayoutRef = (id: LayoutPresetId): void => {
     const preset = layoutPreset(id)
     if (!preset) return
-    let areas = preset.areas.map((row) =>
-      row.map((v) => (v === '*' ? focusLayer : v)) as UnderstandingLayer[])
-    // 🔴 版面只放得下兩個投影其中一個時，放使用者最後按的那一個。
-    //    ⚠️ 兩個都在（三欄／十字）就什麼都不換——那才是這一刀要的：**不再互斥**。
-    const flat = areas.flat()
-    const other: Record<string, UnderstandingLayer> = { space: 'relation', relation: 'space' }
-    const present = (['space', 'relation'] as const).filter((l) => flat.includes(l))
-    if (present.length === 1 && present[0] !== projectionWanted
-        && other[present[0]] === projectionWanted) {
-      areas = areas.map((row) => row.map((v) => (v === present[0] ? projectionWanted : v)))
-    }
+    // 🔴 **使用者的指派套在這裡**（2026-09-01，spec 169）：宣告是**預設**，
+    //    而 `assignment` 是一張層與層的置換表。⚠️ 它只換名字不換形狀——
+    //    格數、跨度、`state` 必在都保住（第九十九條的 A2 盯著）。
+    let areas = effectiveAreas(preset, assignment, focusLayer).map((r) => [...r])
+    // 🪦 **「版面只放得下一個投影時，放使用者最後按的那一個」那段退場**
+    //    （2026-09-01，spec 169）。
+    //
+    // 🔴 它是「兩個投影擠同一欄、所以互斥」那個時代的補償。而槽自己選視圖之後
+    //    它會**安靜地抵銷**使用者的選擇：`effectiveAreas` 剛把那一格換成流程，
+    //    它下一行就依 `projectionWanted`（還停在 `space`）換回積木。
+    //    使用者：「我選了另外的，好像行為有點怪」——畫面沒動，只有下拉的字變了。
+    //
+    // > **一段為了舊機制而存在的補償，在新機制上線之後會安靜地抵銷它
+    // > ——而它不會報錯，因為它做的正是它當初被寫下來要做的事。**
 
     // 一整欄（列）都是「這個宿主沒有的層」→ 軌道收成 0。
     const colUsed = areas[0].map((_, c) => areas.some((row) => layerAvailable(row[c])))
@@ -731,40 +818,20 @@ export function createAppLayout(
     blocksColumn.style.display = shown.has('space') ? 'flex' : 'none'
     bottomContainer.style.display = shown.has('state') && layerAvailable('state') ? '' : 'none'
 
-    // 🔴 **切換投影的那條列，要跟著看得見的那一欄走**（2026-09-01）。
+    // ⚠️ 每次都重掛一遍——那條列可能是這一刻之後才建出來的
+    mountSlotPickers()
+    // 🔴 每一顆選擇器寫的是**它所在的那個面板是誰**——而那永遠是它自己。
     //
-    //    它原本住在積木那一欄裡——而切到流程時那一欄被藏起來，
-    //    於是「切回積木」的按鈕**跟著不見**。使用者被困在流程視圖裡。
+    //    ⚠️ 第一版寫成 `assignment[layer]`（「這一格宣告的層被換成了誰」），
+    //    於是流程面板上的那顆會寫著「積木」——**標籤與它腳下的東西相反**。
     //
-    // > **一條工具列如果住在它所操作的東西裡面，
-    // > 那個東西被藏起來的時候，你就沒有辦法把它叫回來。**
-    //
-    // ⚠️ 這與行動版還原鈕（2026-08-31）是同一類，處置也一樣：**搬**，不是複製一份。
-    const bar = document.querySelector('.quick-access-bar')
-    if (bar) {
-      const host = blocksColumn.style.display !== 'none' ? blocksColumn
-        : flowColumn.style.display !== 'none' ? flowColumn : null
-      if (host && bar.parentElement !== host) host.insertBefore(bar, host.firstChild)
-    }
-
-    // 🔴 **兩個投影都看得見時，那兩顆分頁沒有工作可做**（2026-09-01）。
-    //
-    //    在「三欄」與「十字」裡積木與流程各有自己的一格——按「流程」不會有任何事發生。
-    //    而一顆按下去沒有反應的按鈕，比沒有那顆按鈕更糟：使用者會以為壞了。
-    //
-    // > **一個控制項如果在某個狀態下什麼都不做，那個狀態下它就不該在。**
-    //
-    // ⚠️ 收起來的只有那一組分頁，**不是整條快速列**（↩↪ 與「清空」仍然要在）。
-    // 🔴 而要連**它後面那一槓**（`.toolbar-separator`）一起收——只收按鈕的話會留下
-    //    一條前面什麼都沒有的豎線。使用者 2026-09-01：「這槓有點怪」。
-    const bothProjections = shown.has('relation') && shown.has('space')
-    const tabs = document.getElementById('view-tabs')
-    if (tabs) {
-      tabs.style.display = bothProjections ? 'none' : ''
-      const sep = tabs.nextElementSibling
-      if (sep?.classList.contains('toolbar-separator')) {
-        ;(sep as HTMLElement).style.display = bothProjections ? 'none' : ''
-      }
+    // > **置換搬的是面板的【位子】，不是它的【內容】
+    // > ——所以標籤問的是「我是誰」，不是「我這一格原本叫什麼」。**
+    for (const { layer } of SLOT_BARS) {
+      const btn = slotPickers.get(layer)!
+      btn.dataset.layer = layer
+      btn.textContent = `${msg(`LAYER_${layer.toUpperCase()}`, layer)} ▾`
+      btn.title = btn.textContent
     }
 
     document.body.setAttribute('data-layout', id)
@@ -791,6 +858,25 @@ export function createAppLayout(
   //
   // > **一個「不做任何事就是對的」的預設，換掉底層之後會變成「什麼都沒有」，
   // > 而它不會報錯。**
+
+  /**
+   * 🚚 **↩↪ 搬到全域標頭**（2026-09-01，spec 169）。
+   *
+   * 🔴 `doUndo` 早就問 `lastEditor` 走三條路（程式碼／流程／積木）
+   * ——**行為是全域的，而它的位置在積木那一欄的快速列裡**。
+   *
+   * > **一個動作如果對三個視圖都成立，它就不該住在其中一個視圖裡。**
+   *
+   * 🟢 而這條原則**行動版早就寫著了**（見 `adoptActionBarSections`：
+   * 「↩↪ 排在最前面，而且不跟著快速列進積木那一格」）——桌機是那個例外。
+   *
+   * ⚠️ **只搬桌機**：行動版試過把它塞進標頭，使用者在 390px 的真手機上回報
+   * 「標頭被擠爆了」。**同一個位置在兩個寬度下不是同一個決定。**
+   */
+  const headerActionsEl = toolbar?.querySelector('.toolbar-actions')
+  const undoSlotEl = document.getElementById('undo-slot')
+  if (headerActionsEl && undoSlotEl) headerActionsEl.insertBefore(undoSlotEl, headerActionsEl.firstChild)
+
   const applyLayout = applyLayoutRef
   applyLayout('compare')
   relayoutDividers = installGridDividers(main)

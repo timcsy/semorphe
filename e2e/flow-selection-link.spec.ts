@@ -28,7 +28,7 @@
  * > **如果圖上一顆節點都沒有，這份報表不算數——不是「選取好了」。**
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, freshApp, appReady, treeReady, flowReady } from './helpers'
+import { showFlowSlot, showBlocksSlot, useAsSource, freshApp, appReady, treeReady, flowReady } from './helpers'
 
 const PROG = 'int main() {\n    int a = 1;\n    cout << a << endl;\n    return 0;\n}\n'
 const flat = (s: string): string => s.replace(/#include[^\n]*\n/g, '').replace(/\s+/g, ' ').trim()
@@ -40,7 +40,7 @@ async function openFlow(page: import('@playwright/test').Page): Promise<void> {
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), PROG)
   await useAsSource(page, '程式碼')
   await treeReady(page)
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await flowReady(page)
 }
 
@@ -176,7 +176,7 @@ test('★ 切分頁不得把反白清掉', async ({ page }) => {
   const before = await page.locator('.fc-node.fc-sel').count()
   expect(before, '🔴 切之前流程就沒有亮 → 下面那條驗的不是「切分頁弄丟了」').toBe(1)
 
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await page.waitForTimeout(1500)
 
   await expect(
@@ -191,7 +191,8 @@ test('★ 切分頁不得把反白清掉', async ({ page }) => {
   //    ——它自己的反白在離開的那一刻就被清掉了。
   //
   // > **一個「離開時順手收拾自己」的動作，在你回來的時候看起來像遺失。**
-  await page.locator('[data-tab="blocks"], button', { hasText: /^積木$/ }).first().click()
+  // 🔴 **切法換了**（spec 169）：回到積木也走那一格的下拉
+  await showBlocksSlot(page)
   await page.waitForTimeout(1400)
   await expect(
     page.locator('.blocklySvg [class*=highlight]'),

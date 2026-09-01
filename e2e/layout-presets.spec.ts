@@ -140,43 +140,19 @@ test('🔴 分隔線的長度 ＝ 那條縫【真正存在】的長度——不�
     .toBeLessThanOrEqual(seam!.codeRight + 1)
 })
 
-test('🔴 分頁收起來時，它後面那一槓也要跟著收', async ({ page }) => {
-  // 🔴 使用者 2026-09-01：「這槓有點怪」——只收按鈕的話會留下一條前面什麼都沒有的豎線。
-  //
-  // > **一個分隔用的東西，在它兩邊有一邊消失的時候，也要跟著消失。**
-  await freshApp(page)
-  const barItems = (): Promise<string[]> => page.evaluate(() =>
-    [...document.querySelector('.quick-access-bar')!.children]
-      .filter((e) => getComputedStyle(e).display !== 'none')
-      .map((e) => e.id || e.className))
-  expect(await barItems(), '🔴 「對照」裡那一組分頁與它的槓都要在')
-    .toEqual(expect.arrayContaining(['view-tabs', 'toolbar-separator']))
-  await pick(page, 'three-column')
-  const after = await barItems()
-  expect(after, '🔴 分頁沒收起來').not.toContain('view-tabs')
-  expect(after, '🔴 槓留在原地了——它前面什麼都沒有').not.toContain('toolbar-separator')
-})
+// 🪦 **兩支退場（2026-09-01，spec 169）**：
+//
+//    「分頁收起來時那一槓也要跟著收」與「兩個投影都在時那兩顆不該還在」
+//    測的都是 `#view-tabs`——**那一組已經不存在了**。切換視圖的分頁列改由
+//    【每一個槽】提供（`.slot-tabs`），而且四個槽的選項完全相同。
+//
+// 🟢 它們要守的東西沒有不見，是**換了更強的形式**：
+//    「選項一樣」現在由**同一份產生器**保證（結構，不是規範），
+//    而 `e2e/slot-view-picker.spec.ts` 直接驗那件事。
+//
+// > **一支測試退場的正當理由，是它守的東西被一個更難違反的東西接手了
+// > ——而不是它變得不方便。**
 
-test('🔴 兩個投影都看得見時，「積木／流程」那兩顆分頁不該還在', async ({ page }) => {
-  // > **一個控制項如果在某個狀態下什麼都不做，那個狀態下它就不該在。**
-  await freshApp(page)
-  // ⚠️ **問「畫得出來嗎」，不問 `display`**：收起來的是外面那一組（`#view-tabs`），
-  //    而 `getComputedStyle` 對一個藏起來的祖先的子孫，回的仍然是它自己指定的值。
-  //
-  // > **`display` 是一個元素自己說的話，而「看不看得到」是它整條祖先鏈說的。**
-  const tabsVisible = (): Promise<boolean[]> => page.evaluate(() =>
-    ['view-blocks-btn', 'view-flow-btn'].map((id) => {
-      const e = document.getElementById(id)
-      return !!e && e.getClientRects().length > 0
-    }))
-  expect(await tabsVisible(), '🔴 「對照」只放得下一個投影，那兩顆要在').toEqual([true, true])
-  await pick(page, 'three-column')
-  expect(await tabsVisible(), '🔴 三欄兩個都在，那兩顆按了沒反應').toEqual([false, false])
-  await pick(page, 'grid')
-  expect(await tabsVisible(), '🔴 十字兩個都在，那兩顆按了沒反應').toEqual([false, false])
-  await pick(page, 'compare')
-  expect(await tabsVisible(), '🔴 切回對照之後那兩顆要回來').toEqual([true, true])
-})
 
 test('🔴 選單裡有四張【示意圖】，而每張的格數與宣告一致', async ({ page }) => {
   await freshApp(page)

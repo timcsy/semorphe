@@ -22,12 +22,12 @@
  * - **不檢測 else 裡面有東西之後的程式碼**——那是產生器的事
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, typeAndFormat } from './helpers'
+import { showFlowSlot, freshApp, typeAndFormat } from './helpers'
 
 test('★ 真人滑鼠：拖「如果／否則如果」→ 樹裡是一條巢狀的 else-if 鏈', async ({ page }) => {
   await freshApp(page)
   await typeAndFormat(page, 'int main() { int a = 1; int b = 2; int c = 3; int d = 4; return 0; }')
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
 
   await page.locator('.flow-cat').filter({ hasText: '控制' }).first().click()
@@ -106,7 +106,7 @@ test('★ 流程視圖做得出 else——`else_body` 要是一個接點', async
   // > **一個沒有被宣告的位置，在靠宣告長出接點的視圖裡等於不存在。**
   await freshApp(page)
   await typeAndFormat(page, 'int main() { int x = 0; if (x > 0) { x = 1; } return 0; }')
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
 
   const ports = page.locator('.fc-port-wirable[data-port="else_body"]')

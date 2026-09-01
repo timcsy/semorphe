@@ -655,5 +655,7 @@
   "FLOW_DELETE_WIRE": "點一下：把這一端拿掉（可以還原）",
   "FLOW_SELECT_WIRE": "點一下選它，再按 ✕ 或 Delete 拿掉這一端",
   "FLOW_MENU_DELETE": "刪掉這一塊",
-  "FLOW_MENU_DELETE_WIRE": "刪掉這一端"
+  "FLOW_MENU_DELETE_WIRE": "刪掉這一端",
+  "SLOT_PICK": "這一格顯示",
+  "CURRENT": "目前"
 }

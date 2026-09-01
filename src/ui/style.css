@@ -269,6 +269,27 @@ html, body {
 .grid-divider-columns { cursor: col-resize; }
 .grid-divider-rows { cursor: row-resize; }
 
+/* ─── 槽的視圖選擇器（`app-shell.ts` 的 `buildSlotPicker`）───
+   🔴 四個槽共用同一份產生器——「每個槽的選項一樣」是**結構**保證的，
+   不是靠人維護的規範。
+   ⚠️ 它**併進那一格既有的工具列**，不自己開一列（使用者：「我不想換行」）。 */
+
+.slot-picker {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 1px 8px;
+}
+
+.slot-picker:hover {
+  background: #37373d;
+  border-color: #3c3c3c;
+  color: #fff;
+}
+
 /* ─── 版面示意圖（`quick-pick.ts` 的 previewGrid）─── */
 
 .quick-pick-preview {
@@ -1874,6 +1895,12 @@ html, body {
   }
 
   /* Main editor area: stack vertically for mobile panels */
+  /* 🔴 **行動版不顯示槽的選擇器**（spec 169 明文不做行動版）：行動版是**單槽**，
+     而它已經有自己的分頁列。⚠️ 少了這一條它會被 `adoptActionBarSections`
+     一起收編進行動列，把那一列擠開——實測 390px 上「分頁與動作」的間距從
+     一左一右變成只隔 84px。 */
+  body:not(.host-no-mobile-layout) .slot-picker { display: none !important; }
+
   /* 🔴 行動版是【單槽】，不走桌機那張 grid（spec 168 明文不做行動版版面）。 */
   body:not(.host-no-mobile-layout) #editors {
     display: flex !important;

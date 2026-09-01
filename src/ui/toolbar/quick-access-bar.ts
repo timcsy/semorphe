@@ -37,17 +37,15 @@ export class QuickAccessBar {
       options.inPanel('sync') ? '<button id="sync-menu-btn" title="同步">⇄ 同步</button>' : '',
       // 🔴 **editor 區看哪一個投影**——積木（空間層）／流程（關係層）。
       //    ⚠️ 它是這一欄的分頁列，不是「面板的裝飾」：兩個都是**程式本身**的投影。
-      // 🔴 **整組包起來**（2026-09-01）：版面同時顯示兩個投影時這兩顆沒有工作可做，
-      //    而收起它們的人如果只收按鈕，**分組之間的那一槓會留在原地**
-      //    ——一條前面什麼都沒有的豎線。使用者：「這槓有點怪」。
+      // 🪦 **`#view-tabs` 退場**（2026-09-01，spec 169）：切換視圖的分頁列
+      //    改由**槽**提供（`app-shell.ts` 的 `buildSlotTabs`）——每一個槽一條，
+      //    而且**選項完全相同**。
       //
-      // > **一個分隔用的東西，在它兩邊有一邊消失的時候，也要跟著消失。**
-      (options.inPanel('viewBlocks') || options.inPanel('viewFlow'))
-        ? '<span id="view-tabs">' +
-          (options.inPanel('viewBlocks') ? '<button id="view-blocks-btn" class="view-tab" title="積木">積木</button>' : '') +
-          (options.inPanel('viewFlow') ? '<button id="view-flow-btn" class="view-tab" title="流程">流程</button>' : '') +
-          '</span>'
-        : '',
+      // 🔴 它住在這裡的時候，它是「積木那一欄的工具列」的一部分
+      //    ——於是那一欄被藏起來時，切回去的按鈕跟著不見（2026-09-01 撞過）。
+      //
+      // > **一條工具列如果住在它所操作的東西裡面，
+      // > 那個東西被藏起來的時候，你就沒有辦法把它叫回來。**
       options.inPanel('target') ? '<span id="level-selector-mount"></span>' : '',
       options.inPanel('target') ? '<span id="track-selector-mount"></span>' : '',
       options.inPanel('target') ? '<span id="lesson-selector-mount"></span>' : '',

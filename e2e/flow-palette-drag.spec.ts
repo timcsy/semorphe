@@ -25,7 +25,7 @@
  * - **不驗新節點放對位置**——只驗「真人拖得動，而且真實變了」。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, typeAndFormat } from './helpers'
+import { showFlowSlot, freshApp, typeAndFormat } from './helpers'
 
 test('★ 真人滑鼠：從 palette 拖一顆到接點上 → 語義樹真的多一顆', async ({ page }) => {
   await freshApp(page)
@@ -33,7 +33,7 @@ test('★ 真人滑鼠：從 palette 拖一顆到接點上 → 語義樹真的�
   await typeAndFormat(page, 'int main() { int a = 1; int b = 2; int c = 3; int d = 4; return 0; }')
 
   // 切到流程分頁——⚠️ 用**文字**認那顆分頁，而不是位置
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
 
   // 🔴 **積木盤是 Blockly 的形狀**（2026-08-27）：左邊一條固定的**分類**，
   //    點了才彈出那一格的積木。所以要按兩下才拿得到一顆。

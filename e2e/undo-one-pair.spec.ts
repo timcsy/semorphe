@@ -33,7 +33,7 @@
  * > **如果快速列那一顆找不到，這份報表不算數——不是「只剩一對了」。**
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, freshApp, appReady, treeReady } from './helpers'
+import { useAsSource, freshApp, appReady, treeReady, openFlowTab, showFlowSlot } from './helpers'
 
 const PROG = 'int main() {\n    int a = 1;\n    cout << a << endl;\n    return 0;\n}\n'
 const flat = (s: string): string => s.replace(/#include[^\n]*\n/g, '').replace(/\s+/g, ' ').trim()
@@ -46,29 +46,34 @@ test('★ 畫面上只有一對還原按鈕', async ({ page }) => {
   await appReady(page)
 
   // ★ 入口條件（見檔頭的自我否證）
-  await expect(page.locator('#undo-btn'), '🔴 快速列那一顆不見了 → 這份報表不算數').toHaveCount(1)
+  // 🚚 **它搬到全域標頭了**（spec 169）——而這一支要守的仍然是「只有一對」
+  await expect(page.locator('#undo-btn'), '🔴 那一顆不見了 → 這份報表不算數').toHaveCount(1)
+  expect(
+    await page.evaluate(() => document.getElementById('undo-btn')?.closest('#toolbar') !== null),
+    '🔴 還原鈕不在全域標頭裡——它是全域的動作',
+  ).toBe(true)
 
   expect(
     await page.locator('.clipboard-btn', { hasText: /還原/ }).count(),
     '🔴 程式碼工具列又長回一對「還原」了',
   ).toBe(0)
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
-  await page.waitForTimeout(1500)
+  // 🔴 **切法換了**（2026-09-01，spec 169）：每一格自己的下拉，不是快速列上的分頁
+  // ⚠️ 用 `showFlowSlot` 不是 `openFlowTab`——這支是空程式，**流程沒有節點可等**
+  await showFlowSlot(page)
   expect(
     await page.locator('.flow-toolbar button[title="還原"]').count(),
     '🔴 流程工具列又長回一對 ↶↷ 了',
   ).toBe(0)
 })
 
-test('★ 在流程刪掉的，按【快速列】那一顆就退得回來', async ({ page }) => {
+test('★ 在流程刪掉的，按【標頭】那一顆就退得回來', async ({ page }) => {
   await freshApp(page)
   await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c), PROG)
   await useAsSource(page, '程式碼')
   await treeReady(page)
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
-  await page.waitForTimeout(1600)
+  await openFlowTab(page)
 
   const base = await codeNow(page)
   expect(base, '🔴 一開始就沒有那一句 → 驗不出東西').toContain('cout')

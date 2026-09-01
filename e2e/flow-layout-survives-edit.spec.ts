@@ -24,7 +24,7 @@
  * - **不檢測配對是不是配對到【對的那一顆】**——那由單元測試釘
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, typeAndFormat } from './helpers'
+import { showFlowSlot, freshApp, typeAndFormat } from './helpers'
 
 type Pos = { id: string; x: number; y: number }
 
@@ -58,7 +58,7 @@ const BASE = 'int main() {\n  int x = 1;\n  int y = 2;\n  int z = 3;\n  return 0
 test('★ 手拖之後在程式碼裡加一行——每一顆都留在原地', async ({ page }) => {
   await freshApp(page)
   await typeAndFormat(page, 'int main() { int x = 1; int y = 2; int z = 3; return 0; }')
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
 
   await setCode(page, BASE)
@@ -97,7 +97,7 @@ test('★ 刪掉一行——其餘的不動，而【不得】誤報「對不回�
   // > ——而那時它報的真問題也一起被忽略了。**
   await freshApp(page)
   await typeAndFormat(page, 'int main() { int x = 1; int y = 2; int z = 3; return 0; }')
-  await page.locator('[data-tab="flow"], button', { hasText: /^流程$/ }).first().click()
+  await showFlowSlot(page)
   await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
 
   await setCode(page, BASE)
