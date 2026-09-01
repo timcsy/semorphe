@@ -117,11 +117,21 @@ const blocks = await page.evaluate(() => {
   // > **一個選擇器如果會配到別的東西，它報的數字是真的，
   // > 而它報的【意義】是假的。**
   下方分頁: document.querySelectorAll('.bottom-tab-btn').length,
-  // 🔴 主控台在這個宿主是**終端機**——面板裡不該有那一格（2026-08-25）。
-  //    ⚠️ 而變數那一格還在（DAP 是第五刀），所以下方分頁不會是 0。
+  // 🔴 **這個宿主把主控台／變數投影到哪** ——問跑著的那個應用自己的宣告，
+  //    而不是把答案寫進這支腳本（見下面兩格的墓碑）。
+  output投影: window.__app?.profile?.controlSurfaces?.output ?? '(問不到)',
+  inspector投影: window.__app?.profile?.controlSurfaces?.inspector ?? '(問不到)',
+  // 🪦 這兩格曾經是「**不該在**」的斷言（2026-08-25：主控台去了終端機、
+  //    變數去了 `panel` 區）。而 2026-09-01 主控台收回成一個面板，
+  //    那兩句就從「規範」變成「一個過期的事實」——**而 CI 是它抓到的**。
+  //
+  // > **一個把決定寫死的斷言，在決定被推翻的那天不會說「這個決定變了」，
+  // > 它會說「壞了」。**
+  //
+  // 🟢 處置與第六十三條護欄同一天學到的那條一樣：**問宣告**。
+  //    下面 `ok` 的判定改成「宣告說在，它就要在；宣告說不在，它就不准在」。
   主控台分頁: [...document.querySelectorAll('.bottom-tab-btn')]
     .some((b) => (b.textContent ?? '').includes('主控台')),
-  // 🔴 變數在這個宿主住在 `panel` 區（與終端機同一排）——面板裡不該有那一格。
   變數分頁: [...document.querySelectorAll('.bottom-tab-btn')]
     .some((b) => (b.textContent ?? '').includes('變數')),
   程式碼編輯區: !!document.querySelector('.monaco-editor'),
@@ -435,14 +445,25 @@ const ok = !fatal && errors.length === 0 && failures.length === 0
   && blocks.畫布佔比 >= 90
   // 🔴 而它們要真的到了宿主手上——**「消失」與「搬家」的差別就在這一格**。
   && controlIds.length >= 5 && 值域齊全 && problemsSent
-  && !blocks.主控台分頁 && !blocks.變數分頁
+  // 🔴 **宣告說在，它就要在；宣告說不在，它就不准在**（2026-09-02）。
+  //    ⚠️ 這一行以前寫死「不准在」，而 2026-09-01 主控台收回成面板之後
+  //       它就開始說「壞了」——**而東西是對的**。CI 連紅三次才被發現。
+  && blocks.主控台分頁 === (blocks.output投影 === 'panelBottom')
+  && blocks.變數分頁 === (blocks.inspector投影 === 'panelBottom')
   && blocks.工具箱分類 >= 1 && twoWay && untouched && sketchBlocks > 0
   // 🔴 這個宿主**自己有狀態列**——面板裡再畫一條就是同一件事講兩次，
   //    ⚠️ 而 `phaseReached` 是它的另一半：不畫的義務是「交出去」。
   && !blocks.狀態列 && phaseReached
   && !blocks.程式碼編輯區 && !blocks.檔案按鈕
   && lifted > 0 && !!assetBase.media && !!assetBase.assets
-if (!ok) console.log('🔴 預檢不通過')
+// 🔴 **通過也要說一句**（2026-09-02）。
+//
+// 在此之前只有不通過才印一行，而**通過是靜默的**——於是我在本機跑了六次，
+// 每一次都只看畫面上那些 🟢，**沒有人告訴我退出碼是 1**。
+// CI 連紅三次才被發現（那三次的 log 裡每一行都是 🟢）。
+//
+// > **一個只在失敗時出聲的檢查，它的成功與「沒跑到最後」長得一樣。**
+console.log(ok ? '\n🟢 預檢通過' : '\n🔴 預檢不通過')
 
 await browser.close()
 stop()
