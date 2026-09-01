@@ -437,14 +437,31 @@ export function createAppLayout(
   // ⚠️ 不切的時候，積木**就是** `main` 本身——不是「一個佔滿的子欄」。
   // 🔴 **它是 grid 的一格**（`space`），不再是「切出來的右半」——
   //    所以 `codeSideHasContent` 不再改變它是誰。用不到的層由軌道大小 0 收掉。
-  const blocksColumn = document.createElement('div')
-  blocksColumn.id = 'blocks-column'
-  blocksColumn.style.gridArea = 'space'
-  blocksColumn.style.display = 'flex'
-  blocksColumn.style.flexDirection = 'column'
-  blocksColumn.style.minWidth = '0'
-  blocksColumn.style.minHeight = '0'
-  blocksColumn.style.overflow = 'hidden'
+
+  /**
+   * **一格 ＝ 一個容器**（spec 170 · T016）。
+   *
+   * 🔴 四段一模一樣的 `createElement` ＋ `gridArea` ＋ 五行 style 收成這裡。
+   *    它們之間唯一真的不同是 **id ／ 層 ／ 要不要 `flex-direction: column`**。
+   *
+   * ⚠️ 為什麼還不是「跑一遍 `panelsFor(profile)`」：那四格的**建構**與各自的
+   *    相依糾纏在一起（Blockly 要 registry、程式碼走 `profile.createCodeView`、
+   *    下方面板要 tabs）。這一步先把**格子**收掉，建構留在原地——
+   *
+   * > **一次抽象如果同時搬走「容器」與「內容」，它壞掉時你分不出是哪一半。**
+   */
+  const makeCell = (id: string, layer: UnderstandingLayer, column = true): HTMLDivElement => {
+    const el = document.createElement('div')
+    el.id = id
+    el.style.gridArea = layer
+    if (column) { el.style.display = 'flex'; el.style.flexDirection = 'column' }
+    el.style.minWidth = '0'
+    el.style.minHeight = '0'
+    el.style.overflow = 'hidden'
+    return el
+  }
+
+  const blocksColumn = makeCell('blocks-column', 'space')
   main.appendChild(blocksColumn)
 
   // 🔴 一顆控制項都不剩的話**不建這條列**——一條空的列只是把版面吃掉。
@@ -482,15 +499,8 @@ export function createAppLayout(
   // Right panel: Monaco + BottomPanel
   // 🔴 沒有切的時候它是一個**沒掛進 DOM 的容器**——程式碼視圖的建構子
   //    仍然收得到一個容器（那本來就是契約：「即使那個實作不在上面畫任何東西」）。
-  const codeColumn = document.createElement('div')
-  codeColumn.id = 'code-column'
+  const codeColumn = makeCell('code-column', 'element')
   codeColumn.classList.add('code-column')
-  codeColumn.style.gridArea = 'element'
-  codeColumn.style.display = 'flex'
-  codeColumn.style.flexDirection = 'column'
-  codeColumn.style.minWidth = '0'
-  codeColumn.style.minHeight = '0'
-  codeColumn.style.overflow = 'hidden'
   main.appendChild(codeColumn)
 
   const monacoWrapper = document.createElement('div')
@@ -519,12 +529,9 @@ export function createAppLayout(
     .filter((c) => surfaceOf(c, surfaces) === 'panelBottom')
   // 🔴 **主控台是 grid 的一格（`state`），不再掛在程式碼那一欄底下**（spec 168）。
   //    版面可以**搬**它（十字時在右下），但**不得關掉**它——第八十一條的 I4 盯著。
-  const bottomContainer = document.createElement('div')
-  bottomContainer.id = 'bottom-container'
-  bottomContainer.style.gridArea = 'state'
-  bottomContainer.style.minWidth = '0'
-  bottomContainer.style.minHeight = '0'
-  bottomContainer.style.overflow = 'hidden'
+  // ⚠️ **不是 column flex**——它裡面是 `BottomPanel` 自己的分頁 ＋ 內容。
+  const bottomContainer = makeCell('bottom-container', 'state', false)
+
   let bottomPanel = bottomTabs.length > 0 ? new BottomPanel(bottomContainer) : null
   if (bottomPanel) main.appendChild(bottomContainer)
 
@@ -619,14 +626,7 @@ export function createAppLayout(
   //
   // 🔴 而那正是使用者感覺到的不對稱的所在：流程住在積木那一欄裡，
   //    於是它與積木**互斥**，而程式碼不必跟任何人互斥。
-  const flowColumn = document.createElement('div')
-  flowColumn.id = 'flow-column'
-  flowColumn.style.gridArea = 'relation'
-  flowColumn.style.display = 'flex'
-  flowColumn.style.flexDirection = 'column'
-  flowColumn.style.minWidth = '0'
-  flowColumn.style.minHeight = '0'
-  flowColumn.style.overflow = 'hidden'
+  const flowColumn = makeCell('flow-column', 'relation')
   flowEl.style.display = ''
   main.appendChild(flowColumn)
   flowColumn.appendChild(flowEl)
@@ -776,15 +776,24 @@ export function createAppLayout(
    *
    * > **一條「等它出現再掛」的邏輯，寫成「掛一次」就會在它比較晚出現的那天失效。**
    */
-  const SLOT_BARS = [
-    { el: codeColumn, layer: 'element' as const, bar: '.monaco-clipboard-bar' },
-    { el: flowColumn, layer: 'relation' as const, bar: '.flow-toolbar' },
-    { el: blocksColumn, layer: 'space' as const, bar: '.quick-access-bar' },
-    { el: bottomContainer, layer: 'state' as const, bar: '.bottom-panel-tabs' },
+  /**
+   * **四格的那一張表**（spec 170 · T017／T019）。
+   *
+   * 🔴 它取代了兩個各自列四次的地方：`SLOT_BARS` 與 `applyLayout` 的四行
+   *    display。⚠️ 而「`state` 畫出來時是 `''` 不是 `'flex'`」這個例外
+   *    現在**寫在表裡**，不是藏在其中一行後面。
+   *
+   * > **一個只在四行裡的其中一行成立的例外，讀的人會以為那三行也一樣。**
+   */
+  const CELLS = [
+    { el: codeColumn, layer: 'element' as const, bar: '.monaco-clipboard-bar', shownAs: 'flex' },
+    { el: flowColumn, layer: 'relation' as const, bar: '.flow-toolbar', shownAs: 'flex' },
+    { el: blocksColumn, layer: 'space' as const, bar: '.quick-access-bar', shownAs: 'flex' },
+    { el: bottomContainer, layer: 'state' as const, bar: '.bottom-panel-tabs', shownAs: '' },
   ]
-  const slotPickers = new Map(SLOT_BARS.map(({ layer }) => [layer, buildSlotPicker(layer)]))
+  const slotPickers = new Map(CELLS.map(({ layer }) => [layer, buildSlotPicker(layer)]))
   const mountSlotPickers = (): void => {
-    for (const { el, layer, bar } of SLOT_BARS) {
+    for (const { el, layer, bar } of CELLS) {
       const btn = slotPickers.get(layer)!
       // 🔴 **沒有那條列就替它開一條**，而不是把按鈕丟進這一格（2026-09-01）。
       //
@@ -865,11 +874,14 @@ export function createAppLayout(
     //    `flex: 1` 的內容量到 **0 高**，畫面上是一片空白而**沒有任何錯誤**。
     //
     // > **把 inline 樣式清成空字串，還的不是「原本的值」，是「沒有值」。**
+    // 🔴 **一行，不是四行**（spec 170 · T017）——四格跑同一份 `CELLS`。
+    //    ⚠️ 而 `state` 那一格的「畫出來」是 `''` 不是 `'flex'`（它裡面是
+    //       `BottomPanel` 自己的分頁 ＋ 內容，不是直向的 flex）——
+    //       那個差別跟著 `CELLS` 走，不再是四行裡藏著的一個例外。
     const shown = new Set(areas.flat())
-    codeColumn.style.display = shown.has('element') && layerAvailable('element') ? 'flex' : 'none'
-    flowColumn.style.display = shown.has('relation') ? 'flex' : 'none'
-    blocksColumn.style.display = shown.has('space') ? 'flex' : 'none'
-    bottomContainer.style.display = shown.has('state') && layerAvailable('state') ? '' : 'none'
+    for (const c of CELLS) {
+      c.el.style.display = shown.has(c.layer) && layerAvailable(c.layer) ? c.shownAs : 'none'
+    }
 
     // ⚠️ 每次都重掛一遍——那條列可能是這一刻之後才建出來的
     mountSlotPickers()
@@ -880,7 +892,7 @@ export function createAppLayout(
     //
     // > **置換搬的是面板的【位子】，不是它的【內容】
     // > ——所以標籤問的是「我是誰」，不是「我這一格原本叫什麼」。**
-    for (const { layer } of SLOT_BARS) {
+    for (const { layer } of CELLS) {
       const btn = slotPickers.get(layer)!
       btn.dataset.layer = layer
       btn.textContent = `${msg(`LAYER_${layer.toUpperCase()}`, layer)} ▾`

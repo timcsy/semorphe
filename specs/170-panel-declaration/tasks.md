@@ -49,12 +49,19 @@
 **獨立測試**：合成一種只畫一段文字的投影，驗它在**不修改既有檔**的前提下
 出現在版面清單、槽的選擇器與版面裡。
 
-- [ ] T014 [US1] 把四種既有投影搬成宣告：`src/panels/{code,flow,blocks,console,variables}/panel.ts`（**行為不動**，`mount` 直接呼叫既有的類別）
-- [ ] T015 [US1] `src/core/view-host.ts` 的 `LAYER_ORDER` 改由登錄表導出（或保留為根宣告而登錄表驗證它——研究時二選一，理由寫進 commit）
-- [ ] T016 [US1] `src/ui/app-shell.ts`：**建容器 ＋ `grid-area`** 那一段收成迴圈（跑 `panelsFor(profile)`）
-- [ ] T017 [US1] `src/ui/app-shell.ts`：`applyLayout` 的四行 display 分支收成迴圈
-- [ ] T018 [US1] `src/ui/app-shell.ts`：`layerAvailable` 改問 `spec.availableIn(profile)`，不再有 `element`／`state` 的手寫分支
-- [ ] T019 [US1] `src/ui/app-shell.ts`：`SLOT_BARS` 與 `mountSlotPickers` 收成同一個迴圈
+- [ ] 🔴 T014 [US1] 把四種既有投影搬成宣告——**卡住了，而卡點不在實作**
+      （2026-09-02 查證，見 [research.md](./research.md) 末段）：
+      `AppShellElements` 把**型別化的**面板交給 `app.ts`，而 `mount` 進宣告之後
+      組裝點只拿得到 `PanelInstance`——要一個 `as` 才轉得回去。
+      > **把一個編譯期的型別換成一個執行期的轉型，
+      > 是在把「錯了會編不過」換成「錯了會在使用者那裡炸」。**
+      ⟹ 解法（改走 Bus／ViewHost）與 P9 ④ 的 `directViewCalls: 21` **是同一刀**，
+      要單獨立項。這一刀交付到 **metadata 層級**。
+- [ ] T015 [US1] `LAYER_ORDER` 與登錄表的關係二選一 ——⏸ **等 T014**
+- [x] T016 [US1] `src/ui/app-shell.ts`：**建容器 ＋ `grid-area`** 那一段收成迴圈（跑 `panelsFor(profile)`）
+- [x] T017 [US1] `src/ui/app-shell.ts`：`applyLayout` 的四行 display 分支收成迴圈
+- [ ] T018 [US1] `layerAvailable` 改問 `spec.availableIn(profile)` ——⏸ **等 T014**（沒有宣告就沒有東西可問）
+- [x] T019 [US1] `src/ui/app-shell.ts`：`SLOT_BARS` 與 `mountSlotPickers` 收成同一個迴圈
 - [ ] T020 [US1] 跑 `npm test` ＋ `npm run test:e2e`
 - [ ] T021 [US1] 在 `tests/integration/panel-declaration-open.test.ts` 寫 SC-001 的測試：測試檔**自己**合成一份 `probe` 宣告推進登錄表，斷言版面清單／槽的選項／`mount` 被呼叫都認得它
 - [ ] T022 [US1] 🔴 驗 T021 **只 import 登錄表與組裝點**——需要 import `app-shell` 才跑得動就代表耦合還在（quickstart §一）
@@ -110,6 +117,28 @@ Setup(T001) → Foundational(T002–T006)
 
 **US2 ＋ US1**（T001–T022）。做到這裡，「加一種投影 ＝ 一份宣告」就成立了，
 而 US3 是既有行為的保護、Polish 是把它釘住。
+
+## 📍 2026-09-02 的實際進度
+
+```
+✅ Phase 1–2  T001–T006   登錄表骨架（11 條測試，兩個注入驗過會紅）
+✅ Phase 3    T007–T013   頭的產生器 5 → 1
+🔶 Phase 4    T016/T017/T019 ✅ ——「四個一起列」的結構 5 → 2
+              T014/T015/T018/T021/T022 ⏸ 卡在上面那個前置
+⬜ Phase 5–6
+```
+
+**已達成的可量成果**：
+
+```
+頭的產生器            5 → 1   ✅ SC-003
+四條頭的樣式定義       維持 1   ✅
+「四個一起列」的結構    5 → 2   🔶 SC-002 走了 60%
+                              （剩下的兩處是 CELLS 表與 mountSlotPickers，
+                               它們要等宣告進來才收得掉）
+視圖獨立性             0       ✅ 硬性零維持
+方法呼叫數        2715 → 2706   🟢 兩次正當的下降，都核對過是「真的刪了」
+```
 
 ## ⚠️ 這份任務清單最容易失敗的地方
 
