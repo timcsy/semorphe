@@ -122,13 +122,52 @@ test('🔴 格與格之間要有【縫】，而把手剛好蓋住那條縫——
   expect(blocks.x - (code.x + code.w), '🔴 兩欄之間的距離不等於那條縫').toBe(gap)
 })
 
+test('🔴 分隔線的長度 ＝ 那條縫【真正存在】的長度——不得穿過跨格的格子', async ({ page }) => {
+  // 🔴 使用者 2026-09-01：「那條水平線還是沒有處理好」。
+  //    在「對照」裡積木是**跨兩列**的，它上面根本沒有縫——而第一版的橫線
+  //    橫跨整個容器，從積木中間穿過去。
+  //
+  // > **一條分隔線的長度，等於那條縫真正存在的長度
+  // > ——而跨格的地方，縫是不存在的。**
+  await freshApp(page)
+  const seam = await page.evaluate(() => {
+    const h = [...document.querySelectorAll('.grid-divider-rows')][0] as HTMLElement | undefined
+    const code = document.getElementById('code-column')!.getBoundingClientRect()
+    return h ? { right: parseFloat(h.style.left) + parseFloat(h.style.width), codeRight: Math.round(code.width) } : null
+  })
+  expect(seam, '🔴 「對照」裡沒有橫的分隔線 → 這支測的不是那條路').not.toBeNull()
+  expect(seam!.right, '🔴 橫線穿過了積木——而積木在「對照」跨兩列，那裡沒有縫')
+    .toBeLessThanOrEqual(seam!.codeRight + 1)
+})
+
+test('🔴 分頁收起來時，它後面那一槓也要跟著收', async ({ page }) => {
+  // 🔴 使用者 2026-09-01：「這槓有點怪」——只收按鈕的話會留下一條前面什麼都沒有的豎線。
+  //
+  // > **一個分隔用的東西，在它兩邊有一邊消失的時候，也要跟著消失。**
+  await freshApp(page)
+  const barItems = (): Promise<string[]> => page.evaluate(() =>
+    [...document.querySelector('.quick-access-bar')!.children]
+      .filter((e) => getComputedStyle(e).display !== 'none')
+      .map((e) => e.id || e.className))
+  expect(await barItems(), '🔴 「對照」裡那一組分頁與它的槓都要在')
+    .toEqual(expect.arrayContaining(['view-tabs', 'toolbar-separator']))
+  await pick(page, 'three-column')
+  const after = await barItems()
+  expect(after, '🔴 分頁沒收起來').not.toContain('view-tabs')
+  expect(after, '🔴 槓留在原地了——它前面什麼都沒有').not.toContain('toolbar-separator')
+})
+
 test('🔴 兩個投影都看得見時，「積木／流程」那兩顆分頁不該還在', async ({ page }) => {
   // > **一個控制項如果在某個狀態下什麼都不做，那個狀態下它就不該在。**
   await freshApp(page)
+  // ⚠️ **問「畫得出來嗎」，不問 `display`**：收起來的是外面那一組（`#view-tabs`），
+  //    而 `getComputedStyle` 對一個藏起來的祖先的子孫，回的仍然是它自己指定的值。
+  //
+  // > **`display` 是一個元素自己說的話，而「看不看得到」是它整條祖先鏈說的。**
   const tabsVisible = (): Promise<boolean[]> => page.evaluate(() =>
     ['view-blocks-btn', 'view-flow-btn'].map((id) => {
       const e = document.getElementById(id)
-      return !!e && getComputedStyle(e).display !== 'none'
+      return !!e && e.getClientRects().length > 0
     }))
   expect(await tabsVisible(), '🔴 「對照」只放得下一個投影，那兩顆要在').toEqual([true, true])
   await pick(page, 'three-column')

@@ -754,11 +754,17 @@ export function createAppLayout(
     //
     // > **一個控制項如果在某個狀態下什麼都不做，那個狀態下它就不該在。**
     //
-    // ⚠️ 收起來的只有那兩顆分頁，**不是整條快速列**（↩↪ 與「清空」仍然要在）。
+    // ⚠️ 收起來的只有那一組分頁，**不是整條快速列**（↩↪ 與「清空」仍然要在）。
+    // 🔴 而要連**它後面那一槓**（`.toolbar-separator`）一起收——只收按鈕的話會留下
+    //    一條前面什麼都沒有的豎線。使用者 2026-09-01：「這槓有點怪」。
     const bothProjections = shown.has('relation') && shown.has('space')
-    for (const id of ['view-blocks-btn', 'view-flow-btn']) {
-      const btn = document.getElementById(id)
-      if (btn) btn.style.display = bothProjections ? 'none' : ''
+    const tabs = document.getElementById('view-tabs')
+    if (tabs) {
+      tabs.style.display = bothProjections ? 'none' : ''
+      const sep = tabs.nextElementSibling
+      if (sep?.classList.contains('toolbar-separator')) {
+        ;(sep as HTMLElement).style.display = bothProjections ? 'none' : ''
+      }
     }
 
     document.body.setAttribute('data-layout', id)

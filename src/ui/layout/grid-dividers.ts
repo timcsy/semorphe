@@ -96,52 +96,74 @@ export function installGridDividers(container: HTMLElement): () => void {
   /**
    * 依**格子實際的位置**重新鋪把手。
    *
-   * 🔴 **不讀 `getComputedStyle` 的軌道**（2026-09-01 實測）。原本讀
-   * `gridTemplateColumns`，而切到三欄之後它**連兩層 `requestAnimationFrame`
-   * 之後都還回上一個版面的 `733px 733px`**——把手於是永遠停在對照的位置。
+   * 🔴 **一格一格看，不是「整條列／整條欄」**（2026-09-01 第二版）。
    *
-   * > **`getComputedStyle` 的軌道值要等版面解析完才是新的，
-   * > 而「什麼時候算完」不是呼叫端說了算。**
+   * 第一版對每一個內部邊界畫一條**橫跨整個容器**的線——而在「對照」裡
+   * 積木是**跨兩列**的，它上面根本沒有縫，那條線卻從它中間穿過去。
+   * 使用者：「那條水平線還是沒有處理好」。
    *
-   * 🟢 `getBoundingClientRect()` 沒有這個問題：它**強制**版面算完才回答。
-   * 所以縫在哪，就問格子自己在哪——**每一個內部左緣的前面，就是一條直縫**。
+   * > **一條分隔線的長度，等於那條縫真正存在的長度
+   * > ——而跨格的地方，縫是不存在的。**
+   *
+   * 🟢 逐格看就自然對了：**只有「這一格的上緣不是容器上緣」才在它上面放一條**，
+   * 而跨兩列的格子上緣就是容器上緣，所以它上面不會有線。
+   *
+   * ⚠️ 位置一樣的把手要**合併**（相鄰兩格共用同一條縫），否則會疊出兩層。
+   *
+   * 🔴 **不讀 `getComputedStyle` 的軌道**：切版面之後它連兩層 `requestAnimationFrame`
+   * 都還回上一個版面的值。`getBoundingClientRect()` 沒有這個問題——它**強制**
+   * 版面算完才回答。
    */
   const layout = (): void => {
     clear()
     const box = container.getBoundingClientRect()
+    const gapC = gapOf(container, 'columns')
+    const gapR = gapOf(container, 'rows')
     const cells = Array.from(container.children)
       .filter((c) => !c.classList.contains('grid-divider'))
       .map((c) => c.getBoundingClientRect())
       .filter((r) => r.width > 0 && r.height > 0)
     if (cells.length === 0) return
 
-    const edges = (get: (r: DOMRect) => number, origin: number): number[] =>
-      [...new Set(cells.map((r) => Math.round(get(r) - origin)))].filter((v) => v > 1).sort((a, b) => a - b)
+    /** 位置 → 這條縫要覆蓋的範圍（相鄰的格子會被合併成一段）。 */
+    type Seam = { at: number; from: number; to: number }
+    const collect = (
+      edge: (r: DOMRect) => number, from: (r: DOMRect) => number, to: (r: DOMRect) => number,
+      originEdge: number, originSpan: number,
+    ): Seam[] => {
+      const by = new Map<number, Seam>()
+      for (const r of cells) {
+        const at = Math.round(edge(r) - originEdge)
+        if (at <= 1) continue     // 貼著容器邊緣 ＝ 不是內部的縫
+        const f = Math.round(from(r) - originSpan), t = Math.round(to(r) - originSpan)
+        const cur = by.get(at)
+        if (cur) { cur.from = Math.min(cur.from, f); cur.to = Math.max(cur.to, t) }
+        else by.set(at, { at, from: f, to: t })
+      }
+      return [...by.values()].sort((a, b) => a.at - b.at)
+    }
 
-    for (const axis of ['columns', 'rows'] as const) {
-      const gap = gapOf(container, axis)
-      if (gap <= 0) continue
-      const starts = axis === 'columns'
-        ? edges((r) => r.left, box.left)
-        : edges((r) => r.top, box.top)
-      for (const start of starts) {
+    const put = (axis: Axis, seams: Seam[], gap: number): void => {
+      seams.forEach((seam, idx) => {
         const h = document.createElement('div')
         h.className = `grid-divider grid-divider-${axis}`
         h.style.position = 'absolute'
         // 🟢 把手**剛好蓋住那條縫**——不多不少，一個像素的內容都不會被壓到
         if (axis === 'columns') {
-          h.style.left = `${start - gap}px`; h.style.top = '0'
-          h.style.width = `${gap}px`; h.style.height = `${box.height}px`
+          h.style.left = `${seam.at - gap}px`; h.style.width = `${gap}px`
+          h.style.top = `${seam.from}px`; h.style.height = `${seam.to - seam.from}px`
         } else {
-          h.style.top = `${start - gap}px`; h.style.left = '0'
-          h.style.height = `${gap}px`; h.style.width = `${box.width}px`
+          h.style.top = `${seam.at - gap}px`; h.style.height = `${gap}px`
+          h.style.left = `${seam.from}px`; h.style.width = `${seam.to - seam.from}px`
         }
-        const idx = starts.indexOf(start)
         h.addEventListener('pointerdown', (e) => { e.preventDefault(); drag(axis, idx, e) })
         container.appendChild(h)
         handles.push(h)
-      }
+      })
     }
+
+    if (gapC > 0) put('columns', collect((r) => r.left, (r) => r.top, (r) => r.bottom, box.left, box.top), gapC)
+    if (gapR > 0) put('rows', collect((r) => r.top, (r) => r.left, (r) => r.right, box.top, box.left), gapR)
   }
 
   layout()
