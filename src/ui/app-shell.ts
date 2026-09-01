@@ -781,8 +781,20 @@ export function createAppLayout(
     { el: blocksColumn, layer: 'space' as const, bar: '.quick-access-bar' },
     { el: bottomContainer, layer: 'state' as const, bar: '.bottom-panel-tabs' },
   ]
-  const slotPickers = new Map(SLOT_BARS.map(({ layer }) => [layer, buildSlotPicker(layer)]))
+  /**
+   * 🔴 **宿主自己會說「這一格是誰」的話，我們不畫**（2026-09-01）。
+   *
+   * 使用者：「有標籤列跟工具列感覺很**厚重**」——而 VSCode 的分頁列
+   * 已經寫著「Semorphe 流程」，我們再畫一次「流程 ▾」不是差異，是重複。
+   *
+   * ⚠️ 判準寫在**宣告**裡（`controlSurfaces.identity`），不是寫在 if
+   * ——見那一格的說明。網頁版沒有分頁列，那顆在那裡是唯一的名字。
+   */
+  const drawsIdentity = surfaces.identity === 'panelToolbar'
+  const slotPickers = new Map(
+    drawsIdentity ? SLOT_BARS.map(({ layer }) => [layer, buildSlotPicker(layer)] as const) : [])
   const mountSlotPickers = (): void => {
+    if (!drawsIdentity) return
     for (const { el, layer, bar } of SLOT_BARS) {
       const btn = slotPickers.get(layer)!
       // 🔴 **沒有那條列就替它開一條**，而不是把按鈕丟進這一格（2026-09-01）。
@@ -880,7 +892,8 @@ export function createAppLayout(
     // > **置換搬的是面板的【位子】，不是它的【內容】
     // > ——所以標籤問的是「我是誰」，不是「我這一格原本叫什麼」。**
     for (const { layer } of SLOT_BARS) {
-      const btn = slotPickers.get(layer)!
+      const btn = slotPickers.get(layer)
+      if (!btn) continue
       btn.dataset.layer = layer
       btn.textContent = `${msg(`LAYER_${layer.toUpperCase()}`, layer)} ▾`
       btn.title = btn.textContent

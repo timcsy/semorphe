@@ -6,6 +6,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { DocPrefStore, DOC_PREF_KEYS, type DocPrefs, type PrefStore } from '../../../src/vscode/sync/doc-prefs'
+import { defaultTargetForPath, resolveConfig } from '../../../src/vscode/sync/settings'
 
 function memory(): PrefStore & { dump(): Record<string, DocPrefs | undefined> } {
   const m = new Map<string, DocPrefs | undefined>()
@@ -62,5 +63,46 @@ describe('🔴 哪些鍵屬於「這份文件」', () => {
   it('⚠️ 積木外觀與語系【不在】裡面——它們描述的是這個人，不是這份文件', () => {
     expect(DOC_PREF_KEYS.blockStyle).toBeUndefined()
     expect(DOC_PREF_KEYS.locale).toBeUndefined()
+  })
+})
+
+describe('🔴 一份文件自己說它是什麼', () => {
+  // 使用者 2026-09-01：「我希望的是看到 C++，**因為我語言選 C++**，
+  // 如果是 .ino 才要 Arduino」。
+  it('.ino／.pde → arduino', () => {
+    expect(defaultTargetForPath('/a/sketch.ino')).toBe('arduino')
+    expect(defaultTargetForPath('/a/sketch.PDE')).toBe('arduino')
+  })
+
+  it('.cpp → cpp', () => {
+    expect(defaultTargetForPath('/a/main.cpp')).toBe('cpp')
+  })
+
+  it('🔴 暫存分頁【沒有副檔名】——那時只有語言說得出來', () => {
+    expect(defaultTargetForPath('Untitled-1', 'cpp')).toBe('cpp')
+    expect(defaultTargetForPath('Untitled-1', 'ino')).toBe('arduino')
+    expect(defaultTargetForPath('Untitled-1', 'arduino')).toBe('arduino')
+  })
+
+  it('⚠️ 副檔名比語言強——純 VSCode 裡 `.ino` 常常被歸成 `cpp`', () => {
+    expect(defaultTargetForPath('/a/sketch.ino', 'cpp')).toBe('arduino')
+  })
+
+  it('什麼都不知道時落到 cpp', () => {
+    expect(defaultTargetForPath(undefined)).toBe('cpp')
+  })
+})
+
+describe('resolveConfig 同時交出「設定說的」與「文件說的」', () => {
+  it('🔴 兩個都送——該不該蓋掉由【認得登錄表的那一側】決定', () => {
+    const c = resolveConfig({ target: { user: 'arduino' } }, 'Untitled-1', 'zh-tw', 'cpp')
+    expect(c.targetId).toBe('arduino')      // 設定說的
+    expect(c.autoTargetId).toBe('cpp')      // 文件說的
+  })
+
+  it('沒設定時兩者相同', () => {
+    const c = resolveConfig({}, '/a/sketch.ino')
+    expect(c.targetId).toBe('arduino')
+    expect(c.autoTargetId).toBe('arduino')
   })
 })

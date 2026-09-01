@@ -215,6 +215,22 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
       expect(typeof view.reportVariables, '🔴 變數投影到宿主而交不出去＝那一格會是空的')
         .toBe('function')
     }
+    // 🔴 **`identity` 投影到宿主 ⟹ 宿主要真的說得出「這一格是誰」**（2026-09-01）。
+    //
+    //    使用者：「有標籤列跟工具列感覺很厚重」——而厚的那一半是同一句話說兩次
+    //    （分頁寫「Semorphe 流程」，我們的列再寫一次「流程 ▾」）。於是面板那側
+    //    不畫了。⚠️ **而不畫的前提是宿主真的有畫**：
+    //
+    // > **把一件事交給宿主之後，如果宿主其實沒做，那一格就不是「比較乾淨」，
+    // > 是【沒有人說得出這是什麼】。**
+    if (vscodeProfile.controlSurfaces.identity.startsWith('host')) {
+      // 每一種面板各一個標題，而且**互不相同**——相同的話分頁上分不出誰是誰。
+      const titles = [...panelSrc.matchAll(/^\s*(blocks|flow|state):\s*'([^']+)'/gm)]
+        .map((m) => m[2])
+        .filter((t) => t.startsWith('Semorphe'))
+      expect(titles.length, '🔴 宿主沒有替每一種面板取名字').toBeGreaterThanOrEqual(3)
+      expect(new Set(titles).size, `🔴 分頁標題有重複：${titles.join('、')}`).toBe(titles.length)
+    }
     // ⚠️ **註解裡提到它不算**（那是說明，不是分支）——與第 60 條的
     //    `profile.id ===` 掃描同一個形狀。第一版沒排掉註解，配到自己寫的說明。
     const branching = panelSrc.split('\n')

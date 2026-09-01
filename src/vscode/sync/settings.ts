@@ -55,6 +55,12 @@ export interface PanelConfig {
    */
   skeletonId: string | null
   scaffoldMode: string | null
+  /**
+   * 這份文件自己說它是什麼（由副檔名與語言導出）——見 `resolveConfig`。
+   *
+   * ⚠️ `undefined` ＝ **不要問**（使用者在這份文件上明確選過了）。
+   */
+  autoTargetId?: string
 }
 
 /**
@@ -89,6 +95,7 @@ export const DEFAULT_CONFIG: PanelConfig = {
   // ⚠️ **沒有預設**——`null` ＝ 使用者沒選過，下游保留現況（見 `PanelConfig`）。
   skeletonId: null,
   scaffoldMode: null,
+  autoTargetId: 'cpp',
 }
 
 /**
@@ -143,12 +150,25 @@ export interface RawSettings {
  *
  * 而這只是**預設**：`semorphe.target` 設過的話仍然照設定走（`pick` 在前）。
  */
-export function defaultTargetForPath(path: string | undefined): string {
+export function defaultTargetForPath(path: string | undefined, languageId?: string): string {
   if (path && /\.(ino|pde)$/i.test(path)) return 'arduino'
+  // 🔴 **語言也算一種宣告**（2026-09-01）。使用者：「我希望的是看到 C++，
+  //    **因為我語言選 C++**，如果是 .ino 才要 Arduino」。
+  //
+  // ⚠️ 一份**暫存分頁沒有副檔名**——那時只有 `languageId` 說得出它是什麼。
+  //    而在純 VSCode 裡 `.ino` 常常也被歸成 `cpp`，所以副檔名要**排在前面**：
+  //    它是比較強的證據。
+  //
+  // > **一份文件說自己是什麼，有兩種說法（副檔名與語言），
+  // > 而只聽其中一種的判斷會在另一種上安靜地答錯。**
+  if (languageId && /^(ino|arduino)$/i.test(languageId)) return 'arduino'
   return DEFAULT_CONFIG.targetId
 }
 
-export function resolveConfig(raw: RawSettings, documentPath?: string, hostLocale?: string): PanelConfig {
+export function resolveConfig(
+  raw: RawSettings, documentPath?: string, hostLocale?: string, languageId?: string,
+): PanelConfig {
+  const auto = defaultTargetForPath(documentPath, languageId)
   return {
     // 🔴 **`?? ` 不可省**：`pick()` 對一個【明確設成 null】的層會回傳 `null`
     //    （它只跳過 `undefined`），而 `null` 到了下游是「沒有目標」——
@@ -159,7 +179,22 @@ export function resolveConfig(raw: RawSettings, documentPath?: string, hostLocal
     //
     // > **一個「沒設定」的表示法如果有兩種（`undefined` 與 `null`），
     // > 只處理一種的判斷會在另一種上安靜地給出錯的答案。**
-    targetId: pick(raw.target, defaultTargetForPath(documentPath)) ?? defaultTargetForPath(documentPath),
+    targetId: pick(raw.target, auto) ?? auto,
+    /**
+     * **這份文件自己說它是什麼**——由副檔名與語言導出，不看設定。
+     *
+     * 🔴 使用者：「我希望的是看到 C++，因為我語言選 C++，如果是 .ino 才要
+     * Arduino」——而他的全域設定裡有一行 `semorphe.target: arduino`，
+     * 於是**每一份文件都被判成 Arduino**，包含 C++ 的。
+     *
+     * > **一份放在那裡的全域設定，不該蓋掉一份【自己說得出身分】的文件。**
+     *
+     * ⚠️ 而「該不該蓋」的判斷**不在這裡做**——它要問目標登錄表
+     * （`arduino-uno` 與 `arduino` 是同一家族，`cpp` 不是），
+     * 而**主行程不認得那張登錄表**（P9）。所以這裡只把兩個 id 都送過去，
+     * 由認得登錄表的那一側決定。
+     */
+    autoTargetId: auto,
     topicId: pick(raw.topic, DEFAULT_CONFIG.topicId as string | null),
     styleId: pick(raw.style, DEFAULT_CONFIG.styleId as string | null),
     blockStyleId: pick(raw.blockStyle, DEFAULT_CONFIG.blockStyleId),

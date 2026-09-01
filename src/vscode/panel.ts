@@ -340,7 +340,8 @@ class SemorpheSession {
       locale: layered<string>('locale'),
     }
     // 🔴 傳檔名進去——`.ino` 的預設目標是 Arduino，不是 C++（見 `settings.ts`）。
-    const resolved = resolveConfig(raw, doc?.uri.path, vscode.env.language)
+    // ⚠️ `languageId` 也要傳——暫存分頁**沒有副檔名**，那時只有它說得出這是什麼。
+    const resolved = resolveConfig(raw, doc?.uri.path, vscode.env.language, doc?.languageId)
     // 🔴 **這份文件上選過的壓在最上面**——見 `configChanged` 那一段。
     //    ⚠️ 用 `??` 而不是展開：`prefs` 的每一格都是選填，展開會把
     //       `undefined` 蓋掉解析好的值。
@@ -353,6 +354,9 @@ class SemorpheSession {
         styleId: prefs.styleId ?? resolved.styleId,
         skeletonId: prefs.skeletonId ?? resolved.skeletonId,
         scaffoldMode: prefs.scaffoldMode ?? resolved.scaffoldMode,
+        // ⚠️ **使用者在這份文件上選過的話，就不必再問文件自己說什麼**
+        //    ——他的選擇比推導更明確。
+        autoTargetId: prefs.targetId ? undefined : resolved.autoTargetId,
       },
     })
   }

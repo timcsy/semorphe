@@ -90,6 +90,7 @@ async function boot(): Promise<void> {
       targetId?: string; locale?: string; hostLocale?: string
       styleId?: string | null; blockStyleId?: string
       skeletonId?: string | null; scaffoldMode?: string | null
+      autoTargetId?: string
     }
   }>) => {
     if (e.data?.type === 'config' && e.data.config) app.applyHostConfig(e.data.config)

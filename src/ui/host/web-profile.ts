@@ -73,5 +73,8 @@ export const webProfile: HostProfile = {
     output: 'panelBottom',
     // 變數也在下方面板——**網頁版沒有第二個面板區可以放它**。
     inspector: 'panelBottom',
+    // 🔴 **網頁版沒有分頁列**——那顆「程式碼 ▾／流程 ▾…」是這一格
+    //    **唯一的**名字。它在這裡是必要的，不是重複。
+    identity: 'panelToolbar',
   },
 }

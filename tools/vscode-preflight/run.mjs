@@ -230,6 +230,37 @@ console.log(`\n組態 → 面板：目標「${applied.target}」${wantsArduino ?
   `｜骨架「${applied.scaffold}」${wantsGhost ? '🟢' : '🔴 沒吃下去'}`)
 await cfgPage.close()
 
+// ── ⑤″ 一份全域設定，不得蓋掉一份自己說得出身分的文件 ─────────────
+//
+// 🔴 2026-09-01。使用者的全域 settings.json 裡有一行
+//    `"semorphe.target": "arduino"`（8/19 起就在），於是**每一份文件都被判成
+//    Arduino**，包含 C++ 的。他說：
+//
+//      「我希望的是看到 C++，**因為我語言選 C++**，如果是 .ino 才要 Arduino」
+//
+// > **一份放在那裡的全域設定，不該蓋掉一份【自己說得出身分】的文件。**
+//
+// ⚠️ 而判準是**家族**不是相等：`arduino-uno` 與 `arduino` 同族（都用 arduino
+//    骨架），那時設定比較具體，該用設定——老師把板子釘成 `arduino-uno`
+//    是有意義的，不該被推導洗成 `arduino`。
+for (const c of [
+  { label: '設定 arduino ＋ 文件說 cpp', cfg: { targetId: 'arduino', autoTargetId: 'cpp' }, want: /C\+\+/ },
+  { label: '設定 arduino-uno ＋ 文件說 arduino（同族）', cfg: { targetId: 'arduino-uno', autoTargetId: 'arduino' }, want: /Uno/i },
+  { label: '沒有設定，文件說 arduino', cfg: { targetId: 'arduino', autoTargetId: 'arduino' }, want: /Arduino/ },
+]) {
+  const fp = await browser.newPage({ viewport: { width: 900, height: 620 } })
+  await fp.goto(`http://localhost:${PORT}/preview.html`, { waitUntil: 'networkidle' })
+  await fp.waitForFunction(() => typeof window.__setConfig__ === 'function')
+  await fp.evaluate((x) => window.__setConfig__(x), c.cfg)
+  await fp.waitForTimeout(5000)
+  const label = await fp.evaluate(() => {
+    const last = [...(window.__HOST__?.sent ?? [])].reverse().find((m) => m.type === 'controls')
+    return (last?.items ?? []).find((i) => i.id === 'target')?.label ?? '(沒送)'
+  })
+  console.log(`  ${c.label} → 「${label}」${c.want.test(label) ? ' 🟢' : ' 🔴'}`)
+  await fp.close()
+}
+
 // ── ⑤ 每一種視窗只畫它那一層，而版面交給 IDE ─────────────────────
 //
 // 🔴 2026-09-01。這一段的第一版問的是「這個宿主畫得出幾格、每條縫拖不拖得動」

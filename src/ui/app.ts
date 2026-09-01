@@ -1498,6 +1498,8 @@ export class App {
     targetId?: string; locale?: string; hostLocale?: string
     styleId?: string | null; blockStyleId?: string
     skeletonId?: string | null; scaffoldMode?: string | null
+    /** 這份文件自己說它是什麼——`undefined` ＝ 不要問（使用者明確選過了）。 */
+    autoTargetId?: string
   }): void {
     // 🔴 語系先處理——⚠️ 它與目標**互不相干**，而早期的版本因為
     //    `if (!cfg.targetId) return` 寫在最前面，讓它整段被跳過。
@@ -1506,7 +1508,31 @@ export class App {
     // 🔴 **其餘偏好在【目標之後】套**——見 `applyPreferences` 的說明。
     const rest = (): void => this.applyPreferences(cfg)
     if (!cfg.targetId) { rest(); return }
-    const target = this.targetRegistry.get(cfg.targetId)
+    // 🔴 **文件自己說得出身分時，它贏過一份放在那裡的全域設定**（2026-09-01）。
+    //
+    // 使用者：「我希望的是看到 C++，**因為我語言選 C++**，如果是 .ino 才要
+    // Arduino」——而他的全域設定裡有一行 `semorphe.target: arduino`，
+    // 於是**每一份文件都被判成 Arduino**，包含 C++ 的。
+    //
+    // > **一份放在那裡的全域設定，不該蓋掉一份【自己說得出身分】的文件。**
+    //
+    // ⚠️ 而判準是**家族**不是相等：`arduino-uno` 與 `arduino` 是同一家族
+    //    （都用 `arduino` 骨架），那時設定比較具體，該用設定
+    //    ——老師把板子釘成 `arduino-uno` 是有意義的，不該被推導洗成 `arduino`。
+    //
+    // > **一個「更具體的值」與一個「不同種類的值」是兩件事
+    // > ——只比對相等的話，兩者都會被當成「不一樣」。**
+    const wanted = ((): string => {
+      if (!cfg.autoTargetId || cfg.autoTargetId === cfg.targetId) return cfg.targetId!
+      const family = (id: string): string =>
+        this.targetRegistry.get(id)?.skeleton ?? 'main'
+      if (family(cfg.autoTargetId) === family(cfg.targetId!)) return cfg.targetId!
+      diagNote(`⚠️ 設定的目標「${cfg.targetId}」與這份文件不同族——` +
+        `改用文件自己說的「${cfg.autoTargetId}」。（設定要跟著檔案走的話，` +
+        `用語言覆寫：\`"[cpp]": { "semorphe.target": … }\`）`)
+      return cfg.autoTargetId
+    })()
+    const target = this.targetRegistry.get(wanted)
     // 🔴 **認不得就要出聲**——回退到現況是對的，而**靜靜地回退不是**。
     //
     // 2026-08-31：`manifest.ts` 把 `'cpp-beginner'`（一個**課程清單**的 id）
@@ -1518,8 +1544,8 @@ export class App {
     // >  ——設定看起來有在運作，實際上這一格從來沒有生效過。」
     //
     // **那句話診斷對了，而沒有人把『出聲』做出來。** 現在做。
-    if (cfg.targetId && !target) {
-      diagNote(`🔴 宿主給的目標認不得：「${cfg.targetId}」——已回退到現況「${this.currentTarget.id}」。` +
+    if (!target) {
+      diagNote(`🔴 宿主給的目標認不得：「${wanted}」——已回退到現況「${this.currentTarget.id}」。` +
         `登錄的目標：${this.targetRegistry.all().map((t) => t.id).join('、')}`)
     }
     if (!target || target.id === this.currentTarget.id) { rest(); return }

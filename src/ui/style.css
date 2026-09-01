@@ -2077,6 +2077,15 @@ html, body {
   overflow: auto;
 }
 
+/* 🔴 **一格的頭只有一種密度**（2026-09-01）。
+   在此之前這一條是 `6px 10px`，而 `.quick-access-bar`／`.panel-head` 是 `2px 8px`
+   ——**流程那一格的頭比其他兩格各厚 8px，而那是不小心的，不是設計**。
+
+   使用者：「有標籤列跟工具列感覺很**厚重**」。⚠️ 而這一刀是**兩邊一起薄**
+   （網頁版與 IDE 版同時），所以它不需要任何「哪一邊該不一樣」的判準
+   ——那正是它比另外幾個提案好的地方。
+
+   > **一個沒有人決定過的差異，不是設計，是漂移。** */
 .flow-toolbar {
   position: sticky;
   top: 0;
@@ -2084,7 +2093,7 @@ html, body {
   display: flex;
   gap: 8px;
   align-items: center;
-  padding: 6px 10px;
+  padding: 2px 8px;
   background: #252526;
   border-bottom: 1px solid #3c3c3c;
 }
