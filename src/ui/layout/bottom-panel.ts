@@ -1,3 +1,5 @@
+import { createPanelHead } from './cell-head'
+
 export interface TabAction {
   icon: string
   title: string
@@ -33,8 +35,10 @@ export class BottomPanel {
     this.divider.className = 'bottom-panel-divider'
     this.container.appendChild(this.divider)
 
-    this.tabBar = document.createElement('div')
-    this.tabBar.className = 'bottom-panel-tabs'
+    // 🔴 框架走同一支產生器（spec 170 · T011）。
+    //    ⚠️ 這一條裝的是**分頁**（內容導覽）不是動作，而框架與其他三格相同
+    //       ——那正是「面板統一」要的。
+    this.tabBar = createPanelHead('bottom-panel-tabs').el
     this.container.appendChild(this.tabBar)
 
     this.tabButtonsArea = document.createElement('div')

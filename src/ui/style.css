@@ -304,6 +304,14 @@ html, body {
 
    > **一個為了特例而生的東西，如果通則長得跟它一樣，那它本來就是通則。** */
 
+/* 🔴 spec 170：**框架住在 `.panel-head` 一個 class 上**。
+   舊的四個 class 留著當**掛鉤**（e2e 的選擇器、`mountSlotPickers` 的 `bar`、
+   行動版的搬移都用它們認人）——⚠️ 而它們**不再帶樣式**。
+
+   > **把兩個責任壓在同一個 class 上，改樣式就會動到誰認得誰。**
+
+   ⚠️ 選擇器清單暫時保留（既有的四條頭還沒全部改走 `createPanelHead`），
+   T009–T012 逐一改完之後只剩 `.panel-head` 一個。 */
 .panel-head,
 .quick-access-bar,
 .bottom-panel-tabs,
@@ -318,6 +326,23 @@ html, body {
   flex-shrink: 0;
   min-height: 28px;
   box-sizing: border-box;
+}
+
+/* 名字之後的那一段——面板自己的東西接這裡（`layout/panel-head.ts`）。 */
+.panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 🔴 **空的那一段要消失**。它帶著 `flex: 1`，而一個空的 flex:1 會把它後面的
+   東西整個推到右邊——主控台那條頭的分頁就是這樣被擠走的（實作時當場抓到）。
+
+   > **一個「佔位」的容器，在它沒有東西可佔的時候仍然佔著位。** */
+.panel-head-actions:empty {
+  display: none;
 }
 
 /* ─── 可拖的格線（`layout/grid-dividers.ts`）─── */

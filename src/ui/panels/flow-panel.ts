@@ -35,6 +35,7 @@
  * > 使用者定的形式：「一開始就手拖 ＋ 記住，也可以**一鍵**自動排版」
  * > ——所以自動排版是一個**動作**，不是一個模式。
  */
+import { createPanelHead } from '../layout/cell-head'
 import type { ViewHost, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, EditableSource } from '../../core/view-host'
 import type { SemanticNode } from '../../core/types'
 import type { CodeMapping } from '../../core/projection/code-generator'
@@ -973,8 +974,10 @@ export class FlowPanel implements ViewHost {
 
   private buildChrome(): void {
     this.container.classList.add('flow-panel')
-    const bar = document.createElement('div')
-    bar.className = 'flow-toolbar'
+    // 🔴 **框架走同一支產生器**（spec 170 · T009）——`flow-toolbar` 從
+    //    「帶樣式的 class」變成純粹的**掛鉤**（e2e／搬移用它認人）。
+    const head = createPanelHead('flow-toolbar')
+    const bar = head.actions
 
     // 🪦 **「整份程式 ▾」那顆下拉已於 2026-08-30 刪除**（使用者：
     //    「這選單能不能先刪掉？現在好像還看不出有什麼用」）。
@@ -1109,7 +1112,7 @@ export class FlowPanel implements ViewHost {
     const workRow = document.createElement('div')
     workRow.className = 'flow-work'
     workRow.append(this.toolboxEl, this.paletteToggle, this.paletteEl, this.canvas)
-    this.container.append(bar, workRow)
+    this.container.append(head.el, workRow)
     this.setPaletteOpen(true)
   }
 

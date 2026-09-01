@@ -4,6 +4,7 @@ import { msg } from '../core/messages'
 import { showQuickPick } from './toolbar/quick-pick'
 import { installGridDividers } from './layout/grid-dividers'
 import { identityAssignment, swapTo, effectiveAreas, type SlotAssignment } from '../core/host/slot-assignment'
+import { createPanelHead } from './layout/cell-head'
 import { BottomPanel } from './layout/bottom-panel'
 import { LayoutManager } from './layout/layout-manager'
 import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
@@ -801,8 +802,8 @@ export function createAppLayout(
       let host = real
       if (!host) {
         const own = el.querySelector<HTMLElement>(':scope > .panel-head')
-        host = own ?? el.insertBefore(Object.assign(document.createElement('div'),
-          { className: 'panel-head' }), el.firstChild)
+        // 🔴 走同一支產生器（spec 170 · T012）——這裡曾經是第五份手寫的頭。
+        host = own ?? el.insertBefore(createPanelHead().el, el.firstChild)
       }
       if (btn.parentElement !== host) host.insertBefore(btn, host.firstChild)
       if (real) {

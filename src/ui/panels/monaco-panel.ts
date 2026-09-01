@@ -1,3 +1,4 @@
+import { createPanelHead } from '../layout/cell-head'
 import * as monaco from 'monaco-editor'
 import { preserveBlankLines } from '../../core/projection/preserve-blank-lines'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent, EditableSource } from '../../core/view-host'
@@ -607,8 +608,10 @@ export class MonacoPanel implements ViewHost, CodeView {
   }
 
   private createClipboardBar(): void {
-    const bar = document.createElement('div')
-    bar.className = 'monaco-clipboard-bar'
+    // 🔴 框架走同一支產生器（spec 170 · T010）——`monaco-clipboard-bar`
+    //    從「帶樣式的 class」變成純粹的掛鉤。
+    const head = createPanelHead('monaco-clipboard-bar')
+    const bar = head.actions
 
     const copyBtn = document.createElement('button')
     copyBtn.className = 'clipboard-btn'
@@ -662,7 +665,7 @@ export class MonacoPanel implements ViewHost, CodeView {
     bar.appendChild(pasteReplaceBtn)
 
     // Insert bar before the editor container (at the top of the wrapper)
-    this.container.insertBefore(bar, this.container.firstChild)
+    this.container.insertBefore(head.el, this.container.firstChild)
   }
 
   private renderBreakpoints(): void {

@@ -1,3 +1,4 @@
+import { createPanelHead } from '../layout/cell-head'
 /**
  * BlockToolbar — 積木面板上方的工具列
  * 包含：同步按鈕、等級選擇、積木風格、undo/redo/clear、匯出/匯入/上傳
@@ -29,8 +30,8 @@ export class QuickAccessBar {
    * 機制見 `core/sync-coordinator.ts`。
    */
   constructor(parent: HTMLElement, options: QuickAccessBarOptions) {
-    this.container = document.createElement('div')
-    this.container.className = 'quick-access-bar'
+    // 🔴 框架走同一支產生器（spec 170 · T012）。
+    this.container = createPanelHead('quick-access-bar').el
     // 🔴 **一群一群地建**——⚠️ 分隔線跟著它前面那一群走，
     //    否則關掉中間某一群會留下兩條連在一起的分隔線。
     const groups = [

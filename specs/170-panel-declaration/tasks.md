@@ -11,15 +11,15 @@
 
 ## Phase 1：Setup
 
-- [ ] T001 建 `src/panels/` 目錄，並在 `src/panels/README.md` 寫下這裡放什麼（一種投影一個子目錄，各含 `panel.ts`）
+- [x] T001 建 `src/panels/` 目錄，並在 `src/panels/README.md` 寫下這裡放什麼（一種投影一個子目錄，各含 `panel.ts`）
 
 ## Phase 2：Foundational（擋住所有 user story）
 
-- [ ] T002 在 `src/core/host/panel-spec.ts` 定義 `PanelSpec`／`PanelAction`／`PanelInstance`／`PanelContext`（照 data-model.md，`mount` 是函式不是資料）
-- [ ] T003 在 `src/core/host/panel-registry.ts` 實作登錄表：`allPanels`／`panelsOfLayer`／`panelsFor`／`layersOf`（照 contracts/panel-registry.md）
-- [ ] T004 在 `src/core/host/load-panels.ts` 用 `import.meta.glob('/src/panels/*/panel.ts', { eager: true })` 收宣告；**順序不靠 glob 的鍵順序**，由 `LAYER_ORDER` ＋ 宣告的 `order` 決定
-- [ ] T005 在 `tests/unit/core/panel-registry.test.ts` 寫**先紅**的四條「要出聲」：id 撞名／層認不得／`nameKey` 查不到／**一份宣告都沒有**（入口條件）
-- [ ] T006 讓 T005 綠——出聲走既有的 `diagNote`／組裝點出聲機制，**不得靜默降級**（第七十五條護欄的判準）
+- [x] T002 在 `src/core/host/panel-spec.ts` 定義 `PanelSpec`／`PanelAction`／`PanelInstance`／`PanelContext`（照 data-model.md，`mount` 是函式不是資料）
+- [x] T003 在 `src/core/host/panel-registry.ts` 實作登錄表：`allPanels`／`panelsOfLayer`／`panelsFor`／`layersOf`（照 contracts/panel-registry.md）
+- [x] T004 在 `src/core/host/load-panels.ts` 用 `import.meta.glob('/src/panels/*/panel.ts', { eager: true })` 收宣告；**順序不靠 glob 的鍵順序**，由 `LAYER_ORDER` ＋ 宣告的 `order` 決定
+- [x] T005 在 `tests/unit/core/panel-registry.test.ts` 寫**先紅**的四條「要出聲」：id 撞名／層認不得／`nameKey` 查不到／**一份宣告都沒有**（入口條件）
+- [x] T006 讓 T005 綠——出聲走既有的 `diagNote`／組裝點出聲機制，**不得靜默降級**（第七十五條護欄的判準）
 
 **Checkpoint**：`npx vitest run tests/unit/core/panel-registry.test.ts` 綠，而**產品行為一個字都還沒動**。
 
