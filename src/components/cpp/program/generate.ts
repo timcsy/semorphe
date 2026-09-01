@@ -154,6 +154,47 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
 
         const userBody = body.filter(n => !isIncludeDirective(n.componentId))
 
+        // 🔴 **最外層的東西留在最外層**（2026-09-02）。
+        //
+        // 使用者 2026-09-01 貼一段 `#define SQ(x) …` ＋ `int main(){…}` 進去，
+        // 產出的是：
+        //
+        //     int main() {
+        //         #define SQ(x) ((x)*(x))     ← 搬進來，還縮排了
+        //         return 0;
+        //     }
+        //
+        // 字沒被改，**位置被改了**——而 `#define` 在 `main` 之前的任何使用
+        // 都會壞掉。同一個病也讓**使用者自己寫的函式**跑進 main 裡面
+        // （那根本編不過）。
+        //
+        // > **一句「我不會動你的東西」的承諾，要連【它在哪裡】一起算。**
+        //
+        // ⚠️ 根因在上游：`cpp-scaffold-filter.ts` 把「進入點外面」與
+        //    「進入點裡面」倒進同一個籃子（`userBody.push(node)`），
+        //    於是這裡拿到的清單裡**沒有那個資訊**。
+        //
+        // 🟢 而它救得回來，因為 C++ 自己說得出哪些東西不能待在函式裡
+        //    ——而這裡是 C++ 的膠囊，那個知識該住在這裡。
+        //
+        // 🔴 **待清**：`func_def` 那一半該是一格**宣告的性狀**
+        //    （`topLevelOnly`），與 `scaffold`／`includeDirective` 同一個形狀。
+        //    `raw_code` 那一半不行——它的頂層性住在**文字**裡，不在身分裡。
+        const mustStayTopLevel = (n: typeof userBody[number]): boolean => {
+          // 使用者自己的函式——C++ 不允許巢狀函式定義。
+          if (isFunctionDefinition(n.componentId)) return true
+          // 前處理指示詞（`#define`／`#pragma`…）——它認不出來所以是 raw_code，
+          // ⚠️ 而「它是頂層的」寫在**文字**裡：第一個非空白字元是 `#`。
+          const raw = (n.metadata as { rawCode?: string } | undefined)?.rawCode
+          return typeof raw === 'string' && raw.trimStart().startsWith('#')
+        }
+        const topLevel = userBody.filter(mustStayTopLevel)
+        const insideEntry = userBody.filter(n => !mustStayTopLevel(n))
+        if (topLevel.length > 0) {
+          code += generateBody(topLevel, ctx)
+          code += '\n'
+        }
+
         // 進入點 ＋ 本體 ＋ 收尾——**逐顆函式**，不是把四段攤平。
         //
         // 🔴 **2026-08-31：這裡本來讀 `scaffoldResult.entryPoint`／`epilogue`
@@ -177,13 +218,13 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         //    函式定義就是頂層，縮排會變成一個假的巢狀關係。
         const entryFns = skeleton?.entryFunctions ?? []
         if (entryFns.length === 0) {
-          code += generateBody(userBody, ctx)
+          code += generateBody(insideEntry, ctx)
         } else {
           // 鬆散的語句只有**一個**去處——由宣告指定（Arduino 是 `loop`）
           const host = entryFns.find((f) => f.hostsBody) ?? entryFns[0]
           code += entryFns.map((f) => {
             let block = f.open.map((l) => l.code + '\n').join('')
-            if (f === host) block += generateBody(userBody, indented(ctx))
+            if (f === host) block += generateBody(insideEntry, indented(ctx))
             block += f.close.map((l) => l.code + '\n').join('')
             return block
           }).join('\n')

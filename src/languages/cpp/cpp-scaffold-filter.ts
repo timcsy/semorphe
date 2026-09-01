@@ -65,6 +65,23 @@ export function cppStripScaffoldNodes(tree: SemanticNode, skeletonId = 'main'): 
       continue
     }
     // Keep everything else (user-defined functions, etc.)
+    //
+    // 🔴 **這一行把「進入點外面」與「進入點裡面」倒進同一個籃子**（2026-09-02）。
+    //
+    //    使用者貼一段 `#define` ＋ 進入點進去，產出的把 `#define` 放進了框裡面
+    //    ——字沒被改，**位置被改了**。同一個病也讓使用者自己寫的函式跑進框裡
+    //    （那根本編不過）。
+    //
+    // > **一個過濾器如果只記得「留下什麼」而不記得「它本來在哪」，
+    // > 下游就只能把它們放在同一個地方。**
+    //
+    // 🟢 而下游**救得回來**：C++ 自己說得出哪些東西不能待在函式裡，
+    //    而那個判斷住在 `components/cpp/program/generate.ts`（C++ 的膠囊）。
+    //    由 `tests/integration/toplevel-stays-outside.test.ts` 釘住。
+    //
+    // ⚠️ **這裡仍然是資訊弄丟的第一站**——把「本來在哪」帶下去比在下游重建
+    //    更正確，而那要動 `cpp:program` 的形狀（多一格 children）。
+    //    記在 `knowledge/draft/2026-03-11-已知工程待解問題.md`。
     userBody.push(node)
   }
 
