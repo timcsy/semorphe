@@ -345,26 +345,28 @@ export function buildManifest(): ExtensionManifest {
       //    ——與網頁版逐字相同。
       //
       // > **與宿主一致、與自己一致，第一次指向同一邊。**
+      // ⚠️ **兩個容器各一個視圖，不是一個容器裝兩個**：在 panel 那一排上，
+      //    **一個容器就是一個分頁**，而使用者要的正是那一排上的兩個名字
+      //    （2026-09-02 逐字：「移到上面的 tab 變成『Semorphe 主控台』、
+      //    『Semorphe 變數』」）。
+      //
+      // 🪦 而先前拍板的「一個 view 裡畫我們自己的兩個分頁」的理由——
+      //    「兩個 `WebviewView` 是兩個 context，會回到『被餵的薄視圖』那個形狀」
+      //    ——**在這裡不成立**：那條規矩管的是**投影**，而主控台與變數是
+      //    **執行的輸出**（三維錨定：屬於情境，`history/198`）。
+      //    一條資料流本來就只有一個源頭，由主行程轉送。
+      //
+      // > **「不要被餵」是投影的規矩；資料流被餵是它的定義。**
       viewsContainers: {
         panel: [
-          {
-            id: 'semorphe-panel',
-            title: DISPLAY_NAME,
-            // ⚠️ panel 區的容器圖示走**單色遮罩**（與活動列同一種機制）
-            // ⚠️ 用既有的那兩張之一——**沒有另做一張**（多一張就多一份會漂的資產）
-            icon: 'assets/logo-dark-theme.svg',
-          },
+          { id: 'semorphe-console', title: 'Semorphe 主控台', icon: 'assets/logo-dark-theme.svg' },
+          { id: 'semorphe-variables', title: 'Semorphe 變數', icon: 'assets/logo-dark-theme.svg' },
         ],
       },
       views: {
-        'semorphe-panel': [
-          {
-            // 🔴 與 `panel.ts` 的 `CONSOLE_VIEW_ID` **逐字相同**（預檢會出聲）
-            id: 'semorphe.consoleView',
-            name: '主控台',
-            type: 'webview',
-          },
-        ],
+        // 🔴 id 與 `panel.ts` 的 `PANEL_VIEW_IDS` **逐字相同**（預檢會出聲）
+        'semorphe-console': [{ id: 'semorphe.consoleView', name: '主控台', type: 'webview' }],
+        'semorphe-variables': [{ id: 'semorphe.variablesView', name: '變數', type: 'webview' }],
       },
       // 🪦 **舊的 `viewsContainers` ＋ `views`（2026-09-01 退場的那一組）**：
       //

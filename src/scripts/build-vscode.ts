@@ -151,28 +151,21 @@ function main(): void {
   //    屬性，而模組一載入就讀它，所以「開好之後再改」來不及。
   //
   // > **一個在啟動時就被讀走的參數，測試環境必須在【啟動之前】給它。**
-  writeFileSync(
-    join(OUT, 'dist', 'preview-flow.html'),
-    renderHtml({
-      preScripts: ['./host-stub.js'],
-      scriptSrc: './webview.js',
-      styleSrc: './webview.css',
-      mediaSrc: './media/',
-      csp: csp(`'self'`),
-      view: 'flow',
-    }),
-  )
-  writeFileSync(
-    join(OUT, 'dist', 'preview-state.html'),
-    renderHtml({
-      preScripts: ['./host-stub.js'],
-      scriptSrc: './webview.js',
-      styleSrc: './webview.css',
-      mediaSrc: './media/',
-      csp: csp(`'self'`),
-      view: 'state',
-    }),
-  )
+  // 🔴 `'state'` 拆成 `'console'`／`'variables'`（2026-09-02，spec 171 第二刀）
+  //    ——它們是宿主 panel 區的**兩個原生分頁**。
+  for (const view of ['flow', 'console', 'variables'] as const) {
+    writeFileSync(
+      join(OUT, 'dist', `preview-${view}.html`),
+      renderHtml({
+        preScripts: ['./host-stub.js'],
+        scriptSrc: './webview.js',
+        styleSrc: './webview.css',
+        mediaSrc: './media/',
+        csp: csp(`'self'`),
+        view,
+      }),
+    )
+  }
 
   // 5. 打包。⚠️ `vsce` 以 **cwd** 為擴充根目錄——不切過去的話它會讀到
   //    網頁版那份 `package.json`，而那份沒有 `engines.vscode`。

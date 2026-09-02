@@ -54,6 +54,23 @@ export type HostMessage =
     }
   | {
       /**
+       * **執行的輸出轉給主控台那個視圖**（2026-09-02，spec 171）。
+       *
+       * 🔴 跑程式的是積木那個 webview，而主控台是 panel 區的**另一個** webview
+       * ——主行程是它們之間唯一的通道。
+       */
+      type: 'consoleOut'
+      chunk?: string
+      clear?: boolean
+      awaitingInput?: string
+    }
+  | {
+      /** 同上，變數快照轉給變數那個視圖。 */
+      type: 'variablesOut'
+      groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[]
+    }
+  | {
+      /**
        * 🔴 **這個宿主打不開終端機**——主控台還給面板。
        *
        * ⚠️ 它是**探測的結果**，不是設定：`Pseudoterminal.open()` 沒有被呼叫。
@@ -214,6 +231,15 @@ export type WebviewMessage =
       /** 變數快照 → 主行程 → `panel` 區的視圖。 */
       type: 'variables'
       groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[]
+    }
+  | {
+      /**
+       * 使用者在**主控台那個視圖**打了一行 → 主行程 → 正在跑的那個視圖。
+       *
+       * ⚠️ 與 `HostMessage.consoleInput` 是反方向的同一件事。
+       */
+      type: 'consoleSubmit'
+      line: string
     }
   | {
       /** 程式的輸出 → 宿主的終端機。`clear: true` ＝ 清空。 */

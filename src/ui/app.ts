@@ -963,6 +963,10 @@ export class App {
     this.wireHostConsole(elements.consolePanel)
     // 🔴 變數 → 宿主的 `panel` 區（與終端機同一排）。
     elements.variablePanel?.onSnapshot((groups) => this.codeView?.reportVariables?.(groups))
+    // 🔴 **反方向：別的視窗在跑，而變數要畫在【我】這裡**（2026-09-02，spec 171）
+    //    ——見 `CodeView.onConsoleOut` 的檔頭：資料流只有一個源頭。
+    this.codeView?.onVariablesSnapshot?.((groups) =>
+      elements.variablePanel?.updateWithScopes(groups as never))
     // 🔴 **暫停中改一個變數 → 匯流排**（2026-08-26）。
     //    面板自己**不認識執行器**——P9：跨層通訊只走 Bus（`principles.md:177`）。
     elements.variablePanel?.onEditValue((name, value) =>
@@ -2165,6 +2169,20 @@ export class App {
     consolePanel.onClear(() => view.clearConsole?.())
     consolePanel.onInputRequested((prompt) => view.reportConsoleAwaitingInput?.(prompt))
     view.onConsoleInput?.((line: string) => consolePanel.feedInput(line))
+
+    // 🔴 **反方向：別的視窗在跑，而輸出要畫在【我】這裡**（2026-09-02，spec 171）。
+    //
+    //    ▷ 在宿主的標題列上，它跑的是**積木那個 webview**；而主控台是 panel 區
+    //    的另一個 webview。少了這一段，那個原生分頁永遠是空的
+    //    ——**而執行看起來像沒有跑**。
+    view.onConsoleOut?.((m) => {
+      if (m.clear) consolePanel.clear()
+      if (m.chunk !== undefined) consolePanel.write(m.chunk)
+      // ⚠️ 等輸入時要**開一個輸入框**，而它的答案要回到跑的那一邊（下面那段）。
+      if (m.awaitingInput !== undefined) {
+        void consolePanel.promptInput(m.awaitingInput).then((line) => view.submitConsoleInput?.(line))
+      }
+    })
   }
 
   /**

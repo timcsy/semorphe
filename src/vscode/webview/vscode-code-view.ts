@@ -213,6 +213,23 @@ export class VscodeCodeView implements CodeView, ViewHost {
     this.consoleFallbackCb = callback
   }
 
+  /** 🔴 別的視窗在跑，而輸出畫在我這裡（見 `CodeView.onConsoleOut`）。 */
+  onConsoleOut(callback: (m: { chunk?: string; clear?: boolean; awaitingInput?: string }) => void): void {
+    this.consoleOutCb = callback
+  }
+
+  onVariablesSnapshot(callback: (groups: readonly { name: string; collapsed: boolean; variables: readonly { name: string; type: string; value: string }[] }[]) => void): void {
+    this.variablesOutCb = callback
+  }
+
+  /** 使用者在我這個主控台打了一行 → 主行程 → 正在跑的那個視窗。 */
+  submitConsoleInput(line: string): void {
+    postToHost({ type: 'consoleSubmit', line })
+  }
+
+  private consoleOutCb: ((m: { chunk?: string; clear?: boolean; awaitingInput?: string }) => void) | null = null
+  private variablesOutCb: ((groups: readonly { name: string; collapsed: boolean; variables: readonly { name: string; type: string; value: string }[] }[]) => void) | null = null
+
   private consoleFallbackCb: (() => void) | null = null
 
   private consoleCb: ((line: string) => void) | null = null
@@ -253,6 +270,14 @@ export class VscodeCodeView implements CodeView, ViewHost {
     }
     if (m.type === 'consoleFallback') {
       this.consoleFallbackCb?.()
+      return
+    }
+    if (m.type === 'consoleOut') {
+      this.consoleOutCb?.({ chunk: m.chunk, clear: m.clear, awaitingInput: m.awaitingInput })
+      return
+    }
+    if (m.type === 'variablesOut') {
+      this.variablesOutCb?.(m.groups)
       return
     }
     if (m.type === 'document') {

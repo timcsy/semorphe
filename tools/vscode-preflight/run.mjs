@@ -300,7 +300,10 @@ const WINDOWS = [
   { page: 'preview-flow.html', label: '流程視窗', cell: 'flow-column' },
   // 🟢 2026-09-01：主控台收回成一個面板（`output`／`inspector` → `panelBottom`）。
   //    ⚠️ 它有**兩個分頁**（主控台／變數）——所以下面多問一句 `tabs`。
-  { page: 'preview-state.html', label: '主控台視窗', cell: 'bottom-container', tabs: 2 },
+  // 🔴 **兩個原生分頁各一份**（2026-09-02）——`tabs: 1`：每個視窗只畫它自己
+  //    那一頁（另一頁的投影是 `hostPanel`，由**另一個視窗**畫）。
+  { page: 'preview-console.html', label: '主控台視窗', cell: 'bottom-container', tabs: 1, solo: true },
+  { page: 'preview-variables.html', label: '變數視窗', cell: 'bottom-container', tabs: 1, solo: true },
 ]
 let windowsOk = true
 console.log('\n面板獨立 → 每種視窗只畫一層：')
@@ -320,12 +323,21 @@ for (const w of WINDOWS) {
       layoutOptions: ((last?.items ?? []).find((c) => c.id === 'layout')?.options ?? []).length,
       // ⚠️ 數**分頁按鈕那一區**，不是整條列——那條列上還有清除鈕與槽選擇器。
       tabs: document.querySelectorAll('.bottom-panel-tab-buttons button').length,
+      // 🔴 **這一條就是整個視窗嗎**——第一版沒問，於是 `#editors` 空著佔了
+      //    585px（使用者截圖裡那一大片空白），而每一格都還是 🟢。
+      editorsHidden: !!el && getComputedStyle(el).display === 'none',
+      fill: (() => {
+        const b = document.getElementById('bottom-container')
+        return b ? Math.round(b.getBoundingClientRect().height / window.innerHeight * 100) : 0
+      })(),
       booted: !!el,
     }
   })
   const ok = m.booted && m.vis.length === 1 && m.vis[0] === w.cell &&
     m.handles === 0 && m.layoutOptions === 3 && errs.length === 0 &&
-    (w.tabs === undefined || m.tabs === w.tabs)
+    (w.tabs === undefined || m.tabs === w.tabs) &&
+    // 獨佔的視窗：編輯區不畫，而那一條要吃掉九成以上的高度
+    (!w.solo || (m.editorsHidden && m.fill >= 90))
   // 🔴 **這一格的結論要進總結論**（2026-09-02）。在此之前它只印出來
   //    ——而 spec 171 當天它真的抓到了東西（積木視窗多長出一條主控台），
   //    **印了 🔴 而預檢說「通過」**。
@@ -336,6 +348,7 @@ for (const w of WINDOWS) {
     `｜把手 ${m.handles}${m.handles ? ' 🔴' : ''}` +
     `｜版面 ${m.layoutOptions === 3 ? '三張・由 IDE 排' : `🔴 ${m.layoutOptions} 張`}` +
     (w.tabs === undefined ? '' : `｜分頁 ${m.tabs}${m.tabs === w.tabs ? '' : ` 🔴 該有 ${w.tabs}`}`) +
+    (w.solo ? `｜佔滿 ${m.fill}%${m.editorsHidden && m.fill >= 90 ? '' : ' 🔴'}` : '') +
     `${errs.length ? `｜🔴 ${errs.length} 則錯誤：${errs[0].slice(0, 80)}` : ''} ${ok ? '🟢' : ''}`)
   await wp.close()
 }
@@ -456,15 +469,18 @@ if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}
 // > **一個由宿主渲染的東西，我們驗得到的只有【我們這一側說對了什麼】。**
 const manifest = JSON.parse(readFileSync('build/vscode/package.json', 'utf8'))
 const panelContainers = manifest.contributes?.viewsContainers?.panel ?? []
-const consoleViews = Object.values(manifest.contributes?.views ?? {}).flat()
+const panelViews = Object.values(manifest.contributes?.views ?? {}).flat()
   .filter((v) => v.type === 'webview')
-const 主控台在panel區 = panelContainers.length === 1
-  && consoleViews.length === 1
-  && consoleViews[0].id === 'semorphe.consoleView'
-  && readFileSync('src/vscode/panel.ts', 'utf8').includes("CONSOLE_VIEW_ID = 'semorphe.consoleView'")
-console.log(`\n主控台在 panel 區：${主控台在panel區 ? '🟢 宣告與實作對得上' :
-  `🔴 容器 ${panelContainers.length}／webview 視圖 ${consoleViews.length}` +
-  `（${consoleViews.map((v) => v.id).join('、') || '無'}）`}`)
+const src = readFileSync('src/vscode/panel.ts', 'utf8')
+// 🔴 **兩個容器兩個視圖**（一個容器 ＝ panel 那一排上的一個分頁），
+//    而 id 兩邊要逐字相同——差一個字，視圖就永遠是一片空白**而沒有任何錯誤**。
+const 主控台在panel區 = panelContainers.length === 2
+  && panelViews.length === 2
+  && ['semorphe.consoleView', 'semorphe.variablesView']
+    .every((id) => panelViews.some((v) => v.id === id) && src.includes(`'${id}'`))
+console.log(`\n主控台與變數在 panel 區：${主控台在panel區 ? '🟢 兩個原生分頁，宣告與實作對得上' :
+  `🔴 容器 ${panelContainers.length}／webview 視圖 ${panelViews.length}` +
+  `（${panelViews.map((v) => v.id).join('、') || '無'}）`}`)
 
 const ok = !fatal && errors.length === 0 && failures.length === 0
   && 主控台在panel區 && windowsOk

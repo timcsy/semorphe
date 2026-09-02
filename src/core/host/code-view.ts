@@ -232,6 +232,31 @@ export interface CodeView {
    */
   onConsoleFallback?(callback: () => void): void
 
+  /**
+   * 🔴 **別的視窗在執行，而輸出要畫在【我】這裡**（2026-09-02，spec 171）。
+   *
+   * 使用者把主控台與變數移成宿主 panel 區的兩個原生分頁之後，
+   * 「跑程式的那個視窗」與「畫輸出的那個視窗」**不再是同一個**
+   * ——▷ 在標題列上，它按下去跑的是積木那個 webview。
+   *
+   * ⚠️ 而這**不是「被餵的薄視圖」那個反模式**：那條規矩管的是**投影**
+   * （一個必須被餵才畫得出來的投影，它不是在投影）。而執行的輸出是
+   * **一條資料流**，不是投影——三維錨定：執行追蹤屬於情境（`history/198`）。
+   *
+   * > **投影要自己算；資料流本來就只有一個源頭。**
+   */
+  onConsoleOut?(callback: (m: { chunk?: string; clear?: boolean; awaitingInput?: string }) => void): void
+
+  /** 同上，變數那一頁。 */
+  onVariablesSnapshot?(callback: (groups: readonly { name: string; collapsed: boolean; variables: readonly { name: string; type: string; value: string }[] }[]) => void): void
+
+  /**
+   * 使用者在**我這個**主控台打了一行——交回宿主，由它送給正在跑的那個視窗。
+   *
+   * ⚠️ 與 `onConsoleInput` 是反方向：那個是「宿主的終端機收到打字」。
+   */
+  submitConsoleInput?(line: string): void
+
   // ─── C：可選——**沒有的要說得出為什麼** ───
 
   /** 版面變了要重排。⚠️ 編輯器不歸我們管的宿主沒有這一格。 */

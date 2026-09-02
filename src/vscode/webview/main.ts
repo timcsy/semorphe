@@ -65,7 +65,7 @@ async function boot(): Promise<void> {
   //    ⚠️ 認不得的值退回 `blocks`：一個空白的面板比一個「畫錯東西」的面板
   //       更難查，而這一格是宿主寫的，寫錯是我們自己的 bug。
   const v = appEl.dataset.view
-  const kind = v === 'flow' || v === 'state' ? v : 'blocks'
+  const kind = v === 'flow' || v === 'console' || v === 'variables' ? v : 'blocks'
   const app = new App(vscodeProfileFor(kind))
   ;(window as unknown as { __app?: unknown }).__app = app
   await app.init()

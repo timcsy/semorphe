@@ -558,26 +558,39 @@ export function createAppLayout(
    * ⚠️ 狀態列在它之後：要 `insertBefore`，不是 `appendChild`。
    */
   //
-  // 🔴 **而「這個宿主的這個視窗畫不畫它」要問宣告**（2026-09-02，spec 171）。
+  // 🪦 **「這個視窗畫不畫它」那一句 2026-09-02 當天就退場了**（同一支 spec）。
   //
-  //    它在 grid 裡的時候，這件事是**免費**的：宿主少了 `state` 那一層，
-  //    縮減就把那一格拿掉了。搬出 grid 之後**沒有人再拿掉它**——實測（預檢）
-  //    是 VSCode 的積木視窗與流程視窗**各自長出一條主控台**。
+  //    第一版在這裡問 `profile.layers.includes('state')`——因為主控台搬出 grid
+  //    之後沒有人再拿掉它（實測：VSCode 的積木與流程視窗各自長出一條主控台）。
   //
-  // > **把一個東西搬出某個機構的管轄範圍，也就搬出了它的保護。
-  // > 那個機構順手做的事，現在要有人明說。**
+  // 🟢 而正確的答案在**上面那一段**：`bottomTabs` 問的是 `controlSurfaces`，
+  //    而積木／流程那兩種視窗的 `output`／`inspector` 投影到 `hostPanel`
+  //    ——它們不畫，只把資料送過去。於是這裡一個判斷都不需要。
   //
-  // ⚠️ 判準是**宿主指名的層**，不是 `layerAvailable`（後者反過來問
-  //    `bottomPanel !== null`，會繞成一圈）。
-  const hostDrawsConsole = !profile.layers || profile.layers.includes('state')
+  // > **一個「要不要畫」的問題如果需要新的判斷，
+  // > 通常是既有的那份宣告還沒有說實話。**
   const mountBottom = (): void => {
-    if (!hostDrawsConsole) return
     const bar = document.getElementById('status-bar')
     if (bar?.parentElement === appEl) appEl.insertBefore(bottomContainer, bar)
     else appEl.appendChild(bottomContainer)
   }
+  /**
+   * 🔴 **這個視窗有沒有編輯區**（2026-09-02，spec 171 第二刀）。
+   *
+   * IDE 的 panel 區裡，主控台／變數那兩個視圖**只有那一層**——整個 webview
+   * 就是那一條。第一版沒有問這件事，於是 `#editors` 空著佔了 585px
+   * （使用者截圖：分頁列被擠在最底下，上面一大片空白）。
+   */
+  const soloBottom = !!profile.layers && !profile.layers.some((l) => l !== 'state')
   let bottomPanel = bottomTabs.length > 0 ? new BottomPanel(bottomContainer) : null
-  if (bottomPanel) mountBottom()
+  if (bottomPanel) {
+    mountBottom()
+    if (soloBottom) {
+      bottomPanel.setSolo(true)
+      // ⚠️ 編輯區整個不畫——它在這個視窗裡不是「空的」，是**不存在**。
+      main.style.display = 'none'
+    }
+  }
 
   // 🔴 **主控台那一格建不建，問登錄表**（`controlSurfaces.output`）。
   //

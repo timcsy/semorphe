@@ -75,14 +75,26 @@ class DocumentlessStorage implements StorageLike {
  * 🟢 一個視窗一層之後，版面回到 IDE：拖到側邊、拆成兩欄、用它自己的分隔線
  * ——而使用者不必再學第二套。
  */
-export type VscodeViewKind = 'blocks' | 'flow' | 'state'
+/**
+ * 🔴 **`'state'` 拆成兩種**（2026-09-02，spec 171 第二刀）。
+ *
+ * 使用者看到「一個 SEMORPHE 分頁裡面又有我們自己的兩個分頁」之後：
+ * 「我是希望主控台和變數可以**移到上面的 tab** 變成『Semorphe 主控台』、
+ * 『Semorphe 變數』」——那是**兩個原生分頁**，於是這裡是兩種視圖。
+ *
+ * ⚠️ 而先前拍板的「一個 view 裡畫我們自己的兩個分頁」的理由（兩個
+ * `WebviewView` 是兩個 context，會回到『被餵的薄視圖』那個形狀）**在這裡
+ * 不成立**：那條規矩管的是**投影**，而主控台與變數是**執行的輸出**
+ * ——一條資料流本來就只有一個源頭（見 `CodeView.onConsoleOut`）。
+ */
+export type VscodeViewKind = 'blocks' | 'flow' | 'console' | 'variables'
 
 const LAYER_OF: Record<VscodeViewKind, UnderstandingLayer> = {
   blocks: 'space',
   flow: 'relation',
-  // 🔴 主控台與變數是**同一層**（`state`）的兩個分頁——與網頁版逐格相同。
-  //    ⚠️ 它們不是兩個面板：`LAYER_ORDER` 有四層，不是五層。
-  state: 'state',
+  // ⚠️ 兩種視圖**同一層**——它們是那一層的兩個分頁，不是兩層。
+  console: 'state',
+  variables: 'state',
 }
 
 /**
@@ -94,7 +106,22 @@ const LAYER_OF: Record<VscodeViewKind, UnderstandingLayer> = {
  * > **兩個視窗如果只差在「畫什麼」，那就只有那一格可以不一樣。**
  */
 export function vscodeProfileFor(kind: VscodeViewKind): HostProfile {
-  return { ...vscodeProfile, layers: [LAYER_OF[kind]] }
+  // 🔴 **每個視窗只畫它自己那一個分頁**（2026-09-02，spec 171 第二刀）。
+  //
+  //    `output`／`inspector` 投影到 `panelBottom` ＝「**我自己畫**」，
+  //    投影到 `hostPanel` ＝「宿主那邊有一個視圖在畫，我只負責**把資料送過去**」。
+  //
+  // ⚠️ 而積木／流程兩種視窗**兩格都不畫**——它們是跑程式的那一邊，
+  //    輸出經由主行程轉給 panel 區那兩個視圖。少了這一段，執行的輸出
+  //    會畫在一個**沒有人看得到**的面板裡（它在那個 webview 裡沒有位子）。
+  //
+  // > **「誰畫它」與「誰產生它」在多視窗之後不再是同一個問題。**
+  const surfaces = {
+    ...vscodeProfile.controlSurfaces,
+    output: kind === 'console' ? 'panelBottom' : 'hostPanel',
+    inspector: kind === 'variables' ? 'panelBottom' : 'hostPanel',
+  } as HostProfile['controlSurfaces']
+  return { ...vscodeProfile, layers: [LAYER_OF[kind]], controlSurfaces: surfaces }
 }
 
 export const vscodeProfile: HostProfile = {

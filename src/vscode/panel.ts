@@ -87,14 +87,18 @@ const DIAGNOSTICS = vscode.languages.createDiagnosticCollection('semorphe')
 const VIEW_TYPES: Record<VscodeViewKind, string> = {
   blocks: 'semorphe.blocks',
   flow: 'semorphe.flow',
-  state: 'semorphe.console',
+  // ⚠️ 這兩種**不走編輯器分頁**（它們是 panel 區的視圖）——留著是因為
+  //    `viewType` 也當成 `data-view` 與登錄表的鍵在用。
+  console: 'semorphe.consoleView',
+  variables: 'semorphe.variablesView',
 }
 const TITLES: Record<VscodeViewKind, string> = {
   blocks: 'Semorphe 積木',
   flow: 'Semorphe 流程',
-  // ⚠️ 這一格是**兩個分頁**（主控台／變數）——標題寫層的名字會太抽象，
-  //    所以寫使用者按下去最常要的那一個。
-  state: 'Semorphe 主控台',
+  // 🔴 **兩個原生分頁，各自一個名字**（2026-09-02，使用者逐字：
+  //    「移到上面的 tab 變成『Semorphe 主控台』、『Semorphe 變數』」）。
+  console: 'Semorphe 主控台',
+  variables: 'Semorphe 變數',
 }
 const DIST = ['dist']
 const MEDIA = ['dist', 'media']
@@ -165,6 +169,16 @@ const sessions = new Map<VscodeViewKind, SemorpheSession>()
  * 「骨架」時，他心裡想的是**他正在看的那個面板**。
  */
 let active: SemorpheSession | undefined
+
+/**
+ * **正在跑程式的那一個**——使用者在主控台打的那一行要送回給它。
+ *
+ * ⚠️ 它不是 `active`（「最後看的那一個」）：按下 Enter 的那一刻，
+ * 使用者正在看的是**主控台**，而正在等那一行的是積木那個 webview。
+ *
+ * > **「誰在等這個答案」與「誰在畫面上」是兩個問題。**
+ */
+let runner: SemorpheSession | undefined
 
 /**
  * 開過面板的那個 context。
@@ -484,16 +498,33 @@ class SemorpheSession {
       return
     }
     if (m.type === 'problems') { this.publishDiagnostics(m.items); return }
-    // 🪦 `console` 與 `variables` 這兩則**不再有宿主端的消費者**（2026-09-01）。
+    // 🔴 **執行的輸出要跨過這條線**（2026-09-02，spec 171 第二刀）。
     //
-    // 🔴 主控台與變數是 `state` 面板裡的兩個分頁，而那個面板自己畫它們——
-    //    **沒有東西要跨過這條線**。而「兩個面板搶一台終端機，輸入該給誰」
-    //    那個問題跟著整個消失。
+    // 主控台與變數變成 panel 區的兩個**原生分頁**之後，「跑程式的那個視窗」
+    // 與「畫輸出的那個視窗」不再是同一個：▷ 在標題列上，它跑的是積木那個
+    // webview，而主控台是另一個 webview。**主行程是它們之間唯一的通道。**
     //
-    // ⚠️ 訊息本身留著不接：webview 那側在 `output` 投影到 `panelBottom` 時
-    //    根本不送它們，而**收到了也只是舊版的 webview**——靜靜地丟掉，
-    //    比拋錯好（一個舊面板不該讓宿主壞掉）。
-    if (m.type === 'console' || m.type === 'variables') return
+    // ⚠️ 而這不是「被餵的薄視圖」那個反模式（`registerVariablesView` 的墓碑）：
+    //    那條規矩管的是**投影**——一個必須被餵才畫得出來的投影，它不是在投影。
+    //    而執行的輸出是**一條資料流**，三維錨定說它屬於情境（`history/198`）。
+    //
+    // > **投影要自己算；資料流本來就只有一個源頭。**
+    if (m.type === 'console') {
+      // 🔴 **記住誰在跑**——等一下使用者在主控台打的那一行要送回去給它。
+      if (m.awaitingInput !== undefined) runner = this
+      sessions.get('console')?.sendConsoleOut(m)
+      return
+    }
+    if (m.type === 'variables') {
+      sessions.get('variables')?.sendVariablesOut(m.groups)
+      return
+    }
+    if (m.type === 'consoleSubmit') {
+      // ⚠️ 送回**正在跑的那一個**，不是 `active`——`active` 是「最後看的」，
+      //    而使用者按下 Enter 的那一刻他正在看主控台。
+      runner?.sendConsoleInput(m.line)
+      return
+    }
     if (m.type === 'ready') { this.resend(); return }
     if (m.type === 'requestDocument') {
       // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
@@ -775,9 +806,23 @@ class SemorpheSession {
     this.send({ type: 'consoleFallback' })
   }
 
-  /** 終端機打的一行 → webview。 */
+  /** 終端機打的一行 → webview。⚠️ 2026-09-02 起它也是「主控台那個視圖打的一行」。 */
   sendConsoleInput(line: string): void {
     this.send({ type: 'consoleInput', line })
+  }
+
+  /** 別的視窗在跑，而這個視窗（主控台）要把它畫出來。 */
+  sendConsoleOut(m: { chunk?: string; clear?: boolean; awaitingInput?: string }): void {
+    this.send({ type: 'consoleOut', chunk: m.chunk, clear: m.clear, awaitingInput: m.awaitingInput })
+    // 🔴 **有輸出就自己回來**——與網頁版同一條規則（`core/host/console-surface.ts`）。
+    //    ⚠️ 這裡不能共用那支函式：宿主沒有「它現在收起來了嗎」這個問題的答案，
+    //    而 `show(preserveFocus)` 對一個已經開著的視圖是**無害的**。
+    this.panel.reveal()
+  }
+
+  /** 同上，變數那一頁。 */
+  sendVariablesOut(groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[]): void {
+    this.send({ type: 'variablesOut', groups })
   }
 
   /** 宿主那側按了控制項——原封不動送進 webview。 */
@@ -1132,7 +1177,7 @@ export function invokeControl(id: string, value?: string): void {
  * **與網頁版逐格相同的那一份**（`ui/panels/console-panel.ts`）。
  */
 export function showConsole(): void {
-  if (extensionContext) openPanel(extensionContext, 'state')
+  if (extensionContext) openPanel(extensionContext, 'console')
 }
 
 // 🪦 `registerConsoleDocument` 與 `registerVariablesView` **一起退場**。
@@ -1197,11 +1242,11 @@ export function requestDiagnostics(): void {
  */
 export function openPanel(context: vscode.ExtensionContext, kind: VscodeViewKind = 'blocks'): void {
   extensionContext = context
-  // 🔴 **主控台不在編輯器區**（2026-09-02，spec 171）：它是宿主 panel 區的一個
-  //    視圖，與終端機／問題並排。叫它出來的方式是宿主自己的 `.focus` 指令
-  //    ——⚠️ 我們不能（也不該）自己 `createWebviewPanel` 一個出來。
-  if (kind === 'state') {
-    void vscode.commands.executeCommand(`${CONSOLE_VIEW_ID}.focus`)
+  // 🔴 **主控台與變數不在編輯器區**（2026-09-02，spec 171）：它們是宿主 panel 區
+  //    的兩個視圖，與終端機／問題並排。叫它們出來的方式是宿主自己的 `.focus`
+  //    指令——⚠️ 我們不能（也不該）自己 `createWebviewPanel` 一個出來。
+  if (kind === 'console' || kind === 'variables') {
+    void vscode.commands.executeCommand(`${PANEL_VIEW_IDS[kind]}.focus`)
     return
   }
   const existing = sessions.get(kind)
@@ -1228,18 +1273,24 @@ export function openPanel(context: vscode.ExtensionContext, kind: VscodeViewKind
 }
 
 /**
- * **panel 區那個視圖的 id**——`manifest.ts` 宣告它，這裡實作它。
+ * **panel 區那兩個視圖的 id**——`manifest.ts` 宣告它們，這裡實作它們。
  *
  * ⚠️ 兩邊必須逐字相同，而 `tools/vscode-preflight` 會對這件事出聲。
  */
-export const CONSOLE_VIEW_ID = 'semorphe.consoleView'
+export const PANEL_VIEW_IDS = {
+  console: 'semorphe.consoleView',
+  variables: 'semorphe.variablesView',
+} as const
 
 /**
- * **主控台住進宿主的 panel 區**（2026-09-02，spec 171）。
+ * **主控台與變數住進宿主的 panel 區**（2026-09-02，spec 171）。
  *
  * 使用者逐字：「把我們的主控台跟原生的綁在一起，就是**多塞幾個 tab**，
- * 而不是走編輯視窗」——於是它與終端機／問題／輸出並排，開得掉、關得回來，
- * 而**上面那三欄**是編輯區。
+ * 而不是走編輯視窗」，看到成品之後再一句：「我是希望主控台和變數可以**移到
+ * 上面的 tab** 變成『Semorphe 主控台』、『Semorphe 變數』」。
+ *
+ * 🔴 於是是**兩個容器各一個視圖**，不是一個容器裡兩個——在 panel 那一排上，
+ * **一個容器就是一個分頁**，而使用者要的是那一排上的兩個名字。
  *
  * 🟢 已查證 Theia 支援這條路（bundle 裡有 `registerWebviewViewProvider`／
  * `resolveWebviewView`／`views.container.panel`／`contributes.view.webview`）
@@ -1250,32 +1301,34 @@ export const CONSOLE_VIEW_ID = 'semorphe.consoleView'
  */
 export function registerConsoleView(context: vscode.ExtensionContext): void {
   extensionContext = context
-  context.subscriptions.push(vscode.window.registerWebviewViewProvider(
-    CONSOLE_VIEW_ID,
-    {
-      resolveWebviewView(view: vscode.WebviewView): void {
-        view.webview.options = {
-          enableScripts: true,
-          localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, ...DIST)],
-        }
-        // 🔴 `WebviewView` 沒有 `reveal`，它的說法是 `show(preserveFocus)`
-        //    ——⚠️ 帶 `true`：有輸出時它自己回來**不該偷走鍵盤焦點**。
-        const surface: SessionSurface = {
-          webview: view.webview,
-          reveal: () => view.show(true),
-        }
-        const session = new SemorpheSession(surface, context.extensionUri, context.workspaceState, 'state')
-        sessions.set('state', session)
-        view.onDidDispose(() => {
-          session.dispose()
-          if (sessions.get('state') === session) sessions.delete('state')
-          if (active === session) active = undefined
-        }, null, context.subscriptions)
+  for (const kind of ['console', 'variables'] as const) {
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider(
+      PANEL_VIEW_IDS[kind],
+      {
+        resolveWebviewView(view: vscode.WebviewView): void {
+          view.webview.options = {
+            enableScripts: true,
+            localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, ...DIST)],
+          }
+          // 🔴 `WebviewView` 沒有 `reveal`，它的說法是 `show(preserveFocus)`
+          //    ——⚠️ 帶 `true`：有輸出時它自己回來**不該偷走鍵盤焦點**。
+          const surface: SessionSurface = {
+            webview: view.webview,
+            reveal: () => view.show(true),
+          }
+          const session = new SemorpheSession(surface, context.extensionUri, context.workspaceState, kind)
+          sessions.set(kind, session)
+          view.onDidDispose(() => {
+            session.dispose()
+            if (sessions.get(kind) === session) sessions.delete(kind)
+            if (active === session) active = undefined
+          }, null, context.subscriptions)
+        },
       },
-    },
-    // ⚠️ 收起來再打開**不要重建**——重建等於重新載入膠囊 ＋ 重新 inject。
-    { webviewOptions: { retainContextWhenHidden: true } },
-  ))
+      // ⚠️ 收起來再打開**不要重建**——重建等於重新載入膠囊 ＋ 重新 inject。
+      { webviewOptions: { retainContextWhenHidden: true } },
+    ))
+  }
 }
 
 /**

@@ -117,7 +117,7 @@ export interface HtmlParts {
    * 也沒有 `unsafe-inline`，**行內腳本不會執行**——而症狀是「面板一片空白」，
    * 沒有任何錯誤指向這裡。
    */
-  view?: 'blocks' | 'flow' | 'state'
+  view?: 'blocks' | 'flow' | 'console' | 'variables'
 }
 
 const escapeAttr = (s: string): string =>

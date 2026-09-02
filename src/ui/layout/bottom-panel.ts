@@ -27,6 +27,17 @@ export class BottomPanel {
   private collapsed = true
   private collapsible = true
   private heightRatio = 0.35
+  /**
+   * **這一條就是整個視窗**（2026-09-02，spec 171）。
+   *
+   * 🔴 在 IDE 的 panel 區裡，主控台那個視圖裡**沒有編輯區**——它整個 webview
+   * 就是這一條。實測第一版：`#editors` 空著佔了 585px，而主控台只有 315px
+   * （使用者截圖裡那一大片空白）。
+   *
+   * ⚠️ 獨佔的時候三件事跟著變：不收合（宿主自己有那顆關閉）、
+   * 沒有自己的分隔線（沒有東西在它上面）、高度**吃滿**而不是 35%。
+   */
+  private solo = false
 
   constructor(container: HTMLElement) {
     this.container = container
@@ -90,6 +101,13 @@ export class BottomPanel {
    * ⚠️ 關掉時如果正收著就順手展開——否則那一頁會停在空白上，
    *    而使用者已經沒有那個「再按一下」可以救它了。
    */
+  /** 見 `solo` 的說明：這一條就是整個視窗。 */
+  setSolo(v: boolean): void {
+    this.solo = v
+    if (v) { this.collapsible = false; this.collapsed = false }
+    this.applyHeight()
+  }
+
   setCollapsible(v: boolean): void {
     this.collapsible = v
     if (!v && this.collapsed && this.activeTabId) this.showTab(this.activeTabId)
@@ -272,8 +290,10 @@ export class BottomPanel {
     // ⚠️ 收合仍然由這裡管——那是「內容顯不顯示」，不是「這一格多高」
     this.contentArea.style.display = this.collapsed ? 'none' : ''
     // grid 之下把手交給格線（`layout/grid-dividers.ts`），這條列自己的分隔線收起來
-    this.divider.style.display = this.inGrid() ? 'none' : ''
+    this.divider.style.display = this.inGrid() || this.solo ? 'none' : ''
     if (this.inGrid()) return
-    this.container.style.flex = this.collapsed ? '0 0 auto' : `0 0 ${this.heightRatio * 100}%`
+    // 🔴 獨佔時吃滿——`0 0 35%` 會在一個沒有編輯區的視窗裡留下 65% 的空白。
+    this.container.style.flex = this.solo ? '1 1 auto'
+      : this.collapsed ? '0 0 auto' : `0 0 ${this.heightRatio * 100}%`
   }
 }
