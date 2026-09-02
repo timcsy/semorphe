@@ -28,7 +28,7 @@
  */
 import * as vscode from 'vscode'
 import { csp, renderHtml } from './webview-html'
-import type { VscodeViewKind } from './vscode-profile'
+import { isDocumentWriter, type VscodeViewKind } from './vscode-profile'
 import { layoutPreset, type LayoutPresetId } from '../core/host/layout-presets'
 import type { UnderstandingLayer } from '../core/view-host'
 import { EchoGuard } from './sync/echo-guard'
@@ -222,6 +222,17 @@ class SemorpheSession {
   /** 這個面板畫哪一層。⚠️ 它決定 `data-view`、分頁標題與登錄表的鍵。 */
   readonly kind: VscodeViewKind
 
+  /**
+   * 🔴 **這個視圖畫的是【資料流】，不是投影**——所以它不是寫入者。
+   *
+   * 判準住在 `vscode-profile.ts` 的 `isDocumentWriter`（那裡有完整的病歷：
+   * 使用者 2026-09-02「為何這 hello 一直閃？」）。⚠️ 這裡**不重寫那個判斷**
+   * ——兩份會漂。
+   */
+  private get streamOnly(): boolean {
+    return !isDocumentWriter(this.kind)
+  }
+
   constructor(panel: SessionSurface, extensionUri: vscode.Uri, memento: vscode.Memento,
     kind: VscodeViewKind = 'blocks') {
     this.panel = panel
@@ -233,6 +244,18 @@ class SemorpheSession {
 
     this.panel.webview.onDidReceiveMessage(
       (m: WebviewMessage) => void this.onWebviewMessage(m), null, this.disposables)
+
+    // 🔴 **資料流視圖不跟文件**（見 `streamOnly`）——它不 lift、不回寫，
+    //    於是它不可能與別的視窗搶那份文件。
+    //
+    // ⚠️ 而**設定仍然要送**：語系與風格決定那兩個分頁上的字。
+    if (this.streamOnly) {
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration('semorphe')) this.sendConfig()
+      }, null, this.disposables)
+      this.sendConfig()
+      return
+    }
 
     // 跟著 active editor 走
     vscode.window.onDidChangeActiveTextEditor(() => this.follow(), null, this.disposables)
@@ -532,7 +555,12 @@ class SemorpheSession {
       return
     }
     if (m.type === 'setLanguageCpp') { await this.setLanguageCpp(); return }
-    if (m.type === 'applyEdit') { await this.applyEdit(m.span, m.baseVersion); return }
+    if (m.type === 'applyEdit') {
+      // ⚠️ **資料流視圖不是寫入者**（見 `streamOnly`）——它送來的編輯一律不套。
+      //    🔴 這一條是防守，不是機制：正常路徑上它根本沒有文件可以算出編輯。
+      if (this.streamOnly) return
+      await this.applyEdit(m.span, m.baseVersion); return
+    }
     if (m.type === 'revealNode') { this.revealNode(m.range); return }
     if (m.type === 'diagnostics') {
       // 🔴 診斷去**輸出頻道**，不去面板（FR-009）。

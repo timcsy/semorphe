@@ -105,6 +105,35 @@ const LAYER_OF: Record<VscodeViewKind, UnderstandingLayer> = {
  *
  * > **兩個視窗如果只差在「畫什麼」，那就只有那一格可以不一樣。**
  */
+/**
+ * **這一種視圖是不是文件的寫入者**（2026-09-02，spec 171 第三刀）。
+ *
+ * 使用者在 Arduino IDE 打字：「**為何這 hello 一直閃**？」——打進去的字出現
+ * 一下就被換回裸骨架。
+ *
+ * 🔴 根因：主控台與變數那兩個視圖各自是一個**完整的 session**，於是它們也
+ * 收文件、也 lift、也回寫 `applyEdit`。而它們那個視窗裡**沒有積木工作區**
+ * ——樹是空的，產生出來的就是一份裸骨架，然後**寫了回去**。
+ *
+ * ```
+ * 使用者打  cout << "hello"
+ * 主控台視窗（樹是空的）→ 產生 int main(){return 0;} → 寫回去
+ * → hello 不見了 → 其他視窗重新 lift → 使用者再打一次 → 又不見
+ * ```
+ *
+ * ⚠️ 而它們**根本不需要那份文件**：它們畫的是執行的輸出（一條資料流），
+ * 由主行程從跑程式的那個視窗轉送過來。
+ *
+ * > **一個不投影任何東西的視圖，不該是一個寫入者
+ * > ——而讓它變成寫入者的，是「每個視窗都是完整的 session」這個便利。**
+ *
+ * 🟢 它與 `vscode-large-delete-guard` 守的是同一件事的兩端：那一條把後果從
+ * 「檔案沒了」降成「這一次沒同步」，而這一條拿掉的是**產生那種寫入的來源**。
+ */
+export function isDocumentWriter(kind: VscodeViewKind): boolean {
+  return kind === 'blocks' || kind === 'flow'
+}
+
 export function vscodeProfileFor(kind: VscodeViewKind): HostProfile {
   // 🔴 **每個視窗只畫它自己那一個分頁**（2026-09-02，spec 171 第二刀）。
   //
