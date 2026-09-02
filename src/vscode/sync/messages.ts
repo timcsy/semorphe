@@ -48,6 +48,38 @@ export type HostMessage =
       values?: string[]
     }
   | {
+      /**
+       * **這個宿主換得動編輯器嗎**（2026-09-02）。
+       *
+       * 🔴 使用者在 Arduino IDE：「ArduinoIDE 的檔案沒有辦法關閉，所以我建議
+       * 在 ArduinoIDE 這邊程式碼不是一個可切換的選項」。
+       *
+       * 而他說的正是根因：與程式碼那一格對調要**先多開一份撐住位子、再把多的
+       * 關掉**（見 `swapWithEditor`）——關不掉的宿主上，那一步會留下一個
+       * 使用者關不掉的重複分頁。
+       *
+       * > **一個做得到一半的功能，在做不到那一半的宿主上不該出現在選單裡
+       * > ——一個按了會留下垃圾的選項，比沒有那個選項更糟。**
+       */
+      type: 'hostCaps'
+      canSwapEditor: boolean
+      /**
+       * **這個宿主答得出「那兩頁現在開著沒有」嗎**（2026-09-02）。
+       *
+       * 🔴 Arduino IDE 答不出來（實測）：整個 panel 區關掉了，`WebviewView.visible`
+       * 仍然回 `true`，`document.hidden` 也還是 `false`（`retainContextWhenHidden`）。
+       * 於是選單上兩項都寫著「隱藏…面板」——使用者：「**沒有面板卻還說隱藏**」。
+       *
+       * > **答不出來的時候，正確的做法不是猜一個，是【不要說】。**
+       */
+      canObserveBottomVisibility: boolean
+    }
+  | {
+      /** **你現在畫這一層**——槽的下拉在 IDE 裡就是換這個（見 `CodeView.onSetLayer`）。 */
+      type: 'setLayer'
+      layer: string
+    }
+  | {
       /** 使用者在終端機打了一行（不含換行）。 */
       type: 'consoleInput'
       line: string
@@ -63,6 +95,23 @@ export type HostMessage =
       chunk?: string
       clear?: boolean
       awaitingInput?: string
+    }
+  | {
+      /**
+       * **panel 區那兩頁現在看得見沒有**（2026-09-02）。
+       *
+       * 🔴 少了它，版面選單上那兩個標籤只能寫「顯示／隱藏」這種兩件事都說的話
+       * ——而使用者要的是「它現在開著就寫隱藏」。
+       */
+      type: 'bottomVisibility'
+      console: boolean
+      variables: boolean
+    }
+  | {
+      /** 執行狀態轉給主控台那個視圖——它的狀態列要跟著走。 */
+      type: 'execStatusOut'
+      status: string
+      reason?: string
     }
   | {
       /** 同上，變數快照轉給變數那個視圖。 */
@@ -231,6 +280,63 @@ export type WebviewMessage =
       /** 變數快照 → 主行程 → `panel` 區的視圖。 */
       type: 'variables'
       groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[]
+    }
+  | {
+      /**
+       * **請宿主用它自己的選單問「這一格顯示什麼」**（2026-09-02）。
+       *
+       * 🔴 使用者：「**為何選單不是像網頁那樣是全域的**？」——而在 IDE 裡
+       * 它做不到：一個 webview 只畫得到**自己那個矩形**，`position: fixed`
+       * 的盡頭是這塊面板的邊界，不是視窗的邊界。
+       *
+       * 🟢 但**宿主的選單是全域的**——而這正是這個專案既有的做法：
+       * 控制項（目標／課程／風格…）早就投影到宿主的 QuickPick 了
+       * （`controlSurfaces`）。這一則讓槽的下拉走同一條路。
+       *
+       * > **一個畫不出去的邊界，不是用更大的 z-index 解決的
+       * > ——是把那件事交給畫得出去的那個人。**
+       */
+      type: 'pickLayer'
+      title: string
+      items: { value: string; label: string; description?: string }[]
+    }
+  | {
+      /**
+       * **把我這一格換成另一層**（2026-09-02）。
+       *
+       * 🔴 在 IDE 裡「這一格顯示什麼」不是我們排得動的——每一種投影是一個
+       * 獨立的分頁，而**分頁擺在哪一欄是宿主的事**。所以槽的下拉在這裡
+       * 不做本地置換，而是**請宿主把那一層叫到我這一欄來**。
+       *
+       * > **一個排不動版面的宿主上，「這一格顯示什麼」要問的不是版面，
+       * > 是「請你把它放到我這裡」。**
+       */
+      type: 'showLayer'
+      layer: string
+    }
+  | {
+      /**
+       * **我這個 webview 現在看得見嗎**（2026-09-02）。
+       *
+       * 🔴 宿主那側的 `WebviewView.visible` 在 Arduino IDE 上**說了謊**：
+       * 變數那一頁明明不是被選到的分頁，它仍然回 `true`，於是版面選單上
+       * 寫著「隱藏變數面板」——而它根本沒開。
+       *
+       * > **一個「你看得見嗎」的問題，最可靠的回答者是【被看的那一個】。**
+       */
+      type: 'viewVisible'
+      visible: boolean
+    }
+  | {
+      /** **開關宿主 panel 區的某一頁**（版面選單裡那兩項）。 */
+      type: 'toggleConsole'
+      page: 'console' | 'variables'
+    }
+  | {
+      /** 執行狀態 → 主行程 → 畫主控台的那個視圖。 */
+      type: 'execStatus'
+      status: string
+      reason?: string
     }
   | {
       /**

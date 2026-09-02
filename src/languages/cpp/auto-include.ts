@@ -13,6 +13,7 @@ import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver, DependencyEdge } from '../../core/dependency-resolver'
 import { expandHeaderAliases, normalizeHeader } from './header-aliases'
 import { buildInclude } from '../../components/cpp/include/lift'
+import { buildUsingNamespace } from '../../components/cpp/using_namespace/lift'
 import { isIncludeDirective } from './core/node-traits'
 
 /**
@@ -180,8 +181,27 @@ export function createCppCodePatcher(
  * 現在介面層只知道「請語言套件把這些邊變成節點」。**哪個概念代表引入，是
  * 語言套件自己的知識。**
  */
-export function autoIncludeNodes(edges: DependencyEdge[]): SemanticNode[] {
-  return edges.map((edge) =>
+export function autoIncludeNodes(
+  edges: DependencyEdge[],
+  /**
+   * 命名空間風格。🔴 **`using` 那一句與引入是同一件事的兩半**（2026-09-02）：
+   * 補丁器（上面第 2 步）兩個都往程式碼裡寫，而這裡本來只還原了引入那一半。
+   *
+   * 使用者：「引入函式庫和使用命名空間應該都也要是淡的吧」、
+   * 「為何 `using namespace std;` 不見了？」——症狀正是那一句
+   * **只活在程式碼文字裡**：樹裡沒有它，於是下一次從真相重新投影就沒了。
+   *
+   * > **同一個補丁器往文字裡加了兩種東西，
+   * > 而只有一種被放回樹裡——不見的一定是另一種。**
+   */
+  namespaceStyle: 'using' | 'explicit' = 'explicit',
+): SemanticNode[] {
+  const includes = edges.map((edge) =>
     buildInclude(edge.header.replace(/^<|>$/g, '')),
   )
+  // ⚠️ 條件與補丁器第 2 步**逐字相同**（`namespaceStyle === 'using' && edges.length > 0`）
+  //    ——兩邊看的是同一個決定，錯開的話就是「程式碼有、積木沒有」。
+  return namespaceStyle === 'using' && edges.length > 0
+    ? [...includes, buildUsingNamespace('std')]
+    : includes
 }

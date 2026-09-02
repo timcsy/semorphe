@@ -251,6 +251,72 @@ export interface CodeView {
   onVariablesSnapshot?(callback: (groups: readonly { name: string; collapsed: boolean; variables: readonly { name: string; type: string; value: string }[] }[]) => void): void
 
   /**
+   * **請宿主把某一層叫到我這一格來**（2026-09-02）。
+   *
+   * 🔴 一個「每個視窗只畫一層」的宿主上，槽的下拉不能做本地置換——
+   * 那一層根本不在這個視窗裡。它要變成一句**對宿主的請求**。
+   *
+   * ⚠️ 沒有這一格的宿主（網頁版）自己置換，見 `app-shell` 的 `buildSlotPicker`。
+   */
+  showLayer?(layer: string): void
+
+  /**
+   * **請宿主開關它自己的下方面板的某一頁**（2026-09-02）。
+   *
+   * 🔴 在 IDE 裡主控台與變數是**宿主 panel 區**的兩個視圖——它們不在這個
+   * webview 裡，我們沒有辦法自己收合它們。
+   */
+  toggleConsole?(page: 'console' | 'variables'): void
+
+  /**
+   * **宿主告訴我那兩頁現在看得見沒有**。
+   *
+   * ⚠️ 少了它，選單上的標籤只能寫「顯示／隱藏」這種**兩件事都說**的話
+   * ——而使用者要的是「它現在開著就寫隱藏」。
+   */
+  onBottomVisibility?(callback: (v: { console: boolean; variables: boolean }) => void): void
+
+  /**
+   * **宿主宣告它做得到什麼**（2026-09-02）。
+   *
+   * ⚠️ 目前只有一格：`canSwapEditor`——與程式碼那一格對調要「多開一份再關掉
+   * 多的」，而**關不掉的宿主**上那個選項不該出現（見協定的 `hostCaps`）。
+   */
+  onHostCaps?(callback: (caps: { canSwapEditor: boolean; canObserveBottomVisibility: boolean }) => void): void
+
+  /**
+   * **請宿主用它自己的選單問「這一格顯示什麼」**。
+   *
+   * 🔴 一個 webview 只畫得到自己那個矩形——而宿主的選單是全域的。
+   * ⚠️ 選項由**這一側**給（標籤要 i18n，而那份字典在這裡）。
+   */
+  pickLayer?(title: string, items: readonly { value: string; label: string; description?: string }[]): void
+
+  /**
+   * **宿主說：你現在畫這一層**（2026-09-02）。
+   *
+   * 🔴 使用者要的是「**欄位數不變，裡面的內容置換**，就像網頁版那樣」。
+   * 在 IDE 裡一欄就是一個 webview，所以那句話的執行機構是**這個 webview
+   * 改畫另一層**——一個分頁都不搬、一個面板都不重建。
+   */
+  onSetLayer?(callback: (layer: string) => void): void
+
+  /**
+   * **執行的狀態**（跑完了／出錯了／在等輸入）交給宿主，由它轉給畫主控台的
+   * 那個視窗。
+   *
+   * 🔴 少了它，那個視窗的狀態列會**停在最後一句話**：使用者 2026-09-02 的
+   * 截圖裡，程式已經印完了而底下還寫著「等待輸入…」。
+   *
+   * > **一個永遠停在上一句話的狀態列，比沒有狀態列更糟
+   * > ——它說的是一件曾經為真的事。**
+   */
+  reportExecutionState?(e: { status: string; reason?: string }): void
+
+  /** 同上的反方向：別的視窗在跑，而狀態要畫在【我】這裡。 */
+  onExecutionStateIn?(callback: (e: { status: string; reason?: string }) => void): void
+
+  /**
    * 使用者在**我這個**主控台打了一行——交回宿主，由它送給正在跑的那個視窗。
    *
    * ⚠️ 與 `onConsoleInput` 是反方向：那個是「宿主的終端機收到打字」。

@@ -4,6 +4,7 @@ import { msg } from '../core/messages'
 import { showQuickPick } from './toolbar/quick-pick'
 import { installGridDividers } from './layout/grid-dividers'
 import { identityAssignment, swapTo, effectiveAreas, type SlotAssignment } from '../core/host/slot-assignment'
+import type { BottomPage, BottomVisibility } from '../core/host/console-surface'
 import { createPanelHead } from './layout/cell-head'
 import { BottomPanel } from './layout/bottom-panel'
 import { LayoutManager } from './layout/layout-manager'
@@ -49,6 +50,16 @@ export interface AppShellElements {
   showProjection: (which: 'blocks' | 'flow') => void
   /** 套一個桌機佈局預設（專注／對照／三欄）。 */
   applyLayout: (id: LayoutPresetId) => void
+  /** 🔴 宿主換掉這個視窗畫哪一層（IDE 的槽下拉）——見 `hostLayers`。 */
+  setHostLayer: (l: UnderstandingLayer) => void
+  /** 🔴 下方面板某一頁的開關——⚠️ 誰去開關它**每個宿主不一樣**（見實作）。 */
+  toggleBottom: (page: BottomPage) => void
+  /** 🔴 可見性變了要重畫控制項——`App` 用它掛上自己的 `publishControls`。 */
+  onBottomVisibilityChanged: (cb: () => void) => void
+  /** 下方面板現在哪幾頁看得見（版面選單要據此說「顯示」還是「隱藏」）。 */
+  bottomVisibility: () => BottomVisibility
+  /** 🔴 這個宿主**看不看得出**那件事——看不出來時標籤要中性（見 `app.ts`）。 */
+  bottomVisibilityKnown: () => boolean
   /**
    * **這個宿主提供得出來的版面**——名字從實際的格子導出，塌成同形狀的只留一張。
    *
@@ -575,6 +586,46 @@ export function createAppLayout(
     else appEl.appendChild(bottomContainer)
   }
   /**
+   * **面板右上那兩顆：最大化與關閉**（2026-09-02）。
+   *
+   * 使用者指著 VSCode 面板右上角那兩顆說「**我希望網頁版也有這個**」。
+   *
+   * 🔴 **最大化＝把編輯區讓出來**，不是「把底條拉高」：VSCode 那顆按下去
+   * 編輯區整個不見，面板佔滿——而那正是「我現在只想看輸出」的動作。
+   *
+   * ⚠️ 而它只在**網頁版**畫：IDE 那側宿主自己就有這兩顆，我們再畫一份
+   * 就是同一件事講兩次（`solo` 的視窗也不畫——它本來就佔滿）。
+   */
+  const installPanelActions = (panel: BottomPanel): void => {
+    if (soloBottom) return
+    let maximized = false
+    const apply = (): void => {
+      main.style.display = maximized ? 'none' : ''
+      panel.setMaximized(maximized)
+      panel.setPanelActions([
+        {
+          id: 'maximize',
+          icon: maximized ? '❐' : '⛶',
+          title: msg(maximized ? 'PANEL_RESTORE' : 'PANEL_MAXIMIZE', maximized ? '還原' : '最大化'),
+          onClick: () => { maximized = !maximized; apply() },
+        },
+        {
+          id: 'close',
+          icon: '✕',
+          title: msg('PANEL_CLOSE', '關閉面板'),
+          onClick: () => {
+            // ⚠️ 關掉之前要先還原——不然下次叫它回來，編輯區還藏著。
+            if (maximized) { maximized = false; apply() }
+            panel.asConsoleSurface().hide()
+          },
+        },
+      ])
+      window.dispatchEvent(new Event('resize'))
+    }
+    apply()
+  }
+
+  /**
    * 🔴 **這個視窗有沒有編輯區**（2026-09-02，spec 171 第二刀）。
    *
    * IDE 的 panel 區裡，主控台／變數那兩個視圖**只有那一層**——整個 webview
@@ -582,9 +633,26 @@ export function createAppLayout(
    * （使用者截圖：分頁列被擠在最底下，上面一大片空白）。
    */
   const soloBottom = !!profile.layers && !profile.layers.some((l) => l !== 'state')
+  /**
+   * ⚠️ **這兩個要宣告在底條【建立之前】**（2026-09-02 實測）。
+   *
+   * 🔴 它們本來寫在下面，而底條一建好就會走 `applyHeight()` → 回呼 →
+   * 讀到一個**還沒初始化的 `let`**：`Cannot access 'bottomVisibilityChanged'
+   * before initialization`，整個應用**開機就白畫面**。
+   *
+   * > **一個「等一下才會被呼叫」的回呼，如果它讀的是同一段設定裡的 `let`，
+   * > 那個「等一下」可能就在這一段設定的下一行。**
+   */
+  let hostBottomVisibility: BottomVisibility = { console: false, variables: false }
+  let bottomVisibilityChanged: (() => void) | null = null
+
   let bottomPanel = bottomTabs.length > 0 ? new BottomPanel(bottomContainer) : null
   if (bottomPanel) {
     mountBottom()
+    installPanelActions(bottomPanel)
+    // 🔴 收合／關閉／最大化／切分頁都會改變「哪一頁看得見」——而版面選單上
+    //    那兩個標籤是算出來的，得有人叫它重算（見 `BottomPanel.onVisibilityChange`）。
+    bottomPanel.onVisibilityChange(() => bottomVisibilityChanged?.())
     if (soloBottom) {
       bottomPanel.setSolo(true)
       // ⚠️ 編輯區整個不畫——它在這個視窗裡不是「空的」，是**不存在**。
@@ -730,28 +798,74 @@ export function createAppLayout(
    * 點一顆 ＝「把 X 放到**我這裡**」，而那是一次**對調**（`swapTo`）：
    * 原本顯示 X 的那一格會接手我現在這一層。
    */
+  /**
+   * 🔴 **一個視窗只畫一層的宿主上，下拉要列【宿主拿得出來的全部】**
+   *   （2026-09-02）。
+   *
+   * 使用者在 IDE 裡點開它，看到的是一個**只有一個選項**的下拉：
+   * 「我希望點擊是可以**切換全部面板的選項**，除非做不來」。
+   *
+   * ⚠️ 而在那裡「切換」不是本地置換（那一層根本不在這個視窗裡），
+   * 是**請宿主把那一層叫到這一欄來**——見 `CodeView.showLayer`。
+   *
+   * > **一個只有一個選項的下拉，不是一個選擇，是一顆假的按鈕。**
+   */
+  const hostPicksLayer = (profile.layers?.length ?? 0) === 1 && !!codeView.showLayer
+
+  /**
+   * 🔴 **這個宿主換不動編輯器的話，「程式碼」不列進選單**（2026-09-02）。
+   *
+   * 使用者在 Arduino IDE：「檔案沒有辦法關閉，所以我建議在 ArduinoIDE 這邊
+   * 程式碼不是一個可切換的選項」。而與程式碼對調要「多開一份撐位子、再把多的
+   * 關掉」——關不掉的宿主上，那一步留下一個**使用者關不掉的重複分頁**。
+   *
+   * > **一個做得到一半的功能，在做不到那一半的宿主上不該出現在選單裡
+   * > ——一個按了會留下垃圾的選項，比沒有那個選項更糟。**
+   *
+   * ⚠️ 它是**宿主宣告的**（`CodeView.onHostCaps`），不是我們猜的。
+   */
+  let hostCanSwapEditor = true
+  /** 🔴 這個宿主答不答得出「那兩頁開著沒有」——答不出來就不要說（見 `app.ts` 的標籤）。 */
+  let hostSeesBottom = true
+  codeView.onHostCaps?.((caps) => {
+    hostCanSwapEditor = caps.canSwapEditor
+    hostSeesBottom = caps.canObserveBottomVisibility
+    bottomVisibilityChanged?.()
+  })
+
+  // ⚠️ **每次點開才算**——能力是宿主推過來的，可能在開機之後才到。
+  const pickableLayers = (): UnderstandingLayer[] => (hostPicksLayer
+    ? LAYER_ORDER.filter((l) => l !== 'state' && (l !== 'element' || hostCanSwapEditor))
+    : LAYER_ORDER.filter((l) => l !== 'state' && layerAvailable(l)))
+
   const buildSlotPicker = (own: UnderstandingLayer): HTMLElement => {
     const btn = document.createElement('button')
     btn.className = 'slot-picker'
     btn.addEventListener('click', () => {
+      const title = msg('SLOT_PICK', '這一格顯示')
+      const items = pickableLayers().map((l) => ({
+        value: l,
+        label: msg(`LAYER_${l.toUpperCase()}`, l),
+        description: l === own ? msg('CURRENT', '目前') : undefined,
+      }))
+      // 🔴 **宿主有全域的選單就用它**（2026-09-02）。使用者：「為何選單不是
+      //    像網頁那樣是全域的？」——一個 webview 只畫得到**自己那個矩形**，
+      //    而這個專案早就把控制項投影到宿主的 QuickPick 了（`controlSurfaces`）。
+      //
+      // > **一個畫不出去的邊界，不是用更大的 z-index 解決的
+      // > ——是把那件事交給畫得出去的那個人。**
+      if (hostPicksLayer && codeView.pickLayer) { codeView.pickLayer(title, items); return }
       showQuickPick(
-        {
-          title: msg('SLOT_PICK', '這一格顯示'),
-          // ⚠️ 選項來自**同一份**來源，每個槽逐字相同（spec 169 的 SC-002）
-          // 🔴 **扣掉 `state`**（2026-09-02，spec 171）：主控台不是編輯區的一格
-          //    ——它是底下那條獨立的、開得關得的底條。列它進來的話，選到它
-          //    等於把「執行的輸出」塞回一欄投影裡，而那正是這一刀拆掉的形狀。
-          items: LAYER_ORDER.filter((l) => l !== 'state' && layerAvailable(l)).map((l) => ({
-            value: l,
-            label: msg(`LAYER_${l.toUpperCase()}`, l),
-            // 🔴 「目前」是**這個面板自己**——每個面板永遠顯示它自己，
-            //    置換搬的是它的**位子**，不是它的內容。
-            description: l === own ? msg('CURRENT', '目前') : undefined,
-          })),
-        },
+        // ⚠️ 選項來自**同一份**來源，每個槽逐字相同（spec 169 的 SC-002）
+        // 🔴 **扣掉 `state`**（2026-09-02，spec 171）：主控台不是編輯區的一格
+        //    ——它是底下那條獨立的、開得關得的底條。
+        // 🔴 「目前」是**這個面板自己**——每個面板永遠顯示它自己。
+        { title, items },
         (v: string[] | null) => {
           const to = v?.[0] as UnderstandingLayer | undefined
           if (!to || to === own) return
+          // 🔴 宿主自己排版面的話，這是一句**請求**，不是一次本地置換。
+          if (hostPicksLayer) { codeView.showLayer?.(to); return }
           // 「把 X 放到**我這個位子**」——而我現在在的位子顯示的是我自己
           assignment = swapTo(assignment, own, to)
           applyLayoutRef?.(document.body.getAttribute('data-layout') as LayoutPresetId ?? 'compare')
@@ -759,6 +873,76 @@ export function createAppLayout(
       )
     })
     return btn
+  }
+
+  /**
+   * **宿主說：你現在畫這一層**（2026-09-02）。
+   *
+   * ⚠️ 只有「一個視窗一層」的宿主用得到它——見 `hostLayers` 的說明。
+   * 🟢 而它很便宜：積木與流程兩個面板**本來就都建好了**，換的只是哪一格顯示。
+   */
+  /**
+   * **下方面板現在哪幾頁看得見**（2026-09-02）。
+   *
+   * 🔴 網頁版底下是**一條有兩個分頁的**面板——開著的時候也只有作用中的那一頁
+   * 看得見。IDE 那側它們是宿主 panel 區的兩個原生分頁，答案由**宿主**給
+   * （`CodeView.onBottomVisibility`），因為它們根本不在這個 webview 裡。
+   */
+  const bottomVisibility = (): BottomVisibility => {
+    if (!bottomPanel) return hostBottomVisibility
+    const on = bottomPanel.visibleTab
+    return { console: on === 'console', variables: on === 'variables' }
+  }
+
+  /**
+   * **開關下方面板的某一頁**（2026-09-02，使用者要的）。
+   *
+   * 🔴 **誰去開關它，每個宿主不一樣**：
+   *
+   * ```
+   * 網頁版   它就在這裡    → 看得見就收起來；看不見就展開並切到那一頁
+   * IDE     它不在這裡    → 那是【宿主 panel 區】的視圖，交給宿主
+   * ```
+   *
+   * > **一個「開關這個東西」的按鈕，要先問得出「這個東西在誰家」。**
+   */
+  const toggleBottom = (page: BottomPage): void => {
+    if (!bottomPanel) { codeView.toggleConsole?.(page); return }
+    if (bottomPanel.visibleTab === page) bottomPanel.asConsoleSurface().hide()
+    else bottomPanel.showTab(page)
+  }
+
+  // 🔴 IDE 那側：兩個原生分頁的可見性由宿主推過來（它們不在這個 webview 裡）。
+  codeView.onBottomVisibility?.((v) => {
+    hostBottomVisibility = v
+    // ⚠️ 可見性變了 → 選單上那兩個標籤要跟著改（「顯示」↔「隱藏」）。
+    bottomVisibilityChanged?.()
+  })
+  
+
+  const setHostLayer = (l: UnderstandingLayer): void => {
+    if (l !== 'relation' && l !== 'space') return
+    hostLayers = [l]
+    focusLayer = l
+    // 🔴 **置換表要歸位**（2026-09-02 實測）。
+    //
+    //    第一版這裡呼叫 `showProjection()`，而它會**動置換表**（那是網頁版的
+    //    做法：版面裡沒有那一層時，把它換進來）。而在一個**只有一層**的視窗裡
+    //    那一步是有害的：
+    //
+    //    ```
+    //    showProjection('flow') → 置換表變成 relation↔space
+    //    applyLayout           → 只剩一層 ⟹ 版面塌成「專注」，而 `*` ＝ relation
+    //                          → 再套置換表 → space（換回去了）
+    //                          → 而 space 這個視窗又沒有 ⟹ 一格都不剩
+    //    ```
+    //
+    //    使用者看到的是**一片空白**（分頁標題已經變成「流程」了）。
+    //
+    // > **一張「哪一格顯示誰」的置換表，在只有一格的地方沒有意義
+    // > ——而讓它留著非恆等，那一格就會指到一個不存在的層。**
+    assignment = identityAssignment()
+    applyLayoutRef?.(document.body.getAttribute('data-layout') as LayoutPresetId ?? 'compare')
   }
 
   const showProjection = (which: 'blocks' | 'flow'): void => {
@@ -822,10 +1006,25 @@ export function createAppLayout(
    * 🔴 不存在的層，它的軌道收成 `0`——而不是「畫出來再藏起來」。
    * ⚠️ 判準問的是**能力**（`profile.features` ／ 有沒有那個面板），不是宿主的名字。
    */
+  /**
+   * **這個視窗現在畫哪幾層**——⚠️ 它是**可變的**（2026-09-02）。
+   *
+   * 🔴 使用者：「我希望的比較像是我的**欄位數不變**，但是**裡面的內容置換**，
+   * 就像網頁版那樣的處理」。
+   *
+   * 在 IDE 裡一欄就是一個 webview，所以「內容置換」＝**這個 webview 改畫另一層**
+   * ——欄位一格都不動。三欄的 DOM 本來就都建好了（`CELLS`），換的只是
+   * 這一格顯示哪一個。
+   *
+   * > **「換位子」與「換內容」在網頁版是同一件事（格子是容器）；
+   * > 在 IDE 裡它們是兩件事——而使用者要的是後者。**
+   */
+  let hostLayers: readonly UnderstandingLayer[] | undefined = profile.layers
+
   const layerAvailable = (l: UnderstandingLayer): boolean =>
     // 🔴 **宿主指名了哪幾層的話，那是硬邊界**（2026-09-01）——一個只畫流程的
     //    視窗裡，積木不是「藏起來」，是**不在那裡**。
-    profile.layers && !profile.layers.includes(l) ? false
+    hostLayers && !hostLayers.includes(l) ? false
       : l === 'element' ? profile.features.codeEditorPane
         : l === 'state' ? bottomPanel !== null
           : true
@@ -850,6 +1049,46 @@ export function createAppLayout(
    *
    * > **一個只在四行裡的其中一行成立的例外，讀的人會以為那三行也一樣。**
    */
+  /**
+   * **一格窄了就給它一顆收合鈕**（2026-09-02）。
+   *
+   * 使用者：「我希望側欄在畫面**太小**時可以顯示收合按鈕，像行動版那樣」。
+   *
+   * 🔴 判準是**那一格的寬度**，不是視窗的：三欄版面在很寬的螢幕上，每一欄
+   * 仍然只有三百多像素——而媒體查詢問不到這件事。
+   *
+   * > **「畫面太小」在多欄版面裡不是一個視窗的性質，是【每一格各自的】性質。**
+   *
+   * ⚠️ **門檻 660px**——這個數字調過兩次，而**兩次都是量出來的**：
+   *
+   * ```
+   * 420  第一版：分類條 96 ＋ 放得下積木的畫布
+   *      🔴 那是「能不能用」的下限，不是「想不想收」的門檻
+   * 820  使用者：「或許平板就可以有了」→ 調高
+   *      🔴 而 1512 的筆電開「對照」時每格 754 → 也長出來了，
+   *         使用者：「收合按鈕錯位」——它出現在一個沒有理由收的地方
+   * 660  現在：平板進得來，而桌機的兩欄留在外面
+   * ```
+   *
+   * | 情境 | 每格寬 | 有沒有 |
+   * |---|---|---|
+   * | 1512 筆電・對照 | 754 | 沒有 |
+   * | 1512 筆電・三欄 | ~500 | 有 |
+   * | 1920 桌機・三欄 | 640 | 有 |
+   * | 1024 橫向平板・對照 | 510 | 有 |
+   *
+   * > **一個「太擠了」的門檻，量的是使用者什麼時候【想把它收起來】
+   * > ——而它出現在不擠的地方時，讀起來就只是一顆錯位的按鈕。**
+   */
+  const NARROW_CELL = 660
+  const watchNarrow = (el: HTMLElement): void => {
+    const mark = (): void => {
+      el.classList.toggle('cell-narrow', el.getBoundingClientRect().width < NARROW_CELL)
+    }
+    new ResizeObserver(mark).observe(el)
+    mark()
+  }
+
   const CELLS = [
     { el: codeColumn, layer: 'element' as const, bar: '.monaco-clipboard-bar', shownAs: 'flex' },
     { el: flowColumn, layer: 'relation' as const, bar: '.flow-toolbar', shownAs: 'flex' },
@@ -858,6 +1097,72 @@ export function createAppLayout(
     //    ⚠️ 它的那條頭仍然存在（`.bottom-panel-tabs`），只是不再由這張表管
     //       它的顯示／隱藏——那是 `BottomPanel` 自己的事。
   ]
+  for (const { el } of CELLS) watchNarrow(el)
+
+  /**
+   * **積木那一欄的收合鈕**（桌機的窄欄用）。
+   *
+   * 🪦 在此之前它**只有行動版建**（掛在 `#mobile-blocks` 上），於是三欄底下
+   * 的積木欄看得到工具箱卻收不掉它。
+   *
+   * ⚠️ 它與行動版那顆**共用形狀與行為**，差別只在掛在哪一格上；
+   * 顯示與否交給 CSS（`.cell-narrow`），這裡不判斷寬度。
+   */
+  const installToolboxToggle = (host: HTMLElement): void => {
+    const btn = document.createElement('button')
+    btn.className = 'toolbox-collapse-btn'
+    btn.textContent = '◀'
+    const q = <T extends Element>(sel: string): T | null => blocklyContainer.querySelector<T>(sel)
+    /**
+     * **它站在「它管的那一塊」的外緣**（2026-09-02）。
+     *
+     * 🔴 使用者：「收合按鈕應該在**開啟的子分類側欄的右邊**」——而第一版
+     * 只算了分類條的寬度，於是子分類（Blockly 的 flyout）一打開，那顆鈕就
+     * 停在**它中間**。
+     *
+     * > **一顆按鈕的位置在說「我管的是這一塊」。
+     * > 它管兩層而站在第一層的邊上，那句話就是錯的。**
+     *
+     * ⚠️ 流程視圖那一側 2026-08-30 就記過同一課（`.flow-palette-toggle`），
+     * 而積木這一側**沒有跟上**——同一個教訓在兩個地方各撞一次。
+     */
+    const place = (): void => {
+      const tb = q<HTMLElement>('.blocklyToolbox')
+      if (!tb) return
+      if (tb.style.display === 'none') { btn.style.left = '0px'; return }
+      // ⚠️ **`.blocklyFlyout` 有兩個**（實測）：垃圾桶那一個永遠在（`display:none`），
+      //    而分類的那一個叫 `.blocklyToolboxFlyout`。`querySelector` 抓到的是前者，
+      //    於是寬度永遠是 0——鈕就永遠停在分類條的邊上。
+      const fly = q<SVGGraphicsElement>('.blocklyToolboxFlyout')
+      const flyW = fly && getComputedStyle(fly).display !== 'none'
+        ? fly.getBoundingClientRect().width : 0
+      btn.style.left = `${tb.getBoundingClientRect().width + flyW}px`
+    }
+    btn.addEventListener('click', () => {
+      const tb = q<HTMLElement>('.blocklyToolbox')
+      if (!tb) return
+      const hidden = tb.style.display === 'none'
+      tb.style.display = hidden ? '' : 'none'
+      btn.textContent = hidden ? '◀' : '▶'
+      window.dispatchEvent(new Event('resize'))
+      requestAnimationFrame(place)
+    })
+    host.appendChild(btn)
+    requestAnimationFrame(place)
+    new ResizeObserver(place).observe(blocklyContainer)
+    // ⚠️ **子分類是「開／關」不是「變大」**——它由 `display`／`transform` 切換，
+    //    而那不會觸發 `ResizeObserver`。所以另外盯屬性的變化。
+    let pending = false
+    new MutationObserver(() => {
+      if (pending) return
+      pending = true
+      requestAnimationFrame(() => { pending = false; place() })
+    }).observe(blocklyContainer, {
+      attributes: true, subtree: true, attributeFilter: ['style', 'class', 'transform'],
+    })
+  }
+  installToolboxToggle(blocksColumn)
+
   const slotPickers = new Map(CELLS.map(({ layer }) => [layer, buildSlotPicker(layer)]))
   const mountSlotPickers = (): void => {
     for (const { el, layer, bar } of CELLS) {
@@ -1520,7 +1825,7 @@ export function createAppLayout(
   //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
   showProjection('blocks')
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, setHostLayer, toggleBottom, bottomVisibility, bottomVisibilityKnown: () => !!bottomPanel || hostSeesBottom, onBottomVisibilityChanged: (cb: () => void) => { bottomVisibilityChanged = cb }, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
 }
 
 /*

@@ -38,6 +38,44 @@ export function componentTraits(componentId: string): Record<string, unknown> | 
 }
 
 /**
+ * 這顆**永遠在範圍內**嗎——不管這一課教什麼（2026-09-02）。
+ *
+ * 🔴 使用者在 Arduino 專題的第一課看到 `// put your setup code here` 那兩顆
+ * 註解積木是暗的：「理論上這邊註解不應該是淡的呀」。
+ *
+ * 而他是對的：「超出範圍」說的是**這一課不教這個概念**，而註解**不是一個
+ * 概念**——它是使用者（或 sketch 樣板）寫在旁邊的話。把它打暗等於對學生說
+ * 「這一行你不該碰」，而那句話是假的。
+ *
+ * > **「這一課的範圍」管的是概念。
+ * > 一個不是概念的東西落在那張表外面，不代表它不該在這裡。**
+ *
+ * ⚠️ 它與 `scaffold` 不同：鷹架**在範圍內但不進工具箱**（學生拖不到），
+ * 而註解是**兩者都在**（它就在工具箱的「程式設定」裡）。
+ */
+export function isAlwaysInScope(componentId: string): boolean {
+  return componentTraits(componentId)?.alwaysInScope === true
+}
+
+/**
+ * **所有宣告了「永遠在範圍內」的元件**。
+ *
+ * ⚠️ 它與 `isAlwaysInScope` 是同一件事的兩個問法，而**兩個都需要**：
+ * 有課的時候是「這一顆在不在」（過濾），沒課的時候是「把它們補進來」
+ * ——因為那時的範圍來自**層級樹**，而註解不一定被列在任何一層裡。
+ *
+ * 🔴 使用者 2026-09-02：選了課正常、**剛開啟卻是暗的**——就是這個差別。
+ *
+ * > **一條「不受範圍管」的規則，要在【每一條算範圍的路】上都成立
+ * > ——只補了其中一條，另一條就會用同一個畫面說相反的話。**
+ */
+export function alwaysInScopeComponents(): Set<string> {
+  return new Set(registeredComponents()
+    .filter((c) => (c.manifest as { traits?: { alwaysInScope?: boolean } } | undefined)?.traits?.alwaysInScope === true)
+    .map((c) => c.componentId))
+}
+
+/**
  * 這顆是**具名呼叫**嗎（`properties.name` 是被呼叫的名字）。
  *
  * ⚠️ 只認膠囊的宣告。還沒膠囊化的元件在這裡一律回 `false`——

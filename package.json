@@ -18,7 +18,9 @@
     "build:vscode": "npx tsx src/scripts/build-vscode.ts",
     "preflight:vscode": "npm run build:vscode && node tools/vscode-preflight/run.mjs",
     "install:ide": "node tools/install-ide.mjs",
-    "build:wasm:python": "tree-sitter build --wasm node_modules/tree-sitter-python -o public/tree-sitter-python.wasm"
+    "build:wasm:python": "tree-sitter build --wasm node_modules/tree-sitter-python -o public/tree-sitter-python.wasm",
+    "demo:record": "playwright test --config=tools/demo/playwright.demo.config.ts",
+    "demo:gif": "bash tools/demo/to-gif.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

@@ -4,16 +4,28 @@
  * 腳本（每一拍都要看得懂，所以中間有刻意的停頓）：
  *
  * ```
- * ① 打一段四行、有迴圈的 C++      → 積木與流程【同時】長出來
- * ② 在【程式碼】改一個數字         → 另外兩格當場跟著變
- * ③ 在【積木】改一個字串           → 另外兩格當場跟著變
- * ④ 在【流程】改一個數字           → 另外兩格當場跟著變
- * ⑤ 按執行                         → 第四格（主控台）印出來
+ * ⓪ 切【三欄】                     → 程式碼 · 流程 · 積木 ＋ 底下的主控台
+ * ① 打一段四行、有迴圈的 C++        → 積木與流程【同時】長出來
+ * ② 在【程式碼】改一個數字          → 另外兩格當場跟著變
+ * ③ 在【積木】改一個字串            → 另外兩格當場跟著變
+ * ④ 在【流程】改一個數字            → 另外兩格當場跟著變
+ * ⑤ 按執行                          → 底下的主控台印出來
+ * ⑥ 關掉主控台 → 再按執行           → **它自己回來**
+ * ⑦ 用「這一格顯示」把兩格對調      → 版面是使用者的，不是寫死的
+ * ⑧ 切【對照】                      → 收成兩欄
  * ```
  *
- * 🔴 **第五拍不是裝飾**：十字有四格，而前四拍只用到三格——
- * 主控台那一格整片空著，畫面上有四分之一是死的。
+ * 🔴 **第五拍不是裝飾**：前四拍只用到三格，主控台那一條整片空著。
  * 而「按下去真的會跑」本來就是這個工具與「積木玩具」的差別。
+ *
+ * 🔴 **⑥⑦⑧ 是 2026-09-02 加的**（spec 171 之後）：那一刀把主控台搬出編輯區、
+ * 讓每一格自己選顯示哪一層，而**示範裡一格都沒演到**。
+ *
+ * > **一個沒有被演出來的功能，在讀 README 的人眼裡不存在
+ * > ——而它與沒做完的差別，只有作者知道。**
+ *
+ * 🪦 **十字（`grid`）退場**（同一刀）：這支示範本來靠它把四格擺上畫面，
+ * 而現在是「三欄 ＋ 底下一條」——同樣四塊，而三個宿主排得出同一個形狀。
  *
  * 🔴 **為什麼是這三拍**（2026-09-01 重錄）：README 的標語是
  * 「同一支程式，三種看法——**改哪一邊都算數**」，而**舊的那支只證明了兩邊**
@@ -66,10 +78,8 @@ test('demo', async ({ page }) => {
     undefined, { timeout: 60_000 })
   await page.waitForTimeout(1200)
 
-  // ⓪ 切到【十字】——這一支示範的前提：四格同時看得到
-  await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
-  await page.locator('.quick-pick-item[data-value="grid"]').click()
-  await page.waitForFunction(() => document.body.getAttribute('data-layout') === 'grid')
+  // ⓪ 切到【三欄】——這一支示範的前提：三個投影 ＋ 底下的主控台同時看得到
+  await pickLayout(page, 'three-column')
   await page.waitForTimeout(1200)
 
   // ① 打字 → 積木與流程同時長出來
@@ -217,7 +227,102 @@ test('demo', async ({ page }) => {
   await page.waitForTimeout(3200)
   const printed = await page.evaluate(() =>
     document.querySelector('.console-output')?.textContent ?? '')
-  expect(printed, '🔴 主控台沒有印出東西——第四格還是空的').toContain('嗨')
+  expect(printed, '🔴 主控台沒有印出東西——底下那一條還是空的').toContain('嗨')
+  await page.waitForTimeout(1200)
 
   await page.waitForTimeout(1600)
 })
+
+/**
+ * **第二支：版面是使用者的**（2026-09-02 新增）。
+ *
+ * 🔴 **為什麼拆成兩支**：一支從頭演到尾是 33 秒，而那轉成 GIF 是 **4.1MB**
+ * ——版面切換與面板搬家是整片畫面在動，GIF 壓不掉。
+ *
+ * > **一支示範的長度不是由「還有什麼想演」決定的，
+ * > 是由「它變成幾 MB」決定的——而讀者不會等一張 4MB 的圖。**
+ *
+ * ```
+ * ① 關掉主控台 → 按執行 → **它自己回來**
+ * ② 用「這一格顯示」把兩格對調
+ * ③ 切【對照】→ 收成兩欄
+ * ```
+ */
+test('demo-layout', async ({ page }) => {
+  test.setTimeout(180_000)
+  await boot(page)
+  await pickLayout(page, 'three-column')
+  await page.waitForTimeout(800)
+  await typeProgram(page)
+  await page.waitForTimeout(1500)
+
+  // ⑥ 關掉主控台 → 再按執行 → **它自己回來**
+  //
+  // 🔴 這一拍演的是一條規則，不是一顆按鈕：主控台可以關，而**關不掉它回來的
+  //    能力**——「有輸出時它自己出現」寫在 `ConsolePanel` 的寫入路徑上。
+  await page.locator('#bottom-container .bottom-panel-actions [data-action="close"]').click()
+  await page.waitForTimeout(1400)
+  expect(await bottomShown(page), '🔴 按了 ✕ 而它還在——這一拍沒有東西可以演').toBe(false)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(2600)
+  expect(await bottomShown(page), '🔴 有輸出而主控台沒有自己回來').toBe(true)
+  await page.waitForTimeout(1200)
+
+  // ⑦ 用「這一格顯示」把【流程】那一格換成積木——兩格對調
+  //
+  // ⚠️ 它演的是**版面是使用者的**：每一格自己選顯示哪一層，而選到別處的就對調。
+  const before = await columnOrder(page)
+  await page.locator('.slot-picker[data-layer="relation"]').first().click()
+  await page.waitForTimeout(700)
+  await page.locator('.quick-pick-item[data-value="space"]').click()
+  await page.waitForTimeout(2000)
+  const after = await columnOrder(page)
+  expect(after, `🔴 兩格沒有對調（${before.join(' · ')} → ${after.join(' · ')}）`).not.toEqual(before)
+
+  // ⑧ 切【對照】——收成兩欄
+  await pickLayout(page, 'compare')
+  await page.waitForTimeout(2200)
+})
+
+/** 開機並清空——⚠️ 兩支示範都要從同一個狀態開始，否則第二支會沿用上一次的存檔。 */
+async function boot(page: Page): Promise<void> {
+  await page.goto('/')
+  await page.waitForFunction(() => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
+    undefined, { timeout: 60_000 })
+  await page.evaluate(() => localStorage.clear())
+  await page.reload()
+  await page.waitForFunction(() => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
+    undefined, { timeout: 60_000 })
+  await page.waitForTimeout(1200)
+}
+
+/** 打那一段程式——⚠️ 第二支不必再演一次「跟著長出來」，所以它打得快一點。 */
+async function typeProgram(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(''))
+  await page.waitForTimeout(400)
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.type(PROGRAM, { delay: 8 })
+  await page.waitForTimeout(2200)
+}
+
+/** 底下那一條現在看得見嗎——⚠️ 判準是**它真的有高度**，不是那個節點在不在。 */
+const bottomShown = (page: Page): Promise<boolean> => page.evaluate(() => {
+  const c = document.getElementById('bottom-container')
+  return !!c && c.getClientRects().length > 0 && c.getBoundingClientRect().height > 30
+})
+
+/** 由左到右現在是哪幾格——⑦ 用它證明「真的對調了」。 */
+const columnOrder = (page: Page): Promise<string[]> => page.evaluate(() =>
+  ['code-column', 'flow-column', 'blocks-column']
+    .map((id) => ({ id, el: document.getElementById(id)! }))
+    .filter((c) => getComputedStyle(c.el).display !== 'none')
+    .sort((a, b) => a.el.getBoundingClientRect().x - b.el.getBoundingClientRect().x)
+    .map((c) => c.id))
+
+/** 切一張版面——⚠️ 等 `data-layout` 真的變了再往下走。 */
+async function pickLayout(page: Page, id: string): Promise<void> {
+  await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
+  await page.locator(`.quick-pick-item[data-value="${id}"]`).click()
+  await page.waitForFunction((v) => document.body.getAttribute('data-layout') === v, id)
+}

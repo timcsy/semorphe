@@ -10,7 +10,7 @@
  *
  * 🟢 兩個語言都走同一條路之後，那九個登記處才第一次**被驗過**。
  */
-import type { Topic, Target, StylePreset } from '../../core/types'
+import type { Topic, Target, StylePreset, SemanticNode } from '../../core/types'
 import { registerCppLifters } from './lifters'
 import { createPopulatedRegistry } from './std'
 import { CppScaffold } from './cpp-scaffold'
@@ -137,9 +137,14 @@ declareLanguagePack({
       scaffold: new CppScaffold(moduleRegistry),
       stripScaffoldNodes: cppStripScaffoldNodes as never,
       patchCode: patcher as never,
-      autoIncludeNodes: ((tree: never) => {
+      autoIncludeNodes: ((tree: never, namespaceStyle: 'using' | 'explicit') => {
         const names = computeAutoIncludes(tree, moduleRegistry as never)
-        return names.length === 0 ? [] : autoIncludeNodes(names)
+        if (names.length === 0) return []
+        // ⚠️ 樹裡**已經有**那一句就不再補一顆——與引入那一半的去重同一個道理
+        //    （`collectManualIncludes`）。少了它的症狀是兩顆一樣的積木。
+        const body = ((tree as unknown as SemanticNode).children.body ?? [])
+        const hasUsing = body.some((n) => n.componentId === 'cpp:using_namespace')
+        return autoIncludeNodes(names, hasUsing ? 'explicit' : namespaceStyle)
       }) as never,
     }
   },

@@ -179,7 +179,7 @@ test('🔴 編輯區裡沒有橫線，而主控台上面那一條【橫跨整條
 // > ——而不是它變得不方便。**
 
 
-test('🔴 選單裡有三張【示意圖】，而每張的格數與宣告一致', async ({ page }) => {
+test('🔴 選單裡有三張【示意圖】＋兩頁的開關', async ({ page }) => {
   await freshApp(page)
   await openPicker(page)
   const rows = await page.evaluate(() =>
@@ -188,11 +188,20 @@ test('🔴 選單裡有三張【示意圖】，而每張的格數與宣告一致
       cells: r.querySelectorAll('.quick-pick-preview-cell').length,
       visible: (r.querySelector('.quick-pick-preview') as HTMLElement | null)?.getBoundingClientRect().width ?? 0,
     })))
-  expect(rows.map((r) => r.id)).toEqual(['focus', 'compare', 'three-column'])
+  // 🔴 **開關排在三張版面之後**（2026-09-02，使用者：「加在單欄、對照、三欄的下方」）
+  expect(rows.map((r) => r.id))
+    .toEqual(['focus', 'compare', 'three-column', '__toggle-console', '__toggle-variables'])
   // 🪦 本來是 `[2, 3, 4, 4]`——那個 `3` 是「對照的積木跨兩列，跨格算一格」，
   //    而跨格隨十字一起退場了（主控台不在版面裡，沒有東西需要跨列）。
-  expect(rows.map((r) => r.cells), '🔴 圖的格數與宣告不一致').toEqual([1, 2, 3])
-  expect(rows.every((r) => r.visible > 0), '🔴 圖畫出來是 0 寬 → 使用者看不到').toBe(true)
+  // ⚠️ 開關那一列**沒有示意圖**：它不是一張版面，畫一張圖會讓它看起來像。
+  expect(rows.map((r) => r.cells), '🔴 圖的格數與宣告不一致').toEqual([1, 2, 3, 0, 0])
+  // ⚠️ **只驗有圖的那三列**——開關那兩列本來就沒有示意圖（上一行剛宣告過），
+  //    連它們一起驗的話，這條測試會在「開關加進選單」的那一天變紅，
+  //    而它抱怨的是一個**它自己剛說對的**設計。
+  expect(
+    rows.filter((r) => r.cells > 0).every((r) => r.visible > 0),
+    '🔴 圖畫出來是 0 寬 → 使用者看不到',
+  ).toBe(true)
 })
 
 /**

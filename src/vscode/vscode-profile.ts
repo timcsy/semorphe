@@ -197,6 +197,33 @@ export const vscodeProfile: HostProfile = {
   controlSurfaces: {
     picker: 'hostStatusBar',
     action: 'hostTitleBar',
+    /**
+     * **指名的例外**（2026-09-02）。使用者在 IDE 的標題列上看到七顆圖示：
+     * 「我想要把**還原、清除**移到工具列（像是處理行動版那樣），
+     * 然後**只保留執行**，其他都移除」。
+     *
+     * ```
+     * run／undo／redo      → 標題列（＝網頁版的**全域標頭**，同一個位置）
+     * clear               → 積木那一格自己的快速列（網頁版也在那裡）
+     * viewBlocks/viewFlow → 退場：槽的下拉「這一格顯示」做的是同一件事
+     * ```
+     *
+     * 🔴 **分界是「它管的是誰」**（使用者 2026-09-02：「還原和取消還原還是
+     * 留在標題列，這樣跟網頁版比較一致」）：
+     *
+     * ```
+     * ↩↪   全域的動作（`doUndo` 走三條路——2026-09-01 才把它從積木那一欄搬出來）
+     * 清空  積木那一格的動作（它清的是那一格的內容）
+     * ```
+     *
+     * > **一顆按鈕該站在哪一條列上，看的是它管的範圍
+     * > ——而兩個宿主的「那條列」叫不同名字（全域標頭／標題列），位置是同一個。**
+     */
+    byId: {
+      clear: 'panelToolbar',
+      viewBlocks: 'none',
+      viewFlow: 'none',
+    },
     indicator: 'hostStatusBar',
     // 🪦 **`hostTerminal` 退場**（2026-09-01）。
     //

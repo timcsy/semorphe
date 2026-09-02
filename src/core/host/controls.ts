@@ -70,6 +70,16 @@ export type ControlSurface =
   | 'hostTitleBar'
   | 'hostTerminal'
   | 'hostPanel'
+  /**
+   * **這個宿主不畫它**（2026-09-02）。
+   *
+   * ⚠️ 它與「沒有宣告」不同：沒有宣告是漏掉，`none` 是**說出口的決定**
+   * ——而說出口的那一個，`panelControls()` 與 manifest 都讀得到。
+   *
+   * 🔴 目前的用例：IDE 裡「顯示積木／顯示流程」那兩顆——槽的下拉
+   * （「這一格顯示」）做的是同一件事，而同一件事有兩顆按鈕是雜訊。
+   */
+  | 'none'
 
 export type ControlId =
   | 'target' | 'track' | 'lesson' | 'template' | 'scaffold' | 'style' | 'blockStyle' | 'locale'   // 🪦 `branches` 於 2026-08-28 退場（見下面的墓碑）
@@ -241,16 +251,32 @@ export const CONTROLS: readonly ControlSpec[] = [
  * 而真正的答案是**把那幾條列收成同一種東西**——見 `style.css` 的
  * 「一格的頭」那一段。
  */
-export type ControlSurfaces = Readonly<Record<ControlKind, ControlSurface>>
+export type ControlSurfaces = Readonly<Record<ControlKind, ControlSurface>> & {
+  /**
+   * **指名某一顆的例外**（2026-09-02）。
+   *
+   * 🔴 使用者在 IDE 的標題列上看到七顆圖示：「我想要把**還原、清除**移到
+   * 工具列（像是處理行動版那樣），然後**只保留執行**，其他都移除」。
+   *
+   * 而「動作」這一類原本整類投影到標題列——一整類一個答案，說不出
+   * 「執行留下，其餘各自去別的地方」。
+   *
+   * > **一個以「種類」為單位的宣告，在同一種類裡出現兩種決定時就不夠用了
+   * > ——而那時要加的是【指名的例外】，不是再分一個種類。**
+   *
+   * ⚠️ 它是**例外表**，不是第二份宣告：沒有指名的仍然照種類走。
+   */
+  readonly byId?: Readonly<Partial<Record<ControlId, ControlSurface>>>
+}
 
-/** 這一顆投影到哪個表面。 */
+/** 這一顆投影到哪個表面。⚠️ **指名的例外優先**（見 `byId`）。 */
 export function surfaceOf(spec: ControlSpec, surfaces: ControlSurfaces): ControlSurface {
-  return surfaces[spec.kind]
+  return surfaces.byId?.[spec.id] ?? surfaces[spec.kind]
 }
 
 /** 這個宿主要不要自己畫這一顆。 */
 export function drawnByPanel(spec: ControlSpec, surfaces: ControlSurfaces): boolean {
-  return surfaces[spec.kind].startsWith('panel')
+  return surfaceOf(spec, surfaces).startsWith('panel')
 }
 
 /** 這個宿主的面板要建哪些控制項。 */

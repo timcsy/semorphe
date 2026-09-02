@@ -87,13 +87,19 @@ const blocks = await page.evaluate(() => {
   //
   // > **一個只問「存在嗎」的檢查，答得出「在」，
   // > 答不出「使用者看得到嗎」——而後者才是驗收。**
-  // 🔴 這個宿主的**控制項全部投影出去了**，所以工具列與快速列都不該存在。
-  //    ⚠️ 量「有沒有那條列」還不夠——⬇️ 下面數的是**控制項**，
-  //       因為一條只剩商標的列也是浪費，而它 `seen()` 為真。
+  // 🔴 這個宿主的控制項**大部分**投影出去了，而 2026-09-02 起有三顆回來：
+  //    使用者：「我想要把**還原、清除**移到工具列（像是處理行動版那樣），
+  //    然後**只保留執行**，其他都移除」。
+  //
+  // ⚠️ 所以這裡不再數「幾顆」，而是列出**是哪幾顆**——數量對而東西不對
+  //    （例如風格選擇器又跑回面板裡）那個檢查會放行。
+  //
+  // > **一個只數數量的斷言，擋得住「多了一顆」，擋不住「換了一顆」。**
   工具列: seen('header'),
   快速列: seen('.quick-access-bar'),
-  面板內控制項: document.querySelectorAll(
-    '#toolbar select, #toolbar button, .quick-access-bar select, .quick-access-bar button').length,
+  面板內控制項: [...document.querySelectorAll(
+    '#toolbar select, #toolbar button, .quick-access-bar select, .quick-access-bar button')]
+    .map((e) => e.id || e.className).join('、'),
   狀態列: seen('footer'),
   積木畫布: seen('.injectionDiv'),
   // 🔴 **畫布要佔滿**——2026-08-25 使用者截圖：積木上面一大塊空白，
@@ -320,7 +326,15 @@ for (const w of WINDOWS) {
     const last = [...(window.__HOST__?.sent ?? [])].reverse().find((x) => x.type === 'controls')
     return {
       vis, handles: document.querySelectorAll('.grid-divider').length,
-      layoutOptions: ((last?.items ?? []).find((c) => c.id === 'layout')?.options ?? []).length,
+      // 🔴 **版面與開關要分開數**（2026-09-02）：選單裡除了三張版面，還多了
+      //    「顯示／隱藏下方面板」——它有值而**沒有示意圖**，因為它不是版面。
+      layoutOptions: ((last?.items ?? []).find((c) => c.id === 'layout')?.options ?? [])
+        .filter((o) => !!o.previewGrid).length,
+      // 🔴 **兩頁各一個開關**（2026-09-02）：主控台與變數，而標籤要說得出
+      //    「顯示」還是「隱藏」——所以這裡連標籤一起帶出來看。
+      consoleToggle: ['__toggle-console', '__toggle-variables'].every((v) =>
+        ((last?.items ?? []).find((c) => c.id === 'layout')?.options ?? [])
+          .some((o) => o.value === v && !o.previewGrid && /顯示|隱藏|Show|Hide/.test(o.label ?? ''))),
       // ⚠️ 數**分頁按鈕那一區**，不是整條列——那條列上還有清除鈕與槽選擇器。
       tabs: document.querySelectorAll('.bottom-panel-tab-buttons button').length,
       // 🔴 **這一條就是整個視窗嗎**——第一版沒問，於是 `#editors` 空著佔了
@@ -334,7 +348,7 @@ for (const w of WINDOWS) {
     }
   })
   const ok = m.booted && m.vis.length === 1 && m.vis[0] === w.cell &&
-    m.handles === 0 && m.layoutOptions === 3 && errs.length === 0 &&
+    m.handles === 0 && m.layoutOptions === 3 && m.consoleToggle && errs.length === 0 &&
     (w.tabs === undefined || m.tabs === w.tabs) &&
     // 獨佔的視窗：編輯區不畫，而那一條要吃掉九成以上的高度
     (!w.solo || (m.editorsHidden && m.fill >= 90))
@@ -347,6 +361,7 @@ for (const w of WINDOWS) {
   console.log(`  ${w.label}：${m.booted ? m.vis.join(', ') || '🔴 一格都沒有' : '🔴 沒開起來'}` +
     `｜把手 ${m.handles}${m.handles ? ' 🔴' : ''}` +
     `｜版面 ${m.layoutOptions === 3 ? '三張・由 IDE 排' : `🔴 ${m.layoutOptions} 張`}` +
+    `｜下方面板開關 ${m.consoleToggle ? '兩頁都在' : '🔴 缺'}` +
     (w.tabs === undefined ? '' : `｜分頁 ${m.tabs}${m.tabs === w.tabs ? '' : ` 🔴 該有 ${w.tabs}`}`) +
     (w.solo ? `｜佔滿 ${m.fill}%${m.editorsHidden && m.fill >= 90 ? '' : ' 🔴'}` : '') +
     `${errs.length ? `｜🔴 ${errs.length} 則錯誤：${errs[0].slice(0, 80)}` : ''} ${ok ? '🟢' : ''}`)
@@ -486,7 +501,11 @@ const ok = !fatal && errors.length === 0 && failures.length === 0
   && 主控台在panel區 && windowsOk
   && blocks.積木畫布
   // 🔴 **控制項在這個宿主裡歸零**——驗收②。⚠️ 而工具箱與畫布不變（下面兩格）。
-  && blocks.面板內控制項 === 0 && !blocks.工具列 && !blocks.快速列
+  // 🔴 面板裡**只該有這三顆 ＋ 那一格的下拉**（見上面的量測）。
+  // ⚠️ 2026-09-02 修正：↩↪ **留在標題列**（＝網頁版的全域標頭），
+  //    面板裡只留「清空」——它清的是這一格的內容。
+  && blocks.面板內控制項 === 'slot-picker、clear-btn'
+  && !blocks.工具列
   // 🔴 畫布沒佔滿＝有一塊空白在跟它分高度（使用者 2026-08-25 截圖）
   && blocks.畫布佔比 >= 90
   // 🔴 而它們要真的到了宿主手上——**「消失」與「搬家」的差別就在這一格**。

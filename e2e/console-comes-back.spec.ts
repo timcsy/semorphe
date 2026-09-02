@@ -92,3 +92,68 @@ test('🔴 關掉 → 切版面 → 它【不准】被打開', async ({ page }) 
     expect(await isOpen(page), `🔴 切到「${id}」把主控台打開了——那是使用者關掉的`).toBe(false)
   }
 })
+
+test('🔴 版面選單裡的「顯示／隱藏主控台面板」真的開得起來也關得掉', async ({ page }) => {
+  // 使用者 2026-09-02：「我想要加一個『顯示/隱藏下方面板』的功能
+  // （加在單欄、對照、三欄的下方）」。
+  //
+  // ⚠️ 而它**不是第四張版面**：三張版面說的是編輯區怎麼排，而主控台是
+  //    編輯區底下那條獨立的底條（spec 171）。這一條驗的是它真的接上了開關。
+  await freshApp(page)
+  expect(await isOpen(page), '🔴 開機主控台就是關的 → 這支測的不是那條路').toBe(true)
+
+  const pickToggle = async (): Promise<void> => {
+    await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
+    await expect(page.locator('.quick-pick-overlay')).toHaveCount(1)
+    await page.locator('.quick-pick-item[data-value="__toggle-console"]').click()
+    await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+    await page.waitForTimeout(300)
+  }
+
+  await pickToggle()
+  expect(await isOpen(page), '🔴 選了「顯示／隱藏」而它沒有關掉').toBe(false)
+  await pickToggle()
+  expect(await isOpen(page), '🔴 再選一次而它沒有回來——那不是開關，是「關掉」').toBe(true)
+})
+
+test('⚠️ 而它不得被當成一張版面——按了之後版面的名字不准變', async ({ page }) => {
+  // 🔴 少了這一條，一個把 `__console-toggle` 當成 preset id 的實作也會綠：
+  //    畫面上主控台收起來了，而狀態列上那顆會顯示一個**不存在的版面名字**。
+  await freshApp(page)
+  const before = await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').innerText()
+  await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
+  await page.locator('.quick-pick-item[data-value="__toggle-console"]').click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  await page.waitForTimeout(300)
+  expect(await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').innerText(),
+    '🔴 版面的名字被開關改掉了').toBe(before)
+  expect(await page.evaluate(() => document.body.getAttribute('data-layout')),
+    '🔴 `data-layout` 被開關改掉了').toBe('compare')
+})
+
+test('🔴 標籤說的是【按下去會發生什麼】——開著寫「隱藏」，關著寫「顯示」', async ({ page }) => {
+  // 使用者 2026-09-02：「如果現在已經是開著的，就是『隱藏…面板』」。
+  //
+  // > **一個開關如果兩種狀態都叫同一個名字，
+  // > 使用者要按下去才知道它剛才是開還是關。**
+  await freshApp(page)
+  const labelOf = async (v: string): Promise<string> => {
+    await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
+    await expect(page.locator('.quick-pick-overlay')).toHaveCount(1)
+    const t = await page.locator(`.quick-pick-item[data-value="${v}"]`).innerText()
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+    return t
+  }
+  // 開機時主控台是開著的、變數沒有
+  expect(await labelOf('__toggle-console'), '🔴 開著卻寫「顯示」').toContain('隱藏')
+  expect(await labelOf('__toggle-variables'), '🔴 沒開卻寫「隱藏」').toContain('顯示')
+
+  // 切到變數那一頁 → 兩個標籤要對調
+  await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
+  await page.locator('.quick-pick-item[data-value="__toggle-variables"]').click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  await page.waitForTimeout(300)
+  expect(await labelOf('__toggle-variables'), '🔴 切過去了而它還寫「顯示」').toContain('隱藏')
+  expect(await labelOf('__toggle-console'), '🔴 主控台那一頁被蓋掉了而它還寫「隱藏」').toContain('顯示')
+})

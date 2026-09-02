@@ -217,10 +217,32 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
     }
     // ⚠️ **註解裡提到它不算**（那是說明，不是分支）——與第 60 條的
     //    `profile.id ===` 掃描同一個形狀。第一版沒排掉註解，配到自己寫的說明。
-    const branching = panelSrc.split('\n')
-      .filter((line) => !/^\s*(\*|\/\/|\/\*)/.test(line))
-      .filter((line) => /vscode\.env\.(appName|appHost)/.test(line))
-    expect(branching, '🔴 用身分猜能力——那正是這個專案明令禁止的').toEqual([])
+    //
+    // 🪦 **這一條 2026-09-02 從「不准問身分」改成「只准在一個地方問」。**
+    //
+    //    當天撞到兩件**探測不出來**的事（都查證過 bundle）：Arduino IDE 的
+    //    `tabGroups.close`／`TabInputText` 都在而**關不掉檔案分頁**；
+    //    `WebviewView.visible` 與 `document.hidden` **同時**說謊。
+    //
+    // > **能力探測問的是「你有沒有這個方法」，而那兩題問的是「你做了會怎樣」
+    // > ——後者只有做過一次才知道。**
+    //
+    // 🟢 所以規則的形狀變成：名單住在 `host-quirks.ts`（每一筆附病歷 ＋
+    //    都有「實測會降級」的第二層），而**其餘每一個檔一律不准**
+    //    ——⚠️ 掃的範圍因此從一個檔擴大到整個 `src/vscode/`，比原本更嚴。
+    const HOST_QUIRKS = 'src/vscode/host-quirks.ts'
+    const scanned = fs.readdirSync('src/vscode')
+      .filter((f) => f.endsWith('.ts') && `src/vscode/${f}` !== HOST_QUIRKS)
+    expect(scanned.length, '★ 一個檔都沒掃到 → 下面的 0 是假的').toBeGreaterThan(3)
+    const branching = scanned.flatMap((f) =>
+      fs.readFileSync(`src/vscode/${f}`, 'utf8').split('\n')
+        .filter((line) => !/^\s*(\*|\/\/|\/\*)/.test(line))
+        .filter((line) => /vscode\.env\.(appName|appHost)/.test(line))
+        .map((line) => `${f}: ${line.trim()}`))
+    expect(branching, `🔴 用身分猜能力——只准住在 ${HOST_QUIRKS}（那裡每一筆都有病歷）`)
+      .toEqual([])
+    // 🔴 而那個檔**必須真的存在**——不然上面那條在說一個不存在的例外。
+    expect(fs.existsSync(HOST_QUIRKS), '🔴 例外的家不見了').toBe(true)
   })
 
   it('⚠️ 其餘投影到宿主的用原始碼檢查——比較弱，弱在它讀的是文字不是行為', () => {

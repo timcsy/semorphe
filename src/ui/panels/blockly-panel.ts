@@ -1552,11 +1552,26 @@ export class BlocklyPanel implements ViewHost {
       const spec = this.blockSpecRegistry.getAll().find(s => s.blockDef?.type === block.type)
       const componentId = spec?.componentMapping?.componentId
       // If block has no component (unknown/custom), treat as visible
+      //
+      // 🔴 **只掛類別，不要在這裡設 `opacity`**（2026-09-02）。
+      //
+      //    `svgRoot.style.opacity = '0.35'` 蓋在積木的 `<g>` 上，而 SVG 的
+      //    `opacity` **會套用到整個子樹**——於是一顆超出範圍的 `setup`
+      //    把裡面的註解、以及學生自己寫的積木**全部一起打暗**。
+      //    使用者：「怎麼連註解也是淡的？」
+      //
+      // 🪦 這正是 2026-08-28 在**鷹架**那一層學過的同一課
+      //    （`.ghost-block` 用直接子代選擇器），而**這一層沒有跟上**。
+      //
+      // > **同一個教訓在兩個地方各犯一次，第二次不是「又犯了」
+      // > ——是第一次修的時候只修了看得到的那一半。**
+      //
+      // 🟢 淡成什麼樣交給 CSS（`.out-of-scope-block > …`），與鷹架同一種寫法。
       if (!componentId || visibleComponents.has(componentId)) {
         svgRoot.style.opacity = ''
         svgRoot.classList.remove('out-of-scope-block')
       } else {
-        svgRoot.style.opacity = '0.35'
+        svgRoot.style.opacity = ''
         svgRoot.classList.add('out-of-scope-block')
       }
     }

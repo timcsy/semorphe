@@ -154,6 +154,8 @@ export class SyncController {
   private codePatcherFn: ((code: string, tree: SemanticNode) => string | null) | null = null
   private scaffoldNodeFilter: ScaffoldNodeFilter = identityFilter
   private displayTreeEnhancer: ((tree: SemanticNode, visible: Set<string>, scaffoldVisible: boolean) => SemanticNode) | null = null
+  /** 最後一次真的畫出去的那棵樹（增強器補過）——見 `getDisplayTree()`。 */
+  private lastDisplayTree: SemanticNode | null = null
 
   constructor(
     bus: SemanticBus,
@@ -274,10 +276,33 @@ export class SyncController {
 
   /** Apply the display tree enhancer (if set) and return the enhanced tree. */
   private enhanceDisplayTree(tree: SemanticNode): SemanticNode {
-    if (!this.displayTreeEnhancer || !this.currentTopic) return tree
-    const visible = getVisibleComponents(this.currentTopic, this.enabledBranches)
-    const scaffoldVisible = !this.shouldStripScaffold()
-    return this.displayTreeEnhancer(tree, visible, scaffoldVisible)
+    const enhanced = (!this.displayTreeEnhancer || !this.currentTopic)
+      ? tree
+      : this.displayTreeEnhancer(
+        tree,
+        getVisibleComponents(this.currentTopic, this.enabledBranches),
+        !this.shouldStripScaffold(),
+      )
+    // 🔴 **畫出來的是這一棵，不是 `currentTree`**（2026-09-02）。
+    //
+    //    使用者：「include 和 using 應該也要是淡的才對」——它們**是**骨架
+    //    （兩顆元件都宣告了 `scaffold: true`），而「哪幾顆要畫成淡的」是拿
+    //    `currentTree` 去算的，那棵樹裡**沒有**增強器補上去的節點
+    //    ——於是它們畫得出來，卻沒有人認得它們。
+    //
+    // > **一層「畫完之後蓋上去」的視覺，如果問的樹跟畫的樹不是同一棵，
+    // > 它蓋不到那些只存在於畫的那棵上的東西。**
+    this.lastDisplayTree = enhanced
+    return enhanced
+  }
+
+  /**
+   * **畫布上那一棵**——增強器補過的顯示樹。沒有畫過就退回真相那一棵。
+   *
+   * ⚠️ 要問「畫面上這一塊是什麼」就問它；要問「真相是什麼」問 `getCurrentTree()`。
+   */
+  getDisplayTree(): SemanticNode | null {
+    return this.lastDisplayTree ?? this.currentTree
   }
 
   /** Set a language-specific code patcher for auto-fixing missing dependencies after code→blocks */

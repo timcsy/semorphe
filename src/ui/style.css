@@ -272,6 +272,8 @@ html, body {
 #editors > #bottom-container {
   border: 1px solid #3c3c3c;
   border-radius: 3px;
+  /* ⚠️ 收合鈕是絕對定位的，它要以**這一格**為基準（見 `.cell-narrow`）。 */
+  position: relative;
   /* ⚠️ 邊框要算進格子的尺寸裡，否則四格等大那條（SC-005）會差 2px */
   box-sizing: border-box;
 }
@@ -633,24 +635,35 @@ html, body {
  *
  * 理由是拇指：頂端置中的清單在手機上按不到，而**一個按不到的選單
  * 與一個不存在的選單，在單手拿著手機的那個人身上是同一件事。**
+ *
+ * ⚠️ **每一條都要掛 `body:not(.host-no-mobile-layout)`**（2026-09-02 補）。
+ *
+ * 使用者在 Arduino IDE 裡點開槽的下拉：「**選單可以不要開在下面嗎**？」
+ * ——而它開在下面，是因為那塊面板只有 640px 寬，**寬度斷點把它當成手機了**。
+ *
+ * 🔴 那不是新病：2026-08-18 的行動版分頁列是**同一個形狀**（見 `app-shell`
+ * 的 `host-no-mobile-layout`）。當時修好了分頁列那一段，而這一段漏了。
+ *
+ * > **一個「這個宿主沒有行動版」的宣告，要是有一條 CSS 規則沒有問它，
+ * > 那條規則就會在一塊窄面板上自己決定使用者拿的是手機。**
  */
 @media (max-width: 768px) {
-  .quick-pick-overlay {
+  body:not(.host-no-mobile-layout) .quick-pick-overlay {
     align-items: flex-end;
     background: rgba(0, 0, 0, 0.4);
   }
 
-  .quick-pick {
+  body:not(.host-no-mobile-layout) .quick-pick {
     margin-top: 0;
     width: 100%;
     border-radius: 12px 12px 0 0;
   }
 
-  .quick-pick-list {
+  body:not(.host-no-mobile-layout) .quick-pick-list {
     max-height: 60vh;
   }
 
-  .quick-pick-item {
+  body:not(.host-no-mobile-layout) .quick-pick-item {
     padding: 10px 14px;
     font-size: 15px;
   }
@@ -982,6 +995,31 @@ html, body {
 .bottom-panel-tab-actions {
   display: flex;
   margin-right: 4px;
+}
+
+/*
+ * 🔴 **面板自己的那兩顆**（最大化／關閉）——排在最右邊，與分頁的動作
+ * 隔一條細線（VSCode 面板右上角就是這個形狀，使用者指著它說「網頁版也要」）。
+ *
+ * ⚠️ 它們**不隨分頁改變**，所以視覺上要與「這一頁的動作」分得出來。
+ */
+.bottom-panel-actions {
+  display: flex;
+  gap: 2px;
+  margin-left: 4px;
+  padding-left: 6px;
+  border-left: 1px solid #3c3c3c;
+}
+
+.bottom-panel-actions .bottom-panel-action-btn {
+  border-color: transparent;
+  padding: 2px 7px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.bottom-panel-actions .bottom-panel-action-btn:hover {
+  border-color: #555;
 }
 
 .bottom-panel-action-btn {
@@ -1478,6 +1516,19 @@ html, body {
  * 所以用**直接子代選擇器**：骨架自己的路徑與欄位變淡，
  * 而巢狀的積木（Blockly 的子積木也是 `.blocklyDraggable`）不受影響。 */
 .ghost-block > .blocklyPath {
+  /* 🪦 **2026-09-02 換成 `filter: saturate() brightness()`，當天又換回來。**
+   *
+   *    換過去的理由是「半透明讓坐在它裡面的東西背景是透的，看起來也灰」
+   *    ——而那個現象的**真正來源是另外兩個缺陷**（超出範圍用 `<g>` 的 opacity
+   *    吃掉子樹、註解被課程範圍打暗）。那兩個修好之後，這裡就沒有理由改。
+   *
+   *    使用者：「淡的地方的樣式好像跟以前不太一樣，以前的比較好看」——他是對的：
+   *    `brightness()` 把粉紅壓成了濁掉的暗紅，而 `opacity` 是讓它**往背景退**，
+   *    色相還在。
+   *
+   * > **看到一個現象就改離它最近的那一行，會把一個【對的東西】改成錯的
+   * > ——而真正的原因還在原地。**
+   */
   opacity: 0.4;
   stroke-dasharray: 4 3;
 }
@@ -1498,6 +1549,33 @@ html, body {
 .ghost-block > text,
 .ghost-block > .blocklyText {
   opacity: 0.4;
+}
+
+/*
+ * **超出範圍的積木**——這一課不該用到的那些。
+ *
+ * 🔴 **只淡它自己那一層**（2026-09-02）：在此之前它是
+ * `svgRoot.style.opacity = '0.35'`，而 SVG 的 `opacity` 蓋在 `<g>` 上
+ * **會套用到整個子樹**——一顆超出範圍的 `setup` 把裡面的註解與學生的積木
+ * 全部一起打暗（使用者：「怎麼連註解也是淡的？」）。
+ *
+ * 🪦 與 `.ghost-block` 是**同一個教訓**（2026-08-28「裡面的東西不見了」），
+ * 而那一次只修了鷹架那一層。
+ *
+ * > **同一個教訓在兩個地方各犯一次，第二次不是「又犯了」
+ * > ——是第一次修的時候只修了看得到的那一半。**
+ */
+.out-of-scope-block > .blocklyPath {
+  opacity: 0.35;
+}
+
+.out-of-scope-block > .blocklyLabelField,
+.out-of-scope-block > .blocklyField,
+.out-of-scope-block > .blocklyImageField,
+.out-of-scope-block > .blocklyIconGroup,
+.out-of-scope-block > text,
+.out-of-scope-block > .blocklyText {
+  opacity: 0.35;
 }
 
 /* ─── Block toolbar (above Blockly panel) ─── */
@@ -2031,64 +2109,16 @@ html, body {
     overflow-y: auto !important;
   }
 
-  /* Toolbox collapse button for mobile */
-  body:not(.host-no-mobile-layout) .toolbox-collapse-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 200;
-    width: 22px;
-    height: 44px;
-    background: #333;
-    border: 1px solid #555;
-    border-left: none;
-    border-radius: 0 6px 6px 0;
-    color: #ccc;
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    touch-action: manipulation;
-  }
-
-  body:not(.host-no-mobile-layout) .toolbox-collapse-btn:active {
-    background: #444;
-  }
+  /* ⚠️ 同上：形狀在共用層，這裡只說「行動版要看得到」。 */
+  body:not(.host-no-mobile-layout) .toolbox-collapse-btn { display: flex; }
 
   /* 流程視圖的分類條收合鈕——**與上面那顆同一個形狀**（使用者：
      「行動版的話仿照 Blockly 那邊的收合按鈕就好」）。
      ⚠️ 差別只在定位：這裡的分類條是排版的一部分，所以按鈕貼在它右緣，
      用 `flex` 的順序就位，不必像 Blockly 那顆去算 `left`。 */
-  body:not(.host-no-mobile-layout) .flow-palette-toggle {
-    display: flex;
-    /* 🔴 **絕對定位，而 `left` 跟著「目前展開到哪裡」走**（2026-08-30）。
-       在此之前它是 flex 的一員，於是永遠停在**分類條的右緣**
-       ——而它收的是**整個** palette（兩層）。第二層一打開，
-       它就被夾在 x=84..106 那條 22px 的縫裡，看起來不屬於任何一邊。
-
-       > 一顆按鈕的位置在說「我管的是這一塊」。
-       > 它管兩層而站在第一層的邊上，那句話就是錯的。 */
-    position: absolute;
-    left: var(--flow-toolbox-w);
-    top: 50%;
-    transform: translateY(-50%);
-    flex: none;
-    z-index: 20;
-    width: 22px;
-    height: 44px;
-    background: #333;
-    border: 1px solid #555;
-    border-left: none;
-    border-radius: 0 6px 6px 0;
-    color: #ccc;
-    font-size: 12px;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    touch-action: manipulation;
-  }
-  body:not(.host-no-mobile-layout) .flow-palette-toggle:active { background: #444; }
+  /* ⚠️ **形狀在共用層**（見 `.toolbox-collapse-btn, .flow-palette-toggle`）
+     ——這裡只說「行動版要看得到」。 */
+  body:not(.host-no-mobile-layout) .flow-palette-toggle { display: flex; }
 
   /* ⚠️ 行動版的畫布窄，分類條也跟著窄一點。
      🔴 **三個數字收成變數**：收合鈕要算「展開到哪裡」，而那個座標
@@ -2489,11 +2519,65 @@ html, body {
   flex: none; width: 10px; height: 10px; border-radius: 2px; background: #666;
 }
 
-/* 🔴 **收合鈕只在行動版出現**（2026-08-27）。
-   桌機上分類條靠邊排版、96px、不蓋任何東西——**沒有理由收它**，
-   而一顆沒有理由按的按鈕佔的是工具列最貴的那塊地方。
-   形狀照抄積木那側的 `.toolbox-collapse-btn`。 */
-.flow-palette-toggle { display: none; }
+/* 🪦 **「收合鈕只在行動版出現」那條規則 2026-09-02 放寬了**（2026-08-27 的理由是
+   「桌機上分類條靠邊排版、96px、不蓋任何東西——沒有理由收它」）。
+   而三欄／IDE 的一欄只有三百多像素時**理由就出現了**——見下面的 `.cell-narrow`。 */
+/*
+ * 🔴 **收合鈕的形狀住在這裡一份**（2026-09-02）。
+ *
+ * 它有**兩個**出現的理由，而形狀是同一個：
+ *
+ * ```
+ * 行動版      畫面就是窄的
+ * 桌機的窄欄  三欄／IDE 的面板一欄只有三百多像素
+ *             （使用者：「我希望側欄在畫面太小時可以顯示收合按鈕，像行動版那樣」）
+ * ```
+ *
+ * > **同一顆按鈕因為兩個理由出現，理由可以有兩個，形狀只能有一份。**
+ */
+.toolbox-collapse-btn,
+.flow-palette-toggle {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  flex: none;
+  z-index: 200;
+  width: 22px;
+  height: 44px;
+  background: #333;
+  border: 1px solid #555;
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  color: #ccc;
+  font-size: 12px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.toolbox-collapse-btn:active,
+.flow-palette-toggle:active { background: #444; }
+
+.flow-palette-toggle { left: var(--flow-toolbox-w, 96px); z-index: 20; }
+.flow-panel.flow-palette-closed .flow-palette-toggle { left: 0; }
+.flow-panel.flow-flyout-open .flow-palette-toggle {
+  left: calc(var(--flow-palette-left, 96px) + var(--flow-palette-w, 168px));
+}
+
+/*
+ * 🔴 **窄欄才出現**（2026-09-02）——判準是**那一格的寬度**，不是視窗寬度。
+ *
+ * ⚠️ 一欄窄不窄與整個視窗窄不窄是兩件事：三欄版面在很寬的螢幕上，
+ * 每一欄仍然只有三百多像素。所以標記掛在**那一格**上（`cell-narrow`，
+ * 由 `app-shell` 的 `ResizeObserver` 量了才加），不是靠媒體查詢猜。
+ *
+ * > **「畫面太小」在多欄版面裡不是一個視窗的性質，是【每一格各自的】性質。**
+ */
+.cell-narrow .toolbox-collapse-btn,
+.cell-narrow .flow-palette-toggle { display: flex; }
+
 
 /* 彈出的那一格——**暫時的**：拖曳一開始就收（見 `closeFlyout`）。 */
 .flow-palette {
@@ -2627,6 +2711,17 @@ html, body {
 
 #mobile-action-bar .bottom-panel-tab-actions {
   margin-right: 0;
+}
+
+/* 🔴 **面板自己的那兩顆（⛶／✕）在行動版不畫**（2026-09-02）。
+   它們是給「編輯區與面板並存」的桌面版的：手機上面板本來就是一個佔滿的分頁，
+   「最大化」沒有意義，而「關閉」會讓這一列自己把回去的路關掉。
+   ⚠️ 而 e2e 量到的代價是具體的：這一列只有 390px，多這兩顆之後
+   分頁與動作之間只剩 83px（該 > 97.5），「一左一右分開」看起來就不成立了。
+   > **一顆在寬的地方剛好的按鈕，搬到窄的地方會先擠掉的是【留白】
+   > ——而留白正是那裡唯一在說「這兩組不是同一組」的東西。** */
+#mobile-action-bar .bottom-panel-actions {
+  display: none;
 }
 
 /*

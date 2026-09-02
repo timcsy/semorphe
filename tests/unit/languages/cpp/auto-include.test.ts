@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeAutoIncludes } from '../../../../src/languages/cpp/auto-include'
+import { computeAutoIncludes, autoIncludeNodes } from '../../../../src/languages/cpp/auto-include'
 import { createPopulatedRegistry } from '../../../../src/languages/cpp/std'
 import { createNode } from '../../../../src/core/semantic-tree'
 
@@ -151,5 +151,29 @@ describe('Auto-include engine', () => {
       expect(edge.sourceType).toBe('stdlib')
       expect(edge.reason).toBeDefined()
     })
+  })
+})
+
+// 🔴 **補丁器往程式碼裡加兩種東西，而樹裡本來只回得來一種**（2026-09-02）。
+//
+//    使用者：「為何 `using namespace std;` 不見了？」——那一句是補丁器加的，
+//    從來沒有被放回樹裡，於是下一次「從真相重新投影」就沒有它。
+//
+// > **一個只存在於某一個投影上的東西，在下一次重新投影的時候就會消失。**
+describe('autoIncludeNodes：using 那一句也要回到樹裡', () => {
+  const edges = [{ header: '<iostream>', directive: '#include <iostream>' }] as never[]
+
+  it('using 風格 → 引入之後接一顆 cpp:using_namespace', () => {
+    const nodes = autoIncludeNodes(edges, 'using')
+    expect(nodes.map((n) => n.componentId)).toEqual(['cpp:include', 'cpp:using_namespace'])
+    expect(nodes[1].properties.ns).toBe('std')
+  })
+
+  it('explicit 風格 → 只有引入（std:: 是寫在用的地方，不是一句宣告）', () => {
+    expect(autoIncludeNodes(edges, 'explicit').map((n) => n.componentId)).toEqual(['cpp:include'])
+  })
+
+  it('沒有任何相依 → 一顆都不補（連 using 都不補）', () => {
+    expect(autoIncludeNodes([], 'using')).toEqual([])
   })
 })

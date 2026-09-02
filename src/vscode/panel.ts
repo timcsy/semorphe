@@ -29,6 +29,8 @@
 import * as vscode from 'vscode'
 import { csp, renderHtml } from './webview-html'
 import { isDocumentWriter, type VscodeViewKind } from './vscode-profile'
+import { shouldRevealForConsoleMessage, bottomPageOf, type BottomPage } from '../core/host/console-surface'
+import { hostName, hostCanCloseEditors, hostSeesPanelVisibility } from './host-quirks'
 import { layoutPreset, type LayoutPresetId } from '../core/host/layout-presets'
 import type { UnderstandingLayer } from '../core/view-host'
 import { EchoGuard } from './sync/echo-guard'
@@ -228,6 +230,14 @@ interface SessionSurface {
   readonly webview: vscode.Webview
   /** ⚠️ panel 區的視圖沒有「欄」的概念——它會忽略這個參數。 */
   reveal(column?: vscode.ViewColumn): void
+  /** 我現在在哪一欄。⚠️ panel 區的視圖沒有欄——它回 `undefined`。 */
+  column?(): vscode.ViewColumn | undefined
+  /** 換分頁上的標題——⚠️ 它換的是**顯示的名字**，不是 `viewType`（那個改不了）。 */
+  setTitle?(title: string): void
+  /** 現在看得見嗎。⚠️ panel 區的視圖有 `visible`，編輯器區的分頁也有。 */
+  isVisible?(): boolean
+  // 🪦 `close?()` 退場（2026-09-02）：切換視圖時**一個面板都不關**
+  //    ——見 `showLayer` 的檔頭（使用者：「現在切到流程積木就不見了」）。
 }
 
 class SemorpheSession {
@@ -263,6 +273,7 @@ class SemorpheSession {
     kind: VscodeViewKind = 'blocks') {
     this.panel = panel
     this.kind = kind
+    this.currentLayer = kind === 'flow' ? 'relation' : 'space'
     this.extensionUri = extensionUri
     this.viewStates = new ViewStateStore(mementoStore(memento))
     this.docPrefs = new DocPrefStore(prefStore(memento))
@@ -551,8 +562,24 @@ class SemorpheSession {
     // > **投影要自己算；資料流本來就只有一個源頭。**
     if (m.type === 'console') {
       // 🔴 **記住誰在跑**——等一下使用者在主控台打的那一行要送回去給它。
-      if (m.awaitingInput !== undefined) runner = this
+      //    ⚠️ 任何一則都算（清空也是「這個視窗要開跑了」），不只是等輸入那一則。
+      runner = this
       sessions.get('console')?.sendConsoleOut(m)
+      return
+    }
+    if (m.type === 'showLayer') { await this.showLayer(m.layer); return }
+    if (m.type === 'pickLayer') { await this.pickLayer(m.title, m.items); return }
+    if (m.type === 'viewVisible') {
+      if (this.reportedVisible !== m.visible) {
+        this.reportedVisible = m.visible
+        broadcastBottomVisibility()
+      }
+      return
+    }
+    if (m.type === 'toggleConsole') { await toggleHostConsole(m.page); return }
+    if (m.type === 'execStatus') {
+      runner = this
+      sessions.get('console')?.sendExecStatus(m.status, m.reason)
       return
     }
     if (m.type === 'variables') {
@@ -565,7 +592,12 @@ class SemorpheSession {
       runner?.sendConsoleInput(m.line)
       return
     }
-    if (m.type === 'ready') { this.resend(); return }
+    if (m.type === 'ready') {
+      this.resend()
+      // ⚠️ 面板剛起來，它還不知道這個宿主做得到什麼。
+      this.sendHostCaps(canSwapEditor)
+      return
+    }
     if (m.type === 'requestDocument') {
       // 積木那側說它的鏡像對不上 → 宿主是權威，重送。
       if (this.doc) this.sendDocument(this.doc)
@@ -587,6 +619,17 @@ class SemorpheSession {
       for (const line of m.lines) OUTPUT.appendLine(`  ${line}`)
       // 🔴 **宿主這側的時間軸也要印**——見 `hostNote` 的檔頭：
       //    面板那側的「什麼都沒收到」答不出「有沒有人送」。
+      OUTPUT.appendLine('')
+      // 🔴 **宿主能力也印在這裡**（2026-09-02）。
+      //
+      //    我本來把它零散地 `appendLine` 到輸出頻道，而**診斷這一支開頭會
+      //    `OUTPUT.clear()`**——於是使用者跑一次診斷，那幾行就被洗掉了。
+      //
+      // > **一個只在別的時間點印過一次的訊息，等於沒有印
+      // > ——診斷要印的是【現在問得到的答案】，不是【曾經印過的字】。**
+      OUTPUT.appendLine('')
+      OUTPUT.appendLine('  宿主能力：')
+      for (const line of hostCapsReport) OUTPUT.appendLine(`    ${line}`)
       OUTPUT.appendLine('')
       OUTPUT.appendLine(`  宿主時間軸（序號｜距上一則｜視窗｜事件）｜目前開著：${[...sessions.keys()].join('、')}`)
       if (HOST_LOG.length === 0) OUTPUT.appendLine('    （空——文件從頭到尾沒有變過）')
@@ -860,13 +903,173 @@ class SemorpheSession {
     this.send({ type: 'consoleInput', line })
   }
 
+  /** 這一輪執行已經把主控台叫回來過了嗎——見 `shouldRevealForConsoleMessage`。 */
+  private revealedThisRun = false
+
   /** 別的視窗在跑，而這個視窗（主控台）要把它畫出來。 */
   sendConsoleOut(m: { chunk?: string; clear?: boolean; awaitingInput?: string }): void {
     this.send({ type: 'consoleOut', chunk: m.chunk, clear: m.clear, awaitingInput: m.awaitingInput })
-    // 🔴 **有輸出就自己回來**——與網頁版同一條規則（`core/host/console-surface.ts`）。
-    //    ⚠️ 這裡不能共用那支函式：宿主沒有「它現在收起來了嗎」這個問題的答案，
-    //    而 `show(preserveFocus)` 對一個已經開著的視圖是**無害的**。
+    // 🔴 **有輸出就自己回來，而「有輸出」的主詞是輸出**
+    //    （使用者 2026-09-02：「好像被卡在主控台，而且我點其他的 tab 是
+    //     切不過去的」——我本來在每一則上都叫了一次，`clear` 也算）。
+    if (m.clear) { this.revealedThisRun = false; return }
+    if (!shouldRevealForConsoleMessage(m, this.revealedThisRun)) return
+    this.revealedThisRun = true
     this.panel.reveal()
+  }
+
+  /**
+   * **這個分頁現在畫哪一層**——⚠️ 它是**可變的**（2026-09-02）。
+   *
+   * 🔴 `kind` 是這個分頁的**身分**（`viewType` 一旦建立就不能改，標題列的
+   * `when` 也綁著它）；而它**畫哪一層**是可以換的——使用者要的是
+   * 「欄位數不變，裡面的內容置換」。
+   *
+   * > **一個視窗的身分與它現在顯示什麼，不是同一件事
+   * > ——而把它們寫成同一個欄位，就換不動了。**
+   */
+  private currentLayer: UnderstandingLayer
+
+  get layer(): UnderstandingLayer {
+    return this.currentLayer
+  }
+
+  /** 換掉這個分頁畫的那一層——⚠️ 分頁不搬家、不重建。 */
+  setLayer(l: UnderstandingLayer): void {
+    if (l === this.currentLayer) return
+    this.currentLayer = l
+    this.send({ type: 'setLayer', layer: l })
+    this.panel.setTitle?.(l === 'relation' ? TITLES.flow : TITLES.blocks)
+  }
+
+  /**
+   * 這個分頁現在看得見嗎——**兩個證人都說是，才算是**（2026-09-02）。
+   *
+   * ```
+   * 宿主說的  `WebviewView.visible`
+   *   ✅ VSCode 準
+   *   ❌ Arduino IDE：不是被選到的分頁，它仍然回 true
+   *      （使用者：「這邊應該是【顯示變數面板】吧」）
+   *
+   * webview 自己說的  `document.hidden`
+   *   ❌ VSCode：`retainContextWhenHidden` 讓收起來的 webview 仍然是 hidden=false
+   *      （使用者：「怎麼會兩個都隱藏？」）
+   * ```
+   *
+   * 🔴 兩個各自都會說謊，而**它們說謊的方向一樣**：都是把「看不見」講成
+   * 「看得見」。於是取 **AND**——兩個都說看得見才算。
+   *
+   * > **兩個都不可靠的訊號，如果它們錯的方向一致，交集就是可靠的。**
+   *
+   * ⚠️ 而萬一兩個都誤判成「看不見」：標籤會寫「顯示」而它其實開著，
+   * 按下去只是聚焦——**弄錯的方向要選代價小的那一邊**。
+   */
+  private reportedVisible: boolean | undefined
+  get isVisible(): boolean {
+    return (this.panel.isVisible?.() ?? true) && (this.reportedVisible ?? true)
+  }
+
+  /** 我這個分頁在哪一欄。 */
+  get columnOf(): vscode.ViewColumn | undefined {
+    return this.panel.column?.()
+  }
+
+  /**
+   * **把某一層換到我這一欄來**（2026-09-02）。
+   *
+   * 使用者在 IDE 裡點了槽上的下拉：「我希望點擊是可以**切換全部面板的選項**」。
+   *
+   * ## 🪦 這一支的做法換過兩次，而兩次都是使用者當場否決的
+   *
+   * ```
+   * ① 疊上來（開新的，舊的留在同一欄當另一個分頁）
+   *    使用者：「我覺得疊上來有點怪」
+   *    ——那顆下拉寫的是「這一格顯示」，而疊上來之後這一欄有兩個分頁，
+   *      「這一格顯示什麼」就有了兩個答案。
+   *
+   * ② 開新的、關掉舊的
+   *    使用者：「我比較想直接把內部 WebView 切換掉的感覺，
+   *              就是他原本已經存在，只是被喚醒然後移過來」
+   *    ——關掉等於**丟掉一個已經開好的視窗**，再開要重新載入膠囊與注入畫布。
+   * ```
+   *
+   * ```
+   * ③ 兩兩對調（把它 reveal 到我這一欄、我搬去它那一欄）
+   *    使用者：「三欄的比積木切到流程會只剩兩欄，剩程式和流程」
+   *    ——移走之後那一欄空了，宿主把空的群組收掉，欄的編號整個往前挪，
+   *      第二步就搬進了一個已經不是那個位子的欄。見 `placeColumns`。
+   * ```
+   *
+   * 🟢 **④ 在一張順序表上對調，然後【由左到右整排重擺】**（現在這一版）。
+   * 面板本來就開著，`reveal(column)` 做的是「移過去」——不重建、不丟狀態。
+   *
+   * 🔴 而這與**網頁版逐字相同**：那裡的槽下拉做的就是一次置換
+   * （`swapTo`——「選到別處的就對調」）。兩個宿主第一次是同一個語義。
+   *
+   * > **「這一格顯示 X」的自然結果不是「把原本那個關掉」，
+   * > 是「原本那個去 X 剛剛待的地方」——那才是一次對調。**
+   *
+   * ## ⚠️ 而「還沒開過的那一層」沒有位子可以換
+   *
+   * 🪦 曾經的退路是「開新的、**關掉自己**」——而使用者當場看到的是
+   * 「現在切到流程**積木就不見了**」。
+   *
+   * 🔴 **一個面板都不關**：沒有對象可以換的時候，那一層接管我這一格，
+   * 而我留在**同一欄的後面**（宿主的分頁）。它還活著，切回來是一次
+   * `reveal`（幾毫秒），不是重新載入。
+   *
+   * > **「疊上來」是一個不好的【切換】，但它是一個好的【保留】
+   * > ——而在沒有對象可以對調的那一格，選項只有保留或丟掉。**
+   */
+  /**
+   * **用宿主自己的選單問「這一格顯示什麼」**（2026-09-02）。
+   *
+   * 使用者：「為何選單不是像網頁那樣是全域的？」
+   *
+   * 🔴 因為一個 webview 只畫得到**自己那個矩形**——網頁版那個選單蓋住整個
+   * 視窗，是因為那裡整個視窗都是它的。在 IDE 裡 `position: fixed` 的盡頭
+   * 是這塊面板的邊界。
+   *
+   * 🟢 而宿主的選單**是全域的**，這條路這個專案早就在走：目標／課程／風格
+   * 那幾顆控制項都投影到 `vscode.window.showQuickPick`（`controlSurfaces`）。
+   *
+   * > **一個畫不出去的邊界，不是用更大的 z-index 解決的
+   * > ——是把那件事交給畫得出去的那個人。**
+   *
+   * ⚠️ 選項由 webview 那側給：標籤要 i18n，而那份字典在那裡。
+   */
+  private async pickLayer(
+    title: string,
+    items: readonly { value: string; label: string; description?: string }[],
+  ): Promise<void> {
+    type Item = vscode.QuickPickItem & { value: string }
+    const picked = await vscode.window.showQuickPick<Item>(
+      items.map((i) => ({ label: i.label, description: i.description, value: i.value })),
+      { title, placeHolder: title },
+    )
+    if (picked) await this.showLayer(picked.value)
+  }
+
+  private async showLayer(layer: string): Promise<void> {
+    const mine: UnderstandingLayer | undefined =
+      this.kind === 'blocks' ? 'space' : this.kind === 'flow' ? 'relation' : undefined
+    if (!mine) return
+    await swapLayer(this, layer as UnderstandingLayer)
+  }
+
+  /** 這個宿主做得到什麼——版面／槽的選單要據此決定列不列某些項。 */
+  sendHostCaps(canSwap: boolean): void {
+    this.send({ type: 'hostCaps', canSwapEditor: canSwap, canObserveBottomVisibility })
+  }
+
+  /** panel 區那兩頁看得見沒有——版面選單的標籤要用。 */
+  sendBottomVisibility(v: { console: boolean; variables: boolean }): void {
+    this.send({ type: 'bottomVisibility', ...v })
+  }
+
+  /** 執行狀態 → 畫主控台的那個視圖（它的狀態列要跟著走）。 */
+  sendExecStatus(status: string, reason?: string): void {
+    this.send({ type: 'execStatusOut', status, reason })
   }
 
   /** 同上，變數那一頁。 */
@@ -1137,7 +1340,20 @@ export async function pickControl(id: string): Promise<void> {
   //
   // > **一個控制項的【名字】與它的【執行者】可以住在不同的地方
   // > ——而讓它們住在同一個地方，就是把宿主的知識搬進核心。**
-  if (id === 'layout') { await applyEditorLayout(choice.value); return }
+  if (id === 'layout') {
+    // 🔴 **版面選單裡有一項不是版面**（2026-09-02）：「顯示／隱藏下方面板」。
+    //
+    //    ⚠️ 使用者回報「那選項沒有作用」，而根因就在這一行：這顆控制項
+    //    **在宿主就地執行**（不轉回 webview），於是 webview 那側寫好的處置
+    //    根本沒有機會跑；而 `applyEditorLayout` 對一個不是版面的值
+    //    **安靜地回頭**。
+    //
+    // > **一個「就地執行」的分支，等於在宿主這側複製了一份值域
+    // > ——而複製出來的那一份，不會自動跟著新增的選項長大。**
+    const page = bottomPageOf(choice.value)
+    if (page) { await toggleHostConsole(page); return }
+    await applyEditorLayout(choice.value); return
+  }
   broadcastControl(id, choice.value)
 }
 
@@ -1163,32 +1379,388 @@ export async function pickControl(id: string): Promise<void> {
  */
 async function applyEditorLayout(presetId: string): Promise<void> {
   const preset = layoutPreset(presetId as LayoutPresetId)
-  if (!preset || !extensionContext) return
+  if (!preset) {
+    // 🔴 **不認得的值要出聲**——安靜地回頭正是「那選項沒有作用」那個病的形狀。
+    OUTPUT.appendLine(`Semorphe 版面：不認得「${presetId}」——沒有這張版面`)
+    return
+  }
   // ⚠️ 「專注」的 `*` 跟著**目前這個面板**走——它就是使用者正在看的那一層。
   const focus: UnderstandingLayer = active?.kind === 'flow' ? 'relation' : 'space'
-  const cols = preset.areas[0].map((v) => (v === '*' ? focus : v))
+  await placeColumns(preset.areas[0].map((v) => (v === '*' ? focus : v)))
 
-  const KIND_OF: Partial<Record<UnderstandingLayer, VscodeViewKind>> = {
-    relation: 'flow', space: 'blocks',
-  }
-  // 該開的先開。
+  // 🔴 **告訴面板它現在是哪一張**——不然狀態列上那顆會停在上一個名字。
+  broadcastControl('layout', presetId)
+}
+
+/** 每一層在 IDE 裡由誰擔任。⚠️ `element` 是宿主自己的編輯器，不是我們的面板。 */
+const KIND_OF: Partial<Record<UnderstandingLayer, VscodeViewKind>> = {
+  relation: 'flow', space: 'blocks',
+}
+
+// 🪦 `columnOrder`（「目前每一欄是誰」）退場：槽的下拉**不再搬分頁**，
+//    它換的是那個 webview 畫哪一層（見 `swapLayer`）。而版面那條路仍然
+//    由左到右整排擺——見 `placeColumns`。
+
+/**
+ * **把這幾層依序擺成一欄一個**（2026-09-02）。
+ *
+ * ## 🔴 為什麼一定要【由左到右整排重擺】
+ *
+ * 使用者：「三欄的比積木切到流程會**只剩兩欄**，剩程式和流程」。
+ *
+ * 第一版是「兩兩對調」：把流程 `reveal` 到我這一欄、我搬去它那一欄。而
+ * **把一個面板移走之後，它原本那一欄就空了——宿主會把空的分頁群組收掉**，
+ * 於是欄的編號整個往前挪一格，第二步就搬進了一個**已經不是那個位子**的欄。
+ *
+ * > **在一個會自己收掉空欄的宿主上，「兩兩對調」不是一個原子操作
+ * > ——第一步做完的那一瞬間，第二步的座標就已經失效了。**
+ *
+ * 🟢 由左到右整排重擺就沒有這個問題：每一步要嘛併進一個**已經在對的位子**的
+ * 群組，要嘛在最右邊長出一個新的——而收掉的空欄永遠在還沒處理到的右側。
+ *
+ * ⚠️ `preserveFocus: true`——重擺不該把游標搶走。
+ */
+async function placeColumns(cols: readonly UnderstandingLayer[]): Promise<void> {
+  if (!extensionContext || cols.length === 0) return
+
+  // 🔴 **套一張版面要同時把【位置】與【內容】擺回去**（2026-09-02）。
+  //
+  //    使用者：「三欄不見了，在 ArduinoIDE 上」——狀態列寫著三欄，而畫面上
+  //    只有兩欄。根因是槽的下拉會**換掉一個 webview 畫哪一層**（`swapLayer`），
+  //    於是「流程」可能**沒有任何分頁在畫它**：一張只擺位置的版面救不回來。
+  //
+  // > **在一個「分頁可以改畫別的東西」的世界裡，「套版面」不只是把分頁排好
+  // > ——它還要說清楚每一格【現在畫什麼】。**
+  //
+  // ⚠️ 順序：先找**已經在畫那一層的**（不動它最省），再找**本來就是那一種的**
+  //    （被換走了就換回來），都沒有才開一個新的。
+  const assigned = new Map<UnderstandingLayer, SemorpheSession>()
   for (const layer of cols) {
     const kind = KIND_OF[layer]
-    if (kind && !sessions.has(kind)) openPanel(extensionContext, kind)
+    if (!kind) continue
+    const showing = [...sessions.values()].find((x) => x.layer === layer && !isAssigned(assigned, x))
+    if (showing) { assigned.set(layer, showing); continue }
+    const byKind = sessions.get(kind)
+    if (byKind && !isAssigned(assigned, byKind)) {
+      byKind.setLayer(layer)          // 它本來就是這一種，只是被換了內容 → 換回來
+      assigned.set(layer, byKind)
+      continue
+    }
+    openPanel(extensionContext, kind)
+    const opened = sessions.get(kind)
+    if (opened) { opened.setLayer(layer); assigned.set(layer, opened) }
   }
-  // 各自就位——第 j 欄就是 `ViewColumn` j+1（不存在的欄會長出來）。
-  const doc = active?.document
+
+  const doc = active?.document ?? sessions.get('blocks')?.document
   for (const [j, layer] of cols.entries()) {
     if (layer === 'element') {
       if (doc) await vscode.window.showTextDocument(doc, { viewColumn: j + 1, preserveFocus: true })
       continue
     }
-    const kind = KIND_OF[layer]
-    if (kind) sessions.get(kind)?.reveal(j + 1)
+    await moveSessionTo(assigned.get(layer), j + 1)
+  }
+  await evenColumns()
+}
+
+/**
+ * **把幾欄拉成等寬**（2026-09-02）。
+ *
+ * 使用者：「可以了！只不過**能不能三等分**？」「然後跳到對照的時候是**二等分**」。
+ *
+ * 🔴 為什麼不等寬：新的一欄是從**現有的某一欄切一半**長出來的
+ * ——切兩次就是 `1/2 · 1/4 · 1/4`，而不是三等分。
+ *
+ * ⚠️ 而「把它們拉成等寬」是**宿主的動作**，我們碰不到它的分隔線：
+ *
+ * ```
+ * VSCode  workbench.action.evenEditorWidths   ✅
+ * Theia   （bundle 裡沒有這顆；`distributeViewSizes` 是內部方法，不是指令）
+ * ```
+ *
+ * 🟢 所以這裡**問過再用**，而且把用了哪一顆寫進輸出頻道——下次有人問
+ * 「為什麼 Arduino IDE 沒有等寬」，答案查得到。
+ *
+ * > **一個「請宿主做某件事」的呼叫，要先問它會不會
+ * > ——而問不到的時候，要留下「我問過了」這件事。**
+ */
+async function evenColumns(): Promise<void> {
+  const all = await vscode.commands.getCommands(true)
+  for (const id of EVEN_WIDTH_COMMANDS) {
+    if (all.includes(id)) { await vscode.commands.executeCommand(id); return }
+  }
+  // ⚠️ 這裡**不印**——那份清單的家是診斷報表（見 `diagnostics`）：
+  //    診斷開頭會 `OUTPUT.clear()`，零散印的行會被洗掉。
+}
+
+/**
+ * **這個宿主做得到哪幾件事**——診斷報表印它（見 `diagnostics` 那一段）。
+ *
+ * ⚠️ 它是**執行期問出來的**（`getCommands`），不是查 bundle 猜的。
+ */
+const hostCapsReport: string[] = ['（還沒探測）']
+
+async function probeHostCaps(): Promise<void> {
+  const all = await vscode.commands.getCommands(true)
+  const even = EVEN_WIDTH_COMMANDS.find((c) => all.includes(c))
+  const near = all.filter((c) => /even|distribute|ViewSize|EditorWidth|setEditorLayout/i.test(c))
+  hostCapsReport.length = 0
+  hostCapsReport.push(
+    `名稱：${hostName()}`,
+    `切換到程式碼：${canSwapEditor ? '可用' : '不列入（這個宿主關不掉檔案那個分頁）'}`,
+    `平均欄寬：${even ?? '🔴 沒有（找過 ' + EVEN_WIDTH_COMMANDS.join('、') + '）'}`,
+    `看得出面板開著沒有：${canObserveBottomVisibility ? '是' : '否（選單改用中性的名字）'}`,
+    `相關的指令它有這些：${near.length ? near.join('、') : '（一個都沒有）'}`,
+    `開關下方面板：${['workbench.action.togglePanel', 'core.toggle.bottom.panel'].find((c) => all.includes(c)) ?? '🔴 兩個都沒有'}`,
+  )
+}
+
+/** ⚠️ 依序試——名字每個宿主不一樣，而**問過再用**（`getCommands`）。 */
+const EVEN_WIDTH_COMMANDS = [
+  'workbench.action.evenEditorWidths',
+  'workbench.action.evenEditorGroups',
+  'workbench.action.distributeEditorGroups',
+  'core.distributeViewSizes',
+  'view.distributeViewSizes',
+]
+
+/**
+ * **把一個面板搬到第 n 欄——那一欄不存在的話，讓它長出來**（2026-09-02）。
+ *
+ * 🔴 `WebviewPanel.reveal(第三欄)` 在 VSCode 上會**長出第三欄**，而在
+ * Arduino IDE 上**不會**——它把面板塞進現有的最後一欄。使用者：
+ * 「這樣沒有分三欄啊」（流程與積木擠在同一欄的兩個分頁）。
+ *
+ * 🟢 而 `moveEditorToNextGroup` 在**兩個宿主上都會**長出新的一群
+ * （這一刀稍早就是靠它做出「插一欄」的）。
+ *
+ * > **「把它放到第 n 欄」與「把它往右移一格」在欄位存在時是同一件事，
+ * > 而在欄位不存在時，只有後者做得到。**
+ */
+async function moveSessionTo(sess: SemorpheSession | undefined, column: number): Promise<void> {
+  if (!sess) return
+  const groups = vscode.window.tabGroups?.all?.length ?? column
+  if (column <= groups) { sess.reveal(column); return }
+  // 那一欄還不存在 → 一步一步往右推，每一步都可能長出新的一群。
+  for (let at = sess.columnOf ?? groups; at < column; at++) {
+    sess.reveal()
+    await vscode.commands.executeCommand('workbench.action.moveEditorToNextGroup')
+  }
+}
+
+/** 這個 session 已經被這一輪指派過了嗎——⚠️ 一個分頁不能同時擔任兩層。 */
+function isAssigned(
+  assigned: ReadonlyMap<UnderstandingLayer, SemorpheSession>,
+  sess: SemorpheSession,
+): boolean {
+  return [...assigned.values()].includes(sess)
+}
+
+/**
+ * **這一格改顯示另一層——而【欄位一格都不動】**（2026-09-02）。
+ *
+ * ## 🪦 這一支的做法換過三次，每一次都是使用者當場否決的
+ *
+ * ```
+ * ① 疊上來            「我覺得疊上來有點怪」
+ *                      ——那一欄有兩個分頁，「這一格顯示什麼」就有兩個答案
+ * ② 開新的、關掉舊的   「現在切到流程積木就不見了」
+ *                      ——關掉等於丟掉一個已經開好的視窗
+ * ③ 兩兩對調／整排重擺 「三欄的比積木切到流程會只剩兩欄」「現在更慘了」
+ *                      ——移走面板那一欄就空了，宿主把空的群組收掉，欄數變少
+ * ```
+ *
+ * 🟢 **④ 換內容**（現在這一版）。使用者逐字：「我希望的比較像是我的
+ * **欄位數不變**，但是**裡面的內容置換**，就像網頁版那樣的處理」。
+ *
+ * 而那句話一講出來就清楚了：**我一直在搬分頁，而分頁不是格子——分頁就是內容。**
+ * 在 IDE 裡一欄就是一個 webview，所以「格子不動而內容換」＝
+ * **那個 webview 改畫另一層**（`setLayer`）。積木與流程兩個面板在每個 webview
+ * 裡本來就都建好了，換的只是哪一格顯示——幾毫秒，什麼都不重建。
+ *
+ * > **在一個「格子就是容器」的地方，換位子與換內容是同一件事；
+ * > 在一個「分頁就是內容」的地方，它們是兩件事——而使用者要的一直是後者。**
+ *
+ * ⚠️ 對方那一格也要跟著換（否則兩欄都畫同一層）——那正是網頁版的**置換**。
+ * ⚠️ 而 `element`（程式碼）不是我們畫的，它是宿主自己的編輯器：那一格只能
+ *    把編輯器叫到這一欄來，而我留在它後面（不關掉、不搬家）。
+ */
+/**
+ * **開關宿主 panel 區的某一頁**（2026-09-02）。
+ *
+ * 使用者：「下方面板也分『主控台』『變數』，我要有『顯示…面板』的選項，
+ * 如果現在已經是開著的，就是『隱藏…面板』。」
+ *
+ * 🔴 兩頁在這個宿主是 panel 區的**兩個容器**（各一個分頁）——而宿主的 API
+ * 只給得出「把某個視圖叫出來」與「把整個 panel 區收起來」：
+ *
+ * ```
+ * 看不見 → `<viewId>.focus`            把它叫出來（順便把 panel 區打開）
+ * 看得見 → 收起整個 panel 區            ⚠️ 因為每一頁是自己的容器，
+ *                                        它看得見就代表它是【現在那一個】
+ * ```
+ *
+ * ⚠️ 那顆「收起來」的指令**每個宿主自己取名**（都查證過）：
+ *
+ * ```
+ * VSCode  workbench.action.togglePanel   ✅
+ * Theia   core.toggle.bottom.panel       ✅（Arduino IDE 的 bundle）
+ * ```
+ *
+ * 🪦 我一度猜 `view.toggle`——它在 bundle 裡有這個字串，而它是**別的東西**
+ * （側邊欄視圖的開關），於是使用者按下去「那選項沒有作用」。
+ *
+ * > **「這個字串在 bundle 裡」不等於「這顆指令做我以為的那件事」。**
+ */
+async function toggleHostConsole(page: BottomPage): Promise<void> {
+  const shown = sessions.get(page)?.isVisible === true
+  if (!shown) {
+    await vscode.commands.executeCommand(`${PANEL_VIEW_IDS[page]}.focus`)
+    return
+  }
+  const all = await vscode.commands.getCommands(true)
+  for (const id of ['workbench.action.togglePanel', 'core.toggle.bottom.panel']) {
+    if (all.includes(id)) { await vscode.commands.executeCommand(id); return }
+  }
+}
+
+/** 這份文件的編輯器現在在哪一欄。⚠️ 不在畫面上時是 `undefined`。 */
+function editorColumnOf(doc: vscode.TextDocument): vscode.ViewColumn | undefined {
+  return vscode.window.visibleTextEditors
+    .find((e) => e.document.uri.toString() === doc.uri.toString())?.viewColumn
+}
+
+/**
+ * **與程式碼那一格【對調】**（2026-09-02）。
+ *
+ * 使用者：「我不是要輪轉，我是要**交換**」「現在我想把流程那邊切到程式碼，
+ * 但是就**完全不會動**」。
+ *
+ * ## 🔴 我在這一支上錯了四次，而每一次都錯在同一個地方
+ *
+ * ```
+ * ① 疊上來              使用者：「有點怪」
+ * ② 開新的、關掉舊的      使用者：「積木就不見了」
+ * ③ 兩兩對調／整排重擺    使用者：「三欄變兩欄」「更慘了」
+ * ④ 沿路一格一格對調      使用者：「我不是要輪轉」
+ * ⑤ 從邊緣拆出去          使用者：「完全不會動」
+ * ```
+ *
+ * 共同的根：我一直想用「**把分頁往左／往右搬一格**」湊出「**在中間插一欄**」，
+ * 而那個宿主沒有後者——⑤ 之所以不動，是因為「往外一步會長出一群」這件事
+ * 我只在**右邊**驗過，左邊（`Previous`）在這個宿主上不長。
+ *
+ * > **我試了五種寫法去湊一個這個宿主沒有的動作，
+ * > 而它一直都在旁邊：想插一欄，就先【多開一份】把那個位子佔住。**
+ *
+ * ## 🟢 而正確的做法只用三個【已經驗證過】的動作
+ *
+ * ```
+ * ① showTextDocument(第 n 欄)  對編輯器是「再開一份」——⚠️ 而這裡正好要它
+ * ② panel.reveal(第 n 欄)      webview 分頁真的會搬過去（實測過）
+ * ③ 關掉多出來的那一份          tabGroups.close，沒有就退回 closeActiveEditor
+ * ```
+ *
+ * 由左到右整排擺一次，那個「多開的一份」**在搬動途中把欄位撐著不塌**，
+ * 擺完再把多的關掉：
+ *
+ * ```
+ * 流程│程式碼│積木        （在流程這格選「程式碼」→ 想要 程式碼│流程│積木）
+ *  ① 程式碼開一份在第 1 欄   流程＋程式碼′│程式碼│積木
+ *  ② 流程搬到第 2 欄        程式碼′│程式碼＋流程│積木
+ *  ③ 積木搬到第 3 欄        （原地）
+ *  ④ 關掉第 2 欄那一份       程式碼│流程│積木        ✅ 真的對調
+ * ```
+ */
+async function swapWithEditor(self: SemorpheSession): Promise<void> {
+  const doc = self.document ?? active?.document
+  const myCol = self.columnOf
+  if (!doc || !myCol) return
+  const eCol = editorColumnOf(doc)
+  if (!eCol) {
+    // 編輯器不在畫面上 → 沒有位子可以換：把它叫到我這一格（我留在它後面）。
+    await vscode.window.showTextDocument(doc, { viewColumn: myCol, preserveFocus: false })
+    return
+  }
+  if (eCol === myCol) return
+
+  // 目前由左到右是誰：`element` ＝ 編輯器，其餘是面板。
+  type Slot = { col: number; sess?: SemorpheSession }
+  const slots: Slot[] = [
+    { col: eCol },
+    ...[...sessions.values()]
+      .filter((x) => typeof x.columnOf === 'number' && x.columnOf !== eCol)
+      .map((x) => ({ col: x.columnOf as number, sess: x })),
+  ].sort((a, b) => a.col - b.col)
+
+  // 對調：我與編輯器交換位子（其餘一格不動）。
+  const i = slots.findIndex((x) => x.sess === self)
+  const j = slots.findIndex((x) => !x.sess)
+  if (i < 0 || j < 0) return
+  const order = slots.map((x) => x.sess)
+  ;[order[i], order[j]] = [order[j], order[i]]
+
+  // ① 由左到右擺一次。⚠️ 編輯器那一格是「再開一份」——它同時把位子撐著。
+  for (const [k, sess] of order.entries()) {
+    if (sess) sess.reveal(k + 1)
+    else await vscode.window.showTextDocument(doc, { viewColumn: k + 1, preserveFocus: true })
   }
 
-  // 🔴 **告訴面板它現在是哪一張**——不然狀態列上那顆會停在上一個名字。
-  broadcastControl('layout', presetId)
+  // ② 關掉多出來的那幾份——⚠️ 只關**這份文件**、且**不在目標欄**的那些。
+  const target = order.findIndex((x) => !x) + 1
+  await closeDuplicateEditors(doc, target)
+
+  // 🔴 **量一次結果**：還留著重複的 ⟹ 這個宿主關不掉分頁，把那個選項收起來。
+  //    （使用者在 Arduino IDE：「檔案沒有辦法關閉」）
+  const leftovers = vscode.window.visibleTextEditors
+    .filter((e) => e.document.uri.toString() === doc.uri.toString()).length
+  if (leftovers > 1 && canSwapEditor) {
+    canSwapEditor = false
+    OUTPUT.appendLine('Semorphe：這個宿主關不掉重複的【檔案】分頁 → 「程式碼」不再列進切換選單')
+    broadcastHostCaps()
+  }
+}
+
+/**
+ * 關掉這份文件在**目標欄以外**的分頁。
+ *
+ * ⚠️ `tabGroups` 不一定每個宿主都有（Theia 的 bundle 裡有這個字串，而
+ * 「有字串」不等於「行為一樣」）——所以有退路：聚焦那一份，再叫宿主關掉
+ * 作用中的那個分頁。
+ *
+ * 🔴 而它**只關這一份文件**：使用者自己開的其他檔一個都不准動。
+ */
+async function closeDuplicateEditors(doc: vscode.TextDocument, keepColumn: number): Promise<void> {
+  const uri = doc.uri.toString()
+  const groups = vscode.window.tabGroups
+  if (groups?.close) {
+    const dupes = groups.all.flatMap((g) => g.tabs.filter((t) => {
+      const input = t.input as { uri?: vscode.Uri } | undefined
+      return input?.uri?.toString() === uri && g.viewColumn !== keepColumn
+    }))
+    if (dupes.length > 0) { await groups.close(dupes, true); return }
+  }
+  // 退路：一份一份聚焦再關。
+  for (let guard = 0; guard < 4; guard++) {
+    const at = vscode.window.visibleTextEditors
+      .find((e) => e.document.uri.toString() === uri && e.viewColumn !== keepColumn)?.viewColumn
+    if (!at) return
+    await vscode.window.showTextDocument(doc, { viewColumn: at, preserveFocus: false })
+    await vscode.commands.executeCommand('workbench.action.closeActiveEditor')
+  }
+}
+
+async function swapLayer(self: SemorpheSession, theirs: UnderstandingLayer): Promise<void> {
+  const mine = self.layer
+  if (mine === theirs) return
+
+  if (theirs === 'element') { await swapWithEditor(self); return }
+  if (theirs !== 'relation' && theirs !== 'space') return
+
+  // 🔴 **置換**：現在畫著那一層的那個分頁，改畫我這一層。
+  for (const other of sessions.values()) {
+    if (other !== self && other.layer === theirs) other.setLayer(mine)
+  }
+  self.setLayer(theirs)
 }
 
 /** 標題列按了一個動作（含執行模式）。 */
@@ -1289,7 +1861,12 @@ export function requestDiagnostics(): void {
  *
  * > **把一件事交給宿主，就要連【談論它的介面】一起交出去。**
  */
-export function openPanel(context: vscode.ExtensionContext, kind: VscodeViewKind = 'blocks'): void {
+export function openPanel(
+  context: vscode.ExtensionContext,
+  kind: VscodeViewKind = 'blocks',
+  /** ⚠️ 指定要開在哪一欄——槽的下拉用它（「把那一層叫到**我這一欄**」）。 */
+  column?: vscode.ViewColumn,
+): void {
   extensionContext = context
   // 🔴 **主控台與變數不在編輯器區**（2026-09-02，spec 171）：它們是宿主 panel 區
   //    的兩個視圖，與終端機／問題並排。叫它們出來的方式是宿主自己的 `.focus`
@@ -1299,15 +1876,21 @@ export function openPanel(context: vscode.ExtensionContext, kind: VscodeViewKind
     return
   }
   const existing = sessions.get(kind)
-  if (existing) { existing.reveal(startColumn(kind)); return }
+  if (existing) { existing.reveal(column ?? startColumn(kind)); return }
 
-  const panel = vscode.window.createWebviewPanel(VIEW_TYPES[kind], TITLES[kind], startColumn(kind), {
+  const panel = vscode.window.createWebviewPanel(VIEW_TYPES[kind], TITLES[kind], column ?? startColumn(kind), {
     enableScripts: true,
     // ⚠️ 收起來再打開**不要重建**——重建等於重新載入 200 顆膠囊 ＋ 重新 inject。
     retainContextWhenHidden: true,
     localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, ...DIST)],
   })
-  const session = new SemorpheSession(panel, context.extensionUri, context.workspaceState, kind)
+  const surface: SessionSurface = {
+    webview: panel.webview,
+    reveal: (col) => panel.reveal(col),
+    column: () => panel.viewColumn,
+    setTitle: (t) => { panel.title = t },
+  }
+  const session = new SemorpheSession(surface, context.extensionUri, context.workspaceState, kind)
   sessions.set(kind, session)
   active = session
   // 🔴 **「目前是哪一個」由【看】決定，不由【開】決定**——狀態列上那顆
@@ -1348,8 +1931,46 @@ export const PANEL_VIEW_IDS = {
  * ⚠️ 這裡放的是**我們自己的 webview**，不是 Output channel：它有輸入框，
  * 所以 `cin` 有家（見 `vscode-profile.ts` 那段墓誌銘）。
  */
+/**
+ * **這個宿主換得動編輯器嗎**（2026-09-02）。
+ *
+ * 🔴 與程式碼那一格對調要「多開一份撐住位子、再把多的關掉」
+ * （見 `swapWithEditor`），而有的宿主關不掉檔案那個分頁。
+ *
+ * ⚠️ 它有**兩層**：`host-quirks` 的名單（探測不出來的那幾筆，附病歷）
+ * ＋ **實測降級**（做完之後量一次，還留著重複的就關掉這個能力）。
+ *
+ * > **一個「這個宿主做得到嗎」的旗標，最誠實的來源是【它剛才做到了沒有】。**
+ */
+let canSwapEditor = hostCanCloseEditors()
+  && typeof vscode.window.tabGroups?.close === 'function'
+
+/**
+ * **這個宿主答得出「那兩頁現在開著沒有」嗎**——答不出來時選單改用中性的名字。
+ *
+ * 見 `host-quirks.ts`：兩個可見性訊號在 Arduino IDE 上同時說謊。
+ */
+const canObserveBottomVisibility = hostSeesPanelVisibility()
+
+/** 能力變了 → 告訴每一個面板（那個選項要跟著出現或消失）。 */
+function broadcastHostCaps(): void {
+  for (const s of sessions.values()) s.sendHostCaps(canSwapEditor)
+}
+
+/** panel 區那兩頁的可見性 → 每一個面板（版面選單的標籤要用）。 */
+function broadcastBottomVisibility(): void {
+  const v = {
+    console: sessions.get('console')?.isVisible === true,
+    variables: sessions.get('variables')?.isVisible === true,
+  }
+  for (const s of sessions.values()) s.sendBottomVisibility(v)
+}
+
 export function registerConsoleView(context: vscode.ExtensionContext): void {
   extensionContext = context
+  // ⚠️ **把判斷寫下來**：下次有人問「為什麼這裡沒有程式碼那個選項」，
+  //    答案要查得到，而不是要重讀一次原始碼。
+  void probeHostCaps()
   for (const kind of ['console', 'variables'] as const) {
     context.subscriptions.push(vscode.window.registerWebviewViewProvider(
       PANEL_VIEW_IDS[kind],
@@ -1364,13 +1985,19 @@ export function registerConsoleView(context: vscode.ExtensionContext): void {
           const surface: SessionSurface = {
             webview: view.webview,
             reveal: () => view.show(true),
+            isVisible: () => view.visible,
           }
           const session = new SemorpheSession(surface, context.extensionUri, context.workspaceState, kind)
           sessions.set(kind, session)
+          // 🔴 **看得見沒有要推給每一個面板**——版面選單上那兩個標籤靠它
+          //    才說得出「顯示」還是「隱藏」。
+          view.onDidChangeVisibility(() => broadcastBottomVisibility(), null, context.subscriptions)
+          broadcastBottomVisibility()
           view.onDidDispose(() => {
             session.dispose()
             if (sessions.get(kind) === session) sessions.delete(kind)
             if (active === session) active = undefined
+            broadcastBottomVisibility()
           }, null, context.subscriptions)
         },
       },

@@ -27,5 +27,8 @@
     "execute": "declarative"
   },
   "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**（使用者 2026-08-21 回報）。",
-  "_skipPaths_why": "🔴 **這與 `paths.execute: null` 是【兩件事】**（skill 的步驟零寫了這一條，而我自己漏了）：\n\n```\npaths.execute: null ＋ _why    「沒有這個檔」        ← 契約 C3 檢查它\nskipPaths ＋ skipReasons        「直譯器別抱怨這顆」  ← skip-declarations 讀它\n```\n\n⚠️ 少了這一組的症狀是 **`# 註解` 讓整支程式在執行時掛掉**（`RUNTIME_ERR_UNKNOWN_COMPONENT`）——而它**不會讓任何測試變紅**，因為在 Python 有執行期之前，沒有任何測試在跑 Python。"
+  "_skipPaths_why": "🔴 **這與 `paths.execute: null` 是【兩件事】**（skill 的步驟零寫了這一條，而我自己漏了）：\n\n```\npaths.execute: null ＋ _why    「沒有這個檔」        ← 契約 C3 檢查它\nskipPaths ＋ skipReasons        「直譯器別抱怨這顆」  ← skip-declarations 讀它\n```\n\n⚠️ 少了這一組的症狀是 **`# 註解` 讓整支程式在執行時掛掉**（`RUNTIME_ERR_UNKNOWN_COMPONENT`）——而它**不會讓任何測試變紅**，因為在 Python 有執行期之前，沒有任何測試在跑 Python。",
+  "traits": {
+    "alwaysInScope": true
+  }
 }

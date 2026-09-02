@@ -142,6 +142,9 @@ export class VscodeCodeView implements CodeView, ViewHost {
     // ⚠️ 容器刻意不使用——見檔頭「它沒有畫布」。
     this.onHostMessage = (e) => this.receive(e.data)
     window.addEventListener('message', this.onHostMessage)
+    // 🔴 **我看得見嗎，由我自己回答**（見 `reportVisibility`）。
+    document.addEventListener('visibilitychange', () => this.reportVisibility())
+    this.reportVisibility()
   }
 
   private post(m: WebviewMessage): void {
@@ -222,6 +225,59 @@ export class VscodeCodeView implements CodeView, ViewHost {
     this.variablesOutCb = callback
   }
 
+  onSetLayer(callback: (layer: string) => void): void {
+    this.setLayerCb = callback
+  }
+
+  private setLayerCb: ((layer: string) => void) | null = null
+
+  /** 請宿主把某一層叫到我這一欄來（見 `CodeView.showLayer`）。 */
+  showLayer(layer: string): void {
+    postToHost({ type: 'showLayer', layer })
+  }
+
+  /** 請宿主開關它自己的下方面板（見 `CodeView.toggleConsole`）。 */
+  toggleConsole(page: 'console' | 'variables'): void {
+    postToHost({ type: 'toggleConsole', page })
+  }
+
+  /**
+   * **回報「我看得見嗎」**——⚠️ 由**被看的那一個**回答（見協定的 `viewVisible`）。
+   *
+   * 🔴 收起來的 webview 在兩個宿主上都是 `document.hidden === true`
+   * （`retainContextWhenHidden` 讓它活著，但它沒有被畫出來）。
+   */
+  private reportVisibility(): void {
+    postToHost({ type: 'viewVisible', visible: !document.hidden })
+  }
+
+  onBottomVisibility(callback: (v: { console: boolean; variables: boolean }) => void): void {
+    this.bottomVisCb = callback
+  }
+
+  onHostCaps(callback: (caps: { canSwapEditor: boolean; canObserveBottomVisibility: boolean }) => void): void {
+    this.capsCb = callback
+  }
+
+  private capsCb: ((caps: { canSwapEditor: boolean; canObserveBottomVisibility: boolean }) => void) | null = null
+
+  private bottomVisCb: ((v: { console: boolean; variables: boolean }) => void) | null = null
+
+  /** 請宿主用**它自己的**選單問（見 `CodeView.pickLayer`）。 */
+  pickLayer(title: string, items: readonly { value: string; label: string; description?: string }[]): void {
+    postToHost({ type: 'pickLayer', title, items: items.map((i) => ({ ...i })) })
+  }
+
+  reportExecutionState(e: { status: string; reason?: string }): void {
+    postToHost({ type: 'execStatus', status: e.status, reason: e.reason })
+  }
+
+  onExecutionStateIn(callback: (e: { status: string; reason?: string }) => void): void {
+    this.execStateCb = callback
+  }
+
+  private execStateCb: ((e: { status: string; reason?: string }) => void) | null = null
+
   /** 使用者在我這個主控台打了一行 → 主行程 → 正在跑的那個視窗。 */
   submitConsoleInput(line: string): void {
     postToHost({ type: 'consoleSubmit', line })
@@ -272,8 +328,27 @@ export class VscodeCodeView implements CodeView, ViewHost {
       this.consoleFallbackCb?.()
       return
     }
+    if (m.type === 'setLayer') {
+      this.setLayerCb?.(m.layer)
+      return
+    }
     if (m.type === 'consoleOut') {
       this.consoleOutCb?.({ chunk: m.chunk, clear: m.clear, awaitingInput: m.awaitingInput })
+      return
+    }
+    if (m.type === 'hostCaps') {
+      this.capsCb?.({
+        canSwapEditor: m.canSwapEditor,
+        canObserveBottomVisibility: m.canObserveBottomVisibility,
+      })
+      return
+    }
+    if (m.type === 'bottomVisibility') {
+      this.bottomVisCb?.({ console: m.console, variables: m.variables })
+      return
+    }
+    if (m.type === 'execStatusOut') {
+      this.execStateCb?.({ status: m.status, reason: m.reason })
       return
     }
     if (m.type === 'variablesOut') {

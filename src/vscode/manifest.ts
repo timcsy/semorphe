@@ -1,4 +1,7 @@
-import { CONTROLS, RUN_MODES, hostCommandId, runModeCommandId } from '../core/host/controls'
+import { CONTROLS, RUN_MODES, hostCommandId, runModeCommandId, surfaceOf } from '../core/host/controls'
+// ⚠️ **建置期讀那份宣告**——「哪一顆畫在哪」只有一個真相（`vscode-profile`），
+//    而這個檔是它的第二個消費者（第一個是 webview）。
+import { vscodeProfile } from './vscode-profile'
 /**
  * 擴充的宣告——**它是 TypeScript，不是一份散落的 JSON**。
  *
@@ -313,7 +316,11 @@ export function buildManifest(): ExtensionManifest {
         // ⚠️ 手寫這一段的話，「有哪些控制項」就會有第二個真相
         // ——而這個檔案是**建置期**執行的，登錄表 import 得進來。
         ...CONTROLS
-          .filter((c) => c.kind === 'picker' || c.kind === 'action')   // ⚠️ sync 有自己那一條；console 是資料流不是控制項
+          // 🔴 **問表面，不問種類**（2026-09-02）：`action` 這一類裡，有的留在
+          //    標題列（執行），有的搬進面板（還原／清除），有的整個退場。
+          //    ⚠️ 只有**宿主自己畫**的那些才需要一顆指令。
+          .filter((c) => (c.kind === 'picker' || c.kind === 'action')
+            && surfaceOf(c, vscodeProfile.controlSurfaces).startsWith('host'))
           .map((c) => ({
             command: hostCommandId(c.id),
             title: c.hostTitle,
@@ -409,11 +416,23 @@ export function buildManifest(): ExtensionManifest {
             group: 'navigation',
           },
           ...CONTROLS
-            .filter((c) => c.kind === 'action' && c.id !== 'run')
-            .map((c) => ({
+            // ⚠️ 執行有自己那一組（`editor/title/run`），其餘只留**宿主畫的**。
+            .filter((c) => c.id !== 'run'
+              && surfaceOf(c, vscodeProfile.controlSurfaces) === 'hostTitleBar')
+            .map((c, i) => ({
               command: hostCommandId(c.id),
               when: PANEL_WHEN,
-              group: 'navigation',
+              // 🔴 **順序要寫出來**（2026-09-02）。使用者：「應該是還原在左、
+              //    重做在右吧」——而畫面上是反的。
+              //
+              //    只寫 `navigation` 的話，同一群裡的先後**由宿主決定**
+              //    （它不保證照宣告的順序），於是 ↩↪ 的方向會不一樣。
+              //
+              // > **一個「順序有意義」的清單，如果沒有把順序寫進去，
+              // > 那個意義就交給了別人的實作細節。**
+              //
+              // ⚠️ `@1` 起跳：`openBlocks` 佔 `navigation`（沒有序號＝最前）。
+              group: `navigation@${i + 1}`,
             })),
         ],
         // 🔴 執行是**一顆按鈕 ＋ 一個下拉**（人拍板：「像 C/C++ 的 VSCode 外掛那樣」）。

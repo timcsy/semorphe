@@ -5,6 +5,8 @@ export interface TabAction {
   icon: string
   title: string
   onClick: () => void
+  /** ⚠️ 給測試與樣式用的識別字（`data-action`）——沒有也可以。 */
+  id?: string
 }
 
 export interface TabDefinition {
@@ -19,6 +21,7 @@ export class BottomPanel {
   private tabBar: HTMLElement
   private tabButtonsArea: HTMLElement
   private tabActionsArea: HTMLElement
+  private panelActionsArea: HTMLElement
   private contentArea: HTMLElement
   private divider: HTMLElement
   private tabs: TabDefinition[] = []
@@ -38,6 +41,24 @@ export class BottomPanel {
    * 沒有自己的分隔線（沒有東西在它上面）、高度**吃滿**而不是 35%。
    */
   private solo = false
+  /** 🔴 最大化＝編輯區讓出來，而這一條吃滿（見 `app-shell` 的 `installPanelActions`）。 */
+  private maximized = false
+  /** 🔴 **整條不見**（按 ✕ 或版面選單的「隱藏…」）——與 `collapsed`（只收內容）不同。 */
+  private hidden = false
+  /**
+   * 🔴 **看得見的那一頁變了要出聲**（2026-09-02）。
+   *
+   * 使用者按了 ✕ 之後，版面選單上還寫著「隱藏主控台面板」——**它已經關了**。
+   * 因為那個標籤是**算出來的**，而算它的人不知道剛才發生了什麼。
+   *
+   * > **一個會說「現在是什麼狀態」的標籤，要有人在狀態變的時候叫它重算
+   * > ——否則它說的是【上一次有人問的時候】的狀態。**
+   */
+  private visibilityCb: (() => void) | null = null
+
+  onVisibilityChange(cb: () => void): void {
+    this.visibilityCb = cb
+  }
 
   constructor(container: HTMLElement) {
     this.container = container
@@ -60,6 +81,18 @@ export class BottomPanel {
     this.tabActionsArea = document.createElement('div')
     this.tabActionsArea.className = 'bottom-panel-tab-actions'
     this.tabBar.appendChild(this.tabActionsArea)
+
+    // 🔴 **面板自己的動作**（最大化／關閉）——⚠️ 與**分頁的**動作分開放
+    //    （2026-09-02，使用者要「網頁版也有這個」，指的是 VSCode 面板右上那兩顆）。
+    //
+    //    分頁的動作（複製、清除）**換分頁就換一組**，而這兩顆是**面板的**：
+    //    不管你在看主控台還是變數，它們都在那裡、意思都一樣。
+    //
+    // > **一個放在同一條列上的按鈕，如果它的意思不隨分頁改變，
+    // > 它就不該跟著分頁被重畫。**
+    this.panelActionsArea = document.createElement('div')
+    this.panelActionsArea.className = 'bottom-panel-actions'
+    this.tabBar.appendChild(this.panelActionsArea)
 
     this.contentArea = document.createElement('div')
     this.contentArea.className = 'bottom-panel-content'
@@ -101,6 +134,23 @@ export class BottomPanel {
    * ⚠️ 關掉時如果正收著就順手展開——否則那一頁會停在空白上，
    *    而使用者已經沒有那個「再按一下」可以救它了。
    */
+  /**
+   * **現在看得見的是哪一頁**——收起來時是 `null`。
+   *
+   * ⚠️ 「面板開著」與「這一頁看得見」是兩件事：這一條有兩個分頁，
+   * 開著的時候也只有**作用中的那一頁**看得見。
+   */
+  get visibleTab(): string | null {
+    return this.hidden || this.collapsed ? null : this.activeTabId
+  }
+
+  /** 最大化：編輯區已經讓出來了，這一條吃滿高度。⚠️ 收合狀態不動。 */
+  setMaximized(v: boolean): void {
+    this.maximized = v
+    if (v) this.collapsed = false
+    this.applyHeight()
+  }
+
   /** 見 `solo` 的說明：這一條就是整個視窗。 */
   setSolo(v: boolean): void {
     this.solo = v
@@ -125,17 +175,30 @@ export class BottomPanel {
   asConsoleSurface(): ConsoleSurface {
     return {
       show: () => {
-        if (!this.collapsed) return
-        if (this.activeTabId) this.showTab(this.activeTabId)
-        else if (this.tabs[0]) this.showTab(this.tabs[0].id)
-      },
-      hide: () => {
-        if (this.collapsed || !this.collapsible) return
-        this.collapsed = true
+        this.hidden = false
+        if (this.collapsed) {
+          if (this.activeTabId) this.showTab(this.activeTabId)
+          else if (this.tabs[0]) this.showTab(this.tabs[0].id)
+        }
         this.applyHeight()
         window.dispatchEvent(new Event('resize'))
       },
-      isHidden: () => this.collapsed,
+      hide: () => {
+        // 🔴 **關掉＝整條不見，連分頁列一起**（2026-09-02）。
+        //
+        //    使用者按了 ✕ 之後看到分頁列還留在最底下：「**為何我按 x 變這樣**？」
+        //    ——而他是對的：VSCode 的 ✕ 關的是**整個面板**，不是「把內容收起來
+        //    而留一條」。留著那一條的是**點分頁**那個動作（收合），兩者不同。
+        //
+        // > **「收起來」與「關掉」的差別，在畫面上就是那條列還在不在
+        // > ——而使用者按的那顆叉，指的一定是後者。**
+        //
+        // ⚠️ 那它怎麼回來？版面選單的「顯示…面板」，以及**有輸出時自己回來**。
+        this.hidden = true
+        this.applyHeight()
+        window.dispatchEvent(new Event('resize'))
+      },
+      isHidden: () => this.hidden || this.collapsed,
     }
   }
 
@@ -192,6 +255,14 @@ export class BottomPanel {
     if (!this.tabs.some((t) => t.id === id)) return
     this.activeTabId = id
     this.collapsed = false
+    // 🔴 **「顯示這一頁」當然包含「這一條要在」**（2026-09-02）。
+    //
+    //    使用者按了版面選單的「顯示主控台面板」而**沒反應**——因為這裡只解了
+    //    `collapsed`，而整條是被 `hidden` 關掉的（按 ✕ 的那一種）。
+    //
+    // > **一個東西有兩種「看不見」的時候，「顯示」必須把兩種都解掉
+    // > ——只解一種的下場，是使用者按了而畫面完全不動。**
+    this.hidden = false
     this.applyHeight()
 
     for (const tab of this.tabs) {
@@ -227,6 +298,25 @@ export class BottomPanel {
 
   getElement(): HTMLElement {
     return this.container
+  }
+
+  /**
+   * **面板自己的那幾顆**（最大化／關閉）——與分頁的動作分開，換分頁不重畫。
+   *
+   * ⚠️ 傳空陣列就是「這個宿主不畫它們」：IDE 那側有宿主自己的同名按鈕，
+   * 我們再畫一份就是同一件事講兩次。
+   */
+  setPanelActions(actions: readonly TabAction[]): void {
+    this.panelActionsArea.innerHTML = ''
+    for (const action of actions) {
+      const btn = document.createElement('button')
+      btn.className = 'bottom-panel-action-btn'
+      btn.title = action.title
+      btn.textContent = action.icon
+      btn.dataset.action = action.id ?? ''
+      btn.addEventListener('click', action.onClick)
+      this.panelActionsArea.appendChild(btn)
+    }
   }
 
   private updateActions(tabId: string): void {
@@ -287,13 +377,20 @@ export class BottomPanel {
   }
 
   private applyHeight(): void {
+    // ⚠️ **每一條改變「看得見的是哪一頁」的路徑都會走到這裡**——收合、關閉、
+    //    最大化、切分頁——所以出聲放這裡一次就夠，不必每個呼叫點各記一次。
+    this.visibilityCb?.()
+    // 🔴 整條不見的時候，下面每一條「多高」都不必算了。
+    this.container.style.display = this.hidden ? 'none' : ''
+    if (this.hidden) return
     // ⚠️ 收合仍然由這裡管——那是「內容顯不顯示」，不是「這一格多高」
     this.contentArea.style.display = this.collapsed ? 'none' : ''
     // grid 之下把手交給格線（`layout/grid-dividers.ts`），這條列自己的分隔線收起來
-    this.divider.style.display = this.inGrid() || this.solo ? 'none' : ''
+    // ⚠️ 最大化時那條把手沒有東西可以拖（上面沒有編輯區了）。
+    this.divider.style.display = this.inGrid() || this.solo || this.maximized ? 'none' : ''
     if (this.inGrid()) return
     // 🔴 獨佔時吃滿——`0 0 35%` 會在一個沒有編輯區的視窗裡留下 65% 的空白。
-    this.container.style.flex = this.solo ? '1 1 auto'
+    this.container.style.flex = this.solo || this.maximized ? '1 1 auto'
       : this.collapsed ? '0 0 auto' : `0 0 ${this.heightRatio * 100}%`
   }
 }

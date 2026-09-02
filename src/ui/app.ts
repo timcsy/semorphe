@@ -3,6 +3,7 @@ import * as Blockly from 'blockly'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
+import { consoleRole, BOTTOM_PAGES, bottomToggleValue, bottomPageOf, type BottomPage } from '../core/host/console-surface'
 import {
   CONTROLS, LOCALES, FOLLOW_HOST_LOCALE, surfaceOf,
   type ControlSpec, type ControlState, type ControlInvoke, type ControlOption,
@@ -27,7 +28,7 @@ import { TopicRegistry } from '../core/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
 import { getVisibleComponents, flattenLevelTree } from '../core/level-tree'
-import { componentTraits } from '../core/component/traits'
+import { isAlwaysInScope, alwaysInScopeComponents, componentTraits } from '../core/component/traits'
 import type { Target, Topic } from '../core/types'
 // spec 142：三塊板子。⚠️ 它們**共用** `arduino` 課程清單，差別只在 `provides`
 //（不新增三份幾乎相同的 topic JSON——見 specs/142 的 research.md R1）。
@@ -158,6 +159,20 @@ export class App {
   private currentLayout: LayoutPresetId = 'compare'
   private applyLayout?: (id: LayoutPresetId) => void
 
+  /**
+   * **下方面板的開關**（2026-09-02，使用者要的）。
+   *
+   * 🔴 它與版面走**同一個選單**而**不是一張版面**：三張版面說的是「編輯區
+   * 怎麼排」，而主控台是編輯區底下那條獨立的底條（spec 171）。
+   *
+   * ⚠️ 誰真的去開關它由 shell 決定：網頁版是自己那條底條，IDE 是**宿主的
+   * panel 區**（那裡它根本不在這個 webview 裡）。
+   */
+  private toggleBottom?: (page: BottomPage) => void
+  private bottomVisibility?: () => { console: boolean; variables: boolean }
+  /** 🔴 宿主看不看得出那件事——看不出來時標籤要中性（見版面選單那一段）。 */
+  private bottomVisibilityKnown?: () => boolean
+
   /** 這個宿主提供得出來的版面——由 shell 回答（只有它知道哪一層在不在）。 */
   private shellLayoutOptions?: () => readonly HostLayoutOption[]
   private flowPanel?: import('./panels/flow-panel').FlowPanel
@@ -199,6 +214,23 @@ export class App {
   private currentSkeletonId = 'main'
   private currentIoPreference: 'iostream' | 'cstdio' = 'iostream'
   private _codeToBlocksInProgress = false
+  /**
+   * **同步進行中時來的那些改動**（2026-09-02）。
+   *
+   * 🔴 使用者：「為何我輸入完了底下卻還有紅線？明明已經對了」——而畫面上的
+   * 積木停在**打到一半**的那個樣子（`宣告 cout 變數 return`）。
+   *
+   *    根因是 `codeView.onChange` 遇到「同步進行中」時**整個 return**：那一段
+   *    時間（同步 ＋ 300ms 尾巴）內按的鍵**連記都沒記**。而最後一個鍵剛好落在
+   *    那個窗口時，就沒有下一次同步來收拾它。
+   *
+   * > **一個「現在很忙，先不理」的守衛，如果不記得它忽略過什麼，
+   * > 那些被忽略的東西就永遠不會再被處理。**
+   *
+   * ⚠️ 它會收斂：補相依那一次寫入也會設起這個旗標，而下一輪不再需要補，
+   *    於是最多多跑一趟。
+   */
+  private _codeChangedWhileSyncing = false
   private _restoringState = false
   private currentStylePreset: StylePreset = DEFAULT_STYLE
   private currentBlockStyleId: string = 'scratch'
@@ -357,11 +389,29 @@ export class App {
    * > **一個從選單上拿掉的選項，如果狀態還到得了它，那就只是看不到而已。**
    */
   private enforceShellDepthFloor(): void {
-    if (!canHideScaffold(skeletonById(this.currentSkeletonId)) && this.scaffoldDepth === 0) {
-      this.scaffoldDepth = 1
-      setScaffoldConfig({ scaffoldDepth: this.scaffoldDepth })
-      this.syncController?.setScaffoldDepth(this.scaffoldDepth)
-    }
+    if (canHideScaffold(skeletonById(this.currentSkeletonId)) || this.scaffoldDepth !== 0) return
+    this.scaffoldDepth = 1
+    setScaffoldConfig({ scaffoldDepth: this.scaffoldDepth })
+    this.syncController?.setScaffoldDepth(this.scaffoldDepth)
+    // 🔴 **改了深度就要讓畫面跟上**（2026-09-02）。
+    //
+    //    使用者：「說是**淡的**卻不是淡的」——狀態列已經寫著「淡的」，而積木
+    //    上的骨架還是實心的。因為這一支只改了**數字**，而「淡」是重畫之後
+    //    才蓋上去的一層（見 `setScaffoldMode`）。
+    //
+    // > **一個只改了狀態而沒有讓畫面跟上的修正，把一個「說謊的標籤」
+    // > 換成了另一個——方向反過來而已。**
+    //
+    // ⚠️ **只重蓋鷹架那一層，不要順手重算「超出範圍」**（2026-09-02 實測）。
+    //
+    //    第一版這裡呼叫的是 `markOutOfScopeBlocks()`（它同時做兩件事），而這一支
+    //    是在**換目標的途中**跑的——那時「這個主題看得到哪些元件」還沒算完，
+    //    於是整個畫布被判成超出範圍，**每一顆積木都變淡**（使用者：
+    //    「怎麼裡面的非骨架積木也淡了」）。
+    //
+    // > **一支「順手把兩件事一起做」的方法，在只需要其中一件的地方
+    // > 會把另一件在錯的時機做掉。**
+    setTimeout(() => this.remarkScaffold(), 900)
   }
 
   /**
@@ -583,6 +633,29 @@ export class App {
     // ⚠️ `handleTargetChange` 重繪工具箱，而**控制項清單要另外重送**
     //    ——被釘住的那顆要消失／回來，而那不是目標改變的一部分。
     this.publishControls()
+    // 🔴 **重投影完再打一次暗**（2026-09-02）。
+    //
+    //    使用者選了「閃一顆燈」之後看到 `setup`／`loop` 整片是**紅的**
+    //    （超出範圍）：「怎麼淡的怪怪的」。而它們是**工具自己放的骨架**，
+    //    本來就該在範圍內。
+    //
+    //    根因是時機：「哪幾顆是骨架」問的是**目前那棵樹**
+    //    （`scaffoldComponentIds()`），而換課會換目標、換骨架、重投影
+    //    ——同步那一趟做完之前，那個集合是**上一棵樹**的答案，甚至是空的。
+    //
+    // > **一個「這顆在不在範圍內」的判斷，如果它問的是一棵還沒長好的樹，
+    // > 它會把工具自己放的東西判成學生不該碰的東西。**
+    this.remarkAfterSettled()
+  }
+
+  /**
+   * **等重投影落地之後再打一次暗**。
+   *
+   * ⚠️ 900ms 是量出來的（與 `setScaffoldMode` 同一個數字）：`reprojectFromTree`
+   * 是非同步的，而「超出範圍」與「鷹架」這兩層都蓋在**畫完之後**的積木上。
+   */
+  private remarkAfterSettled(): void {
+    setTimeout(() => this.markOutOfScopeBlocks(), 900)
   }
 
   /**
@@ -755,7 +828,11 @@ export class App {
     this.syncController.setDisplayTreeEnhancer((tree, _visible, scaffoldVisible) => {
       if (!scaffoldVisible || !shaping) return tree
       // 🟢 哪些引入要補、以及「引入」是哪一顆元件，都是語言套件的知識
-      const includeNodes = (shaping.autoIncludeNodes as (t: never) => SemanticNode[])(tree as never)
+      // 🔴 **命名空間風格要一起交下去**（2026-09-02）：`using namespace std;`
+      //    是補丁器寫進程式碼的，而它要不要出現在積木上，看的是同一格風格。
+      const includeNodes = (shaping.autoIncludeNodes as
+        (t: never, ns: 'using' | 'explicit') => SemanticNode[])(
+        tree as never, this.currentStylePreset.namespace_style)
       if (includeNodes.length === 0) return tree
       return {
         ...tree,
@@ -841,7 +918,8 @@ export class App {
     this.codeView.onChange(() => {
       // 🔴 記住**上一步在哪裡做的**——那一對按鈕靠它轉送（見 `lastEditor`）
       this.lastEditor = 'code'
-      if (this._codeToBlocksInProgress) return
+      // ⚠️ **記下來再回頭做**——見 `_codeChangedWhileSyncing`。
+      if (this._codeToBlocksInProgress) { this._codeChangedWhileSyncing = true; return }
       this.codeDirty = true
       // 🔴 記下「誰被編輯」——來源是導出的，而暫停期間這筆會累積成分岔
       // ⚠️ `CodeView` 是宿主注入的介面，不保證是 `ViewHost`——用登錄表裡那個
@@ -960,13 +1038,22 @@ export class App {
     // 🔴 宿主那側的入口——⚠️ 走的是**同一組回呼**。
     this.wireHostControls()
     // 🔴 主控台 ↔ 宿主的終端機——⚠️ 用**能力探測**，這一層不認識任何宿主。
+    // 🔴 **宿主換掉這個視窗畫哪一層**（2026-09-02）——IDE 的槽下拉走這條路：
+    //    欄位一格都不動，換的是這個 webview 的內容（使用者：「欄位數不變，
+    //    但是裡面的內容置換，就像網頁版那樣的處理」）。
+    this.codeView?.onSetLayer?.((l) => elements.setHostLayer(l as never))
     this.wireHostConsole(elements.consolePanel)
-    // 🔴 變數 → 宿主的 `panel` 區（與終端機同一排）。
-    elements.variablePanel?.onSnapshot((groups) => this.codeView?.reportVariables?.(groups))
-    // 🔴 **反方向：別的視窗在跑，而變數要畫在【我】這裡**（2026-09-02，spec 171）
-    //    ——見 `CodeView.onConsoleOut` 的檔頭：資料流只有一個源頭。
-    this.codeView?.onVariablesSnapshot?.((groups) =>
-      elements.variablePanel?.updateWithScopes(groups as never))
+    // 🔴 變數也是一條資料流，判準與主控台同一條（見 `wireHostConsole`）：
+    //    **畫的人不報回去，報的人不畫**——否則是一個回音圈。
+    const varSpec = CONTROLS.find((c) => c.id === 'variables')
+    const varsDrawnLocally = !!varSpec
+      && consoleRole(surfaceOf(varSpec, this.profile.controlSurfaces)) === 'draw'
+    if (varsDrawnLocally) {
+      this.codeView?.onVariablesSnapshot?.((groups) =>
+        elements.variablePanel?.updateWithScopes(groups as never))
+    } else {
+      elements.variablePanel?.onSnapshot((groups) => this.codeView?.reportVariables?.(groups))
+    }
     // 🔴 **暫停中改一個變數 → 匯流排**（2026-08-26）。
     //    面板自己**不認識執行器**——P9：跨層通訊只走 Bus（`principles.md:177`）。
     elements.variablePanel?.onEditValue((name, value) =>
@@ -975,6 +1062,11 @@ export class App {
     //    ⚠️ 走 `edit:tree` 這個**通用**事件，不是 `edit:flow`
     //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。
     this.applyLayout = elements.applyLayout
+    this.toggleBottom = elements.toggleBottom
+    this.bottomVisibility = elements.bottomVisibility
+    this.bottomVisibilityKnown = elements.bottomVisibilityKnown
+    // ⚠️ 宿主那側的可見性是**推過來的**——它變了，選單上的標籤要跟著改。
+    elements.onBottomVisibilityChanged(() => this.publishControls())
     this.shellLayoutOptions = elements.layoutOptions
     // ⚠️ `viewId` 要問面板自己，**不是寫死一個字串**（2026-08-27 修）：
     //    寫死的是 `'flow-panel'` 而面板宣告的是 `'flow'`，兩個對不上。
@@ -1113,17 +1205,67 @@ export class App {
       this._codeToBlocksInProgress = true
       originalSync(code).then(() => {
         const patched = this.syncController?.patchMissingDependencies(code)
-        if (patched) {
-          const linesDelta = patched.split('\n').length - code.split('\n').length
-          this.codeView?.setCodePreserveCursor(patched, linesDelta)
-        }
+        if (!patched) return
+        const linesDelta = patched.split('\n').length - code.split('\n').length
+        this.codeView?.setCodePreserveCursor(patched, linesDelta)
+        // 🪦 **這裡曾經「補完就再 lift 一次」**（2026-09-02，當天就退場）。
+        //
+        //    動機是對的：補進去的那幾行**樹裡沒有**，而 IDE 那側的回音守衛
+        //    會擋掉下一次 lift（診斷逐字：「✍️ 套用寫入…首行『#include <iostream>』」
+        //    後面緊接著「🔇 判成【回音】，不送」）。
+        //
+        //    而 `preflight:vscode` 當場抓到代價：**還原變成沒有作用**
+        //    ——「積木 → 程式碼：宿主收下 1 筆」（本來 2 筆）。因為再 lift 一次
+        //    ＝重載工作區 ＝ **把還原堆清掉**，而它會被我們自己的寫入回音觸發。
+        //
+        // > **為了讓兩邊一致而重建一次真相，代價是使用者按不動還原
+        // > ——一個修法如果會清掉使用者的歷史，它就不是修法。**
+        //
+        // 🟢 真正的修法在**顯示樹增強器**（見上面 `setDisplayTreeEnhancer`）：
+        //    補丁器往文字裡加什麼，增強器就往樹裡補同樣的節點。那一條路
+        //    不重建工作區，也就不會動到還原堆。
+
+      }).then(() => {
         this.codeDirty = false
         this.blocksDirty = false
         this.updateSyncHints()
-        setTimeout(() => { this._codeToBlocksInProgress = false }, 300)
+        // 🔴 **重畫過的積木沒有那兩層視覺**（2026-09-02）。
+        //
+        //    使用者：「怎麼我選淡的，前面還好好的，後面就不是淡的了？」
+        //    ——打了一行字之後，程式碼→積木重建了整棵樹，而「淡的」與
+        //    「超出範圍」是**畫完之後蓋上去**的一層，新的積木身上沒有它。
+        //
+        // > **一層蓋在畫面上的標記，它的壽命只到下一次重畫
+        // > ——所以它要跟著【重畫】走，不是跟著【設定改變】走。**
+        //
+        // ⚠️ 這裡是**程式碼 → 積木**唯一的匯流點（見這個 wrapper 的檔頭），
+        //    所以補在這裡就夠，不必每個呼叫點各記一次。
+        // 🔴 **而補相依會【再長出積木】**（2026-09-02）：`patchMissingDependencies`
+        //    把 `#include <iostream>` 寫回程式碼，那顆積木是**這一輪之後**才出現的
+        //    ——上面那一次蓋不到它。使用者：「引入函式庫和使用命名空間應該也要是淡的吧」。
+        //
+        // > **一個「畫完之後蓋上去」的動作，如果畫還沒完，它蓋的是上一張畫。**
+        // 🪦 **這裡曾經【立刻】再蓋一次**（`markOutOfScopeBlocks()`），而 e2e 抓到代價：
+        //    `ghost` 的三條拖曳測試全紅——拖走學生的積木之後，`return 0` 留在 main 外面。
+        //
+        //    根因：`markScaffoldBlocks` 會 `setDragStrategy`＋`setEditable(false)`，
+        //    而這一刀落在**拖曳還在進行中**的積木身上——正在跑的那次拖曳握著舊的策略物件，
+        //    於是「把鷹架摘出來、結束時接回去」的後半段接到了空氣。
+        //
+        // > **一層「畫完之後蓋上去」的視覺，如果蓋的時候畫還沒停，
+        // > 它蓋到的是一隻正在動的手。**
+        //
+        // 🟢 留下面那一支就夠（900ms 之後）：重投影本來就是非同步的，
+        //    立刻蓋那一次蓋的也是上一張畫。
+        this.remarkAfterSettled()
+        setTimeout(() => {
+          this._codeToBlocksInProgress = false
+          this.drainCodeChangedWhileSyncing()
+        }, 300)
       }).catch((err: unknown) => {
         console.error('Parse error:', err)
         this._codeToBlocksInProgress = false
+        this.drainCodeChangedWhileSyncing()
       })
       return Promise.resolve(false)
     }
@@ -1177,7 +1319,14 @@ export class App {
   }
 
   private getVisibleComponents(): Set<string> {
-    const base = getVisibleComponents(this.currentTopic, this.enabledBranches)
+    // 🔴 **不是概念的那幾顆先補進來**（2026-09-02）——見 `alwaysInScopeComponents`。
+    //    ⚠️ 沒有選課的時候範圍來自**層級樹**，而註解不一定被列在任何一層裡；
+    //       使用者：「剛開 ArduinoIDE 的樣子，是不正常的」（註解是暗的），
+    //       而選了課之後反而正常——因為那條路已經補過了。
+    const base = new Set([
+      ...getVisibleComponents(this.currentTopic, this.enabledBranches),
+      ...alwaysInScopeComponents(),
+    ])
     if (!this.currentLesson) return base
     // 🔴 **交集，不是取代**——課宣告了一顆這個目標根本沒有的元件時，
     //    它不該憑空出現。而那種不一致由 `audit-lessons` 那條護欄擋在上游。
@@ -1216,8 +1365,10 @@ export class App {
     //
     // 🟢 骨架是誰，`scaffoldNodeIds()` 已經在算了（它問的是**骨架宣告**）。
     //    所以範圍 ＝ 這一課要的 ∪ **畫面上真的是骨架的那幾塊的元件**。
+    // 🔴 **不是概念的東西不受課程範圍管**（2026-09-02）——見 `isAlwaysInScope`。
+    //    註解是第一個：它落在課程那張表外面，而那不代表學生不該碰它。
     return new Set([...base].filter((c) =>
-      want.has(c) || isScaffoldComponent(c) || this.scaffoldComponentIds().has(c)))
+      want.has(c) || isAlwaysInScope(c) || isScaffoldComponent(c) || this.scaffoldComponentIds().has(c)))
   }
 
   /**
@@ -1311,13 +1462,40 @@ export class App {
    * ——搬進 core 而不是複製一份（`history/188`：那個決定曾經有六份實作）。
    */
   private scaffoldNodeIds(): Set<string> {
-    return coreScaffoldNodeIds(this.syncController?.getCurrentTree(), this.currentSkeletonId)
+    // 🔴 **問畫布上那一棵**（2026-09-02）：自動補的 `#include`／`using namespace std;`
+    //    只存在於顯示樹上，而它們**是**骨架——拿真相那一棵去算會漏掉它們，
+    //    症狀是「兩顆實心的積木站在一堆淡的裡面」。
+    return coreScaffoldNodeIds(this.syncController?.getDisplayTree(), this.currentSkeletonId)
+  }
+
+  /**
+   * **把「忙的時候被忽略的那些改動」補做一次**（見 `_codeChangedWhileSyncing`）。
+   *
+   * ⚠️ 只補**一次**排程，不是每一筆各排一次——它們的結果都是「拿現在的程式碼再同步一次」。
+   */
+  private drainCodeChangedWhileSyncing(): void {
+    if (!this._codeChangedWhileSyncing) return
+    this._codeChangedWhileSyncing = false
+    this.codeDirty = true
+    this.updateSyncHints()
+    if (this.autoSync) this.scheduleCodeToBlocksSync()
   }
 
   private markOutOfScopeBlocks(): void {
     this.blocklyPanel?.markOutOfScopeBlocks(this.getVisibleComponents())
     // 🔴 **鷹架的顯示模式也在這裡套用**——與「超出範圍」同一個時機
     //    （畫完之後在既有的積木上蓋一層視覺）。
+    this.remarkScaffold()
+  }
+
+  /**
+   * **只重蓋鷹架那一層**（2026-09-02）。
+   *
+   * ⚠️ 與 `markOutOfScopeBlocks` 分開，是因為有人只需要這一半：換目標的途中
+   * 「這個主題看得到哪些元件」還沒算完，那時去重算「超出範圍」會把整個畫布
+   * 判成超出範圍。
+   */
+  private remarkScaffold(): void {
     this.blocklyPanel?.markScaffoldBlocks(
       this.scaffoldNodeIds(),
       this.scaffoldDepth === 1 ? 'ghost' : 'editable',
@@ -1445,6 +1623,12 @@ export class App {
         // 風格那一半——走既有的 `applyStylePreset`（它同時更新選擇器的顯示值）
         const style = STYLE_PRESETS.find(p => p.id === target.style)
         if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
+        // 🔴 **換目標可能就換了骨架**（C++ → Arduino），而新的那個未必藏得住
+        //    ——使用者看到狀態列寫著「Arduino 骨架・hidden」而積木上骨架好好地在。
+        //
+        // > **一個「這個狀態到不了」的規則，要在【每一條到得了它的路】上都執行
+        // > ——而換目標就是其中一條。**
+        this.enforceShellDepthFloor()
         const newDepth = this.getScaffoldDepth()
         setScaffoldConfig({ scaffoldDepth: newDepth })
         // ⚠️ **換到沒有替換表的目標時要真的清掉**——否則上一塊板子的替換會留著。
@@ -1464,6 +1648,8 @@ export class App {
         this.reloadBlockSpecsForTopic()
         this.updateToolbox()
         this.markOutOfScopeBlocks()
+        // ⚠️ 同上：這一次是**同步**打的，而樹要重投影完才算得準——再補一次。
+        this.remarkAfterSettled()
         if (!this._restoringState) {
           // Full resync only when scaffold depth crosses the 0 boundary
           // (blocks need scaffold wrapping/unwrapping). Otherwise just regen code.
@@ -1874,13 +2060,28 @@ export class App {
         //    Arduino 有兩個進入點，兩批語句攤平成一串之後**分不回去**
         //    ——那不是「藏起來」，是把資訊弄丟。
         //    使用者：「這也會**被你選什麼目標限制有哪些選擇**」。
-        const MODES: readonly [ScaffoldMode, string, string][] = [
-          ...(canHideScaffold(cur)
-            ? [['hidden', '隱藏', '積木上只留你自己的邏輯'] as [ScaffoldMode, string, string]]
-            : []),
-          ['ghost', '淡的', '看得到、動不了，旁邊寫著為什麼'],
-          ['editable', '完整', '整支程式，你改得動'],
-        ]
+        // 🔴 **名字表要【全】**（2026-09-02）：選單上列哪幾個是一回事，
+        //    而「現在是哪一個」要說得出人話又是另一回事。
+        //
+        //    使用者看到狀態列寫著「Arduino 骨架・**hidden**」——那是原始 id
+        //    漏到畫面上：Arduino 藏不住骨架，於是 `hidden` 不在選單裡，
+        //    而狀態卻停在它，標籤就掉回了 `?? mode`。
+        //
+        // > **一張「給人看的名字」的表，如果它只收得下【現在可以選的】那幾個，
+        // > 那麼狀態一旦落在別處，畫面上就會出現一個給機器看的字。**
+        const MODE_NAMES: Record<ScaffoldMode, [string, string]> = {
+          hidden: ['隱藏', '積木上只留你自己的邏輯'],
+          ghost: ['淡的', '看得到、動不了，旁邊寫著為什麼'],
+          editable: ['完整', '整支程式，你改得動'],
+        }
+        // ⚠️ **`hidden` 不是每一種骨架都做得到**（2026-08-28）：
+        //    Arduino 有兩個進入點，兩批語句攤平成一串之後**分不回去**
+        //    ——那不是「藏起來」，是把資訊弄丟。
+        //    使用者：「這也會**被你選什麼目標限制有哪些選擇**」。
+        const MODES: readonly [ScaffoldMode, string, string][] =
+          (Object.keys(MODE_NAMES) as ScaffoldMode[])
+            .filter((m) => m !== 'hidden' || canHideScaffold(cur))
+            .map((m) => [m, MODE_NAMES[m][0], MODE_NAMES[m][1]])
         const mode: ScaffoldMode =
           this.scaffoldDepth === 0 ? 'hidden' : this.scaffoldDepth === 1 ? 'ghost' : 'editable'
         const options: ControlOption[] = [
@@ -1899,7 +2100,8 @@ export class App {
         return {
           id: spec.id, kind: spec.kind, title,
           // 🔴 標籤同時說出**兩個軸**——「目前是哪一種」問的就是這兩格
-          label: `${cur?.name ?? this.currentSkeletonId}・${MODES.find(([m]) => m === mode)?.[1] ?? mode}`,
+          // ⚠️ 名字查**全表**，不是查「可以選的那幾個」——見 `MODE_NAMES`。
+          label: `${cur?.name ?? this.currentSkeletonId}・${MODE_NAMES[mode]?.[0] ?? mode}`,
           value: `mode:${mode}`,
           options,
         }
@@ -1980,7 +2182,16 @@ export class App {
          * 少了層 ⟹ **名字由剩下的格子拼出來**，因為宣告的名字在那裡是假話。
          */
         const nameOf = (o: HostLayoutOption): { label: string; description?: string } => {
-          if (o.complete) return { label: msg(o.nameKey, o.id) }
+          // 🔴 **名字與說明分開**（2026-09-02，使用者：「我不想要你寫括號內的字」）。
+          //
+          //    在此之前名字就是「三欄（程式碼 · 流程 · 積木）」——那串括號在選單裡
+          //    是有用的說明，而在**狀態列上**它只是一條長字。
+          //
+          // > **一個名字與一句說明，在選單裡並排、在狀態列上只留前者
+          // > ——把它們寫成同一個字串，就沒有地方可以只留前者。**
+          if (o.complete) {
+            return { label: msg(o.nameKey, o.id), description: msg(`${o.nameKey}_HINT`, '') || undefined }
+          }
           // 🪦 spec 171：版面全是純欄之後，縮減後剩下的一定是**一列並排**
           //    ——本來還要分「上下」與「跨格」那兩種說法。
           const cells = [...new Set(o.areas.flat())].map(layerName)
@@ -1990,15 +2201,54 @@ export class App {
         const cur = opts.find((o) => o.id === this.currentLayout) ?? opts[0]
         return {
           id: spec.id, kind: spec.kind, title,
-          label: nameOf(cur).label, value: cur.id,
+          // ⚠️ 狀態列上要說得出**這是什麼**——一個孤零零的「三欄」在一排
+          //    「C++」「Scratch 風格」中間讀不出來它在講版面。
+          label: `${msg('LAYOUT_LABEL', '佈局')}：${nameOf(cur).label}`, value: cur.id,
           // 🔴 **示意圖從【同一份宣告】產生**（2026-08-31，spec 168）：
           //    `areas` 就是套用時餵給 CSS 的那一份，所以圖與畫面**不可能**不一致。
           //    ⚠️ 手畫四張圖的話，它們會與宣告漂開，而漂開時沒有任何機構會出聲。
           //    ⚠️ 而它畫的是**縮減後**的 `areas`——否則圖上四格、畫面上兩格。
-          options: opts.map((o) => ({
-            value: o.id, ...nameOf(o),
-            previewGrid: { areas: o.areas.map((row) => row.map(layerName)) },
-          })),
+          options: [
+            ...opts.map((o) => ({
+              value: o.id, ...nameOf(o),
+              previewGrid: { areas: o.areas.map((row) => row.map(layerName)) },
+            })),
+            // 🔴 **下方面板那兩頁的開關住在版面選單裡**（2026-09-02，使用者要的）。
+            //
+            //    它們不是版面——三張版面說的是**編輯區怎麼排**，而主控台與變數
+            //    在編輯區底下（spec 171）。放在這裡是因為**使用者要調版面的
+            //    時候，想的就是這件事**。
+            //
+            // ⚠️ 標籤說的是**按下去會發生什麼**，不是那個東西的名字：
+            //    現在開著就寫「隱藏」，沒開就寫「顯示」（使用者逐字要的）。
+            //
+            // > **一個開關如果兩種狀態都叫同一個名字，使用者要按下去才知道
+            // > 它剛才是開還是關。**
+            //
+            // ⚠️ 沒有 `previewGrid`：它們不是版面，畫一張圖會讓它看起來像。
+            ...BOTTOM_PAGES.map((page) => {
+              const name = msg(`PANEL_${page.toUpperCase()}`, page)
+              // 🔴 **答不出來就不要說**（2026-09-02）。使用者在 Arduino IDE：
+              //    「沒有面板卻還說隱藏」——那個宿主的兩個可見性訊號都說謊
+              //    （見 `panel.ts` 的 `canObserveBottomVisibility`）。
+              //
+              // > **一個「現在是開還是關」的標籤，只在答得出來的時候才該說
+              // > ——答不出來時說一個，有一半的時間是騙人的。**
+              if (!(this.bottomVisibilityKnown?.() ?? true)) {
+                return {
+                  value: bottomToggleValue(page),
+                  label: msg('LAYOUT_TOGGLE_PANEL', '{panel}面板').replace('{panel}', name),
+                  description: msg('LAYOUT_TOGGLE_PANEL_HINT', '顯示／隱藏'),
+                }
+              }
+              const shown = this.bottomVisibility?.()[page] ?? false
+              return {
+                value: bottomToggleValue(page),
+                label: msg(shown ? 'LAYOUT_HIDE_PANEL' : 'LAYOUT_SHOW_PANEL', shown ? '隱藏' : '顯示')
+                  .replace('{panel}', name),
+              }
+            }),
+          ],
         }
       }
       case 'style': {
@@ -2133,10 +2383,19 @@ export class App {
         case 'viewBlocks': this.showProjection?.('blocks'); break
         case 'viewFlow': this.showProjection?.('flow'); break
         case 'layout': {
-          const id = (invoke.values?.[0] ?? invoke.value) as LayoutPresetId | undefined
-          if (id && layoutPreset(id)) {
-            this.currentLayout = id
-            this.applyLayout?.(id)
+          const id = (invoke.values?.[0] ?? invoke.value) as string | undefined
+          // 🔴 下方面板的開關與版面走**同一個選單**，但它不是一張版面
+          //    ——所以在這裡岔開，不去碰 `currentLayout`。
+          const page = bottomPageOf(id)
+          if (page) {
+            this.toggleBottom?.(page)
+            // 🔴 **重畫控制項**——標籤要從「顯示」翻成「隱藏」。
+            this.publishControls()
+            break
+          }
+          if (id && layoutPreset(id as LayoutPresetId)) {
+            this.currentLayout = id as LayoutPresetId
+            this.applyLayout?.(id as LayoutPresetId)
             // 🔴 **重畫控制項**——不然狀態列還顯示上一個版面的名字。
             //    ⚠️ 那不是「沒更新」，是**它在說謊**：畫面已經是三欄而它寫著對照。
             this.publishControls()
@@ -2162,23 +2421,50 @@ export class App {
   private wireHostConsole(consolePanel: ConsolePanel | null): void {
     const view = this.codeView
     if (!consolePanel || !view?.reportConsole) return
-    consolePanel.onOutput((chunk: string) => view.reportConsole?.(chunk))
-    // 🔴 宿主打不開終端機 → 主控台還給面板（Arduino IDE，2026-08-25 實測）。
-    //    🟢 而輸出不會掉：`ConsolePanel` 一直都在畫，終端機只是它的鏡射。
-    view.onConsoleFallback?.(() => this.enableConsoleTab?.())
-    consolePanel.onClear(() => view.clearConsole?.())
-    consolePanel.onInputRequested((prompt) => view.reportConsoleAwaitingInput?.(prompt))
-    view.onConsoleInput?.((line: string) => consolePanel.feedInput(line))
 
-    // 🔴 **反方向：別的視窗在跑，而輸出要畫在【我】這裡**（2026-09-02，spec 171）。
+    // ─────────────────────────────────────────────────────────────
+    // 🔴 **我是【產生輸出的人】還是【畫輸出的人】？**（2026-09-02）
     //
-    //    ▷ 在宿主的標題列上，它跑的是**積木那個 webview**；而主控台是 panel 區
-    //    的另一個 webview。少了這一段，那個原生分頁永遠是空的
-    //    ——**而執行看起來像沒有跑**。
+    // 使用者：「執行了一次，結果字被銜接在之後，然後還是一直閃」。
+    //
+    // 主控台搬進宿主的 panel 區之後有兩種視窗：跑程式的（積木／流程）與
+    // 畫輸出的（主控台）。而第一版**兩邊都接了兩個方向**，於是畫的人
+    // 把它畫下來的每一個字**又報回宿主**，宿主再轉回來——一個回音圈。
+    //
+    // > **同一個面板，「把它畫出來」與「把它報出去」不能同時接
+    // > ——那不是兩個功能，那是一個迴圈。**
+    //
+    // 判準問宣告：`output` 投影到 `panelBottom` ＝ **這個視窗自己畫**。
+    // ─────────────────────────────────────────────────────────────
+    const spec = CONTROLS.find((c) => c.id === 'console')
+    const drawsLocally = !!spec
+      && consoleRole(surfaceOf(spec, this.profile.controlSurfaces)) === 'draw'
+
+    if (!drawsLocally) {
+      // 【產生的人】：把輸出送出去，宿主會轉給畫的人。
+      consolePanel.onOutput((chunk: string) => view.reportConsole?.(chunk))
+      consolePanel.onClear(() => view.clearConsole?.())
+      consolePanel.onInputRequested((prompt) => view.reportConsoleAwaitingInput?.(prompt))
+      // 🔴 宿主打不開終端機 → 主控台還給面板（Arduino IDE，2026-08-25 實測）。
+      //    🟢 而輸出不會掉：`ConsolePanel` 一直都在畫，終端機只是它的鏡射。
+      view.onConsoleFallback?.(() => this.enableConsoleTab?.())
+      // ⚠️ 使用者在**別的地方**（宿主的終端機／主控台視圖）打的那一行
+      view.onConsoleInput?.((line: string) => consolePanel.feedInput(line))
+      // 🔴 **狀態也要送**——不然畫的那一側會停在「等待輸入…」，
+      //    而程式其實早就印完了（使用者 2026-09-02 的截圖）。
+      this.bus.on('execution:state', (e) =>
+        view.reportExecutionState?.({ status: e.status, reason: e.reason }))
+      return
+    }
+
+    // 【畫的人】：把宿主轉過來的畫出來，而**不再報回去**。
+    // ⚠️ 狀態列也是「畫」的一部分——它說的是「程式現在怎麼樣」。
+    view.onExecutionStateIn?.((e) =>
+      consolePanel.onExecutionState({ status: e.status as never, reason: e.reason as never }))
     view.onConsoleOut?.((m) => {
       if (m.clear) consolePanel.clear()
       if (m.chunk !== undefined) consolePanel.write(m.chunk)
-      // ⚠️ 等輸入時要**開一個輸入框**，而它的答案要回到跑的那一邊（下面那段）。
+      // ⚠️ 等輸入時開一個輸入框，而答案要回到**跑的那一邊**。
       if (m.awaitingInput !== undefined) {
         void consolePanel.promptInput(m.awaitingInput).then((line) => view.submitConsoleInput?.(line))
       }

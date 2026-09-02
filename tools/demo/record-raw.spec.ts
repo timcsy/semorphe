@@ -79,6 +79,15 @@ test('raw', async ({ page }) => {
     undefined, { timeout: 60_000 })
   await page.waitForTimeout(1600)
 
+  // ⓪ **明說是「對照」**（2026-09-02）——在此之前這一支靠**預設值**。
+  //    而預設值是會變的：這一刀（spec 171）就動過版面清單一次。
+  //
+  // > **一支示範如果靠預設值，它演的是「今天的預設」，不是它想演的那件事。**
+  await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
+  await page.locator('.quick-pick-item[data-value="compare"]').click()
+  await page.waitForFunction(() => document.body.getAttribute('data-layout') === 'compare')
+  await page.waitForTimeout(1000)
+
   // ① 貼進去 → 灰色積木長出來
   await page.evaluate((prog) => {
     const a = (window as never as { __app: {

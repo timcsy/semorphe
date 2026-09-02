@@ -132,6 +132,11 @@ function attachDiagnostics(app: App): void {
 
   window.addEventListener('message', (e: MessageEvent<{ type?: string }>) => {
     if (e.data?.type !== 'requestDiagnostics') return
+    /** 畫布上**最外層**那幾顆的身分——⚠️ 巢狀的不列（它們跟著父節點走）。 */
+    const topLevelBlocks = (): string[] => {
+      const ws = (panel() as { workspace?: { getTopBlocks(ordered: boolean): { type: string }[] } }).workspace
+      return ws?.getTopBlocks(true).map((b) => b.type) ?? []
+    }
     postToHost({
       type: 'diagnostics',
       lines: [
@@ -149,6 +154,15 @@ function attachDiagnostics(app: App): void {
         // 🔴 這一行是 2026-08-18 唯一還沒抓到的那個 bug 的證據
         //    ——它只在 Theia（Arduino IDE）裡發生，Chromium 重現不出來。
         `積木載入：${panelError() ?? '正常'}`,
+        // 🔴 **畫布上到底有哪幾顆**（2026-09-02）。
+        //
+        //    使用者：「為何 using namespace std; 不見了？」——程式碼裡有那一行，
+        //    而積木上沒有那一顆。而這份報表**答不出**「它是沒被畫出來，還是
+        //    畫了而看不到」——那兩件事的修法完全不同。
+        //
+        // > **一份診斷如果只說得出「同步過幾次」，
+        // > 它答不出使用者眼前那個「它不見了」是哪一種不見。**
+        `畫布上的頂層積木：${topLevelBlocks().join(' · ') || '（一顆都沒有）'}`,
         // 🔴 沒有堆疊就只能猜——而這一輪已經猜錯過三次。
         ...(panel().stateErrorStack
           ? ['  堆疊：', ...(panel().stateErrorStack ?? '').split('\n').map((l) => `    ${l}`)]
