@@ -118,7 +118,7 @@ Semorphe 想做的是另一件事：
 `semorphe-vscode-<版本>.vsix`，然後任選一種：
 
 ```bash
-code --install-extension semorphe-vscode-0.12.0.vsix
+code --install-extension semorphe-vscode-0.13.0.vsix
 ```
 
 或在 VSCode 裡：命令面板（`Cmd/Ctrl` + `Shift` + `P`）→
