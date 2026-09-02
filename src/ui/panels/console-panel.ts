@@ -1,6 +1,7 @@
 import { msg } from '../../core/messages'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
+import { revealForOutput, type ConsoleSurface } from '../../core/host/console-surface'
 
 export type ConsoleSignal = 'SIGINT' | 'EOF'
 
@@ -30,6 +31,17 @@ export class ConsolePanel implements ViewHost {
   /** Queued input lines from multi-line paste */
   private pendingInputLines: string[] = []
   private onInputShowCallback: ((input: HTMLInputElement) => void) | null = null
+
+  /**
+   * 這個宿主上「主控台這一格」的開關（spec 171）。
+   *
+   * ⚠️ `null` ＝ 這個宿主沒有可關的主控台——那時 `revealForOutput` 什麼都不做。
+   */
+  private surface: ConsoleSurface | null = null
+
+  setSurface(surface: ConsoleSurface | null): void {
+    this.surface = surface
+  }
   private onInputHideCallback: (() => void) | null = null
 
   constructor(container: HTMLElement) {
@@ -214,9 +226,16 @@ export class ConsolePanel implements ViewHost {
    */
   write(text: string): void {
     if (!text) return
-    // 🔴 **鏡射給宿主**（2026-08-25）——IDE 那側的主控台是**終端機**。
-    //    ⚠️ 放在最前面：底下有多個提早 return 的分支，而
-    //    「有些輸出沒有出現在終端機上」比「完全沒接上」難查得多。
+    // 🔴 **關著就先把它叫回來**（spec 171）。使用者可以關掉主控台，
+    //    而「有輸出時它自己回來」是那個自由的代價——不然使用者會
+    //    **看不到程式在說什麼**，那與「程式當掉了」長得一樣。
+    //
+    // ⚠️ 這一句在**共用的這一側**，不是各宿主各寫一份：
+    //    兩個宿主各寫一次的話，其中一個遲早會漏。
+    revealForOutput(this.surface)
+    // 🔴 **鏡射給宿主**（2026-08-25）——⚠️ 放在最前面：底下有多個提早
+    //    return 的分支，而「有些輸出沒有出現在宿主那側」比「完全沒接上」
+    //    難查得多。
     this.outputCb?.(text)
 
     const parts = text.split('\n')
@@ -374,6 +393,9 @@ export class ConsolePanel implements ViewHost {
 
       this.scrollToBottom()
       // Notify virtual keyboard integration before focusing
+      // 🔴 **等輸入也算輸出**——`cin` 的提示不出現的話，
+      //    使用者會以為程式當掉了。
+      revealForOutput(this.surface)
       this.onInputShowCallback?.(input)
       input.focus()
     })

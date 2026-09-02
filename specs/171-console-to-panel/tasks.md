@@ -15,9 +15,9 @@
 
 ## Phase 2：Foundational（擋住所有 user story）
 
-- [ ] T002 在 `src/core/host/console-surface.ts` 定義 `ConsoleSurface`（`show`／`hide`／`isHidden`），照 [contracts](./contracts/console-surface.md)
-- [ ] T003 在 `tests/unit/core/console-comes-back.test.ts` 寫**先紅**的三條：關著時寫入要 `show()`／已經開著不重複 `show()`／等輸入也算輸出
-- [ ] T004 讓 T003 綠——那條規則寫在 `ConsolePanel` 的**寫入路徑**上，**不是各宿主各寫一份**
+- [x] T002 在 `src/core/host/console-surface.ts` 定義 `ConsoleSurface`（`show`／`hide`／`isHidden`），照 [contracts](./contracts/console-surface.md)
+- [x] T003 在 `tests/unit/core/console-comes-back.test.ts` 寫**先紅**的三條：關著時寫入要 `show()`／已經開著不重複 `show()`／等輸入也算輸出
+- [x] T004 讓 T003 綠——那條規則寫在 `ConsolePanel` 的**寫入路徑**上，**不是各宿主各寫一份**
 
 **Checkpoint**：`npx vitest run tests/unit/core/console-comes-back.test.ts` 綠，而**產品行為還沒動**。
 
