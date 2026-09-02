@@ -42,7 +42,7 @@ const boxOf = (page: P, id: string): Promise<{ x: number; y: number; w: number; 
     return { x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.width), h: Math.round(b.height) }
   }, id)
 
-test('★ 入口條件：編輯區真的是一張 grid，而四格都建出來了', async ({ page }) => {
+test('★ 入口條件：編輯區真的是一張 grid，而三欄 ＋ 底條都建出來了', async ({ page }) => {
   // 錨在**合成量**（是不是 grid、建了幾個容器），不是「有幾個位置對」
   // ——後者會在這支成功的那天變紅。
   await freshApp(page)
@@ -52,61 +52,79 @@ test('★ 入口條件：編輯區真的是一張 grid，而四格都建出來�
       .filter((id) => document.getElementById(id)).length,
   }))
   expect(s.display, '🔴 編輯區不是 grid → 下面每一個座標都不算數').toBe('grid')
-  expect(s.cells, '🔴 四格沒有全部建出來 → 下面的「不見了」可能只是沒建').toBe(4)
+  // ⚠️ `bottom-container` 現在是 `#editors` 的**兄弟**不是它的一格（spec 171）
+  //    ——它仍然要在，而它不再由 grid 排。
+  expect(s.cells, '🔴 三欄或底條沒有全部建出來 → 下面的「不見了」可能只是沒建').toBe(4)
 })
 
-test('🔴 從「對照」切到「十字」，【整個左欄】不跳走', async ({ page }) => {
+test('🔴 從「對照」切到「三欄」，程式碼那一欄不跳走', async ({ page }) => {
   // 這是使用者那句話的執行機構：切版面時你正在看的東西不會換位子。
   //
-  // 🪦 2026-09-01 之前這一支釘的是「程式碼**與積木**不跳走」（那時十字是
-  //    `element,space ／ relation,state`）。使用者把十字改成
-  //    `element,relation ／ state,space` 之後，保住的是**更大的一塊**：
-  //    整個左欄與「對照」逐格相同——只有積木讓位給流程。
+  // 🪦 2026-09-02（spec 171）之前這一支釘的是「切到**十字**時整個左欄不跳走」。
+  //    十字退場之後，**同一條性質**留在三欄上：加一欄流程，而程式碼還在最左。
+  //    ⚠️ 而主控台那一半的斷言**變強了**：它現在根本不參加版面，
+  //    所以它的位置**一個像素都不該動**（不只是「還在同一欄」）。
   await freshApp(page)
   const a = { code: await boxOf(page, 'code-column'), bottom: await boxOf(page, 'bottom-container') }
   expect(a.code, '🔴 一開機程式碼那一格就不見了 → 這支測的不是那條路').not.toBeNull()
 
-  await pick(page, 'grid')
+  await pick(page, 'three-column')
   const b = { code: await boxOf(page, 'code-column'), bottom: await boxOf(page, 'bottom-container') }
 
   expect({ x: b.code!.x, y: b.code!.y }, '🔴 程式碼跳走了').toEqual({ x: a.code!.x, y: a.code!.y })
-  expect(b.bottom!.x, '🔴 主控台換了欄').toBe(a.bottom!.x)
+  expect(b.bottom, '🔴 切版面把主控台弄不見了').toEqual(a.bottom)
 })
 
-test('🔴 十字：四格【等大】——「沒有任何一層是特別的」是可量的', async ({ page }) => {
+test('🔴 三欄：三格【等大】——「沒有任何一層是特別的」是可量的', async ({ page }) => {
+  // 🪦 這一條本來量的是十字的四格。它的理念（使用者 2026-08-31：
+  //    「這樣程式碼面板就變得比較特別了」）**由三欄承接**——而主控台不參加
+  //    這個比較，因為它不是投影，是**執行的輸出**。
   await freshApp(page)
-  await pick(page, 'grid')
+  await pick(page, 'three-column')
   const boxes = await Promise.all(
-    ['code-column', 'blocks-column', 'flow-column', 'bottom-container'].map((id) => boxOf(page, id)))
-  expect(boxes.every((b) => b !== null), '🔴 十字裡有格子不見了').toBe(true)
+    ['code-column', 'flow-column', 'blocks-column'].map((id) => boxOf(page, id)))
+  expect(boxes.every((b) => b !== null), '🔴 三欄裡有格子不見了').toBe(true)
   const areas = boxes.map((b) => b!.w * b!.h)
   const max = Math.max(...areas), min = Math.min(...areas)
   // SC-005：面積差在 ±5% 以內
-  expect((max - min) / max, `🔴 四格不等大：${areas.join(' / ')}`).toBeLessThan(0.05)
+  expect((max - min) / max, `🔴 三格不等大：${areas.join(' / ')}`).toBeLessThan(0.05)
 })
 
-test('🔴 四個版面裡，主控台一次都不准不見', async ({ page }) => {
-  // 🔴 舊規則寫的是「state 不得出現在編輯區的預設裡」，理由是怕面板區被佈局關掉。
-  //    版面可以**搬**它，**不得關掉**它——所以判準要反過來寫。
+test('🔴 三個版面裡，主控台一次都不准【被版面動到】', async ({ page }) => {
+  // 🪦 **判準在 2026-09-02（spec 171）反轉了一次**：
+  //    舊的是「每一張版面裡主控台都要在」（十字那個時代，它是版面的一格）。
+  //    新的是「**版面根本碰不到它**」——它是編輯區底下一條獨立的、全寬的底條。
+  //
+  // > **「每一張版面都要記得留一格給它」與「版面碰不到它」守的是同一件事，
+  // > 而後者不需要任何一張版面記得。**
   await freshApp(page)
-  for (const id of ['focus', 'compare', 'three-column', 'grid']) {
+  const first = await boxOf(page, 'bottom-container')
+  expect(first, '🔴 一開機主控台就不在 → 這支測的不是那條路').not.toBeNull()
+  for (const id of ['focus', 'compare', 'three-column']) {
     await pick(page, id)
-    expect(await boxOf(page, 'bottom-container'), `🔴 「${id}」把主控台弄不見了`).not.toBeNull()
+    expect(await boxOf(page, 'bottom-container'), `🔴 「${id}」動到了主控台`).toEqual(first)
   }
 })
 
-test('🔴 十字：左上程式碼·右上流程·右下積木·左下主控台', async ({ page }) => {
+test('🔴 三欄：程式碼·流程·積木由左到右，而主控台橫在底下【整條】', async ({ page }) => {
+  // 🪦 取代「十字：左上程式碼·右上流程·右下積木·左下主控台」。
+  //    使用者 2026-09-02：「讓最底下水平**完全展開**是放主控台，
+  //    像是 VSCode 那樣」——「完全展開」是可量的，量在這裡。
   await freshApp(page)
-  await pick(page, 'grid')
-  const [code, flow, blocks, bottom] = await Promise.all(
-    ['code-column', 'flow-column', 'blocks-column', 'bottom-container'].map((id) => boxOf(page, id)))
-  expect([code, flow, blocks, bottom].every((b) => b !== null), '🔴 十字裡有格子不見了').toBe(true)
-  // 左行 ＝ 程式碼／主控台　右行 ＝ 流程／積木
-  expect(code!.x, '🔴 程式碼不在左').toBeLessThan(flow!.x)
-  expect(bottom!.x, '🔴 主控台不在左下').toBe(code!.x)
-  expect(blocks!.x, '🔴 積木不在右下').toBe(flow!.x)
-  expect(bottom!.y, '🔴 主控台不在下排').toBeGreaterThan(code!.y)
-  expect(blocks!.y, '🔴 積木不在下排').toBeGreaterThan(flow!.y)
+  await pick(page, 'three-column')
+  const [code, flow, blocks, bottom, editors] = await Promise.all(
+    ['code-column', 'flow-column', 'blocks-column', 'bottom-container', 'editors']
+      .map((id) => boxOf(page, id)))
+  expect([code, flow, blocks, bottom].every((b) => b !== null), '🔴 三欄裡有格子不見了').toBe(true)
+  // 由左到右 ＝ 理解的層次（細 → 粗），不是偏好
+  expect(code!.x, '🔴 程式碼不在最左').toBeLessThan(flow!.x)
+  expect(flow!.x, '🔴 流程不在中間').toBeLessThan(blocks!.x)
+  // 三欄同一列
+  expect([flow!.y, blocks!.y], '🔴 三欄沒有對齊').toEqual([code!.y, code!.y])
+  // 🔴 主控台在**下面**，而且**與編輯區一樣寬**（±2px 容 gap／邊框）
+  expect(bottom!.y, '🔴 主控台不在編輯區下面').toBeGreaterThanOrEqual(code!.y + code!.h)
+  expect(Math.abs(bottom!.w - editors!.w), `🔴 主控台沒有完全展開：${bottom!.w} vs ${editors!.w}`)
+    .toBeLessThanOrEqual(2)
 })
 
 test('🔴 格與格之間要有【縫】，而把手剛好蓋住那條縫——不壓到內容', async ({ page }) => {
@@ -122,22 +140,29 @@ test('🔴 格與格之間要有【縫】，而把手剛好蓋住那條縫——
   expect(blocks.x - (code.x + code.w), '🔴 兩欄之間的距離不等於那條縫').toBe(gap)
 })
 
-test('🔴 分隔線的長度 ＝ 那條縫【真正存在】的長度——不得穿過跨格的格子', async ({ page }) => {
-  // 🔴 使用者 2026-09-01：「那條水平線還是沒有處理好」。
-  //    在「對照」裡積木是**跨兩列**的，它上面根本沒有縫——而第一版的橫線
-  //    橫跨整個容器，從積木中間穿過去。
-  //
-  // > **一條分隔線的長度，等於那條縫真正存在的長度
-  // > ——而跨格的地方，縫是不存在的。**
+// 🪦 **「分隔線的長度 ＝ 那條縫真正存在的長度」退場**（2026-09-02，spec 171）。
+//
+//    它守的是「橫線不得穿過**跨格**的格子」——在「對照」裡積木跨兩列，
+//    它上面沒有縫，而第一版的橫線橫跨整個容器從積木中間穿過去。
+//
+// 🔴 **而編輯區已經沒有第二列了**，於是它裡面**一條橫的分隔線都沒有**
+//    （`.grid-divider-rows` 是空的）——這一支現在測不到任何東西。
+//    它不是被改綠的，是它守的那個形狀不存在了。
+//
+// 🟢 主控台與編輯區之間那條橫線還在，而它是**另一個機構**
+//    （`bottom-panel-divider`，全寬，沒有跨格問題）。下面那一支驗它。
+
+test('🔴 編輯區裡沒有橫線，而主控台上面那一條【橫跨整條】', async ({ page }) => {
   await freshApp(page)
-  const seam = await page.evaluate(() => {
-    const h = [...document.querySelectorAll('.grid-divider-rows')][0] as HTMLElement | undefined
-    const code = document.getElementById('code-column')!.getBoundingClientRect()
-    return h ? { right: parseFloat(h.style.left) + parseFloat(h.style.width), codeRight: Math.round(code.width) } : null
+  const s = await page.evaluate(() => {
+    const rows = document.querySelectorAll('#editors .grid-divider-rows').length
+    const d = document.querySelector('#bottom-container .bottom-panel-divider') as HTMLElement | null
+    const bc = document.getElementById('bottom-container')!.getBoundingClientRect()
+    return { rows, w: d?.getBoundingClientRect().width ?? -1, bw: Math.round(bc.width) }
   })
-  expect(seam, '🔴 「對照」裡沒有橫的分隔線 → 這支測的不是那條路').not.toBeNull()
-  expect(seam!.right, '🔴 橫線穿過了積木——而積木在「對照」跨兩列，那裡沒有縫')
-    .toBeLessThanOrEqual(seam!.codeRight + 1)
+  expect(s.rows, '🔴 編輯區又長出橫的分隔線 → 那代表它有第二列了').toBe(0)
+  expect(Math.abs(s.w - s.bw), `🔴 主控台上面那條線沒有橫跨整條：${s.w} vs ${s.bw}`)
+    .toBeLessThanOrEqual(2)
 })
 
 // 🪦 **兩支退場（2026-09-01，spec 169）**：
@@ -154,7 +179,7 @@ test('🔴 分隔線的長度 ＝ 那條縫【真正存在】的長度——不�
 // > ——而不是它變得不方便。**
 
 
-test('🔴 選單裡有四張【示意圖】，而每張的格數與宣告一致', async ({ page }) => {
+test('🔴 選單裡有三張【示意圖】，而每張的格數與宣告一致', async ({ page }) => {
   await freshApp(page)
   await openPicker(page)
   const rows = await page.evaluate(() =>
@@ -163,9 +188,10 @@ test('🔴 選單裡有四張【示意圖】，而每張的格數與宣告一致
       cells: r.querySelectorAll('.quick-pick-preview-cell').length,
       visible: (r.querySelector('.quick-pick-preview') as HTMLElement | null)?.getBoundingClientRect().width ?? 0,
     })))
-  expect(rows.map((r) => r.id)).toEqual(['focus', 'compare', 'three-column', 'grid'])
-  // 跨格算【一格】——`compare` 的積木跨兩列，所以是 3 格不是 4 格
-  expect(rows.map((r) => r.cells), '🔴 圖的格數與宣告不一致').toEqual([2, 3, 4, 4])
+  expect(rows.map((r) => r.id)).toEqual(['focus', 'compare', 'three-column'])
+  // 🪦 本來是 `[2, 3, 4, 4]`——那個 `3` 是「對照的積木跨兩列，跨格算一格」，
+  //    而跨格隨十字一起退場了（主控台不在版面裡，沒有東西需要跨列）。
+  expect(rows.map((r) => r.cells), '🔴 圖的格數與宣告不一致').toEqual([1, 2, 3])
   expect(rows.every((r) => r.visible > 0), '🔴 圖畫出來是 0 寬 → 使用者看不到').toBe(true)
 })
 
@@ -192,8 +218,10 @@ test('🔴 選單裡有四張【示意圖】，而每張的格數與宣告一致
  *    而 happy-dom 沒有 CSS 引擎。
  */
 test('🔴 四格的頭是同一種東西——底色、內距、間距都一樣', async ({ page }) => {
+  // ⚠️ 「四格」＝ 三欄 ＋ 底下的主控台。它們**不在同一個容器**了（spec 171），
+  //    而「讀起來是同一組」這件事不因為容器不同而放寬。
   await freshApp(page)
-  await pick(page, 'grid')
+  await pick(page, 'three-column')
   const heads = await page.evaluate(() =>
     ['.monaco-clipboard-bar', '.flow-toolbar', '.quick-access-bar', '.bottom-panel-tabs']
       .map((sel) => {
@@ -219,7 +247,7 @@ test('🔴 四格的頭是同一種東西——底色、內距、間距都一樣
 
 test('🔴 每一格都有頭——一格沒有頭，它讀起來就不是這一組的', async ({ page }) => {
   await freshApp(page)
-  await pick(page, 'grid')
+  await pick(page, 'three-column')
   // ⚠️ 判準是「那一格的第一個子節點是一條頭」，不是「頁面上有幾條頭」
   //    ——後者在某一格少一條時仍然會過。
   for (const [cell, head] of [

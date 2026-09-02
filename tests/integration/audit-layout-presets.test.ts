@@ -50,6 +50,9 @@
 import { describe, it, expect } from 'vitest'
 import { LAYOUT_PRESETS, layoutPreset } from '../../src/core/host/layout-presets'
 import { LAYER_ORDER } from '../../src/core/view-host'
+import { revealForOutput } from '../../src/core/host/console-surface'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import zhTW from '../../src/i18n/zh-TW/blocks.json'
 import en from '../../src/i18n/en/blocks.json'
 
@@ -63,6 +66,10 @@ type Areas = readonly (readonly Slot[])[]
  * ——而那個輸出裡沒有 `failed` 字樣，會被讀成「綠的」。這支在 `areas` 還不存在時
  * 必須**真的紅**，不是編不過。
  */
+/** I4b 的接線側要讀原始碼——它問的是「這條規則有沒有被接上」。 */
+const read = (rel: string): string =>
+  readFileSync(resolve(__dirname, '../..', rel), 'utf8')
+
 const areasOf = (p: unknown): Areas | undefined =>
   (p as { areas?: Areas }).areas
 
@@ -111,7 +118,7 @@ describe('第八十一條護欄：佈局宣告是二維的格子表', () => {
   it('★ 入口條件：真的讀到那份宣告了', () => {
     // 錨在**宣告了幾個版面**（合成量），見檔頭的自我否證聲明。
     expect(LAYOUT_PRESETS.length, '一個版面都沒讀到 → 下面的 0 是假的').toBeGreaterThan(0)
-    expect(LAYOUT_PRESETS.map((p) => p.id)).toEqual(['focus', 'compare', 'three-column', 'grid'])
+    expect(LAYOUT_PRESETS.map((p) => p.id)).toEqual(['focus', 'compare', 'three-column'])
   })
 
   it('🔴 I1 硬性零：每個版面都要有 `areas`，而且是【矩形】', () => {
@@ -139,14 +146,35 @@ describe('第八十一條護欄：佈局宣告是二維的格子表', () => {
     expect(bad, `這些把層的順序重排了：\n  ${bad.join('\n  ')}`).toEqual([])
   })
 
-  it('🔴 I4 硬性零：`state` 必須在【每一個】版面裡恰好一個連續矩形——不得缺席', () => {
-    // 🔴 舊規則寫的是「state 不得出現」，理由是怕面板區被佈局關掉。
-    //    而版面可以【搬】它，不得【關掉】它——所以判準要反過來寫。
-    const bad = LAYOUT_PRESETS.filter((p) => {
-      const a = areasOf(p); if (!a) return true
-      return !isSolidRect(a, 'state')
-    }).map((p) => p.id)
-    expect(bad, `這些版面把主控台弄不見了（或把它切成兩塊）：\n  ${bad.join('\n  ')}`).toEqual([])
+  it('🔴 I4a 硬性零：`state` 不得出現在任何版面裡——主控台不是編輯區的一格', () => {
+    // 見檔頭「I4 又反轉回來了」：它不是一種投影，是**執行的輸出**。
+    // ⚠️ 而「不准被關掉」那個擔憂由 I4b 接手，不是不見了。
+    const bad = LAYOUT_PRESETS
+      .filter((p) => (areasOf(p) ?? []).flat().includes('state'))
+      .map((p) => p.id)
+    expect(bad, `這些版面把主控台當成編輯區的一格：\n  ${bad.join('\n  ')}`).toEqual([])
+  })
+
+  it('🔴 I4b 硬性零：主控台【叫得回來】，而且【有輸出時自己回來】', () => {
+    // ① 行為側：規則本身
+    const log: string[] = []
+    const closed = {
+      show: () => log.push('show'), hide: () => log.push('hide'), isHidden: () => true,
+    }
+    const open = { ...closed, isHidden: () => false }
+    expect(revealForOutput(closed), '關著的時候有輸出，它必須自己回來').toBe(true)
+    expect(revealForOutput(open), '已經開著就不該再叫一次').toBe(false)
+    expect(revealForOutput(null), '沒有表面時不得炸').toBe(false)
+    expect(log).toEqual(['show'])
+
+    // ② 接線側：那條規則**真的在產品的寫入路徑上**。
+    //    🔴 少了這一半，`console-surface.ts` 可以是一支沒有人呼叫的純函數，
+    //    而上面三條照樣全綠。
+    const panel = read('src/ui/panels/console-panel.ts')
+    expect(panel, '主控台的寫入路徑沒有接上「有輸出就回來」').toMatch(/revealForOutput\(/)
+    const shell = read('src/ui/app-shell.ts')
+    expect(shell, '沒有人把「怎麼開關」交給主控台——它叫不回來')
+      .toMatch(/setSurface\(/)
   })
 
   it('🔴 I5 硬性零：同一層在一個版面裡最多一個連續矩形——一層兩塊＝兩個真相', () => {
@@ -197,8 +225,10 @@ describe('第八十一條護欄：佈局宣告是二維的格子表', () => {
     expect(isSolidRect(splitLayer, 'space'), 'I5 認不出一層兩塊').toBe(false)
     expect(isSolidRect([['element', 'space'], ['relation', 'space']], 'space'),
       'I5 誤判了合法的直向跨格').toBe(true)
-    expect(isSolidRect(noState, 'state'), 'I4 認不出主控台不見了').toBe(false)
-    expect(isSolidRect([['element', 'space'], ['state', 'state']], 'state'), 'I4 誤判了正確的跨格').toBe(true)
+    // 🪦 I4 反轉之後，這裡驗的是「認得出主控台被塞進版面」
+    expect(noState.flat().includes('state'), 'I4a 誤判了一張乾淨的版面').toBe(false)
+    expect([['element', 'space'], ['state', 'state']].flat().includes('state'),
+      'I4a 認不出主控台被塞進版面').toBe(true)
     expect(notRect.some((r) => r.length !== notRect[0].length), 'I1 認不出不是矩形').toBe(true)
     expect(notALayer.flat().some((v) => !LAYER_ORDER.includes(v as never) && v !== '*'), 'I2 認不出不是層').toBe(true)
   })
@@ -207,6 +237,6 @@ describe('第八十一條護欄：佈局宣告是二維的格子表', () => {
     // 缺了這一條，一個「找不到就回第一個」的實作也能通過上面幾條，
     // ⚠️ 而那會讓一個打錯的版面**靜靜地變成專注模式**。
     expect(layoutPreset('nope' as never)).toBeUndefined()
-    expect(areasOf(layoutPreset('compare'))).toEqual([['element', 'space'], ['state', 'space']])
+    expect(areasOf(layoutPreset('compare'))).toEqual([['element', 'space']])
   })
 })

@@ -23,14 +23,16 @@ const pick = async (page: P, id: string): Promise<void> => {
   await page.waitForFunction((v) => document.body.getAttribute('data-layout') === v, id)
 }
 
-const ALL = ['focus', 'compare', 'three-column', 'grid']
+// 🪦 十字（`grid`）退場（2026-09-02，spec 171）——主控台不再是版面的一格，
+//    而它是唯一需要「編輯區有第二列」的版面。
+const ALL = ['focus', 'compare', 'three-column']
 
-test('★ 入口條件：四個版面都套得起來，而槽真的建出來了', () => {
+test('★ 入口條件：三個版面都套得起來，而槽真的建出來了', () => {
   // 錨在合成量，見 spec 169 的 SC——不錨在「有幾個不對」
-  expect(ALL.length).toBe(4)
+  expect(ALL.length).toBe(3)
 })
 
-test('🔴 ↩↪ 在四個版面都看得見，而且【不住在任何一格投影裡】', async ({ page }) => {
+test('🔴 ↩↪ 在三個版面都看得見，而且【不住在任何一格投影裡】', async ({ page }) => {
   // 🔴 `doUndo` 早就問 `lastEditor` 走三條路——行為是全域的。
   //    而在此之前它的位置在積木那一欄的快速列裡，會跟著那一欄一起消失。
   //
@@ -56,10 +58,12 @@ test('🔴 每一個可見槽的【選項集合完全相同】', async ({ page }
   // ⚠️ 改成下拉之後選項**開了才在 DOM 裡**（2026-09-01 使用者：「我希望不是用 tab，
   //    而是用下拉式」）——所以這一支要**一格一格打開來比**，而不是掃 DOM。
   await freshApp(page)
-  await pick(page, 'grid')   // 四個槽都看得見的那一張
+  // 🪦 本來挑十字（「四個槽都看得見的那一張」）。十字退場之後**三欄**是
+  //    看得到最多槽的那一張——而主控台不再是槽，它不投影任何東西。
+  await pick(page, 'three-column')
   const pickers = page.locator('.slot-picker')
   const n = await pickers.count()
-  expect(n, '🔴 一顆選擇器都沒有').toBe(4)
+  expect(n, '🔴 選擇器的數目不是三欄').toBe(3)
 
   const sets: string[] = []
   for (let i = 0; i < n; i++) {
@@ -127,28 +131,14 @@ test('🔴 切走版面再切回來，指派不變（SC-005）', async ({ page }
   expect(await shownIn(), '🔴 切走再切回來，指派變了').toEqual(before)
 })
 
-test('🔴 主控台永遠叫得回來（SC-004）', async ({ page }) => {
-  // 🟢 由**結構**保證：每一格的下拉都列著全部四層，所以不管現在誰在哪，
-  //    使用者永遠選得到主控台。⚠️ 所以**不需要**再加一顆「叫回主控台」的按鈕
-  //    ——加了反而讓主控台變成「那個有特權的」。
-  await freshApp(page)
-  await pick(page, 'compare')
-  // 把主控台換走
-  await page.locator('.slot-picker[data-layer="state"]').first().click()
-  await page.locator('.quick-pick-item[data-value="element"]').click()
-  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
-  await page.waitForTimeout(600)
-  // 從任何一格都叫得回來
-  await page.locator('.slot-picker:visible').first().click()
-  await expect(page.locator('.quick-pick-item[data-value="state"]'),
-    '🔴 下拉裡沒有主控台 → 它叫不回來了').toHaveCount(1)
-  await page.locator('.quick-pick-item[data-value="state"]').click()
-  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
-  await page.waitForTimeout(600)
-  expect(
-    await page.evaluate(() => [...document.querySelectorAll('.slot-picker')]
-      .some((b) => (b as HTMLElement).dataset.layer === 'state'
-        && (b as HTMLElement).getClientRects().length > 0)),
-    '🔴 主控台叫不回來',
-  ).toBe(true)
-})
+// 🪦 **「主控台永遠叫得回來（SC-004）」退場**（2026-09-02，spec 171）。
+//
+//    它守的是「把主控台換到別格之後，從任何一格的下拉都選得回來」——而
+//    **主控台已經不是一個槽**了。它是編輯區底下一條獨立的底條，版面與置換
+//    都碰不到它，`.slot-picker[data-layer="state"]` 這顆按鈕不存在。
+//
+// 🟢 它守的東西**沒有不見，是換了更強的形式**：主控台現在關得掉，而
+//    「關掉之後叫得回來 ＋ 有輸出時它自己回來」由 `e2e/console-comes-back.spec.ts`
+//    直接驗——那比「下拉裡列得到它」更接近使用者真正怕的那件事。
+//
+// > **一支測試退場的正當理由，是它守的東西被一個更難違反的東西接手了。**

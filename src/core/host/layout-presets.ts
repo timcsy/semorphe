@@ -31,83 +31,84 @@
  */
 import { LAYER_ORDER, type UnderstandingLayer } from '../view-host'
 
-export type LayoutPresetId = 'focus' | 'compare' | 'three-column' | 'grid'
+/**
+ * 🪦 `'grid'`（十字）**退場**（spec 171，2026-09-02）。
+ *
+ * 它是**唯一需要編輯區有第二列**的版面——而那個需求只存在於「主控台是編輯區
+ * 的一格」的那段期間。主控台搬去底下之後，三張版面全是純欄。
+ *
+ * 🔴 而它的理念（使用者 2026-08-31：「四格，每一層一格」「**沒有任何一層是
+ * 特別的**」）**由「上面三欄平等」承接**——程式碼、流程、積木誰都不特別，
+ * 而主控台**不參加這個比較**，因為它不是一種投影。
+ *
+ * > **「沒有任何一層是特別的」這句話，在發現其中一個根本不是那種東西之後，
+ * > 要說的是【它不參加這個比較】，而不是【硬給它一格】。**
+ *
+ * 見 `history/202`。
+ */
+export type LayoutPresetId = 'focus' | 'compare' | 'three-column'
 
 /**
  * 一格裡放什麼。`'*'` ＝**使用者現在看的那一層**，只有 `focus` 用得到。
  *
  * ⚠️ 用佔位而不是特例分支——讓「專注」仍然只是一份宣告。
  */
-export type LayoutSlot = UnderstandingLayer | '*'
+/**
+ * 🔴 **編輯區只有三層**（spec 171）——主控台不在這裡。
+ *
+ * ⚠️ 型別上就排除掉，不是靠註解請人不要寫：
+ * **「主控台是編輯區的一格」這件事現在【寫不出來】。**
+ */
+export type EditorLayer = Exclude<UnderstandingLayer, 'state'>
+
+export type LayoutSlot = EditorLayer | '*'
 
 export interface LayoutPresetSpec {
   readonly id: LayoutPresetId
   /** 給人看的名字的 i18n 鍵——⚠️ **不得把 id 印上畫面**（第七十八條同一個原則）。 */
   readonly nameKey: string
   /**
-   * **二維的格子表**：一列一個陣列，**同一層連續重複 ＝ 跨格**。
+   * **這張版面由左到右有哪幾欄**（一欄一格）。
    *
-   * 🔴 **2026-08-31 取代了 `layers: UnderstandingLayer[]`**（spec 168）。
-   * 那個欄位是一維的，說得出「開哪幾層」，說不出「**哪一層在哪一格**」
-   * ——於是「十字」（四層各一格）表達不出來。
+   * 🪦 **2026-09-02（spec 171）：它曾經是一張二維的格子表**，因為十字要
+   * 「四層各一格」而主控台是其中一格。主控台搬去底下（宿主的 panel 區）之後，
+   * 編輯區**只有一列**——型別上仍然是 `[列][欄]`（CSS 與示意圖用得到它），
+   * 而**第一列就是全部**。`tests/unit/core/host-layout-options.test.ts`
+   * 釘著「每一張都只有一列」。
    *
-   * 🟢 它與 CSS `grid-template-areas` **同構**，而**同一份 `areas` 餵三個消費者**：
-   *
-   * ```
-   * 套用    gridTemplateAreas()  → 設進 CSS
-   * 示意圖  thumbnailCells()     → 畫格子（不是另一份資料，所以不可能與畫面不符）
-   * 護欄    第八十一條的六條不變式
-   * ```
+   * 🟢 它與 CSS `grid-template-areas` 同構，而**同一份宣告餵三個消費者**：
+   * 套用（設進 CSS）、示意圖（畫格子）、護欄（第八十一條的不變式）。
    */
   readonly areas: readonly (readonly LayoutSlot[])[]
-  /**
-   * 每一列／每一欄的**預設**大小（CSS 軌道值）。省略 ＝ 全部 `1fr`。
-   *
-   * ⚠️ 它是**預設**不是狀態：拖過分隔線之後不跨版面記憶（spec 168 的假設段），
-   * 切版面就回到這裡寫的值。
-   */
-  readonly rows?: readonly string[]
-  readonly cols?: readonly string[]
 }
 
 /**
- * 四個版面。**每一列與每一欄由左到右／由上到下都是 `LAYER_ORDER` 的子序列**
- * ——不重排，因為那個順序是**理解的層次**不是偏好。第八十一條護欄的 I3 盯著它。
+ * **三個版面，而每一張都只有一列**（spec 171，2026-09-02）。
+ *
+ * 🔴 主控台不在這裡——它是編輯區**底下**一條全寬的、開得關得的東西。
+ * 它不是一種投影，是執行的輸出（三維錨定，`history/198`）。
+ *
+ * 🟢 而「每一張都只有一列」不是巧合，是**這一刀的結果**：
+ * 唯一需要第二列的是十字，而十字需要第二列**只因為主控台在編輯區裡**。
+ *
+ * ⟹ 三張版面用「把一格顯示到第幾欄」就排得出來——**三個宿主都做得到**，
+ * 不需要任何「一次宣告整張版面」的宿主指令（Theia 沒有那顆）。
+ *
+ * ⚠️ 每一列由左到右仍然是 `LAYER_ORDER` 的子序列——不重排，因為那個順序是
+ * **理解的層次**不是偏好。第八十一條護欄的 I3 盯著它。
  */
 export const LAYOUT_PRESETS: readonly LayoutPresetSpec[] = [
   // 專注：一次一層。⚠️ 哪一層由使用者現在看的那個分頁決定，不寫死。
-  { id: 'focus', nameKey: 'LAYOUT_PRESET_FOCUS', areas: [['*'], ['state']], rows: ['2.5fr', '1fr'] },
+  { id: 'focus', nameKey: 'LAYOUT_PRESET_FOCUS', areas: [['*']] },
   // 對照：程式碼 ＋ 積木——**取用要相鄰**（同一段程式的兩個投影並排）
-  // ⚠️ **主控台在程式碼底下，而積木跨兩列**——那是今天就有的形狀
-  //    （`bottomContainer` 掛在 `codeColumn` 裡），不是這一刀改的。
-  {
-    id: 'compare', nameKey: 'LAYOUT_PRESET_COMPARE',
-    areas: [['element', 'space'], ['state', 'space']], rows: ['2fr', '1fr'],
-  },
+  { id: 'compare', nameKey: 'LAYOUT_PRESET_COMPARE', areas: [['element', 'space']] },
   // 三欄：再加上關係層（流程）——**認識要面積**
   {
     id: 'three-column', nameKey: 'LAYOUT_PRESET_THREE',
-    areas: [['element', 'relation', 'space'], ['state', 'relation', 'space']], rows: ['2fr', '1fr'],
+    areas: [['element', 'relation', 'space']],
   },
-  // 十字：四層各一格，**而沒有任何一層是特別的**。
-  //
-  // 🔴 使用者 2026-08-31：「你現在把積木和流程用 tab 切換我不太喜歡，
-  //    **因為這樣程式碼面板就變得比較特別了**」。
-  //
-  // ⚠️ **左欄與「對照」逐格相同**（程式碼在上、主控台在下）——切過去時
-  //    整個左半一個像素都不動，右半才從「積木佔滿」拆成「流程／積木」。
-  //
-  // > **一個切換版面時「你正在看的東西不會跳走」的版面組，
-  // > 比一個每一格都重排的版面組好用得多。**
-  //
-  // 🪦 2026-09-01 之前是 `element,space ／ relation,state`（上排程式碼｜積木）。
-  //    使用者改成這一版——而它**保住的是更大的一塊**：整個左欄，而不只是兩格的位置。
-  //    ⚠️ 代價是積木從右上移到右下；`e2e/layout-presets.spec.ts` 的斷言跟著改。
-  {
-    id: 'grid', nameKey: 'LAYOUT_PRESET_GRID',
-    // ⚠️ **四格等大**——「沒有任何一層是特別的」是可量的（SC-005：面積差 ±5%）
-    areas: [['element', 'relation'], ['state', 'space']], rows: ['1fr', '1fr'], cols: ['1fr', '1fr'],
-  },
+  // 🪦 **十字（`grid`）退場**（spec 171）。見 `LayoutPresetId` 的說明：
+  //    它的理念由「上面三欄平等」承接，而主控台不參加那個比較。
 ]
 
 export function layoutPreset(id: LayoutPresetId): LayoutPresetSpec | undefined {
@@ -202,52 +203,27 @@ export interface HostLayoutOption {
   readonly nameKey: string
   /** 拿掉這個宿主沒有的整列整欄之後，剩下的格子（**跨格保留**——示意圖要畫它）。 */
   readonly areas: readonly (readonly UnderstandingLayer[])[]
-  /**
-   * 同上，但**跨格收成一格**——「有幾格、怎麼排」問的是這個。
-   *
-   * 🔴 2026-09-01 實測抓到的：在 VSCode 上「三欄」縮減成
-   * `[[流程,積木],[流程,積木]]`——兩列**逐格相同**，那不是四格，
-   * 是**兩格各跨兩列**。而拿列數去判斷形狀的話，它會被當成「二維」而放棄命名，
-   * 於是名字退回宣告的「三欄（程式碼 · 流程 · 積木）」——**又在說程式碼**。
-   *
-   * ⚠️ 同一個根還讓「專注」與「對照」在那裡變成**兩個一模一樣的選項**
-   * （`[[積木]]` 與 `[[積木],[積木]]` 簽章不同、畫面相同）。
-   *
-   * > **一張矩陣裡重複的整列，說的是「這一格比較高」，不是「這裡有兩格」
-   * > ——把它當成兩格，會同時弄錯【數量】與【形狀】。**
-   */
-  readonly shape: readonly (readonly UnderstandingLayer[])[]
   /** 這個宿主四層都在 ⟹ 用宣告的名字；否則名字要從 `areas` 導。 */
   readonly complete: boolean
 }
 
 /**
- * 把**跨格**收成一格：相鄰而逐格相同的列（欄）合併。
+ * 一張版面在這個宿主上剩下的格子（這個宿主沒有的那一欄就拿掉）。
  *
- * ```
- * [[積木],[積木]]          → [[積木]]           一格跨兩列
- * [[流程,積木],[流程,積木]] → [[流程,積木]]      兩格各跨兩列
- * [[流程],[積木]]          → [[流程],[積木]]    真的是兩格
- * ```
+ * 🪦 **2026-09-02（spec 171）**：這裡本來還有「拿掉整列」與 `normalizeShape`
+ * （把逐格相同的相鄰列收成一格）。三張版面全是純欄之後，**列只有一列**
+ * ——那兩段判斷永遠走同一條分支。
+ *
+ * > **「兩列逐格相同要算一格」是一個真問題，
+ * > 而它只在【有第二列】的世界裡是真的。**
  */
-export function normalizeShape(
-  areas: readonly (readonly UnderstandingLayer[])[],
-): readonly (readonly UnderstandingLayer[])[] {
-  const rows = areas.filter((row, r) => r === 0 || row.join(' ') !== areas[r - 1].join(' '))
-  const keepCol = rows[0].map((_, c) => c === 0 || rows.some((row) => row[c] !== row[c - 1]))
-  return rows.map((row) => row.filter((_, c) => keepCol[c]))
-}
-
-/** 一張版面在這個宿主上剩下的格子（整列整欄都沒有的就拿掉）。 */
 export function reduceAreas(
   preset: LayoutPresetSpec,
   available: (l: UnderstandingLayer) => boolean,
   focusLayer: UnderstandingLayer,
 ): readonly (readonly UnderstandingLayer[])[] {
-  const a = preset.areas.map((row) => row.map((v) => (v === '*' ? focusLayer : v)))
-  const keepCol = a[0].map((_, c) => a.some((row) => available(row[c])))
-  const keepRow = a.map((row) => row.some((v) => available(v)))
-  return a.filter((_, r) => keepRow[r]).map((row) => row.filter((_, c) => keepCol[c]))
+  const row = preset.areas[0].map((v) => (v === '*' ? focusLayer : v)).filter(available)
+  return row.length === 0 ? [] : [row]
 }
 
 /**
@@ -274,13 +250,11 @@ export function hostLayoutOptions(
     // > **一個「把不要的拿掉」的化簡，要能回答「全部都不要」那一格
     // > ——而它的答案通常不是「空的」，是「這件事不存在」。**
     if (areas.length === 0 || areas[0].length === 0) continue
-    const shape = normalizeShape(areas)
-    // ⚠️ 簽章要含形狀，不只含層——「並排」與「上下」的層一樣而形狀不同。
-    // 🔴 而它問的是 `shape` 不是 `areas`：跨格與單格**畫面上是同一件事**。
-    const sig = shape.map((r) => r.join(' ')).join('|')
+    // ⚠️ 簽章要含順序，不只含層——同樣三層，左右排法不同就是兩張版面。
+    const sig = areas[0].join(' ')
     if (seen.has(sig)) continue
     seen.add(sig)
-    out.push({ id: p.id, nameKey: p.nameKey, areas, shape, complete })
+    out.push({ id: p.id, nameKey: p.nameKey, areas, complete })
   }
   return out
 }

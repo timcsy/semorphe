@@ -1967,7 +1967,7 @@ export class App {
             // ⚠️ `'*'`（跟著焦點走的那一格）在這裡先解析掉——示意圖畫的是層名，
             //    而 `LAYER_*` 不是一個鍵。
             const areas = p.areas.map((row) => row.map((v) => (v === '*' ? 'space' : v)))
-            return { id: p.id, nameKey: p.nameKey, areas, shape: areas, complete: true }
+            return { id: p.id, nameKey: p.nameKey, areas, complete: true }
           })
           : this.shellLayoutOptions?.() ?? hostLayoutOptions(() => true)
         const layerName = (l: string): string => msg(`LAYER_${l.toUpperCase()}`, l)
@@ -1977,12 +1977,11 @@ export class App {
          */
         const nameOf = (o: HostLayoutOption): { label: string; description?: string } => {
           if (o.complete) return { label: msg(o.nameKey, o.id) }
-          // 🔴 問 `shape` 不問 `areas`——跨格不是兩格（見 `normalizeShape`）。
-          const cells = [...new Set(o.shape.flat())].map(layerName)
+          // 🪦 spec 171：版面全是純欄之後，縮減後剩下的一定是**一列並排**
+          //    ——本來還要分「上下」與「跨格」那兩種說法。
+          const cells = [...new Set(o.areas.flat())].map(layerName)
           if (cells.length === 1) return { label: cells[0] }
-          if (o.shape.length === 1) return { label: cells.join(' ｜ '), description: msg('LAYOUT_SIDE_BY_SIDE', '並排') }
-          if (o.shape.every((r) => r.length === 1)) return { label: cells.join(' ／ '), description: msg('LAYOUT_STACKED', '上下') }
-          return { label: msg(o.nameKey, o.id) }
+          return { label: cells.join(' ｜ '), description: msg('LAYOUT_SIDE_BY_SIDE', '並排') }
         }
         const cur = opts.find((o) => o.id === this.currentLayout) ?? opts[0]
         return {

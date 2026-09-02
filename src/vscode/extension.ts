@@ -23,7 +23,7 @@
  * 而**宿主層本來就要認識宿主**。方向是單向的。
  */
 import * as vscode from 'vscode'
-import { openBlocksPanel, openPanel, requestDiagnostics, openSyncMenu, pickControl, invokeControl, showConsole, SYNC_MENU_COMMAND } from './panel'
+import { openBlocksPanel, openPanel, requestDiagnostics, openSyncMenu, pickControl, invokeControl, showConsole, registerConsoleView, SYNC_MENU_COMMAND } from './panel'
 import { CONTROLS, RUN_MODES, hostCommandId, runModeCommandId } from '../core/host/controls'
 
 export const OPEN_COMMAND = 'semorphe.openBlocks'
@@ -34,6 +34,10 @@ export const DIAGNOSTICS_COMMAND = 'semorphe.showDiagnostics'
 export { SYNC_MENU_COMMAND }
 
 export function activate(context: vscode.ExtensionContext): void {
+  // 🔴 **主控台在宿主的 panel 區**（2026-09-02，spec 171）——它不是被指令開出來
+  //    的分頁，是一個**一直登記在那裡**的視圖（與終端機並排）。所以它在
+  //    `activate` 就註冊（自己進 `subscriptions`），不等使用者按指令。
+  registerConsoleView(context)
   context.subscriptions.push(
     vscode.commands.registerCommand(OPEN_COMMAND, () => openBlocksPanel(context)),
     vscode.commands.registerCommand(OPEN_FLOW_COMMAND, () => openPanel(context, 'flow')),

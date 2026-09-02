@@ -12,9 +12,11 @@ import { LAYER_ORDER } from '../../../src/core/view-host'
 const P = (id: string) => layoutPreset(id as never)!
 
 describe('槽的指派是一個置換', () => {
-  it('★ 入口條件：四層都在，四個版面都在', () => {
+  it('★ 入口條件：四層都在，三個版面都在', () => {
+    // ⚠️ **層還是四個**（主控台仍然是一層），而**版面剩三張**
+    //    ——十字退場（spec 171）。層數與版面數本來就不必相等。
     expect(LAYER_ORDER.length).toBe(4)
-    expect(LAYOUT_PRESETS.length).toBe(4)
+    expect(LAYOUT_PRESETS.length).toBe(3)
   })
 
   it('恆等：什麼都沒換的時候，每一層對到自己', () => {
@@ -31,17 +33,19 @@ describe('槽的指派是一個置換', () => {
     expect(a.state).toBe('state')
   })
 
-  it('🔴 十字：把積木換成程式碼，兩格對調而【形狀一格都沒變】', () => {
-    const before = effectiveAreas(P('grid'), identityAssignment())
-    expect(before).toEqual([['element', 'relation'], ['state', 'space']])
-    const after = effectiveAreas(P('grid'), swapTo(identityAssignment(), 'space', 'element'))
-    expect(after, '🔴 左上與右下對調').toEqual([['space', 'relation'], ['state', 'element']])
+  it('🔴 三欄：把積木換成程式碼，兩格對調而【形狀一格都沒變】', () => {
+    // 🪦 這一條本來拿十字當例子（左上與右下對調）。十字退場（spec 171）之後
+    //    改用三欄——守的性質**一個字都沒變**：置換換的是「哪一格顯示誰」，不是格數。
+    const before = effectiveAreas(P('three-column'), identityAssignment())
+    expect(before).toEqual([['element', 'relation', 'space']])
+    const after = effectiveAreas(P('three-column'), swapTo(identityAssignment(), 'space', 'element'))
+    expect(after, '🔴 頭尾對調').toEqual([['space', 'relation', 'element']])
     expect(after.map((r) => r.length), '形狀變了').toEqual(before.map((r) => r.length))
   })
 
-  it('🔴 對照：積木換成流程之後，跨兩列的那一格【還是跨兩列】', () => {
+  it('🔴 對照：積木換成流程之後，那一格顯示流程', () => {
     const a = swapTo(identityAssignment(), 'space', 'relation')
-    expect(effectiveAreas(P('compare'), a)).toEqual([['element', 'relation'], ['state', 'relation']])
+    expect(effectiveAreas(P('compare'), a)).toEqual([['element', 'relation']])
   })
 
   it('★ 注入（不亂報）：換到自己身上不得改變任何東西', () => {
@@ -53,8 +57,8 @@ describe('槽的指派是一個置換', () => {
   it('★ 注入：`*`（專注）用 focusLayer 代換之後才套置換', () => {
     // ⚠️ 順序反了的話「專注」會顯示一個沒有被指派過的層
     expect(effectiveAreas(P('focus'), identityAssignment(), 'relation'))
-      .toEqual([['relation'], ['state']])
+      .toEqual([['relation']])
     expect(effectiveAreas(P('focus'), swapTo(identityAssignment(), 'relation', 'space'), 'relation'))
-      .toEqual([['space'], ['state']])
+      .toEqual([['space']])
   })
 })

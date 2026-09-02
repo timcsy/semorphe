@@ -166,6 +166,11 @@ export const vscodeProfile: HostProfile = {
     //
     // > **一條為了繞過某個限制而生的路，在限制消失之後不會自己消失
     // > ——它會變成「本來就這樣」。**
+    // 🟢 **2026-09-02（spec 171）：那個 webview 現在住在宿主的 panel 區**
+    //    ——與終端機／問題並排（`panel.ts` 的 `registerConsoleView`）。
+    //    ⚠️ 投影值仍然是 `panelBottom`，而那句話是對的：**畫它的是我們自己**，
+    //    宿主只提供那塊地。「這個宿主把主控台畫在哪」與「這個視窗要不要畫它」
+    //    是兩個問題——後者問 `profile.layers`（見 `app-shell` 的 `hostDrawsConsole`）。
     output: 'panelBottom',
     // 🪦 `hostPanel` 同上退場。變數本來是一個**被餵的**薄視圖，
     //    有自己一份 `reportVariables` schema，而餵它的面板關掉之後

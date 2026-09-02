@@ -327,7 +327,46 @@ export function buildManifest(): ExtensionManifest {
           category: DISPLAY_NAME,
         })),
       ],
-      // 🪦 **`viewsContainers` ＋ `views` 整組退場**（2026-09-01）。
+      // 🔴 **`viewsContainers.panel` ＋ 一個 webview 視圖回來了**（2026-09-02，
+      //    spec 171）——而**理由與 2026-09-01 拿掉它的那次不同**。
+      //
+      //    拿掉的理由是「變數在那裡是一個**被餵的**薄視圖」（它有自己一份
+      //    `reportVariables` schema，餵它的面板關掉之後沒有人清它）。
+      //    🟢 而現在住進去的**不是**薄視圖：是**與網頁版逐格相同的那一份**
+      //    主控台（`ui/panels/console-panel.ts`），跑在我們自己的 webview 裡
+      //    ——它有輸入框，`cin` 有家；它自己 lift 那份文件，不必被餵。
+      //
+      //    使用者 2026-09-02：「把我們的主控台跟原生的綁在一起，就是**多塞幾個
+      //    tab**，而不是走編輯視窗」。
+      //
+      // ⚠️ **一個容器一個視圖**，而不是兩個並排的 native 分頁：兩個
+      //    `WebviewView` 是**兩個 context**，那會回到「被餵的薄視圖」那個形狀。
+      //    主控台／變數在那一個 webview 裡是**我們自己的兩個分頁**
+      //    ——與網頁版逐字相同。
+      //
+      // > **與宿主一致、與自己一致，第一次指向同一邊。**
+      viewsContainers: {
+        panel: [
+          {
+            id: 'semorphe-panel',
+            title: DISPLAY_NAME,
+            // ⚠️ panel 區的容器圖示走**單色遮罩**（與活動列同一種機制）
+            // ⚠️ 用既有的那兩張之一——**沒有另做一張**（多一張就多一份會漂的資產）
+            icon: 'assets/logo-dark-theme.svg',
+          },
+        ],
+      },
+      views: {
+        'semorphe-panel': [
+          {
+            // 🔴 與 `panel.ts` 的 `CONSOLE_VIEW_ID` **逐字相同**（預檢會出聲）
+            id: 'semorphe.consoleView',
+            name: '主控台',
+            type: 'webview',
+          },
+        ],
+      },
+      // 🪦 **舊的 `viewsContainers` ＋ `views`（2026-09-01 退場的那一組）**：
       //
       // 這裡曾經宣告一個 `panel` 區的容器與 `semorphe.variables` 視圖
       // ——那是「主控台去終端機、變數去 panel 區」那個時代的東西。

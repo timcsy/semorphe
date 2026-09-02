@@ -530,10 +530,54 @@ export function createAppLayout(
   // 🔴 **主控台是 grid 的一格（`state`），不再掛在程式碼那一欄底下**（spec 168）。
   //    版面可以**搬**它（十字時在右下），但**不得關掉**它——第八十一條的 I4 盯著。
   // ⚠️ **不是 column flex**——它裡面是 `BottomPanel` 自己的分頁 ＋ 內容。
-  const bottomContainer = makeCell('bottom-container', 'state', false)
+  /**
+   * 🔴 **主控台不是編輯區的一格**（spec 171，2026-09-02）。
+   *
+   * 使用者：「讓最底下水平**完全展開**是放主控台（不同於現在沒有完全展開），
+   * 像是 VSCode 那樣，然後其他面板就在上面分割畫面」。
+   *
+   * ⚠️ 而理由不只是好看：**它不是一種投影，是執行的輸出**
+   * （三維錨定——執行追蹤屬於情境。`history/198`）。
+   * 它待在編輯區的那段期間，「十字要兩列」這個需求才存在，
+   * 而那個需求是 Theia 排不出版面的唯一原因。
+   *
+   * > **一個分類如果只改標籤而不改任何決定，它還沒有付出代價。**
+   *
+   * 🟢 而搬出 grid 之後，`BottomPanel` 自己那條 divider 與高度比例
+   * **自己就回來了**——它們一直在，只是被 `inGrid()` 收著。
+   */
+  const bottomContainer = document.createElement('div')
+  bottomContainer.id = 'bottom-container'
+  bottomContainer.style.minWidth = '0'
+  bottomContainer.style.overflow = 'hidden'
 
+
+  /**
+   * 把底條掛在 `#editors` 的**後面**——`#app` 是直向 flex，所以它自然全寬。
+   *
+   * ⚠️ 狀態列在它之後：要 `insertBefore`，不是 `appendChild`。
+   */
+  //
+  // 🔴 **而「這個宿主的這個視窗畫不畫它」要問宣告**（2026-09-02，spec 171）。
+  //
+  //    它在 grid 裡的時候，這件事是**免費**的：宿主少了 `state` 那一層，
+  //    縮減就把那一格拿掉了。搬出 grid 之後**沒有人再拿掉它**——實測（預檢）
+  //    是 VSCode 的積木視窗與流程視窗**各自長出一條主控台**。
+  //
+  // > **把一個東西搬出某個機構的管轄範圍，也就搬出了它的保護。
+  // > 那個機構順手做的事，現在要有人明說。**
+  //
+  // ⚠️ 判準是**宿主指名的層**，不是 `layerAvailable`（後者反過來問
+  //    `bottomPanel !== null`，會繞成一圈）。
+  const hostDrawsConsole = !profile.layers || profile.layers.includes('state')
+  const mountBottom = (): void => {
+    if (!hostDrawsConsole) return
+    const bar = document.getElementById('status-bar')
+    if (bar?.parentElement === appEl) appEl.insertBefore(bottomContainer, bar)
+    else appEl.appendChild(bottomContainer)
+  }
   let bottomPanel = bottomTabs.length > 0 ? new BottomPanel(bottomContainer) : null
-  if (bottomPanel) main.appendChild(bottomContainer)
+  if (bottomPanel) mountBottom()
 
   // 🔴 **主控台那一格建不建，問登錄表**（`controlSurfaces.output`）。
   //
@@ -544,6 +588,11 @@ export function createAppLayout(
   // > 把它們寫成同一件，會讓執行在那個宿主上直接沒有出口。**
   const consoleEl = document.createElement('div')
   const consolePanel = new ConsolePanel(consoleEl)
+  // 🔴 **主控台知道自己開不開**（spec 171）——而「有輸出就自己回來」那條規則
+  //    住在 `ConsolePanel` 的寫入路徑上，不是各宿主各寫一份。
+  //    ⚠️ 沒有下方面板的宿主給 `null`：那時它沒有可關的主控台，
+  //       `revealForOutput` 什麼都不做。
+  consolePanel.setSurface(bottomPanel?.asConsoleSurface() ?? null)
   /**
    * 把主控台那一格加進下方面板。
    *
@@ -564,7 +613,7 @@ export function createAppLayout(
       bottomPanel = new BottomPanel(bottomContainer)
       // 🔴 **沒有切版面時，程式碼那一欄沒掛進 DOM**——掛過去會看不見。
       //    ⚠️ 那時它跟在積木下面（`main` 本身就是直向的 flex）。
-      main.appendChild(bottomContainer)
+      mountBottom()
       // 🔴 **執行控制器手上是建構當時的那一份**——不通知它的話，
       //    `showTab('console')` 會打在一個 `null` 上，而輸出看起來像沒有跑。
       onBottomPanelCreated?.(bottomPanel)
@@ -675,8 +724,11 @@ export function createAppLayout(
       showQuickPick(
         {
           title: msg('SLOT_PICK', '這一格顯示'),
-          // ⚠️ 選項來自**同一份**來源，四個槽逐字相同（spec 169 的 SC-002）
-          items: LAYER_ORDER.filter(layerAvailable).map((l) => ({
+          // ⚠️ 選項來自**同一份**來源，每個槽逐字相同（spec 169 的 SC-002）
+          // 🔴 **扣掉 `state`**（2026-09-02，spec 171）：主控台不是編輯區的一格
+          //    ——它是底下那條獨立的、開得關得的底條。列它進來的話，選到它
+          //    等於把「執行的輸出」塞回一欄投影裡，而那正是這一刀拆掉的形狀。
+          items: LAYER_ORDER.filter((l) => l !== 'state' && layerAvailable(l)).map((l) => ({
             value: l,
             label: msg(`LAYER_${l.toUpperCase()}`, l),
             // 🔴 「目前」是**這個面板自己**——每個面板永遠顯示它自己，
@@ -789,7 +841,9 @@ export function createAppLayout(
     { el: codeColumn, layer: 'element' as const, bar: '.monaco-clipboard-bar', shownAs: 'flex' },
     { el: flowColumn, layer: 'relation' as const, bar: '.flow-toolbar', shownAs: 'flex' },
     { el: blocksColumn, layer: 'space' as const, bar: '.quick-access-bar', shownAs: 'flex' },
-    { el: bottomContainer, layer: 'state' as const, bar: '.bottom-panel-tabs', shownAs: '' },
+    // 🪦 主控台那一列退場（spec 171）——它不是編輯區的一格了。
+    //    ⚠️ 它的那條頭仍然存在（`.bottom-panel-tabs`），只是不再由這張表管
+    //       它的顯示／隱藏——那是 `BottomPanel` 自己的事。
   ]
   const slotPickers = new Map(CELLS.map(({ layer }) => [layer, buildSlotPicker(layer)]))
   const mountSlotPickers = (): void => {
@@ -857,16 +911,15 @@ export function createAppLayout(
     //
     // > **「寬度是零」不等於「不在那裡」——一個佔不到面積的東西，
     // > 仍然佔著【序號】與【它兩側的縫】。**
-    const keepCol = areas[0].map((_, c) => areas.some((row) => layerAvailable(row[c])))
-    const keepRow = areas.map((row) => row.some((v) => layerAvailable(v)))
-    const pick = <T>(xs: readonly T[], keep: boolean[]): T[] => xs.filter((_, i) => keep[i])
-    areas = pick(areas, keepRow).map((row) => pick(row, keepCol))
-    const cols = preset.cols ? pick(preset.cols, keepCol) : undefined
-    const rows = preset.rows ? pick(preset.rows, keepRow) : undefined
+    //
+    // 🪦 **2026-09-02（spec 171）：「拿掉整列」那一半也退場了。**
+    //    主控台搬去底下之後，編輯區**只有一列**——沒有任何一列可以拿掉。
+    const keepCol = areas[0].map((_, c) => layerAvailable(areas[0][c]))
+    areas = [areas[0].filter((_, i) => keepCol[i])]
 
-    main.style.gridTemplateAreas = areas.map((r) => `"${r.join(' ')}"`).join(' ')
-    main.style.gridTemplateColumns = areas[0].map((_, i) => cols?.[i] ?? '1fr').join(' ')
-    main.style.gridTemplateRows = areas.map((_, i) => rows?.[i] ?? '1fr').join(' ')
+    main.style.gridTemplateAreas = `"${areas[0].join(' ')}"`
+    main.style.gridTemplateColumns = areas[0].map(() => '1fr').join(' ')
+    main.style.gridTemplateRows = '1fr'
 
     // 沒有出現在這張版面裡的層 → 那一格不畫（grid 不會替它留位子）
     // 🔴 **要還原成 `flex`，不是 `''`**（2026-08-31 實測）。三欄都是直向的 flex 容器
@@ -1316,7 +1369,7 @@ export function createAppLayout(
     blocksColumn.appendChild(blocklyContainer)
     // Ensure correct order: monaco first, then bottom panel
     codeColumn.appendChild(monacoWrapper)
-    if (bottomPanel) main.appendChild(bottomContainer)
+    if (bottomPanel) mountBottom()
     // 🔴 流程回到**投影那一列**——⚠️ 不是回到 `blocksColumn`：
     //    2026-08-26 加了 `projectionRow`（讓三欄時兩個投影並排而不動到工具列），
     //    而這裡如果放回外層，**從手機切回桌機之後三欄就排不出來**

@@ -36,7 +36,7 @@
  */
 import { chromium } from '@playwright/test'
 import { spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 
 const DIST = 'build/vscode/dist'
 const PORT = 8899
@@ -286,12 +286,14 @@ for (const c of [
 //
 // 判準：① 這個視窗**只有一格**，而那一格就是它宣告的那一層
 //       ② 一個把手都不准有（版面不歸我們管）
-//       ③ 版面選單**必須送到宿主，而且是宣告的那四張**
+//       ③ 版面選單**必須送到宿主，而且是宣告的那三張**
 //          🪦 這一條 2026-09-01 當天被推翻過一次：第一版寫的是「不准送」，
 //             理由是「一個只有一個選項的選單是假的按鈕」。而使用者問
 //             「**我現在要如何切換佈局？**」——版面沒有消失，它**換了執行者**。
-//             ⚠️ 那四張在這裡第一次是真的：程式碼是 IDE 的編輯器、
-//                主控台是 IDE 的終端機，所以「十字（四格）」真的有四格。
+//             ⚠️ 而 2026-09-02（spec 171）**十字退場**：主控台搬去宿主的
+//                panel 區，它不再是版面的一格；剩下的三張全是**純欄**
+//                ——`reveal(ViewColumn)` 就排得出來，而 Theia **沒有**
+//                `vscode.setEditorLayout`（bundle 裡零筆，查證過）。
 //       ④ 兩種視窗都不准有 console 錯誤（流程視窗曾經**開機就炸**）
 const WINDOWS = [
   { page: 'preview.html', label: '積木視窗', cell: 'blocks-column' },
@@ -300,6 +302,7 @@ const WINDOWS = [
   //    ⚠️ 它有**兩個分頁**（主控台／變數）——所以下面多問一句 `tabs`。
   { page: 'preview-state.html', label: '主控台視窗', cell: 'bottom-container', tabs: 2 },
 ]
+let windowsOk = true
 console.log('\n面板獨立 → 每種視窗只畫一層：')
 for (const w of WINDOWS) {
   const wp = await browser.newPage({ viewport: { width: 900, height: 620 } })
@@ -321,11 +324,17 @@ for (const w of WINDOWS) {
     }
   })
   const ok = m.booted && m.vis.length === 1 && m.vis[0] === w.cell &&
-    m.handles === 0 && m.layoutOptions === 4 && errs.length === 0 &&
+    m.handles === 0 && m.layoutOptions === 3 && errs.length === 0 &&
     (w.tabs === undefined || m.tabs === w.tabs)
+  // 🔴 **這一格的結論要進總結論**（2026-09-02）。在此之前它只印出來
+  //    ——而 spec 171 當天它真的抓到了東西（積木視窗多長出一條主控台），
+  //    **印了 🔴 而預檢說「通過」**。
+  //
+  // > **一個算了卻沒有進結論的判準，與沒有算是同一件事。**
+  windowsOk = windowsOk && ok
   console.log(`  ${w.label}：${m.booted ? m.vis.join(', ') || '🔴 一格都沒有' : '🔴 沒開起來'}` +
     `｜把手 ${m.handles}${m.handles ? ' 🔴' : ''}` +
-    `｜版面 ${m.layoutOptions === 4 ? '四張・由 IDE 排' : `🔴 ${m.layoutOptions} 張`}` +
+    `｜版面 ${m.layoutOptions === 3 ? '三張・由 IDE 排' : `🔴 ${m.layoutOptions} 張`}` +
     (w.tabs === undefined ? '' : `｜分頁 ${m.tabs}${m.tabs === w.tabs ? '' : ` 🔴 該有 ${w.tabs}`}`) +
     `${errs.length ? `｜🔴 ${errs.length} 則錯誤：${errs[0].slice(0, 80)}` : ''} ${ok ? '🟢' : ''}`)
   await wp.close()
@@ -437,7 +446,28 @@ console.log(`\n請求失敗：${failures.length ? '\n  ' + failures.join('\n  ')
 console.log(`Console 錯誤：${errors.length ? '\n  ' + errors.join('\n  ') : 'none'}`)
 if (shot) { await page.screenshot({ path: shot }); console.log(`截圖：${shot}`) }
 
+// 🔴 **主控台在宿主的 panel 區嗎**（2026-09-02，spec 171 · T023）。
+//
+// 這一問**不看畫面，看宣告**：panel 區的視圖是宿主排的，Chromium 裡沒有它。
+// 而「宣告了、實作沒接上」是這條路最安靜的壞法——`manifest.ts` 的 id 與
+// `panel.ts` 的 `CONSOLE_VIEW_ID` 只要差一個字，視圖就永遠是一片空白，
+// **而沒有任何錯誤**。
+//
+// > **一個由宿主渲染的東西，我們驗得到的只有【我們這一側說對了什麼】。**
+const manifest = JSON.parse(readFileSync('build/vscode/package.json', 'utf8'))
+const panelContainers = manifest.contributes?.viewsContainers?.panel ?? []
+const consoleViews = Object.values(manifest.contributes?.views ?? {}).flat()
+  .filter((v) => v.type === 'webview')
+const 主控台在panel區 = panelContainers.length === 1
+  && consoleViews.length === 1
+  && consoleViews[0].id === 'semorphe.consoleView'
+  && readFileSync('src/vscode/panel.ts', 'utf8').includes("CONSOLE_VIEW_ID = 'semorphe.consoleView'")
+console.log(`\n主控台在 panel 區：${主控台在panel區 ? '🟢 宣告與實作對得上' :
+  `🔴 容器 ${panelContainers.length}／webview 視圖 ${consoleViews.length}` +
+  `（${consoleViews.map((v) => v.id).join('、') || '無'}）`}`)
+
 const ok = !fatal && errors.length === 0 && failures.length === 0
+  && 主控台在panel區 && windowsOk
   && blocks.積木畫布
   // 🔴 **控制項在這個宿主裡歸零**——驗收②。⚠️ 而工具箱與畫布不變（下面兩格）。
   && blocks.面板內控制項 === 0 && !blocks.工具列 && !blocks.快速列
@@ -448,8 +478,16 @@ const ok = !fatal && errors.length === 0 && failures.length === 0
   // 🔴 **宣告說在，它就要在；宣告說不在，它就不准在**（2026-09-02）。
   //    ⚠️ 這一行以前寫死「不准在」，而 2026-09-01 主控台收回成面板之後
   //       它就開始說「壞了」——**而東西是對的**。CI 連紅三次才被發現。
-  && blocks.主控台分頁 === (blocks.output投影 === 'panelBottom')
-  && blocks.變數分頁 === (blocks.inspector投影 === 'panelBottom')
+  //
+  // 🪦 **而 2026-09-02（spec 171）它又要再讓一次**：主控台搬去宿主的 panel 區
+  //    之後，`output` 投影仍然是 `panelBottom`（**畫它的是我們自己**），
+  //    但**這個視窗**（積木）沒有 `state` 那一層，所以它不該有那兩個分頁。
+  //
+  // > **「這個宿主把主控台畫在哪」與「這個視窗要不要畫它」是兩個問題，
+  // > 而它們曾經共用同一個答案——因為那時每個視窗都有一條底條。**
+  //
+  // ⚠️ 主控台視窗那一側由下面 `WINDOWS` 的 `tabs: 2` 驗（它有 `state` 層）。
+  && !blocks.主控台分頁 && !blocks.變數分頁
   && blocks.工具箱分類 >= 1 && twoWay && untouched && sketchBlocks > 0
   // 🔴 這個宿主**自己有狀態列**——面板裡再畫一條就是同一件事講兩次，
   //    ⚠️ 而 `phaseReached` 是它的另一半：不畫的義務是「交出去」。

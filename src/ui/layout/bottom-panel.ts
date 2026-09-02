@@ -1,4 +1,5 @@
 import { createPanelHead } from './cell-head'
+import type { ConsoleSurface } from '../../core/host/console-surface'
 
 export interface TabAction {
   icon: string
@@ -92,6 +93,32 @@ export class BottomPanel {
   setCollapsible(v: boolean): void {
     this.collapsible = v
     if (!v && this.collapsed && this.activeTabId) this.showTab(this.activeTabId)
+  }
+
+  /**
+   * **這一格當成「主控台這個表面」**（spec 171）。
+   *
+   * 🔴 `collapsed` 就是「使用者把它關掉了」——而 `show()` 要把它展開，
+   * 不是把它建出來（它一直在，只是收著）。
+   *
+   * ⚠️ `show()` 在**已經開著時必須是 no-op**：印一百行不該跳一百次，
+   * 也不該搶焦點。
+   */
+  asConsoleSurface(): ConsoleSurface {
+    return {
+      show: () => {
+        if (!this.collapsed) return
+        if (this.activeTabId) this.showTab(this.activeTabId)
+        else if (this.tabs[0]) this.showTab(this.tabs[0].id)
+      },
+      hide: () => {
+        if (this.collapsed || !this.collapsible) return
+        this.collapsed = true
+        this.applyHeight()
+        window.dispatchEvent(new Event('resize'))
+      },
+      isHidden: () => this.collapsed,
+    }
   }
 
   activateTab(id: string): void {

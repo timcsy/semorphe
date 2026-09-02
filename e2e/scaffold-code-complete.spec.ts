@@ -312,7 +312,19 @@ test('★ `ghost`：積木插得進 `main` 與 `return` 之間', async ({ page }
   const from = await topOf(page, 'cpp_print')
   await page.mouse.move(from!.x, from!.y)
   await page.mouse.down()
-  await page.mouse.move(from!.x + 140, from!.y + 340, { steps: 20 })
+  // 🔴 **位移要問畫布，不能寫死**（2026-09-02，spec 171）。
+  //
+  //    這一行本來是 `from.y + 340`，而 spec 171 把主控台從編輯區搬出去之後
+  //    積木那一格**不再跨到主控台旁邊**——它矮了 315px（實測），
+  //    於是 +340 掉到畫布外面，測試說「插不回去」。
+  //
+  // ⚠️ 而那不是功能壞了，是**這條測試假設了一個已經不存在的高度**。
+  //
+  // > **一條用寫死像素位移的拖曳測試，會在版面改變的那天說「功能壞了」
+  // > ——而它報的是它自己的假設。**
+  const canvas = await page.locator('#blockly-panel').boundingBox()
+  const dropY = Math.min(from!.y + 340, (canvas!.y + canvas!.height) - 60)
+  await page.mouse.move(from!.x + 140, dropY, { steps: 20 })
   await page.mouse.up()
   await page.waitForTimeout(2800)
 
