@@ -9803,3 +9803,29 @@ Blockly.Python['cv2_create_knn'] = function(block) {
   不是「那個名字出現過」。前者是實作，後者可能只是一份字串表。
 
 - **來源**：[history/202](history/202-十字退場而主控台回到它本來的位置.md)
+
+### 版本號沒有變的重裝，等於沒有裝
+
+2026-09-02。改完之後把新的 `.vsix` 複製進 `~/.arduinoIDE/plugins/`（覆蓋同一個
+檔名），回報「裝好了」。使用者：「**ArduinoIDE 那邊還沒裝**」。
+
+而他是對的。Theia 開機時把 `plugins/*.vsix` **解壓**到
+`~/.arduinoIDE/deployedPlugins/<name>-<version>/`，而它認的是**那個資料夾在不在**
+——不是 `.vsix` 的時間戳。同一個版本號覆蓋過去，解壓那一步整個跳過：
+
+```
+plugins/semorphe-vscode-0.12.0.vsix          14:01  ← 新的
+deployedPlugins/semorphe-vscode-0.12.0/      11:18  ← IDE 讀的是這個
+```
+
+🔴 **而 VSCode 那側同時是綠的**（`code --install-extension --force` 真的重裝了），
+所以「裝好了」在一個宿主上是真的、在另一個宿主上是假的——而我只驗了會過的那個。
+
+處置：**每次都先 `rm -rf ~/.arduinoIDE/deployedPlugins/<name>-<version>`**，
+或在開發期把版本號往上帶。
+
+> **一個「安裝」如果被快取擋掉，它失敗的樣子與成功一模一樣
+> ——複製成功、檔案在、時間戳是新的，而跑起來的是舊的。**
+
+⚠️ 同一個形狀的第二次：`history/080` 那次是「A 環境驗、宣稱 B 環境成立」。
+這次更輕微也更容易犯——**兩個宿主吃同一份產物，而它們的安裝機制不同**。
