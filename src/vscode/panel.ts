@@ -181,6 +181,32 @@ let active: SemorpheSession | undefined
 let runner: SemorpheSession | undefined
 
 /**
+ * **宿主的時間軸——一條，不是每個視窗一條**（2026-09-02）。
+ *
+ * 🔴 它本來是 per-session 的，而那答不出這個問題：
+ * **使用者打的字被誰蓋掉了？** 一份多寫入者的病歷裡，每個寫入者手上的紀錄
+ * 都只說「文件變了（外來）」——而「外來」正是要查的那個東西。
+ *
+ * > **一條每個嫌疑人各自保管的時間軸，說得出每個人做了什麼，
+ * > 說不出他們的先後。**
+ *
+ * ⚠️ 所以每一則都標上**是哪一種視窗**。
+ */
+const HOST_LOG: string[] = []
+let hostLogSeq = 0
+let hostLogAt = 0
+
+function hostNoteGlobal(kind: VscodeViewKind, line: string): void {
+  const now = Date.now()
+  const gap = hostLogAt === 0 ? 0 : now - hostLogAt
+  hostLogAt = now
+  hostLogSeq += 1
+  HOST_LOG.push(
+    `${String(hostLogSeq).padStart(3, ' ')}｜+${String(gap).padStart(5, ' ')}ms｜${kind.padEnd(9)}｜${line}`)
+  while (HOST_LOG.length > 80) HOST_LOG.shift()
+}
+
+/**
  * 開過面板的那個 context。
  *
  * ⚠️ 套版面時可能要**補開**一個還沒開的面板，而 `openPanel` 需要它。
@@ -443,22 +469,13 @@ class SemorpheSession {
    *
    * 所以宿主這側要記：文件變了幾次、每一次判成回音還是外來的、送了沒有。
    */
-  private readonly hostLog: string[] = []
-  private hostLogSeq = 0
-  private hostLogAt = 0
-
   private hostNote(line: string): void {
-    const now = Date.now()
-    const gap = this.hostLogAt === 0 ? 0 : now - this.hostLogAt
-    this.hostLogAt = now
-    this.hostLogSeq += 1
-    this.hostLog.push(`${String(this.hostLogSeq).padStart(3, ' ')}｜+${String(gap).padStart(5, ' ')}ms｜${line}`)
-    while (this.hostLog.length > 40) this.hostLog.shift()
+    hostNoteGlobal(this.kind, line)
   }
 
-  /** 宿主時間軸——診斷用。 */
+  /** 宿主時間軸——診斷用。⚠️ 它是**全域**的（見 `HOST_LOG`）。 */
   get hostTimeline(): readonly string[] {
-    return this.hostLog
+    return HOST_LOG
   }
 
   private sendDocument(doc: vscode.TextDocument): void {
@@ -571,9 +588,9 @@ class SemorpheSession {
       // 🔴 **宿主這側的時間軸也要印**——見 `hostNote` 的檔頭：
       //    面板那側的「什麼都沒收到」答不出「有沒有人送」。
       OUTPUT.appendLine('')
-      OUTPUT.appendLine('  宿主時間軸（序號｜距上一則｜事件）：')
-      if (this.hostLog.length === 0) OUTPUT.appendLine('    （空——文件從頭到尾沒有變過）')
-      for (const line of this.hostLog) OUTPUT.appendLine(`    ${line}`)
+      OUTPUT.appendLine(`  宿主時間軸（序號｜距上一則｜視窗｜事件）｜目前開著：${[...sessions.keys()].join('、')}`)
+      if (HOST_LOG.length === 0) OUTPUT.appendLine('    （空——文件從頭到尾沒有變過）')
+      for (const line of HOST_LOG) OUTPUT.appendLine(`    ${line}`)
       OUTPUT.show(true)
       return
     }
@@ -680,7 +697,11 @@ class SemorpheSession {
       this.hostNote(`⏭ 積木要寫入，而它算的是版本 ${baseVersion}、現在是 ${doc.version} → 丟掉並重送`)
       this.sendDocument(doc); return
     }
-    this.hostNote(`✍️ 套用積木的寫入｜${span.startLine}–${span.endLine} → ${span.lines.length} 行｜版本 ${baseVersion}`)
+    // ⚠️ **把寫進去的第一行也記下來**——「誰寫的」答不出「它把什麼變成什麼」，
+    //    而使用者回報的病歷是「我打的字不見了」。
+    this.hostNote(
+      `✍️ 套用寫入｜${span.startLine}–${span.endLine} → ${span.lines.length} 行`
+      + `｜版本 ${baseVersion}｜首行「${(span.lines[0] ?? '（空）').trim().slice(0, 40)}」`)
 
     const editor = vscode.window.visibleTextEditors.find(
       (ed) => ed.document.uri.toString() === doc.uri.toString())
