@@ -79,6 +79,18 @@ export interface EditorLayoutPlan {
    */
   readonly order: readonly UnderstandingLayer[]
 
+  /**
+   * **一欄一個陣列，欄裡由上到下**——`setEditorLayout` 不可用時的退路要它。
+   *
+   * 🔴 2026-09-02 查證：Arduino IDE（Theia）的 bundle 裡
+   * `setEditorLayout` **零筆**，而 `workbench.action.splitEditorDown` 等
+   * 分割指令**都在**。
+   *
+   * > **「這個宿主做不到」與「這個宿主沒有那一顆指令」是兩件事
+   * > ——而只有後者有退路。**
+   */
+  readonly columns: readonly (readonly UnderstandingLayer[])[]
+
   /** 🪦 由 `order` 導出，只給測試與說明用——**執行時不要拿它當 `ViewColumn`**。 */
   readonly columnOf: ReadonlyMap<UnderstandingLayer, number>
 }
@@ -126,5 +138,5 @@ export function planEditorLayout(
   })
 
   const columnOf = new Map(order.map((l, i) => [l, i + 1] as const))
-  return { layout: { orientation: HORIZONTAL, groups }, order, columnOf }
+  return { layout: { orientation: HORIZONTAL, groups }, order, columns, columnOf }
 }

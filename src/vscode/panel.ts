@@ -1060,7 +1060,8 @@ async function applyEditorLayout(presetId: string): Promise<void> {
   // ⚠️ 「專注」的 `*` 跟著**目前這個面板**走——它就是使用者正在看的那一層。
   const focus: UnderstandingLayer =
     active?.kind === 'flow' ? 'relation' : active?.kind === 'state' ? 'state' : 'space'
-  const { layout, order } = planEditorLayout(preset, focus)
+  const plan = planEditorLayout(preset, focus)
+  const { layout, order } = plan
 
   const ctx = extensionContext
   const KIND_OF: Partial<Record<UnderstandingLayer, VscodeViewKind>> = {
@@ -1079,7 +1080,47 @@ async function applyEditorLayout(presetId: string): Promise<void> {
   }
 
   // ③ 排。
-  await vscode.commands.executeCommand('vscode.setEditorLayout', layout)
+  //
+  // 🔴 **這個宿主不一定有這個指令**（2026-09-02，使用者在 Arduino IDE 實測）。
+  //
+  //    `executeCommand` 對認不得的指令**會拋**，而在此之前這一行沒有被包住
+  //    ——於是它後面的 ④ reveal 與 ⑤ 通知面板**整條沒跑**。畫面上的樣子是：
+  //    面板都開了（②做完了），而它們擠成四條窄欄，狀態列還寫著上一張版面。
+  //
+  // > **一個「排版面」的動作失敗時，最糟的結果不是【沒排】
+  // > ——是【開了一半而停在那裡】，因為前面那一步已經改了畫面。**
+  //
+  // ⚠️ `history/080` 逐字記著：「Theia 的 Webview 與 VSCode 的差異
+  //    **沒有逐項比對過**」。這是那句話的第一個實例。
+  //
+  // 🟢 而處置不是靜默 catch：**排不了要說得出來**，而且後面的步驟照跑
+  //    （面板已經開好了，使用者自己拖得動）。
+  let arranged = true
+  try {
+    await vscode.commands.executeCommand('vscode.setEditorLayout', layout)
+  } catch (e) {
+    // 🔴 **沒有那一顆指令，不代表這個宿主排不了**（2026-09-02 查證）。
+    //
+    //    Arduino IDE（Theia）的 bundle 裡 `setEditorLayout` **零筆**，
+    //    而 `workbench.action.splitEditorDown`／`focusNthEditorGroup`
+    //    **全部都在**。
+    //
+    // > **「這個宿主做不到」與「這個宿主沒有那一顆指令」是兩件事
+    // > ——而只有後者有退路。**
+    //
+    // ⚠️ 退路是**一步一步排**（開一欄、需要第二列就往下切），
+    //    而不是宣告一次排好。它比較脆，所以它是**退路**不是主路。
+    OUTPUT.appendLine(`Semorphe 版面：這個 IDE 沒有 setEditorLayout（${String(e)}）`)
+    OUTPUT.appendLine('  → 改用分割指令一步一步排。')
+    arranged = await arrangeBySplitting(plan.columns, KIND_OF, active?.document)
+    if (!arranged) {
+      OUTPUT.appendLine('  🔴 分割指令也不行——面板已經開好了，請自己拖到想要的位置。')
+      void vscode.window.showWarningMessage(
+        'Semorphe：這個 IDE 兩種排版面的方式都不支援。面板已經開好了，請自己拖。')
+    }
+    // ⚠️ 退路已經把每一格放到位了 —— ④ 不要再搬一次。
+    if (arranged) { broadcastControl('layout', presetId); return }
+  }
 
   // ④ 各自就位。
   //
@@ -1094,7 +1135,8 @@ async function applyEditorLayout(presetId: string): Promise<void> {
   //
   // ⚠️ 而 `tabGroups.all` 給的順序**就是那個版面的順序**——它與 `order`
   //    是同一棵樹走出來的兩份，所以逐項對得起來。
-  const cols = vscode.window.tabGroups.all.map((g) => g.viewColumn)
+  // ⚠️ 排不動的話**不要再搬**——那只會把使用者自己排好的位置洗掉。
+  const cols = arranged ? vscode.window.tabGroups.all.map((g) => g.viewColumn) : []
   const doc = active?.document
   for (let i = 0; i < order.length; i++) {
     const col = cols[i]
@@ -1119,6 +1161,63 @@ async function applyEditorLayout(presetId: string): Promise<void> {
   // ⚠️ 送給**每一個**面板，不只 `active`：狀態列由目前看的那個面板餵，
   //    只更新一個的話，切過去就會看到舊名字。
   broadcastControl('layout', presetId)
+}
+
+/**
+ * **退路：用分割指令一步一步排**（2026-09-02）。
+ *
+ * 🔴 為什麼需要它：`vscode.setEditorLayout` 是**一次宣告整張版面**的指令，
+ * 而 Theia 沒有實作它。但 Theia **有**分割指令——所以排得出來，
+ * 只是要換一種說法。
+ *
+ * ```
+ * 一欄一欄開      第 j 欄的第一格 → reveal 到 ViewColumn j+1（不存在就長出來）
+ * 欄裡要第二列    focus 那一組 → splitEditorDown → reveal 到新長出來的那一組
+ * ```
+ *
+ * ⚠️ **新那一組的號碼要用問的**（`tabGroups.all.length`），不是自己算
+ * ——這一天已經在同一個坑上跌過一次（`planEditorLayout` 的 `order` 說明）。
+ *
+ * > **一個「第幾個」的索引，只在【被數的東西與被指的東西一一對應時】才成立。**
+ *
+ * @returns 有沒有真的排成。⚠️ 連分割指令都沒有時回 `false`——**不假裝成功**。
+ */
+async function arrangeBySplitting(
+  columns: readonly (readonly UnderstandingLayer[])[],
+  kindOf: Partial<Record<UnderstandingLayer, VscodeViewKind>>,
+  doc: vscode.TextDocument | undefined,
+): Promise<boolean> {
+  const FOCUS = ['First', 'Second', 'Third', 'Fourth', 'Fifth']
+  /** 把一層放到某一組。程式碼那一層走編輯器，其餘走面板。 */
+  const place = async (layer: UnderstandingLayer, col: number): Promise<void> => {
+    if (layer === 'element') {
+      if (doc) await vscode.window.showTextDocument(doc, { viewColumn: col, preserveFocus: true })
+      return
+    }
+    const kind = kindOf[layer]
+    if (kind) sessions.get(kind)?.reveal(col)
+  }
+
+  try {
+    for (let j = 0; j < columns.length; j++) {
+      const rows = columns[j]
+      // 第一格：直接 reveal 到第 j+1 欄——不存在的欄會長出來（VSCode 與 Theia 都是）。
+      await place(rows[0], j + 1)
+      for (let r = 1; r < rows.length; r++) {
+        // 🔴 **要先站到那一欄，往下切才切在對的地方。**
+        const focus = FOCUS[j]
+        if (!focus) return false      // 超過五欄——這個宿主指名不到，不假裝
+        await vscode.commands.executeCommand(`workbench.action.focus${focus}EditorGroup`)
+        await vscode.commands.executeCommand('workbench.action.splitEditorDown')
+        // ⚠️ 新那一組的號碼**用問的**。
+        await place(rows[r], vscode.window.tabGroups.all.length)
+      }
+    }
+    return true
+  } catch (e) {
+    OUTPUT.appendLine(`  分割指令失敗：${String(e)}`)
+    return false
+  }
 }
 
 /** 標題列按了一個動作（含執行模式）。 */

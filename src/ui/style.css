@@ -326,6 +326,28 @@ html, body {
   flex-shrink: 0;
   min-height: 28px;
   box-sizing: border-box;
+  /* 🔴 **窄的時候要裁掉，不要把字擠成直排**（2026-09-02）。
+     使用者在 Arduino IDE 把四格排成四條窄欄，而「主控台」與「自動排版」
+     被擠成**一個字一行的直排**——那不是「小一點」，是**認不出來**。
+
+     > **一條放不下的工具列，該做的是【看不到後面那幾顆】，
+     > 而不是【把每一顆都變形】。**
+
+     ⚠️ `min-width: 0` 不可省：flex 子項的預設 `min-width: auto` 會讓
+     它拒絕縮到內容寬度以下，於是裁不掉、只能擠。 */
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* 頭上的每一顆都不准變形——放不下就整顆被裁掉。 */
+.panel-head > *,
+.quick-access-bar > *,
+.bottom-panel-tabs > *,
+.monaco-clipboard-bar > *,
+.flow-toolbar > * {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* 名字之後的那一段——面板自己的東西接這裡（`layout/panel-head.ts`）。 */
@@ -1482,8 +1504,13 @@ html, body {
 
 /* ⚠️ 共同的部分在「一格的頭」那一段——這裡只留它自己才有的。 */
 .quick-access-bar {
-  /* 🔴 快速列的東西比較多，窄視窗要換行——而**只有它**需要。 */
-  flex-wrap: wrap;
+  /* 🪦 `flex-wrap: wrap` 退場（2026-09-02）。
+     它的理由是「快速列的東西比較多，窄視窗要換行」——而**換行的代價是
+     那一格的頭變成兩層高**，在四條窄欄的版面裡它會把畫布吃掉一半。
+     ⚠️ 而真正窄的情境（行動版）走的是另一條路（`#mobile-action-bar`）。
+
+     > **「放不下」的兩種處置——換行與裁切——差別在【誰的高度會變】。
+     > 一條頭如果會長高，它就不再是一條頭。** */
 }
 
 .quick-access-bar button {

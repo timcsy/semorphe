@@ -82,3 +82,34 @@ describe('🔴 回傳的是【順序】，不是 ViewColumn 的號碼', () => {
     expect([...p.columnOf]).toEqual(p.order.map((l, i) => [l, i + 1]))
   })
 })
+
+/**
+ * 🔴 `columns` —— 沒有 `setEditorLayout` 的宿主要靠它一步一步排。
+ *
+ * 2026-09-02 查證：Arduino IDE（Theia）的 bundle 裡 `setEditorLayout` 零筆，
+ * 而 `workbench.action.splitEditorDown` 等分割指令全部都在。
+ *
+ * > 「這個宿主做不到」與「這個宿主沒有那一顆指令」是兩件事
+ * > ——而只有後者有退路。
+ */
+describe('一欄一個陣列，欄裡由上到下', () => {
+  it('十字：兩欄，各兩列', () => {
+    expect(plan('grid').columns).toEqual([['element', 'state'], ['relation', 'space']])
+  })
+
+  it('三欄：第一欄兩列，另外兩欄各一列', () => {
+    expect(plan('three-column').columns)
+      .toEqual([['element', 'state'], ['relation'], ['space']])
+  })
+
+  it('對照：（程式碼／主控台）｜積木', () => {
+    expect(plan('compare').columns).toEqual([['element', 'state'], ['space']])
+  })
+
+  it('⚠️ 攤平之後就是 `order`——兩份是同一棵樹走出來的', () => {
+    for (const id of ['focus', 'compare', 'three-column', 'grid'] as const) {
+      const p = plan(id)
+      expect(p.columns.flat(), id).toEqual([...p.order])
+    }
+  })
+})
