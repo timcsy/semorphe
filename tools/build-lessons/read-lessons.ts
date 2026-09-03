@@ -18,8 +18,9 @@
  * `tests/integration/audit-lesson-pages.test.ts` 拿**登錄表**（glob 那一側）
  * 去對 `dist/` 裡的頁數，對不上就紅。
  */
-import { readdirSync, readFileSync, existsSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { readdirSync, readFileSync, existsSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { join, relative } from 'node:path'
 import { parseLesson, parseTrack, type Lesson, type Track } from '../../src/core/lesson'
 
 export interface LessonPage {
@@ -27,8 +28,45 @@ export interface LessonPage {
   readonly track: Track
   /** `lesson.md` 的原文——⚠️ 課文只有這一份，不在 `lesson.json` 裡 */
   readonly md: string
-  /** 課文自己的修改時間——`sitemap.xml` 的 `lastmod` 用它，不是用建置時間 */
-  readonly mtime: Date
+  /**
+   * 課文**最後一次被改**的時間——`sitemap.xml` 的 `lastmod` 用它。
+   *
+   * 🔴 **問 git，不問檔案的 mtime**（2026-09-03，CI 紅了才發現）：
+   * `git clone` 之後每個檔的 mtime 都是 **checkout 的時間**，於是在 CI 上
+   * 「每一課的最後修改日」會全部變成今天——**那正是這個欄位最沒有用的樣子**。
+   *
+   * ⚠️ 問不到就是 `undefined`（不是「今天」）：`lastmod` 可以不寫，
+   * 但不可以寫一個假的——Google 會學會不看它。
+   */
+  readonly lastmod?: Date
+}
+
+/**
+ * 一次 `git log` 問出每一份課文的最後提交時間。
+ *
+ * ⚠️ **一次呼叫，不是 66 次**：`--name-only` 讓每個 commit 後面接它動到的檔，
+ * 由新到舊走一遍，第一次看到就是最後一次改動。
+ *
+ * 🔴 拿不到（沒有 git、淺 clone、從 tarball 建）就回空的——**呼叫端要能接受沒有**。
+ */
+export function lastmodFromGit(root: string): Map<string, Date> {
+  const out = new Map<string, Date>()
+  let log: string
+  try {
+    // 🔴 **`core.quotepath=false` 不是可選的**：git 預設會把非 ASCII 的路徑
+    //    跳脫成 `"lessons/cpp-beginner/01-\345\215\260…"`，而這 66 個資料夾**全是中文**
+    //    ——不關掉的話比對不到，`lastmod` 會安靜地只剩下零星幾筆（實測：66 → 2）。
+    log = execFileSync('git',
+      ['-c', 'core.quotepath=false', 'log', '--pretty=format:%cI', '--name-only', '--', root],
+      { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 })
+  } catch { return out }
+  let when: Date | null = null
+  for (const line of log.split('\n')) {
+    if (line === '') continue
+    if (/^\d{4}-\d{2}-\d{2}T/.test(line)) { when = new Date(line); continue }
+    if (when !== null && !out.has(line)) out.set(line, when)
+  }
+  return out
 }
 
 /** 讀出每一條軌道，**照宣告的順序**（與 `load-lessons.ts` 的排法逐字相同）。 */
@@ -49,7 +87,7 @@ export function readTracks(root: string): Track[] {
  * ⚠️ 編號是**課文的一部分**（`lessons/README.md` 的〈編號〉那一節），
  * 所以這裡不另外發明一個順序欄位。
  */
-export function readLessonsOf(root: string, track: Track): LessonPage[] {
+export function readLessonsOf(root: string, track: Track, gitTimes?: Map<string, Date>): LessonPage[] {
   const dir = join(root, track.id)
   const out: LessonPage[] = []
   for (const d of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -66,7 +104,8 @@ export function readLessonsOf(root: string, track: Track): LessonPage[] {
       lesson: parseLesson(id, JSON.parse(readFileSync(j, 'utf8'))),
       track,
       md: readFileSync(m, 'utf8'),
-      mtime: statSync(m).mtime,
+      // ⚠️ git 的路徑是**相對於 repo 根**的，而 `m` 是絕對路徑
+      lastmod: gitTimes?.get(relative(process.cwd(), m)),
     })
   }
   return out

@@ -33,7 +33,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { Plugin } from 'vite'
-import { readTracks, readLessonsOf } from './read-lessons'
+import { readTracks, readLessonsOf, lastmodFromGit } from './read-lessons'
 import { lessonDocHref } from '../../src/core/lesson'
 import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots } from './render'
 
@@ -94,12 +94,13 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
         // ⚠️ dev 也要供這兩個——不然「上線前先看一眼 sitemap」做不到，
         //    而它們正是最容易寫錯又最沒有人檢查的兩個檔。
         if (url === '/sitemap.xml' || url === '/robots.txt') {
+          const gt = lastmodFromGit('lessons')
           const tracks = readTracks(lessonsRoot)
           const entries: { path: string; lastmod?: Date }[] = [{ path: '/' }, { path: '/lessons/' }]
           for (const t of tracks) {
             entries.push({ path: `/lessons/${encodeURIComponent(t.id)}/` })
-            for (const p of readLessonsOf(lessonsRoot, t)) {
-              entries.push({ path: lessonDocHref(p.lesson.id), lastmod: p.mtime })
+            for (const p of readLessonsOf(lessonsRoot, t, gt)) {
+              entries.push({ path: lessonDocHref(p.lesson.id), lastmod: p.lastmod })
             }
           }
           res.setHeader('content-type', url.endsWith('.xml') ? 'application/xml' : 'text/plain')
@@ -122,15 +123,16 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
     },
     // ⚠️ 只有 build 走這一步；dev 走上面的中介層——**兩條路同一組函式**。
     closeBundle() {
+      const gitTimes = lastmodFromGit('lessons')
       const tracks = readTracks(lessonsRoot)
       const counts: { track: ReturnType<typeof readTracks>[number]; count: number }[] = []
       const sitemap: { path: string; lastmod?: Date }[] = [{ path: '/' }, { path: '/lessons/' }]
       let n = 0
       for (const track of tracks) {
-        const pages = readLessonsOf(lessonsRoot, track)
+        const pages = readLessonsOf(lessonsRoot, track, gitTimes)
         sitemap.push({ path: `/lessons/${encodeURIComponent(track.id)}/` })
         pages.forEach((p, i) => {
-          sitemap.push({ path: lessonDocHref(p.lesson.id), lastmod: p.mtime })
+          sitemap.push({ path: lessonDocHref(p.lesson.id), lastmod: p.lastmod })
           // ⚠️ 鄰居由**這裡**算——`renderLesson` 不知道它在第幾課，那是清單的知識。
           write(outDir, `lessons/${p.lesson.id}`,
             renderLesson(p, { prev: pages[i - 1], next: pages[i + 1] }))

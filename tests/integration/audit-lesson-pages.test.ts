@@ -26,7 +26,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { readTracks, readLessonsOf } from '../../tools/build-lessons/read-lessons'
+import { readTracks, readLessonsOf, lastmodFromGit } from '../../tools/build-lessons/read-lessons'
 import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots } from '../../tools/build-lessons/render'
 import { lessonDocHref } from '../../src/core/lesson'
 import { allLessons } from '../../src/core/load-lessons'
@@ -154,11 +154,14 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
   it('④之五 sitemap 要列到每一頁，而 robots 要指得到它', () => {
     // 🔴 sitemap 漏一頁的代價不是「那一頁排名差」，是**Google 可能永遠沒發現它**。
     const known = [...allLessons().keys()]
+    const gitTimes = lastmodFromGit('lessons')
     const tracks = readTracks(ROOT)
     const entries: { path: string; lastmod?: Date }[] = [{ path: '/' }, { path: '/lessons/' }]
     for (const t of tracks) {
       entries.push({ path: `/lessons/${encodeURIComponent(t.id)}/` })
-      for (const p of readLessonsOf(ROOT, t)) entries.push({ path: lessonDocHref(p.lesson.id), lastmod: p.mtime })
+      for (const p of readLessonsOf(ROOT, t, gitTimes)) {
+        entries.push({ path: lessonDocHref(p.lesson.id), lastmod: p.lastmod })
+      }
     }
     const xml = renderSitemap(entries)
     const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
@@ -169,11 +172,24 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
     expect(missing, '🔴 有課沒有進 sitemap').toEqual([])
     // 🔴 **首頁一定要在**——它是全站權重最高的一頁，而它不是這個 plugin 產的
     expect(locs, '🔴 首頁不在 sitemap 裡').toContain('https://semorphe.com/')
-    // ⚠️ `lastmod` 要是**課文的**時間，不是建置時間——每次 build 都變成今天的話，
-    //    這個欄位就退化成噪音。
-    const today = new Date().toISOString().slice(0, 10)
-    const allToday = [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].every((m) => m[1] === today)
-    expect(allToday, '🔴 每一筆 lastmod 都是今天——那是建置時間，不是內容時間').toBe(false)
+    // 🔴 **`lastmod` 要是【內容】的時間**——而它有兩種合法結果：
+    //
+    //    ```
+    //    問得到 git   → 每一課各自的最後提交日（會有很多個不同的日期）
+    //    問不到       → 一筆 lastmod 都不寫（不是寫「今天」）
+    //    ```
+    //
+    // 🪦 這一條 2026-09-03 在 CI 上紅過一次，而它紅得對：第一版讀的是檔案的
+    //    `mtime`，而 `git clone` 之後每個檔的 mtime 都是 **checkout 的時間**
+    //    ——於是「每一課的最後修改日」在 CI 上全部變成今天。
+    //
+    // > **一個在開發機上成立的「檔案什麼時候改的」，在 CI 上量到的是
+    // > 「這個 runner 什麼時候把它抓下來的」。**
+    const dates = [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1])
+    const distinct = new Set(dates).size
+    expect(dates.length === 0 || distinct > 1,
+      `🔴 ${dates.length} 筆 lastmod 卻只有 ${distinct} 種日期——那不是內容的時間，` +
+      '是建置／checkout 的時間。問不到就不要寫。').toBe(true)
     expect(renderRobots(), '🔴 robots 沒有指出 sitemap 在哪')
       .toContain('Sitemap: https://semorphe.com/sitemap.xml')
   })
