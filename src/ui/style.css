@@ -591,6 +591,99 @@ html, body {
  * ⚠️ 那個位置不是美感——**它讓清單離「你剛才按的那顆狀態列項目」很遠**，
  *    而 VSCode 就是這樣，使用者的肌肉記憶在那裡。
  */
+/*
+ * ─── 抽屜（☰ 的動作清單） ───
+ *
+ * 🔴 **沒有 `@media`**：誰要開它由呼叫端決定（`app-shell` 只在有 `mobileLayout`
+ * 時畫那顆 ☰）。用寬度斷點決定「這是不是手機」正是第一百條護欄在擋的事。
+ */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0);
+  transition: background .18s ease;
+}
+
+.drawer-backdrop.open {
+  background: rgba(0, 0, 0, .45);
+}
+
+.drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(300px, 82vw);
+  background: #252526;
+  border-left: 1px solid #454545;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, .5);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform .18s ease;
+}
+
+.drawer-backdrop.open .drawer {
+  transform: translateX(0);
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #3a3a3a;
+  color: #ccc;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.drawer-close {
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.drawer-close:hover { background: #3a3a3a; color: #fff; }
+
+.drawer-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  color: #ddd;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.drawer-item:hover, .drawer-item:active { background: #37373d; }
+
+/* 分隔線——上面是「對作品做什麼」，下面是「這個專案」。 */
+.drawer-item-divided {
+  border-top: 1px solid #3a3a3a;
+  margin-top: 6px;
+  padding-top: 14px;
+}
+
+.drawer-item-icon { font-size: 15px; line-height: 1.4; }
+
+/* SVG 圖示與 emoji 對齊在同一條線上——⚠️ emoji 是文字（有 line-height），
+   SVG 是替換元素（沒有），所以要自己補一點上邊距。 */
+.drawer-item-mark { width: 16px; height: 16px; margin-top: 3px; flex: 0 0 auto; }
+
+.drawer-item-text { display: flex; flex-direction: column; gap: 2px; }
+
+.drawer-item-desc { color: #999; font-size: 12px; }
+
 .quick-pick-overlay {
   position: fixed;
   inset: 0;
@@ -1634,9 +1727,22 @@ html, body {
   cursor: pointer;
 }
 
-#toolbar #file-menu-btn:hover {
+#toolbar #file-menu-btn:hover,
+#toolbar #lessons-link:hover {
   background: #3a3a3a;
   color: #fff;
+}
+
+/* 「課程」——與「檔案」同一種外觀（同一列上的東西不該長得不一樣）。
+   ⚠️ 它是 `<a>` 不是 `<button>`：它真的是一個連結（可以中鍵開新分頁、可以複製網址），
+   而把連結做成按鈕會把那些能力拿掉。 */
+#toolbar #lessons-link {
+  padding: 3px 10px;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 13px;
+  line-height: 20px;
+  text-decoration: none;
 }
 
 .file-menu {
@@ -2056,8 +2162,34 @@ html, body {
   body:not(.host-no-mobile-layout) .quick-access-bar #block-style-selector-mount,
   body:not(.host-no-mobile-layout) .quick-access-bar .file-menu-group,
   /* ⚠️ 搬到標題列之後，行動版隱藏的規則也要跟著搬——維持原本的行為 */
-  body:not(.host-no-mobile-layout) .toolbar-left .file-menu-group {
+  body:not(.host-no-mobile-layout) .toolbar-left .file-menu-group,
+  /* 🔴 **行動版讓出空間的是【字】，不是任何一個入口**（2026-09-03）。
+     使用者三句話收斂到這裡：「課程也可以直接在標頭顯示…這是我們的重點」→
+     「Semorphe 的字還是要留著」→「手機還是要 GitHub icon，但是不用寫 Star」。
+     🪦 中間試過兩版都太粗：藏站名、藏整顆星星。
+     🟢 正解是**只藏標籤，留圖示**——圖示本身就說得出它是什麼，
+        而「Star」那五個字母是它唯一可省的部分。
+     > 窄畫面上先讓出的是【字】，不是【入口】——
+     > 一個入口消失了就沒有了，而一個沒有標籤的圖示還在那裡。 */
+  body:not(.host-no-mobile-layout) .github-star-label {
     display: none !important;
+  }
+
+  /* ⚠️ **內距也要讓**：390px 剛好放得下，而 360px 差 5px（量出來的）。
+     兩側各省 8px 就夠了，而它不動任何一個入口。 */
+  body:not(.host-no-mobile-layout) #toolbar {
+    padding: 0 8px;
+  }
+
+  /* ⚠️ **不准把中文折成兩行**——320px 上實測「課程」變成「課／程」、
+     「執行」變成「執／行」。那不是擠，是壞掉。
+     🔴 折行是 flex 子項在空間不足時的預設行為，而它**不會報錯**：
+     畫面只是變醜，沒有任何測試會紅。 */
+  body:not(.host-no-mobile-layout) #toolbar #lessons-link,
+  body:not(.host-no-mobile-layout) #toolbar .toolbar-title,
+  body:not(.host-no-mobile-layout) #toolbar #run-btn {
+    white-space: nowrap;
+    flex: 0 0 auto;
   }
 
   /* Simplify quick-access-bar: only undo/redo/clear */

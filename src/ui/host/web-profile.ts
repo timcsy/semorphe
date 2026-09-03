@@ -23,7 +23,13 @@ export const webProfile: HostProfile = {
   createCodeView(container: HTMLElement): CodeView {
     const panel = new MonacoPanel(container)
     panel.init(false)
-    return panel
+    // 🔴 **「開得了外部網址」是宿主的能力，由宿主宣告**（2026-09-03）。
+    //    網頁版開得了；IDE 的 webview 裡 `window.open` 被沙箱擋著，
+    //    所以那一側**不宣告這個方法**，而組裝點會據此不端出「看課文」
+    //    ——⚠️ 不端出來，好過端出來然後點了沒反應。
+    const view = panel as CodeView
+    view.openExternal = (url) => { window.open(url, '_blank', 'noopener') }
+    return view
   },
 
   createStorage() {

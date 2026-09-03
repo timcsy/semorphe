@@ -120,7 +120,11 @@ const GITHUB_URL = 'https://github.com/timcsy/semorphe'
  * ⚠️ `fill="currentColor"`：它跟著按鈕的文字色走，
  * hover 與 focus 時不會留下一塊顏色對不上的圖。
  */
-const GITHUB_MARK = 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z'
+/**
+ * GitHub 的商標路徑（16×16 viewBox）——**一份，兩個消費者**：
+ * 標頭那顆星星，與行動版抽屜裡那一項（`App.menuActions`）。
+ */
+export const GITHUB_MARK = 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z'
 
 export function createAppLayout(
   appEl: HTMLElement,
@@ -185,6 +189,23 @@ export function createAppLayout(
       </div>` : ''
 
   /**
+   * **課程**——去讀那 66 堂課的課文（`/lessons/`，2026-09-03）。
+   *
+   * 🔴 它跟著 `fileMenu` 走，而那不是偷懶：`fileButtons` 宣告的是
+   * 「**這個宿主的檔案由我們管**」＝我們就是那個網站；反過來，
+   * IDE 面板裡的檔案是使用者專案的檔案，那裡的 `/lessons/` 不存在，
+   * 一顆連過去會把 webview 導走的按鈕比沒有更糟。
+   *
+   * > **一個長得一樣而按下去沒反應的按鈕，比沒有那顆按鈕更糟
+   * > ——因為它讓「像」變成一個謊。**（上面那句的同一個推論）
+   *
+   * ⚠️ `target="_blank"`：正在寫的東西不該被一個「我想看看課文」踢掉。
+   */
+  const lessonsLink = profile.features.fileButtons
+    ? `<a id="lessons-link" href="/lessons/" target="_blank" rel="noopener" title="課程">課程</a>`
+    : ''
+
+  /**
    * **在 GitHub 給星星**——星星 ＋ 數字，放在「執行」**左邊**
    * （使用者 2026-08-30 指定的位置）。
    *
@@ -236,7 +257,12 @@ export function createAppLayout(
       //    而它同時是顯示處與入口。
       //
       // > **同一件事在同一個畫面上有兩個開關，是一個必然會不一致的東西。**
-      ? '<button id="hamburger-btn" class="hamburger-btn" title="設定">☰</button>' 
+      // 🔴 **兩顆，不是一顆**（使用者 2026-09-03：「我希望有 ☰ 也有設定 icon，
+      //    分開我覺得比較好」）——☰ 是**動作**（課程／檔案），⚙ 是**設定**。
+      //    ⚠️ ☰ 跟著 `fileButtons` 走：宿主自己管檔案時它沒有東西可裝。
+      ? `${profile.features.fileButtons
+          ? '<button id="hamburger-btn" class="hamburger-btn" title="選單">☰</button>' : ''
+        }<button id="settings-btn" class="hamburger-btn" title="設定">⚙</button>` 
       : '',
   ].join('')
 
@@ -244,13 +270,13 @@ export function createAppLayout(
   //    「Semorphe 積木」。在一個窄面板裡那一條就是純粹的浪費。
   //    ⚠️ 所以是**不建**，同一條規則。
   let toolbar: HTMLElement | null = null
-  if (headerActions !== '' || fileMenu !== '') {
+  if (headerActions !== '' || fileMenu !== '' || lessonsLink !== '') {
     toolbar = document.createElement('header')
     toolbar.id = 'toolbar'
     toolbar.innerHTML = `
     <div class="toolbar-left">
       <img src="logo.svg" alt="Semorphe" class="toolbar-logo">
-      <span class="toolbar-title">Semorphe</span>${fileMenu}
+      <span class="toolbar-title">Semorphe</span>${fileMenu}${lessonsLink}
     </div>
     <div class="toolbar-actions">${headerActions}</div>
   `
@@ -1843,8 +1869,10 @@ export function createAppLayout(
 export function setupToolbarButtons(
   callbacks: Pick<AppShellCallbacks, 'onOpenSyncMenu'> & {
     onAction: (id: ControlId) => void
-    /** 行動版的設定清單。 */
+    /** ⚙：行動版的設定清單。 */
     onOpenSettings: () => void
+    /** ☰：行動版的動作清單（課程／檔案）。 */
+    onOpenMenu: () => void
   },
 ): void {
   const replaceBtn = (id: string) => {
@@ -1860,7 +1888,8 @@ export function setupToolbarButtons(
   replaceBtn('sync-menu-btn')?.addEventListener('click', callbacks.onOpenSyncMenu)
   // 行動版的設定——⚠️ 它不是控制項登錄表的一員，是**行動版的 chrome**
   //（與分頁列同一類），所以在這裡具名接。
-  replaceBtn('hamburger-btn')?.addEventListener('click', callbacks.onOpenSettings)
+  replaceBtn('hamburger-btn')?.addEventListener('click', callbacks.onOpenMenu)
+  replaceBtn('settings-btn')?.addEventListener('click', callbacks.onOpenSettings)
   for (const spec of CONTROLS) {
     if (spec.kind !== 'action' || spec.id === 'run') continue
     replaceBtn(spec.mountId)?.addEventListener('click', () => callbacks.onAction(spec.id))

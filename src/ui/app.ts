@@ -56,7 +56,7 @@ import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
-import { lessonIdFromQuery, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson, type ScaffoldMode } from '../core/lesson'
+import { lessonIdFromQuery, lessonDocHref, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson, type ScaffoldMode } from '../core/lesson'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
@@ -65,8 +65,9 @@ import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
-import type { AppShellElements, AppShellCallbacks } from './app-shell'
-import { renderStatusControls, openSettings } from './layout/status-bar-controls'
+import { GITHUB_MARK, type AppShellElements, type AppShellCallbacks } from './app-shell'
+import { renderStatusControls, openSettings, type MenuAction } from './layout/status-bar-controls'
+import { openDrawer } from './layout/drawer'
 import type { ConsolePanel } from './panels/console-panel'
 import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
@@ -261,6 +262,65 @@ export class App {
    */
   private openSettingsMenu(): void {
     openSettings(this.latestControlStates, (invoke) => this.handleControlInvoke(invoke))
+  }
+
+  /**
+   * ☰：動作那一張（課程／檔案）——與 ⚙ 的設定分開，而且**是一個抽屜**。
+   *
+   * 🔴 形狀不同是因為意圖不同（使用者 2026-09-03）：
+   * 設定是「這一格選哪一個值」（QuickPick 選完就關），
+   * 動作是「這裡有這些東西」（抽屜留在那裡）。
+   */
+  private openActionMenu(): void {
+    openDrawer('選單', this.menuActions().map((a) => ({
+      id: a.id, label: a.label, description: a.description, icon: a.icon,
+      iconPath: a.iconPath, dividerBefore: a.dividerBefore, run: a.run,
+    })))
+  }
+
+  /**
+   * ☰ 選單上半段的**動作**——行動版把「檔案」與「課程」從標頭藏起來之後，
+   * 它們的家在這裡。
+   *
+   * 🔴 **不重寫那三顆的行為，按同一顆按鈕**：匯出／匯入／上傳的實作住在
+   * `app-shell` 的事件處理器裡，行動版只是把那顆 `<button>` 隱藏起來
+   * ——它還在 DOM 裡。抄一份實作到這裡的話，兩份遲早會不一樣。
+   *
+   * > **要在第二個地方提供同一件事，最便宜的做法是【按同一顆按鈕】，
+   * > 不是把它做第二次。**
+   *
+   * ⚠️ 閘門是 `fileButtons`：宿主自己管檔案時，這幾項不該存在
+   *（IDE 裡我們的 `/lessons/` 也不存在——見 `app-shell` 的「課程」那一段）。
+   */
+  private menuActions(): MenuAction[] {
+    if (!this.profile.features.fileButtons) return []
+    const press = (id: string) => () => document.getElementById(id)?.click()
+    const open = this.codeView?.openExternal
+    return [
+      ...(open ? [{
+        id: 'lessons', label: '課程', icon: '📖', description: '66 堂課的課文（開新分頁）',
+        run: () => open('/lessons/'),
+      }] : []),
+      { id: 'export', label: '匯出', icon: '⬇', description: '把目前的作品存成 .json 檔', run: press('export-btn') },
+      { id: 'import', label: '匯入', icon: '⬆', description: '從 .json 檔載回來', run: press('import-btn') },
+      { id: 'upload-blocks', label: '上傳自訂積木', icon: '🧩', run: press('upload-blocks-btn') },
+      // 🔴 **GitHub 在抽屜的最下面，而它【不是】重複**（使用者 2026-09-03 拍板）。
+      //
+      //    我上一版把它拿掉了，理由是「同一件事兩個開關」。而那條規矩在這裡
+      //    不成立：標頭那顆現在**只剩圖示、沒有標籤**（「Star」兩個字讓給了空間）。
+      //
+      // > **一個沒有標籤的圖示，需要一個地方把它的名字說出來
+      // > ——那不是第二個開關，那是它的說明。**
+      //
+      // ⚠️ 它與上面那三項用分隔線隔開：上面是「對我的作品做什麼」，
+      //    下面是「這個專案」。
+      ...(open ? [{
+        id: 'github', label: '在 GitHub 給星星', iconPath: { d: GITHUB_MARK, size: 16 },
+        dividerBefore: true,
+        description: 'github.com/timcsy/semorphe',
+        run: () => open('https://github.com/timcsy/semorphe'),
+      }] : []),
+    ]
   }
 
   /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
@@ -607,6 +667,20 @@ export class App {
    * ——切目標要做的十件事（鷹架深度／風格／標頭別名／文法／語言／工具箱…）
    * 在那裡已經是對的，而抄第二份的話它們遲早會不同意。
    */
+  /**
+   * **去讀這一課的課文**——開靜態頁（`dist/lessons/<軌道>/<課>/`）。
+   *
+   * 🔴 網址由**同一支函式**產生（`core/lesson.ts` 的 `lessonDocHref`），
+   * 不是在這裡拼一次字串——兩邊各拼一次的話，中文課名的 encode 遲早不一樣，
+   * 而症狀是一個 404。
+   *
+   * ⚠️ `codeView.openExternal` 不存在時**這個選項根本不會被端出來**（見上面），
+   * 所以這裡不必再處理「開不了」。
+   */
+  private openLessonDoc(id: string): void {
+    this.codeView?.openExternal?.(lessonDocHref(id))
+  }
+
   private selectLesson(id: string): void {
     const lesson = id === '' ? undefined : lessonById(id)
     if (id !== '' && !lesson) {
@@ -666,6 +740,16 @@ export class App {
    */
   private applyLesson(lesson: Lesson): void {
     this.currentLesson = lesson
+    // 🔴 **軌道也要跟著設**（2026-09-03）：`?lesson=` 那條路只設了「哪一課」，
+    //    而「章節」那顆控制項是**看軌道決定畫不畫**的（見 `publishControls`：
+    //    「章節」與「範例」佔同一格）。
+    //
+    //    症狀很具體：從課文的靜態頁按「在編輯器打開」進來的人，
+    //    畫面上**沒有章節選單**——於是他既跳不到下一章，也回不去讀課文。
+    //
+    // > **一條深連結如果只設了「我是誰」而沒設「我從哪來」，
+    // > 使用者就會落在一個【走不回去】的狀態。**
+    this.currentTrack = trackOf(lesson.id)
     const t = lesson.pins.target
     if (t !== undefined) {
       const target = this.targetRegistry.all().find((x) => x.id === t)
@@ -778,6 +862,25 @@ export class App {
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
     this.syncController = new SyncController(this.bus, this.currentTopic.language, DEFAULT_STYLE)
+    // 🔴 **把建構子裡那個決定【再交一次】**（2026-09-03）。
+    //
+    //    `?lesson=arduino/…` 在**建構子**裡就走了 `applyLesson` → `adoptSkeleton`，
+    //    而那支要交給三個持有者：
+    //
+    //    ```
+    //    this.currentSkeletonId = id          ← 建構子裡唯一交得出去的
+    //    this.scaffold?.setSkeleton?.(id)     ← 那時它是 null（init 才生）
+    //    this.syncController?.setSkeleton?.(id) ← 那時它是 null（就在這一行生）
+    //    ```
+    //
+    //    症狀：狀態列寫著「Arduino 骨架・淡的」，而畫布與程式碼是
+    //    `using namespace std; int main() { return 0; }`。
+    //    🪦 2026-08-28 修過**同一個症狀**一次，而那次只補了「換 id」這一半
+    //    ——`applyLesson` 裡那句「在此之前這裡漏了它」講的就是那一次。
+    //
+    // > **一個在建構子裡做的決定，交給了三個還不存在的持有者
+    // > ——它會安靜地只生效三分之一，而那三分之一正好是【給人看的那一格】。**
+    this.adoptSkeleton(this.currentSkeletonId)
     this.syncController.setStyleAnalyzer({
       // ⚠️ 用吃 `StylePreset` 的那個門面——收窄發生在語言那側，不是這裡也不是引擎裡
       // 🟢 **2026-08-26：三支風格例外改由語言套件宣告**（`styleExceptions`）。
@@ -957,6 +1060,7 @@ export class App {
       // 🔴 **與宿主那側走同一支**（`handleControlInvoke`）——一個入口，不是兩個。
       onAction: (id) => this.handleControlInvoke({ id }),
       onOpenSettings: () => this.openSettingsMenu(),
+      onOpenMenu: () => this.openActionMenu(),
     })
 
     // 🔴 這個宿主沒有檔案按鈕就【不接線】——DOM 根本不存在。
@@ -2132,6 +2236,20 @@ export class App {
           // ⚠️ 資料夾名的 `NN-` 前綴留著——它就是章節編號
           label: `${l.id.split('/')[1] ?? l.id}${l.estimate ? `　${l.estimate}` : ''}`,
         }))
+        // 🔴 **回去讀的那條路**（2026-09-03）：課文有靜態頁了，而編輯器裡
+        //    沒有任何地方說得出「這一課有課文可以讀」。
+        //
+        //    形狀與鷹架那顆一樣——**用前綴分開兩種語義**（`doc:` ＝ 開一個新分頁，
+        //    不是換一堂課）。少了前綴的話它會被當成一個課程 id，而那個 id 不存在。
+        //
+        // > **一份寫好的教材，如果只有搜尋引擎進得去，那它對現在的使用者仍然不存在。**
+        if (this.currentLesson && this.codeView?.openExternal) {
+          options.unshift({
+            value: `doc:${this.currentLesson.id}`,
+            label: `📖 看這一課的課文`,
+            description: '在新分頁打開，編輯器不會關掉',
+          })
+        }
         return {
           id: spec.id, kind: spec.kind, title,
           // 🔴 沒選課程的時候這一顆說「先選課程」而不是「沒有章節」
@@ -2356,7 +2474,10 @@ export class App {
           break
         }
         case 'lesson': {
-          this.selectLesson(invoke.value ?? '')
+          const v = invoke.value ?? ''
+          // ⚠️ `doc:` 不是一堂課，是「去讀它」——與鷹架的 `skeleton:` / `mode:` 同形。
+          if (v.startsWith('doc:')) { this.openLessonDoc(v.slice(4)); break }
+          this.selectLesson(v)
           break
         }
         case 'style': {
@@ -2761,10 +2882,28 @@ export class App {
     // ⚠️ `targetId` 優先，回退到 `topicId`——舊存檔（spec 136 之前）只有後者。
     // 🔴 而**認不得的 ID 一律回退到預設**，不得崩潰或留下一片空白。
     const savedTarget = state.targetId ? this.targetRegistry.get(state.targetId) : undefined
-    if (savedTarget) this.currentTarget = savedTarget
+    // 🔴 **課釘住的目標，存檔蓋不掉**（2026-09-03）。
+    //
+    //    `?lesson=` 在**建構子**裡就把目標定了，而這一段稍後才跑
+    //    ——它原本無條件把存檔裡那個目標寫回去。於是老師貼出去的連結，
+    //    在**任何一個用過別的目標的瀏覽器上**會落在一個混合狀態：
+    //    狀態列寫著上一次的目標，而骨架與課程是這一課的。
+    //
+    //    使用者截圖（2026-09-03）：`?lesson=cpp-beginner/15-多層迴圈`
+    //    而狀態列第一格寫著「Python」。
+    //
+    // > **一條連結如果會被「這台電腦上次做了什麼」改寫，
+    // > 它就不是一條可以貼給別人的連結。**
+    //
+    // ⚠️ 只擋**課釘住的那一格**——沒有課的時候存檔仍然說了算。
+    const pinnedTarget = this.currentLesson?.pins.target
+    if (savedTarget && pinnedTarget === undefined) this.currentTarget = savedTarget
     // ⚠️ 還原也要跟著換外殼——否則存檔存的是 Arduino，開起來卻套 `main()`。
     this.scaffold?.setSkeleton?.(this.currentTarget.skeleton ?? 'main')
-    const topicId = savedTarget?.topic ?? state.topicId
+    // ⚠️ 課程主題也跟著——`savedTarget` 被擋掉時，別再從它推主題。
+    const topicId = pinnedTarget !== undefined
+      ? this.currentTopic.id
+      : (savedTarget?.topic ?? state.topicId)
     if (topicId) {
       const topic = this.topicRegistry.get(topicId)
       if (topic) {
@@ -2780,9 +2919,26 @@ export class App {
         //
         // > **一條「只在還原時走」的路，會安靜地漏掉每一件在另一條路上做的事。**
         this.setActiveGrammar?.(topic.language)
-        this.enabledBranches = state.enabledBranches
-          ? new Set(state.enabledBranches)
-          : new Set([topic.levelTree.id])
+        // 🔴 **課在的時候，層級由課說了算**（2026-09-03，第二刀）。
+        //
+        //    上一刀只擋住「目標」，而**層級是另一格**——於是存檔裡那份
+        //    （上一次待的主題留下的分支集合）照樣寫回來，與這一課的主題
+        //    交集之後幾乎是空的。
+        //
+        //    使用者：「多層迴圈的積木應該不只這些吧」——工具箱上只剩
+        //    「資料」與「輸入/輸出」，而那一課宣告的 `cpp:loop_count`
+        //    屬於「控制」，被交集掉了。
+        //
+        // > **一個「存檔蓋掉課程」的缺陷修一格是不夠的
+        // > ——課程釘住的是【一組】決定，而存檔也是一組。**
+        //
+        // ⚠️ `applyLesson` 已經把它設成「這個主題全開」（收窄由課的
+        //    `components` 做，不由層級做）——這裡只要不覆蓋它。
+        if (pinnedTarget === undefined) {
+          this.enabledBranches = state.enabledBranches
+            ? new Set(state.enabledBranches)
+            : new Set([topic.levelTree.id])
+        }
       }
     }
     // 舊存檔沒有 `targetId`，而它的 `styleId` 仍然照舊生效（下面既有的還原路徑）。

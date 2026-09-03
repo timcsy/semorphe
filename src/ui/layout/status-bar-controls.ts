@@ -97,6 +97,20 @@ export function renderStatusControls(
  *
  * ⚠️ 而「名字 ＋ 目前的值」沒有丟——它是 QuickPick 的 `description`。
  */
+export interface MenuAction {
+  readonly id: string
+  readonly label: string
+  readonly description?: string
+  /** 前面那個圖示——抽屜會畫它。 */
+  readonly icon?: string
+  /** 在它上面畫一條分隔線。 */
+  readonly dividerBefore?: boolean
+  /** 圖示是一段 SVG 路徑時給這個（見 `layout/drawer.ts`）。 */
+  readonly iconPath?: { readonly d: string; readonly size: number }
+  readonly run: () => void
+}
+
+/** ⚙ 那一顆——**設定**（每一個有選項的控制項）。動作在 `openMenu`。 */
 export function openSettings(
   states: readonly ControlState[],
   onInvoke: (invoke: ControlInvoke) => void,
@@ -115,3 +129,7 @@ export function openSettings(
     },
   )
 }
+
+// 🪦 **`openMenu` 退場（2026-09-03，寫完當天）**：☰ 改成抽屜
+// （`layout/drawer.ts`）——同一天使用者說「我希望 ☰ 可以開啟 drawer」。
+// 型別 `MenuAction` 留著，它現在餵給抽屜。

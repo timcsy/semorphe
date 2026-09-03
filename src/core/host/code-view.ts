@@ -190,6 +190,18 @@ export interface CodeView {
   persistPreference?(key: string, value: string): void
 
   /**
+   * **在宿主那邊開一個外部網址**（課文的靜態頁、說明文件）。
+   *
+   * 🔴 **沒有這個方法 ＝ 這個宿主開不了**，而組裝點要據此**不端出那個選項**
+   * ——不是端出來然後點了沒反應（`host-profile.ts` 的判準：問可選方法，
+   * 不要新增第五格布林；`history/153` 記著「不是第六格布林，是登錄表」）。
+   *
+   * ⚠️ 網頁版是 `window.open(url, '_blank')`；IDE 那側要走宿主的
+   * `env.openExternal`（webview 裡 `window.open` 是被沙箱擋住的）。
+   */
+  openExternal?(url: string): void
+
+  /**
    * 程式的輸出交給宿主的終端機。
    *
    * 🔴 **與 `controlSurfaces.output` 是同一件事的兩端**——宣告

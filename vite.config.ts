@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { lessonPages } from './tools/build-lessons'
 import { cpSync, mkdirSync } from 'node:fs'
 
 /**
@@ -28,6 +29,10 @@ function copyBlocklyMedia(): void {
 copyBlocklyMedia()
 
 export default defineConfig({
+  // 🔴 **課文的出口**（2026-09-03）：`lessons/` 的 66 課產生成靜態頁。
+  //    它們是給【讀的人】與搜尋引擎的——**零 JS、不載編輯器**
+  //    （`tests/integration/audit-lesson-pages.test.ts` 的第四條盯著）。
+  plugins: [lessonPages()],
   // 🔴 **根目錄**——2026-08-30 起網站住在 `semorphe.com/`，不是
   //    `timcsy.github.io/semorphe/`。
   //

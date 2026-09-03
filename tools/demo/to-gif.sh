@@ -20,3 +20,4 @@ mk() {
 mk test-results/record-demo/video.webm        assets/demo.gif
 mk test-results/record-demo-layout/video.webm assets/demo-layout.gif
 mk test-results/record-raw-raw/video.webm      assets/demo-raw.gif
+mk test-results/record-lessons-lessons/video.webm assets/demo-lessons.gif

@@ -261,3 +261,16 @@ export function lessonIdFromQuery(search: string): string | null {
   const v = q.get('lesson')
   return v !== null && v.trim() !== '' ? v.trim() : null
 }
+
+/**
+ * 課文靜態頁的網址。`cpp-beginner/11-for迴圈` → `/lessons/cpp-beginner/11-for%E8%BF%B4%E5%9C%88/`
+ *
+ * 🔴 **它與上面那支是一對**：一個把網址讀成 id，一個把 id 寫成網址。
+ * 兩邊分開住的話，中文課名的 encode 遲早會不一樣——而症狀是一個 404。
+ *
+ * ⚠️ 斜線**不 encode**（它是路徑分隔），課名**要 encode**（它有中文）。
+ * 這一條由 `audit-lesson-pages` 的最後一支釘著。
+ */
+export function lessonDocHref(id: string): string {
+  return `/lessons/${id.split('/').map(encodeURIComponent).join('/')}/`
+}

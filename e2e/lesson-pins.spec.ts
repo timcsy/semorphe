@@ -262,3 +262,81 @@ for (const c of CASES) {
     ).toBeLessThanOrEqual(c.want + 2)
   })
 }
+
+/**
+ * 🔴 **一條課程連結，不得被「這台電腦上次做了什麼」改寫。**
+ *
+ * 使用者截圖（2026-09-03）：開 `?lesson=cpp-beginner/15-多層迴圈`，
+ * 而狀態列第一格寫著「**Python**」——因為 `restoreState()` 在建構子之後才跑，
+ * 而它原本**無條件**把存檔裡的目標寫回去。
+ *
+ * > **一條連結如果會被上一次的使用狀態改寫，
+ * > 它就不是一條可以貼給別人的連結。**
+ */
+test('★ 存檔是別的目標時，課釘住的那個要贏', async ({ page }) => {
+  test.setTimeout(90_000)
+  // ① 先在 Python 上留下一份存檔
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(6000)
+  await page.locator('[data-control-id="target"]').click()
+  await page.waitForTimeout(400)
+  await page.locator('.quick-pick-item[data-value="python"]').first().click()
+  await page.waitForTimeout(3000)
+  expect(await page.evaluate(() =>
+    (window as never as { __app: { currentTarget: { id: string } } }).__app.currentTarget.id)).toBe('python')
+
+  // ② 開一條釘住 C++ 的課程連結
+  await page.goto('/?lesson=cpp-beginner%2F15-%E5%A4%9A%E5%B1%A4%E8%BF%B4%E5%9C%88', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+  const after = await page.evaluate(() => {
+    const a = (window as never as { __app: {
+      currentTarget: { id: string }; currentTopic: { id: string }; currentSkeletonId: string
+    } }).__app
+    return { target: a.currentTarget.id, topic: a.currentTopic.id, skeleton: a.currentSkeletonId,
+      bar: (document.querySelector('[data-control-id="target"]')?.textContent ?? '').trim() }
+  })
+  expect(after.target, '🔴 存檔蓋掉了課釘住的目標').toBe('cpp')
+  expect(after.topic, '🔴 主題跟著存檔跑了').toBe('cpp-beginner')
+  // 🔴 狀態列與內部狀態要說同一件事——使用者看到的是這一格
+  expect(after.bar, '🔴 狀態列還寫著上一次的目標').not.toContain('Python')
+
+  // 🔴 **層級是另一格，而它也會被存檔蓋掉**（使用者：「多層迴圈的積木應該不只這些吧」）。
+  //    那一課宣告的 `cpp:loop_count` 屬於「控制」——存檔的分支集合與這一課的主題
+  //    交集之後，整個分類會消失，而**畫面上看起來只是「這一課比較小」**。
+  // ⚠️ 選擇器是 `.blocklyToolboxCategory`——`.blocklyTreeLabel` 在這個版本的
+  //    Blockly **不存在**（`e2e/toolbox.spec.ts:76` 記著同一個坑：沒驗過的選擇器
+  //    會讓這支「空過」——0 個分類 → 什麼都沒比 → 綠）。
+  const cats = await page.locator('.blocklyToolboxCategory').allInnerTexts()
+  expect(cats.length, `★ 入口條件：一個分類都沒抓到（${cats.length}）→ 這支不算數`)
+    .toBeGreaterThan(1)
+  expect(cats, `🔴 工具箱少了「控制」——量到的分類：${cats.join('／')}`).toContain('控制')
+})
+
+/**
+ * 🔴 **建構子裡換的骨架，要真的換到那三個持有者身上。**
+ *
+ * 使用者截圖（2026-09-03）：`?lesson=arduino/01-閃一顆燈` 的狀態列寫著
+ * 「Arduino 骨架・淡的」，而程式碼是 `using namespace std; int main() { return 0; }`。
+ *
+ * 根因：`adoptSkeleton` 要交給三個持有者，而 `?lesson=` 在**建構子**裡就走它
+ * ——那時 `scaffold` 與 `syncController` 都還是 `null`，只有那個 id 交得出去。
+ *
+ * > **一個在建構子裡做的決定，交給了三個還不存在的持有者
+ * > ——它會安靜地只生效三分之一，而那三分之一正好是給人看的那一格。**
+ */
+test('★ `?lesson=arduino/…` 開出來的是 setup／loop，不是 int main', async ({ page }) => {
+  test.setTimeout(60_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=arduino%2F01-%E9%96%83%E4%B8%80%E9%A1%86%E7%87%88', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+  const d = await page.evaluate(() => {
+    const a = (window as never as { __app: {
+      currentSkeletonId: string; codeView: { getCode(): string }
+    } }).__app
+    return { skeleton: a.currentSkeletonId, code: a.codeView.getCode() }
+  })
+  expect(d.skeleton).toBe('arduino')
+  expect(d.code, '🔴 骨架宣告說是 Arduino，而產出來的是 C++ 的外框').toContain('void setup()')
+  expect(d.code, '🔴 兩個外框疊在一起了').not.toContain('int main()')
+})
