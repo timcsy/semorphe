@@ -51,6 +51,19 @@ export interface LessonPage {
  */
 export function lastmodFromGit(root: string): Map<string, Date> {
   const out = new Map<string, Date>()
+  // 🔴 **淺複製一律不給日期**（2026-09-03，線上抓到）。
+  //
+  //    淺複製裡 HEAD 沒有父節點，git 把它當【根 commit】——於是
+  //    `--name-only` 會把整棵樹都列成「這一次新增的」，每一課的日期
+  //    都變成 clone 的那一天。而那**看起來完全正常**：66 筆 lastmod 都在，
+  //    只是全部說謊。
+  //
+  // > **一個「拿不到就不寫」的退路，只有在【拿到假的】也算拿不到時才有用。**
+  try {
+    const shallow = execFileSync('git', ['rev-parse', '--is-shallow-repository'],
+      { encoding: 'utf8' }).trim()
+    if (shallow === 'true') return out
+  } catch { return out }
   let log: string
   try {
     // 🔴 **`core.quotepath=false` 不是可選的**：git 預設會把非 ASCII 的路徑

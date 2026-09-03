@@ -121,7 +121,17 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
+      # 🔴 **這裡也要完整歷史**（2026-09-03）：`sitemap.xml` 的 `lastmod` 問的是
+      #    `git log`，而淺複製裡 HEAD **沒有父節點** → git 把它當根 commit →
+      #    「所有檔案都是今天新增的」→ 66 筆 lastmod 全部變成部署日。
+      #
+      #    ⚠️ 而 `test` job 有 `fetch-depth: 0`，所以**護欄在有歷史的那一份上跑，
+      #    是綠的**——出貨的卻是另一次 checkout。
+      #
+      # > **護欄跑的那一份，與出貨的那一份，不是同一次 checkout。**
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20

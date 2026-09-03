@@ -194,6 +194,36 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
       .toContain('Sitemap: https://semorphe.com/sitemap.xml')
   })
 
+  it('④之六 淺複製一律不給日期——不然它會給【假的】', () => {
+    // 🔴 病歷（2026-09-03，**線上才抓到**）：`build` job 用預設的淺複製，
+    //    而淺複製裡 HEAD 沒有父節點 → git 當它是根 commit →
+    //    整棵樹都算「今天新增」→ 66 筆 lastmod 全部是部署日。
+    //
+    //    ⚠️ 而這條護欄那時是**綠的**：`test` job 有 `fetch-depth: 0`，
+    //    它跑在有歷史的那一份上。
+    //
+    // > **護欄跑的那一份，與出貨的那一份，不是同一次 checkout。**
+    //
+    // 兩道修都要在：① 產生器自己拒絕在淺複製上給日期
+    const src = readFileSync(
+      resolve(__dirname, '../..', 'tools/build-lessons/read-lessons.ts'), 'utf8')
+    expect(src, '🔴 沒有檢查淺複製——它會在 CI 上給出假的日期')
+      .toContain('--is-shallow-repository')
+    // ② 而部署那個 job 要真的有歷史（不然每一課都沒有日期，雖然不說謊但也沒用）
+    //
+    // ⚠️ **註解裡提到它不算，而且只看 `build:` 到 `deploy:` 之間**
+    //    ——第一版兩個都沒做，於是把 `fetch-depth: 0` 整行刪掉之後它**還是綠的**：
+    //    上面那段解釋為什麼要有它的註解裡，正好也有那幾個字。
+    //    （`audit-status-bar-owner` 記過同一個坑：「註解裡提到它不算」。）
+    const wf = readFileSync(resolve(__dirname, '../..', '.github/workflows/deploy.yml'), 'utf8')
+    const from = wf.indexOf('\n  build:')
+    const to = wf.indexOf('\n  deploy:', from)
+    const buildJob = wf.slice(from, to < 0 ? undefined : to)
+      .split('\n').filter((l) => !/^\s*#/.test(l)).join('\n')
+    expect(buildJob, '🔴 build job 沒有 fetch-depth: 0——淺複製會讓 sitemap 沒有日期')
+      .toContain('fetch-depth: 0')
+  })
+
   it('⑤ 產生器要真的被掛上——不然上面全部是空轉', () => {
     const cfg = readFileSync(resolve(__dirname, '../..', 'vite.config.ts'), 'utf8')
     expect(cfg, '🔴 vite.config 沒有掛 lessonPages()——一頁都不會產').toContain('lessonPages(')
