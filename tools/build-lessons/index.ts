@@ -14,6 +14,8 @@
  * dist/lessons/index.html                     全部軌道
  * dist/lessons/<軌道>/index.html               一條軌道的課表
  * dist/lessons/<軌道>/<課>/index.html          課文（零 JS）
+ * dist/sitemap.xml                            給 Google 的目錄（含首頁）
+ * dist/robots.txt                             指出 sitemap 在哪
  * ```
  *
  * ## ⚠️ dev server 也要有——而這是實測抓到的
@@ -32,7 +34,8 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { Plugin } from 'vite'
 import { readTracks, readLessonsOf } from './read-lessons'
-import { renderIndex, renderTrack, renderLesson } from './render'
+import { lessonDocHref } from '../../src/core/lesson'
+import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots } from './render'
 
 const write = (outDir: string, rel: string, html: string): void => {
   const dir = join(outDir, rel)
@@ -88,6 +91,21 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = (req.url ?? '').split('?')[0]
+        // ⚠️ dev 也要供這兩個——不然「上線前先看一眼 sitemap」做不到，
+        //    而它們正是最容易寫錯又最沒有人檢查的兩個檔。
+        if (url === '/sitemap.xml' || url === '/robots.txt') {
+          const tracks = readTracks(lessonsRoot)
+          const entries: { path: string; lastmod?: Date }[] = [{ path: '/' }, { path: '/lessons/' }]
+          for (const t of tracks) {
+            entries.push({ path: `/lessons/${encodeURIComponent(t.id)}/` })
+            for (const p of readLessonsOf(lessonsRoot, t)) {
+              entries.push({ path: lessonDocHref(p.lesson.id), lastmod: p.mtime })
+            }
+          }
+          res.setHeader('content-type', url.endsWith('.xml') ? 'application/xml' : 'text/plain')
+          res.end(url.endsWith('.xml') ? renderSitemap(entries) : renderRobots())
+          return
+        }
         if (!url.startsWith('/lessons')) return next()
         let html: string | null = null
         try { html = renderPath(url) } catch (e) {
@@ -106,10 +124,13 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
     closeBundle() {
       const tracks = readTracks(lessonsRoot)
       const counts: { track: ReturnType<typeof readTracks>[number]; count: number }[] = []
+      const sitemap: { path: string; lastmod?: Date }[] = [{ path: '/' }, { path: '/lessons/' }]
       let n = 0
       for (const track of tracks) {
         const pages = readLessonsOf(lessonsRoot, track)
+        sitemap.push({ path: `/lessons/${encodeURIComponent(track.id)}/` })
         pages.forEach((p, i) => {
+          sitemap.push({ path: lessonDocHref(p.lesson.id), lastmod: p.mtime })
           // ⚠️ 鄰居由**這裡**算——`renderLesson` 不知道它在第幾課，那是清單的知識。
           write(outDir, `lessons/${p.lesson.id}`,
             renderLesson(p, { prev: pages[i - 1], next: pages[i + 1] }))
@@ -119,6 +140,10 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
         counts.push({ track, count: pages.length })
       }
       write(outDir, 'lessons', renderIndex(counts))
+      // 🔴 **首頁也要在 sitemap 裡**——它是全站權重最高的一頁，
+      //    而它不是這個 plugin 產的，所以要在這裡明確列進去。
+      writeFileSync(join(outDir, 'sitemap.xml'), renderSitemap(sitemap), 'utf8')
+      writeFileSync(join(outDir, 'robots.txt'), renderRobots(), 'utf8')
       // ⚠️ 出聲——**產了幾頁**要看得到。零頁的話上面每一步都「成功」了。
       this.info?.(`課文靜態頁：${tracks.length} 軌 · ${n} 課`)
       console.log(`\n📄 課文靜態頁：${tracks.length} 軌 · ${n} 課 → ${outDir}/lessons/`)

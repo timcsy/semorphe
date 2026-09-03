@@ -18,7 +18,7 @@
  * `tests/integration/audit-lesson-pages.test.ts` 拿**登錄表**（glob 那一側）
  * 去對 `dist/` 裡的頁數，對不上就紅。
  */
-import { readdirSync, readFileSync, existsSync } from 'node:fs'
+import { readdirSync, readFileSync, existsSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseLesson, parseTrack, type Lesson, type Track } from '../../src/core/lesson'
 
@@ -27,6 +27,8 @@ export interface LessonPage {
   readonly track: Track
   /** `lesson.md` 的原文——⚠️ 課文只有這一份，不在 `lesson.json` 裡 */
   readonly md: string
+  /** 課文自己的修改時間——`sitemap.xml` 的 `lastmod` 用它，不是用建置時間 */
+  readonly mtime: Date
 }
 
 /** 讀出每一條軌道，**照宣告的順序**（與 `load-lessons.ts` 的排法逐字相同）。 */
@@ -64,6 +66,7 @@ export function readLessonsOf(root: string, track: Track): LessonPage[] {
       lesson: parseLesson(id, JSON.parse(readFileSync(j, 'utf8'))),
       track,
       md: readFileSync(m, 'utf8'),
+      mtime: statSync(m).mtime,
     })
   }
   return out

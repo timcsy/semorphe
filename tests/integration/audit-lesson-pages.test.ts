@@ -27,7 +27,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { readTracks, readLessonsOf } from '../../tools/build-lessons/read-lessons'
-import { renderIndex, renderTrack, renderLesson } from '../../tools/build-lessons/render'
+import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots } from '../../tools/build-lessons/render'
 import { lessonDocHref } from '../../src/core/lesson'
 import { allLessons } from '../../src/core/load-lessons'
 
@@ -103,7 +103,17 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
   it('④ 硬性零：課文頁不得載入任何 JavaScript', () => {
     const bad: string[] = []
     for (const p of pages()) {
-      if (/<script/i.test(p.html)) bad.push(`${p.id}：有 <script>`)
+      // 🔴 **`application/ld+json` 是【資料】不是程式**（2026-09-03 補的具名例外）。
+      //
+      //    這條規矩要擋的是「會跑的東西 ＋ 會被拖進來的包」，而結構化資料
+      //    既不執行也不發請求——它就寫在這一頁裡。
+      //    ⚠️ 而例外要窄到只有那一種 type：`<script>` 沒有 type、或 type 是別的，
+      //    一律照舊擋（下面那條注入驗過）。
+      //
+      // > **一條規矩要擋的是它的【理由】所指的東西，不是它的字面。**
+      const scripts = [...p.html.matchAll(/<script([^>]*)>/gi)]
+        .filter((m) => !/type="application\/ld\+json"/i.test(m[1]))
+      if (scripts.length > 0) bad.push(`${p.id}：有 <script>`)
       if (/blockly|monaco|tree-sitter|\/assets\//i.test(p.html)) bad.push(`${p.id}：提到了編輯器的包`)
     }
     // ⚠️ 這一條守的是這件事的**全部價值**：一旦有人在這裡 import 了什麼，
@@ -139,6 +149,33 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
     // ★ 入口條件：一頁都沒有導覽的話，上面那個迴圈什麼都沒驗
     expect(withNav, '★ 沒有任何一頁有上下課導覽 → 這條不算數').toBeGreaterThan(50)
     expect(bad, '🔴 上一課／下一課連錯了').toEqual([])
+  })
+
+  it('④之五 sitemap 要列到每一頁，而 robots 要指得到它', () => {
+    // 🔴 sitemap 漏一頁的代價不是「那一頁排名差」，是**Google 可能永遠沒發現它**。
+    const known = [...allLessons().keys()]
+    const tracks = readTracks(ROOT)
+    const entries: { path: string; lastmod?: Date }[] = [{ path: '/' }, { path: '/lessons/' }]
+    for (const t of tracks) {
+      entries.push({ path: `/lessons/${encodeURIComponent(t.id)}/` })
+      for (const p of readLessonsOf(ROOT, t)) entries.push({ path: lessonDocHref(p.lesson.id), lastmod: p.mtime })
+    }
+    const xml = renderSitemap(entries)
+    const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
+    // ★ 入口條件：錨在合成量（課變多的那天不該紅）
+    expect(locs.length, '★ sitemap 是空的 → 這條不算數').toBeGreaterThan(50)
+    const missing = known.filter((id) =>
+      !locs.some((l) => l.endsWith(lessonDocHref(id))))
+    expect(missing, '🔴 有課沒有進 sitemap').toEqual([])
+    // 🔴 **首頁一定要在**——它是全站權重最高的一頁，而它不是這個 plugin 產的
+    expect(locs, '🔴 首頁不在 sitemap 裡').toContain('https://semorphe.com/')
+    // ⚠️ `lastmod` 要是**課文的**時間，不是建置時間——每次 build 都變成今天的話，
+    //    這個欄位就退化成噪音。
+    const today = new Date().toISOString().slice(0, 10)
+    const allToday = [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].every((m) => m[1] === today)
+    expect(allToday, '🔴 每一筆 lastmod 都是今天——那是建置時間，不是內容時間').toBe(false)
+    expect(renderRobots(), '🔴 robots 沒有指出 sitemap 在哪')
+      .toContain('Sitemap: https://semorphe.com/sitemap.xml')
   })
 
   it('⑤ 產生器要真的被掛上——不然上面全部是空轉', () => {
@@ -205,8 +242,38 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
     expect(dup).toEqual(['b'])
   })
 
-  it('★ 注入③：頁面裡有 <script> 會紅', () => {
-    expect(/<script/i.test('<html><script src="x.js"></script>')).toBe(true)
+  it('★ 注入③：頁面裡有真的 <script> 會紅，而 JSON-LD 不會', () => {
+    const scan = (html: string): number => [...html.matchAll(/<script([^>]*)>/gi)]
+      .filter((m) => !/type="application\/ld\+json"/i.test(m[1])).length
+    expect(scan('<html><script src="x.js"></script>'), '🔴 真的 script 沒被抓到').toBe(1)
+    expect(scan('<html><script>alert(1)</script>'), '🔴 內聯 script 沒被抓到').toBe(1)
+    expect(scan('<script type="application/ld+json">{}</script>'), '🔴 JSON-LD 被誤殺').toBe(0)
+  })
+
+  it('④之四 每一課都要有 Course 的結構化資料，而它說的要是實話', () => {
+    const bad: string[] = []
+    let n = 0
+    for (const p of pages()) {
+      if (p.id.startsWith('軌道:') || p.id === '索引') {
+        // 🔴 **索引與課表【不放】** `Course`——它們不是一門課。
+        if (/application\/ld\+json/.test(p.html)) bad.push(`${p.id}：不是課，卻宣告了 Course`)
+        continue
+      }
+      const m = /<script type="application\/ld\+json">(.*?)<\/script>/s.exec(p.html)
+      if (m === null) { bad.push(`${p.id}：沒有結構化資料`); continue }
+      n++
+      const d = JSON.parse(m[1]) as { '@type': string; url: string; name: string }
+      if (d['@type'] !== 'Course') bad.push(`${p.id}：型別是 ${d['@type']}`)
+      // ⚠️ 與畫面不符的結構化資料，Google 罰的是**整站**——所以這裡逐項對
+      if (!p.html.includes(`<link rel="canonical" href="${d.url}">`)) {
+        bad.push(`${p.id}：JSON-LD 的 url 與 canonical 不一致`)
+      }
+      if (!p.html.includes(`>${d.name}<`) && !p.html.includes(d.name)) {
+        bad.push(`${p.id}：JSON-LD 的 name 在頁面上找不到`)
+      }
+    }
+    expect(n, '★ 一頁都沒有結構化資料 → 這條不算數').toBeGreaterThan(50)
+    expect(bad, '🔴 結構化資料說了畫面上沒有的話').toEqual([])
   })
 
   it('★ 網址的形狀：中文課名要 encode，而斜線不能被 encode', () => {

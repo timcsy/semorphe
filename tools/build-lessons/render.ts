@@ -24,6 +24,12 @@ import { lessonDocHref, type Track } from '../../src/core/lesson'
 
 export { lessonDocHref }
 
+/**
+ * **站台的正式網址**——`og:*` 與 `canonical` 都要**絕對網址**（規範明文，
+ * 相對的會被當成沒有）。⚠️ 與 `public/CNAME` 是同一個網域，改網域時兩邊要一起改。
+ */
+const SITE = 'https://semorphe.com'
+
 const md = new MarkdownIt({ html: false, linkify: true, breaks: false })
 
 const esc = (s: string): string =>
@@ -138,8 +144,18 @@ const ICON_GITHUB = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="fals
 interface Shell {
   title: string
   description: string
+  /** 這一頁的路徑（`/lessons/…/`）——`canonical` 與 `og:url` 用它。 */
+  path: string
   crumb: string
   body: string
+  /**
+   * 這一頁的結構化資料（JSON-LD）。
+   *
+   * 🔴 **只在【說得出實話】的頁面上放**：課文頁是 `Course`，索引不是。
+   * 一份與畫面內容不符的結構化資料，Google 的處置是**整站降低信任**，
+   * 不是「忽略那一段」。
+   */
+  jsonLd?: object
 }
 
 /**
@@ -157,9 +173,15 @@ function page(s: Shell): string {
 <link rel="alternate icon" href="/favicon-32.png">
 <title>${esc(s.title)}</title>
 <meta name="description" content="${esc(s.description)}">
+<link rel="canonical" href="${SITE}${s.path}">
 <meta property="og:title" content="${esc(s.title)}">
 <meta property="og:description" content="${esc(s.description)}">
 <meta property="og:type" content="article">
+<meta property="og:url" content="${SITE}${s.path}">
+<meta property="og:image" content="${SITE}/og.png">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">${s.jsonLd === undefined ? '' :
+`\n<script type="application/ld+json">${JSON.stringify(s.jsonLd)}</script>`}
 <style>${CSS}</style>
 <header><div><a class="brand" href="/">${LOGO}Semorphe</a><nav>${s.crumb}</nav></div></header>
 <main>${s.body}</main>
@@ -214,6 +236,18 @@ function navBlock(n: LessonNeighbours): string {
   return `<nav class="lesson-nav">${cell(n.prev, '上一課')}${cell(n.next, '下一課')}</nav>`
 }
 
+/**
+ * 「25 分鐘」→ `PT25M`。
+ *
+ * ⚠️ 認不出來就**回 undefined**，不要猜——`timeRequired` 寫一個假的時間，
+ * 是拿信任換一個欄位（結構化資料與畫面不符，Google 罰的是整站）。
+ */
+function isoDuration(text: string): string | undefined {
+  const m = /(\d+)\s*(分鐘|分|小時)/.exec(text)
+  if (!m) return undefined
+  return m[2] === '小時' ? `PT${m[1]}H` : `PT${m[1]}M`
+}
+
 export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): string {
   const crumb = `<a href="/lessons/">課程</a> › <a href="/lessons/${encodeURIComponent(p.track.id)}/">${esc(p.track.name)}</a>`
   // 🔴 **「在編輯器打開」用的是既有的深連結**（`lessonIdFromQuery`，`core/lesson.ts`）
@@ -222,8 +256,23 @@ export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): 
   return page({
     title: `${p.lesson.title}｜${p.track.name}｜Semorphe`,
     description: descriptionOf(p),
+    path: lessonDocHref(p.lesson.id),
     crumb,
     body: md.render(p.md) + open + navBlock(neighbours),
+    // 🔴 **`Course` 說的每一句都要是實話**：`provider` 是我們、`inLanguage` 是課文的語言，
+    //    而 `timeRequired` 只在課程自己宣告了 `estimate` 時才寫（ISO 8601 duration）。
+    //    ⚠️ 猜一個時間填進去，是拿信任換一個欄位。
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: p.lesson.title,
+      description: descriptionOf(p),
+      url: `${SITE}${lessonDocHref(p.lesson.id)}`,
+      inLanguage: 'zh-Hant',
+      isAccessibleForFree: true,
+      provider: { '@type': 'Organization', name: 'Semorphe', url: SITE },
+      ...(p.lesson.estimate === undefined ? {} : { timeRequired: isoDuration(p.lesson.estimate) }),
+    },
   })
 }
 
@@ -234,11 +283,45 @@ export function renderTrack(track: Track, pages: readonly LessonPage[]): string 
   return page({
     title: `${track.name}｜Semorphe 課程`,
     description: `${track.name}：${track.description ?? ''}共 ${pages.length} 課，每一課都可以直接在編輯器裡打開。`,
+    path: `/lessons/${encodeURIComponent(track.id)}/`,
     crumb: `<a href="/lessons/">課程</a>`,
     body: `<h1>${esc(track.name)}</h1>` +
       `<p class="meta">${esc(track.description ?? '')} · 共 ${pages.length} 課</p>` +
       `<ul class="cards">${items}</ul>`,
   })
+}
+
+/**
+ * `sitemap.xml`——**給 Google 的目錄**。
+ *
+ * 🔴 沒有它的代價不是「排名差」，是「**它得自己慢慢爬**」：一個沒有外部連結的
+ * 新站，靠爬蟲自己發現 73 頁要很久，而 sitemap 是 Search Console 那一步的輸入。
+ *
+ * ⚠️ **`lastmod` 用課文檔案自己的修改時間**，不是建置時間——每次 build 都蓋成
+ * 「今天」的話，這個欄位就退化成噪音，而 Google 會學會不看它。
+ *
+ * > **一個每次都變的「上次修改時間」，說的是建置的時間，不是內容的時間。**
+ */
+export function renderSitemap(
+  entries: ReadonlyArray<{ readonly path: string; readonly lastmod?: Date }>,
+): string {
+  const url = (e: { path: string; lastmod?: Date }): string =>
+    `  <url><loc>${SITE}${e.path}</loc>` +
+    (e.lastmod === undefined ? '' : `<lastmod>${e.lastmod.toISOString().slice(0, 10)}</lastmod>`) +
+    '</url>'
+  return '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    entries.map(url).join('\n') + '\n</urlset>\n'
+}
+
+/**
+ * `robots.txt`——**它唯一真正的工作是指出 sitemap 在哪**。
+ *
+ * ⚠️ 不要在這裡 `Disallow` 任何東西：這個站沒有不想被看的頁，
+ * 而一條寫錯的 `Disallow` 會安靜地讓整個站消失。
+ */
+export function renderRobots(): string {
+  return ['User-agent: *', 'Allow: /', '', `Sitemap: ${SITE}/sitemap.xml`, ''].join('\n')
 }
 
 export function renderIndex(tracks: ReadonlyArray<{ track: Track; count: number }>): string {
@@ -249,6 +332,7 @@ export function renderIndex(tracks: ReadonlyArray<{ track: Track; count: number 
   return page({
     title: 'Semorphe 課程',
     description: `${tracks.length} 條軌道、${total} 堂課：C++／Python 入門、Arduino 硬體、進階演算法與語言銜接。每一課都可以直接在編輯器裡打開。`,
+    path: '/lessons/',
     crumb: '課程',
     body: `<h1>課程</h1><p class="meta">${tracks.length} 條軌道 · ${total} 堂課</p>` +
       `<ul class="cards">${items}</ul>`,
