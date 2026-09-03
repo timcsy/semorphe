@@ -110,12 +110,18 @@ const PANEL_WHEN = [
 ].join(' || ')
 
 const EDITOR_WHEN = [
-  ...['.ino', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp'].map(
+  // 🔴 **`.py` 是 2026-09-03 補的**，而它漏了很久：Python 語言套件 2026-08 就上線了，
+  //    而這一條停在「只有 C 家族」的年代——症狀是**開 `.py` 時標題列上沒有那顆圖示**，
+  //    使用者只能從命令面板叫。而那不會報錯，只會讓人以為「這個擴充不支援 Python」。
+  //
+  // > **一份「哪些檔案算數」的清單，在加了第二個語言的那一天就過期了
+  // > ——而它過期的樣子是一顆不出現的按鈕。**
+  ...['.ino', '.cpp', '.cc', '.cxx', '.c', '.h', '.hpp', '.py'].map(
     (ext) => `resourceExtname == ${ext}`,
   ),
   // `arduino` 是 Arduino IDE 認得的語言 id（`history/080`§一 查證過）；
   // 在純 VSCode 裡 `.ino` 多半被歸成 `cpp` 或 `plaintext`。
-  ...['cpp', 'c', 'arduino'].map((lang) => `resourceLangId == ${lang}`),
+  ...['cpp', 'c', 'arduino', 'python'].map((lang) => `resourceLangId == ${lang}`),
 ].join(' || ')
 
 export interface ExtensionManifest {
