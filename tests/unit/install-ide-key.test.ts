@@ -18,7 +18,7 @@ describe('install:ide 清舊版時「這是不是我們的目錄」', () => {
   })
 
   it('現行 publisher 的目錄當然算', () => {
-    expect(isOurVscodeDir('timcsy.semorphe-vscode-0.13.0', NAME)).toBe(true)
+    expect(isOurVscodeDir('timcsy.semorphe-vscode-0.14.0', NAME)).toBe(true)
   })
 
   it('沒有 publisher 前綴的也算', () => {
