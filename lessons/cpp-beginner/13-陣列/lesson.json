@@ -16,8 +16,22 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "14\n",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "14\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：找出最大的那個",
+      "check": {
+        "stdout": "5\n",
+        "stdin": []
+      }
+    }
+  ]
 }

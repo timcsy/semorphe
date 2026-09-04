@@ -382,7 +382,11 @@ export class ConsolePanel implements ViewHost {
    * 強迫產生的是順從，不是思考——他會打 `aaa` 混過去，而那比不問更糟：
    * 它教會學生「這個框是一個要繞過的關卡」。
    */
-  askPrediction(kind: 'output' | 'iterations', prompt: string): Promise<string | null> {
+  askPrediction(
+    kind: 'output' | 'iterations' | 'choice',
+    prompt: string,
+    choices?: readonly { readonly text: string }[],
+  ): Promise<string | null> {
     this.currentLineEl = null
     return new Promise((resolve) => {
       const box = document.createElement('div')
@@ -392,6 +396,46 @@ export class ConsolePanel implements ViewHost {
       head.className = 'console-predict-head'
       head.textContent = `🤔 跑之前先猜一下：${prompt}`
       box.appendChild(head)
+
+      // 🔴 **選擇題是一次點擊就送出**——它存在的理由就是「最低的承諾成本」，
+      //    再要他多按一次「送出」等於把那個理由丟掉。
+      if (kind === 'choice' && choices) {
+        const list = document.createElement('div')
+        list.className = 'console-predict-choices'
+        let picked = false
+        for (const c of choices) {
+          const b = document.createElement('button')
+          b.type = 'button'
+          b.className = 'console-predict-choice'
+          // ⚠️ 選項的文字**就是輸出長什麼樣**（含換行），所以要 `pre-wrap`（見 CSS）
+          b.textContent = c.text
+          b.addEventListener('click', () => {
+            if (picked) return
+            picked = true
+            b.classList.add('picked')
+            for (const el of list.querySelectorAll('button')) (el as HTMLButtonElement).disabled = true
+            skipBtn.disabled = true
+            resolve(c.text)
+          })
+          list.appendChild(b)
+        }
+        const skipBtn = document.createElement('button')
+        skipBtn.type = 'button'
+        skipBtn.className = 'console-predict-skip'
+        skipBtn.textContent = '跳過'
+        skipBtn.addEventListener('click', () => {
+          if (picked) return
+          picked = true
+          for (const el of list.querySelectorAll('button')) (el as HTMLButtonElement).disabled = true
+          skipBtn.disabled = true
+          resolve(null)
+        })
+        list.appendChild(skipBtn)
+        box.appendChild(list)
+        this.outputEl.appendChild(box)
+        this.scrollToBottom()
+        return
+      }
 
       const row = document.createElement('div')
       row.className = 'console-predict-row'
@@ -447,7 +491,7 @@ export class ConsolePanel implements ViewHost {
    *
    * ⚠️ 猜錯了**不說「錯」**：說的是「機器做的跟你想的不一樣」。
    */
-  showPrediction(guess: string, actual: string, right: boolean): void {
+  showPrediction(guess: string, actual: string, right: boolean, why?: string): void {
     this.currentLineEl = null
     const box = document.createElement('div')
     box.className = `console-predict-result ${right ? 'right' : 'differs'}`
@@ -458,6 +502,15 @@ export class ConsolePanel implements ViewHost {
       ? '🎯 你猜對了——你腦子裡那台機器是對的'
       : '機器做的跟你想的不一樣——差在這裡'
     box.appendChild(head)
+
+    // 🔴 **說出他剛才想的是什麼**——選擇題全部的價值住在這一行。
+    //    沒有它的話，能說的只有「不對」，而那正是這一整輪在拆的東西。
+    if (why !== undefined && why !== '') {
+      const w = document.createElement('div')
+      w.className = 'console-predict-why'
+      w.textContent = `你選的那一個是：${why}`
+      box.appendChild(w)
+    }
 
     if (!right) {
       const table = document.createElement('div')

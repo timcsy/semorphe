@@ -14,8 +14,27 @@
     "cpp:vector_declare",
     "cpp:vector_size"
   ],
-  "check": {
-    "stdout": "3\n3\n1\n4\n",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "3\n3\n1\n4\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：讀到 0 為止，印出總共幾個",
+      "check": {
+        "stdout": "3\n",
+        "stdin": [
+          "7",
+          "2",
+          "9",
+          "0"
+        ]
+      }
+    }
+  ]
 }

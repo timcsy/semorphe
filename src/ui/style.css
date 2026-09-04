@@ -1785,6 +1785,49 @@ html, body {
   cursor: default;
 }
 
+/* 選擇題——🔴 **一次點擊就送出**：它存在的理由就是最低的承諾成本。 */
+.console-predict-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.console-predict-choice {
+  /* ⚠️ 選項的文字**就是輸出長什麼樣**（含換行）——不能塌成一行 */
+  white-space: pre-wrap;
+  text-align: left;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #2a5f8f;
+  background: #0d1620;
+  color: #cfe6f7;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.console-predict-choice:hover:not(:disabled) {
+  background: #1b3d5c;
+}
+
+.console-predict-choice.picked {
+  border-color: #6aa9dd;
+  background: #1b3d5c;
+}
+
+.console-predict-choice:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* 🔴 「你選的那一個是〈以為 endl 是空格〉」——選擇題全部的價值住在這一行 */
+.console-predict-why {
+  margin-bottom: 6px;
+  color: #9ccbf0;
+  font-size: 13px;
+}
+
 .console-predict-result {
   margin: 8px 0;
   padding: 8px 10px;

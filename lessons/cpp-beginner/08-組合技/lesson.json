@@ -13,8 +13,22 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "13\n",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "13\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：改寫成長寫法，印出一模一樣的 13",
+      "check": {
+        "stdout": "13\n",
+        "stdin": []
+      }
+    }
+  ]
 }

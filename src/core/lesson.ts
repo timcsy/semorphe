@@ -247,7 +247,34 @@ export interface LessonTask {
    * 🔴 課程作者比自動判定更知道這一課的學生撐不撐得住，所以宣告會贏。
    * 判定的細節見 `core/predict.ts` 的 `predictionFor`。
    */
-  readonly predict?: 'output' | 'iterations' | 'none'
+  readonly predict?: 'output' | 'iterations' | 'none' | 'choice'
+  /**
+   * 選擇題的選項——⚠️ `predict: 'choice'` 時**必填**。
+   *
+   * ## 🔴 一個說不出誤解的干擾項，只是一個隨機的錯答案
+   *
+   * ```jsonc
+   * { "text": "1 2 3 4 5", "why": "以為 endl 是空格" }
+   * { "text": "1 2 3 4",   "why": "差一——條件是 <= 還是 <" }
+   * { "text": "1\n2\n3\n4\n5", "correct": true }
+   * ```
+   *
+   * 學生選了錯的那一個之後，我們要說得出**他剛才想的是什麼**。
+   * 沒有 `why` 的話，能說的只有「不對」——而那正是這一整輪在拆的東西。
+   *
+   * > **選擇題的價值全在干擾項，而干擾項的價值全在它說得出哪一個誤解。**
+   */
+  readonly choices?: readonly PredictChoice[]
+}
+
+/** 選擇題的一個選項。 */
+export interface PredictChoice {
+  /** 選項的文字——**就是輸出長什麼樣**，不是「A. 五行數字」那種描述。 */
+  readonly text: string
+  /** 這一個是對的嗎。⚠️ **恰好一個**為真。 */
+  readonly correct?: boolean
+  /** 🔴 錯的選項**必須**說得出它是哪個誤解；對的那一個不用。 */
+  readonly why?: string
 }
 
 /**
@@ -325,15 +352,52 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
     // 🔴 **認不得的值要當場丟錯**——一個拼成 `'ouput'` 的宣告會安靜地
     //    退回自動判定，而畫面上與「作者沒寫」一模一樣。
     const pr = t.predict
-    if (pr !== undefined && !['output', 'iterations', 'none'].includes(String(pr))) {
-      throw new Error(`教案 ${id}：tasks[${i}] 的 predict 不是 output／iterations／none`)
+    if (pr !== undefined && !['output', 'iterations', 'none', 'choice'].includes(String(pr))) {
+      throw new Error(`教案 ${id}：tasks[${i}] 的 predict 不是 output／iterations／none／choice`)
     }
     return {
       id: t.id, title: t.title,
       check: parseCheck(`${id}#${t.id}`, t.check),
-      predict: pr as 'output' | 'iterations' | 'none' | undefined,
+      predict: pr as 'output' | 'iterations' | 'none' | 'choice' | undefined,
+      choices: parseChoices(`${id}#${t.id}`, pr, t.choices),
     }
   })
+}
+
+/**
+ * 讀選擇題的選項——**三條規矩，每一條都會當場丟錯**。
+ *
+ * ```
+ * ① predict: 'choice' 而沒有 choices   一個沒有選項的選擇題問不出來
+ * ② 對的那一個不是【恰好一個】          零個 ⟹ 永遠猜錯；兩個 ⟹ 猜對了卻說錯
+ * ③ 錯的選項沒有 why                    🔴 一個說不出誤解的干擾項，
+ *                                          只是一個隨機的錯答案
+ * ```
+ *
+ * ⚠️ ③ 看起來像是可以放寬的，而它正是這件事全部的價值：
+ * 學生選了它之後，我們要說得出**他剛才想的是什麼**。
+ */
+function parseChoices(id: string, predict: unknown, raw: unknown): PredictChoice[] | undefined {
+  if (raw === undefined || raw === null) {
+    if (predict === 'choice') throw new Error(`教案 ${id}：predict 是 choice 而沒有 choices`)
+    return undefined
+  }
+  if (!Array.isArray(raw)) throw new Error(`教案 ${id}：choices 不是陣列`)
+  if (raw.length < 2) throw new Error(`教案 ${id}：choices 至少要兩個`)
+  const out = raw.map((x, i) => {
+    if (x === null || typeof x !== 'object') throw new Error(`教案 ${id}：choices[${i}] 不是一個物件`)
+    const c = x as Record<string, unknown>
+    if (typeof c.text !== 'string' || c.text === '') throw new Error(`教案 ${id}：choices[${i}] 缺 text`)
+    const correct = c.correct === true
+    if (!correct && (typeof c.why !== 'string' || c.why === '')) {
+      throw new Error(`教案 ${id}：choices[${i}]（「${c.text}」）是干擾項而沒有 why` +
+        `——一個說不出誤解的干擾項，只是一個隨機的錯答案`)
+    }
+    return { text: c.text, correct, why: typeof c.why === 'string' ? c.why : undefined }
+  })
+  const right = out.filter((c) => c.correct).length
+  if (right !== 1) throw new Error(`教案 ${id}：choices 有 ${right} 個 correct，要恰好一個`)
+  return out
 }
 
 /** 這一課的第幾題。⚠️ `FREE_PRACTICE`（純練習）回 `undefined`，那不是缺陷。 */

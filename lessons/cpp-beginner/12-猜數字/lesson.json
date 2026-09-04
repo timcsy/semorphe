@@ -18,8 +18,22 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "猜了 7 次\n",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "猜了 7 次\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：target 換成 1，看要幾次",
+      "check": {
+        "stdout": "猜了 7 次\n",
+        "stdin": []
+      }
+    }
+  ]
 }

@@ -6,7 +6,7 @@
   "scanned": {
     "files": 34,
     "importLines": 224,
-    "anyMethodCalls": 2918
+    "anyMethodCalls": 2940
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,
@@ -14,7 +14,7 @@
   "directViewCalls": 23,
   "visibleNotRatcheted": {
     "compositionRootImportsLanguage": 0,
-    "compositionRootViewCalls": 69
+    "compositionRootViewCalls": 70
   },
   "details": {
     "viewImportsLanguage": [],
@@ -46,5 +46,5 @@
       "src/ui/execution-controller.ts → consolePanel.clear"
     ]
   },
-  "note": "⚠️ 2026-09-04（跑之前先猜一下）：方法呼叫數 2876 → 2918、import 行數 223 → 224——**輸入量上調，不是耦合變差**。新增 `core/predict.ts`（要問什麼 ＋ 這支程式是不是還是剛才那一支）＋ `tests/unit/core/predict.test.ts`；`LessonTask` 多一格 `predict`；`ConsolePanel.askPrediction`／`showPrediction`；`iterations.ts` 多三支（`isLoop`／`loopNodes`／`loopNodeById`／`loopRatio`——後者**不過濾**，因為揭曉一個預測時 `1` 與 `0` 都是正當的答案）。🔴 執行器多一個**可省略的** `beforeRun` async 鉤子——形狀抄 `pauseForUnrecognized`：**要停下來問人的事，用鉤子，不是把那件事搬進執行器**。沒注入時行為與從前逐字相同。\n"
+  "note": "⚠️ 2026-09-04（選擇題 ＋ 清除進度的入口）：方法呼叫數上調——**輸入量上調，不是耦合變差**。`predict` 多一個 `'choice'` 值（`parseChoices` 三條規矩：恰好一個 correct · 每個干擾項都要有 why · 至少兩個選項）· `ConsolePanel.askPrediction` 多一條「一次點擊就送出」的路 · 🧹 清除學習進度**搬進「題目」那顆 picker**（🪦 原本放在 ☰ 抽屜，而那只有行動版有——需要它的人坐在桌機前）。\n"
 }

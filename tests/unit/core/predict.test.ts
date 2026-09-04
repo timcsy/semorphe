@@ -74,6 +74,60 @@ describe('要問什麼', () => {
   })
 })
 
+describe('選擇題', () => {
+  const base = { title: 't', pins: {}, components: ['cpp:print'] }
+  const good = [
+    { text: '1\n2\n3', correct: true },
+    { text: '1 2 3', why: '以為 endl 是空格' },
+    { text: '1\n2', why: '差一——條件是 <= 還是 <' },
+  ]
+
+  it('★ 讀得進來，而問句帶著選項', () => {
+    const l = parseLesson('x/y', { ...base, tasks: [
+      { id: 'a', title: 'A', predict: 'choice', choices: good, check: { stdout: '1\n2\n3\n' } },
+    ] })
+    const q = predictionFor(prog(show(1)), l.tasks[0])
+    expect(q?.kind).toBe('choice')
+    expect(q?.choices).toHaveLength(3)
+  })
+
+  it('🔴 干擾項沒有 why → 丟錯：一個說不出誤解的干擾項只是一個隨機的錯答案', () => {
+    expect(() => parseLesson('x/y', { ...base, tasks: [
+      { id: 'a', title: 'A', predict: 'choice', choices: [
+        { text: '對的', correct: true }, { text: '錯的' },
+      ] },
+    ] })).toThrow(/why/)
+  })
+
+  it('🔴 對的答案不是恰好一個 → 丟錯', () => {
+    const two = [{ text: 'a', correct: true }, { text: 'b', correct: true }]
+    expect(() => parseLesson('x/y', { ...base, tasks: [
+      { id: 'a', title: 'A', predict: 'choice', choices: two },
+    ] })).toThrow(/恰好一個/)
+    const none = [{ text: 'a', why: 'w' }, { text: 'b', why: 'w' }]
+    expect(() => parseLesson('x/y', { ...base, tasks: [
+      { id: 'a', title: 'A', predict: 'choice', choices: none },
+    ] })).toThrow(/恰好一個/)
+  })
+
+  it('🔴 說是 choice 而沒有選項 → 丟錯（一個沒有選項的選擇題問不出來）', () => {
+    expect(() => parseLesson('x/y', { ...base, tasks: [
+      { id: 'a', title: 'A', predict: 'choice' },
+    ] })).toThrow(/沒有 choices/)
+  })
+
+  it('只有一個選項 → 丟錯', () => {
+    expect(() => parseLesson('x/y', { ...base, tasks: [
+      { id: 'a', title: 'A', predict: 'choice', choices: [{ text: 'a', correct: true }] },
+    ] })).toThrow(/至少要兩個/)
+  })
+
+  it('⚠️ 自動判定【不會】選中選擇題——只有作者寫了才有', () => {
+    // 一顆迴圈 ＋ 沒有宣告 predict ⟹ 走「跑幾次」，不會變成選擇題
+    expect(predictionFor(prog(loop([show(1)])), task())?.kind).toBe('iterations')
+  })
+})
+
 describe('這支程式是不是還是剛才那一支', () => {
   it('🔴 `i < 3` 改成 `i < 4` 要算【另一支】——差一錯誤正住在那裡', () => {
     const a = prog(show(3))

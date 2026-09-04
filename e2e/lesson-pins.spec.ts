@@ -486,6 +486,49 @@ test('★ 執行覆蓋：一支完全正確的程式，一塊都不准標', asyn
  *
  * > **一個會在學生做對事情時說他錯的裁判，比沒有裁判更糟。**
  */
+/**
+ * 🔴 **清除學習進度**——一台電腦換一班學生，是這個工具最可能的部署方式。
+ *
+ * ⚠️ 入口在**進度旁邊**（「題目」那顆 picker 裡），不在 ☰ 抽屜
+ * ——後者只有行動版有，而需要它的人坐在桌機前。
+ *
+ * > **一個入口如果只在某一種螢幕寬度下存在，
+ * > 那它對「在另一種寬度下工作的那個人」等於不存在。**
+ */
+test('★ 清除學習進度：入口就在進度旁邊，而且要問一次', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.addInitScript(() => {
+    window.localStorage.clear()
+    // 先塞一筆進度——⚠️ 沒有進度時那一項【不畫】（沒有東西可清）
+    window.localStorage.setItem('semorphe-progress',
+      JSON.stringify({ 'cpp-beginner/10-重複': ['follow'] }))
+  })
+  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  const cell = page.locator('#status-controls .status-item-btn[data-control-id="task"]')
+  expect(await cell.innerText(), '🔴 進度沒有讀回來 → 下面驗的是一個空狀態').toMatch(/1\/2/)
+  await cell.click()
+  await page.waitForTimeout(300)
+
+  const item = page.locator('.quick-pick-item[data-value="action:clear-progress"]')
+  await expect(item, '🔴 找不到清除的入口——藏起來的清除鍵等於沒有').toBeVisible()
+  await item.click()
+  await page.waitForTimeout(400)
+
+  // 🔴 **要問一次**：那份紀錄是學生累積的，而這個動作救不回來
+  await expect(page.locator('.quick-pick-item[data-value="yes"]'), '🔴 沒問就清了').toBeVisible()
+  await page.locator('.quick-pick-item[data-value="yes"]').click()
+  await page.waitForTimeout(600)
+
+  expect(
+    await page.evaluate(() => window.localStorage.getItem('semorphe-progress')),
+    '🔴 按了清除而紀錄還在',
+  ).toBeNull()
+  // 🔴 那個「1/2」要**當場**歸零——顯示一份已經不存在的進度，比不清更糟
+  expect(await cell.innerText(), '🔴 畫面還顯示著已經不存在的進度').toMatch(/0\/2/)
+})
+
 test('★ 題目：只有選了課程與章節才有那一格，而預設是「跟著做」', async ({ page }) => {
   test.setTimeout(120_000)
   await page.addInitScript(() => window.localStorage.clear())
@@ -774,4 +817,40 @@ test('★ 預測：純練習不問——他【說了】他不在做題目', asyn
   expect(await page.locator('.console-predict').count(), '🔴 純練習還在問').toBe(0)
   // ⚠️ 而徽章照樣標——描述性的回饋永遠可以給
   expect(await page.locator('.iteration-badge-text').textContent(), '🔴 純練習把徽章也關掉了').toBe('×3')
+})
+
+/**
+ * 🔴 **選擇題——而它全部的價值住在「這個干擾項是哪個誤解」。**
+ *
+ * 學生選了錯的那一個之後，我們要說得出**他剛才想的是什麼**。
+ * 沒有那句話，能說的只有「不對」——而那正是這一整輪在拆的東西。
+ */
+test('★ 預測：選擇題——選錯了要說出他剛才想的是什麼', async ({ page }) => {
+  test.setTimeout(150_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=cpp-beginner%2F09-%E9%81%B8%E6%93%87', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('int score = 75;\nif (score >= 60) {\ncout << "及格" << endl;', { delay: 12 })
+  await page.waitForTimeout(3500)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(1800)
+
+  const choices = await page.$$eval('.console-predict-choice', (e) => e.map((x) => x.textContent))
+  expect(choices.length, '🔴 選擇題沒有出現').toBeGreaterThanOrEqual(3)
+  // ⚠️ 選項的文字**就是輸出長什麼樣**（含換行），不是「A. 五行數字」那種描述
+  expect(choices.join('｜')).toContain('及格\n不及格')
+
+  // 🔴 **一次點擊就送出**——它存在的理由就是最低的承諾成本
+  await page.locator('.console-predict-choice', { hasText: '不及格' }).first().click()
+  await page.waitForTimeout(3500)
+
+  const text = await page.locator('.console-predict-result').innerText()
+  expect(text, `🔴 沒有說出他剛才想的是什麼：${text}`).toContain('條件的方向反了')
+  expect(text, '🔴 對學生說了「錯」').not.toMatch(/錯誤|錯了|失敗/)
 })

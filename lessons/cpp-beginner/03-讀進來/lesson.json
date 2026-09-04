@@ -13,11 +13,28 @@
     "cpp:literal_string",
     "cpp:endl"
   ],
-  "check": {
-    "stdout": "你打的是 7\n",
-    "stdin": [
-      "7"
-    ]
-  },
-  "_pins_scaffold_why": "同上"
+  "_pins_scaffold_why": "同上",
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "你打的是 7\n",
+        "stdin": [
+          "7"
+        ]
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：讀進兩個數字",
+      "check": {
+        "stdout": "第一個是 3\n第二個是 8\n",
+        "stdin": [
+          "3",
+          "8"
+        ]
+      }
+    }
+  ]
 }

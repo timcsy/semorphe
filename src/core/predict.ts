@@ -24,23 +24,30 @@
  * 這一刀做前兩個——**它們的製作成本是零**：答案分別是 `check.stdout`
  * 與執行時本來就在數的次數，一課都不用改。
  *
- * ⚠️ 選擇題不在這一刀：它的價值**全在「這個干擾項是哪個誤解」**，
- * 而那要一課一課想。一個自動生成的干擾項只是一個隨機的錯答案，
- * 學生選完之後你也不知道要跟他說什麼。
+ * ## 選擇題（2026-09-04 稍晚補上）
+ *
+ * 它的價值**全在「這個干擾項是哪個誤解」**——所以宣告裡的每一個錯選項
+ * **必須**附上 `why`（`parseChoices` 會擋），而學生選錯時我們說的是
+ * 那句 `why`，不是「不對」。
+ *
+ * ⚠️ **它不會被自動判定選中**：一個自動生成的干擾項只是一個隨機的錯答案，
+ * 而學生選完之後你也不知道要跟他說什麼。**只有作者寫了才有。**
  */
 import { loopNodes } from './iterations'
-import type { LessonTask } from './lesson'
+import type { LessonTask, PredictChoice } from './lesson'
 import type { SemanticNode } from './types'
 
 /** 宣告裡寫得出來的形式。⚠️ `none` 是**說出口的「這一題不問」**，不是漏掉。 */
-export type PredictKind = 'output' | 'iterations' | 'none'
+export type PredictKind = 'output' | 'iterations' | 'none' | 'choice'
 
 export interface PredictQuestion {
-  readonly kind: 'output' | 'iterations'
+  readonly kind: 'output' | 'iterations' | 'choice'
   /** 問句本身。 */
   readonly prompt: string
   /** `iterations` 專用：問的是**哪一顆**迴圈——揭曉時那顆的徽章就在旁邊。 */
   readonly nodeId?: string
+  /** `choice` 專用：那幾個選項（順序就是宣告的順序）。 */
+  readonly choices?: readonly PredictChoice[]
 }
 
 /**
@@ -68,6 +75,12 @@ export function predictionFor(
   task: LessonTask | undefined,
 ): PredictQuestion | undefined {
   if (!tree || !task || task.predict === 'none') return undefined
+
+  // 🔴 **選擇題只在作者寫了的時候才有**——`parseChoices` 已經擋掉
+  //    「說是 choice 而沒有選項」，所以到這裡一定有。
+  if (task.predict === 'choice' && task.choices) {
+    return { kind: 'choice', prompt: '它會印出什麼？', choices: task.choices }
+  }
 
   const loops = loopNodes(tree)
   const wantIterations = task.predict === 'iterations'

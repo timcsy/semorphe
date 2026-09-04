@@ -14,8 +14,41 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "及格\n",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "及格\n",
+        "stdin": []
+      },
+      "predict": "choice",
+      "choices": [
+        {
+          "text": "及格",
+          "correct": true
+        },
+        {
+          "text": "不及格",
+          "why": "把 >= 讀成 <=——條件的方向反了"
+        },
+        {
+          "text": "及格\n不及格",
+          "why": "以為 if 跟 else 兩邊都會跑（它們是【二選一】）"
+        },
+        {
+          "text": "（什麼都沒印）",
+          "why": "以為 75 沒有「符合」任何一個條件"
+        }
+      ]
+    },
+    {
+      "id": "ex1",
+      "title": "練習：加上「優等」那一段",
+      "check": {
+        "stdout": "優等\n",
+        "stdin": []
+      }
+    }
+  ]
 }

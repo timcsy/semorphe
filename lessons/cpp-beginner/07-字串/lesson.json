@@ -16,8 +16,22 @@
     "cpp:var_ref",
     "cpp:vector_size"
   ],
-  "check": {
-    "stdout": "Semorphe\n8\nS\nSemorphe!\n",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "Semorphe\n8\nS\nSemorphe!\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：印出最後一個字",
+      "check": {
+        "stdout": "e\n",
+        "stdin": []
+      }
+    }
+  ]
 }

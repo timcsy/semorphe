@@ -16,8 +16,22 @@
     "cpp:return",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "120\n",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "120\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：用迴圈寫同一個階乘",
+      "check": {
+        "stdout": "120\n",
+        "stdin": []
+      }
+    }
+  ]
 }

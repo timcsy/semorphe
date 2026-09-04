@@ -14,8 +14,24 @@
     "cpp:literal_string",
     "cpp:endl"
   ],
-  "check": {
-    "stdout": "分數是 100\n",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "分數是 100\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：兩倍與餘數",
+      "check": {
+        "stdout": "兩倍是 28\n餘數是 2\n",
+        "stdin": [
+          "14"
+        ]
+      }
+    }
+  ]
 }

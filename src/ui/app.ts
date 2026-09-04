@@ -57,7 +57,15 @@ import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type ScaffoldMode } from '../core/lesson'
-import { markTaskPassed, isTaskPassed, passedCount } from '../core/progress'
+import { markTaskPassed, isTaskPassed, passedCount, clearProgress } from '../core/progress'
+/**
+ * 「題目」那顆 picker 裡**不是一個題目**的那一項。
+ *
+ * 🔴 前綴／哨兵值是這個專案的既有形狀（`doc:`／`skeleton:`／`mode:`）：
+ * 一顆 picker 裡混著「選一個值」與「做一件事」時，用值本身分開它們。
+ * ⚠️ 它不得與任何題目 id 相同——`parseTasks` 擋掉了空字串，而這一個帶冒號。
+ */
+const CLEAR_PROGRESS = 'action:clear-progress'
 import { iterationCounts, loopRatio, loopNodeById } from '../core/iterations'
 import { predictionFor, programSignature, type PredictQuestion } from '../core/predict'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
@@ -320,6 +328,16 @@ export class App {
    *
    * ⚠️ 閘門是 `fileButtons`：宿主自己管檔案時，這幾項不該存在
    *（IDE 裡我們的 `/lessons/` 也不存在——見 `app-shell` 的「課程」那一段）。
+   *
+   * 🪦 **「清除學習進度」曾經放在這裡，而那是錯的**（2026-09-04）：
+   *    ☰ **只有行動版有**（`mobileLayout` ＋ `fileButtons`），
+   *    而需要它的人——老師，在電腦教室裡，兩節課之間——坐在桌機前。
+   *
+   * > **一個入口如果只在某一種螢幕寬度下存在，
+   * > 那它對「在另一種寬度下工作的那個人」等於不存在。**
+   *
+   *    它搬到「題目」那顆 picker 裡了（見 `controlStateOf` 的 `task`）
+   *    ——**進度顯示在哪，清除就在哪**。
    */
   private menuActions(): MenuAction[] {
     if (!this.profile.features.fileButtons) return []
@@ -350,6 +368,35 @@ export class App {
         run: () => open('https://github.com/timcsy/semorphe'),
       }] : []),
     ]
+  }
+
+  /**
+   * **清除學習進度**——那些「✅ 你完成了」的勾。
+   *
+   * 🔴 **入口要明顯**：藏起來的清除鍵等於沒有，而需要它的人（老師，
+   * 在電腦教室裡，兩節課之間）沒有時間找。
+   *
+   * ⚠️ 而它**要問一次**：那份紀錄是學生自己累積的，而這個動作救不回來。
+   *    ——形狀與「換目標會清空檔案」那一顆一樣（`selectTarget` 的確認）。
+   */
+  private confirmClearProgress(): void {
+    showQuickPick(
+      {
+        // ⚠️ QuickPick 的標題是**純文字**，寫 `**粗體**` 會原樣顯示成星號
+        title: '清除學習進度？所有課的「已完成」都會不見，而且救不回來',
+        items: [
+          { value: 'yes', label: '清除（救不回來）' },
+          { value: 'no', label: '取消' },
+        ],
+      },
+      (v) => {
+        if (v?.[0] !== 'yes') return
+        clearProgress()
+        // 🔴 **選單上那個「2/3」要當場歸零**——不重畫的話，
+        //    畫面會顯示一份已經不存在的進度，而那比不清更糟。
+        this.publishControls()
+      },
+    )
   }
 
   /** 這一次執行印出來的東西——⚠️ 只收 `stdout`，錯誤訊息不是「輸出」。 */
@@ -502,7 +549,7 @@ export class App {
     const q = predictionFor(tree, task)
     if (!q) return
     this.lastPredictedProgram = sig
-    const guess = await consolePanel.askPrediction(q.kind, q.prompt)
+    const guess = await consolePanel.askPrediction(q.kind, q.prompt, q.choices)
     // 🔴 跳過是**正當的**，不是失敗——不記、不提、不再問這一支
     if (guess === null) return
     this.pendingPrediction = { q, guess }
@@ -519,6 +566,14 @@ export class App {
     this.pendingPrediction = undefined
     if (!p) return
 
+    if (p.q.kind === 'choice') {
+      const picked = p.q.choices?.find((c) => c.text === p.guess)
+      const right = picked?.correct === true
+      // ⚠️ 揭曉時給的「實際」是**真的跑出來的那份**，不是宣告裡標了 correct 的那個
+      //    ——學生的程式可能與課文不同，而那時該相信執行器。
+      consolePanel.showPrediction(p.guess, this.runTranscript.trim(), right, right ? undefined : picked?.why)
+      return
+    }
     if (p.q.kind === 'output') {
       // 🟢 **用同一支 `compareOutput`**：它對空白的處置（行尾寬容、行首不寬容、
       //    最後的換行不決定對錯）在這裡一樣是對的，而寫第二份會慢慢地不一樣。
@@ -2536,6 +2591,18 @@ export class App {
             description: t.check ? undefined : '這一題沒有裁判（改寫法、開放題）',
           })),
         ]
+        // 🔴 **清除的入口就在進度旁邊**（2026-09-04）——一台電腦換一班學生
+        //    是這個工具最可能的部署方式（電腦教室），而藏起來的清除鍵等於沒有。
+        //
+        // ⚠️ 形狀與「章節」那顆的 `📖 看這一課的課文` 一樣：**用前綴分開兩種語義**
+        //    （這一項不是「換一題」，是「做一件事」）。少了前綴會被當成題目 id。
+        if (lesson && passedCount(lesson.id, tasks.map((t) => t.id)) > 0) {
+          options.push({
+            value: CLEAR_PROGRESS,
+            label: '🧹 清除學習進度',
+            description: '換一班學生用同一台電腦時',
+          })
+        }
         const done = lesson ? passedCount(lesson.id, tasks.map((t) => t.id)) : 0
         const cur = taskById(lesson, this.currentTaskId)
         return {
@@ -2767,6 +2834,8 @@ export class App {
           break
         }
         case 'task': {
+          // ⚠️ 這一項不是「換一題」，是「做一件事」——與「章節」的 `doc:` 同形
+          if (invoke.value === CLEAR_PROGRESS) { this.confirmClearProgress(); break }
           // ⚠️ **不 persist**：它是 `session` 域的（跟課程與章節同一層）。
           //    「我現在做哪一題」跨裝置記住是錯的——那不是一份偏好。
           this.currentTaskId = invoke.value ?? FREE_PRACTICE
