@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "testFileCount": 428
+    "testFileCount": 429
   },
   "adHocAssembly": 0,
   "details": [],
-  "note": "⚠️ 2026-09-03（課文的出口）：測試檔數 427 → 428——新增第一百零一條護欄（`audit-lesson-pages`）。**輸入量上調**，adHocAssembly 一筆未動。\n"
+  "note": "⚠️ 2026-09-04（裁判 ＋ 輸出 diff）：測試檔數 428 → 429——`check` 終於進了 `Lesson` 型別（在此之前 `parseLesson` 讀完就丟，**應用根本不知道它存在**），新增 `compareOutput`（逐行比對）· `ConsolePanel.showVerdict`（並排的 diff）· 組裝點的 `wireLessonCheck`。**輸入量上調，不是耦合變差**（directViewCalls 未動）。\n"
 }

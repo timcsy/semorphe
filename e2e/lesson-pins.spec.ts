@@ -340,3 +340,51 @@ test('★ `?lesson=arduino/…` 開出來的是 setup／loop，不是 int main',
   expect(d.code, '🔴 骨架宣告說是 Arduino，而產出來的是 C++ 的外框').toContain('void setup()')
   expect(d.code, '🔴 兩個外框疊在一起了').not.toContain('int main()')
 })
+
+/**
+ * 🔴 **裁判：跑完要說得出「差在哪」，不只是對或錯。**
+ *
+ * `check.stdout` 從 2026-08 就寫在 66 份 `lesson.json` 裡，而 `Lesson` 型別裡
+ * 沒有它——`parseLesson` 讀完就丟，**應用根本不知道它存在**。
+ * 學生按了執行，沒有任何人告訴他對了沒有。
+ *
+ * > **回饋要說的是「你少了第 2 行」，不是「你答錯了」。**
+ */
+test('★ 跑完之後，裁判說得出差在哪一行', async ({ page }) => {
+  test.setTimeout(120_000)
+  const write = async (body: string): Promise<void> => {
+    await page.locator('.monaco-editor').first().click()
+    await page.keyboard.press('Control+Home')
+    await page.keyboard.press('ArrowDown')   // → `int main() {`
+    await page.keyboard.press('End')
+    await page.keyboard.press('Enter')
+    await page.keyboard.type(body, { delay: 10 })
+    await page.waitForTimeout(2600)
+    await page.locator('#run-btn').click()
+    await page.waitForTimeout(3000)
+  }
+
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=cpp-beginner%2F01-%E5%8D%B0%E5%87%BA%E4%B8%80%E5%8F%A5%E8%A9%B1',
+    { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  // ① 少一個驚嘆號 → 要說「還沒」，而且要**並排**看得到差在哪
+  await write('cout << "Hello" << endl;')
+  const bad = page.locator('.console-verdict')
+  await expect(bad, '🔴 跑完沒有裁判——學生按了執行而沒有人告訴他對了沒有').toBeVisible()
+  await expect(bad).toHaveClass(/not-yet/)
+  const text = await bad.innerText()
+  expect(text, `🔴 只說了對錯而沒有並排差異：${text}`).toContain('Hello!')
+  // ⚠️ 用「還沒」不用「錯」——前者指向下一步，後者指向自己
+  expect(text, '🔴 對學生說了「錯」').not.toMatch(/錯誤|失敗|✗|❌/)
+
+  // ② 改對 → ✅，而且不再有 diff 表格
+  await page.goto('/?lesson=cpp-beginner%2F01-%E5%8D%B0%E5%87%BA%E4%B8%80%E5%8F%A5%E8%A9%B1',
+    { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+  await write('cout << "Hello!" << endl;')
+  const ok = page.locator('.console-verdict')
+  await expect(ok).toHaveClass(/passed/)
+  expect(await page.locator('.console-verdict-diff').count(), '🔴 對了還在給 diff').toBe(0)
+})

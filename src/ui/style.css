@@ -899,6 +899,70 @@ html, body {
   color: #fff;
 }
 
+/*
+ * ─── 裁判（`ConsolePanel.showVerdict`）───
+ *
+ * 🔴 **不用紅色**。初學者的多數「錯」是**還沒完成**，而一片紅在他眼裡是
+ * 「我做壞了」——那正是 Hattie 說效果最差的那一層（針對人，不是針對事）。
+ * 所以「還沒」用**中性的黃**，只有真正不一樣的那幾行才標出來。
+ */
+.console-verdict {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #3a3a3a;
+  background: #232323;
+  font-size: 13px;
+}
+
+.console-verdict.passed {
+  border-color: #2ea043;
+  background: #12261a;
+}
+
+.console-verdict.not-yet {
+  border-color: #9e6a03;
+  background: #241f12;
+}
+
+.console-verdict-head {
+  font-weight: 600;
+  color: #ddd;
+  margin-bottom: 6px;
+}
+
+.console-verdict-diff {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.console-verdict-diff .h {
+  color: #999;
+  font-size: 12px;
+  font-family: inherit;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #3a3a3a;
+  margin-bottom: 2px;
+}
+
+.console-verdict-diff .c {
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #bbb;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* 只標【不一樣的那幾行】——一樣的那些留著是為了對齊，不是為了看 */
+.console-verdict-diff .c.different,
+.console-verdict-diff .c.missing,
+.console-verdict-diff .c.extra {
+  background: #3a2f14;
+  color: #f0d99b;
+}
+
 .console-output {
   flex: 1;
   overflow-y: auto;

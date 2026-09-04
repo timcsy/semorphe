@@ -670,5 +670,9 @@
   "LAYOUT_PRESET_THREE_HINT": "程式碼 · 流程 · 積木",
   "LAYOUT_LABEL": "佈局",
   "LAYOUT_TOGGLE_PANEL": "{panel}面板",
-  "LAYOUT_TOGGLE_PANEL_HINT": "顯示／隱藏"
+  "LAYOUT_TOGGLE_PANEL_HINT": "顯示／隱藏",
+  "CHECK_PASSED": "✅ 輸出對了",
+  "CHECK_NOT_YET": "還沒對——看看差在哪",
+  "CHECK_YOURS": "你的輸出",
+  "CHECK_WANTED": "這一課要的"
 }

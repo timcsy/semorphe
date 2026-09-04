@@ -2,6 +2,7 @@ import { msg } from '../../core/messages'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
 import type { SemanticBus } from '../../core/semantic-bus'
 import { revealForOutput, type ConsoleSurface } from '../../core/host/console-surface'
+import type { OutputComparison } from '../../core/lesson'
 
 export type ConsoleSignal = 'SIGINT' | 'EOF'
 
@@ -271,6 +272,59 @@ export class ConsolePanel implements ViewHost {
     line.textContent = text
     this.outputEl.appendChild(line)
     this.currentLineEl = null
+    this.scrollToBottom()
+  }
+
+  /**
+   * **裁判**——這一課要的輸出，與學生實際跑出來的，並排。
+   *
+   * ## 🔴 為什麼不是一個 ✅／❌
+   *
+   * `Hattie & Timperley`：針對**人**的回饋（分數、讚美）效果最差，針對**任務與過程**
+   * 的最好。而「❌ 錯」是**不能行動**的——它沒告訴學生下一步。
+   *
+   * > **回饋要說的是「你少了第 3 行」，不是「你答錯了」。**
+   *
+   * ⚠️ 而它說「**還沒**」不說「錯」：初學者的多數「錯」其實是還沒完成，
+   * 前者指向下一步，後者指向自己。
+   *
+   * ⚠️ **這裡不判寫法**——用 `while` 還是 `for` 不是對錯，那是另一個話題。
+   */
+  showVerdict(result: OutputComparison): void {
+    this.currentLineEl = null
+    const box = document.createElement('div')
+    box.className = `console-verdict ${result.passed ? 'passed' : 'not-yet'}`
+
+    const head = document.createElement('div')
+    head.className = 'console-verdict-head'
+    head.textContent = result.passed
+      ? msg('CHECK_PASSED', '✅ 輸出對了')
+      : msg('CHECK_NOT_YET', '還沒對——看看差在哪')
+    box.appendChild(head)
+
+    if (!result.passed) {
+      const table = document.createElement('div')
+      table.className = 'console-verdict-diff'
+      const cell = (text: string, cls: string): HTMLElement => {
+        const d = document.createElement('div')
+        d.className = cls
+        d.textContent = text
+        return d
+      }
+      table.append(
+        cell(msg('CHECK_YOURS', '你的輸出'), 'h'),
+        cell(msg('CHECK_WANTED', '這一課要的'), 'h'),
+      )
+      for (const l of result.lines) {
+        // ⚠️ 空字串會讓那一格塌掉——用一個看得見的佔位
+        table.append(
+          cell(l.got ?? '—', `c ${l.kind}`),
+          cell(l.want ?? '—', `c ${l.kind}`),
+        )
+      }
+      box.appendChild(table)
+    }
+    this.outputEl.appendChild(box)
     this.scrollToBottom()
   }
 

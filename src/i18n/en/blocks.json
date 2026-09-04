@@ -670,5 +670,9 @@
   "LAYOUT_PRESET_THREE_HINT": "code · flow · blocks",
   "LAYOUT_LABEL": "Layout",
   "LAYOUT_TOGGLE_PANEL": "{panel} panel",
-  "LAYOUT_TOGGLE_PANEL_HINT": "Show / hide"
+  "LAYOUT_TOGGLE_PANEL_HINT": "Show / hide",
+  "CHECK_PASSED": "✅ Output matches",
+  "CHECK_NOT_YET": "Not yet — see what differs",
+  "CHECK_YOURS": "Yours",
+  "CHECK_WANTED": "Expected"
 }

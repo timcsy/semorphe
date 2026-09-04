@@ -177,6 +177,37 @@ export interface Lesson {
    * ⚠️ 省略 ＝ 這一課不需要教操作（多數課都是這樣）。
    */
   readonly interactions?: readonly string[]
+  /**
+   * **這一課做對了長什麼樣**——輸出，以及要餵給它的輸入。
+   *
+   * ## 🔴 它 2026-08 就寫在每一份 `lesson.json` 裡了，而【型別裡一直沒有它】
+   *
+   * ```
+   * 每一份 lesson.json   66 課每一課都有 check.stdout
+   * 這個介面             🔴 沒有 check → parseLesson 直接把它丟掉
+   * 唯二的讀者           e2e/lessons.spec.ts · audit-lessons（都讀原始 JSON）
+   * ```
+   *
+   * ⚠️ 上面那三行本來寫成 `lessons/⟨星號⟩/lesson.json`，而那個 `⟨星號⟩/`
+   * **把這段註解提前關掉了**——`tsc` 當場紅。路徑裡有萬用字元時要繞開它。
+   *
+   * 也就是說**應用根本不知道它存在**——學生按了執行，沒有任何人告訴他對了沒有。
+   *
+   * > **一個「東西早就在了、缺的只是出口」的形狀，這個專案今天是第二次遇到**
+   * > （第一次是 13 萬字的課文，見 `history/205`）。
+   *
+   * ⚠️ **只判輸出，不判寫法**：學生用 `while` 而不是 `for` 不是錯——
+   * 拿結構去判對錯就變成「猜老師心裡的答案」，那是自動評分最經典的失敗。
+   */
+  readonly check?: LessonCheck
+}
+
+/** 這一課的裁判。⚠️ 沒有 `check` 的課就是**沒有裁判**，不是「永遠算對」。 */
+export interface LessonCheck {
+  /** 期望的標準輸出——**逐字比對**（見 `compareOutput` 對空白的處置）。 */
+  readonly stdout: string
+  /** 要餵給它的輸入行。⚠️ 空陣列是「這一課不需要輸入」，不是「還沒寫」。 */
+  readonly stdin: readonly string[]
 }
 
 /**
@@ -186,6 +217,71 @@ export interface Lesson {
  * 一堂沒有 `components` 的課會讓工具箱變成空的，而畫面上那與
  * 「這堂課就是這麼小」長得一模一樣（靜默降級反模式）。
  */
+/**
+ * 讀 `check`——⚠️ **形狀不對要丟錯，不要回一個「空的裁判」**。
+ *
+ * 一個 `stdout: undefined` 的裁判會**永遠說對**，而那比沒有裁判更糟：
+ * 學生會學到「這個勾沒有意義」。
+ */
+function parseCheck(id: string, raw: unknown): LessonCheck | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (typeof raw !== 'object') throw new Error(`教案 ${id}：check 不是一個物件`)
+  const c = raw as Record<string, unknown>
+  if (typeof c.stdout !== 'string') throw new Error(`教案 ${id}：check.stdout 不是字串`)
+  const stdin = c.stdin ?? []
+  if (!Array.isArray(stdin) || stdin.some((x) => typeof x !== 'string')) {
+    throw new Error(`教案 ${id}：check.stdin 不是字串陣列`)
+  }
+  return { stdout: c.stdout, stdin: stdin as string[] }
+}
+
+/** 逐行比對的結果——⚠️ `kind` 是**這一行怎麼了**，不是「對或錯」。 */
+export interface OutputDiffLine {
+  readonly kind: 'same' | 'different' | 'missing' | 'extra'
+  /** 學生的那一行（`missing` 時是 `undefined`）。 */
+  readonly got?: string
+  /** 這一課要的那一行（`extra` 時是 `undefined`）。 */
+  readonly want?: string
+}
+
+export interface OutputComparison {
+  readonly passed: boolean
+  readonly lines: readonly OutputDiffLine[]
+}
+
+/**
+ * 把學生的輸出與這一課要的輸出**逐行**比對。
+ *
+ * ## 🔴 為什麼是逐行，不是整串比
+ *
+ * 整串比只答得出「對」或「錯」，而**「錯」不是可以行動的資訊**。
+ * 逐行才說得出「你少了第 3 行」「你的第 2 行多了一個空格」——
+ * 那才是 Hattie 說的「針對任務與過程」的回饋。
+ *
+ * > **回饋要說的是「你的迴圈少跑了一次」，不是「你答錯了」。**
+ *
+ * ## ⚠️ 空白的處置：行尾寬容，行首不寬容
+ *
+ * ```
+ * 行尾空白   忽略  —— `cout << i << " "` 是很常見的寫法，而它會留下行尾空格
+ * 行首空白   在意  —— 縮排是輸出格式的一部分（例如印三角形）
+ * 最後的換行 忽略  —— `endl` 與否不該決定對錯
+ * ```
+ */
+export function compareOutput(got: string, want: string): OutputComparison {
+  const split = (s: string): string[] => s.replace(/\n+$/, '').split('\n').map((l) => l.replace(/[ \t]+$/, ''))
+  const a = split(got)
+  const b = split(want)
+  const lines: OutputDiffLine[] = []
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (i >= a.length) lines.push({ kind: 'missing', want: b[i] })
+    else if (i >= b.length) lines.push({ kind: 'extra', got: a[i] })
+    else if (a[i] === b[i]) lines.push({ kind: 'same', got: a[i], want: b[i] })
+    else lines.push({ kind: 'different', got: a[i], want: b[i] })
+  }
+  return { passed: lines.every((l) => l.kind === 'same'), lines }
+}
+
 export function parseLesson(id: string, raw: unknown): Lesson {
   if (raw === null || typeof raw !== 'object') {
     throw new Error(`教案 ${id}：不是一個物件`)
@@ -231,6 +327,7 @@ export function parseLesson(id: string, raw: unknown): Lesson {
     },
     components: o.components as string[],
     interactions: inter as string[] | undefined,
+    check: parseCheck(id, o.check),
   }
 }
 

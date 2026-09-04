@@ -56,7 +56,7 @@ import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
-import { lessonIdFromQuery, lessonDocHref, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson, type ScaffoldMode } from '../core/lesson'
+import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson, type ScaffoldMode } from '../core/lesson'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
@@ -321,6 +321,46 @@ export class App {
         run: () => open('https://github.com/timcsy/semorphe'),
       }] : []),
     ]
+  }
+
+  /** 這一次執行印出來的東西——⚠️ 只收 `stdout`，錯誤訊息不是「輸出」。 */
+  private runTranscript = ''
+
+  /**
+   * **裁判**：跑完之後，把輸出與這一課要的比一比。
+   *
+   * ## 🔴 為什麼接在【組裝點】上
+   *
+   * 執行器不知道有「課程」這種東西（它只會跑一棵樹），而主控台不知道
+   * 「現在是哪一課」。**只有組裝點兩邊都知道**——所以這條線在這裡接，
+   * 不在那兩邊任何一邊。
+   *
+   * ## ⚠️ 它為什麼一直不存在
+   *
+   * `check.stdout` 從 2026-08 就寫在 66 份 `lesson.json` 裡，而
+   * `Lesson` 型別裡**沒有 check** ——`parseLesson` 讀完就丟。
+   * 也就是說**應用根本不知道它存在**，學生按了執行沒有人告訴他對了沒有。
+   *
+   * > **一個「東西早就在了、缺的只是出口」的形狀，這個專案是第二次遇到**
+   * > （第一次是 13 萬字的課文，`history/205`）。
+   */
+  private wireLessonCheck(consolePanel?: ConsolePanel): void {
+    if (!consolePanel) return
+    // ⚠️ 只累積 `stdout`：`stderr` 是「它壞了」，不是「它印了什麼」
+    this.bus.on('execution:output', (e) => {
+      if (e.stream !== 'stderr') this.runTranscript += e.text
+    })
+    this.bus.on('execution:state', (e) => {
+      // 🔴 **每次開跑都要歸零**——不然第二次執行會把第一次的輸出算進去，
+      //    而那個 bug 的樣子是「第一次對、第二次也對，第三次莫名其妙不對」
+      if (e.status === 'running') { this.runTranscript = ''; return }
+      if (e.status !== 'completed') return
+      const check = this.currentLesson?.check
+      // ⚠️ 沒有課、或這一課沒有裁判 ⟹ **不說話**。
+      //    一個「沒有裁判時預設說對」的設計，會讓那個勾失去意義。
+      if (!check) return
+      consolePanel.showVerdict(compareOutput(this.runTranscript, check.stdout))
+    })
   }
 
   /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
@@ -998,6 +1038,7 @@ export class App {
     // - `monaco-panel` **發** `execution:breakpoints`（把行號翻成 nodeId）
     elements.consolePanel?.connectBus(this.bus)
     this.codeView?.connectBus(this.bus)
+    this.wireLessonCheck(elements.consolePanel)
 
     // 🔴 **診斷的第二個產出端在樹上，而樹只從匯流排來。**
     //
