@@ -56,7 +56,8 @@ import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
-import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, type Lesson, type ScaffoldMode } from '../core/lesson'
+import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type ScaffoldMode } from '../core/lesson'
+import { markTaskPassed, isTaskPassed, passedCount } from '../core/progress'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
@@ -196,6 +197,18 @@ export class App {
    * 「章節」那顆知道要列誰，而不必從 `currentLesson` 反推。
    */
   private currentTrack: string | undefined
+  /**
+   * **現在在做哪一題**——`FREE_PRACTICE`（空字串）＝ 純練習。
+   *
+   * 🔴 預設是**這一課的第一題**（「跟著做」），不是純練習——因為第一次打開
+   * 一堂課時，學生要做的就是課文帶著他做的那一支，而 diff 會在他最需要的
+   * 時候出現。使用者 2026-09-04 拍板：「預設是跟著做的那題」。
+   *
+   * ⚠️ 它與 `currentLesson` 一樣是 `session` 域的——**不進存檔**。
+   *    換一堂課就重設（見 `applyLesson`）：留著上一課的題目 id
+   *    會讓裁判對著一個不存在的題目沉默，而畫面上看不出為什麼。
+   */
+  private currentTaskId: string = FREE_PRACTICE
   /**
    * 鷹架露到第幾層——**它自己的一格**（2026-08-28 從 `enabledBranches` 拆出來）。
    *
@@ -343,6 +356,15 @@ export class App {
    *
    * > **一個「東西早就在了、缺的只是出口」的形狀，這個專案是第二次遇到**
    * > （第一次是 13 萬字的課文，`history/205`）。
+   *
+   * ## 🪦 而「一課一判」活了兩天（2026-09-04）
+   *
+   * 使用者：「課程應該除了課程題目之外，還會有一些練習題，**這樣去比對結果
+   * 不就沒有辦法做練習題了**？」——學生一做練習題，寫的就是另一支程式，
+   * 而裁判會在他做對事情的時候說他錯。**那比沒有裁判更糟。**
+   *
+   * 現在判的是**目前釘住的那一題**（狀態列上的「題目」那一格），
+   * 而「純練習」時它完全沉默。見 `judgeCurrentTask`。
    */
   private wireLessonCheck(consolePanel?: ConsolePanel): void {
     if (!consolePanel) return
@@ -360,11 +382,7 @@ export class App {
         return
       }
       if (e.status !== 'completed') return
-      const check = this.currentLesson?.check
-      // ⚠️ 沒有課、或這一課沒有裁判 ⟹ **不說話**。
-      //    一個「沒有裁判時預設說對」的設計，會讓那個勾失去意義。
-      if (!check) return
-      consolePanel.showVerdict(compareOutput(this.runTranscript, check.stdout))
+      this.judgeCurrentTask(consolePanel)
     })
 
     // 🔴 **執行覆蓋**：跑完把沒被走到的積木標出來，並在主控台問一句。
@@ -379,6 +397,49 @@ export class App {
       if (n > 0) consolePanel.log(msg('COVERAGE_NEVER_RAN', `⚠️ 有 ${n} 塊積木這一次沒有被跑到——是故意的嗎？`)
         .replace('{n}', String(n)))
     })
+  }
+
+  /**
+   * 跑完了——**該不該說話，以及對誰說**。
+   *
+   * ## 🔴 三種沉默，而它們的理由不同
+   *
+   * ```
+   * 沒有課               「哪一題」這個問題不存在
+   * 純練習               他【說了】他不在做題目 —— 而這是使用者 2026-09-04 給的那一格
+   * 這一題沒有裁判       「改用 while 寫」的輸出一模一樣，判不了
+   * ```
+   *
+   * ⚠️ 三種都**不能說「對了」**：一個永遠說對的勾會讓所有的勾都貶值。
+   *
+   * ## 🔴 而「沉默」與「說錯話」之間，選沉默
+   *
+   * 「沒有命中任何一題」有兩種完全不同的意思——他在做某一題而還沒對
+   * （他要的是 diff），或他只是在亂試（他不要任何人跳出來說他錯）。
+   * **而系統分不出這兩者**，所以由他釘的那一題決定要不要開口。
+   */
+  private judgeCurrentTask(consolePanel: ConsolePanel): void {
+    const lesson = this.currentLesson
+    const task = taskById(lesson, this.currentTaskId)
+    if (!lesson || !task?.check) return
+    const result = compareOutput(this.runTranscript, task.check.stdout)
+    consolePanel.showVerdict(result, task.title)
+    if (!result.passed) return
+
+    markTaskPassed(lesson.id, task.id)
+    // 🔴 **不自動切下一題**——自動切會讓他下一次執行突然被另一題評價，
+    //    而他不會知道是什麼時候換的。給一顆按鈕，他按了才算。
+    //
+    // > **一個會自己改變「我現在在做什麼」的系統，
+    // > 會讓使用者失去對回饋的信任——因為他不知道那句話在對誰說。**
+    const next = lesson.tasks.find((t) => !isTaskPassed(lesson.id, t.id))
+    if (next) {
+      consolePanel.offerNextTask(next.title, () => {
+        this.currentTaskId = next.id
+        this.publishControls()
+      })
+    }
+    this.publishControls()   // ⚠️ 選單上那個「2/3」要跟著動
   }
 
   /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
@@ -682,6 +743,7 @@ export class App {
       if (target && target.id !== this.currentTarget.id) {
         this.currentLesson = undefined
         this.currentTrack = undefined
+        this.currentTaskId = FREE_PRACTICE
         this.handleTargetChange(target, this.topicRegistry.get(target.topic)!, allBranchesOf(this.topicRegistry.get(target.topic)!))
       }
       this.codeView?.setCode(t.code)
@@ -747,6 +809,8 @@ export class App {
     }
     this.currentLesson = lesson
     this.currentTrack = lesson ? trackOf(lesson.id) : this.currentTrack
+    // ⚠️ 沒有課 ⟹ 純練習。與 `applyLesson` 是同一條規矩的兩端。
+    this.currentTaskId = lesson?.tasks[0]?.id ?? FREE_PRACTICE
     // 課釘的目標可能與現在不同——讓 `handleTargetChange` 去處理那一整套。
     const wantId = lesson?.pins.target ?? this.currentTarget.id
     const target = this.targetRegistry.all().find((t) => t.id === wantId) ?? this.currentTarget
@@ -808,6 +872,10 @@ export class App {
     // > **一條深連結如果只設了「我是誰」而沒設「我從哪來」，
     // > 使用者就會落在一個【走不回去】的狀態。**
     this.currentTrack = trackOf(lesson.id)
+    // 🔴 **換課就重設題目**（2026-09-04）——預設是第一題「跟著做」。
+    //    留著上一課的題目 id 的話，`taskById` 查不到它，於是裁判**沉默**
+    //    ——而「沉默」與「這一題沒有裁判」在畫面上長得一模一樣。
+    this.currentTaskId = lesson.tasks[0]?.id ?? FREE_PRACTICE
     const t = lesson.pins.target
     if (t !== undefined) {
       const target = this.targetRegistry.all().find((x) => x.id === t)
@@ -2143,6 +2211,13 @@ export class App {
     // 🔴 **「章節」與「範例」佔同一格，不同時出現。**
     //    那一格問的是同一件事——「我從什麼開始」——只是有課的時候由課回答。
     pinned.add(this.currentTrack ? 'template' : 'lesson')
+    // 🔴 **只有選了課程與章節，「題目」那一格才存在**（使用者 2026-09-04 拍板）。
+    //    沒有課的時候「我在做哪一題」這個問題不存在，而一個永遠只有
+    //    「純練習」可選的下拉是假的按鈕。
+    //
+    // ⚠️ 一課有課而**沒有宣告任何題目**時也不畫——那與「還沒寫題目」是同一件事，
+    //    畫一個空的選單只會讓人以為壞了。
+    if ((this.currentLesson?.tasks.length ?? 0) === 0) pinned.add('task')
     const pickersAndActions = CONTROLS
       .filter((c) => c.kind === 'picker' || c.kind === 'action')
       .filter((c) => !pinned.has(c.id))
@@ -2331,6 +2406,43 @@ export class App {
           options,
         }
       }
+      case 'task': {
+        // 🔴 **「純練習」排在最上面，而它是一個【看得見的狀態】**，
+        //    不是「還沒選」。使用者 2026-09-04：「還是先不選擇題目純練習」。
+        //
+        // ⚠️ 它在這個模式下裁判**完全沉默**，而**執行覆蓋照樣標**
+        //    ——那是一條刻意畫的界線：
+        //
+        // > **描述性的回饋永遠可以給；評價性的回饋要先問過。**
+        //
+        //    「有 1 塊積木沒有被跑到」只是在說發生了什麼；
+        //    「還沒對——你少了第 2 行」是在說對錯。
+        const lesson = this.currentLesson
+        const tasks = lesson?.tasks ?? []
+        const options: ControlOption[] = [
+          {
+            value: FREE_PRACTICE,
+            label: '純練習',
+            description: '不對應任何題目——不會有人說你對或錯',
+          },
+          ...tasks.map((t) => ({
+            value: t.id,
+            // ⚠️ 打勾**只給過了的**，沒過的那些不放叉——一排叉是一排指責，
+            //    而他還沒開始做。
+            label: `${lesson && isTaskPassed(lesson.id, t.id) ? '✅ ' : ''}${t.title}`,
+            description: t.check ? undefined : '這一題沒有裁判（改寫法、開放題）',
+          })),
+        ]
+        const done = lesson ? passedCount(lesson.id, tasks.map((t) => t.id)) : 0
+        const cur = taskById(lesson, this.currentTaskId)
+        return {
+          id: spec.id, kind: spec.kind, title,
+          // 🔴 標籤帶進度——**「2/3」是這一格唯一說得出「我學到哪」的地方**。
+          label: cur ? `${cur.title}　${done}/${tasks.length}` : `純練習　${done}/${tasks.length}`,
+          value: this.currentTaskId,
+          options,
+        }
+      }
       case 'layout': {
         // 🔴 標籤走 i18n 鍵（`nameKey`），**不得把 id 印上畫面**
         //    ——第八十一條護欄的硬性零盯著這一點。
@@ -2510,6 +2622,7 @@ export class App {
           //    留著它的話，畫面會顯示一堂**不屬於這個目標**的課。
           this.currentLesson = undefined
           this.currentTrack = undefined
+          this.currentTaskId = FREE_PRACTICE
           const target = this.targetRegistry.get(invoke.value ?? '')
           const topic = target ? this.topicRegistry.get(target.topic) : null
           if (!target || !topic) return
@@ -2548,6 +2661,13 @@ export class App {
           // ⚠️ `doc:` 不是一堂課，是「去讀它」——與鷹架的 `skeleton:` / `mode:` 同形。
           if (v.startsWith('doc:')) { this.openLessonDoc(v.slice(4)); break }
           this.selectLesson(v)
+          break
+        }
+        case 'task': {
+          // ⚠️ **不 persist**：它是 `session` 域的（跟課程與章節同一層）。
+          //    「我現在做哪一題」跨裝置記住是錯的——那不是一份偏好。
+          this.currentTaskId = invoke.value ?? FREE_PRACTICE
+          this.publishControls()
           break
         }
         case 'style': {

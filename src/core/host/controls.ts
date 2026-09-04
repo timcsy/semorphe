@@ -82,7 +82,7 @@ export type ControlSurface =
   | 'none'
 
 export type ControlId =
-  | 'target' | 'track' | 'lesson' | 'template' | 'scaffold' | 'style' | 'blockStyle' | 'locale'   // 🪦 `branches` 於 2026-08-28 退場（見下面的墓碑）
+  | 'target' | 'track' | 'lesson' | 'task' | 'template' | 'scaffold' | 'style' | 'blockStyle' | 'locale'   // 🪦 `branches` 於 2026-08-28 退場（見下面的墓碑）
   | 'run' | 'undo' | 'redo' | 'clear'
   | 'viewBlocks' | 'viewFlow'
   | 'layout'
@@ -134,6 +134,34 @@ export const CONTROLS: readonly ControlSpec[] = [
   // ⚠️ 兩顆都**不會**被課釘住（`controlsPinnedBy` 回空）——它們是出口。
   { id: 'track', kind: 'picker', domain: 'session', mountId: 'track-selector-mount', bar: 'quickAccess', hostTitle: '選擇課程' },
   { id: 'lesson', kind: 'picker', domain: 'session', mountId: 'lesson-selector-mount', bar: 'quickAccess', hostTitle: '選擇章節' },
+  // 🔴 **題目**——「我現在做的是哪一題」（2026-09-04）。
+  //
+  // ## 它解掉的是一個【會說錯話的裁判】
+  //
+  // 一課一個 `check` 的時候，學生一開始做練習題，他寫的就是**另一支程式**：
+  //
+  // ```
+  // 學生：認真在做練習 2
+  // 裁判：還沒對——你的輸出是「1 2 3」，這一課要的是「Hello!」
+  // ```
+  //
+  // 系統分不出「他在做練習 2 而還沒對」與「他只是在亂試」。
+  // 使用者 2026-09-04 給的解法是**問他**：「在開始執行前先問他是對應到哪一題，
+  // 還是先不選擇題目純練習」。
+  //
+  // ## ⚠️ 而那個問題不能問在【執行前】
+  //
+  // 執行是整個工具裡按最多次的按鈕——一堂課裡幾十次。每次跳一個框，
+  // 那個摩擦會蓋過裁判的好處，而且他會開始亂選。
+  //
+  // > **同一個問題，問一次而答案一直看得見，
+  // > 與每次都問，拿到的資訊一樣而成本差一個數量級。**
+  //
+  // 🟢 於是它是狀態列上的一格：目標 → 課程 → 章節 → **題目**，四格同形。
+  //
+  // ⚠️ **只有選了課程與章節才畫**（使用者拍板）——沒有課的時候「哪一題」
+  //    這個問題不存在，而一個永遠只有「純練習」可選的下拉是假的按鈕。
+  { id: 'task', kind: 'picker', domain: 'session', mountId: 'task-selector-mount', bar: 'quickAccess', hostTitle: '選擇題目' },
   // 🔴 **範例**——沒選課程時佔「章節」那一格。
   //
   // 形狀抄 **Arduino IDE 的 Examples 選單**（使用者 2026-08-28：

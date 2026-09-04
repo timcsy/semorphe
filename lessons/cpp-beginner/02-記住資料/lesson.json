@@ -13,9 +13,23 @@
     "cpp:var_ref",
     "cpp:endl"
   ],
-  "check": {
-    "stdout": "16\n1.72\nA\n",
-    "stdin": []
-  },
-  "_pins_scaffold_why": "同上"
+  "_pins_scaffold_why": "同上",
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "16\n1.72\nA\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把 height 改成 int",
+      "check": {
+        "stdout": "16\n1\nA\n",
+        "stdin": []
+      }
+    }
+  ]
 }

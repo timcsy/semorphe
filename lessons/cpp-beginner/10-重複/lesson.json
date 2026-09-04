@@ -15,8 +15,22 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "1\n2\n3\n4\n5\n",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "1\n2\n3\n4\n5\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：印出 1 到 5 的總和",
+      "check": {
+        "stdout": "15\n",
+        "stdin": []
+      }
+    }
+  ]
 }

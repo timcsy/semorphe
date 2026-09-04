@@ -5,8 +5,8 @@
   },
   "scanned": {
     "files": 34,
-    "importLines": 221,
-    "anyMethodCalls": 2841
+    "importLines": 222,
+    "anyMethodCalls": 2857
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,
@@ -14,7 +14,7 @@
   "directViewCalls": 23,
   "visibleNotRatcheted": {
     "compositionRootImportsLanguage": 0,
-    "compositionRootViewCalls": 62
+    "compositionRootViewCalls": 63
   },
   "details": {
     "viewImportsLanguage": [],
@@ -46,5 +46,5 @@
       "src/ui/execution-controller.ts → consolePanel.clear"
     ]
   },
-  "note": "⚠️ 2026-09-04（執行覆蓋）：方法呼叫數 2821 → 2841——直譯器記下「這一次到過誰」（`executeNode` 一次 `Set.add`，沒有新回呼）· 匯流排多一個 `execution:coverage` · `BlocklyPanel.markNeverRan`（只標最外層那一塊）· 組裝點接線並在主控台問一句。**輸入量上調，不是耦合變差。**\n"
+  "note": "⚠️ 2026-09-04（一課多題）：方法呼叫數 2841 → 2857、import 行數 221 → 222、組裝點呼叫 62 → 63——**輸入量上調，不是耦合變差**。新增 `core/progress.ts`（通過紀錄，自己一格 localStorage：匯出一份作品給同學，不該把「你第 3 題還沒過」一起送出去）＋ `tests/unit/core/progress.test.ts`；`core/lesson.ts` 的 `check` 升格成 `tasks`（`LessonTask`／`parseTasks`／`taskById`／`FREE_PRACTICE`）；登錄表多一顆 `task` picker；`ConsolePanel.offerNextTask`。🔴 它修的是一個**會在學生做對事情時說他錯**的裁判。\n"
 }

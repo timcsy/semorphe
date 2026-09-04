@@ -290,16 +290,22 @@ export class ConsolePanel implements ViewHost {
    *
    * ⚠️ **這裡不判寫法**——用 `while` 還是 `for` 不是對錯，那是另一個話題。
    */
-  showVerdict(result: OutputComparison): void {
+  showVerdict(result: OutputComparison, taskTitle?: string): void {
     this.currentLineEl = null
     const box = document.createElement('div')
     box.className = `console-verdict ${result.passed ? 'passed' : 'not-yet'}`
 
     const head = document.createElement('div')
     head.className = 'console-verdict-head'
+    // 🔴 **說出是哪一題**（2026-09-04）——「✅ 你完成了〈練習 1〉」比
+    //    「✅ 對了」多了一件事：**他知道自己完成的是什麼**。
+    //
+    // ⚠️ 而在一課有好幾題的時候，不說題名的祝賀是**有歧義的**：
+    //    他會不知道剛才那個勾算在哪一題頭上。
+    const named = taskTitle !== undefined && taskTitle !== ''
     head.textContent = result.passed
-      ? msg('CHECK_PASSED', '✅ 輸出對了')
-      : msg('CHECK_NOT_YET', '還沒對——看看差在哪')
+      ? (named ? `✅ 你完成了〈${taskTitle}〉` : msg('CHECK_PASSED', '✅ 輸出對了'))
+      : (named ? `〈${taskTitle}〉還沒對——看看差在哪` : msg('CHECK_NOT_YET', '還沒對——看看差在哪'))
     box.appendChild(head)
 
     if (!result.passed) {
@@ -313,7 +319,8 @@ export class ConsolePanel implements ViewHost {
       }
       table.append(
         cell(msg('CHECK_YOURS', '你的輸出'), 'h'),
-        cell(msg('CHECK_WANTED', '這一課要的'), 'h'),
+        // ⚠️ 「這一課要的」→「這一題要的」：一課有好幾題之後，前者是錯的
+        cell(msg('CHECK_WANTED', '這一題要的'), 'h'),
       )
       for (const l of result.lines) {
         // ⚠️ 空字串會讓那一格塌掉——用一個看得見的佔位
@@ -325,6 +332,37 @@ export class ConsolePanel implements ViewHost {
       box.appendChild(table)
     }
     this.outputEl.appendChild(box)
+    this.scrollToBottom()
+  }
+
+  /**
+   * 過了之後，**問他要不要換到下一題**——而不是替他換。
+   *
+   * 🔴 自動切下一題會讓他下一次執行**突然被另一題評價**，而他不會知道
+   * 是什麼時候換的。一句話 ＋ 一顆按鈕，他按了才算。
+   *
+   * > **一個會自己改變「我現在在做什麼」的系統，
+   * > 會讓使用者失去對回饋的信任——因為他不知道那句話在對誰說。**
+   */
+  offerNextTask(title: string, onSwitch: () => void): void {
+    this.currentLineEl = null
+    const row = document.createElement('div')
+    row.className = 'console-next-task'
+    const text = document.createElement('span')
+    text.textContent = `下一題：${title}`
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'console-next-task-btn'
+    btn.textContent = '切過去'
+    btn.addEventListener('click', () => {
+      // ⚠️ **按過就不能再按**：它描述的是「當時的下一題」，
+      //    而按完之後那句話已經過期了。
+      btn.disabled = true
+      btn.textContent = '已切換'
+      onSwitch()
+    })
+    row.append(text, btn)
+    this.outputEl.appendChild(row)
     this.scrollToBottom()
   }
 

@@ -429,3 +429,170 @@ test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句�
   await page.waitForTimeout(3000)
   expect(await page.locator('.never-ran').count(), '🔴 第二次跑完標記重複累加').toBe(1)
 })
+
+/**
+ * 🔴 **一支完全正確的程式，一塊都不准標**（2026-09-04，開瀏覽器截圖抓到的）。
+ *
+ * 第一版對 `sum = sum + n;` 標了兩塊——因為指定的**左邊那顆變數不走執行，
+ * 走的是 lvalue 解析**，於是它從來不會進 `visited`。
+ *
+ * > **一個在正確的程式上發出警告的警告，比沒有那個警告更糟
+ * > ——它教會學生把警告當背景雜訊。**
+ */
+test('★ 執行覆蓋：一支完全正確的程式，一塊都不准標', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  // ⚠️ 指定的左邊（`sum` / `n`）就是那兩個假警報的來源
+  await page.keyboard.type('int sum = 0;\nint n = 1;\nwhile (n <= 5) {\nsum = sum + n;\nn = n + 1;', { delay: 10 })
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.type('\ncout << sum << endl;', { delay: 10 })
+  await page.waitForTimeout(3000)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(3500)
+
+  expect(
+    await page.locator('.never-ran').count(),
+    '🔴 正確的程式被標了——多半又是某個【不走 executeNode】的節點（lvalue／宣告初值／預設參數）',
+  ).toBe(0)
+  expect(
+    await page.locator('#bottom-container').innerText(),
+    '🔴 正確的程式而主控台在問「是故意的嗎」',
+  ).not.toContain('沒有被跑到')
+})
+
+/**
+ * 🔴 **題目——而它修的是一個【會在學生做對時說他錯】的裁判。**
+ *
+ * 使用者 2026-09-04：「課程應該除了課程題目之外，還會有一些練習題，
+ * **這樣去比對結果不就沒有辦法做練習題了**？」
+ *
+ * 一課一個 `check` 的時候，學生一開始做練習題，寫的就是另一支程式：
+ *
+ * ```
+ * 學生：認真在做練習 2
+ * 裁判：還沒對——你的輸出是「1 2 3」，這一課要的是「Hello!」
+ * ```
+ *
+ * > **一個會在學生做對事情時說他錯的裁判，比沒有裁判更糟。**
+ */
+test('★ 題目：只有選了課程與章節才有那一格，而預設是「跟著做」', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.addInitScript(() => window.localStorage.clear())
+
+  // ① 沒有課 ⟹ **那一格不存在**（不是「有而空的」）
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+  await expect(
+    page.locator('#status-controls .status-item-btn[data-control-id="task"]'),
+    '🔴 沒選課程就出現「題目」——那時「我在做哪一題」這個問題不存在',
+  ).toHaveCount(0)
+
+  // ② 有課 ⟹ 那一格在，而它預設停在第一題
+  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+  const cell = page.locator('#status-controls .status-item-btn[data-control-id="task"]')
+  await expect(cell, '🔴 選了課程與章節，而沒有「題目」那一格').toHaveCount(1)
+  const label = await cell.innerText()
+  expect(label, `🔴 預設不是「跟著做」：${label}`).toContain('跟著做')
+  // 🔴 進度就在標籤上——它是這一格唯一說得出「我學到哪」的地方
+  expect(label, `🔴 標籤上沒有進度：${label}`).toMatch(/0\/2/)
+
+  // ③ 清單裡有「純練習」與那兩題，而沒有裁判的那一題要說出來
+  await cell.click()
+  const rows = await page.$$eval('.quick-pick-item', (e) => e.map((x) => x.textContent ?? ''))
+  expect(rows.join('｜'), '🔴 清單裡沒有「純練習」——那是使用者拍板的那一格').toContain('純練習')
+  expect(rows.join('｜')).toContain('練習：印出 1 到 5 的總和')
+  await page.keyboard.press('Escape')
+})
+
+test('★ 題目：純練習的時候裁判沉默，而執行覆蓋照樣標', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  // 切到「純練習」
+  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
+  await page.locator('.quick-pick-item[data-value=""]').click()
+  await page.waitForTimeout(500)
+
+  // 寫一支【不是這一課答案】的程式——他在亂試
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('cout << "A" << endl;\nif (1 > 2) {\ncout << "never" << endl;', { delay: 10 })
+  await page.waitForTimeout(3000)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(3500)
+
+  // 🔴 **裁判一個字都不說**——系統分不出「卡住」與「在玩」，那就閉嘴
+  expect(
+    await page.locator('.console-verdict').count(),
+    '🔴 純練習時裁判還在說話——他【說了】他不在做題目',
+  ).toBe(0)
+
+  // ⚠️ 而覆蓋照樣標——這是刻意畫的界線：
+  //    **描述性的回饋永遠可以給；評價性的回饋要先問過。**
+  expect(
+    await page.locator('.never-ran').count(),
+    '🔴 純練習把覆蓋也一起關掉了——那不是評價，那只是在說發生了什麼',
+  ).toBe(1)
+})
+
+test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問過才切】', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  // 選第二題（練習：印出總和），然後寫出它的答案
+  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
+  await page.locator('.quick-pick-item[data-value="ex1"]').click()
+  await page.waitForTimeout(500)
+
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('int sum = 0;\nint n = 1;\nwhile (n <= 5) {\nsum = sum + n;\nn = n + 1;', { delay: 10 })
+  // ⚠️ 迴圈外面才印——`typeBody` 那一課學到的：游標會留在迴圈裡
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.type('\ncout << sum << endl;', { delay: 10 })
+  await page.waitForTimeout(3000)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(3500)
+
+  const verdict = page.locator('.console-verdict')
+  await expect(verdict).toHaveClass(/passed/)
+  // 🔴 **說出是哪一題**——「✅ 對了」在一課有好幾題的時候是有歧義的
+  expect(await verdict.innerText(),
+    '🔴 祝賀沒有說出是哪一題——他不知道那個勾算在哪一題頭上').toContain('練習：印出 1 到 5 的總和')
+
+  // 🔴 **不自動切**：下一題是一句話 ＋ 一顆按鈕
+  const next = page.locator('.console-next-task')
+  await expect(next, '🔴 過了而沒有指向下一步').toBeVisible()
+  const stillHere = await page.locator('#status-controls .status-item-btn[data-control-id="task"]').innerText()
+  expect(stillHere,
+    '🔴 自動切了下一題——他下一次執行會突然被另一題評價，而他不知道何時換的',
+  ).toContain('練習：印出 1 到 5 的總和')
+  // 進度要跟著動
+  expect(stillHere, `🔴 過了而進度沒動：${stillHere}`).toMatch(/1\/2/)
+
+  await next.locator('button').click()
+  await page.waitForTimeout(400)
+  expect(await page.locator('#status-controls .status-item-btn[data-control-id="task"]').innerText(),
+    '🔴 按了「切過去」而沒有切').toContain('跟著做')
+})

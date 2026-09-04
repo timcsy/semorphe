@@ -38,6 +38,59 @@ interface LessonCase {
   target?: string
   stdout: string
   stdin: string[]
+  /** 這一課的練習題裡，**有參考解答**的那些（見下面的 `collectExercises`）。 */
+  exercises: Exercise[]
+}
+
+/**
+ * 一題**練習題**，以及它的參考解答。
+ *
+ * ## 🔴 為什麼期望輸出一定要有人跑過
+ *
+ * 一份 `check.stdout` 是課程作者**用手打的**。打錯一個空格，那一題的裁判
+ * 就會對每一個做對的學生說他錯——而**畫面上完全看不出來**
+ * （那正是 2026-09-04 那個「會在學生做對時說他錯」的缺陷的另一個形狀）。
+ *
+ * > **一個沒有人跑過的期望輸出，是一個還沒被發現的、會說錯話的裁判。**
+ *
+ * ## ⚠️ 而參考解答【不進課文】
+ *
+ * 它住在 `solutions/<題目 id>.<副檔名>`——`lesson.md` 一個字都不提，
+ * 靜態頁產生器只讀 `lesson.md`，所以學生點不到它。
+ */
+interface Exercise {
+  taskId: string
+  title: string
+  solution: string
+  stdout: string
+  stdin: string[]
+}
+
+/**
+ * 讀一堂課的題目——⚠️ **舊的 `check` 就是第一題**（`core/lesson.ts` 的 `parseTasks`
+ * 同一條規矩）。這裡不能只讀 `tasks`：66 課裡多數還是舊形狀。
+ */
+function tasksOf(j: Record<string, any>): { id: string; title: string; check?: { stdout?: string; stdin?: string[] } }[] {
+  if (Array.isArray(j.tasks)) return j.tasks
+  return j.check ? [{ id: 'follow', title: '跟著做', check: j.check }] : []
+}
+
+/** 有參考解答檔的那幾題。⚠️ 第一題不算——它的解答是課文裡的「完成的樣子」。 */
+function collectExercises(dir: string, j: Record<string, any>): Exercise[] {
+  const out: Exercise[] = []
+  const sols = path.join(dir, 'solutions')
+  if (!fs.existsSync(sols)) return out
+  for (const t of tasksOf(j).slice(1)) {
+    const file = fs.readdirSync(sols).find((f) => f.replace(/\.[^.]+$/, '') === t.id)
+    if (!file) continue
+    out.push({
+      taskId: t.id, title: t.title,
+      solution: fs.readFileSync(path.join(sols, file), 'utf8').trimEnd(),
+      stdout: t.check?.stdout ?? '',
+      stdin: t.check?.stdin ?? [],
+    })
+  }
+  return out
 }
 
 function collect(): LessonCase[] {
@@ -60,8 +113,10 @@ function collect(): LessonCase[] {
         code,
         components: j.components ?? [],
         target: j.pins?.target,
-        stdout: j.check?.stdout ?? '',
-        stdin: j.check?.stdin ?? [],
+        // 🔴 第一題（「跟著做」）就是課文那一支——這兩格是它的裁判
+        stdout: tasksOf(j)[0]?.check?.stdout ?? '',
+        stdin: tasksOf(j)[0]?.check?.stdin ?? [],
+        exercises: collectExercises(p, j),
       })
     }
   }
@@ -278,4 +333,41 @@ for (const c of CASES) {
         `課文承諾學生會看到什麼，而他看到的是別的`,
     ).toContain(c.stdout.trim())
   })
+
+  // 🔴 **每一題練習的期望輸出，都要有一份參考解答真的跑出它**（2026-09-04）。
+  //
+  //    一份手打的 `check.stdout` 錯一個空格，那一題的裁判就會對每一個
+  //    做對的學生說他錯——而畫面上完全看不出來。
+  for (const ex of c.exercises) {
+    test(`★ ${c.name}〈${ex.title}〉：參考解答真的跑得出宣告的答案`, async ({ page }) => {
+      await openLesson(page, c)
+      await page.evaluate((code) =>
+        (window as never as { __app: { codeView: { setCode(c: string): void } } })
+          .__app.codeView.setCode(code), ex.solution)
+      await useAsSource(page, '程式碼')
+      await page.waitForFunction(() => {
+        const t = (window as never as Record<string, any>).__app?.syncController?.currentTree
+        return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+      }, undefined, { timeout: 30_000 })
+
+      await page.locator('#run-btn').click()
+      for (const line of ex.stdin) {
+        const box = page.locator('.console-inline-input')
+        await expect(box).toBeVisible({ timeout: 8000 })
+        await box.fill(line)
+        await box.press('Enter')
+        await page.waitForTimeout(400)
+      }
+      await expect
+        .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
+        .toMatch(/程式執行完畢|錯誤|Error|Completed/)
+
+      const output = (await page.locator('.console-output').innerText()).trim()
+      expect(
+        output,
+        `🔴 ${c.name}〈${ex.title}〉的參考解答跑出來不是宣告的答案——` +
+          `這一題的裁判會對【做對的學生】說他錯`,
+      ).toContain(ex.stdout.trim())
+    })
+  }
 }

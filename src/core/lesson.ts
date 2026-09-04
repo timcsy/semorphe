@@ -198,9 +198,64 @@ export interface Lesson {
    *
    * ⚠️ **只判輸出，不判寫法**：學生用 `while` 而不是 `for` 不是錯——
    * 拿結構去判對錯就變成「猜老師心裡的答案」，那是自動評分最經典的失敗。
+   *
+   * ## 🪦 而「一課一個 `check`」這個形狀活了兩天就被推翻了
+   *
+   * 使用者 2026-09-04：「課程應該除了課程題目之外，還會有一些練習題，
+   * **這樣去比對結果不就沒有辦法做練習題了**？」
+   *
+   * ```
+   * 學生：認真在做練習 2
+   * 裁判：還沒對——你的輸出是「1 2 3」，這一課要的是「Hello!」
+   * ```
+   *
+   * 🔴 **一個會在學生做對事情時說他錯的裁判，比沒有裁判更糟**
+   * ——它教會學生「這個勾沒有意義」，而那正是 `parseCheck` 檔頭在防的事。
+   *
+   * 於是 `check` 升格成 `tasks`：**一課有好幾題，每一題各自有裁判**。
+   * 舊的 `check` 仍然讀得進來（成為第一題「跟著做」），66 課一個字都不用改。
    */
+  readonly tasks: readonly LessonTask[]
+}
+
+/**
+ * 一堂課裡的**一題**——課程題目、練習題，都是題。
+ *
+ * ## 🔴 沒有 `check` 的題目仍然是題目
+ *
+ * 「把上面的程式改用 `while` 寫」的輸出與原本**一模一樣**，而這裡立過的規矩是
+ * 「只判輸出，不判寫法」——所以它就是**一題沒有裁判的題目**。
+ *
+ * > **不是每一題都有裁判，而沒有裁判不等於沒有題目。**
+ *
+ * ⚠️ 那種題目該做的事是**沉默**，不是說「對了」——後者是靜默降級的一種：
+ * 一個永遠說對的勾會讓所有的勾都貶值。
+ */
+export interface LessonTask {
+  /** 這一課裡唯一。⚠️ 它會被存進通過紀錄，所以**改了它等於把紀錄清掉**。 */
+  readonly id: string
+  /** 選單上那一行，例如「跟著做」「練習 1：印 1 到 5」。 */
+  readonly title: string
+  /** 這一題的裁判。⚠️ 省略 ＝ 這一題判不了（見上）。 */
   readonly check?: LessonCheck
 }
+
+/**
+ * 舊的一課一個 `check`，讀成第一題。
+ *
+ * 🔴 標題是「跟著做」而不是課名——它就是課文帶著學生做的那一支，
+ * 而 PRIMM 裡那一步的名字正是這個。
+ */
+const FOLLOW_ALONG: { readonly id: string; readonly title: string } =
+  { id: 'follow', title: '跟著做' }
+
+/**
+ * 選單裡「不對應任何題目」那一項的值。
+ *
+ * 🔴 它是**看得見的狀態**，不是「沒有選」——使用者 2026-09-04 提的
+ * 「還是先不選擇題目純練習」。裁判在這個狀態下**完全沉默**。
+ */
+export const FREE_PRACTICE = ''
 
 /** 這一課的裁判。⚠️ 沒有 `check` 的課就是**沒有裁判**，不是「永遠算對」。 */
 export interface LessonCheck {
@@ -233,6 +288,38 @@ function parseCheck(id: string, raw: unknown): LessonCheck | undefined {
     throw new Error(`教案 ${id}：check.stdin 不是字串陣列`)
   }
   return { stdout: c.stdout, stdin: stdin as string[] }
+}
+
+/**
+ * 讀 `tasks`——沒有的話，把舊的 `check` 讀成唯一那一題。
+ *
+ * ⚠️ **id 重複要當場丟錯**：兩題同 id 的話，通過紀錄會把它們當成同一題，
+ * 而畫面上看不出來——學生做完第一題，第二題自己就打勾了。
+ */
+function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): LessonTask[] {
+  if (raw === undefined || raw === null) {
+    return legacy ? [{ ...FOLLOW_ALONG, check: legacy }] : []
+  }
+  if (!Array.isArray(raw)) throw new Error(`教案 ${id}：tasks 不是陣列`)
+  const seen = new Set<string>()
+  return raw.map((x, i) => {
+    if (x === null || typeof x !== 'object') throw new Error(`教案 ${id}：tasks[${i}] 不是一個物件`)
+    const t = x as Record<string, unknown>
+    if (typeof t.id !== 'string') throw new Error(`教案 ${id}：tasks[${i}] 缺 id`)
+    // ⚠️ 空字串**不是**「缺 id」，它是【純練習那一格的值】——訊息要說出這件事，
+    //    不然作者只會把它改成 `id: ' '`。
+    if (t.id === FREE_PRACTICE) throw new Error(`教案 ${id}：tasks[${i}] 的 id 不得是空字串——那是「純練習」`)
+    if (seen.has(t.id)) throw new Error(`教案 ${id}：tasks 有重複的 id「${t.id}」`)
+    seen.add(t.id)
+    if (typeof t.title !== 'string' || t.title === '') throw new Error(`教案 ${id}：tasks[${i}] 缺 title`)
+    return { id: t.id, title: t.title, check: parseCheck(`${id}#${t.id}`, t.check) }
+  })
+}
+
+/** 這一課的第幾題。⚠️ `FREE_PRACTICE`（純練習）回 `undefined`，那不是缺陷。 */
+export function taskById(lesson: Lesson | undefined, taskId: string | undefined): LessonTask | undefined {
+  if (!lesson || taskId === undefined || taskId === FREE_PRACTICE) return undefined
+  return lesson.tasks.find((t) => t.id === taskId)
 }
 
 /** 逐行比對的結果——⚠️ `kind` 是**這一行怎麼了**，不是「對或錯」。 */
@@ -327,7 +414,7 @@ export function parseLesson(id: string, raw: unknown): Lesson {
     },
     components: o.components as string[],
     interactions: inter as string[] | undefined,
-    check: parseCheck(id, o.check),
+    tasks: parseTasks(id, o.tasks, parseCheck(id, o.check)),
   }
 }
 

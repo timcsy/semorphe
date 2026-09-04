@@ -58,8 +58,14 @@ interface Finding { lesson: string; kind: string; detail: string }
 /** 一堂課的宣告 ＋ 課文 */
 interface Lesson {
   dir: string
-  json: { title?: string; estimate?: string; pins?: { target?: string }; components?: string[]; check?: { stdout?: string; stdin?: string[] } }
+  json: {
+    title?: string; estimate?: string; pins?: { target?: string }; components?: string[]
+    check?: { stdout?: string; stdin?: string[] }
+    tasks?: { id?: string; title?: string; check?: { stdout?: string; stdin?: string[] } }[]
+  }
   md: string
+  /** `solutions/` 裡有解答的題目 id。⚠️ 只要 id，**不要內容**——見下面那條。 */
+  solutions: string[]
 }
 
 /** 掃一個 lessons 根目錄——**純函式**，注入餵得進合成目錄 */
@@ -79,6 +85,9 @@ export function scanLessons(root: string): Lesson[] {
         dir: `${track.name}/${dir.name}`,
         json: JSON.parse(fs.readFileSync(j, 'utf8')),
         md: fs.existsSync(m) ? fs.readFileSync(m, 'utf8') : '',
+        solutions: fs.existsSync(path.join(p, 'solutions'))
+          ? fs.readdirSync(path.join(p, 'solutions')).map((x) => x.replace(/\.[^.]+$/, ''))
+          : [],
       })
     }
   }
@@ -93,6 +102,29 @@ export function judgeLessons(
 ): Finding[] {
   const f: Finding[] = []
   for (const l of lessons) {
+    // 🔴 **有裁判的練習題，一定要有一份跑得出那個答案的參考解答**（2026-09-04）。
+    //
+    //    一份手打的 `check.stdout` 錯一個空格，那一題的裁判就會對每一個
+    //    做對的學生說他錯——而**畫面上完全看不出來**。
+    //
+    // > **一個沒有人跑過的期望輸出，是一個還沒被發現的、會說錯話的裁判。**
+    //
+    // ⚠️ 這裡只驗**檔案在不在**；「它真的跑得出那個答案」要開瀏覽器
+    //    （`e2e/lessons.spec.ts` 的〈參考解答〉那幾支）。兩道各守一半。
+    //
+    // ⚠️ 第一題不算——它的解答就是課文裡的「完成的樣子」。
+    for (const t of (l.json.tasks ?? []).slice(1)) {
+      if (!t.check) continue      // 沒有裁判的題目本來就不需要解答
+      if (t.id !== undefined && !l.solutions.includes(t.id)) {
+        f.push({ lesson: l.dir, kind: '練習題沒有參考解答', detail: t.id })
+      }
+    }
+    // 🔴 **解答不得出現在課文裡**——學生點得到的地方不放答案。
+    for (const id of l.solutions) {
+      if (l.md.includes(`solutions/${id}`)) {
+        f.push({ lesson: l.dir, kind: '課文洩漏參考解答', detail: id })
+      }
+    }
     for (const c of l.json.components ?? []) {
       if (knownComponents.has(c)) continue
       // 🔴 **兩種不存在要分開報**——訊息不同，修法也不同。
@@ -177,6 +209,7 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
     dir: '合成/一堂好課',
     json: { title: 'x', pins: { target: 'ㄒ目標' }, components: ['ㄒ:甲'] },
     md: '## 你會學到三件事\n1. a\n2. b\n3. c\n## 完成的樣子\n```cpp\nint main(){}\n```\n## 換你了\n## 如果卡住了\n',
+    solutions: [],
   }
   const C = new Set(['ㄒ:甲'])
   const T = new Set(['ㄒ目標'])
@@ -208,6 +241,27 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
   it('★ 注入：完成的樣子沒有程式碼 → 會報', () => {
     const bad = { ...good, md: good.md.replace('```cpp\nint main(){}\n```', '之後補') }
     expect(judgeLessons([bad], C, T).map((x) => x.kind)).toContain('完成的樣子沒有程式碼')
+  })
+
+  it('★ 注入：有裁判的練習題而沒有參考解答 → 會報', () => {
+    const bad = { ...good, json: { ...good.json, tasks: [
+      { id: 'follow', title: '跟著做' },
+      { id: 'ex1', title: '練習 1', check: { stdout: 'a\n' } },
+    ] } }
+    expect(judgeLessons([bad], C, T).map((x) => x.kind)).toContain('練習題沒有參考解答')
+  })
+
+  it('★ 注入：沒有裁判的練習題 → 不報（那種題目本來就不需要解答）', () => {
+    const ok = { ...good, json: { ...good.json, tasks: [
+      { id: 'follow', title: '跟著做' },
+      { id: 'ex1', title: '練習：改用 while 寫' },
+    ] } }
+    expect(judgeLessons([ok], C, T)).toEqual([])
+  })
+
+  it('★ 注入：課文提到解答檔 → 會報（學生點得到的地方不放答案）', () => {
+    const bad = { ...good, solutions: ['ex1'], md: `${good.md}\n見 solutions/ex1.cpp` }
+    expect(judgeLessons([bad], C, T).map((x) => x.kind)).toContain('課文洩漏參考解答')
   })
 
   it('★ 注入：缺一個段落 → 會報', () => {

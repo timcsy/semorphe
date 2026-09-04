@@ -963,6 +963,44 @@ html, body {
   color: #f0d99b;
 }
 
+/**
+ * **下一題**——過了之後那一行。
+ *
+ * 🔴 它**不是**祝賀框的一部分（是一行獨立的、比較安靜的東西）：
+ * 祝賀是給剛完成的那一題，這一行是給下一步。兩件事擠在同一個框裡，
+ * 學生會分不出那顆按鈕是在確認什麼。
+ */
+.console-next-task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0 8px;
+  padding: 4px 10px;
+  font-size: 13px;
+  color: #9fb8a3;
+}
+
+.console-next-task-btn {
+  padding: 2px 10px;
+  border-radius: 4px;
+  border: 1px solid #2ea043;
+  background: transparent;
+  color: #7ee29a;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.console-next-task-btn:hover:not(:disabled) {
+  background: #12261a;
+}
+
+/* ⚠️ 按過的那顆要看得出是**做完了**，不是壞了 */
+.console-next-task-btn:disabled {
+  border-color: #3a3a3a;
+  color: #777;
+  cursor: default;
+}
+
 .console-output {
   flex: 1;
   overflow-y: auto;

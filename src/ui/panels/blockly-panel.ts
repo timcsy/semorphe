@@ -1516,6 +1516,21 @@ export class BlocklyPanel implements ViewHost {
       // ⚠️ 對不到節點的積木（剛拖進來還沒同步）不算——它不是「沒跑到」，
       //    它是「還沒進到樹裡」。把兩者混在一起會讓標記閃來閃去。
       if (nodeId === null || nodeId === undefined) continue
+      // 🔴 **只看【語句】，不看運算式**（2026-09-04，截圖抓到的）。
+      //
+      //    一支**完全正確**的 `sum = sum + n;` 會被標兩塊——因為指定的
+      //    **左邊那顆變數不走執行，它走 lvalue 解析**（`interpreter/lvalue.ts`
+      //    的 `resolvePlace`），於是它從來不會進 `visited`。
+      //
+      // > **`visited` 記的是「執行器走過誰」，而那不等於「這一段跑了沒有」
+      // > ——有些節點是被【解析】的，不是被【執行】的。**
+      //
+      //    而修法不在直譯器那側（再補一個記錄點，下一個非執行路徑仍會漏），
+      //    在**粒度**：`return` 後面的程式碼、不成立的 `if`、沒進去的迴圈
+      //    ——初學者的那三種 bug **全部是語句**。
+      //
+      // ⚠️ Blockly 的判準：有 `outputConnection` ＝ 它是一個值（運算式）。
+      if (block.outputConnection) continue
       if (!visited.has(nodeId) && !this.lastScaffoldIds.has(nodeId)) never.add(block.id)
     }
     // 🔴 **只標最外層的那一塊**（2026-09-04 實測）：一句
