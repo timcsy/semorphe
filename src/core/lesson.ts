@@ -238,6 +238,16 @@ export interface LessonTask {
   readonly title: string
   /** 這一題的裁判。⚠️ 省略 ＝ 這一題判不了（見上）。 */
   readonly check?: LessonCheck
+  /**
+   * **跑之前要不要先叫他猜一下**，以及猜什麼。
+   *
+   * ⚠️ **省略 ＝ 自動判定**（依樹上有幾顆迴圈、期望輸出有多長），
+   * 不是「不問」——「不問」要寫 `'none'`，而那是一個**說出口的決定**。
+   *
+   * 🔴 課程作者比自動判定更知道這一課的學生撐不撐得住，所以宣告會贏。
+   * 判定的細節見 `core/predict.ts` 的 `predictionFor`。
+   */
+  readonly predict?: 'output' | 'iterations' | 'none'
 }
 
 /**
@@ -312,7 +322,17 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
     if (seen.has(t.id)) throw new Error(`教案 ${id}：tasks 有重複的 id「${t.id}」`)
     seen.add(t.id)
     if (typeof t.title !== 'string' || t.title === '') throw new Error(`教案 ${id}：tasks[${i}] 缺 title`)
-    return { id: t.id, title: t.title, check: parseCheck(`${id}#${t.id}`, t.check) }
+    // 🔴 **認不得的值要當場丟錯**——一個拼成 `'ouput'` 的宣告會安靜地
+    //    退回自動判定，而畫面上與「作者沒寫」一模一樣。
+    const pr = t.predict
+    if (pr !== undefined && !['output', 'iterations', 'none'].includes(String(pr))) {
+      throw new Error(`教案 ${id}：tasks[${i}] 的 predict 不是 output／iterations／none`)
+    }
+    return {
+      id: t.id, title: t.title,
+      check: parseCheck(`${id}#${t.id}`, t.check),
+      predict: pr as 'output' | 'iterations' | 'none' | undefined,
+    }
   })
 }
 

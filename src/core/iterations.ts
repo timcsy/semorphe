@@ -34,6 +34,58 @@ import { annotationOf } from './skip-declarations'
 import { bodySlotsOf } from './component/traits'
 import type { SemanticNode } from './types'
 
+/** 這顆節點是不是一個**重複器**——⚠️ 讀宣告，不看元件名。 */
+export function isLoop(node: SemanticNode): boolean {
+  return annotationOf(node.componentId, 'control_flow') === 'loop'
+}
+
+/** 這棵樹裡的迴圈，依出現順序。🔴 「猜這個迴圈會跑幾次」要先知道有幾顆。 */
+export function loopNodes(root: SemanticNode | null | undefined): SemanticNode[] {
+  const out: SemanticNode[] = []
+  const walk = (n: SemanticNode): void => {
+    if (isLoop(n)) out.push(n)
+    for (const list of Object.values(n.children ?? {})) {
+      for (const c of list ?? []) if (c) walk(c)
+    }
+  }
+  if (root) walk(root)
+  return out
+}
+
+/** 依 id 找那一顆迴圈。⚠️ 找不到回 `undefined`——樹在執行之間被換掉是正常的。 */
+export function loopNodeById(
+  root: SemanticNode | null | undefined,
+  nodeId: string,
+): SemanticNode | undefined {
+  return loopNodes(root).find((n) => n.id === nodeId)
+}
+
+/**
+ * **這一顆迴圈跑了幾輪**——⚠️ 與 `iterationCounts` 的差別是**不過濾**。
+ *
+ * 🔴 徽章刻意只畫 `> 1` 的（`×1` 是雜訊、`×0` 由覆蓋標）；
+ * 而**揭曉一個預測時，`1` 與 `0` 都是正當的答案**——
+ * 「我猜 5，實際只跑了 1 次」正是最值得看到的那一種。
+ *
+ * > **一個為了畫面乾淨而過濾掉的數字，
+ * > 在另一個消費者眼裡可能正是最重要的那一個。**
+ */
+export function loopRatio(
+  node: SemanticNode,
+  counts: ReadonlyMap<string, number>,
+): number | undefined {
+  if (node.id === undefined || !isLoop(node)) return undefined
+  const own = counts.get(node.id) ?? 0
+  if (own === 0) return undefined      // 這顆迴圈整個沒被走到（在沒進去的分支裡）
+  let body = 0
+  for (const slot of bodySlotsOf(node.componentId)) {
+    for (const child of node.children?.[slot] ?? []) {
+      if (child?.id !== undefined) body = Math.max(body, counts.get(child.id) ?? 0)
+    }
+  }
+  return Math.floor(body / own)
+}
+
 /**
  * @param root   這一次跑的那棵樹（**顯示樹**——學生看到的就是它；`null` 就是還沒有）
  * @param counts `SemanticInterpreter.getVisitCounts()`
@@ -48,7 +100,7 @@ export function iterationCounts(
 
   const walk = (node: SemanticNode): void => {
     const kids = node.children ?? {}
-    if (node.id !== undefined && annotationOf(node.componentId, 'control_flow') === 'loop') {
+    if (node.id !== undefined && isLoop(node)) {
       const own = counts.get(node.id) ?? 0
       if (own > 0) {
         // 🔴 **只看身體，不看條件**：`while (n <= 5)` 的條件也跑了 6 次

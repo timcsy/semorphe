@@ -32,7 +32,7 @@
  *   這裡只挑三堂**跨語言**的驗那條路真的通。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource, treeReady } from './helpers'
+import { freshApp, useAsSource, treeReady, skipPredictionIfAsked } from './helpers'
 
 /** 三堂跨語言的——證明這條路不是只對 C++ 通 */
 const CASES = [
@@ -361,6 +361,8 @@ test('★ 跑完之後，裁判說得出差在哪一行', async ({ page }) => {
     await page.keyboard.type(body, { delay: 10 })
     await page.waitForTimeout(2600)
     await page.locator('#run-btn').click()
+    // ⚠️ 這一支驗的是**裁判**，不是預測——跳過那個問句
+    await skipPredictionIfAsked(page)
     await page.waitForTimeout(3000)
   }
 
@@ -573,6 +575,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   await page.keyboard.type('\ncout << sum << endl;', { delay: 10 })
   await page.waitForTimeout(3000)
   await page.locator('#run-btn').click()
+  await skipPredictionIfAsked(page)
   await page.waitForTimeout(3500)
 
   const verdict = page.locator('.console-verdict')
@@ -658,4 +661,117 @@ test('★ 迴圈跑了幾次：巢狀是【倍數】不是總次數', async ({ p
   await page.keyboard.type(' ', { delay: 10 })
   await page.waitForTimeout(2500)
   expect(await page.locator('.iteration-badge').count(), '🔴 改過之後數字還留著').toBe(0)
+})
+
+/**
+ * 🔴 **跑之前先猜一下**——使用者 2026-09-04：「總之**目的是要使用者想過**就是」。
+ *
+ * 機制是**意外**：你猜過了，機器做的跟你想的不一樣，你才想知道為什麼。
+ * 沒有猜的話，跑出來的東西你就只是接受它。
+ *
+ * ⚠️ 而它**不是評量**：沒有分數、沒有猜對率、跳過的按鈕一直在。
+ */
+test('★ 預測：猜跑幾次——而揭曉的徽章就在那顆迴圈旁邊', async ({ page }) => {
+  test.setTimeout(150_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('int n = 1;\nwhile (n <= 5) {\ncout << n << endl;\nn = n + 1;', { delay: 10 })
+  await page.waitForTimeout(3500)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(1500)
+
+  // 🔴 **一顆迴圈 → 問「跑幾次」**：答案是一個數字，而它正是差一錯誤住的地方
+  const ask = page.locator('.console-predict-head')
+  await expect(ask, '🔴 跑之前沒有問').toBeVisible()
+  expect(await ask.innerText()).toContain('跑幾次')
+  // ⚠️ 跳過的按鈕一定要在，而且看得到——藏起來等於強迫
+  await expect(page.locator('.console-predict-skip'), '🔴 沒有跳過的路').toBeVisible()
+
+  // ⚠️ **執行要真的停下來等他**——沒停的話「猜完才跑」整件事就是假的
+  expect(
+    (await page.locator('.console-output').innerText()).includes('1\n2'),
+    '🔴 還沒猜完程式就跑了',
+  ).toBe(false)
+
+  await page.locator('.console-predict-input').fill('4')
+  await page.locator('.console-predict-btn').click()
+  await page.waitForTimeout(4000)
+
+  const result = page.locator('.console-predict-result')
+  await expect(result).toHaveClass(/differs/)
+  const text = await result.innerText()
+  expect(text, `🔴 沒有並排：${text}`).toContain('4 次')
+  expect(text).toContain('5 次')
+  // 🔴 **不說「錯」**——說的是「機器做的跟你想的不一樣」
+  expect(text, '🔴 對學生說了「錯」').not.toMatch(/錯誤|錯了|失敗/)
+  // 🟢 而揭曉的東西就在那顆迴圈旁邊
+  // ⚠️ 徽章是 SVG 的 `<text>`——`innerText` 在它身上會丟「Node is not an HTMLElement」
+  expect(await page.locator('.iteration-badge-text').textContent()).toBe('×5')
+
+  // 🔴 **沒改程式，第二次不再問**——跑過一次之後他已經知道答案了，
+  //    再問一次是儀式，而學生一眼看穿
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(1500)
+  expect(await page.locator('.console-predict').count(), '🔴 同一支程式問了第二次').toBe(0)
+})
+
+test('★ 預測：沒有迴圈、輸出短 → 猜輸出；猜對了要比程式跑對更大聲', async ({ page }) => {
+  test.setTimeout(150_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=cpp-beginner%2F01-%E5%8D%B0%E5%87%BA%E4%B8%80%E5%8F%A5%E8%A9%B1',
+    { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('cout << "Hello!" << endl;', { delay: 10 })
+  await page.waitForTimeout(3000)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(1500)
+
+  expect(await page.locator('.console-predict-head').innerText()).toContain('印出什麼')
+  await page.locator('.console-predict-input').fill('Hello!')
+  await page.locator('.console-predict-btn').click()
+  await page.waitForTimeout(3500)
+
+  const result = page.locator('.console-predict-result')
+  await expect(result).toHaveClass(/right/)
+  // 🔴 猜對了要說出它證明了什麼——「對了」兩個字說不出那件事
+  expect(await result.innerText(), '🔴 只說了「對了」').toContain('機器')
+  // ⚠️ 猜對了不給 diff
+  expect(await page.locator('.console-predict-result .console-verdict-diff').count()).toBe(0)
+})
+
+test('★ 預測：純練習不問——他【說了】他不在做題目', async ({ page }) => {
+  test.setTimeout(150_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
+  await page.locator('.quick-pick-item[data-value=""]').click()
+  await page.waitForTimeout(500)
+
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('int n = 1;\nwhile (n <= 3) {\ncout << n << endl;\nn = n + 1;', { delay: 10 })
+  await page.waitForTimeout(3500)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(4000)
+
+  expect(await page.locator('.console-predict').count(), '🔴 純練習還在問').toBe(0)
+  // ⚠️ 而徽章照樣標——描述性的回饋永遠可以給
+  expect(await page.locator('.iteration-badge-text').textContent(), '🔴 純練習把徽章也關掉了').toBe('×3')
 })

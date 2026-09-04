@@ -366,6 +366,116 @@ export class ConsolePanel implements ViewHost {
     this.scrollToBottom()
   }
 
+  /**
+   * **跑之前先問一句**——回傳他猜的，跳過的話回 `null`。
+   *
+   * ## 🔴 為什麼問在主控台，不是跳一個框
+   *
+   * 答案等一下就出現在這裡。**問題與揭曉在同一個地方**，那個 diff 才會
+   * 出現在他剛才寫的那句話底下——而跳出來的框做不到這件事。
+   *
+   * ⚠️ 而且主控台**本來就有一個會停下來等人的輸入框**（`promptInput`），
+   * 學生對「這裡會問我問題」這件事已經熟了。
+   *
+   * ## ⚠️ 跳過的按鈕一定要在，而且不准藏起來
+   *
+   * 強迫產生的是順從，不是思考——他會打 `aaa` 混過去，而那比不問更糟：
+   * 它教會學生「這個框是一個要繞過的關卡」。
+   */
+  askPrediction(kind: 'output' | 'iterations', prompt: string): Promise<string | null> {
+    this.currentLineEl = null
+    return new Promise((resolve) => {
+      const box = document.createElement('div')
+      box.className = 'console-predict'
+
+      const head = document.createElement('div')
+      head.className = 'console-predict-head'
+      head.textContent = `🤔 跑之前先猜一下：${prompt}`
+      box.appendChild(head)
+
+      const row = document.createElement('div')
+      row.className = 'console-predict-row'
+      // ⚠️ 兩種形式**用不同的欄位**：一行數字用 `input`，多行輸出用 `textarea`
+      //    ——把「猜 3 行輸出」塞進一個單行欄位，學生會以為只能寫一行。
+      const field: HTMLInputElement | HTMLTextAreaElement = kind === 'iterations'
+        ? Object.assign(document.createElement('input'), { type: 'number', min: '0' })
+        : Object.assign(document.createElement('textarea'), { rows: 3 })
+      field.className = 'console-predict-input'
+      field.placeholder = kind === 'iterations' ? '例如 5' : '一行一行寫，就像它會印出來的樣子'
+
+      const send = document.createElement('button')
+      send.type = 'button'
+      send.className = 'console-predict-btn'
+      send.textContent = '就這樣，跑吧'
+      const skip = document.createElement('button')
+      skip.type = 'button'
+      skip.className = 'console-predict-skip'
+      skip.textContent = '跳過'
+
+      let done = false
+      const finish = (v: string | null): void => {
+        if (done) return
+        done = true
+        // 🔴 **收掉輸入、留下他寫的那一句**——`clear()` 等一下會把整個主控台清空，
+        //    所以這裡不必自己刪；而在那之前的這一瞬間，他要看得到自己按了什麼。
+        field.disabled = true
+        send.disabled = true
+        skip.disabled = true
+        resolve(v)
+      }
+      send.addEventListener('click', () => finish(field.value))
+      skip.addEventListener('click', () => finish(null))
+      field.addEventListener('keydown', ((e: KeyboardEvent) => {
+        // ⚠️ 單行的 Enter 送出；多行的 Enter 是換行（那是它的重點），要 Ctrl/⌘+Enter
+        if (e.key !== 'Enter') return
+        if (kind === 'iterations' || e.metaKey || e.ctrlKey) { e.preventDefault(); finish(field.value) }
+      }) as EventListener)
+
+      row.append(field, send, skip)
+      box.appendChild(row)
+      this.outputEl.appendChild(box)
+      this.scrollToBottom()
+      field.focus()
+    })
+  }
+
+  /**
+   * **揭曉**——把「你猜的」與「機器做的」並排。
+   *
+   * 🔴 猜對了要**比程式跑對更大聲**：它證明他腦子裡那台機器是對的，
+   * 而那正是這整件事要教的東西。
+   *
+   * ⚠️ 猜錯了**不說「錯」**：說的是「機器做的跟你想的不一樣」。
+   */
+  showPrediction(guess: string, actual: string, right: boolean): void {
+    this.currentLineEl = null
+    const box = document.createElement('div')
+    box.className = `console-predict-result ${right ? 'right' : 'differs'}`
+
+    const head = document.createElement('div')
+    head.className = 'console-verdict-head'
+    head.textContent = right
+      ? '🎯 你猜對了——你腦子裡那台機器是對的'
+      : '機器做的跟你想的不一樣——差在這裡'
+    box.appendChild(head)
+
+    if (!right) {
+      const table = document.createElement('div')
+      table.className = 'console-verdict-diff'
+      const cell = (t: string, cls: string): HTMLElement => {
+        const d = document.createElement('div')
+        d.className = cls
+        d.textContent = t
+        return d
+      }
+      table.append(cell('你猜的', 'h'), cell('它實際做的', 'h'))
+      table.append(cell(guess === '' ? '—' : guess, 'c different'), cell(actual, 'c different'))
+      box.appendChild(table)
+    }
+    this.outputEl.appendChild(box)
+    this.scrollToBottom()
+  }
+
   error(text: string): void {
     this.lines.push(`[ERROR] ${text}`)
     this.currentLineEl = null

@@ -394,3 +394,23 @@ export async function runAndSettle(page: Page): Promise<void> {
     .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
     .toMatch(/程式執行完畢|錯誤|Error|Completed|等待輸入|Waiting/)
 }
+
+/**
+ * **按了執行之後，如果跳出「先猜一下」的問句，就跳過它。**
+ *
+ * 🔴 2026-09-04 加預測那一刀之後，**題目模式下的第一次執行會停下來問**
+ * ——而既有的 66 支課程測試按了執行就等輸出，於是整片紅。
+ *
+ * > **一個「開跑之前先問人」的機制，會讓每一個【按了執行就等結果】的
+ * > 既有測試同時失效——而它們紅得看起來像是那 66 堂課壞了。**
+ *
+ * ⚠️ 這一支**不是把那個機制關掉**：它是替測試按下「跳過」，
+ * 也就是**明說「這支測試不是在扮演一個學生」**。真的在驗預測的那幾支
+ * （`lesson-pins.spec.ts`）會自己填答案，不走這裡。
+ */
+export async function skipPredictionIfAsked(page: Page): Promise<void> {
+  const skip = page.locator('.console-predict-skip')
+  // ⚠️ 短逾時：多數情況下它不會出現（純練習、沒有課、問不出好問題），
+  //    而每一支都等三秒的話，這個檔會多花三分鐘。
+  if (await skip.isVisible({ timeout: 2500 }).catch(() => false)) await skip.click()
+}

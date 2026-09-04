@@ -27,7 +27,7 @@
  * - **不檢測步驟中間那些示範用的程式碼片段**——只抽 `## 完成的樣子`。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource } from './helpers'
+import { freshApp, useAsSource, skipPredictionIfAsked } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -291,6 +291,8 @@ for (const c of CASES) {
     }, undefined, { timeout: 30_000 })
 
     await page.locator('#run-btn').click()
+    // ⚠️ 這支測試不是在扮演一個學生——它在驗「課文承諾的輸出」
+    await skipPredictionIfAsked(page)
 
     // 🔴 **用真的輸入框餵，不灌 API**——學生做的就是這件事，
     //    而灌 API 會繞過「程式有沒有真的停下來等人」這一半。
@@ -351,6 +353,7 @@ for (const c of CASES) {
       }, undefined, { timeout: 30_000 })
 
       await page.locator('#run-btn').click()
+      await skipPredictionIfAsked(page)
       for (const line of ex.stdin) {
         const box = page.locator('.console-inline-input')
         await expect(box).toBeVisible({ timeout: 8000 })

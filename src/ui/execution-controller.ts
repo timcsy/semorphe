@@ -60,6 +60,8 @@ export class ExecutionController {
   private animateSpeed: ExecutionSpeed = 'medium'
   private animateAccelerateSkipIds: Set<string> | null = null
   private getBlocksDirty: () => boolean
+  /** 見建構參數的 `beforeRun`。⚠️ 可省略——沒有它時行為與從前逐字相同。 */
+  private beforeRun?: (tree: SemanticNode) => Promise<void>
   private syncBeforeRun: () => void
 
   private static readonly ANIMATE_DELAY: Record<string, number> = {
@@ -113,10 +115,24 @@ export class ExecutionController {
        * 而一個開機時抓一次的值會讓「切了板子」不生效。
        */
       currentBoard?: () => BoardPinModel | undefined
+      /**
+       * **開跑之前先問一句**（2026-09-04：預測）——由組裝點注入。
+       *
+       * 🔴 **執行器不知道有「課程」「題目」「預測」這些東西**：它只知道
+       * 「開跑之前有人可能想說話，而那個人會等到說完」。
+       *
+       * ⚠️ 形狀抄 `pauseForUnrecognized`（「停在這裡，讓人看得到、決定」）
+       * ——那條線 2026-08 已經證明過：**要停下來問人的事，
+       * 用一個可省略的 async 鉤子，不是把那件事搬進執行器**。
+       *
+       * 🟢 沒注入的話什麼都不會發生——與加入這個機制之前逐字相同。
+       */
+      beforeRun?: (tree: SemanticNode) => Promise<void>
     },
   ) {
     this.panels = panels
     this.currentBoard = opts.currentBoard
+    this.beforeRun = opts.beforeRun
     this.getBlocksDirty = opts.getBlocksDirty
     this.syncBeforeRun = opts.syncBeforeRun
     this.bus = opts.bus
@@ -334,6 +350,11 @@ export class ExecutionController {
     const tree = this.panels.syncController?.getCurrentTree()
     if (!tree) return
     if (this.refuseIfBroken(tree)) return
+
+    // 🔴 **問在這裡，不在按鈕上**：要等到樹是同步過的、而且是跑得動的，
+    //    才值得佔用使用者一次注意力。壞掉的程式不該先問他猜什麼。
+    //    ⚠️ 而它在 `resetExecution()`【之前】——後者會清主控台。
+    await this.beforeRun?.(tree)
 
     this.resetExecution()
     this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })

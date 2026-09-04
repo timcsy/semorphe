@@ -58,7 +58,8 @@ import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type ScaffoldMode } from '../core/lesson'
 import { markTaskPassed, isTaskPassed, passedCount } from '../core/progress'
-import { iterationCounts } from '../core/iterations'
+import { iterationCounts, loopRatio, loopNodeById } from '../core/iterations'
+import { predictionFor, programSignature, type PredictQuestion } from '../core/predict'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
@@ -210,6 +211,20 @@ export class App {
    *    會讓裁判對著一個不存在的題目沉默，而畫面上看不出為什麼。
    */
   private currentTaskId: string = FREE_PRACTICE
+  /**
+   * 這一次跑之前他猜了什麼（`undefined` ＝ 沒問或跳過）。
+   * ⚠️ 它活得很短：問完到揭曉為止。
+   */
+  private pendingPrediction: { q: PredictQuestion; guess: string } | undefined
+  /**
+   * 上一次**問過預測**的那支程式。
+   *
+   * 🔴 預測只在「你還不知道答案」時有意義——跑過一次之後再問同一件事，
+   * 那是儀式，而學生一眼看穿。所以只在**程式改過之後的第一次執行**問。
+   */
+  private lastPredictedProgram = ''
+  /** 最近一次執行的節點次數——揭曉「跑幾次」要用。 */
+  private lastCounts: ReadonlyMap<string, number> = new Map()
   /**
    * 鷹架露到第幾層——**它自己的一格**（2026-08-28 從 `enabledBranches` 拆出來）。
    *
@@ -384,6 +399,8 @@ export class App {
         return
       }
       if (e.status !== 'completed') return
+      // ⚠️ 預測在裁判**之前**——先「機器做的跟我想的不一樣」，再「這一題對了沒」
+      this.revealPrediction(consolePanel)
       this.judgeCurrentTask(consolePanel)
     })
 
@@ -395,6 +412,8 @@ export class App {
     // ⚠️ 而它是**問句不是判決**：一個 `if` 的另一支本來就可能不該跑。
     //    所以文案是「是故意的嗎」，而視覺是琥珀色虛線，不是紅色（見 CSS）。
     this.bus.on('execution:coverage', (e) => {
+      // ⚠️ 留一份給揭曉用——`execution:coverage` 在 `completed` **之前**送達
+      this.lastCounts = new Map(Object.entries(e.counts))
       const n = this.blocklyPanel?.markNeverRan(new Set(e.visited)) ?? 0
       if (n > 0) consolePanel.log(msg('COVERAGE_NEVER_RAN', `⚠️ 有 ${n} 塊積木這一次沒有被跑到——是故意的嗎？`)
         .replace('{n}', String(n)))
@@ -408,7 +427,7 @@ export class App {
       //    ⚠️ 樹要用**顯示樹**（學生看到的那一棵），不是內部樹——
       //    id 對不上的話一塊都標不出來，而畫面上與「這次沒有迴圈」一模一樣。
       this.blocklyPanel?.markIterations(
-        iterationCounts(this.syncController?.getDisplayTree(), new Map(Object.entries(e.counts))),
+        iterationCounts(this.syncController?.getDisplayTree(), this.lastCounts),
       )
     })
   }
@@ -454,6 +473,73 @@ export class App {
       })
     }
     this.publishControls()   // ⚠️ 選單上那個「2/3」要跟著動
+  }
+
+  /**
+   * **跑之前先問一句**——而它是 `ExecutionController` 注入的鉤子。
+   *
+   * ## 🔴 三種不問，而理由與裁判那三種是同一組
+   *
+   * ```
+   * 沒有課 / 純練習    他【說了】他不在做題目
+   * 這支程式剛才問過    預測只在「你還不知道答案」時有意義
+   * 問不出好問題        多顆迴圈（「哪一顆」有歧義）· 輸出超過三行（那是抄寫）
+   * ```
+   *
+   * ⚠️ 這個方法**會等**——使用者按了送出或跳過才回。那是刻意的：
+   * 「猜完才跑」是這件事全部的重點（他跑完就知道答案了，那時再猜沒有意義）。
+   */
+  private async askPrediction(consolePanel: ConsolePanel | undefined, tree: SemanticNode): Promise<void> {
+    this.pendingPrediction = undefined
+    if (!consolePanel) return
+    const task = taskById(this.currentLesson, this.currentTaskId)
+    if (!task) return
+
+    // ⚠️ 用**要跑的那棵樹**算簽章，不是顯示樹——問的是「這支程式」。
+    const sig = programSignature(tree)
+    if (sig === this.lastPredictedProgram) return
+
+    const q = predictionFor(tree, task)
+    if (!q) return
+    this.lastPredictedProgram = sig
+    const guess = await consolePanel.askPrediction(q.kind, q.prompt)
+    // 🔴 跳過是**正當的**，不是失敗——不記、不提、不再問這一支
+    if (guess === null) return
+    this.pendingPrediction = { q, guess }
+  }
+
+  /**
+   * **揭曉**——而它接在裁判旁邊，因為兩者都是「跑完之後說一句」。
+   *
+   * ⚠️ 順序：預測在裁判**之前**。他先看到「機器做的跟我想的不一樣」，
+   * 再看到「這一題對了沒有」——反過來的話，第二句會把第一句蓋掉。
+   */
+  private revealPrediction(consolePanel: ConsolePanel): void {
+    const p = this.pendingPrediction
+    this.pendingPrediction = undefined
+    if (!p) return
+
+    if (p.q.kind === 'output') {
+      // 🟢 **用同一支 `compareOutput`**：它對空白的處置（行尾寬容、行首不寬容、
+      //    最後的換行不決定對錯）在這裡一樣是對的，而寫第二份會慢慢地不一樣。
+      const cmp = compareOutput(p.guess, this.runTranscript)
+      consolePanel.showPrediction(p.guess.trim(), this.runTranscript.trim(), cmp.passed)
+      return
+    }
+    // 跑幾次——⚠️ 用**沒有過濾**的那一支：`1` 與 `0` 都是正當的答案，
+    //    而「我猜 5，實際只跑了 1 次」正是最值得看到的那一種。
+    const node = p.q.nodeId === undefined
+      ? undefined
+      : loopNodeById(this.syncController?.getDisplayTree(), p.q.nodeId)
+        ?? loopNodeById(this.syncController?.getCurrentTree(), p.q.nodeId)
+    const actual = node ? loopRatio(node, this.lastCounts) : undefined
+    if (actual === undefined) return   // ⚠️ 那顆迴圈整個沒被走到——沒有數字可以揭曉
+    const guessed = Number.parseInt(p.guess.trim(), 10)
+    consolePanel.showPrediction(
+      Number.isNaN(guessed) ? p.guess.trim() : `${guessed} 次`,
+      `${actual} 次`,
+      guessed === actual,
+    )
   }
 
   /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
@@ -1187,6 +1273,8 @@ export class App {
         // 🔴 **每次執行都問一次**——目標會在執行之間被切換（spec 145）。
         currentBoard: () => this.currentTarget.board as never,
         bus: this.bus,
+        // 🔴 **跑之前先猜一下**（2026-09-04 第四刀）——見 `askPrediction`。
+        beforeRun: (tree) => this.askPrediction(elements.consolePanel, tree),
         getBlocksDirty: () => this.blocksDirty,
         syncBeforeRun: () => {
           this.syncBlocksToCodeWithMappings()

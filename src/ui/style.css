@@ -1711,6 +1711,103 @@ html, body {
  * 所以用**直接子代選擇器**：骨架自己的路徑與欄位變淡，
  * 而巢狀的積木（Blockly 的子積木也是 `.blocklyDraggable`）不受影響。 */
 /*
+ * ─── 跑之前先猜一下（預測）───
+ *
+ * 🔴 用**藍色**，而不是裁判的綠／黃：它是一個**問句**，不是一個結論。
+ * 畫面上那三件事要一眼分得出來：
+ *
+ * ```
+ * 藍   我在問你          （預測）
+ * 綠   這一題對了        （裁判）
+ * 黃   有話要說          （還沒對 · 沒跑到 · 跑了幾次）
+ * ```
+ */
+.console-predict {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #2a5f8f;
+  background: #13202c;
+}
+
+.console-predict-head {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ccbf0;
+  margin-bottom: 6px;
+}
+
+.console-predict-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.console-predict-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #2a5f8f;
+  background: #0d1620;
+  color: #ddd;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.console-predict-btn,
+.console-predict-skip {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.console-predict-btn {
+  border: 1px solid #2a5f8f;
+  background: #1b3d5c;
+  color: #cfe6f7;
+}
+
+/* 🔴 **跳過不准藏起來**——一個藏起來的跳過鍵，等於強迫；
+ * 而強迫產生的是 `aaa`，不是思考。它只是【比較安靜】，不是比較難找。 */
+.console-predict-skip {
+  border: 1px solid #3a3a3a;
+  background: transparent;
+  color: #888;
+}
+
+.console-predict-btn:disabled,
+.console-predict-skip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.console-predict-result {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #3a3a3a;
+  background: #232323;
+  font-size: 13px;
+}
+
+/* ⚠️ 猜對了用**比裁判更亮**的綠——它證明他腦子裡那台機器是對的，
+ * 而那比程式跑對更值得慶祝。 */
+.console-predict-result.right {
+  border-color: #3fb950;
+  background: #102b18;
+}
+
+/* ⚠️ 猜錯了**不是紅的**：說的是「機器做的跟你想的不一樣」，不是「你錯了」。 */
+.console-predict-result.differs {
+  border-color: #2a5f8f;
+  background: #13202c;
+}
+
+/*
  * ─── 這一次沒有被跑到（執行覆蓋）───
  *
  * 🔴 **不能用「變淡」**：畫面上已經有兩層淡的（鷹架 `.ghost-block`、
