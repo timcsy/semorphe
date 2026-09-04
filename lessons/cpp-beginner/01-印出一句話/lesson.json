@@ -14,5 +14,11 @@
     "stdout": "Hello!\n",
     "stdin": []
   },
-  "_pins_scaffold_why": "第 1～3 課只給學生自己放的那幾塊；外框第 4 課才拆開"
+  "_pins_scaffold_why": "第 1～3 課只給學生自己放的那幾塊；外框第 4 課才拆開",
+  "interactions": [
+    "drag-block",
+    "switch-layout",
+    "run"
+  ],
+  "_interactions_why": "第 1 課是唯一「他還不知道怎麼操作」的一課。其餘的課不宣告——操作說明抹在 66 課上會腐爛，而且一個需要被教的工具是在增加認知負荷（concepts/認知鷹架「三輪車不是輔助輪」）。"
 }

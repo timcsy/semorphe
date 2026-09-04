@@ -29,10 +29,17 @@ mk test-results/record-lessons-lessons/video.webm assets/demo-lessons.gif
 #
 # ⚠️ 而 README 仍然用 GIF：GitHub 會把 webm 變成一個【要按才會播】的播放器。
 #    同一支影片轉兩種格式，各自去該去的地方。
+#
+# 🔴 **要剪掉開頭那幾秒**（2026-09-04 量到）：每一支的前面都是開機
+#   （`goto` → 清 localStorage → `reload` → 等應用起來），而那幾秒**畫面是空的**。
+#   症狀很具體：課文頁上還沒捲到的那一支，第一格是**一塊黑色方框**——看起來像壞了。
+#
+# ⚠️ `-ss` 要放在 `-i` **前面**（快速定位），而 2 秒是量出來的：
+#   三支原始長度 9.4／10.7／9.9 秒，第 3 秒時都已經在演正題了。
 clip() {
   local src="test-results/record-clips-$1/video.webm" out="assets/clips/$1.webm"
   [ -f "$src" ] || { echo "🔴 找不到 $src——先跑 npm run demo:record"; exit 1; }
-  ffmpeg -v error -y -i "$src" \
+  ffmpeg -v error -y -ss 2 -i "$src" \
     -vf "fps=12,scale=720:-2:flags=lanczos" \
     -c:v libvpx-vp9 -crf 40 -b:v 0 -an -row-mt 1 "$out"
   echo "$out  $(ls -lh "$out" | awk '{print $5}')"

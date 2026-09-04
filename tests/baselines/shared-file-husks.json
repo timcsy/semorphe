@@ -4,8 +4,8 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "fileCount": 262,
-    "exportCount": 688
+    "fileCount": 263,
+    "exportCount": 690
   },
   "husks": 0,
   "duplicates": 0,
@@ -13,5 +13,5 @@
     "husks": [],
     "duplicates": []
   },
-  "note": "⚠️ 2026-09-03（課文的出口・第三輪 · 入口與抽屜）：共用檔數 261 → 262、export 數 686 → 688——標頭多一顆「課程」（`fileButtons` 閘門，走 `<a>` 不走 `<button>`）、行動版的 ☰ 抽屜（新檔 `ui/layout/drawer.ts`：課程／匯出／匯入／上傳自訂積木／GitHub）與 ⚙ 設定分開、`GITHUB_MARK` 改成具名匯出（一份兩個消費者）。**輸入量上調，不是耦合變差**（directViewCalls 停在 23，一筆未動）。\n"
+  "note": "⚠️ 2026-09-04（操作片段）：共用檔數 262 → 263、export 數 688 → 690——新增 `core/interactions.ts`（`INTERACTIONS` ＋ `interactionById`）。🔴 它住在 `core/` 不住在 `tools/`，因為**建置期（課文頁）與執行期（之後的就地提示）讀的是同一份**。**輸入量上調。**\n⚠️ 2026-09-03（課文的出口・第三輪 · 入口與抽屜）：共用檔數 261 → 262、export 數 686 → 688——標頭多一顆「課程」（`fileButtons` 閘門，走 `<a>` 不走 `<button>`）、行動版的 ☰ 抽屜（新檔 `ui/layout/drawer.ts`：課程／匯出／匯入／上傳自訂積木／GitHub）與 ⚙ 設定分開、`GITHUB_MARK` 改成具名匯出（一份兩個消費者）。**輸入量上調，不是耦合變差**（directViewCalls 停在 23，一筆未動）。\n"
 }

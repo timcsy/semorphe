@@ -101,8 +101,12 @@ async function pickLayout(page: Page, id: string): Promise<void> {
 test('clip-drag', async ({ page }) => {
   test.setTimeout(120_000)
   await boot(page)
-  await pickLayout(page, 'compare')
-  await settle(page, 1200)
+  // 🪦 這裡曾經先切一次「對照」——而**預設本來就是對照**，於是片段的前三秒
+  //    是一個與主題無關的選單。3 秒的片段裡，三秒都要在講同一件事。
+  const cols = await page.evaluate(() =>
+    ['code-column', 'blocks-column']
+      .every((id) => getComputedStyle(document.getElementById(id)!).display !== 'none'))
+  expect(cols, '🔴 預設版面不是「對照」了——這一段要重新設計，不是硬切一次').toBe(true)
 
   const before = await blockCount(page)
 

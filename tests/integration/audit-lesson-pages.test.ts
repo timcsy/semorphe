@@ -24,11 +24,12 @@
  *   ⚠️ 代價是它看不到「plugin 沒被掛上」，所以下面第 ⑤ 支直接讀 `vite.config.ts`。
  */
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { readTracks, readLessonsOf, lastmodFromGit } from '../../tools/build-lessons/read-lessons'
 import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots } from '../../tools/build-lessons/render'
 import { lessonDocHref } from '../../src/core/lesson'
+import { INTERACTIONS, interactionById } from '../../src/core/interactions'
 import { allLessons } from '../../src/core/load-lessons'
 
 const ROOT = resolve(__dirname, '../..', 'lessons')
@@ -222,6 +223,60 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
       .split('\n').filter((l) => !/^\s*#/.test(l)).join('\n')
     expect(buildJob, '🔴 build job 沒有 fetch-depth: 0——淺複製會讓 sitemap 沒有日期')
       .toContain('fetch-depth: 0')
+  })
+
+  it('④之七 操作片段：宣告的要有檔、有檔的要有人用', () => {
+    // 🔴 **兩個方向都要驗**（`draft/2026-09-04-操作說明要會過期就變紅` §四）：
+    //    只驗一邊的話，一支沒有人用的片段會安靜地留著，而它照樣要維護、照樣會過期。
+    const used = new Set<string>()
+    for (const l of allLessons().values()) for (const id of l.interactions ?? []) used.add(id)
+
+    const missingClip = INTERACTIONS
+      .filter((i) => !existsSync(resolve(__dirname, '../..', `assets${i.clip}`)))
+      .map((i) => `${i.id} → assets${i.clip}`)
+    expect(missingClip, '🔴 登錄表裡的互動沒有對應的影片檔——課文頁上會是一塊黑方框').toEqual([])
+
+    const unused = INTERACTIONS.filter((i) => !used.has(i.id)).map((i) => i.id)
+    expect(unused, '🔴 有片段沒有任何一課在用——它會安靜地過期').toEqual([])
+
+    // ★ 入口條件：真的有課宣告了東西（不然上面兩條都是空轉）
+    expect(used.size, '★ 一課都沒有宣告 interactions → 這條不算數').toBeGreaterThan(0)
+  })
+
+  it('④之八 有宣告的課，頁面上要真的有那幾支影片', () => {
+    const bad: string[] = []
+    for (const p of pages()) {
+      if (p.id.startsWith('軌道:') || p.id === '索引') continue
+      const want = allLessons().get(p.id)?.interactions ?? []
+      const got = [...p.html.matchAll(/<video src="([^"]+)"/g)].map((m) => m[1])
+      if (want.length !== got.length) {
+        bad.push(`${p.id}：宣告 ${want.length} 支、頁面上 ${got.length} 支`)
+        continue
+      }
+      // ⚠️ 順序也要一樣——課程宣告的順序就是它要人看的順序
+      const expected = want.map((id) => interactionById(id)?.clip)
+      if (JSON.stringify(expected) !== JSON.stringify(got)) {
+        bad.push(`${p.id}：順序或網址對不上（${got.join('、')}）`)
+      }
+    }
+    expect(bad, '🔴 宣告了而頁面上沒有（或反過來）').toEqual([])
+  })
+
+  it('④之九 一頁的影片總量有上限——秒開是這幾頁的全部價值', () => {
+    // 🔴 課文頁現在 7.5KB／零外部請求。影片是唯一的重量，而它會**慢慢長**
+    //    ——每加一支都「只多一點點」，直到某一天它不再秒開。
+    //
+    // > **一個沒有上限的「只多一點點」，是一條沒有人會發現自己越過的線。**
+    const LIMIT_KB = 200
+    const bad: string[] = []
+    for (const l of allLessons().values()) {
+      const kb = (l.interactions ?? [])
+        .map((id) => interactionById(id))
+        .reduce((n, i) => n + (i === undefined ? 0
+          : statSync(resolve(__dirname, '../..', `assets${i.clip}`)).size / 1024), 0)
+      if (kb > LIMIT_KB) bad.push(`${l.id}：${kb.toFixed(0)}KB`)
+    }
+    expect(bad, `🔴 有課的影片總量超過 ${LIMIT_KB}KB`).toEqual([])
   })
 
   it('⑤ 產生器要真的被掛上——不然上面全部是空轉', () => {

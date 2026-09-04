@@ -21,6 +21,7 @@
 import MarkdownIt from 'markdown-it'
 import type { LessonPage } from './read-lessons'
 import { lessonDocHref, type Track } from '../../src/core/lesson'
+import { interactionById, type Interaction } from '../../src/core/interactions'
 
 export { lessonDocHref }
 
@@ -80,6 +81,13 @@ th,td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left}
 .cards a{display:block;padding:.8rem 1rem;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--fg)}
 .cards a:hover{border-color:var(--accent)}
 .cards small{color:var(--muted);display:block;margin-top:.2rem}
+.howto{margin:1.6rem 0 0;padding:1rem 1.1rem;border:1px solid var(--line);border-radius:10px;background:var(--code-bg)}
+.howto h2{font-size:1rem;margin:0 0 .2rem;border:none;padding:0}
+.howto p.meta{margin:0 0 .9rem}
+.howto figure{margin:0 0 1rem}
+.howto figure:last-child{margin-bottom:0}
+.howto video{width:100%;border-radius:8px;border:1px solid var(--line);display:block;background:#1e1e1e}
+.howto figcaption{color:var(--muted);font-size:.88rem;margin-top:.35rem}
 .lesson-nav{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:2.4rem 0 0}
 .lesson-nav a{display:flex;flex-direction:column;gap:.15rem;padding:.8rem 1rem;
   border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--fg)}
@@ -224,6 +232,33 @@ export interface LessonNeighbours {
   readonly next?: LessonPage
 }
 
+/**
+ * 「這一課會用到的操作」——課程宣告哪幾個，這裡把片段插進去。
+ *
+ * 🔴 **`preload="metadata"` 而不是 `none`**：`none` 連**第一格都不載**，
+ * 於是還沒捲到的那幾支在畫面上是**一塊黑色方框**——而那看起來像壞了。
+ * `metadata` 只要幾 KB 就換到一張第一格。
+ *
+ * > **一個為了省流量而不載的東西，如果它不載時長得像壞了，那個流量就沒省到。**
+ * ⚠️ 而 `muted autoplay loop playsinline` 是「像 GIF 一樣」的那一組——
+ * 少了 `muted`，多數瀏覽器不准自動播；少了 `playsinline`，iOS 會全螢幕接管。
+ *
+ * 🔴 每一支都要有 `figcaption`：**影片沒有字幕**，那是唯一說得出
+ * 「這裡發生了什麼」的地方——也是搜尋引擎唯一讀得到的。
+ */
+function howToBlock(ids: readonly string[]): string {
+  const items = ids
+    .map((id) => interactionById(id))
+    .filter((i): i is Interaction => i !== undefined)
+  if (items.length === 0) return ''
+  const figures = items.map((i) =>
+    `<figure><video src="${i.clip}" muted autoplay loop playsinline preload="metadata"` +
+    ` aria-label="${esc(i.alt)}"></video>` +
+    `<figcaption><b>${esc(i.label)}</b>——${esc(i.alt)}</figcaption></figure>`).join('')
+  return `<section class="howto"><h2>這一課會用到的操作</h2>` +
+    `<p class="meta">看不清楚？每一段都會一直重播。</p>${figures}</section>`
+}
+
 function navBlock(n: LessonNeighbours): string {
   if (n.prev === undefined && n.next === undefined) return ''
   const cell = (page: LessonPage | undefined, dir: '上一課' | '下一課'): string => {
@@ -248,6 +283,23 @@ function isoDuration(text: string): string | undefined {
   return m[2] === '小時' ? `PT${m[1]}H` : `PT${m[1]}M`
 }
 
+/**
+ * 把「這一課會用到的操作」插進課文的**開頭那一段之後**。
+ *
+ * ⚠️ 位置要**可預測**：課文的結構是 `# 標題` → `> 一句話` → 其餘，
+ * 所以插在第一個 `</blockquote>` 之後；沒有引言就插在 `</h1>` 之後。
+ * 🔴 兩個都找不到就**插在最前面**——寧可位置不完美，也不要安靜地不插。
+ */
+function withHowTo(html: string, ids: readonly string[]): string {
+  const block = howToBlock(ids)
+  if (block === '') return html
+  for (const tag of ['</blockquote>', '</h1>']) {
+    const i = html.indexOf(tag)
+    if (i >= 0) return html.slice(0, i + tag.length) + block + html.slice(i + tag.length)
+  }
+  return block + html
+}
+
 export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): string {
   const crumb = `<a href="/lessons/">課程</a> › <a href="/lessons/${encodeURIComponent(p.track.id)}/">${esc(p.track.name)}</a>`
   // 🔴 **「在編輯器打開」用的是既有的深連結**（`lessonIdFromQuery`，`core/lesson.ts`）
@@ -258,7 +310,7 @@ export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): 
     description: descriptionOf(p),
     path: lessonDocHref(p.lesson.id),
     crumb,
-    body: md.render(p.md) + open + navBlock(neighbours),
+    body: withHowTo(md.render(p.md), p.lesson.interactions ?? []) + open + navBlock(neighbours),
     // 🔴 **`Course` 說的每一句都要是實話**：`provider` 是我們、`inLanguage` 是課文的語言，
     //    而 `timeRequired` 只在課程自己宣告了 `estimate` 時才寫（ISO 8601 duration）。
     //    ⚠️ 猜一個時間填進去，是拿信任換一個欄位。

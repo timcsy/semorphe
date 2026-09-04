@@ -16,7 +16,12 @@
  * dist/lessons/<軌道>/<課>/index.html          課文（零 JS）
  * dist/sitemap.xml                            給 Google 的目錄（含首頁）
  * dist/robots.txt                             指出 sitemap 在哪
+ * dist/clips/*.webm                           課文頁用的操作片段
  * ```
+ *
+ * ⚠️ **片段的來源是 `assets/clips/`，不是 `public/`**：`public/` 底下的東西
+ * 是「每一頁都可能用到的資源」，而這幾支只有課文頁在用。⚠️ 而複製一份進 `public/`
+ * 會讓同一個檔在版控裡有兩份——`public/blockly-media` 那一課記著同樣的事。
  *
  * ## ⚠️ dev server 也要有——而這是實測抓到的
  *
@@ -30,7 +35,7 @@
  * 🟢 所以 dev 走 middleware **當場算一頁**（同樣那幾支純函式，沒有第二份實作），
  * 而且順便拿到「改了 `lesson.md` → 重新整理就看得到」。
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync, cpSync, existsSync, createReadStream } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { Plugin } from 'vite'
 import { readTracks, readLessonsOf, lastmodFromGit } from './read-lessons'
@@ -42,6 +47,9 @@ const write = (outDir: string, rel: string, html: string): void => {
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, 'index.html'), html, 'utf8')
 }
+
+/** 操作片段的來源——由 `tools/demo/record-clips.spec.ts` 錄、`to-gif.sh` 轉。 */
+const CLIPS = resolve('assets/clips')
 
 export function lessonPages(opts: { root?: string } = {}): Plugin {
   const lessonsRoot = resolve(opts.root ?? 'lessons')
@@ -93,6 +101,15 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
         const url = (req.url ?? '').split('?')[0]
         // ⚠️ dev 也要供這兩個——不然「上線前先看一眼 sitemap」做不到，
         //    而它們正是最容易寫錯又最沒有人檢查的兩個檔。
+        // ⚠️ dev 也要供片段——不然開發時課文頁上是三塊黑方框，
+        //    而那**看起來像壞了**（它只是檔案不在那條路上）。
+        if (url.startsWith('/clips/') && url.endsWith('.webm')) {
+          const f = join(CLIPS, url.slice('/clips/'.length))
+          if (!existsSync(f)) return next()
+          res.setHeader('content-type', 'video/webm')
+          createReadStream(f).pipe(res)
+          return
+        }
         if (url === '/sitemap.xml' || url === '/robots.txt') {
           const gt = lastmodFromGit('lessons')
           const tracks = readTracks(lessonsRoot)
@@ -142,6 +159,9 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
         counts.push({ track, count: pages.length })
       }
       write(outDir, 'lessons', renderIndex(counts))
+      // 🔴 片段跟著頁一起出——⚠️ 沒有它們的話那幾個 `<video>` 是壞的，
+      //    而**壞掉的樣子是一塊黑色方框**，不是錯誤。
+      if (existsSync(CLIPS)) cpSync(CLIPS, join(outDir, 'clips'), { recursive: true })
       // 🔴 **首頁也要在 sitemap 裡**——它是全站權重最高的一頁，
       //    而它不是這個 plugin 產的，所以要在這裡明確列進去。
       writeFileSync(join(outDir, 'sitemap.xml'), renderSitemap(sitemap), 'utf8')

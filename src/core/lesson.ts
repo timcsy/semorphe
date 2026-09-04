@@ -35,6 +35,7 @@
  * - **不呈現課文**（`lesson.md`）——那是另一刀，而它牽到還沒拍板的互動教材形式。
  * - **不知道任何語言**——`components` 對它只是一串身分。
  */
+import { interactionById } from './interactions'
 import type { ControlId } from './host/controls'
 
 /**
@@ -167,6 +168,15 @@ export interface Lesson {
   readonly pins: LessonPins
   /** 這堂課要開的元件身分——🔴 **量出來的，不是列出來的**（見 `write-lesson` skill） */
   readonly components: readonly string[]
+  /**
+   * 這一課會用到哪些**操作**（`core/interactions.ts` 的 id）。
+   *
+   * 🔴 課程只說「我會用到什麼」，**不說它長什麼樣**——長相住在登錄表，
+   * 而那個片段是腳本錄的。少了這一層，操作說明會散在 66 份課文裡各自腐爛。
+   *
+   * ⚠️ 省略 ＝ 這一課不需要教操作（多數課都是這樣）。
+   */
+  readonly interactions?: readonly string[]
 }
 
 /**
@@ -198,6 +208,19 @@ export function parseLesson(id: string, raw: unknown): Lesson {
   if (psc !== undefined && !['hidden', 'ghost', 'editable'].includes(String(psc))) {
     throw new Error(`教案 ${id}：pins.scaffold 不是 hidden／ghost／editable`)
   }
+  // 🔴 **認不得的 id 要當場丟錯**，不要安靜地跳過——一個拼錯的 `interactions`
+  //    會讓那一課少一段操作說明，而**畫面上看不出少了什麼**。
+  const inter = o.interactions
+  if (inter !== undefined) {
+    if (!Array.isArray(inter)) throw new Error(`教案 ${id}：interactions 不是陣列`)
+    for (const x of inter) {
+      if (typeof x !== 'string') throw new Error(`教案 ${id}：interactions 裡有不是字串的東西`)
+      if (interactionById(x) === undefined) {
+        throw new Error(`教案 ${id}：interactions 有認不得的 id「${x}」` +
+          `——登錄表在 core/interactions.ts`)
+      }
+    }
+  }
   return {
     id,
     title: o.title,
@@ -207,6 +230,7 @@ export function parseLesson(id: string, raw: unknown): Lesson {
       scaffold: psc as ScaffoldMode | undefined,
     },
     components: o.components as string[],
+    interactions: inter as string[] | undefined,
   }
 }
 
