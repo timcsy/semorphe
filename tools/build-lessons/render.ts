@@ -42,6 +42,21 @@ const esc = (s: string): string =>
  * ⚠️ 一個 `<link rel=stylesheet>` 就是一次額外的往返，而這幾頁的全部賣點
  * 就是「打開就在那裡」。它只有 1KB，內嵌比較誠實。
  */
+/**
+ * 🪦 **「滑過一行，那塊積木亮起來」那段腳本已於 2026-09-05 退場。**
+ *
+ * 它做得出來、也很好用，而**課文頁有一條硬性零：不得載入任何 JavaScript**
+ * （`audit-lesson-pages` ④，理由是「打開就在那裡」——一旦有人在這裡
+ * import 了什麼，秒開就沒了）。我不繞過那條規矩。
+ *
+ * 🟢 而換來的做法更好：**把行號直接畫進積木旁邊**（見
+ * `tools/demo/record-blockmaps.spec.ts` 的 badges）。讀者用編號配對，
+ * 那是 split-attention 研究說的 integrated format。
+ *
+ * > **一個需要滑鼠才成立的對照，在紙上、在手機上、在讀螢幕的人那裡
+ * > 都不成立——而編號到處都成立。**
+ */
+
 const CSS = `
 :root{color-scheme:light dark;--fg:#1a1a1a;--bg:#fff;--muted:#666;--line:#e5e5e5;--accent:#0b6ea8;--code-bg:#f6f8fa}
 @media(prefers-color-scheme:dark){:root{--fg:#e6e6e6;--bg:#161719;--muted:#9aa0a6;--line:#2e3033;--accent:#7ec8f0;--code-bg:#1e2023}}
@@ -81,6 +96,33 @@ th,td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left}
 .cards a{display:block;padding:.8rem 1rem;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--fg)}
 .cards a:hover{border-color:var(--accent)}
 .cards small{color:var(--muted);display:block;margin-top:.2rem}
+
+/* ─── 同一支程式，兩種看法 ───
+ * ⚠️⚠️ **這一整段住在一個模板字串裡——註解裡【一顆反引號都不能有】。**
+ *   同一個坑 2026-09-05 踩了兩次：在註解裡用反引號括一個 CSS 名字，
+ *   當場把整個字串關掉，而 esbuild 的錯誤指向下一個看起來像語法的東西。
+ *   > 一個把字串關掉的字元，它造成的錯誤訊息永遠指著別的地方。
+ *   規矩：這裡的註解用「」括名字。 */
+.blockmap{margin:1.6rem 0;padding:1rem 1.1rem;border:1px solid var(--line);border-radius:10px;background:var(--code-bg)}
+/* 🔴 這一張圖破出文字欄：內容欄是 44rem（約 704px），兩欄各 330px
+ * ——積木在那個寬度下擠成一團，而「看清楚積木長什麼樣」正是它存在的理由。
+ * ⚠️ 只在放得下的時候破，窄螢幕仍然乖乖待在欄內。 */
+@media(min-width:1040px){.blockmap{width:min(62rem,calc(100vw - 4rem));margin-left:50%;transform:translateX(-50%)}}
+.blockmap h2{font-size:1rem;margin:0 0 .2rem;border:none;padding:0}
+.blockmap p.meta{margin:0 0 .9rem}
+.bm-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:1rem;align-items:start}
+@media(max-width:720px){.bm-grid{grid-template-columns:1fr}}
+.bm-code{margin:0;padding:.6rem .2rem;background:var(--bg);border:1px solid var(--line);
+  border-radius:8px;overflow-x:auto;font:13px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace}
+/* ⚠️ 積木那半也要一塊底：兩邊長得像一對，讀者才會把它們當成同一個東西的兩面。
+ * 而底色是淺的即使在深色模式——積木本身是亮色的，深底會讓它們刺眼地浮起來。 */
+.bm-blocks{background:#fafafa;border:1px solid var(--line);border-radius:8px;padding:.5rem}
+.bm-line{display:block;padding:0 .6rem;white-space:pre}
+/* 🔴 左邊的號碼與積木上那顆圓點是**同一個編號**——讀者靠它配對。
+ * 所以它不是裝飾性的行號：有對到積木的那幾行，號碼要看得出是「可以配對的」。 */
+.bm-line i{display:inline-block;width:1.9em;color:var(--muted);font-style:normal;user-select:none}
+.bm-line[data-blocks] i{color:var(--fg);font-weight:700}
+.bm-blocks svg{width:100%;height:auto;display:block}
 .howto{margin:1.6rem 0 0;padding:1rem 1.1rem;border:1px solid var(--line);border-radius:10px;background:var(--code-bg)}
 .howto h2{font-size:1rem;margin:0 0 .2rem;border:none;padding:0}
 .howto p.meta{margin:0 0 .9rem}
@@ -259,6 +301,81 @@ function howToBlock(ids: readonly string[]): string {
     `<p class="meta">看不清楚？每一段都會一直重播。</p>${figures}</section>`
 }
 
+/**
+ * **同一支程式，兩種看法**——逐行對齊的程式碼 ↔ 積木。
+ *
+ * ## 🔴 為什麼是「對照」而不是「並排」
+ *
+ * 多重表徵（Ainsworth 的 DeFT）最反直覺的一條：
+ *
+ * > **兩個表徵並排放著，不會自己教會任何人它們是同一個東西。**
+ *
+ * 學習者需要**被支持著做那個翻譯**。所以這一塊做的是：
+ * 滑過（或用鍵盤走到）任何一行，**對應的那幾塊積木亮起來**。
+ *
+ * 🟢 而那正是編輯器裡本來就有的動作（`app.ts` 的 `linkNode`：點一顆積木 →
+ * 程式碼那幾行反白）。這一頁**重現的是那個手勢**，不是一張截圖
+ * ——讀到這裡的人學會的，是他等一下打開編輯器要做的事。
+ *
+ * ## ⚠️ 亮哪幾塊：**最內層的那些**
+ *
+ * 一行程式碼會落在好幾塊積木的範圍裡（`int n = 1;` 在 `main` 裡、
+ * `main` 在 `program` 裡）。全部亮的話等於全部沒亮。
+ * 所以取**跨度最小**的那些——它們就是「這一行」本身的那幾塊。
+ *
+ * ## 沒有 JS 的時候
+ *
+ * 兩邊照樣都在，只是不會互相點亮——⚠️ 它**降級成並排**，而不是空白。
+ */
+function blockmapBlock(p: LessonPage): string {
+  const bm = p.blockmap
+  if (bm === undefined || bm.blocks.length === 0) return ''
+  const lines = bm.code.split('\n')
+  // 🔴 每一行帶著「這一行該亮哪幾塊」——**算在建置期**，頁面上不做這個推導。
+  //    ⚠️ 那份跨度的判斷只該有一份；放到頁面的 script 裡就是第二份。
+  const rows = lines.map((text, i) => {
+    const line = i + 1
+    // ⚠️ **只有「號碼印在積木上」的那幾行**才標成可以配對的。
+    //    收尾的大括號那幾行也落在某塊積木的範圍裡，而它們沒有自己的號碼
+    //    ——標了的話學生會去找一個不存在的圓點。
+    // ⚠️ 舊格式的對照沒有這一格——**當成「沒有配對」而不是讓建置死掉**。
+    //    「有對照而它是舊格式」由護欄說出是哪幾課（`audit-lesson-blockmaps`）。
+    const paired = (bm.badgeLines ?? []).includes(line)
+    return `<span class="bm-line"${paired ? ' data-blocks="1"' : ''}>` +
+      `<i>${line}</i>${esc(text === '' ? ' ' : text)}</span>`
+  }).join('')
+  return `<section class="blockmap"><h2>同一支程式，兩種看法</h2>` +
+    // ⚠️ **不要寫「左邊／右邊」**：手機上它們是上下（見 bm-grid 的斷點）。
+    `<p class="meta">程式碼的每一行都有一個號碼，而那個號碼就印在對應的積木上。` +
+    `<b>它們不是兩個東西，是同一個東西的兩種寫法。</b></p>` +
+    `<div class="bm-grid"><pre class="bm-code">${rows}</pre>` +
+    `<div class="bm-blocks">${bm.svg}</div></div>` +
+    // ⚠️ 這裡是**已經渲染完的 HTML**，不是 markdown——星號不會變粗體
+    `<p class="meta">⚠️ 這張圖是<b>產生</b>的，不是截圖——課文裡的程式碼改了，它會跟著改。</p>` +
+    `</section>`
+}
+
+/**
+ * 把「兩種看法」插在**〈完成的樣子〉那段程式碼的正下方**。
+ *
+ * 🔴 位置就是它的教學意義：讀者剛看完那段程式碼，下一眼就該看到它變成積木。
+ * 隔一段距離的話，他要**自己記住上面寫了什麼再往下對**——那正是
+ * split-attention（Sweller）說最貴的那件事。
+ *
+ * ⚠️ 找不到那個標題就**放在最後**，不要安靜地不放。
+ */
+function withBlockmap(html: string, p: LessonPage): string {
+  const block = blockmapBlock(p)
+  if (block === '') return html
+  const h = html.indexOf('完成的樣子')
+  if (h < 0) return html + block
+  // 那個標題之後的第一個 </pre> ＝ 那段程式碼的結尾
+  const end = html.indexOf('</pre>', h)
+  if (end < 0) return html + block
+  const at = end + '</pre>'.length
+  return html.slice(0, at) + block + html.slice(at)
+}
+
 function navBlock(n: LessonNeighbours): string {
   if (n.prev === undefined && n.next === undefined) return ''
   const cell = (page: LessonPage | undefined, dir: '上一課' | '下一課'): string => {
@@ -310,7 +427,8 @@ export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): 
     description: descriptionOf(p),
     path: lessonDocHref(p.lesson.id),
     crumb,
-    body: withHowTo(md.render(p.md), p.lesson.interactions ?? []) + open + navBlock(neighbours),
+    body: withBlockmap(withHowTo(md.render(p.md), p.lesson.interactions ?? []), p)
+      + open + navBlock(neighbours),
     // 🔴 **`Course` 說的每一句都要是實話**：`provider` 是我們、`inLanguage` 是課文的語言，
     //    而 `timeRequired` 只在課程自己宣告了 `estimate` 時才寫（ISO 8601 duration）。
     //    ⚠️ 猜一個時間填進去，是拿信任換一個欄位。

@@ -24,7 +24,26 @@
       "check": {
         "stdout": "Hello!\n",
         "stdin": []
-      }
+      },
+      "predict": "choice",
+      "choices": [
+        {
+          "text": "Hello!",
+          "correct": true
+        },
+        {
+          "text": "\"Hello!\"",
+          "why": "以為引號也會被印出來——它們是【告訴程式這是一段文字】的記號，不是內容"
+        },
+        {
+          "text": "cout << \"Hello!\" << endl;",
+          "why": "以為程式會把你寫的那一行照抄出來"
+        },
+        {
+          "text": "（什麼都沒印）",
+          "why": "以為要先按什麼才會執行——按【執行】就是那一下"
+        }
+      ]
     },
     {
       "id": "ex1",

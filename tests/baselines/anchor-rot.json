@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "auditFileCount": 96,
+    "auditFileCount": 97,
     "trueIdentityCount": 332
   },
   "badAnchor": 0,
-  "note": "⚠️ 2026-09-03（課文的出口）：護欄檔數 95 → 96——新增第一百零一條（`audit-lesson-pages`：每一堂課都要有一頁讀得到的課文）。**輸入量上調，不是缺陷上調**（錨錯了仍然是 0）。\n"
+  "note": "⚠️ 2026-09-05（課文的程式碼↔積木對照）：掃描的 audit 檔 96 → 97——新增第一百零二條 `audit-lesson-blockmaps`。**錨錯了停在 0。**\n"
 }

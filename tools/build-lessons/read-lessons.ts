@@ -39,6 +39,35 @@ export interface LessonPage {
    * 但不可以寫一個假的——Google 會學會不看它。
    */
   readonly lastmod?: Date
+  /**
+   * **程式碼 ↔ 積木的逐行對照**——`tools/demo/record-blockmaps.spec.ts` 產的。
+   *
+   * 🔴 使用者 2026-09-04：「我比較在意的是程式碼跟積木或是節點的對照，
+   * **目前使用者幾乎沒有辦法從課程了解積木長怎樣**」。
+   *
+   * ⚠️ 沒有就是 `undefined`（那一課的頁少一塊，而不是整個建置失敗）
+   * ——⚠️ 而**「少了」與「過期了」都由護欄盯**
+   * （`tests/integration/audit-lesson-blockmaps.test.ts`），不是靠這裡。
+   */
+  readonly blockmap?: BlockMap
+}
+
+/** 一課的對照：那張 SVG，以及每一塊積木對到程式碼的哪幾行。 */
+export interface BlockMap {
+  /**
+   * 產生時用的那段程式碼的雜湊（sha256 前 16 碼）。
+   *
+   * 🔴 **它是「會過期就變紅」的載體**：護欄拿它跟 `lesson.md` 現在的
+   * 〈完成的樣子〉比，不一樣就紅。少了它，這張圖會安靜地變成一張
+   * **與課文不符的舊圖**——而那正是手工截圖的病。
+   */
+  readonly codeHash: string
+  /** 產生這張圖的那一段程式碼——⚠️ 頁面左半用它，**不再去課文抽一次**。 */
+  readonly code: string
+  readonly blocks: readonly { readonly id: string; readonly startLine: number; readonly endLine: number }[]
+  /** 哪幾行的號碼有印在積木上——課文頁靠它決定哪幾行標成「可以配對的」。 */
+  readonly badgeLines: readonly number[]
+  readonly svg: string
 }
 
 /**
@@ -113,10 +142,14 @@ export function readLessonsOf(root: string, track: Track, gitTimes?: Map<string,
     //    「這堂課還沒寫」長得一模一樣（靜默降級反模式）。
     //    ⚠️ 而 `audit-lessons` 已經在守「每一課都要有 lesson.md」，這裡是第二道。
     if (!existsSync(m)) throw new Error(`教案 ${id}：沒有 lesson.md，產不出頁`)
+    const bm = join(root, '..', 'assets/blockmaps', `${id.replace('/', '__')}.json`)
     out.push({
       lesson: parseLesson(id, JSON.parse(readFileSync(j, 'utf8'))),
       track,
       md: readFileSync(m, 'utf8'),
+      // ⚠️ 讀不到就沒有——**不要在這裡丟錯**：一個沒有對照的頁仍然是一頁課文，
+      //    而「少了」是護欄的事（它說得出少了哪幾課，這裡只會說第一課）。
+      blockmap: existsSync(bm) ? JSON.parse(readFileSync(bm, 'utf8')) : undefined,
       // ⚠️ git 的路徑是**相對於 repo 根**的，而 `m` 是絕對路徑
       lastmod: gitTimes?.get(relative(process.cwd(), m)),
     })

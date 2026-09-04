@@ -5,7 +5,7 @@
   },
   "corpus": {
     "syntaxComplete": 693,
-    "syntaxErrorFragments": 229,
+    "syntaxErrorFragments": 230,
     "totalChars": 103974
   },
   "residual2": {
@@ -83,5 +83,5 @@
       "nonstandard_but_valid": 7
     }
   },
-  "note": "⚠️ 2026-09-04（練習題鋪滿 66 課 ＋ 兩個直譯器缺陷）：完整語料段 692 → 693、殘缺語料段 228 → 229（殘差字元數停在 387，16 個節點，一個未動）——**語料變大，缺陷數一筆未動**。新增 `tests/integration/user-function-wins.test.ts`（使用者自己定義的函式贏過內建名字樣式 · 結構陣列的每一格是一個結構；**兩個注入都驗過會紅**）。\n"
+  "note": "⚠️ 2026-09-05（課文的程式碼↔積木對照）：語料上調——**缺陷數一筆未動**。新增第一百零二條護欄 `audit-lesson-blockmaps`（對照不得過期：拿產生時記的 codeHash 跟課文現在的〈完成的樣子〉比；**兩個注入驗過會紅**）＋ `tools/demo/record-blockmaps.spec.ts`（64 課的對照）。\n"
 }

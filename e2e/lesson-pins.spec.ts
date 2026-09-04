@@ -768,7 +768,10 @@ test('★ 預測：猜跑幾次——而揭曉的徽章就在那顆迴圈旁邊'
 test('★ 預測：沒有迴圈、輸出短 → 猜輸出；猜對了要比程式跑對更大聲', async ({ page }) => {
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=cpp-beginner%2F01-%E5%8D%B0%E5%87%BA%E4%B8%80%E5%8F%A5%E8%A9%B1',
+  // ⚠️ **用第 4 課，不是第 1 課**：第 1 課 2026-09-05 起宣告了 `predict: 'choice'`
+  //    （它的干擾項問「引號會不會被印出來」），而這一支驗的是**自動判定**那一條。
+  //    > 一條測試如果錨在「某一課剛好沒有宣告」上，那一課宣告的那天它會紅。
+  await page.goto('/?lesson=cpp-beginner%2F04-%E7%A8%8B%E5%BC%8F%E5%BE%9E%E5%93%AA%E9%96%8B%E5%A7%8B',
     { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(7000)
 

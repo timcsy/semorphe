@@ -159,6 +159,24 @@ lessons/cpp-beginner/10-重複/
 
 完整做法見 `knowledge/skills/write-lesson/SKILL.md`。
 
+## 🔴 改了〈完成的樣子〉之後，要重產那張對照
+
+每一課的靜態頁底下有一張「同一支程式，兩種看法」——**程式碼的每一行有一個號碼，
+而那個號碼印在對應的積木上**。它是**產生**的，不是截圖：
+
+```bash
+npx playwright test tools/demo/record-blockmaps.spec.ts \
+  --config=tools/demo/playwright.demo.config.ts
+```
+
+⚠️ **忘了重產不會安靜地過去**：第一百零二條護欄拿產生時記下的 `codeHash`
+跟課文現在的〈完成的樣子〉比，不一樣就紅，而且說得出是哪一課。
+
+> **一張手工截的圖是死的；一份腳本產的對照是活的——課文改了它會紅。**
+
+⚠️ 而課文頁有一條硬性零：**不得載入任何 JavaScript**。所以那張圖是**靜態**的
+——用編號配對，不是滑鼠。它在紙上、在手機上、在讀螢幕的人那裡都成立。
+
 ## `lesson.md` 的骨架
 
 ```
