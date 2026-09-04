@@ -60,7 +60,18 @@ export class SemanticInterpreter implements ExecutionContext {
   private stepRecords: StepInfo[] = []
   private recordSteps = false
   /** 這一次執行到過的節點 id——⚠️ 每次 `execute` 開頭清空，見 `getVisitedNodes`。 */
-  private visited = new Set<string>()
+  /**
+   * **這一次執行，每一顆節點被走過幾次。**
+   *
+   * 🔴 從 `Set` 換成 `Map` 是為了「迴圈跑了幾次」（2026-09-04）——而
+   * **這裡不知道誰是迴圈**（那是元件的知識，核心不重新認識語言）。
+   * 它只記次數；「哪一塊是重複器」由**看得到結構的那一側**推
+   * （見 `BlocklyPanel.markIterations`：**一個孩子跑得比自己多的積木**）。
+   *
+   * > **要說出「迴圈跑了幾次」，核心不必認得迴圈——
+   * > 它只要誠實地數，讓看得到結構的人去比。**
+   */
+  private visitCounts = new Map<string, number>()
   private inputProvider: (() => Promise<string>) | null = null
   private outputCallback: ((text: string) => void) | null = null
   private aborted = false
@@ -340,13 +351,24 @@ export class SemanticInterpreter implements ExecutionContext {
    * 不是判對錯。
    */
   getVisitedNodes(): ReadonlySet<string> {
-    return this.visited
+    return new Set(this.visitCounts.keys())
+  }
+
+  /**
+   * **每一顆節點被走過幾次**——「迴圈跑了幾次」的原料。
+   *
+   * ⚠️ 迴圈**自己**的次數是 1（`executeNode` 對那顆 `while` 只呼叫一次），
+   * 而它**身體裡**的那幾句是 N。所以「跑了幾次」是**孩子比自己多出來的倍數**，
+   * 不是這裡任何一個數字本身。
+   */
+  getVisitCounts(): ReadonlyMap<string, number> {
+    return this.visitCounts
   }
 
   async execute(program: SemanticNode, stdin: string[] = []): Promise<void> {
     // ⚠️ **每一次開跑都要清**——不清的話第二次執行會把第一次到過的算進去，
     //    而那個 bug 的樣子是「沒跑到的積木越來越少」，看起來像是自己好了。
-    this.visited.clear()
+    this.visitCounts.clear()
     this.scope = new Scope()
     this.io = new IOSystem(stdin)
     if (this.outputCallback) this.io.onOutput(this.outputCallback)
@@ -445,7 +467,7 @@ export class SemanticInterpreter implements ExecutionContext {
     //
     // ⚠️ 它**不是**除錯的步進紀錄（那一份要 `debug_step` 標註、要快照作用域，
     //    而且只在除錯模式開著）。覆蓋要的只是「有沒有到過」。
-    if (node.id !== undefined) this.visited.add(node.id)
+    if (node.id !== undefined) this.visitCounts.set(node.id, (this.visitCounts.get(node.id) ?? 0) + 1)
     const component = node.componentId
 
     const executor = this.executorRegistry.get(component)

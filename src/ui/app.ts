@@ -58,6 +58,7 @@ import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type ScaffoldMode } from '../core/lesson'
 import { markTaskPassed, isTaskPassed, passedCount } from '../core/progress'
+import { iterationCounts } from '../core/iterations'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
@@ -377,8 +378,9 @@ export class App {
       //    而那個 bug 的樣子是「第一次對、第二次也對，第三次莫名其妙不對」
       if (e.status === 'running') {
         this.runTranscript = ''
-        // ⚠️ 上一次的覆蓋標記在這一次開跑時就過期了
+        // ⚠️ 上一次的覆蓋標記與次數標註，在這一次開跑時就過期了
         this.blocklyPanel?.clearNeverRan()
+        this.blocklyPanel?.clearIterations()
         return
       }
       if (e.status !== 'completed') return
@@ -396,6 +398,18 @@ export class App {
       const n = this.blocklyPanel?.markNeverRan(new Set(e.visited)) ?? 0
       if (n > 0) consolePanel.log(msg('COVERAGE_NEVER_RAN', `⚠️ 有 ${n} 塊積木這一次沒有被跑到——是故意的嗎？`)
         .replace('{n}', String(n)))
+      // 🔴 **迴圈跑了幾次**——同一份資料的第二個問題（2026-09-04 第三刀）。
+      //
+      //    初學者的另一種 bug 是「跑的次數不對」（差一錯誤），而那是
+      //    **看不見的**：程式跑完了、沒有錯誤、輸出少一行，而他只能一行一行讀。
+      //
+      // ⚠️ 主控台**不再說一次**：數字已經標在那顆迴圈上了，
+      //    而重複說一遍會讓主控台變成一份沒有人讀的日誌。
+      //    ⚠️ 樹要用**顯示樹**（學生看到的那一棵），不是內部樹——
+      //    id 對不上的話一塊都標不出來，而畫面上與「這次沒有迴圈」一模一樣。
+      this.blocklyPanel?.markIterations(
+        iterationCounts(this.syncController?.getDisplayTree(), new Map(Object.entries(e.counts))),
+      )
     })
   }
 
@@ -2086,6 +2100,7 @@ export class App {
       // > **一個叫 `onXxx` 的方法，如果它是指派而不是訂閱，
       // > 那麼「多接一條線」就是「剪掉原本那一條」。**
       this.blocklyPanel?.clearNeverRan()
+      this.blocklyPanel?.clearIterations()
       if (this._codeToBlocksInProgress) return
       // 🔴 **記錄「誰編輯了」要在殘態守衛【之前】**（2026-08-25 瀏覽器實測抓到）。
       //

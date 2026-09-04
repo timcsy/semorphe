@@ -20,7 +20,16 @@ export interface SemanticEvents {
    * ⚠️ 發的是「到過的」不是「沒到過的」：誰算「應該要到」是視圖的知識
    * （它要排掉骨架、排掉還沒同步進樹的積木），執行器不該認得那些。
    */
-  'execution:coverage': { visited: readonly string[] }
+  /**
+   * 這一次執行**到過誰、各幾次**。
+   *
+   * 🔴 **兩者是同一件事的兩個精度，所以是一個事件不是兩個**：
+   * `visited` ＝ `counts` 的鍵。分成兩個事件的話，收的人要自己保證
+   * 它們來自**同一次執行**——而那是一個遲早會漏的義務。
+   *
+   * ⚠️ 廣播的是**到過的**，不是「沒到過的」：誰算「應該要到」是視圖的知識。
+   */
+  'execution:coverage': { visited: readonly string[]; counts: Readonly<Record<string, number>> }
   /**
    * ⚠️ **這條線的方向是刻意反過來的。**
    *

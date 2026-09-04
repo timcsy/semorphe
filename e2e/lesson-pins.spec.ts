@@ -596,3 +596,66 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   expect(await page.locator('#status-controls .status-item-btn[data-control-id="task"]').innerText(),
     '🔴 按了「切過去」而沒有切').toContain('跟著做')
 })
+
+/**
+ * 🔴 **迴圈跑了幾次**——初學者的另一種 bug 是「跑的次數不對」（差一錯誤），
+ * 而那是**看不見的**：程式跑完了、沒有錯誤、輸出少一行，
+ * 而他只能一行一行讀。
+ *
+ * ⚠️ 而它與「沒跑到」共用同一份資料，也共用同一條規矩：
+ * 它在**描述發生了什麼**，不在說對錯。
+ */
+test('★ 迴圈跑了幾次：巢狀是【倍數】不是總次數', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type(
+    'for (int i = 0; i < 3; i = i + 1) {\nfor (int j = 0; j < 4; j = j + 1) {\ncout << i << j << endl;',
+    { delay: 10 })
+  await page.waitForTimeout(3500)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(4000)
+
+  // ⚠️ 入口條件：真的跑了 3×4 圈（沒跑的話下面驗的是一個空畫面）
+  expect(
+    (await page.locator('.console-output').innerText()).trim().split('\n').length,
+    '🔴 這支程式沒有跑出 12 行 → 下面兩條是空過的',
+  ).toBe(12)
+
+  const badges = await page.$$eval('.iteration-badge-text', (e) => e.map((x) => x.textContent))
+  // 🔴 內層是 **×4**（12 ÷ 3），不是 ×12——學生看著 ×12 會想「我明明寫 4」
+  expect(
+    [...badges].sort(),
+    `🔴 巢狀迴圈的次數不對：${JSON.stringify(badges)}`,
+  ).toEqual(['×3', '×4'])
+
+  // 🔴 **兩顆都要真的看得見**——第一版琥珀色的字落在橘色的迴圈積木上
+  //    （而迴圈正是這個功能唯一會標的積木），內層那顆等於沒有畫。
+  const boxes = await page.$$eval('.iteration-badge', (e) => e.map((x) => {
+    const r = (x as SVGGElement).getBoundingClientRect()
+    return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width) }
+  }))
+  expect(boxes.every((b) => b.w > 0), '🔴 徽章沒有實際尺寸').toBe(true)
+  // ⚠️ 兩顆在**同一條左側的槽**上（像行號），而**不在同一列**
+  expect(
+    new Set(boxes.map((b) => b.x)).size,
+    '🔴 兩顆的水平位置不同——它們該對齊成一條槽',
+  ).toBe(1)
+  expect(
+    new Set(boxes.map((b) => b.y)).size,
+    '🔴 兩顆疊在同一列上——那就分不出哪個數字在講哪一顆迴圈',
+  ).toBe(2)
+
+  // ⚠️ 改了積木，上一次的數字就過期了
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.type(' ', { delay: 10 })
+  await page.waitForTimeout(2500)
+  expect(await page.locator('.iteration-badge').count(), '🔴 改過之後數字還留著').toBe(0)
+})

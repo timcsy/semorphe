@@ -5,8 +5,8 @@
   },
   "scanned": {
     "files": 34,
-    "importLines": 222,
-    "anyMethodCalls": 2857
+    "importLines": 223,
+    "anyMethodCalls": 2876
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,
@@ -14,7 +14,7 @@
   "directViewCalls": 23,
   "visibleNotRatcheted": {
     "compositionRootImportsLanguage": 0,
-    "compositionRootViewCalls": 63
+    "compositionRootViewCalls": 66
   },
   "details": {
     "viewImportsLanguage": [],
@@ -46,5 +46,5 @@
       "src/ui/execution-controller.ts → consolePanel.clear"
     ]
   },
-  "note": "⚠️ 2026-09-04（一課多題）：方法呼叫數 2841 → 2857、import 行數 221 → 222、組裝點呼叫 62 → 63——**輸入量上調，不是耦合變差**。新增 `core/progress.ts`（通過紀錄，自己一格 localStorage：匯出一份作品給同學，不該把「你第 3 題還沒過」一起送出去）＋ `tests/unit/core/progress.test.ts`；`core/lesson.ts` 的 `check` 升格成 `tasks`（`LessonTask`／`parseTasks`／`taskById`／`FREE_PRACTICE`）；登錄表多一顆 `task` picker；`ConsolePanel.offerNextTask`。🔴 它修的是一個**會在學生做對事情時說他錯**的裁判。\n"
+  "note": "⚠️ 2026-09-04（迴圈跑了幾次）：方法呼叫數 2857 → 2876、import 行數 222 → 223——**輸入量上調，不是耦合變差**。新增 `core/iterations.ts`（把「每顆節點走過幾次」換算成「這顆迴圈重複了幾輪」）＋ `tests/unit/core/iterations.test.ts`；直譯器的 `visited: Set` 換成 `visitCounts: Map`（同一個漏斗，一次 `Map.set`）；匯流排的 `execution:coverage` 多帶 `counts`（🔴 **一個事件不是兩個**——分開的話收的人要自己保證它們來自同一次執行）；`BlocklyPanel.markIterations` 只畫。🔴 「哪一塊是迴圈」讀 `control_flow` 標註，「哪一格是身體」讀 `bodySlotsOf`——**兩份判斷都已經有家了，這一刀一份新的都沒寫**。\n"
 }

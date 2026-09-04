@@ -1551,6 +1551,102 @@ export class BlocklyPanel implements ViewHost {
     return n
   }
 
+  /**
+   * **把「這顆迴圈跑了幾輪」畫上去。**
+   *
+   * 🔴 這裡**只負責畫**——「哪一塊是迴圈」與「幾輪」都在 `core/iterations.ts`
+   * 算好了（它讀元件的 `control_flow` 標註）。
+   *
+   * > **一個視圖如果自己推導教學上的判斷，那個判斷就會有第二份
+   * > ——而兩份遲早會不同意。**
+   *
+   * @param times 迴圈**節點 id** → 跑了幾輪
+   * @returns 標了幾塊
+   */
+  markIterations(times: ReadonlyMap<string, number>): number {
+    if (!this.workspace) return 0
+    this.clearIterations()
+    let n = 0
+    for (const block of this.workspace.getAllBlocks(false)) {
+      const nodeId = this.getNodeIdForBlockId(block.id)
+      if (nodeId === null || nodeId === undefined) continue
+      const t = times.get(nodeId)
+      if (t === undefined) continue
+      this.drawIterationBadge(block as Blockly.BlockSvg, t)
+      n++
+    }
+    return n
+  }
+
+  /**
+   * 把 `×5` 畫在積木的**右上角**。
+   *
+   * ⚠️ 它是 SVG 裡的一個 `<text>`，不是 DOM 的浮層——浮層會在捲動與縮放時
+   * 與積木脫節，而那個 bug 的樣子是「數字飄在別的積木上」。
+   */
+  private drawIterationBadge(block: Blockly.BlockSvg, times: number): void {
+    const root = block.getSvgRoot?.()
+    if (!root) return
+    // 🪦 **第一版畫在 `width + 6`（右邊），而它飄在空白處**（2026-09-04 截圖）。
+    //
+    //    `getHeightWidth().width` 是整塊 C 形積木的寬——包含**身體裡最寬的那一句**。
+    //    於是迴圈的標題列在 x=1260 結束，而數字落在 x=1387：
+    //    中間隔著一段空白，看起來不像是在講那顆迴圈。
+    //
+    // > **一個標註如果離它在講的東西有一段空白，
+    // > 使用者要自己連那條線——而他會連錯。**
+    //
+    // 🟢 改貼在**標題列的左邊**（`text-anchor: end`）：那一列就是
+    //    「重複」那幾個字所在的那一列，兩者讀起來是同一句話。
+    //
+    // 🪦 **而第二版是純文字，內層那顆看不見**（同一天，同一張截圖的下一輪）。
+    //
+    //    琥珀色的字落在**橘色的迴圈積木**上——而迴圈正是這個功能
+    //    **唯一會標的積木**。外層那顆落在深色畫布上，看得一清二楚；
+    //    內層那顆落在外層的身體裡，等於沒有。
+    //
+    // > **一個只在「它旁邊剛好是背景色」時才看得見的標註，
+    // > 在它最該出現的地方——巢狀的內層——正好看不見。**
+    //
+    // 🟢 所以給它一塊**深色底**：不管積木是什麼顏色都讀得到。
+    //
+    // 🪦 **而「貼在標題列左邊」也不對**（同一天的第三輪）。
+    //
+    //    巢狀的內層迴圈，它標題列的左邊**正好是父迴圈畫「執行」那兩個字的地方**
+    //    ——量出來的座標是對的（905, 268），而畫面上被蓋掉了。
+    //
+    // > **一個位置如果只在「這一塊沒有被別人包住」時才空著，
+    // > 那它在巢狀的情況下必然撞車——而巢狀正是這個功能最有用的時候。**
+    //
+    // 🟢 最後的形狀是**左邊的一條槽**：每顆迴圈的數字**垂直對齊自己那一列**，
+    //    而水平上全部排在整塊程式的左邊（像行號）。撞不到任何東西，
+    //    而且一眼看得出「這個 3 是在講這一列」。
+    const label = `×${times}`
+    const w = 9 + 7 * label.length
+    // ⚠️ 巢狀的縮排要**扣回去**：內層積木的原點在父積木裡面，
+    //    不扣的話它的槽會落在父積木身上（那正是上一版的病）。
+    const here = block.getRelativeToSurfaceXY()
+    const root0 = block.getRootBlock().getRelativeToSurfaceXY()
+    const gutterX = root0.x - here.x - 10 - w
+    const g = Blockly.utils.dom.createSvgElement('g', { class: 'iteration-badge' }, root)
+    Blockly.utils.dom.createSvgElement('rect', {
+      x: gutterX, y: 5, width: w, height: 16, rx: 4,
+      class: 'iteration-badge-bg',
+    }, g)
+    const text = Blockly.utils.dom.createSvgElement('text', {
+      class: 'iteration-badge-text', x: gutterX + w / 2, y: 17,
+    }, g)
+    text.textContent = label
+  }
+
+  /** 把上一次的次數標註清掉。⚠️ 與 `clearNeverRan` 同一條規矩：改了就過期。 */
+  clearIterations(): void {
+    if (!this.workspace) return
+    for (const el of this.workspace.getParentSvg().querySelectorAll('.iteration-badge')) {
+      el.remove()
+    }
+  }
+
   /** 把上一次的標記清掉——⚠️ 改積木之後那個標記就過期了。 */
   clearNeverRan(): void {
     if (!this.workspace) return

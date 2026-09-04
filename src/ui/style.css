@@ -1728,6 +1728,35 @@ html, body {
   stroke-dasharray: 6 4;
 }
 
+/*
+ * ─── 迴圈跑了幾次 ───
+ *
+ * 🔴 **它與「沒跑到」用同一個色系（琥珀），因為它們是同一類東西**：
+ * 都在描述**發生了什麼**，都不在說對錯。
+ *
+ * ⚠️ `pointer-events: none`——它不是一個按得到的東西，
+ * 而蓋在積木上的一塊「可以點但點了沒事」的區域，比沒有它更糟。
+ */
+.iteration-badge {
+  pointer-events: none;
+}
+
+/* 🔴 **深色底是必要的，不是裝飾**：沒有它，巢狀的內層那顆落在橘色的
+ * 外層迴圈身體裡，等於沒有畫（2026-09-04 截圖實測）。 */
+.iteration-badge-bg {
+  fill: rgba(20, 18, 10, 0.86);
+  stroke: #d0a215;
+  stroke-width: 1px;
+}
+
+.iteration-badge-text {
+  text-anchor: middle;
+  fill: #f0c236;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 .ghost-block > .blocklyPath {
   /* 🪦 **2026-09-02 換成 `filter: saturate() brightness()`，當天又換回來。**
    *

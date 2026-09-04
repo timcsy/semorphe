@@ -157,8 +157,11 @@ export class ExecutionController {
   }
 
   /** 廣播這一次到過哪些節點。⚠️ 沒有匯流排時不退路——覆蓋是加分項，不是必需品。 */
-  private broadcastCoverage(visited: ReadonlySet<string>): void {
-    this.bus?.emit('execution:coverage', { visited: [...visited] })
+  private broadcastCoverage(counts: ReadonlyMap<string, number>): void {
+    this.bus?.emit('execution:coverage', {
+      visited: [...counts.keys()],
+      counts: Object.fromEntries(counts),
+    })
   }
 
   /** 廣播輸出。⚠️ `stderr` 由視圖決定怎麼顯示——執行器不知道它會變紅。 */
@@ -389,7 +392,9 @@ export class ExecutionController {
       //    初學者的 bug 壓倒性是「這一段從來沒跑到」，而執行器已經知道答案了。
       //    ⚠️ 廣播的是**到過的**，不是「沒到過的」：誰算「應該要到」是視圖的知識
       //    （它要排掉骨架、排掉還沒同步的積木），執行器不該認得那些。
-      this.broadcastCoverage(this.interpreter.getVisitedNodes())
+      //    🔴 而**次數**（2026-09-04 第三刀）走同一條線：初學者的另一種 bug 是
+      //    「跑的次數不對」（差一錯誤），而執行器一樣已經知道答案了。
+      this.broadcastCoverage(this.interpreter.getVisitCounts())
       this.broadcastState({ status: 'completed' })
       showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
     } catch (e) {

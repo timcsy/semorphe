@@ -42,6 +42,24 @@ describe('執行覆蓋', () => {
     expect(i.getVisitedNodes().has(never.id)).toBe(false)
   })
 
+  it('★ 次數也記得住——「迴圈跑了幾次」的原料', async () => {
+    const i = new SemanticInterpreter()
+    const body = show(str('x'))
+    const w = createNode('cpp:loop_while', {}, {
+      condition: [createNode('cpp:compare', { operator: '<' }, {
+        left: [createNode('cpp:literal_number', { value: '0' })],
+        right: [createNode('cpp:literal_number', { value: '3' })],
+      })],
+      body: [body],
+    })
+    // ⚠️ 上面那個條件永遠成立 → 會撞步數上限而停，但**次數已經記下來了**
+    await i.execute(prog(w)).catch(() => {})
+    const counts = i.getVisitCounts()
+    // 🔴 迴圈**自己**只被走一次，而身體被走了很多次——「跑了幾次」是那個倍數
+    expect(counts.get(w.id), '🔴 迴圈自己不是 1 的話，倍數的分母就錯了').toBe(1)
+    expect(counts.get(body.id) ?? 0, '🔴 身體沒有被數').toBeGreaterThan(1)
+  })
+
   it('🔴 每一次開跑都要清——不清的話「沒跑到的」會越來越少，看起來像自己好了', async () => {
     const i = new SemanticInterpreter()
     const first = show(str('a'))
