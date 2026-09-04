@@ -26,8 +26,18 @@
     "cpp:var_ref",
     "cpp:vector_declare"
   ],
-  "check": {
-    "stdout": "2",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "2",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把 queue 換成 stack，看 dist[3] 變什麼"
+    }
+  ]
 }

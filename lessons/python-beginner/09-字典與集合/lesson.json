@@ -18,8 +18,24 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "16\nming 16\nhua 17\nnew 18\n2",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "16\nming 16\nhua 17\nnew 18\n2",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：數出每個字母出現幾次",
+      "check": {
+        "stdout": "a 2\nb 1\n",
+        "stdin": [
+          "aba"
+        ]
+      }
+    }
+  ]
 }

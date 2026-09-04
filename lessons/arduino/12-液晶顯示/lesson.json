@@ -12,8 +12,18 @@
     "cpp:literal_number",
     "cpp:literal_string"
   ],
-  "check": {
-    "stdout": "",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把光感應值顯示在第二列（用 millis 不用 delay）"
+    }
+  ]
 }

@@ -12,8 +12,18 @@
     "cpp:tone_stop",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：用陣列存一段旋律，用迴圈播它"
+    }
+  ]
 }

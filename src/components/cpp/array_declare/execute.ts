@@ -27,8 +27,23 @@ export function registerExecute(register: (component: string, executor: Componen
       }
 
       const elements: import('../../../interpreter/types').RuntimeValue[] = []
+      // 🔴 **元素型別是一個【已宣告的結構】時，每一格要是一個結構實例**
+      //    （2026-09-04）。
+      //
+      //    在此之前 `struct Point ps[3];` 的每一格是 `defaultValue('struct Point')`
+      //    ——一個帶著那個字串型別的 0。於是 `ps[0].x = 1` 丟
+      //    「**變數 '（不是一個結構）' 尚未宣告**」，而那句話指向的東西
+      //    根本不存在於程式裡。
+      //
+      // > **一個「型別名我不認得，那就給 0」的預設值，
+      // > 會在後面某一步炸出一個【與真正原因無關】的訊息。**
+      //
+      // 🟢 `struct Point` 與 `Point` **都交給 `structs` 自己認**——它的
+      //    `bareTypeName` 已經剝過那個前綴了（見 `struct-types.ts` 的檔頭：
+      //    在那之前 C 那一側正是踩到這個坑）。這裡再剝一次會是**第二份**。
+      const isStruct = ctx.structs.has(type)
       for (let i = 0; i < size; i++) {
-        elements.push(defaultValue(type))
+        elements.push(isStruct ? ctx.structs.instantiate(type) : defaultValue(type))
       }
 
       // 初始值：`int a[3] = {3,1,2}`

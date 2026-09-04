@@ -16,8 +16,22 @@
     "cpp:var_ref",
     "cpp:vector_declare"
   ],
-  "check": {
-    "stdout": "55",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "55",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：爬樓梯——n 階有幾種走法",
+      "check": {
+        "stdout": "89\n",
+        "stdin": []
+      }
+    }
+  ]
 }

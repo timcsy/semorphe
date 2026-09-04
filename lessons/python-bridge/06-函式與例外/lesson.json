@@ -20,8 +20,25 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "4\n7\n6\n10\n轉換失敗",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "4\n7\n6\n10\n轉換失敗",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：打錯就要求重打，而不是當掉",
+      "check": {
+        "stdout": "請重打\n7\n",
+        "stdin": [
+          "abc",
+          "7"
+        ]
+      }
+    }
+  ]
 }

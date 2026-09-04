@@ -15,8 +15,24 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "及格\n在範圍內",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "及格\n在範圍內",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：改成讀進使用者輸入的分數",
+      "check": {
+        "stdout": "及格\n",
+        "stdin": [
+          "75"
+        ]
+      }
+    }
+  ]
 }

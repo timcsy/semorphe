@@ -8,8 +8,18 @@
     "python:literal_string",
     "python:print"
   ],
-  "check": {
-    "stdout": "Hello!\n我在學 Python",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "Hello!\n我在學 Python",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：印出三行你自己的話"
+    }
+  ]
 }

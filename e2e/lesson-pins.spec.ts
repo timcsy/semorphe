@@ -854,3 +854,50 @@ test('★ 預測：選擇題——選錯了要說出他剛才想的是什麼', a
   expect(text, `🔴 沒有說出他剛才想的是什麼：${text}`).toContain('條件的方向反了')
   expect(text, '🔴 對學生說了「錯」').not.toMatch(/錯誤|錯了|失敗/)
 })
+
+/**
+ * 🔴 **會讀輸入的課，裁判要看得到「輸入之前」印的東西。**
+ *
+ * `running` 這個狀態**送出來不只一次**：每次程式停下來等輸入，執行器都會再送
+ * 一次 `{ status: 'running', reason: 'awaiting-input' }`。而裁判原本無條件
+ * 在 `running` 時把稿子歸零 ⟹ **只看得到最後一次輸入之後印的東西**。
+ *
+ * > **一個「開始」事件如果在中途也會送，那把它當成「開始」的每一段邏輯
+ * > 都錯了——而它們錯得很安靜。**
+ *
+ * ⚠️ 症狀不是報錯：那一行明明印在主控台上，而裁判說「你少了那一行」
+ * ——**裁判在對一個做對的學生說他錯**。
+ */
+test('★ 裁判：輸入【之前】印的東西不得被丟掉', async ({ page }) => {
+  test.setTimeout(150_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  // 第 3 課「讀進來」：印一句 → 讀 → 再印一句
+  await page.goto('/?lesson=cpp-beginner%2F03-%E8%AE%80%E9%80%B2%E4%BE%86',
+    { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('cout << "先印這一行" << endl;\nint n;\ncin >> n;\ncout << "後印這一行" << endl;',
+    { delay: 12 })
+  await page.waitForTimeout(3500)
+  await page.locator('#run-btn').click()
+  await skipPredictionIfAsked(page)
+
+  const box = page.locator('.console-inline-input')
+  await expect(box).toBeVisible({ timeout: 8000 })
+  await box.fill('7')
+  await box.press('Enter')
+  await page.waitForTimeout(3500)
+
+  const verdict = await page.locator('.console-verdict').innerText()
+  // 這一課要的是「你打的是 7」，所以一定是「還沒對」——重點是**你的輸出那一欄**
+  expect(
+    verdict,
+    `🔴 裁判把輸入【之前】印的那一行丟掉了——它會對做對的學生說他錯：\n${verdict}`,
+  ).toContain('先印這一行')
+  expect(verdict).toContain('後印這一行')
+})

@@ -13,8 +13,22 @@
     "cpp:priority_queue_declare",
     "cpp:priority_queue_peek"
   ],
-  "check": {
-    "stdout": "7\n3",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "7\n3",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：合併果子的最小總成本",
+      "check": {
+        "stdout": "19\n",
+        "stdin": []
+      }
+    }
+  ]
 }

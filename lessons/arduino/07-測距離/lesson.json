@@ -19,8 +19,18 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "0\n0",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "0\n0",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：加一顆蜂鳴器，越近叫得越急"
+    }
+  ]
 }

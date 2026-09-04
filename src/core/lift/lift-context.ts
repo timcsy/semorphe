@@ -9,6 +9,28 @@ export class LiftContextData {
   private usingDirectives: string[] = []
   private includes: string[] = []
   private macroDefinitions: string[] = []
+  /**
+   * **這支程式自己定義了哪些函式。**
+   *
+   * 🔴 它存在的理由是一個真缺陷（2026-09-04）：`swap(&x, &y)` 被 lift 成
+   * 內建的 `cpp:var_swap`（`std::swap`），**而那支程式自己定義了 `swap`**。
+   *
+   * ```
+   * void swap(int *a, int *b) { … }   ← 使用者寫的
+   * swap(&x, &y);                     → cpp:var_swap（內建的那一顆）
+   * 執行                              → 「這個東西不能被指定值」
+   * ```
+   *
+   * 症狀不是「找不到函式」，是一個**看起來與指標有關的執行期錯誤**
+   * ——而真正的原因是他的函式從頭到尾沒有被呼叫過。
+   *
+   * > **一個名字樣式如果不看「這個名字在這支程式裡有沒有被使用者自己定義」，
+   * > 它就會把使用者的函式偷換成內建的那一顆。**
+   *
+   * ⚠️ 這是**路由器層級**的知識（名字的解析順序），不是任何一顆元件的
+   * ——所以擋在 `tryCallBranches`，不是在每一個分支裡各寫一次。
+   */
+  private functionNames = new Set<string>()
 
   /** Push a new scope frame (entering a block, function, etc.) */
   pushScope(): void {
@@ -26,6 +48,16 @@ export class LiftContextData {
   /** Get current scope depth */
   getScopeDepth(): number {
     return this.scopeStack.length - 1
+  }
+
+  /** 這支程式定義了一個叫這個名字的函式。⚠️ 原型與定義都算。 */
+  declareFunction(name: string): void {
+    if (name !== '') this.functionNames.add(name)
+  }
+
+  /** 使用者自己定義過這個名字嗎。 */
+  hasFunction(name: string): boolean {
+    return this.functionNames.has(name)
   }
 
   /** Declare a variable in the current scope */

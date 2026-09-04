@@ -16,8 +16,18 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "1000000000000\nsafe",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "1000000000000\nsafe",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把兩個 LL 拿掉，看它印出什麼"
+    }
+  ]
 }

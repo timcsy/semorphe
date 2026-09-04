@@ -366,11 +366,27 @@ for (const c of CASES) {
         .toMatch(/程式執行完畢|錯誤|Error|Completed/)
 
       const output = (await page.locator('.console-output').innerText()).trim()
+      // 🔴 **主控台會把使用者打的那一行【回顯】出來**，而一支
+      //    「問一句、印一句、再問一句」的程式，回顯會**插在期望輸出中間**
+      //    ——`toContain` 於是失敗，而程式其實是對的（2026-09-04 實測）。
+      //
+      // > **一份含有回顯的輸出，不是「程式印了什麼」的逐字紀錄
+      // > ——它是「這個畫面上出現過什麼」。**
+      //
+      // 🟢 所以驗的是「期望的每一行**照順序**出現過」，而不是一段連續的字串。
+      //    ⚠️ 它比逐字比對弱，而這一支要答的問題是**「這個宣告的答案做得到嗎」**
+      //    ——逐字那一半由裁判（`compareOutput`）在真實使用時負責。
+      const wanted = ex.stdout.trim().split('\n')
+      let matched = 0
+      for (const line of output.split('\n')) {
+        if (matched < wanted.length && line === wanted[matched]) matched++
+      }
       expect(
-        output,
+        matched,
         `🔴 ${c.name}〈${ex.title}〉的參考解答跑出來不是宣告的答案——` +
-          `這一題的裁判會對【做對的學生】說他錯`,
-      ).toContain(ex.stdout.trim())
+          `這一題的裁判會對【做對的學生】說他錯。\n` +
+          `宣告：${JSON.stringify(ex.stdout)}\n實際：${JSON.stringify(output)}`,
+      ).toBe(wanted.length)
     })
   }
 }

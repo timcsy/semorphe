@@ -15,8 +15,18 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "NaN",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "NaN",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：加上 isnan 檢查，讀失敗就印「讀失敗」"
+    }
+  ]
 }

@@ -65,6 +65,17 @@ export function tryCallBranches(
   ctx: LiftContext,
   argsNode: AstNode | null,
 ): SemanticNode | null {
+  // 🔴 **使用者自己定義的函式，贏過內建的名字樣式**（2026-09-04）。
+  //
+  //    見 `LiftContextData.functionNames` 的檔頭：`swap(&x, &y)` 曾經被
+  //    lift 成 `cpp:var_swap`，而那支程式自己定義了 `void swap(int*, int*)`
+  //    ——他的函式從頭到尾沒有被呼叫過，而症狀是一個看起來與指標有關的
+  //    執行期錯誤。
+  //
+  // ⚠️ **擋在這裡，不在每一個分支裡各寫一次**：名字的解析順序是路由器的知識
+  //    （「去問誰」），不是任何一顆元件的知識（「答案是什麼」）。
+  //    28 個名字樣式各寫一次的話，第 29 個會漏掉。
+  if (ctx.data.hasFunction(funcName)) return null
   for (const b of funcBranches) {
     const n = b.fn(funcName, argChildren, ctx, argsNode)
     if (n) return n

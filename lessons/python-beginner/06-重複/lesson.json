@@ -13,8 +13,27 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "15",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "15",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：讀到 0 為止，印出總和",
+      "check": {
+        "stdout": "18\n",
+        "stdin": [
+          "7",
+          "2",
+          "9",
+          "0"
+        ]
+      }
+    }
+  ]
 }

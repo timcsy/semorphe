@@ -542,6 +542,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       paramChildren.push(...liftParamList(fnDecl.childForFieldName('parameters'), ctx))
     }
 
+    // 🔴 **登記這個名字**——之後 `swap(…)` 那種呼叫才不會被內建樣式攔走。
+    //    ⚠️ 要在 `extractBody` **之前**：一個遞迴函式在自己的主體裡呼叫自己。
+    ctx.data.declareFunction(name)
     const body = extractBody(bodyNode, ctx)
     return buildFuncDef(name, returnType, { params: paramChildren, body })
   })

@@ -14,8 +14,18 @@
     "cpp:print_formatted",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "5\n0",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "5\n0",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把 t 改成 char t[3]，看它壞不壞給你看"
+    }
+  ]
 }

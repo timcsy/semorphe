@@ -15,8 +15,22 @@
     "cpp:stack_declare",
     "cpp:stack_peek"
   ],
-  "check": {
-    "stdout": "1\n2\n2",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "1\n2\n2",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：用 stack 判斷括號有沒有配對好",
+      "check": {
+        "stdout": "1\n0\n",
+        "stdin": []
+      }
+    }
+  ]
 }

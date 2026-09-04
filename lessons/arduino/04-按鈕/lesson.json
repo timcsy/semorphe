@@ -13,8 +13,18 @@
     "cpp:pin_mode",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：按一下切換（⚠️ 比想像的難）"
+    }
+  ]
 }

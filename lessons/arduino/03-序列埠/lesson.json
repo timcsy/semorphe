@@ -16,8 +16,18 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "ready",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "ready",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把第 1 課的閃燈加上 Serial.println"
+    }
+  ]
 }

@@ -11,8 +11,24 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "9\n5\n14\n3.5\n3\n1\n49",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "9\n5\n14\n3.5\n3\n1\n49",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：拆出百位、十位、個位",
+      "check": {
+        "stdout": "4\n5\n6\n",
+        "stdin": [
+          "456"
+        ]
+      }
+    }
+  ]
 }

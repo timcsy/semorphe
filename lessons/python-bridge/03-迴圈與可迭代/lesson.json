@@ -18,8 +18,22 @@
     "python:var_assign_compound",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "0\n1\n2\n0 a\n1 b\n2 c\n3\n2\n1",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "0\n1\n2\n0 a\n1 b\n2 c\n3\n2\n1",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：印出 1 到 10 之間的偶數，不要用 if",
+      "check": {
+        "stdout": "2\n4\n6\n8\n10\n",
+        "stdin": []
+      }
+    }
+  ]
 }

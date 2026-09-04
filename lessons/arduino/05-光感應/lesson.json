@@ -16,8 +16,18 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "0\n0",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "0\n0",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：量出你這一顆的實際範圍，拿去校正 map"
+    }
+  ]
 }

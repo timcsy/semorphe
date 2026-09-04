@@ -13,8 +13,25 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "那不是數字\n程式繼續",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "那不是數字\n程式繼續",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：打錯就重問，打對才往下走",
+      "check": {
+        "stdout": "那不是數字\n收到 5\n",
+        "stdin": [
+          "abc",
+          "5"
+        ]
+      }
+    }
+  ]
 }

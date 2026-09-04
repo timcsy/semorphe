@@ -16,8 +16,18 @@
     "cpp:servo_write",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "90",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "90",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：接上超音波，做一個掃描式雷達"
+    }
+  ]
 }

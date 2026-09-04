@@ -17,8 +17,24 @@
     "cpp:sizeof",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "16",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "16",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：讀進 n，開 n 格填 1 到 n，印出總和",
+      "check": {
+        "stdout": "15\n",
+        "stdin": [
+          "5"
+        ]
+      }
+    }
+  ]
 }

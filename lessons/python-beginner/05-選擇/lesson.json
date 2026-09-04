@@ -13,8 +13,24 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "及格",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "及格",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：閏年（2000 是，1900 不是）",
+      "check": {
+        "stdout": "True\n",
+        "stdin": [
+          "2000"
+        ]
+      }
+    }
+  ]
 }

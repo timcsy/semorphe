@@ -19,8 +19,22 @@
     "cpp:var_ref",
     "cpp:vector_declare"
   ],
-  "check": {
-    "stdout": "10",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "10",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把「合」換成 max，它就變成找最大值",
+      "check": {
+        "stdout": "4\n",
+        "stdin": []
+      }
+    }
+  ]
 }

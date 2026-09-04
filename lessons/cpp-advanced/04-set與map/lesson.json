@@ -17,8 +17,22 @@
     "cpp:set_insert",
     "cpp:vector_size"
   ],
-  "check": {
-    "stdout": "1\n0\n1",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "1\n0\n1",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：數出每個字幾次，由小到大印出來",
+      "check": {
+        "stdout": "a 2\nb 1\nc 1\n",
+        "stdin": []
+      }
+    }
+  ]
 }

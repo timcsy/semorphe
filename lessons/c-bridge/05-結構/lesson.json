@@ -16,8 +16,22 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "3 4\n3",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "3 4\n3",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：三個點的陣列，用迴圈填值再印出來",
+      "check": {
+        "stdout": "0 0\n1 2\n2 4\n",
+        "stdin": []
+      }
+    }
+  ]
 }

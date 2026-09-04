@@ -15,8 +15,22 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "[1, 4, 9, 16, 25]\n[2, 4]",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "[1, 4, 9, 16, 25]\n[2, 4]",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：每個名字的長度，以及只留長度大於 3 的",
+      "check": {
+        "stdout": "[2, 4, 8]\n['ming', 'semorphe']\n",
+        "stdin": []
+      }
+    }
+  ]
 }

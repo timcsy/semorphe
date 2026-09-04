@@ -12,10 +12,26 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "Semorphe\n17",
-    "stdin": [
-      "Semorphe"
-    ]
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "Semorphe\n17",
+        "stdin": [
+          "Semorphe"
+        ]
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：讀進一個數字，印出兩倍",
+      "check": {
+        "stdout": "10\n",
+        "stdin": [
+          "5"
+        ]
+      }
+    }
+  ]
 }

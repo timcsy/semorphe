@@ -17,8 +17,24 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "HELLO, WORLD\nhello, world\n12",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "HELLO, WORLD\nhello, world\n12",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：出現最多次的那個字（三課接起來）",
+      "check": {
+        "stdout": "the\n",
+        "stdin": [
+          "the cat the dog the"
+        ]
+      }
+    }
+  ]
 }

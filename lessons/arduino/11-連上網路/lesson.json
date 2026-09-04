@@ -16,8 +16,18 @@
     "cpp:wifi_open",
     "cpp:wifi_read"
   ],
-  "check": {
-    "stdout": "192.168.1.100",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "192.168.1.100",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：加一個次數上限，試 20 次就放棄"
+    }
+  ]
 }

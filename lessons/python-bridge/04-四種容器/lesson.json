@@ -19,8 +19,22 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "3\n16\n4\n2\n2",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "3\n16\n4\n2\n2",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：印出分數最高的那個人的名字",
+      "check": {
+        "stdout": "hua\n",
+        "stdin": []
+      }
+    }
+  ]
 }

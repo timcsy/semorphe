@@ -12,10 +12,26 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "你好，小明\n歡迎",
-    "stdin": [
-      "小明"
-    ]
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "你好，小明\n歡迎",
+        "stdin": [
+          "小明"
+        ]
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：讀進一個數字，印出兩倍",
+      "check": {
+        "stdout": "10\n",
+        "stdin": [
+          "5"
+        ]
+      }
+    }
+  ]
 }

@@ -15,8 +15,22 @@
     "cpp:var_ref",
     "cpp:vector_declare"
   ],
-  "check": {
-    "stdout": "2",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "2",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：用 upper_bound - lower_bound 數出 3 幾個",
+      "check": {
+        "stdout": "3\n2\n",
+        "stdin": []
+      }
+    }
+  ]
 }

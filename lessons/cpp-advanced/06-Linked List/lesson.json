@@ -19,8 +19,22 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "1\n2",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "1\n2",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：在中間插一個 99——而兩行的順序不能反",
+      "check": {
+        "stdout": "1\n99\n2\n",
+        "stdin": []
+      }
+    }
+  ]
 }

@@ -14,8 +14,22 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "42\n100",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "42\n100",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：寫一個 swap(int *a, int *b)",
+      "check": {
+        "stdout": "2 1\n",
+        "stdin": []
+      }
+    }
+  ]
 }

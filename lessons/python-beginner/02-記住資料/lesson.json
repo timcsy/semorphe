@@ -12,8 +12,18 @@
     "python:var_assign",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "小明\n16\n1.72\nTrue",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "小明\n16\n1.72\nTrue",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：換成你自己的資料，再加一行"
+    }
+  ]
 }

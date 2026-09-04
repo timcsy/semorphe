@@ -14,8 +14,18 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "0",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "0",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把校正值存進 EEPROM，開機讀回來"
+    }
+  ]
 }

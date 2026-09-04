@@ -10,8 +10,18 @@
     "cpp:var_declare",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "5",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "5",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把入門第 13 課貼進來，切到 C 看它變什麼"
+    }
+  ]
 }

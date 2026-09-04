@@ -14,8 +14,22 @@
     "python:return",
     "python:var_ref"
   ],
-  "check": {
-    "stdout": "7\n你好，小明",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "7\n你好，小明",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：寫一個 is_leap(year)，要 return 不要 print",
+      "check": {
+        "stdout": "True\nFalse\n",
+        "stdin": []
+      }
+    }
+  ]
 }

@@ -11,8 +11,18 @@
     "cpp:pin_mode",
     "cpp:var_ref"
   ],
-  "check": {
-    "stdout": "",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：改成像心跳那樣（亮 0.1 秒、暗 0.9 秒）"
+    }
+  ]
 }

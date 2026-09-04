@@ -14,8 +14,22 @@
     "cpp:var_ref",
     "cpp:vector_declare"
   ],
-  "check": {
-    "stdout": "1 2 5 8",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "1 2 5 8",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：最接近的兩個數的差",
+      "check": {
+        "stdout": "1\n",
+        "stdin": []
+      }
+    }
+  ]
 }

@@ -21,8 +21,22 @@
     "cpp:var_ref",
     "cpp:vector_declare"
   ],
-  "check": {
-    "stdout": "2",
-    "stdin": []
-  }
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "2",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：算出每個節點的子樹大小",
+      "check": {
+        "stdout": "3\n2\n1\n",
+        "stdin": []
+      }
+    }
+  ]
 }

@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "testFileCount": 433
+    "testFileCount": 434
   },
   "adHocAssembly": 0,
   "details": [],
-  "note": "⚠️ 2026-09-04（跑之前先猜一下）：測試檔數 432 → 433——**輸入量上調，不是耦合變差**。新增 `core/predict.ts`（要問什麼 ＋ 這支程式是不是還是剛才那一支）＋ `tests/unit/core/predict.test.ts`；`LessonTask` 多一格 `predict`；`ConsolePanel.askPrediction`／`showPrediction`；`iterations.ts` 多三支（`isLoop`／`loopNodes`／`loopNodeById`／`loopRatio`——後者**不過濾**，因為揭曉一個預測時 `1` 與 `0` 都是正當的答案）。🔴 執行器多一個**可省略的** `beforeRun` async 鉤子——形狀抄 `pauseForUnrecognized`：**要停下來問人的事，用鉤子，不是把那件事搬進執行器**。沒注入時行為與從前逐字相同。\n"
+  "note": "⚠️ 2026-09-04（練習題鋪滿 66 課 ＋ 兩個直譯器缺陷）：測試檔數 433 → 434——**語料變大，缺陷數一筆未動**。新增 `tests/integration/user-function-wins.test.ts`（使用者自己定義的函式贏過內建名字樣式 · 結構陣列的每一格是一個結構；**兩個注入都驗過會紅**）。\n"
 }
