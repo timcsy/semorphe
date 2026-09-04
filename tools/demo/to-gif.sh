@@ -21,3 +21,23 @@ mk test-results/record-demo/video.webm        assets/demo.gif
 mk test-results/record-demo-layout/video.webm assets/demo-layout.gif
 mk test-results/record-raw-raw/video.webm      assets/demo-raw.gif
 mk test-results/record-lessons-lessons/video.webm assets/demo-lessons.gif
+
+# ── 課文頁用的短片段 ──────────────────────────────────────────
+#
+# 🔴 **webm 不是 GIF**：同樣 3 秒的 UI 動畫，webm 大約是 GIF 的 1/5～1/10，
+#    而課文頁現在是 7.5KB／零外部請求——那是它的體驗基礎。
+#
+# ⚠️ 而 README 仍然用 GIF：GitHub 會把 webm 變成一個【要按才會播】的播放器。
+#    同一支影片轉兩種格式，各自去該去的地方。
+clip() {
+  local src="test-results/record-clips-$1/video.webm" out="assets/clips/$1.webm"
+  [ -f "$src" ] || { echo "🔴 找不到 $src——先跑 npm run demo:record"; exit 1; }
+  ffmpeg -v error -y -i "$src" \
+    -vf "fps=12,scale=720:-2:flags=lanczos" \
+    -c:v libvpx-vp9 -crf 40 -b:v 0 -an -row-mt 1 "$out"
+  echo "$out  $(ls -lh "$out" | awk '{print $5}')"
+}
+mkdir -p assets/clips
+clip clip-drag
+clip clip-compare
+clip clip-run
