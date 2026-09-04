@@ -156,6 +156,11 @@ export class ExecutionController {
     for (const p of [this.panels.consolePanel, this.panels.variablePanel]) p?.onExecutionState(e)
   }
 
+  /** 廣播這一次到過哪些節點。⚠️ 沒有匯流排時不退路——覆蓋是加分項，不是必需品。 */
+  private broadcastCoverage(visited: ReadonlySet<string>): void {
+    this.bus?.emit('execution:coverage', { visited: [...visited] })
+  }
+
   /** 廣播輸出。⚠️ `stderr` 由視圖決定怎麼顯示——執行器不知道它會變紅。 */
   private broadcastOutput(text: string, stream: 'stdout' | 'stderr'): void {
     if (this.bus) this.bus.emit('execution:output', { text, stream })
@@ -380,6 +385,11 @@ export class ExecutionController {
       await this.interpreter.execute(tree as unknown as InterpreterNode)
       this.clearHighlights()
       this.reportInterventions()
+      // 🔴 **跑完之後，「到過誰」是一份回饋**（2026-09-04）——
+      //    初學者的 bug 壓倒性是「這一段從來沒跑到」，而執行器已經知道答案了。
+      //    ⚠️ 廣播的是**到過的**，不是「沒到過的」：誰算「應該要到」是視圖的知識
+      //    （它要排掉骨架、排掉還沒同步的積木），執行器不該認得那些。
+      this.broadcastCoverage(this.interpreter.getVisitedNodes())
       this.broadcastState({ status: 'completed' })
       showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
     } catch (e) {

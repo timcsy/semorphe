@@ -674,5 +674,6 @@
   "CHECK_PASSED": "✅ Output matches",
   "CHECK_NOT_YET": "Not yet — see what differs",
   "CHECK_YOURS": "Yours",
-  "CHECK_WANTED": "Expected"
+  "CHECK_WANTED": "Expected",
+  "COVERAGE_NEVER_RAN": "⚠️ {n} block(s) never ran this time — on purpose?"
 }

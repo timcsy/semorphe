@@ -15,6 +15,13 @@ export interface SemanticEvents {
   'execution:output': { text: string; stream: 'stdout' | 'stderr' }
   'execution:at-node': ExecutionAtNodeEvent
   /**
+   * 這一次執行**到過哪些節點**（跑完才發一次）。
+   *
+   * ⚠️ 發的是「到過的」不是「沒到過的」：誰算「應該要到」是視圖的知識
+   * （它要排掉骨架、排掉還沒同步進樹的積木），執行器不該認得那些。
+   */
+  'execution:coverage': { visited: readonly string[] }
+  /**
    * ⚠️ **這條線的方向是刻意反過來的。**
    *
    * 斷點原本是這樣判的：

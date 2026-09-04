@@ -353,13 +353,31 @@ export class App {
     this.bus.on('execution:state', (e) => {
       // 🔴 **每次開跑都要歸零**——不然第二次執行會把第一次的輸出算進去，
       //    而那個 bug 的樣子是「第一次對、第二次也對，第三次莫名其妙不對」
-      if (e.status === 'running') { this.runTranscript = ''; return }
+      if (e.status === 'running') {
+        this.runTranscript = ''
+        // ⚠️ 上一次的覆蓋標記在這一次開跑時就過期了
+        this.blocklyPanel?.clearNeverRan()
+        return
+      }
       if (e.status !== 'completed') return
       const check = this.currentLesson?.check
       // ⚠️ 沒有課、或這一課沒有裁判 ⟹ **不說話**。
       //    一個「沒有裁判時預設說對」的設計，會讓那個勾失去意義。
       if (!check) return
       consolePanel.showVerdict(compareOutput(this.runTranscript, check.stdout))
+    })
+
+    // 🔴 **執行覆蓋**：跑完把沒被走到的積木標出來，並在主控台問一句。
+    //
+    //    初學者的 bug 有壓倒性的比例是「**這一段從來沒跑到**」：`return` 後面的
+    //    程式碼、永遠不成立的 `if`、根本沒進去的迴圈。
+    //
+    // ⚠️ 而它是**問句不是判決**：一個 `if` 的另一支本來就可能不該跑。
+    //    所以文案是「是故意的嗎」，而視覺是琥珀色虛線，不是紅色（見 CSS）。
+    this.bus.on('execution:coverage', (e) => {
+      const n = this.blocklyPanel?.markNeverRan(new Set(e.visited)) ?? 0
+      if (n > 0) consolePanel.log(msg('COVERAGE_NEVER_RAN', `⚠️ 有 ${n} 塊積木這一次沒有被跑到——是故意的嗎？`)
+        .replace('{n}', String(n)))
     })
   }
 
@@ -1989,6 +2007,17 @@ export class App {
     this.blocklyPanel?.onChange(() => {
       // 🔴 積木那側改過了 → 上一步不再是流程的（見 `doUndo`）
       this.markBlocksEdited()
+      // ⚠️ **改了積木，上一次的「沒跑到」就過期了**——留著會讓學生對著一個
+      //    「上一次執行」的結論改東西。
+      //
+      // 🪦 這一行原本寫在 `wireLessonCheck` 裡，自己 `onChange` 了一次
+      //    ——而 `BlocklyPanel.onChange` 是**指派**不是訂閱
+      //    （`this.onChangeCallback = callback`）：第二次呼叫會把第一次蓋掉。
+      //    當時僥倖沒出事，只因為這一支剛好註冊在後面。
+      //
+      // > **一個叫 `onXxx` 的方法，如果它是指派而不是訂閱，
+      // > 那麼「多接一條線」就是「剪掉原本那一條」。**
+      this.blocklyPanel?.clearNeverRan()
       if (this._codeToBlocksInProgress) return
       // 🔴 **記錄「誰編輯了」要在殘態守衛【之前】**（2026-08-25 瀏覽器實測抓到）。
       //

@@ -1672,6 +1672,24 @@ html, body {
  *
  * 所以用**直接子代選擇器**：骨架自己的路徑與欄位變淡，
  * 而巢狀的積木（Blockly 的子積木也是 `.blocklyDraggable`）不受影響。 */
+/*
+ * ─── 這一次沒有被跑到（執行覆蓋）───
+ *
+ * 🔴 **不能用「變淡」**：畫面上已經有兩層淡的（鷹架 `.ghost-block`、
+ * 超出範圍 `.out-of-scope-block`），第三層淡的會讓三件不同的事長得一樣。
+ *
+ * 🔴 **也不能用紅色**：「沒跑到」**不等於錯**——一個 `if` 的另一支本來就可能
+ * 不該跑。紅色會把一個「問一句」變成一個「你做錯了」。
+ *
+ * 🟢 所以用**虛線外框 ＋ 中性的琥珀色**：它在說「這裡有話要說」，不在說對錯。
+ * ⚠️ 一樣用**直接子代選擇器**——`.ghost-block` 那一課記著為什麼。
+ */
+.never-ran > .blocklyPath {
+  stroke: #d0a215;
+  stroke-width: 2px;
+  stroke-dasharray: 6 4;
+}
+
 .ghost-block > .blocklyPath {
   /* 🪦 **2026-09-02 換成 `filter: saturate() brightness()`，當天又換回來。**
    *

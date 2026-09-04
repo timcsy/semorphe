@@ -59,6 +59,8 @@ export class SemanticInterpreter implements ExecutionContext {
   board?: BoardPinModel
   private stepRecords: StepInfo[] = []
   private recordSteps = false
+  /** 這一次執行到過的節點 id——⚠️ 每次 `execute` 開頭清空，見 `getVisitedNodes`。 */
+  private visited = new Set<string>()
   private inputProvider: (() => Promise<string>) | null = null
   private outputCallback: ((text: string) => void) | null = null
   private aborted = false
@@ -330,7 +332,21 @@ export class SemanticInterpreter implements ExecutionContext {
 
   }
 
+  /**
+   * **這一次執行到過哪些節點。**
+   *
+   * 🔴 「沒到過」不等於「錯」——一個 `if` 的另一支本來就可能不該跑。
+   * 所以這份資料的用途是**問一句**（「這 3 塊沒跑到，是故意的嗎？」），
+   * 不是判對錯。
+   */
+  getVisitedNodes(): ReadonlySet<string> {
+    return this.visited
+  }
+
   async execute(program: SemanticNode, stdin: string[] = []): Promise<void> {
+    // ⚠️ **每一次開跑都要清**——不清的話第二次執行會把第一次到過的算進去，
+    //    而那個 bug 的樣子是「沒跑到的積木越來越少」，看起來像是自己好了。
+    this.visited.clear()
     this.scope = new Scope()
     this.io = new IOSystem(stdin)
     if (this.outputCallback) this.io.onOutput(this.outputCallback)
@@ -421,6 +437,15 @@ export class SemanticInterpreter implements ExecutionContext {
   async executeNode(node: SemanticNode): Promise<RuntimeValue | void> {
     await this.countStep()
     this.currentNode = node
+    // 🔴 **這一次跑到了誰**——執行覆蓋（2026-09-04）。
+    //
+    //    初學者的 bug 有壓倒性的比例是這兩種：**這一段從來沒跑到**、
+    //    **跑的次數不對**。而 `executeNode` 是每一顆節點的唯一漏斗，
+    //    所以記在這裡是最便宜的：一次 `Set.add`，沒有新的回呼、沒有匯流排流量。
+    //
+    // ⚠️ 它**不是**除錯的步進紀錄（那一份要 `debug_step` 標註、要快照作用域，
+    //    而且只在除錯模式開著）。覆蓋要的只是「有沒有到過」。
+    if (node.id !== undefined) this.visited.add(node.id)
     const component = node.componentId
 
     const executor = this.executorRegistry.get(component)

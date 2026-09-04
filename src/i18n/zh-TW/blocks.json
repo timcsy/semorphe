@@ -674,5 +674,6 @@
   "CHECK_PASSED": "✅ 輸出對了",
   "CHECK_NOT_YET": "還沒對——看看差在哪",
   "CHECK_YOURS": "你的輸出",
-  "CHECK_WANTED": "這一課要的"
+  "CHECK_WANTED": "這一課要的",
+  "COVERAGE_NEVER_RAN": "⚠️ 有 {n} 塊積木這一次沒有被跑到——是故意的嗎？"
 }

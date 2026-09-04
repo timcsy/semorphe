@@ -1488,7 +1488,64 @@ export class BlocklyPanel implements ViewHost {
   /** 每一塊原本的拖曳策略——換回 `editable` 時要還原它。 */
   private originalDragStrategy = new Map<string, ReturnType<Blockly.BlockSvg['getDragStrategy']>>()
 
+  /** 上一次 `markScaffoldBlocks` 收到的那一組——覆蓋要把骨架排除在外。 */
+  private lastScaffoldIds: ReadonlySet<string> = new Set()
+
+  /**
+   * **這一次執行沒有跑到的積木，標出來。**
+   *
+   * 🔴 初學者的 bug 有壓倒性的比例是「**這一段從來沒跑到**」：`return` 後面的
+   * 程式碼、永遠不成立的 `if`、根本沒進去的迴圈。而執行器已經知道它到過誰了
+   * ——缺的只是把它畫出來。
+   *
+   * ⚠️ **骨架不算**：`int main()`／`return 0` 那幾塊是不是被走到，
+   * 對學生沒有意義（而且鷹架模式下它們本來就不是他的東西）。
+   *
+   * ⚠️ **沒跑到 ≠ 錯**（見 CSS 的說明）：一個 `if` 的另一支本來就可能不該跑。
+   * 這個標記是在**問一句**，不是在判對錯——所以回傳的數字給呼叫端去說那句話，
+   * 這裡不決定文案。
+   *
+   * @returns 被標起來的積木數。
+   */
+  markNeverRan(visited: ReadonlySet<string>): number {
+    if (!this.workspace) return 0
+    const blocks = this.workspace.getAllBlocks(false)
+    const never = new Set<string>()
+    for (const block of blocks) {
+      const nodeId = this.getNodeIdForBlockId(block.id)
+      // ⚠️ 對不到節點的積木（剛拖進來還沒同步）不算——它不是「沒跑到」，
+      //    它是「還沒進到樹裡」。把兩者混在一起會讓標記閃來閃去。
+      if (nodeId === null || nodeId === undefined) continue
+      if (!visited.has(nodeId) && !this.lastScaffoldIds.has(nodeId)) never.add(block.id)
+    }
+    // 🔴 **只標最外層的那一塊**（2026-09-04 實測）：一句
+    //    `cout << "never" << endl;` 在樹裡是三顆節點（輸出／字串／換行），
+    //    三顆都標的話畫面上是三圈框，而主控台會說「有 3 塊沒跑到」
+    //    ——**而學生眼裡那是一句話**。
+    //
+    // > **回饋的計數單位要跟使用者的知覺一致，不是跟資料結構一致。**
+    let n = 0
+    for (const block of blocks) {
+      const svgRoot = (block as Blockly.BlockSvg).getSvgRoot?.()
+      if (!svgRoot) continue
+      const outermost = never.has(block.id)
+        && !(block.getParent() !== null && never.has(block.getParent()!.id))
+      svgRoot.classList.toggle('never-ran', outermost)
+      if (outermost) n++
+    }
+    return n
+  }
+
+  /** 把上一次的標記清掉——⚠️ 改積木之後那個標記就過期了。 */
+  clearNeverRan(): void {
+    if (!this.workspace) return
+    for (const block of this.workspace.getAllBlocks(false)) {
+      (block as Blockly.BlockSvg).getSvgRoot?.()?.classList.remove('never-ran')
+    }
+  }
+
   markScaffoldBlocks(scaffoldNodeIds: ReadonlySet<string>, mode: 'ghost' | 'editable'): void {
+    this.lastScaffoldIds = scaffoldNodeIds
     if (!this.workspace) return
     const ghostBlockIds = new Set<string>()
     for (const block of this.workspace.getAllBlocks(false)) {

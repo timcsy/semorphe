@@ -388,3 +388,44 @@ test('★ 跑完之後，裁判說得出差在哪一行', async ({ page }) => {
   await expect(ok).toHaveClass(/passed/)
   expect(await page.locator('.console-verdict-diff').count(), '🔴 對了還在給 diff').toBe(0)
 })
+
+/**
+ * 🔴 **執行覆蓋：跑完要說得出「這一段從來沒跑到」。**
+ *
+ * 初學者的 bug 有壓倒性的比例是這兩種：`return` 後面的程式碼、永遠不成立的 `if`、
+ * 根本沒進去的迴圈。而執行器本來就知道它到過誰——缺的只是把它畫出來。
+ *
+ * ⚠️ 而它是**問句不是判決**：一個 `if` 的另一支本來就可能不該跑。
+ */
+test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句不是判決', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('cout << "A" << endl;\nif (1 > 2) {\ncout << "never" << endl;', { delay: 10 })
+  await page.waitForTimeout(3000)
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(3500)
+
+  // 🔴 **只標最外層那一塊**：`cout << "never" << endl;` 在樹裡是三顆節點，
+  //    而學生眼裡那是一句話。
+  expect(await page.locator('.never-ran').count(),
+    '🔴 沒跑到的那一句沒有被標出來（或標成了三塊——計數單位要跟知覺一致）').toBe(1)
+
+  const console_ = await page.locator('#bottom-container').innerText()
+  expect(console_, '🔴 主控台沒說').toContain('沒有被跑到')
+  // ⚠️ 是問句不是判決——「沒跑到」不等於錯
+  expect(console_, '🔴 對學生說了「錯」').not.toMatch(/錯誤|失敗|不對/)
+
+  // ⚠️ 而下一次開跑要先清掉——不然學生會對著上一次的結論改東西
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(600)
+  await page.waitForTimeout(3000)
+  expect(await page.locator('.never-ran').count(), '🔴 第二次跑完標記重複累加').toBe(1)
+})

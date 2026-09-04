@@ -6,7 +6,7 @@
   "scanned": {
     "files": 34,
     "importLines": 221,
-    "anyMethodCalls": 2821
+    "anyMethodCalls": 2841
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,
@@ -14,7 +14,7 @@
   "directViewCalls": 23,
   "visibleNotRatcheted": {
     "compositionRootImportsLanguage": 0,
-    "compositionRootViewCalls": 58
+    "compositionRootViewCalls": 62
   },
   "details": {
     "viewImportsLanguage": [],
@@ -46,5 +46,5 @@
       "src/ui/execution-controller.ts → consolePanel.clear"
     ]
   },
-  "note": "⚠️ 2026-09-04（裁判 ＋ 輸出 diff）：import 220 → 221、方法呼叫數 2807 → 2821——`check` 終於進了 `Lesson` 型別（在此之前 `parseLesson` 讀完就丟，**應用根本不知道它存在**），新增 `compareOutput`（逐行比對）· `ConsolePanel.showVerdict`（並排的 diff）· 組裝點的 `wireLessonCheck`。**輸入量上調，不是耦合變差**（directViewCalls 未動）。\n"
+  "note": "⚠️ 2026-09-04（執行覆蓋）：方法呼叫數 2821 → 2841——直譯器記下「這一次到過誰」（`executeNode` 一次 `Set.add`，沒有新回呼）· 匯流排多一個 `execution:coverage` · `BlocklyPanel.markNeverRan`（只標最外層那一塊）· 組裝點接線並在主控台問一句。**輸入量上調，不是耦合變差。**\n"
 }
