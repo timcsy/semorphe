@@ -6,7 +6,7 @@
   "scanned": {
     "files": 34,
     "importLines": 224,
-    "anyMethodCalls": 2940
+    "anyMethodCalls": 2936
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,
@@ -46,5 +46,5 @@
       "src/ui/execution-controller.ts → consolePanel.clear"
     ]
   },
-  "note": "⚠️ 2026-09-04（選擇題 ＋ 清除進度的入口）：方法呼叫數上調——**輸入量上調，不是耦合變差**。`predict` 多一個 `'choice'` 值（`parseChoices` 三條規矩：恰好一個 correct · 每個干擾項都要有 why · 至少兩個選項）· `ConsolePanel.askPrediction` 多一條「一次點擊就送出」的路 · 🧹 清除學習進度**搬進「題目」那顆 picker**（🪦 原本放在 ☰ 抽屜，而那只有行動版有——需要它的人坐在桌機前）。\n"
+  "note": "🟢 2026-09-05（宣告了插槽就要有人建）：方法呼叫數 **2940 → 2936 下降 4**——`block-registrar` 裡四個分支各自寫的「只有 jsonInit 的 init」收成**一支共用的 `jsonInitFor`**。\n🔴 而那不只是少四行：那四個分支**全部跳過了**「下拉不得靜默丟掉不認得的值」與腳位常數綁定（它們寫在最後一條路上，而分支提前 `continue`）。\n> **一個「在最後一條路上做的收尾」，會被每一個提前 continue 的分支跳過——而那些分支正是特別的那幾顆。**\n⚠️ 抓到它的是第五十九條護欄（開放而不保值 0 → 1），而觸發它的是替 `cpp_lcd_declare` 選入 variadic 的那一刀。\n"
 }

@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "auditFileCount": 97,
+    "auditFileCount": 98,
     "trueIdentityCount": 332
   },
   "badAnchor": 0,
-  "note": "⚠️ 2026-09-05（課文的程式碼↔積木對照）：掃描的 audit 檔 96 → 97——新增第一百零二條 `audit-lesson-blockmaps`。**錨錯了停在 0。**\n"
+  "note": "⚠️ 2026-09-05（宣告了插槽就要有人建）：語料上調——**缺陷數一筆未動**。新增第一百零三條護欄 `audit-declared-slots-built`（硬性零：宣告了 `dynamicRules.inputPattern` 而沒有 builder／paramList／branchList／altLayout 的，一顆都不准有；**注入驗過會紅**）。\n"
 }

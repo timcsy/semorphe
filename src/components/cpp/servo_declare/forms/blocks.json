@@ -19,7 +19,12 @@
       "colour": "#E67E22",
       "tooltip": "%{BKY_C_SERVO_DECLARE_TOOLTIP}",
       "previousStatement": null,
-      "nextStatement": null
+      "nextStatement": null,
+      "builder": "variadic",
+      "countKey": "ctorCount",
+      "_builder_why": "🔴 **顯式選入宣告式的可變插槽建構器**（2026-09-05）。\n\n在此之前這顆宣告了 `renderMapping.dynamicRules` 的 `inputPattern: \"CTOR_{i}\"`，而**沒有任何人照著它建那些 input**。帶建構引數時 Blockly 丟 `missing a(n) CTOR_0 connection`，而**整個工作區載入失敗**——學生看到的是一張空白的積木畫布。\n\n> **一顆積木少了一個宣告好的插槽，壞掉的不是那一顆——是整張畫布。**\n\n⚠️ 它走的是 `block-registrar` 的**「接上去」**那一支（`args0` 非空 ⟹ `jsonInit` 先建 `NAME` 與 `DECL_TYPE`，再把 `CTOR_{i}` 接上去），不是「從零建整顆」那一支——後者會把這兩格弄丟（`cpp_vector_declare` 那個坑）。\n\n⚠️ `countKey` 必須與 `dynamicRules.countSource` 是同一個鍵，否則存下去與畫出來各記各的。",
+      "minCount": 0,
+      "_minCount_why": "🔴 **0 個建構引數是正當的**：`Servo myservo;` 一個都沒有。預設的 min 會留一個空插槽，而那在畫面上是一個「你少填了什麼」的暗示——他什麼都不缺。"
     },
     "renderMapping": {
       "fields": {

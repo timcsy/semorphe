@@ -5,9 +5,6 @@
     "rule": "每一課都要有『程式碼↔積木』的對照，而它不得過期。"
   },
   "lessons": 66,
-  "missing": [
-    "arduino/12-液晶顯示",
-    "arduino/13-溫濕度"
-  ],
-  "note": "🔴 今天缺的這兩課【原因已經查清楚】：`cpp_lcd_declare`／`cpp_dht_declare`／`cpp_servo_declare` 宣告了 `renderMapping.dynamicRules` 的 `inputPattern: \"CTOR_{i}\"`，而**沒有任何人照著它建那些 input**（`block-registrar.ts` 的 `builder: \"variadic\"` 是顯式選入的，而這三顆沒有選）。帶建構引數時 Blockly 丟 `missing a(n) CTOR_0 connection`，**整個工作區載入失敗**——學生看到的是一張空白的積木畫布。\n> **一顆積木少了一個宣告好的插槽，壞掉的不是那一顆——是整張畫布。**\n⚠️ 而整套測試看不到它：那兩課的 e2e 驗的是樹與執行結果，兩者都不看積木。\n⚠️ 修法**不是**加 `builder: \"variadic\"`：那個建構器會從零建整顆，把 `NAME` 欄位與 `DECL_TYPE` 下拉弄丟（`cpp_vector_declare` 那個坑，`block-registrar.ts:520` 記著）。要走 `func_def` 參數列那種『jsonInit 先建靜態的，再把動態的接上去』的第二種形狀。\n"
+  "missing": [],
+  "note": "🟢 **2026-09-05 清到 0**：`cpp_lcd_declare`／`cpp_dht_declare`／`cpp_servo_declare` 顯式選入了 `builder: \"variadic\"` ＋ `countKey: \"ctorCount\"` ＋ `minCount: 0`。\n⚠️ 而我原本在這裡寫的修法**太悲觀了**：以為加 `builder` 會把 `NAME` 與 `DECL_TYPE` 弄丟。實際上 `block-registrar` 有**兩支**——`args0` 非空時走「jsonInit 先建靜態的、再把動態的接上去」，只有 `args0` 空的時候才走「從零建整顆」（那一支才是 `cpp_vector_declare` 的坑）。\n> **一條「這個修法行不通」的筆記，如果沒有去讀那份實作，> 它擋掉的可能是唯一對的那一條路。**\n🔴 而它修掉的是一個**學生看得到**的缺陷：帶建構引數時 Blockly 丟 `missing a(n) CTOR_0 connection`，**整個工作區載入失敗** ⟹ 空白的積木畫布。\n⚠️ 整套測試看不到它——那兩課的 e2e 驗的是樹與執行結果，兩者都不看積木。\n"
 }

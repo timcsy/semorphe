@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "testFileCount": 435
+    "testFileCount": 436
   },
   "adHocAssembly": 0,
   "details": [],
-  "note": "⚠️ 2026-09-05（課文的程式碼↔積木對照）：語料上調——**缺陷數一筆未動**。新增第一百零二條護欄 `audit-lesson-blockmaps`（對照不得過期：拿產生時記的 codeHash 跟課文現在的〈完成的樣子〉比；**兩個注入驗過會紅**）＋ `tools/demo/record-blockmaps.spec.ts`（64 課的對照）。\n"
+  "note": "⚠️ 2026-09-05（宣告了插槽就要有人建）：語料上調——**缺陷數一筆未動**。新增第一百零三條護欄 `audit-declared-slots-built`（硬性零：宣告了 `dynamicRules.inputPattern` 而沒有 builder／paramList／branchList／altLayout 的，一顆都不准有；**注入驗過會紅**）。\n"
 }

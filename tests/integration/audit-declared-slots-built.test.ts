@@ -1,0 +1,116 @@
+/**
+ * **第一百零三條護欄：宣告了插槽，就要有人照著它建。**
+ *
+ * 🔴 2026-09-05 抓到的缺陷（而它活了很久）：
+ *
+ * ```
+ * cpp_lcd_declare 的 renderMapping.dynamicRules 宣告 inputPattern: "CTOR_{i}"
+ *   而 blockDef 沒有 builder ⟹ 沒有任何人建那些 input
+ *   → Blockly 載入時丟 "missing a(n) CTOR_0 connection"
+ *   → 整個工作區載入失敗 ⟹ 學生看到一張【空白的積木畫布】
+ * ```
+ *
+ * > **一顆積木少了一個宣告好的插槽，壞掉的不是那一顆——是整張畫布。**
+ *
+ * ⚠️ 它為什麼溜過了整套測試：lift 與 execute 兩側的測試看的是**語義樹**，
+ * 而樹是對的。**積木那一側沒有人在看。**
+ *
+ * ## 判準
+ *
+ * 一顆積木宣告了 `dynamicRules[].inputPattern`（那是「我有一串可增減的插槽」），
+ * 就必須有**一個實作**接手：
+ *
+ * ```
+ * builder: "variadic"   宣告式的可變插槽建構器
+ * paramList             可增減的欄位組（def f(a, b)）
+ * branchList            成對插槽 ＋ 尾巴（if / elif / else）
+ * altLayout             依 extraState 換一整份佈局
+ * 命令式註冊             這顆積木在 TS 裡自己 define 過
+ * ```
+ *
+ * ⚠️ **`inputPattern` 是 `null` 的不算**——那些宣告的是別種形狀
+ * （`func_def` 的參數列走 `paramList`），它們有自己的實作。
+ */
+import { describe, it, expect } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+
+interface Form {
+  id?: string
+  blockDef?: Record<string, unknown>
+  renderMapping?: { dynamicRules?: { inputPattern?: string | null }[] }
+}
+
+/** 掃出每一份積木形態宣告。 */
+function forms(): { file: string; form: Form }[] {
+  const out: { file: string; form: Form }[] = []
+  const walk = (dir: string): void => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name)
+      if (e.isDirectory()) walk(p)
+      else if (e.name === 'blocks.json') {
+        const arr = JSON.parse(fs.readFileSync(p, 'utf8')) as Form[]
+        for (const form of arr) out.push({ file: path.relative(ROOT, p), form })
+      }
+    }
+  }
+  walk(path.join(ROOT, 'src/components'))
+  return out
+}
+
+/** 這顆積木有沒有人接手它那串動態插槽。 */
+function hasBuilder(bd: Record<string, unknown>): boolean {
+  return bd.builder === 'variadic' || bd.paramList !== undefined
+    || bd.branchList !== undefined || bd.altLayout !== undefined
+}
+
+/** 命令式註冊的那幾顆——⚠️ 具名，而不是「找不到就算了」。 */
+const IMPERATIVE = new Set([
+  // `cpp:method_call` 與它的運算式版在 TS 裡自己 define（它們的引數列是手寫的）
+  'cpp:method_call', 'cpp_method_call_expression',
+])
+
+const FORMS = forms()
+
+describe('第一百零三條護欄：宣告了插槽就要有人建', () => {
+  it('★ 入口條件——真的掃到積木形態了', () => {
+    expect(FORMS.length, '🔴 一份都沒掃到 → 下面那條是空過的').toBeGreaterThan(100)
+  })
+
+  it('★ 入口條件——真的有宣告動態插槽的積木', () => {
+    const withRules = FORMS.filter(({ form }) =>
+      (form.renderMapping?.dynamicRules ?? []).some((r) => typeof r.inputPattern === 'string'))
+    expect(withRules.length, '🔴 一顆都沒有 → 這條護欄什麼都沒驗').toBeGreaterThan(5)
+  })
+
+  it('🔴 硬性零：宣告了 inputPattern 而沒有人建那些 input', () => {
+    const orphans: string[] = []
+    for (const { file, form } of FORMS) {
+      const rules = form.renderMapping?.dynamicRules ?? []
+      if (!rules.some((r) => typeof r.inputPattern === 'string')) continue
+      const id = form.id ?? file
+      if (IMPERATIVE.has(id)) continue
+      if (!hasBuilder(form.blockDef ?? {})) orphans.push(`${id}（${file}）`)
+    }
+    expect(
+      orphans,
+      '🔴 這幾顆宣告了一串插槽而沒有人建——帶引數時 Blockly 會丟 ' +
+        '「missing a(n) …_0 connection」，而**整個工作區載入失敗**：\n' +
+        '   學生看到的是一張空白的積木畫布，而語義樹是對的（所以 lift／execute 的測試全綠）。',
+    ).toEqual([])
+  })
+
+  it('★ 注入：一顆宣告了插槽而沒有 builder 的積木 → 會報', () => {
+    const fake: Form = { id: '合成:壞的', blockDef: {}, renderMapping: { dynamicRules: [{ inputPattern: 'X_{i}' }] } }
+    expect(hasBuilder(fake.blockDef!)).toBe(false)
+  })
+
+  it('★ 注入：有 builder 的 → 不報', () => {
+    expect(hasBuilder({ builder: 'variadic' })).toBe(true)
+    expect(hasBuilder({ paramList: {} })).toBe(true)
+    expect(hasBuilder({ branchList: {} })).toBe(true)
+  })
+})

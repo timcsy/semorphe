@@ -509,6 +509,49 @@ export class BlockRegistrar {
       if (!blockType) continue
       if (Blockly.Blocks[blockType]) continue
 
+      /**
+       * **每一條路都要走的那一段 `init`。**
+       *
+       * 🪦 它 2026-09-05 之前**只長在最後那條路上**，而上面四個分支
+       *    （`branchList`／`altLayout`／`paramList`／`builder: variadic`）
+       *    各自寫了一個只有 `jsonInit` 的 init 然後 `continue`
+       *    ——於是它們**全部沒有**「下拉不得靜默丟掉不認得的值」與腳位常數綁定。
+       *
+       *    抓到它的是第五十九條護欄：我那天替 `cpp_lcd_declare` 選入 variadic，
+       *    而它的 `DECL_TYPE` 記的是**學生原本用哪一個函式庫**
+       *    （`LiquidCrystal` vs `LiquidCrystal_I2C`，建構參數完全不同）
+       *    ——靜默換掉的話，**那支程式就再也編不過了**。
+       *
+       * > **一個「在最後一條路上做的收尾」，會被每一個提前 `continue` 的分支跳過
+       * > ——而那些分支正是特別的那幾顆。**
+       */
+      const jsonInitFor = (bd: unknown) => function (this: Blockly.Block) {
+        this.jsonInit(bd as never)
+        // 🔴 **JSON 的 `field_dropdown` 會【靜默丟掉】不在清單裡的值**（spec 150 實測）：
+        //    學生貼 `#include <WiFi.h>`，而 `cpp_include` 的清單只有 20 個標頭
+        //    ——Blockly 把它換成第一項 `stdio.h`，**而沒有任何訊息**。
+        //
+        // > **一個會把它不認得的值換掉的下拉，等於在使用者沒看的時候改掉他的程式。**
+        for (const input of this.inputList) {
+          for (const field of input.fieldRow) {
+            /* eslint-disable @typescript-eslint/no-explicit-any */
+            const f = field as any
+            if (!f.menuGenerator_ || typeof f.doClassValidation_ !== 'function') continue
+            f.doClassValidation_ = function (this: any, newValue: string) {
+              if (newValue === null || newValue === undefined) return null
+              const options = this.getOptions(false)
+              if (!options.some((o: string[]) => o[1] === newValue)) options.push([newValue, newValue])
+              return newValue
+            }
+          }
+        }
+        // 🔴 **腳位常數的下拉列的是【目前這塊板子】的常數**（spec 148）
+        //    ——名單由語言套件宣告，這一層不認識任何具體的目標名字。
+        for (const d of allBoardConstantDropdowns()) {
+          if (d.blockType === blockType) self.bindBoardConstantDropdown(this, d.field)
+        }
+      }
+
       // 🔴 **宣告了可變參數的，走宣告式的建構器**（spec 162）。
       //
       // `renderMapping.dynamicRules` **早就宣告在膠囊裡**（16 顆），而讀它的
@@ -544,7 +587,7 @@ export class BlockRegistrar {
       //    —— `if / elif… / else`。使用者：「if-else 還沒有 mutation」。
       const branchSpec = (blockDef as { branchList?: Record<string, unknown> }).branchList
       if (branchSpec) {
-        Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
+        Blockly.Blocks[blockType] = { init: jsonInitFor(blockDef) }
         attachBranchList(blockType, branchSpec as unknown as Parameters<typeof attachBranchList>[1])
         continue
       }
@@ -555,7 +598,7 @@ export class BlockRegistrar {
       //       第五維證明的是「extraState 的鍵對得上」，不是「那一格會出現」。
       const altSpec = (blockDef as { altLayout?: Record<string, unknown> }).altLayout
       if (altSpec) {
-        Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
+        Blockly.Blocks[blockType] = { init: jsonInitFor(blockDef) }
         attachAltLayout(blockType, blockDef as never, {
           stateKey: altSpec.stateKey as string,
           alt: altSpec as never,
@@ -565,7 +608,7 @@ export class BlockRegistrar {
 
       const paramSpec = (blockDef as { paramList?: Record<string, unknown> }).paramList
       if (paramSpec) {
-        Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
+        Blockly.Blocks[blockType] = { init: jsonInitFor(blockDef) }
         attachParamList(blockType, paramSpec as unknown as Parameters<typeof attachParamList>[1])
         continue
       }
@@ -598,7 +641,7 @@ export class BlockRegistrar {
           openLabelOnFirstSlot: bd.openLabelOnFirstSlot as boolean | undefined,
         }
         if (Array.isArray(bd.args0) && bd.args0.length > 0) {
-          Blockly.Blocks[blockType] = { init: function (this: Blockly.Block) { this.jsonInit(blockDef as never) } }
+          Blockly.Blocks[blockType] = { init: jsonInitFor(blockDef) }
           attachVariadic(blockType, spec)
           continue
         }
@@ -624,44 +667,7 @@ export class BlockRegistrar {
         continue
       }
 
-      // 🔴 **JSON 的 `field_dropdown` 會【靜默丟掉】不在清單裡的值**（spec 150 實測）：
-      //    學生貼 `#include <WiFi.h>`，而 `cpp_include` 的清單只有 20 個標頭
-      //    ——Blockly 把它換成第一項 `stdio.h`，**而沒有任何訊息**。
-      //
-      // > **一個會把它不認得的值換掉的下拉，等於在使用者沒看的時候改掉他的程式。**
-      //
-      // 🟢 `createOpenDropdown` 早就有正解（不認得就把值加進選項），
-      //    而它原本只有命令式註冊的那幾顆在用。這裡讓**所有 JSON 下拉**都拿到。
-      const preserveUnknown = (block: Blockly.Block) => {
-        for (const input of block.inputList) {
-          for (const field of input.fieldRow) {
-            /* eslint-disable @typescript-eslint/no-explicit-any */
-            const f = field as any
-            if (!f.menuGenerator_ || typeof f.doClassValidation_ !== 'function') continue
-            f.doClassValidation_ = function (this: any, newValue: string) {
-              if (newValue === null || newValue === undefined) return null
-              const options = this.getOptions(false)
-              if (!options.some((o: string[]) => o[1] === newValue)) options.push([newValue, newValue])
-              return newValue
-            }
-          }
-        }
-      }
-
-      const boardFields = allBoardConstantDropdowns()
-        .filter((d) => d.blockType === blockType)
-        .map((d) => d.field)
-
-      Blockly.Blocks[blockType] = {
-        init: function (this: Blockly.Block) {
-          this.jsonInit(blockDef)
-          // 🔴 **不認得的值要留著，不得靜默換掉**（spec 150）
-          preserveUnknown(this)
-          // 🔴 **腳位常數的下拉列的是【目前這塊板子】的常數**（spec 148）
-          //    ——名單由語言套件宣告，這一層不認識任何具體的目標名字。
-          for (const field of boardFields) self.bindBoardConstantDropdown(this, field)
-        },
-      }
+      Blockly.Blocks[blockType] = { init: jsonInitFor(blockDef) }
     }
 
     this.registerDynamicBlocks()
