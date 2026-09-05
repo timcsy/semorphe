@@ -695,9 +695,71 @@ export class SyncController {
    */
   private scaffoldNotice(tree: SemanticNode): SemanticUpdateEvent['scaffold'] {
     return {
-      nodeIds: [...scaffoldNodeIds(tree, this.skeletonId)],
+      // 🔴 **兩棵樹的聯集**（2026-09-06，spec 172）——而這一行試過兩個單棵的版本，
+      //    兩個都會壞掉一半：
+      //
+      //    ```
+      //    只問真相那棵     增強器補的 #include／using 認不出來
+      //                     → 「兩顆實心的積木站在一堆淡的裡面」（2026-09-02 使用者報過）
+      //    只問顯示樹       hidden 模式下骨架【已經被剝掉了】，於是告示是空的
+      //                     → 流程視圖不知道要隱藏誰，hidden 與 editable 長得一樣
+      //    ```
+      //
+      //    🔴 而它們不是同一個問題的兩面——**是兩棵樹各自【多】了對方沒有的東西**：
+      //    顯示樹多了增強器補的，真相那棵多了被剝掉的。聯集兩邊都涵蓋。
+      //
+      // > **「該問哪一棵樹」如果有兩個都對的答案，那個問題問錯了
+      // > ——要問的是「這兩棵各自知道什麼別人不知道的」。**
+      //
+      // ⚠️ 兩棵樹的 nodeId 不會撞號（增強器補的節點有自己的 id）。
+      nodeIds: [...new Set([
+        ...scaffoldNodeIds(tree, this.skeletonId),
+        ...(this.lastDisplayTree ? scaffoldNodeIds(this.lastDisplayTree, this.skeletonId) : []),
+      ])],
       mode: scaffoldModeOfDepth(this.getScaffoldDepth()),
     }
+  }
+
+  /**
+   * **只重發一次骨架告示**——⚠️ 樹沒有變，變的是「使用者想看到多少」。
+   *
+   * ## 🔴 為什麼需要一個【只做一件事】的發布點
+   *
+   * 鷹架深度是使用者的一個決定（`setScaffoldDepth`，組裝點有 6 個呼叫點），
+   * 而它**不是一次語義更新**：樹一個節點都沒動。
+   *
+   * 在此之前積木那一側靠組裝點直接呼叫面板來更新外觀，而那讓組裝點
+   * 替視圖做了兩個決定：算出哪幾顆是骨架（可以），
+   * **以及這個深度該畫成 `ghost` 還是 `editable`**（不可以）。
+   *
+   * ## 🔴 `blockState` 缺席不是省略，是這則事件的開關
+   *
+   * 積木面板的重畫**閘在 `event.blockState` 上**
+   * （`blockly-panel.ts` 的 `if (!mine && event.blockState)`）——
+   * 所以不帶它，這則事件就只會做「套用骨架告示」這一件事：
+   * **不重畫、不打斷拖曳、不動復原堆疊。**
+   *
+   * > **一個「這則事件要做多少事」的旋鈕，剛好已經長在收的那一端了
+   * > ——而它本來是為了別的理由長出來的。**
+   *
+   * ⚠️ 也不帶 `mappings`：樹沒變，對映沒變。
+   *
+   * @returns 有沒有發出去（沒有樹就沒得發）
+   */
+  republishScaffold(): boolean {
+    const tree = this.currentTree
+    if (!tree) return false
+    // ⚠️ **`mappings` 要一起帶**——`tree` 與 `mappings` 是一對。
+    //    只帶樹的話，程式碼視圖會用「新的樹」配「舊的對映」去查行號，
+    //    而它查不到的診斷**會被靜靜跳過**（那是它刻意的設計：
+    //    「一個指錯地方的波浪比沒有波浪更糟」）——症狀是波浪消失，不是報錯。
+    //
+    // > **兩個欄位如果會被同一支查詢一起讀，
+    // > 那它們是一對——而一則只更新其中一個的事件，會讓那支查詢對著兩個時代。**
+    this.bus.emit('semantic:update', {
+      tree, source: 'resync', mappings: this.codeMappings, scaffold: this.scaffoldNotice(tree),
+    })
+    return true
   }
 
   /**

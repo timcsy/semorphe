@@ -198,6 +198,8 @@ export class BlocklyPanel implements ViewHost {
   }
 
   onSemanticUpdate(event: SemanticUpdateEvent): void {
+    /** 重畫那條路已經套過骨架了嗎——⚠️ 套兩次不是冪等的（見 `applyScaffoldNotice`）。 */
+    let applied = false
     // 🔴 **跳過的是「我自己改的」，不是「某個視圖改的」**（2026-08-27）。
     //
     // 在此之前這裡的條件是 `source === 'code' || source === 'resync'`
@@ -331,13 +333,83 @@ export class BlocklyPanel implements ViewHost {
         // ─────────────────────────────────────────────────────────────
         this.workspace?.clearUndo()
         this.hasRendered = true
+        // 🔴 **骨架在【視窗關掉之前】套**（2026-09-06，spec 172）。
+        //
+        //    `markScaffoldBlocks` 會 `setEditable(false)` ＋ 動拖曳策略，
+        //    而那些都是 Blockly 事件。放在視窗**外面**的話它們變成
+        //    「使用者的編輯」——⚠️ 而症狀完全不在骨架上：
+        //    「排回去」那一題打散完之後**程式碼不再跟著變**
+        //    （散落的積木在畫布上，而程式碼還是原來那一份）。
+        //
+        // > **一段「畫完之後蓋上去」的視覺，如果它產生的事件落在
+        // > 「這是重畫」的視窗外面，下一個真正的編輯會被當成重畫的餘波。**
+        // 🔴 `force`：重畫過的積木全是新物件，key 相同也得重蓋一次。
+        this.applyScaffoldNotice(event, true)
+        applied = true
         // ⚠️ **`recordUndo` 不在這裡還原**——見 `endRecordUndoWindow`：
         //    有 mutator 的積木，形狀更新被 Blockly 延到下一幀才做。
         this.endRecordUndoWindow(prevRecord)
         Blockly.Events.setGroup(prevGroup)
       }
     }
+
+    // 🔴 **骨架告示在最後套用——而「最後」是這一段唯一重要的事**
+    //    （2026-09-06，spec 172）。
+    //
+    //    在此之前積木這一側**不讀這個欄位**：它靠組裝點直接呼叫
+    //    `markScaffoldBlocks`，而那讓組裝點替視圖做了兩個決定：
+    //    算出哪幾顆是骨架（可以），**以及該畫成 `ghost` 還是 `editable`**（不可以）。
+    //
+    // 🪦 **第一版寫在這支的開頭，而它錯得很安靜**：`markScaffoldBlocks` 會
+    //    遍歷工作區、在積木上蓋 `ghost-block` 與 `setEditable(false)`
+    //    ——而那時**新的積木還沒載進來**，於是它蓋在上一份積木上，
+    //    重畫完就全沒了。
+    //
+    //    ⚠️ 症狀不是「骨架沒變淡」（那會有人看到）：三段鷹架的 e2e **全綠**，
+    //    因為切模式那條路不重畫。紅的是「排回去」那一題
+    //    ——`return 0;` 沒有被鎖住，於是它被當成學生的積木**打散出 `main`**。
+    //
+    // > **一層「畫完之後蓋上去」的視覺，蓋在【畫之前】等於沒蓋
+    // > ——而它不會報錯，它會在別的地方以別的名字爆出來。**
+    //
+    // ⚠️ 而它必須在重畫那道閘門**外面**：一則「只是深度變了」的更新
+    //    不帶 `blockState`，被跳過的話使用者切了鷹架卻什麼都沒發生。
+    //
+    // ⚠️ `hidden` 對積木來說與 `editable` 同義——那個模式下骨架**根本不在樹裡**
+    //    （`shouldStripScaffold`），沒有東西可以淡化。這與 2026-09-06 之前
+    //    組裝點寫的 `depth === 1 ? 'ghost' : 'editable'` 逐字等價。
+    // ⚠️ 重畫那條路已經套過了——這裡只服務**不重畫**的那些更新
+    //    （骨架告示的重發：樹沒變，變的是使用者想看到多少）。
+    if (!applied) this.applyScaffoldNotice(event)
   }
+
+  /**
+   * **套用骨架告示**——⚠️ 只在「重畫了」或「告示變了」的時候真的動手。
+   *
+   * 🔴 **重套不是冪等的**：它會重跑 `setDragStrategy` ＋ `setEditable`，
+   * 而使用者**拖曳中**那些 `source: 'blocks'` 的更新也會經過這裡
+   * ——實測三支鷹架 e2e 紅：「`return 0` 被連帶拖走了」
+   * 「插不回 `main` 與 `return` 之間」。
+   *
+   * > **一層冪等的視覺，在「重套」本身有副作用的時候就不再是冪等的。**
+   *
+   * ⚠️ `hidden` 對積木來說與 `editable` 同義——那個模式下骨架**根本不在樹裡**
+   * （`shouldStripScaffold`），沒有東西可以淡化。這與 2026-09-06 之前組裝點寫的
+   * `depth === 1 ? 'ghost' : 'editable'` 逐字等價。
+   */
+  private applyScaffoldNotice(event: SemanticUpdateEvent, force = false): void {
+    if (!event.scaffold) return
+    const key = `${event.scaffold.mode}|${[...event.scaffold.nodeIds].sort().join(',')}`
+    if (!force && key === this.lastScaffoldKey) return
+    this.lastScaffoldKey = key
+    this.markScaffoldBlocks(
+      new Set(event.scaffold.nodeIds),
+      event.scaffold.mode === 'ghost' ? 'ghost' : 'editable',
+    )
+  }
+
+  /** 上一次套用過的骨架告示——⚠️ 用來擋「內容沒變而重套」（重套有副作用）。 */
+  private lastScaffoldKey = ''
 
   /**
    * 🔴 **把「不記復原」的窗口延到 Blockly 的下一幀之後才關。**
@@ -1768,8 +1840,13 @@ export class BlocklyPanel implements ViewHost {
     }
   }
 
-  markScaffoldBlocks(scaffoldNodeIds: ReadonlySet<string>, mode: 'ghost' | 'editable'): void {
+  /**
+   * ⚠️ **內部的**（2026-09-06，spec 172）——⚠️ 唯一的入口是 `onSemanticUpdate`
+   * 讀到的骨架告示。組裝點不得直接叫它，而第一百零五條護欄擋著。
+   */
+  private markScaffoldBlocks(scaffoldNodeIds: ReadonlySet<string>, mode: 'ghost' | 'editable'): void {
     this.lastScaffoldIds = scaffoldNodeIds
+    if (!this.workspace) return
     if (!this.workspace) return
     const ghostBlockIds = new Set<string>()
     for (const block of this.workspace.getAllBlocks(false)) {

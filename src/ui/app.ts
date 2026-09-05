@@ -72,7 +72,7 @@ import { predictionFor, programSignature, type PredictQuestion } from '../core/p
 import { scatterOrder } from '../core/arrange'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
-import { unwrapSkeletonFrame, scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
+import { unwrapSkeletonFrame, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
 import { lessonById, allTracks, lessonsOfTrack, solutionFor } from '../core/load-lessons'
 import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
@@ -986,7 +986,25 @@ export class App {
     // > **一個「等別人做完」的等待，寫成毫秒數就是在賭那台機器的速度。**
     //
     // ⚠️ 有上限：鷹架剝光（`hidden`）的課本來就沒有鷹架積木，等不到是正常的。
-    for (let i = 0; i < 20 && this.blocklyPanel?.scaffoldMarked() !== true; i++) {
+    //
+    // 🔴 **而「同步真的結束了」也要等**（2026-09-06，spec 172 實測抓到）。
+    //
+    //    `syncCodeToBlocks` 的 `await` 回來時 `_codeToBlocksInProgress`
+    //    **還是 true**——它在稍後才清。而積木那側的變更處理器第一行就是
+    //    `if (this._codeToBlocksInProgress) return`，於是 `scatter` 造成的
+    //    19 次變更**一次都沒有寫回程式碼**：散落的積木在畫布上，
+    //    而程式碼還是原來那一份。
+    //
+    //    ⚠️ 這個 bug 是被「骨架改走匯流排」**逼出來的，而不是它造成的**：
+    //    在此之前骨架標記由組裝點在 `setTimeout(…, 900)` 裡做，
+    //    於是這個迴圈**順便**等掉了那 900 毫秒。
+    //
+    // > **一個等 A 的迴圈，如果它真正需要的是 B，
+    // > 那它在「A 變快了」的那一天會安靜地全部落空
+    // > ——而在那之前，它一直在靠一個沒有人寫下來的巧合活著。**
+    const ready = (): boolean =>
+      this.blocklyPanel?.scaffoldMarked() === true && !this._codeToBlocksInProgress
+    for (let i = 0; i < 30 && !ready(); i++) {
       await new Promise((r) => setTimeout(r, 100))
     }
     const n = this.blocklyPanel?.scatterTopStatements(
@@ -1408,8 +1426,20 @@ export class App {
     // （`wireBlocklyChangeHandler`），所以程式碼改動不會直接觸發診斷。
     // `e2e/diagnostics.spec.ts` 的檔頭記過「那是另一條線，今天沒有防線」。
     this.bus.on('semantic:update', (e) => {
+      const same = e.tree !== undefined && e.tree === this.currentTree
       if (e.tree) this.currentTree = e.tree
-      this.runAllDiagnostics()
+      // 🔴 **樹沒換就不重算診斷**（2026-09-06，spec 172）。
+      //
+      //    ⚠️ 在此之前這裡無條件重算，而那在 2026-09-06 之前不痛不癢
+      //    ——每一則 `semantic:update` 都代表樹真的變了。
+      //    骨架告示的重發（`republishScaffold`）帶的是**同一棵樹**：
+      //    診斷的輸入一個位元都沒動，而重算一次會**取代**掉現有的那批
+      //    ——包括別人剛推進去的（實測：診斷的 e2e 紅在「程式碼側沒有波浪」，
+      //    而積木側是好的，因為積木側的圖示不走同一條取代路徑）。
+      //
+      // > **一個「輸入沒變所以輸出一樣」的重算，不是沒有代價的
+      // > ——它會把中間那段時間裡別人放進去的東西一起洗掉。**
+      if (!same) this.runAllDiagnostics()
     })
 
     // 8. Setup code→blocks pipeline
@@ -1961,18 +1991,17 @@ export class App {
     return coreScaffoldComponentIds(this.syncController?.getCurrentTree(), this.currentSkeletonId)
   }
 
-  /**
-   * 畫布上哪幾塊積木屬於**骨架**——判定住在 `core/scaffold-nodes.ts`。
-   *
-   * 🔴 **這裡曾經是那份判定的家**，而 2026-08-30 流程視圖也要問同一件事
-   * ——搬進 core 而不是複製一份（`history/188`：那個決定曾經有六份實作）。
-   */
-  private scaffoldNodeIds(): Set<string> {
-    // 🔴 **問畫布上那一棵**（2026-09-02）：自動補的 `#include`／`using namespace std;`
-    //    只存在於顯示樹上，而它們**是**骨架——拿真相那一棵去算會漏掉它們，
-    //    症狀是「兩顆實心的積木站在一堆淡的裡面」。
-    return coreScaffoldNodeIds(this.syncController?.getDisplayTree(), this.currentSkeletonId)
-  }
+  // 🪦 **`scaffoldNodeIds()` 已於 2026-09-06 退場**（spec 172）。
+  //
+  //    組裝點不再算「哪幾顆是骨架」——那份判定跟著告示走匯流排，
+  //    而算它的地方是 `SyncController.scaffoldNotice()`。
+  //
+  // ⚠️ 它帶走的那一條註解**沒有消失，它搬家了**：
+  //    「問畫布上那一棵」（自動補的 `#include`／`using namespace std;`
+  //    只存在於顯示樹上）——那一行今天住在 `scaffoldNotice()` 裡。
+  //
+  // > **一支函式退場的時候，它註解裡那個【踩過的雷】要跟著搬到新家，
+  // > 不然下一個人會在新家再踩一次。**
 
   /**
    * **把「忙的時候被忽略的那些改動」補做一次**（見 `_codeChangedWhileSyncing`）。
@@ -2002,10 +2031,18 @@ export class App {
    * 判成超出範圍。
    */
   private remarkScaffold(): void {
-    this.blocklyPanel?.markScaffoldBlocks(
-      this.scaffoldNodeIds(),
-      this.scaffoldDepth === 1 ? 'ghost' : 'editable',
-    )
+    // 🔴 **組裝點不再替視圖決定它該畫什麼**（2026-09-06，spec 172）。
+    //
+    //    這裡曾經是 `blocklyPanel.markScaffoldBlocks(this.scaffoldNodeIds(),
+    //    this.scaffoldDepth === 1 ? 'ghost' : 'editable')`——而那一行做了兩件事，
+    //    第二件不該是它做的：**「這個深度該畫成 ghost 還是 editable」是視圖的事。**
+    //
+    //    今天它只說一句「骨架的告示變了，請重發一次」，
+    //    而每個視圖自己決定那代表什麼樣子（P1：唯一真實，各式投影）。
+    //
+    // ⚠️ 那則重發**不帶 `blockState`**，所以積木不會重畫——見
+    //    `SyncController.republishScaffold` 的檔頭。
+    this.syncController?.republishScaffold()
   }
 
   private reloadBlockSpecsForTopic(): void {
