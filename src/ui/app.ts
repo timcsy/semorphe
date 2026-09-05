@@ -56,7 +56,7 @@ import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
-import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type ScaffoldMode } from '../core/lesson'
+import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson'
 import { markTaskPassed, isTaskPassed, passedCount, clearProgress } from '../core/progress'
 /**
  * 「題目」那顆 picker 裡**不是一個題目**的那一項。
@@ -68,10 +68,11 @@ import { markTaskPassed, isTaskPassed, passedCount, clearProgress } from '../cor
 const CLEAR_PROGRESS = 'action:clear-progress'
 import { iterationCounts, loopRatio, loopNodeById } from '../core/iterations'
 import { predictionFor, programSignature, type PredictQuestion } from '../core/predict'
+import { scatterOrder } from '../core/arrange'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldNodeIds as coreScaffoldNodeIds, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
-import { lessonById, allTracks, lessonsOfTrack } from '../core/load-lessons'
+import { lessonById, allTracks, lessonsOfTrack, solutionFor } from '../core/load-lessons'
 import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
@@ -890,6 +891,64 @@ export class App {
     const code = this.codeView?.getCode?.() ?? ''
     if (code.trim() === '') return
     void this.syncController?.syncCodeToBlocks(code)
+  }
+
+  /**
+   * **鋪一題「排回去」**（文獻裡叫 Parsons problem）——把參考解答的積木打散在畫布上。
+   *
+   * ## 🔴 為什麼幾乎不用寫東西
+   *
+   * 這一題要的每一塊零件都已經在：
+   *
+   * ```
+   * 解答      solutions/<題目 id>.<副檔名>（42 題已經有，而且每一份都真的跑過）
+   * 變積木    syncCodeToBlocks —— 就是「以此為準：程式碼」那條路
+   * 打散      core/arrange.ts 的 scatterOrder（確定性）
+   * 判對錯    既有的裁判：排完按執行，比對輸出
+   * ```
+   *
+   * > **一個為了教學而發明的載體（打散的卡片），
+   * > 在這裡本來就是產品的主體。**
+   *
+   * ## ⚠️ 打散的是【語句】，不是每一塊積木
+   *
+   * 把 `cout << n << endl;` 拆成三塊（輸出／變數／換行）不是 Parsons 題，
+   * 是拼圖——而學生要練的是**順序與結構**，不是把運算式重組回去。
+   *
+   * 🔴 同一條規矩在「執行覆蓋」那一刀已經定過一次：
+   * **回饋的計數單位要跟使用者的知覺一致**，而學生眼裡一行就是一塊。
+   *
+   * ## ⚠️ 而它會蓋掉畫布——所以先問一句
+   *
+   * 形狀與「套用範例」一樣（`applyTemplate`）：選了一題卻沒看到它，
+   * 比被問一句更糟；而**吃掉他寫到一半的東西**比兩者都糟。
+   */
+  private async seedArrange(lesson: Lesson, task: LessonTask): Promise<void> {
+    const code = solutionFor(lesson.id, task.id)
+    if (code === undefined) {
+      // 🔴 **出聲**——一個安靜地變成「自己寫」的 Parsons 題，
+      //    畫面上與「這一課還沒寫好」一模一樣。
+      console.error(`[arrange] ${lesson.id}#${task.id} 宣告了 arrange 而沒有 solutions/ 檔`)
+      return
+    }
+    await this.syncController?.syncCodeToBlocks(code)
+    // 🔴 **等鷹架標記填好，而不是等一個猜出來的毫秒數。**
+    //
+    //    `lastScaffoldIds` 是同步之後才填的，而「哪幾塊是他不該搬的」
+    //    （`return 0;`）要靠它。等固定秒數的話，機器快一點的那天
+    //    `return 0;` 會被一起打散——而那不會報錯，只會多一塊他碰不到的積木。
+    //
+    // > **一個「等別人做完」的等待，寫成毫秒數就是在賭那台機器的速度。**
+    //
+    // ⚠️ 有上限：鷹架剝光（`hidden`）的課本來就沒有鷹架積木，等不到是正常的。
+    for (let i = 0; i < 20 && this.blocklyPanel?.scaffoldMarked() !== true; i++) {
+      await new Promise((r) => setTimeout(r, 100))
+    }
+    const n = this.blocklyPanel?.scatterTopStatements(
+      scatterOrder(`${lesson.id}#${task.id}`, 64)) ?? 0
+    if (n === 0) {
+      console.error(`[arrange] ${lesson.id}#${task.id} 一塊都沒打散——那一題等於直接給答案`)
+    }
   }
 
   /**
@@ -2850,6 +2909,33 @@ export class App {
         case 'task': {
           // ⚠️ 這一項不是「換一題」，是「做一件事」——與「章節」的 `doc:` 同形
           if (invoke.value === CLEAR_PROGRESS) { this.confirmClearProgress(); break }
+          // 🔴 **「排回去」那種題要先鋪畫面**——而它會蓋掉畫布，所以先問一句
+          //    （形狀與「套用範例」一樣：選了一題卻沒看到它比被問一句更糟，
+          //     而吃掉他寫到一半的東西比兩者都糟）。
+          const picked = taskById(this.currentLesson, invoke.value ?? '')
+          if (picked?.kind === 'arrange' && this.currentLesson) {
+            const lesson = this.currentLesson
+            const go = (): void => {
+              this.currentTaskId = picked.id
+              this.publishControls()
+              void this.seedArrange(lesson, picked)
+            }
+            // 🔴 **問語義樹，不問面板**（同 `applyTemplate`）——「有沒有東西」
+            //    是那份唯一真實的性質，不是某一個投影的性質。
+            const body = this.syncController?.getCurrentTree()?.children?.body ?? []
+            if (body.length === 0) { go(); break }
+            showQuickPick(
+              {
+                title: `開始「${picked.title}」？畫布上現在的東西會被換掉`,
+                items: [
+                  { value: 'yes', label: '開始（現在的內容會被換掉）' },
+                  { value: 'no', label: '取消' },
+                ],
+              },
+              (v) => { if (v?.[0] === 'yes') go() },
+            )
+            break
+          }
           // ⚠️ **不 persist**：它是 `session` 域的（跟課程與章節同一層）。
           //    「我現在做哪一題」跨裝置記住是錯的——那不是一份偏好。
           this.currentTaskId = invoke.value ?? FREE_PRACTICE

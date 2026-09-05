@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "testFileCount": 436
+    "testFileCount": 437
   },
   "adHocAssembly": 0,
   "details": [],
-  "note": "⚠️ 2026-09-05（宣告了插槽就要有人建）：語料上調——**缺陷數一筆未動**。新增第一百零三條護欄 `audit-declared-slots-built`（硬性零：宣告了 `dynamicRules.inputPattern` 而沒有 builder／paramList／branchList／altLayout 的，一顆都不准有；**注入驗過會紅**）。\n"
+  "note": "⚠️ 2026-09-05（「排回去」那種題）：測試檔數 434 → 435——新增 `tests/unit/core/arrange.test.ts`（確定性的打散）。**輸入量上調。**\n"
 }

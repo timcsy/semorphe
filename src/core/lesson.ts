@@ -247,6 +247,36 @@ export interface LessonTask {
    * 🔴 課程作者比自動判定更知道這一課的學生撐不撐得住，所以宣告會贏。
    * 判定的細節見 `core/predict.ts` 的 `predictionFor`。
    */
+  /**
+   * 這一題**怎麼給**——省略 ＝ 他自己從空白開始寫。
+   *
+   * ```
+   * 省略         自己寫
+   * 'arrange'   🟢 解答的積木打散在畫布上，他把它們【排】回去
+   * ```
+   *
+   * 🔴 **它與隔壁的 `predict` 是同一種詞性：學生的動作。**
+   *    `predict` 是「他要猜」，`arrange` 是「他要排」——兩個鍵並排時，
+   *    讀者立刻看得出它們都在講他做什麼。
+   *
+   * 🪦 **這一格原本叫 `parsons`**（研究文獻裡的名字），而那是一個人的姓：
+   *    寫教案的老師打開 `lesson.json` 看到它，零資訊。
+   *
+   * > **一個字如果它的意思要靠一篇論文才解釋得通，
+   * > 那它是【註解】，不是【識別字】。**
+   *
+   *    Parsons 這個名字留在下面的說明與 `concepts/認知鷹架.md` 裡
+   *    ——它是**出處**，而出處該待在註解裡。
+   *
+   * 🔴 **證據**（文獻裡叫 **Parsons problem**，見 `concepts/認知鷹架.md`）：
+   * 「把打散的程式碼排回去，學習成效與『自己寫程式』相同，而只花 **70%** 的時間。」
+   * 而在這裡它幾乎是免費的——**積木本來就會卡榫、會拒絕接錯**。
+   *
+   * ⚠️ 它**需要 `check`**（排完按執行，由既有的裁判判）
+   * 與 `solutions/<題目 id>.<副檔名>`（打散的來源就是那份參考解答）
+   * ——兩個都由 `parseTasks` 與第一百零二條護欄擋。
+   */
+  readonly kind?: 'arrange'
   readonly predict?: 'output' | 'iterations' | 'none' | 'choice'
   /**
    * 選擇題的選項——⚠️ `predict: 'choice'` 時**必填**。
@@ -355,8 +385,19 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
     if (pr !== undefined && !['output', 'iterations', 'none', 'choice'].includes(String(pr))) {
       throw new Error(`教案 ${id}：tasks[${i}] 的 predict 不是 output／iterations／none／choice`)
     }
+    const kind = t.kind
+    if (kind !== undefined && kind !== 'arrange') {
+      throw new Error(`教案 ${id}：tasks[${i}] 的 kind 只認得 arrange`)
+    }
+    // 🔴 **沒有裁判的 Parsons 題是排不完的**：學生把積木排好之後，
+    //    「排對了沒有」是按執行、比對輸出得到的答案。少了 `check`，
+    //    他排完之後**沒有任何人會說話**——而那比不給這一題更糟。
+    if (kind === 'arrange' && t.check === undefined) {
+      throw new Error(`教案 ${id}：tasks[${i}] 是 arrange 而沒有 check——排完之後沒有人會說話`)
+    }
     return {
       id: t.id, title: t.title,
+      kind: kind as 'arrange' | undefined,
       check: parseCheck(`${id}#${t.id}`, t.check),
       predict: pr as 'output' | 'iterations' | 'none' | 'choice' | undefined,
       choices: parseChoices(`${id}#${t.id}`, pr, t.choices),

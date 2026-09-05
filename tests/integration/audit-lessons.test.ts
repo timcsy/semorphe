@@ -61,7 +61,7 @@ interface Lesson {
   json: {
     title?: string; estimate?: string; pins?: { target?: string }; components?: string[]
     check?: { stdout?: string; stdin?: string[] }
-    tasks?: { id?: string; title?: string; check?: { stdout?: string; stdin?: string[] } }[]
+    tasks?: { id?: string; title?: string; kind?: string; check?: { stdout?: string; stdin?: string[] } }[]
   }
   md: string
   /** `solutions/` 裡有解答的題目 id。⚠️ 只要 id，**不要內容**——見下面那條。 */
@@ -117,6 +117,15 @@ export function judgeLessons(
       if (!t.check) continue      // 沒有裁判的題目本來就不需要解答
       if (t.id !== undefined && !l.solutions.includes(t.id)) {
         f.push({ lesson: l.dir, kind: '練習題沒有參考解答', detail: t.id })
+      }
+    }
+    // 🔴 **「排回去」那種題一定要有參考解答**——打散的來源就是它。
+    //    ⚠️ 少了它的症狀不是報錯：那一題會安靜地變成「自己從空白寫」，
+    //    而畫面上與「這一課還沒寫好」一模一樣。
+    for (const t of (l.json.tasks ?? [])) {
+      if (t.kind !== 'arrange') continue
+      if (t.id !== undefined && !l.solutions.includes(t.id)) {
+        f.push({ lesson: l.dir, kind: '「排回去」那種題沒有參考解答', detail: t.id })
       }
     }
     // 🔴 **解答不得出現在課文裡**——學生點得到的地方不放答案。
@@ -255,6 +264,22 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
     const ok = { ...good, json: { ...good.json, tasks: [
       { id: 'follow', title: '跟著做' },
       { id: 'ex1', title: '練習：改用 while 寫' },
+    ] } }
+    expect(judgeLessons([ok], C, T)).toEqual([])
+  })
+
+  it('★ 注入：「排回去」那種題沒有參考解答 → 會報（那一題會安靜地變成「自己寫」）', () => {
+    const bad = { ...good, json: { ...good.json, tasks: [
+      { id: 'follow', title: '跟著做' },
+      { id: 'ex1', title: '練習', kind: 'arrange', check: { stdout: 'a\n' } },
+    ] } }
+    expect(judgeLessons([bad], C, T).map((x) => x.kind)).toContain('「排回去」那種題沒有參考解答')
+  })
+
+  it('★ 注入：「排回去」那種題有解答 → 不報', () => {
+    const ok = { ...good, solutions: ['ex1'], json: { ...good.json, tasks: [
+      { id: 'follow', title: '跟著做' },
+      { id: 'ex1', title: '練習', kind: 'arrange', check: { stdout: 'a\n' } },
     ] } }
     expect(judgeLessons([ok], C, T)).toEqual([])
   })

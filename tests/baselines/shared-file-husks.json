@@ -4,8 +4,8 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "fileCount": 266,
-    "exportCount": 706
+    "fileCount": 267,
+    "exportCount": 708
   },
   "husks": 0,
   "duplicates": 0,
@@ -13,5 +13,5 @@
     "husks": [],
     "duplicates": []
   },
-  "note": "⚠️ 2026-09-04（跑之前先猜一下）：共用檔數 265 → 266——**輸入量上調，不是耦合變差**。新增 `core/predict.ts`（要問什麼 ＋ 這支程式是不是還是剛才那一支）＋ `tests/unit/core/predict.test.ts`；`LessonTask` 多一格 `predict`；`ConsolePanel.askPrediction`／`showPrediction`；`iterations.ts` 多三支（`isLoop`／`loopNodes`／`loopNodeById`／`loopRatio`——後者**不過濾**，因為揭曉一個預測時 `1` 與 `0` 都是正當的答案）。🔴 執行器多一個**可省略的** `beforeRun` async 鉤子——形狀抄 `pauseForUnrecognized`：**要停下來問人的事，用鉤子，不是把那件事搬進執行器**。沒注入時行為與從前逐字相同。\n"
+  "note": "⚠️ 2026-09-05（「排回去」那種題）：共用檔數與 export 數上調——**輸入量上調，不是耦合變差**。新增 `core/arrange.ts`（確定性的打散——🔴 一顆亂數都不產：一個每次都不一樣的東西，測試只能驗「它有動」，驗不了「它對」）＋ `tests/unit/core/arrange.test.ts`；`LessonTask` 多一格 `kind: 'arrange'`（**沒有 check 的「排回去」要丟錯**——排完之後沒有人會說話）；`load-lessons` 多一個 `solutionFor`（那 42 份參考解答本來只有護欄在讀，現在產品這一側也讀）；`BlocklyPanel.scatterTopStatements` 只負責畫。\n🔴 外部證據：文獻裡叫 Parsons problem：「與自己寫程式同樣的學習成效，而只花 70% 的時間」（`concepts/認知鷹架.md`）。\n"
 }

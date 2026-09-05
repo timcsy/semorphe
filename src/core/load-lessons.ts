@@ -20,6 +20,32 @@ function idOf(path: string): string {
   return path.replace(/^\/lessons\//, '').replace(/\/lesson\.json$/, '')
 }
 
+/**
+ * **參考解答**——Parsons 題打散的來源。
+ *
+ * 🔴 它們本來只有護欄在讀（`e2e/lessons.spec.ts` 真的跑一次，確認那個
+ * 期望輸出做得到）。Parsons 題讓它們有了**第二個消費者**，而那是產品這一側。
+ *
+ * ⚠️ **答案會進到 bundle 裡**——而那是這件事本來的形狀，不是我引入的漏：
+ * 期望輸出（`check.stdout`）早就在裡面了，而 Parsons 題**必須**把那些積木
+ * 給他才排得起來。
+ *
+ * ⚠️ 而課文頁**不受影響**：靜態頁的產生器只讀 `lesson.md`（`solutions/` 是
+ * 課目錄下的子資料夾，兩個讀者都以 `lesson.json` 為錨）。
+ */
+const SOLUTION_FILES = import.meta.glob('/lessons/*/*/solutions/*', {
+  eager: true, query: '?raw', import: 'default',
+}) as Record<string, string>
+
+/** `<課程 id>` ＋ `<題目 id>` → 那份參考解答。⚠️ 沒有就是 `undefined`。 */
+export function solutionFor(lessonId: string, taskId: string): string | undefined {
+  const prefix = `/lessons/${lessonId}/solutions/${taskId}.`
+  for (const [path, code] of Object.entries(SOLUTION_FILES)) {
+    if (path.startsWith(prefix)) return code
+  }
+  return undefined
+}
+
 const TRACK_FILES = import.meta.glob('/lessons/*/track.json', { eager: true }) as Record<
   string,
   { default: unknown }

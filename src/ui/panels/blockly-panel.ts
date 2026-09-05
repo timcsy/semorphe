@@ -1639,6 +1639,113 @@ export class BlocklyPanel implements ViewHost {
     text.textContent = label
   }
 
+  /**
+   * **把最外層的那幾句拆開、打散**——「排回去」那種題的畫面（文獻裡叫 Parsons problem）。
+   *
+   * ## 🔴 打散的是【語句】，不是每一塊積木
+   *
+   * 把 `cout << n << endl;` 拆成三塊（輸出／變數／換行）不是「排回去」，
+   * 是拼圖——而學生要練的是**順序與結構**，不是把運算式重組回去。
+   *
+   * 同一條規矩在「執行覆蓋」那一刀定過一次：
+   * **回饋的計數單位要跟使用者的知覺一致**，而學生眼裡一行就是一塊。
+   *
+   * ## ⚠️ 而鷹架那幾塊【不動】
+   *
+   * `#include`／`int main()` 是他沒有要排的東西（多數課它們還是淡的）。
+   * 打散它們只會讓他去搬一堆與這一題無關的積木。
+   *
+   * @param order 由 `core/arrange.ts` 給的確定性順序——⚠️ **這裡不亂數**
+   * @returns 打散了幾塊（0 ＝ 那一題等於直接給答案，呼叫端要出聲）
+   */
+  /** 鷹架標記填好了沒有——⚠️「排回去」那種題要等它（見 `scatterTopStatements`）。 */
+  scaffoldMarked(): boolean {
+    return this.lastScaffoldIds.size > 0
+  }
+
+  scatterTopStatements(order: readonly number[]): number {
+    const ws = this.workspace
+    if (!ws) return 0
+
+    // 🔴 **只找「函式主體裡的那幾句」**：頂層的 `#include` 與 `main` 本身不算。
+    //    判準是「它有前後接點、而且它的父積木是鷹架」——⚠️ 而「哪一塊是鷹架」
+    //    問的是既有的那份（`lastScaffoldIds`），不是在這裡再判一次。
+    const isScaffold = (b: Blockly.Block): boolean => {
+      const nodeId = this.getNodeIdForBlockId(b.id)
+      return nodeId !== null && nodeId !== undefined && this.lastScaffoldIds.has(nodeId)
+    }
+
+    const movable: Blockly.BlockSvg[] = []
+    for (const b of ws.getAllBlocks(false) as Blockly.BlockSvg[]) {
+      if (!b.previousConnection) continue          // 沒有前接點 ＝ 運算式，不是一句
+      // 🔴 **不打散他搬不動的**——淡的鷹架（`return 0;`）本來就拖不動，
+      //    打散它只會在畫面上多一塊他碰不到的東西。
+      //    ⚠️ 而這個判準**不依賴時機**：`isMovable()` 是積木自己的狀態。
+      if (!b.isMovable()) continue
+      if (isScaffold(b)) continue                  // 同上的第二道（鷹架標記若已就緒）
+      // 🔴 **`getSurroundParent()`，不是 `getParent()`**（2026-09-05 實測）。
+      //
+      //    Blockly 的 `getParent()` 回的是「**接在我上面的那一塊**」——在一疊
+      //    語句裡，那是**上一句**，不是包住我的那一塊。用它判「我在哪一層」
+      //    會得到一條鏈（第二句的 parent 是第一句），於是**每一句都被判成巢狀**
+      //    ——實測：4 塊該打散的，一塊都沒打散。
+      //
+      // > **一個名字叫 `getParent` 的東西，回的不一定是你以為的那個「裡面」。**
+      const around = b.getSurroundParent()
+      if (!around) continue
+      // ⚠️ 只取「函式主體的第一層」——巢狀迴圈【裡面】那幾句留在原地，
+      //    否則一題會爆成二十塊，而那正是那些研究說會讓人放棄的形狀。
+      //
+      // 🪦 判準原本是「圍住我的那一塊是鷹架」，而**它依賴時機**：
+      //    `lastScaffoldIds` 是同步之後才填的，在 +300ms 那一刻可能還是空的
+      //    ——實測：分類全部正確，而打散是 0 塊。
+      //
+      // > **一個依賴「另一件事已經做完」的判準，
+      // > 在它自己跑得比較快的那一天會安靜地全部落空。**
+      //
+      // 🟢 換成**結構**的判準：圍住我的那一塊自己沒有被圍住 ＝ 我在第一層。
+      if (around.getSurroundParent() !== null) continue
+      movable.push(b)
+    }
+    if (movable.length < 2) return 0
+
+    // 拆下來
+    for (const b of movable) b.unplug(true)
+
+    // 依 `order` 擺——⚠️ 由外面給順序，**這裡一顆亂數都不產**
+    const seq = order.filter((i) => i < movable.length)
+    const rest = movable.map((_, i) => i).filter((i) => !seq.includes(i))
+
+    // 🔴 **擺在骨架【下面】，不要疊上去**：疊在一起的第一印象是「壞了」，
+    //    而學生第一件事會是把它們拖開——那是白花的力氣。
+    let y = 20
+    for (const t of ws.getTopBlocks(false) as Blockly.BlockSvg[]) {
+      if (movable.includes(t)) continue
+      y = Math.max(y, t.getRelativeToSurfaceXY().y + t.getHeightWidth().height + 24)
+    }
+    for (const i of [...seq, ...rest]) {
+      const b = movable[i]
+      const xy = b.getRelativeToSurfaceXY()
+      b.moveBy(40 - xy.x, y - xy.y)
+      y += b.getHeightWidth().height + 14
+    }
+
+    // 🔴 **打散完要看得到**——擺在骨架下面之後，它們多半在畫面外，
+    //    而**看不到的積木等於沒有**：學生看到的是一個空掉的 `main`，
+    //    畫面上與「這一題壞了」一模一樣。
+    //
+    // ⚠️ `zoomToFit` 而不是 `scrollCenter`：塊數多的時候光是置中還是塞不下。
+    // ⚠️ **`catch` 不得是空的**（第某條護欄當場抓到我）：被吞掉的例外
+    //    會變成「內容比較少的成功」——這裡真正會發生的是「沒有畫布」
+    //    （測試環境），而那時打散仍然是有效的，只是沒有東西可以縮放。
+    try {
+      ws.zoomToFit()
+    } catch (e) {
+      console.warn('[arrange] 縮放到看得見失敗——積木已經打散了，而它們可能在畫面外', e)
+    }
+    return movable.length
+  }
+
   /** 把上一次的次數標註清掉。⚠️ 與 `clearNeverRan` 同一條規矩：改了就過期。 */
   clearIterations(): void {
     if (!this.workspace) return

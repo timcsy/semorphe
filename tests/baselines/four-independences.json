@@ -5,8 +5,8 @@
   },
   "scanned": {
     "files": 34,
-    "importLines": 224,
-    "anyMethodCalls": 2936
+    "importLines": 225,
+    "anyMethodCalls": 2965
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,
@@ -14,7 +14,7 @@
   "directViewCalls": 23,
   "visibleNotRatcheted": {
     "compositionRootImportsLanguage": 0,
-    "compositionRootViewCalls": 70
+    "compositionRootViewCalls": 72
   },
   "details": {
     "viewImportsLanguage": [],
@@ -46,5 +46,5 @@
       "src/ui/execution-controller.ts → consolePanel.clear"
     ]
   },
-  "note": "🟢 2026-09-05（宣告了插槽就要有人建）：方法呼叫數 **2940 → 2936 下降 4**——`block-registrar` 裡四個分支各自寫的「只有 jsonInit 的 init」收成**一支共用的 `jsonInitFor`**。\n🔴 而那不只是少四行：那四個分支**全部跳過了**「下拉不得靜默丟掉不認得的值」與腳位常數綁定（它們寫在最後一條路上，而分支提前 `continue`）。\n> **一個「在最後一條路上做的收尾」，會被每一個提前 continue 的分支跳過——而那些分支正是特別的那幾顆。**\n⚠️ 抓到它的是第五十九條護欄（開放而不保值 0 → 1），而觸發它的是替 `cpp_lcd_declare` 選入 variadic 的那一刀。\n"
+  "note": "⚠️ 2026-09-05（「排回去」那種題）：方法呼叫數與 import 行數上調——**輸入量上調，不是耦合變差**。新增 `core/arrange.ts`（確定性的打散——🔴 一顆亂數都不產：一個每次都不一樣的東西，測試只能驗「它有動」，驗不了「它對」）＋ `tests/unit/core/arrange.test.ts`；`LessonTask` 多一格 `kind: 'arrange'`（**沒有 check 的「排回去」要丟錯**——排完之後沒有人會說話）；`load-lessons` 多一個 `solutionFor`（那 42 份參考解答本來只有護欄在讀，現在產品這一側也讀）；`BlocklyPanel.scatterTopStatements` 只負責畫。\n🔴 外部證據：文獻裡叫 Parsons problem：「與自己寫程式同樣的學習成效，而只花 70% 的時間」（`concepts/認知鷹架.md`）。\n"
 }

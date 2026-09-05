@@ -134,6 +134,29 @@ describe('parseLesson：tasks', () => {
   })
 })
 
+describe('「排回去」那種題（kind: arrange）', () => {
+  const base = { title: 't', pins: {}, components: ['cpp:print'] }
+
+  it('讀得進來', () => {
+    const l = parseLesson('x/y', { ...base, tasks: [
+      { id: 'a', title: 'A', kind: 'arrange', check: { stdout: '5\n' } },
+    ] })
+    expect(l.tasks[0]?.kind).toBe('arrange')
+  })
+
+  it('🔴 沒有 check 的「排回去」要丟錯——排完之後沒有人會說話', () => {
+    expect(() => parseLesson('x/y', { ...base, tasks: [
+      { id: 'a', title: 'A', kind: 'arrange' },
+    ] })).toThrow(/沒有人會說話/)
+  })
+
+  it('認不得的 kind 要丟錯，不要安靜地當成「自己寫」', () => {
+    expect(() => parseLesson('x/y', { ...base, tasks: [
+      { id: 'a', title: 'A', kind: 'jigsaw', check: { stdout: '1\n' } },
+    ] })).toThrow(/kind/)
+  })
+})
+
 describe('taskById', () => {
   const l = parseLesson('x/y', {
     title: 't', pins: {}, components: ['cpp:print'],

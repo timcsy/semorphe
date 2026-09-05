@@ -555,7 +555,8 @@ test('★ 題目：只有選了課程與章節才有那一格，而預設是「�
   await cell.click()
   const rows = await page.$$eval('.quick-pick-item', (e) => e.map((x) => x.textContent ?? ''))
   expect(rows.join('｜'), '🔴 清單裡沒有「純練習」——那是使用者拍板的那一格').toContain('純練習')
-  expect(rows.join('｜')).toContain('練習：印出 1 到 5 的總和')
+  // ⚠️ 這一題 2026-09-05 起是 Parsons（標題跟著換了）
+  expect(rows.join('｜')).toContain('練習：把印出總和的積木排回去')
   await page.keyboard.press('Escape')
 })
 
@@ -598,10 +599,14 @@ test('★ 題目：純練習的時候裁判沉默，而執行覆蓋照樣標', a
 test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問過才切】', async ({ page }) => {
   test.setTimeout(120_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
+  // ⚠️ **用第 2 課，不是第 10 課**：第 10 課的 ex1 2026-09-05 起是 Parsons，
+  //    而選那一題會**重鋪畫布**——這一支驗的是裁判與「下一題」，不是 Parsons。
+  //    > 一條測試如果錨在「某一題剛好是普通題」上，那一題升級的那天它會紅。
+  await page.goto('/?lesson=cpp-beginner%2F02-%E8%A8%98%E4%BD%8F%E8%B3%87%E6%96%99',
+    { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(7000)
 
-  // 選第二題（練習：印出總和），然後寫出它的答案
+  // 選第二題（練習：把 height 改成 int），然後寫出它的答案
   await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
   await page.locator('.quick-pick-item[data-value="ex1"]').click()
   await page.waitForTimeout(500)
@@ -611,11 +616,9 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
-  await page.keyboard.type('int sum = 0;\nint n = 1;\nwhile (n <= 5) {\nsum = sum + n;\nn = n + 1;', { delay: 10 })
-  // ⚠️ 迴圈外面才印——`typeBody` 那一課學到的：游標會留在迴圈裡
-  await page.keyboard.press('ArrowDown')
-  await page.keyboard.press('End')
-  await page.keyboard.type('\ncout << sum << endl;', { delay: 10 })
+  await page.keyboard.type(
+    'int age = 16;\nint height = 1.72;\nchar grade = \'A\';\n' +
+    'cout << age << endl;\ncout << height << endl;\ncout << grade << endl;', { delay: 10 })
   await page.waitForTimeout(3000)
   await page.locator('#run-btn').click()
   await skipPredictionIfAsked(page)
@@ -625,7 +628,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   await expect(verdict).toHaveClass(/passed/)
   // 🔴 **說出是哪一題**——「✅ 對了」在一課有好幾題的時候是有歧義的
   expect(await verdict.innerText(),
-    '🔴 祝賀沒有說出是哪一題——他不知道那個勾算在哪一題頭上').toContain('練習：印出 1 到 5 的總和')
+    '🔴 祝賀沒有說出是哪一題——他不知道那個勾算在哪一題頭上').toContain('練習：把 height 改成 int')
 
   // 🔴 **不自動切**：下一題是一句話 ＋ 一顆按鈕
   const next = page.locator('.console-next-task')
@@ -633,7 +636,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   const stillHere = await page.locator('#status-controls .status-item-btn[data-control-id="task"]').innerText()
   expect(stillHere,
     '🔴 自動切了下一題——他下一次執行會突然被另一題評價，而他不知道何時換的',
-  ).toContain('練習：印出 1 到 5 的總和')
+  ).toContain('練習：把 height 改成 int')
   // 進度要跟著動
   expect(stillHere, `🔴 過了而進度沒動：${stillHere}`).toMatch(/1\/2/)
 
@@ -951,4 +954,55 @@ test('★ 數字字面：0x27／1000000LL／1.5f 走一趟積木都不得被改�
       `🔴 ${literal} 走一趟積木之後不見了——使用者沒有要求，而他的程式被改掉了：\n${back}`,
     ).toContain(literal)
   }
+})
+
+/**
+ * 🔴 **「排回去」（文獻裡叫 Parsons problem）：解答的積木打散在畫布上，他把它們排回去。**
+ *
+ * 外部證據（`concepts/認知鷹架.md`）：
+ *
+ * > 把打散的程式碼排回去，**學習成效與「自己寫程式」相同，而只花 70% 的時間**。
+ *
+ * 而在這裡它幾乎是免費的——**積木本來就會卡榫、會拒絕接錯**。
+ */
+test('★ 排回去：選了那一題，解答的積木會被打散在畫布上', async ({ page }) => {
+  test.setTimeout(150_000)
+  const errs: string[] = []
+  page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().split('\n')[0]) })
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  const top = () => page.evaluate(() =>
+    (window as never as { __app: { blocklyPanel: { workspace: { getTopBlocks(o: boolean): unknown[] } } } })
+      .__app.blocklyPanel.workspace.getTopBlocks(false).length)
+  expect(await top(), '🔴 一開始畫布不是乾淨的 → 下面驗的是別的東西').toBeLessThanOrEqual(1)
+
+  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
+  await page.locator('.quick-pick-item[data-value="ex1"]').click()
+  await page.waitForTimeout(5000)
+
+  // 🔴 **打散了**——頂層從 1 變成好幾塊
+  expect(await top(), '🔴 選了「排回去」那種題而畫布沒有被打散——那一題等於直接給答案')
+    .toBeGreaterThan(2)
+
+  // ⚠️ 而**骨架不動**：`return 0;` 是他不該搬的
+  const code = await page.evaluate(() =>
+    (window as never as { __app: { codeView: { getCode?(): string } } }).__app.codeView.getCode?.() ?? '')
+  expect(code, `🔴 return 0; 被搬出 main 了：\n${code}`).toMatch(/int main\(\) \{\s*\n\s*return 0;/)
+
+  // 🔴 **他要看得到那些積木**——擺到畫面外等於沒有
+  const visible = await page.evaluate(() => {
+    const ws = (window as never as Record<string, never>).__app as unknown as
+      { blocklyPanel: { workspace: { getTopBlocks(o: boolean): { getSvgRoot?(): SVGGElement }[] } } }
+    let n = 0
+    for (const b of ws.blocklyPanel.workspace.getTopBlocks(false)) {
+      const r = b.getSvgRoot?.()?.getBoundingClientRect()
+      if (r && r.width > 0 && r.top < window.innerHeight && r.bottom > 0) n++
+    }
+    return n
+  })
+  expect(visible, '🔴 打散的積木在畫面外——看不到的積木等於沒有').toBeGreaterThan(2)
+
+  expect(errs.filter((e) => e.includes('[arrange]')), '🔴 鋪這一題的時候出聲了').toEqual([])
 })
