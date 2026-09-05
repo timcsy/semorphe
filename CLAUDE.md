@@ -48,6 +48,7 @@ tests/
 | 改核心／投影／解譯器 | `npm run test:unit` ＋ `npm run test:capsule` | 十幾秒 |
 | 🔴 **改宣告、身分、基線、工具箱、課程清單** | `npm run test:guard`（54 條護欄） | 分鐘 |
 | 🔴 **改了「使用者按得到的東西」**（按鈕、選單、面板結構） | **`npm run test:e2e`** | 十分鐘 |
+| 🔴 **改了積木的畫法**（膠囊定義、`block-registrar`、renderer） | **重產課文的對照圖**（見下） | 六分鐘 |
 | commit 前 | `npm test`（全套） | 兩分鐘 |
 | PR | CI 跑全套 ＋ `npm run test:e2e` | — |
 
@@ -60,6 +61,20 @@ tests/
 
 ⚠️ 而「開瀏覽器實測」也擋不住：**實測的是剛做的那條路，
 不是那些沒有人再去看的舊路**。
+
+🔴 **對照圖那一列是 2026-09-05 加的**，而它也是使用者發現的：課文頁上
+`1000000LL * 1000000LL` 的積木寫著 `0 × 0`——**而產品是對的**，
+過期的是那 68 張圖（在 `field_number → field_input` 之前產的）。
+
+```
+npx playwright test --config=tools/demo/playwright.demo.config.ts record-blockmaps
+```
+
+> **一份產物的過期，有兩種來源：輸入變了，或者【產它的那台機器變了】。
+> 只錨住前者的檢查，會在後者發生時保持全綠。**
+
+⚠️ 現在 `audit-lesson-blockmaps` 會替你紅（它比對 `engineHash`），
+所以**不用記得**——但要知道紅的時候該跑什麼。
 
 判準一句話：**你改的是「行為」，還是「這個 repo 的形狀」？** 後者才需要護欄。
 

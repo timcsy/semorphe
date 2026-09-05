@@ -47,7 +47,7 @@ export interface AppShellElements {
   mobileTabBar: MobileTabBar | null
   codeKeyboard: CodeKeyboard | null
   /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
-  showProjection: (which: 'blocks' | 'flow') => void
+  showProjection: (which: 'blocks' | 'flow' | 'code') => void
   /** 套一個桌機佈局預設（專注／對照／三欄）。 */
   applyLayout: (id: LayoutPresetId) => void
   /** 🔴 宿主換掉這個視窗畫哪一層（IDE 的槽下拉）——見 `hostLayers`。 */
@@ -971,10 +971,19 @@ export function createAppLayout(
     applyLayoutRef?.(document.body.getAttribute('data-layout') as LayoutPresetId ?? 'compare')
   }
 
-  const showProjection = (which: 'blocks' | 'flow'): void => {
+  const showProjection = (which: 'blocks' | 'flow' | 'code'): void => {
     // 🔴 **「專注」顯示哪一層由這裡決定**（2026-08-31）——宣告寫的是 `'*'`，
     //    而 `'*'` 要被代換成使用者現在看的那一層。少了這兩行，「專注」永遠是程式碼。
-    const target: UnderstandingLayer = which === 'blocks' ? 'space' : 'relation'
+    //
+    // 🔴 **`'code'` 是 2026-09-05 補的，而它補的是一個真的洞**：在此之前
+    //    這支只認得積木與流程，於是「回到程式碼」**沒有任何入口**
+    //    ——`focusLayer` 停在上一次被切走的那一層。
+    //    症狀是課程宣告了 `view: 'code'` 而學生看到的是積木：
+    //
+    //    > **「專注」永遠是程式碼**這句舊註解，在有人真的切走之後就不成立了
+    //    > ——而沒有回頭路的那一邊，不會報錯，它只是留在原地。
+    const target: UnderstandingLayer =
+      which === 'blocks' ? 'space' : which === 'flow' ? 'relation' : 'element'
     focusLayer = target
     // 🔴 **它現在走的是同一張置換表**（2026-09-01）：宿主那顆「看積木／看流程」
     //    與槽上的下拉**做同一件事**，所以不會有兩份狀態。
@@ -983,7 +992,9 @@ export function createAppLayout(
       layoutPreset(document.body.getAttribute('data-layout') as LayoutPresetId ?? 'compare')
         ?? LAYOUT_PRESETS[0], assignment, focusLayer).flat()
     if (!flat.includes(target)) {
-      const shown = (['space', 'relation'] as const).find((l) => flat.includes(l))
+      // ⚠️ 換的來源不含 `target` 自己——`element` 進來之後這一組有三個成員了。
+      const shown = (['space', 'relation', 'element'] as const)
+        .find((l) => l !== target && flat.includes(l))
       if (shown) assignment = swapTo(assignment, shown, target)
     }
     // 🔴 **grid 之下「哪一個投影看得到」由【版面】決定，不由這裡**（2026-08-31）。

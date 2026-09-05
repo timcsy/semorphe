@@ -36,6 +36,7 @@ import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { engineHash } from '../blockmap/engine-hash'
 
 const ROOT = path.resolve(process.cwd())
 const OUT = path.join(ROOT, 'assets/blockmaps')
@@ -363,6 +364,10 @@ for (const c of CASES) {
       //    **產生這張圖的那一份**——去課文裡再抽一次就是第二個抽取點，
       //    而兩份遲早會不一樣。
       code: c.code,
+      // 🔴 **產這張圖的那台機器長什麼樣**——見 `core/blockmap-engine-hash.ts`。
+      //    ⚠️ 少了它，`field_number → field_input` 這種改動會讓 68 張圖
+      //    **全部靜默過期**：課文一個字沒改，於是 `codeHash` 一路綠。
+      engineHash: engineHash(ROOT),
       blocks: got.blocks,
       svg: got.svg,
     }, null, 0) + '\n')

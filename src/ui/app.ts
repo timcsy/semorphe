@@ -57,6 +57,7 @@ import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson'
+import type { LessonView } from '../core/semantic-wave'
 import { markTaskPassed, isTaskPassed, passedCount, clearProgress } from '../core/progress'
 /**
  * 「題目」那顆 picker 裡**不是一個題目**的那一項。
@@ -613,7 +614,7 @@ export class App {
   }
 
   /** 切換 editor 區顯示哪一個投影（積木／流程）。 */
-  private showProjection: ((which: 'blocks' | 'flow') => void) | null = null
+  private showProjection: ((which: 'blocks' | 'flow' | 'code') => void) | null = null
 
   /** 把主控台那一格加回下方面板——宿主打不開終端機時。 */
   private enableConsoleTab: (() => void) | null = null
@@ -891,6 +892,50 @@ export class App {
     const code = this.codeView?.getCode?.() ?? ''
     if (code.trim() === '') return
     void this.syncController?.syncCodeToBlocks(code)
+  }
+
+  /**
+   * **套用這一題建議的看法**——⚠️ **一次，而且只有一次**。
+   *
+   * ## 🔴 「一次」就是「這不是閘門」的全部
+   *
+   * 學習者控制的整合分析（`concepts/認知鷹架.md`）：
+   *
+   * > **「sequence control is the only type that generally does not harm」**
+   * > ——順序的控制權是唯一一種一般不會有害的。
+   *
+   * 所以系統給預設是對的，而**搶回去是錯的**。而「搶回去」在程式碼裡長成什麼樣？
+   * 它不是一個 `if (locked)`——它是**在每一次重畫時再套用一次**。
+   *
+   * > **一個鎖，多數時候不是寫成鎖的。
+   * > 它是一段「每次都重新套用預設值」的程式碼。**
+   *
+   * ⚠️ 所以這一支只從**換題**那一條路呼叫，不從任何重畫、同步或狀態發布的路徑。
+   *
+   * ## ⚠️ 而宿主做不到就跳過，不要退而求其次
+   *
+   * VSCode 的面板裡只有積木與流程兩層（程式碼在 IDE 自己的編輯器）。
+   * 那裡「專注程式碼」沒有意義——**跳過比擺一個最接近的更好**，
+   * 因為後者會讓學生看到一個他沒有要的版面而不知道為什麼。
+   */
+  private applySuggestedView(view: LessonView | undefined): void {
+    if (view === undefined) return
+    const layout: LayoutPresetId =
+      view === 'compare' ? 'compare' : view === 'three' ? 'three-column' : 'focus'
+    // 🔴 **專注時一定要說「專注哪一層」**——三種都要說，`code` 也要。
+    //    ⚠️ 少了 `code` 那一支，從「排回去」（積木）切到下一題（程式碼）時
+    //    版面會換成專注**而那一格還是積木**：課程說了 code，學生看到積木。
+    if (view === 'blocks' || view === 'flow' || view === 'code') this.showProjection?.(view)
+    this.applyLayout?.(layout)
+    // 🔴 **`currentLayout` 也要跟著動**——它是狀態列那顆算標籤用的那一格。
+    //    只呼叫 `applyLayout` 的話：版面真的換了（`gridTemplateAreas` 變了），
+    //    **而標籤還寫著舊的**——那比沒換更糟，因為畫面上兩個地方互相打臉。
+    //
+    // > **一個「做了那件事」的呼叫，與一個「記得那件事做過了」的欄位，
+    // > 是兩件事——而少了後者，畫面會開始說謊。**
+    this.currentLayout = layout
+    // ⚠️ 套用完要再發布一次：標籤是從現況算的，而呼叫端多半在套用【之前】發布過。
+    this.publishControls()
   }
 
   /**
@@ -2918,6 +2963,7 @@ export class App {
             const go = (): void => {
               this.currentTaskId = picked.id
               this.publishControls()
+              this.applySuggestedView(picked.view)
               void this.seedArrange(lesson, picked)
             }
             // 🔴 **問語義樹，不問面板**（同 `applyTemplate`）——「有沒有東西」
@@ -2940,6 +2986,9 @@ export class App {
           //    「我現在做哪一題」跨裝置記住是錯的——那不是一份偏好。
           this.currentTaskId = invoke.value ?? FREE_PRACTICE
           this.publishControls()
+          // 🔴 **只在換題這一條路套用**——見 `applySuggestedView` 的檔頭：
+          //    在重畫時再套一次，就是把「建議」變成「鎖」。
+          this.applySuggestedView(taskById(this.currentLesson, this.currentTaskId)?.view)
           break
         }
         case 'style': {

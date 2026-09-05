@@ -1692,7 +1692,13 @@ export class BlocklyPanel implements ViewHost {
       //
       // > **一個名字叫 `getParent` 的東西，回的不一定是你以為的那個「裡面」。**
       const around = b.getSurroundParent()
-      if (!around) continue
+      // 🔴 **`hidden` 鷹架的課根本沒有 `main` 積木**（2026-09-05 實測）——
+      //    那幾句本來就在頂層，`getSurroundParent()` 回 `null`。
+      //    原本這裡直接 `continue`，於是**整條 hidden 的課一塊都打散不了**。
+      //
+      // > **一個「找出第一層」的判準，如果假設了「一定有一個包住它的東西」，
+      // > 它在【那個東西被藏起來】的那些課上會全部落空。**
+      if (!around) { movable.push(b); continue }
       // ⚠️ 只取「函式主體的第一層」——巢狀迴圈【裡面】那幾句留在原地，
       //    否則一題會爆成二十塊，而那正是那些研究說會讓人放棄的形狀。
       //

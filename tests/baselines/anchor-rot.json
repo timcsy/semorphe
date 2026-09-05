@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "auditFileCount": 98,
+    "auditFileCount": 99,
     "trueIdentityCount": 332
   },
   "badAnchor": 0,
-  "note": "⚠️ 2026-09-05（宣告了插槽就要有人建）：語料上調——**缺陷數一筆未動**。新增第一百零三條護欄 `audit-declared-slots-built`（硬性零：宣告了 `dynamicRules.inputPattern` 而沒有 builder／paramList／branchList／altLayout 的，一顆都不准有；**注入驗過會紅**）。\n"
+  "note": "⚠️ 2026-09-05（版面建議與語意波）：護欄檔數 98 → 99——新增第一百零四條護欄 `tests/integration/audit-lesson-wave.test.ts`（宣告了看法的課要是一條語意波：**先下到具體，再回到抽象**——只下不上不算，那是「玩過了但沒有學到」）。⚠️ 「第一百零四條」是**發號**，條數是這個 99——見 `audit-guardrail-count` 的檔頭。\n⚠️ 2026-09-05（宣告了插槽就要有人建）：語料上調——**缺陷數一筆未動**。新增第一百零三條護欄 `audit-declared-slots-built`（硬性零：宣告了 `dynamicRules.inputPattern` 而沒有 builder／paramList／branchList／altLayout 的，一顆都不准有；**注入驗過會紅**）。\n"
 }

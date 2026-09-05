@@ -23,6 +23,19 @@
         "stdin": [
           "7"
         ]
+      },
+      "view": "compare"
+    },
+    {
+      "id": "rebuild",
+      "title": "排回去：把剛才那支程式的積木排好",
+      "kind": "arrange",
+      "view": "blocks",
+      "check": {
+        "stdout": "你打的是 7\n",
+        "stdin": [
+          "7"
+        ]
       }
     },
     {
@@ -34,7 +47,8 @@
           "3",
           "8"
         ]
-      }
+      },
+      "view": "code"
     }
   ]
 }

@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "testFileCount": 437
+    "testFileCount": 439
   },
   "adHocAssembly": 0,
   "details": [],
-  "note": "⚠️ 2026-09-05（「排回去」那種題）：測試檔數 434 → 435——新增 `tests/unit/core/arrange.test.ts`（確定性的打散）。**輸入量上調。**\n"
+  "note": "⚠️ 2026-09-05（版面建議與語意波）：測試檔數 437 → 439——**輸入量上調，不是耦合變差**。新增 `core/semantic-wave.ts`（`LessonView` ＋ `abstraction()` ＋ `waveOf()`）＋ `tests/unit/core/semantic-wave.test.ts` ＋ 第一百零四條護欄 `tests/integration/audit-lesson-wave.test.ts`；`LessonTask` 多一格 `view`；`app.ts` 多一支 `applySuggestedView`。\n🔴 這一格是**建議，不是鎖**：`applySuggestedView` 只從【換題】那一條路呼叫，不從任何重畫路徑——因為「搶回去」在程式碼裡不是一個 `if (locked)`，它是一段「每次都重新套用預設值」的程式碼。外部證據是學習者控制的整合分析：「sequence control is the only type that generally does not harm」（`concepts/認知鷹架.md`）。\n🔴 而 `applySuggestedView` 除了呼叫 `applyLayout` 還要寫 `this.currentLayout`——少了後者，版面真的換了而狀態列的標籤還寫著舊的：**畫面上兩個地方互相打臉，比沒換更糟**。\n"
 }

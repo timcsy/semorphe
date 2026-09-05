@@ -4,8 +4,8 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "fileCount": 267,
-    "exportCount": 708
+    "fileCount": 268,
+    "exportCount": 711
   },
   "husks": 0,
   "duplicates": 0,
@@ -13,5 +13,5 @@
     "husks": [],
     "duplicates": []
   },
-  "note": "⚠️ 2026-09-05（「排回去」那種題）：共用檔數與 export 數上調——**輸入量上調，不是耦合變差**。新增 `core/arrange.ts`（確定性的打散——🔴 一顆亂數都不產：一個每次都不一樣的東西，測試只能驗「它有動」，驗不了「它對」）＋ `tests/unit/core/arrange.test.ts`；`LessonTask` 多一格 `kind: 'arrange'`（**沒有 check 的「排回去」要丟錯**——排完之後沒有人會說話）；`load-lessons` 多一個 `solutionFor`（那 42 份參考解答本來只有護欄在讀，現在產品這一側也讀）；`BlocklyPanel.scatterTopStatements` 只負責畫。\n🔴 外部證據：文獻裡叫 Parsons problem：「與自己寫程式同樣的學習成效，而只花 70% 的時間」（`concepts/認知鷹架.md`）。\n"
+  "note": "⚠️ 2026-09-05（版面建議與語意波）：共用檔數 267 → 268、export 數 708 → 711——**輸入量上調，不是耦合變差**。新增 `core/semantic-wave.ts`（`LessonView` ＋ `abstraction()` ＋ `waveOf()`）＋ `tests/unit/core/semantic-wave.test.ts` ＋ 第一百零四條護欄 `tests/integration/audit-lesson-wave.test.ts`；`LessonTask` 多一格 `view`；`app.ts` 多一支 `applySuggestedView`。\n🔴 這一格是**建議，不是鎖**：`applySuggestedView` 只從【換題】那一條路呼叫，不從任何重畫路徑——因為「搶回去」在程式碼裡不是一個 `if (locked)`，它是一段「每次都重新套用預設值」的程式碼。外部證據是學習者控制的整合分析：「sequence control is the only type that generally does not harm」（`concepts/認知鷹架.md`）。\n🔴 而 `applySuggestedView` 除了呼叫 `applyLayout` 還要寫 `this.currentLayout`——少了後者，版面真的換了而狀態列的標籤還寫著舊的：**畫面上兩個地方互相打臉，比沒換更糟**。\n"
 }

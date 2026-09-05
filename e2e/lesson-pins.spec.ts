@@ -638,7 +638,10 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
     '🔴 自動切了下一題——他下一次執行會突然被另一題評價，而他不知道何時換的',
   ).toContain('練習：把 height 改成 int')
   // 進度要跟著動
-  expect(stillHere, `🔴 過了而進度沒動：${stillHere}`).toMatch(/1\/2/)
+  // ⚠️ 分母跟著課走（第 2 課 2026-09-05 起有三題：跟著做／排回去／練習），
+  //    所以只驗**分子動了**——錨在分母上的話，加一題的那天它會紅，
+  //    而它要驗的從來不是「這一課有幾題」。
+  expect(stillHere, `🔴 過了而進度沒動：${stillHere}`).toMatch(/1\/\d/)
 
   await next.locator('button').click()
   await page.waitForTimeout(400)
@@ -1005,4 +1008,80 @@ test('★ 排回去：選了那一題，解答的積木會被打散在畫布上'
   expect(visible, '🔴 打散的積木在畫面外——看不到的積木等於沒有').toBeGreaterThan(2)
 
   expect(errs.filter((e) => e.includes('[arrange]')), '🔴 鋪這一題的時候出聲了').toEqual([])
+})
+
+/**
+ * 🔴 **版面是【建議】，不是【閘門】。**
+ *
+ * 學習者控制的整合分析（`concepts/認知鷹架.md`）：
+ *
+ * > **「sequence control is the only type that generally does not harm」**
+ * > ——順序的控制權是唯一一種一般不會有害的。
+ *
+ * 所以系統給預設是對的，而**搶回去是錯的**。而「搶回去」在程式碼裡不是一個
+ * `if (locked)`——它是**在每一次重畫時再套用一次**。
+ *
+ * > **一個鎖，多數時候不是寫成鎖的。
+ * > 它是一段「每次都重新套用預設值」的程式碼。**
+ *
+ * ⚠️ 所以這一支的重點在**後半**：改完之後去做一堆會重畫的事，看它有沒有被搶回去。
+ */
+test('★ 版面：課程給預設，而學生改了之後【不得被搶回去】', async ({ page }) => {
+  test.setTimeout(150_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  // ⚠️ 用第 2 課：第 1 課只有一句話，排不了（`movable < 2`），
+  //    而那一課因此**沒有**宣告 view——它還不是一條波。
+  await page.goto('/?lesson=cpp-beginner%2F02-%E8%A8%98%E4%BD%8F%E8%B3%87%E6%96%99',
+    { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  const layoutNow = () => page.locator('#status-controls .status-item-btn[data-control-id="layout"]').innerText()
+
+  // ① 選一題宣告了 `view: 'blocks'` 的（「排回去」）→ 版面該跟著走
+  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
+  await page.locator('.quick-pick-item[data-value="rebuild"]').click()
+  await page.waitForTimeout(5000)
+  const suggested = await layoutNow()
+  expect(suggested, `🔴 課程宣告了看法而版面沒有跟著走：${suggested}`).toContain('專注')
+
+  // 🔴 **「專注」還要說專注【哪一格】**——這一句是 2026-09-05 補的，
+  //    在此之前只驗到「版面是專注」，而專注在哪一層沒有人問。
+  //    ⚠️ 版面寫在 `<main>` 的 `grid-template-areas` 上，不在 `body`
+  //       ——`body` 上只有 `data-layout` 那個名字。
+  const focusOn = () => page.evaluate(() =>
+    getComputedStyle(document.querySelector('main') as HTMLElement).gridTemplateAreas)
+  expect(await focusOn(), '🔴 宣告 blocks 而專注的那一格不是積木').toContain('space')
+
+  // ② 換到宣告 `view: 'code'` 的那一題 → 專注要**切得回程式碼**
+  //    ⚠️ 這一條擋的是一個真的洞：`showProjection` 本來只認得積木與流程，
+  //    於是「回到程式碼」沒有入口，`focusLayer` 停在上一次被切走的那一層。
+  //    症狀是課程說 code 而學生看到積木——**而它不會報錯，它只是留在原地**。
+  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
+  await page.locator('.quick-pick-item[data-value="ex1"]').click()
+  await page.waitForTimeout(3000)
+  expect(await focusOn(), '🔴 宣告 code 而專注的那一格不是程式碼——沒有回頭路').toContain('element')
+
+  // ③ 🔴 **他自己改成別的**
+  await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
+  await page.locator('.quick-pick-item[data-value="three-column"]').click()
+  await page.waitForTimeout(1200)
+  expect(await layoutNow(), '🔴 他改不動——那就不是建議，是閘門').toContain('三欄')
+
+  // ④ 🔴 **做一堆會重畫的事**——這才是「有沒有被搶回去」真正的考題
+  await page.locator('.monaco-editor').first().click()
+  await page.keyboard.press('Control+Home')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('End')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('cout << "Hi" << endl;', { delay: 12 })
+  await page.waitForTimeout(3000)          // 同步一輪
+  await page.locator('#run-btn').click()   // 執行一輪（會發狀態、會重畫控制項）
+  await skipPredictionIfAsked(page)
+  await page.waitForTimeout(3500)
+
+  expect(
+    await layoutNow(),
+    '🔴 **版面被搶回去了**——而「搶回去」不是一個 if (locked)，\n' +
+      '   它是一段「每次都重新套用預設值」的程式碼（見 applySuggestedView 的檔頭）。',
+  ).toContain('三欄')
 })

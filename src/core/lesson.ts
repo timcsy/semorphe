@@ -36,6 +36,7 @@
  * - **不知道任何語言**——`components` 對它只是一串身分。
  */
 import { interactionById } from './interactions'
+import { LESSON_VIEWS, type LessonView } from './semantic-wave'
 import type { ControlId } from './host/controls'
 
 /**
@@ -277,6 +278,27 @@ export interface LessonTask {
    * ——兩個都由 `parseTasks` 與第一百零二條護欄擋。
    */
   readonly kind?: 'arrange'
+  /**
+   * 這一題**建議看哪一邊**——省略 ＝ 不動版面（沿用他現在的）。
+   *
+   * ```
+   * 'code'      專注程式碼      抽象
+   * 'compare'   對照（碼＋積木）  中間——同時給抽象與具體
+   * 'three'     三欄            同上
+   * 'blocks'    專注積木
+   * 'flow'      專注流程        具體
+   * ```
+   *
+   * 🔴 **它是【建議】，不是【閘門】**——套用一次，而學生隨時可以改，
+   * 改完**不得被搶回去**。那不是我們客氣，是研究說的：
+   *
+   * > 學習者控制的整合分析：**「sequence control is the only type that
+   * > generally does not harm」**——順序的控制權是唯一一種一般不會有害的。
+   *
+   * 🟢 而一課的這幾個值排起來要是**一條語意波**（下沉再上浮）
+   * ——見 `core/semantic-wave.ts` 與 `concepts/認知鷹架.md`。
+   */
+  readonly view?: LessonView
   readonly predict?: 'output' | 'iterations' | 'none' | 'choice'
   /**
    * 選擇題的選項——⚠️ `predict: 'choice'` 時**必填**。
@@ -385,6 +407,12 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
     if (pr !== undefined && !['output', 'iterations', 'none', 'choice'].includes(String(pr))) {
       throw new Error(`教案 ${id}：tasks[${i}] 的 predict 不是 output／iterations／none／choice`)
     }
+    // 🔴 **認不得的看法要當場丟錯**——一個拼錯的 `view` 會安靜地不套用，
+    //    而畫面上與「這一題沒有宣告版面」一模一樣。
+    const view = t.view
+    if (view !== undefined && !LESSON_VIEWS.includes(String(view) as LessonView)) {
+      throw new Error(`教案 ${id}：tasks[${i}] 的 view 不是 ${LESSON_VIEWS.join('／')}`)
+    }
     const kind = t.kind
     if (kind !== undefined && kind !== 'arrange') {
       throw new Error(`教案 ${id}：tasks[${i}] 的 kind 只認得 arrange`)
@@ -398,6 +426,7 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
     return {
       id: t.id, title: t.title,
       kind: kind as 'arrange' | undefined,
+      view: view as LessonView | undefined,
       check: parseCheck(`${id}#${t.id}`, t.check),
       predict: pr as 'output' | 'iterations' | 'none' | 'choice' | undefined,
       choices: parseChoices(`${id}#${t.id}`, pr, t.choices),

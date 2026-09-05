@@ -21,6 +21,17 @@
       "check": {
         "stdout": "16\n1.72\nA\n",
         "stdin": []
+      },
+      "view": "compare"
+    },
+    {
+      "id": "rebuild",
+      "title": "排回去：把剛才那支程式的積木排好",
+      "kind": "arrange",
+      "view": "blocks",
+      "check": {
+        "stdout": "16\n1.72\nA\n",
+        "stdin": []
       }
     },
     {
@@ -29,7 +40,8 @@
       "check": {
         "stdout": "16\n1\nA\n",
         "stdin": []
-      }
+      },
+      "view": "code"
     }
   ]
 }

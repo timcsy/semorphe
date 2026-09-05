@@ -21,11 +21,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { fileURLToPath } from 'node:url'
+import { engineHash } from '../../tools/blockmap/engine-hash'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const BASELINE = path.join(ROOT, 'tests/baselines/lesson-blockmaps.json')
 
-interface Case { id: string; code: string; bm?: { codeHash: string; code: string; svg: string; blocks: unknown[]; badgeLines?: number[] } }
+interface Case { id: string; code: string; bm?: { codeHash: string; engineHash?: string; code: string; svg: string; blocks: unknown[]; badgeLines?: number[] } }
 
 function collect(): Case[] {
   const root = path.join(ROOT, 'lessons')
@@ -62,6 +63,29 @@ describe('第一百零二條護欄：課文的程式碼↔積木對照', () => {
       '🔴 這幾課的對照是舊的——課文裡的程式碼改過，而圖沒有重產。\n' +
         '   重產：npx playwright test tools/demo/record-blockmaps.spec.ts ' +
         '--config=tools/demo/playwright.demo.config.ts',
+    ).toEqual([])
+  })
+
+  /**
+   * 🔴 **這一條是 2026-09-05 補的，而它補的是一次真的翻車。**
+   *
+   * 使用者在課文頁上看到 `1000000LL * 1000000LL` 的積木寫著 `0 × 0`
+   * ——而**產品當下是對的**（實測積木上是 `1000000LL × 1000000LL`）。
+   * 錯的是那張圖：它是在 `field_number` 改成 `field_input` 之前產的。
+   *
+   * 而上面那條「對照不得過期」全綠，因為**那一課的課文一個字都沒改**。
+   *
+   * > **一份產物的過期，有兩種來源：輸入變了，或者【產它的那台機器變了】。
+   * > 只錨住前者的檢查，會在後者發生時保持全綠。**
+   */
+  it('🔴 圖不得是舊引擎產的——積木的畫法改了，圖也要跟著重產', () => {
+    const now = engineHash(ROOT)
+    const stale = CASES.filter((c) => c.bm !== undefined && c.bm.engineHash !== now)
+    expect(
+      stale.map((c) => c.id),
+      '🔴 這幾張圖是【舊的積木引擎】產的——課文沒改，而積木的畫法改了。\n' +
+        `   重產：npx playwright test --config=tools/demo/playwright.demo.config.ts record-blockmaps\n` +
+        `   （現在的指紋 ${now}；來源清單在 tools/blockmap/engine-hash.ts 的 ENGINE_FILES）`,
     ).toEqual([])
   })
 
@@ -110,6 +134,38 @@ describe('第一百零二條護欄：課文的程式碼↔積木對照', () => {
     }
     const stale = [fake].filter((c) => c.bm !== undefined && c.bm.codeHash !== hash(c.code))
     expect(stale.map((c) => c.id)).toEqual(['合成/一堂課'])
+  })
+
+  it('★ 注入：圖是舊引擎產的 → 會報出是哪一課', () => {
+    const now = engineHash(ROOT)
+    const fake: Case = {
+      id: '合成/一堂課', code: 'int main() {}',
+      bm: { codeHash: hash('int main() {}'), engineHash: '0000000000000000',
+        code: 'int main() {}', svg: 'x'.repeat(300), blocks: [{}], badgeLines: [1] },
+    }
+    expect([fake].filter((c) => c.bm !== undefined && c.bm.engineHash !== now).map((c) => c.id))
+      .toEqual(['合成/一堂課'])
+  })
+
+  /**
+   * ⚠️ **這一條擋的是「指紋算出來永遠一樣」**——一個常數函式會讓上面那條
+   * 永遠綠，而它看起來跟真的一模一樣。
+   */
+  it('★ 指紋要真的跟著來源動——改一個位元組，指紋就要換', () => {
+    const before = engineHash(ROOT)
+    const f = path.join(ROOT, 'tools/blockmap/engine-hash.ts')
+    const body = fs.readFileSync(f, 'utf8')
+    // engine-hash.ts 自己不在 ENGINE_FILES 裡，所以拿 block-registrar 當白老鼠
+    const g = path.join(ROOT, 'src/ui/block-registrar.ts')
+    const orig = fs.readFileSync(g, 'utf8')
+    try {
+      fs.writeFileSync(g, orig + '\n// 注入\n')
+      expect(engineHash(ROOT), '🔴 來源改了而指紋沒動——那這條護欄永遠是綠的').not.toBe(before)
+    } finally {
+      fs.writeFileSync(g, orig)
+      fs.writeFileSync(f, body)
+    }
+    expect(engineHash(ROOT), '🔴 還原了而指紋沒回來——那它不是內容的函式').toBe(before)
   })
 
   it('★ 注入：正確的對照 → 不報', () => {
