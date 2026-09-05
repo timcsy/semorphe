@@ -68,6 +68,32 @@ test('★ 入口條件——真的掃到課了', () => {
   expect(CASES.length, '🔴 一堂課都沒掃到 → 這一支什麼都沒產').toBeGreaterThan(0)
 })
 
+/**
+ * 🔴 **★ 入口條件：瀏覽器拿到的是【剛才建出來的】那一份。**
+ *
+ * ⚠️ 這一條是 2026-09-05 那一整天最貴的教訓：`playwright.demo.config.ts` 的
+ * `reuseExistingServer: true` 讓 Playwright 接上**還沒收掉的舊 preview**，
+ * 於是同一個缺陷被驗成「修好了」一次、又被驗成「沒修好」一次。
+ *
+ * > **一次「我剛剛量到它好了」的量測，如果沒有先確認量的是新的那一份，
+ * > 它會讓一個沒修好的東西帶著「已修復」的標籤上線。**
+ *
+ * 判準：`dist/index.html` 裡的 entry 檔名，要與伺服器送出來的那一個相同。
+ */
+test('★ 入口條件——伺服器送的是剛建出來的那一份', async ({ page }) => {
+  const onDisk = fs.readFileSync(path.join(ROOT, 'dist/index.html'), 'utf8')
+    .match(/assets\/index-[A-Za-z0-9_-]+\.js/)?.[0]
+  expect(onDisk, '🔴 dist/index.html 裡找不到 entry——建置壞了？').toBeTruthy()
+  await page.goto('/')
+  const served = (await page.content()).match(/assets\/index-[A-Za-z0-9_-]+\.js/)?.[0]
+  expect(
+    served,
+    '🔴 **伺服器送的不是剛才建出來的那一份**——多半是舊的 preview 還活著。\n' +
+      '   先 `pkill -f "vite preview"`，再重跑。\n' +
+      `   dist：${onDisk}　伺服器：${served}`,
+  ).toBe(onDisk)
+})
+
 for (const c of CASES) {
   test(`產生 ${c.id} 的對照`, async ({ page }) => {
     test.setTimeout(120_000)

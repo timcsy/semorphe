@@ -20,7 +20,10 @@
       "tooltip": "%{BKY_C_DHT_DECLARE_TOOLTIP}",
       "previousStatement": null,
       "nextStatement": null,
-      "_no_builder_why": "🪦 **2026-09-05 上午加了 `builder: \"variadic\"`，當天下午收回。**\n\n那一刀量到「14 塊積木、round-trip 逐字相同」，於是宣告修好了。🔴 **而那次量測跑在一個舊的 preview 上**（`npm run build && (pkill; preview &)` 之後 Playwright 的 `reuseExistingServer` 接上了還沒收掉的舊伺服器）。乾淨重來：**仍然 0 塊積木**。\n\n> **一個「我剛剛量到它好了」的結論，如果沒有先確認量的是新的那一份，\n> 它會讓一個沒修好的東西帶著「已修復」的標籤上線。**\n\n⚠️ 真正的缺口在**下一層**：`builder` 讓 init 建得出插槽，而載入時 `renderMapping.dynamicRules.countSource`（`ctorCount`）沒有到達 `loadExtraState`——症狀仍然是「missing a(n) CTOR_n connection」⟹ **整張積木畫布空白**。\n\n🔴 收回而不是留著，是因為**留著會讓第一百零三條護欄變成表演**：它會回報 0 個孤兒，而那三顆其實還壞著。"
+      "builder": "variadic",
+      "countKey": "ctorCount",
+      "minCount": 0,
+      "_builder_why": "🔴 **顯式選入宣告式的可變插槽建構器**（2026-09-05）。\n\n在此之前這顆宣告了 `renderMapping.dynamicRules` 的 `inputPattern: \"CTOR_{i}\"`，而**沒有任何人照著它建那些 input**。帶建構引數時 Blockly 丟 `missing a(n) CTOR_0 connection`，而**整個工作區載入失敗**——學生看到的是一張空白的積木畫布。\n\n> **一顆積木少了一個宣告好的插槽，壞掉的不是那一顆——是整張畫布。**\n\n⚠️ 它走的是 `block-registrar` 的**「接上去」**那一支（`args0` 非空 ⟹ `jsonInit` 先建 `NAME` 與 `DECL_TYPE`，再把 `CTOR_{i}` 接上去），不是「從零建整顆」那一支——後者會把這兩格弄丟（`cpp_vector_declare` 那個坑）。\n\n⚠️ `countKey` 必須與 `dynamicRules.countSource` 同一個鍵；`minCount: 0` 是因為**0 個建構引數是正當的**（`Servo myservo;`）。\n\n🪦 而這一刀 2026-09-05 被**驗錯了兩次**（一次說修好、一次說沒修好），兩次都是量在**舊的 preview** 上——`reuseExistingServer: true` 讓 Playwright 接上了還沒收掉的伺服器。現在的驗證會**先比對 dist 與服務中的 asset 雜湊**。"
     },
     "renderMapping": {
       "fields": {

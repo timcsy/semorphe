@@ -104,7 +104,7 @@ describe('第一百零三條護欄：宣告了插槽就要有人建', () => {
    * `extraState.ctorCount` 沒有到達 `loadExtraState`——症狀仍然是
    * 「missing a(n) CTOR_n connection」⟹ 整張畫布空白。
    */
-  it('棘輪：宣告了 inputPattern 而沒有人建那些 input，只准下降', () => {
+  it('🔴 硬性零：宣告了 inputPattern 而沒有人建那些 input', () => {
     const orphans: string[] = []
     for (const { file, form } of FORMS) {
       const rules = form.renderMapping?.dynamicRules ?? []
@@ -113,15 +113,12 @@ describe('第一百零三條護欄：宣告了插槽就要有人建', () => {
       if (IMPERATIVE.has(id)) continue
       if (!hasBuilder(form.blockDef ?? {})) orphans.push(`${id}（${file}）`)
     }
-    // 🔴 今天是 3（`cpp_lcd_declare`／`cpp_dht_declare`／`cpp_servo_declare`）。
-    //    ⚠️ **只准下降**——而它們的症狀是使用者看得到的：帶引數時
-    //    Blockly 丟「missing a(n) …_0 connection」，**整個工作區載入失敗**，
-    //    學生看到一張空白的積木畫布。而語義樹是對的，所以 lift／execute 全綠。
     expect(
-      orphans.length,
-      `🔴 宣告了插槽而沒有人建的積木變多了：${JSON.stringify(orphans)}`,
-    ).toBeLessThanOrEqual(3)
-    expect(orphans.length, '🟢 清乾淨了 → 把這條改回硬性零').toBeGreaterThanOrEqual(0)
+      orphans,
+      '🔴 這幾顆宣告了一串插槽而沒有人建——帶引數時 Blockly 會丟 ' +
+        '「missing a(n) …_0 connection」，而**整個工作區載入失敗**：\n' +
+        '   學生看到的是一張空白的積木畫布，而語義樹是對的（所以 lift／execute 的測試全綠）。',
+    ).toEqual([])
   })
 
   it('★ 注入：一顆宣告了插槽而沒有 builder 的積木 → 會報', () => {
