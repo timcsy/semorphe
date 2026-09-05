@@ -88,7 +88,17 @@ export function wipNames(md: string): string[] {
     //
     // > **一個判準如果寬到把散文也收進來，它報的第一筆多半是它自己。**
     const m = /^\*\*([^*]+)\*\*——/.exec(line.trim())
-    if (m && !m[1].startsWith('（')) out.push(m[1].replace(/（.*$/, '').trim())
+    if (m && !m[1].startsWith('（')) { out.push(m[1].replace(/（.*$/, '').trim()); continue }
+    // 🔴 **`#### 標題` 也是一項**（2026-09-05 補）——而在此之前它不是，
+    //    於是「課程的第五刀」三項全部打勾之後，這條護欄**一聲不吭**。
+    //
+    //    ⚠️ 它漏的不是一個邊界情況：一刀大到要開自己的小節，本來就是
+    //    「進行中」最重要的那幾項——**而愈重要的項目愈可能用標題寫**。
+    //
+    // > **一條「每一項都要還有事沒做完」的護欄，
+    // > 如果它的「項」認不出最大的那幾個，它擋住的是最小的那幾個。**
+    const h = /^#{4} (.+)$/.exec(line.trim())
+    if (h) out.push(h[1].replace(/（.*$/, '').replace(/：.*$/, '').trim())
   }
   return out
 }
@@ -158,6 +168,22 @@ describe('★ 第八十九條：「進行中」裡的每一項都還有事沒做
     const names2 = wipNames(md2)
     expect(names2, '🔴 連名字都抓不出來').toEqual(['做完的那一刀'])
     expect(openBoxesUnder(md2, names2[0]).open, '🔴 全部打勾了而它說還有沒做的').toBe(0)
+  })
+
+  it('★ 注入①b：用 #### 標題寫的一刀做完了 → 也要報得出來', () => {
+    const fake = [
+      '### 🟡 進行中',
+      '',
+      '#### 課程的第 N 刀：某某某（2026-09-05 升格）',
+      '',
+      '- [x] ① 做完了',
+      '- [x] ② 也做完了',
+      '',
+      '### 下一節',
+    ].join('\n')
+    const names = wipNames(fake)
+    expect(names, '🔴 #### 標題沒有被當成一項——那一刀做完了也不會有人說').toContain('課程的第 N 刀')
+    expect(openBoxesUnder(fake, '課程的第 N 刀').open).toBe(0)
   })
 
   it('★ 注入②：還沒做完的不得被報', () => {
