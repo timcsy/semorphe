@@ -470,15 +470,29 @@ languages/{lang}/
       → [208](history/208-骨架告示合成一條路而那個問題本身問錯了.md) · [191](history/191-骨架在流程視圖上是一句謊話.md)
       ⚠️ **`markOutOfScopeBlocks()` 仍然同時做兩件事**——拆它不在那一刀（見 208）
 
-- [ ] 🆕 **語料缺的那五個語法形狀**（2026-08-26，量測修好之後才看得見）
-      `abstract_array_declarator` · `literal_suffix` · `parenthesized_declarator` ·
-      `structured_binding_declarator` · `user_defined_literal`
-      —— 它們以前算「語料有碰到」，**而碰到它們的是幽靈**（掃描器把測試碼本身當成語料）。
+- [ ] 🆕 **語料缺的那五個語法形狀**（2026-08-26 發現 · **2026-09-06 驗過了**）
       → [172](history/172-把上限寫進配對規則的掃描器會生出幽靈語料.md)
-      ⚠️ **補之前先答一句**：這五個裡有幾個是「這個工具本來就不做」？
-      現在全部歸在保守桶（`該補進語料 = 5`，第五十三條護欄的棘輪盯著），
-      **因為沒有人驗過它們的支援度**——先驗，再決定是補語料還是改判定。
-      ⚠️ 補完可能連動殘差與降級率，那是另一刀。
+      · 探針 `tests/probes/five-shapes.test.ts`
+
+      🟢 **「先驗再決定」那一步做完了，而答案不是五個都要補**：
+
+      | 形狀 | 實測 | 判定 |
+      |---|---|---|
+      | `literal_suffix` · `user_defined_literal` | `raw_code` ＋ 來回逐字相同 | 🟢 **已經對了**——誠實降級。⚠️ 而它們**是同一件事**：`5LL` 一個 `literal_suffix` 都不產生，它只出現在 `42.0_km` 裡 |
+      | `abstract_array_declarator` | `void f(int[10])` → `void f(int)` | 🔴 **靜默遺失** |
+      | `parenthesized_declarator` | `void (*f)(int);` → `void f(int);` | 🔴 **靜默遺失**，而且**改變意義**（函式指標 → 函式宣告） |
+      | `structured_binding_declarator` | `auto [a,b]` 保住了，`{1,2}` 初值掉了 | 🔴 **靜默遺失** |
+
+      > **一個誠實的「我不會」，比一個安靜的「我改了你的程式」好。**
+
+      🔴 **所以這條債的形狀變了**：不是「補五段語料」，是
+      **「三個靜默遺失要出聲或做對」**——而那三個各自是一刀（`param_decl` 的解析）。
+      探針的棘輪釘住 `靜默遺失 ≤ 3`，⚠️ **降到 0 的那天它會紅**，
+      那時要把它改成硬性零。
+      - [ ] `abstract_array_declarator`：參數裡的陣列大小
+      - [ ] `parenthesized_declarator`：函式指標（🔴 三個裡唯一**改變意義**的）
+      - [ ] `structured_binding_declarator`：`{…}` 初值
+      - [ ] 兩個「已經對了」的從保守桶移出（`該補進語料 5 → 3`，第五十三條護欄的顯式下調）
 
 - [ ] 🆕 **名詞表的其餘各列**（2026-08-20）
       🟢 **命名本身已經掃乾淨**：spec `158` 做了身分鍵那一列，spec `159` 把
