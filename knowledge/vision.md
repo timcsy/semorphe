@@ -529,7 +529,18 @@ languages/{lang}/
       🔴 **它連十二輪標熟而未升格**（`draft/目錄結構對硬體的適配 §五` 點名過），
       而 2026-08-24 `dist-sdk` 出貨讓它從「未來式」變成**現在式**：
       一份對外的產物，它的 `componentId` 詞彙與 `ViewHost` 協定就是公開介面。
-      - [ ] 驗收：`dist-sdk` 有版本號，而**破壞性改版說得出破壞了什麼**
+      - [x] 🟢 **驗收：`dist-sdk` 有版本號，而破壞性改版說得出破壞了什麼**（2026-09-06）
+            `build:sdk` 產出 `dist-sdk/package.json`（`@semorphe/core`，版本取自根 `package.json`）；
+            第一百零六條護欄 `audit-sdk-surface` 把公開面的 **28 個匯出名**記在基線裡
+            ——**移除或改名要顯式下調並在 commit 訊息寫明破壞了什麼**。
+            注入「拿掉 `generateCode`」→ 紅並指名（驗過）。
+            > **一個公開介面的移除，在自己的 repo 裡與一次正常的重構長得一模一樣
+            > ——差別在別人的 CI 上。**
+            ⚠️ **兩個版本號刻意不同步**：`@semorphe/core` 0.1.0（還沒發布過 npm）
+            與 `EXTENSION_VERSION` 0.16.0（市集上那個）。
+            > **一個版本號說的是「這個東西的歷史」，不是「這個 repo 的歷史」。**
+            🟡 未了：**型別簽章**那一層（`.d.mts`）要 build 才驗得到，而 `dist-sdk/`
+            在 `.gitignore` 裡——那是另一刀
       - [ ] 驗收：第三方 scope（`@someone:*`）的元件裝得進來、拿得到、認得出
             🟢 命名那一半**已經設計完了**（`concepts/元件.md:138`：scope 是套件擁有者，
             而 `@someone:boost_vector` 宣告一條轉換邊就自動進同一個抽象元件）

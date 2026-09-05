@@ -1,0 +1,37 @@
+{
+  "exports": [
+    "BlockMapping",
+    "BlockSpecRegistry",
+    "CodeMapping",
+    "LiftPattern",
+    "LiftStrategyRegistry",
+    "Lifter",
+    "PatternLifter",
+    "SemanticBus",
+    "SemanticNode",
+    "StylePreset",
+    "SyncController",
+    "TransformRegistry",
+    "allLanguagePacks",
+    "componentBlocks",
+    "componentComponents",
+    "componentGenerateRegistrars",
+    "componentLiftPatterns",
+    "componentLiftStrategyRegistrars",
+    "connectViews",
+    "generateCode",
+    "loadAllLanguagePacks",
+    "registerCoreTransforms",
+    "registerLanguage",
+    "registerView",
+    "registerViewsIn",
+    "registeredViews",
+    "resetViews",
+    "setCommentLanguage"
+  ],
+  "_meta": {
+    "guard": "audit-sdk-surface",
+    "rule": "SDK 的公開面。新增＝上調（commit 說一句）；移除／改名＝**破壞性改版**，要顯式下調並在 commit 訊息寫明破壞了什麼、消費者該怎麼改。"
+  },
+  "note": "⚠️ 2026-09-06 建檔（vision「元件套件管理」的第一個驗收）。\n`src/sdk/index.ts` 的檔頭本來就寫著「加一個匯出很便宜，**移掉一個很貴**」\n——而那是一句**沒有機械檢查的規範**。這個檔讓它會出聲。\n🔴 SDK 的破壞性改版有一個特別的性質：**傷害發生在別人的專案裡，\n  而我們的測試全部是綠的**。`npm test` 驗不到一個消費者的 build 壞了。\n> **一個公開介面的移除，在自己的 repo 裡與一次正常的重構長得一模一樣\n> ——差別在別人的 CI 上。**\n⚠️ 這一條守的是**名字**那一層。型別簽章要 build 才驗得到（`.d.mts`），\n  而 `dist-sdk/` 在 `.gitignore` 裡——那是另一刀。\n\n🟢 **它同時是「什麼時候動版本號」的訊號**：`dist-sdk/package.json` 的版本\n  取自根 `package.json`（`@semorphe/core` 還沒發布過 npm，`0.1.0` 是誠實的），\n  而**這條護欄紅的那一刻，就是該想版本號的那一刻**。\n⚠️ 而它與 `EXTENSION_VERSION`（0.16.0）**刻意不同步**——那是另一件產物。\n> **一個版本號說的是「這個東西的歷史」，不是「這個 repo 的歷史」。**\n"
+}

@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "auditFileCount": 100,
+    "auditFileCount": 101,
     "trueIdentityCount": 332
   },
   "badAnchor": 0,
-  "note": "⚠️ 2026-09-06（骨架上匯流排，spec 172）：護欄檔數 99 → 100——**輸入量上調**。新增第一百零五條護欄 `tests/integration/audit-scaffold-on-bus.test.ts`（組裝點不得直接呼叫視圖的骨架標記）。\n🟢 而**耦合那一欄是下降的**：`compositionRootViewCalls` 72 → 71——組裝點少替視圖做了一個決定。\n⚠️ 而語料的「方法呼叫數」2969 → 2971 是**上升**的，那正常：加了一支 `republishScaffold` 與一條護欄。\n> **一個驗收標準如果錨在「總量」上，它會在【做對事情】的時候也動。**\n⚠️ 2026-09-05（版面建議與語意波）：護欄檔數 98 → 99——新增第一百零四條護欄 `tests/integration/audit-lesson-wave.test.ts`（宣告了看法的課要是一條語意波：**先下到具體，再回到抽象**——只下不上不算，那是「玩過了但沒有學到」）。⚠️ 「第一百零四條」是**發號**，條數是這個 99——見 `audit-guardrail-count` 的檔頭。\n⚠️ 2026-09-05（宣告了插槽就要有人建）：語料上調——**缺陷數一筆未動**。新增第一百零三條護欄 `audit-declared-slots-built`（硬性零：宣告了 `dynamicRules.inputPattern` 而沒有 builder／paramList／branchList／altLayout 的，一顆都不准有；**注入驗過會紅**）。\n"
+  "note": "⚠️ 2026-09-06（SDK 的公開面）：護欄檔數 100 → 101——**輸入量上調**。新增第一百零六條護欄 `tests/integration/audit-sdk-surface.test.ts`（公開面的每一個匯出名記在基線裡；移除／改名 ＝ 破壞性改版，要顯式下調）。\n🔴 它守的是一句本來只寫在註解裡的規範（`src/sdk/index.ts` 檔頭：「加一個匯出很便宜，**移掉一個很貴**」）。\n> **一個公開介面的移除，在自己的 repo 裡與一次正常的重構長得一模一樣——差別在別人的 CI 上。**\n⚠️ 2026-09-06（骨架上匯流排，spec 172）：護欄檔數 99 → 100——**輸入量上調**。新增第一百零五條護欄 `tests/integration/audit-scaffold-on-bus.test.ts`（組裝點不得直接呼叫視圖的骨架標記）。\n🟢 而**耦合那一欄是下降的**：`compositionRootViewCalls` 72 → 71——組裝點少替視圖做了一個決定。\n⚠️ 而語料的「方法呼叫數」2969 → 2971 是**上升**的，那正常：加了一支 `republishScaffold` 與一條護欄。\n> **一個驗收標準如果錨在「總量」上，它會在【做對事情】的時候也動。**\n⚠️ 2026-09-05（版面建議與語意波）：護欄檔數 98 → 99——新增第一百零四條護欄 `tests/integration/audit-lesson-wave.test.ts`（宣告了看法的課要是一條語意波：**先下到具體，再回到抽象**——只下不上不算，那是「玩過了但沒有學到」）。⚠️ 「第一百零四條」是**發號**，條數是這個 99——見 `audit-guardrail-count` 的檔頭。\n⚠️ 2026-09-05（宣告了插槽就要有人建）：語料上調——**缺陷數一筆未動**。新增第一百零三條護欄 `audit-declared-slots-built`（硬性零：宣告了 `dynamicRules.inputPattern` 而沒有 builder／paramList／branchList／altLayout 的，一顆都不准有；**注入驗過會紅**）。\n"
 }
