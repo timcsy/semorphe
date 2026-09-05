@@ -48,8 +48,11 @@ const SHAPES: Record<string, string> = {
   literal_suffix: 'int main() {\n    auto d = 42.0_km;\n    return 0;\n}\n',
   // 🔴 `int (x)` 與 `int (*p)[10]` **都不產生它**（實測）——只有**函式指標**會。
   parenthesized_declarator: 'int main() {\n    void (*f)(int);\n    return 0;\n}\n',
-  // `auto [a, b] = t;`——C++17 的結構化繫結
-  structured_binding_declarator: '#include <utility>\nint main() {\n    std::pair<int, int> t{1, 2};\n    auto [a, b] = t;\n    return 0;\n}\n',
+  // `auto [a, b] = p;`——C++17 的結構化繫結
+  // ⚠️ **範例要最小**：第一版用 `std::pair<int,int> t{1,2}`，而那讓「初值 `{1,2}` 掉了」
+  //    混進了這一列——**那是另一件事**（初值列，與結構化繫結無關）。
+  //    > **一個示範 X 的最小範例，如果它順便用到了 Y，那它量到的是 X 與 Y 的聯集。**
+  structured_binding_declarator: 'struct P { int x; int y; };\nint main() {\n    P p;\n    auto [a, b] = p;\n    return 0;\n}\n',
   // `42_km`——自訂字面
   user_defined_literal: 'long double operator"" _km(long double v) { return v; }\nint main() {\n    auto d = 42.0_km;\n    return 0;\n}\n',
 }
@@ -155,42 +158,39 @@ describe('探針：五個「該補進語料」的形狀', () => {
   })
 
   /**
-   * 🔴 **silentLoss：來回不一致，而【沒有任何一顆節點說它降級了】。**
+   * 🔴 **硬性零：靜默遺失。**
    *
-   * 那比「不支援」更糟——不支援會留下 `raw_code`，使用者看得到一塊原樣保留的碼；
-   * 而silentLoss是**程式碼被改掉了而沒有人說**。
-   *
-   * ```
-   * void f(int[10])   →  void f(int)        陣列大小沒了
-   * void (*f)(int);   →  void f(int);       函式指標【變成函式宣告】
-   * ```
-   *
-   * ⚠️ 第二個不只是掉資訊，是**改變意義**：一個變數變成了一個宣告。
+   * 「來回不一致」＋「沒有任何節點說它降級了」＝ **程式碼被改掉而沒有人說**。
+   * 那比「不支援」更糟——不支援會留下 `raw_code`，使用者看得到一塊原樣保留的碼。
    *
    * > **一個誠實的「我不會」，比一個安靜的「我改了你的程式」好。**
    *
-   * 🟢 而 `literal_suffix`／`user_defined_literal` 走的正是誠實那條路
-   * （`raw_code: nonstandard_but_valid`，來回逐字相同）——**它們不是債**。
+   * ## 🪦 它 2026-09-06 當天從「棘輪 ≤ 3」升成硬性零
    *
-   * ## ⚠️ 這一條是棘輪，不是硬性零
+   * 那三筆各自的下場不一樣，而**只有兩筆需要真的做事**：
    *
-   * 修這三個各自是一刀（`param_decl` 的解析）。現在把數字釘住：
-   * **只准下降**。而它降到 0 的那天，這一條要改成硬性零。
+   * ```
+   * structured_binding_declarator  範例寫錯了——它本來就是對的
+   *                                （第一版用 `pair<int,int> t{1,2}`，
+   *                                 而掉的是【初值列】，與結構化繫結無關）
+   * abstract_array_declarator      做對了：`parseParamDeclaration` 的清單裡補上它
+   * parenthesized_declarator       出聲了：函式指標降級成 raw_code
+   * ```
+   *
+   * > **一個示範 X 的最小範例，如果它順便用到了 Y，那它量到的是 X 與 Y 的聯集
+   * > ——而報表上那一列會寫著 X 的名字。**
+   *
+   * ⚠️ 所以三筆債裡有一筆**從來不存在**，而它在報表上與真的那兩筆長得一模一樣。
    */
-  it('棘輪：silentLoss的形狀只准下降', () => {
+  it('🔴 硬性零：沒有靜默遺失', () => {
     const silentLoss = Object.entries(SHAPES).map(([s, c]) => measure(s, c))
       .filter((r) => !r.roundTripsExact && r.residuals.length === 0)
       .map((r) => r.shape)
     expect(
-      silentLoss.length,
-      `🔴 silentLoss變多了：${silentLoss.join('、')}\n` +
-        '   「來回不一致」＋「沒有任何節點說它降級了」＝ 程式碼被改掉而沒有人說。\n' +
-        '   ⚠️ 修法不是把它加進這個數字，是讓它【出聲】（raw_code）或【做對】。',
-    ).toBeLessThanOrEqual(3)
-    // ★ 自我否證：三個都修好的那天這一條會紅，而那時要把它改成硬性零
-    expect(
-      silentLoss.length,
-      '🟢 silentLoss降到 0 了——把這條改成硬性零（`toEqual([])`），別讓它停在 3',
-    ).toBeGreaterThan(0)
+      silentLoss,
+      '🔴 有形狀被安靜地改掉了：來回不一致，而沒有任何節點說它降級了。\n' +
+        '   ⚠️ 修法有兩條——【做對】或【出聲（raw_code）】，\n' +
+        '      而「把它加進一個容忍名單」不是其中之一。',
+    ).toEqual([])
   })
 })

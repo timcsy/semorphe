@@ -904,6 +904,27 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     // Forward function declarations: void listp(int *, int); → structured forward_decl
     const funcDeclarator = node.namedChildren.find(c => c.type === 'function_declarator')
+    // 🔴 **函式指標不是函式宣告**（2026-09-06 補）——`void (*f)(int);`
+    //    的 `function_declarator` 底下包的是 `parenthesized_declarator`，
+    //    而底下那條路只找**直接**的 `identifier`：找不到就落到預設值 `'f'`。
+    //
+    //    於是 `void (*f)(int);` 產回去變成 `void f(int);`
+    //    ——**不只掉資訊，是改變意義**：一個變數變成了一個宣告。
+    //    而它安靜得像一段合法程式。
+    //
+    // > **一個誠實的「我不會」，比一個安靜的「我改了你的程式」好。**
+    //
+    // ⚠️ 這裡選的是**出聲**，不是**做對**：把函式指標變成一顆概念是另一刀
+    //    （它要有型別、要能當參數、要能呼叫）。而在那之前，
+    //    原樣保留是唯一不說謊的做法。
+    //
+    // 🔴 判準同 CLAUDE.md 的「靜默降級反模式」：
+    //    **多層 fallback 都用同一個預設值，會掩蓋真正的資料遺失。**
+    if (funcDeclarator?.namedChildren.some(c => c.type === 'parenthesized_declarator')) {
+      const raw = createNode('raw_code', {})
+      raw.metadata = { rawCode: node.text, degradationCause: 'unsupported' }
+      return raw
+    }
     if (funcDeclarator) {
       const nameNode = funcDeclarator.namedChildren.find(c => c.type === 'identifier')
       const paramList = funcDeclarator.childForFieldName('parameters')
@@ -1081,7 +1102,13 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
   )
   const declNode = param.namedChildren.find(c =>
     c.type === 'identifier' || c.type === 'pointer_declarator' ||
-    c.type === 'reference_declarator' || c.type === 'array_declarator'
+    c.type === 'reference_declarator' || c.type === 'array_declarator' ||
+    // 🔴 **沒有名字的陣列參數**（`void f(int[10])`）——2026-09-06 補。
+    //    在此之前它不在這份清單裡，於是 `declNode` 是 `undefined`，
+    //    產出變成 `void f(int)`：**`[10]` 整段消失，而沒有任何一顆節點說它降級了**。
+    //
+    // > **一個誠實的「我不會」，比一個安靜的「我改了你的程式」好。**
+    c.type === 'abstract_array_declarator'
   )
 
   // If we have structured children, use them
@@ -1103,6 +1130,12 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
         type += '&'
         const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
         name = innerIdent?.text ?? ''
+      } else if (declNode.type === 'abstract_array_declarator') {
+        // ⚠️ **原樣接上去**（`[10]`／`[]`）——它沒有名字，整段就是型別的一部分。
+        //    🔴 而**大小要留著**：`int[10]` 與 `int[]` 在參數位置雖然等價，
+        //    但那是 C++ 的規則，不是我們的——**改寫使用者的程式碼需要理由，
+        //    而「反正等價」不是一個**。
+        type += declNode.text
       } else if (declNode.type === 'array_declarator') {
         // int arr[] → type stays, name is the identifier inside
         const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
