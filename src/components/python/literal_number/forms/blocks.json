@@ -10,14 +10,15 @@
       "message0": "%1",
       "args0": [
         {
-          "type": "field_number",
+          "type": "field_input",
           "name": "NUM",
-          "value": 0
+          "text": "0"
         }
       ],
       "output": "Expression",
       "colour": "#FF8C1A",
-      "tooltip": "%{BKY_PY_NUMBER_TOOLTIP}"
+      "tooltip": "%{BKY_PY_NUMBER_TOOLTIP}",
+      "_field_why": "🔴 **`field_number` 會把使用者的字面【換成一個 JS number】**（2026-09-05 實測）：\n\n```\n0x27          → 39            進位丟了（而 0x27 是 I2C 位址的標準寫法）\n1000000LL     → 0             🔴 值直接歸零\n1.5f          → 0             🔴 值直接歸零\n0b1010        → 10            進位丟了\n```\n\n後兩種是**程式的意思被悄悄改掉**——而 `cpp-advanced/01-預備` 整堂課在教 `1000000LL`。\n\n> **C++ 的數字字面是一段【文字】，不是一個 JS number——\n> 用一個數字欄位裝它，等於在使用者沒看的時候改掉他的程式。**\n\n🟢 而管線的其餘部分**本來就當它是文字**：lift 存 `$text`、generate 印 `String(value)`、execute 自己剝後綴也認得 `0x`／`0b`。**只有這一格是錯的。**\n\n⚠️ **刻意不加驗證器**：一個會拒絕輸入的驗證器，是同一個罪的小一號版本（它也會改掉／擋掉他打的東西）。打錯的數字由診斷與執行期出聲，那是誠實降級。\n\n⚠️ 代價：行動版少了數字鍵盤。而它換來的是「不會安靜地改掉你的程式」。"
     },
     "renderMapping": {
       "fields": {

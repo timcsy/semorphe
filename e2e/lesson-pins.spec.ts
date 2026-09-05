@@ -904,3 +904,51 @@ test('★ 裁判：輸入【之前】印的東西不得被丟掉', async ({ page
   ).toContain('先印這一行')
   expect(verdict).toContain('後印這一行')
 })
+
+/**
+ * 🔴 **數字字面走一趟積木再回來，要逐字相同。**
+ *
+ * 缺陷（2026-09-05）：那一格是 `field_number`，而 Blockly 的數字欄位
+ * 會把值**換成一個 JS number**：
+ *
+ * ```
+ * 0x27          → 39      進位丟了（而 0x27 是 I2C 位址的標準寫法）
+ * 1000000LL     → 0       🔴 值直接歸零
+ * 1.5f          → 0       🔴 值直接歸零
+ * 0b1010        → 10      進位丟了
+ * ```
+ *
+ * 後兩種是**程式的意思被悄悄改掉**——而 `cpp-advanced/01-預備` 整堂課在教
+ * `1000000LL`。
+ *
+ * > **C++ 的數字字面是一段【文字】，不是一個 JS number——
+ * > 用一個數字欄位裝它，等於在使用者沒看的時候改掉他的程式。**
+ *
+ * ⚠️ 它**在 2026-09-05 之前沒有任何測試在看**：lift 與 execute 兩側都對
+ * （它們本來就當它是文字），壞的只有積木那一格，而**沒有人走過那一趟**。
+ */
+test('★ 數字字面：0x27／1000000LL／1.5f 走一趟積木都不得被改掉', async ({ page }) => {
+  test.setTimeout(150_000)
+  await page.addInitScript(() => window.localStorage.clear())
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+
+  await page.evaluate(() => (window as never as { __app: { codeView: { setCode(c: string): void } } })
+    .__app.codeView.setCode(
+      'int main() {\n    int a = 0x27;\n    long long b = 1000000LL;\n' +
+      '    double c = 1.5f;\n    int d = 0b1010;\n    return 0;\n}'))
+  await useAsSource(page, '程式碼')
+  await page.waitForTimeout(2500)
+  // 🔴 **再從積木產回去**——損失發生在這一趟，不在前一趟
+  await useAsSource(page, '積木')
+  await page.waitForTimeout(2500)
+
+  const back = await page.evaluate(() =>
+    (window as never as { __app: { codeView: { getCode?(): string } } }).__app.codeView.getCode?.() ?? '')
+  for (const literal of ['0x27', '1000000LL', '1.5f', '0b1010']) {
+    expect(
+      back,
+      `🔴 ${literal} 走一趟積木之後不見了——使用者沒有要求，而他的程式被改掉了：\n${back}`,
+    ).toContain(literal)
+  }
+})
