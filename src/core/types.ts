@@ -487,10 +487,21 @@ export interface ComponentDefJSON {
   componentId: string
   abstractComponent?: string | null
   /**
-   * ⚠️ **過渡中**：純名字清單（124 顆）與 `ParamSpec[]`（規格化後）並存。
-   * 見 `specs/102-param-spec`。全部遷完之後這裡只留 `ParamSpec[]`。
+   * 🟢 **過渡結束了**（2026-09-06 量到）：185 顆全部是 `ParamSpec`，
+   * **純名字清單 0 顆**。見 `specs/102-param-spec` · [history/030](../../knowledge/history/030-C1參數規格化-證據優先於名字.md)。
+   *
+   * 🪦 這裡曾經是 `string[] | ParamSpec[]`，而註解寫著「⚠️ 過渡中：純名字清單
+   * （124 顆）與 `ParamSpec[]` 並存」——**那個 124 在 2026-08-08 之後就沒有再量過**。
+   *
+   * > **一個寫著「過渡中」的型別，不會在過渡結束的那天自己收斂
+   * > ——而那個聯集會一直教下一個人「這裡有兩種可能」。**
+   *
+   * 🟢 **不需要新護欄**：`audit-param-spec` 已經在守
+   * （「參數未規格化（仍是純名字）」是它的硬性零之一）。
+   * ⚠️ 而 `core/param-spec.ts` 那個讀取入口**照樣接受兩種形態**
+   * ——型別註解攔不住一個手寫錯的 JSON。
    */
-  properties: string[] | ParamSpec[]
+  properties: ParamSpec[]
   children: Record<string, string>
   role: 'statement' | 'expression' | 'both'
   annotations?: Record<string, unknown>

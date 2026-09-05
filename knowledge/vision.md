@@ -499,8 +499,20 @@ languages/{lang}/
       🟢 **命名本身已經掃乾淨**：spec `158` 做了身分鍵那一列，spec `159` 把
       `concept` 家族的**周邊命名**整族退場（3496 處／656 檔 → 0，含 14 個檔名與 39 個匯出符號），
       轉變見 [history/110](history/110-concept家族整族退場.md)。
-      🔴 **而 `concepts/元件.md`「現況落差」表的下面五列一列都沒動**
-      ——它們不是改名，是**改結構**：
+      🟢 **2026-09-06 逐列查證過了**（做法同「五個語法形狀」那一筆：先驗再決定）：
+
+      | 列 | 現況 | 下一步 |
+      |---|---|---|
+      | `params` / `ParamSpec` | 🟢 **早就完成了**：185 顆全是 `ParamSpec`，純名字 **0** 顆 | 型別已收斂成 `ParamSpec[]`（那個「124 顆」自 2026-08-08 沒再量過） |
+      | 三個登錄表的**合併** | 🟡 **它與 `experience` 的一條教訓打架** | 目標改成「**名字說得出職責**」，待人拍板——見 `concepts/元件.md` |
+      | `attachments` ＋ `relation` | ＝ 底下那筆「C2 資訊軸」 | **同一件事，不是兩筆** |
+      | `Instance` 取代 `SemanticNode` | 沒動 | ⚠️ 它動的是**型別的意義**——要有消費者才動 |
+      | `forms` | `blockDef`／`codeTemplate`／`astPattern` 仍分屬三個機制 | 同上：先問誰因為它受傷過 |
+
+      > **一個「五列都是一刀」的清單，逐列去量之後
+      > 剩下的通常不是五刀——而在量之前，它們看起來一樣重。**
+
+      🔴 而原本那份清單（保留在下面）是這樣寫的：
       ```
       三個登錄表的【合併】   ComponentRegistry ／ BlockSpecRegistry ／ component/registry
       Instance             取代 SemanticNode（動的是型別的意義，不只名字）
