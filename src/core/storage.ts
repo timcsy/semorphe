@@ -46,8 +46,20 @@ export interface SavedState {
    *
    * ⚠️ 失效條件是 `codeHash`：對不上就**寧可重排版**，
    * 也不要拿一份與程式碼不一致的積木——那會變成第二份真相。
+   *
+   * ## 🔴 **選填**（2026-09-06 改的，而它修的是一個真的缺陷）
+   *
+   * `FIELD_OWNERSHIP` 把它歸在 `sideCar` 桶，而那個桶的定義逐字是
+   * 「**可以丟，丟了重算**」。而在此之前它同時被列在 `REQUIRED_FIELDS` 裡
+   * ——於是把它從存檔裡拿掉的結果**不是重算，是整份存檔被拒絕**。
+   *
+   * 實測（`e2e/sidecar-droppable.spec.ts`）：刪掉它之後重新整理，
+   * 畫布空的、**程式碼也是空的**——使用者的東西全部不見了。
+   *
+   * > **兩份宣告如果對同一個欄位說了相反的話，
+   * > 執行的是【驗證】那一份——而寫下另一份的人以為自己說了算。**
    */
-  blocklyState: object
+  blocklyState?: object
   /** `blocklyState` 對應的那份程式碼的雜湊——見上 */
   codeHash?: string
   /**

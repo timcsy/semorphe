@@ -107,10 +107,23 @@ export const FIELD_OWNERSHIP = {
   enabledBranches: 'context',
 } satisfies Record<keyof Required<SavedState>, 'document' | 'sideCar' | 'user' | 'context' | 'meta'>
 
-/** 必填欄位——形狀驗證用。同樣由編譯器釘住 */
+/**
+ * 必填欄位——形狀驗證用。同樣由編譯器釘住。
+ *
+ * 🔴 **`blocklyState` 於 2026-09-06 從這裡移除**，而那修的是一個真的缺陷：
+ * 它在 `FIELD_OWNERSHIP` 裡屬於 `sideCar` 桶（「**可以丟，丟了重算**」），
+ * 而同時被列在這裡當必填——於是丟掉它的結果**不是重算，是整份存檔被拒絕**。
+ *
+ * 實測：刪掉它之後重新整理，畫布空的、**程式碼也是空的**。
+ *
+ * > **兩份宣告如果對同一個欄位說了相反的話，
+ * > 執行的是【驗證】那一份——而寫下另一份的人以為自己說了算。**
+ *
+ * ⚠️ 判準：**這一格的桶是 `sideCar` 或 `context` 的，就不該在這裡**
+ * ——它們的定義本身就是「沒有也行」。
+ */
 export const REQUIRED_FIELDS = {
   version: 1,
-  blocklyState: 1,
   code: 1,
   language: 1,
   styleId: 1,

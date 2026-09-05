@@ -34,7 +34,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { SAVED_STATE_FIELDS, FIELD_OWNERSHIP } from '../../src/core/storage-version'
+import { SAVED_STATE_FIELDS, FIELD_OWNERSHIP, REQUIRED_FIELDS } from '../../src/core/storage-version'
 import { printReport, assertRatchet, assertCorpus, REPO_ROOT } from '../helpers/guardrail'
 
 /** 讀取點——只認具名的取用，不認「字串剛好出現」 */
@@ -97,6 +97,49 @@ describe('護欄：存檔欄位的歸屬與讀取點（第六十一條）', () =
     const allowed = new Set(['document', 'sideCar', 'user', 'context', 'meta'])
     const bad = Object.entries(FIELD_OWNERSHIP).filter(([, v]) => !allowed.has(v))
     expect(bad).toEqual([])
+  })
+
+  /**
+   * 🔴 **「可以丟」的欄位不得同時是「必填」。**
+   *
+   * ## 它擋的是一次真的翻車（2026-09-06）
+   *
+   * `blocklyState` 在 `FIELD_OWNERSHIP` 裡屬於 `sideCar` 桶，
+   * 而那個桶的定義**逐字**是「**可以丟，丟了重算**」。
+   * 而它同時被列在 `REQUIRED_FIELDS` 裡。
+   *
+   * 於是把它從存檔裡拿掉的結果**不是重算，是整份存檔被拒絕**
+   * ——實測：畫布空的，**程式碼也是空的**。使用者的東西全部不見了。
+   *
+   * > **兩份宣告如果對同一個欄位說了相反的話，
+   * > 執行的是【驗證】那一份——而寫下另一份的人以為自己說了算。**
+   *
+   * ## ⚠️ 為什麼 `context` 也算
+   *
+   * `context` 桶（`topicId`／`targetId`／`enabledBranches`）的定義是
+   * 「屬於現在在上哪一課」——**沒有課的時候它本來就不該在**。
+   * 把它列為必填等於要求「每一份存檔都在上課」。
+   */
+  it('🔴 硬性零：`sideCar` 與 `context` 桶的欄位不得是必填', () => {
+    const droppable = new Set(['sideCar', 'context'])
+    const conflict = Object.keys(REQUIRED_FIELDS)
+      .filter((f) => droppable.has(FIELD_OWNERSHIP[f as keyof typeof FIELD_OWNERSHIP]))
+      .map((f) => `${f}：歸屬是 ${FIELD_OWNERSHIP[f as keyof typeof FIELD_OWNERSHIP]}（可以丟），而它在 REQUIRED_FIELDS 裡`)
+    expect(
+      conflict,
+      '🔴 有欄位被兩份宣告說了相反的話。\n' +
+        '   `FIELD_OWNERSHIP` 說它可以丟，而 `REQUIRED_FIELDS` 說它必填\n' +
+        '   ——**執行的是後者**，於是丟掉它會讓整份存檔被拒絕。\n' +
+        '   ⚠️ 而症狀不是「少了那一格」：是**使用者的程式碼一起不見**。',
+    ).toEqual([])
+  })
+
+  /** ★ 注入：合成一組互相矛盾的宣告 → 必須抓得到。 */
+  it('★ 注入：可以丟的欄位被列為必填 → 抓得到', () => {
+    const own = { a: 'document', b: 'sideCar', c: 'context' } as const
+    const req = { a: 1, b: 1, c: 1 }
+    const droppable = new Set(['sideCar', 'context'])
+    expect(Object.keys(req).filter((f) => droppable.has(own[f as keyof typeof own]))).toEqual(['b', 'c'])
   })
 
   it('棘輪：沒有讀取點的存檔欄位只准下降', () => {

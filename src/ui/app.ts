@@ -3325,7 +3325,7 @@ export class App {
    * ⚠️ 舊存檔（v10 升上來）的 `codeHash` 由遷移補上，所以這裡不需要「沒有就當有效」
    * 的寬鬆分支——**那種寬鬆會讓失效條件變成裝飾**。
    */
-  private sideCarUsable(state: SavedState): boolean {
+  private sideCarUsable(state: SavedState): state is SavedState & { blocklyState: object } {
     if (!state.blocklyState || Object.keys(state.blocklyState).length === 0) return false
     if (state.codeHash === undefined) return false
     return state.codeHash === hashCode(state.code)
@@ -3348,7 +3348,15 @@ export class App {
       lastModified: new Date().toISOString(), blockStyleId: this.currentBlockStyleId, locale: this.currentLocale }
   }
 
-  private autoSave(): void {
+  /**
+   * ⚠️ **不是 `private`**（2026-09-06，spec 173）——
+   * `e2e/sidecar-droppable.spec.ts` 要逼它存一次，才驗得了
+   * 「存檔缺一格時載入怎麼辦」。
+   *
+   * 🔴 而那不是一個測試後門：存檔本來就是**組裝點的一個動作**，
+   * 而「什麼時候存」與「存了之後怎麼載」是兩件事——那一支驗後者。
+   */
+  autoSave(): void {
     this.storageService.save(this.buildSaveState())
   }
 
