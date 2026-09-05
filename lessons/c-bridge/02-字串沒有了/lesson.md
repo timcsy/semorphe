@@ -106,6 +106,9 @@ if (s == t)      // 🔴 這是在比【位址】，不是比內容
 ## 完成的樣子
 
 ```c
+#include <cstdio>
+#include <cstring>
+using namespace std;
 int main() {
     char s[20] = "hello";
     printf("%d\n", strlen(s));

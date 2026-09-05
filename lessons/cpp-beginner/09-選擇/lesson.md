@@ -89,6 +89,8 @@ if (score >= 60) cout << "及格" << endl;
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int main() {
     int score = 75;
     if (score >= 60) {

@@ -74,6 +74,8 @@ WiFi.begin("my-ssid", "my-password");
 ## 完成的樣子
 
 ```cpp
+#include <WiFi.h>
+using namespace std;
 void setup() {
     Serial.begin(115200);
     WiFi.begin("my-ssid", "my-password");

@@ -87,6 +87,8 @@ double c = 7.0 / 2;   // 3.5
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int main() {
     int score = 95;
     score = score + 5;

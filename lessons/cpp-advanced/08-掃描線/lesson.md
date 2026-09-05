@@ -89,6 +89,11 @@ cur:    1    2    1    0
 ## 完成的樣子
 
 ```cpp
+#include <algorithm>
+#include <iostream>
+#include <utility>
+#include <vector>
+using namespace std;
 int main() {
     vector<pair<int, int>> events;
     events.push_back(make_pair(1, 1));

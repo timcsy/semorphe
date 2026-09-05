@@ -77,6 +77,10 @@ f(5) → f(4) → f(3) → f(2) → f(1)
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <queue>
+#include <stack>
+using namespace std;
 int main() {
     queue<int> q;
     q.push(1);

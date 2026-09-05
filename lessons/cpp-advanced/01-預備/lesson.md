@@ -89,6 +89,8 @@ if (v[i] == x && i < v.size())      // 🔴 反了，會越界
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int main() {
     long long big = 1000000LL * 1000000LL;
     cout << big << endl;

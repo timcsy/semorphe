@@ -102,6 +102,8 @@ while (lo <= hi) {
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int main() {
     int target = 42;
     int lo = 1, hi = 100, steps = 0;

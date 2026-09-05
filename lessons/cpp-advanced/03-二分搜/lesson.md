@@ -94,6 +94,10 @@ if (i < v.size() && v[i] == x) {
 ## 完成的樣子
 
 ```cpp
+#include <algorithm>
+#include <iostream>
+#include <vector>
+using namespace std;
 int main() {
     vector<int> v = {1, 3, 5, 7, 9};
     int idx = lower_bound(v.begin(), v.end(), 5) - v.begin();

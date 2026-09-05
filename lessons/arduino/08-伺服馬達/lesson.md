@@ -81,6 +81,8 @@ for (int a = 0; a <= 180; a++) {
 ## 完成的樣子
 
 ```cpp
+#include <Servo.h>
+using namespace std;
 Servo s;
 
 void setup() {

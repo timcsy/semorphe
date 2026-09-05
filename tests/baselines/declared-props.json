@@ -4,11 +4,11 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
-    "segments": 472,
-    "nodesWithDeclTable": 10374
+    "segments": 473,
+    "nodesWithDeclTable": 10378
   },
   "missingDecl": 0,
   "projectionHint": 4,
   "dynamicNumbering": 4,
-  "note": "\n⚠️ 2026-08-31（第三次）：語料 +1／+3——**輸入量變大，不是判準放寬**。`host-no-overwrite.test.ts` 加了「開機產生的骨架不得覆蓋外部文件」那一組（Arduino IDE 覆蓋 setup/loop 的迴歸），檔頭的反引號片段進了共用語料庫。\n⚠️ 2026-08-31（第三次）：語料變大——**輸入量變大，不是判準放寬**。`host-no-overwrite.test.ts` 加了「開機產生的骨架不得覆蓋外部文件」那一組（Arduino IDE 覆蓋 setup/loop 的迴歸）。"
+  "note": "⚠️ 2026-09-05（完成的樣子與對照合而為一）：語料上調——**缺陷數一筆未動**。35 課的〈完成的樣子〉補上了鷹架那幾行（`#include`／`using namespace`）——它們本來就在積木上（淡的），而課文裡沒有，於是圖的兩邊對不起來。\n🟢 補完之後，課文那一段與對照左半**逐字相同**，而課文頁把兩個框**合併成一個**（同一支程式不印兩次）。\n"
 }

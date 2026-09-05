@@ -91,6 +91,8 @@ for (int i = 0; i < N; i++) { ... }
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int main() {
     int a[5] = {3, 1, 4, 1, 5};
     int sum = 0;

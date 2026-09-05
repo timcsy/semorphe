@@ -109,6 +109,9 @@ for (int v : g[u]) {
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <vector>
+using namespace std;
 vector<vector<int>> g;
 vector<int> depth(3, 0);
 

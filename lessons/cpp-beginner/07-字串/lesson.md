@@ -78,6 +78,10 @@ cout << name << endl;       // Semorphe!
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
 int main() {
     string name = "Semorphe";
     cout << name << endl;

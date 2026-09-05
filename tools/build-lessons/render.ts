@@ -103,7 +103,7 @@ th,td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left}
  *   當場把整個字串關掉，而 esbuild 的錯誤指向下一個看起來像語法的東西。
  *   > 一個把字串關掉的字元，它造成的錯誤訊息永遠指著別的地方。
  *   規矩：這裡的註解用「」括名字。 */
-.blockmap{margin:1.6rem 0;padding:1rem 1.1rem;border:1px solid var(--line);border-radius:10px;background:var(--code-bg)}
+.blockmap{margin:1rem 0 1.6rem;padding:.9rem 1.1rem 1.1rem;border:1px solid var(--line);border-radius:10px;background:var(--code-bg)}
 /* 🔴 這一張圖破出文字欄：內容欄是 44rem（約 704px），兩欄各 330px
  * ——積木在那個寬度下擠成一團，而「看清楚積木長什麼樣」正是它存在的理由。
  * ⚠️ 只在放得下的時候破，窄螢幕仍然乖乖待在欄內。 */
@@ -114,9 +114,11 @@ th,td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left}
 @media(max-width:720px){.bm-grid{grid-template-columns:1fr}}
 .bm-code{margin:0;padding:.6rem .2rem;background:var(--bg);border:1px solid var(--line);
   border-radius:8px;overflow-x:auto;font:13px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace}
-/* ⚠️ 積木那半也要一塊底：兩邊長得像一對，讀者才會把它們當成同一個東西的兩面。
- * 而底色是淺的即使在深色模式——積木本身是亮色的，深底會讓它們刺眼地浮起來。 */
-.bm-blocks{background:#fafafa;border:1px solid var(--line);border-radius:8px;padding:.5rem}
+/* ⚠️ 積木那半也要一塊框：兩邊長得像一對，讀者才會把它們當成同一個東西的兩面。
+ * 🪦 底色原本寫死 #fafafa（怕深色模式下亮色積木刺眼），而使用者 2026-09-05：
+ *    「後面的背景應該用透明而不是白色」——他是對的：寫死之後那一格在深色模式
+ *    是**整頁唯一一塊白**，而應用裡的畫布本來就是深的。 */
+.bm-blocks{background:transparent;border:1px solid var(--line);border-radius:8px;padding:.5rem}
 .bm-line{display:block;padding:0 .6rem;white-space:pre}
 /* 🔴 左邊的號碼與積木上那顆圓點是**同一個編號**——讀者靠它配對。
  * 所以它不是裝飾性的行號：有對到積木的那幾行，號碼要看得出是「可以配對的」。 */
@@ -344,14 +346,29 @@ function blockmapBlock(p: LessonPage): string {
     return `<span class="bm-line"${paired ? ' data-blocks="1"' : ''}>` +
       `<i>${line}</i>${esc(text === '' ? ' ' : text)}</span>`
   }).join('')
-  return `<section class="blockmap"><h2>同一支程式，兩種看法</h2>` +
+  // 🔴 **只說「這是對照，而它是一個參考做法」**（2026-09-05 使用者拍板）。
+  //
+  //    原本這裡宣告了一句主張（「它們不是兩個東西，是同一個東西的兩種寫法」）
+  //    ——而那句話是**課文的工作**（第 1 課有一整節在講它），不是一張圖的圖說。
+  //
+  // > **一張圖的說明只需要回答「這是什麼、怎麼看」；
+  // > 「為什麼重要」是課文的事，寫在圖上只是把它說第二次。**
+  //
+  // ⚠️ 而「參考做法」是誠實的：同一段程式可以有別的寫法，這張圖是其中一種。
+  // ⚠️ **這裡沒有自己的標題**：它坐在〈完成的樣子〉底下，而那就是它的標題。
+  //    多一個 h2 會讓同一件事有兩個名字。
+  return `<section class="blockmap">` +
     // ⚠️ **不要寫「左邊／右邊」**：手機上它們是上下（見 bm-grid 的斷點）。
-    `<p class="meta">程式碼的每一行都有一個號碼，而那個號碼就印在對應的積木上。` +
-    `<b>它們不是兩個東西，是同一個東西的兩種寫法。</b></p>` +
+    `<p class="meta">這一課的<b>參考做法</b>——程式碼每一行的號碼，` +
+    `就印在對應的那塊積木上。</p>` +
     `<div class="bm-grid"><pre class="bm-code">${rows}</pre>` +
     `<div class="bm-blocks">${bm.svg}</div></div>` +
-    // ⚠️ 這裡是**已經渲染完的 HTML**，不是 markdown——星號不會變粗體
-    `<p class="meta">⚠️ 這張圖是<b>產生</b>的，不是截圖——課文裡的程式碼改了，它會跟著改。</p>` +
+    // 🪦 這裡原本有一行「這張圖是產生的，不是截圖——課文改了它會跟著改」。
+    //    使用者 2026-09-05：「**這句話不該給使用者看**」——他是對的：
+    //    那是寫給**維護者**的（而它已經寫在 `lessons/README.md` 與這個檔的註解裡）。
+    //
+    // > **一句話如果它的讀者是「未來要改這個專案的人」，
+    // > 那它就不該出現在學生的畫面上——那裡的每一行都要為【學生】服務。**
     `</section>`
 }
 
@@ -369,11 +386,20 @@ function withBlockmap(html: string, p: LessonPage): string {
   if (block === '') return html
   const h = html.indexOf('完成的樣子')
   if (h < 0) return html + block
-  // 那個標題之後的第一個 </pre> ＝ 那段程式碼的結尾
+  // 🔴 **取代那個程式碼框，不是插在它後面**（2026-09-05 使用者：「甚至可以合併」）。
+  //
+  //    〈完成的樣子〉的程式碼與對照左半**現在逐字相同**（鷹架那幾行已經補進課文），
+  //    所以並排的結果是**同一支程式在頁面上印兩次**。
+  //
+  // > **兩個框裡是同一份東西時，第二個框帶來的不是強調，是懷疑
+  // > ——讀者會去找它們哪裡不一樣。**
+  //
+  // ⚠️ 而 `lesson.md` 那一側**不動**：`e2e/lessons.spec.ts` 與產生器都從那個
+  //    程式碼框抽程式。合併發生在**呈現**，不在來源。
+  const start = html.indexOf('<pre>', h)
   const end = html.indexOf('</pre>', h)
-  if (end < 0) return html + block
-  const at = end + '</pre>'.length
-  return html.slice(0, at) + block + html.slice(at)
+  if (start < 0 || end < 0) return html + block
+  return html.slice(0, start) + block + html.slice(end + '</pre>'.length)
 }
 
 function navBlock(n: LessonNeighbours): string {

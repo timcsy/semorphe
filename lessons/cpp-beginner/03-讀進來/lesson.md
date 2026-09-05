@@ -76,6 +76,8 @@ cin  >> n     資料從鍵盤 【流進來】裝進 n
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int main() {
     int n;
     cin >> n;

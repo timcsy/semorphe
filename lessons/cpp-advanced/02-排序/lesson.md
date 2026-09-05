@@ -83,6 +83,10 @@ sort(v.begin(), v.end(), [](int a, int b) {
 ## 完成的樣子
 
 ```cpp
+#include <algorithm>
+#include <iostream>
+#include <vector>
+using namespace std;
 int main() {
     vector<int> v = {5, 2, 8, 1};
     sort(v.begin(), v.end());

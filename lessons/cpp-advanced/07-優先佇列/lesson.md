@@ -83,6 +83,9 @@ priority_queue<int, vector<int>, greater<int>> pq;
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <queue>
+using namespace std;
 int main() {
     priority_queue<int> pq;
     pq.push(3);

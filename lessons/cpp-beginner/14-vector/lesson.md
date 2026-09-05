@@ -93,6 +93,9 @@ for (int x : v) {
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <vector>
+using namespace std;
 int main() {
     vector<int> v;
     v.push_back(3);

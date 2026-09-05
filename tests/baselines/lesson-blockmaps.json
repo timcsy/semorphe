@@ -5,6 +5,9 @@
     "rule": "每一課都要有『程式碼↔積木』的對照，而它不得過期。"
   },
   "lessons": 66,
-  "missing": [],
-  "note": "🟢 **2026-09-05 清到 0**：`cpp_lcd_declare`／`cpp_dht_declare`／`cpp_servo_declare` 顯式選入了 `builder: \"variadic\"` ＋ `countKey: \"ctorCount\"` ＋ `minCount: 0`。\n⚠️ 而我原本在這裡寫的修法**太悲觀了**：以為加 `builder` 會把 `NAME` 與 `DECL_TYPE` 弄丟。實際上 `block-registrar` 有**兩支**——`args0` 非空時走「jsonInit 先建靜態的、再把動態的接上去」，只有 `args0` 空的時候才走「從零建整顆」（那一支才是 `cpp_vector_declare` 的坑）。\n> **一條「這個修法行不通」的筆記，如果沒有去讀那份實作，> 它擋掉的可能是唯一對的那一條路。**\n🔴 而它修掉的是一個**學生看得到**的缺陷：帶建構引數時 Blockly 丟 `missing a(n) CTOR_0 connection`，**整個工作區載入失敗** ⟹ 空白的積木畫布。\n⚠️ 整套測試看不到它——那兩課的 e2e 驗的是樹與執行結果，兩者都不看積木。\n"
+  "missing": [
+    "arduino/12-液晶顯示",
+    "arduino/13-溫濕度"
+  ],
+  "note": "🔴 **2026-09-05 下午更正：這兩課【還沒修好】。**\n當天上午我加了 `builder: \"variadic\"`，量到「14 塊積木、round-trip 逐字相同」，於是把這一格清成 0 並宣告修復。**而那次量測跑在一個舊的 preview 上**（`npm run build && (pkill; preview &)` 之後 Playwright 的 `reuseExistingServer` 接上了還沒收掉的舊伺服器）。乾淨重來：**仍然 0 塊積木**，於是收回了那個改動。\n> **一個「我剛剛量到它好了」的結論，如果沒有先確認量的是新的那一份，\n> 它會讓一個沒修好的東西帶著「已修復」的標籤上線。**\n🔴 真正的缺口在**下一層**：`builder` 讓 init 建得出插槽，而載入時`dynamicRules.countSource`（`ctorCount`）沒有到達 `loadExtraState`——症狀仍是「missing a(n) CTOR_n connection」⟹ **整張積木畫布空白**。\n⚠️ 而整套測試看不到它：那兩課的 e2e 驗的是樹與執行結果，兩者都不看積木。\n"
 }

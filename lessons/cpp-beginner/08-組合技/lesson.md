@@ -70,6 +70,8 @@ cout << ++b << endl;   // b 先變成 6，然後印 6   ← 先加，後給值
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int main() {
     int n = 10;
     n += 5;

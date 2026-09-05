@@ -77,6 +77,8 @@ cout << !(a == b) << endl;   // a 不等於 b → 1
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int main() {
     int a = 7, b = 3;
     bool big = a > b;

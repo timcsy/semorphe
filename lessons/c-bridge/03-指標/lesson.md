@@ -95,6 +95,8 @@ if (p != NULL) {
 ## 完成的樣子
 
 ```c
+#include <cstdio>
+using namespace std;
 int main() {
     int n = 42;
     int *p = &n;

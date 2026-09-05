@@ -95,6 +95,11 @@ for (string w : words) cnt[w]++;      // 🟢 沒見過的自動從 0 開始
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <map>
+#include <set>
+#include <vector>
+using namespace std;
 int main() {
     map<string, int> m;
     m["a"] = 1;

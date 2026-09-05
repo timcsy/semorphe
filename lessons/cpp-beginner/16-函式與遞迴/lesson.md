@@ -107,6 +107,8 @@ f(5) = 5 × f(4)
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int f(int n) {
     if (n <= 1) return 1;
     return n * f(n - 1);

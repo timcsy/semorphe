@@ -78,14 +78,17 @@ for (const c of CASES) {
       undefined, { timeout: 60_000 })
     await page.waitForTimeout(2000)
 
-    // 🔴 **鷹架要全露**：課文頁要讓人看到完整的程式長什麼樣，
-    //    而有幾條軌道把 `#include`／`int main` 藏起來了（`scaffold: hidden`）。
-    await page.evaluate(() => {
-      const app = (window as never as Record<string, never>).__app as unknown as
-        { setScaffoldMode?(m: string): void }
-      app.setScaffoldMode?.('editable')
-    })
-    await page.waitForTimeout(800)
+    // 🔴 **鷹架跟著課程走，不要強制全露**（2026-09-05 使用者指出）。
+    //
+    //    第一版在這裡呼叫 `setScaffoldMode('editable')`，理由是「課文頁要讓人
+    //    看到完整的程式」。而那讓圖與課文**互相矛盾**：C++ 第 1 課的圖上畫著
+    //    五塊積木，而它正下方那一行寫著「**積木上你只會看到一塊**」。
+    //
+    // > **一張「示範這一課長什麼樣」的圖，如果不照那一課的組態產，
+    // > 它示範的就是另一課。**
+    //
+    // ⚠️ 六條軌道裡三條是 `ghost`（淡的）、三條是 `editable`，而個別課還會覆寫。
+    //    照著它走，圖上就會出現「淡的鷹架」——那正是學生打開時看到的。
 
     await page.evaluate((code) =>
       (window as never as { __app: { codeView: { setCode(c: string): void } } })
@@ -96,6 +99,18 @@ for (const c of CASES) {
     await page.locator('#sync-menu-btn').click()
     await page.locator('.quick-pick-item').filter({ hasText: /以此為準：程式碼/ }).first().click()
     await page.waitForTimeout(3000)
+
+    // 🟢 **不再需要任何來回**（2026-09-05 使用者：「完成的樣子要和對照一致」）。
+    //
+    //    鷹架那幾行（`#include`／`using namespace`）已經寫進 66 課的
+    //    〈完成的樣子〉了，所以送進去的就是最終那一份——對應表的行號、
+    //    左半顯示的文字、課文裡的程式碼，**三者是同一份**。
+    //
+    // 🪦 中間那一版做了兩次額外同步（積木→程式碼、再程式碼→積木）來補上鷹架，
+    //    而它把積木的**格式正規化**也一起帶進來了
+    //    （`char s[20] = "hello";` → `= {"hello"};`）——於是課文與圖不再逐字相同。
+    //
+    // > **與其讓兩份東西「盡量像」，不如讓它們是同一份。**
 
     const got = await page.evaluate(() => {
       const app = (window as never as Record<string, never>).__app as unknown as {
@@ -222,6 +237,24 @@ for (const c of CASES) {
           if (v && v !== 'none' && v !== 'normal') parts.push(`${p}:${v}`)
         }
         if (parts.length > 0) dstAll[i].setAttribute('style', parts.join(';'))
+      }
+
+      // 🔴 **「淡的鷹架」也要跟著出來**——它住在 CSS 的 `.ghost-block > .blocklyPath`
+      //    （`opacity: .4` ＋ `stroke-dasharray: 4 3`），而我們等一下要把 class 拿掉。
+      //
+      // ⚠️ 這一輪掃**每一個元素**（不是只掃沒寫 fill 的那些）：淡化是掛在
+      //    積木本體的 `<path>` 上的，而它有 `fill` 屬性——上一輪會跳過它。
+      const srcEvery = canvas.querySelectorAll('*')
+      const dstEvery = clone.querySelectorAll('*')
+      for (let i = 0; i < srcEvery.length && i < dstEvery.length; i++) {
+        const cs = getComputedStyle(srcEvery[i])
+        const extra: string[] = []
+        if (cs.opacity !== '' && cs.opacity !== '1') extra.push(`opacity:${cs.opacity}`)
+        const dash = cs.getPropertyValue('stroke-dasharray')
+        if (dash && dash !== 'none') extra.push(`stroke-dasharray:${dash}`)
+        if (extra.length === 0) continue
+        const had = dstEvery[i].getAttribute('style')
+        dstEvery[i].setAttribute('style', (had ? had + ';' : '') + extra.join(';'))
       }
       // ⚠️ 拖曳層／泡泡層不是積木——留著只是體積
       for (const sel of ['.blocklyDragSurface', '.blocklyBubbleCanvas', '.blocklyHighlightedConnectionPath']) {

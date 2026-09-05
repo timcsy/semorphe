@@ -87,6 +87,8 @@ void setup() {
 ## 完成的樣子
 
 ```cpp
+#include <EEPROM.h>
+using namespace std;
 void setup() {
     Serial.begin(9600);
     int n = EEPROM.read(0);

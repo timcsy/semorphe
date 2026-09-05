@@ -124,6 +124,8 @@ while (p != NULL) {
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 struct Node {
     int val;
     Node* next;

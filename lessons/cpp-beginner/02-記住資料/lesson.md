@@ -93,6 +93,8 @@ A
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+using namespace std;
 int main() {
     int age = 16;
     double height = 1.72;

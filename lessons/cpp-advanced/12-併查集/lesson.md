@@ -104,6 +104,9 @@ cout << (find(p, 1) == find(p, 3)) << endl;      // 0  ← 不同組
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <vector>
+using namespace std;
 int find(vector<int>& p, int x) {
     if (p[x] == x) return x;
     p[x] = find(p, p[x]);

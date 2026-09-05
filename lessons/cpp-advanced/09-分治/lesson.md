@@ -83,6 +83,9 @@ n = 10⁵、遞迴 log n 層、每層 n 次呼叫——**複製的成本會遠�
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <vector>
+using namespace std;
 int msum(vector<int>& a, int lo, int hi) {
     if (lo == hi) return a[lo];
     int mid = (lo + hi) / 2;

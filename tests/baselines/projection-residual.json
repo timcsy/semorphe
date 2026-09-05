@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
-    "syntaxComplete": 693,
-    "syntaxErrorFragments": 231,
-    "totalChars": 103974
+    "syntaxComplete": 694,
+    "syntaxErrorFragments": 233,
+    "totalChars": 103995
   },
   "residual2": {
     "charCount": 387,
@@ -83,5 +83,5 @@
       "nonstandard_but_valid": 7
     }
   },
-  "note": "⚠️ 2026-09-05（宣告了插槽就要有人建）：語料上調——**缺陷數一筆未動**。新增第一百零三條護欄 `audit-declared-slots-built`（硬性零：宣告了 `dynamicRules.inputPattern` 而沒有 builder／paramList／branchList／altLayout 的，一顆都不准有；**注入驗過會紅**）。\n"
+  "note": "⚠️ 2026-09-05（完成的樣子與對照合而為一）：語料上調——**缺陷數一筆未動**。35 課的〈完成的樣子〉補上了鷹架那幾行（`#include`／`using namespace`）——它們本來就在積木上（淡的），而課文裡沒有，於是圖的兩邊對不起來。\n🟢 補完之後，課文那一段與對照左半**逐字相同**，而課文頁把兩個框**合併成一個**（同一支程式不印兩次）。\n"
 }

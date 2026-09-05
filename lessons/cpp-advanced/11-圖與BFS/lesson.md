@@ -100,6 +100,10 @@ if (dist[v] == -1) {
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <queue>
+#include <vector>
+using namespace std;
 int main() {
     vector<int> a0;
     a0.push_back(1);

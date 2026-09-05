@@ -97,6 +97,9 @@ DP 的答案常常很大，**用 `long long`**。
 ## 完成的樣子
 
 ```cpp
+#include <iostream>
+#include <vector>
+using namespace std;
 int main() {
     int n = 10;
     vector<int> dp(n + 1);
