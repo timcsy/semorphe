@@ -58,7 +58,7 @@ import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson'
 import type { LessonView } from '../core/semantic-wave'
-import { markTaskPassed, isTaskPassed, passedCount, clearProgress } from '../core/progress'
+import { markTaskPassed, isTaskPassed, passedCount, clearProgress, setProgressStore } from '../core/progress'
 /**
  * 「題目」那顆 picker 裡**不是一個題目**的那一項。
  *
@@ -90,6 +90,7 @@ import { ExecutionController } from './execution-controller'
 // Projection layer
 import { CURRENT_VERSION, hashCode } from '../core/storage-version'
 import { diagNote } from '../core/diag-log'
+import { createBrowserStore } from './browser-store'
 
 /**
  * 全部語言的風格預設——**從語言套件收，不逐個 import**。
@@ -655,6 +656,20 @@ export class App {
     // 🔴 **問人這件事要走頁面，不走瀏覽器的原生對話框**——
     //    `window.prompt` 在 VSCode 的 webview 裡是停用的（見 `prompt-dialog.ts`）。
     installDialogs()
+    // 🔴 **進度存在哪，由組裝點說**（2026-09-06，spec 173）。
+    //
+    //    `core/progress.ts` 是**函式式**的（不是類別），所以注入走一個
+    //    模組層級的 setter 而不是建構子。它的預設是**記憶體**
+    //    ——核心不知道有 `localStorage` 這種東西。
+    //
+    // ⚠️ **兩個宿主都設同一個**：webview 裡也有 `localStorage`，
+    //    而進度是「使用者的東西」（`FIELD_OWNERSHIP` 的 `user` 桶）
+    //    ——它跨檔案、跨宿主都該在。所以它不走 `HostProfile`：
+    //    那張表宣告的是**宿主之間不一樣的東西**，而這一件兩邊一樣。
+    //
+    // 🔴 少了這一行，症狀是**進度記不住**，而它不會報錯
+    //    ——`audit-store-wired` 那條護欄盯著這一行還在不在。
+    setProgressStore(createBrowserStore())
     this.storageService = this.profile.createStorage()
     this.topicRegistry = new TopicRegistry()
     this.targetRegistry = new TargetRegistry()

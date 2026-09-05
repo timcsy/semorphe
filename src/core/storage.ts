@@ -1,4 +1,5 @@
 import { CURRENT_VERSION, judgeJSON, upgrade } from './storage-version'
+import { MemoryKeyValueStore, type KeyValueStore } from './host/key-value-store'
 
 const STORAGE_KEY = 'semorphe-state'
 /** 被拒絕的存檔搬到這裡。覆蓋式，只留一份 */
@@ -79,9 +80,23 @@ export interface SavedState {
 
 export class StorageService {
   private defaultLanguage: string
+  /**
+   * 存在哪——**由呼叫端決定**（2026-09-06，spec 173）。
+   *
+   * 🔴 在此之前這個類別直接叫 `localStorage`，而那是**一個宿主的東西**
+   * （Node 沒有、VSCode 的擴充主程序沒有、無痕模式下叫它會拋）。
+   *
+   * > **一個「核心」如果它的存檔只在一個宿主上跑得起來，
+   * > 那它不是核心，是那個宿主的一部分。**
+   *
+   * ⚠️ 預設是**記憶體**：核心不知道有 `localStorage` 這種東西。
+   * 網頁版由組裝點傳 `createBrowserStore()` 進來（`src/ui/browser-store.ts`）。
+   */
+  private store: KeyValueStore
 
-  constructor(defaultLanguage = 'cpp') {
+  constructor(defaultLanguage = 'cpp', store: KeyValueStore = new MemoryKeyValueStore()) {
     this.defaultLanguage = defaultLanguage
+    this.store = store
   }
 
   /**
@@ -116,8 +131,10 @@ export class StorageService {
         console.warn('Storage size exceeds limit, not saving')
         return false
       }
-      localStorage.setItem(STORAGE_KEY, json)
-      return true
+      // 🔴 **寫不進去是一個【失敗】**——埠回 `false`，這裡如實往上傳。
+      //    在此之前它被 `catch` 吞成同一個 `return false`，
+      //    於是「配額滿」與「存檔格式不對」在呼叫端長得一樣。
+      return this.store.write(STORAGE_KEY, json)
     } catch {
       return false
     }
@@ -146,7 +163,7 @@ export class StorageService {
   loadOutcome(): LoadOutcome {
     let json: string | null
     try {
-      json = localStorage.getItem(STORAGE_KEY)
+      json = this.store.read(STORAGE_KEY)
     } catch {
       return { kind: 'empty' }
     }
@@ -190,18 +207,25 @@ export class StorageService {
    * 假裝備份好了。主鍵在這條路徑上完全不動。
    */
   private refuse(raw: string, reason: RefusalReason): LoadOutcome {
-    let backedUpTo = ''
-    try {
-      localStorage.setItem(BACKUP_KEY, raw)
-      backedUpTo = BACKUP_KEY
-    } catch { /* 備份失敗仍要回報拒絕，只是說不出備份在哪 */ }
-    return { kind: 'refused', reason, backedUpTo }
+    // 🔴 **寫入失敗是一個【回傳值】，不是一個例外**（2026-09-06，spec 173）。
+    //
+    //    在此之前這裡包 `try/catch`，因為 `localStorage.setItem` 在配額滿時**拋**。
+    //    埠把它換成 `boolean`——⚠️ 而換完之後 `catch` 那條路**永遠不會走到**，
+    //    於是「備份寫不進去」會被回報成「備份好了」。
+    //
+    //    那正是這一支測試（T026）擋下來的：
+    //    「備份沒寫成功卻回報備份好了，**比沒有備份更危險**」。
+    //
+    // > **把一個例外換成回傳值的時候，接例外的那一段不會報錯——
+    // > 它只是安靜地變成永遠成功。**
+    const ok = this.store.write(BACKUP_KEY, raw)
+    return { kind: 'refused', reason, backedUpTo: ok ? BACKUP_KEY : '' }
   }
 
   /** Clear saved state */
   clear(): void {
     try {
-      localStorage.removeItem(STORAGE_KEY)
+      this.store.remove(STORAGE_KEY)
     } catch { /* ignore */ }
   }
 

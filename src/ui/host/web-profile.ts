@@ -16,6 +16,7 @@ import { MonacoPanel } from '../panels/monaco-panel'
 import { StorageService } from '../../core/storage'
 import type { HostProfile } from '../../core/host/host-profile'
 import type { CodeView } from '../../core/host/code-view'
+import { createBrowserStore } from '../browser-store'
 
 export const webProfile: HostProfile = {
   id: 'web',
@@ -33,7 +34,16 @@ export const webProfile: HostProfile = {
   },
 
   createStorage() {
-    return new StorageService()
+    // 🔴 **網頁版才知道有 `localStorage` 這種東西**（2026-09-06，spec 173）。
+    //    `StorageService` 住在核心，而核心的預設是**記憶體**
+    //    ——它不知道任何宿主的儲存。這裡是那個知識唯一的家。
+    //
+    // > **一個「核心」如果它的存檔只在一個宿主上跑得起來，
+    // > 那它不是核心，是那個宿主的一部分。**
+    //
+    // ⚠️ 進度（`core/progress.ts`）是函式式的，走它自己的 setter
+    //    ——在 `app-shell` 啟動時設，見 `setProgressStore`。
+    return new StorageService('cpp', createBrowserStore())
   },
 
   // 🟢 網頁版什麼都有——所以 `featureReasons` 是空的，

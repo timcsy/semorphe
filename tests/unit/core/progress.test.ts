@@ -1,16 +1,22 @@
 /**
- * @vitest-environment happy-dom
- *
  * **通過紀錄**——`core/progress.ts`。
  *
- * ⚠️ 這個檔要 DOM 環境是因為它讀 `localStorage`。`src/` 裡零個
- * 「偵測 DOM 存在」的分支，所以不加這一行的症狀是**整個檔紅**，不是靜默錯。
+ * 🪦 **這個檔曾經需要 `@vitest-environment happy-dom`**，而理由逐字是
+ * 「它讀 `localStorage`」。2026-09-06（spec 173）之後不需要了：
+ * 存放變成一個**注入的埠**，而測試注入記憶體那一個。
+ *
+ * > **一個「因為它碰 DOM 所以測試要有 DOM」的檔案，
+ * > 多半是它碰了一個不該碰的東西——而那件事在測試環境上先浮出來。**
+ *
+ * ⚠️ 而重置也跟著變乾淨：從 `localStorage.clear()`（一個**全域**的副作用）
+ * 變成「換一個新的 store」——測試之間再也不可能互相污染。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { markTaskPassed, isTaskPassed, passedTasks, passedCount, clearProgress } from '../../../src/core/progress'
+import { markTaskPassed, isTaskPassed, passedTasks, passedCount, clearProgress, setProgressStore } from '../../../src/core/progress'
+import { MemoryKeyValueStore } from '../../../src/core/host/key-value-store'
 
 describe('通過紀錄', () => {
-  beforeEach(() => { localStorage.clear() })
+  beforeEach(() => { setProgressStore(new MemoryKeyValueStore()) })
 
   it('記得住，而且分課', () => {
     markTaskPassed('cpp/01', 'follow')
@@ -41,18 +47,24 @@ describe('通過紀錄', () => {
   })
 
   it('🔴 讀到壞掉的資料回空，不要丟錯', () => {
-    localStorage.setItem('semorphe-progress', '{ 這不是 JSON')
+    // ⚠️ 直接往 store 裡塞壞資料——在此之前這裡塞的是 `localStorage`，
+    //    而那是一個**全域**：兩個測試檔同時跑會互相看到對方的髒資料。
+    const bad = new MemoryKeyValueStore()
+    setProgressStore(bad)
+    bad.write('semorphe-progress', '{ 這不是 JSON')
     expect(passedTasks('cpp/01')).toEqual([])
-    localStorage.setItem('semorphe-progress', '"一個字串"')
+    bad.write('semorphe-progress', '"一個字串"')
     expect(passedTasks('cpp/01')).toEqual([])
-    localStorage.setItem('semorphe-progress', '{"cpp/01": "不是陣列"}')
+    bad.write('semorphe-progress', '{"cpp/01": "不是陣列"}')
     expect(passedTasks('cpp/01')).toEqual([])
-    localStorage.setItem('semorphe-progress', '{"cpp/01": ["ok", 3, null]}')
+    bad.write('semorphe-progress', '{"cpp/01": ["ok", 3, null]}')
     expect(passedTasks('cpp/01')).toEqual(['ok'])
   })
 
   it('⚠️ 壞掉的資料被覆寫之後，新的記得住（不會卡在壞的那一份）', () => {
-    localStorage.setItem('semorphe-progress', 'x')
+    const store = new MemoryKeyValueStore()
+    setProgressStore(store)
+    store.write('semorphe-progress', 'x')
     markTaskPassed('cpp/01', 'follow')
     expect(isTaskPassed('cpp/01', 'follow')).toBe(true)
   })

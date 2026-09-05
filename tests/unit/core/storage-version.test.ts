@@ -2,7 +2,13 @@
  * @vitest-environment happy-dom
  *
  * ⚠️ **預設環境是 `node`**（2026-08-21，見 `vitest.config.ts` 的說明）——
- * 這個檔碰得到 DOM（`document`／`localStorage`／面板），所以顯式加回來。
+ * 這個檔碰得到 DOM，所以顯式加回來。
+ *
+ * 🪦 **理由裡的 `localStorage` 已於 2026-09-06 退場**（spec 173）：
+ * 存放變成一個注入的埠，而這個檔注入的是記憶體實作。
+ * ⚠️ **`document` 那一半仍然成立**，所以這一行留著。
+ * > **一個「因為 A、B、C 所以需要 X」的理由，在 A 消失時
+ * > 不會自己變成「因為 B、C」——它會整句留著，然後被當成還完整的。**
  */
 /**
  * 版本閘門（US2）
@@ -19,6 +25,7 @@ import { isValidComponentId, isNamespaced } from '../../../src/core/identity'
 import '../../../src/languages/cpp/all-declarations'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { StorageService } from '../../../src/core/storage'
+import { MemoryKeyValueStore } from '../../../src/core/host/key-value-store'
 import {
   judge,
   judgeJSON,
@@ -33,23 +40,20 @@ import {
 
 const STORAGE_KEY = 'semorphe-state'
 
-const localStorageMock = (() => {
-  let store: Record<string, string> = {}
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key]
-    }),
-    clear: vi.fn(() => {
-      store = {}
-    }),
-  }
-})()
-
-Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
+/**
+ * 🪦 **這裡曾經是一個把 `globalThis.localStorage` 換掉的 mock**
+ * （2026-09-06，spec 173 之前）。
+ *
+ * 存放變成一個**注入的埠**之後，那種替身不再需要——也不再可行：
+ * 核心不看全域了。
+ *
+ * > **一個測試如果要換掉全域才測得到，那它測的東西就綁在全域上
+ * > ——而換掉全域的那一行，正是那個綁定的收據。**
+ *
+ * ⚠️ 而換成注入之後多了一件事：**每一個 `describe` 各自拿一個新的 store**，
+ * 於是測試之間再也不可能互相污染（舊的做法靠記得呼叫 `clear()`）。
+ */
+let backing = new MemoryKeyValueStore()
 
 /** 一份合法的存檔，版本可覆寫 */
 function savedState(version = CURRENT_VERSION, extra: Record<string, unknown> = {}) {
@@ -153,9 +157,9 @@ describe('兩條讀取路徑判定一致（FR-010）', () => {
   let storage: StorageService
 
   beforeEach(() => {
-    localStorageMock.clear()
+    backing = new MemoryKeyValueStore()
     vi.clearAllMocks()
-    storage = new StorageService()
+    storage = new StorageService('cpp', backing)
   })
 
   const samples: [string, unknown][] = [
@@ -168,7 +172,7 @@ describe('兩條讀取路徑判定一致（FR-010）', () => {
   for (const [name, value] of samples) {
     it(`${name}：自動載入與匯入檔案得到相同結論`, () => {
       const json = JSON.stringify(value)
-      localStorage.setItem(STORAGE_KEY, json)
+      backing.write(STORAGE_KEY, json)
 
       const autoLoad = storage.load()
       const imports = storage.importFromJSON(json)
@@ -186,28 +190,28 @@ describe('自動載入的行為', () => {
   let storage: StorageService
 
   beforeEach(() => {
-    localStorageMock.clear()
+    backing = new MemoryKeyValueStore()
     vi.clearAllMocks()
-    storage = new StorageService()
+    storage = new StorageService('cpp', backing)
   })
 
   it('版本相同 → 正常載入，與現況完全相同（FR-013／FR-042）', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedState(CURRENT_VERSION)))
+    backing.write(STORAGE_KEY, JSON.stringify(savedState(CURRENT_VERSION)))
     expect(storage.load()?.code).toBe('使用者的作品')
   })
 
   it('版本較高 → 不載入', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedState(99)))
+    backing.write(STORAGE_KEY, JSON.stringify(savedState(99)))
     expect(storage.load()).toBeNull()
   })
 
   it('不是存檔形狀 → 不載入（現況會原樣回傳）', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ hello: 'world' }))
+    backing.write(STORAGE_KEY, JSON.stringify({ hello: 'world' }))
     expect(storage.load()).toBeNull()
   })
 
   it('loadOutcome() 說得出為什麼——不只是 null', () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedState(99)))
+    backing.write(STORAGE_KEY, JSON.stringify(savedState(99)))
     const r = storage.loadOutcome()
     expect(r.kind).toBe('refused')
     expect(r.kind === 'refused' && r.reason.code).toBe('too-new')

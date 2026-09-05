@@ -479,7 +479,7 @@ npm run install:ide    # 裝進本機兩個 IDE
 三件會讓一次改動被擋下來的事：
 
 - **改了規範而沒有機械化的檢查** — 見 `knowledge/skills/build-guardrail`。
-  這個專案有 **105 條護欄**（數字由 `tests/integration/audit-guardrail-count.test.ts`
+  這個專案有 **106 條護欄**（數字由 `tests/integration/audit-guardrail-count.test.ts`
   算出來，而它會擋住這一行變成過期的數字），而它們的存在理由是同一句：
   *一條規範沒有機械化的檢查，它本身就是殼——而殼看起來像完成。*
 - **改了使用者按得到的東西而沒跑 `npm run test:e2e`** — 全套單元測試綠**擋不住**它

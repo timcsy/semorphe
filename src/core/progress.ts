@@ -29,7 +29,27 @@
  * 一個清不掉的進度會讓第二班看到第一班的勾。
  */
 
+import { MemoryKeyValueStore, type KeyValueStore } from './host/key-value-store'
+
 const KEY = 'semorphe-progress'
+
+/**
+ * 進度存在哪——**由組裝點決定**（2026-09-06，spec 173）。
+ *
+ * 🔴 這一支是**函式式**的（不是類別），所以注入走一個模組層級的 setter，
+ * 而不是建構子。⚠️ 那讓「組裝點忘了設」變成一個可能的失敗，
+ * 而它的症狀是**進度記不住**——所以第一百零七條護欄的姊妹條
+ * （`audit-store-wired`）驗組裝點真的接上了。
+ *
+ * ⚠️ 預設是**記憶體**而不是瀏覽器：核心不知道有 `localStorage` 這種東西，
+ * 那正是這一刀的全部重點。
+ */
+let store: KeyValueStore = new MemoryKeyValueStore()
+
+/** 組裝點在啟動時呼叫一次。⚠️ 呼叫**之前**寫的東西留在記憶體裡，不會搬過去。 */
+export function setProgressStore(s: KeyValueStore): void {
+  store = s
+}
 
 /** `<課程 id>` → 過了的題目 id。 */
 type Passed = Record<string, string[]>
@@ -40,7 +60,7 @@ type Passed = Record<string, string[]>
  */
 function read(): Passed {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = store.read(KEY)
     if (raw === null) return {}
     const o: unknown = JSON.parse(raw)
     if (o === null || typeof o !== 'object') return {}
@@ -56,7 +76,7 @@ function read(): Passed {
 
 function write(p: Passed): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(p))
+    store.write(KEY, JSON.stringify(p))
   } catch {
     // 無痕視窗、配額滿了——⚠️ 進度存不下來不該讓執行整個失敗
   }
@@ -87,7 +107,7 @@ export function passedCount(lessonId: string, taskIds: readonly string[]): numbe
 /** 🔴 換一班學生。⚠️ 入口要明顯——藏起來的清除鍵等於沒有。 */
 export function clearProgress(): void {
   try {
-    localStorage.removeItem(KEY)
+    store.remove(KEY)
   } catch {
     // 同上
   }

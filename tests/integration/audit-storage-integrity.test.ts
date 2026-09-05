@@ -32,28 +32,27 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE, type BaselineMeta , assertRatchet } from '../helpers/guardrail'
 import { StorageService } from '../../src/core/storage'
+import { MemoryKeyValueStore } from '../../src/core/host/key-value-store'
 import { SAVED_STATE_FIELDS, CURRENT_VERSION, UPGRADES } from '../../src/core/storage-version'
 import type { SavedState } from '../../src/core/storage'
 
 const STORAGE_KEY = 'semorphe-state'
 
-const localStorageMock = (() => {
-  let store: Record<string, string> = {}
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key]
-    }),
-    clear: vi.fn(() => {
-      store = {}
-    }),
-  }
-})()
-
-Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
+/**
+ * 一個實作了埠的替身（2026-09-06，spec 173）。
+ *
+ * 🪦 在此之前這裡換掉的是 `globalThis.localStorage`——而存放變成注入的埠之後，
+ * 那種替身**再也讀不到**：核心不看全域了。
+ *
+ * ⚠️ 而它壞掉的方式很安靜：`new StorageService()` 拿到的是**記憶體**預設值，
+ * 於是「自動載入」讀不到測試塞進 mock 的資料 → **兩條讀取路徑判定不一致 0 → 2**。
+ * 那個數字是這條護欄自己的棘輪抓到的。
+ *
+ * > **一個換掉全域的測試替身，在被測的東西不再看全域的那天
+ * > 不會報錯——它只是開始量另一件事。**
+ */
+const backing = new MemoryKeyValueStore()
+const localStorageMock = { clear: (): void => { for (const k of [STORAGE_KEY, `${STORAGE_KEY}.rejected`]) backing.remove(k) } }
 
 const RULE =
   '欄位守恆：存入可辨識值後讀回比對。判定一致性：自動載入與匯入對同一輸入的接受／拒絕須相同。' +
@@ -130,7 +129,7 @@ function measureFieldConservation(storage: {
 
 /** 量兩條讀取路徑的判定是否一致 */
 function measureVerdictAgreement(): { input: string; auto: string; imported: string }[] {
-  const storage = new StorageService()
+  const storage = new StorageService('cpp', backing)
   const valid = { ...probe }
   const samples: [string, unknown][] = [
     ['合法、版本相同', valid],
@@ -145,7 +144,7 @@ function measureVerdictAgreement(): { input: string; auto: string; imported: str
   for (const [name, value] of samples) {
     localStorageMock.clear()
     const json = JSON.stringify(value)
-    localStorage.setItem(STORAGE_KEY, json)
+    backing.write(STORAGE_KEY, json)
     const auto = storage.load() === null ? '拒絕' : '接受'
     const imported = storage.importFromJSON(json) === null ? '拒絕' : '接受'
     if (auto !== imported) out.push({ input: name, auto, imported })
@@ -160,7 +159,7 @@ function measureUpgradeCoverage(): number[] {
   return missing
 }
 
-const notConserved = measureFieldConservation(new StorageService())
+const notConserved = measureFieldConservation(new StorageService('cpp', backing))
 const disagreements = measureVerdictAgreement()
 const missingSteps = measureUpgradeCoverage()
 
@@ -266,7 +265,7 @@ describe('護欄：存檔完整性', () => {
 
   it('★ 注入：不誤報——正確的實作必須是零違規', () => {
     // 沒有這一支的話，一個「什麼都報」的掃描器也能通過上面兩支
-    expect(measureFieldConservation(new StorageService())).toEqual([])
+    expect(measureFieldConservation(new StorageService('cpp', backing))).toEqual([])
   })
 
   it('棘輪：三個數字皆不得上升', () => {

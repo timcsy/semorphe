@@ -4,9 +4,9 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "files": 34,
-    "importLines": 226,
-    "anyMethodCalls": 2973
+    "files": 35,
+    "importLines": 229,
+    "anyMethodCalls": 2978
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,
@@ -46,5 +46,5 @@
       "src/ui/execution-controller.ts → consolePanel.clear"
     ]
   },
-  "note": "⚠️ 2026-09-06（骨架上匯流排，spec 172）：import 行數 225 → 226、方法呼叫數 2969 → 2973——**輸入量上調**。新增第一百零五條護欄 `tests/integration/audit-scaffold-on-bus.test.ts`（組裝點不得直接呼叫視圖的骨架標記）。\n🟢 而**耦合那一欄是下降的**：`compositionRootViewCalls` 72 → 71——組裝點少替視圖做了一個決定。\n⚠️ 而語料的「方法呼叫數」2969 → 2971 是**上升**的，那正常：加了一支 `republishScaffold` 與一條護欄。\n> **一個驗收標準如果錨在「總量」上，它會在【做對事情】的時候也動。**\n"
+  "note": "🟢 **2026-09-06（把核心從 `localStorage` 上拔下來，spec 173）：ui 檔數 34 → 35、import 行數 226 → 229、方法呼叫數 2973 → 2978。**\n  新增第一百零七條護欄 `audit-core-no-storage`（核心不得直接用宿主的儲存 API）\n  ＋ `core/host/key-value-store.ts`（埠 ＋ 記憶體實作）\n  ＋ `ui/browser-store.ts`（瀏覽器實作——⚠️ **它住在 UI 層**：\n    知道宿主的那一層是 UI，核心只宣告它要什麼）。\n  🔴 **核心裡直接叫 `localStorage` 的次數 7 → 0。**\n  > **一個「核心」如果它的存檔只在一個宿主上跑得起來，\n  > 那它不是核心，是那個宿主的一部分。**\n  ⚠️ `ui 檔數` 與 `import 行數` 上調是**輸入量**：多了一個實作檔，\n    而那正是這一刀要的形狀（實作在 UI，宣告在核心）。\n\n⚠️ 2026-09-06（骨架上匯流排，spec 172）：import 行數 225 → 226、方法呼叫數 2969 → 2973——**輸入量上調**。新增第一百零五條護欄 `tests/integration/audit-scaffold-on-bus.test.ts`（組裝點不得直接呼叫視圖的骨架標記）。\n🟢 而**耦合那一欄是下降的**：`compositionRootViewCalls` 72 → 71——組裝點少替視圖做了一個決定。\n⚠️ 而語料的「方法呼叫數」2969 → 2971 是**上升**的，那正常：加了一支 `republishScaffold` 與一條護欄。\n> **一個驗收標準如果錨在「總量」上，它會在【做對事情】的時候也動。**\n"
 }
