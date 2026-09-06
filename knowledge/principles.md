@@ -261,6 +261,7 @@ Sc4 最小驚訝：積木行為和生成的程式碼一致
 
 | 觸發關鍵字 | MUST 讀 |
 |---|---|
+| 一條原則自己標記的缺口、「等 X 出現再重畫範圍」、一個建立在現況上的理由 | `concepts/紀錄的腐壞.md` |
 | 投影、roundtrip、可逆性、R0-R4、viewType、viewParams、語義 diff、Code/Block Style、執行後端 | `concepts/投影.md` |
 | 元件、registry、四路完備性、抽象元件、跨語言、語義阻抗、statement/expression | `concepts/元件代數.md` |
 | 核心不認得任何語言：語言套件推、核心讀 | `concepts/宣告登記處.md` |
