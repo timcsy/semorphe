@@ -86,6 +86,7 @@ declareLanguagePack({
   name: 'Python',
   grammar: 'tree-sitter-python',
   programRoot: 'python:program',
+  fileExtension: '.py',
   install: registerPythonLanguage,
   liftPatterns: pythonLiftPatterns,
   liftTransforms: registerPythonTransforms,

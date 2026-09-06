@@ -26,6 +26,9 @@ import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import type { StylePreset, Target, Topic } from '../core/types'
 import type { BlockStylePreset } from '../languages/style'
 import { showToast } from './toolbar/toast'
+import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate'
+import { toPortable, fromPortable, defaultWorkName } from '../core/portable'
+import { fileExtensionOf } from '../core/language-packs'
 
 export interface AppShellElements {
   blocklyPanel: BlocklyPanel
@@ -1928,33 +1931,109 @@ export function setupFileButtons(
 
   const closeMenu = () => { if (fileMenu) fileMenu.style.display = 'none' }
 
+  /**
+   * **匯出 ＝ 一份帶得走的作品**（2026-09-06，spec 177）。
+   *
+   * ```
+   * <作品名>.cpp                    ← 原始碼，任何編輯器打得開
+   * .semorphe/<作品名>.cpp.json     ← 側檔（擺放、佈局、設定）
+   * ```
+   *
+   * 🔴 在此之前匯出是一份 `.json`，而**它只有 Semorphe 打得開**
+   * ——而 P1 的唯一真實是**程式碼**。
+   *
+   * ⚠️ **壓縮走 `fflate`，而它跟著產品一起打包**——`e2e/offline.spec.ts`
+   * 是硬條件，一個「使用時才去拿」的相依會讓「離線可用」失效。
+   */
   document.getElementById('export-btn')?.addEventListener('click', () => {
     closeMenu()
     const state = callbacks.getExportState()
-    const blob = storageService.exportToBlob!(state)
-    storageService.downloadBlob!(blob, `semorphe-${Date.now()}.json`)
+    const name = defaultWorkName(state.topicId)
+    // ⚠️ 副檔名由**語言**宣告——反推是錯的（`traits.ts:60`）
+    const files = toPortable(state, name, fileExtensionOf(state.language))
+    const zipped = zipSync(
+      Object.fromEntries(Object.entries(files).map(([path, text]) => [path, strToU8(text)])),
+    )
+    // ⚠️ `zipSync` 回的是 `Uint8Array`，而 `Blob` 要一個真的 ArrayBuffer 支撐
+    const blob = new Blob([zipped as unknown as BlobPart], { type: 'application/zip' })
+    storageService.downloadBlob!(blob, `${name}.zip`)
     showToast(Blockly.Msg['TOAST_EXPORT_SUCCESS'] || '已匯出', 'success')
   })
 
+  /**
+   * **匯入 ＝ 解開，而舊的單一 `.json` 照樣進得來**（2026-09-06，spec 177）。
+   *
+   * 🔴 那些舊檔**已經在別人的硬碟上**了——我們改不動它，而它一定要能回來。
+   *
+   * ⚠️ 兩條路在版本判定上**匯流**：都走 `importFromJSON`（＝同一個
+   * `judgeJSON` ＋ `upgrade`）。
+   * > **走同一個 `judgeJSON`——與自動載入不得有第二種鬆緊度。**
+   */
   document.getElementById('import-btn')?.addEventListener('click', () => {
     closeMenu()
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.json'
+    input.accept = '.zip,.json'
     input.addEventListener('change', () => {
       const file = input.files?.[0]
       if (!file) return
-      const reader = new FileReader()
-      reader.onload = () => {
-        const state = storageService.importFromJSON!(reader.result as string)
-        if (!state) {
-          showToast(Blockly.Msg['TOAST_IMPORT_ERROR'] || '匯入失敗：無效的 JSON', 'error')
-          return
-        }
+      const fail = (): void => {
+        showToast(Blockly.Msg['TOAST_IMPORT_ERROR'] || '匯入失敗：無效的檔案', 'error')
+      }
+      const done = (state: SavedState | null): void => {
+        if (!state) { fail(); return }
         callbacks.importState(state)
         showToast(Blockly.Msg['TOAST_IMPORT_SUCCESS'] || '已匯入', 'success')
       }
-      reader.readAsText(file)
+      const reader = new FileReader()
+      // ⚠️ 用**內容**判斷是不是 zip，不是副檔名
+      // ——🔴 從產出的形狀反推它是什麼，會安靜地做錯事（`traits.ts:60`）。
+      //    zip 的前兩個位元組是 `PK`。
+      reader.onload = () => {
+        const buf = new Uint8Array(reader.result as ArrayBuffer)
+        const isZip = buf.length > 1 && buf[0] === 0x50 && buf[1] === 0x4b
+        if (!isZip) { done(storageService.importFromJSON!(strFromU8(buf))); return }
+        let files: Record<string, string>
+        try {
+          files = Object.fromEntries(
+            Object.entries(unzipSync(buf))
+              .filter(([, bytes]) => bytes.length > 0 || true)
+              .map(([path, bytes]) => [path, strFromU8(bytes)]),
+          )
+        } catch { fail(); return }
+        const parts = fromPortable(files)
+        if (!parts) { fail(); return }
+        if (parts.sideCar) {
+          const state = storageService.importFromJSON!(parts.sideCar)
+          if (!state) { fail(); return }
+          // 🔴 **原始碼永遠來自那個檔，不是側檔**——側檔裡本來就沒有它
+          done({ ...state, code: parts.code })
+          return
+        }
+        /**
+         * 🟢 **側檔不在——而那不是壞掉。**
+         *
+         * 有人在別的編輯器改過、把 `.semorphe/` 刪了，容器裡只剩程式碼。
+         *
+         * ⚠️ 而那時**語言是不知道的**：副檔名是唯一線索，而
+         * **從產出的形狀反推它是什麼會安靜地做錯事**（`traits.ts:60`）
+         * ——`.cpp` 對得到四個教學語言。
+         *
+         * 🟢 所以誠實的做法是**保留使用者現在的設定**（那是他自己選的），
+         * 只換掉程式碼，並**丟掉排版**（沒有側檔就沒有擺放）→ 自動排版。
+         *
+         * > **不知道的時候，不要猜——用使用者已經說過的那個答案。**
+         */
+        const current = callbacks.getExportState()
+        done({
+          ...current,
+          code: parts.code,
+          blocklyState: undefined,
+          codeHash: undefined,
+          flowLayout: undefined,
+        })
+      }
+      reader.readAsArrayBuffer(file)
     })
     input.click()
   })

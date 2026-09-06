@@ -88,6 +88,26 @@ export interface LanguagePack {
    */
   programRoot: string
   /**
+   * 🔴 **這個語言存出去的檔案，副檔名是什麼**（帶點，如 `.cpp`）。
+   *
+   * ## ⚠️ 方向只有一個
+   *
+   * ```
+   * 語言 → 副檔名   ✅ 副檔名是【產出的形狀】（存檔的結果）
+   * 副檔名 → 語言   🔴 錯——`traits.ts:60`：
+   *                「從產出的形狀反推它是什麼的判準，會安靜地做錯事」
+   * ```
+   *
+   * 使用者 2026-08-24 逐字：「我開啟一個**新檔案**時是可以選擇語言，
+   * 但是**還沒存檔，所以沒有副檔名**。」
+   *
+   * > **語言是宣告，副檔名是它存檔後的投影。**
+   *
+   * ⚠️ **它宣告在這裡，不在核心**——「C++ 的檔案叫 `.cpp`」不是核心的知識。
+   * 沒有宣告時匯出用一個中性的預設（`.txt`），**不得讓匯出失敗**。
+   */
+  fileExtension?: string
+  /**
    * 🔴 **把這個語言接到核心上**——產生器、執行器、跳過宣告…
    *
    * ⚠️ 在此之前只有 `app.ts` 呼叫的 `registerCppLanguage()` 一條路，
@@ -239,4 +259,17 @@ export function defaultTarget(): Target | undefined {
 /** 這個語言的套件；沒登錄回 `undefined`（**不猜一個預設值**——P6）。 */
 export function languagePack(id: string): LanguagePack | undefined {
   return PACKS.get(id)
+}
+
+/**
+ * 這個語言的副檔名——⚠️ **沒有宣告時回中性的預設**。
+ *
+ * 🔴 回 `.txt` 而不是拋錯：一個認不得的語言**不該讓使用者匯不出東西**，
+ * 而一個 `.txt` 仍然是「任何編輯器打得開」的。
+ *
+ * > **一個「我不知道」的答案，要選那個【還能用】的分支。**
+ */
+export function fileExtensionOf(languageId: string | undefined): string {
+  const ext = languageId ? languagePack(languageId)?.fileExtension : undefined
+  return ext && ext.startsWith('.') ? ext : '.txt'
 }

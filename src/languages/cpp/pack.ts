@@ -120,6 +120,8 @@ declareLanguagePack({
    */
   grammar: 'tree-sitter-cpp',
   programRoot: 'cpp:program',
+  // ⚠️ C++ 的四個教學語言共用這個套件，而它們存出去都是 `.cpp`
+  fileExtension: '.cpp',
   install: registerCppLanguage,
   // 🔴 這兩格 2026-08-26 從 `app.ts` 的寫死 import 搬過來——組裝點不再認得
   //    「C++ 的 lifters 叫什麼名字」。⚠️ Python 兩支都**沒有**，
