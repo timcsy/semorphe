@@ -277,9 +277,24 @@ languages/{lang}/
 - [ ] **標頭的反向不成立**：ESP8266 的產出 round-trip 之後再切回 ESP32，
       `<ESP8266WiFi.h>` 不會換回去。🔴 補「每塊板子列出所有別塊的標頭」不 scale
       ——正解是**一個能力有一個正典標頭**，而那是更大的設計。
-- [ ] ⚠️ **已知不一致**：`cpp:pin_constant` 只在**工具箱**那條路上；
-      學生**貼上** `pinMode(D1, …)` 得到的是 `cpp:var_ref`。
-      剩下那一半是**身分**的決定，不是下拉的決定。
+- [x] 🟢 **已知不一致：`cpp:pin_constant` 只在工具箱那條路上**——**已決，不是待做**
+      （2026-09-06 查證）。學生貼上 `pinMode(D1, …)` 得到 `cpp:var_ref`，
+      而那是一個**帶病歷的決定**：第一版有 lift 樣式，它把使用者宣告的名字搶走了
+      （`enum Level { LOW = -1 }` → `cout << LOW` 印出 0）。
+      處置逐字寫在膠囊的 `_lift_why`：「**沒有人宣告它，它才是環境提供的**」，
+      而代價明說了——「**correctness 贏 round-trip**」。
+
+      ⏳ **重開條件量過了，而它不成立**（`tests/probes/lift-scope-knows.test.ts`）：
+      ```
+      speed（一般變數）  ✅ lift 期查得到
+      LOW（enum 成員）   🔴 查不到   ← 樣式問了也沒用
+      D1 / OUTPUT        🔴 查不到（＝環境提供的，那是對的）
+      ```
+      根因：`recordDeclaration` 只認 `<scope>:<x>_declare` 或帶 `type` 的節點。
+      🔴 **真正的重開條件因此更明確**：`recordDeclaration` 要認得**列舉成員**
+      ——而它的收益不只這一顆（`builtin_constant` 用同一個做法）。
+      > **一個「重開條件」如果沒有人去量它有沒有成立，
+      > 它與「永遠不重開」是同一件事。**
 
 #### 量測機制的洞（2026-08-20，使用者選「A 先做」）
 
