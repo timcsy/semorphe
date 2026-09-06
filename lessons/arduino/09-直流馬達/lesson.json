@@ -9,8 +9,8 @@
     "cpp:delay",
     "cpp:digital_write",
     "cpp:literal_number",
-    "cpp:pin_mode",
-    "cpp:var_ref"
+    "cpp:pin_constant",
+    "cpp:pin_mode"
   ],
   "tasks": [
     {

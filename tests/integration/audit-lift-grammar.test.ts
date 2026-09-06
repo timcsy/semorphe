@@ -161,7 +161,12 @@ describe('spec 167 · lift pattern 的文法歸屬', () => {
       //    把「這裡本來有一對括號」記在被拆出來那顆身上。
       //    🔴 而它必須列在這裡才生效：這條護欄第一次跑就擋下了它（沒列＝靜默忽略）。
       'layoutHint'])
-    const CONSTRAINT_KEYS = new Set(['field', 'text', 'nodeType', 'match', 'absent'])
+    // ⚠️ **這份清單與 `AstConstraint` 的欄位是同一件事的兩份記載**
+    //    ——加一格就要動兩處，而護欄自己會在漏掉的那次紅（2026-09-06 驗過：
+    //    `notDeclared` 加進型別而沒加這裡 → 它當場報「不存在的鍵」）。
+    //
+    // 🟢 那正是它該做的：**JSON 沒有型別檢查，拼錯了沒有人會說**。
+    const CONSTRAINT_KEYS = new Set(['field', 'text', 'nodeType', 'match', 'absent', 'notDeclared'])
     const MAPPING_KEYS = new Set(['semantic', 'ast', 'extract', 'transform'])
     const bad: string[] = []
     const check = (obj: Record<string, unknown>, allowed: Set<string>, where: string) => {

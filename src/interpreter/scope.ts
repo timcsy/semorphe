@@ -1,6 +1,7 @@
 import type { RuntimeValue } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
 import { findNearMiss } from './near-miss'
+import { isBuiltinName } from '../core/language-executors'
 
 export class Scope {
   private variables = new Map<string, RuntimeValue>()
@@ -13,6 +14,33 @@ export class Scope {
 
   declare(name: string, value: RuntimeValue): void {
     if (this.variables.has(name)) {
+      throw new RuntimeError(RUNTIME_ERRORS.DUPLICATE_DECLARATION, { '%1': name })
+    }
+    this.variables.set(name, value)
+  }
+
+  /**
+   * **蓋掉一個內建常數**——使用者宣告了同名的東西時走這條。
+   *
+   * ## 🔴 為什麼需要它（2026-09-06，spec 174）
+   *
+   * 直譯器啟動時把**全部**內建常數塞進全域作用域
+   * （`interpreter.ts` 的 `allBuiltinConstants()`）。於是使用者寫
+   * `enum Marker { EOF = -99 };` 會撞上那一份，丟 `DUPLICATE_DECLARATION`
+   * ——⚠️ 而那個訊息**說錯了原因**：他只宣告了一次。
+   *
+   * > **一個「你重複宣告了」的錯誤訊息，
+   * > 在另一個宣告是系統自己塞的時候，指控的是無辜的那一方。**
+   *
+   * ## ⚠️ 它【只】蓋得掉內建的那些
+   *
+   * 🔴 使用者自己重複宣告**仍然要丟錯**——那是一個真的錯誤，
+   * 而把這一支寫成「一律覆蓋」會把它一起吞掉。
+   *
+   * 判準：那個名字**是不是語言的內建常數**（`isBuiltinName`）。
+   */
+  declareOverridingBuiltin(name: string, value: RuntimeValue): void {
+    if (this.variables.has(name) && !isBuiltinName(name)) {
       throw new RuntimeError(RUNTIME_ERRORS.DUPLICATE_DECLARATION, { '%1': name })
     }
     this.variables.set(name, value)

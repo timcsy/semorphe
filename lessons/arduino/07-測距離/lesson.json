@@ -10,6 +10,7 @@
     "cpp:func_call",
     "cpp:func_def",
     "cpp:literal_number",
+    "cpp:pin_constant",
     "cpp:pin_mode",
     "cpp:pulse_read",
     "cpp:return",

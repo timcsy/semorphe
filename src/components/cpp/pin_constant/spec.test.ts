@@ -45,7 +45,9 @@ const run = async (c: string): Promise<string> => {
 
 describe('膠囊自證：cpp:pin_constant', () => {
   /**
-   * 🔴 **這顆【沒有】lift 路，而那是一次翻車換來的。**
+   * 🔴 **這顆的 lift 路被拿掉過一次，而 2026-09-06 它回來了。**
+   *
+   * ## 那次翻車
    *
    * 第一版有 `lift-pattern.json`，靠識別字的名字認人。第三十二條護欄當場抓到：
    * 語料裡有 `enum Level { LOW = -1, MEDIUM = 0, HIGH = 1 };`，
@@ -54,11 +56,27 @@ describe('膠囊自證：cpp:pin_constant', () => {
    * > **一個靠「識別字的名字」認人的樣式，會把使用者自己宣告的名字搶走。**
    * > 而 `HIGH`／`LOW`／`INPUT`／`OUTPUT` 正是【最常見的列舉成員名】。
    *
-   * ⚠️ 既有的 `builtin_constant` 用同一個做法（`EOF`／`NULL` 靠名字 lift）
-   * ——差別**不在做法，在那些名字幾乎沒有人會重新宣告**。
+   * 處置是拿掉樣式，代價明說了：「**correctness 贏 round-trip**」。
+   *
+   * ## 🟢 而那兩者 2026-09-06（spec 174）不再互斥
+   *
+   * 樣式回來了，**而它先問一句**：`notDeclared` ——「這個名字沒有被宣告過」。
+   * 判準與那份病歷裡寫的**同一個**：**沒有人宣告它，它才是環境提供的**。
+   *
+   * ⚠️ 而那份病歷裡有一句沒被驗證過的推測：「`builtin_constant` 用同一個做法，
+   * 差別在那些名字幾乎沒有人會重新宣告」——**去量了，那句話不成立**：
+   * 使用者宣告 `enum Marker { EOF = -99 }` 之後 `EOF` 照樣被搶。
+   *
+   * > **一個「因為沒有人會這樣做所以安全」的理由，
+   * > 保護的是常見情況——而 bug 住在別的地方。**
    */
-  it('★ 從程式碼進來時它是變數參照——而【那是對的】', () => {
-    const ids = collect(lift('int main(){ int x = HIGH; }'))
+  it('★ 沒有人宣告時，從程式碼進來的 `HIGH` 是腳位常數', () => {
+    const ids = collect(lift('void setup(){ digitalWrite(13, HIGH); }'))
+    expect(ids, '🔴 樣式沒有認領它——round-trip 會掉形狀').toContain('cpp:pin_constant')
+  })
+
+  it('★ 而使用者宣告了同名的，樣式不得認領', () => {
+    const ids = collect(lift('int main(){ int HIGH = 7; int x = HIGH; }'))
     expect(ids, '🔴 名字又被樣式搶走了').not.toContain('cpp:pin_constant')
     expect(ids).toContain('cpp:var_ref')
   })

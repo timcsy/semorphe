@@ -1,15 +1,15 @@
 [
   {
-    "id": "cpp_eof",
+    "id": "cpp_pin_constant_high",
     "grammar": "tree-sitter-cpp",
     "astNodeType": "identifier",
     "component": {
-      "componentId": "cpp:builtin_constant"
+      "componentId": "cpp:pin_constant"
     },
     "constraints": [
       {
         "field": "$text",
-        "text": "EOF",
+        "text": "HIGH",
         "notDeclared": true
       }
     ],
@@ -19,20 +19,19 @@
         "ast": "$text",
         "extract": "text"
       }
-    ],
-    "priority": 5
+    ]
   },
   {
-    "id": "cpp_null_id",
+    "id": "cpp_pin_constant_low",
     "grammar": "tree-sitter-cpp",
     "astNodeType": "identifier",
     "component": {
-      "componentId": "cpp:builtin_constant"
+      "componentId": "cpp:pin_constant"
     },
     "constraints": [
       {
         "field": "$text",
-        "text": "NULL",
+        "text": "LOW",
         "notDeclared": true
       }
     ],
@@ -42,80 +41,20 @@
         "ast": "$text",
         "extract": "text"
       }
-    ],
-    "priority": 5
-  },
-  {
-    "id": "cpp_true",
-    "grammar": "tree-sitter-cpp",
-    "astNodeType": "true",
-    "component": {
-      "componentId": "cpp:builtin_constant"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "value",
-        "ast": "$text",
-        "extract": "text"
-      }
     ]
   },
   {
-    "id": "cpp_false",
+    "id": "cpp_pin_constant_output",
     "grammar": "tree-sitter-cpp",
-    "astNodeType": "false",
+    "astNodeType": "identifier",
     "component": {
-      "componentId": "cpp:builtin_constant"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "value",
-        "ast": "$text",
-        "extract": "text"
-      }
-    ]
-  },
-  {
-    "id": "cpp_nullptr",
-    "grammar": "tree-sitter-cpp",
-    "astNodeType": "nullptr",
-    "component": {
-      "componentId": "cpp:builtin_constant"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "value",
-        "ast": "$text",
-        "extract": "text"
-      }
-    ]
-  },
-  {
-    "id": "cpp_null",
-    "grammar": "tree-sitter-cpp",
-    "astNodeType": "null",
-    "component": {
-      "componentId": "cpp:builtin_constant"
-    },
-    "fieldMappings": [
-      {
-        "semantic": "value",
-        "ast": "$text",
-        "extract": "text"
-      }
-    ]
-  },
-  {
-    "id": "cpp_npos_qualified",
-    "grammar": "tree-sitter-cpp",
-    "astNodeType": "qualified_identifier",
-    "component": {
-      "componentId": "cpp:builtin_constant"
+      "componentId": "cpp:pin_constant"
     },
     "constraints": [
       {
         "field": "$text",
-        "text": "string::npos"
+        "text": "OUTPUT",
+        "notDeclared": true
       }
     ],
     "fieldMappings": [
@@ -124,7 +63,50 @@
         "ast": "$text",
         "extract": "text"
       }
+    ]
+  },
+  {
+    "id": "cpp_pin_constant_input",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "cpp:pin_constant"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "INPUT",
+        "notDeclared": true
+      }
     ],
-    "priority": 5
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ]
+  },
+  {
+    "id": "cpp_pin_constant_input_pullup",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "cpp:pin_constant"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "INPUT_PULLUP",
+        "notDeclared": true
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ]
   }
 ]

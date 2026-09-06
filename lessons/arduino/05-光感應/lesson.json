@@ -9,6 +9,7 @@
     "cpp:analog_write",
     "cpp:delay",
     "cpp:literal_number",
+    "cpp:pin_constant",
     "cpp:pin_mode",
     "cpp:range_remap",
     "cpp:serial_open",

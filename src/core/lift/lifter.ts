@@ -100,6 +100,35 @@ export class Lifter {
     if (type) data.declare(String(name), type)
   }
 
+  /**
+   * **列舉成員也是「宣告過的名字」**（2026-09-06，spec 174）。
+   *
+   * ## 🔴 為什麼它需要一支自己的
+   *
+   * `recordDeclaration` 認的是「一個節點宣告了一個名字」，而列舉是
+   * **一個節點宣告了 N 個名字**——它們住在 `values` 那一格裡，
+   * 形狀是 `"LOW = -1, MEDIUM = 0, HIGH = 1"`。
+   *
+   * 少了這一支，`enum Level { LOW = -1 }` 之後問「`LOW` 被宣告過嗎」
+   * 會得到**沒有**——而那正是靠名字認人的樣式把它搶走的原因。
+   *
+   * > **一個「這個節點宣告了什麼」的收集器，
+   * > 在遇到一個宣告了很多東西的節點時，會安靜地收集到零個。**
+   *
+   * ⚠️ 型別記成 `enum`——這裡只需要「**有沒有**」，不需要是哪一種。
+   *    而記一個誠實的粗略值，好過記一個猜出來的精確值。
+   */
+  private recordEnumerators(r: SemanticNode, data: LiftContextData): void {
+    if (!/^[a-z]+:enum$/.test(r.componentId ?? '')) return
+    const values = r.properties?.values
+    if (typeof values !== 'string' || values.length === 0) return
+    for (const part of values.split(',')) {
+      // `LOW = -1` → `LOW`；`MEDIUM` → `MEDIUM`
+      const name = part.split('=')[0].trim()
+      if (name) data.declare(name, 'enum')
+    }
+  }
+
   /** Lift with an existing context (for recursive calls that share scope) */
   liftWithContext(node: AstNode, contextData: LiftContextData): SemanticNode | null {
     // 複合敘述（`{ … }`）是一個作用域。
@@ -129,6 +158,7 @@ export class Lifter {
     const addSourceRange = (r: SemanticNode): void => {
       // 宣告記錄掛在這裡，因為**三個回傳點都經過它**——掛在個別回傳點會漏。
       this.recordDeclaration(r, contextData)
+      this.recordEnumerators(r, contextData)
       if (!r.metadata) r.metadata = {}
       if (!r.metadata.sourceRange) {
         // Tree-sitter endPosition points AFTER the last character.

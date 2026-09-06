@@ -29,7 +29,19 @@ export function registerExecute(register: (component: string, executor: Componen
           const v = Number(s.slice(eq + 1).trim())
           if (!Number.isNaN(v)) next = v
         }
-        ctx.scope.declare(name, { type: 'int', value: next })
+        // 🔴 **使用者宣告的贏**（2026-09-06，spec 174）。
+        //
+        //    直譯器在啟動時把**全部**內建常數塞進全域作用域
+        //    （`interpreter.ts` 的 `allBuiltinConstants()`），所以
+        //    `enum Marker { EOF = -99 };` 會撞上那一份，丟 `DUPLICATE_DECLARATION`
+        //    ——⚠️ 而那個訊息**說錯了原因**：使用者只宣告了一次。
+        //
+        // > **一個「你重複宣告了」的錯誤訊息，
+        // > 在另一個宣告是系統自己塞的時候，指控的是無辜的那一方。**
+        //
+        // 🟢 判準與 lift 那一側**同一個**：沒有人宣告它，它才是環境提供的。
+        //    這裡是它的另一半——**有人宣告了，就以他的為準**。
+        ctx.scope.declareOverridingBuiltin(name, { type: 'int', value: next })
         next += 1
       }
     })

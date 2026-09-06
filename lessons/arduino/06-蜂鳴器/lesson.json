@@ -7,10 +7,10 @@
   "components": [
     "cpp:delay",
     "cpp:literal_number",
+    "cpp:pin_constant",
     "cpp:pin_mode",
     "cpp:tone",
-    "cpp:tone_stop",
-    "cpp:var_ref"
+    "cpp:tone_stop"
   ],
   "tasks": [
     {

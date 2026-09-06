@@ -260,7 +260,7 @@ export class PatternLifter {
   private tryMatch(node: AstNode, entry: PatternEntry, ctx: LiftContext): SemanticNode | null {
     // Check constraints before anything else (gates liftStrategy too)
     if (entry.constraints && entry.constraints.length > 0) {
-      if (!this.checkConstraints(node, entry.constraints)) return null
+      if (!this.checkConstraints(node, entry.constraints, ctx)) return null
     }
 
     // Layer 3: liftStrategy takes priority over pattern matching
@@ -319,7 +319,7 @@ export class PatternLifter {
   // ── Simple / Constrained ──
 
   private matchSimple(node: AstNode, entry: PatternEntry, ctx: LiftContext): SemanticNode | null {
-    if (!this.checkConstraints(node, entry.constraints)) return null
+    if (!this.checkConstraints(node, entry.constraints, ctx)) return null
 
     const props: Record<string, string> = {}
     const children: Record<string, SemanticNode[]> = {}
@@ -580,9 +580,27 @@ export class PatternLifter {
 
   // ── Helpers ──
 
-  private checkConstraints(node: AstNode, constraints: AstPattern['constraints']): boolean {
+  /**
+   * @param ctx 🔴 **`notDeclared` 需要它**（spec 174）——那一格問的是
+   *   「這個名字在**現在這個作用域**裡被宣告過嗎」，而那個答案只有 lift 當下知道。
+   *
+   *   ⚠️ 沒有 `ctx` 時（合成的比對、測試）那一格**視為通過**
+   *   ——它偏向安全的那一邊：行為與沒有這一格時相同。
+   */
+  private checkConstraints(
+    node: AstNode,
+    constraints: AstPattern['constraints'],
+    ctx?: LiftContext,
+  ): boolean {
     if (!constraints) return true
     for (const c of constraints) {
+      // 🔴 **這一格問的是名字，不是欄位**——所以它在取值之前先處理完。
+      if (c.notDeclared) {
+        const name = c.field === '$text' ? node.text : node.childForFieldName(c.field)?.text
+        // 查得到 ⟹ 有人宣告過它 ⟹ **這條樣式不該認領它**
+        if (name !== undefined && ctx?.data.lookup(name)) return false
+        if (c.text === undefined) continue
+      }
       let value: string | null = null
       if (c.field === '$text') {
         value = node.text
