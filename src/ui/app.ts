@@ -1,4 +1,5 @@
 import { TAB_LAYERS } from './layout/mobile-tab-bar'
+import { setTreeForTypeLookup } from '../core/types-in-use'
 import * as Blockly from 'blockly'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
@@ -1443,6 +1444,16 @@ export class App {
     this.bus.on('semantic:update', (e) => {
       const same = e.tree !== undefined && e.tree === this.currentTree
       if (e.tree) this.currentTree = e.tree
+      // 🟢 **型別的下拉跟著這棵樹長**（2026-09-06，spec 176）。
+      //
+      //    ⚠️ 餵的是**同一棵**已經在維護的樹——不是第二次掃描、不是重新解析。
+      //    在此之前學生寫了 `struct Point`，而下拉裡沒有它：他打字寫得出來，
+      //    **卻選不到**。
+      //
+      //    🔴 而它掛在這裡（而不是 `sync-controller` 的六個發佈點）是因為
+      //    **這裡是「現在畫面上是哪一棵樹」唯一的答案**——六個發佈點各餵一次，
+      //    就是六個要記得同步的地方。
+      setTreeForTypeLookup(e.tree ?? this.currentTree ?? null)
       // 🔴 **樹沒換就不重算診斷**（2026-09-06，spec 172）。
       //
       //    ⚠️ 在此之前這裡無條件重算，而那在 2026-09-06 之前不痛不癢

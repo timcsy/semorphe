@@ -11,6 +11,7 @@
  * 🟢 兩個語言都走同一條路之後，那九個登記處才第一次**被驗過**。
  */
 import type { Topic, Target, StylePreset, SemanticNode } from '../../core/types'
+import { withTypesInUse, typesInCurrentProgram } from '../../core/types-in-use'
 import { registerCppLifters } from './lifters'
 import { createPopulatedRegistry } from './std'
 import { CppScaffold } from './cpp-scaffold'
@@ -65,7 +66,7 @@ import cPreset from './styles/c.json'
 
 
 
-declareDropdownSource('cpp_param_types', () => [
+declareDropdownSource('cpp_param_types', () => withTypesInUse([
   [msg('U_FUNC_DEF_PARAM_TYPE_INT', 'int'), 'int'],
   [msg('U_FUNC_DEF_PARAM_TYPE_FLOAT', 'float'), 'float'],
   [msg('U_FUNC_DEF_PARAM_TYPE_DOUBLE', 'double'), 'double'],
@@ -76,7 +77,7 @@ declareDropdownSource('cpp_param_types', () => [
   ['char*', 'char*'],
   ['double*', 'double*'],
   ['void*', 'void*'],
-])
+], typesInCurrentProgram()))
 
 /**
  * **變數的型別**——`int x;`／`vector<int> v;`／`MyStruct* p;`。
@@ -88,7 +89,7 @@ declareDropdownSource('cpp_param_types', () => [
  * ⚠️ **認不得的值不會被換掉**（`dynamic-dropdown-field` 的既有行為），
  * 所以這裡不必窮舉——命令式那份靠 `opts.unshift(currentVal)` 手動做同一件事。
  */
-declareDropdownSource('cpp_var_types', () => [
+declareDropdownSource('cpp_var_types', () => withTypesInUse([
   [msg('U_VAR_DECLARE_TYPE_INT', 'int'), 'int'],
   [msg('U_VAR_DECLARE_TYPE_FLOAT', 'float'), 'float'],
   [msg('U_VAR_DECLARE_TYPE_DOUBLE', 'double'), 'double'],
@@ -96,9 +97,9 @@ declareDropdownSource('cpp_var_types', () => [
   [msg('U_VAR_DECLARE_TYPE_BOOL', 'bool'), 'bool'],
   [msg('U_VAR_DECLARE_TYPE_STRING', 'string'), 'string'],
   [msg('U_VAR_DECLARE_TYPE_LONG_LONG', 'long long'), 'long long'],
-])
+], typesInCurrentProgram()))
 
-declareDropdownSource('cpp_return_types', () => [
+declareDropdownSource('cpp_return_types', () => withTypesInUse([
   [msg('U_FUNC_DEF_RETURN_TYPE_VOID', 'void'), 'void'],
   [msg('U_FUNC_DEF_RETURN_TYPE_INT', 'int'), 'int'],
   [msg('U_FUNC_DEF_RETURN_TYPE_FLOAT', 'float'), 'float'],
@@ -107,7 +108,7 @@ declareDropdownSource('cpp_return_types', () => [
   [msg('U_FUNC_DEF_RETURN_TYPE_BOOL', 'bool'), 'bool'],
   [msg('U_FUNC_DEF_RETURN_TYPE_LONG_LONG', 'long long'), 'long long'],
   [msg('U_FUNC_DEF_RETURN_TYPE_STRING', 'string'), 'string'],
-])
+], typesInCurrentProgram()))
 
 declareLanguagePack({
   id: 'cpp',
