@@ -6,6 +6,7 @@
   },
   "components": [
     "cpp:arithmetic",
+    "cpp:comment",
     "cpp:eeprom_read",
     "cpp:eeprom_write",
     "cpp:literal_number",

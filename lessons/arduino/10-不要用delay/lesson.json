@@ -6,6 +6,7 @@
   },
   "components": [
     "cpp:arithmetic",
+    "cpp:comment",
     "cpp:compare",
     "cpp:digital_write",
     "cpp:if",

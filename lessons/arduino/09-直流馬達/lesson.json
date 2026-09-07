@@ -6,6 +6,7 @@
   },
   "components": [
     "cpp:analog_write",
+    "cpp:comment",
     "cpp:delay",
     "cpp:digital_write",
     "cpp:literal_number",

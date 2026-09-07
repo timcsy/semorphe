@@ -5,7 +5,7 @@
   },
   "corpus": {
     "syntaxComplete": 695,
-    "syntaxErrorFragments": 235,
+    "syntaxErrorFragments": 237,
     "totalChars": 104041
   },
   "residual2": {
@@ -82,5 +82,6 @@
       "(無)": 9,
       "nonstandard_but_valid": 7
     }
-  }
+  },
+  "note": "⚠️ **2026-09-07（spec 178 續）：語料再變大**——新護欄多了一條規則\n  （`labelKey` 有定義且與 `labelFallback` 一致），而它的斷言帶著 C++ 片段。\n\n"
 }

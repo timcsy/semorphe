@@ -9,6 +9,7 @@
     "cpp:compare",
     "cpp:endl",
     "cpp:literal_number",
+    "cpp:loop_do_while",
     "cpp:loop_while",
     "cpp:print",
     "cpp:var_assign",

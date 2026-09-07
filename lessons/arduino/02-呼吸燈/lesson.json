@@ -6,6 +6,7 @@
   },
   "components": [
     "cpp:analog_write",
+    "cpp:comment",
     "cpp:compare",
     "cpp:delay",
     "cpp:increment",

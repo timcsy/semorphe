@@ -5,6 +5,8 @@
     "target": "arduino-uno"
   },
   "components": [
+    "cpp:array_at",
+    "cpp:array_declare",
     "cpp:delay",
     "cpp:literal_number",
     "cpp:pin_constant",

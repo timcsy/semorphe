@@ -1,4 +1,5 @@
 {
   "U_PRINT_MSG0": "Print %1",
-  "U_PRINT_TOOLTIP": "Print one or more values to the screen"
+  "U_PRINT_TOOLTIP": "Print one or more values to the screen",
+  "U_PRINT_MSG": "Print"
 }

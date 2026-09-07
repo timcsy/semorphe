@@ -7,6 +7,7 @@
   "components": [
     "cpp:builtin_constant",
     "cpp:compare",
+    "cpp:delete",
     "cpp:endl",
     "cpp:literal_number",
     "cpp:loop_while",

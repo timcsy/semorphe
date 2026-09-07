@@ -6,6 +6,7 @@
   },
   "components": [
     "cpp:arithmetic",
+    "cpp:array_at",
     "cpp:endl",
     "cpp:literal_number",
     "cpp:literal_string",

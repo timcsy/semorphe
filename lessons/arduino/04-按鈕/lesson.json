@@ -5,6 +5,7 @@
     "target": "arduino-uno"
   },
   "components": [
+    "cpp:comment",
     "cpp:compare",
     "cpp:digital_read",
     "cpp:digital_write",

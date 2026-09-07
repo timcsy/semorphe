@@ -14,7 +14,7 @@
       "tooltip": "%{BKY_U_PRINT_TOOLTIP}",
       "builder": "variadic",
       "labelKey": "U_PRINT_MSG",
-      "labelFallback": "輸出",
+      "labelFallback": "印出",
       "slotCheck": "Expression"
     },
     "renderMapping": {

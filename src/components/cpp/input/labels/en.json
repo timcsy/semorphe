@@ -1,3 +1,4 @@
 {
-  "U_INPUT_TOOLTIP": "Read a value from the keyboard into a variable"
+  "U_INPUT_TOOLTIP": "Read a value from the keyboard into a variable",
+  "U_INPUT_LABEL": "read input ->"
 }

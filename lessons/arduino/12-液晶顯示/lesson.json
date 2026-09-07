@@ -5,12 +5,15 @@
     "target": "arduino-uno"
   },
   "components": [
+    "cpp:comment",
+    "cpp:container_clear",
     "cpp:lcd_at",
     "cpp:lcd_declare",
     "cpp:lcd_open",
     "cpp:lcd_print",
     "cpp:literal_number",
-    "cpp:literal_string"
+    "cpp:literal_string",
+    "cpp:method_call"
   ],
   "tasks": [
     {

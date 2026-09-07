@@ -59,6 +59,26 @@ export const ENGINE_FILES = [
 /** 膠囊裡的積木定義都叫這個名字，都住在 `forms/` 底下。 */
 const CAPSULE_DEFS = 'blocks.json'
 
+/**
+ * 🔴 **積木上印的字**——`labels/zh-TW.json`（2026-09-07 補）。
+ *
+ * ## 它是一個盲區，而它當天就現形了
+ *
+ * spec 178 把 `print` 的畫面文字從「輸出」改成「印出」（使用者拍板），
+ * 而 **68 張對照圖一張都沒紅**——因為這支雜湊只收 `blocks.json`
+ * （積木的**結構**），不收 `labels/`（積木上的**字**）。
+ *
+ * ⚠️ 而那些圖是 SVG，**裡面畫著那幾個字**：實測那一刻，
+ * `cpp-beginner/02` 的圖裡有 3 個「輸出」、0 個「印出」。
+ *
+ * > **一份產物的過期，有兩種來源：輸入變了，或者【產它的那台機器變了】。
+ * > ——而「那台機器」包括它印在圖上的每一個字。**
+ *
+ * 🔴 這是同一句話**第二次**在同一支檔案上生效：第一次（2026-09-05）
+ * 是「`codeHash` 錨在輸入，而過期的是輸出」。
+ */
+const CAPSULE_LABELS = 'zh-TW.json'
+
 const short = (s: string): string => createHash('sha256').update(s).digest('hex').slice(0, 16)
 
 /** `src/components` 底下每一份 `forms/blocks.json`，路徑排序過。 */
@@ -70,7 +90,7 @@ export function capsuleDefFiles(repoRoot: string): string[] {
     for (const e of entries) {
       const p = join(dir, e)
       if (statSync(p).isDirectory()) walk(p)
-      else if (e === CAPSULE_DEFS) out.push(p.slice(repoRoot.length + 1))
+      else if (e === CAPSULE_DEFS || e === CAPSULE_LABELS) out.push(p.slice(repoRoot.length + 1))
     }
   }
   walk(join(repoRoot, 'src/components'))

@@ -6,12 +6,13 @@
     "scaffold": "hidden"
   },
   "components": [
-    "cpp:var_declare",
-    "cpp:literal_number",
+    "cpp:comment",
+    "cpp:endl",
     "cpp:literal_char",
+    "cpp:literal_number",
     "cpp:print",
-    "cpp:var_ref",
-    "cpp:endl"
+    "cpp:var_declare",
+    "cpp:var_ref"
   ],
   "_pins_scaffold_why": "同上",
   "tasks": [

@@ -5,9 +5,11 @@
     "target": "arduino-uno"
   },
   "components": [
+    "cpp:comment",
     "cpp:delay",
     "cpp:literal_number",
     "cpp:loop_count",
+    "cpp:method_call",
     "cpp:serial_open",
     "cpp:serial_print",
     "cpp:servo_attach",

@@ -140,6 +140,24 @@ export interface Track {
    * （見 `app.ts` 的 `applySuggestedView` 檔頭）。
    */
   readonly view?: LessonView
+  /**
+   * 🔴 **這一軌接在哪一軌後面**——省略 ＝ 它是一條起點。
+   *
+   * ## 為什麼要有這一格（2026-09-07）
+   *
+   * 「一顆積木**第一次**出現的那一課要介紹它」這條規則，
+   * 在沒有這一格的時候只能**每一軌各自從零算**——於是進階軌的第 1 課
+   * 會被要求重新介紹「換行」「建立變數」，而**那些學生在入門軌早就學過了**。
+   *
+   * ⚠️ 而 `order` 不是它：`order` 是**選單的順序**，
+   * 它說不出「走完這一軌才走那一軌」。
+   *
+   * > **一個「順序」的欄位，回答不了「前置」的問題
+   * > ——而兩者在只有兩條軌道的時候長得一樣。**
+   *
+   * ⚠️ **不做遞移閉包以外的事**：這一格只說前置，不說「難度」也不說「推薦」。
+   */
+  readonly after?: string
 }
 
 export function parseTrack(id: string, raw: unknown): Track {
@@ -166,6 +184,7 @@ export function parseTrack(id: string, raw: unknown): Track {
     scaffold: (sc as ScaffoldMode) ?? 'editable',
     skeleton: o.skeleton as string | undefined,
     view: o.view as LessonView | undefined,
+    after: typeof o.after === 'string' ? o.after : undefined,
   }
 }
 

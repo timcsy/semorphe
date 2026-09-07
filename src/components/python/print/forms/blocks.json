@@ -13,7 +13,7 @@
       "colour": "#5CB1D6",
       "tooltip": "%{BKY_PY_PRINT_TOOLTIP}",
       "labelKey": "PY_PRINT_MSG",
-      "labelFallback": "輸出",
+      "labelFallback": "印出",
       "slotCheck": "Expression",
       "builder": "variadic"
     },

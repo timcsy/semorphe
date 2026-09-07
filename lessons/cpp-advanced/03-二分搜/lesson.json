@@ -12,6 +12,7 @@
     "cpp:print",
     "cpp:range_find_lower",
     "cpp:var_declare",
+    "cpp:var_declare_auto",
     "cpp:var_ref",
     "cpp:vector_declare"
   ],

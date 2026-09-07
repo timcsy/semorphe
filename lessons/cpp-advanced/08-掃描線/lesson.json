@@ -13,6 +13,7 @@
     "cpp:if",
     "cpp:literal_number",
     "cpp:loop_count",
+    "cpp:pair_declare",
     "cpp:pair_make",
     "cpp:print",
     "cpp:range_sort",

@@ -6,9 +6,11 @@
   },
   "components": [
     "cpp:endl",
+    "cpp:lambda",
     "cpp:literal_number",
     "cpp:literal_string",
     "cpp:loop_range",
+    "cpp:math_abs",
     "cpp:print",
     "cpp:range_sort",
     "cpp:var_ref",

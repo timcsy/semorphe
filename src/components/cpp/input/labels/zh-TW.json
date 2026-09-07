@@ -1,3 +1,4 @@
 {
-  "U_INPUT_TOOLTIP": "從鍵盤讀取一個值到變數中"
+  "U_INPUT_TOOLTIP": "從鍵盤讀取一個值到變數中",
+  "U_INPUT_LABEL": "讀取輸入 →"
 }

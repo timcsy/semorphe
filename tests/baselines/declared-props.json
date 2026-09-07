@@ -4,10 +4,11 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "corpus": {
-    "segments": 474,
-    "nodesWithDeclTable": 10380
+    "segments": 476,
+    "nodesWithDeclTable": 10385
   },
   "missingDecl": 0,
   "projectionHint": 4,
-  "dynamicNumbering": 4
+  "dynamicNumbering": 4,
+  "note": "🟢 **2026-09-07（spec 178：課文的用字與還沒教過的東西）：語料段數 474 → 476、有宣告表的節點 10380 → 10385**——**輸入量上調**。\n  使用者回報「**沒有先說明註解是什麼就使用註解**」＋「還有**課文本身的用字**」，\n  而查證量到**兩族共 171 筆**：\n  ```\n  ① 課文的程式碼用了還沒教過的元件      62\n  ② 一顆積木【第一次】出現而課文沒提它在畫面上叫什麼   109\n  ```\n  🔴 **同一天清到 0 ＋ 0**，第一百一十四條護欄 `audit-lesson-vocabulary`（**硬性零**）。\n  ⚠️ 語料變大是因為**新護欄檔裡的 C++ 片段**（`takeCorpus` 掃 `tests/integration/`\n    的反引號——設計如此：「測試長，語料就跟著長」）。\n\n"
 }

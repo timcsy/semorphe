@@ -5,6 +5,7 @@
     "target": "arduino-uno"
   },
   "components": [
+    "cpp:comment",
     "cpp:delay",
     "cpp:digital_write",
     "cpp:literal_number",

@@ -5,11 +5,15 @@
     "target": "arduino-uno"
   },
   "components": [
+    "cpp:comment",
+    "cpp:container_iter",
     "cpp:delay",
     "cpp:dht_declare",
     "cpp:dht_open",
     "cpp:dht_read",
     "cpp:literal_number",
+    "cpp:math_is_nan",
+    "cpp:method_call",
     "cpp:serial_open",
     "cpp:serial_print",
     "cpp:var_declare",

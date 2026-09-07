@@ -1,4 +1,5 @@
 {
   "PYTHON_FUNC_CALL_MSG0": "call %1",
-  "PYTHON_FUNC_CALL_TOOLTIP": "Run a function and hand it the arguments"
+  "PYTHON_FUNC_CALL_TOOLTIP": "Run a function and hand it the arguments",
+  "PYTHON_FUNC_CALL_MSG": "call"
 }
