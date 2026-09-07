@@ -32,7 +32,7 @@
  *   這裡只挑三堂**跨語言**的驗那條路真的通。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource, treeReady, skipPredictionIfAsked } from './helpers'
+import { freshApp, useAsSource, treeReady, skipPredictionIfAsked, openLessonLink, runSkippingPrediction, pickControl } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -162,9 +162,7 @@ test('★ 三層選得到課——目標 → 課程 → 章節', async ({ page }
   await page.keyboard.press('Escape')
 
   // 選一條軌道 → **自動落在第一章**
-  await page.locator('.status-item-btn[data-control-id="track"]').click()
-  await page.locator('.quick-pick-item[data-value="cpp-advanced"]').click()
-  await page.waitForTimeout(3000)
+  await pickControl(page, 'track', 'cpp-advanced')
   await expect(
     page.locator('.status-item-btn[data-control-id="track"]'),
     '🔴 選了軌道而「課程」沒跟上',
@@ -199,9 +197,7 @@ test('★ 三層選得到課——目標 → 課程 → 章節', async ({ page }
   await page.keyboard.press('Escape')
 
   // 🔴 換目標要退出課程——課的清單是跟著目標走的
-  await page.locator('.status-item-btn[data-control-id="target"]').click()
-  await page.locator('.quick-pick-item[data-value="python"]').click()
-  await page.waitForTimeout(3000)
+  await pickControl(page, 'target', 'python')
   await expect(
     page.locator('.status-item-btn[data-control-id="track"]'),
     '🔴 換了目標而課程還留著——那條軌道不屬於這個目標',
@@ -302,16 +298,12 @@ test('★ 存檔是別的目標時，課釘住的那個要贏', async ({ page })
   await page.addInitScript(() => window.localStorage.clear())
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(6000)
-  await page.locator('[data-control-id="target"]').click()
-  await page.waitForTimeout(400)
-  await page.locator('.quick-pick-item[data-value="python"]').first().click()
-  await page.waitForTimeout(3000)
+  await pickControl(page, 'target', 'python')
   expect(await page.evaluate(() =>
     (window as never as { __app: { currentTarget: { id: string } } }).__app.currentTarget.id)).toBe('python')
 
   // ② 開一條釘住 C++ 的課程連結
-  await page.goto('/?lesson=cpp-beginner%2F15-%E5%A4%9A%E5%B1%A4%E8%BF%B4%E5%9C%88', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/15-多層迴圈')
   const after = await page.evaluate(() => {
     const a = (window as never as { __app: {
       currentTarget: { id: string }; currentTopic: { id: string }; currentSkeletonId: string
@@ -351,8 +343,7 @@ test('★ 存檔是別的目標時，課釘住的那個要贏', async ({ page })
 test('★ `?lesson=arduino/…` 開出來的是 setup／loop，不是 int main', async ({ page }) => {
   test.setTimeout(60_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=arduino%2F01-%E9%96%83%E4%B8%80%E9%A1%86%E7%87%88', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'arduino/01-閃一顆燈')
   const d = await page.evaluate(() => {
     const a = (window as never as { __app: {
       currentSkeletonId: string; codeView: { getCode(): string }
@@ -390,9 +381,7 @@ test('★ 跑完之後，裁判說得出差在哪一行', async ({ page }) => {
   }
 
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=cpp-beginner%2F01-%E5%8D%B0%E5%87%BA%E4%B8%80%E5%8F%A5%E8%A9%B1',
-    { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/01-印出一句話')
 
   // ① 少一個驚嘆號 → 要說「還沒」，而且要**並排**看得到差在哪
   await write('cout << "Hello" << endl;')
@@ -405,9 +394,7 @@ test('★ 跑完之後，裁判說得出差在哪一行', async ({ page }) => {
   expect(text, '🔴 對學生說了「錯」').not.toMatch(/錯誤|失敗|✗|❌/)
 
   // ② 改對 → ✅，而且不再有 diff 表格
-  await page.goto('/?lesson=cpp-beginner%2F01-%E5%8D%B0%E5%87%BA%E4%B8%80%E5%8F%A5%E8%A9%B1',
-    { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/01-印出一句話')
   await write('cout << "Hello!" << endl;')
   const ok = page.locator('.console-verdict')
   await expect(ok).toHaveClass(/passed/)
@@ -435,8 +422,7 @@ test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句�
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "A" << endl;\nif (1 > 2) {\ncout << "never" << endl;', { delay: 10 })
   await page.waitForTimeout(3000)
-  await page.locator('#run-btn').click()
-  await page.waitForTimeout(3500)
+  await runSkippingPrediction(page)
 
   // 🔴 **只標最外層那一塊**：`cout << "never" << endl;` 在樹裡是三顆節點，
   //    而學生眼裡那是一句話。
@@ -449,8 +435,7 @@ test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句�
   expect(console_, '🔴 對學生說了「錯」').not.toMatch(/錯誤|失敗|不對/)
 
   // ⚠️ 而下一次開跑要先清掉——不然學生會對著上一次的結論改東西
-  await page.locator('#run-btn').click()
-  await page.waitForTimeout(600)
+  await runSkippingPrediction(page)
   await page.waitForTimeout(3000)
   expect(await page.locator('.never-ran').count(), '🔴 第二次跑完標記重複累加').toBe(1)
 })
@@ -467,8 +452,7 @@ test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句�
 test('★ 執行覆蓋：一支完全正確的程式，一塊都不准標', async ({ page }) => {
   test.setTimeout(120_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/10-重複')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -481,8 +465,7 @@ test('★ 執行覆蓋：一支完全正確的程式，一塊都不准標', asyn
   await page.keyboard.press('End')
   await page.keyboard.type('\ncout << sum << endl;', { delay: 10 })
   await page.waitForTimeout(3000)
-  await page.locator('#run-btn').click()
-  await page.waitForTimeout(3500)
+  await runSkippingPrediction(page)
 
   expect(
     await page.locator('.never-ran').count(),
@@ -526,8 +509,7 @@ test('★ 清除學習進度：入口就在進度旁邊，而且要問一次', a
     window.localStorage.setItem('semorphe-progress',
       JSON.stringify({ 'cpp-beginner/10-重複': ['follow'] }))
   })
-  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/10-重複')
 
   const cell = page.locator('#status-controls .status-item-btn[data-control-id="task"]')
   expect(await cell.innerText(), '🔴 進度沒有讀回來 → 下面驗的是一個空狀態')
@@ -567,8 +549,7 @@ test('★ 題目：只有選了課程與章節才有那一格，而預設是「�
   ).toHaveCount(0)
 
   // ② 有課 ⟹ 那一格在，而它預設停在第一題
-  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/10-重複')
   const cell = page.locator('#status-controls .status-item-btn[data-control-id="task"]')
   await expect(cell, '🔴 選了課程與章節，而沒有「題目」那一格').toHaveCount(1)
   const label = await cell.innerText()
@@ -588,8 +569,7 @@ test('★ 題目：只有選了課程與章節才有那一格，而預設是「�
 test('★ 題目：純練習的時候裁判沉默，而執行覆蓋照樣標', async ({ page }) => {
   test.setTimeout(120_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/10-重複')
 
   // 切到「純練習」
   await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
@@ -604,8 +584,7 @@ test('★ 題目：純練習的時候裁判沉默，而執行覆蓋照樣標', a
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "A" << endl;\nif (1 > 2) {\ncout << "never" << endl;', { delay: 10 })
   await page.waitForTimeout(3000)
-  await page.locator('#run-btn').click()
-  await page.waitForTimeout(3500)
+  await runSkippingPrediction(page)
 
   // 🔴 **裁判一個字都不說**——系統分不出「卡住」與「在玩」，那就閉嘴
   expect(
@@ -627,9 +606,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   // ⚠️ **用第 2 課，不是第 10 課**：第 10 課的 ex1 2026-09-05 起是 Parsons，
   //    而選那一題會**重鋪畫布**——這一支驗的是裁判與「下一題」，不是 Parsons。
   //    > 一條測試如果錨在「某一題剛好是普通題」上，那一題升級的那天它會紅。
-  await page.goto('/?lesson=cpp-beginner%2F02-%E8%A8%98%E4%BD%8F%E8%B3%87%E6%96%99',
-    { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/02-記住資料')
 
   // 選第二題（練習：把 height 改成 int），然後寫出它的答案
   await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
@@ -697,8 +674,7 @@ test('★ 迴圈跑了幾次：巢狀是【倍數】不是總次數', async ({ p
     'for (int i = 0; i < 3; i = i + 1) {\nfor (int j = 0; j < 4; j = j + 1) {\ncout << i << j << endl;',
     { delay: 10 })
   await page.waitForTimeout(3500)
-  await page.locator('#run-btn').click()
-  await page.waitForTimeout(4000)
+  await runSkippingPrediction(page)
 
   // ⚠️ 入口條件：真的跑了 3×4 圈（沒跑的話下面驗的是一個空畫面）
   expect(
@@ -748,8 +724,7 @@ test('★ 迴圈跑了幾次：巢狀是【倍數】不是總次數', async ({ p
 test('★ 預測：猜跑幾次——而揭曉的徽章就在那顆迴圈旁邊', async ({ page }) => {
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/10-重複')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -758,8 +733,8 @@ test('★ 預測：猜跑幾次——而揭曉的徽章就在那顆迴圈旁邊'
   await page.keyboard.press('Enter')
   await page.keyboard.type('int n = 1;\nwhile (n <= 5) {\ncout << n << endl;\nn = n + 1;', { delay: 10 })
   await page.waitForTimeout(3500)
+  // ⚠️ **這一支驗的就是那個問句**——不得跳過它
   await page.locator('#run-btn').click()
-  await page.waitForTimeout(1500)
 
   // 🔴 **一顆迴圈 → 問「跑幾次」**：答案是一個數字，而它正是差一錯誤住的地方
   const ask = page.locator('.console-predict-head')
@@ -791,8 +766,8 @@ test('★ 預測：猜跑幾次——而揭曉的徽章就在那顆迴圈旁邊'
 
   // 🔴 **沒改程式，第二次不再問**——跑過一次之後他已經知道答案了，
   //    再問一次是儀式，而學生一眼看穿
+  // ⚠️ **這一支驗的就是那個問句**——不得跳過它
   await page.locator('#run-btn').click()
-  await page.waitForTimeout(1500)
   expect(await page.locator('.console-predict').count(), '🔴 同一支程式問了第二次').toBe(0)
 })
 
@@ -802,9 +777,7 @@ test('★ 預測：沒有迴圈、輸出短 → 猜輸出；猜對了要比程�
   // ⚠️ **用第 4 課，不是第 1 課**：第 1 課 2026-09-05 起宣告了 `predict: 'choice'`
   //    （它的干擾項問「引號會不會被印出來」），而這一支驗的是**自動判定**那一條。
   //    > 一條測試如果錨在「某一課剛好沒有宣告」上，那一課宣告的那天它會紅。
-  await page.goto('/?lesson=cpp-beginner%2F04-%E7%A8%8B%E5%BC%8F%E5%BE%9E%E5%93%AA%E9%96%8B%E5%A7%8B',
-    { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/04-程式從哪開始')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -813,8 +786,8 @@ test('★ 預測：沒有迴圈、輸出短 → 猜輸出；猜對了要比程�
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "Hello!" << endl;', { delay: 10 })
   await page.waitForTimeout(3000)
+  // ⚠️ **這一支驗的就是那個問句**——不得跳過它
   await page.locator('#run-btn').click()
-  await page.waitForTimeout(1500)
 
   expect(await page.locator('.console-predict-head').innerText()).toContain('印出什麼')
   await page.locator('.console-predict-input').fill('Hello!')
@@ -832,8 +805,7 @@ test('★ 預測：沒有迴圈、輸出短 → 猜輸出；猜對了要比程�
 test('★ 預測：純練習不問——他【說了】他不在做題目', async ({ page }) => {
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/10-重複')
   await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
   await page.locator('.quick-pick-item[data-value=""]').click()
   await page.waitForTimeout(500)
@@ -845,8 +817,8 @@ test('★ 預測：純練習不問——他【說了】他不在做題目', asyn
   await page.keyboard.press('Enter')
   await page.keyboard.type('int n = 1;\nwhile (n <= 3) {\ncout << n << endl;\nn = n + 1;', { delay: 10 })
   await page.waitForTimeout(3500)
+  // ⚠️ **這一支驗的就是那個問句**——不得跳過它
   await page.locator('#run-btn').click()
-  await page.waitForTimeout(4000)
 
   expect(await page.locator('.console-predict').count(), '🔴 純練習還在問').toBe(0)
   // ⚠️ 而徽章照樣標——描述性的回饋永遠可以給
@@ -862,8 +834,7 @@ test('★ 預測：純練習不問——他【說了】他不在做題目', asyn
 test('★ 預測：選擇題——選錯了要說出他剛才想的是什麼', async ({ page }) => {
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=cpp-beginner%2F09-%E9%81%B8%E6%93%87', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/09-選擇')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -872,8 +843,8 @@ test('★ 預測：選擇題——選錯了要說出他剛才想的是什麼', a
   await page.keyboard.press('Enter')
   await page.keyboard.type('int score = 75;\nif (score >= 60) {\ncout << "及格" << endl;', { delay: 12 })
   await page.waitForTimeout(3500)
+  // ⚠️ **這一支驗的就是那個問句**——不得跳過它
   await page.locator('#run-btn').click()
-  await page.waitForTimeout(1800)
 
   const choices = await page.$$eval('.console-predict-choice', (e) => e.map((x) => x.textContent))
   expect(choices.length, '🔴 選擇題沒有出現').toBeGreaterThanOrEqual(3)
@@ -906,9 +877,7 @@ test('★ 裁判：輸入【之前】印的東西不得被丟掉', async ({ page
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
   // 第 3 課「讀進來」：印一句 → 讀 → 再印一句
-  await page.goto('/?lesson=cpp-beginner%2F03-%E8%AE%80%E9%80%B2%E4%BE%86',
-    { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/03-讀進來')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -998,8 +967,7 @@ test('★ 排回去：選了那一題，解答的積木會被打散在畫布上'
   const errs: string[] = []
   page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().split('\n')[0]) })
   await page.addInitScript(() => window.localStorage.clear())
-  await page.goto('/?lesson=cpp-beginner%2F10-%E9%87%8D%E8%A4%87', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/10-重複')
 
   const top = () => page.evaluate(() =>
     (window as never as { __app: { blocklyPanel: { workspace: { getTopBlocks(o: boolean): unknown[] } } } })
@@ -1056,9 +1024,7 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   await page.addInitScript(() => window.localStorage.clear())
   // ⚠️ 用第 2 課：第 1 課只有一句話，排不了（`movable < 2`），
   //    而那一課因此**沒有**宣告 view——它還不是一條波。
-  await page.goto('/?lesson=cpp-beginner%2F02-%E8%A8%98%E4%BD%8F%E8%B3%87%E6%96%99',
-    { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await openLessonLink(page, 'cpp-beginner/02-記住資料')
 
   const layoutNow = () => page.locator('#status-controls .status-item-btn[data-control-id="layout"]').innerText()
 

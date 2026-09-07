@@ -410,6 +410,28 @@ export interface LessonTask {
    * 「基本操作次數」——見 `core/steps.ts` 的檔頭。
    */
   readonly compareSteps?: boolean
+  /**
+   * 🔴 **這一關的目標步數**——省略 ＝ 沒有目標。
+   *
+   * ## ⚠️ 它是一句話，不是一道門
+   *
+   * ```
+   * ❌ 過不了就不算通過   那是把「建議」變成「鎖」
+   * 🟢 說一句            「這一關的目標是 200 步以內，這一趟用了 850 步」
+   *                     ——而題目【照樣算通過】
+   * ```
+   *
+   * 🔴 而那是這個專案一貫的規矩：學習者控制的整合分析說
+   * 「sequence control is the only type that generally does not harm」
+   * ——我們給建議，不搶方向盤。
+   *
+   * ⚠️ 而它說的是**任務**：「這一趟用了 N 步」，不是「你太慢了」。
+   *
+   * 🟢 **它與 `compareSteps` 不同**：那一格是「與**上一次**比」，
+   * 這一格是「與**一個目標**比」——一個問進步，一個問到位。
+   * ⚠️ 兩個可以同時宣告，而那時主控台會說兩句。
+   */
+  readonly stepBudget?: number
   readonly predict?: 'output' | 'iterations' | 'none' | 'choice'
   /**
    * 選擇題的選項——⚠️ `predict: 'choice'` 時**必填**。
@@ -544,6 +566,7 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
       kind: kind as TaskKind | undefined,
       view: view as LessonView | undefined,
       compareSteps: t.compareSteps === true,
+      stepBudget: typeof t.stepBudget === 'number' && t.stepBudget > 0 ? t.stepBudget : undefined,
       check: parseCheck(`${id}#${t.id}`, t.check),
       predict: pr as 'output' | 'iterations' | 'none' | 'choice' | undefined,
       choices: parseChoices(`${id}#${t.id}`, pr, t.choices),

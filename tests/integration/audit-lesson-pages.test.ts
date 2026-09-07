@@ -26,13 +26,15 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { readTracks, readLessonsOf, lastmodFromGit } from '../../tools/build-lessons/read-lessons'
-import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots } from '../../tools/build-lessons/render'
+import { readTracks, readLessonsOf, lastmodFromGit, readTargets } from '../../tools/build-lessons/read-lessons'
+import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots, renderSpecs } from '../../tools/build-lessons/render'
 import { lessonDocHref } from '../../src/core/lesson'
 import { INTERACTIONS, interactionById } from '../../src/core/interactions'
 import { allLessons } from '../../src/core/load-lessons'
 
 const ROOT = resolve(__dirname, '../..', 'lessons')
+/** ⚠️ `readTargets` 讀的是 `src/languages/cpp/targets/`，所以它要 **repo 根**，不是 `lessons/`。 */
+const REPO = resolve(__dirname, '../..')
 
 /** 產生器那一側看到的所有頁（不碰 `dist/`）。 */
 function pages(): { id: string; html: string }[] {
@@ -46,6 +48,8 @@ function pages(): { id: string; html: string }[] {
     counts.push({ track, count: ps.length })
   }
   out.push({ id: '索引', html: renderIndex(counts) })
+  // 🟢 **規格頁也是一頁**——它要過同樣的檢查（零 JS、有標題、連得回去…）
+  out.push({ id: '規格', html: renderSpecs(readTargets(REPO)) })
   return out
 }
 
@@ -71,7 +75,11 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
   it('① 反向：產出的每一頁，都要對得回登錄表', () => {
     const known = new Set(allLessons().keys())
     const extra = pages()
-      .filter((p) => !p.id.startsWith('軌道:') && p.id !== '索引' && !known.has(p.id))
+      // ⚠️ 三種不是「課」的頁：軌道的清單、索引、規格
+      //    ——🔴 而它們要**逐一列出來**，不是用「不在登錄表裡就跳過」
+      //    （那樣的話產生器多產一頁垃圾也不會有人發現）。
+      .filter((p) => !p.id.startsWith('軌道:') && p.id !== '索引' && p.id !== '規格'
+        && !known.has(p.id))
     expect(extra.map((p) => p.id), '🔴 產了一頁而登錄表不認得它').toEqual([])
   })
 
@@ -351,12 +359,66 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
     expect(scan('<script type="application/ld+json">{}</script>'), '🔴 JSON-LD 被誤殺').toBe(0)
   })
 
+  /**
+   * 🔴 **規格頁是投影**——它上面的每一個數字都要在宣告裡找得到。
+   *
+   * > **一份規格如果是手抄的，它與規格的關係是「當初一樣」。**
+   *
+   * ⚠️ 而這一條**不是驗它「長得好看」**，是驗那個投影沒有斷掉：
+   * 每一塊有板子的目標都要出現，而它的腳位範圍與**上游來源**要印在頁上。
+   */
+  it('④之十 規格頁：每一塊板子都在，而數字與來源都對得回宣告', () => {
+    const targets = readTargets(REPO).filter((t) => t.board !== undefined)
+    expect(targets.length, '★ 入口條件——真的讀到板子了').toBeGreaterThan(3)
+
+    const html = pages().find((p) => p.id === '規格')?.html ?? ''
+    expect(html.length, '🔴 規格頁沒產出來').toBeGreaterThan(500)
+
+    const missing: string[] = []
+    for (const t of targets) {
+      const b = t.board!
+      if (!html.includes(b.name)) missing.push(`${t.id}：板名沒出現`)
+      if (!html.includes(t.id)) missing.push(`${t.id}：目標 id 沒出現`)
+      // 🔴 **上游來源要印出來**——`spec 147` 的存在理由就是它
+      //    （「一個沒附來源的事實主張，長出護欄之後就變成不可質疑的」）
+      if (b.source && !html.includes(b.source)) missing.push(`${t.id}：來源沒印出來`)
+      // 腳位範圍
+      for (const r of b.pins) {
+        const want = r.from === r.to ? String(r.from) : `${r.from}–${r.to}`
+        if (!html.includes(want)) missing.push(`${t.id}：腳位 ${want} 沒出現`)
+      }
+    }
+    expect(
+      missing,
+      '🔴 規格頁與宣告對不上——而它**是那份宣告的投影**，不該對不上。\n'
+        + '⚠️ 多半是 `renderSpecs` 少畫了一格，或 `readTargets` 少讀了一個檔。',
+    ).toEqual([])
+  })
+
+  /**
+   * ⚠️ **規格頁只放宣告得出來的**——時序、接線圖那一類不在這裡。
+   *
+   * > **一份「什麼都收」的規格頁，會變成第二份課文
+   * > ——而它會與第一份說不同的話。**
+   */
+  it('④之十一 規格頁不得混進課文的散文', () => {
+    const html = pages().find((p) => p.id === '規格')?.html ?? ''
+    const bad: string[] = []
+    // 🔴 錨在**課文才會有的東西**上，而不是某幾個關鍵字
+    for (const marker of ['## 換你了', '你會學到', '如果卡住了', '完成的樣子']) {
+      if (html.includes(marker)) bad.push(marker)
+    }
+    expect(bad, '🔴 規格頁上出現了課文的段落——它會變成第二份課文').toEqual([])
+  })
+
   it('④之四 每一課都要有 Course 的結構化資料，而它說的要是實話', () => {
     const bad: string[] = []
     let n = 0
     for (const p of pages()) {
-      if (p.id.startsWith('軌道:') || p.id === '索引') {
-        // 🔴 **索引與課表【不放】** `Course`——它們不是一門課。
+      if (p.id.startsWith('軌道:') || p.id === '索引' || p.id === '規格') {
+        // 🔴 **索引、課表與規格頁【不放】** `Course`——它們不是一門課。
+        //    ⚠️ 規格頁是 2026-09-07 加的：它是 `targets/*.json` 的投影，
+        //    而**一份規格不是一門課**。
         if (/application\/ld\+json/.test(p.html)) bad.push(`${p.id}：不是課，卻宣告了 Course`)
         continue
       }

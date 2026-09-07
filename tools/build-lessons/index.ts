@@ -38,9 +38,9 @@
 import { mkdirSync, writeFileSync, cpSync, existsSync, createReadStream } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { Plugin } from 'vite'
-import { readTracks, readLessonsOf, lastmodFromGit } from './read-lessons'
+import { readTracks, readLessonsOf, lastmodFromGit, readTargets } from './read-lessons'
 import { lessonDocHref } from '../../src/core/lesson'
-import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots } from './render'
+import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots, renderSpecs } from './render'
 
 const write = (outDir: string, rel: string, html: string): void => {
   const dir = join(outDir, rel)
@@ -81,6 +81,8 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
     if (parts.length === 0) {
       return renderIndex(tracks.map((t) => ({ track: t, count: readLessonsOf(lessonsRoot, t).length })))
     }
+    // 🟢 **規格頁**——它是 `targets/*.json` 的投影，不是一份新寫的文件
+    if (parts[0] === 'specs') return renderSpecs(readTargets(resolve('.')))
     const track = tracks.find((t) => t.id === parts[0])
     if (!track) return null
     const pages = readLessonsOf(lessonsRoot, track)
@@ -159,6 +161,12 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
         counts.push({ track, count: pages.length })
       }
       write(outDir, 'lessons', renderIndex(counts))
+      // 🟢 **規格頁**——`targets/*.json` 的投影（2026-09-07）。
+      //    ⚠️ 它也要進 sitemap：一頁沒有人連得到的規格，
+      //    與一頁不存在的規格在使用者眼裡是同一件事。
+      const targets = readTargets(resolve('.'))
+      write(outDir, 'lessons/specs', renderSpecs(targets))
+      sitemap.push({ path: '/lessons/specs/' })
       // 🔴 片段跟著頁一起出——⚠️ 沒有它們的話那幾個 `<video>` 是壞的，
       //    而**壞掉的樣子是一塊黑色方框**，不是錯誤。
       if (existsSync(CLIPS)) cpSync(CLIPS, join(outDir, 'clips'), { recursive: true })
@@ -168,7 +176,8 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
       writeFileSync(join(outDir, 'robots.txt'), renderRobots(), 'utf8')
       // ⚠️ 出聲——**產了幾頁**要看得到。零頁的話上面每一步都「成功」了。
       this.info?.(`課文靜態頁：${tracks.length} 軌 · ${n} 課`)
-      console.log(`\n📄 課文靜態頁：${tracks.length} 軌 · ${n} 課 → ${outDir}/lessons/`)
+      console.log(`\n📄 課文靜態頁：${tracks.length} 軌 · ${n} 課`
+        + ` · 規格頁 ${targets.filter((t) => t.board !== undefined).length} 塊板子 → ${outDir}/lessons/`)
     },
   }
 }

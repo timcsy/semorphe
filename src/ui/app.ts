@@ -61,7 +61,7 @@ import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trac
 import type { LessonView } from '../core/semantic-wave'
 import { markTaskPassed, isTaskPassed, passedCount, clearProgress, setProgressStore } from '../core/progress'
 import { setEditTallyStore, clearEditTally, tallyEdit } from '../core/edit-tally'
-import { stepsOf, compareSteps, describeSteps, type StepRecord } from '../core/steps'
+import { stepsOf, compareSteps, describeSteps, describeBudget, type StepRecord } from '../core/steps'
 /**
  * 「題目」那顆 picker 裡**不是一個題目**的那一項。
  *
@@ -519,13 +519,26 @@ export class App {
        * 不是「你變慢了」。
        */
       const task = taskById(this.currentLesson, this.currentTaskId)
-      if (task?.compareSteps === true && this.currentLesson) {
+      if (this.currentLesson && task !== undefined
+          && (task.compareSteps === true || task.stepBudget !== undefined)) {
         const key = `${this.currentLesson.id}#${task.id}`
         const steps = stepsOf(this.lastCounts)
-        const line = describeSteps(steps, compareSteps(this.lastSteps, { key, steps }))
-        // ⚠️ **先算再存**——順序反了的話它永遠在跟自己比
-        this.lastSteps = { key, steps }
-        if (line !== undefined) consolePanel.log(line)
+        if (task.compareSteps === true) {
+          const line = describeSteps(steps, compareSteps(this.lastSteps, { key, steps }))
+          // ⚠️ **先算再存**——順序反了的話它永遠在跟自己比
+          this.lastSteps = { key, steps }
+          if (line !== undefined) consolePanel.log(line)
+        }
+        /**
+         * 🟢 **與這一關的目標比**——⚠️ 而它是一句話，不是一道門：
+         * 超過了照樣算通過。
+         *
+         * 🔴 兩句可以同時出現（一個問進步，一個問到位），
+         * 而順序是「先與上一次比，再與目標比」——**近的先說**。
+         */
+        if (task.stepBudget !== undefined) {
+          consolePanel.log(describeBudget(steps, task.stepBudget))
+        }
       }
     })
   }

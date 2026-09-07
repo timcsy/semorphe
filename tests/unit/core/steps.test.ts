@@ -2,7 +2,7 @@
  * **跑了幾步，而比較才是重點**（2026-09-07）。
  */
 import { describe, it, expect } from 'vitest'
-import { stepsOf, compareSteps, describeSteps } from '../../../src/core/steps'
+import { stepsOf, compareSteps, describeSteps, describeBudget } from '../../../src/core/steps'
 
 const counts = (o: Record<string, number>): Map<string, number> => new Map(Object.entries(o))
 
@@ -77,5 +77,43 @@ describe('怎麼說', () => {
       const line = describeSteps(500, r) ?? ''
       expect(line.includes('你'), `🔴 「${line}」說到了這個人`).toBe(false)
     }
+  })
+})
+
+describe('關卡的目標——⚠️ 它是一句話，不是一道門', () => {
+  it('在目標之內 → 說一句，而它看得出是好消息', () => {
+    expect(describeBudget(57, 80)).toContain('🟢')
+    expect(describeBudget(57, 80)).toContain('之內')
+  })
+
+  it('超過了 → 也說一句，而它指向【還有更省的做法】', () => {
+    const line = describeBudget(154, 80)
+    expect(line).toContain('154')
+    expect(line).toContain('80')
+    expect(line).toContain('更省')
+  })
+
+  it('剛好等於目標算在裡面', () => {
+    expect(describeBudget(80, 80)).toContain('🟢')
+  })
+
+  /**
+   * 🔴 **兩句都說任務，不說這個人。**
+   * （`draft/課程重新設計` §十一：「說到人就砍掉」）
+   */
+  it('🔴 文案裡不得出現「你」', () => {
+    for (const [n, b] of [[57, 80], [154, 80], [80, 80]]) {
+      const line = describeBudget(n!, b!)
+      expect(line.includes('你'), `🔴 「${line}」說到了這個人`).toBe(false)
+    }
+  })
+
+  /**
+   * ⚠️ **它與 `describeSteps` 的「差 25% 內不說」不同**——
+   * 那一支比的是「上一次」（一個會動的基準），
+   * 而這一支比的是**課程作者訂下來的數字**，每一次都值得說。
+   */
+  it('★ 超過一點點也說——目標是一個固定的數，不是一個趨勢', () => {
+    expect(describeBudget(81, 80)).toContain('更省')
   })
 })

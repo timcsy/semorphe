@@ -22,6 +22,7 @@ import MarkdownIt from 'markdown-it'
 import type { LessonPage } from './read-lessons'
 import { lessonDocHref, type Track } from '../../src/core/lesson'
 import { interactionById, type Interaction } from '../../src/core/interactions'
+import type { Target } from '../../src/core/types'
 
 export { lessonDocHref }
 
@@ -484,6 +485,60 @@ export function renderTrack(track: Track, pages: readonly LessonPage[]): string 
     body: `<h1>${esc(track.name)}</h1>` +
       `<p class="meta">${esc(track.description ?? '')} · 共 ${pages.length} 課</p>` +
       `<ul class="cards">${items}</ul>`,
+  })
+}
+
+/**
+ * **規格頁**——每一塊板子有哪些腳位、提供哪些常數，而**每一筆都附上游來源**。
+ *
+ * ## 🔴 它是宣告的投影，不是一份新寫的文件
+ *
+ * 那些數字**早就是宣告了**（`src/languages/cpp/targets/*.json`，spec 145／147／150）
+ * ——而課文今天是**把它們抄一次**。
+ *
+ * > **一份規格如果是手抄的，它與規格的關係是「當初一樣」。**
+ *
+ * 🟢 而這一頁是投影，所以它**不可能與宣告不一致**——改了那份 JSON，
+ * 這一頁下一次 build 就跟著變。
+ *
+ * ## ⚠️ 而它為什麼值得存在（SHENZHEN I/O）
+ *
+ * 那個遊戲給你一份 PDF 手冊，你要**自己查**——而那把「讀規格」變成
+ * 學習的一部分。Arduino 那一軌的課文現在是**告訴他**規格：
+ * 「DHT11 和 DHT22 的通訊時序不同」「`analogRead` 只有 A0 到 A5」。
+ *
+ * ⚠️ **而這一頁只放宣告得出來的**：時序那種散文留在課文裡。
+ * > **一份「什麼都收」的規格頁，會變成第二份課文——而它會與第一份說不同的話。**
+ */
+export function renderSpecs(targets: readonly Target[]): string {
+  const boards = targets.filter((t) => t.board !== undefined)
+  const rows = boards.map((t) => {
+    const b = t.board!
+    const pins = b.pins.map((r) => r.from === r.to ? String(r.from) : `${r.from}–${r.to}`).join('、')
+    const consts = Object.entries(b.constants ?? {})
+      .map(([k, v]) => `<code>${esc(k)}</code> = ${esc(String(v))}`).join('、')
+    return `<section class="spec">
+<h2 id="${esc(t.id)}">${esc(b.name)}</h2>
+<table>
+<tr><th>目標 id</th><td><code>${esc(t.id)}</code></td></tr>
+<tr><th>腳位</th><td>${esc(pins)}</td></tr>
+<tr><th>常數</th><td>${consts || '（無）'}</td></tr>
+<tr><th>這幾個數字哪裡來的</th><td><small>${esc(b.source ?? '（未註明）')}</small></td></tr>
+</table>
+</section>`
+  }).join('\n')
+
+  return page({
+    title: '板子規格｜Semorphe',
+    description: `${boards.length} 塊板子的腳位與常數——每一筆都附上游來源。接線之前先查這裡。`,
+    path: '/lessons/specs/',
+    crumb: `<a href="/lessons/">課程</a>`,
+    body: `<h1>板子規格</h1>
+<p class="meta">${boards.length} 塊板子 · 接線之前先查這裡</p>
+<blockquote><p>⚠️ 這一頁的每一個數字都是<strong>從編輯器讀的同一份宣告</strong>產生的
+——它不可能與你在畫面上選到的腳位不一致。</p>
+<p>而<strong>時序、接線圖那一類</strong>不在這裡：那些住在各課的課文裡。</p></blockquote>
+${rows}`,
   })
 }
 

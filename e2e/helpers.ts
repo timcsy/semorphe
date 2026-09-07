@@ -414,3 +414,79 @@ export async function skipPredictionIfAsked(page: Page): Promise<void> {
   //    而每一支都等三秒的話，這個檔會多花三分鐘。
   if (await skip.isVisible({ timeout: 2500 }).catch(() => false)) await skip.click()
 }
+
+/**
+ * **開一條 `?lesson=` 連結，並等那一課【真的套用完】。**
+ *
+ * ## 🔴 它取代的是 20 個 `waitForTimeout(7000)`
+ *
+ * `lesson-pins.spec.ts` 裡有 **70 處**固定等待，合計 **274 秒**
+ * ——而那是那個檔 5.2 分鐘的 **88%**。其中 20 處是同一件事重複 20 次：
+ * 「開一條課程連結，然後睡 7 秒」。
+ *
+ * ⚠️ 而 7 秒是**照閒置機器校準的**：全跑到後半段機器很忙，那 7 秒不夠
+ * ——2026-09-07 的一次全跑花了 23 分鐘（平常 16），而 4 支紅、單獨重跑全綠。
+ *
+ * > **一個用固定秒數等待的測試，它的正確性綁在「機器現在有多閒」上
+ * > ——那既讓它慢，也讓它不穩。同一個病，兩個症狀。**
+ * > （`playwright.config.ts` 的檔頭 2026-08-31 就寫過這句）
+ *
+ * 🟢 而課程有一個**真的訊號**：`__app.currentLesson` 被設好了。
+ * 等它比睡 7 秒**又快又穩**——快是因為多數情況 1 秒內就好了，
+ * 穩是因為機器慢的時候它會多等。
+ *
+ * @param lessonId 未編碼的課程 id，例如 `cpp-beginner/01-印出一句話`
+ */
+export async function openLessonLink(page: Page, lessonId: string): Promise<void> {
+  await page.goto(`/?lesson=${encodeURIComponent(lessonId)}`, { waitUntil: 'domcontentloaded' })
+  await page.waitForFunction(
+    (want) => (window as any).__app?.currentLesson?.id === want,
+    lessonId, { timeout: 30_000 },
+  )
+  // ⚠️ **還要等畫布**——課套用完的下一拍才是積木畫好
+  await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+}
+
+/**
+ * **在狀態列切一個控制項，並等 app 真的換過去。**
+ *
+ * 🔴 取代「點一下然後睡 3 秒」——而那 3 秒是照閒置機器校準的。
+ *
+ * ⚠️ 它等的是**那個選單關掉 ＋ 一次語義更新落地**：多數控制項
+ * （軌道、目標、課程）換了之後都會重畫，而重畫完成的訊號是
+ * 「畫布還在，而且沒有一個 QuickPick 蓋著」。
+ *
+ * 🟢 而需要**更精確**的訊號時（例如「目標真的變成 python 了」），
+ * 用 `pickTarget` 那一支——它等的是 `__app.currentTarget.id`。
+ */
+export async function pickControl(page: Page, controlId: string, value: string): Promise<void> {
+  await page.locator(`.status-item-btn[data-control-id="${controlId}"]`).click()
+  await page.locator(`.quick-pick-item[data-value="${value}"]`).first().click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0, { timeout: 15_000 })
+  await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+}
+
+/**
+ * **按執行、跳過「先猜一下」的問句、等它停下來**——三件事一次。
+ *
+ * ## 🔴 為什麼要有這一支
+ *
+ * 它取代的是「按執行 ＋ `waitForTimeout(3500)`」——而那 3.5 秒
+ * **順便等掉了預測問句**：問句出現、測試沒理它、3.5 秒後它還在，
+ * 而測試接著去讀主控台**剛好讀得到**（問句不擋輸出）。
+ *
+ * ⚠️ 而換成 `runAndSettle` 之後那 4 支當場紅——因為它**停在問句上**：
+ * 狀態列還沒說「執行完畢」。
+ *
+ * > **一個固定等待除了它宣稱在等的那件事，
+ * > 常常還順便等掉了幾件沒有人寫下來的——而換掉它的時候那幾件會現形。**
+ *
+ * 🟢 順序有意義：**先跳問句再等停**。反過來的話它會等滿逾時。
+ */
+export async function runSkippingPrediction(page: Page): Promise<void> {
+  await page.locator('#run-btn').click()
+  await skipPredictionIfAsked(page)
+  await expect
+    .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
+    .toMatch(/程式執行完畢|錯誤|Error|Completed|等待輸入|Waiting/)
+}

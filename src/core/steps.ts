@@ -87,3 +87,24 @@ export function describeSteps(now: number, ratio: number | undefined): string | 
   if (ratio <= 0.8) return `這一趟走了 ${n} 步——只有上一次的 ${(ratio * 100).toFixed(0)}%`
   return `這一趟走了 ${n} 步`
 }
+
+/**
+ * **與這一關的目標比**——⚠️ 它是一句話，不是一道門。
+ *
+ * ```
+ * 在目標之內   🟢 說一句，而它是這一關少數幾個「你做到了一件不只是對的事」
+ * 超過了       說一句，而題目【照樣算通過】
+ * ```
+ *
+ * 🔴 而兩句都說**任務**：「這一趟用了 N 步」，不是「你太慢了」。
+ *
+ * ⚠️ **超過多少才說**：全部都說。與 `describeSteps` 的「差 25% 內不提」不同
+ * ——那一支比的是「上一次」（一個會動的基準），而這一支比的是
+ * **一個課程作者訂下來的數字**，它每一次都值得說。
+ */
+export function describeBudget(steps: number, budget: number): string {
+  const n = steps.toLocaleString('en-US')
+  const b = budget.toLocaleString('en-US')
+  if (steps <= budget) return `🟢 這一趟用了 ${n} 步——在這一關的目標（${b} 步）之內`
+  return `這一趟用了 ${n} 步，而這一關的目標是 ${b} 步以內。還有更省的做法`
+}

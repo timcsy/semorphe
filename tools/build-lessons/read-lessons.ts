@@ -22,6 +22,7 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join, relative } from 'node:path'
 import { parseLesson, parseTrack, type Lesson, type Track } from '../../src/core/lesson'
+import type { Target } from '../../src/core/types'
 
 export interface LessonPage {
   readonly lesson: Lesson
@@ -155,4 +156,29 @@ export function readLessonsOf(root: string, track: Track, gitTimes?: Map<string,
     })
   }
   return out
+}
+
+/**
+ * **每一塊板子的宣告**——規格頁的原料。
+ *
+ * 🔴 它讀的是 `src/languages/cpp/targets/*.json`，也就是
+ * **編輯器讀的同一份**——所以規格頁不可能與畫面上選得到的腳位不一致。
+ *
+ * > **一份規格如果是手抄的，它與規格的關係是「當初一樣」。**
+ *
+ * ⚠️ 而它**不驗那份 JSON 的形狀**（`parseTarget` 才是那件事的家）
+ * ——這裡只是把檔案讀進來；壞掉的檔會在別的地方紅。
+ */
+export function readTargets(repoRoot: string): Target[] {
+  const dir = join(repoRoot, 'src/languages/cpp/targets')
+  if (!existsSync(dir)) return []
+  const out: Target[] = []
+  for (const f of readdirSync(dir).sort()) {
+    if (!f.endsWith('.json')) continue
+    try {
+      out.push(JSON.parse(readFileSync(join(dir, f), 'utf8')) as Target)
+    } catch { /* ⚠️ 壞掉的檔在 `audit-*` 那邊紅，這裡不重複報 */ }
+  }
+  // 🔴 依 `order` 排——那是課程作者訂的順序，不是檔名的字典序
+  return out.sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9))
 }
