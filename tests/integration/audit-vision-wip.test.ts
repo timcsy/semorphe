@@ -103,6 +103,36 @@ export function wipNames(md: string): string[] {
   return out
 }
 
+/**
+ * **任何一節裡掛著 `🟡` 的標題**——而不只是〈🟡 進行中〉那一節裡的。
+ *
+ * ## 🔴 2026-09-07：這條護欄有一個盲區，而它掛了十二天
+ *
+ * `#### 🟡 階段 7 的第 0 刀：語言耦合` 住在〈🔜 下一步〉那一節，
+ * 底下**一個沒打勾的框都沒有**（2026-08-26 就結案了）——而上面那支
+ * `wipNames` 只掃〈🟡 進行中〉，所以它**一聲不吭**。
+ *
+ * > **一個「進行中」的標記，如果檢查只認得它住在哪一節、不認得它自己，
+ * > 那它在別的地方就是一個不會被查的宣稱。**
+ *
+ * ⚠️ 而這是同一條護欄**第三次**因為「項的定義太窄」而漏掉東西
+ * （前兩次：只認行首粗體、不認 `####` 標題）。
+ *
+ * > **一條護欄漏掉東西的方式，多半不是判準錯了，是它認得的【範圍】太窄。**
+ */
+export function yellowHeadings(md: string): string[] {
+  const out: string[] = []
+  for (const line of md.split('\n')) {
+    const m = /^#{2,4} 🟡 (.+)$/.exec(line.trim())
+    if (!m) continue
+    const name = m[1].replace(/（.*$/, '').replace(/：.*$/, '').trim()
+    // ⚠️ 〈🟡 進行中〉那一節的標題自己不是一項
+    if (name.startsWith('進行中')) continue
+    out.push(name)
+  }
+  return out
+}
+
 /** 那個名字底下還有幾個沒打勾的框。 */
 export function openBoxesUnder(md: string, name: string): { found: boolean; open: number } {
   const key = name.slice(0, 8)
@@ -151,6 +181,37 @@ describe('★ 第八十九條：「進行中」裡的每一項都還有事沒做
         '路線圖項收成一行 ＋ 指標，然後把它移出「進行中」。\n' +
         '⚠️ **不要**把它從這支的掃描裡排除——那是把宣稱改成謊話。',
     ).toEqual([])
+  })
+
+  it('🔴 硬性零：任何一節裡的 `🟡` 標題，都要還有沒打勾的框', () => {
+    const stale = yellowHeadings(md)
+      .map((n) => ({ n, r: openBoxesUnder(md, n) }))
+      .filter((x) => x.r.found && x.r.open === 0)
+      .map((x) => `${x.n}：底下一個沒打勾的框都沒有 → 它已經做完了`)
+    expect(
+      stale,
+      '🔴 有 `🟡`（進行中）的標題底下已經沒事可做了。\n'
+        + '⚠️ 它不一定住在〈🟡 進行中〉那一節——**而 `🟡` 這個標記本身就是一句宣稱**。\n'
+        + '🟢 修法同上：反流到 `history/`，收成一行 ＋ 指標，並把 🟡 換成 ✅。',
+    ).toEqual([])
+  })
+
+  it('★ 注入：一個住在別節、而框全打勾的 🟡 標題 → 抓得到', () => {
+    const md2 = [
+      '### 🔜 下一步',
+      '',
+      '#### 🟡 某一刀',
+      '',
+      '- [x] 做完了',
+      '- [x] 也做完了',
+    ].join('\n')
+    const names = yellowHeadings(md2)
+    expect(names).toEqual(['某一刀'])
+    expect(openBoxesUnder(md2, '某一刀').open).toBe(0)
+  })
+
+  it('★ 反向：〈🟡 進行中〉那一節的標題自己不算一項', () => {
+    expect(yellowHeadings('### 🟡 進行中\n\n內文')).toEqual([])
   })
 
   it('★ 注入①：一項做完了還留在進行中 → 要報得出來', () => {
