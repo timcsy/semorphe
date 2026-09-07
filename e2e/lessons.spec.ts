@@ -40,6 +40,8 @@ interface LessonCase {
   stdin: string[]
   /** 這一課的練習題裡，**有參考解答**的那些（見下面的 `collectExercises`）。 */
   exercises: Exercise[]
+  /** 這一課的**除錯題**（`kind: 'debug'`，2026-09-07）——它們要驗的是相反的事。 */
+  debugs: Exercise[]
 }
 
 /**
@@ -93,6 +95,37 @@ function collectExercises(dir: string, j: Record<string, any>): Exercise[] {
   return out
 }
 
+/**
+ * 除錯題的**壞掉的起點**（2026-09-07）。
+ *
+ * 🔴 它與 `collectExercises` 驗的是**相反的事**：
+ *
+ * ```
+ * 參考解答   跑得出宣告的答案     ← 不然裁判會對做對的學生說他錯
+ * 壞掉的起點 跑【不】出那個答案   ← 不然那一題【已經是對的】
+ * ```
+ *
+ * > **一題「修好它」如果它的起點本來就是對的，
+ * > 學生按一次執行就過關——而他什麼都沒學到，也不會有人發現。**
+ */
+function collectDebugs(dir: string, j: Record<string, any>): Exercise[] {
+  const out: Exercise[] = []
+  const dirp = path.join(dir, 'starters')
+  if (!fs.existsSync(dirp)) return out
+  for (const t of tasksOf(j)) {
+    if (t.kind !== 'debug') continue
+    const file = fs.readdirSync(dirp).find((f) => f.replace(/\.[^.]+$/, '') === t.id)
+    if (!file) continue
+    out.push({
+      taskId: t.id, title: t.title,
+      solution: fs.readFileSync(path.join(dirp, file), 'utf8').trimEnd(),
+      stdout: t.check?.stdout ?? '',
+      stdin: t.check?.stdin ?? [],
+    })
+  }
+  return out
+}
+
 function collect(): LessonCase[] {
   const root = path.resolve(process.cwd(), 'lessons')
   const out: LessonCase[] = []
@@ -117,6 +150,7 @@ function collect(): LessonCase[] {
         stdout: tasksOf(j)[0]?.check?.stdout ?? '',
         stdin: tasksOf(j)[0]?.check?.stdin ?? [],
         exercises: collectExercises(p, j),
+        debugs: collectDebugs(p, j),
       })
     }
   }
@@ -387,6 +421,58 @@ for (const c of CASES) {
           `這一題的裁判會對【做對的學生】說他錯。\n` +
           `宣告：${JSON.stringify(ex.stdout)}\n實際：${JSON.stringify(output)}`,
       ).toBe(wanted.length)
+    })
+  }
+
+  /**
+   * 🔴 **除錯題的起點必須【跑不出】宣告的答案**（2026-09-07）。
+   *
+   * > **一題「修好它」如果它的起點本來就是對的，
+   * > 學生按一次執行就過關——而他什麼都沒學到，也不會有人發現。**
+   *
+   * ⚠️ 這一支與上面那一支是**同一個機制驗相反的方向**，所以它們共用
+   * `Exercise` 與同一段流程——🔴 兩份流程各寫一次的話，
+   * 其中一份遲早會走到另一份不會走的路上。
+   */
+  for (const dg of c.debugs) {
+    test(`★ ${c.name}〈${dg.title}〉：除錯題的起點【跑不出】宣告的答案`, async ({ page }) => {
+      if (dg.stdout.trim() === '') return   // 沒有輸出可比的除錯題，這一支驗不了
+      await openLesson(page, c)
+      await page.evaluate((code) =>
+        (window as never as { __app: { codeView: { setCode(c: string): void } } })
+          .__app.codeView.setCode(code), dg.solution)
+      await useAsSource(page, '程式碼')
+      await page.waitForFunction(() => {
+        const t = (window as never as Record<string, any>).__app?.syncController?.currentTree
+        return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+      }, undefined, { timeout: 30_000 })
+
+      await page.locator('#run-btn').click()
+      await skipPredictionIfAsked(page)
+      for (const line of dg.stdin) {
+        const box = page.locator('.console-inline-input')
+        await expect(box).toBeVisible({ timeout: 8000 })
+        await box.fill(line)
+        await box.press('Enter')
+        await page.waitForTimeout(400)
+      }
+      await expect
+        .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
+        .toMatch(/程式執行完畢|錯誤|Error|Completed/)
+
+      const output = (await page.locator('.console-output').innerText()).trim()
+      // ⚠️ 用與上面**同一套**比對（回顯會插在中間，見上面那段說明），
+      //    而這裡要的是**不完全命中**。
+      const wanted = dg.stdout.trim().split('\n')
+      let matched = 0
+      for (const line of output.split('\n')) {
+        if (matched < wanted.length && line === wanted[matched]) matched++
+      }
+      expect(
+        matched,
+        `🔴 ${c.name}〈${dg.title}〉的起點【已經跑得出答案了】——那一題沒有東西要修。\n` +
+          `宣告：${JSON.stringify(dg.stdout)}\n實際：${JSON.stringify(output)}`,
+      ).toBeLessThan(wanted.length)
     })
   }
 }

@@ -271,6 +271,27 @@ export interface Lesson {
  * ⚠️ 那種題目該做的事是**沉默**，不是說「對了」——後者是靜默降級的一種：
  * 一個永遠說對的勾會讓所有的勾都貶值。
  */
+/**
+ * 一題的**形狀**——省略 ＝ 「跟著做」（他自己從空白開始）。
+ *
+ * ```
+ * arrange   把打散的積木排回去   Parsons problem——來源是 solutions/
+ * debug     把壞掉的程式修好     來源是 starters/
+ * ```
+ *
+ * ⚠️ **值域是封閉的**，而多一個值要先問「它有沒有機制」：
+ *
+ * > **一個沒有機制的題型宣告，是一個標籤——而標籤看起來像功能。**
+ *
+ * 🔴 **「打字」那一種刻意還沒進來**（2026-09-07）：研究說的是
+ * 「從拖拉到**打字與除錯**的概念轉變」，而「他真的敲了那些字」
+ * 今天**驗不出來**——編輯來源的計數是 per-lesson 的，不是 per-task。
+ * 加一個 `type` 只會是版面建議的別名。
+ */
+export type TaskKind = 'arrange' | 'debug'
+
+export const TASK_KINDS: readonly TaskKind[] = ['arrange', 'debug']
+
 export interface LessonTask {
   /** 這一課裡唯一。⚠️ 它會被存進通過紀錄，所以**改了它等於把紀錄清掉**。 */
   readonly id: string
@@ -315,8 +336,19 @@ export interface LessonTask {
    * ⚠️ 它**需要 `check`**（排完按執行，由既有的裁判判）
    * 與 `solutions/<題目 id>.<副檔名>`（打散的來源就是那份參考解答）
    * ——兩個都由 `parseTasks` 與第一百零二條護欄擋。
+   *
+   * ## `debug`：把壞掉的程式修好（2026-09-07）
+   *
+   * 🔴 它補的是研究點名的那一半：blocks→text 的工具
+   * 「往往**沒有處理**從拖拉到打字與**除錯**的概念轉變」。
+   *
+   * 🟢 而它幾乎也是免費的：**診斷系統早就在了**（紅字、波浪、修復建議）
+   * ——缺的只是**一段壞掉的程式**，而它住在 `starters/<題目 id>.<副檔名>`。
+   *
+   * ⚠️ 起點與正解**分開放**：一個同時裝著「該對的」與「該壞的」的資料夾，
+   * 會讓任何一條檢查都得先問「這一份是哪一種」——而那個答案不在檔案裡。
    */
-  readonly kind?: 'arrange'
+  readonly kind?: TaskKind
   /**
    * 這一題**建議看哪一邊**——省略 ＝ 不動版面（沿用他現在的）。
    *
@@ -453,8 +485,8 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
       throw new Error(`教案 ${id}：tasks[${i}] 的 view 不是 ${LESSON_VIEWS.join('／')}`)
     }
     const kind = t.kind
-    if (kind !== undefined && kind !== 'arrange') {
-      throw new Error(`教案 ${id}：tasks[${i}] 的 kind 只認得 arrange`)
+    if (kind !== undefined && !TASK_KINDS.includes(kind as TaskKind)) {
+      throw new Error(`教案 ${id}：tasks[${i}] 的 kind 只認得 ${TASK_KINDS.join('／')}`)
     }
     // 🔴 **沒有裁判的 Parsons 題是排不完的**：學生把積木排好之後，
     //    「排對了沒有」是按執行、比對輸出得到的答案。少了 `check`，
@@ -462,9 +494,14 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
     if (kind === 'arrange' && t.check === undefined) {
       throw new Error(`教案 ${id}：tasks[${i}] 是 arrange 而沒有 check——排完之後沒有人會說話`)
     }
+    // 🔴 **同一條規矩**：修完之後沒有人會說話的除錯題，
+    //    與「這一課還沒寫好」在畫面上一模一樣。
+    if (kind === 'debug' && t.check === undefined) {
+      throw new Error(`教案 ${id}：tasks[${i}] 是 debug 而沒有 check——修完之後沒有人會說話`)
+    }
     return {
       id: t.id, title: t.title,
-      kind: kind as 'arrange' | undefined,
+      kind: kind as TaskKind | undefined,
       view: view as LessonView | undefined,
       check: parseCheck(`${id}#${t.id}`, t.check),
       predict: pr as 'output' | 'iterations' | 'none' | 'choice' | undefined,

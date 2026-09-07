@@ -38,6 +38,40 @@ const SOLUTION_FILES = import.meta.glob('/lessons/*/*/solutions/*', {
   eager: true, query: '?raw', import: 'default',
 }) as Record<string, string>
 
+/**
+ * **壞掉的起點**——除錯題的來源（`kind: 'debug'`）。
+ *
+ * ## 🔴 為什麼它與參考解答分開放
+ *
+ * ```
+ * solutions/<題目 id>.<ext>   對的     Parsons 打散的來源 · e2e 真的跑它
+ * starters/<題目 id>.<ext>    壞的     除錯題的起點
+ * ```
+ *
+ * ⚠️ **同一個資料夾裝兩種東西**會讓「那些檔案都跑得過」這條護欄
+ * 要嘛放寬（於是它守不住正解），要嘛誤報（於是有人去把壞的改成對的）。
+ *
+ * > **一個資料夾如果同時裝著「該對的」與「該壞的」，
+ * > 那麼任何一條對它的檢查都必須先問「這一份是哪一種」——
+ * > 而那個問題的答案不在檔案裡。**
+ *
+ * 🔴 而除錯題**要的正是那份壞掉的程式跑不過**：
+ * 研究說 blocks→text 的工具「往往沒有處理從拖拉到**打字與除錯**的概念轉變」，
+ * 而這個 repo 的診斷系統早就在了——缺的只是**一段壞掉的程式**。
+ */
+const STARTER_FILES = import.meta.glob('/lessons/*/*/starters/*', {
+  eager: true, query: '?raw', import: 'default',
+}) as Record<string, string>
+
+/** `<課程 id>` ＋ `<題目 id>` → 那份壞掉的起點。⚠️ 沒有就是 `undefined`。 */
+export function starterFor(lessonId: string, taskId: string): string | undefined {
+  const prefix = `/lessons/${lessonId}/starters/${taskId}.`
+  for (const [path, code] of Object.entries(STARTER_FILES)) {
+    if (path.startsWith(prefix)) return code
+  }
+  return undefined
+}
+
 /** `<課程 id>` ＋ `<題目 id>` → 那份參考解答。⚠️ 沒有就是 `undefined`。 */
 export function solutionFor(lessonId: string, taskId: string): string | undefined {
   const prefix = `/lessons/${lessonId}/solutions/${taskId}.`

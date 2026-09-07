@@ -66,6 +66,13 @@ interface Lesson {
   md: string
   /** `solutions/` 裡有解答的題目 id。⚠️ 只要 id，**不要內容**——見下面那條。 */
   solutions: string[]
+  /**
+   * `starters/` 裡有**壞掉的起點**的題目 id（`kind: 'debug'`，2026-09-07）。
+   *
+   * ⚠️ 它與 `solutions` **分開放**：一個同時裝著「該對的」與「該壞的」的
+   * 資料夾，會讓任何一條檢查都得先問「這一份是哪一種」——而那個答案不在檔案裡。
+   */
+  starters?: string[]
 }
 
 /** 掃一個 lessons 根目錄——**純函式**，注入餵得進合成目錄 */
@@ -87,6 +94,9 @@ export function scanLessons(root: string): Lesson[] {
         md: fs.existsSync(m) ? fs.readFileSync(m, 'utf8') : '',
         solutions: fs.existsSync(path.join(p, 'solutions'))
           ? fs.readdirSync(path.join(p, 'solutions')).map((x) => x.replace(/\.[^.]+$/, ''))
+          : [],
+        starters: fs.existsSync(path.join(p, 'starters'))
+          ? fs.readdirSync(path.join(p, 'starters')).map((x) => x.replace(/\.[^.]+$/, ''))
           : [],
       })
     }
@@ -115,6 +125,10 @@ export function judgeLessons(
     // ⚠️ 第一題不算——它的解答就是課文裡的「完成的樣子」。
     for (const t of (l.json.tasks ?? []).slice(1)) {
       if (!t.check) continue      // 沒有裁判的題目本來就不需要解答
+      // ⚠️ **除錯題的「解答」是他自己修出來的**——它要的是一份【壞掉的起點】，
+      //    而正解就是把那個 bug 修掉。硬要它附一份 `solutions/` 會讓
+      //    「那些檔案都跑得過」那條 e2e 去驗一份**沒有人會看的**檔案。
+      if (t.kind === 'debug') continue
       if (t.id !== undefined && !l.solutions.includes(t.id)) {
         f.push({ lesson: l.dir, kind: '練習題沒有參考解答', detail: t.id })
       }
@@ -126,6 +140,41 @@ export function judgeLessons(
       if (t.kind !== 'arrange') continue
       if (t.id !== undefined && !l.solutions.includes(t.id)) {
         f.push({ lesson: l.dir, kind: '「排回去」那種題沒有參考解答', detail: t.id })
+      }
+    }
+    /**
+     * 🔴 **除錯題一定要有壞掉的起點**（2026-09-07）。
+     *
+     * ⚠️ 少了它的症狀不是報錯：那一題會安靜地變成**一片空白畫布**，
+     * 而畫面上與「這一課還沒寫好」一模一樣——與 `arrange` 同一個形狀。
+     */
+    for (const t of (l.json.tasks ?? [])) {
+      if (t.kind !== 'debug') continue
+      // ⚠️ `?? []` 不是防禦性寫法，是**合成輸入**的需要：注入測試餵的是
+      //    手寫的物件，而要它們每一個都寫 `starters: []` 只會讓注入變難寫。
+      if (t.id !== undefined && !(l.starters ?? []).includes(t.id)) {
+        f.push({ lesson: l.dir, kind: '除錯題沒有壞掉的起點', detail: t.id })
+      }
+    }
+    /**
+     * 🔴 **一個題目不得同時有起點與解答。**
+     *
+     * > **一個資料夾如果同時裝著「該對的」與「該壞的」，
+     * > 那麼任何一條對它的檢查都必須先問「這一份是哪一種」
+     * > ——而那個問題的答案不在檔案裡。**
+     *
+     * ⚠️ 而 `solutions/` 那一批**有一條 e2e 真的去跑它們**——
+     * 一份壞掉的程式混進去，那條 e2e 會紅在一個**它應該壞**的東西上。
+     */
+    for (const id of l.starters ?? []) {
+      if (l.solutions.includes(id)) {
+        f.push({ lesson: l.dir, kind: '同一題既有起點又有解答', detail: id })
+      }
+    }
+    /** ⚠️ 起點也不得出現在課文裡——那等於把 bug 直接指出來。 */
+    for (const id of l.starters ?? []) {
+      if (l.md.includes(`starters/${id}`)) {
+        f.push({ lesson: l.dir, kind: '課文洩漏除錯題的起點', detail: id })
       }
     }
     // 🔴 **解答不得出現在課文裡**——學生點得到的地方不放答案。
@@ -225,6 +274,46 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
 
   it('★ 注入：正確的輸入 → 不報', () => {
     expect(judgeLessons([good], C, T)).toEqual([])
+  })
+
+  // ─── 除錯題（2026-09-07）——🔴 新規則要有自己的健康檢查 ───
+
+  it('★ 注入：除錯題沒有壞掉的起點 → 會報', () => {
+    const bad = {
+      ...good,
+      json: { ...good.json, tasks: [
+        { id: 'follow', title: '跟著做' },
+        { id: 'fix', title: '修好它', kind: 'debug', check: { stdout: 'a\n' } },
+      ] },
+    }
+    expect(judgeLessons([bad], C, T).map((x) => x.kind))
+      .toContain('除錯題沒有壞掉的起點')
+  })
+
+  it('★ 注入：有起點的除錯題 → 不報，而且**不得**被要求附參考解答', () => {
+    const ok = {
+      ...good,
+      starters: ['fix'],
+      json: { ...good.json, tasks: [
+        { id: 'follow', title: '跟著做' },
+        { id: 'fix', title: '修好它', kind: 'debug', check: { stdout: 'a\n' } },
+      ] },
+    }
+    const kinds = judgeLessons([ok], C, T).map((x) => x.kind)
+    expect(kinds).not.toContain('除錯題沒有壞掉的起點')
+    expect(kinds, '🔴 除錯題的「解答」是他自己修出來的').not.toContain('練習題沒有參考解答')
+  })
+
+  it('★ 注入：同一題既有起點又有解答 → 會報', () => {
+    const bad = { ...good, starters: ['ex1'], solutions: ['ex1'] }
+    expect(judgeLessons([bad], C, T).map((x) => x.kind))
+      .toContain('同一題既有起點又有解答')
+  })
+
+  it('★ 注入：課文洩漏了除錯題的起點 → 會報', () => {
+    const bad = { ...good, starters: ['fix'], md: `${good.md}\n看 starters/fix 就知道了` }
+    expect(judgeLessons([bad], C, T).map((x) => x.kind))
+      .toContain('課文洩漏除錯題的起點')
   })
 
   it('★ 注入：懸空元件 → 會報', () => {

@@ -75,7 +75,7 @@ import { scatterOrder } from '../core/arrange'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
-import { lessonById, allTracks, lessonsOfTrack, solutionFor, viewForLesson } from '../core/load-lessons'
+import { lessonById, allTracks, lessonsOfTrack, solutionFor, starterFor, viewForLesson } from '../core/load-lessons'
 import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
@@ -1036,6 +1036,36 @@ export class App {
     if (n === 0) {
       console.error(`[arrange] ${lesson.id}#${task.id} 一塊都沒打散——那一題等於直接給答案`)
     }
+  }
+
+  /**
+   * **鋪一題「修好它」**（`kind: 'debug'`，2026-09-07）。
+   *
+   * ## 🟢 它比 Parsons 題還便宜——因為一個字都不用寫
+   *
+   * ```
+   * 壞掉的起點   starters/<題目 id>.<副檔名>
+   * 放進編輯器   syncCodeToBlocks —— 與「以此為準：程式碼」同一條路
+   * 判他修好了   既有的裁判（check）
+   * 告訴他哪裡壞 既有的診斷系統（紅字、波浪、修復建議）
+   * ```
+   *
+   * ⚠️ **不打散**（那是 `arrange` 的事）——除錯題要的是
+   * 「一段看起來完整、而跑起來不對的程式」。
+   *
+   * 🔴 **而它刻意不先驗「這段程式真的壞掉」**：一段
+   * 「編得過而輸出不對」的程式**也是**除錯題，而且是比較難的那一種。
+   * 由 `check` 去判他修好了沒——**壞在哪裡不是我們要分類的東西**。
+   */
+  private async seedDebug(lesson: Lesson, task: LessonTask): Promise<void> {
+    const code = starterFor(lesson.id, task.id)
+    if (code === undefined) {
+      // 🔴 **出聲**——一個沒有起點的除錯題，畫面上是一片空白畫布，
+      //    而那與「這一課還沒寫好」一模一樣。
+      console.error(`[debug] ${lesson.id}#${task.id} 宣告了 debug 而沒有 starters/ 檔`)
+      return
+    }
+    await this.syncController?.syncCodeToBlocks(code)
   }
 
   /**
@@ -3068,13 +3098,16 @@ export class App {
           //    （形狀與「套用範例」一樣：選了一題卻沒看到它比被問一句更糟，
           //     而吃掉他寫到一半的東西比兩者都糟）。
           const picked = taskById(this.currentLesson, invoke.value ?? '')
-          if (picked?.kind === 'arrange' && this.currentLesson) {
+          // ⚠️ **兩種題型都要先問一句**（`arrange` 與 `debug`）——它們都會
+          //    把畫布換成一份【別人給的】程式碼，而那會蓋掉他寫到一半的東西。
+          if ((picked?.kind === 'arrange' || picked?.kind === 'debug') && this.currentLesson) {
             const lesson = this.currentLesson
             const go = (): void => {
               this.currentTaskId = picked.id
               this.publishControls()
               this.applySuggestedView(picked.view)
-              void this.seedArrange(lesson, picked)
+              if (picked.kind === 'arrange') void this.seedArrange(lesson, picked)
+              else void this.seedDebug(lesson, picked)
             }
             // 🔴 **問語義樹，不問面板**（同 `applyTemplate`）——「有沒有東西」
             //    是那份唯一真實的性質，不是某一個投影的性質。

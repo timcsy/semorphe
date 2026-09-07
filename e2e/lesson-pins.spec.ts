@@ -33,6 +33,8 @@
  */
 import { test, expect } from '@playwright/test'
 import { freshApp, useAsSource, treeReady, skipPredictionIfAsked } from './helpers'
+import fs from 'node:fs'
+import path from 'node:path'
 
 /** 三堂跨語言的——證明這條路不是只對 C++ 通 */
 const CASES = [
@@ -67,6 +69,27 @@ const toolboxIds = async (page: import('@playwright/test').Page): Promise<string
     walk(ws.getToolbox()?.getToolboxItems() ?? [])
     return [...new Set(out)]
   })
+
+
+/**
+ * `10-重複` 這一課有幾題——**從宣告讀，不寫死**。
+ *
+ * 🔴 2026-09-07 這裡本來寫著 `0/2`，而那一課多了一題除錯題之後
+ * **兩支 e2e 當場紅**——而產品是對的。
+ *
+ * > **一個錨在「今天有幾個」上的斷言，會在【正確地多了一個】的那天變紅
+ * > ——而它報出來的樣子與真的壞掉一模一樣。**
+ *
+ * ⚠️ 而它讀的是 `lesson.json`，也就是**產品讀的同一份**。
+ */
+function taskCountOf(lessonDir: string): number {
+  const j = JSON.parse(fs.readFileSync(
+    path.resolve(process.cwd(), 'lessons', lessonDir, 'lesson.json'), 'utf8')) as
+    { tasks?: unknown[] }
+  return (j.tasks ?? []).length
+}
+
+const REPEAT_TASKS = taskCountOf('cpp-beginner/10-重複')
 
 test('★ 入口條件 ＋ 回歸閘：沒有 `?lesson` 時與今天逐字相同', async ({ page }) => {
   await freshApp(page)
@@ -507,7 +530,8 @@ test('★ 清除學習進度：入口就在進度旁邊，而且要問一次', a
   await page.waitForTimeout(7000)
 
   const cell = page.locator('#status-controls .status-item-btn[data-control-id="task"]')
-  expect(await cell.innerText(), '🔴 進度沒有讀回來 → 下面驗的是一個空狀態').toMatch(/1\/2/)
+  expect(await cell.innerText(), '🔴 進度沒有讀回來 → 下面驗的是一個空狀態')
+    .toContain(`1/${REPEAT_TASKS}`)
   await cell.click()
   await page.waitForTimeout(300)
 
@@ -526,7 +550,8 @@ test('★ 清除學習進度：入口就在進度旁邊，而且要問一次', a
     '🔴 按了清除而紀錄還在',
   ).toBeNull()
   // 🔴 那個「1/2」要**當場**歸零——顯示一份已經不存在的進度，比不清更糟
-  expect(await cell.innerText(), '🔴 畫面還顯示著已經不存在的進度').toMatch(/0\/2/)
+  expect(await cell.innerText(), '🔴 畫面還顯示著已經不存在的進度')
+    .toContain(`0/${REPEAT_TASKS}`)
 })
 
 test('★ 題目：只有選了課程與章節才有那一格，而預設是「跟著做」', async ({ page }) => {
@@ -549,9 +574,9 @@ test('★ 題目：只有選了課程與章節才有那一格，而預設是「�
   const label = await cell.innerText()
   expect(label, `🔴 預設不是「跟著做」：${label}`).toContain('跟著做')
   // 🔴 進度就在標籤上——它是這一格唯一說得出「我學到哪」的地方
-  expect(label, `🔴 標籤上沒有進度：${label}`).toMatch(/0\/2/)
+  expect(label, `🔴 標籤上沒有進度：${label}`).toContain(`0/${REPEAT_TASKS}`)
 
-  // ③ 清單裡有「純練習」與那兩題，而沒有裁判的那一題要說出來
+  // ③ 清單裡有「純練習」與那幾題，而沒有裁判的那一題要說出來
   await cell.click()
   const rows = await page.$$eval('.quick-pick-item', (e) => e.map((x) => x.textContent ?? ''))
   expect(rows.join('｜'), '🔴 清單裡沒有「純練習」——那是使用者拍板的那一格').toContain('純練習')
