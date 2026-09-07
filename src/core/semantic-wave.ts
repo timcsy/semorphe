@@ -84,3 +84,55 @@ export function waveOf(views: readonly LessonView[]): WaveShape {
   }
   return { descends, ascends, isWave: descends && ascends, levels }
 }
+
+// ─── 跨課的那一條：拆輪子的曲線 ─────────────────────────────────────
+
+/**
+ * 一條軌道的**版面曲線**長什麼樣。
+ *
+ * ## 🔴 它與語意波方向相反，而兩者都對
+ *
+ * ```
+ * 語意波   一【課】之內   先下到具體，再回到抽象   ← 這一趟要理解一個東西
+ * 曲線     一【軌】之間   往程式碼那一頭走，不回頭  ← 這一路是把輪子拆掉
+ * ```
+ *
+ * ⚠️ **搞混它們會讓護欄互相打架**：一課之內回到抽象是**學會了**，
+ * 而一軌之間回到積木是**鷹架又裝回去了**。
+ *
+ * 使用者原話：「我希望這成為學生的**輔助輪**，最終是可以看懂程式碼的」
+ * ——`concepts/認知鷹架.md`「三輪車不是輔助輪」。
+ *
+ * ## ⚠️ 而「不回頭」不是「每一課都要往前」
+ *
+ * 一整軌都用同一個看法是**合法的**（那條軌道沒有宣告曲線的意圖）。
+ * 這一支要抓的是**倒退**：第 9 課比第 4 課更靠近積木那一頭。
+ */
+export interface CurveShape {
+  /** 抽象度序列——⚠️ 紅的時候要印得出來 */
+  readonly levels: readonly number[]
+  /** 有沒有往程式碼那一頭移動過（＝真的宣告了一條曲線） */
+  readonly moves: boolean
+  /** 🔴 有沒有倒退（往積木那一頭走）——那是鷹架又裝回去了 */
+  readonly regresses: boolean
+  /** 倒退發生在第幾步（0-based，指向**後**面那一步）。沒有倒退時是空的 */
+  readonly regressAt: readonly number[]
+}
+
+/**
+ * 判一條軌道的版面宣告是不是一條**拆輪子的曲線**。
+ *
+ * @param views 依課程順序排好的看法。⚠️ **順序由呼叫端負責**
+ *   ——這一支不知道課程怎麼排（那是 `lesson.ts` 的事）。
+ */
+export function curveOf(views: readonly LessonView[]): CurveShape {
+  const levels = views.map(abstraction)
+  const regressAt: number[] = []
+  let moves = false
+  for (let i = 1; i < levels.length; i++) {
+    const d = (levels[i] ?? 0) - (levels[i - 1] ?? 0)
+    if (d > 0) moves = true
+    if (d < 0) regressAt.push(i)
+  }
+  return { levels, moves, regresses: regressAt.length > 0, regressAt }
+}

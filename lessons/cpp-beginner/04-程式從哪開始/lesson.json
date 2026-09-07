@@ -2,7 +2,8 @@
   "title": "程式從哪開始",
   "estimate": "15 分鐘",
   "pins": {
-    "target": "cpp"
+    "target": "cpp",
+    "view": "compare"
   },
   "components": [
     "cpp:print",
@@ -22,5 +23,6 @@
       "id": "ex1",
       "title": "練習：把輸出搬到 return 下面，看它不跑"
     }
-  ]
+  ],
+  "_view_why": "曲線的第一個轉折：這一課就是把 #include／main 拆開的那一課（軌道的 scaffold 也在這裡從 hidden 變回 ghost）——他要開始【認得】那幾行，所以版面換成對照。"
 }

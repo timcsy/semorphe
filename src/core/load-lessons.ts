@@ -8,7 +8,8 @@
  * ⚠️ **課文（`lesson.md`）不在這裡**。這一刀只讀宣告；
  * 課文的呈現牽到還沒拍板的互動教材形式。
  */
-import { parseLesson, parseTrack, type Lesson, type Track } from './lesson'
+import { parseLesson, parseTrack, trackOf, type Lesson, type Track } from './lesson'
+import type { LessonView } from './semantic-wave'
 
 const FILES = import.meta.glob('/lessons/*/*/lesson.json', { eager: true }) as Record<
   string,
@@ -97,4 +98,42 @@ export function lessonsOfTrack(trackId: string): Lesson[] {
   return [...allLessons().values()]
     .filter((l) => l.id.startsWith(`${trackId}/`))
     .sort((a, b) => a.id.localeCompare(b.id))
+}
+
+/**
+ * **這一課該從哪一邊開始**——拆輪子的曲線，走**階梯**語意。
+ *
+ * ## 🔴 轉折點是「從這一課開始」，不是「只有這一課」
+ *
+ * ⚠️ 第一版把它寫成 `pins.view ?? track.view`，而**第一百一十三條護欄
+ * 當場紅了**：軌道預設 `blocks`、第 4 課轉 `compare`，於是**第 5 課退回
+ * `blocks`**——一個看起來很合理的 fallback，做出來的是一條鋸齒。
+ *
+ * ```
+ * ❌ pins.view ?? track.view      blocks blocks blocks compare blocks blocks …
+ * 🟢 階梯（繼承前一課）            blocks blocks blocks compare compare compare …
+ * ```
+ *
+ * > **一條曲線的宣告，寫的是【轉折點】而不是【每一格的值】
+ * > ——而「沒宣告就退回預設」會把轉折變成一根刺。**
+ *
+ * 🟢 **而護欄抓到它，是因為護欄與產品共用這一支**——兩份判斷會讓
+ * 護欄驗過一條產品不會走的路。
+ *
+ * @param lessonId `<軌道>/<編號>-<課名>`
+ * @returns 沒有任何宣告時回 `undefined`（＝不建議，版面完全由使用者作主）
+ */
+export function viewForLesson(lessonId: string): LessonView | undefined {
+  const track = trackOf(lessonId)
+  // ⚠️ 課程 id 帶編號（`01-…`），所以字典序**就是**課程順序
+  const ids = [...allLessons().keys()]
+    .filter((id) => trackOf(id) === track)
+    .sort((a, b) => a.localeCompare(b))
+  let current = allTracks().get(track)?.view
+  for (const id of ids) {
+    const pinned = allLessons().get(id)?.pins.view
+    if (pinned !== undefined) current = pinned
+    if (id === lessonId) return current
+  }
+  return current
 }

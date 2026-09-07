@@ -121,6 +121,25 @@ export interface Track {
    * 今天沒有軌道用到它，而**機制在**：多一份 `skeletons/*.json` 就通。
    */
   readonly skeleton?: string
+  /**
+   * 這條軌道**預設看哪一邊**——省略 ＝ 不建議，使用者的版面完全自己作主。
+   *
+   * ## 🔴 它是「拆輪子的曲線」那一軸
+   *
+   * ```
+   * scaffold   露多少骨架    hidden / ghost / editable
+   * skeleton   骨架長什麼樣  哪幾段組成
+   * view       看哪一邊      code / blocks / flow / compare / three   ← 這一個
+   * ```
+   *
+   * ⚠️ **形狀與 `scaffold` 一模一樣**：軌道給預設、課程用 `pins.view` 覆寫。
+   * 🔴 **刻意不發明「第 1–3 課用 X」那種區間語法**——那會是第二種宣告方式，
+   * 而這個 repo 反覆證明第二種宣告方式最後會與第一種說不同的話。
+   *
+   * ⚠️ 而**它是建議不是鎖**：只在換課那一條路套用
+   * （見 `app.ts` 的 `applySuggestedView` 檔頭）。
+   */
+  readonly view?: LessonView
 }
 
 export function parseTrack(id: string, raw: unknown): Track {
@@ -135,12 +154,18 @@ export function parseTrack(id: string, raw: unknown): Track {
   if (sc !== undefined && !['hidden', 'ghost', 'editable'].includes(String(sc))) {
     throw new Error(`軌道 ${id}：scaffold 不是 hidden／ghost／editable`)
   }
+  // ⚠️ 打錯字要**當場丟**——一個安靜地被忽略的版面宣告，
+  //    症狀是「我明明寫了而它沒有反應」，而那查起來很久。
+  if (o.view !== undefined && !LESSON_VIEWS.includes(o.view as LessonView)) {
+    throw new Error(`軌道 ${id}：view 不是 ${LESSON_VIEWS.join('／')}`)
+  }
   return {
     id, name: o.name, target: o.target,
     order: typeof o.order === 'number' ? o.order : 1e9,
     description: typeof o.description === 'string' ? o.description : undefined,
     scaffold: (sc as ScaffoldMode) ?? 'editable',
     skeleton: o.skeleton as string | undefined,
+    view: o.view as LessonView | undefined,
   }
 }
 
@@ -159,6 +184,20 @@ export interface LessonPins {
    * 「同一軌裡有一課要先把骨架藏起來」的情況。
    */
   readonly scaffold?: ScaffoldMode
+  /**
+   * 這一堂**預設看哪一邊**——覆寫軌道的 `view`。
+   *
+   * ⚠️ 多數課不需要它（跟著軌道走就好）。它存在是為了**曲線的轉折點**：
+   * 「從這一課開始改看對照」。
+   *
+   * 🔴 而它與 `tasks[].view` 不同層，兩者都要（2026-09-07 釐清）：
+   *
+   * ```
+   * pins.view      這一【課】從哪一邊開始     ← 曲線（跨課，不回頭）
+   * tasks[].view   這一【題】建議看哪一邊     ← 語意波（課內，先下再上）
+   * ```
+   */
+  readonly view?: LessonView
 }
 
 export interface Lesson {
@@ -545,6 +584,9 @@ export function parseLesson(id: string, raw: unknown): Lesson {
   if (psc !== undefined && !['hidden', 'ghost', 'editable'].includes(String(psc))) {
     throw new Error(`教案 ${id}：pins.scaffold 不是 hidden／ghost／editable`)
   }
+  if (pins.view !== undefined && !LESSON_VIEWS.includes(pins.view as LessonView)) {
+    throw new Error(`教案 ${id}：pins.view 不是 ${LESSON_VIEWS.join('／')}`)
+  }
   // 🔴 **認不得的 id 要當場丟錯**，不要安靜地跳過——一個拼錯的 `interactions`
   //    會讓那一課少一段操作說明，而**畫面上看不出少了什麼**。
   const inter = o.interactions
@@ -565,6 +607,7 @@ export function parseLesson(id: string, raw: unknown): Lesson {
     pins: {
       target: pins.target as string | undefined,
       scaffold: psc as ScaffoldMode | undefined,
+      view: pins.view as LessonView | undefined,
     },
     components: o.components as string[],
     interactions: inter as string[] | undefined,

@@ -60,6 +60,7 @@ import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson'
 import type { LessonView } from '../core/semantic-wave'
 import { markTaskPassed, isTaskPassed, passedCount, clearProgress, setProgressStore } from '../core/progress'
+import { setEditTallyStore, clearEditTally, tallyEdit } from '../core/edit-tally'
 /**
  * 「題目」那顆 picker 裡**不是一個題目**的那一項。
  *
@@ -74,7 +75,7 @@ import { scatterOrder } from '../core/arrange'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
-import { lessonById, allTracks, lessonsOfTrack, solutionFor } from '../core/load-lessons'
+import { lessonById, allTracks, lessonsOfTrack, solutionFor, viewForLesson } from '../core/load-lessons'
 import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
@@ -396,6 +397,9 @@ export class App {
       (v) => {
         if (v?.[0] !== 'yes') return
         clearProgress()
+        // 🔴 **兩個一起清**——換一班學生時留著上一班的編輯計數，
+        //    會讓新學生的「你改了哪一邊」從一個不是他的數字開始。
+        clearEditTally()
         // 🔴 **選單上那個「2/3」要當場歸零**——不重畫的話，
         //    畫面會顯示一份已經不存在的進度，而那比不清更糟。
         this.publishControls()
@@ -671,6 +675,10 @@ export class App {
     // 🔴 少了這一行，症狀是**進度記不住**，而它不會報錯
     //    ——`audit-store-wired` 那條護欄盯著這一行還在不在。
     setProgressStore(createBrowserStore())
+    // 🔴 **一起設，而且要用【同一種】store**——編輯計數與進度是同一個
+    //    「這台電腦上這個學生」的東西，而一個記得住、一個記不住
+    //    會讓「你這一課改了哪一邊」在重新整理之後歸零而進度還在。
+    setEditTallyStore(createBrowserStore())
     this.storageService = this.profile.createStorage()
     this.topicRegistry = new TopicRegistry()
     this.targetRegistry = new TargetRegistry()
@@ -1209,6 +1217,33 @@ export class App {
     if (track?.skeleton !== undefined) this.adoptSkeleton(track.skeleton)
     // 🔴 剝不掉的骨架（Arduino）不得停在「隱藏」——見 `enforceShellDepthFloor`
     this.enforceShellDepthFloor()
+    /**
+     * 🟢 **版面的曲線**（2026-09-07）——**軌道給預設、課可以覆寫**，
+     * 與上面那一格（鷹架）**同一個形狀**。
+     *
+     * 使用者原話：「我希望這成為學生的**輔助輪**，最終是可以看懂程式碼的」。
+     *
+     * ⚠️ **它是建議不是鎖**：只在這一條（換課）與換題那一條套用，
+     * **不從任何重畫路徑呼叫**——見 `applySuggestedView` 的檔頭。
+     * 🔴 而那不是實作細節：「搶回去」在程式碼裡不是一個 `if (locked)`，
+     * 它是一段「每次都重新套用預設值」的程式碼。
+     *
+     * ⚠️ 兩層 `view` 多數時候在不同的軸上：
+     * ```
+     * pins.view / track.view   這一【課】從哪一邊開始   跨課的曲線（不回頭）
+     * tasks[].view             這一【題】建議看哪一邊   課內的語意波（先下再上）
+     * ```
+     * 🔴 **而在第一題那一刻它們是重疊的**——兩個都在說「這一課的第一個畫面」。
+     * 換題那一條在這之後跑（`currentTaskId` 已重設成第一題），
+     * 所以**題目贏**，而那是對的：它更近，也更具體。
+     *
+     * > **兩層預設值重疊的時候，贏的該是【比較近的那一層】
+     * > ——而「它們在不同的軸上」是一句聽起來很整齊、而擋不住任何東西的話。**
+     */
+    // ⚠️ **走 `viewForLesson`，不要在這裡自己 `?? track?.view`**
+    //    ——那個看起來很合理的 fallback 會讓轉折點的**下一課退回預設**
+    //    （第一百一十三條護欄當場抓到）。曲線寫的是轉折點，不是每一格的值。
+    this.applySuggestedView(viewForLesson(lesson.id))
   }
 
   async init(): Promise<void> {
@@ -1444,6 +1479,18 @@ export class App {
     this.bus.on('semantic:update', (e) => {
       const same = e.tree !== undefined && e.tree === this.currentTree
       if (e.tree) this.currentTree = e.tree
+      /**
+       * 🟢 **記一次「他改了哪一邊」**（2026-09-07，拆輪子的曲線）。
+       *
+       * ⚠️ **只記真的換了樹的那些**（`!same`）——骨架告示的重發帶的是
+       * 同一棵樹，把它算成一次編輯會讓計數跟著**重畫的次數**跑。
+       *
+       * 🔴 而 `flow` 記成 `blocks` 是刻意的：這個計數要回答的是
+       * 「**他還在用圖形介面嗎**」，而流程圖與積木在那個問題上是同一邊。
+       */
+      if (!same && (e.source === 'code' || e.source === 'blocks')) {
+        tallyEdit(this.currentLesson?.id, e.source)
+      }
       // 🟢 **型別的下拉跟著這棵樹長**（2026-09-06，spec 176）。
       //
       //    ⚠️ 餵的是**同一棵**已經在維護的樹——不是第二次掃描、不是重新解析。
