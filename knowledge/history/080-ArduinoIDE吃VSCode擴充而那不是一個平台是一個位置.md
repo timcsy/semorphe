@@ -240,5 +240,5 @@ metadata.sourceRange                          core/types.ts:49
 - [concepts/投影](../concepts/投影.md)「資訊分類學」——🔴 第三節說的那條要重看
 - [principles](../principles.md)「四項獨立性」——宿主獨立性
 - `../TextBlockly/`——PoC 本體（⚠️ 不在這個 repo 裡，而它是第五節每一條的出處）
-- [draft/擴充的形狀](../draft/2026-08-17-擴充的形狀.md)——本檔開出來的設計題，
+- [draft/擴充的形狀](../draft/retired/2026-08-17-擴充的形狀.md)——本檔開出來的設計題，
   🔴 而它把「六個單例」更正為**十八個**

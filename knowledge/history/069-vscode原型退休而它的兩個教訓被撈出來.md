@@ -82,7 +82,7 @@ src/ui/app.ts:69-84   blocklyPanel / monacoPanel / syncController
 > 逐欄分類 `App` 的 31 個欄位之後——per-app 9、**per-document 18**、不確定 4。
 > 這裡數到六，是因為**只數了看得見的那些**（面板與樹），
 > 而**同步狀態與守衛那一批**（`blocksDirty`／`autoSync`／`_restoringState`…）
-> 沒有被數進去。見 [draft/擴充的形狀](../draft/2026-08-17-擴充的形狀.md)§二。
+> 沒有被數進去。見 [draft/擴充的形狀](../draft/retired/2026-08-17-擴充的形狀.md)§二。
 >
 > > **一個假設的成本，第一次估的時候只會數到它顯眼的部分。**
 
