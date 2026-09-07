@@ -389,6 +389,27 @@ export interface LessonTask {
    * ——見 `core/semantic-wave.ts` 與 `concepts/認知鷹架.md`。
    */
   readonly view?: LessonView
+  /**
+   * 🔴 **這一題要不要比「跑了幾步」**——省略 ＝ 不比。
+   *
+   * ## 它補的是一個【教材已經在教而沒有回饋】的落差
+   *
+   * `cpp-advanced` 第 1 課逐字：「題目會告訴你『n ≤ 100000』這種話
+   * ——而那句話**直接決定你可以用什麼做法**」。
+   *
+   * 而在此之前，O(n²) 與 O(n log n) 的兩份解答**在畫面上長得一模一樣**：
+   * 兩個都印出對的答案，兩個都得到一個綠勾。
+   *
+   * > **一門課如果教「哪一種比較快」，而它的裁判只問「答案對不對」，
+   * > 那學生學到的是「兩種都可以」。**
+   *
+   * ⚠️ **只在宣告了的題目上說話**——它是一句給「這一題有兩種寫法」的話，
+   * 而在其他題目上它是雜訊。
+   *
+   * ⚠️ 而「一步」＝**直譯器走過一顆語義節點一次**，那不是課本的
+   * 「基本操作次數」——見 `core/steps.ts` 的檔頭。
+   */
+  readonly compareSteps?: boolean
   readonly predict?: 'output' | 'iterations' | 'none' | 'choice'
   /**
    * 選擇題的選項——⚠️ `predict: 'choice'` 時**必填**。
@@ -522,6 +543,7 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
       id: t.id, title: t.title,
       kind: kind as TaskKind | undefined,
       view: view as LessonView | undefined,
+      compareSteps: t.compareSteps === true,
       check: parseCheck(`${id}#${t.id}`, t.check),
       predict: pr as 'output' | 'iterations' | 'none' | 'choice' | undefined,
       choices: parseChoices(`${id}#${t.id}`, pr, t.choices),

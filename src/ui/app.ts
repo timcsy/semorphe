@@ -61,6 +61,7 @@ import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trac
 import type { LessonView } from '../core/semantic-wave'
 import { markTaskPassed, isTaskPassed, passedCount, clearProgress, setProgressStore } from '../core/progress'
 import { setEditTallyStore, clearEditTally, tallyEdit } from '../core/edit-tally'
+import { stepsOf, compareSteps, describeSteps, type StepRecord } from '../core/steps'
 /**
  * 「題目」那顆 picker 裡**不是一個題目**的那一項。
  *
@@ -238,6 +239,13 @@ export class App {
   private lastPredictedProgram = ''
   /** 最近一次執行的節點次數——揭曉「跑幾次」要用。 */
   private lastCounts: ReadonlyMap<string, number> = new Map()
+  /**
+   * 上一次跑的步數——「這一版是上一版的幾倍」要它。
+   *
+   * ⚠️ **不 persist**：它是「這一次坐下來的兩次嘗試」之間的比，
+   * 而跨裝置或跨天記住它會讓那個倍數變成一個沒有人記得的基準。
+   */
+  private lastSteps: StepRecord | null = null
   /**
    * 鷹架露到第幾層——**它自己的一格**（2026-08-28 從 `enabledBranches` 拆出來）。
    *
@@ -498,6 +506,27 @@ export class App {
       this.blocklyPanel?.markIterations(
         iterationCounts(this.syncController?.getDisplayTree(), this.lastCounts),
       )
+      /**
+       * 🔴 **跑了幾步——而【比較】才是重點**（2026-09-07）。
+       *
+       * `cpp-advanced` 第 1 課教的就是複雜度，而在此之前
+       * O(n²) 與 O(n log n) 的兩份解答**在畫面上長得一模一樣**。
+       *
+       * ⚠️ **只在課程宣告了的題目上說話**（`tasks[].compareSteps`）
+       * ——它是一句給「這一題有兩種寫法」的話，在其他題上是雜訊。
+       *
+       * ⚠️ 而它說的是**任務**，不是這個人：「這一版走了 8 倍的步數」，
+       * 不是「你變慢了」。
+       */
+      const task = taskById(this.currentLesson, this.currentTaskId)
+      if (task?.compareSteps === true && this.currentLesson) {
+        const key = `${this.currentLesson.id}#${task.id}`
+        const steps = stepsOf(this.lastCounts)
+        const line = describeSteps(steps, compareSteps(this.lastSteps, { key, steps }))
+        // ⚠️ **先算再存**——順序反了的話它永遠在跟自己比
+        this.lastSteps = { key, steps }
+        if (line !== undefined) consolePanel.log(line)
+      }
     })
   }
 

@@ -52,11 +52,32 @@ beforeAll(async () => {
 /**
  * 每顆元件在**畫面上**的名字。
  *
- * 🔴 **只收 `*_MSG*`，不收 tooltip**——學生在積木盤上認得那顆積木，
- * 靠的是**上面印的字**，而不是「把滑鼠停在上面才看得到」的說明。
+ * 🔴 **只收 `*_MSG*`**——積木上**固定印著**的那幾個字。
  *
- * ⚠️ 第一版把 tooltip 也算進去，於是 **66 課全部**報「對不上」
- * ——而那不是缺陷，是判準太寬。
+ * ```
+ * *_MSG*      固定印在積木上         ✅ 課文該提，否則學生找不到那顆積木
+ * 下拉的選項   使用者選了才出現       ❌ 🔴 見下
+ * *_TOOLTIP   滑鼠停著才看得到       ❌
+ * ```
+ *
+ * ## ⚠️ 下拉的選項刻意不算（2026-09-07 試過又收回）
+ *
+ * 我一度把下拉也收進來——**因為 `cpp:increment` 的 MSG 是 `%1 %2 %3`，
+ * 而它的名字在下拉裡**（「加 1（++）」）。收進來之後族二多了 14 筆，
+ * 而**那 14 筆多數是誤報**：
+ *
+ * ```
+ * cpp:arithmetic 的下拉有「餘數／左移／右移」   而那一課只用加減乘除
+ * python:literal_bool 的下拉有「沒有值」        而那一課只教 True／False
+ * ```
+ *
+ * > **一個下拉裡的選項，是使用者【選了才會出現】的字
+ * > ——要求課文提到每一個，等於要求它教完那個下拉。**
+ *
+ * 🟢 而真正無名的那幾顆改用**判定檔**宣告（見下面那條硬性零）。
+ *
+ * ⚠️ 而第一版把 tooltip 也算進去，於是 **66 課全部**報「對不上」
+ * ——那不是缺陷，是判準太寬。
  *
  * > **一條護欄漏掉東西的方式，多半是它認得的範圍太窄；
  * > 而它誤報的方式相反：範圍太寬。**
@@ -346,6 +367,55 @@ describe('第一百一十四條護欄：課文的用字與還沒教過的東西'
    *
    * ⚠️ 所以「多開的積木是雜訊」這個顧慮**由族二接手**，不另設一條。
    */
+
+  /**
+   * 🔴 **硬性零：每一顆「沒有可比對名字」的積木都要有判定。**
+   *
+   * 族二扣掉了一批積木（畫面上只有佔位符、或名字只有一個字）。
+   * ⚠️ 而**扣掉一批東西要有人說得出理由**：
+   *
+   * > **一份沒有理由的排除清單，與一條被關掉的護欄，
+   * > 在第二天之後是同一個東西。**
+   *
+   * 🔴 而它**兩個方向都驗**：
+   * ```
+   * 沒有判定的無名積木   → 紅（有人加了一顆而沒有說它為什麼沒名字）
+   * 判定過期了           → 紅（那一顆現在【有】名字了，判定該刪）
+   * ```
+   */
+  it('🔴 硬性零：無名的積木都有判定，而判定不得過期', () => {
+    const names = screenNames()
+    const noName = [...names.entries()]
+      .filter(([, ls]) => ls.length > 0 && ls.flatMap(wordsOf).length === 0)
+      .map(([id]) => id)
+      .sort()
+    expect(noName.length, '★ 入口條件——真的有無名的積木').toBeGreaterThan(0)
+
+    const decided = (JSON.parse(fs.readFileSync(
+      path.join(REPO_ROOT, 'tests/assets/blocks-without-name-decisions.json'), 'utf8',
+    ) as string) as { decisions: { componentId: string; cause: string; reason: string }[] }).decisions
+
+    const byId = new Map(decided.map((d) => [d.componentId, d]))
+
+    const undecided = noName.filter((id) => !byId.has(id))
+    expect(
+      undecided,
+      '🔴 有積木在畫面上沒有可比對的名字，而**沒有人說它為什麼沒有**。\n'
+        + '🟢 修法：要嘛給它一個名字（`labels/zh-TW.json` 的 `*_MSG*`），\n'
+        + '   要嘛在 `tests/assets/blocks-without-name-decisions.json` 說明理由。',
+    ).toEqual([])
+
+    const stale = [...byId.keys()].filter((id) => !noName.includes(id)).sort()
+    expect(
+      stale,
+      '🔴 判定過期了——這幾顆現在**有**名字了，而判定還說它沒有。\n'
+        + '⚠️ 留著的話，一顆真的沒名字的積木會躲在這份清單裡。',
+    ).toEqual([])
+
+    // 🔴 **沒有理由的判定是把「懶得看」寫成「看過了」**（第三十五條護欄的規矩）
+    const thin = decided.filter((d) => (d.reason ?? '').length < 20).map((d) => d.componentId)
+    expect(thin, '🔴 判定的理由太短——它要說得出「為什麼這一顆不需要名字」').toEqual([])
+  })
 
   /**
    * 🔴 **硬性零：`labelKey` 指向的鍵一定要有定義，而 `labelFallback` 要一致。**
