@@ -38,9 +38,16 @@ function openPicker(state: ControlState, onInvoke: (invoke: ControlInvoke) => vo
         group: o.group,
         // 🟢 有示意圖的就畫出來——這一層不知道那張圖在講什麼，只知道「畫格子」
         previewGrid: o.previewGrid,
+        // 🟢 橫條同理——這一層只知道「畫兩塊顏色」
+        previewBar: o.previewBar,
         picked: state.multi ? state.picked?.includes(o.value) : o.value === state.value,
-        // ⚠️ 「目前」優先於選項自己的說明——**哪一個是現在的**比說明重要
-        description: !state.multi && o.value === state.value ? '目前' : o.description,
+        // ⚠️ 「目前」排在前面——**哪一個是現在的**比說明重要。
+        //    🔴 而它**不蓋掉**選項自己的說明（2026-09-08 改）：章節清單的
+        //    「建議：對照」是拆輪子的**參照系**，而它在【目前這一課】最有用
+        //    ——原本的寫法正好把最需要的那一列的參照系蓋掉了。
+        description: !state.multi && o.value === state.value
+          ? (o.description ? `目前 · ${o.description}` : '目前')
+          : o.description,
       })),
     },
     (values) => {

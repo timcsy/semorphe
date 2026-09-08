@@ -136,3 +136,19 @@ export function curveOf(views: readonly LessonView[]): CurveShape {
   }
   return { levels, moves, regresses: regressAt.length > 0, regressAt }
 }
+
+/**
+ * 一個看法的**中文名**——給「建議：對照」那種參照系用。
+ *
+ * ⚠️ 它住在這裡而不是 UI，因為 `LessonView` 的值域住在這裡：
+ * 多一個值的時候，這張表會跟著編譯器一起紅。
+ */
+export function viewLabel(view: LessonView): string {
+  switch (view) {
+    case 'code': return '程式碼'
+    case 'compare': return '對照'
+    case 'three': return '三欄'
+    case 'blocks': return '積木'
+    case 'flow': return '流程'
+  }
+}

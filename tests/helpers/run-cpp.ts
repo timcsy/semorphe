@@ -11,6 +11,20 @@
  * macOS 上 `/usr/bin/g++` 是 Apple clang 的別名。所以基線要記的是
  * **版本字串原文**，不是「g++」這個名字——否則換一台機器跑出不同數字時，
  * 沒有人查得出原因。
+ *
+ * ## ⚠️ 它在機器很忙的時候會【跑不出結果】——而那看起來像產品壞了
+ *
+ * 2026-09-08 一次 8 分鐘的全套（平常 4 分）：`audit-cin-fail-state` 整檔紅
+ * （「參照編譯器跑不動第 3 段」）、`fuzz-cpp-strings` 的 `fuzz_1` 紅
+ * （`runCpp` 回 `null`）。**單獨重跑兩支全綠**，而它們一行都沒被改過。
+ *
+ * > **一個靠外部子行程的測試，它的紅有兩種意思：程式錯了，或者那個子行程
+ * > 這一次沒排到 CPU——而兩種在 `expect` 那一行長得一模一樣。**
+ *
+ * 🟢 判準與 `playwright.config.ts` 檔頭那條同一個：全套跑得比平常慢很多
+ * 而紅的是**這一族**（`runCpp` 為 null／跑不動第 N 段）→ 先單獨重跑；
+ * 單獨也紅才是迴歸。⚠️ 而 `test.skip` 掉的 `[BLOCKED…]` 那批**不是**這個：
+ * 那些是標了 pre-existing bug 的刻意跳過。
  */
 import { execSync, exec } from 'node:child_process'
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs'

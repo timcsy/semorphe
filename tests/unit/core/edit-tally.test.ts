@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
-  setEditTallyStore, tallyEdit, tallyOf, tallyOfTrack, clearEditTally,
+  setEditTallyStore, tallyEdit, tallyOf, tallyOfTrack, clearEditTally, tallyCurve, barShare,
 } from '../../../src/core/edit-tally'
 import { MemoryKeyValueStore } from '../../../src/core/host/key-value-store'
 
@@ -73,5 +73,41 @@ describe('編輯計數', () => {
     setEditTallyStore(store)
     expect(tallyOf('a/1')).toEqual({ blocks: 0, code: 2 })
     expect(tallyOf('b/1')).toEqual({ blocks: 0, code: 0 })
+  })
+})
+
+describe('拆輪子的曲線——三段', () => {
+  it('切成前／中／後，各自加總', () => {
+    for (let i = 1; i <= 9; i++) {
+      tallyEdit(`t/${String(i).padStart(2, '0')}`, i <= 3 ? 'blocks' : 'code')
+    }
+    const c = tallyCurve(Array.from({ length: 9 }, (_, i) => `t/${String(i + 1).padStart(2, '0')}`))
+    expect(c.map((s) => s.label)).toEqual(['前段', '中段', '後段'])
+    expect(c[0]).toMatchObject({ lessons: 3, blocks: 3, code: 0 })
+    expect(c[2]).toMatchObject({ lessons: 3, blocks: 0, code: 3 })
+  })
+
+  /**
+   * 🔴 **往上走的曲線也誠實地畫**——那不是羞辱，那是一個學生自己看得懂的訊號。
+   */
+  it('★ 越來越靠積木的曲線照樣畫得出來', () => {
+    for (let i = 1; i <= 6; i++) tallyEdit(`t/${i}`, i <= 3 ? 'code' : 'blocks')
+    const c = tallyCurve(['t/1', 't/2', 't/3', 't/4', 't/5', 't/6'])
+    expect(c[0]!.code).toBeGreaterThan(c[0]!.blocks)
+    expect(c[2]!.blocks).toBeGreaterThan(c[2]!.code)
+  })
+
+  it('少於 3 課 → 一段「全部」，不硬切', () => {
+    tallyEdit('t/1', 'code')
+    expect(tallyCurve(['t/1', 't/2']).map((s) => s.label)).toEqual(['全部'])
+    expect(tallyCurve([])).toEqual([])
+  })
+
+  /**
+   * ⚠️ 「還沒開始」與「一半一半」是兩件事。
+   */
+  it('★ 兩邊都是 0 → 兩個都給 0，不是 50/50', () => {
+    expect(barShare(0, 0)).toEqual({ blocks: 0, code: 0 })
+    expect(barShare(2, 6)).toEqual({ blocks: 0.25, code: 0.75 })
   })
 })

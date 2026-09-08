@@ -429,6 +429,23 @@ html, body {
 
 .quick-pick-item.active .quick-pick-preview-cell { background: #4a6b8a; }
 
+/* ─── 拆輪子的橫條（`quick-pick.ts` 的 previewBar）——🔴 上面沒有字，它是一面鏡子 ─── */
+
+.quick-pick-bar {
+  display: inline-flex;
+  width: 52px;
+  height: 8px;
+  flex: 0 0 auto;
+  margin-right: 10px;
+  background: #1b1b1c;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.quick-pick-bar-left  { background: #5c6bc0; height: 100%; }   /* 積木那一側 */
+.quick-pick-bar-right { background: #4db6ac; height: 100%; }   /* 程式碼那一側 */
+
 
 /* ─── Blockly panel ─── */
 

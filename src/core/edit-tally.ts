@@ -132,3 +132,58 @@ export function clearEditTally(): void {
     // 同上
   }
 }
+
+/**
+ * **拆輪子的曲線**——把一條軌道的課切成前／中／後三段，各自加總。
+ *
+ * ## 🔴 為什麼是曲線，不是「你最後五課有 80% 是直接寫程式碼的」
+ *
+ * 那句話說的是**這個人**，而且它只能在數字好的時候出現
+ * ——**如果是 20% 呢？** 那句話就變成羞辱。所以它只在數字好的時候出現，
+ * 而選擇性回饋會讓「沒出現」變成一種訊號。
+ *
+ * > **一條曲線，任何方向都畫得出來——而它說的是【怎麼變的】，不是這個人。**
+ *
+ * ⚠️ 往上走的曲線（越來越靠積木）也誠實地畫——那不是羞辱，
+ * 那是一個學生自己看得懂的訊號。
+ *
+ * @param lessonIds 依課程順序排好的 id。⚠️ 順序由呼叫端負責
+ * @returns 三段，每段的 `lessons` 是它涵蓋幾課。少於 3 課時段數會少
+ */
+export interface CurveSegment {
+  readonly label: string
+  readonly lessons: number
+  readonly blocks: number
+  readonly code: number
+}
+
+export function tallyCurve(lessonIds: readonly string[]): CurveSegment[] {
+  if (lessonIds.length === 0) return []
+  const n = lessonIds.length
+  const cut = Math.max(1, Math.round(n / 3))
+  const ranges: [string, string[]][] = n < 3
+    ? [['全部', [...lessonIds]]]
+    : [['前段', lessonIds.slice(0, cut)],
+       ['中段', lessonIds.slice(cut, n - cut)],
+       ['後段', lessonIds.slice(n - cut)]]
+  return ranges
+    .filter(([, ids]) => ids.length > 0)
+    .map(([label, ids]) => {
+      let blocks = 0
+      let code = 0
+      for (const id of ids) { const t = tallyOf(id); blocks += t.blocks; code += t.code }
+      return { label, lessons: ids.length, blocks, code }
+    })
+}
+
+/**
+ * 一段畫成一條橫條——**沒有任何一個字在評價**。
+ *
+ * ⚠️ 兩邊都是 0 時回一條空的（不是 50/50）：**「還沒開始」與「一半一半」是兩件事**，
+ * 而一條假的 50/50 會讓沒開始的課看起來像做過了。
+ */
+export function barShare(blocks: number, code: number): { blocks: number; code: number } {
+  const total = blocks + code
+  if (total === 0) return { blocks: 0, code: 0 }
+  return { blocks: blocks / total, code: code / total }
+}

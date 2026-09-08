@@ -58,9 +58,9 @@ import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson'
-import type { LessonView } from '../core/semantic-wave'
+import { viewLabel, type LessonView } from '../core/semantic-wave'
 import { markTaskPassed, isTaskPassed, passedCount, clearProgress, setProgressStore } from '../core/progress'
-import { setEditTallyStore, clearEditTally, tallyEdit } from '../core/edit-tally'
+import { setEditTallyStore, clearEditTally, tallyEdit, tallyOf, tallyCurve, barShare } from '../core/edit-tally'
 import { stepsOf, compareSteps, describeSteps, describeBudget, type StepRecord } from '../core/steps'
 /**
  * 「題目」那顆 picker 裡**不是一個題目**的那一項。
@@ -582,6 +582,31 @@ export class App {
         this.currentTaskId = next.id
         this.publishControls()
       })
+    }
+    /**
+     * 🟢 **走完一軌時，畫一次曲線**（2026-09-08，拆輪子的曲線）。
+     *
+     * 🔴 不是「你最後五課有 80% 是直接寫程式碼的」——那句話說的是**這個人**，
+     * 而且它只能在數字好的時候出現（**如果是 20% 呢？**）。
+     *
+     * 曲線任何方向都畫得出來，而它說的是**怎麼變的**。
+     * ⚠️ 往上走的（越來越靠積木）也誠實地畫——那是一個學生自己看得懂的訊號。
+     *
+     * ⚠️ 只在**這一軌最後一課的最後一題**過了那一刻說——那是「走完」唯一的定義。
+     */
+    if (next === undefined) {
+      const track = trackOf(lesson.id)
+      const mine = lessonsOfTrack(track)
+      if (mine.length >= 3 && mine[mine.length - 1]?.id === lesson.id) {
+        const curve = tallyCurve(mine.map((l) => l.id))
+        consolePanel.log(`這一軌走完了。每一段改了哪一邊：`)
+        for (const seg of curve) {
+          const share = barShare(seg.blocks, seg.code)
+          const w = Math.round(share.blocks * 10)
+          // ⚠️ 文字版的橫條——一樣沒有評價，只有比例
+          consolePanel.log(`  ${seg.label}（${seg.lessons} 課）  積木 ${'█'.repeat(w)}${'░'.repeat(10 - w)} 程式碼`)
+        }
+      }
     }
     this.publishControls()   // ⚠️ 選單上那個「2/3」要跟著動
   }
@@ -1562,6 +1587,19 @@ export class App {
        */
       if (!same && (e.source === 'code' || e.source === 'blocks')) {
         tallyEdit(this.currentLesson?.id, e.source)
+        /**
+         * 🔴 **記完要重發控制項**——章節清單的橫條是從 `tallyOf` 算的，
+         * 而那份選項在**上一次 `publishControls`** 就算好了。
+         *
+         * 不重發的症狀（e2e 抓到的）：改了一下、打開章節清單、**橫條沒出現**
+         * ——而 localStorage 裡計數明明在。
+         *
+         * > **一份在發布時算好的清單，不會因為它讀的資料變了而自己更新
+         * > ——它要有人在資料變的那一刻再發一次。**
+         *
+         * ⚠️ 只在**有課**的時候重發：自由練習沒有橫條，重發是白做。
+         */
+        if (this.currentLesson) this.publishControls()
       }
       // 🟢 **型別的下拉跟著這棵樹長**（2026-09-06，spec 176）。
       //
@@ -2834,11 +2872,39 @@ export class App {
         //    而那正是這一整刀在拆的東西。
         const tid = this.currentTrack ?? (this.currentLesson ? trackOf(this.currentLesson.id) : undefined)
         const mine = tid ? lessonsOfTrack(tid) : []
-        const options: ControlOption[] = mine.map((l) => ({
-          value: l.id,
-          // ⚠️ 資料夾名的 `NN-` 前綴留著——它就是章節編號
-          label: `${l.id.split('/')[1] ?? l.id}${l.estimate ? `　${l.estimate}` : ''}`,
-        }))
+        const options: ControlOption[] = mine.map((l) => {
+          /**
+           * 🟢 **每一課一條橫條——「這一課改了哪一邊」**（2026-09-08，拆輪子的曲線）。
+           *
+           * 🔴 **它是一面鏡子，不是一句評語**：橫條上沒有字，數字好壞長得一樣。
+           * 而把它放在**章節清單**（不是狀態列）有兩個理由：
+           *
+           * ```
+           * 學生要【主動打開】才看得到      一面你自己走過去照的鏡子，與掛在你面前的不同
+           * 16 條橫條排成一列就是曲線       不必另做一個「畢業畫面」——曲線每次打開都在
+           * ```
+           *
+           * ⚠️ 而它要有**參照系**：第 1 課全是積木是對的，第 15 課才是訊號。
+           * 所以 `description` 寫這一課**建議**看哪一邊——那句話說的是課程，不是他。
+           */
+          const t = tallyOf(l.id)
+          const share = barShare(t.blocks, t.code)
+          const suggested = viewForLesson(l.id)
+          return {
+            value: l.id,
+            // ⚠️ 資料夾名的 `NN-` 前綴留著——它就是章節編號
+            label: `${l.id.split('/')[1] ?? l.id}${l.estimate ? `　${l.estimate}` : ''}`,
+            // ⚠️ 還沒改過的課不畫——一條空的橫條會讓「沒開始」看起來像「做了但沒東西」
+            ...(t.blocks + t.code > 0 ? {
+              previewBar: {
+                left: share.blocks, right: share.code,
+                // 🔴 只准是數字——沒有「還」「才」「只」「已經」
+                title: `積木 ${t.blocks} · 程式碼 ${t.code}`,
+              },
+            } : {}),
+            ...(suggested !== undefined ? { description: `建議：${viewLabel(suggested)}` } : {}),
+          }
+        })
         // 🔴 **回去讀的那條路**（2026-09-03）：課文有靜態頁了，而編輯器裡
         //    沒有任何地方說得出「這一課有課文可以讀」。
         //
