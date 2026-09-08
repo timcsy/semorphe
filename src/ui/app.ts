@@ -2890,7 +2890,17 @@ export class App {
           const t = tallyOf(l.id)
           const share = barShare(t.blocks, t.code)
           const suggested = viewForLesson(l.id)
+          const desc: string[] = []
+          if (t.blocks + t.code > 0) desc.push(`積木 ${t.blocks}・程式碼 ${t.code}`)
+          if (suggested !== undefined) desc.push(`建議：${viewLabel(suggested)}`)
           return {
+            /**
+             * 🟢 **一列標題說明那條橫條是什麼**——它只出現一次（組名不變）。
+             *
+             * ⚠️ 用既有的 `group` 機制，不另做一個「說明列」：
+             * 那一列本來就是不可選、不參與搜尋、不佔鍵盤導覽位置的。
+             */
+            group: '橫條：靛色＝在積木那邊改的，青色＝在程式碼那邊改的',
             value: l.id,
             // ⚠️ 資料夾名的 `NN-` 前綴留著——它就是章節編號
             label: `${l.id.split('/')[1] ?? l.id}${l.estimate ? `　${l.estimate}` : ''}`,
@@ -2902,7 +2912,19 @@ export class App {
                 title: `積木 ${t.blocks} · 程式碼 ${t.code}`,
               },
             } : {}),
-            ...(suggested !== undefined ? { description: `建議：${viewLabel(suggested)}` } : {}),
+            /**
+             * 🔴 **數字寫出來**（2026-09-08，使用者看著橫條問「那一條是什麼意思？」）。
+             *
+             * 原本只有一條橫條與 `title`（滑鼠停著才看得到）——而**沒有人會把滑鼠
+             * 停在一條 52 像素的橫條上**，觸控裝置更是連 hover 都沒有。
+             *
+             * > **一個沒有人看得懂的回饋，與一個不存在的回饋，
+             * > 在使用者眼裡是同一件事。**
+             *
+             * ⚠️ 而**數字不是評語**：「積木 2・程式碼 6」說的是發生過什麼，
+             * 那條「不准評價」的線守的是「還」「才」「只」那種字。
+             */
+            ...(desc.length > 0 ? { description: desc.join(' · ') } : {}),
           }
         })
         // 🔴 **回去讀的那條路**（2026-09-03）：課文有靜態頁了，而編輯器裡
