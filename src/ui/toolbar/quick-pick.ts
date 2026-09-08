@@ -49,11 +49,6 @@ export interface QuickPickItem {
    * ⚠️ 它只知道「畫一張幾列幾欄、格子裡有字的圖」，**不知道版面是什麼**。
    */
   readonly previewGrid?: { readonly areas: readonly (readonly string[])[] }
-  /**
-   * 畫成一條**兩色的橫條**（2026-09-08）——⚠️ 上面**沒有字**，那是刻意的：
-   * 它是一面鏡子，不是一句評語。見 `core/host/controls.ts` 的 `previewBar`。
-   */
-  readonly previewBar?: { readonly left: number; readonly right: number; readonly title: string }
 }
 
 export interface QuickPickOptions {
@@ -90,31 +85,6 @@ function buildPreviewGrid(areas: readonly (readonly string[])[]): HTMLElement {
     cell.style.gridArea = `${r + 1} / ${c + 1} / ${r + 1 + rowSpan} / ${c + 1 + colSpan}`
     box.appendChild(cell)
   }))
-  return box
-}
-
-/**
- * 一條兩色的橫條。
- *
- * 🔴 **沒有任何文字節點**——`title` 給滑鼠與螢幕閱讀器，而畫面上只有兩塊顏色。
- * 那不是省事，是這條線的判準：**一面鏡子不說話**。
- *
- * ⚠️ 兩邊都是 0 時畫一條**空的**（兩塊都是 0 寬）：「還沒開始」與「一半一半」
- * 是兩件事，而一條假的 50/50 會讓沒開始的課看起來像做過了。
- */
-function buildPreviewBar(bar: { left: number; right: number; title: string }): HTMLElement {
-  const box = document.createElement('span')
-  box.className = 'quick-pick-bar'
-  box.title = bar.title
-  box.setAttribute('role', 'img')
-  box.setAttribute('aria-label', bar.title)
-  const l = document.createElement('span')
-  l.className = 'quick-pick-bar-left'
-  l.style.width = `${Math.round(bar.left * 100)}%`
-  const r = document.createElement('span')
-  r.className = 'quick-pick-bar-right'
-  r.style.width = `${Math.round(bar.right * 100)}%`
-  box.append(l, r)
   return box
 }
 
@@ -178,7 +148,6 @@ export function showQuickPick(
       row.appendChild(mark)
       // 🔴 **示意圖畫在標籤前面**——使用者要能「不讀文字就挑得出來」（SC-001）。
       if (item.previewGrid) row.appendChild(buildPreviewGrid(item.previewGrid.areas))
-      if (item.previewBar) row.appendChild(buildPreviewBar(item.previewBar))
       const text = document.createElement('span')
       text.className = 'quick-pick-label'
       text.textContent = item.label

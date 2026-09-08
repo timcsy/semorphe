@@ -60,7 +60,6 @@ import { buildToolbox } from '../core/toolbox-builder'
 import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson'
 import { viewLabel, type LessonView } from '../core/semantic-wave'
 import { markTaskPassed, isTaskPassed, passedCount, clearProgress, setProgressStore } from '../core/progress'
-import { setEditTallyStore, clearEditTally, tallyEdit, tallyOf, tallyCurve, barShare } from '../core/edit-tally'
 import { stepsOf, compareSteps, describeSteps, describeBudget, type StepRecord } from '../core/steps'
 /**
  * 「題目」那顆 picker 裡**不是一個題目**的那一項。
@@ -405,9 +404,6 @@ export class App {
       (v) => {
         if (v?.[0] !== 'yes') return
         clearProgress()
-        // 🔴 **兩個一起清**——換一班學生時留著上一班的編輯計數，
-        //    會讓新學生的「你改了哪一邊」從一個不是他的數字開始。
-        clearEditTally()
         // 🔴 **選單上那個「2/3」要當場歸零**——不重畫的話，
         //    畫面會顯示一份已經不存在的進度，而那比不清更糟。
         this.publishControls()
@@ -583,31 +579,6 @@ export class App {
         this.publishControls()
       })
     }
-    /**
-     * 🟢 **走完一軌時，畫一次曲線**（2026-09-08，拆輪子的曲線）。
-     *
-     * 🔴 不是「你最後五課有 80% 是直接寫程式碼的」——那句話說的是**這個人**，
-     * 而且它只能在數字好的時候出現（**如果是 20% 呢？**）。
-     *
-     * 曲線任何方向都畫得出來，而它說的是**怎麼變的**。
-     * ⚠️ 往上走的（越來越靠積木）也誠實地畫——那是一個學生自己看得懂的訊號。
-     *
-     * ⚠️ 只在**這一軌最後一課的最後一題**過了那一刻說——那是「走完」唯一的定義。
-     */
-    if (next === undefined) {
-      const track = trackOf(lesson.id)
-      const mine = lessonsOfTrack(track)
-      if (mine.length >= 3 && mine[mine.length - 1]?.id === lesson.id) {
-        const curve = tallyCurve(mine.map((l) => l.id))
-        consolePanel.log(`這一軌走完了。每一段改了哪一邊：`)
-        for (const seg of curve) {
-          const share = barShare(seg.blocks, seg.code)
-          const w = Math.round(share.blocks * 10)
-          // ⚠️ 文字版的橫條——一樣沒有評價，只有比例
-          consolePanel.log(`  ${seg.label}（${seg.lessons} 課）  積木 ${'█'.repeat(w)}${'░'.repeat(10 - w)} 程式碼`)
-        }
-      }
-    }
     this.publishControls()   // ⚠️ 選單上那個「2/3」要跟著動
   }
 
@@ -742,10 +713,6 @@ export class App {
     // 🔴 少了這一行，症狀是**進度記不住**，而它不會報錯
     //    ——`audit-store-wired` 那條護欄盯著這一行還在不在。
     setProgressStore(createBrowserStore())
-    // 🔴 **一起設，而且要用【同一種】store**——編輯計數與進度是同一個
-    //    「這台電腦上這個學生」的東西，而一個記得住、一個記不住
-    //    會讓「你這一課改了哪一邊」在重新整理之後歸零而進度還在。
-    setEditTallyStore(createBrowserStore())
     this.storageService = this.profile.createStorage()
     this.topicRegistry = new TopicRegistry()
     this.targetRegistry = new TargetRegistry()
@@ -1576,31 +1543,6 @@ export class App {
     this.bus.on('semantic:update', (e) => {
       const same = e.tree !== undefined && e.tree === this.currentTree
       if (e.tree) this.currentTree = e.tree
-      /**
-       * 🟢 **記一次「他改了哪一邊」**（2026-09-07，拆輪子的曲線）。
-       *
-       * ⚠️ **只記真的換了樹的那些**（`!same`）——骨架告示的重發帶的是
-       * 同一棵樹，把它算成一次編輯會讓計數跟著**重畫的次數**跑。
-       *
-       * 🔴 而 `flow` 記成 `blocks` 是刻意的：這個計數要回答的是
-       * 「**他還在用圖形介面嗎**」，而流程圖與積木在那個問題上是同一邊。
-       */
-      if (!same && (e.source === 'code' || e.source === 'blocks')) {
-        tallyEdit(this.currentLesson?.id, e.source)
-        /**
-         * 🔴 **記完要重發控制項**——章節清單的橫條是從 `tallyOf` 算的，
-         * 而那份選項在**上一次 `publishControls`** 就算好了。
-         *
-         * 不重發的症狀（e2e 抓到的）：改了一下、打開章節清單、**橫條沒出現**
-         * ——而 localStorage 裡計數明明在。
-         *
-         * > **一份在發布時算好的清單，不會因為它讀的資料變了而自己更新
-         * > ——它要有人在資料變的那一刻再發一次。**
-         *
-         * ⚠️ 只在**有課**的時候重發：自由練習沒有橫條，重發是白做。
-         */
-        if (this.currentLesson) this.publishControls()
-      }
       // 🟢 **型別的下拉跟著這棵樹長**（2026-09-06，spec 176）。
       //
       //    ⚠️ 餵的是**同一棵**已經在維護的樹——不是第二次掃描、不是重新解析。
@@ -2872,61 +2814,15 @@ export class App {
         //    而那正是這一整刀在拆的東西。
         const tid = this.currentTrack ?? (this.currentLesson ? trackOf(this.currentLesson.id) : undefined)
         const mine = tid ? lessonsOfTrack(tid) : []
-        const options: ControlOption[] = mine.map((l) => {
-          /**
-           * 🟢 **每一課一條橫條——「這一課改了哪一邊」**（2026-09-08，拆輪子的曲線）。
-           *
-           * 🔴 **它是一面鏡子，不是一句評語**：橫條上沒有字，數字好壞長得一樣。
-           * 而把它放在**章節清單**（不是狀態列）有兩個理由：
-           *
-           * ```
-           * 學生要【主動打開】才看得到      一面你自己走過去照的鏡子，與掛在你面前的不同
-           * 16 條橫條排成一列就是曲線       不必另做一個「畢業畫面」——曲線每次打開都在
-           * ```
-           *
-           * ⚠️ 而它要有**參照系**：第 1 課全是積木是對的，第 15 課才是訊號。
-           * 所以 `description` 寫這一課**建議**看哪一邊——那句話說的是課程，不是他。
-           */
-          const t = tallyOf(l.id)
-          const share = barShare(t.blocks, t.code)
-          const suggested = viewForLesson(l.id)
-          const desc: string[] = []
-          if (t.blocks + t.code > 0) desc.push(`積木 ${t.blocks}・程式碼 ${t.code}`)
-          if (suggested !== undefined) desc.push(`建議：${viewLabel(suggested)}`)
-          return {
-            /**
-             * 🟢 **一列標題說明那條橫條是什麼**——它只出現一次（組名不變）。
-             *
-             * ⚠️ 用既有的 `group` 機制，不另做一個「說明列」：
-             * 那一列本來就是不可選、不參與搜尋、不佔鍵盤導覽位置的。
-             */
-            group: '橫條：靛色＝在積木那邊改的，青色＝在程式碼那邊改的',
-            value: l.id,
-            // ⚠️ 資料夾名的 `NN-` 前綴留著——它就是章節編號
-            label: `${l.id.split('/')[1] ?? l.id}${l.estimate ? `　${l.estimate}` : ''}`,
-            // ⚠️ 還沒改過的課不畫——一條空的橫條會讓「沒開始」看起來像「做了但沒東西」
-            ...(t.blocks + t.code > 0 ? {
-              previewBar: {
-                left: share.blocks, right: share.code,
-                // 🔴 只准是數字——沒有「還」「才」「只」「已經」
-                title: `積木 ${t.blocks} · 程式碼 ${t.code}`,
-              },
-            } : {}),
-            /**
-             * 🔴 **數字寫出來**（2026-09-08，使用者看著橫條問「那一條是什麼意思？」）。
-             *
-             * 原本只有一條橫條與 `title`（滑鼠停著才看得到）——而**沒有人會把滑鼠
-             * 停在一條 52 像素的橫條上**，觸控裝置更是連 hover 都沒有。
-             *
-             * > **一個沒有人看得懂的回饋，與一個不存在的回饋，
-             * > 在使用者眼裡是同一件事。**
-             *
-             * ⚠️ 而**數字不是評語**：「積木 2・程式碼 6」說的是發生過什麼，
-             * 那條「不准評價」的線守的是「還」「才」「只」那種字。
-             */
-            ...(desc.length > 0 ? { description: desc.join(' · ') } : {}),
-          }
-        })
+        const options: ControlOption[] = mine.map((l) => ({
+          value: l.id,
+          // ⚠️ 資料夾名的 `NN-` 前綴留著——它就是章節編號
+          label: `${l.id.split('/')[1] ?? l.id}${l.estimate ? `　${l.estimate}` : ''}`,
+          // 🟢 **這一課建議看哪一邊**——`Track.view`／`pins.view` 那條曲線的投影。
+          //    ⚠️ 它說的是**課程**，不是這個人。
+          ...(viewForLesson(l.id) !== undefined
+            ? { description: `建議：${viewLabel(viewForLesson(l.id)!)}` } : {}),
+        }))
         // 🔴 **回去讀的那條路**（2026-09-03）：課文有靜態頁了，而編輯器裡
         //    沒有任何地方說得出「這一課有課文可以讀」。
         //

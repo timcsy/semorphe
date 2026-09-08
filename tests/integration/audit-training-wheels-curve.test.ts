@@ -59,6 +59,11 @@ function tracks(): Map<string, Step[]> {
 
 const TRACKS = tracks()
 
+/** 一個看法的中文名——⚠️ 與 `core/semantic-wave.ts` 的 `viewLabel` 是同一份。 */
+function viewName(v: LessonView): string {
+  return { code: '程式碼', compare: '對照', three: '三欄', blocks: '積木', flow: '流程' }[v]
+}
+
 describe('第一百一十三條護欄：拆輪子的曲線', () => {
   /**
    * 🔴 **這一條今天量的是 0**，而那**不是壞掉**——沒有軌道宣告曲線。
@@ -114,39 +119,47 @@ describe('第一百一十三條護欄：拆輪子的曲線', () => {
     expect(curveOf(['blocks', 'blocks', 'blocks']).regresses).toBe(false)
   })
 
-  // ─── 兩個 store 要一起接、一起清 ───
-
   /**
-   * 🔴 **編輯計數與進度是同一個「這台電腦上這個學生」。**
+   * 🔴 **宣告了版面轉折的課，課文要提到那個轉折。**
    *
-   * ⚠️ 少接一個的症狀是**它記不住而不會報錯**；少清一個的症狀是
-   * **換一班學生之後新學生從一個不是他的數字開始**。
+   * ## 為什麼需要這一條
+   *
+   * `pins.view` 換了，學生**下一次打開這一課時版面就變了**——而如果課文
+   * 一個字都沒提，那個變化對他就是「它自己動了」。
+   *
+   * > **一個由宣告驅動的改變，如果沒有人在課文裡說一句，
+   * > 它對使用者就是一件【沒有原因發生的事】。**
+   *
+   * ⚠️ 而它取代的是一條橫條（2026-09-08 退場）：那條橫條想用**一面鏡子**
+   * 讓學生自己看出「該換邊了」，而使用者的判斷是**直接在課程裡提醒更好**。
+   *
+   * 🟢 判準刻意寬：只要課文提到那個看法的名字（「對照」「程式碼」）就算
+   * ——**這一條守的是「有沒有說」，不是「說得好不好」**。
    */
-  it('🔴 硬性零：兩個 store 一起接、一起清', () => {
-    const app = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/app.ts'), 'utf8')
-    expect(app.includes('setEditTallyStore('),
-      '🔴 編輯計數沒有接上 store → 它記在記憶體裡，重新整理就沒了（而且不報錯）').toBe(true)
-    expect(app.includes('clearEditTally('),
-      '🔴 清除進度時沒有清編輯計數 → 換一班學生，新學生看到上一班的數字').toBe(true)
-
-    // ⚠️ 兩者要在**同一個**函式裡（接：組裝；清：清除入口）
-    const wire = app.indexOf('setProgressStore(')
-    expect(app.slice(wire, wire + 800).includes('setEditTallyStore('),
-      '🔴 兩個 store 接在不同地方 → 遲早只改到一個').toBe(true)
-    const clear = app.indexOf('clearProgress()')
-    expect(app.slice(clear, clear + 500).includes('clearEditTally()'),
-      '🔴 兩個清除不在一起 → 遲早只清一個').toBe(true)
-  })
-
-  /**
-   * ⚠️ **計數不得離開這台機器**——送出去就破〈離線可用〉的硬性零，
-   * 而且那個數字的價值在於它是**給學生自己看的**。
-   */
-  it('🔴 硬性零：計數不得被送出去', () => {
-    const src = fs.readFileSync(path.join(REPO_ROOT, 'src/core/edit-tally.ts'), 'utf8')
-    for (const forbidden of ['fetch(', 'XMLHttpRequest', 'sendBeacon', 'WebSocket']) {
-      expect(src.includes(forbidden),
-        `🔴 編輯計數碰了 ${forbidden}——它只留在本機`).toBe(false)
+  it('🔴 硬性零：宣告了版面轉折的課，課文要提到它', () => {
+    const bad: string[] = []
+    let checked = 0
+    for (const [, steps] of TRACKS) {
+      for (let i = 1; i < steps.length; i++) {
+        const prev = steps[i - 1]!
+        const cur = steps[i]!
+        if (prev.view === cur.view) continue      // 不是轉折
+        checked++
+        const md = fs.readFileSync(
+          path.join(REPO_ROOT, 'lessons', cur.lesson, 'lesson.md'), 'utf8')
+        const name = viewName(cur.view)
+        if (!md.includes(name)) {
+          bad.push(`${cur.lesson}：版面從「${viewName(prev.view)}」換成「${name}」，`
+            + `而課文一個字都沒提`)
+        }
+      }
     }
+    expect(checked, '★ 入口條件——真的有轉折點').toBeGreaterThan(0)
+    expect(
+      bad,
+      '🔴 版面換了而課文沒說——學生下一次打開會覺得「它自己動了」。\n'
+        + '🟢 修法：在那一課的「開始之前」加一句，說**為什麼**這一課換邊。',
+    ).toEqual([])
   })
+
 })
