@@ -49,6 +49,7 @@ tests/
 | 🔴 **改宣告、身分、基線、工具箱、課程清單** | `npm run test:guard`（54 條護欄） | 分鐘 |
 | 🔴 **改了「使用者按得到的東西」**（按鈕、選單、面板結構） | **`npm run test:e2e`** | 十分鐘 |
 | 🔴 **改了積木的畫法**（膠囊定義、`block-registrar`、renderer） | **重產課文的對照圖**（見下） | 六分鐘 |
+| 🔴 **改 lift／產生器**（`lifters/strategies.ts`、`code-generator.ts`、膠囊的 `lift`／`generate`） | **拿真實語料重量一次**（見下） | 十秒 |
 | commit 前 | `npm test`（全套） | 兩分鐘 |
 | PR | CI 跑全套 ＋ `npm run test:e2e` | — |
 
@@ -72,6 +73,23 @@ npx playwright test --config=tools/demo/playwright.demo.config.ts record-blockma
 
 > **一份產物的過期，有兩種來源：輸入變了，或者【產它的那台機器變了】。
 > 只錨住前者的檢查，會在後者發生時保持全綠。**
+
+🔴 **「拿真實語料重量一次」那一列是 2026-09-09 加的**，而它也是使用者給的：
+他交來學生的練習 repo（218 個 `.cpp`、7327 行，AP325／TIOJ／zeroJudge／APCS）。
+
+```bash
+git clone https://github.com/core-keeper/StudyCpp /tmp/StudyCpp
+STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-
+```
+
+⚠️ **沒有 `STUDYCPP_DIR` 那兩支探針就跳過**——語料是別人的 repo，沒有收進來。
+🟢 而**形狀收進來了**：第一百一十五條護欄 `declaration-shapes-roundtrip`
+（53 條，`npm test` 會跑）。
+
+第一次跑量到的東西：**殘差 0.0%，而 218 支裡 144 支轉一圈回來不是同一棵樹**。
+
+> **殘差量的是「我沒認出來」，而它對「我認錯了」保持沉默
+> ——而後者才會讓使用者的程式碼變成另一支程式。**
 
 ⚠️ 現在 `audit-lesson-blockmaps` 會替你紅（它比對 `engineHash`），
 所以**不用記得**——但要知道紅的時候該跑什麼。

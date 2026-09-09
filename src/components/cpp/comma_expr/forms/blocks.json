@@ -1,1 +1,72 @@
-[]
+[
+  {
+    "id": "cpp_comma_expr",
+    "componentId": "cpp:comma_expr",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_comma_expr",
+      "inputsInline": true,
+      "colour": "#59C059",
+      "tooltip": "%{BKY_CPP_COMMA_EXPR_TOOLTIP}",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "builder": "variadic",
+      "labelKey": "CPP_COMMA_EXPR_MSG",
+      "labelFallback": "依序",
+      "slotCheck": "Expression",
+      "minCount": 2,
+      "countKey": "itemCount"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "exprs",
+          "inputPattern": "EXPR{i}"
+        }
+      ],
+      "expressionCounterpart": "cpp_comma_expr_expression"
+    },
+    "_why": "🟢 **2026-09-09：逗號從殘差變成一顆積木。**\n\n拿學生的競賽練習當語料量到（218 個 `.cpp`）：逗號運算式出現 140 次，\n而它**沒有積木形態**——`forms/blocks.json` 是 `[]`，`skipReasons.render`\n寫著 `consumed-by-parent`。\n\n🔴 **而那句話只在一個位置成立**：\n\n```\n語句位置        138 次   父節點是 body，沒有人吃它\nfor 的更新格      2 次   ✅ 這裡才真的有父節點\n值的位置          0 次\n```\n\n實測積木那一側：整行變成一顆 `cpp_raw_code` 黑盒。\n\n⚠️ **使用者拍板做積木，而理由是【兩根指標的迴圈】**：\n`for (i = 0, j = n; i < j; i++, j--)` 是 AP325 的常見技巧，\n而在此之前那個迴圈的第一格與第三格是兩個打不開的盒子。\n\n> **一個「由父節點吃掉」的宣告，要說得出【是哪一個父節點】\n> ——否則它在沒有那個父節點的位置就是一句沒有人檢查的話。**\n\n## 🔴 為什麼是兩個形態，不是一個\n\n`role` 是 `expression`（產出 `a, b`，分號由 `asStatement` 補）。\n而**只給運算式版的話，那 138 筆會從畫布上消失**——\n`renderStatementChain` 明文跳過接不進語句串的積木：\n\n```ts\nif (this.expressionOnlyBlockTypes.has(block.type)) continue\n```\n\n⚠️ 那比黑盒**更糟**：黑盒至少看得見。形狀與**函式呼叫**那一顆逐字相同\n（同樣 `role: expression`，同樣一個語句版 ＋ 一個運算式版）。\n\n## ⚠️ 沒有 `slotPrefix`（逗號）是刻意的\n\n`slotPrefix` 掛在**每一格**自己前面，包含第一格——\n加了會變成 `依序 ，[i++] ，[j--]`，開頭多一個孤兒逗號。"
+  },
+  {
+    "id": "cpp_comma_expr_expression",
+    "componentId": "cpp:comma_expr",
+    "language": "cpp",
+    "category": "operators",
+    "version": "1.0.0",
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    },
+    "blockDef": {
+      "type": "cpp_comma_expr_expression",
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_CPP_COMMA_EXPR_TOOLTIP}",
+      "builder": "variadic",
+      "labelKey": "CPP_COMMA_EXPR_MSG",
+      "labelFallback": "依序",
+      "slotCheck": "Expression",
+      "minCount": 2,
+      "countKey": "itemCount"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "exprs",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    },
+    "_why": "運算式版——它才是 `for` 的第一格與第三格裝得下的那一種，\n而那正是使用者要這顆積木的理由。"
+  }
+]

@@ -19,7 +19,23 @@ export const cppCommentSyntax: CommentSyntax = {
   block: (text, indent) => {
     if (text.includes('\n')) {
       let result = `${indent}/*\n`
-      for (const line of text.split('\n')) result += `${indent} * ${line.trim()}\n`
+      // 🔴 **不 `.trim()`——註解裡的對齊是內容，不是排版**（2026-09-09）
+      //
+      // 這裡原本寫 `${line.trim()}`，而學生的課本註解裡有一張表：
+      //
+      // ```
+      // 原文   位置\t索引 0\t索引 1        產出   位置\t索引 0\t索引 1
+      //        數值\t10      20                   數值\t10      20
+      //        指標\tbegin   end                  指標\tbegin   end
+      //        ↑ 每一行縮排四格                    ↑ 全部靠左，表格塌了
+      // ```
+      //
+      // ⚠️ **而 lift 那一側本來就保住了相對縮排**（星號式的 ` * ` 進來時
+      // 已經被剝掉，所以不會多一層）——`.trim()` 是這條路上唯一的損失點。
+      //
+      // 🔴 它也**破壞了不動點**：來回一次之後的文字與原本不同，
+      // 而一個「轉一次就變」的投影，在使用者眼裡就是弄壞了他的東西。
+      for (const line of text.split('\n')) result += `${indent} * ${line}\n`
       result += `${indent} */\n`
       return result
     }

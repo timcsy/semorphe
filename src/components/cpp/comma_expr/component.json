@@ -3,17 +3,14 @@
   "abstractComponent": null,
   "properties": [],
   "children": {
-    "exprs": "expressions"
+    "exprs": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 2
+    }
   },
   "role": "expression",
-  "skipPaths": [
-    "extract",
-    "render"
-  ],
-  "skipReasons": {
-    "render": "consumed-by-parent",
-    "extract": "consumed-by-parent"
-  },
   "owner": "(core)",
   "paths": {
     "render": "./forms/blocks.json",
@@ -27,5 +24,7 @@
     "forLoopPart": true,
     "parenInCout": true
   },
-  "_traits_why": "**優先級、能不能放進 for 的三格、放進 cout 要不要括號——都是我自己的性質**，不是共用表該列的身分。"
+  "_traits_why": "**優先級、能不能放進 for 的三格、放進 cout 要不要括號——都是我自己的性質**，不是共用表該列的身分。",
+  "_children_why": "🔴 **`min: 2`——一個運算元的逗號不是逗號。**\n積木那一側由 `blockDef.minCount` 守（拖出來就是兩格，減不下去），\n而這裡是宣告那一側的同一句話。",
+  "_why": "🟢 **2026-09-09：`skipPaths: [extract, render]` 拿掉了。**\n\n它們的理由寫著 `consumed-by-parent`，而拿真實語料量過之後那句話**只在一個位置成立**：\n140 次裡有 **138 次的父節點是 body**——沒有人吃它，整行在畫布上變成一顆黑盒。\n\n> **一個「由父節點吃掉」的宣告，要說得出【是哪一個父節點】\n> ——否則它在沒有那個父節點的位置就是一句沒有人檢查的話。**\n\n⚠️ `role` **維持 `expression`**：產出是 `a, b`（沒有分號），\n而語句位置的分號由 `asStatement` 補——那與**函式呼叫**那一顆是一模一樣的形狀。"
 }

@@ -25,7 +25,42 @@
       "fields": {},
       "inputs": {
         "VALUE": "value"
+      },
+      "expressionCounterpart": "cpp_io_sync_expression"
+    },
+    "_why": "🟢 **2026-09-09：多了一個運算式形態**（`renderMapping.expressionCounterpart`）。\n\n🔴 理由是**逗號**：競賽 C++ 的第一行是一個逗號運算式\n（`ios::sync_with_stdio(0), cin.tie(0);`），而逗號的插槽收的是**運算式**。\n在此之前這一顆只有敘述形態，於是它在那個插槽裡退成一顆\n`直接寫運算式` 黑盒——學生看得到那一行，而拆不開它。\n\n⚠️ 拿學生的競賽練習當語料量到：那一行在 **218 個檔裡出現在 136 個**。"
+  },
+  {
+    "id": "cpp_io_sync_expression",
+    "componentId": "cpp:io_sync",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_io_sync_expression",
+      "message0": "%{BKY_CPP_IO_SYNC_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_CPP_IO_SYNC_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value"
       }
-    }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    },
+    "_why": "運算式形態——它才是逗號那顆積木的插槽裝得下的那一種。\n⚠️ 產出**沒有分號**（`asExpression` 依 `role` 脫掉），\n而它出現在語句位置時分號由 `asStatement` 補回來——那一對是同一個機制的兩半。"
   }
 ]

@@ -1,10 +1,5 @@
 [
   {
-    "key": "cpp:comma_expr:exprs",
-    "cause": "元概念，沒有積木",
-    "reason": "這顆的 `forms/blocks.json` 是**刻意的空陣列**——逗號運算式（`i++, j--`）在教學裡只出現在 for 的更新段，而那一段由迴圈那顆自己裝。沒有積木就沒有「哪一格」可談。"
-  },
-  {
     "key": "cpp:program:body",
     "cause": "元概念，沒有積木",
     "reason": "`program` 是整棵樹的根——它不是一顆積木，是**工作區本身**。它的 `body` 就是工作區上那一疊。"

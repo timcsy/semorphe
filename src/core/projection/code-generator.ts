@@ -415,7 +415,7 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
 
   const exprCtx = ctx.isExpression ? ctx : { ...ctx, isExpression: true }
   const generator = exprCtx.generators.get(node.componentId)
-  if (generator) return generator(node, exprCtx)
+  if (generator) return asExpression(node, generator(node, exprCtx), exprCtx)
   // Meta-components that carry raw code — expression context returns raw value without formatting
   if (node.metadata?.rawCode != null) return String(node.metadata.rawCode)
   return `⟨${node.componentId}⟩`
@@ -429,8 +429,34 @@ export function indented(ctx: GeneratorContext): GeneratorContext {
   return { ...ctx, indent: ctx.indent + 1 }
 }
 
+/**
+ * 一段主體。
+ *
+ * ## 🔴 主體是語句的地方——不論它自己被誰包著（2026-09-09）
+ *
+ * `isExpression` 原本會**穿過**主體傳下去，而 lambda 的主體正好在那條路上：
+ * lambda 自己是一顆運算式（`auto f = [&](int R){ … };`），於是它的
+ * 每一句都以為自己在運算式位置。
+ *
+ * ```
+ * 原文   count++;⏎⏎  // 說明⏎  return R;
+ * 產出   count++        // 說明        🔴 分號、換行、縮排全沒了，
+ *        return R;                        而下一顆註解黏了上來
+ * ```
+ *
+ * ⚠️ **而每一顆膠囊都做對了**：`cpp:increment` 老老實實地問了
+ * `ctx.isExpression`，它只是**被騙了**。
+ *
+ * > **一個旗標如果會穿過它不再成立的邊界，
+ * > 那麼下游每一個正確的檢查都會得到錯的答案。**
+ *
+ * 🔴 這一支在真實語料裡的樣子：學生把 BFS 寫在一個 lambda 裡，
+ * 產出的程式碼**編不過**，而系統從頭到尾沒有出聲
+ * （`tests/probes/studycpp-*`，`w/APCS/o713_AC.cpp`）。
+ */
 export function generateBody(nodes: SemanticNode[], ctx: GeneratorContext): string {
-  return nodes.map(n => asStatement(n, generateNode(n, ctx), ctx)).join('')
+  const stmtCtx = ctx.isExpression ? { ...ctx, isExpression: false } : ctx
+  return nodes.map(n => asStatement(n, generateNode(n, stmtCtx), stmtCtx)).join('')
 }
 
 /**
@@ -479,6 +505,59 @@ export function generateBody(nodes: SemanticNode[], ctx: GeneratorContext): stri
  * ——所以**不動它**，改成只在真正需要分號的地方作用。
  * 🔴 判準：**函式體裡的裸運算式是合法的運算式語句，而編譯單元層級的不是。**
  */
+/**
+ * 🔴 **一個語句出現在運算式位置時，要脫掉分號與縮排**——`asStatement` 的反面。
+ *
+ * ## 為什麼（2026-09-09，拿學生的競賽程式當語料量到）
+ *
+ * 競賽 C++ 的第一行幾乎都是這個：
+ *
+ * ```cpp
+ * ios::sync_with_stdio(0), cin.tie(0);     ← 一個【逗號運算式】
+ * ```
+ *
+ * `cpp:comma_expr` 的產生器老實地把每個 expr 用 `, ` 接起來，
+ * 而 `cpp:io_sync` 回給它的是**語句形**（帶縮排、帶分號與換行）：
+ *
+ * ```
+ * 產出   ios::sync_with_stdio(0);⏎,     cin.tie(0);⏎      🔴 編不過
+ * 再讀   io_sync ｜ raw_code ｜ io_tie                     🔴 中間多一顆殘差
+ * ```
+ *
+ * 實測：**218 個檔裡 136 個**（62%）踩到它——它是競賽程式的第一行。
+ *
+ * ## 🔴 為什麼修在這裡，而不是修那兩顆膠囊
+ *
+ * 量過：**152 個產生器無條件產語句形，只有 7 個看 `ctx.isExpression`**。
+ * 逐顆修等於把一個契約託付給 152 份記憶，而下一顆新膠囊照樣會忘。
+ *
+ * > **一個「要記得先檢查」的契約，就是一個等著被忘記的契約
+ * > ——它該由呼叫端執行，因為呼叫端知道自己要的是什麼。**
+ *
+ * ## ⚠️ 判準是【問宣告】，不是看產出的形狀
+ *
+ * 與 `asStatement` 同一條線（那一支的檔頭記著第一版「從產出的形狀反推」
+ * 為什麼是錯的）。只有 `role: statement` 的才脫——`expression` 與 `both`
+ * 本來就是運算式形，動它們會咬掉真的分號。
+ *
+ * ## ⚠️ 跨行的不動——**看不懂就不要改**
+ *
+ * 一顆多行的語句（迴圈、條件）出現在運算式位置是另一回事，
+ * 而把它壓成一行會產出一段**看起來對而意思不同**的程式碼。
+ * 🟢 保守的方向是「原樣放行、讓它難看」，不是「猜一個」。
+ */
+function asExpression(node: SemanticNode, text: string, ctx: GeneratorContext): string {
+  if (roleOf(node.componentId) !== 'statement') return text
+  const syntax = expressionStatementOf(ctx.language)
+  if (!syntax) return text
+  const trimmed = text.trim()
+  // ⚠️ 跨行 → 不動（見檔頭）
+  if (trimmed.includes('\n')) return text
+  return trimmed.endsWith(syntax.suffix)
+    ? trimmed.slice(0, -syntax.suffix.length)
+    : trimmed
+}
+
 function asStatement(node: SemanticNode, text: string, ctx: GeneratorContext): string {
   if (text === '' || text.endsWith('\n')) return text
   // 🔴 **收尾與「頂層可不可以」都是語言宣告的**（2026-08-21）——原本這裡寫死

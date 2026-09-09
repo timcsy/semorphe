@@ -16,22 +16,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
   // ── Variable declarations (complex multi-variable logic) ──
   extractor.registerExtractStrategy('cpp_var_declare', (block: BlockState, ctx: ExtractContext) => {
     const type = (block.fields.TYPE as string) ?? 'int'
-    const declarators: SemanticNode[] = []
-    let i = 0
-    while (true) {
-      const name = block.fields[`NAME_${i}`] as string | undefined
-      if (name === null || name === undefined) break
-      const initInput = block.inputs[`INIT_${i}`]
-      const initNode = initInput?.block ? ctx.extract(initInput.block) : null
-      // ⚠️ **與辨識端一致**：`declarators` 槽裡放的是各自完整的宣告概念
-      // （`int a, *p, arr[3];` 的三個宣告子是三個**不同**的概念）。
-      // 原本這裡建的 `var_declarator` 是一個**沒有任何辨識路徑產出過**的概念
-      // ——它假設所有宣告子都是純名字，而系統刻意不那樣做。已進墓碑。
-      declarators.push(buildVarDeclare({ name, type }, {
-        initializer: initNode ? [initNode] : [],
-      }))
-      i++
-    }
+    const declarators = readDeclarators(block, type, ctx)
     if (declarators.length > 1) {
       return buildVarDeclare({ type }, { declarators })
     }
@@ -119,15 +104,57 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
   //
   // 積木型別 `cpp_var_declare_expression` **不動**——那是形態（`form: { axis: 'role' }`），
   // 形態與身分本來就該分開。
+  //
+  // 🔴 **2026-09-09：它原本只讀 `NAME_0`／`INIT_0`——第二個宣告子讀不回來。**
+  //
+  // `for (int a = 0, b = n; a < b; b--)` 的第一格就是這一顆，而它有兩個宣告子。
+  // 症狀不只在這裡：那顆積木的宣告也**只有 `NAME_0`／`INIT_0`**（沒有 `paramList`），
+  // 於是渲染吐出 `INIT_1` 而 Blockly 建不出那一格：
+  //
+  // ```
+  // 積木載入失敗：cpp_var_declare_expression is missing a(n) INIT_1 connection
+  // ```
+  //
+  // ⚠️ **而測試全綠**：渲染那一路產出的是 BlockState（JSON），
+  // 它對「Blockly 建不建得起來」一個字都沒說（第五十一條護欄的檔頭記著這句）。
+  // 這一筆是**開瀏覽器實測**抓到的。
+  //
+  // 🟢 兩個形態現在讀**同一支** `readDeclarators`——不留兩份會漂移的迴圈。
   extractor.registerExtractStrategy('cpp_var_declare_expression', (block: BlockState, ctx: ExtractContext) => {
     const type = (block.fields.TYPE as string) ?? 'int'
-    const name = (block.fields.NAME_0 as string) ?? 'i'
-    const initInput = block.inputs.INIT_0
-    const initNode = initInput?.block ? ctx.extract(initInput.block) : null
-    return buildVarDeclare({ name, type }, {
-      initializer: initNode ? [initNode] : [],
-    })
+    const declarators = readDeclarators(block, type, ctx)
+    if (declarators.length > 1) return buildVarDeclare({ type }, { declarators })
+    if (declarators.length === 1) {
+      return buildVarDeclare(
+        { name: declarators[0].properties.name, type },
+        { initializer: declarators[0].children.initializer ?? [] },
+      )
+    }
+    return buildVarDeclare({ name: 'i', type }, { initializer: [] })
   })
+}
+
+/**
+ * **一顆宣告積木上的每一個宣告子**——`NAME_{i}` ＋ `INIT_{i}`，讀到沒有為止。
+ *
+ * ⚠️ **與辨識端一致**：`declarators` 槽裡放的是各自完整的宣告概念
+ * （`int a, *p, arr[3];` 的三個宣告子是三個**不同**的概念）。
+ * 🪦 原本這裡建的 `var_declarator` 是一個**沒有任何辨識路徑產出過**的概念
+ * ——它假設所有宣告子都是純名字，而系統刻意不那樣做。
+ *
+ * 🔴 **語句版與運算式版共用它**（2026-09-09）：在此之前運算式版只讀第 0 格，
+ * 而 `for (int a = 0, b = n; …)` 的第二個宣告子就那樣不見了。
+ */
+function readDeclarators(block: BlockState, type: string, ctx: ExtractContext): SemanticNode[] {
+  const out: SemanticNode[] = []
+  for (let i = 0; ; i++) {
+    const name = block.fields[`NAME_${i}`] as string | undefined
+    if (name === null || name === undefined) break
+    const initInput = block.inputs[`INIT_${i}`]
+    const initNode = initInput?.block ? ctx.extract(initInput.block) : null
+    out.push(buildVarDeclare({ name, type }, { initializer: initNode ? [initNode] : [] }))
+  }
+  return out
 }
 
 // ── Helpers for if-elseif chain ──

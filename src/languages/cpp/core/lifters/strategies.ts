@@ -41,6 +41,78 @@ import { buildVarAssign } from '../../../../components/cpp/var_assign/lift'
 import { buildInitializerList } from '../../../../components/cpp/initializer_list/lift'
 
 /**
+ * **這個宣告的宣告子形狀，具體型別那幾支讀得懂嗎？**
+ *
+ * 「具體型別那幾支」＝ `string`／`stringstream`／`vector`／`map`… 那些**認領
+ * 一個型別名**的分支。它們讀的是 `name` 與 `initializer` 兩樣東西。
+ *
+ * ## 🔴 它原本用一個 `?? 'x'` 把三種災難蓋起來
+ *
+ * 拿學生的競賽練習當語料量到（`tests/probes/studycpp-*`，2026-09-09）：
+ *
+ * ```
+ * string A[100];        →  string x;          🔴 陣列、大小、名字一起蒸發
+ * string* p;            →  string x;          🔴 指標與名字蒸發
+ * string s, t, u;       →  string s;          🔴 第二、三個變數蒸發
+ * vector<int> v[10];    →  vector<int> x;     🔴 同上
+ * ```
+ *
+ * ⚠️ **而它們全部不出聲**：lift 殘差是 0、積木長得很正常、產出的程式碼
+ * 編得過——只是**它是另一支程式**。
+ *
+ * > **一個 `?? '預設值'` 讓「我沒認出來」與「它本來就長這樣」
+ * > 長得一模一樣**（`CLAUDE.md` 的靜默降級反模式）。
+ *
+ * ## 🟢 而退路早就在了
+ *
+ * 通用的宣告路徑**本來就處理陣列、指標與多宣告子**（`int a[10], b[20];`
+ * 走的就是它）。這支判別器要做的只是讓那幾支**不要攔截它們讀不懂的**。
+ *
+ * ⚠️ 代價講明：`string A[100];` 之後的身分是 `cpp:array_declare type=string`，
+ * 不是 `cpp:string_declare`——**少一顆專屬積木，換一支正確的程式**。
+ *
+ * @returns 剛好一個宣告子，而它是裸名字、初始化、或最令人困惑的解析
+ */
+/** 一個宣告底下，哪些子節點是「宣告子」。 */
+const DECLARATOR_SHAPES = new Set([
+  'init_declarator', 'identifier', 'array_declarator',
+  'pointer_declarator', 'reference_declarator', 'function_declarator',
+])
+
+/**
+ * **`stack<int> a, b;`——多個宣告子，而它們全是裸名字。**
+ *
+ * 🔴 具體型別那幾支（容器、`string`…）原本只認得**一個**宣告子，第二個之後
+ * **安靜地掉了**（`string s, t, u;` 產出 `string s;`）。而只是「讓開」也不夠：
+ * 讓開之後程式碼對了，**身分卻退化成通用的 `cpp:var_declare`**——
+ * 學生看到的不再是那顆堆疊積木。
+ *
+ * > **一個為了修正確性而放棄身分的修法，是把一個缺陷換成另一個缺陷。**
+ *
+ * 🟢 所以這一支讓那幾支**自己把多宣告子包起來**：外層是 `cpp:var_declare`
+ * （多宣告子本來就長這樣），而**每一個宣告子保住自己的身分**。
+ *
+ * ⚠️ **只認全部都是裸名字的那種**（`stack<int> a, b;`）。混著初始化或陣列的
+ * （`string A[100], ans;`）仍然讓開走通用路徑——那裡才有陣列與指標的處理。
+ *
+ * @returns 名字們（兩個以上），或 `null`
+ */
+function plainIdentifierNames(node: AstNode): string[] | null {
+  const found = node.namedChildren.filter((c) => DECLARATOR_SHAPES.has(c.type))
+  if (found.length < 2) return null
+  if (!found.every((c) => c.type === 'identifier')) return null
+  return found.map((c) => c.text)
+}
+
+function claimsSimpleDeclarator(node: AstNode): boolean {
+  const found = node.namedChildren.filter((c) => DECLARATOR_SHAPES.has(c.type))
+  if (found.length !== 1) return false
+  const t = found[0].type
+  return t === 'init_declarator' || t === 'identifier' || t === 'function_declarator'
+}
+
+
+/**
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
  *
  * ⚠️ **從 JSON 讀，不寫死。** 第一版對所有容器都掛 `source`，於是
@@ -585,11 +657,39 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       // 容器宣告概念——**從登錄表讀，不寫死**（見 core/component/container-templates.ts）。
       // 已元件化的由膠囊登錄；還沒的由 `pending-containers.ts` 的過渡表提供。
       const componentId = componentForContainerTemplate(templateName)
-      if (componentId) {
+      // ⚠️ 同一個守門（`vector<int> v[10];` 原本產出 `vector<int> x;`）
+      //
+      // 🟢 而全是裸名字的多宣告子由這一支自己包起來——**身分保住**
+      //    （`stack<int> inbox, outbox;`，見 `plainIdentifierNames`）。
+      const containerNames = componentId ? plainIdentifierNames(node) : null
+      if (componentId && containerNames) {
+        const innerT = templateArgs?.namedChildren.find(c => c.type === 'type_descriptor' || c.type === 'type_identifier')?.text ?? 'int'
+        return buildVarDeclare(
+          { type: templateTypeNode.text },
+          { declarators: containerNames.map((n) => createNode(componentId, { type: innerT, name: n })) },
+        )
+      }
+      if (componentId && claimsSimpleDeclarator(node)) {
         const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
+        // 🔴 **`vector<int> v(n);` 走的是最令人困惑的解析**（2026-09-09）
+        //
+        // 引數是識別字時，tree-sitter 把整句讀成一個【函式宣告】
+        // ——與 `DHT dht(DHTPIN, DHT11);` 同一回事（具體型別那一支早就處理了它，
+        // 而容器這一支沒有）。實測：學生的 218 個檔裡 **32 個**這樣寫。
+        //
+        // ```
+        // vector<int> v(5);   → init_declarator + argument_list   ← 下面那條路
+        // vector<int> v(n);   → function_declarator               ← 這條
+        // ```
+        //
+        // > **一個解析器少了前置處理階段，它會在那個階段本來會消掉的地方看到歧義**
+        // > （具體型別那一支的檔頭逐字記過）。
+        const fnDecl = node.namedChildren.find(c => c.type === 'function_declarator')
         const name = decl?.type === 'identifier'
           ? decl.text
-          : (decl?.childForFieldName('declarator') ?? decl?.namedChildren[0])?.text ?? 'x'
+          : (decl?.childForFieldName('declarator') ?? decl?.namedChildren[0])?.text
+            ?? fnDecl?.namedChildren.find(c => c.type === 'identifier')?.text
+            ?? ''
 
         // map needs key_type and value_type as separate properties
         if (templateName === 'map') {
@@ -651,6 +751,36 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
             source = ctx.lift(v)
           }
         }
+
+        // ⚠️ 最令人困惑的解析那一條：引數住在 `parameter_list` 裡，
+        //    而它們的「型別」其實是識別字（見上）。
+        if (!decl && fnDecl) {
+          const params = fnDecl.namedChildren.find(c => c.type === 'parameter_list')
+          const ctorArgs = (params?.namedChildren ?? [])
+            .map(pd => {
+              const inner = pd.namedChildren[0]
+              if (!inner) return null
+              // 🔴 **一個「引數」自己也可能是最令人困惑的解析**（2026-09-09）
+              //
+              // ```cpp
+              // vector<vector<int>> g(M, vector<int>(N));
+              //                          ^^^^^^^^^^^^^^ ← template_type ＋
+              //                                            abstract_function_declarator
+              // ```
+              //
+              // 這裡原本只取 `namedChildren[0]`，於是拿到 `vector<int>` 而
+              // **`(N)` 安靜地掉了**——產出的 `vector<int>` 是一個裸型別，
+              // 而它下一次讀回來就是殘差。
+              //
+              // ⚠️ 這一層**不再往下猜**：把原文原封帶出去（P6 誠實降級）。
+              // > **看不懂的時候，帶著原文比帶著一半的理解安全。**
+              if (pd.namedChildren.length > 1) return buildRawCode(pd.text)
+              return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
+            })
+            .filter((n): n is NonNullable<typeof n> => n !== null)
+          if (ctorArgs.length === 1) size = ctorArgs[0]
+          else if (ctorArgs.length === 2) { size = ctorArgs[0]; fill = ctorArgs[1] }
+        }
         // `pair<int, string> p` —— **兩個型別參數要拆成兩個具名屬性**。
         //
         // 🔴 這一顆的 lift 是三路裡唯一錯的那一路：`generate.ts` 讀 `type1`／`type2`、
@@ -710,7 +840,20 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         simpleTypeName = innerTypeIdent.text
       }
     }
-    if (simpleTypeName && (streamComponents[simpleTypeName] ?? plainTypeComponent(simpleTypeName))) {
+    // ⚠️ 讀不懂的宣告子形狀要**讓開**——見 `claimsSimpleDeclarator` 的檔頭。
+    //
+    // 🟢 而全是裸名字的多宣告子由這一支自己包起來（`string s, t, u;`）。
+    const plainNames = simpleTypeName ? plainIdentifierNames(node) : null
+    if (plainNames && simpleTypeName) {
+      const cid = streamComponents[simpleTypeName] ?? plainTypeComponent(simpleTypeName)
+      if (cid) {
+        return buildVarDeclare(
+          { type: simpleTypeName },
+          { declarators: plainNames.map((n) => createNode(cid, { name: n })) },
+        )
+      }
+    }
+    if (claimsSimpleDeclarator(node) && simpleTypeName && (streamComponents[simpleTypeName] ?? plainTypeComponent(simpleTypeName))) {
       const componentId = streamComponents[simpleTypeName] ?? plainTypeComponent(simpleTypeName)
       // 🔴 **一個身分可能被多個型別名登錄**（同一片液晶的並列版與 I2C 版）。
       //    那個差別在程式碼裡是真的，而**它不得被改寫**——所以要帶著。
@@ -740,9 +883,11 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const withCount = (args: unknown[]): Record<string, string> =>
         wantsCtorCount ? { ...extraProps, ctorCount: String(args.length) } : extraProps
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
+      // ⚠️ 走到這裡代表 `claimable`——`decl` 缺席只可能是最令人困惑的解析那一支
+      //    （下面的 `fnDecl`），它自己會帶名字進來。
       const name = decl?.type === 'identifier'
         ? decl.text
-        : (decl?.childForFieldName('declarator') ?? decl?.namedChildren[0])?.text ?? 'x'
+        : (decl?.childForFieldName('declarator') ?? decl?.namedChildren[0])?.text ?? ''
       // 🔴 **最令人困惑的解析**（most vexing parse）——而它在 Arduino 教學裡是常態。
       //
       // ```cpp

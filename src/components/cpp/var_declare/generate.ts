@@ -16,8 +16,37 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const declarators = node.children.declarators ?? []
 
       // Multi-variable: int x, v1 = 0;
+      //
+      // 🔴 **每一個宣告子由【它自己的產生器】畫，這裡只脫掉型別前綴**（2026-09-09）
+      //
+      // 這裡原本自己重新實作了一次「宣告子長什麼樣」——名字，也許再一個初始值。
+      // 而現實比那寬：
+      //
+      // ```
+      // int a[10], b[20];      →  int a, b;        🔴 兩個大小一起蒸發
+      // string A[100], ans;    →  string A, ans;   🔴 同上
+      // ```
+      //
+      // ⚠️ `cpp:array_declare` 帶的是 `size`，`cpp:pointer_declare` 帶的是星號
+      // ——而這個分支只讀 `name` 與 `initializer`，其餘的**安靜地丟掉**。
+      //
+      // > **一個容器自己重新實作了一次「我的成員長什麼樣」的規則，
+      // > 那份實作永遠只有寫的那天是完整的。**
+      //
+      // 🟢 而每一顆宣告子**都有自己的產生器**，產的是完整的一句
+      // （`int a[10];`）。要的是去掉型別之後那一段，而型別是**我們自己**
+      // 剛放上去的，所以脫它不是猜。
+      //
+      // ⚠️ **脫不掉就退回舊行為**——一個對不上的前綴代表這顆宣告子的形狀
+      // 與我們以為的不同，而那時候「少畫一點」比「亂剪一刀」安全。
       if (declarators.length > 0) {
         const parts = declarators.map(d => {
+          const own = generateExpression(d, { ...ctx, indent: 0, isExpression: true }).trim()
+          const ownType = String(d.properties.type ?? type)
+          if (own.startsWith(ownType)) {
+            const rest = own.slice(ownType.length).trim()
+            if (rest.length > 0) return rest
+          }
           const name = d.properties.name ?? 'x'
           const inits = d.children.initializer ?? []
           if (inits.length > 0) {

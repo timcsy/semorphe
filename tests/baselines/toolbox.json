@@ -38,10 +38,12 @@
         "cpp_cast_dynamic",
         "cpp_cast_reinterpret",
         "cpp_cast_static",
+        "cpp_comma_expr",
         "cpp_increment",
         "cpp_sizeof",
         "cpp_ternary",
         "cpp_var_assign_compound",
+        "cpp_comma_expr_expression",
         "cpp_increment_expression",
         "cpp_var_assign_compound_expression",
         "cpp_math_binary",
@@ -105,6 +107,8 @@
         "cpp_input_expression",
         "cpp_io_sync",
         "cpp_io_tie",
+        "cpp_io_sync_expression",
+        "cpp_io_tie_expression",
         "cpp_input_formatted",
         "cpp_print_formatted",
         "cpp_input_formatted_expression",
@@ -333,6 +337,6 @@
     }
   ],
   "_meta": {
-    "note": "2026-08-11：三顆 `<string>` 膠囊（string_empty／find_first_not_of／find_last_not_of）與三顆 `<cmath>` 膠囊（math_pow／math_unary／math_binary）改變了所屬分類裡的**位置**——膠囊積木排在模組自有積木**之前**、身分字母序，與第一顆膠囊同一條放置規則。**它們不是新積木，是同一批積木換了住處。**\n⚠️ `<cmath>` 這個模組現在自有積木為零，數學分類整段都由膠囊供給——這是第一個被完全清空的模組。\n六顆都不是「該第一眼看到」的那一顆（已知清單只有 vector_declare 排在「陣列與列表」第一），所以不為它們設計順序機制。"
+    "note": "2026-09-09：「輸入/輸出」多了 `cpp_io_sync_expression` 與 `cpp_io_tie_expression`。逗號的插槽收的是運算式，而這兩顆在此之前只有敘述形態——競賽模板那一行因此拆不開。\n2026-09-09：「運算」多了 `cpp_comma_expr` 與 `cpp_comma_expr_expression`。**逗號從一顆黑盒變成一顆積木**，使用者拍板，理由是**兩根指標的迴圈**（`for (int a = 0, b = n; a < b; a++, b--)`——AP325 的常見技巧）。⚠️ 語句版與運算式版都列出來，形狀與函式呼叫那一顆相同。\n2026-08-11：三顆 `<string>` 膠囊（string_empty／find_first_not_of／find_last_not_of）與三顆 `<cmath>` 膠囊（math_pow／math_unary／math_binary）改變了所屬分類裡的**位置**——膠囊積木排在模組自有積木**之前**、身分字母序，與第一顆膠囊同一條放置規則。**它們不是新積木，是同一批積木換了住處。**\n⚠️ `<cmath>` 這個模組現在自有積木為零，數學分類整段都由膠囊供給——這是第一個被完全清空的模組。\n六顆都不是「該第一眼看到」的那一顆（已知清單只有 vector_declare 排在「陣列與列表」第一），所以不為它們設計順序機制。"
   }
 }

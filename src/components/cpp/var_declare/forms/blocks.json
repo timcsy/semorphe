@@ -7,7 +7,7 @@
     "version": "1.0.0",
     "blockDef": {
       "type": "cpp_var_declare_expression",
-      "message0": "%{BKY_U_VAR_DECLARE_EXPR_MSG0}",
+      "message0": "%1 %2",
       "args0": [
         {
           "type": "field_dynamic_dropdown",
@@ -16,20 +16,54 @@
           "allowCustom": true
         },
         {
-          "type": "field_input",
-          "name": "NAME_0",
-          "text": "i"
-        },
-        {
-          "type": "input_value",
-          "name": "INIT_0",
-          "check": "Expression"
+          "type": "input_dummy",
+          "name": "HEADER"
         }
       ],
       "inputsInline": true,
       "output": "Expression",
       "colour": "#FF8C1A",
-      "tooltip": "%{BKY_U_VAR_DECLARE_EXPR_TOOLTIP}"
+      "tooltip": "%{BKY_U_VAR_DECLARE_EXPR_TOOLTIP}",
+      "paramList": {
+        "itemPattern": "VAR_{i}",
+        "fields": [
+          {
+            "type": "field_input",
+            "name": "NAME_{i}",
+            "text": "v{i}",
+            "firstText": "i"
+          },
+          {
+            "type": "field_label",
+            "name": "VAR_EQ_{i}",
+            "text": "="
+          }
+        ],
+        "separator": ",",
+        "minCount": 1,
+        "openInput": "PARAMS_LABEL",
+        "tailInput": "TAIL",
+        "optionalGroups": [
+          {
+            "key": "init",
+            "fromField": "VAR_EQ_{i}",
+            "labelKey": "U_VAR_DECLARE_INIT_LABEL",
+            "labelFallback": "初始值",
+            "defaultOpen": true,
+            "valueInput": {
+              "name": "INIT_{i}",
+              "check": "Expression",
+              "replacesItem": true
+            }
+          }
+        ],
+        "itemsAs": {
+          "key": "items",
+          "group": "init",
+          "open": "var_init",
+          "closed": "var"
+        }
+      }
     },
     "renderMapping": {
       "fields": {
@@ -44,7 +78,8 @@
       "axis": "role",
       "value": "expression"
     },
-    "_why": "🟢 **2026-08-26：形狀補上（`message0`／顏色／提示），命令式定義退場。**\n🔴 **而 `TYPE` 從靜態 `field_dropdown` 換成 `field_dynamic_dropdown` ＋ `allowCustom`**\n   ——那個差異就是這一刀的目的：靜態清單把 `int**`／自訂類別當成非法值\n   （「讀得回來，寫不出去」），而命令式那份一直是開放的（`getTypeOptions` 會把\n   認不得的現值 unshift 進清單）。**宣告比命令式少了一項能力，不是多。**\n⚠️ 訊息刻意**不加「建立」**——命令式那份沒有前導標籤（它長在 `for` 的標頭裡），\n   而加字是一次外觀改動，不該混進退場那一刀。"
+    "_why": "🔴 **2026-09-09：補上 `paramList`——在此之前它只有寫死的 `NAME_0`／`INIT_0`。**\n\n`for (int a = 0, b = n; a < b; b--)` 的第一格就是這一顆，而它有**兩個**宣告子。\n渲染那一路（`cpp:renderVarDeclare`）老實地吐出 `INIT_1`，而積木建不出那一格：\n\n```\n積木載入失敗：cpp_var_declare_expression is missing a(n) INIT_1 connection\nextraState={\"items\":[\"var_init\",\"var_init\"]}\n```\n\n⚠️ **而全套測試是綠的**：渲染那一路產出的是 BlockState（JSON），\n它對「Blockly 建不建得起來」一個字都沒說（第五十一條護欄的檔頭記著這句）。\n這一筆是**開瀏覽器實測**抓到的。\n\n> **兩個形態的宣告，只有一邊補得完整時，另一邊會在【使用者拖到它】的那天壞掉。**\n\n⚠️ 版面**刻意與語句版不同**：`message0` 是 `%1 %2`（沒有「宣告」「變數」那兩個詞）\n——它住在 `for` 的第一格，那裡要的是 `int a = 0, b = n` 這種緊湊的樣子。",
+    "_renderMapping_why": "⚠️ **這份映射留著，而抽取實際上不走它**——抽取策略（`cpp_var_declare_expression`）先被問，它讀 `NAME_{i}`／`INIT_{i}` 的每一格。\n🔴 留著的理由是**它是宣告**：第五十四條護欄靠它回答「`type` 與 `name` 住在積木的哪一格」。清空的話那兩個屬性會被報成「沒有位置」。"
   },
   {
     "id": "cpp_var_declare",

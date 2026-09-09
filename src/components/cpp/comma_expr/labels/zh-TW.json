@@ -1,1 +1,4 @@
-{}
+{
+  "CPP_COMMA_EXPR_MSG": "依序",
+  "CPP_COMMA_EXPR_TOOLTIP": "依序做這幾件事，整體的值是最後一個。放在 for 的第一格與第三格，就是兩根指標的迴圈：i++, j--"
+}

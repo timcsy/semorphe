@@ -1,1 +1,4 @@
-{}
+{
+  "CPP_COMMA_EXPR_MSG": "in order",
+  "CPP_COMMA_EXPR_TOOLTIP": "Do these one after another; the whole thing's value is the last one. In a for loop's first and third slot this is the two-pointer idiom: i++, j--"
+}
