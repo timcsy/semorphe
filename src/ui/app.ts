@@ -2487,10 +2487,19 @@ export class App {
     // ⚠️ **兩種殘只有一種該出聲**（2026-08-24，使用者：「每次重新整理都會跳出一條」）：
     //    開機時工作區還沒被畫過，那是**正常的過渡狀態**——擋住寫回是對的，
     //    而對使用者喊「積木沒有完整載入」是錯的。見 `staleReason`。
+    // ⚠️ 🪦 **「讓使用者明確選『以積木為準』就放行」試過了，而它更糟**
+    //    （2026-09-10 瀏覽器實測）：那條路寫回去的是**舊的樹**，
+    //    使用者剛改的那一格被靜靜地退掉——**比乾脆拒絕還糟**。
+    //
+    // > **一條救援路徑如果會把使用者剛做的事丟掉，
+    // > 那它不是救援，是第二次損失。**
+    //
+    // 🟢 目前唯一真的有效的出路是**改程式碼那一側**（成功重畫就解除），
+    //    而那句話現在寫在訊息裡、也寫在狀態列上。
     const stale = this.blocklyPanel?.staleReason
     if (stale) {
       if (stale === 'load-failed') {
-        showToast('積木沒有完整載入，暫停同步到程式碼——請從同步選單選「以此為準：程式碼」重載', 'error')
+        showToast('積木沒有完整載入，暫停同步到程式碼——改一下程式碼那一側就會恢復', 'error')
       } else {
         // 🟢 不出聲，而**不是靜默**：留一行給開發者，使用者不需要看到它
         console.debug('[semorphe] 工作區還沒畫過，這一次不寫回程式碼（開機時的正常狀態）')
@@ -2509,6 +2518,9 @@ export class App {
   }
 
   private wireBlocklyChangeHandler(): void {
+    // 🔴 積木從「殘」恢復過來時，狀態列要跟著回到「同步中」——
+    //    不然那個 ⛔ 會一直掛著，而它已經不成立了。
+    this.blocklyPanel?.onStaleChanged(() => this.refreshStatusBar())
     this.blocklyPanel?.onChange(() => {
       // 🔴 積木那側改過了 → 上一步不再是流程的（見 `doUndo`）
       this.markBlocksEdited()
@@ -2537,7 +2549,17 @@ export class App {
       this.syncCoordinator.noteEdit(this.blocklyPanel?.viewId ?? 'blockly-panel')
       // 🔴 同 `syncBlocksToCodeWithMappings`：殘的工作區不得覆蓋程式碼。
       //    ⚠️ 自動同步這條路才是真正危險的——它不需要使用者按任何東西。
-      if (this.blocklyPanel?.isStateStale) return
+      if (this.blocklyPanel?.isStateStale) {
+        // 🔴 **被丟掉的編輯要出聲**（2026-09-10，學生回報）。
+        //
+        // 在此之前這裡是一個裸的 `return`——使用者改了積木，什麼都沒發生，
+        // **而畫面上沒有任何東西改變**。他花了不知道多久才發現「還要自己改左邊」。
+        //
+        // ⚠️ `not-rendered`（開機的正常過渡）**不說**——說了就是每次重新整理
+        // 都嚇人一次，那個錯誤 2026-08-24 已經犯過。
+        if (this.blocklyPanel.staleReason === 'load-failed') this.warnBlocksStuck()
+        return
+      }
       this.blocksDirty = true; this.updateSyncHints()
       if (this.autoSync) {
         const tree = this.blocklyPanel?.extractSemanticTree()
@@ -2559,11 +2581,57 @@ export class App {
    * > **同一份狀態的兩個投影，如果由兩個函式寫，
    * > 遲早會有一條路徑只走到其中一個。**
    */
-  private refreshStatusBar(): void {
+/**
+   * **狀態列要顯示哪一態。**
+   *
+   * 🔴 `syncCoordinator` 認得三態（同步中／已暫停／兩邊都改了），
+   * 而還有第四種狀態它不知道：**積木那一側被擋住了**。
+   *
+   * 學生回報（2026-09-10）：
+   *
+   * > 「我執行一次之後改右邊，左邊不會改，下方的答案也不會改。
+   * >  我不知道是我的問題還是他的。反正我還要自己改左邊。」
+   *
+   * 積木載入失敗之後 `isStateStale` 會擋掉「積木→程式碼」——**那是對的**
+   * （殘的工作區不得覆蓋程式碼）。錯的是**它不說**：狀態列照樣寫「同步中」，
+   * 而那個旗標只在下一次成功重畫時才清——被擋住就不會有下一次重畫。
+   *
+   * ⚠️ **`not-rendered` 不算**：那是開機的正常過渡，說了只會嚇人
+   * （2026-08-24 使用者已經回報過一次「每次重新整理都跳紅字」）。
+   */
+/** 上一次說「積木改不動程式碼」的時間——⚠️ 每一次編輯都喊會變成噪音。 */
+  private lastStuckWarnAt = 0
+
+  /**
+   * 說一句「你的改動沒有進到程式碼」——**而且說得出怎麼辦**。
+   *
+   * ⚠️ 節流到 8 秒一次：使用者拖一顆積木會產生好幾則事件。
+   */
+  private warnBlocksStuck(): void {
+    this.refreshStatusBar()
+    const now = Date.now()
+    if (now - this.lastStuckWarnAt < 8000) return
+    this.lastStuckWarnAt = now
+    showToast(
+      msg('SYNC_BLOCKS_STUCK_HINT',
+        '⛔ 積木的改動沒有進到程式碼——上一次載入積木時出過錯。改一下程式碼那一側就會恢復。'),
+      'warning',
+    )
+  }
+
+    private syncStatusPhase(): { phase: 'live' | 'paused' | 'diverged' | 'blocks-stuck'; source: string | null } {
+    const snap = this.syncCoordinator.snapshot()
+    if (snap.phase === 'live' && this.blocklyPanel?.staleReason === 'load-failed') {
+      return { phase: 'blocks-stuck', source: snap.source }
+    }
+    return snap
+  }
+
+    private refreshStatusBar(): void {
     const detail = updateStatusBar(this.currentStylePreset, this.currentLocale, this.currentBlockStyleId, this.currentTopic.name,
       languagePack(this.currentTopic.language)?.name ?? this.currentTopic.language,
-      // 🔴 三態要**一直看得見**——一個沒被顯示的狀態，使用者會當成壞掉
-      this.syncCoordinator.snapshot(),
+      // 🔴 四態要**一直看得見**——一個沒被顯示的狀態，使用者會當成壞掉
+      this.syncStatusPhase(),
       // 目標的名字——讓那一格判斷得出自己是不是廢話（見 `updateStatusBar`）
       this.currentTarget.name)
     // 🔴 **宿主那條也是同一份狀態的投影**——⚠️ 用能力探測，
@@ -3730,8 +3798,15 @@ export class App {
       // **而使用者按了一個按鈕卻什麼都沒發生，他會以為程式壞了。**
       //
       // > **同一個守衛、兩個呼叫者——沉默只對其中一個是正確的。**
+      // ⚠️ **兩種殘要說不一樣的話**——「還沒畫過」是開機的過渡，
+      //    「載入失敗」則要說得出怎麼恢復（2026-09-10，學生回報）。
       if (this.blocklyPanel?.isStateStale) {
-        showToast('積木還沒被畫過，這一次不能以它為準——請先讓它顯示出來', 'warning')
+        showToast(
+          this.blocklyPanel.staleReason === 'load-failed'
+            ? '積木沒有完整載入，不能以它為準——改一下程式碼那一側就會恢復'
+            : '積木還沒被畫過，這一次不能以它為準——請先讓它顯示出來',
+          'warning',
+        )
         return
       }
       this.syncBlocksToCodeWithMappings()

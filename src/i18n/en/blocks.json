@@ -161,6 +161,7 @@
   "SYNC_STATE_LIVE": "In sync",
   "SYNC_STATE_PAUSED": "Paused",
   "SYNC_STATE_DIVERGED": "Both changed",
+  "SYNC_STATE_BLOCKS_STUCK": "Blocks can't update the code",
   "SYNC_MENU_TITLE": "Sync",
   "SYNC_PAUSE": "⏸ Pause auto-sync",
   "SYNC_RESUME": "▶ Resume auto-sync",

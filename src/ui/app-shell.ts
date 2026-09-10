@@ -2090,7 +2090,7 @@ export function updateStatusBar(
    * 同步的三態。🔴 **它必須一直看得見**——
    * 一個沒被顯示的狀態，使用者會當成壞掉（開機誤報那一刀的同一條）。
    */
-  sync?: { phase: 'live' | 'paused' | 'diverged'; source: string | null },
+  sync?: { phase: 'live' | 'paused' | 'diverged' | 'blocks-stuck'; source: string | null },
   /**
    * **目前目標的顯示名**——用來判斷語言那一格是不是廢話。
    *
@@ -2128,12 +2128,28 @@ export function updateStatusBar(
 ): string {
   const styleName = currentStylePreset.name[currentLocale] || currentStylePreset.name['zh-TW'] || currentStylePreset.id
   const blockStyleLabel = (Blockly.Msg as Record<string, string>)[`BLOCK_STYLE_${currentBlockStyleId.toUpperCase()}`] || currentBlockStyleId
+  // 🔴 **「積木改不動程式碼」是第四態**（2026-09-10，學生回報）
+  //
+  // 積木載入失敗之後，「積木→程式碼」會被擋住——那是對的（殘的工作區
+  // 不得覆蓋程式碼）。而在此之前**狀態列照樣寫著「同步中」**：
+  //
+  // > 「我執行一次之後改右邊，左邊不會改，下方的答案也不會改。
+  // >  我不知道是我的問題還是他的。反正我還要自己改左邊。」
+  //
+  // ⚠️ 而它只在發生的那一刻跳一次快顯，之後**永遠沉默**；
+  // 又因為擋住了就不會有下一次重畫，那個旗標**清不掉**
+  // ——唯一的出路是改程式碼，而使用者是自己摸索出來的。
+  //
+  // > **一個「我暫時不聽你的」的狀態，如果沒有一直說出來，
+  // > 使用者會以為是自己不會用。**
   const syncLabel = sync
     ? sync.phase === 'paused'
       ? `⏸ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_PAUSED'] || '已暫停'}`
-      : sync.phase === 'diverged'
-        ? `⚠️ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_DIVERGED'] || '兩邊都改了'}`
-        : `⇄ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_LIVE'] || '同步中'}`
+      : sync.phase === 'blocks-stuck'
+        ? `⛔ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_BLOCKS_STUCK'] || '積木改不動程式碼'}`
+        : sync.phase === 'diverged'
+          ? `⚠️ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_DIVERGED'] || '兩邊都改了'}`
+          : `⇄ ${(Blockly.Msg as Record<string, string>)['SYNC_STATE_LIVE'] || '同步中'}`
     : ''
   const syncText = syncLabel === '' ? '' : ` | ${syncLabel}`
   const contextText = `${languageName} | ${styleName} | ${blockStyleLabel} | ${topicName} | ${currentLocale}`

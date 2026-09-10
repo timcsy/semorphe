@@ -161,6 +161,7 @@
   "SYNC_STATE_LIVE": "同步中",
   "SYNC_STATE_PAUSED": "已暫停",
   "SYNC_STATE_DIVERGED": "兩邊都改了",
+  "SYNC_STATE_BLOCKS_STUCK": "積木改不動程式碼",
   "SYNC_MENU_TITLE": "同步",
   "SYNC_PAUSE": "⏸ 暫停自動同步",
   "SYNC_RESUME": "▶ 恢復自動同步",

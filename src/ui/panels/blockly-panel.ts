@@ -242,6 +242,17 @@ export class BlocklyPanel implements ViewHost {
       const snapshot = this.workspace
         ? Blockly.serialization.workspaces.save(this.workspace)
         : null
+      // ⚠️ **先記下來**——旗標在 `setState` 成功的下一行就被清掉了，
+      //    等到後面再問「剛才是不是殘的」永遠會得到「不是」。
+      //
+      // 🔴 **只認 `load-failed`，不認 `not-rendered`**（2026-09-10 e2e 抓到）。
+      //    第一版寫 `staleReason !== null`，而**每一次開機的第一次重畫**
+      //    都是 `not-rendered → null`——於是那個通知每次開機都送一遍，
+      //    連帶多跑一次 `publishControls`，把課程釘住控制項那一支 e2e 弄紅。
+      //
+      // > **一個「從壞狀態恢復了」的通知，如果它把【正常的開機過渡】
+      // > 也算成一次恢復，那它每一次開機都在放一次假警報的解除。**
+      const wasLoadFailed = this.staleReason === 'load-failed'
       try {
         this.setState(event.blockState as object)
         this.stateLoadFailed = false
@@ -333,6 +344,15 @@ export class BlocklyPanel implements ViewHost {
         // ─────────────────────────────────────────────────────────────
         this.workspace?.clearUndo()
         this.hasRendered = true
+        // 🔴 **從「殘」恢復過來時要通知外面**（2026-09-10）
+        //
+        // 旗標在上面的 `try` 裡已經清掉了，而**狀態列不知道**
+        // ——於是它會一直寫著「⛔ 積木改不動程式碼」，
+        // 而積木其實早就動得了。
+        //
+        // > **一個恢復了卻還在喊警報的畫面，比不喊還糟：
+        // > 它教使用者不要相信那個警報。**
+        if (wasLoadFailed && this.staleReason === null) this.onStaleChangedCallback?.()
         // 🔴 **骨架在【視窗關掉之前】套**（2026-09-06，spec 172）。
         //
         //    `markScaffoldBlocks` 會 `setEditable(false)` ＋ 動拖曳策略，
@@ -743,6 +763,14 @@ export class BlocklyPanel implements ViewHost {
    * ⚠️ **擋寫回這件事兩種都要擋**（`isStateStale` 仍然兩種都為真）——
    * 分開的是「說什麼」，不是「擋不擋」。
    */
+  /**
+   * **使用者明確說「以積木為準」時，這份工作區拿得出東西嗎。**
+   *
+   * 🔴 只有「載入失敗**而還原成功**」這一種算——那時工作區握著上一個
+   * 完整的狀態，它是**過期**不是**殘**。
+   *
+   * ⚠️ 還沒畫過（`not-rendered`）不算：那時工作區是真的空的。
+   */
   get staleReason(): 'load-failed' | 'not-rendered' | null {
     if (this.stateLoadFailed) return 'load-failed'
     if (!this.hasRendered) return 'not-rendered'
@@ -823,6 +851,13 @@ export class BlocklyPanel implements ViewHost {
   /** 失敗時的呼叫堆疊（前 8 層）。🔴 診斷指令要印它——沒有它就只能猜。 */
   get stateErrorStack(): string | null {
     return this.lastStateStack
+  }
+
+  /** 「殘 → 好」的那一刻——狀態列要重畫。⚠️ 反方向由那條路自己出聲。 */
+  private onStaleChangedCallback: (() => void) | null = null
+
+  onStaleChanged(callback: () => void): void {
+    this.onStaleChangedCallback = callback
   }
 
   onChange(callback: () => void): void {
