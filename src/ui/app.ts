@@ -76,6 +76,8 @@ import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skel
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
 import { lessonById, allTracks, lessonsOfTrack, solutionFor, starterFor, viewForLesson } from '../core/load-lessons'
+import { suggestLessonFor } from '../core/lesson-suggest'
+import type { LessonNudgeBar } from './lesson-nudge-bar'
 import { allTemplates, templateById } from '../core/load-templates'
 import { registeredViews } from '../core/view-registry'
 import { BlockRegistrar } from './block-registrar'
@@ -135,6 +137,8 @@ function allBranchesOf(topic: Topic): Set<string> {
 export class App {
   private bus: SemanticBus
   private blocklyPanel: BlocklyPanel | null = null
+  /** 「〈記住資料〉教的就是你正在用的東西」——見 `lesson-nudge-bar.ts` */
+  private lessonNudgeBar: LessonNudgeBar | null = null
   private codeView: CodeView | null = null
   private syncController: SyncController | null = null
   private blockSpecRegistry: BlockSpecRegistry
@@ -1387,6 +1391,7 @@ export class App {
         }) as never,
       })
     this.blocklyPanel = elements.blocklyPanel
+    this.lessonNudgeBar = elements.lessonNudgeBar
     this.showProjection = elements.showProjection
     this.enableConsoleTab = elements.enableConsoleTab
     elements.onBottomPanelReady((panel) => this.executionController?.attachBottomPanel(panel))
@@ -2142,10 +2147,47 @@ export class App {
   }
 
   private markOutOfScopeBlocks(): void {
-    this.blocklyPanel?.markOutOfScopeBlocks(this.getVisibleComponents())
+    const dimmed = this.blocklyPanel?.markOutOfScopeBlocks(this.getVisibleComponents()) ?? new Set<string>()
+    // 🔴 **打暗之後要說得出「那該換哪一課」**（2026-09-10，學生的畫面）
+    //
+    //    在此之前「有積木變淡」是一個純視覺的訊號：畫面上沒有字說為什麼，
+    //    而出路（換課／不選課程）藏在最下面那條狀態列的一格下拉裡。
+    //
+    // > **一個純視覺的訊號，如果它在使用者【正當地往前走】的時候觸發，
+    // > 那它讀起來不是提示，是故障。**
+    this.updateLessonNudge(dimmed)
     // 🔴 **鷹架的顯示模式也在這裡套用**——與「超出範圍」同一個時機
     //    （畫完之後在既有的積木上蓋一層視覺）。
     this.remarkScaffold()
+  }
+
+  /**
+   * **端出（或收起）那條指路的線。**
+   *
+   * ⚠️ 三種情況它都不出現：沒釘課、沒有積木被打暗、學生按過「不用」
+   * （那一半由 `LessonNudgeBar` 自己記）。
+   *
+   * 🔴 **候選只限同一軌**——把 C++ 入門的學生指去 Arduino 那一課，
+   *    技術上「涵蓋得了」，而那不是他要的下一步。
+   */
+  private updateLessonNudge(dimmed: Set<string>): void {
+    const bar = this.lessonNudgeBar
+    if (!bar) return
+    const lesson = this.currentLesson
+    if (!lesson || dimmed.size === 0) { bar.hide(); return }
+    const track = lessonsOfTrack(trackOf(lesson.id))
+    const hit = suggestLessonFor([...dimmed], track, lesson.id)
+    bar.show({
+      currentTitle: lesson.title,
+      dimmedCount: dimmed.size,
+      suggestion: hit
+        ? { lessonId: hit.lessonId, title: lessonById(hit.lessonId)?.title ?? hit.lessonId }
+        : null,
+      onSwitch: (id: string) => this.selectLesson(id),
+      // ⚠️ 「自由練習」＝ 不選課程（`selectLesson('')`），
+      //    而**不是**課內的「純練習」那一題——後者仍然釘著這一課的工具箱。
+      onFreePractice: () => this.selectLesson(''),
+    })
   }
 
   /**

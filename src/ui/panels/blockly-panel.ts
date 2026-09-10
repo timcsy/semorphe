@@ -1936,8 +1936,16 @@ export class BlocklyPanel implements ViewHost {
     }
   }
 
-  markOutOfScopeBlocks(visibleComponents: Set<string>): void {
-    if (!this.workspace || !this.blockSpecRegistry) return
+  /**
+   * @returns **哪幾顆元件被打暗了**——⚠️ 在此之前它什麼都不回，
+   *   於是「畫面上有東西變淡」這件事**只有畫面知道**，
+   *   組裝點說不出「有幾塊」，更說不出「該換哪一課」。
+   *
+   * > **一個只改畫面的方法，讓「發生了什麼」變成一件只有眼睛知道的事。**
+   */
+  markOutOfScopeBlocks(visibleComponents: Set<string>): Set<string> {
+    const dimmed = new Set<string>()
+    if (!this.workspace || !this.blockSpecRegistry) return dimmed
     const allBlocks = this.workspace.getAllBlocks(false)
     for (const block of allBlocks) {
       const svgRoot = (block as Blockly.BlockSvg).getSvgRoot?.()
@@ -1966,8 +1974,10 @@ export class BlocklyPanel implements ViewHost {
       } else {
         svgRoot.style.opacity = ''
         svgRoot.classList.add('out-of-scope-block')
+        dimmed.add(componentId)
       }
     }
+    return dimmed
   }
 
   /** 取得目前使用的 renderer 名稱 */

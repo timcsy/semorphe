@@ -3229,3 +3229,53 @@ html, body {
   padding: 2px 6px;
   white-space: nowrap;
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * 🔴 **「〈記住資料〉教的就是你正在用的東西」**——一條指路的細線。
+ *
+ * 學生沒有換課，一路往下寫，於是他自己寫的積木全部被打暗
+ * （超出這一課的範圍），而畫面上沒有一個字說為什麼、也沒說怎麼辦。
+ *
+ * ⚠️ **配色刻意不是紅色**：學生沒有做錯任何事，他只是走得比課快。
+ *    紅色是判決，而這一條是指路——與「執行覆蓋」的琥珀色同一條線。
+ * ───────────────────────────────────────────────────────────── */
+.lesson-nudge-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: rgba(255, 176, 32, 0.10);
+  border-bottom: 1px solid rgba(255, 176, 32, 0.28);
+  color: var(--text, #ddd);
+  flex: 0 0 auto;
+}
+
+/* 🔴 **`display: flex` 會蓋過 `[hidden]`**——兩者的特異度相同，而後寫的贏。
+ *    不補這一行的症狀是：沒有話要說的時候，那條線**照樣佔一格**
+ *    （一條空的琥珀色細線掛在積木上面，什麼都沒寫）。
+ *
+ * > **一個「沒事就收起來」的元件，如果它的 `display` 比 `[hidden]` 強，
+ * > 那它永遠不會收起來——而空著的樣子看起來像壞掉。** */
+.lesson-nudge-bar[hidden] { display: none; }
+
+.lesson-nudge-text { flex: 1 1 auto; min-width: 0; }
+
+.lesson-nudge-btn {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 176, 32, 0.45);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.lesson-nudge-btn:hover { background: rgba(255, 176, 32, 0.16); }
+
+.lesson-nudge-btn.primary {
+  background: rgba(255, 176, 32, 0.22);
+  font-weight: 600;
+}

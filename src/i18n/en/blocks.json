@@ -672,5 +672,10 @@
   "CHECK_NOT_YET": "Not yet — see what differs",
   "CHECK_YOURS": "Yours",
   "CHECK_WANTED": "Expected",
-  "COVERAGE_NEVER_RAN": "⚠️ {n} block(s) never ran this time — on purpose?"
+  "COVERAGE_NEVER_RAN": "⚠️ {n} block(s) never ran this time — on purpose?",
+  "LESSON_NUDGE_SWITCH": "“{next}” is where these are taught ({n} kinds of blocks are dimmed right now)",
+  "LESSON_NUDGE_BEYOND": "{n} kinds of blocks are outside “{cur}” — that is why they look faded",
+  "LESSON_NUDGE_GO": "Switch to it",
+  "LESSON_NUDGE_FREE": "Free practice",
+  "LESSON_NUDGE_DISMISS": "Not now"
 }

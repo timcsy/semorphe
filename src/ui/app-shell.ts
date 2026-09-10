@@ -26,6 +26,7 @@ import type { BlockSpecRegistry } from '../core/block-spec-registry'
 import type { StylePreset, Target, Topic } from '../core/types'
 import type { BlockStylePreset } from '../languages/style'
 import { showToast } from './toolbar/toast'
+import { LessonNudgeBar } from './lesson-nudge-bar'
 import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate'
 import { toPortable, fromPortable, defaultWorkName } from '../core/portable'
 import { fileExtensionOf } from '../core/language-packs'
@@ -46,6 +47,8 @@ export interface AppShellElements {
   bottomPanel: BottomPanel | null
   /** 🔴 **這個宿主可能一顆快速列控制項都沒有**——那時它不存在，不是空的。 */
   quickAccessBar: QuickAccessBar | null
+  /** 「〈記住資料〉教的就是你正在用的東西」——見 `lesson-nudge-bar.ts` */
+  lessonNudgeBar: LessonNudgeBar
   layoutManager: LayoutManager
   mobileTabBar: MobileTabBar | null
   codeKeyboard: CodeKeyboard | null
@@ -517,6 +520,10 @@ export function createAppLayout(
   blocklyContainer.style.flex = '1'
   blocklyContainer.style.overflow = 'hidden'
   blocksColumn.appendChild(blocklyContainer)
+
+  // 🔴 **指路的那一條掛在積木上面**——它說的是那些被打暗的積木，
+  //    所以它要在**看得到那些積木的地方**，不是在最下面的狀態列裡。
+  const lessonNudgeBar = new LessonNudgeBar(blocksColumn, blocklyContainer)
 
   // 🔴 **`media` 不傳的話，Blockly 會去 `blockly-demo.appspot.com` 抓圖示與音效**
   // ——而離線時那些圖示會壞掉，壞得很安靜（只是變破圖，功能還在）。
@@ -1865,7 +1872,7 @@ export function createAppLayout(
   //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
   showProjection('blocks')
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, setHostLayer, toggleBottom, bottomVisibility, bottomVisibilityKnown: () => !!bottomPanel || hostSeesBottom, onBottomVisibilityChanged: (cb: () => void) => { bottomVisibilityChanged = cb }, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, lessonNudgeBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, setHostLayer, toggleBottom, bottomVisibility, bottomVisibilityKnown: () => !!bottomPanel || hostSeesBottom, onBottomVisibilityChanged: (cb: () => void) => { bottomVisibilityChanged = cb }, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
 }
 
 /*

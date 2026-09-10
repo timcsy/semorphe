@@ -672,5 +672,10 @@
   "CHECK_NOT_YET": "還沒對——看看差在哪",
   "CHECK_YOURS": "你的輸出",
   "CHECK_WANTED": "這一課要的",
-  "COVERAGE_NEVER_RAN": "⚠️ 有 {n} 塊積木這一次沒有被跑到——是故意的嗎？"
+  "COVERAGE_NEVER_RAN": "⚠️ 有 {n} 塊積木這一次沒有被跑到——是故意的嗎？",
+  "LESSON_NUDGE_SWITCH": "〈{next}〉教的就是你正在用的東西（現在有 {n} 種積木是淡的）",
+  "LESSON_NUDGE_BEYOND": "有 {n} 種積木不在〈{cur}〉裡——所以它們是淡的",
+  "LESSON_NUDGE_GO": "換過去",
+  "LESSON_NUDGE_FREE": "自由練習",
+  "LESSON_NUDGE_DISMISS": "不用"
 }
