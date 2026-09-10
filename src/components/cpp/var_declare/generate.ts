@@ -42,9 +42,21 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       if (declarators.length > 0) {
         const parts = declarators.map(d => {
           const own = generateExpression(d, { ...ctx, indent: 0, isExpression: true }).trim()
-          const ownType = String(d.properties.type ?? type)
-          if (own.startsWith(ownType)) {
-            const rest = own.slice(ownType.length).trim()
+          // 🔴 **先試外層那個型別**（2026-09-10）
+          //
+          // 這裡原本只試 `d.properties.type`，而容器的那一格裝的是**元素型別**：
+          //
+          // ```
+          // vector<int> a(5), b(5);
+          //   宣告子印出來   "vector<int> a(5)"
+          //   d.properties.type  "int"        ← 對不上 → 退回只印名字
+          //   產出           "vector<int> a, b;"   🔴 建構引數蒸發
+          // ```
+          //
+          // ⚠️ 外層那個型別**正是我們自己剛放上去的那一段**，所以脫它不是猜。
+          for (const prefix of [type, String(d.properties.type ?? '')]) {
+            if (prefix.length === 0 || !own.startsWith(prefix)) continue
+            const rest = own.slice(prefix.length).trim()
             if (rest.length > 0) return rest
           }
           const name = d.properties.name ?? 'x'

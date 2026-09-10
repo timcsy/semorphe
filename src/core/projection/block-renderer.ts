@@ -48,6 +48,7 @@ let currentBlockMappings: BlockMapping[] = []
 export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & { blockMappings: BlockMapping[] } {
   resetBlockIdCounter()
   currentBlockMappings = []
+  currentOrphans = []
 
   // 🔴 **問這顆自己是不是根**，不跟全域單值比——見 `traits.ts` 的 `isProgramRoot`。
   // 比對單值的話，第二個語言的根會靜默渲染成空白畫布（spec 160 實測）。
@@ -69,34 +70,95 @@ export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & 
   firstBlock.x = 30
   firstBlock.y = 30
 
+  // ⚠️ 接不上語句鏈的那幾顆放在旁邊——**沒有丟掉，也沒有硬接**（見 `renderStatementChain`）
+  const orphans = currentOrphans
+  currentOrphans = []
+  orphans.forEach((b, i) => { b.x = 30; b.y = 30 + (i + 1) * 4000 })
+
   const blockMappings = currentBlockMappings
   currentBlockMappings = []
 
   return {
     blocks: {
       languageVersion: 0,
-      blocks: [firstBlock],
+      blocks: [firstBlock, ...orphans],
     },
     blockMappings,
   }
 }
 
+/**
+ * 一串語句接成一條積木鏈。
+ *
+ * ## 🔴 **接不上的不得硬接，也不得丟掉**（2026-09-10）
+ *
+ * C++ 允許**運算式語句**，而其中有些運算式沒有敘述形態：
+ *
+ * ```cpp
+ * cc[A[i]];      ← 離散化的慣用寫法（順手把那一格建出來）
+ * return c;
+ * // 保底         ← `return` 在此之前沒有下接點
+ * ```
+ *
+ * 硬接的後果不是「那一行怪怪的」，是 Blockly 拒絕**整個**工作區：
+ * `missing a(n) previous connection`——**使用者看到一片空白**。
+ *
+ * ⚠️ 而**丟掉也不行**：那一行從積木上消失，學生一動積木它就從程式碼裡沒了。
+ *
+ * 🟢 所以接不上的**放成另一顆頂層積木**（Blockly 的浮動積木是合法的）。
+ * 它在畫布上是分開的一塊——而那**正是它在程式裡的樣子**：一個接不進
+ * 語句流的東西。誠實，而且什麼都沒少。
+ *
+ * > **「硬接」與「丟掉」都是在替使用者決定；把它放在旁邊是把決定留給他。**
+ */
+/** 這一趟渲染裡接不上語句鏈的積木——由 `renderToBlocklyState` 收成頂層積木。 */
+let currentOrphans: BlockState[] = []
+
 function renderStatementChain(nodes: SemanticNode[]): BlockState | null {
   if (nodes.length === 0) return null
 
-  const first = renderBlock(nodes[0])
-  if (!first) return null
+  const canFollow = (b: BlockState): boolean =>
+    !(globalPatternRenderer?.isExpressionOnly(b.type) ?? false)
 
-  let current = first
-  for (let i = 1; i < nodes.length; i++) {
-    const next = renderBlock(nodes[i])
-    if (next) {
-      current.next = { block: next }
-      current = next
+  let first: BlockState | null = null
+  let current: BlockState | null = null
+  for (const node of nodes) {
+    const block = renderBlock(node)
+    if (!block) continue
+    if (!first) {
+      first = block
+      current = canFollow(block) ? tailOf(block) : null
+      continue
     }
+    if (current === null || !canFollow(block) || !acceptsNext(current)) {
+      currentOrphans.push(block)
+      continue
+    }
+    current.next = { block }
+    // ⚠️ **一顆節點可以畫成【一串】積木**（`int a[10], b[20];` 攤成兩顆）。
+    //    接下一句時要接在那一串的**尾巴**上，不然它自己的 `next` 會被蓋掉
+    //    ——症狀是第二顆之後整批消失。
+    current = tailOf(block)
   }
 
   return first
+}
+
+/** 一串積木的最後一顆。 */
+function tailOf(b: BlockState): BlockState {
+  let t = b
+  while (t.next?.block) t = t.next.block
+  return t
+}
+
+/**
+ * 這顆積木接得住下一句嗎。
+ *
+ * ⚠️ **問宣告，不看型別名**——`cpp_return` 與 `cpp_break` 在 2026-09-10
+ * 之前沒有下接點，而那是宣告裡的一格，不是這裡該記得的清單。
+ */
+function acceptsNext(b: BlockState): boolean {
+  return globalPatternRenderer?.acceptsNextStatement(b.type) ?? true
 }
 
 const renderCtx: RenderContext = {

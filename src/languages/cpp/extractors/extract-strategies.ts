@@ -20,6 +20,8 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     if (declarators.length > 1) {
       return buildVarDeclare({ type }, { declarators })
     }
+    // ⚠️ **建構子形式從 extraState 讀回來**——積木上沒有它的位置（見渲染那一側）
+    const initStyle = (block.extraState as { initStyle?: string } | undefined)?.initStyle
     const name = declarators.length === 1
       ? declarators[0].properties.name
       : ((block.fields.NAME as string) ?? 'x')
@@ -30,7 +32,10 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
           const initNode = initInput?.block ? ctx.extract(initInput.block) : null
           return initNode ? [initNode] : []
         })()
-    return buildVarDeclare({ name, type }, { initializer: initChildren })
+    return buildVarDeclare(
+      initStyle !== undefined ? { name, type, init_style: initStyle } : { name, type },
+      { initializer: initChildren },
+    )
   })
 
   // ── Control flow (if-elseif chain flattening) ──

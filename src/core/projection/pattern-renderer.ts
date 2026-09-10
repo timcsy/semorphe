@@ -38,6 +38,8 @@ export class PatternRenderer {
   private mappingByBlockType = new Map<string, RenderMapping>()
   private expressionOnlyBlockTypes = new Set<string>()
   private statementOnlyBlockTypes = new Set<string>()
+  /** 有上接點而**沒有**下接點的——接東西在它後面會讓整個工作區載不進去。 */
+  private noNextStatementBlockTypes = new Set<string>()
   private renderStrategyRegistry: RenderStrategyRegistry | null = null
   private activeRenderCtx: RenderContext | undefined = undefined
 
@@ -98,6 +100,13 @@ export class PatternRenderer {
       // Track statement-only block types (have previousStatement but no output)
       if (blockDef.previousStatement !== undefined && blockDef.output === undefined) {
         this.statementOnlyBlockTypes.add(blockType)
+      }
+      // 🔴 **接得住下一句嗎**——從宣告推導，不寫清單（2026-09-10）。
+      //    `cpp_return` 與 `cpp_break` 在此之前沒有 `nextStatement`，而
+      //    `return c;` 後面接一行註解是學生真的會寫的東西。硬接的後果是
+      //    Blockly 拒絕整個工作區，使用者看到一片空白。
+      if (blockDef.previousStatement !== undefined && blockDef.nextStatement === undefined) {
+        this.noNextStatementBlockTypes.add(blockType)
       }
     }
     this.formSets = buildFormSets(this.formDeclarations)
@@ -374,6 +383,16 @@ export class PatternRenderer {
   /** Check if a block type is expression-only (has output, no previous/next connection) */
   isExpressionOnly(blockType: string): boolean {
     return this.expressionOnlyBlockTypes.has(blockType)
+  }
+
+  /**
+   * **這顆積木接得住下一句嗎。**
+   *
+   * ⚠️ 認不得的一律回 `true`——保守的方向是「照舊接上」，
+   * 而不是「把後面的東西全部搬走」。
+   */
+  acceptsNextStatement(blockType: string): boolean {
+    return !this.noNextStatementBlockTypes.has(blockType)
   }
 
   /** Get the expression counterpart block type for a statement block type */

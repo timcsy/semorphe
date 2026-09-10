@@ -16,6 +16,7 @@
         }
       ],
       "previousStatement": "Statement",
+      "nextStatement": "Statement",
       "colour": "#FF6680",
       "tooltip": "%{BKY_U_RETURN_TOOLTIP}"
     },
@@ -24,6 +25,6 @@
         "VALUE": "value"
       }
     },
-    "_why": "🔴 **spec 164：宣告拿掉了 `nextStatement`。**\n\n`return` 之後接東西是**不可達的程式碼**——命令式那份從來就沒有它，而**宣告多了**。\n\n⚠️ 而這個錯**使用者看不到**（命令式蓋住了它），直到有人刪掉命令式的那一天。\n\n> 由 `audit-block-def-parity`（spec 163）逐項比對掉出來：「statement true/false vs true/true」。\n⚠️ **而我第一次判它時判反了**——寫成「命令式才是錯的」。判準必須是**這一顆的語義**，不是「哪一份比較新」。"
+    "_why": "🔴 **2026-09-10：補上 `nextStatement`。**\n\n在此之前它沒有下接點，理由看起來很合理：「`cpp_return` 之後不會再執行任何東西」。\n⚠️ **而原始碼裡可以有**——最常見的就是一行註解：\n\n```cpp\nreturn c;\n//保底有一個return      ← 學生真的這樣寫（tioj_godteach/learn/9_1_function.cpp）\n```\n\n渲染那一路老實地把註解接在它後面，而 Blockly 拒絕整個工作區：\n`The block \"cpp_return\" is missing a(n) next connection`——**使用者看到一片空白**。\n\n> **一個「照理說不會發生」的形狀，如果原始碼寫得出來，它就會發生。**\n\n🟢 同族的 `continue`／`throw`／`program_exit` 本來就有下接點——這一顆與 `break` 是僅有的兩個例外，而那個例外沒有理由。\n\n🔴 **spec 164：宣告拿掉了 `nextStatement`。**\n\n`return` 之後接東西是**不可達的程式碼**——命令式那份從來就沒有它，而**宣告多了**。\n\n⚠️ 而這個錯**使用者看不到**（命令式蓋住了它），直到有人刪掉命令式的那一天。\n\n> 由 `audit-block-def-parity`（spec 163）逐項比對掉出來：「statement true/false vs true/true」。\n⚠️ **而我第一次判它時判反了**——寫成「命令式才是錯的」。判準必須是**這一顆的語義**，不是「哪一份比較新」。"
   }
 ]

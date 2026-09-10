@@ -79,29 +79,200 @@ const DECLARATOR_SHAPES = new Set([
   'pointer_declarator', 'reference_declarator', 'function_declarator',
 ])
 
+
 /**
- * **`stack<int> a, b;`——多個宣告子，而它們全是裸名字。**
+ * **這個宣告的每一個宣告子，都是「一個變數」嗎？**
  *
- * 🔴 具體型別那幾支（容器、`string`…）原本只認得**一個**宣告子，第二個之後
- * **安靜地掉了**（`string s, t, u;` 產出 `string s;`）。而只是「讓開」也不夠：
- * 讓開之後程式碼對了，**身分卻退化成通用的 `cpp:var_declare`**——
- * 學生看到的不再是那顆堆疊積木。
+ * ```
+ * vector<int> a;              identifier
+ * vector<int> a = {1};        init_declarator
+ * vector<int> a(n);           function_declarator   ← 最令人困惑的解析
+ * vector<int> a[10];          array_declarator      ← 🔴 不是（那是陣列，另一顆概念）
+ * vector<int>* p;             pointer_declarator    ← 🔴 不是
+ * ```
  *
- * > **一個為了修正確性而放棄身分的修法，是把一個缺陷換成另一個缺陷。**
+ * 🔴 **回傳全部，不是第一個。** `vector<int> C(n), V(n);` 有兩個宣告子，
+ * 而在此之前每一條路都只讀得到第一個——第二個安靜地蒸發。
  *
- * 🟢 所以這一支讓那幾支**自己把多宣告子包起來**：外層是 `cpp:var_declare`
- * （多宣告子本來就長這樣），而**每一個宣告子保住自己的身分**。
- *
- * ⚠️ **只認全部都是裸名字的那種**（`stack<int> a, b;`）。混著初始化或陣列的
- * （`string A[100], ans;`）仍然讓開走通用路徑——那裡才有陣列與指標的處理。
- *
- * @returns 名字們（兩個以上），或 `null`
+ * @returns 宣告子們（至少一個），或 `null`（有讀不懂的形狀 → 讓開）
  */
-function plainIdentifierNames(node: AstNode): string[] | null {
+/**
+ * **這個 `f(…)` 其實是一個帶建構引數的變數嗎？**
+ *
+ * 最令人困惑的解析（most vexing parse）：`int a(n);` 與 `int f(int);`
+ * 在文法上同形，而它們是兩件完全不同的事。
+ *
+ * 🟢 判準是**問宣告登記處**：括號裡每一個「參數」都是一個**宣告過的名字**
+ * ⟹ 那不是型別，是引數 ⟹ 這是一個變數定義。
+ *
+ * ```
+ * int a(n);        n 宣告過      → true   （變數）
+ * int f(int);      primitive_type → false  （函式）
+ * void f(MyType);  MyType 沒宣告過 → false （函式）
+ * int f();         沒有參數        → false  （零引數的 `int f()` 一律當函式
+ *                                            ——`int a();` 在 C++ 裡本來就是函式宣告）
+ * ```
+ *
+ * ⚠️ **拿不準的一律回 `false`**——把函式宣告誤判成變數，會讓一支程式的
+ * 前置宣告整批消失；反過來只是維持今天的行為。
+ */
+function looksLikeCtorCall(fnDecl: AstNode, ctx: LiftContext): boolean {
+  // 名字本身要是裸識別字（`int (*p)(int)` 那種不算）
+  if (!fnDecl.namedChildren.some((c) => c.type === 'identifier')) return false
+  const params = fnDecl.namedChildren.find((c) => c.type === 'parameter_list')
+  const items = params?.namedChildren ?? []
+  if (items.length === 0) return false
+  return items.every((pd) => {
+    const inner = pd.namedChildren[0]
+    if (!inner || pd.namedChildren.length !== 1) return false
+    if (inner.type !== 'type_identifier') return false
+    return ctx.data.lookup(inner.text) !== null
+  })
+}
+
+/**
+ * 這顆概念的 `initializer` 接點裝得下**多個**嗎。
+ *
+ * ⚠️ **從宣告讀，不寫清單**：簡寫（`"initializer": "expression"`）是一個；
+ * 物件形式（`{ allowed: […], max: n }`）才可能是多個。
+ */
+function acceptsManyInitializers(componentId: string): boolean {
+  const all = [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
+  const c = all.find((x) => (x as { componentId?: string }).componentId === componentId) as
+    { children?: Record<string, unknown>; properties?: { name?: string }[] } | undefined
+  if (c === undefined) return false
+  // 🔴 **宣告了 `ctorCount` 就是明說「我收 N 個」**
+  //
+  // ⚠️ 第一版漏了這一條，於是 `LiquidCrystal lcd(12, 11, 5, 4, 3, 2);`
+  // 整句被降級成殘差——**六個腳位的液晶是 Arduino 那一軌的主角之一**。
+  // 那幾顆的 `initializer` 寫的是簡寫（一個），而**它們的真實契約在
+  // `ctorCount` 那一格上**：插槽開幾個由它決定。
+  //
+  // > **一個接點能裝幾個，可能寫在別的地方——
+  // > 只讀一處就下判斷，會把「宣告過了」讀成「沒宣告」。**
+  if ((c.properties ?? []).some((pp) => pp?.name === 'ctorCount')) return true
+  const slot = c.children?.initializer
+  if (slot === undefined) return false
+  if (typeof slot === 'string') return false
+  const max = (slot as { max?: number }).max
+  return max === undefined || max > 1
+}
+
+function variableDeclarators(node: AstNode): AstNode[] | null {
   const found = node.namedChildren.filter((c) => DECLARATOR_SHAPES.has(c.type))
-  if (found.length < 2) return null
-  if (!found.every((c) => c.type === 'identifier')) return null
-  return found.map((c) => c.text)
+  if (found.length === 0) return null
+  return found.every(isPlainVariableDeclarator) ? found : null
+}
+
+/**
+ * 一個宣告子是「就是一個變數」嗎——⚠️ **裡面包著參考或指標的不算**。
+ *
+ * ```
+ * a          ✅            &r = x     🔴 那是參考，另一顆概念
+ * a = 1      ✅            *p = &x    🔴 那是指標
+ * a(n)       ✅            a[10]      🔴 那是陣列
+ * ```
+ *
+ * 🔴 不擋的話 `stack<int>& r = a0;` 會被這一支認領，而它讀出來的名字是
+ * **`"& r"`**（星號與 `&` 跑進名字裡），初始值也掉了——產出 `stack<int> & r;`
+ * 是**編不過的程式碼**（參考一定要初始化）。
+ *
+ * 🟢 讓開之後走通用路徑，那裡有 `buildVarDeclareRef`。
+ */
+function isPlainVariableDeclarator(c: AstNode): boolean {
+  if (c.type === 'identifier') return true
+  if (c.type === 'function_declarator') {
+    return c.namedChildren.find((x) => x.type === 'identifier') !== undefined
+      && !c.namedChildren.some((x) => x.type === 'pointer_declarator' || x.type === 'reference_declarator')
+  }
+  if (c.type !== 'init_declarator') return false
+  const inner = c.childForFieldName('declarator') ?? c.namedChildren[0]
+  return inner?.type === 'identifier'
+}
+
+/** 一個宣告子拆出來的東西。空的那幾格代表「這個宣告子沒有那一樣」。 */
+interface CtorSlots {
+  name: string
+  /** `= {1,2}` 的元素 */
+  values: SemanticNode[]
+  /** `(n)` 或 `(n, 0)` 的第一個引數 */
+  size: SemanticNode | null
+  /** `(n, 0)` 的第二個引數 */
+  fill: SemanticNode | null
+  /** `= f()`——初始值是一整個運算式，不是元素列表 */
+  source: SemanticNode | null
+}
+
+/**
+ * **讀一個宣告子**——三種形狀走同一支。
+ *
+ * 🔴 這一支是從容器分支裡抽出來的（2026-09-10）。抽它的理由不是整潔：
+ * 那段邏輯原本只被呼叫**一次**，所以「有沒有第二個宣告子」這個問題
+ * 從來沒有機會被問。
+ *
+ * ## ⚠️ 建構引數有兩個住處，而它們的形狀不同
+ *
+ * ```
+ * vector<int> v(5);   init_declarator ＋ argument_list      引數就是運算式
+ * vector<int> v(n);   function_declarator ＋ parameter_list 引數包在 parameter_declaration 裡，
+ *                                                            而它的「型別」其實是識別字
+ * ```
+ */
+function ctorSlots(decl: AstNode, ctx: LiftContext): CtorSlots {
+  const out: CtorSlots = { name: '', values: [], size: null, fill: null, source: null }
+
+  if (decl.type === 'identifier') {
+    out.name = decl.text
+    return out
+  }
+
+  if (decl.type === 'function_declarator') {
+    out.name = decl.namedChildren.find((c) => c.type === 'identifier')?.text ?? ''
+    const params = decl.namedChildren.find((c) => c.type === 'parameter_list')
+    const args = (params?.namedChildren ?? [])
+      .map((pd) => {
+        const inner = pd.namedChildren[0]
+        if (!inner) return null
+        // 🔴 **一個「引數」自己也可能是最令人困惑的解析**
+        //
+        // ```cpp
+        // vector<vector<int>> g(M, vector<int>(N));
+        //                          ^^^^^^^^^^^^^^ ← template_type ＋
+        //                                            abstract_function_declarator
+        // ```
+        //
+        // 只取 `namedChildren[0]` 的話拿到 `vector<int>` 而 **`(N)` 安靜地掉了**
+        // ——產出的 `vector<int>` 是一個裸型別，下一次讀回來就是殘差。
+        //
+        // ⚠️ 這一層**不再往下猜**：把原文原封帶出去（P6 誠實降級）。
+        // > **看不懂的時候，帶著原文比帶著一半的理解安全。**
+        if (pd.namedChildren.length > 1) return buildRawCode(pd.text)
+        return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
+      })
+      .filter((n): n is SemanticNode => n !== null)
+    if (args.length >= 1) out.size = args[0]
+    if (args.length >= 2) out.fill = args[1]
+    return out
+  }
+
+  // init_declarator
+  const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
+  out.name = nameNode?.text ?? ''
+  const v = decl.childForFieldName('value')
+  if (v?.type === 'initializer_list') {
+    for (const item of v.namedChildren) {
+      const lifted = ctx.lift(item)
+      if (lifted) out.values.push(lifted)
+    }
+  } else if (v?.type === 'argument_list') {
+    // 單一引數是「幾個元素」（`vector<int> v(5)`）；
+    // 兩個引數是「幾個、每個是什麼」（`vector<int> v(5, 7)`）。
+    if (v.namedChildren.length >= 1) out.size = ctx.lift(v.namedChildren[0])
+    if (v.namedChildren.length >= 2) out.fill = ctx.lift(v.namedChildren[1])
+  } else if (v) {
+    out.source = ctx.lift(v)
+  }
+  return out
 }
 
 function claimsSimpleDeclarator(node: AstNode): boolean {
@@ -135,6 +306,20 @@ const hasInitSourceDecl = new Set(
  * ⚠️ 與上面同一條理由：**從 JSON 讀，不寫死**。而它要解決的是一個
  * 「被正確地排除、然後沒有人接住」的缺陷——見下方 `argument_list` 那一段。
  */
+/**
+ * 哪些容器宣告概念**有宣告 `values` 子節點**（`vector<int> v = {1,2}`）。
+ *
+ * ⚠️ 與 `hasSizeDecl` 同一條理由：**從 JSON 讀，不寫死**。
+ * 🔴 在此之前 `values` 是**無條件掛上去**的，而 `map` 靠一個提前 return 躲開
+ * ——也就是說那條規則寫在控制流裡，不在宣告裡。一個沒有宣告 `values` 的
+ * 第三顆容器出現時，它會安靜地收到一個產生器不認得的子節點。
+ */
+const hasValuesDecl = new Set(
+  [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
+    .filter((c) => (c as { children?: Record<string, unknown> }).children?.values !== undefined)
+    .map((c) => (c as { componentId: string }).componentId),
+)
+
 const hasSizeDecl = new Set(
   [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
     .filter((c) => (c as { children?: Record<string, unknown> }).children?.size !== undefined)
@@ -656,166 +841,70 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
       // 容器宣告概念——**從登錄表讀，不寫死**（見 core/component/container-templates.ts）。
       // 已元件化的由膠囊登錄；還沒的由 `pending-containers.ts` 的過渡表提供。
+      // 容器宣告概念——**從登錄表讀，不寫死**（見 core/component/container-templates.ts）。
+      // 已元件化的由膠囊登錄；還沒的由 `pending-containers.ts` 的過渡表提供。
       const componentId = componentForContainerTemplate(templateName)
-      // ⚠️ 同一個守門（`vector<int> v[10];` 原本產出 `vector<int> x;`）
       //
-      // 🟢 而全是裸名字的多宣告子由這一支自己包起來——**身分保住**
-      //    （`stack<int> inbox, outbox;`，見 `plainIdentifierNames`）。
-      const containerNames = componentId ? plainIdentifierNames(node) : null
-      if (componentId && containerNames) {
-        const innerT = templateArgs?.namedChildren.find(c => c.type === 'type_descriptor' || c.type === 'type_identifier')?.text ?? 'int'
+      // 🔴 **每一個宣告子都走同一支**（2026-09-10）
+      //
+      // 這裡原本只認得**一個**宣告子。使用者回報：
+      //
+      // ```cpp
+      // vector<int> C(n), V(n);   →  vector<int> C(n);     🔴 V 整個蒸發
+      // ```
+      //
+      // ⚠️ 而它連 `cpp:vector_declare` 都不是：兩個 `function_declarator` 讓
+      // 整句被讀成一個**函式的前置宣告**（`cpp:forward_decl`），第二個直接沒了。
+      //
+      // > **一個只寫得出「一個」的讀取器，在遇到兩個的時候不會出聲
+      // > ——它會安靜地讀完第一個就回去。**
+      //
+      // 🟢 修法是把「讀一個宣告子」抽成 `ctorSlots`，這裡只負責**跑一遍**。
+      // ⚠️ 一個宣告子時**回傳那顆概念本身**（行為與先前逐字相同）；
+      //    兩個以上才包一層 `cpp:var_declare`——多宣告子本來就長那樣。
+      const declList = componentId ? variableDeclarators(node) : null
+      if (componentId && declList) {
+        /** 型別參數怎麼變成屬性——`map` 與 `pair` 各有兩個。 */
+        const typeArgs = templateArgs?.namedChildren
+          .filter((c) => c.type === 'type_descriptor' || c.type === 'type_identifier') ?? []
+        const propsFor = (nm: string): Record<string, string> =>
+          templateName === 'map'
+            ? { key_type: typeArgs[0]?.text ?? 'int', value_type: typeArgs[1]?.text ?? 'int', name: nm }
+            : templateName === 'pair'
+              // 🔴 這一顆的 lift 是三路裡唯一錯過的那一路：`generate.ts` 讀 `type1`／`type2`、
+              // `forms/blocks.json` 的 renderMapping 也是——而 lift 曾經產出
+              // `type: "int,string"`，一個要 parse 回結構才能用的字串。
+              //
+              // ⚠️ 這是**第二個**「兩個型別參數」的特例。第三個出現時該收斂成
+              // 「從 `component.json` 的 properties 宣告推導」，而不是再加一個 `if`。
+              ? { type1: typeArgs[0]?.text ?? 'int', type2: typeArgs[1]?.text ?? 'int', name: nm }
+              : { type: innerType, name: nm }
+
+        const buildOne = (d: AstNode): SemanticNode => {
+          const s = ctorSlots(d, ctx)
+          const props = propsFor(s.name)
+          // ⚠️ **每一格都問過宣告才掛**——沒有宣告那個接點的容器不得收到它
+          //    （`hasInitSourceDecl` 的檔頭記過那次翻車：一個未宣告的子節點
+          //    讓產生器不認得，來回轉換就掉了那一段）。
+          if (s.values.length > 0 && hasValuesDecl.has(componentId)) {
+            return createNode(componentId, props, { values: s.values })
+          }
+          if (s.source && hasInitSourceDecl.has(componentId)) {
+            return createNode(componentId, props, { source: [s.source] })
+          }
+          if (s.size && hasSizeDecl.has(componentId)) {
+            return s.fill
+              ? createNode(componentId, props, { size: [s.size], fill: [s.fill] })
+              : createNode(componentId, props, { size: [s.size] })
+          }
+          return createNode(componentId, props)
+        }
+
+        if (declList.length === 1) return buildOne(declList[0])
         return buildVarDeclare(
           { type: templateTypeNode.text },
-          { declarators: containerNames.map((n) => createNode(componentId, { type: innerT, name: n })) },
+          { declarators: declList.map(buildOne) },
         )
-      }
-      if (componentId && claimsSimpleDeclarator(node)) {
-        const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
-        // 🔴 **`vector<int> v(n);` 走的是最令人困惑的解析**（2026-09-09）
-        //
-        // 引數是識別字時，tree-sitter 把整句讀成一個【函式宣告】
-        // ——與 `DHT dht(DHTPIN, DHT11);` 同一回事（具體型別那一支早就處理了它，
-        // 而容器這一支沒有）。實測：學生的 218 個檔裡 **32 個**這樣寫。
-        //
-        // ```
-        // vector<int> v(5);   → init_declarator + argument_list   ← 下面那條路
-        // vector<int> v(n);   → function_declarator               ← 這條
-        // ```
-        //
-        // > **一個解析器少了前置處理階段，它會在那個階段本來會消掉的地方看到歧義**
-        // > （具體型別那一支的檔頭逐字記過）。
-        const fnDecl = node.namedChildren.find(c => c.type === 'function_declarator')
-        const name = decl?.type === 'identifier'
-          ? decl.text
-          : (decl?.childForFieldName('declarator') ?? decl?.namedChildren[0])?.text
-            ?? fnDecl?.namedChildren.find(c => c.type === 'identifier')?.text
-            ?? ''
-
-        // map needs key_type and value_type as separate properties
-        if (templateName === 'map') {
-          const args = templateArgs?.namedChildren.filter(c => c.type === 'type_descriptor' || c.type === 'type_identifier') ?? []
-          const keyType = args[0]?.text ?? 'int'
-          const valueType = args[1]?.text ?? 'int'
-          return createNode(componentId, { key_type: keyType, value_type: valueType, name })
-        }
-
-        // `vector<int> v = {3,1,4}` —— 初始化列表。
-        //
-        // ⚠️ **原本整段被丟掉**：辨識出來的是一個沒有初始值的宣告，
-        // 而**產出的程式碼也少了那一段**，所以來回轉換看起來「成功」了。
-        // 只有跑起來（`v[1]` 索引越界）才會發現。
-        const values: SemanticNode[] = []
-        // `vector<int> v = f()` —— 初始值是**一整個運算式**，不是元素列表。
-        //
-        // ⚠️ 這一筆原本也被丟掉，症狀與上面的初始化列表完全相同（變數宣告成
-        // 空的、產回去的程式碼少一段、來回轉換看起來「成功」）。而它的停用
-        // 標記寫的是「初始化列表尚無對應概念」——**方向指錯了**：列表早就
-        // 支援了，掉的是函式呼叫。照標記走會去改一段已經正確的程式碼。
-        let source: SemanticNode | null = null
-        // `vector<int> v(5)` —— **建構子引數，不是初始值**。
-        //
-        // ⚠️ 它原本只被「排除在 source 之外」（那是對的，當成 source 會產出
-        // `vector<int> v = 5;`，不合法），**而排除之後就沒有人接住它**：
-        // 大小整個掉了，`v` 建成空的，於是 `iota(v.begin(), v.end(), 1)`
-        // 立刻索引越界。第三十二條護欄的 1 段缺口。
-        //
-        // > **「這不屬於那個接點」與「這不需要接點」是兩件事，
-        // > 而一個 `else if` 排除法把它們寫成了同一件。**
-        let size: SemanticNode | null = null
-        let fill: SemanticNode | null = null
-        if (decl && decl.type === 'init_declarator') {
-          const v = decl.childForFieldName('value')
-          // `{3,1,4}` 是 initializer_list；`vector<int> v(5)` 是 argument_list（不是列表初始化）
-          if (v && v.type === 'initializer_list') {
-            for (const item of v.namedChildren) {
-              const lifted = ctx.lift(item)
-              if (lifted) values.push(lifted)
-            }
-          } else if (v && v.type === 'argument_list') {
-            // 單一引數是「幾個元素」（`vector<int> v(5)`）；
-            // 兩個引數是「幾個、每個是什麼」（`vector<int> v(5, 7)`）。
-            //
-            // ⚠️ 🔴 **兩個引數的形式原本這裡寫著「今天不支援，它必須繼續被丟到
-            // raw_code 那條路」——而實際行為不是那樣**：它 fall through 到
-            // 「沒有任何接點」的分支，於是向量建成**空的**。
-            // 註解說的是一件事，程式做的是另一件，而**空的向量不會出聲**。
-            //
-            // > **一句「這裡不支援」的註解，如果沒有人檢查它，
-            // > 描述的就只是寫它的人當時的打算。**
-            if (v.namedChildren.length === 1) size = ctx.lift(v.namedChildren[0])
-            else if (v.namedChildren.length === 2) {
-              size = ctx.lift(v.namedChildren[0])
-              fill = ctx.lift(v.namedChildren[1])
-            }
-          } else if (v) {
-            source = ctx.lift(v)
-          }
-        }
-
-        // ⚠️ 最令人困惑的解析那一條：引數住在 `parameter_list` 裡，
-        //    而它們的「型別」其實是識別字（見上）。
-        if (!decl && fnDecl) {
-          const params = fnDecl.namedChildren.find(c => c.type === 'parameter_list')
-          const ctorArgs = (params?.namedChildren ?? [])
-            .map(pd => {
-              const inner = pd.namedChildren[0]
-              if (!inner) return null
-              // 🔴 **一個「引數」自己也可能是最令人困惑的解析**（2026-09-09）
-              //
-              // ```cpp
-              // vector<vector<int>> g(M, vector<int>(N));
-              //                          ^^^^^^^^^^^^^^ ← template_type ＋
-              //                                            abstract_function_declarator
-              // ```
-              //
-              // 這裡原本只取 `namedChildren[0]`，於是拿到 `vector<int>` 而
-              // **`(N)` 安靜地掉了**——產出的 `vector<int>` 是一個裸型別，
-              // 而它下一次讀回來就是殘差。
-              //
-              // ⚠️ 這一層**不再往下猜**：把原文原封帶出去（P6 誠實降級）。
-              // > **看不懂的時候，帶著原文比帶著一半的理解安全。**
-              if (pd.namedChildren.length > 1) return buildRawCode(pd.text)
-              return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
-            })
-            .filter((n): n is NonNullable<typeof n> => n !== null)
-          if (ctorArgs.length === 1) size = ctorArgs[0]
-          else if (ctorArgs.length === 2) { size = ctorArgs[0]; fill = ctorArgs[1] }
-        }
-        // `pair<int, string> p` —— **兩個型別參數要拆成兩個具名屬性**。
-        //
-        // 🔴 這一顆的 lift 是三路裡唯一錯的那一路：`generate.ts` 讀 `type1`／`type2`、
-        // `forms/blocks.json` 的 renderMapping 也是 `TYPE1→type1`／`TYPE2→type2`，
-        // **而 lift 產出 `type: "int,string"`**——一個要 parse 回結構才能用的字串。
-        //
-        // 缺陷帳（`tests/baselines/defect-ledger.json` 的 `_meta`）逐字：
-        // 「宣告寫的 type1/type2 才是對的設計，所以**刻意不改宣告**
-        // （改了會讓護欄變綠而缺陷還在）」——所以改的是這裡。
-        //
-        // ⚠️ 這是**第二個**「兩個型別參數」的特例（`map` 是第一個）。第三個出現時
-        // 該收斂成「從 `component.json` 的 properties 宣告推導」，而不是再加一個 `if`。
-        const props: Record<string, string> =
-          templateName === 'pair'
-            ? (() => {
-                const args = templateArgs?.namedChildren.filter(c => c.type === 'type_descriptor' || c.type === 'type_identifier') ?? []
-                return { type1: args[0]?.text ?? 'int', type2: args[1]?.text ?? 'int', name }
-              })()
-            : { type: innerType, name }
-
-        if (values.length > 0) {
-          return createNode(componentId, props, { values })
-        }
-        if (source && hasInitSourceDecl.has(componentId)) {
-          return createNode(componentId, props, { source: [source] })
-        }
-        // ⚠️ 同樣從 JSON 讀，不寫死——沒有宣告 `size` 接點的容器不得收到它
-        //（那正是 `hasInitSourceDecl` 的檔頭記過的翻車：一個未宣告的子節點
-        // 讓產生器不認得，來回轉換就掉了那一段）。
-        if (size && hasSizeDecl.has(componentId)) {
-          return fill
-            ? createNode(componentId, props, { size: [size], fill: [fill] })
-            : createNode(componentId, props, { size: [size] })
-        }
-        return createNode(componentId, props)
       }
 
       // Unknown template type — fall through to var_declare with full template text
@@ -842,14 +931,32 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     }
     // ⚠️ 讀不懂的宣告子形狀要**讓開**——見 `claimsSimpleDeclarator` 的檔頭。
     //
-    // 🟢 而全是裸名字的多宣告子由這一支自己包起來（`string s, t, u;`）。
-    const plainNames = simpleTypeName ? plainIdentifierNames(node) : null
-    if (plainNames && simpleTypeName) {
+    // 🟢 **多宣告子由這一支自己包起來**（`string s, t, u;`／`string a(n, '0'), b;`）
+    //    ——與容器那一支走同一對 `variableDeclarators` ＋ `ctorSlots`。
+    //    ⚠️ 一個宣告子時**不走這條**：底下那一段還有最令人困惑的解析、
+    //    `decl_type`、`ctorCount` 幾格這一條沒有的東西。
+    const plainDecls = simpleTypeName ? variableDeclarators(node) : null
+    if (plainDecls && plainDecls.length > 1 && simpleTypeName) {
       const cid = streamComponents[simpleTypeName] ?? plainTypeComponent(simpleTypeName)
       if (cid) {
+        const slots = plainDecls.map((d) => ctorSlots(d, ctx))
+        // ⚠️ 與單一宣告子那一條**同一道檢查**：宣告說得下幾個就放幾個。
+        // 🔴 而降級的單位是**整句**，不是單一個宣告子——一顆殘差節點當不了
+        //    宣告子（產生器不認得它，產出的是 `string x, x;` 那種垃圾）。
+        // > **降級要降在一個【自己站得住】的單位上。**
+        const tooMany = slots.some((sl) =>
+          [sl.size, sl.fill].filter(Boolean).length > 1 && !acceptsManyInitializers(cid))
+        if (tooMany) return buildRawCode(node.text)
         return buildVarDeclare(
           { type: simpleTypeName },
-          { declarators: plainNames.map((n) => createNode(cid, { name: n })) },
+          {
+            declarators: slots.map((sl) => {
+              const args = [sl.size, sl.fill].filter((x): x is SemanticNode => x !== null)
+              if (args.length > 0) return createNode(cid, { name: sl.name }, { initializer: args })
+              if (sl.source) return createNode(cid, { name: sl.name }, { initializer: [sl.source] })
+              return createNode(cid, { name: sl.name })
+            }),
+          },
         )
       }
     }
@@ -927,6 +1034,22 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           const args = valueNode.namedChildren
             .map(a => ctx.lift(a))
             .filter((n): n is NonNullable<typeof n> => n !== null)
+          // 🔴 **宣告說得下幾個，就只放幾個**（2026-09-10）
+          //
+          // `string s(n, '0');`（n 個 '0'）有兩個建構引數，而 `cpp:string_declare`
+          // 的宣告寫的是 `"initializer": "expression"`——**一個**。
+          //
+          // 硬塞兩個進去的後果：積木上只有一格，於是走一趟積木回來變成
+          // `string s = n;`——**編不過，而且意思完全不同**。
+          //
+          // ⚠️ 誠實降級：帶著原文出去（P6）。它來回轉換逐字不變，
+          // 而學生看得到那一行——只是拆不開它。
+          //
+          // > **一個接點裝不下的東西，塞進去之後不會出聲；
+          // > 它會在【投影到別的地方】的那一步安靜地掉。**
+          if (args.length > 1 && !acceptsManyInitializers(componentId)) {
+            return buildRawCode(node.text)
+          }
           return createNode(componentId, { name, ...withCount(args) }, { initializer: args })
         }
         if (valueNode) {
@@ -1069,6 +1192,35 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       const raw = createNode('raw_code', {})
       raw.metadata = { rawCode: node.text, degradationCause: 'unsupported' }
       return raw
+    }
+    // 🔴 **`int a(n), b(n);` 是【兩個變數】，不是一個函式的前置宣告**（2026-09-10）
+    //
+    // 使用者回報 `vector<int> C(n+1), V(n+1);` 之後，全掃出來的同一族還剩這幾筆：
+    // 型別**沒有對應膠囊**時（`int`／`double`／還沒膠囊化的 `deque`），
+    // 整句掉進這條前置宣告的路，而它只讀第一個宣告子——`b` 就這樣沒了。
+    //
+    // ## ⚠️ 判準：括號裡那個名字，是宣告過的變數還是型別
+    //
+    // ```
+    // int a(n), b(n);      n 是宣告過的變數  → 兩個變數（最令人困惑的解析）
+    // int f(int), g(int);  int 是 primitive  → 兩個函式的前置宣告
+    // void f(MyType);      MyType 沒被宣告成變數 → 函式
+    // ```
+    //
+    // 🟢 `ctx.data.lookup` 這個機制早就在（`pattern-lifter` 用它做過同一種消歧）。
+    //
+    // > **一個解析器少了前置處理階段，它會在那個階段本來會消掉的地方看到歧義
+    // > ——而消歧的資料，通常已經在別的地方被記下來了。**
+    const funcDeclarators = node.namedChildren.filter(c => c.type === 'function_declarator')
+    if (funcDeclarators.length > 0 && funcDeclarators.every((f) => looksLikeCtorCall(f, ctx))) {
+      const kids = funcDeclarators.map((f) => {
+        const sl = ctorSlots(f, ctx)
+        const args = [sl.size, sl.fill].filter((x): x is SemanticNode => x !== null)
+        // ⚠️ **要記成建構子形式**：`deque<int> a(n)` 的 `= n` 版本編不過
+        //    （explicit 建構子）。`int a(n)` 兩種都行，而記住原文比較誠實。
+        return buildVarDeclare({ name: sl.name, type, init_style: 'constructor' }, { initializer: args })
+      })
+      return kids.length === 1 ? kids[0] : buildVarDeclare({ type }, { declarators: kids })
     }
     if (funcDeclarator) {
       const nameNode = funcDeclarator.namedChildren.find(c => c.type === 'identifier')
