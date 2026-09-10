@@ -27,3 +27,4 @@ examples/**/dist/
 
 # 生教材時的量測暫存（e2e/measure-lesson-codes.spec.ts）
 .lesson-measure/
+.vscode-test-web/

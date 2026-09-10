@@ -62,7 +62,7 @@ export const DISPLAY_NAME = 'Semorphe'
  * ⚠️ 只改 `webview/` 底下的程式碼不必動——那是 Webview 的內容，
  * 每次開面板都重新載入。**只有 `contributes` 需要**。
  */
-export const EXTENSION_VERSION = '0.18.0'
+export const EXTENSION_VERSION = '0.19.0'
 
 /**
  * 什麼時候出現入口——**副檔名【或】語言，兩個都要**。
@@ -140,6 +140,8 @@ export interface ExtensionManifest {
   bugs: { url: string }
   galleryBanner: { color: string; theme: 'dark' | 'light' }
   main: string
+  /** 🔴 網頁版擴充主機的進入點——見底下 `browser` 那一格的說明。 */
+  browser: string
   activationEvents: string[]
   contributes: Record<string, unknown>
 }
@@ -256,6 +258,26 @@ export function buildManifest(): ExtensionManifest {
     bugs: { url: 'https://github.com/timcsy/semorphe/issues' },
     galleryBanner: { color: '#1e293b', theme: 'dark' },
     main: './dist/extension.js',
+    // 🔴 **網頁版有自己的進入點**（2026-09-10，使用者在 Codespaces 撞到）
+    //
+    // ```
+    // command 'semorphe.openBlocks' not found
+    // ```
+    //
+    // 指令沒被註冊，因為**擴充根本沒有啟動**：`main` 是給 node 擴充主機的，
+    // 而 vscode.dev／github.dev／瀏覽器裡的 Codespaces 用的是
+    // **web worker 擴充主機**——它只讀這一格。
+    //
+    // > **一個只宣告了 `main` 的擴充，在網頁版裡不是「壞掉」——
+    // > 它是【不存在】，而畫面上只看得到一句「找不到那個指令」。**
+    //
+    // ⚠️ 兩份產物**不能共用一個檔**：node 那份是 `platform: node`，
+    //    網頁那份是 `platform: browser`。共用的話 worker 裡會找不到
+    //    `process`／`require`，而那是執行期才炸的。
+    //
+    // 🟢 而 `src/vscode/` 底下**一個 node 內建都沒用到**（量過），
+    //    所以這一格是建置的事，不是重寫。
+    browser: './dist/extension.web.js',
     // ⚠️ **不用 `onLanguage:arduino`**：那要開了 `.ino` 才啟動。
     //    本輪要驗的是「面板打不打得開」，**啟動條件愈少變因愈少**。
     //    `history/080`§一：textbricks 用的就是 onStartupFinished，而它載得起來。

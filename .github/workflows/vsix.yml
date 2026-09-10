@@ -79,6 +79,15 @@ jobs:
           test "$FILES" -gt 10 || { echo "::error::vsix 只有 ${FILES} 個檔"; exit 1; }
           # 🔴 **面板的程式真的在裡面**——少了它擴充裝得起來而畫面是空的
           unzip -l "$VSIX" | grep -q 'webview' || { echo "::error::vsix 裡沒有 webview 的產物"; exit 1; }
+          # 🔴 **網頁版的進入點也在裡面**（2026-09-10，使用者在 Codespaces 撞到）
+          #
+          #    少了它，vscode.dev／github.dev／瀏覽器裡的 Codespaces 只會說
+          #    「command 'semorphe.openBlocks' not found」——而擴充看起來裝好了。
+          #
+          #    > 一個只宣告了 `main` 的擴充，在網頁版裡不是「壞掉」——
+          #    > 它是【不存在】，而畫面上只看得到一句「找不到那個指令」。
+          unzip -l "$VSIX" | grep -q 'extension.web.js' \
+            || { echo "::error::vsix 裡沒有網頁版的進入點——網頁版的 VS Code 會說找不到指令"; exit 1; }
 
       - name: 版本
         id: ver

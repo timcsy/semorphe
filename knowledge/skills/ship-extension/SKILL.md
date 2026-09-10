@@ -38,6 +38,35 @@ Theia 的解壓快取以【名字】為鍵 → 覆蓋 vsix 不會重新解，差
 ⚠️ VSCode 以 `(id, version)` 為鍵快取 `contributes`；**版本不變就不重建**，
 而症狀是「改了圖示／選單而畫面沒變，且零錯誤」。
 
+### 1.5 🔴 **網頁版也是一個宿主**（2026-09-10）
+
+這支流程本來只想著兩個宿主（VSCode 桌面版 · Arduino IDE）。**第三個一直都在**：
+
+```
+vscode.dev / github.dev / 瀏覽器裡的 Codespaces  → web worker 擴充主機
+```
+
+而它**只讀 manifest 的 `browser`**，不讀 `main`。使用者在 Codespaces 撞到：
+
+```
+command 'semorphe.openBlocks' not found
+```
+
+> **一個只宣告了 `main` 的擴充，在網頁版裡不是「壞掉」——
+> 它是【不存在】，而畫面上只看得到一句「找不到那個指令」。**
+
+⚠️ **驗它要用真的網頁版 VS Code**，桌面版的預檢驗不到：
+
+```bash
+npx @vscode/test-web --extensionDevelopmentPath=build/vscode <一個資料夾>
+```
+
+（2026-09-10 用它實測過：指令找得到、面板開得起來、編輯器打字同步得到積木。）
+
+🔴 而它有一條**現在守的是未來**的護欄：`src/vscode/` 不得 import node 內建
+（今天是零）。加一行 `import fs` 不會有任何東西出聲，
+直到有人在網頁版裡打開它。
+
 ### 2. `npm run build:vscode`
 
 ⚠️ 建置腳本裡的錯誤**可能不會讓指令失敗**——回頭確認產出物真的換了：

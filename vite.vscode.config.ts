@@ -34,8 +34,54 @@ import { defineConfig } from 'vite'
 const target = process.env.SEMORPHE_VSCODE_TARGET ?? 'webview'
 const OUT = 'build/vscode/dist'
 
+/**
+ * 🔴 **網頁版的擴充主機是第三個目標**（2026-09-10，使用者在 Codespaces 撞到）。
+ *
+ * ```
+ * command 'semorphe.openBlocks' not found
+ * ```
+ *
+ * 指令沒被註冊，因為**擴充根本沒有啟動**：manifest 只宣告了 `main`，
+ * 而 `main` 是給 node 擴充主機的。vscode.dev／github.dev／瀏覽器裡的
+ * Codespaces 用的是 **web worker 擴充主機**，它只讀 `browser` 那一格。
+ *
+ * > **一個只宣告了 `main` 的擴充，在網頁版裡不是「壞掉」——
+ * > 它是【不存在】，而畫面上只看得到一句「找不到那個指令」。**
+ *
+ * 🟢 而這一份程式碼**本來就跑得動**：`src/vscode/` 底下一個 node 內建都沒用到
+ * （`fs`／`path`／`child_process` 全都是零，量過）。所以這是建置的事，不是重寫。
+ *
+ * ⚠️ 三個差別，缺一個就是安靜地壞：
+ *
+ * ```
+ * platform  browser   打包進 node 的 polyfill 會讓 worker 當場炸
+ * formats   cjs       web worker 擴充主機用 `module.exports` 拿 activate
+ * 檔名      extension.web.js   與 node 那份分開——它們的 platform 不同
+ * ```
+ */
+const EXTENSION_ENTRY = 'src/vscode/extension.ts'
+
 export default defineConfig(
-  target === 'extension'
+  target === 'extension-web'
+    ? {
+        publicDir: false,
+        build: {
+          outDir: OUT,
+          emptyOutDir: false,
+          // ⚠️ **不是 `ssr: true`**——那會把它當成 node 產物，
+          //    於是 `platform` 跑掉，而 worker 裡沒有 `process`／`require`。
+          lib: {
+            entry: EXTENSION_ENTRY,
+            formats: ['cjs'],
+          },
+          rollupOptions: {
+            external: ['vscode'],
+            output: { entryFileNames: 'extension.web.js' },
+          },
+          minify: false,
+        },
+      }
+    : target === 'extension'
     ? {
         // 網頁版的 `public/` 不屬於擴充——連 3.6 MB 的 tree-sitter wasm 都會被
         // 複製過來，而本輪一個都用不到。Blockly 的 media 由建置腳本明確複製。
@@ -45,7 +91,7 @@ export default defineConfig(
           emptyOutDir: false,
           ssr: true,
           lib: {
-            entry: 'src/vscode/extension.ts',
+            entry: EXTENSION_ENTRY,
             formats: ['cjs'],
           },
           // `vscode` 由宿主在執行期提供——打包進去的話會找不到。

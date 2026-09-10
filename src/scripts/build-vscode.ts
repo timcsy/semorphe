@@ -35,6 +35,10 @@ function main(): void {
   const vite = ['vite', 'build', '--config', 'vite.vscode.config.ts']
   run('npx', vite, { SEMORPHE_VSCODE_TARGET: 'webview' })
   run('npx', vite, { SEMORPHE_VSCODE_TARGET: 'extension' })
+  // 🔴 **第三個目標：網頁版的擴充主機**（2026-09-10）。
+  //    少了它，vscode.dev／github.dev／瀏覽器裡的 Codespaces 只會說
+  //    「command 'semorphe.openBlocks' not found」——而擴充看起來裝好了。
+  run('npx', vite, { SEMORPHE_VSCODE_TARGET: 'extension-web' })
 
   // 2. Blockly 的圖示與音效——見檔頭。
   cpSync('node_modules/blockly/media', join(OUT, 'dist', 'media'), { recursive: true })
