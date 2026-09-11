@@ -2,6 +2,7 @@ import { generateExpressionCode, isUngeneratable, UNGENERATABLE_PREFIX } from '.
 import type { StylePreset } from '../../core/types'
 import * as Blockly from 'blockly'
 import { healingDragStrategy, immovableDragStrategy } from './ghost-drag-strategy'
+import { enableMiddleDragPan } from './middle-drag-pan'
 import type { SemanticNode, BlockSpec, DegradationCause, ConfidenceLevel, Annotation } from '../../core/types'
 import { createNode } from '../../core/semantic-tree'
 import { companionFor } from '../../core/component/companion-blocks'
@@ -58,6 +59,15 @@ export class BlocklyPanel implements ViewHost {
 
   private workspace: Blockly.WorkspaceSvg | null = null
   private container: HTMLElement
+
+  /**
+   * 中鍵平移的解除安裝。
+   *
+   * ⚠️ **只裝一次**：`reinitWithPreset` 會 dispose 工作區再呼叫一次 `init`，
+   * 而監聽器裝在容器上、工作區用一支函式現拿——所以它活得比工作區久，
+   * 每次 `init` 都裝一遍的話會疊成兩層（一次拖曳平移兩倍距離）。
+   */
+  private detachMiddleDragPan: (() => void) | null = null
   private onChangeCallback: (() => void) | null = null
   private onBlockSelectCallback: ((blockId: string | null) => void) | null = null
   private onNodeSelectCallback: ((nodeId: string | null) => void) | null = null
@@ -541,6 +551,9 @@ export class BlocklyPanel implements ViewHost {
       injectOptions.media = this.media
     }
     this.workspace = Blockly.inject(this.container, injectOptions as Blockly.BlocklyOptions)
+    // 🔴 **中鍵拖曳＝推畫面**（學生回饋，2026-09-10）。Blockly 只認左鍵拖背景，
+    //    而在一張滿版的工作區上背景不存在——見 `middle-drag-pan` 的檔頭。
+    this.detachMiddleDragPan ??= enableMiddleDragPan(this.container, () => this.workspace)
 
     this.workspace.addChangeListener((event: Blockly.Events.Abstract) => {
       if (event.isUiEvent) {
@@ -2009,6 +2022,8 @@ export class BlocklyPanel implements ViewHost {
   }
 
   dispose(): void {
+    this.detachMiddleDragPan?.()
+    this.detachMiddleDragPan = null
     this.workspace?.dispose()
     this.workspace = null
   }

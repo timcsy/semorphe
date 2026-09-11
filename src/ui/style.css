@@ -1631,6 +1631,13 @@ html, body {
   filter: none !important;
 }
 
+/* ─── 中鍵推畫面：整塊都變成「抓著」 ───
+   ⚠️ 要 `!important` 且要吃到子孫：Blockly 在積木、欄位、拖曳層上各自
+   寫了 inline 或更具體的 cursor，不蓋過去的話游標會在積木上跳回箭頭
+   ——而使用者會以為平移停了。 */
+.is-middle-panning,
+.is-middle-panning * { cursor: grabbing !important; }
+
 /* ─── Block highlight: block→code direction (yellow, must override .blocklySelected) ─── */
 
 .blocklyPath.blockly-highlight-forward,
