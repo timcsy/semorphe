@@ -780,3 +780,42 @@ export function lessonIdFromQuery(search: string): string | null {
 export function lessonDocHref(id: string): string {
   return `/lessons/${id.split('/').map(encodeURIComponent).join('/')}/`
 }
+
+/**
+ * **從查詢字串取出題目 id。** `?lesson=…&task=try`
+ *
+ * ## 🔴 它為什麼存在：課文頁上的題目，讀的人看不見
+ *
+ * 使用者 2026-09-12：「要不要每個題目都有一個在編輯器練習的按鈕跟著？
+ * 這樣大家比較能 follow 到」。
+ *
+ * ⚠️ 而查證之後它比那句話說的更需要：`tools/build-lessons/` 裡
+ * **`tasks` 出現 0 次**——課文的靜態頁從頭到尾沒有提過這一課有幾題。
+ * 整頁只有底下一個「在編輯器打開這一課」。
+ *
+ * > **一份教材如果它的練習題只存在於另一個畫面裡，
+ * > 那些練習題對讀教材的人來說不存在。**
+ *
+ * ⚠️ **認不得的值回 `null`，由呼叫端退回第一題**——一個打錯的
+ * `?task=` 不該讓連結壞掉，它只該少做一件事。
+ */
+export function taskIdFromQuery(search: string): string | null {
+  const v = new URLSearchParams(search).get('task')
+  return v !== null && v.trim() !== '' ? v.trim() : null
+}
+
+/**
+ * 編輯器的深連結。`cpp-beginner/13-陣列` ＋ `try` → `/?lesson=…&task=try`
+ *
+ * 🔴 **它與 `lessonIdFromQuery`／`taskIdFromQuery` 是一組**——理由與
+ * `lessonDocHref` 那一條相同：兩邊分開住的話，中文課名的 encode
+ * 遲早會不一樣，而症狀是一個打不開的連結。
+ *
+ * ⚠️ 在此之前這個網址是**在 `tools/build-lessons/render.ts` 裡手寫的**
+ * （`/?lesson=${encodeURIComponent(...)}`）——那正是「兩邊分開住」。
+ */
+export function editorHref(lessonId: string, taskId?: string): string {
+  const q = new URLSearchParams({ lesson: lessonId })
+  if (taskId !== undefined && taskId !== '') q.set('task', taskId)
+  return `/?${q.toString()}`
+}

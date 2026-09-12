@@ -77,12 +77,17 @@ function tasksOf(j: Record<string, any>): { id: string; title: string; check?: {
   return j.check ? [{ id: 'follow', title: '跟著做', check: j.check }] : []
 }
 
-/** 有參考解答檔的那幾題。⚠️ 第一題不算——它的解答是課文裡的「完成的樣子」。 */
+/**
+ * 有參考解答檔的那幾題。
+ *
+ * ⚠️ **「跟著做」不算**——它的解答是課文裡的〈完成的樣子〉。
+ * 🔴 這裡本來也是 `.slice(1)`（位置），與 `audit-lessons` 同一個假設、同一天改成身分。
+ */
 function collectExercises(dir: string, j: Record<string, any>): Exercise[] {
   const out: Exercise[] = []
   const sols = path.join(dir, 'solutions')
   if (!fs.existsSync(sols)) return out
-  for (const t of tasksOf(j).slice(1)) {
+  for (const t of tasksOf(j).filter((x) => x.id !== 'follow')) {
     const file = fs.readdirSync(sols).find((f) => f.replace(/\.[^.]+$/, '') === t.id)
     if (!file) continue
     out.push({

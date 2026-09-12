@@ -5,7 +5,7 @@
  * 而畫面上那與「這堂課就是這麼小」**長得一模一樣**。
  */
 import { describe, it, expect } from 'vitest'
-import { parseLesson, controlsPinnedBy, lessonIdFromQuery } from '../../../src/core/lesson'
+import { parseLesson, controlsPinnedBy, lessonIdFromQuery, taskIdFromQuery, editorHref } from '../../../src/core/lesson'
 
 const OK = { title: '印出一句話', pins: { target: 'cpp' }, components: ['cpp:print'] }
 
@@ -61,5 +61,51 @@ describe('lessonIdFromQuery', () => {
 
   it.each(['', '?', '?x=1', '?lesson=', '?lesson=%20'])('%s → null（沒有選課）', (q) => {
     expect(lessonIdFromQuery(q)).toBeNull()
+  })
+})
+
+/**
+ * **課文頁那顆「在編輯器練習」的按鈕靠這一組**（2026-09-12）。
+ *
+ * 🔴 `editorHref` 與 `lessonIdFromQuery`／`taskIdFromQuery` 是**寫的那一端**
+ * 與**讀的那一端**——它們住在同一個檔案的理由就是這幾條：
+ * 產生的網址，必須讀得回原來那兩個 id。
+ */
+describe('taskIdFromQuery', () => {
+  it.each([
+    ['?lesson=a/b&task=try', 'try'],
+    ['?task=ex1', 'ex1'],
+    ['?task=%20ex1%20', 'ex1'],
+  ])('%s → %s', (q, want) => {
+    expect(taskIdFromQuery(q)).toBe(want)
+  })
+
+  it.each(['', '?', '?lesson=a/b', '?task=', '?task=%20'])('%s → null（呼叫端退回第一題）', (q) => {
+    expect(taskIdFromQuery(q)).toBeNull()
+  })
+})
+
+describe('editorHref', () => {
+  it('沒有題目時只帶課', () => {
+    expect(editorHref('a/b')).toBe('/?lesson=a%2Fb')
+  })
+
+  it('帶題目時兩格都在', () => {
+    expect(editorHref('a/b', 'try')).toBe('/?lesson=a%2Fb&task=try')
+  })
+
+  it.each(['', undefined])('題目是 %p ＝ 不帶那一格', (t) => {
+    expect(editorHref('a/b', t)).toBe('/?lesson=a%2Fb')
+  })
+
+  it.each([
+    ['cpp-beginner/13-陣列', 'try'],
+    ['cpp-advanced/06-Linked List', 'ex1'],   // 🔴 中文與【空白】都要繞得回來
+    ['a/b', '跟著做'],
+  ])('往返：%s ＋ %s 寫得出去也讀得回來', (lesson, task) => {
+    const href = editorHref(lesson, task)
+    const search = href.slice(href.indexOf('?'))
+    expect(lessonIdFromQuery(search)).toBe(lesson)
+    expect(taskIdFromQuery(search)).toBe(task)
   })
 })

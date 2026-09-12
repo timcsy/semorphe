@@ -267,7 +267,7 @@ Sc4 最小驚訝：積木行為和生成的程式碼一致
 | 核心不認得任何語言：語言套件推、核心讀 | `concepts/宣告登記處.md` |
 | 新增語言、新增套件、pattern、astPattern、歧義、lifter、strategy、依賴解析 | `concepts/開放擴充.md` |
 | 認知層級、Level、Topic、toolbox、scaffold、ghost line、表面形態 | `concepts/漸進揭露.md` |
-| 積木文字、message、tooltip、mutator label、i18n、CLT、ZPD | `concepts/認知鷹架.md` |
+| 積木文字、message、tooltip、mutator label、i18n、CLT、ZPD、**題目設計、課堂討論、同儕教學、PRIMM、Productive Failure、語意波** | `concepts/認知鷹架.md` |
 | 降級、raw_code、confidence、巨集、taint、靜默失敗 | `concepts/降級與認知邊界.md` |
 | LLM、AI 輔助、soundness、correctness、自舉、元教學 | `concepts/三維錨定.md` |
 | 積木定義、generator、extractor、欄位同步、動態積木、extraState | `concepts/積木投影管線.md` |

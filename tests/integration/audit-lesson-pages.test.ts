@@ -28,7 +28,7 @@ import { readFileSync, existsSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { readTracks, readLessonsOf, lastmodFromGit, readTargets } from '../../tools/build-lessons/read-lessons'
 import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots, renderSpecs } from '../../tools/build-lessons/render'
-import { lessonDocHref } from '../../src/core/lesson'
+import { lessonDocHref, lessonIdFromQuery, taskIdFromQuery } from '../../src/core/lesson'
 import { INTERACTIONS, interactionById } from '../../src/core/interactions'
 import { allLessons } from '../../src/core/load-lessons'
 
@@ -83,16 +83,38 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
     expect(extra.map((p) => p.id), '🔴 產了一頁而登錄表不認得它').toEqual([])
   })
 
-  it('② 硬性零：「在編輯器打開」連到的 lesson id 必須存在', () => {
+  it('② 硬性零：「在編輯器打開」連到的 lesson id 必須存在，題目 id 也要', () => {
     const known = new Set(allLessons().keys())
     const bad: string[] = []
     for (const p of pages()) {
-      for (const m of p.html.matchAll(/href="\/\?lesson=([^"]+)"/g)) {
-        const id = decodeURIComponent(m[1])
-        if (!known.has(id)) bad.push(`${p.id} → ${id}`)
+      for (const m of p.html.matchAll(/href="\/\?([^"]+)"/g)) {
+        // 🔴 **用產品自己那兩支解析，不要自己切字串**（2026-09-12）。
+        //
+        //    這裡本來寫 `/href="\/\?lesson=([^"]+)"/` ＋ `decodeURIComponent`，
+        //    而它在兩件事上剛好都錯：
+        //
+        //    ```
+        //    多一個參數（?lesson=…&task=try）  id 被讀成「…&task=try」
+        //    空白 encode 成 `+`（URLSearchParams）  「Linked List」變「Linked+List」
+        //    ```
+        //
+        //    兩個都不是連結壞了——是**這條護欄自己的解析器**與產品的不一樣。
+        //
+        // > **一條檢查網址的護欄，如果它用自己的方式拆網址，
+        // > 它遲早會去報產品沒有犯的錯，並且放過產品真的犯的。**
+        const search = `?${m[1]}`
+        const id = lessonIdFromQuery(search)
+        if (id === null) { bad.push(`${p.id} → 這個連結沒有 lesson`); continue }
+        if (!known.has(id)) { bad.push(`${p.id} → 課不存在：${id}`); continue }
+        // ⚠️ 題目那一格同理——一顆指向不存在的題目的按鈕，
+        //    按下去會停在第一題，而**畫面上看起來像它就該這樣**。
+        const taskId = taskIdFromQuery(search)
+        if (taskId !== null && !(allLessons().get(id)?.tasks ?? []).some((t) => t.id === taskId)) {
+          bad.push(`${p.id} → ${id} 沒有這一題：${taskId}`)
+        }
       }
     }
-    expect(bad, '🔴 那顆按鈕會把人帶到一堂不存在的課').toEqual([])
+    expect(bad, '🔴 那顆按鈕會把人帶到一堂不存在的課（或一題不存在的題）').toEqual([])
   })
 
   it('③ 硬性零：每一頁的 title 與 description 互不相同', () => {

@@ -20,7 +20,7 @@
  */
 import MarkdownIt from 'markdown-it'
 import type { LessonPage } from './read-lessons'
-import { lessonDocHref, type Track } from '../../src/core/lesson'
+import { lessonDocHref, editorHref, type Track } from '../../src/core/lesson'
 import { interactionById, type Interaction } from '../../src/core/interactions'
 import type { Target } from '../../src/core/types'
 
@@ -93,6 +93,9 @@ table{border-collapse:collapse;width:100%;overflow-x:auto;display:block}
 th,td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left}
 .meta{color:var(--muted);font-size:.92rem;margin:0 0 1.2rem}
 .open{display:inline-block;margin:1.2rem 0 0;padding:.6rem 1.1rem;background:var(--accent);color:#fff;text-decoration:none;border-radius:6px;font-weight:600}
+.task-btn{display:inline-block;padding:.15rem .6rem;border:1px solid var(--accent);border-radius:999px;color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap}
+.task-btn:hover{background:var(--accent);color:#fff}
+.task-btn::after{content:' ↗';font-weight:400}
 .cards{list-style:none;padding:0;margin:1.2rem 0;display:grid;gap:.6rem}
 .cards a{display:block;padding:.8rem 1rem;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--fg)}
 .cards a:hover{border-color:var(--accent)}
@@ -434,6 +437,50 @@ function isoDuration(text: string): string | undefined {
  * 所以插在第一個 `</blockquote>` 之後；沒有引言就插在 `</h1>` 之後。
  * 🔴 兩個都找不到就**插在最前面**——寧可位置不完美，也不要安靜地不插。
  */
+/**
+ * **把課文裡的〈題目名字〉換成一顆按鈕，按下去直接開那一題。**
+ *
+ * ## 🔴 在此之前，課文頁上的題目讀的人看不見
+ *
+ * 使用者 2026-09-12：「要不要每個題目都有一個在編輯器練習的按鈕跟著？
+ * 這樣大家比較能 follow 到」。
+ *
+ * ⚠️ 而查證之後它比那句話說的更需要：這個目錄裡 **`tasks` 出現 0 次**
+ * ——整頁只有底下一顆「在編輯器打開這一課」，而一課有兩到三題。
+ *
+ * > **一份教材如果它的練習題只存在於另一個畫面裡，
+ * > 那些練習題對讀教材的人來說不存在。**
+ *
+ * ## 🟢 按鈕從【課文的提及】長出來，不另外排一張清單
+ *
+ * 位置帶著意義：學生讀到「現在把題目切到〈跟著做〉」的**那一刻**按鈕就在那裡，
+ * 而不是堆在頁尾讓他自己配對。形狀與對照圖一樣（它插在〈完成的樣子〉底下）。
+ *
+ * ## ⚠️ `〈…〉` 這個記號是【空的】才拿來用的
+ *
+ * 量過（2026-09-12）：全庫 66 課的 `lesson.md` 裡 `〈…〉` 只出現在
+ * 這一刀自己寫的那兩處。所以它可以**整個**被指定成「這是一道題目」，
+ * 不會與既有的寫法打架。
+ *
+ * 🔴 **對不上的名字是錯字，不是純文字**——由 `audit-lessons` 當場紅。
+ * 靜靜地留成文字的話，作者會看到一句沒有按鈕的句子而不知道為什麼。
+ */
+function withTaskButtons(html: string, p: LessonPage): string {
+  const byTitle = new Map((p.lesson.tasks ?? []).map((t) => [t.title, t.id]))
+  if (byTitle.size === 0) return html
+  // ⚠️ **`<pre>` 裡面不動**——程式碼區塊裡的字不是課文的句子。
+  return html.split(/(<pre[\s\S]*?<\/pre>)/).map((chunk, i) => {
+    if (i % 2 === 1) return chunk
+    return chunk.replace(/〈([^〉]{1,60})〉/g, (whole, name: string) => {
+      const id = byTitle.get(name)
+      if (id === undefined) return whole   // 護欄會報，這裡不吞也不猜
+      // ⚠️ `href` 要 `esc`——網址裡有 `&`（`?lesson=…&task=…`），
+      //    而屬性值裡的裸 `&` 是不合法的 HTML。
+      return `<a class="task-btn" href="${esc(editorHref(p.lesson.id, id))}" target="_blank" rel="noopener">${esc(name)}</a>`
+    })
+  }).join('')
+}
+
 function withHowTo(html: string, ids: readonly string[]): string {
   const block = howToBlock(ids)
   if (block === '') return html
@@ -448,13 +495,13 @@ export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): 
   const crumb = `<a href="/lessons/">課程</a> › <a href="/lessons/${encodeURIComponent(p.track.id)}/">${esc(p.track.name)}</a>`
   // 🔴 **「在編輯器打開」用的是既有的深連結**（`lessonIdFromQuery`，`core/lesson.ts`）
   //    ——不是新發明一個網址。而 `target=_blank` 是刻意的：讀到一半的人不該被踢走。
-  const open = `<a class="open" href="/?lesson=${encodeURIComponent(p.lesson.id)}" target="_blank" rel="noopener">在編輯器打開這一課 →</a>`
+  const open = `<a class="open" href="${editorHref(p.lesson.id)}" target="_blank" rel="noopener">在編輯器打開這一課 →</a>`
   return page({
     title: `${p.lesson.title}｜${p.track.name}｜Semorphe`,
     description: descriptionOf(p),
     path: lessonDocHref(p.lesson.id),
     crumb,
-    body: withBlockmap(withHowTo(md.render(p.md), p.lesson.interactions ?? []), p)
+    body: withTaskButtons(withBlockmap(withHowTo(md.render(p.md), p.lesson.interactions ?? []), p), p)
       + open + navBlock(neighbours),
     // 🔴 **`Course` 說的每一句都要是實話**：`provider` 是我們、`inLanguage` 是課文的語言，
     //    而 `timeRequired` 只在課程自己宣告了 `estimate` 時才寫（ISO 8601 duration）。

@@ -57,7 +57,7 @@ import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from '../core/category-colors'
 import { registerViewsIn, connectViews } from '../core/view-registry'
 import { buildToolbox } from '../core/toolbox-builder'
-import { lessonIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson'
+import { lessonIdFromQuery, taskIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson'
 import { viewLabel, type LessonView } from '../core/semantic-wave'
 import { markTaskPassed, isTaskPassed, passedCount, clearProgress, setProgressStore } from '../core/progress'
 import { stepsOf, compareSteps, describeSteps, describeBudget, type StepRecord } from '../core/steps'
@@ -764,7 +764,18 @@ export class App {
       // 🔴 **找不到要出聲**。靜靜地當成「沒有課」的話，老師貼出去的連結
       //    會安靜地退回預設組態，而**畫面上看起來一切正常**。
       if (!lesson) console.error(`[lessons] 找不到 ${lessonId}——連結指向一堂不存在的課`)
-      else this.applyLesson(lesson)
+      else {
+        this.applyLesson(lesson)
+        // 🔴 **`?task=` 在 `applyLesson` 【之後】才套**——它會把題目重設成第一題
+        //    （那是「換課就重設題目」那條規矩，2026-09-04）。先套的話會被蓋掉。
+        const wantTask = taskIdFromQuery(this.profile.querySearch ?? '')
+        if (wantTask !== null) {
+          // ⚠️ **認不得就留在第一題，而且要出聲**——一個打錯的 `?task=`
+          //    靜靜地退回第一題的話，老師會以為那顆按鈕壞了而去改別的地方。
+          if (taskById(lesson, wantTask)) this.currentTaskId = wantTask
+          else console.error(`[lessons] ${lesson.id} 沒有 ${wantTask} 這一題——連結停在第一題`)
+        }
+      }
     }
   }
 

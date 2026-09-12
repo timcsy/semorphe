@@ -8,11 +8,51 @@
  * > **一個看不見自己前置條件有沒有成立的測試，失敗時說不出任何事。**
  */
 import { expect, type Page } from '@playwright/test'
+import fs from 'node:fs'
+import path from 'node:path'
+
+/* ────────────────────────────────────────────────────────────────
+ * 入口條件：**這個瀏覽器連到的真的是我們的應用嗎**
+ * ──────────────────────────────────────────────────────────────── */
+
+/**
+ * 🔴 **`aaa-fresh-build.spec.ts` 守的是全跑，而【跑單一支】會繞過它。**
+ *
+ * 2026-09-12 實測：`npx playwright test e2e/lessons.spec.ts` 跑了一個多小時、
+ * **87 支全紅**，而原因是 `reuseExistingServer` 接上了 4173 上**另一個專案**
+ * 的 preview（同一台機器上另一個 repo 的伺服器，已經開了十小時）。
+ * 每一支都在對著別人的畫面找 `.injectionDiv`。
+ *
+ * > **一條寫成「排第一支」的入口條件，只在「有第一支」的時候成立
+ * > ——而跑單一支的時候，它不存在。**
+ *
+ * 🟢 所以它搬進**每一支都會呼叫的那個地方**，而且只做一次
+ * （`checked` 記住結果，不重複抓 `dist/`）。
+ *
+ * ⚠️ 判準與那一支相同：`dist/index.html` 的 entry 檔名要與伺服器送的一樣。
+ */
+const ENTRY_RE = /assets\/index-[A-Za-z0-9_-]+\.js/
+let entryChecked = false
+
+async function assertServingOurBuild(page: Page): Promise<void> {
+  if (entryChecked) return
+  entryChecked = true
+  const onDisk = fs.readFileSync(path.resolve('dist/index.html'), 'utf8').match(ENTRY_RE)?.[0]
+  const served = (await page.content()).match(ENTRY_RE)?.[0]
+  expect(
+    served,
+    '🔴 **伺服器送的不是我們剛建出來的那一份**——這一整輪的結果都不可信。\n'
+      + '   多半是 4173 上有另一個 preview 活著（有可能是【另一個專案】的）。\n'
+      + '   先 `lsof -ti tcp:4173` 看是誰，再決定要不要收掉它。\n'
+      + `   dist：${onDisk}\n   伺服器：${served}`,
+  ).toBe(onDisk)
+}
 
 /** 乾淨啟動。⚠️ 專案存在 localStorage，上一支的存檔會餵給下一支。 */
 export async function freshApp(page: Page): Promise<void> {
   await page.addInitScript(() => window.localStorage.clear())
   await page.goto('/')
+  await assertServingOurBuild(page)
   await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })
 }
 
@@ -30,6 +70,7 @@ export async function freshApp(page: Page): Promise<void> {
  */
 export async function appKeepingStorage(page: Page): Promise<void> {
   await page.goto('/')
+  await assertServingOurBuild(page)
   await page.evaluate(() => window.localStorage.clear())
   await page.reload()
   await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })

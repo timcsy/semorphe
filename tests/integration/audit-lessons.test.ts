@@ -42,7 +42,7 @@
  * - **不檢測 check.stdout 對不對**——那也是 e2e 的事。
  */
 import { describe, it, expect } from 'vitest'
-import { printReport } from '../helpers/guardrail'
+import { printReport, assertRatchet, assertCorpus } from '../helpers/guardrail'
 import { loadToolbox } from '../helpers/toolbox'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -122,8 +122,17 @@ export function judgeLessons(
     // ⚠️ 這裡只驗**檔案在不在**；「它真的跑得出那個答案」要開瀏覽器
     //    （`e2e/lessons.spec.ts` 的〈參考解答〉那幾支）。兩道各守一半。
     //
-    // ⚠️ 第一題不算——它的解答就是課文裡的「完成的樣子」。
-    for (const t of (l.json.tasks ?? []).slice(1)) {
+    // ⚠️ 「跟著做」不算——它的解答就是課文裡的「完成的樣子」。
+    //
+    // 🔴 **這裡本來寫 `.slice(1)`，而那是【位置】不是【身分】**（2026-09-12）。
+    //    66 課的第一題 id 都是 `follow`，所以兩種寫法今天等價
+    //    ——而在〈陣列〉那一課前面插進一題「先試試看」的那一刻就不等價了：
+    //    `follow` 變成第二題，於是它被要求附一份 `solutions/follow.cpp`，
+    //    而那份檔案**只會是〈完成的樣子〉的複本**。
+    //
+    // > **一條靠「它排第幾」認東西的檢查，
+    // > 會在有人往前面插一個東西的那天，要求一份不該存在的檔案。**
+    for (const t of (l.json.tasks ?? []).filter((x) => x.id !== 'follow')) {
       if (!t.check) continue      // 沒有裁判的題目本來就不需要解答
       // ⚠️ **除錯題的「解答」是他自己修出來的**——它要的是一份【壞掉的起點】，
       //    而正解就是把那個 bug 修掉。硬要它附一份 `solutions/` 會讓
@@ -131,6 +140,24 @@ export function judgeLessons(
       if (t.kind === 'debug') continue
       if (t.id !== undefined && !l.solutions.includes(t.id)) {
         f.push({ lesson: l.dir, kind: '練習題沒有參考解答', detail: t.id })
+      }
+    }
+    // 🔴 **課文裡的〈題目名字〉要對得上一道真的題目**（2026-09-12）。
+    //
+    // 那個記號是課文頁上「在編輯器練習」那顆按鈕的來源
+    // （`tools/build-lessons/render.ts` 的 `withTaskButtons`）。
+    // ⚠️ 對不上的話，產生器**什麼都不做**——那一句留成純文字，
+    //    而畫面上與「這一課還沒加按鈕」一模一樣。
+    //
+    // > **一個打錯的標記如果只是少長出一顆按鈕，
+    // > 作者會看著那句話想不通，而沒有任何東西告訴他哪裡錯。**
+    //
+    // ⚠️ `〈…〉` 這個記號**整個**屬於題目：量過（2026-09-12）66 課裡
+    //    它只出現在這一刀自己寫的地方，所以不會誤傷既有的寫法。
+    {
+      const titles = new Set((l.json.tasks ?? []).map((t) => t.title))
+      for (const m of l.md.matchAll(/〈([^〉]{1,60})〉/g)) {
+        if (!titles.has(m[1])) f.push({ lesson: l.dir, kind: '題目名字對不上', detail: m[1] })
       }
     }
     // 🔴 **「排回去」那種題一定要有參考解答**——打散的來源就是它。
@@ -262,6 +289,52 @@ describe('★ 第八十三條：教案宣告的東西都要真的存在', () => 
   })
 })
 
+describe('★ 第一百二十三條護欄：每一道題目在課文裡都要有入口', () => {
+  /**
+   * ## 🔴 課文頁上的題目，讀的人看不見
+   *
+   * 使用者 2026-09-12：「要不要每個題目都有一個在編輯器練習的按鈕跟著？
+   * 這樣大家比較能 follow 到」。
+   *
+   * ⚠️ 而查證之後它比那句話說的更需要：`tools/build-lessons/` 裡
+   * **`tasks` 一次都沒出現過**——整頁只有底下一顆「在編輯器打開這一課」，
+   * 而一課有兩到三題。
+   *
+   * > **一份教材如果它的練習題只存在於另一個畫面裡，
+   * > 那些練習題對讀教材的人來說不存在。**
+   *
+   * ## ⚠️ 它是棘輪，不是硬性零
+   *
+   * 今天 136 題裡絕大多數沒有被課文提過，而那是**要一課一課寫進去的**。
+   * 一條今天就紅 130 幾筆的護欄，明天就會被當成背景雜訊。
+   *
+   * 🟢 而「對不上的名字」那一條**是硬性零**（在 `judgeLessons` 裡）
+   * ——那是錯字，不是待辦。
+   */
+  const lessons = scanLessons(path.join(ROOT, 'lessons'))
+
+  it('入口條件：真的讀到課了', () => {
+    expect(lessons.length, '🔴 一課都沒讀到 → 下面那個數字不算數').toBeGreaterThan(50)
+  })
+
+  it('語料：題目總數（它變多，這條護欄的分母就跟著大）', () => {
+    const total = lessons.reduce((n, l) => n + (l.json.tasks ?? []).length, 0)
+    assertCorpus([['題目總數', total]], 'lesson-task-entry')
+  })
+
+  it('棘輪：課文裡沒有入口的題目，只准變少', () => {
+    const orphans: string[] = []
+    for (const l of lessons) {
+      const named = new Set([...l.md.matchAll(/〈([^〉]{1,60})〉/g)].map((m) => m[1]))
+      for (const t of l.json.tasks ?? []) {
+        if (t.title !== undefined && !named.has(t.title)) orphans.push(`${l.dir} · ${t.title}`)
+      }
+    }
+    printReport('課文裡沒有入口的題目', [['沒有入口', orphans.length]])
+    assertRatchet([['沒有入口的題目', orphans.length]], 'lesson-task-entry', { detail: orphans })
+  })
+})
+
 describe('★ 注入——證明它會報，也證明它不亂報', () => {
   const good: Lesson = {
     dir: '合成/一堂好課',
@@ -341,12 +414,50 @@ describe('★ 注入——證明它會報，也證明它不亂報', () => {
     expect(judgeLessons([bad], C, T).map((x) => x.kind)).toContain('完成的樣子沒有程式碼')
   })
 
-  it('★ 注入：有裁判的練習題而沒有參考解答 → 會報', () => {
+  it('★ 注入：課文寫了一個對不上的〈題目名字〉 → 會報（那是錯字，不是待辦）', () => {
+    const bad = {
+      ...good,
+      json: { ...good.json, tasks: [{ id: 'follow', title: '跟著做' }] },
+      md: good.md + '\n題目切到〈跟著坐〉。\n',
+    }
+    const out = judgeLessons([bad], C, T)
+    expect(out.map((x) => x.kind)).toContain('題目名字對不上')
+    expect(out.map((x) => x.detail)).toContain('跟著坐')
+  })
+
+  it('★ 不亂報：對得上的〈題目名字〉不報，而〈…〉裡的段落名也不報', () => {
+    const ok = {
+      ...good,
+      json: { ...good.json, tasks: [{ id: 'follow', title: '跟著做' }] },
+      md: good.md + '\n題目切到〈跟著做〉。\n',
+    }
+    expect(judgeLessons([ok], C, T).map((x) => x.kind)).not.toContain('題目名字對不上')
+  })
+
+  it('★ 不亂報：「跟著做」前面插一題，`follow` 仍然不必附參考解答', () => {
+    // 🔴 這一條釘住 2026-09-12 的那個改動：判準是**身分**（`id === 'follow'`），
+    //    不是**位置**。舊的 `.slice(1)` 在這個輸入上會報，而它報錯了
+    //    ——`follow` 的解答一直都是課文裡的〈完成的樣子〉，
+    //    它排第幾與那件事無關。
+    const withPre = { ...good, json: { ...good.json, tasks: [
+      { id: 'try', title: '先試試看' },
+      { id: 'follow', title: '跟著做', check: { stdout: 'a\n' } },
+    ] } }
+    expect(judgeLessons([withPre], C, T).map((x) => x.kind)).not.toContain('練習題沒有參考解答')
+  })
+
+  it('★ 注入：有裁判的練習題而沒有參考解答 → 會報（而它排第幾都一樣）', () => {
     const bad = { ...good, json: { ...good.json, tasks: [
       { id: 'follow', title: '跟著做' },
       { id: 'ex1', title: '練習 1', check: { stdout: 'a\n' } },
     ] } }
     expect(judgeLessons([bad], C, T).map((x) => x.kind)).toContain('練習題沒有參考解答')
+    // ⚠️ 同一題往前挪一格，照樣要報——不然「改成身分」會變成「放過第一格以外的漏洞」。
+    const moved = { ...good, json: { ...good.json, tasks: [
+      { id: 'ex1', title: '練習 1', check: { stdout: 'a\n' } },
+      { id: 'follow', title: '跟著做' },
+    ] } }
+    expect(judgeLessons([moved], C, T).map((x) => x.kind)).toContain('練習題沒有參考解答')
   })
 
   it('★ 注入：沒有裁判的練習題 → 不報（那種題目本來就不需要解答）', () => {

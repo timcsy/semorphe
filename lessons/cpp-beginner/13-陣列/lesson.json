@@ -19,6 +19,10 @@
   ],
   "tasks": [
     {
+      "id": "try",
+      "title": "先試試看：一百個人怎麼辦"
+    },
+    {
       "id": "follow",
       "title": "跟著做",
       "check": {
