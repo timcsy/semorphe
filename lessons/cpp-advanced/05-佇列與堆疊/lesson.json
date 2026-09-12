@@ -31,6 +31,14 @@
         "stdout": "1\n0\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：數到三就出局",
+      "check": {
+        "stdout": "4\n",
+        "stdin": []
+      }
     }
   ]
 }

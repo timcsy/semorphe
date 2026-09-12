@@ -36,6 +36,14 @@
         "stdout": "1\n99\n2\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：把串列反過來",
+      "check": {
+        "stdout": "3\n2\n1\n",
+        "stdin": []
+      }
     }
   ]
 }

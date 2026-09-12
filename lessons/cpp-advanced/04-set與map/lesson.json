@@ -33,6 +33,14 @@
         "stdout": "a 2\nb 1\nc 1\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：兩份名單的交集",
+      "check": {
+        "stdout": "bob\ncid\n",
+        "stdin": []
+      }
     }
   ]
 }

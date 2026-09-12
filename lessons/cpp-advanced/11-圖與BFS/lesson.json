@@ -38,6 +38,14 @@
     {
       "id": "ex1",
       "title": "練習：把 queue 換成 stack，看 dist[3] 變什麼"
+    },
+    {
+      "id": "make",
+      "title": "做一個：每個點離起點幾步",
+      "check": {
+        "stdout": "0 0\n1 1\n2 1\n3 2\n4 3\n",
+        "stdin": []
+      }
     }
   ]
 }

@@ -105,6 +105,24 @@ export function scanLessons(root: string): Lesson[] {
 }
 
 /** 判定——與掃描分開，才注得進合成的課 */
+/**
+ * **課文裡沒有入口的題目**——`lesson.md` 沒有用〈題目名字〉提到它，
+ * 於是課文頁上不會長出那顆「到編輯器做這一題」的按鈕。
+ *
+ * ⚠️ 比對是**逐字**的，與 `tools/build-lessons/render.ts` 的 `withTaskButtons` 相同
+ * ——兩邊的判準只要有一點不一樣，就會出現「護欄綠而按鈕長不出來」。
+ */
+export function orphanTasks(lessons: readonly Lesson[]): string[] {
+  const out: string[] = []
+  for (const l of lessons) {
+    const named = new Set([...l.md.matchAll(/〈([^〉]{1,60})〉/g)].map((m) => m[1]))
+    for (const t of l.json.tasks ?? []) {
+      if (t.title !== undefined && !named.has(t.title)) out.push(`${l.dir} · ${t.title}`)
+    }
+  }
+  return out
+}
+
 export function judgeLessons(
   lessons: Lesson[],
   knownComponents: ReadonlySet<string>,
@@ -322,16 +340,24 @@ describe('★ 第一百二十三條護欄：每一道題目在課文裡都要有
     assertCorpus([['題目總數', total]], 'lesson-task-entry')
   })
 
-  it('棘輪：課文裡沒有入口的題目，只准變少', () => {
-    const orphans: string[] = []
-    for (const l of lessons) {
-      const named = new Set([...l.md.matchAll(/〈([^〉]{1,60})〉/g)].map((m) => m[1]))
-      for (const t of l.json.tasks ?? []) {
-        if (t.title !== undefined && !named.has(t.title)) orphans.push(`${l.dir} · ${t.title}`)
-      }
-    }
+  it('棘輪：課文裡沒有入口的題目，只准變少（今天是 0）', () => {
+    const orphans = orphanTasks(lessons)
     printReport('課文裡沒有入口的題目', [['沒有入口', orphans.length]])
     assertRatchet([['沒有入口的題目', orphans.length]], 'lesson-task-entry', { detail: orphans })
+  })
+
+  it('★ 注入：一課的課文沒提到它的題目 → 會被算進去', () => {
+    const bad = [{ dir: '合成/一堂課', json: { tasks: [{ id: 'ex1', title: '練習：某某' }] }, md: '沒有提到它。', solutions: [], starters: [] }]
+    expect(orphanTasks(bad as never)).toEqual(['合成/一堂課 · 練習：某某'])
+  })
+
+  it('★ 不亂報：提到了就不算——而【部分吻合】不算提到', () => {
+    const ok = [{ dir: '合成/甲', json: { tasks: [{ id: 'ex1', title: '練習：某某' }] }, md: '做這一題：〈練習：某某〉', solutions: [], starters: [] }]
+    expect(orphanTasks(ok as never)).toEqual([])
+    // 🔴 少一個字就不是同一題——`withTaskButtons` 也是**逐字**比對，
+    //    兩邊的判準必須一樣，不然護欄綠而按鈕長不出來。
+    const typo = [{ dir: '合成/乙', json: { tasks: [{ id: 'ex1', title: '練習：某某' }] }, md: '做這一題：〈練習：某〉', solutions: [], starters: [] }]
+    expect(orphanTasks(typo as never)).toEqual(['合成/乙 · 練習：某某'])
   })
 })
 

@@ -28,6 +28,10 @@
     {
       "id": "ex1",
       "title": "練習：把第 1 課的閃燈加上 Serial.println"
+    },
+    {
+      "id": "make",
+      "title": "做一個：用鍵盤遙控那顆燈"
     }
   ]
 }

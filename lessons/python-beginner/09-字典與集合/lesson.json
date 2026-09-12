@@ -36,6 +36,16 @@
           "aba"
         ]
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：每個字出現幾次",
+      "check": {
+        "stdout": "cat 1\nend 1\nhat 1\nthe 3\n",
+        "stdin": [
+          "the cat the hat the end"
+        ]
+      }
     }
   ]
 }

@@ -29,6 +29,14 @@
         "stdout": "13\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：三次加薪",
+      "check": {
+        "stdout": "29282\n",
+        "stdin": []
+      }
     }
   ]
 }

@@ -29,6 +29,14 @@
         "stdout": "19\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：前三大的和",
+      "check": {
+        "stdout": "21\n",
+        "stdin": []
+      }
     }
   ]
 }

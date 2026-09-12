@@ -35,6 +35,16 @@
           "the cat the dog the"
         ]
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：最長的那個單字",
+      "check": {
+        "stdout": "projection\n10\n",
+        "stdin": [
+          "a program is a projection"
+        ]
+      }
     }
   ]
 }

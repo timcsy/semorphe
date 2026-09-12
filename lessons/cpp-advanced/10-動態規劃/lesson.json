@@ -32,6 +32,14 @@
         "stdout": "89\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：最大連續子陣列和",
+      "check": {
+        "stdout": "6\n",
+        "stdin": []
+      }
     }
   ]
 }

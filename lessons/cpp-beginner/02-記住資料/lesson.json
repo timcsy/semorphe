@@ -43,6 +43,14 @@
         "stdin": []
       },
       "view": "code"
+    },
+    {
+      "id": "make",
+      "title": "做一個：長方形的面積與周長",
+      "check": {
+        "stdout": "28\n22\n",
+        "stdin": []
+      }
     }
   ]
 }

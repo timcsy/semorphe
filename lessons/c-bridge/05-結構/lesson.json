@@ -32,6 +32,14 @@
         "stdout": "0 0\n1 2\n2 4\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：總分最高的那一個",
+      "check": {
+        "stdout": "1\n95\n",
+        "stdin": []
+      }
     }
   ]
 }

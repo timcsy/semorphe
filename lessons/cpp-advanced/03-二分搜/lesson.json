@@ -29,7 +29,15 @@
       "id": "ex1",
       "title": "練習：用 upper_bound - lower_bound 數出 3 幾個",
       "check": {
-        "stdout": "3\n2\n",
+        "stdout": "3\n4\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "make",
+      "title": "做一個：這個數出現幾次（多筆詢問）",
+      "check": {
+        "stdout": "3\n0\n1\n",
         "stdin": []
       }
     }

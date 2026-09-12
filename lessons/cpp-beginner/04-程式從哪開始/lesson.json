@@ -22,6 +22,10 @@
     {
       "id": "ex1",
       "title": "練習：把輸出搬到 return 下面，看它不跑"
+    },
+    {
+      "id": "make",
+      "title": "做一個：證明它真的由上往下跑"
     }
   ],
   "_view_why": "曲線的第一個轉折：這一課就是把 #include／main 拆開的那一課（軌道的 scaffold 也在這裡從 hidden 變回 ghost）——他要開始【認得】那幾行，所以版面換成對照。"

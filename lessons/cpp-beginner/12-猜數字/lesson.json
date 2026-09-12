@@ -31,8 +31,18 @@
       "id": "ex1",
       "title": "練習：target 換成 1，看要幾次",
       "check": {
-        "stdout": "猜了 7 次\n",
+        "stdout": "猜了 6 次\n",
         "stdin": []
+      }
+    },
+    {
+      "id": "make",
+      "title": "做一個：兩種找法各要幾次",
+      "check": {
+        "stdout": "42\n7\n",
+        "stdin": [
+          "42"
+        ]
       }
     }
   ]

@@ -35,6 +35,14 @@
         "stdout": "hua\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：去掉重複再排好",
+      "check": {
+        "stdout": "10\n7\n[1, 2, 3, 4, 5, 6, 9]\n",
+        "stdin": []
+      }
     }
   ]
 }

@@ -33,6 +33,16 @@
         "stdout": "e\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：一個名字的三件事",
+      "check": {
+        "stdout": "8\nS\ne\n",
+        "stdin": [
+          "Semorphe"
+        ]
+      }
     }
   ]
 }

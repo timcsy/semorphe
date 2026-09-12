@@ -44,6 +44,16 @@
         ]
       },
       "view": "code"
+    },
+    {
+      "id": "make",
+      "title": "做一個：找零錢",
+      "check": {
+        "stdout": "3\n1\n1\n3\n1\n3\n",
+        "stdin": [
+          "1688"
+        ]
+      }
     }
   ]
 }

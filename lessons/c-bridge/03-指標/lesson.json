@@ -30,6 +30,14 @@
         "stdout": "2 1\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：一次回傳兩個答案",
+      "check": {
+        "stdout": "9\n2\n",
+        "stdin": []
+      }
     }
   ]
 }

@@ -26,6 +26,14 @@
     {
       "id": "ex1",
       "title": "練習：把 t 改成 char t[3]，看它壞不壞給你看"
+    },
+    {
+      "id": "make",
+      "title": "做一個：把名字倒著印出來",
+      "check": {
+        "stdout": "8\nehpromeS\n",
+        "stdin": []
+      }
     }
   ]
 }

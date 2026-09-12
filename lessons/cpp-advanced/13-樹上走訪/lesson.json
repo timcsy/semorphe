@@ -37,6 +37,14 @@
         "stdout": "3\n2\n1\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：最深的那個節點",
+      "check": {
+        "stdout": "4\n3\n",
+        "stdin": []
+      }
     }
   ]
 }

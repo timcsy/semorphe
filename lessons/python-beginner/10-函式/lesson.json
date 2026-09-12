@@ -30,6 +30,17 @@
         "stdout": "True\nFalse\n",
         "stdin": []
       }
+    },
+    {
+      "id": "make",
+      "title": "做一個：最大公因數，兩種寫法",
+      "check": {
+        "stdout": "6\n6\n",
+        "stdin": [
+          "48",
+          "18"
+        ]
+      }
     }
   ]
 }

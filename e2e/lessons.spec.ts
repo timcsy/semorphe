@@ -69,6 +69,37 @@ interface Exercise {
 }
 
 /**
+ * **程式真的印出來的那幾行**——⚠️ 不要讀整個 `.console-output`。
+ *
+ * ## 🔴 這條護欄曾經因為讀太多而【永遠通過】（2026-09-12）
+ *
+ * 裁判說「還沒對」的時候，會在主控台裡畫一張對照表，而那張表上
+ * **印著「這一課要的」那一欄**——也就是 `check.stdout` 本身：
+ *
+ * ```
+ * 猜了 6 次                    ← 程式印的
+ * 〈跟著做〉還沒對——看看差在哪
+ * 你的輸出      這一課要的
+ * 猜了 6 次     猜了 7 次       ← 🔴 裁判把【期望值】印進主控台了
+ * ```
+ *
+ * 於是「參考解答跑得出宣告的答案嗎」這一支，在答案**錯**的時候
+ * 反而找得到那一行——它通過得最徹底的時候，正是內容最錯的時候。
+ *
+ * > **一條檢查輸出的測試，如果它讀的畫面上也印著【期望值】，
+ * > 那它量的不是程式，是它自己的題目紙。**
+ *
+ * 🟢 DOM 早就分開了：程式的輸出是 `.console-line`，裁判的面板是
+ * `.console-verdict`。改讀前者。
+ *
+ * 🔴 實績：改完當場紅了兩題，而兩題都用參照編譯器確認過是**課程宣告錯了**
+ * （`猜數字` 宣告 7 而實際 6；`二分搜` 宣告 `3\n2` 而實際 `3\n4`）。
+ */
+async function programOutput(page: import('@playwright/test').Page): Promise<string> {
+  return (await page.locator('.console-output .console-line').allInnerTexts()).join('\n').trim()
+}
+
+/**
  * 讀一堂課的題目——⚠️ **舊的 `check` 就是第一題**（`core/lesson.ts` 的 `parseTasks`
  * 同一條規矩）。這裡不能只讀 `tasks`：66 課裡多數還是舊形狀。
  */
@@ -361,7 +392,7 @@ for (const c of CASES) {
       .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
       .toMatch(/程式執行完畢|錯誤|Error|Completed/)
 
-    const output = (await page.locator('.console-output').innerText()).trim()
+    const output = await programOutput(page)
 
     // ★ 兩種課都要驗的：**主控台上不得有錯誤**
     //   ⚠️ 認的是直譯器吐出來的那幾種說法，不是任意含「錯」的字
@@ -411,7 +442,7 @@ for (const c of CASES) {
         .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
         .toMatch(/程式執行完畢|錯誤|Error|Completed/)
 
-      const output = (await page.locator('.console-output').innerText()).trim()
+      const output = await programOutput(page)
       // 🔴 **主控台會把使用者打的那一行【回顯】出來**，而一支
       //    「問一句、印一句、再問一句」的程式，回顯會**插在期望輸出中間**
       //    ——`toContain` 於是失敗，而程式其實是對的（2026-09-04 實測）。
@@ -472,7 +503,7 @@ for (const c of CASES) {
         .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
         .toMatch(/程式執行完畢|錯誤|Error|Completed/)
 
-      const output = (await page.locator('.console-output').innerText()).trim()
+      const output = await programOutput(page)
       // ⚠️ 用與上面**同一套**比對（回顯會插在中間，見上面那段說明），
       //    而這裡要的是**不完全命中**。
       const wanted = dg.stdout.trim().split('\n')
