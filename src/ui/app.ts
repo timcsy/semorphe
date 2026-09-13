@@ -108,18 +108,21 @@ loadAllLanguagePacks()
 const STYLE_PRESETS: StylePreset[] = allLanguagePacks().flatMap((p) => p.styles)
 
 /**
- * **面板的宣告也在這裡收**（2026-09-13）。
+ * **面板的宣告在這裡收**（2026-09-13）。
  *
  * 🔴 在此之前 `loadPanels()` **零個產品呼叫者**，而 `src/panels/` 裡一份宣告都沒有
  * ——登錄表綠著，畫面正常，而它一次都沒有跑過。
  *
  * > **一個沒有人呼叫的載入器，與一個不存在的載入器，在畫面上長得一模一樣。**
  *
- * ⚠️ 健檢的結果**印出來**：`assertPanelsSane` 的第四條是入口條件
- * （一份宣告都沒有 → 喊），而它只有在有人讀它的時候才算數。
+ * ⚠️ **健檢不在這裡跑**——它要問「這個名字翻得出來嗎」，而語系是
+ * `init()` 裡 `await localeLoader.load()` 之後才進 `Blockly.Msg` 的。
+ *
+ * 🔴 第一版就是在這裡跑的，而 CI 當場紅：五個面板的名字**全部**「查不到翻譯」。
+ *
+ * > **一個檢查如果跑在它要檢查的東西存在之前，它報的不是缺陷，是它自己的時機。**
  */
-const panelProblems = [...loadPanels(), ...assertPanelsSane((k) => Boolean(Blockly.Msg[k]))]
-if (panelProblems.length > 0) console.error(`[panels]\n${panelProblems.join('\n')}`)
+const panelLoadProblems = loadPanels()
 
 const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]
 
@@ -1366,6 +1369,18 @@ export class App {
     setHeaderAliases(this.currentTarget.headerAliases)
     this.localeLoader.setBlocklyMsg(Blockly.Msg as Record<string, string>)
     await this.localeLoader.load('zh-TW')
+
+    // 🔴 **面板的健檢在這裡跑，不在模組層**——它要問「這個名字翻得出來嗎」，
+    //    而語系是上面那一行 `await` 之後才進 `Blockly.Msg` 的。
+    //    ⚠️ 第一版跑在模組層，CI 當場紅：五個面板的名字**全部**「查不到翻譯」。
+    //
+    // > **一個檢查如果跑在它要檢查的東西存在之前，
+    // > 它報的不是缺陷，是它自己的時機。**
+    const panelProblems = [
+      ...panelLoadProblems,
+      ...assertPanelsSane((k) => Boolean((Blockly.Msg as Record<string, string>)[k])),
+    ]
+    if (panelProblems.length > 0) console.error(`[panels]\n${panelProblems.join('\n')}`)
 
     // 2. Load block specs (split component/projection architecture)
     // 🟢 **2026-08-26：從寫死的 `allCppComponents()` 換成問登記表。**
