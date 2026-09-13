@@ -19,8 +19,8 @@
 import { cpSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
-import { buildManifest } from '../vscode/manifest'
-import { csp, renderHtml } from '../vscode/webview-html'
+import { buildManifest } from '../src/vscode/manifest'
+import { csp, renderHtml } from '../src/vscode/webview-html'
 
 const OUT = 'build/vscode'
 const run = (cmd: string, args: string[], env: NodeJS.ProcessEnv = {}, cwd?: string): void => {

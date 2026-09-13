@@ -1,5 +1,28 @@
 # 面板宣告
 
+> 🔴 **這個目錄今天是空的——一份 `panel.ts` 都沒有。**（2026-09-13 查證）
+>
+> ```
+> src/panels/*/panel.ts        0 個
+> loadPanels() 的產品呼叫者     0 個
+> 下面提到的 panel-declaration-open.test.ts   不存在
+> ```
+>
+> spec 170 的 T001–T006 把**登錄表**蓋好了
+> （`core/host/{panel-spec,panel-registry,load-panels}.ts`，262 行，
+> 而 `tests/unit/core/panel-registry.test.ts` 測得到它），
+> **而宣告與接線那一半沒有做**。
+>
+> ⚠️ 這份 README 底下描述的是**打算長成的樣子**，不是現況。
+> 而它自己那支測試的檔頭逐字寫著：
+>
+> > **一個沒有人宣告的登記處【就是殼】，而它綠得跟真的一樣。**
+>
+> 🔴 **待拍板**：把剩下那一半做完，還是把登錄表收掉。
+> 在那之前，這一段的存在是為了**不讓這個殼看起來像已經完成**。
+
+---
+
 **一種投影一個子目錄，各含一份 `panel.ts`。**
 
 ```
@@ -35,7 +58,7 @@ src/panels/
 2. 加它的 i18n 鍵
 3. **沒有第三步。** 版面、選單、槽的選擇器、那條頭全部自己長出來。
 
-🔴 由 `tests/integration/panel-declaration-open.test.ts` 釘住——那支測試
+🔴 ~~由 `tests/integration/panel-declaration-open.test.ts` 釘住~~（⚠️ **那個檔不存在**）——那支測試
 **只 import 登錄表與組裝點**，它跑得起來本身就是「不用碰別的」的證明。
 
 ## 這裡不做什麼

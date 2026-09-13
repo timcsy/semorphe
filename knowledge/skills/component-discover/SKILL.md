@@ -144,7 +144,7 @@ $ARGUMENTS
 
 ### 階段五：輸出
 
-產生結構化報告，放在 `specs/concepts/` 目錄下，如 `specs/concepts/{lang}-{topic}.md`：
+產生結構化報告，放在 `specs/component-discovery/` 目錄下，如 `specs/component-discovery/{lang}-{topic}.md`：
 
 ```markdown
 # 概念探索：{Language} — {Topic}

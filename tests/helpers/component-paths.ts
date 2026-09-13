@@ -1,15 +1,22 @@
 /**
- * ComponentRegistry 完備性驗證腳本
+ * 元件的四條路徑各自到齊了嗎——**一份報表，不是一道門**。
  *
  * 掃描所有概念來源，檢查每個概念的四條路徑：
  * lift（AST→Semantic）、render（Semantic→Block）、extract（Block→Semantic）、generate（Semantic→Code）
  *
- * 用法：npx tsx src/scripts/verify-component-paths.ts
+ * ⚠️ **這支不是可執行的工具**——它用 `import.meta.glob`，在 `tsx` 下跑不起來。
+ * `npm run verify-components` 因此壞了一段時間，2026-09-13 拿掉那個入口。
+ *
+ * 🔴 而它搬到 `tests/helpers/` 是因為**它唯一真實的消費者是一支測試**
+ * （`tests/unit/core/component-paths.test.ts`）。
+ * 四路完備性真正的護欄是 `tests/integration/audit-completeness.test.ts`（P2，零容忍）。
+ *
+ * > **一個放在「工具」底下而沒有人跑得起來的檔案，它的位置在說謊。**
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { programRootComponent } from '../core/component/traits'
+import { programRootComponent } from '../../src/core/component/traits'
 
 // ─── Types ───
 
@@ -198,7 +205,7 @@ export function verify(rootDir: string): { reports: ComponentPathReport[]; exitC
   // `src/components/<scope>/<name>/forms/blocks.json` 之後就不在那三種裡。
   // 症狀是「這顆概念沒有任何投影」，而它的積木好端端地在膠囊裡。
   //
-  // 這是**第 N 份各自列來源**（第三十七條護欄只掃 `tests/`，掃不到 `src/scripts/`）。
+  // 這是**第 N 份各自列來源**（第三十七條護欄只掃 `tests/`，掃不到 `tools/`）。
   const componentsDir = path.join(rootDir, 'src/components')
   const componentBlockPaths: string[] = []
   if (fs.existsSync(componentsDir)) {

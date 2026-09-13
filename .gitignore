@@ -28,3 +28,7 @@ examples/**/dist/
 # 生教材時的量測暫存（e2e/measure-lesson-codes.spec.ts）
 .lesson-measure/
 .vscode-test-web/
+
+# 🔴 `cpp:ofstream_declare` 的預設檔名——跑到檔案輸出的測試會在根目錄留下它。
+# （2026-09-13 從版控裡刪掉一份 0 位元組的，它是這樣進來的。）
+output.txt

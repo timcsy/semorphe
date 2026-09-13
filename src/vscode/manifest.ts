@@ -18,7 +18,7 @@ import { vscodeProfile } from './vscode-profile'
  *
  * > **宣告是程式碼的一部分，那就讓它受同一套檢查。**
  *
- * 由 `src/scripts/build-vscode.ts` 寫成 `build/vscode/package.json`。
+ * 由 `tools/build-vscode.ts` 寫成 `build/vscode/package.json`。
  */
 
 /** 擴充的識別——⚠️ 與網頁版的 `semorphe` 分開，兩者不是同一個東西。 */

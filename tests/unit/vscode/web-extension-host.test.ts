@@ -50,7 +50,7 @@ describe('第一百二十一條護欄：網頁版的擴充主機', () => {
   })
 
   it('🔴 建置腳本要真的跑那個目標', () => {
-    const build = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/build-vscode.ts'), 'utf8')
+    const build = fs.readFileSync(path.join(REPO_ROOT, 'tools/build-vscode.ts'), 'utf8')
     expect(build, '🔴 建置沒有跑 extension-web → manifest 指向一個不存在的檔')
       .toContain("SEMORPHE_VSCODE_TARGET: 'extension-web'")
     const vite = fs.readFileSync(path.join(REPO_ROOT, 'vite.vscode.config.ts'), 'utf8')

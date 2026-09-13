@@ -150,7 +150,7 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 ```
 不可手動執行探索步驟。必須調用 Skill tool。
 
-**關卡**：探索報告已產生（路徑在 `specs/concepts/` 目錄下）
+**關卡**：探索報告已產生（路徑在 `specs/component-discovery/` 目錄下）
 **完成標記**：`🏁 SKILL_COMPLETE: component-discover | ...`
 
 **決策點**：探索後，向使用者呈現概念目錄：
@@ -282,7 +282,7 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
 ## 錯誤恢復
 
 管線被中斷時，所有中間產出物都會保留。可以透過個別 skill 從任何階段恢復：
-- `/component-generate specs/concepts/{lang}-{topic}.md`
+- `/component-generate specs/component-discovery/{lang}-{topic}.md`
 - `/component-roundtrip {lang} {component_name}`
 - `/component-integrate {lang} {component_name}`
 

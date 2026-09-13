@@ -1,7 +1,7 @@
 # Round-Trip 測試結果：C++ — 套件物件（第 2 批）＋ ESP32（第 3 批）
 
 > 測試檔：`tests/integration/roundtrip-cpp-arduino-libraries.test.ts`（永久，11 條）
-> 上游：`specs/concepts/cpp-arduino-libraries.md`
+> 上游：`specs/component-discovery/cpp-arduino-libraries.md`
 
 ## ⚠️ 宣稱範圍：**不含編譯與執行比對**
 

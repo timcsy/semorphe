@@ -2,7 +2,7 @@
 
 > 對象：`cpp:pin_attach` · `cpp:ultrasonic_trigger`
 > 測試檔：`tests/integration/roundtrip-cpp-arduino-components.test.ts`（永久，7 條）
-> 上游：`specs/concepts/cpp-arduino-components.md`　同批：`roundtrip-cpp-arduino-builtins.md`（第 0 批）
+> 上游：`specs/component-discovery/cpp-arduino-components.md`　同批：`roundtrip-cpp-arduino-builtins.md`（第 0 批）
 
 ## ⚠️ 宣稱範圍：**不含編譯與執行比對**
 

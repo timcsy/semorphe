@@ -10,5 +10,5 @@
     "rootDir": "src"
   },
   "include": ["src/sdk/index.ts"],
-  "exclude": ["src/scripts", "src/**/*.test.ts"]
+  "exclude": ["src/**/*.test.ts"]
 }

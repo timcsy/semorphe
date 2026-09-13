@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import * as path from 'path'
-import { verify } from '../../../src/scripts/verify-component-paths'
+import { verify } from '../../helpers/component-paths'
 
 const ROOT_DIR = path.resolve(__dirname, '../../..')
 

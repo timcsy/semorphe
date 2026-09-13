@@ -26,6 +26,8 @@
   // 元件膠囊的自證測住在 `src/components/**/` 裡（刻意：一顆元件的語義主張與
   // 它的實作住在一起）。但**測試不進建置**——它們用 node 全域（`process`），
   // 而 production 的 tsconfig 沒有 node types，也不該有。
+  // 🪦 `src/scripts` 那一項 2026-09-13 拿掉了：那兩支建置工具搬到 `tools/` 了。
+  //    **「要把它排除在建置外」本身就是「它不屬於 src」的自白。**
   // Vitest 走自己的 include（見 vitest.config.ts），不受這裡影響。
-  "exclude": ["src/scripts", "src/**/*.test.ts"]
+  "exclude": ["src/**/*.test.ts"]
 }
