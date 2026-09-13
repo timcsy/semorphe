@@ -3,7 +3,7 @@
  *
  * ## 為什麼在這裡
  *
- * 這段邏輯原本只有一份，住在 `languages/cpp/core/generators/expressions.ts`
+ * 這段邏輯原本只有一份，住在 `languages/cpp/lang/generators/expressions.ts`
  * ——而**那個檔自己的註解就說了它不屬於 C++**：
  *
  * > 「`precedence`／`genChild` 是**共用的排版演算法**……而那不屬於任何一顆元件。」

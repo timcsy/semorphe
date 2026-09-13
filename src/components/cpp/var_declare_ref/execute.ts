@@ -2,7 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { execVarDeclare } from '../../../interpreter/executors/variables'
 // ⚠️ 問**性狀**不問身分——一顆膠囊裡寫另一顆的身分，就近性護欄的反向檢查會指名。
-import { isVariableRef } from '../../../languages/cpp/core/node-traits'
+import { isVariableRef } from '../../../languages/cpp/lang/node-traits'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /**

@@ -24,10 +24,10 @@
  * 見 specs/052-storage-integrity-gate/data-model.md 契約 1、5
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { StorageService } from '../../../src/core/storage'
-import { SAVED_STATE_FIELDS } from '../../../src/core/storage-version'
-import type { SavedState } from '../../../src/core/storage'
-import { CURRENT_VERSION } from '../../../src/core/storage-version'
+import { StorageService } from '../../../src/core/storage/storage'
+import { SAVED_STATE_FIELDS } from '../../../src/core/storage/storage-version'
+import type { SavedState } from '../../../src/core/storage/storage'
+import { CURRENT_VERSION } from '../../../src/core/storage/storage-version'
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {}

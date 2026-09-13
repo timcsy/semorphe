@@ -29,7 +29,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { isFunctionDefinition } from '../../../core/component/traits'
 import { buildFuncCall } from '../func_call/lift'
-import { loopBudget, tickLoop } from '../../../languages/cpp/core/runtime/arduino-clock'
+import { loopBudget, tickLoop } from '../../../languages/cpp/lang/runtime/arduino-clock'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:program', async (node, ctx) => {

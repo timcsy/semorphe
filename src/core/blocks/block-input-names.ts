@@ -9,7 +9,7 @@
  * If a blockDef input name changes in JSON, the dynamic registration
  * automatically picks up the change — no dual maintenance.
  */
-import type { BlockSpec } from './types'
+import type { BlockSpec } from '../types'
 import { BlockSpecRegistry } from './block-spec-registry'
 // ⚠️ **第十個組裝點**（2026-08-11）：這裡原本只讀 `universal-blocks.json`。
 // 一顆通用元件搬進膠囊之後它就查不到了，症狀是
@@ -17,9 +17,9 @@ import { BlockSpecRegistry } from './block-spec-registry'
 // ——**訊息指著一個已經不是唯一來源的檔**。
 //
 // > **每一處「自己列舉來源」的地方，都會在下一次搬家時漏掉一種來源。**
-import { universalComponents, universalBlocks } from './universal'
-import { componentComponents, componentBlocks } from './component/registry'
-import type { ComponentDefJSON, BlockProjectionJSON } from './types'
+import { universalComponents, universalBlocks } from '../universal'
+import { componentComponents, componentBlocks } from '../component/registry'
+import type { ComponentDefJSON, BlockProjectionJSON } from '../types'
 
 const _registry = new BlockSpecRegistry()
 _registry.loadFromSplit(

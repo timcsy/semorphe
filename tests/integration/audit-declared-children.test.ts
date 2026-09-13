@@ -36,7 +36,7 @@ import {
 } from '../helpers/guardrail'
 import { universalComponents } from '../../src/core/universal'
 import { allCppComponents } from '../../src/languages/cpp/all-declarations'
-import { coreComponents } from '../../src/languages/cpp/core'
+import { coreComponents } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ComponentDefJSON } from '../../src/core/types'
 

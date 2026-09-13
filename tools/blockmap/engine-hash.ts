@@ -53,7 +53,7 @@ export const ENGINE_FILES = [
   'src/core/projection/pattern-renderer.ts',
   'src/core/projection/block-renderer.ts',
   'src/core/universal-blocks.json',
-  'src/languages/cpp/core/blocks.json',
+  'src/languages/cpp/lang/blocks.json',
 ] as const
 
 /** 膠囊裡的積木定義都叫這個名字，都住在 `forms/` 底下。 */

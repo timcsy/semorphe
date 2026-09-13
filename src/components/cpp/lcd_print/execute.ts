@@ -8,7 +8,7 @@
  * 那是**視圖層**的缺口（板子視圖，已推遲），**不是用汙染 stdout 去補的**。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { lcdOf } from '../../../languages/cpp/core/runtime/arduino-devices'
+import { lcdOf } from '../../../languages/cpp/lang/runtime/arduino-devices'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:lcd_print', async (node, ctx) => {

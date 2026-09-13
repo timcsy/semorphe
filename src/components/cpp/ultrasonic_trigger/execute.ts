@@ -11,8 +11,8 @@
  * 那是刻意的，判準是「可重現比擬真重要」（見腳位讀取那顆的檔頭）。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
-import { sleepMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
+import { sleepMillis } from '../../../languages/cpp/lang/runtime/arduino-clock'
 
 export function registerExecute(
   register: (component: string, executor: ComponentExecutor) => void,

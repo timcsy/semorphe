@@ -49,7 +49,7 @@ import { splitCodeAndComments, maskNonIdentityPositions, scanText } from '../hel
 import { classifyFile } from '../helpers/file-classification'
 import decided from '../assets/identity-review-decisions.json'
 import { universalComponents } from '../../src/core/universal'
-import { coreComponents } from '../../src/languages/cpp/core'
+import { coreComponents } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 
@@ -381,13 +381,13 @@ describe('護欄：元件身分健檢（膠囊化之前）', () => {
 
   it('★ 「標 universal 但只有語言側」信號是活的——用合成元件證明', () => {
     // 這個信號在真實資料上是 0。**0 必須是可證的**，否則它與「信號死掉」長得一樣。
-    const synth = { layer: 'universal', impl: ['src/languages/cpp/core/generators/statements.ts'] }
+    const synth = { layer: 'universal', impl: ['src/languages/cpp/lang/generators/statements.ts'] }
     const fires = synth.layer === 'universal'
       && synth.impl.filter((f) => f.startsWith('src/languages/')).length > 0
       && synth.impl.filter((f) => !f.startsWith('src/languages/')).length === 0
     expect(fires, '合成的「通用元件只有語言側實作」沒被判為違規 → 信號是死的').toBe(true)
 
-    const ok = { layer: 'universal', impl: ['src/interpreter/executors/control-flow.ts', 'src/languages/cpp/core/generators/statements.ts'] }
+    const ok = { layer: 'universal', impl: ['src/interpreter/executors/control-flow.ts', 'src/languages/cpp/lang/generators/statements.ts'] }
     const firesOk = ok.layer === 'universal'
       && ok.impl.filter((f) => f.startsWith('src/languages/')).length > 0
       && ok.impl.filter((f) => !f.startsWith('src/languages/')).length === 0

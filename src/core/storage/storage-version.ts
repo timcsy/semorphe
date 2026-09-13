@@ -11,10 +11,10 @@
  * 見 specs/052-storage-integrity-gate/research.md F2、contracts/storage.md
  */
 import type { SavedState } from './storage'
-import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../migrations/block-type-migrations'
-import { mergedIdentities } from '../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16 } from '../migrations/block-shape-changes'
-import type { ShapeChange } from '../migrations/block-shape-changes'
+import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../../migrations/block-type-migrations'
+import { mergedIdentities } from '../../migrations/merged-identities'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16 } from '../../migrations/block-shape-changes'
+import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
 export const CURRENT_VERSION = 18

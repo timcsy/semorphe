@@ -19,7 +19,7 @@ import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { SemanticInterpreter } from '../../../interpreter/interpreter'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
-import { resetClock, useRealTime, markRealStart } from '../../../languages/cpp/core/runtime/arduino-clock'
+import { resetClock, useRealTime, markRealStart } from '../../../languages/cpp/lang/runtime/arduino-clock'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 
 let parser: Parser

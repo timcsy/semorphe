@@ -19,8 +19,8 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT } from '../helpers/guardrail'
-import { toPortable, SIDECAR_DIR } from '../../src/core/portable'
-import type { SavedState } from '../../src/core/storage'
+import { toPortable, SIDECAR_DIR } from '../../src/core/storage/portable'
+import type { SavedState } from '../../src/core/storage/storage'
 
 const read = (p: string): string => fs.readFileSync(path.join(REPO_ROOT, p), 'utf8')
 const codeOf = (src: string): string =>
@@ -71,7 +71,7 @@ describe('第一百一十二條護欄：匯出是一份帶得走的作品', () =
    */
   it('🔴 硬性零：沒有人從副檔名反推語言', () => {
     const bad: string[] = []
-    for (const f of ['src/core/portable.ts', 'src/ui/app-shell.ts', 'src/core/language-packs.ts']) {
+    for (const f of ['src/core/storage/portable.ts', 'src/ui/app-shell.ts', 'src/core/language-packs.ts']) {
       const code = codeOf(read(f))
       // 「拿一個副檔名去查語言」的形狀
       if (/languageFor(Ext|Extension)|extensionToLanguage|langFromExt/.test(code)) bad.push(f)
@@ -84,7 +84,7 @@ describe('第一百一十二條護欄：匯出是一份帶得走的作品', () =
   })
 
   it('★ 核心純淨：拆檔那一支裡沒有任何語言的副檔名', () => {
-    const code = codeOf(read('src/core/portable.ts'))
+    const code = codeOf(read('src/core/storage/portable.ts'))
     for (const ext of ['.cpp', '.py', '.ino', '.c']) {
       expect(code.includes(`'${ext}'`) || code.includes(`"${ext}"`),
         `🔴 核心裡出現了 ${ext}——那份知識住在語言套件`).toBe(false)

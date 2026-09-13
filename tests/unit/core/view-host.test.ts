@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../../src/core/view-host'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../../src/core/sync/view-host'
 
 class MockBlocksView implements ViewHost {
   readonly viewId = 'blocks-1'

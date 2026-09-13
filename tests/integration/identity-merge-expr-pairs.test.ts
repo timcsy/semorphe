@@ -34,8 +34,8 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { SemanticNode } from '../../src/core/types'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
-import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
@@ -211,7 +211,7 @@ describe('產生路徑不變', () => {
 
 describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
   it('★ 舊樹裡的 `_expr` 身分會被轉成合併後的身分', async () => {
-    const { UPGRADES, CURRENT_VERSION } = await import('../../src/core/storage-version')
+    const { UPGRADES, CURRENT_VERSION } = await import('../../src/core/storage/storage-version')
     expect(CURRENT_VERSION, '詞彙變了卻沒有升版 → 舊存檔會帶著不存在的身分').toBeGreaterThan(1)
     const oldSave = {
       version: 1,
@@ -228,7 +228,7 @@ describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
   })
 
   it('★ 負向：沒有 `_expr` 的樹**原樣通過**，不得被亂改', async () => {
-    const { UPGRADES } = await import('../../src/core/storage-version')
+    const { UPGRADES } = await import('../../src/core/storage/storage-version')
     const savedState = {
       version: 1,
       tree: { id: 'n1', componentId: 'cpp:var_declare', properties: { name: 'x', type: 'int' }, slots: {} },
@@ -239,7 +239,7 @@ describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
   })
 
   it('★ 積木型別**不轉**——加法式，`cpp_increment_expression` 仍然有效', async () => {
-    const { UPGRADES } = await import('../../src/core/storage-version')
+    const { UPGRADES } = await import('../../src/core/storage/storage-version')
     const savedState = {
       version: 1, tree: null,
       blocklyState: { blocks: { blocks: [{ type: 'cpp_increment_expression', id: 'b1' }] } },

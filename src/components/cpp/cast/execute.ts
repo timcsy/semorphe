@@ -5,7 +5,7 @@
  * 四種命名轉型是 `false`（既有差別，見 `core/runtime/cast.ts` 的檔頭）。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { numericCast } from '../../../languages/cpp/core/runtime/cast'
+import { numericCast } from '../../../languages/cpp/lang/runtime/cast'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cast', async (node, ctx) => {

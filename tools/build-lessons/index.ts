@@ -3,7 +3,7 @@
  *
  * ## 🔴 為什麼有這個
  *
- * `src/core/load-lessons.ts:8` 逐字：「⚠️ 課文（`lesson.md`）**不在這裡**」。
+ * `src/core/lesson/load-lessons.ts:8` 逐字：「⚠️ 課文（`lesson.md`）**不在這裡**」。
  * 於是 129,368 字的課文**在產品裡沒有讀者**——唯二讀它的是測試，而它們讀完就丟。
  *
  * > **一句「這一刀不做 X」的註解，如果沒有人接手 X，它會變成「X 不做」。**
@@ -39,7 +39,7 @@ import { mkdirSync, writeFileSync, cpSync, existsSync, createReadStream } from '
 import { join, resolve } from 'node:path'
 import type { Plugin } from 'vite'
 import { readTracks, readLessonsOf, lastmodFromGit, readTargets } from './read-lessons'
-import { lessonDocHref } from '../../src/core/lesson'
+import { lessonDocHref } from '../../src/core/lesson/lesson'
 import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots, renderSpecs } from './render'
 
 const write = (outDir: string, rel: string, html: string): void => {

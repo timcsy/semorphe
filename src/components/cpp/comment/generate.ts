@@ -5,7 +5,7 @@
  *
  * ```
  * core/projection/code-generator.ts            → commentSyntax().…（語言中立登記處）
- * languages/cpp/core/generators/statements.ts  → 寫死 `//`／`/* … *​/`／`///`
+ * languages/cpp/lang/generators/statements.ts  → 寫死 `//`／`/* … *​/`／`///`
  * ```
  *
  * 實測**核心那一份贏**（註冊順序）。把寫死那份裝進膠囊試跑，

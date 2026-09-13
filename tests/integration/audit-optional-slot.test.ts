@@ -33,7 +33,7 @@
  * - ❌ **不驗載入之後的外觀**——只問「宣告裡表達得出這一格嗎」
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
 

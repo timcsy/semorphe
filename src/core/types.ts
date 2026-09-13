@@ -820,7 +820,7 @@ export interface ToolboxCategoryDef {
   /** If true, this category uses the I/O builder (iostream/cstdio sorting) */
   isIoCategory?: boolean
   /** Custom content builder for special categories */
-  buildContents?: (registry: import('./block-spec-registry').BlockSpecRegistry, visibleComponents: Set<string>, ioPreference: 'iostream' | 'cstdio') => { kind: string; type: string }[]
+  buildContents?: (registry: import('./blocks/block-spec-registry').BlockSpecRegistry, visibleComponents: Set<string>, ioPreference: 'iostream' | 'cstdio') => { kind: string; type: string }[]
 }
 
 // ─── Target（目標）───

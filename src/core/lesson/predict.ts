@@ -33,9 +33,9 @@
  * ⚠️ **它不會被自動判定選中**：一個自動生成的干擾項只是一個隨機的錯答案，
  * 而學生選完之後你也不知道要跟他說什麼。**只有作者寫了才有。**
  */
-import { loopNodes } from './iterations'
+import { loopNodes } from '../iterations'
 import type { LessonTask, PredictChoice } from './lesson'
-import type { SemanticNode } from './types'
+import type { SemanticNode } from '../types'
 
 /** 宣告裡寫得出來的形式。⚠️ `none` 是**說出口的「這一題不問」**，不是漏掉。 */
 export type PredictKind = 'output' | 'iterations' | 'none' | 'choice'

@@ -5,7 +5,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
-import { resolveRange, numOf } from '../../../languages/cpp/core/runtime/range'
+import { resolveRange, numOf } from '../../../languages/cpp/lang/runtime/range'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_find_lower', async (node, ctx) => {

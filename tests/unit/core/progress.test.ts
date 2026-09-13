@@ -1,5 +1,5 @@
 /**
- * **通過紀錄**——`core/progress.ts`。
+ * **通過紀錄**——`core/lesson/progress.ts`。
  *
  * 🪦 **這個檔曾經需要 `@vitest-environment happy-dom`**，而理由逐字是
  * 「它讀 `localStorage`」。2026-09-06（spec 173）之後不需要了：
@@ -12,7 +12,7 @@
  * 變成「換一個新的 store」——測試之間再也不可能互相污染。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { markTaskPassed, isTaskPassed, passedTasks, passedCount, clearProgress, setProgressStore } from '../../../src/core/progress'
+import { markTaskPassed, isTaskPassed, passedTasks, passedCount, clearProgress, setProgressStore } from '../../../src/core/lesson/progress'
 import { MemoryKeyValueStore } from '../../../src/core/host/key-value-store'
 
 describe('通過紀錄', () => {

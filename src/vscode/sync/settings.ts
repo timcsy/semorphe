@@ -12,7 +12,7 @@
  *
  * ## 🔴 而網頁版把三種東西混在一個 blob 裡，這裡只收其中一種
  *
- * `core/storage.ts` 的 `SavedState`：
+ * `core/storage/storage.ts` 的 `SavedState`：
  *
  * ```
  * tree / blocklyState / code                        ① 文件內容

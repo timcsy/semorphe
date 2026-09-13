@@ -1,14 +1,14 @@
 import { Lifter } from '../../src/core/lift/lifter'
 import { setCommentLanguage } from '../../src/core/comment-syntax'
 import { PatternLifter } from '../../src/core/lift/pattern-lifter'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { registerCppLifters } from '../../src/languages/cpp/lifters'
-import { registerCppLiftStrategies } from '../../src/languages/cpp/core/lifters/strategies'
+import { registerCppLiftStrategies } from '../../src/languages/cpp/lang/lifters/strategies'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../../src/core/registry'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import type { LiftPattern } from '../../src/core/types'
 import { universalComponents, universalBlocks } from '../../src/core/universal'
-import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 /** Create a fully wired Lifter with PatternLifter + registries for testing */

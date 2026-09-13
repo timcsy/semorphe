@@ -34,7 +34,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { SAVED_STATE_FIELDS, FIELD_OWNERSHIP, REQUIRED_FIELDS } from '../../src/core/storage-version'
+import { SAVED_STATE_FIELDS, FIELD_OWNERSHIP, REQUIRED_FIELDS } from '../../src/core/storage/storage-version'
 import { printReport, assertRatchet, assertCorpus, REPO_ROOT } from '../helpers/guardrail'
 
 /** 讀取點——只認具名的取用，不認「字串剛好出現」 */
@@ -45,7 +45,7 @@ export function countReaders(source: string, field: string): number {
 }
 
 /** 存檔模組自己不算——它當然會碰每一個欄位 */
-const SELF = ['src/core/storage.ts', 'src/core/storage-version.ts']
+const SELF = ['src/core/storage/storage.ts', 'src/core/storage/storage-version.ts']
 
 function consumerSource(): string {
   let out = ''

@@ -49,7 +49,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { LAYOUT_PRESETS, layoutPreset } from '../../src/core/host/layout-presets'
-import { LAYER_ORDER } from '../../src/core/view-host'
+import { LAYER_ORDER } from '../../src/core/sync/view-host'
 import { revealForOutput } from '../../src/core/host/console-surface'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

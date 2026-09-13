@@ -10,7 +10,7 @@ import { PatternLifter } from '../../src/core/lift/pattern-lifter'
 import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
 import { generateNode, type GeneratorContext, type NodeGenerator } from '../../src/core/projection/code-generator'
 import type { BlockSpec, LiftPattern, StylePreset, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
@@ -19,7 +19,7 @@ import { LiftContextData } from '../../src/core/lift/lift-context'
 
 // Import split component/projection JSON files
 import { universalComponents } from '../../src/core/universal'
-import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
 import { allStdModules } from '../../src/languages/cpp/std'
 // ⚠️ **不要自己列宣告來源。**

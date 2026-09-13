@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalComponents, universalBlocks } from '../../src/core/universal'
-import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import rangeSortBlocks from '../../src/components/cpp/range_sort/forms/blocks.json'
 // ⚠️ `cpp:vector_declare` 已元件化，不在這個模組檔裡了——走唯一組裝點。

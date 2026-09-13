@@ -57,7 +57,7 @@ export function editableReaders(source: string): number {
  * > **字串剛好出現在某處不算讀取——那可能只是它自己的宣告。**
  * > （`annotation-adoption` 的同一條，第二次踩。）
  */
-const DECLARATION_SITE = 'src/core/view-registry.ts'
+const DECLARATION_SITE = 'src/core/sync/view-registry.ts'
 
 function uiSources(): { files: number; text: string } {
   let text = ''

@@ -14,7 +14,7 @@ import type { DependencyResolver, DependencyEdge } from '../../core/dependency-r
 import { expandHeaderAliases, normalizeHeader } from './header-aliases'
 import { buildInclude } from '../../components/cpp/include/lift'
 import { buildUsingNamespace } from '../../components/cpp/using_namespace/lift'
-import { isIncludeDirective } from './core/node-traits'
+import { isIncludeDirective } from './lang/node-traits'
 
 /**
  * Collect all component IDs from a semantic tree (recursive).

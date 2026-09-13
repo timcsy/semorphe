@@ -28,9 +28,9 @@
  * 呼叫端寫 `codeView.relayout?.()` —— 🟢 **那不是防禦性程式碼，
  * 是讀得出意圖的程式碼**：這一格本來就可能不存在。
  */
-import type { SemanticBus } from '../semantic-bus'
-import type { ExecutionAtNodeEvent, SemanticUpdateEvent } from '../view-host'
-import type { SyncPhase } from '../sync-coordinator'
+import type { SemanticBus } from '../sync/semantic-bus'
+import type { ExecutionAtNodeEvent, SemanticUpdateEvent } from '../sync/view-host'
+import type { SyncPhase } from '../sync/sync-coordinator'
 import type { ControlState, ControlInvoke } from './controls'
 
 /**
@@ -38,7 +38,7 @@ import type { ControlState, ControlInvoke } from './controls'
  *
  * ⚠️ **只有兩種**，而執行高亮不在這裡：它走 `onExecutionAtNode`
  * ——🔴 因為「執行到哪個節點」是**唯一真實**，而高亮是它的投影，不是一個命令
- * （`core/view-host.ts:94`）。
+ * （`core/sync/view-host.ts:94`）。
  */
 export type HighlightVariant = 'block-to-code' | 'code-to-block'
 

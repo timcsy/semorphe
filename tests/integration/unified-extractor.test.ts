@@ -7,12 +7,12 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 // ⚠️ **第十五個「自己列舉來源」的地方**（今天的同一個形狀）。
 import { universalComponents, universalBlocks } from '../../src/core/universal'
 import { componentComponents, componentBlocks } from '../../src/core/component/registry'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 

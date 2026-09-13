@@ -11,7 +11,7 @@
  * **不會推進可見的時間**，而那不影響 `pulse_read` 的結果（它讀的是腳位狀態）。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { sleepMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
+import { sleepMillis } from '../../../languages/cpp/lang/runtime/arduino-clock'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:delay_microseconds', async (node, ctx) => {

@@ -1,5 +1,5 @@
 import type { SemanticNode } from './types'
-import type { RuntimeType } from '../interpreter/types'
+import type { RuntimeType } from './execution'
 
 /**
  * 語言套件推進來的執行器登記處。

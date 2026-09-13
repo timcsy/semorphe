@@ -1,5 +1,5 @@
 // ⚠️ 問**性狀**不問身分——一份身分集合擋住那三顆搬進膠囊。
-import { needsParenInCout, isBinaryOperator } from '../../core/node-traits'
+import { needsParenInCout, isBinaryOperator } from '../../lang/node-traits'
 
 // Bitwise/comparison/logic operators have lower precedence than <<
 const LOW_PREC_OPS = new Set(['&', '|', '^', '&&', '||', '>', '<', '>=', '<=', '==', '!='])

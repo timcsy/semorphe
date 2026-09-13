@@ -33,10 +33,10 @@
  * `setCode` **必須被呼叫**。兩邊都驗，這條才有意義。
  */
 import { describe, it, expect } from 'vitest'
-import { StorageService } from '../../src/core/storage'
+import { StorageService } from '../../src/core/storage/storage'
 import { vscodeProfile } from '../../src/vscode/vscode-profile'
 import type { StorageLike } from '../../src/core/host/host-profile'
-import type { SavedState } from '../../src/core/storage'
+import type { SavedState } from '../../src/core/storage/storage'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 

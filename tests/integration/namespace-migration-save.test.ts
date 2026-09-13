@@ -6,7 +6,7 @@
  * 因此要求這類變更 MUST 附一次性轉換——這裡驗它真的成立。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { UPGRADES, upgrade, CURRENT_VERSION } from '../../src/core/storage-version'
+import { UPGRADES, upgrade, CURRENT_VERSION } from '../../src/core/storage/storage-version'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import type { SemanticNode, StylePreset } from '../../src/core/types'

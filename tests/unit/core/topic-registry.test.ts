@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { TopicRegistry } from '../../../src/core/topic-registry'
+import { TopicRegistry } from '../../../src/core/lesson/topic-registry'
 import type { Topic } from '../../../src/core/types'
 
 function makeTopic(overrides: Partial<Topic> = {}): Topic {

@@ -1,7 +1,7 @@
 /** `cpp:var_declare_static` 的 **execute** 路——從共用檔原封剪過來（批次第二十一批：建構子）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
-import { rootScope } from '../../../languages/cpp/core/runtime/scope'
+import { rootScope } from '../../../languages/cpp/lang/runtime/scope'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /**

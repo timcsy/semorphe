@@ -1,17 +1,17 @@
 /**
- * **跑之前先猜一下**——`core/predict.ts`。
+ * **跑之前先猜一下**——`core/lesson/predict.ts`。
  *
  * 🔴 使用者 2026-09-04：「總之**目的是要使用者想過**就是」。
  * 那句話把設計推掉了一半：沒有分數、沒有猜對率、沒有全班統計，
  * 而**問不出好問題就不要問**。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { predictionFor, programSignature } from '../../../src/core/predict'
+import { predictionFor, programSignature } from '../../../src/core/lesson/predict'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import { createNode } from '../../../src/core/semantic-tree'
-import { parseLesson } from '../../../src/core/lesson'
+import { parseLesson } from '../../../src/core/lesson/lesson'
 import type { SemanticNode } from '../../../src/core/types'
-import type { LessonTask } from '../../../src/core/lesson'
+import type { LessonTask } from '../../../src/core/lesson/lesson'
 
 beforeAll(() => { registerCppLanguage() })
 

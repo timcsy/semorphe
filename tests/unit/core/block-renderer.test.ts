@@ -7,7 +7,7 @@ import { setupTestRenderer } from '../../helpers/setup-renderer'
 // 🔴 **spec 154：降級積木的型別由語言套件宣告**，核心不再寫死 `cpp_raw_code`。
 //    ⚠️ 這一支測的是**真行為**（降級時渲染成哪一顆），所以它**宣告之後繼續測**
 //    ——不是「被刪的功能」。
-import { declareDegradationBlocks, setDegradationLanguage } from '../../../src/core/degradation-blocks'
+import { declareDegradationBlocks, setDegradationLanguage } from '../../../src/core/blocks/degradation-blocks'
 declareDegradationBlocks('cpp', { statement: 'cpp_raw_code', expression: 'cpp_raw_expression' })
 setDegradationLanguage('cpp')
 

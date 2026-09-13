@@ -1,6 +1,6 @@
 /** `cpp:range_sum_partial` 的 **execute** 路——從共用檔原封剪過來（批次第六批：lift 是 io.ts 的一個帶真邏輯的分支）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { resolveRange, numOf } from '../../../languages/cpp/core/runtime/range'
+import { resolveRange, numOf } from '../../../languages/cpp/lang/runtime/range'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_sum_partial', async (node, ctx) => {

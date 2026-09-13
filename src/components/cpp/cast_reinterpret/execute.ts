@@ -5,7 +5,7 @@
  * 不是另一顆元件的實作——四種命名轉型與 C 風格轉型各自宣告自己用它。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { numericCast } from '../../../languages/cpp/core/runtime/cast'
+import { numericCast } from '../../../languages/cpp/lang/runtime/cast'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cast_reinterpret', async (node, ctx) => {

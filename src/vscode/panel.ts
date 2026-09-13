@@ -32,7 +32,7 @@ import { isDocumentWriter, type VscodeViewKind } from './vscode-profile'
 import { shouldRevealForConsoleMessage, bottomPageOf, type BottomPage } from '../core/host/console-surface'
 import { hostName, hostCanCloseEditors, hostSeesPanelVisibility } from './host-quirks'
 import { layoutPreset, type LayoutPresetId } from '../core/host/layout-presets'
-import type { UnderstandingLayer } from '../core/view-host'
+import type { UnderstandingLayer } from '../core/sync/view-host'
 import { EchoGuard } from './sync/echo-guard'
 import { resolveConfig, type RawSettings } from './sync/settings'
 import { textFingerprint } from './sync/fingerprint'
@@ -860,7 +860,7 @@ class SemorpheSession {
     this.send({ type: 'requestDiagnostics' })
   }
 
-  /** 把同步指令送進 webview——三態的機制住在那裡（`core/sync-coordinator.ts`） */
+  /** 把同步指令送進 webview——三態的機制住在那裡（`core/sync/sync-coordinator.ts`） */
   sendSync(cmd: { action: 'pause' | 'resume' | 'use'; viewId?: string }): void {
     this.send({ type: 'syncCommand', ...cmd })
   }

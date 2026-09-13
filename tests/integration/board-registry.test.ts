@@ -19,7 +19,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import type { BoardPinModel } from '../../src/core/types'
-import { hasPin, describePins } from '../../src/languages/cpp/core/runtime/arduino-pins'
+import { hasPin, describePins } from '../../src/languages/cpp/lang/runtime/arduino-pins'
 
 const modules = import.meta.glob('../../src/languages/cpp/targets/*.json', { eager: true }) as Record<
   string,

@@ -1,11 +1,11 @@
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { setPatternRenderer } from '../../src/core/projection/block-renderer'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalComponents, universalBlocks } from '../../src/core/universal'
-import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 /** Set up the global PatternRenderer with all block specs and render strategies */

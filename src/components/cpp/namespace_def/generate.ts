@@ -1,6 +1,6 @@
 /** `cpp:namespace_def` 的 **generate** 路——從共用檔原封剪過來（批次第三批：lift 是只產一種身分的具名策略）。 */
 import type { StylePreset } from '../../../core/types'
-import { openBraceFor } from '../../../languages/cpp/core/generators/statements'
+import { openBraceFor } from '../../../languages/cpp/lang/generators/statements'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, indented, generateBody, trackOwnText } from '../../../core/projection/code-generator'
 

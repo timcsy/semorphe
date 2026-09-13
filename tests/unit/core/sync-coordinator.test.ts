@@ -5,7 +5,7 @@
  * 之後才發現的洞：暫停 → 兩邊都改 → 解除，「誰最後編輯」是**任意的**。
  */
 import { describe, it, expect } from 'vitest'
-import { SyncCoordinator } from '../../../src/core/sync-coordinator'
+import { SyncCoordinator } from '../../../src/core/sync/sync-coordinator'
 
 const editable = (): string[] => ['blockly-panel', 'monaco-panel']
 

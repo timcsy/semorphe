@@ -2,7 +2,7 @@ import { RUN_MODES } from '../core/host/controls'
 import * as Blockly from 'blockly'
 import type { BoardPinModel } from '../core/types'
 import { SemanticInterpreter } from '../interpreter/interpreter'
-import { StepController } from '../core/step-controller'
+import { StepController } from '../core/sync/step-controller'
 import { DebugToolbar } from './debug-toolbar'
 import type { StepInfo, ExecutionSpeed } from '../interpreter/types'
 import type { SemanticNode as InterpreterNode } from '../core/types'
@@ -22,9 +22,9 @@ import { describeRuntimeStop } from './runtime-message'
 import type { SemanticNode } from '../core/types'
 import type { VariablePanel } from './panels/variable-panel'
 import type { BottomPanel } from './layout/bottom-panel'
-import type { SyncController } from '../core/sync-controller'
-import type { SemanticBus } from '../core/semantic-bus'
-import type { ExecutionReason } from '../core/view-host'
+import type { SyncController } from '../core/sync/sync-controller'
+import type { SemanticBus } from '../core/sync/semantic-bus'
+import type { ExecutionReason } from '../core/sync/view-host'
 import type { ExecutionStatus } from '../interpreter/types'
 
 export interface ExecutionPanels {
@@ -605,7 +605,7 @@ export class ExecutionController {
     if (index < 0 || index >= this.stepRecords.length) return
     const step = this.stepRecords[index]
 
-    // broadcastState，不是命令——誰想看變數，自己登錄成視圖（`core/view-registry.ts`）。
+    // broadcastState，不是命令——誰想看變數，自己登錄成視圖（`core/sync/view-registry.ts`）。
     // ⚠️ 沒有 bus 時退回直接呼叫：這個類別在測試裡被建構時不一定有匯流排，
     // 而**讓變數面板在某些情境安靜地不更新**比多留一行退路糟得多。
     this.broadcastState({ status: 'paused', step })

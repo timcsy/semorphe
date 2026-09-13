@@ -1,6 +1,6 @@
 /** `cpp:lcd_at` 的 **execute** 路——移動游標。⚠️ 行與列都從 0 開始。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { lcdOf } from '../../../languages/cpp/core/runtime/arduino-devices'
+import { lcdOf } from '../../../languages/cpp/lang/runtime/arduino-devices'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:lcd_at', async (node, ctx) => {

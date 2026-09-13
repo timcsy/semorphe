@@ -7,7 +7,7 @@
  * > **一個裝置如果它的本質就是資料，那它不需要被模擬——它可以被實作。**
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { eepromOf, requireAddress } from '../../../languages/cpp/core/runtime/arduino-devices'
+import { eepromOf, requireAddress } from '../../../languages/cpp/lang/runtime/arduino-devices'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:eeprom_read', async (node, ctx) => {

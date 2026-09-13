@@ -1,7 +1,7 @@
 /**
  * 把 `lessons/` 讀成宣告——**建置期那一側的搬運工**。
  *
- * ## 🔴 它與 `src/core/load-lessons.ts` 的關係
+ * ## 🔴 它與 `src/core/lesson/load-lessons.ts` 的關係
  *
  * 那一支用 `import.meta.glob`，只在 Vite 的模組圖裡跑得動；這一支跑在 Node 裡。
  * 所以**搬運不同，理解相同**：
@@ -21,7 +21,7 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join, relative } from 'node:path'
-import { parseLesson, parseTrack, type Lesson, type Track } from '../../src/core/lesson'
+import { parseLesson, parseTrack, type Lesson, type Track } from '../../src/core/lesson/lesson'
 import type { Target } from '../../src/core/types'
 
 export interface LessonPage {

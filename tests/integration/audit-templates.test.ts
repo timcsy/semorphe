@@ -32,8 +32,8 @@
 import { describe, it, expect } from 'vitest'
 import { printReport } from '../helpers/guardrail'
 import { findFiles } from '../helpers/find-files'
-import { allTemplates } from '../../src/core/load-templates'
-import { parseTemplate } from '../../src/core/template'
+import { allTemplates } from '../../src/core/lesson/load-templates'
+import { parseTemplate } from '../../src/core/lesson/template'
 import fs from 'node:fs'
 import path from 'node:path'
 

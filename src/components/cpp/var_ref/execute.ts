@@ -3,7 +3,7 @@ import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/e
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import type { RuntimeValue, Callable } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { pinConstantValue } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { pinConstantValue } from '../../../languages/cpp/lang/runtime/arduino-pins'
 
 /**
  * **C++ 的標準串流——它們是名字，而不是變數。**

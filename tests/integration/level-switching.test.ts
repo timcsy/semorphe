@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../src/core/types'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
-import { getVisibleComponents } from '../../src/core/level-tree'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
+import { getVisibleComponents } from '../../src/core/lesson/level-tree'
 // ⚠️ **第十四個「自己列舉來源」的地方**。漏了膠囊的話 `isBlockVisible`
 // 對搬走的積木回 `true`（查不到 = 當成可見），而斷言訊息只說「expected true to be false」。
 import { universalComponents, universalBlocks } from '../../src/core/universal'
 import { componentComponents, componentBlocks } from '../../src/core/component/registry'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import cppBeginnerTopic from '../../src/languages/cpp/topics/cpp-beginner.json'
 // ⚠️ **不要自己列宣告來源。**

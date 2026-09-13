@@ -24,7 +24,7 @@ import { isValidComponentId, isNamespaced } from '../../../src/core/identity'
 // 副作用：讓兩份套件的身分改名表登錄進來
 import '../../../src/languages/cpp/all-declarations'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { StorageService } from '../../../src/core/storage'
+import { StorageService } from '../../../src/core/storage/storage'
 import { MemoryKeyValueStore } from '../../../src/core/host/key-value-store'
 import {
   judge,
@@ -36,7 +36,7 @@ import {
   UPGRADES,
   registeredIdMigrations,
   registeredPropertyMigrations,
-} from '../../../src/core/storage-version'
+} from '../../../src/core/storage/storage-version'
 
 const STORAGE_KEY = 'semorphe-state'
 

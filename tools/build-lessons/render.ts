@@ -20,8 +20,8 @@
  */
 import MarkdownIt from 'markdown-it'
 import type { LessonPage } from './read-lessons'
-import { lessonDocHref, editorHref, type Track } from '../../src/core/lesson'
-import { interactionById, type Interaction } from '../../src/core/interactions'
+import { lessonDocHref, editorHref, type Track } from '../../src/core/lesson/lesson'
+import { interactionById, type Interaction } from '../../src/core/lesson/interactions'
 import type { Target } from '../../src/core/types'
 
 export { lessonDocHref }
@@ -493,7 +493,7 @@ function withHowTo(html: string, ids: readonly string[]): string {
 
 export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): string {
   const crumb = `<a href="/lessons/">課程</a> › <a href="/lessons/${encodeURIComponent(p.track.id)}/">${esc(p.track.name)}</a>`
-  // 🔴 **「在編輯器打開」用的是既有的深連結**（`lessonIdFromQuery`，`core/lesson.ts`）
+  // 🔴 **「在編輯器打開」用的是既有的深連結**（`lessonIdFromQuery`，`core/lesson/lesson.ts`）
   //    ——不是新發明一個網址。而 `target=_blank` 是刻意的：讀到一半的人不該被踢走。
   const open = `<a class="open" href="${editorHref(p.lesson.id)}" target="_blank" rel="noopener">在編輯器打開這一課 →</a>`
   return page({

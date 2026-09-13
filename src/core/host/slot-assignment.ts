@@ -15,7 +15,7 @@
  * 🔴 而這一刀讓 I3（左右是 `LAYER_ORDER` 的子序列）在**套用後的結果**上
  * 不再成立：使用者可以把積木放左邊。那是這一刀的代價，見 spec 169 的 Assumptions①。
  */
-import { LAYER_ORDER, type UnderstandingLayer } from '../view-host'
+import { LAYER_ORDER, type UnderstandingLayer } from '../sync/view-host'
 import type { LayoutPresetSpec, LayoutSlot } from './layout-presets'
 
 /** 一張**雙射**表：這一格宣告的是哪一層 → 實際要顯示哪一層。 */

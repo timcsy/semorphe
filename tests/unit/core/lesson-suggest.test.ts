@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { suggestLessonFor, type LessonScope } from '../../../src/core/lesson-suggest'
+import { suggestLessonFor, type LessonScope } from '../../../src/core/lesson/lesson-suggest'
 
 const LESSONS: LessonScope[] = [
   { id: 'cpp-beginner/01-印出一句話', components: ['cpp:print', 'cpp:literal_string', 'cpp:endl'] },

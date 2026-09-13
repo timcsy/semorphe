@@ -1,5 +1,5 @@
-import { LAYER_ORDER } from '../../core/view-host'
-import type { UnderstandingLayer } from '../../core/view-host'
+import { LAYER_ORDER } from '../../core/sync/view-host'
+import type { UnderstandingLayer } from '../../core/sync/view-host'
 
 export type TabId = 'code' | 'flow' | 'blocks' | 'console'
 
@@ -18,7 +18,7 @@ interface TabDef {
  *
  * > **一個寫在註解裡的理由，擋不住下一個人在陣列中間插一格。**
  *
- * 現在順序是 `LAYER_ORDER`（`core/view-host.ts`，那也是面板自己宣告的那四個值），
+ * 現在順序是 `LAYER_ORDER`（`core/sync/view-host.ts`，那也是面板自己宣告的那四個值），
  * 而**這個檔只擁有「那一層在手機上長什麼樣」**——圖示與字。
  *
  * ⚠️ **那正是分界**：層次是這個系統的語義，圖示與字是這個宿主的呈現。

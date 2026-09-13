@@ -9,19 +9,19 @@
  * 積木一顆都沒被數到——報「拿不到 6 顆」，實際是 10 顆。課程收不收錄是策展，
  * 與「使用者有沒有入口拿到它」是兩件事，混在一起量會**低估**。
  */
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { filterByTarget } from '../../src/core/component/traits'
-import { buildToolbox } from '../../src/core/toolbox-builder'
-import { toolboxCategoriesOf, declaredToolboxLanguages } from '../../src/core/toolbox-categories'
+import { buildToolbox } from '../../src/core/blocks/toolbox-builder'
+import { toolboxCategoriesOf, declaredToolboxLanguages } from '../../src/core/blocks/toolbox-categories'
 // ⚠️ **副作用匯入**：讓 Python 的分類宣告自己（與 `all-declarations.ts` 的
 // 身分改名表同一個形狀）。少了它，`declaredToolboxLanguages()` 看不到 python，
 // 而可拿性護欄會說 `python_print` 拿不到——**而它其實有分類，只是沒人載入宣告**。
 import '../../src/languages/python/toolbox-categories'
-import { CATEGORY_COLORS } from '../../src/core/category-colors'
+import { CATEGORY_COLORS } from '../../src/core/blocks/category-colors'
 import type { ToolboxCategoryDef } from '../../src/core/types'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { universalBlocks, UNIVERSAL_OWNER } from '../../src/core/universal'
-import { coreBlocks, CORE_OWNER } from '../../src/languages/cpp/core'
+import { coreBlocks, CORE_OWNER } from '../../src/languages/cpp/lang'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allStdModules } from '../../src/languages/cpp/std'
 import { componentBlocks, componentBlocksNotIn } from '../../src/core/component/registry'

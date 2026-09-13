@@ -37,7 +37,7 @@ import { attachVariadic, defineVariadicBlock } from '../../src/ui/variadic-block
 // > **一個沒有把「產品註冊過的欄位型別」註冊齊的比對，會把它建不出來的當成「宣告寫錯」。**
 import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
 import { registerDynamicDropdownField, declareDropdownSource, dropdownSourceNames } from '../../src/ui/dynamic-dropdown-field'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
 import { componentLabels } from '../../src/core/component/labels'

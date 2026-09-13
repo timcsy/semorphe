@@ -25,7 +25,7 @@
  * ## 本護欄不檢測什麼
  *
  * - **不管按下去對不對**——那要真的跑那個宿主（見下面的「它驗不到什麼」）
- * - **不管三態的判定**（`core/sync-coordinator.ts` 有它自己的測試）
+ * - **不管三態的判定**（`core/sync/sync-coordinator.ts` 有它自己的測試）
  * - **不管入口長什麼樣**：狀態列／命令面板／QuickPick 是同一件事的三個面
  *
  * ## 🔴 它【驗不到】什麼——而那一句要說出來
@@ -91,7 +91,7 @@ describe('第一百零八條護欄：同步的入口兩個宿主都要有', () =
    * ——而它們**只在同時看得到兩邊的時候**才會被發現不一樣。
    */
   it('🔴 硬性零：三態住在核心，宿主那側不得自己判', () => {
-    const core = read('src/core/sync-coordinator.ts')
+    const core = read('src/core/sync/sync-coordinator.ts')
     for (const p of PHASES) {
       expect(core, `🔴 核心裡找不到 \`${p}\` 這一態`).toContain(`'${p}'`)
     }

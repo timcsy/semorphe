@@ -16,7 +16,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { UPGRADES, CURRENT_VERSION, upgrade, unknownBlockTypes } from '../../src/core/storage-version'
+import { UPGRADES, CURRENT_VERSION, upgrade, unknownBlockTypes } from '../../src/core/storage/storage-version'
 import {
   BLOCK_TYPE_MIGRATIONS_V9_TO_V10,
   registerBlockTypeMigration,

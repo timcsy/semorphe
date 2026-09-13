@@ -25,7 +25,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { deviceFromName, type DeviceKind } from '../../src/languages/cpp/core/runtime/device-names'
+import { deviceFromName, type DeviceKind } from '../../src/languages/cpp/lang/runtime/device-names'
 
 interface Sketch { board: string; topic: string; code: string }
 

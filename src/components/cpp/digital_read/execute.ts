@@ -6,7 +6,7 @@
  * 🔴 `INPUT_PULLUP` 是例外：它**本來就該讀回 HIGH**（內部提升電阻）。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
 
 const INPUT_PULLUP = 2
 

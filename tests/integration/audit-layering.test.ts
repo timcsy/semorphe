@@ -36,7 +36,16 @@ import { printReport, assertRatchet, assertCorpus, REPO_ROOT } from '../helpers/
 
 /** 誰不准 import 誰。**空集合＝那一層可以 import 任何東西**（沒有這種層） */
 const FORBIDDEN: Record<string, ReadonlySet<string>> = {
-  core: new Set(['ui', 'languages', 'components', 'vscode']),
+  // 🔴 `interpreter` 2026-09-13 加進來：在那之前 `core/` 有四個檔 import
+  //    `interpreter/types`，而 `interpreter/` 也 import `core/`——**兩個平級目錄
+  //    互相依賴，而這張表看不到**（它只列了 ui／languages／components／vscode）。
+  //
+  // > **一張「誰不准 import 誰」的表，漏掉的那一格就是環長出來的地方。**
+  //
+  //    解法不是加一條禁令就好：那四個型別（ExecutionStatus／ExecutionSpeed／
+  //    RuntimeType／StepInfo）搬進了 `core/execution.ts`，因為**講它們的是
+  //    匯流排與視圖，直譯器只是第一個實作**。
+  core: new Set(['ui', 'languages', 'components', 'vscode', 'interpreter']),
   interpreter: new Set(['ui', 'vscode']),
   languages: new Set(['ui', 'vscode']),
   components: new Set(['ui', 'vscode']),
@@ -121,7 +130,7 @@ describe('護欄：相依的方向（第六十條）', () => {
   })
 
   it('★ 合成注入：正確的方向不得亂報', () => {
-    expect(violates('src/ui/panels/p.ts', '../../core/view-host'), '視圖 import 核心是對的').toBeNull()
+    expect(violates('src/ui/panels/p.ts', '../../core/sync/view-host'), '視圖 import 核心是對的').toBeNull()
     expect(violates('src/languages/cpp/pack.ts', '../../core/messages'), '語言 import 核心是對的').toBeNull()
     expect(violates('src/core/a.ts', './b'), '同層互相 import 不管').toBeNull()
     expect(violates('src/ui/x.ts', 'blockly'), 'npm 相依不在這條護欄的範圍').toBeNull()

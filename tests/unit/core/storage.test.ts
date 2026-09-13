@@ -4,10 +4,10 @@
  * ⚠️ **預設環境是 `node`**（2026-08-21，見 `vitest.config.ts` 的說明）——
  * 這個檔碰得到 DOM（`document`／`localStorage`／面板），所以顯式加回來。
  */
-import { CURRENT_VERSION } from '../../../src/core/storage-version'
+import { CURRENT_VERSION } from '../../../src/core/storage/storage-version'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { StorageService } from '../../../src/core/storage'
-import type { SavedState } from '../../../src/core/storage'
+import { StorageService } from '../../../src/core/storage/storage'
+import type { SavedState } from '../../../src/core/storage/storage'
 
 // Mock localStorage
 const localStorageMock = (() => {

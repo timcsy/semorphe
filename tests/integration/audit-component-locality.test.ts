@@ -257,7 +257,7 @@ describe('護欄：膠囊就近性（一顆元件的東西都在自己的資料�
 
     it('① 實作外洩回共用檔 → 紅，且指名元件與檔案', () => {
       const violations = detectLeak(
-        [{ rel: 'src/languages/cpp/core/lifters/strategies.ts', content: `const t = { 'vector': '${current}' }` }],
+        [{ rel: 'src/languages/cpp/lang/lifters/strategies.ts', content: `const t = { 'vector': '${current}' }` }],
         [current],
       )
       expect(violations).toHaveLength(1)

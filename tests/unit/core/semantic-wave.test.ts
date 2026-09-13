@@ -1,11 +1,11 @@
 /**
- * **語意波**——`core/semantic-wave.ts`。
+ * **語意波**——`core/lesson/semantic-wave.ts`。
  *
  * 🔴 它是第五刀 ③ 的驗收判準：**這一課有沒有下沉再上浮？**
  * 而那比「七個步驟都要有」好驗得多。
  */
 import { describe, it, expect } from 'vitest'
-import { waveOf, abstraction, LESSON_VIEWS, type LessonView } from '../../../src/core/semantic-wave'
+import { waveOf, abstraction, LESSON_VIEWS, type LessonView } from '../../../src/core/lesson/semantic-wave'
 
 describe('語意軸', () => {
   it('★ 入口條件：五個看法都有位置，而它們不全同高', () => {

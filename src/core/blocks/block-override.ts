@@ -1,4 +1,4 @@
-import type { BlockSpec, BlockOverride, BlockArgOverride } from './types'
+import type { BlockSpec, BlockOverride, BlockArgOverride } from '../types'
 
 export function mergeArgs(
   baseArgs: Array<Record<string, unknown>>,

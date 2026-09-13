@@ -45,7 +45,7 @@
 import { describe, it, expect, beforeAll, afterEach } from 'vitest'
 import * as Blockly from 'blockly/core'
 import { BlocklyPanel } from '../../src/ui/panels/blockly-panel'
-import type { SemanticUpdateEvent } from '../../src/core/view-host'
+import type { SemanticUpdateEvent } from '../../src/core/sync/view-host'
 import { createNode } from '../../src/core/semantic-tree'
 
 /** 一顆最小的合成積木——**不是任何真實元件**，見自我否證聲明。 */

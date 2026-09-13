@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../../src/core/types'
 import { universalComponents, universalBlocks } from '../../../src/core/universal'
-import { coreComponents, coreBlocks } from '../../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../../src/languages/cpp/lang'
 import { allStdModules } from '../../../src/languages/cpp/std'
 
 describe('Component/BlockDef split integrity', () => {

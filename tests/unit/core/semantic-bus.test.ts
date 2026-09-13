@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { SemanticBus } from '../../../src/core/semantic-bus'
-import type { SemanticEvents, ViewRequests } from '../../../src/core/semantic-bus'
+import { SemanticBus } from '../../../src/core/sync/semantic-bus'
+import type { SemanticEvents, ViewRequests } from '../../../src/core/sync/semantic-bus'
 
 describe('SemanticBus', () => {
   let bus: SemanticBus

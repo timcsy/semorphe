@@ -12,7 +12,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { hostLayoutOptions, reduceAreas, layoutPreset, LAYOUT_PRESETS } from '../../../src/core/host/layout-presets'
-import type { UnderstandingLayer } from '../../../src/core/view-host'
+import type { UnderstandingLayer } from '../../../src/core/sync/view-host'
 
 const ALL = (): boolean => true
 /** VSCode 的單層視窗：只有積木。 */

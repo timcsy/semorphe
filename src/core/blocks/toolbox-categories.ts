@@ -24,7 +24,7 @@
  *
  * 見 `specs/160-python-first-block/`
  */
-import type { ToolboxCategoryDef } from './types'
+import type { ToolboxCategoryDef } from '../types'
 
 const REGISTRY = new Map<string, ToolboxCategoryDef[]>()
 

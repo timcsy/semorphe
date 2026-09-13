@@ -5,7 +5,7 @@ import {
   resolveEnabledBranches,
   validateDoublingGuideline,
   isComponentVisible,
-} from '../../../src/core/level-tree'
+} from '../../../src/core/lesson/level-tree'
 import type { LevelNode, Topic } from '../../../src/core/types'
 
 const sampleTree: LevelNode = {

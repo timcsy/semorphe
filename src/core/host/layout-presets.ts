@@ -29,7 +29,7 @@
  * **每一個使用者的畫面都不一樣**，而這是一個教學工具
  * ——老師說「看左邊那一欄」時，那句話要對每個人都成立。
  */
-import { LAYER_ORDER, type UnderstandingLayer } from '../view-host'
+import { LAYER_ORDER, type UnderstandingLayer } from '../sync/view-host'
 
 /**
  * 🪦 `'grid'`（十字）**退場**（spec 171，2026-09-02）。

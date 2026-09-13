@@ -7,7 +7,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
-import { charOf } from '../../../languages/cpp/core/runtime/char'
+import { charOf } from '../../../languages/cpp/lang/runtime/char'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:char_to_lower', async (node, ctx) => {

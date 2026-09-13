@@ -1,7 +1,7 @@
 /** `cpp:switch` 的 **execute** 路——從共用檔原封剪過來（批次第二十九批：switch 族與原始碼容器）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { BreakSignal } from '../../../interpreter/executors/control-flow'
-import { isDefaultCase } from '../../../languages/cpp/core/node-traits'
+import { isDefaultCase } from '../../../languages/cpp/lang/node-traits'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:switch', async (node, ctx) => {

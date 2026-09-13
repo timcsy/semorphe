@@ -175,7 +175,7 @@ function executorFiles(): string[] {
       // **目錄跟上了，檔名沒跟上。**
       // ⚠️ **檔名規則漏掉了共用執行器**（2026-08-11 補）。
       //
-      // `src/languages/cpp/core/executors/` 底下 14 個檔叫 `operators.ts`、
+      // `src/languages/cpp/lang/executors/` 底下 14 個檔叫 `operators.ts`、
       // `arrays.ts`、`containers.ts`……**一個都不叫 `executors.ts`**
       // ——於是這條護欄從落地起就沒掃過它們。
       //

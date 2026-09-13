@@ -9,7 +9,7 @@
  * 「你沒有 `Serial.begin` 就輸出，真板子上會看不到東西」。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { markSerialOpen } from '../../../languages/cpp/core/runtime/arduino-serial'
+import { markSerialOpen } from '../../../languages/cpp/lang/runtime/arduino-serial'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:serial_open', async (node, ctx) => {

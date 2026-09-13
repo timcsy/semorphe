@@ -9,7 +9,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { runOnInstance } from '../../../languages/cpp/core/executors/structs'
+import { runOnInstance } from '../../../languages/cpp/lang/executors/structs'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   const callMethod: ComponentExecutor = async (node, ctx) => {

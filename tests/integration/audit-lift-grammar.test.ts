@@ -94,7 +94,7 @@ describe('spec 167 · lift pattern 的文法歸屬', () => {
     // 而「要用哪一顆積木裝它」是 `block-renderer` 查降級登記處決定的。
     //
     // > **一條問錯層的斷言，會把一個健康的系統判成有病。**
-    const { setDegradationLanguage, degradationBlocks } = await import('../../src/core/degradation-blocks')
+    const { setDegradationLanguage, degradationBlocks } = await import('../../src/core/blocks/degradation-blocks')
     await import('../../src/languages/python/pack')
     await import('../../src/languages/cpp/generators/index')
 

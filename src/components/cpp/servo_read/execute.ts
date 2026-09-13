@@ -5,7 +5,7 @@
  * 「上一次寫進去的值」，而不是量出來的位置。**模擬與真板子在這裡完全一致。**
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { servoOf } from '../../../languages/cpp/core/runtime/arduino-devices'
+import { servoOf } from '../../../languages/cpp/lang/runtime/arduino-devices'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:servo_read', async (node, ctx) => {

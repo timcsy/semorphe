@@ -1,7 +1,7 @@
 /** `cpp:servo_attach` 的 **execute** 路——記下這顆伺服接在哪根腳位。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin } from '../../../languages/cpp/core/runtime/arduino-pins'
-import { servoOf } from '../../../languages/cpp/core/runtime/arduino-devices'
+import { boardIn, requirePin } from '../../../languages/cpp/lang/runtime/arduino-pins'
+import { servoOf } from '../../../languages/cpp/lang/runtime/arduino-devices'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:servo_attach', async (node, ctx) => {

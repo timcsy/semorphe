@@ -7,7 +7,7 @@
  * ```
  */
 import { describe, it, expect } from 'vitest'
-import { curveOf, abstraction } from '../../../src/core/semantic-wave'
+import { curveOf, abstraction } from '../../../src/core/lesson/semantic-wave'
 
 describe('拆輪子的曲線', () => {
   it('軸的方向：程式碼最抽象，流程最具體', () => {

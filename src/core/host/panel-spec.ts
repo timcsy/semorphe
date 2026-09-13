@@ -16,7 +16,7 @@
  * 元件（性狀由語言套件推進來）→ 目標（登錄表裝 cpp／arduino／板子）→ **面板**。
  * 三處的病是同一個：核心**知道它們叫什麼、也假設了它們有幾個**。
  */
-import type { UnderstandingLayer } from '../view-host'
+import type { UnderstandingLayer } from '../sync/view-host'
 import type { HostProfile } from './host-profile'
 
 /** 一個面板畫出來之後，外面拿得到的把手。 */
@@ -91,6 +91,31 @@ export interface PanelSpec {
    * 🔴 **刻意是函式不是資料**。一個面板真正獨特的正是這一格。
    *
    * > **宣告該吃掉的是【重複的那些】，不是【真的不一樣的那個】。**
+   *
+   * ⚠️ **選填，而那是一個分階段的交代**（2026-09-13）：見下面 `mountedByShell`。
    */
-  readonly mount: (container: HTMLElement, ctx: PanelContext) => PanelInstance
+  readonly mount?: (container: HTMLElement, ctx: PanelContext) => PanelInstance
+
+  /**
+   * 🔴 **這一格今天由組裝點畫，不由這份宣告畫。**
+   *
+   * spec 170 的 T001–T006 蓋好了登錄表就停住了，而 `app-shell.ts` 自己
+   * 留下了停住的理由（逐字）：
+   *
+   * > 那四格的**建構**與各自的相依糾纏在一起（Blockly 要 registry、
+   * > 程式碼走 `profile.createCodeView`、下方面板要 tabs）。這一步先把
+   * > **格子**收掉，建構留在原地——
+   * > **一次抽象如果同時搬走「容器」與「內容」，它壞掉時你分不出是哪一半。**
+   *
+   * 而在 2026-09-13 之前，那個「停住」是**看不見的**：
+   * `src/panels/` 裡一份宣告都沒有，`loadPanels()` 零個產品呼叫者，
+   * 而登錄表自己的測試綠得跟真的一樣。
+   *
+   * 🟢 現在五份宣告都在了（身分／層／順序／名字／在哪個宿主存在），
+   * **而 `mount` 還沒搬過來的那幾個要在這裡說出來**——
+   * 由 `tests/unit/core/panel-mount-migration.test.ts` 棘輪盯著：**只准變少**。
+   *
+   * > **一個分階段的搬遷，如果沒有東西數著還剩幾個，它會停在第一階段。**
+   */
+  readonly mountedByShell?: true
 }

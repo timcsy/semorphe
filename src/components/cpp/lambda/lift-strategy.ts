@@ -2,7 +2,7 @@
  * ⚠️ 這顆是**閉包提升之後才搬得動的**。 */
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import { createNode } from '../../../core/semantic-tree'
-import { liftParamList, extractBody } from '../../../languages/cpp/core/lifters/strategies'
+import { liftParamList, extractBody } from '../../../languages/cpp/lang/lifters/strategies'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   // lambda_expression: [capture](params) -> ret { body }

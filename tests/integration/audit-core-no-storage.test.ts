@@ -11,8 +11,8 @@
  * 無痕／擋掉 storage     叫它會拋
  * ```
  *
- * 而 2026-09-06 之前核心裡有 **9 處**直接叫它（`core/storage.ts` 與
- * `core/progress.ts`）。
+ * 而 2026-09-06 之前核心裡有 **9 處**直接叫它（`core/storage/storage.ts` 與
+ * `core/lesson/progress.ts`）。
  *
  * > **一個「核心」如果它的存檔只在一個宿主上跑得起來，
  * > 那它不是核心，是那個宿主的一部分。**
@@ -82,7 +82,7 @@ describe('第一百零七條護欄：核心不碰宿主的儲存', () => {
   it('★ 入口條件——真的掃到核心了', () => {
     expect(CORE.length, '🔴 一個檔都沒掃到 → 下面每一條都是空過的').toBeGreaterThan(20)
     expect(CORE.some((f) => f.endsWith('storage.ts')),
-      '🔴 掃不到 `core/storage.ts`——路徑或檔名改了').toBe(true)
+      '🔴 掃不到 `core/storage/storage.ts`——路徑或檔名改了').toBe(true)
   })
 
   it('🔴 硬性零：核心不得直接用宿主的儲存 API', () => {
@@ -137,7 +137,7 @@ describe('第一百零七條護欄：核心不碰宿主的儲存', () => {
   it('🔴 硬性零：埠真的接上產品路徑了', () => {
     const wiring: [file: string, needle: string, what: string][] = [
       ['src/ui/host/web-profile.ts', 'createBrowserStore()', '存檔（網頁版的 StorageService）'],
-      ['src/ui/app.ts', 'setProgressStore(', '進度（core/progress.ts 的模組層級 store）'],
+      ['src/ui/app.ts', 'setProgressStore(', '進度（core/lesson/progress.ts 的模組層級 store）'],
     ]
     const missing = wiring
       .filter(([f, needle]) => !fs.readFileSync(path.join(REPO_ROOT, f), 'utf8').includes(needle))

@@ -3,15 +3,15 @@
  */
 import { describe, it, expect } from 'vitest'
 import { cppCategoryDefs } from '../../../src/languages/cpp/toolbox-categories'
-import { buildToolbox } from '../../../src/core/toolbox-builder'
-import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
-import { CATEGORY_COLORS } from '../../../src/core/category-colors'
+import { buildToolbox } from '../../../src/core/blocks/toolbox-builder'
+import { BlockSpecRegistry } from '../../../src/core/blocks/block-spec-registry'
+import { CATEGORY_COLORS } from '../../../src/core/blocks/category-colors'
 import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
-import { getVisibleComponents } from '../../../src/core/level-tree'
+import { getVisibleComponents } from '../../../src/core/lesson/level-tree'
 // ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——
 // 工具箱靠 owner 決定歸屬，少了它整個通用分類會是空的。
 import { universalComponents, universalBlocks } from '../../../src/core/universal'
-import { coreComponents, coreBlocks } from '../../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../../src/languages/cpp/lang'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import cppBeginnerTopic from '../../../src/languages/cpp/topics/cpp-beginner.json'
 import { loadToolbox } from '../../helpers/toolbox'
@@ -21,7 +21,7 @@ import { loadToolbox } from '../../helpers/toolbox'
 // `allCppComponents()`／`allCppProjections()` 是組裝函式，它們含膠囊。
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
 import { allCppComponents, allCppProjections } from '../../../src/languages/cpp/all-declarations'
-import { ioTraitOf } from '../../../src/languages/cpp/core/node-traits'
+import { ioTraitOf } from '../../../src/languages/cpp/lang/node-traits'
 
 const topic = cppBeginnerTopic as Topic
 

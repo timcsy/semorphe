@@ -19,9 +19,9 @@
  * 一支證明「弄髒了會被抓到」，一支證明「量的時候真的有東西在跑」。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { SemanticBus } from '../../src/core/semantic-bus'
-import { registerView, connectViews, resetViews, registeredViews } from '../../src/core/view-registry'
-import type { ViewHost, SemanticUpdateEvent } from '../../src/core/view-host'
+import { SemanticBus } from '../../src/core/sync/semantic-bus'
+import { registerView, connectViews, resetViews, registeredViews } from '../../src/core/sync/view-registry'
+import type { ViewHost, SemanticUpdateEvent } from '../../src/core/sync/view-host'
 import type { SemanticNode } from '../../src/core/types'
 import { FlowPanel } from '../../src/ui/panels/flow-panel'
 

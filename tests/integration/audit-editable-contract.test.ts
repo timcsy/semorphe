@@ -3,7 +3,7 @@
  *
  * ## 它從哪來
  *
- * `core/view-host.ts` 有一個能力旗標 `editable: boolean`
+ * `core/sync/view-host.ts` 有一個能力旗標 `editable: boolean`
  * ——「這個視圖可以當真相來源」。而它**有九個消費者**：同步協調器、
  * 「以此為準」的 QuickPick、狀態列、VSCode 主行程……
  * 第六十二條護欄還在盯著「同步的入口不得硬編視圖的名字」。

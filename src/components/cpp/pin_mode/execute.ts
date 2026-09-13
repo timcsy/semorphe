@@ -5,7 +5,7 @@
  * 而不是 `ExecutionContext`：`src/interpreter` 在中立性護欄的 `NEUTRAL_DIRS` 裡。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pin_mode', async (node, ctx) => {

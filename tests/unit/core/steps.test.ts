@@ -2,7 +2,7 @@
  * **跑了幾步，而比較才是重點**（2026-09-07）。
  */
 import { describe, it, expect } from 'vitest'
-import { stepsOf, compareSteps, describeSteps, describeBudget } from '../../../src/core/steps'
+import { stepsOf, compareSteps, describeSteps, describeBudget } from '../../../src/core/lesson/steps'
 
 const counts = (o: Record<string, number>): Map<string, number> => new Map(Object.entries(o))
 

@@ -1,4 +1,4 @@
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/sync/view-host'
 
 export interface VariableEntry {
   name: string
@@ -54,7 +54,7 @@ export class VariablePanel implements ViewHost {
    *
    * > **一個契約如果沒有人透過它呼叫，那些方法就只是註解。**
    *
-   * 現在由視圖登錄表統一派送（`core/view-registry.ts` 的 `connectViews`）。
+   * 現在由視圖登錄表統一派送（`core/sync/view-registry.ts` 的 `connectViews`）。
    */
   onExecutionState(event: ExecutionStateEvent): void {
     // 🔴 只有**暫停中**才改得動——而它要在畫快照【之前】更新，

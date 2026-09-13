@@ -37,7 +37,7 @@
  */
 import { interactionById } from './interactions'
 import { LESSON_VIEWS, type LessonView } from './semantic-wave'
-import type { ControlId } from './host/controls'
+import type { ControlId } from '../host/controls'
 
 /**
  * 一條**軌道**——`lessons/<軌道>/track.json`。
@@ -228,7 +228,7 @@ export interface Lesson {
   /** 這堂課要開的元件身分——🔴 **量出來的，不是列出來的**（見 `write-lesson` skill） */
   readonly components: readonly string[]
   /**
-   * 這一課會用到哪些**操作**（`core/interactions.ts` 的 id）。
+   * 這一課會用到哪些**操作**（`core/lesson/interactions.ts` 的 id）。
    *
    * 🔴 課程只說「我會用到什麼」，**不說它長什麼樣**——長相住在登錄表，
    * 而那個片段是腳本錄的。少了這一層，操作說明會散在 66 份課文裡各自腐爛。
@@ -325,7 +325,7 @@ export interface LessonTask {
    * 不是「不問」——「不問」要寫 `'none'`，而那是一個**說出口的決定**。
    *
    * 🔴 課程作者比自動判定更知道這一課的學生撐不撐得住，所以宣告會贏。
-   * 判定的細節見 `core/predict.ts` 的 `predictionFor`。
+   * 判定的細節見 `core/lesson/predict.ts` 的 `predictionFor`。
    */
   /**
    * 這一題**怎麼給**——省略 ＝ 他自己從空白開始寫。
@@ -386,7 +386,7 @@ export interface LessonTask {
    * > generally does not harm」**——順序的控制權是唯一一種一般不會有害的。
    *
    * 🟢 而一課的這幾個值排起來要是**一條語意波**（下沉再上浮）
-   * ——見 `core/semantic-wave.ts` 與 `concepts/認知鷹架.md`。
+   * ——見 `core/lesson/semantic-wave.ts` 與 `concepts/認知鷹架.md`。
    */
   readonly view?: LessonView
   /**
@@ -407,7 +407,7 @@ export interface LessonTask {
    * 而在其他題目上它是雜訊。
    *
    * ⚠️ 而「一步」＝**直譯器走過一顆語義節點一次**，那不是課本的
-   * 「基本操作次數」——見 `core/steps.ts` 的檔頭。
+   * 「基本操作次數」——見 `core/lesson/steps.ts` 的檔頭。
    */
   readonly compareSteps?: boolean
   /**
@@ -697,7 +697,7 @@ export function parseLesson(id: string, raw: unknown): Lesson {
       if (typeof x !== 'string') throw new Error(`教案 ${id}：interactions 裡有不是字串的東西`)
       if (interactionById(x) === undefined) {
         throw new Error(`教案 ${id}：interactions 有認不得的 id「${x}」` +
-          `——登錄表在 core/interactions.ts`)
+          `——登錄表在 core/lesson/interactions.ts`)
       }
     }
   }

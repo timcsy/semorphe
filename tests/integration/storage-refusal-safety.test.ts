@@ -28,7 +28,7 @@
  * 見 specs/052-storage-integrity-gate/tasks.md T002、T025–T026
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { StorageService } from '../../src/core/storage'
+import { StorageService } from '../../src/core/storage/storage'
 import type { KeyValueStore } from '../../src/core/host/key-value-store'
 
 const STORAGE_KEY = 'semorphe-state'

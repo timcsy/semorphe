@@ -1,7 +1,7 @@
 /** `cpp:lambda` 的 **execute** 路——從共用檔原封剪過來（批次第四批：閉包提升之後才搬得動的三顆）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue, Callable } from '../../../interpreter/types'
-import { installLambda } from '../../../languages/cpp/core/runtime/lambda'
+import { installLambda } from '../../../languages/cpp/lang/runtime/lambda'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:lambda', async (node, ctx) => {

@@ -21,7 +21,7 @@
  * 🔴 理由與元件登錄表同一條：**這一層要測得到，而 `import.meta.glob`
  * 在 Vitest 的 node 環境下行為不同**。
  */
-import { LAYER_ORDER, type UnderstandingLayer } from '../view-host'
+import { LAYER_ORDER, type UnderstandingLayer } from '../sync/view-host'
 import type { HostProfile } from './host-profile'
 import type { PanelSpec } from './panel-spec'
 

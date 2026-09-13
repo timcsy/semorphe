@@ -1,7 +1,13 @@
 import type { SemanticNode } from '../core/types'
+/**
+ * 🔴 **這四個名字住在 `core/execution.ts`**（2026-09-13 搬的）——
+ * 因為講它們的是匯流排與視圖，而直譯器只是它們的**第一個實作**。
+ * 搬之前 `core/` 有四個檔反過來 import 這裡，兩個目錄互相依賴。
+ * 這裡原樣再匯出，執行期那一側的 import 因此一行都不用改。
+ */
+export type { ExecutionStatus, ExecutionSpeed, RuntimeType, StepInfo } from '../core/execution'
+import type { RuntimeType } from '../core/execution'
 
-/** 執行期型別 */
-export type RuntimeType = 'int' | 'float' | 'double' | 'char' | 'string' | 'bool' | 'void' | 'array' | 'pointer' | 'object' | 'function' | 'function'
 
 /**
  * 一個結構／類別的實例：欄位名 → 值。
@@ -125,20 +131,6 @@ export interface CallFrame {
   returnValue: RuntimeValue | null
 }
 
-/** 執行狀態 */
-export type ExecutionStatus = 'idle' | 'running' | 'paused' | 'completed' | 'error'
-
-/** 執行速度 */
-export type ExecutionSpeed = 'slow' | 'medium' | 'fast'
-
-/** 步進回呼資訊 */
-export interface StepInfo {
-  node: SemanticNode
-  nodeId: string
-  sourceRange: { start: number; end: number } | null
-  outputLength: number
-  scopeSnapshot: { name: string; type: string; value: string }[]
-}
 
 /**
  * **這次執行從外面拿到的東西**——按發生順序。

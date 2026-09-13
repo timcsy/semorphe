@@ -210,7 +210,7 @@ describe('FR-002 同一個 componentId 註冊多個形態，後來的不得蓋�
 
 describe('登錄表：一個 componentId 查得到它所有的形態', () => {
   it('★ getFormsByComponentId 回傳全部三顆，而不是最後註冊的那顆', async () => {
-    const { BlockSpecRegistry } = await import('../../../src/core/block-spec-registry')
+    const { BlockSpecRegistry } = await import('../../../src/core/blocks/block-spec-registry')
     // ⚠️ **不要自己列宣告來源**（第三十七條護欄）。這裡原本讀 `core`，
     // 而 `cpp:container_push` 2026-08-11 進了膠囊——症狀會是「三個形態只剩零個」，
     // 看起來像形態機制壞了。同一支測試下面那一段早就改對了，**這一段沒跟上**。
@@ -226,7 +226,7 @@ describe('登錄表：一個 componentId 查得到它所有的形態', () => {
   })
 
   it('★ 反向：沒有變體的元件回傳恰好一顆', async () => {
-    const { BlockSpecRegistry } = await import('../../../src/core/block-spec-registry')
+    const { BlockSpecRegistry } = await import('../../../src/core/blocks/block-spec-registry')
     // ⚠️ 原本讀 `coreComponents`／`coreBlocks`——**又是列舉式的組裝**。
     // `cpp:container_empty` 進膠囊之後那兩個陣列裡就沒有它了，
     // 而這一支測的是「沒有變體的元件回傳恰好一顆」，不是「它住在哪」。

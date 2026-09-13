@@ -10,7 +10,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16 } from '../../../src/migrations/block-shape-changes'
-import { UPGRADES, CURRENT_VERSION } from '../../../src/core/storage-version'
+import { UPGRADES, CURRENT_VERSION } from '../../../src/core/storage/storage-version'
 
 const oldState = {
   blocks: { blocks: [{

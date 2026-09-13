@@ -29,7 +29,7 @@
  * 一個清不掉的進度會讓第二班看到第一班的勾。
  */
 
-import { MemoryKeyValueStore, type KeyValueStore } from './host/key-value-store'
+import { MemoryKeyValueStore, type KeyValueStore } from '../host/key-value-store'
 
 const KEY = 'semorphe-progress'
 

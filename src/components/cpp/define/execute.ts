@@ -30,7 +30,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
-import { defined } from '../../../languages/cpp/core/executors/preprocessor'
+import { defined } from '../../../languages/cpp/lang/executors/preprocessor'
 
 /**
  * 巨集的值是不是一個**字面常數**。不是就回 `null`——呼叫端據此決定不綁。

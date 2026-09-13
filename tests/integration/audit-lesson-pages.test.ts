@@ -28,9 +28,9 @@ import { readFileSync, existsSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { readTracks, readLessonsOf, lastmodFromGit, readTargets } from '../../tools/build-lessons/read-lessons'
 import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots, renderSpecs } from '../../tools/build-lessons/render'
-import { lessonDocHref, lessonIdFromQuery, taskIdFromQuery } from '../../src/core/lesson'
-import { INTERACTIONS, interactionById } from '../../src/core/interactions'
-import { allLessons } from '../../src/core/load-lessons'
+import { lessonDocHref, lessonIdFromQuery, taskIdFromQuery } from '../../src/core/lesson/lesson'
+import { INTERACTIONS, interactionById } from '../../src/core/lesson/interactions'
+import { allLessons } from '../../src/core/lesson/load-lessons'
 
 const ROOT = resolve(__dirname, '../..', 'lessons')
 /** ⚠️ `readTargets` 讀的是 `src/languages/cpp/targets/`，所以它要 **repo 根**，不是 `lessons/`。 */

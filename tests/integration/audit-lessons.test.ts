@@ -231,7 +231,7 @@ export function judgeLessons(
     for (const c of l.json.components ?? []) {
       if (knownComponents.has(c)) continue
       // 🔴 **兩種不存在要分開報**——訊息不同，修法也不同。
-      //    沒有冒號 ＝ 結構節點（`core/non-components.ts`：`param_decl` 之類），
+      //    沒有冒號 ＝ 結構節點（`core/blocks/non-components.ts`：`param_decl` 之類），
       //    它**存在**，只是不是元件，學生在積木盤上看不到它。
       //    2026-08-27 生第 15 課時真的犯過：量測把 `param_decl` 算進 components。
       f.push({

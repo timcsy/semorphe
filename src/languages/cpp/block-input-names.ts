@@ -1,7 +1,7 @@
 /**
  * C++ 積木插槽名的唯一真相。
  *
- * 與 `src/core/block-input-names.ts` 同一個形狀，只是涵蓋**語言專屬**的積木。
+ * 與 `src/core/blocks/block-input-names.ts` 同一個形狀，只是涵蓋**語言專屬**的積木。
  *
  * ## 為什麼要分兩個模組
  *
@@ -14,7 +14,7 @@
  * 見 specs/057-single-source-input-names
  */
 import type { BlockProjectionJSON } from '../../core/types'
-import coreBlocks from './core/blocks.json'
+import coreBlocks from './lang/blocks.json'
 import { allStdModules } from './std'
 import { componentBlocks } from '../../core/component/registry'
 
@@ -63,7 +63,7 @@ export const CPP_STRING_AT_INPUTS = getInputs('cpp_string_at')
 //    **而型別檢查看不到**——兩個都是 string。
 export const C_VAR_DECLARE_EXPR_INPUTS = getInputs('cpp_var_declare_expression')
 
-// ── 🔴 spec 154：從 `core/block-input-names.ts` 搬過來的九個 ──────────────
+// ── 🔴 spec 154：從 `core/blocks/block-input-names.ts` 搬過來的九個 ──────────────
 //
 // 那個檔的註解（057 寫的）早就標出這個張力，逐字：
 //

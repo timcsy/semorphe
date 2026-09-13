@@ -26,13 +26,13 @@
  * > **一個會把它不認得的值換掉的下拉，等於在使用者沒看的時候改掉他的程式。**
  */
 import * as Blockly from 'blockly'
-import { dropdownSource } from '../core/dropdown-sources'
-import type { DropdownContext } from '../core/dropdown-sources'
+import { dropdownSource } from '../core/blocks/dropdown-sources'
+import type { DropdownContext } from '../core/blocks/dropdown-sources'
 import { msg } from '../core/messages'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// 🔴 **登記處搬到 `core/dropdown-sources.ts` 了**（2026-08-24）。
+// 🔴 **登記處搬到 `core/blocks/dropdown-sources.ts` 了**（2026-08-24）。
 //
 // 理由不是分層潔癖，是一個在 Node 裡量到的事實：語言套件只需要那張 Map，
 // 而它住在這個檔案裡，於是 `languages/<lang>/pack.ts` 為了登記一個下拉
@@ -40,7 +40,7 @@ import { msg } from '../core/messages'
 //
 // ⚠️ 這裡**轉出**它們，是因為既有呼叫端（積木宣告、比對器、護欄）都指著這個檔。
 // 一個檔案可以既是實作的家、又是別人的門面——但**登記處不該與它的欄位綁在一起**。
-export { declareDropdownSource, dropdownSourceNames } from '../core/dropdown-sources'
+export { declareDropdownSource, dropdownSourceNames } from '../core/blocks/dropdown-sources'
 
 const FIELD_TYPE = 'field_dynamic_dropdown'
 
@@ -106,7 +106,7 @@ export function registerDynamicDropdownField(): void {
     constructor(spec: { source?: string; options?: Array<[string, string]>; allowCustom?: boolean }) {
       const allowCustom = spec.allowCustom === true
       super(function (this: Blockly.FieldDropdown) {
-        // 🔴 **選項要知道自己長在哪一格**（2026-08-26，見 `core/dropdown-sources.ts`
+        // 🔴 **選項要知道自己長在哪一格**（2026-08-26，見 `core/blocks/dropdown-sources.ts`
         //    的 `DropdownContext`）。左值接點化之後，「讀一個名字」與
         //    「寫進一個名字」用的是**同一顆積木**，於是那個區別只剩位置。
         //

@@ -1,4 +1,4 @@
-import type { ExecutionSpeed } from '../interpreter/types'
+import type { ExecutionSpeed } from '../execution'
 
 type StepStatus = 'idle' | 'stepping' | 'running' | 'paused' | 'completed'
 

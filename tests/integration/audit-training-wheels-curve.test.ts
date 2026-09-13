@@ -23,8 +23,8 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { allLessons, viewForLesson } from '../../src/core/load-lessons'
-import { curveOf, LESSON_VIEWS, type LessonView } from '../../src/core/semantic-wave'
+import { allLessons, viewForLesson } from '../../src/core/lesson/load-lessons'
+import { curveOf, LESSON_VIEWS, type LessonView } from '../../src/core/lesson/semantic-wave'
 import { REPO_ROOT } from '../helpers/guardrail'
 
 interface Step { lesson: string; view: LessonView }
@@ -59,7 +59,7 @@ function tracks(): Map<string, Step[]> {
 
 const TRACKS = tracks()
 
-/** 一個看法的中文名——⚠️ 與 `core/semantic-wave.ts` 的 `viewLabel` 是同一份。 */
+/** 一個看法的中文名——⚠️ 與 `core/lesson/semantic-wave.ts` 的 `viewLabel` 是同一份。 */
 function viewName(v: LessonView): string {
   return { code: '程式碼', compare: '對照', three: '三欄', blocks: '積木', flow: '流程' }[v]
 }

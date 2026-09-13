@@ -53,10 +53,10 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { loadToolbox } from '../helpers/toolbox'
-import { isTypeLookupFallback } from '../../src/core/toolbox-builder'
+import { isTypeLookupFallback } from '../../src/core/blocks/toolbox-builder'
 import { loadBaseline, writeBaseline, printReport, newItems, assertRatchet, REPO_ROOT } from '../helpers/guardrail'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
-import { toolboxCategoriesOf, declaredToolboxLanguages } from '../../src/core/toolbox-categories'
+import { toolboxCategoriesOf, declaredToolboxLanguages } from '../../src/core/blocks/toolbox-categories'
 // ⚠️ **副作用匯入**：讓 Python 宣告自己的分類（與身分改名表同一個形狀）。
 // 少了它，`python_print` 會被報成「拿不到」——**而它其實有分類，只是沒人載入宣告**。
 import '../../src/languages/python/toolbox-categories'

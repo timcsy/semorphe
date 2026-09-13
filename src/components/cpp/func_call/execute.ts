@@ -12,7 +12,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { ReturnSignal } from '../../../interpreter/executors/functions'
 import { defaultValue } from '../../../interpreter/types'
-import { cppParamDefault } from '../../../languages/cpp/core/executors/param-default'
+import { cppParamDefault } from '../../../languages/cpp/lang/executors/param-default'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { Scope } from '../../../interpreter/scope'
 

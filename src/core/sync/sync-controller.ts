@@ -1,6 +1,6 @@
-import type { SemanticNode, StylePreset, Topic } from './types'
-import { getVisibleComponents } from './level-tree'
-import type { ProgramScaffold, ScaffoldResult } from './program-scaffold'
+import type { SemanticNode, StylePreset, Topic } from '../types'
+import { getVisibleComponents } from '../lesson/level-tree'
+import type { ProgramScaffold, ScaffoldResult } from '../program-scaffold'
 // 🔴 **不再 import 語言套件**（spec 153）——風格分析由組裝點推進來。
 //
 // ⚠️ 兩種做法都論證過：
@@ -10,7 +10,7 @@ import type { ProgramScaffold, ScaffoldResult } from './program-scaffold'
 //      `skip-declarations`／`comment-syntax`／`language-executors` 同一個形狀
 //
 // > **機制跨不過分層時，讓特例自己帶著宣告來**（`experience`）。
-import type { StyleException, StyleConformance } from './types'
+import type { StyleException, StyleConformance } from '../types'
 // 🔴 **一個語言套件的匯入都不剩**（spec 153）。
 //    原本連 `StyleConformance` 的型別都從語言套件來——而這一層
 //    **只讀 `verdict`**，其餘欄位只是轉交。
@@ -47,21 +47,21 @@ export interface StyleAnalyzer {
   applyStyleConversions: (tree: SemanticNode, exceptions: StyleException[]) => SemanticNode | undefined
   analyzeIoConformance: (code: string, pref: string) => StyleConformance | undefined
 }
-import { generateCodeWithMapping } from './projection/code-generator'
+import { generateCodeWithMapping } from '../projection/code-generator'
 
-import type { CodeMapping, BlockMapping } from './projection/code-generator'
-import { renderToBlocklyState } from './projection/block-renderer'
-import { Lifter } from './lift/lifter'
+import type { CodeMapping, BlockMapping } from '../projection/code-generator'
+import { renderToBlocklyState } from '../projection/block-renderer'
+import { Lifter } from '../lift/lifter'
 import { SemanticBus } from './semantic-bus'
-import { abstractComponentOf, variableTypeOf } from './language-executors'
-import { isFunctionDefinition } from './component/traits'
+import { abstractComponentOf, variableTypeOf } from '../language-executors'
+import { isFunctionDefinition } from '../component/traits'
 // 🔴 「樹裡哪一塊是骨架」由**骨架宣告**回答（2026-08-28）——見 `EntryFunction`
-import { skeletonById, skeletonPresent } from './skeleton'
+import { skeletonById, skeletonPresent } from '../skeleton'
 // 🔴 「哪幾顆是骨架」的判定住在 core——**不要在這裡再寫一次**（`history/188`）
-import { scaffoldNodeIds } from './scaffold-nodes'
+import { scaffoldNodeIds } from '../scaffold-nodes'
 import type { SemanticUpdateEvent } from './view-host'
-import { scaffoldModeOfDepth } from './lesson'
-import { detectRename, renameReferences, scopeOf } from './rename-variable'
+import { scaffoldModeOfDepth } from '../lesson/lesson'
+import { detectRename, renameReferences, scopeOf } from '../rename-variable'
 
 /** Scaffold node filter type — strips scaffold nodes for L0 display */
 export type ScaffoldNodeFilter = (tree: SemanticNode) => SemanticNode
@@ -489,7 +489,7 @@ export class SyncController {
     try {
       const code = data.code
       const parseResult = await this.parser.parse(code)
-      const rootNode = parseResult.rootNode as import('../core/lift/types').AstNode
+      const rootNode = parseResult.rootNode as import('../lift/types').AstNode
 
       // Report parse errors but continue sync — lifter degrades ERROR nodes to raw_code.
       // Previously this aborted sync entirely, but that caused blocks to disappear on
@@ -792,7 +792,7 @@ export class SyncController {
           n => isFunctionDefinition(n.componentId) && n.properties.name === name))
       if (relift && this.getScaffoldDepth() > 0 && !framePresent && this.lifter && this.parser) {
         const parseResult = await this.parser.parse(currentCode)
-        const rootNode = parseResult.rootNode as import('../core/lift/types').AstNode
+        const rootNode = parseResult.rootNode as import('../lift/types').AstNode
         if (rootNode) {
           const lifted = this.lifter.lift(rootNode)
           if (lifted) fullTree = lifted
@@ -1023,13 +1023,13 @@ export class SyncController {
     }
   }
 
-  private findErrors(node: import('../core/lift/types').AstNode): SyncError[] {
+  private findErrors(node: import('../lift/types').AstNode): SyncError[] {
     const errors: SyncError[] = []
     this.walkForErrors(node, errors)
     return errors
   }
 
-  private walkForErrors(node: import('../core/lift/types').AstNode, errors: SyncError[]): void {
+  private walkForErrors(node: import('../lift/types').AstNode, errors: SyncError[]): void {
     if (node.type === 'ERROR') {
       errors.push({
         message: `Syntax error at line ${node.startPosition.row + 1}`,

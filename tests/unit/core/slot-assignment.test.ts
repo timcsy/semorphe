@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest'
 import { identityAssignment, swapTo, effectiveAreas } from '../../../src/core/host/slot-assignment'
 import { LAYOUT_PRESETS, layoutPreset } from '../../../src/core/host/layout-presets'
-import { LAYER_ORDER } from '../../../src/core/view-host'
+import { LAYER_ORDER } from '../../../src/core/sync/view-host'
 
 const P = (id: string) => layoutPreset(id as never)!
 

@@ -222,7 +222,7 @@ export function verify(rootDir: string): { reports: ComponentPathReport[]; exitC
 
   const blockSpecPaths = [
     path.join(rootDir, 'src/core/universal-blocks.json'),
-    path.join(rootDir, 'src/languages/cpp/core/blocks.json'),
+    path.join(rootDir, 'src/languages/cpp/lang/blocks.json'),
     ...stdBlockPaths,
     ...componentBlockPaths,
   ]

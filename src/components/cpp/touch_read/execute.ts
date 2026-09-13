@@ -12,7 +12,7 @@
  * 判準是 `digital_read` 檔頭那句：**可重現比擬真重要**。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin } from '../../../languages/cpp/lang/runtime/arduino-pins'
 
 /** ESP32 未觸碰時的典型讀數。 */
 const UNTOUCHED = 75

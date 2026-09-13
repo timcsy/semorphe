@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 const panelsDir = path.resolve(__dirname, '../../../src/ui/panels')
-const syncControllerPath = path.resolve(__dirname, '../../../src/core/sync-controller.ts')
+const syncControllerPath = path.resolve(__dirname, '../../../src/core/sync/sync-controller.ts')
 
 const panelFiles = ['blockly-panel.ts', 'monaco-panel.ts', 'console-panel.ts', 'variable-panel.ts']
 
@@ -43,7 +43,7 @@ describe('Panel independence', () => {
   })
 
   it('toolbox-builder should not import blockly', () => {
-    const filePath = path.resolve(__dirname, '../../../src/core/toolbox-builder.ts')
+    const filePath = path.resolve(__dirname, '../../../src/core/blocks/toolbox-builder.ts')
     const imports = getImports(filePath)
     for (const imp of imports) {
       expect(imp).not.toContain('blockly')
@@ -62,7 +62,7 @@ describe('Panel independence', () => {
   it('components.json should not contain blockDef fields', () => {
     const componentFiles = [
       path.resolve(__dirname, '../../../src/core/universal-components.json'),
-      path.resolve(__dirname, '../../../src/languages/cpp/core/components.json'),
+      path.resolve(__dirname, '../../../src/languages/cpp/lang/components.json'),
     ]
     for (const filePath of componentFiles) {
       const content = fs.readFileSync(filePath, 'utf-8')
@@ -87,7 +87,7 @@ describe('Panel independence', () => {
    * 同族教訓：`experience.md`「身分不只以字串字面出現」。
    */
   it('★ 視圖契約不得 import blockly／投影／面板', () => {
-    for (const f of ['view-host.ts', 'view-registry.ts']) {
+    for (const f of ['sync/view-host.ts', 'sync/view-registry.ts']) {
       const filePath = path.resolve(__dirname, '../../../src/core', f)
       const imports = getImports(filePath)
       expect(imports.length, `${f} 一個 import 都沒讀到 → 掃描壞了`).toBeGreaterThan(0)

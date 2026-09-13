@@ -5,7 +5,7 @@
  *
  * ⚠️ **這一段的理由在 2026-08-11 過期了，留著是因為它解釋了這個檔為什麼存在。**
  *
- * 原文：「`languages/cpp/core/node-traits.ts` 除了讀膠囊宣告，還疊了一張**過渡表**
+ * 原文：「`languages/cpp/lang/node-traits.ts` 除了讀膠囊宣告，還疊了一張**過渡表**
  * （還沒膠囊化的元件的性狀暫放處）。那張表是 C++ 的，所以那個模組屬於語言套件。」
  *
  * **F 完成之後（177/177 膠囊化）過渡表退場了**，於是那邊的 `性狀()` 與這裡的
@@ -203,8 +203,8 @@ export function isFunctionDefinition(componentId: string): boolean {
  * 這顆元件的 I/O 角色與風格。
  *
  * ⚠️ **它住在核心，是因為它一個 C++ 的字都不認識**——只是把膠囊宣告的
- * `ioRole`／`ioStyle` 讀出來。它原本住在 `languages/cpp/core/node-traits.ts`，
- * 而它的消費者是 `core/toolbox-builder.ts`（決定 I/O 積木的排序偏好），
+ * `ioRole`／`ioStyle` 讀出來。它原本住在 `languages/cpp/lang/node-traits.ts`，
+ * 而它的消費者是 `core/blocks/toolbox-builder.ts`（決定 I/O 積木的排序偏好），
  * 於是**視圖層為了問一句「這顆是哪種 I/O」而 import 了整個 C++ 語言套件**
  * ——P9 語言獨立性的字面違反（第三十九條護欄抓到）。
  *

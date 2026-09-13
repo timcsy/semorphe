@@ -27,7 +27,7 @@
  * - **不檢測指派存不存得住**——那要跨一次重載，e2e 才驗得到。
  */
 import { describe, it, expect } from 'vitest'
-import { LAYER_ORDER } from '../../src/core/view-host'
+import { LAYER_ORDER } from '../../src/core/sync/view-host'
 import {
   identityAssignment, swapTo, effectiveAreas,
 } from '../../src/core/host/slot-assignment'

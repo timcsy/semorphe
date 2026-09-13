@@ -31,7 +31,7 @@
  *
  * ## ⚠️ 一個【已知的重複】，寫在這裡讓它看得見
  *
- * 網頁版的 `core/sync-controller.ts` 也在做雙向同步，用布林旗標防迴圈。
+ * 網頁版的 `core/sync/sync-controller.ts` 也在做雙向同步，用布林旗標防迴圈。
  * 而這裡是**跨行程、非同步、有外來變更**——性質不同。
  *
  * 2026-08-18 拍板**兩份並存**，理由是硬合成一份會做出一個兩邊都不好用的抽象
@@ -47,10 +47,10 @@ import type { CodeView, HighlightVariant } from '../../core/host/code-view'
 import type { ControlState, ControlInvoke } from '../../core/host/controls'
 import type { CodeMapping } from '../../core/projection/code-generator'
 import type { SemanticNode } from '../../core/types'
-import type { DiagnosticsEvent } from '../../core/view-host'
+import type { DiagnosticsEvent } from '../../core/sync/view-host'
 import { projectDiagnostics } from '../../core/projection/diagnostic-projection' 
-import type { SemanticBus } from '../../core/semantic-bus'
-import type { SemanticUpdateEvent, ExecutionAtNodeEvent, ViewHost, ViewCapabilities } from '../../core/view-host'
+import type { SemanticBus } from '../../core/sync/semantic-bus'
+import type { SemanticUpdateEvent, ExecutionAtNodeEvent, ViewHost, ViewCapabilities } from '../../core/sync/view-host'
 import type { HostMessage, WebviewMessage } from '../sync/messages'
 
 export class VscodeCodeView implements CodeView, ViewHost {

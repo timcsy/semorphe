@@ -6,7 +6,7 @@
  * 🔴 而**值截成一個位元組**與真板子一致（`EEPROM.write` 只吃 0–255）。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { eepromOf, requireAddress } from '../../../languages/cpp/core/runtime/arduino-devices'
+import { eepromOf, requireAddress } from '../../../languages/cpp/lang/runtime/arduino-devices'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:eeprom_write', async (node, ctx) => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../../src/core/blocks/block-spec-registry'
 import type { BlockSpec } from '../../../src/core/types'
 
 const sampleSpec: BlockSpec = {

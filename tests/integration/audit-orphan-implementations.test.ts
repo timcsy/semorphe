@@ -29,7 +29,7 @@ import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { allComponentDefs } from '../helpers/component-scan'
 // 🔴 **「非元件」也是一種宣告**——見下面 `declared` 那一段。
-import { allNonComponents } from '../../src/core/non-components'
+import { allNonComponents } from '../../src/core/blocks/non-components'
 
 const RULE = '把「已註冊執行器的概念」與「宣告過的東西」相減——宣告包含概念定義檔**與非元件宣告**。'
 
@@ -54,7 +54,7 @@ registerCppLanguage()
  *
  * 🔴 **`declareNonComponent` 也是宣告**（2026-08-22）：`raw_code` 與
  * `unresolved` 是**降級機制**，它們刻意沒有概念定義（「一顆什麼都能是的元件
- * 會讓五路完備性失去意義」——見 `core/non-components.ts` 的檔頭），
+ * 會讓五路完備性失去意義」——見 `core/blocks/non-components.ts` 的檔頭），
  * 而那份宣告帶著 `kind` 與 `reason`。
  *
  * ⚠️ 只看概念定義檔的話，替 `unresolved` 加一個執行器

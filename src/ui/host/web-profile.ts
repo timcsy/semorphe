@@ -13,7 +13,7 @@
  * `history/072` 的病歷正是這種形狀：一條路徑全綠，而另一條安靜地錯了。
  */
 import { MonacoPanel } from '../panels/monaco-panel'
-import { StorageService } from '../../core/storage'
+import { StorageService } from '../../core/storage/storage'
 import type { HostProfile } from '../../core/host/host-profile'
 import type { CodeView } from '../../core/host/code-view'
 import { createBrowserStore } from '../browser-store'
@@ -41,7 +41,7 @@ export const webProfile: HostProfile = {
     // > **一個「核心」如果它的存檔只在一個宿主上跑得起來，
     // > 那它不是核心，是那個宿主的一部分。**
     //
-    // ⚠️ 進度（`core/progress.ts`）是函式式的，走它自己的 setter
+    // ⚠️ 進度（`core/lesson/progress.ts`）是函式式的，走它自己的 setter
     //    ——在 `app-shell` 啟動時設，見 `setProgressStore`。
     return new StorageService('cpp', createBrowserStore())
   },

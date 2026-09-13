@@ -6,7 +6,7 @@
  * （很多教學範例就是漏了 `pinMode`）。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:digital_write', async (node, ctx) => {

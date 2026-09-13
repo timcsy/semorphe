@@ -36,7 +36,7 @@ import { join } from 'node:path'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { resetClock, useRealTime } from '../../src/languages/cpp/core/runtime/arduino-clock'
+import { resetClock, useRealTime } from '../../src/languages/cpp/lang/runtime/arduino-clock'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 

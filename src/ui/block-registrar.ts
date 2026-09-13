@@ -1,5 +1,5 @@
-import { allVariableDropdownBlocks } from '../core/variable-dropdown-blocks'
-import { allBoardConstantDropdowns, boardConstantOptions } from '../core/board-constant-dropdown-blocks'
+import { allVariableDropdownBlocks } from '../core/blocks/variable-dropdown-blocks'
+import { allBoardConstantDropdowns, boardConstantOptions } from '../core/blocks/board-constant-dropdown-blocks'
 import type { BoardPinModel } from '../core/types'
 import { componentsDeclaringVariableType } from '../core/language-executors'
 import * as Blockly from 'blockly'
@@ -24,7 +24,7 @@ import * as Blockly from 'blockly'
  * 🟢 由 `tests/unit/ui/declared-field-types.test.ts` 釘住。
  */
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
-import type { BlockSpecRegistry } from '../core/block-spec-registry'
+import type { BlockSpecRegistry } from '../core/blocks/block-spec-registry'
 // 🪦 `CATEGORY_COLORS` 的匯入已於 2026-08-26 刪除——最後一顆命令式積木定義
 //    （`cpp_var_declare`）退場，顏色從此**只住在宣告裡**。
 import { attachBranchList } from './branch-list-block'
@@ -35,11 +35,11 @@ import { attachBranchList } from './branch-list-block'
 //    **自己會呼叫** `registerParamMutatorBlocks`，不靠這裡的 import。
 import { attachParamList } from './param-list-block'
 import { attachAltLayout } from './alt-layout-block'
-import { preserveForeignExtraState } from '../core/foreign-extra-state'
+import { preserveForeignExtraState } from '../core/blocks/foreign-extra-state'
 import { defineVariadicBlock, attachVariadic } from './variadic-block'
 import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
 import { componentsDeclaringVariables, componentTraits } from '../core/component/traits'
-import type { DropdownContext } from '../core/dropdown-sources'
+import type { DropdownContext } from '../core/blocks/dropdown-sources'
 import { deriveBlockType } from '../core/component/derive-block-type'
 import { abstractComponentOf } from '../core/language-executors'
 // 🪦 `setFieldSafely` 的匯入已於 2026-08-26 刪除——它的最後幾個消費者
@@ -66,7 +66,7 @@ import { isPlainDeclaration } from '../core/component/traits'
 // ⚠️ 那道「沒注入就當場拋錯」的守衛也一起走：**它守的是一份空契約**，
 //    而一個守著空契約的守衛，與沒有守衛產出一樣。
 //
-// 🟢 `core/block-input-names.ts` 與 `languages/cpp/block-input-names.ts` **留著**
+// 🟢 `core/blocks/block-input-names.ts` 與 `languages/cpp/block-input-names.ts` **留著**
 //    ——多條護欄拿它們當「插槽名的唯一真相」在比對，那是另一件事。
 
 export interface WorkspaceAccessors {
@@ -1032,7 +1032,7 @@ export class BlockRegistrar {
     // 🔴 它與上面那個新定義（動態插槽）**是同一個鍵**，而**後定義的贏**
     // ——於是新的那個從來沒有生效過。而舊的用
     // `ARRAY_DECLARE_INPUTS.value[0]`，那個常數是**從 `blocks.json` 的
-    // `args0` 導出的**（`core/block-input-names.ts`）：把 `args0` 移除之後
+    // `args0` 導出的**（`core/blocks/block-input-names.ts`）：把 `args0` 移除之後
     // 它變成**空字串**，`appendValueInput('')` 拋錯。
     //
     // 症狀是**整個 flyout 停在那一顆**——使用者打開「陣列與列表」只看到一顆積木，
@@ -1087,7 +1087,7 @@ export class BlockRegistrar {
     // 它」不是介面層的知識**——原本這裡直接寫 `Blockly.Blocks['cpp_string_at']`，
     // 一個 C++ 專屬身分寫死在呈現層。
     //
-    // 名單由語言套件宣告（`core/variable-dropdown-blocks.ts`）。
+    // 名單由語言套件宣告（`core/blocks/variable-dropdown-blocks.ts`）。
     // 列哪些變數也是宣告的，所以加一個新的字串宣告概念時這裡自動涵蓋它。
     for (const d of allVariableDropdownBlocks()) {
       const KEY = d.blockType.toUpperCase()

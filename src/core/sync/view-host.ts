@@ -1,8 +1,8 @@
-import type { SemanticNode } from './types'
-import type { Diagnostic } from './diagnostics'
-import type { ExecutionStatus, StepInfo } from '../interpreter/types'
-import type { CodeMapping } from './projection/code-generator'
-import type { ScaffoldResult } from './program-scaffold'
+import type { SemanticNode } from '../types'
+import type { Diagnostic } from '../diagnostics'
+import type { ExecutionStatus, StepInfo } from '../execution'
+import type { CodeMapping } from '../projection/code-generator'
+import type { ScaffoldResult } from '../program-scaffold'
 
 // ─── View Configuration ───
 

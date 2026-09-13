@@ -1,6 +1,6 @@
 /** `cpp:class_def` 的 **generate** 路——從共用檔原封剪過來（批次第四批：閉包提升之後才搬得動的三顆）。 */
 import type { StylePreset } from '../../../core/types'
-import { openBraceFor } from '../../../languages/cpp/core/generators/statements'
+import { openBraceFor } from '../../../languages/cpp/lang/generators/statements'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, indented, generateBody } from '../../../core/projection/code-generator'
 

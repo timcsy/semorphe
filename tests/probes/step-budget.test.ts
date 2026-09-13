@@ -6,7 +6,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { stepsOf } from '../../src/core/steps'
+import { stepsOf } from '../../src/core/lesson/steps'
 import { REPO_ROOT } from '../helpers/guardrail'
 import type { SemanticNode } from '../../src/core/types'
 

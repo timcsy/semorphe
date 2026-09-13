@@ -11,7 +11,7 @@
  *
  * 寫成明表讓每一筆都看得見：規則若對某一顆是錯的，讀的人指得出來。
  */
-import { registerIdMigration, registerPropertyMigration } from '../../core/storage-version'
+import { registerIdMigration, registerPropertyMigration } from '../../core/storage/storage-version'
 
 /**
  * ⚠️ **變數名帶了範圍前綴，那不是囉嗦**（2026-08-11）。

@@ -22,7 +22,7 @@ import {
   variableTypeOf,
   componentsDeclaringVariableType,
 } from '../../../src/core/language-executors'
-import { allVariableDropdownBlocks } from '../../../src/core/variable-dropdown-blocks'
+import { allVariableDropdownBlocks } from '../../../src/core/blocks/variable-dropdown-blocks'
 
 beforeAll(() => {
   registerCppLanguage()

@@ -1,15 +1,15 @@
 import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
-import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
-import { buildToolbox } from '../../../src/core/toolbox-builder'
-import { CATEGORY_COLORS } from '../../../src/core/category-colors'
+import { BlockSpecRegistry } from '../../../src/core/blocks/block-spec-registry'
+import { buildToolbox } from '../../../src/core/blocks/toolbox-builder'
+import { CATEGORY_COLORS } from '../../../src/core/blocks/category-colors'
 import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
-import { getVisibleComponents } from '../../../src/core/level-tree'
+import { getVisibleComponents } from '../../../src/core/lesson/level-tree'
 // ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——
 // 工具箱靠 owner 決定歸屬，少了它整個通用分類會是空的。
 import { universalComponents, universalBlocks } from '../../../src/core/universal'
-import { coreComponents, coreBlocks } from '../../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../../src/languages/cpp/lang'
 import { allStdModules } from '../../../src/languages/cpp/std'
 import { cppCategoryDefs } from '../../../src/languages/cpp/toolbox-categories'
 import cppBeginnerTopic from '../../../src/languages/cpp/topics/cpp-beginner.json'
@@ -147,7 +147,7 @@ describe('ToolboxBuilder', () => {
   })
 
   it('should NOT import blockly (zero UI framework dependency)', () => {
-    const filePath = path.resolve(__dirname, '../../../src/core/toolbox-builder.ts')
+    const filePath = path.resolve(__dirname, '../../../src/core/blocks/toolbox-builder.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     const importLines = content.match(/^import\s+.*from\s+['"]([^'"]+)['"]/gm) ?? []
     for (const line of importLines) {

@@ -1,6 +1,6 @@
 /** `cpp:lcd_open` 的 **execute** 路——記下行列數。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { lcdOf } from '../../../languages/cpp/core/runtime/arduino-devices'
+import { lcdOf } from '../../../languages/cpp/lang/runtime/arduino-devices'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:lcd_open', async (node, ctx) => {

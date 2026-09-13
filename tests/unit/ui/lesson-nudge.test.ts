@@ -29,7 +29,7 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { REPO_ROOT } from '../../helpers/guardrail'
-import { suggestLessonFor, type LessonScope } from '../../../src/core/lesson-suggest'
+import { suggestLessonFor, type LessonScope } from '../../../src/core/lesson/lesson-suggest'
 
 const appSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/app.ts'), 'utf8')
 const barSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/lesson-nudge-bar.ts'), 'utf8')

@@ -1,7 +1,7 @@
 /** `cpp:pwm_tie` 的 **execute** 路——把腳位繫到通道。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin } from '../../../languages/cpp/core/runtime/arduino-pins'
-import { tiePin } from '../../../languages/cpp/core/runtime/arduino-pwm'
+import { boardIn, requirePin } from '../../../languages/cpp/lang/runtime/arduino-pins'
+import { tiePin } from '../../../languages/cpp/lang/runtime/arduino-pwm'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pwm_tie', async (node, ctx) => {

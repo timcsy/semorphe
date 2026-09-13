@@ -57,7 +57,7 @@
  * 函式 → 類別與物件 → 錯誤處理 → 其他，與課程清單的 L0／L1／L2 對得上。
  */
 import type { ToolboxCategoryDef } from '../../core/types'
-import { declareToolboxCategories } from '../../core/toolbox-categories'
+import { declareToolboxCategories } from '../../core/blocks/toolbox-categories'
 
 export const pythonCategoryDefs: ToolboxCategoryDef[] = [
   {

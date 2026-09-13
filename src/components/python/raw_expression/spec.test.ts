@@ -4,7 +4,7 @@ import { liftPython, componentIdsOf, generatePython as gen, runPython } from '..
 
 describe('python:raw_expression —— 運算式位置的降級落點', () => {
   it('🔴 降級積木的型別是 Python 的，不是別的語言的', async () => {
-    const { degradationBlocks, setDegradationLanguage } = await import('../../../core/degradation-blocks')
+    const { degradationBlocks, setDegradationLanguage } = await import('../../../core/blocks/degradation-blocks')
     await import('../../../languages/python/pack')
     setDegradationLanguage('python')
     const d = degradationBlocks()

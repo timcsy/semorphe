@@ -1,5 +1,5 @@
 import { CURRENT_VERSION, judgeJSON, upgrade } from './storage-version'
-import { MemoryKeyValueStore, type KeyValueStore } from './host/key-value-store'
+import { MemoryKeyValueStore, type KeyValueStore } from '../host/key-value-store'
 
 const STORAGE_KEY = 'semorphe-state'
 /** 被拒絕的存檔搬到這裡。覆蓋式，只留一份 */

@@ -100,7 +100,7 @@ async function programOutput(page: import('@playwright/test').Page): Promise<str
 }
 
 /**
- * 讀一堂課的題目——⚠️ **舊的 `check` 就是第一題**（`core/lesson.ts` 的 `parseTasks`
+ * 讀一堂課的題目——⚠️ **舊的 `check` 就是第一題**（`core/lesson/lesson.ts` 的 `parseTasks`
  * 同一條規矩）。這裡不能只讀 `tasks`：66 課裡多數還是舊形狀。
  */
 function tasksOf(j: Record<string, any>): { id: string; title: string; check?: { stdout?: string; stdin?: string[] } }[] {
@@ -294,7 +294,7 @@ for (const c of CASES) {
 
     const declared = new Set(c.components)
     // `cpp:program` 是每一份都有的骨架，不算在課的元件裡。
-    // 🔴 **結構節點也不算**——`core/non-components.ts` 宣告的那一類
+    // 🔴 **結構節點也不算**——`core/blocks/non-components.ts` 宣告的那一類
     //    （`param_decl` 之類）是別人的子節點，**學生在積木盤上看不到它們**，
     //    所以一堂課不該宣告要開它們。判準是**真元件的身分都帶冒號**
     //    （`語言:名字`，實測 332/332）。

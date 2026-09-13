@@ -25,8 +25,57 @@
  */
 import type { Topic, Target, StylePreset, ToolboxCategoryDef } from './types'
 
-/** 一個語言套件對外提供的東西——**六項齊全，少一項就是那一項回到 `app.ts`**。 */
-export interface LanguagePack {
+/**
+ * **一個套件**——三個域（軟體／硬體／UI）都填得出來的那一半。
+ *
+ * ## 🔴 它為什麼從 `LanguagePack` 裡分出來（2026-09-13）
+ *
+ * `concepts/元件.md` 定過「域／語言／layer **三軸正交**」，而且標注
+ * 「2026-08-24 起這三軸也是**出貨**的軸」。
+ * ⚠️ 而查證之後：**`domain` 那一軸在程式碼裡不存在**
+ * （`component.json` 有 `domain` 欄位的：0 個）。
+ *
+ * 目錄樹與型別都只表達了**語言**那一軸，於是硬體無家可歸——
+ * 不是還沒做，是 `LanguagePack` 描述不了它：
+ *
+ * ```
+ * grammar · createParser · liftPatterns · programRoot · fileExtension
+ * styleExceptions · createCodeShaping
+ * ```
+ *
+ * 一塊 Arduino 板子沒有文法、沒有解析器、沒有程式根、沒有副檔名。
+ *
+ * > **一個擴充點如果它的必填欄位只有一個域填得出來，
+ * > 那它不是擴充點，是那個域的建構式。**
+ *
+ * 🟢 所以拆成兩層：**套件**是共同的那一半（身分、順序、宣告了哪些元件、
+ * 課程、目標、工具箱分類），而**語言套件**多出「它有一套文法」那一整族。
+ * 硬體套件將來 `extends Pack`，填得出它填得出的，不必假裝有解析器。
+ */
+export interface Pack {
+  /** 這個套件的身分——跨域唯一。 */
+  id: string
+  /** 選單上那一行。 */
+  name: string
+  /** 選單順序——**設計出來的**，不是檔名排序（見下面 `LanguagePack.order` 的病歷）。 */
+  order: number
+  /** 這個套件宣告了哪些元件與投影。⚠️ **三個域都有這一格**，而它是套件真正的內容。 */
+  declarations?: () => { components: unknown[]; projections: unknown[] }
+  /** 載入時要做的事（登錄產生器、執行器…）。 */
+  install?: () => void
+  /** 課程清單 */
+  topics: Topic[]
+  /** 目標——軟體域是方言，硬體域是板子。**同一格，不同域填不同東西。** */
+  targets: Target[]
+  /** 工具箱分類 */
+  categories: ToolboxCategoryDef[]
+}
+
+/**
+ * **軟體域的套件**——它比 `Pack` 多出「有一套文法」那一整族
+ * （解析、lift、產碼、風格）。硬體套件將來 `extends Pack` 而不經過這裡。
+ */
+export interface LanguagePack extends Pack {
   id: string
   name: string
   /**

@@ -29,7 +29,7 @@ export function registerExecute(register: (component: string, executor: Componen
       await ctx.executeBody(node.slots.body ?? [])
     } finally {
       // ⚠️ 走 `exitScope` 而不是直接還原——**作用域結束時要跑解構式**，
-      // 而那個知識住在 `onScopeExit`（`languages/cpp/core/executors/structs.ts`）。
+      // 而那個知識住在 `onScopeExit`（`languages/cpp/lang/executors/structs.ts`）。
       // 那個函式的註解逐字：「**每一個建立作用域的地方都要走這裡**
       // ——漏掉任何一個，那裡宣告的物件就永遠不會被收尾，**而症狀是沒有症狀**」。
       await ctx.exitScope(ctx.scope, outer)

@@ -38,8 +38,8 @@
  */
 import { describe, it, expect } from 'vitest'
 import { printReport } from '../helpers/guardrail'
-import { allLessons, allTracks } from '../../src/core/load-lessons'
-import { controlsPinnedBy, parseLesson, parseTrack } from '../../src/core/lesson'
+import { allLessons, allTracks } from '../../src/core/lesson/load-lessons'
+import { controlsPinnedBy, parseLesson, parseTrack } from '../../src/core/lesson/lesson'
 import { CONTROLS } from '../../src/core/host/controls'
 import fs from 'node:fs'
 import path from 'node:path'

@@ -9,10 +9,10 @@ import {
   CONTROLS, LOCALES, FOLLOW_HOST_LOCALE, surfaceOf,
   type ControlSpec, type ControlState, type ControlInvoke, type ControlOption,
 } from '../core/host/controls'
-import type { CodeParser } from '../core/sync-controller'
-import { SyncController } from '../core/sync-controller'
-import type { SyncError } from '../core/sync-controller'
-import { SemanticBus } from '../core/semantic-bus'
+import type { CodeParser } from '../core/sync/sync-controller'
+import { SyncController } from '../core/sync/sync-controller'
+import type { SyncError } from '../core/sync/sync-controller'
+import { SemanticBus } from '../core/sync/semantic-bus'
 import { showToast } from './toolbar/toast'
 import { showStyleActionBar } from './toolbar/style-action-bar'
 import { runDiagnostics, diagnosticsFromTree } from '../core/diagnostics'
@@ -25,10 +25,10 @@ import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeader
 //    它們原本散在 `blockly-panel`／`block-registrar`／`sync-controller` 裡
 //    ——而那三個檔是**視圖與 UI**，不該認得語言套件（P9 第一項）。
 //    ⚠️ 組裝點認得語言是**設計如此**（護欄明寫「可見，不入棘輪」）。
-import { TopicRegistry } from '../core/topic-registry'
+import { TopicRegistry } from '../core/lesson/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
-import { getVisibleComponents, flattenLevelTree } from '../core/level-tree'
+import { getVisibleComponents, flattenLevelTree } from '../core/lesson/level-tree'
 import { isAlwaysInScope, alwaysInScopeComponents, componentTraits } from '../core/component/traits'
 import type { Target, Topic } from '../core/types'
 // spec 142：三塊板子。⚠️ 它們**共用** `arduino` 課程清單，差別只在 `provides`
@@ -39,28 +39,30 @@ import { PatternRenderer } from '../core/projection/pattern-renderer'
 import { setPatternRenderer } from '../core/projection/block-renderer'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry, RenderStrategyRegistry } from '../core/registry'
 import { allLanguagePacks, languagePack, defaultTarget } from '../core/language-packs'
-import { setDegradationLanguage } from '../core/degradation-blocks'
+import { setDegradationLanguage } from '../core/blocks/degradation-blocks'
 import { setCommentLanguage } from '../core/comment-syntax'
 import { loadAllLanguagePacks } from '../core/load-language-packs'
+import { loadPanels } from '../core/host/load-panels'
+import { assertPanelsSane } from '../core/host/panel-registry'
 import type { LiftPattern } from '../core/types'
-import { BlockSpecRegistry } from '../core/block-spec-registry'
+import { BlockSpecRegistry } from '../core/blocks/block-spec-registry'
 
-import type { SavedState } from '../core/storage'
+import type { SavedState } from '../core/storage/storage'
 import { describeRefusal } from '../core/refusal-message'
 import { LocaleLoader } from '../i18n/loader'
 import { setMessageSource, msg } from '../core/messages'
 import { LAYOUT_PRESETS, layoutPreset, hostLayoutOptions, type LayoutPresetId, type HostLayoutOption } from '../core/host/layout-presets'
-import { SyncCoordinator } from '../core/sync-coordinator'
-import { viewsWith } from '../core/view-registry'
+import { SyncCoordinator } from '../core/sync/sync-coordinator'
+import { viewsWith } from '../core/sync/view-registry'
 import { installDialogs } from './prompt-dialog'
 import type { StylePreset } from '../core/types'
-import { CATEGORY_COLORS } from '../core/category-colors'
-import { registerViewsIn, connectViews } from '../core/view-registry'
-import { buildToolbox } from '../core/toolbox-builder'
-import { lessonIdFromQuery, taskIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson'
-import { viewLabel, type LessonView } from '../core/semantic-wave'
-import { markTaskPassed, isTaskPassed, passedCount, clearProgress, setProgressStore } from '../core/progress'
-import { stepsOf, compareSteps, describeSteps, describeBudget, type StepRecord } from '../core/steps'
+import { CATEGORY_COLORS } from '../core/blocks/category-colors'
+import { registerViewsIn, connectViews } from '../core/sync/view-registry'
+import { buildToolbox } from '../core/blocks/toolbox-builder'
+import { lessonIdFromQuery, taskIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson/lesson'
+import { viewLabel, type LessonView } from '../core/lesson/semantic-wave'
+import { markTaskPassed, isTaskPassed, passedCount, clearProgress, setProgressStore } from '../core/lesson/progress'
+import { stepsOf, compareSteps, describeSteps, describeBudget, type StepRecord } from '../core/lesson/steps'
 /**
  * 「題目」那顆 picker 裡**不是一個題目**的那一項。
  *
@@ -70,16 +72,16 @@ import { stepsOf, compareSteps, describeSteps, describeBudget, type StepRecord }
  */
 const CLEAR_PROGRESS = 'action:clear-progress'
 import { iterationCounts, loopRatio, loopNodeById } from '../core/iterations'
-import { predictionFor, programSignature, type PredictQuestion } from '../core/predict'
+import { predictionFor, programSignature, type PredictQuestion } from '../core/lesson/predict'
 import { scatterOrder } from '../core/arrange'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
-import { lessonById, allTracks, lessonsOfTrack, solutionFor, starterFor, viewForLesson } from '../core/load-lessons'
-import { suggestLessonFor } from '../core/lesson-suggest'
+import { lessonById, allTracks, lessonsOfTrack, solutionFor, starterFor, viewForLesson } from '../core/lesson/load-lessons'
+import { suggestLessonFor } from '../core/lesson/lesson-suggest'
 import type { LessonNudgeBar } from './lesson-nudge-bar'
-import { allTemplates, templateById } from '../core/load-templates'
-import { registeredViews } from '../core/view-registry'
+import { allTemplates, templateById } from '../core/lesson/load-templates'
+import { registeredViews } from '../core/sync/view-registry'
 import { BlockRegistrar } from './block-registrar'
 import { createAppLayout, setupToolbarButtons, setupFileButtons, updateStatusBar } from './app-shell'
 import { GITHUB_MARK, type AppShellElements, type AppShellCallbacks } from './app-shell'
@@ -92,7 +94,7 @@ import {} from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
 // Semantic layer
 // Projection layer
-import { CURRENT_VERSION, hashCode } from '../core/storage-version'
+import { CURRENT_VERSION, hashCode } from '../core/storage/storage-version'
 import { diagNote } from '../core/diag-log'
 import { createBrowserStore } from './browser-store'
 
@@ -104,6 +106,20 @@ import { createBrowserStore } from './browser-store'
  */
 loadAllLanguagePacks()
 const STYLE_PRESETS: StylePreset[] = allLanguagePacks().flatMap((p) => p.styles)
+
+/**
+ * **面板的宣告也在這裡收**（2026-09-13）。
+ *
+ * 🔴 在此之前 `loadPanels()` **零個產品呼叫者**，而 `src/panels/` 裡一份宣告都沒有
+ * ——登錄表綠著，畫面正常，而它一次都沒有跑過。
+ *
+ * > **一個沒有人呼叫的載入器，與一個不存在的載入器，在畫面上長得一模一樣。**
+ *
+ * ⚠️ 健檢的結果**印出來**：`assertPanelsSane` 的第四條是入口條件
+ * （一份宣告都沒有 → 喊），而它只有在有人讀它的時候才算數。
+ */
+const panelProblems = [...loadPanels(), ...assertPanelsSane((k) => Boolean(Blockly.Msg[k]))]
+if (panelProblems.length > 0) console.error(`[panels]\n${panelProblems.join('\n')}`)
 
 const DEFAULT_STYLE: StylePreset = STYLE_PRESETS[0]
 
@@ -705,7 +721,7 @@ export class App {
     installDialogs()
     // 🔴 **進度存在哪，由組裝點說**（2026-09-06，spec 173）。
     //
-    //    `core/progress.ts` 是**函式式**的（不是類別），所以注入走一個
+    //    `core/lesson/progress.ts` 是**函式式**的（不是類別），所以注入走一個
     //    模組層級的 setter 而不是建構子。它的預設是**記憶體**
     //    ——核心不知道有 `localStorage` 這種東西。
     //
@@ -1184,7 +1200,7 @@ export class App {
   /**
    * **去讀這一課的課文**——開靜態頁（`dist/lessons/<軌道>/<課>/`）。
    *
-   * 🔴 網址由**同一支函式**產生（`core/lesson.ts` 的 `lessonDocHref`），
+   * 🔴 網址由**同一支函式**產生（`core/lesson/lesson.ts` 的 `lessonDocHref`），
    * 不是在這裡拼一次字串——兩邊各拼一次的話，中文課名的 encode 遲早不一樣，
    * 而症狀是一個 404。
    *
@@ -3448,7 +3464,7 @@ export class App {
    *
    * 🔴 **同一個機制、兩個入口**——網頁版點自己的狀態列，擴充走宿主的。
    * 我一度以為擴充那側不必做，理由是「那裡真相是文件」——
-   * **那只推得掉「誰是來源」那一格**（`core/sync-coordinator.ts` 的檔頭記著）。
+   * **那只推得掉「誰是來源」那一格**（`core/sync/sync-coordinator.ts` 的檔頭記著）。
    */
   private wireHostSyncCommands(): void {
     this.codeView?.onSyncCommand?.((cmd) => {

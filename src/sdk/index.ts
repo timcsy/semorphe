@@ -37,20 +37,20 @@ export type {
   ExecutionStateEvent,
   ExecutionAtNodeEvent,
   ViewCapabilities,
-} from '../core/view-host'
-export { registerView, registerViewsIn, connectViews, resetViews, registeredViews } from '../core/view-registry'
+} from '../core/sync/view-host'
+export { registerView, registerViewsIn, connectViews, resetViews, registeredViews } from '../core/sync/view-registry'
 
 // ── 真相與匯流排 ──────────────────────────────────────────────
-export { SemanticBus } from '../core/semantic-bus'
+export { SemanticBus } from '../core/sync/semantic-bus'
 export type { SemanticNode, StylePreset, LiftPattern } from '../core/types'
 export type { CodeMapping, BlockMapping } from '../core/projection/code-generator'
 
 // ── 即時互轉 ──────────────────────────────────────────────────
-export { SyncController } from '../core/sync-controller'
+export { SyncController } from '../core/sync/sync-controller'
 export { Lifter } from '../core/lift/lifter'
 export { PatternLifter } from '../core/lift/pattern-lifter'
 export { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry } from '../core/registry'
-export { BlockSpecRegistry } from '../core/block-spec-registry'
+export { BlockSpecRegistry } from '../core/blocks/block-spec-registry'
 
 // ── 語言套件與膠囊登錄表 ──────────────────────────────────────
 export { loadAllLanguagePacks } from '../core/load-language-packs'

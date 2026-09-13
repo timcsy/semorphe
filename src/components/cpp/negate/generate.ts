@@ -1,8 +1,8 @@
 /** `cpp:negate` 的 **generate** 路——從共用檔原封剪過來（批次第三十二批：一元運算子族）。 */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { precedence, genChild } from '../../../languages/cpp/core/generators/expressions'
+import { precedence, genChild } from '../../../languages/cpp/lang/generators/expressions'
 // ⚠️ 問**性狀**不問身分——一顆膠囊裡列另外兩顆的身分，就近性護欄的反向檢查會指名。
-import { isPrefixOperator } from '../../../languages/cpp/core/node-traits'
+import { isPrefixOperator } from '../../../languages/cpp/lang/node-traits'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:negate', (node, ctx) => {

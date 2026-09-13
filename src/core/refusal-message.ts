@@ -1,4 +1,4 @@
-import type { LoadOutcome } from './storage'
+import type { LoadOutcome } from './storage/storage'
 import { msg } from './messages'
 
 /**

@@ -1,4 +1,4 @@
-import type { Topic } from './types'
+import type { Topic } from '../types'
 
 export class TopicRegistry {
   private topics = new Map<string, Topic>()

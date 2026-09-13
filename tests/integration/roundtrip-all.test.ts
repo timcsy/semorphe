@@ -14,10 +14,10 @@ import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { createNode } from '../../src/core/semantic-tree'
 import type { BlockSpec, UniversalTemplate, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 
 import { universalComponents, universalBlocks } from '../../src/core/universal'
-import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
 // ⚠️ **不要自己列宣告來源。**

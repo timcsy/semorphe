@@ -4,7 +4,7 @@
  * ⚠️ 與發聲那一顆**共用同一份腳位狀態**，否則「停了沒有」問不出來。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:tone_stop', async (node, ctx) => {

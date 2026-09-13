@@ -5,7 +5,7 @@
  * 而畫面上那與「這堂課就是這麼小」**長得一模一樣**。
  */
 import { describe, it, expect } from 'vitest'
-import { parseLesson, controlsPinnedBy, lessonIdFromQuery, taskIdFromQuery, editorHref } from '../../../src/core/lesson'
+import { parseLesson, controlsPinnedBy, lessonIdFromQuery, taskIdFromQuery, editorHref } from '../../../src/core/lesson/lesson'
 
 const OK = { title: '印出一句話', pins: { target: 'cpp' }, components: ['cpp:print'] }
 

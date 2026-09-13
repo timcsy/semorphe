@@ -5,7 +5,7 @@
  * ——整串比只答得出對錯，而**「錯」不是可以行動的資訊**。
  */
 import { describe, it, expect } from 'vitest'
-import { compareOutput, parseLesson, taskById, FREE_PRACTICE } from '../../../src/core/lesson'
+import { compareOutput, parseLesson, taskById, FREE_PRACTICE } from '../../../src/core/lesson/lesson'
 
 describe('compareOutput：逐行比對', () => {
   it('一模一樣 → 過', () => {

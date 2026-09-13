@@ -28,7 +28,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { SemanticInterpreter } from '../../../interpreter/interpreter'
-import { resetDefinedMacros } from '../../../languages/cpp/core/executors/preprocessor'
+import { resetDefinedMacros } from '../../../languages/cpp/lang/executors/preprocessor'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode } from '../../../core/types'
 

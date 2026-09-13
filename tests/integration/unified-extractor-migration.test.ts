@@ -7,13 +7,13 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
 // ⚠️ **第十三個組裝點**（今天第四處同一個形狀）。
 import { universalComponents, universalBlocks } from '../../src/core/universal'
 import { componentComponents, componentBlocks } from '../../src/core/component/registry'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
-import { coreComponents, coreBlocks } from '../../src/languages/cpp/core'
+import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 

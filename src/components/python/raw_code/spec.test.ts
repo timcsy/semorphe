@@ -23,7 +23,7 @@ describe('python:raw_code — 降級的落點', () => {
   })
 
   it('🔴 降級積木的型別是 Python 的，不是 C++ 的', async () => {
-    const { degradationBlocks, setDegradationLanguage } = await import('../../../core/degradation-blocks')
+    const { degradationBlocks, setDegradationLanguage } = await import('../../../core/blocks/degradation-blocks')
     await import('../../../languages/python/pack')
     setDegradationLanguage('python')
     const d = degradationBlocks()
@@ -33,7 +33,7 @@ describe('python:raw_code — 降級的落點', () => {
   })
 
   it('⚠️ 沒宣告過的語言回 null——**不得回別的語言的**', async () => {
-    const { degradationBlocks, setDegradationLanguage } = await import('../../../core/degradation-blocks')
+    const { degradationBlocks, setDegradationLanguage } = await import('../../../core/blocks/degradation-blocks')
     setDegradationLanguage('沒有這個語言')
     expect(degradationBlocks(),
       '🔴 回了別的語言的降級積木 → 登記處又變回全域單槽了').toBeNull()

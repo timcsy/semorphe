@@ -1,6 +1,6 @@
 /** `cpp:ifdef` 的 **execute** 路——從共用檔原封剪過來（批次第二十三批：前置處理指令 → 身分）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { defined } from '../../../languages/cpp/core/executors/preprocessor'
+import { defined } from '../../../languages/cpp/lang/executors/preprocessor'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:ifdef', async (node, ctx) => {

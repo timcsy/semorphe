@@ -4,7 +4,7 @@ import type { StylePreset } from '../../../core/types'
 // ⚠️ **共用的是演算法，不是身分。** `if_else` 與 `if` 的產生器是同一個
 // ——那正是它以前搬不動的原因（可搬性第 5 條）。`ifGeneratorFor` 提升成
 // 模組層級之後，兩顆各自 `g.set` 自己的身分，而排版邏輯只有一份。
-import { ifGeneratorFor } from '../../../languages/cpp/core/generators/statements'
+import { ifGeneratorFor } from '../../../languages/cpp/lang/generators/statements'
 
 export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePreset): void {
   g.set('cpp:if_else', ifGeneratorFor(style))

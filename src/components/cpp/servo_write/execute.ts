@@ -6,7 +6,7 @@
  * ⚠️ 而角度**夾在 0–180**，與真板子一致。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { servoOf } from '../../../languages/cpp/core/runtime/arduino-devices'
+import { servoOf } from '../../../languages/cpp/lang/runtime/arduino-devices'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:servo_write', async (node, ctx) => {

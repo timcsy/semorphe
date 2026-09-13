@@ -8,7 +8,7 @@ import { liftPostProcessors } from './post-processors'
 // ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
 // 🔴 **不再 import 語言套件**（spec 155）——身分由語言套件宣告。
 //    P9 原文逐字：「拔掉 C++……**無 `languages/cpp/` import**」。
-import { buildStandaloneBlock } from '../standalone-block'
+import { buildStandaloneBlock } from '../blocks/standalone-block'
 
 export class Lifter {
   /** `文法\u0000節點型別` → 手寫 lifter。**鍵帶文法**，見 `registerFor`。 */

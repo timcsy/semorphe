@@ -127,10 +127,10 @@ describe('工具箱（E 項的第一次回報）', () => {
   // 而「快照要釘在使用者實際會看到的狀態上，不是最大的那個狀態」這句話
   // 三個 commit 前才寫進 experience.md。
   it('★ **學生真的看得到**——在課程的可見集合裡', async () => {
-    const { getVisibleComponents } = await import('../../src/core/level-tree')
-    const { BlockSpecRegistry } = await import('../../src/core/block-spec-registry')
-    const { buildToolbox } = await import('../../src/core/toolbox-builder')
-    const { CATEGORY_COLORS } = await import('../../src/core/category-colors')
+    const { getVisibleComponents } = await import('../../src/core/lesson/level-tree')
+    const { BlockSpecRegistry } = await import('../../src/core/blocks/block-spec-registry')
+    const { buildToolbox } = await import('../../src/core/blocks/toolbox-builder')
+    const { CATEGORY_COLORS } = await import('../../src/core/blocks/category-colors')
     const { allCppComponents, allCppProjections } = await import('../../src/languages/cpp/all-declarations')
     const { cppCategoryDefs } = await import('../../src/languages/cpp/toolbox-categories')
     const beginner = (await import('../../src/languages/cpp/topics/cpp-beginner.json')).default

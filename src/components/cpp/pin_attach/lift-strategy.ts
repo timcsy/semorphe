@@ -38,7 +38,7 @@
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { AstNode } from '../../../core/lift/types'
 import { createNode } from '../../../core/semantic-tree'
-import { deviceFromName } from '../../../languages/cpp/core/runtime/device-names'
+import { deviceFromName } from '../../../languages/cpp/lang/runtime/device-names'
 
 /**
  * 會把第一個引數當腳位的函式。

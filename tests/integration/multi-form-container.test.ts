@@ -28,7 +28,7 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 // ⚠️ **不要自己列宣告來源**（第三十七條護欄）。這裡原本只讀 `core`，
 // 而 `cpp:container_push` 2026-08-11 進了膠囊——症狀是「積木文字是空的」
 // 與「舊積木型別註冊不到」，看起來像形態機制壞了。
@@ -258,7 +258,7 @@ describe('工具箱放的是形態，不是退路', () => {
   })
 
   it('★ 預設變數名用 stk／que，沿用本分類既有的慣例', async () => {
-    const { BlockSpecRegistry } = await import('../../src/core/block-spec-registry')
+    const { BlockSpecRegistry } = await import('../../src/core/blocks/block-spec-registry')
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(allCppComponents(), allCppProjections())
     const objDefault = (bt: string): string | undefined => {

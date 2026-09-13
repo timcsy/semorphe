@@ -1,5 +1,5 @@
 import type { SemanticNode, BlockSpec, RenderMapping, DynamicRule, Topic, FormSet } from '../types'
-import { applyBlockOverride } from '../block-override'
+import { applyBlockOverride } from '../blocks/block-override'
 import type { RenderStrategyRegistry, RenderContext } from '../registry/render-strategy-registry'
 import { resolvePattern } from './common-mappings'
 import { selectForm, buildFormSets, type FormDeclaration } from './form-selection'

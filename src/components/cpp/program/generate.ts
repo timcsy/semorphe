@@ -6,7 +6,7 @@ import { computeAutoIncludes } from '../../../languages/cpp/auto-include'
 import { normalizeHeader, cIoHeaderFor, toCHeader } from '../../../languages/cpp/header-aliases'
 import { isCDialect, C_BOOL_HEADER, usesBool, collectStructNames } from '../../../languages/cpp/target-dialect'
 import type { DependencyResolver } from '../../../core/dependency-resolver'
-import { isIncludeDirective } from '../../../languages/cpp/core/node-traits'
+import { isIncludeDirective } from '../../../languages/cpp/lang/node-traits'
 import { buildInclude } from '../include/lift'
 import { isFunctionDefinition } from '../../../core/component/traits'
 // 🔴 「骨架已經在樹裡了嗎」由**骨架宣告**回答（2026-08-28）

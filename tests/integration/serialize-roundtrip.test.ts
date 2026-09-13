@@ -4,7 +4,7 @@ import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 // 🔄 **spec 154 搬家**：這三個常數是 `cpp_*` 的插槽名，
-//    而它們原本住在 `core/block-input-names.ts`——核心不該認得語言的積木型別。
+//    而它們原本住在 `core/blocks/block-input-names.ts`——核心不該認得語言的積木型別。
 import { IF_INPUTS, WHILE_INPUTS, COUNT_LOOP_INPUTS } from '../../src/languages/cpp/block-input-names'
 
 /**

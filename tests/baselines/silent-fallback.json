@@ -13,8 +13,8 @@
     "entryCount": 26,
     "details": [
       {
-        "key": "src/languages/cpp/core/executors/param-default.ts#u109md",
-        "position": "src/languages/cpp/core/executors/param-default.ts:29",
+        "key": "src/languages/cpp/lang/executors/param-default.ts#u109md",
+        "position": "src/languages/cpp/lang/executors/param-default.ts:29",
         "condition": "t === 'nullptr' || t === 'NULL'",
         "returns": "if (t === 'nullptr' || t === 'NULL') return { type: 'pointer",
         "shape": "值判斷"

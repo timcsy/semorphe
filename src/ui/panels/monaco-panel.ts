@@ -1,12 +1,12 @@
 import { createPanelHead } from '../layout/cell-head'
 import * as monaco from 'monaco-editor'
 import { preserveBlankLines } from '../../core/projection/preserve-blank-lines'
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent, EditableSource } from '../../core/view-host'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent, EditableSource } from '../../core/sync/view-host'
 import type { CodeMapping } from '../../core/projection/code-generator'
 import { mappingFor, codeDiagnosticMessage } from '../../core/projection/diagnostic-projection'
 import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
 import { isResidualCause } from '../../core/diagnostics'
-import type { SemanticBus } from '../../core/semantic-bus'
+import type { SemanticBus } from '../../core/sync/semantic-bus'
 import type { SemanticNode } from '../../core/types'
 
 import type { ScaffoldResult, ScaffoldItem } from '../../core/program-scaffold'
@@ -308,7 +308,7 @@ export class MonacoPanel implements ViewHost, CodeView {
   }
 
   // ⚠️ 沒有 `connectBus` 了——`semantic:update` 由視圖登錄表統一派送
-  // （`core/view-registry.ts` 的 `connectViews`）。
+  // （`core/sync/view-registry.ts` 的 `connectViews`）。
 
   init(readOnly = true): void {
     this.editor = monaco.editor.create(this.container, {

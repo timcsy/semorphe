@@ -5,7 +5,7 @@
  * 而跳過會讓直譯器在**下一行**撞上「不是一個物件」——症狀出現在別人身上。
  *
  * ⚠️ 而值本身是一個**空殼**：狀態記在
- * `languages/cpp/core/runtime/arduino-devices.ts`，以變數名為鍵。
+ * `languages/cpp/lang/runtime/arduino-devices.ts`，以變數名為鍵。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 

@@ -18,7 +18,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { FlowPanel } from '../../../src/ui/panels/flow-panel'
-import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../../src/core/blocks/block-spec-registry'
 import { allCppComponents, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 import { setMessageSource, resetMessageSource } from '../../../src/core/messages'
 import zhTW from '../../../src/i18n/zh-TW/blocks.json'

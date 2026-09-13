@@ -6,7 +6,7 @@
  * directly into registries, then wires into the four generic engines.
  */
 import type { LiftPattern, UniversalTemplate, ComponentDefJSON, BlockProjectionJSON } from '../../core/types'
-import { BlockSpecRegistry } from '../../core/block-spec-registry'
+import { BlockSpecRegistry } from '../../core/blocks/block-spec-registry'
 import { ComponentRegistry } from '../../core/component-registry'
 import { PatternLifter } from '../../core/lift/pattern-lifter'
 import { TemplateGenerator } from '../../core/projection/template-generator'
@@ -15,9 +15,9 @@ import { PatternExtractor } from '../../core/projection/pattern-extractor'
 
 // Semantic layer: component definitions
 import { universalComponents } from '../../core/universal'
-import { declareNonComponent } from '../../core/non-components'
+import { declareNonComponent } from '../../core/blocks/non-components'
 import { allCppProjections } from './all-declarations'
-import { coreComponents } from './core'
+import { coreComponents } from './lang'
 import { allStdModules } from './std'
 import { componentComponents } from '../../core/component/registry'
 
@@ -44,7 +44,7 @@ export interface CppModuleEngines {
  * C++ 套件裡**不是元件**的樹節點。
  *
  * 它們沒有概念定義是**刻意的**，而在此之前那與「忘了寫定義」分不出來——
- * 兩者都只是「不在登錄表裡」。見 `src/core/non-components.ts` 的檔頭。
+ * 兩者都只是「不在登錄表裡」。見 `src/core/blocks/non-components.ts` 的檔頭。
  */
 declareNonComponent(
   'param_decl',

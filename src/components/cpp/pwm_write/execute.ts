@@ -7,8 +7,8 @@
  * 🟢 值本身走**既有的**腳位狀態，與 `analogWrite` 同一條路——不另寫一套。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
-import { resolveTarget } from '../../../languages/cpp/core/runtime/arduino-pwm'
+import { stateOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
+import { resolveTarget } from '../../../languages/cpp/lang/runtime/arduino-pwm'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pwm_write', async (node, ctx) => {

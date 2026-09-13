@@ -1,7 +1,7 @@
 /** `cpp:container_pop` 的 **execute** 路——從共用檔原封剪過來（批次第三十五批）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { heapTopIndex } from '../../../languages/cpp/core/runtime/heap'
+import { heapTopIndex } from '../../../languages/cpp/lang/runtime/heap'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_pop', async (node, ctx) => {

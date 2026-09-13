@@ -1,7 +1,7 @@
 /** `cpp:pwm_attach` 的 **execute** 路——新版一步到位：設定 ＋ 繫腳位。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin } from '../../../languages/cpp/core/runtime/arduino-pins'
-import { setupChannel, tiePin } from '../../../languages/cpp/core/runtime/arduino-pwm'
+import { boardIn, requirePin } from '../../../languages/cpp/lang/runtime/arduino-pins'
+import { setupChannel, tiePin } from '../../../languages/cpp/lang/runtime/arduino-pwm'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pwm_attach', async (node, ctx) => {

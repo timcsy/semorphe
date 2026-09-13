@@ -31,7 +31,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { printReport } from '../helpers/guardrail'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import type { BlockProjectionJSON, BlockSpec } from '../../src/core/types'
 

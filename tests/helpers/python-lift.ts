@@ -7,7 +7,7 @@
  */
 import { Lifter } from '../../src/core/lift/lifter'
 import { PatternLifter } from '../../src/core/lift/pattern-lifter'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { TransformRegistry, registerCoreTransforms, LiftStrategyRegistry } from '../../src/core/registry'
 import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
 import { componentComponents, componentBlocks } from '../../src/core/component/registry'
@@ -19,7 +19,7 @@ import { componentGenerateRegistrars } from '../../src/core/component/paths'
 import { registerLanguage, generateCode } from '../../src/core/projection/code-generator'
 import pythonStyle from '../../src/languages/python/styles/python.json'
 import { setCommentLanguage } from '../../src/core/comment-syntax'
-import { setDegradationLanguage } from '../../src/core/degradation-blocks'
+import { setDegradationLanguage } from '../../src/core/blocks/degradation-blocks'
 import type { LiftPattern, SemanticNode, NodeGenerator, StylePreset } from '../../src/core/types'
 
 /**

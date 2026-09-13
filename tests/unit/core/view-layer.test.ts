@@ -23,8 +23,8 @@
  * - **不檢測桌機那一側**——它今天還是用容器 id（那是這一項的下一條驗收）。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { LAYER_ORDER, type UnderstandingLayer, type ViewHost } from '../../../src/core/view-host'
-import { registerView, resetViews, viewsByLayer } from '../../../src/core/view-registry'
+import { LAYER_ORDER, type UnderstandingLayer, type ViewHost } from '../../../src/core/sync/view-host'
+import { registerView, resetViews, viewsByLayer } from '../../../src/core/sync/view-registry'
 
 function fakeView(id: string, layer?: UnderstandingLayer): ViewHost {
   return {

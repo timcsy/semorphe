@@ -3,7 +3,7 @@
  *
  * ## 🔴 為什麼需要它
  *
- * 存檔裡有四種歸屬（`core/storage-version.ts` 的 `FIELD_OWNERSHIP`），
+ * 存檔裡有四種歸屬（`core/storage/storage-version.ts` 的 `FIELD_OWNERSHIP`），
  * 而其中一種叫 **side-car**：
  *
  * ```

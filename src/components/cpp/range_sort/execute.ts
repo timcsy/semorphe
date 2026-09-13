@@ -6,9 +6,9 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
-import { resolveRange } from '../../../languages/cpp/core/runtime/range'
-import { defaultLess, asyncSort } from '../../../languages/cpp/core/runtime/order'
-import { callWithValues } from '../../../languages/cpp/core/runtime/lambda'
+import { resolveRange } from '../../../languages/cpp/lang/runtime/range'
+import { defaultLess, asyncSort } from '../../../languages/cpp/lang/runtime/order'
+import { callWithValues } from '../../../languages/cpp/lang/runtime/lambda'
 
 export function registerGenerateUnused(): void {}
 

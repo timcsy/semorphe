@@ -19,7 +19,7 @@
  * 先斷言那段程式**真的執行完並產出可觀察的結果**。
  */
 import { describe, it, expect } from 'vitest'
-import { requirePin, boardOf } from '../../src/languages/cpp/core/runtime/arduino-pins'
+import { requirePin, boardOf } from '../../src/languages/cpp/lang/runtime/arduino-pins'
 import type { BoardPinModel } from '../../src/core/types'
 import unoTarget from '../../src/languages/cpp/targets/arduino-uno.json'
 import esp32Target from '../../src/languages/cpp/targets/esp32.json'

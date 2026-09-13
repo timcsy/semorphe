@@ -7,7 +7,7 @@
  * 所以兩條路各有一支測試（見 `arduino-clock.spec` 與本檔）。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { sleepMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
+import { sleepMillis } from '../../../languages/cpp/lang/runtime/arduino-clock'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:delay', async (node, ctx) => {

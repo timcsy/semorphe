@@ -4,8 +4,8 @@
  * ⚠️ 這裡不碰 zip：核心說「拆成哪幾個檔」，宿主說「怎麼變成一個下載」。
  */
 import { describe, it, expect } from 'vitest'
-import { toPortable, fromPortable, defaultWorkName, SIDECAR_DIR } from '../../../src/core/portable'
-import type { SavedState } from '../../../src/core/storage'
+import { toPortable, fromPortable, defaultWorkName, SIDECAR_DIR } from '../../../src/core/storage/portable'
+import type { SavedState } from '../../../src/core/storage/storage'
 
 const STATE = {
   version: 18,

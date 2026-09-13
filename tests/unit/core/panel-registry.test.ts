@@ -13,7 +13,7 @@ import {
 } from '../../../src/core/host/panel-registry'
 import type { PanelSpec } from '../../../src/core/host/panel-spec'
 import type { HostProfile } from '../../../src/core/host/host-profile'
-import type { UnderstandingLayer } from '../../../src/core/view-host'
+import type { UnderstandingLayer } from '../../../src/core/sync/view-host'
 
 const spec = (id: string, layer: UnderstandingLayer, extra: Partial<PanelSpec> = {}): PanelSpec => ({
   id, layer, nameKey: `LAYER_${layer.toUpperCase()}`,

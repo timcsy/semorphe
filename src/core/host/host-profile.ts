@@ -21,9 +21,9 @@
  * ⚠️ 由 `tests/integration/host-profile-no-branch.test.ts` 釘住。
  */
 import type { CodeView } from './code-view'
-import type { SavedState, LoadOutcome } from '../storage'
+import type { SavedState, LoadOutcome } from '../storage/storage'
 import type { ControlSurfaces } from './controls'
-import type { UnderstandingLayer } from '../view-host'
+import type { UnderstandingLayer } from '../sync/view-host'
 
 /**
  * 存檔服務這個角色。

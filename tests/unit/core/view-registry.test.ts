@@ -9,9 +9,9 @@
  * > 在一套沒有測到它的測試裡看起來一樣。**
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { registerView, registeredViews, viewsWith, viewsConsuming, connectViews, resetViews, isViewHost, registerViewsIn } from '../../../src/core/view-registry'
-import { SemanticBus } from '../../../src/core/semantic-bus'
-import type { ViewHost, ViewCapabilities } from '../../../src/core/view-host'
+import { registerView, registeredViews, viewsWith, viewsConsuming, connectViews, resetViews, isViewHost, registerViewsIn } from '../../../src/core/sync/view-registry'
+import { SemanticBus } from '../../../src/core/sync/semantic-bus'
+import type { ViewHost, ViewCapabilities } from '../../../src/core/sync/view-host'
 
 function fakeView(viewId: string, caps: Partial<ViewCapabilities> = {}): ViewHost & { received: string[] } {
   const received: string[] = []

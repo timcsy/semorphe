@@ -25,7 +25,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { printReport } from '../helpers/guardrail'
-import { fieldWriteFailures, resetFieldWriteFailures, setFieldSafely } from '../../src/core/field-write'
+import { fieldWriteFailures, resetFieldWriteFailures, setFieldSafely } from '../../src/core/blocks/field-write'
 import { listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import fs from 'node:fs'
 import path from 'node:path'

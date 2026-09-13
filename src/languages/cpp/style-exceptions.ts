@@ -8,15 +8,15 @@
 import type { SemanticNode, StylePreset } from '../../core/types'
 import type { CodingStyle } from '../style'
 import type { ModuleRegistry } from './std/module-registry'
-import { isStringLiteral } from './core/node-traits'
-import { isLineBreak } from './core/node-traits'
-import { ioTraitOf } from './core/node-traits'
+import { isStringLiteral } from './lang/node-traits'
+import { isLineBreak } from './lang/node-traits'
+import { ioTraitOf } from './lang/node-traits'
 import { buildPrintFormatted } from '../../components/cpp/print_formatted/lift'
 import { buildInputFormatted } from '../../components/cpp/input_formatted/lift'
 import { buildPrint } from '../../components/cpp/print/lift'
 import { buildInput } from '../../components/cpp/input/lift'
 import { buildInclude } from '../../components/cpp/include/lift'
-import { isIncludeDirective } from './core/node-traits'
+import { isIncludeDirective } from './lang/node-traits'
 
 /** A single style exception found in the semantic tree */
 // 🔴 **型別搬到核心了**（spec 153）——它的四個欄位一個語言專屬的東西都沒有，
@@ -240,7 +240,7 @@ const IO_MODULE_HEADERS = new Set(['<iostream>', '<cstdio>'])
 /**
  * **給視圖層用的門面**——收核心的 `StylePreset`，自己翻成 C++ 的 `CodingStyle`。
  *
- * 🔴 在此之前這個轉換住在 `core/sync-controller.ts` 裡，於是**即時互轉的引擎
+ * 🔴 在此之前這個轉換住在 `core/sync/sync-controller.ts` 裡，於是**即時互轉的引擎
  * 認識 `'iostream'`／`'cstdio'`／`'bits'` 這些 C++ 專屬的字**（2026-08-24 第六十條護欄量到）。
  *
  * > **一個轉換函式住在哪一層，那一層就認識兩邊的詞彙。**

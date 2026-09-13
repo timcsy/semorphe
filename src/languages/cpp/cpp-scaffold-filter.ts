@@ -1,6 +1,6 @@
 import type { SemanticNode } from '../../core/types'
 // ⚠️ 問**性狀**不問身分——一條 if 一顆元件的話，那幾顆永遠搬不進膠囊。
-import { isScaffold, isScaffoldInMain } from './core/node-traits'
+import { isScaffold, isScaffoldInMain } from './lang/node-traits'
 // 🔴 「樹裡哪一塊是骨架」由**骨架宣告**回答（2026-08-28）——見 `EntryFunction`
 import { skeletonById, canHideScaffold } from '../../core/skeleton'
 // ⚠️ 少了它，沒載語言套件的路徑上 `skeletonById` 找不到東西（與 `cpp-scaffold.ts` 同一條）

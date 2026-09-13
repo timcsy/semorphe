@@ -30,7 +30,7 @@
  *
  * 見 `specs/155-import-dimension/`
  */
-import type { SemanticNode } from './types'
+import type { SemanticNode } from '../types'
 
 type BlockBuilder = (body: SemanticNode[]) => SemanticNode
 

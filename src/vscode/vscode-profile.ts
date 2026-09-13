@@ -18,8 +18,8 @@
  */
 import { VscodeCodeView } from './webview/vscode-code-view'
 import type { HostProfile, StorageLike } from '../core/host/host-profile'
-import type { UnderstandingLayer } from '../core/view-host'
-import type { SavedState, LoadOutcome } from '../core/storage'
+import type { UnderstandingLayer } from '../core/sync/view-host'
+import type { SavedState, LoadOutcome } from '../core/storage/storage'
 
 /**
  * 不記文件內容的存檔服務。

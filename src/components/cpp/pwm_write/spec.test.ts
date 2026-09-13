@@ -17,7 +17,7 @@ import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { SemanticInterpreter } from '../../../interpreter/interpreter'
 import { generateCode } from '../../../core/projection/code-generator'
-import { pinsOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { pinsOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 

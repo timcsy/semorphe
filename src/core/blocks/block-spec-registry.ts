@@ -1,6 +1,6 @@
-import type { BlockSpec, AstConstraint, ComponentDefJSON, BlockProjectionJSON, Topic } from './types'
+import type { BlockSpec, AstConstraint, ComponentDefJSON, BlockProjectionJSON, Topic } from '../types'
 import { applyBlockOverride } from './block-override'
-import { paramNames } from './param-spec'
+import { paramNames } from '../param-spec'
 
 export class BlockSpecRegistry {
   private specs = new Map<string, BlockSpec>()

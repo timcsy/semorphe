@@ -206,7 +206,7 @@ describe('spec 159 · 整個 concept 家族退場', () => {
   })
 
   it('★ 存檔格式不受本輪影響——SavedState 沒有任何 concept 欄位', () => {
-    const sv = fs.readFileSync(path.join(REPO_ROOT, 'src/core/storage-version.ts'), 'utf8')
+    const sv = fs.readFileSync(path.join(REPO_ROOT, 'src/core/storage/storage-version.ts'), 'utf8')
     // ⚠️ **邊界要收在那個常數自己身上**——原本切到 `REQUIRED_FIELDS`，
     //    於是 2026-08-24 在兩者之間加一段**註解**（裡面提到 `concepts/…`）就誤報了。
     //    **一個用「下一個常數的名字」當結尾的切片，切的是位置不是那個東西。**

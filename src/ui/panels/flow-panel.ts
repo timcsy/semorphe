@@ -37,10 +37,10 @@
  */
 import { isRenamingADefinition, renameReferences, scopeOf } from '../../core/rename-variable'
 import { createPanelHead } from '../layout/cell-head'
-import type { ViewHost, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, EditableSource } from '../../core/view-host'
+import type { ViewHost, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, EditableSource } from '../../core/sync/view-host'
 import type { SemanticNode } from '../../core/types'
 import type { CodeMapping } from '../../core/projection/code-generator'
-import type { BlockSpecRegistry } from '../../core/block-spec-registry'
+import type { BlockSpecRegistry } from '../../core/blocks/block-spec-registry'
 import { buildNodeGraph, type NodeGraph, type GraphNode, type GraphPort } from '../../core/flow/node-graph'
 import { labelSourceFromSpecs, collapseBlockMessage, flowTitle, type FlowLabelSource } from '../../core/flow/vocabulary'
 import { paletteFromToolbox, type PaletteItem } from '../../core/flow/palette'

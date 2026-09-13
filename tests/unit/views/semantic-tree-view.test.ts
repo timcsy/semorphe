@@ -9,7 +9,7 @@ import type { SemanticNode } from '../../../src/core/types'
  * > 「Dummy read-only view … **Used to verify** that the component/blockDef split
  * > enables views independent of the Blockly projection layer」
  *
- * 它成功了：`ViewHost` 契約與視圖登錄表（`src/core/view-registry.ts`）
+ * 它成功了：`ViewHost` 契約與視圖登錄表（`src/core/sync/view-registry.ts`）
  * 現在持續證明著同一件事。而一個**完成任務的假實作**繼續佔一個頂層目錄，
  * 會讓讀者以為 `src/views/` 是一個產品層。
  *
@@ -126,7 +126,7 @@ describe('SemanticTreeView', () => {
    * 若契約本身認識 Blockly，「視圖可抽換」這句話就是假的——
    * 而硬體的 2D／3D 面板正是那個抽換。
    */
-  const contractFiles = ['view-host.ts', 'view-registry.ts']
+  const contractFiles = ['sync/view-host.ts', 'sync/view-registry.ts']
 
   it('★ 視圖契約不得 import blockly（靜態掃描）', () => {
     for (const f of contractFiles) {

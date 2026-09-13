@@ -11,7 +11,7 @@
  * 那是**視圖層**的缺口（板子視圖，階段 6.11 第 4 項，已推遲），不是這一層該補的。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin, stateOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:tone', async (node, ctx) => {

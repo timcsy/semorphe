@@ -1,5 +1,5 @@
 import type { Topic, LevelNode } from '../../core/types'
-import { resolveEnabledBranches } from '../../core/level-tree'
+import { resolveEnabledBranches } from '../../core/lesson/level-tree'
 
 /**
  * Level tree selector: renders a tree of checkboxes for enabling/disabling branches.

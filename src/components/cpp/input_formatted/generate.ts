@@ -2,7 +2,7 @@
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
 // ⚠️ 問**性狀**不問身分——一顆膠囊裡寫另一顆的身分，反向檢查會指名。
-import { isAddressable } from '../../../languages/cpp/core/node-traits'
+import { isAddressable } from '../../../languages/cpp/lang/node-traits'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   // cpp_input_formatted with structured args + auto & for simple vars (0 or more)

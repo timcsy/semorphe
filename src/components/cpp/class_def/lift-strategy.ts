@@ -3,7 +3,7 @@
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
-import { liftClassMember } from '../../../languages/cpp/core/lifters/strategies'
+import { liftClassMember } from '../../../languages/cpp/lang/lifters/strategies'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   // class_specifier: class Name : public Base { public: ... private: ... protected: ... };

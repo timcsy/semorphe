@@ -87,7 +87,7 @@ test('🔧 量測：把每一段課文程式碼用到的元件與輸出量出來
 
     await sync(spec.code)
     const all = (await walk()).filter((x) => !x.endsWith(':program'))
-    // 🔴 結構節點不是元件（`core/non-components.ts`）——真元件的身分都帶冒號
+    // 🔴 結構節點不是元件（`core/blocks/non-components.ts`）——真元件的身分都帶冒號
     const ids = all.filter((x) => x.includes(':'))
     const structural = all.filter((x) => !x.includes(':'))
     const after = ids.sort().join(',')

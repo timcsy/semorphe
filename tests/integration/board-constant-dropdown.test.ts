@@ -6,7 +6,7 @@
  * ——而這個專案已經撞過四次「機制有了沒人接上」。
  */
 import { describe, it, expect } from 'vitest'
-import { boardConstantOptions, allBoardConstantDropdowns } from '../../src/core/board-constant-dropdown-blocks'
+import { boardConstantOptions, allBoardConstantDropdowns } from '../../src/core/blocks/board-constant-dropdown-blocks'
 import type { BoardPinModel } from '../../src/core/types'
 import { registerCppLanguage } from '../../src/languages/cpp/generators/index'
 

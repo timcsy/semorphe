@@ -141,7 +141,7 @@ export class SemanticInterpreter implements ExecutionContext {
     // swap
 
     // ⚠️ 「執行不了」的那兩類概念已搬進語言套件
-    // （`languages/cpp/core/executors/unimplemented.ts`）——看不懂的兜底容器
+    // （`languages/cpp/lang/executors/unimplemented.ts`）——看不懂的兜底容器
     // （執行到就出聲，不靜靜略過）與未實作的物件導向（十個空操作）。
     //
     // **那是「搬」不是「宣告」。** 那十個仍然是殼，完備性護欄照樣數它們；

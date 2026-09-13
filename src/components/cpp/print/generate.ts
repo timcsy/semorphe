@@ -4,8 +4,8 @@ import type { StylePreset } from '../../../core/types'
 // ⚠️ 共用的是**演算法**（`<<` 的排版），不是身分。
 import { needsParensInCout } from '../../../languages/cpp/std/iostream/generators'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
-import { isStringLiteral } from '../../../languages/cpp/core/node-traits'
-import { isLineBreak } from '../../../languages/cpp/core/node-traits'
+import { isStringLiteral } from '../../../languages/cpp/lang/node-traits'
+import { isLineBreak } from '../../../languages/cpp/lang/node-traits'
 
 export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePreset): void {
   g.set('cpp:print', (node, ctx) => {

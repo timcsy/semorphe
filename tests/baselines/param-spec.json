@@ -11,7 +11,7 @@
       "componentId": "cpp:class_def",
       "param": "base",
       "direction": "讀了沒宣告",
-      "where": "src/languages/cpp/core/executors/structs.ts:192"
+      "where": "src/languages/cpp/lang/executors/structs.ts:192"
     },
     {
       "componentId": "cpp:input",
@@ -35,7 +35,7 @@
       "componentId": "cpp:negate",
       "param": "operator",
       "direction": "讀了沒宣告",
-      "where": "src/languages/cpp/core/generators/expressions.ts:100"
+      "where": "src/languages/cpp/lang/generators/expressions.ts:100"
     }
   ],
   "fallbackContradicts": [
@@ -43,19 +43,19 @@
       "componentId": "cpp:define",
       "param": "name",
       "direction": "退路自相矛盾",
-      "where": "src/languages/cpp/core/executors/preprocessor.ts:30→\"\"  src/languages/cpp/core/generators/statements.ts:250→\"MACRO\""
+      "where": "src/languages/cpp/lang/executors/preprocessor.ts:30→\"\"  src/languages/cpp/lang/generators/statements.ts:250→\"MACRO\""
     },
     {
       "componentId": "cpp:ifdef",
       "param": "condition",
       "direction": "退路自相矛盾",
-      "where": "src/languages/cpp/core/executors/preprocessor.ts:35→\"\"  src/languages/cpp/core/generators/statements.ts:263→\"MACRO\""
+      "where": "src/languages/cpp/lang/executors/preprocessor.ts:35→\"\"  src/languages/cpp/lang/generators/statements.ts:263→\"MACRO\""
     },
     {
       "componentId": "cpp:ifndef",
       "param": "condition",
       "direction": "退路自相矛盾",
-      "where": "src/languages/cpp/core/executors/preprocessor.ts:40→\"\"  src/languages/cpp/core/generators/statements.ts:268→\"MACRO\""
+      "where": "src/languages/cpp/lang/executors/preprocessor.ts:40→\"\"  src/languages/cpp/lang/generators/statements.ts:268→\"MACRO\""
     }
   ],
   "_meta": {

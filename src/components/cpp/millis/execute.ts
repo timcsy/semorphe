@@ -5,7 +5,7 @@
  * 兩顆各記一份的話，「`delay` 推進了時間而 `millis` 讀得到」**就不成立**。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { nowMillis } from '../../../languages/cpp/core/runtime/arduino-clock'
+import { nowMillis } from '../../../languages/cpp/lang/runtime/arduino-clock'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:millis', async () => ({ type: 'int', value: nowMillis() }))

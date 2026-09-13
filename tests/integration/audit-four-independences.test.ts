@@ -353,7 +353,7 @@ describe('第三十九條護欄：P9 四項獨立性', () => {
   it('★ 注入②：語言中立的 import 不得被報', () => {
     // 這一條不可省。沒有它，一個「什麼都報」的掃描器也能通過注入①。
     expect(isLanguageSpecificImport("import type { A } from '../languages/style'")).toBe(false)
-    expect(isLanguageSpecificImport("import { B } from '../../core/semantic-bus'")).toBe(false)
+    expect(isLanguageSpecificImport("import { B } from '../../core/sync/semantic-bus'")).toBe(false)
     expect(isLanguageSpecificImport("import * as Blockly from 'blockly'")).toBe(false)
     expect(isLanguageSpecificImport('一行沒有 import 的字')).toBe(false)
   })
@@ -361,7 +361,7 @@ describe('第三十九條護欄：P9 四項獨立性', () => {
   it('★ 注入③：視圖間 import 會被報，非視圖的不會', () => {
     expect(isCrossViewImport("import { Foo } from './foo-panel'")).toBe(true)
     expect(isCrossViewImport("import { Bar } from '../panels/bar-panel.ts'")).toBe(true)
-    expect(isCrossViewImport("import { Baz } from '../../core/view-host'")).toBe(false)
+    expect(isCrossViewImport("import { Baz } from '../../core/sync/view-host'")).toBe(false)
     expect(isCrossViewImport("import { Qux } from './panel-helpers/util'")).toBe(false)
   })
 

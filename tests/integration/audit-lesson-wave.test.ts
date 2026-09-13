@@ -24,7 +24,7 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { waveOf, LESSON_VIEWS, type LessonView } from '../../src/core/semantic-wave'
+import { waveOf, LESSON_VIEWS, type LessonView } from '../../src/core/lesson/semantic-wave'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -69,7 +69,7 @@ describe('第一百零四條護欄：課的語意波', () => {
       flat,
       '🔴 這幾課的語意曲線不是一條波。平的曲線（一直抽象或一直具體）教學效果差，\n' +
         '   而「下沉了沒收回來」是把學生拆開之後丟在那裡。\n' +
-        '   判準與出處：`core/semantic-wave.ts` · `concepts/認知鷹架.md`',
+        '   判準與出處：`core/lesson/semantic-wave.ts` · `concepts/認知鷹架.md`',
     ).toEqual([])
   })
 

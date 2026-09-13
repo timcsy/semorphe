@@ -1,5 +1,5 @@
 import { languagePack } from '../language-packs'
-import { setDegradationLanguage } from '../degradation-blocks'
+import { setDegradationLanguage } from '../blocks/degradation-blocks'
 import { commentSyntax, setCommentLanguage } from '../comment-syntax'
 import { expressionStatementOf } from '../expression-statement'
 import { roleOf } from '../component/traits'

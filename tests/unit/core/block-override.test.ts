@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { applyBlockOverride, mergeArgs } from '../../../src/core/block-override'
+import { applyBlockOverride, mergeArgs } from '../../../src/core/blocks/block-override'
 import type { BlockSpec, BlockOverride } from '../../../src/core/types'
 
 function makeBlockSpec(overrides: Partial<BlockSpec> = {}): BlockSpec {

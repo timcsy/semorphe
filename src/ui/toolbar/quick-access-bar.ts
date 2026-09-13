@@ -27,7 +27,7 @@ export class QuickAccessBar {
    *
    * 而三態（同步中／已暫停／分岔了）顯示在**狀態列**：它是全域的、永遠看得見，
    * 而「暫停中必須看得見」是這一刀的驗收之一。
-   * 機制見 `core/sync-coordinator.ts`。
+   * 機制見 `core/sync/sync-coordinator.ts`。
    */
   constructor(parent: HTMLElement, options: QuickAccessBarOptions) {
     // 🔴 框架走同一支產生器（spec 170 · T012）。

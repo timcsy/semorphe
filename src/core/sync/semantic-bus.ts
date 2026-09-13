@@ -1,8 +1,8 @@
-import type { SemanticNode } from './types'
-import type { BlockMapping } from './projection/code-generator'
-import type { ExecutionStatus, StepInfo } from '../interpreter/types'
+import type { SemanticNode } from '../types'
+import type { BlockMapping } from '../projection/code-generator'
+import type { ExecutionStatus, StepInfo } from '../execution'
 import type { ExecutionReason, ExecutionAtNodeEvent, SemanticUpdateEvent } from './view-host'
-import type { Diagnostic } from './diagnostics'
+import type { Diagnostic } from '../diagnostics'
 
 // ─── Event Type Maps ───
 

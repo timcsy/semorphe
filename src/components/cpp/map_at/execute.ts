@@ -2,7 +2,7 @@
 import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/executor-registry'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { defaultValue } from '../../../interpreter/types'
-import { mapFind, makePair, pairParts, mapInsertSorted } from '../../../languages/cpp/core/runtime/map'
+import { mapFind, makePair, pairParts, mapInsertSorted } from '../../../languages/cpp/lang/runtime/map'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import type { RuntimeValue } from '../../../interpreter/types'
 

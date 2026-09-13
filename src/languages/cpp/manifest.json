@@ -8,10 +8,10 @@
   },
   "provides": {
     "components": [
-      "./core/components.json"
+      "./lang/components.json"
     ],
     "blocks": [
-      "./core/blocks.json"
+      "./lang/blocks.json"
     ],
     "templates": [
       "./templates/universal-templates.json"

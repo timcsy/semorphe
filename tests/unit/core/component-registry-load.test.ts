@@ -4,7 +4,7 @@ import * as path from 'path'
 import { ComponentRegistry } from '../../../src/core/component-registry'
 import type { ComponentDefJSON } from '../../../src/core/types'
 import { universalComponents } from '../../../src/core/universal'
-import { coreComponents } from '../../../src/languages/cpp/core'
+import { coreComponents } from '../../../src/languages/cpp/lang'
 import { allStdModules } from '../../../src/languages/cpp/std'
 // ⚠️ **不要自己列宣告來源。**
 // 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { StepController } from '../../src/core/step-controller'
+import { StepController } from '../../src/core/sync/step-controller'
 
 describe('StepController', () => {
   it('should start in idle state', () => {

@@ -1,4 +1,4 @@
-import { degradationBlocks } from '../degradation-blocks'
+import { degradationBlocks } from '../blocks/degradation-blocks'
 import type { SemanticNode } from '../types'
 import type { BlockMapping } from './code-generator'
 import { PatternRenderer } from './pattern-renderer'

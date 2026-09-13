@@ -18,7 +18,7 @@
  * 兩顆長得幾乎一樣，一顆會掉一顆不會——這就是為什麼推導必須只有一份。
  */
 import { describe, it, expect } from 'vitest'
-import { BlockSpecRegistry } from '../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'

@@ -1,9 +1,9 @@
 /** `cpp:constructor` 的 **generate** 路——從共用檔原封剪過來（批次第二十六批：OOP 方法族）。 */
 import type { StylePreset } from '../../../core/types'
-import { openBraceFor } from '../../../languages/cpp/core/generators/statements'
+import { openBraceFor } from '../../../languages/cpp/lang/generators/statements'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, indented, generateBody, trackOwnText, generateExpression } from '../../../core/projection/code-generator'
-import { formatParams } from '../../../languages/cpp/core/generators/statements'
+import { formatParams } from '../../../languages/cpp/lang/generators/statements'
 
 export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePreset): void {
   const openBrace = openBraceFor(style)

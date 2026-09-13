@@ -27,7 +27,7 @@
  * 虛擬硬體接上來時，這裡改成從腳位狀態讀真的脈衝長度（`PinState` 再加一格）。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { boardIn, requirePin } from '../../../languages/cpp/core/runtime/arduino-pins'
+import { boardIn, requirePin } from '../../../languages/cpp/lang/runtime/arduino-pins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pulse_read', async (node, ctx) => {

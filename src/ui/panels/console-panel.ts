@@ -1,8 +1,8 @@
 import { msg } from '../../core/messages'
-import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/view-host'
-import type { SemanticBus } from '../../core/semantic-bus'
+import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/sync/view-host'
+import type { SemanticBus } from '../../core/sync/semantic-bus'
 import { revealForOutput, type ConsoleSurface } from '../../core/host/console-surface'
-import type { OutputComparison } from '../../core/lesson'
+import type { OutputComparison } from '../../core/lesson/lesson'
 
 export type ConsoleSignal = 'SIGINT' | 'EOF'
 

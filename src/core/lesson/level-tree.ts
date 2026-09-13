@@ -1,4 +1,4 @@
-import type { LevelNode, Topic } from './types'
+import type { LevelNode, Topic } from '../types'
 
 export interface DoublingWarning {
   nodeId: string

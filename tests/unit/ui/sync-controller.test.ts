@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
-import { SyncController } from '../../../src/core/sync-controller'
+import { SyncController } from '../../../src/core/sync/sync-controller'
 import { cppStripScaffoldNodes as stripScaffoldNodes } from '../../../src/languages/cpp/cpp-scaffold-filter'
-import type { CodeParser, SyncError } from '../../../src/core/sync-controller'
+import type { CodeParser, SyncError } from '../../../src/core/sync/sync-controller'
 import type { StylePreset } from '../../../src/core/types'
 import type { CodeMapping, BlockMapping } from '../../../src/core/projection/code-generator'
 import { createNode } from '../../../src/core/semantic-tree'
-import { SemanticBus } from '../../../src/core/semantic-bus'
+import { SemanticBus } from '../../../src/core/sync/semantic-bus'
 // 🔴 **spec 153：風格分析改成由組裝點推進來**，所以測試也要裝
 //    ——⚠️ 這三支測的是**同步控制器怎麼用分析器**（真行為），
 //    不是被刪掉的功能，所以它們**留著並裝上分析器**，而不是退場。

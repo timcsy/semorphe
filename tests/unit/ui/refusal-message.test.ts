@@ -6,7 +6,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { describeRefusal } from '../../../src/core/refusal-message'
-import type { LoadOutcome } from '../../../src/core/storage'
+import type { LoadOutcome } from '../../../src/core/storage/storage'
 
 type Refused = Extract<LoadOutcome, { kind: 'refused' }>
 

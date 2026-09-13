@@ -1,5 +1,5 @@
 import * as Blockly from 'blockly'
-import { LAYER_ORDER } from '../core/view-host'
+import { LAYER_ORDER } from '../core/sync/view-host'
 import { msg } from '../core/messages'
 import { showQuickPick } from './toolbar/quick-pick'
 import { installGridDividers } from './layout/grid-dividers'
@@ -7,6 +7,7 @@ import { identityAssignment, swapTo, effectiveAreas, type SlotAssignment } from 
 import type { BottomPage, BottomVisibility } from '../core/host/console-surface'
 import { createPanelHead } from './layout/cell-head'
 import { BottomPanel } from './layout/bottom-panel'
+import { panelById } from '../core/host/panel-registry'
 import { LayoutManager } from './layout/layout-manager'
 import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
 import { ConsolePanel } from './panels/console-panel'
@@ -17,18 +18,18 @@ import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
 import { CONTROLS, RUN_MODES, surfaceOf, panelControls, type ControlId } from '../core/host/controls'
 import { LAYOUT_PRESETS, layoutPreset, hostLayoutOptions, type LayoutPresetId, type HostLayoutOption } from '../core/host/layout-presets'
-import type { UnderstandingLayer } from '../core/view-host'
+import type { UnderstandingLayer } from '../core/sync/view-host'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
 import { CodeKeyboard } from './panels/code-keyboard'
 import type { StorageLike } from '../core/host/host-profile'
-import type { SavedState } from '../core/storage'
-import type { BlockSpecRegistry } from '../core/block-spec-registry'
+import type { SavedState } from '../core/storage/storage'
+import type { BlockSpecRegistry } from '../core/blocks/block-spec-registry'
 import type { StylePreset, Target, Topic } from '../core/types'
 import type { BlockStylePreset } from '../languages/style'
 import { showToast } from './toolbar/toast'
 import { LessonNudgeBar } from './lesson-nudge-bar'
 import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate'
-import { toPortable, fromPortable, defaultWorkName } from '../core/portable'
+import { toPortable, fromPortable, defaultWorkName } from '../core/storage/portable'
 import { fileExtensionOf } from '../core/language-packs'
 
 export interface AppShellElements {
@@ -85,7 +86,7 @@ export interface AppShellCallbacks {
   onStyleChange: (style: StylePreset) => void
   onBlockStyleChange: (preset: BlockStylePreset, toolbox: object) => void
   onLocaleChange: (locale: string) => void
-  /** 🔴 一個入口，而不是每個方向一顆——見 `core/sync-coordinator.ts` */
+  /** 🔴 一個入口，而不是每個方向一顆——見 `core/sync/sync-coordinator.ts` */
   onOpenSyncMenu: () => void
   /** 🪦 `onUndo`／`onRedo`／`onClear` 已於 2026-08-25 刪除——它們變成登錄表的一列，
    *  由 `setupToolbarButtons` 一次接完（見那裡的檔頭）。 */
@@ -721,6 +722,26 @@ export function createAppLayout(
    */
   let consoleTabAdded = false
   let onBottomPanelCreated: ((panel: BottomPanel) => void) | null = null
+  /**
+   * 🔴 **「狀態」那一層有哪些分頁、叫什麼、什麼順序——問登錄表。**
+   *
+   * 在 2026-09-13 之前這裡是兩處寫死的 `addTab({ id: 'console', label: Blockly.Msg[...] })`
+   * ——而那三樣東西（身分、名字、順序）正是 `src/panels/⟨星號⟩/panel.ts` 宣告的
+   * （⚠️ 星號寫成字，不然它會把這段註解提前關掉——`core/lesson/lesson.ts` 記過同一個坑）。
+   *
+   * > **一份宣告如果沒有人讀它，它與一份註解沒有差別。**
+   *
+   * ⚠️ **這裡仍然只讀「是什麼」，不讀「怎麼畫」**——`mount` 那一半還在組裝點
+   * （見 `PanelSpec.mountedByShell`）。兩者分開搬，才分得出壞的是哪一半。
+   */
+  const STATE_BODIES: Record<string, Omit<Parameters<BottomPanel['addTab']>[0], 'id' | 'label'>> = {}
+  const addStateTab = (id: string): void => {
+    const spec = panelById(id)
+    const body = STATE_BODIES[id]
+    if (!spec || !body) return
+    bottomPanel?.addTab({ id, label: Blockly.Msg[spec.nameKey] || id, ...body })
+  }
+
   const enableConsoleTab = (): void => {
     if (consoleTabAdded) return
     consoleTabAdded = true
@@ -735,15 +756,14 @@ export function createAppLayout(
       //    `showTab('console')` 會打在一個 `null` 上，而輸出看起來像沒有跑。
       onBottomPanelCreated?.(bottomPanel)
     }
-    bottomPanel?.addTab({
-      id: 'console',
-      label: Blockly.Msg['PANEL_CONSOLE'] || 'Console',
+    STATE_BODIES['console'] = {
       panel: consoleEl,
       actions: [
         { icon: '📋', title: '複製輸出', onClick: () => consolePanel.copyOutput() },
         { icon: Blockly.Msg['PANEL_CLEAR'] || '清除', title: 'Clear', onClick: () => consolePanel.clear() },
       ],
-    })
+    }
+    addStateTab('console')
   }
   if (surfaceOf(CONTROLS.find((c) => c.id === 'console')!, surfaces) === 'panelBottom') {
     enableConsoleTab()
@@ -755,7 +775,8 @@ export function createAppLayout(
   const variableEl = document.createElement('div')
   const variablePanel = new VariablePanel(variableEl)
   if (surfaceOf(CONTROLS.find((c) => c.id === 'variables')!, surfaces) === 'panelBottom') {
-    bottomPanel?.addTab({ id: 'variables', label: Blockly.Msg['PANEL_VARIABLES'] || 'Variables', panel: variableEl })
+    STATE_BODIES['variables'] = { panel: variableEl }
+    addStateTab('variables')
   }
 
   // 🔴 **第三個投影**。它出現在這裡只是因為要有一格 DOM——

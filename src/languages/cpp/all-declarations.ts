@@ -16,7 +16,7 @@
  */
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../core/types'
 import { universalComponents, universalBlocks } from '../../core/universal'
-import { coreComponents, coreBlocks } from './core'
+import { coreComponents, coreBlocks } from './lang'
 import { allStdModules } from './std'
 // 元件膠囊——一顆一個資料夾，`import.meta.glob` 掃出來。
 // 加一顆元件不必編輯這個檔（那正是元件化要買的東西）。

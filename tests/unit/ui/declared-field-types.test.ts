@@ -33,7 +33,7 @@
 import { describe, it, expect } from 'vitest'
 import * as Blockly from 'blockly'
 import '../../../src/ui/block-registrar'
-import { BlockSpecRegistry } from '../../../src/core/block-spec-registry'
+import { BlockSpecRegistry } from '../../../src/core/blocks/block-spec-registry'
 import { allCppProjections } from '../../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../../helpers/component-scan'
 
