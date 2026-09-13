@@ -26,7 +26,8 @@
  * **被拒絕的東西去哪了**。」——這裡的答案是「哪裡都沒去，而原因是這個」。
  */
 import type { SemanticNode } from '../types'
-import { slotsOf, roleOf } from '../component/traits'
+import { slotsOf, usableAsStatement } from '../component/traits'
+import { fitsSlot } from '../component/slot-check'
 
 /** 拒絕的理由——**封閉詞彙**。加值的門檻見 `concepts/執行機構.md:279`。 */
 export type RefusalReason =
@@ -130,9 +131,21 @@ export function tryConnect(
   if (!decl) return { ok: false, reason: 'no-such-slot' }
 
   // 那一格要的是語句還是值——**由宣告決定，視圖不判斷**。
-  // ⚠️ 判準與 `node-graph.ts` 的接點分類同一條（`roleOf(...) !== 'expression'`）：
-  //    兩處各寫一份會分岔，而分岔的症狀是「圖上接得起來，而樹裡接不上」。
-  const sourceIsStatement = roleOf(source.componentId) !== 'expression'
+  //
+  // 🔴 **這裡曾經問 `roleOf`，而那是問錯了欄位**（2026-09-14 量到）。
+  //    `role` 是**產生器契約**（「我自己收尾嗎」），不是文法。C++ 裡
+  //    `i++`／`a = b`／`cin >> x`／`cout << x` 的 `role` 全是 `statement`
+  //    ——因為它們的產生器自己印分號——而它們**在文法上都是運算式**。
+  //
+  //    症狀：實測 7 個真實世界合法的接法，**7 個全被拒絕**，其中包括
+  //    `for (int i = 0; i < n; i++)` 的 init 與 update 兩格
+  //    ——**C++ 最常見的那一行，在流程面板上組不出來。**
+  //
+  // > **一個欄位如果同時回答兩個問題，它會在兩個問題的答案分岔的那一天
+  // > 安靜地答錯其中一個。**
+  //
+  // ⚠️ `node-graph.ts` 那一處**照舊問 `roleOf`**，而那是對的：
+  //    它問的是「這顆會不會被執行到」（要不要畫執行接點），那正是 `role` 答得出的。
 
   // 🔴 **只有「種類槽」才用種類判**（2026-08-26，e2e 抓到）。
   //
@@ -143,11 +156,18 @@ export function tryConnect(
   // > **「這一格裝語句還是值」與「這一格要哪一種身分」是兩個問題，
   // > 而把它們用同一個布林回答，會讓具名的槽永遠接不上。**
   //
-  // → 宣告是具名身分時，**種類那一關不判**（下面那一關會判身分）。
-  const isKindSlot = decl.allowed.every(
-    (a) => a === 'expression' || a === 'statement' || a === 'statements',
-  )
-  if (isKindSlot && decl.isBody !== sourceIsStatement) {
+  // → 種類與具名是**聯集**：`["expression", "cpp:var_declare"]` 讀成
+  //   「一個運算式**或**一顆宣告」，兩邊中一邊就放行。
+  //
+  // 🔴 **第一版是「有具名就不判種類」，而那讓混合宣告永遠接不上**
+  //    （2026-09-14）：`for` 的 init 要寫成「運算式或宣告」，
+  //    而舊的判法會因為具名那一關失敗就整個拒絕。
+  //
+  // > **一個聯集型別如果用「先看有沒有 A，有就不看 B」來判，
+  // > 它判的是優先序，不是聯集。**
+  // 🟢 **判定只有一份**，住在 `component/slot-check.ts`
+  //    ——護欄、探針、診斷與這裡讀的是同一支，所以不會分岔。
+  if (!fitsSlot(source.componentId, decl.allowed)) {
     return { ok: false, reason: 'wrong-kind' }
   }
 
@@ -160,24 +180,9 @@ export function tryConnect(
   //
   // ⚠️ `expression`／`statement(s)` 是**種類**不是身分，上面那一關已經判過；
   //    這裡判的是**具名的身分**（`param_decl`、`cpp:var_declare`…）。
-  const named = decl.allowed.filter((a) => a !== 'expression' && a !== 'statement' && a !== 'statements')
-  if (named.length > 0 && !named.some((a) => matchesKind(source.componentId, a))) {
-    return { ok: false, reason: 'wrong-kind' }
-  }
-
   return { ok: true, slot }
 }
 
-/**
- * 這顆元件算不算宣告要的那一種。
- *
- * ⚠️ 宣告寫的可能是**帶 scope 的身分**（`cpp:var_declare`）或**裸名**（`param_decl`）
- * ——兩種都要認得，因為兩種都真的出現在膠囊裡。
- */
-function matchesKind(componentId: string, allowed: string): boolean {
-  if (componentId === allowed) return true
-  return componentId.split(':').pop() === allowed
-}
 
 /** 拒絕的理由 → 一個 i18n 鍵。**畫面上不得出現 `not-parent-child` 這種字**。 */
 export function refusalKeyOf(reason: RefusalReason): string {
@@ -238,7 +243,7 @@ export function tryReorder(root: SemanticNode, afterId: string, movedId: string)
 
   // 兩邊都必須是語句——`__next__`／`__in__` 這對接點只有語句才有，
   // ⚠️ 而這裡仍然要判，因為呼叫端可能拿別的東西進來。
-  if (roleOf(moved.componentId) === 'expression' || roleOf(after.componentId) === 'expression') {
+  if (!usableAsStatement(moved.componentId) || !usableAsStatement(after.componentId)) {
     return { ok: false, reason: 'wrong-kind' }
   }
 

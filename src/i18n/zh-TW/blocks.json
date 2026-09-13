@@ -677,5 +677,11 @@
   "LESSON_NUDGE_BEYOND": "有 {n} 種積木不在〈{cur}〉裡——所以它們是淡的",
   "LESSON_NUDGE_GO": "換過去",
   "LESSON_NUDGE_FREE": "自由練習",
-  "LESSON_NUDGE_DISMISS": "不用"
+  "LESSON_NUDGE_DISMISS": "不用",
+  "DIAG_SLOT_TOO_FEW_CODE": "「{slot}」這一格至少要 {min} 個，而現在有 {got} 個",
+  "DIAG_SLOT_TOO_FEW_BLOCK": "「{slot}」那一格空著——它至少要接 {min} 塊",
+  "DIAG_SLOT_TOO_MANY_CODE": "「{slot}」這一格至多 {max} 個，而現在有 {got} 個——多出來的不會出現在程式碼裡",
+  "DIAG_SLOT_TOO_MANY_BLOCK": "「{slot}」那一格只放得下 {max} 塊，而你接了 {got} 塊——多的那幾塊不會被用到",
+  "DIAG_SLOT_WRONG_KIND_CODE": "「{slot}」這一格要的是 {want}，而這裡是 {got}",
+  "DIAG_SLOT_WRONG_KIND_BLOCK": "「{slot}」那一格接的積木種類不對——它要的是 {want}"
 }

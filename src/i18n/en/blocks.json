@@ -677,5 +677,11 @@
   "LESSON_NUDGE_BEYOND": "{n} kinds of blocks are outside “{cur}” — that is why they look faded",
   "LESSON_NUDGE_GO": "Switch to it",
   "LESSON_NUDGE_FREE": "Free practice",
-  "LESSON_NUDGE_DISMISS": "Not now"
+  "LESSON_NUDGE_DISMISS": "Not now",
+  "DIAG_SLOT_TOO_FEW_CODE": "Slot \"{slot}\" needs at least {min}, but has {got}",
+  "DIAG_SLOT_TOO_FEW_BLOCK": "Slot \"{slot}\" is empty — it needs at least {min} block(s)",
+  "DIAG_SLOT_TOO_MANY_CODE": "Slot \"{slot}\" takes at most {max}, but has {got} — the extras will not appear in the code",
+  "DIAG_SLOT_TOO_MANY_BLOCK": "Slot \"{slot}\" holds at most {max}, but you attached {got} — the extras are unused",
+  "DIAG_SLOT_WRONG_KIND_CODE": "Slot \"{slot}\" expects {want}, but this is {got}",
+  "DIAG_SLOT_WRONG_KIND_BLOCK": "Slot \"{slot}\" got the wrong kind of block — it expects {want}"
 }

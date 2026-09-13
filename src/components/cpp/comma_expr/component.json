@@ -11,6 +11,11 @@
     }
   },
   "role": "expression",
+  "positions": [
+    "expression",
+    "statement"
+  ],
+  "_positions_why": "`ios::sync_with_stdio(0), cin.tie(0);` ——**逗號運算式當一句用**是競程最常見的那一行（實測學生語料 218 支裡出現 136 次）。它的 `role` 是產生器契約，這一格才是文法。",
   "owner": "(core)",
   "paths": {
     "render": "./forms/blocks.json",

@@ -106,6 +106,39 @@ export function roleOf(componentId: string): string | undefined {
 }
 
 /**
+ * 這顆在**文法上**能出現的位置。
+ *
+ * 🔴 **與 `roleOf` 不是同一個問題**——`role` 是產生器契約（「我自己收尾嗎」），
+ * 這一支是文法（「我出現在這裡合法嗎」）。兩者在 C++ 裡大量分岔：
+ * `i++`／`a = b`／`cin >> x`／`cout << x` 的 `role` 都是 `statement`
+ * （因為它們的產生器自己印分號），而它們**在 C++ 裡都是運算式**。
+ *
+ * 沒有宣告 `positions` 就**從 `role` 導**——所以這一支對 332 顆裡的絕大多數
+ * 與今天的行為逐字相同，只有顯式宣告過的那幾顆會不一樣。
+ *
+ * > **預設用導的，例外用宣告的**——反過來的話 332 顆都要填一次，
+ * > 而那 332 次填寫裡會有一批是抄的。
+ */
+export function positionsOf(componentId: string): ('statement' | 'expression')[] {
+  const c = registeredComponents().find((x) => x.componentId === componentId)
+  const m = c?.manifest as { role?: string; positions?: ('statement' | 'expression')[] } | undefined
+  if (m?.positions && m.positions.length > 0) return m.positions
+  if (m?.role === 'expression') return ['expression']
+  if (m?.role === 'both') return ['statement', 'expression']
+  return ['statement']
+}
+
+/** 這顆放得進一個要**運算式**的格子嗎。 */
+export function usableAsExpression(componentId: string): boolean {
+  return positionsOf(componentId).includes('expression')
+}
+
+/** 這顆放得進一個要**語句**的格子嗎。 */
+export function usableAsStatement(componentId: string): boolean {
+  return positionsOf(componentId).includes('statement')
+}
+
+/**
  * 這顆是**帶索引的存取**嗎（`properties.obj` 是容器名、`slots.index` 是索引）。
  *
  * ⚠️ 核心的 `interpreter/executors/io.ts` 要認得它——`cin >> arr[i]` 讀進來的值

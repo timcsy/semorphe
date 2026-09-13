@@ -3,7 +3,14 @@
   "abstractComponent": "cpp:loop_count",
   "properties": [],
   "slots": {
-    "init": "expression",
+    "init": {
+      "allowed": [
+        "expression",
+        "declarator"
+      ],
+      "min": 0,
+      "max": 1
+    },
     "cond": "expression",
     "update": "expression",
     "body": "statements"
@@ -21,5 +28,6 @@
     "execute": "./execute.ts",
     "lift": "./lift.ts",
     "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建for迴圈`）——判別留在共用檔。"
-  }
+  },
+  "_slots_why": "`init` 收「一個運算式**或**一顆宣告」——`for (int i = 0; …)` 的 init 位置在 C++ 文法裡是 `init-statement`，宣告是合法的。原本只寫 `\"expression\"`，於是最常見的那一行在流程面板上組不出來（2026-09-14 實測）。"
 }

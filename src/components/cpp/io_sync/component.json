@@ -12,6 +12,11 @@
     }
   },
   "role": "statement",
+  "positions": [
+    "statement",
+    "expression"
+  ],
+  "_positions_why": "ios::sync_with_stdio(0) —— 函式呼叫，常出現在逗號運算式裡。⚠️ 而它的 `role` 是 `statement`，那是**產生器契約**（「我自己印分號」），不是文法——兩條軸在這顆身上分岔。見 `core/component/traits.ts` 的 `positionsOf`。",
   "owner": "(universal)",
   "requires": [
     "<iostream>"

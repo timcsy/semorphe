@@ -6,6 +6,11 @@
     "values": "expression"
   },
   "role": "statement",
+  "positions": [
+    "statement",
+    "expression"
+  ],
+  "_positions_why": "cout << x —— 回傳 ostream&，所以串得下去，也放得進逗號運算式。⚠️ 而它的 `role` 是 `statement`，那是**產生器契約**（「我自己印分號」），不是文法——兩條軸在這顆身上分岔。見 `core/component/traits.ts` 的 `positionsOf`。",
   "annotations": {
     "debug_step": true
   },

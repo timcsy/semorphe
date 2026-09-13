@@ -1,3 +1,4 @@
+import { checkSlots } from './component/slot-check'
 import type { SemanticNode } from './types'
 
 /**
@@ -277,6 +278,34 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
     for (const bucket of Object.values(n.slots ?? {})) for (const c of bucket ?? []) walk(c)
   }
   walk(tree)
+
+  // 🔴 **槽的宣告也是診斷的來源**（2026-09-14）。
+  //
+  // 在此之前 `slots` 的 `allowed`／`min`／`max` 只有【流程接線】一處在讀，
+  // 而注入量到：違反 min/max 的樹**產碼安靜 58/60、積木安靜 60/60**；
+  // 把一顆語句塞進只收運算式的 218 個格子，兩側**全部**安靜。
+  //
+  // 走這條通道有兩個理由：
+  //
+  // ```
+  // ① 三側同時拿到      程式碼的波浪、積木的標記、主控台的訊息讀的是同一份
+  // ② 它是【報告】不是閘門   canExecute 只看 degradationCause，不看這些
+  // ```
+  //
+  // ⚠️ severity 是 `warning`：一棵違反宣告的樹**仍然跑得動**，
+  //    而且多數時候它跑出來的正是使用者想要的。說一聲就好。
+  //
+  // > **一條會擋下執行的檢查，必須先證明「擋下來比放過去好」
+  // > ——而這一條今天還沒有那個證據。**
+  for (const f of checkSlots(tree)) {
+    out.push({
+      nodeId: f.nodeId ?? '',
+      severity: 'warning',
+      rule: f.kind === 'min' ? 'SLOT_TOO_FEW' : f.kind === 'max' ? 'SLOT_TOO_MANY' : 'SLOT_WRONG_KIND',
+      params: f.params,
+      source: 'component',
+    })
+  }
   return out
 }
 

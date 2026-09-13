@@ -12,6 +12,11 @@
     "args": "expressions"
   },
   "role": "expression",
+  "positions": [
+    "expression",
+    "statement"
+  ],
+  "_positions_why": "`f(x);` ——**函式呼叫是最典型的「運算式當語句用」**，而它的 `role` 是 `expression`（產生器不收尾，由 `asStatement` 包）。兩條軸在這顆身上也分岔，只是方向相反。",
   "annotations": {
     "debug_step": true
   },

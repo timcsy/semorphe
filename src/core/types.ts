@@ -533,6 +533,38 @@ export interface ComponentDefJSON {
   properties: ParamSpec[]
   slots: Record<string, string>
   role: 'statement' | 'expression' | 'both'
+  /**
+   * 這顆在**文法上**能出現在哪些位置——`role` 之外的第二條軸。
+   *
+   * ## 🔴 為什麼不能用 `role` 回答這件事（2026-09-14 量到）
+   *
+   * `role` 的實際語意是**產生器契約**（`roleOf` 的檔頭寫得很清楚：
+   * 「產生器需要知道一個節點出現在語句位置時要不要補分號」）：
+   *
+   * ```
+   * statement    產生器自己收尾（`cout << x;\n` 是它自己印的）
+   * expression   產生器不收尾，由 asStatement 包
+   * both         同 expression，而且語句位置也合法
+   * ```
+   *
+   * 而**文法問題是另一個問題**：`i++`、`a = b`、`cin >> x`、`cout << x`
+   * 在 C++ 裡**都是運算式**，而它們的 `role` 全都是 `statement`
+   * ——因為它們的產生器自己收尾。
+   *
+   * 症狀很具體：`flow/connect.ts` 拿 `role` 當文法判準，於是
+   * **`for (int i = 0; i < n; i++)` 在流程面板上組不出來**
+   * （實測 7 個真實世界合法的接法，7 個全被拒絕）。
+   *
+   * > **一個欄位如果同時回答兩個問題，它會在兩個問題的答案分岔的那一天
+   * > 安靜地答錯其中一個——而答錯的那一個沒有名字，所以沒有人去查它。**
+   *
+   * ## 預設是導出的，不是宣告的
+   *
+   * 沒寫＝從 `role` 導（`statement` → 只有語句位置、`expression` → 只有運算式、
+   * `both` → 兩個）。所以**今天的 332 顆一個字都不必改**，
+   * 只有「`role` 答錯文法」的那些要顯式宣告。
+   */
+  positions?: ('statement' | 'expression')[]
   annotations?: Record<string, unknown>
   /**
    * 本概念**刻意**不提供的路徑。
