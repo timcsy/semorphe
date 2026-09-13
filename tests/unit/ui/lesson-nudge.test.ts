@@ -58,12 +58,12 @@ describe('第一百二十條護欄：打暗要說得出換哪一課', () => {
    *
    * 釘在第 1 課而在宣告變數 → 那四顆元件全部超出範圍 → 該指向第 2 課。
    */
-  it('🔴 學生的情況：釘在第 1 課而在宣告變數 → 指向〈記住資料〉', () => {
+  it('🔴 學生的情況：釘在第 1 課而在宣告變數 → 指向〈型別〉', () => {
     const lessons = realLessons('cpp-beginner')
     const dimmed = ['cpp:var_declare', 'cpp:var_ref', 'cpp:literal_number', 'cpp:literal_char']
     const s = suggestLessonFor(dimmed, lessons, 'cpp-beginner/01-印出一句話')
     expect(s, '🔴 一堂都指不出來——那條線只能說「你超出範圍了」而說不出下一步').not.toBeNull()
-    expect(s!.lessonId).toBe('cpp-beginner/02-記住資料')
+    expect(s!.lessonId).toBe('cpp-beginner/02-型別')
     expect(s!.covers, '🔴 第 2 課涵蓋不了全部 → 課程資料與這條建議對不上').toBe(dimmed.length)
   })
 

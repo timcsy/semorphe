@@ -117,13 +117,17 @@ test('clip-drag', async ({ page }) => {
   await category.click()
   await settle(page, 1100)
 
-  // ② 從彈出的那一列裡挑【輸出】那一顆
+  // ② 從彈出的那一列裡挑【印出】那一顆
   //    🔴 **不要用 `.first()`**：實測第一顆是「換行」（`endl`），
   //    拖出來會變成一行 `endl;`——一個示範「怎麼用」的片段，示範錯的東西比沒有更糟。
+  //    🪦 這裡曾經寫著「輸出」——2026-09-07 積木上的字改成「印出」（使用者拍板），
+  //    而這支錄影腳本**在六天後才出聲**，因為沒有人重錄過那幾支 GIF。
+  //    > **一份產物的過期，要等到有人再產一次的時候才會被發現
+  //    > ——而「再產一次」不在任何一條護欄上。**
   const blocks = page.locator('.blocklyFlyout .blocklyDraggable')
   const texts = await blocks.evaluateAll((els) => els.map((e) => (e.textContent ?? '').trim()))
-  const idx = texts.findIndex((t) => t.startsWith('輸出'))
-  expect(idx, `🔴 工具箱裡找不到「輸出」（量到：${texts.slice(0, 4).join('／')}）`).toBeGreaterThan(-1)
+  const idx = texts.findIndex((t) => t.startsWith('印出'))
+  expect(idx, `🔴 工具箱裡找不到「印出」（量到：${texts.slice(0, 4).join('／')}）`).toBeGreaterThan(-1)
 
   const from = await blocks.nth(idx).boundingBox()
   const canvas = await page.locator('#blockly-panel').boundingBox()

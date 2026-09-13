@@ -8,8 +8,11 @@
     "cpp:compare",
     "cpp:endl",
     "cpp:if",
+    "cpp:include",
+    "cpp:input",
     "cpp:literal_number",
     "cpp:literal_string",
+    "cpp:math_unary",
     "cpp:print",
     "cpp:var_declare",
     "cpp:var_ref"
@@ -48,6 +51,16 @@
       "check": {
         "stdout": "優等\n",
         "stdin": []
+      }
+    },
+    {
+      "id": "ex2",
+      "title": "練習：調分",
+      "check": {
+        "stdout": "70\n",
+        "stdin": [
+          "49"
+        ]
       }
     },
     {

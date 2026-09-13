@@ -1,0 +1,20 @@
+{
+  "title": "變數",
+  "estimate": "25 分鐘",
+  "pins": { "target": "cpp" },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:endl",
+    "cpp:literal_number",
+    "cpp:print",
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "tasks": [
+    { "id": "try", "title": "先試試看：x 能不能等於 x + 1" },
+    { "id": "follow", "title": "跟著做", "check": { "stdout": "95\n", "stdin": [] } },
+    { "id": "ex1", "title": "練習：把名字改壞，再改回來", "check": { "stdout": "95\n", "stdin": [] } },
+    { "id": "make", "title": "做一個：幫三個變數取名字" }
+  ]
+}

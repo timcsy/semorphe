@@ -5,13 +5,18 @@
     "target": "cpp"
   },
   "components": [
+    "cpp:arithmetic",
     "cpp:compare",
     "cpp:continue",
     "cpp:endl",
     "cpp:if",
+    "cpp:increment",
     "cpp:literal_number",
     "cpp:loop_count",
+    "cpp:loop_while",
     "cpp:print",
+    "cpp:var_assign",
+    "cpp:var_declare",
     "cpp:var_ref"
   ],
   "tasks": [
@@ -28,6 +33,14 @@
       "title": "練習：把 continue 換成 break",
       "check": {
         "stdout": "1\n2\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex2",
+      "title": "練習：把上一課的 while 改寫成 for",
+      "check": {
+        "stdout": "1\n3\n5\n7\n9\n",
         "stdin": []
       }
     },

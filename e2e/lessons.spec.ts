@@ -100,6 +100,23 @@ async function programOutput(page: import('@playwright/test').Page): Promise<str
 }
 
 /**
+ * 一行一行的輸出——**不修剪行首的空白**。
+ *
+ * 🔴 `programOutput` 對【整串】做 `.trim()`，於是**第一行開頭的空白會被吃掉**。
+ *    那在「第一行就是程式的第一行」的時候剛好抵銷（期望值也 `.trim()` 過），
+ *    而在**主控台先回顯了使用者輸入**的時候不會——期望的第一行被修剪，
+ *    實際的第一行沒有，兩邊永遠對不上。
+ *
+ * ⚠️ 2026-09-13 的症狀：一棵讀進 `n` 的聖誕樹（第一行是四個空白 ＋ 一顆星），
+ *    參考解答跑出來一字不差，而這一支說它 0 行對得上。
+ *
+ * > **一個為了寬容而做的修剪，會在它修剪的那一端有意義的時候變成缺陷。**
+ */
+async function programLines(page: import('@playwright/test').Page): Promise<string[]> {
+  return await page.locator('.console-output .console-line').allInnerTexts()
+}
+
+/**
  * 讀一堂課的題目——⚠️ **舊的 `check` 就是第一題**（`core/lesson/lesson.ts` 的 `parseTasks`
  * 同一條規矩）。這裡不能只讀 `tasks`：66 課裡多數還是舊形狀。
  */
@@ -442,7 +459,7 @@ for (const c of CASES) {
         .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
         .toMatch(/程式執行完畢|錯誤|Error|Completed/)
 
-      const output = await programOutput(page)
+      const outputLines = await programLines(page)
       // 🔴 **主控台會把使用者打的那一行【回顯】出來**，而一支
       //    「問一句、印一句、再問一句」的程式，回顯會**插在期望輸出中間**
       //    ——`toContain` 於是失敗，而程式其實是對的（2026-09-04 實測）。
@@ -453,16 +470,16 @@ for (const c of CASES) {
       // 🟢 所以驗的是「期望的每一行**照順序**出現過」，而不是一段連續的字串。
       //    ⚠️ 它比逐字比對弱，而這一支要答的問題是**「這個宣告的答案做得到嗎」**
       //    ——逐字那一半由裁判（`compareOutput`）在真實使用時負責。
-      const wanted = ex.stdout.trim().split('\n')
+      const wanted = ex.stdout.replace(/\n+$/, '').split('\n')
       let matched = 0
-      for (const line of output.split('\n')) {
+      for (const line of outputLines) {
         if (matched < wanted.length && line === wanted[matched]) matched++
       }
       expect(
         matched,
         `🔴 ${c.name}〈${ex.title}〉的參考解答跑出來不是宣告的答案——` +
           `這一題的裁判會對【做對的學生】說他錯。\n` +
-          `宣告：${JSON.stringify(ex.stdout)}\n實際：${JSON.stringify(output)}`,
+          `宣告：${JSON.stringify(ex.stdout)}\n實際：${JSON.stringify(outputLines.join('\n'))}`,
       ).toBe(wanted.length)
     })
   }

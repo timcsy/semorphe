@@ -1,0 +1,62 @@
+{
+  "title": "函式",
+  "estimate": "30 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:endl",
+    "cpp:func_call",
+    "cpp:func_def",
+    "cpp:input",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:print",
+    "cpp:return",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "tasks": [
+    {
+      "id": "try",
+      "title": "先試試看：同一件事寫三遍"
+    },
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "25\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：再做兩個函式",
+      "check": {
+        "stdout": "7\n12\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex2",
+      "title": "練習：跟名字打招呼",
+      "check": {
+        "stdout": "hi, Semorphe\n",
+        "stdin": [
+          "Semorphe"
+        ]
+      }
+    },
+    {
+      "id": "make",
+      "title": "做一個：華氏轉攝氏",
+      "check": {
+        "stdout": "100\n",
+        "stdin": [
+          "212"
+        ]
+      }
+    }
+  ]
+}

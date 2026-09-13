@@ -1,0 +1,60 @@
+{
+  "title": "二維陣列",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:array_2d_at",
+    "cpp:array_2d_declare",
+    "cpp:compare",
+    "cpp:endl",
+    "cpp:if",
+    "cpp:initializer_list",
+    "cpp:input",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:loop_count",
+    "cpp:print",
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "tasks": [
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "1 2 3 \n4 5 6 \n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：每一列的總和",
+      "check": {
+        "stdout": "6\n15\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "make",
+      "title": "做一個：找出表裡最大的那一個",
+      "check": {
+        "stdout": "9\n1 2\n",
+        "stdin": [
+          "3",
+          "1",
+          "4",
+          "1",
+          "5",
+          "9",
+          "2",
+          "6",
+          "5"
+        ]
+      }
+    }
+  ],
+  "_view_why": "⚠️ **這一課刻意不宣告 `view`**——曲線寫的是【轉折點】，而第 16 課那一個轉折會一路帶下來（`viewForLesson` 是階梯）。在這裡再寫一次 `code` 是重複宣告，不是轉折。"
+}

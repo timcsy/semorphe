@@ -35,7 +35,7 @@ describe('T031: Locale Integration', () => {
     it('should have all dynamic block UI keys', () => {
       loader.loadFromData('zh-TW', zhTWBlocks, zhTWTypes)
 
-      expect(msg['U_PRINT_LABEL']).toBe('輸出')
+      expect(msg['U_PRINT_LABEL']).toBe('印出')
       // 🪦 `U_FUNC_DEF_LABEL`／`U_FUNC_DEF_RETURN_LABEL` 於 2026-08-24 搬進膠囊
       //    （`components/cpp/func_def/labels/`）——命令式那顆退場，標籤跟著走。
       //    ⚠️ `U_FUNC_DEF_PARAMS_LABEL` 仍留在共用檔：**還有別人在用**
@@ -86,7 +86,7 @@ describe('T031: Locale Integration', () => {
       loader.loadFromData('zh-TW', zhTWBlocks, zhTWTypes)
 
       expect(msg['QA_VAR']).toBe('變數')
-      expect(msg['QA_PRINT']).toBe('輸出')
+      expect(msg['QA_PRINT']).toBe('印出')
       expect(msg['QA_INPUT']).toBe('輸入')
       expect(msg['QA_IF']).toBe('如果')
       expect(msg['QA_LOOP']).toBe('迴圈')
@@ -114,7 +114,7 @@ describe('T031: Locale Integration', () => {
   describe('locale switching', () => {
     it('should switch from zh-TW to en and update all keys', () => {
       loader.loadFromData('zh-TW', zhTWBlocks, zhTWTypes)
-      expect(msg['U_PRINT_LABEL']).toBe('輸出')
+      expect(msg['U_PRINT_LABEL']).toBe('印出')
 
       loader.loadFromData('en', enBlocks, enTypes)
       expect(msg['U_PRINT_LABEL']).toBe('Print')
@@ -126,7 +126,7 @@ describe('T031: Locale Integration', () => {
       expect(msg['U_PRINT_LABEL']).toBe('Print')
 
       loader.loadFromData('zh-TW', zhTWBlocks, zhTWTypes)
-      expect(msg['U_PRINT_LABEL']).toBe('輸出')
+      expect(msg['U_PRINT_LABEL']).toBe('印出')
       expect(loader.getCurrentLocale()).toBe('zh-TW')
     })
   })

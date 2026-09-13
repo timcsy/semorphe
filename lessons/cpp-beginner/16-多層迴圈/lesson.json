@@ -1,0 +1,60 @@
+{
+  "title": "多層迴圈",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "cpp",
+    "view": "code"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:endl",
+    "cpp:input",
+    "cpp:literal_number",
+    "cpp:literal_string",
+    "cpp:loop_count",
+    "cpp:print",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "tasks": [
+    {
+      "id": "try",
+      "title": "先試試看：印出九九乘法表的第一列"
+    },
+    {
+      "id": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "1 2 3 4 5 6 7 8 9 \n2 4 6 8 10 12 14 16 18 \n3 6 9 12 15 18 21 24 27 \n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex1",
+      "title": "練習：整張九九乘法表",
+      "check": {
+        "stdout": "1 2 3 4 5 6 7 8 9 \n2 4 6 8 10 12 14 16 18 \n3 6 9 12 15 18 21 24 27 \n4 8 12 16 20 24 28 32 36 \n5 10 15 20 25 30 35 40 45 \n6 12 18 24 30 36 42 48 54 \n7 14 21 28 35 42 49 56 63 \n8 16 24 32 40 48 56 64 72 \n9 18 27 36 45 54 63 72 81 \n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex2",
+      "title": "練習：印一個星星塔",
+      "check": {
+        "stdout": "*\n**\n***\n****\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "make",
+      "title": "做一個：一棵聖誕樹",
+      "check": {
+        "stdout": "    *\n   ***\n  *****\n *******\n*********\n",
+        "stdin": [
+          "5"
+        ]
+      }
+    }
+  ],
+  "_view_why": "曲線的第二個轉折：到這裡他讀得懂程式碼了，積木變成卡住時才打開的那一格。⚠️ 研究提醒過【並排不等於對照】——這一格只是版面，真正的轉變要靠打字與除錯的練習（那還沒做）。"
+}

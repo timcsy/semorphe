@@ -72,7 +72,7 @@ const toolboxIds = async (page: import('@playwright/test').Page): Promise<string
 
 
 /**
- * `10-重複` 這一課有幾題——**從宣告讀，不寫死**。
+ * `10-while迴圈` 這一課有幾題——**從宣告讀，不寫死**。
  *
  * 🔴 2026-09-07 這裡本來寫著 `0/2`，而那一課多了一題除錯題之後
  * **兩支 e2e 當場紅**——而產品是對的。
@@ -89,7 +89,7 @@ function taskCountOf(lessonDir: string): number {
   return (j.tasks ?? []).length
 }
 
-const REPEAT_TASKS = taskCountOf('cpp-beginner/10-重複')
+const REPEAT_TASKS = taskCountOf('cpp-beginner/10-while迴圈')
 
 test('★ 入口條件 ＋ 回歸閘：沒有 `?lesson` 時與今天逐字相同', async ({ page }) => {
   await freshApp(page)
@@ -124,7 +124,7 @@ test('★ 三層選得到課——目標 → 課程 → 章節', async ({ page }
   // ```
   // 目標   語言／板子   C++ · C · Python · Arduino Uno · ESP32…
   // 課程   軌道         C++ 入門 · C++ 進階 · Python 入門 · Arduino 專題…
-  // 章節   課           01 印出一句話 · 02 記住資料…
+  // 章節   課           01 印出一句話 · 02 型別…
   // ```
   await freshApp(page)
   await expect(page.locator('#status-controls .status-item-btn').first()).toBeVisible({ timeout: 20_000 })
@@ -285,7 +285,7 @@ for (const c of CASES) {
 /**
  * 🔴 **一條課程連結，不得被「這台電腦上次做了什麼」改寫。**
  *
- * 使用者截圖（2026-09-03）：開 `?lesson=cpp-beginner/15-多層迴圈`，
+ * 使用者截圖（2026-09-03）：開 `?lesson=cpp-beginner/16-多層迴圈`，
  * 而狀態列第一格寫著「**Python**」——因為 `restoreState()` 在建構子之後才跑，
  * 而它原本**無條件**把存檔裡的目標寫回去。
  *
@@ -303,7 +303,7 @@ test('★ 存檔是別的目標時，課釘住的那個要贏', async ({ page })
     (window as never as { __app: { currentTarget: { id: string } } }).__app.currentTarget.id)).toBe('python')
 
   // ② 開一條釘住 C++ 的課程連結
-  await openLessonLink(page, 'cpp-beginner/15-多層迴圈')
+  await openLessonLink(page, 'cpp-beginner/16-多層迴圈')
   const after = await page.evaluate(() => {
     const a = (window as never as { __app: {
       currentTarget: { id: string }; currentTopic: { id: string }; currentSkeletonId: string
@@ -452,7 +452,7 @@ test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句�
 test('★ 執行覆蓋：一支完全正確的程式，一塊都不准標', async ({ page }) => {
   test.setTimeout(120_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await openLessonLink(page, 'cpp-beginner/10-重複')
+  await openLessonLink(page, 'cpp-beginner/10-while迴圈')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -507,9 +507,9 @@ test('★ 清除學習進度：入口就在進度旁邊，而且要問一次', a
     window.localStorage.clear()
     // 先塞一筆進度——⚠️ 沒有進度時那一項【不畫】（沒有東西可清）
     window.localStorage.setItem('semorphe-progress',
-      JSON.stringify({ 'cpp-beginner/10-重複': ['follow'] }))
+      JSON.stringify({ 'cpp-beginner/10-while迴圈': ['follow'] }))
   })
-  await openLessonLink(page, 'cpp-beginner/10-重複')
+  await openLessonLink(page, 'cpp-beginner/10-while迴圈')
 
   const cell = page.locator('#status-controls .status-item-btn[data-control-id="task"]')
   expect(await cell.innerText(), '🔴 進度沒有讀回來 → 下面驗的是一個空狀態')
@@ -549,7 +549,7 @@ test('★ 題目：只有選了課程與章節才有那一格，而預設是「�
   ).toHaveCount(0)
 
   // ② 有課 ⟹ 那一格在，而它預設停在第一題
-  await openLessonLink(page, 'cpp-beginner/10-重複')
+  await openLessonLink(page, 'cpp-beginner/10-while迴圈')
   const cell = page.locator('#status-controls .status-item-btn[data-control-id="task"]')
   await expect(cell, '🔴 選了課程與章節，而沒有「題目」那一格').toHaveCount(1)
   const label = await cell.innerText()
@@ -569,7 +569,7 @@ test('★ 題目：只有選了課程與章節才有那一格，而預設是「�
 test('★ 題目：純練習的時候裁判沉默，而執行覆蓋照樣標', async ({ page }) => {
   test.setTimeout(120_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await openLessonLink(page, 'cpp-beginner/10-重複')
+  await openLessonLink(page, 'cpp-beginner/10-while迴圈')
 
   // 切到「純練習」
   await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
@@ -606,7 +606,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   // ⚠️ **用第 2 課，不是第 10 課**：第 10 課的 ex1 2026-09-05 起是 Parsons，
   //    而選那一題會**重鋪畫布**——這一支驗的是裁判與「下一題」，不是 Parsons。
   //    > 一條測試如果錨在「某一題剛好是普通題」上，那一題升級的那天它會紅。
-  await openLessonLink(page, 'cpp-beginner/02-記住資料')
+  await openLessonLink(page, 'cpp-beginner/02-型別')
 
   // 選第二題（練習：把 height 改成 int），然後寫出它的答案
   await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
@@ -619,8 +619,9 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type(
-    'int age = 16;\nint height = 1.72;\nchar grade = \'A\';\n' +
-    'cout << age << endl;\ncout << height << endl;\ncout << grade << endl;', { delay: 10 })
+    'int age = 16;\nint height = 1.72;\nchar grade = \'A\';\nbool passed = true;\n' +
+    'cout << age << endl;\ncout << height << endl;\ncout << grade << endl;\n' +
+    'cout << passed << endl;', { delay: 10 })
   await page.waitForTimeout(3000)
   await page.locator('#run-btn').click()
   await skipPredictionIfAsked(page)
@@ -724,7 +725,7 @@ test('★ 迴圈跑了幾次：巢狀是【倍數】不是總次數', async ({ p
 test('★ 預測：猜跑幾次——而揭曉的徽章就在那顆迴圈旁邊', async ({ page }) => {
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await openLessonLink(page, 'cpp-beginner/10-重複')
+  await openLessonLink(page, 'cpp-beginner/10-while迴圈')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -777,7 +778,7 @@ test('★ 預測：沒有迴圈、輸出短 → 猜輸出；猜對了要比程�
   // ⚠️ **用第 4 課，不是第 1 課**：第 1 課 2026-09-05 起宣告了 `predict: 'choice'`
   //    （它的干擾項問「引號會不會被印出來」），而這一支驗的是**自動判定**那一條。
   //    > 一條測試如果錨在「某一課剛好沒有宣告」上，那一課宣告的那天它會紅。
-  await openLessonLink(page, 'cpp-beginner/04-程式從哪開始')
+  await openLessonLink(page, 'cpp-beginner/05-程式從哪開始')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -805,7 +806,7 @@ test('★ 預測：沒有迴圈、輸出短 → 猜輸出；猜對了要比程�
 test('★ 預測：純練習不問——他【說了】他不在做題目', async ({ page }) => {
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
-  await openLessonLink(page, 'cpp-beginner/10-重複')
+  await openLessonLink(page, 'cpp-beginner/10-while迴圈')
   await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
   await page.locator('.quick-pick-item[data-value=""]').click()
   await page.waitForTimeout(500)
@@ -877,7 +878,7 @@ test('★ 裁判：輸入【之前】印的東西不得被丟掉', async ({ page
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
   // 第 3 課「讀進來」：印一句 → 讀 → 再印一句
-  await openLessonLink(page, 'cpp-beginner/03-讀進來')
+  await openLessonLink(page, 'cpp-beginner/04-讀進來')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -967,7 +968,7 @@ test('★ 排回去：選了那一題，解答的積木會被打散在畫布上'
   const errs: string[] = []
   page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().split('\n')[0]) })
   await page.addInitScript(() => window.localStorage.clear())
-  await openLessonLink(page, 'cpp-beginner/10-重複')
+  await openLessonLink(page, 'cpp-beginner/10-while迴圈')
 
   const top = () => page.evaluate(() =>
     (window as never as { __app: { blocklyPanel: { workspace: { getTopBlocks(o: boolean): unknown[] } } } })
@@ -1024,7 +1025,7 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   await page.addInitScript(() => window.localStorage.clear())
   // ⚠️ 用第 2 課：第 1 課只有一句話，排不了（`movable < 2`），
   //    而那一課因此**沒有**宣告 view——它還不是一條波。
-  await openLessonLink(page, 'cpp-beginner/02-記住資料')
+  await openLessonLink(page, 'cpp-beginner/02-型別')
 
   const layoutNow = () => page.locator('#status-controls .status-item-btn[data-control-id="layout"]').innerText()
 

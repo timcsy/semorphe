@@ -9,11 +9,16 @@
     "cpp:break",
     "cpp:compare",
     "cpp:endl",
+    "cpp:func_call",
     "cpp:if",
+    "cpp:include",
+    "cpp:input",
     "cpp:literal_number",
     "cpp:literal_string",
     "cpp:loop_while",
     "cpp:print",
+    "cpp:random_next",
+    "cpp:random_seed",
     "cpp:var_assign",
     "cpp:var_declare",
     "cpp:var_ref"
@@ -44,6 +49,10 @@
           "42"
         ]
       }
+    },
+    {
+      "id": "make2",
+      "title": "做一個：換人猜，程式當裁判"
     }
   ]
 }

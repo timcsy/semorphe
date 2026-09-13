@@ -16,7 +16,7 @@
  * 🔴 **而 Chromium 的數字不是 Arduino IDE 的結論**——
  * 那正是 `history/076` 那個錯的形狀（在 A 環境驗、宣稱 B 環境成立）。
  */
-import { cpSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
+import { cpSync, mkdirSync, writeFileSync, rmSync, readFileSync, readdirSync, existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 import { buildManifest } from '../src/vscode/manifest'
@@ -191,6 +191,28 @@ function main(): void {
  * `vsce` 直接擋下來（`SVGs are restricted in README.md`）——不是警告，是錯誤。
  * 根 `README.md` 用的是 SVG，所以從那裡抄過來的第一版打不出包。
  */
+/**
+ * 課程總數——**數出來的，不是寫死的**。
+ *
+ * 🔴 2026-09-13 抓到：這份 README 寫著「66 堂課」，而課程已經是 69
+ * （型別／變數拆開、二維陣列與遞迴各自獨立）。**沒有任何東西會出聲**——
+ * 它是一段字串，而字串不會跟著課程目錄長。
+ *
+ * > **一份產物的過期，有兩種來源：輸入變了，或者產它的那台機器變了。
+ * > 而一個【抄下來的數字】兩種都擋不住——它連輸入都沒讀。**
+ */
+function lessonCount(): number {
+  let n = 0
+  for (const track of readdirSync('lessons', { withFileTypes: true })) {
+    if (!track.isDirectory()) continue
+    for (const d of readdirSync(join('lessons', track.name), { withFileTypes: true })) {
+      if (d.isDirectory() && existsSync(join('lessons', track.name, d.name, 'lesson.json'))) n++
+    }
+  }
+  if (n === 0) throw new Error('🔴 一堂課都數不到 → README 會寫「0 堂課」，那比寫錯還糟')
+  return n
+}
+
 function marketplaceReadme(): string {
   const RAW = 'https://raw.githubusercontent.com/timcsy/semorphe/main'
   return `<p align="center">
@@ -256,7 +278,7 @@ Arduino ＋ 積木的工具幾乎都住在 IDE **外面**（另一個網站、�
 
 出事的時候：命令面板 → **Semorphe: 顯示同步診斷**，把那一段貼進 issue 裡。
 
-## 66 堂課，課文在網站上
+## ${lessonCount()} 堂課，課文在網站上
 
 <https://semorphe.com/lessons/> — 6 條軌道（C++ 入門／進階、C 銜接、
 Python 入門／銜接、Arduino 專題），每一課的課文底下有「在編輯器打開這一課」。

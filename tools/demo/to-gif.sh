@@ -10,7 +10,10 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 mk() {
   local src="$1" out="$2"
-  [ -f "$src" ] || { echo "🔴 找不到 $src——先跑 npm run demo:record"; exit 1; }
+  # ⚠️ `${src}` 的大括號**不能省**：後面那個破折號是多位元組，bash 會把它
+  #    當成變數名的一部分，於是這一行自己爆成 `src?: unbound variable`
+  #    ——而它只在【找不到檔案】的時候跑，正是你需要那句話的時候。
+  [ -f "$src" ] || { echo "🔴 找不到 ${src}——先跑 npm run demo:record"; exit 1; }
   ffmpeg -v error -y -i "$src" \
     -vf "fps=8,scale=760:-1:flags=lanczos,palettegen=max_colors=64:stats_mode=diff" /tmp/semorphe-pal.png
   ffmpeg -v error -y -i "$src" -i /tmp/semorphe-pal.png \
@@ -38,7 +41,10 @@ mk test-results/record-lessons-lessons/video.webm assets/demo-lessons.gif
 #   三支原始長度 9.4／10.7／9.9 秒，第 3 秒時都已經在演正題了。
 clip() {
   local src="test-results/record-clips-$1/video.webm" out="assets/clips/$1.webm"
-  [ -f "$src" ] || { echo "🔴 找不到 $src——先跑 npm run demo:record"; exit 1; }
+  # ⚠️ `${src}` 的大括號**不能省**：後面那個破折號是多位元組，bash 會把它
+  #    當成變數名的一部分，於是這一行自己爆成 `src?: unbound variable`
+  #    ——而它只在【找不到檔案】的時候跑，正是你需要那句話的時候。
+  [ -f "$src" ] || { echo "🔴 找不到 ${src}——先跑 npm run demo:record"; exit 1; }
   ffmpeg -v error -y -ss 2 -i "$src" \
     -vf "fps=12,scale=720:-2:flags=lanczos" \
     -c:v libvpx-vp9 -crf 40 -b:v 0 -an -row-mt 1 "$out"
