@@ -67,9 +67,9 @@ export function openBraceFor(style: StylePreset): (ctx: Parameters<NodeGenerator
 export function ifGeneratorFor(style: StylePreset): NodeGenerator {
   const openBrace = openBraceFor(style)
   const ifGenerator: NodeGenerator = (node, ctx) => {
-    const cond = generateExpression((node.children.condition ?? [])[0], ctx)
-    const thenBody = node.children.then_body ?? []
-    const elseBody = node.children.else_body ?? []
+    const cond = generateExpression((node.slots.condition ?? [])[0], ctx)
+    const thenBody = node.slots.then_body ?? []
+    const elseBody = node.slots.else_body ?? []
     const header = `${indent(ctx)}if (${cond})${openBrace(ctx)}\n`
     trackOwnText(ctx, header)
     let code = header

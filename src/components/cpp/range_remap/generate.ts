@@ -11,7 +11,7 @@ const SLOTS = ['value', 'from_low', 'from_high', 'to_low', 'to_high'] as const
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:range_remap', (node, ctx) => {
-    const args = SLOTS.map((s) => generateExpression((node.children[s] ?? [])[0], ctx))
+    const args = SLOTS.map((s) => generateExpression((node.slots[s] ?? [])[0], ctx))
     return `map(${args.join(', ')})`
   })
 }

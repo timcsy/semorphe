@@ -25,8 +25,8 @@ import type { SemanticNode } from '../../../src/core/types'
 const n = (
   component: string,
   properties: Record<string, unknown> = {},
-  children: Record<string, SemanticNode[]> = {},
-): SemanticNode => ({ componentId: component, properties, children }) as unknown as SemanticNode
+  slots: Record<string, SemanticNode[]> = {},
+): SemanticNode => ({ componentId: component, properties, slots }) as unknown as SemanticNode
 
 const num = (v: number): SemanticNode => n('cpp:literal_number', { value: v })
 const ret = (v: SemanticNode): SemanticNode => n('cpp:return', {}, { value: [v] })

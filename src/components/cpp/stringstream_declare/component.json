@@ -7,7 +7,7 @@
       "kind": "literal"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "skipPaths": [
     "execute"

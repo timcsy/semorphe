@@ -14,7 +14,7 @@ export function registerExecute(register: (component: string, executor: Componen
     // 一個 `for` 迴圈註冊出來的四個執行器，來源位置是同一行，
     // 分不出是哪一顆。**膠囊化把它拆開，護欄立刻指名了三顆。**
     const targetType = String(node.properties.target_type ?? 'Derived*')
-    const valueNodes = node.children.value ?? []
+    const valueNodes = node.slots.value ?? []
     if (valueNodes.length === 0) return { type: 'int', value: 0 }
     const val = await ctx.evaluate(valueNodes[0])
     // ⚠️ `charIsChar: true`——命名轉型的 `char` 回整數。這是既有行為，

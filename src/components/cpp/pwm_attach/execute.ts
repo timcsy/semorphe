@@ -5,9 +5,9 @@ import { setupChannel, tiePin } from '../../../languages/cpp/core/runtime/arduin
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pwm_attach', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
-    const freq = ctx.toNumber(await ctx.evaluate((node.children.freq ?? [])[0]))
-    const bits = ctx.toNumber(await ctx.evaluate((node.children.bits ?? [])[0]))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
+    const freq = ctx.toNumber(await ctx.evaluate((node.slots.freq ?? [])[0]))
+    const bits = ctx.toNumber(await ctx.evaluate((node.slots.bits ?? [])[0]))
     // ⚠️ 新版**用腳位號當通道號**——通道由系統自動配置，而 API 的語義就是這個。
     setupChannel(ctx, pin, freq, bits)
     tiePin(ctx, pin, pin)

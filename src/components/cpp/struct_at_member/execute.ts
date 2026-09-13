@@ -13,7 +13,7 @@ export function registerExecute(register: (component: string, executor: Componen
   /** `p.x` */
     register('cpp:struct_at_member', async (node, ctx) => {
       // 🟢 **接收者一律是接點**（2026-08-26）——混合形狀退場，字串回退跟著消失。
-      const objNode = (node.children.obj ?? [])[0]
+      const objNode = (node.slots.obj ?? [])[0]
       if (!objNode) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個取成員沒有接收者' })
       const o = await ctx.evaluate(objNode)
       const objName = String(objNode.properties?.name ?? '')
@@ -31,7 +31,7 @@ export function registerExecute(register: (component: string, executor: Componen
  */
 export function registerLvalue(): void {
   declareLvalue('cpp:struct_at_member', async (node, ctx: ExecutionContext) => {
-    const objNode = (node.children.obj ?? [])[0]
+    const objNode = (node.slots.obj ?? [])[0]
     if (!objNode) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個取成員沒有接收者' })
     const o = await ctx.evaluate(objNode)
     const objName = String(objNode.properties?.name ?? '')

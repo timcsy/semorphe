@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側沒有這個操作——它的容器要自己跑一次尋找演算法再減去起點。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "value": "expression"
   },

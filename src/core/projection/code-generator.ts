@@ -371,7 +371,7 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
 /**
  * Call from compound generators (func_def, if, while, etc.) to update _lineCount
  * for header text BEFORE generating child nodes via generateBody/generateNode.
- * This ensures children see the correct starting line number.
+ * This ensures slots see the correct starting line number.
  */
 export function trackOwnText(ctx: GeneratorContext, text: string): void {
   const n = countNewlines(text)

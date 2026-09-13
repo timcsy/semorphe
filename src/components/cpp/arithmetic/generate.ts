@@ -6,8 +6,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:arithmetic', (node, ctx) => {
       const op = node.properties.operator ?? '+'
       const prec = precedence(node)
-      const leftNode = (node.children.left ?? [])[0]
-      const rightNode = (node.children.right ?? [])[0]
+      const leftNode = (node.slots.left ?? [])[0]
+      const rightNode = (node.slots.right ?? [])[0]
       const left = genChild(leftNode, prec, ctx)
       // Right child: use prec+1 to force parens for same-precedence on right side
       // e.g. a - (b - c) needs parens, but a - b + c doesn't (left-to-right)

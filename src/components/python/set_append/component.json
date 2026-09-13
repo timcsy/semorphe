@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側的集合插入回一個「有沒有真的插進去」的旗標，而這一顆什麼都不回。行為不同，不宣告等價。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "value": "expression"
   },

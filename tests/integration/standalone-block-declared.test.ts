@@ -32,7 +32,7 @@ beforeAll(async () => {
 
 function componentsIn(node: SemanticNode, out: string[] = []): string[] {
   out.push(node.componentId)
-  for (const kids of Object.values(node.children ?? {})) {
+  for (const kids of Object.values(node.slots ?? {})) {
     for (const k of kids as SemanticNode[]) componentsIn(k, out)
   }
   return out

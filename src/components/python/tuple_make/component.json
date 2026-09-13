@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "與同族串列字面那顆最像，而**它們在 Python 是兩種型別**：一個可變、一個不可變。指同一個抽象父會把那個差別抹掉，而那正是初學者要學會的差別之一。",
   "properties": [],
-  "children": {
+  "slots": {
     "items": "expression"
   },
   "role": "expression",

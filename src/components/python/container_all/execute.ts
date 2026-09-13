@@ -18,7 +18,7 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:container_all', async (node, ctx) => {
     const args: RuntimeValue[] = []
     for (const k of ["obj"]) {
-      const n = (node.children as Record<string, unknown[]>)[k]?.[0]
+      const n = (node.slots as Record<string, unknown[]>)[k]?.[0]
       if (n) args.push(await ctx.evaluate(n as never))
     }
     const userDefined = ctx.functions.get('all')

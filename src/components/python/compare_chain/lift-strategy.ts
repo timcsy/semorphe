@@ -27,7 +27,7 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const operands = node.namedChildren
     if (operands.length < 3) return null // 兩個運算元＝一般的比較，不歸這裡
     // ⚠️ `AstNode` 的介面上只有單數的 `childForFieldName`——而運算子這個欄位
-    //    **可以重複**。`children` 裡的**匿名**節點就是那些運算子。
+    //    **可以重複**。`slots` 裡的**匿名**節點就是那些運算子。
     //
     // 🔴 **要用 `isNamed` 判，不可以拿 `namedChildren` 去做集合差集**：
     //    每次存取都會產生**新的包裝物件**，於是 `Set.has` 永遠是 false

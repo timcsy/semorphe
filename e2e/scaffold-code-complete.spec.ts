@@ -106,9 +106,9 @@ test('★ 改顯示模式，不得改到語義樹', async ({ page }) => {
 
   const bodyOf = async (): Promise<string[]> => page.evaluate(() => {
     const t = (window as never as {
-      __app: { syncController: { getCurrentTree(): { children?: { body?: { componentId?: string }[] } } | null } }
+      __app: { syncController: { getCurrentTree(): { slots?: { body?: { componentId?: string }[] } } | null } }
     }).__app.syncController.getCurrentTree()
-    return (t?.children?.body ?? []).map((n) => n.componentId ?? '')
+    return (t?.slots?.body ?? []).map((n) => n.componentId ?? '')
   })
 
   const before = await bodyOf()

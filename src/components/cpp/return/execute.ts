@@ -5,7 +5,7 @@ import { ReturnSignal } from '../../../interpreter/executors/functions'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:return', async (node, ctx) => {
-      const valueNodes = node.children.value
+      const valueNodes = node.slots.value
       if (valueNodes && valueNodes.length > 0) {
         const val = await ctx.evaluate(valueNodes[0])
         throw new ReturnSignal(val)

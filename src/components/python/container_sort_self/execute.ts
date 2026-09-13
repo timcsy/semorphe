@@ -16,11 +16,11 @@ import { callMethod } from '../method_call/dispatch'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:container_sort_self', async (node, ctx) => {
-    const self = await ctx.evaluate(node.children.obj[0])
+    const self = await ctx.evaluate(node.slots.obj[0])
     const args: RuntimeValue[] = []
     // 關鍵字引數包成內建表看得懂的形狀（`__kw__名字` ＋ 值）
     for (const slot of ['key', 'reverse'] as const) {
-      const v = (node.children[slot] ?? [])[0]
+      const v = (node.slots[slot] ?? [])[0]
       if (!v) continue
       args.push({ type: 'array', value: [{ type: 'string', value: `__kw__${slot}` }, await ctx.evaluate(v)] })
     }

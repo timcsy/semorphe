@@ -4,8 +4,8 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:math_max', (node, ctx) => {
-      const aNodes = node.children.a ?? []
-      const bNodes = node.children.b ?? []
+      const aNodes = node.slots.a ?? []
+      const bNodes = node.slots.b ?? []
       // 🔴 **只有一個運算元時就產一個引數——不得補一個 `0`**（2026-09-09）
       //
       // `max({a, b, c})` 是**合法的 C++**（大括號那個多載），而競賽程式常寫它。

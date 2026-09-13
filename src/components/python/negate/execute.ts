@@ -10,7 +10,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:negate', async (node, ctx) => {
-    const v = await ctx.evaluate(node.children.value[0])
+    const v = await ctx.evaluate(node.slots.value[0])
     const isInt = v.type === 'int' || v.type === 'char'
     return { type: isInt ? ('int' as const) : ('double' as const), value: -ctx.toNumber(v) }
   })

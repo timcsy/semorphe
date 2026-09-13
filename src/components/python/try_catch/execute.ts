@@ -27,28 +27,28 @@ export function registerExecute(register: (component: string, executor: Componen
     //    只在錯誤路徑上出現，跑一次正常的程式看不出來。
     try {
       try {
-        await ctx.executeBody(node.children.body ?? [])
+        await ctx.executeBody(node.slots.body ?? [])
         // 🟢 沒出錯才跑的那一段
-        await ctx.executeBody(node.children.orelse ?? [])
+        await ctx.executeBody(node.slots.orelse ?? [])
       } catch (e) {
         if (e instanceof BreakSignal || e instanceof ContinueSignal || e instanceof ReturnSignal) throw e
-        const first = (node.children.handlers ?? [])[0]
+        const first = (node.slots.handlers ?? [])[0]
         if (!first) throw e // 沒有分支就不吞——不然錯誤會安靜地消失
         // 🔴 `except X as e:` 要把錯誤**綁到那個名字上**，而它只活在這個分支裡
         //    ——少了這一段的症狀是分支裡的 `print(e)` 說「沒有這個變數 e」。
         const alias = String(first.properties.alias ?? '')
-        if (!alias) { await ctx.executeBody(first.children.body ?? []); return }
+        if (!alias) { await ctx.executeBody(first.slots.body ?? []); return }
         const parent = ctx.scope
         ctx.scope = new Scope(parent)
         try {
           ctx.scope.declare(alias, { type: 'string', value: pythonExceptionText(e) })
-          await ctx.executeBody(first.children.body ?? [])
+          await ctx.executeBody(first.slots.body ?? [])
         } finally {
           ctx.scope = parent
         }
       }
     } finally {
-      await ctx.executeBody(node.children.ensure ?? [])
+      await ctx.executeBody(node.slots.ensure ?? [])
     }
   })
 }

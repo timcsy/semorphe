@@ -20,8 +20,8 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
       createNode('cpp:var_declare', { name: 'x', type: 'int' }),
     ])
     const result = cppStripScaffoldNodes(tree)
-    expect(result.children.body).toHaveLength(1)
-    expect(result.children.body[0].componentId).toBe('cpp:var_declare')
+    expect(result.slots.body).toHaveLength(1)
+    expect(result.slots.body[0].componentId).toBe('cpp:var_declare')
   })
 
   it('strips using namespace', () => {
@@ -30,8 +30,8 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
       createNode('cpp:print', {}),
     ])
     const result = cppStripScaffoldNodes(tree)
-    expect(result.children.body).toHaveLength(1)
-    expect(result.children.body[0].componentId).toBe('cpp:print')
+    expect(result.slots.body).toHaveLength(1)
+    expect(result.slots.body[0].componentId).toBe('cpp:print')
   })
 
   it('unwraps func_def main body and skips return', () => {
@@ -44,8 +44,8 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
       }),
     ])
     const result = cppStripScaffoldNodes(tree)
-    expect(result.children.body).toHaveLength(1)
-    expect(result.children.body[0].componentId).toBe('cpp:var_declare')
+    expect(result.slots.body).toHaveLength(1)
+    expect(result.slots.body[0].componentId).toBe('cpp:var_declare')
   })
 
   it('keeps user-defined functions', () => {
@@ -56,10 +56,10 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
       }),
     ])
     const result = cppStripScaffoldNodes(tree)
-    expect(result.children.body).toHaveLength(2)
-    expect(result.children.body[0].componentId).toBe('cpp:func_def')
-    expect(result.children.body[0].properties.name).toBe('helper')
-    expect(result.children.body[1].componentId).toBe('cpp:print')
+    expect(result.slots.body).toHaveLength(2)
+    expect(result.slots.body[0].componentId).toBe('cpp:func_def')
+    expect(result.slots.body[0].properties.name).toBe('helper')
+    expect(result.slots.body[1].componentId).toBe('cpp:print')
   })
 
   it('strips cpp_include_local too', () => {
@@ -68,6 +68,6 @@ describe('cppStripScaffoldNodes (moved from sync-controller)', () => {
       createNode('cpp:print', {}),
     ])
     const result = cppStripScaffoldNodes(tree)
-    expect(result.children.body).toHaveLength(1)
+    expect(result.slots.body).toHaveLength(1)
   })
 })

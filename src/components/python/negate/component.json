@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "🔴 **刻意是 null**——見同批其他運算子的理由。",
   "properties": [],
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "expression",

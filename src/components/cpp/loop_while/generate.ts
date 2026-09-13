@@ -7,8 +7,8 @@ import { indent, indented, generateExpression, generateBody, trackOwnText } from
 export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePreset): void {
   const openBrace = openBraceFor(style)
   g.set('cpp:loop_while', (node, ctx) => {
-      const cond = generateExpression((node.children.condition ?? [])[0], ctx)
-      const body = node.children.body ?? []
+      const cond = generateExpression((node.slots.condition ?? [])[0], ctx)
+      const body = node.slots.body ?? []
       const header = `${indent(ctx)}while (${cond})${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header

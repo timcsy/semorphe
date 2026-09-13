@@ -26,6 +26,6 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:program', async (node, ctx) => {
     // ⚠️ **就這一行。** 而它短是因為語言本來就這樣，不是因為少做了什麼
     // ——如果哪天要支援 `if __name__ == "__main__"`，那是【那顆元件】的事，不是這裡的。
-    await ctx.executeBody(node.children.body ?? [])
+    await ctx.executeBody(node.slots.body ?? [])
   })
 }

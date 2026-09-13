@@ -3,9 +3,9 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:ternary', async (node, ctx) => {
-      const condNodes = node.children.condition ?? []
-      const trueNodes = node.children.true_expr ?? []
-      const falseNodes = node.children.false_expr ?? []
+      const condNodes = node.slots.condition ?? []
+      const trueNodes = node.slots.true_expr ?? []
+      const falseNodes = node.slots.false_expr ?? []
       if (condNodes.length === 0) return { type: 'int', value: 0 }
 
       const condition = await ctx.evaluate(condNodes[0])

@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:comma_expr', async (node, ctx) => {
-      const exprs = node.children.exprs ?? []
+      const exprs = node.slots.exprs ?? []
       let last: import('../../../interpreter/types').RuntimeValue = { type: 'int', value: 0 }
       for (const expr of exprs) {
         last = (await ctx.executeNode(expr)) as import('../../../interpreter/types').RuntimeValue ?? last

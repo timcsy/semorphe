@@ -4,9 +4,9 @@ import { writableArray, readCString } from '../../../languages/cpp/core/runtime/
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_copy_bounded', async (node, ctx) => {
-      const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strncpy 的目標')
-      const n = ctx.toNumber(await ctx.evaluate((node.children.n ?? [])[0]))
-      const src = readCString(await ctx.evaluate((node.children.src ?? [])[0]))
+      const dest = writableArray(ctx as never, (node.slots.dest ?? [])[0], 'strncpy 的目標')
+      const n = ctx.toNumber(await ctx.evaluate((node.slots.n ?? [])[0]))
+      const src = readCString(await ctx.evaluate((node.slots.src ?? [])[0]))
       // strncpy 的語義：只複製 n 個字元，**不保證結尾有 \0**
       for (let i = 0; i < n && i < dest.length; i++) {
         dest[i] = { type: 'char', value: src[i] ?? '\0' }

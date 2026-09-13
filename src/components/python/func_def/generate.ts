@@ -7,7 +7,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     const name = String(node.properties.name ?? 'f')
     // ⚠️ **參數是結構節點不是字串**（spec 169）——每一顆帶一個 `name`。
     // 🔴 帶預設值的參數多一格（2026-08-21）——`greeting="hi"`。
-    const params = (node.children.params ?? [])
+    const params = (node.slots.params ?? [])
       .map((p) => {
         const n = String(p.properties.name ?? '')
         // 🔴 星號是**標記**不是名字的一部分——見 lift 那一側的理由
@@ -21,7 +21,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         return d ? (t ? `${head} = ${d}` : `${head}=${d}`) : head
       })
       .filter(Boolean)
-    const body = node.children.body ?? []
+    const body = node.slots.body ?? []
     const inner = indented(ctx)
     const returns = String(node.properties.returns ?? '')
     // 🔴 **每一段標頭都要先算進行號**（2026-08-24）——否則那一段主體裡每一顆的

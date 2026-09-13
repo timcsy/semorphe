@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "與同族的串列生成式最像，而它產出的是鍵值對應不是序列——那個差別正是初學者要學會的。",
   "properties": [],
-  "children": {
+  "slots": {
     "targets": "param_decl",
     "key": "expression",
     "value": "expression",

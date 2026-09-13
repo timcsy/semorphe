@@ -55,7 +55,7 @@ const lift = (c: string): SemanticNode | null =>
 
 const walk = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   out.push(n)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks ?? []) walk(k, out)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks ?? []) walk(k, out)
   return out
 }
 

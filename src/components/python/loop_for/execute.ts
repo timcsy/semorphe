@@ -25,9 +25,9 @@ import { isNamedCall, componentTraits } from '../../../core/component/traits'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:loop_for', async (node, ctx) => {
     // 多目標（`for k, v in d.items():`）——每一圈把那一格拆開分給每個名字
-    const targets = (node.children.targets ?? []).map((t) => String(t.properties.name ?? ''))
+    const targets = (node.slots.targets ?? []).map((t) => String(t.properties.name ?? ''))
     const name = String(node.properties.obj ?? 'i')
-    const itNode = (node.children.iterable ?? [])[0]
+    const itNode = (node.slots.iterable ?? [])[0]
     // 走訪的是**值**，不是數字——`range` 只是其中一種來源。
     const values: RuntimeValue[] = []
 
@@ -41,7 +41,7 @@ export function registerExecute(register: (component: string, executor: Componen
       (componentTraits(itNode.componentId)?.producesRange === true ||
         (isNamedCall(itNode.componentId) && itNode.properties.name === 'range'))
     if (itNode && isRange) {
-      const args = itNode.children.args ?? itNode.children.values ?? []
+      const args = itNode.slots.args ?? itNode.slots.values ?? []
       const nums: number[] = []
       for (const a of args) nums.push(ctx.toNumber(await ctx.evaluate(a)))
       const [start, stop, step] =
@@ -90,7 +90,7 @@ export function registerExecute(register: (component: string, executor: Componen
         bind(name, bound)
       }
       try {
-        await ctx.executeBody(node.children.body ?? [])
+        await ctx.executeBody(node.slots.body ?? [])
       } catch (signal) {
         if (signal instanceof BreakSignal) break
         if (signal instanceof ContinueSignal) continue

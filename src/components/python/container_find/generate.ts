@@ -10,6 +10,6 @@ const one = (ns: unknown[] | undefined, ctx: Parameters<NodeGenerator>[1]): stri
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:container_find', (node, ctx) => {
     const op = String(node.properties.operator ?? 'in')
-    return `${one(node.children.needle, ctx)} ${op} ${one(node.children.haystack, ctx)}`
+    return `${one(node.slots.needle, ctx)} ${op} ${one(node.slots.haystack, ctx)}`
   })
 }

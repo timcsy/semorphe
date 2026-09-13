@@ -5,7 +5,7 @@
   "properties": [
     { "name": "method", "kind": "identifier", "default": "" }
   ],
-  "children": { "obj": "expression", "args": "expression" },
+  "slots": { "obj": "expression", "args": "expression" },
   "role": "both",
   "owner": "(python)",
   "paths": {

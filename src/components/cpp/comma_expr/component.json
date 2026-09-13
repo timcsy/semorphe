@@ -2,7 +2,7 @@
   "componentId": "cpp:comma_expr",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "exprs": {
       "allowed": [
         "expression"

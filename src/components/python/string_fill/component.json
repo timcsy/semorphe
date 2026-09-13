@@ -10,7 +10,7 @@
     }
   ],
   "_properties_why": "🔴 **三個方法是同一個語義概念的三種寫法**（補到指定寬度），而 `\"5\".zfill(3)` 與 `\"5\".rjust(3, \"0\")` **算出來一模一樣**。\n⚠️ 所以要記住原文寫的是哪一個——不記的話來回一趟會把使用者的 `zfill` 換成 `rjust`：意思沒變，而**碼被改了**。",
-  "children": {
+  "slots": {
     "obj": "expression",
     "width": "expression",
     "fill": "expression"

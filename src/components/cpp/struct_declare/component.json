@@ -8,7 +8,7 @@
       "default": "MyStruct"
     }
   ],
-  "children": {
+  "slots": {
     "members": "statements"
   },
   "role": "statement",

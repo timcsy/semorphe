@@ -1,7 +1,7 @@
 {
   "componentId": "cpp:string_as_double",
   "properties": [],
-  "children": {
+  "slots": {
     "value": {
       "allowed": [
         "expression"

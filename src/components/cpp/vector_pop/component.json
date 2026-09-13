@@ -8,7 +8,7 @@
       "default": "vec"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "paths": {
     "render": "./forms/blocks.json",

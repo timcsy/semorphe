@@ -11,7 +11,7 @@ export function registerExecute(register: (component: string, executor: Componen
       // 而那些測試被停用時標成 `[UNVERIFIED]`（連理由都不知道）。
       //
       // 辨識器把初始值放在 `initializer`（與 `var_declare` 同名）。
-      const init = node.children.initializer ?? node.children.value ?? []
+      const init = node.slots.initializer ?? node.slots.value ?? []
       if (init.length > 0) {
         const v = await ctx.evaluate(init[0])
         ctx.scope.declare(name, { type: 'string', value: String(v.value) })

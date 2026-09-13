@@ -940,7 +940,7 @@ describe('Interpreter - more edge cases', () => {
     expect(interp.getOutput().join('')).toBe('7')
   })
 
-  it('should handle multi-variable input with children.values', async () => {
+  it('should handle multi-variable input with slots.values', async () => {
     const interp = await run([
       createNode('cpp:var_declare', { name: 'a', type: 'int' }, {}),
       createNode('cpp:var_declare', { name: 'b', type: 'int' }, {}),

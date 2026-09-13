@@ -8,7 +8,7 @@
       "default": "int*"
     }
   ],
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "expression",

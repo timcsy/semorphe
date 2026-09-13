@@ -8,10 +8,10 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
   const openBrace = openBraceFor(style)
   g.set('cpp:loop_for', (node, ctx) => {
       const strip = (s: string) => s.replace(/;\s*$/, '').trim()
-      const initExpr = strip(generateExpression((node.children.init ?? [])[0], ctx))
-      const condExpr = strip(generateExpression((node.children.cond ?? [])[0], ctx))
-      const updateExpr = strip(generateExpression((node.children.update ?? [])[0], ctx))
-      const body = node.children.body ?? []
+      const initExpr = strip(generateExpression((node.slots.init ?? [])[0], ctx))
+      const condExpr = strip(generateExpression((node.slots.cond ?? [])[0], ctx))
+      const updateExpr = strip(generateExpression((node.slots.update ?? [])[0], ctx))
+      const body = node.slots.body ?? []
       const header = `${indent(ctx)}for (${initExpr}; ${condExpr}; ${updateExpr})${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header

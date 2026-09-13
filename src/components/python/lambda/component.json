@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那顆有擷取子句（`[&]`／`[=]`）而 Python 沒有——Python 的匿名函式一律看得到外面。**保證不同。**",
   "properties": [],
-  "children": { "params": "param_decl", "body": "expression" },
+  "slots": { "params": "param_decl", "body": "expression" },
   "role": "expression",
   "owner": "(python)",
   "paths": {

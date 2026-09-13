@@ -12,8 +12,8 @@ import { ThrownSignal } from '../../../interpreter/executors/control-flow'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:try_catch', async (node, ctx) => {
-      const tryBody = node.children.try_body ?? []
-      const catchBody = node.children.catch_body ?? []
+      const tryBody = node.slots.try_body ?? []
+      const catchBody = node.slots.catch_body ?? []
       const catchName = String(node.properties.catch_name ?? 'e')
       try {
         await ctx.executeBody(tryBody)

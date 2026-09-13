@@ -9,8 +9,8 @@ import { resolvePlace } from '../../../interpreter/lvalue'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_swap', async (node, ctx) => {
-    const leftNode = (node.children.left ?? [])[0]
-    const rightNode = (node.children.right ?? [])[0]
+    const leftNode = (node.slots.left ?? [])[0]
+    const rightNode = (node.slots.right ?? [])[0]
     if (!leftNode || !rightNode) return
     // ⚠️ **兩個位置都先解出來再讀**——先讀一邊再解另一邊的話，
     // `swap(a[i], a[++i])` 這種帶副作用的索引會讓兩次解析看到不同的 i。

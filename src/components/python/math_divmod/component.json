@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側的 `std::div` 回一個結構，而這個專案的 C++ 側沒有那一顆。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "value": "expression"
   },

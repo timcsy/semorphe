@@ -13,7 +13,7 @@
       "default": "method"
     }
   ],
-  "children": {
+  "slots": {
     "args": "expressions"
   },
   "role": "statement",

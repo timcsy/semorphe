@@ -21,7 +21,7 @@
  *
  * | 要什麼 | 問誰 |
  * |---|---|
- * | 哪個插槽是執行、哪個是資料 | 膠囊的 `children` 宣告（`slotsOf`） |
+ * | 哪個插槽是執行、哪個是資料 | 膠囊的 `slots` 宣告（`slotsOf`） |
  * | 節點的顏色 | `blockSpecRegistry` 的 `blockDef.colour`——**同一張表**，不是抄一份色票 |
  * | 節點在程式碼裡是哪一行 | `mappings` ＋ `code`（滑鼠停留時顯示） |
  *
@@ -758,7 +758,7 @@ export class FlowPanel implements ViewHost {
     //    判不過就**原樣拿掉**，樹回到原狀。
     const parent = this.findNode(this.tree, target.nodeId)
     if (!parent) return
-    const bucket = (parent.children[target.port.key] ??= [])
+    const bucket = (parent.slots[target.port.key] ??= [])
     bucket.push(node)
     const verdict = tryConnect(this.tree, node.id, target.nodeId, target.port.key)
     if (!verdict.ok) {
@@ -787,7 +787,7 @@ export class FlowPanel implements ViewHost {
   ): void {
     if (!this.tree) return
     const node = presetTree(componentId, extraState)
-    const body = (this.tree.children.body ??= [])
+    const body = (this.tree.slots.body ??= [])
     body.push(node)
     this.pendingDrop = { id: node.id, at }
     this.rebuild()
@@ -926,7 +926,7 @@ export class FlowPanel implements ViewHost {
 
   private findNode(n: SemanticNode, id: string): SemanticNode | null {
     if (n.id === id) return n
-    for (const bucket of Object.values(n.children ?? {})) {
+    for (const bucket of Object.values(n.slots ?? {})) {
       for (const c of bucket ?? []) {
         const hit = this.findNode(c, id)
         if (hit) return hit
@@ -1154,7 +1154,7 @@ export class FlowPanel implements ViewHost {
   private rootBody(): SemanticNode[] {
     const target = this.scopedRoot()
     if (!target) return []
-    const body = bodySlotsOf(target.componentId).flatMap((s) => target.children[s] ?? [])
+    const body = bodySlotsOf(target.componentId).flatMap((s) => target.slots[s] ?? [])
     if (this.scaffoldMode !== 'hidden') return body
     // 🔴 **`hidden` ＝「只留你自己的邏輯」，而那句話要跨視圖同一個意思。**
     //
@@ -1165,7 +1165,7 @@ export class FlowPanel implements ViewHost {
     // 🟢 這條規則語言無關：Arduino 的 `setup`／`loop` 各攤出自己的本體。
     const unwrap = (nodes: SemanticNode[]): SemanticNode[] =>
       nodes.flatMap((n) => this.scaffoldIds.has(n.id)
-        ? unwrap(bodySlotsOf(n.componentId).flatMap((s) => n.children[s] ?? []))
+        ? unwrap(bodySlotsOf(n.componentId).flatMap((s) => n.slots[s] ?? []))
         : [n])
     return unwrap(body)
   }
@@ -1722,7 +1722,7 @@ export class FlowPanel implements ViewHost {
     if (this.isGhostNode(nodeId)) { this.refuse('scaffold-locked'); return }
     const holder = this.slotOf(nodeId)
     if (!holder) return
-    const bucket0 = (holder.parent.children[holder.slot] ?? []) as SemanticNode[]
+    const bucket0 = (holder.parent.slots[holder.slot] ?? []) as SemanticNode[]
     // 🔴 **判準是「那一格會不會變成空的」**，不是「它是不是語句」（2026-08-30 放寬）。
     //
     // 使用者要刪 `cout << "Hello!" << endl` 裡的 `endl`——它住在 `values` 這個
@@ -1739,7 +1739,7 @@ export class FlowPanel implements ViewHost {
       this.refuse('slot-would-empty')
       return
     }
-    const bucket = holder.parent.children[holder.slot] as SemanticNode[]
+    const bucket = holder.parent.slots[holder.slot] as SemanticNode[]
     bucket.splice(holder.index, 1)
     this.rebuild()
     this.editCb?.(this.tree)
@@ -1770,7 +1770,7 @@ export class FlowPanel implements ViewHost {
   /** 這顆節點住在誰的哪一格、第幾個。 */
   private slotOf(nodeId: string): { parent: SemanticNode; slot: string; index: number } | null {
     const walk = (n: SemanticNode): { parent: SemanticNode; slot: string; index: number } | null => {
-      for (const [slot, bucket] of Object.entries(n.children ?? {})) {
+      for (const [slot, bucket] of Object.entries(n.slots ?? {})) {
         const i = (bucket ?? []).findIndex((c) => c.id === nodeId)
         if (i >= 0) return { parent: n, slot, index: i }
         for (const c of bucket ?? []) { const hit = walk(c); if (hit) return hit }
@@ -1794,9 +1794,9 @@ export class FlowPanel implements ViewHost {
   private moveInto(sourceId: string, targetId: string, slot: string, index?: number): void {
     if (!this.tree) return
     const detach = (n: SemanticNode): SemanticNode | null => {
-      for (const [k, bucket] of Object.entries(n.children ?? {})) {
+      for (const [k, bucket] of Object.entries(n.slots ?? {})) {
         const i = (bucket ?? []).findIndex((c) => c.id === sourceId)
-        if (i >= 0) return (n.children[k] as SemanticNode[]).splice(i, 1)[0]
+        if (i >= 0) return (n.slots[k] as SemanticNode[]).splice(i, 1)[0]
         for (const c of bucket ?? []) { const hit = detach(c); if (hit) return hit }
       }
       return null
@@ -1805,7 +1805,7 @@ export class FlowPanel implements ViewHost {
     if (!node) return
     const target = this.findNode(this.tree, targetId)
     if (!target) return
-    const bucket = (target.children[slot] ??= [])
+    const bucket = (target.slots[slot] ??= [])
     // ⚠️ **摘下來之後索引可能已經往前挪了**——所以夾在範圍內，
     //    而不是相信呼叫端算出來的那個數字。
     if (index === undefined) bucket.push(node)

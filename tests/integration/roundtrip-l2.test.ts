@@ -246,7 +246,7 @@ describe('L2 Block Roundtrip', () => {
       expect(sem2!.componentId).toBe('cpp:struct_at_member')
       // 🟢 **接收者是接點**（2026-08-26）
       expect(sem2!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(sem2!.children.obj[0].properties.name).toBe('p')
+      expect(sem2!.slots.obj[0].properties.name).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
 
@@ -283,8 +283,8 @@ describe('L2 Block Roundtrip', () => {
       // 以及積木上多一列「（ ? ）」——那一列是為了裝「不是名字的那一種」，
       // 而它在常見情況下永遠是空的。見 `history/157`。
       expect(sem!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(sem!.children.obj[0].componentId).toBe('cpp:var_ref')
-      expect(sem!.children.obj[0].properties.name).toBe('p')
+      expect(sem!.slots.obj[0].componentId).toBe('cpp:var_ref')
+      expect(sem!.slots.obj[0].properties.name).toBe('p')
     })
   })
 

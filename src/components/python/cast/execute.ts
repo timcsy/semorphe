@@ -19,7 +19,7 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:cast', async (node, ctx) => {
     const to = String(node.properties.target_type ?? 'int')
     const args: RuntimeValue[] = []
-    for (const a of node.children.value ?? []) args.push(await ctx.evaluate(a))
+    for (const a of node.slots.value ?? []) args.push(await ctx.evaluate(a))
     const userDefined = ctx.functions.get(to)
     if (userDefined) return callWith(userDefined, args, ctx, to)
     return PYTHON_BUILTIN_FUNCTIONS[to](args, withCall(ctx))

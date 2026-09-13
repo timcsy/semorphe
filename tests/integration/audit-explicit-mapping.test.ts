@@ -70,16 +70,16 @@ function measure(extra: BlockProjectionJSON[] = []): Finding[] {
     const missing: string[] = []
     // 只在「這顆積木確實有這類參數」而且「概念確實有對應的槽」時才要求宣告
     const props = spec.componentMapping?.properties ?? []
-    const children = Object.keys(spec.componentMapping?.children ?? {})
+    const slots = Object.keys(spec.componentMapping?.slots ?? {})
 
     if (props.length > 0 && has((t) => t.startsWith('field_')) && !(rm?.fields && Object.keys(rm.fields).length)) {
       missing.push('fields')
     }
-    if (children.length > 0 && has((t) => t === 'input_value') && !(rm?.inputs && Object.keys(rm.inputs).length)) {
+    if (slots.length > 0 && has((t) => t === 'input_value') && !(rm?.inputs && Object.keys(rm.inputs).length)) {
       missing.push('inputs')
     }
     if (
-      children.length > 0 &&
+      slots.length > 0 &&
       has((t) => t === 'input_statement') &&
       !(rm?.statementInputs && Object.keys(rm.statementInputs).length)
     ) {

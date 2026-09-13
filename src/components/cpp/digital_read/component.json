@@ -2,7 +2,7 @@
   "componentId": "cpp:digital_read",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "pin": "expression"
   },
   "role": "expression",

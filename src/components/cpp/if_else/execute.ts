@@ -11,7 +11,7 @@ export function registerExecute(register: (component: string, executor: Componen
      * 就是它，而我第一次看到時以為那是誤報。**實測它是真的。**
      */
     register('cpp:if_else', async (node, ctx) => {
-      const condition = await ctx.evaluate(node.children.condition[0])
-      await ctx.executeBody(ctx.toBool(condition) ? (node.children.then ?? []) : (node.children.else ?? []))
+      const condition = await ctx.evaluate(node.slots.condition[0])
+      await ctx.executeBody(ctx.toBool(condition) ? (node.slots.then ?? []) : (node.slots.else ?? []))
     })
 }

@@ -54,7 +54,7 @@ import '../../src/core/load-language-packs'
 
 /** 一棵**空的**程式樹——使用者剛開檔案時的樣子。 */
 const emptyProgram = () => ({
-  id: 'root', componentId: 'cpp:program', properties: {}, children: { body: [] },
+  id: 'root', componentId: 'cpp:program', properties: {}, slots: { body: [] },
 })
 
 /** 空程式在這份骨架下產出的程式碼（`cogLevel: 0` ＝ 補丁器負責進入點）。 */

@@ -95,9 +95,9 @@ int main() {
     const result = liftCode(code)
 
     // Inspect semantic tree
-    const body = result?.children.body ?? []
+    const body = result?.slots.body ?? []
     const ifNode = body[0]
-    const elseBody = ifNode?.children.else_body ?? []
+    const elseBody = ifNode?.slots.else_body ?? []
     console.log('nested else body[0] componentId:', elseBody[0]?.componentId)
     console.log('nested else body length:', elseBody.length)
 

@@ -10,7 +10,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:new', (node, ctx) => {
       const type = node.properties.type ?? 'int'
-      const size = (node.children.size ?? [])[0]
+      const size = (node.slots.size ?? [])[0]
       if (size) return `new ${type}[${generateExpression(size, ctx)}]`
       const args = node.properties.args ?? ''
       return args ? `new ${type}(${args})` : `new ${type}`

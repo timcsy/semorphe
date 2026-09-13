@@ -32,7 +32,7 @@ export function registerExecute(
     // 少了那段初始值**，所以來回轉換看起來「成功」了。
     // 初始值是一整個運算式（`vector<int> v = f()`）——求值後直接接管它的內容。
     // 不複製的話，`v` 與 `f()` 回傳的那個陣列會共用同一個物件。
-    const source = (node.children.source ?? [])[0]
+    const source = (node.slots.source ?? [])[0]
     if (source) {
       const produced = await ctx.evaluate(source)
       const copied = produced.type === 'array' && Array.isArray(produced.value)
@@ -45,13 +45,13 @@ export function registerExecute(
     // ⚠️ 這個接點在 2026-08-13 之前不存在：lift 只把 `argument_list`「排除在
     // source 之外」（那是對的），**而排除之後沒有人接住它**，於是 `v` 建成空的，
     // `iota(v.begin(), v.end(), 1)` 立刻索引越界。
-    const sizeNode = (node.children.size ?? [])[0]
+    const sizeNode = (node.slots.size ?? [])[0]
     if (sizeNode) {
       const n = Number((await ctx.evaluate(sizeNode)).value)
       // `vector<int> v(5, 7)` —— 第二個引數是「每一格是什麼」。
       // ⚠️ **每一格都要獨立的複本**：`vector<vector<int>> g(2, vector<int>(3))`
       // 共用同一個列物件的話，`g[0][0] = 9` 會同時改到 `g[1][0]`。
-      const fillNode = (node.children.fill ?? [])[0]
+      const fillNode = (node.slots.fill ?? [])[0]
       const fill = fillNode ? await ctx.evaluate(fillNode) : null
       const cells = []
       for (let i = 0; i < (Number.isFinite(n) && n > 0 ? Math.trunc(n) : 0); i++) {
@@ -61,7 +61,7 @@ export function registerExecute(
       return
     }
 
-    const init = node.children.values ?? []
+    const init = node.slots.values ?? []
     const elems = []
     // ⚠️ `evalInitializer` 而不是 `evaluate`：`vector<S> v = {{3},{1}}` 的元素
     // 本身是一層 `{…}`，而那是**聚合初始化**——要按 `S` 的成員順序填。

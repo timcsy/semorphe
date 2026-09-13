@@ -13,7 +13,7 @@ import { lcdOf } from '../../../languages/cpp/core/runtime/arduino-devices'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:lcd_print', async (node, ctx) => {
     const s = lcdOf(ctx, String(node.properties.obj ?? 'lcd'))
-    const v = await ctx.evaluate((node.children.value ?? [])[0])
+    const v = await ctx.evaluate((node.slots.value ?? [])[0])
     const text = String((v as { value?: unknown })?.value ?? '')
     const [col, row] = s.cursor
     if (row < s.lines.length) {

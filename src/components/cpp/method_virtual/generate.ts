@@ -10,8 +10,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
   g.set('cpp:method_virtual', (node, ctx) => {
       const returnType = node.properties.return_type ?? 'void'
       const name = node.properties.name ?? 'method'
-      const paramChildren = node.children.params ?? []
-      const body = node.children.body ?? []
+      const paramChildren = node.slots.params ?? []
+      const body = node.slots.body ?? []
       const paramStr = formatParams(paramChildren)
       const header = `${indent(ctx)}virtual ${returnType} ${name}(${paramStr})${openBrace(ctx)}\n`
       trackOwnText(ctx, header)

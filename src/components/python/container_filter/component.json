@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側是 `std::copy_if`（要先準備好目的地），不是一個運算式。",
   "properties": [],
-  "children": {
+  "slots": {
     "func": "expression",
     "obj": "expression"
   },

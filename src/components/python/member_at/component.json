@@ -9,7 +9,7 @@
       "default": ""
     }
   ],
-  "children": {
+  "slots": {
     "obj": "expression"
   },
   "role": "expression",

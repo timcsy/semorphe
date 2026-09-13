@@ -2,7 +2,7 @@
   "componentId": "cpp:random_seed",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "seed": "expression"
   },
   "role": "statement",

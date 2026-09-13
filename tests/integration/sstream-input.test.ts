@@ -49,7 +49,7 @@ function collect(node: SemanticNode, pred: (n: SemanticNode) => boolean): Semant
   const walk = (n: SemanticNode): void => {
     if (!n) return
     if (pred(n)) found.push(n)
-    for (const list of Object.values(n.children ?? {})) {
+    for (const list of Object.values(n.slots ?? {})) {
       for (const child of list ?? []) walk(child as SemanticNode)
     }
   }
@@ -109,7 +109,7 @@ describe('概念身分與五路', () => {
     expect(inputs).toHaveLength(1)
     expect(inputs[0].properties?.from).toBe('in')
     // 只收到第一個目標曾經是實際的缺陷（走訪停太早），這條釘住它
-    expect((inputs[0].children?.values ?? []).map((v) => (v as SemanticNode).properties?.name)).toEqual(['a', 'b', 'c'])
+    expect((inputs[0].slots?.values ?? []).map((v) => (v as SemanticNode).properties?.name)).toEqual(['a', 'b', 'c'])
   })
 
   it('宣告升成 cpp_istringstream_declare，來源掛在 source 底下', () => {
@@ -117,7 +117,7 @@ describe('概念身分與五路', () => {
     const decls = collect(tree, (n) => n.componentId === 'cpp:istringstream_declare')
     expect(decls).toHaveLength(1)
     expect(decls[0].properties?.name).toBe('in')
-    expect((decls[0].children?.source ?? []).length).toBe(1)
+    expect((decls[0].slots?.source ?? []).length).toBe(1)
   })
 
   it('產生路徑：宣告與讀取都產得回來，且不是無法產生的退路', () => {

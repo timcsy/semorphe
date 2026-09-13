@@ -4,11 +4,11 @@ import { generateExpression, indent } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:container_sort_self', (node, ctx) => {
-    const o = generateExpression((node.children.obj ?? [])[0], ctx)
+    const o = generateExpression((node.slots.obj ?? [])[0], ctx)
     const parts: string[] = []
     // ⚠️ **空的那一格不寫**——`xs.sort(key=)` 不是合法的 Python
     for (const slot of ['key', 'reverse'] as const) {
-      const v = (node.children[slot] ?? [])[0]
+      const v = (node.slots[slot] ?? [])[0]
       if (v) parts.push(`${slot}=${generateExpression(v, ctx)}`)
     }
     return `${indent(ctx)}${o}.sort(${parts.join(', ')})\n`

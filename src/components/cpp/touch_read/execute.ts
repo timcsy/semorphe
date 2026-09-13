@@ -19,7 +19,7 @@ const UNTOUCHED = 75
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:touch_read', async (node, ctx) => {
-    requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
+    requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
     return { type: 'int', value: UNTOUCHED }
   })
 }

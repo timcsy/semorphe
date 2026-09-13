@@ -2,7 +2,7 @@
   "componentId": "cpp:digital_write",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "pin": "expression",
     "value": "expression"
   },

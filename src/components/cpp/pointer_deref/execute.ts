@@ -7,7 +7,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   registerLvalue()
   register('cpp:pointer_deref', async (node, ctx) => {
-      const ptrNodes = node.children.ptr ?? []
+      const ptrNodes = node.slots.ptr ?? []
       if (ptrNodes.length > 0) {
         const ptrVal = await ctx.evaluate(ptrNodes[0])
         if (ptrVal.type === ('pointer' as any) && typeof ptrVal.value === 'string') {
@@ -56,7 +56,7 @@ export function registerExecute(register: (component: string, executor: Componen
  */
 export function registerLvalue(): void {
   declareLvalue('cpp:pointer_deref', async (node, ctx: ExecutionContext) => {
-    const ptrNodes = node.children.ptr ?? []
+    const ptrNodes = node.slots.ptr ?? []
     if (ptrNodes.length === 0) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個解參考沒有指標' })
     }

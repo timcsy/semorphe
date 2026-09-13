@@ -103,7 +103,7 @@ const cppPrintfRule: StyleExceptionRule = {
   suggestion: () => 'cout << ...',
   convert: (node) => {
     // Convert cpp_printf to universal print
-    const args = node.children.args ?? []
+    const args = node.slots.args ?? []
     const values = args.length > 0 ? args : []
     return [buildPrint(values)]
   },
@@ -116,7 +116,7 @@ const cppScanfRule: StyleExceptionRule = {
   label: () => 'scanf(...)',
   suggestion: () => 'cin >> ...',
   convert: (node) => {
-    const args = node.children.args ?? []
+    const args = node.slots.args ?? []
     const values = args.length > 0 ? args : []
     return [buildInput(values)]
   },
@@ -129,7 +129,7 @@ const printToCstdioRule: StyleExceptionRule = {
   label: () => 'cout << ...',
   suggestion: () => 'printf(...)',
   convert: (node) => {
-    const values = node.children.values ?? []
+    const values = node.slots.values ?? []
     const hasEndl = values.some(v => isLineBreak(v.componentId))
     // Build format string: embed string_literal values directly, use %d for expressions
     const formatParts: string[] = []
@@ -157,7 +157,7 @@ const inputToCstdioRule: StyleExceptionRule = {
   label: () => 'cin >> ...',
   suggestion: () => 'scanf(...)',
   convert: (node) => {
-    const values = node.children.values ?? []
+    const values = node.slots.values ?? []
     const format = values.map(() => '%d').join(' ')
     return [buildInputFormatted(format, values)]
   },
@@ -332,9 +332,9 @@ function walkTree(
     }
   }
 
-  // Recurse into children
-  for (const children of Object.values(node.children)) {
-    for (const child of children) {
+  // Recurse into slots
+  for (const slots of Object.values(node.slots)) {
+    for (const child of slots) {
       walkTree(child, style, exceptions, registry)
     }
   }
@@ -344,11 +344,11 @@ function replaceInTree(
   node: SemanticNode,
   replacements: Map<SemanticNode, SemanticNode[] | null>,
 ): SemanticNode {
-  // Process children first (bottom-up)
+  // Process slots first (bottom-up)
   const newChildren: Record<string, SemanticNode[]> = {}
-  for (const [key, children] of Object.entries(node.children)) {
+  for (const [key, slots] of Object.entries(node.slots)) {
     const newList: SemanticNode[] = []
-    for (const child of children) {
+    for (const child of slots) {
       const replacement = replacements.get(child)
       if (replacement !== undefined) {
         // Replace or remove
@@ -364,5 +364,5 @@ function replaceInTree(
     newChildren[key] = newList
   }
 
-  return { ...node, children: newChildren }
+  return { ...node, slots: newChildren }
 }

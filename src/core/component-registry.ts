@@ -49,7 +49,7 @@ export class ComponentRegistry {
         id: c.componentId,
         abstractComponent: c.abstractComponent ?? undefined,
         propertyNames: paramNames(c.properties),
-        childNames: Object.keys(c.children),
+        childNames: Object.keys(c.slots),
         annotations: c.annotations,
       })
     }

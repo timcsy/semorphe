@@ -2,7 +2,7 @@
   "componentId": "cpp:math_pow",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "base": "expression",
     "exponent": "expression"
   },

@@ -37,7 +37,7 @@ describe('PatternExtractor — extractStrategy', () => {
     // Load a spec that would auto-derive
     extractor.loadBlockSpecs([{
       blockDef: { type: 'u_test', args0: [{ type: 'field_input', name: 'NAME' }] },
-      componentMapping: { componentId: 'test', properties: ['name'], children: {} },
+      componentMapping: { componentId: 'test', properties: ['name'], slots: {} },
     }])
     // Register strategy that returns different component
     extractor.registerExtractStrategy('u_test', () => createNode('strategy_wins', {}))
@@ -93,9 +93,9 @@ describe('C++ extract strategies on PatternExtractor', () => {
     const result = extractor.extract(block)!
     expect(result.componentId).toBe('cpp:var_declare')
     expect(result.properties.type).toBe('int')
-    expect(result.children.declarators).toHaveLength(2)
-    expect(result.children.declarators![0].properties.name).toBe('a')
-    expect(result.children.declarators![1].properties.name).toBe('b')
+    expect(result.slots.declarators).toHaveLength(2)
+    expect(result.slots.declarators![0].properties.name).toBe('a')
+    expect(result.slots.declarators![1].properties.name).toBe('b')
   })
 
   it('cpp_if strategy extracts if with else-if chain', () => {
@@ -111,7 +111,7 @@ describe('C++ extract strategies on PatternExtractor', () => {
     // 186 筆對應已固化成顯式宣告，推導已刪除，缺宣告由 `audit-explicit-mapping` 指名。
     extractor.loadBlockSpecs([{
       blockDef: { type: 'cpp_var_ref', args0: [{ type: 'field_input', name: 'NAME' }], output: 'any' },
-      componentMapping: { componentId: 'cpp:var_ref', properties: ['name'], children: {} },
+      componentMapping: { componentId: 'cpp:var_ref', properties: ['name'], slots: {} },
       renderMapping: { fields: { NAME: 'name' }, inputs: {}, statementInputs: {} },
     }])
 
@@ -127,10 +127,10 @@ describe('C++ extract strategies on PatternExtractor', () => {
     }
     const result = extractor.extract(block)!
     expect(result.componentId).toBe('cpp:if')
-    expect(result.children.condition![0].properties.name).toBe('x')
-    expect(result.children.else_body).toHaveLength(1)
-    expect(result.children.else_body![0].componentId).toBe('cpp:if')
-    expect(result.children.else_body![0].properties.isElseIf).toBe('true')
+    expect(result.slots.condition![0].properties.name).toBe('x')
+    expect(result.slots.else_body).toHaveLength(1)
+    expect(result.slots.else_body![0].componentId).toBe('cpp:if')
+    expect(result.slots.else_body![0].properties.isElseIf).toBe('true')
   })
 
   /**

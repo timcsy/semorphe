@@ -27,7 +27,7 @@ import { presetTree, presetKey, presetSuffixKey, resetPresetIds } from '../../..
 import type { SemanticNode } from '../../../src/core/types'
 
 const shape = (n: SemanticNode): Record<string, number> =>
-  Object.fromEntries(Object.entries(n.children).map(([k, v]) => [k, v.length]))
+  Object.fromEntries(Object.entries(n.slots).map(([k, v]) => [k, v.length]))
 
 describe('flow/presets', () => {
   beforeEach(() => resetPresetIds())
@@ -43,7 +43,7 @@ describe('flow/presets', () => {
     // ＋ `properties.isElseIf === 'true'`。學生不可能猜到這個形狀。
     const t = presetTree('cpp:if', { elseifCount: 1, hasElse: true })
     expect(shape(t), '🔴 else 那一格是空的 → 骨架沒有生出來').toEqual({ else_body: 1 })
-    const inner = t.children.else_body[0]
+    const inner = t.slots.else_body[0]
     expect(inner.componentId, '巢狀的那顆要是同一種').toBe('cpp:if')
     expect(inner.properties.isElseIf, '🔴 少了這個旗標，它會被讀成一個獨立的 if').toBe('true')
   })
@@ -80,8 +80,8 @@ describe('flow/presets', () => {
 
   it('★ 多層 else-if 要一層包一層，不是攤平', () => {
     const t = presetTree('cpp:if', { elseifCount: 2 })
-    const l1 = t.children.else_body[0]
-    expect(l1.children.else_body?.length, '🔴 第二層攤平了 → 那不是 else-if 鏈').toBe(1)
-    expect(l1.children.else_body[0].properties.isElseIf).toBe('true')
+    const l1 = t.slots.else_body[0]
+    expect(l1.slots.else_body?.length, '🔴 第二層攤平了 → 那不是 else-if 鏈').toBe(1)
+    expect(l1.slots.else_body[0].properties.isElseIf).toBe('true')
   })
 })

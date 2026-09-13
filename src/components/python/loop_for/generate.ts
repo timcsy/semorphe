@@ -5,12 +5,12 @@ import { indent, indented, generateExpression, generateBody, trackOwnText} from 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:loop_for', (node, ctx) => {
     // 多目標時 `targets` 是唯一的真實；單一目標仍走 `obj`（見 component.json 的說明）
-    const targets = node.children.targets ?? []
+    const targets = node.slots.targets ?? []
     const name = targets.length > 0
       ? targets.map((t) => String(t.properties.name ?? '')).join(', ')
       : String(node.properties.obj ?? 'i')
-    const it = generateExpression((node.children.iterable ?? [])[0], ctx)
-    const body = node.children.body ?? []
+    const it = generateExpression((node.slots.iterable ?? [])[0], ctx)
+    const body = node.slots.body ?? []
     const inner = indented(ctx)
     // 🔴 **標頭那一行要先算進行號**（2026-08-24）——否則主體裡每一顆的
     //    對應都往上偏一行，使用者按下積木時**反白到上一行**。

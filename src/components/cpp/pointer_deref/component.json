@@ -2,7 +2,7 @@
   "componentId": "cpp:pointer_deref",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "ptr": "expression"
   },
   "role": "expression",

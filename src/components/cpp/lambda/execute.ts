@@ -9,7 +9,7 @@ export function registerExecute(register: (component: string, executor: Componen
       const raw = String(node.properties.capture ?? '&')
       const capture: Callable['capture'] = raw.includes('&') ? '&' : raw.includes('=') ? '=' : ''
 
-      const params = (node.children.params ?? []).map((p) => ({
+      const params = (node.slots.params ?? []).map((p) => ({
         name: String(p.properties?.name ?? ''),
         type: String(p.properties?.type ?? 'int'),
       }))
@@ -19,7 +19,7 @@ export function registerExecute(register: (component: string, executor: Componen
 
       const callable: Callable = {
         params,
-        body: node.children.body ?? [],
+        body: node.slots.body ?? [],
         capture,
         closure: ctx.scope,
         snapshot,

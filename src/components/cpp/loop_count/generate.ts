@@ -8,9 +8,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
   const openBrace = openBraceFor(style)
   g.set('cpp:loop_count', (node, ctx) => {
       const varName = node.properties.var_name ?? 'i'
-      const from = generateExpression((node.children.from ?? [])[0], ctx)
-      const to = generateExpression((node.children.to ?? [])[0], ctx)
-      const body = node.children.body ?? []
+      const from = generateExpression((node.slots.from ?? [])[0], ctx)
+      const to = generateExpression((node.slots.to ?? [])[0], ctx)
+      const body = node.slots.body ?? []
       const inclusive = node.properties.inclusive === 'TRUE'
       const op = inclusive ? '<=' : '<'
       const header = `${indent(ctx)}for (int ${varName} = ${from}; ${varName} ${op} ${to}; ${varName}++)${openBrace(ctx)}\n`

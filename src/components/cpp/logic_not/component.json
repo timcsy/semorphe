@@ -2,7 +2,7 @@
   "componentId": "cpp:logic_not",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "operand": "expression"
   },
   "role": "expression",

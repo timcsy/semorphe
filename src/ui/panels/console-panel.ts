@@ -678,9 +678,9 @@ export class ConsolePanel implements ViewHost {
   }
 
   showOutputUpTo(count: number): void {
-    const children = this.outputEl.children
-    for (let i = 0; i < children.length; i++) {
-      const el = children[i] as HTMLElement
+    const slots = this.outputEl.children
+    for (let i = 0; i < slots.length; i++) {
+      const el = slots[i] as HTMLElement
       el.style.display = i < count ? '' : 'none'
     }
   }

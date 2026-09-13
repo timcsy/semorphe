@@ -34,7 +34,7 @@ import { setMessageSource, resetMessageSource } from '../../../src/core/messages
 import type { SemanticNode } from '../../../src/core/types'
 
 const tree = (): SemanticNode =>
-  ({ id: 'r', componentId: 'cpp:program', children: {}, properties: {} }) as unknown as SemanticNode
+  ({ id: 'r', componentId: 'cpp:program', slots: {}, properties: {} }) as unknown as SemanticNode
 
 const labels = (el: HTMLElement): string[] =>
   [...el.querySelectorAll('.flow-btn, .flow-empty, option')].map((n) => n.textContent ?? '')

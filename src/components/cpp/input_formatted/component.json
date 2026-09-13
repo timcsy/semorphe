@@ -7,7 +7,7 @@
       "kind": "literal"
     }
   ],
-  "children": {
+  "slots": {
     "args": "expressions"
   },
   "role": "statement",

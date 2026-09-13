@@ -15,7 +15,7 @@ const lift = liftPython
 /** 找出那顆節點——⚠️ 找不到時回 null，讓斷言指名，不要在這裡 throw。 */
 function findCompound(n: SemanticNode): SemanticNode | null {
   if (n.componentId === 'python:var_assign_compound') return n
-  for (const kids of Object.values(n.children ?? {})) {
+  for (const kids of Object.values(n.slots ?? {})) {
     for (const k of kids as SemanticNode[]) {
       const hit = findCompound(k)
       if (hit) return hit
@@ -127,6 +127,6 @@ describe('python:var_assign_compound', () => {
     const node = findCompound(tree)
     expect(node, '正向錨點——沒有它，下面的負向會空過').toBeTruthy()
     expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-    expect((node!.children.target ?? []).length, '🔴 左邊不是接點').toBe(1)
+    expect((node!.slots.target ?? []).length, '🔴 左邊不是接點').toBe(1)
   })
 })

@@ -4,7 +4,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:delay_microseconds', (node, ctx) => {
-    const us = generateExpression((node.children.us ?? [])[0], ctx)
+    const us = generateExpression((node.slots.us ?? [])[0], ctx)
     return `${indent(ctx)}delayMicroseconds(${us});\n`
   })
 }

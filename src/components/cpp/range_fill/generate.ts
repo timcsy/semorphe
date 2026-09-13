@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:range_fill', (node, ctx) => {
       const begin = node.properties.begin ?? 'v.begin()'
       const end = node.properties.end ?? 'v.end()'
-      const valueNodes = node.children.value ?? []
+      const valueNodes = node.slots.value ?? []
       const value = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '0'
       return `${indent(ctx)}fill(${begin}, ${end}, ${value});\n`
     })

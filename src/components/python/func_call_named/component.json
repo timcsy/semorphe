@@ -5,7 +5,7 @@
   "properties": [
     { "name": "name", "kind": "identifier", "default": "" }
   ],
-  "children": { "value": "expression" },
+  "slots": { "value": "expression" },
   "role": "expression",
   "owner": "(python)",
   "paths": {

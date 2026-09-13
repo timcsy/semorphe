@@ -8,7 +8,7 @@
       "default": "lcd"
     }
   ],
-  "children": {
+  "slots": {
     "col": "expression",
     "row": "expression"
   },

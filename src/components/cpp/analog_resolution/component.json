@@ -2,7 +2,7 @@
   "componentId": "cpp:analog_resolution",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "bits": "expression"
   },
   "role": "statement",

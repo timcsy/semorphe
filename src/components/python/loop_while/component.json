@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "🔴 **刻意是 null**——Python 的 `while` 可以帶 `else`（迴圈**沒有被 break** 時執行），C++ 沒有。邊界不同。",
   "properties": [],
-  "children": {
+  "slots": {
     "condition": "expression",
     "body": "statements"
   },

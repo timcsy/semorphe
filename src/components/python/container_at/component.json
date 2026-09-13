@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "🔴 C++ 那側把它切成兩顆（依容器型別各一顆），因為那邊**編譯期就知道型別**。Python 這一顆刻意合成一顆——見 `_children_why`。指向其中任一顆都會是一個我們判不出來的宣稱。",
   "properties": [],
-  "children": {
+  "slots": {
     "target": "expression",
     "key": "expression"
   },

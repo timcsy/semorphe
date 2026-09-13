@@ -11,7 +11,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:bitwise_not', async (node, ctx) => {
-    const v = await ctx.evaluate(node.children.operand[0])
+    const v = await ctx.evaluate(node.slots.operand[0])
     if (v.type !== 'int' && v.type !== 'bool') {
       throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': '~ 只能用在整數上' })
     }

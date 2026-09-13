@@ -54,8 +54,8 @@ function roundTripCode(code: string): string {
 function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
-  for (const children of Object.values(node.children ?? {})) {
-    for (const child of children as SemanticNode[]) {
+  for (const slots of Object.values(node.slots ?? {})) {
+    for (const child of slots as SemanticNode[]) {
       const found = findComponent(child, componentId)
       if (found) return found
     }
@@ -66,21 +66,21 @@ function findComponent(node: SemanticNode | null, componentId: string): Semantic
 function countRawCode(node: SemanticNode): number {
   let count = 0
   if (node.componentId === 'raw_code' || node.componentId === 'cpp:raw_code') count++
-  for (const children of Object.values(node.children ?? {})) {
-    for (const child of children as SemanticNode[]) count += countRawCode(child)
+  for (const slots of Object.values(node.slots ?? {})) {
+    for (const child of slots as SemanticNode[]) count += countRawCode(child)
   }
   return count
 }
 
 function treesStructurallyEqual(a: SemanticNode, b: SemanticNode): boolean {
   if (a.componentId !== b.componentId) return false
-  const aKeys = Object.keys(a.children ?? {}).sort()
-  const bKeys = Object.keys(b.children ?? {}).sort()
+  const aKeys = Object.keys(a.slots ?? {}).sort()
+  const bKeys = Object.keys(b.slots ?? {}).sort()
   if (aKeys.length !== bKeys.length) return false
   for (let i = 0; i < aKeys.length; i++) {
     if (aKeys[i] !== bKeys[i]) return false
-    const ac = (a.children?.[aKeys[i]] ?? []) as SemanticNode[]
-    const bc = (b.children?.[bKeys[i]] ?? []) as SemanticNode[]
+    const ac = (a.slots?.[aKeys[i]] ?? []) as SemanticNode[]
+    const bc = (b.slots?.[bKeys[i]] ?? []) as SemanticNode[]
     if (ac.length !== bc.length) return false
     for (let j = 0; j < ac.length; j++) {
       if (!treesStructurallyEqual(ac[j], bc[j])) return false

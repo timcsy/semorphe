@@ -86,7 +86,7 @@ export type ConnectVerdict =
 /** 這顆節點的子樹裡有沒有那個 id（用來擋環）。 */
 function contains(node: SemanticNode, id: string): boolean {
   if (node.id === id) return true
-  for (const bucket of Object.values(node.children ?? {})) {
+  for (const bucket of Object.values(node.slots ?? {})) {
     for (const c of bucket ?? []) if (contains(c, id)) return true
   }
   return false
@@ -94,7 +94,7 @@ function contains(node: SemanticNode, id: string): boolean {
 
 function findNode(root: SemanticNode, id: string): SemanticNode | null {
   if (root.id === id) return root
-  for (const bucket of Object.values(root.children ?? {})) {
+  for (const bucket of Object.values(root.slots ?? {})) {
     for (const c of bucket ?? []) {
       const hit = findNode(c, id)
       if (hit) return hit
@@ -210,7 +210,7 @@ function locate(
   root: SemanticNode,
   id: string,
 ): { parent: SemanticNode; slot: string; index: number } | null {
-  for (const [slot, bucket] of Object.entries(root.children ?? {})) {
+  for (const [slot, bucket] of Object.entries(root.slots ?? {})) {
     const i = (bucket ?? []).findIndex((c) => c.id === id)
     if (i >= 0) return { parent: root, slot, index: i }
     for (const c of bucket ?? []) {

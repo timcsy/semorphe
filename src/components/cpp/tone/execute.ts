@@ -15,13 +15,13 @@ import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtim
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:tone', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
-    const hz = ctx.toNumber(await ctx.evaluate((node.children.frequency ?? [])[0]))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
+    const hz = ctx.toNumber(await ctx.evaluate((node.slots.frequency ?? [])[0]))
     const state = stateOf(ctx, pin)
     if (state.mode === undefined) state.writtenBeforeMode = true
     state.toneHz = hz
     // ⚠️ **沒有第三個引數與「發聲 0 毫秒」要分得出來**——前者是 `undefined`（一直響）。
-    const durNode = (node.children.duration ?? [])[0]
+    const durNode = (node.slots.duration ?? [])[0]
     state.toneMs = durNode ? ctx.toNumber(await ctx.evaluate(durNode)) : undefined
   })
 }

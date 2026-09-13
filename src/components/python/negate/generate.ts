@@ -5,6 +5,6 @@ import { precedence, genChild } from '../../../core/projection/precedence'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:negate', (node, ctx) => {
     // 與 `not` 不同：`-` 是符號，`-x` 不需要空格。
-    return `-${genChild((node.children.value ?? [])[0], precedence(node), ctx)}`
+    return `-${genChild((node.slots.value ?? [])[0], precedence(node), ctx)}`
   })
 }

@@ -4,7 +4,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:bitwise_not', (node, ctx) => {
-      const operand = generateExpression((node.children.operand ?? [])[0], ctx)
+      const operand = generateExpression((node.slots.operand ?? [])[0], ctx)
       return `~${operand}`
     })
 }

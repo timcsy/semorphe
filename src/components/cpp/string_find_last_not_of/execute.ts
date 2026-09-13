@@ -17,7 +17,7 @@ export function registerExecute(
 ): void {
   register('cpp:string_find_last_not_of', async (node, ctx) => {
     const str = String(ctx.scope.get(String(node.properties.obj)).value)
-    const argNodes = node.children.arg ?? []
+    const argNodes = node.slots.arg ?? []
     if (argNodes.length === 0) return { type: 'int', value: -1 }
     const set = new Set(String((await ctx.evaluate(argNodes[0])).value))
     const idxs = [...str].map((c, i) => (set.has(c) ? -1 : i)).filter((i) => i >= 0)

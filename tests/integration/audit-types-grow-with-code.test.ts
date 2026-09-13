@@ -32,8 +32,8 @@ import type { SemanticNode } from '../../src/core/types'
 import { REPO_ROOT } from '../helpers/guardrail'
 
 /** 一棵最小的樹——⚠️ 刻意不經解析器，這一支驗的是**列舉**不是解析。 */
-function node(componentId: string, type?: string, children: Record<string, SemanticNode[]> = {}): SemanticNode {
-  return { id: componentId + Math.random(), componentId, properties: type ? { type } : {}, children } as SemanticNode
+function node(componentId: string, type?: string, slots: Record<string, SemanticNode[]> = {}): SemanticNode {
+  return { id: componentId + Math.random(), componentId, properties: type ? { type } : {}, slots } as SemanticNode
 }
 
 /** 今天那七個——🔴 **順序是介面的一部分**（課程在依賴它）。 */

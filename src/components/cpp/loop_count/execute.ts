@@ -5,9 +5,9 @@ import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/cont
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:loop_count', async (node, ctx) => {
       const varName = String(node.properties.var_name)
-      const from = ctx.toNumber(await ctx.evaluate(node.children.from[0]))
-      const to = ctx.toNumber(await ctx.evaluate(node.children.to[0]))
-      const body = node.children.body ?? []
+      const from = ctx.toNumber(await ctx.evaluate(node.slots.from[0]))
+      const to = ctx.toNumber(await ctx.evaluate(node.slots.to[0]))
+      const body = node.slots.body ?? []
       const parentScope = ctx.scope
       const inclusive = node.properties.inclusive === 'TRUE'
 

@@ -15,7 +15,7 @@ import { pythonDisplay } from '../../../languages/python/value-display'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:throw', async (node, ctx) => {
     const name = String(node.properties.exception ?? 'ValueError')
-    const v = (node.children.value ?? [])[0]
+    const v = (node.slots.value ?? [])[0]
     const msg = v ? pythonDisplay(await ctx.evaluate(v)) : name
     throw new RuntimeError(RUNTIME_ERRORS.USER_RAISED, { '%1': msg, '%2': name })
   })

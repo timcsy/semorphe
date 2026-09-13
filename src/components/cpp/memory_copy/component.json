@@ -2,7 +2,7 @@
   "componentId": "cpp:memory_copy",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "dest": "expression",
     "src": "expression",
     "size": "expression"

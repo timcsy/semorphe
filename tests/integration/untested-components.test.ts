@@ -64,7 +64,7 @@ function collect(node: SemanticNode, id: string): SemanticNode[] {
   const walk = (n: SemanticNode): void => {
     if (!n) return
     if (n.componentId === id) out.push(n)
-    for (const list of Object.values(n.children ?? {})) for (const c of list ?? []) walk(c as SemanticNode)
+    for (const list of Object.values(n.slots ?? {})) for (const c of list ?? []) walk(c as SemanticNode)
   }
   walk(node)
   return out
@@ -106,15 +106,15 @@ describe('var_declarator — 多變數宣告', () => {
     // 有執行器、有抽取器、有定義，而**沒有任何辨識路徑產出過它**。
     // 它假設所有宣告子都是純名字，但 `int a, *p, arr[3];` 的三個宣告子是
     // 三個**不同**的概念。系統做對了，模型錯了。已進墓碑。
-    const outer = collect(lift(program), 'cpp:var_declare').filter((n) => (n.children?.declarators ?? []).length > 0)
+    const outer = collect(lift(program), 'cpp:var_declare').filter((n) => (n.slots?.declarators ?? []).length > 0)
     expect(outer).toHaveLength(1)
-    expect(outer[0].children!.declarators).toHaveLength(3)
+    expect(outer[0].slots!.declarators).toHaveLength(3)
   })
 
   it('負向：不同形狀的宣告子拿到**不同**的概念', () => {
     const tree = lift('int a = 1, *p = nullptr, arr[3];')
-    const outer = collect(tree, 'cpp:var_declare').filter((n) => (n.children?.declarators ?? []).length > 0)[0]
-    const ids = (outer.children!.declarators as SemanticNode[]).map((d) => d.componentId)
+    const outer = collect(tree, 'cpp:var_declare').filter((n) => (n.slots?.declarators ?? []).length > 0)[0]
+    const ids = (outer.slots!.declarators as SemanticNode[]).map((d) => d.componentId)
     expect(new Set(ids).size, '全部同一個概念 → 指標與陣列的形狀資訊掉了').toBeGreaterThan(1)
   })
 

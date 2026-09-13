@@ -59,7 +59,7 @@ function scan(n: SemanticNode | null | undefined,
       if (typeof t === 'string') raws.push(t.trim().slice(0, 120))
     }
   }
-  for (const b of Object.values(n.children ?? {})) for (const c of b ?? []) scan(c, ids, raws)
+  for (const b of Object.values(n.slots ?? {})) for (const c of b ?? []) scan(c, ids, raws)
 }
 
 describe.skipIf(!process.env.STUDYCPP_DIR)('探針：StudyCpp 語料', () => {

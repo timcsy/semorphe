@@ -27,7 +27,7 @@ const NONE: RuntimeValue = { type: 'void', value: null }
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:with', async (node, ctx) => {
-    const resource = await ctx.evaluate(node.children.value[0])
+    const resource = await ctx.evaluate(node.slots.value[0])
     const has = (m: string): boolean =>
       resource.type === 'object' && !!resource.structName && ctx.functions.has(`${resource.structName}.${m}`)
 
@@ -38,7 +38,7 @@ export function registerExecute(register: (component: string, executor: Componen
       else ctx.scope.declare(name, bound)
     }
     try {
-      await ctx.executeBody(node.children.body ?? [])
+      await ctx.executeBody(node.slots.body ?? [])
     } finally {
       // 🔴 **收尾在 finally**——主體丟例外時它照樣要跑，那正是 `with` 存在的理由
       if (has('__exit__')) await callMethod(resource, '__exit__', [NONE, NONE, NONE], ctx)

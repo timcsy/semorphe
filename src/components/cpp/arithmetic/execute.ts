@@ -5,7 +5,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:arithmetic', async (node, ctx) => {
       const op = String(node.properties.operator)
-      const left = await ctx.evaluate(node.children.left[0])
+      const left = await ctx.evaluate(node.slots.left[0])
 
       // 左邊是物件時，問它的型別有沒有多載這個運算子。
       //
@@ -15,7 +15,7 @@ export function registerExecute(register: (component: string, executor: Componen
       if (left.type === 'object') {
         const m = ctx.structs.method(left.structName ?? '', `operator${op}`)
         if (m) {
-          const r = await ctx.structs.invoke(left, m, [node.children.right[0]])
+          const r = await ctx.structs.invoke(left, m, [node.slots.right[0]])
           if (r !== undefined) return r
         }
         // 落到下面的數值運算會把物件轉成 NaN，而那會印出一個數字，
@@ -25,7 +25,7 @@ export function registerExecute(register: (component: string, executor: Componen
         })
       }
 
-      const right = await ctx.evaluate(node.children.right[0])
+      const right = await ctx.evaluate(node.slots.right[0])
 
       // **指標算術**：`p = p + 2`、`p - 1`。
       //

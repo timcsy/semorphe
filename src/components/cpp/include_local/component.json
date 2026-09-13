@@ -8,7 +8,7 @@
       "default": "myheader.h"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "skipPaths": [
     "execute"

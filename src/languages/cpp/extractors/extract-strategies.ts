@@ -26,7 +26,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
       ? declarators[0].properties.name
       : ((block.fields.NAME as string) ?? 'x')
     const initChildren = declarators.length === 1
-      ? declarators[0].children.initializer ?? []
+      ? declarators[0].slots.initializer ?? []
       : (() => {
           const initInput = block.inputs.INIT ?? block.inputs.INIT_0
           const initNode = initInput?.block ? ctx.extract(initInput.block) : null
@@ -132,7 +132,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     if (declarators.length === 1) {
       return buildVarDeclare(
         { name: declarators[0].properties.name, type },
-        { initializer: declarators[0].children.initializer ?? [] },
+        { initializer: declarators[0].slots.initializer ?? [] },
       )
     }
     return buildVarDeclare({ name: 'i', type }, { initializer: [] })

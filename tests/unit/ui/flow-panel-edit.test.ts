@@ -31,11 +31,11 @@ import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 const loopTree = (): SemanticNode =>
   ({
     id: 'root', componentId: 'cpp:program', properties: {},
-    children: {
+    slots: {
       body: [{
         id: 'L1', componentId: 'cpp:loop_count',
         properties: { var_name: 'i', inclusive: 'FALSE' },
-        children: {},
+        slots: {},
       }],
     },
   }) as unknown as SemanticNode
@@ -154,7 +154,7 @@ describe('流程面板：改一格的值', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
 
     expect(got, '沒有送出去 → 改了而沒有人知道').not.toBeNull()
-    const loop = (got as unknown as SemanticNode).children.body[0]
+    const loop = (got as unknown as SemanticNode).slots.body[0]
     expect(
       loop.properties.inclusive,
       '🔴 顯示文字被寫進真實了——下一次投影會壞，而症狀出現在別的地方',
@@ -186,10 +186,10 @@ describe('流程面板：拉線', () => {
   const twoNodes = (): SemanticNode =>
     ({
       id: 'root', componentId: 'cpp:program', properties: {},
-      children: {
+      slots: {
         body: [
-          { id: 'D', componentId: 'cpp:var_declare', properties: { name: 'x' }, children: {} },
-          { id: 'N', componentId: 'cpp:literal_number', properties: { value: '7' }, children: {} },
+          { id: 'D', componentId: 'cpp:var_declare', properties: { name: 'x' }, slots: {} },
+          { id: 'N', componentId: 'cpp:literal_number', properties: { value: '7' }, slots: {} },
         ],
       },
     }) as unknown as SemanticNode
@@ -269,8 +269,8 @@ describe('流程面板：拖曳的回饋', () => {
     panel = new FlowPanel(host, registry())
     panel.onSemanticUpdate({ tree: {
       id: 'root', componentId: 'cpp:program', properties: {},
-      children: { body: [
-        { id: 'D', componentId: 'cpp:var_declare', properties: { name: 'x' }, children: {} },
+      slots: { body: [
+        { id: 'D', componentId: 'cpp:var_declare', properties: { name: 'x' }, slots: {} },
       ] },
     } } as never)
   })
@@ -381,8 +381,8 @@ describe('流程面板：拉一顆節點出來（先不接）', () => {
   const oneNode = (): SemanticNode =>
     ({
       id: 'root', componentId: 'cpp:program', properties: {},
-      children: { body: [
-        { id: 'D', componentId: 'cpp:var_declare', properties: { name: 'x' }, children: {} },
+      slots: { body: [
+        { id: 'D', componentId: 'cpp:var_declare', properties: { name: 'x' }, slots: {} },
       ] },
     }) as unknown as SemanticNode
 
@@ -514,7 +514,7 @@ describe('流程面板：拉一顆節點出來（先不接）', () => {
     panel.onEdit((t) => { got = t })
     dragChip('算式', { x: 0, y: 0 })   // happy-dom 沒有版面：畫布的邊界是 0×0，(0,0) 在裡面
     expect(got, '🔴 什麼都沒送出去 → 拉不出節點').not.toBeNull()
-    const body = (got as unknown as SemanticNode).children.body
+    const body = (got as unknown as SemanticNode).slots.body
     expect(body.length, '🔴 頂層沒有多出那一顆').toBe(2)
     expect(body[1].componentId).toBe('cpp:arithmetic')
   })

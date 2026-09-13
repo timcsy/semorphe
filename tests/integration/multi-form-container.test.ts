@@ -63,7 +63,7 @@ function collect(node: SemanticNode, pred: (n: SemanticNode) => boolean): Semant
   const walk = (n: SemanticNode): void => {
     if (!n) return
     if (pred(n)) out.push(n)
-    for (const list of Object.values(n.children ?? {})) for (const c of list ?? []) walk(c as SemanticNode)
+    for (const list of Object.values(n.slots ?? {})) for (const c of list ?? []) walk(c as SemanticNode)
   }
   walk(node)
   return out

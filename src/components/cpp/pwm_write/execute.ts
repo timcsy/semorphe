@@ -12,8 +12,8 @@ import { resolveTarget } from '../../../languages/cpp/core/runtime/arduino-pwm'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pwm_write', async (node, ctx) => {
-    const x = ctx.toNumber(await ctx.evaluate((node.children.target ?? [])[0]))
-    const duty = ctx.toNumber(await ctx.evaluate((node.children.duty ?? [])[0]))
+    const x = ctx.toNumber(await ctx.evaluate((node.slots.target ?? [])[0]))
+    const duty = ctx.toNumber(await ctx.evaluate((node.slots.duty ?? [])[0]))
     const target = resolveTarget(ctx, x)
     if (!target) {
       throw new Error(`PWM 通道 ${x} 設定過了，但沒有接到任何腳位——少了「把腳位接到 PWM 通道」`)

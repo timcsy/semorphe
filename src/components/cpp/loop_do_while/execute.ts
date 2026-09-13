@@ -4,8 +4,8 @@ import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/cont
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:loop_do_while', async (node, ctx) => {
-      const body = node.children.body ?? []
-      const condNodes = node.children.cond ?? []
+      const body = node.slots.body ?? []
+      const condNodes = node.slots.cond ?? []
       const parentScope = ctx.scope
       do {
         ctx.scope = parentScope.createChild()

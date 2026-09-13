@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:container_append', (node, ctx) => {
       const obj = node.properties.obj ?? 'obj'
-      const val = generateExpression((node.children.value ?? [])[0], ctx)
+      const val = generateExpression((node.slots.value ?? [])[0], ctx)
       return `${indent(ctx)}${obj}.push_back(${val});\n`
     })
 }

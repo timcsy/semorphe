@@ -18,11 +18,11 @@ import { describe, it, expect } from 'vitest'
 import { unwrapSkeletonFrame } from '../../../src/core/scaffold-nodes'
 import '../../../src/core/load-language-packs'
 
-interface N { id: string; componentId: string; properties: Record<string, unknown>; children: Record<string, N[]> }
+interface N { id: string; componentId: string; properties: Record<string, unknown>; slots: Record<string, N[]> }
 const n = (componentId: string, properties: Record<string, unknown> = {}, body: N[] = []): N =>
-  ({ id: componentId + Math.random(), componentId, properties, children: { body } })
+  ({ id: componentId + Math.random(), componentId, properties, slots: { body } })
 const program = (body: N[]): N => n('cpp:program', {}, body)
-const names = (t: unknown) => ((t as N).children.body ?? []).map(
+const names = (t: unknown) => ((t as N).slots.body ?? []).map(
   (x) => x.componentId + (x.properties.name ? `(${String(x.properties.name)})` : ''))
 
 describe('換骨架前：扣掉骨架自己之後還剩什麼', () => {

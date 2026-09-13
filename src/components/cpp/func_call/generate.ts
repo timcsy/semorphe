@@ -9,7 +9,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       // 都在（`cpp_increment` 與 `cpp_compound_assign` 早就在用），而這四個
       // 沒有用它——於是被迫存在一個 `_expr` 雙胞胎概念。B 項合併掉那六對。
       const name = node.properties.name ?? 'f'
-      const args = (node.children.args ?? []).map(a => generateExpression(a, ctx))
+      const args = (node.slots.args ?? []).map(a => generateExpression(a, ctx))
       const expr = `${name}(${args.join(', ')})`
       if (ctx.isExpression) return expr
       return `${indent(ctx)}${expr};\n`

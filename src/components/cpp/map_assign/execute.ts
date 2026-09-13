@@ -16,8 +16,8 @@ export function registerExecute(register: (component: string, executor: Componen
      */
     register('cpp:map_assign', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const keyNodes = node.children.key ?? []
-      const valueNodes = node.children.value ?? []
+      const keyNodes = node.slots.key ?? []
+      const valueNodes = node.slots.value ?? []
       if (keyNodes.length === 0 || valueNodes.length === 0) return
       const keyVal = await ctx.evaluate(keyNodes[0])
       const val = await ctx.evaluate(valueNodes[0])

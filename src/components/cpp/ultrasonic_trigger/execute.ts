@@ -18,7 +18,7 @@ export function registerExecute(
   register: (component: string, executor: ComponentExecutor) => void,
 ): void {
   register('cpp:ultrasonic_trigger', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
     const state = stateOf(ctx, pin)
     // ⚠️ 與 digitalWrite 同一條路：沒有 pinMode 就寫，**記下來但不擋**。
     if (state.mode === undefined) state.writtenBeforeMode = true

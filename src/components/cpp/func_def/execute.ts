@@ -5,7 +5,7 @@ export function registerExecute(register: (component: string, executor: Componen
   register('cpp:func_def', async (node, ctx) => {
       const name = String(node.properties.name)
       const returnType = String(node.properties.return_type || 'void')
-      const paramChildren = node.children.params ?? []
+      const paramChildren = node.slots.params ?? []
       // 🔴 **預設值要一起帶過去**（2026-08-23）：呼叫那側少給引數時要用它，
       //    而它在這裡被丟掉的症狀是 `add(1)` 在 `int add(int a, int b = 10)`
       //    底下算出 1 而不是 11——**不報錯、有輸出、而答案錯**。
@@ -21,7 +21,7 @@ export function registerExecute(register: (component: string, executor: Componen
         name,
         params,
         returnType,
-        body: node.children.body ?? [],
+        body: node.slots.body ?? [],
       })
     })
 }

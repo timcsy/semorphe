@@ -37,7 +37,7 @@ beforeAll(async () => {
 
 function ids(n: SemanticNode, out: string[] = []): string[] {
   out.push(n.componentId)
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids) ids(k, out)
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids) ids(k, out)
   return out
 }
 

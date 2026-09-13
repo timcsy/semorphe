@@ -125,7 +125,7 @@ function liftCode(code: string): SemanticNode | null {
 function collectIds(node: SemanticNode | null, out: Set<string> = new Set()): Set<string> {
   if (!node) return out
   out.add(node.componentId)
-  for (const kids of Object.values(node.children ?? {})) {
+  for (const kids of Object.values(node.slots ?? {})) {
     for (const k of kids as SemanticNode[]) collectIds(k, out)
   }
   return out

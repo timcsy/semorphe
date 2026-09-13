@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:dht_declare', (node, ctx) => {
     const name = String(node.properties.name ?? 'dht')
-    const args = (node.children.initializer ?? []).map((a) => generateExpression(a, ctx))
+    const args = (node.slots.initializer ?? []).map((a) => generateExpression(a, ctx))
     // 🔴 沒有引數時**不得產出空的括號**——`DHT s();` 在 C++ 裡是一個
     //    函式宣告，不是一個物件（最令人困惑的解析）。
     if (args.length === 0) return `${indent(ctx)}DHT ${name};\n`

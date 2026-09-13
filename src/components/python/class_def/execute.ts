@@ -28,18 +28,18 @@ export function registerExecute(register: (component: string, executor: Componen
         if (key.startsWith(prefix)) ctx.functions.set(`${cls}.${key.slice(prefix.length)}`, fn)
       }
     }
-    for (const m of node.children.methods ?? []) {
+    for (const m of node.slots.methods ?? []) {
       const mName = String(m.properties.name ?? '')
       if (!mName) continue
-      const params = (m.children.params ?? [])
+      const params = (m.slots.params ?? [])
         .map((p) => ({ name: String(p.properties.name ?? ''), type: '' }))
         .filter((p) => p.name)
-      ctx.functions.set(`${cls}.${mName}`, { name: mName, params, body: m.children.body ?? [], returnType: '' })
+      ctx.functions.set(`${cls}.${mName}`, { name: mName, params, body: m.slots.body ?? [], returnType: '' })
     }
     // 🔴 **類別層級的屬性存成「建構時要跑的那幾行」**——見宣告裡的已知簡化：
     //    它們在這裡是**每個實例各一份的初始值**，不是共用的一份。
     ctx.functions.set(`${cls}.__fields__`, {
-      name: '__fields__', params: [], body: node.children.fields ?? [], returnType: '',
+      name: '__fields__', params: [], body: node.slots.fields ?? [], returnType: '',
     })
     // 🔴 **父類別記在函式表裡**——`super().__init__(…)` 要靠它找到上一層。
     //    ⚠️ 存在這裡而不是另開一張表：**一個實例找得到它的類別**（`structName`），

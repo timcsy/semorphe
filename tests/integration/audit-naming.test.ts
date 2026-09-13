@@ -91,8 +91,8 @@ function receiverParamName(components: component[]): Map<string, string> {
     //
     // > **一條「第一個 X 就是 Y」的規則，在 Y 有第二種住處時會安靜地指錯人。**
     //
-    // 🟢 宣告了 `children.obj` 的，接收者就在那裡——屬性那一側不必再猜。
-    if ((c as { children?: Record<string, unknown> }).children?.[RECEIVER_PARAM] !== undefined) continue
+    // 🟢 宣告了 `slots.obj` 的，接收者就在那裡——屬性那一側不必再猜。
+    if ((c as { slots?: Record<string, unknown> }).slots?.[RECEIVER_PARAM] !== undefined) continue
     const first = paramSpecs(c.properties as never)[0]
     if (first?.kind === 'identifier') out.set(c.componentId, first.name)
   }

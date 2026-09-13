@@ -8,5 +8,5 @@ const one = (ns: unknown[] | undefined, ctx: Parameters<NodeGenerator>[1]): stri
 }
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
-  g.set('python:pair_make', (node, ctx) => `${one(node.children.key, ctx)}: ${one(node.children.value, ctx)}`)
+  g.set('python:pair_make', (node, ctx) => `${one(node.slots.key, ctx)}: ${one(node.slots.value, ctx)}`)
 }

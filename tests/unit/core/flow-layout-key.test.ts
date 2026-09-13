@@ -38,11 +38,11 @@ import type { SemanticNode } from '../../../src/core/types'
 const tree = (bodies: { id: string; c: string; v?: string }[]): SemanticNode =>
   ({
     id: 'root', componentId: 'x:program', properties: {},
-    children: {
+    slots: {
       body: bodies.map((b) => ({
         id: b.id, componentId: b.c,
         properties: b.v === undefined ? {} : { value: b.v },
-        children: {},
+        slots: {},
       })),
     },
   }) as unknown as SemanticNode
@@ -73,13 +73,13 @@ describe('flow/layout-key', () => {
     const nested = (n: number): SemanticNode =>
       ({
         id: 'root', componentId: 'x:program', properties: {},
-        children: { body: [{
+        slots: { body: [{
           id: 'f', componentId: 'x:fn', properties: {},
-          children: { body: Array.from({ length: n }, (_, i) => ({
-            id: `s${i}`, componentId: 'x:pad', properties: {}, children: {},
+          slots: { body: Array.from({ length: n }, (_, i) => ({
+            id: `s${i}`, componentId: 'x:pad', properties: {}, slots: {},
           })).concat([{
             id: 'ret', componentId: 'x:ret', properties: {},
-            children: { value: [{ id: 'lit', componentId: 'x:n', properties: { value: '7' }, children: {} }] },
+            slots: { value: [{ id: 'lit', componentId: 'x:n', properties: { value: '7' }, slots: {} }] },
           } as never]),
           },
         }] },

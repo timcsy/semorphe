@@ -11,9 +11,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       const name = node.properties.name ?? 'MyClass'
       const baseClass = node.properties.base_class ?? ''
       const baseAccess = node.properties.base_access ?? 'public'
-      const publicBody = node.children.public ?? []
-      const protectedBody = node.children.protected ?? []
-      const privateBody = node.children.private ?? []
+      const publicBody = node.slots.public ?? []
+      const protectedBody = node.slots.protected ?? []
+      const privateBody = node.slots.private ?? []
       const inheritance = baseClass ? ` : ${baseAccess} ${baseClass}` : ''
       let code = `${indent(ctx)}class ${name}${inheritance}${openBrace(ctx)}\n`
       if (publicBody.length > 0) {

@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:servo_attach', (node, ctx) => {
     const obj = String(node.properties.obj ?? 'myServo')
-    const pin = generateExpression((node.children.pin ?? [])[0], ctx)
+    const pin = generateExpression((node.slots.pin ?? [])[0], ctx)
     return `${indent(ctx)}${obj}.attach(${pin});\n`
   })
 }

@@ -8,7 +8,7 @@ export function registerExecute(register: (component: string, executor: Componen
     // 🔴 **預設值要一起帶過去**（2026-08-21）：呼叫那側少給引數時要用它，
     //    而它在這裡被丟掉的症狀是「`greet("小明")` 說少了引數 greeting」
     //    ——**看起來像 lift 沒認出預設值，其實是登記時掉的**。
-    const params = (node.children.params ?? [])
+    const params = (node.slots.params ?? [])
       .map((p) => ({
         name: String(p.properties.name ?? ''),
         type: '',
@@ -18,6 +18,6 @@ export function registerExecute(register: (component: string, executor: Componen
         variadic: p.properties.variadic === undefined ? undefined : String(p.properties.variadic),
       }))
       .filter((p) => p.name)
-    ctx.functions.set(name, { name, params, body: node.children.body ?? [], returnType: '' })
+    ctx.functions.set(name, { name, params, body: node.slots.body ?? [], returnType: '' })
   })
 }

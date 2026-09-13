@@ -14,9 +14,9 @@ import { callMethod } from '../method_call/dispatch'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:string_join', async (node, ctx) => {
-    const self = await ctx.evaluate(node.children.obj[0])
+    const self = await ctx.evaluate(node.slots.obj[0])
     const args: RuntimeValue[] = []
-    for (const x of node.children.value ?? []) args.push(await ctx.evaluate(x))
+    for (const x of node.slots.value ?? []) args.push(await ctx.evaluate(x))
     return callMethod(self, 'join', args, ctx)
   })
 }

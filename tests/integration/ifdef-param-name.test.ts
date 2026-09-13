@@ -47,7 +47,7 @@ function lift(src: string): SemanticNode {
 
 function find(node: SemanticNode, id: string): SemanticNode | undefined {
   if (node?.componentId === id) return node
-  for (const l of Object.values(node?.children ?? {})) {
+  for (const l of Object.values(node?.slots ?? {})) {
     for (const c of l ?? []) {
       const hit = find(c as SemanticNode, id)
       if (hit) return hit

@@ -2,7 +2,7 @@
   "componentId": "cpp:memory_fill",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "ptr": "expression",
     "value": "expression",
     "size": "expression"

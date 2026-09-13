@@ -2,7 +2,7 @@
   "componentId": "cpp:array_2d_at",
   "abstractComponent": "cpp:array_at",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "row": "expression",
     "col": "expression"

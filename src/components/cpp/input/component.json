@@ -2,7 +2,7 @@
   "componentId": "cpp:input",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "values": "expressions"
   },
   "role": "statement",

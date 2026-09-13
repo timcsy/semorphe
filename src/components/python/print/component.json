@@ -3,7 +3,7 @@
   "_why": "spec 156：第一顆 Python 元件。它此刻【只是一個有性狀的身分】——沒有積木、沒有執行期。",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "values": "expression"
   },
   "_children_why": "🔴 **spec 156 寫成 `{}`，而 lift-pattern 一直在產出 `values`**——宣告與實際不符，卻沒有任何東西說話：宣告完整性護欄的語料是 **C++ 的**，這顆躲在「無法確定」裡（`declared-slots-decisions.json`，cause=語料沒覆蓋）。\n\n> **一個量不到的地方，宣告錯了與宣告對了長得一模一樣。**\n\n🟢 spec 160 補上：接點與 C++ 那顆輸出元件同形（`{\"values\": \"expression\"}`；⚠️ 刻意不寫完整身分——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出引用與說明），因為它們在觀察集 `{ioRole}` 下本來就同一類。",

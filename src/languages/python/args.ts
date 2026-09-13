@@ -15,7 +15,7 @@ export function isSpread(n: SemanticNode): boolean {
 
 /** 攤開的那個來源運算式（`*nums` 的 `nums`），不是攤開時回 `null`。 */
 export function spreadSourceOf(n: SemanticNode): SemanticNode | null {
-  return isSpread(n) ? ((n.children?.value ?? [])[0] ?? null) : null
+  return isSpread(n) ? ((n.slots?.value ?? [])[0] ?? null) : null
 }
 
 /**
@@ -31,7 +31,7 @@ export async function evalPythonArgs(
   const out: RuntimeValue[] = []
   for (const n of nodes) {
     if (isSpread(n)) {
-      const inner = (n.children?.value ?? [])[0]
+      const inner = (n.slots?.value ?? [])[0]
       if (!inner) continue
       const v = await ctx.evaluate(inner)
       if (n.properties?.kind === 'dict') {

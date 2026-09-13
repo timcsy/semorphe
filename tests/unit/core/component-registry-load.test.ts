@@ -25,7 +25,7 @@ describe('ComponentRegistry.loadFromJSON', () => {
     expect(registry.listAll().length).toBe(components.length)
   })
 
-  it('should load var_declare with correct properties and children', () => {
+  it('should load var_declare with correct properties and slots', () => {
     const registry = new ComponentRegistry()
     registry.loadFromJSON(loadComponents())
     const varDecl = registry.get('cpp:var_declare')

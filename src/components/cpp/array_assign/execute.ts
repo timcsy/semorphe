@@ -5,8 +5,8 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:array_assign', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const indexNodes = node.children.index
-      const valueNodes = node.children.value
+      const indexNodes = node.slots.index
+      const valueNodes = node.slots.value
       if (!indexNodes || indexNodes.length === 0 || !valueNodes || valueNodes.length === 0) return
 
       const indexVal = await ctx.evaluate(indexNodes[0])

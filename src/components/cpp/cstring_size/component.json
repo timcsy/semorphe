@@ -2,7 +2,7 @@
   "componentId": "cpp:cstring_size",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "str": "expression"
   },
   "role": "expression",

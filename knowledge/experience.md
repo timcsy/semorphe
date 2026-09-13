@@ -9433,7 +9433,7 @@ Blockly.Python['cv2_create_knn'] = function(block) {
 
 ### 一個宣告了而沒有人讀的型別，與沒有宣告是同一件事
 
-- **實例（2026-08-26）**：`component.json` 的 `children` 一直寫著那一格要什麼
+- **實例（2026-08-26）**：`component.json` 的 `slots`（當時叫 `children`）一直寫著那一格要什麼
   （`params: "param_decl"`、`initializer: "expression"`），而 `slotsOf` **只回傳
   「是不是身體」**。於是流程視圖上把一個數字接進 `main` 的參數格**接得上**，
   產出 `int main(int)`。

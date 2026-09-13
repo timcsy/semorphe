@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側是一個吃迭代器的演算法，不是容器的方法。形狀不同。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "value": "expression"
   },

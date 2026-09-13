@@ -2,7 +2,7 @@
   "componentId": "cpp:random_next",
   "abstractComponent": null,
   "properties": [],
-  "children": {},
+  "slots": {},
   "role": "expression",
   "paths": {
     "render": "./forms/blocks.json",

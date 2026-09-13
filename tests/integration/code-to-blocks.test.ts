@@ -113,8 +113,8 @@ function findComponents(sem: any): string[] {
   function walk(node: any) {
     if (!node) return
     if (node.componentId) components.push(node.componentId)
-    if (node.children) {
-      for (const ch of Object.values(node.children) as any[]) {
+    if (node.slots) {
+      for (const ch of Object.values(node.slots) as any[]) {
         if (Array.isArray(ch)) ch.forEach(walk)
       }
     }
@@ -189,8 +189,8 @@ describe('Code-to-Blocks Pipeline', () => {
       function findNode(node: any, component: string): any {
         if (!node) return null
         if (node.componentId === component) return node
-        if (node.children) {
-          for (const ch of Object.values(node.children) as any[]) {
+        if (node.slots) {
+          for (const ch of Object.values(node.slots) as any[]) {
             if (Array.isArray(ch)) {
               for (const c of ch) {
                 const found = findNode(c, component)

@@ -7,7 +7,7 @@
     { "name": "target_type", "kind": "enum", "default": "int" }
   ],
   "_properties_why": "屬性名與 C++ 那顆轉型一致——**同一個問題該用同一個名字問**。",
-  "children": { "value": "expression" },
+  "slots": { "value": "expression" },
   "role": "expression",
   "owner": "(python)",
   "paths": {

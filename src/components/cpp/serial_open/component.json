@@ -8,7 +8,7 @@
       "default": "Serial"
     }
   ],
-  "children": {
+  "slots": {
     "baud": "expression"
   },
   "role": "statement",

@@ -10,7 +10,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:string_make', async (node, ctx) => {
     let out = ''
-    for (const p of node.children.parts ?? []) out += String((await ctx.evaluate(p)).value)
+    for (const p of node.slots.parts ?? []) out += String((await ctx.evaluate(p)).value)
     return { type: 'string', value: out }
   })
 }

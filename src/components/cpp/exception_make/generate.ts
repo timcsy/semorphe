@@ -5,7 +5,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:exception_make', (node, ctx) => {
     const kind = String(node.properties.kind ?? 'runtime_error')
-    const msg = (node.children.message ?? [])[0]
+    const msg = (node.slots.message ?? [])[0]
     return msg ? `${kind}(${generateExpression(msg, ctx)})` : `${kind}("")`
   })
 }

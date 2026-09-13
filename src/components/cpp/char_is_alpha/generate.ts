@@ -10,7 +10,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:char_is_alpha', (node, ctx) => {
-    const v = (node.children.value ?? [])[0]
+    const v = (node.slots.value ?? [])[0]
     // ⚠️ 缺子節點時**不回一個看起來合理的預設值**——那是第三十三條護欄抓的形狀。
     if (!v) throw new Error('cpp:char_is_alpha 少了 value 子節點——語義樹壞了')
     return `isalpha(${generateExpression(v, ctx)})`

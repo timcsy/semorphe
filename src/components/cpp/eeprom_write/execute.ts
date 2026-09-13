@@ -10,8 +10,8 @@ import { eepromOf, requireAddress } from '../../../languages/cpp/core/runtime/ar
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:eeprom_write', async (node, ctx) => {
-    const addr = requireAddress(ctx.toNumber(await ctx.evaluate((node.children.address ?? [])[0])))
-    const value = ctx.toNumber(await ctx.evaluate((node.children.value ?? [])[0]))
+    const addr = requireAddress(ctx.toNumber(await ctx.evaluate((node.slots.address ?? [])[0])))
+    const value = ctx.toNumber(await ctx.evaluate((node.slots.value ?? [])[0]))
     eepromOf(ctx)[addr] = Math.trunc(value) & 0xff
   })
 }

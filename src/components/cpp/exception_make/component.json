@@ -8,7 +8,7 @@
       "default": "runtime_error"
     }
   ],
-  "children": {
+  "slots": {
     "message": {
       "allowed": [
         "expression"

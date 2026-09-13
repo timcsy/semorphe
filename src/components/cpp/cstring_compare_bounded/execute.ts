@@ -3,9 +3,9 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_compare_bounded', async (node, ctx) => {
-      const s1Nodes = node.children.s1 ?? []
-      const s2Nodes = node.children.s2 ?? []
-      const nNodes = node.children.n ?? []
+      const s1Nodes = node.slots.s1 ?? []
+      const s2Nodes = node.slots.s2 ?? []
+      const nNodes = node.slots.n ?? []
       const s1 = s1Nodes.length > 0 ? String((await ctx.evaluate(s1Nodes[0])).value) : ''
       const s2 = s2Nodes.length > 0 ? String((await ctx.evaluate(s2Nodes[0])).value) : ''
       const n = nNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(nNodes[0])) : 0

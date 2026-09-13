@@ -14,7 +14,7 @@ import { callMethod } from '../method_call/dispatch'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:string_strip', async (node, ctx) => {
-    const self = await ctx.evaluate(node.children.obj[0])
+    const self = await ctx.evaluate(node.slots.obj[0])
     const args: RuntimeValue[] = []
 
     return callMethod(self, 'strip', args, ctx)

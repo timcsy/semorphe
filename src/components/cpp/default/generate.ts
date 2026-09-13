@@ -4,7 +4,7 @@ import { indent, indented, generateBody } from '../../../core/projection/code-ge
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:default', (node, ctx) => {
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       let code = `${indent(ctx)}default:\n`
       code += generateBody(body, indented(ctx))
       return code

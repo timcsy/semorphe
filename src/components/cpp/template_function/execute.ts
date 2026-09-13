@@ -6,12 +6,12 @@ export function registerExecute(register: (component: string, executor: Componen
     register('cpp:template_function', async (node, ctx) => {
       ctx.functions.set(String(node.properties.func_name), {
         name: String(node.properties.func_name),
-        params: (node.children.params ?? []).map((p) => ({
+        params: (node.slots.params ?? []).map((p) => ({
           type: String(p.properties?.type ?? 'int'),
           name: String(p.properties?.name ?? ''),
         })),
         returnType: String(node.properties.return_type ?? 'T'),
-        body: node.children.body ?? [],
+        body: node.slots.body ?? [],
       })
     })
 }

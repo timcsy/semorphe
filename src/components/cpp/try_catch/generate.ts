@@ -7,10 +7,10 @@ import { indent, indented, generateBody, trackOwnText } from '../../../core/proj
 export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePreset): void {
   const openBrace = openBraceFor(style)
   g.set('cpp:try_catch', (node, ctx) => {
-      const tryBody = node.children.try_body ?? []
+      const tryBody = node.slots.try_body ?? []
       const catchType = node.properties.catch_type ?? 'exception&'
       const catchName = node.properties.catch_name ?? 'e'
-      const catchBody = node.children.catch_body ?? []
+      const catchBody = node.slots.catch_body ?? []
       const header = `${indent(ctx)}try${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header

@@ -7,7 +7,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const t = node.properties.t ?? 'T'
       const returnType = node.properties.return_type ?? 'T'
       const funcName = node.properties.func_name ?? 'myFunc'
-      const paramChildren = node.children.params ?? []
+      const paramChildren = node.slots.params ?? []
       const paramStr = paramChildren.map(p => {
         const pt = String(p.properties.type ?? 'T')
         const pn = String(p.properties.name ?? '')
@@ -17,7 +17,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         }
         return pn ? `${pt} ${pn}` : pt
       }).join(', ')
-      const bodyNodes = node.children.body ?? []
+      const bodyNodes = node.slots.body ?? []
       const bodyCode = generateBody(bodyNodes, indented(ctx))
       const ind = indent(ctx)
       return `${ind}template <typename ${t}>\n${ind}${returnType} ${funcName}(${paramStr}) {\n${bodyCode}${ind}}\n`

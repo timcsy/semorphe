@@ -11,7 +11,7 @@ import { charOf } from '../../../languages/cpp/core/runtime/char'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:char_is_digit', async (node, ctx) => {
-    const c = node.children.value?.[0]
+    const c = node.slots.value?.[0]
     const v = c ? ((await ctx.evaluate(c)) as RuntimeValue) : null
     if (!v) return { type: 'int', value: 0 }
     return { type: 'int', value: /[0-9]/.test(charOf(v)) ? 1 : 0 }

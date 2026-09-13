@@ -32,7 +32,7 @@ function thirdParty(id: string, extra: Partial<ComponentDefJSON> = {}): Componen
     componentId: id,
     abstractComponent: null,
     properties: [],
-    children: {},
+    slots: {},
     role: 'statement',
     ...extra,
   } as ComponentDefJSON

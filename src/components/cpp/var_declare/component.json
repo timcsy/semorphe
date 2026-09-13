@@ -20,7 +20,7 @@
       "required": false
     }
   ],
-  "children": {
+  "slots": {
     "initializer": "expression",
     "declarators": "cpp:var_declare"
   },

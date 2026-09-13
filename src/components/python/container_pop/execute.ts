@@ -14,9 +14,9 @@ import { callMethod } from '../method_call/dispatch'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:container_pop', async (node, ctx) => {
-    const self = await ctx.evaluate(node.children.obj[0])
+    const self = await ctx.evaluate(node.slots.obj[0])
     const args: RuntimeValue[] = []
-    const i = (node.children.index ?? [])[0]
+    const i = (node.slots.index ?? [])[0]
     if (i) args.push(await ctx.evaluate(i))
     return callMethod(self, 'pop', args, ctx)
   })

@@ -244,7 +244,7 @@ test('少分號的程式：按執行 → 不執行', async ({ page }) => {
     const marked: string[] = []
     const walk = (n: any): void => {
       if (n?.metadata?.degradationCause === 'syntax_error') marked.push(n.id)
-      for (const b of Object.values(n?.children ?? {})) for (const c of (b as any[]) ?? []) walk(c)
+      for (const b of Object.values(n?.slots ?? {})) for (const c of (b as any[]) ?? []) walk(c)
     }
     if (tree) walk(tree)
     return { marked: marked.length }
@@ -324,7 +324,7 @@ for (const [name, code] of Object.entries({
       let n = 0
       const walk = (x: any): void => {
         if (x?.metadata?.degradationCause === 'syntax_error') n++
-        for (const b of Object.values(x?.children ?? {})) for (const c of (b as any[]) ?? []) walk(c)
+        for (const b of Object.values(x?.slots ?? {})) for (const c of (b as any[]) ?? []) walk(c)
       }
       if (t) walk(t)
       return n

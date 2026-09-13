@@ -56,7 +56,7 @@ export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & 
     return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }
 
-  const body = tree.children.body ?? []
+  const body = tree.slots.body ?? []
   if (body.length === 0) {
     return { blocks: { languageVersion: 0, blocks: [] }, blockMappings: [] }
   }

@@ -8,7 +8,7 @@
       "default": "field"
     }
   ],
-  "children": {
+  "slots": {
     "obj": "expression"
   },
   "role": "expression",

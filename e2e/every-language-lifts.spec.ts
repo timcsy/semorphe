@@ -6,7 +6,7 @@
  * 2026-08-27 生 Python 教案時量到的：**六段 Python 全部量到 0 顆元件**。
  *
  * ```
- * print(1)  →  { componentId: "python:program", children: { body: [] } }
+ * print(1)  →  { componentId: "python:program", slots: { body: [] } }
  *              主控台：Parse error: TypeError: Cannot read properties of undefined (reading 'verdict')
  * ```
  *
@@ -78,8 +78,8 @@ for (const c of CASES) {
 
     const n = await page.evaluate(() => {
       const t = (window as never as { __app: { syncController: { currentTree: unknown } } })
-        .__app.syncController.currentTree as { children?: Record<string, unknown[]> }
-      return Object.values(t?.children ?? {}).reduce((a, v) => a + (v?.length ?? 0), 0)
+        .__app.syncController.currentTree as { slots?: Record<string, unknown[]> }
+      return Object.values(t?.slots ?? {}).reduce((a, v) => a + (v?.length ?? 0), 0)
     })
 
     expect(

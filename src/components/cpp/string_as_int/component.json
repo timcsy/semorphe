@@ -1,7 +1,7 @@
 {
   "componentId": "cpp:string_as_int",
   "properties": [],
-  "children": {
+  "slots": {
     "value": {
       "allowed": [
         "expression"

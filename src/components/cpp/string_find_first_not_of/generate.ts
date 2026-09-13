@@ -27,7 +27,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:string_find_first_not_of', (node, ctx) => {
     const obj = node.properties.obj ?? 'str'
-    const argNodes = node.children.arg ?? []
+    const argNodes = node.slots.arg ?? []
     const arg = argNodes.length > 0 ? generateExpression(argNodes[0], ctx) : '""'
     return `${obj}.find_first_not_of(${arg})`
   })

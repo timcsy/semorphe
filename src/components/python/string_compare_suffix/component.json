@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "同「開頭」那顆：C++ 那側要兩步。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "value": "expression"
   },

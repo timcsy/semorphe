@@ -7,10 +7,10 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function buildIf(children: Record<string, SemanticNode[]>, isElseIf = false): SemanticNode {
+export function buildIf(slots: Record<string, SemanticNode[]>, isElseIf = false): SemanticNode {
   return isElseIf
-    ? createNode('cpp:if', { isElseIf: 'true' }, children)
-    : createNode('cpp:if', {}, children)
+    ? createNode('cpp:if', { isElseIf: 'true' }, slots)
+    : createNode('cpp:if', {}, slots)
 }
 
 /** 判別走 pattern；這裡只提供建構子。 */

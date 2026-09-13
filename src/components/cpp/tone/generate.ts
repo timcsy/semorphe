@@ -9,9 +9,9 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:tone', (node, ctx) => {
-    const pin = generateExpression((node.children.pin ?? [])[0], ctx)
-    const freq = generateExpression((node.children.frequency ?? [])[0], ctx)
-    const durNode = (node.children.duration ?? [])[0]
+    const pin = generateExpression((node.slots.pin ?? [])[0], ctx)
+    const freq = generateExpression((node.slots.frequency ?? [])[0], ctx)
+    const durNode = (node.slots.duration ?? [])[0]
     const args = durNode ? `${pin}, ${freq}, ${generateExpression(durNode, ctx)}` : `${pin}, ${freq}`
     return `${indent(ctx)}tone(${args});\n`
   })

@@ -155,7 +155,7 @@ function build(node: SemanticNode, labels?: FlowLabelSource, opts?: GraphOptions
   let row = 0
   const sources: Built[] = []
   for (const s of dataSlots) {
-    const kids = node.children[s.slot] ?? []
+    const kids = node.slots[s.slot] ?? []
     // ⚠️ 一個子槽可能裝**好幾個**值（`print` 的 `values`）——每一個各自一個接點，
     //    不是把它們併成一條線。併起來的話「第二個引數是誰」在圖上就消失了。
     if (kids.length === 0) {
@@ -197,7 +197,7 @@ function build(node: SemanticNode, labels?: FlowLabelSource, opts?: GraphOptions
   // → 所以「空插槽長不長接點」變成**呼叫端的決定**（`opts.emptySlots`）：
   //   唯讀的宿主照舊（不長，圖乾淨），可編輯的長出來（有地方下手）。
   const bodies = bodySlots
-    .map((s) => ({ port: s.slot, nodes: (node.children[s.slot] ?? []).map((k) => build(k, labels, opts)) }))
+    .map((s) => ({ port: s.slot, nodes: (node.slots[s.slot] ?? []).map((k) => build(k, labels, opts)) }))
     .filter((b) => b.nodes.length > 0 || opts?.emptySlots === true)
   const flow = flowKindOf(node.componentId)
   for (const b of bodies) {

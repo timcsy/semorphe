@@ -11,8 +11,8 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function buildVarAssign(children: Record<string, SemanticNode[]>): SemanticNode {
-  return createNode('cpp:var_assign', {}, children)
+export function buildVarAssign(slots: Record<string, SemanticNode[]>): SemanticNode {
+  return createNode('cpp:var_assign', {}, slots)
 }
 
 /** 這顆由共用檔**呼叫**建構子，不是被問判別。 */

@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_as_int', async (node, ctx) => {
-      const v = node.children.str?.[0]
+      const v = node.slots.str?.[0]
       if (!v) return { type: 'int' as const, value: 0 }
       const val = await ctx.evaluate(v)
       return { type: 'int' as const, value: parseInt(String(val.value), 10) || 0 }

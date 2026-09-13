@@ -7,7 +7,7 @@
  * 那正是本功能要治的病。合成能保證覆蓋率 100%（spec SC-003 要求無元件被
  * 靜默略過）。
  *
- * `ComponentDefJSON` 已經有 `properties`、`children`、`role`，足以合成。
+ * `ComponentDefJSON` 已經有 `properties`、`slots`、`role`，足以合成。
  *
  * 見 specs/049-audit-guardrails/research.md D6
  */
@@ -143,7 +143,7 @@ export interface SynthResult {
 }
 
 /**
- * 合成一個最小節點：properties 填預設、children 每個具名槽填一個最小子節點。
+ * 合成一個最小節點：properties 填預設、slots 每個具名槽填一個最小子節點。
  */
 export function synthMinimalNode(def: ComponentDefJSON): SynthResult {
   const notes: string[] = []
@@ -155,8 +155,8 @@ export function synthMinimalNode(def: ComponentDefJSON): SynthResult {
     properties[sp.name] = synthValue(sp, def.componentId)
   }
 
-  const children: Record<string, SemanticNode[]> = {}
-  for (const [slot, slotType] of Object.entries(def.children ?? {})) {
+  const slots: Record<string, SemanticNode[]> = {}
+  for (const [slot, slotType] of Object.entries(def.slots ?? {})) {
     try {
       // 🔴 **可變數量的接點填【兩個】，不是一個。**
       //
@@ -174,13 +174,13 @@ export function synthMinimalNode(def: ComponentDefJSON): SynthResult {
       // 🔴 這一格是**左值**嗎——由元件自己宣告（`traits.writesTo`），見 `fillerFor`。
       const writesTo = (def as { traits?: { writesTo?: string } }).traits?.writesTo
       const lvalueOf = writesTo === slot ? def.componentId.split(':')[0] : undefined
-      children[slot] = Array.from({ length: n }, () => fillerFor(String(slotType), lvalueOf))
+      slots[slot] = Array.from({ length: n }, () => fillerFor(String(slotType), lvalueOf))
     } catch {
       notes.push(`子槽 ${slot} 無法合成填充節點`)
     }
   }
 
-  return { node: createNode(def.componentId, properties, children), notes }
+  return { node: createNode(def.componentId, properties, slots), notes }
 }
 
 /** 判斷一段程式碼是不是「佔位輸出」——空字串、只有空白、或只剩分號 */

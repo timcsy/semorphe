@@ -4,9 +4,9 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:cstring_copy_bounded', (node, ctx) => {
-      const dest = generateExpression((node.children.dest ?? [])[0], ctx)
-      const src = generateExpression((node.children.src ?? [])[0], ctx)
-      const n = generateExpression((node.children.n ?? [])[0], ctx)
+      const dest = generateExpression((node.slots.dest ?? [])[0], ctx)
+      const src = generateExpression((node.slots.src ?? [])[0], ctx)
+      const n = generateExpression((node.slots.n ?? [])[0], ctx)
       return `${indent(ctx)}strncpy(${dest}, ${src}, ${n});\n`
     })
 }

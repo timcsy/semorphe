@@ -13,7 +13,7 @@
       "default": "void"
     }
   ],
-  "children": {
+  "slots": {
     "body": "statements",
     "params": "param_decl"
   },

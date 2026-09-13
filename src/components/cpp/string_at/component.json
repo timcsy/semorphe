@@ -7,7 +7,7 @@
       "default": "str"
     }
   ],
-  "children": {
+  "slots": {
     "index": {
       "allowed": [
         "expression"

@@ -4,7 +4,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:program_exit', (node, ctx) => {
-      const code = generateExpression((node.children.code ?? [])[0], ctx)
+      const code = generateExpression((node.slots.code ?? [])[0], ctx)
       return `${indent(ctx)}exit(${code});\n`
     })
 }

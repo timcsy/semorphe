@@ -4,7 +4,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:pointer_deref', (node, ctx) => {
-      const ptr = generateExpression((node.children.ptr ?? [])[0], ctx)
+      const ptr = generateExpression((node.slots.ptr ?? [])[0], ctx)
       return `*${ptr}`
     })
 }

@@ -35,8 +35,8 @@ import { setMessages, formatMessage, resetMessages } from '../../../src/i18n/mes
 import type { SemanticNode } from '../../../src/core/types'
 import zhTW from '../../../src/i18n/zh-TW/blocks.json'
 
-const n = (component: string, children: Record<string, SemanticNode[]> = {}): SemanticNode =>
-  ({ id: 'x1', componentId: component, properties: {}, children }) as unknown as SemanticNode
+const n = (component: string, slots: Record<string, SemanticNode[]> = {}): SemanticNode =>
+  ({ id: 'x1', componentId: component, properties: {}, slots }) as unknown as SemanticNode
 
 beforeAll(() => registerCppLanguage())
 

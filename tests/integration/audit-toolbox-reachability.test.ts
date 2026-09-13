@@ -156,7 +156,7 @@ function measure(
 // ─── 合成注入：兩個方向都要釘（第 9 步）─────────────────────────────
 
 const syntheticComponent = (id: string): ComponentDefJSON =>
-  ({ componentId: id, category: '__不存在的分類__', properties: [], children: {} }) as unknown as ComponentDefJSON
+  ({ componentId: id, category: '__不存在的分類__', properties: [], slots: {} }) as unknown as ComponentDefJSON
 
 const syntheticBlock = (id: string, type: string, category: string, owner = '(core)'): BlockProjectionJSON =>
   ({

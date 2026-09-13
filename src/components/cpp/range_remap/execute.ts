@@ -14,7 +14,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_remap', async (node, ctx) => {
     const at = async (slot: string): Promise<number> =>
-      ctx.toNumber(await ctx.evaluate((node.children[slot] ?? [])[0]))
+      ctx.toNumber(await ctx.evaluate((node.slots[slot] ?? [])[0]))
     const [x, inMin, inMax, outMin, outMax] =
       [await at('value'), await at('from_low'), await at('from_high'), await at('to_low'), await at('to_high')]
     // ⚠️ 來源區間為零寬時真板子會除以零；這裡丟錯而不是回一個看起來合理的數

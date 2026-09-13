@@ -4,8 +4,8 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:container_enumerate', (node, ctx) => {
-    const parts = (node.children.value ?? []).map((v) => generateExpression(v, ctx))
-    const start = (node.children.start ?? [])[0]
+    const parts = (node.slots.value ?? []).map((v) => generateExpression(v, ctx))
+    const start = (node.slots.start ?? [])[0]
     if (start) {
       const code = generateExpression(start, ctx)
       // ⚠️ **原本寫哪一種就產哪一種**——見膠囊的 `_why`

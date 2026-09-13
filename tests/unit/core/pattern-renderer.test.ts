@@ -80,7 +80,7 @@ describe('PatternRenderer', () => {
     })
   })
 
-  describe('inputs mapping (expression children)', () => {
+  describe('inputs mapping (expression slots)', () => {
     it('should render expression child as input', () => {
       const spec: BlockSpec = {
         id: 'cpp_return',
@@ -90,7 +90,7 @@ describe('PatternRenderer', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:return',
-          children: { value: 'expression' },
+          slots: { value: 'expression' },
           role: 'statement',
         },
         blockDef: {
@@ -139,7 +139,7 @@ describe('PatternRenderer', () => {
   })
 
   describe('statementInputs mapping', () => {
-    it('should render statement children as chained blocks', () => {
+    it('should render statement slots as chained blocks', () => {
       const spec: BlockSpec = {
         id: 'cpp_loop_while',
         language: 'universal',
@@ -148,7 +148,7 @@ describe('PatternRenderer', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:loop_while',
-          children: { condition: 'expression', body: 'statements' },
+          slots: { condition: 'expression', body: 'statements' },
           role: 'statement',
         },
         blockDef: {

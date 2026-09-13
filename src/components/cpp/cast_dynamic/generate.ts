@@ -5,7 +5,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:cast_dynamic', (node, ctx) => {
       const targetType = node.properties.target_type ?? 'Derived*'
-      const val = generateExpression((node.children.value ?? [])[0], ctx)
+      const val = generateExpression((node.slots.value ?? [])[0], ctx)
       return `dynamic_cast<${targetType}>(${val})`
     })
 }

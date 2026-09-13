@@ -59,8 +59,8 @@ function findComponents(node: SemanticNode): string[] {
   function walk(n: SemanticNode) {
     if (!n) return
     if (n.componentId) components.push(n.componentId)
-    if (n.children) {
-      for (const ch of Object.values(n.children)) {
+    if (n.slots) {
+      for (const ch of Object.values(n.slots)) {
         if (Array.isArray(ch)) ch.forEach(walk)
       }
     }
@@ -72,8 +72,8 @@ function findComponents(node: SemanticNode): string[] {
 /** Find a node with a specific component ID in the tree */
 function findNode(root: SemanticNode, componentId: string): SemanticNode | undefined {
   if (root.componentId === componentId) return root
-  if (root.children) {
-    for (const ch of Object.values(root.children)) {
+  if (root.slots) {
+    for (const ch of Object.values(root.slots)) {
       if (Array.isArray(ch)) {
         for (const child of ch) {
           const found = findNode(child, componentId)
@@ -98,9 +98,9 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
 
       const lambdaNode = findNode(tree!, 'cpp:lambda')
       expect(lambdaNode).toBeDefined()
-      expect(lambdaNode!.children.params).toHaveLength(1)
-      expect(lambdaNode!.children.params[0].properties.type).toBe('int')
-      expect(lambdaNode!.children.params[0].properties.name).toBe('x')
+      expect(lambdaNode!.slots.params).toHaveLength(1)
+      expect(lambdaNode!.slots.params[0].properties.type).toBe('int')
+      expect(lambdaNode!.slots.params[0].properties.name).toBe('x')
 
       // Generate code and verify round-trip
       const gen = generateCode(tree!, 'cpp', style)
@@ -174,7 +174,7 @@ describe('Roundtrip: cpp_lambda, cpp_namespace_def, C++ named casts', () => {
       const nsNode = findNode(tree!, 'cpp:namespace_def')
       expect(nsNode).toBeDefined()
       expect(nsNode!.properties.name).toBe('Math')
-      expect(nsNode!.children.body.length).toBeGreaterThan(0)
+      expect(nsNode!.slots.body.length).toBeGreaterThan(0)
 
       // Should contain func_def inside namespace body
       expect(components).toContain('cpp:func_def')

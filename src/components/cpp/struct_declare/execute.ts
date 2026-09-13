@@ -12,7 +12,7 @@ export function registerExecute(register: (component: string, executor: Componen
       // **除了預設存取權限之外沒有差別**，方法、建構式、運算子多載都合法。
       //
       // → 改走 `splitMember`（class 用的同一支）。**共用的是演算法，不是身分。**
-      const { fields, methods, ctor, dtor, statics } = splitMember(node.children.members ?? [])
+      const { fields, methods, ctor, dtor, statics } = splitMember(node.slots.members ?? [])
       ctx.structs.declare(name, fields, methods, ctor, { statics, dtor })
     })
 }

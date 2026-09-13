@@ -13,7 +13,7 @@ export function registerExecute(register: (component: string, executor: Componen
       // `resolveRange` 的 `arr` 宣告成 `unknown[]`（它不必知道元素是什麼）——
       // 這裡收窄一次，而不是讓每一行各自 cast。
       const cells = r.arr as RuntimeValue[]
-      const valueNode = (node.children.value ?? [])[0]
+      const valueNode = (node.slots.value ?? [])[0]
       const target = valueNode ? numOf(await ctx.evaluate(valueNode)) : 0
       // **二分搜**——範圍必須已排序，那是 C++ 對呼叫端的要求，不是我們檢查得起的。
       let lo = r.from

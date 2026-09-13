@@ -5,7 +5,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:container_count', (node, ctx) => {
       const obj = node.properties.obj ?? 'obj'
-      const key = generateExpression((node.children.key ?? [])[0], ctx)
+      const key = generateExpression((node.slots.key ?? [])[0], ctx)
       return `${obj}.count(${key})`
     })
 }

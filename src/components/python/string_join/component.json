@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "等價要在**量得出來的觀察集**底下宣告，不是靠同名——所以這裡是顯式的空，不是遺漏。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "value": "expression"
   },

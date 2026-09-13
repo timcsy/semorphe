@@ -56,8 +56,8 @@ function findComponents(node: SemanticNode): string[] {
   function walk(n: SemanticNode) {
     if (!n) return
     if (n.componentId) components.push(n.componentId)
-    if (n.children) {
-      for (const ch of Object.values(n.children)) {
+    if (n.slots) {
+      for (const ch of Object.values(n.slots)) {
         if (Array.isArray(ch)) ch.forEach(walk)
       }
     }
@@ -68,8 +68,8 @@ function findComponents(node: SemanticNode): string[] {
 
 function findNode(root: SemanticNode, componentId: string): SemanticNode | undefined {
   if (root.componentId === componentId) return root
-  if (root.children) {
-    for (const ch of Object.values(root.children)) {
+  if (root.slots) {
+    for (const ch of Object.values(root.slots)) {
       if (Array.isArray(ch)) {
         for (const child of ch) {
           const found = findNode(child, componentId)
@@ -356,7 +356,7 @@ int main() {
       const nsNode = findNode(tree!, 'cpp:namespace_def')
       expect(nsNode).toBeDefined()
       expect(nsNode!.properties.name).toBe('Math')
-      expect(nsNode!.children.body.length).toBeGreaterThan(0)
+      expect(nsNode!.slots.body.length).toBeGreaterThan(0)
     })
 
     it('generates namespace with functions', () => {
@@ -502,7 +502,7 @@ int main() {
       expect(tmplNode!.properties.t).toBe('T')
       expect(tmplNode!.properties.func_name).toBe('myMax')
       expect(tmplNode!.properties.return_type).toBe('T')
-      expect(tmplNode!.children.params?.length).toBe(2)
+      expect(tmplNode!.slots.params?.length).toBe(2)
     })
 
     it('generates template function with both params', () => {

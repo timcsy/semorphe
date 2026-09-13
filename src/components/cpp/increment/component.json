@@ -13,7 +13,7 @@
       "default": "postfix"
     }
   ],
-  "children": {
+  "slots": {
     "target": "expression"
   },
   "role": "statement",

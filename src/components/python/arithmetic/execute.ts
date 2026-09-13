@@ -11,8 +11,8 @@ import { applyPythonBinary } from './apply'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:arithmetic', async (node, ctx) => {
     const op = String(node.properties.operator ?? '+')
-    const l = await ctx.evaluate(node.children.left[0])
-    const r = await ctx.evaluate(node.children.right[0])
+    const l = await ctx.evaluate(node.slots.left[0])
+    const r = await ctx.evaluate(node.slots.right[0])
     return applyPythonBinary(op, l, r, ctx)
   })
 }

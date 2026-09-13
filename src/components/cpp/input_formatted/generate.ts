@@ -8,7 +8,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   // cpp_input_formatted with structured args + auto & for simple vars (0 or more)
     g.set('cpp:input_formatted', (node, ctx) => {
       const format = (node.properties.format as string) ?? '%d'
-      const argNodes = node.children.args ?? []
+      const argNodes = node.slots.args ?? []
       if (argNodes.length > 0) {
         const args = argNodes.map(a => {
           const expr = generateExpression(a, ctx)

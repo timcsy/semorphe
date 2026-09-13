@@ -4,7 +4,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "🔴 **真的沒有。** C++ 的 `main` 與 Python 的 module 不是同一個東西：前者是一個具名函式、後者是檔案本身。硬指一個抽象父會是**猜的**（P6：不給看起來合理的結構）。\n\n🟢 而這正是階段 7 要找的「**第一個不落在同一類的地方**」的第二個實例——第一個是字面常數，這是**程式的入口**。",
   "properties": [],
-  "children": {
+  "slots": {
     "body": "statement"
   },
   "role": "statement",

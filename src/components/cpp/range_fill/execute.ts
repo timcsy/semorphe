@@ -5,7 +5,7 @@ import { resolveRange } from '../../../languages/cpp/core/runtime/range'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_fill', async (node, ctx) => {
       const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
-      const v = await ctx.evaluate((node.children.value ?? [])[0])
+      const v = await ctx.evaluate((node.slots.value ?? [])[0])
       for (let i = r.from; i < r.to; i++) r.arr[i] = v
     })
 }

@@ -13,7 +13,7 @@
       "default": "begin"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "expression",
   "owner": "(core)",
   "paths": {

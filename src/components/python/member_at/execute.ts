@@ -15,7 +15,7 @@ export function registerExecute(register: (component: string, executor: Componen
   registerLvalue()
   register('python:member_at', async (node, ctx) => {
     const member = String(node.properties.member ?? '')
-    const objNode = (node.children.obj ?? [])[0]
+    const objNode = (node.slots.obj ?? [])[0]
 
     // `math.pi` —— 物件是一個**模組名**，作用域裡沒有這個變數
     // ⚠️ `import math as m` 之後接收者是 `m`——**它在作用域裡**，而它指向 `math`。
@@ -49,7 +49,7 @@ export function registerExecute(register: (component: string, executor: Componen
  */
 export function registerLvalue(): void {
   declareLvalue('python:member_at', async (node, ctx: ExecutionContext) => {
-    const recvNode = (node.children.obj ?? [])[0]
+    const recvNode = (node.slots.obj ?? [])[0]
     const field = String(node.properties.member ?? '')
     if (!recvNode || !field) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個左邊不是「某個東西的欄位」' })

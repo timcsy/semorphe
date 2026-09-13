@@ -4,11 +4,11 @@ import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/cont
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:loop_while', async (node, ctx) => {
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       const parentScope = ctx.scope
       while (true) {
         ctx.scope = parentScope.createChild()
-        const condition = await ctx.evaluate(node.children.condition[0])
+        const condition = await ctx.evaluate(node.slots.condition[0])
         if (!ctx.toBool(condition)) break
         try {
           await ctx.executeBody(body)

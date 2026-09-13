@@ -5,8 +5,8 @@ import { tiePin } from '../../../languages/cpp/core/runtime/arduino-pwm'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pwm_tie', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
-    const channel = ctx.toNumber(await ctx.evaluate((node.children.channel ?? [])[0]))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
+    const channel = ctx.toNumber(await ctx.evaluate((node.slots.channel ?? [])[0]))
     tiePin(ctx, pin, channel)
   })
 }

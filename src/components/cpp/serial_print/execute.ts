@@ -13,8 +13,8 @@ import { valueToString } from '../../../interpreter/types'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:serial_print', async (node, ctx) => {
-    const value = (node.children.value ?? [])[0]
-    const formatNode = (node.children.format ?? [])[0]
+    const value = (node.slots.value ?? [])[0]
+    const formatNode = (node.slots.format ?? [])[0]
     if (value) {
       const v = await ctx.evaluate(value)
       if (formatNode && v.type === 'double') {

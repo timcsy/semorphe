@@ -36,7 +36,7 @@ const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const nodes = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   out.push(n)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) nodes(k, out)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks) nodes(k, out)
   return out
 }
 const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.componentId)
@@ -271,7 +271,7 @@ void loop() {}
       const tree = lift(`${decl}\nvoid setup() {}\nvoid loop() {}\n`)
       const d = nodes(tree).find((x) => /^cpp:(servo|dht|lcd)_declare$/.test(x.componentId))
       expect(d, `${decl}：宣告沒認出來`).toBeDefined()      // ← 正向錨點
-      expect(d?.children.initializer ?? [], `${decl}：語義樹的接點數`).toHaveLength(want)
+      expect(d?.slots.initializer ?? [], `${decl}：語義樹的接點數`).toHaveLength(want)
       expect(Number(d?.properties.ctorCount), `${decl}：ctorCount`).toBe(want)
 
       // 🔴 而**積木上的插槽數要一樣**——這一條才是那個 bug 的所在

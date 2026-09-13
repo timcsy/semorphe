@@ -12,7 +12,7 @@ declareDegradationBlocks('cpp', { statement: 'cpp_raw_code', expression: 'cpp_ra
 setDegradationLanguage('cpp')
 
 function makeProgram(...body: SemanticNode[]): SemanticNode {
-  return { id: 'root', componentId: 'cpp:program', properties: {}, children: { body } }
+  return { id: 'root', componentId: 'cpp:program', properties: {}, slots: { body } }
 }
 
 describe('block-renderer', () => {

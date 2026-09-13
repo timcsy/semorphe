@@ -37,7 +37,7 @@ function withNote(clause: AstNode | null | undefined, kids: SemanticNode[], ctx:
 function statementsOf(block: AstNode | null, ctx: LiftContext): SemanticNode[] {
   const lifted = block ? ctx.lift(block) : null
   if (!lifted) return []
-  return lifted.componentId === '_compound' ? (lifted.children.body ?? []) : [lifted]
+  return lifted.componentId === '_compound' ? (lifted.slots.body ?? []) : [lifted]
 }
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {

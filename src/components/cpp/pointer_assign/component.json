@@ -8,7 +8,7 @@
       "default": "ptr"
     }
   ],
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "statement",

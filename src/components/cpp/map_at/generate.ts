@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   // Expression components
     g.set('cpp:map_at', (node, ctx) => {
       const obj = node.properties.obj ?? 'mp'
-      const keyNodes = node.children.key ?? []
+      const keyNodes = node.slots.key ?? []
       const key = keyNodes.length > 0 ? generateExpression(keyNodes[0], ctx) : '0'
       return `${obj}[${key}]`
     })

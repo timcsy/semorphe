@@ -53,7 +53,7 @@ function lift(code: string): SemanticNode | null {
 function find(node: SemanticNode | null, component: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === component) return node
-  for (const arr of Object.values(node.children ?? {})) {
+  for (const arr of Object.values(node.slots ?? {})) {
     for (const c of arr) {
       const hit = find(c, component)
       if (hit) return hit
@@ -70,13 +70,13 @@ describe('陣列初始值：做得到的時候要做對（US1 場景 1-3）', ()
   it('數值初始值被保留', () => {
     const n = arrayOf('int a[3] = {1,2,3};')
     expect(n, '應辨識為 array_declare').not.toBeNull()
-    const values = n!.children.values ?? []
+    const values = n!.slots.values ?? []
     expect(values.map((v) => v.properties.value)).toEqual(['1', '2', '3'])
   })
 
   it('字元初始值被保留', () => {
     const n = arrayOf("char c[4] = {'a','b','c'};")
-    expect((n!.children.values ?? []).length).toBe(3)
+    expect((n!.slots.values ?? []).length).toBe(3)
   })
 
   it.skip('[BLOCKED:cpp:string_declare] 字串陣列的初始值被保留', () => {
@@ -88,17 +88,17 @@ describe('陣列初始值：做得到的時候要做對（US1 場景 1-3）', ()
     // 的違反，修法在 string 模組而非陣列策略——本功能刻意不擴大到那裡。
     // 已進缺陷帳，阻斷者標為 cpp_string_declare。
     const n = arrayOf('string s[2] = {"ab","cd"};')
-    expect((n!.children.values ?? []).length).toBe(2)
+    expect((n!.slots.values ?? []).length).toBe(2)
   })
 
   it('初始值數量少於宣告大小仍完整保留（C++ 合法，其餘補零）', () => {
     const n = arrayOf('int a[5] = {1,2};')
-    expect((n!.children.values ?? []).length).toBe(2)
+    expect((n!.slots.values ?? []).length).toBe(2)
   })
 
   it('初始值中的運算式被保留為節點，不是字串', () => {
     const n = arrayOf('int x=1; int a[2] = {x+1, 3};')
-    const values = n!.children.values ?? []
+    const values = n!.slots.values ?? []
     expect(values.length).toBe(2)
     expect(values[0].componentId).not.toBe('raw_code')
   })
@@ -109,9 +109,9 @@ describe('陣列初始值：做得到的時候要做對（US1 場景 1-3）', ()
     // （`name: "m[2]"`）——產出的碼是對的，而執行時變數就叫 `m[2]`。
     const n = find(lift('int main(){ int m[2][2] = {{1,2},{3,4}}; }'), 'cpp:array_2d_declare')
     expect(n, '多維陣列該由二維那顆接住').not.toBeNull()
-    const values = n!.children.values ?? []
+    const values = n!.slots.values ?? []
     expect(values.length, '外層應該是 2 個群組，不是壓平的 4 個值').toBe(2)
-    const innerCount = values.reduce((sum, v) => sum + (v.children.values ?? []).length, 0)
+    const innerCount = values.reduce((sum, v) => sum + (v.slots.values ?? []).length, 0)
     expect(innerCount, '內層各 2 個值').toBe(4)
   })
 
@@ -120,9 +120,9 @@ describe('陣列初始值：做得到的時候要做對（US1 場景 1-3）', ()
     const empty = arrayOf('int a[3] = {};')!
     const some = arrayOf('int a[3] = {1};')!
 
-    expect(none.children.values, '無初始值 → 欄位不存在').toBeUndefined()
-    expect(empty.children.values, '空列表 → 空陣列').toEqual([])
-    expect((some.children.values ?? []).length, '有初始值 → 有內容').toBe(1)
+    expect(none.slots.values, '無初始值 → 欄位不存在').toBeUndefined()
+    expect(empty.slots.values, '空列表 → 空陣列').toEqual([])
+    expect((some.slots.values ?? []).length, '有初始值 → 有內容').toBe(1)
   })
 
   it('走完「辨識 → 產生程式碼」一圈後初始值等價', () => {
@@ -151,7 +151,7 @@ describe('陣列初始值：做不到的時候要出聲（US1 場景 4）★ 本
     for (const code of cases) {
       const n = arrayOf(code)
       if (!n) continue
-      const kept = (n.children.values ?? []).length > 0
+      const kept = (n.slots.values ?? []).length > 0
       const confidence = n.metadata?.confidence ?? 'high'
       if (!kept && confidence === 'high') {
         dishonest.push(`${code}  →  值未保留，卻標 confidence=high`)

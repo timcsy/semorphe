@@ -8,8 +8,8 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:ternary', async (node, ctx) => {
-    const cond = ctx.toBool(await ctx.evaluate(node.children.condition[0]))
-    const picked = cond ? node.children.then_value : node.children.else_value
+    const cond = ctx.toBool(await ctx.evaluate(node.slots.condition[0]))
+    const picked = cond ? node.slots.then_value : node.slots.else_value
     return ctx.evaluate(picked[0])
   })
 }

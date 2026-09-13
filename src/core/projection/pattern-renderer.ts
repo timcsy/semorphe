@@ -18,7 +18,7 @@ interface RenderSpec {
   mapping: RenderMapping
 }
 
-import { serializeChildren } from './children-as-field'
+import { serializeChildren } from './slot-as-field'
 import { nextBlockId as _nextBlockId, resetBlockIdCounter } from './common-mappings'
 import { componentWithTrait } from '../component/traits'
 
@@ -82,7 +82,7 @@ export class PatternRenderer {
             expressionCounterpart: explicit.expressionCounterpart,
             dynamicRules: explicit.dynamicRules,
             extraStateFlags: explicit.extraStateFlags,
-            childrenAsField: explicit.childrenAsField,
+            slotAsField: explicit.slotAsField,
           }
         : derived
       // ⚠️ **第一個宣告勝出，後來的不覆寫。**
@@ -134,7 +134,7 @@ export class PatternRenderer {
 
   /** Render a SemanticNode to a BlockState. Returns null if no render spec found. */
   render(node: SemanticNode, renderCtx?: RenderContext): BlockState | null {
-    // Store renderCtx so recursive calls (auto-derive children) can use strategies
+    // Store renderCtx so recursive calls (auto-derive slots) can use strategies
     if (renderCtx) this.activeRenderCtx = renderCtx
     const ctx = renderCtx ?? this.activeRenderCtx
 
@@ -186,11 +186,11 @@ export class PatternRenderer {
     // Map inputs: blockInput → semanticChild (expression)
     // Use ctx.renderExpression() for expression slots to handle statement-only blocks safely
     for (const [blockInput, semChild] of Object.entries(formMapping.inputs)) {
-      const children = node.children[semChild]
-      if (children && children.length > 0) {
+      const slots = node.slots[semChild]
+      if (slots && slots.length > 0) {
         const childBlock = ctx?.renderExpression
-          ? ctx.renderExpression(children[0])
-          : this.render(children[0])
+          ? ctx.renderExpression(slots[0])
+          : this.render(slots[0])
         if (childBlock) {
           block.inputs[blockInput] = { block: childBlock }
         }
@@ -199,35 +199,35 @@ export class PatternRenderer {
 
     // Map statementInputs: blockInput → semanticChild (statement chain)
     for (const [blockInput, semChild] of Object.entries(formMapping.statementInputs)) {
-      const children = node.children[semChild]
-      if (children && children.length > 0) {
+      const slots = node.slots[semChild]
+      if (slots && slots.length > 0) {
         const chain = ctx?.renderStatementChain
-          ? ctx.renderStatementChain(children)
-          : this.renderStatementChain(children)
+          ? ctx.renderStatementChain(slots)
+          : this.renderStatementChain(slots)
         if (chain) {
           block.inputs[blockInput] = { block: chain }
         }
       }
     }
 
-    // Process dynamicRules: render dynamic children into extraState + inputs/fields
+    // Process dynamicRules: render dynamic slots into extraState + inputs/fields
     if (formMapping.dynamicRules) {
       this.renderDynamicRules(node, formMapping.dynamicRules, block, ctx)
     }
 
-    // childrenAsField：把一個接點的子節點序列化進一個文字欄位。
+    // slotAsField：把一個接點的子節點序列化進一個文字欄位。
     // ⚠️ 零個子節點時**不寫欄位**（`serializeChildren` 回傳 null）——
     // 寫一個空欄位與不寫，在來回比對上是不同的東西。
-    for (const spec of formMapping.childrenAsField ?? []) {
-      const text = serializeChildren(node.children[spec.childSlot] ?? [], spec)
+    for (const spec of formMapping.slotAsField ?? []) {
+      const text = serializeChildren(node.slots[spec.childSlot] ?? [], spec)
       if (text !== null) block.fields[spec.field] = text
     }
 
-    // Process extraStateFlags: set extraState[key] = true when children[childSlot] is non-empty
+    // Process extraStateFlags: set extraState[key] = true when slots[childSlot] is non-empty
     if (formMapping.extraStateFlags) {
       for (const [extraKey, childSlot] of Object.entries(formMapping.extraStateFlags)) {
-        const children = node.children[childSlot]
-        if (children && children.length > 0) {
+        const slots = node.slots[childSlot]
+        if (slots && slots.length > 0) {
           if (!block.extraState) block.extraState = {}
           block.extraState[extraKey] = true
         }
@@ -237,7 +237,7 @@ export class PatternRenderer {
     return block
   }
 
-  /** Process dynamicRules to render semantic children into block extraState + dynamic inputs/fields */
+  /** Process dynamicRules to render semantic slots into block extraState + dynamic inputs/fields */
   private renderDynamicRules(
     node: SemanticNode,
     rules: DynamicRule[],
@@ -245,7 +245,7 @@ export class PatternRenderer {
     ctx: RenderContext | undefined,
   ): void {
     for (const rule of rules) {
-      const childNodes = node.children[rule.childSlot] ?? []
+      const childNodes = node.slots[rule.childSlot] ?? []
 
       // Set count in extraState
       if (!block.extraState) block.extraState = {}
@@ -327,7 +327,7 @@ export class PatternRenderer {
             //    `_compound` 是核心用來表示一段的結構身分，這裡把它攤回一串。
             //    ⚠️ 少了這一步的症狀是那一支只畫得出第一行。
             const kid = childNodes[i]
-            const stack = kid?.componentId === '_compound' ? (kid.children?.body ?? []) : [kid]
+            const stack = kid?.componentId === '_compound' ? (kid.slots?.body ?? []) : [kid]
             const chain = ctx?.renderStatementChain
               ? ctx.renderStatementChain(stack)
               : this.renderStatementChain(stack)

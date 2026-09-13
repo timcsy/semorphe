@@ -1,5 +1,5 @@
 /**
- * `childrenAsField`：把一個接點的子節點序列化進**一個文字欄位**，並解析回來
+ * `slotAsField`：把一個接點的子節點序列化進**一個文字欄位**，並解析回來
  *
  * ## 為什麼有這個機制
  *
@@ -34,7 +34,7 @@ import { createNode } from '../semantic-tree'
 import type { SemanticNode } from '../types'
 
 /** 一個接點 ↔ 一個文字欄位的宣告。 */
-export interface ChildrenAsField {
+export interface SlotAsField {
   /** Blockly 欄位名，例如 `PARAMS` */
   field: string
   /** 語義接點名，例如 `params` */
@@ -90,9 +90,9 @@ export function splitTopLevel(text: string, sep: string): string[] {
  *   `null` 代表「不要寫這個欄位」，空字串代表「寫一個空欄位」，
  *   兩者在來回比對上是不同的東西。
  */
-export function serializeChildren(children: readonly SemanticNode[], spec: ChildrenAsField): string | null {
-  if (!children.length) return null
-  return children
+export function serializeChildren(slots: readonly SemanticNode[], spec: SlotAsField): string | null {
+  if (!slots.length) return null
+  return slots
     .map((c) => spec.parts.map((p) => String(c.properties[p] ?? '')).filter((s) => s.length > 0).join(' '))
     .join(spec.itemSeparator ?? defaultItemSep)
 }
@@ -107,7 +107,7 @@ export function serializeChildren(children: readonly SemanticNode[], spec: Child
  * 那就讓名字是空字串，而不是猜一個 `p0`。判不出來的留原樣，
  * 讓來回轉換抓到——猜出來的東西會安靜地變成使用者沒寫過的程式。
  */
-export function parseToChildren(text: string, spec: ChildrenAsField): SemanticNode[] {
+export function parseToChildren(text: string, spec: SlotAsField): SemanticNode[] {
   const items = splitTopLevel(text ?? '', (spec.itemSeparator ?? defaultItemSep).trim() || ',')
   return items.map((item) => {
     const words = item.split(/\s+/).filter(Boolean)

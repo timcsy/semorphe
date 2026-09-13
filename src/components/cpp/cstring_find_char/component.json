@@ -2,7 +2,7 @@
   "componentId": "cpp:cstring_find_char",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "str": "expression",
     "ch": "expression"
   },

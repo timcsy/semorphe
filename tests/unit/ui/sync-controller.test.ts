@@ -251,7 +251,7 @@ describe('SyncController (bus-based)', () => {
       })
 
       const stripped = stripScaffoldNodes(fullTree)
-      const body = stripped.children.body ?? []
+      const body = stripped.slots.body ?? []
 
       // Only user's body (print) should remain — include, namespace, func_def wrapper, return stripped
       expect(body).toHaveLength(1)
@@ -275,7 +275,7 @@ describe('SyncController (bus-based)', () => {
       })
 
       const stripped = stripScaffoldNodes(tree)
-      const body = stripped.children.body ?? []
+      const body = stripped.slots.body ?? []
 
       // helper (user-defined) + var_declare (from main body) should remain
       expect(body).toHaveLength(2)
@@ -290,7 +290,7 @@ describe('SyncController (bus-based)', () => {
       })
 
       const stripped = stripScaffoldNodes(tree)
-      const body = stripped.children.body ?? []
+      const body = stripped.slots.body ?? []
 
       expect(body).toHaveLength(1)
       expect(body[0].componentId).toBe('cpp:var_declare')
@@ -299,7 +299,7 @@ describe('SyncController (bus-based)', () => {
     it('should handle empty program', () => {
       const tree = createNode('cpp:program', {}, { body: [] })
       const stripped = stripScaffoldNodes(tree)
-      expect(stripped.children.body ?? []).toHaveLength(0)
+      expect(stripped.slots.body ?? []).toHaveLength(0)
     })
   })
 

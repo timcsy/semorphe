@@ -22,12 +22,12 @@ import { componentGenerateRegistrars } from '../../../src/core/component/paths'
 // **生產環境不存在的組態**（語言中立的退路，不是任何語言的註解）。
 beforeAll(() => registerCppLanguage())
 
-function makeNode(component: string, props: Record<string, any> = {}, children: Record<string, SemanticNode[]> = {}, meta?: Record<string, any>): SemanticNode {
+function makeNode(component: string, props: Record<string, any> = {}, slots: Record<string, SemanticNode[]> = {}, meta?: Record<string, any>): SemanticNode {
   return {
     id: 'test-1',
     componentId: component,
     properties: props,
-    children,
+    slots,
     metadata: meta,
   }
 }

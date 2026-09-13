@@ -6,10 +6,10 @@ export function registerExecute(register: (component: string, executor: Componen
       const obj = String(node.properties.obj)
       const val = ctx.scope.get(obj)
       const str = String(val.value)
-      const argNodes = node.children.arg ?? []
+      const argNodes = node.slots.arg ?? []
       if (argNodes.length === 0) return { type: 'int', value: -1 }
       const sub = String((await ctx.evaluate(argNodes[0])).value)
-      const fromNodes = node.children.from ?? []
+      const fromNodes = node.slots.from ?? []
       const from = fromNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(fromNodes[0])) : 0
       const idx = str.indexOf(sub, from)
       // 找不到時 C++ 回 `string::npos`。而**使用者常寫 `!= -1` 來比**——

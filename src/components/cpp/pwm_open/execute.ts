@@ -4,9 +4,9 @@ import { setupChannel } from '../../../languages/cpp/core/runtime/arduino-pwm'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pwm_open', async (node, ctx) => {
-    const channel = ctx.toNumber(await ctx.evaluate((node.children.channel ?? [])[0]))
-    const freq = ctx.toNumber(await ctx.evaluate((node.children.freq ?? [])[0]))
-    const bits = ctx.toNumber(await ctx.evaluate((node.children.bits ?? [])[0]))
+    const channel = ctx.toNumber(await ctx.evaluate((node.slots.channel ?? [])[0]))
+    const freq = ctx.toNumber(await ctx.evaluate((node.slots.freq ?? [])[0]))
+    const bits = ctx.toNumber(await ctx.evaluate((node.slots.bits ?? [])[0]))
     setupChannel(ctx, channel, freq, bits)
   })
 }

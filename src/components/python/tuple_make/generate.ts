@@ -9,7 +9,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:tuple_make', (node, ctx) => {
-    const items = (node.children.items ?? []).map((v) => generateExpression(v, ctx))
+    const items = (node.slots.items ?? []).map((v) => generateExpression(v, ctx))
     if (items.length === 1) return `(${items[0]},)`
     // 🔴 **括號是排版**——投影記住它（見 `lift-strategy.ts` 的檔頭）。
     //    `a, b = 1, 2` 沒有括號，而硬加上去等於改了使用者的碼。

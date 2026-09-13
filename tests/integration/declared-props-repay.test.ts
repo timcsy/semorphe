@@ -27,7 +27,7 @@ beforeAll(async () => {
 const lift = (c: string): SemanticNode => createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const find = (n: SemanticNode, id: string): SemanticNode | null => {
   if (n.componentId === id) return n
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k, id); if (r) return r }
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks) { const r = find(k, id); if (r) return r }
   return null
 }
 async function run(c: string): Promise<string> {

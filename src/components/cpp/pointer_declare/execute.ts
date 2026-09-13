@@ -4,7 +4,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pointer_declare', async (node, ctx) => {
       const name = String(node.properties.name ?? 'ptr')
-      const inits = node.children.initializer ?? []
+      const inits = node.slots.initializer ?? []
       if (inits.length > 0) {
         const val = await ctx.evaluate(inits[0])
         ctx.scope.declare(name, val)

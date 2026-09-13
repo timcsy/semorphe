@@ -8,7 +8,7 @@ import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtim
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:tone_stop', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
     const state = stateOf(ctx, pin)
     state.toneHz = undefined
     state.toneMs = undefined

@@ -11,7 +11,7 @@
       "kind": "literal"
     }
   ],
-  "children": {
+  "slots": {
     "init": "expression"
   },
   "role": "expression",

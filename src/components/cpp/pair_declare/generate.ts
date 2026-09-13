@@ -10,7 +10,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       // `pair<int,string> p = make_pair(42, "hi")` —— 初始值是一整個運算式。
       // ⚠️ 它原本**兩邊對稱地被丟掉**（辨識掉、產生也掉），所以來回轉換比對
       // 一直是綠的——一個對稱的資料遺失，比不對稱的難發現。
-      const source = (node.children.source ?? [])[0]
+      const source = (node.slots.source ?? [])[0]
       if (source) {
         return `${indent(ctx)}pair<${type1}, ${type2}> ${name} = ${generateExpression(source, ctx)};\n`
       }

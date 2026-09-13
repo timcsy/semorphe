@@ -9,7 +9,7 @@
       "default": "int"
     }
   ],
-  "children": {
+  "slots": {
     "size": {
       "allowed": [
         "expression"

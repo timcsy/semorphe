@@ -13,7 +13,7 @@ import { applyFormatSpec } from '../../../languages/python/format-spec'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:string_insert', async (node, ctx) => {
-    const value = (node.children.value ?? [])[0]
+    const value = (node.slots.value ?? [])[0]
     const v = value ? await ctx.evaluate(value) : { type: 'string' as const, value: '' }
     return { type: 'string', value: applyFormatSpec(v, String(node.properties.format ?? '')) }
   })

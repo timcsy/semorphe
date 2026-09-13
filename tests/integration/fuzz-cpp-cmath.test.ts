@@ -50,13 +50,13 @@ function treesStructurallyEqual(a: SemanticNode, b: SemanticNode): boolean {
   for (const key of aKeys) {
     if (String(a.properties[key]) !== String(b.properties[key])) return false
   }
-  const aChildKeys = Object.keys(a.children).sort()
-  const bChildKeys = Object.keys(b.children).sort()
+  const aChildKeys = Object.keys(a.slots).sort()
+  const bChildKeys = Object.keys(b.slots).sort()
   if (JSON.stringify(aChildKeys) !== JSON.stringify(bChildKeys)) return false
   for (const key of aChildKeys) {
-    if (a.children[key].length !== b.children[key].length) return false
-    for (let i = 0; i < a.children[key].length; i++) {
-      if (!treesStructurallyEqual(a.children[key][i], b.children[key][i])) return false
+    if (a.slots[key].length !== b.slots[key].length) return false
+    for (let i = 0; i < a.slots[key].length; i++) {
+      if (!treesStructurallyEqual(a.slots[key][i], b.slots[key][i])) return false
     }
   }
   return true
@@ -68,8 +68,8 @@ function countRawCode(node: SemanticNode): number {
     if (n.metadata?.confidence === 'raw_code' || n.componentId === 'cpp:raw_code' || n.componentId === 'cpp:raw_expression') {
       count++
     }
-    for (const children of Object.values(n.children)) {
-      for (const child of children) walk(child)
+    for (const slots of Object.values(n.slots)) {
+      for (const child of slots) walk(child)
     }
   }
   walk(node)

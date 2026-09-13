@@ -47,7 +47,7 @@ const lift = (code: string): SemanticNode | null => lifter.lift(tsParser.parse(c
 function ids(n: SemanticNode | null, out = new Set<string>()): Set<string> {
   if (!n) return out
   out.add(n.componentId)
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids as SemanticNode[]) ids(k, out)
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids as SemanticNode[]) ids(k, out)
   return out
 }
 
@@ -120,10 +120,10 @@ describe('cpp:vector_declare 自證測', () => {
   it.skip('[BLOCKED:cpp:vector_declare] 初始值走得過積木投影（render → extract）', () => {
       // 🔴 **既有缺陷，2026-08-10 由 spec 104 的瀏覽器實測找到。**
       //
-      //   ① lift 後 children:      ["values"]
+      //   ① lift 後 slots:      ["values"]
       //   ② 直接產生:              "vector<int> v = {3, 1, 4};"
       //   ③ render 出的 block:     inputs: {}        ← 掉在這裡
-      //   ④ extract 回來 children: []
+      //   ④ extract 回來 slots: []
       //   ⑤ 再產生:                "vector<int> v;"
       //
       // 在 `git worktree` 的 58d64eb（元件化動工前）跑同一支探針，

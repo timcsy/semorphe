@@ -10,8 +10,8 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:var_assign_sequence', async (node, ctx) => {
-    const names = (node.children.targets ?? []).map((t) => String(t.properties.name ?? ''))
-    const v = await ctx.evaluate(node.children.value[0])
+    const names = (node.slots.targets ?? []).map((t) => String(t.properties.name ?? ''))
+    const v = await ctx.evaluate(node.slots.value[0])
     const parts = v.type === 'array' ? (v.value as RuntimeValue[])
       : v.type === 'string' ? [...String(v.value)].map((c) => ({ type: 'string' as const, value: c }))
       : null

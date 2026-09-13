@@ -10,7 +10,7 @@ import { numericCast } from '../../../languages/cpp/core/runtime/cast'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cast', async (node, ctx) => {
     const targetType = String(node.properties.target_type ?? 'int')
-    const valueNodes = node.children.value ?? []
+    const valueNodes = node.slots.value ?? []
     if (valueNodes.length === 0) return { type: 'int', value: 0 }
     const val = await ctx.evaluate(valueNodes[0])
     return numericCast(targetType, val, ctx.toNumber(val), { charIsChar: true })

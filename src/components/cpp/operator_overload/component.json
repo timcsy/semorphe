@@ -23,7 +23,7 @@
       "default": ""
     }
   ],
-  "children": {
+  "slots": {
     "body": "statements"
   },
   "role": "statement",

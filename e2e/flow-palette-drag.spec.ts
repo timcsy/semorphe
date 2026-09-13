@@ -76,12 +76,12 @@ test('★ 真人滑鼠：從 palette 拖一顆到接點上 → 語義樹真的�
   const nodeCount = (): Promise<number> =>
     page.evaluate(() => {
       const t = (window as never as { __app: { syncController: { getCurrentTree(): unknown } } })
-        .__app.syncController.getCurrentTree() as { children?: Record<string, unknown[]> } | null
+        .__app.syncController.getCurrentTree() as { slots?: Record<string, unknown[]> } | null
       let n = 0
-      const walk = (x: { children?: Record<string, unknown[]> } | null): void => {
+      const walk = (x: { slots?: Record<string, unknown[]> } | null): void => {
         if (!x) return
         n++
-        for (const b of Object.values(x.children ?? {})) for (const c of b ?? []) walk(c as never)
+        for (const b of Object.values(x.slots ?? {})) for (const c of b ?? []) walk(c as never)
       }
       walk(t)
       return n

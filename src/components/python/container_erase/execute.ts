@@ -10,9 +10,9 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:container_erase', async (node, ctx) => {
-    const at = (node.children.target ?? [])[0]
-    const inner = at?.children?.target?.[0]
-    const keyNode = at?.children?.key?.[0]
+    const at = (node.slots.target ?? [])[0]
+    const inner = at?.slots?.target?.[0]
+    const keyNode = at?.slots?.key?.[0]
     if (!inner || !keyNode) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個左邊不是「容器的某一格」' })
     }

@@ -41,7 +41,7 @@
         "NAME": "name",
         "RETURN_TYPE": "return_type"
       },
-      "childrenAsField": [
+      "slotAsField": [
         {
           "field": "PARAMS",
           "childSlot": "params",

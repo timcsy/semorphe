@@ -7,7 +7,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:method_virtual_pure', (node, ctx) => {
       const returnType = node.properties.return_type ?? 'void'
       const name = node.properties.name ?? 'method'
-      const paramChildren = node.children.params ?? []
+      const paramChildren = node.slots.params ?? []
       const paramStr = formatParams(paramChildren)
       return `${indent(ctx)}virtual ${returnType} ${name}(${paramStr}) = 0;\n`
     })

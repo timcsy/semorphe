@@ -51,7 +51,7 @@ export function registerDeclarationGenerators(g: Map<string, NodeGenerator>): vo
 
 
   g.set('_multi_field', (node, ctx) => {
-    const fields = node.children.fields ?? []
+    const fields = node.slots.fields ?? []
     return generateBody(fields, ctx)
   })
 }

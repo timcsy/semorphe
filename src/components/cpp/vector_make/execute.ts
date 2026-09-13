@@ -25,8 +25,8 @@ function cloneValue(v: RuntimeValue): RuntimeValue {
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:vector_make', async (node, ctx) => {
     const elemType = String(node.properties.type ?? 'int')
-    const sizeNode = (node.children.size ?? [])[0]
-    const fillNode = (node.children.fill ?? [])[0]
+    const sizeNode = (node.slots.size ?? [])[0]
+    const fillNode = (node.slots.fill ?? [])[0]
     const n = sizeNode ? Math.trunc(ctx.toNumber(await ctx.evaluate(sizeNode))) : 0
     const fill = fillNode ? await ctx.evaluate(fillNode) : defaultValue(elemType)
     const cells: RuntimeValue[] = []

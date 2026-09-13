@@ -4,7 +4,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:member_at', (node, ctx) => {
-    const obj = (node.children.obj ?? [])[0]
+    const obj = (node.slots.obj ?? [])[0]
     return `${obj ? generateExpression(obj, ctx) : ''}.${node.properties.member ?? ''}`
   })
 }

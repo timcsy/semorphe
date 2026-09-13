@@ -4,7 +4,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:istringstream_declare', async (node, ctx) => {
       const name = String(node.properties.name ?? 'in')
-      const src = node.children.source ?? []
+      const src = node.slots.source ?? []
       const text = src.length > 0 ? String((await ctx.evaluate(src[0])).value) : ''
       // 以**空白**切開，與 C++ 的 `>>` 一致（連續空白算一個分隔）
       const tokens = text.split(/\s+/).filter((s) => s.length > 0)

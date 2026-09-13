@@ -5,8 +5,8 @@ import { lcdOf } from '../../../languages/cpp/core/runtime/arduino-devices'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:lcd_open', async (node, ctx) => {
     const s = lcdOf(ctx, String(node.properties.obj ?? 'lcd'))
-    s.cols = Math.max(1, ctx.toNumber(await ctx.evaluate((node.children.cols ?? [])[0])))
-    s.rows = Math.max(1, ctx.toNumber(await ctx.evaluate((node.children.rows ?? [])[0])))
+    s.cols = Math.max(1, ctx.toNumber(await ctx.evaluate((node.slots.cols ?? [])[0])))
+    s.rows = Math.max(1, ctx.toNumber(await ctx.evaluate((node.slots.rows ?? [])[0])))
     s.lines = Array.from({ length: s.rows }, () => '')
     s.cursor = [0, 0]
   })

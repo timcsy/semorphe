@@ -141,9 +141,9 @@ async function main(): Promise<void> {
   sync.syncBlocksToCode(afterLift)
 
   const ids: string[] = []
-  const walk = (n: { componentId: string; children: Record<string, unknown[]> }): void => {
+  const walk = (n: { componentId: string; slots: Record<string, unknown[]> }): void => {
     ids.push(n.componentId)
-    for (const kids of Object.values(n.children ?? {})) for (const k of kids ?? []) walk(k as never)
+    for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) walk(k as never)
   }
   walk(afterLift as never)
 

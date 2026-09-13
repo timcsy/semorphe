@@ -7,7 +7,7 @@ import { evalInitializer } from '../aggregate'
 
 export const execVarDeclare: ComponentExecutor = async (node, ctx) => {
   // Multi-variable declaration: int a, b, c;
-  const declarators = node.children.declarators
+  const declarators = node.slots.declarators
   if (declarators && declarators.length > 0) {
     const parentType = String(node.properties.type || 'int')
     for (const decl of declarators) {
@@ -42,7 +42,7 @@ export const execVarDeclare: ComponentExecutor = async (node, ctx) => {
   // 而落到下面的 `defaultValue(type)` 會回傳一個 `int 0`——那個變數看起來
   // 宣告成功了，直到有人讀它的欄位才發現它不是物件。
   if (ctx.structs.has(type)) {
-    const init0 = node.children.initializer
+    const init0 = node.slots.initializer
     if (init0 && init0.length > 0) {
       const arg0 = init0[0]
       // `P p(42);` —— 初始化式是一個名字等於型別名的呼叫，那是建構式。
@@ -61,7 +61,7 @@ export const execVarDeclare: ComponentExecutor = async (node, ctx) => {
         (isNamedCall(arg0.componentId) && String(arg0.properties?.name) === type)
       const ctorArgs =
         isNamedCall(arg0.componentId) && String(arg0.properties?.name) === type
-          ? (arg0.children?.args ?? [])
+          ? (arg0.slots?.args ?? [])
           : init0
       // ⚠️ `evalInitializer` 而不是 `evaluate`：`P a{3};` 的初始值是一層 `{…}`，
       // 而那是**聚合初始化**——要按成員宣告順序填，不是求一個值出來。
@@ -85,7 +85,7 @@ export const execVarDeclare: ComponentExecutor = async (node, ctx) => {
     return
   }
 
-  const init = node.children.initializer
+  const init = node.slots.initializer
   if (init && init.length > 0) {
     let val = await ctx.evaluate(init[0])
     val = ctx.coerceType(val, type)

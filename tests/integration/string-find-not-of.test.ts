@@ -52,8 +52,8 @@ function components(body: string): string[] {
   const walk = (n: SemanticNode | null | undefined): void => {
     if (!n) return
     if (n.componentId) out.push(n.componentId)
-    for (const k of Object.keys(n.children ?? {}))
-      for (const c of (n.children as Record<string, SemanticNode[]>)[k] ?? []) walk(c)
+    for (const k of Object.keys(n.slots ?? {}))
+      for (const c of (n.slots as Record<string, SemanticNode[]>)[k] ?? []) walk(c)
   }
   walk(lift(body))
   return out

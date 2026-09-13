@@ -47,7 +47,7 @@ function broken(n: SemanticNode, out: { id: string; raw: string }[] = []): { id:
   if (n.metadata?.degradationCause === 'syntax_error') {
     out.push({ id: n.componentId, raw: String(n.metadata?.rawCode ?? '') })
   }
-  for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) broken(c, out)
+  for (const bucket of Object.values(n.slots ?? {})) for (const c of bucket ?? []) broken(c, out)
   return out
 }
 

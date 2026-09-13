@@ -132,8 +132,8 @@ function countNodes(node: SemanticNode): { total: number; raw: number } {
   if (node.componentId === 'cpp:raw_code' || node.componentId === 'cpp:raw_expression' || node.componentId === 'unresolved') {
     raw++
   }
-  for (const children of Object.values(node.children || {})) {
-    for (const child of children) {
+  for (const slots of Object.values(node.slots || {})) {
+    for (const child of slots) {
       const c = countNodes(child)
       total += c.total
       raw += c.raw

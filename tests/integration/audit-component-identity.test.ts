@@ -46,8 +46,8 @@ function findComponents(node: SemanticNode, componentId: string): SemanticNode[]
   if (node.componentId === componentId) {
     found.push(node)
   }
-  for (const children of Object.values(node.children || {})) {
-    for (const child of children) {
+  for (const slots of Object.values(node.slots || {})) {
+    for (const child of slots) {
       found.push(...findComponents(child, componentId))
     }
   }
@@ -68,8 +68,8 @@ function assertComponentPresent(code: string, componentId: string) {
 /** Collect all component IDs in the tree (for diagnostics) */
 function collectComponentIds(node: SemanticNode): string[] {
   const ids: string[] = [node.componentId]
-  for (const children of Object.values(node.children || {})) {
-    for (const child of children) {
+  for (const slots of Object.values(node.slots || {})) {
+    for (const child of slots) {
       ids.push(...collectComponentIds(child))
     }
   }
@@ -144,7 +144,7 @@ int main() { cout << "hello"; }`, 'cpp:literal_string')
     expect(sem).not.toBeNull()
     const ifNodes = findComponents(sem!, 'cpp:if')
     expect(ifNodes.length).toBeGreaterThan(0)
-    const hasElse = ifNodes.some(n => (n.children.else_body?.length ?? 0) > 0)
+    const hasElse = ifNodes.some(n => (n.slots.else_body?.length ?? 0) > 0)
     expect(hasElse, 'Expected if component with non-empty else_body child').toBe(true)
   })
 

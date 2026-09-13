@@ -4,8 +4,8 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:pwm_write', (node, ctx) => {
-    const target = generateExpression((node.children.target ?? [])[0], ctx)
-    const duty = generateExpression((node.children.duty ?? [])[0], ctx)
+    const target = generateExpression((node.slots.target ?? [])[0], ctx)
+    const duty = generateExpression((node.slots.duty ?? [])[0], ctx)
     return `${indent(ctx)}ledcWrite(${target}, ${duty});\n`
   })
 }

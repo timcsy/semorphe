@@ -11,8 +11,8 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:lambda', async (node, ctx) => ({
     type: 'function',
     value: {
-      params: (node.children.params ?? []).map((p) => ({ name: String(p.properties.name ?? ''), type: '' })),
-      body: node.children.body ?? [],
+      params: (node.slots.params ?? []).map((p) => ({ name: String(p.properties.name ?? ''), type: '' })),
+      body: node.slots.body ?? [],
       capture: '&' as const,
       closure: ctx.scope,
     },

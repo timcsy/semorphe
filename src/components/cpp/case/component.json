@@ -2,7 +2,7 @@
   "componentId": "cpp:case",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "value": "expression",
     "body": "statements"
   },

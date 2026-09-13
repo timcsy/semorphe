@@ -43,7 +43,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
   it('should round-trip enum declaration', () => {
     const tree = liftCode('enum Color { RED, GREEN, BLUE };')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
+    const body = tree!.slots.body ?? []
     expect(body[0].componentId).toBe('cpp:enum')
     expect(body[0].properties.name).toBe('Color')
     expect(body[0].properties.values).toBe('RED, GREEN, BLUE')
@@ -55,7 +55,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
   it('should round-trip range-based for loop', () => {
     const tree = liftCode('for (auto x : vec) {\n    cout << x;\n}')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
+    const body = tree!.slots.body ?? []
     expect(body[0].componentId).toBe('cpp:loop_range')
     expect(body[0].properties.var_type).toBe('auto')
     expect(body[0].properties.var_name).toBe('x')
@@ -68,7 +68,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
   it('should round-trip range-for with int type', () => {
     const tree = liftCode('for (int n : arr) {\n    cout << n;\n}')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
+    const body = tree!.slots.body ?? []
     expect(body[0].componentId).toBe('cpp:loop_range')
     expect(body[0].properties.var_type).toBe('int')
 
@@ -79,7 +79,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
   it('should round-trip 2D array declaration', () => {
     const tree = liftCode('int arr[3][4];')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
+    const body = tree!.slots.body ?? []
     expect(body[0].componentId).toBe('cpp:array_2d_declare')
     expect(body[0].properties.type).toBe('int')
     expect(body[0].properties.name).toBe('arr')
@@ -93,12 +93,12 @@ describe('Round-trip: enum, range-for, 2D array', () => {
   it('should round-trip 2D array access', () => {
     const tree = liftCode('int v = arr[0][1];')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
-    const init = body[0].children.initializer?.[0]
+    const body = tree!.slots.body ?? []
+    const init = body[0].slots.initializer?.[0]
     expect(init?.componentId).toBe('cpp:array_2d_at')
     // 🟢 **容器是接點**（2026-08-26）——釘接點比釘字串強。
     expect(init?.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
-    expect(init?.children.obj[0].properties.name).toBe('arr')
+    expect(init?.slots.obj[0].properties.name).toBe('arr')
 
     const code = generateCode(tree!, 'cpp', style)
     expect(code).toContain('arr[0][1]')
@@ -107,7 +107,7 @@ describe('Round-trip: enum, range-for, 2D array', () => {
   it('should round-trip 2D array assignment', () => {
     const tree = liftCode('arr[1][2] = 5;')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
+    const body = tree!.slots.body ?? []
     expect(body[0].componentId).toBe('cpp:array_2d_assign')
     expect(body[0].properties.obj).toBe('arr')
 
@@ -118,8 +118,8 @@ describe('Round-trip: enum, range-for, 2D array', () => {
   it('should not break 1D array access', () => {
     const tree = liftCode('int v = arr[3];')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
-    const init = body[0].children.initializer?.[0]
+    const body = tree!.slots.body ?? []
+    const init = body[0].slots.initializer?.[0]
     expect(init?.componentId).toBe('cpp:array_at')
   })
 })

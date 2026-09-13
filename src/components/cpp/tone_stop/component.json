@@ -2,7 +2,7 @@
   "componentId": "cpp:tone_stop",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "pin": "expression"
   },
   "role": "statement",

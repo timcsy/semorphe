@@ -20,7 +20,7 @@ function charOf(v: RuntimeValue): string {
 
 export function registerExecute(register: (component: string, e: ComponentExecutor) => void): void {
   register('cpp:char_is_alpha', async (node, ctx) => {
-    const v = (node.children.value ?? [])[0]
+    const v = (node.slots.value ?? [])[0]
     if (!v) throw new Error('cpp:char_is_alpha 少了 value 子節點——語義樹壞了')
     const val = await ctx.evaluate(v)
     return { type: 'int', value: /[a-zA-Z]/.test(charOf(val)) ? 1 : 0 }

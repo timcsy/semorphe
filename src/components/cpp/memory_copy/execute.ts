@@ -4,10 +4,10 @@ import { writableArray } from '../../../languages/cpp/core/runtime/cstring'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:memory_copy', async (node, ctx) => {
-      const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'memcpy 的目標')
-      const srcNode = (node.children.src ?? [])[0]
+      const dest = writableArray(ctx as never, (node.slots.dest ?? [])[0], 'memcpy 的目標')
+      const srcNode = (node.slots.src ?? [])[0]
       const src = writableArray(ctx as never, srcNode, 'memcpy 的來源')
-      const size = ctx.toNumber(await ctx.evaluate((node.children.size ?? [])[0]))
+      const size = ctx.toNumber(await ctx.evaluate((node.slots.size ?? [])[0]))
       for (let i = 0; i < size && i < dest.length && i < src.length; i++) dest[i] = { ...src[i] }
     })
 }

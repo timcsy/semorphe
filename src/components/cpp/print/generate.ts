@@ -9,7 +9,7 @@ import { isLineBreak } from '../../../languages/cpp/core/node-traits'
 
 export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePreset): void {
   g.set('cpp:print', (node, ctx) => {
-      const values = node.children.values ?? []
+      const values = node.slots.values ?? []
       if (style.io_style === 'cout') {
         const parts = values.map(v => {
           const expr = generateExpression(v, ctx)

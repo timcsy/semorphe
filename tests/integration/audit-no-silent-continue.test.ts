@@ -105,7 +105,7 @@ import type { SemanticNode } from '../../src/core/types'
 
 /** 合成的節點——⚠️ **刻意不是任何真實身分**（`build-guardrail` 簽名三）。 */
 const node = (componentId: string): SemanticNode =>
-  ({ id: 'n-probe', componentId, properties: {}, children: {} }) as unknown as SemanticNode
+  ({ id: 'n-probe', componentId, properties: {}, slots: {} }) as unknown as SemanticNode
 
 /**
  * **具名豁免**——每一筆要寫得出理由。空的是對的：這個字現在沒有正當用途。

@@ -17,16 +17,16 @@ import { dictSet } from '../../../languages/python/dict'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:container_assign', async (node, ctx) => {
-    const at = (node.children.target ?? [])[0]
-    const inner = at?.children?.target?.[0]
-    const keyNode = at?.children?.key?.[0]
+    const at = (node.slots.target ?? [])[0]
+    const inner = at?.slots?.target?.[0]
+    const keyNode = at?.slots?.key?.[0]
     if (!inner || !keyNode) {
       // 認得出來而拆不開＝上游給了一個不是「取那一格」的左邊，**出聲不要猜**
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個左邊不是「容器的某一格」' })
     }
     const container = await ctx.evaluate(inner)
     const key = await ctx.evaluate(keyNode)
-    const v = await ctx.evaluate(node.children.value[0])
+    const v = await ctx.evaluate(node.slots.value[0])
 
     if (container.type === 'object') {
       // ⚠️ **同時記住那個鍵原本長什麼樣**——`count[3] = 1` 的 3 是整數，

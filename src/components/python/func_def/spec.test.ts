@@ -13,10 +13,10 @@ describe('python:func_def', () => {
     const t = await liftPython('def add(a, b):\n    return a\n')
     const find = (n: typeof t): typeof t =>
       !n ? null : n.componentId === 'python:func_def' ? n
-        : Object.values(n.children ?? {}).flat().map((k) => find(k)).find(Boolean) ?? null
+        : Object.values(n.slots ?? {}).flat().map((k) => find(k)).find(Boolean) ?? null
     const fd = find(t)!
-    expect(fd.children.params?.length, '🔴 兩個參數要是兩格——一個逗號分隔的字串表達不出「兩格」').toBe(2)
-    expect(fd.children.params!.map((p) => p.properties.name)).toEqual(['a', 'b'])
+    expect(fd.slots.params?.length, '🔴 兩個參數要是兩格——一個逗號分隔的字串表達不出「兩格」').toBe(2)
+    expect(fd.slots.params!.map((p) => p.properties.name)).toEqual(['a', 'b'])
     expect(gen(t)).toBe('def add(a, b):\n    return a')
   })
 

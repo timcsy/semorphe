@@ -148,7 +148,7 @@ export function skeletonComponents(): Set<string> {
 function collectIds(n: SemanticNode | null | undefined, acc: Set<string>): void {
   if (!n || typeof n !== 'object') return
   if (typeof n.componentId === 'string' && n.componentId.includes(':')) acc.add(n.componentId)
-  for (const b of Object.values(n.children ?? {})) for (const c of b ?? []) collectIds(c, acc)
+  for (const b of Object.values(n.slots ?? {})) for (const c of b ?? []) collectIds(c, acc)
 }
 
 // ─── 課程 ───

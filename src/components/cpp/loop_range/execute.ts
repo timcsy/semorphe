@@ -6,7 +6,7 @@ export function registerExecute(register: (component: string, executor: Componen
   register('cpp:loop_range', async (node, ctx) => {
       const varName = String(node.properties.var_name ?? 'x')
       const containerName = String(node.properties.container ?? 'vec')
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       const parentScope = ctx.scope
       const container = ctx.scope.get(containerName)
 

@@ -14,10 +14,10 @@ import { callMethod } from '../method_call/dispatch'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:string_compare_prefix', async (node, ctx) => {
-    const self = await ctx.evaluate(node.children.obj[0])
+    const self = await ctx.evaluate(node.slots.obj[0])
     const args: RuntimeValue[] = []
     for (const k of ["value"]) {
-      const n = (node.children as Record<string, unknown[]>)[k]?.[0]
+      const n = (node.slots as Record<string, unknown[]>)[k]?.[0]
       if (n) args.push(await ctx.evaluate(n as never))
     }
     return callMethod(self, 'startswith', args, ctx)

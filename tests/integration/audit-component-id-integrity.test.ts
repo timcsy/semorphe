@@ -223,7 +223,7 @@ describe('走流程掃樹（硬關卡）', () => {
     const walk = (n: SemanticNode): void => {
       if (!n) return
       out.push(n.componentId)
-      for (const l of Object.values(n.children ?? {})) for (const c of l ?? []) walk(c as SemanticNode)
+      for (const l of Object.values(n.slots ?? {})) for (const c of l ?? []) walk(c as SemanticNode)
     }
     walk(root)
     return out
@@ -253,7 +253,7 @@ describe('走流程掃樹（硬關卡）', () => {
 
   it('★ 反向：合成一個算出來的幽靈身分**必須被抓到**', () => {
     // 沒有這一支的話，上一支綠可能只代表樣本沒踩到問題。
-    const fakeTree = { componentId: '__合成_算出來的幽靈__', properties: {}, children: {} } as unknown as SemanticNode
+    const fakeTree = { componentId: '__合成_算出來的幽靈__', properties: {}, slots: {} } as unknown as SemanticNode
     const ids = [fakeTree.componentId]
     const ghosts = ids.filter((id) => !declared.has(id) && !nonComponentDecl(id))
     expect(ghosts, '判定函式放過了一個不存在的身分').toEqual(['__合成_算出來的幽靈__'])

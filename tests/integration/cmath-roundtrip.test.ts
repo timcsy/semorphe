@@ -163,8 +163,8 @@ describe('cmath Round-trip', () => {
     function findComponent(node: any, componentId: string): any {
       if (!node) return null
       if (node.componentId === componentId) return node
-      for (const children of Object.values(node.children ?? {})) {
-        for (const child of children as any[]) {
+      for (const slots of Object.values(node.slots ?? {})) {
+        for (const child of slots as any[]) {
           const found = findComponent(child, componentId)
           if (found) return found
         }
@@ -177,8 +177,8 @@ describe('cmath Round-trip', () => {
       expect(tree).not.toBeNull()
       const pow = findComponent(tree, 'cpp:math_pow')
       expect(pow).not.toBeNull()
-      expect(pow.children.base).toHaveLength(1)
-      expect(pow.children.exponent).toHaveLength(1)
+      expect(pow.slots.base).toHaveLength(1)
+      expect(pow.slots.exponent).toHaveLength(1)
     })
 
     it('lifts sqrt to cpp:math_unary with func=sqrt', () => {
@@ -187,7 +187,7 @@ describe('cmath Round-trip', () => {
       const sqrt = findComponent(tree, 'cpp:math_unary')
       expect(sqrt).not.toBeNull()
       expect(sqrt.properties.func).toBe('sqrt')
-      expect(sqrt.children.value).toHaveLength(1)
+      expect(sqrt.slots.value).toHaveLength(1)
     })
 
     it('lifts fmod to cpp:math_binary with func=fmod', () => {
@@ -196,8 +196,8 @@ describe('cmath Round-trip', () => {
       const fmod = findComponent(tree, 'cpp:math_binary')
       expect(fmod).not.toBeNull()
       expect(fmod.properties.func).toBe('fmod')
-      expect(fmod.children.arg1).toHaveLength(1)
-      expect(fmod.children.arg2).toHaveLength(1)
+      expect(fmod.slots.arg1).toHaveLength(1)
+      expect(fmod.slots.arg2).toHaveLength(1)
     })
   })
 })

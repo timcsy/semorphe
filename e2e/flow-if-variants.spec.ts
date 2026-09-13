@@ -44,10 +44,10 @@ test('★ 真人滑鼠：拖「如果／否則如果」→ 樹裡是一條巢狀
 
   const countIfs = (): Promise<number> =>
     page.evaluate(() => {
-      const walk = (n: { componentId: string; children: Record<string, unknown[]> }): number => {
+      const walk = (n: { componentId: string; slots: Record<string, unknown[]> }): number => {
         let c = n.componentId === 'cpp:if' ? 1 : 0
-        for (const k of Object.keys(n.children ?? {})) {
-          for (const kid of (n.children[k] ?? []) as never[]) c += walk(kid)
+        for (const k of Object.keys(n.slots ?? {})) {
+          for (const kid of (n.slots[k] ?? []) as never[]) c += walk(kid)
         }
         return c
       }
@@ -73,13 +73,13 @@ test('★ 真人滑鼠：拖「如果／否則如果」→ 樹裡是一條巢狀
     .toBe(2)
 
   const nested = await page.evaluate(() => {
-    const walk = (n: { componentId: string; properties: Record<string, unknown>; children: Record<string, unknown[]> }): unknown => {
+    const walk = (n: { componentId: string; properties: Record<string, unknown>; slots: Record<string, unknown[]> }): unknown => {
       if (n.componentId === 'cpp:if') {
-        const inner = (n.children?.else_body ?? [])[0] as typeof n | undefined
+        const inner = (n.slots?.else_body ?? [])[0] as typeof n | undefined
         return { hasInner: Boolean(inner), isElseIf: inner?.properties?.isElseIf ?? null }
       }
-      for (const k of Object.keys(n.children ?? {})) {
-        for (const kid of (n.children[k] ?? []) as never[]) {
+      for (const k of Object.keys(n.slots ?? {})) {
+        for (const kid of (n.slots[k] ?? []) as never[]) {
           const r = walk(kid)
           if (r) return r
         }
@@ -99,7 +99,7 @@ test('★ 真人滑鼠：拖「如果／否則如果」→ 樹裡是一條巢狀
 test('★ 流程視圖做得出 else——`else_body` 要是一個接點', async ({ page }) => {
   // ## 它從哪來
   //
-  // 在這一刀之前 `cpp:if` 的 `children` 只宣告了 `condition` 與 `then_body`
+  // 在這一刀之前 `cpp:if` 的 `slots` 只宣告了 `condition` 與 `then_body`
   // ——而 lifter 產得出 `else_body`。**宣告漏了一格**，
   // 於是流程視圖上那顆「如果」沒有 else 接點：**做不出 else**。
   //

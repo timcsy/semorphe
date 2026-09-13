@@ -16,7 +16,7 @@ export function registerExecute(register: (component: string, executor: Componen
   register('cpp:range_sort', async (node, ctx) => {
       const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
       const cells = r.arr as RuntimeValue[]
-      const cmpNode = (node.children.comparator ?? [])[0]
+      const cmpNode = (node.slots.comparator ?? [])[0]
 
       // 沒有比較器 → C++ 的預設 `operator<`（對 `pair` 是字典序）
       let less = async (a: RuntimeValue, b: RuntimeValue): Promise<boolean> => defaultLess(a, b)

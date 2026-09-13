@@ -10,6 +10,6 @@ export function registerExecute(register: (component: string, executor: Componen
      */
     /** `namespace N { … }` —— 這個直譯器沒有名稱隔離，本體直接跑 */
     register('cpp:namespace_def', async (node, ctx) => {
-      await ctx.executeBody(node.children.body ?? [])
+      await ctx.executeBody(node.slots.body ?? [])
     })
 }

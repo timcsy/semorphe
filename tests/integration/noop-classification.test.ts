@@ -104,7 +104,7 @@ const DEAD = ['cpp:include', 'cpp:include_local', 'cpp:using_namespace']
 function componentsIn(node: SemanticNode | null, acc = new Set<string>()): Set<string> {
   if (!node) return acc
   acc.add(node.componentId)
-  for (const arr of Object.values(node.children ?? {})) for (const c of arr) componentsIn(c, acc)
+  for (const arr of Object.values(node.slots ?? {})) for (const c of arr) componentsIn(c, acc)
   return acc
 }
 

@@ -322,15 +322,15 @@ export class PatternLifter {
     if (!this.checkConstraints(node, entry.constraints, ctx)) return null
 
     const props: Record<string, string> = {}
-    const children: Record<string, SemanticNode[]> = {}
+    const slots: Record<string, SemanticNode[]> = {}
 
     if (entry.fieldMappings) {
       for (const fm of entry.fieldMappings) {
-        this.extractField(node, fm, ctx, props, children)
+        this.extractField(node, fm, ctx, props, slots)
       }
     }
 
-    return createNode(entry.componentId, props, children)
+    return createNode(entry.componentId, props, slots)
   }
 
   // ── Operator Dispatch ──
@@ -354,14 +354,14 @@ export class PatternLifter {
     if (!targetComponent) return null
 
     const props: Record<string, string> = {}
-    const children: Record<string, SemanticNode[]> = {}
+    const slots: Record<string, SemanticNode[]> = {}
 
     const mappings = dispatch.fieldMappings ?? entry.fieldMappings ?? []
     for (const fm of mappings) {
-      this.extractField(node, fm, ctx, props, children)
+      this.extractField(node, fm, ctx, props, slots)
     }
 
-    return createNode(targetComponent, props, children)
+    return createNode(targetComponent, props, slots)
   }
 
   // ── Chain (left-recursive) ──
@@ -438,9 +438,9 @@ export class PatternLifter {
       }
     }
 
-    // Extract properties and children
+    // Extract properties and slots
     const props: Record<string, string> = {}
-    const children: Record<string, SemanticNode[]> = {}
+    const slots: Record<string, SemanticNode[]> = {}
 
     if (comp.extract) {
       for (const [semName, rule] of Object.entries(comp.extract)) {
@@ -459,7 +459,7 @@ export class PatternLifter {
             const target = this.resolvePathNode(node, rule.path ?? '')
             if (target) {
               const lifted = ctx.lift(target)
-              if (lifted) children[semName] = [lifted]
+              if (lifted) slots[semName] = [lifted]
             }
             break
           }
@@ -470,9 +470,9 @@ export class PatternLifter {
               if (!lifted) {
                 // skip
               } else if (lifted.componentId === '_compound') {
-                children[semName] = lifted.children.body ?? []
+                slots[semName] = lifted.slots.body ?? []
               } else {
-                children[semName] = [lifted]
+                slots[semName] = [lifted]
               }
             }
             break
@@ -494,7 +494,7 @@ export class PatternLifter {
       }
     }
 
-    return createNode(entry.componentId, props, children)
+    return createNode(entry.componentId, props, slots)
   }
 
   // ── Unwrap ──
@@ -550,7 +550,7 @@ export class PatternLifter {
     // Apply transform rules
     for (const rule of ct.transformRules) {
       if (lifted.componentId === rule.fromComponent) {
-        return createNode(rule.toComponent, { ...lifted.properties }, { ...lifted.children })
+        return createNode(rule.toComponent, { ...lifted.properties }, { ...lifted.slots })
       }
     }
 
@@ -635,7 +635,7 @@ export class PatternLifter {
       const op = node.children.find(c => !c.isNamed)
       return op?.text ?? null
     }
-    // $namedChildren[N] — positional access to named children
+    // $namedChildren[N] — positional access to named slots
     const namedChildMatch = ast.match(/^\$namedChildren\[(\d+)\]$/)
     if (namedChildMatch) {
       const idx = parseInt(namedChildMatch[1], 10)
@@ -669,7 +669,7 @@ export class PatternLifter {
     fm: FieldMapping,
     ctx: LiftContext,
     props: Record<string, string>,
-    children: Record<string, SemanticNode[]>,
+    slots: Record<string, SemanticNode[]>,
   ): void {
     switch (fm.extract) {
       case 'text': {
@@ -696,7 +696,7 @@ export class PatternLifter {
         //
         // > **一個不存在的欄位參照不會報錯，它只會讓你以為那個對映生效了。**
         if (fm.ast === '$namedChildren') {
-          children[fm.semantic] = node.namedChildren
+          slots[fm.semantic] = node.namedChildren
             .map((c) => ctx.lift(c))
             .filter((n): n is NonNullable<typeof n> => n !== null)
           break
@@ -718,10 +718,10 @@ export class PatternLifter {
         }
         if (child) {
           const lifted = ctx.lift(child)
-          if (lifted) children[fm.semantic] = [lifted]
-          else children[fm.semantic] = []
+          if (lifted) slots[fm.semantic] = [lifted]
+          else slots[fm.semantic] = []
         } else {
-          children[fm.semantic] = []
+          slots[fm.semantic] = []
         }
         break
       }
@@ -733,12 +733,12 @@ export class PatternLifter {
           // - return_statement → return node
           // - expression_statement → unwrapped expression
           // For wrapper nodes (else_clause) that have no lift handler,
-          // fall back to lifting their children.
+          // fall back to lifting their slots.
           const lifted = ctx.lift(child)
           if (lifted && lifted.componentId === '_compound') {
-            children[fm.semantic] = lifted.children.body ?? []
+            slots[fm.semantic] = lifted.slots.body ?? []
           } else if (lifted && lifted.componentId !== 'raw_code' && lifted.componentId !== 'unresolved') {
-            children[fm.semantic] = [lifted]
+            slots[fm.semantic] = [lifted]
           } else if (lifted && lifted.componentId === 'raw_code' && !coversToEnd(child)) {
             // 🔴 **認不出來的【語句】要整段留著，不准往下拆**（2026-09-02）。
             //
@@ -763,9 +763,9 @@ export class PatternLifter {
             // 判準是**量得到的**：往下拆會不會掉字。包裝節點的最後一個子節點
             // 結束在它自己的結尾（`else { … }` 的 `}` 就是 else_clause 的結尾），
             // 而 `goto done;` 的 `done` 結束在分號**之前**。
-            children[fm.semantic] = [lifted]
+            slots[fm.semantic] = [lifted]
           } else {
-            // Fallback: lift named children (handles else_clause, etc.)
+            // Fallback: lift named slots (handles else_clause, etc.)
             const liftedChildren = ctx.liftChildren(child.namedChildren)
             // Mark direct "else if" chains: when an else_clause contains
             // a direct if_statement (not wrapped in compound_statement),
@@ -776,23 +776,23 @@ export class PatternLifter {
                 && liftedChildren.length === 1 && isElseIfChainable(liftedChildren[0].componentId)) {
               liftedChildren[0].properties = { ...liftedChildren[0].properties, isElseIf: 'true' }
             }
-            children[fm.semantic] = liftedChildren
+            slots[fm.semantic] = liftedChildren
           }
         } else {
-          children[fm.semantic] = []
+          slots[fm.semantic] = []
         }
         break
       }
       case 'liftChildren': {
-        if (fm.ast === '$text' || fm.ast === '$children') {
-          // Use all named children of the current node
-          children[fm.semantic] = ctx.liftChildren(node.namedChildren)
+        if (fm.ast === '$text' || fm.ast === '$slots') {
+          // Use all named slots of the current node
+          slots[fm.semantic] = ctx.liftChildren(node.namedChildren)
         } else {
           const child = node.childForFieldName(fm.ast)
           if (child) {
-            children[fm.semantic] = ctx.liftChildren(child.namedChildren)
+            slots[fm.semantic] = ctx.liftChildren(child.namedChildren)
           } else {
-            children[fm.semantic] = []
+            slots[fm.semantic] = []
           }
         }
         break

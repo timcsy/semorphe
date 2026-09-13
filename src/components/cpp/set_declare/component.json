@@ -13,7 +13,7 @@
       "default": "s"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "paths": {
     "render": "./forms/blocks.json",

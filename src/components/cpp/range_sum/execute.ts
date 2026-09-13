@@ -14,7 +14,7 @@ export function registerExecute(register: (component: string, executor: Componen
      */
     register('cpp:range_sum', async (node, ctx) => {
       const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
-      const init = (node.children.init ?? [])[0]
+      const init = (node.slots.init ?? [])[0]
       let sum = init ? ctx.toNumber(await ctx.evaluate(init)) : 0
       for (let i = r.from; i < r.to; i++) sum += numOf(r.arr[i])
       return { type: 'int' as const, value: sum }

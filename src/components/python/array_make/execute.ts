@@ -5,7 +5,7 @@ import type { RuntimeValue } from '../../../interpreter/types'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:array_make', async (node, ctx) => {
     const items: RuntimeValue[] = []
-    for (const it of node.children.items ?? []) items.push(await ctx.evaluate(it))
+    for (const it of node.slots.items ?? []) items.push(await ctx.evaluate(it))
     return { type: 'array', value: items }
   })
 }

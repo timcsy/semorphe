@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   // cpp_print_formatted with structured args (0 or more)
     g.set('cpp:print_formatted', (node, ctx) => {
       const format = (node.properties.format as string) ?? '%d\\n'
-      const argNodes = node.children.args ?? []
+      const argNodes = node.slots.args ?? []
       if (argNodes.length > 0) {
         const args = argNodes.map(a => generateExpression(a, ctx))
         return `${indent(ctx)}printf("${format}", ${args.join(', ')});\n`

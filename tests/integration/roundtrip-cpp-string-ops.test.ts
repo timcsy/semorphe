@@ -60,8 +60,8 @@ function roundTripCode(code: string): string {
 function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
-  for (const children of Object.values(node.children ?? {})) {
-    for (const child of children as SemanticNode[]) {
+  for (const slots of Object.values(node.slots ?? {})) {
+    for (const child of slots as SemanticNode[]) {
       const found = findComponent(child, componentId)
       if (found) return found
     }
@@ -73,8 +73,8 @@ function findComponent(node: SemanticNode | null, componentId: string): Semantic
 function collectComponents(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
   result.add(node.componentId)
-  for (const children of Object.values(node.children ?? {})) {
-    for (const child of children as SemanticNode[]) {
+  for (const slots of Object.values(node.slots ?? {})) {
+    for (const child of slots as SemanticNode[]) {
       collectComponents(child, result)
     }
   }
@@ -121,8 +121,8 @@ describe('C++ String Operations Roundtrip', () => {
       const node = findComponent(tree, 'cpp:string_substr')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
-      expect(node!.children.pos).toHaveLength(1)
-      expect(node!.children.len).toHaveLength(1)
+      expect(node!.slots.pos).toHaveLength(1)
+      expect(node!.slots.len).toHaveLength(1)
     })
 
     it('should generate code containing .substr()', () => {
@@ -137,8 +137,8 @@ describe('C++ String Operations Roundtrip', () => {
       const node2 = findComponent(tree2, 'cpp:string_substr')
       expect(node2).not.toBeNull()
       expect(node2!.properties.obj).toBe('s')
-      expect(node2!.children.pos).toHaveLength(1)
-      expect(node2!.children.len).toHaveLength(1)
+      expect(node2!.slots.pos).toHaveLength(1)
+      expect(node2!.slots.len).toHaveLength(1)
     })
   })
 
@@ -153,7 +153,7 @@ describe('C++ String Operations Roundtrip', () => {
       const node = findComponent(tree, 'cpp:string_find')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
-      expect(node!.children.arg).toHaveLength(1)
+      expect(node!.slots.arg).toHaveLength(1)
     })
 
     it('should generate code containing .find()', () => {
@@ -182,7 +182,7 @@ describe('C++ String Operations Roundtrip', () => {
       const node = findComponent(tree, 'cpp:string_append')
       expect(node).not.toBeNull()
       expect(node!.properties.obj).toBe('s')
-      expect(node!.children.value).toHaveLength(1)
+      expect(node!.slots.value).toHaveLength(1)
     })
 
     it('should generate code containing .append()', () => {
@@ -242,7 +242,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(node).not.toBeNull()
       // 🟢 **讀進去的那一格是接點**（2026-08-25）——`getline(cin, o.name)` 合法。
       expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(node!.children.target[0].properties.name).toBe('line')
+      expect(node!.slots.target[0].properties.name).toBe('line')
     })
 
     it('should generate code containing getline()', () => {
@@ -258,7 +258,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:input_line')
       expect(node2).not.toBeNull()
-      expect(node2!.children.target[0].properties.name).toBe('line')
+      expect(node2!.slots.target[0].properties.name).toBe('line')
     })
   })
 
@@ -272,7 +272,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_make')
       expect(node).not.toBeNull()
-      expect(node!.children.value).toHaveLength(1)
+      expect(node!.slots.value).toHaveLength(1)
     })
 
     it('should generate code containing to_string()', () => {
@@ -286,7 +286,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_make')
       expect(node2).not.toBeNull()
-      expect(node2!.children.value).toHaveLength(1)
+      expect(node2!.slots.value).toHaveLength(1)
     })
   })
 
@@ -300,7 +300,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_as_int')
       expect(node).not.toBeNull()
-      expect(node!.children.value).toHaveLength(1)
+      expect(node!.slots.value).toHaveLength(1)
     })
 
     it('should generate code containing stoi()', () => {
@@ -314,7 +314,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_as_int')
       expect(node2).not.toBeNull()
-      expect(node2!.children.value).toHaveLength(1)
+      expect(node2!.slots.value).toHaveLength(1)
     })
   })
 
@@ -328,7 +328,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_as_double')
       expect(node).not.toBeNull()
-      expect(node!.children.value).toHaveLength(1)
+      expect(node!.slots.value).toHaveLength(1)
     })
 
     it('should generate code containing stod()', () => {
@@ -342,7 +342,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_as_double')
       expect(node2).not.toBeNull()
-      expect(node2!.children.value).toHaveLength(1)
+      expect(node2!.slots.value).toHaveLength(1)
     })
   })
 

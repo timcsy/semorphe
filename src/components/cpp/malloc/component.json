@@ -12,7 +12,7 @@
       "kind": "enum"
     }
   ],
-  "children": {
+  "slots": {
     "size": "expression"
   },
   "role": "expression",

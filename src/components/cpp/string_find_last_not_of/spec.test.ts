@@ -35,7 +35,7 @@ function identities(src: string): string[] {
   const out: string[] = []
   const walk = (n: SemanticNode) => {
     out.push(n.componentId)
-    for (const kids of Object.values(n.children ?? {})) for (const k of kids) walk(k as SemanticNode)
+    for (const kids of Object.values(n.slots ?? {})) for (const k of kids) walk(k as SemanticNode)
   }
   walk(tree)
   return out

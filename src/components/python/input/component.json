@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "🔴 **刻意是 null**——C++ 的 `cin >> x` **同時讀取並寫進一個變數**，而 Python 的 `input()` 只回傳一個字串。一顆是語句、一顆是運算式。",
   "properties": [],
-  "children": {
+  "slots": {
     "prompt": "expression"
   },
   "role": "expression",

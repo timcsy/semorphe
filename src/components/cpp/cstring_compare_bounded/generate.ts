@@ -4,9 +4,9 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:cstring_compare_bounded', (node, ctx) => {
-      const s1 = generateExpression((node.children.s1 ?? [])[0], ctx)
-      const s2 = generateExpression((node.children.s2 ?? [])[0], ctx)
-      const n = generateExpression((node.children.n ?? [])[0], ctx)
+      const s1 = generateExpression((node.slots.s1 ?? [])[0], ctx)
+      const s2 = generateExpression((node.slots.s2 ?? [])[0], ctx)
+      const n = generateExpression((node.slots.n ?? [])[0], ctx)
       return `strncmp(${s1}, ${s2}, ${n})`
     })
 }

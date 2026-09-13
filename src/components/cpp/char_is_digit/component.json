@@ -2,7 +2,7 @@
   "componentId": "cpp:char_is_digit",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "expression",

@@ -13,9 +13,9 @@ import { callMethod } from '../method_call/dispatch'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:string_fill', async (node, ctx) => {
     const method = String(node.properties.method ?? 'zfill')
-    const self = await ctx.evaluate(node.children.obj[0])
-    const args: RuntimeValue[] = [await ctx.evaluate(node.children.width[0])]
-    const fill = (node.children.fill ?? [])[0]
+    const self = await ctx.evaluate(node.slots.obj[0])
+    const args: RuntimeValue[] = [await ctx.evaluate(node.slots.width[0])]
+    const fill = (node.slots.fill ?? [])[0]
     if (fill && method !== 'zfill') args.push(await ctx.evaluate(fill))
     return callMethod(self, method, args, ctx)
   })

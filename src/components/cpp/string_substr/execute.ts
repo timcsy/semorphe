@@ -6,8 +6,8 @@ export function registerExecute(register: (component: string, executor: Componen
       const obj = String(node.properties.obj)
       const val = ctx.scope.get(obj)
       const str = String(val.value)
-      const posNodes = node.children.pos ?? []
-      const lenNodes = node.children.len ?? []
+      const posNodes = node.slots.pos ?? []
+      const lenNodes = node.slots.len ?? []
       const pos = posNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(posNodes[0])) : 0
       const len = lenNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(lenNodes[0])) : str.length - pos
       return { type: 'string', value: str.substring(pos, pos + len) }

@@ -8,7 +8,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
   const openBrace = openBraceFor(style)
   g.set('cpp:namespace_def', (node, ctx) => {
       const name = node.properties.name ?? 'myns'
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       const header = `${indent(ctx)}namespace ${name}${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header

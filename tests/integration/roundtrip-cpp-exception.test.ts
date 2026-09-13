@@ -173,8 +173,8 @@ int main() {
       // Compare structure: same component at root level
       function findComponent(node: any, component: string): boolean {
         if (node.componentId === component) return true
-        for (const children of Object.values(node.children ?? {})) {
-          for (const child of children as any[]) {
+        for (const slots of Object.values(node.slots ?? {})) {
+          for (const child of slots as any[]) {
             if (findComponent(child, component)) return true
           }
         }

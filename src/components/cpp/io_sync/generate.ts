@@ -13,7 +13,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:io_sync', (node, ctx) => {
-    const value = node.children.value?.[0]
+    const value = node.slots.value?.[0]
     // 引數缺席時補 `false`——這顆概念在真實程式裡幾乎只有一種用法，
     // 而空括號 `sync_with_stdio()` 編不過。
     const arg = value ? generateExpression(value, ctx) : 'false'

@@ -13,7 +13,7 @@
       "default": ""
     }
   ],
-  "children": {
+  "slots": {
     "size": {
       "allowed": [
         "expression"

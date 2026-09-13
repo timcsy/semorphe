@@ -66,14 +66,14 @@ interface gap { key: string; componentId: string; what: string }
  * 輸入是一顆膠囊的宣告與它每一個形態的對映表，輸出是「沒有位置的那幾個」。
  */
 export function gapsOf(
-  c: { componentId: string; properties?: { name: string }[]; children?: Record<string, string> },
+  c: { componentId: string; properties?: { name: string }[]; slots?: Record<string, string> },
   forms: {
     renderMapping?: {
       fields?: Record<string, string>
       inputs?: Record<string, string>
       statementInputs?: Record<string, string>
       dynamicRules?: { childSlot?: string; countSource?: string }[]
-      childrenAsField?: { childSlot?: string }[]
+      slotAsField?: { childSlot?: string }[]
     }
   }[],
 ): gap[] {
@@ -89,13 +89,13 @@ export function gapsOf(
       //    （`ctorCount`／`paramCount`），使用者按 ＋／− 就是在改它。
       if (r.countSource) homes.add(r.countSource)
     }
-    for (const r of rm.childrenAsField ?? []) if (r.childSlot) homes.add(r.childSlot)
+    for (const r of rm.slotAsField ?? []) if (r.childSlot) homes.add(r.childSlot)
   }
   const out: gap[] = []
   for (const p of c.properties ?? []) {
     if (!homes.has(p.name)) out.push({ key: `${c.componentId}.${p.name}`, componentId: c.componentId, what: `屬性 ${p.name}` })
   }
-  for (const k of Object.keys(c.children ?? {})) {
+  for (const k of Object.keys(c.slots ?? {})) {
     if (!homes.has(k)) out.push({ key: `${c.componentId}:${k}`, componentId: c.componentId, what: `接點 ${k}` })
   }
   return out
@@ -117,7 +117,7 @@ function scanCapsules(): { total: number; gaps: gap[] } {
     const c = JSON.parse(fs.readFileSync(cp, 'utf8')) as {
       componentId: string
       properties?: { name: string }[]
-      children?: Record<string, string>
+      slots?: Record<string, string>
       paths?: { render?: string | null }
     }
     const render = c.paths?.render
@@ -187,7 +187,7 @@ describe('第五十四條護欄：宣告的屬性，積木上有沒有一格裝�
       {
         componentId: 'fake:two',
         properties: [{ name: 'a' }, { name: 'b' }, { name: 'c' }, { name: 'n' }],
-        children: { body: 'statements', args: 'expression', params: 'param_decl' },
+        slots: { body: 'statements', args: 'expression', params: 'param_decl' },
       },
       [{
         renderMapping: {
@@ -195,7 +195,7 @@ describe('第五十四條護欄：宣告的屬性，積木上有沒有一格裝�
           inputs: { B: 'b', ARGS: 'args' },
           statementInputs: { BODY: 'body' },
           dynamicRules: [{ childSlot: 'c', countSource: 'n' }],
-          childrenAsField: [{ childSlot: 'params' }],
+          slotAsField: [{ childSlot: 'params' }],
         },
       }],
     )

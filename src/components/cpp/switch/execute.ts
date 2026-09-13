@@ -5,18 +5,18 @@ import { isDefaultCase } from '../../../languages/cpp/core/node-traits'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:switch', async (node, ctx) => {
-      const exprNodes = node.children.expr ?? []
+      const exprNodes = node.slots.expr ?? []
       if (exprNodes.length === 0) return
       const switchVal = await ctx.evaluate(exprNodes[0])
 
-      const cases = node.children.cases ?? []
+      const cases = node.slots.cases ?? []
       let matched = false
 
       for (const caseNode of cases) {
         if (!matched) {
           const isDefault = isDefaultCase(caseNode.componentId)
           if (!isDefault) {
-            const caseValNodes = caseNode.children.value ?? []
+            const caseValNodes = caseNode.slots.value ?? []
             if (caseValNodes.length > 0) {
               const caseVal = await ctx.evaluate(caseValNodes[0])
               if (ctx.toNumber(switchVal) !== ctx.toNumber(caseVal)) continue
@@ -25,7 +25,7 @@ export function registerExecute(register: (component: string, executor: Componen
           matched = true
         }
 
-        const caseBody = caseNode.children.body ?? []
+        const caseBody = caseNode.slots.body ?? []
         try {
           await ctx.executeBody(caseBody)
         } catch (signal) {

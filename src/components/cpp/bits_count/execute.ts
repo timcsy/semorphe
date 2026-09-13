@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:bits_count', async (node, ctx) => {
-    const value = node.children.value?.[0]
+    const value = node.slots.value?.[0]
     if (!value) return { type: 'int' as const, value: 0 }
     // ⚠️ **`>>> 0` 而不是 `>>`**：`__builtin_popcount` 吃的是 `unsigned int`，
     // 而 JS 的 `>>` 是帶號位移——`__builtin_popcount(-1)` 該是 32，

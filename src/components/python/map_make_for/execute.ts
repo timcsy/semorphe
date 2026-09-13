@@ -12,8 +12,8 @@ import { dictKeyOf, makeDict } from '../../../languages/python/dict'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:map_make_for', async (node, ctx) => {
-    const names = (node.children.targets ?? []).map((t) => String(t.properties.name ?? ''))
-    const seq = await ctx.evaluate(node.children.iterable[0])
+    const names = (node.slots.targets ?? []).map((t) => String(t.properties.name ?? ''))
+    const seq = await ctx.evaluate(node.slots.iterable[0])
     const items: RuntimeValue[] =
       seq.type === 'array' ? [...(seq.value as RuntimeValue[])]
       : seq.type === 'object' ? [...(seq.value as ObjectFields).keys()].map((k) => ({ type: 'string' as const, value: k }))
@@ -36,10 +36,10 @@ export function registerExecute(register: (component: string, executor: Componen
         } else {
           ctx.scope.has(names[0]) ? ctx.scope.set(names[0], it) : ctx.scope.declare(names[0], it)
         }
-        const cond = (node.children.condition ?? [])[0]
+        const cond = (node.slots.condition ?? [])[0]
         if (cond && !ctx.toBool(await ctx.evaluate(cond))) continue
-        const k = await ctx.evaluate(node.children.key[0])
-        out.set(dictKeyOf(k), await ctx.evaluate(node.children.value[0]))
+        const k = await ctx.evaluate(node.slots.key[0])
+        out.set(dictKeyOf(k), await ctx.evaluate(node.slots.value[0]))
         keys.set(dictKeyOf(k), k)
       }
     } finally {

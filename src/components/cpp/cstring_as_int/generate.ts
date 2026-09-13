@@ -4,7 +4,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:cstring_as_int', (node, ctx) => {
-      const str = generateExpression((node.children.str ?? [])[0], ctx)
+      const str = generateExpression((node.slots.str ?? [])[0], ctx)
       return `atoi(${str})`
     })
 }

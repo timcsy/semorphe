@@ -13,8 +13,8 @@ import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtim
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:analog_write', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
-    const value = ctx.toNumber(await ctx.evaluate((node.children.value ?? [])[0]))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
+    const value = ctx.toNumber(await ctx.evaluate((node.slots.value ?? [])[0]))
     const state = stateOf(ctx, pin)
     if (state.mode === undefined) state.writtenBeforeMode = true
     state.value = Math.max(0, Math.min(255, Math.trunc(value)))

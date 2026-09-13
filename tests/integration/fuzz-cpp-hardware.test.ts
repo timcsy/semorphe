@@ -50,7 +50,7 @@ const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const componentsIn = (n: SemanticNode, out: string[] = []): string[] => {
   out.push(n.componentId)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) componentsIn(k, out)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks) componentsIn(k, out)
   return out
 }
 const run = async (src: string): Promise<string> => {

@@ -2,7 +2,7 @@
   "componentId": "cpp:ternary",
   "abstractComponent": "cpp:if_else",
   "properties": [],
-  "children": {
+  "slots": {
     "condition": "expression",
     "true_expr": "expression",
     "false_expr": "expression"

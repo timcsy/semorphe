@@ -10,7 +10,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const cols = node.properties.cols ?? '4'
       // 初始值三態，與一維陣列同一條契約：欄位不存在 → 無初始化；
       // `[]` → `= {}`；有內容 → `= {…}`。
-      const values = node.children.values
+      const values = node.slots.values
       const init = values === undefined ? '' : ` = {${values.map((v) => generateExpression(v, ctx)).join(', ')}}`
       return `${indent(ctx)}${type} ${name}[${rows}][${cols}]${init};\n`
     })

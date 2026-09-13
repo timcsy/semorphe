@@ -46,7 +46,7 @@
       "statementInputs": {
         "BODY": "body"
       },
-      "childrenAsField": [
+      "slotAsField": [
         {
           "field": "PARAMS",
           "childSlot": "params",

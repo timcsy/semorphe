@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "名字與 C++ 那顆同一個操作對齊，而**保證不同**（Python 的字串不可變，這幾顆回新的；C++ 那側有的就地改）。等價要在量得出來的觀察集底下宣告。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "value": "expression"
   },

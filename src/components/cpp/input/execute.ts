@@ -59,7 +59,7 @@ async function extractOne(ctx: ExecutionContext, targetType: string): Promise<Ex
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:input', async (node, ctx) => {
-      const valueNodes = node.children.values ?? []
+      const valueNodes = node.slots.values ?? []
 
       // `in >> a >> b` —— 來源是一個**字串串流變數**，不是標準輸入。
       // 串流的狀態是「還沒讀的 token」（見 std/sstream/executors.ts），

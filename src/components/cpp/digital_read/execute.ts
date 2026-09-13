@@ -12,7 +12,7 @@ const INPUT_PULLUP = 2
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:digital_read', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
     const state = stateOf(ctx, pin)
     if (state.mode === INPUT_PULLUP && state.value === 0) return { type: 'int', value: 1 }
     return { type: 'int', value: state.value === 0 ? 0 : 1 }

@@ -2,7 +2,7 @@
   "componentId": "cpp:range_remap",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "value": "expression",
     "from_low": "expression",
     "from_high": "expression",

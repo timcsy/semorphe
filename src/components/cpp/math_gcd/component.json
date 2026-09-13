@@ -2,7 +2,7 @@
   "componentId": "cpp:math_gcd",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "a": "expression",
     "b": "expression"
   },

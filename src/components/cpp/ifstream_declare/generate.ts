@@ -5,8 +5,8 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:ifstream_declare', (node, ctx) => {
       const name = (node.properties.name as string) ?? 'fin'
-      // Support both property-based (from block) and children-based (from lifter) init
-      const initNodes = node.children.initializer ?? []
+      // Support both property-based (from block) and slots-based (from lifter) init
+      const initNodes = node.slots.initializer ?? []
       if (initNodes.length > 0) {
         const val = generateExpression(initNodes[0], ctx)
         return `${indent(ctx)}ifstream ${name}(${val});\n`

@@ -30,7 +30,7 @@ function tree(src: string): SemanticNode {
 }
 function identities(n: SemanticNode): string[] {
   const out: string[] = [n.componentId]
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...identities(k as SemanticNode))
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids) out.push(...identities(k as SemanticNode))
   return out
 }
 function program(expr: string): string {

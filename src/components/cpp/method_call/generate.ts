@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:method_call', (node, ctx) => {
       const obj = node.properties.obj ?? 'obj'
       const method = node.properties.method ?? 'method'
-      const args = (node.children.args ?? []).map(a => generateExpression(a, ctx))
+      const args = (node.slots.args ?? []).map(a => generateExpression(a, ctx))
       const expr = `${obj}.${method}(${args.join(', ')})`
       if (ctx.isExpression) return expr
       return `${indent(ctx)}${expr};\n`

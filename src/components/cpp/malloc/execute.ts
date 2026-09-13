@@ -43,7 +43,7 @@ export function registerExecute(register: (component: string, executor: Componen
     const elem = elementType(node)
     const unit = SIZES[elem] ?? 4
 
-    const sizeNode = (node.children.size ?? [])[0]
+    const sizeNode = (node.slots.size ?? [])[0]
     if (!sizeNode) {
       // 沒有大小＝語義樹壞掉（`size` 是宣告過的接點）。配一格而不是丟錯，
       // 與別處的缺子節點退路同形（防禦性）。

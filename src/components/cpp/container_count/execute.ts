@@ -7,7 +7,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_count', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const keyNodes = node.children.key ?? []
+      const keyNodes = node.slots.key ?? []
       if (keyNodes.length === 0) return { type: 'int' as const, value: 0 }
       const keyVal = await ctx.evaluate(keyNodes[0])
       const arr = ctx.scope.get(name)

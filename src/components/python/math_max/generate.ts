@@ -4,5 +4,5 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:math_max', (node, ctx) =>
-    `max(${(node.children.values ?? []).map((v) => generateExpression(v, ctx)).join(', ')})`)
+    `max(${(node.slots.values ?? []).map((v) => generateExpression(v, ctx)).join(', ')})`)
 }

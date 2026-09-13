@@ -8,7 +8,7 @@
       "default": "pq"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "expression",
   "paths": {
     "render": "./forms/blocks.json",

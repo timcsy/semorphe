@@ -14,22 +14,22 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     // 初始化列表要一起產回去。**少了它的話，來回轉換會靜靜地把
     // `vector<int> v = {3,1,4}` 變成 `vector<int> v;`**——那是合法程式，
     // 只是不是使用者寫的那一段。
-    const values = node.children.values ?? []
+    const values = node.slots.values ?? []
     if (values.length > 0) {
       const items = values.map((v) => generateExpression(v, ctx)).join(', ')
       return `${indent(ctx)}vector<${type}> ${name} = {${items}};\n`
     }
     // 初始值是一整個運算式（`= f()`）——與上面同一個病，同一個處方
-    const source = (node.children.source ?? [])[0]
+    const source = (node.slots.source ?? [])[0]
     if (source) {
       return `${indent(ctx)}vector<${type}> ${name} = ${generateExpression(source, ctx)};\n`
     }
     // `vector<int> v(5)` —— 建構子引數。⚠️ 原本產不回來（lift 也接不住，**兩邊對稱**）。
-    const size = (node.children.size ?? [])[0]
+    const size = (node.slots.size ?? [])[0]
     if (size) {
       // `vector<int> v(5, 7)` —— 第二個引數是「每一格是什麼」。
       // ⚠️ 少了它的話產出 `v(5)`，那**編得過而且看起來很像**，只是每一格變成 0。
-      const fill = (node.children.fill ?? [])[0]
+      const fill = (node.slots.fill ?? [])[0]
       const args = fill
         ? `${generateExpression(size, ctx)}, ${generateExpression(fill, ctx)}`
         : generateExpression(size, ctx)

@@ -79,7 +79,7 @@ function mapping(specs: BlockSpec[]): { blockType: string; renderKnows: string[]
       id: 'probe',
       componentId: spec.componentMapping!.componentId,
       properties: Object.fromEntries(props.map((p) => [p, `«${p}»`])),
-      children: {},
+      slots: {},
     }
     const state = r.render(node as never)
     if (!state) continue
@@ -106,7 +106,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     expect(specs.length, '零筆 spec → 是載入壞了').toBeGreaterThan(150)
     const r = new PatternRenderer()
     r.loadBlockSpecs(specs)
-    expect(r.render({ id: 'x', componentId: 'cpp:var_declare', properties: { name: 'a', type: 'int' }, children: {} } as never))
+    expect(r.render({ id: 'x', componentId: 'cpp:var_declare', properties: { name: 'a', type: 'int' }, slots: {} } as never))
       .not.toBeNull()
   })
 
@@ -118,7 +118,7 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     r.loadBlockSpecs(specs)
     e.loadBlockSpecs(specs)
     const walkAll = (cid: string, prop: string): unknown => {
-      const s = r.render({ id: 'p', componentId: cid, properties: { [prop]: '«v»' }, children: {} } as never)
+      const s = r.render({ id: 'p', componentId: cid, properties: { [prop]: '«v»' }, slots: {} } as never)
       return s ? e.extract(s as never)?.properties?.[prop] : undefined
     }
     expect(walkAll('cpp:doc_comment', 'brief'), 'doc_comment 有顯式 fields，本來就該保住').toBe('«v»')

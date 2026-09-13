@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側最接近的是 `std::transform`——它**寫進另一個容器**而不是回一個惰性序列。形狀不同。",
   "properties": [],
-  "children": {
+  "slots": {
     "func": "expression",
     "obj": "expression"
   },

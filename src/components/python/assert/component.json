@@ -4,7 +4,7 @@
   "_abstractComponent_why": "C++ 的 `assert` 是巨集（`<cassert>`），Python 的是語句而且**帶得走一句訊息**。形狀相近而保證不同。",
   "_componentId_why": "`assert` 是一個**語言構造**（與 `import`／`global` 同一類）——沒有「主體＋操作」可以拆。",
   "properties": [],
-  "children": {
+  "slots": {
     "condition": "expression",
     "value": "expression"
   },

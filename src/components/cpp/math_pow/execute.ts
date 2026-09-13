@@ -3,8 +3,8 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:math_pow', async (node, ctx) => {
-    const base = await ctx.evaluate((node.children.base ?? [])[0])
-    const exponent = await ctx.evaluate((node.children.exponent ?? [])[0])
+    const base = await ctx.evaluate((node.slots.base ?? [])[0])
+    const exponent = await ctx.evaluate((node.slots.exponent ?? [])[0])
     return { type: 'double', value: Math.pow(ctx.toNumber(base), ctx.toNumber(exponent)) }
   })
 }

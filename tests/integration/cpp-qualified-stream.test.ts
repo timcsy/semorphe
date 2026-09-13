@@ -40,7 +40,7 @@ const componentsIn = (code: string): string[] => {
   const ids: string[] = []
   const walk = (n: SemanticNode): void => {
     ids.push(n.componentId)
-    for (const ks of Object.values(n.children ?? {})) for (const k of ks) walk(k)
+    for (const ks of Object.values(n.slots ?? {})) for (const k of ks) walk(k)
   }
   if (t) walk(t)
   return ids

@@ -13,7 +13,7 @@
  * ## 🔴 而它**不能**沿用常數宣告的執行器
  *
  * 第一版直接 `register('cpp:pin_attach', execVarDeclare)`，而那是錯的：
- * 那支執行器的值從 `children.initializer` 讀，**而這顆的值在
+ * 那支執行器的值從 `slots.initializer` 讀，**而這顆的值在
  * `properties.pin`**（積木上是一個數字欄位，不是一個插槽）。
  *
  * ```

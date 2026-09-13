@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:servo_write', (node, ctx) => {
     const obj = String(node.properties.obj ?? 'myServo')
-    const angle = generateExpression((node.children.angle ?? [])[0], ctx)
+    const angle = generateExpression((node.slots.angle ?? [])[0], ctx)
     return `${indent(ctx)}${obj}.write(${angle});\n`
   })
 }

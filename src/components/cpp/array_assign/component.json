@@ -8,7 +8,7 @@
       "default": "arr"
     }
   ],
-  "children": {
+  "slots": {
     "index": "expression",
     "value": "expression"
   },

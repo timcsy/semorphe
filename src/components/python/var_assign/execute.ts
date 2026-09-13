@@ -17,7 +17,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:var_assign', async (node, ctx) => {
     const name = String(node.properties.obj ?? 'x')
-    const v = await ctx.evaluate(node.children.value[0])
+    const v = await ctx.evaluate(node.slots.value[0])
 
     // 🔴 `n[1] = 7` ／ `d["b"] = 2` —— **寫進那一格**（2026-08-21）。
     //

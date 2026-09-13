@@ -40,7 +40,7 @@ export class BlockSpecRegistry {
           // 見 `components/等價與觀察集.md` 剪枝力②：**「通用」是外延的，不住在名字裡**。
           abstractComponent: component?.abstractComponent ?? undefined,
           properties: paramNames(component?.properties),
-          children: component?.children,
+          slots: component?.slots,
           role: component?.role,
           annotations: component?.annotations,
         },

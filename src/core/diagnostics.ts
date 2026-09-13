@@ -274,7 +274,7 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
         }
       }
     }
-    for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) walk(c)
+    for (const bucket of Object.values(n.slots ?? {})) for (const c of bucket ?? []) walk(c)
   }
   walk(tree)
   return out
@@ -328,7 +328,7 @@ export function canExecute(tree: SemanticNode): { ok: true } | { ok: false; node
   const walk = (n: SemanticNode): void => {
     const cause = n.metadata?.degradationCause
     if (cause && DIAGNOSTIC_CAUSES.includes(cause)) bad.push(n.id)
-    for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) walk(c)
+    for (const bucket of Object.values(n.slots ?? {})) for (const c of bucket ?? []) walk(c)
   }
   walk(tree)
   return bad.length === 0 ? { ok: true } : { ok: false, nodeIds: bad }

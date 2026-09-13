@@ -8,7 +8,7 @@
       "required": true
     }
   ],
-  "children": {
+  "slots": {
     "body": "statements"
   },
   "role": "statement",

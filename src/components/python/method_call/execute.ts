@@ -22,13 +22,13 @@ export function registerExecute(register: (component: string, executor: Componen
 
     // 🔴 **模組不是變數**：`math.sqrt(16)` 的接收者 `math` 在作用域裡不存在，
     //    求值它會說「沒有這個變數」。模組的方法用整個名字當鍵。
-    const objNode = node.children.obj[0]
+    const objNode = node.slots.obj[0]
     const objName = String(objNode.properties?.name ?? '')
     const modName = moduleNameOf(objName, ctx.scope)   // `m.sqrt` 的 `m` 也算
     if (modName) {
       const modFn = PYTHON_MODULE_METHODS[`${modName}.${method}`]
       if (modFn) {
-        const modArgs: RuntimeValue[] = await evalPythonArgs(node.children.args ?? [], ctx)
+        const modArgs: RuntimeValue[] = await evalPythonArgs(node.slots.args ?? [], ctx)
         return modFn(modArgs, withCall(ctx))
       }
     }
@@ -53,13 +53,13 @@ export function registerExecute(register: (component: string, executor: Componen
         throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': `super().${method}()` })
       }
       const superArgs: RuntimeValue[] = []
-      superArgs.push(...(await evalPythonArgs(node.children.args ?? [], ctx)))
+      superArgs.push(...(await evalPythonArgs(node.slots.args ?? [], ctx)))
       return callWith(fn, [self, ...superArgs], ctx, `super().${method}`)
     }
 
     const self = await ctx.evaluate(objNode)
     const args: RuntimeValue[] = []
-    args.push(...(await evalPythonArgs(node.children.args ?? [], ctx)))
+    args.push(...(await evalPythonArgs(node.slots.args ?? [], ctx)))
 
     return callMethod(self, method, args, ctx)
   })

@@ -55,7 +55,7 @@ async function run(src: string): Promise<string> {
 /** 找出那顆普通指派節點——找不到回 null，讓斷言指名。 */
 function findAssign(n: SemanticNode): SemanticNode | null {
   if (n.componentId === 'cpp:var_assign') return n
-  for (const kids of Object.values(n.children ?? {})) {
+  for (const kids of Object.values(n.slots ?? {})) {
     for (const k of kids as SemanticNode[]) {
       const hit = findAssign(k)
       if (hit) return hit
@@ -67,7 +67,7 @@ function findAssign(n: SemanticNode): SemanticNode | null {
 /** 找出那顆遞增節點——找不到回 null，讓斷言指名。 */
 function findIncrement(n: SemanticNode): SemanticNode | null {
   if (n.componentId === 'cpp:increment') return n
-  for (const kids of Object.values(n.children ?? {})) {
+  for (const kids of Object.values(n.slots ?? {})) {
     for (const k of kids as SemanticNode[]) {
       const hit = findIncrement(k)
       if (hit) return hit
@@ -79,7 +79,7 @@ function findIncrement(n: SemanticNode): SemanticNode | null {
 /** 找出那顆複合指定節點——找不到回 null，讓斷言指名。 */
 function findCompound(n: SemanticNode): SemanticNode | null {
   if (n.componentId === 'cpp:var_assign_compound') return n
-  for (const kids of Object.values(n.children ?? {})) {
+  for (const kids of Object.values(n.slots ?? {})) {
     for (const k of kids as SemanticNode[]) {
       const hit = findCompound(k)
       if (hit) return hit
@@ -97,8 +97,8 @@ describe('C++ 的左值是接點', () => {
     const node = findCompound(lift(`${IO}int main(){ int x = 1; x += 1; cout << x; }`))
     expect(node, '正向錨點——沒有它，下面的負向會空過').toBeTruthy()
     expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-    expect(node!.children.target).toHaveLength(1)
-    expect(node!.children.target[0].componentId).toBe('cpp:var_ref')
+    expect(node!.slots.target).toHaveLength(1)
+    expect(node!.slots.target[0].componentId).toBe('cpp:var_ref')
   })
 
   it.each([
@@ -109,7 +109,7 @@ describe('C++ 的左值是接點', () => {
   ])('🎯 左值是 %s → 巢狀成 %s，而且算得對', async (_shape, componentId, src, want) => {
     const node = findCompound(lift(src))
     expect(node, '🔴 沒 lift 出複合指定').toBeTruthy()
-    expect(node!.children.target[0].componentId,
+    expect(node!.slots.target[0].componentId,
       '🔴 左邊沒有變成那顆節點——它可能又被壓成字串了').toBe(componentId)
     expect(await run(src), '🔴 lift 對了而執行錯了').toBe(want)
   })
@@ -125,8 +125,8 @@ describe('C++ 的左值是接點', () => {
   it('★ 加一種左值形狀不改任何既有執行器（路線圖驗收②）', () => {
     const two = findCompound(lift(`${IO}int main(){ int a[2][2]; a[1][0] += 5; }`))
     const str = findCompound(lift(`${S}int main(){ string s = "h"; s[0] -= 7; }`))
-    expect(two!.children.target[0].componentId).toBe('cpp:array_2d_at')
-    expect(str!.children.target[0].componentId).toBe('cpp:string_at')
+    expect(two!.slots.target[0].componentId).toBe('cpp:array_2d_at')
+    expect(str!.slots.target[0].componentId).toBe('cpp:string_at')
   })
 
   it('🎯 兩層下標（`a[i][j] += 1`）——舊版連 lift 都拆不出來', async () => {
@@ -169,7 +169,7 @@ describe('C++ 的左值是接點', () => {
     const node = findIncrement(lift(src))
     expect(node, '🔴 沒 lift 出遞增').toBeTruthy()
     expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-    expect(node!.children.target[0].componentId).toBe(componentId)
+    expect(node!.slots.target[0].componentId).toBe(componentId)
     expect(await run(src), '🔴 lift 對了而執行錯了').toBe(want)
   })
 
@@ -215,7 +215,7 @@ describe('C++ 的左值是接點', () => {
     const node = findAssign(lift(`${IO}${P}int main(){ P o; o.x = 7; }`))
     expect(node, '正向錨點——沒有它，下面的負向會空過').toBeTruthy()
     expect(node!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
-    expect(node!.children.target[0].componentId).toBe('cpp:struct_at_member')
+    expect(node!.slots.target[0].componentId).toBe('cpp:struct_at_member')
   })
 
   /**

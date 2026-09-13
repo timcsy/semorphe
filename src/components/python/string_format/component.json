@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側是 `printf` 的格式字串——而**那是輸出的一部分**，不是一個「產出字串」的運算式。形狀不同。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "args": "expression"
   },

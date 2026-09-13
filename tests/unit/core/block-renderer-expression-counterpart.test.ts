@@ -25,7 +25,7 @@ function makeSpec(blockType: string, componentId: string, opts: {
     category: 'test',
     level: 1,
     version: '1.0.0',
-    componentMapping: { componentId, properties: [], children: {} },
+    componentMapping: { componentId, properties: [], slots: {} },
     blockDef,
     codeTemplate: { pattern: '', imports: [], order: 0 },
     astPattern: { nodeType: '_none', constraints: [] },

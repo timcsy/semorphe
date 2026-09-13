@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:ofstream_declare', (node, ctx) => {
       const name = (node.properties.name as string) ?? 'fout'
-      const initNodes = node.children.initializer ?? []
+      const initNodes = node.slots.initializer ?? []
       if (initNodes.length > 0) {
         const val = generateExpression(initNodes[0], ctx)
         return `${indent(ctx)}ofstream ${name}(${val});\n`

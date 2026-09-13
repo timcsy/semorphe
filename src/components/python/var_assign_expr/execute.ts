@@ -10,7 +10,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:var_assign_expr', async (node, ctx) => {
     const name = String(node.properties.obj ?? 'n')
-    const src = (node.children.value ?? [])[0]
+    const src = (node.slots.value ?? [])[0]
     if (!src) throw new RuntimeError(RUNTIME_ERRORS.UNRECOGNIZED_CODE, { '%1': ':= 少了值' })
     const v = await ctx.evaluate(src)
     if (ctx.scope.has(name)) ctx.scope.set(name, v)

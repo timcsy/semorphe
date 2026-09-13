@@ -56,7 +56,7 @@ function rawTexts(n: import('../../../src/core/types').SemanticNode | null): str
     if (x.componentId === 'raw_code') {
       out.push(String((x.metadata as { rawCode?: string })?.rawCode ?? ''))
     }
-    for (const kids of Object.values(x.children ?? {})) {
+    for (const kids of Object.values(x.slots ?? {})) {
       for (const k of kids as import('../../../src/core/types').SemanticNode[]) walk(k)
     }
   }

@@ -6,7 +6,7 @@ import { evalInitializer } from '../../../interpreter/aggregate'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_append', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const valueNodes = node.children.value ?? []
+      const valueNodes = node.slots.value ?? []
       if (valueNodes.length === 0) return
       const arr = ctx.scope.get(name)
       if (arr.type !== 'array' || !Array.isArray(arr.value)) {

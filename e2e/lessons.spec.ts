@@ -267,7 +267,7 @@ for (const c of CASES) {
     // 等到樹**真的有內容**——`useAsSource` 回來時同步還在跑。
     await page.waitForFunction(() => {
       const t = (window as never as Record<string, any>).__app?.syncController?.currentTree
-      return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+      return Boolean(t) && Object.keys(t.slots ?? {}).length > 0
     }, undefined, { timeout: 30_000 })
 
     const measured = await page.evaluate(() => {
@@ -276,10 +276,10 @@ for (const c of CASES) {
       const seen = new Set<string>()
       const walk = (n: unknown): void => {
         if (!n || typeof n !== 'object') return
-        const node = n as { componentId?: string; children?: Record<string, unknown[]> }
+        const node = n as { componentId?: string; slots?: Record<string, unknown[]> }
         if (node.componentId) seen.add(node.componentId)
-        for (const k of Object.keys(node.children ?? {})) {
-          for (const child of node.children![k] ?? []) walk(child)
+        for (const k of Object.keys(node.slots ?? {})) {
+          for (const child of node.slots![k] ?? []) walk(child)
         }
       }
       walk(tree)
@@ -364,7 +364,7 @@ for (const c of CASES) {
     // 等到樹**真的有內容**——`useAsSource` 回來時同步還在跑。
     await page.waitForFunction(() => {
       const t = (window as never as Record<string, any>).__app?.syncController?.currentTree
-      return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+      return Boolean(t) && Object.keys(t.slots ?? {}).length > 0
     }, undefined, { timeout: 30_000 })
 
     await page.locator('#run-btn').click()
@@ -426,7 +426,7 @@ for (const c of CASES) {
       await useAsSource(page, '程式碼')
       await page.waitForFunction(() => {
         const t = (window as never as Record<string, any>).__app?.syncController?.currentTree
-        return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+        return Boolean(t) && Object.keys(t.slots ?? {}).length > 0
       }, undefined, { timeout: 30_000 })
 
       await page.locator('#run-btn').click()
@@ -487,7 +487,7 @@ for (const c of CASES) {
       await useAsSource(page, '程式碼')
       await page.waitForFunction(() => {
         const t = (window as never as Record<string, any>).__app?.syncController?.currentTree
-        return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+        return Boolean(t) && Object.keys(t.slots ?? {}).length > 0
       }, undefined, { timeout: 30_000 })
 
       await page.locator('#run-btn').click()

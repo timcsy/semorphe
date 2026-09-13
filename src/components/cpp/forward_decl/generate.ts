@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:forward_decl', (node, ctx) => {
       const returnType = node.properties.return_type ?? 'void'
       const name = node.properties.name ?? ''
-      const paramChildren = node.children.params ?? []
+      const paramChildren = node.slots.params ?? []
       const paramStr = paramChildren.map(p => {
         const t = String(p.properties.type ?? 'int')
         const n = String(p.properties.name ?? '')

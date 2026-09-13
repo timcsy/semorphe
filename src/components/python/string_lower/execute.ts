@@ -11,7 +11,7 @@ import { PYTHON_BUILTIN_METHODS } from '../../../languages/python/builtins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:string_lower', async (node, ctx) => {
-    const self = await ctx.evaluate(node.children.obj[0])
+    const self = await ctx.evaluate(node.slots.obj[0])
     const args: RuntimeValue[] = []
     
     return PYTHON_BUILTIN_METHODS['lower'](self, args, withCall(ctx))

@@ -5,7 +5,7 @@ export function registerExecute(register: (component: string, executor: Componen
   register('cpp:string_append', async (node, ctx) => {
       const obj = String(node.properties.obj)
       const val = ctx.scope.get(obj)
-      const valueNodes = node.children.value ?? []
+      const valueNodes = node.slots.value ?? []
       if (valueNodes.length === 0) return
       const appendVal = await ctx.evaluate(valueNodes[0])
       ctx.scope.set(obj, { type: 'string', value: String(val.value) + String(appendVal.value) })

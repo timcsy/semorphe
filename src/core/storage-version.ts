@@ -151,11 +151,11 @@ function rewriteIdentity(node: unknown, table: Record<string, string>): unknown 
   const out: Record<string, unknown> = { ...n }
   const cid = out.componentId
   if (typeof cid === 'string' && table[cid]) out.componentId = table[cid]
-  const children = out.children
-  if (children && typeof children === 'object' && !Array.isArray(children)) {
+  const slots = out.slots
+  if (slots && typeof slots === 'object' && !Array.isArray(slots)) {
     const c: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(children as Record<string, unknown>)) c[k] = rewriteIdentity(v, table)
-    out.children = c
+    for (const [k, v] of Object.entries(slots as Record<string, unknown>)) c[k] = rewriteIdentity(v, table)
+    out.slots = c
   }
   return out
 }
@@ -226,11 +226,11 @@ function rewriteParams(node: unknown): unknown {
     for (const [k, v] of Object.entries(out.properties as Record<string, unknown>)) props[map[k] ?? k] = v
     out.properties = props
   }
-  const children = out.children
-  if (children && typeof children === 'object' && !Array.isArray(children)) {
+  const slots = out.slots
+  if (slots && typeof slots === 'object' && !Array.isArray(slots)) {
     const c: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(children as Record<string, unknown>)) c[k] = rewriteParams(v)
-    out.children = c
+    for (const [k, v] of Object.entries(slots as Record<string, unknown>)) c[k] = rewriteParams(v)
+    out.slots = c
   }
   return out
 }

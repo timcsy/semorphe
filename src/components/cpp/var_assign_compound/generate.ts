@@ -11,11 +11,11 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:var_assign_compound', (node, ctx) => {
-    const targets = node.children.target ?? []
+    const targets = node.slots.target ?? []
     // ⚠️ 左邊缺席時退回 `x`——與同族一致，而**不是**靜默丟掉這一行。
     const target = targets.length > 0 ? generateExpression(targets[0], ctx) : 'x'
     const op = node.properties.operator ?? '+='
-    const vals = node.children.value ?? []
+    const vals = node.slots.value ?? []
     const val = vals.length > 0 ? generateExpression(vals[0], ctx) : '0'
     const expr = `${target} ${op} ${val}`
     if (ctx.isExpression) return expr

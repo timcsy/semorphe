@@ -4,7 +4,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:string_lower', (node, ctx) => {
-    const o = generateExpression((node.children.obj ?? [])[0], ctx)
+    const o = generateExpression((node.slots.obj ?? [])[0], ctx)
     
     return `${o}.lower()`
   })

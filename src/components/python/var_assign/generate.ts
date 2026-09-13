@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:var_assign', (node, ctx) => {
     const name = String(node.properties.obj ?? 'x')
-    const value = generateExpression((node.children.value ?? [])[0], ctx)
+    const value = generateExpression((node.slots.value ?? [])[0], ctx)
     return `${indent(ctx)}${name} = ${value}\n`
   })
 }

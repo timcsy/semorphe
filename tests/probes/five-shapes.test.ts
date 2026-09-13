@@ -59,7 +59,7 @@ const SHAPES: Record<string, string> = {
 
 const walk = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   out.push(n)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks ?? []) walk(k, out)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks ?? []) walk(k, out)
   return out
 }
 
@@ -78,7 +78,7 @@ function measure(shape: string, code: string): Row {
   // ① 這個形狀真的出現在語法樹上了嗎——⚠️ 沒出現的話這一列量的是別的東西
   let found = false
   let hasError = false
-  const visit = (n: { type: string; children: unknown[] }): void => {
+  const visit = (n: { type: string; slots: unknown[] }): void => {
     if (n.type === shape) found = true
     if (n.type === 'ERROR') hasError = true
     for (const c of n.children as { type: string; children: unknown[] }[]) if (c) visit(c)
@@ -108,7 +108,7 @@ describe('探針：五個「該補進語料」的形狀', () => {
   it('候選寫法 × 節點型別', () => {
     const has = (code: string, want: string): boolean => {
       let f = false
-      const visit = (n: { type: string; children: unknown[] }): void => {
+      const visit = (n: { type: string; slots: unknown[] }): void => {
         if (n.type === want) f = true
         for (const c of n.children as { type: string; children: unknown[] }[]) if (c) visit(c)
       }

@@ -21,7 +21,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       // > 在槽名改變時不會報錯——它會安靜地產出一個看起來合理的東西。**
       //
       // 兩個都讀，🔴 而**找不到就丟錯**，不要再用預設值掩蓋一次。
-      const charNodes = node.children.char ?? node.children.value ?? []
+      const charNodes = node.slots.char ?? node.slots.value ?? []
       if (charNodes.length === 0) {
         throw new Error(`${String(obj)}.push_back() 少了要加的字元——接點 char／value 都是空的`)
       }

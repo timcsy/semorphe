@@ -2,7 +2,7 @@
   "componentId": "cpp:char_is_alpha",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "value": {
       "allowed": [
         "expression"

@@ -11,7 +11,7 @@ export function registerExecute(register: (component: string, executor: Componen
       // 076 把 `s.push_back(c)` 從通用容器版導到字串專屬版時，沒有人檢查子槽名
       // 對不對。第十條護欄（宣告的子節點名沒有人讀）抓不到這種——它查「有沒有
       // 人讀」，不查「**讀對不對**」。那條邊界寫在它的「不檢測什麼」裡。
-      const charNodes = node.children.value ?? node.children.char ?? []
+      const charNodes = node.slots.value ?? node.slots.char ?? []
       if (charNodes.length === 0) return
       const ch = await ctx.evaluate(charNodes[0])
       // 字元字面可能求值成**數字碼**（`'x'` → 120）。直接串接會把 "ab" 變成

@@ -49,7 +49,7 @@ const lift = (src: string): SemanticNode => lifter.lift(tp.parse(src)!.rootNode 
 const rt = (src: string): string => generateCode(lift(src) as never, 'cpp', style)
 const idsOf = (n: SemanticNode, out: string[] = []): string[] => {
   out.push(n.componentId)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) idsOf(k, out)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks) idsOf(k, out)
   return out
 }
 async function run(src: string): Promise<string> {

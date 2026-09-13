@@ -26,7 +26,7 @@
       "_default_why": "🔴 **這一格記的是【學生原本怎麼寫的】，不是一個選項。**\n\n盲測語料（20 段隔離出題）裡腳位宣告的分佈：\n\n```\nconst int LED = 13;   19 筆\n#define LED 13        10 筆\nint LED = 13;          3 筆\n```\n\n⚠️ 不帶著它的話，學生貼進來的 `#define` 會在**開一次積木之後**被靜默改寫成 `const int`——而在 IDE 裡積木是會寫回 `.ino` 的。\n\n> **一個不記得原文形式的 round-trip，會在使用者沒有要求的時候改掉他的檔案。**"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "owner": "(arduino)",
   "_owner_why": "照 `pin_constant`／`pin_mode`：**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",

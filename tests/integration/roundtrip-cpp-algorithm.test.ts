@@ -55,8 +55,8 @@ function roundTripCode(code: string): string {
 function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
-  for (const children of Object.values(node.children ?? {})) {
-    for (const child of children as SemanticNode[]) {
+  for (const slots of Object.values(node.slots ?? {})) {
+    for (const child of slots as SemanticNode[]) {
       const found = findComponent(child, componentId)
       if (found) return found
     }
@@ -67,8 +67,8 @@ function findComponent(node: SemanticNode | null, componentId: string): Semantic
 function collectComponents(node: SemanticNode | null, result: Set<string> = new Set()): Set<string> {
   if (!node) return result
   result.add(node.componentId)
-  for (const children of Object.values(node.children ?? {})) {
-    for (const child of children as SemanticNode[]) {
+  for (const slots of Object.values(node.slots ?? {})) {
+    for (const child of slots as SemanticNode[]) {
       collectComponents(child, result)
     }
   }
@@ -136,8 +136,8 @@ describe('C++ Algorithm Roundtrip', () => {
       const node = findComponent(tree, 'cpp:range_fill')
       expect(node).not.toBeNull()
       expect(node!.properties.begin).toBe('v.begin()')
-      expect(node!.children.value).toBeDefined()
-      expect(node!.children.value!.length).toBe(1)
+      expect(node!.slots.value).toBeDefined()
+      expect(node!.slots.value!.length).toBe(1)
     })
 
     it('should generate code containing fill()', () => {
@@ -161,8 +161,8 @@ describe('C++ Algorithm Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:math_min')
       expect(node).not.toBeNull()
-      expect(node!.children.a).toBeDefined()
-      expect(node!.children.b).toBeDefined()
+      expect(node!.slots.a).toBeDefined()
+      expect(node!.slots.b).toBeDefined()
     })
 
     it('should generate code containing min()', () => {
@@ -185,8 +185,8 @@ describe('C++ Algorithm Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:math_max')
       expect(node).not.toBeNull()
-      expect(node!.children.a).toBeDefined()
-      expect(node!.children.b).toBeDefined()
+      expect(node!.slots.a).toBeDefined()
+      expect(node!.slots.b).toBeDefined()
     })
 
     it('should generate code containing max()', () => {
@@ -212,8 +212,8 @@ describe('C++ Algorithm Roundtrip', () => {
       // ⚠️ 2026-08-13：兩個運算元從**字串屬性**升格成接點。
       // 舊形狀（`properties.a`／`properties.b`）讓 `swap(a[j], a[j+1])` 的
       // `a[j]` 整個被當成一個變數名去查——**看起來像使用者打錯字**。
-      expect(node!.children.left?.[0]?.properties.name).toBe('a')
-      expect(node!.children.right?.[0]?.properties.name).toBe('b')
+      expect(node!.slots.left?.[0]?.properties.name).toBe('a')
+      expect(node!.slots.right?.[0]?.properties.name).toBe('b')
     })
 
     it('should generate code containing swap()', () => {

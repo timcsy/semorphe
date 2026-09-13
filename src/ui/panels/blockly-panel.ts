@@ -173,7 +173,7 @@ export class BlocklyPanel implements ViewHost {
    * 🟢 組裝點一定會傳（`app.ts`），這個退路只是為了讓面板單獨建得起來。
    */
   private buildProgramRoot: (body: SemanticNode[]) => SemanticNode =
-    (body) => ({ id: 'program', componentId: 'program', properties: {}, children: { body } } as SemanticNode)
+    (body) => ({ id: 'program', componentId: 'program', properties: {}, slots: { body } } as SemanticNode)
 
   /**
    * 抽取策略由**組裝點**裝上（spec 153）。
@@ -1110,10 +1110,10 @@ export class BlocklyPanel implements ViewHost {
       if (originalNodeId) node.id = originalNodeId
       this._blockMappings.push({ nodeId: node.id, blockId })
     }
-    // Recurse into children
-    for (const children of Object.values(node.children || {})) {
-      if (!Array.isArray(children)) continue
-      for (const child of children) {
+    // Recurse into slots
+    for (const slots of Object.values(node.slots || {})) {
+      if (!Array.isArray(slots)) continue
+      for (const child of slots) {
         this.collectMappings(child)
       }
     }

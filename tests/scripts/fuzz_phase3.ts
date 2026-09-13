@@ -30,8 +30,8 @@ function countNodes(node: SemanticNode): { total: number; raw: number; rawList: 
     raw++
     rawList.push(node.componentId + (node.metadata?.rawCode ? `: ${node.metadata.rawCode.substring(0, 60)}` : ''))
   }
-  for (const children of Object.values(node.children || {})) {
-    for (const child of children) {
+  for (const slots of Object.values(node.slots || {})) {
+    for (const child of slots) {
       const c = countNodes(child)
       total += c.total
       raw += c.raw

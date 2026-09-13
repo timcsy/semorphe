@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側的同名操作是方法呼叫（`v.erase(it)`）而這裡是一個語句，形狀不同。等價要在量得出來的觀察集底下宣告。",
   "properties": [],
-  "children": {
+  "slots": {
     "target": "expression"
   },
   "role": "statement",

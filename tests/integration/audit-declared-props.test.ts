@@ -144,7 +144,7 @@ function measure(corpus: readonly string[]): result {
         else acc.set(key, { key, component: n.componentId, props: k, count: 1, shape: classifyProp(n.componentId, k) })
       }
     }
-    for (const ks of Object.values(n.children ?? {})) for (const c of ks) walk(c)
+    for (const ks of Object.values(n.slots ?? {})) for (const c of ks) walk(c)
   }
   for (const c of corpus) {
     try {
@@ -195,7 +195,7 @@ describe('第三十四條護欄：屬性方向的宣告完整性', () => {
     const fakeNode = {
       componentId: 'cpp:include',
       properties: { header: 'string', propNeverDeclared: 'x' },
-      children: {},
+      slots: {},
     } as unknown as SemanticNode
     const declare = declTable()
     expect(declare.has('cpp:include'), '宣告表沒載入 → 這支測試什麼都沒測到').toBe(true)

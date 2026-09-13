@@ -2,7 +2,7 @@
   "componentId": "cpp:cstring_compare",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "s1": "expression",
     "s2": "expression"
   },

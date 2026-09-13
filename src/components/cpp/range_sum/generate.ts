@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:range_sum', (node, ctx) => {
       const begin = (node.properties.begin as string) ?? 'v.begin()'
       const end = (node.properties.end as string) ?? 'v.end()'
-      const init = generateExpression((node.children.init ?? [])[0], ctx)
+      const init = generateExpression((node.slots.init ?? [])[0], ctx)
       return `accumulate(${begin}, ${end}, ${init})`
     })
 }

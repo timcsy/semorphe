@@ -5,7 +5,7 @@ import { indent, generateBody, indented } from '../../../core/projection/code-ge
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:struct_declare', (node, ctx) => {
       const name = node.properties.name ?? 'MyStruct'
-      const members = node.children.members ?? []
+      const members = node.slots.members ?? []
       let code = `${indent(ctx)}struct ${name} {\n`
       code += generateBody(members, indented(ctx))
       code += `${indent(ctx)}};\n`

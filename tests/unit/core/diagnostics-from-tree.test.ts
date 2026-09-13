@@ -39,13 +39,13 @@ function node(
   componentId: string,
   cause?: 'syntax_error' | 'unsupported' | 'nonstandard_but_valid',
   rawCode?: string,
-  children: Record<string, SemanticNode[]> = {},
+  slots: Record<string, SemanticNode[]> = {},
 ): SemanticNode {
   return {
     id,
     componentId,
     properties: {},
-    children,
+    slots,
     ...(cause ? { metadata: { degradationCause: cause, rawCode: rawCode ?? '' } } : {}),
   } as SemanticNode
 }

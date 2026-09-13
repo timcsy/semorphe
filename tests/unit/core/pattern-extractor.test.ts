@@ -60,8 +60,8 @@ describe('PatternExtractor', () => {
     })
   })
 
-  describe('input extraction (expression children)', () => {
-    it('should extract value inputs as expression children', () => {
+  describe('input extraction (expression slots)', () => {
+    it('should extract value inputs as expression slots', () => {
       const retSpec: BlockSpec = {
         id: 'cpp_return',
         language: 'universal',
@@ -70,7 +70,7 @@ describe('PatternExtractor', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:return',
-          children: { value: 'expression' },
+          slots: { value: 'expression' },
           role: 'statement',
         },
         blockDef: {
@@ -123,14 +123,14 @@ describe('PatternExtractor', () => {
 
       expect(result).not.toBeNull()
       expect(result!.componentId).toBe('cpp:return')
-      expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].componentId).toBe('cpp:literal_number')
-      expect(result!.children.value[0].properties.value).toBe('42')
+      expect(result!.slots.value).toHaveLength(1)
+      expect(result!.slots.value[0].componentId).toBe('cpp:literal_number')
+      expect(result!.slots.value[0].properties.value).toBe('42')
     })
   })
 
   describe('statement input extraction', () => {
-    it('should extract statement chain as children array', () => {
+    it('should extract statement chain as slots array', () => {
       const whileSpec: BlockSpec = {
         id: 'cpp_loop_while',
         language: 'universal',
@@ -139,7 +139,7 @@ describe('PatternExtractor', () => {
         version: '1.0.0',
         componentMapping: {
           componentId: 'cpp:loop_while',
-          children: { condition: 'expression', body: 'statements' },
+          slots: { condition: 'expression', body: 'statements' },
           role: 'statement',
         },
         blockDef: {
@@ -205,9 +205,9 @@ describe('PatternExtractor', () => {
 
       expect(result).not.toBeNull()
       expect(result!.componentId).toBe('cpp:loop_while')
-      expect(result!.children.body).toHaveLength(2)
-      expect(result!.children.body[0].componentId).toBe('cpp:break')
-      expect(result!.children.body[1].componentId).toBe('cpp:continue')
+      expect(result!.slots.body).toHaveLength(2)
+      expect(result!.slots.body[0].componentId).toBe('cpp:break')
+      expect(result!.slots.body[1].componentId).toBe('cpp:continue')
     })
   })
 

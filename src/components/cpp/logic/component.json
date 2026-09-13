@@ -8,7 +8,7 @@
       "default": "&&"
     }
   ],
-  "children": {
+  "slots": {
     "left": "expression",
     "right": "expression"
   },

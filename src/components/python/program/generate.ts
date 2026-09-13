@@ -11,5 +11,5 @@ import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { generateBody } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
-  g.set('python:program', (node, ctx) => generateBody(node.children.body ?? [], ctx))
+  g.set('python:program', (node, ctx) => generateBody(node.slots.body ?? [], ctx))
 }

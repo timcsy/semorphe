@@ -24,7 +24,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:analog_resolution', async (node, ctx) => {
-    const bits = ctx.toNumber(await ctx.evaluate((node.children.bits ?? [])[0]))
+    const bits = ctx.toNumber(await ctx.evaluate((node.slots.bits ?? [])[0]))
     // ⚠️ 真板子接受 1–16（ESP32 是 9–12）。超出範圍在真板子上被夾住而不出聲，
     //    🔴 而**一個什麼都不做又不出聲的呼叫，是最難查的那種錯**（`requirePin` 檔頭同一條）。
     if (!Number.isFinite(bits) || bits < 1 || bits > 16) {

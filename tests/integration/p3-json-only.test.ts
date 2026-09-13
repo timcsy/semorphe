@@ -116,7 +116,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       expect(result!.componentId).toBe('cpp:increment')
       // 🟢 **運算元是接點**（2026-08-25）——釘接點比釘字串強：它證明左邊被 lift 過。
       expect(result!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(result!.children.target[0].properties.name).toBe('i')
+      expect(result!.slots.target[0].properties.name).toBe('i')
     })
 
     it('should generate code from semantic node (hand-written generator for prefix/postfix)', () => {
@@ -159,7 +159,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       expect(node).not.toBeNull()
       expect(node!.componentId).toBe('cpp:increment')
       // 🟢 **運算元是接點**（2026-08-25）——釘接點比釘字串強：它證明左邊被 lift 過。
-      expect(node!.children.target[0].properties.name).toBe('i')
+      expect(node!.slots.target[0].properties.name).toBe('i')
       expect(node!.properties.operator).toBe('++')
     })
 
@@ -184,7 +184,7 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       expect(semantic2).not.toBeNull()
       expect(semantic2!.componentId).toBe('cpp:increment')
       // 🟢 **運算元是接點**（2026-08-25）——釘接點比釘字串強：它證明左邊被 lift 過。
-      expect(semantic2!.children.target[0].properties.name).toBe('i')
+      expect(semantic2!.slots.target[0].properties.name).toBe('i')
     })
   })
 
@@ -231,9 +231,9 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
       expect(result!.componentId).toBe('cpp:var_assign_compound')
       // 🟢 **左值是接點**（2026-08-25）
       expect(result!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(result!.children.target[0].componentId).toBe('cpp:var_ref')
-      expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].componentId).toBe('cpp:literal_number')
+      expect(result!.slots.target[0].componentId).toBe('cpp:var_ref')
+      expect(result!.slots.value).toHaveLength(1)
+      expect(result!.slots.value[0].componentId).toBe('cpp:literal_number')
     })
   })
 })

@@ -2,7 +2,7 @@
  * B 項：statement／expression 雙版本的身分整併
  *
  * 元件身分健檢護欄（第十八條）的「**確定**」桶裡最大的一類——六對元件，
- * properties 與 children **完全相同**，只差 `role`：
+ * properties 與 slots **完全相同**，只差 `role`：
  *
  * ```
  * func_call / func_call_expr · cpp_method_call / …_expr · cpp_increment / …_expr
@@ -95,7 +95,7 @@ function collect(node: SemanticNode, pred: (n: SemanticNode) => boolean): Semant
   const walk = (n: SemanticNode): void => {
     if (!n) return
     if (pred(n)) out.push(n)
-    for (const list of Object.values(n.children ?? {})) for (const c of list ?? []) walk(c as SemanticNode)
+    for (const list of Object.values(n.slots ?? {})) for (const c of list ?? []) walk(c as SemanticNode)
   }
   walk(node)
   return out
@@ -216,14 +216,14 @@ describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
     const oldSave = {
       version: 1,
       tree: {
-        id: 'n1', componentId: 'cpp:program', properties: {}, children: {
-          body: [{ id: 'n2', componentId: 'cpp_increment_expr', properties: { name: 'i', operator: '++', position: 'postfix' }, children: {} }],
+        id: 'n1', componentId: 'cpp:program', properties: {}, slots: {
+          body: [{ id: 'n2', componentId: 'cpp_increment_expr', properties: { name: 'i', operator: '++', position: 'postfix' }, slots: {} }],
         },
       },
       blocklyState: {}, code: '', language: 'cpp', styleId: 'apcs', lastModified: '',
     }
     const upgraded = UPGRADES[1](oldSave as unknown as Record<string, unknown>)
-    const body = (upgraded.tree as { children: { body: { componentId: string }[] } }).children.body
+    const body = (upgraded.tree as { slots: { body: { componentId: string }[] } }).slots.body
     expect(body[0].componentId, '舊身分沒被轉換 → 那棵樹裡有一個不存在的概念').toBe('cpp:increment')
   })
 
@@ -231,7 +231,7 @@ describe('存檔轉換——語義詞彙變更的第一次真正使用', () => {
     const { UPGRADES } = await import('../../src/core/storage-version')
     const savedState = {
       version: 1,
-      tree: { id: 'n1', componentId: 'cpp:var_declare', properties: { name: 'x', type: 'int' }, children: {} },
+      tree: { id: 'n1', componentId: 'cpp:var_declare', properties: { name: 'x', type: 'int' }, slots: {} },
       blocklyState: {}, code: '', language: 'cpp', styleId: 'apcs', lastModified: '',
     }
     const after = UPGRADES[1](savedState as unknown as Record<string, unknown>)

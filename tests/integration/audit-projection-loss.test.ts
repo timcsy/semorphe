@@ -11,7 +11,7 @@
  * 而它為什麼難被抓到：
  *
  * ```
- * 語義樹   children.args = [var_ref cmd]     ✅
+ * 語義樹   slots.args = [var_ref cmd]     ✅
  * 產生器   Serial.write(cmd);                ✅
  * 積木     inputs: {}                        🔴 引數不在上面
  * ```
@@ -41,7 +41,7 @@
  *
  * ```
  * ✗ 積木上的落點語義對不對     只問「有沒有落點」，不問它落得對不對
- * ✗ 欄位（properties）        只看接點（children）——欄位有另一條護欄
+ * ✗ 欄位（properties）        只看接點（slots）——欄位有另一條護欄
  *                            （audit-param-spec）
  * ✗ extract 真的取得回來       這裡量的是【渲染】那一半；反向是另一條
  * ✗ 積木在 Blockly 裡渲染得出來  那要真的 DOM，本檔只看狀態 JSON
@@ -137,7 +137,7 @@ function usesNamedStrategy(componentId: string): boolean {
 /** 掃一顆元件：把每個接點填滿、渲染、數標記。 */
 function scan(def: {
   componentId: string
-  children?: Record<string, unknown>
+  slots?: Record<string, unknown>
   skipPaths?: string[]
   paths?: Record<string, unknown>
 }): { losses: Loss[]; markersPut: number } | null {
@@ -156,18 +156,18 @@ function scan(def: {
   // 沒有一個是「它是容器」，而**發明第三個理由正是 `history/018` 擋的事**。
   // 所以它記在完備性基線的「缺」裡，附理由——**而這條護欄要認得那個形狀。**
   if (def.paths && 'render' in def.paths && def.paths.render === null) return null
-  const slots = Object.entries(def.children ?? {})
-  if (slots.length === 0) return null                          // 沒有接點，無從丟失
+  const declared = Object.entries(def.slots ?? {})
+  if (declared.length === 0) return null                       // 沒有接點，無從丟失
 
   const losses: Loss[] = []
   let markersPut = 0
   let seq = 0
-  const children: Record<string, SemanticNode[]> = {}
+  const slots: Record<string, SemanticNode[]> = {}
   const expect_: Record<string, string[]> = {}
-  for (const [slot, type] of slots) {
+  for (const [slot, type] of declared) {
     const n = isVariadic(type) ? VARIADIC_FILL : 1
     const ms: string[] = []
-    children[slot] = Array.from({ length: n }, () => {
+    slots[slot] = Array.from({ length: n }, () => {
       seq++
       ms.push(marker(seq))
       return filler(type, seq)
@@ -190,7 +190,7 @@ function scan(def: {
     //
     // > **一個合成得不完整的輸入，會讓護欄把自己的殘缺報成世界的缺陷。**
     const node = synthMinimalNode(def as never).node
-    node.children = children
+    node.slots = slots
     json = JSON.stringify(renderToBlocklyState(createNode('cpp:program', {}, { body: [node] })))
   } catch {
     // 渲染拋錯是另一條護欄的事（完備性）——這裡判不出來就說判不出來
@@ -238,7 +238,7 @@ describe('護欄：投影遺失（宣告的接點在積木上有沒有落點）'
 
   it('★ 注入：宣告三個接點而積木只有一個插槽 → **必須被報出**', () => {
     // ⚠️ 合成的身分，**不是真實元件**——真實元件被修好的那天，這支不會爛。
-    const fake = { componentId: 'synthetic:leaky', children: { args: 'expressions' } }
+    const fake = { componentId: 'synthetic:leaky', slots: { args: 'expressions' } }
     // 直接驗判定函式：渲染一個不存在的身分會拋錯 → scan 回 null（判不出來）。
     // 所以這裡驗的是**判定的算術**：填三個、只找到一個 → 報一筆。
     const ms = [marker(1), marker(2), marker(3)]

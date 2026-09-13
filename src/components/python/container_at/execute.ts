@@ -14,8 +14,8 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   registerLvalue()
   register('python:container_at', async (node, ctx) => {
-    const target = await ctx.evaluate(node.children.target[0])
-    const key = await ctx.evaluate(node.children.key[0])
+    const target = await ctx.evaluate(node.slots.target[0])
+    const key = await ctx.evaluate(node.slots.key[0])
 
     if (target.type === 'object') {
       const fields = target.value as ObjectFields
@@ -48,8 +48,8 @@ export function registerExecute(register: (component: string, executor: Componen
  */
 export function registerLvalue(): void {
   declareLvalue('python:container_at', async (node, ctx: ExecutionContext) => {
-    const container = await ctx.evaluate(node.children.target[0])
-    const key = await ctx.evaluate(node.children.key[0])
+    const container = await ctx.evaluate(node.slots.target[0])
+    const key = await ctx.evaluate(node.slots.key[0])
 
     if (container.type === 'object') {
       const fields = container.value as ObjectFields

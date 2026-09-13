@@ -4,7 +4,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:comma_expr', (node, ctx) => {
-      const exprs = (node.children.exprs ?? []).map(e => generateExpression(e, ctx))
+      const exprs = (node.slots.exprs ?? []).map(e => generateExpression(e, ctx))
       return exprs.join(', ')
     })
 }

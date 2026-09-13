@@ -5,8 +5,8 @@ import { generateBody, indented, indent } from '../../../core/projection/code-ge
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:lambda', (node, ctx) => {
       const capture = node.properties.capture ?? '&'
-      const paramChildren = node.children.params ?? []
-      const body = node.children.body ?? []
+      const paramChildren = node.slots.params ?? []
+      const body = node.slots.body ?? []
       const paramStr = paramChildren.map(p => {
         const t = String(p.properties.type ?? 'int')
         const n = String(p.properties.name ?? '')

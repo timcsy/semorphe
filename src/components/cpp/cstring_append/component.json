@@ -2,7 +2,7 @@
   "componentId": "cpp:cstring_append",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "dest": "expression",
     "src": "expression"
   },

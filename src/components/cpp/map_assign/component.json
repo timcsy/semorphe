@@ -8,7 +8,7 @@
       "default": "mp"
     }
   ],
-  "children": {
+  "slots": {
     "key": "expression",
     "value": "expression"
   },

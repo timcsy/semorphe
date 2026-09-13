@@ -27,9 +27,9 @@ describe('python:string_make', () => {
   it('lift：格式規格是結構化的一格，不是黏在文字裡', async () => {
     const tree = await liftPython('x = f"{s:.1f}"')
     const find = (n: unknown): Record<string, unknown> | null => {
-      const node = n as { componentId?: string; properties?: Record<string, unknown>; children?: Record<string, unknown[]> }
+      const node = n as { componentId?: string; properties?: Record<string, unknown>; slots?: Record<string, unknown[]> }
       if (node?.componentId === 'python:string_insert') return node.properties ?? {}
-      for (const kids of Object.values(node?.children ?? {})) for (const k of kids ?? []) { const r = find(k); if (r) return r }
+      for (const kids of Object.values(node?.slots ?? {})) for (const k of kids ?? []) { const r = find(k); if (r) return r }
       return null
     }
     expect(find(tree), '找不到插槽 → 這支測試量不到東西').not.toBeNull()

@@ -18,7 +18,7 @@
       "default": "vec"
     }
   ],
-  "children": {
+  "slots": {
     "body": "statements"
   },
   "role": "statement",

@@ -38,7 +38,7 @@ const lift = (src: string): SemanticNode =>
 
 function find(n: SemanticNode, pred: (x: SemanticNode) => boolean): SemanticNode | null {
   if (pred(n)) return n
-  for (const kids of Object.values(n.children ?? {})) {
+  for (const kids of Object.values(n.slots ?? {})) {
     for (const k of (kids ?? []) as SemanticNode[]) {
       const hit = k && find(k, pred)
       if (hit) return hit
@@ -49,7 +49,7 @@ function find(n: SemanticNode, pred: (x: SemanticNode) => boolean): SemanticNode
 
 function names(n: SemanticNode, out: string[] = []): string[] {
   if (isVariableReference(n.componentId)) out.push(String(n.properties.name))
-  for (const kids of Object.values(n.children ?? {})) {
+  for (const kids of Object.values(n.slots ?? {})) {
     for (const k of (kids ?? []) as SemanticNode[]) if (k) names(k, out)
   }
   return out

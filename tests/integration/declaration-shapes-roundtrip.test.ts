@@ -70,7 +70,7 @@ function bodyOf(code: string): string {
 function identities(n: SemanticNode | null | undefined, out = new Set<string>()): Set<string> {
   if (!n) return out
   if (n.componentId) out.add(n.componentId)
-  for (const b of Object.values(n.children ?? {})) for (const c of b ?? []) identities(c, out)
+  for (const b of Object.values(n.slots ?? {})) for (const c of b ?? []) identities(c, out)
   return out
 }
 
@@ -307,7 +307,7 @@ describe('第一百一十八條護欄：走一趟積木回來', () => {
     const root = createTestLifter().lift(tree!.rootNode as never) as SemanticNode
     const { blockMappings: _drop, ...state } = renderToBlocklyState(root)
     const backs = (state.blocks.blocks as unknown[]).flatMap(chainOf)
-    const rebuilt = { componentId: 'cpp:program', properties: {}, children: { body: backs } } as SemanticNode
+    const rebuilt = { componentId: 'cpp:program', properties: {}, slots: { body: backs } } as SemanticNode
     return generateCode(rebuilt, 'cpp', S)
       .split('\n').map((l) => l.trim())
       .filter((l) => l && !/^(int n, M, N;|int main|\}|return 0;)/.test(l))

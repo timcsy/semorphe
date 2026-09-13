@@ -11,7 +11,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       const op = node.properties.operator ?? '+'
       const paramType = node.properties.param_type ?? ''
       const paramName = node.properties.param_name ?? ''
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       const paramStr = paramType ? (paramName ? `${paramType} ${paramName}` : paramType) : ''
       const header = `${indent(ctx)}${returnType} operator${op}(${paramStr})${openBrace(ctx)}\n`
       trackOwnText(ctx, header)

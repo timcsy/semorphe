@@ -58,12 +58,12 @@ describe('spec 167 · lift pattern 的文法歸屬', () => {
     const nested = {
       componentId: 'python:program',
       properties: {},
-      children: {
+      slots: {
         body: [
           {
             componentId: 'python:if',
             properties: {},
-            children: { then_body: [{ componentId: 'cpp:var_ref', properties: {}, children: {} }] },
+            slots: { then_body: [{ componentId: 'cpp:var_ref', properties: {}, slots: {} }] },
           },
         ],
       },

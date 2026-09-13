@@ -13,7 +13,7 @@
       "default": "humidity"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "expression",
   "owner": "(arduino)",
   "_owner_why": "**它屬於 Arduino 的套件生態**——`#include` 那一行就是它的申請書。",

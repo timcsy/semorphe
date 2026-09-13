@@ -15,7 +15,7 @@
       "default": "SIZE"
     }
   ],
-  "children": {
+  "slots": {
     "initializer": "expression"
   },
   "role": "statement",

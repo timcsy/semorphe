@@ -54,8 +54,8 @@ function roundTripCode(code: string): string {
 function findComponent(node: SemanticNode | null, componentId: string): SemanticNode | null {
   if (!node) return null
   if (node.componentId === componentId) return node
-  for (const children of Object.values(node.children ?? {})) {
-    for (const child of children as SemanticNode[]) {
+  for (const slots of Object.values(node.slots ?? {})) {
+    for (const child of slots as SemanticNode[]) {
       const found = findComponent(child, componentId)
       if (found) return found
     }

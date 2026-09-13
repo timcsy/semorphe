@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側吃一對迭代器＋一個判斷式，而這一顆吃的是**已經算出真假的一串**。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression"
   },
   "role": "expression",

@@ -25,7 +25,7 @@ export function registerExecute(register: (component: string, executor: Componen
       // 🟢 讀進去的那一格是**一個位置**（2026-08-25）——`getline(cin, o.name)` 合法。
       //    🪦 在此之前是 `ctx.scope.set(name)`／`declare(name)`，於是
       //    `o.name` 會在作用域裡**長出一個叫 `o.name` 的變數**，而那個欄位沒動。
-      const targetNode = (node.children.target ?? [])[0]
+      const targetNode = (node.slots.target ?? [])[0]
       // 流已經失敗：`getline` 立刻回，變數一個字都不動
       if (ctx.cinFailed) return
       if (!targetNode) return

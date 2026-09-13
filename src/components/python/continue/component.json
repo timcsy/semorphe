@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "🔴 **刻意是 null**——等價要靠觀察集驗，今天沒有。",
   "properties": [],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "owner": "(python)",
   "_owner_why": "⚠️ 章要蓋 `(python)` 不是 `(core)`。工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空。",

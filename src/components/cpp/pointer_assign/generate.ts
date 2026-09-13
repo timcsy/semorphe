@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:pointer_assign', (node, ctx) => {
       const ptrName = node.properties.obj ?? 'ptr'
-      const vals = node.children.value ?? []
+      const vals = node.slots.value ?? []
       if (vals.length > 0) {
         const val = generateExpression(vals[0], ctx)
         return `${indent(ctx)}*${ptrName} = ${val};\n`

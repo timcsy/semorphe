@@ -10,7 +10,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:ultrasonic_trigger', (node, ctx) => {
-    const pin = generateExpression((node.children.pin ?? [])[0], ctx)
+    const pin = generateExpression((node.slots.pin ?? [])[0], ctx)
     const i = indent(ctx)
     return (
       `${i}digitalWrite(${pin}, LOW);\n` +

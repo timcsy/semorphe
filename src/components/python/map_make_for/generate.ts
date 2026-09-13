@@ -5,10 +5,10 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:map_make_for', (node, ctx) => {
     const one = (k: 'key' | 'value' | 'iterable' | 'condition'): string => {
-      const n = (node.children[k] ?? [])[0]
+      const n = (node.slots[k] ?? [])[0]
       return n ? generateExpression(n, ctx) : ''
     }
-    const names = (node.children.targets ?? []).map((t) => String(t.properties.name ?? '')).join(', ')
+    const names = (node.slots.targets ?? []).map((t) => String(t.properties.name ?? '')).join(', ')
     const cond = one('condition')
     return `{${one('key')}: ${one('value')} for ${names} in ${one('iterable')}${cond ? ` if ${cond}` : ''}}`
   })

@@ -10,7 +10,7 @@
     }
   ],
   "_properties_why": "⚠️ **空字串 ＝ 沒有 `as`**（`with lock:`），不是「還沒填」。",
-  "children": {
+  "slots": {
     "value": "expression",
     "body": "statements"
   },

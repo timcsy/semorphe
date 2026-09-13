@@ -14,8 +14,8 @@ import { pythonDisplay } from '../../../languages/python/value-display'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:assert', async (node, ctx) => {
-    if (ctx.toBool(await ctx.evaluate(node.children.condition[0]))) return
-    const msg = (node.children.value ?? [])[0]
+    if (ctx.toBool(await ctx.evaluate(node.slots.condition[0]))) return
+    const msg = (node.slots.value ?? [])[0]
     const text = msg ? pythonDisplay(await ctx.evaluate(msg)) : String(node.metadata?.rawCode ?? 'assert')
     throw new RuntimeError(RUNTIME_ERRORS.USER_RAISED, { '%1': text, '%2': 'AssertionError' })
   })

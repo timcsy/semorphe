@@ -152,7 +152,7 @@ function blockTypeFingerprint(): string {
 // ─── 自我驗證 ─────────────────────────────────────────────────────
 
 const syntheticComponent = (id: string): ComponentDefJSON =>
-  ({ componentId: id, layer: 'universal', properties: [], children: {} }) as unknown as ComponentDefJSON
+  ({ componentId: id, layer: 'universal', properties: [], slots: {} }) as unknown as ComponentDefJSON
 
 describe('自我驗證：這條護欄真的量得到東西', () => {
   it('★ 注入一顆裸名身分 → **必須被報出**', () => {

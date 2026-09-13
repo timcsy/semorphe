@@ -52,7 +52,7 @@ export function usesBool(root: SemanticNode): boolean {
   // `true`／`false` 字面值在 C99 也要 <stdbool.h>
   const v = root.properties?.value
   if (v === true || v === false || v === 'true' || v === 'false') return true
-  for (const bucket of Object.values(root.children ?? {})) {
+  for (const bucket of Object.values(root.slots ?? {})) {
     for (const c of bucket ?? []) if (usesBool(c)) return true
   }
   return false
@@ -79,7 +79,7 @@ export function collectStructNames(root: SemanticNode, acc = new Set<string>()):
   if (root.componentId.endsWith(':struct_declare') && typeof root.properties?.name === 'string') {
     acc.add(root.properties.name)
   }
-  for (const bucket of Object.values(root.children ?? {})) {
+  for (const bucket of Object.values(root.slots ?? {})) {
     for (const c of bucket ?? []) collectStructNames(c, acc)
   }
   return acc

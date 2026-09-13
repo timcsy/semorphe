@@ -16,7 +16,7 @@
     }
   ],
   "_properties_why": "⚠️ **`names` 是一串逗號隔開的識別字，而那不是「把運算式壓成字串」**：它們是**名字**不是運算式，積木上那一格是文字欄位。判準見 `concepts/元件代數.md` 的屬性結構化邊界。",
-  "children": {},
+  "slots": {},
   "role": "statement",
   "owner": "(python)",
   "paths": {

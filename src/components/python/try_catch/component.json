@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那顆抓的是型別（`catch (const std::exception&)`），Python 抓的是例外**類別的名字**而且可以省略。形狀相近而保證不同。",
   "properties": [],
-  "children": {
+  "slots": {
     "body": "statements",
     "handlers": "statements",
     "orelse": "statements",

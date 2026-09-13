@@ -10,8 +10,8 @@ import { indent, indented, generateExpression, generateBody, trackOwnText} from 
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:loop_while', (node, ctx) => {
-    const cond = generateExpression((node.children.condition ?? [])[0], ctx)
-    const body = node.children.body ?? []
+    const cond = generateExpression((node.slots.condition ?? [])[0], ctx)
+    const body = node.slots.body ?? []
     const inner = indented(ctx)
     // 🔴 **標頭那一行要先算進行號**（2026-08-24）——否則主體裡每一顆的
     //    對應都往上偏一行，使用者按下積木時**反白到上一行**。

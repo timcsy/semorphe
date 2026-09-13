@@ -50,7 +50,7 @@
         "BODY": "body",
         "INITS": "inits"
       },
-      "childrenAsField": [
+      "slotAsField": [
         {
           "field": "PARAMS",
           "childSlot": "params",

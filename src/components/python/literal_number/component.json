@@ -9,7 +9,7 @@
       "default": "0"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "expression",
   "owner": "(python)",
   "paths": {

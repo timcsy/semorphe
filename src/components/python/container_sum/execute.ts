@@ -25,7 +25,7 @@ export function registerExecute(register: (component: string, executor: Componen
     // 使用者自己定義的同名函式優先——Python 允許蓋掉內建的
     const userDefined = ctx.functions.get('sum')
     const args: RuntimeValue[] = []
-    for (const a of node.children.obj ?? []) args.push(await ctx.evaluate(a))
+    for (const a of node.slots.obj ?? []) args.push(await ctx.evaluate(a))
     if (userDefined) return callWith(userDefined, args, ctx, 'sum')
     return PYTHON_BUILTIN_FUNCTIONS['sum'](args, withCall(ctx))
   })

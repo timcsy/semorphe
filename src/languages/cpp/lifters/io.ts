@@ -47,12 +47,12 @@ function tryStringMethodLift(
     if (claim) return claim
     const shape = methodComponentFor(method)
     if (shape) {
-      const children: Record<string, SemanticNode[]> = {}
+      const slots: Record<string, SemanticNode[]> = {}
       shape.argSlots.forEach((slot, i) => {
         const n = argChildren[i] ? ctx.lift(argChildren[i]) : null
-        children[slot] = n ? [n] : []
+        slots[slot] = n ? [n] : []
       })
-      return createNode(shape.componentId, { obj }, children)
+      return createNode(shape.componentId, { obj }, slots)
     }
   }
   switch (method) {
@@ -226,17 +226,17 @@ export function registerIOLifters(lifter: Lifter): void {
       //
       // > **一個看起來像防護的條件，常常是一句沒有被寫下來的假設。**
       //
-      // 空的 `argSlots` 讓下面的迴圈產出 `children = {}`，那正是零引數該有的樣子。
+      // 空的 `argSlots` 讓下面的迴圈產出 `slots = {}`，那正是零引數該有的樣子。
       if (shape) {
         const args = argsNode
           ? argsNode.namedChildren.map((a) => ctx.lift(a)).filter((n): n is SemanticNode => n !== null)
           : []
-        const children: Record<string, SemanticNode[]> = {}
+        const slots: Record<string, SemanticNode[]> = {}
         shape.argSlots.forEach((slot, i) => {
-          children[slot] = args[i] ? [args[i]] : []
+          slots[slot] = args[i] ? [args[i]] : []
         })
         const props = shape.funcProp ? { [shape.funcProp]: funcName } : {}
-        return createNode(shape.componentId, props, children)
+        return createNode(shape.componentId, props, slots)
       }
     }
 

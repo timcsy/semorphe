@@ -14,7 +14,7 @@
       "default": ""
     }
   ],
-  "children": {
+  "slots": {
     "expression": "expression",
     "iterable": "expression",
     "condition": "expression",

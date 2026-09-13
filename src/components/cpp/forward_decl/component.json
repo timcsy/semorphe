@@ -13,7 +13,7 @@
       "default": ""
     }
   ],
-  "children": {
+  "slots": {
     "params": "param_decl"
   },
   "role": "statement",

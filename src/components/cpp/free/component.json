@@ -2,7 +2,7 @@
   "componentId": "cpp:free",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "ptr": "expression"
   },
   "role": "statement",

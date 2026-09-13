@@ -32,7 +32,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:var_assign_compound', async (node, ctx) => {
-    const targetNode = (node.children.target ?? [])[0]
+    const targetNode = (node.slots.target ?? [])[0]
     if (!targetNode) {
       // 認得出來而拆不開＝上游給了一個沒有左邊的節點，**出聲不要猜**
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這一行沒有左邊' })
@@ -43,7 +43,7 @@ export function registerExecute(register: (component: string, executor: Componen
     //    反過來的話 `f()` 改掉 `i` 會讓它讀一格、寫另一格。
     const place = await resolvePlace(targetNode, ctx)
     const cur = place.read()
-    const rhs = await ctx.evaluate(node.children.value[0])
+    const rhs = await ctx.evaluate(node.slots.value[0])
     place.write(applyPythonBinary(op, cur, rhs, ctx))
   })
 }

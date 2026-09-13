@@ -7,8 +7,8 @@ import { indent, indented, generateExpression, generateBody, trackOwnText } from
 export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePreset): void {
   const openBrace = openBraceFor(style)
   g.set('cpp:switch', (node, ctx) => {
-      const expr = generateExpression((node.children.expr ?? [])[0], ctx)
-      const cases = node.children.cases ?? []
+      const expr = generateExpression((node.slots.expr ?? [])[0], ctx)
+      const cases = node.slots.cases ?? []
       const header = `${indent(ctx)}switch (${expr})${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header

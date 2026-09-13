@@ -5,8 +5,8 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:string_substr', (node, ctx) => {
       const obj = node.properties.obj ?? 'str'
-      const posNodes = node.children.pos ?? []
-      const lenNodes = node.children.len ?? []
+      const posNodes = node.slots.pos ?? []
+      const lenNodes = node.slots.len ?? []
       const pos = posNodes.length > 0 ? generateExpression(posNodes[0], ctx) : '0'
       const len = lenNodes.length > 0 ? generateExpression(lenNodes[0], ctx) : ''
       return len ? `${obj}.substr(${pos}, ${len})` : `${obj}.substr(${pos})`

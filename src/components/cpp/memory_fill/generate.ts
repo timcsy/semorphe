@@ -4,9 +4,9 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:memory_fill', (node, ctx) => {
-      const ptr = generateExpression((node.children.ptr ?? [])[0], ctx)
-      const value = generateExpression((node.children.value ?? [])[0], ctx)
-      const size = generateExpression((node.children.size ?? [])[0], ctx)
+      const ptr = generateExpression((node.slots.ptr ?? [])[0], ctx)
+      const value = generateExpression((node.slots.value ?? [])[0], ctx)
+      const size = generateExpression((node.slots.size ?? [])[0], ctx)
       return `${indent(ctx)}memset(${ptr}, ${value}, ${size});\n`
     })
 }

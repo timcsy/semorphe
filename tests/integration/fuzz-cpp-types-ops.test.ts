@@ -66,8 +66,8 @@ function assertStableRoundtrip(code: string) {
 
 function hasNoComponent(node: SemanticNode, forbidden: string[]): boolean {
   if (forbidden.includes(node.componentId)) return false
-  for (const children of Object.values(node.children || {})) {
-    for (const child of children) {
+  for (const slots of Object.values(node.slots || {})) {
+    for (const child of slots) {
       if (!hasNoComponent(child, forbidden)) return false
     }
   }

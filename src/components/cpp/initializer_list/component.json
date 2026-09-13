@@ -2,7 +2,7 @@
   "componentId": "cpp:initializer_list",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "values": {
       "allowed": [
         "expression"

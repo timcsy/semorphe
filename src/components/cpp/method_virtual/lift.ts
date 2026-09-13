@@ -7,8 +7,8 @@
 import type { SemanticNode, PropertyValue } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function buildMethodVirtual(props: Record<string, PropertyValue>, children?: Record<string, SemanticNode[]>): SemanticNode {
-  return createNode('cpp:method_virtual', props, children)
+export function buildMethodVirtual(props: Record<string, PropertyValue>, slots?: Record<string, SemanticNode[]>): SemanticNode {
+  return createNode('cpp:method_virtual', props, slots)
 }
 
 /** 這顆由共用檔**呼叫**建構子，不是被問判別。 */

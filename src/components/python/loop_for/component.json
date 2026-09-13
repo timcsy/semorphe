@@ -9,7 +9,7 @@
       "default": "i"
     }
   ],
-  "children": {
+  "slots": {
     "iterable": "expression",
     "body": "statements",
     "targets": "param_decl"

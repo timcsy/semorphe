@@ -2,7 +2,7 @@
   "componentId": "cpp:if",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "condition": "expression",
     "then_body": "statements",
     "else_body": "statements"

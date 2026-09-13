@@ -57,7 +57,7 @@ interface ComponentDef {
   componentId: string
   layer?: string
   properties?: string[]
-  children?: Record<string, unknown>
+  slots?: Record<string, unknown>
   role?: string
   skipPaths?: string[]
   skipReasons?: Record<string, string>
@@ -211,7 +211,7 @@ const declareFamily = ALL.filter((c) => {
 const sig = (c: ComponentDef): string =>
   JSON.stringify({
     p: paramSpecs(c.properties).map((x) => `${x.name}:${x.kind}`).sort(),
-    ch: Object.keys(c.children ?? {}).sort(),
+    ch: Object.keys(c.slots ?? {}).sort(),
     r: c.role,
   })
 const bySig = new Map<string, string[]>()

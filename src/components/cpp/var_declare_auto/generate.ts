@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:var_declare_auto', (node, ctx) => {
       const name = node.properties.name ?? 'x'
-      const inits = node.children.initializer ?? []
+      const inits = node.slots.initializer ?? []
       if (inits.length > 0) {
         const val = generateExpression(inits[0], ctx)
         return `${indent(ctx)}auto ${name} = ${val};\n`

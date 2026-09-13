@@ -5,7 +5,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:cast', (node, ctx) => {
       const targetType = node.properties.target_type ?? 'int'
-      const val = generateExpression((node.children.value ?? [])[0], ctx)
+      const val = generateExpression((node.slots.value ?? [])[0], ctx)
       return `(${targetType})${val}`
     })
 }

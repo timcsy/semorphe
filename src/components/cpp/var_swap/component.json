@@ -2,7 +2,7 @@
   "componentId": "cpp:var_swap",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "left": {
       "allowed": [
         "expression"

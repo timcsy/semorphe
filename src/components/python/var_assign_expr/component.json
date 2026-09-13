@@ -10,7 +10,7 @@
       "_why": "⚠️ **叫 `obj` 不叫 `name`**——「被指派的那個東西」這個角色在詞彙表裡只有一個名字（`RECEIVER_PARAM`），與同族那顆語句形態的指派一字不差。"
     }
   ],
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "expression",

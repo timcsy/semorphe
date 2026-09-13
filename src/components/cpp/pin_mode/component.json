@@ -2,7 +2,7 @@
   "componentId": "cpp:pin_mode",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "pin": "expression",
     "mode": "expression"
   },

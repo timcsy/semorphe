@@ -39,7 +39,7 @@ function cppBlocks(md: string): string[] {
 function idsIn(root: SemanticNode | null | undefined, acc: Set<string>): void {
   if (!root || typeof root !== 'object') return
   if (typeof root.componentId === 'string' && root.componentId.includes(':')) acc.add(root.componentId)
-  for (const b of Object.values(root.children ?? {})) for (const c of b ?? []) idsIn(c, acc)
+  for (const b of Object.values(root.slots ?? {})) for (const c of b ?? []) idsIn(c, acc)
 }
 
 interface Row { id: string; declared: string[]; used: string[] }

@@ -18,17 +18,17 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     }
     /** 一支分支的主體——`_compound` 是「一段」，其餘是單獨一行。 */
     const branchBody = (n: SemanticNode | undefined): SemanticNode[] =>
-      !n ? [] : n.componentId === '_compound' ? (n.children.body ?? []) : [n]
+      !n ? [] : n.componentId === '_compound' ? (n.slots.body ?? []) : [n]
 
-    const cond = generateExpression((node.children.condition ?? [])[0], ctx)
+    const cond = generateExpression((node.slots.condition ?? [])[0], ctx)
     // 🔴 **每一段標頭都要先算進行號**（2026-08-24）——否則那一段主體裡每一顆的
     //    對應都往上偏一行，使用者按下積木時**反白到上一行**。
     const ifHead = `${indent(ctx)}if ${cond}:\n`
     trackOwnText(ctx, ifHead)
-    let out = ifHead + section(node.children.body)
+    let out = ifHead + section(node.slots.body)
 
-    const elifConds = node.children.elif_condition ?? []
-    const elifBodies = node.children.elif_body ?? []
+    const elifConds = node.slots.elif_condition ?? []
+    const elifBodies = node.slots.elif_body ?? []
     for (let i = 0; i < elifConds.length; i++) {
       const elifHead = `${indent(ctx)}elif ${generateExpression(elifConds[i], ctx)}:\n`
       trackOwnText(ctx, elifHead)
@@ -38,10 +38,10 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       // ⚠️ **一支的主體可以是「一段」**（`_compound`）——攤回去才印得出第二行起
       out += section(branchBody(elifBodies[i]))
     }
-    if ((node.children.else_body ?? []).length > 0) {
+    if ((node.slots.else_body ?? []).length > 0) {
       const elseHead = `${indent(ctx)}else:\n`
       trackOwnText(ctx, elseHead)
-      out += elseHead + section(node.children.else_body)
+      out += elseHead + section(node.slots.else_body)
     }
     return out
   })

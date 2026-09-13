@@ -110,7 +110,7 @@ export async function liftPython(code: string): Promise<SemanticNode | null> {
 export function componentIdsOf(n: SemanticNode | null, out: string[] = []): string[] {
   if (!n) return out
   out.push(n.componentId)
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids ?? []) componentIdsOf(k, out)
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) componentIdsOf(k, out)
   return out
 }
 

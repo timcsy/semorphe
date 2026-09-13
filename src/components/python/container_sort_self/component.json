@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側的排序**一律就地**（沒有「產一份新的」那種），所以那邊沒有這個對立。不宣告等價。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "key": "expression",
     "reverse": "expression"

@@ -32,7 +32,7 @@ import { createNode } from '../../../core/semantic-tree'
 export function buildCommaExpr(exprs: SemanticNode[]): SemanticNode {
   const flat: SemanticNode[] = []
   for (const e of exprs) {
-    if (e?.componentId === 'cpp:comma_expr') flat.push(...(e.children.exprs ?? []))
+    if (e?.componentId === 'cpp:comma_expr') flat.push(...(e.slots.exprs ?? []))
     else flat.push(e)
   }
   return createNode('cpp:comma_expr', {}, { exprs: flat })

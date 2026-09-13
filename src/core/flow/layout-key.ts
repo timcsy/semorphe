@@ -49,8 +49,8 @@ export function walkWithPath(
   const out: KeyedNode[] = []
   const walk = (n: SemanticNode, path: string): void => {
     out.push({ node: n, path, line: lineOf(n.id) })
-    for (const slot of Object.keys(n.children ?? {})) {
-      const kids = n.children[slot] ?? []
+    for (const slot of Object.keys(n.slots ?? {})) {
+      const kids = n.slots[slot] ?? []
       kids.forEach((kid, i) => walk(kid, `${path}/${slot}[${i}]`))
     }
   }

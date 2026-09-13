@@ -229,19 +229,19 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
   it('① 舊身分（cpp_ 與裸名）都轉得動，含巢狀子節點', () => {
     const out = rise({
       componentId: 'cpp:if',
-      children: {
-        body: [{ componentId: 'cpp:vector_declare', children: {} }],
-        condition: [{ componentId: 'cpp:compare', children: {} }],
+      slots: {
+        body: [{ componentId: 'cpp:vector_declare', slots: {} }],
+        condition: [{ componentId: 'cpp:compare', slots: {} }],
       },
-    }) as { componentId: string; children: Record<string, { componentId: string }[]> }
+    }) as { componentId: string; slots: Record<string, { componentId: string }[]> }
     expect(out.componentId).toBe('cpp:if')
-    expect(out.children.body[0].componentId).toBe('cpp:vector_declare')
-    expect(out.children.condition[0].componentId).toBe('cpp:compare')
+    expect(out.slots.body[0].componentId).toBe('cpp:vector_declare')
+    expect(out.slots.condition[0].componentId).toBe('cpp:compare')
   })
 
   it('② 已是新格式的身分**原樣通過**（冪等）', () => {
     // 樹裡本來就有三顆 `cpp:math_*`——它們不得被加成 `cpp:cpp:math_pow`。
-    const out = rise({ componentId: 'cpp:math_pow', children: {} }) as { componentId: string }
+    const out = rise({ componentId: 'cpp:math_pow', slots: {} }) as { componentId: string }
     expect(out.componentId).toBe('cpp:math_pow')
   })
 
@@ -249,17 +249,17 @@ describe('v2 → v3：元件身分加上命名空間（spec 103 的四個 Accept
     const out = rise({
       componentId: '__某個未來的身分__',
       properties: { keep: 'me' },
-      children: { body: [{ componentId: 'cpp:print', children: {} }] },
-    }) as { componentId: string; properties: Record<string, string>; children: Record<string, { componentId: string }[]> }
+      slots: { body: [{ componentId: 'cpp:print', slots: {} }] },
+    }) as { componentId: string; properties: Record<string, string>; slots: Record<string, { componentId: string }[]> }
     expect(out.componentId).toBe('__某個未來的身分__')
     expect(out.properties.keep, '認不得就整個節點丟掉的話，使用者的資料會消失').toBe('me')
-    expect(out.children.body[0].componentId, '認不得的父節點不得阻斷子節點的轉換').toBe('cpp:print')
+    expect(out.slots.body[0].componentId, '認不得的父節點不得阻斷子節點的轉換').toBe('cpp:print')
   })
 
   it('④ 積木型別**完全不動**——66 顆身分與積木型別同名', () => {
     const raw = {
       version: 2,
-      tree: { componentId: 'cpp:class_def', children: {} },
+      tree: { componentId: 'cpp:class_def', slots: {} },
       blocklyState: { blocks: { blocks: [{ type: 'cpp_class_def' }] } },
     } as Record<string, unknown>
     const out = UPGRADES[2](raw) as { tree: { componentId: string }; blocklyState: unknown }
@@ -298,15 +298,15 @@ describe('v3 → v4：接收者參數統一叫 obj（G 項第 1 步）', () => {
     const out = rise({
       componentId: 'lang:program',
       properties: {},
-      children: {
+      slots: {
         body: [
-          { componentId: 'lang:var_assign', properties: { name: 'x' }, children: {} },
-          { componentId: 'cpp:vector_size', properties: { vector: 'v' }, children: {} },
-          { componentId: 'cpp:pointer_assign', properties: { ptr_name: 'p' }, children: {} },
+          { componentId: 'lang:var_assign', properties: { name: 'x' }, slots: {} },
+          { componentId: 'cpp:vector_size', properties: { vector: 'v' }, slots: {} },
+          { componentId: 'cpp:pointer_assign', properties: { ptr_name: 'p' }, slots: {} },
         ],
       },
-    }) as { children: Record<string, { properties: Record<string, string> }[]> }
-    const b = out.children.body
+    }) as { slots: Record<string, { properties: Record<string, string> }[]> }
+    const b = out.slots.body
     expect(b[0].properties.obj, 'var_assign 的 name 沒轉成 obj').toBe('x')
     expect(b[1].properties.obj).toBe('v')
     expect(b[2].properties.obj).toBe('p')
@@ -317,7 +317,7 @@ describe('v3 → v4：接收者參數統一叫 obj（G 項第 1 步）', () => {
     const out = rise({
       componentId: 'lang:var_declare',
       properties: { name: 'x', type: 'int' },
-      children: {},
+      slots: {},
     }) as { properties: Record<string, string> }
     // `var_declare.name` 是**它自己的名字**，不是接收者——不該被改
     expect(out.properties.name, 'var_declare 的 name 被誤改了').toBe('x')
@@ -326,7 +326,7 @@ describe('v3 → v4：接收者參數統一叫 obj（G 項第 1 步）', () => {
 
   it('★ 反向：不升級的話，產生器會拿不到接收者', () => {
     // 沒有這一支，前兩支綠可能只是因為「舊屬性名本來也讀得到」。
-    const old = { componentId: 'cpp:vector_size', properties: { vector: 'v' }, children: {} }
+    const old = { componentId: 'cpp:vector_size', properties: { vector: 'v' }, slots: {} }
     expect(
       (old.properties as Record<string, string>).obj,
       '舊格式本來就有 obj → 那這個遷移沒有存在的必要',
@@ -353,7 +353,7 @@ describe('端到端：v2 的存檔走完整條鏈（順序不能倒）', () => {
     const r = upgrade(
       {
         version: 2,
-        tree: { componentId: 'var_assign', properties: { name: 'x' }, children: {} },
+        tree: { componentId: 'var_assign', properties: { name: 'x' }, slots: {} },
         blocklyState: {}, code: '', language: 'cpp', styleId: 'apcs', lastModified: 0,
       } as Record<string, unknown>,
       2,

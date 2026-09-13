@@ -111,7 +111,7 @@ describe('Component/BlockDef split integrity', () => {
       // Should have componentId (reference) but not component definition fields
       expect(p).toHaveProperty('componentId')
       expect(p).not.toHaveProperty('properties')
-      expect(p).not.toHaveProperty('children')
+      expect(p).not.toHaveProperty('slots')
       expect(p).not.toHaveProperty('role')
     }
   })

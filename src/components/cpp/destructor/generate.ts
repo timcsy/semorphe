@@ -8,7 +8,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
   const openBrace = openBraceFor(style)
   g.set('cpp:destructor', (node, ctx) => {
       const className = node.properties.class_name ?? 'MyClass'
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       const header = `${indent(ctx)}~${className}()${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header

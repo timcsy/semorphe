@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "它是字典字面裡的一組對應，沒有跨語言的對應物可指。",
   "properties": [],
-  "children": { "key": "expression", "value": "expression" },
+  "slots": { "key": "expression", "value": "expression" },
   "role": "expression",
   "owner": "(python)",
   "paths": {

@@ -14,7 +14,7 @@
       "default": ""
     }
   ],
-  "children": {
+  "slots": {
     "params": "param_decl",
     "body": "statements"
   },

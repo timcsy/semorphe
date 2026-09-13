@@ -8,7 +8,7 @@ export function registerExecute(register: (component: string, executor: Componen
       const name = String(node.properties.name)
       const type = String(node.properties.type || 'int')
 
-      const sizeChildren = node.children.size ?? []
+      const sizeChildren = node.slots.size ?? []
       let size: number
       if (sizeChildren.length > 0) {
         const sizeVal = await ctx.evaluate(sizeChildren[0])
@@ -48,10 +48,10 @@ export function registerExecute(register: (component: string, executor: Componen
 
       // 初始值：`int a[3] = {3,1,2}`
       //
-      // 辨識那半在 specs/050 就修好了（初始值進 `children.values`），**執行這半
+      // 辨識那半在 specs/050 就修好了（初始值進 `slots.values`），**執行這半
       // 沒有接上**——於是 `int a[3]={3,1,2}; cout << a[0]` 輸出 0。
       // 半條路修好比沒修更難察覺：語義樹裡看得到值，跑起來卻是零。
-      const init = node.children.values ?? []
+      const init = node.slots.values ?? []
       // `char s[4] = "ab"` —— 初始值是一個字串字面，要**拆成字元**再填。
       // 不拆的話整個字串會塞進 s[0]，於是 s[1] 是空的、cout << s 也不對。
       if (type.includes('char') && init.length === 1) {

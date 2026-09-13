@@ -277,7 +277,7 @@ function wrap(node: SemanticNode | null, id?: string, contextNode?: SemanticNode
 function findComponent(node: SemanticNode | null, id: string): boolean {
   if (!node) return false
   if (node.componentId === id) return true
-  return Object.values(node.children ?? {}).some((arr) => arr.some((c) => findComponent(c, id)))
+  return Object.values(node.slots ?? {}).some((arr) => arr.some((c) => findComponent(c, id)))
 }
 
 function classify(def: ComponentDefJSON): { row: Row; generated: string } {
@@ -643,7 +643,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
       componentId: '__zz_never_implemented__',
       layer: 'lang-core',
       properties: [],
-      children: {},
+      slots: {},
       role: 'statement',
     } as unknown as ComponentDefJSON
     const { row } = classify(fakeComponent)

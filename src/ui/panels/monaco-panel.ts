@@ -144,7 +144,7 @@ export class MonacoPanel implements ViewHost, CodeView {
           })
         }
       }
-      for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) walk(c)
+      for (const bucket of Object.values(n.slots ?? {})) for (const c of bucket ?? []) walk(c)
     }
     walk(tree)
     monaco.editor.setModelMarkers(model, 'semorphe-residual', markers)

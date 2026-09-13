@@ -2,7 +2,7 @@
   "componentId": "cpp:print",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "values": "expression"
   },
   "role": "statement",

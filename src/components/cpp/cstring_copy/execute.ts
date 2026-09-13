@@ -4,7 +4,7 @@ import { writableArray, readCString, writeCString } from '../../../languages/cpp
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_copy', async (node, ctx) => {
-      const dest = writableArray(ctx as never, (node.children.dest ?? [])[0], 'strcpy 的目標')
-      writeCString(dest, readCString(await ctx.evaluate((node.children.src ?? [])[0])))
+      const dest = writableArray(ctx as never, (node.slots.dest ?? [])[0], 'strcpy 的目標')
+      writeCString(dest, readCString(await ctx.evaluate((node.slots.src ?? [])[0])))
     })
 }

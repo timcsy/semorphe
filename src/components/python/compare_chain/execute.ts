@@ -14,11 +14,11 @@ import { comparePython } from '../../../languages/python/compare'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:compare_chain', async (node, ctx) => {
-    const a = await ctx.evaluate(node.children.left[0])
-    const b = await ctx.evaluate(node.children.middle[0])
+    const a = await ctx.evaluate(node.slots.left[0])
+    const b = await ctx.evaluate(node.slots.middle[0])
     const first = comparePython(String(node.properties.operator ?? '<'), a, b, ctx)
     if (!first) return { type: 'bool', value: false }
-    const c = await ctx.evaluate(node.children.right[0])
+    const c = await ctx.evaluate(node.slots.right[0])
     return { type: 'bool', value: comparePython(String(node.properties.operator2 ?? '<'), b, c, ctx) }
   })
 }

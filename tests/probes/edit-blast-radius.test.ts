@@ -75,7 +75,7 @@ const clone = (n: SemanticNode): SemanticNode => JSON.parse(JSON.stringify(n)) a
 
 function walk(n: SemanticNode, fn: (x: SemanticNode) => void): void {
   fn(n)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) walk(k, fn)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks) walk(k, fn)
 }
 
 /** 把第 `idx` 個節點的第一個字串／數字屬性改掉。回傳有沒有改成。 */
@@ -103,7 +103,7 @@ function mutateProperty(root: SemanticNode, idx: number): boolean {
 function deleteStatement(root: SemanticNode, idx: number): boolean {
   const bodies: SemanticNode[][] = []
   walk(root, (n) => {
-    for (const ks of Object.values(n.children ?? {})) {
+    for (const ks of Object.values(n.slots ?? {})) {
       if (Array.isArray(ks) && ks.length > 1) bodies.push(ks as SemanticNode[])
     }
   })

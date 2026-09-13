@@ -9,7 +9,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
   g.set('cpp:func_def', (node, ctx) => {
       const name = node.properties.name ?? 'f'
       const returnType = node.properties.return_type ?? 'void'
-      const paramChildren = node.children.params ?? []
+      const paramChildren = node.slots.params ?? []
       const paramStr = paramChildren.map(p => {
         const t = String(p.properties.type ?? 'int')
         const n = String(p.properties.name ?? '')
@@ -22,7 +22,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
         }
         return n ? `${t} ${n}${tail}` : t
       }).join(', ')
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       const header = `${indent(ctx)}${returnType} ${name}(${paramStr})${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header

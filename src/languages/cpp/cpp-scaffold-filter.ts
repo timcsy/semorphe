@@ -41,7 +41,7 @@ import { isFunctionDefinition } from '../../core/component/traits'
  */
 export function cppStripScaffoldNodes(tree: SemanticNode, skeletonId = 'main'): SemanticNode {
   const skeleton = skeletonById(skeletonId)
-  const body = tree.children.body ?? []
+  const body = tree.slots.body ?? []
   const userBody: SemanticNode[] = []
 
   // 🔴 剝不掉的骨架（Arduino）原樣通過——見上面的說明
@@ -55,7 +55,7 @@ export function cppStripScaffoldNodes(tree: SemanticNode, skeletonId = 'main'): 
     if (isScaffold(node.componentId)) continue
     // Unwrap 進入點函式 — 取出本體，跳過裡面那些「只有在這裡才是鷹架」的
     if (entry !== undefined && isFunctionDefinition(node.componentId) && node.properties.name === entry) {
-      const funcBody = node.children.body ?? []
+      const funcBody = node.slots.body ?? []
       for (const stmt of funcBody) {
         // ⚠️ 問**性狀**不問身分。而它是 `scaffoldInMain` 不是 `scaffold`：
         // `return` 只有在 main 裡才是鷹架，在別的函式裡是使用者寫的東西。
@@ -80,7 +80,7 @@ export function cppStripScaffoldNodes(tree: SemanticNode, skeletonId = 'main'): 
     //    由 `tests/integration/toplevel-stays-outside.test.ts` 釘住。
     //
     // ⚠️ **這裡仍然是資訊弄丟的第一站**——把「本來在哪」帶下去比在下游重建
-    //    更正確，而那要動 `cpp:program` 的形狀（多一格 children）。
+    //    更正確，而那要動 `cpp:program` 的形狀（多一格 slots）。
     //    記在 `knowledge/draft/2026-03-11-已知工程待解問題.md`。
     userBody.push(node)
   }

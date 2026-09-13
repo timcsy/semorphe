@@ -4,8 +4,8 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:math_gcd', (node, ctx) => {
-      const a = generateExpression((node.children.a ?? [])[0], ctx)
-      const b = generateExpression((node.children.b ?? [])[0], ctx)
+      const a = generateExpression((node.slots.a ?? [])[0], ctx)
+      const b = generateExpression((node.slots.b ?? [])[0], ctx)
       return `__gcd(${a}, ${b})`
     })
 }

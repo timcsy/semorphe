@@ -11,7 +11,7 @@ import { ThrownSignal } from '../../../interpreter/executors/control-flow'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:throw', async (node, ctx) => {
-      const vals = node.children.value ?? []
+      const vals = node.slots.value ?? []
       const value = vals.length > 0 ? await ctx.evaluate(vals[0]) : 'exception'
       throw new ThrownSignal(value)
     })

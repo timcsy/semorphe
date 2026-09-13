@@ -10,7 +10,7 @@
     }
   ],
   "_properties_why": "**格式規格是結構化的一格，不是黏在文字裡的字元。** `f\"{score:.1f}\"` 的 `.1f` 若留在字串裡，用到它的人就得再 parse 一次——而知識庫的教訓逐字：「需要 parse 回結構才能用的字串，就不該是字串」。",
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "expression",

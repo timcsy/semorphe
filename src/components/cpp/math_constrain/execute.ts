@@ -11,9 +11,9 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:math_constrain', async (node, ctx) => {
-    const v = await ctx.evaluate((node.children.value ?? [])[0])
-    const lo = await ctx.evaluate((node.children.low ?? [])[0])
-    const hi = await ctx.evaluate((node.children.high ?? [])[0])
+    const v = await ctx.evaluate((node.slots.value ?? [])[0])
+    const lo = await ctx.evaluate((node.slots.low ?? [])[0])
+    const hi = await ctx.evaluate((node.slots.high ?? [])[0])
     const n = ctx.toNumber(v)
     // ⚠️ 回傳**原本那個值**（不是重新包一個 int）——型別要跟著走，
     //    否則 `constrain(2.5, 0, 10)` 會變成整數。

@@ -67,14 +67,14 @@ export function smugglesEdge(line: string): boolean {
 const tree = (): SemanticNode =>
   ({
     id: 'root', componentId: 'cpp:program', properties: {},
-    children: {
+    slots: {
       body: [{
         id: 'F', componentId: 'cpp:func_def', properties: { name: 'main' },
-        children: {
+        slots: {
           body: [
             { id: 'D', componentId: 'cpp:var_declare', properties: { name: 'x' },
-              children: { initializer: [{ id: 'N', componentId: 'cpp:literal_number', properties: { value: '0' }, children: {} }] } },
-            { id: 'L', componentId: 'cpp:loop_count', properties: {}, children: {} },
+              slots: { initializer: [{ id: 'N', componentId: 'cpp:literal_number', properties: { value: '0' }, slots: {} }] } },
+            { id: 'L', componentId: 'cpp:loop_count', properties: {}, slots: {} },
           ],
         },
       }],
@@ -84,7 +84,7 @@ const tree = (): SemanticNode =>
 describe('第八十條護欄：流程視圖上的線只有父子關係', () => {
   it('★ 入口條件：合成樹真的建起來了', () => {
     let n = 0
-    const walk = (x: SemanticNode): void => { n++; for (const b of Object.values(x.children ?? {})) for (const c of b ?? []) walk(c) }
+    const walk = (x: SemanticNode): void => { n++; for (const b of Object.values(x.slots ?? {})) for (const c of b ?? []) walk(c) }
     walk(tree())
     expect(n, '合成樹是空的 → 下面的判定在對空氣').toBeGreaterThanOrEqual(5)
   })
@@ -120,8 +120,8 @@ describe('第八十條護欄：流程視圖上的線只有父子關係', () => {
     //    > 「裝語句還是值」與「要哪一種身分」是兩個問題，
     //    > 用同一個布林回答會讓具名的槽永遠接不上。
     const t = tree()
-    const d2 = { id: 'D2', componentId: 'cpp:var_declare', properties: {}, children: {} } as unknown as SemanticNode
-    ;(t.children.body[0].children.body as SemanticNode[]).push(d2)
+    const d2 = { id: 'D2', componentId: 'cpp:var_declare', properties: {}, slots: {} } as unknown as SemanticNode
+    ;(t.slots.body[0].slots.body as SemanticNode[]).push(d2)
     expect(tryConnect(t, 'D2', 'D', 'declarators').ok, '具名身分對得上就該接得起來').toBe(true)
   })
 

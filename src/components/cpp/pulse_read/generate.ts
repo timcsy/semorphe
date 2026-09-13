@@ -8,9 +8,9 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:pulse_read', (node, ctx) => {
-    const pin = generateExpression((node.children.pin ?? [])[0], ctx)
-    const state = generateExpression((node.children.state ?? [])[0], ctx)
-    const toNode = (node.children.timeout ?? [])[0]
+    const pin = generateExpression((node.slots.pin ?? [])[0], ctx)
+    const state = generateExpression((node.slots.state ?? [])[0], ctx)
+    const toNode = (node.slots.timeout ?? [])[0]
     const args = toNode ? `${pin}, ${state}, ${generateExpression(toNode, ctx)}` : `${pin}, ${state}`
     return `pulseIn(${args})`
   })

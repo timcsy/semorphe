@@ -173,7 +173,7 @@ describe('Style Exception Conversion', () => {
     const converted = applyStyleConversions(tree, exceptions)
 
     // bits/stdc++.h should be replaced with iostream
-    const includes = converted.children.body.filter(n => n.componentId === 'cpp:include')
+    const includes = converted.slots.body.filter(n => n.componentId === 'cpp:include')
     expect(includes).toHaveLength(1)
     expect(includes[0].properties.header).toBe('iostream')
   })
@@ -185,7 +185,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, apcs)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const includes = converted.children.body.filter(n => n.componentId === 'cpp:include')
+    const includes = converted.slots.body.filter(n => n.componentId === 'cpp:include')
     expect(includes).toHaveLength(1)
     expect(includes[0].properties.header).toBe('iostream')
   })
@@ -197,7 +197,7 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const includes = converted.children.body.filter(n => n.componentId === 'cpp:include')
+    const includes = converted.slots.body.filter(n => n.componentId === 'cpp:include')
     expect(includes).toHaveLength(1)
     expect(includes[0].properties.header).toBe('cstdio')
   })
@@ -210,10 +210,10 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, apcs)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const prints = converted.children.body.filter(n => n.componentId === 'cpp:print')
+    const prints = converted.slots.body.filter(n => n.componentId === 'cpp:print')
     expect(prints).toHaveLength(1)
-    expect(prints[0].children.values).toHaveLength(1)
-    expect(prints[0].children.values[0].componentId).toBe('cpp:var_ref')
+    expect(prints[0].slots.values).toHaveLength(1)
+    expect(prints[0].slots.values[0].componentId).toBe('cpp:var_ref')
   })
 
   it('should convert cpp_scanf to input in APCS mode', () => {
@@ -224,9 +224,9 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, apcs)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const inputs = converted.children.body.filter(n => n.componentId === 'cpp:input')
+    const inputs = converted.slots.body.filter(n => n.componentId === 'cpp:input')
     expect(inputs).toHaveLength(1)
-    expect(inputs[0].children.values[0].properties.name).toBe('n')
+    expect(inputs[0].slots.values[0].properties.name).toBe('n')
   })
 
   it('should convert print to cpp_printf in competitive mode', () => {
@@ -241,12 +241,12 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const printfs = converted.children.body.filter(n => n.componentId === 'cpp:print_formatted')
+    const printfs = converted.slots.body.filter(n => n.componentId === 'cpp:print_formatted')
     expect(printfs).toHaveLength(1)
     expect(printfs[0].properties.format).toContain('%d')
     expect(printfs[0].properties.format).toContain('\\n')
-    expect(printfs[0].children.args).toHaveLength(1)
-    expect(printfs[0].children.args[0].properties.name).toBe('x')
+    expect(printfs[0].slots.args).toHaveLength(1)
+    expect(printfs[0].slots.args[0].properties.name).toBe('x')
   })
 
   it('should convert input to cpp_scanf in competitive mode', () => {
@@ -261,10 +261,10 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const scanfs = converted.children.body.filter(n => n.componentId === 'cpp:input_formatted')
+    const scanfs = converted.slots.body.filter(n => n.componentId === 'cpp:input_formatted')
     expect(scanfs).toHaveLength(1)
     expect(scanfs[0].properties.format).toBe('%d %d')
-    expect(scanfs[0].children.args).toHaveLength(2)
+    expect(scanfs[0].slots.args).toHaveLength(2)
   })
 
   it('should convert print with string_literal to cpp_printf with %s', () => {
@@ -279,13 +279,13 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, competitive)
     const converted = applyStyleConversions(tree, exceptions)
 
-    const printfs = converted.children.body.filter(n => n.componentId === 'cpp:print_formatted')
+    const printfs = converted.slots.body.filter(n => n.componentId === 'cpp:print_formatted')
     expect(printfs).toHaveLength(1)
     // string_literal "hello" embedded directly in format, var uses %d
     expect(printfs[0].properties.format).toBe('hello%d')
     // Only the var_ref should remain as an arg (string is in format)
-    expect(printfs[0].children.args).toHaveLength(1)
-    expect(printfs[0].children.args[0].componentId).toBe('cpp:var_ref')
+    expect(printfs[0].slots.args).toHaveLength(1)
+    expect(printfs[0].slots.args[0].componentId).toBe('cpp:var_ref')
   })
 
   it('should preserve non-exception nodes unchanged', () => {
@@ -297,11 +297,11 @@ describe('Style Exception Conversion', () => {
     const exceptions = detectStyleExceptions(tree, apcs)
     const converted = applyStyleConversions(tree, exceptions)
 
-    expect(converted.children.body).toHaveLength(3) // include replaced, namespace + var kept
-    expect(converted.children.body[0].componentId).toBe('cpp:include')
-    expect(converted.children.body[0].properties.header).toBe('iostream')
-    expect(converted.children.body[1].componentId).toBe('cpp:using_namespace')
-    expect(converted.children.body[2].componentId).toBe('cpp:var_declare')
+    expect(converted.slots.body).toHaveLength(3) // include replaced, namespace + var kept
+    expect(converted.slots.body[0].componentId).toBe('cpp:include')
+    expect(converted.slots.body[0].properties.header).toBe('iostream')
+    expect(converted.slots.body[1].componentId).toBe('cpp:using_namespace')
+    expect(converted.slots.body[2].componentId).toBe('cpp:var_declare')
   })
 })
 

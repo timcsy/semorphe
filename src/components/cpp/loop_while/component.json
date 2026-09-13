@@ -2,7 +2,7 @@
   "componentId": "cpp:loop_while",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "condition": "expression",
     "body": "statements"
   },

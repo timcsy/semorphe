@@ -4,9 +4,9 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:ternary', (node, ctx) => {
-      const cond = generateExpression((node.children.condition ?? [])[0], ctx)
-      const trueExpr = generateExpression((node.children.true_expr ?? [])[0], ctx)
-      const falseExpr = generateExpression((node.children.false_expr ?? [])[0], ctx)
+      const cond = generateExpression((node.slots.condition ?? [])[0], ctx)
+      const trueExpr = generateExpression((node.slots.true_expr ?? [])[0], ctx)
+      const falseExpr = generateExpression((node.slots.false_expr ?? [])[0], ctx)
       return `${cond} ? ${trueExpr} : ${falseExpr}`
     })
 }

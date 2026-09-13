@@ -26,7 +26,7 @@ export function registerExecute(register: (component: string, executor: Componen
     // 使用者自己定義的同名函式優先——Python 允許蓋掉內建的
     const userDefined = ctx.functions.get('min')
     const args: RuntimeValue[] = []
-    args.push(...(await evalPythonArgs(node.children.values ?? [], ctx)))
+    args.push(...(await evalPythonArgs(node.slots.values ?? [], ctx)))
     if (userDefined) return callWith(userDefined, args, ctx, 'min')
     return PYTHON_BUILTIN_FUNCTIONS['min'](args, withCall(ctx))
   })

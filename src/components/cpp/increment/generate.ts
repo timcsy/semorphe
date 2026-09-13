@@ -16,7 +16,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     // > **一個永遠不會命中的回退，是一份沒有人會發現已經過期的宣告。**
     const op = String(node.properties.operator ?? '++')
     const pos = String(node.properties.position ?? 'postfix')
-    const targets = node.children.target ?? []
+    const targets = node.slots.target ?? []
     // ⚠️ 運算元缺席時退回 `i`——與同族一致，而**不是**靜默丟掉這一行。
     const target = targets.length > 0 ? generateExpression(targets[0], ctx) : 'i'
     const expr = pos === 'prefix' ? `${op}${target}` : `${target}${op}`

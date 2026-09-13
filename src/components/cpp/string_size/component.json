@@ -7,7 +7,7 @@
       "default": "str"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "expression",
   "paths": {
     "render": "./forms/blocks.json",

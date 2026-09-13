@@ -9,10 +9,10 @@ export function registerExecute(register: (component: string, executor: Componen
   registerLvalue()
   register('cpp:array_2d_at', async (node, ctx) => {
       // 🟢 容器是一顆節點（2026-08-26）
-      const objNodes0 = node.children.obj ?? []
+      const objNodes0 = node.slots.obj ?? []
       const name = String(objNodes0[0]?.properties?.name ?? '')
-      const rowNodes = node.children.row
-      const colNodes = node.children.col
+      const rowNodes = node.slots.row
+      const colNodes = node.slots.col
       if (!rowNodes?.length || !colNodes?.length) return defaultValue('int')
 
       const row = ctx.toNumber(await ctx.evaluate(rowNodes[0]))
@@ -37,10 +37,10 @@ export function registerExecute(register: (component: string, executor: Componen
  */
 export function registerLvalue(): void {
   declareLvalue('cpp:array_2d_at', async (node, ctx: ExecutionContext) => {
-    const objN = (node.children.obj ?? [])[0]
+    const objN = (node.slots.obj ?? [])[0]
     const name = String(objN?.properties?.name ?? '')
-    const rowNodes = node.children.row ?? []
-    const colNodes = node.children.col ?? []
+    const rowNodes = node.slots.row ?? []
+    const colNodes = node.slots.col ?? []
     if (!rowNodes.length || !colNodes.length) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${name}（缺一個索引）` })
     }

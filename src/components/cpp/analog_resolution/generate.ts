@@ -4,7 +4,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:analog_resolution', (node, ctx) => {
-    const bits = generateExpression((node.children.bits ?? [])[0], ctx)
+    const bits = generateExpression((node.slots.bits ?? [])[0], ctx)
     return `${indent(ctx)}analogReadResolution(${bits});\n`
   })
 }

@@ -5,9 +5,9 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:array_2d_assign', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const rowNodes = node.children.row
-      const colNodes = node.children.col
-      const valueNodes = node.children.value
+      const rowNodes = node.slots.row
+      const colNodes = node.slots.col
+      const valueNodes = node.slots.value
       if (!rowNodes?.length || !colNodes?.length || !valueNodes?.length) return
 
       const row = ctx.toNumber(await ctx.evaluate(rowNodes[0]))

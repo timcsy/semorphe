@@ -9,7 +9,7 @@
       "default": ""
     }
   ],
-  "children": {
+  "slots": {
     "args": "expression"
   },
   "role": "both",

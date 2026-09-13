@@ -73,8 +73,8 @@ function lift(code: string): SemanticNode {
 function paramsOf(tree: SemanticNode): SemanticNode[] {
   const found: SemanticNode[] = []
   const walk = (n: SemanticNode): void => {
-    if (n.componentId === 'cpp:forward_decl') found.push(...(n.children.params ?? []))
-    for (const kids of Object.values(n.children ?? {})) for (const k of kids) walk(k)
+    if (n.componentId === 'cpp:forward_decl') found.push(...(n.slots.params ?? []))
+    for (const kids of Object.values(n.slots ?? {})) for (const k of kids) walk(k)
   }
   walk(tree)
   return found

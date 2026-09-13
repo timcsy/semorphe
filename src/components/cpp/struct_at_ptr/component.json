@@ -13,7 +13,7 @@
       "default": "field"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "expression",
   "traits": {
     "addressable": true

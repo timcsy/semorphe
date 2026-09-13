@@ -27,7 +27,7 @@ export interface SemanticNode {
   id: string
   componentId: string
   properties: Record<string, PropertyValue>
-  children: Record<string, SemanticNode[]>
+  slots: Record<string, SemanticNode[]>
   annotations?: Annotation[]
   metadata?: NodeMetadata
 }
@@ -193,7 +193,7 @@ export interface ComponentMapping {
    */
   abstractComponent?: string
   properties?: string[]
-  children?: Record<string, string>
+  slots?: Record<string, string>
   role?: 'statement' | 'expression' | 'both'
   annotations?: Record<string, unknown>
 }
@@ -390,7 +390,7 @@ export interface RenderMapping {
   expressionCounterpart?: string
   /** Declarative rules for dynamic block structure (variable-count inputs, multi-mode slots, etc.) */
   dynamicRules?: DynamicRule[]
-  /** Extra state flags: set extraState[key] = true when children[childSlot] is non-empty */
+  /** Extra state flags: set extraState[key] = true when slots[childSlot] is non-empty */
   extraStateFlags?: Record<string, string>
   /**
    * 把一個接點的子節點序列化進**一個文字欄位**，並解析回來。
@@ -400,14 +400,14 @@ export interface RenderMapping {
    * （`cpp_lambda` 的 `PARAMS`）。並列在同一層，讓「這顆元件的參數長什麼樣」
    * 一眼看得出來。
    *
-   * 見 `src/core/projection/children-as-field.ts` 的檔頭（含**升級成結構化
+   * 見 `src/core/projection/slot-as-field.ts` 的檔頭（含**升級成結構化
    * 插槽的三個訊號**）。
    */
-  childrenAsField?: ChildrenAsField[]
+  slotAsField?: SlotAsField[]
 }
 
-import type { ChildrenAsField } from './projection/children-as-field'
-export type { ChildrenAsField }
+import type { SlotAsField } from './projection/slot-as-field'
+export type { SlotAsField }
 
 export interface DynamicInputDef {
   semanticChild: string
@@ -419,12 +419,12 @@ export interface DynamicInputDef {
 
 /**
  * A declarative rule describing how to extract/render dynamic block structure.
- * Each rule maps a variable-count set of inputs/fields to a semantic children slot.
+ * Each rule maps a variable-count set of inputs/fields to a semantic slot.
  */
 export interface DynamicRule {
   /** Path in extraState to get the element count (e.g., "argCount", "args.length") */
   countSource: string
-  /** Semantic children slot name to populate */
+  /** semantic slot name to populate */
   childSlot: string
   /** Input name pattern with {i} placeholder (e.g., "ARG_{i}") — reads input_value */
   inputPattern?: string
@@ -531,7 +531,7 @@ export interface ComponentDefJSON {
    * ——型別註解攔不住一個手寫錯的 JSON。
    */
   properties: ParamSpec[]
-  children: Record<string, string>
+  slots: Record<string, string>
   role: 'statement' | 'expression' | 'both'
   annotations?: Record<string, unknown>
   /**

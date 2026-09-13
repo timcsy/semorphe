@@ -8,5 +8,5 @@ const one = (ns: unknown[] | undefined, ctx: Parameters<NodeGenerator>[1]): stri
 }
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
-  g.set('python:container_at', (node, ctx) => `${one(node.children.target, ctx)}[${one(node.children.key, ctx)}]`)
+  g.set('python:container_at', (node, ctx) => `${one(node.slots.target, ctx)}[${one(node.slots.key, ctx)}]`)
 }

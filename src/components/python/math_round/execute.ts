@@ -17,8 +17,8 @@ import { PYTHON_BUILTIN_FUNCTIONS } from '../../../languages/python/builtins'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:math_round', async (node, ctx) => {
     const args: RuntimeValue[] = []
-    for (const x of node.children.value ?? []) args.push(await ctx.evaluate(x))
-    for (const x of node.children.digits ?? []) args.push(await ctx.evaluate(x))
+    for (const x of node.slots.value ?? []) args.push(await ctx.evaluate(x))
+    for (const x of node.slots.digits ?? []) args.push(await ctx.evaluate(x))
     const userDefined = ctx.functions.get('round')
     if (userDefined) return callWith(userDefined, args, ctx, 'round')
     return PYTHON_BUILTIN_FUNCTIONS['round'](args, withCall(ctx))

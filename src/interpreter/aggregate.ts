@@ -48,7 +48,7 @@ export async function evalInitializer(
 ): Promise<RuntimeValue> {
   if (!isBraceList(node)) return ctx.coerceType(await ctx.evaluate(node), type)
 
-  const elements = node.children.values ?? []
+  const elements = node.slots.values ?? []
 
   // 結構／類別 → 聚合初始化：按**成員宣告順序**填
   if (ctx.structs.has(type)) {

@@ -5,7 +5,7 @@ import type { SemanticNode } from '../../../core/types'
 
 const findIf = (n: SemanticNode | null): SemanticNode | null =>
   !n ? null : n.componentId === 'python:if' ? n
-    : Object.values(n.children ?? {}).flat().map((k) => findIf(k)).find(Boolean) ?? null
+    : Object.values(n.slots ?? {}).flat().map((k) => findIf(k)).find(Boolean) ?? null
 
 describe('python:if', () => {
   it('★ lift：三種形狀都認得出來（沒有 else／有 else／有 elif）', async () => {
@@ -22,16 +22,16 @@ describe('python:if', () => {
     const t = await liftPython('if a:\n    b = 1\nelif c:\n    b = 2\nelse:\n    b = 3\n')
     const n = findIf(t)!
     expect(n, '★ 錨點：先要找得到那顆節點').toBeTruthy()
-    expect(n.children.elif_condition?.length, 'elif 的條件沒接進來').toBe(1)
-    expect(n.children.elif_body?.length, '🔴 兩個清單靠索引配對，長度必須相同').toBe(1)
-    expect(n.children.else_body?.length, 'else 沒接進來').toBe(1)
+    expect(n.slots.elif_condition?.length, 'elif 的條件沒接進來').toBe(1)
+    expect(n.slots.elif_body?.length, '🔴 兩個清單靠索引配對，長度必須相同').toBe(1)
+    expect(n.slots.else_body?.length, 'else 沒接進來').toBe(1)
   })
 
   it('🔴 多段 elif：兩個清單長度必須相同——錯開的話每一格都還在，只是接錯了人', async () => {
     const n = findIf(await liftPython(
       'if a:\n    x = 1\nelif b:\n    x = 2\nelif c:\n    x = 3\nelif d:\n    x = 4\n'))!
-    expect(n.children.elif_condition?.length).toBe(3)
-    expect(n.children.elif_body?.length).toBe(3)
+    expect(n.slots.elif_condition?.length).toBe(3)
+    expect(n.slots.elif_body?.length).toBe(3)
   })
 
   it('★ generate ＋ round-trip：三種形狀都一字不差', async () => {

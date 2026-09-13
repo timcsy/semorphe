@@ -55,14 +55,14 @@ beforeAll(async () => {
 
 function componentsIn(n: SemanticNode, out: string[] = []): string[] {
   out.push(n.componentId)
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids as SemanticNode[]) componentsIn(k, out)
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids as SemanticNode[]) componentsIn(k, out)
   return out
 }
 
 /** 找出那顆 `python:print`——⚠️ **不要拿整棵樹去產出**，見下一段。 */
 function findComponent(n: SemanticNode, id: string): SemanticNode | null {
   if (n.componentId === id) return n
-  for (const kids of Object.values(n.children ?? {})) {
+  for (const kids of Object.values(n.slots ?? {})) {
     for (const k of kids as SemanticNode[]) {
       const hit = findComponent(k, id)
       if (hit) return hit
@@ -108,7 +108,7 @@ describe('spec 157 · Python 的第一趟行為證據', () => {
     const tree = lifter.lift(pyParser.parse('print("hi")').rootNode as never)!
     const node = findComponent(tree, 'python:print')
     expect(node, '樹裡沒有 python:print').not.toBeNull()
-    expect(node!.children.values?.length,
+    expect(node!.slots.values?.length,
       '引數沒有被收進 `values` → `fieldMappings` 沒生效').toBe(1)
   })
 

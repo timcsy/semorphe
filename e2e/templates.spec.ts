@@ -94,9 +94,9 @@ for (const c of CASES) {
       const seen = new Set<string>()
       const walk = (n: unknown): void => {
         if (!n || typeof n !== 'object') return
-        const node = n as { componentId?: string; children?: Record<string, unknown[]> }
+        const node = n as { componentId?: string; slots?: Record<string, unknown[]> }
         if (node.componentId) seen.add(node.componentId)
-        for (const k of Object.keys(node.children ?? {})) for (const c of node.children![k] ?? []) walk(c)
+        for (const k of Object.keys(node.slots ?? {})) for (const c of node.slots![k] ?? []) walk(c)
       }
       walk(t)
       return [...seen]

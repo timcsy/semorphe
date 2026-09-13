@@ -60,7 +60,7 @@ function findComponents(node: SemanticNode, target: string): SemanticNode[] {
   function walk(n: SemanticNode) {
     if (!n) return
     if (n.componentId === target) result.push(n)
-    for (const ch of Object.values(n.children || {})) {
+    for (const ch of Object.values(n.slots || {})) {
       if (Array.isArray(ch)) ch.forEach(walk)
     }
   }
@@ -74,7 +74,7 @@ describe('cpp_string_at generate direction', () => {
   it('t01: generates str[0] for literal index', () => {
     const idx = createNode('cpp:literal_number', { value: '1' })
     const node = createNode('cpp:string_at', { obj: 'word' }, { index: [idx] })
-    const prog = { id: 'root', componentId: 'cpp:program', properties: {}, children: { body: [node] } }
+    const prog = { id: 'root', componentId: 'cpp:program', properties: {}, slots: { body: [node] } }
     const code = generateCode(prog, 'cpp', style)
     expect(code).toContain('word[1]')
   })
@@ -82,14 +82,14 @@ describe('cpp_string_at generate direction', () => {
   it('t02: generates str[i] for variable index', () => {
     const idx = createNode('cpp:var_ref', { name: 'i' })
     const node = createNode('cpp:string_at', { obj: 'msg' }, { index: [idx] })
-    const prog = { id: 'root', componentId: 'cpp:program', properties: {}, children: { body: [node] } }
+    const prog = { id: 'root', componentId: 'cpp:program', properties: {}, slots: { body: [node] } }
     const code = generateCode(prog, 'cpp', style)
     expect(code).toContain('msg[i]')
   })
 
   it('t03: generates str[0] when index missing', () => {
     const node = createNode('cpp:string_at', { obj: 'str' }, { index: [] })
-    const prog = { id: 'root', componentId: 'cpp:program', properties: {}, children: { body: [node] } }
+    const prog = { id: 'root', componentId: 'cpp:program', properties: {}, slots: { body: [node] } }
     const code = generateCode(prog, 'cpp', style)
     expect(code).toContain('str[0]')
   })
@@ -223,7 +223,7 @@ int main() {
     const main = createNode('cpp:func_def', { name: 'main', return_type: 'int', params: '' }, {
       body: [strDecl, print]
     })
-    const prog = { id: 'root', componentId: 'cpp:program', properties: {}, children: { body: [main] } }
+    const prog = { id: 'root', componentId: 'cpp:program', properties: {}, slots: { body: [main] } }
     const code = generateCode(prog, 'cpp', style)
     expect(code).toContain('word[2]')
     expect(code).toContain('"hello"')

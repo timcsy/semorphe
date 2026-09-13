@@ -139,7 +139,7 @@ function looksLikeCtorCall(fnDecl: AstNode, ctx: LiftContext): boolean {
 function acceptsManyInitializers(componentId: string): boolean {
   const all = [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
   const c = all.find((x) => (x as { componentId?: string }).componentId === componentId) as
-    { children?: Record<string, unknown>; properties?: { name?: string }[] } | undefined
+    { slots?: Record<string, unknown>; properties?: { name?: string }[] } | undefined
   if (c === undefined) return false
   // 🔴 **宣告了 `ctorCount` 就是明說「我收 N 個」**
   //
@@ -151,7 +151,7 @@ function acceptsManyInitializers(componentId: string): boolean {
   // > **一個接點能裝幾個，可能寫在別的地方——
   // > 只讀一處就下判斷，會把「宣告過了」讀成「沒宣告」。**
   if ((c.properties ?? []).some((pp) => pp?.name === 'ctorCount')) return true
-  const slot = c.children?.initializer
+  const slot = c.slots?.initializer
   if (slot === undefined) return false
   if (typeof slot === 'string') return false
   const max = (slot as { max?: number }).max
@@ -287,7 +287,7 @@ function claimsSimpleDeclarator(node: AstNode): boolean {
  * 哪些容器宣告概念**有宣告 `source` 子節點**（初始值是一整個運算式）。
  *
  * ⚠️ **從 JSON 讀，不寫死。** 第一版對所有容器都掛 `source`，於是
- * `cpp_pair_declare`（`children` 是空的）收到一個**未宣告的子節點**，
+ * `cpp_pair_declare`（`slots` 是空的）收到一個**未宣告的子節點**，
  * 它的產生器不認得，來回轉換就掉了那一段——`roundtrip-cpp-utility` 立刻變紅。
  *
  * 那條紅是**既有缺陷被我的改動照出來**：`pair<int,string> p = make_pair(…)`
@@ -296,7 +296,7 @@ function claimsSimpleDeclarator(node: AstNode): boolean {
  */
 const hasInitSourceDecl = new Set(
   [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
-    .filter((c) => (c as { children?: Record<string, unknown> }).children?.source !== undefined)
+    .filter((c) => (c as { slots?: Record<string, unknown> }).slots?.source !== undefined)
     .map((c) => (c as { componentId: string }).componentId),
 )
 
@@ -316,13 +316,13 @@ const hasInitSourceDecl = new Set(
  */
 const hasValuesDecl = new Set(
   [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
-    .filter((c) => (c as { children?: Record<string, unknown> }).children?.values !== undefined)
+    .filter((c) => (c as { slots?: Record<string, unknown> }).slots?.values !== undefined)
     .map((c) => (c as { componentId: string }).componentId),
 )
 
 const hasSizeDecl = new Set(
   [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
-    .filter((c) => (c as { children?: Record<string, unknown> }).children?.size !== undefined)
+    .filter((c) => (c as { slots?: Record<string, unknown> }).slots?.size !== undefined)
     .map((c) => (c as { componentId: string }).componentId),
 )
 
@@ -350,7 +350,7 @@ function attachInitializer(
   if (valueNode.type !== 'initializer_list') {
     const single = ctx.lift(valueNode)
     if (single) {
-      node.children.values = [single]
+      node.slots.values = [single]
       return node
     }
     return degrade(node, `初始化寫法 ${valueNode.type} 無法辨識`)
@@ -373,7 +373,7 @@ function attachInitializer(
     else lost++
   }
 
-  node.children.values = lifted
+  node.slots.values = lifted
 
   // 有元素掉了 → 必須出聲
   if (lost > 0) {
@@ -684,7 +684,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       })
       // Return first and add rest — use a wrapper approach
       // Actually, we need to return multiple nodes. Use the fact that struct/class member lifting
-      // collects all children. Return a compound node that generateBody will flatten.
+      // collects all slots. Return a compound node that generateBody will flatten.
       return createNode('_multi_field', {}, { fields: nodes })
     }
     const declNode = node.childForFieldName('declarator')
@@ -1139,7 +1139,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           type: liftedType,
           name: lifted.properties.name as string ?? 'x',
         }, {
-          initializer: lifted.children.initializer ?? [],
+          initializer: lifted.slots.initializer ?? [],
         })
       }
       const componentId = qualifierComponent(qualifier)
@@ -1408,7 +1408,7 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
     c.type === 'abstract_array_declarator'
   )
 
-  // If we have structured children, use them
+  // If we have structured slots, use them
   if (typeNode || declNode) {
     const qualifier = qualifierNode?.text ? qualifierNode.text + ' ' : ''
     let type = qualifier + (typeNode?.text ?? 'int')
@@ -1489,7 +1489,7 @@ export function extractBody(node: AstNode | null, ctx: LiftContext): SemanticNod
   const lifted = ctx.lift(node)
   if (!lifted) return []
   if (lifted.componentId === '_compound') {
-    return lifted.children.body ?? []
+    return lifted.slots.body ?? []
   }
   return [lifted]
 }

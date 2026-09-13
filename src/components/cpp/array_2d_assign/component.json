@@ -8,7 +8,7 @@
       "default": "arr"
     }
   ],
-  "children": {
+  "slots": {
     "row": "expression",
     "col": "expression",
     "value": "expression"

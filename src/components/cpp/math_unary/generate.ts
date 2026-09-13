@@ -11,7 +11,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:math_unary', (node, ctx) => {
     const func = (node.properties.func as string) ?? 'abs'
-    const value = generateExpression((node.children.value ?? [])[0], ctx)
+    const value = generateExpression((node.slots.value ?? [])[0], ctx)
     return `${func}(${value})`
   })
 }

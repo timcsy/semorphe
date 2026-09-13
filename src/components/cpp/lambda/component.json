@@ -12,7 +12,7 @@
       "kind": "literal"
     }
   ],
-  "children": {
+  "slots": {
     "params": "statements",
     "body": "statements"
   },

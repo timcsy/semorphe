@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:math_abs', async (node, ctx) => {
-      const v = node.children.value?.[0]
+      const v = node.slots.value?.[0]
       if (!v) return { type: 'int' as const, value: 0 }
       const val = await ctx.evaluate(v)
       return { type: val.type, value: Math.abs(ctx.toNumber(val)) }

@@ -2,7 +2,7 @@
   "componentId": "cpp:pair_make",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "first": "expression",
     "second": "expression"
   },

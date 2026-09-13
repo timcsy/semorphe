@@ -16,7 +16,7 @@ describe('SemanticTree', () => {
     it('should create a program node with empty body', () => {
       const tree = createEmptyProgram()
       expect(tree.componentId).toBe('cpp:program')
-      expect(tree.children.body).toEqual([])
+      expect(tree.slots.body).toEqual([])
       expect(tree.id).toBeTruthy()
     })
   })
@@ -30,11 +30,11 @@ describe('SemanticTree', () => {
       expect(node.id).toBeTruthy()
     })
 
-    it('should create a node with children', () => {
+    it('should create a node with slots', () => {
       const value = createNode('cpp:literal_number', { value: '5' })
       const node = createNode('cpp:var_declare', { name: 'x' }, { initializer: [value] })
-      expect(node.children.initializer).toHaveLength(1)
-      expect(node.children.initializer[0].componentId).toBe('cpp:literal_number')
+      expect(node.slots.initializer).toHaveLength(1)
+      expect(node.slots.initializer[0].componentId).toBe('cpp:literal_number')
     })
   })
 
@@ -43,19 +43,19 @@ describe('SemanticTree', () => {
       const tree = createEmptyProgram()
       const child = createNode('cpp:var_declare', { name: 'x' })
       const newTree = addChild(tree, tree.id, 'body', child)
-      expect(newTree.children.body).toHaveLength(1)
-      expect(newTree.children.body[0].componentId).toBe('cpp:var_declare')
+      expect(newTree.slots.body).toHaveLength(1)
+      expect(newTree.slots.body[0].componentId).toBe('cpp:var_declare')
       // original tree is unchanged (immutable)
-      expect(tree.children.body).toHaveLength(0)
+      expect(tree.slots.body).toHaveLength(0)
     })
 
-    it('should append to existing children', () => {
+    it('should append to existing slots', () => {
       const tree = createEmptyProgram()
       const child1 = createNode('cpp:var_declare', { name: 'x' })
       const child2 = createNode('cpp:var_declare', { name: 'y' })
       const t1 = addChild(tree, tree.id, 'body', child1)
       const t2 = addChild(t1, t1.id, 'body', child2)
-      expect(t2.children.body).toHaveLength(2)
+      expect(t2.slots.body).toHaveLength(2)
     })
   })
 
@@ -65,9 +65,9 @@ describe('SemanticTree', () => {
       const child = createNode('cpp:var_declare', { name: 'x' })
       const withChild = addChild(tree, tree.id, 'body', child)
       const removed = removeChild(withChild, withChild.id, 'body', 0)
-      expect(removed.children.body).toHaveLength(0)
+      expect(removed.slots.body).toHaveLength(0)
       // original unchanged
-      expect(withChild.children.body).toHaveLength(1)
+      expect(withChild.slots.body).toHaveLength(1)
     })
   })
 
@@ -76,7 +76,7 @@ describe('SemanticTree', () => {
       const node = createNode('cpp:var_declare', { name: 'x', type: 'int' })
       const tree: SemanticNode = {
         ...createEmptyProgram(),
-        children: { body: [node] },
+        slots: { body: [node] },
       }
       const updated = updateProperty(tree, node.id, 'name', 'y')
       const updatedChild = findById(updated, node.id)
@@ -93,7 +93,7 @@ describe('SemanticTree', () => {
       const outer = createNode('cpp:var_declare', { name: 'x' }, { initializer: [inner] })
       const tree: SemanticNode = {
         ...createEmptyProgram(),
-        children: { body: [outer] },
+        slots: { body: [outer] },
       }
       const found = findById(tree, inner.id)
       expect(found).toBeTruthy()
@@ -118,9 +118,9 @@ describe('SemanticTree', () => {
       const json = serializeTree(withDecl)
       const restored = deserializeTree(json)
       expect(restored.componentId).toBe('cpp:program')
-      expect(restored.children.body).toHaveLength(1)
-      expect(restored.children.body[0].componentId).toBe('cpp:var_declare')
-      expect(restored.children.body[0].properties.name).toBe('x')
+      expect(restored.slots.body).toHaveLength(1)
+      expect(restored.slots.body[0].componentId).toBe('cpp:var_declare')
+      expect(restored.slots.body[0].properties.name).toBe('x')
     })
 
     it('should preserve annotations and metadata', () => {

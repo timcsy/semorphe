@@ -15,7 +15,7 @@
  *
  * ## ⚠️ 詞界不可省
  *
- * `children.init` 是 `children.initializer` 的**子字串**。第一版沒加詞界，
+ * `slots.init` 是 `slots.initializer` 的**子字串**。第一版沒加詞界，
  * 於是這條護欄回報「0 個問題」——**而它要抓的那一個正好被自己的子字串遮掉**。
  *
  * 同一個坑這個專案今天踩了四次（撞名的概念身分、`'cpp_endl'` 裡的 `endl`、
@@ -41,9 +41,9 @@ import { allStdModules } from '../../src/languages/cpp/std'
 import type { ComponentDefJSON } from '../../src/core/types'
 
 const RULE =
-  '對每個概念宣告的每個子節點名，檢查原始碼裡有沒有 `children.<名字>` 或 ' +
-  '`children[\'<名字>\']` 的讀取。**比對加詞界**——`children.init` 是 ' +
-  '`children.initializer` 的子字串。'
+  '對每個概念宣告的每個子節點名，檢查原始碼裡有沒有 `slots.<名字>` 或 ' +
+  '`slots[\'<名字>\']` 的讀取。**比對加詞界**——`slots.init` 是 ' +
+  '`slots.initializer` 的子字串。'
 
 const SELF_FALSIFICATION =
   '⚠️ 這條護欄的健康檢查是下面那兩支合成注入，**不是報表上的數字**。' +
@@ -73,7 +73,7 @@ function allSource(): string {
 /** ⚠️ 詞界不可省——見檔頭 */
 export function isChildRead(source: string, name: string): boolean {
   const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return new RegExp(`children(\\.${esc}|\\['${esc}'\\])(?![A-Za-z0-9_])`).test(source)
+  return new RegExp(`slots(\\.${esc}|\\['${esc}'\\])(?![A-Za-z0-9_])`).test(source)
 }
 
 function measure(): { name: string; component: string }[] {
@@ -85,9 +85,9 @@ function measure(): { name: string; component: string }[] {
   ]
   const out: { name: string; component: string }[] = []
   for (const c of all) {
-    const children = (c as { children?: Record<string, unknown> }).children
-    if (!children) continue
-    for (const name of Object.keys(children)) {
+    const slots = (c as { slots?: Record<string, unknown> }).slots
+    if (!slots) continue
+    for (const name of Object.keys(slots)) {
       if (!isChildRead(src, name)) out.push({ name, componentId: c.componentId })
     }
   }
@@ -104,26 +104,26 @@ describe('護欄：宣告的子節點名沒有人讀', () => {
     lines.push('**這不是「路徑空的」，是「餵給路徑的東西是空的」**——')
     lines.push('完備性護欄照著概念定義合成節點，宣告錯了它就會量到一個不存在的東西。')
     lines.push('')
-    for (const o of orphans) lines.push(`  ${o.componentId} → children.${o.name}`)
+    for (const o of orphans) lines.push(`  ${o.componentId} → slots.${o.name}`)
     printReport('宣告的子節點名護欄（第十條）', lines)
     expect(orphans.length).toBeGreaterThanOrEqual(0)
   })
 
   it('★ 合成注入：沒有人讀的名字必須被報出', () => {
     expect(
-      isChildRead('const x = node.children.somethingElse', '__zz_no_reader__'),
+      isChildRead('const x = node.slots.somethingElse', '__zz_no_reader__'),
       '無人讀卻回報有人讀 → 這條護欄的 0 是假的',
     ).toBe(false)
   })
 
   it('★ 合成注入：有人讀的名字不得被誤報', () => {
-    expect(isChildRead('await ctx.executeBody(node.children.body)', 'body')).toBe(true)
-    expect(isChildRead("const v = node.children['then'] ?? []", 'then')).toBe(true)
+    expect(isChildRead('await ctx.executeBody(node.slots.body)', 'body')).toBe(true)
+    expect(isChildRead("const v = node.slots['then'] ?? []", 'then')).toBe(true)
   })
 
   it('★ 詞界：`init` 不得因為 `initializer` 而被判成有人讀', () => {
     expect(
-      isChildRead('const i = node.children.initializer', 'init'),
+      isChildRead('const i = node.slots.initializer', 'init'),
       '這正是第一版的錯——它要抓的那一筆被自己的子字串遮掉，回報 0 而看起來健康',
     ).toBe(false)
   })
@@ -141,7 +141,7 @@ describe('護欄：宣告的子節點名沒有人讀', () => {
   })
 
   it('棘輪：不得上升', () => {
-    const b = loadBaseline<ChildrenBaseline>('declared-children')
+    const b = loadBaseline<ChildrenBaseline>('declared-slots')
     const now = orphans.map((o) => `${o.componentId}::${o.name}`)
     const added = now.filter((k) => !b.list.includes(k))
     expect(added, `新增了沒有人讀的子節點宣告：\n  ${added.join('\n  ')}`).toEqual([])
@@ -149,11 +149,11 @@ describe('護欄：宣告的子節點名沒有人讀', () => {
   })
 })
 
-/** 產生基線：`GENERATE_BASELINE=1 npx vitest run tests/integration/audit-declared-children.test.ts` */
+/** 產生基線：`GENERATE_BASELINE=1 npx vitest run tests/integration/audit-declared-slots.test.ts` */
 if (process.env.GENERATE_BASELINE) {
-  writeBaseline('declared-children', {
+  writeBaseline('declared-slots', {
     _meta: {
-      guard: 'declared-children',
+      guard: 'declared-slots',
       measuredAt: new Date().toISOString().slice(0, 10),
       rule: RULE,
       note: RATCHET_NOTE + ' ' + SELF_FALSIFICATION,

@@ -6,7 +6,7 @@ import { servoOf } from '../../../languages/cpp/core/runtime/arduino-devices'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:servo_attach', async (node, ctx) => {
     const name = String(node.properties.obj ?? 'myServo')
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
     servoOf(ctx, name).pin = pin
   })
 }

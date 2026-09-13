@@ -6,8 +6,8 @@ export function registerExecute(register: (component: string, executor: Componen
       const obj = String(node.properties.obj)
       const val = ctx.scope.get(obj)
       const str = String(val.value)
-      const posNodes = node.children.pos ?? []
-      const valueNodes = node.children.value ?? []
+      const posNodes = node.slots.pos ?? []
+      const valueNodes = node.slots.value ?? []
       const pos = posNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(posNodes[0])) : 0
       const insertStr = valueNodes.length > 0 ? String((await ctx.evaluate(valueNodes[0])).value) : ''
       ctx.scope.set(obj, { type: 'string', value: str.substring(0, pos) + insertStr + str.substring(pos) })

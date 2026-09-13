@@ -769,7 +769,7 @@ export class BlockRegistrar {
     //
     //    spec 169 已經判過這件事，而**這一顆正是它舉的例子**：
     //    > 「一個『把標籤掛在第一個資料上』的版面，在資料可以是零個的時候就崩了。」
-    //    而 `component.json` 說 `children.values.min: 0`——`{}` 是合法的。
+    //    而 `component.json` 說 `slots.values.min: 0`——`{}` 是合法的。
     //
     //    ⚠️ 版面沒有變（`inputsInline: true`，標籤仍然在第一格左邊）。
 
@@ -816,7 +816,7 @@ export class BlockRegistrar {
     //
     // 🔴 **這一刀是【判哪一邊對】，不是「一模一樣了」**（`retire-imperative-block` 第 1 步）。
     //    宣告那份本來把參數**擠進一個文字欄位**（`ARGS: field_input`），
-    //    而 `component.json` 說 `children: ['args']`——**參數在語義上是子節點**。
+    //    而 `component.json` 說 `slots: ['args']`——**參數在語義上是子節點**。
     //    所以錯的是宣告，而命令式的可變插槽是對的。
     //
     // ⚠️ 而每一格從「變數下拉／接點二選一」變成**單純的接點**，
@@ -927,7 +927,7 @@ export class BlockRegistrar {
     // 2026-08-18 使用者在 Arduino IDE 實測到：`Serial.write(cmd)` 的積木上
     // 是「對 Serial 執行 write（ ▯ ）」——**括號裡是空的**。
     //
-    // ⚠️ 而語義樹是對的（`children.args` 有那顆 `cmd`）、產生器也是對的
+    // ⚠️ 而語義樹是對的（`slots.args` 有那顆 `cmd`）、產生器也是對的
     // （`Serial.write(cmd);`）。壞的只有**投影**那一側：
     // `renderMapping` 把 `ARGS` 當成一個**欄位**對到 `args` 這個**接點**
     // ——而接點是節點陣列，一個文字欄位裝不下它。

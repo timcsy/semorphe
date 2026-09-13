@@ -10,8 +10,8 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:container_pop', (node, ctx) => {
-    const o = generateExpression((node.children.obj ?? [])[0], ctx)
-    const i = (node.children.index ?? [])[0]
+    const o = generateExpression((node.slots.obj ?? [])[0], ctx)
+    const i = (node.slots.index ?? [])[0]
     return `${o}.pop(${i ? generateExpression(i, ctx) : ''})`
   })
 }

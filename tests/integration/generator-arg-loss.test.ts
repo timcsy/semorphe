@@ -69,10 +69,10 @@ describe('護欄：產生器不得靜默丟掉引數', () => {
     const bad = {
       componentId: 'cpp:string_append_char',
       properties: { obj: 's' },
-      children: {},
+      slots: {},
       metadata: {},
     } as unknown as SemanticNode
-    const prog = { componentId: 'cpp:program', properties: {}, children: { body: [bad] }, metadata: {} } as unknown as SemanticNode
+    const prog = { componentId: 'cpp:program', properties: {}, slots: { body: [bad] }, metadata: {} } as unknown as SemanticNode
     expect(() => generateCode(prog, 'cpp', apcs as StylePreset)).toThrow(/少了要加的字元/)
   })
 })

@@ -41,7 +41,7 @@ export function registerExecute(register: (component: string, executor: Componen
     // `new int[n]` —— 大小是一個運算式，要求值。
     // ⚠️ 這個接點在 2026-08-13 之前不存在（lift 把 `[n]` 整個丟掉），
     // 所以 `new int[5]` 與 `new int` 在語義樹上是同一棵。
-    const sizeNode = (node.children.size ?? [])[0]
+    const sizeNode = (node.slots.size ?? [])[0]
     let count = 1
     if (sizeNode) {
       const v = await ctx.evaluate(sizeNode)

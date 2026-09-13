@@ -15,7 +15,7 @@
       "default": "<"
     }
   ],
-  "children": {
+  "slots": {
     "left": "expression",
     "middle": "expression",
     "right": "expression"

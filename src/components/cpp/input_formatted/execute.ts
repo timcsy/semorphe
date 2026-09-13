@@ -15,7 +15,7 @@ import { resolvePlace } from '../../../interpreter/lvalue'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   const execScanf: ComponentExecutor = async (node, ctx) => {
     const format = String(node.properties.format ?? '%d')
-    const argNodes = node.children.args ?? []
+    const argNodes = node.slots.args ?? []
     const specifiers = format.match(/%[^%]*?[diouxXeEfgGcsplnDOUaA]/g) ?? []
 
     let itemsRead = 0

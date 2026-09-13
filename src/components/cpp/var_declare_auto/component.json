@@ -8,7 +8,7 @@
       "default": "x"
     }
   ],
-  "children": {
+  "slots": {
     "initializer": "expression"
   },
   "role": "statement",

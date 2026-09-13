@@ -6,8 +6,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:compare', (node, ctx) => {
     const op = String(node.properties.operator ?? '<')
     const prec = precedence(node)
-    const left = genChild((node.children.left ?? [])[0], prec, ctx)
-    const right = genChild((node.children.right ?? [])[0], prec + 1, ctx)
+    const left = genChild((node.slots.left ?? [])[0], prec, ctx)
+    const right = genChild((node.slots.right ?? [])[0], prec + 1, ctx)
     return `${left} ${op} ${right}`
   })
 }

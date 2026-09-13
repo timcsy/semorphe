@@ -1,7 +1,7 @@
 /**
  * 宣告家族的語義（B 項，身分健檢的「要看」批）
  *
- * 護欄報出六顆宣告概念**宣告完全相同**（properties／children／role 一致）：
+ * 護欄報出六顆宣告概念**宣告完全相同**（properties／slots／role 一致）：
  * `var_declare`／`cpp_pointer_declare`／`cpp_const_declare`／`cpp_ref_declare`／
  * `cpp_constexpr_declare`／`cpp_static_declare`，並問「型別是身分還是參數？」
  *
@@ -125,7 +125,7 @@ describe('六顆宣告概念的身分', () => {
       const walk = (n: SemanticNode): void => {
         if (!n) return
         ids.push(n.componentId)
-        for (const l of Object.values(n.children ?? {})) for (const c of l ?? []) walk(c as SemanticNode)
+        for (const l of Object.values(n.slots ?? {})) for (const c of l ?? []) walk(c as SemanticNode)
       }
       walk(lift(`${P}int main(){ int a = 0; ${program} return 0; }`))
       expect(ids, '六顆都是活的、都到得了——合併之前先確認這件事').toContain(identity)

@@ -26,12 +26,12 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_assign', async (node, ctx) => {
-    const targetNode = (node.children.target ?? [])[0]
+    const targetNode = (node.slots.target ?? [])[0]
     if (!targetNode) {
       // 認得出來而拆不開＝上游給了一個沒有左邊的節點，**出聲不要猜**
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這一行沒有左邊' })
     }
-    const valueNodes = node.children.value
+    const valueNodes = node.slots.value
     if (!valueNodes || valueNodes.length === 0) return
     const val = await ctx.evaluate(valueNodes[0])
     const place = await resolvePlace(targetNode, ctx)

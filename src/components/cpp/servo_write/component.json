@@ -8,7 +8,7 @@
       "default": "myServo"
     }
   ],
-  "children": {
+  "slots": {
     "angle": "expression"
   },
   "role": "statement",

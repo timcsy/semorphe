@@ -1,7 +1,7 @@
 {
   "componentId": "cpp:input_line",
   "properties": [],
-  "children": {
+  "slots": {
     "target": "expression"
   },
   "role": "statement",

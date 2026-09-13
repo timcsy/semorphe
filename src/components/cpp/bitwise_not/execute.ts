@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:bitwise_not', async (node, ctx) => {
-      const operand = await ctx.evaluate(node.children.operand[0])
+      const operand = await ctx.evaluate(node.slots.operand[0])
       const val = ctx.toNumber(operand)
       return { type: 'int', value: ~Math.trunc(val) }
     })

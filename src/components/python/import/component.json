@@ -14,7 +14,7 @@
       "default": ""
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "owner": "(python)",
   "paths": {

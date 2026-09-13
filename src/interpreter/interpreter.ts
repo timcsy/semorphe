@@ -154,7 +154,7 @@ export class SemanticInterpreter implements ExecutionContext {
 
     // algorithm components — noop for sort/reverse/fill (operate on containers, not interpreter values)
 
-    // min/max — evaluate children and return the smaller/larger
+    // min/max — evaluate slots and return the smaller/larger
 
     // stdlib advanced expressions
 

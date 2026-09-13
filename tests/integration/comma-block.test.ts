@@ -86,7 +86,7 @@ function fingerprint(n: SemanticNode | null | undefined): string {
     .filter(([, v]) => v !== undefined && v !== null && v !== '')
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${k}=${String(v)}`).join(',')
-  const kids = Object.entries(n.children ?? {}).sort(([a], [b]) => a.localeCompare(b))
+  const kids = Object.entries(n.slots ?? {}).sort(([a], [b]) => a.localeCompare(b))
     .map(([k, arr]) => `${k}[${(arr ?? []).map(fingerprint).join('|')}]`).join('')
   return `(${n.componentId}${props ? ' ' + props : ''}${kids})`
 }
@@ -95,7 +95,7 @@ function fingerprint(n: SemanticNode | null | undefined): string {
 function statementOf(body: string): SemanticNode {
   const tree = parser.parse(`int i, j, n;\nint main() {\n${body}\n}`)
   const root = createTestLifter().lift(tree!.rootNode as never) as SemanticNode
-  return root.children.body![1].children.body![0]
+  return root.slots.body![1].slots.body![0]
 }
 
 /** 這段程式碼投影成積木之後，出現了哪些積木型別。 */
@@ -181,11 +181,11 @@ describe('第一百一十六條護欄：逗號的積木', () => {
     const n = statementOf('    i++, j--, n++;')
     expect(n.componentId).toBe('cpp:comma_expr')
     expect(
-      (n.children.exprs ?? []).length,
+      (n.slots.exprs ?? []).length,
       '🔴 三個運算元沒有拉平——學生按 `+` 加的那一格，同步一趟就裂成兩顆積木',
     ).toBe(3)
     expect(
-      (n.children.exprs ?? []).some((c) => c.componentId === 'cpp:comma_expr'),
+      (n.slots.exprs ?? []).some((c) => c.componentId === 'cpp:comma_expr'),
       '🔴 裡面還巢著一顆逗號',
     ).toBe(false)
     expect(blockTypes('    i++, j--, n++;').has('cpp_comma_expr')).toBe(true)
@@ -283,7 +283,7 @@ describe('第一百一十六條護欄：逗號的積木', () => {
     expect(found.length, '🔴 找不到那顆兩個宣告子的積木').toBeGreaterThan(0)
     const back = extractor.extract(found[0])
     expect(
-      (back?.children.declarators ?? []).length,
+      (back?.slots.declarators ?? []).length,
       '🔴 抽取回來只剩一個宣告子——學生動了積木，`b = n` 就不見了',
     ).toBe(2)
   })

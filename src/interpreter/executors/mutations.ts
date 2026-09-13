@@ -41,7 +41,7 @@ switch (op) {
 export const execIncrement: ComponentExecutor = async (node, ctx) => {
   const op = String(node.properties.operator)
   const position = String(node.properties.position ?? 'postfix')
-  const targetNode = (node.children.target ?? [])[0]
+  const targetNode = (node.slots.target ?? [])[0]
   if (!targetNode) {
     // 認得出來而拆不開＝上游給了一個沒有運算元的節點，**出聲不要猜**
     throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個遞增沒有運算元' })
@@ -61,14 +61,14 @@ export const execIncrement: ComponentExecutor = async (node, ctx) => {
 
 export const execCompoundAssign: ComponentExecutor = async (node, ctx) => {
   const op = String(node.properties.operator)
-  const targetNode = (node.children.target ?? [])[0]
+  const targetNode = (node.slots.target ?? [])[0]
   if (!targetNode) {
     // 認得出來而拆不開＝上游給了一個沒有左邊的節點，**出聲不要猜**
     throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這一行沒有左邊' })
   }
   const place = await resolvePlace(targetNode, ctx)
   const current = place.read()
-  const rhs = await ctx.evaluate(node.children.value[0])
+  const rhs = await ctx.evaluate(node.slots.value[0])
 
   // `digits += input[i]` —— **字串的 `+=` 是串接，不是數值相加**。
   //

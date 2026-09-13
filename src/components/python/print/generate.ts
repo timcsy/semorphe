@@ -18,7 +18,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:print', (node, ctx) => {
-    const values = node.children.values ?? []
+    const values = node.slots.values ?? []
     const parts = values.map((v) => generateExpression(v, ctx))
     return `${indent(ctx)}print(${parts.join(', ')})\n`
   })

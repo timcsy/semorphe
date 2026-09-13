@@ -51,9 +51,9 @@ test('🔧 量測：把每一段課文程式碼用到的元件與輸出量出來
       const seen = new Set<string>()
       const go = (n: unknown): void => {
         if (!n || typeof n !== 'object') return
-        const node = n as { componentId?: string; children?: Record<string, unknown[]> }
+        const node = n as { componentId?: string; slots?: Record<string, unknown[]> }
         if (node.componentId) seen.add(node.componentId)
-        for (const k of Object.keys(node.children ?? {})) for (const c of node.children![k] ?? []) go(c)
+        for (const k of Object.keys(node.slots ?? {})) for (const c of node.slots![k] ?? []) go(c)
       }
       go(tree)
       return [...seen]

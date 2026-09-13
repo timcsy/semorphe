@@ -23,8 +23,8 @@ import type { Diagnostic } from '../diagnostics'
 
 function containsNodeId(node: SemanticNode, targetId: string): boolean {
   if (node.id === targetId) return true
-  for (const children of Object.values(node.children)) {
-    for (const child of children) if (containsNodeId(child, targetId)) return true
+  for (const slots of Object.values(node.slots)) {
+    for (const child of slots) if (containsNodeId(child, targetId)) return true
   }
   return false
 }
@@ -33,8 +33,8 @@ function findAncestorWithCodeMapping(
   mappings: readonly CodeMapping[], node: SemanticNode, targetId: string,
 ): string | null {
   if (!containsNodeId(node, targetId)) return null
-  for (const children of Object.values(node.children)) {
-    for (const child of children) {
+  for (const slots of Object.values(node.slots)) {
+    for (const child of slots) {
       const found = findAncestorWithCodeMapping(mappings, child, targetId)
       if (found) return found
     }

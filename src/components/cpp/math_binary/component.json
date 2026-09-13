@@ -8,7 +8,7 @@
       "default": "fmod"
     }
   ],
-  "children": {
+  "slots": {
     "arg1": "expression",
     "arg2": "expression"
   },

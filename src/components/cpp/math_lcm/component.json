@@ -2,7 +2,7 @@
   "componentId": "cpp:math_lcm",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "a": "expression",
     "b": "expression"
   },

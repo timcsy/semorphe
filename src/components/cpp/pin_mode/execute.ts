@@ -9,8 +9,8 @@ import { boardIn, requirePin, stateOf } from '../../../languages/cpp/core/runtim
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pin_mode', async (node, ctx) => {
-    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.children.pin ?? [])[0])), boardIn(ctx))
-    const mode = ctx.toNumber(await ctx.evaluate((node.children.mode ?? [])[0]))
+    const pin = requirePin(ctx.toNumber(await ctx.evaluate((node.slots.pin ?? [])[0])), boardIn(ctx))
+    const mode = ctx.toNumber(await ctx.evaluate((node.slots.mode ?? [])[0]))
     stateOf(ctx, pin).mode = mode
   })
 }

@@ -6,7 +6,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:set_insert', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const valueNodes = node.children.value ?? []
+      const valueNodes = node.slots.value ?? []
       if (valueNodes.length === 0) return
       const val = await ctx.evaluate(valueNodes[0])
       const arr = ctx.scope.get(name)

@@ -38,11 +38,11 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const condNode = ifs[0]?.namedChildren[0]
     const cond = condNode ? ctx.lift(condNode) : null
 
-    const children: Record<string, SemanticNode[]> = {
+    const slots: Record<string, SemanticNode[]> = {
       targets: names.map((n) => createNode('param_decl', { type: '', name: n })),
       key: [key], value: [value], iterable: [iter],
     }
-    if (cond) children.condition = [cond]
-    return createNode('python:map_make_for', {}, children)
+    if (cond) slots.condition = [cond]
+    return createNode('python:map_make_for', {}, slots)
   })
 }

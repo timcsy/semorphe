@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:pointer_declare', (node, ctx) => {
       const type = node.properties.type ?? 'int'
       const name = node.properties.name ?? 'ptr'
-      const inits = node.children.initializer ?? []
+      const inits = node.slots.initializer ?? []
       if (inits.length > 0) {
         const val = generateExpression(inits[0], ctx)
         return `${indent(ctx)}${type}* ${name} = ${val};\n`

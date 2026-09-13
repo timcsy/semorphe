@@ -1,5 +1,5 @@
 /**
- * `childrenAsField`：子節點列表 ↔ 一個文字欄位
+ * `slotAsField`：子節點列表 ↔ 一個文字欄位
  *
  * ## 這裡釘的是**這個方向最明顯的失敗模式**
  *
@@ -9,7 +9,7 @@
  * 允許「明確不支援」，**不允許靜默拆錯**（spec FR-005、SC-003）。
  */
 import { describe, it, expect } from 'vitest'
-import { serializeChildren, parseToChildren, splitTopLevel } from '../../src/core/projection/children-as-field'
+import { serializeChildren, parseToChildren, splitTopLevel } from '../../src/core/projection/slot-as-field'
 import { createNode } from '../../src/core/semantic-tree'
 
 const spec = { field: 'PARAMS', childSlot: 'params', childComponent: 'param_decl', parts: ['type', 'name'] }

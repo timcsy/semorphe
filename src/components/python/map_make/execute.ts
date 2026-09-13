@@ -20,7 +20,7 @@ export function registerExecute(register: (component: string, executor: Componen
     //    而那種撞名會讓「讀一個不存在的鍵」靜默成功（見 `ObjectFields` 的說明）。
     const entries: ObjectFields = new Map()
     const keys = new Map<string, RuntimeValue>()
-    for (const p of node.children.pairs ?? []) {
+    for (const p of node.slots.pairs ?? []) {
       // ⚠️ `{**d, "b": 2}`——**攤開的那一張表整批倒進來**，而後面的蓋前面的
       const spreadSrc = spreadSourceOf(p)
       if (spreadSrc) {

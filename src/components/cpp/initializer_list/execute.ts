@@ -15,7 +15,7 @@ import type { RuntimeValue } from '../../../interpreter/types'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:initializer_list', async (node, ctx) => {
     const values: RuntimeValue[] = []
-    for (const v of node.children.values ?? []) values.push(await ctx.evaluate(v))
+    for (const v of node.slots.values ?? []) values.push(await ctx.evaluate(v))
     return { type: 'array', value: values }
   })
 }

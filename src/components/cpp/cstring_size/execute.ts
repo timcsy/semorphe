@@ -4,7 +4,7 @@ import type { RuntimeValue } from '../../../interpreter/types'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:cstring_size', async (node, ctx) => {
-      const strNodes = node.children.str ?? []
+      const strNodes = node.slots.str ?? []
       if (strNodes.length === 0) return { type: 'int', value: 0 }
       const val = await ctx.evaluate(strNodes[0])
 

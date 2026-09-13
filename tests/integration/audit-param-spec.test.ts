@@ -191,7 +191,7 @@ describe('自我驗證：這條護欄的判準是準的', () => {
       {
         file: '合成/子節點.ts',
         source:
-          "g.set('cpp:var_declare', (node, ctx) => (node.children.values ?? []).map(v => v.properties.__子節點的__))\n",
+          "g.set('cpp:var_declare', (node, ctx) => (node.slots.values ?? []).map(v => v.properties.__子節點的__))\n",
       },
     ]).filter((f) => f.param === '__子節點的__')
     expect(hit, '子節點的參數被算給父元件——那正是 print.value 那筆假報的成因').toEqual([])

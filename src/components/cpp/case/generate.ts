@@ -4,8 +4,8 @@ import { indent, indented, generateExpression, generateBody } from '../../../cor
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:case', (node, ctx) => {
-      const val = generateExpression((node.children.value ?? [])[0], ctx)
-      const body = node.children.body ?? []
+      const val = generateExpression((node.slots.value ?? [])[0], ctx)
+      const body = node.slots.body ?? []
       let code = `${indent(ctx)}case ${val}:\n`
       code += generateBody(body, indented(ctx))
       return code

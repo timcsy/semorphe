@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側有同名的一顆，而**兩邊的整數不是同一種**：Python 的整數沒有位寬（`~5` 是 -6，而那是「無限位元的二補數」的結果），C++ 的看型別。同名不等於等價。",
   "properties": [],
-  "children": { "operand": "expression" },
+  "slots": { "operand": "expression" },
   "role": "expression",
   "owner": "(python)",
   "traits": { "precedence": 14, "prefixOperator": true },

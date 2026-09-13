@@ -78,7 +78,7 @@ function extractBody(node: import('../../../../core/lift/types').AstNode | null,
   if (!lifted) return []
   // If it's a compound statement, unwrap the body
   if (lifted.componentId === '_compound') {
-    return lifted.children.body ?? []
+    return lifted.slots.body ?? []
   }
   return [lifted]
 }
@@ -86,7 +86,7 @@ function extractBody(node: import('../../../../core/lift/types').AstNode | null,
 /**
  * Lift a case_statement into cpp_case or cpp_default.
  * tree-sitter: case_statement has a `value` field for regular cases, none for default.
- * Body statements are the remaining named children after the value.
+ * Body statements are the remaining named slots after the value.
  */
 function liftCaseStatement(
   node: import('../../../../core/lift/types').AstNode,
@@ -95,7 +95,7 @@ function liftCaseStatement(
   const valueNode = node.childForFieldName('value')
   const isDefault = !valueNode
 
-  // Body = all named children except the value
+  // Body = all named slots except the value
   // Note: web-tree-sitter creates new wrapper objects per access, so === fails.
   // Use startPosition comparison instead.
   const vStart = valueNode?.startPosition

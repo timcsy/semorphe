@@ -13,7 +13,7 @@
       "default": "e"
     }
   ],
-  "children": {
+  "slots": {
     "try_body": "statements",
     "catch_body": "statements"
   },

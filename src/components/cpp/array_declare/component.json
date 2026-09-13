@@ -13,7 +13,7 @@
       "default": "arr"
     }
   ],
-  "children": {
+  "slots": {
     "size": "expression",
     "values": "expressions"
   },

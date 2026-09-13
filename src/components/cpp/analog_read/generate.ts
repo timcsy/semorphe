@@ -4,5 +4,5 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:analog_read', (node, ctx) =>
-    `analogRead(${generateExpression((node.children.pin ?? [])[0], ctx)})`)
+    `analogRead(${generateExpression((node.slots.pin ?? [])[0], ctx)})`)
 }

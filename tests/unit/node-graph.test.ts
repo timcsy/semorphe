@@ -24,7 +24,7 @@ def f(a):
 async function graphOf(code: string): Promise<ReturnType<typeof buildNodeGraph>> {
   const tree = await liftPython(code)
   expect(tree).not.toBeNull()
-  return buildNodeGraph(tree!.children['body'] ?? [])
+  return buildNodeGraph(tree!.slots['body'] ?? [])
 }
 
 beforeAll(async () => {

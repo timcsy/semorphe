@@ -35,7 +35,7 @@ export function registerExecute(register: (component: string, executor: Componen
     // `pair<int,string> p = make_pair(42, "hi")` —— 初始值是一整個運算式。
     // ⚠️ 這個接點在 2026-08-13 之前不存在，於是初始值**被辨識與產生兩邊對稱地丟掉**，
     // 而來回轉換比對因此一直是綠的（見 `strategies.ts` 的 `hasInitSourceDecl` 檔頭）。
-    const source = (node.children.source ?? [])[0]
+    const source = (node.slots.source ?? [])[0]
     if (source) {
       const produced = await ctx.evaluate(source)
       // 不複製的話，兩個 pair 會共用同一個 Map——改一個另一個跟著變。

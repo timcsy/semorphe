@@ -58,7 +58,7 @@ function collect(node: SemanticNode, pred: (n: SemanticNode) => boolean): Semant
   const walk = (n: SemanticNode): void => {
     if (!n) return
     if (pred(n)) found.push(n)
-    for (const list of Object.values(n.children ?? {})) {
+    for (const list of Object.values(n.slots ?? {})) {
       for (const child of list ?? []) walk(child as SemanticNode)
     }
   }
@@ -90,7 +90,7 @@ describe('概念身分與五路', () => {
     const decls = collect(tree, (n) => n.componentId === 'cpp:vector_declare')
     expect(decls).toHaveLength(1)
     expect(
-      (decls[0].children?.source ?? []).length,
+      (decls[0].slots?.source ?? []).length,
       '初始值被丟掉時，這裡是 0——而產回去的程式碼也會少那一段，' +
         '於是來回轉換比對會「成功」。這條是唯一擋得住它的斷言。',
     ).toBe(1)
@@ -104,23 +104,23 @@ describe('概念身分與五路', () => {
 
   it('負向：元素列表仍走 values，不得改走 source', () => {
     const decls = collect(liftMain('vector<int> v = {3, 1, 4};'), (n) => n.componentId === 'cpp:vector_declare')
-    expect(decls[0].children?.source ?? []).toHaveLength(0)
-    expect(decls[0].children?.values ?? []).toHaveLength(3)
+    expect(decls[0].slots?.source ?? []).toHaveLength(0)
+    expect(decls[0].slots?.values ?? []).toHaveLength(3)
   })
 
   it('負向：`vector<int> v(5)` 是建構子引數，兩個子節點都不得有東西', () => {
     // argument_list 不是初始值運算式——當成 source 的話會產出
     // `vector<int> v = 5;`，那不是合法程式
     const decls = collect(liftMain('vector<int> v(5);'), (n) => n.componentId === 'cpp:vector_declare')
-    expect(decls[0].children?.source ?? []).toHaveLength(0)
-    expect(decls[0].children?.values ?? []).toHaveLength(0)
+    expect(decls[0].slots?.source ?? []).toHaveLength(0)
+    expect(decls[0].slots?.values ?? []).toHaveLength(0)
   })
 
   it('pair 的初始值接得住了（2026-08-13 修，釘子已拔）', () => {
     // ✅ **這支曾經是 `it.fails`**，而那個機制照設計運作了一次：
     // 缺陷還在時它綠且出聲；修好的那一刻它變紅，逼人來拔釘子。
     //
-    // 當時沒一起修的理由逐字：「`cpp_pair_declare` 的 `children` 是空的且
+    // 當時沒一起修的理由逐字：「`cpp_pair_declare` 的 `slots` 是空的且
     // `skipPaths: ['execute']`（理由「declarative」）。要接上初始值就得把
     // 執行那一路也做出來，那是另一個功能」——**而那正是 2026-08-13 做的事**：
     // 🔴 那個 `skipPaths` 是一個**假的「顯式的空」**（`pair<int,int> p;` 當然有
@@ -129,7 +129,7 @@ describe('概念身分與五路', () => {
       liftMain('pair<int, string> p = make_pair(42, "hello");'),
       (n) => n.componentId === 'cpp:pair_declare',
     )
-    expect(decls[0].children?.source ?? []).toHaveLength(1)
+    expect(decls[0].slots?.source ?? []).toHaveLength(1)
   })
 
   it('負向：沒有初始值的宣告產出不得多一個 `=`', () => {

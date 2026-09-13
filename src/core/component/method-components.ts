@@ -35,7 +35,7 @@ export interface MethodComponentShape {
   /**
    * 引數依序放進哪些子節點槽。空陣列 = 這個方法不吃引數（`s.length()`）。
    *
-   * ⚠️ **槽名是契約**，與 `component.json` 的 `children` 必須一致，
+   * ⚠️ **槽名是契約**，與 `component.json` 的 `slots` 必須一致，
    * 否則產生器讀不到——而那是安靜的（子節點是空陣列，不是錯誤）。
    */
   argSlots: string[]

@@ -63,7 +63,7 @@ export interface ComponentManifest {
   /** 依賴。C++ 是標頭檔（`['<vector>']`）。⚠️ **不得從資料夾名推**——`cpp:pair_declare` 的 header 是 `<utility>`。 */
   requires?: string[]
   properties?: unknown[]
-  children?: Record<string, unknown>
+  slots?: Record<string, unknown>
   role?: string
   /**
    * 五路的宣告。**沒有的那幾路寫 `null`，並在 `_<path>_why` 說明理由。**

@@ -113,7 +113,7 @@ describe('cpp:literal_string', () => {
     const sem = liftCode('"hello"')
     expect(sem).not.toBeNull()
     // string_literal should have value: hello
-    const body = sem!.children.body ?? []
+    const body = sem!.slots.body ?? []
     const node = body[0]
     expect(node.componentId).toBe('cpp:literal_string')
     expect(node.properties.value).toBe('hello')
@@ -172,10 +172,10 @@ describe('cpp:var_ref', () => {
   it('variable reference in declaration initializer', () => {
     const sem = liftCode('int y = x;')
     expect(sem).not.toBeNull()
-    const body = sem!.children.body ?? []
+    const body = sem!.slots.body ?? []
     const decl = body[0]
     expect(decl.componentId).toBe('cpp:var_declare')
-    const init = (decl.children.initializer ?? [])[0]
+    const init = (decl.slots.initializer ?? [])[0]
     expect(init).toBeDefined()
     expect(init.componentId).toBe('cpp:var_ref')
     expect(init.properties.name).toBe('x')

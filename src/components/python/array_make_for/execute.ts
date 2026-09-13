@@ -16,17 +16,17 @@ export function registerExecute(register: (component: string, executor: Componen
     const out: RuntimeValue[] = []
     // 🔴 **由外而內走**：`outer` 鏈是從內指向外的，所以先攤成「外→內」的順序
     const levels: { name: string; src: SemanticNode }[] = []
-    for (let c = (node.children.outer ?? [])[0]; c; c = (c.children.outer ?? [])[0]) {
-      levels.unshift({ name: String(c.properties.obj ?? 'row'), src: c.children.iterable[0] })
+    for (let c = (node.slots.outer ?? [])[0]; c; c = (c.slots.outer ?? [])[0]) {
+      levels.unshift({ name: String(c.properties.obj ?? 'row'), src: c.slots.iterable[0] })
     }
-    levels.push({ name: String(node.properties.obj ?? 'x'), src: node.children.iterable[0] })
+    levels.push({ name: String(node.properties.obj ?? 'x'), src: node.slots.iterable[0] })
 
     /** 走第 `depth` 層；走到最裡面時算一格出來。 */
     const walk = async (depth: number): Promise<void> => {
       if (depth === levels.length) {
-        const cond = (node.children.condition ?? [])[0]
+        const cond = (node.slots.condition ?? [])[0]
         if (cond && !ctx.toBool(await ctx.evaluate(cond))) return
-        out.push(await ctx.evaluate(node.children.expression[0]))
+        out.push(await ctx.evaluate(node.slots.expression[0]))
         return
       }
       const { name, src } = levels[depth]

@@ -18,7 +18,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:input', async (node, ctx) => {
-    const p = (node.children.prompt ?? [])[0]
+    const p = (node.slots.prompt ?? [])[0]
     // ⚠️ **提示要先印出來**——不然使用者會對著一個空的輸入框發呆。
     if (p) ctx.io.write(String((await ctx.evaluate(p)).value))
 

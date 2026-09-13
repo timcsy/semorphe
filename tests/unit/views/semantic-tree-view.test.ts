@@ -30,7 +30,7 @@ class SemanticTreeView {
       .map(([k, v]) => `<span class="prop">${k}=${String(v)}</span>`)
       .join(' ')
 
-    const childrenHtml = Object.entries(node.children)
+    const childrenHtml = Object.entries(node.slots)
       .map(([name, nodes]) =>
         `${indent}  <div class="child-group" data-name="${name}">` +
         nodes.map(child => this.renderNode(child, depth + 2)).join('') +
@@ -54,18 +54,18 @@ describe('SemanticTreeView', () => {
       id: 'root',
       componentId: 'cpp:program',
       properties: {},
-      children: {
+      slots: {
         body: [
           {
             id: 'n1',
             componentId: 'cpp:var_declare',
             properties: { type: 'int', name: 'x' },
-            children: {
+            slots: {
               init: [{
                 id: 'n2',
                 componentId: 'cpp:literal_number',
                 properties: { value: '5' },
-                children: {},
+                slots: {},
               }],
             },
           },
@@ -73,12 +73,12 @@ describe('SemanticTreeView', () => {
             id: 'n3',
             componentId: 'cpp:print',
             properties: {},
-            children: {
+            slots: {
               values: [{
                 id: 'n4',
                 componentId: 'cpp:var_ref',
                 properties: { name: 'x' },
-                children: {},
+                slots: {},
               }],
             },
           },
@@ -103,7 +103,7 @@ describe('SemanticTreeView', () => {
       id: 'root',
       componentId: 'cpp:program',
       properties: {},
-      children: {},
+      slots: {},
     }
 
     const view = new SemanticTreeView()

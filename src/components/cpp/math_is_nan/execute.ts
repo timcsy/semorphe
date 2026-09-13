@@ -8,7 +8,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:math_is_nan', async (node, ctx) => {
-    const v = await ctx.evaluate((node.children.value ?? [])[0])
+    const v = await ctx.evaluate((node.slots.value ?? [])[0])
     return { type: 'bool', value: Number.isNaN(ctx.toNumber(v)) }
   })
 }

@@ -8,7 +8,7 @@
       "default": "myServo"
     }
   ],
-  "children": {
+  "slots": {
     "pin": "expression"
   },
   "role": "statement",

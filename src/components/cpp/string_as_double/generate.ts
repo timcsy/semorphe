@@ -4,7 +4,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:string_as_double', (node, ctx) => {
-      const valueNodes = node.children.value ?? []
+      const valueNodes = node.slots.value ?? []
       const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '""'
       return `stod(${val})`
     })

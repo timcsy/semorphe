@@ -220,8 +220,8 @@ export class Lifter {
         // `cpp:program` 會被重複標上——而那讓「哪裡壞了」又變成「整棵樹壞了」。
         const claimedBy = (n: SemanticNode): boolean =>
           n.metadata?.degradationCause === 'syntax_error' ||
-          Object.values(n.children ?? {}).flat().some((c) => c && claimedBy(c))
-        const claimed = Object.values(r.children ?? {}).flat().some((c) => c && claimedBy(c))
+          Object.values(n.slots ?? {}).flat().some((c) => c && claimedBy(c))
+        const claimed = Object.values(r.slots ?? {}).flat().some((c) => c && claimedBy(c))
         if (!claimed) {
           r.metadata.confidence = 'inferred'
           r.metadata.degradationCause = 'syntax_error'
@@ -287,9 +287,9 @@ export class Lifter {
     if (node.namedChildren.length > 0) {
       const liftedChildren = this.liftStatementsWithContext(node.namedChildren, contextData)
       if (liftedChildren.length > 0 && liftedChildren.some(c => c.componentId !== 'raw_code')) {
-        // Has some meaningful sub-nodes — create unresolved node preserving children
+        // Has some meaningful sub-nodes — create unresolved node preserving slots
         const unresolved = createNode('unresolved', { node_type: node.type }, {
-          children: liftedChildren,
+          slots: liftedChildren,
         })
         const endLine = node.endPosition.column === 0 && node.endPosition.row > node.startPosition.row
           ? node.endPosition.row - 1 : node.endPosition.row
@@ -428,8 +428,8 @@ export class Lifter {
 
       if (lifted.componentId === '_compound') {
         const standalone = node.type === 'compound_statement' && node.parent?.type === 'compound_statement'
-        if (standalone) results.push(buildStandaloneBlock(lifted.children.body ?? []))
-        else results.push(...(lifted.children.body ?? []))
+        if (standalone) results.push(buildStandaloneBlock(lifted.slots.body ?? []))
+        else results.push(...(lifted.slots.body ?? []))
       } else {
         results.push(lifted)
       }
@@ -460,7 +460,7 @@ export class Lifter {
     //    ⚠️ 而它是**指數的**：每來回一趟翻一倍（實測 1 → 2 → 4）。
     //    症狀不是「多一行」，是**一段程式碼每存一次就長大一點**。
     if (lifted.componentId === '_compound') return
-    const body = lifted.children.body
+    const body = lifted.slots.body
     if (!body) return
     // 🔴 **`block` 之前的註解也在這裡**（2026-08-24，使用者：「Python 程式碼到積木
     //    會丟失註解」）——不是只有同一列那一顆。實測的 AST：
@@ -487,7 +487,7 @@ export class Lifter {
       const made = this.liftWithContext(kid, ctx)
       if (made) notes.push(made)
     }
-    if (notes.length > 0) lifted.children.body = [...notes, ...body]
+    if (notes.length > 0) lifted.slots.body = [...notes, ...body]
   }
 
 
@@ -523,7 +523,7 @@ export class Lifter {
       const raw = n.metadata?.rawCode
       if (typeof raw === 'string'
           && (n.componentId === 'raw_code' || n.componentId === 'unresolved')) kept.push(raw)
-      for (const ks of Object.values(n.children ?? {})) ks.forEach(walk)
+      for (const ks of Object.values(n.slots ?? {})) ks.forEach(walk)
     }
     walk(lifted)
     // ⚠️ **比的是內容，不是形式**——而「形式」比想像中多：

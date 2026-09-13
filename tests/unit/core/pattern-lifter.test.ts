@@ -117,7 +117,7 @@ describe('PatternLifter', () => {
       const node = mockNode('update_expression', 'i++', [argNode, opNode], {
         argument: argNode,
       })
-      // For $operator extraction, we need unnamed children
+      // For $operator extraction, we need unnamed slots
       const ctx = makeLiftContext(lifter)
       const result = lifter.tryLift(node, ctx)
 
@@ -247,7 +247,7 @@ describe('PatternLifter', () => {
           componentId: 'cpp:var_assign_compound',
           abstractComponent: 'compound_assign',
           properties: ['name', 'operator'],
-          children: { value: 'expression' },
+          slots: { value: 'expression' },
           role: 'statement',
         },
         blockDef: { type: 'cpp_var_assign_compound' },
@@ -297,8 +297,8 @@ describe('PatternLifter', () => {
       expect(result).not.toBeNull()
       expect(result!.componentId).toBe('cpp:var_assign_compound')
       expect(result!.properties.name).toBe('x')
-      expect(result!.children.value).toHaveLength(1)
-      expect(result!.children.value[0].componentId).toBe('cpp:literal_number')
+      expect(result!.slots.value).toHaveLength(1)
+      expect(result!.slots.value[0].componentId).toBe('cpp:literal_number')
     })
   })
 
@@ -366,8 +366,8 @@ describe('PatternLifter', () => {
       expect(addResult).not.toBeNull()
       expect(addResult!.componentId).toBe('cpp:arithmetic')
       expect(addResult!.properties.operator).toBe('+')
-      expect(addResult!.children.left).toHaveLength(1)
-      expect(addResult!.children.right).toHaveLength(1)
+      expect(addResult!.slots.left).toHaveLength(1)
+      expect(addResult!.slots.right).toHaveLength(1)
 
       // Test compare
       const opGt = unnamed('>', '>')
@@ -448,8 +448,8 @@ describe('PatternLifter', () => {
 
       expect(result).not.toBeNull()
       expect(result!.componentId).toBe('cpp:print')
-      expect(result!.children.values).toBeDefined()
-      expect(result!.children.values.length).toBeGreaterThanOrEqual(2)
+      expect(result!.slots.values).toBeDefined()
+      expect(result!.slots.values.length).toBeGreaterThanOrEqual(2)
     })
   })
 

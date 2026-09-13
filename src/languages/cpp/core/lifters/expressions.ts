@@ -221,8 +221,8 @@ export function registerExpressionLifters(lifter: Lifter): void {
 
   // Comma expression: i++, j-- (used in for-loop updates)
   lifter.register('comma_expression', (node, ctx) => {
-    const children = node.namedChildren.map(c => ctx.lift(c)).filter(Boolean) as SemanticNode[]
-    return buildCommaExpr(children)
+    const slots = node.namedChildren.map(c => ctx.lift(c)).filter(Boolean) as SemanticNode[]
+    return buildCommaExpr(slots)
   })
 
   /**
@@ -390,15 +390,15 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
   while (cur) {
     if (isStreamInput(cur.componentId) && cur.properties?.from !== undefined) {
       // 內層已經改判過——接續它收集到的目標
-      targets.unshift(...(cur.children?.values ?? []))
+      targets.unshift(...(cur.slots?.values ?? []))
       rootName = String(cur.properties.from)
       break
     }
     if (!isShiftLike(cur)) return null
-    const right = (cur.children?.right ?? [])[0]
+    const right = (cur.slots?.right ?? [])[0]
     if (!right || !isVariableRef(right.componentId)) return null
     targets.unshift(right)
-    const left: SemanticNode | undefined = (cur.children?.left ?? [])[0]
+    const left: SemanticNode | undefined = (cur.slots?.left ?? [])[0]
     if (!left) return null
     if (isVariableRef(left.componentId)) {
       rootName = String(left.properties?.name ?? '')

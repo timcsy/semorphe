@@ -16,8 +16,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
     ? (ctx: Parameters<NodeGenerator>[1]) => `\n${indent(ctx)}{`
     : () => ' {'
   g.set('cpp:loop_do_while', (node, ctx) => {
-    const body = node.children.body ?? []
-    const cond = generateExpression((node.children.cond ?? [])[0], ctx)
+    const body = node.slots.body ?? []
+    const cond = generateExpression((node.slots.cond ?? [])[0], ctx)
     const header = `${indent(ctx)}do${openBrace(ctx)}\n`
     trackOwnText(ctx, header)
     let code = header

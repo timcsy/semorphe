@@ -41,10 +41,10 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       segs[seg] = lifted
     }
 
-    const children: Record<string, SemanticNode[]> = { obj: [obj] }
-    if (segs[0]) children.from = [segs[0]]
-    if (segs[1]) children.to = [segs[1]]
-    if (segs[2]) children.step = [segs[2]]
-    return createNode('python:container_substr', {}, children)
+    const slots: Record<string, SemanticNode[]> = { obj: [obj] }
+    if (segs[0]) slots.from = [segs[0]]
+    if (segs[1]) slots.to = [segs[1]]
+    if (segs[2]) slots.step = [segs[2]]
+    return createNode('python:container_substr', {}, slots)
   })
 }

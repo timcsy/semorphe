@@ -2,7 +2,7 @@
   "componentId": "cpp:program_exit",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "code": "expression"
   },
   "role": "statement",

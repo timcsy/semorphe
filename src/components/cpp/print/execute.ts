@@ -4,7 +4,7 @@ import { valueToString } from '../../../interpreter/types'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:print', async (node, ctx) => {
-      const values = node.children.values ?? []
+      const values = node.slots.values ?? []
       for (const valNode of values) {
         const val = await ctx.evaluate(valNode)
         if (val.type === 'string' && val.value === '\n') {

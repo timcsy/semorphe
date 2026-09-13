@@ -5,8 +5,8 @@ import { precedence, genChild } from '../../../languages/cpp/core/generators/exp
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:compare', (node, ctx) => {
       const prec = precedence(node)
-      const left = genChild((node.children.left ?? [])[0], prec, ctx)
-      const right = genChild((node.children.right ?? [])[0], prec, ctx)
+      const left = genChild((node.slots.left ?? [])[0], prec, ctx)
+      const right = genChild((node.slots.right ?? [])[0], prec, ctx)
       const op = node.properties.operator ?? '=='
       return `${left} ${op} ${right}`
     })

@@ -13,9 +13,9 @@ export function registerExecute(register: (component: string, executor: Componen
 
   register('cpp:array_at', async (node, ctx) => {
       // 🟢 容器是一顆節點（2026-08-26）——`obj.arr[i]` 本來會去查一個叫 `obj.arr` 的變數
-      const objNodes = node.children.obj ?? []
+      const objNodes = node.slots.obj ?? []
       const name = String(objNodes[0]?.properties?.name ?? '')
-      const indexNodes = node.children.index
+      const indexNodes = node.slots.index
       if (!indexNodes || indexNodes.length === 0) return defaultValue('int')
 
       const indexVal = await ctx.evaluate(indexNodes[0])
@@ -52,14 +52,14 @@ export function registerExecute(register: (component: string, executor: Componen
 export function registerLvalue(): void {
   declareLvalue('cpp:array_at', async (node, ctx: ExecutionContext) => {
     // 先問接點（`a[i][j]` 的外層容器是一顆節點），沒有才退回字串屬性。
-    const objNode = (node.children.obj ?? [])[0]
+    const objNode = (node.slots.obj ?? [])[0]
     const name = String(objNode?.properties?.name ?? '')
     if (!objNode) throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個下標沒有容器' })
     // 🔴 **容器本身也解成一個位置**，不只求值——字串那一格要寫回去時
     //    得把整個字串重建再寫回**變數**（這個直譯器裡字串是不可變的）。
     const containerPlace = await resolvePlace(objNode, ctx)
     const container = containerPlace.read()
-    const idxNode = (node.children.index ?? [])[0]
+    const idxNode = (node.slots.index ?? [])[0]
     const idx = idxNode ? Math.trunc(ctx.toNumber(await ctx.evaluate(idxNode))) : 0
 
     // `s[i] -= 7` —— C++ 的 `string::operator[]` 回的是參照，所以它**是**左值。

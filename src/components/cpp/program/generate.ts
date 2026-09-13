@@ -49,7 +49,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       aliasTable.size === 0 ? line
         : line.replace(/#include\s*<([^>]+)>/g, (_m, h: string) => `#include <${aliasHeader(h)}>`)
 
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       // C 目標的型別名要加 `struct` 標籤——先收集這棵樹宣告了哪些 struct。
       if (isCDialect(ctx.style)) ctx._structNames = collectStructNames(node)
 

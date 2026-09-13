@@ -10,8 +10,8 @@ import type { RuntimeValue, ObjectFields } from '../../../interpreter/types'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:container_find', async (node, ctx) => {
-    const needle = await ctx.evaluate(node.children.needle[0])
-    const hay = await ctx.evaluate(node.children.haystack[0])
+    const needle = await ctx.evaluate(node.slots.needle[0])
+    const hay = await ctx.evaluate(node.slots.haystack[0])
     const negated = String(node.properties.operator ?? 'in').includes('not')
 
     let found: boolean

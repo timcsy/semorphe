@@ -26,7 +26,7 @@ import type { RuntimeValue } from '../../../interpreter/types'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:exception_make', async (node, ctx) => {
     const kind = String(node.properties.kind ?? 'runtime_error')
-    const msgNode = (node.children.message ?? [])[0]
+    const msgNode = (node.slots.message ?? [])[0]
     const msg = msgNode ? String((await ctx.evaluate(msgNode)).value) : ''
     const fields = new Map<string, RuntimeValue>([['what', { type: 'string', value: msg }]])
     return { type: 'object', value: fields, structName: kind }

@@ -150,9 +150,9 @@ describe('第八十二條護欄：手拖的佈局活得過一次編輯嗎', () =
     // `build-guardrail` §2 簽名三：注入裡出現真實身分，
     // 那個東西被修好的那天這支就爛了。
     const mk = (id: string, c: string, v?: string): SemanticNode =>
-      ({ id, componentId: c, properties: v === undefined ? {} : { value: v }, children: {} }) as never
+      ({ id, componentId: c, properties: v === undefined ? {} : { value: v }, slots: {} }) as never
     const wrap = (kids: SemanticNode[]): SemanticNode =>
-      ({ id: 'r', componentId: 'x:program', properties: {}, children: { body: kids } }) as never
+      ({ id: 'r', componentId: 'x:program', properties: {}, slots: { body: kids } }) as never
 
     const A = walkWithPath(wrap([mk('a', 'x:n', '1')]))
     // ① 一模一樣 → 配得上

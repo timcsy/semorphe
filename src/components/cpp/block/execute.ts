@@ -26,7 +26,7 @@ export function registerExecute(register: (component: string, executor: Componen
     const outer = ctx.scope
     ctx.scope = outer.createChild()
     try {
-      await ctx.executeBody(node.children.body ?? [])
+      await ctx.executeBody(node.slots.body ?? [])
     } finally {
       // ⚠️ 走 `exitScope` 而不是直接還原——**作用域結束時要跑解構式**，
       // 而那個知識住在 `onScopeExit`（`languages/cpp/core/executors/structs.ts`）。

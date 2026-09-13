@@ -11,7 +11,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:wifi_open', async (node, ctx) => {
-    await ctx.evaluate((node.children.ssid ?? [])[0])
-    await ctx.evaluate((node.children.password ?? [])[0])
+    await ctx.evaluate((node.slots.ssid ?? [])[0])
+    await ctx.evaluate((node.slots.password ?? [])[0])
   })
 }

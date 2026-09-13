@@ -46,9 +46,9 @@ function ids(node: unknown): string[] {
   const out: string[] = []
   const walk = (n: unknown): void => {
     if (!n || typeof n !== 'object') return
-    const x = n as { componentId?: string; children?: Record<string, unknown[]> }
+    const x = n as { componentId?: string; slots?: Record<string, unknown[]> }
     if (x.componentId) out.push(x.componentId)
-    for (const list of Object.values(x.children ?? {})) for (const c of list ?? []) walk(c)
+    for (const list of Object.values(x.slots ?? {})) for (const c of list ?? []) walk(c)
   }
   walk(node)
   return out

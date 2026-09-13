@@ -2,7 +2,7 @@
   "componentId": "cpp:throw",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "statement",

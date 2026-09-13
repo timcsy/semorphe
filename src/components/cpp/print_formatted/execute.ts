@@ -6,7 +6,7 @@ import { formatPrintf } from '../../../languages/cpp/std/cstdio/executors'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:print_formatted', async (node, ctx) => {
       const format = String(node.properties.format ?? '')
-      const argNodes = node.children.args ?? []
+      const argNodes = node.slots.args ?? []
       const argValues: RuntimeValue[] = []
       for (const argNode of argNodes) {
         argValues.push(await ctx.evaluate(argNode))

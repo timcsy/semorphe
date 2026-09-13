@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那顆取子字串只作用在字串上而且參數是「起點＋長度」；Python 的切片作用在任何序列而且是「起點：終點」。**保證不同。**",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "from": "expression",
     "to": "expression",

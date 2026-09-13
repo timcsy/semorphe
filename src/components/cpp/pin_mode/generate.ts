@@ -4,8 +4,8 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:pin_mode', (node, ctx) => {
-    const pin = generateExpression((node.children.pin ?? [])[0], ctx)
-    const mode = generateExpression((node.children.mode ?? [])[0], ctx)
+    const pin = generateExpression((node.slots.pin ?? [])[0], ctx)
+    const mode = generateExpression((node.slots.mode ?? [])[0], ctx)
     return `${indent(ctx)}pinMode(${pin}, ${mode});\n`
   })
 }

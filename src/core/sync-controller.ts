@@ -615,9 +615,9 @@ export class SyncController {
    * 因為降級只在「課程可見集合」這條路上發生，而測試幾乎都用全部可見的設定跑。
    */
   private cloneTree(node: SemanticNode): SemanticNode {
-    const children: Record<string, SemanticNode[]> = {}
-    for (const [k, arr] of Object.entries(node.children ?? {})) children[k] = arr.map((c) => this.cloneTree(c))
-    return { ...node, properties: { ...node.properties }, children }
+    const slots: Record<string, SemanticNode[]> = {}
+    for (const [k, arr] of Object.entries(node.slots ?? {})) slots[k] = arr.map((c) => this.cloneTree(c))
+    return { ...node, properties: { ...node.properties }, slots }
   }
 
   /**
@@ -651,10 +651,10 @@ export class SyncController {
       // If no downgrade mapping or target also not visible → keep original (never raw_code)
     }
 
-    // Recurse into children
-    for (const children of Object.values(node.children)) {
-      if (Array.isArray(children)) {
-        for (const child of children) {
+    // Recurse into slots
+    for (const slots of Object.values(node.slots)) {
+      if (Array.isArray(slots)) {
+        for (const child of slots) {
           this.downgradeComponentsForLevel(child, visible)
         }
       }
@@ -788,7 +788,7 @@ export class SyncController {
       //    ——那與改動前逐字相同，不是這一刀要動的東西。
       const skeleton = skeletonById(this.skeletonId)
       const framePresent = skeletonPresent(skeleton, (name) =>
-        (extractedTree.children.body ?? []).some(
+        (extractedTree.slots.body ?? []).some(
           n => isFunctionDefinition(n.componentId) && n.properties.name === name))
       if (relift && this.getScaffoldDepth() > 0 && !framePresent && this.lifter && this.parser) {
         const parseResult = await this.parser.parse(currentCode)
@@ -863,8 +863,8 @@ export class SyncController {
     if (original !== undefined && node.componentId === abstractComponentOf(original)) {
       node.componentId = original
     }
-    for (const children of Object.values(node.children ?? {})) {
-      if (Array.isArray(children)) for (const c of children) this.restoreDowngrade(c)
+    for (const slots of Object.values(node.slots ?? {})) {
+      if (Array.isArray(slots)) for (const c of slots) this.restoreDowngrade(c)
     }
   }
 
@@ -931,9 +931,9 @@ export class SyncController {
   private findAncestorWithCodeMapping(node: SemanticNode, targetId: string): string | null {
     // Check if targetId is a descendant of this node
     if (!this.containsNodeId(node, targetId)) return null
-    // This node contains the target — check children for a tighter match
-    for (const children of Object.values(node.children)) {
-      for (const child of children) {
+    // This node contains the target — check slots for a tighter match
+    for (const slots of Object.values(node.slots)) {
+      for (const child of slots) {
         const found = this.findAncestorWithCodeMapping(child, targetId)
         if (found) return found
       }
@@ -946,8 +946,8 @@ export class SyncController {
   /** Check if a node or any descendant has the given id */
   private containsNodeId(node: SemanticNode, targetId: string): boolean {
     if (node.id === targetId) return true
-    for (const children of Object.values(node.children)) {
-      for (const child of children) {
+    for (const slots of Object.values(node.slots)) {
+      for (const child of slots) {
         if (this.containsNodeId(child, targetId)) return true
       }
     }
@@ -1016,8 +1016,8 @@ export class SyncController {
     if (sr && node.id) {
       map.set(node.id, sr)
     }
-    for (const children of Object.values(node.children)) {
-      for (const child of children) {
+    for (const slots of Object.values(node.slots)) {
+      for (const child of slots) {
         this.collectSourceRanges(child, map)
       }
     }

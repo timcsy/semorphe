@@ -59,7 +59,7 @@ function residualOf(n: SemanticNode, acc: { count: number; kinds: Set<string> })
     acc.kinds.add(String(n.metadata?.rawCode ?? '').slice(0, 40).replace(/\n/g, '⏎'))
     return
   }
-  for (const bucket of Object.values(n.children ?? {})) for (const c of bucket ?? []) residualOf(c, acc)
+  for (const bucket of Object.values(n.slots ?? {})) for (const c of bucket ?? []) residualOf(c, acc)
 }
 
 /**

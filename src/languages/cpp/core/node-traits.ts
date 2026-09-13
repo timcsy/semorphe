@@ -194,7 +194,7 @@ export interface NodeTraits {
   ioRole?: 'print' | 'input'
   ioStyle?: 'iostream' | 'cstdio'
   /**
-   * 這顆是**帶索引的存取**（`properties.obj` 是容器名、`children.index` 是索引）。
+   * 這顆是**帶索引的存取**（`properties.obj` 是容器名、`slots.index` 是索引）。
    *
    * ⚠️ 兩個 I/O 執行器要認得它：`scanf("%d", &arr[i])` 與 `cin >> arr[i]`
    * 讀進來的值要寫回**陣列的某一格**，而不是一個變數。

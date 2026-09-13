@@ -2,7 +2,7 @@
   "componentId": "cpp:pwm_attach",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "pin": "expression",
     "freq": "expression",
     "bits": "expression"

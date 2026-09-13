@@ -4,7 +4,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:digital_read', (node, ctx) => {
-    const pin = generateExpression((node.children.pin ?? [])[0], ctx)
+    const pin = generateExpression((node.slots.pin ?? [])[0], ctx)
     return `digitalRead(${pin})`
   })
 }

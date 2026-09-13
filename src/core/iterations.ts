@@ -44,7 +44,7 @@ export function loopNodes(root: SemanticNode | null | undefined): SemanticNode[]
   const out: SemanticNode[] = []
   const walk = (n: SemanticNode): void => {
     if (isLoop(n)) out.push(n)
-    for (const list of Object.values(n.children ?? {})) {
+    for (const list of Object.values(n.slots ?? {})) {
       for (const c of list ?? []) if (c) walk(c)
     }
   }
@@ -79,7 +79,7 @@ export function loopRatio(
   if (own === 0) return undefined      // 這顆迴圈整個沒被走到（在沒進去的分支裡）
   let body = 0
   for (const slot of bodySlotsOf(node.componentId)) {
-    for (const child of node.children?.[slot] ?? []) {
+    for (const child of node.slots?.[slot] ?? []) {
       if (child?.id !== undefined) body = Math.max(body, counts.get(child.id) ?? 0)
     }
   }
@@ -99,7 +99,7 @@ export function iterationCounts(
   if (!root) return out
 
   const walk = (node: SemanticNode): void => {
-    const kids = node.children ?? {}
+    const kids = node.slots ?? {}
     if (node.id !== undefined && isLoop(node)) {
       const own = counts.get(node.id) ?? 0
       if (own > 0) {

@@ -118,7 +118,7 @@ export function programSignature(tree: SemanticNode | null | undefined): string 
   const walk = (n: SemanticNode): void => {
     parts.push(n.componentId)
     for (const [k, v] of Object.entries(n.properties ?? {})) parts.push(`${k}=${String(v)}`)
-    for (const [slot, list] of Object.entries(n.children ?? {})) {
+    for (const [slot, list] of Object.entries(n.slots ?? {})) {
       parts.push(`[${slot}`)
       for (const c of list ?? []) if (c) walk(c)
       parts.push(']')

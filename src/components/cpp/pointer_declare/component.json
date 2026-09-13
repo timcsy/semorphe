@@ -15,7 +15,7 @@
       "default": "ptr"
     }
   ],
-  "children": {
+  "slots": {
     "initializer": "expression"
   },
   "role": "statement",

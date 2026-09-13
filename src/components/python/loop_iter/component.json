@@ -10,7 +10,7 @@
       "default": "row"
     }
   ],
-  "children": {
+  "slots": {
     "iterable": "expression",
     "outer": "expression"
   },

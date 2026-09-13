@@ -17,8 +17,8 @@ import { PYTHON_BUILTIN_FUNCTIONS } from '../../../languages/python/builtins'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:container_zip', async (node, ctx) => {
     const args: RuntimeValue[] = []
-    for (const x of node.children.first ?? []) args.push(await ctx.evaluate(x))
-    for (const x of node.children.second ?? []) args.push(await ctx.evaluate(x))
+    for (const x of node.slots.first ?? []) args.push(await ctx.evaluate(x))
+    for (const x of node.slots.second ?? []) args.push(await ctx.evaluate(x))
     const userDefined = ctx.functions.get('zip')
     if (userDefined) return callWith(userDefined, args, ctx, 'zip')
     return PYTHON_BUILTIN_FUNCTIONS['zip'](args, withCall(ctx))

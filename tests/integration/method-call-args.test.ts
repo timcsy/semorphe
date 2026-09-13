@@ -7,7 +7,7 @@
  * Serial.write(cmd);   →  積木：「對 Serial 執行 write（ ▯ ）」  ← 括號裡是空的
  * ```
  *
- * ⚠️ 而**語義樹是對的**（`children.args` 有那顆 `cmd`）、**產生器也是對的**
+ * ⚠️ 而**語義樹是對的**（`slots.args` 有那顆 `cmd`）、**產生器也是對的**
  * （產出 `Serial.write(cmd);`）。壞的只有**投影**那一側。
  *
  * > **一個只在投影那一側丟資料的 bug，
@@ -48,7 +48,7 @@ const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const nodes = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   out.push(n)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) nodes(k, out)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks) nodes(k, out)
   return out
 }
 interface BlockState { type?: string; inputs?: Record<string, unknown>; extraState?: Record<string, unknown> }
@@ -70,7 +70,7 @@ describe('護欄：通用方法呼叫的引數不得在積木那一側消失', (
     const tree = lift('void noteOn(int cmd) {\n  Serial.write(cmd);\n}\n')
     const call = nodes(tree).find((n) => n.componentId === 'cpp:method_call')
     expect(call, '沒有認出方法呼叫——下面全部空過').toBeDefined()   // ← 正向錨點
-    expect(call?.children.args ?? [], '語義樹那一側').toHaveLength(1)
+    expect(call?.slots.args ?? [], '語義樹那一側').toHaveLength(1)
 
     const blk = allBlocks(tree).find((b) => b.type === 'cpp_method_call')
     expect(blk, '積木沒渲染出來').toBeDefined()
@@ -82,7 +82,7 @@ describe('護欄：通用方法呼叫的引數不得在積木那一側消失', (
   it('🔴 多引數也要全部在——一個都不准掉', () => {
     const tree = lift('void f() {\n  obj.doThing(1, 2, 3);\n}\n')
     const call = nodes(tree).find((n) => n.componentId === 'cpp:method_call')
-    expect(call?.children.args ?? []).toHaveLength(3)               // ← 正向錨點
+    expect(call?.slots.args ?? []).toHaveLength(3)               // ← 正向錨點
     const blk = allBlocks(tree).find((b) => b.type === 'cpp_method_call')
     expect(Object.keys(blk?.inputs ?? {}).filter((k) => k.startsWith('ARG_'))).toHaveLength(3)
   })
@@ -107,7 +107,7 @@ describe('護欄：通用方法呼叫的引數不得在積木那一側消失', (
     // ⚠️ `STATEMENT_TO_EXPRESSION` 直接搬移 extraState（專案記過的契約）。
     const tree = lift('void f() {\n  int n = obj.getValue(7);\n}\n')
     const call = nodes(tree).find((n) => n.componentId === 'cpp:method_call')
-    expect(call?.children.args ?? []).toHaveLength(1)                // ← 正向錨點
+    expect(call?.slots.args ?? []).toHaveLength(1)                // ← 正向錨點
     const blk = allBlocks(tree).find((b) => (b.type ?? '').startsWith('cpp_method_call'))
     expect(blk?.extraState?.argCount).toBe(1)
     expect(Object.keys(blk?.inputs ?? {})).toContain('ARG_0')

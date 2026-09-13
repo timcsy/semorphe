@@ -4,11 +4,11 @@ import { generateExpression, generateBody, indent, indented, trackOwnText} from 
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:with', (node, ctx) => {
-    const v = generateExpression((node.children.value ?? [])[0], ctx)
+    const v = generateExpression((node.slots.value ?? [])[0], ctx)
     const name = String(node.properties.name ?? '').trim()
     const head = `${indent(ctx)}with ${v}${name ? ` as ${name}` : ''}:\n`
     // ⚠️ **主體要另一層縮排**，而空主體要有 `pass`——空的區塊在 Python 是語法錯誤
-    const kids = node.children.body ?? []
+    const kids = node.slots.body ?? []
     const inner = indented(ctx)
     // 🔴 **標頭那一行要先算進行號**（2026-08-24）——否則主體裡每一顆的
     //    對應都往上偏一行，使用者按下積木時**反白到上一行**。

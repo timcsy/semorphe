@@ -14,7 +14,7 @@ export function registerExecute(register: (component: string, executor: Componen
     type: 'array',
     value: [
       { type: 'string' as const, value: `__kw__${String(node.properties.name ?? '')}` },
-      await ctx.evaluate(node.children.value[0]),
+      await ctx.evaluate(node.slots.value[0]),
     ],
   }))
 }

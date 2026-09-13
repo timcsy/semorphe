@@ -2,7 +2,7 @@
   "componentId": "cpp:math_abs",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "expression",

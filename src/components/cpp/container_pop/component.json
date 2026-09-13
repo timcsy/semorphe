@@ -8,7 +8,7 @@
       "default": "obj"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "owner": "(core)",
   "paths": {

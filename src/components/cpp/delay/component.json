@@ -2,7 +2,7 @@
   "componentId": "cpp:delay",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "ms": "expression"
   },
   "role": "statement",

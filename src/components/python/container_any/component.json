@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "同「每一格都成立」那顆。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression"
   },
   "role": "expression",

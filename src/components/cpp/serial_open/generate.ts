@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:serial_open', (node, ctx) => {
     const obj = String(node.properties.obj ?? 'Serial')
-    const baud = generateExpression((node.children.baud ?? [])[0], ctx)
+    const baud = generateExpression((node.slots.baud ?? [])[0], ctx)
     return `${indent(ctx)}${obj}.begin(${baud});\n`
   })
 }

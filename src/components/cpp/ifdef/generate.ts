@@ -16,7 +16,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       //    `#ifdef X` 底下那幾行**產不回去**，而積木上有那個插槽、執行器也會跑它
       //    ——三條路裡只有產生那一條缺，於是症狀是「來回一趟之後程式碼少了幾行」。
       //    ⚠️ 前置處理指令**不縮排**（它不屬於任何區塊），主體照原本的縮排產。
-      const body = generateBody(node.children.body ?? [], ctx)
+      const body = generateBody(node.slots.body ?? [], ctx)
       return `#ifdef ${name}\n${body}#endif\n`
     })
 }

@@ -10,9 +10,9 @@ import { createNode } from '../../../core/semantic-tree'
 export function buildLoopCount(
   varName: string,
   inclusive: string | boolean,
-  children: Record<string, SemanticNode[]>,
+  slots: Record<string, SemanticNode[]>,
 ): SemanticNode {
-  return createNode('cpp:loop_count', { var_name: varName, inclusive }, children)
+  return createNode('cpp:loop_count', { var_name: varName, inclusive }, slots)
 }
 
 /** 這顆由共用檔**呼叫**建構子，不是被問判別。 */

@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側對應的是一個空的區塊——**而空區塊不是一個構造**（沒有東西可以指），所以沒有抽象父。",
   "properties": [],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "owner": "(python)",
   "paths": {

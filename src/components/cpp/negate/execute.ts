@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:negate', async (node, ctx) => {
-      const operand = await ctx.evaluate(node.children.value[0])
+      const operand = await ctx.evaluate(node.slots.value[0])
       const val = ctx.toNumber(operand)
       return operand.type === 'int'
         ? { type: 'int', value: -Math.trunc(val) }

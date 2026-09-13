@@ -2,7 +2,7 @@
   "componentId": "cpp:loop_for",
   "abstractComponent": "cpp:loop_count",
   "properties": [],
-  "children": {
+  "slots": {
     "init": "expression",
     "cond": "expression",
     "update": "expression",

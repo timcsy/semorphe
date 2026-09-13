@@ -56,7 +56,7 @@ function lift(code: string): SemanticNode | null {
 
 function liftBody(code: string): SemanticNode[] {
   const program = lift(code)
-  return program?.children.body ?? []
+  return program?.slots.body ?? []
 }
 
 function liftFirst(code: string): SemanticNode | null {
@@ -165,7 +165,7 @@ describe('Declarations', () => {
       expect(node).not.toBeNull()
       expect(node!.componentId).toBe('cpp:var_declare')
       expect(node!.properties.name).toBe('x')
-      const inits = node!.children.initializer ?? []
+      const inits = node!.slots.initializer ?? []
       expect(inits.length).toBe(1)
       expect(inits[0].componentId).toBe('cpp:literal_number')
       expect(inits[0].properties.value).toBe('5')
@@ -177,7 +177,7 @@ describe('Declarations', () => {
       // string declarations are now lifted as cpp_string_declare
       expect(node!.componentId).toBe('cpp:string_declare')
       expect(node!.properties.name).toBe('name')
-      const inits = node!.children.initializer ?? []
+      const inits = node!.slots.initializer ?? []
       expect(inits.length).toBe(1)
       expect(inits[0].componentId).toBe('cpp:literal_string')
       expect(inits[0].properties.value).toBe('hello')
@@ -200,11 +200,11 @@ describe('Declarations', () => {
       expect(node).not.toBeNull()
       expect(node!.componentId).toBe('cpp:var_declare')
       expect(node!.properties.type).toBe('int')
-      const decls = node!.children.declarators ?? []
+      const decls = node!.slots.declarators ?? []
       expect(decls.length).toBe(2)
       expect(decls[0].properties.name).toBe('a')
       expect(decls[1].properties.name).toBe('b')
-      const bInits = decls[1].children.initializer ?? []
+      const bInits = decls[1].slots.initializer ?? []
       expect(bInits.length).toBe(1)
     })
 
@@ -231,7 +231,7 @@ describe('Declarations', () => {
       expect(node!.componentId).toBe('cpp:var_assign')
       // 🟢 **左值是接點**（2026-08-25）——釘接點比釘字串強。
       expect(node!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(node!.children.target[0].properties.name).toBe('x')
+      expect(node!.slots.target[0].properties.name).toBe('x')
     })
 
     it('roundtrips x = 10;', () => {
@@ -263,7 +263,7 @@ describe('Expressions', () => {
   function liftExpr(expr: string): SemanticNode | null {
     const node = liftFirst(`int _t = ${expr};`)
     if (!node) return null
-    const inits = node.children.initializer ?? []
+    const inits = node.slots.initializer ?? []
     return inits[0] ?? null
   }
 
@@ -278,7 +278,7 @@ describe('Expressions', () => {
     it('lifts string literal (strips quotes)', () => {
       const body = liftBody('string s = "hello world";')
       const node = body[0]
-      const inits = node?.children.initializer ?? []
+      const inits = node?.slots.initializer ?? []
       expect(inits[0]?.componentId).toBe('cpp:literal_string')
       expect(inits[0]?.properties.value).toBe('hello world')
     })
@@ -286,7 +286,7 @@ describe('Expressions', () => {
     it('lifts char literal (strips quotes)', () => {
       const body = liftBody("char c = 'A';")
       const node = body[0]
-      const inits = node?.children.initializer ?? []
+      const inits = node?.slots.initializer ?? []
       expect(inits[0]?.componentId).toBe('cpp:literal_char')
       expect(inits[0]?.properties.char).toBe('A')
     })
@@ -298,8 +298,8 @@ describe('Expressions', () => {
       expect(n).not.toBeNull()
       expect(n!.componentId).toBe('cpp:arithmetic')
       expect(n!.properties.operator).toBe(op)
-      expect(n!.children.left?.[0]?.componentId).toBe('cpp:var_ref')
-      expect(n!.children.right?.[0]?.componentId).toBe('cpp:var_ref')
+      expect(n!.slots.left?.[0]?.componentId).toBe('cpp:var_ref')
+      expect(n!.slots.right?.[0]?.componentId).toBe('cpp:var_ref')
     })
 
     it('roundtrips a + b', () => {
@@ -364,7 +364,7 @@ describe('Expressions', () => {
       // 🟢 **容器是接點**（2026-08-26）——`obj.arr[i]` 的容器是一個成員存取，
       //    而它本來被抄成字串（連讀都是壞的：`scope.get("obj.arr")`）。
       expect(n!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(n!.children.obj[0].properties.name).toBe('arr')
+      expect(n!.slots.obj[0].properties.name).toBe('arr')
     })
 
     it('roundtrips arr[i] in expression', () => {
@@ -391,8 +391,8 @@ describe('Expressions', () => {
       const n = liftExpr('strlen(s)')
       expect(n).not.toBeNull()
       expect(n!.componentId).toBe('cpp:cstring_size')
-      expect(n!.children.str).toBeDefined()
-      expect(n!.children.str!.length).toBe(1)
+      expect(n!.slots.str).toBeDefined()
+      expect(n!.slots.str!.length).toBe(1)
     })
 
     it('roundtrips strlen(s)', () => {
@@ -434,11 +434,11 @@ describe('I/O', () => {
     it('lifts cout << "hello"; as print with string value', () => {
       const body = liftBody('int main() { cout << "hello"; }')
       const mainNode = body[0]
-      const mainBody = mainNode?.children.body ?? []
+      const mainBody = mainNode?.slots.body ?? []
       const printNode = mainBody[0]
       expect(printNode).not.toBeNull()
       expect(printNode!.componentId).toBe('cpp:print')
-      const values = printNode!.children.values ?? []
+      const values = printNode!.slots.values ?? []
       expect(values.length).toBe(1)
       expect(values[0].componentId).toBe('cpp:literal_string')
       expect(values[0].properties.value).toBe('hello')
@@ -446,10 +446,10 @@ describe('I/O', () => {
 
     it('lifts cout << x << y; as print with two values', () => {
       const body = liftBody('int main() { cout << x << y; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const printNode = mainBody[0]
       expect(printNode!.componentId).toBe('cpp:print')
-      const values = printNode!.children.values ?? []
+      const values = printNode!.slots.values ?? []
       expect(values.length).toBe(2)
       expect(values[0].componentId).toBe('cpp:var_ref')
       expect(values[1].componentId).toBe('cpp:var_ref')
@@ -457,10 +457,10 @@ describe('I/O', () => {
 
     it('lifts cout << "hi" << endl; with endl component', () => {
       const body = liftBody('int main() { cout << "hi" << endl; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const printNode = mainBody[0]
       expect(printNode!.componentId).toBe('cpp:print')
-      const values = printNode!.children.values ?? []
+      const values = printNode!.slots.values ?? []
       expect(values.length).toBe(2)
       expect(values[0].componentId).toBe('cpp:literal_string')
       expect(values[1].componentId).toBe('cpp:endl')
@@ -492,11 +492,11 @@ describe('I/O', () => {
   describe('cin (input)', () => {
     it('lifts cin >> x; as input with one variable', () => {
       const body = liftBody('int main() { cin >> x; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const inputNode = mainBody[0]
       expect(inputNode).not.toBeNull()
       expect(inputNode!.componentId).toBe('cpp:input')
-      const values = inputNode!.children.values ?? []
+      const values = inputNode!.slots.values ?? []
       expect(values.length).toBe(1)
       expect(values[0].componentId).toBe('cpp:var_ref')
       expect(values[0].properties.name).toBe('x')
@@ -504,10 +504,10 @@ describe('I/O', () => {
 
     it('lifts cin >> x >> y; as input with two variables', () => {
       const body = liftBody('int main() { cin >> x >> y; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const inputNode = mainBody[0]
       expect(inputNode!.componentId).toBe('cpp:input')
-      const values = inputNode!.children.values ?? []
+      const values = inputNode!.slots.values ?? []
       expect(values.length).toBe(2)
     })
 
@@ -523,14 +523,14 @@ describe('I/O', () => {
 
     it('lifts if (cin >> a >> n >> m) as if with input condition', () => {
       const body = liftBody('int main() { if (cin >> a >> n >> m) {} }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const ifNode = mainBody[0]
       expect(ifNode).toBeDefined()
       expect(ifNode!.componentId).toBe('cpp:if')
-      const cond = (ifNode!.children.condition ?? [])[0]
+      const cond = (ifNode!.slots.condition ?? [])[0]
       expect(cond).toBeDefined()
       expect(cond!.componentId).toBe('cpp:input')
-      const values = cond!.children.values ?? []
+      const values = cond!.slots.values ?? []
       expect(values.length).toBe(3)
       expect(values[0].properties.name).toBe('a')
       expect(values[1].properties.name).toBe('n')
@@ -563,9 +563,9 @@ describe('I/O', () => {
   describe('cpp:endl', () => {
     it('lifts endl identifier as endl component (not var_ref)', () => {
       const body = liftBody('int main() { cout << endl; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const printNode = mainBody[0]
-      const values = printNode?.children.values ?? []
+      const values = printNode?.slots.values ?? []
       expect(values.length).toBeGreaterThan(0)
       const endlNode = values[values.length - 1]
       expect(endlNode.componentId).toBe('cpp:endl')
@@ -600,20 +600,20 @@ describe('Control Flow', () => {
   describe('if / if-else', () => {
     it('lifts if without else', () => {
       const body = liftBody('int main() { if (x > 0) { y = 1; } }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const ifNode = mainBody[0]
       expect(ifNode!.componentId).toBe('cpp:if')
-      expect(ifNode!.children.condition?.length).toBe(1)
-      expect(ifNode!.children.then_body?.length).toBeGreaterThan(0)
-      expect(ifNode!.children.else_body?.length ?? 0).toBe(0)
+      expect(ifNode!.slots.condition?.length).toBe(1)
+      expect(ifNode!.slots.then_body?.length).toBeGreaterThan(0)
+      expect(ifNode!.slots.else_body?.length ?? 0).toBe(0)
     })
 
     it('lifts if-else', () => {
       const body = liftBody('int main() { if (x > 0) { y = 1; } else { y = 2; } }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const ifNode = mainBody[0]
       expect(ifNode!.componentId).toBe('cpp:if')
-      expect(ifNode!.children.else_body?.length).toBeGreaterThan(0)
+      expect(ifNode!.slots.else_body?.length).toBeGreaterThan(0)
     })
 
     it('renders if-else block with hasElse extraState', () => {
@@ -634,7 +634,7 @@ describe('Control Flow', () => {
   describe('while loop', () => {
     it('lifts while loop', () => {
       const body = liftBody('int main() { while (x > 0) { x = x - 1; } }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const whileNode = mainBody[0]
       expect(whileNode!.componentId).toBe('cpp:loop_while')
     })
@@ -648,7 +648,7 @@ describe('Control Flow', () => {
   describe('for loop (counting)', () => {
     it('lifts counting for as count_loop', () => {
       const body = liftBody('int main() { for (int i = 0; i < 10; i++) { x = i; } }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const forNode = mainBody[0]
       expect(forNode!.componentId).toBe('cpp:loop_count')
       expect(forNode!.properties.var_name).toBe('i')
@@ -663,14 +663,14 @@ describe('Control Flow', () => {
   describe('break / continue', () => {
     it('lifts break', () => {
       const body = liftBody('int main() { while(1) { break; } }')
-      const whileBody = body[0]?.children.body?.[0]?.children.body ?? []
+      const whileBody = body[0]?.slots.body?.[0]?.slots.body ?? []
       const breakNode = whileBody[0]
       expect(breakNode!.componentId).toBe('cpp:break')
     })
 
     it('lifts continue', () => {
       const body = liftBody('int main() { while(1) { continue; } }')
-      const whileBody = body[0]?.children.body?.[0]?.children.body ?? []
+      const whileBody = body[0]?.slots.body?.[0]?.slots.body ?? []
       const contNode = whileBody[0]
       expect(contNode!.componentId).toBe('cpp:continue')
     })
@@ -706,7 +706,7 @@ describe('Functions', () => {
       expect(node).not.toBeNull()
       expect(node!.componentId).toBe('cpp:func_def')
       expect(node!.properties.name).toBe('add')
-      const paramChildren = node!.children.params ?? []
+      const paramChildren = node!.slots.params ?? []
       expect(paramChildren).toHaveLength(2)
       expect(paramChildren[0].componentId).toBe('param_decl')
       expect(paramChildren[0].properties.type).toBe('int')
@@ -773,7 +773,7 @@ describe('Functions', () => {
   describe('Function call (statement)', () => {
     it('lifts func(); as func_call', () => {
       const body = liftBody('int main() { greet(); }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const callNode = mainBody[0]
       expect(callNode).not.toBeNull()
       expect(callNode!.componentId).toBe('cpp:func_call')
@@ -782,10 +782,10 @@ describe('Functions', () => {
 
     it('lifts func(a, b); with args', () => {
       const body = liftBody('int main() { add(1, 2); }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const callNode = mainBody[0]
       expect(callNode!.componentId).toBe('cpp:func_call')
-      const args = callNode!.children.args ?? []
+      const args = callNode!.slots.args ?? []
       expect(args.length).toBe(2)
     })
 
@@ -812,20 +812,20 @@ describe('Functions', () => {
   describe('Return', () => {
     it('lifts return 0;', () => {
       const body = liftBody('int main() { return 0; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const retNode = mainBody[0]
       expect(retNode!.componentId).toBe('cpp:return')
-      const vals = retNode!.children.value ?? []
+      const vals = retNode!.slots.value ?? []
       expect(vals.length).toBe(1)
       expect(vals[0].componentId).toBe('cpp:literal_number')
     })
 
     it('lifts return; (no value)', () => {
       const body = liftBody('void f() { return; }')
-      const fBody = body[0]?.children.body ?? []
+      const fBody = body[0]?.slots.body ?? []
       const retNode = fBody[0]
       expect(retNode!.componentId).toBe('cpp:return')
-      const vals = retNode!.children.value ?? []
+      const vals = retNode!.slots.value ?? []
       expect(vals.length).toBe(0)
     })
 
@@ -869,21 +869,21 @@ describe('Compound Assignment & Increment', () => {
   describe('Compound assignment (+=, -=, etc.)', () => {
     it('lifts x += 5; as cpp_compound_assign', () => {
       const body = liftBody('int main() { x += 5; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const node = mainBody[0]
       expect(node).not.toBeNull()
       // Should be cpp_compound_assign, NOT var_assign
       expect(node!.componentId).toBe('cpp:var_assign_compound')
       // 🟢 **左值是接點**（2026-08-25）——這裡本來釘 `properties.name === 'x'`。
       expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(node!.children.target[0].componentId).toBe('cpp:var_ref')
-      expect(node!.children.target[0].properties.name).toBe('x')
+      expect(node!.slots.target[0].componentId).toBe('cpp:var_ref')
+      expect(node!.slots.target[0].properties.name).toBe('x')
       expect(node!.properties.operator).toBe('+=')
     })
 
     it('lifts x -= 3; correctly', () => {
       const body = liftBody('int main() { x -= 3; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const node = mainBody[0]
       expect(node!.componentId).toBe('cpp:var_assign_compound')
       expect(node!.properties.operator).toBe('-=')
@@ -909,19 +909,19 @@ describe('Compound Assignment & Increment', () => {
   describe('Increment / Decrement (i++, i--)', () => {
     it('lifts i++ as cpp_increment', () => {
       const body = liftBody('int main() { i++; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const node = mainBody[0]
       expect(node).not.toBeNull()
       expect(node!.componentId).toBe('cpp:increment')
       // 🟢 **運算元是接點**（2026-08-25）——`++` 的運算元是一個左值。
       expect(node!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(node!.children.target[0].properties.name).toBe('i')
+      expect(node!.slots.target[0].properties.name).toBe('i')
       expect(node!.properties.operator).toBe('++')
     })
 
     it('lifts i-- as cpp_increment with -- operator', () => {
       const body = liftBody('int main() { i--; }')
-      const mainBody = body[0]?.children.body ?? []
+      const mainBody = body[0]?.slots.body ?? []
       const node = mainBody[0]
       expect(node!.componentId).toBe('cpp:increment')
       expect(node!.properties.operator).toBe('--')

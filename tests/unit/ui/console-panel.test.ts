@@ -64,10 +64,10 @@ describe('ConsolePanel', () => {
     panel.log('Line 2')
     panel.log('Line 3')
     panel.showOutputUpTo(2)
-    const children = container.querySelectorAll('.console-line')
-    expect((children[0] as HTMLElement).style.display).toBe('')
-    expect((children[1] as HTMLElement).style.display).toBe('')
-    expect((children[2] as HTMLElement).style.display).toBe('none')
+    const slots = container.querySelectorAll('.console-line')
+    expect((slots[0] as HTMLElement).style.display).toBe('')
+    expect((slots[1] as HTMLElement).style.display).toBe('')
+    expect((slots[2] as HTMLElement).style.display).toBe('none')
   })
 
   it('should prompt input and resolve on submit', async () => {

@@ -10,7 +10,7 @@
       "_why": "🔴 **記住原文把起點寫成哪一種**（`enumerate(xs, 1)` 還是 `enumerate(xs, start=1)`）——兩種語義相同，而**產回去換一種等於改了使用者的碼**。空字串 ＝ 沒有起點。\n⚠️ 它是**寫法**不是語義，所以積木上沒有這一格（與 tuple 的括號同一條線）。"
     }
   ],
-  "children": {
+  "slots": {
     "value": "expression",
     "start": "expression"
   },

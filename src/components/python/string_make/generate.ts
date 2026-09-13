@@ -11,7 +11,7 @@ import { componentTraits } from '../../../core/component/traits'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:string_make', (node, ctx) => {
-    const parts = node.children.parts ?? []
+    const parts = node.slots.parts ?? []
     const body = parts
       .map((p) => {
         // 字面片段：原樣放進引號裡（**不**再包一層引號——它已經在字串內部了）

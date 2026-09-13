@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:array_declare', (node, ctx) => {
       const type = node.properties.type ?? 'int'
       const name = node.properties.name ?? 'arr'
-      const sizeNodes = node.children.size ?? []
+      const sizeNodes = node.slots.size ?? []
       // 🔴 **沒有大小就產出 `[]`——不得編一個出來。**
       //
       // 這裡原本是 `?? '10'`，而那讓
@@ -27,7 +27,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         ? generateExpression(sizeNodes[0], ctx)
         : String(node.properties.size ?? '')
       // 初始值三態：欄位不存在 → 無初始化；[] → `= {}`；有內容 → `= {…}`
-      const values = node.children.values
+      const values = node.slots.values
       const init = values === undefined ? '' : ` = {${values.map(v => generateExpression(v, ctx)).join(', ')}}`
       return `${indent(ctx)}${type} ${name}[${size}]${init};\n`
     })

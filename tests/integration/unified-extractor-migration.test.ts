@@ -49,9 +49,9 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:func_call')
     expect(result!.properties.name).toBe('add')
-    expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].componentId).toBe('cpp:literal_number')
-    expect(result!.children.args[1].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.args).toHaveLength(2)
+    expect(result!.slots.args[0].componentId).toBe('cpp:literal_number')
+    expect(result!.slots.args[1].componentId).toBe('cpp:var_ref')
   })
 
   it('render → extract roundtrip for func_call', () => {
@@ -69,7 +69,7 @@ describe('Migration roundtrip: func_call with dynamicRules', () => {
     expect(reExtracted).not.toBeNull()
     expect(reExtracted!.componentId).toBe('cpp:func_call')
     expect(reExtracted!.properties.name).toBe('sum')
-    expect(reExtracted!.children.args).toHaveLength(2)
+    expect(reExtracted!.slots.args).toHaveLength(2)
   })
 })
 
@@ -91,12 +91,12 @@ describe('Migration roundtrip: func_def with dynamicRules', () => {
     expect(result!.componentId).toBe('cpp:func_def')
     expect(result!.properties.name).toBe('add')
     expect(result!.properties.return_type).toBe('int')
-    expect(result!.children.params).toHaveLength(2)
-    expect(result!.children.params[0].componentId).toBe('param_decl')
-    expect(result!.children.params[0].properties.type).toBe('int')
-    expect(result!.children.params[0].properties.name).toBe('a')
-    expect(result!.children.params[1].properties.type).toBe('double')
-    expect(result!.children.body).toHaveLength(1)
+    expect(result!.slots.params).toHaveLength(2)
+    expect(result!.slots.params[0].componentId).toBe('param_decl')
+    expect(result!.slots.params[0].properties.type).toBe('int')
+    expect(result!.slots.params[0].properties.name).toBe('a')
+    expect(result!.slots.params[1].properties.type).toBe('double')
+    expect(result!.slots.body).toHaveLength(1)
   })
 
   it('render → extract roundtrip for func_def', () => {
@@ -113,8 +113,8 @@ describe('Migration roundtrip: func_def with dynamicRules', () => {
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
     expect(reExtracted!.componentId).toBe('cpp:func_def')
-    expect(reExtracted!.children.params).toHaveLength(1)
-    expect(reExtracted!.children.params[0].properties.name).toBe('name')
+    expect(reExtracted!.slots.params).toHaveLength(1)
+    expect(reExtracted!.slots.params[0].properties.name).toBe('name')
   })
 })
 
@@ -133,7 +133,7 @@ describe('Migration roundtrip: print with dynamicRules', () => {
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:print')
-    expect(result!.children.values).toHaveLength(2)
+    expect(result!.slots.values).toHaveLength(2)
   })
 
   it('render → extract roundtrip for print', () => {
@@ -150,7 +150,7 @@ describe('Migration roundtrip: print with dynamicRules', () => {
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
     expect(reExtracted!.componentId).toBe('cpp:print')
-    expect(reExtracted!.children.values).toHaveLength(3)
+    expect(reExtracted!.slots.values).toHaveLength(3)
   })
 })
 
@@ -173,10 +173,10 @@ describe('Migration roundtrip: input with dynamicRules', () => {
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:input')
-    expect(result!.children.values).toHaveLength(2)
-    expect(result!.children.values[0].componentId).toBe('cpp:var_ref')
-    expect(result!.children.values[0].properties.name).toBe('x')
-    expect(result!.children.values[1].properties.name, '🔴 第二格掉了').toBe('y')
+    expect(result!.slots.values).toHaveLength(2)
+    expect(result!.slots.values[0].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.values[0].properties.name).toBe('x')
+    expect(result!.slots.values[1].properties.name, '🔴 第二格掉了').toBe('y')
   })
 
   it('render → extract roundtrip for input', () => {
@@ -192,7 +192,7 @@ describe('Migration roundtrip: input with dynamicRules', () => {
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
     expect(reExtracted!.componentId).toBe('cpp:input')
-    expect(reExtracted!.children.values).toHaveLength(2)
+    expect(reExtracted!.slots.values).toHaveLength(2)
   })
 })
 
@@ -220,9 +220,9 @@ describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:input_formatted')
     expect(result!.properties.format).toBe('%d %f')
-    expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].properties.name).toBe('x')
-    expect(result!.children.args[1].componentId, '🔴 運算式那一格掉了').toBe('cpp:arithmetic')
+    expect(result!.slots.args).toHaveLength(2)
+    expect(result!.slots.args[0].properties.name).toBe('x')
+    expect(result!.slots.args[1].componentId, '🔴 運算式那一格掉了').toBe('cpp:arithmetic')
   })
 
   it('render → extract roundtrip for printf', () => {
@@ -235,7 +235,7 @@ describe('Migration roundtrip: scanf/printf with dynamicRules', () => {
     const reExtracted = extractor.extract(block as never)
     expect(reExtracted).not.toBeNull()
     expect(reExtracted!.componentId).toBe('cpp:print_formatted')
-    expect(reExtracted!.children.args).toHaveLength(1)
+    expect(reExtracted!.slots.args).toHaveLength(1)
   })
 })
 
@@ -257,8 +257,8 @@ describe('Migration roundtrip: if with elseif chain', () => {
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:if')
-    expect(result!.children.condition).toHaveLength(1)
-    expect(result!.children.then_body).toHaveLength(1)
+    expect(result!.slots.condition).toHaveLength(1)
+    expect(result!.slots.then_body).toHaveLength(1)
   })
 })
 
@@ -276,15 +276,15 @@ describe('Migration roundtrip: forward_decl with dynamicRules', () => {
     expect(result!.componentId).toBe('cpp:forward_decl')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.properties.name).toBe('add')
-    expect(result!.children.params).toHaveLength(2)
-    expect(result!.children.params[0].properties.type).toBe('int')
-    expect(result!.children.params[1].properties.type).toBe('double')
+    expect(result!.slots.params).toHaveLength(2)
+    expect(result!.slots.params[0].properties.type).toBe('int')
+    expect(result!.slots.params[1].properties.type).toBe('double')
   })
 })
 
 describe('Migration roundtrip: doc_comment', () => {
   // NOTE: doc_comment uses flat properties (param_0_name, param_0_desc) in its semantic model,
-  // not children. Keeping strategy-based rendering for now.
+  // not slots. Keeping strategy-based rendering for now.
   it('extract → component identity for doc_comment brief field', () => {
     const blockState = {
       type: 'cpp_doc_comment',

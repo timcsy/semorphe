@@ -5,9 +5,9 @@ import { writableArray } from '../../../languages/cpp/core/runtime/cstring'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:memory_fill', async (node, ctx) => {
-      const arr = writableArray(ctx as never, (node.children.ptr ?? [])[0], 'memset 的目標')
-      const v = await ctx.evaluate((node.children.value ?? [])[0])
-      const size = ctx.toNumber(await ctx.evaluate((node.children.size ?? [])[0]))
+      const arr = writableArray(ctx as never, (node.slots.ptr ?? [])[0], 'memset 的目標')
+      const v = await ctx.evaluate((node.slots.value ?? [])[0])
+      const size = ctx.toNumber(await ctx.evaluate((node.slots.size ?? [])[0]))
       // 目標是字元陣列時要存**字元**——`'a'` 求值成數字 97，直接塞進去會讓
       // `cout << s` 印出 `979797`。
       const asChar = arr.length > 0 && arr[0]?.type === 'char'

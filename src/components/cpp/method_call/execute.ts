@@ -31,7 +31,7 @@ export function registerExecute(register: (component: string, executor: Componen
       // **必須無引數、且必須真的有那個同名欄位**——兩者有一個不成立就照樣丟錯。
       //
       // > **一個退路的安全性不在它退到哪裡，在它的入口條件有多窄。**
-      const args = node.children.args ?? []
+      const args = node.slots.args ?? []
       if (args.length === 0 && obj.value instanceof Map && obj.value.has(methodName)) {
         return obj.value.get(methodName)!
       }
@@ -48,7 +48,7 @@ export function registerExecute(register: (component: string, executor: Componen
         '%1': `${obj.structName ?? '?'}::${methodName}（純虛擬，沒有實作）`,
       })
     }
-    return runOnInstance(obj, m, node.children.args ?? [], ctx)
+    return runOnInstance(obj, m, node.slots.args ?? [], ctx)
   }
 
   register('cpp:method_call', callMethod)

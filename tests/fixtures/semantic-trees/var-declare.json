@@ -2,7 +2,7 @@
   "id": "test_program",
   "componentId": "cpp:program",
   "properties": {},
-  "children": {
+  "slots": {
     "body": [
       {
         "id": "test_var_declare",
@@ -11,7 +11,7 @@
           "name": "x",
           "type": "int"
         },
-        "children": {
+        "slots": {
           "initializer": [
             {
               "id": "test_number",
@@ -19,7 +19,7 @@
               "properties": {
                 "value": "5"
               },
-              "children": {}
+              "slots": {}
             }
           ]
         }

@@ -18,7 +18,7 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:set_make', async (node, ctx) => {
     const seen = new Set<string>()
     const items: RuntimeValue[] = []
-    for (const c of node.children.items ?? []) {
+    for (const c of node.slots.items ?? []) {
       const v = await ctx.evaluate(c)
       const k = pythonDisplay(v)
       if (!seen.has(k)) { seen.add(k); items.push(v) }

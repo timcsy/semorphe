@@ -41,7 +41,7 @@ function fp(n: SemanticNode | null | undefined): string {
     .filter(([, v]) => v !== undefined && v !== null && v !== '')
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${k}=${String(v)}`).join(',')
-  const kids = Object.entries(n.children ?? {}).sort(([a], [b]) => a.localeCompare(b))
+  const kids = Object.entries(n.slots ?? {}).sort(([a], [b]) => a.localeCompare(b))
     .map(([k, arr]) => `${k}[${(arr ?? []).map(fp).join('|')}]`).join('')
   return `(${n.componentId}${props ? ' ' + props : ''}${kids})`
 }

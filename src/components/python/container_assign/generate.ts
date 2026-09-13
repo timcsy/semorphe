@@ -4,8 +4,8 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:container_assign', (node, ctx) => {
-    const t = generateExpression((node.children.target ?? [])[0], ctx)
-    const v = generateExpression((node.children.value ?? [])[0], ctx)
+    const t = generateExpression((node.slots.target ?? [])[0], ctx)
+    const v = generateExpression((node.slots.value ?? [])[0], ctx)
     return `${indent(ctx)}${t} = ${v}\n`
   })
 }

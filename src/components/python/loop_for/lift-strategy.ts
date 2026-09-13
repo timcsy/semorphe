@@ -33,27 +33,27 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const right = node.childForFieldName('right')
     const body = node.childForFieldName('body')
 
-    const children: Record<string, SemanticNode[]> = {}
+    const slots: Record<string, SemanticNode[]> = {}
     const properties: Record<string, string> = {}
 
     if (left?.type === 'pattern_list') {
-      children.targets = left.namedChildren
+      slots.targets = left.namedChildren
         .filter((c) => c.type === 'identifier')
         .map((c) => createNode('param_decl', { type: '', name: c.text }))
       // ⚠️ `obj` 仍然填第一個名字——存檔格式與積木的那個欄位都還在用它。
-      properties.obj = String(children.targets[0]?.properties.name ?? 'i')
+      properties.obj = String(slots.targets[0]?.properties.name ?? 'i')
     } else {
       properties.obj = left?.text ?? 'i'
     }
 
     const it = right ? ctx.lift(right) : null
-    children.iterable = it ? [it] : []
+    slots.iterable = it ? [it] : []
     // 迴圈體：`block` 節點由核心的 `_compound` 樣式拆開
     const liftedBody = body ? ctx.lift(body) : null
-    children.body = liftedBody
-      ? (liftedBody.componentId === '_compound' ? (liftedBody.children.body ?? []) : [liftedBody])
+    slots.body = liftedBody
+      ? (liftedBody.componentId === '_compound' ? (liftedBody.slots.body ?? []) : [liftedBody])
       : []
 
-    return createNode('python:loop_for', properties, children)
+    return createNode('python:loop_for', properties, slots)
   })
 }

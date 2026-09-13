@@ -45,8 +45,8 @@ describe('C++ Declaration Lifters', () => {
     expect(result!.componentId).toBe('cpp:var_declare')
     expect(result!.properties.name).toBe('x')
     expect(result!.properties.type).toBe('int')
-    expect(result!.children.initializer).toHaveLength(1)
-    expect(result!.children.initializer[0].componentId).toBe('cpp:literal_number')
+    expect(result!.slots.initializer).toHaveLength(1)
+    expect(result!.slots.initializer[0].componentId).toBe('cpp:literal_number')
   })
 
   it('should lift declaration without init to var_declare', () => {
@@ -84,13 +84,13 @@ describe('C++ Declaration Lifters', () => {
     expect(result!.componentId).toBe('cpp:forward_decl')
     expect(result!.properties.return_type).toBe('void')
     expect(result!.properties.name).toBe('listp')
-    expect(result!.children.params).toHaveLength(2)
-    expect(result!.children.params[0].componentId).toBe('param_decl')
-    expect(result!.children.params[0].properties.type).toBe('int*')
-    expect(result!.children.params[0].properties.name).toBe('')
-    expect(result!.children.params[1].componentId).toBe('param_decl')
-    expect(result!.children.params[1].properties.type).toBe('int')
-    expect(result!.children.params[1].properties.name).toBe('')
+    expect(result!.slots.params).toHaveLength(2)
+    expect(result!.slots.params[0].componentId).toBe('param_decl')
+    expect(result!.slots.params[0].properties.type).toBe('int*')
+    expect(result!.slots.params[0].properties.name).toBe('')
+    expect(result!.slots.params[1].componentId).toBe('param_decl')
+    expect(result!.slots.params[1].properties.type).toBe('int')
+    expect(result!.slots.params[1].properties.name).toBe('')
   })
 
   it('should lift forward declaration with no params', () => {
@@ -108,7 +108,7 @@ describe('C++ Declaration Lifters', () => {
     expect(result!.componentId).toBe('cpp:forward_decl')
     expect(result!.properties.return_type).toBe('int')
     expect(result!.properties.name).toBe('getVal')
-    expect(result!.children.params).toHaveLength(0)
+    expect(result!.slots.params).toHaveLength(0)
   })
 
   it('should lift array declaration', () => {
@@ -125,7 +125,7 @@ describe('C++ Declaration Lifters', () => {
     expect(result!.componentId).toBe('cpp:array_declare')
     expect(result!.properties.name).toBe('arr')
     // Size is now a child expression node
-    const sizeChildren = result!.children.size ?? []
+    const sizeChildren = result!.slots.size ?? []
     expect(sizeChildren.length).toBe(1)
   })
 
@@ -149,8 +149,8 @@ describe('C++ Declaration Lifters', () => {
     expect(result!.componentId).toBe('cpp:var_assign')
     // 🟢 **左值是接點**（2026-08-25）——釘接點比釘字串強：它同時證明左邊被 lift 過。
     expect(result!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
-    expect(result!.children.target[0].componentId).toBe('cpp:var_ref')
-    expect(result!.children.value).toHaveLength(1)
+    expect(result!.slots.target[0].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.value).toHaveLength(1)
   })
 })
 
@@ -205,7 +205,7 @@ describe('C++ Expression Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:logic_not')
-    expect(result!.children.operand).toHaveLength(1)
+    expect(result!.slots.operand).toHaveLength(1)
   })
 
   it('should lift unary - to negate', () => {
@@ -217,7 +217,7 @@ describe('C++ Expression Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:negate')
-    expect(result!.children.value).toHaveLength(1)
+    expect(result!.slots.value).toHaveLength(1)
   })
 
   it('should degrade unknown unary op (++) to raw_code', () => {
@@ -251,8 +251,8 @@ describe('C++ Expression Lifters', () => {
     expect(result!.componentId).toBe('cpp:array_at')
     // 🟢 **容器是接點**（2026-08-26）——釘接點比釘字串強。
     expect(result!.properties.obj, '🔴 字串屬性長回來了').toBeUndefined()
-    expect(result!.children.obj[0].properties.name).toBe('arr')
-    expect(result!.children.index).toHaveLength(1)
+    expect(result!.slots.obj[0].properties.name).toBe('arr')
+    expect(result!.slots.index).toHaveLength(1)
   })
 })
 
@@ -285,9 +285,9 @@ describe('C++ Statement Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:if')
-    expect(result!.children.condition).toHaveLength(1)
-    expect(result!.children.then_body.length).toBeGreaterThan(0)
-    expect(result!.children.else_body).toHaveLength(0)
+    expect(result!.slots.condition).toHaveLength(1)
+    expect(result!.slots.then_body.length).toBeGreaterThan(0)
+    expect(result!.slots.else_body).toHaveLength(0)
   })
 
   it('should lift if_statement with else', () => {
@@ -306,7 +306,7 @@ describe('C++ Statement Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:if')
-    expect(result!.children.else_body.length).toBeGreaterThan(0)
+    expect(result!.slots.else_body.length).toBeGreaterThan(0)
   })
 
   it('should lift while_statement', () => {
@@ -328,7 +328,7 @@ describe('C++ Statement Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:loop_while')
-    expect(result!.children.condition).toHaveLength(1)
+    expect(result!.slots.condition).toHaveLength(1)
   })
 
   it('should lift counting for_statement to count_loop', () => {
@@ -357,8 +357,8 @@ describe('C++ Statement Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:loop_count')
     expect(result!.properties.var_name).toBe('i')
-    expect(result!.children.from).toHaveLength(1)
-    expect(result!.children.to).toHaveLength(1)
+    expect(result!.slots.from).toHaveLength(1)
+    expect(result!.slots.to).toHaveLength(1)
   })
 
   it('should detect inclusive count_loop (<=)', () => {
@@ -436,7 +436,7 @@ describe('C++ Statement Lifters', () => {
     expect(result!.properties.var_name).toBe('i')
     expect(result!.properties.inclusive).toBe('FALSE')
     // No initializer value → empty from
-    expect(result!.children.from).toHaveLength(0)
+    expect(result!.slots.from).toHaveLength(0)
   })
 
   it('should NOT treat i += 2 as counting for', () => {
@@ -483,9 +483,9 @@ describe('C++ Statement Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:loop_for')
-    expect(result!.children.init).toBeDefined()
-    expect(result!.children.cond).toBeDefined()
-    expect(result!.children.update).toBeDefined()
+    expect(result!.slots.init).toBeDefined()
+    expect(result!.slots.cond).toBeDefined()
+    expect(result!.slots.update).toBeDefined()
   })
 
   it('should reject mismatched variable in counting for (cond uses different var)', () => {
@@ -556,11 +556,11 @@ describe('C++ Statement Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:loop_for')
     // init should be var_declare (passed through as-is)
-    expect(result!.children.init).toHaveLength(1)
-    expect(result!.children.init[0].componentId).toBe('cpp:var_declare')
+    expect(result!.slots.init).toHaveLength(1)
+    expect(result!.slots.init[0].componentId).toBe('cpp:var_declare')
     // No condition or update
-    expect(result!.children.cond).toHaveLength(0)
-    expect(result!.children.update).toHaveLength(0)
+    expect(result!.slots.cond).toHaveLength(0)
+    expect(result!.slots.update).toHaveLength(0)
   })
 
   it('should wrap statement-component update (i += 2) as cpp_raw_expression in cpp_for_loop', () => {
@@ -591,11 +591,11 @@ describe('C++ Statement Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:loop_for')
     // init (declaration) → var_declare (passed through)
-    expect(result!.children.init[0].componentId).toBe('cpp:var_declare')
+    expect(result!.slots.init[0].componentId).toBe('cpp:var_declare')
     // cond present
-    expect(result!.children.cond).toHaveLength(1)
+    expect(result!.slots.cond).toHaveLength(1)
     // update (assignment_expression with +=) → cpp_compound_assign (passed through)
-    expect(result!.children.update[0].componentId).toBe('cpp:var_assign_compound')
+    expect(result!.slots.update[0].componentId).toBe('cpp:var_assign_compound')
   })
 
   it('should lift function_definition', () => {
@@ -624,11 +624,11 @@ describe('C++ Statement Lifters', () => {
     expect(result!.componentId).toBe('cpp:func_def')
     expect(result!.properties.name).toBe('add')
     expect(result!.properties.return_type).toBe('int')
-    expect(result!.children.params).toHaveLength(1)
-    expect(result!.children.params[0].componentId).toBe('param_decl')
-    expect(result!.children.params[0].properties.type).toBe('int')
-    expect(result!.children.params[0].properties.name).toBe('a')
-    expect(result!.children.body).toHaveLength(1)
+    expect(result!.slots.params).toHaveLength(1)
+    expect(result!.slots.params[0].componentId).toBe('param_decl')
+    expect(result!.slots.params[0].properties.type).toBe('int')
+    expect(result!.slots.params[0].properties.name).toBe('a')
+    expect(result!.slots.body).toHaveLength(1)
   })
 
   it('should lift compound_statement as _compound pseudo-node', () => {
@@ -638,7 +638,7 @@ describe('C++ Statement Lifters', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('_compound')
-    expect(result!.children.body).toHaveLength(1)
+    expect(result!.slots.body).toHaveLength(1)
   })
 
   it('should lift condition_clause by unwrapping', () => {
@@ -665,8 +665,8 @@ describe('C++ I/O Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:print_formatted')
     expect(result!.properties.format).toBe('%d')
-    expect(result!.children.args).toHaveLength(1)
-    expect(result!.children.args[0].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.args).toHaveLength(1)
+    expect(result!.slots.args[0].componentId).toBe('cpp:var_ref')
   })
 
   it('should lift printf("%.2f\\n", x) preserving float format', () => {
@@ -682,7 +682,7 @@ describe('C++ I/O Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:print_formatted')
     expect(result!.properties.format).toBe('%.2f\\n')
-    expect(result!.children.args).toHaveLength(1)
+    expect(result!.slots.args).toHaveLength(1)
   })
 
   it('should lift printf with no args (format only)', () => {
@@ -697,7 +697,7 @@ describe('C++ I/O Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:print_formatted')
     expect(result!.properties.format).toBe('hello\\n')
-    expect(result!.children.args).toHaveLength(0)
+    expect(result!.slots.args).toHaveLength(0)
   })
 
   it('should lift scanf to cpp_scanf with format preserved', () => {
@@ -716,9 +716,9 @@ describe('C++ I/O Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:input_formatted')
     expect(result!.properties.format).toBe('%d')
-    expect(result!.children.args).toHaveLength(1)
-    expect(result!.children.args[0].componentId).toBe('cpp:var_ref')
-    expect(result!.children.args[0].properties.name).toBe('x')
+    expect(result!.slots.args).toHaveLength(1)
+    expect(result!.slots.args[0].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.args[0].properties.name).toBe('x')
   })
 
   it('should lift scanf("%d %s", &x, buf) preserving multi-format', () => {
@@ -738,9 +738,9 @@ describe('C++ I/O Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:input_formatted')
     expect(result!.properties.format).toBe('%d %s')
-    expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].properties.name).toBe('x')
-    expect(result!.children.args[1].properties.name).toBe('buf')
+    expect(result!.slots.args).toHaveLength(2)
+    expect(result!.slots.args[0].properties.name).toBe('x')
+    expect(result!.slots.args[1].properties.name).toBe('buf')
   })
 
   it('should lift scanf with pointer_expression (&x) args', () => {
@@ -763,9 +763,9 @@ describe('C++ I/O Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:input_formatted')
     expect(result!.properties.format).toBe('%d %d')
-    expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].properties.name).toBe('a')
-    expect(result!.children.args[1].properties.name).toBe('b')
+    expect(result!.slots.args).toHaveLength(2)
+    expect(result!.slots.args[0].properties.name).toBe('a')
+    expect(result!.slots.args[1].properties.name).toBe('b')
   })
 
   it('should lift generic function call to func_call_expr', () => {
@@ -780,6 +780,6 @@ describe('C++ I/O Lifters', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:func_call')
     expect(result!.properties.name).toBe('myFunc')
-    expect(result!.children.args).toHaveLength(1)
+    expect(result!.slots.args).toHaveLength(1)
   })
 })

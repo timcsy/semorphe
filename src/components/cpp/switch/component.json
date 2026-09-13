@@ -2,7 +2,7 @@
   "componentId": "cpp:switch",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "expr": "expression",
     "cases": "statements"
   },

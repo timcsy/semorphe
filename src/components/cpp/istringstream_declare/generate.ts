@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:istringstream_declare', (node, ctx) => {
       const name = node.properties.name ?? 'in'
-      const src = node.children.source ?? []
+      const src = node.slots.source ?? []
       const arg = src.length > 0 ? generateExpression(src[0], ctx) : ''
       return `${indent(ctx)}istringstream ${name}(${arg});\n`
     })

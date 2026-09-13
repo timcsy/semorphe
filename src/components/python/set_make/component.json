@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "與串列字面最像，而**集合沒有順序也不重複**——指同一個抽象父會把「同一個值放兩次只留一個」這件事抹掉，而那正是集合存在的理由。",
   "properties": [],
-  "children": {
+  "slots": {
     "items": "expression"
   },
   "role": "expression",

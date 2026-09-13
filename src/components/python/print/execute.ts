@@ -25,7 +25,7 @@ export function registerExecute(register: (component: string, executor: Componen
   register('python:print', async (node, ctx) => {
     const all = []
     // ⚠️ `print(*items)`——攤開走同一份（見 `languages/python/args.ts`）
-    all.push(...(await evalPythonArgs(node.children.values ?? [], ctx)))
+    all.push(...(await evalPythonArgs(node.slots.values ?? [], ctx)))
     // ⚠️ `end` 與 `sep` 的**預設值是 Python 的規則**，不是這裡的巧合
     const end = kwArg(all, 'end')
     const sep = kwArg(all, 'sep')

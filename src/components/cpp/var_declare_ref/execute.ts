@@ -15,7 +15,7 @@ export function registerExecute(register: (component: string, executor: Componen
      */
     register('cpp:var_declare_ref', async (node, ctx) => {
       const name = String(node.properties.name)
-      const inits = node.children.initializer ?? []
+      const inits = node.slots.initializer ?? []
       const target = inits[0]
       if (target && isVariableRef(target.componentId) && target.properties?.name !== undefined) {
         // `get`／`set` 會沿 parent 往上找，所以目標作用域傳當前的就夠

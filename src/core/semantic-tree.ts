@@ -25,19 +25,19 @@ export function resetIdCounter(): void {
 export function createEmptyProgram(): SemanticNode {
   const root = programRootComponent()
   if (!root) throw new Error('沒有任何元件宣告 `traits.programRoot` —— 建不出空的語義樹')
-  return { id: generateId(), componentId: root, properties: {}, children: { body: [] } }
+  return { id: generateId(), componentId: root, properties: {}, slots: { body: [] } }
 }
 
 export function createNode(
   component: string,
   properties: Record<string, PropertyValue> = {},
-  children: Record<string, SemanticNode[]> = {},
+  slots: Record<string, SemanticNode[]> = {},
 ): SemanticNode {
   return {
     id: generateId(),
     componentId: component,
     properties,
-    children,
+    slots,
   }
 }
 
@@ -48,11 +48,11 @@ export function addChild(
   child: SemanticNode,
 ): SemanticNode {
   if (tree.id === targetId) {
-    const existingChildren = tree.children[childName] ?? []
+    const existingChildren = tree.slots[childName] ?? []
     return {
       ...tree,
-      children: {
-        ...tree.children,
+      slots: {
+        ...tree.slots,
         [childName]: [...existingChildren, child],
       },
     }
@@ -60,7 +60,7 @@ export function addChild(
 
   const newChildren: Record<string, SemanticNode[]> = {}
   let changed = false
-  for (const [key, nodes] of Object.entries(tree.children)) {
+  for (const [key, nodes] of Object.entries(tree.slots)) {
     const mapped = nodes.map(n => {
       const updated = addChild(n, targetId, childName, child)
       if (updated !== n) changed = true
@@ -69,7 +69,7 @@ export function addChild(
     newChildren[key] = mapped
   }
 
-  return changed ? { ...tree, children: newChildren } : tree
+  return changed ? { ...tree, slots: newChildren } : tree
 }
 
 export function removeChild(
@@ -79,12 +79,12 @@ export function removeChild(
   index: number,
 ): SemanticNode {
   if (tree.id === targetId) {
-    const existing = tree.children[childName] ?? []
+    const existing = tree.slots[childName] ?? []
     const updated = [...existing.slice(0, index), ...existing.slice(index + 1)]
     return {
       ...tree,
-      children: {
-        ...tree.children,
+      slots: {
+        ...tree.slots,
         [childName]: updated,
       },
     }
@@ -92,7 +92,7 @@ export function removeChild(
 
   const newChildren: Record<string, SemanticNode[]> = {}
   let changed = false
-  for (const [key, nodes] of Object.entries(tree.children)) {
+  for (const [key, nodes] of Object.entries(tree.slots)) {
     const mapped = nodes.map(n => {
       const updated = removeChild(n, targetId, childName, index)
       if (updated !== n) changed = true
@@ -101,7 +101,7 @@ export function removeChild(
     newChildren[key] = mapped
   }
 
-  return changed ? { ...tree, children: newChildren } : tree
+  return changed ? { ...tree, slots: newChildren } : tree
 }
 
 export function updateProperty(
@@ -119,7 +119,7 @@ export function updateProperty(
 
   const newChildren: Record<string, SemanticNode[]> = {}
   let changed = false
-  for (const [k, nodes] of Object.entries(tree.children)) {
+  for (const [k, nodes] of Object.entries(tree.slots)) {
     const mapped = nodes.map(n => {
       const updated = updateProperty(n, targetId, key, value)
       if (updated !== n) changed = true
@@ -128,13 +128,13 @@ export function updateProperty(
     newChildren[k] = mapped
   }
 
-  return changed ? { ...tree, children: newChildren } : tree
+  return changed ? { ...tree, slots: newChildren } : tree
 }
 
 export function findById(tree: SemanticNode, id: string): SemanticNode | null {
   if (tree.id === id) return tree
 
-  for (const nodes of Object.values(tree.children)) {
+  for (const nodes of Object.values(tree.slots)) {
     for (const node of nodes) {
       const found = findById(node, id)
       if (found) return found
@@ -163,12 +163,12 @@ export function nodeEquals(a: SemanticNode, b: SemanticNode): boolean {
     if (a.properties[key] !== b.properties[key]) return false
   }
 
-  const aChildKeys = Object.keys(a.children)
-  const bChildKeys = Object.keys(b.children)
+  const aChildKeys = Object.keys(a.slots)
+  const bChildKeys = Object.keys(b.slots)
   if (aChildKeys.length !== bChildKeys.length) return false
   for (const key of aChildKeys) {
-    const aChild = a.children[key]
-    const bChild = b.children[key]
+    const aChild = a.slots[key]
+    const bChild = b.slots[key]
     if (bChild === undefined) return false
     if (aChild.length !== bChild.length) return false
     for (let i = 0; i < aChild.length; i++) {
@@ -187,8 +187,8 @@ export function semanticEquals(a: SemanticModel, b: SemanticModel): boolean {
 /** 走訪 SemanticNode 樹 */
 export function walkNodes(root: SemanticNode, visitor: (node: SemanticNode) => void): void {
   visitor(root)
-  for (const children of Object.values(root.children)) {
-    for (const node of children) {
+  for (const slots of Object.values(root.slots)) {
+    for (const node of slots) {
       walkNodes(node, visitor)
     }
   }

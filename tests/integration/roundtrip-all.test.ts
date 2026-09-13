@@ -55,41 +55,41 @@ beforeAll(() => {
 })
 
 /**
- * Build a minimal SemanticNode with dummy values for all properties and children
+ * Build a minimal SemanticNode with dummy values for all properties and slots
  * based on the block's component definition.
  */
 function buildDummyNode(spec: BlockSpec) {
   const component = spec.componentMapping!
   const props: Record<string, string> = {}
-  const children: Record<string, any[]> = {}
+  const slots: Record<string, any[]> = {}
 
   for (const prop of component.properties ?? []) {
     props[prop] = 'test'
   }
 
-  const childDefs = component.children ?? {}
-  // children can be array of objects or a plain object
+  const childDefs = component.slots ?? {}
+  // slots can be array of objects or a plain object
   if (Array.isArray(childDefs)) {
     for (const childObj of childDefs) {
       for (const [name, role] of Object.entries(childObj)) {
         if (role === 'statements') {
-          children[name] = [] // empty statement list
+          slots[name] = [] // empty statement list
         } else {
-          children[name] = [createNode('cpp:literal_number', { value: '0' })]
+          slots[name] = [createNode('cpp:literal_number', { value: '0' })]
         }
       }
     }
   } else {
     for (const [name, role] of Object.entries(childDefs)) {
       if (role === 'statements') {
-        children[name] = []
+        slots[name] = []
       } else {
-        children[name] = [createNode('cpp:literal_number', { value: '0' })]
+        slots[name] = [createNode('cpp:literal_number', { value: '0' })]
       }
     }
   }
 
-  return createNode(component.componentId, props, children)
+  return createNode(component.componentId, props, slots)
 }
 
 describe('Full Roundtrip — All 68 Blocks', () => {

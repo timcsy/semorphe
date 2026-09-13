@@ -24,8 +24,8 @@ import type { RuntimeValue } from '../../../interpreter/types'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pair_make', async (node, ctx) => {
-    const f = node.children.first?.[0]
-    const s = node.children.second?.[0]
+    const f = node.slots.first?.[0]
+    const s = node.slots.second?.[0]
     const fv: RuntimeValue = f ? await ctx.evaluate(f) : { type: 'int', value: 0 }
     const sv: RuntimeValue = s ? await ctx.evaluate(s) : { type: 'int', value: 0 }
     const fields = new Map<string, RuntimeValue>([

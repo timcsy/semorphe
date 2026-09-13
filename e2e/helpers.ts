@@ -280,7 +280,7 @@ export async function appReady(page: Page): Promise<void> {
 export async function treeReady(page: Page): Promise<void> {
   await page.waitForFunction(() => {
     const t = (window as any).__app?.syncController?.currentTree
-    return Boolean(t) && Object.keys(t.children ?? {}).length > 0
+    return Boolean(t) && Object.keys(t.slots ?? {}).length > 0
   }, undefined, { timeout: 30_000 })
 }
 

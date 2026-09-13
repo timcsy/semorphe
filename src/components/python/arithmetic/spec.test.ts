@@ -19,11 +19,11 @@ describe('python:arithmetic', () => {
     const t = await liftPython('1 + 2')
     const find = (n: SemanticNode | null): SemanticNode | undefined =>
       !n ? undefined : n.componentId === 'python:arithmetic' ? n
-        : Object.values(n.children ?? {}).flat().map((k) => find(k)).find(Boolean)
+        : Object.values(n.slots ?? {}).flat().map((k) => find(k)).find(Boolean)
     const a = find(await liftPython('1 + 2'))
     expect(a, '★ 錨點：先要找得到那顆節點').toBeTruthy()
-    expect(a!.children.left?.length, 'left 接點空了').toBe(1)
-    expect(a!.children.right?.length, 'right 接點空了').toBe(1)
+    expect(a!.slots.left?.length, 'left 接點空了').toBe(1)
+    expect(a!.slots.right?.length, 'right 接點空了').toBe(1)
     void t
   })
 

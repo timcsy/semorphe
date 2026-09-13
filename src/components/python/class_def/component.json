@@ -14,7 +14,7 @@
       "default": ""
     }
   ],
-  "children": {
+  "slots": {
     "methods": "statements",
     "fields": "statements"
   },

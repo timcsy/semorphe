@@ -20,7 +20,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
       inputs: {},
     }
 
-    const declarators = node.children.declarators ?? []
+    const declarators = node.slots.declarators ?? []
 
     // 🔴 **裝不下的宣告子，各畫各的積木**（2026-09-10）
     //
@@ -62,7 +62,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
       for (let i = 0; i < declarators.length; i++) {
         const d = declarators[i]
         block.fields[`NAME_${i}`] = d.properties.name ?? 'x'
-        const inits = d.children.initializer ?? []
+        const inits = d.slots.initializer ?? []
         if (inits.length > 0) {
           const initBlock = ctx.renderExpression(inits[0])
           if (initBlock) {
@@ -76,7 +76,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
       block.extraState = { items }
     } else {
       block.fields.NAME_0 = node.properties.name ?? 'x'
-      const inits = node.children.initializer ?? []
+      const inits = node.slots.initializer ?? []
       if (inits.length > 0) {
         const initBlock = ctx.renderExpression(inits[0])
         if (initBlock) {
@@ -114,7 +114,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
     }
 
     // condition
-    const condChildren = node.children.condition ?? []
+    const condChildren = node.slots.condition ?? []
     if (condChildren.length > 0) {
       const condBlock = ctx.renderExpression(condChildren[0])
       if (condBlock) {
@@ -123,7 +123,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
     }
 
     // then body
-    const thenChildren = node.children.then_body ?? []
+    const thenChildren = node.slots.then_body ?? []
     if (thenChildren.length > 0) {
       const chain = ctx.renderStatementChain(thenChildren)
       if (chain) {
@@ -135,13 +135,13 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
     let elseIfCount = 0
     let current = node
     while (true) {
-      const elseChildren = current.children.else_body ?? []
+      const elseChildren = current.slots.else_body ?? []
       // If else_body is exactly one `if` node marked as else-if, flatten into mutator inputs
       if (elseChildren.length === 1 && isElseIfChainable(elseChildren[0].componentId) && elseChildren[0].properties.isElseIf === 'true') {
         const elseIfNode = elseChildren[0]
 
         // Render else-if condition
-        const elifCond = elseIfNode.children.condition ?? []
+        const elifCond = elseIfNode.slots.condition ?? []
         if (elifCond.length > 0) {
           const condBlock = ctx.renderExpression(elifCond[0])
           if (condBlock) {
@@ -150,7 +150,7 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
         }
 
         // Render else-if body
-        const elifBody = elseIfNode.children.then_body ?? []
+        const elifBody = elseIfNode.slots.then_body ?? []
         if (elifBody.length > 0) {
           const chain = ctx.renderStatementChain(elifBody)
           if (chain) {

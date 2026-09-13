@@ -34,7 +34,7 @@ const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const collect = (n: SemanticNode, out: string[] = []): string[] => {
   out.push(n.componentId)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
 const run = async (c: string): Promise<string> => {
@@ -93,11 +93,11 @@ describe('膠囊自證：cpp:pin_constant', () => {
    * 所以這一支**直接餵一顆合成的節點**給產生器。
    */
   it('★ generate：從積木來的節點產得出名字', () => {
-    const node = { componentId: 'cpp:pin_constant', properties: { value: 'INPUT_PULLUP' }, children: {} } as unknown as SemanticNode
+    const node = { componentId: 'cpp:pin_constant', properties: { value: 'INPUT_PULLUP' }, slots: {} } as unknown as SemanticNode
     const code = generateCode(
-      { componentId: 'cpp:program', properties: {}, children: { body: [
-        { componentId: 'cpp:pin_mode', properties: {}, children: {
-          pin: [{ componentId: 'cpp:literal_number', properties: { value: '2' }, children: {} } as unknown as SemanticNode],
+      { componentId: 'cpp:program', properties: {}, slots: { body: [
+        { componentId: 'cpp:pin_mode', properties: {}, slots: {
+          pin: [{ componentId: 'cpp:literal_number', properties: { value: '2' }, slots: {} } as unknown as SemanticNode],
           mode: [node],
         } } as unknown as SemanticNode,
       ] } } as unknown as SemanticNode, 'cpp', apcs as unknown as StylePreset)

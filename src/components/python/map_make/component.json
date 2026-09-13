@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "與同族串列字面那顆同一個理由：C++ 那側最接近的是宣告，而這是一個值。",
   "properties": [],
-  "children": { "pairs": "expression" },
+  "slots": { "pairs": "expression" },
   "role": "expression",
   "owner": "(python)",
   "paths": {

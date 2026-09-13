@@ -884,7 +884,7 @@ export class App {
     const rest = tree
       ? (unwrapSkeletonFrame(tree, this.currentSkeletonId) as SemanticNode)
       : undefined
-    const hasWork = (rest?.children?.body ?? []).length > 0
+    const hasWork = (rest?.slots?.body ?? []).length > 0
 
     const go = async (): Promise<void> => {
       // 🔴 **三個持有者一起換**（鷹架、補丁器、同步器）——見 `adoptSkeleton`
@@ -896,7 +896,7 @@ export class App {
       // ⚠️ 沿用原本那顆根節點——`cpp:program` 這種身分不該出現在視圖層（P9）。
       // ⚠️ `relift: false`——那條補救路徑會回去讀**還帶著舊框**的程式碼。
       await this.syncController?.resyncForTopic(
-        { ...tree, children: { ...tree.children, body: [] } }, '', false)
+        { ...tree, slots: { ...tree.slots, body: [] } }, '', false)
       // ② 再從**剛產生的程式碼**抬回樹裡。
       //
       // 🔴 少了這一步，「淡的」模式下畫布會**空無一物**（2026-08-31 使用者：
@@ -1129,7 +1129,7 @@ export class App {
     if (!t) { console.error(`[templates] 選了一份不存在的範例：${id}`); return }
     // 🔴 **問語義樹，不問面板**——「有沒有東西」是那份唯一真實的性質，
     //    而不是某一個投影的性質（根公理）。⚠️ 也不用戳面板的私有欄位。
-    const body = this.syncController?.getCurrentTree()?.children?.body ?? []
+    const body = this.syncController?.getCurrentTree()?.slots?.body ?? []
     const hasWork = body.length > 0
     const go = (): void => {
       // 換目標（範例釘住它），再把程式碼放進去
@@ -1487,7 +1487,7 @@ export class App {
       if (includeNodes.length === 0) return tree
       return {
         ...tree,
-        children: { ...tree.children, body: [...includeNodes, ...(tree.children.body ?? [])] },
+        slots: { ...tree.slots, body: [...includeNodes, ...(tree.slots.body ?? [])] },
       }
     })
 
@@ -3258,7 +3258,7 @@ export class App {
             }
             // 🔴 **問語義樹，不問面板**（同 `applyTemplate`）——「有沒有東西」
             //    是那份唯一真實的性質，不是某一個投影的性質。
-            const body = this.syncController?.getCurrentTree()?.children?.body ?? []
+            const body = this.syncController?.getCurrentTree()?.slots?.body ?? []
             if (body.length === 0) { go(); break }
             showQuickPick(
               {

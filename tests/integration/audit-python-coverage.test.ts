@@ -171,14 +171,14 @@ function genericBuiltinCalls(n: SemanticNode | null, out: Record<string, number>
   const method = String((n.properties as Record<string, unknown>)?.method ?? '')
   if (n.componentId === 'python:func_call' && (name in PYTHON_BUILTIN_FUNCTIONS || name in PYTHON_MODULE_METHODS)) out[name] = (out[name] ?? 0) + 1
   if (n.componentId === 'python:method_call' && method in PYTHON_BUILTIN_METHODS) out[`.${method}`] = (out[`.${method}`] ?? 0) + 1
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids ?? []) genericBuiltinCalls(k, out)
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) genericBuiltinCalls(k, out)
   return out
 }
 
 function unresolvedOf(n: SemanticNode | null, out: string[] = []): string[] {
   if (!n) return out
   if (n.componentId === 'unresolved') out.push(String((n.properties as Record<string, unknown>)?.node_type ?? '?'))
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids ?? []) unresolvedOf(k, out)
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) unresolvedOf(k, out)
   return out
 }
 

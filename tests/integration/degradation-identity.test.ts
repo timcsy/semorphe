@@ -143,7 +143,7 @@ describe('走一次投影，身分不得改變', () => {
     const back = (st.blocks.blocks as never[]).map((b) => extractor.extract(b as never)).filter(Boolean) as SemanticNode[]
     const collect = (n: SemanticNode, out: string[] = []): string[] => {
       out.push(n.componentId)
-      for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
+      for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
       return out
     }
     const all = back.flatMap((b) => collect(b))

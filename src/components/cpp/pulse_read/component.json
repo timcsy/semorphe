@@ -2,7 +2,7 @@
   "componentId": "cpp:pulse_read",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "pin": "expression",
     "state": "expression",
     "timeout": "expression"

@@ -19,28 +19,28 @@ const STYLE = apcs as unknown as StylePreset
 const v2Tree = {
   componentId: 'program',
   properties: {},
-  children: {
+  slots: {
     body: [
       {
         componentId: 'func_def',
         properties: { name: 'main', return_type: 'int' },
-        children: {
+        slots: {
           params: [],
           body: [
             {
               componentId: 'var_declare',
               properties: { name: 'x', type: 'int' },
-              children: { initializer: [{ componentId: 'number_literal', properties: { value: '42' }, children: {} }] },
+              slots: { initializer: [{ componentId: 'number_literal', properties: { value: '42' }, slots: {} }] },
             },
             {
               componentId: 'cpp_vector_declare',
               properties: { name: 'v', type: 'int' },
-              children: {},
+              slots: {},
             },
             {
               componentId: 'print',
               properties: {},
-              children: { values: [{ componentId: 'var_ref', properties: { name: 'x' }, children: {} }] },
+              slots: { values: [{ componentId: 'var_ref', properties: { name: 'x' }, slots: {} }] },
             },
           ],
         },
@@ -79,7 +79,7 @@ describe('SC-003：v2 存檔升級後產出不變', () => {
     const ids: string[] = []
     const walk = (n: SemanticNode): void => {
       ids.push(n.componentId)
-      for (const arr of Object.values(n.children ?? {})) arr.forEach(walk)
+      for (const arr of Object.values(n.slots ?? {})) arr.forEach(walk)
     }
     walk(rise(v2Tree))
     expect(ids.filter((i) => !i.includes(':')), '升級後仍有舊格式身分').toEqual([])

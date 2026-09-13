@@ -8,7 +8,7 @@
       "default": ""
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "expression",
   "owner": "(core)",
   "paths": {

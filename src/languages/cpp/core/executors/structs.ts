@@ -37,7 +37,7 @@ export function splitMember(members: SemanticNode[]): {
   let ctor: MethodDecl | undefined
   let dtor: MethodDecl | undefined
   const params = (m: SemanticNode): FieldDecl[] =>
-    (m.children.params ?? []).map((p) => ({
+    (m.slots.params ?? []).map((p) => ({
       name: String(p.properties?.name ?? ''),
       type: String(p.properties?.type ?? 'int'),
     }))
@@ -60,7 +60,7 @@ export function splitMember(members: SemanticNode[]): {
   // ——看起來像使用者打錯欄位名。
   const flat: SemanticNode[] = []
   for (const m of members) {
-    if (m.componentId === '_multi_field') flat.push(...(m.children.fields ?? []))
+    if (m.componentId === '_multi_field') flat.push(...(m.slots.fields ?? []))
     else flat.push(m)
   }
   for (const m of flat) {
@@ -75,19 +75,19 @@ export function splitMember(members: SemanticNode[]): {
       methods.push({
         name: `operator${String(m.properties.operator)}`,
         params: [{ name: String(m.properties.param_name ?? 'rhs'), type: String(m.properties.param_type ?? 'int') }],
-        body: m.children.body ?? [],
+        body: m.slots.body ?? [],
       })
     } else if (methodComponents.has(m.componentId)) {
-      methods.push({ name: String(m.properties.name), params: params(m), body: m.children.body ?? [] })
+      methods.push({ name: String(m.properties.name), params: params(m), body: m.slots.body ?? [] })
     } else if (role(m.componentId) === 'constructor') {
       ctor = {
         name: String(m.properties.class_name ?? ''),
         params: params(m),
-        inits: m.children.inits ?? [],
-        body: m.children.body ?? [],
+        inits: m.slots.inits ?? [],
+        body: m.slots.body ?? [],
       }
     } else if (role(m.componentId) === 'destructor') {
-      dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.children.body ?? [] }
+      dtor = { name: `~${String(m.properties.class_name ?? '')}`, params: [], body: m.slots.body ?? [] }
     } else if (m.properties?.name !== undefined) {
       // 🪦 這裡曾經自己判「這個成員是不是指標」（看身分），
       //    而**那是在補上游的洞**：lift 把 `Node* next;` 的星號放進了**名字**
@@ -101,7 +101,7 @@ export function splitMember(members: SemanticNode[]): {
         type: String(m.properties?.type ?? 'int'),
         // 成員預設值——`initializer` 是 `cpp:var_declare` 既有的接點，
         // 類別成員與一般宣告用的是同一顆元件，所以這裡不需要新的形狀
-        init: m.children.initializer?.[0],
+        init: m.slots.initializer?.[0],
       })
     }
   }

@@ -10,7 +10,7 @@ export function registerExecute(register: (component: string, executor: Componen
   registerLvalue()
   register('cpp:map_at', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const keyNodes = node.children.key ?? []
+      const keyNodes = node.slots.key ?? []
       if (keyNodes.length === 0) return defaultValue('int')
       const keyVal = await ctx.evaluate(keyNodes[0])
       const map = ctx.scope.get(name)
@@ -47,7 +47,7 @@ export function registerExecute(register: (component: string, executor: Componen
 export function registerLvalue(): void {
   declareLvalue('cpp:map_at', async (node, ctx: ExecutionContext) => {
     const name = String(node.properties.obj)
-    const keyNodes = node.children.key ?? []
+    const keyNodes = node.slots.key ?? []
     if (keyNodes.length === 0) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個對應表存取沒有鍵' })
     }

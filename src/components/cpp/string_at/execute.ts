@@ -10,7 +10,7 @@ export function registerExecute(register: (component: string, executor: Componen
       const obj = String(node.properties.obj)
       const val = ctx.scope.get(obj)
       const str = String(val.value)
-      const indexNodes = node.children.index ?? []
+      const indexNodes = node.slots.index ?? []
       const idx = indexNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(indexNodes[0])) : 0
       if (idx < 0 || idx >= str.length) throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE)
       // ⚠️ `s[i]` 的型別是 **char**，而 char 在這個直譯器裡是**碼位（數字）**
@@ -40,7 +40,7 @@ export function registerLvalue(): void {
     const name = String(node.properties.obj)
     const current = ctx.scope.get(name)
     const text = String(current.value)
-    const indexNodes = node.children.index ?? []
+    const indexNodes = node.slots.index ?? []
     const idx = indexNodes.length > 0
       ? Math.trunc(ctx.toNumber(await ctx.evaluate(indexNodes[0]))) : 0
     if (idx < 0 || idx >= text.length) {

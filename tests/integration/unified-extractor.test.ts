@@ -53,8 +53,8 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result!.componentId).toBe('cpp:var_declare_const')
     expect(result!.properties.type).toBe('int')
     expect(result!.properties.name).toBe('limit')
-    expect(result!.children.initializer).toHaveLength(1)
-    expect(result!.children.initializer[0].componentId).toBe('cpp:arithmetic')
+    expect(result!.slots.initializer).toHaveLength(1)
+    expect(result!.slots.initializer[0].componentId).toBe('cpp:arithmetic')
   })
 
   it('cpp_pointer_declare with INIT input → cpp_pointer_declare with initializer', () => {
@@ -80,8 +80,8 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result!.componentId).toBe('cpp:pointer_declare')
     expect(result!.properties.type).toBe('int')
     expect(result!.properties.name).toBe('ptr')
-    expect(result!.children.initializer).toHaveLength(1)
-    expect(result!.children.initializer[0].componentId).toBe('cpp:address_of')
+    expect(result!.slots.initializer).toHaveLength(1)
+    expect(result!.slots.initializer[0].componentId).toBe('cpp:address_of')
   })
 
   it('cpp_var_declare_ref with INIT input → cpp_ref_declare with initializer', () => {
@@ -97,7 +97,7 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:var_declare_ref')
     expect(result!.properties.name).toBe('ref')
-    expect(result!.children.initializer).toHaveLength(1)
+    expect(result!.slots.initializer).toHaveLength(1)
   })
 
   it('cpp_cast with VALUE input → cpp_cast with value child', () => {
@@ -113,10 +113,10 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:cast')
     expect(result!.properties.target_type).toBe('int')
-    expect(result!.children.value).toHaveLength(1)
+    expect(result!.slots.value).toHaveLength(1)
   })
 
-  it('cpp_arithmetic with A/B inputs → arithmetic with left/right children', () => {
+  it('cpp_arithmetic with A/B inputs → arithmetic with left/right slots', () => {
     const blockState = {
       type: 'cpp_arithmetic',
       id: 'test12',
@@ -130,8 +130,8 @@ describe('Unified extractor: static blocks via PatternExtractor', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:arithmetic')
     expect(result!.properties.operator).toBe('+')
-    expect(result!.children.left).toHaveLength(1)
-    expect(result!.children.right).toHaveLength(1)
+    expect(result!.slots.left).toHaveLength(1)
+    expect(result!.slots.right).toHaveLength(1)
   })
 
   it('blocks without registered component return null (PatternExtractor cannot handle)', () => {

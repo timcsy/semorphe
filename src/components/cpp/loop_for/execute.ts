@@ -4,18 +4,18 @@ import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/cont
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:loop_for', async (node, ctx) => {
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       const parentScope = ctx.scope
       const forScope = parentScope.createChild()
       ctx.scope = forScope
 
-      if (node.children.init && node.children.init.length > 0) {
-        await ctx.executeNode(node.children.init[0])
+      if (node.slots.init && node.slots.init.length > 0) {
+        await ctx.executeNode(node.slots.init[0])
       }
 
       while (true) {
-        if (node.children.cond && node.children.cond.length > 0) {
-          const condition = await ctx.evaluate(node.children.cond[0])
+        if (node.slots.cond && node.slots.cond.length > 0) {
+          const condition = await ctx.evaluate(node.slots.cond[0])
           if (!ctx.toBool(condition)) break
         }
 
@@ -33,8 +33,8 @@ export function registerExecute(register: (component: string, executor: Componen
         }
         ctx.scope = forScope
 
-        if (node.children.update && node.children.update.length > 0) {
-          await ctx.executeNode(node.children.update[0])
+        if (node.slots.update && node.slots.update.length > 0) {
+          await ctx.executeNode(node.slots.update[0])
         }
       }
       ctx.scope = parentScope

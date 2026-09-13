@@ -6,7 +6,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   // Statement components — return full line with indent and newline
     g.set('cpp:string_declare', (node, ctx) => {
       const name = node.properties.name ?? 'str'
-      const initNodes = node.children.initializer ?? []
+      const initNodes = node.slots.initializer ?? []
       // 🔴 **兩個引數是建構子，不是賦值**（2026-09-10）
       //
       // `string s(n, '0');`（n 個 '0'）在此之前只讀第一個引數，產出

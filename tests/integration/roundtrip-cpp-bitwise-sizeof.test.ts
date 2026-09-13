@@ -43,10 +43,10 @@ describe('Round-trip: bitwise operators and sizeof', () => {
   it('should round-trip bitwise AND', () => {
     const tree = liftCode('int a = x & y;')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
+    const body = tree!.slots.body ?? []
     const decl = body[0]
     expect(decl.componentId).toBe('cpp:var_declare')
-    const init = decl.children.initializer?.[0]
+    const init = decl.slots.initializer?.[0]
     expect(init?.componentId).toBe('cpp:arithmetic')
     expect(init?.properties.operator).toBe('&')
 
@@ -85,9 +85,9 @@ describe('Round-trip: bitwise operators and sizeof', () => {
   it('should round-trip sizeof(type)', () => {
     const tree = liftCode('int f = sizeof(int);')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
+    const body = tree!.slots.body ?? []
     const decl = body[0]
-    const init = decl.children.initializer?.[0]
+    const init = decl.slots.initializer?.[0]
     expect(init?.componentId).toBe('cpp:sizeof')
     expect(init?.properties.target).toBe('int')
 
@@ -98,8 +98,8 @@ describe('Round-trip: bitwise operators and sizeof', () => {
   it('should round-trip sizeof(variable)', () => {
     const tree = liftCode('int g = sizeof(x);')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
-    const init = body[0].children.initializer?.[0]
+    const body = tree!.slots.body ?? []
+    const init = body[0].slots.initializer?.[0]
     expect(init?.componentId).toBe('cpp:sizeof')
     expect(init?.properties.target).toBe('x')
 
@@ -110,7 +110,7 @@ describe('Round-trip: bitwise operators and sizeof', () => {
   it('should not break cout chain with << operator', () => {
     const tree = liftCode('cout << x << endl;')
     expect(tree).not.toBeNull()
-    const body = tree!.children.body ?? []
+    const body = tree!.slots.body ?? []
     expect(body[0].componentId).toBe('cpp:print')
   })
 })

@@ -9,8 +9,8 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:pair_make', async (node, ctx) => {
-    const k = await ctx.evaluate(node.children.key[0])
-    const v = await ctx.evaluate(node.children.value[0])
+    const k = await ctx.evaluate(node.slots.key[0])
+    const v = await ctx.evaluate(node.slots.value[0])
     return { type: 'array', value: [k, v] }
   })
 }

@@ -13,7 +13,7 @@
       "default": "v.end()"
     }
   ],
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "statement",

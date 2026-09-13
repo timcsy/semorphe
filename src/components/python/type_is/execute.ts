@@ -15,7 +15,7 @@ import { PYTHON_BUILTIN_FUNCTIONS } from '../../../languages/python/builtins'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:type_is', async (node, ctx) => {
-    const v = await ctx.evaluate(node.children.obj[0])
+    const v = await ctx.evaluate(node.slots.obj[0])
     const want: RuntimeValue = {
       type: 'function',
       value: { ref: 'builtin', name: String(node.properties.target_type ?? 'int') },

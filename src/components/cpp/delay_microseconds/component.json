@@ -2,7 +2,7 @@
   "componentId": "cpp:delay_microseconds",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "us": "expression"
   },
   "role": "statement",

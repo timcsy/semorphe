@@ -20,7 +20,7 @@
  *
  * 流程的接點是**宣告**出來的（`slotsOf`），永遠都在——「要不要一個 else 插槽」
  * 在那裡不是一個問題。⚠️ 而在此之前 `else_body` **根本沒有被宣告**
- * （`cpp:if` 的 `children` 只有 `condition` 與 `then_body`），
+ * （`cpp:if` 的 `slots` 只有 `condition` 與 `then_body`），
  * 於是流程視圖裡**做不出 else**——那是這一刀先修掉的一個真缺陷。
  *
  * ## 剩下的差別是【骨架】，而那是真的
@@ -51,7 +51,7 @@ export function resetPresetIds(): void {
 
 /** 一顆空的節點。 */
 function node(componentId: string, properties: Record<string, unknown> = {}): SemanticNode {
-  return { id: newId(), componentId, properties, children: {} } as unknown as SemanticNode
+  return { id: newId(), componentId, properties, slots: {} } as unknown as SemanticNode
 }
 
 /**
@@ -67,7 +67,7 @@ export function presetTree(componentId: string, extraState?: Record<string, unkn
     let tail = root
     for (let i = 0; i < n; i += 1) {
       const inner = node(componentId, { isElseIf: 'true' })
-      tail.children.else_body = [inner]
+      tail.slots.else_body = [inner]
       tail = inner
     }
   }

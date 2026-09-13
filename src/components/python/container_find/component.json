@@ -5,7 +5,7 @@
   "properties": [
     { "name": "operator", "kind": "enum", "default": "in" }
   ],
-  "children": { "needle": "expression", "haystack": "expression" },
+  "slots": { "needle": "expression", "haystack": "expression" },
   "role": "expression",
   "owner": "(python)",
   "paths": {

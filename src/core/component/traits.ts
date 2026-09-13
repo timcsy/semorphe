@@ -106,7 +106,7 @@ export function roleOf(componentId: string): string | undefined {
 }
 
 /**
- * 這顆是**帶索引的存取**嗎（`properties.obj` 是容器名、`children.index` 是索引）。
+ * 這顆是**帶索引的存取**嗎（`properties.obj` 是容器名、`slots.index` 是索引）。
  *
  * ⚠️ 核心的 `interpreter/executors/io.ts` 要認得它——`cin >> arr[i]` 讀進來的值
  * 要寫回陣列的某一格。核心不得 import 語言套件（P9），所以這一份在這裡。
@@ -158,7 +158,7 @@ export function isElseIfChainable(componentId: string): boolean {
 
 
 /**
- * 這顆是**整棵語義樹的根**（`children.body` 是整個程式）。
+ * 這顆是**整棵語義樹的根**（`slots.body` 是整個程式）。
  *
  * ⚠️ `core/semantic-tree.ts` 的 `createEmptyProgram()` 原本寫死 `'cpp:program'`
  * ——**核心知道一顆 C++ 元件的名字**。而「哪一顆是樹根」是那顆元件的宣告：
@@ -339,7 +339,7 @@ export function componentsDeclaringVariables(): { componentId: string; fields: s
  * 這顆元件的**身體插槽**——子槽裡裝的是語句的那些，依宣告順序。
  *
  * 🔴 **流程圖靠這個知道「哪一條是流程」**，而它讀的是膠囊自己的宣告
- * （`component.json` 的 `children`），不是一份「哪些概念有身體」的清單。
+ * （`component.json` 的 `slots`），不是一份「哪些概念有身體」的清單。
  * 那份清單如果存在，它會住在視圖層而且用語言專屬的名字——
  * 那正是 P9（視圖層不得認識語言）擋掉的形狀。
  *
@@ -365,8 +365,8 @@ export function bodySlotsOf(componentId: string): string[] {
  */
 export function slotsOf(componentId: string): { slot: string; isBody: boolean; allowed: string[] }[] {
   const c = registeredComponents().find((x) => x.componentId === componentId)
-  const children = (c?.manifest as { children?: Record<string, unknown> } | undefined)?.children
-  if (!children) return []
+  const slots = (c?.manifest as { slots?: Record<string, unknown> } | undefined)?.slots
+  if (!slots) return []
   const isBody = (v: unknown): boolean => {
     if (typeof v === 'string') return v === 'statements' || v === 'statement'
     const allowed = (v as { allowed?: unknown[] } | null)?.allowed
@@ -386,7 +386,7 @@ export function slotsOf(componentId: string): { slot: string; isBody: boolean; a
     const a = (v as { allowed?: unknown[] } | null)?.allowed
     return Array.isArray(a) ? a.map(String) : []
   }
-  return Object.entries(children).map(([slot, v]) => ({
+  return Object.entries(slots).map(([slot, v]) => ({
     slot,
     isBody: isBody(v),
     allowed: allowedOf(v),

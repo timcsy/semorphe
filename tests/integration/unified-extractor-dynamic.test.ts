@@ -55,7 +55,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       componentMapping: {
         componentId: 'test_func_call',
         properties: ['name'],
-        children: { args: 'expression' },
+        slots: { args: 'expression' },
         role: 'expression',
       },
       blockDef: { type: 'test_func_call', output: 'Expression' },
@@ -83,7 +83,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       componentMapping: {
         componentId: 'test_func_def',
         properties: ['name', 'return_type'],
-        children: { params: 'expression', body: 'statements' },
+        slots: { params: 'expression', body: 'statements' },
         role: 'statement',
       },
       blockDef: { type: 'test_func_def', previousStatement: null, nextStatement: null },
@@ -112,7 +112,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       componentMapping: {
         componentId: 'test_scanf',
         properties: ['format'],
-        children: { args: 'expression' },
+        slots: { args: 'expression' },
         role: 'statement',
       },
       blockDef: { type: 'test_scanf', previousStatement: null, nextStatement: null },
@@ -144,7 +144,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       componentMapping: {
         componentId: 'test_if',
         properties: [],
-        children: { condition: 'expression', then_body: 'statements', else_body: 'statements' },
+        slots: { condition: 'expression', then_body: 'statements', else_body: 'statements' },
         role: 'statement',
       },
       blockDef: { type: 'test_if', previousStatement: null, nextStatement: null },
@@ -178,7 +178,7 @@ function createTestBlockSpecs(): BlockSpec[] {
       componentMapping: {
         componentId: 'test_print',
         properties: [],
-        children: { values: 'expression' },
+        slots: { values: 'expression' },
         role: 'statement',
       },
       blockDef: { type: 'test_print', previousStatement: null, nextStatement: null },
@@ -217,11 +217,11 @@ describe('T011: PatternExtractor dynamicRules — repeat input (func_call)', () 
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('test_func_call')
     expect(result!.properties.name).toBe('add')
-    expect(result!.children.args).toHaveLength(3)
-    expect(result!.children.args[0].componentId).toBe('cpp:literal_number')
-    expect(result!.children.args[0].properties.value).toBe('1')
-    expect(result!.children.args[2].componentId).toBe('cpp:var_ref')
-    expect(result!.children.args[2].properties.name).toBe('x')
+    expect(result!.slots.args).toHaveLength(3)
+    expect(result!.slots.args[0].componentId).toBe('cpp:literal_number')
+    expect(result!.slots.args[0].properties.value).toBe('1')
+    expect(result!.slots.args[2].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.args[2].properties.name).toBe('x')
   })
 
   it('handles zero-arg case (argCount=0 or missing extraState)', () => {
@@ -234,7 +234,7 @@ describe('T011: PatternExtractor dynamicRules — repeat input (func_call)', () 
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('test_func_call')
-    expect(result!.children.args ?? []).toHaveLength(0)
+    expect(result!.slots.args ?? []).toHaveLength(0)
   })
 })
 
@@ -256,11 +256,11 @@ describe('T012: PatternExtractor dynamicRules — multi-mode slot (scanf)', () =
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('test_scanf')
     expect(result!.properties.format).toBe('%d %d')
-    expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].componentId).toBe('cpp:var_ref')
-    expect(result!.children.args[0].properties.name).toBe('x')
-    expect(result!.children.args[1].componentId).toBe('cpp:var_ref')
-    expect(result!.children.args[1].properties.name).toBe('y')
+    expect(result!.slots.args).toHaveLength(2)
+    expect(result!.slots.args[0].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.args[0].properties.name).toBe('x')
+    expect(result!.slots.args[1].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.args[1].properties.name).toBe('y')
   })
 
   it('extracts compose mode args from block inputs', () => {
@@ -283,15 +283,15 @@ describe('T012: PatternExtractor dynamicRules — multi-mode slot (scanf)', () =
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.children.args).toHaveLength(2)
-    expect(result!.children.args[0].componentId).toBe('cpp:var_ref')
-    expect(result!.children.args[0].properties.name).toBe('x')
-    expect(result!.children.args[1].componentId).toBe('cpp:arithmetic')
+    expect(result!.slots.args).toHaveLength(2)
+    expect(result!.slots.args[0].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.args[0].properties.name).toBe('x')
+    expect(result!.slots.args[1].componentId).toBe('cpp:arithmetic')
   })
 })
 
 describe('T013: PatternExtractor dynamicRules — repeat field group (func_def)', () => {
-  it('extracts TYPE_0/PARAM_0..1 as param_decl children', () => {
+  it('extracts TYPE_0/PARAM_0..1 as param_decl slots', () => {
     const blockState = {
       type: 'test_func_def',
       id: 'fd1',
@@ -304,11 +304,11 @@ describe('T013: PatternExtractor dynamicRules — repeat field group (func_def)'
     expect(result!.componentId).toBe('test_func_def')
     expect(result!.properties.name).toBe('add')
     expect(result!.properties.return_type).toBe('int')
-    expect(result!.children.params).toHaveLength(2)
-    expect(result!.children.params[0].componentId).toBe('param_decl')
-    expect(result!.children.params[0].properties.type).toBe('int')
-    expect(result!.children.params[0].properties.name).toBe('a')
-    expect(result!.children.params[1].properties.name).toBe('b')
+    expect(result!.slots.params).toHaveLength(2)
+    expect(result!.slots.params[0].componentId).toBe('param_decl')
+    expect(result!.slots.params[0].properties.type).toBe('int')
+    expect(result!.slots.params[0].properties.name).toBe('a')
+    expect(result!.slots.params[1].properties.name).toBe('b')
   })
 
   it('handles zero params (no extraState)', () => {
@@ -320,12 +320,12 @@ describe('T013: PatternExtractor dynamicRules — repeat field group (func_def)'
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.children.params ?? []).toHaveLength(0)
+    expect(result!.slots.params ?? []).toHaveLength(0)
   })
 })
 
 describe('T014: PatternExtractor dynamicRules — if-elseif chain', () => {
-  it('extracts ELSEIF_CONDITION_0..1 and ELSEIF_THEN_0..1 as children', () => {
+  it('extracts ELSEIF_CONDITION_0..1 and ELSEIF_THEN_0..1 as slots', () => {
     const blockState = {
       type: 'test_if',
       id: 'if1',
@@ -345,15 +345,15 @@ describe('T014: PatternExtractor dynamicRules — if-elseif chain', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('test_if')
     // Static mappings
-    expect(result!.children.condition).toHaveLength(1)
-    expect(result!.children.then_body).toHaveLength(1)
-    expect(result!.children.else_body).toHaveLength(1)
+    expect(result!.slots.condition).toHaveLength(1)
+    expect(result!.slots.then_body).toHaveLength(1)
+    expect(result!.slots.else_body).toHaveLength(1)
     // Dynamic elseif conditions
-    expect(result!.children.elseif_conditions).toHaveLength(2)
-    expect(result!.children.elseif_conditions[0].componentId).toBe('cpp:var_ref')
-    expect(result!.children.elseif_conditions[0].properties.name).toBe('cond1')
+    expect(result!.slots.elseif_conditions).toHaveLength(2)
+    expect(result!.slots.elseif_conditions[0].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.elseif_conditions[0].properties.name).toBe('cond1')
     // Dynamic elseif bodies (statement chains)
-    expect(result!.children.elseif_bodies).toHaveLength(2)
+    expect(result!.slots.elseif_bodies).toHaveLength(2)
   })
 
   it('handles no elseif (no extraState)', () => {
@@ -368,7 +368,7 @@ describe('T014: PatternExtractor dynamicRules — if-elseif chain', () => {
     }
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
-    expect(result!.children.elseif_conditions ?? []).toHaveLength(0)
+    expect(result!.slots.elseif_conditions ?? []).toHaveLength(0)
   })
 })
 
@@ -388,10 +388,10 @@ describe('T011 (print): PatternExtractor dynamicRules — repeat expression (pri
     const result = extractor.extract(blockState as never)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('test_print')
-    expect(result!.children.values).toHaveLength(3)
-    expect(result!.children.values[0].componentId).toBe('cpp:literal_string')
-    expect(result!.children.values[1].componentId).toBe('cpp:var_ref')
-    expect(result!.children.values[2].componentId).toBe('cpp:endl')
+    expect(result!.slots.values).toHaveLength(3)
+    expect(result!.slots.values[0].componentId).toBe('cpp:literal_string')
+    expect(result!.slots.values[1].componentId).toBe('cpp:var_ref')
+    expect(result!.slots.values[2].componentId).toBe('cpp:endl')
   })
 })
 
@@ -513,8 +513,8 @@ describe('dynamicRules roundtrip: extract → render → extract', () => {
     expect(reExtracted).not.toBeNull()
     expect(reExtracted!.componentId).toBe('test_func_call')
     expect(reExtracted!.properties.name).toBe('f')
-    expect(reExtracted!.children.args).toHaveLength(1)
-    expect(reExtracted!.children.args[0].componentId).toBe('cpp:literal_number')
+    expect(reExtracted!.slots.args).toHaveLength(1)
+    expect(reExtracted!.slots.args[0].componentId).toBe('cpp:literal_number')
   })
 
   it('print roundtrips correctly', () => {
@@ -536,6 +536,6 @@ describe('dynamicRules roundtrip: extract → render → extract', () => {
     const reExtracted = extractor.extract(rendered as never)
     expect(reExtracted).not.toBeNull()
     expect(reExtracted!.componentId).toBe('test_print')
-    expect(reExtracted!.children.values).toHaveLength(2)
+    expect(reExtracted!.slots.values).toHaveLength(2)
   })
 })

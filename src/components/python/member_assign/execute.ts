@@ -9,14 +9,14 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:member_assign', async (node, ctx) => {
-    const at = (node.children.target ?? [])[0]
-    const recvNode = at?.children?.obj?.[0]
+    const at = (node.slots.target ?? [])[0]
+    const recvNode = at?.slots?.obj?.[0]
     const field = String(at?.properties?.member ?? '')
     if (!recvNode || !field) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個左邊不是「某個東西的欄位」' })
     }
     const recv = await ctx.evaluate(recvNode)
-    const v = await ctx.evaluate(node.children.value[0])
+    const v = await ctx.evaluate(node.slots.value[0])
     if (recv.type !== 'object') {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${field} 的接收者不是一個物件` })
     }

@@ -4,8 +4,8 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:wifi_open', (node, ctx) => {
-    const ssid = generateExpression((node.children.ssid ?? [])[0], ctx)
-    const password = generateExpression((node.children.password ?? [])[0], ctx)
+    const ssid = generateExpression((node.slots.ssid ?? [])[0], ctx)
+    const password = generateExpression((node.slots.password ?? [])[0], ctx)
     return `${indent(ctx)}WiFi.begin(${ssid}, ${password});\n`
   })
 }

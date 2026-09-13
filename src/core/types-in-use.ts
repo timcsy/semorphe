@@ -72,7 +72,7 @@ export function typesInUse(root: SemanticNode | null | undefined): string[] {
       seen.add(t)
       out.push(t)
     }
-    for (const bucket of Object.values(n.children ?? {})) {
+    for (const bucket of Object.values(n.slots ?? {})) {
       for (const c of bucket ?? []) walk(c)
     }
   }

@@ -325,8 +325,8 @@ describe('prime checker program', () => {
     `)
     expect(sem).not.toBeNull()
     expect(sem!.componentId).toBe('cpp:program')
-    // Should have body children including includes, forward decls, main, listp, checkp
-    const body = sem!.children.body ?? []
+    // Should have body slots including includes, forward decls, main, listp, checkp
+    const body = sem!.slots.body ?? []
     expect(body.length).toBeGreaterThanOrEqual(5) // at least: 2 includes + using + main + listp + checkp
     // Should have function definitions for main, listp, checkp
     const funcDefs = body.filter(n => n.componentId === 'cpp:func_def')
@@ -476,10 +476,10 @@ describe('full render pipeline', () => {
       }
     `)
     // Check that the semantic tree has array_assign components
-    const body = sem.children.body ?? []
+    const body = sem.slots.body ?? []
     const mainFunc = body.find(n => n.componentId === 'cpp:func_def' && n.properties.name === 'main')
     expect(mainFunc).toBeDefined()
-    const mainBody = mainFunc!.children.body ?? []
+    const mainBody = mainFunc!.slots.body ?? []
     const arrayAssigns = mainBody.filter(n => n.componentId === 'cpp:array_assign')
     expect(arrayAssigns.length).toBe(2)
   })

@@ -11,7 +11,7 @@ import { servoOf } from '../../../languages/cpp/core/runtime/arduino-devices'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:servo_write', async (node, ctx) => {
     const name = String(node.properties.obj ?? 'myServo')
-    const angle = ctx.toNumber(await ctx.evaluate((node.children.angle ?? [])[0]))
+    const angle = ctx.toNumber(await ctx.evaluate((node.slots.angle ?? [])[0]))
     servoOf(ctx, name).angle = Math.max(0, Math.min(180, Math.trunc(angle)))
   })
 }

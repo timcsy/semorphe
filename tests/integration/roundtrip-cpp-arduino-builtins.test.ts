@@ -47,7 +47,7 @@ const lift = (c: string): SemanticNode =>
 const gen = (t: SemanticNode): string => generateCode(t, 'cpp', apcs as StylePreset)
 const ids = (n: SemanticNode, out: string[] = []): string[] => {
   out.push(n.componentId)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) ids(k, out)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks) ids(k, out)
   return out
 }
 

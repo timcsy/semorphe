@@ -2,7 +2,7 @@
   "componentId": "cpp:tone",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "pin": "expression",
     "frequency": "expression",
     "duration": "expression"

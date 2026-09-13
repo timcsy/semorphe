@@ -104,7 +104,7 @@ export function resolvePattern(pattern: string, index: number): string {
 export function deriveRenderMapping(
   blockDef: Record<string, unknown>,
   properties: readonly string[],
-  children: Record<string, unknown>,
+  slots: Record<string, unknown>,
 ): { fields: Record<string, string>; inputs: Record<string, string>; statementInputs: Record<string, string> } {
   const mapping = {
     fields: {} as Record<string, string>,
@@ -133,10 +133,10 @@ export function deriveRenderMapping(
       const semProp = findMatchingProperty(argName, properties)
       if (semProp) mapping.fields[argName] = semProp
     } else if (argType === 'input_value') {
-      const semChild = findMatchingChild(argName, children)
+      const semChild = findMatchingChild(argName, slots)
       if (semChild) mapping.inputs[argName] = semChild
     } else if (argType === 'input_statement') {
-      const semChild = findMatchingChild(argName, children)
+      const semChild = findMatchingChild(argName, slots)
       if (semChild) mapping.statementInputs[argName] = semChild
     }
   }
@@ -160,15 +160,15 @@ export function findMatchingProperty(fieldName: string, properties: readonly str
 }
 
 /** 積木輸入名 → 語義子節點名。同上 */
-export function findMatchingChild(inputName: string, children: Record<string, unknown>): string | null {
+export function findMatchingChild(inputName: string, slots: Record<string, unknown>): string | null {
   const lower = inputName.toLowerCase()
-  for (const child of Object.keys(children)) {
+  for (const child of Object.keys(slots)) {
     if (child.toLowerCase() === lower) return child
   }
   const mapped = INPUT_COMMON_MAPPINGS[inputName]
   if (mapped) {
     for (const m of mapped) {
-      if (m in children) return m
+      if (m in slots) return m
     }
   }
   return null

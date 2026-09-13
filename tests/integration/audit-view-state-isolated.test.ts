@@ -36,19 +36,19 @@ function hashTree(node: unknown): string {
 }
 
 function fixture(): SemanticNode {
-  const step = (id: string, cid: string): SemanticNode => ({ id, componentId: cid, properties: {}, children: {} })
+  const step = (id: string, cid: string): SemanticNode => ({ id, componentId: cid, properties: {}, slots: {} })
   return {
     id: 'root',
     componentId: 'python:program',
     properties: {},
-    children: {
+    slots: {
       body: [
         step('a', 'python:print'),
         {
           id: 'b',
           componentId: 'python:if',
           properties: {},
-          children: { then_body: [step('c', 'python:print')] },
+          slots: { then_body: [step('c', 'python:print')] },
         },
       ],
     },
@@ -91,8 +91,8 @@ describe('護欄：視圖私有狀態不回寫真實（第五十七條）', () =
 
   it('★ 合成注入：改到深處也要被抓到（只比根不算比過）', () => {
     const dirty = inertView('deep', (e) => {
-      e.tree.children['body']?.[1]?.children['then_body']?.push({
-        id: 'ghost', componentId: 'python:pass', properties: {}, children: {},
+      e.tree.slots['body']?.[1]?.slots['then_body']?.push({
+        id: 'ghost', componentId: 'python:pass', properties: {}, slots: {},
       })
     })
     const { before, after } = dispatch([dirty], fixture())

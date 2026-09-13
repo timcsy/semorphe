@@ -4,7 +4,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:random_seed', (node, ctx) => {
-      const seed = generateExpression((node.children.seed ?? [])[0], ctx)
+      const seed = generateExpression((node.slots.seed ?? [])[0], ctx)
       return `${indent(ctx)}srand(${seed});\n`
     })
 }

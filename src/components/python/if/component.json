@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "🔴 **刻意是 null**——Python 的 `elif` 是一個**獨立的語法結構**（不是巢狀的 if），而 C++ 沒有這件事。邊界不同。",
   "properties": [],
-  "children": {
+  "slots": {
     "condition": "expression",
     "body": "statements",
     "elif_condition": "expression",

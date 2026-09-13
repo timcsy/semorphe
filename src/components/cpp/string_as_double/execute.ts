@@ -4,7 +4,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:string_as_double', async (node, ctx) => {
-      const valueNodes = node.children.value ?? []
+      const valueNodes = node.slots.value ?? []
       if (valueNodes.length === 0) return { type: 'double', value: 0 }
       const val = await ctx.evaluate(valueNodes[0])
       const n = parseFloat(String(val.value))

@@ -25,7 +25,7 @@ interface Node {
   id: string
   componentId: string
   properties?: Record<string, unknown>
-  children?: Record<string, unknown[]>
+  slots?: Record<string, unknown[]>
 }
 
 /** 🔴 **問性狀不問身分**——`scaffold` 由元件自己宣告。 */
@@ -40,8 +40,8 @@ function isScaffoldInEntryComponent(componentId: string): boolean {
 
 function addSubtree(node: Node, out: Set<string>): void {
   out.add(node.id)
-  for (const k of Object.keys(node.children ?? {})) {
-    for (const c of (node.children![k] ?? []) as Node[]) addSubtree(c, out)
+  for (const k of Object.keys(node.slots ?? {})) {
+    for (const c of (node.slots![k] ?? []) as Node[]) addSubtree(c, out)
   }
 }
 
@@ -54,14 +54,14 @@ function addSubtree(node: Node, out: Set<string>): void {
  */
 export function scaffoldNodeIds(tree: unknown, skeletonId: string): Set<string> {
   const out = new Set<string>()
-  const root = tree as { children?: Record<string, unknown[]> } | null | undefined
+  const root = tree as { slots?: Record<string, unknown[]> } | null | undefined
   if (!root) return out
   const skeleton = skeletonById(skeletonId)
-  for (const node of (root.children?.body ?? []) as Node[]) {
+  for (const node of (root.slots?.body ?? []) as Node[]) {
     if (isScaffoldComponent(node.componentId)) { addSubtree(node, out); continue }
     if (isFunctionDefinition(node.componentId) && entryFunctionOf(skeleton, node.properties?.name)) {
       out.add(node.id)
-      for (const stmt of (node.children?.body ?? []) as Node[]) {
+      for (const stmt of (node.slots?.body ?? []) as Node[]) {
         // ⚠️ **連它插著的東西一起**——`return 0` 的那個 `0` 也是骨架的一部分。
         //    少了它，一顆實心的 `0` 插在一塊淡的「回傳」上，看起來像
         //    「這個數字是我要改的」——而它不是。
@@ -84,7 +84,7 @@ export function scaffoldComponentIds(tree: unknown, skeletonId: string): Set<str
   const out = new Set<string>()
   const walk = (n: Node): void => {
     if (n.id !== undefined && ids.has(n.id) && n.componentId) out.add(n.componentId)
-    for (const kids of Object.values(n.children ?? {})) {
+    for (const kids of Object.values(n.slots ?? {})) {
       for (const k of (kids ?? []) as Node[]) walk(k)
     }
   }
@@ -117,19 +117,19 @@ export function scaffoldComponentIds(tree: unknown, skeletonId: string): Set<str
  * 會在新骨架裡變成一句學生沒寫過、也看不懂的程式。
  */
 export function unwrapSkeletonFrame(tree: unknown, skeletonId: string): unknown {
-  const root = tree as { children?: Record<string, Node[]> } | null | undefined
-  if (!root?.children?.body) return tree
+  const root = tree as { slots?: Record<string, Node[]> } | null | undefined
+  if (!root?.slots?.body) return tree
   const skeleton = skeletonById(skeletonId)
   if (!skeleton || skeleton.entryFunctions.length === 0) return tree
   const body: Node[] = []
-  for (const node of root.children.body) {
+  for (const node of root.slots.body) {
     // 🔴 **鷹架元件也要扣掉**（`using namespace std;`／`#include`）——它們是骨架
     //    的一部分，換骨架時新的那份會自己補。
     //    ⚠️ 少了這一行，一支【空程式】在「淡的」模式下也算「有作品」
     //    （樹裡有 `using namespace`），於是每次換骨架都跳警告。
     if (isScaffoldComponent(node.componentId)) continue
     if (isFunctionDefinition(node.componentId) && entryFunctionOf(skeleton, node.properties?.name)) {
-      for (const stmt of (node.children?.body ?? []) as Node[]) {
+      for (const stmt of (node.slots?.body ?? []) as Node[]) {
         if (isScaffoldInEntryComponent(stmt.componentId)) continue
         body.push(stmt)
       }
@@ -137,5 +137,5 @@ export function unwrapSkeletonFrame(tree: unknown, skeletonId: string): unknown 
     }
     body.push(node)
   }
-  return { ...root, children: { ...root.children, body } }
+  return { ...root, slots: { ...root.slots, body } }
 }

@@ -120,7 +120,7 @@ function measure(corpus: readonly string[]): stats {
       s.downgradeReason.set(because, (s.downgradeReason.get(because) ?? 0) + 1)
       s.details.push({ raw: raw.slice(0, 120).replace(/\n/g, '⏎'), downgradeReason: because })
     }
-    for (const ks of Object.values(n.children ?? {})) for (const k of ks) walk(k)
+    for (const ks of Object.values(n.slots ?? {})) for (const k of ks) walk(k)
   }
   for (const c of corpus) {
     let tree

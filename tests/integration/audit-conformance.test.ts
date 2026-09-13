@@ -145,7 +145,7 @@ export function judgeConformance(
 }
 
 
-interface form { componentId: string; renderMapping?: { childrenAsField?: { field: string; childSlot: string; childComponent: string; parts: string[] }[] } }
+interface form { componentId: string; renderMapping?: { slotAsField?: { field: string; childSlot: string; childComponent: string; parts: string[] }[] } }
 const formsOf = (id: string): form[] =>
   (allCppProjections() as never as form[]).filter((f) => f.componentId === id)
 
@@ -155,8 +155,8 @@ let cache: decision[] | null = null
 function measureOnce(): decision[] {
   if (cache) return cache
   const out: decision[] = []
-  for (const c of allCppComponents() as never as { componentId: string; children?: Record<string, unknown> }[]) {
-    const slotDecl = Object.keys(c.children ?? {})
+  for (const c of allCppComponents() as never as { componentId: string; slots?: Record<string, unknown> }[]) {
+    const slotDecl = Object.keys(c.slots ?? {})
     if (!slotDecl.length) continue
     let node: SemanticNode
     try {
@@ -170,10 +170,10 @@ function measureOnce(): decision[] {
     // （`'expression'`）挑一顆，於是 `params` 會拿到 `cpp:literal_number`。
     // 那不是違規，是合成產物：一顆沒有 `type`／`name` 屬性的節點當然序列化不出東西。
     //
-    // 而**宣告裡就寫著該放什麼**（`childrenAsField.childComponent`）。讀它，不要猜。
-    for (const caf of formsOf(c.componentId).flatMap((f) => f.renderMapping?.childrenAsField ?? [])) {
-      if (!(node.children[caf.childSlot] ?? []).length) continue
-      node.children[caf.childSlot] = [
+    // 而**宣告裡就寫著該放什麼**（`slotAsField.childComponent`）。讀它，不要猜。
+    for (const caf of formsOf(c.componentId).flatMap((f) => f.renderMapping?.slotAsField ?? [])) {
+      if (!(node.slots[caf.childSlot] ?? []).length) continue
+      node.slots[caf.childSlot] = [
         createNode(caf.childComponent, Object.fromEntries(caf.parts.map((p, i) => [p, i === 0 ? 'int' : 'x']))),
       ]
     }
@@ -185,11 +185,11 @@ function measureOnce(): decision[] {
     // 而 render 走了不該走的路，於是連本來好好的 `initializer` 也被報成掉了。
     //
     // 每個接點各自跑一次，它就只會為自己的失敗負責。
-    const allSlots = Object.keys(node.children ?? {}).filter((k) => (node.children[k] ?? []).length > 0)
+    const allSlots = Object.keys(node.slots ?? {}).filter((k) => (node.slots[k] ?? []).length > 0)
     const missing: string[] = []
     let renderedOnce = false
     for (const thisSlot of allSlots) {
-      const singleSlot = { ...node, children: { [thisSlot]: node.children[thisSlot] } }
+      const singleSlot = { ...node, slots: { [thisSlot]: node.slots[thisSlot] } }
       let back: string[] | null = null
       try {
         const st = renderToBlocklyState(createNode('cpp:program', {}, { body: [singleSlot as SemanticNode] }))
@@ -197,11 +197,11 @@ function measureOnce(): decision[] {
         const find = (n: SemanticNode | null): SemanticNode | null => {
           if (!n) return null
           if (n.componentId === c.componentId) return n
-          for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
+          for (const ks of Object.values(n.slots ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
           return null
         }
         const it = extractBack.map((x) => find(x as SemanticNode)).find(Boolean) ?? null
-        back = it ? Object.keys(it.children ?? {}).filter((k) => (it.children[k] ?? []).length > 0) : null
+        back = it ? Object.keys(it.slots ?? {}).filter((k) => (it.slots[k] ?? []).length > 0) : null
       } catch { back = null }
       if (back !== null) { renderedOnce = true; if (!back.includes(thisSlot)) missing.push(thisSlot) }
     }
@@ -336,7 +336,7 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     // 這一則是 spec 105 最容易漏的一條。六顆各寫一行修好了眼前的問題，
     // 而**下一個加元件的人不會知道要寫那一行**——沒有這條檢查，
     // 這次的修法只治了六顆。
-    it('★ 有 params 接點但沒宣告 childrenAsField 的元件必須被報為違規', () => {
+    it('★ 有 params 接點但沒宣告 slotAsField 的元件必須被報為違規', () => {
       // 合成一顆「有接點、沒宣告」的元件：它的參數走不過投影，
       // 而**沉默不得等於通過**。
       const notDeclared = judgeConformance('cpp:seventh', ['params'], ['body'])
@@ -345,11 +345,11 @@ describe('護欄：符合性（宣告的接點，形態表達得出來嗎）', (
     })
 
     it('★ 已宣告的六顆，宣告確實存在（不是靠測試放水）', () => {
-      // 釘住宣告本身——有人刪掉某一顆的 `childrenAsField`，這裡先紅，
+      // 釘住宣告本身——有人刪掉某一顆的 `slotAsField`，這裡先紅，
       // 而不是等到來回轉換的樣本紅。兩者都會紅，但這一條**指得出是哪一顆**。
       const shouldHave = ['cpp:lambda', 'cpp:constructor', 'cpp:method_virtual',
         'cpp:method_virtual_pure', 'cpp:method_override', 'cpp:template_function']
-      const missingDeclaration = shouldHave.filter((id) => !formsOf(id).some((f) => (f.renderMapping?.childrenAsField ?? []).length))
+      const missingDeclaration = shouldHave.filter((id) => !formsOf(id).some((f) => (f.renderMapping?.slotAsField ?? []).length))
       expect(missingDeclaration, '這些元件的 params 沒有形態映射，參數會靜默消失').toEqual([])
     })
   })

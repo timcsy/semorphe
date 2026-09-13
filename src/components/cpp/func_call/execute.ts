@@ -27,7 +27,7 @@ export function registerExecute(register: (component: string, executor: Componen
     if (ctx.scope.has(name)) {
       const v = ctx.scope.get(name)
       const callable = ctx.callableOf?.(v) ?? null
-      if (callable) return ctx.invokeCallable!(callable, node.children.args ?? [])
+      if (callable) return ctx.invokeCallable!(callable, node.slots.args ?? [])
       // 變數存在但不可呼叫——**出聲**。把一個整數當函式呼叫靜默成功的話，
       // 使用者只會看到一個莫名其妙的結果。
       const { RuntimeError, RUNTIME_ERRORS } = await import('../../../interpreter/errors')
@@ -55,7 +55,7 @@ export function registerExecute(register: (component: string, executor: Componen
       throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': name })
     }
 
-    const args = node.children.args ?? []
+    const args = node.slots.args ?? []
     const argValues: RuntimeValue[] = []
     for (const argNode of args) {
       argValues.push(await ctx.evaluate(argNode))

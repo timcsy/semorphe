@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側的同名操作吃的是迭代器不是索引——**位置的表示方式不同**，不宣告等價。",
   "properties": [],
-  "children": {
+  "slots": {
     "obj": "expression",
     "index": "expression",
     "value": "expression"

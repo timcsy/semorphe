@@ -138,7 +138,7 @@ describe('Confidence & DegradationCause', () => {
       // Actually, binary_expression with unknown op falls back to arithmetic in hand-written lifter
       // So let's use a node type that has a component mapping but the pattern doesn't match
       // For this test, we need an AST node type that IS in the component mapping but fails to match
-      // Let's test with a completely empty compound_statement (no children to lift)
+      // Let's test with a completely empty compound_statement (no slots to lift)
       // Actually, let me use an approach: register a component for a known AST type,
       // then give a node of that type that doesn't match
       registry.register({
@@ -197,7 +197,7 @@ describe('Confidence & DegradationCause', () => {
       // The outer node matched arithmetic pattern → should be high
       expect(sem!.metadata?.confidence).toBe('high')
       // The right child should be raw_code
-      const rightChild = sem!.children.right?.[0]
+      const rightChild = sem!.slots.right?.[0]
       expect(rightChild?.componentId).toBe('raw_code')
       expect(rightChild?.metadata?.confidence).toBe('raw_code')
     })

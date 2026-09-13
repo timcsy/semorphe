@@ -10,13 +10,13 @@ import { createNode } from '../../../core/semantic-tree'
 
 export function buildVarDeclare(
   props: { name?: unknown; type?: unknown; init_style?: unknown },
-  children?: Record<string, SemanticNode[]>,
+  slots?: Record<string, SemanticNode[]>,
 ): SemanticNode {
   const p: Record<string, string> = {}
   if (props.name !== undefined) p.name = String(props.name)
   if (props.type !== undefined) p.type = String(props.type)
   if (props.init_style !== undefined) p.init_style = String(props.init_style)
-  return children ? createNode('cpp:var_declare', p, children) : createNode('cpp:var_declare', p)
+  return slots ? createNode('cpp:var_declare', p, slots) : createNode('cpp:var_declare', p)
 }
 
 /** 判別走 pattern 與共用檔；這裡提供建構子。 */

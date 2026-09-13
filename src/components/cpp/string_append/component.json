@@ -7,7 +7,7 @@
       "default": "str"
     }
   ],
-  "children": {
+  "slots": {
     "value": {
       "allowed": [
         "expression"

@@ -64,12 +64,12 @@ function roundTrip(node: SemanticNode, slot: string): { ok: boolean; back: strin
     const find = (n: SemanticNode | null): SemanticNode | null => {
       if (!n) return null
       if (n.componentId === node.componentId) return n
-      for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
+      for (const ks of Object.values(n.slots ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
       return null
     }
     const it = out.map((x) => find(x as SemanticNode)).find(Boolean) ?? null
     if (!it) return { ok: false, back: null }
-    const back = Object.keys(it.children ?? {}).filter((k) => (it.children[k] ?? []).length > 0)
+    const back = Object.keys(it.slots ?? {}).filter((k) => (it.slots[k] ?? []).length > 0)
     return { ok: back.includes(slot), back }
   } catch {
     return { ok: false, back: null }
@@ -161,12 +161,12 @@ describe('第一週語法的接點走得完來回', () => {
     const back = (st.blocks.blocks as BlockState[]).map((b) => extractor.extract(b as never)).filter(Boolean)
     const find = (n: SemanticNode | null): SemanticNode | null => {
       if (!n) return null
-      if (n.componentId === 'cpp:var_declare' && (n.children.declarators ?? []).length > 0) return n
-      for (const ks of Object.values(n.children ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
+      if (n.componentId === 'cpp:var_declare' && (n.slots.declarators ?? []).length > 0) return n
+      for (const ks of Object.values(n.slots ?? {})) for (const k of ks) { const r = find(k); if (r) return r }
       return null
     }
     const d = (back as SemanticNode[]).map(find).find(Boolean)
     expect(d, '多變數宣告沒有回來').toBeDefined()          // ← 正向錨點
-    expect((d?.children.declarators ?? []).map((x) => x.properties.name)).toEqual(['a', 'b', 'c'])
+    expect((d?.slots.declarators ?? []).map((x) => x.properties.name)).toEqual(['a', 'b', 'c'])
   })
 })

@@ -30,7 +30,7 @@ function tree(src: string): SemanticNode {
 }
 function identities(n: SemanticNode): string[] {
   const out: string[] = [n.componentId]
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids) out.push(...identities(k as SemanticNode))
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids) out.push(...identities(k as SemanticNode))
   return out
 }
 function program(expr: string): string {
@@ -62,7 +62,7 @@ describe('膠囊自證：cpp:math_pow', () => {
     const n = tree(program('pow(2, 10)'))
     const find = (x: SemanticNode): SemanticNode | null => {
       if (x.componentId === 'cpp:math_pow') return x
-      for (const kids of Object.values(x.children ?? {})) for (const k of kids) {
+      for (const kids of Object.values(x.slots ?? {})) for (const k of kids) {
         const r = find(k as SemanticNode); if (r) return r
       }
       return null
@@ -70,7 +70,7 @@ describe('膠囊自證：cpp:math_pow', () => {
     const p = find(n)!
     expect(p, 'pow(2,10) 必須產生 cpp:math_pow').not.toBeNull()
     // ⚠️ 槽名錯了不會爆，只會是空陣列——所以要指名地驗兩個槽都非空。
-    expect(p.children.base?.length, 'base 槽必須有東西').toBe(1)
-    expect(p.children.exponent?.length, 'exponent 槽必須有東西').toBe(1)
+    expect(p.slots.base?.length, 'base 槽必須有東西').toBe(1)
+    expect(p.slots.exponent?.length, 'exponent 槽必須有東西').toBe(1)
   })
 })

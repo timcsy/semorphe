@@ -4,7 +4,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:delete', (node, ctx) => {
-      const ptr = generateExpression((node.children.ptr ?? [])[0], ctx)
+      const ptr = generateExpression((node.slots.ptr ?? [])[0], ctx)
       return `${indent(ctx)}delete ${ptr};\n`
     })
 }

@@ -160,12 +160,12 @@ describe('第七十二條護欄：字串屬性不得裝結構', () => {
       try { tr = lifter.lift(tree.rootNode as never) } catch { continue }
       if (!tr) continue
       lifted++
-      const walk = (n: { componentId?: string; properties?: Record<string, unknown>; children?: Record<string, unknown[]> }): void => {
+      const walk = (n: { componentId?: string; properties?: Record<string, unknown>; slots?: Record<string, unknown[]> }): void => {
         if (!n) return
         for (const [k, v] of Object.entries(n.properties ?? {})) {
           if (typeof v === 'string') samples.push({ componentId: n.componentId ?? '?', property: k, value: v })
         }
-        for (const kk of Object.keys(n.children ?? {})) (n.children![kk] as never[]).forEach(walk)
+        for (const kk of Object.keys(n.slots ?? {})) (n.slots![kk] as never[]).forEach(walk)
       }
       walk(tr as never)
     }

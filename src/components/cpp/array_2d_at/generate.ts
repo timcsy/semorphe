@@ -4,10 +4,10 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:array_2d_at', (node, ctx) => {
-      const objs2 = node.children.obj ?? []
+      const objs2 = node.slots.obj ?? []
       const name = objs2.length > 0 ? generateExpression(objs2[0], ctx) : 'arr'
-      const rowNodes = node.children.row ?? []
-      const colNodes = node.children.col ?? []
+      const rowNodes = node.slots.row ?? []
+      const colNodes = node.slots.col ?? []
       const row = rowNodes.length > 0 ? generateExpression(rowNodes[0], ctx) : '0'
       const col = colNodes.length > 0 ? generateExpression(colNodes[0], ctx) : '0'
       return `${name}[${row}][${col}]`

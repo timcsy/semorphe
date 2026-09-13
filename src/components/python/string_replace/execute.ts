@@ -14,10 +14,10 @@ import { callMethod } from '../method_call/dispatch'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:string_replace', async (node, ctx) => {
-    const self = await ctx.evaluate(node.children.obj[0])
+    const self = await ctx.evaluate(node.slots.obj[0])
     const args: RuntimeValue[] = []
-    for (const x of node.children.old ?? []) args.push(await ctx.evaluate(x))
-    for (const x of node.children.new ?? []) args.push(await ctx.evaluate(x))
+    for (const x of node.slots.old ?? []) args.push(await ctx.evaluate(x))
+    for (const x of node.slots.new ?? []) args.push(await ctx.evaluate(x))
     return callMethod(self, 'replace', args, ctx)
   })
 }

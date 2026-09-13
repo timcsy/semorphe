@@ -9,12 +9,12 @@ import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/cont
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:loop_while', async (node, ctx) => {
-    const body = node.children.body ?? []
+    const body = node.slots.body ?? []
     const parentScope = ctx.scope
     for (;;) {
       // ⚠️ **Python 的迴圈【沒有】自己的作用域**——迴圈裡指派的名字，
       // 迴圈結束後仍然看得到。C++ 那顆每一輪 `createChild()`，這顆刻意不。
-      const condition = await ctx.evaluate(node.children.condition[0])
+      const condition = await ctx.evaluate(node.slots.condition[0])
       if (!ctx.toBool(condition)) break
       try {
         await ctx.executeBody(body)

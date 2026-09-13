@@ -13,7 +13,7 @@
       "default": "myint"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "skipPaths": [
     "execute"

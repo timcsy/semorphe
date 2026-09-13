@@ -24,12 +24,12 @@ describe('python:loop_for', () => {
     const t = await liftPython('for i in range(3):\n    print(i)\n')
     const find = (n: any): any => {
       if (n?.componentId === 'python:loop_for') return n
-      for (const k of Object.values(n?.children ?? {})) for (const c of (k as any[]) ?? []) { const r = find(c); if (r) return r }
+      for (const k of Object.values(n?.slots ?? {})) for (const c of (k as any[]) ?? []) { const r = find(c); if (r) return r }
       return null
     }
     const loop = find(t)
     expect(loop, '找不到迴圈 → 這支測試量不到東西').not.toBeNull()
-    expect(loop.children.iterable?.length, '可走訪那個插槽是空的').toBe(1)
+    expect(loop.slots.iterable?.length, '可走訪那個插槽是空的').toBe(1)
     expect(loop.properties.count, '不得有一個「跑幾次」的欄位').toBeUndefined()
   })
 

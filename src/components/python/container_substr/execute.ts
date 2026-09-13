@@ -11,9 +11,9 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:container_substr', async (node, ctx) => {
-    const target = await ctx.evaluate(node.children.obj[0])
+    const target = await ctx.evaluate(node.slots.obj[0])
     const at = async (k: 'from' | 'to' | 'step'): Promise<number | undefined> => {
-      const n = (node.children[k] ?? [])[0]
+      const n = (node.slots[k] ?? [])[0]
       return n ? Math.trunc(ctx.toNumber(await ctx.evaluate(n))) : undefined
     }
     const a = await at('from')

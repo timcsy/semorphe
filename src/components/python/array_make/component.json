@@ -3,7 +3,7 @@
   "abstractComponent": null,
   "_abstractComponent_why": "C++ 那側最接近的是**宣告**（`vector<int> v = {…}`），而這一顆是一個**值**——`[1,2]` 可以直接當引數傳出去，不必先有名字。指同一個抽象父會把宣告與值混成一件事。",
   "properties": [],
-  "children": { "items": "expression" },
+  "slots": { "items": "expression" },
   "role": "expression",
   "owner": "(python)",
   "paths": {

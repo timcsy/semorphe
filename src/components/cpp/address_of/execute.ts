@@ -25,7 +25,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:address_of', async (node, ctx) => {
-    const varNodes = node.children.var ?? []
+    const varNodes = node.slots.var ?? []
     if (varNodes.length === 0) return { type: 'int', value: 0 }
     const target = varNodes[0]
 
@@ -46,9 +46,9 @@ export function registerExecute(register: (component: string, executor: Componen
     //    ——它從 1 升到 3，而**誤差本身仍然是 0**：一段跑不動的程式不會產生誤差。
     //
     // > **一個「跑不動」的迴歸，不會出現在「答案對不對」那一欄。**
-    const objNode = (target.children.obj ?? [])[0]
+    const objNode = (target.slots.obj ?? [])[0]
     const objName = String(objNode?.properties?.name ?? target.properties.obj ?? '')
-    const idxNode = (target.children.index ?? [])[0]
+    const idxNode = (target.slots.index ?? [])[0]
     if ((objNode || objName) && idxNode) {
       const base = objNode
         ? await ctx.evaluate(objNode)

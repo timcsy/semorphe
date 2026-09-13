@@ -8,7 +8,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     // ⚠️ 沒有型別就不可能有 `as`——`except as e:` 是語法錯誤
     const alias = exc ? String(node.properties.alias ?? '') : ''
     const inner = indented(ctx)
-    const body = node.children.body ?? []
+    const body = node.slots.body ?? []
     // 🔴 **每一段標頭都要先算進行號**（2026-08-24）——否則那一段主體裡每一顆的
     //    對應都往上偏一行，使用者按下積木時**反白到上一行**。
     const head = `${indent(ctx)}except${exc ? ` ${exc}` : ''}${alias ? ` as ${alias}` : ''}:\n`

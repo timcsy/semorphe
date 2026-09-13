@@ -33,7 +33,7 @@ import { loopBudget, tickLoop } from '../../../languages/cpp/core/runtime/arduin
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:program', async (node, ctx) => {
-      const body = node.children.body ?? []
+      const body = node.slots.body ?? []
       await ctx.executeBody(body)
 
       if (ctx.functions.has('main')) {

@@ -2,7 +2,7 @@
   "componentId": "cpp:pwm_open",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "channel": "expression",
     "freq": "expression",
     "bits": "expression"

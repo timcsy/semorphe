@@ -14,8 +14,8 @@ export function registerExecute(register: (component: string, executor: Componen
       installMethodExecutors(ctx)
       const name = String(node.properties.name)
       const { fields, methods, ctor, dtor, statics } = splitMember([
-        ...(node.children.public ?? []),
-        ...(node.children.private ?? []),
+        ...(node.slots.public ?? []),
+        ...(node.slots.private ?? []),
       ])
       // 存取控制（public／private）這一片仍不做——兩區一視同仁。
       ctx.structs.declare(name, fields, methods, ctor, {

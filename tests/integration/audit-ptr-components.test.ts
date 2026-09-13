@@ -40,8 +40,8 @@ function roundTrip(code: string): string {
 function findComponents(node: SemanticNode, target: string): SemanticNode[] {
   const results: SemanticNode[] = []
   if (node.componentId === target) results.push(node)
-  for (const children of Object.values(node.children || {})) {
-    for (const child of children as SemanticNode[]) {
+  for (const slots of Object.values(node.slots || {})) {
+    for (const child of slots as SemanticNode[]) {
       results.push(...findComponents(child, target))
     }
   }
@@ -50,8 +50,8 @@ function findComponents(node: SemanticNode, target: string): SemanticNode[] {
 
 function findAllComponents(node: SemanticNode): string[] {
   const results: string[] = [node.componentId]
-  for (const children of Object.values(node.children || {})) {
-    for (const child of children as SemanticNode[]) {
+  for (const slots of Object.values(node.slots || {})) {
+    for (const child of slots as SemanticNode[]) {
       results.push(...findAllComponents(child))
     }
   }
@@ -69,7 +69,7 @@ describe('COMPONENT_IDENTITY audit: pointer declarations', () => {
     expect(ptrs.length).toBe(1)
     expect(ptrs[0].properties.type).toBe('int')
     expect(ptrs[0].properties.name).toBe('ptr')
-    expect((ptrs[0].children.initializer ?? []).length).toBe(1)
+    expect((ptrs[0].slots.initializer ?? []).length).toBe(1)
   })
 
   it('int* ptr; (no init) → cpp_pointer_declare', () => {

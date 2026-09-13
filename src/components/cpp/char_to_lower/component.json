@@ -2,7 +2,7 @@
   "componentId": "cpp:char_to_lower",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "value": "expression"
   },
   "role": "expression",

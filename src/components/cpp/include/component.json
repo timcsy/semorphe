@@ -13,7 +13,7 @@
       "default": "false"
     }
   ],
-  "children": {},
+  "slots": {},
   "role": "statement",
   "skipPaths": [
     "execute"

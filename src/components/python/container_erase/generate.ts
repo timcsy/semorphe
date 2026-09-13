@@ -4,5 +4,5 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:container_erase', (node, ctx) =>
-    `${indent(ctx)}del ${generateExpression((node.children.target ?? [])[0], ctx)}\n`)
+    `${indent(ctx)}del ${generateExpression((node.slots.target ?? [])[0], ctx)}\n`)
 }

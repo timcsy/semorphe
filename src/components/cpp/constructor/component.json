@@ -8,7 +8,7 @@
       "default": "MyClass"
     }
   ],
-  "children": {
+  "slots": {
     "params": "statements",
     "inits": "statements",
     "body": "statements"

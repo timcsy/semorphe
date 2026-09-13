@@ -56,7 +56,7 @@ export function isVariableReference(componentId: string): boolean {
 /** 走訪：對每一顆節點做一件事。 */
 function walk(node: SemanticNode, fn: (n: SemanticNode) => void): void {
   fn(node)
-  for (const kids of Object.values(node.children ?? {})) {
+  for (const kids of Object.values(node.slots ?? {})) {
     for (const k of (kids ?? []) as SemanticNode[]) if (k) walk(k, fn)
   }
 }
@@ -71,7 +71,7 @@ export function scopeOf(root: SemanticNode, target: SemanticNode): SemanticNode 
   const visit = (n: SemanticNode, nearestFn: SemanticNode): void => {
     if (n === target) { best = nearestFn; return }
     const next = isFunctionDefinition(n.componentId) ? n : nearestFn
-    for (const kids of Object.values(n.children ?? {})) {
+    for (const kids of Object.values(n.slots ?? {})) {
       for (const k of (kids ?? []) as SemanticNode[]) if (k) visit(k, next)
     }
   }
@@ -153,10 +153,10 @@ export function detectRename(
       if (!isIdentifierProperty(a.componentId, key)) continue
       hits.push({ node: b, oldName: String(ap[key] ?? ''), newName: String(bp[key] ?? '') })
     }
-    const keys = new Set([...Object.keys(a.children ?? {}), ...Object.keys(b.children ?? {})])
+    const keys = new Set([...Object.keys(a.slots ?? {}), ...Object.keys(b.slots ?? {})])
     for (const k of keys) {
-      const ac = (a.children?.[k] ?? []) as SemanticNode[]
-      const bc = (b.children?.[k] ?? []) as SemanticNode[]
+      const ac = (a.slots?.[k] ?? []) as SemanticNode[]
+      const bc = (b.slots?.[k] ?? []) as SemanticNode[]
       if (ac.length !== bc.length) { shapeDiffers = true; return }
       for (let i = 0; i < ac.length; i++) if (ac[i] && bc[i]) pair(ac[i], bc[i])
     }

@@ -13,7 +13,7 @@ import { ReturnSignal } from '../../../interpreter/executors/functions'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:return', async (node, ctx) => {
-    const kid = (node.children.value ?? [])[0]
+    const kid = (node.slots.value ?? [])[0]
     // 沒有值的 `return` 回 void —— 那正是 Python 的 `None`。
     throw new ReturnSignal(kid ? await ctx.evaluate(kid) : { type: 'void', value: null })
   })

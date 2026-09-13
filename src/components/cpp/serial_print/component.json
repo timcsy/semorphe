@@ -13,7 +13,7 @@
       "default": "true"
     }
   ],
-  "children": {
+  "slots": {
     "value": "expression",
     "format": "expression"
   },

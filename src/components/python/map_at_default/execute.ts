@@ -14,10 +14,10 @@ import { callMethod } from '../method_call/dispatch'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('python:map_at_default', async (node, ctx) => {
-    const self = await ctx.evaluate(node.children.obj[0])
+    const self = await ctx.evaluate(node.slots.obj[0])
     const args: RuntimeValue[] = []
-    for (const x of node.children.key ?? []) args.push(await ctx.evaluate(x))
-    for (const x of node.children.fallback ?? []) args.push(await ctx.evaluate(x))
+    for (const x of node.slots.key ?? []) args.push(await ctx.evaluate(x))
+    for (const x of node.slots.fallback ?? []) args.push(await ctx.evaluate(x))
     return callMethod(self, 'get', args, ctx)
   })
 }

@@ -11,7 +11,7 @@ import { eepromOf, requireAddress } from '../../../languages/cpp/core/runtime/ar
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:eeprom_read', async (node, ctx) => {
-    const addr = requireAddress(ctx.toNumber(await ctx.evaluate((node.children.address ?? [])[0])))
+    const addr = requireAddress(ctx.toNumber(await ctx.evaluate((node.slots.address ?? [])[0])))
     return { type: 'int', value: eepromOf(ctx)[addr] }
   })
 }

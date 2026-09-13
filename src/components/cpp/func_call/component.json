@@ -8,7 +8,7 @@
       "default": "f"
     }
   ],
-  "children": {
+  "slots": {
     "args": "expressions"
   },
   "role": "expression",

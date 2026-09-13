@@ -87,7 +87,7 @@ export function misaligned(
   const walk = (n: SemanticNode): void => {
     const m = range.get(n.id)
     // ⚠️ 主體的鍵不只一個（`body`／`methods`／`try_body`…）——取第一個非空的
-    const body = Object.entries(n.children ?? {})
+    const body = Object.entries(n.slots ?? {})
       .filter(([k]) => k === 'body' || k === 'methods' || k === 'try_body')
       .map(([, v]) => v).find((v) => v.length > 0)
     if (m && body && n.id !== rootId) {
@@ -97,7 +97,7 @@ export function misaligned(
         out.push(`${n.componentId} 標頭在行 ${m.startLine}，而主體第一顆也在行 ${first.startLine}`)
       }
     }
-    for (const ks of Object.values(n.children ?? {})) ks.forEach(walk)
+    for (const ks of Object.values(n.slots ?? {})) ks.forEach(walk)
   }
   walk(tree)
   return out
@@ -121,9 +121,9 @@ beforeAll(async () => {
 describe('第五十六條護欄：積木↔程式碼的對應表指得準嗎', () => {
   it('★ 注入①：一份「主體與標頭同一行」的對應表【必須】被抓到', () => {
     // 合成的樹與合成的對應表——**一個真實元件身分都沒有**
-    const kid: SemanticNode = { id: 'k', componentId: 'x:kid', properties: {}, children: {} }
-    const parent: SemanticNode = { id: 'p', componentId: 'x:parent', properties: {}, children: { body: [kid] } }
-    const root: SemanticNode = { id: 'r', componentId: 'x:root', properties: {}, children: { body: [parent] } }
+    const kid: SemanticNode = { id: 'k', componentId: 'x:kid', properties: {}, slots: {} }
+    const parent: SemanticNode = { id: 'p', componentId: 'x:parent', properties: {}, slots: { body: [kid] } }
+    const root: SemanticNode = { id: 'r', componentId: 'x:root', properties: {}, slots: { body: [parent] } }
     const bad: CodeMapping[] = [
       { nodeId: 'r', startLine: 0, endLine: 2 },
       { nodeId: 'p', startLine: 0, endLine: 2 },
@@ -133,9 +133,9 @@ describe('第五十六條護欄：積木↔程式碼的對應表指得準嗎', (
   })
 
   it('★ 注入②：一份正確的對應表不可以被誤報（含沒有標頭的根）', () => {
-    const kid: SemanticNode = { id: 'k', componentId: 'x:kid', properties: {}, children: {} }
-    const parent: SemanticNode = { id: 'p', componentId: 'x:parent', properties: {}, children: { body: [kid] } }
-    const root: SemanticNode = { id: 'r', componentId: 'x:root', properties: {}, children: { body: [parent] } }
+    const kid: SemanticNode = { id: 'k', componentId: 'x:kid', properties: {}, slots: {} }
+    const parent: SemanticNode = { id: 'p', componentId: 'x:parent', properties: {}, slots: { body: [kid] } }
+    const root: SemanticNode = { id: 'r', componentId: 'x:root', properties: {}, slots: { body: [parent] } }
     const good: CodeMapping[] = [
       { nodeId: 'r', startLine: 0, endLine: 1 },   // 根沒有標頭——從第 0 行開始是對的
       { nodeId: 'p', startLine: 0, endLine: 1 },

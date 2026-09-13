@@ -9,9 +9,9 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:loop_iter', (node, ctx) => {
-    const outer = (node.children.outer ?? [])[0]
+    const outer = (node.slots.outer ?? [])[0]
     const head = outer ? `${generateExpression(outer, ctx)} ` : ''
-    const src = (node.children.iterable ?? [])[0]
+    const src = (node.slots.iterable ?? [])[0]
     return `${head}for ${String(node.properties.obj ?? 'row')} in ${src ? generateExpression(src, ctx) : ''}`
   })
 }

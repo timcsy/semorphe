@@ -21,9 +21,9 @@ import type { CodeMapping } from '../../../src/core/projection/code-generator'
 import type { Diagnostic } from '../../../src/core/diagnostics'
 
 const tree = {
-  id: 'zz-root', componentId: 'zz:root', children: { body: [
-    { id: 'zz-stmt', componentId: 'zz:stmt', children: { expr: [
-      { id: 'zz-expr', componentId: 'zz:expr', children: {} },
+  id: 'zz-root', componentId: 'zz:root', slots: { body: [
+    { id: 'zz-stmt', componentId: 'zz:stmt', slots: { expr: [
+      { id: 'zz-expr', componentId: 'zz:expr', slots: {} },
     ] } },
   ] },
 } as unknown as SemanticNode

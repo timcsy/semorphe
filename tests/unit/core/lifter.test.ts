@@ -64,8 +64,8 @@ describe('Lifter', () => {
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:arithmetic')
     expect(result!.properties.operator).toBe('+')
-    expect(result!.children.left).toHaveLength(1)
-    expect(result!.children.right).toHaveLength(1)
+    expect(result!.slots.left).toHaveLength(1)
+    expect(result!.slots.right).toHaveLength(1)
   })
 
   it('should lift binary_expression with comparison op', () => {
@@ -116,7 +116,7 @@ describe('Lifter', () => {
     const result = lifter.lift(root)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:program')
-    expect(result!.children.body.length).toBeGreaterThan(0)
+    expect(result!.slots.body.length).toBeGreaterThan(0)
   })
 
   it('should lift return_statement', () => {
@@ -127,8 +127,8 @@ describe('Lifter', () => {
     const result = lifter.lift(node)
     expect(result).not.toBeNull()
     expect(result!.componentId).toBe('cpp:return')
-    expect(result!.children.value).toHaveLength(1)
-    expect(result!.children.value[0].componentId).toBe('cpp:literal_number')
+    expect(result!.slots.value).toHaveLength(1)
+    expect(result!.slots.value[0].componentId).toBe('cpp:literal_number')
   })
 
   it('should lift break_statement and continue_statement', () => {
@@ -138,7 +138,7 @@ describe('Lifter', () => {
     expect(lifter.lift(contNode)!.componentId).toBe('cpp:continue')
   })
 
-  it('should detect deeply nested ERROR descendant (not just direct children)', () => {
+  it('should detect deeply nested ERROR descendant (not just direct slots)', () => {
     // ERROR buried 2 levels deep: expression_statement > binary_expression > ERROR
     const errorNode = mockNode('ERROR', '???')
     const innerExpr = mockNode('binary_expression', 'x + ???', [

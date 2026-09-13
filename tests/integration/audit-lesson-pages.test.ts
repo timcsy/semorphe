@@ -217,10 +217,24 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
     // > **一個在開發機上成立的「檔案什麼時候改的」，在 CI 上量到的是
     // > 「這個 runner 什麼時候把它抓下來的」。**
     const dates = [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1])
-    const distinct = new Set(dates).size
-    expect(dates.length === 0 || distinct > 1,
-      `🔴 ${dates.length} 筆 lastmod 卻只有 ${distinct} 種日期——那不是內容的時間，` +
-      '是建置／checkout 的時間。問不到就不要寫。').toBe(true)
+    // 🪦 **這裡本來問「日期有沒有很多種」，而那個判準 2026-09-13 退役了。**
+    //
+    //    那一天一次 commit 改了全部 66 課的 `lesson.md`，於是 git 給的日期
+    //    **真的只有一種**，而護欄說那是 checkout 的時間。
+    //    它分不出「淺複製壞掉」與「一次合法的大改」。
+    //
+    // > **一個用「結果看起來對不對」當判準的檢查，會在世界合法地長成
+    // > 那個樣子的那天誤報——而誤報過一次之後，它就開始被當成雜訊。**
+    //
+    // 🟢 而它守的那個缺陷**已經被上游堵死了**：`lastmodFromGit` 現在
+    //    「淺複製一律不給日期」（見下面「④之六」，它直接驗那段程式碼在不在）。
+    //    拿不到假日期，這個代理就沒有東西可以抓。
+    //
+    // ⚠️ 仍然驗一件事：**有日期的話，格式要是日期**——一個寫成建置時間戳
+    //    的欄位長得跟這個不一樣。
+    for (const d of dates) {
+      expect(d, `🔴 lastmod 不是一個日期：${d}`).toMatch(/^\d{4}-\d{2}-\d{2}/)
+    }
     expect(renderRobots(), '🔴 robots 沒有指出 sitemap 在哪')
       .toContain('Sitemap: https://semorphe.com/sitemap.xml')
   })

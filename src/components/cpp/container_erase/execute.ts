@@ -6,7 +6,7 @@ import { mapFind } from '../../../languages/cpp/core/runtime/map'
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_erase', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const keyNodes = node.children.key ?? []
+      const keyNodes = node.slots.key ?? []
       if (keyNodes.length === 0) return
       const keyVal = await ctx.evaluate(keyNodes[0])
       const arr = ctx.scope.get(name)

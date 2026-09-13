@@ -118,7 +118,7 @@ describe('L1 Block Roundtrip', () => {
       expect(sem2!.componentId).toBe('cpp:increment')
       // 🟢 **運算元是接點**（2026-08-25）——釘接點比釘字串強：它證明左邊被 lift 過。
       expect(sem2!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(sem2!.children.target[0].properties.name).toBe('i')
+      expect(sem2!.slots.target[0].properties.name).toBe('i')
     })
 
     it('should generate code for cpp_increment (hand-written generator for prefix/postfix)', () => {
@@ -162,9 +162,9 @@ describe('L1 Block Roundtrip', () => {
       // 🟢 **左值是接點**（2026-08-25）——這裡本來釘的是 `properties.name === 'x'`。
       //    釘接點比釘字串強：它同時證明了左邊**被 lift 過**，而不是被 `.text` 抄走。
       expect(sem!.properties.name, '🔴 字串屬性長回來了').toBeUndefined()
-      expect(sem!.children.target).toHaveLength(1)
-      expect(sem!.children.target[0].componentId).toBe('cpp:var_ref')
-      expect(sem!.children.value).toHaveLength(1)
+      expect(sem!.slots.target).toHaveLength(1)
+      expect(sem!.slots.target[0].componentId).toBe('cpp:var_ref')
+      expect(sem!.slots.value).toHaveLength(1)
     })
   })
 
@@ -228,7 +228,7 @@ describe('L1 Block Roundtrip', () => {
       const sem = lifter.tryLift(outer, liftCtx())
       expect(sem).not.toBeNull()
       expect(sem!.componentId).toBe('cpp:print')
-      expect(sem!.children.values.length).toBeGreaterThanOrEqual(2)
+      expect(sem!.slots.values.length).toBeGreaterThanOrEqual(2)
     })
   })
 
@@ -244,7 +244,7 @@ describe('L1 Block Roundtrip', () => {
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem).not.toBeNull()
       expect(sem!.componentId).toBe('cpp:if')
-      expect(sem!.children.then_body).toBeDefined()
+      expect(sem!.slots.then_body).toBeDefined()
     })
   })
 
@@ -298,7 +298,7 @@ describe('L1 Block Roundtrip', () => {
       })
       const sem = lifter.tryLift(ast, liftCtx())
       expect(sem!.componentId).toBe('cpp:return')
-      expect(sem!.children.value).toHaveLength(1)
+      expect(sem!.slots.value).toHaveLength(1)
     })
   })
 

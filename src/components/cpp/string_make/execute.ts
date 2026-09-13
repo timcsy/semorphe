@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:string_make', async (node, ctx) => {
-      const valueNodes = node.children.value ?? []
+      const valueNodes = node.slots.value ?? []
       if (valueNodes.length === 0) return { type: 'string', value: '' }
       const val = await ctx.evaluate(valueNodes[0])
       return { type: 'string', value: String(val.value) }

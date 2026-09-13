@@ -37,7 +37,7 @@ const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const collect = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   out.push(n)
-  for (const ks of Object.values(n.children ?? {})) for (const k of ks) collect(k, out)
+  for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
 const ids = (n: SemanticNode): string[] => collect(n).map((x) => x.componentId)

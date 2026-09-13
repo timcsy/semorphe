@@ -5,7 +5,7 @@ import { generateExpression } from '../../../core/projection/code-generator'
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:string_at', (node, ctx) => {
       const obj = node.properties.obj ?? 'str'
-      const indexNodes = node.children.index ?? []
+      const indexNodes = node.slots.index ?? []
       const index = indexNodes.length > 0 ? generateExpression(indexNodes[0], ctx) : '0'
       return `${obj}[${index}]`
     })

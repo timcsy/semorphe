@@ -79,7 +79,7 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const body = node.childForFieldName('body')
     const lifted = body ? ctx.lift(body) : null
     const statements = lifted
-      ? (lifted.componentId === '_compound' ? (lifted.children.body ?? []) : [lifted])
+      ? (lifted.componentId === '_compound' ? (lifted.slots.body ?? []) : [lifted])
       : []
 
     // 回傳型別同理——寫給人看的，不參與判斷

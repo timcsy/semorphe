@@ -26,7 +26,7 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       if (!n) return []
       const lifted = ctx.lift(n)
       if (!lifted) return []
-      return lifted.componentId === '_compound' ? (lifted.children.body ?? []) : [lifted]
+      return lifted.componentId === '_compound' ? (lifted.slots.body ?? []) : [lifted]
     }
 
     const condition = ctx.lift(node.childForFieldName('condition') as never)
@@ -76,7 +76,7 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       }
     }
 
-    const children: Record<string, SemanticNode[]> = {
+    const slots: Record<string, SemanticNode[]> = {
       condition: [condition],
       body: body(node.childForFieldName('consequence')),
     }
@@ -84,7 +84,7 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     // 決定 `hasElse`，而一個空陣列與沒有這個鍵在那裡是同一件事，
     // 但寫進去會讓語義樹多出一堆空鍵。
     if (elifConds.length > 0) {
-      children.elif_condition = elifConds
+      slots.elif_condition = elifConds
       // 🔴 **兩個清單長度必須相同**——它們靠索引配對。
       // ⚠️ 一支空的 elif（`elif c: pass`）在這裡是一格空陣列，
       //    而**塞一顆填充節點會讓「空的分支」與「掉了的分支」長得一樣**。
@@ -94,10 +94,10 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       //    於是 `elif r == 0:` 底下第二行起**整段安靜地不見**
       //    ——不報錯、積木畫得出來、產回去是一段合法的 Python，而少了幾行。
       //    🟢 多行包成 `_compound`（核心表示「一段」的結構身分），一行的照原樣。
-      children.elif_body = elifBodies.map((b) => (b.length === 1 ? b[0] : createNode('_compound', {}, { body: b })))
+      slots.elif_body = elifBodies.map((b) => (b.length === 1 ? b[0] : createNode('_compound', {}, { body: b })))
     }
-    if (elseBody.length > 0) children.else_body = elseBody
+    if (elseBody.length > 0) slots.else_body = elseBody
 
-    return createNode('python:if', {}, children)
+    return createNode('python:if', {}, slots)
   })
 }

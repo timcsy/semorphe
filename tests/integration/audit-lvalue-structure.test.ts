@@ -20,7 +20,7 @@
  *
  * ## 🔴 而它必須是【主動探測】，不能讀宣告
  *
- * 改寫前這條護欄讀 `traits.writesTo` 指到 `children` 還是 `properties`。
+ * 改寫前這條護欄讀 `traits.writesTo` 指到 `slots` 還是 `properties`。
  * 那對新判準沒有用——`kind: 'identifier'` 只是一句**主張**：
  * `cpp:var_assign.obj` 曾經宣告成 identifier 而語料上裝著 `r.x`。
  *
@@ -148,7 +148,7 @@ export function leaksIn(
       if (!ATOM.test(v)) out.push({ componentId: node.componentId, prop, value: v, probe })
     }
   }
-  for (const [slot, kids] of Object.entries(node.children ?? {})) {
+  for (const [slot, kids] of Object.entries(node.slots ?? {})) {
     // 🔴 `value` 是**被寫進去的東西**，不是左值——它底下的非原子是正常的。
     const nextInside = inRegion && slot !== 'value'
     for (const c of kids as SemanticNode[]) leaksIn(c, writers, probe, out, nextInside)
@@ -172,7 +172,7 @@ describe('第七十三條護欄：左值必須被結構表達', () => {
     const fake = {
       componentId: 'synthetic:assign_probe',
       properties: { obj: '(p + 1)' },
-      children: {},
+      slots: {},
     } as unknown as SemanticNode
     const hits = leaksIn(fake, new Set(['synthetic:assign_probe']), 'synthetic')
     expect(hits.length, '🔴 判定函式連合成輸入都認不出來').toBe(1)
@@ -183,7 +183,7 @@ describe('第七十三條護欄：左值必須被結構表達', () => {
     const ok = {
       componentId: 'synthetic:assign_ok',
       properties: { obj: 'arr', operator: '+=' },
-      children: {},
+      slots: {},
     } as unknown as SemanticNode
     expect(leaksIn(ok, new Set(['synthetic:assign_ok']), 'synthetic'),
       '🔴 這條護欄會把正確的宣告罵一頓').toEqual([])
@@ -193,7 +193,7 @@ describe('第七十三條護欄：左值必須被結構表達', () => {
     const other = {
       componentId: 'synthetic:not_a_writer',
       properties: { obj: 'a.b.c' },
-      children: {},
+      slots: {},
     } as unknown as SemanticNode
     expect(leaksIn(other, new Set(['synthetic:assign_ok']), 'synthetic')).toEqual([])
   })
@@ -202,7 +202,7 @@ describe('第七十三條護欄：左值必須被結構表達', () => {
     const nested = {
       componentId: 'synthetic:block',
       properties: {},
-      children: { body: [{ componentId: 'w', properties: { obj: 'o.x' }, children: {} }] },
+      slots: { body: [{ componentId: 'w', properties: { obj: 'o.x' }, slots: {} }] },
     } as unknown as SemanticNode
     expect(leaksIn(nested, new Set(['w']), 'synthetic').length).toBe(1)
   })
@@ -211,7 +211,7 @@ describe('第七十三條護欄：左值必須被結構表達', () => {
     const w = {
       componentId: 'synthetic:writer',
       properties: {},
-      children: { target: [{ componentId: 'inner', properties: { obj: 'obj.arr' }, children: {} }] },
+      slots: { target: [{ componentId: 'inner', properties: { obj: 'obj.arr' }, slots: {} }] },
     } as unknown as SemanticNode
     const hits = leaksIn(w, new Set(['synthetic:writer']), 'synthetic')
     expect(hits.length, '🔴 只看最外層 → `cin >> obj.arr[i]` 這一族全部漏掉').toBe(1)
@@ -222,9 +222,9 @@ describe('第七十三條護欄：左值必須被結構表達', () => {
     const w = {
       componentId: 'synthetic:writer',
       properties: {},
-      children: {
-        target: [{ componentId: 'inner', properties: { obj: 'a' }, children: {} }],
-        value: [{ componentId: 'lit', properties: { name: 'hello world' }, children: {} }],
+      slots: {
+        target: [{ componentId: 'inner', properties: { obj: 'a' }, slots: {} }],
+        value: [{ componentId: 'lit', properties: { name: 'hello world' }, slots: {} }],
       },
     } as unknown as SemanticNode
     expect(leaksIn(w, new Set(['synthetic:writer']), 'synthetic'),

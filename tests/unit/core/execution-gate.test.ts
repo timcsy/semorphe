@@ -33,13 +33,13 @@ import type { SemanticNode } from '../../../src/core/types'
 function node(
   id: string,
   cause?: 'syntax_error' | 'unsupported' | 'nonstandard_but_valid',
-  children: Record<string, SemanticNode[]> = {},
+  slots: Record<string, SemanticNode[]> = {},
 ): SemanticNode {
   return {
     id,
     componentId: 'cpp:var_declare',
     properties: {},
-    children,
+    slots,
     ...(cause ? { metadata: { degradationCause: cause, rawCode: 'x' } } : {}),
   } as SemanticNode
 }

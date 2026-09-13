@@ -13,7 +13,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       // 所以 C++ 那一側**一個字都沒變**。
       const rawType = String(node.properties.type ?? 'int')
       const type = ctx._structNames ? cTypeName(rawType, ctx._structNames) : rawType
-      const declarators = node.children.declarators ?? []
+      const declarators = node.slots.declarators ?? []
 
       // Multi-variable: int x, v1 = 0;
       //
@@ -60,7 +60,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
             if (rest.length > 0) return rest
           }
           const name = d.properties.name ?? 'x'
-          const inits = d.children.initializer ?? []
+          const inits = d.slots.initializer ?? []
           if (inits.length > 0) {
             return `${name} = ${generateExpression(inits[0], ctx)}`
           }
@@ -71,7 +71,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
 
       // Single variable
       const name = node.properties.name ?? 'x'
-      const inits = node.children.initializer ?? []
+      const inits = node.slots.initializer ?? []
       if (inits.length > 0) {
         // Constructor-style initialization: Type name(args)
         if (node.properties.init_style === 'constructor') {

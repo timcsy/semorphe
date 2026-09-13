@@ -5,7 +5,7 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:lcd_print', (node, ctx) => {
     const obj = String(node.properties.obj ?? 'lcd')
-    const value = generateExpression((node.children.value ?? [])[0], ctx)
+    const value = generateExpression((node.slots.value ?? [])[0], ctx)
     return `${indent(ctx)}${obj}.print(${value});\n`
   })
 }

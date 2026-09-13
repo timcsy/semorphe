@@ -4,5 +4,5 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:array_make', (node, ctx) =>
-    `[${(node.children.items ?? []).map((v) => generateExpression(v, ctx)).join(', ')}]`)
+    `[${(node.slots.items ?? []).map((v) => generateExpression(v, ctx)).join(', ')}]`)
 }

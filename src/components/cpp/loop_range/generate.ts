@@ -7,7 +7,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const varType = node.properties.var_type ?? 'auto'
       const varName = node.properties.var_name ?? 'x'
       const container = node.properties.container ?? 'vec'
-      const bodyNodes = node.children.body ?? []
+      const bodyNodes = node.slots.body ?? []
       const bodyCode = generateBody(bodyNodes, indented(ctx))
       const ind = indent(ctx)
       return `${ind}for (${varType} ${varName} : ${container}) {\n${bodyCode}${ind}}\n`

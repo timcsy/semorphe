@@ -24,7 +24,7 @@ export function registerExecute(register: (component: string, executor: Componen
       const root = rootScope(ctx.scope)
 
       if (!root.has(storedName)) {
-        const inits = node.children.initializer ?? []
+        const inits = node.slots.initializer ?? []
         const initValue = inits.length > 0 ? await ctx.evaluate(inits[0]) : defaultValue(type)
         root.declare(storedName, ctx.coerceType ? ctx.coerceType(initValue, type) : initValue)
       }

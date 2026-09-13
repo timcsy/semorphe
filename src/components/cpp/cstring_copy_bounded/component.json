@@ -2,7 +2,7 @@
   "componentId": "cpp:cstring_copy_bounded",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "dest": "expression",
     "src": "expression",
     "n": "expression"

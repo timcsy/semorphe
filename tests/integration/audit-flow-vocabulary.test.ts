@@ -77,7 +77,7 @@ function everyComponentNode(): SemanticNode[] {
     .map((d, i) => {
       const properties: Record<string, unknown> = {}
       for (const p of d.properties ?? []) properties[p.name] = p.default ?? 'v'
-      return { id: `n${i}`, componentId: d.componentId, properties, children: {} } as unknown as SemanticNode
+      return { id: `n${i}`, componentId: d.componentId, properties, slots: {} } as unknown as SemanticNode
     })
 }
 

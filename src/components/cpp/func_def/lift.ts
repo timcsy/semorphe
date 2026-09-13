@@ -9,9 +9,9 @@ import { createNode } from '../../../core/semantic-tree'
 export function buildFuncDef(
   name: string,
   returnType: string,
-  children: Record<string, SemanticNode[]>,
+  slots: Record<string, SemanticNode[]>,
 ): SemanticNode {
-  return createNode('cpp:func_def', { name, return_type: returnType }, children)
+  return createNode('cpp:func_def', { name, return_type: returnType }, slots)
 }
 
 /** 判別走共用檔；這裡提供建構子。 */

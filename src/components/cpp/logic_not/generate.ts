@@ -4,7 +4,7 @@ import { precedence, genChild } from '../../../languages/cpp/core/generators/exp
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:logic_not', (node, ctx) => {
-      const operand = genChild((node.children.operand ?? [])[0], precedence(node), ctx)
+      const operand = genChild((node.slots.operand ?? [])[0], precedence(node), ctx)
       return `!${operand}`
     })
 }

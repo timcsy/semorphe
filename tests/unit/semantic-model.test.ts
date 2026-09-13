@@ -14,7 +14,7 @@ describe('createNode', () => {
     const node = createNode('cpp:var_declare')
     expect(node.componentId).toBe('cpp:var_declare')
     expect(node.properties).toEqual({})
-    expect(node.children).toEqual({})
+    expect(node.slots).toEqual({})
     expect(node.id).toBeDefined()
   })
 
@@ -27,7 +27,7 @@ describe('createNode', () => {
     )
     expect(node.componentId).toBe('cpp:var_declare')
     expect(node.properties).toEqual({ name: 'x', type: 'int' })
-    expect(node.children.initializer[0]).toBe(child)
+    expect(node.slots.initializer[0]).toBe(child)
   })
 
   it('should create language-specific component nodes', () => {
@@ -70,7 +70,7 @@ describe('nodeEquals', () => {
     expect(nodeEquals(a, b)).toBe(true)
   })
 
-  it('should compare nested children recursively', () => {
+  it('should compare nested slots recursively', () => {
     const childA = createNode('cpp:literal_number', { value: '5' })
     const childB = createNode('cpp:literal_number', { value: '5' })
     const a = createNode('cpp:var_declare', { name: 'x' }, { initializer: [childA] })
@@ -78,7 +78,7 @@ describe('nodeEquals', () => {
     expect(nodeEquals(a, b)).toBe(true)
   })
 
-  it('should return false for different nested children', () => {
+  it('should return false for different nested slots', () => {
     const childA = createNode('cpp:literal_number', { value: '5' })
     const childB = createNode('cpp:literal_number', { value: '10' })
     const a = createNode('cpp:var_declare', { name: 'x' }, { initializer: [childA] })
@@ -86,7 +86,7 @@ describe('nodeEquals', () => {
     expect(nodeEquals(a, b)).toBe(false)
   })
 
-  it('should compare array children', () => {
+  it('should compare array slots', () => {
     const stmt1 = createNode('cpp:var_declare', { name: 'x' })
     const stmt2 = createNode('cpp:var_declare', { name: 'y' })
     const a = createNode('cpp:program', {}, { body: [stmt1, stmt2] })
@@ -94,14 +94,14 @@ describe('nodeEquals', () => {
     expect(nodeEquals(a, b)).toBe(true)
   })
 
-  it('should return false for different array children lengths', () => {
+  it('should return false for different array slots lengths', () => {
     const stmt1 = createNode('cpp:var_declare', { name: 'x' })
     const a = createNode('cpp:program', {}, { body: [stmt1] })
     const b = createNode('cpp:program', {}, { body: [stmt1, stmt1] })
     expect(nodeEquals(a, b)).toBe(false)
   })
 
-  it('should return false for different number of children keys', () => {
+  it('should return false for different number of slots keys', () => {
     const child = createNode('cpp:literal_number', { value: '1' })
     const a = createNode('cpp:if', {}, { condition: [child] })
     const b = createNode('cpp:if', {}, { condition: [child], then_body: [child] })
@@ -167,7 +167,7 @@ describe('walkNodes', () => {
     expect(visited).toEqual(['cpp:program', 'cpp:func_def', 'cpp:var_declare', 'cpp:literal_number'])
   })
 
-  it('should handle empty children', () => {
+  it('should handle empty slots', () => {
     const root = createNode('cpp:break')
     const visited: string[] = []
     walkNodes(root, (node) => visited.push(node.componentId))

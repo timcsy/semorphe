@@ -2,7 +2,7 @@
   "componentId": "cpp:cstring_find",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "haystack": "expression",
     "needle": "expression"
   },

@@ -24,7 +24,7 @@ function makeProgram(...body: ReturnType<typeof createNode>[]) {
     id: 'root',
     componentId: 'cpp:program',
     properties: {},
-    children: { body },
+    slots: { body },
     metadata: {},
   }
 }

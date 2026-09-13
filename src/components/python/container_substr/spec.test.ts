@@ -56,9 +56,9 @@ describe('python:ternary', () => {
     const t = await liftPython('a = "成年" if age >= 18 else "未成年"\n')
     expect(componentIdsOf(t)).toContain('python:ternary')
     const find = (n: any): any => n?.componentId === 'python:ternary' ? n
-      : Object.values(n?.children ?? {}).flat().map(find).find(Boolean)
+      : Object.values(n?.slots ?? {}).flat().map(find).find(Boolean)
     const node = find(t)
-    expect(node.children.condition[0].componentId, '條件被對映成那個字串了').toBe('python:compare')
+    expect(node.slots.condition[0].componentId, '條件被對映成那個字串了').toBe('python:compare')
   })
 
   it('來回：Python 的順序（值在前）', async () => {

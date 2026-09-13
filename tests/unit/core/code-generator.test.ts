@@ -24,7 +24,7 @@ function makeProgram(...body: SemanticNode[]): SemanticNode {
     id: 'test_root',
     componentId: 'cpp:program',
     properties: {},
-    children: { body },
+    slots: { body },
   }
 }
 
@@ -138,7 +138,7 @@ describe('generateCode', () => {
       id: 'test_raw',
       componentId: 'raw_code',
       properties: {},
-      children: {},
+      slots: {},
       metadata: { rawCode: 'template<typename T> class Foo {};' },
     }
     const tree = makeProgram(raw)

@@ -75,8 +75,8 @@ function printNode(): SemanticNode {
     id: 'n1',
     componentId: 'python:print',
     properties: {},
-    children: {
-      values: [{ id: 'n2', componentId: 'cpp:literal_string', properties: { value: 'hi' }, children: {} }],
+    slots: {
+      values: [{ id: 'n2', componentId: 'cpp:literal_string', properties: { value: 'hi' }, slots: {} }],
     },
   }
 }
@@ -137,7 +137,7 @@ describe('spec 160 · 兩條到達路徑', () => {
     const tree = await pyParser.parse('print("a", "b")')
     const sem = lifter.lift(tree.rootNode as never)
     const print = collect(sem!).find((n) => n.componentId === 'python:print')!
-    expect(print.children.values?.length, 'lift 只收到一個引數 → 可變參數在 lift 那一側就斷了').toBe(2)
+    expect(print.slots.values?.length, 'lift 只收到一個引數 → 可變參數在 lift 那一側就斷了').toBe(2)
 
     // 🔴 **走產品的入口**（`renderToBlocklyState`），不自己叫 `PatternRenderer.render`。
     //
@@ -157,7 +157,7 @@ describe('spec 160 · 兩條到達路徑', () => {
       'extraState 沒帶 itemCount → 存檔之後會塌回一個引數').toBe(2)
 
     const back = extractor.extract(block!)
-    expect(back?.children.values?.length, '抽回來少了一個引數').toBe(2)
+    expect(back?.slots.values?.length, '抽回來少了一個引數').toBe(2)
     expect(back?.componentId).toBe('python:print')
   })
 
@@ -173,7 +173,7 @@ describe('spec 160 · 兩條到達路徑', () => {
   /**
    * 🔴 **宣告的接點必須是 lift 真的產出的那些。**
    *
-   * ⚠️ 這一支是**注射逼出來的**：改壞 `component.json` 的 `children` 之後，
+   * ⚠️ 這一支是**注射逼出來的**：改壞 `component.json` 的 `slots` 之後，
    * 上面五支**一支都沒紅**——那個宣告沒有任何東西在驗。
    *
    * 而全域的宣告完整性護欄看不到它：**它的語料是 `tests/integration/` 裡的
@@ -182,15 +182,15 @@ describe('spec 160 · 兩條到達路徑', () => {
    * > **一個量不到的地方，宣告錯了與宣告對了長得一模一樣**
    * > ——而我在修這顆的時候把這句話寫進了膠囊，卻沒有補上量它的東西。
    */
-  it('🔴 `children` 宣告 ↔ lift 實際產出，必須對得上', async () => {
+  it('🔴 `slots` 宣告 ↔ lift 實際產出，必須對得上', async () => {
     const manifest = JSON.parse(fs.readFileSync(
       path.join(REPO_ROOT, 'src/components/python/print/component.json'), 'utf8'))
-    const declared = Object.keys(manifest.children as Record<string, unknown>).sort()
+    const declared = Object.keys(manifest.slots as Record<string, unknown>).sort()
 
     const tree = await pyParser.parse('print("hi")')
     const sem = lifter.lift(tree.rootNode as never, 'python')
     const print = collect(sem!).find((n) => n.componentId === 'python:print')!
-    const actual = Object.keys(print.children ?? {}).sort()
+    const actual = Object.keys(print.slots ?? {}).sort()
 
     expect(actual, `宣告 ${declared.join('/')} 而 lift 產出 ${actual.join('/')}`).toEqual(declared)
   })
@@ -218,7 +218,7 @@ describe('spec 160 · 兩條到達路徑', () => {
     const tree = await pyParser.parse('print("hi")')
     const sem = lifter.lift(tree.rootNode as never, 'python')
     const print = collect(sem!).find((n) => n.componentId === 'python:print')!
-    const arg = print.children.values?.[0]
+    const arg = print.slots.values?.[0]
     // 🎯 **spec 167：這一格從 `raw_code` 變成 `python:literal_string`。**
     //
     // spec 160 寫這一條時附了一句話：
@@ -252,7 +252,7 @@ describe('spec 160 · 兩條到達路徑', () => {
 
 function collect(n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] {
   out.push(n)
-  for (const kids of Object.values(n.children ?? {})) for (const k of kids) collect(k, out)
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids) collect(k, out)
   return out
 }
 

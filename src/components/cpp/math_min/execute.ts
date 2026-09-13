@@ -3,8 +3,8 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:math_min', async (node, ctx) => {
-      const a = node.children.a?.[0]
-      const b = node.children.b?.[0]
+      const a = node.slots.a?.[0]
+      const b = node.slots.b?.[0]
       const va = a ? await ctx.evaluate(a) : { type: 'int' as const, value: 0 }
       const vb = b ? await ctx.evaluate(b) : { type: 'int' as const, value: 0 }
       const na = ctx.toNumber(va)

@@ -21,8 +21,8 @@ import { isIncludeDirective } from './core/node-traits'
  */
 export function collectComponents(node: SemanticNode, out: Set<string>): void {
   out.add(node.componentId)
-  for (const children of Object.values(node.children)) {
-    for (const child of children) {
+  for (const slots of Object.values(node.slots)) {
+    for (const child of slots) {
       collectComponents(child, out)
     }
   }
@@ -58,7 +58,7 @@ export function computeAutoIncludes(
   const edges = resolver.resolve([...components])
 
   // Exclude headers already manually included
-  const body = root.children.body ?? []
+  const body = root.slots.body ?? []
   const manual = collectManualIncludes(body)
 
   return edges.filter(e => !manual.has(e.header))

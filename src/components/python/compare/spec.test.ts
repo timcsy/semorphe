@@ -18,11 +18,11 @@ describe('python:compare', () => {
   it('🔴 位置式子節點：left／right 都要接到（這顆的取法與同族不同）', async () => {
     const find = (n: SemanticNode | null): SemanticNode | undefined =>
       !n ? undefined : n.componentId === 'python:compare' ? n
-        : Object.values(n.children ?? {}).flat().map((k) => find(k)).find(Boolean)
+        : Object.values(n.slots ?? {}).flat().map((k) => find(k)).find(Boolean)
     const c = find(await liftPython('a < b'))
     expect(c, '★ 錨點：先要找得到').toBeTruthy()
-    expect(c!.children.left?.length, '🔴 `comparison_operator` 沒有 left 欄位——用的是 $namedChildren[0]').toBe(1)
-    expect(c!.children.right?.length, '同上，$namedChildren[1]').toBe(1)
+    expect(c!.slots.left?.length, '🔴 `comparison_operator` 沒有 left 欄位——用的是 $namedChildren[0]').toBe(1)
+    expect(c!.slots.right?.length, '同上，$namedChildren[1]').toBe(1)
   })
 
   it('★ generate ＋ round-trip：六個運算子', async () => {

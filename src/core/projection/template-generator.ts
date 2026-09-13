@@ -120,22 +120,22 @@ export class TemplateGenerator {
       }
 
       // Check if it's a child (exact match first, then case-insensitive)
-      const childKey = this.findChildKey(key, node.children)
-      const children = childKey !== null ? node.children[childKey] : undefined
-      if (children && children.length > 0) {
+      const childKey = this.findChildKey(key, node.slots)
+      const slots = childKey !== null ? node.slots[childKey] : undefined
+      if (slots && slots.length > 0) {
         // If the key suggests a body/statements, generate as indented block
         if (this.isBodyKey(key)) {
-          return this.generateBody(children, { ...ctx, indent: ctx.indent + 1 })
+          return this.generateBody(slots, { ...ctx, indent: ctx.indent + 1 })
         }
         // Otherwise generate as expression
-        return this.generateExpression(children[0], ctx)
+        return this.generateExpression(slots[0], ctx)
       }
 
       // Check for CHILDREN:separator syntax
       if (key.includes(':')) {
         const [childName, separator] = key.split(':', 2)
-        const resolvedChildName = this.findChildKey(childName.trim(), node.children)
-        const childList = resolvedChildName !== null ? node.children[resolvedChildName] : undefined
+        const resolvedChildName = this.findChildKey(childName.trim(), node.slots)
+        const childList = resolvedChildName !== null ? node.slots[resolvedChildName] : undefined
         if (childList && childList.length > 0) {
           return childList
             .map(c => this.generateExpression(c, ctx))
@@ -149,8 +149,8 @@ export class TemplateGenerator {
         if (colonIdx !== -1) {
           const childName = key.substring(1, colonIdx)
           const subTemplate = key.substring(colonIdx + 1)
-          const children = node.children[childName]
-          if (children && children.length > 0) {
+          const slots = node.slots[childName]
+          if (slots && slots.length > 0) {
             return this.expandPattern(subTemplate, node, ctx)
           }
           return ''
@@ -203,11 +203,11 @@ export class TemplateGenerator {
     return null
   }
 
-  private findChildKey(key: string, children: Record<string, SemanticNode[]>): string | null {
-    if (key in children) return key
+  private findChildKey(key: string, slots: Record<string, SemanticNode[]>): string | null {
+    if (key in slots) return key
     const lower = key.toLowerCase()
-    if (lower in children) return lower
-    for (const k of Object.keys(children)) {
+    if (lower in slots) return lower
+    for (const k of Object.keys(slots)) {
       if (k.toLowerCase() === lower) return k
     }
     return null

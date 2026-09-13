@@ -9,9 +9,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
   const openBrace = openBraceFor(style)
   g.set('cpp:constructor', (node, ctx) => {
       const className = node.properties.class_name ?? 'MyClass'
-      const paramChildren = node.children.params ?? []
-      const inits = node.children.inits ?? []
-      const body = node.children.body ?? []
+      const paramChildren = node.slots.params ?? []
+      const inits = node.slots.inits ?? []
+      const body = node.slots.body ?? []
       const paramStr = formatParams(paramChildren)
       // `v = x` → `v(x)`：初始化列的語法是**呼叫的形狀**，不是賦值的形狀
       const initStr = inits.length > 0
@@ -20,9 +20,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
         //    之後那一格不存在了，於是每一筆都退成 `x(...)`。
         //    ⚠️ 這是**同一次改動的第二個消費者**，而它不在那顆膠囊裡。
         ? ` : ${inits.map((n) => {
-          const t = (n.children?.target ?? [])[0]
+          const t = (n.slots?.target ?? [])[0]
           const name = t ? generateExpression(t, ctx) : 'x'
-          return `${name}(${generateExpression((n.children?.value ?? [])[0], ctx)})`
+          return `${name}(${generateExpression((n.slots?.value ?? [])[0], ctx)})`
         }).join(', ')}`
         : ''
       const header = `${indent(ctx)}${className}(${paramStr})${initStr}${openBrace(ctx)}\n`

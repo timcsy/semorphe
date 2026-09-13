@@ -2,7 +2,7 @@
   "componentId": "cpp:pwm_tie",
   "abstractComponent": null,
   "properties": [],
-  "children": {
+  "slots": {
     "pin": "expression",
     "channel": "expression"
   },

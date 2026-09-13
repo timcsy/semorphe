@@ -8,7 +8,7 @@
       "default": "WiFi"
     }
   ],
-  "children": {
+  "slots": {
     "ssid": "expression",
     "password": "expression"
   },

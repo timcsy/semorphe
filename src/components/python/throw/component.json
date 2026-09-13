@@ -6,7 +6,7 @@
   "properties": [
     { "name": "exception", "kind": "string", "default": "ValueError" }
   ],
-  "children": { "value": "expression" },
+  "slots": { "value": "expression" },
   "role": "statement",
   "owner": "(python)",
   "paths": {
