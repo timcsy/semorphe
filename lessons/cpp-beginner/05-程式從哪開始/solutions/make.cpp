@@ -1,7 +1,7 @@
 int main() {
-    cout << "1" << endl;
-    cout << "2" << endl;
-    cout << "3" << endl;
-    cout << "4" << endl;
+    cout << "燒水" << endl;
+    cout << "放麵" << endl;
+    cout << "等三分鐘" << endl;
+    cout << "開動" << endl;
     return 0;
 }

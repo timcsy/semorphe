@@ -361,6 +361,47 @@ describe('★ 第一百二十三條護欄：每一道題目在課文裡都要有
   })
 })
 
+/**
+ * **一道要使用者打東西的題目，課文要先說裁判會餵什麼。**
+ *
+ * 🔴 它從一輪主動掃描來（2026-09-14）：5 道題目宣告了 `check.stdin`，
+ * 而課文一個字都沒提。學生打開編輯器，按執行，游標停在那裡等輸入
+ * ——**而他不知道要打什麼**。他隨便打一個，裁判說不對。
+ *
+ * > **一道要輸入的題目，如果沒說輸入是什麼，
+ * > 那學生第一次執行拿到的不是回饋，是一個他答不出來的問題。**
+ *
+ * ⚠️ 判準刻意寬：課文裡**出現過那些值**就算數（多數課寫成「⚠️ 裁判用的是 `48` 和 `18`」）。
+ * 要求固定句型會變成在管措辭，而那不是這一條要守的東西。
+ */
+describe('★ 第一百二十九條護欄：要輸入的題目，課文要說裁判餵什麼', () => {
+  // ⚠️ 每個 describe 自己掃一次（`lessons` 是上面那兩個 describe 的區域變數）
+  const lessons = scanLessons(path.join(ROOT, 'lessons'))
+  const withStdin = lessons.flatMap((l) =>
+    ((l.json.tasks ?? []) as { title: string; check?: { stdin?: string[] } }[])
+      .filter((t) => (t.check?.stdin ?? []).length > 0)
+      .map((t) => ({ lesson: l.dir, title: t.title, stdin: t.check!.stdin!, md: l.md })))
+
+  it('★ 入口條件——真的有要輸入的題目', () => {
+    expect(withStdin.length, '🔴 一道要輸入的題目都沒有 → 下面那條是空過的').toBeGreaterThan(10)
+  })
+
+  it('🔴 硬性零：每一道的輸入值，課文裡都交代過', () => {
+    const bad = withStdin
+      .filter((t) => !t.stdin.every((v) => t.md.includes(v)))
+      .map((t) => `${t.lesson} · ${t.title} · stdin=${JSON.stringify(t.stdin)}`)
+    expect(bad, '🔴 這幾道題目要使用者打東西，而課文沒說裁判會餵什麼——\n'
+      + '🟢 修法：在題目敘述裡加一句「⚠️ 裁判餵的是 `…`」。').toEqual([])
+  })
+
+  it('★ 注入：把一道題目的輸入值從課文裡拿掉 → 抓得到', () => {
+    const one = withStdin[0]
+    const stripped = one.stdin.reduce((m, v) => m.split(v).join('〔拿掉了〕'), one.md)
+    expect(one.stdin.every((v) => stripped.includes(v)),
+      '🔴 拿掉之後還「交代過」→ 判準是空的').toBe(false)
+  })
+})
+
 describe('★ 注入——證明它會報，也證明它不亂報', () => {
   const good: Lesson = {
     dir: '合成/一堂好課',

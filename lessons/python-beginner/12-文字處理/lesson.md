@@ -135,6 +135,7 @@ print([len(w) for w in words])
 
 讀進一段英文，印出**出現最多次的那個字**。
 
+⚠️ 裁判餵的是 `the cat the dog the`。
 ⚠️ 用得到：`split()`（這一課）、`dict` 的 `get`（第 9 課）、
 `max`（第 8 課）。**這一題把三課接起來了。**
 
