@@ -683,5 +683,13 @@
   "DIAG_SLOT_TOO_MANY_CODE": "「{slot}」這一格至多 {max} 個，而現在有 {got} 個——多出來的不會出現在程式碼裡",
   "DIAG_SLOT_TOO_MANY_BLOCK": "「{slot}」那一格只放得下 {max} 塊，而你接了 {got} 塊——多的那幾塊不會被用到",
   "DIAG_SLOT_WRONG_KIND_CODE": "「{slot}」這一格要的是 {want}，而這裡是 {got}",
-  "DIAG_SLOT_WRONG_KIND_BLOCK": "「{slot}」那一格接的積木種類不對——它要的是 {want}"
+  "DIAG_SLOT_WRONG_KIND_BLOCK": "「{slot}」那一格接的積木種類不對——它要的是 {want}",
+  "DIAG_BAD_NAME_STARTS_WITH_DIGIT_CODE": "`{name}` 不能當名字——名字不可以用數字開頭",
+  "DIAG_BAD_NAME_STARTS_WITH_DIGIT_BLOCK": "「{name}」不能當名字——**名字不可以用數字開頭**。改成 `n{name}` 之類的就可以了",
+  "DIAG_BAD_NAME_RESERVED_CODE": "`{name}` 是這個語言自己在用的字，不能拿來當名字",
+  "DIAG_BAD_NAME_RESERVED_BLOCK": "「{name}」是程式語言自己在用的字（像 `int`、`if`），**不能拿來當名字**",
+  "DIAG_BAD_NAME_BAD_CHAR_CODE": "`{name}` 裡有不能用在名字裡的字元——只能用英文字母、數字和底線",
+  "DIAG_BAD_NAME_BAD_CHAR_BLOCK": "「{name}」裡有不能用的字元——名字**只能用英文字母、數字和底線**，而且不能有空白",
+  "DIAG_BAD_NAME_EMPTY_CODE": "這裡少了一個名字",
+  "DIAG_BAD_NAME_EMPTY_BLOCK": "這一格還沒取名字"
 }

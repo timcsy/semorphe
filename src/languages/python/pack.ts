@@ -14,6 +14,7 @@ import pythonLiftPatterns from './lift-patterns.json'
 import { declareDegradationBlocks } from '../../core/blocks/degradation-blocks'
 import { declareCommentSyntax } from '../../core/comment-syntax'
 import { declareExpressionStatement } from '../../core/expression-statement'
+import { declareIdentifierSyntax } from '../../core/identifier-syntax'
 import { declareBuiltinConstants } from '../../core/language-executors'
 // ⚠️ 下拉的**選項來源**是一個中立的登記處（那個模組一個語言的字都不認識），
 //    而**選項本身是語言的知識**——所以宣告在這裡。
@@ -41,6 +42,28 @@ declareCommentSyntax('python', pythonCommentSyntax)
 // ——`nums.append(9)print(len(nums))`，**一段不合法的 Python**。
 // 見 `core/expression-statement.ts` 的檔頭。
 declareExpressionStatement('python', { suffix: '', allowedAtTopLevel: true })
+
+/**
+ * **Python 的名字可以長什麼樣**（2026-09-14）。
+ *
+ * ⚠️ 與 C++ **刻意不同**：Python 3 的識別字收得下非 ASCII（`變數 = 1` 是合法的），
+ * 所以這裡不用 `[A-Za-z_]`，用「不是數字開頭、而且沒有空白與符號」。
+ *
+ * > **兩個語言的規則不一樣，而那正是它住在語言套件裡的理由
+ * > ——核心寫死一份的話，其中一邊永遠是錯的。**
+ */
+declareIdentifierSyntax('python', {
+  // ⚠️ **`\w` 在 `u` 旗標下仍然只有 ASCII**——第一版寫成 `/^[^\d\W]\w*$/u`
+  //    而它把 `變數` 判成不合法。Unicode 要用屬性類，不是 `\w`。
+  //    🔴 而那個錯**單元測試當場抓到**：它問的正是「Python 收得下中文名字嗎」。
+  pattern: /^[\p{L}\p{Nl}_][\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc}]*$/u,
+  reserved: new Set([
+    'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break', 'class',
+    'continue', 'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global',
+    'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise',
+    'return', 'try', 'while', 'with', 'yield',
+  ]),
+})
 
 // 🔴 **`__name__` 是 `"__main__"`**——`if __name__ == "__main__":` 是 AI 生的
 //    Python 幾乎必有的一行，而少了這個名字整段會說「沒有這個變數」。

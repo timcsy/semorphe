@@ -3,6 +3,7 @@ import { declareBoardConstantDropdown } from '../../../core/blocks/board-constan
 import { declareDegradationBlocks } from '../../../core/blocks/degradation-blocks'
 import { CPP_STRING_AT_INPUTS } from '../block-input-names'
 import { declareCommentSyntax } from '../../../core/comment-syntax'
+import { declareIdentifierSyntax } from '../../../core/identifier-syntax'
 import { declareExpressionStatement } from '../../../core/expression-statement'
 import { cppCommentSyntax } from '../lang/comment-syntax'
 import type { StylePreset } from '../../../core/types'
@@ -83,6 +84,29 @@ declareCommentSyntax('cpp', cppCommentSyntax)
 // 那條規則原本以 `if (ctx.indent === 0) return text` 的形式當成普遍真理，
 // 而 Python 的頂層 `nums.append(9)` 正好是最常見的一行。
 declareExpressionStatement('cpp', { suffix: ';', allowedAtTopLevel: false })
+
+/**
+ * **C++ 的名字可以長什麼樣**（2026-09-14）。
+ *
+ * 使用者轉述：「學生的變數名稱會寫成數字，Semorphe 竟然還可以接受」
+ * ——實測產出 `int 123 = 16;`，而主控台零錯誤、畫面零標記。
+ *
+ * ⚠️ 保留字只列**入門課會撞到的那一批**，不是 C++ 的全部 97 個。
+ * 🔴 理由：這一條要擋的是「學生打了一個他不知道不能用的字」，
+ * 而 `alignas`／`co_await` 那一族他根本打不出來。
+ * **一張為了完整而變長的清單，維護成本落在每一次語言標準更新上，
+ * 而它擋到的東西是零。**
+ */
+declareIdentifierSyntax('cpp', {
+  pattern: /^[A-Za-z_][A-Za-z0-9_]*$/,
+  reserved: new Set([
+    'int', 'double', 'float', 'char', 'bool', 'void', 'long', 'short', 'unsigned', 'signed',
+    'auto', 'const', 'static', 'struct', 'class', 'enum', 'union', 'typedef', 'template',
+    'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'default', 'break', 'continue',
+    'return', 'goto', 'try', 'catch', 'throw', 'new', 'delete', 'sizeof', 'namespace',
+    'using', 'public', 'private', 'protected', 'this', 'true', 'false', 'nullptr', 'operator',
+  ]),
+})
 
 /**
  * 把各模組的執行器推進直譯器。

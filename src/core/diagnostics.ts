@@ -1,4 +1,5 @@
 import { checkSlots } from './component/slot-check'
+import { checkParams } from './component/param-check'
 import type { SemanticNode } from './types'
 
 /**
@@ -297,6 +298,22 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
   //
   // > **一條會擋下執行的檢查，必須先證明「擋下來比放過去好」
   // > ——而這一條今天還沒有那個證據。**
+  // 🔴 **名字也是宣告的一部分**（2026-09-14）。
+  //    使用者轉述：「學生的變數名稱會寫成數字，Semorphe 竟然還可以接受」。
+  //    97 個參數宣告了 `kind: 'identifier'`，而在此之前沒有任何一處讀 `kind`。
+  //
+  // ⚠️ severity 是 `error`——`int 123;` 不是「可以但不建議」，它編不過。
+  //    而 `canExecute` **這一刀不動**：閘門會擋到的東西還沒量過
+  //    （Arduino 的腳位名、C 銜接軌的成員、Python 的中文變數名）。
+  for (const f of checkParams(tree)) {
+    out.push({
+      nodeId: f.nodeId ?? '',
+      severity: 'error',
+      rule: `BAD_NAME_${f.reason.toUpperCase()}`,
+      params: f.params,
+      source: 'component',
+    })
+  }
   for (const f of checkSlots(tree)) {
     out.push({
       nodeId: f.nodeId ?? '',

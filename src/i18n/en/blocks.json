@@ -683,5 +683,13 @@
   "DIAG_SLOT_TOO_MANY_CODE": "Slot \"{slot}\" takes at most {max}, but has {got} — the extras will not appear in the code",
   "DIAG_SLOT_TOO_MANY_BLOCK": "Slot \"{slot}\" holds at most {max}, but you attached {got} — the extras are unused",
   "DIAG_SLOT_WRONG_KIND_CODE": "Slot \"{slot}\" expects {want}, but this is {got}",
-  "DIAG_SLOT_WRONG_KIND_BLOCK": "Slot \"{slot}\" got the wrong kind of block — it expects {want}"
+  "DIAG_SLOT_WRONG_KIND_BLOCK": "Slot \"{slot}\" got the wrong kind of block — it expects {want}",
+  "DIAG_BAD_NAME_STARTS_WITH_DIGIT_CODE": "`{name}` cannot be a name — names may not start with a digit",
+  "DIAG_BAD_NAME_STARTS_WITH_DIGIT_BLOCK": "\"{name}\" cannot be a name — **names may not start with a digit**. Try `n{name}`",
+  "DIAG_BAD_NAME_RESERVED_CODE": "`{name}` is a word the language reserves; it cannot be a name",
+  "DIAG_BAD_NAME_RESERVED_BLOCK": "\"{name}\" is a word the language reserves (like `int`, `if`) — **it cannot be a name**",
+  "DIAG_BAD_NAME_BAD_CHAR_CODE": "`{name}` contains a character that is not allowed in a name",
+  "DIAG_BAD_NAME_BAD_CHAR_BLOCK": "\"{name}\" contains a character that is not allowed — names use **letters, digits and underscore** only",
+  "DIAG_BAD_NAME_EMPTY_CODE": "A name is missing here",
+  "DIAG_BAD_NAME_EMPTY_BLOCK": "This slot has no name yet"
 }
