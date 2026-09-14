@@ -103,8 +103,6 @@ int main() {
 }
 ```
 
-到編輯器照著做一次：〈跟著做〉
-
 ## 換你了
 
 把 `return left + right;` 改成 `return max(left, right);`——

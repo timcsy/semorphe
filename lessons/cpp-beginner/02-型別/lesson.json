@@ -38,12 +38,13 @@
     },
     {
       "id": "ex1",
-      "title": "練習：把 height 改成 int",
+      "title": "練習：把 height 的型別換成 int",
       "check": {
         "stdout": "16\n1\nA\n1\n",
         "stdin": []
       },
-      "view": "code"
+      "view": "code",
+      "_why": "🪦 原本叫「把 height 改成 int」——使用者 2026-09-14 指出那**讀起來像「把變數改名叫 int」**。變數名與型別並列在同一句「把 A 改成 B」裡是有歧義的，而它與〈x 能不能等於 x + 1〉是同一族（題目的名字說不出要動哪一格）。"
     },
     {
       "id": "make",

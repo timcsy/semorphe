@@ -98,8 +98,6 @@ table = {n: n * n for n in nums}
 print(table)
 ```
 
-到編輯器照著做一次：〈跟著做〉
-
 ## 換你了
 
 給一串名字，做出「**每個名字的長度**」的 list。
