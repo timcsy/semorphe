@@ -6,6 +6,7 @@
   },
   "components": [
     "cpp:arithmetic",
+    "cpp:break",
     "cpp:compare",
     "cpp:continue",
     "cpp:endl",

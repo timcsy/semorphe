@@ -13,6 +13,7 @@
     "cpp:print",
     "cpp:string_at",
     "cpp:string_declare",
+    "cpp:string_size",
     "cpp:var_assign",
     "cpp:var_ref",
     "cpp:vector_size"

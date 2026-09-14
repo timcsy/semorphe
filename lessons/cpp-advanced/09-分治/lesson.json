@@ -13,6 +13,7 @@
     "cpp:func_def",
     "cpp:if",
     "cpp:literal_number",
+    "cpp:math_max",
     "cpp:print",
     "cpp:return",
     "cpp:var_declare",

@@ -11,6 +11,7 @@
     "cpp:literal_number",
     "cpp:print",
     "cpp:range_find_lower",
+    "cpp:range_find_upper",
     "cpp:var_declare",
     "cpp:var_declare_auto",
     "cpp:var_ref",

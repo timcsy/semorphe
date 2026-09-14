@@ -5,6 +5,7 @@
     "target": "cpp-advanced"
   },
   "components": [
+    "cpp:container_empty",
     "cpp:container_pop",
     "cpp:container_push",
     "cpp:endl",
