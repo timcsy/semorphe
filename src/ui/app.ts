@@ -929,10 +929,7 @@ export class App {
     if (id === this.currentSkeletonId) return
 
     const tree = this.syncController?.getCurrentTree()
-    const rest = tree
-      ? (unwrapSkeletonFrame(tree, this.currentSkeletonId) as SemanticNode)
-      : undefined
-    const hasWork = (rest?.slots?.body ?? []).length > 0
+    const hasWork = this.hasStudentWork()
 
     const go = async (): Promise<void> => {
       // 🔴 **三個持有者一起換**（鷹架、補丁器、同步器）——見 `adoptSkeleton`
@@ -1177,8 +1174,7 @@ export class App {
     if (!t) { console.error(`[templates] 選了一份不存在的範例：${id}`); return }
     // 🔴 **問語義樹，不問面板**——「有沒有東西」是那份唯一真實的性質，
     //    而不是某一個投影的性質（根公理）。⚠️ 也不用戳面板的私有欄位。
-    const body = this.syncController?.getCurrentTree()?.slots?.body ?? []
-    const hasWork = body.length > 0
+    const hasWork = this.hasStudentWork()
     const go = (): void => {
       // 換目標（範例釘住它），再把程式碼放進去
       const target = this.targetRegistry.all().find((x) => x.id === t.target)
@@ -1915,6 +1911,30 @@ export class App {
    * ⚠️ **只在畫布真的空的時候**——`getCurrentTree()?.slots?.body` 是空的。
    * 問語義樹不問面板（同 `applyTemplate`）：「有沒有東西」是真實那一側的性質。
    */
+  /**
+   * **畫布上有【他寫的】東西嗎——鷹架不算。**
+   *
+   * 🔴 **它為什麼要是一支共用的方法**（2026-09-14）：這個判定原本散在四個地方，
+   * 而**只有一個地方扣掉了鷹架**（`adoptSkeleton` 那一處，用 `unwrapSkeletonFrame`）。
+   * 那一處的註解自己記著漏掉它的症狀：
+   *
+   * > 「少了這一行，一支【空程式】在『淡的』模式下也算『有作品』
+   * > （樹裡有 `using namespace`），於是每次換骨架都跳警告。」
+   *
+   * ⚠️ 而 `seedScaffoldIfEmpty` 上線的那天，另外三處全部中了同一個症狀
+   * ——遠端 e2e 抓到的是其中一處：選一題「排回去」會跳出
+   * 「畫布上現在的東西會被換掉」，而畫布上只有**我們自己剛種進去的骨架**。
+   *
+   * > **一個判定散成四份的時候，修好的永遠是【出事的那一份】
+   * > ——而另外三份會在下一個人改變前提的那天一起現形。**
+   */
+  private hasStudentWork(): boolean {
+    const tree = this.syncController?.getCurrentTree()
+    if (!tree) return false
+    const rest = unwrapSkeletonFrame(tree, this.currentSkeletonId) as SemanticNode | undefined
+    return (rest?.slots?.body ?? []).length > 0
+  }
+
   private async seedScaffoldIfEmpty(): Promise<void> {
     // 鷹架藏起來的課（前幾課）本來就不該看到它
     // 鷹架藏起來的課（前幾課）本來就不該看到它
@@ -3415,8 +3435,8 @@ export class App {
             }
             // 🔴 **問語義樹，不問面板**（同 `applyTemplate`）——「有沒有東西」
             //    是那份唯一真實的性質，不是某一個投影的性質。
-            const body = this.syncController?.getCurrentTree()?.slots?.body ?? []
-            if (body.length === 0) { go(); break }
+            // ⚠️ **鷹架不算「他的東西」**——我們自己種進去的骨架不該讓他被問一句
+            if (!this.hasStudentWork()) { go(); break }
             showQuickPick(
               {
                 title: `開始「${picked.title}」？畫布上現在的東西會被換掉`,
