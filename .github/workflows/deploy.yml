@@ -234,8 +234,23 @@ jobs:
       - run: npm ci
       # 這時候 verified 已經是 HEAD，所以兩份會是同一版
       - run: bash tools/build-site.sh HEAD
+      # 🔴 **產物要換個名字**（2026-09-14）。
+      #
+      #    `upload-pages-artifact` 預設一律叫 `github-pages`，而這一輪**上傳兩次**
+      #    （快車道一次、主線換版一次）。同名的兩份在同一個 workflow run 裡，
+      #    `deploy-pages` 直接拒絕：
+      #
+      #    > Multiple artifacts named "github-pages" were unexpectedly found
+      #    > for this workflow run. Artifact count is 2.
+      #
+      # ⚠️ 而它紅在**最後一步**：前面 test／e2e／build／deploy／promote 全綠，
+      #    快車道也真的上線了——只有「主線換版」沒發生。
+      #
+      # > **一條分成兩次部署的路，它的第二次會踩到第一次留下的東西
+      # > ——而那個東西有一個寫死的預設名字。**
       - uses: actions/upload-pages-artifact@v3
         with:
+          name: github-pages-promoted
           path: dist
 
   redeploy-pages:
@@ -247,3 +262,7 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # ⚠️ 要與上面那個 `name` 逐字相同——寫錯的症狀是「找不到產物」，
+          #    而它同樣紅在最後一步。
+          artifact_name: github-pages-promoted
