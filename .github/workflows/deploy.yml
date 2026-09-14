@@ -141,12 +141,27 @@ jobs:
           retention-days: 7
 
   build:
-    # 🔴 **只等 test，不等 e2e**（2026-09-14）——快車道的全部意義就在這一行。
-    #    主線不會因此變不安全：`build-site.sh` 的 `/` 取的是 `verified`，不是 HEAD。
+    # 🔴 **什麼都不等**（2026-09-14 第二刀）——快車道的全部意義就在這一行。
     #
-    # > **「這一版可以給人用嗎」與「學生現在看得到嗎」是兩個問題，
-    # > 而在此之前它們共用一個閘門。**
-    needs: [test]
+    # 第一版寫的是 `needs: [test]`，而那是半套：快車道的契約明寫著「沒驗過」，
+    # 卻讓它等一個 7.2 分鐘的閘門。
+    #
+    # ## ⚠️ 而 `test` 對【快車道】其實幾乎沒有保護
+    #
+    # ```
+    # build（65 秒）  擋得住  壞的 import、語法錯、型別錯（`"build": "tsc && vite build"`）
+    # test（432 秒）  多擋    行為迴歸、對照圖過期、基線被改
+    # ```
+    #
+    # 第二排那些驗的是「這個 repo 的形狀」，而快車道壞掉的方式是「畫面打不開」
+    # ——**那是 `build` 會擋的**。
+    #
+    # 🟢 而主線一格都沒鬆：`promote` 仍然 `needs: [test, e2e]`，
+    #    `/` 取的仍然是 `verified`。**build 失敗的話兩邊都不動**，上一版還在。
+    #
+    # > **一條明講「沒驗過」的線，如果還要等一個閘門，
+    # > 那它買到的不是安全，是把兩件事都做得半吊子。**
+    needs: []
     # ⚠️ 只有 main 才發布——PR 跑到 `test`／`e2e` 就夠了。
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -177,7 +192,8 @@ jobs:
       # ⚠️ **這個 job 只 `needs: [test]`**——快車道的意義就在它不等 e2e。
       #    而主線不會因此變不安全：它取的是 `verified`，不是 HEAD。
       - run: git fetch origin verified:verified --force || echo "::notice::還沒有 verified 分支"
-      - run: bash tools/build-site.sh verified
+      # 主線 = verified（最後一次 e2e 綠的）· 快車道 = 這個 commit
+      - run: bash tools/build-site.sh verified HEAD
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
@@ -232,8 +248,16 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      # 這時候 verified 已經是 HEAD，所以兩份會是同一版
-      - run: bash tools/build-site.sh HEAD
+      # 🔴 **快車道取的是 `origin/main`，不是這個 commit**（2026-09-14）。
+      #
+      #    這一步跑在 e2e 之後（十幾分鐘），而那段時間裡可能又推了一次。
+      #    用自己的 commit 建 `/next/` 會**把後來那一版蓋回去**，
+      #    而症狀是「我明明改好了，過幾分鐘它又變回去」——課堂上最難解釋的一種。
+      #
+      # > **一條分兩次部署的路，第二次帶著的是【它出發時的世界】
+      # > ——而世界在它跑的那幾分鐘裡動過了。**
+      - run: git fetch origin main --force
+      - run: bash tools/build-site.sh HEAD origin/main
       # 🔴 **產物要換個名字**（2026-09-14）。
       #
       #    `upload-pages-artifact` 預設一律叫 `github-pages`，而這一輪**上傳兩次**

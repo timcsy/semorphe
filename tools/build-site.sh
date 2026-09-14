@@ -31,39 +31,61 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 MAIN_REF="${1:-verified}"
-if ! git rev-parse --verify --quiet "$MAIN_REF" >/dev/null; then
-  echo "::notice::沒有 $MAIN_REF 這個 ref——主線改用 HEAD（第一次跑就是這樣）"
-  MAIN_REF="HEAD"
-fi
-echo "主線 = ${MAIN_REF}（$(git rev-parse --short "$MAIN_REF")）· 快車道 = HEAD（$(git rev-parse --short HEAD)）"
+# 🔴 **快車道要建哪一版，是可以指定的**（2026-09-14）。
+#
+# 在此之前它寫死成 HEAD，而那造成一個課堂上最難解釋的缺陷：
+#
+# ```
+# t=0   推 A                     t=3   推 B
+# t=2   /next/ = A               t=5   /next/ = B          ✅
+# t=9   A 的 e2e 綠 → promote
+# t=11  A 的 redeploy 部署       /next/ = A                🔴 把 B 蓋回 A
+# ```
+#
+# **第二次推送被第一次的延遲部署覆蓋**，症狀是「我明明改好了，過幾分鐘它又變回去」。
+#
+# > **一條分兩次部署的路，第二次帶著的是【它出發時的世界】
+# > ——而世界在它跑的那幾分鐘裡動過了。**
+#
+# 🟢 修法：換版那一路傳 `origin/main`（現在的線頭），不是它自己的 commit。
+NEXT_REF="${2:-HEAD}"
 
-rm -rf dist dist-next .build-main
+resolve() {
+  if git rev-parse --verify --quiet "$1" >/dev/null; then echo "$1"; else
+    echo "::notice::沒有 $1 這個 ref——退回 HEAD" >&2; echo HEAD
+  fi
+}
+MAIN_REF="$(resolve "${MAIN_REF}")"
+NEXT_REF="$(resolve "${NEXT_REF}")"
+echo "主線 = ${MAIN_REF}（$(git rev-parse --short "$MAIN_REF")）· 快車道 = ${NEXT_REF}（$(git rev-parse --short "$NEXT_REF")）"
 
-# ① 快車道：這個 commit，掛在 /next/
-#    ⚠️ `SITE_BASE` 是給課文頁產生器的（它走 tsx，沒有 import.meta.env），
-#       `--base` 是給 Vite 的。兩個都要，而它們必須一致。
-SITE_BASE=/next/ npx vite build --base=/next/ --outDir dist-next
+rm -rf dist dist-next .wt-main .wt-next
 
-# ② 主線：MAIN_REF，掛在 /
-if [ "$(git rev-parse "$MAIN_REF")" = "$(git rev-parse HEAD)" ]; then
-  # 一樣就不必再 checkout 一次
-  npm run build
-else
+# $1=ref  $2=base  $3=輸出目錄
+build_ref() {
+  local ref="$1" base="$2" out="$3"
+  if [ "$(git rev-parse "${ref}")" = "$(git rev-parse HEAD)" ]; then
+    SITE_BASE="${base}" npm run build -- --base="${base}" --outDir "${out}"
+    return
+  fi
   # 🔴 **worktree 要完整歷史**——`sitemap.xml` 的 `lastmod` 問 `git log`，
   #    而淺複製裡 HEAD 沒有父節點 → 所有檔案都變成「今天新增」。
-  #    （build job 的 `fetch-depth: 0` 就是為了這個。）
-  git worktree add -f .build-main "$MAIN_REF"
-  ln -s "$PWD/node_modules" .build-main/node_modules
-  ( cd .build-main && npm run build )
-  mv .build-main/dist dist
-  git worktree remove --force .build-main
-fi
+  #    （CI 那兩個 job 的 `fetch-depth: 0` 就是為了這個。）
+  local wt=".wt-${out}"
+  git worktree add -f "${wt}" "${ref}"
+  ln -s "$PWD/node_modules" "${wt}/node_modules"
+  ( cd "${wt}" && SITE_BASE="${base}" npm run build -- --base="${base}" --outDir "${out}" )
+  mv "${wt}/${out}" "${out}"
+  git worktree remove --force "${wt}"
+}
 
+build_ref "${NEXT_REF}" /next/ dist-next    # 快車道
+build_ref "${MAIN_REF}" /      dist         # 主線
 mv dist-next dist/next
 
-# ★ 入口條件——兩份都要真的在，而且不得是同一份
-test -f dist/index.html          || { echo "::error::主線沒有 index.html"; exit 1; }
-test -f dist/next/index.html     || { echo "::error::快車道沒有 index.html"; exit 1; }
+# ★ 入口條件——兩份都要真的在，而且快車道要帶前綴
+test -f dist/index.html      || { echo "::error::主線沒有 index.html"; exit 1; }
+test -f dist/next/index.html || { echo "::error::快車道沒有 index.html"; exit 1; }
 grep -q '/next/assets/' dist/next/index.html \
   || { echo "::error::快車道的資產路徑沒有帶 /next/ 前綴——它在主站底下會 404"; exit 1; }
 grep -q 'noindex' "$(find dist/next/lessons -name index.html | head -1)" \
