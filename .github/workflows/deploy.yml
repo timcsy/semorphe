@@ -94,8 +94,31 @@ jobs:
   # 接上之後第一件事就是抓到一個錯誤假設：我以為「停住 ＝ 還沒印出 6」，
   # 而除錯模式是**先跑完再回放**——輸出與執行位置是兩個時間軸。
   # 那個假設在單元測試裡永遠不會被否證，因為那裡沒有「主控台」。
+  # ## 🔴 分片（2026-09-14）——而它**不違反** `playwright.config.ts` 的 `workers: 1`
+  #
+  # 那一行的理由是量出來的，逐字：「4 個 Chromium ×（Blockly ＋ tree-sitter wasm
+  # ＋ 177 顆膠囊）擠 4 個效能核，每次開機慢 3～4 倍——而這些測試用固定秒數等待，
+  # 那是照閒置機器校準的。」
+  #
+  # 🟢 **那是【同一台機器上開四個 worker】，這裡是【四台機器各開一個】**
+  # ——每一片仍然 `workers: 1`，不搶核，那條理由碰不到分片。
+  #
+  # ⚠️ **而不要期待四倍**：`fullyParallel: false` 之下 Playwright 以【檔】為單位
+  # 分片，而 `lessons.spec.ts` 一支就佔 14.4 分鐘（全長 26.3 分）。
+  # 所以下限是那一支，預期落在 **15 分鐘左右**，不是 7 分。
+  #
+  # > **一個分片的加速上限，是它最大的那一塊——而不是片數。**
+  #
+  # 🔴 要再往下，得先把 `lessons.spec.ts` 拆開（69 課全部產在同一個檔裡）
+  # ——那是另一刀，而在拿到這一刀的實測數字之前不要先做。
   e2e:
     runs-on: ubuntu-latest
+    strategy:
+      # ⚠️ **不要 fail-fast**：一片紅就砍掉其他三片的話，你只會看到第一個
+      #    失敗，而修完它才知道還有第二個——那把一輪 15 分鐘變成三輪。
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -107,16 +130,23 @@ jobs:
       # 「渲染出來對不對」，不是跨瀏覽器相容性——那是另一個問題，
       # 要問的時候再加，不要因為「順便」而讓每次 CI 都變慢。
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - run: npx playwright test --shard=${{ matrix.shard }}/4
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report
+          # ⚠️ 名字要帶片號——四片同名的話 upload-artifact v4 會直接失敗，
+          #    而那個錯誤訊息出現在【測試已經紅了】的下面，很容易被讀成同一件事。
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 7
 
   build:
-    needs: [test, e2e]
+    # 🔴 **只等 test，不等 e2e**（2026-09-14）——快車道的全部意義就在這一行。
+    #    主線不會因此變不安全：`build-site.sh` 的 `/` 取的是 `verified`，不是 HEAD。
+    #
+    # > **「這一版可以給人用嗎」與「學生現在看得到嗎」是兩個問題，
+    # > 而在此之前它們共用一個閘門。**
+    needs: [test]
     # ⚠️ 只有 main 才發布——PR 跑到 `test`／`e2e` 就夠了。
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -137,13 +167,79 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run build
+      # 🔴 **兩份站合成一包**（2026-09-14）——見 `tools/build-site.sh` 的檔頭。
+      #
+      # ```
+      # /        主線     ＝ verified 分支（最後一次 e2e 綠的那一版）
+      # /next/   快車道   ＝ 這個 commit（沒有驗過）
+      # ```
+      #
+      # ⚠️ **這個 job 只 `needs: [test]`**——快車道的意義就在它不等 e2e。
+      #    而主線不會因此變不安全：它取的是 `verified`，不是 HEAD。
+      - run: git fetch origin verified:verified --force || echo "::notice::還沒有 verified 分支"
+      - run: bash tools/build-site.sh verified
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
+  # ## 🟢 e2e 綠了，才把「主線該用哪一版」往前推
+  #
+  # 🔴 **它是一個 ref，不是一次部署**——推完之後**下一次 build** 才會把主線換過去。
+  # 而那「下一次」通常就是這一輪：`promote` 之後 `build` 會被重新觸發？**不會。**
+  # 所以這裡自己再跑一次 build＋deploy（下面的 `redeploy`）。
+  #
+  # > **一個「等它下次再說」的更新，在沒有下次的那個 commit 上永遠不會發生
+  # > ——而那個 commit 正好是你最想看到它上線的那一個。**
+  promote:
+    needs: [test, e2e]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: verified ← 這一版（它跑完了整套 e2e）
+        run: |
+          git push origin "HEAD:refs/heads/verified" --force
+          echo "::notice::verified 推到 $(git rev-parse --short HEAD)——主線下一次部署會換成它"
+
   deploy:
     needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ## 主線的第二次部署——`verified` 往前推了之後
+  #
+  # ⚠️ 兩次部署會被 `concurrency: pages` 排隊（`cancel-in-progress: false`），
+  #    所以這一次一定跑在第一次之後。快車道那一份內容相同，重畫沒有副作用。
+  #
+  # 🔴 **而它是整條路上唯一一個「主線真的換版」的地方**——
+  #    前面那次部署的 `/` 是上一版。
+  redeploy:
+    needs: promote
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # 這時候 verified 已經是 HEAD，所以兩份會是同一版
+      - run: bash tools/build-site.sh HEAD
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  redeploy-pages:
+    needs: redeploy
     runs-on: ubuntu-latest
     environment:
       name: github-pages

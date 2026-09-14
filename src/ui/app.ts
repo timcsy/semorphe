@@ -1,4 +1,5 @@
 import { TAB_LAYERS } from './layout/mobile-tab-bar'
+import { BASE } from '../core/base-path'
 import { setTreeForTypeLookup } from '../core/types-in-use'
 import * as Blockly from 'blockly'
 import type { BlocklyPanel } from './panels/blockly-panel'
@@ -381,7 +382,7 @@ export class App {
     return [
       ...(open ? [{
         id: 'lessons', label: '課程', icon: '📖', description: '66 堂課的課文（開新分頁）',
-        run: () => open('/lessons/'),
+        run: () => open(`${BASE}lessons/`),
       }] : []),
       { id: 'export', label: '匯出', icon: '⬇', description: '把目前的作品存成 .json 檔', run: press('export-btn') },
       { id: 'import', label: '匯入', icon: '⬆', description: '從 .json 檔載回來', run: press('import-btn') },

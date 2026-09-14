@@ -35,6 +35,7 @@
  * - **不呈現課文**（`lesson.md`）——那是另一刀，而它牽到還沒拍板的互動教材形式。
  * - **不知道任何語言**——`components` 對它只是一串身分。
  */
+import { BASE } from '../base-path'
 import { interactionById } from './interactions'
 import { LESSON_VIEWS, type LessonView } from './semantic-wave'
 import type { ControlId } from '../host/controls'
@@ -778,7 +779,7 @@ export function lessonIdFromQuery(search: string): string | null {
  * 這一條由 `audit-lesson-pages` 的最後一支釘著。
  */
 export function lessonDocHref(id: string): string {
-  return `/lessons/${id.split('/').map(encodeURIComponent).join('/')}/`
+  return `${BASE}lessons/${id.split('/').map(encodeURIComponent).join('/')}/`
 }
 
 /**
@@ -817,5 +818,5 @@ export function taskIdFromQuery(search: string): string | null {
 export function editorHref(lessonId: string, taskId?: string): string {
   const q = new URLSearchParams({ lesson: lessonId })
   if (taskId !== undefined && taskId !== '') q.set('task', taskId)
-  return `/?${q.toString()}`
+  return `${BASE}?${q.toString()}`
 }

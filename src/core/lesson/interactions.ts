@@ -1,3 +1,4 @@
+import { BASE } from '../base-path'
 /**
  * **「這一課會用到哪些操作」的登錄表。**
  *
@@ -41,19 +42,19 @@ export const INTERACTIONS: readonly Interaction[] = [
   {
     id: 'drag-block',
     label: '從工具箱拖一顆積木出來',
-    clip: '/clips/clip-drag.webm',
+    clip: `${BASE}clips/clip-drag.webm`,
     alt: '點開「輸入/輸出」分類，把「輸出」那顆積木拖進畫布，左邊的程式碼跟著多一行',
   },
   {
     id: 'switch-layout',
     label: '切成「對照」，一次看到兩邊',
-    clip: '/clips/clip-compare.webm',
+    clip: `${BASE}clips/clip-compare.webm`,
     alt: '點狀態列右邊的版面，選「對照」，畫面變成程式碼與積木兩欄',
   },
   {
     id: 'run',
     label: '按執行，看主控台',
-    clip: '/clips/clip-run.webm',
+    clip: `${BASE}clips/clip-run.webm`,
     alt: '按右上角的執行，底下的主控台印出程式的輸出',
   },
 ]

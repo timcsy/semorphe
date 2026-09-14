@@ -1,4 +1,5 @@
 import * as Blockly from 'blockly'
+import { BASE } from '../core/base-path'
 import { LAYER_ORDER } from '../core/sync/view-host'
 import { msg } from '../core/messages'
 import { showQuickPick } from './toolbar/quick-pick'
@@ -209,7 +210,7 @@ export function createAppLayout(
    * ⚠️ `target="_blank"`：正在寫的東西不該被一個「我想看看課文」踢掉。
    */
   const lessonsLink = profile.features.fileButtons
-    ? `<a id="lessons-link" href="/lessons/" target="_blank" rel="noopener" title="課程">課程</a>`
+    ? `<a id="lessons-link" href="${BASE}lessons/" target="_blank" rel="noopener" title="課程">課程</a>`
     : ''
 
   /**

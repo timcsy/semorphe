@@ -22,6 +22,7 @@ import MarkdownIt from 'markdown-it'
 import type { LessonPage } from './read-lessons'
 import { lessonDocHref, editorHref, type Track } from '../../src/core/lesson/lesson'
 import { interactionById, type Interaction } from '../../src/core/lesson/interactions'
+import { BASE } from '../../src/core/base-path'
 import type { Target } from '../../src/core/types'
 
 export { lessonDocHref }
@@ -31,6 +32,25 @@ export { lessonDocHref }
  * 相對的會被當成沒有）。⚠️ 與 `public/CNAME` 是同一個網域，改網域時兩邊要一起改。
  */
 const SITE = 'https://semorphe.com'
+
+/**
+ * **快車道的橫幅**——只在 `BASE !== '/'` 時出現。
+ *
+ * 🔴 它不是裝飾。一個不承諾的環境**必須自己說出它不承諾什麼**，
+ * 否則使用者會拿對待主線的信任來對待它——而這一條的代價是具體的：
+ *
+ * ```
+ * 沒驗過      這一版沒跑過完整的 e2e
+ * 存檔不通    ⚠️ 其實【通】——同一個 origin 是選這條路的唯一理由
+ * ```
+ *
+ * ⚠️ 而 `noindex` 是另一半：canonical 仍然指向主站（SEO 併過去），
+ * 加上 noindex 才不會有人從搜尋結果直接掉進沒驗過的那一版。
+ */
+const FAST_LANE_BANNER =
+  '<div class="fastlane">⚠️ 你在<strong>快車道</strong>上——'
+  + '這一版還沒跑過完整驗證。'
+  + `<a href="${SITE}/lessons/">回主站 →</a></div>`
 
 const md = new MarkdownIt({ html: false, linkify: true, breaks: false })
 
@@ -59,6 +79,11 @@ const esc = (s: string): string =>
  */
 
 const CSS = `
+/* 快車道的橫幅——只在 BASE !== "/" 時被插進來 */
+.fastlane{background:#fff4e5;border-bottom:1px solid #f0c68a;color:#7a4a00;
+  padding:.55rem 1rem;font-size:.9rem;text-align:center}
+.fastlane a{color:#7a4a00;text-decoration:underline;margin-left:.4rem}
+
 :root{color-scheme:light dark;--fg:#1a1a1a;--bg:#fff;--muted:#666;--line:#e5e5e5;--accent:#0b6ea8;--code-bg:#f6f8fa}
 @media(prefers-color-scheme:dark){:root{--fg:#e6e6e6;--bg:#161719;--muted:#9aa0a6;--line:#2e3033;--accent:#7ec8f0;--code-bg:#1e2023}}
 *{box-sizing:border-box}
@@ -225,11 +250,12 @@ function page(s: Shell): string {
 <html lang="zh-Hant">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="alternate icon" href="/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="${BASE}favicon.svg">
+<link rel="alternate icon" href="${BASE}favicon-32.png">
 <title>${esc(s.title)}</title>
 <meta name="description" content="${esc(s.description)}">
 <link rel="canonical" href="${SITE}${s.path}">
+${BASE === '/' ? '' : `<meta name="robots" content="noindex">`}
 <meta property="og:title" content="${esc(s.title)}">
 <meta property="og:description" content="${esc(s.description)}">
 <meta property="og:type" content="article">
@@ -239,12 +265,13 @@ function page(s: Shell): string {
 <meta name="twitter:card" content="summary_large_image">${s.jsonLd === undefined ? '' :
 `\n<script type="application/ld+json">${JSON.stringify(s.jsonLd)}</script>`}
 <style>${CSS}</style>
-<header><div><a class="brand" href="/">${LOGO}Semorphe</a><nav>${s.crumb}</nav></div></header>
+<header><div><a class="brand" href="${BASE}">${LOGO}Semorphe</a><nav>${s.crumb}</nav></div></header>
+${BASE === '/' ? '' : FAST_LANE_BANNER}
 <main>${s.body}</main>
 <footer><div>
 <div class="tag">${LOGO}<span>Semorphe — 程式碼、流程圖、積木，三邊同步</span></div>
 <div class="links">
-<a href="/" target="_blank" rel="noopener">${ICON_PLAY}開啟 Semorphe Demo</a>
+<a href="${BASE}" target="_blank" rel="noopener">${ICON_PLAY}開啟 Semorphe Demo</a>
 <a href="${GITHUB_URL}" target="_blank" rel="noopener">${ICON_GITHUB}在 GitHub 給它一顆星</a>
 </div>
 </div></footer>
@@ -492,7 +519,7 @@ function withHowTo(html: string, ids: readonly string[]): string {
 }
 
 export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): string {
-  const crumb = `<a href="/lessons/">課程</a> › <a href="/lessons/${encodeURIComponent(p.track.id)}/">${esc(p.track.name)}</a>`
+  const crumb = `<a href="${BASE}lessons/">課程</a> › <a href="${BASE}lessons/${encodeURIComponent(p.track.id)}/">${esc(p.track.name)}</a>`
   // 🔴 **「在編輯器打開」用的是既有的深連結**（`lessonIdFromQuery`，`core/lesson/lesson.ts`）
   //    ——不是新發明一個網址。而 `target=_blank` 是刻意的：讀到一半的人不該被踢走。
   const open = `<a class="open" href="${editorHref(p.lesson.id)}" target="_blank" rel="noopener">在編輯器打開這一課 →</a>`
@@ -528,7 +555,7 @@ export function renderTrack(track: Track, pages: readonly LessonPage[]): string 
     title: `${track.name}｜Semorphe 課程`,
     description: `${track.name}：${track.description ?? ''}共 ${pages.length} 課，每一課都可以直接在編輯器裡打開。`,
     path: `/lessons/${encodeURIComponent(track.id)}/`,
-    crumb: `<a href="/lessons/">課程</a>`,
+    crumb: `<a href="${BASE}lessons/">課程</a>`,
     body: `<h1>${esc(track.name)}</h1>` +
       `<p class="meta">${esc(track.description ?? '')} · 共 ${pages.length} 課</p>` +
       `<ul class="cards">${items}</ul>`,
@@ -579,7 +606,7 @@ export function renderSpecs(targets: readonly Target[]): string {
     title: '板子規格｜Semorphe',
     description: `${boards.length} 塊板子的腳位與常數——每一筆都附上游來源。接線之前先查這裡。`,
     path: '/lessons/specs/',
-    crumb: `<a href="/lessons/">課程</a>`,
+    crumb: `<a href="${BASE}lessons/">課程</a>`,
     body: `<h1>板子規格</h1>
 <p class="meta">${boards.length} 塊板子 · 接線之前先查這裡</p>
 <blockquote><p>⚠️ 這一頁的每一個數字都是<strong>從編輯器讀的同一份宣告</strong>產生的
@@ -624,7 +651,7 @@ export function renderRobots(): string {
 
 export function renderIndex(tracks: ReadonlyArray<{ track: Track; count: number }>): string {
   const items = tracks.map(({ track, count }) =>
-    `<li><a href="/lessons/${encodeURIComponent(track.id)}/">${esc(track.name)}` +
+    `<li><a href="${BASE}lessons/${encodeURIComponent(track.id)}/">${esc(track.name)}` +
     `<small>${esc(track.description ?? '')} · ${count} 課</small></a></li>`).join('\n')
   const total = tracks.reduce((n, t) => n + t.count, 0)
   return page({
