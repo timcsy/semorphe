@@ -65,7 +65,32 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      # 🔴 **`npm ci` 要能重試**（2026-09-14）。
+      #
+      #    那天 `e2e (3)` 紅，而**它不是測試紅**：
+      #
+      #    ```
+      #    npm error command failed
+      #    npm error Download failed
+      #    ```
+      #
+      #    那一片根本沒跑到測試，而後果是 `promote` 跳過、**主線沒換版**
+      #    ——一次登錄庫的抖動，讓一份已經驗過的東西上不了線。
+      #
+      # > **一條會因為外面的網路抖一下就整輪作廢的流程，
+      # > 它量的不是你的程式碼，是那一分鐘的運氣。**
+      #
+      #    ⚠️ 而它**只在片數變多之後才變得明顯**：四片各裝一次，
+      #    撞到的機率是原本的四倍。
+      - name: npm ci（抖了就重試）
+        run: |
+          for i in 1 2 3; do
+            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
+            sleep 20
+          done
+          echo "::error::npm ci 連三次都失敗——這一次多半不是抖動"
+          exit 1
       - run: npx tsc --noEmit
       - run: npm test
 
@@ -125,7 +150,15 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - name: npm ci（抖了就重試——理由見上面第一處）
+        run: |
+          for i in 1 2 3; do
+            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
+            sleep 20
+          done
+          echo "::error::npm ci 連三次都失敗——這一次多半不是抖動"
+          exit 1
       # ⚠️ 只裝 chromium。裝全部瀏覽器要多幾分鐘，而這批測試量的是
       # 「渲染出來對不對」，不是跨瀏覽器相容性——那是另一個問題，
       # 要問的時候再加，不要因為「順便」而讓每次 CI 都變慢。
@@ -181,7 +214,15 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - name: npm ci（抖了就重試——理由見上面第一處）
+        run: |
+          for i in 1 2 3; do
+            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
+            sleep 20
+          done
+          echo "::error::npm ci 連三次都失敗——這一次多半不是抖動"
+          exit 1
       # 🔴 **兩份站合成一包**（2026-09-14）——見 `tools/build-site.sh` 的檔頭。
       #
       # ```
@@ -247,7 +288,15 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - name: npm ci（抖了就重試——理由見上面第一處）
+        run: |
+          for i in 1 2 3; do
+            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
+            sleep 20
+          done
+          echo "::error::npm ci 連三次都失敗——這一次多半不是抖動"
+          exit 1
       # 🔴 **快車道取的是 `origin/main`，不是這個 commit**（2026-09-14）。
       #
       #    這一步跑在 e2e 之後（十幾分鐘），而那段時間裡可能又推了一次。
