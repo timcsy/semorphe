@@ -123,7 +123,7 @@ function renderStatementChain(nodes: SemanticNode[]): BlockState | null {
   let first: BlockState | null = null
   let current: BlockState | null = null
   for (const node of nodes) {
-    const block = renderBlock(node)
+    const block = renderBlock(node, 'statement')
     if (!block) continue
     if (!first) {
       first = block
@@ -168,12 +168,13 @@ const renderCtx: RenderContext = {
   nextBlockId: () => nextBlockId('block_'),
 }
 
-function renderBlock(node: SemanticNode): BlockState | null {
+function renderBlock(node: SemanticNode, position?: 'statement' | 'expression'): BlockState | null {
   let block: BlockState | null = null
 
   // Single pipeline: delegate all rendering to PatternRenderer
   if (globalPatternRenderer) {
-    const patternResult = globalPatternRenderer.render(node, renderCtx)
+    // ⚠️ `position` 要往下傳——形態軸 `role` 的值只能從這裡來（呼叫端知道、節點不知道）
+    const patternResult = globalPatternRenderer.render(node, renderCtx, position)
     if (patternResult) {
       propagateMetadata(patternResult, node)
       block = patternResult
@@ -234,20 +235,32 @@ function propagateMetadata(block: BlockState, node: SemanticNode): void {
 }
 
 function renderExpression(node: SemanticNode): BlockState | null {
-  const block = renderBlock(node)
+  // 🟢 **在選形態的時候就說清楚位置**，而不是事後把型別換掉。
+  //    事後換型別（下面那一段）是 spec 097 之前的做法，它與形態軸是兩套機制
+  //    宣告同一件事——實測 13 顆元件兩邊涵蓋範圍逐字相同、答案 13/13 一致。
+  const block = renderBlock(node, 'expression')
   if (!block) return null
   // 語句位置的降級積木出現在運算式位置時，換成運算式版（型別由語言套件宣告）
   const deg = degradationBlocks()
   if (deg && block.type === deg.statement) {
     return { ...block, type: deg.expression }
   }
-  // Check if a statement-only block has an expression counterpart
+  // 🪦 **`expressionCounterpart` 的事後換型別退場了**（2026-09-14）。
+  //
+  // 它與形態軸（`form: {axis:'role'}`）是**兩套機制宣告同一件事**：
+  // 實測 13 顆元件兩邊涵蓋範圍逐字相同、答案 13/13 一致、孤兒 0 顆。
+  //
+  // 退場的順序是：① 讓渲染端把位置餵下去（軸才選得到）
+  // → ② 在這一段放一個 `throw` 跑全套，**確認它 0 次開火** → ③ 才刪。
+  //
+  // 🔴 而②那一步當場抓到①漏了一條路：有 `renderStrategy` 的元件
+  // （`cpp:var_declare`）在策略成功時就 `return` 了，**跳過形態選擇**
+  // ——它一直靠這一段活著。
+  //
+  // > **一個「我推論它已經不可達」的結論，要用一次 throw 來驗
+  // > ——而那一次 throw 找到了推論漏掉的那條路。**
   if (globalPatternRenderer?.isStatementOnly(block.type)) {
-    const exprType = globalPatternRenderer.getExpressionCounterpart(block.type)
-    if (exprType) {
-      return { ...block, type: exprType }
-    }
-    // 沒有運算式版的對應積木 → 降級（型別由語言套件宣告，spec 154）
+    // 語句積木掉在運算式位置，而它沒有運算式形態 → 降級（型別由語言套件宣告，spec 154）
     const rawCodeRaw = node.metadata?.rawCode ?? node.properties.name ?? node.componentId
     // Strip trailing semicolons/newlines — expression context doesn't need them
     const rawCode = typeof rawCodeRaw === 'string' ? rawCodeRaw.replace(/;\s*$/, '').trim() : rawCodeRaw

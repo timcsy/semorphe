@@ -35,7 +35,6 @@
       "inputs": {
         "OBJ": "obj"
       },
-      "expressionCounterpart": "python_method_call_expression",
       "dynamicRules": [
         {
           "countSource": "itemCount",
@@ -92,6 +91,6 @@
         }
       ]
     },
-    "_why": "🔴 **運算式形態要有完整的 `blockDef`**，而語句那一份要宣告 `expressionCounterpart`——少了它的症狀是 `x = s.upper()` 渲染成一顆灰色方塊（C++ 的同族元件漏了它一直到 2026-08-21）。"
+    "_why": "🔴 **運算式形態要有完整的 `blockDef`**，而語句那一份要宣告 `expressionCounterpart`——少了它的症狀是 `x = s.upper()` 渲染成一顆灰色方塊（C++ 的同族元件漏了它一直到 2026-08-21）。\n\n🪦 **2026-09-14：`expressionCounterpart` 退場。** 它與 `form: {axis:'role'}` 是兩套機制宣告同一件事（13 顆元件涵蓋範圍逐字相同、答案 13/13 一致）。現在「什麼時候用哪一種形態」由**軸**回答，而軸值由渲染端餵（`render(node, ctx, position)`）。⚠️ 上面那段關於 `expressionCounterpart` 的說明是**歷史**，不是現況。"
   }
 ]

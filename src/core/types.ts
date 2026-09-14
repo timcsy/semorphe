@@ -386,8 +386,6 @@ export interface RenderMapping {
   statementInputs: Record<string, string>
   dynamicInputs?: DynamicInputDef
   strategy?: string
-  /** Block type to use when this statement block appears in expression context */
-  expressionCounterpart?: string
   /** Declarative rules for dynamic block structure (variable-count inputs, multi-mode slots, etc.) */
   dynamicRules?: DynamicRule[]
   /** Extra state flags: set extraState[key] = true when slots[childSlot] is non-empty */

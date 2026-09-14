@@ -79,7 +79,6 @@ export class PatternRenderer {
             statementInputs: (explicit.statementInputs && Object.keys(explicit.statementInputs).length > 0) ? explicit.statementInputs : derived.statementInputs,
             dynamicInputs: explicit.dynamicInputs ?? derived.dynamicInputs,
             strategy: explicit.strategy ?? derived.strategy,
-            expressionCounterpart: explicit.expressionCounterpart,
             dynamicRules: explicit.dynamicRules,
             extraStateFlags: explicit.extraStateFlags,
             slotAsField: explicit.slotAsField,
@@ -132,8 +131,21 @@ export class PatternRenderer {
     this.loadBlockSpecs(overriddenSpecs)
   }
 
-  /** Render a SemanticNode to a BlockState. Returns null if no render spec found. */
-  render(node: SemanticNode, renderCtx?: RenderContext): BlockState | null {
+  /**
+   * Render a SemanticNode to a BlockState. Returns null if no render spec found.
+   *
+   * @param position **這個節點正要被放進哪一種槽**——形態軸 `role` 的值來源。
+   *
+   * 🔴 **它為什麼是參數而不是從 `node` 讀**：同一顆語義節點放在語句位置與
+   * 運算式位置要畫成不同的積木（`i++` 自成一句 vs `a[i++]` 裡的那一顆），
+   * 而**那個差別不在節點裡**——節點兩邊一模一樣。
+   *
+   * > **一個「同一份真實在不同地方長得不一樣」的選擇，
+   * > 它的依據只能來自【放它的那個人】，不可能來自它自己。**
+   *
+   * ⚠️ 不給就是不知道（合法狀態），形態會落回中性那一個。
+   */
+  render(node: SemanticNode, renderCtx?: RenderContext, position?: 'statement' | 'expression'): BlockState | null {
     // Store renderCtx so recursive calls (auto-derive slots) can use strategies
     if (renderCtx) this.activeRenderCtx = renderCtx
     const ctx = renderCtx ?? this.activeRenderCtx
@@ -141,13 +153,35 @@ export class PatternRenderer {
     const spec = this.renderSpecs.get(node.componentId)
     if (!spec) return null
 
+    // 🔴 **形態選擇要在【策略之前】算好。**
+    //
+    // 策略那一條路本來 `return` 得比形態選擇早，於是**有 renderStrategy 的元件
+    // 永遠拿不到軸**——實測 `cpp:var_declare` 就是這樣，它一直靠舊機制
+    // （`expressionCounterpart` 的事後換型別）活著。
+    //
+    // > **策略造的是【內容】，軸選的是【哪一個形態】——兩件事，
+    // > 而把後者放在前者的 early return 後面，等於對一整族元件關掉它。**
+    const formSet = this.formSets.get(node.componentId)
+    // 🪦 這裡曾經寫著「位置軸在本功能中沒有任何積木宣告它……傳 undefined 是誠實的」
+    //    ——那句話在 spec 097 交付當天是真的，而**今天有 13 顆積木宣告了它**。
+    //
+    // > **一句誠實的註解，不會在它變成不誠實的那天自己出聲。**
+    const chosen = formSet ? selectForm(formSet, node, { position }) : undefined
+    if (chosen?.degraded) {
+      console.warn(`[PatternRenderer] ${node.componentId}：${chosen.degraded.reason}`)
+    }
+    /** 軸真的選了一個**變體**（不是落回中性）才換型別——中性時不動策略的產出。 */
+    const variant = chosen && formSet && chosen.blockType !== formSet.fallback
+      ? chosen.blockType : undefined
+
     // Layer 3: renderStrategy takes priority over auto-derive mapping
     if (spec.mapping.strategy && this.renderStrategyRegistry && ctx) {
       const strategyFn = this.renderStrategyRegistry.get(spec.mapping.strategy)
       if (strategyFn) {
         try {
           const result = strategyFn(node, ctx!)
-          if (result) return result
+          // ⚠️ 策略造好了內容，而**形態仍然由軸決定**
+          if (result) return variant !== undefined ? { ...result, type: variant } : result
         } catch {
           // Strategy threw — fall through to auto-derive
         }
@@ -158,13 +192,6 @@ export class PatternRenderer {
 
     // 選形態——**規則來自宣告**（契約 C-2：本函式不得出現任何具體元件身分）。
     // 沒有多形態的元件走的是同一條路，只是形態集合只有一個成員。
-    const formSet = this.formSets.get(node.componentId)
-    // 位置軸（statement/expression）在本功能中沒有任何積木宣告它——那是 B 項的事。
-    // 傳 undefined 是誠實的：呼叫端目前不知道呈現位置。
-    const chosen = formSet ? selectForm(formSet, node, {}) : undefined
-    if (chosen?.degraded) {
-      console.warn(`[PatternRenderer] ${node.componentId}：${chosen.degraded.reason}`)
-    }
     const formType = chosen?.blockType ?? spec.blockType
     const formMapping = this.mappingByBlockType.get(formType) ?? spec.mapping
 
@@ -190,7 +217,7 @@ export class PatternRenderer {
       if (slots && slots.length > 0) {
         const childBlock = ctx?.renderExpression
           ? ctx.renderExpression(slots[0])
-          : this.render(slots[0])
+          : this.render(slots[0], undefined, 'expression')
         if (childBlock) {
           block.inputs[blockInput] = { block: childBlock }
         }
@@ -276,7 +303,7 @@ export class PatternRenderer {
                 const inputName = resolvePattern(modeRule.input, i)
                 const childBlock = ctx?.renderExpression
                   ? ctx.renderExpression(child)
-                  : this.render(child)
+                  : this.render(child, undefined, 'expression')
                 if (childBlock) {
                   block.inputs[inputName] = { block: childBlock }
                 }
@@ -337,7 +364,7 @@ export class PatternRenderer {
           } else {
             const childBlock = ctx?.renderExpression
               ? ctx.renderExpression(childNodes[i])
-              : this.render(childNodes[i])
+              : this.render(childNodes[i], undefined, 'expression')
             if (childBlock) {
               block.inputs[inputName] = { block: childBlock }
             }
@@ -359,7 +386,7 @@ export class PatternRenderer {
     let first: BlockState | null = null
     let current: BlockState | null = null
     for (const node of nodes) {
-      const block = this.render(node)
+      const block = this.render(node, undefined, 'statement')
       if (!block) continue
       // Skip expression-only blocks that can't be statement-chained
       if (this.expressionOnlyBlockTypes.has(block.type)) continue
@@ -395,15 +422,7 @@ export class PatternRenderer {
     return !this.noNextStatementBlockTypes.has(blockType)
   }
 
-  /** Get the expression counterpart block type for a statement block type */
-  getExpressionCounterpart(blockType: string): string | undefined {
-    for (const spec of this.renderSpecs.values()) {
-      if (spec.blockType === blockType && spec.mapping.expressionCounterpart) {
-        return spec.mapping.expressionCounterpart
-      }
-    }
-    return undefined
-  }
+
 
 
 

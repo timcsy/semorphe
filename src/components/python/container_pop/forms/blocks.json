@@ -31,8 +31,7 @@
       "inputs": {
         "OBJ": "obj",
         "INDEX": "index"
-      },
-      "expressionCounterpart": "python_container_pop_expression"
+      }
     },
     "_why": "⚠️ **語句那一份要宣告運算式的對應**——少了它，`print(xs.pop())` 的樹是對的而渲染時挑不到形態，畫出一顆灰色方塊。"
   },

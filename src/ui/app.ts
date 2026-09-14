@@ -830,9 +830,32 @@ export class App {
    *
    * > **一個從選單上拿掉的選項，如果狀態還到得了它，那就只是看不到而已。**
    */
-  private enforceShellDepthFloor(): void {
-    if (canHideScaffold(skeletonById(this.currentSkeletonId)) || this.scaffoldDepth !== 0) return
-    this.scaffoldDepth = 1
+  /**
+   * **把現在的鷹架深度推給每一個持有者，並讓畫面跟上。**
+   *
+   * 🔴 **它為什麼是一支獨立的方法**（2026-09-14）：這三行原本住在
+   * `enforceShellDepthFloor` 裡面，而那一支**在深度不是 0 的時候直接 return**。
+   * 於是 `applyLesson` 換到一堂 `ghost` 的課時，數字改了而**推不下去**：
+   *
+   * ```
+   * 第 4 課（pins hidden，0）→ 產生器組態 = 0
+   * 第 5 課（軌道 ghost，1） → this.scaffoldDepth = 1，而組態【還是 0】
+   * 狀態列讀前者 → 說「淡的」　畫面讀後者 → 畫「隱藏」
+   * ```
+   *
+   * 使用者逐字：「雖然骨架**寫的是淡的**，但是我**實際看到卻是隱藏的**」。
+   *
+   * ⚠️ 它是 2026-09-02 那個缺陷的**反面**，而那一次的教訓就寫在下面：
+   *
+   * > **一個只改了狀態而沒有讓畫面跟上的修正，
+   * > 把一個「說謊的標籤」換成了另一個——方向反過來而已。**
+   *
+   * 🔴 而它**復發**，是因為修法住在一個有前置條件的地方：
+   *
+   * > **一段「每次改了都必須做」的收尾，如果它住在某個 `if` 的後面，
+   * > 那它保證的不是「每次」，是「那個 if 成立的每次」。**
+   */
+  private pushScaffoldDepth(): void {
     setScaffoldConfig({ scaffoldDepth: this.scaffoldDepth })
     this.syncController?.setScaffoldDepth(this.scaffoldDepth)
     // 🔴 **改了深度就要讓畫面跟上**（2026-09-02）。
@@ -854,6 +877,12 @@ export class App {
     // > **一支「順手把兩件事一起做」的方法，在只需要其中一件的地方
     // > 會把另一件在錯的時機做掉。**
     setTimeout(() => this.remarkScaffold(), 900)
+  }
+
+  private enforceShellDepthFloor(): void {
+    if (canHideScaffold(skeletonById(this.currentSkeletonId)) || this.scaffoldDepth !== 0) return
+    this.scaffoldDepth = 1
+    this.pushScaffoldDepth()
   }
 
   /**
@@ -1311,6 +1340,34 @@ export class App {
     //    而「鷹架**長什麼樣**」是另一格，住在**目標**上（`skeleton`）。
     const track = allTracks().get(trackOf(lesson.id))
     this.scaffoldDepth = scaffoldDepthOf(lesson.pins.scaffold ?? track?.scaffold ?? 'editable')
+    /**
+     * 🔴 **設了數字還要把它推下去**（2026-09-14 使用者回報）。
+     *
+     * 使用者逐字：「我從課程點進去編輯器，雖然**骨架寫的是淡的**，
+     * 但是我**實際看到卻是隱藏的**」。
+     *
+     * 在此之前這裡只設了 `this.scaffoldDepth`，而把它推給產生器的那三行
+     * 住在 `enforceShellDepthFloor` 裡——**而那一支在深度不是 0 的時候直接 return**。
+     * 於是：
+     *
+     * ```
+     * 第 4 課（pins hidden，深度 0）→ 產生器組態 = 0
+     * 第 5 課（沒 pin，軌道 ghost，深度 1）→ this.scaffoldDepth = 1
+     *                                      而【產生器組態還是 0】
+     * 狀態列讀 this.scaffoldDepth → 說「淡的」
+     * 畫面讀產生器組態             → 畫「隱藏」
+     * ```
+     *
+     * ⚠️ 它是 2026-09-02 那個缺陷的**反面**（那次是狀態說淡的、畫面畫實心的），
+     * 而修法逐字相同——那一次的教訓就寫在 `enforceShellDepthFloor` 的註解裡：
+     *
+     * > **一個只改了狀態而沒有讓畫面跟上的修正，
+     * > 把一個「說謊的標籤」換成了另一個——方向反過來而已。**
+     *
+     * 🔴 而這一次它復發，是因為**那三行住在一個會提早 return 的地方**
+     * ——在深度剛好是 0 的那條路上是對的，而換課走的是另一條。
+     */
+    this.pushScaffoldDepth()
     // 🔴 **課程也可以換一份【骨架】**（不只是露多少）——省略就跟著目標走。
     if (track?.skeleton !== undefined) this.adoptSkeleton(track.skeleton)
     // 🔴 剝不掉的骨架（Arduino）不得停在「隱藏」——見 `enforceShellDepthFloor`
@@ -1812,6 +1869,75 @@ export class App {
     // 13. Update status bar + restore state
     this.refreshStatusBar()
     this.restoreState()
+    // 🔴 **restoreState 之後才種**——先種的話會被存檔蓋掉，而且會吃掉他的作品。
+    void this.seedScaffoldIfEmpty()
+  }
+
+  /**
+   * **鷹架看得見、而畫布是空的 → 把骨架種進去。**
+   *
+   * ## 它從哪來（2026-09-14 使用者回報）
+   *
+   * 使用者讀完第 5 課：「雖然骨架**寫的是淡的**，但是我**實際看到卻是隱藏的**」。
+   *
+   * 而那一課的課文白紙黑字承諾：
+   *
+   * > 「從這一課起，**積木那一邊也會把它們畫出來**——淡淡的、拖不動的那幾塊。」
+   *
+   * 實測（空畫布、`?lesson=…&task=follow`）：
+   *
+   * ```
+   * 深度      1（淡的）✅
+   * 程式碼側   using namespace std; int main() { return 0; }   ← 有骨架
+   * 積木側     0 顆                                            ← 一顆都沒有
+   * ```
+   *
+   * 🔴 **兩側的骨架來源不一樣**，而那個不對稱只在【空程式】的時候看得見：
+   *
+   * ```
+   * 程式碼   樹裡沒有骨架 → 產生器【在最外層補】出來
+   * 積木     樹裡沒有骨架 → 沒有節點 → 畫不出東西
+   * ```
+   *
+   * 學生一旦貼進或打出任何一行完整程式，`main` 就成為真的節點、
+   * 鷹架標記就蓋得上去（實測 8 顆積木、5 顆淡的）——**機制是好的，
+   * 缺的是那個「還沒有任何東西」的起點**。
+   *
+   * > **一份「兩邊都看得到」的承諾，如果兩邊各自合成它，
+   * > 那它會在【還沒有東西可合成】的那一刻先破。**
+   *
+   * ## 為什麼是「種進樹」而不是「畫的時候補一顆」
+   *
+   * 種進樹之後兩側投影的是**同一份真實**（P1），而畫的時候補會讓
+   * 積木側多一個「只有它知道」的東西——那正是雙重真相的形狀。
+   * 🟢 而它與學生自己打出那段程式的結果**逐字相同**，不是一條特例路徑。
+   *
+   * ⚠️ **只在畫布真的空的時候**——`getCurrentTree()?.slots?.body` 是空的。
+   * 問語義樹不問面板（同 `applyTemplate`）：「有沒有東西」是真實那一側的性質。
+   */
+  private async seedScaffoldIfEmpty(): Promise<void> {
+    // 鷹架藏起來的課（前幾課）本來就不該看到它
+    // 鷹架藏起來的課（前幾課）本來就不該看到它
+    if (this.scaffoldDepth === 0) return
+    /**
+     * ⚠️ **要等第一次投影**——`init()` 結束的當下程式碼側還是空字串（實測）。
+     *
+     * 🔴 而這裡**刻意等產生器**，不自己拼一段骨架字串：自己拼的那一份
+     * 會與產生器分岔，而分岔的那天**兩邊各自都看起來是對的**。
+     *
+     * > **一個「我也知道那份骨架長什麼樣」的第二實作，
+     * > 是把一個同步問題換成一個一致性問題。**
+     */
+    let code = ''
+    for (let i = 0; i < 40; i++) {
+      code = this.codeView?.getCode?.() ?? ''
+      if (code.trim() !== '') break
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    if (code.trim() === '') return
+    // 🔴 等的途中他可能已經動手了——再問一次真實那一側
+    if ((this.syncController?.getCurrentTree()?.slots?.body ?? []).length > 0) return
+    await this.syncController?.syncCodeToBlocks(code)
   }
 
   /**

@@ -75,7 +75,6 @@ export class PatternExtractor {
             statementInputs: (explicit.statementInputs && Object.keys(explicit.statementInputs).length > 0) ? explicit.statementInputs : derived.statementInputs,
             dynamicInputs: explicit.dynamicInputs ?? derived.dynamicInputs,
             strategy: explicit.strategy ?? derived.strategy,
-            expressionCounterpart: explicit.expressionCounterpart,
             dynamicRules: explicit.dynamicRules,
             extraStateFlags: explicit.extraStateFlags,
             slotAsField: explicit.slotAsField,

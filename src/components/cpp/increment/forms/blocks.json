@@ -67,7 +67,6 @@
       ]
     },
     "renderMapping": {
-      "expressionCounterpart": "cpp_increment_expression",
       "inputs": {
         "TARGET": "target"
       },

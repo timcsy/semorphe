@@ -1,6 +1,9 @@
 int main() {
-    int w = 7, h = 4;
-    cout << w * h << endl;
-    cout << (w + h) * 2 << endl;
+    int a = 3.9;
+    double b = 3.9;
+    char c = 'A';
+    cout << a << endl;
+    cout << b << endl;
+    cout << c << endl;
     return 0;
 }

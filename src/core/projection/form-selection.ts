@@ -164,7 +164,13 @@ export function singleForm(componentId: string, blockType: string): FormSet {
  * 這裡的鍵是**軸名**，不是元件身分——中立性護欄數的是後者。
  */
 export const KNOWN_AXES: Record<string, FormAxis> = {
-  /** 依呈現位置：敘述版／運算式版。既有 `expressionCounterpart` 的一般化 */
+  /**
+   * 依呈現位置：敘述版／運算式版。
+   *
+   * 🪦 它曾經是 `expressionCounterpart` 的一般化，而**那個舊機制 2026-09-14 退場了**
+   * ——在此之前兩套並存，而且只有舊的那套真的在跑（這一條軸的 13 顆宣告全部落回中性）。
+   * 軸值由渲染端餵：`PatternRenderer.render(node, ctx, position)`。
+   */
   role: { name: 'role', from: 'position' },
   /** 依容器種類：堆疊／佇列／… */
   container_kind: { name: 'container_kind', from: 'property', property: 'container_kind' },

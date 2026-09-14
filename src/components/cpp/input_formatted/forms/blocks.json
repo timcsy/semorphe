@@ -48,7 +48,6 @@
       },
       "inputs": {},
       "statementInputs": {},
-      "expressionCounterpart": "cpp_input_formatted_expression",
       "dynamicRules": [
         {
           "countSource": "itemCount",

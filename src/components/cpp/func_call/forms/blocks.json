@@ -45,10 +45,9 @@
           "childSlot": "args",
           "inputPattern": "ARG_{i}"
         }
-      ],
-      "expressionCounterpart": "cpp_func_call_expression"
+      ]
     },
-    "_why": "🔴 **spec 168 補上 `expressionCounterpart`**——這顆宣告了兩個形態（`form: {axis:'role'}`）而**沒有宣告什麼時候用哪一個**，於是運算式位置的呼叫（`x = f(1)`）渲染時挑不到運算式那份。\n⚠️ **這是既有缺陷，由 Python 那顆同族的元件逼出來的**——兩邊的宣告一比就看見了。\n🔴 **2026-08-24：命令式那份退場，這裡改成宣告**（第 12／13 顆）。逐筆判「哪一邊對」：\n① **函式名是【跟著工作區長的下拉】**（`field_dynamic_dropdown` ／ `funcs`）——命令式對。宣告原本是一個 `field_input`（死文字框），而**一個死文字框讓學生打錯了也不會知道**。判例逐字在 `retire-imperative-block`：「`cpp_var_ref` 宣告只有死文字框 → 命令式對（它的下拉跟著工作區長）」。\n② **`ARGS` 那個文字欄刪掉**——它是「參數是一個字串」時代的化石，而 `renderMapping` 早就走 `ARG_{i}` 值插槽。**這一格兩邊都不對**：命令式沒有它，宣告有一個沒有人讀的它。\n③ **引數用 `builder: \"variadic\"`**（＋ `minCount: 0`：`f()` 是合法的呼叫）——`⊕⊖` 由建構子長。\n④ **`LABEL` 那一列要具名**：`jsonInit` 預設把欄位放進匿名 dummy，而命令式那一列叫 `LABEL`——比對護欄比的是名字，不具名就永遠到不了「一模一樣」。\n⑤ **那對括號只在有引數時出現**——命令式那份在 `rebuildArgLabels_` 裡做，而**比對護欄看不到那個時機**（它只比剛建好的樣子）。這一格是 skill 第 3 步「它有沒有一段只在別的時機才跑的邏輯」問出來的。\n⑥ **`countKey: \"argCount\"`**——命令式那份與 `renderMapping.countSource` 都用這個鍵，而建構子預設是 `itemCount`。不指定的症狀不是報錯，是**載入時整個工作區一片空白**（`missing a(n) ARG_0 connection`）。"
+    "_why": "🔴 **spec 168 補上 `expressionCounterpart`**——這顆宣告了兩個形態（`form: {axis:'role'}`）而**沒有宣告什麼時候用哪一個**，於是運算式位置的呼叫（`x = f(1)`）渲染時挑不到運算式那份。\n⚠️ **這是既有缺陷，由 Python 那顆同族的元件逼出來的**——兩邊的宣告一比就看見了。\n🔴 **2026-08-24：命令式那份退場，這裡改成宣告**（第 12／13 顆）。逐筆判「哪一邊對」：\n① **函式名是【跟著工作區長的下拉】**（`field_dynamic_dropdown` ／ `funcs`）——命令式對。宣告原本是一個 `field_input`（死文字框），而**一個死文字框讓學生打錯了也不會知道**。判例逐字在 `retire-imperative-block`：「`cpp_var_ref` 宣告只有死文字框 → 命令式對（它的下拉跟著工作區長）」。\n② **`ARGS` 那個文字欄刪掉**——它是「參數是一個字串」時代的化石，而 `renderMapping` 早就走 `ARG_{i}` 值插槽。**這一格兩邊都不對**：命令式沒有它，宣告有一個沒有人讀的它。\n③ **引數用 `builder: \"variadic\"`**（＋ `minCount: 0`：`f()` 是合法的呼叫）——`⊕⊖` 由建構子長。\n④ **`LABEL` 那一列要具名**：`jsonInit` 預設把欄位放進匿名 dummy，而命令式那一列叫 `LABEL`——比對護欄比的是名字，不具名就永遠到不了「一模一樣」。\n⑤ **那對括號只在有引數時出現**——命令式那份在 `rebuildArgLabels_` 裡做，而**比對護欄看不到那個時機**（它只比剛建好的樣子）。這一格是 skill 第 3 步「它有沒有一段只在別的時機才跑的邏輯」問出來的。\n⑥ **`countKey: \"argCount\"`**——命令式那份與 `renderMapping.countSource` 都用這個鍵，而建構子預設是 `itemCount`。不指定的症狀不是報錯，是**載入時整個工作區一片空白**（`missing a(n) ARG_0 connection`）。\n\n🪦 **2026-09-14：`expressionCounterpart` 退場。** 它與 `form: {axis:'role'}` 是兩套機制宣告同一件事（13 顆元件涵蓋範圍逐字相同、答案 13/13 一致）。現在「什麼時候用哪一種形態」由**軸**回答，而軸值由渲染端餵（`render(node, ctx, position)`）。⚠️ 上面那段關於 `expressionCounterpart` 的說明是**歷史**，不是現況。"
   },
   {
     "id": "cpp_func_call_expression",

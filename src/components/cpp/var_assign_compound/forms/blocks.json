@@ -80,7 +80,6 @@
       ]
     },
     "renderMapping": {
-      "expressionCounterpart": "cpp_var_assign_compound_expression",
       "inputs": {
         "TARGET": "target",
         "VALUE": "value"

@@ -21,7 +21,6 @@
       "fields": {},
       "inputs": {},
       "statementInputs": {},
-      "expressionCounterpart": "cpp_input_expression",
       "dynamicRules": [
         {
           "countSource": "itemCount",

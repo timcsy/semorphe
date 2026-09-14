@@ -152,8 +152,7 @@
       "fields": {},
       "inputs": {},
       "statementInputs": {},
-      "strategy": "cpp:renderVarDeclare",
-      "expressionCounterpart": "cpp_var_declare_expression"
+      "strategy": "cpp:renderVarDeclare"
     },
     "_why": "🟢 **2026-08-26：形狀補上，命令式定義退場**——命令式積木退場計畫的**最後一顆**。\n🔴 它用 `paramList`，而 `optionalGroups` 這一輪補了兩格才表達得完：\n  ① `valueInput`——那一段的結尾是**接點**（`= ⟨運算式⟩`）而不是欄位群。\n     ⚠️ `optionalGroups` 的 doc 本來就拿這顆積木當齒輪設計的例子\n     （「齒輪選『變數』還是『變數 = 值』」），而它一直只建得出啞輸入。\n  ② `itemsAs`——存檔照舊寫成 `{ items: ['var_init','var'] }`。\n     🟢 **那是既有的存檔契約，而用它原本的形狀寫就不必遷移**\n     （渲染那一路 `cpp:renderVarDeclare` 吐的也是這個鍵與 `INIT_{i}` 這個插槽名）。"
   }
