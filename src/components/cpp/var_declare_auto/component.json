@@ -4,8 +4,9 @@
   "properties": [
     {
       "name": "name",
-      "kind": "identifier",
-      "default": "x"
+      "kind": "literal",
+      "default": "x",
+      "_kind_why": "⚠️ `name` 在這顆上**不保證是單一識別字**：`auto [u,v,w] = f();` 的結構化繫結把一串名字放在這裡（實測學生語料 5 筆）。改成 `literal`。"
     }
   ],
   "slots": {

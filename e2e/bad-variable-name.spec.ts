@@ -82,7 +82,21 @@ test('🔴 不能當名字的字，畫面上要說得出為什麼', async ({ pag
   await rename(page, 'my name')
   expect((await warnings(page)).join(''), '🔴 有空白沒被說出來').toContain('底線')
 
-  // ★ 改回合法的 → 警告要消失（不然它會一直掛在那裡）
+  // 🔴 **而它要擋下執行**（使用者 2026-09-14 拍板：「變數名稱不合格應該要不能執行才對」）
+  await rename(page, '123')
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(2500)
+  const out = (await page.locator('.console-output').innerText())
+  expect(out, '🔴 名字不合法卻照跑了——一個會執行的錯誤程式，教的是「這裡沒有錯」')
+    .toContain('名字不能用')
+  // ⚠️ 而理由要對：他的語法是完整的，說「語法還不完整」會讓他去找錯的地方
+  expect(out, '🔴 拒絕的理由說成語法問題了').not.toContain('語法還不完整')
+
+  // ★ 改回合法的 → 警告要消失，而且跑得動
   await rename(page, 'age')
   expect(await warnings(page), '🔴 改回合法之後警告沒消——那比不報還糟').toEqual([])
+  await page.locator('#run-btn').click()
+  await page.waitForTimeout(2500)
+  expect(await page.locator('.console-output').innerText(),
+    '🔴 改好了還是被擋——那比一開始就擋更糟').toContain('16')
 })

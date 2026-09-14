@@ -138,6 +138,21 @@ function collectExercises(dir: string, j: Record<string, any>): Exercise[] {
   for (const t of tasksOf(j).filter((x) => x.id !== 'follow')) {
     const file = fs.readdirSync(sols).find((f) => f.replace(/\.[^.]+$/, '') === t.id)
     if (!file) continue
+    // 🔴 **沒有裁判的題目跳過**（2026-09-14）。
+    //
+    //    這一支驗的是「宣告的答案，參考解答真的跑得出來」——而一道沒有
+    //    `check.stdout` 的題目**沒有宣告任何答案**，那句話對它不成立。
+    //
+    //    ⚠️ 它是被一次改動逼出來的：那天替 13 道無裁判的題目補了參考解答
+    //    （為了讓「解答不得用到還沒教過的元件」那條護欄看得見它們），
+    //    於是這裡一次收進 12 道**期望值是空字串**的題目，全部紅。
+    //
+    // 🔴 而 `tests/probes/lesson-solutions-run.ts` 從第一版就有這一行
+    //    （`if (!t.check?.stdout) continue`）——所以那支探針是綠的。
+    //
+    // > **兩支驗同一件事的東西，一支跳過了沒有裁判的題目、另一支沒有
+    // > ——而只有跑得慢的那一支會告訴你。**
+    if (!t.check?.stdout) continue
     out.push({
       taskId: t.id, title: t.title,
       solution: fs.readFileSync(path.join(sols, file), 'utf8').trimEnd(),

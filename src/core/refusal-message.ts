@@ -41,7 +41,18 @@ export function describeRefusal(outcome: Extract<LoadOutcome, { kind: 'refused' 
  * ⚠️ **不可以只說「執行失敗」**——那是無法行動的訊息，
  * 使用者不知道發生什麼事，也不知道他打的東西還在不在。
  */
-export function describeExecutionRefusal(count: number): string {
+export function describeExecutionRefusal(count: number, cause: 'syntax' | 'bad_name' = 'syntax'): string {
+  // 🔴 **兩種拒絕要說不一樣的話**（2026-09-14）。
+  //    「語法還不完整」對一個把變數取名叫 `123` 的學生是**指不到地方的**
+  //    ——他的語法完整得很，是那個名字不能用。
+  //
+  // > **一句拒絕的話如果說錯了理由，它比不說更糟：
+  // > 學生會照著那個錯的理由去找錯的地方。**
+  if (cause === 'bad_name') {
+    const what = count > 1 ? `這段程式有 ${count} 個名字不能用` : '這段程式有一個名字不能用'
+    return `${what}，所以還不能執行。積木上的紅色驚嘆號會說是哪一個、為什麼——`
+      + '改好名字再按一次執行就可以了。'
+  }
   const what = count > 1 ? `這段程式有 ${count} 處語法還不完整` : '這段程式有一處語法還不完整'
   return `${what}，所以還不能執行。你打的程式沒有被改動——補好之後再按一次執行就可以了。`
 }

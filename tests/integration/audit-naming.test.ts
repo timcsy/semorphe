@@ -93,8 +93,25 @@ function receiverParamName(components: component[]): Map<string, string> {
     //
     // 🟢 宣告了 `slots.obj` 的，接收者就在那裡——屬性那一側不必再猜。
     if ((c as { slots?: Record<string, unknown> }).slots?.[RECEIVER_PARAM] !== undefined) continue
-    const first = paramSpecs(c.properties as never)[0]
-    if (first?.kind === 'identifier') out.set(c.componentId, first.name)
+    // 🔴 **接收者靠【名字】認，不靠 `kind`**（2026-09-14）。
+    //
+    //    這裡曾經寫「第一個 `kind === 'identifier'` 的屬性就是接收者」
+    //    ——而那是一個**代理**，不是宣告。它在 2026-09-14 那天壞掉了：
+    //    那天把 57 個 `obj` 從 `identifier` 改成 `literal`
+    //    （因為 `obj` 裝的是容器運算式 `d2[a]`，**不是識別字**），
+    //    而這一支當場「一個接收者都認不出來」。
+    //
+    // > **一條靠代理欄位推斷的規則，會在那個欄位為了別的理由被修正的那天壞掉
+    // > ——而它壞掉的方式是「什麼都掃不到」，不是「掃錯」。**
+    //
+    // 🟢 而正確的來源本來就在手邊：接收者的名字**就是 `obj`**
+    //    （上面那一行查 `slots.obj` 用的是同一個常數）。
+    // ⚠️ **先問名字、問不到才退回原本那條啟發式**——退回成「第一個屬性」
+    //    太鬆（會把操作的引數當成接收者），量到的症狀是硬性零那一項當場冒出一批。
+    const spec = paramSpecs(c.properties as never)
+    const recv = spec.find((x) => x.name === RECEIVER_PARAM)
+      ?? (spec[0]?.kind === 'identifier' ? spec[0] : undefined)
+    if (recv !== undefined) out.set(c.componentId, recv.name)
   }
   return out
 }

@@ -369,7 +369,11 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
  * 這個判定回答的是「**使用者現在要求執行**」，而直譯器不知道時機
  * ——它只知道有人給了它一棵樹。而既有測試直接呼叫 `execute(tree)`。
  */
-export function canExecute(tree: SemanticNode): { ok: true } | { ok: false; nodeIds: string[] } {
+export type RefusalCause = 'syntax' | 'bad_name'
+
+export function canExecute(
+  tree: SemanticNode,
+): { ok: true } | { ok: false; nodeIds: string[]; cause: RefusalCause } {
   const bad: string[] = []
   const walk = (n: SemanticNode): void => {
     const cause = n.metadata?.degradationCause
@@ -377,6 +381,33 @@ export function canExecute(tree: SemanticNode): { ok: true } | { ok: false; node
     for (const bucket of Object.values(n.slots ?? {})) for (const c of bucket ?? []) walk(c)
   }
   walk(tree)
-  return bad.length === 0 ? { ok: true } : { ok: false, nodeIds: bad }
+  // 🔴 **語法不完整優先**——它比名字更基本，而且一段讀不懂的程式裡
+  //    那些「名字」本來就不算數。
+  if (bad.length > 0) return { ok: false, nodeIds: bad, cause: 'syntax' }
+
+  /**
+   * 🔴 **不合法的名字也擋**（2026-09-14，使用者拍板：「變數名稱不合格應該要不能執行才對」）。
+   *
+   * 在此之前它只是一條紅字，而程式照跑——於是學生得到一支**跑得動的
+   * `int 123 = 16;`**，而那教的是「這樣可以」。
+   *
+   * > **一個會執行的錯誤程式，教的不是「這裡有錯」，是「這裡沒有錯」。**
+   * > （`canExecute` 的檔頭 2026-08-14 就寫著這句，而名字那一格漏了。）
+   *
+   * ## ⚠️ 上閘門之前量過，而那次量測改變了做法
+   *
+   * 第一次拿 218 支學生程式量：**57 筆誤報**——`d2[a].push_back(x)` 的 `obj`、
+   * `auto [u,v,w] = …` 的結構化繫結、`sizeof(int)` 的 `target`。
+   * **每一筆都是合法的程式，而宣告說它們是識別字。**
+   *
+   * 修的是宣告（59 個參數 `identifier` → `literal`），不是判準。
+   * 修完再量：**課文 135 支 ＋ 學生 218 支，誤報 0**。
+   *
+   * > **一條會擋下執行的檢查，它的第一個量測不該問「它抓到幾個」，
+   * > 該問「它擋錯了幾個」——而那個數字只有別人的程式答得出來。**
+   */
+  const names = checkParams(tree).map((f) => f.nodeId ?? '').filter((x) => x !== '')
+  if (names.length > 0) return { ok: false, nodeIds: names, cause: 'bad_name' }
+  return { ok: true }
 }
 

@@ -4,8 +4,9 @@
   "properties": [
     {
       "name": "target",
-      "kind": "identifier",
-      "default": "int"
+      "kind": "literal",
+      "default": "int",
+      "_kind_why": "⚠️ `sizeof` 的 `target` **可以是型別也可以是運算式**：`sizeof(int)`、`sizeof(long long)`、`sizeof(number[0])` 都合法。實測學生語料 14 筆全是這一類——**宣告成識別字是錯的**。"
     }
   ],
   "slots": {},

@@ -608,7 +608,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   //    > 一條測試如果錨在「某一題剛好是普通題」上，那一題升級的那天它會紅。
   await openLessonLink(page, 'cpp-beginner/02-型別')
 
-  // 選第二題（練習：把 height 改成 int），然後寫出它的答案
+  // 選第二題（練習：把 height 的型別換成 int），然後寫出它的答案
   await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
   await page.locator('.quick-pick-item[data-value="ex1"]').click()
   await page.waitForTimeout(500)
@@ -631,7 +631,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   await expect(verdict).toHaveClass(/passed/)
   // 🔴 **說出是哪一題**——「✅ 對了」在一課有好幾題的時候是有歧義的
   expect(await verdict.innerText(),
-    '🔴 祝賀沒有說出是哪一題——他不知道那個勾算在哪一題頭上').toContain('練習：把 height 改成 int')
+    '🔴 祝賀沒有說出是哪一題——他不知道那個勾算在哪一題頭上').toContain('練習：把 height 的型別換成 int')
 
   // 🔴 **不自動切**：下一題是一句話 ＋ 一顆按鈕
   const next = page.locator('.console-next-task')
@@ -639,7 +639,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   const stillHere = await page.locator('#status-controls .status-item-btn[data-control-id="task"]').innerText()
   expect(stillHere,
     '🔴 自動切了下一題——他下一次執行會突然被另一題評價，而他不知道何時換的',
-  ).toContain('練習：把 height 改成 int')
+  ).toContain('練習：把 height 的型別換成 int')
   // 進度要跟著動
   // ⚠️ 分母跟著課走（第 2 課 2026-09-05 起有三題：跟著做／排回去／練習），
   //    所以只驗**分子動了**——錨在分母上的話，加一題的那天它會紅，

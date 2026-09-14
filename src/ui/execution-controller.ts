@@ -940,7 +940,7 @@ export class ExecutionController {
     const verdict = canExecute(tree as SemanticNode)
     if (verdict.ok) return false
     // `history/017`：一道會拒絕的檢查必須同時回答「被拒絕的東西去哪了」。
-    const msg = describeExecutionRefusal(verdict.nodeIds.length)
+    const msg = describeExecutionRefusal(verdict.nodeIds.length, verdict.cause)
     this.broadcastOutput(msg + '\n', 'stderr')
     this.panels.bottomPanel?.showTab('console')
     showToast(msg, 'error')
