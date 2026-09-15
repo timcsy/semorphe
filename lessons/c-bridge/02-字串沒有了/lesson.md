@@ -72,10 +72,10 @@ char s[20] = "hello";
 「**複製文字 … 到 …**」——名字就是它們做的事。
 
 ```c
-printf("%d\n", strlen(s));      // 5    ——數到 \0
+printf("%d\n", strlen(s));      // 5
 char t[20];
-strcpy(t, s);                   // 把 s 複製到 t
-printf("%d\n", strcmp(s, t));   // 0    ——一樣就是 0
+strcpy(t, s);
+printf("%d\n", strcmp(s, t));   // 0
 ```
 
 | | 做什麼 | ⚠️ 危險在哪 |

@@ -49,10 +49,10 @@ print("name")    # name    ← 🔴 差一對引號，完全不同
 ## 三、四種基本的資料
 
 ```python
-name = "小明"          # str    文字
-age = 16               # int    整數
-height = 1.72          # float  小數
-is_student = True      # bool   真假
+name = "小明"          # str
+age = 16               # int
+height = 1.72          # float
+is_student = True      # bool
 ```
 
 | | 長什麼樣 | 注意 |

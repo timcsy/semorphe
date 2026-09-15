@@ -58,7 +58,7 @@ print(nums[-2])       # 1    ← 倒數第二個
 
 ```python
 nums[0] = 99          # 改第一個
-nums.append(9)        # 最後面加一個
+nums.append(9)
 print(nums)           # [99, 1, 4, 1, 5, 9]
 ```
 

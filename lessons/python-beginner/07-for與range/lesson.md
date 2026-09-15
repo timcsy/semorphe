@@ -58,8 +58,8 @@ print(total)      # 55
 | **`while`** | **不知道要跑幾次**——跑到某件事發生為止 |
 
 ```python
-for i in range(10):        # 就是十次
-while user_says_yes():     # 幾次不知道
+for i in range(10):
+while user_says_yes():
 ```
 
 > **能用 `for` 就用 `for`。**
