@@ -675,6 +675,8 @@
   "COVERAGE_NEVER_RAN": "⚠️ 有 {n} 塊積木這一次沒有被跑到——是故意的嗎？",
   "LESSON_NUDGE_SWITCH": "〈{next}〉教的就是你正在用的東西（現在有 {n} 種積木是淡的）",
   "LESSON_NUDGE_BEYOND": "有 {n} 種積木不在〈{cur}〉裡——所以它們是淡的",
+  "LESSON_NUDGE_START": "第一次來？先打開課程，照著〈{next}〉上面的按鈕做——它會一步一步帶你。",
+  "LESSON_NUDGE_OPEN_DOC": "打開課程",
   "LESSON_NUDGE_GO": "換過去",
   "LESSON_NUDGE_FREE": "自由練習",
   "LESSON_NUDGE_DISMISS": "不用",

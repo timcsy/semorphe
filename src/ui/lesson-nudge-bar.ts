@@ -56,8 +56,21 @@ export interface LessonNudge {
   readonly dimmedCount: number
   /** 建議換到哪一課——`null` ＝ 沒有一堂沾得上邊 */
   readonly suggestion: { readonly lessonId: string; readonly title: string } | null
-  /** 按下「換過去」 */
+  /** 按下「換過去」——⚠️ `'start'` 那一種走 `onOpenDoc`，不是這一支 */
   readonly onSwitch: (lessonId: string) => void
+  /**
+   * 按下「打開課程」——**開課文那一頁**，不是在編輯器裡換一課。
+   *
+   * 🔴 使用者 2026-09-15：「指路的部分我比較喜歡說**打開課程**，然後按相關按鈕」。
+   *
+   * ⚠️ 而那不只是措辭：在編輯器裡換一課會**跳過課文**，而課文正是
+   * 「要做什麼」的來源——他缺的就是那個。課文頁上的每一題都有一顆
+   * 進編輯器的按鈕（2026-09-12 那一刀做的），照著按才是完整的一條路。
+   *
+   * > **把人帶到工具的另一個狀態，與把人帶到【說明那件事的地方】，
+   * > 是兩件事——而他缺的是後者。**
+   */
+  readonly onOpenDoc?: (lessonId: string) => void
   /** 按下「自由練習」 */
   readonly onFreePractice: () => void
 }
@@ -95,7 +108,7 @@ export class LessonNudgeBar {
     // 🔴 **主詞是那一課，不是「你用錯了」**——見檔頭。
     text.textContent = n.kind === 'start'
       // ⚠️ 不說「積木太多」——那會讓他以為自己選錯了。說的是「有一條帶路的」。
-      ? msg('LESSON_NUDGE_START', '第一次來？〈{next}〉會一步一步帶你，積木盤也會只留這一課要用的。')
+      ? msg('LESSON_NUDGE_START', '第一次來？先打開課程，照著〈{next}〉上面的按鈕做——它會一步一步帶你。')
         .replace('{next}', n.suggestion?.title ?? '第 1 課')
       : n.suggestion
         ? msg('LESSON_NUDGE_SWITCH', '〈{next}〉教的就是你正在用的東西（現在有 {n} 種積木是淡的）')
@@ -113,9 +126,13 @@ export class LessonNudgeBar {
     }
     if (n.suggestion) {
       const s = n.suggestion
-      button(
-        n.kind === 'start' ? msg('LESSON_NUDGE_BEGIN', '從這一課開始') : msg('LESSON_NUDGE_GO', '換過去'),
-        () => { this.hide(); n.onSwitch(s.lessonId) }, true)
+      // 🔴 **`'start'` 開的是課文，不是在編輯器裡換一課**——見 `onOpenDoc`。
+      if (n.kind === 'start') {
+        button(msg('LESSON_NUDGE_OPEN_DOC', '打開課程'),
+          () => { this.hide(); n.onOpenDoc?.(s.lessonId) }, true)
+      } else {
+        button(msg('LESSON_NUDGE_GO', '換過去'), () => { this.hide(); n.onSwitch(s.lessonId) }, true)
+      }
     }
     // ⚠️ `'start'` 不給「自由練習」——他**已經在**自由練習了
     if (n.kind !== 'start') {

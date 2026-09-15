@@ -675,6 +675,8 @@
   "COVERAGE_NEVER_RAN": "⚠️ {n} block(s) never ran this time — on purpose?",
   "LESSON_NUDGE_SWITCH": "“{next}” is where these are taught ({n} kinds of blocks are dimmed right now)",
   "LESSON_NUDGE_BEYOND": "{n} kinds of blocks are outside “{cur}” — that is why they look faded",
+  "LESSON_NUDGE_START": "First time here? Open the course and follow the buttons in “{next}” — it walks you through step by step.",
+  "LESSON_NUDGE_OPEN_DOC": "Open the course",
   "LESSON_NUDGE_GO": "Switch to it",
   "LESSON_NUDGE_FREE": "Free practice",
   "LESSON_NUDGE_DISMISS": "Not now",

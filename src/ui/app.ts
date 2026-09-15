@@ -2507,7 +2507,9 @@ export class App {
         currentTitle: '',
         dimmedCount: 0,
         suggestion: { lessonId: first.id, title: first.title },
+        // ⚠️ `'start'` 走的是 `onOpenDoc`；這一支留著只是因為型別要它
         onSwitch: (id: string) => this.selectLesson(id),
+        onOpenDoc: (id: string) => this.codeView?.openExternal?.(lessonDocHref(id)),
         onFreePractice: () => { /* 他已經在自由練習了——見 `kind: 'start'` */ },
       })
       return

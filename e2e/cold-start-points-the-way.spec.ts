@@ -47,7 +47,11 @@ test('★ 冷開（沒選課、畫布空的）→ 指路條要出現，而且指
   const b = await bar(page)
   expect(b.shown, '🔴 沒有指路條——他拿到 196 顆積木而不知道有一條帶路的').toBe(true)
   expect(b.text, '🔴 沒有指名是哪一課').toContain('印出一句話')
-  expect(b.text, '🔴 沒有一顆按得下去的').toContain('從這一課開始')
+  // 🔴 使用者 2026-09-15：「指路的部分我比較喜歡說**打開課程**，然後按相關按鈕」
+  //    ——而那不只是措辭：在編輯器裡換一課會**跳過課文**，而課文正是
+  //    「要做什麼」的來源。課文頁上每一題都有一顆進編輯器的按鈕。
+  expect(b.text, '🔴 沒有一顆按得下去的').toContain('打開課程')
+  expect(b.text, '🔴 還在說「換一課」——那會跳過課文').not.toContain('從這一課開始')
   // ⚠️ 他**已經在**自由練習了，再給他一顆「自由練習」是廢話
   expect(b.text, '🔴 不該給「自由練習」').not.toContain('自由練習')
 })
@@ -89,6 +93,29 @@ test('★ 他已經動手做東西了 → 不要插嘴', async ({ page }) => {
  *
  * ⚠️ 而上一刀我只驗了「它出現」與「它該閉嘴時閉嘴」，**沒有驗它擋到誰**。
  */
+test('★ 「打開課程」開的是課文那一頁，不是在編輯器裡換一課', async ({ page }) => {
+  test.setTimeout(180_000)
+  await open_(page, '/')
+  const before = await page.evaluate(() => (window as unknown as {
+    __app: { currentLesson?: { id: string } }
+  }).__app.currentLesson?.id ?? null)
+  expect(before, '🔴 一開始就有課 → 這一支測的不是那條路').toBeNull()
+
+  const [popup] = await Promise.all([
+    page.waitForEvent('popup', { timeout: 15_000 }).catch(() => null),
+    page.locator('.lesson-nudge-btn.primary').click(),
+  ])
+  await page.waitForTimeout(1500)
+
+  // 🔴 它該把人帶到【課文】，而不是把編輯器切成那一課
+  const after = await page.evaluate(() => (window as unknown as {
+    __app: { currentLesson?: { id: string } }
+  }).__app.currentLesson?.id ?? null)
+  expect(after, '🔴 它在編輯器裡換了一課——那會跳過課文，而課文正是他缺的').toBeNull()
+  expect(popup, '🔴 沒有開出課文那一頁').toBeTruthy()
+  expect(popup!.url(), '🔴 開的不是那一課的課文').toContain('lessons/')
+})
+
 test('★ 指路條不得蓋住任何控制項', async ({ page }) => {
   test.setTimeout(180_000)
   await open_(page, '/')
