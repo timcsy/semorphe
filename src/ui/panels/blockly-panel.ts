@@ -1831,7 +1831,17 @@ export class BlocklyPanel implements ViewHost {
       return nodeId !== null && nodeId !== undefined && this.lastScaffoldIds.has(nodeId)
     }
 
-    const movable: Blockly.BlockSvg[] = []
+    /**
+     * 這一塊被幾層包著——`0` ＝ 在最外面（`hidden` 的課），`1` ＝ 在 `main` 裡，
+     * `2` ＝ 在 `main` 裡的某顆迴圈／分支裡。
+     */
+    const nesting = (b: Blockly.Block): number => {
+      let d = 0
+      for (let p = b.getSurroundParent(); p; p = p.getSurroundParent()) d++
+      return d
+    }
+
+    const candidates: { b: Blockly.BlockSvg; depth: number }[] = []
     for (const b of ws.getAllBlocks(false) as Blockly.BlockSvg[]) {
       if (!b.previousConnection) continue          // 沒有前接點 ＝ 運算式，不是一句
       // 🔴 **不打散他搬不動的**——淡的鷹架（`return 0;`）本來就拖不動，
@@ -1847,28 +1857,38 @@ export class BlocklyPanel implements ViewHost {
       //    ——實測：4 塊該打散的，一塊都沒打散。
       //
       // > **一個名字叫 `getParent` 的東西，回的不一定是你以為的那個「裡面」。**
-      const around = b.getSurroundParent()
       // 🔴 **`hidden` 鷹架的課根本沒有 `main` 積木**（2026-09-05 實測）——
-      //    那幾句本來就在頂層，`getSurroundParent()` 回 `null`。
+      //    那幾句本來就在頂層，`getSurroundParent()` 回 `null`（深度 0）。
       //    原本這裡直接 `continue`，於是**整條 hidden 的課一塊都打散不了**。
       //
       // > **一個「找出第一層」的判準，如果假設了「一定有一個包住它的東西」，
       // > 它在【那個東西被藏起來】的那些課上會全部落空。**
-      if (!around) { movable.push(b); continue }
-      // ⚠️ 只取「函式主體的第一層」——巢狀迴圈【裡面】那幾句留在原地，
-      //    否則一題會爆成二十塊，而那正是那些研究說會讓人放棄的形狀。
       //
       // 🪦 判準原本是「圍住我的那一塊是鷹架」，而**它依賴時機**：
       //    `lastScaffoldIds` 是同步之後才填的，在 +300ms 那一刻可能還是空的
-      //    ——實測：分類全部正確，而打散是 0 塊。
-      //
-      // > **一個依賴「另一件事已經做完」的判準，
-      // > 在它自己跑得比較快的那一天會安靜地全部落空。**
-      //
-      // 🟢 換成**結構**的判準：圍住我的那一塊自己沒有被圍住 ＝ 我在第一層。
-      if (around.getSurroundParent() !== null) continue
-      movable.push(b)
+      //    ——實測：分類全部正確，而打散是 0 塊。換成**結構**的判準之後就不依賴時機了。
+      candidates.push({ b, depth: nesting(b) })
     }
+
+    // 🔴 **取最淺的那一層，而那一層要有兩塊以上**（2026-09-15）。
+    //
+    //    在此之前判準是「只取第一層」，而**第 11／16 課的本體只有一顆 `for`**
+    //    ——第一層永遠是一塊，於是那兩課的「排回去」一塊都沒打散。
+    //    使用者轉述學生：「在課程那邊點擊排回去**不會有打亂**」。
+    //
+    // > **一個「只取第一層」的規則，在【第一層只有一塊】的時候
+    // > 產出的不是「比較簡單的題目」，是【沒有題目】。**
+    //
+    // ⚠️ 而**不是把每一層都打散**：一題爆成二十塊正是那些研究說會讓人放棄的形狀。
+    //    往裡面走一層之後，學生排的是那顆迴圈的**身體**——那仍然是一題。
+    const byDepth = new Map<number, Blockly.BlockSvg[]>()
+    for (const c of candidates) {
+      const list = byDepth.get(c.depth) ?? []
+      list.push(c.b)
+      byDepth.set(c.depth, list)
+    }
+    const depth = [...byDepth.keys()].sort((a, b) => a - b).find((d) => (byDepth.get(d)?.length ?? 0) >= 2)
+    const movable = depth === undefined ? [] : byDepth.get(depth)!
     if (movable.length < 2) return 0
 
     // 拆下來

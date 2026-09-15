@@ -1095,6 +1095,19 @@ export class App {
       console.error(`[arrange] ${lesson.id}#${task.id} 宣告了 arrange 而沒有 solutions/ 檔`)
       return
     }
+    // 🔴 **先把它放進編輯器**（2026-09-15）——`syncCodeToBlocks` 只做
+    //    程式碼→積木，而程式碼視圖**會跳過 `source: 'code'` 的更新**
+    //    （那本來是「使用者自己打的，別覆寫他」）。於是編輯器停在骨架，
+    //    積木上是題目——**兩個投影說不一樣的話**。
+    //
+    //    ⚠️ 症狀只在【打散是 0 塊】的那幾課露出來：有打散的課，那一次
+    //    blocks→code 會順便把編輯器覆寫成對的，於是這個缺陷被蓋住了。
+    //
+    // > **一個缺陷如果被另一個動作順便蓋掉，它會在那個動作不發生的地方現形
+    // > ——而那看起來像「只有那幾課壞了」。**
+    //
+    // 🟢 判準寫在 `applyTemplate` 裡：`setCode` 之後才 `syncCodeToBlocks`。
+    this.codeView?.setCode(code)
     await this.syncController?.syncCodeToBlocks(code)
     // 🔴 **等鷹架標記填好，而不是等一個猜出來的毫秒數。**
     //
@@ -1160,6 +1173,8 @@ export class App {
       console.error(`[debug] ${lesson.id}#${task.id} 宣告了 debug 而沒有 starters/ 檔`)
       return
     }
+    // 🔴 **同上**：不先 `setCode` 的話，編輯器停在骨架而積木上是起點。
+    this.codeView?.setCode(code)
     await this.syncController?.syncCodeToBlocks(code)
   }
 
@@ -2120,10 +2135,21 @@ export class App {
 
     // ⚠️ **這個 wrapper 留著，而它剩下的職責不是轉接**：補相依、保游標、
     //    清那三個旗標——那些是**組裝點的事**，不是 parser 介面的事。
-    this.syncController!.syncCodeToBlocks = (codeArg?: string) => {
+    // 🔴 **要把 promise 回傳出去**（2026-09-15）——在此之前這個 wrapper
+    //    回的是 `undefined`，於是每一個 `await syncCodeToBlocks(...)`
+    //    **立刻就過了**，而它包住的那一次同步還沒開始。
+    //
+    //    症狀（使用者轉述學生：「排回去不知道在幹嘛」）：`seedArrange` 送進去的是
+    //    完整的解答，而它 `await` 回來的那一刻程式碼還是骨架——那一題的積木
+    //    在畫布上，而程式碼裡沒有它。
+    //
+    // > **一個回傳 `undefined` 的非同步函式，它的每一個呼叫端都以為自己等過了。**
+    this.syncController!.syncCodeToBlocks = (codeArg?: string): Promise<boolean> => {
       const code = codeArg ?? codeView.getCode()
       this._codeToBlocksInProgress = true
-      originalSync(code).then(() => {
+      let synced = false
+      return originalSync(code).then((ok) => {
+        synced = ok
         const patched = this.syncController?.patchMissingDependencies(code)
         if (!patched) return
         const linesDelta = patched.split('\n').length - code.split('\n').length
@@ -2182,12 +2208,14 @@ export class App {
           this._codeToBlocksInProgress = false
           this.drainCodeChangedWhileSyncing()
         }, 300)
-      }).catch((err: unknown) => {
+      }).then(() => synced).catch((err: unknown) => {
         console.error('Parse error:', err)
         this._codeToBlocksInProgress = false
         this.drainCodeChangedWhileSyncing()
+        return false
       })
-      return Promise.resolve(false)
+      // 🪦 這裡本來是 `return Promise.resolve(false)`——**一個立刻完成的假承諾**。
+      //    它讓每一個 `await syncCodeToBlocks(...)` 都在真正的同步開始之前就通過。
     }
 
     this.syncController!.onError((errors: SyncError[]) => {
