@@ -1786,11 +1786,27 @@ html, body {
 }
 
 /* 🔴 **跳過不准藏起來**——一個藏起來的跳過鍵，等於強迫；
- * 而強迫產生的是 `aaa`，不是思考。它只是【比較安靜】，不是比較難找。 */
+ * 而強迫產生的是 `aaa`，不是思考。它只是【比較安靜】，不是比較難找。
+ *
+ * 🪦 而這一段話寫在這裡，**而樣式違反了它**（2026-09-15）：
+ * `#888` 的字配 `#3a3a3a` 的框、12px、透明底——一個學生逐字說
+ * 「我完全不知道**那個東西可以按**」。
+ *
+ * > **一個「不准藏起來」的規矩，如果沒有人量它的對比度，
+ * > 它會被樣式悄悄違反——而註解仍然理直氣壯地寫在那裡。**
+ *
+ * ⚠️ 調的是「看不看得出來是一顆按鈕」，不是「跟主要動作一樣搶眼」：
+ * 它仍然比 `.console-predict-btn` 安靜。 */
 .console-predict-skip {
-  border: 1px solid #3a3a3a;
-  background: transparent;
-  color: #888;
+  border: 1px solid #7a7a7a;
+  background: #2f2f2f;
+  color: #d4d4d4;
+}
+
+.console-predict-skip:hover:not(:disabled) {
+  border-color: #7a7a7a;
+  background: #343434;
+  color: #e8e8e8;
 }
 
 .console-predict-btn:disabled,

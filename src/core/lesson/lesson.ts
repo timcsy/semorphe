@@ -689,7 +689,24 @@ export function summarizeComparison(result: OutputComparison): string | undefine
   if (result.passed) return undefined
   const extra = result.lines.filter((l) => l.kind === 'extra').length
   const missing = result.lines.filter((l) => l.kind === 'missing').length
-  const different = result.lines.filter((l) => l.kind === 'different').length
+  const diffs = result.lines.filter((l) => l.kind === 'different')
+  const different = diffs.length
+  // 🔴 **只有一行不一樣的時候，逐字告訴他差在哪**（2026-09-15）。
+  //
+  //    兩個學生分別逐字說：「一直卡在中間的空格」「就算只是一個空格沒打到
+  //    都不行」。而在此之前這一支遇到「行內容不同」**什麼都不說**
+  //    ——畫面上是兩行【看起來一模一樣】的東西並排，而裁判說不對。
+  //
+  // > **一個「你錯了」而看不出錯在哪的回饋，教的是「這個工具有脾氣」。**
+  //
+  // ⚠️ **只在【一行】不同時說**：兩行以上就指不出「差在哪」了，
+  //    而一個講錯位置的診斷比沒有診斷糟。
+  if (different === 1 && extra === 0 && missing === 0) {
+    const d = diffs[0]
+    const at = result.lines.indexOf(d) + 1
+    const how = describeLineDiff(d.got ?? '', d.want ?? '')
+    return how === undefined ? undefined : `第 ${at} 行${how}`
+  }
   if (different > 0) return undefined
   if (extra > 0 && missing === 0) {
     return `你多印了 ${extra} 行——把最後${extra === 1 ? '一' : ` ${extra} `}行拿掉就對了`
@@ -698,6 +715,37 @@ export function summarizeComparison(result: OutputComparison): string | undefine
     return `你少印了 ${missing} 行——還差最後${missing === 1 ? '一' : ` ${missing} `}行`
   }
   return undefined
+}
+
+/**
+ * **兩行只差在哪裡**——給的是位置與種類，不是「不一樣」。
+ *
+ * 🔴 空白那一種要**特別講**：畫面上它看不見，而學生會一直重讀那兩行找不同。
+ *
+ * ⚠️ 位置用「某某後面」而不是「第 N 個字」——⚠️ 中文字與英文字在畫面上
+ * 一個寬一個窄，數字元對使用者沒有意義，而**他看得到的是那段文字**。
+ */
+export function describeLineDiff(got: string, want: string): string | undefined {
+  if (got === want) return undefined
+  const bare = (s: string): string => s.replace(/\s/g, '')
+  let i = 0
+  while (i < got.length && i < want.length && got[i] === want[i]) i++
+  const lead = want.slice(Math.max(0, i - 8), i)
+  const where = lead === '' ? '最前面' : `「${lead}」後面`
+  const count = (n: number): string => (n === 1 ? '一個' : ` ${n} 個`)
+
+  if (bare(got) === bare(want)) {
+    const gs = got.length - bare(got).length
+    const ws = want.length - bare(want).length
+    if (ws > gs) return `只差在空白——${where}少了${count(ws - gs)}空格`
+    if (gs > ws) return `只差在空白——${where}多了${count(gs - ws)}空格`
+    return `只差在空白的位置——${where}`
+  }
+  const g = got.slice(i, i + 10)
+  const w = want.slice(i, i + 10)
+  if (g === '') return `${where}少了「${w}」`
+  if (w === '') return `${where}多了「${g}」`
+  return `${where}開始不一樣：你印的是「${g}」，要的是「${w}」`
 }
 
 export function parseLesson(id: string, raw: unknown): Lesson {

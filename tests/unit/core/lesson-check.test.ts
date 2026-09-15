@@ -5,7 +5,7 @@
  * ——整串比只答得出對錯，而**「錯」不是可以行動的資訊**。
  */
 import { describe, it, expect } from 'vitest'
-import { compareOutput, summarizeComparison, parseLesson, taskById, FREE_PRACTICE } from '../../../src/core/lesson/lesson'
+import { compareOutput, summarizeComparison, describeLineDiff, parseLesson, taskById, FREE_PRACTICE } from '../../../src/core/lesson/lesson'
 
 describe('compareOutput：逐行比對', () => {
   it('一模一樣 → 過', () => {
@@ -206,5 +206,62 @@ describe('summarizeComparison：把「差在哪」講成一句話', () => {
 
   it('過了 → 不說話', () => {
     expect(summarizeComparison(compareOutput('a\n', 'a\n'))).toBeUndefined()
+  })
+})
+
+/**
+ * **只差一個空白的時候，要指得出來。**
+ *
+ * 兩個學生分別逐字說：「一直卡在中間的空格」「就算只是一個空格沒打到都不行」。
+ * 而在此之前裁判遇到「行內容不同」**什麼都不說**——畫面上是兩行看起來
+ * 一模一樣的東西並排。
+ */
+describe('describeLineDiff：差在哪一個字', () => {
+  it('🔴 少了一個空格（第 4 課那一題的原型）', () => {
+    expect(describeLineDiff('你打的是7', '你打的是 7'))
+      .toBe('只差在空白——「你打的是」後面少了一個空格')
+  })
+
+  it('多了一個空格', () => {
+    expect(describeLineDiff('你打的是  7', '你打的是 7'))
+      .toBe('只差在空白——「你打的是 」後面多了一個空格')
+  })
+
+  it('少了兩個空格 → 數字要對', () => {
+    expect(describeLineDiff('a b', 'a   b')).toContain('少了 2 個空格')
+  })
+
+  it('空白在最前面', () => {
+    expect(describeLineDiff('abc', ' abc')).toBe('只差在空白——最前面少了一個空格')
+  })
+
+  it('不是空白的差別 → 指出位置與兩邊各是什麼', () => {
+    expect(describeLineDiff('答案是 5', '答案是 6'))
+      .toBe('「答案是 」後面開始不一樣：你印的是「5」，要的是「6」')
+  })
+
+  it('整段少了一截', () => {
+    expect(describeLineDiff('Hello', 'Hello!')).toBe('「Hello」後面少了「!」')
+  })
+
+  it('一模一樣 → 不說話', () => {
+    expect(describeLineDiff('a', 'a')).toBeUndefined()
+  })
+})
+
+describe('summarizeComparison：一行不同的時候接上去', () => {
+  it('🔴 只有一行差一個空格 → 說得出第幾行、差在哪', () => {
+    const r = compareOutput('你打的是7\n', '你打的是 7\n')
+    expect(summarizeComparison(r)).toBe('第 1 行只差在空白——「你打的是」後面少了一個空格')
+  })
+
+  it('⚠️ 兩行以上不同 → 不說話（指不出「差在哪」）', () => {
+    const r = compareOutput('1\n2\n', '3\n4\n')
+    expect(summarizeComparison(r), '🔴 一個講錯位置的診斷比沒有診斷糟').toBeUndefined()
+  })
+
+  it('行數也不對 → 仍然走行數那一條', () => {
+    const r = compareOutput('a\nb\n', 'a\n')
+    expect(summarizeComparison(r)).toContain('多印了 1 行')
   })
 })
