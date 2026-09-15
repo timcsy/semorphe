@@ -87,8 +87,13 @@ describe('第一百二十條護欄：打暗要說得出換哪一課', () => {
   it('🔴 按過「不用」就不再說同一句', () => {
     expect(barSrc, '🔴 沒有記住被按掉的建議 → 它會變成一條趕不走的橫幅')
       .toContain('this.dismissed')
+    // ⚠️ 鍵裡**要有那一課**——不然學生走到別課的範圍時問不出第二次。
     expect(barSrc, '🔴 鍵不是「建議換到哪一課」→ 學生走到別課的範圍時問不出第二次')
-      .toMatch(/const key = n\.suggestion\?\.lessonId/)
+      .toMatch(/const key = [^\n]*n\.suggestion\?\.lessonId/)
+    // 🔴 而它**也要有「這是哪一種」**（2026-09-15）：多了「冷開指路」那一種之後，
+    //    按掉其中一種不該讓另一種一起消失——它們說的是不同的事。
+    expect(barSrc, '🔴 兩種指路共用一個鍵 → 按掉一種會讓另一種也不見')
+      .toMatch(/const key = `\$\{n\.kind/)
   })
 
   /**

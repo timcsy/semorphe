@@ -34,7 +34,23 @@ const msg = (key: string, fallback: string): string =>
   (Blockly.Msg as Record<string, string>)[key] || fallback
 
 export interface LessonNudge {
-  /** 現在釘著哪一課的**名字**（給人看的） */
+  /**
+   * 這一條在說哪一件事——**兩件事共用一條線，而文案完全不同**。
+   *
+   * ```
+   * 'scope'  他走得比課快：有積木被打暗       （原本唯一的那一種）
+   * 'start'  他【還沒選課】而畫布是空的        （2026-09-15）
+   * ```
+   *
+   * 🔴 `'start'` 從哪來：整班回饋裡兩個學生說「找不到方塊」「最難的是找積木，
+   * 眼睛快花了」，而他們**沒有從課程點進來**——於是拿到的是完整工具箱
+   * （實測 12 個分類、196 顆）。
+   *
+   * > **問題不是那 196 顆太多——自由練習本來就該有全部。
+   * > 問題是他不知道有一條帶路的，而那條路的入口在最下面那條狀態列裡。**
+   */
+  readonly kind?: 'scope' | 'start'
+  /** 現在釘著哪一課的**名字**（給人看的）——`'start'` 時是空字串 */
   readonly currentTitle: string
   /** 有幾種積木被打暗 */
   readonly dimmedCount: number
@@ -70,18 +86,22 @@ export class LessonNudgeBar {
   }
 
   show(n: LessonNudge): void {
-    const key = n.suggestion?.lessonId ?? '(沒有建議)'
+    const key = `${n.kind ?? 'scope'}|${n.suggestion?.lessonId ?? '(沒有建議)'}`
     if (this.dismissed.has(key)) { this.hide(); return }
 
     this.el.replaceChildren()
     const text = document.createElement('span')
     text.className = 'lesson-nudge-text'
     // 🔴 **主詞是那一課，不是「你用錯了」**——見檔頭。
-    text.textContent = n.suggestion
-      ? msg('LESSON_NUDGE_SWITCH', '〈{next}〉教的就是你正在用的東西（現在有 {n} 種積木是淡的）')
-        .replace('{next}', n.suggestion.title).replace('{n}', String(n.dimmedCount))
-      : msg('LESSON_NUDGE_BEYOND', '有 {n} 種積木不在〈{cur}〉裡——所以它們是淡的')
-        .replace('{n}', String(n.dimmedCount)).replace('{cur}', n.currentTitle)
+    text.textContent = n.kind === 'start'
+      // ⚠️ 不說「積木太多」——那會讓他以為自己選錯了。說的是「有一條帶路的」。
+      ? msg('LESSON_NUDGE_START', '第一次來？〈{next}〉會一步一步帶你，積木盤也會只留這一課要用的。')
+        .replace('{next}', n.suggestion?.title ?? '第 1 課')
+      : n.suggestion
+        ? msg('LESSON_NUDGE_SWITCH', '〈{next}〉教的就是你正在用的東西（現在有 {n} 種積木是淡的）')
+          .replace('{next}', n.suggestion.title).replace('{n}', String(n.dimmedCount))
+        : msg('LESSON_NUDGE_BEYOND', '有 {n} 種積木不在〈{cur}〉裡——所以它們是淡的')
+          .replace('{n}', String(n.dimmedCount)).replace('{cur}', n.currentTitle)
     this.el.appendChild(text)
 
     const button = (label: string, run: () => void, primary = false): void => {
@@ -93,9 +113,14 @@ export class LessonNudgeBar {
     }
     if (n.suggestion) {
       const s = n.suggestion
-      button(msg('LESSON_NUDGE_GO', '換過去'), () => { this.hide(); n.onSwitch(s.lessonId) }, true)
+      button(
+        n.kind === 'start' ? msg('LESSON_NUDGE_BEGIN', '從這一課開始') : msg('LESSON_NUDGE_GO', '換過去'),
+        () => { this.hide(); n.onSwitch(s.lessonId) }, true)
     }
-    button(msg('LESSON_NUDGE_FREE', '自由練習'), () => { this.hide(); n.onFreePractice() })
+    // ⚠️ `'start'` 不給「自由練習」——他**已經在**自由練習了
+    if (n.kind !== 'start') {
+      button(msg('LESSON_NUDGE_FREE', '自由練習'), () => { this.hide(); n.onFreePractice() })
+    }
     // ⚠️ 「不用」要在最後，而且**不是主要按鈕**——它是一條建議，不是一道門。
     button(msg('LESSON_NUDGE_DISMISS', '不用'), () => { this.dismissed.add(key); this.hide() })
 

@@ -1887,6 +1887,12 @@ export class App {
     void (async (): Promise<void> => {
       if (await this.seedCurrentTask()) return
       await this.seedScaffoldIfEmpty()
+      // 🔴 **冷開也要指一條路**（2026-09-15）——`markOutOfScopeBlocks` 在這條路上
+      //    從來沒有被叫到，於是「還沒選課」那一種指路條**永遠不會出現**。
+      //
+      // > **一條只在「某件事發生時」才更新的提示，在那件事從不發生的那條路上
+      // > 等於不存在——而它不會報錯，它只是安靜。**
+      this.markOutOfScopeBlocks()
     })()
   }
 
@@ -2482,7 +2488,31 @@ export class App {
     const bar = this.lessonNudgeBar
     if (!bar) return
     const lesson = this.currentLesson
-    if (!lesson || dimmed.size === 0) { bar.hide(); return }
+    // 🔴 **還沒選課而畫布是空的 → 指一條路**（2026-09-15）。
+    //
+    //    整班回饋裡兩個學生說「找不到方塊」「最難的是找積木，眼睛快花了」
+    //    ——而他們**沒有從課程點進來**，於是拿到完整工具箱（實測 12 個分類、196 顆）。
+    //
+    // > **問題不是那 196 顆太多——自由練習本來就該有全部。
+    // > 問題是他不知道有一條帶路的，而那條路的入口在最下面那條狀態列裡。**
+    //
+    // ⚠️ **畫布是空的才說**：他已經動手做東西了就不要插嘴。
+    if (!lesson) {
+      if (this.hasStudentWork()) { bar.hide(); return }
+      const first = lessonsOfTrack(trackOf(this.currentTarget.id))[0]
+        ?? lessonsOfTrack('cpp-beginner')[0]
+      if (!first) { bar.hide(); return }
+      bar.show({
+        kind: 'start',
+        currentTitle: '',
+        dimmedCount: 0,
+        suggestion: { lessonId: first.id, title: first.title },
+        onSwitch: (id: string) => this.selectLesson(id),
+        onFreePractice: () => { /* 他已經在自由練習了——見 `kind: 'start'` */ },
+      })
+      return
+    }
+    if (dimmed.size === 0) { bar.hide(); return }
     const track = lessonsOfTrack(trackOf(lesson.id))
     const hit = suggestLessonFor([...dimmed], track, lesson.id)
     bar.show({
