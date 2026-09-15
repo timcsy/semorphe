@@ -63,6 +63,11 @@ import { printReport, assertCorpus, assertRatchet } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { StylePreset, SemanticNode } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
+import { setProgramScaffold, setScaffoldConfig } from '../../src/core/projection/code-generator'
+import { createPopulatedRegistry } from '../../src/languages/cpp/std'
+import { CppScaffold } from '../../src/languages/cpp/cpp-scaffold'
+import { createNode } from '../../src/core/semantic-tree'
+import { buildProgram } from '../../src/components/cpp/program/lift'
 import pythonStyle from '../../src/languages/python/styles/python.json'
 
 /** C++ 那側是**正向錨點**——它一直是對的，而少了它這條護欄只保護一個語言。 */
@@ -143,6 +148,46 @@ describe('第五十六條護欄：積木↔程式碼的對應表指得準嗎', (
     ]
     expect(misaligned(root, good, 'r'), '一個「什麼都報」的判定也會過注入① —— 這一支擋的是它')
       .toEqual([])
+  })
+
+  /**
+   * 🔴 **骨架由產生器【合成】的那一條路**（2026-09-15）。
+   *
+   * 使用者：「積木跟程式碼好像 highlight 的地方對不上，會差一行」。
+   * 量出來：積木那側改一個字之後，「印出」那顆指到 `int main()` 那一行。
+   *
+   * 根因在 `cpp:program` 的產生器——它算行號的那一句
+   * （`trackOwnText(ctx, code)`）只算到 preamble 為止，
+   * **而 `int main()` 那一行 是在它之後才接上去的**。
+   *
+   * > **一個共用的行號計數器，它的正確性靠「每一段自己記得報數」。
+   * > 而漏報的那一段，產出的程式碼一個字都不會錯。**
+   *
+   * ⚠️ 而上面那三個 C++ 探針**一個都走不到這裡**：它們的原始碼都自己帶著
+   * `int main()`，於是走的是「樹裡已經有框」那條 legacy 路徑。
+   *
+   * > **一條護欄的探針如果都長同一個樣子，它保護的是那個樣子，不是那個性質。**
+   */
+  it('★ 骨架是產生器合成的時候，對應也要指到自己那一行', () => {
+    setProgramScaffold(new CppScaffold(createPopulatedRegistry()))
+    setScaffoldConfig({ scaffoldDepth: 0 })
+    try {
+      const str = createNode('cpp:literal_string', { value: 'hi' })
+      const print = createNode('cpp:print', {}, { args: [str] })
+      const tree = buildProgram([print])
+      const { code, mappings } = generateCodeWithMapping(tree, 'cpp', apcs as unknown as StylePreset)
+      const lines = code.split('\n')
+      // ★ 入口條件：骨架真的被合成出來了，不然這一條在驗另一種樹
+      expect(code, '🔴 沒有合成出 `int main()` → 這一條測不到那條路').toContain('int main()')
+      const m = mappings.find((x) => x.nodeId === print.id)
+      expect(m, '🔴 「印出」沒有對應').toBeDefined()
+      expect(
+        lines[m!.startLine],
+        `🔴 「印出」指到第 ${m!.startLine} 行，而那一行是 ${JSON.stringify(lines[m!.startLine])}`,
+      ).toContain('cout')
+    } finally {
+      setScaffoldConfig({ scaffoldDepth: 0 })
+    }
   })
 
   it('★ 入口條件：語料與探針真的餵進來了', () => {

@@ -193,6 +193,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         if (topLevel.length > 0) {
           code += generateBody(topLevel, ctx)
           code += '\n'
+          trackOwnText(ctx, '\n')   // ⚠️ 這一行空白也要算——見下面那段
         }
 
         // 進入點 ＋ 本體 ＋ 收尾——**逐顆函式**，不是把四段攤平。
@@ -222,12 +223,37 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         } else {
           // 鬆散的語句只有**一個**去處——由宣告指定（Arduino 是 `loop`）
           const host = entryFns.find((f) => f.hostsBody) ?? entryFns[0]
-          code += entryFns.map((f) => {
-            let block = f.open.map((l) => l.code + '\n').join('')
+          // 🔴 **進入點那一行也要算進行號**（2026-09-15）。
+          //
+          //    上面那句 `trackOwnText(ctx, code)` 只算到 preamble 為止，
+          //    而 `int main() {` 是**在它之後**才接上去的——於是本體裡的
+          //    每一顆都少一行：使用者點「印出」，反白跑到 `int main() {`。
+          //
+          //    ⚠️ 症狀只在【骨架是合成的】那條路上出現（積木→程式碼、
+          //    而樹裡沒有 `func_def`）。從程式碼那一側進來時對照表是
+          //    lift 給的，一直都對——所以它看起來像「有時候才歪」。
+          //
+          // > **一個共用的行號計數器，它的正確性靠「每一段自己記得報數」。
+          // > 而漏報的那一段，產出的程式碼一個字都不會錯。**
+          //
+          // （第五十六條護欄為同一族缺陷立過：「複合產生器必須自己把標頭
+          //   那一行算進去」——而它的探針都從 `int main()` 開始，
+          //   **沒有一個走得到「骨架由產生器合成」這條路**。）
+          const parts: string[] = []
+          for (let i = 0; i < entryFns.length; i++) {
+            const f = entryFns[i]
+            // ⚠️ `join('\n')` 會在兩顆函式之間多一行——第二顆起要先算它
+            if (i > 0) trackOwnText(ctx, '\n')
+            const open = f.open.map((l) => l.code + '\n').join('')
+            trackOwnText(ctx, open)
+            let block = open
             if (f === host) block += generateBody(insideEntry, indented(ctx))
-            block += f.close.map((l) => l.code + '\n').join('')
-            return block
-          }).join('\n')
+            const close = f.close.map((l) => l.code + '\n').join('')
+            trackOwnText(ctx, close)
+            block += close
+            parts.push(block)
+          }
+          code += parts.join('\n')
         }
 
         return code
