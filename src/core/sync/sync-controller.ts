@@ -51,6 +51,7 @@ import { generateCodeWithMapping } from '../projection/code-generator'
 
 import type { CodeMapping, BlockMapping } from '../projection/code-generator'
 import { renderToBlocklyState } from '../projection/block-renderer'
+import { shiftMappings } from '../projection/patch-shift'
 import { Lifter } from '../lift/lifter'
 import { SemanticBus } from './semantic-bus'
 import { abstractComponentOf, variableTypeOf } from '../language-executors'
@@ -388,10 +389,36 @@ export class SyncController {
     this.codePatcherFn = fn
   }
 
-  /** Patch code with missing dependencies (e.g. #include). Returns patched code or null if unchanged. */
+  /**
+   * Patch code with missing dependencies (e.g. #include). Returns patched code or null if unchanged.
+   *
+   * 🔴 **補完要把對照表一起挪**（2026-09-15）——使用者：「積木跟程式碼
+   * highlight 的地方對不上，會差一行」。
+   *
+   * 對照表描述的是**補之前**那份文字；補丁器在最上面塞一行 `#include` 之後，
+   * 它下面的每一筆都早一行。實測：「印出」那顆積木亮在 `return 0;` 上。
+   *
+   * ⚠️ 而**組裝點那個 wrapper 早就算過同一個位移**（`linesDelta`，給游標保位用）
+   * ——它只是沒有交給對照表。
+   *
+   * > **同一個位移被算出來給 A 用，而 B 也需要它
+   * > ——那是「已經知道答案而沒有交出去」。**
+   *
+   * ⚠️ 挪完要**發出去**：視圖各自留了一份（`monaco-panel` 的 `codeMappings`），
+   * 不發的話畫面上用的還是舊的那一份。而這一則**不帶 `blockState`**
+   * ——與 `republishScaffold` 同一個形狀，不重畫、不打斷拖曳、不動還原堆。
+   */
   patchMissingDependencies(code: string): string | null {
     if (!this.codePatcherFn || !this.currentTree) return null
-    return this.codePatcherFn(code, this.currentTree)
+    const patched = this.codePatcherFn(code, this.currentTree)
+    if (patched === null || patched === code) return patched
+    this.codeMappings = shiftMappings(code, patched, this.codeMappings)
+    this.bus.emit('semantic:update', {
+      tree: this.currentTree, code: patched, source: 'resync',
+      mappings: this.codeMappings, scaffold: this.scaffoldNotice(this.currentTree),
+      derivedNodeIds: this.derivedIds,
+    })
+    return patched
   }
 
   /** Set block mappings from external source (e.g., blockly-panel extraction) */
@@ -552,7 +579,10 @@ export class SyncController {
       // > 在下一次「從真相重新投影」的時候就會消失。**
       const patched = this.codePatcherFn?.(gen.code, tree) ?? null
       const code = patched ?? gen.code
-      const mappings = gen.mappings
+      // 🔴 **補丁器插了幾行，對照表就要挪幾行**——見 `patchMissingDependencies`。
+      //    這一條路上的樹沒有自動補的 `#include`（`dropDerived` 摘掉了），
+      //    於是產出的文字會被補丁器加一行，而對照表停在補之前。
+      const mappings = patched === null ? gen.mappings : shiftMappings(gen.code, patched, gen.mappings)
       this.codeMappings = mappings
 
       // Use blockMappings from extraction if provided
