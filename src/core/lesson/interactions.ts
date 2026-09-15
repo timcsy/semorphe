@@ -52,6 +52,13 @@ export const INTERACTIONS: readonly Interaction[] = [
     alt: '點狀態列右邊的版面，選「對照」，畫面變成程式碼與積木兩欄',
   },
   {
+    id: 'gear',
+    label: '點齒輪，關掉「初始值」',
+    clip: `${BASE}clips/clip-gear.webm`,
+    alt: '點宣告積木左上角的齒輪，浮出的小視窗裡把「初始值」的勾點掉，'
+      + '積木上的等號消失，程式碼那一邊從 int n = 0; 變成 int n;',
+  },
+  {
     id: 'run',
     label: '按執行，看主控台',
     clip: `${BASE}clips/clip-run.webm`,

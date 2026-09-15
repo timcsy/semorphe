@@ -181,10 +181,19 @@ describe('第一百二十八條護欄：參考解答不得用到還沒教過的�
         const sd = path.join(dir, d, 'solutions')
         const have = new Set(fs.existsSync(sd)
           ? fs.readdirSync(sd).map((f) => f.replace(/\.[^.]+$/, '')) : [])
+        // 🔴 **起點也算交件**（2026-09-14）——一道有 `starters/` 的題目
+        //    同樣有一份真的程式碼被驗過，而第八十三條護欄**禁止**它同時有解答
+        //    （「一份 .cpp 到底是該壞的起點還是該對的答案，答案不在檔案裡」）。
+        //
+        // > **一條數「誰沒交」的規則，如果它只認得一種交法，
+        // > 那它會在另一種交法出現的那天，把交了的人算成沒交。**
+        const st = path.join(dir, d, 'starters')
+        const started = new Set(fs.existsSync(st)
+          ? fs.readdirSync(st).map((f) => f.replace(/\.[^.]+$/, '')) : [])
         for (const t of JSON.parse(fs.readFileSync(j, 'utf8')).tasks ?? []) {
-          // ⚠️ 「跟著做」的解答是課文的〈完成的樣子〉；除錯題的起點在 `starters/`
-          if (t.id === 'follow' || t.kind === 'debug') continue
-          if (!have.has(t.id)) missing++
+          // ⚠️ 「跟著做」的解答是課文的〈完成的樣子〉
+          if (t.id === 'follow') continue
+          if (!have.has(t.id) && !started.has(t.id)) missing++
         }
       }
     }

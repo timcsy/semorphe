@@ -2,7 +2,7 @@ import { msg } from '../../core/messages'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent } from '../../core/sync/view-host'
 import type { SemanticBus } from '../../core/sync/semantic-bus'
 import { revealForOutput, type ConsoleSurface } from '../../core/host/console-surface'
-import type { OutputComparison } from '../../core/lesson/lesson'
+import { summarizeComparison, type OutputComparison } from '../../core/lesson/lesson'
 
 export type ConsoleSignal = 'SIGINT' | 'EOF'
 
@@ -309,6 +309,15 @@ export class ConsolePanel implements ViewHost {
     box.appendChild(head)
 
     if (!result.passed) {
+      // 🔴 **一句話說出差在哪**——那張表的 `—` 學生看不懂，而老師一直在替它翻譯
+      //    （使用者 2026-09-15：「我都要跟學生說把最後一行拿掉才會通過」）。
+      const hint = summarizeComparison(result)
+      if (hint !== undefined) {
+        const h = document.createElement('div')
+        h.className = 'console-verdict-hint'
+        h.textContent = hint
+        box.appendChild(h)
+      }
       const table = document.createElement('div')
       table.className = 'console-verdict-diff'
       const cell = (text: string, cls: string): HTMLElement => {

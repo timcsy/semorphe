@@ -932,6 +932,12 @@ html, body {
   margin-bottom: 6px;
 }
 
+.console-verdict-hint {
+  color: #ffd479;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
 .console-verdict-diff {
   display: grid;
   grid-template-columns: 1fr 1fr;

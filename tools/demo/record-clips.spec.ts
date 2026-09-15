@@ -98,6 +98,50 @@ async function pickLayout(page: Page, id: string): Promise<void> {
   await page.waitForFunction((v) => document.body.getAttribute('data-layout') === v, id)
 }
 
+/**
+ * **那顆齒輪**——關掉「初始值」，`int n = 0;` 變成 `int n;`。
+ *
+ * 🔴 使用者 2026-09-15 轉述：第 4 課那一段用 ASCII 圖畫了那個小視窗，
+ * 而「**有同學還是看不懂**」。
+ *
+ * > **一張用文字排出來的操作圖，教的是【它長什麼樣】；
+ * > 而學生要知道的是【手要往哪裡點】——那件事只有影片答得出來。**
+ *
+ * ⚠️ 這一段是**第 4 課**要的，不是第 1 課——它是全課程第一次非用齒輪不可的地方。
+ */
+test('clip-gear', async ({ page }) => {
+  test.setTimeout(240_000)
+  await boot(page)
+  await typeBody(page, 'int n = 0;')
+
+  // 齒輪在宣告那顆積木的左上角
+  const gear = page.locator('.blocklyIconGroup').first()
+  await gear.hover()
+  await settle(page, 900)
+  await gear.click()
+  await settle(page, 1400)
+
+  // 點掉「初始值」那個勾——⚠️ 用真的點擊，這一段**教的就是手往哪裡點**
+  //
+  // 🪦 第一版寫 `.first()`，而它抓到的是**飛出盤裡那顆 0×0 的樣板**
+  //    （實測：`✓` 在 DOM 裡有兩顆，@0,0 那顆看不見）。點不到，於是落到
+  //    一條「直接翻欄位」的退路——程式碼會變，而**影片裡沒有人在點**。
+  //
+  // > **一段示範如果靠程式繞過使用者要走的那一步，
+  // > 它示範的就不再是那一步。**
+  const check = page.locator('.blocklyBubbleCanvas text').filter({ hasText: '✓' }).last()
+  await check.hover()
+  await settle(page, 800)
+  await check.click()
+  await settle(page, 2600)
+
+  // 🔴 程式碼真的少了那一段嗎——不然這一段在教一個沒有效果的操作
+  const code = await codeNow(page)
+  expect(code, `🔴 取消勾選之後程式碼沒變（量到：${code.slice(0, 80)}）`).toContain('int n;')
+  expect(code, '🔴 `= 0` 還在').not.toContain('int n = 0')
+  await settle(page, 900)
+})
+
 test('clip-drag', async ({ page }) => {
   test.setTimeout(120_000)
   await boot(page)

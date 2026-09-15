@@ -5,7 +5,7 @@
  * ——整串比只答得出對錯，而**「錯」不是可以行動的資訊**。
  */
 import { describe, it, expect } from 'vitest'
-import { compareOutput, parseLesson, taskById, FREE_PRACTICE } from '../../../src/core/lesson/lesson'
+import { compareOutput, summarizeComparison, parseLesson, taskById, FREE_PRACTICE } from '../../../src/core/lesson/lesson'
 
 describe('compareOutput：逐行比對', () => {
   it('一模一樣 → 過', () => {
@@ -172,5 +172,39 @@ describe('taskById', () => {
   it('沒有課、或查不到的 id → undefined', () => {
     expect(taskById(undefined, 'ex1')).toBeUndefined()
     expect(taskById(l, '不存在')).toBeUndefined()
+  })
+})
+
+/**
+ * **那句翻譯**——老師講了一整個學期的那一句，現在由裁判自己說。
+ *
+ * 使用者 2026-09-15：「因為之前是輸出四行，所以到這題很常會被判斷多一行，
+ * **我都要跟學生說把最後一行拿掉**才會通過」。
+ */
+describe('summarizeComparison：把「差在哪」講成一句話', () => {
+  it('🔴 多印一行 → 說「把最後一行拿掉」', () => {
+    const r = compareOutput('3\n3.9\nA\n1\n', '3\n3.9\nA\n')
+    expect(r.passed).toBe(false)
+    expect(summarizeComparison(r)).toBe('你多印了 1 行——把最後一行拿掉就對了')
+  })
+
+  it('多印兩行 → 數字跟著變', () => {
+    const r = compareOutput('a\nb\nc\n', 'a\n')
+    expect(summarizeComparison(r)).toBe('你多印了 2 行——把最後 2 行拿掉就對了')
+  })
+
+  it('少印一行 → 說還差最後一行', () => {
+    const r = compareOutput('3\n3.9\n', '3\n3.9\nA\n')
+    expect(summarizeComparison(r)).toBe('你少印了 1 行——還差最後一行')
+  })
+
+  it('🔴 中間有一行不同 → 不說話（那是錯位，不是多一行）', () => {
+    // ⚠️ 講錯的診斷比沒有診斷糟：學生會照著它刪掉不該刪的東西
+    const r = compareOutput('3\n9.9\nA\nX\n', '3\n3.9\nA\n')
+    expect(summarizeComparison(r)).toBeUndefined()
+  })
+
+  it('過了 → 不說話', () => {
+    expect(summarizeComparison(compareOutput('a\n', 'a\n'))).toBeUndefined()
   })
 })

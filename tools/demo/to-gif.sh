@@ -54,3 +54,4 @@ mkdir -p assets/clips
 clip clip-drag
 clip clip-compare
 clip clip-run
+clip clip-gear

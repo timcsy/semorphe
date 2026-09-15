@@ -1867,7 +1867,12 @@ export class App {
     this.refreshStatusBar()
     this.restoreState()
     // 🔴 **restoreState 之後才種**——先種的話會被存檔蓋掉，而且會吃掉他的作品。
-    void this.seedScaffoldIfEmpty()
+    //    ⚠️ 順序：**先看這一題有沒有起點**（`?task=` 進來的那條路），
+    //    種了就不要再鋪一次骨架——`seedCurrentTask` 放上去的本來就含骨架。
+    void (async (): Promise<void> => {
+      if (await this.seedCurrentTask()) return
+      await this.seedScaffoldIfEmpty()
+    })()
   }
 
   /**
@@ -1936,6 +1941,71 @@ export class App {
     return (rest?.slots?.body ?? []).length > 0
   }
 
+  /**
+   * **這一題有起點的話，把它放上畫布。**
+   *
+   * ## 🔴 它從哪來（2026-09-14）
+   *
+   * 學生回報第 3 課〈先試試看〉「不太知道要幹嘛」。查證之後發現的比那句話大：
+   *
+   * ```
+   * 從【選單】挑題目    → 會種（arrange 打散、debug 放壞掉的起點）
+   * 從【課文頁按鈕】進來 → 不會種      ← 而那是 ?task=，是學生唯一走的那條
+   * ```
+   *
+   * 也就是說：**那 30 道「排回去」從課文點進去全部是空畫布**——
+   * 而它們是 2026-09-14 才補上的，補的時候只驗了選單那條路。
+   *
+   * > **一個功能如果只在「我測試時走的那條路」上成立，
+   * > 那它的驗收量的是我的習慣，不是使用者的路徑。**
+   *
+   * ⚠️ **只在畫布上沒有他的東西時才種**——URL 進來的時候存檔可能已經還原了，
+   * 而選單那條路是先問一句再種。兩條路都不得吃掉他寫到一半的東西。
+   */
+  /**
+   * **等到程式碼那一側真的投影出東西為止**（最多兩秒），回傳當時的程式碼。
+   *
+   * 🔴 它是「管線就緒了嗎」的**唯一**判準。空字串代表還沒好——而在那之前
+   * 呼叫 `syncCodeToBlocks` 會安靜地什麼都不做（不報錯、不回 false）。
+   *
+   * ⚠️ 而它**刻意不是一個固定秒數**：固定秒數是照當下那台機器校準的，
+   * 而這個 repo 的 e2e 已經因為那件事付過一次帳（見 `playwright.config.ts`）。
+   */
+  private async waitForFirstProjection(): Promise<string> {
+    for (let i = 0; i < 40; i++) {
+      const code = this.codeView?.getCode?.() ?? ''
+      if (code.trim() !== '') return code
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    return this.codeView?.getCode?.() ?? ''
+  }
+
+  private async seedCurrentTask(): Promise<boolean> {
+    const lesson = this.currentLesson
+    if (!lesson) return false
+    const task = taskById(lesson, this.currentTaskId)
+    if (!task) return false
+    /**
+     * ⚠️ **要等第一次投影**——`init()` 結束的當下同步管線還沒就緒，
+     * 而 `syncCodeToBlocks` 在那之前呼叫會**安靜地什麼都不做**。
+     *
+     * 🔴 實測抓到的樣子：第 3 課種得進去、第 10 課種不進去——同一支函式、
+     * 同一條路，差別只在那一課大一點、慢了幾百毫秒。
+     *
+     * > **一個「早了一點就失效而且不出聲」的呼叫，
+     * > 它會在某些課上成立、某些課上不成立——而那看起來像資料的問題。**
+     */
+    await this.waitForFirstProjection()
+    if (this.hasStudentWork()) return false
+    if (task.kind === 'arrange') { await this.seedArrange(lesson, task); return true }
+    // 🔴 判準是**「這一題有沒有起始檔」**，不是「它是不是除錯題」
+    //    ——那才是 `starters/` 真正在答的問題。
+    if (task.kind === 'debug' || starterFor(lesson.id, task.id) !== undefined) {
+      await this.seedDebug(lesson, task); return true
+    }
+    return false
+  }
+
   private async seedScaffoldIfEmpty(): Promise<void> {
     // 鷹架藏起來的課（前幾課）本來就不該看到它
     // 鷹架藏起來的課（前幾課）本來就不該看到它
@@ -1949,12 +2019,7 @@ export class App {
      * > **一個「我也知道那份骨架長什麼樣」的第二實作，
      * > 是把一個同步問題換成一個一致性問題。**
      */
-    let code = ''
-    for (let i = 0; i < 40; i++) {
-      code = this.codeView?.getCode?.() ?? ''
-      if (code.trim() !== '') break
-      await new Promise((r) => setTimeout(r, 50))
-    }
+    const code = await this.waitForFirstProjection()
     if (code.trim() === '') return
     // 🔴 等的途中他可能已經動手了——再問一次真實那一側
     if ((this.syncController?.getCurrentTree()?.slots?.body ?? []).length > 0) return
@@ -3425,14 +3490,30 @@ export class App {
           const picked = taskById(this.currentLesson, invoke.value ?? '')
           // ⚠️ **兩種題型都要先問一句**（`arrange` 與 `debug`）——它們都會
           //    把畫布換成一份【別人給的】程式碼，而那會蓋掉他寫到一半的東西。
-          if ((picked?.kind === 'arrange' || picked?.kind === 'debug') && this.currentLesson) {
-            const lesson = this.currentLesson
+          /**
+           * 🔴 **有起始檔的題目也要種**（2026-09-14）——不只 `debug`。
+           *
+           * 學生回報（第 3 課〈先試試看〉）：「到編輯器試試看不太知道要幹嘛」。
+           * 而課文寫著「**那一題的畫面上已經有 `int age = 16;`**」
+           * ——那一題**沒有起始檔**，畫布是空的。課文說了一件不存在的事。
+           *
+           * > **一句「畫面上已經有 X」如果沒有東西保證 X 真的在，
+           * > 它就是一份沒有人在維護的承諾——而學生是第一個發現的人。**
+           *
+           * 在此之前 `starters/` 只服務 `kind: 'debug'`。判準改成
+           * **「這一題有沒有起始檔」**，而不是「它是不是除錯題」
+           * ——那才是這個機制真正在答的問題。
+           */
+          const hasStarter = picked !== undefined && this.currentLesson !== undefined
+            && starterFor(this.currentLesson.id, picked.id) !== undefined
+          if ((picked?.kind === 'arrange' || picked?.kind === 'debug' || hasStarter) && this.currentLesson) {
             const go = (): void => {
               this.currentTaskId = picked.id
               this.publishControls()
               this.applySuggestedView(picked.view)
-              if (picked.kind === 'arrange') void this.seedArrange(lesson, picked)
-              else void this.seedDebug(lesson, picked)
+              // 🟢 **與 `?task=` 那條路共用同一支**——兩份判定會分岔，
+              //    而分岔的症狀是「從選單進去有東西、從課文頁進去沒有」。
+              void this.seedCurrentTask()
             }
             // 🔴 **問語義樹，不問面板**（同 `applyTemplate`）——「有沒有東西」
             //    是那份唯一真實的性質，不是某一個投影的性質。

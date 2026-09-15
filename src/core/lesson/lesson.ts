@@ -664,6 +664,42 @@ export function compareOutput(got: string, want: string): OutputComparison {
   return { passed: lines.every((l) => l.kind === 'same'), lines }
 }
 
+/**
+ * **一句話說出差在哪**——而它是那張表格看不懂的時候的那句話。
+ *
+ * ## 🔴 為什麼要有它
+ *
+ * `showVerdict` 的檔頭逐字寫著：
+ *
+ * > **回饋要說的是「你少了第 3 行」，不是「你答錯了」。**
+ *
+ * 而它自己**沒有做到**：畫面上只有一張並排的表，多出來的那一行在
+ * 「這一題要的」那一格寫著 `—`。使用者 2026-09-15 轉述：
+ *
+ * > 「因為之前是輸出四行，所以到這題很常會被判斷多一行，
+ * >   **我都要跟學生說把最後一行拿掉**才會通過」
+ *
+ * ——那句翻譯，老師講了一整個學期，而它本來就是裁判該說的話。
+ *
+ * ⚠️ **只在「行數對不上而其餘每一行都一樣」時說**：中間有一行不同的時候，
+ * 「多一行」是錯的診斷（是**錯位**，不是多），而一個講錯的診斷
+ * 比沒有診斷糟——學生會照著它去刪掉不該刪的東西。
+ */
+export function summarizeComparison(result: OutputComparison): string | undefined {
+  if (result.passed) return undefined
+  const extra = result.lines.filter((l) => l.kind === 'extra').length
+  const missing = result.lines.filter((l) => l.kind === 'missing').length
+  const different = result.lines.filter((l) => l.kind === 'different').length
+  if (different > 0) return undefined
+  if (extra > 0 && missing === 0) {
+    return `你多印了 ${extra} 行——把最後${extra === 1 ? '一' : ` ${extra} `}行拿掉就對了`
+  }
+  if (missing > 0 && extra === 0) {
+    return `你少印了 ${missing} 行——還差最後${missing === 1 ? '一' : ` ${missing} `}行`
+  }
+  return undefined
+}
+
 export function parseLesson(id: string, raw: unknown): Lesson {
   if (raw === null || typeof raw !== 'object') {
     throw new Error(`教案 ${id}：不是一個物件`)

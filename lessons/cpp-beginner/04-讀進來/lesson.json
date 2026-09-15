@@ -1,6 +1,10 @@
 {
   "title": "讀進來",
   "estimate": "20 分鐘",
+  "interactions": [
+    "gear"
+  ],
+  "_interactions_why": "🔴 第 4 課是全課程**第一次非用齒輪不可**的地方（`int n;` 要關掉「初始值」）。使用者 2026-09-15 轉述學生：課文那段用 ASCII 圖畫了那個小視窗，而「**有同學還是看不懂**」。\n⚠️ 而其餘的課仍然不宣告——操作說明抹在 69 課上會腐爛（見第 1 課的 `_interactions_why`）。這一段只掛在「第一次需要它」的那一課。",
   "pins": {
     "target": "cpp",
     "scaffold": "hidden"
