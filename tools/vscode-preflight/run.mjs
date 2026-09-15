@@ -536,6 +536,29 @@ const ok = !fatal && errors.length === 0 && failures.length === 0
 // CI 連紅三次才被發現（那三次的 log 裡每一行都是 🟢）。
 //
 // > **一個只在失敗時出聲的檢查，它的成功與「沒跑到最後」長得一樣。**
+// 🔴 **不通過的時候要說出【是哪一項】**（2026-09-15）。
+//
+// 在此之前它只印一句「🔴 預檢不通過」，而上面每一行都是 🟢
+// ——那是這個檔頭已經記過的形狀（「CI 連紅三次，那三次的 log 裡每一行都是 🟢」）。
+// 我在本機重跑了好幾次才知道該看哪一項。
+//
+// > **一句「不通過」而不說是哪一項，等於要求下一個人把整個條件式重跑一遍。**
+if (!ok) {
+  const terms = {
+    fatal: !fatal, errors: errors.length === 0, failures: failures.length === 0,
+    主控台在panel區, windowsOk, 積木畫布: blocks.積木畫布,
+    面板內控制項: blocks.面板內控制項 === 'slot-picker、clear-btn',
+    沒有工具列: !blocks.工具列, 畫布佔比: blocks.畫布佔比 >= 90,
+    控制項數: controlIds.length >= 5, 值域齊全, problemsSent,
+    沒有主控台分頁: !blocks.主控台分頁, 沒有變數分頁: !blocks.變數分頁,
+    工具箱分類: blocks.工具箱分類 >= 1, twoWay, untouched, sketchBlocks: sketchBlocks > 0,
+    沒有狀態列: !blocks.狀態列, phaseReached,
+    沒有程式碼編輯區: !blocks.程式碼編輯區, 沒有檔案按鈕: !blocks.檔案按鈕,
+    lifted: lifted > 0, media: !!assetBase.media, assets: !!assetBase.assets,
+  }
+  console.log('\n不合格的那幾項：', Object.entries(terms).filter(([, v]) => !v).map(([k]) => k).join('、') || '（每一項都過，而 ok 是 false？）')
+  console.log('   面板內控制項實際是：', JSON.stringify(blocks.面板內控制項))
+}
 console.log(ok ? '\n🟢 預檢通過' : '\n🔴 預檢不通過')
 
 await browser.close()
