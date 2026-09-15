@@ -435,6 +435,9 @@ html, body {
 
 #blockly-panel {
   background: #1e1e1e;
+  /* ⚠️ 指路條以**這一格**為基準浮著（見 `.lesson-nudge-bar`）——
+     少了這一行它會跑去貼在整欄的頂端，蓋住那一排 `slot-picker`。 */
+  position: relative;
 }
 
 #blockly-panel .injectionDiv {

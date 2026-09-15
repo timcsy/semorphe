@@ -76,3 +76,41 @@ test('★ 他已經動手做東西了 → 不要插嘴', async ({ page }) => {
   const b = await bar(page)
   expect(b.text, '🔴 他正在寫東西而它跳出來喊「第一次來？」').not.toContain('第一次來')
 })
+
+/**
+ * **浮起來的東西不准蓋住任何按得到的東西。**
+ *
+ * 🪦 這一條是 CI 教的（2026-09-15）：把指路條改成浮起來（不跟畫布分高度）之後，
+ * 它貼在**整欄的頂端**，蓋住了那一排 `slot-picker`
+ * ——`slot-view-picker` 三條 e2e 全部 `click` 逾時。
+ *
+ * > **把一個東西從排版流拿出來，它就不再跟旁邊的東西讓位
+ * > ——而它會蓋住的第一個，是它上面那一個。**
+ *
+ * ⚠️ 而上一刀我只驗了「它出現」與「它該閉嘴時閉嘴」，**沒有驗它擋到誰**。
+ */
+test('★ 指路條不得蓋住任何控制項', async ({ page }) => {
+  test.setTimeout(180_000)
+  await open_(page, '/')
+  const b = await bar(page)
+  expect(b.shown, '🔴 指路條沒出現 → 這一支測的不是那條路').toBe(true)
+
+  const covered = await page.evaluate(() => {
+    const nudge = document.querySelector('.lesson-nudge-bar') as HTMLElement
+    const r = nudge.getBoundingClientRect()
+    const hit: string[] = []
+    // 每一顆按得到的東西——它的中心點不得落在指路條的矩形裡
+    for (const el of [...document.querySelectorAll('button, .slot-picker, [role=button]')]) {
+      if (nudge.contains(el)) continue
+      const e = (el as HTMLElement).getBoundingClientRect()
+      if (e.width === 0 || e.height === 0) continue
+      const cx = e.left + e.width / 2
+      const cy = e.top + e.height / 2
+      if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) {
+        hit.push((el as HTMLElement).className || (el as HTMLElement).id || el.tagName)
+      }
+    }
+    return hit
+  })
+  expect(covered, '🔴 這幾顆按鈕被指路條蓋住了——它們會「點不到而逾時」：').toEqual([])
+})

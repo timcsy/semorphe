@@ -525,7 +525,16 @@ export function createAppLayout(
 
   // 🔴 **指路的那一條掛在積木上面**——它說的是那些被打暗的積木，
   //    所以它要在**看得到那些積木的地方**，不是在最下面的狀態列裡。
-  const lessonNudgeBar = new LessonNudgeBar(blocksColumn, blocklyContainer)
+  //
+  // 🪦 而它原本掛在**整個欄**（`blocksColumn`）上。2026-09-15 把它改成浮起來
+  //    （不跟畫布分高度）之後，它就貼在**整欄的頂端**——蓋住了那一排
+  //    `slot-picker`，於是 `slot-view-picker` 那三條 e2e 全部點不到而逾時。
+  //
+  // > **把一個東西從「排版流」拿出來，它就不再跟旁邊的東西讓位
+  // > ——而它會蓋住的第一個，是它上面那一個。**
+  //
+  // 🟢 掛進畫布容器裡：它蓋的是積木（那本來就是它要講的東西），不是欄的控制項。
+  const lessonNudgeBar = new LessonNudgeBar(blocklyContainer, blocklyContainer.firstChild)
 
   // 🔴 **`media` 不傳的話，Blockly 會去 `blockly-demo.appspot.com` 抓圖示與音效**
   // ——而離線時那些圖示會壞掉，壞得很安靜（只是變破圖，功能還在）。
