@@ -58,6 +58,23 @@ export function scaffoldNodeIds(tree: unknown, skeletonId: string): Set<string> 
   if (!root) return out
   const skeleton = skeletonById(skeletonId)
   for (const node of (root.slots?.body ?? []) as Node[]) {
+    // ⚠️ **這裡問的是身分，而嚴格說該問的是「誰放的」**——自動補的 `#include`
+    //    與學生自己放的那一顆身分相同，這一行分不出來。
+    //
+    //    🪦 2026-09-15 改過一版（問 `metadata.derived`），而**代價是課文的
+    //    18 張對照圖**：那裡的 `#include` 是從課文的程式碼 lift 回來的、
+    //    不帶那一格，於是變成實心的——而第 5 課逐字寫著「淡淡的、拖不動的那幾塊」。
+    //
+    // > **一個「誰放的」的判準，在【程式碼是別人給的】那個情境裡答不出來
+    // > ——而課文的對照圖正是那個情境。**
+    //
+    // 🟢 而使用者給了一刀更前面的：**ghost 的積木不出現在工具箱**
+    //    （`app.ts` 的 `toolboxComponents`）——於是「學生放了一顆而它被鎖住」
+    //    這條路今天**走不到**：鎖著的拿不到，拿得到的（深度 2+）沒有鎖。
+    //
+    // > **與其讓一個拿出來也動不了的東西「動得了」，不如不要給。**
+    //
+    // ⚠️ 完整的來由記在 [history/235]。
     if (isScaffoldComponent(node.componentId)) { addSubtree(node, out); continue }
     if (isFunctionDefinition(node.componentId) && entryFunctionOf(skeleton, node.properties?.name)) {
       out.add(node.id)

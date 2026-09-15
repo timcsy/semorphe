@@ -57,6 +57,37 @@ import { abstractComponentOf, variableTypeOf } from '../language-executors'
 import { isFunctionDefinition } from '../component/traits'
 // 🔴 「樹裡哪一塊是骨架」由**骨架宣告**回答（2026-08-28）——見 `EntryFunction`
 import { skeletonById, skeletonPresent } from '../skeleton'
+
+/**
+ * **系統推導出來的那幾顆的簽章**——身分＋屬性，串起來。
+ *
+ * 🔴 **不能拿 nodeId 當簽章**：增強器每次都重建那些節點，id 每次都不同，
+ * 於是簽章每一次都不一樣，而「只有變了才重畫」就變成「一律重畫」
+ * ——那正是這整段要避開的那件事。
+ */
+/**
+ * 摘除時的比對單位——🔴 **只比身分，不比屬性**。
+ *
+ * 🪦 第一版比 `componentId + JSON.stringify(properties)`，而它一次都沒中：
+ * 建構出來的那顆是 `{header:'iostream', local:false}`，而**從積木抽回來的
+ * 那顆屬性不逐字相同**（`local` 那一格的型別與有無都可能不一樣）。
+ *
+ * > **一個「逐字相同」的比對，跨過一次投影往返之後幾乎一定不成立
+ * > ——而它的失敗是安靜的。**
+ *
+ * ⚠️ 只比身分是安全的，因為推導出來的那幾顆**補在 `body` 最前面**，
+ * 而摘除做的是多重集相減：第一顆同身分的才扣，學生自己那一顆留得下來。
+ */
+function signatureOf(n: SemanticNode): string {
+  return n.componentId
+}
+
+function derivedKeyOf(tree: SemanticNode): string {
+  return (tree.slots.body ?? [])
+    .filter((n) => n.metadata?.derived === true)
+    .map(signatureOf)
+    .join('|')
+}
 // 🔴 「哪幾顆是骨架」的判定住在 core——**不要在這裡再寫一次**（`history/188`）
 import { scaffoldNodeIds } from '../scaffold-nodes'
 import type { SemanticUpdateEvent } from './view-host'
@@ -156,6 +187,46 @@ export class SyncController {
   private displayTreeEnhancer: ((tree: SemanticNode, visible: Set<string>, scaffoldVisible: boolean) => SemanticNode) | null = null
   /** 最後一次真的畫出去的那棵樹（增強器補過）——見 `getDisplayTree()`。 */
   private lastDisplayTree: SemanticNode | null = null
+  /**
+   * 上一次**系統推導出來的那幾顆**長什麼樣——見 `SemanticUpdateEvent.scaffoldChanged`。
+   *
+   * ⚠️ 記的是**身分＋屬性**，不是 nodeId：增強器每次重建，id 每次都不一樣，
+   * 拿 id 比的話它**每一次都說「變了」**，於是那個例外就變成「一律重畫」。
+   */
+  private lastDerivedKey = ''
+  /** 這一次 `enhanceDisplayTree` 有沒有讓那一組變了。 */
+  private derivedChanged = false
+  /**
+   * 上一次畫出去的那些**推導節點的簽章**——抽回來的時候要把它們摘掉。
+   *
+   * ## 🔴 為什麼需要它（2026-09-15）
+   *
+   * 自動補的 `#include` **只該活在顯示樹上**。而它一旦被畫到畫布上，
+   * 下一次 blocks→code 的抽取就會把它讀成**學生寫的**，於是它進了真相樹
+   * ——而在那之後沒有任何人記得它是誰放的。
+   *
+   * > **一顆只存在於投影上的節點，被畫出來的那一刻就有了變成真相的路徑
+   * > ——而那條路上不帶「誰放的」。**
+   *
+   * ⚠️ 這與上面 `identityBeforeDowngrade` 是**同一個形狀**：
+   * 視圖帶不動的那一格資訊，由這裡記著，讓那一步可逆。
+   *
+   * ## 🪦 而第一版記的是 **nodeId**，它一次都沒有中過
+   *
+   * 根因是 `BlocklyPanel.setNodeIdLookup` **零個呼叫者**——那支的說明寫著
+   * 「讓抽取沿用原本的 nodeId」，而 `_blockIdToNodeId` 永遠是 `null`，
+   * 於是「還原原本的 nodeId」那一段從來沒跑過。抽回來的 id **每次都是新的**。
+   *
+   * > **又一個宣告了而沒有人讀的東西——而這一次它讓我寫了一段
+   * > 在任何情況下都不會成立的比對，而那段比對【不會出聲】。**
+   *
+   * 所以記的是**身分＋屬性**，而摘的時候做**多重集相減**：推導的補在 `body`
+   * 最前面，扣掉前幾顆同簽章的就好。⚠️ 不能「同簽章的全扣」——學生自己
+   * 拉一顆一模一樣的 `#include <iostream>` 時，那會讓他的積木當場消失。
+   */
+  private derivedSignatures: string[] = []
+  /** 那幾顆的 nodeId——隨事件交給視圖，見 `SemanticUpdateEvent.derivedNodeIds`。 */
+  private derivedIds: string[] = []
 
   constructor(
     bus: SemanticBus,
@@ -293,6 +364,13 @@ export class SyncController {
     // > **一層「畫完之後蓋上去」的視覺，如果問的樹跟畫的樹不是同一棵，
     // > 它蓋不到那些只存在於畫的那棵上的東西。**
     this.lastDisplayTree = enhanced
+    // 🔴 **推導出來的那一組變了嗎**——積木面板要拿它當「不重畫自己的編輯」的例外。
+    const key = derivedKeyOf(enhanced)
+    this.derivedChanged = key !== this.lastDerivedKey
+    this.lastDerivedKey = key
+    const derivedNodes = (enhanced.slots.body ?? []).filter((n) => n.metadata?.derived === true)
+    this.derivedSignatures = derivedNodes.map(signatureOf)
+    this.derivedIds = derivedNodes.map((n) => n.id)
     return enhanced
   }
 
@@ -384,6 +462,13 @@ export class SyncController {
 
   private handleEditTree(data: { viewId?: string; tree: SemanticNode; blockMappings?: BlockMapping[] }): void {
     if (this.syncing) return
+    // 🔴 **把自動補的那幾顆摘回來**（2026-09-15）——見 `derivedNodeIds`。
+    //
+    //    畫布上有它們（學生看得到那一行淡的 `#include`），而抽回來的樹
+    //    **不該有**：它們是推導出來的，不是這支程式寫著的東西。
+    //    少了這一步的症狀：學生拉一顆「印出」，自動補的 `#include` 就
+    //    **變成他寫的**——下一秒它不再是淡的，而沒有人記得它是誰放的。
+    data = { ...data, tree: this.dropDerived(data.tree) }
     // 🔴 **先拍照再套用**——照的是【改動前】那一棵。
     //    ⚠️ 而新的一步一定要清掉 `future`：不清的話「還原→改別的→取消還原」
     //    會把一條已經不存在的未來接回來。
@@ -394,6 +479,27 @@ export class SyncController {
       this.future.length = 0
     }
     this.applyTree(data)
+  }
+
+  /**
+   * 把上一次畫出去的那些**推導節點**從抽回來的樹裡摘掉。
+   *
+   * ⚠️ **只看頂層**：推導出來的東西只會被補在 `body` 的最前面
+   * （見 `app.ts` 的顯示樹增強器），往下走會誤傷同名的別人。
+   */
+  private dropDerived(tree: SemanticNode): SemanticNode {
+    if (this.derivedSignatures.length === 0) return tree
+    const budget = new Map<string, number>()
+    for (const sig of this.derivedSignatures) budget.set(sig, (budget.get(sig) ?? 0) + 1)
+    const body = tree.slots.body ?? []
+    const kept = body.filter((n) => {
+      const left = budget.get(signatureOf(n)) ?? 0
+      if (left === 0) return true
+      budget.set(signatureOf(n), left - 1)   // ⚠️ 一顆只扣一次——見 `derivedSignatures`
+      return false
+    })
+    if (kept.length === body.length) return tree
+    return { ...tree, slots: { ...tree.slots, body: kept } }
   }
 
   private applyTree(data: { viewId?: string; tree: SemanticNode; blockMappings?: BlockMapping[] }): void {
@@ -473,6 +579,11 @@ export class SyncController {
       //    由 `originViewId` 如實帶下去——見它的說明。
       this.bus.emit('semantic:update', {
         tree, code, blockState: renderResult, source: 'blocks', scaffold: this.scaffoldNotice(tree),
+        // 🔴 **「不重畫我自己的編輯」的那一個例外**（2026-09-15）——見
+        //    `SemanticUpdateEvent.scaffoldChanged`。使用者：「`#include` 好像
+        //    不會在拉 `cout` 的時候出來」。
+        scaffoldChanged: this.derivedChanged,
+        derivedNodeIds: this.derivedIds,
         originViewId: data.viewId, mappings, scaffoldResult,
       })
     } finally {
@@ -538,7 +649,7 @@ export class SyncController {
             const convRender = renderToBlocklyState(this.enhanceDisplayTree(convDisplay))
             this.blockMappings = convRender.blockMappings
       
-            this.bus.emit('semantic:update', { tree: converted, code, blockState: convRender, source: 'code', mappings: this.codeMappings, scaffold: this.scaffoldNotice(converted) })
+            this.bus.emit('semantic:update', { tree: converted, code, blockState: convRender, source: 'code', mappings: this.codeMappings, scaffold: this.scaffoldNotice(converted), derivedNodeIds: this.derivedIds })
           }
         }
       }
@@ -590,7 +701,7 @@ export class SyncController {
       // 只在單一方向出現的不對稱。
       //
       // 🟢 程式碼面板不受影響：它只在 `blocks`／`resync` 才回寫（見 monaco-panel）。
-      this.bus.emit('semantic:update', { tree, code, blockState: renderResult, source: 'code', mappings: this.codeMappings, scaffold: this.scaffoldNotice(tree) })
+      this.bus.emit('semantic:update', { tree, code, blockState: renderResult, source: 'code', mappings: this.codeMappings, scaffold: this.scaffoldNotice(tree), derivedNodeIds: this.derivedIds })
     } finally {
       this.syncing = false
     }
@@ -830,6 +941,7 @@ export class SyncController {
       this.bus.emit('semantic:update', {
         tree: fullTree, code, blockState: renderResult, source: 'resync', mappings, scaffoldResult,
         scaffold: this.scaffoldNotice(fullTree),
+        derivedNodeIds: this.derivedIds,
       })
     } finally {
       this.syncing = false

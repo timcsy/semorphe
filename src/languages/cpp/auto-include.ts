@@ -196,12 +196,32 @@ export function autoIncludeNodes(
    */
   namespaceStyle: 'using' | 'explicit' = 'explicit',
 ): SemanticNode[] {
-  const includes = edges.map((edge) =>
-    buildInclude(edge.header.replace(/^<|>$/g, '')),
-  )
+  // 🔴 **蓋上「這是系統推導的」那一格**（2026-09-15）——`metadata.derived`。
+  //
+  //    在此之前「哪幾顆是骨架」問的是身分（`traits.scaffold`），而
+  //    **學生自己從工具箱拉出來的 `#include` 身分一模一樣**：它被認成骨架、
+  //    畫成淡的、下拉改不動。使用者回報的正是第 5 課——那一課在教 `#include`。
+  //
+  // > **骨架不是「哪一種元件」，是【誰放的】。**
+  // 🔴 **id 要是固定的，不能每次重建就換一個**（2026-09-15）。
+  //
+  //    這些節點每一次重畫都被重新建構，而 `createNode` 每次給新 id。
+  //    症狀：積木的對照表停在上一輪的 id，而骨架告示用的是這一輪的
+  //    ——兩邊對不起來，於是那顆 `#include` **畫出來了卻不是淡的**。
+  //
+  // > **一個每次重建都換身分的東西，它與任何「上一次算好的」清單
+  // > 都對不上——而對不上的表現是「少做了一件事」，不是報錯。**
+  //
+  // ⚠️ 前綴 `auto:` 與 `createNode` 的 `node_N_xxx` 不會撞號。
+  const derived = (n: SemanticNode, key: string): SemanticNode =>
+    ({ ...n, id: `auto:${key}`, metadata: { ...n.metadata, derived: true } })
+  const includes = edges.map((edge) => {
+    const header = edge.header.replace(/^<|>$/g, '')
+    return derived(buildInclude(header), `include:${header}`)
+  })
   // ⚠️ 條件與補丁器第 2 步**逐字相同**（`namespaceStyle === 'using' && edges.length > 0`）
   //    ——兩邊看的是同一個決定，錯開的話就是「程式碼有、積木沒有」。
   return namespaceStyle === 'using' && edges.length > 0
-    ? [...includes, buildUsingNamespace('std')]
+    ? [...includes, derived(buildUsingNamespace('std'), 'using:std')]
     : includes
 }

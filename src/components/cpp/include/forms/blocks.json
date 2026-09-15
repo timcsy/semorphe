@@ -14,36 +14,16 @@
           "name": "HEADER",
           "options": [
             [
-              "%{BKY_C_INCLUDE_HEADER_STDIO_H}",
-              "stdio.h"
-            ],
-            [
-              "%{BKY_C_INCLUDE_HEADER_STDLIB_H}",
-              "stdlib.h"
-            ],
-            [
-              "%{BKY_C_INCLUDE_HEADER_STRING_H}",
-              "string.h"
-            ],
-            [
-              "%{BKY_C_INCLUDE_HEADER_MATH_H}",
-              "math.h"
-            ],
-            [
-              "%{BKY_C_INCLUDE_HEADER_STDBOOL_H}",
-              "stdbool.h"
-            ],
-            [
               "%{BKY_C_INCLUDE_HEADER_IOSTREAM}",
               "iostream"
             ],
             [
-              "%{BKY_C_INCLUDE_HEADER_VECTOR}",
-              "vector"
-            ],
-            [
               "%{BKY_C_INCLUDE_HEADER_STRING}",
               "string"
+            ],
+            [
+              "%{BKY_C_INCLUDE_HEADER_VECTOR}",
+              "vector"
             ],
             [
               "%{BKY_C_INCLUDE_HEADER_ALGORITHM}",
@@ -74,10 +54,6 @@
               "cstring"
             ],
             [
-              "%{BKY_C_INCLUDE_HEADER_CLIMITS}",
-              "climits"
-            ],
-            [
               "%{BKY_C_INCLUDE_HEADER_CSTDIO}",
               "cstdio"
             ],
@@ -90,8 +66,32 @@
               "cctype"
             ],
             [
+              "%{BKY_C_INCLUDE_HEADER_CLIMITS}",
+              "climits"
+            ],
+            [
               "%{BKY_C_INCLUDE_HEADER_CFLOAT}",
               "cfloat"
+            ],
+            [
+              "%{BKY_C_INCLUDE_HEADER_STDLIB_H}",
+              "stdlib.h"
+            ],
+            [
+              "%{BKY_C_INCLUDE_HEADER_STRING_H}",
+              "string.h"
+            ],
+            [
+              "%{BKY_C_INCLUDE_HEADER_MATH_H}",
+              "math.h"
+            ],
+            [
+              "%{BKY_C_INCLUDE_HEADER_STDBOOL_H}",
+              "stdbool.h"
+            ],
+            [
+              "%{BKY_C_INCLUDE_HEADER_STDIO_H}",
+              "stdio.h"
             ]
           ]
         }
@@ -99,7 +99,8 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#888888",
-      "tooltip": "%{BKY_C_INCLUDE_TOOLTIP}"
+      "tooltip": "%{BKY_C_INCLUDE_TOOLTIP}",
+      "_options_why": "🔴 **順序不是排版，是預設值**（2026-09-15）。Blockly 拿【第一個選項】當一顆新積木的欄位值，而這一份原本以 `stdio.h` 開頭——於是 C++ 課程的學生從工具箱拉一顆「引入函式庫」出來，拿到的是 `#include <stdio.h>`（使用者回報第 5 課）。\\n⚠️ 而元件宣告的 `default` 是 `iostream`——**兩份真相，而生效的是這一份**。\\n> **`default` 答的是「這個屬性沒填的時候算什麼」，下拉的第一個選項答的是「學生拉出來看到什麼」——兩個問題，而這個 repo 只有一個欄位。**\\n🟢 已量過全庫：55 個有宣告 default 的下拉裡，只有 4 個兩者不一致，而其中兩個的 default 是哨兵（`unknown`）——所以這不是一族，不要寫成通則。\\n⚠️ C++ 的標頭在前、C 的在後。`cpp:include` 今天只有 cpp-beginner 宣告（4 課），c-bridge 零課——所以這個順序不會動到 C 那一側的教材。"
     },
     "codeTemplate": {
       "pattern": "#include <${HEADER}>",

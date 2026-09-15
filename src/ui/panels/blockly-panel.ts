@@ -223,7 +223,20 @@ export class BlocklyPanel implements ViewHost {
     // ⚠️ 而**不能改成「一律重畫」**：重畫自己的編輯會打斷拖曳、清掉復原堆疊
     //    （下面那整段就是在處理這件事）。要跳過的只有**我自己**發的那一次。
     const mine = event.originViewId !== undefined && event.originViewId === this.viewId
-    if (!mine && event.blockState) {
+    // 🔴 **而「我自己的編輯」有一個例外**（2026-09-15）：系統推導出來的那幾顆
+    //    （自動補的 `#include`／`using namespace std;`）**不是我畫的**
+    //    ——它們由增強器補進顯示樹，只有重畫才出得來。
+    //
+    //    使用者回報第 5 課：「`#include` 好像**不會在拉 `cout` 的時候出來**」
+    //    ——而在程式碼裡打同一行 `cout` 它就會出來。
+    //
+    // > **一個「不重畫我自己的編輯」的規矩，會把【我沒有畫過的東西】
+    // > 一起擋在外面——而那正是只有重畫才出得來的那些。**
+    //
+    // ⚠️ 例外只在那一組**真的變了**的時候成立（`scaffoldChanged`），
+    //    不是「只要有骨架就重畫」——後者等於取消這條規矩本身。
+    const derivedAppeared = event.scaffoldChanged === true
+    if ((!mine || derivedAppeared) && event.blockState) {
       diagNote(`🔄 重畫 ← ${event.source}｜重畫前頂層 ${this.workspace?.getTopBlocks(false).length ?? 0} 顆｜復原堆疊 ${this.workspace?.getUndoStack().length ?? 0} 項`)
       const prevGroup = Blockly.Events.getGroup()
       Blockly.Events.setGroup(BlocklyPanel.BUS_GROUP)
@@ -312,6 +325,29 @@ export class BlocklyPanel implements ViewHost {
         const blockState = event.blockState as { blockMappings?: BlockMapping[] }
         if (blockState.blockMappings) {
           this._blockMappings = blockState.blockMappings
+          // 🔴 **推導出來的那幾塊，身分不由抽取決定**（2026-09-15）。
+          //
+          //    抽取會把畫布上每一塊重新編號，而那幾顆**不在真相樹裡**
+          //    ——重新編號之後就沒有人認得它們，於是下一次套骨架告示時
+          //    它們對不上，`ghost-block` 被**拿掉**：那顆 `#include`
+          //    畫出來了，而它不是淡的（使用者 2026-09-15 回報的正是它）。
+          //
+          // ⚠️ 這是 `setNodeIdLookup` 的**第一個呼叫者**——那支的說明寫著
+          //    「讓抽取沿用原本的 nodeId」，而它至今零個呼叫者，於是
+          //    `collectMappings` 裡那段「還原原本的 nodeId」從來沒跑過。
+          //
+          // > **又一個宣告了而沒有人讀的機制——而它不出聲，
+          // > 因為「沒有還原」與「還原成一樣的」在畫面上長得一樣，
+          // > 直到有一顆節點【只存在於畫面上】為止。**
+          //
+          // ⚠️ **只放推導的那幾顆**：全部放進去是另一件事（那會改變
+          //    整棵樹的身分延續性，而 `identityBeforeDowngrade` 也讀 id）。
+          const derived = new Set(event.derivedNodeIds ?? [])
+          this.setNodeIdLookup(new Map(
+            blockState.blockMappings
+              .filter((m) => derived.has(m.nodeId))
+              .map((m) => [m.blockId, m.nodeId]),
+          ))
         }
         // Force render after setState — dynamic blocks may not auto-render
         // ⚠️ **這一行必須在群組【裡面】**：它會 `initSvg`／`render` 每一顆積木，

@@ -2292,16 +2292,42 @@ export class App {
   }
 
   /**
-   * 工具箱該給哪些——**比畫布的範圍再窄一刀**。
+   * 工具箱該給哪些——**比畫布的範圍再窄兩刀**。
    *
-   * 選了課的時候，鷹架留在畫布的範圍內（不被打暗），
-   * 而**它不進工具箱**：第 1 課不教 `#include`，學生不該拖得到它。
+   * ```
+   * ① 拿出來也動不了的，不給        鷹架在 ghost／hidden 下是唯讀的
+   * ② 選了課就只給這一課宣告的      第 1 課不教 `#include`
+   * ```
+   *
+   * ## 🔴 ①是 2026-09-15 補的，而②漏掉的正是它
+   *
+   * ②的理由逐字寫著「第 1 課不教 `#include`，學生不該拖得到它」，而它的做法是
+   * 「只給這一課宣告的」——**於是【教 `#include` 的那一課】就給了**。
+   *
+   * 使用者回報第 5 課（「程式從哪開始」，那一課在教 `#include`）：
+   *
+   * > 「自己把 include 積木拉出來，又會是**不能調整的 `stdio.h`**」
+   *
+   * 拉得到，而拉出來是唯讀的——因為它一接進頂層就被認成骨架。
+   *
+   * > **工具箱裡不該有「拿出來也動不了」的積木。**
+   *
+   * ⚠️ 而「一課宣告了它」與「學生該拿得到它」是**兩件事**：第 5 課宣告
+   * `cpp:include` 是因為課文在**講解**它（積木要畫得出來），
+   * 不是因為學生要**放**一顆。那一課自己寫著「你用了 `cout`，
+   * 這一行就**自己長出來了**」。
+   *
+   * ⚠️ **綁深度不綁身分**：`editable`（深度 2+）下鷹架是可以動的，
+   * 那時它該在工具箱裡——自由練習與 `c-bridge`／`cpp-advanced` 走的是那一格。
    */
   private toolboxComponents(): Set<string> {
     const visible = this.getVisibleComponents()
-    if (!this.currentLesson) return visible
+    // 🔴 ①**拿出來也動不了的，不給**——與課程無關，自由練習也適用
+    const usable = new Set([...visible].filter(
+      (c) => this.scaffoldDepth >= 2 || !isScaffoldComponent(c)))
+    if (!this.currentLesson) return usable
     const want = new Set(this.currentLesson.components)
-    return new Set([...visible].filter((c) => want.has(c)))
+    return new Set([...usable].filter((c) => want.has(c)))
   }
 
   /**

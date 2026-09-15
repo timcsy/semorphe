@@ -42,6 +42,22 @@ export type ConfidenceLevel = 'high' | 'warning' | 'inferred' | 'user_confirmed'
 export type DegradationCause = 'syntax_error' | 'unsupported' | 'nonstandard_but_valid'
 
 export interface NodeMetadata {
+  /**
+   * **這顆是系統推導出來的，不是使用者放的。**
+   *
+   * 🔴 今天只有一個生產者：自動補的 `#include`／`using namespace std;`
+   * （`languages/cpp/auto-include.ts` 的 `autoIncludeNodes`）——它們**只活在
+   * 顯示樹上**，真相樹裡沒有（2026-09-15 實測）。
+   *
+   * 而它的消費者是 `core/scaffold-nodes.ts`：
+   *
+   * > **骨架不是「哪一種元件」，是【誰放的】。**
+   *
+   * ⚠️ 少了這一格的症狀（使用者 2026-09-15 回報第 5 課）：學生自己從工具箱
+   * 拉一顆 `#include` 出來，它與自動補的那一顆**身分相同**，於是被認成骨架、
+   * 畫成淡的、**下拉改不動**——而那一課正在教他 `#include` 是什麼。
+   */
+  derived?: boolean
   syntaxPreference?: string
   confidence?: ConfidenceLevel
   degradationCause?: DegradationCause
