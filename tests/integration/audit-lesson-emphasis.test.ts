@@ -192,7 +192,21 @@ describe('第一百三十條護欄：課文的強調要留得出喘息', () => {
   })
 
   it('★ 棘輪：中位喘息不到一句話的課數，只准下降', () => {
-    const below = files.filter((f) => medianRun(fs.readFileSync(f, 'utf8')) < ONE_SENTENCE)
+    const below = files
+      .map((f) => [f, medianRun(fs.readFileSync(f, 'utf8'))] as const)
+      .filter(([, m]) => m < ONE_SENTENCE)
+    // 🟢 2026-09-16 清到 0（69 課全過）——所以基線是 0，而棘輪就是硬性零。
+    // ⚠️ **紅的時候要說得出是哪一課**：先前我為了知道這件事另外寫了一支探針，
+    //    而那支探針的輸出第一行會被 vitest 的 stdout 標頭黏住，於是最糟的那一課
+    //    （`arduino/13-溫濕度`，中位 9）被我自己的 grep 濾掉整整一輪。
+    //
+    // > **一個診斷如果只住在另一支工具裡，它會用那支工具的方式騙你
+    // > ——診斷要住在會紅的那一條裡。**
+    expect(
+      below.map(([f, m]) =>
+        `${path.basename(path.dirname(path.dirname(f)))}/${path.basename(path.dirname(f))}：中位 ${m}`),
+      `🔴 這幾課的強調密到讀者建不出層次（兩個強調之間讀不完一句話，門檻 ${ONE_SENTENCE} 字）：`,
+    ).toEqual([])
     assertRatchet([['喘息不足一句的課數', below.length]], 'lesson-emphasis')
   })
 
