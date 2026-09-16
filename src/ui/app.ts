@@ -1880,11 +1880,14 @@ export class App {
 
     // 13. Update status bar + restore state
     this.refreshStatusBar()
-    this.restoreState()
+    const restored = this.restoreState()
     // 🔴 **restoreState 之後才種**——先種的話會被存檔蓋掉，而且會吃掉他的作品。
+    //    ⚠️ 而「之後」要等到它引發的那次同步**落地**，不是等它回傳
+    //    （2026-09-16）：它最後一行是射後不理的 `syncCodeToBlocks`。
     //    ⚠️ 順序：**先看這一題有沒有起點**（`?task=` 進來的那條路），
     //    種了就不要再鋪一次骨架——`seedCurrentTask` 放上去的本來就含骨架。
     void (async (): Promise<void> => {
+      await restored
       if (await this.seedCurrentTask()) return
       await this.seedScaffoldIfEmpty()
       // 🔴 **冷開也要指一條路**（2026-09-15）——`markOutOfScopeBlocks` 在這條路上
@@ -3943,7 +3946,32 @@ export class App {
     this.storageService.save(this.buildSaveState())
   }
 
-  private restoreState(): void {
+  /**
+   * **還原存檔**——回傳的 promise 在「還原引發的那次同步**落地**」時才 resolve。
+   *
+   * 🔴 **它以前是 `void`，而那是一場賽跑**（2026-09-16，使用者：「我從課程點擊
+   * 進去，但是都沒有積木，只有程式那邊有」）。
+   *
+   * 這個函式最後一行是**射後不理**的 `syncCodeToBlocks(state.code)`；它一回傳，
+   * 組裝點就開始種那一題。於是**兩次程式碼→積木同時在飛**，而最後落地的那一次
+   * 決定那棵樹：
+   *
+   * ```
+   * 存檔 code   using namespace std; int main() { return 0; }   ← 上一次留下的空骨架
+   * 起點 code   int main() { int age = 16; cout << age …  }     ← 這一題的起點
+   *
+   * 輸掉的時候  程式碼欄位＝起點（種的 setCode 寫的）
+   *             語義樹    ＝空骨架（還原那次同步後落地）
+   *             而骨架在前幾課是【隱藏】的 ⟹ 畫布上一顆都沒有
+   * ```
+   *
+   * ⚠️ **它只在「存檔裡有 `code`」時發生**——而每一支 e2e 都先把 localStorage
+   * 清空，於是那條路在測試裡**一次都沒有走過**。
+   *
+   * > **兩個非同步的寫入指向同一份真相，而沒有人排序它們
+   * > ——那不是偶爾錯，那是「誰先回來誰說了算」。**
+   */
+  private async restoreState(): Promise<void> {
     const outcome = this.storageService.loadOutcome()
 
     // 「沒有存檔」與「存檔被拒絕」必須分開。混在一起的話，使用者會以為這是
@@ -4117,6 +4145,7 @@ export class App {
     if (useSideCar) {
       this.syncBlocksToCodeWithMappings()
       this.resyncAfterTopicChange()
+      return
     } else if (state.code) {
       // 🔴 **方向要反過來，而順序也要反過來**（2026-08-24 實測兩次才對）。
       //
@@ -4127,10 +4156,13 @@ export class App {
       // > **在這條路上，最後一個寫程式碼的必須是真相本身。**
       this.resyncAfterTopicChange()
       this.codeView?.setCode(state.code)
-      this.syncController?.syncCodeToBlocks(state.code)
-    } else {
-      this.resyncAfterTopicChange()
+      // 🔴 **等它落地再回去**——見檔頭那個墓碑。射後不理的話，種那一題的人
+      //    不知道還有一次同步在飛，而它會在稍後把起點的樹蓋成這一份空骨架。
+      //    ⚠️ 它自己的 wrapper 已經接住解析錯誤（回 `false`），所以這裡不再補一層。
+      await this.syncController?.syncCodeToBlocks(state.code)
+      return
     }
+    this.resyncAfterTopicChange()
   }
 
   private updateSyncHints(): void {
