@@ -1,4 +1,5 @@
 import type { SemanticNode } from '../core/types'
+import { aggregateShapeOf } from '../core/component/aggregate-nodes'
 /**
  * 🔴 **這四個名字住在 `core/execution.ts`**（2026-09-13 搬的）——
  * 因為講它們的是匯流排與視圖，而直譯器只是它們的**第一個實作**。
@@ -179,6 +180,28 @@ export function defaultValue(type: string): RuntimeValue {
       // ⚠️ 判準是「型別名帶尖括號」，不是「型別名叫 vector」——後者會讓
       // 核心認得一個特定語言的容器名（中立性護欄在看）。任何語言的樣板容器
       // 都吃這條。
+      /**
+       * 🔴 **有聚合形狀的樣板型別，預設值是那個形狀的物件**（2026-09-16）。
+       *
+       * `pair<int,int> A[10];` 在此之前每一格都是**空陣列**，於是
+       * `A[0].first = 3` 拋「（不是一個結構）」。而 lift 是對的
+       * （`array_declare` ＋ `type: pair<int,int>` ＋ `size`）——
+       * 壞的是這一行把「帶尖括號」一律當成容器。
+       *
+       * ⚠️ 判準是**有沒有登記過聚合形狀**，不是型別名叫什麼
+       *    ——`vector<int>` 沒登記，照舊是空容器。
+       *
+       * > **「帶尖括號」說的是它是一個樣板，不是它是一個容器。**
+       */
+      {
+        const shape = aggregateShapeOf(type)
+        if (shape) {
+          const fields = new Map<string, RuntimeValue>()
+          for (const f of shape) fields.set(f, { type: 'int', value: 0 })
+          const bare = type.includes('<') ? type.slice(0, type.indexOf('<')) : type
+          return { type: 'object', value: fields, structName: bare }
+        }
+      }
       if (type.includes('<')) return { type: 'array', value: [] }
       // **指標型別的預設值是空指標**，不是 0。
       //

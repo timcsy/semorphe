@@ -74,6 +74,21 @@ const CASES: [string, string, string, string[]][] = [
     `int a; cin>>a; cin.ignore(); string s; getline(cin,s); cout<<a<<"["<<s<<"]";`, ['5', 'xy']],
   ['`cin` 寫進全域陣列', 'int A[200007];',
     `int n; cin>>n; for(int i=0;i<n;i++) cin>>A[i]; cout<<A[0]<<A[n-1];`, ['3', '7', '8', '9']],
+  // ── 2026-09-16 第三輪：pair、聚合、別名 ──
+  ['`pair` 的大括號初始化', '', `pair<int,int> pr = {3,4}; cout << pr.first << pr.second;`, []],
+  ['`pair` 的陣列（AP325/3/3_13）', 'pair<int,int> A[10];',
+    `A[0].first=3; int i=0; cout << A[i].first;`, []],
+  ['寫進 `pair` 陣列的成員', 'pair<int,int> A[10];', `int i=0; A[i].first=7; cout << A[0].first;`, []],
+  ['`A[0] = {3,1}` 照元素型別填', 'pair<int,int> A[10];',
+    `A[0]={3,1};A[1]={1,2}; sort(A,A+2); cout<<A[0].first<<A[1].first;`, []],
+  ['`#define x first` 讀', '#define x first\npair<int,int> A[10];',
+    `A[0].first=3; int i=0; cout << A[i].x;`, []],
+  ['`#define x first` 寫', '#define x first\npair<int,int> A[10];',
+    `int i=0; A[i].x=7; cout << A[0].first;`, []],
+  ['`cin >> A[i].x`', '#define x first\npair<int,int> A[10];',
+    `int i=0; cin >> A[i].x; cout << A[0].first;`, ['5']],
+  ['`max({...})` 的串列形式（AP325/5/5_2）', '', `cout << max({3,9,4}) << min({3,9,4});`, []],
+  ['⚠️ `vector<int>` **不得**被當成聚合', '', `vector<int> v{1,2,3}; cout << v.size() << v[1];`, []],
 ]
 
 describe('解譯器與參照編譯器：同一段程式，印出來的要一樣', () => {

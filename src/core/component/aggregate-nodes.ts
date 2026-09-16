@@ -55,6 +55,21 @@ export function aggregateShapeOf(typeName: string): string[] | undefined {
 }
 
 /** 護欄用：誰被宣告過。 */
+/**
+ * **這個範圍（語言）的「大括號串列」元件是誰。**
+ *
+ * 🔴 它存在的理由是**膠囊就近性**（2026-09-16）：組裝路徑需要生一顆
+ * 「大括號串列」節點，而它**不得寫死 `cpp:initializer_list`**
+ * ——一個元件的身分只准住在自己的資料夾裡，寫死在共用檔就是第二份宣告。
+ *
+ * > **共用檔可以【問】哪一顆是，不可以【說】哪一顆是。**
+ */
+export function aggregateListFor(scope: string): string | undefined {
+  const prefix = `${scope}:`
+  for (const id of aggregateLists) if (id.startsWith(prefix)) return id
+  return undefined
+}
+
 export function declaredAggregateLists(): string[] {
   return [...aggregateLists]
 }

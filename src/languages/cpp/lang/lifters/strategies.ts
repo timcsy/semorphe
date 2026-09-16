@@ -4,6 +4,7 @@ import type { SemanticNode } from '../../../../core/types'
 import { createNode } from '../../../../core/semantic-tree'
 import { allStdModules } from '../../std'
 import { componentForContainerTemplate } from '../../../../core/component/container-templates'
+import { aggregateListFor } from '../../../../core/component/aggregate-nodes'
 // ⚠️ 元件膠囊也要算進來——第五處「從 allStdModules 推導」的地方。
 // 少算的話 `vector<int> v = f()` 的初始值會被判成「沒宣告 source」而丟掉。
 import { componentComponents } from '../../../../core/component/registry'
@@ -891,6 +892,31 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           }
           if (s.source && hasInitSourceDecl.has(componentId)) {
             return createNode(componentId, props, { source: [s.source] })
+          }
+          /**
+           * 🔴 **大括號的初始值進來了，而這顆元件的槽叫 `source`**（2026-09-16）。
+           *
+           * `pair<int,int> pr = {3,4};` 走到這裡時 `s.values` 是 `[3, 4]`，
+           * 而 `cpp:pair_declare` 宣告的是 `source` 不是 `values`——於是上面兩條
+           * 都不成立，掉到最後那個 `createNode(componentId, props)`，
+           * **初始值整個從語義樹上消失**。
+           *
+           * 症狀有兩層，而第二層更嚴重：
+           *
+           *     解譯器   pr.first 讀到 0（而 make_pair(3,4) 是好的）
+           *     學生     一動積木，`= {3,4}` 就從他的程式碼裡不見了
+           *
+           * > **一條「我認得的槽有三種」的組裝路徑，第四種不會報錯
+           * > ——它會安靜地少一塊，而少掉的那一塊是使用者打的字。**
+           *
+           * 🟢 把它包成一顆 `initializer_list` 放進 `source`：那正是
+           *    `pair<int,int> pr = {3,4}` 在語義上的樣子。
+           */
+          const listId = aggregateListFor(componentId.split(':')[0])
+          if (s.values.length > 0 && listId && hasInitSourceDecl.has(componentId)) {
+            return createNode(componentId, props, {
+              source: [createNode(listId, {}, { values: s.values })],
+            })
           }
           if (s.size && hasSizeDecl.has(componentId)) {
             return s.fill

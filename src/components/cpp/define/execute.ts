@@ -31,6 +31,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { defined } from '../../../languages/cpp/lang/executors/preprocessor'
+import { setAlias } from '../../../interpreter/aliases'
 
 /**
  * 巨集的值是不是一個**字面常數**。不是就回 `null`——呼叫端據此決定不綁。
@@ -61,9 +62,25 @@ export function registerExecute(register: (component: string, executor: Componen
     // `#ifdef` / `#ifndef` 讀這個集合——與下面的常數綁定是兩件獨立的事
     defined.add(name)
 
-    const value = literalValue(String(node.properties.value ?? ''))
+    const raw = String(node.properties.value ?? '').trim()
+    const value = literalValue(raw)
     // ⚠️ 同名重複 `#define` 時 `declare` 會丟錯，而那是對的：
     // 兩個不同的值綁到同一個名字，靜默取其一會讓後面的算式莫名其妙。
-    if (value) ctx.scope.declare(name, value)
+    if (value) { ctx.scope.declare(name, value); return }
+
+    /**
+     * 🔴 **取小名那一族**（2026-09-16）——218 支學生程式裡 19 支撞在這裡：
+     *
+     *     #define x first        #define pb push_back
+     *     #define y second       #define pii pair<int,int>
+     *
+     * 在此之前只有字面值那條路，於是 `pr.x` 拋 UNDECLARED_VAR。
+     *
+     * ⚠️ **只收「一個名字」或「一個型別」**：帶參數的 `#define rep(i,n) …`
+     *    是一段程式不是一個名字，它不進這張表（而它會繼續報錯，那是誠實的）。
+     * ⚠️ 也**不做替換**——見 `interpreter/aliases.ts` 的檔頭：
+     *    替換會回頭改寫使用者的程式碼。
+     */
+    if (/^[A-Za-z_]\w*(\s*<[^>]*>)?(\s*\*)*$/.test(raw)) setAlias(name, raw)
   })
 }

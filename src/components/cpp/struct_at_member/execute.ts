@@ -4,6 +4,7 @@ import type { RuntimeValue } from '../../../interpreter/types'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { getMember } from '../../../interpreter/executors/variables'
+import { resolveAlias } from '../../../interpreter/aliases'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   // 🔴 **與執行器同一個生命週期**——左值解析要用到執行環境，
@@ -39,7 +40,11 @@ export function registerLvalue(): void {
       throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName}（不是一個結構）` })
     }
     const fields = o.value as Map<string, RuntimeValue>
-    const member = String(node.properties.member)
+    // 🔴 **寫的那一側也要認別名**（`#define x first`）——只認讀的話，
+    //    `A[i].x = 7` 會在這個 Map 上長出一個叫 `x` 的新欄位，
+    //    而 `A[i].first` 讀到的還是舊值。症狀是「改了沒反應」，比拋錯難查。
+    const rawMember = String(node.properties.member)
+    const member = fields.has(rawMember) ? rawMember : resolveAlias(rawMember)
     return {
       read: () => fields.get(member) ?? { type: 'int', value: 0 },
       write: (v) => { fields.set(member, v as RuntimeValue) },

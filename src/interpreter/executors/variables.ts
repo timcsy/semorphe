@@ -2,6 +2,7 @@ import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 import type { RuntimeValue } from '../types'
 import type { ComponentExecutor } from '../executor-registry'
 import { defaultValue } from '../types'
+import { hasAlias, resolveAlias } from '../aliases'
 import { isNamedCall } from '../../core/component/traits'
 import { evalInitializer } from '../aggregate'
 
@@ -121,9 +122,20 @@ export const execVarDeclare: ComponentExecutor = async (node, ctx) => {
         return
       }
     }
-    let val = await ctx.evaluate(init[0])
-    val = ctx.coerceType(val, type)
-    ctx.scope.declare(name, val)
+    /**
+     * 🔴 **走 `evalInitializer`，不要自己 `evaluate` ＋ `coerceType`**（2026-09-16）。
+     *
+     * 在此之前這裡直接求值再壓型別，於是**聚合形狀永遠用不到**：
+     * `pair<int,int> pr = {3,4};` 變成一個陣列，而 `pr.first` 讀出 0。
+     * （`make_pair(3,4)` 是好的——所以它看起來像「只有大括號那種寫法壞掉」。）
+     *
+     * ⚠️ `evalInitializer` 對**不是大括號**的初始值就是
+     * `coerceType(evaluate(node), type)` ——與原本逐字相同，所以這不是行為變更，
+     * 是把兩條路合成一條。
+     *
+     * > **同一件事有兩份實作的時候，壞掉的永遠是沒有人走的那一份。**
+     */
+    ctx.scope.declare(name, await evalInitializer(init[0], type, ctx))
   } else {
     ctx.scope.declare(name, defaultValue(type))
   }
@@ -148,7 +160,13 @@ export function getMember(
   const fields = obj.value as Map<string, RuntimeValue>
   // 實例欄位優先，找不到再看型別的靜態表——C++ 允許 `a.count` 取靜態成員，
   // 而它住在型別上不在實例上。順序與方法作用域的層次一致。
-  const v = fields.get(member) ?? statics?.get(member)
+  let v = fields.get(member) ?? statics?.get(member)
+  // 🔴 **查不到才問別名**（`#define x first`，見 `aliases.ts`）——
+  //    有這個欄位的時候一個字都不動，所以它不會蓋掉正常的查找。
+  if (v === undefined && hasAlias(member)) {
+    const real = resolveAlias(member)
+    v = fields.get(real) ?? statics?.get(real)
+  }
   if (v === undefined) {
     throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, {
       '%1': `${objName}.${member}（${obj.structName ?? '結構'} 沒有這個欄位）`,
@@ -160,7 +178,9 @@ export function getMember(
 /** 寫一個結構欄位。同樣：不存在的欄位要出聲，不得默默新增一個 */
 export function setMember(obj: RuntimeValue | undefined, member: string, val: RuntimeValue, objName: string): void {
   getMember(obj, member, objName)  // 先驗存在，錯誤訊息一致
-  ;(obj!.value as Map<string, RuntimeValue>).set(member, val)
+  const fields = obj!.value as Map<string, RuntimeValue>
+  // ⚠️ 讀得到而寫錯地方的話，症狀是「改了沒反應」——比拋錯難查得多
+  fields.set(fields.has(member) ? member : resolveAlias(member), val)
 }
 
 /**

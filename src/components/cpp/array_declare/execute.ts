@@ -26,6 +26,12 @@ export function registerExecute(register: (component: string, executor: Componen
         }
       }
 
+      /**
+       * 🔴 **陣列要記住自己的元素型別**（2026-09-16，下面兩個 `declare` 都帶上 `elemType`）。
+       *
+       * 少了它，`pair<int,int> A[10]; A[0] = {3,1};` 那一格會被填成一個**陣列**
+       * （因為沒有人知道該照什麼形狀填），於是 `A[0].first` 拋「不是一個結構」。
+       */
       const elements: import('../../../interpreter/types').RuntimeValue[] = []
       // 🔴 **元素型別是一個【已宣告的結構】時，每一格要是一個結構實例**
       //    （2026-09-04）。
@@ -63,7 +69,7 @@ export function registerExecute(register: (component: string, executor: Componen
           if (v.value.length < elements.length) {
             elements[v.value.length] = { type: 'char', value: '\0' }
           }
-          ctx.scope.declare(name, { type: 'array', value: elements })
+          ctx.scope.declare(name, { type: 'array', value: elements, elemType: type })
           return
         }
       }
@@ -84,6 +90,6 @@ export function registerExecute(register: (component: string, executor: Componen
         for (const n of init) elements.push(await evalInitializer(n, type, ctx))
       }
 
-      ctx.scope.declare(name, { type: 'array', value: elements })
+      ctx.scope.declare(name, { type: 'array', value: elements, elemType: type })
     })
 }

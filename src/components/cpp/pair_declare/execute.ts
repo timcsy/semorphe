@@ -24,6 +24,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { defaultValue } from '../../../interpreter/types'
 import type { RuntimeValue } from '../../../interpreter/types'
+import { evalInitializer } from '../../../interpreter/aggregate'
 
 /** `pair` 的欄位名是語言定的，不是我們取的。 */
 const FIELDS = ['first', 'second'] as const
@@ -37,7 +38,21 @@ export function registerExecute(register: (component: string, executor: Componen
     // 而來回轉換比對因此一直是綠的（見 `strategies.ts` 的 `hasInitSourceDecl` 檔頭）。
     const source = (node.slots.source ?? [])[0]
     if (source) {
-      const produced = await ctx.evaluate(source)
+      /**
+       * 🔴 **大括號那種寫法以前會靜靜地變成一對 0**（2026-09-16）。
+       *
+       * `pair<int,int> pr = {3,4};` 的來源是一顆 `initializer_list`，而它求值
+       * 出來是**陣列**不是物件。下面那個判斷認不得，就給了一個新的空 Map
+       * ——於是 `pr.first` 讀到 0，**而且沒有任何人出聲**。
+       * （`make_pair(3,4)` 是好的，所以它看起來像「只有大括號那種寫法壞掉」。）
+       *
+       * > **一個「認不得就給預設值」的回退，與一個「認不得就出聲」的檢查，
+       * > 差別在前者把「我不懂」變成了一個看起來很正常的答案。**
+       *
+       * 🟢 `evalInitializer` 對大括號會走聚合形狀（`pair` → first/second），
+       *    對其他節點就是原本那條 `coerceType(evaluate(…))`。
+       */
+      const produced = await evalInitializer(source, 'pair', ctx)
       // 不複製的話，兩個 pair 會共用同一個 Map——改一個另一個跟著變。
       // 這與 `vector_declare` 的初始值處置是同一條理由。
       const copied =
