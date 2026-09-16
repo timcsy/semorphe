@@ -87,6 +87,40 @@ export const execVarDeclare: ComponentExecutor = async (node, ctx) => {
 
   const init = node.slots.initializer
   if (init && init.length > 0) {
+    /**
+     * 🔴 **純量的大括號初始化要拆開**（2026-09-16）。
+     *
+     * `int a{7}` 的初始值是一顆 `cpp:initializer_list`，而它求值出來是一個
+     * **陣列**。在此之前這裡直接把它 `coerceType(…, 'int')`，於是：
+     *
+     * ```
+     * int a{};          g++ 0  ↔ 我們 1     ← 值初始化變成 1
+     * int a{7};         g++ 7  ↔ 我們 1     ← 給的值直接被丟掉
+     * long long ans{};  g++ 0  ↔ 我們 ""    ← 什麼都印不出來
+     * ```
+     *
+     * ⚠️ 而 **lift 與 generate 都是對的**——樹裡逐字是
+     * `var_declare ← initializer_list ← literal_number 7`，產生器也照樣吐回
+     * `int a{7};`。所以①②③④四個面向全綠，抓到它的是第五個：
+     * **拿真實的學生程式跟參照編譯器比跑出來的東西**。
+     *
+     * > **一個只錯在 execute 那一路的缺陷，形狀是完美的
+     * > ——而形狀完美正是它活下來的原因。**
+     *
+     * ⚠️ **只拆純量**：`vector<int> v{1,2,3}` 的那個串列是它的內容，不是一個值。
+     *    判準用「型別裡有沒有 `<`」——結構體在上面那一段已經走掉了。
+     * ⚠️ 也**只拆 0 或 1 個元素**：多個元素的純量大括號在 C++ 裡本來就不合法，
+     *    留給原本那條路去處理，不要自己發明語義。
+     */
+    const braced = init[0].componentId?.endsWith(':initializer_list') === true
+    if (braced && !type.includes('<')) {
+      const items = init[0].slots?.values ?? []
+      if (items.length === 0) { ctx.scope.declare(name, defaultValue(type)); return }
+      if (items.length === 1) {
+        ctx.scope.declare(name, ctx.coerceType(await ctx.evaluate(items[0]), type))
+        return
+      }
+    }
     let val = await ctx.evaluate(init[0])
     val = ctx.coerceType(val, type)
     ctx.scope.declare(name, val)

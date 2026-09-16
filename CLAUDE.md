@@ -93,7 +93,7 @@ STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-
 > ——而後者才會讓使用者的程式碼變成另一支程式。**
 
 🔴 **而那還不夠**（2026-09-10，使用者：「你到底有沒有整個仔細測過一遍？」）。
-一個宣告有**四個面向**，而上面那兩支只量了前兩個：
+一個宣告有**五個面向**，而上面那兩支只量了前兩個（⑤是 2026-09-16 才補上的）：
 
 | 面向 | 怎麼量 | 紅了的症狀 |
 |---|---|---|
@@ -101,6 +101,32 @@ STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-
 | ② 語義的不動點 | `lift → 產碼 → 再 lift` | 來回一趟就變 |
 | 🔴 ③ 載得進工作區嗎 | `render → Blockly load` | **一片空白**（不是少一行） |
 | 🔴 ④ 走一趟積木回來 | `render → extract → 產碼` | 學生一動積木，程式碼就少東西 |
+| 🔴 ⑤ **跑出來一不一樣** | `execute` vs **參照編譯器** | **形狀全對，而它印出別的東西** |
+
+🔴 **⑤ 是 2026-09-16 加的**，而它也是使用者問出來的：「你有幫我驗證語料庫的
+執行結果與模擬的是一致的嗎？」——沒有。①②③④**四個都是形狀**，
+而四支 `studycpp-*` 探針裡 `interpret`／`execute` 的出現次數是 0。
+
+```bash
+STUDYCPP_DIR=/tmp/StudyCpp SEMORPHE_REFCC_INCLUDE=$PWD/tests/fixtures/refcc-shim \
+  npx vitest run tests/probes/studycpp-behaves        # ⑤，要參照編譯器
+```
+
+⚠️ **測資是【問程式自己】生的**：語義樹裡有每一次讀取的型別與順序。
+判準不是「這份輸入對那一題有意義」，是**兩邊餵同一份**。
+⚠️ `bits/stdc++.h` 是 GCC 專屬的，macOS 上要 `SEMORPHE_REFCC_INCLUDE` 指到墊片
+——不指的話 206/218 會假性編不過。
+
+第一次跑量到：**兩邊都跑完 91 支，41 支輸出不同**，收斂成兩族，
+而**兩族的 lift 與 generate 都是對的**（`cout << '\n'` 印成反斜線、
+`int a{7}` 變成 1）。修完 37 → 14。
+
+> **一個只錯在 `execute` 那一路的缺陷，形狀是完美的
+> ——而形狀完美正是它活下來的原因。**
+
+🔴 **而它的代價要知道**：那支探針要編 204 支含 `bits/stdc++.h` 的程式
+（單支峰值 94 MB）。並行度**刻意壓在 3**——8 那次把使用者的機器打掛了
+（[history/240]，2,880 次 jetsam ＋ 重開機）。
 
 ```bash
 STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-loadable   # ③

@@ -21,11 +21,11 @@
  *
  * ## 判準有三層（CLAUDE.md 記過，少一層就會追到雜訊）
  *
- * ```
+ * 
  * ① 先問參照編譯器「這一段是合法的 C++ 嗎」  不問 → 追自己造的雜訊
  * ② 兩邊餵一模一樣的 stdin                    不同 → 比的是輸入不是行為
  * ③ 文字不同 ≠ 錯，行為不同才是              不分 → 正規化會被算成缺陷
- * ```
+ * 
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import fs from 'node:fs'
@@ -35,6 +35,7 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { runCppBatchDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -47,11 +48,11 @@ const DIR = process.env.STUDYCPP_DIR ?? ''
  * 第一版寫 8，而這一支探針要編 204 支**含 `bits/stdc++.h`** 的程式
  * （單支峰值 94 MB、0.64 秒）。實測那天的系統紀錄：
  *
- * ```
+ * 
  * 14:51  17 支 clang 同時在 unnest DYLD 共享區
  * 14:51:16  kernel: memorystatus: killing_idle_process …（接下來 2,880 次）
  * 14:57  使用者重開機
- * ```
+ * 
  *
  * 而 kernel 自己說出了機制——每一支 clang 都會把原本**共用**的動態庫區段解巢：
  *
@@ -98,8 +99,195 @@ beforeAll(async () => {
 
 const FS = files()
 
+
+// ── 測資怎麼來：問程式自己 ────────────────────────────────────────────
+
+/** 走遍整棵樹（含所有槽）。 */
+function walk(n: SemanticNode | undefined, fn: (x: SemanticNode) => void): void {
+  if (!n || typeof n !== 'object') return
+  fn(n)
+  for (const v of Object.values(n.slots ?? {})) {
+    if (Array.isArray(v)) for (const c of v) walk(c as SemanticNode, fn)
+    else walk(v as SemanticNode, fn)
+  }
+}
+
+/** 名字 → 宣告的型別。⚠️ 同名重複宣告時**後面的贏**，與 C++ 的遮蔽方向一致。 */
+function typeOfNames(tree: SemanticNode): Map<string, string> {
+  const m = new Map<string, string>()
+  walk(tree, (n) => {
+    if (!n.componentId?.endsWith(':var_declare') && !n.componentId?.endsWith(':array_declare')) return
+    const t = String((n.properties as Record<string, unknown>)?.type ?? '')
+    const name = String((n.properties as Record<string, unknown>)?.name ?? '')
+    if (name) m.set(name, t)
+  })
+  return m
+}
+
+/** 一次讀取要吃掉什麼型別的一個 token。 */
+type Kind = 'int' | 'double' | 'char' | 'string'
+
+function kindOf(t: string): Kind {
+  const s = t.replace(/[&*]/g, '').trim()
+  if (/^(double|float|long double)$/.test(s)) return 'double'
+  if (s === 'char') return 'char'
+  if (/string/.test(s)) return 'string'
+  return 'int'
+}
+
+/** 這支程式的讀取排程——**照原始碼順序**，而且標出哪些在迴圈裡。 */
+export function readSchedule(tree: SemanticNode): { kinds: Kind[]; inLoop: Kind[] } {
+  const types = typeOfNames(tree)
+  const kinds: Kind[] = []
+  const inLoop: Kind[] = []
+  const visit = (n: SemanticNode | undefined, depth: number): void => {
+    if (!n || typeof n !== 'object') return
+    const id = n.componentId ?? ''
+    const isLoop = /:(loop_while|loop_for|loop_count|loop_do|container_iter)$/.test(id)
+    if (/:(input|input_formatted|input_line)$/.test(id)) {
+      const vals = (n.slots?.values ?? []) as SemanticNode[]
+      for (const v of Array.isArray(vals) ? vals : [vals]) {
+        // 目標可能是 `a`、`a[i]`、`s` —— 一律從名字查宣告
+        let name = ''
+        walk(v, (x) => {
+          const nm = String((x.properties as Record<string, unknown>)?.name ?? '')
+          if (nm && !name) name = nm
+        })
+        const k = kindOf(types.get(name) ?? 'int')
+        kinds.push(k)
+        if (depth > 0) inLoop.push(k)
+      }
+      if (/:input_line$/.test(id) && (n.slots?.values ?? []).length === 0) kinds.push('string')
+    }
+    for (const v of Object.values(n.slots ?? {})) {
+      if (Array.isArray(v)) for (const c of v) visit(c as SemanticNode, depth + (isLoop ? 1 : 0))
+      else visit(v as SemanticNode, depth + (isLoop ? 1 : 0))
+    }
+  }
+  visit(tree, 0)
+  return { kinds, inLoop }
+}
+
+/**
+ * 照排程生一份輸入。
+ *
+ * 🔴 **第一個整數刻意小**（3–8）——競賽題幾乎都是「先讀 n，再讀 n 筆」，
+ *    而 n 大一點就會讀到餓死或跑很久。
+ * ⚠️ 判準**不是「這份輸入對那一題有意義」**，是【兩邊餵同一份】：
+ *    輸入合不合題意，不影響「g++ 印 A 而我們印 B」這個判定。
+ */
+export function makeStdin(
+  sch: { kinds: Kind[]; inLoop: Kind[] }, seed: number, tail = 200,
+): string[] {
+  let x = seed * 2654435761 % 2147483647
+  const rnd = (n: number): number => { x = (x * 48271) % 2147483647; return x % n }
+  const tok = (k: Kind, first: boolean): string =>
+    k === 'double' ? `${1 + rnd(9)}.${rnd(9)}`
+      : k === 'char' ? String.fromCharCode(97 + rnd(26))
+        : k === 'string' ? ['ab', 'cd', 'hello', 'xy', 'semorphe'][rnd(5)]
+          : String(first ? 3 + rnd(6) : 1 + rnd(20))
+  const out: string[] = []
+  sch.kinds.forEach((k, i) => out.push(tok(k, i === 0)))
+  // 迴圈裡的讀取不知道會跑幾圈——多給一些，餓死比多餵更難查
+  const cycle = sch.inLoop.length > 0 ? sch.inLoop : []
+  for (let i = 0; i < tail && cycle.length > 0; i++) out.push(tok(cycle[i % cycle.length], false))
+  return out
+}
+
 describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
   '探針：學生的程式，解譯器與參照編譯器跑出來一不一樣', () => {
+
+  /** ⚠️ 行尾空白與結尾換行是**排版**，不是行為（判準③）。 */
+  const norm = (s: string): string =>
+    s.split('\n').map((l) => l.replace(/\s+$/, '')).join('\n').replace(/\n+$/, '')
+
+  it('🔴 ③ 同一份輸入，解譯器與參照編譯器印出來的要一樣', async () => {
+    interface Row { file: string; src: string; stdin: string[] }
+    const rows: Row[] = []
+    let liftFail = 0
+    const TAIL = Number(process.env.PROBE_TAIL ?? 200)
+    for (const f of FS) {
+      const src = fs.readFileSync(f, 'utf8')
+      try {
+        const tree = lifter.lift(tsParser.parse(src).rootNode as never) as SemanticNode
+        rows.push({ file: path.relative(DIR, f), src, stdin: makeStdin(readSchedule(tree), 1, TAIL) })
+      } catch { liftFail++ }
+    }
+
+    // 參照編譯器那一側——⚠️ 並行度見 `COMPILE_CONCURRENCY` 的檔頭（一次當機換來的）
+    const ref = await runCppBatchDetailed(
+      rows.map((r) => r.src), COMPILE_CONCURRENCY, rows.map((r) => r.stdin.join('\n') + '\n'))
+
+    const tally = { compileFail: 0, refRunFail: 0, interpError: 0, same: 0, differ: 0 }
+    const shape = { weStopEarly: 0, wePrintMore: 0, reallyDifferent: 0 }
+    const diffs: string[] = []
+    for (let i = 0; i < rows.length; i++) {
+      const r = ref[i]
+      if (!r.ok) { tally[r.stage === 'compile' ? 'compileFail' : 'refRunFail']++; continue }
+      let got: string
+      try {
+        const tree = lifter.lift(tsParser.parse(rows[i].src).rootNode as never) as SemanticNode
+        const out: string[] = []
+        const interp = new SemanticInterpreter({ maxSteps: 2_000_000 })
+        interp.setOutputCallback((x) => out.push(x))
+        await interp.execute(tree, rows[i].stdin)
+        got = out.join('')
+      } catch (e) {
+        tally.interpError++
+        if (diffs.length < 45) diffs.push(`   ✘ ${rows[i].file}  解譯器拋錯：${String(e).slice(0, 90)}`)
+        continue
+      }
+      if (norm(got) === norm(r.output ?? '')) tally.same++
+      else {
+        tally.differ++
+        const a = norm(r.output ?? ''), b = norm(got)
+        // 🔴 **先分形狀再談缺陷**：「我們的是它的前綴」多半是餵的測資不夠，
+        //    程式讀到 EOF 就停了——那是量測工具的帳，不是解譯器的。
+        if (a.startsWith(b)) shape.weStopEarly++
+        else if (b.startsWith(a)) shape.wePrintMore++
+        else shape.reallyDifferent++
+        if (diffs.length < 45) diffs.push(
+          `   ✘ ${rows[i].file}\n      g++ ：${JSON.stringify(norm(r.output ?? '').slice(0, 70))}` +
+          `\n      我們：${JSON.stringify(norm(got).slice(0, 70))}`)
+      }
+    }
+    const ran = tally.same + tally.differ
+    console.log([
+      `  抬升失敗        ${liftFail}`,
+      `  編不過          ${tally.compileFail}`,
+      `  參照跑不完      ${tally.refRunFail}   ← 多半是餵的測資讓它崩／逾時`,
+      `  解譯器出錯      ${tally.interpError}`,
+      `  ── 兩邊都跑完 ${ran} 支 ──`,
+      `  🟢 一致         ${tally.same}`,
+      `  🔴 不一致       ${tally.differ}`,
+      `       ├ 我們少了尾巴 ${shape.weStopEarly}   ← 多半是測資餵不夠（量測工具的帳）`,
+      `       ├ 我們多了尾巴 ${shape.wePrintMore}`,
+      `       └ 內容真的不同 ${shape.reallyDifferent}   ← 🔴 這一欄才是缺陷`,
+      `  （測資尾巴長度 ${TAIL}）`,
+      diffs.join('\n'),
+    ].join('\n'))
+    expect(ran, '🔴 一支都沒跑完 → 下面的數字不算數').toBeGreaterThan(20)
+  }, 1_800_000)
+
+  it('② 讀取排程：程式自己說得出它要吃什麼', () => {
+    const rows: string[] = []
+    let noInput = 0
+    for (const f of FS) {
+      let sch
+      try {
+        const tree = lifter.lift(tsParser.parse(fs.readFileSync(f, 'utf8')).rootNode as never) as SemanticNode
+        sch = readSchedule(tree)
+      } catch { continue }
+      if (sch.kinds.length === 0) { noInput++; continue }
+      if (rows.length < 8) {
+        rows.push(`   ${path.basename(f).padEnd(30)} 讀 ${JSON.stringify(sch.kinds).slice(0, 46)}` +
+          `${sch.inLoop.length ? ` ＋迴圈裡 ${JSON.stringify(sch.inLoop).slice(0, 26)}` : ''}` +
+          `\n      → ${makeStdin(sch, 1).slice(0, 12).join(' ')}`)
+      }
+    }
+    console.log(`  不讀輸入的：${noInput} / ${FS.length}\n` + rows.join('\n'))
+    expect(FS.length).toBeGreaterThan(200)
+  }, 300_000)
 
   it('① 地基：這 218 支裡，參照編譯器收下幾支', async () => {
     const srcs = FS.map((f) => fs.readFileSync(f, 'utf8'))
