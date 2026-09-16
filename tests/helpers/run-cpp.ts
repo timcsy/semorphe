@@ -31,6 +31,16 @@ import { writeFileSync, mkdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
 
 const flag = '-std=c++17'
+/**
+ * **額外的 include 路徑**——預設空的，所以護欄的行為一個字都不變。
+ *
+ * 🔴 它為 `bits/stdc++.h` 而生：那是 GCC 專屬的標頭，而 Apple clang 沒有。
+ *    學生的競賽程式幾乎都用它——沒有這條路，「參照編譯器收不收下」會量出
+ *    206 筆假的編譯失敗（實測 2026-09-16）。
+ */
+const extraInc = process.env.SEMORPHE_REFCC_INCLUDE
+  ? ` -I${process.env.SEMORPHE_REFCC_INCLUDE}`
+  : ''
 const cwd = '/tmp/semorphe-refcc'
 const timeoutMs = 5000
 
@@ -73,7 +83,7 @@ export function runCppDetailed(code: string): execResult {
   try {
     writeFileSync(src, code)
     try {
-      execSync(`g++ ${flag} -o ${bin} ${src}`, { encoding: 'utf-8', stdio: 'pipe' })
+      execSync(`g++ ${flag}${extraInc} -o ${bin} ${src}`, { encoding: 'utf-8', stdio: 'pipe' })
     } catch (e) {
       return { ok: false, stage: 'compile', message: String((e as Error).message).slice(0, 200) }
     }
@@ -175,7 +185,7 @@ async function runCppAsyncDetailed(code: string, stdin?: string): Promise<asyncO
     )
   try {
     writeFileSync(src, code)
-    const compiled = await run(`g++ ${flag} -o ${bin} ${src}`, 30000)
+    const compiled = await run(`g++ ${flag}${extraInc} -o ${bin} ${src}`, 30000)
     if (compiled.out === null) {
       return { ok: false, output: null, stage: 'compile', message: compiled.err.slice(0, 400) }
     }
