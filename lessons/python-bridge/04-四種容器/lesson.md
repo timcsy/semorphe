@@ -18,6 +18,7 @@ Python 這四種是**內建的、有專屬語法的**——所以它們是這個
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、四種，一眼看完
+四種放在一起比：
 
 ```python
 nums  = [3, 1, 4]                    # list  ——有順序、可以重複、可以改
@@ -41,6 +42,7 @@ point = (1, 2)                       # tuple ——像 list，而【不能改】
 ⚠️ **`{}` 是空的 dict，不是空的 set。** 空的 set 要寫 `set()`。
 
 ## 二、拿東西
+拿的寫法都是方括號：
 
 ```python
 print(nums[0])            # 3
@@ -60,6 +62,8 @@ print("a" in tags)        # True
 
 > 底下這幾顆在積木上是「**在 … 末端加入 …**」與「**… 的長度**」。
 
+加的寫法各有各的：
+
 ```python
 nums.append(5)            # list  →  [3, 1, 4, 5]
 ages["new"] = 18          # dict  →  多一個鍵
@@ -75,6 +79,7 @@ print(len(nums))          # 4
 ```
 
 ## 四、⚠️ `tuple` 不能改
+`tuple` 做好就不能改：
 
 ```python
 point[0] = 9              # 💥 TypeError

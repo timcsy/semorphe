@@ -30,6 +30,7 @@
 Arduino Uno 有 **1024 個位元組**的 EEPROM。不多，而夠記設定。
 
 ## 二、用位址存取
+EEPROM 是一格一格的，用編號存取：
 
 ```cpp
 int n = EEPROM.read(0);      // 讀第 0 格
@@ -58,6 +59,8 @@ EEPROM.write(0, n + 1);      // 寫回第 0 格
 
 EEPROM 的每一格大約可以寫 **10 萬次**。聽起來很多，而——
 
+下面這個寫法**不要學**——它會把那一格寫爛：
+
 ```cpp
 void loop() {
     EEPROM.write(0, n);      // 🔴 千萬不要這樣
@@ -74,6 +77,7 @@ void loop() {
 `EEPROM.update()` 比 `write()` 好——**值沒變的話它不寫**。
 
 ## 四、開機計數器
+照著打上這一段——它會記得自己開機過幾次：
 
 ```cpp
 void setup() {

@@ -17,6 +17,7 @@
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、`range`
+照著打上這一段：
 
 ```python
 for i in range(1, 6):
@@ -39,6 +40,7 @@ for i in range(1, 6):
 > 積木盤上 `range` 那一顆寫著「**數列**」。
 
 ## 二、累加
+同樣是加總，`for` 寫起來是這樣：
 
 ```python
 total = 0
@@ -66,6 +68,7 @@ while user_says_yes():
 > 它把「前進」寫死了，所以你不會忘記，也不會寫錯。
 
 ## 四、`for` 也可以走別的東西
+`for` 走得過的不只數字——一段文字也可以：
 
 ```python
 for c in "Python":
@@ -86,6 +89,7 @@ for i in range(len(names)):  # ⚠️ 除非你真的需要 i
 ```
 
 ## 五、`break` / `continue` 一樣能用
+這兩個字在 `for` 裡也一樣：
 
 ```python
 for i in range(1, 11):

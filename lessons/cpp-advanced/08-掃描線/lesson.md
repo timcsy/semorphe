@@ -17,6 +17,7 @@
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、`pair`：把兩個值綁在一起
+`pair` 把兩個值當成一個東西：
 
 ```cpp
 pair<int, int> p = make_pair(1, 2);
@@ -54,6 +55,7 @@ events.push_back(make_pair(b, -1));     // 離場
 ```
 
 ## 三、排序，然後掃一遍
+照著打上這一段——排完之後只走一遍：
 
 ```cpp
 sort(events.begin(), events.end());

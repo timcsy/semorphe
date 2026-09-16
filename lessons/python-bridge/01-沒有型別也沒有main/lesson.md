@@ -45,6 +45,7 @@ print("hi")
 > Python 的答案是「從這個檔案的開頭」。
 
 ## 二、不用寫型別
+Python 宣告變數不寫型別：
 
 ```python
 name = "Semorphe"
@@ -70,6 +71,7 @@ age = 16
 一個變數在第 50 行變成別的東西，而沒有任何地方會提醒你。
 
 ## 三、`print` 吃很多樣東西
+`print` 什麼都印得出來：
 
 ```python
 print(name)
@@ -81,6 +83,7 @@ print("你好", name)      # 逗號隔開，自動加空格
 不要換行的話寫 `print(x, end="")`。
 
 ## 四、讀進來
+讀一行進來用 `input()`：
 
 ```python
 name = input()

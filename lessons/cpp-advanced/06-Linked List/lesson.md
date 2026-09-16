@@ -28,6 +28,7 @@ Linked List 反過來。
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、節點指向下一個節點
+一個節點裝著自己的值，和「下一個在哪」：
 
 ```cpp
 struct Node {
@@ -54,6 +55,8 @@ struct Node {
 
 > `new` 那一顆在積木上寫著「**建立 … 物件（…）**」。
 
+把第二個接在第一個後面：
+
 ```cpp
 Node* second = new Node;
 second->val = 2;
@@ -77,6 +80,7 @@ head              second
 **程式可能當掉，也可能印出一堆亂數然後看起來很正常。**
 
 ## 三、走過整條
+從頭開始，一直跟著 `next` 走：
 
 ```cpp
 Node* p = head;
@@ -112,6 +116,7 @@ while (p != NULL) {
 而 Linked List 的每個節點散在各處。**大 O 不是全部。**
 
 ## 五、⚠️ 用完要還
+`new` 出來的每一個都要自己還回去：
 
 ```cpp
 Node* p = head;

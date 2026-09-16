@@ -18,6 +18,7 @@ Arduino Uno **沒有 WiFi**——它連這幾個名字都不認得。
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、開始連
+連線要給名字和密碼：
 
 ```cpp
 WiFi.begin("my-ssid", "my-password");
@@ -28,6 +29,7 @@ WiFi.begin("my-ssid", "my-password");
 ⚠️ 它**不會等連上**。這一行的意思是「開始連」，而不是「連好了」。
 
 ## 二、等待要寫成迴圈
+連線要花幾秒，所以要等它連上：
 
 ```cpp
 while (WiFi.status() != WL_CONNECTED) {
@@ -50,6 +52,7 @@ while (WiFi.status() != WL_CONNECTED) {
 正式的程式要加一個次數上限，超過就重開或改用熱點模式。
 
 ## 三、拿到位址
+連上之後把位址印出來，你才知道它在哪：
 
 ```cpp
 Serial.println(WiFi.localIP());
@@ -61,6 +64,7 @@ Serial.println(WiFi.localIP());
 其他裝置可以用它連過來。
 
 ## 四、⚠️ 密碼寫在程式裡
+下面這一行**會跟著程式一起被看到**：
 
 ```cpp
 WiFi.begin("my-ssid", "my-password");

@@ -18,6 +18,7 @@
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、0 到 1023
+類比腳讀進來的是一個 0 到 1023 的數字：
 
 ```cpp
 int raw = analogRead(A0);
@@ -51,6 +52,8 @@ int raw = analogRead(A0);
 
 所以第一步永遠是：**印出來看看**。
 
+先把它印出來，遮住感應器再看一次：
+
 ```cpp
 Serial.println(raw);
 ```
@@ -60,6 +63,8 @@ Serial.println(raw);
 ## 三、`map`：把範圍換掉
 
 讀到的是 0～1023，而 `analogWrite` 要的是 0～255。差 4 倍。
+
+`map` 把一個範圍換成另一個範圍：
 
 ```cpp
 int level = map(raw, 0, 1023, 0, 255);
@@ -79,6 +84,7 @@ level   0 ──────────────────  255
 要夾住得用 `constrain`。
 
 ## 四、接起來
+照著打上這一段——光越暗，燈越亮：
 
 ```cpp
 int raw = analogRead(A0);

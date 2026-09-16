@@ -44,6 +44,8 @@ Arduino  ──訊號──▶  L298N  ──大電流──▶  馬達
 | `LOW` | `LOW` | 停（滑行） |
 | `HIGH` | `HIGH` | 停（煞車） |
 
+兩支腳的高低決定轉的方向：
+
 ```cpp
 digitalWrite(5, HIGH);
 digitalWrite(6, LOW);      // 正轉
@@ -52,6 +54,7 @@ digitalWrite(6, LOW);      // 正轉
 方向靠的是**電流從哪一邊流到哪一邊**，所以要兩支腳。
 
 ## 三、速度：PWM
+速度用 `analogWrite`：
 
 ```cpp
 analogWrite(3, 200);       // 0～255
@@ -63,6 +66,7 @@ analogWrite(3, 200);       // 0～255
 每顆馬達的「最低啟動值」不同，多半在 50～100 之間，要自己試。
 
 ## 四、組起來
+照著打上這一段——正轉，中速：
 
 ```cpp
 digitalWrite(5, HIGH);

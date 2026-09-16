@@ -19,6 +19,7 @@
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、`delay` 的代價
+`delay` 這一行的期間，這支程式**什麼都不能做**：
 
 ```cpp
 delay(1000);
@@ -32,6 +33,7 @@ delay(1000);
 > **`delay` 不是「等一下」，是「停機一下」。**
 
 ## 二、`millis()`
+`millis()` 回的是「開機到現在幾毫秒」：
 
 ```cpp
 unsigned long t = millis();
@@ -45,6 +47,7 @@ unsigned long t = millis();
 > 而下一節那行 `last = millis();` 是「**把 … 設成 …**」。
 
 ## 三、看時間，而不是等時間
+照著打上這一段——它一樣每秒閃一次，而中間沒有停下來：
 
 ```cpp
 unsigned long last = 0;

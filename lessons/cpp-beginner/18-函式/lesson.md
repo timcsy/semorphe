@@ -35,6 +35,7 @@ cout << c * c << endl;
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、做一個
+照著打上這一段：
 
 ```cpp
 int square(int n) {
@@ -67,6 +68,7 @@ cout << square(5) << endl;    // 25
 ⚠️ **函式要寫在 `main` 外面。**
 
 ## 二、`return` 有兩個作用
+那一行 `return` 做的是兩件事：
 
 ```cpp
 return n * n;
@@ -92,6 +94,7 @@ void say() {
 `cout << say();` 是錯的，要單獨寫成一行 `say();`。
 
 ## 三、參數可以不只一個
+照著打上這一段：
 
 ```cpp
 int add(int a, int b) {

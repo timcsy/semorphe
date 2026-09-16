@@ -17,6 +17,7 @@
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、三步
+照著打上這一段，三步都在裡面：
 
 ```cpp
 int msum(vector<int>& a, int lo, int hi) {
@@ -37,6 +38,7 @@ int msum(vector<int>& a, int lo, int hi) {
 ⚠️ **`lo == hi` 那個出口不能少**（C++ 入門第 16 課的規矩：遞迴要有出口）。
 
 ## 二、`vector<int>&` 的那個 `&`
+那個 `&` 在這裡是這個意思：
 
 ```cpp
 int msum(vector<int>& a, int lo, int hi)

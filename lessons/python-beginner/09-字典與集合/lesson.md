@@ -15,6 +15,7 @@
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、`dict`：鍵 → 值
+照著打上這兩行：
 
 ```python
 ages = {"ming": 16, "hua": 17}
@@ -38,6 +39,7 @@ print(len(ages))         # 幾筆
 > 與第 2 課那顆「設定」不同：這一顆改的是**容器裡的一格**。
 
 ## 二、走過去
+走過一本字典，拿到的是**鍵**：
 
 ```python
 for k in ages:
@@ -60,6 +62,7 @@ for k, v in ages.items():
 | `for k, v in d.items()` | 兩個 |
 
 ## 三、🔴 不存在的鍵
+問一個不存在的鍵，它會出事：
 
 ```python
 print(ages["nobody"])          # 💥 KeyError
@@ -86,6 +89,7 @@ for w in words:
 ```
 
 ## 四、`set`：只管有沒有
+集合裡的東西不會重複：
 
 ```python
 tags = {"a", "b", "a"}

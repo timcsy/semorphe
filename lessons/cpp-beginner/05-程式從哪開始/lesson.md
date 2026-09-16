@@ -44,6 +44,7 @@ int main() {
 你前三課放進去的東西，全部都在那兩行中間。
 
 ## 二、`#include` 是「先把工具借來」
+那一行長這樣：
 
 ```cpp
 #include <iostream>

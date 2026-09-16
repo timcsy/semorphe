@@ -17,6 +17,7 @@ C++ 有兩種 `for`：計數的和範圍的。
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、`for ... in`
+Python 的 `for` 走的是「一串東西」：
 
 ```python
 for i in range(3):
@@ -40,6 +41,7 @@ for i in range(3):
 只是這次它寫在名字裡而不是條件裡。
 
 ## 二、直接走過東西
+不必先算長度再用編號——直接走：
 
 ```python
 names = ["a", "b", "c"]
@@ -55,6 +57,7 @@ for n in names:
 > 那個方括號的東西在積木上叫「**串列**」。
 
 ## 三、需要位置的時候：`enumerate`
+真的需要位置的時候，用 `enumerate`：
 
 ```python
 for i, n in enumerate(names):
@@ -80,6 +83,7 @@ for i, n in enumerate(names):
 > 少一個地方會寫錯，就是少一個 bug（C++ 入門第 14 課那句話）。
 
 ## 四、`while` 一模一樣
+`while` 與 C++ 沒有差別，只差縮排：
 
 ```python
 n = 3

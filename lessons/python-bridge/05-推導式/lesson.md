@@ -23,6 +23,7 @@ for n in nums:
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、換成別的
+一行把一串換成另一串：
 
 ```python
 squares = [n * n for n in nums]
@@ -41,6 +42,7 @@ squares = [n * n for n in nums]
 ⚠️ **它做出一個新的 list，不會改到原來的。**
 
 ## 二、加上篩選
+後面加一個 `if`，就只留下合的：
 
 ```python
 evens = [n for n in nums if n % 2 == 0]
@@ -57,6 +59,7 @@ evens = [n for n in nums if n % 2 == 0]
 讀法：「走過每一個 `n`，**如果**是偶數，**就換成** `n * n`」。
 
 ## 三、dict 也可以
+換成大括號就是一本字典：
 
 ```python
 table = {n: n * n for n in nums}
@@ -68,6 +71,8 @@ table = {n: n * n for n in nums}
 ## 四、⚠️ 什麼時候不該用
 
 推導式讀起來像一句英文，而那只在**它短的時候**成立。
+
+下面這個寫法**不要學**——它塞了太多件事：
 
 ```python
 # 🔴 不要這樣

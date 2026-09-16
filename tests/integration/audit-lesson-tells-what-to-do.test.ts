@@ -1,5 +1,5 @@
 /**
- * **第一百三十一條護欄：一節放了程式碼，就要有一句話叫他做什麼。**
+ * **第一百三十一條護欄：程式碼不得憑空出現——它上面要有一句話。**
  *
  * ## 它從哪來——整班回饋裡出現 5 次（2026-09-15）
  *
@@ -47,14 +47,42 @@ import { loadBaseline, assertRatchet } from '../helpers/guardrail'
 const ROOT = path.resolve(__dirname, '../..')
 
 /**
- * 「這一段你要做什麼」說得出口的那些字。
+ * 一句好的引言長什麼樣——**這一份只是文件，不是判準**。
  *
- * ⚠️ 後兩個（`不用打`／`看一眼就好`）是**反向**的指示——它們一樣清楚，
- * 所以一樣算數。少了它們，純參考的那幾節會被逼著加一句假的動作。
+ * 🪦 第一版拿它當判準（「有沒有動作動詞」），而它報了 26 個偽陽性：
+ * 「和陣列一模一樣：」「兩種寫法逐字對照：」這種句子**本來就答了「這是什麼」**。
+ *
+ * > **「那句話說不說得出要做什麼」導不出來——導得出來的是「有沒有那句話」。
+ * > 一個量不到的性質，用代理去量會報一堆偽陽性，而那些偽陽性會逼人寫廢話。**
  */
 const FENCE = '\x60'.repeat(3)
 
+const TAGGED = new RegExp(FENCE + '(?:cpp|c|python|ino)\\b')
+
 const ACTION = /打上|打這|把它打|拖進來|拖到|拖一|按一下|按「|按執行|改成|換成|加上|加一|選「|點一下|點那|試試看把|自己打|不用打|看一眼就好/
+
+/**
+ * **程式碼區塊【正上方】那一句，是不是一句引言**（以冒號收尾）。
+ *
+ * 🪦 第一版只認動詞，於是「和陣列一模一樣：」「兩種寫法逐字對照：」這種
+ * **本來就答了「這是什麼」**的句子全被報成缺陷（實測 24 節）。
+ *
+ * > **「叫他做什麼」有兩種答法：一種是祈使句，另一種是
+ * > 「下面這一段是……」——而後者在中文裡的記號就是那個冒號。**
+ *
+ * ⚠️ 而**沒有任何前文**（標題之後直接是一段碼）是真的缺陷：實測 168 節。
+ * 讀者撞上那段碼時，手上一個字都沒有。
+ */
+/**
+ * 標題與那段程式碼之間，**有沒有話**。
+ *
+ * 🔴 這就是判準的全部。實測全庫有 168 節是「標題之後直接一段碼」
+ * ——讀者撞上它時手上一個字都沒有，而他分不出那是要他打的還是給他看的。
+ */
+function hasLeadIn(body: string): boolean {
+  const before = body.split(FENCE)[0]
+  return before.split('\n').some((l) => l.trim().length > 0)
+}
 
 export interface Finding { lesson: string; section: string }
 
@@ -65,8 +93,11 @@ export function sectionsWithoutAction(md: string, lesson = ''): Finding[] {
     // 🪦 **不寫字面的三連反引號**——一行奇數個反引號會讓整個檔的配對錯開一位，
     //    而錯開的配對會生出橫跨數十行的假「程式碼片段」，被第三十一／七十二條
     //    當成 C++ 語料吃進去（今天第三次踩到）。
-    if (!body.includes(FENCE)) continue
-    if (ACTION.test(body)) continue
+    // ⚠️ **只算有語言標記的**（```cpp／```python…）——沒有標記的那些是
+    //    輸出範例、ASCII 圖、對照表，它們本來就不是「要他打的東西」。
+    //    🪦 第一版連它們一起算，多報了 11 節。
+    if (!TAGGED.test(body)) continue
+    if (hasLeadIn(body)) continue
     out.push({ lesson, section: title.trim() })
   }
   return out
@@ -93,26 +124,40 @@ describe('第一百三十一條護欄：一節放了程式碼就要說得出要�
     expect(files.length, '🔴 一課都沒掃到 → 下面在驗空集合').toBeGreaterThan(50)
   })
 
-  it('★ 棘輪：說不出要做什麼的小節，只准變少', () => {
+  it('★ 硬性零：程式碼不得憑空出現', () => {
     const bad = files.flatMap((f) =>
       sectionsWithoutAction(fs.readFileSync(f, 'utf8'),
         `${path.basename(path.dirname(path.dirname(f)))}/${path.basename(path.dirname(f))}`))
-    assertRatchet([['說不出要做什麼的小節', bad.length]], 'lesson-tells-what-to-do')
+    // 🟢 2026-09-16 清到 0（補了 190 節引言）——所以它從棘輪升級成硬性零。
+    // ⚠️ 而基線那一項留著：`assertRatchet` 仍然跑，數字回不去。
+    expect(
+      bad.map((b) => `${b.lesson} · ${b.section}`),
+      '🔴 這幾節的程式碼是憑空出現的——讀者撞上它時手上一個字都沒有：',
+    ).toEqual([])
+    assertRatchet([['程式碼憑空出現的小節', bad.length]], 'lesson-tells-what-to-do')
   })
 
-  it('★ 注入①：放了程式碼而沒有動作句 → 要被報出來', () => {
-    const md = ['## 一、測試', '', '這是一段解釋。', '', FENCE + 'cpp', 'int x = 1;', FENCE].join('\n')
+  it('★ 注入①：標題之後直接一段碼 → 要被報出來', () => {
+    const md = ['## 一、測試', '', FENCE + 'cpp', 'int x = 1;', FENCE].join('\n')
     expect(sectionsWithoutAction(md).length, '🔴 沒被報 → 偵測器壞了').toBe(1)
   })
 
-  it('★ 注入②：有動作句 → 不得被報', () => {
+  it('★ 注入②：有一句引言 → 不得被報', () => {
     const md = ['## 一、測試', '', '照著打上這一行：', '', FENCE + 'cpp', 'int x = 1;', FENCE].join('\n')
-    expect(sectionsWithoutAction(md), '🔴 有祈使句還被報 → 會逼人寫廢話').toEqual([])
+    expect(sectionsWithoutAction(md), '🔴 有引言還被報 → 會逼人寫廢話').toEqual([])
   })
 
-  it('★ 注入③：明說「不用打」也算數——那是另一種清楚的指示', () => {
-    const md = ['## 一、測試', '', '⚠️ 這幾行不用打，看一眼就好。', '', FENCE + 'cpp', 'int x = 1;', FENCE].join('\n')
-    expect(sectionsWithoutAction(md), '🔴 純參考的那幾節會被逼著加一句假的動作').toEqual([])
+  it('★ 注入③：不以冒號結尾的引言也算數', () => {
+    // 🪦 第一版要求冒號，而「這是同一件事做九次。」一樣說清楚了下面是什麼
+    //    ——那個要求是我加的，不是讀者要的。
+    const md = ['## 一、測試', '', '這是同一件事做九次。', '', FENCE + 'cpp', 'int x = 1;', FENCE].join('\n')
+    expect(sectionsWithoutAction(md), '🔴 只認冒號 → 會逼人改標點').toEqual([])
+  })
+
+  it('★ 沒有語言標記的區塊不在範圍——那是輸出範例或 ASCII 圖', () => {
+    // 🪦 第一版連它們一起算，多報了 11 節（`原理`、`為什麼是 O(n log n)`…）
+    const md = ['## 一、測試', '', FENCE, '① 送出一聲 → ② 等它回來', FENCE].join('\n')
+    expect(sectionsWithoutAction(md), '🔴 ASCII 圖被當成「要他打的程式碼」').toEqual([])
   })
 
   it('★ 沒有程式碼的小節不在範圍', () => {
@@ -121,6 +166,6 @@ describe('第一百三十一條護欄：一節放了程式碼就要說得出要�
 
   it('★ 基線裡真的有這一項（少一項＝棘輪沒跑而測試是綠的）', () => {
     const base = loadBaseline<Record<string, number>>('lesson-tells-what-to-do')
-    expect(typeof base['說不出要做什麼的小節']).toBe('number')
+    expect(typeof base['程式碼憑空出現的小節']).toBe('number')
   })
 })
