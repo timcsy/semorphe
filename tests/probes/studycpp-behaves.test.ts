@@ -218,8 +218,10 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
     const ref = await runCppBatchDetailed(
       rows.map((r) => r.src), COMPILE_CONCURRENCY, rows.map((r) => r.stdin.join('\n') + '\n'))
 
-    const tally = { compileFail: 0, refRunFail: 0, interpError: 0, same: 0, differ: 0 }
+    const tally = { compileFail: 0, refRunFail: 0, interpError: 0, stepBudget: 0, same: 0, differ: 0 }
     const shape = { weStopEarly: 0, wePrintMore: 0, reallyDifferent: 0 }
+    const errKinds = new Map<string, number>()
+    const errSample = new Map<string, string>()
     const diffs: string[] = []
     for (let i = 0; i < rows.length; i++) {
       const r = ref[i]
@@ -228,13 +230,27 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
       try {
         const tree = lifter.lift(tsParser.parse(rows[i].src).rootNode as never) as SemanticNode
         const out: string[] = []
-        const interp = new SemanticInterpreter({ maxSteps: 2_000_000 })
+        /**
+         * ⚠️ **步數預算不是缺陷判準**——撞到上限的那些是 N 皇后回溯那一類，
+         * g++ 幾毫秒跑完，而樹走式解譯器慢 10–100 倍。所以它獨立成一格，
+         * 不混進「解譯器出錯」。
+         */
+        const interp = new SemanticInterpreter({
+          maxSteps: Number(process.env.PROBE_STEPS ?? 2_000_000),
+        })
         interp.setOutputCallback((x) => out.push(x))
         await interp.execute(tree, rows[i].stdin)
         got = out.join('')
       } catch (e) {
         tally.interpError++
-        if (diffs.length < 45) diffs.push(`   ✘ ${rows[i].file}  解譯器拋錯：${String(e).slice(0, 90)}`)
+        // 🔴 **分族，不要一支一支追**——90 支的清單看不出下一刀該切哪裡。
+        const msg = String(e)
+        if (msg.includes('MAX_STEPS')) { tally.interpError--; tally.stepBudget++; continue }
+        const key = (msg.match(/RUNTIME_ERR_[A-Z_]+/) ?? msg.match(/Error: [^"{]{0,40}/) ?? ['其他'])[0]
+        const detail = (msg.match(/\{"%1":"([^"]{0,40})/) ?? ['', ''])[1]
+        const k = `${key}${detail ? ` ｜ ${detail}` : ''}`
+        errKinds.set(k, (errKinds.get(k) ?? 0) + 1)
+        if (!errSample.has(k)) errSample.set(k, rows[i].file)
         continue
       }
       if (norm(got) === norm(r.output ?? '')) tally.same++
@@ -257,6 +273,7 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
       `  編不過          ${tally.compileFail}`,
       `  參照跑不完      ${tally.refRunFail}   ← 多半是餵的測資讓它崩／逾時`,
       `  解譯器出錯      ${tally.interpError}`,
+      `  步數預算用完    ${tally.stepBudget}   ← 不是缺陷，是樹走式解譯器比編譯碼慢`,
       `  ── 兩邊都跑完 ${ran} 支 ──`,
       `  🟢 一致         ${tally.same}`,
       `  🔴 不一致       ${tally.differ}`,
@@ -264,6 +281,9 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
       `       ├ 我們多了尾巴 ${shape.wePrintMore}`,
       `       └ 內容真的不同 ${shape.reallyDifferent}   ← 🔴 這一欄才是缺陷`,
       `  （測資尾巴長度 ${TAIL}）`,
+      '  ── 解譯器出錯的分族 ──',
+      [...errKinds.entries()].sort((a, b) => b[1] - a[1])
+        .map(([k, n2]) => `   ${String(n2).padStart(3)} 支  ${k}\n          例：${errSample.get(k)}`).join('\n'),
       diffs.join('\n'),
     ].join('\n'))
     expect(ran, '🔴 一支都沒跑完 → 下面的數字不算數').toBeGreaterThan(20)
@@ -303,46 +323,4 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
     expect(FS.length).toBeGreaterThan(200)
   }, 600_000)
 
-  /**
-   * ② **不用讀輸入的那一批**——零生成器風險的第一個數字。
-   *
-   * 🔴 兩邊都餵空的，所以這一格量的純粹是「同一支程式，兩個執行器的輸出一樣嗎」。
-   */
-  it('② 不用輸入的那些：兩邊的輸出一樣嗎', async () => {
-    const srcs = FS.map((f) => fs.readFileSync(f, 'utf8'))
-    const ref = await runCppBatchDetailed(srcs, 8, srcs.map(() => ''))
-    const rows: { f: string; want: string; got: string; why: string }[] = []
-    let same = 0, lifted = 0
-    for (let i = 0; i < FS.length; i++) {
-      const r = ref[i]
-      if (!r.ok || r.output === null) continue
-      lifted++
-      let got = ''
-      let why = ''
-      try {
-        const tree = lifter.lift(tsParser.parse(srcs[i]).rootNode as never) as SemanticNode
-        const out: string[] = []
-        const interp = new SemanticInterpreter({ maxSteps: 2_000_000 })
-        interp.setOutputCallback((x) => out.push(x))
-        await interp.execute(tree, [])
-        got = out.join('')
-      } catch (e) {
-        why = `解譯器拋了：${String((e as Error).message).slice(0, 90)}`
-      }
-      // ⚠️ ③ 文字不同 ≠ 錯：只正規化行尾與尾端空白，**不碰內容**
-      const norm = (x: string): string =>
-        x.replace(/\r\n/g, '\n').split('\n').map((l) => l.replace(/\s+$/, '')).join('\n').replace(/\n+$/, '')
-      if (why === '' && norm(got) === norm(r.output)) same++
-      else rows.push({ f: path.relative(DIR, FS[i]), want: r.output, got, why })
-    }
-    console.log([
-      `  參照編譯器跑得完的  ${lifted}`,
-      `  兩邊一模一樣        ${same}   （${((same / lifted) * 100).toFixed(1)}%）`,
-      `  對不上              ${rows.length}`,
-      '',
-      ...rows.slice(0, 12).map((x) =>
-        `  ✘ ${x.f}\n      ${x.why || `g++ ${JSON.stringify(x.want.slice(0, 70))}\n      我們 ${JSON.stringify(x.got.slice(0, 70))}`}`),
-    ].join('\n'))
-    expect(lifted).toBeGreaterThan(100)
-  }, 900_000)
 })

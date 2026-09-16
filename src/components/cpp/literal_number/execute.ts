@@ -36,8 +36,18 @@ const SUFFIX = /(?:[uU]|[lL]{1,2}|[fF])+$/
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:literal_number', async (node) => {
       const raw = String(node.properties.value)
+      /**
+       * 🔴 **數字分隔符 `'` 要先拿掉**（C++14，2026-09-16）。
+       *
+       * `10'0000'0007` 在競賽程式裡很常見（那是 10⁹+7，分段比較好讀）。
+       * 在此之前這裡直接 `Number()`，得到 `NaN`，然後**整支程式拋錯停掉**。
+       *
+       * ⚠️ 它是**寫法**不是值：`1'000` 與 `1000` 是同一個數。所以剝在這裡，
+       *    而 `properties.value` 留原文——產生器照樣吐回原本那個寫法。
+       */
+      const noSep = raw.replace(/'/g, '')
       // ⚠️ 十六進位／二進位不能剝：`0xFF` 的 `F` 是數字不是後綴。
-      const bare = /^0[xXbB]/.test(raw) ? raw : raw.replace(SUFFIX, '')
+      const bare = /^0[xXbB]/.test(noSep) ? noSep : noSep.replace(SUFFIX, '')
       const num = Number(bare)
       // 🔴 **判不出來就出聲**——回 `NaN` 的話錯誤會出現在離根因很遠的地方
       //（第三十三條護欄「靜默回退」在看這個）。

@@ -71,7 +71,14 @@ export type execResult =
  * 分得出**編譯失敗**與**執行失敗**——誤差護欄需要這個區分，因為
  * 「參照跑不動」與「參照跑出別的答案」是兩種不同的東西。
  */
-export function runCppDetailed(code: string): execResult {
+/**
+ * ⚠️ **`stdin` 是 2026-09-16 補的**——在此之前它寫死 `stdio: ['ignore', …]`，
+ * 於是每一個「要讀輸入」的測試，g++ 那一側都讀到 EOF、印出未初始化的垃圾，
+ * 而**看起來像是我們錯了**。
+ *
+ * > **一個不吃輸入的參照實作，量出來的每一個「不一致」都是它自己造的。**
+ */
+export function runCppDetailed(code: string, stdin?: string): execResult {
   if (!hasReferenceCompiler()) {
     // 沒有編譯器**不是**「這一段跑不動」，是量測機構壞了。丟出去，別混進統計。
     throw new Error('找不到參照編譯器（g++）。護欄不得在此跳過——一筆看不見的缺陷與一筆不存在的缺陷長得一模一樣。')
@@ -92,7 +99,13 @@ export function runCppDetailed(code: string): execResult {
       // ⚠️ **要餵 stdin 的請走 `runCppBatchDetailed`。** 這一支是 `execSync`，
       // 它阻塞整條 Node 執行緒——在 `it()` 裡連跑七次會把同一輪的
       // 時間敏感測試推過門檻（2026-08-21 實測，`bus-update` 每輪紅不同支）。
-      return { ok: true, output: execSync(bin, { encoding: 'utf-8', timeout: timeoutMs, stdio: ['ignore', 'pipe', 'pipe'] }) }
+      return {
+        ok: true,
+        output: execSync(bin, {
+          encoding: 'utf-8', timeout: timeoutMs, input: stdin ?? '',
+          stdio: ['pipe', 'pipe', 'pipe'],
+        }),
+      }
     } catch (e) {
       return { ok: false, stage: 'run', message: String((e as Error).message).slice(0, 200) }
     }

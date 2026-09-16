@@ -12,9 +12,38 @@ import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { runOnInstance } from '../../../languages/cpp/lang/executors/structs'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
+  /**
+   * **標準串流的設定方法——在我們的模型裡是 no-op。**
+   *
+   * 🔴 它從真實的學生程式來（2026-09-16，218 支裡 6 支撞到）：
+   *    `ios::sync_with_stdio(0), cin.tie(0); … cin.ignore();`
+   *    ——`cin` 不在作用域裡，於是 `scope.get('cin')` 直接拋 UNDECLARED_VAR，
+   *    **整支程式停掉**。
+   *
+   * ⚠️ 為什麼 `ignore` 也算 no-op：我們的 stdin 是**一串 token／行**，
+   *    不是字元流。`cin >> n` 吃掉一個 token 之後，「這一行剩下的東西」
+   *    本來就不在路上了——所以什麼都不做才是對的。
+   *
+   * 🔴 **白名單是刻意窄的**：會【讀走東西】的方法（`get`／`peek`／`getline`／
+   *    `read`）**不在裡面**，它們要繼續報錯。
+   *
+   * > **一個「忽略掉不認識的東西」的放行，與一個「這幾個我知道可以忽略」的白名單，
+   * > 差別在前者會把「它其實讀走了一個字」也一起忽略掉。**
+   */
+  const STREAMS = new Set(['cin', 'cout', 'cerr', 'clog', 'ios', 'ios_base'])
+  const NOOP_METHODS = new Set([
+    'tie', 'ignore', 'sync_with_stdio', 'precision', 'setf', 'unsetf',
+    'flush', 'clear', 'rdbuf', 'exceptions', 'width', 'fill',
+  ])
+
   const callMethod: ComponentExecutor = async (node, ctx) => {
     const objName = String(node.properties.obj)
     const methodName = String(node.properties.method)
+    if (STREAMS.has(objName) && NOOP_METHODS.has(methodName)) {
+      // ⚠️ 回傳 `cin` 自己——`cin.tie(0)` 在 C++ 裡回傳的是一個串流，
+      //    而鏈式寫法（`cin.tie(0)->sync…`）靠它。
+      return { type: 'object', structName: objName, value: new Map() }
+    }
     const obj = ctx.scope.get(objName)
     if (obj.type !== 'object') {
       throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName}（不是一個物件）` })
