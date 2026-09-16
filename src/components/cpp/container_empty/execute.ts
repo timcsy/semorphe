@@ -1,10 +1,11 @@
 /** `cpp:container_empty` 的 **execute** 路——從共用檔原封剪過來（批次第九批：容器方法資料表）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_empty', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const arr = ctx.scope.get(name)
+      const arr = receiverOf(ctx.scope, name)
 
       // **字串也是容器**。`s.empty()` 走這條路（容器方法表按方法名分派，
       // 不按接收者型別），而它原本落進下面那個「不是 array 就回 true」。

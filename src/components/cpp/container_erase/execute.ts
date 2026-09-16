@@ -1,5 +1,6 @@
 /** `cpp:container_erase` 的 **execute** 路——從共用檔原封剪過來（批次第九批：容器方法資料表）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { mapFind } from '../../../languages/cpp/lang/runtime/map'
 
@@ -9,7 +10,7 @@ export function registerExecute(register: (component: string, executor: Componen
       const keyNodes = node.slots.key ?? []
       if (keyNodes.length === 0) return
       const keyVal = await ctx.evaluate(keyNodes[0])
-      const arr = ctx.scope.get(name)
+      const arr = receiverOf(ctx.scope, name)
       if (arr.type !== 'array' || !Array.isArray(arr.value)) return
       // Try map-style erase (key-value pairs) first
       const idx = mapFind(arr.value, keyVal)

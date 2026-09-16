@@ -1,5 +1,6 @@
 /** `cpp:map_at` 的 **execute** 路——從共用檔原封剪過來（批次第十四批：subscript_expression 的分支）。 */
 import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { defaultValue } from '../../../interpreter/types'
 import { mapFind, makePair, pairParts, mapInsertSorted } from '../../../languages/cpp/lang/runtime/map'
@@ -13,7 +14,7 @@ export function registerExecute(register: (component: string, executor: Componen
       const keyNodes = node.slots.key ?? []
       if (keyNodes.length === 0) return defaultValue('int')
       const keyVal = await ctx.evaluate(keyNodes[0])
-      const map = ctx.scope.get(name)
+      const map = receiverOf(ctx.scope, name)
       if (map.type !== 'array' || !Array.isArray(map.value)) {
         return defaultValue('int')
       }
@@ -52,7 +53,7 @@ export function registerLvalue(): void {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個對應表存取沒有鍵' })
     }
     const keyVal = await ctx.evaluate(keyNodes[0])
-    const map = ctx.scope.get(name)
+    const map = receiverOf(ctx.scope, name)
     if (map.type !== 'array' || !Array.isArray(map.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${name} 不是一個對應表` })
     }

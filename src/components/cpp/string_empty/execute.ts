@@ -1,10 +1,11 @@
 /** `cpp:string_empty` 的 **execute** 路——從 `std/string/executors.ts` 原封搬過來。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 
 export function registerExecute(register: (component: string, e: ComponentExecutor) => void): void {
   register('cpp:string_empty', async (node, ctx) => {
     const obj = String(node.properties.obj)
-    const val = ctx.scope.get(obj)
+    const val = receiverOf(ctx.scope, obj)
     return { type: 'bool', value: String(val.value).length === 0 }
   })
 }

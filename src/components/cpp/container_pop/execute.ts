@@ -1,12 +1,13 @@
 /** `cpp:container_pop` 的 **execute** 路——從共用檔原封剪過來（批次第三十五批）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { heapTopIndex } from '../../../languages/cpp/lang/runtime/heap'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_pop', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const arr = ctx.scope.get(name)
+      const arr = receiverOf(ctx.scope, name)
       if (arr.type !== 'array' || !Array.isArray(arr.value)) {
         throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
       }

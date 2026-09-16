@@ -6,12 +6,13 @@
  * **搬移不重寫**——原封搬過來，重寫要另一個 commit（見 `component-encapsulate`）。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import { defaultValue } from '../../../interpreter/types'
 
 export function registerExecute(register: (component: string, e: ComponentExecutor) => void): void {
   register('cpp:queue_back', async (node, ctx) => {
     const name = String(node.properties.obj)
-    const arr = ctx.scope.get(name)
+    const arr = receiverOf(ctx.scope, name)
     if (arr.type !== 'array' || !Array.isArray(arr.value) || arr.value.length === 0) {
       return defaultValue('int')
     }

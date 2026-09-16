@@ -1,5 +1,6 @@
 /** `cpp:vector_size` 的 **execute** 路——從共用檔原封剪過來（批次第九批：容器方法資料表）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
@@ -19,7 +20,7 @@ export function registerExecute(register: (component: string, executor: Componen
      */
     register('cpp:vector_size', async (node, ctx) => {
       const name = String(node.properties.obj)
-      const v = ctx.scope.get(name)
+      const v = receiverOf(ctx.scope, name)
       if (v.type === 'array' && Array.isArray(v.value)) return { type: 'int', value: v.value.length }
       if (v.type === 'string') return { type: 'int', value: String(v.value).length }
       // **出聲，不要回 0。** 空容器的 0 與「不是容器」的 0 分不出來時，

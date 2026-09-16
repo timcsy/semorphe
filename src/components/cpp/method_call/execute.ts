@@ -8,6 +8,7 @@
  * > **共用的是演算法（在實例上執行一個方法），不是身分。**
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { runOnInstance } from '../../../languages/cpp/lang/executors/structs'
 
@@ -44,7 +45,7 @@ export function registerExecute(register: (component: string, executor: Componen
       //    而鏈式寫法（`cin.tie(0)->sync…`）靠它。
       return { type: 'object', structName: objName, value: new Map() }
     }
-    const obj = ctx.scope.get(objName)
+    const obj = receiverOf(ctx.scope, objName)
     if (obj.type !== 'object') {
       throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName}（不是一個物件）` })
     }

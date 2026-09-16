@@ -1,5 +1,6 @@
 import type { SemanticNode } from '../core/types'
 import { aggregateShapeOf } from '../core/component/aggregate-nodes'
+import { resolveAlias } from './aliases'
 /**
  * 🔴 **這四個名字住在 `core/execution.ts`**（2026-09-13 搬的）——
  * 因為講它們的是匯流排與視圖，而直譯器只是它們的**第一個實作**。
@@ -161,7 +162,15 @@ export type ExecutionInput =
   | { kind: 'pause-decision'; decision: 'continue' | 'stop' }
 
 /** 建立預設 RuntimeValue */
-export function defaultValue(type: string): RuntimeValue {
+export function defaultValue(rawType: string): RuntimeValue {
+  /**
+   * 🔴 **型別也可能是一個小名**（`#define pii pair<int,int>`，2026-09-16）。
+   *
+   * 在此之前 `pii A[200007];` 的每一格都是 `int 0`，於是 `A[i].first`
+   * 拋「不是一個結構」。實測 218 支學生程式裡 11 支撞在這裡
+   * （`#define pii` 出現在 6 支，而它的下游更廣）。
+   */
+  const type = resolveAlias(rawType)
   switch (type) {
     case 'int': return { type: 'int', value: 0 }
     case 'float': return { type: 'float', value: 0.0 }

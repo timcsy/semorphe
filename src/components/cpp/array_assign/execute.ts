@@ -1,5 +1,6 @@
 /** `cpp:array_assign` 的 **execute** 路——從共用檔原封剪過來（批次第三十七批）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { evalInitializer } from '../../../interpreter/aggregate'
 
@@ -12,7 +13,7 @@ export function registerExecute(register: (component: string, executor: Componen
 
       const indexVal = await ctx.evaluate(indexNodes[0])
       const index = ctx.toNumber(indexVal)
-      const container = ctx.scope.get(name)
+      const container = receiverOf(ctx.scope, name)
       /**
        * 🔴 **大括號要照那一格的型別填**（2026-09-16）。
        *

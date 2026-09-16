@@ -8,13 +8,14 @@
  * > 相減（`it - v.begin()`）在那個表示上全都已經能跑。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_iter', async (node, ctx) => {
     const name = String(node.properties.obj)
     const which = String(node.properties.which ?? 'begin')
-    const v = ctx.scope.get(name)
+    const v = receiverOf(ctx.scope, name)
     if (v.type !== 'array' || !Array.isArray(v.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${name} 不是容器` })
     }

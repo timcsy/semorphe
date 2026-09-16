@@ -20,6 +20,7 @@
  * 所以共用同一個 `value` 陣列，用 `offset` 記位置。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
@@ -52,7 +53,7 @@ export function registerExecute(register: (component: string, executor: Componen
     if ((objNode || objName) && idxNode) {
       const base = objNode
         ? await ctx.evaluate(objNode)
-        : (ctx.scope.has(objName) ? ctx.scope.get(objName) : null)
+        : (ctx.scope.has(objName) ? receiverOf(ctx.scope, objName) : null)
       if (base && base.type === 'array' && Array.isArray(base.value)) {
         const i = Number((await ctx.evaluate(idxNode)).value)
         if (!Number.isInteger(i) || i < 0 || i >= base.value.length) {

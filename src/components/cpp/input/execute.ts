@@ -23,10 +23,13 @@
  * 那是 `cin >> a >> b` 的**回傳值**（讀成功幾筆），`while (cin >> x)` 正是靠它終止。
  */
 import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { defaultValue, parseInputValue } from '../../../interpreter/types'
-// 🪦 `RuntimeError`／`isIndexedAccess` 的匯入已於 2026-08-26 刪除——
-//    那一支手拆形狀的分支換成了 `resolvePlace`，兩個消費者一起消失。
+// 🪦 `isIndexedAccess` 的匯入已於 2026-08-26 刪除——那一支手拆形狀的分支
+//    換成了 `resolvePlace`。⚠️ `RuntimeError` 於 2026-09-16 回來了：
+//    「讀進來的東西不知道要放哪裡」在此之前是靜靜地寫進一個叫 `x` 的假名字。
+import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { resolvePlace } from '../../../interpreter/lvalue'
 
 /**
@@ -72,7 +75,7 @@ export function registerExecute(register: (component: string, executor: Componen
         for (const target of valueNodes) {
           const tok = tokens.shift()
           const name = String(target.properties.name)
-          const cur = ctx.scope.has(name) ? ctx.scope.get(name) : { type: 'int' as const, value: 0 }
+          const cur = ctx.scope.has(name) ? receiverOf(ctx.scope, name) : { type: 'int' as const, value: 0 }
           // 依**目標變數的型別**轉換——與 C++ 的 `>>` 一致
           const parsed = tok === undefined
             ? cur
@@ -110,7 +113,27 @@ export function registerExecute(register: (component: string, executor: Componen
           const got = await extractOne(ctx, targetType)
           if (got.value !== null) {
             if (place) place.write(got.value)
-            else ctx.scope.set(String(varRefNode.properties.name ?? 'x'), got.value)
+            else {
+              /**
+               * 🪦 **這裡的預設名曾經寫著 `'x'`**（2026-09-16 拿掉）。
+               *
+               * 位置解不出來而那個節點又沒有名字時，它會去 `set('x', …)`
+               * ——於是錯誤訊息指著一個**程式裡根本不存在的名字**。
+               * 實測：218 支學生程式有 19 支報「UNDECLARED_VAR: x」，
+               * 而其中沒有一支有叫 `x` 的變數（那是 `#define x first`
+               * 與 `pii A[…]` 兩個完全不同的根因，被同一個假名字蓋住）。
+               *
+               * > **一個回退用的預設值，會變成錯誤訊息的內容
+               * > ——而那句話會把每一個不同的根因說成同一件事。**
+               */
+              const target = String(varRefNode.properties.name ?? '')
+              if (target === '') {
+                throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+                  '%1': `讀進來的東西不知道要放哪裡：${varRefNode.componentId}`,
+                })
+              }
+              ctx.scope.set(target, got.value)
+            }
           }
           if (!got.ok) return { type: 'int', value: 0 }
           itemsRead++

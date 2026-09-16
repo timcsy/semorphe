@@ -6,6 +6,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { evalInitializer } from '../../../interpreter/aggregate'
 import type { RuntimeValue } from '../../../interpreter/types'
+import { defaultValue } from '../../../interpreter/types'
 
 /** 深拷貝——每一格獨立，見下方 `fill` 的註解 */
 function cloneValue(v: RuntimeValue): RuntimeValue {
@@ -38,7 +39,8 @@ export function registerExecute(
       const copied = produced.type === 'array' && Array.isArray(produced.value)
         ? [...produced.value]
         : []
-      ctx.scope.declare(name, { type: 'array', value: copied })
+      // ⚠️ 複製來的也要記住元素型別——`vt[0] = {3,4}` 靠它照形狀填
+      ctx.scope.declare(name, { type: 'array', value: copied, elemType })
       return
     }
     // `vector<int> v(5)` —— **建構子引數：5 個預設值**。
@@ -55,7 +57,16 @@ export function registerExecute(
       const fill = fillNode ? await ctx.evaluate(fillNode) : null
       const cells = []
       for (let i = 0; i < (Number.isFinite(n) && n > 0 ? Math.trunc(n) : 0); i++) {
-        cells.push(fill ? cloneValue(fill) : { type: 'int' as const, value: 0 })
+        /**
+         * 🔴 **沒有填充值的時候要照【元素型別】給預設值**（2026-09-16）。
+         *
+         * 在此之前這裡寫死 `int 0`，於是 `vector<pair<int,int>> vt(n);`
+         * 的每一格都是 0 而不是一對——`cin >> vt[i].first` 因此拋錯。
+         * 實測 218 支學生程式裡 8 支撞在這裡（競賽裡 `vector<pii> vt(n)` 很常見）。
+         *
+         * > **一個「沒給就補 0」的預設值，在元素不是數字的時候補的是一個錯的形狀。**
+         */
+        cells.push(fill ? cloneValue(fill) : defaultValue(elemType))
       }
       ctx.scope.declare(name, { type: 'array', value: cells, elemType })
       return

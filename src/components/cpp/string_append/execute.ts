@@ -1,10 +1,11 @@
 /** `cpp:string_append` 的 **execute** 路——從共用檔原封剪過來（批次第五批：lift 是 io.ts 的方法 case（純資料））。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:string_append', async (node, ctx) => {
       const obj = String(node.properties.obj)
-      const val = ctx.scope.get(obj)
+      const val = receiverOf(ctx.scope, obj)
       const valueNodes = node.slots.value ?? []
       if (valueNodes.length === 0) return
       const appendVal = await ctx.evaluate(valueNodes[0])

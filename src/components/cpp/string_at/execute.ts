@@ -1,5 +1,6 @@
 /** `cpp:string_at` 的 **execute** 路——從共用檔原封剪過來（批次第二十四批：單一建立點 → 建構子）。 */
 import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
@@ -8,7 +9,7 @@ export function registerExecute(register: (component: string, executor: Componen
   registerLvalue()
   register('cpp:string_at', async (node, ctx) => {
       const obj = String(node.properties.obj)
-      const val = ctx.scope.get(obj)
+      const val = receiverOf(ctx.scope, obj)
       const str = String(val.value)
       const indexNodes = node.slots.index ?? []
       const idx = indexNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(indexNodes[0])) : 0
@@ -38,7 +39,7 @@ export function registerExecute(register: (component: string, executor: Componen
 export function registerLvalue(): void {
   declareLvalue('cpp:string_at', async (node, ctx: ExecutionContext) => {
     const name = String(node.properties.obj)
-    const current = ctx.scope.get(name)
+    const current = receiverOf(ctx.scope, name)
     const text = String(current.value)
     const indexNodes = node.slots.index ?? []
     const idx = indexNodes.length > 0

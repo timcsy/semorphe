@@ -1,5 +1,6 @@
 /** `cpp:map_assign` 的 **execute** 路——從共用檔原封剪過來（批次第十批：assignment_expression 的分支）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { receiverOf } from '../../../interpreter/receiver'
 import { mapFind, makePair, setPairValue, mapInsertSorted } from '../../../languages/cpp/lang/runtime/map'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
@@ -21,7 +22,7 @@ export function registerExecute(register: (component: string, executor: Componen
       if (keyNodes.length === 0 || valueNodes.length === 0) return
       const keyVal = await ctx.evaluate(keyNodes[0])
       const val = await ctx.evaluate(valueNodes[0])
-      const map = ctx.scope.get(name)
+      const map = receiverOf(ctx.scope, name)
       if (map.type !== 'array' || !Array.isArray(map.value)) return
       const idx = mapFind(map.value, keyVal)
       if (idx === -1) {

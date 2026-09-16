@@ -89,6 +89,19 @@ const CASES: [string, string, string, string[]][] = [
     `int i=0; cin >> A[i].x; cout << A[0].first;`, ['5']],
   ['`max({...})` 的串列形式（AP325/5/5_2）', '', `cout << max({3,9,4}) << min({3,9,4});`, []],
   ['⚠️ `vector<int>` **不得**被當成聚合', '', `vector<int> v{1,2,3}; cout << v.size() << v[1];`, []],
+  // ── 2026-09-16 第四輪：型別別名、容器的元素型別、帶下標的接收者 ──
+  ['`#define pii` 當陣列的元素型別（AP325/3/3_13）', '#define pii pair<int,int>\npii A[10];',
+    `int i=0; cin >> A[i].first; cout << A[0].first;`, ['5']],
+  ['`vector<pair>` 定大小（AP325/4/4_15）', '',
+    `vector<pair<int,int>> vt(2); cin >> vt[0].first; cout << vt[0].first;`, ['5']],
+  ['`vector<pii>` 定大小', '#define pii pair<int,int>',
+    `vector<pii> vt(2); vt[0].first=3; cout << vt[0].first;`, []],
+  ['帶下標的接收者（AP325/7/7_1）', 'vector<int> d2[10];',
+    `d2[3].push_back(5); cout << d2[3][0] << d2[3].size();`, []],
+  ['下標是變數的接收者', 'vector<int> d2[10];',
+    `int a=2; d2[a].push_back(7); cout << d2[2][0];`, []],
+  ['⚠️ 解不開的下標要用【原本】那句話報錯', 'vector<int> d2[10];',
+    `d2[3].push_back(1); cout << d2[3].size();`, []],
 ]
 
 describe('解譯器與參照編譯器：同一段程式，印出來的要一樣', () => {
