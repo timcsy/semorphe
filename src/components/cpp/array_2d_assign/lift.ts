@@ -30,6 +30,17 @@ export function registerLift(): void {
     //
     // > **一個複合元件的存在條件，是它的每一格都真的裝得下自己那一格。**
     if (arrayNode?.type !== 'identifier') return null
+    /**
+     * 🔴 **與讀取那一顆同一條判準**（2026-09-18）：`x[a][b]` 只有在 `x` 真的是
+     * **二維陣列**時才是二維存取。`map<int, map<int,int>> g; g[1][2] = 3;`
+     * 的外層下標是一個**鍵**，不是一個列。
+     *
+     * ⚠️ 讀那一側修了而寫這一側沒修的話，症狀是**讀得到而寫不進去**
+     * ——同一個東西的兩個方向說兩種話。
+     * 🟢 查不到型別時照舊認領（沿用既有行為）。
+     */
+    const baseType = ctx.data.getType(arrayNode.text)
+    if (baseType !== null && baseType !== 'array_2d') return null
     const rowIndices = innerNode.namedChildren.find((c) => c.type === 'subscript_argument_list')
     const rowNode = rowIndices?.namedChildren[0] ?? innerNode.namedChildren[1]
     const colIndices = left.namedChildren.find((c) => c.type === 'subscript_argument_list')
