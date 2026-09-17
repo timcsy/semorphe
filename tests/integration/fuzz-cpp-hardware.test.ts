@@ -580,11 +580,50 @@ void loop() {
   //    形狀的常駐網在 fuzz_3（一維＋指標元素）與 fuzz_6（二維）。
 
   /**
-   * **struct 的參考參數**
+   * **struct 的參考參數**——🟢 **2026-09-17 量到它已經解開了**。
    *
-   * `void f(Servoish& s){ s.angle = … }` → `UNDECLARED_VAR: s.angle`。🔴 成員存取的**左值**在參考參數上沒有接上。
+   * 原本的症狀是 `void f(Servoish& s){ s.angle = … }` → `UNDECLARED_VAR: s.angle`
+   * （成員存取的**左值**在參考參數上沒有接上）。
+   *
+   * ⚠️ **不是這一刀修的**——是在第五關的釘子覆核裡量出來的：那個阻斷者
+   * （`cpp:struct_at_member` 的左值）在這段期間被別的改動接上了，而**沒有人
+   * 回來拔這根釘子**。
+   *
+   * > **一根釘子如果只寫著「誰擋住我」，它不會在那個人讓開的時候自己掉下來。**
+   *
+   * ⚠️ 這一支是重建的（那一輪只留了 `it.todo` 的標題，原始程式沒有留下來）。
    */
-  it.todo('[BLOCKED:cpp:struct_at_member] 🔴 fuzz_13：struct 的參考參數')
+  it('★ fuzz_13：struct 的參考參數——成員寫得進去', async () => {
+    const src = `struct Motor {
+  int pin;
+  int angle;
+};
+
+void rotate(Motor& m, int by) {
+  m.angle = m.angle + by;
+  analogWrite(m.pin, m.angle);
+}
+
+void setup() {
+  Serial.begin(9600);
+  Motor a;
+  a.pin = 9;
+  a.angle = 10;
+  rotate(a, 5);
+  Serial.println(a.angle);
+}
+
+void loop() {
+}
+`
+    const ids = componentsIn(lift(src))
+    expect(ids, '🔴 沒認出來 → 下面在驗空集合').toContain('cpp:struct_at_member')
+    expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
+    const once = generateCode(lift(src), 'cpp', S)
+    expect(generateCode(lift(once), 'cpp', S)).toBe(once)
+    // 🔴 **參考參數要真的是參考**：寫進 `m.angle` 之後，呼叫者的 `a.angle` 要跟著變
+    expect(await run(src)).toContain('15')
+  }, 60000)
 
   /**
    * **帶參數的 `#define`**

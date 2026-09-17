@@ -207,6 +207,22 @@ function variableDeclarators(node: AstNode): AstNode[] | null {
 function isPlainVariableDeclarator(c: AstNode): boolean {
   if (c.type === 'identifier') return true
   if (c.type === 'function_declarator') {
+    /**
+     * 🔴 **空的參數列沒有歧義可言**（2026-09-17）——`map<char,int> f();`
+     * 在 C++ 裡**一定**是一個函式宣告，而不是一個變數。
+     *
+     * 「最令人困惑的解析」只在**有引數**的時候咬人（`DHT dht(DHTPIN, DHT11)`
+     * 的引數看起來像參數宣告）。而 `T f()` 連一個可以被誤讀的東西都沒有
+     * ——C++ 自己的規則就是「它是函式」。
+     *
+     * 在此之前它被認成一個叫 `f` 的容器變數，於是那一行的**前置宣告消失**，
+     * 產出 `map<char, int> f;`——合法，而之後 `f()` 找不到那個函式。
+     *
+     * > **一個為了「有引數時的歧義」而放寬的判準，會在【沒有引數】時
+     * > 把一個本來沒有歧義的東西也讀錯。**
+     */
+    const params = c.namedChildren.find((x) => x.type === 'parameter_list')
+    if (params && params.namedChildren.length === 0) return false
     return c.namedChildren.find((x) => x.type === 'identifier') !== undefined
       && !c.namedChildren.some((x) => x.type === 'pointer_declarator' || x.type === 'reference_declarator')
   }

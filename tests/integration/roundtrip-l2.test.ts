@@ -472,6 +472,27 @@ describe('L2 Block Roundtrip', () => {
       expect(back!.componentId).toBe('cpp:map_declare')
       expect(back!.properties.ordered ?? 'true').toBe('true')
     })
+
+    /**
+     * 🔴 **面向④：走一趟積木回來**（2026-09-17 新增的 `source` 那一格）。
+     *
+     * `map<char,int> r = f();` 的初始值原本在 lift 就掉了。補上接點之後，
+     * lift 與 generate 兩路都接得住——**而那還不足以證明學生動得了它**：
+     * 形態表達不出那一格的話，`render → extract` 會安靜地少一塊，
+     * 而症狀是「學生一動積木，`= f()` 就從他的程式碼裡不見了」。
+     */
+    it('🔴 初始值那一格：畫得出來，也抽得回去', () => {
+      const sem = createNode('cpp:map_declare',
+        { key_type: 'char', value_type: 'int', name: 'r' },
+        { source: [createNode('cpp:var_ref', { name: 'other' })] })
+      const block = renderer.render(sem)
+      expect(block, '🔴 畫不出來').not.toBeNull()
+      const back = extractor.extract(block!)
+      expect(back!.componentId).toBe('cpp:map_declare')
+      expect(back!.slots.source?.length, '🔴 走一趟積木回來就少了初始值').toBe(1)
+      expect(back!.slots.source[0].properties.name).toBe('other')
+      expect(generateCode(back!, 'cpp', style)).toContain('map<char, int> r = other;')
+    })
   })
 
   describe('cpp:string_declare', () => {
@@ -537,6 +558,19 @@ describe('L2 Block Roundtrip', () => {
   })
 
   describe('cpp:set_declare', () => {
+    // 面向④：與同族那顆對照表同一條理由，見那裡的註解。
+    it('🔴 初始值那一格：畫得出來，也抽得回去', () => {
+      const sem = createNode('cpp:set_declare',
+        { type: 'int', name: 'b' },
+        { source: [createNode('cpp:var_ref', { name: 'a' })] })
+      const block = renderer.render(sem)
+      expect(block, '🔴 畫不出來').not.toBeNull()
+      const back = extractor.extract(block!)
+      expect(back!.componentId).toBe('cpp:set_declare')
+      expect(back!.slots.source?.length, '🔴 走一趟積木回來就少了初始值').toBe(1)
+      expect(generateCode(back!, 'cpp', style)).toContain('set<int> b = a;')
+    })
+
     // 同上：這一顆的樣板也拿掉了，所以驗的是產品真的會走的那一條。
     it('should generate code', () => {
       const sem = createNode('cpp:set_declare', { type: 'int', name: 's' })
