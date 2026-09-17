@@ -26,7 +26,7 @@
  * 單獨也紅才是迴歸。⚠️ 而 `test.skip` 掉的 `[BLOCKED…]` 那批**不是**這個：
  * 那些是標了 pre-existing bug 的刻意跳過。
  */
-import { execSync, exec } from 'node:child_process'
+import { execSync, execFileSync, spawn } from 'node:child_process'
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
 
@@ -101,7 +101,11 @@ export function runCppDetailed(code: string, stdin?: string): execResult {
       // 時間敏感測試推過門檻（2026-08-21 實測，`bus-update` 每輪紅不同支）。
       return {
         ok: true,
-        output: execSync(bin, {
+        // 🔴 **`execFileSync` 不是 `execSync`**（2026-09-17）：後者是
+        //    `/bin/sh -c "<bin>"`，逾時時 Node 殺得到的是**那個 shell**，
+        //    而真正在跑的程式是它的孫子——於是它**變成孤兒繼續跑**。
+        //    直接 spawn 那支執行檔，逾時殺的就是它本人。
+        output: execFileSync(bin, [], {
           encoding: 'utf-8', timeout: timeoutMs, input: stdin ?? '',
           stdio: ['pipe', 'pipe', 'pipe'],
         }),
@@ -190,12 +194,52 @@ async function runCppAsyncDetailed(code: string, stdin?: string): Promise<asyncO
   const src = path.join(cwd, `${name}.cpp`)
   const bin = path.join(cwd, name)
   const inFile = path.join(cwd, `${name}.in`)
+  /**
+   * 🔴 **逾時要殺【整個行程群組】，不是那個 shell**（2026-09-17）。
+   *
+   * 這裡的指令帶著 shell 重導（`bin < file`），所以 `exec` 跑的是
+   * `/bin/sh -c "bin < file"`。`exec` 的 `timeout` 選項殺得到的是**那個 shell**
+   * ——而真正在跑的程式是它的**孫子**。shell 死掉之後，那支程式**變成孤兒，
+   * 繼續跑到天荒地老**。
+   *
+   * 實測（2026-09-17）：一輪**正常結束**的語料探針留下 **3 支**孤兒，
+   * 各燒 90% CPU、記憶體持續長大。接下來三次「全套測試」與「重跑探針」
+   * 全部被系統以記憶體不足砍掉，而那看起來像是**測試自己太重**。
+   *
+   * > **一個被殺掉的父行程，不會帶走它的孩子——
+   * > 而一支沒有人再看著的孤兒，它的帳會記在下一個人頭上。**
+   *
+   * ⚠️ 與 [history/240] 同一族：那一次是我把編譯並行度開到 8 打掛使用者的機器。
+   *    這一次的量級小得多，而它**更難發現**——因為沒有任何一支測試變紅。
+   *
+   * 🟢 `detached: true` 讓 shell 自己當群組長，`kill(-pid)` 就整群帶走。
+   */
   const run = (cmd: string, timeout: number): Promise<{ out: string | null; err: string }> =>
-    new Promise((res) =>
-      exec(cmd, { encoding: 'utf-8', timeout }, (e, stdout, stderr) =>
-        res({ out: e ? null : stdout, err: String(stderr ?? (e as Error | null)?.message ?? '') }),
-      ),
-    )
+    new Promise((res) => {
+      // 🔴 **`spawn` 不是 `exec`**：`detached` 不在 `exec` 的選項表裡，
+      //    它是 `spawn` 的。寫給 `exec` 會被**靜默忽略**——實測那個 shell 的
+      //    PGID 仍是呼叫者的群組，於是 `kill(-pid)` 回 ESRCH，而我以為我殺了它。
+      //
+      //    > **一個不存在的選項不會報錯，它只會讓你以為那件事生效了。**
+      const child = spawn('/bin/sh', ['-c', cmd], { detached: true })
+      let out = '', err = '', done = false
+      child.stdout.on('data', (d: Buffer) => { out += d.toString() })
+      child.stderr.on('data', (d: Buffer) => { err += d.toString() })
+      const finish = (ok: boolean, msg: string): void => {
+        if (done) return
+        done = true
+        clearTimeout(timer)
+        res({ out: ok ? out : null, err: err || msg })
+      }
+      const timer = setTimeout(() => {
+        // ⚠️ 負的 pid ＝ 整個行程群組（`detached` 讓 shell 當上群組長）。
+        //    少了這一步，被殺掉的是 shell 而**真正在跑的程式是它的孫子**。
+        try { if (child.pid) process.kill(-child.pid, 'SIGKILL') } catch { child.kill('SIGKILL') }
+        finish(false, `timeout after ${timeout}ms`)
+      }, timeout)
+      child.on('error', (e: Error) => finish(false, e.message))
+      child.on('close', (code: number | null) => finish(code === 0, `exit ${code}`))
+    })
   try {
     writeFileSync(src, code)
     const compiled = await run(`g++ ${flag}${extraInc} -o ${bin} ${src}`, 30000)
