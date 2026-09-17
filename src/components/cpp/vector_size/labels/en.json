@@ -1,4 +1,4 @@
 {
-  "CPP_VECTOR_SIZE_MSG0": "size of vector %1",
-  "CPP_VECTOR_SIZE_TOOLTIP": "Get the number of elements in the vector"
+  "CPP_VECTOR_SIZE_MSG0": "Size of %1",
+  "CPP_VECTOR_SIZE_TOOLTIP": "Get the number of elements in a container. It works for every container kind — vector, set, map, queue all use this one block."
 }

@@ -18,10 +18,24 @@ export function registerExecute(register: (component: string, executor: Componen
         arr.value.splice(idx, 1)
         return
       }
-      // Set-style erase (direct value match)
-      const setIdx = arr.value.findIndex((v: RuntimeValue) => v.value === keyVal.value)
-      if (setIdx !== -1) {
-        arr.value.splice(setIdx, 1)
+      /**
+       * 🔴 **`multiset::erase(key)` 刪掉【全部】等於那個鍵的**（2026-09-17）。
+       *
+       * 這一條在 `multiset` 能留重複之前**看起來是對的**：容器裡本來就只有一個，
+       * 刪一個與刪全部沒有差別。支援重複性的那一刻，它變成一個錯的答案
+       * ——而它不當掉，只是 `size()` 多了一。
+       *
+       * > **一個「只有在另一個缺陷存在時才正確」的實作，
+       * > 會在那個缺陷被修好的當天變成新的缺陷。**
+       *
+       * ⚠️ 探索報告點過名（「`multiset` 的 `erase(x)` 刪掉全部，而 `erase(iterator)`
+       * 只刪一個——這一刀不碰 `erase`」）。迭代器那一半仍然沒做，而**這一半現在非做不可**。
+       */
+      const all = arr.allowsDuplicates === true
+      for (let i = arr.value.length - 1; i >= 0; i--) {
+        if ((arr.value[i] as RuntimeValue).value !== keyVal.value) continue
+        arr.value.splice(i, 1)
+        if (!all) return
       }
     })
 }

@@ -16,6 +16,12 @@
       "name": "name",
       "kind": "identifier",
       "default": "mp"
+    },
+    {
+      "name": "ordered",
+      "kind": "enum",
+      "default": "true",
+      "_kind_why": "**`map` 與 `unordered_map` 的差別是「走訪有沒有順序」，不是身分**——同一組操作（`m[k]`／`count`／`size`）逐字相同。⚠️ 預設 `'true'` 是存檔相容：既有存檔沒有這個屬性，而它們是 `map`。"
     }
   ],
   "slots": {},
@@ -33,5 +39,6 @@
   "traits": {
     "declarator": true
   },
-  "_traits_why": "`declarator: true`＝**我可以當一次宣告裡的一個宣告子**（`int a, b;` 的 `a` 與 `b`）。2026-09-14 補：多宣告子那一格原本只收單一身分，而實測 `string s, t;` 的宣告子是**字串宣告**那一顆——**宣告子的身分跟著型別走**，所以那一格要的是一個【族】不是一個身分。"
+  "_traits_why": "`declarator: true`＝**我可以當一次宣告裡的一個宣告子**（`int a, b;` 的 `a` 與 `b`）。2026-09-14 補：多宣告子那一格原本只收單一身分，而實測 `string s, t;` 的宣告子是**字串宣告**那一顆——**宣告子的身分跟著型別走**，所以那一格要的是一個【族】不是一個身分。",
+  "_requires_why": "⚠️ `unordered_map` 其實住在 `<unordered_map>`，而這一格今天只吐得出一個標頭。記在這裡：第一個需要兩個標頭的元件出現時，這一格要變成「依屬性決定」。"
 }

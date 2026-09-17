@@ -1,4 +1,9 @@
-/** `cpp:map_declare` 的 **generate** 路——從共用檔原封剪過來（批次第七批：容器樣板過渡表退場）。 */
+/**
+ * `cpp:map_declare` 的 **generate** 路。
+ *
+ * ⚠️ 樣板已經拿掉（同 `set` 那一顆，理由見那裡）：它與這一支對同一件事的說法
+ * 不一樣，而它今天不會被發現，是因為樣板產生器在產品裡從沒被裝上。
+ */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent } from '../../../core/projection/code-generator'
 
@@ -8,6 +13,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const keyType = node.properties.key_type ?? 'int'
       const valueType = node.properties.value_type ?? 'int'
       const name = node.properties.name ?? 'mp'
-      return `${indent(ctx)}map<${keyType}, ${valueType}> ${name};\n`
+      // ⚠️ 只有明講「沒有序」才是 unordered_map——舊存檔沒有這個屬性，而它們是 map。
+      const kind = String(node.properties.ordered ?? 'true') === 'false' ? 'unordered_map' : 'map'
+      return `${indent(ctx)}${kind}<${keyType}, ${valueType}> ${name};\n`
     })
 }

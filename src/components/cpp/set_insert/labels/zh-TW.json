@@ -1,4 +1,4 @@
 {
-  "CPP_SET_INSERT_MSG0": "將 %2 加入集合 %1",
-  "CPP_SET_INSERT_TOOLTIP": "把元素加入集合（重複的會被忽略）"
+  "CPP_SET_INSERT_MSG0": "在 %1 加入 %2",
+  "CPP_SET_INSERT_TOOLTIP": "把一個元素加進容器。⚠️ 留不留重複由【容器自己】決定：集合只留一個，可重複集合每一個都留。對照表則要一對「鍵, 值」，而鍵已存在時它不覆蓋。"
 }

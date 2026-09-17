@@ -1,4 +1,4 @@
 {
-  "CPP_SET_INSERT_MSG0": "Insert %2 into set %1",
-  "CPP_SET_INSERT_TOOLTIP": "Insert an element into the set (duplicates are ignored)"
+  "CPP_SET_INSERT_MSG0": "Insert %2 into %1",
+  "CPP_SET_INSERT_TOOLTIP": "Insert an element into a container. Whether duplicates are kept is decided by the container itself: a set keeps one, a multiset keeps every one. A map takes a key/value pair and does not overwrite an existing key."
 }

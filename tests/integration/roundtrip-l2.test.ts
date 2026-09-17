@@ -443,10 +443,34 @@ describe('L2 Block Roundtrip', () => {
       expect(sem2!.componentId).toBe('cpp:map_declare')
     })
 
+    /**
+     * 🔴 **走的是 `generateCode`，不是 `generator.generate`**（2026-09-17）。
+     *
+     * 這一顆原本宣告了 `codeTemplate`，而那份樣板與膠囊的 `generate.ts` 對同一件事
+     * 的說法不一樣（`std::map` vs `map`）。沒有人發現，是因為 `setTemplateGenerator`
+     * 在 `src/` 內**零呼叫**——這支測試自己接了一個樣板產生器上去，於是
+     * **它驗的是產品跑不到的那一份**。有序性那一軸樣板也表達不了，所以樣板拿掉了。
+     *
+     * > **一支自己把管線接起來的測試，會驗到一條產品沒有接上的路。**
+     */
     it('should generate code', () => {
       const sem = createNode('cpp:map_declare', { key_type: 'string', value_type: 'int', name: 'dict' })
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBe('std::map<string, int> dict;')
+      expect(generateCode(sem, 'cpp', style)).toContain('map<string, int> dict;')
+    })
+
+    it('🔴 unordered_map 走同一顆，而它不得被產回成 map', () => {
+      const sem = createNode('cpp:map_declare', { key_type: 'int', value_type: 'int', name: 'cnt', ordered: 'false' })
+      expect(generateCode(sem, 'cpp', style)).toContain('unordered_map<int, int> cnt;')
+    })
+
+    // 同上（面向③）：舊存檔沒有那一格。
+    it('🔴 舊存檔（沒有那一格）仍然渲染得出來、抽得回去', () => {
+      const sem = createNode('cpp:map_declare', { key_type: 'string', value_type: 'int', name: 'm' })
+      const block = renderer.render(sem)
+      expect(block).not.toBeNull()
+      const back = extractor.extract(block!)
+      expect(back!.componentId).toBe('cpp:map_declare')
+      expect(back!.properties.ordered ?? 'true').toBe('true')
     })
   })
 
@@ -513,10 +537,34 @@ describe('L2 Block Roundtrip', () => {
   })
 
   describe('cpp:set_declare', () => {
+    // 同上：這一顆的樣板也拿掉了，所以驗的是產品真的會走的那一條。
     it('should generate code', () => {
       const sem = createNode('cpp:set_declare', { type: 'int', name: 's' })
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBe('std::set<int> s;')
+      expect(generateCode(sem, 'cpp', style)).toContain('set<int> s;')
+    })
+
+    it('🔴 multiset 走同一顆，而它不得被產回成 set', () => {
+      const sem = createNode('cpp:set_declare', { type: 'int', name: 'ms', unique: 'false' })
+      expect(generateCode(sem, 'cpp', style)).toContain('multiset<int> ms;')
+    })
+
+    /**
+     * 🔴 **面向③：舊存檔載得進來嗎**（2026-09-17）。
+     *
+     * 這顆積木多了一個下拉欄位，而**既有存檔裡沒有那一格**。
+     * 渲染不得因此吐 null，抽取也不得把那一格變成 `undefined` 字串
+     * ——那兩種都會讓使用者開啟舊作品時看到一片空白或一個壞掉的欄位。
+     */
+    it('🔴 舊存檔（沒有那一格）仍然渲染得出來、抽得回去', () => {
+      const sem = createNode('cpp:set_declare', { type: 'int', name: 's' })
+      const block = renderer.render(sem)
+      expect(block, '🔴 渲染吐 null → 工作區一片空白，不是少一個欄位').not.toBeNull()
+      expect(block!.type).toBe('cpp_set_declare')
+      const back = extractor.extract(block!)
+      expect(back!.componentId).toBe('cpp:set_declare')
+      expect(back!.properties.name).toBe('s')
+      // 抽回來時那一格會拿到下拉的第一個選項——而第一個選項必須是「去重」那一邊。
+      expect(back!.properties.unique ?? 'true', '🔴 第一個選項若是 multiset，舊作品會開始留重複').toBe('true')
     })
   })
 

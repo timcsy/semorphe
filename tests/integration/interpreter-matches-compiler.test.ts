@@ -102,6 +102,24 @@ const CASES: [string, string, string, string[]][] = [
     `int a=2; d2[a].push_back(7); cout << d2[2][0];`, []],
   ['⚠️ 解不開的下標要用【原本】那句話報錯', 'vector<int> d2[10];',
     `d2[3].push_back(1); cout << d2[3].size();`, []],
+  // ── 重複性與有序性那兩軸（2026-09-17）──────────────────────
+  // 🔴 這兩族在此之前都**不當掉**：一個少一半元素、一個指著沒寫錯的那一行報索引錯誤。
+  ['multiset 留重複（語料 13 支）', '',
+    `multiset<int> ms; ms.insert(5); ms.insert(3); ms.insert(5);
+     for (int x : ms) cout << x;`, []],
+  ['而 set 不留', '',
+    `set<int> s; s.insert(5); s.insert(3); s.insert(5);
+     for (int x : s) cout << x;`, []],
+  ['multiset 的大小', '',
+    `multiset<int> ms; ms.insert(1); ms.insert(1); cout << ms.size();`, []],
+  ['unordered_map 的查與寫（語料 5 支）', '',
+    `unordered_map<int,int> m; m[3] = 7; m[3]++; cout << m[3] << m.size();`, []],
+  ['unordered_map 數次數', '',
+    `unordered_map<int,int> cnt; int a[4] = {1,2,1,1};
+     for (int i = 0; i < 4; i++) cnt[a[i]]++; cout << cnt[1] << cnt[2];`, []],
+  // ⚠️ **刻意沒有「走訪 unordered_map」那一題**：真的 unordered_map 走訪順序是
+  //    【未指定的】，拿 g++ 當權威量它，量到的是「我們有沒有跟它做出同一個
+  //    未指定的選擇」。見這個檔頭「這裡不放什麼」。
 ]
 
 describe('解譯器與參照編譯器：同一段程式，印出來的要一樣', () => {
@@ -111,8 +129,12 @@ describe('解譯器與參照編譯器：同一段程式，印出來的要一樣'
 
   for (const [name, glob, body, stdin] of CASES) {
     it(`🔴 ${name}`, async () => {
+      // ⚠️ **這一行是【判準的一部分】**：少一個標頭，那一題會以
+      //    「參照編譯器收不下」紅掉，而訊息會說「測試自己的問題」——
+      //    2026-09-17 加 multiset 那三題時正是這樣紅的（缺 `<set>`）。
       const src = '#include <iostream>\n#include <string>\n#include <vector>\n'
-        + '#include <algorithm>\n#include <map>\n'
+        + '#include <algorithm>\n#include <map>\n#include <set>\n'
+        + '#include <unordered_map>\n#include <deque>\n'
         + `using namespace std;\n${glob}\nint main(){ ${body} return 0; }\n`
       // ⚠️ **兩邊餵同一份 stdin**——`runCppDetailed` 的第二個參數是 2026-09-16
       //    才補的；在那之前它寫死忽略輸入，於是每個要讀輸入的案例，

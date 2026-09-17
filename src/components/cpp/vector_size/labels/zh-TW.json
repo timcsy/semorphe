@@ -1,4 +1,4 @@
 {
-  "CPP_VECTOR_SIZE_MSG0": "列表 %1 的長度",
-  "CPP_VECTOR_SIZE_TOOLTIP": "取得列表裡有幾個元素"
+  "CPP_VECTOR_SIZE_MSG0": "%1 的長度",
+  "CPP_VECTOR_SIZE_TOOLTIP": "取得容器裡有幾個元素。⚠️ 它對每一種容器都成立——列表、集合、對照表、佇列都用同一顆。"
 }

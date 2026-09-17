@@ -25,7 +25,7 @@
 
 import { registeredComponents } from './registry'
 
-const table = new Map<string, { componentId: string; source: string }>()
+const table = new Map<string, { componentId: string; source: string; props?: Record<string, string> }>()
 
 /**
  * 登錄一個樣板名。
@@ -33,8 +33,22 @@ const table = new Map<string, { componentId: string; source: string }>()
  * @param templateName C++ 的樣板容器名（`vector`／`stack`…）
  * @param componentId 對應的元件身分
  * @param source 誰登錄的——膠囊填自己的資料夾，過渡表填 `'(尚未元件化)'`
+ * @param props **這個樣板名附帶的屬性**——`multiset` 就是「`set` 那顆，而重複性是另一個值」。
+ *
+ * 🔴 **為什麼是這裡，不是共用的 lift 檔**（2026-09-17）：那支檔案裡已經有
+ * `templateName === 'map' ? … : templateName === 'pair' ? … : …`，而它旁邊
+ * 逐字寫著「這是**第二個**特例。第三個出現時該收斂成『從宣告推導』，
+ * 而不是再加一個 `if`」。重複性就是那個第三個。
+ *
+ * > **同一個身分在不同樣板名下的差別，是【那個名字】的性質。
+ * > 它屬於登錄那個名字的地方，不屬於讀那張表的人。**
  */
-export function registerContainerTemplate(templateName: string, componentId: string, source: string): void {
+export function registerContainerTemplate(
+  templateName: string,
+  componentId: string,
+  source: string,
+  props?: Record<string, string>,
+): void {
   const existing = table.get(templateName)
   if (existing && existing.componentId !== componentId) {
     throw new Error(
@@ -43,12 +57,22 @@ export function registerContainerTemplate(templateName: string, componentId: str
         `不自動取其一——靜默覆蓋的症狀是「某種容器被辨識成另一種」。`,
     )
   }
-  table.set(templateName, { componentId, source })
+  table.set(templateName, { componentId, source, props })
 }
 
 /** 樣板名 → 元件身分。認不得回傳 `undefined`（不是猜一個看起來合理的）。 */
 export function componentForContainerTemplate(templateName: string): string | undefined {
   return table.get(templateName)?.componentId
+}
+
+/**
+ * 樣板名附帶的屬性——`multiset` → `{ unique: 'false' }`。
+ *
+ * 沒登錄過或沒附屬性時回傳 `undefined`，**呼叫端照舊**（不是回一個空物件
+ * 讓「沒有附」與「附了空的」長得一樣）。
+ */
+export function propsForContainerTemplate(templateName: string): Record<string, string> | undefined {
+  return table.get(templateName)?.props
 }
 
 /** 護欄用：每一筆是誰登錄的。過渡表的筆數應該只降不升。 */

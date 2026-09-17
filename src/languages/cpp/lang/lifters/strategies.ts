@@ -3,7 +3,7 @@ import type { AstNode, LiftContext } from '../../../../core/lift/types'
 import type { SemanticNode } from '../../../../core/types'
 import { createNode } from '../../../../core/semantic-tree'
 import { allStdModules } from '../../std'
-import { componentForContainerTemplate } from '../../../../core/component/container-templates'
+import { componentForContainerTemplate, propsForContainerTemplate } from '../../../../core/component/container-templates'
 import { aggregateListFor } from '../../../../core/component/aggregate-nodes'
 // ⚠️ 元件膠囊也要算進來——第五處「從 allStdModules 推導」的地方。
 // 少算的話 `vector<int> v = f()` 的初始值會被判成「沒宣告 source」而丟掉。
@@ -40,6 +40,29 @@ import { buildVarRef } from '../../../../components/cpp/var_ref/lift'
 import { buildFuncDef } from '../../../../components/cpp/func_def/lift'
 import { buildVarAssign } from '../../../../components/cpp/var_assign/lift'
 import { buildInitializerList } from '../../../../components/cpp/initializer_list/lift'
+
+/**
+ * **把參數的型別文字，正規化成宣告那一側用的同一個詞彙。**
+ *
+ * ```
+ * map<char,int>&   → map        （容器樣板，問登錄表）
+ * const vector<int>& → vector
+ * string&          → string      （非樣板的型別名，問另一張登錄表）
+ * int              → int         （認不得就原樣回傳——誠實的粗略值）
+ * ```
+ *
+ * ⚠️ **認不得時回傳原文，不猜**：這張表的消費者問的是「它是不是 map」，
+ *    而一個回答「我不知道」的值與一個猜錯的值，後者才會讓 `a[i]` 被判成對照表。
+ */
+function normalizeParamType(raw: string): string {
+  const bare = raw.replace(/\bconst\b/g, '').replace(/[&*\s]/g, '')
+  const base = bare.includes('<') ? bare.slice(0, bare.indexOf('<')) : bare
+  if (base === '') return raw
+  const id = componentForContainerTemplate(base) ?? plainTypeComponent(base)
+  if (!id) return raw
+  // `cpp:map_declare` → `map`；與 `recordDeclaration` 從身分導出的那個詞彙一致。
+  return /^[a-z]+:(\w+?)_declare$/.exec(id)?.[1] ?? raw
+}
 
 /**
  * **這個宣告的宣告子形狀，具體型別那幾支讀得懂嗎？**
@@ -823,8 +846,43 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     // 🔴 **登記這個名字**——之後 `swap(…)` 那種呼叫才不會被內建樣式攔走。
     //    ⚠️ 要在 `extractBody` **之前**：一個遞迴函式在自己的主體裡呼叫自己。
     ctx.data.declareFunction(name)
-    const body = extractBody(bodyNode, ctx)
-    return buildFuncDef(name, returnType, { params: paramChildren, body })
+    /**
+     * 🔴 **參數也是「宣告過的名字」**（2026-09-17，模糊測試抓到的）。
+     *
+     * ```cpp
+     * void tally(map<char,int>& om){ om['t']++; }     g++ 數一個字母
+     *                                                 我們：INDEX_OUT_OF_RANGE 116
+     * ```
+     *
+     * `m[k]` 要判成對照表還是陣列，判準是**根變數的型別**（`cpp:map_at` 的
+     * 檔頭逐字：「差別在律——陣列索引超出範圍是錯誤，對應表的鍵不存在是插入」）。
+     * 而那張型別表只收得到**宣告節點**：`recordDeclaration` 認的是
+     * `<x>_declare` 那一族，**參數不在裡面**。
+     *
+     * 於是同一段程式在 `main` 裡是對的、搬進函式就壞了——而它壞成一個
+     * 指著使用者沒寫錯的那一行的索引錯誤。
+     *
+     * > **一張「名字 → 型別」的表如果只收宣告，那麼每一個參數對它來說都不存在
+     * > ——而函式正是「同一段程式碼換個地方寫」。**
+     *
+     * ⚠️ 型別文字要正規化成與宣告那一側**同一個詞彙**（`map<char,int>&` → `map`），
+     *    而「哪些名字是容器」問的是**登錄表**，不是自己列一張會過期的清單。
+     * ⚠️ 推進一層作用域再登記——否則參數名會洩漏到函式外面，
+     *    而外面同名的全域變數會被判成另一個型別。
+     */
+    ctx.data.pushScope()
+    try {
+      for (const p of paramChildren) {
+        const pname = p.properties?.name
+        const ptype = p.properties?.type
+        if (typeof pname !== 'string' || pname === '' || typeof ptype !== 'string') continue
+        ctx.data.declare(pname, normalizeParamType(ptype))
+      }
+      const body = extractBody(bodyNode, ctx)
+      return buildFuncDef(name, returnType, { params: paramChildren, body })
+    } finally {
+      ctx.data.popScope()
+    }
   })
 
 
@@ -888,7 +946,16 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         /** 型別參數怎麼變成屬性——`map` 與 `pair` 各有兩個。 */
         const typeArgs = templateArgs?.namedChildren
           .filter((c) => c.type === 'type_descriptor' || c.type === 'type_identifier') ?? []
-        const propsFor = (nm: string): Record<string, string> =>
+        /**
+         * 🔴 **樣板名自己附帶的屬性**（2026-09-17）——`multiset` → `{ unique: 'false' }`。
+         *
+         * 下面那條 `if` 鏈旁邊寫著「第三個出現時該收斂成『從宣告推導』，
+         * 而不是再加一個 `if`」，而重複性正是那個第三個。所以它**不走那條鏈**：
+         * 資料回到登錄那個名字的膠囊，這裡只負責合併。
+         */
+        const extraProps = propsForContainerTemplate(templateName) ?? {}
+        const propsFor = (nm: string): Record<string, string> => ({ ...extraProps, ...baseProps(nm) })
+        const baseProps = (nm: string): Record<string, string> =>
           templateName === 'map'
             ? { key_type: typeArgs[0]?.text ?? 'int', value_type: typeArgs[1]?.text ?? 'int', name: nm }
             : templateName === 'pair'

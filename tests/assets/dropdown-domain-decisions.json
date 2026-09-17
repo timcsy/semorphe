@@ -146,6 +146,11 @@
       "field": "field_dropdown",
       "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
     },
+    "cpp_map_declare.ORDERED": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "「走訪有沒有序」只有兩個值，對應 map／unordered_map——同上，清單外沒有第三種對照表"
+    },
     "cpp_map_declare.VALUE_TYPE": {
       "decision": "open",
       "field": "field_dropdown",
@@ -225,6 +230,11 @@
       "decision": "open",
       "field": "field_dropdown",
       "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_set_declare.UNIQUE": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "「留不留重複」只有兩個值，而它們對應 C++ 的兩個型別名（set／multiset）——清單外的第三個值沒有對應的容器"
     },
     "cpp_stack_declare.TYPE": {
       "decision": "open",

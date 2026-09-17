@@ -1,8 +1,10 @@
 {
-  "CPP_SET_DECLARE_MSG0": "建立 %1 集合 %2",
-  "CPP_SET_DECLARE_TOOLTIP": "建立一個集合，裡面的元素不會重複，而且會自動排序",
+  "CPP_SET_DECLARE_MSG0": "建立 %1 %2 %3",
+  "CPP_SET_DECLARE_TOOLTIP": "建立一個會自動排序的容器。⚠️ 中間那一格決定重複的值留不留：集合只留一個，可重複集合每一個都留。",
   "CPP_SET_DECLARE_TYPE_INT": "int（整數）",
   "CPP_SET_DECLARE_TYPE_FLOAT": "float（小數）",
   "CPP_SET_DECLARE_TYPE_STRING": "string（文字）",
-  "CPP_SET_DECLARE_TYPE_CHAR": "char（字元）"
+  "CPP_SET_DECLARE_TYPE_CHAR": "char（字元）",
+  "CPP_SET_DECLARE_UNIQUE_YES": "集合",
+  "CPP_SET_DECLARE_UNIQUE_NO": "可重複集合"
 }
