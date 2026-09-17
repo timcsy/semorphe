@@ -1,16 +1,15 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { receiverOf } from '../../../interpreter/receiver'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_pop_front', async (node, ctx) => {
-    const name = String(node.properties.obj)
+    // 🔴 **接收者求值，不再解析一串文字**（2026-09-18）——見 `component.json` 的 `_slots_why`
     /**
      * ⚠️ **接收者要走 `receiverOf`**——`d2[3].pop_front()` 這種帶下標的接收者
      * 在組裝時被壓成字串 `"d2[3]"`，直接 `scope.get` 會找不到那個名字。
      * 見 `interpreter/receiver.ts` 的檔頭。
      */
-    const arr = receiverOf(ctx.scope, name)
+    const arr = await ctx.evaluate((node.slots.obj ?? [])[0])
     if (arr.type !== 'array' || !Array.isArray(arr.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
     }

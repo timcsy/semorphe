@@ -60,8 +60,8 @@ const counter = (): SemanticNode =>
       n('cpp:func_def', { name: 'bumpTwice', return_type: 'void' }, {
         params: [],
         body: [
-          n('cpp:method_call', { obj: 'this', method: 'bump' }, { args: [] }),
-          n('cpp:method_call', { obj: 'this', method: 'bump' }, { args: [] }),
+          n('cpp:method_call', { method: 'bump' }, { obj: [n('cpp:var_ref', { name: 'this' }, {})], args: [] }),
+          n('cpp:method_call', { method: 'bump' }, { obj: [n('cpp:var_ref', { name: 'this' }, {})], args: [] }),
         ],
       }),
       n('cpp:func_def', { name: 'get', return_type: 'int' }, {
@@ -94,7 +94,7 @@ describe('類別與方法', () => {
   it('★ 呼叫一個方法，它改的是**這個實例**的欄位', async () => {
     const out = await run(
       prog(counter(), n('cpp:var_declare', { name: 'c', type: 'Counter' }),
-        n('cpp:method_call', { obj: 'c', method: 'bump' }, { args: [] }),
+        n('cpp:method_call', { method: 'bump' }, { obj: [n('cpp:var_ref', { name: 'c' }, {})], args: [] }),
         show(n('cpp:struct_at_member', { member: 'n' }, { obj: [n('cpp:var_ref', { name: 'c' })] }))),
     )
     expect(out.trim(), '方法改不到欄位——多半是欄位被複製進方法的作用域了').toBe('1')
@@ -103,8 +103,8 @@ describe('類別與方法', () => {
   it('★ 有回傳值的方法（運算式位置）', async () => {
     const out = await run(
       prog(counter(), n('cpp:var_declare', { name: 'c', type: 'Counter' }),
-        n('cpp:method_call', { obj: 'c', method: 'bump' }, { args: [] }),
-        show(n('cpp:method_call', { obj: 'c', method: 'get' }, { args: [] }))),
+        n('cpp:method_call', { method: 'bump' }, { obj: [n('cpp:var_ref', { name: 'c' }, {})], args: [] }),
+        show(n('cpp:method_call', { method: 'get' }, { obj: [n('cpp:var_ref', { name: 'c' }, {})], args: [] }))),
     )
     expect(out.trim()).toBe('1')
   })
@@ -113,7 +113,7 @@ describe('類別與方法', () => {
     // 內層方法改的必須是同一個實例，不是自己那份副本
     const out = await run(
       prog(counter(), n('cpp:var_declare', { name: 'c', type: 'Counter' }),
-        n('cpp:method_call', { obj: 'c', method: 'bumpTwice' }, { args: [] }),
+        n('cpp:method_call', { method: 'bumpTwice' }, { obj: [n('cpp:var_ref', { name: 'c' }, {})], args: [] }),
         show(n('cpp:struct_at_member', { member: 'n' }, { obj: [n('cpp:var_ref', { name: 'c' })] }))),
     )
     expect(out.trim(), '內層方法改的是副本——這正是「複製進去、跑完複製回來」的失效樣態').toBe('2')
@@ -124,7 +124,7 @@ describe('類別與方法', () => {
       prog(counter(),
         n('cpp:var_declare', { name: 'a', type: 'Counter' }),
         n('cpp:var_declare', { name: 'b', type: 'Counter' }),
-        n('cpp:method_call', { obj: 'a', method: 'bump' }, { args: [] }),
+        n('cpp:method_call', { method: 'bump' }, { obj: [n('cpp:var_ref', { name: 'a' }, {})], args: [] }),
         show(n('cpp:struct_at_member', { member: 'n' }, { obj: [n('cpp:var_ref', { name: 'b' })] }))),
     )
     expect(out.trim(), 'b 被 a 的方法改到了——方法綁在型別上而不是實例上').toBe('0')
@@ -134,7 +134,7 @@ describe('類別與方法', () => {
     let message = ''
     try {
       await run(prog(counter(), n('cpp:var_declare', { name: 'c', type: 'Counter' }),
-        n('cpp:method_call', { obj: 'c', method: '沒有這個方法' }, { args: [] })))
+        n('cpp:method_call', { method: '沒有這個方法' }, { obj: [n('cpp:var_ref', { name: 'c' }, {})], args: [] })))
     } catch (e) { message = (e as Error).message }
     expect(message, '呼叫不存在的方法靜默成功了').not.toBe('')
   })
@@ -153,7 +153,7 @@ describe('類別與方法', () => {
     let message = ''
     try {
       await run(prog(withLocal, n('cpp:var_declare', { name: 'o', type: 'L' }),
-        n('cpp:method_call', { obj: 'o', method: 'run' }, { args: [] }),
+        n('cpp:method_call', { method: 'run' }, { obj: [n('cpp:var_ref', { name: 'o' }, {})], args: [] }),
         show(n('cpp:struct_at_member', { member: '區域' }, { obj: [n('cpp:var_ref', { name: 'o' })] }))))
     } catch (e) { message = (e as Error).message }
     expect(message, '方法裡宣告的區域變數變成了物件的欄位').not.toBe('')

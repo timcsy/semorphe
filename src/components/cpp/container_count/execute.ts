@@ -1,17 +1,16 @@
 /** `cpp:container_count` 的 **execute** 路——從共用檔原封剪過來（批次第九批：容器方法資料表）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { receiverOf } from '../../../interpreter/receiver'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { mapFind } from '../../../languages/cpp/lang/runtime/map'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_count', async (node, ctx) => {
-      const name = String(node.properties.obj)
+      // 🔴 **接收者求值，不再解析一串文字**（2026-09-18）——見 `component.json` 的 `_slots_why`
       const keyNodes = node.slots.key ?? []
       if (keyNodes.length === 0) return { type: 'int' as const, value: 0 }
       const keyVal = await ctx.evaluate(keyNodes[0])
-      const arr = receiverOf(ctx.scope, name)
+      const arr = await ctx.evaluate((node.slots.obj ?? [])[0])
       if (arr.type !== 'array' || !Array.isArray(arr.value)) {
         // ⚠️ **這裡原本靜靜回 0**——於是「這個容器裡沒有那個鍵」與
         // 「這根本不是容器」長得一模一樣。那正是 `specs/109` 修過的那個病

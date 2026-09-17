@@ -38,12 +38,22 @@ export type CallBranch = (
   argsNode: AstNode | null,
 ) => SemanticNode | null
 
-/** 方法呼叫的分支：`obj.method(a, b)`。 */
+/**
+ * 方法呼叫的分支：`obj.method(a, b)`。
+ *
+ * 🔴 **`objNode` 是 2026-09-18 加的，而它一直都在呼叫端手上**——
+ * 以前只取了 `.text`。接收者要能是一棵樹（`m[k]`、`it->second`、`v[i].begin()`），
+ * 而一個分支如果自己造節點，它就得拿得到那棵樹。
+ *
+ * ⚠️ `obj`（文字）**留著**：判別常常只需要名字（查它的宣告型別），
+ * 而一族接收者是**固定的全域物件**（`Serial`／`EEPROM`／`WiFi`），它們沒有樹。
+ */
 export type MethodBranch = (
   obj: string,
   method: string,
   argChildren: readonly AstNode[],
   ctx: LiftContext,
+  objNode?: AstNode | null,
 ) => SemanticNode | null
 
 const funcBranches: { source: string; fn: CallBranch }[] = []
@@ -88,9 +98,10 @@ export function tryMethodBranches(
   method: string,
   argChildren: readonly AstNode[],
   ctx: LiftContext,
+  objNode?: AstNode | null,
 ): SemanticNode | null {
   for (const b of methodBranches) {
-    const n = b.fn(obj, method, argChildren, ctx)
+    const n = b.fn(obj, method, argChildren, ctx, objNode)
     if (n) return n
   }
   return null

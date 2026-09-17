@@ -10,9 +10,9 @@
       "message0": "%{BKY_CPP_CONTAINER_PUSH_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "obj"
+          "check": "Expression"
         },
         {
           "type": "input_value",
@@ -23,7 +23,8 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_CONTAINER_PUSH_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_CONTAINER_PUSH_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.push(${VALUE});",
@@ -31,11 +32,10 @@
       "order": 0
     },
     "renderMapping": {
-      "fields": {
-        "OBJ": "obj"
-      },
+      "fields": {},
       "inputs": {
-        "VALUE": "value"
+        "VALUE": "value",
+        "OBJ": "obj"
       }
     }
   },
@@ -50,9 +50,9 @@
       "message0": "%{BKY_CPP_STACK_PUSH_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "stk"
+          "check": "Expression"
         },
         {
           "type": "input_value",
@@ -63,7 +63,8 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_STACK_PUSH_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_STACK_PUSH_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.push(${VALUE});",
@@ -76,11 +77,10 @@
     },
     "toolboxCategory": "stacks_queues",
     "renderMapping": {
-      "fields": {
-        "OBJ": "obj"
-      },
+      "fields": {},
       "inputs": {
-        "VALUE": "value"
+        "VALUE": "value",
+        "OBJ": "obj"
       }
     }
   },
@@ -95,9 +95,9 @@
       "message0": "%{BKY_CPP_QUEUE_PUSH_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "que"
+          "check": "Expression"
         },
         {
           "type": "input_value",
@@ -108,7 +108,8 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_QUEUE_PUSH_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_QUEUE_PUSH_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.push(${VALUE});",
@@ -121,11 +122,10 @@
     },
     "toolboxCategory": "stacks_queues",
     "renderMapping": {
-      "fields": {
-        "OBJ": "obj"
-      },
+      "fields": {},
       "inputs": {
-        "VALUE": "value"
+        "VALUE": "value",
+        "OBJ": "obj"
       }
     }
   }

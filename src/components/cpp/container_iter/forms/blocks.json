@@ -10,9 +10,9 @@
       "message0": "%{BKY_CPP_CONTAINER_ITER_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "v"
+          "check": "Expression"
         },
         {
           "type": "field_dropdown",
@@ -44,10 +44,11 @@
     },
     "renderMapping": {
       "fields": {
-        "OBJ": "obj",
         "WHICH": "which"
       },
-      "inputs": {}
+      "inputs": {
+        "OBJ": "obj"
+      }
     }
   }
 ]

@@ -270,6 +270,18 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const index = indexNode ? ctx.lift(indexNode) : null
 
     if (isStringVar(name, node)) {
+      /**
+       * 🟠 **這一顆的接收者【刻意】還是一串文字**（2026-09-18 的接收者重構把它排除）。
+       *
+       * `cpp_string_at` 的接收者在積木上是一個**工作區變數下拉**
+       * （`allVariableDropdownBlocks`——列出目前所有字串變數），而那是一個
+       * 有機構支撐的刻意 UX：初學者點一下就選到自己宣告過的字串。
+       * 換成插槽的話那個下拉沒有地方去。
+       *
+       * ⚠️ 代價寫清楚：`parts[i][0]` 這種**接收者是運算式**的下標仍然解不開。
+       * 🔴 何時該修：等「工具箱／下拉要不要在插槽上活下來」那個問題有答案時，
+       *    與 `multi-form-container` 那條 `it.todo` 一起。
+       */
       return buildStringIndex(name, index)
     }
     // 🟢 **容器一律 lift**（2026-08-26）——`obj.arr[i]` 的容器是一個成員存取，

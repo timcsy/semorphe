@@ -8,7 +8,7 @@
  * > **共用的是演算法（在實例上執行一個方法），不是身分。**
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { receiverOf } from '../../../interpreter/receiver'
+import { varRefName } from '../var_ref/lift'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { runOnInstance } from '../../../languages/cpp/lang/executors/structs'
 
@@ -38,16 +38,24 @@ export function registerExecute(register: (component: string, executor: Componen
   ])
 
   const callMethod: ComponentExecutor = async (node, ctx) => {
-    const objName = String(node.properties.obj)
+    /**
+     * 🔴 **接收者求值，不再解析一串文字**（2026-09-18）——見 `component.json` 的 `_slots_why`。
+     *
+     * ⚠️ 而**串流那一條要在求值【之前】判**：`cin` 不是一個變數
+     * （`cpp:var_ref` 對它丟「它是一個串流，不是變數」），所以這裡只問名字。
+     * 🟢 名字由 `cpp:var_ref` 自己答——身分字串不出它的資料夾。
+     */
+    const objNode = (node.slots.obj ?? [])[0]
+    const objName = varRefName(objNode) ?? ''
     const methodName = String(node.properties.method)
     if (STREAMS.has(objName) && NOOP_METHODS.has(methodName)) {
       // ⚠️ 回傳 `cin` 自己——`cin.tie(0)` 在 C++ 裡回傳的是一個串流，
       //    而鏈式寫法（`cin.tie(0)->sync…`）靠它。
       return { type: 'object', structName: objName, value: new Map() }
     }
-    const obj = receiverOf(ctx.scope, objName)
+    const obj = await ctx.evaluate(objNode)
     if (obj.type !== 'object') {
-      throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName}（不是一個物件）` })
+      throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName || '這個接收者'}（不是一個物件）` })
     }
     const m = ctx.structs.method(obj.structName ?? '', methodName)
     if (!m) {

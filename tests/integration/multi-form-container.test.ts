@@ -183,14 +183,16 @@ describe('C-3 兩個形態產出相同、行為相同', () => {
 
   it('★ CK-3：執行器 MUST NOT 讀 container_kind——改成錯的值，行為不變', async () => {
     const run = async (kind: string | undefined): Promise<string> => {
-      const props: Record<string, string> = { obj: 's' }
+      const props: Record<string, string> = {}
       if (kind !== undefined) props.container_kind = kind
+      // 🔴 接收者是接點（2026-09-18）——`container_kind` 仍然是屬性（形態要用）
+      const recv = (): SemanticNode[] => [createNode('cpp:var_ref', { name: 's' })]
       const tree = createNode('cpp:program', {}, {
         body: [
           createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-          createNode('cpp:container_push', { ...props }, { value: [createNode('cpp:literal_number', { value: '1' }, {})] }),
-          createNode('cpp:container_push', { ...props }, { value: [createNode('cpp:literal_number', { value: '2' }, {})] }),
-          createNode('cpp:print', {}, { values: [createNode('cpp:stack_peek', { obj: 's' }, {})] }),
+          createNode('cpp:container_push', { ...props }, { obj: recv(), value: [createNode('cpp:literal_number', { value: '1' }, {})] }),
+          createNode('cpp:container_push', { ...props }, { obj: recv(), value: [createNode('cpp:literal_number', { value: '2' }, {})] }),
+          createNode('cpp:print', {}, { values: [createNode('cpp:stack_peek', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })] }),
         ],
       })
       const i = new SemanticInterpreter({ maxSteps: 50000 })
@@ -257,15 +259,37 @@ describe('工具箱放的是形態，不是退路', () => {
     expect(categoriesOf.has('cpp_container_pop')).toBe(false)
   })
 
-  it('★ 預設變數名用 stk／que，沿用本分類既有的慣例', async () => {
+  /**
+   * 🪦 **原本這一條釘的是「OBJ 這個【欄位】的預設文字是 stk／que」**，
+   * 而 2026-09-18 之後**那一格不是欄位了**——接收者換成接點
+   * （`m[k]`／`v[i]`／`it->second` 都要放得進去）。
+   *
+   * 所以這裡改釘**新的形狀**：那一格是一個吃運算式的插槽。
+   */
+  it('★ 接收者是一個吃運算式的插槽（不再是一個打字的欄位）', async () => {
     const { BlockSpecRegistry } = await import('../../src/core/blocks/block-spec-registry')
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(allCppComponents(), allCppProjections())
-    const objDefault = (bt: string): string | undefined => {
-      const args = ((reg.getByBlockType(bt)?.blockDef as Record<string, unknown>)?.args0 ?? []) as { name?: string; text?: string }[]
-      return args.find((a) => a.name === 'OBJ')?.text
+    const objArg = (bt: string): { type?: string; check?: string } | undefined => {
+      const args = ((reg.getByBlockType(bt)?.blockDef as Record<string, unknown>)?.args0 ?? []) as { name?: string; type?: string; check?: string }[]
+      return args.find((a) => a.name === 'OBJ')
     }
-    expect(objDefault('cpp_container_push_stack')).toBe('stk')
-    expect(objDefault('cpp_container_push_queue')).toBe('que')
+    for (const bt of ['cpp_container_push_stack', 'cpp_container_push_queue']) {
+      expect(objArg(bt)?.type, `${bt} 的接收者還是一個欄位`).toBe('input_value')
+      expect(objArg(bt)?.check).toBe('Expression')
+    }
   })
+
+  /**
+   * 🟠 **而「拖出來的時候那一格是空的」是一個真的 UX 改變**，還沒有人決定。
+   *
+   * 舊的欄位會預填 `stk`／`que`（本分類的慣例），而一個空插槽要學生自己
+   * 接一顆變數積木上去。Python 那一側**一直都是空插槽**，所以不是沒有前例
+   * ——而 C++ 這一族的初學者路徑上，預填省掉一步。
+   *
+   * 🔴 **何時該修**：等第六關（開瀏覽器）用眼睛看過那個空插槽之後再決定。
+   * 要預填的話需要一個機制（Blockly 的 shadow 積木），而這個 repo 今天
+   * **一個 shadow 都沒有**——那是一刀自己的事，不該塞在接收者重構的尾巴。
+   */
+  it.todo('[UNSUPPORTED:工具箱的預設接收者] 🟠 拖出來時接收者那一格要不要預填一顆變數積木')
 })

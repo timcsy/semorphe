@@ -118,6 +118,18 @@ export interface RuntimeValue {
    */
   elemType?: string
   /**
+   * **對照表的【值】是什麼型別**（`map<int, vector<int>>` 的 `vector<int>`）。
+   *
+   * 🔴 `m[k]` 在鍵不存在時會**自動建一格**（C++ 的 `operator[]` 就是這樣），
+   * 而在此之前那一格一律補 `int 0`——於是相鄰串列的標準寫法
+   * `map<int, vector<int>> g; g[a].push_back(b);` 在第一次存取時
+   * 拿到一個數字，而 `push_back` 說「這不是一個容器」。
+   *
+   * > **一個「沒給就補 0」的預設值，在值不是數字的時候補的是一個錯的形狀**
+   * > ——同族的 `elemType` 記過一模一樣的一句。
+   */
+  valueType?: string
+  /**
    * 這個容器**留不留重複的值**——`set` 不留，`multiset` 留。
    *
    * ⚠️ 與 `heapOrder` 同一個理由，而那一條的教訓逐字適用：**比較規則寫在宣告上，

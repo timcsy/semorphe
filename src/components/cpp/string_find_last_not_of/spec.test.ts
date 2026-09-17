@@ -61,7 +61,7 @@ describe('膠囊自證：cpp:string_find_last_not_of', () => {
   // 而它看不見的原因是身分由樣板字串組出來。見 `generate.ts` 檔頭。
   it('★ generate：產回 s.find_last_not_of(...)', () => {
     const tree = createNode('cpp:program', {}, {
-      body: [createNode('cpp:string_find_last_not_of', { obj: 's' }, {
+      body: [createNode('cpp:string_find_last_not_of', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],
         arg: [createNode('cpp:literal_string', { value: ' ' })],
       })],
     })

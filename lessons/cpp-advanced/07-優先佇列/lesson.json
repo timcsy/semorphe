@@ -11,7 +11,8 @@
     "cpp:literal_number",
     "cpp:print",
     "cpp:priority_queue_declare",
-    "cpp:priority_queue_peek"
+    "cpp:priority_queue_peek",
+    "cpp:var_ref"
   ],
   "tasks": [
     {

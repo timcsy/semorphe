@@ -56,8 +56,15 @@ describe('屬性宣告清償', () => {
     // 那個對照斷言（`not.toBeNull()`）第一版就抓到了它。
     const n = find(lift('#include <iostream>\nstruct P { int x; };\nint main(){ P a; P* p=&a; std::cout << p->x; }'), 'cpp:struct_at_ptr')
     expect(n, '語料要真的產出這顆，否則這支測試什麼都沒測到').not.toBeNull()
-    expect(Object.keys(n!.properties)).toContain('obj')
+    // 🟢 **2026-09-18：接收者從屬性搬成接點**——這條原本釘的是「屬性名要叫 `obj`
+    //    不是 `ptr`」（lifter 產 `ptr`、執行器讀 `obj` → `p->x` 會炸）。
+    //    那個病的**根治**是讓它根本不是一個屬性：接收者是一棵樹。
+    //    > **一條「兩邊的名字要一樣」的護欄，在那個東西不再是一個名字之後，
+    //    > 要跟著問新的形狀——而不是被刪掉。**
     expect(Object.keys(n!.properties)).not.toContain('ptr')
+    expect(Object.keys(n!.properties)).not.toContain('obj')
+    expect(n!.slots.obj?.length, '🔴 接收者不在接點裡').toBe(1)
+    expect((n!.slots.obj[0] as SemanticNode).properties.name).toBe('p')
   })
 
   it('兩個型別是兩個屬性，不是一個逗號字串（2026-08-13 修，釘子已拔）', () => {

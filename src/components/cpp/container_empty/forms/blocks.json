@@ -10,14 +10,15 @@
       "message0": "%{BKY_CPP_CONTAINER_EMPTY_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "obj"
+          "check": "Expression"
         }
       ],
       "output": "Expression",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_CONTAINER_EMPTY_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_CONTAINER_EMPTY_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.empty()",
@@ -29,7 +30,8 @@
       "stacks_queues"
     ],
     "renderMapping": {
-      "fields": {
+      "fields": {},
+      "inputs": {
         "OBJ": "obj"
       }
     }

@@ -962,16 +962,35 @@ export class BlockRegistrar {
           this.setColour('#4C97FF')
           this.setTooltip(Blockly.Msg[`${msgKey}_TOOLTIP`] || '')
         },
-        /** 「對 <物件> 執行 <方法>」——⚠️ 欄位值要保住，重建時再塞回去。 */
+        /**
+         * 「對 <物件> 執行 <方法>」
+         *
+         * 🔴 **接收者是一個【插槽】，而它必須住在自己的輸入上**（2026-09-18）。
+         *
+         * 這一支會**重建 `LABEL`**（引數數量變了時要重排括號），而
+         * `removeInput` 會把掛在那一列上的東西一起拆掉——接收者如果掛在
+         * `LABEL` 上，接在它上面的積木每加一個引數就掉一次。
+         *
+         * ⚠️ 症狀不是「畫錯」，是**整個工作區載不進去**：
+         * `MissingConnection: The block "cpp_method_call" is missing a(n) OBJ`
+         * ——與 `variadic-block.ts` 檔頭記的那一條是同一個病，
+         * 而它 2026-08-22 在另一個語言的同名概念上就治過一次。
+         *
+         * > **同一個病在兩個語言上各犯一次，中間隔了一個月。**
+         */
         buildHead_: function (this: any) {
-          const obj = this.getFieldValue('OBJ') ?? 'obj'
           const method = this.getFieldValue('METHOD') ?? 'method'
+          // 接收者那一格**只建一次**——它不參與重排
+          if (!this.getInput('OBJ')) {
+            this.appendValueInput('OBJ')
+              .setCheck('Expression')
+              .appendField(Blockly.Msg['CPP_METHOD_CALL_ON'] || '對')
+          }
           if (this.getInput('LABEL')) this.removeInput('LABEL')
           const input = this.appendDummyInput('LABEL')
-            .appendField(Blockly.Msg['CPP_METHOD_CALL_ON'] || '對')
-            .appendField(new Blockly.FieldTextInput(obj), 'OBJ')
             .appendField(Blockly.Msg['CPP_METHOD_CALL_DO'] || '執行')
             .appendField(new Blockly.FieldTextInput(method), 'METHOD')
+          this.moveInputBefore('OBJ', 'LABEL')
           if (this.argCount_ > 0) input.appendField(Blockly.Msg['U_FUNC_CALL_OPEN'] || '（')
         },
         rebuildArgLabels_: function (this: any) {

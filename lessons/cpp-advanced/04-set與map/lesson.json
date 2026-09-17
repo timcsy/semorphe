@@ -16,6 +16,7 @@
     "cpp:set_declare",
     "cpp:set_insert",
     "cpp:struct_at_member",
+    "cpp:var_ref",
     "cpp:vector_size"
   ],
   "tasks": [

@@ -9,12 +9,16 @@ import { registerMethodBranch } from '../../../core/component/lift-branches'
 import { createNode } from '../../../core/semantic-tree'
 
 export function registerLift(): void {
-  registerMethodBranch('cpp/string_insert', (obj, method, argChildren, ctx): SemanticNode | null => {
+  registerMethodBranch('cpp/string_insert', (_obj, method, argChildren, ctx, objNode): SemanticNode | null => {
     if (method !== 'insert') return null
+    // 🔴 **接收者是一棵樹**（2026-09-18）——`parts[i].insert(…)`
+    const recv = objNode ? ctx.lift(objNode) : null
+    if (!recv) return null
     if (argChildren.length >= 2) {
         const pos = ctx.lift(argChildren[0])
         const value = ctx.lift(argChildren[1])
-        return createNode('cpp:string_insert', { obj }, {
+        return createNode('cpp:string_insert', {}, {
+          obj: [recv],
           pos: pos ? [pos] : [],
           value: value ? [value] : [],
         })

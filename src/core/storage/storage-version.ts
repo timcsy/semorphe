@@ -13,11 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../../migrations/block-type-migrations'
 import { mergedIdentities } from '../../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16 } from '../../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19 } from '../../migrations/block-shape-changes'
 import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 18
+export const CURRENT_VERSION = 19
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -422,6 +422,13 @@ export const UPGRADES: Record<number, Upgrade> = {
     const rename = (v: unknown): unknown => (v === 'cpp-competitive' ? 'cpp-advanced' : v)
     return { ...raw, targetId: rename(raw.targetId), topicId: rename(raw.topicId), version: 18 }
   },
+  /**
+   * `v18 → v19`：**接收者從欄位換成接點**（39 顆積木）。
+   *
+   * ⚠️ 同一個版號裡放 39 筆是有效的——它們**同一批出去**。
+   * （已經升到 v19 的存檔不會再跑一次 v19，所以往後要再還一顆就開 v20。）
+   */
+  18: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V19, 19),
 }
 
 /**

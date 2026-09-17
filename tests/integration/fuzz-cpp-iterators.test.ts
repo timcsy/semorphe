@@ -203,6 +203,34 @@ describe('模糊測試：迭代器的邊界', () => {
       '🔴 兩個不同的下標 lift 成同一棵樹')
   }, 60_000)
 
+  /**
+   * 🔴 **`->` 的接收者是一個運算式**——`m.begin()->second`、`it->second`。
+   *
+   * 那顆元件的接收者原本被 `.text` 抄成字串，於是執行時
+   * `scope.get("m.begin()")` 說「這個變數尚未宣告」。
+   * ⚠️ 同族的 `.`（成員存取）2026-08-26 就改成接點了，而 `->` 這一條漏掉。
+   *
+   * 🔴 **而它改不動的原因值得記住**：那顆積木的 BlockSpec 上還有一個
+   * `astPattern`——**一個第二個 lift 來源**，而它贏過膠囊自己的分支。
+   * > **一個概念有兩個 lift 來源時，改對了其中一個不會有任何反應
+   * > ——而那讓人以為自己改錯了地方。**
+   */
+  it('`->` 的接收者可以是一棵樹', async () => {
+    await sameAsCompiler(
+      `map<int, vector<int>> m; m[1].push_back(7);
+       cout << m.begin()->second.size() << m.begin()->first;`,
+      '🔴 `->` 的接收者被壓成文字了')
+  }, 60_000)
+
+  it('`it->second` 當函式引數', async () => {
+    const src = `${H}int g(const vector<int>& v){ return v.size(); }\n`
+      + `int main(){ map<int,vector<int>> m; m[1].push_back(7); m[2].push_back(1); m[2].push_back(2);\n`
+      + `  for (auto it = m.begin(); it != m.end(); ++it) cout << g(it->second); return 0; }\n`
+    const ref = runCppDetailed(src)
+    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+    expect(await run(src), '🔴 `it->second` 當引數傳不過去').toBe(ref.output)
+  }, 60_000)
+
   // ─── 壓出來而這一刀不修的，各留一支 ────────────────────────
   //
   // ⚠️ 兩支都用 `it.fails`（不是 `it.todo`）——**修好的那天它會紅，逼人來拔釘子**。

@@ -124,7 +124,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:container_append')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('v')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
 
     it('should generate code containing .push_back()', () => {
@@ -138,7 +138,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:container_append')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('v')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
   })
 
@@ -152,7 +152,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:vector_size')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('v')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
 
     it('should generate code containing .size()', () => {
@@ -166,7 +166,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:vector_size')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('v')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
   })
 
@@ -180,7 +180,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:vector_pop')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('v')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
 
     it('should generate code containing .pop_back()', () => {
@@ -194,7 +194,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:vector_pop')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('v')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
   })
 
@@ -208,7 +208,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:container_clear')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('v')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
 
     it('should generate code containing .clear()', () => {
@@ -222,7 +222,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:container_clear')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('v')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
   })
 
@@ -236,7 +236,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:container_empty')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('v')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
 
     it('should generate code containing .empty()', () => {
@@ -250,7 +250,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:container_empty')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('v')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
   })
 
@@ -264,7 +264,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:vector_back')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('v')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
 
     it('should generate code containing .back()', () => {
@@ -278,7 +278,7 @@ describe('C++ Vector Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:vector_back')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('v')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
   })
 

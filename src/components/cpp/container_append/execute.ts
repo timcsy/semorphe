@@ -1,15 +1,22 @@
 /** `cpp:container_append` 的 **execute** 路——從共用檔原封剪過來（批次第九批：容器方法資料表）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { receiverOf } from '../../../interpreter/receiver'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { evalInitializer } from '../../../interpreter/aggregate'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_append', async (node, ctx) => {
-      const name = String(node.properties.obj)
+      /**
+       * 🔴 **接收者求值，不再解析一串文字**（2026-09-18）。
+       *
+       * ⚠️ **求出來的必須是【同一個物件】**：`push` 是原地改。
+       * `ctx.evaluate` 對一個變數參照回傳的就是作用域裡那一份
+       * （聚合值不複製——複製只發生在傳值那一刻，見 `interpreter/clone.ts`），
+       * 所以下面的 `arr.value.push(...)` 改到的是使用者的容器。
+       */
+      const objNodes = node.slots.obj ?? []
       const valueNodes = node.slots.value ?? []
-      if (valueNodes.length === 0) return
-      const arr = receiverOf(ctx.scope, name)
+      if (valueNodes.length === 0 || objNodes.length === 0) return
+      const arr = await ctx.evaluate(objNodes[0])
       if (arr.type !== 'array' || !Array.isArray(arr.value)) {
         throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
       }

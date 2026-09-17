@@ -4,7 +4,8 @@ import { indent, generateExpression } from '../../../core/projection/code-genera
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:method_call', (node, ctx) => {
-      const obj = node.properties.obj ?? 'obj'
+      // 🔴 接收者是接點——`m[k].f()` 的 `m[k]` 是一棵樹，不是一串文字
+      const obj = generateExpression((node.slots.obj ?? [])[0], ctx)
       const method = node.properties.method ?? 'method'
       const args = (node.slots.args ?? []).map(a => generateExpression(a, ctx))
       const expr = `${obj}.${method}(${args.join(', ')})`

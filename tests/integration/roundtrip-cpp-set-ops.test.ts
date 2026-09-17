@@ -114,7 +114,7 @@ describe('C++ Set Operations Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:set_insert')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .insert()', () => {
@@ -137,7 +137,7 @@ describe('C++ Set Operations Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:container_erase')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .erase()', () => {
@@ -160,7 +160,7 @@ describe('C++ Set Operations Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:container_count')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .count()', () => {

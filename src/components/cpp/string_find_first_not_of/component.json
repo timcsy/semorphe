@@ -1,13 +1,6 @@
 {
   "componentId": "cpp:string_find_first_not_of",
-  "properties": [
-    {
-      "name": "obj",
-      "kind": "literal",
-      "default": "str",
-      "_default_why": "⚠️ **這個退路是搬家時從同族的 find 那顆照抄帶過來的，不是設計出來的。** 第二十三條護欄（參數規格一致性）在搬家當下就指名了它：宣告沒有 default，而產生器寫著 `?? 'str'`——**規格與程式碼對缺省的看法不一致**。這裡選擇「讓宣告說實話」而不是「改掉退路」，因為搬家不重寫；而退路本身仍有味道（obj 缺席時憑空生一個叫 str 的變數名，是靜默降級），要改的話是另一個 commit。"
-    }
-  ],
+  "properties": [],
   "slots": {
     "arg": {
       "allowed": [
@@ -15,7 +8,8 @@
       ],
       "min": 1,
       "max": 1
-    }
+    },
+    "obj": "expression"
   },
   "role": "expression",
   "requires": [
@@ -28,5 +22,6 @@
     "extract": "./forms/blocks.json",
     "execute": "./execute.ts",
     "_generate_why": "⚠️ 這一路**搬家前根本不存在**——實測 `generateCode` 回 `⟨unknown component⟩`。原因是身分原本由樣板字串組出來，掃描器看不到，於是「缺了哪一路」也量不出來。理由詳見 `generate.ts` 檔頭。"
-  }
+  },
+  "_slots_why": "🔴 **接收者是一個【接點】，不是一串文字**（2026-09-18）。\n解開那串文字的地方（`interpreter/receiver.ts`）只認得「名字、數字、以及它們的加減」——於是 `m[name]`（字串鍵）、`buckets[keys[i%2]]`（巢狀下標）、`m[1]`（巢狀容器）在執行期就斷了。十支資訊隔離的盲測有 7 支死在上面。\n⚠️ Python 那一側**早就是接點**——同一顆元件、同一個引數名，兩種做法。"
 }

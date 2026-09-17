@@ -31,7 +31,7 @@ import { createNode } from '../../../core/semantic-tree'
 const HOWS = new Set(['find', 'lower_bound', 'upper_bound'])
 
 export function registerLift(): void {
-  registerMethodBranch('cpp/container_find', (obj, method, argChildren, ctx): SemanticNode | null => {
+  registerMethodBranch('cpp/container_find', (obj, method, argChildren, ctx, objNode): SemanticNode | null => {
     if (!HOWS.has(method)) return null
     // 這三個都**恰好吃一個引數**。判不出來就說不是我。
     if (argChildren.length !== 1) return null
@@ -43,6 +43,9 @@ export function registerLift(): void {
     // ⚠️ `argChildren` 是 **AST 節點**，不是語義節點——要自己 lift 一次。
     const key = ctx.lift(argChildren[0])
     if (!key) return null
-    return createNode('cpp:container_find', { obj, how: method }, { key: [key] })
+    // 🔴 **接收者是一棵樹**（2026-09-18）——`v[i].begin()`／`m[k].find(x)`
+    const recv = objNode ? ctx.lift(objNode) : null
+    if (!recv) return null
+    return createNode('cpp:container_find', { how: method }, { key: [key], obj: [recv] })
   })
 }

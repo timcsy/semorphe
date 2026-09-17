@@ -92,7 +92,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_size')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .length()', () => {
@@ -106,7 +106,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_size')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -120,7 +120,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_substr')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
       expect(node!.slots.pos).toHaveLength(1)
       expect(node!.slots.len).toHaveLength(1)
     })
@@ -136,7 +136,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_substr')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
       expect(node2!.slots.pos).toHaveLength(1)
       expect(node2!.slots.len).toHaveLength(1)
     })
@@ -152,7 +152,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_find')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
       expect(node!.slots.arg).toHaveLength(1)
     })
 
@@ -167,7 +167,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_find')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -181,7 +181,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_append')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
       expect(node!.slots.value).toHaveLength(1)
     })
 
@@ -198,7 +198,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_append')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -212,7 +212,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_as_cstring')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .c_str()', () => {
@@ -226,7 +226,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_as_cstring')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -357,7 +357,7 @@ describe('C++ String Operations Roundtrip', () => {
       // empty() is a shared method — without type info, lifts as generic container component
       const node = findComponent(tree, 'cpp:container_empty')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .empty()', () => {
@@ -371,7 +371,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:container_empty')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -385,7 +385,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_erase')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .erase()', () => {
@@ -399,7 +399,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_erase')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -413,7 +413,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_insert')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .insert()', () => {
@@ -427,7 +427,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_insert')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -441,7 +441,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:string_replace')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .replace()', () => {
@@ -455,7 +455,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_replace')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -476,7 +476,7 @@ describe('C++ String Operations Roundtrip', () => {
       // push_back() is a shared method — without type info, lifts as generic container component
       const node = findComponent(tree, 'cpp:string_append_char')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .push_back()', () => {
@@ -490,7 +490,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_append_char')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -505,7 +505,7 @@ describe('C++ String Operations Roundtrip', () => {
       // clear() is a shared method — without type info, lifts as generic container component
       const node = findComponent(tree, 'cpp:string_clear')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .clear()', () => {
@@ -519,7 +519,7 @@ describe('C++ String Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:string_clear')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 

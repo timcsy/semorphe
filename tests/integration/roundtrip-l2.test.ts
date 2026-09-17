@@ -290,19 +290,21 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp_struct_at_ptr', () => {
     it('should render and extract struct pointer access', () => {
-      const sem = createNode('cpp:struct_at_ptr', { obj: 'p', member: 'x' })
+      const sem = createNode('cpp:struct_at_ptr', { member: 'x' },
+        { obj: [createNode('cpp:var_ref', { name: 'p' })] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_struct_at_ptr')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.componentId).toBe('cpp:struct_at_ptr')
-      expect(sem2!.properties.obj).toBe('p')
+      expect((sem2!.slots.obj[0] as SemanticNode).properties.name).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:struct_at_ptr', { obj: 'node', member: 'next' })
+      const sem = createNode('cpp:struct_at_ptr', { member: 'next' },
+        { obj: [createNode('cpp:var_ref', { name: 'node' })] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('node->next')
     })
@@ -395,19 +397,19 @@ describe('L2 Block Roundtrip', () => {
   describe('cpp:container_append', () => {
     it('should render and extract push_back', () => {
       const val = createNode('cpp:literal_number', { value: '42' })
-      const sem = createNode('cpp:container_append', { obj: 'v' }, { value: [val] })
+      const sem = createNode('cpp:container_append', {}, { obj: [createNode('cpp:var_ref', { name: 'v' })],  value: [val] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_container_append')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.componentId).toBe('cpp:container_append')
-      expect(sem2!.properties.obj).toBe('v')
+      expect((sem2!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
 
     it('should generate code', () => {
       const val = createNode('cpp:literal_number', { value: '5' })
-      const sem = createNode('cpp:container_append', { obj: 'v' }, { value: [val] })
+      const sem = createNode('cpp:container_append', {}, { obj: [createNode('cpp:var_ref', { name: 'v' })],  value: [val] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('v.push_back(5);')
     })
@@ -415,18 +417,18 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp:vector_size', () => {
     it('should render and extract vector size', () => {
-      const sem = createNode('cpp:vector_size', { obj: 'v' })
+      const sem = createNode('cpp:vector_size', {}, { obj: [createNode('cpp:var_ref', { name: 'v' })] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_vector_size')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.componentId).toBe('cpp:vector_size')
-      expect(sem2!.properties.obj).toBe('v')
+      expect((sem2!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:vector_size', { obj: 'nums' })
+      const sem = createNode('cpp:vector_size', {}, { obj: [createNode('cpp:var_ref', { name: 'nums' })] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('nums.size()')
     })
@@ -674,19 +676,19 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp:method_call', () => {
     it('should render and extract method call statement', () => {
-      const sem = createNode('cpp:method_call', { obj: 'v', method: 'clear', args: '' })
+      const sem = createNode('cpp:method_call', {method: 'clear', args: ''}, { obj: [createNode('cpp:var_ref', { name: 'v' })] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_method_call')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.componentId).toBe('cpp:method_call')
-      expect(sem2!.properties.obj).toBe('v')
+      expect((sem2!.slots.obj[0] as SemanticNode).properties.name).toBe('v')
       expect(sem2!.properties.method).toBe('clear')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:method_call', { obj: 'v', method: 'push_back', args: '5' })
+      const sem = createNode('cpp:method_call', {method: 'push_back', args: '5'}, { obj: [createNode('cpp:var_ref', { name: 'v' })] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('v.push_back(5);')
     })
@@ -694,7 +696,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp:method_call', () => {
     it('should render and extract method call expression', () => {
-      const sem = createNode('cpp:method_call', { obj: 'v', method: 'size', args: '' })
+      const sem = createNode('cpp:method_call', {method: 'size', args: ''}, { obj: [createNode('cpp:var_ref', { name: 'v' })] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_method_call')  // 中性形態（渲染端未給位置）
@@ -704,7 +706,7 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:method_call', { obj: 'v', method: 'size', args: '' })
+      const sem = createNode('cpp:method_call', {method: 'size', args: ''}, { obj: [createNode('cpp:var_ref', { name: 'v' })] })
       // ⚠️ **運算式位置**——B 項合併身分之後，位置由 ctx 說，不由身分編碼
       const code = generator.generate(sem, { ...genCtx, isExpression: true })
       expect(code).toBe('v.size()')
