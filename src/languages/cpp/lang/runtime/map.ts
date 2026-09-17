@@ -102,3 +102,39 @@ export function mapFind(pairs: RuntimeValue[], keyVal: RuntimeValue): number {
  * > **模組是搬家的中途站，不是終點——而中途站的最後一塊石頭是它共用的東西。**
  */
 
+
+/**
+ * **兩個值的先後**——有序容器（`set`／`multiset`／`map`）靠它排序與查找。
+ *
+ * ## 🔴 它從哪來（2026-09-17）
+ *
+ * 語料的 `multiset<pair<int,int>>` 走訪出來是 `3412` 而不是 `1234`
+ * ——**容器沒有排序**。因為原本的規則只認「兩邊都是數字」與「其餘比字面」，
+ * 而一對值的字面是 `[object Map]`：**每一對都相等**，於是排序是個空操作。
+ *
+ * > **一條「其餘比字面」的退路，在遇到一個沒有字面的型別時不會報錯
+ * > ——它會讓每一次比較都回 0，而那看起來像「本來就同序」。**
+ *
+ * ⚠️ C++ 的 `pair` 是**字典序**：先比第一個，相同才比第二個。
+ * 那不是一個慣例，是 `operator<` 的定義——而學生的二分搜靠著它。
+ */
+export function compareValues(a: RuntimeValue, b: RuntimeValue): number {
+  const pa = pairParts(a)
+  const pb = pairParts(b)
+  if (pa && pb) {
+    const first = compareValues(pa.key, pb.key)
+    return first !== 0 ? first : compareValues(pa.value, pb.value)
+  }
+  // ⚠️ 大括號放進來的那種（還沒被認成一對）——逐格比，短的在前。
+  if (Array.isArray(a.value) && Array.isArray(b.value)) {
+    const xs = a.value as RuntimeValue[]
+    const ys = b.value as RuntimeValue[]
+    for (let i = 0; i < Math.min(xs.length, ys.length); i++) {
+      const d = compareValues(xs[i], ys[i])
+      if (d !== 0) return d
+    }
+    return xs.length - ys.length
+  }
+  if (typeof a.value === 'number' && typeof b.value === 'number') return a.value - b.value
+  return String(a.value).localeCompare(String(b.value))
+}

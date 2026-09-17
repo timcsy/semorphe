@@ -21,11 +21,25 @@ import { describe, it, expect } from 'vitest'
 import { execSync } from 'node:child_process'
 import { runCppBatchDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 
-/** 現在有幾支我們編出來的程式還在跑。 */
+/**
+ * 現在有幾支**這個行程自己**編出來的程式還在跑。
+ *
+ * 🔴 **母體要縮到自己**（2026-09-17，這條護欄自己誤報之後才發現）。
+ *
+ * 第一版數的是系統上所有 `semorphe-refcc` 的行程，而全套用兩個 worker 跑
+ * ——**另一支測試檔合法地在跑它自己編的程式**，於是這裡數到它，
+ * 判定「留下了孤兒」。單獨跑時綠、全套時紅，而全套結束後一支都不剩。
+ *
+ * > **一個量測工具如果它量的母體包含別人的東西，
+ * > 它會在別人忙的時候誤報——而那種紅看起來與真的缺陷一模一樣。**
+ *
+ * 🟢 `run-cpp.ts` 把執行檔命名為 `a<pid>_<序號>`，所以「自己的」是問得出來的。
+ */
 const orphans = (): string[] => {
   try {
+    const mine = `a${process.pid}_`
     return execSync('ps -eo pid,comm', { encoding: 'utf-8' })
-      .split('\n').filter((l) => l.includes('semorphe-refcc')).map((l) => l.trim())
+      .split('\n').filter((l) => l.includes('semorphe-refcc') && l.includes(mine)).map((l) => l.trim())
   } catch { return [] }
 }
 

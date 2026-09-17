@@ -168,6 +168,24 @@ const CASES: [string, string, string, string[]][] = [
   ['位置換算成索引（`it - v.begin()`）', '',
     `vector<int> v; v.push_back(3); v.push_back(1); v.push_back(4);
      auto it = v.begin() + 2; cout << (it - v.begin());`, []],
+  // ── 有序容器裝一對值（語料 AP325/4/4_15 的形狀）（2026-09-17）────
+  // 🔴 三個缺陷疊在這一支上：容器不知道元素型別 ⟹ 大括號存成陣列；
+  //    排序的比較規則不認一對值 ⟹ 容器【根本沒有排序】；
+  //    而查找把每一格拆開只比第一個。
+  ['有序容器裝一對值：走訪出來要是排好的', '',
+    `multiset<pair<int,int>> st; st.insert({3,4}); st.insert({1,2});
+     for (auto it = st.begin(); it != st.end(); ++it) cout << it->first << it->second;`, []],
+  ['有序容器裝一對值：字典序的查找', '',
+    `multiset<pair<int,int>> st; st.insert({1,9}); st.insert({5,0});
+     auto it = st.lower_bound({2,0}); cout << it->first << it->second;`, []],
+  ['🔴 別名：`#define x first` 之後 `it->x`（AP325/4/4_15 逐字）', '#define x first',
+    `multiset<pair<int,int>> st; st.insert({3,4}); auto it = st.begin(); cout << it->x;`, []],
+  // ★ 正向錨點：這一刀不得弄壞純量的集合與字串的集合。
+  ['★ 純量集合仍然有序', '',
+    `set<int> s; s.insert(5); s.insert(1); s.insert(3);
+     for (int v : s) cout << v;`, []],
+  ['★ 字串集合不得被壓成數字', '',
+    `set<string> s; s.insert("bb"); s.insert("aa"); cout << *s.begin();`, []],
   // ⚠️ **刻意沒有**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
   //    ——兩者在 C++ 裡都是未定義行為，而判準裡不得放它們。
 ]
