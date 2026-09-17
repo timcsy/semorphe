@@ -10,9 +10,9 @@
       "message0": "%{BKY_C_STRUCT_POINTER_ACCESS_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "PTR",
-          "text": "ptr"
+          "check": "Expression"
         },
         {
           "type": "field_input",
@@ -30,31 +30,12 @@
       "imports": [],
       "order": 20
     },
-    "astPattern": {
-      "grammar": "tree-sitter-cpp",
-      "nodeType": "field_expression",
-      "constraints": [
-        {
-          "field": "operator",
-          "text": "->"
-        }
-      ],
-      "fieldMappings": [
-        {
-          "semantic": "obj",
-          "ast": "argument",
-          "extract": "text"
-        },
-        {
-          "semantic": "member",
-          "ast": "field",
-          "extract": "text"
-        }
-      ]
-    },
+    "_astPattern_why": "🪦 **這裡原本有一個 `astPattern`，而它是一個【第二個 lift 來源】**（2026-09-18 刪）。\n它把接收者 `extract: \"text\"` 抄成字串，而膠囊自己的 `lift.ts` 分支（`registerAstBranch('field_expression', …)`）把它 lift 成一棵樹——**兩份說法不一樣，而贏的是這一份**。\n症狀：`copy.begin()->second` 的接收者變成字串 `\"copy.begin()\"`，於是執行時說「這個變數尚未宣告」。\n> **一個概念有兩個 lift 來源時，改對了其中一個不會有任何反應\n> ——而那讓人以為自己改錯了地方。**",
     "renderMapping": {
       "fields": {
-        "MEMBER": "member",
+        "MEMBER": "member"
+      },
+      "inputs": {
         "PTR": "obj"
       }
     }

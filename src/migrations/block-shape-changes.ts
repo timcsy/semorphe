@@ -237,6 +237,7 @@ const WHY = '接收者 `OBJ` 從欄位換成接點——`m[k]`／`v[i]`／`it->s
   + '一個欄位只裝得下一串文字，而解那串文字的地方只認得「名字、數字、以及它們的加減」。'
 
 export const SHAPE_CHANGES_V19: ShapeChange[] = [
+  { blockType: 'cpp_struct_at_ptr', retiredFields: ['PTR'], why: WHY },
   { blockType: 'cpp_container_append', retiredFields: ['OBJ'], why: WHY },
   { blockType: 'cpp_container_clear', retiredFields: ['OBJ'], why: WHY },
   { blockType: 'cpp_container_count', retiredFields: ['OBJ'], why: WHY },

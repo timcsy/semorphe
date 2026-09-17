@@ -34,7 +34,9 @@ const show = (x: SemanticNode): SemanticNode => n('cpp:print', {}, { values: [x]
 //    而那正是這一刀在解的：舊版執行器用 `indexOf('.')` 手拆它。
 const lvalue = (name: string): SemanticNode => {
   const arrow = name.indexOf('->')
-  if (arrow > 0) return n('cpp:struct_at_ptr', { obj: name.slice(0, arrow), member: name.slice(arrow + 2) }, {})
+  // 🟢 接收者是接點（2026-09-18，`->` 這一條補上——`.` 那一條 2026-08-26 就改了）
+  if (arrow > 0) return n('cpp:struct_at_ptr', { member: name.slice(arrow + 2) },
+    { obj: [n('cpp:var_ref', { name: name.slice(0, arrow) }, {})] })
   const dot = name.indexOf('.')
   // 🟢 接收者是接點（2026-08-26）
   if (dot > 0) return n('cpp:struct_at_member', { member: name.slice(dot + 1) },
@@ -101,7 +103,7 @@ describe('指標取成員 `p->x`', () => {
         n('cpp:pointer_declare', { name: 'ptr', type: 'Point' }, {
           initializer: [n('cpp:address_of', {}, { var: [ref('p')] })],
         }),
-        show(n('cpp:struct_at_ptr', { obj: 'ptr', member: 'x' })),
+        show(n('cpp:struct_at_ptr', { member: 'x' }, { obj: [ref('ptr')] })),
       ),
     )
     expect(out.trim(), '指標取成員讀不到——多半是沒有解參照').toBe('9')

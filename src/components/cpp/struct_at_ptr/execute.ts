@@ -1,5 +1,6 @@
 /** `cpp:struct_at_ptr` 的 **execute** 路——從共用檔原封剪過來（批次第十五批：field_expression 的分支）。 */
 import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/executor-registry'
+import { varRefName } from '../var_ref/lift'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { getMember } from '../../../interpreter/executors/variables'
@@ -39,8 +40,13 @@ export function registerExecute(register: (component: string, executor: Componen
   registerLvalue()
   /** `p->x` */
     register('cpp:struct_at_ptr', async (node, ctx) => {
-      const ptrName = String(node.properties.obj)
-      const ptr = ctx.scope.get(ptrName)
+      /**
+       * 🔴 **接收者求值，不再用名字查作用域**（2026-09-18）。
+       * ⚠️ 名字**仍然要拿**——符號式指標（`&x`）要靠它查 `pointerTargets`，
+       *    而那個判別由 `cpp:var_ref` 自己答（身分字串不出它的資料夾）。
+       */
+      const ptrName = varRefName((node.slots.obj ?? [])[0]) ?? '這個指標'
+      const ptr = await ctx.evaluate((node.slots.obj ?? [])[0])
       if (ptr.value === null || ptr.value === undefined) {
         // 對空指標取成員在真的 C++ 會當掉。**出聲**，不要靜默回預設值。
         throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${ptrName}（空指標）` })
@@ -58,8 +64,8 @@ export function registerExecute(register: (component: string, executor: Componen
  */
 export function registerLvalue(): void {
   declareLvalue('cpp:struct_at_ptr', async (node, ctx: ExecutionContext) => {
-    const ptrName = String(node.properties.obj)
-    const ptr = ctx.scope.get(ptrName)
+    const ptrName = varRefName((node.slots.obj ?? [])[0]) ?? '這個指標'
+    const ptr = await ctx.evaluate((node.slots.obj ?? [])[0])
     if (ptr.value === null || ptr.value === undefined) {
       throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${ptrName}（空指標）` })
     }

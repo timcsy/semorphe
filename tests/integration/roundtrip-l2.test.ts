@@ -290,20 +290,21 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp_struct_at_ptr', () => {
     it('should render and extract struct pointer access', () => {
-      const sem = createNode('cpp:struct_at_ptr', { obj: 'p', member: 'x' })
+      const sem = createNode('cpp:struct_at_ptr', { member: 'x' },
+        { obj: [createNode('cpp:var_ref', { name: 'p' })] })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_struct_at_ptr')
 
       const sem2 = extractor.extract(block!)
       expect(sem2!.componentId).toBe('cpp:struct_at_ptr')
-      // ⚠️ 這一顆**還沒**遷移（它的接收者仍然是屬性）——見 `_slots_why` 那一批
-      expect(sem2!.properties.obj).toBe('p')
+      expect((sem2!.slots.obj[0] as SemanticNode).properties.name).toBe('p')
       expect(sem2!.properties.member).toBe('x')
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:struct_at_ptr', { obj: 'node', member: 'next' })
+      const sem = createNode('cpp:struct_at_ptr', { member: 'next' },
+        { obj: [createNode('cpp:var_ref', { name: 'node' })] })
       const code = generator.generate(sem, genCtx)
       expect(code).toBe('node->next')
     })
