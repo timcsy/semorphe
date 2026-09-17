@@ -118,6 +118,7 @@
                   "cpp:container_erase",
                   "cpp:container_count",
                   "cpp:vector_pop",
+                  "cpp:deque_declare",
                   "cpp:container_push_front",
                   "cpp:container_pop_front",
                   "cpp:vector_back",

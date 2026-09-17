@@ -228,6 +228,7 @@
         "cpp_queue_front",
         "cpp_container_pop_front",
         "cpp_container_push_front",
+        "cpp_deque_declare",
         "cpp_stringstream_declare",
         "cpp_container_empty",
         "cpp_container_find",

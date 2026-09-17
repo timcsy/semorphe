@@ -59,6 +59,7 @@
     "cpp:delay",
     "cpp:delay_microseconds",
     "cpp:delete",
+    "cpp:deque_declare",
     "cpp:dht_declare",
     "cpp:dht_read",
     "cpp:digital_read",

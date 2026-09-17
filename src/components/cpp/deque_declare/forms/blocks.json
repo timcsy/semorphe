@@ -1,0 +1,91 @@
+[
+  {
+    "id": "cpp:deque_declare",
+    "componentId": "cpp:deque_declare",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_deque_declare",
+      "message0": "%{BKY_CPP_DEQUE_DECLARE_CREATE} %1 %{BKY_CPP_DEQUE_DECLARE_KIND} %2 %3",
+      "args0": [
+        {
+          "type": "field_dynamic_dropdown",
+          "name": "TYPE",
+          "source": "cpp_var_types",
+          "allowCustom": true
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "dq"
+        },
+        {
+          "type": "input_dummy",
+          "name": "HEAD"
+        }
+      ],
+      "message1": "%{BKY_CPP_DEQUE_DECLARE_SIZE} %1",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        }
+      ],
+      "message2": "%{BKY_CPP_DEQUE_DECLARE_FILL} %1",
+      "args2": [
+        {
+          "type": "input_value",
+          "name": "FILL",
+          "check": "Expression"
+        }
+      ],
+      "message3": "%{BKY_CPP_DEQUE_DECLARE_SOURCE} %1",
+      "args3": [
+        {
+          "type": "input_value",
+          "name": "SOURCE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_DEQUE_DECLARE_TOOLTIP}",
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "minCount": 0,
+      "openLabelKey": "CPP_DEQUE_DECLARE_INIT",
+      "openLabelFallback": "初始值",
+      "openLabelOnFirstSlot": true
+    },
+    "codeTemplate": {
+      "pattern": "std::deque<${TYPE}> ${NAME};",
+      "imports": [
+        "deque"
+      ],
+      "order": 0
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      },
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ],
+      "inputs": {
+        "SOURCE": "source",
+        "SIZE": "size",
+        "FILL": "fill"
+      }
+    },
+    "_why": "🟢 **形狀照抄同族的列表宣告**（`variadic` ＋ `openLabelOnFirstSlot` ＋ 大小／每格填／複製自三格）——`deque` 的每一個建構形式都與它相同，而**學生靠形狀認「這是同一種東西」**。\n⚠️ 顏色與 category 也是抄的（`containers` / `#4C97FF`）：自己挑一個「看起來合理」的顏色等於在同一族裡製造一條假的分界。"
+  }
+]

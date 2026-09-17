@@ -1,0 +1,26 @@
+{
+  "componentId": "cpp:deque_declare",
+  "abstractComponent": "cpp:var_declare",
+  "properties": [
+    { "name": "type", "kind": "enum", "default": "int" },
+    { "name": "name", "kind": "identifier", "default": "dq" }
+  ],
+  "slots": {
+    "values": { "allowed": ["expression"], "min": 0 },
+    "source": { "allowed": ["expression"], "min": 0, "max": 1 },
+    "size": { "allowed": ["expression"], "min": 0, "max": 1 },
+    "fill": { "allowed": ["expression"], "min": 0, "max": 1 }
+  },
+  "role": "statement",
+  "paths": {
+    "lift": "./lift.ts",
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts"
+  },
+  "requires": ["<deque>"],
+  "_children_why": "四個接點與同族的列表宣告**一字不差**——`deque` 的每一個建構形式（初始化列／複製自／`(n)`／`(n, x)`）都與它相同。差別只在**兩端都能進出**，而那是「在前端加入」與「從前端拿掉」兩顆元件的事，不是宣告的事。\n🔴 **所以行為也共用一份**（`runtime/sequence-declare`）：抄一份的話兩份會漂移，而漂移的那天沒有人會發現。",
+  "traits": { "declarator": true },
+  "_traits_why": "`declarator: true`＝**我可以當一次宣告裡的一個宣告子**（`int a, b;` 的 `a` 與 `b`）——與同族每一顆容器宣告一致。"
+}

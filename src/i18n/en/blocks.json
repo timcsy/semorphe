@@ -325,6 +325,7 @@
   "FLOW_TITLE_CPP_DELAY": "Delay (ms)",
   "FLOW_TITLE_CPP_DELAY_MICROSECONDS": "Delay (µs)",
   "FLOW_TITLE_CPP_DELETE": "Delete",
+  "FLOW_TITLE_CPP_DEQUE_DECLARE": "New double-ended queue",
   "FLOW_TITLE_CPP_DESTRUCTOR": "Destructor",
   "FLOW_TITLE_CPP_DHT_DECLARE": "Declare DHT sensor",
   "FLOW_TITLE_CPP_DHT_OPEN": "Start DHT sensor",

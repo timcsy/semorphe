@@ -64,6 +64,7 @@
     "cpp:delay",
     "cpp:delay_microseconds",
     "cpp:delete",
+    "cpp:deque_declare",
     "cpp:destructor",
     "cpp:dht_declare",
     "cpp:dht_open",
@@ -354,5 +355,6 @@
       "CPP_VECTOR_DECLARE_TYPE_LONG_LONG": "long long (large integer)",
       "CPP_VECTOR_DECLARE_TYPE_STRING": "string (text)"
     }
-  }
+  },
+  "note": "\n\n📈 **2026-09-18：`cpp:deque_declare` 加入**（探索報告的 P1）。\n  `deque` 在此之前沒有主人，於是 `deque<pair<int,int>>` 掉進一般的變數宣告而\n  失去元素型別。語料 22 支用 deque。\n"
 }

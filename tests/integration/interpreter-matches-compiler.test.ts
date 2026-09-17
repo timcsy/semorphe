@@ -230,6 +230,46 @@ const CASES: [string, string, string, string[]][] = [
     `int t[2][2] = {{0,0},{0,0}}; int w = (t[1][1] = 6); cout << w << t[1][1];\n` +
     `int v = 0; int* ptr = &v; int u = (*ptr = 3); cout << u << v;`, []],
 
+  /**
+   * 🔴 **容器要記得住自己裝什麼**（2026-09-18，探索階段量到的兩個前置缺陷）。
+   *
+   * ```
+   * vector<pair<int,int>> v; v.push_back({3,4}); v[0].first     🟢 一直是好的
+   * deque <pair<int,int>> q; q.push_back({1,2}); q[0].first     🔴「（不是一個結構）」
+   * queue /priority_queue  .push({1,2}); .front().first          🔴 同上
+   * ```
+   *
+   * 兩個根因不同：`deque` **沒有宣告元件**（掉進一般的變數宣告，型別整串塞進一格），
+   * 而 `.push()` **不照元素型別長**（同族的 `push_back` 早就照了）。
+   *
+   * > **同一族的三顆元件，兩顆做了某件事而一顆沒有——那個差別不會有人發現，
+   * > 直到有人寫出只有前兩顆能表達的程式。**
+   */
+  ['🔴 雙端佇列記得住元素型別（語料 22 支用它）', '',
+    `deque<pair<int,int>> q; q.push_back({1,2}); q.push_front({7,8});\n` +
+    `cout << q[0].first << q.front().second << q.back().first << q.size();`, []],
+  ['★ 正向錨點：純量的雙端佇列本來就是好的', '',
+    `deque<int> d; d.push_front(1); d.push_back(2); cout << d.front() << d.back() << d.size();`, []],
+  ['🔴 雙端佇列的建構子引數 `deque<int> d(3)`', '',
+    `deque<int> d(3); cout << d.size() << d[0];`, []],
+  ['🔴 佇列／堆疊／優先佇列的 `push` 也要照元素型別長', '',
+    `queue<pair<int,int>> q; q.push({1,2});\n` +
+    `stack<pair<int,int>> st; st.push({3,4});\n` +
+    `cout << q.front().first << q.front().second << st.top().second;`, []],
+  /**
+   * 🔴 **而元素長對的那一天，堆頂的比較就開始答錯**：`heapTopIndex` 寫著
+   * `Number(cell.value)`，而一個 `pair` 的 `value` 是一張 `Map`——`Number(Map)`
+   * 是 `NaN`，每一次比較都是 false，**堆頂永遠是先推進去的那一個**。
+   *
+   * > **一個「把值壓成數字」的比較，會在那個值終於長對的那天開始答錯。**
+   */
+  ['🔴 優先佇列裝一對值時，堆頂要照字典序', '',
+    `priority_queue<pair<int,int>> pq; pq.push({1,2}); pq.push({5,6}); pq.push({5,1});\n` +
+    `cout << pq.top().first << pq.top().second; pq.pop(); cout << pq.top().second;`, []],
+  ['★ 正向錨點：純量的優先佇列（大根堆與小根堆）不得被弄壞', '',
+    `priority_queue<int> a; a.push(3); a.push(9); a.push(1); cout << a.top(); a.pop(); cout << a.top();\n` +
+    `priority_queue<int, vector<int>, greater<int>> b; b.push(3); b.push(9); b.push(1); cout << b.top();`, []],
+
   // ⚠️ **刻意沒有**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
   //    ——兩者在 C++ 裡都是未定義行為，而判準裡不得放它們。
 ]
