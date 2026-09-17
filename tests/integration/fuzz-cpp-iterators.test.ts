@@ -235,19 +235,134 @@ describe('模糊測試：迭代器的邊界', () => {
   //
   // ⚠️ 兩支都用 `it.fails`（不是 `it.todo`）——**修好的那天它會紅，逼人來拔釘子**。
 
-  it.fails('[BLOCKED:cpp:container_erase] 刪一格之後，別人手上那份位置沒有人通知它', async () => {
+  /**
+   * 🟢 **2026-09-18：這根釘子被拔了，而拔它的是它自己寫的觸發條件。**
+   *
+   * 原本的釘子寫著：「**語料量到 0 支**用這個寫法……🔴 何時該修：如果盲測或
+   * 使用者的程式出現這個寫法——**第二個獨立來源**就夠了。」
+   * 那一天來了，而且不是兩個來源是**三個**：十支盲測裡 fuzz_3（`multiset`）、
+   * fuzz_6（`map<int,set<int>>`）、fuzz_9 全部寫 `c.erase(it++)`。
+   *
+   * 🟢 修法就是釘子上寫的那一句：**容器記下每一次刪除的位置，
+   * 而每一個讀位置的地方先套用那份紀錄**（`pointer.ts` 的 `noteErasure`／
+   * `offsetOf`／`positionIn`，以及 `RuntimeValue.era`）。
+   *
+   * > **一根釘子如果寫得出「什麼讀數會讓我該被拔掉」，
+   * > 那個讀數出現的那天它就不需要有人記得它。**
+   */
+  it('★ 刪一格之後，別人手上那份位置會被通知', async () => {
     // 🔴 **這【不是】迭代器失效**：C++ 的 `set::erase` 只讓被刪的那個失效，
-    //    別人手上的仍然有效。所以這是我們「位置＝偏移量」模型的一個真實限制
-    //    ——刪掉一格之後，指向後面的那些拷貝的偏移量全部差一。
-    //    而它是**靜默的錯答案**：`s.erase(a)` 之後 `*b` 我們給 4、g++ 給 3。
-    //
-    // 🟠 **為什麼不現在修**：要讓位置能被「修正」，容器得記下每一次刪除的位置，
-    //    而每一個讀位置的地方都要先套用那份紀錄。那是一次模型改動，
-    //    而**語料量到 0 支**用這個寫法（語料用的是 `it = c.erase(it)`，已支援）。
-    // 🔴 何時該修：如果盲測或使用者的程式出現這個寫法——**第二個獨立來源**就夠了。
+    //    別人手上的仍然有效——所以這一格有唯一的正確答案，進得了判準。
     await sameAsCompiler(
       `set<int> s; for (int i = 1; i <= 4; i++) s.insert(i);
        auto a = s.begin(); auto b = a; ++b; ++b; s.erase(a); cout << *b;`, '')
+  }, 60_000)
+
+  /**
+   * 🔴 **邊走邊刪的兩種寫法**——盲測三支同時寫的那一個。
+   *
+   * `c.erase(it++)` 的 `it++` **先**挪一格、**後**那一格被抽掉，於是底下整串左移。
+   * 症狀不是當掉，是**數字偏小**（`pruned=1` 而 g++ 說 2）。
+   */
+  it('★ `erase(it++)`：集合／對照表／文字三種容器', async () => {
+    await sameAsCompiler(
+      `set<int> s; for (int i = 1; i <= 6; i++) s.insert(i);
+       auto it = s.begin(); int n = 0;
+       while (it != s.end()) { if (*it % 2 == 0) { s.erase(it++); n++; } else ++it; }
+       cout << n << s.size(); for (int x : s) cout << x;`,
+      '🔴 挪過去的位置指到了再下一個——每刪一格就跳過一格')
+  }, 60_000)
+
+  it('★ `erase(it++)` 在對照表上，而值也要跟著', async () => {
+    await sameAsCompiler(
+      `map<int,int> m; for (int i = 0; i < 5; i++) m[i] = i * i;
+       auto it = m.begin(); int n = 0;
+       while (it != m.end()) { if (it->second < 9) { m.erase(it++); n++; } else ++it; }
+       cout << n << m.size();`, '')
+  }, 60_000)
+
+  it('★ `it = c.erase(it)` 那一半不得被弄壞', async () => {
+    await sameAsCompiler(
+      `vector<int> v{1,2,3,4,5,6}; auto it = v.begin(); int n = 0;
+       while (it != v.end()) { if (*it % 2) { it = v.erase(it); n++; } else ++it; }
+       cout << n << v.size(); for (int x : v) cout << x;`, '')
+  }, 60_000)
+
+  it('★ 兩個位置存在變數裡，中間刪掉前面一格', async () => {
+    await sameAsCompiler(
+      `multiset<int> ms{1,2,3,4,5,6,7};
+       auto lo = ms.lower_bound(3); auto hi = ms.upper_bound(5);
+       ms.erase(ms.find(1));
+       cout << *lo << *hi << ms.size();`,
+      '🔴 刪掉第 0 格之後，手上那兩個位置各該往前一格')
+  }, 60_000)
+
+  /**
+   * 🔴 **參數的型別帶著修飾，而別名查不到就會認錯身分**（盲測 fuzz_6）。
+   *
+   * ```cpp
+   * typedef map<int, set<int>> Graph;
+   * void dfs(const Graph &g, …) { auto row = g.find(u); … }
+   * ```
+   *
+   * `normalizeParamType('const Graph &')` 對不認得的型別回傳原樣，於是
+   * 「`g` 是什麼」查不到 `Graph`，而 `g.find(u)` 被認成**字串的 find**——
+   * 它回 `-1`，下一步 `row->second` 就去 `scope.get('-1')`。
+   *
+   * > **一個查不到型別就讓開的判別是安全的；而一個查不到型別就
+   * > 【落到預設身分】的判別，會安靜地把別人的東西當成自己的。**
+   *
+   * ⚠️ 斷言**身分**而不只是輸出：認錯身分而輸出碰巧對，是這一族的常態。
+   */
+  it('★ `typedef` 的容器當 `const &` 參數傳進去', async () => {
+    const src = `${H}typedef map<int, set<int>> Graph;\n`
+      + `int deg(const Graph &g, int u){ auto row = g.find(u);\n`
+      + `  if (row == g.end()) return -1; return row->second.size(); }\n`
+      + `int main(){ Graph g; g[1].insert(2); g[1].insert(3); g[2].insert(1);\n`
+      + `  cout << deg(g, 1) << deg(g, 2) << deg(g, 9); return 0; }\n`
+    const ids = new Set<string>()
+    const walk = (n: SemanticNode): void => {
+      ids.add(n.componentId)
+      for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) walk(k)
+    }
+    walk(lift(src))
+    expect([...ids], '🔴 `g.find(u)` 被認成字串的 find（回 -1）').toContain('cpp:container_find')
+    expect([...ids], '🔴 接收者的型別查不到，於是落到字串那一支').not.toContain('cpp:string_find')
+    const ref = runCppDetailed(src)
+    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+    expect(await run(src), '🔴 別名 ＋ 修飾詞的參數型別沒解開').toBe(ref.output)
+  }, 60_000)
+
+  /**
+   * 🔴 **一個「位置」不是一個容器——傳值那一路不得複製它**（盲測 fuzz_8）。
+   *
+   * ```cpp
+   * long long parseExpr(TIt &it, TIt end);   // end 是【傳值】的迭代器
+   * ```
+   *
+   * 兩者在執行期都是 `type: 'array'`，於是 `end` 底下那串格子被整個複製，
+   * 而 `it != end` 的判準是「同一個 JS 陣列參考」——**結束條件永遠不成立**，
+   * 最後在結尾之後解參考。⚠️ 症狀是一個**越界**，不是一個錯答案。
+   */
+  it('★ 迭代器傳值進函式，仍然指著同一串格子', async () => {
+    const src = `${H}int eat(vector<int>::iterator it, vector<int>::iterator end){\n`
+      + `  int n = 0; while (it != end) { n += *it; ++it; } return n; }\n`
+      + `int main(){ vector<int> v{1,2,3,4}; cout << eat(v.begin(), v.end()); return 0; }\n`
+    const ref = runCppDetailed(src)
+    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+    expect(await run(src), '🔴 傳值把位置底下那串格子複製走了').toBe(ref.output)
+  }, 60_000)
+
+  /**
+   * 🔴 **`char` 是整數型別**（盲測 fuzz_8 的第二個缺陷）——`*c - '0'` 在 C++ 裡是 `int`。
+   * 把它算成小數的話，**下游第一個整數除法才會失真**：`100/7/2+1` 印出 `8.14286`。
+   */
+  it('★ 字元相減之後的整數除法', async () => {
+    await sameAsCompiler(
+      `string t = "100"; long long n = 0;
+       for (string::const_iterator c = t.begin(); c != t.end(); ++c) n = n * 10 + (*c - '0');
+       long long r = 7; n /= r; cout << n;`,
+      '🔴 `char - char` 被算成小數了')
   }, 60_000)
 
   /**

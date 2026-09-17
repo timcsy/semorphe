@@ -13,6 +13,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { offsetOf } from '../../../interpreter/pointer'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:pointer_assign', async (node, ctx) => {
@@ -35,7 +36,7 @@ export function registerExecute(register: (component: string, executor: Componen
     // ——`cpp:new` 配的儲存體是一個陣列，`*a` 是它的第 0 格。
     if (ptrVal.type === 'array' && Array.isArray(ptrVal.value)) {
       // ⚠️ `offset` 是 `&arr[i]` 留下的位置（見 `cpp:address_of`）。未設 = 0。
-      const at = ptrVal.offset ?? 0
+      const at = offsetOf(ptrVal)
       if (at < 0 || at >= ptrVal.value.length) {
         throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(at) })
       }

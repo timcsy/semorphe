@@ -4,6 +4,8 @@ import type { RuntimeValue } from '../../../interpreter/types'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { resolvePlace } from '../../../interpreter/lvalue'
 import { defaultValue } from '../../../interpreter/types'
+import { mapFind, makePair, pairParts, mapInsertSorted } from '../../../languages/cpp/lang/runtime/map'
+import { containerDefaultFor } from '../../../languages/cpp/lang/runtime/container-defaults'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
@@ -32,6 +34,28 @@ export function registerExecute(register: (component: string, executor: Componen
 
       if (container.type !== 'array' || !Array.isArray(container.value)) {
         throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
+      }
+      /**
+       * 🔴 **一個 keyed 容器的下標是【鍵】，不是位置**（2026-09-18，盲測抓到）。
+       *
+       * `map<int, map<int,int>> g; g[1][2] = 3;` 的外層 `g[1]` 由對照表那一顆
+       * 認走（它的根是一個名字，型別查得到），而**內層的 `[2]` 落到這裡**
+       * ——因為 lift 期看不出 `g[1]` 是什麼種類（`getType("g[1]")` 查不到）。
+       *
+       * 🟢 **而執行期看得出來**：那個值自己帶著 `keyed`。
+       * ⚠️ 用的是**同一組**對照表函式（`runtime/map`），不是第二份實作
+       * ——`m[k]` 在鍵不存在時要新增一格，那條規則只能有一份。
+       *
+       * > **辨識期分不出來的東西，執行期常常分得出來
+       * > ——而把判斷放在分得出來的那一邊，比在另一邊猜便宜。**
+       */
+      if (container.keyed === true) {
+        const cells = container.value as RuntimeValue[]
+        const at = mapFind(cells, indexVal)
+        if (at !== -1) return pairParts(cells[at])?.value ?? defaultValue('int')
+        const fresh = containerDefaultFor(String(container.valueType ?? '')) ?? defaultValue(String(container.valueType ?? 'int'))
+        mapInsertSorted(cells, makePair(indexVal, fresh))
+        return fresh
       }
       if (index < 0 || index >= container.value.length) {
         throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(index) })
@@ -86,6 +110,23 @@ export function registerLvalue(): void {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${name || '這個東西'} 不是容器` })
     }
     const cells = container.value as RuntimeValue[]
+    /**
+     * 🔴 **keyed 容器的下標是鍵**——與求值那一側同一條（見那裡的檔頭）。
+     * ⚠️ 讀那一側修了而寫這一側沒修的話，症狀是**讀得到而寫不進去**。
+     */
+    if (container.keyed === true) {
+      const keyVal = idxNode ? await ctx.evaluate(idxNode) : defaultValue('int')
+      let at = mapFind(cells, keyVal)
+      if (at === -1) {
+        const fresh = containerDefaultFor(String(container.valueType ?? ''))
+          ?? defaultValue(String(container.valueType ?? 'int'))
+        at = mapInsertSorted(cells, makePair(keyVal, fresh))
+      }
+      return {
+        read: () => pairParts(cells[at])?.value ?? defaultValue('int'),
+        write: (v) => { cells[at] = makePair(keyVal, v as RuntimeValue) },
+      }
+    }
     if (idx < 0 || idx >= cells.length) {
       throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(idx) })
     }

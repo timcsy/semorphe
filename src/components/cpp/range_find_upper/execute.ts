@@ -6,6 +6,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { resolveRange, numOf } from '../../../languages/cpp/lang/runtime/range'
+import { positionIn } from '../../../interpreter/pointer'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_find_upper', async (node, ctx) => {
@@ -24,6 +25,6 @@ export function registerExecute(register: (component: string, executor: Componen
         if (v <= target) lo = mid + 1
         else hi = mid
       }
-      return { type: 'array' as const, value: cells, offset: lo }
+      return positionIn(cells, lo)
     })
 }

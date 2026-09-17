@@ -9,6 +9,8 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { varRefName } from '../var_ref/lift'
+import type { RuntimeValue } from '../../../interpreter/types'
+import { positionIn } from '../../../interpreter/pointer'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
@@ -36,7 +38,7 @@ export function registerExecute(register: (component: string, executor: Componen
       const cells = (v.charCells ??= [...v.value].map((ch) => ({ type: 'char' as const, value: ch.charCodeAt(0) })))
       const at = which === 'end' ? cells.length : which === 'rbegin' ? cells.length - 1 : which === 'rend' ? -1 : 0
       const rev = which === 'rbegin' || which === 'rend'
-      return { type: 'array', value: cells, offset: at, readonlyCells: true, ...(rev ? { reverse: true } : {}) }
+      return positionIn(cells, at, { readonlyCells: true, ...(rev ? { reverse: true } : {}) })
     }
     if (v.type !== 'array' || !Array.isArray(v.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${name} 不是容器` })
@@ -50,8 +52,9 @@ export function registerExecute(register: (component: string, executor: Componen
     //
     // > **一個「界線」不是一個元素**——正反兩邊各有一個，而它們都合法。
     const n = v.value.length
-    if (which === 'rbegin') return { type: 'array', value: v.value, offset: n - 1, reverse: true }
-    if (which === 'rend') return { type: 'array', value: v.value, offset: -1, reverse: true }
-    return { type: 'array', value: v.value, offset: which === 'end' ? n : 0 }
+    const cells = v.value as RuntimeValue[]
+    if (which === 'rbegin') return positionIn(cells, n - 1, { reverse: true })
+    if (which === 'rend') return positionIn(cells, -1, { reverse: true })
+    return positionIn(cells, which === 'end' ? n : 0)
   })
 }

@@ -163,25 +163,35 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
   }, 60_000)
 
   /**
-   * 🟠 **`m[k][0]`——對照表上的雙下標被認成【二維陣列】**（2026-09-18 隔離出來）。
+   * 🟢 **2026-09-18：這根釘子被拔了**（同一天釘上、同一天拔掉）。
    *
-   * `map<int, vector<int>> g;` 的 `g[5][0]` lift 成 `cpp:array_2d_at`，
-   * 於是它拿 `5` 當列索引去一個長度 1 的東西上取——`INDEX_OUT_OF_RANGE`。
+   * 它寫著「何時該修：下一刀碰 `subscript_expression` 的身分選擇時」——而那一刀
+   * 的判準是：**`x[a][b]` 只有在 `x` 真的被宣告成二維陣列時才是二維存取**。
+   * 其餘讓它**自然巢狀**（對照表走鍵、列表走位置、文字走字元）。
    *
-   * ⚠️ **接收者重構治不了它**：這是**身分選擇**的問題，不是接收者的形狀。
-   * `x[a][b]` 只有在 `x` 真的是二維陣列時才是二維存取；`x` 是對照表時
-   * 它是 `array_at(map_at(x, a), b)`。
-   *
-   * 🔴 **為什麼不是現在修**：那個分支要先問根變數的宣告型別，而它今天
-   * 在 `subscript_expression` 的**外層**就決定了。與 `m[k]` 的巢狀那一族
-   * 一起改比較安全——分開改會讓兩邊各認一半。
-   * 🔴 **何時該修**：下一刀碰 `subscript_expression` 的身分選擇時。
-   * ⚠️ 用 `it.fails` 不用 `it.todo`——修好的那天它會紅，逼人來拔釘子。
+   * ⚠️ 而巢狀的內層有一格辨識期看不出來：`g[1]` 是什麼種類？
+   * 🟢 **執行期看得出來**——那個值自己帶著 `keyed`。
+   * > **辨識期分不出來的東西，執行期常常分得出來
+   * > ——而把判斷放在分得出來的那一邊，比在另一邊猜便宜。**
    */
-  it.fails('[BLOCKED:cpp:array_2d_at] 🟠 對照表上的雙下標被認成二維陣列', async () => {
+  it('★ 對照表上的雙下標', async () => {
     const { ref, got } = await both('#include <map>',
       `map<int, vector<int>> g; g[5].push_back(9); cout << g[5][0];`)
     expect(got).toBe(ref)
+  }, 60_000)
+
+  /**
+   * 🔴 **同一族的其餘三種**——它們的外層下標都不是「一個列」。
+   * ⚠️ 兩個正向錨點跟著：真的二維陣列與向量的向量**不得被弄壞**。
+   */
+  it('★ 雙下標的身分由「那個容器是什麼」決定', async () => {
+    const { ref, got } = await both('#include <map>',
+      `map<int, map<int,int>> gg; gg[1][2] = 3;
+       string w[2] = {"ab", "cd"};
+       int t[2][3] = {{1,2,3},{4,5,6}};
+       vector<vector<int>> vv(2); vv[0].push_back(7);
+       cout << gg[1][2] << gg.size() << w[1][0] << t[1][2] << vv[0][0];`)
+    expect(got, '🔴 雙下標的身分選錯了').toBe(ref)
   }, 60_000)
 
   it.todo('[UNSUPPORTED:deque<char> 傳值後的差異，根因未定位] 🟠 模糊測試 fuzz_9'

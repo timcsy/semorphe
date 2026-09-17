@@ -220,7 +220,23 @@ function scan(files: readonly string[]): { hits: hits[]; "return 總數": number
     const rel = path.relative(REPO_ROOT, f)
     for (let i = 0; i < lines.length; i++) {
       const l = lines[i]
-      if (!/\breturn\b/.test(l) || !/value:/.test(l)) continue
+      /**
+       * 🔴 **母體是「造得出一個值的 return」，而那不只是字面上寫著 `value:` 的**
+       *（2026-09-18）。
+       *
+       * 那一天 17 個 `return { type: 'array', value: cells, offset: n }` 被換成
+       * `return positionIn(cells, n)`（位置要蓋上「第幾次刪除之後」的章）。
+       * **那些 return 一個都沒有消失**，而母體從 183 掉到 167——於是
+       * 「這條護欄少看了 17 處」與「這 17 處真的不見了」長得一模一樣。
+       *
+       * > **一個用「長什麼樣」定義母體的掃描器，會在那個樣子被重構掉的那天
+       * > 安靜地縮小自己的視野——而它的結論看起來完全正常。**
+       *
+       * ⚠️ 收進來的是**造值的輔助函式**，而它們造不出靜默回退
+       *（`positionIn` 一律回一個真的位置，回不了 `value: 0`）
+       * ——所以命中數不變，變的只是母體不再假性縮水。
+       */
+      if (!/\breturn\b/.test(l) || !/value:|positionIn\(/.test(l)) continue
       total++
       if (!defaultValue.test(l)) continue
       // 條件：同一行的 `if (…) return`，或往上找最近的 `if (`

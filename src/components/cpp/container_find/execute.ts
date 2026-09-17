@@ -13,6 +13,7 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { varRefName } from '../var_ref/lift'
+import { positionIn } from '../../../interpreter/pointer'
 import { evalInitializer } from '../../../interpreter/aggregate'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
@@ -77,6 +78,6 @@ export function registerExecute(register: (component: string, executor: Componen
       if (ok) { hit = i; break }
     }
     // 🔴 **找不到 ＝ 結尾之後**，而那是一個合法的位置（只有解參考它才是錯的）。
-    return { type: 'array', value: cells, offset: hit === -1 ? cells.length : hit }
+    return positionIn(cells, hit === -1 ? cells.length : hit)
   })
 }
