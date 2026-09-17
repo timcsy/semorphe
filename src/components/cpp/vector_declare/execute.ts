@@ -9,6 +9,7 @@ import { evalInitializer } from '../../../interpreter/aggregate'
 //    值語義的複製是**執行期的通則**，不是這顆元件的性質。
 import { cloneValue } from '../../../interpreter/clone'
 import { defaultValue } from '../../../interpreter/types'
+import { registerContainerDefault, containerDefaultFor } from '../../../languages/cpp/lang/runtime/container-defaults'
 
 /** 深拷貝——每一格獨立，見下方 `fill` 的註解 */
 
@@ -16,6 +17,10 @@ import { defaultValue } from '../../../interpreter/types'
 export function registerExecute(
   register: (component: string, executor: ComponentExecutor) => void,
 ): void {
+  /** 🔴 同族：`vector<vector<int>> g(2)` 的每一格也是一個真的列表（見 `container-defaults`）。 */
+  registerContainerDefault('vector', (inner) => ({
+    type: 'array', value: [], ...(inner ? { elemType: inner } : {}),
+  }))
   register('cpp:vector_declare', async (node, ctx) => {
     const name = String(node.properties.name)
     // 元素型別——`vector<pair<int,int>>` 的 `pair<int,int>`。
@@ -57,8 +62,13 @@ export function registerExecute(
          * 實測 218 支學生程式裡 8 支撞在這裡（競賽裡 `vector<pii> vt(n)` 很常見）。
          *
          * > **一個「沒給就補 0」的預設值，在元素不是數字的時候補的是一個錯的形狀。**
+         *
+         * 🟢 **2026-09-18：元素是【容器】時也一樣**——`vector<set<int>> bins(4);`
+         * 的每一格要是一個真的集合（不留重複），而不是一個空陣列。
+         * 形狀由宣告那顆元件自己登記（見 `runtime/container-defaults`）。
+         * ⚠️ **每一格都要獨立的複本**——工廠每次呼叫都造一個新的，所以這裡不必再 clone。
          */
-        cells.push(fill ? cloneValue(fill) : defaultValue(elemType))
+        cells.push(fill ? cloneValue(fill) : (containerDefaultFor(elemType) ?? defaultValue(elemType)))
       }
       ctx.scope.declare(name, { type: 'array', value: cells, elemType })
       return

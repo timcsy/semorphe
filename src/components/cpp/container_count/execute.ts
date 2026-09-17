@@ -2,6 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { mapFind } from '../../../languages/cpp/lang/runtime/map'
+import { equivalentInOrder } from '../../../languages/cpp/lang/runtime/order'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
@@ -26,8 +27,24 @@ export function registerExecute(register: (component: string, executor: Componen
       // Try map-style count (key-value pairs) first
       const idx = mapFind(arr.value, keyVal)
       if (idx !== -1) return { type: 'int' as const, value: 1 }
-      // Set-style count (direct value match)
-      const exists = arr.value.some((v: RuntimeValue) => v.value === keyVal.value)
-      return { type: 'int' as const, value: exists ? 1 : 0 }
+      /**
+       * 🔴 **可重複集合的 `count` 要數【全部】**（2026-09-18，盲測抓到）。
+       *
+       * C++ 的 `count` 回傳的是「有幾個」，而 `set`／`map` 的鍵唯一，
+       * 所以那個數字只會是 0 或 1——**而 `multiset` 不是**。
+       *
+       * ⚠️ 症狀是**數字偏小而程式跑得完**：`ms.count(0)` 有兩個時回 1。
+       * 而重複性住在容器的宣告上（`allowsDuplicates`），所以這裡讀它
+       * ——與同族的 `insert`／`erase` 同一條判準。
+       *
+       * > **一個「有沒有」與一個「有幾個」在唯一鍵的容器上是同一個答案
+       * > ——而那讓錯的那一半在大多數情況下看起來是對的。**
+       */
+      // ⚠️ 比較要問使用者自己的 `operator<`（與查找／去重同一份規則）
+      let hits = 0
+      for (const v of arr.value as RuntimeValue[]) {
+        if (await equivalentInOrder(v, keyVal, ctx)) hits++
+      }
+      return { type: 'int' as const, value: arr.allowsDuplicates ? hits : (hits > 0 ? 1 : 0) }
     })
 }

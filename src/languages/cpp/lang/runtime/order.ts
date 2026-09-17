@@ -44,6 +44,56 @@ export function defaultLess(a: RuntimeValue, b: RuntimeValue): boolean {
 }
 
 /**
+ * **兩個值誰在前面——而使用者自己的 `operator<` 優先。**
+ *
+ * 🔴 它從哪來（2026-09-18，資訊隔離的盲測）：`defaultLess` 認得一對值
+ * （`first`／`second`），而**不認得使用者自己定義的結構**。於是
+ *
+ * ```cpp
+ * struct T { int k; bool operator<(const T& o) const { return k < o.k; } };
+ * vector<T> v; sort(v.begin(), v.end());        我們：完全沒排序
+ * set<T> s; s.insert(T(3)); s.insert(T(3));     我們：留了兩個
+ * ```
+ *
+ * 三件事**全部是靜默的**：程式跑完、印出東西、而順序與數量都不對。
+ *
+ * ⚠️ **機制早就齊了**——`cpp:compare` 與 `cpp:arithmetic` 都會問
+ * `ctx.structs.method(name, 'operator…')`。缺的只是**排序這一路去問**。
+ * > **一個機制的消費者少一個，那個機制就對那條路徑不存在。**
+ *
+ * 沒有多載時落回 `defaultLess`（pair 與純量），**不猜**。
+ */
+export async function lessWithOverload(
+  a: RuntimeValue,
+  b: RuntimeValue,
+  ctx: import('../../../../interpreter/executor-registry').ExecutionContext,
+): Promise<boolean> {
+  if (a.type === 'object' && b.type === 'object') {
+    const m = ctx.structs.method(a.structName ?? '', 'operator<')
+    if (m) {
+      const r = await ctx.structs.invokeWith(a, m, [b])
+      if (r !== undefined) return ctx.toBool(r)
+    }
+  }
+  return defaultLess(a, b)
+}
+
+/**
+ * **兩個值在有序容器裡算不算同一個。**
+ *
+ * 🔴 C++ 的判準是 `!(a<b) && !(b<a)`——**不是 `==`**。
+ * `set` 沒有用到 `operator==`，而一個只比 `.value` 的實作對物件永遠回 false
+ * （兩個 Map 不是同一個參考），於是重複的結構全部留了下來。
+ */
+export async function equivalentInOrder(
+  a: RuntimeValue,
+  b: RuntimeValue,
+  ctx: import('../../../../interpreter/executor-registry').ExecutionContext,
+): Promise<boolean> {
+  return !(await lessWithOverload(a, b, ctx)) && !(await lessWithOverload(b, a, ctx))
+}
+
+/**
  * 穩定的合併排序，比較函式可以是非同步的。
  *
  * 穩定性不是額外要求：C++ 的 `sort` 不保證穩定，**而不穩定的實作會讓

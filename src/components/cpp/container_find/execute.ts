@@ -16,7 +16,8 @@ import { varRefName } from '../var_ref/lift'
 import { evalInitializer } from '../../../interpreter/aggregate'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { compareValues, pairParts } from '../../../languages/cpp/lang/runtime/map'
+import { pairParts } from '../../../languages/cpp/lang/runtime/map'
+import { lessWithOverload } from '../../../languages/cpp/lang/runtime/order'
 
 /**
  * 一格拿來比大小的東西。
@@ -59,10 +60,22 @@ export function registerExecute(register: (component: string, executor: Componen
     const cells = c.value as RuntimeValue[]
     // ⚠️ 容器是**有序的**（插入時就排好了），所以線性掃出來的第一個就是答案。
     //    這裡刻意不用二分搜：正確性與可讀性優先，而語料的容器都不大。
-    const hit = cells.findIndex((cell) => {
-      const d = compareValues(keyOf(cell, c.keyed === true), want)
-      return how === 'upper_bound' ? d > 0 : how === 'lower_bound' ? d >= 0 : d === 0
-    })
+    /**
+     * 🔴 **比較要問使用者自己的 `operator<`**（2026-09-18）。
+     *
+     * `compareValues` 不認得使用者定義的結構，於是 `s.find(Task(2,"alpha"))`
+     * 在一個沒有那個元素的集合上**找得到東西**——而那是靜默的錯答案。
+     * ⚠️ 排序、去重、查找**三條要用同一份規則**，否則
+     * 「放進去的順序」與「找出來的位置」會對不上。
+     */
+    let hit = -1
+    for (let i = 0; i < cells.length; i++) {
+      const k = keyOf(cells[i], c.keyed === true)
+      const less = await lessWithOverload(k, want, ctx)
+      const greater = await lessWithOverload(want, k, ctx)
+      const ok = how === 'upper_bound' ? greater : how === 'lower_bound' ? !less : (!less && !greater)
+      if (ok) { hit = i; break }
+    }
     // 🔴 **找不到 ＝ 結尾之後**，而那是一個合法的位置（只有解參考它才是錯的）。
     return { type: 'array', value: cells, offset: hit === -1 ? cells.length : hit }
   })

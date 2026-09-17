@@ -1,8 +1,17 @@
 /** `cpp:map_declare` 的 **execute** 路——從共用檔原封剪過來（批次第七批：容器樣板過渡表退場）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { cloneValue } from '../../../interpreter/clone'
+import { registerContainerDefault } from '../../../languages/cpp/lang/runtime/container-defaults'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
+  /** 🔴 同 `set` 那一顆：對照表也可能不經宣告就被建出來（見 `container-defaults`）。 */
+  for (const name of ['map', 'unordered_map']) {
+    registerContainerDefault(name, (inner) => ({
+      type: 'array', value: [], keyed: true,
+      // `map<int, vector<int>>` 的 `inner` 是 `int, vector<int>`——值型別是逗號後面那一半
+      ...(inner.includes(',') ? { valueType: inner.slice(inner.indexOf(',') + 1).trim() } : {}),
+    }))
+  }
   register('cpp:map_declare', async (node, ctx) => {
       const name = String(node.properties.name)
       // 🔴 **`keyed` 說的是「我的條目是鍵值對」**（2026-09-17）。

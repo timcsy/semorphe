@@ -62,6 +62,31 @@ export function registerExecute(register: (component: string, executor: Componen
        * 「下一個」正好還是同一個 offset。⚠️ 那是**剛好對**，不是設計出來的
        * ——下一個人改這裡的刪除方式時要知道有東西靠著它。
        */
+      /**
+       * 🔴 **兩個位置界定一段範圍**（2026-09-18，盲測抓到）：`ms.erase(a, b)`。
+       *
+       * 這是同一個方法名的**第四種引數**。在此之前只讀了第一個引數，
+       * 而症狀不是「少刪一些」——是 `before - after` 算出 **-358**，
+       * 而那個容器的內容變成一串 `[object Object],…`。
+       *
+       * > **一個只讀第一個引數的方法，在收到兩個的時候不會出聲
+       * > ——它會把第二個當成不存在，然後做一件完全不同的事。**
+       *
+       * ⚠️ C++ 的範圍是**半開**的：`[first, last)`，`last` 那一格不刪。
+       */
+      const endVal = keyNodes.length > 1 ? await ctx.evaluate(keyNodes[1]) : null
+      if (isCellPointer(keyVal) && endVal && isCellPointer(endVal)) {
+        if (!sameCells(keyVal, arr) || !sameCells(endVal, arr)) {
+          throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+            '%1': `這兩個位置不是同一個「${name}」裡的，刪不了`,
+          })
+        }
+        const from = offsetOf(keyVal)
+        const to = offsetOf(endVal)
+        if (to > from) arr.value.splice(from, to - from)
+        // 回傳**最後一個被刪的之後**——那正好還是同一個 offset（與單格那一條同理）
+        return { type: 'array', value: arr.value, offset: from }
+      }
       if (isCellPointer(keyVal)) {
         if (!sameCells(keyVal, arr)) {
           throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {

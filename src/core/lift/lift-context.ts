@@ -129,9 +129,33 @@ export class LiftContextData {
     return this.lookup(name) !== null
   }
 
-  /** Get the type of a declared variable */
+  /**
+   * Get the type of a declared variable.
+   *
+   * 🔴 **型別別名在這裡解開**（2026-09-18，資訊隔離的盲測）。
+   *
+   * `typedef map<int, set<int>> Graph; Graph g;` 之後，`g` 記下的型別是 `Graph`
+   * ——而**所有問「這是不是對照表」的地方問的都是基底名**（`map`）。
+   * 於是 `g[a]` 被認成陣列下標，而那是一個靜默的錯身分。
+   *
+   * ⚠️ **別名本來就在這張表裡**：`lifter.ts` 的 `recordTypeAlias` 把
+   * `typedef X Y` 記成 `declare(Y, X)`（那是這個檔裡第三支同形狀的收集器）。
+   * 所以這裡**不新增一張表**——多一張表就是多一份會漂移的真相。
+   *
+   * > **一個查得到的東西查兩次，比替它開第二張表便宜。**
+   */
   getType(name: string): string | null {
-    const decl = this.lookup(name)
-    return decl?.type ?? null
+    const t = this.lookup(name)?.type ?? null
+    if (t === null) return null
+    // `Graph` 是一個別名嗎——是的話換成它指向的那個型別
+    const target = t === name ? null : this.lookup(t)?.type
+    /**
+     * ⚠️ **回的是【基底名】**（`deque<int>` → `deque`）。
+     *
+     * 問這一支的人問的都是「這是哪一種容器」——而樣板參數不是種類的一部分。
+     * 容器宣告那幾顆元件記下來的本來就是基底名（`cpp:map_declare` → `map`），
+     * 所以**一般變數那一條要對齊它**，否則同一個問題有兩種答案的形狀。
+     */
+    return (target ?? t).split('<')[0].trim()
   }
 }

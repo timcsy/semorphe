@@ -4,7 +4,7 @@ import { receiverOf } from '../../../interpreter/receiver'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { defaultValue } from '../../../interpreter/types'
 import { mapFind, makePair, pairParts, mapInsertSorted } from '../../../languages/cpp/lang/runtime/map'
-import { componentForContainerTemplate } from '../../../core/component/container-templates'
+import { containerDefaultFor } from '../../../languages/cpp/lang/runtime/container-defaults'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import type { RuntimeValue } from '../../../interpreter/types'
 
@@ -19,21 +19,22 @@ import type { RuntimeValue } from '../../../interpreter/types'
  * g[a].push_back(b);     // 我們：「這不是一個容器」  g++：好的
  * ```
  *
- * ⚠️ **這裡只給「空」這件事，不給種類的性質**（有序性／重複性）——
- * 那些住在宣告那一顆元件上，而自動建出來的這一格**沒有經過宣告**。
- * 所以 `map<int, set<int>>` 的內層集合拿不到「不留重複」：它會在第一次
- * `insert` 時**出聲**（「不是集合或對照表」），而不是安靜地留下重複。
+ * 🟢 **2026-09-18：種類的性質也跟著來了。** 這裡原本只給「空」這件事，
+ * 於是 `map<int, set<int>>` 的內層集合拿不到「不留重複」——它會在第一次
+ * `insert` 時出聲（那是誠實的，但它擋住了一個真的寫法）。
  *
- * > **判不出來就出聲，不要安靜地給一個答案**——而這一格的限制要寫在這裡，
- * > 不是寫在報表上。
+ * 修法**不是在這裡多寫一段**：「集合不留重複」是宣告那顆元件的知識，
+ * 所以它自己登記一個「我的空實例長什麼樣」，這裡只負責問。
+ * 見 `runtime/container-defaults` 的檔頭。
+ *
+ * > **一個「不經過宣告也會被建出來」的東西，
+ * > 它的形狀仍然屬於宣告它的那顆元件——只是需要一個問得到的地方。**
  */
 function defaultForValueType(t: string): RuntimeValue {
-  const base = t.split('<')[0].trim()
-  if (componentForContainerTemplate(base)) {
-    const inner = /<(.+)>/.exec(t)?.[1]?.trim()
-    return { type: 'array', value: [], ...(inner ? { elemType: inner } : {}) }
-  }
-  return defaultValue(t)
+  // 🟢 **種類的性質也跟著來了**（2026-09-18）：`map<string, set<int>>` 的那一格
+  //    現在是一個真的**集合**（不留重複），不再只是「一個空陣列」。
+  //    形狀由宣告那顆元件自己登記——見 `runtime/container-defaults` 的檔頭。
+  return containerDefaultFor(t) ?? defaultValue(t)
 }
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {

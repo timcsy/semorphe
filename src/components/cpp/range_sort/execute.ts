@@ -7,7 +7,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { resolveRange } from '../../../languages/cpp/lang/runtime/range'
-import { defaultLess, asyncSort } from '../../../languages/cpp/lang/runtime/order'
+import { asyncSort, lessWithOverload } from '../../../languages/cpp/lang/runtime/order'
 import { callWithValues } from '../../../languages/cpp/lang/runtime/lambda'
 
 export function registerGenerateUnused(): void {}
@@ -19,7 +19,8 @@ export function registerExecute(register: (component: string, executor: Componen
       const cmpNode = (node.slots.comparator ?? [])[0]
 
       // 沒有比較器 → C++ 的預設 `operator<`（對 `pair` 是字典序）
-      let less = async (a: RuntimeValue, b: RuntimeValue): Promise<boolean> => defaultLess(a, b)
+      // 🔴 **使用者自己的 `operator<` 優先**（2026-09-18）——見 `lessWithOverload` 的檔頭
+      let less = async (a: RuntimeValue, b: RuntimeValue): Promise<boolean> => lessWithOverload(a, b, ctx)
       if (cmpNode) {
         // 求值一次就好——比較器在整趟排序裡是同一個東西，
         // 每次比較都重新求值的話，lambda 的捕捉會在排序途中被重拍

@@ -15,12 +15,6 @@
   ],
   "slots": {},
   "role": "statement",
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "declarative"
-  },
   "owner": "(core)",
   "paths": {
     "render": "./forms/blocks.json",
@@ -29,5 +23,6 @@
     "execute": "./execute.ts",
     "lift": "./lift-pattern.json",
     "liftStrategy": "./lift-strategy.ts"
-  }
+  },
+  "_execute_why": "🔴 **它一度宣告 `skipPaths: [\"execute\"]`，理由是「宣告性」**——而 2026-09-18 之後它**真的有行為**：把型別別名登記進執行期的別名表，讓 `typedef map<int,set<int>> Graph; Graph g;` 的 `g` 建得出一個對照表。\n⚠️ 那個宣告因此撤掉了。**顯式的空與遺漏的空要分得出來，而「已經不空了」要立刻改口。**"
 }
