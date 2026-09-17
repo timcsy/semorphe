@@ -1,0 +1,26 @@
+{
+  "componentId": "cpp:container_pop_front",
+  "abstractComponent": null,
+  "_componentId_why": "⚠️ **刻意叫 `container_` 而不是 `deque_`**：`pop_front` 對 `deque` 與 `list` 都成立，而那張「方法名 → 元件」的登錄表今天的教訓正是**名字寫了某一種容器、行為卻涵蓋全部**——負責 `back` 的那顆名字裡有 vector、負責 `insert` 的那顆名字裡有 set，而它們都是所有容器的主人。見 `specs/component-discovery/cpp-container-ends.md`。",
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "literal",
+      "default": "dq",
+      "_kind_why": "⚠️ `obj` **不是識別字**——它裝的是一個【容器運算式】：`v`、`d2[a]`、`a.b` 都合法。與同族那顆移除末端元素的元件同一個理由（2026-09-14 拿 218 支學生程式量到 57 筆「不合法的名字」，每一筆都是 `d2[a]` 這種正常寫法）。"
+    }
+  ],
+  "slots": {},
+  "role": "statement",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<deque>"
+  ],
+  "_requires_why": "`pop_front` 最常見的宿主是 `deque`（語料裡 22 支宣告 deque、18 支用 pop_front）。`list` 也有它，而補丁器只需要一個能讓程式編得過的標頭。"
+}

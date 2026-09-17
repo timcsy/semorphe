@@ -162,6 +162,10 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:container_pop_front": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:container_push": {
       "files": 3,
       "dirs": 1
@@ -1334,5 +1338,6 @@
       "files": 4,
       "dirs": 1
     }
-  }
+  },
+  "note": "📈 **2026-09-16（第一百七十九刀）**：新增 `cpp:container_pop_front`\n  （`dq.pop_front()`，語料 218 支裡 18 支用到）。**新增一顆元件，輸入量本來就會長。**\n\n"
 }

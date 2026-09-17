@@ -1,0 +1,149 @@
+# 概念探索：C++ — 容器的兩端、有序查找、以及「允不允許重複」
+
+## 摘要
+
+- 語言：cpp
+- 目標：`deque` 的前端操作、`set`/`multiset` 的 `lower_bound` 方法形式、重複性那一軸
+- **來源不是文件，是量測**：使用者學生的 218 支競賽練習，拿 g++ 比對執行結果，
+  14 支撞在這一族（見 [history/241](../../knowledge/history/241-第五個面向.md)）
+- 發現概念總數：**2 個要做、1 個明確不做、1 個是既有元件的缺陷**
+
+## 🔴 先講一件探索本身掀出來的事：那張表已經按位置碎掉了
+
+把 `registerContainerMethodComponent` 全部列出來之後，今天的登錄表長這樣：
+
+```
+back       → cpp:vector_back        front      → cpp:queue_front
+pop        → cpp:container_pop      pop_back   → cpp:vector_pop
+push       → cpp:container_push     push_back  → cpp:container_append
+top        → cpp:stack_peek         insert     → cpp:set_insert
+size       → cpp:vector_size        erase      → cpp:container_erase
+count      → cpp:container_count    empty      → cpp:container_empty
+clear      → cpp:container_clear
+```
+
+兩件事看得很清楚：
+
+**① 這張表的鍵是【方法名】，不是概念。** 所以 `pop` 與 `pop_back` 已經是兩個身分。
+**② 名字會騙人。** `cpp:vector_back` 是**所有容器**的 `back` 的主人，
+`cpp:queue_front` 是所有容器的 `front` 的主人，而 `cpp:set_insert`
+是**所有容器**的 `insert` 的主人——③ 那個缺陷就是從這裡來的。
+
+> **一個以「方法名」為鍵的登錄表，元件名叫什麼都不影響它的行為
+> ——於是名字會慢慢變成一句沒有人維護的話。**
+
+⚠️ 原理說「位置不是身分，是形態」（`concepts/元件代數.md:236`），
+而**今天的實作不是那樣**。要收斂成「一個身分 ＋ 哪一端那一軸」是一刀
+**獨立的整併**（要動 7 顆元件、它們的積木與課文對照圖）。
+
+🔴 **這一刀不做那個整併**，理由是：整併與「補上缺的操作」混在一起的話，
+出事時分不出是哪一邊造成的。新的兩顆**照今天的慣例走**，而這個氣味記在這裡。
+
+## 概念目錄
+
+### 要做：容器的前端操作 — 中級（`L2` 資料結構）
+
+| 概念名稱 | 語法 | 語義意義 | 積木輸入 | Layer | 通用/特定 | 降級路徑 | 語料 |
+|---|---|---|---|---|---|---|---|
+| `cpp:container_pop_front` | `dq.pop_front()` | 把**最前面**那個拿掉 | 1（容器） | lang-library | 特定 | `raw_code` | **18 支** |
+| `cpp:container_push_front` | `dq.push_front(x)` | 從**前面**放進去 | 2（容器、值） | lang-library | 特定 | `raw_code` | 1 支 |
+
+**為什麼是新身分而不是既有元件的新形態**：這張表以方法名為鍵，而
+`pop`／`pop_back` 今天就是兩個身分。新的兩顆若做成形態，要先把那 7 顆整併
+——見上一節，那是另一刀。
+
+⚠️ **命名刻意用 `container_` 而不是 `deque_`**：它們對 `deque` 與 `list` 都成立，
+而今天那張表的教訓正是「名字寫了某一種容器，行為卻涵蓋全部」。
+
+### 明確不做：`lower_bound` 的方法形式 — 理由是它一個人到不了終點
+
+| 概念 | 語法 | 為什麼不做 |
+|---|---|---|
+| `set::lower_bound` | `st.lower_bound(x)` | **回傳迭代器**，而我們沒有迭代器 |
+
+實測那兩支（`AP325/2/2_11_AC.cpp`、`AP325/4/4_15_2t.cpp`）除了 `lower_bound`
+還用了：
+
+```
+it != st.end()    2 次
+*it               1 次
+it->second        2 次
+```
+
+**補了 `lower_bound` 之後，錯誤只會往後挪一行。**
+
+> **一個概念如果它的產出沒有人接得住，補上它不會讓任何一支程式跑起來
+> ——它只會讓失敗的位置往後移。**
+
+🟠 迭代器（`begin`／`end`／`*it`／`it->`／`prev`／`next`）是**另一刀**，
+而它的大小要另外量：語料裡 `.begin(` 33 次、`.end(` 30 次。
+
+### 🔴 既有元件的缺陷：`insert` 對每一種容器做同一件事
+
+`cpp:set_insert` 是「`insert` 這個方法名」的唯一主人，而它的實作是
+**去重 ＋ 排序**。於是：
+
+```
+multiset<int> ms;  ms.insert(3);  ms.insert(3);    g++ 兩個 ／ 我們一個
+vector<int> v;     v.insert(v.begin(), 3);         C++ 是【定位插入】，而我們去重排序
+```
+
+而 `multiset` **根本沒有被登錄成容器樣板**（`registerContainerTemplate`）。
+
+語料規模：`multiset<` 13 支、`.insert(` 17 支。
+
+#### 「允不允許重複」住在哪裡——拍板：**住在容器的宣告上**
+
+理由是 C++ 自己的判準：同一個方法名 `insert`，行為由**接收者的型別**決定，
+不由方法決定。所以：
+
+```
+宣告那一側   set → unique: true   ／   multiset → unique: false
+insert 那一側 讀它，不自己決定
+```
+
+⚠️ **不是**把 `insert` 拆成兩顆（`set_insert`／`multiset_insert`）：
+那會讓同一個方法名有兩個主人，而登錄表會當場拒絕（它逐字寫著
+「不自動取其一——靜默覆蓋的症狀是『某個方法被辨識成另一個概念』」）。
+
+> **同一個名字在不同容器上做不同的事，那個差別屬於容器，不屬於名字。**
+
+🟠 **而 `vector.insert` 的定位插入這一刀不做**：它的引數是迭代器
+（`v.insert(v.begin()+i, x)`），同樣卡在迭代器那一關。記在這裡。
+
+## 依賴關係圖
+
+```
+container_pop_front   ← 無（與 container_pop／vector_pop 平行）
+container_push_front  ← 無（與 container_append 平行）
+set_insert 的重複性軸  ← set_declare 要先知道自己是 set 還是 multiset
+                        ← multiset 要先被登錄成容器樣板
+```
+
+## 建議實作順序
+
+1. **`multiset` 登錄 ＋ 重複性軸**（既有元件的缺陷，13 支語料，而且它是「錯的答案」
+   不是「跑不動」——錯的答案比跑不動危險）
+2. **`cpp:container_pop_front`**（18 支，最大的單一收穫）
+3. **`cpp:container_push_front`**（1 支，而它與 ② 是同一族，一起做比較省）
+
+## 跨語言對應
+
+| C++ | Python | 備註 |
+|---|---|---|
+| `dq.pop_front()` | `dq.popleft()` | `collections.deque`；Python 那側今天也沒有 |
+| `dq.push_front(x)` | `dq.appendleft(x)` | 同上 |
+| `multiset` | `collections.Counter` | 語義不同，不對應 |
+
+🟠 兩顆新元件**先做 C++**。Python 的 `deque` 在語料裡沒有出現，
+而「因為對稱所以一起做」不是需求。
+
+## 需注意的邊界案例
+
+- **空容器上 `pop_front()`** 是未定義行為。⚠️ 判準裡不得放 UB
+  （`interpreter-matches-compiler.test.ts` 的檔頭記過：一條拿參照實作當權威的護欄，
+  不得把「它也沒有答案的地方」寫進判準）。我們的選擇要**出聲**，不要靜默。
+- **`multiset` 的 `erase(x)`** 在 C++ 裡刪掉**全部**等於 x 的，而
+  `erase(iterator)` 只刪一個——🟠 這一刀不碰 `erase`，記在這裡。
+- **`set_declare` 今天的 `name` 屬性**：加重複性那一軸時要確認它不影響存檔
+  （既有存檔裡的 `cpp:set_declare` 沒有那個屬性，要有預設值）。

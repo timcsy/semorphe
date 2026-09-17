@@ -1,0 +1,4 @@
+{
+  "CPP_CONTAINER_POP_FRONT_MSG0": "移除 %1 最前面的元素",
+  "CPP_CONTAINER_POP_FRONT_TOOLTIP": "把容器最前面那一個拿掉。⚠️ 它不會把那個值交給你——要先用「%1 的最前面」讀出來再移除。"
+}

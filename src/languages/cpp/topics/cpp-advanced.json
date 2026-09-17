@@ -84,6 +84,7 @@
               "cpp:vector_make",
               "cpp:vector_size",
               "cpp:vector_pop",
+              "cpp:container_pop_front",
               "cpp:vector_back",
               "cpp:map_declare",
               "cpp:map_assign",

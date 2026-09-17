@@ -1,0 +1,4 @@
+{
+  "CPP_CONTAINER_POP_FRONT_MSG0": "Remove first from %1",
+  "CPP_CONTAINER_POP_FRONT_TOOLTIP": "Remove the front element of a deque. Note it does not return the value — read it with front() first."
+}

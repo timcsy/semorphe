@@ -2,7 +2,8 @@
   "_meta": {
     "guard": "component-parity",
     "measuredAt": "2026-08-18",
-    "note": "搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。 ⚠️ 2026-08-23：`SIZE`／`FILL`／`SOURCE` 三個標籤是**新增**不是改值——命令式的 init 本來就沒建出那三格插槽，而宣告的對映表一直指著它們（第五十一條護欄的 C++ 那一維抓到）。🔴 這個檔**不要整批重產**：產生路徑會把 Python 的身分也錄進 `identitySet`，而比對只看 C++ 的，於是下一次跑全變成「搬丟了」。"
+    "note": "搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。 ⚠️ 2026-08-23：`SIZE`／`FILL`／`SOURCE` 三個標籤是**新增**不是改值——命令式的 init 本來就沒建出那三格插槽，而宣告的對映表一直指著它們（第五十一條護欄的 C++ 那一維抓到）。🔴 這個檔**不要整批重產**：產生路徑會把 Python 的身分也錄進 `identitySet`，而比對只看 C++ 的，於是下一次跑全變成「搬丟了」。",
+    "note_2026_09_16": "新增 `cpp:container_pop_front`（`dq.pop_front()`）。⚠️ **看著那一筆加，不要整串重產**——這條防線的價值正是「多一個或少一個都要指名」，重產會把兩者一起吞掉。"
   },
   "identitySet": [
     "cpp:address_of",
@@ -44,6 +45,7 @@
     "cpp:container_erase",
     "cpp:container_iter",
     "cpp:container_pop",
+    "cpp:container_pop_front",
     "cpp:container_push",
     "cpp:continue",
     "cpp:cstring_append",

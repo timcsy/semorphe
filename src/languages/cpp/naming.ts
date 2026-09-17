@@ -182,6 +182,18 @@ export const KINDS = [
   // 第 5 步（裸的函式庫名）帶進來的種差
   'alpha', 'digit', 'lower', 'upper', 'int', 'double',
   'bounded', 'formatted', 'line', 'sequence', 'partial',
+  // 🔴 **`front` 是一個【種類】，不是一個新的操作詞**（2026-09-16）。
+  //
+  //    `pop_front` 被護欄拆成「操作 `pop` ＋ 種類 `front`」，而那正是對的模型：
+  //    **從哪一端拿，是那個動作的修飾，不是另一個動作**
+  //    ——與原理那句「位置不是身分，是形態」同一個方向。
+  //
+  //    ⚠️ 同一個字同時在 OPERATIONS 與 KINDS 裡是有先例的（`count`）：
+  //    `queue_front` 裡它是「讀最前面那個」這個動作，
+  //    而 `container_pop_front` 裡它修飾 `pop`。
+  //
+  // > **一個詞在不同位置扮演不同角色，不必為它發明第二個字。**
+  'front',
   // 第 6 步：**修飾詞從主體位置移到種差位置**。
   // `static` 曾同時是 `static_cast`／`static_declare`／`static_member` 的「主體」
   // ——而它三次都是修飾詞。移到後面之後它們各自歸到真正的主體底下

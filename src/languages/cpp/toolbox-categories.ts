@@ -134,6 +134,12 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     sources: [
       { from: '<stack>', category: 'containers' },
       { from: '<queue>', category: 'containers' },
+      // 🔴 **`<deque>` 是 2026-09-16 補的，而它是「可拿性」那條護欄逼出來的**：
+      //    元件宣告好了、課程清單也加了，**而工具箱裡沒有它的來源段落**
+      //    ——症狀是「宣告了卻拿不到」。
+      //    ⚠️ 放這一段而不是「陣列與列表」：deque 就是雙端佇列，
+      //    學生在這裡找「從前面拿掉」比在陣列那一段合理。
+      { from: '<deque>', category: 'containers' },
       { from: '<sstream>', category: 'containers' },
       // ⚠️ 這裡進來的是**形態**，不是中性版。
       //
