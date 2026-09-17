@@ -1,0 +1,61 @@
+[
+  {
+    "id": "cpp:container_push_front",
+    "componentId": "cpp:container_push_front",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_push_front",
+      "message0": "%{BKY_CPP_CONTAINER_PUSH_FRONT_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "dq"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_PUSH_FRONT_TOOLTIP}"
+    },
+    "codeTemplate": {
+      "pattern": "${OBJ}.push_front(${VALUE});",
+      "imports": [
+        "deque"
+      ],
+      "order": 0
+    },
+    "astPattern": {
+      "grammar": "tree-sitter-cpp",
+      "nodeType": "call_expression",
+      "constraints": [
+        {
+          "field": "function",
+          "nodeType": "field_expression"
+        }
+      ],
+      "fieldMappings": [
+        {
+          "semantic": "obj",
+          "ast": "function.argument",
+          "extract": "text"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    }
+  }
+]

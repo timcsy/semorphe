@@ -427,7 +427,22 @@ void loop() {
    *
    * `#define SENSOR_PIN A0` → `UNDECLARED_VAR`。⚠️ 而 `cpp:define` 的檔頭**明說這是刻意的**（「值不是字面常數時：不猜，讓它繼續出聲」）。🔴 而 Arduino 讓它從邊緣變成招牌寫法——**那個判斷需要重看，而不是這一輪重看**。
    */
-  it.todo('[UNSUPPORTED:#define 的值是另一個識別字] 🔴 fuzz_1：#define 的值是另一個識別字')
+  /**
+   * 🟢 **2026-09-16：這根釘子拔掉了。**
+   *
+   * 那一天補了一張中立的**別名表**（`interpreter/aliases.ts`）：
+   * `cpp:define` 在值是「一個名字」時把它登記起來，而查找**查不到才問一次**。
+   *
+   * ⚠️ 它**不是巨集展開**——樹一個字都不動，使用者的程式碼照樣是他寫的那一份。
+   *
+   * > **一個「取小名」的宣告，它要的是【查得到】，不是【被換掉】。**
+   */
+  it('🔴 fuzz_1：#define 的值是另一個識別字', () => {
+    const src = `#define SENSOR_PIN A0\nvoid setup(){}\nvoid loop(){ int v = analogRead(SENSOR_PIN); }\n`
+    const ids = componentsIn(lift(src))
+    expect(ids, '🔴 沒認出來 → 下面在驗空集合').toContain('cpp:analog_read')
+    expect(ids).not.toContain('cpp:raw_code')
+  })
 
   /**
    * **const／static ＋ 陣列宣告**

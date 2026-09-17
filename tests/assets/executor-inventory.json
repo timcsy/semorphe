@@ -42,6 +42,7 @@
     "cpp:container_pop",
     "cpp:container_pop_front",
     "cpp:container_push",
+    "cpp:container_push_front",
     "cpp:continue",
     "cpp:cstring_append",
     "cpp:cstring_as_double",

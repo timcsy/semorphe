@@ -1,0 +1,4 @@
+{
+  "CPP_CONTAINER_PUSH_FRONT_MSG0": "在 %1 最前面加入 %2",
+  "CPP_CONTAINER_PUSH_FRONT_TOOLTIP": "把一個值放到容器的最前面。⚠️ 原本的元素都會往後挪一格，位置 0 變成這個新的。"
+}

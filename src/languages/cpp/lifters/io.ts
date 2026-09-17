@@ -5,6 +5,7 @@ import type { SemanticNode } from '../../../core/types'
 import { extractPrintf, extractScanf } from '../lang/runtime/printf'
 import { callComponentFor } from '../../../core/component/call-components'
 import { methodComponentFor, containerMethodComponent, typedMethodComponent } from '../../../core/component/method-components'
+import { componentComponents } from '../../../core/component/registry'
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
 import { namedCastComponent } from '../../../core/component/named-cast-components'
 import { buildMalloc } from '../../../components/cpp/malloc/lift'
@@ -111,9 +112,27 @@ const TYPED_METHOD_TO_COMPONENT: Record<string, Record<string, string>> = {
 const GENERIC_CONTAINER_METHODS = new Set(['push', 'pop', 'empty', 'clear'])
 
 /** Methods that take one argument (the rest take zero) */
-const METHODS_WITH_ARG = new Set([
-  'push_back', 'push', 'insert', 'erase', 'count',
-])
+/**
+ * **這顆元件宣告的第一個接點叫什麼**——`value`／`key`／或者沒有。
+ *
+ * 🔴 **這裡原本是兩張手寫表**（`METHODS_WITH_ARG` ＋ `METHOD_CHILD_SLOT`），
+ * 而它們與元件自己的 `slots` 宣告**逐字相同**——第二份真相。
+ *
+ * 症狀（2026-09-16，模糊測試抓到）：新加一顆 `push_front` 元件、宣告了
+ * `slots: { value: "expression" }`、五路齊全、自證測綠——而**引數在 lift 時被丟掉**，
+ * 產碼變成 `dq.push_front();`。因為那兩張表裡沒有它的名字。
+ *
+ * > **一顆元件已經說過自己有幾個接點了。共用檔再說一次，
+ * > 就多了一個會忘記更新的地方——而它忘記的那天不會報錯，只會少一個引數。**
+ *
+ * ⚠️ 這個檔裡已經有同樣的先例：`METHOD_OBJ_PROP` 那張表也是這樣退場的。
+ */
+const firstSlotOf = (componentId: string): string | null => {
+  const decl = (componentComponents() as { componentId: string; slots?: Record<string, unknown> }[])
+    .find((c) => c.componentId === componentId)
+  const keys = Object.keys(decl?.slots ?? {})
+  return keys.length > 0 ? keys[0] : null
+}
 
 // ⚠️ 這裡原本有一張 `METHOD_OBJ_PROP` 表——把方法名對應到「這顆概念的
 // 接收者參數叫什麼」，因為 `vector_size` 叫 `vector` 而 `stack_top` 叫 `obj`。
@@ -125,13 +144,7 @@ const METHODS_WITH_ARG = new Set([
 // 在不一致消失時自己就不見了。
 
 /** Child slot name for the argument value */
-const METHOD_CHILD_SLOT: Record<string, string> = {
-  push_back: 'value',
-  push: 'value',
-  insert: 'value',
-  erase: 'key',
-  count: 'key',
-}
+
 
 export function registerIOLifters(lifter: Lifter): void {
   lifter.register('call_expression', (node, ctx) => {
@@ -176,8 +189,8 @@ export function registerIOLifters(lifter: Lifter): void {
           properties.container_kind = objType
         }
 
-        if (METHODS_WITH_ARG.has(methodName) && argsNode) {
-          const childSlot = METHOD_CHILD_SLOT[methodName] ?? 'value'
+        const childSlot = firstSlotOf(componentId)
+        if (childSlot && argsNode) {
           const argNodes = argsNode.namedChildren
             .map(a => ctx.lift(a))
             .filter((n): n is NonNullable<typeof n> => n !== null)

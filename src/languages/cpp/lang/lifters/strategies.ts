@@ -280,6 +280,26 @@ function claimsSimpleDeclarator(node: AstNode): boolean {
   const found = node.namedChildren.filter((c) => DECLARATOR_SHAPES.has(c.type))
   if (found.length !== 1) return false
   const t = found[0].type
+  /**
+   * 🔴 **帶下標的宣告子要讓開**（2026-09-16，模糊測試抓到的）。
+   *
+   * `init_declarator` 裡面可能包著一個 `array_declarator`：
+   *
+   *     string w[3];                → array_declarator     🟢 讓開，array_declare 接走
+   *     string w[3] = {"a","b"};    → init_declarator
+   *                                    └ array_declarator  🔴 這一層以前沒看
+   *
+   * 只看外層的話這一支會認領它，而名字被抽成**整串 `w[3]`**
+   * ——於是 `w` 根本沒有被宣告，`w[1]` 拋 `UNDECLARED_VAR: w`。
+   *
+   * ⚠️ 症狀不對稱，所以很難發現：**沒有初始值時是好的**
+   * （那時外層就是 `array_declarator`，這道閘本來就擋得住）。
+   *
+   * > **一道只看最外層形狀的閘，會在「同一個形狀多包了一層」時失效
+   * > ——而多包的那一層正是「它有初始值」。**
+   */
+  const inner = found[0].namedChildren?.find((c) => DECLARATOR_SHAPES.has(c.type))
+  if (t === 'init_declarator' && inner?.type === 'array_declarator') return false
   return t === 'init_declarator' || t === 'identifier' || t === 'function_declarator'
 }
 

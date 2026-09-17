@@ -12,6 +12,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { ReturnSignal } from '../../../interpreter/executors/functions'
 import { defaultValue } from '../../../interpreter/types'
+import { cloneValue } from '../../../interpreter/clone'
 import { cppParamDefault } from '../../../languages/cpp/lang/executors/param-default'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { Scope } from '../../../interpreter/scope'
@@ -88,7 +89,45 @@ export function registerExecute(register: (component: string, executor: Componen
         : declared
           ? cppParamDefault(declared)
           : defaultValue(param.type.replace('&', '').replace('[]', ''))
-      ctx.scope.declare(param.name, val)
+      /**
+       * 🔴 **傳值要真的複製一份**（2026-09-16，模糊測試抓到的）。
+       *
+       * 在此之前這裡直接把呼叫端那個物件綁給參數，於是
+       * `int drain(deque<int> d)` 把 `d` 清空之後，**呼叫者的容器也空了**
+       * ——g++ 印 2 而我們印 0。而它壞得很安靜：程式跑完、印出數字、數字是錯的。
+       *
+       * ⚠️ 參考參數（`deque<int>&`）走上面那條 `declareRef`，到不了這裡
+       * ——所以這一行不會把「該共用的」也複製掉。
+       *
+       * > **「傳值」與「傳參考」的差別，在解譯器裡就是「有沒有複製」這一個動作
+       * > ——少了它，兩者的行為完全相同，而語言的宣告變成一句空話。**
+       */
+      /**
+       * ⚠️ **陣列參數【不複製】**——`void feed(deque<int> bins[], int v)` 在 C++ 裡
+       * 退化成指標，被呼叫端改得到呼叫者的那一份。
+       *
+       * 🪦 第一版不分，於是模糊測試裡一支本來通過的程式當場退步
+       * （`feed(bins, …)` 餵進去的東西全部留在函式裡）。
+       *
+       * > **一個「傳值就複製」的規則，在陣列參數上是錯的
+       * > ——那是語言的例外，不是我的選擇。**
+       */
+      /**
+       * ⚠️ **陣列與指標參數都【不複製】**——它們是呼叫者那份資料的別名。
+       *
+       * ```
+       * void feed(deque<int> b[], int v)   陣列退化成指標
+       * void fillArray(int* a, int n)      指標本來就是別名
+       * ```
+       *
+       * 🪦 第一版只擋了 `[]`，於是第三十二條護欄（行為的誤差）當場紅
+       * ——`fillArray` 填的是複本，呼叫者印出 `0 0 0 0` 而 g++ 是 `3 6 9 12`。
+       *
+       * > **C++ 裡 `T*` 與 `T[]` 都是別名，不是值
+       * > ——一個「傳值就複製」的規則要先數清楚語言有幾種例外。**
+       */
+      const aliases = param.type.includes('[]') || param.type.includes('*')
+      ctx.scope.declare(param.name, aliases ? val : cloneValue(val))
     }
 
     let returnValue: RuntimeValue = defaultValue(funcDef.returnType)

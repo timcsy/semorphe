@@ -1,4 +1,5 @@
 import type { RuntimeValue } from './types'
+import { hasAlias, resolveAlias } from './aliases'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
 import { findNearMiss } from './near-miss'
 import { isBuiltinName } from '../core/language-executors'
@@ -69,6 +70,29 @@ export class Scope {
       const r = s.refs.get(name)
       if (r) return r.scope.get(r.name)
       if (s.variables.has(name)) return s.variables.get(name)!
+    }
+    /**
+     * 🔴 **查不到才問別名**（2026-09-16）——`#define SENSOR_PIN A0`。
+     *
+     * `cpp:define` 只認得**字面值**的替換（`#define MAXN 100000` → 宣告一個變數），
+     * 而「值是另一個識別字」那一族一直是 `UNDECLARED_VAR`。
+     * 它在競賽與 Arduino 的程式裡是招牌寫法。
+     *
+     * ⚠️ **只在查不到的那一刻問一次**：有這個名字的時候一個字都不動，
+     * 所以它不會蓋掉正常的查找，也不會把使用者的程式碼改寫成別的樣子
+     * （見 `aliases.ts` 的檔頭——替換與查詢是兩件事）。
+     *
+     * > **一個「取小名」的宣告，它要的是【查得到】，不是【被換掉】。**
+     */
+    if (hasAlias(name)) {
+      const real = resolveAlias(name)
+      if (real !== name) {
+        for (let s: Scope | null = this; s; s = s.parent) {
+          const r = s.refs.get(real)
+          if (r) return r.scope.get(r.name)
+          if (s.variables.has(real)) return s.variables.get(real)!
+        }
+      }
     }
     throw this.undeclared(name)
   }

@@ -1,0 +1,4 @@
+{
+  "CPP_CONTAINER_PUSH_FRONT_MSG0": "Add %2 to the front of %1",
+  "CPP_CONTAINER_PUSH_FRONT_TOOLTIP": "Insert a value at the front of a deque. Existing elements shift back by one."
+}

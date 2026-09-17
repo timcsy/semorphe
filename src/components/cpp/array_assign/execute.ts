@@ -23,7 +23,19 @@ export function registerExecute(register: (component: string, executor: Componen
        * ⚠️ `evalInitializer` 對不是大括號的節點就是原本那條
        * `coerceType(evaluate(…))`，所以這不是行為變更。
        */
-      const val = await evalInitializer(valueNodes[0], String(container.elemType ?? 'int'), ctx)
+      const val = await evalInitializer(valueNodes[0], /**
+       * 🔴 **不知道元素型別就【不要假裝知道】**（2026-09-16，模糊測試抓到的）。
+       *
+       * 這裡曾經寫 `?? 'int'`，於是 `deque<string> d; d.push_back("ab");`
+       * 的元素被 `coerceType(…, 'int')` **壓成 0**——程式跑完、印出東西、而它是錯的。
+       * （`deque` 至今沒有被登錄成容器樣板，所以它的 `elemType` 是空的。）
+       *
+       * > **一個「不知道就用預設值」的回退，在預設值剛好是別的型別時
+       * > 不會報錯——它會安靜地把資料換掉。**
+       *
+       * 🟢 空字串會走 `coerceType` 的 default，原樣回傳——**知道才壓，不知道就不動**。
+       */
+      String(container.elemType ?? ''), ctx)
 
       // String subscript assign: s[i] = 'x'
       if (container.type === 'string' && typeof container.value === 'string') {

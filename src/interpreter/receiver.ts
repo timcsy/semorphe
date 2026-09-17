@@ -63,8 +63,26 @@ export function receiverOf(scope: ScopeLike, text: string): RuntimeValue {
   const sub = splitSubscript(text)
   if (!sub) return scope.get(text)
   const base = scope.get(sub.base)
+  if (!Array.isArray(base.value)) return scope.get(text)
   const i = evalIndex(scope, sub.index)
-  if (i === null || !Array.isArray(base.value)) return scope.get(text)
+  if (i === null) {
+    /**
+     * 🔴 **下標算不出來時要說清楚是【下標】算不出來**（2026-09-16，模糊測試抓到的）。
+     *
+     * `h[i % 3].push_back(6)` 在此之前掉回 `scope.get("h[i % 3]")`，
+     * 於是訊息是「未宣告的變數 `h[i % 3]`」——而 `h` **是**宣告過的。
+     * 那句話把「我算不出這個下標」說成「你沒宣告這個東西」。
+     *
+     * > **一個降級用的錯誤訊息，會把自己的限制說成使用者的錯。**
+     *
+     * ⚠️ **而這裡刻意不把算式補齊**（`*`／`/`／`%`）：那會變成第二份算術語義，
+     * 而真正的修法是**接收者不該被壓成文字**（見檔頭與 `history/241` 的開放項）。
+     * 實測那 218 支學生程式裡這種下標**一處都沒有**，所以先說實話，不先補洞。
+     */
+    throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+      '%1': `這個接收者的下標算不出來：「${text}」（下標支援數字、名字、以及它們的加減）`,
+    })
+  }
   const cell = (base.value as RuntimeValue[])[i]
   if (cell === undefined) {
     throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(i) })

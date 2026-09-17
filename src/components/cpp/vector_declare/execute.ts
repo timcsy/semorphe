@@ -5,21 +5,13 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { evalInitializer } from '../../../interpreter/aggregate'
-import type { RuntimeValue } from '../../../interpreter/types'
+// ⚠️ 這裡原本有一份自己的 `cloneValue`——與核心那份逐字相同。
+//    值語義的複製是**執行期的通則**，不是這顆元件的性質。
+import { cloneValue } from '../../../interpreter/clone'
 import { defaultValue } from '../../../interpreter/types'
 
 /** 深拷貝——每一格獨立，見下方 `fill` 的註解 */
-function cloneValue(v: RuntimeValue): RuntimeValue {
-  if (v.type === 'array' && Array.isArray(v.value)) {
-    return { ...v, value: v.value.map((x) => cloneValue(x as RuntimeValue)) }
-  }
-  if (v.type === 'object' && v.value instanceof Map) {
-    const m = new Map<string, RuntimeValue>()
-    for (const [k, x] of v.value) m.set(k, cloneValue(x))
-    return { ...v, value: m }
-  }
-  return { ...v }
-}
+
 
 export function registerExecute(
   register: (component: string, executor: ComponentExecutor) => void,
