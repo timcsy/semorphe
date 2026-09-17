@@ -41,9 +41,63 @@ export function isCellPointer(v: RuntimeValue): boolean {
   return v.type === 'array' && Array.isArray(v.value)
 }
 
-/** 這個位置指到第幾格。未設 ＝ 0（見 `cpp:address_of`）。 */
+/**
+ * **一串格子被刪過哪幾格**——記在那串格子自己身上，用 Symbol 鍵。
+ *
+ * ⚠️ 用 Symbol 是為了讓它**不被複製走**：`[...arr.value]`（傳值進函式）
+ * 走的是迭代，拿不到 Symbol 鍵——而那是對的，**複本沒有原本的刪除史**。
+ */
+const ERASURES = Symbol('erasures')
+type CellArray = unknown[] & { [ERASURES]?: number[] }
+
+/**
+ * **刪掉一格的時候要說一聲。**
+ *
+ * 🔴 呼叫它的人是「真的把一格抽掉」的那一行（`splice(i, 1)`）。少了它，
+ * 別人手上那些位置會安靜地指到隔壁——見 `RuntimeValue.era` 的完整說明。
+ */
+export function noteErasure(cells: unknown, at: number): void {
+  if (!Array.isArray(cells)) return
+  const c = cells as CellArray
+  ;(c[ERASURES] ??= []).push(at)
+}
+
+/** 這串格子到目前為止被刪過幾次——拿一個新位置時要蓋的章。 */
+export function erasureCount(cells: unknown): number {
+  return Array.isArray(cells) ? ((cells as CellArray)[ERASURES]?.length ?? 0) : 0
+}
+
+/**
+ * 這個位置指到第幾格。未設 ＝ 0（見 `cpp:address_of`）。
+ *
+ * 🔴 **而它會把「蓋章之後發生的刪除」補算回來**（2026-09-18）：
+ * 每一次刪除的索引都記在**當時**的座標系裡，所以照順序一次修一格，
+ * 手上這個 offset 就一路被搬到現在的座標系。
+ *
+ * ⚠️ 刪掉的正好是自己指的那一格時 **offset 不動**——它自然變成「下一個」，
+ *    而那正是 C++ 的 `erase(it)` 回傳的東西。
+ */
 export function offsetOf(v: RuntimeValue): number {
-  return v.offset ?? 0
+  let off = v.offset ?? 0
+  if (v.era === undefined || !Array.isArray(v.value)) return off
+  const log = (v.value as CellArray)[ERASURES]
+  if (!log) return off
+  for (let i = v.era; i < log.length; i++) if (log[i] < off) off--
+  return off
+}
+
+/**
+ * **蓋章：一個指著這串格子第幾格的位置。**
+ *
+ * 用它而不是手寫 `{ type: 'array', value, offset }`，否則那個位置**收不到**
+ * 之後的刪除通知（未蓋章 ＝ 不修正，見 `RuntimeValue.era`）。
+ */
+export function positionIn(
+  cells: RuntimeValue[],
+  offset: number,
+  extra: Partial<RuntimeValue> = {},
+): RuntimeValue {
+  return { ...extra, type: 'array', value: cells, offset, era: erasureCount(cells) }
 }
 
 /**
@@ -67,5 +121,10 @@ export function movePointer(v: RuntimeValue, delta: number): RuntimeValue {
   // 🔴 **反向的位置，「下一個」是往前**（`rbegin()` 從最後一個往回走）。
   //    少了這一行，`++rit` 往後走——而症狀是**順序安靜地反過來**，不是報錯。
   const step = v.reverse ? -delta : delta
-  return { ...v, type: 'array', value: v.value, offset: offsetOf(v) + step }
+  // ⚠️ `offsetOf` 已經把刪除補算完了，所以**要重新蓋章**——否則同一批刪除
+  //    會在下一次讀取時再被補算一次。
+  return {
+    ...v, type: 'array', value: v.value,
+    offset: offsetOf(v) + step, era: erasureCount(v.value),
+  }
 }

@@ -3,7 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { varRefName } from '../var_ref/lift'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { mapFind } from '../../../languages/cpp/lang/runtime/map'
-import { isCellPointer, offsetOf, sameCells } from '../../../interpreter/pointer'
+import { isCellPointer, offsetOf, sameCells, noteErasure, positionIn } from '../../../interpreter/pointer'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
@@ -43,9 +43,10 @@ export function registerExecute(register: (component: string, executor: Componen
         const at = offsetOf(keyVal)
         if (at >= 0 && at < cells.length) {
           cells.splice(at, 1)
+          noteErasure(cells, at)
           arr.value = cells.map((c) => String.fromCharCode(Number(c.value))).join('')
         }
-        return { type: 'array', value: cells, offset: at, readonlyCells: true }
+        return positionIn(cells, at, { readonlyCells: true })
       }
       if (arr.type !== 'array' || !Array.isArray(arr.value)) return
       /**
@@ -59,8 +60,18 @@ export function registerExecute(register: (component: string, executor: Componen
        * 走成「刪全部」，於是一個計數少掉的不只一個。**程式跑完，數字偏小。**
        *
        * 🟢 回傳**下一個位置**（C++11 起的行為）：我們把那一格抽掉之後，
-       * 「下一個」正好還是同一個 offset。⚠️ 那是**剛好對**，不是設計出來的
-       * ——下一個人改這裡的刪除方式時要知道有東西靠著它。
+       * 「下一個」正好還是同一個 offset。
+       *
+       * 🔴 **而【別人手上】那些位置就不是這樣了**（2026-09-18，三支盲測同時指著它）：
+       *
+       * ```cpp
+       * g.erase(it++);     // it 先往後挪一格，然後那一格被抽掉 ⟹ 整串左移
+       * ```
+       *
+       * 挪過去的那個 offset 於是指到**再下一個**——`while` 走訪每刪一格就跳過一格，
+       * 症狀是**數字偏小**（`pruned=1` 而 g++ 說 2），不是當掉。
+       * 所以每一次真的抽掉一格都要 `noteErasure`，讓那些位置讀取時自己補算回來
+       * （見 `RuntimeValue.era` 與 `pointer.ts` 的 `offsetOf`）。
        */
       /**
        * 🔴 **兩個位置界定一段範圍**（2026-09-18，盲測抓到）：`ms.erase(a, b)`。
@@ -83,9 +94,14 @@ export function registerExecute(register: (component: string, executor: Componen
         }
         const from = offsetOf(keyVal)
         const to = offsetOf(endVal)
-        if (to > from) arr.value.splice(from, to - from)
+        if (to > from) {
+          arr.value.splice(from, to - from)
+          // ⚠️ 一次抽掉一段 ＝ **在同一個位置連抽 n 次**（每抽一次後面就補上來），
+          //    所以通知也要送 n 次，否則別人手上的位置只會被修正一格。
+          for (let i = 0; i < to - from; i++) noteErasure(arr.value, from)
+        }
         // 回傳**最後一個被刪的之後**——那正好還是同一個 offset（與單格那一條同理）
-        return { type: 'array', value: arr.value, offset: from }
+        return positionIn(arr.value as RuntimeValue[], from)
       }
       if (isCellPointer(keyVal)) {
         if (!sameCells(keyVal, arr)) {
@@ -94,13 +110,17 @@ export function registerExecute(register: (component: string, executor: Componen
           })
         }
         const at = offsetOf(keyVal)
-        if (at >= 0 && at < arr.value.length) arr.value.splice(at, 1)
-        return { type: 'array', value: arr.value, offset: at }
+        if (at >= 0 && at < arr.value.length) {
+          arr.value.splice(at, 1)
+          noteErasure(arr.value, at)
+        }
+        return positionIn(arr.value as RuntimeValue[], at)
       }
       // Try map-style erase (key-value pairs) first
       const idx = mapFind(arr.value, keyVal)
       if (idx !== -1) {
         arr.value.splice(idx, 1)
+        noteErasure(arr.value, idx)
         return
       }
       /**
@@ -120,6 +140,7 @@ export function registerExecute(register: (component: string, executor: Componen
       for (let i = arr.value.length - 1; i >= 0; i--) {
         if ((arr.value[i] as RuntimeValue).value !== keyVal.value) continue
         arr.value.splice(i, 1)
+        noteErasure(arr.value, i)
         if (!all) return
       }
     })

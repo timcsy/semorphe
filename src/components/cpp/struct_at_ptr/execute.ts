@@ -5,6 +5,7 @@ import type { RuntimeValue } from '../../../interpreter/types'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { getMember } from '../../../interpreter/executors/variables'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { offsetOf } from '../../../interpreter/pointer'
 
 /**
  * 🔴 **這個直譯器有兩種指標，而 `->` 原本只認得其中一種。**
@@ -28,7 +29,7 @@ function resolveTarget(
 ): { target: RuntimeValue; name: string } {
   if (ptr.type === 'array' && Array.isArray(ptr.value)) {
     const cells = ptr.value as RuntimeValue[]
-    const off = ptr.offset ?? 0
+    const off = offsetOf(ptr)
     return { target: cells[off], name: `${ptrName}[${off}]` }
   }
   const targetName = String(ptr.value)

@@ -3,6 +3,7 @@ import type { ComponentExecutor, ExecutionContext } from '../../../interpreter/e
 import type { RuntimeValue } from '../../../interpreter/types'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { offsetOf } from '../../../interpreter/pointer'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   registerLvalue()
@@ -25,7 +26,7 @@ export function registerExecute(register: (component: string, executor: Componen
         // 合成一種要一個真的堆與位址模型，而那是另一個題目。
         if (ptrVal.type === 'array' && Array.isArray(ptrVal.value)) {
           // ⚠️ `offset` 是 `&arr[i]` 留下的位置（見 `cpp:address_of`）。未設 = 0。
-          const at = ptrVal.offset ?? 0
+          const at = offsetOf(ptrVal)
           if (at < 0 || at >= ptrVal.value.length) {
             throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(at) })
           }
@@ -71,7 +72,7 @@ export function registerLvalue(): void {
     }
     if (ptrVal.type === 'array' && Array.isArray(ptrVal.value)) {
       const cells = ptrVal.value as RuntimeValue[]
-      const at = ptrVal.offset ?? 0
+      const at = offsetOf(ptrVal)
       if (at < 0 || at >= cells.length) {
         throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(at) })
       }

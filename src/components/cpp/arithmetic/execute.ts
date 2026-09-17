@@ -1,6 +1,8 @@
 /** `cpp:arithmetic` 的 **execute** 路——從共用檔原封剪過來（批次第三十六批：字面值與二元運算子）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { offsetOf, positionIn } from '../../../interpreter/pointer'
+import type { RuntimeValue } from '../../../interpreter/types'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:arithmetic', async (node, ctx) => {
@@ -47,15 +49,15 @@ export function registerExecute(register: (component: string, executor: Componen
             '%1': '兩個位置不在同一個容器裡，相減沒有意義',
           })
         }
-        return { type: 'int', value: (left.offset ?? 0) - (right.offset ?? 0) }
+        return { type: 'int', value: offsetOf(left) - offsetOf(right) }
       }
 
       if ((op === '+' || op === '-') && left.type === 'array' && Array.isArray(left.value) && right.type !== 'array') {
         const step = ctx.toNumber(right)
-        const moved = (left.offset ?? 0) + (op === '+' ? step : -step)
+        const moved = offsetOf(left) + (op === '+' ? step : -step)
         // ⚠️ **不在這裡檢查越界**：C++ 允許指標指到「尾端之後一格」（`end()` 的慣例），
         // 只有**解參考**才是錯的。而 `pointer_deref`／`pointer_assign` 已經在檢查。
-        return { type: 'array', value: left.value, offset: moved }
+        return positionIn(left.value as RuntimeValue[], moved, left.reverse ? { reverse: true } : {})
       }
 
       // **字串的 `+` 是串接**。`s + s[i]`、`s1 + s2`、`"x" + s`。
@@ -97,7 +99,23 @@ export function registerExecute(register: (component: string, executor: Componen
         default: result = 0
       }
 
-      if (left.type === 'int' && right.type === 'int') {
+      /**
+       * 🔴 **`char` 與 `bool` 也是整數型別**（2026-09-18，盲測 fuzz_8 抓到）。
+       *
+       * ```cpp
+       * for (auto c = t.begin(); c != t.end(); ++c) n = n * 10 + (*c - '0');
+       * v /= r;                    // g++ 印 8 ／ 我們印 8.14286
+       * ```
+       *
+       * C++ 的算術運算元會先做**整數提升**：`char - char` 的結果是 `int`。
+       * 這裡只認 `'int'`，於是那個減法回傳 `double`——而 `double` 一路傳下去，
+       * **整數除法在三步之後才失真**。
+       *
+       * > **一個型別規則漏掉一種型別，症狀不會出現在那個運算上
+       * > ——它出現在下游第一個「整數與小數不同」的地方。**
+       */
+      const integral = (t: string): boolean => t === 'int' || t === 'char' || t === 'bool'
+      if (integral(left.type) && integral(right.type)) {
         return { type: 'int', value: Math.trunc(result) }
       }
       return { type: 'double', value: result }

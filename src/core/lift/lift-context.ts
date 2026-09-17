@@ -147,8 +147,16 @@ export class LiftContextData {
   getType(name: string): string | null {
     const t = this.lookup(name)?.type ?? null
     if (t === null) return null
-    // `Graph` 是一個別名嗎——是的話換成它指向的那個型別
-    const target = t === name ? null : this.lookup(t)?.type
+    /**
+     * `Graph` 是一個別名嗎——是的話換成它指向的那個型別。
+     *
+     * ⚠️ **參數的型別可能帶著修飾**（`const Graph &`）：認不得的型別
+     * `normalizeParamType` 是**原樣回傳**的，所以查別名之前要先剝一層。
+     * 🔴 少了這一步的症狀：`void dfs(const Graph &g)` 裡的 `g.find(u)`
+     * 被認成**字串的 find**（回 -1），而 `row->second` 去查一個叫 `-1` 的變數。
+     */
+    const bare = t.replace(/\bconst\b/g, '').replace(/[&\s]/g, '')
+    const target = bare === name ? null : this.lookup(bare)?.type
     /**
      * ⚠️ **回的是【基底名】**（`deque<int>` → `deque`）。
      *

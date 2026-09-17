@@ -23,6 +23,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { receiverOf } from '../../../interpreter/receiver'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { offsetOf, positionIn } from '../../../interpreter/pointer'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:address_of', async (node, ctx) => {
@@ -60,7 +61,7 @@ export function registerExecute(register: (component: string, executor: Componen
           throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(i) })
         }
         // ⚠️ 共用 `base.value`，不是複製——見檔頭。
-        return { type: 'array', value: base.value as RuntimeValue[], offset: (base.offset ?? 0) + i }
+        return positionIn(base.value as RuntimeValue[], offsetOf(base) + i)
       }
     }
 

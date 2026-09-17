@@ -6,6 +6,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { resolveRange, numOf } from '../../../languages/cpp/lang/runtime/range'
+import { positionIn } from '../../../interpreter/pointer'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_min', async (node, ctx) => {
@@ -14,11 +15,11 @@ export function registerExecute(register: (component: string, executor: Componen
       // 這裡收窄一次，而不是讓每一行各自 cast。
       const cells = r.arr as RuntimeValue[]
       // 空範圍回傳結尾之後的位置——與 C++ 一致（`max_element` 對空範圍回 `end`）。
-      if (r.to <= r.from) return { type: 'array' as const, value: cells, offset: r.to }
+      if (r.to <= r.from) return positionIn(cells, r.to)
       let best = r.from
       for (let i = r.from + 1; i < r.to; i++) {
         if (numOf(cells[i]) < numOf(cells[best])) best = i
       }
-      return { type: 'array' as const, value: cells, offset: best }
+      return positionIn(cells, best)
     })
 }

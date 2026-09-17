@@ -34,6 +34,27 @@ import type { RuntimeValue } from './types'
  * > **一個「理論上不會有人這樣做」的最佳化，要先證明沒有人這樣做。**
  */
 export function cloneValue(v: RuntimeValue): RuntimeValue {
+  /**
+   * 🔴 **一個「位置」不是一個容器——它不複製**（2026-09-18，盲測 fuzz_8 抓到）。
+   *
+   * ```cpp
+   * long long parseExpr(TIt &it, TIt end);      // end 是【傳值】的迭代器
+   * parseExpr(it, ts.end());
+   * ```
+   *
+   * 位置與容器在執行期**長得一模一樣**（都是 `type: 'array'`），於是傳值那一路
+   * 把 `end` 底下那串格子整個複製了一份。`it != end` 的判準是
+   * `sameCells`（同一個 JS 陣列參考）——複製過的永遠不相等，於是
+   * **那個迴圈的結束條件永遠不成立**，最後在結尾之後解參考：
+   * `RUNTIME_ERR_INDEX_OUT_OF_RANGE: 7`。
+   *
+   * > **兩種東西如果在執行期長得一樣，那麼每一條「對其中一種做什麼」的規則
+   * > 都會靜默地套到另一種身上。**
+   *
+   * 🟢 分得出來的地方是 `offset`：容器本身從來不設它，而每一個位置都設
+   *（`positionIn` 一律蓋章）。而 C++ 的迭代器複製出來本來就**指著同一串格子**。
+   */
+  if (v.offset !== undefined) return { ...v }
   if (v.type === 'array' && Array.isArray(v.value)) {
     return { ...v, value: (v.value as RuntimeValue[]).map(cloneValue) }
   }
