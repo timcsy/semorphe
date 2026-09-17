@@ -128,9 +128,12 @@ export async function runOnInstance(
   m: MethodDecl,
   argNodes: SemanticNode[],
   ctx: import('../../../../interpreter/executor-registry').ExecutionContext,
+  preEvaluated?: RuntimeValue[],
 ): Promise<RuntimeValue | void> {
-  const argValues: RuntimeValue[] = []
-  for (const a of argNodes) argValues.push(await ctx.evaluate(a))
+  // ⚠️ `preEvaluated` 是**值那一路**（排序與有序容器問 `operator<` 時手上是值）。
+  //    見 `StructRegistry.invokeWith` 的檔頭。
+  const argValues: RuntimeValue[] = preEvaluated ? [...preEvaluated] : []
+  if (!preEvaluated) for (const a of argNodes) argValues.push(await ctx.evaluate(a))
 
   const outer = ctx.scope
   // 型別層在最外——靜態成員由**所有實例共用**，所以它住在型別上不在實例上。
@@ -211,6 +214,7 @@ async function runFieldInits(
  */
 export const installMethodExecutors = (ctx: import('../../../../interpreter/executor-registry').ExecutionContext): void => {
   ctx.structs.installMethodRunner((obj, m, args) => runOnInstance(obj, m, args, ctx) as Promise<unknown>)
+  ctx.structs.installValueRunner((obj, m, values) => runOnInstance(obj, m, [], ctx, values) as Promise<unknown>)
   ctx.structs.installExprEvaluator((node) => ctx.evaluate(node))
 
   // 作用域結束時跑解構式。核心知道「作用域結束了」，**結束時該做什麼**

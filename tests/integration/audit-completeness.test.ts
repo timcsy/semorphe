@@ -174,7 +174,10 @@ beforeAll(async () => {
 // 是讓脈絡**跟著合成節點走**。
 type Prelude = (varName: string) => SemanticNode[]
 const SAMPLE_CONTEXT: Record<string, Prelude> = {}
-for (const id of ['cpp:string_clear', 'cpp:string_append_char', 'cpp:string_at', 'cpp:string_size', 'cpp:string_substr', 'cpp:string_find']) {
+// ⚠️ **第七個實例**（2026-09-18）：`cpp:string_erase` 的判別改成**問接收者的宣告型別**
+//    （兩個引數不足以認定「這是字串」——`ms.erase(a, b)` 是容器的範圍刪除）。
+//    於是它也需要那個宣告，否則合成樣本量到的是「它不認得」——而那正是它對的地方。
+for (const id of ['cpp:string_clear', 'cpp:string_append_char', 'cpp:string_at', 'cpp:string_size', 'cpp:string_substr', 'cpp:string_find', 'cpp:string_erase', 'cpp:string_insert']) {
   SAMPLE_CONTEXT[id] = (v) => [createNode('cpp:string_declare', { name: v, type: 'string' }, {})]
 }
 // **第三個實例**（2026-08-07）：`mp[k]` 沒有 map 宣告時，辨識器查不到型別，

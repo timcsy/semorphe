@@ -1,8 +1,23 @@
 /** `cpp:set_declare` 的 **execute** 路——從共用檔原封剪過來（批次第七批：容器樣板過渡表退場）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { cloneValue } from '../../../interpreter/clone'
+import { registerContainerDefault } from '../../../languages/cpp/lang/runtime/container-defaults'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
+  /**
+   * 🔴 **一個集合不一定經過宣告就會被建出來**（2026-09-18）：
+   * `map<string, set<int>> b; b[k].insert(i);` 的那一格、
+   * `vector<set<int>> bins(4);` 的每一格。
+   *
+   * 「集合不留重複、可重複集合留」是**這一顆的知識**——所以由它自己登記，
+   * 而不是讓建它的那兩個地方各抄一份（那會是第三份與第四份真相）。
+   */
+  registerContainerDefault('set', (inner) => ({
+    type: 'array', value: [], allowsDuplicates: false, ...(inner ? { elemType: inner } : {}),
+  }))
+  registerContainerDefault('multiset', (inner) => ({
+    type: 'array', value: [], allowsDuplicates: true, ...(inner ? { elemType: inner } : {}),
+  }))
   register('cpp:set_declare', async (node, ctx) => {
       const name = String(node.properties.name)
       // 🔴 **重複性跟著值走**（2026-09-17）：讀它的 `insert()` 只拿得到變數名，

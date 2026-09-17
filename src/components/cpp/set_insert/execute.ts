@@ -21,7 +21,8 @@ import { varRefName } from '../var_ref/lift'
 import { evalInitializer } from '../../../interpreter/aggregate'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { compareValues, makePair, mapFind, mapInsertSorted, pairParts } from '../../../languages/cpp/lang/runtime/map'
+import { makePair, mapFind, mapInsertSorted, pairParts } from '../../../languages/cpp/lang/runtime/map'
+import { asyncSort, equivalentInOrder, lessWithOverload } from '../../../languages/cpp/lang/runtime/order'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:set_insert', async (node, ctx) => {
@@ -83,11 +84,29 @@ export function registerExecute(register: (component: string, executor: Componen
             + `（vector 的定位插入要先有迭代器）`,
         })
       }
-      if (!arr.allowsDuplicates && arr.value.some((v: RuntimeValue) => v.value === val.value)) return
+      /**
+       * 🔴 **「是不是同一個」的判準是 `!(a<b) && !(b<a)`，不是 `==`**（2026-09-18）。
+       *
+       * `set` 從頭到尾沒有用到 `operator==`。而只比 `.value` 的寫法對**物件**
+       * 永遠回 false（兩個 Map 不是同一個參考），於是
+       * `set<T> s; s.insert(T(3)); s.insert(T(3));` 留了兩個——**靜默地**。
+       */
+      if (!arr.allowsDuplicates) {
+        for (const v of arr.value as RuntimeValue[]) {
+          if (await equivalentInOrder(v, val, ctx)) return
+        }
+      }
       arr.value.push(val)
-      // 兩種都是**有序**容器——差別只在留不留重複。
-      // ⚠️ **比較規則只有一份**（`compareValues`）——排序與查找要用同一條，
-      //    否則「放進去的順序」與「找出來的位置」會對不上。
-      arr.value.sort(compareValues)
+      /**
+       * 兩種都是**有序**容器——差別只在留不留重複。
+       * 🔴 **而順序也要問使用者自己的 `operator<`**（同上）：`set<T>` 在此之前
+       * 完全沒有依它排。⚠️ 排序與查找要用**同一條**規則，否則「放進去的順序」
+       * 與「找出來的位置」會對不上。
+       */
+      // ⚠️ **傳一份複本進去**：`asyncSort` 在長度 ≤1 時回傳的就是傳進去的那個陣列，
+      //    而下面要先清空它——清掉的會是同一個。
+      const sorted = await asyncSort([...(arr.value as RuntimeValue[])], (a, b) => lessWithOverload(a, b, ctx))
+      arr.value.length = 0
+      for (const v of sorted) (arr.value as RuntimeValue[]).push(v)
     })
 }

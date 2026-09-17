@@ -169,6 +169,32 @@ export class StructRegistry {
     return (await this.runner(obj, m, args)) as RuntimeValue
   }
 
+  /**
+   * **用【值】呼叫一個方法**——引數已經求過值了。
+   *
+   * 🔴 它從哪來（2026-09-18）：排序與有序容器要問使用者自己的 `operator<`，
+   * 而那時手上的是**兩個值**，不是兩顆節點。
+   *
+   * ```cpp
+   * struct T { bool operator<(const T& o) const { return k < o.k; } };
+   * vector<T> v; sort(v.begin(), v.end());   我們：完全沒排序（靜默）
+   * set<T> s;    s.insert(T(3)); s.insert(T(3));   我們：留了兩個（靜默）
+   * ```
+   *
+   * ⚠️ **與 `invoke` 是兩個入口而不是一個帶旗標的**：一個收節點、一個收值，
+   * 而「引數是什麼」這件事不該由呼叫端在執行期宣告。
+   */
+  private valueRunner: ((obj: RuntimeValue, m: MethodDecl, values: RuntimeValue[]) => Promise<unknown>) | null = null
+
+  installValueRunner(fn: (obj: RuntimeValue, m: MethodDecl, values: RuntimeValue[]) => Promise<unknown>): void {
+    this.valueRunner = fn
+  }
+
+  async invokeWith(obj: RuntimeValue, m: MethodDecl, values: RuntimeValue[]): Promise<RuntimeValue | undefined> {
+    if (!this.valueRunner) return undefined
+    return (await this.valueRunner(obj, m, values)) as RuntimeValue
+  }
+
   /** 建一個實例並跑它的建構式（若有）。沒有語言套件安裝 runner 時，只建不跑 */
   async construct(name: string, args: SemanticNode[]): Promise<RuntimeValue> {
     const obj = this.instantiate(name)

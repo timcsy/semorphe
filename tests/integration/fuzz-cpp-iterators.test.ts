@@ -250,11 +250,14 @@ describe('模糊測試：迭代器的邊界', () => {
        auto a = s.begin(); auto b = a; ++b; ++b; s.erase(a); cout << *b;`, '')
   }, 60_000)
 
-  it.fails('[BLOCKED:cpp:map_at] 巢狀容器的接收者：`m[1].insert(5)`', async () => {
-    // 🟠 **為什麼不現在修**：`m[1]` 當接收者時被壓成文字，而解析它需要讓接收者
-    //    的解析知道「這個容器是 keyed」——那是「接收者被壓成文字」那個設計題的一部分
-    //    （34 顆元件共用）。
-    // 🔴 何時該修：接收者重構那一刀。
+  /**
+   * 🟢 **2026-09-18：這根釘子被拔了。** 它寫著「何時該修：接收者重構那一刀」，
+   * 而那一刀確實修好了接收者——**只解開一半**：`m[1]` 自動建出來的那一格
+   * 還要拿得到自己的種類（見 `runtime/container-defaults`）。
+   *
+   * > **一根釘子上寫的阻斷者，可能只是擋住它的其中一半。**
+   */
+  it('★ 巢狀容器的接收者：`m[1].insert(5)`', async () => {
     await sameAsCompiler(
       `map<int,set<int>> m; m[1].insert(5); m[1].insert(3);
        for (auto it = m[1].begin(); it != m[1].end(); ++it) cout << *it; cout << m[1].size();`, '')

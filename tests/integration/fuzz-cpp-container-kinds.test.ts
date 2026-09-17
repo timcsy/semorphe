@@ -140,11 +140,90 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
     await sameAsCompiler(`vector<int> v; v.push_back(1); v.insert(v.begin(), 9); cout << v[0] << v[1];`, '')
   }, 60_000)
 
-  it.fails('[BLOCKED:cpp:map_at] `map<int, multiset<int>>` 的 `m[1].insert(5)`', async () => {
-    // 🟠 **為什麼不現在修**：`m[1]` 當接收者時，`receiverOf` 把它當成陣列的下標，
-    //    而對照表的鍵不是下標。修它要讓接收者的解析知道「這個容器是 keyed」，
-    //    而那正是接收者被壓成文字那個設計問題的一部分（34 顆元件共用）。
-    // 🔴 何時該修：接收者重構那一刀。
-    await sameAsCompiler(`map<int, multiset<int>> m; m[1].insert(5); m[1].insert(5); cout << m[1].size();`, '')
+  /**
+   * 🟢 **2026-09-18：這根釘子被拔了**（釘的時候寫著「何時該修：接收者重構那一刀」）。
+   *
+   * 接收者確實修好了，而**那只解開一半**：`m[1]` 自動建出來的那一格原本只是
+   * 「一個空陣列」——沒有種類的性質，於是內層的可重複集合不知道自己該留重複。
+   *
+   * 修法**不是在 `map_at` 多寫一段**：「可重複集合留重複」是宣告那顆元件的知識，
+   * 所以由它自己登記一個「我的空實例長什麼樣」，`map_at` 只負責問。
+   *
+   * > **一個「不經過宣告也會被建出來」的東西，
+   * > 它的形狀仍然屬於宣告它的那顆元件——只是需要一個問得到的地方。**
+   */
+  it('★ `map<int, multiset<int>>` 的 `m[1].insert(5)` 留得住重複', async () => {
+    await sameAsCompiler(`map<int, multiset<int>> m; m[1].insert(5); m[1].insert(5); cout << m[1].size();`,
+      '🔴 內層容器沒有拿到「留重複」')
+  }, 60_000)
+
+  /**
+   * 🔴 **`multiset::count` 要數【全部】**（2026-09-18，盲測抓到）。
+   * `set`／`map` 的鍵唯一，所以那個數字只會是 0 或 1——**而 `multiset` 不是**。
+   * > **一個「有沒有」與一個「有幾個」在唯一鍵的容器上是同一個答案
+   * > ——而那讓錯的那一半在大多數情況下看起來是對的。**
+   */
+  it('★ 可重複集合的 count 數全部，而集合與對照表只回 0／1', async () => {
+    await sameAsCompiler(
+      `multiset<int> ms; ms.insert(3); ms.insert(3); set<int> s; s.insert(3);
+       map<string,int> mp; mp["a"] = 1;
+       cout << ms.count(3) << ms.count(9) << s.count(3) << mp.count("a") << mp.count("b");`,
+      '🔴 可重複集合的 count 只回了 0／1')
+  }, 60_000)
+
+  /**
+   * 🔴 **兩個位置界定一段範圍的刪除**——`ms.erase(a, b)`，而 C++ 的區間是半開的。
+   *
+   * 在此之前只讀了第一個引數，而症狀不是「少刪一些」：`before - after`
+   * 算出 **-358**，那個容器的內容變成一串 `[object Object],…`
+   * ——因為**兩個引數被字串那一顆的 `erase(pos, len)` 認走了**。
+   *
+   * > **一個只看引數個數的判別，在另一個型別剛好也收兩個引數時
+   * > 不會落空——它會安靜地把那個東西當成自己的。**
+   */
+  it('★ erase(第一個位置, 最後一個之後) 刪一整段', async () => {
+    await sameAsCompiler(
+      `multiset<int> ms; for (int i = 1; i <= 6; i++) ms.insert(i);
+       multiset<int>::iterator a = ms.lower_bound(2); multiset<int>::iterator b = ms.upper_bound(4);
+       int before = (int)ms.size(); ms.erase(a, b);
+       cout << before - (int)ms.size() << ms.size() << *ms.begin();`,
+      '🔴 範圍刪除沒做對')
+  }, 60_000)
+
+  it('★ 而字串的 erase(位置, 長度) 不得被弄壞', async () => {
+    await sameAsCompiler(`string s = "abcdef"; s.erase(1, 2); cout << s;`, '🔴 字串的兩引數刪除壞了')
+  }, 60_000)
+
+  /**
+   * 🔴 **容器裡面裝容器，而內層那個【沒有經過宣告】**（2026-09-18，盲測兩支）。
+   */
+  it('★ 巢狀容器的內層要拿得到自己的種類', async () => {
+    await sameAsCompiler(
+      `map<string, set<int>> b; b["a"].insert(3); b["a"].insert(3); b["a"].insert(1);
+       vector<set<int>> bins(4); bins[1].insert(5); bins[1].insert(5);
+       vector<vector<int>> g(2); g[0].push_back(7);
+       cout << b["a"].size() << *b["a"].begin() << bins[1].size() << g[0][0] << g.size();`,
+      '🔴 內層容器沒有拿到種類')
+  }, 60_000)
+
+  /**
+   * 🔴 **有序容器要問使用者自己的 `operator<`**（2026-09-18，盲測兩支）。
+   *
+   * 三件事全部是**靜默的**：`sort` 完全沒排序、`set<T>` 的順序是插入順序、
+   * 重複的結構全部留了下來（判準寫成 `==`，而 C++ 的是 `!(a<b) && !(b<a)`）。
+   *
+   * ⚠️ **機制早就齊了**——`cpp:compare` 與 `cpp:arithmetic` 都會問運算子多載。
+   * > **一個機制的消費者少一個，那個機制就對那條路徑不存在。**
+   */
+  it('★ 自訂結構的排序、去重、查找、計數要用同一份規則', async () => {
+    const src = `${H}struct T { int k; T(int a) : k(a) {}\n`
+      + `  bool operator<(const T& o) const { return k < o.k; } };\n`
+      + `int main(){ vector<T> v; v.push_back(T(3)); v.push_back(T(1)); sort(v.begin(), v.end());\n`
+      + `  set<T> s; s.insert(T(3)); s.insert(T(3)); s.insert(T(1));\n`
+      + `  cout << v[0].k << v[1].k << s.size() << s.begin()->k\n`
+      + `       << (s.find(T(2)) == s.end() ? "no2" : "has2") << s.count(T(1)); return 0; }\n`
+    const ref = runCppDetailed(src)
+    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+    expect(await run(src), '🔴 自訂比較沒有被問到').toBe(ref.output)
   }, 60_000)
 })
