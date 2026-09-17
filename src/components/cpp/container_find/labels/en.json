@@ -1,0 +1,7 @@
+{
+  "CPP_CONTAINER_FIND_MSG0": "Position of %3 %2 in %1",
+  "CPP_CONTAINER_FIND_EXACT": "(exactly)",
+  "CPP_CONTAINER_FIND_LOWER": "(first not less than)",
+  "CPP_CONTAINER_FIND_UPPER": "(first greater than)",
+  "CPP_CONTAINER_FIND_TOOLTIP": "Finds a position in a sorted container. When there is no match it gives the past-the-end boundary, so you check for a match by comparing against the past-the-end position."
+}

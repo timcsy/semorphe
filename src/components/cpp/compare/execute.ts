@@ -1,5 +1,7 @@
 /** `cpp:compare` 的 **execute** 路——從共用檔原封剪過來（批次第三十六批：字面值與二元運算子）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { isCellPointer, offsetOf, sameCells } from '../../../interpreter/pointer'
+import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:compare', async (node, ctx) => {
@@ -53,6 +55,45 @@ export function registerExecute(register: (component: string, executor: Componen
           case '!=': r = ls !== rs; break
           default: r = false
         }
+        return { type: 'bool', value: r }
+      }
+
+      /**
+       * 🔴 **兩個【位置】要比「同一串格子嗎、第幾格」**（2026-09-17）。
+       *
+       * 走下面那條數值路徑的話，`toNumber(一串格子)` 回 **1**（刻意的，
+       * 見 `interpreter.ts`：少了它 `while (p != NULL)` 對剛配好的節點是假），
+       * 於是**兩個指標都變成 1**：
+       *
+       * ```
+       * int* p = a;  int* e = a + 3;    p != e  →  0（說相等）／ g++ 1
+       * int* p = a;  int* q = b;        p != q  →  0（說相等）／ g++ 1
+       * ```
+       *
+       * 後果不是「比較答錯一次」，是**每一個 `while (it != c.end())` 迴圈
+       * 一次都不跑**，而程式照樣跑完、印出後面的東西。
+       *
+       * 🔴 **這與上面那段字串的註解是同一件事，只是晚了一個型別**：
+       * 「兩個字串都變成 0，於是 `==` 恆真、`!=` 恆假」。
+       * **`toNumber` 壓平了幾種型別，就有幾個這樣的缺陷等著。**
+       *
+       * ⚠️ **只在兩邊都是位置時才走這裡**：`p != NULL`／`p != 0` 要照舊走
+       * 數值路徑，那正是 `toNumber` 回 1 要服務的東西。
+       */
+      if (isCellPointer(left) && isCellPointer(right)) {
+        const same = sameCells(left, right)
+        const lo = offsetOf(left)
+        const ro = offsetOf(right)
+        if (op === '==') return { type: 'bool', value: same && lo === ro }
+        if (op === '!=') return { type: 'bool', value: !same || lo !== ro }
+        // ⚠️ **不同容器之間比大小，C++ 沒有定義**——不要替它發明一個答案。
+        //    出聲而不是猜：一個猜出來的順序會讓二分搜「看起來動了」。
+        if (!same) {
+          throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+            '%1': '兩個位置不在同一個容器裡，比大小沒有意義',
+          })
+        }
+        const r = op === '<' ? lo < ro : op === '>' ? lo > ro : op === '<=' ? lo <= ro : lo >= ro
         return { type: 'bool', value: r }
       }
 

@@ -1,0 +1,31 @@
+{
+  "componentId": "cpp:container_find",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "literal",
+      "default": "s",
+      "_kind_why": "⚠️ `obj` **不是識別字**——它裝的是一個【容器運算式】：`s`、`d2[a]`、`a.b` 都合法。同族其他容器方法用同一個判準。"
+    },
+    {
+      "name": "how",
+      "kind": "enum",
+      "default": "find"
+    }
+  ],
+  "slots": {
+    "key": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_how_why": "🔴 **三個方法名對同一顆身分，差別進 `how`**——紀律相同（在一個有序容器裡找出一個位置），差的只是**判準**：等於它／第一個不小於它／第一個大於它。那與同族那顆取端點的元件用同一條命名規則（哪一端是參數）。\n⚠️ 拆成三顆的代價是具體的：三個身分做同一件事，而學生要在工具箱裡分辨三顆長得幾乎一樣的積木。",
+  "_owner_why": "⚠️ **沒有 `requires`**——這三個都是容器自己的成員方法，不需要任何標頭。"
+}

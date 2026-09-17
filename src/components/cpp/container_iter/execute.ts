@@ -21,6 +21,15 @@ export function registerExecute(register: (component: string, executor: Componen
     }
     // ⚠️ `end()` 指的是**尾端之後一格**——那是 C++ 的慣例，而且合法：
     // 只有解參考它才是錯的，而那由 `pointer_deref` 檢查。
-    return { type: 'array', value: v.value, offset: which === 'end' ? v.value.length : 0 }
+    //
+    // 🔴 **反向那兩端是對稱的**（2026-09-17）：`rbegin()` 是最後一個、
+    //    `rend()` 是第一個**之前**一格。同樣只有解參考 `rend()` 才是錯的，
+    //    而 `offset: -1` 會被 `pointer_deref` 的範圍檢查擋下來。
+    //
+    // > **一個「界線」不是一個元素**——正反兩邊各有一個，而它們都合法。
+    const n = v.value.length
+    if (which === 'rbegin') return { type: 'array', value: v.value, offset: n - 1, reverse: true }
+    if (which === 'rend') return { type: 'array', value: v.value, offset: -1, reverse: true }
+    return { type: 'array', value: v.value, offset: which === 'end' ? n : 0 }
   })
 }

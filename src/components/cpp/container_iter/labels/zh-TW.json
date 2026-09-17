@@ -2,5 +2,7 @@
   "CPP_CONTAINER_ITER_MSG0": "%1 的 %2",
   "CPP_CONTAINER_ITER_BEGIN": "開頭位置",
   "CPP_CONTAINER_ITER_END": "結尾之後的位置",
-  "CPP_CONTAINER_ITER_TOOLTIP": "取得容器的一個位置。「結尾之後」是刻意的：它標示範圍的界線，本身不指向任何元素。"
+  "CPP_CONTAINER_ITER_TOOLTIP": "取得容器的一個位置。「結尾之後」與「開頭之前」是刻意的：它們標示範圍的界線，本身不指向任何元素。⚠️ 從「最後一個」開始往下走，走的是**反方向**——那一族用來由大到小走訪。",
+  "CPP_CONTAINER_ITER_RBEGIN": "最後一個的位置",
+  "CPP_CONTAINER_ITER_REND": "開頭之前的位置"
 }

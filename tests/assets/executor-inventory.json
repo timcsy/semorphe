@@ -38,6 +38,7 @@
     "cpp:container_count",
     "cpp:container_empty",
     "cpp:container_erase",
+    "cpp:container_find",
     "cpp:container_iter",
     "cpp:container_pop",
     "cpp:container_pop_front",

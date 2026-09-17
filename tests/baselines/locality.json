@@ -154,6 +154,10 @@
       "files": 3,
       "dirs": 1
     },
+    "cpp:container_find": {
+      "files": 3,
+      "dirs": 1
+    },
     "cpp:container_iter": {
       "files": 3,
       "dirs": 1
@@ -167,6 +171,10 @@
       "dirs": 1
     },
     "cpp:container_push": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:container_push_front": {
       "files": 3,
       "dirs": 1
     },
@@ -1336,10 +1344,6 @@
     },
     "python:with": {
       "files": 4,
-      "dirs": 1
-    },
-    "cpp:container_push_front": {
-      "files": 3,
       "dirs": 1
     }
   },

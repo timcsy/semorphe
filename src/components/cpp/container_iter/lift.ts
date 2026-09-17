@@ -13,9 +13,14 @@ import { registerMethodBranch } from '../../../core/component/lift-branches'
 import { recordedTypeIsDevice } from '../../../core/component/container-templates'
 import { createNode } from '../../../core/semantic-tree'
 
+/** 這顆認得的「哪一端」——`which` 屬性的值域，與積木上那格下拉同一份。 */
+const ENDS = new Set(['begin', 'end', 'rbegin', 'rend'])
+
 export function registerLift(): void {
   registerMethodBranch('cpp/container_iter', (obj, method, argChildren, ctx): SemanticNode | null => {
-    if (method !== 'begin' && method !== 'end') return null
+    // ⚠️ **反向那兩端走同一顆**（2026-09-17）——「哪一端是參數」這條規則
+    //    本來就涵蓋它們：紀律相同（取得一個位置），差的只是哪一端、往哪走。
+    if (!ENDS.has(method)) return null
     // `v.begin(x)` 不是這顆——迭代器取得不吃引數。**判不出來就說不是我。**
     if (argChildren.length > 0) return null
     // 🔴 **這個接收者的型別已經被別人認領了嗎。**

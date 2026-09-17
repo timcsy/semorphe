@@ -25,6 +25,14 @@
             [
               "%{BKY_CPP_CONTAINER_ITER_END}",
               "end"
+            ],
+            [
+              "%{BKY_CPP_CONTAINER_ITER_RBEGIN}",
+              "rbegin"
+            ],
+            [
+              "%{BKY_CPP_CONTAINER_ITER_REND}",
+              "rend"
             ]
           ]
         }

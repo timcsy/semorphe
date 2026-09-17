@@ -120,6 +120,56 @@ const CASES: [string, string, string, string[]][] = [
   // ⚠️ **刻意沒有「走訪 unordered_map」那一題**：真的 unordered_map 走訪順序是
   //    【未指定的】，拿 g++ 當權威量它，量到的是「我們有沒有跟它做出同一個
   //    未指定的選擇」。見這個檔頭「這裡不放什麼」。
+  // ── 位置（實體式指標／迭代器）（2026-09-17）──────────────────
+  // 🔴 這一族在此之前**不當掉**：`++p` 把指標寫成一個 double，
+  //    而 `p != e` 恆等於「相等」——於是每一個走訪迴圈一次都不跑。
+  ['位置：走訪迴圈', '',
+    `int a[3]={7,8,9}; int* p=a; int* e=a+3; int s=0;
+     while (p != e) { s += *p; ++p; } cout << s;`, []],
+  ['位置：前置遞增回傳新的', '',
+    `int a[3]={7,8,9}; int* p=a; cout << *(++p);`, []],
+  ['位置：後置遞增回傳舊的', '',
+    `int a[3]={7,8,9}; int* p=a; cout << *(p++) << *p;`, []],
+  ['位置：複合移動', '',
+    `int a[4]={1,2,3,4}; int* p=a; p+=2; cout << *p; p-=1; cout << *p;`, []],
+  ['🔴 位置：不同容器的兩個位置【不相等】', '',
+    `int a[2]={1,2}; int b[2]={1,2}; int* p=a; int* q=b; cout << (p!=q) << (p==q);`, []],
+  ['位置：同容器比大小', '',
+    `int a[3]={1,2,3}; int* p=a; int* q=a+2; cout << (p<q) << (q<p);`, []],
+  ['位置：兩個位置相減是隔幾格', '',
+    `int a[5]={1,2,3,4,5}; int* p=a; int* q=a+3; cout << (q-p);`, []],
+  // ★ **正向錨點：這一刀不得弄壞「指標對 NULL」**——`toNumber` 對一串格子
+  //   回 1 正是為了它（少了它，Linked List 的走訪一圈都不跑）。
+  ['★ 位置：陣列退化的指標不是空指標', '',
+    `int a[3]={7,8,9}; int* p=a; cout << (p!=0) << (p==0);`, []],
+  // ── 迭代器：語料真的會寫的那幾個形狀（2026-09-17）──────────
+  ['走訪：容器的位置迴圈', '',
+    `vector<int> v; v.push_back(3); v.push_back(1); int s=0;
+     for (auto it = v.begin(); it != v.end(); ++it) s += *it; cout << s;`, []],
+  ['走訪：對照表的鍵與值', '',
+    `map<int,int> m; m[2]=7; m[1]=9;
+     for (auto it = m.begin(); it != m.end(); ++it) cout << it->first << it->second;`, []],
+  ['查找：找得到與找不到（`!= end()` 是標準寫法）', '',
+    `set<int> s; s.insert(1); s.insert(2);
+     cout << (s.find(2) != s.end()) << (s.find(9) != s.end());`, []],
+  ['查找：第一個不小於（AP325/2/2_11 的形狀）', '',
+    `set<int> s; s.insert(1); s.insert(3); s.insert(5);
+     auto it = s.lower_bound(2); if (it != s.end()) cout << *it;`, []],
+  ['查找：第一個大於', '',
+    `set<int> s; s.insert(1); s.insert(3); s.insert(5); cout << *s.upper_bound(3);`, []],
+  ['🔴 刪一個位置，不是刪全部（`ms.erase(ms.find(v))`）', '',
+    `multiset<int> ms; ms.insert(4); ms.insert(4); ms.insert(7);
+     ms.erase(ms.find(4)); cout << ms.size() << ms.count(4);`, []],
+  ['最大的那一個（`*s.rbegin()`）', '',
+    `set<int> s; s.insert(1); s.insert(5); s.insert(3); cout << *s.rbegin();`, []],
+  ['🔴 反向走訪：由大到小', '',
+    `set<int> s; s.insert(1); s.insert(5); s.insert(3);
+     for (auto it = s.rbegin(); it != s.rend(); ++it) cout << *it;`, []],
+  ['位置換算成索引（`it - v.begin()`）', '',
+    `vector<int> v; v.push_back(3); v.push_back(1); v.push_back(4);
+     auto it = v.begin() + 2; cout << (it - v.begin());`, []],
+  // ⚠️ **刻意沒有**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
+  //    ——兩者在 C++ 裡都是未定義行為，而判準裡不得放它們。
 ]
 
 describe('解譯器與參照編譯器：同一段程式，印出來的要一樣', () => {
