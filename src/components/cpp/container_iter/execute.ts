@@ -16,6 +16,21 @@ export function registerExecute(register: (component: string, executor: Componen
     const name = String(node.properties.obj)
     const which = String(node.properties.which ?? 'begin')
     const v = receiverOf(ctx.scope, name)
+    /**
+     * 🔴 **一段文字也走得訪**（2026-09-17）——`for (auto c = t.begin(); c != t.end(); ++c)`。
+     *
+     * 格子**延遲產生並存回那個值身上**：`begin()` 與 `end()` 必須拿到同一份，
+     * 否則比較那一條會說「兩個位置不在同一個容器裡」，而迴圈一次都不跑。
+     *
+     * ⚠️ 那是一個**唯讀的投影**：透過它寫回去改不到文字本身，所以位置上標一個記號，
+     *    由寫入那一路出聲。**沉默地寫進一份沒有人會再讀的複本，是最糟的那一種。**
+     */
+    if (v.type === 'string' && typeof v.value === 'string') {
+      const cells = (v.charCells ??= [...v.value].map((ch) => ({ type: 'char' as const, value: ch.charCodeAt(0) })))
+      const at = which === 'end' ? cells.length : which === 'rbegin' ? cells.length - 1 : which === 'rend' ? -1 : 0
+      const rev = which === 'rbegin' || which === 'rend'
+      return { type: 'array', value: cells, offset: at, readonlyCells: true, ...(rev ? { reverse: true } : {}) }
+    }
     if (v.type !== 'array' || !Array.isArray(v.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${name} 不是容器` })
     }

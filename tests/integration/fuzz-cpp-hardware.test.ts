@@ -445,11 +445,44 @@ void loop() {
   })
 
   /**
-   * **const／static ＋ 陣列宣告**
+   * **`const` ＋ 陣列宣告**——🟢 **2026-09-17 解開**（管線 180 的第二輪盲測）。
    *
-   * 本輪已改成**誠實降級**（`cpp:raw_code` ＋ 殘差可見），而完整支援要一顆概念帶得動修飾詞——**那是概念代數的問題，不是 lift 的問題**。
+   * 上面那句「完整支援要一顆概念帶得動修飾詞，那是概念代數的問題」
+   * **對 `const` 不成立**：
+   *
+   * > **`const` 是【型別修飾詞】，它屬於型別；`static` 是【儲存類別】，它不屬於。**
+   *
+   * `const int` 在 C++ 裡本來就是一個型別，所以它住在元素型別裡就好
+   * ——那顆陣列宣告的 `type` 早就裝得下 `char*`（指標陣列走同一條路）。
+   *
+   * ⚠️ **這一支是重建的**：2026-08-17 那次的原始程式沒有留在測試檔裡
+   * （當時只留了 `it.todo` 的標題），所以這裡照那一族的形狀重寫一支
+   * ——查表法的常數表，Arduino 課裡最常見的 `const` 陣列。
    */
-  it.todo('[UNSUPPORTED:const／static ＋ 陣列宣告] 🔴 fuzz_3：const／static ＋ 陣列宣告')
+  it('★ fuzz_3：const ＋ 陣列宣告（查表法的常數表）', async () => {
+    const src = `const int NOTES[3] = {262, 294, 330};
+const char* NAMES[3] = {"do", "re", "mi"};
+
+void setup() {
+  Serial.begin(9600);
+  for (int i = 0; i < 3; i++) {
+    Serial.print(NAMES[i]);
+    Serial.println(NOTES[i]);
+  }
+}
+
+void loop() {
+}
+`
+    const ids = componentsIn(lift(src))
+    expect(ids, '🔴 沒認出來 → 下面在驗空集合').toContain('cpp:array_declare')
+    expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
+    const once = generateCode(lift(src), 'cpp', S)
+    expect(once, '🔴 const 沒有產回去').toContain('const int NOTES[3]')
+    expect(once, '🔴 指標陣列的 const 沒有產回去').toContain('const char* NAMES[3]')
+    expect(generateCode(lift(once), 'cpp', S)).toBe(once)
+    expect(await run(src)).toContain('do262')
+  }, 60000)
 
   /**
    * **無號整數的環繞算術**
@@ -459,11 +492,27 @@ void loop() {
   it.todo('[UNSUPPORTED:無號整數的環繞算術] 🔴 fuzz_4：無號整數的環繞算術')
 
   /**
-   * **const／static ＋ 陣列宣告（二維）**
-   *
-   * 同 fuzz_3。
+   * **`const` ＋ 二維陣列**——🟢 同 fuzz_3，2026-09-17 一起解開。
+   * ⚠️ 同樣是重建的一支（原始程式沒有留下來）。
    */
-  it.todo('[UNSUPPORTED:const／static ＋ 陣列宣告] 🔴 fuzz_6：const／static ＋ 陣列宣告（二維）')
+  it('★ fuzz_6：const ＋ 陣列宣告（二維）', async () => {
+    const src = `const byte GRID[2][3] = {{2, 3, 4}, {5, 6, 7}};
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println(GRID[1][2]);
+}
+
+void loop() {
+}
+`
+    const ids = componentsIn(lift(src))
+    expect(ids, '🔴 沒認出來 → 下面在驗空集合').toContain('cpp:array_2d_declare')
+    expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
+    const once = generateCode(lift(src), 'cpp', S)
+    expect(generateCode(lift(once), 'cpp', S)).toBe(once)
+    expect(await run(src)).toContain('7')
+  }, 60000)
 
   /**
    * **C 風格字元陣列與 String 混用**
@@ -473,11 +522,50 @@ void loop() {
   it.todo('[UNSUPPORTED:char 陣列與 String 混用] 🔴 fuzz_9：C 風格字元陣列與 String 混用')
 
   /**
-   * **const ＋ 陣列宣告**
+   * 🔴 **`static` ＋ 陣列：維持誠實降級——而在今天以前，這件事沒有任何測試在釘。**
    *
-   * 同 fuzz_3。
+   * `const` 那一半 2026-09-17 解開了（見 fuzz_3），而 `static` **刻意留著**：
+   *
+   * > **`const` 是型別修飾詞，它屬於型別；`static` 是儲存類別，它不屬於。**
+   *
+   * 把 `static` 塞進型別字串會**產得出對的碼而模擬不出對的行為**
+   * （函式裡的 `static` 說的是「這個變數跨呼叫活著」）——那比降級更糟，
+   * 因為它看起來會動。
+   *
+   * ⚠️ 這一支同時是那條「宣告完整性」護欄的**語料**：在它之前，
+   * 整個測試庫裡唯一會降級成 `cpp:raw_code` 的片段就是 `const ＋ 陣列`，
+   * 於是修好它的那一刻，那顆元件從「量得到」掉回「量不到」。
+   *
+   * > **一個降級目標如果只被「還沒修好的缺陷」覆蓋到，
+   * > 那它的覆蓋會在缺陷修好的那天消失。**
    */
-  it.todo('[UNSUPPORTED:const／static ＋ 陣列宣告] 🔴 fuzz_10：const ＋ 陣列宣告')
+  it('★ static ＋ 陣列：誠實降級，而原文要原樣回得去', () => {
+    const src = `void tick() {
+  static int hits[2] = {7, 8};
+  Serial.println(hits[1]);
+}
+
+void setup() {
+  Serial.begin(9600);
+  tick();
+}
+
+void loop() {
+}
+`
+    const ids = componentsIn(lift(src))
+    expect(ids, '🔴 沒認出來 → 下面在驗空集合').toContain('cpp:func_def')
+    expect(ids, '🔴 static ＋ 陣列要【看得見地】降級，不得安靜地認錯').toContain('cpp:raw_code')
+    // 🟢 降級成 `cpp:raw_code` 的重點：**原文原樣回得去**，來回轉換不漂移
+    const once = generateCode(lift(src), 'cpp', S)
+    expect(once, '🔴 原文沒有原樣回去').toContain('static int hits[2] = {7, 8};')
+    expect(generateCode(lift(once), 'cpp', S)).toBe(once)
+  }, 60000)
+
+  // 🟢 **fuzz_10（const ＋ 陣列宣告）：2026-09-17 解開**，與 fuzz_3 是同一個缺口。
+  //    ⚠️ 這裡不留第二支測試——那一輪只留了 `it.todo` 的標題，原始程式沒有留下來，
+  //    而**一支重建出來的第二支量的是我重建的形狀，不是當初那支程式**。
+  //    形狀的常駐網在 fuzz_3（一維＋指標元素）與 fuzz_6（二維）。
 
   /**
    * **C 風格轉型 `(byte)x`**
@@ -486,12 +574,10 @@ void loop() {
    */
   it.todo('[UNSUPPORTED:byte 型別別名與轉型] 🔴 fuzz_11：C 風格轉型 `(byte)x`')
 
-  /**
-   * **const ＋ 陣列宣告**
-   *
-   * 同 fuzz_3。
-   */
-  it.todo('[UNSUPPORTED:const／static ＋ 陣列宣告] 🔴 fuzz_12：const ＋ 陣列宣告')
+  // 🟢 **fuzz_12（const ＋ 陣列宣告）：2026-09-17 解開**，與 fuzz_3 是同一個缺口。
+  //    ⚠️ 這裡不留第二支測試——那一輪只留了 `it.todo` 的標題，原始程式沒有留下來，
+  //    而**一支重建出來的第二支量的是我重建的形狀，不是當初那支程式**。
+  //    形狀的常駐網在 fuzz_3（一維＋指標元素）與 fuzz_6（二維）。
 
   /**
    * **struct 的參考參數**
@@ -507,12 +593,10 @@ void loop() {
    */
   it.todo('[TOMBSTONE:014-墓碑目錄#模擬-c-preprocessor-來解決巨集] 🔴 fuzz_14：帶參數的 `#define`')
 
-  /**
-   * **const ＋ 陣列宣告**
-   *
-   * 同 fuzz_3。
-   */
-  it.todo('[UNSUPPORTED:const／static ＋ 陣列宣告] 🔴 fuzz_18：const ＋ 陣列宣告')
+  // 🟢 **fuzz_18（const ＋ 陣列宣告）：2026-09-17 解開**，與 fuzz_3 是同一個缺口。
+  //    ⚠️ 這裡不留第二支測試——那一輪只留了 `it.todo` 的標題，原始程式沒有留下來，
+  //    而**一支重建出來的第二支量的是我重建的形狀，不是當初那支程式**。
+  //    形狀的常駐網在 fuzz_3（一維＋指標元素）與 fuzz_6（二維）。
 
   /**
    * **浮點的位數格式與精度**
@@ -521,11 +605,9 @@ void loop() {
    */
   it.todo('[UNSUPPORTED:float 精度與位數格式] 🔴 fuzz_19：浮點的位數格式與精度')
 
-  /**
-   * **const ＋ 陣列宣告**
-   *
-   * 同 fuzz_3。
-   */
-  it.todo('[UNSUPPORTED:const／static ＋ 陣列宣告] 🔴 fuzz_20：const ＋ 陣列宣告')
+  // 🟢 **fuzz_20（const ＋ 陣列宣告）：2026-09-17 解開**，與 fuzz_3 是同一個缺口。
+  //    ⚠️ 這裡不留第二支測試——那一輪只留了 `it.todo` 的標題，原始程式沒有留下來，
+  //    而**一支重建出來的第二支量的是我重建的形狀，不是當初那支程式**。
+  //    形狀的常駐網在 fuzz_3（一維＋指標元素）與 fuzz_6（二維）。
 
 })

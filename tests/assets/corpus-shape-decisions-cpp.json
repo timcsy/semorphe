@@ -1,10 +1,5 @@
 [
   {
-    "type": "abstract_array_declarator",
-    "cause": "語言有而這個工具不做",
-    "reason": "沒有名字的陣列參數（`void f(int[10])`）。\n🟢 **2026-09-06 做對了**：`parseParamDeclaration` 的宣告子清單裡補上它，整段（含大小）接進型別——來回逐字相同。\n⚠️ 在此之前它不在清單裡，於是 `declNode` 是 `undefined`，產出變成 `void f(int)`——**`[10]` 整段消失，而沒有任何一顆節點說它降級了**。\n🔴 歸「這個工具不做」是因為：它**沒有變成一顆概念**（積木上看不到它），而程式碼那一側逐字保留。補語料改變不了這一點。"
-  },
-  {
     "type": "abstract_parenthesized_declarator",
     "cause": "語言有而這個工具不做",
     "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
@@ -43,11 +38,6 @@
     "type": "attributed_statement",
     "cause": "語言有而這個工具不做",
     "reason": "屬性與對齊（`[[nodiscard]]`／`alignas`）。它們不改變程式的行為語義。"
-  },
-  {
-    "type": "bitfield_clause",
-    "cause": "語言有而這個工具不做",
-    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
   },
   {
     "type": "co_await_expression",

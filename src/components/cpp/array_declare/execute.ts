@@ -60,7 +60,11 @@ export function registerExecute(register: (component: string, executor: Componen
       const init = node.slots.values ?? []
       // `char s[4] = "ab"` —— 初始值是一個字串字面，要**拆成字元**再填。
       // 不拆的話整個字串會塞進 s[0]，於是 s[1] 是空的、cout << s 也不對。
-      if (type.includes('char') && init.length === 1) {
+      // 🔴 **「一串指標」不是「一串字元」**（2026-09-17）——`const char* n[] = {"ab"}`
+      //    的元素型別含 `char`、初始值也只有一個，而它是**一個元素**（一個字串），
+      //    不是一個要拆開的字串。拆了的話 `n[0]` 變成字元 `'a'`。
+      //    ⚠️ 判準是**星號**：拆字元只對「元素本身就是字元」的陣列成立。
+      if (type.includes('char') && !type.includes('*') && init.length === 1) {
         const v = await ctx.evaluate(init[0])
         if (typeof v.value === 'string' && v.value.length > 1) {
           for (let i = 0; i < v.value.length && i < elements.length; i++) {

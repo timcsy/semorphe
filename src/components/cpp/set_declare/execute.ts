@@ -1,5 +1,6 @@
 /** `cpp:set_declare` 的 **execute** 路——從共用檔原封剪過來（批次第七批：容器樣板過渡表退場）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { cloneValue } from '../../../interpreter/clone'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:set_declare', async (node, ctx) => {
@@ -22,6 +23,21 @@ export function registerExecute(register: (component: string, executor: Componen
       //    🟢 第一百一十九條護欄當場指名：「規格宣告的預設值與程式碼實際的退路不一樣
       //    ——規格在說謊。」
       const elemType = String(node.properties.type ?? 'int')
-      ctx.scope.declare(name, { type: 'array', value: [], allowsDuplicates, elemType })
+      /**
+       * 🔴 **用另一個容器建起來**（2026-09-17）——`set<int> b = a;`／`map<char,int> r = f();`。
+       * 在此之前這一行**無條件建一個空的**，而初始值連進不進得了語義樹都還不一定
+       * （那一格沒有宣告，見 `component.json` 的 `_slots_why`）。
+       *
+       * ⚠️ **要複製，不能接管**：`cloneValue` 連裡面的一對值都複製。
+       * 淺複製的話 `b.insert(x)` 之後 `a` 也多一個——而那種錯不會在建立的那一行出聲。
+       * ⚠️ 而**種類跟著宣告走，不跟著來源走**：`multiset<int> b = s;`（`s` 是 `set`）
+       * 之後 `b` 要留得住重複。
+       */
+      const source = (node.slots.source ?? [])[0]
+      const initial = source ? await ctx.evaluate(source) : null
+      const cells = initial && initial.type === 'array' && Array.isArray(initial.value)
+        ? initial.value.map(cloneValue)
+        : []
+      ctx.scope.declare(name, { type: 'array', value: cells, allowsDuplicates, elemType })
     })
 }

@@ -12,6 +12,7 @@ import { plainTypeComponent } from '../../../../core/component/container-templat
 import { tryDeclaratorBranches } from '../../../../core/component/lift-branches'
 // ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
 import { buildArrayDeclare } from '../../../../components/cpp/array_declare/lift'
+import { buildArrayAt } from '../../../../components/cpp/array_at/lift'
 import { buildForwardDecl } from '../../../../components/cpp/forward_decl/lift'
 import { buildAutoDeclare } from '../../../../components/cpp/var_declare_auto/lift'
 import { buildStaticVar } from '../../../../components/cpp/var_declare_static/lift'
@@ -910,7 +911,28 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     if (!templateTypeNode) {
       const qualifiedNode = node.namedChildren.find(c => c.type === 'qualified_identifier')
       if (qualifiedNode) {
-        templateTypeNode = qualifiedNode.namedChildren.find(c => c.type === 'template_type') ?? undefined
+        /**
+         * 🔴 **`std::vector<int>` 與 `vector<int>::iterator` 都是 qualified_identifier**
+         *    ——而只有前者是一個容器宣告（2026-09-17，盲測抓到）。
+         *
+         * ```cpp
+         * vector<int>::iterator it = v.begin();   →  被認成【第二個 vector 宣告】
+         * ```
+         *
+         * 於是 `it` 變成一個**新的空容器**，而 `v.erase(it)` 說「這個位置不是 v 裡的」
+         * ——錯誤指著刪除那一行，而問題在宣告那一行。
+         * ⚠️ 在那句錯誤訊息存在之前，這是一個**靜默的錯答案**：`it` 是空的容器，
+         *    後面每一次走訪都跑零次。
+         *
+         * 🟢 判準是**那個樣板型別是它的「名字」還是它的「範圍」**：
+         *    `std::vector<int>` 的名字是 `vector<int>`（範圍是 `std`）；
+         *    `vector<int>::iterator` 的名字是 `iterator`（範圍才是 `vector<int>`）。
+         *
+         * > **兩個語法形狀相同的東西，差別在哪一格是哪一格——
+         * > 而一個只問「裡面有沒有」的判別式看不見那個差別。**
+         */
+        const named = qualifiedNode.childForFieldName('name')
+        templateTypeNode = named?.type === 'template_type' ? named : undefined
       }
     }
     if (templateTypeNode) {
@@ -1134,7 +1156,35 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
             // ——它其實是一個**識別字**（巨集名或常數名）。
             const inner = pd.namedChildren[0]
             if (!inner) return null
-            return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
+            if (inner.type !== 'type_identifier') return ctx.lift(inner)
+            /**
+             * 🔴 **`string w(names[i]);` 的下標會被這條路吃掉**（2026-09-17）。
+             *
+             * 同一個「最令人困惑的解析」把 `names[i]` 讀成一個**參數宣告**
+             * （型別 `names` ＋ 一個沒有名字的陣列宣告子 `[i]`），而這裡
+             * 只取了型別名 —— 於是 `string w(names[0])` 與 `string w(names[1])`
+             * **lift 出一模一樣的樹**，兩個都接到整個 `names`。
+             *
+             * ⚠️ 它是**靜默的**：積木畫得出來、產出的碼少一段下標而仍然合法。
+             *
+             * > **一個把「型別 ＋ 宣告子」讀成「只有型別」的還原，
+             * > 會讓兩段不同的程式碼變成同一棵樹。**
+             */
+            const plain = buildVarRef(inner.text)
+            let expr = plain
+            // ⚠️ 多維（`w[0][1]`）的第二層**包在第一層底下**，所以是往下走不是往右走
+            let d: AstNode | undefined = pd.namedChildren[1]
+            while (d) {
+              if (d.type !== 'abstract_array_declarator') return plain
+              const idxNode = d.namedChildren.find((c) => c.type !== 'abstract_array_declarator')
+              const idx = idxNode ? ctx.lift(idxNode) : null
+              // 🔴 **解不開就原樣回去**：`w[]`（沒有下標）不是一個下標運算式。
+              //    自己編一個「大概是 0 吧」會讓錯誤指向別的地方。
+              if (!idx) return plain
+              expr = buildArrayAt({ obj: [expr], index: [idx] })
+              d = d.namedChildren.find((c) => c.type === 'abstract_array_declarator')
+            }
+            return expr
           })
           .filter((n): n is NonNullable<typeof n> => n !== null)
         return createNode(componentId, { name: nameNode?.text ?? name, ...withCount(args) }, { initializer: args })
@@ -1197,14 +1247,35 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     // auto declaration: auto x = expr;
     if (autoNode) {
-      const decl = node.namedChildren.find(c => c.type === 'init_declarator')
-      if (decl) {
-        const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
-        const name = nameNode?.text ?? 'x'
-        const valueNode = decl.childForFieldName('value')
-        const value = valueNode ? ctx.lift(valueNode) : null
-        return buildAutoDeclare(name, value)
-      }
+      /**
+       * 🔴 **每一個宣告子都走同一支**（2026-09-17）——這裡本來只認得【第一個】。
+       *
+       * ```cpp
+       * auto lo = s.lower_bound(3), hi = s.upper_bound(6);   →  hi 整個蒸發
+       * ```
+       *
+       * ⚠️ 而它**不出聲**：`hi` 後來被用到時報的是「沒有宣告過這個名字」
+       * ——錯誤指著使用的那一行，而問題在宣告那一行。
+       *
+       * 🔴 **同一個缺陷這個 repo 修過一次**（2026-09-10，容器的宣告）：
+       * `vector<int> C(n), V(n);` 的 `V` 整個蒸發。當時的結論逐字是：
+       * > **一個只寫得出「一個」的讀取器，在遇到兩個的時候不會出聲
+       * > ——它會安靜地讀完第一個就回去。**
+       *
+       * 那一次修的是容器那一支，而**自動型別這一支沒有跟著修**。
+       *
+       * ⚠️ 一個宣告子時**回傳那顆概念本身**（行為與先前逐字相同）；
+       *    兩個以上才包一層一般的變數宣告——多宣告子本來就長那樣。
+       */
+      const built = node.namedChildren
+        .filter((c) => c.type === 'init_declarator')
+        .map((decl) => {
+          const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
+          const valueNode = decl.childForFieldName('value')
+          return buildAutoDeclare(nameNode?.text ?? 'x', valueNode ? ctx.lift(valueNode) : null)
+        })
+      if (built.length === 1) return built[0]
+      if (built.length > 1) return buildVarDeclare({ type: 'auto' }, { declarators: built })
       return buildAutoDeclare('x', null)
     }
 
@@ -1226,19 +1297,45 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     // **這裡只做誠實降級**（P6）：把一個**安靜的錯樹**換成一個**看得見的缺口**。
     // 🔴 完整支援（`const`／`static` 修飾詞 ＋ 陣列宣告）**是另一輪的事**——
     // 它要一顆概念帶得動修飾詞，而那是概念代數的問題不是 lift 的問題。
-    const arrayDeclarator = (d: { type: string; childForFieldName(n: string): { type: string } | null }): boolean =>
-      d.type === 'array_declarator' || d.childForFieldName('declarator')?.type === 'array_declarator'
+    /**
+     * 這個宣告子裡有沒有一個陣列？
+     *
+     * 🔴 **原本只往下看一層**（2026-09-17 修）——而 `const char* n[2]` 的宣告子是
+     * `init_declarator → pointer_declarator → array_declarator`，**陣列被指標包住了**。
+     * 於是這道閘放它過去，下面那條路把它拆成「型別 ＋ 名字 ＋ 初始值」三格，
+     * **陣列那一層就在那裡掉的**：`n` 成了一個純量，而 `n[1]` 說「這不是一個陣列」。
+     *
+     * > **一道只看最外層形狀的閘，會在「同一個形狀多包了一層」時失效
+     * > ——而這個檔上面兩百行處已經記過同一件事一次。**
+     */
+    const arrayDeclarator = (d: AstNode): boolean => {
+      for (let cur: AstNode | null = d; cur; cur = cur.childForFieldName('declarator') as AstNode | null) {
+        if (cur.type === 'array_declarator') return true
+      }
+      return false
+    }
 
     // const/constexpr declaration
     if (qualifier === 'const' || qualifier === 'constexpr') {
       const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier' || c.type === 'pointer_declarator')
       if (decl) {
+        /**
+         * 🔴 **`const` ＋ 陣列不再降級**（2026-09-17）。上面那段註解說完整支援
+         * 「要一顆概念帶得動修飾詞，而那是概念代數的問題」——而**那對 `const` 不成立**：
+         *
+         * > **`const` 是【型別修飾詞】，它屬於型別；`static` 是【儲存類別】，它不屬於。**
+         *
+         * `const int` 在 C++ 裡本來就是一個型別，所以它該住在元素型別裡
+         * ——那顆陣列宣告的 `type` 今天已經裝得下 `char*`（指標陣列走同一條路），
+         * 裝 `const int` 是同一件事，不需要新的一格。
+         *
+         * ⚠️ **`static` 維持誠實降級**：它說的是「這個變數活多久」，
+         * 塞進型別字串會產得出對的碼而模擬不出對的行為——那才是真的要另一輪。
+         *
+         * 🟢 這解開了 `fuzz-cpp-hardware` 上三個 `it.todo`（fuzz_3／6／10）。
+         */
         if (arrayDeclarator(decl)) {
-          // ⚠️ 用 `cpp:raw_code`（**有五路的使用者面概念**）而不是裸的 `raw_code`
-          //（那是核心 Level 4 的降級標記，原文放 `metadata.rawCode`）。
-          // 差別在**產出**：`cpp:raw_code` 的 generate 讀 `properties.code`，
-          // 所以**原文原樣回得去**，round-trip 不漂移。
-          return degrade(buildRawCode(node.text), `${qualifier} ＋ 陣列宣告尚未支援`)
+          return liftSingleDeclarator(decl, `${qualifier} ${type}`, ctx)
         }
         const lifted = liftSingleDeclarator(decl, type, ctx)
         const componentId = qualifierComponent(qualifier)

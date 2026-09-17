@@ -9,5 +9,6 @@
   "CPP_MAP_DECLARE_VALUE_TYPE_DOUBLE": "double (precise decimal)",
   "CPP_MAP_DECLARE_VALUE_TYPE_STRING": "string (text)",
   "CPP_MAP_DECLARE_ORDERED_YES": "lookup table",
-  "CPP_MAP_DECLARE_ORDERED_NO": "hash lookup table"
+  "CPP_MAP_DECLARE_ORDERED_NO": "hash lookup table",
+  "CPP_MAP_DECLARE_SOURCE": "copied from"
 }

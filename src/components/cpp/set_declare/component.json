@@ -19,7 +19,16 @@
       "default": "s"
     }
   ],
-  "slots": {},
+  "slots": {
+    "source": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
+    }
+  },
+  "_slots_why": "🔴 **「用另一個容器建起來」原本【整段消失】**（2026-09-17）。`map<char,int> r = f();` 的初始值在 lift 就掉了——因為掛不掛 `source` 這一格是**問宣告**的（`hasInitSourceDecl` 從 `slots` 讀），而這裡是空的。症狀有兩層，而兩層都不出聲：產出的程式碼變成 `map<char,int> r;`（合法，只是不是使用者寫的那一段），執行起來 `r` 是空的。\n> **一格沒有宣告的接點，與一個「這個概念不吃初始值」的決定長得一模一樣。**\n🟢 同族那顆列表的宣告早就有這一格，形狀照抄它。",
   "role": "statement",
   "paths": {
     "render": "./forms/blocks.json",

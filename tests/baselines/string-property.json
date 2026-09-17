@@ -3,17 +3,17 @@
     "note": "字串屬性不得裝結構。「非原子」不等於錯——判定在 tests/assets/string-property-decisions.json。\n🔴 而語料乾淨不代表模型對：它代表語料是照著模型長的。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
-  "語料段數": 1052,
+  "語料段數": 1089,
   "要看": 37,
   "孤兒判定": 0,
   "details": [
     "cpp:var_declare.type",
+    "cpp:array_declare.type",
     "param_decl.type",
     "cpp:func_call.name",
     "cpp:enum.values",
     "cpp:try_catch.catch_type",
     "cpp:func_def.return_type",
-    "cpp:array_declare.type",
     "cpp:pointer_declare.type",
     "cpp:var_declare_const.type",
     "cpp:vector_declare.type",
@@ -45,5 +45,5 @@
     "cpp:set_declare.type",
     "cpp:priority_queue_declare.type"
   ],
-  "note": "📈 **2026-09-17（迭代器的 round-trip 那一關）：語料變大，而「要看」跟著 +2。**\n  新增的兩筆是 `cpp:set_declare.type`（`pair<int,int>`）與 `cpp:container_append.obj`\n  ——**不是新缺陷，是既有設計問題的新暴露**：我的新測試第一次寫出\n  `multiset<pair<int,int>>` 這種形狀，而它本來就會落進「字串屬性裝了結構」。\n\n  🔴 而這條護欄自己的註解逐字說過這件事：\n  > **語料乾淨不代表模型對：它代表語料是照著模型長的。**\n\n  ⚠️ 所以這個 +2 是**好的**：它證明那條護欄在新形狀出現時真的會說話。\n  🟠 該修的是那個設計（屬性升格成接點），而它住在 `concepts/概念代數.md`\n  的「屬性的結構化邊界」——不是這一刀。\n\n"
+  "note": "📈 **2026-09-17（迭代器的 round-trip 那一關）：語料變大，而「要看」跟著 +2。**\n  新增的兩筆是 `cpp:set_declare.type`（`pair<int,int>`）與 `cpp:container_append.obj`\n  ——**不是新缺陷，是既有設計問題的新暴露**：我的新測試第一次寫出\n  `multiset<pair<int,int>>` 這種形狀，而它本來就會落進「字串屬性裝了結構」。\n\n  🔴 而這條護欄自己的註解逐字說過這件事：\n  > **語料乾淨不代表模型對：它代表語料是照著模型長的。**\n\n  ⚠️ 所以這個 +2 是**好的**：它證明那條護欄在新形狀出現時真的會說話。\n  🟠 該修的是那個設計（屬性升格成接點），而它住在 `concepts/概念代數.md`\n  的「屬性的結構化邊界」——不是這一刀。\n\n\n\n📈 **2026-09-17（管線 180，第二輪盲測）：語料段數 1052 → 1089。**\n  新增的是常駐測試：迭代器一族的模糊測試網（＋6 支）、`const` ＋ 陣列（＋2 支）、\n  `static` ＋ 陣列的誠實降級（＋1 支）、成員初始化列與 g++ 的最小重現（＋3 支）。\n  **輸入量長了，判準沒有變。**\n\n🟢 **而「要看」停在 37 沒有上升**——量到的新面孔有兩個，兩個都寫了判定：\n  `cpp:raw_code.code`（降級目標，那一格裝的就是「還沒被結構化的那一段」）\n  `cpp:array_2d_declare.type`（與已判定的一維那顆同一族）\n  ⚠️ `raw_code` 這一格**在此之前不在語料裡**：測試庫裡唯一會降級的片段是\n  `const ＋ 陣列`，而那個缺陷修好之後它的覆蓋一度消失。\n  > **一個降級目標如果只被「還沒修好的缺陷」覆蓋到，\n  > 那它的覆蓋會在缺陷修好的那天消失。**\n"
 }

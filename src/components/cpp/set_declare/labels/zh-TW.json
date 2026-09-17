@@ -6,5 +6,6 @@
   "CPP_SET_DECLARE_TYPE_STRING": "string（文字）",
   "CPP_SET_DECLARE_TYPE_CHAR": "char（字元）",
   "CPP_SET_DECLARE_UNIQUE_YES": "集合",
-  "CPP_SET_DECLARE_UNIQUE_NO": "可重複集合"
+  "CPP_SET_DECLARE_UNIQUE_NO": "可重複集合",
+  "CPP_SET_DECLARE_SOURCE": "複製自"
 }

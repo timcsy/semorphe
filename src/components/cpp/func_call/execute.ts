@@ -52,6 +52,23 @@ export function registerExecute(register: (component: string, executor: Componen
     const bareName = name.includes('::') ? name.slice(name.lastIndexOf('::') + 2) : null
     const funcDef = ctx.functions.get(name) ?? (bareName ? ctx.functions.get(bareName) : undefined)
     if (!funcDef) {
+      /**
+       * 🔴 **一個名字如果是登記過的結構，那個呼叫是【建構】**（2026-09-17，盲測抓到）。
+       *
+       * ```cpp
+       * struct T { int a; T(int x) : a(x) {} };
+       * T t = T(3);      🟢 宣告那一路早就會了（走 `structs.construct`）
+       * s.insert(T(3));  🔴 而運算式位置說「沒有這個函式：T」
+       * ```
+       *
+       * ⚠️ 同一件事的兩個位置，只有一個接上了——而**那正是「一族有幾個註冊點」
+       * 那條教訓的形狀**：宣告那一路接了，運算式那一路沒有。
+       *
+       * ⚠️ 判準問**登記處**（`ctx.structs.has`），不是名字長怎樣（大寫開頭那種猜法）。
+       */
+      const ctorName = ctx.structs.has(name) ? name : (bareName && ctx.structs.has(bareName) ? bareName : null)
+      // ⚠️ `construct` 吃的是**引數節點**（它自己求值），不是求好的值。
+      if (ctorName) return await ctx.structs.construct(ctorName, node.slots.args ?? [])
       const { RuntimeError, RUNTIME_ERRORS } = await import('../../../interpreter/errors')
       throw new RuntimeError(RUNTIME_ERRORS.UNDEFINED_FUNCTION, { '%1': name })
     }
