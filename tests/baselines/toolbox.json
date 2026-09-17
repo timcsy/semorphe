@@ -18,6 +18,7 @@
         "cpp_var_declare_ref",
         "cpp_var_declare_static",
         "cpp_var_ref",
+        "cpp_var_declare_auto_expression",
         "cpp_literal_char",
         "cpp_var_declare_expression",
         "cpp_pin_constant"
