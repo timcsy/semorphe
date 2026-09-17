@@ -1,4 +1,7 @@
 import type { Lifter } from '../../../../core/lift/lifter'
+import type { AstNode, LiftContext } from '../../../../core/lift/types'
+import type { SemanticNode } from '../../../../core/types'
+import { buildTernary } from '../../../../components/cpp/ternary/build'
 import { tryAstBranches } from '../../../../core/component/lift-branches'
 import { buildVarAssignCompound } from '../../../../components/cpp/var_assign_compound/lift'
 import { buildVarAssign } from '../../../../components/cpp/var_assign/lift'
@@ -17,51 +20,101 @@ export function registerDeclarationLifters(lifter: Lifter): void {
     const left = node.childForFieldName('left')
     const right = node.childForFieldName('right')
     const op = node.children.find(c => !c.isNamed)?.text ?? '='
-    const value = right ? ctx.lift(right) : null
 
-    // Compound assignment: +=, -=, *=, /=, %=
-    //
-    // 🟢 **左邊就 lift**（2026-08-25）——不再判它長什麼樣。
-    // 🪦 這裡本來有一段 `subscript_expression` 的特例，而**左值不只兩種**：
-    //    `o.x`／`p->x`／`*q`／`a[i][j]` 全部合法，而它們全部被 `left.text`
-    //    壓進一個字串，於是執行期去查一個叫 `p->x` 的變數。
-    if (op !== '=') {
-      return buildVarAssignCompound(op, value, left ? ctx.lift(left) : null)
-    }
-
-    if (left?.type === 'subscript_expression') {
-      const innerNode = left.childForFieldName('argument') ?? left.namedChildren[0]
-      // 🔴 **只有「下標一個名字」時才用那顆複合元件**（2026-08-26，第七十三條抓到）。
-      //
-      // `obj.arr[i] = 1` 的容器是一個成員存取，而 `cpp:array_assign` 的 `obj`
-      // 是一個**原子**（陣列的名字）——把 `obj.arr` 塞進去，那一格就裝著文法了。
-      //
-      // > **一個複合元件的存在條件，是它的每一格都真的裝得下自己那一格。**
-      //
-      // 落下去會走 `cpp:var_assign（target = cpp:array_at）`，它表達得出任意容器。
-      if (innerNode?.type !== 'identifier') {
-        const t = ctx.lift(left)
-        return buildVarAssign({ target: t ? [t] : [], value: value ? [value] : [] })
+    /**
+     * 🔴 **`c ? a : b = d` 的括號在 tree-sitter 那裡是錯的**（2026-09-18，語料抓到）。
+     *
+     * ```
+     * 剖出來    assignment_expression( conditional_expression(c ? a : b), d )
+     * C++ 說    c ? a : (b = d)        三元的第三個運算元是【指定式】
+     * ```
+     *
+     * 語料上的形狀是併查集的標準寫法，而它出現在 3 支學生程式裡：
+     * `int find(int x){ return (p[x] < 0 ? x : p[x] = find(p[x])); }`
+     *
+     * ⚠️ **症狀分兩種，而兩種都不指向這裡**：
+     * ① 左邊是三元式 → 「這個東西不能被指定值（它不是一個位置）」
+     * ② 右邊照樣求值 → `find(p[x])` 拿 `p[x]` ＝ -1 去遞迴 → `p[-1]` 越界
+     * 而 ② 才是語料上看到的那一個——**錯誤指著一個根本不該被執行的運算式**。
+     *
+     * > **一個結合律剖錯的地方，報出來的錯會落在它讓程式多做的那件事上，
+     * > 不會落在括號本身。**
+     *
+     * 🟢 修法是**把括號搬回去**：在這裡重組，而不是去改文法。
+     */
+    if (left?.type === 'conditional_expression' && right) {
+      const cond = left.childForFieldName('condition')
+      const yes = left.childForFieldName('consequence')
+      const no = left.childForFieldName('alternative')
+      if (cond && yes && no) {
+        const c = ctx.lift(cond)
+        const y = ctx.lift(yes)
+        const n = liftAssign(no, right, op, ctx)
+        if (c && y && n) return buildTernary(c, y, n)
       }
-      // 1D Array element assignment: arr[i] = value
-      const name = innerNode?.text ?? 'arr'
-      const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')
-      const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
-      const index = indexNode ? ctx.lift(indexNode) : null
-      // 對應表的寫入是另一個概念——見 `expressions.ts` 同位置的說明
-      return buildArrayAssign(name, {
-        index: index ? [index] : [],
-        value: value ? [value] : [],
-      })
     }
 
-    // 🟢 **左邊就 lift**（2026-08-25）——不再把它抄成一個字串。
-    // 🪦 在此之前這裡是 `left?.text ?? 'x'`，而語料上那個字串裝著
-    //    12 種非原子的值（`r.x`／`p.x`…）——執行器只認得**一個**點號。
-    const target = left ? ctx.lift(left) : null
-    return buildVarAssign({
-      target: target ? [target] : [],
+    return liftAssign(left, right, op, ctx)
+  })
+}
+
+/**
+ * 一次指定：`左 op= 右`。
+ *
+ * ⚠️ 抽成函式是為了**讓三元式那一條走同一條路**——`c ? a : b = d` 重組之後
+ * 內層仍然是一次完整的指定（下標／成員／解參考都要照樣分岔），
+ * 而在原地重寫一次會變成第二份規則。
+ */
+function liftAssign(
+  left: AstNode | null,
+  right: AstNode | null,
+  op: string,
+  ctx: LiftContext,
+): SemanticNode | null {
+const value = right ? ctx.lift(right) : null
+
+  // Compound assignment: +=, -=, *=, /=, %=
+  //
+  // 🟢 **左邊就 lift**（2026-08-25）——不再判它長什麼樣。
+  // 🪦 這裡本來有一段 `subscript_expression` 的特例，而**左值不只兩種**：
+  //    `o.x`／`p->x`／`*q`／`a[i][j]` 全部合法，而它們全部被 `left.text`
+  //    壓進一個字串，於是執行期去查一個叫 `p->x` 的變數。
+  if (op !== '=') {
+    return buildVarAssignCompound(op, value, left ? ctx.lift(left) : null)
+  }
+
+  if (left?.type === 'subscript_expression') {
+    const innerNode = left.childForFieldName('argument') ?? left.namedChildren[0]
+    // 🔴 **只有「下標一個名字」時才用那顆複合元件**（2026-08-26，第七十三條抓到）。
+    //
+    // `obj.arr[i] = 1` 的容器是一個成員存取，而 `cpp:array_assign` 的 `obj`
+    // 是一個**原子**（陣列的名字）——把 `obj.arr` 塞進去，那一格就裝著文法了。
+    //
+    // > **一個複合元件的存在條件，是它的每一格都真的裝得下自己那一格。**
+    //
+    // 落下去會走 `cpp:var_assign（target = cpp:array_at）`，它表達得出任意容器。
+    if (innerNode?.type !== 'identifier') {
+      const t = ctx.lift(left)
+      return buildVarAssign({ target: t ? [t] : [], value: value ? [value] : [] })
+    }
+    // 1D Array element assignment: arr[i] = value
+    const name = innerNode?.text ?? 'arr'
+    const indicesNode = left.namedChildren.find(c => c.type === 'subscript_argument_list')
+    const indexNode = indicesNode?.namedChildren[0] ?? left.childForFieldName('index') ?? left.namedChildren[1]
+    const index = indexNode ? ctx.lift(indexNode) : null
+    // 對應表的寫入是另一個概念——見 `expressions.ts` 同位置的說明
+    return buildArrayAssign(name, {
+      index: index ? [index] : [],
       value: value ? [value] : [],
     })
+  }
+
+  // 🟢 **左邊就 lift**（2026-08-25）——不再把它抄成一個字串。
+  // 🪦 在此之前這裡是 `left?.text ?? 'x'`，而語料上那個字串裝著
+  //    12 種非原子的值（`r.x`／`p.x`…）——執行器只認得**一個**點號。
+  const target = left ? ctx.lift(left) : null
+  return buildVarAssign({
+    target: target ? [target] : [],
+    value: value ? [value] : [],
   })
 }

@@ -29,7 +29,11 @@ export function registerExecute(register: (component: string, executor: Componen
       const targetScope = ctx.pointerTargets.get(targetName)
       if (targetScope) targetScope.set(targetName, val)
       else ctx.scope.set(targetName, val)
-      return
+      /**
+       * **指派是一個運算式，它求值成被指派的值**——與 `cpp:var_assign`／
+       * `cpp:array_assign` 同一條規則（2026-09-18 一起補齊）。
+       */
+      return val
     }
 
     // 實體式指標：`int* a = new int; *a = 15`
@@ -49,7 +53,7 @@ export function registerExecute(register: (component: string, executor: Componen
         })
       }
       ;(ptrVal.value as unknown[])[at] = val
-      return
+      return val
     }
 
     // ⚠️ 出聲。見檔頭：靜默 return 讓「寫失敗」與「寫成功」在畫面上相同。

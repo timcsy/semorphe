@@ -46,5 +46,10 @@ export function registerExecute(register: (component: string, executor: Componen
         throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(col) })
       }
       rowArr.value[col] = val
+      /**
+       * **指派是一個運算式，它求值成被指派的值**——與 `cpp:var_assign`／
+       * `cpp:array_assign` 同一條規則（2026-09-18 一起補齊）。
+       */
+      return val
     })
 }

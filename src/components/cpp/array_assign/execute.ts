@@ -46,7 +46,7 @@ export function registerExecute(register: (component: string, executor: Componen
         const chars = container.value.split('')
         chars[index] = ch
         ctx.scope.set(name, { type: 'string', value: chars.join('') })
-        return
+        return val
       }
 
       if (container.type !== 'array' || !Array.isArray(container.value)) {
@@ -56,5 +56,17 @@ export function registerExecute(register: (component: string, executor: Componen
         throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(index) })
       }
       container.value[index] = val
+      /**
+       * **指派是一個運算式，它求值成被指派的值。**
+       *
+       * 🔴 同族的 `cpp:var_assign` 2026-08 就記過這一句，而**這一顆沒跟上**
+       *（2026-09-18，語料抓到）。語料上的形狀是併查集：
+       * `return (p[x] < 0 ? x : p[x] = find(p[x]));`——那個回傳值**就是**
+       * 被指派的那一格，而我們回 `undefined`，印出來是 `void`。
+       *
+       * > **一個「同一句話要在兩顆元件上各說一次」的規則，
+       * > 第二顆會在第一顆修好之後很久才被發現。**
+       */
+      return val
     })
 }
