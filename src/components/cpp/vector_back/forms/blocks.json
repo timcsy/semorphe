@@ -10,9 +10,9 @@
       "message0": "%{BKY_CPP_VECTOR_BACK_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "VECTOR",
-          "text": "vec"
+          "check": "Expression"
         }
       ],
       "inputsInline": true,
@@ -45,7 +45,8 @@
       ]
     },
     "renderMapping": {
-      "fields": {
+      "fields": {},
+      "inputs": {
         "VECTOR": "obj"
       }
     }

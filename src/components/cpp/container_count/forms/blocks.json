@@ -10,9 +10,9 @@
       "message0": "%{BKY_CPP_CONTAINER_COUNT_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "obj"
+          "check": "Expression"
         },
         {
           "type": "input_value",
@@ -22,7 +22,8 @@
       ],
       "output": "Expression",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_CONTAINER_COUNT_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_CONTAINER_COUNT_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.count(${KEY})",
@@ -31,11 +32,10 @@
     },
     "toolboxCategory": "maps_sets",
     "renderMapping": {
-      "fields": {
-        "OBJ": "obj"
-      },
+      "fields": {},
       "inputs": {
-        "KEY": "key"
+        "KEY": "key",
+        "OBJ": "obj"
       }
     }
   }

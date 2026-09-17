@@ -10,9 +10,9 @@
       "message0": "%{BKY_CPP_METHOD_CALL_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "obj"
+          "check": "Expression"
         },
         {
           "type": "field_input",
@@ -28,7 +28,8 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_METHOD_CALL_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_METHOD_CALL_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.${METHOD}(${ARGS});",
@@ -64,10 +65,11 @@
     },
     "renderMapping": {
       "fields": {
-        "METHOD": "method",
+        "METHOD": "method"
+      },
+      "inputs": {
         "OBJ": "obj"
       },
-      "inputs": {},
       "statementInputs": {},
       "dynamicRules": [
         {
@@ -90,9 +92,9 @@
       "message0": "%{BKY_CPP_METHOD_CALL_EXPR_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "obj"
+          "check": "Expression"
         },
         {
           "type": "field_input",
@@ -149,10 +151,11 @@
     "toolboxCategory": "functions",
     "renderMapping": {
       "fields": {
-        "METHOD": "method",
+        "METHOD": "method"
+      },
+      "inputs": {
         "OBJ": "obj"
       },
-      "inputs": {},
       "statementInputs": {},
       "dynamicRules": [
         {

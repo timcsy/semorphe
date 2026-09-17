@@ -112,7 +112,7 @@ describe('C++ Queue Operations Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:container_push')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('q')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('q')
     })
 
     it('should generate code containing .push()', () => {
@@ -135,7 +135,7 @@ describe('C++ Queue Operations Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:queue_front')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('q')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('q')
     })
 
     it('should generate code containing .front()', () => {

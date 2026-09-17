@@ -133,7 +133,7 @@ describe('C++ Map Operations Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:container_erase')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('mp')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('mp')
       expect(node!.slots.key).toBeDefined()
       expect(node!.slots.key!.length).toBe(1)
     })
@@ -158,7 +158,7 @@ describe('C++ Map Operations Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:container_count')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('mp')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('mp')
     })
 
     it('should generate code containing .count()', () => {

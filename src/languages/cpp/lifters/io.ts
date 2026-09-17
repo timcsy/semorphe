@@ -12,6 +12,61 @@ import { buildMalloc } from '../../../components/cpp/malloc/lift'
 import { buildMethodCall } from '../../../components/cpp/method_call/lift'
 import { buildFuncCall } from '../../../components/cpp/func_call/lift'
 
+/**
+ * **這顆元件的接收者是一個【接點】，還是一個【字串屬性】？**
+ *
+ * ## 🔴 為什麼要有這道閘（2026-09-18）
+ *
+ * 接收者原本一律被壓成一串文字（`properties.obj`），而解開它的地方
+ * （`src/interpreter/receiver.ts`）只認得「名字、數字、以及它們的加減」。
+ * 於是這些寫法**在執行期就斷了**：
+ *
+ * ```cpp
+ * m[name].push_back(3);      下標是字串鍵
+ * buckets[keys[i % 2]]++;    巢狀下標
+ * m[1].insert(5);            巢狀容器
+ * ```
+ *
+ * 十支資訊隔離的盲測程式裡 **7 支**死在上面，而語料裡也有 3 支
+ * ——`receiver.ts` 自己留的觸發條件逐字是「第二個獨立來源就夠了」。
+ *
+ * ## ⚠️ 而這道閘的形狀是【問宣告】，不是一張名單
+ *
+ * Python 那 33 顆**早就把接收者做成接點**（`slots.obj`），C++ 這 58 顆是字串。
+ * 一次全翻的話沒有辦法逐顆驗，所以這裡照 `hasInitSourceDecl` 的形狀：
+ * **宣告了 `slots.obj` 的走接點，其餘原樣走屬性。**
+ *
+ * > **一次搬得動的數量，由「一次驗得完的數量」決定
+ * > ——而讓兩者可以不一樣的，是一道問宣告的閘。**
+ *
+ * ⚠️ **有一族刻意不搬**：`Serial`／`EEPROM`／`WiFi` 的接收者是一個**固定的
+ * 全域物件**，不是一個變數。它不是運算式，把它做成插槽等於請學生去接一個
+ * 永遠只有一個答案的東西。
+ */
+const receiverIsSlot = new Set(
+  (componentComponents() as { componentId?: string; slots?: Record<string, unknown> }[])
+    .filter((c) => c.slots?.obj !== undefined)
+    .map((c) => String(c.componentId)),
+)
+
+/**
+ * 把接收者放進它該去的地方。
+ *
+ * @param objNode 接收者的 AST 節點——**它一直都在手上**，只是以前只取了 `.text`
+ */
+function receiverInto(
+  componentId: string,
+  objNode: AstNode | null | undefined,
+  objText: string,
+  ctx: LiftContext,
+): { props: Record<string, string>; slots: Record<string, SemanticNode[]> } {
+  if (!receiverIsSlot.has(componentId)) return { props: { obj: objText }, slots: {} }
+  const lifted = objNode ? ctx.lift(objNode) : null
+  // 🔴 **lift 不出來就回頭走字串**——那比塞一個空接點好：
+  //    空接點在積木上是一個開口，而使用者沒有東西可以放進去。
+  return lifted ? { props: {}, slots: { obj: [lifted] } } : { props: { obj: objText }, slots: {} }
+}
+
 /** Try to lift a method call (field_expression) into a string-specific component.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
  *  can dispatch them via METHOD_TO_COMPONENT for container support. */
@@ -44,7 +99,7 @@ function tryStringMethodLift(
   }
   // **方法名 → 身分**由膠囊登錄（`core/component/method-components.ts`）。
   {
-    const claim = tryMethodBranches(obj, method, argChildren, ctx)
+    const claim = tryMethodBranches(obj, method, argChildren, ctx, objNode)
     if (claim) return claim
     const shape = methodComponentFor(method)
     if (shape) {
@@ -53,7 +108,9 @@ function tryStringMethodLift(
         const n = argChildren[i] ? ctx.lift(argChildren[i]) : null
         slots[slot] = n ? [n] : []
       })
-      return createNode(shape.componentId, { obj }, slots)
+      // 接收者去哪一格由**宣告**決定（見 `receiverInto` 的檔頭）
+      const recv = receiverInto(shape.componentId, objNode, obj, ctx)
+      return createNode(shape.componentId, recv.props, { ...slots, ...recv.slots })
     }
   }
   switch (method) {
@@ -130,7 +187,17 @@ const GENERIC_CONTAINER_METHODS = new Set(['push', 'pop', 'empty', 'clear'])
 const firstSlotOf = (componentId: string): string | null => {
   const decl = (componentComponents() as { componentId: string; slots?: Record<string, unknown> }[])
     .find((c) => c.componentId === componentId)
-  const keys = Object.keys(decl?.slots ?? {})
+  /**
+   * 🔴 **接收者不是引數**（2026-09-18）。
+   *
+   * 這一支問的是「**呼叫的引數**放進哪一格」，而接收者變成接點之後，
+   * `obj` 也出現在 `slots` 裡——於是 `v.push_back(3)` 的 `3` 被放進 `obj`，
+   * 再被接收者蓋掉，**引數整個消失**（產碼是對的，執行時什麼都沒發生）。
+   *
+   * > **一個「第一個接點」的取法，在接點多了一種【不同種類】的成員時會拿錯。
+   * > 而它不會報錯——它會拿到一個真的存在的接點。**
+   */
+  const keys = Object.keys(decl?.slots ?? {}).filter((k) => k !== 'obj')
   return keys.length > 0 ? keys[0] : null
 }
 
@@ -173,7 +240,9 @@ export function registerIOLifters(lifter: Lifter): void {
         METHOD_TO_COMPONENT[methodName] ??
         containerMethodComponent(methodName)
       if (componentId) {
-        const properties: Record<string, string> = { obj: objText }
+        // 接收者去哪一格由**宣告**決定（見 `receiverInto` 的檔頭）
+        const recv = receiverInto(componentId, objNode, objText, ctx)
+        const properties: Record<string, string> = { ...recv.props }
 
         // 容器種類——**投影要用，而投影查不到脈絡**。
         //
@@ -194,10 +263,10 @@ export function registerIOLifters(lifter: Lifter): void {
           const argNodes = argsNode.namedChildren
             .map(a => ctx.lift(a))
             .filter((n): n is NonNullable<typeof n> => n !== null)
-          return createNode(componentId, properties, { [childSlot]: argNodes })
+          return createNode(componentId, properties, { [childSlot]: argNodes, ...recv.slots })
         }
 
-        return createNode(componentId, properties)
+        return createNode(componentId, properties, recv.slots)
       }
 
       // 不認得的方法呼叫 → 泛用的方法呼叫概念。
@@ -210,7 +279,7 @@ export function registerIOLifters(lifter: Lifter): void {
       // 都要在五路上各維護一份，而 `saveExtraState` 的格式契約要人工同步。
       const allArgs = argsNode?.namedChildren ?? []
       const liftedArgs = allArgs.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
-      return buildMethodCall(objText, methodName, liftedArgs)
+      return buildMethodCall(objNode ? ctx.lift(objNode) : null, methodName, liftedArgs)
     }
 
     // printf("...", args) → cstdio module

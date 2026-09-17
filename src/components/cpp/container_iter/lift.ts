@@ -17,7 +17,7 @@ import { createNode } from '../../../core/semantic-tree'
 const ENDS = new Set(['begin', 'end', 'rbegin', 'rend'])
 
 export function registerLift(): void {
-  registerMethodBranch('cpp/container_iter', (obj, method, argChildren, ctx): SemanticNode | null => {
+  registerMethodBranch('cpp/container_iter', (obj, method, argChildren, ctx, objNode): SemanticNode | null => {
     // ⚠️ **反向那兩端走同一顆**（2026-09-17）——「哪一端是參數」這條規則
     //    本來就涵蓋它們：紀律相同（取得一個位置），差的只是哪一端、往哪走。
     if (!ENDS.has(method)) return null
@@ -47,6 +47,9 @@ export function registerLift(): void {
     //    而那些正是真的迭代器。**不改既有行為，只讓硬體走開。**
     const type = obj ? ctx.data.getType(obj) : null
     if (type && recordedTypeIsDevice(type)) return null
-    return createNode('cpp:container_iter', { obj, which: method })
+    // 🔴 **接收者是一棵樹**（2026-09-18）——`v[i].begin()`／`m[k].find(x)`
+    const recv = objNode ? ctx.lift(objNode) : null
+    if (!recv) return null
+    return createNode('cpp:container_iter', { which: method }, { obj: [recv] })
   })
 }

@@ -10,9 +10,9 @@
       "message0": "%{BKY_CPP_STRING_INSERT_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "str"
+          "check": "Expression"
         },
         {
           "type": "input_value",
@@ -28,7 +28,8 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_STRING_INSERT_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_STRING_INSERT_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.insert(${POS}, ${VALUE});",
@@ -38,12 +39,11 @@
       "order": 0
     },
     "renderMapping": {
-      "fields": {
-        "OBJ": "obj"
-      },
+      "fields": {},
       "inputs": {
         "POS": "pos",
-        "VALUE": "value"
+        "VALUE": "value",
+        "OBJ": "obj"
       }
     }
   }

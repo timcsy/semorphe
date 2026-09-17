@@ -10,15 +10,16 @@
       "message0": "%{BKY_CPP_CONTAINER_POP_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "obj"
+          "check": "Expression"
         }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_CONTAINER_POP_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_CONTAINER_POP_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.pop();",
@@ -26,7 +27,8 @@
       "order": 0
     },
     "renderMapping": {
-      "fields": {
+      "fields": {},
+      "inputs": {
         "OBJ": "obj"
       }
     }
@@ -42,15 +44,16 @@
       "message0": "%{BKY_CPP_STACK_POP_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "stk"
+          "check": "Expression"
         }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_STACK_POP_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_STACK_POP_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.pop();",
@@ -63,7 +66,8 @@
     },
     "toolboxCategory": "stacks_queues",
     "renderMapping": {
-      "fields": {
+      "fields": {},
+      "inputs": {
         "OBJ": "obj"
       }
     }
@@ -79,15 +83,16 @@
       "message0": "%{BKY_CPP_QUEUE_POP_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "OBJ",
-          "text": "que"
+          "check": "Expression"
         }
       ],
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
-      "tooltip": "%{BKY_CPP_QUEUE_POP_TOOLTIP}"
+      "tooltip": "%{BKY_CPP_QUEUE_POP_TOOLTIP}",
+      "inputsInline": true
     },
     "codeTemplate": {
       "pattern": "${OBJ}.pop();",
@@ -100,7 +105,8 @@
     },
     "toolboxCategory": "stacks_queues",
     "renderMapping": {
-      "fields": {
+      "fields": {},
+      "inputs": {
         "OBJ": "obj"
       }
     }

@@ -18,6 +18,9 @@ export function registerExecute(register: (component: string, executor: Componen
       const cells = initial && initial.type === 'array' && Array.isArray(initial.value)
         ? initial.value.map(cloneValue)
         : []
-      ctx.scope.declare(name, { type: 'array', value: cells, keyed: true })
+      // 🔴 **值的型別要跟著對照表走**——`m[k]` 自動建一格時要照它的形狀補
+      //    （見 `RuntimeValue.valueType` 的檔頭）。
+      const valueType = String(node.properties.value_type ?? 'int')
+      ctx.scope.declare(name, { type: 'array', value: cells, keyed: true, valueType })
     })
 }

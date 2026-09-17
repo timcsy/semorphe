@@ -120,7 +120,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:container_push')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .push()', () => {
@@ -134,7 +134,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:container_push')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -148,7 +148,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:stack_peek')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .top()', () => {
@@ -162,7 +162,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:stack_peek')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 
@@ -176,7 +176,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree).not.toBeNull()
       const node = findComponent(tree, 'cpp:container_pop')
       expect(node).not.toBeNull()
-      expect(node!.properties.obj).toBe('s')
+      expect((node!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
 
     it('should generate code containing .pop()', () => {
@@ -190,7 +190,7 @@ describe('C++ Stack Operations Roundtrip', () => {
       expect(tree2).not.toBeNull()
       const node2 = findComponent(tree2, 'cpp:container_pop')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.obj).toBe('s')
+      expect((node2!.slots.obj[0] as SemanticNode).properties.name).toBe('s')
     })
   })
 

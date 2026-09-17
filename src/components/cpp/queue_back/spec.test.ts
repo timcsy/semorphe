@@ -33,7 +33,7 @@ beforeAll(async () => {
 describe('膠囊自證：cpp:queue_back', () => {
   it('★ generate：產回 q.back()', () => {
     const tree = createNode('cpp:program', {}, {
-      body: [createNode('cpp:queue_back', { obj: 'que' })],
+      body: [createNode('cpp:queue_back', {}, { obj: [createNode('cpp:var_ref', { name: 'que' })] })],
     })
     expect(generateCode(tree, 'cpp', apcs as unknown as StylePreset)).toContain('que.back()')
   })
@@ -55,13 +55,13 @@ describe('膠囊自證：cpp:queue_back', () => {
     await i.execute(createNode('cpp:program', {}, {
       body: [
         createNode('cpp:queue_declare', { type: 'int', name: 'q' }),
-        createNode('cpp:container_push', { obj: 'q', container_kind: 'queue' }, {
+        createNode('cpp:container_push', { container_kind: 'queue' }, { obj: [createNode('cpp:var_ref', { name: 'q' })],
           value: [createNode('cpp:literal_number', { value: '3' })],
         }),
-        createNode('cpp:container_push', { obj: 'q', container_kind: 'queue' }, {
+        createNode('cpp:container_push', { container_kind: 'queue' }, { obj: [createNode('cpp:var_ref', { name: 'q' })],
           value: [createNode('cpp:literal_number', { value: '9' })],
         }),
-        createNode('cpp:print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:queue_back', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })] })] }),
       ],
     }))
     expect(i.getOutput().join(''), '這一支才是真的在測 cpp:queue_back 的執行器').toBe('9')
@@ -72,7 +72,7 @@ describe('膠囊自證：cpp:queue_back', () => {
     await i.execute(createNode('cpp:program', {}, {
       body: [
         createNode('cpp:queue_declare', { type: 'int', name: 'q' }),
-        createNode('cpp:print', {}, { values: [createNode('cpp:queue_back', { obj: 'q' })] }),
+        createNode('cpp:print', {}, { values: [createNode('cpp:queue_back', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })] })] }),
       ],
     }))
     expect(i.getOutput().join(''), '⚠️ 這是靜默回退，而搬家不重寫它').toBe('0')

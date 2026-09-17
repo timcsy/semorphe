@@ -221,3 +221,59 @@ export const SHAPE_CHANGES_V16: ShapeChange[] = [
     why: '同上——運算式形態。',
   },
 ]
+
+/**
+ * `v18 → v19`：**接收者從欄位換成接點**（39 顆積木）。
+ *
+ * 舊存檔裡那一格是一個**欄位值**（一個變數名），而新的是一個**接點**。
+ * 照這個檔的機構：**丟掉快取，讓它從程式碼重 lift**——重 lift 會免費得到
+ * 正確的新形狀（`m[k].push_back(x)` 的接收者會是一棵樹），
+ * **而不需要在遷移裡寫一個 parser**。
+ *
+ * ⚠️ 這正是檔頭那句話的實例：「**要把一個字串 parse 回結構才能搬運的存檔欄位，
+ * 代表那個欄位不該是被搬運的那一份。**」
+ */
+const WHY = '接收者 `OBJ` 從欄位換成接點——`m[k]`／`v[i]`／`it->second` 當接收者時，'
+  + '一個欄位只裝得下一串文字，而解那串文字的地方只認得「名字、數字、以及它們的加減」。'
+
+export const SHAPE_CHANGES_V19: ShapeChange[] = [
+  { blockType: 'cpp_container_append', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_clear', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_count', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_empty', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_erase', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_find', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_iter', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_pop', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_pop_stack', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_pop_queue', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_pop_front', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_push', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_push_stack', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_push_queue', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_container_push_front', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_method_call', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_method_call_expression', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_priority_queue_peek', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_queue_back', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_queue_front', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_set_insert', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_stack_peek', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_append', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_append_char', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_as_cstring', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_at', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_clear', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_empty', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_erase', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_find', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_find_first_not_of', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_find_last_not_of', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_insert', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_replace', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_size', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_string_substr', retiredFields: ['OBJ'], why: WHY },
+  { blockType: 'cpp_vector_back', retiredFields: ['VECTOR'], why: WHY },
+  { blockType: 'cpp_vector_pop', retiredFields: ['VECTOR'], why: WHY },
+  { blockType: 'cpp_vector_size', retiredFields: ['VECTOR'], why: WHY },
+]

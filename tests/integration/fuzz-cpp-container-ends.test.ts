@@ -107,23 +107,80 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
    * 「`it.todo` 本身就是一種殼：它宣告了一個缺陷，而**沒有任何機構在看那個缺陷
    * 還在不在**」。`it.fails` 會在修好的那天變紅，逼人來拔釘子。
    */
-  it.fails('[BLOCKED:cpp:container_append] 🟠 接收者的下標帶乘除取餘'
-    + '——接收者在 lift 時被壓成【字串】，算下標需要一份文字的算式求值器，'
-    + '而這個 repo 有明文反對（`range.ts`：「不要自己發明一個小算式語言」）。'
-    + '真正的修法是接收者不該是字串（`knowledge/history/241` 的開放項）。'
-    + '⚠️ 真語料 218 支裡這種寫法一處都沒有，所以先把錯誤訊息說對，不先補洞。',
-  async () => {
+  /**
+   * 🟢 **2026-09-18：這根釘子被拔了。** 接收者從字串屬性換成接點之後，
+   * 下標是一棵樹——`i % 3` 由**同一份算術語義**求值，不需要第二份。
+   *
+   * > **一個「要自己寫一份小算式求值器才能修」的缺陷，
+   * > 通常是在說那個東西本來就不該是字串。**
+   */
+  it('★ 接收者的下標帶乘除取餘', async () => {
     const { ref, got } = await both('',
       `vector<deque<int>> h(3); int i=4; h[i % 3].push_back(6); cout << h[1].front();`)
     expect(got).toBe(ref)
   }, 60_000)
 
-  it.fails('[BLOCKED:cpp:container_append] 🟠 接收者是一個運算式（`rows.front().push_back(9)`）'
-    + '——同一個根：接收者被壓成字串 `"rows.front()"`。與上一條一起修，不要各修一半。',
-  async () => {
+  /** 🟢 **2026-09-18：同一根，同一天拔的**——接收者本來就是一棵樹。 */
+  it('★ 接收者是一個運算式（`rows.front().push_back(9)`）', async () => {
     const { ref, got } = await both('',
       `deque<vector<int>> rows; rows.push_back({1,2}); rows.front().push_back(9);`
       + ` cout << rows.front().size();`)
+    expect(got).toBe(ref)
+  }, 60_000)
+
+  /**
+   * 🔴 **接收者的下標是一個【字串鍵】**——相鄰串列與分組統計的標準寫法。
+   *
+   * 這一族在 2026-09-18 之前整族斷在同一個地方：接收者被壓成一串文字，
+   * 而解那串文字的地方只認得「名字、數字、以及它們的加減」。
+   * 十支資訊隔離的盲測有 **7 支**死在上面。
+   */
+  it('★ 接收者的下標是字串鍵', async () => {
+    // ⚠️ `<map>` 由 glob 補進來——`H` 那一份只有 deque／vector／string
+    const { ref, got } = await both('#include <map>',
+      `map<string, vector<int>> m; string k = "a"; m[k].push_back(5); m[k].push_back(7);`
+      + ` cout << m[k].size();`)
+    expect(got).toBe(ref)
+  }, 60_000)
+
+  it('★ 接收者的下標裡還有一個下標', async () => {
+    const { ref, got } = await both('',
+      `vector<int> b[2]; int keys[2] = {0, 1}; int i = 3; b[keys[i % 2]].push_back(9);`
+      + ` cout << b[1].size() << b[1][0];`)
+    expect(got).toBe(ref)
+  }, 60_000)
+
+  /**
+   * 🔴 **`m[k]` 在鍵不存在時自動建的那一格，要照【值型別】長**
+   *（相鄰串列 `g[a].push_back(b)` 就靠它）。在此之前一律補 `int 0`，
+   * 而 `push_back` 說「這不是一個容器」。
+   */
+  it('★ 對照表的值是容器時，第一次存取就要建得出那個容器', async () => {
+    const { ref, got } = await both('#include <map>',
+      `map<int, vector<int>> g; g[3].push_back(1); g[3].push_back(2); g[5].push_back(9);`
+      + ` cout << g[3].size() << g[5].front() << g.size();`)
+    expect(got).toBe(ref)
+  }, 60_000)
+
+  /**
+   * 🟠 **`m[k][0]`——對照表上的雙下標被認成【二維陣列】**（2026-09-18 隔離出來）。
+   *
+   * `map<int, vector<int>> g;` 的 `g[5][0]` lift 成 `cpp:array_2d_at`，
+   * 於是它拿 `5` 當列索引去一個長度 1 的東西上取——`INDEX_OUT_OF_RANGE`。
+   *
+   * ⚠️ **接收者重構治不了它**：這是**身分選擇**的問題，不是接收者的形狀。
+   * `x[a][b]` 只有在 `x` 真的是二維陣列時才是二維存取；`x` 是對照表時
+   * 它是 `array_at(map_at(x, a), b)`。
+   *
+   * 🔴 **為什麼不是現在修**：那個分支要先問根變數的宣告型別，而它今天
+   * 在 `subscript_expression` 的**外層**就決定了。與 `m[k]` 的巢狀那一族
+   * 一起改比較安全——分開改會讓兩邊各認一半。
+   * 🔴 **何時該修**：下一刀碰 `subscript_expression` 的身分選擇時。
+   * ⚠️ 用 `it.fails` 不用 `it.todo`——修好的那天它會紅，逼人來拔釘子。
+   */
+  it.fails('[BLOCKED:cpp:array_2d_at] 🟠 對照表上的雙下標被認成二維陣列', async () => {
+    const { ref, got } = await both('#include <map>',
+      `map<int, vector<int>> g; g[5].push_back(9); cout << g[5][0];`)
     expect(got).toBe(ref)
   }, 60_000)
 

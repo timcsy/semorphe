@@ -25,7 +25,7 @@ beforeAll(async () => {
 
 describe('膠囊自證：cpp:string_empty', () => {
   it('★ generate：產回 s.empty()', () => {
-    const tree = createNode('cpp:program', {}, { body: [createNode('cpp:string_empty', { obj: 's' })] })
+    const tree = createNode('cpp:program', {}, { body: [createNode('cpp:string_empty', {}, { obj: [createNode('cpp:var_ref', { name: 's' })] })] })
     expect(generateCode(tree, 'cpp', apcs as unknown as StylePreset)).toContain('s.empty()')
   })
 
@@ -35,7 +35,7 @@ describe('膠囊自證：cpp:string_empty', () => {
       await i.execute(createNode('cpp:program', {}, {
         body: [
           createNode('cpp:string_declare', { name: 's' }, { value: [createNode('cpp:literal_string', { value: value })] }),
-          createNode('cpp:print', {}, { values: [createNode('cpp:string_empty', { obj: 's' })] }),
+          createNode('cpp:print', {}, { values: [createNode('cpp:string_empty', {}, { obj: [createNode('cpp:var_ref', { name: 's' })] })] }),
         ],
       }))
       return i.getOutput().join('')

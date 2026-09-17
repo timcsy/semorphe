@@ -1,11 +1,18 @@
 /** `cpp:container_empty` 的 **execute** 路——從共用檔原封剪過來（批次第九批：容器方法資料表）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { receiverOf } from '../../../interpreter/receiver'
+import { varRefName } from '../var_ref/lift'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_empty', async (node, ctx) => {
-      const name = String(node.properties.obj)
-      const arr = receiverOf(ctx.scope, name)
+      // 🔴 **接收者求值，不再解析一串文字**（2026-09-18）——見 `component.json` 的 `_slots_why`
+      const arr = await ctx.evaluate((node.slots.obj ?? [])[0])
+      /**
+       * ⚠️ **錯誤訊息要說得出是誰**——接收者變成接點之後，這裡不再有名字。
+       * 🔴 而這一格差點靜默：`name` **是 DOM 的全域**，所以刪掉區域宣告之後
+       * `${name}` 仍然編得過，只是在執行時變成 `undefined`。
+       * > **一個被刪掉的區域變數，如果它的名字剛好是全域的，型別檢查不會報。**
+       */
+      const name = varRefName((node.slots.obj ?? [])[0]) ?? '這個接收者'
 
       // **字串也是容器**。`s.empty()` 走這條路（容器方法表按方法名分派，
       // 不按接收者型別），而它原本落進下面那個「不是 array 就回 true」。

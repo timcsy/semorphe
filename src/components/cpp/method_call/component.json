@@ -3,18 +3,14 @@
   "abstractComponent": "cpp:func_call",
   "properties": [
     {
-      "name": "obj",
-      "kind": "literal",
-      "default": "obj"
-    },
-    {
       "name": "method",
       "kind": "literal",
       "default": "method"
     }
   ],
   "slots": {
-    "args": "expressions"
+    "args": "expressions",
+    "obj": "expression"
   },
   "role": "statement",
   "positions": [
@@ -29,5 +25,6 @@
     "generate": "./generate.ts",
     "execute": "./execute.ts",
     "lift": "./lift.ts"
-  }
+  },
+  "_slots_why": "🔴 **接收者是一個【接點】，不是一串文字**（2026-09-18）。\n解開那串文字的地方（`interpreter/receiver.ts`）只認得「名字、數字、以及它們的加減」——於是 `m[name]`（字串鍵）、`buckets[keys[i%2]]`（巢狀下標）、`m[1]`（巢狀容器）在執行期就斷了。十支資訊隔離的盲測有 7 支死在上面。\n⚠️ Python 那一側**早就是接點**——同一顆元件、同一個引數名，兩種做法。"
 }

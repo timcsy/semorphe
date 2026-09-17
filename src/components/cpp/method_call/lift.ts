@@ -7,8 +7,11 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function buildMethodCall(obj: string, method: string, args: SemanticNode[]): SemanticNode {
-  return createNode('cpp:method_call', { obj, method }, { args })
+/**
+ * @param obj 接收者——**一棵樹**（2026-09-18 起，見 `component.json` 的 `_slots_why`）
+ */
+export function buildMethodCall(obj: SemanticNode | null, method: string, args: SemanticNode[]): SemanticNode {
+  return createNode('cpp:method_call', { method }, { args, obj: obj ? [obj] : [] })
 }
 
 /** 這顆由共用檔**呼叫**建構子，不是被問判別。 */

@@ -26,7 +26,8 @@ import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:string_find_last_not_of', (node, ctx) => {
-    const obj = node.properties.obj ?? 'str'
+    // 🔴 接收者是接點——`m[k].f()` 的 `m[k]` 是一棵樹，不是一串文字
+    const obj = generateExpression((node.slots.obj ?? [])[0], ctx)
     const argNodes = node.slots.arg ?? []
     const arg = argNodes.length > 0 ? generateExpression(argNodes[0], ctx) : '""'
     return `${obj}.find_last_not_of(${arg})`

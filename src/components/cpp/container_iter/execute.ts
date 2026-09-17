@@ -8,14 +8,21 @@
  * > 相減（`it - v.begin()`）在那個表示上全都已經能跑。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { receiverOf } from '../../../interpreter/receiver'
+import { varRefName } from '../var_ref/lift'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_iter', async (node, ctx) => {
-    const name = String(node.properties.obj)
+    // 🔴 **接收者求值，不再解析一串文字**（2026-09-18）——見 `component.json` 的 `_slots_why`
     const which = String(node.properties.which ?? 'begin')
-    const v = receiverOf(ctx.scope, name)
+    const v = await ctx.evaluate((node.slots.obj ?? [])[0])
+      /**
+       * ⚠️ **錯誤訊息要說得出是誰**——接收者變成接點之後，這裡不再有名字。
+       * 🔴 而這一格差點靜默：`name` **是 DOM 的全域**，所以刪掉區域宣告之後
+       * `${name}` 仍然編得過，只是在執行時變成 `undefined`。
+       * > **一個被刪掉的區域變數，如果它的名字剛好是全域的，型別檢查不會報。**
+       */
+      const name = varRefName((node.slots.obj ?? [])[0]) ?? '這個接收者'
     /**
      * 🔴 **一段文字也走得訪**（2026-09-17）——`for (auto c = t.begin(); c != t.end(); ++c)`。
      *

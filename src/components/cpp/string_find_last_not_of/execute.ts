@@ -16,7 +16,8 @@ export function registerExecute(
   register: (id: string, fn: (node: SemanticNode, ctx: any) => Promise<RuntimeValue | void>) => void,
 ): void {
   register('cpp:string_find_last_not_of', async (node, ctx) => {
-    const str = String(ctx.scope.get(String(node.properties.obj)).value)
+    // 🔴 **接收者求值，不再用名字查作用域**（2026-09-18）
+    const str = String((await ctx.evaluate((node.slots.obj ?? [])[0])).value)
     const argNodes = node.slots.arg ?? []
     if (argNodes.length === 0) return { type: 'int', value: -1 }
     const set = new Set(String((await ctx.evaluate(argNodes[0])).value))

@@ -174,7 +174,21 @@ export function synthMinimalNode(def: ComponentDefJSON): SynthResult {
       // 🔴 這一格是**左值**嗎——由元件自己宣告（`traits.writesTo`），見 `fillerFor`。
       const writesTo = (def as { traits?: { writesTo?: string } }).traits?.writesTo
       const lvalueOf = writesTo === slot ? def.componentId.split(':')[0] : undefined
-      slots[slot] = Array.from({ length: n }, () => fillerFor(String(slotType), lvalueOf))
+      /**
+       * 🔴 **`obj` 這一格是【接收者】，它要填一個變數參照**（2026-09-18）。
+       *
+       * 接收者從字串屬性換成接點之後，一般的填充器給的是一顆字面量，
+       * 於是合成出來的程式碼是 `0.push_back(5);`——**編不過的東西**，
+       * 再 lift 回來當然認不出原本的身分。
+       *
+       * ⚠️ 那會讓完備性護欄把十幾顆元件判成「殼」，而**它們的實作是好的**：
+       * > **一份「有 N 個缺陷」的報告，先問那 N 裡有幾個是量測工具自己的。**
+       *
+       * 名字用 `'x'`——與 `receiverName` 的退路、以及各護欄的前置宣告一致。
+       */
+      slots[slot] = slot === 'obj'
+        ? [createNode(`${def.componentId.split(':')[0]}:var_ref`, { name: 'x' })]
+        : Array.from({ length: n }, () => fillerFor(String(slotType), lvalueOf))
     } catch {
       notes.push(`子槽 ${slot} 無法合成填充節點`)
     }

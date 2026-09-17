@@ -4,8 +4,37 @@ import { receiverOf } from '../../../interpreter/receiver'
 import { declareLvalue } from '../../../core/component/lvalue-nodes'
 import { defaultValue } from '../../../interpreter/types'
 import { mapFind, makePair, pairParts, mapInsertSorted } from '../../../languages/cpp/lang/runtime/map'
+import { componentForContainerTemplate } from '../../../core/component/container-templates'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import type { RuntimeValue } from '../../../interpreter/types'
+
+
+/**
+ * **鍵不存在時，那一格該長什麼樣。**
+ *
+ * 🔴 在此之前一律是 `int 0`，而相鄰串列的標準寫法當場斷掉：
+ *
+ * ```cpp
+ * map<int, vector<int>> g;
+ * g[a].push_back(b);     // 我們：「這不是一個容器」  g++：好的
+ * ```
+ *
+ * ⚠️ **這裡只給「空」這件事，不給種類的性質**（有序性／重複性）——
+ * 那些住在宣告那一顆元件上，而自動建出來的這一格**沒有經過宣告**。
+ * 所以 `map<int, set<int>>` 的內層集合拿不到「不留重複」：它會在第一次
+ * `insert` 時**出聲**（「不是集合或對照表」），而不是安靜地留下重複。
+ *
+ * > **判不出來就出聲，不要安靜地給一個答案**——而這一格的限制要寫在這裡，
+ * > 不是寫在報表上。
+ */
+function defaultForValueType(t: string): RuntimeValue {
+  const base = t.split('<')[0].trim()
+  if (componentForContainerTemplate(base)) {
+    const inner = /<(.+)>/.exec(t)?.[1]?.trim()
+    return { type: 'array', value: [], ...(inner ? { elemType: inner } : {}) }
+  }
+  return defaultValue(t)
+}
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   registerLvalue()
@@ -21,7 +50,7 @@ export function registerExecute(register: (component: string, executor: Componen
       const idx = mapFind(map.value, keyVal)
       if (idx === -1) {
         // C++ map auto-inserts default on access
-        const newVal = defaultValue('int')
+        const newVal = defaultForValueType(String(map.valueType ?? 'int'))
         // 🔴 `std::map` 是**有序的**（2026-08-26）
         mapInsertSorted(map.value, makePair(keyVal, newVal))
         return newVal
@@ -61,7 +90,7 @@ export function registerLvalue(): void {
     let idx = mapFind(cells, keyVal)
     if (idx === -1) {
       // 🔴 `std::map` 是**有序的**（2026-08-26）——插入位置就是之後要寫的那一格
-      idx = mapInsertSorted(cells, makePair(keyVal, defaultValue('int')))
+      idx = mapInsertSorted(cells, makePair(keyVal, defaultForValueType(String(map.valueType ?? 'int'))))
     }
     return {
       read: () => pairParts(cells[idx])?.value ?? defaultValue('int'),

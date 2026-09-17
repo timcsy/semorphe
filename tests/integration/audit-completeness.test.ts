@@ -251,6 +251,10 @@ const NEEDS_ASSIGNMENT = new Set(['cpp_method_call_expression', 'cpp:lambda'])
 
 /** 合成節點裡「那個變數叫什麼」——脈絡宣告要用同一個名字 */
 function receiverName(node: SemanticNode | null): string {
+  // 🔴 **接收者也可能是一個接點**（2026-09-18 起）——先問接點，再問屬性
+  const slotObj = (node?.slots?.obj ?? [])[0]
+  const fromSlot = slotObj?.properties?.name
+  if (typeof fromSlot === 'string' && fromSlot !== '') return fromSlot
   for (const k of ['obj', 'name', 'container', 'vector', 'ptr']) {
     const v = node?.properties?.[k]
     if (typeof v === 'string' && v !== '') return v

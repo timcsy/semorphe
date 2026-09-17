@@ -12,7 +12,7 @@
  * > **一個「找不到」的回答，必須是一個可以拿來比較的東西。**
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { receiverOf } from '../../../interpreter/receiver'
+import { varRefName } from '../var_ref/lift'
 import { evalInitializer } from '../../../interpreter/aggregate'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
@@ -36,7 +36,14 @@ function keyOf(cell: RuntimeValue, keyed: boolean): RuntimeValue {
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_find', async (node, ctx) => {
-    const name = String(node.properties.obj)
+    // 🔴 **接收者求值，不再解析一串文字**（2026-09-18）——見 `component.json` 的 `_slots_why`
+    /**
+     * ⚠️ **錯誤訊息要說得出是誰**——接收者變成接點之後，這裡不再有名字。
+     * 🔴 而這一格差點靜默：`name` **是 DOM 的全域**，所以刪掉區域宣告之後
+     * `${name}` 仍然編得過，只是在執行時變成 `undefined`。
+     * > **一個被刪掉的區域變數，如果它的名字剛好是全域的，型別檢查不會報。**
+     */
+    const name = varRefName((node.slots.obj ?? [])[0]) ?? '這個接收者'
     const how = String(node.properties.how ?? 'find')
     const keyNodes = node.slots.key ?? []
     if (keyNodes.length === 0) {
@@ -44,7 +51,7 @@ export function registerExecute(register: (component: string, executor: Componen
     }
     // ⚠️ **接收者先解析**：要找的那個東西可能是一個大括號（`st.lower_bound({2, 0})`），
     //    而它該變成什麼，只有容器知道。與插入那一顆走同一條路。
-    const c = receiverOf(ctx.scope, name)
+    const c = await ctx.evaluate((node.slots.obj ?? [])[0])
     if (c.type !== 'array' || !Array.isArray(c.value)) {
       throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': `${name} 不是容器` })
     }
