@@ -129,6 +129,29 @@ export class Lifter {
     }
   }
 
+  /**
+   * **型別別名也是「這個名字是什麼型別」**（2026-09-17）。
+   *
+   * ```cpp
+   * typedef pair<int,int> P;
+   * ms.insert(P(1, 2));        ← 不記的話：「沒有這個函式：P」
+   * ```
+   *
+   * ⚠️ 這是這個檔案裡**第三支**同形狀的收集器（宣告、列舉成員、型別別名）
+   * ——而它們每一次都是被一個「某個名字查不到」的症狀逼出來的。
+   *
+   * > **一個「這個節點宣告了什麼」的收集器，
+   * > 它認得的形狀有幾種，就有幾種名字是它看得見的。**
+   */
+  private recordTypeAlias(r: SemanticNode, data: LiftContextData): void {
+    if (!/^[a-z]+:typedef$/.test(r.componentId ?? '')) return
+    const alias = r.properties?.alias
+    const orig = r.properties?.orig_type
+    if (typeof alias === 'string' && alias !== '' && typeof orig === 'string' && orig !== '') {
+      data.declare(alias, orig)
+    }
+  }
+
   /** Lift with an existing context (for recursive calls that share scope) */
   liftWithContext(node: AstNode, contextData: LiftContextData): SemanticNode | null {
     // 複合敘述（`{ … }`）是一個作用域。
@@ -159,6 +182,7 @@ export class Lifter {
       // 宣告記錄掛在這裡，因為**三個回傳點都經過它**——掛在個別回傳點會漏。
       this.recordDeclaration(r, contextData)
       this.recordEnumerators(r, contextData)
+      this.recordTypeAlias(r, contextData)
       if (!r.metadata) r.metadata = {}
       if (!r.metadata.sourceRange) {
         // Tree-sitter endPosition points AFTER the last character.

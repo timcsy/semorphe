@@ -472,6 +472,27 @@ describe('L2 Block Roundtrip', () => {
       expect(back!.componentId).toBe('cpp:map_declare')
       expect(back!.properties.ordered ?? 'true').toBe('true')
     })
+
+    /**
+     * 🔴 **面向④：走一趟積木回來**（2026-09-17 新增的 `source` 那一格）。
+     *
+     * `map<char,int> r = f();` 的初始值原本在 lift 就掉了。補上接點之後，
+     * lift 與 generate 兩路都接得住——**而那還不足以證明學生動得了它**：
+     * 形態表達不出那一格的話，`render → extract` 會安靜地少一塊，
+     * 而症狀是「學生一動積木，`= f()` 就從他的程式碼裡不見了」。
+     */
+    it('🔴 初始值那一格：畫得出來，也抽得回去', () => {
+      const sem = createNode('cpp:map_declare',
+        { key_type: 'char', value_type: 'int', name: 'r' },
+        { source: [createNode('cpp:var_ref', { name: 'other' })] })
+      const block = renderer.render(sem)
+      expect(block, '🔴 畫不出來').not.toBeNull()
+      const back = extractor.extract(block!)
+      expect(back!.componentId).toBe('cpp:map_declare')
+      expect(back!.slots.source?.length, '🔴 走一趟積木回來就少了初始值').toBe(1)
+      expect(back!.slots.source[0].properties.name).toBe('other')
+      expect(generateCode(back!, 'cpp', style)).toContain('map<char, int> r = other;')
+    })
   })
 
   describe('cpp:string_declare', () => {
@@ -536,7 +557,52 @@ describe('L2 Block Roundtrip', () => {
     })
   })
 
+  /**
+   * 🔴 **第六關（開瀏覽器）看到的**：`for (auto it = v.begin(); …)` 的初始那一格
+   * 在積木上是一塊**寫死文字**的 `cpp_raw_expression`——畫面上寫著
+   * 「直接寫運算式：auto it = v.begin()」。
+   *
+   * 而並排的對照讓它無所遁形：`for (int i = 0; …)` 的同一格是一顆真的積木
+   * （`cpp_var_declare_expression`）——**同族那顆早就有兩個形態，而這一顆只有一個。**
+   *
+   * > **一個只在【積木這一條投影】上壞掉的缺陷，
+   * > lift／generate／execute 三路的測試全部是綠的。**
+   */
+  describe('cpp:var_declare_auto 的兩個形態', () => {
+    it('★ 語句位置：還是原本那一顆', () => {
+      const sem = createNode('cpp:var_declare_auto', { name: 'it' },
+        { initializer: [createNode('cpp:literal_number', { value: '1' })] })
+      expect(renderer.render(sem, undefined, 'statement')!.type).toBe('cpp_var_declare_auto')
+    })
+
+    it('🔴 運算式位置：要有自己的形態，不得落成寫死文字', () => {
+      const sem = createNode('cpp:var_declare_auto', { name: 'it' },
+        { initializer: [createNode('cpp:literal_number', { value: '1' })] })
+      const block = renderer.render(sem, undefined, 'expression')
+      expect(block, '🔴 畫不出來').not.toBeNull()
+      expect(block!.type, '🔴 運算式位置落回語句形態 → for 迴圈的初始那一格會變成一塊文字')
+        .toBe('cpp_var_declare_auto_expression')
+      // 抽得回去，而且抽回來還是同一個身分
+      const back = extractor.extract(block!)
+      expect(back!.componentId).toBe('cpp:var_declare_auto')
+      expect(back!.properties.name).toBe('it')
+    })
+  })
+
   describe('cpp:set_declare', () => {
+    // 面向④：與同族那顆對照表同一條理由，見那裡的註解。
+    it('🔴 初始值那一格：畫得出來，也抽得回去', () => {
+      const sem = createNode('cpp:set_declare',
+        { type: 'int', name: 'b' },
+        { source: [createNode('cpp:var_ref', { name: 'a' })] })
+      const block = renderer.render(sem)
+      expect(block, '🔴 畫不出來').not.toBeNull()
+      const back = extractor.extract(block!)
+      expect(back!.componentId).toBe('cpp:set_declare')
+      expect(back!.slots.source?.length, '🔴 走一趟積木回來就少了初始值').toBe(1)
+      expect(generateCode(back!, 'cpp', style)).toContain('set<int> b = a;')
+    })
+
     // 同上：這一顆的樣板也拿掉了，所以驗的是產品真的會走的那一條。
     it('should generate code', () => {
       const sem = createNode('cpp:set_declare', { type: 'int', name: 's' })

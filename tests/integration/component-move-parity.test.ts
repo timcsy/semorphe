@@ -182,7 +182,17 @@ async function measureOnce(): Promise<Omit<baseline, '_meta'>> {
     execOutput[s.name] = await runProgram(s.code)
   }
   return {
-    identitySet: allCppComponents().map((c) => c.componentId).sort(),
+    // 🔴 **產生與驗證要用同一個過濾器**（2026-09-17）。
+    //    這裡本來不過濾，而下面那條驗證只看 `cpp:` 開頭的——於是
+    //    `GENERATE_BASELINE=1` 產出的基準**護欄自己不接受**：
+    //    重產一次，下一次就紅，而訊息說「搬家搬丟了 98 個 python 身分」。
+    //
+    // > **一個「重產基線」的模式，如果產出的東西護欄自己不收，
+    // > 那個模式是壞的——而它只在有人真的用它的那天才會被發現。**
+    identitySet: allCppComponents()
+      .map((c) => c.componentId)
+      .filter((id) => id.startsWith('cpp:'))
+      .sort(),
     samples: sampleResult,
     execOutput,
     labels: readLabels(),

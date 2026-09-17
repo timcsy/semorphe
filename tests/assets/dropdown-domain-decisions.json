@@ -41,6 +41,11 @@
       "field": "field_dropdown",
       "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
     },
+    "cpp_container_find.HOW": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "三個判準各自對應一個 C++ 的方法名（find／lower_bound／upper_bound）——清單外沒有第四種找法"
+    },
     "cpp_container_iter.WHICH": {
       "decision": "closed",
       "field": "field_dropdown",

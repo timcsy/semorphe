@@ -1,4 +1,5 @@
 {
   "C_AUTO_DECLARE_MSG0": "自動推斷 %1 = %2",
-  "C_AUTO_DECLARE_TOOLTIP": "宣告一個變數，型別由初始值自動推導"
+  "C_AUTO_DECLARE_TOOLTIP": "宣告一個變數，型別由初始值自動推導",
+  "C_AUTO_DECLARE_EXPR_TOOLTIP": "在運算式的位置宣告一個自動推斷型別的變數——`for` 迴圈的初始那一格用的就是它。"
 }

@@ -21,5 +21,9 @@
     "execute": "./execute.ts",
     "lift": "./lift.ts",
     "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建自動宣告`）——「型別修飾詞是 auto」的判別是 C++ 語法的知識，留在共用檔。"
-  }
+  },
+  "traits": {
+    "forLoopPart": true
+  },
+  "_traits_why": "🔴 **`forLoopPart` ＝「我可以當 for 的初始化子」**（2026-09-17 補）。同族那顆一般的變數宣告早就宣告了它，而這一顆沒有——於是 `for (auto it = v.begin(); it != v.end(); ++it)` 整個掉進 raw code，而 `for (int i = 0; …)` 好好的。 ⚠️ 症狀是 `UNRECOGNIZED_CODE: auto it=v.begin()`，而學生會以為是 `begin()` 不支援——**錯誤訊息指著那一整段，沒有指著少掉的那個宣告**。 🔴 它是語料裡走訪迴圈的標準寫法，而那一族是目前最大的缺口。\n> **同一族的兩顆元件，一顆宣告了某個性質而另一顆沒有——那個差別不會有人發現，直到有人寫出只有後者能表達的程式。**"
 }

@@ -51,6 +51,15 @@
           "text": "s"
         }
       ],
+      "message1": "%{BKY_CPP_SET_DECLARE_SOURCE} %1",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "SOURCE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
@@ -61,6 +70,9 @@
         "NAME": "name",
         "TYPE": "type",
         "UNIQUE": "unique"
+      },
+      "inputs": {
+        "SOURCE": "source"
       }
     },
     "_codeTemplate_why": "🔴 **刻意沒有樣板**（2026-09-17）。它是**第二份真相**：這裡寫著 `std::set<${TYPE}>`，而膠囊的 `generate.ts` 產的是 `set<${TYPE}>`——兩份對同一件事的說法不一樣，而今天沒有人發現，是因為 `setTemplateGenerator` 在 `src/` 內**零呼叫**（樣板產生器在產品裡從沒被裝上）。 ⚠️ 而重複性這一軸樣板**本來就表達不了**：`${UNIQUE}` 拿到的是屬性值 `\"true\"`，樣板沒有依屬性分岔的語法（`${?CHILD:…}` 只對接點成立）。 🟢 `#include <set>` 由 `component.json` 的 `requires` 提供，與這裡無關。"

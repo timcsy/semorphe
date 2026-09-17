@@ -4,13 +4,13 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "fileCount": 320,
-    "return 總數": 173
+    "fileCount": 321,
+    "return 總數": 182
   },
   "typeMismatch": 0,
   "missingChild": 20,
   "hits": {
-    "entryCount": 26,
+    "entryCount": 25,
     "details": [
       {
         "key": "src/languages/cpp/lang/executors/param-default.ts#u109md",
@@ -21,7 +21,7 @@
       },
       {
         "key": "src/components/cpp/address_of/execute.ts#b5q594",
-        "position": "src/components/cpp/address_of/execute.ts:29",
+        "position": "src/components/cpp/address_of/execute.ts:30",
         "condition": "varNodes.length === 0",
         "returns": "if (varNodes.length === 0) return { type: 'int', value: 0 }",
         "shape": "缺子節點"
@@ -91,7 +91,7 @@
       },
       {
         "key": "src/components/cpp/container_count/execute.ts#pmgw8m",
-        "position": "src/components/cpp/container_count/execute.ts:11",
+        "position": "src/components/cpp/container_count/execute.ts:12",
         "condition": "keyNodes.length === 0",
         "returns": "if (keyNodes.length === 0) return { type: 'int' as const, va",
         "shape": "缺子節點"
@@ -105,28 +105,21 @@
       },
       {
         "key": "src/components/cpp/cstring_size/execute.ts#w5tnl8",
-        "position": "src/components/cpp/cstring_size/execute.ts:7",
+        "position": "src/components/cpp/cstring_size/execute.ts:8",
         "condition": "strNodes.length === 0",
         "returns": "if (strNodes.length === 0) return { type: 'int', value: 0 }",
         "shape": "缺子節點"
       },
       {
         "key": "src/components/cpp/input/execute.ts#1dwbp3j",
-        "position": "src/components/cpp/input/execute.ts:41",
+        "position": "src/components/cpp/input/execute.ts:45",
         "condition": "ctx.cinFailed",
         "returns": "if (ctx.cinFailed) return { value: null, ok: false }",
         "shape": "失敗傳遞"
       },
       {
         "key": "src/components/cpp/input/execute.ts#67dmeg",
-        "position": "src/components/cpp/input/execute.ts:100",
-        "condition": "!got.ok",
-        "returns": "if (!got.ok) return { type: 'int', value: 0 }",
-        "shape": "失敗傳遞"
-      },
-      {
-        "key": "src/components/cpp/input/execute.ts#67dmeg",
-        "position": "src/components/cpp/input/execute.ts:111",
+        "position": "src/components/cpp/input/execute.ts:138",
         "condition": "!got.ok",
         "returns": "if (!got.ok) return { type: 'int', value: 0 }",
         "shape": "失敗傳遞"
@@ -196,5 +189,5 @@
       }
     ]
   },
-  "note": "📉 **2026-09-16：帶 value 的 return 175 → 173（改善，下調）。**\n  `io.ts` 的兩張手寫表（方法名 → 有沒有引數／接點叫什麼）拆掉了——\n  改成問元件自己的 `slots` 宣告。**少一份第二真相，就少兩個 return。**\n\n📈 **2026-09-16（第一百七十九刀，第二顆）**：`cpp:container_push_front`\n  ＋ 它的自證測。**輸入量上調，缺陷格未動。**\n\n📈 **2026-09-16（第一百七十九刀）**：新增 `cpp:container_pop_front`。\n  **新增一顆元件，輸入量本來就會長**——缺陷那幾格一筆未動。\n\n🟢 **2026-09-16（第五個面向，第二輪）：清那 90 支「解譯器出錯」。**\n  分族之後打最大的幾個：數字分隔符 `10'0000'0007`、`sort(h, h+N)` 的**變數偏移**、\n  `cin.tie/ignore` 等串流設定方法。解譯器出錯 **90 → 68**、一致 76 → 87。\n  ⚠️ 另有 9 支是**步數預算**用完（N 皇后回溯那一類），已獨立成一格——那不是缺陷。\n\n\n⚠️ 2026-08-27：帶 value 的 return 173 → 174—— 多一條回傳（char 陣列走到 \\0 為止）。**語料變大，不是退步**。\n⚠️ 2026-08-27：「return 總數」173 → 174——cpp:cstring_size 多一條回傳（char 陣列數到第一個 \\0 為止）。**語料變大，不是退步**。"
+  "note": "📈 **2026-09-17（迭代器一族，管線 180）：語料變大，缺陷那幾格未動。**\n  新增 `cpp:container_find`（`find`／`lower_bound`／`upper_bound` 三個方法名\n  對同一顆身分，判準進 `how` 屬性）＋ 既有的取端點那顆多認反向的兩端。\n  🔴 而最大的一個修法只有**一個宣告**：自動型別的變數宣告沒有宣告\n  `forLoopPart`，於是 `for (auto it = v.begin(); …)` 整段掉進 raw code。\n\n  🟢 靜默回退那兩格沒有變。\n\n📈 **2026-09-17（位置＝實體式指標，管線 180 的前兩顆）：語料變大，缺陷那幾格未動。**\n  新增 `src/interpreter/pointer.ts`（「這是一個位置嗎」「往後幾格」「同一串格子嗎」\n  的唯一判定處，三個註冊點共用）＋ `cpp:compare`／`execIncrement`／`execCompoundAssign`\n  各補一條位置分支。\n  🔴 修的是兩個**靜默的**缺陷：`++p` 把指標寫成一個 double（錯誤訊息出現在\n  下一次解參考）、`p != q` 恆等於「相等」（於是每一個走訪迴圈一次都不跑）。\n\n  ⚠️ **掃描檔數沒有變**（320）——新檔不在這條護欄的掃描範圍裡，\n  而我第一次照著「新增一個檔就 +1」寫成 321，下一輪它就紅了。\n  > **一個基線不該從「我做了什麼」推，要從「它量到什麼」抄。**\n  🟢 而**靜默回退那兩格沒有變**（typeMismatch 0、missingChild 20）：\n  新增的三個 return 都是**判斷成立之後**的正常回傳，不是回退。\n\n📉 **2026-09-16：帶 value 的 return 175 → 173（改善，下調）。**\n  `io.ts` 的兩張手寫表（方法名 → 有沒有引數／接點叫什麼）拆掉了——\n  改成問元件自己的 `slots` 宣告。**少一份第二真相，就少兩個 return。**\n\n📈 **2026-09-16（第一百七十九刀，第二顆）**：`cpp:container_push_front`\n  ＋ 它的自證測。**輸入量上調，缺陷格未動。**\n\n📈 **2026-09-16（第一百七十九刀）**：新增 `cpp:container_pop_front`。\n  **新增一顆元件，輸入量本來就會長**——缺陷那幾格一筆未動。\n\n🟢 **2026-09-16（第五個面向，第二輪）：清那 90 支「解譯器出錯」。**\n  分族之後打最大的幾個：數字分隔符 `10'0000'0007`、`sort(h, h+N)` 的**變數偏移**、\n  `cin.tie/ignore` 等串流設定方法。解譯器出錯 **90 → 68**、一致 76 → 87。\n  ⚠️ 另有 9 支是**步數預算**用完（N 皇后回溯那一類），已獨立成一格——那不是缺陷。\n\n\n⚠️ 2026-08-27：帶 value 的 return 173 → 174—— 多一條回傳（char 陣列走到 \\0 為止）。**語料變大，不是退步**。\n⚠️ 2026-08-27：「return 總數」173 → 174——cpp:cstring_size 多一條回傳（char 陣列數到第一個 \\0 為止）。**語料變大，不是退步**。\n\n📈 **2026-09-17（管線 180，第二輪盲測）：帶 value 的 return 180 → 182。**\n  多的兩筆在共用的還原路徑上（建構參數裡的下標解不開時**原樣回去**——\n  自己編一個「大概是 0 吧」會讓錯誤指向別的地方）。\n  ✔ 命中 26 → 25（一筆判定過期，隨改動一起退場）。**型別不符仍然是 0。**\n"
 }

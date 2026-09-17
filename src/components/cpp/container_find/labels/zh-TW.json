@@ -1,0 +1,7 @@
+{
+  "CPP_CONTAINER_FIND_MSG0": "在 %1 裡 %2 %3 的位置",
+  "CPP_CONTAINER_FIND_EXACT": "找",
+  "CPP_CONTAINER_FIND_LOWER": "找第一個不小於",
+  "CPP_CONTAINER_FIND_UPPER": "找第一個大於",
+  "CPP_CONTAINER_FIND_TOOLTIP": "在一個有序的容器裡找出一個位置。⚠️ 找不到時給的是「結尾之後」那個界線——所以要判斷有沒有找到，是拿它跟「結尾之後的位置」比。"
+}

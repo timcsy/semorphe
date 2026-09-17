@@ -1,6 +1,7 @@
 import type { ComponentExecutor } from '../executor-registry'
 import type { RuntimeValue } from '../types'
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
+import { isCellPointer, movePointer } from '../pointer'
 import { resolvePlace } from '../lvalue'
 
 function computeCompound(op: string, lv: number, rv: number): number {
@@ -49,6 +50,28 @@ export const execIncrement: ComponentExecutor = async (node, ctx) => {
   const place = await resolvePlace(targetNode, ctx)
   const current = place.read()
   const delta = op === '++' ? 1 : -1
+  /**
+   * 🔴 **`++p` 在一個【位置】上是「往後一格」，不是「值加一」**（2026-09-17）。
+   *
+   * 走下面那條數值路徑的話：`toNumber(一串格子)` 回 **1**（那是刻意的，
+   * 見 `interpreter.ts`——少了它 `while (p != NULL)` 對剛配好的節點是假），
+   * 於是 `++p` 寫回一個 `double 2`，**指標當場被毀掉**。
+   *
+   * ⚠️ 而它**不在這一行報錯**：症狀出現在下一次解參考
+   * （`*p` → `TYPE_MISMATCH: pointer`），於是看起來像是解參考壞了。
+   *
+   * > **一個把值換成別的型別的寫入，它的錯誤訊息會指向下一個讀它的人。**
+   *
+   * 🟢 `p = p + 1` 早就對了（`cpp:arithmetic` 有完整的指標算術）
+   * ——缺的一直只是**原地改**那幾個形式。
+   */
+  if (isCellPointer(current)) {
+    const moved = movePointer(current, delta)
+    place.write(moved)
+    // ⚠️ 後置回傳**舊的位置**、前置回傳新的。那個差別在 `it = s.erase(it++)`
+    //    這種「邊走邊刪」的寫法裡是關鍵，不是修辭。
+    return position === 'prefix' ? moved : current
+  }
   const n = ctx.toNumber(current) + delta
   const next: RuntimeValue = current.type === 'char'
     ? { type: 'char', value: Math.trunc(n) }
@@ -89,6 +112,19 @@ export const execCompoundAssign: ComponentExecutor = async (node, ctx) => {
     const appended = { type: 'string' as const, value: String(current.value) + piece }
     place.write(appended)
     return appended
+  }
+
+  /**
+   * 🔴 **`p += n` 在一個【位置】上是「往後 n 格」**——與 `++p` 同一個理由
+   *    （見 `execIncrement` 裡那段）。少了這一條，`it += 2` 把迭代器
+   *    變成一個數字，而錯誤訊息會出現在下一次解參考那裡。
+   * ⚠️ 只接 `+=`／`-=`：`p *= 2` 在 C++ 裡本來就不合法，**不要替它發明一個答案**。
+   */
+  if (isCellPointer(current) && (op === '+=' || op === '-=')) {
+    const step = ctx.toNumber(rhs)
+    const moved = movePointer(current, op === '+=' ? step : -step)
+    place.write(moved)
+    return moved
   }
 
   const result = computeCompound(op, ctx.toNumber(current), ctx.toNumber(rhs))

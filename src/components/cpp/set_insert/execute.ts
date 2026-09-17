@@ -18,20 +18,32 @@
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { receiverOf } from '../../../interpreter/receiver'
+import { evalInitializer } from '../../../interpreter/aggregate'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
-import { makePair, mapFind, mapInsertSorted, pairParts } from '../../../languages/cpp/lang/runtime/map'
+import { compareValues, makePair, mapFind, mapInsertSorted, pairParts } from '../../../languages/cpp/lang/runtime/map'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:set_insert', async (node, ctx) => {
       const name = String(node.properties.obj)
       const valueNodes = node.slots.value ?? []
       if (valueNodes.length === 0) return
-      const val = await ctx.evaluate(valueNodes[0])
+      /**
+       * 🔴 **大括號要知道自己該變成什麼**（2026-09-17）——同族那顆在末端加入的
+       * 元件早就走這條路了，而這裡走的是裸的求值。
+       *
+       * 於是 `multiset<pair<int,int>> st; st.insert({a, b});` 存進去一個**陣列**，
+       * 而 `it->first` 在它上面說「不是一個結構」。
+       *
+       * ⚠️ `?? ''` 不是筆誤：**不知道元素型別就不要假裝知道**（見同族那顆的註解，
+       * 那裡曾經寫 `?? 'int'`，於是字串元素被壓成 0）。
+       */
+      // ⚠️ **接收者要先解析**：要拿它的元素型別去讀那個大括號。
       const arr = receiverOf(ctx.scope, name)
       if (arr.type !== 'array' || !Array.isArray(arr.value)) {
         throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'array' })
       }
+      const val = await evalInitializer(valueNodes[0], String(arr.elemType ?? ''), ctx)
       // 🔴 **對應表那一族**：條目是鍵值對，而 C++ 的 `map::insert` 在鍵已存在時
       //    **什麼都不做**（它不覆蓋——那是 `m[k] = v` 的事）。
       if (arr.keyed) {
@@ -67,9 +79,8 @@ export function registerExecute(register: (component: string, executor: Componen
       if (!arr.allowsDuplicates && arr.value.some((v: RuntimeValue) => v.value === val.value)) return
       arr.value.push(val)
       // 兩種都是**有序**容器——差別只在留不留重複。
-      arr.value.sort((a: RuntimeValue, b: RuntimeValue) => {
-        if (typeof a.value === 'number' && typeof b.value === 'number') return a.value - b.value
-        return String(a.value).localeCompare(String(b.value))
-      })
+      // ⚠️ **比較規則只有一份**（`compareValues`）——排序與查找要用同一條，
+      //    否則「放進去的順序」與「找出來的位置」會對不上。
+      arr.value.sort(compareValues)
     })
 }

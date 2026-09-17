@@ -39,5 +39,45 @@
         "VALUE": "initializer"
       }
     }
+  },
+  {
+    "id": "cpp_var_declare_auto_expression",
+    "componentId": "cpp:var_declare_auto",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    },
+    "blockDef": {
+      "type": "cpp_var_declare_auto_expression",
+      "message0": "%{BKY_C_AUTO_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "x"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_C_AUTO_DECLARE_EXPR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "VALUE": "initializer"
+      }
+    },
+    "_why": "🔴 **這一顆的運算式形態原本不存在，而它是這一族最常見的寫法**（2026-09-17，第六關開瀏覽器才看到的）。\n\n`for (auto it = v.begin(); it != v.end(); ++it)` ——辨識對、產碼對、跑起來對，**而積木上那一格是一塊寫死文字的 `cpp_raw_expression`**：畫面上寫著「直接寫運算式：auto it = v.begin()」。\n\n並排的對照讓它無所遁形：`for (int i = 0; …)` 的同一格是一顆真的積木（`cpp_var_declare_expression`）——**同族那顆早就有兩個形態，而這一顆只有一個**。\n\n> **一個只在【積木這一條投影】上壞掉的缺陷，lift／generate／execute 三路的測試全部是綠的。**\n\n⚠️ 刻意**沒有** `codeTemplate`：語句那一份的樣板結尾有分號，而運算式位置不能有。產碼走的是膠囊自己的 `generate.ts`（樣板產生器在產品裡從沒被裝上）。"
   }
 ]

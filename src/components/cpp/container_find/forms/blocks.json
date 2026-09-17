@@ -1,0 +1,56 @@
+[
+  {
+    "id": "cpp:container_find",
+    "componentId": "cpp:container_find",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_find",
+      "message0": "%{BKY_CPP_CONTAINER_FIND_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "OBJ",
+          "text": "s"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "HOW",
+          "options": [
+            [
+              "%{BKY_CPP_CONTAINER_FIND_EXACT}",
+              "find"
+            ],
+            [
+              "%{BKY_CPP_CONTAINER_FIND_LOWER}",
+              "lower_bound"
+            ],
+            [
+              "%{BKY_CPP_CONTAINER_FIND_UPPER}",
+              "upper_bound"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "KEY"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "_colour_why": "🔴 **抄的是【分類】的顏色，不是我隨手抄的那一顆**（2026-09-17）。第一版抄了同族那顆取端點的元件（`#4A90A4`），而**它自己就是那一格 51 筆顏色不一致裡的一筆**——量出來：`containers` 這一格 49 顆是 `#4C97FF`，`#4A90A4` 只有 3 顆。\n> **「照抄一顆既有的」有一個前提：被抄的那顆是對的。**\n⚠️ 而顏色是分類的視覺編碼——學生靠它認「這是同一種東西」。",
+      "tooltip": "%{BKY_CPP_CONTAINER_FIND_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OBJ": "obj",
+        "HOW": "how"
+      },
+      "inputs": {
+        "KEY": "key"
+      }
+    }
+  }
+]

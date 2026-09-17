@@ -69,6 +69,15 @@
           ]
         }
       ],
+      "message1": "%{BKY_CPP_MAP_DECLARE_SOURCE} %1",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "SOURCE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#4C97FF",
@@ -80,6 +89,9 @@
         "NAME": "name",
         "VALUE_TYPE": "value_type",
         "ORDERED": "ordered"
+      },
+      "inputs": {
+        "SOURCE": "source"
       }
     },
     "_codeTemplate_why": "🔴 **刻意沒有樣板**（2026-09-17）。它是**第二份真相**：這裡寫著 `std::map<${KEY_TYPE}, ${VALUE_TYPE}>`，而膠囊的 `generate.ts` 產的是 `map<${KEY_TYPE}, ${VALUE_TYPE}>`——兩份對同一件事的說法不一樣，而今天沒有人發現，是因為 `setTemplateGenerator` 在 `src/` 內**零呼叫**（樣板產生器在產品裡從沒被裝上）。 ⚠️ 而有序性這一軸樣板**本來就表達不了**：`${ORDERED}` 拿到的是屬性值 `\"true\"`，樣板沒有依屬性分岔的語法（`${?CHILD:…}` 只對接點成立）。 🟢 `#include <map>` 由 `component.json` 的 `requires` 提供，與這裡無關。"

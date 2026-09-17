@@ -19,6 +19,7 @@ import { Scope } from '../../../../interpreter/scope'
 // 從定義它的地方導入——**不要再建一份**，見該處的說明
 import { ReturnSignal } from '../../../../interpreter/executors/functions'
 import type { RuntimeValue, ObjectFields } from '../../../../interpreter/types'
+import { varRefName } from '../../../../components/cpp/var_ref/lift'
 import { defaultValue } from '../../../../interpreter/types'
 import type { SemanticNode } from '../../../../core/types'
 import { componentsWithMemberRole, memberRoleOf } from '../../../../core/component/registry'
@@ -147,7 +148,7 @@ export async function runOnInstance(
   try {
     // **成員初始化列先於本體**——C++ 的順序就是這樣，而它有語義：
     // 本體裡的 `v = 9` 蓋得掉初始化列的 `: v(x)`，反過來不行。
-    if (m.inits?.length) await ctx.executeBody(m.inits)
+    if (m.inits?.length) await runFieldInits(m.inits, obj.value as ObjectFields, ctx)
     await ctx.executeBody(m.body)
     return defaultValue('void')
   } catch (e) {
@@ -155,6 +156,47 @@ export async function runOnInstance(
     throw e
   } finally {
     await ctx.exitScope(ctx.scope, outer)
+  }
+}
+
+/**
+ * **成員初始化列不是一串普通的賦值**——它的兩個名字查在不同的地方。
+ *
+ * ```cpp
+ * Vec2(double x, double y) : x(x), y(y) {}   // 課本寫法：參數與成員同名
+ * ```
+ *
+ * C++ 的規則是：**括號【外】那個名字永遠是成員，括號【裡】的在建構式的
+ * 作用域裡查**（所以是參數）。而這裡的作用域鏈是「欄位層 → 本體層（參數）」，
+ * 於是把 `: x(x)` 當成一句 `x = x` 來跑，**兩邊都解析成參數**
+ * ——成員從頭到尾沒有被碰到。
+ *
+ * 🔴 症狀是**安靜的零**（2026-09-17 由第三十二條護欄抓到）：
+ * `Vec2 a(1.0, 2.0); a.print();` 印 `(0, 0)`，而產出的程式碼一字不差。
+ * ⚠️ 而它一直躲在另一個缺陷後面：在「名字是結構就當建構」補上之前，
+ * 那段語料更早就死在 `UNDEFINED_FUNC: Vec2`，**從來沒有機會印出錯的答案**。
+ *
+ * > **參數不遮蔽成員的時候它是對的——而那正是不會有人寫的那一種。**
+ *
+ * ⚠️ 認不得的形式（基底類別的建構 `: Base(x)`、陣列成員）**照原路跑**，
+ * 不在這裡多猜一種語義。
+ */
+async function runFieldInits(
+  inits: SemanticNode[],
+  fields: ObjectFields,
+  ctx: import('../../../../interpreter/executor-registry').ExecutionContext,
+): Promise<void> {
+  for (const init of inits) {
+    const target = (init.slots?.target ?? [])[0]
+    const valueNode = (init.slots?.value ?? [])[0]
+    // ⚠️ **「這是不是一個裸的名字」由那顆元件自己答**——身分字串不出它的資料夾
+    const name = varRefName(target)
+    if (name && valueNode && fields.has(name)) {
+      // 值在**現在這個作用域**求（參數看得到），寫進**欄位**
+      fields.set(name, await ctx.evaluate(valueNode))
+      continue
+    }
+    await ctx.executeBody([init])
   }
 }
 

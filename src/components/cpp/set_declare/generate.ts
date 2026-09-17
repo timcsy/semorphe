@@ -13,7 +13,7 @@
  * 而一份沒有人跑的第二真相，會在有人裝上它的那天變成一個缺陷。
  */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { indent } from '../../../core/projection/code-generator'
+import { indent, generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:set_declare', (node, ctx) => {
@@ -21,6 +21,13 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     const name = node.properties.name ?? 's'
     // ⚠️ 只有明講「不要去重」才是 multiset——舊存檔沒有這個屬性，而它們是 set。
     const kind = String(node.properties.unique ?? 'true') === 'false' ? 'multiset' : 'set'
+    // 🔴 **「用另一個容器建起來」原本產不回來**（2026-09-17）——而它掉得**對稱**
+    //    （lift 沒有這一格、產生也沒有），所以來回轉換一直是綠的。
+    //    見 `component.json` 的 `_slots_why`。
+    const source = (node.slots.source ?? [])[0]
+    if (source) {
+      return `${indent(ctx)}${kind}<${type}> ${name} = ${generateExpression(source, ctx)};\n`
+    }
     return `${indent(ctx)}${kind}<${type}> ${name};\n`
   })
 }

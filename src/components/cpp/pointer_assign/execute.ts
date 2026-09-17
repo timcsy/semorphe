@@ -40,6 +40,13 @@ export function registerExecute(register: (component: string, executor: Componen
         throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(at) })
       }
       // ⚠️ 就地改，不是換一個新陣列——`int* b = a; *b = 9;` 之後 `*a` 必須也是 9。
+      // 🔴 **一段文字的字元投影寫不回去**（2026-09-17）——那些格子是延遲攤出來的複本，
+      //    改了它們，那段文字一個字都不會變。**出聲，不要安靜地寫進一份沒人會讀的東西。**
+      if (ptrVal.readonlyCells) {
+        throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+          '%1': '這個位置指著一段文字，而透過位置改文字目前做不到（用 `s[i] = …`）',
+        })
+      }
       ;(ptrVal.value as unknown[])[at] = val
       return
     }
