@@ -14,7 +14,8 @@
     "cpp:queue_declare",
     "cpp:queue_front",
     "cpp:stack_declare",
-    "cpp:stack_peek"
+    "cpp:stack_peek",
+    "cpp:var_ref"
   ],
   "tasks": [
     {
