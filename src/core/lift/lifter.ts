@@ -96,7 +96,24 @@ export class Lifter {
     // 順手把 `cpp` 也拿掉：scope 不該寫死在核心（P9）。任何 scope 的
     // `<x>_declare` 都適用同一條規則。
     const fromComponent = /^[a-z]+:(\w+?)_declare$/.exec(r.componentId ?? '')?.[1]
-    const type = fromComponent ?? (r.properties?.type !== undefined ? String(r.properties.type) : undefined)
+    /**
+     * 🔴 **`var` 不是一個型別**（2026-09-18，資訊隔離的盲測抓到）。
+     *
+     * 上面那條規則對 `cpp:string_declare` 給出 `string`（對的），
+     * 而對 `cpp:var_declare` 給出 **`var`**——一個沒有任何人認得的名字。
+     * 於是 `Graph g;`（`typedef map<…> Graph`）記下的型別是 `var`，
+     * 而所有問「這是不是對照表」的地方都得到否定的答案：
+     * `g[a]` 被認成**陣列下標**，而那是一個靜默的錯身分。
+     *
+     * ⚠️ **不是把整條規則反過來**：`cpp:vector_declare` 的 `properties.type`
+     * 是**元素**型別（`int`），優先讀它會把容器記成 `int`。
+     * 所以只排掉那個沒有意義的名字。
+     *
+     * > **一條「概念名就是型別」的規則，在概念名說的是「我是一般的那一種」時
+     * > 會給出一個看起來像型別的字串——而它比沒有更糟。**
+     */
+    const usable = fromComponent !== undefined && fromComponent !== 'var' ? fromComponent : undefined
+    const type = usable ?? (r.properties?.type !== undefined ? String(r.properties.type) : undefined)
     if (type) data.declare(String(name), type)
   }
 

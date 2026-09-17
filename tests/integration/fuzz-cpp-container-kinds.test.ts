@@ -26,6 +26,9 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
+import { generateCode } from '../../src/core/projection/code-generator'
+import apcs from '../../src/languages/cpp/styles/apcs.json'
+import type { StylePreset } from '../../src/core/types'
 import type { SemanticNode } from '../../src/core/types'
 
 const ROOT = process.cwd()
@@ -56,6 +59,7 @@ const run = async (src: string): Promise<string> => {
 }
 const H = `#include <iostream>\n#include <set>\n#include <map>\n#include <vector>\n#include <string>\n#include <unordered_map>\nusing namespace std;\n`
 const prog = (body: string): string => `${H}int main(){ ${body} return 0; }\n`
+const S = apcs as unknown as StylePreset
 
 /** 兩邊餵同一段程式，比 stdout——g++ 是權威。 */
 const sameAsCompiler = async (body: string, hint: string): Promise<void> => {
@@ -130,6 +134,34 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
   // ⚠️ 而標記的兩種**不是同義詞**（缺陷帳的檔頭定義）：
   //    `[UNSUPPORTED:描述]`   要加一個新概念  ← 迭代器整族都還不存在
   //    `[BLOCKED:身分]`       修一顆既有元件  ← 括號裡必須是登錄表裡真的有的身分
+
+  /**
+   * 🔴 **型別別名指向一個容器**——`typedef map<int, set<int>> Graph;`（2026-09-18，盲測）。
+   *
+   * `Graph g;` 在語法上就是一個普通的變數宣告，於是 `g[a]` 被認成**陣列下標**。
+   * 根因在一條收集器的規則上：`cpp:var_declare` 被它捕成型別 **`var`**
+   * ——一個沒有任何人認得的名字。
+   *
+   * > **一條「概念名就是型別」的規則，在概念名說的是「我是一般的那一種」時
+   * > 會給出一個看起來像型別的字串——而它比沒有更糟。**
+   *
+   * ⚠️ **而別名刻意不在 lift 期展開**：展開的話產出的程式碼會變成
+   * `map<int, set<int>> g;`——一支與學生寫的不同的程式。
+   * > **一個別名的意義就是那個短名字；把它換掉等於把它拿掉。**
+   */
+  it('★ typedef 指向容器時，那個變數要真的是那種容器', async () => {
+    const src = `${H}typedef map<int, set<int>> Graph;\ntypedef vector<int> vi;\ntypedef pair<int,int> pii;\n`
+      + `int main(){ Graph g; g[1].insert(2); g[1].insert(2);\n`
+      + `  vi v; v.push_back(7); pii p = make_pair(3, 4);\n`
+      + `  cout << g[1].size() << g.size() << v[0] << p.first << p.second; return 0; }\n`
+    const ref = runCppDetailed(src)
+    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+    expect(await run(src), '🔴 別名沒有被解開').toBe(ref.output)
+    // 🔴 **產出的程式碼要保住那個短名字**——別名的意義就在它
+    const gen = generateCode(lift(src), 'cpp', S)
+    expect(gen, '🔴 別名被展開了——學生的程式碼變成另一支').toContain('Graph g;')
+    expect(gen).toContain('vi v;')
+  }, 60_000)
 
   it.fails('[UNSUPPORTED:迭代器] `v.insert(v.begin(), x)` 是定位插入，而我們沒有迭代器', async () => {
     // 🟠 **為什麼不現在修**：它的第一個引數是迭代器，而這個直譯器沒有迭代器這個概念。
