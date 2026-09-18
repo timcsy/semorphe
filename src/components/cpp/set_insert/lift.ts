@@ -9,4 +9,12 @@ import { registerContainerMethodComponent } from '../../../core/component/method
 
 export function registerLift(): void {
   registerContainerMethodComponent('insert', 'cpp:set_insert', 'cpp/set_insert')
+  /**
+   * 🟢 **`emplace` 與 `insert` 在關聯容器上是同一件事**（2026-09-18，盲測抓到）。
+   *
+   * C++ 的差別在**怎麼造那個元素**，而這個直譯器沒有「搬移」這個概念。
+   * ⚠️ 而 `emplace` 收的是**建構元素的那些引數**（`mm.emplace(k, v)`），
+   *    不是一個大括號——那一層由執行那一路依接收者的種類處理。
+   */
+  registerContainerMethodComponent('emplace', 'cpp:set_insert', 'cpp/set_insert')
 }

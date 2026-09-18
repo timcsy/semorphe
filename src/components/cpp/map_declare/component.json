@@ -22,6 +22,12 @@
       "kind": "enum",
       "default": "true",
       "_kind_why": "**`map` 與 `unordered_map` 的差別是「走訪有沒有順序」，不是身分**——同一組操作（`m[k]`／`count`／`size`）逐字相同。⚠️ 預設 `'true'` 是存檔相容：既有存檔沒有這個屬性，而它們是 `map`。"
+    },
+    {
+      "name": "unique",
+      "kind": "enum",
+      "default": "true",
+      "_kind_why": "🔴 **一個鍵能不能有多個值**（2026-09-18）——`multimap` 可以。與同族集合那顆的重複性同一個做法：那是**容器的性質**，跟著宣告走，而 `insert`／`count` 只負責讀它。⚠️ 預設 `true`（只有一個）——舊存檔沒有這一格，而它們是 `map`。"
     }
   ],
   "slots": {

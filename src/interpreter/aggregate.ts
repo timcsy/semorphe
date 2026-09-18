@@ -20,7 +20,7 @@
  * ⚠️ **不做的**：narrowing 檢查、指名初始化（`.x = 1`）、
  * 少於欄位數時的零值補齊以外的規則。少寫比寫錯好。
  */
-import type { RuntimeValue } from './types'
+import { defaultValue, type RuntimeValue } from './types'
 import type { SemanticNode } from '../core/types'
 import type { ExecutionContext } from './executor-registry'
 import { isAggregateList, aggregateShapeOf } from '../core/component/aggregate-nodes'
@@ -41,6 +41,29 @@ export function isBraceList(node: SemanticNode): boolean {
  * 非 `{…}` 的節點原樣求值再轉型——所以呼叫端可以無條件走這一支，
  * 不必自己判斷是不是聚合。
  */
+/**
+ * `pair<string, int>` → `['string', 'int']`。
+ *
+ * ⚠️ **在最外層的逗號切**——`map<int, vector<pair<int,int>>>` 的第二個引數
+ * 自己就帶著逗號。數不對就回空陣列（讓呼叫端落回預設），**不猜**。
+ */
+function fieldTypesOf(type: string, want: number): string[] {
+  const lt = type.indexOf('<')
+  if (lt === -1) return []
+  const inner = type.slice(lt + 1, type.lastIndexOf('>'))
+  const out: string[] = []
+  let depth = 0
+  let cur = ''
+  for (const ch of inner) {
+    if (ch === '<') depth++
+    else if (ch === '>') depth--
+    if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue }
+    cur += ch
+  }
+  if (cur.trim() !== '') out.push(cur.trim())
+  return out.length === want ? out : []
+}
+
 export async function evalInitializer(
   node: SemanticNode,
   type: string,
@@ -67,10 +90,25 @@ export async function evalInitializer(
   // ⚠️ 它們不在 `structs` 裡，因為使用者沒有宣告過它們。
   const shape = aggregateShapeOf(type)
   if (shape) {
+    /**
+     * 🔴 **每一格的型別要從樣板引數拆出來**（2026-09-18，盲測抓到）。
+     *
+     * 這裡本來對每一格都寫死 `'int'`，於是
+     * `priority_queue<pair<string,int>> ps; ps.push({"a", 9});`
+     * 的 `"a"` 被 `coerceType(…, 'int')` **壓成 0**——印出來是 `09`。
+     *
+     * ⚠️ 它一直沒被發現，是因為在型別字串帶著限定名（`std::pair<…>`）時
+     * 這條分支**根本不會進來**（基底名查不到）——**一個缺陷躲在另一個缺陷後面，
+     * 而修好上面那個的當天它才第一次執行。**
+     *
+     * > **一段「從來沒有被走到」的程式碼，與一段正確的程式碼長得一模一樣。**
+     */
+    const args = fieldTypesOf(type, shape.length)
     const fields = new Map<string, RuntimeValue>()
     for (let i = 0; i < shape.length; i++) {
       const el = elements[i]
-      fields.set(shape[i], el ? await evalInitializer(el, 'int', ctx) : { type: 'int', value: 0 })
+      const ft = args[i] ?? 'int'
+      fields.set(shape[i], el ? await evalInitializer(el, ft, ctx) : defaultValue(ft))
     }
     return { type: 'object', value: fields, structName: type.includes('<') ? type.slice(0, type.indexOf('<')) : type }
   }

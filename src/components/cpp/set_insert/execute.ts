@@ -21,8 +21,32 @@ import { varRefName } from '../var_ref/lift'
 import { evalInitializer } from '../../../interpreter/aggregate'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { isCellPointer, offsetOf, positionIn, sameCells } from '../../../interpreter/pointer'
 import { makePair, mapFind, mapInsertSorted, pairParts } from '../../../languages/cpp/lang/runtime/map'
 import { asyncSort, equivalentInOrder, lessWithOverload } from '../../../languages/cpp/lang/runtime/order'
+
+/**
+ * 🔴 **`insert` 回傳「位置 ＋ 有沒有真的插進去」**（2026-09-18，盲測抓到）。
+ *
+ * ```cpp
+ * auto [it, ok] = m.insert({k, v});     // ok 為假 ⟹ 那個鍵本來就在
+ * ```
+ *
+ * 這是 C++ 判斷「這次插入有沒有生效」的標準寫法——而在此之前這裡
+ * 什麼都不回，於是結構化繫結說「這個值拆不開成『it, ok』」。
+ *
+ * ⚠️ **可重複的容器回的是單一個位置**（`multiset`／`multimap` 一定插得進去），
+ *    而不是一對——那是 C++ 自己的差別，不是我們的簡化。
+ */
+function insertResult(
+  cells: RuntimeValue[], at: number, inserted: boolean, container: RuntimeValue,
+): RuntimeValue {
+  const where = positionIn(cells, Math.max(0, at))
+  // 可重複的容器（`multiset`／`multimap`）回的是單一個位置，不是一對。
+  return container.allowsDuplicates === true
+    ? where
+    : makePair(where, { type: 'bool', value: inserted })
+}
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:set_insert', async (node, ctx) => {
@@ -42,6 +66,37 @@ export function registerExecute(register: (component: string, executor: Componen
       // ⚠️ **接收者要先解析**：要拿它的元素型別去讀那個大括號。
       const arr = await ctx.evaluate((node.slots.obj ?? [])[0])
       /**
+       * 🔴 **`v.insert(v.begin(), x)` 是【定位插入】**（2026-09-18）。
+       *
+       * 這一條的釘子上逐字寫著「🔴 何時該修：**迭代器那一刀做完的當天，
+       * 回來拔這根釘子**」——而那一天到了，沒有人回來。
+       *
+       * > **一根釘子如果只寫著「誰擋住我」，它不會在那個人讓開的時候自己掉下來。**
+       *
+       * ⚠️ 而阻斷者讓開之後，缺陷**換了一個形狀**：位置不再是「不支援」，
+       * 它變成了**要插入的那個值**——`v[0]` 印出來是一串格子。
+       * **一個「還不認得」的東西，在它終於被造出來之後會被當成別的東西。**
+       *
+       * 判準與同族的刪除一致：**同一個方法名，由引數的種類決定做哪一件事**。
+       */
+      if (
+        valueNodes.length >= 2 && arr.type === 'array' && Array.isArray(arr.value)
+      ) {
+        const at = await ctx.evaluate(valueNodes[0])
+        if (isCellPointer(at)) {
+          if (!sameCells(at, arr)) {
+            throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+              '%1': `這個位置不是「${varRefName((node.slots.obj ?? [])[0]) ?? '這個接收者'}」裡的，插不進去`,
+            })
+          }
+          const i = Math.max(0, Math.min(offsetOf(at), arr.value.length))
+          const what = await evalInitializer(valueNodes[1], String(arr.elemType ?? ''), ctx)
+          ;(arr.value as RuntimeValue[]).splice(i, 0, what)
+          // C++ 回傳**指向新元素的位置**
+          return positionIn(arr.value as RuntimeValue[], i)
+        }
+      }
+      /**
        * ⚠️ **錯誤訊息要說得出是誰**——接收者變成接點之後，這裡不再有名字。
        * 🔴 而這一格差點靜默：`name` **是 DOM 的全域**，所以刪掉區域宣告之後
        * `${name}` 仍然編得過，只是在執行時變成 `undefined`。
@@ -55,6 +110,18 @@ export function registerExecute(register: (component: string, executor: Componen
       // 🔴 **對應表那一族**：條目是鍵值對，而 C++ 的 `map::insert` 在鍵已存在時
       //    **什麼都不做**（它不覆蓋——那是 `m[k] = v` 的事）。
       if (arr.keyed) {
+        /**
+         * 🟢 **`m.emplace(k, v)` 給的是【兩個引數】，不是一個大括號**
+         *（2026-09-18，盲測抓到）。`insert` 也收得下這個形式。
+         */
+        if (valueNodes.length >= 2) {
+          const k = await ctx.evaluate(valueNodes[0])
+          const v = await ctx.evaluate(valueNodes[1])
+          const had = mapFind(arr.value, k)
+          // 🔴 **可重複的對照表（`multimap`）一定插得進去**——一個鍵可以有多個值。
+          if (arr.allowsDuplicates === true || had === -1) mapInsertSorted(arr.value, makePair(k, v))
+          return insertResult(arr.value as RuntimeValue[], mapFind(arr.value, k), had === -1, arr)
+        }
         /**
          * ⚠️ **`m.insert({3, 7})` 的大括號求值出來是一串值，不是一對**
          *    ——學生寫的正是這個形式（`make_pair` 是課本的寫法）。
@@ -71,8 +138,9 @@ export function registerExecute(register: (component: string, executor: Componen
             '%1': `「${name}」是對照表，它的 insert 要一對「鍵, 值」`,
           })
         }
-        if (mapFind(arr.value, parts.key) === -1) mapInsertSorted(arr.value, braced)
-        return
+        const had = mapFind(arr.value, parts.key)
+        if (arr.allowsDuplicates === true || had === -1) mapInsertSorted(arr.value, braced)
+        return insertResult(arr.value as RuntimeValue[], mapFind(arr.value, parts.key), had === -1, arr)
       }
       // 🔴 **未設 ＝ 這不是關聯容器**，而不是「預設不留重複」。
       //    `v.insert(...)` 也會走到這裡（方法名只有一個主人），而 C++ 的
@@ -92,8 +160,9 @@ export function registerExecute(register: (component: string, executor: Componen
        * `set<T> s; s.insert(T(3)); s.insert(T(3));` 留了兩個——**靜默地**。
        */
       if (!arr.allowsDuplicates) {
-        for (const v of arr.value as RuntimeValue[]) {
-          if (await equivalentInOrder(v, val, ctx)) return
+        const cells = arr.value as RuntimeValue[]
+        for (let i = 0; i < cells.length; i++) {
+          if (await equivalentInOrder(cells[i], val, ctx)) return insertResult(cells, i, false, arr)
         }
       }
       arr.value.push(val)
@@ -108,5 +177,8 @@ export function registerExecute(register: (component: string, executor: Componen
       const sorted = await asyncSort([...(arr.value as RuntimeValue[])], (a, b) => lessWithOverload(a, b, ctx))
       arr.value.length = 0
       for (const v of sorted) (arr.value as RuntimeValue[]).push(v)
+      let at = 0
+      for (let i = 0; i < sorted.length; i++) if (sorted[i] === val) { at = i; break }
+      return insertResult(arr.value as RuntimeValue[], at, true, arr)
     })
 }
