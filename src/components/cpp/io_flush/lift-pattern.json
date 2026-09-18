@@ -1,0 +1,16 @@
+{
+  "id": "cpp_io_flush",
+  "grammar": "tree-sitter-cpp",
+  "astNodeType": "identifier",
+  "component": {
+    "componentId": "cpp:io_flush"
+  },
+  "constraints": [
+    {
+      "field": "$text",
+      "text": "flush",
+      "notDeclared": true
+    }
+  ],
+  "priority": 5
+}

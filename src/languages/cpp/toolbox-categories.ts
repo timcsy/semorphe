@@ -104,6 +104,17 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     isIoCategory: true,
     sources: [
       { from: '(universal)', category: 'io' },
+      /**
+       * 🔴 **`<iomanip>` 一直沒有段落**（2026-09-19 補）——與 `<stdexcept>`
+       * 2026-09-18 撞到的是**同一個形狀**，而那一次的教訓逐字留在下面：
+       *
+       * > **一顆積木宣告過、收錄過、畫得出來，而它的擁有者沒有段落時，
+       * > 它就是不存在——而三個「有」都不會說話。**
+       *
+       * ⚠️ 這一次是**先補**：那個模組今天才第一次有元件（輸出的設定那三顆），
+       * 而如果等護欄說話，中間那段時間學生打開工具箱就是找不到它們。
+       */
+      { from: '<iomanip>', category: 'io' },
       { from: '<cstdio>', category: 'io' },
       { from: '<string>', category: 'io' },
       { from: '<fstream>', category: 'io' },

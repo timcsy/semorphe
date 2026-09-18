@@ -1,0 +1,7 @@
+{
+  "CPP_IO_MODE_MSG0": "Set the output %1 to %2",
+  "CPP_IO_MODE_WIDTH": "width",
+  "CPP_IO_MODE_PRECISION": "decimal places",
+  "CPP_IO_MODE_FILL": "padding character",
+  "CPP_IO_MODE_TOOLTIP": "The width only affects the very next thing printed and is then used up; the decimal places and the padding character stay in effect until changed. Anything narrower than the width is padded in front (with spaces by default); anything wider is not cut. What the decimal places mean depends on the number style block: by default it is the total significant digits, and after choosing fixed-point it is the digits after the point."
+}

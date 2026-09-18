@@ -1,0 +1,6 @@
+{
+  "CPP_IO_MODE_NUMBER_MSG0": "Write numbers in %1",
+  "CPP_IO_MODE_NUMBER_FIXED": "fixed point",
+  "CPP_IO_MODE_NUMBER_SCI": "scientific notation",
+  "CPP_IO_MODE_NUMBER_TOOLTIP": "This changes what the decimal-places setting means: without it, that setting is the total number of significant digits; with fixed point it is the digits after the point. It stays in effect until changed."
+}

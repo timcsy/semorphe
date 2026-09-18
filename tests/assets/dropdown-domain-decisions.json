@@ -415,6 +415,16 @@
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "C++ 取容器一端只有這兩種寫法：成員（`v.begin()`）與自由函式（`begin(v)`）。**這是語言的封閉集合，不是我們挑的**——而它必須被記住而不是猜出來：原生陣列沒有成員 `begin`，所以第三個值不會對應到任何合法的 C++。"
+    },
+    "cpp_io_mode.SETTING": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "C++ 的 `<iomanip>` 帶一個值的操縱子就這三個（`setw`／`setprecision`／`setfill`）。**這是語言的封閉集合，不是我們挑的**——第四個值不會對應到任何合法的 C++。⚠️ 而對齊那一族（`left`／`right`）不在這裡：它們設的是另一件事，要另一顆身分。"
+    },
+    "cpp_io_mode_number.NOTATION": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "數字的寫法在 C++ 裡只有這兩種（`fixed`／`scientific`），而「都不選」是第三種狀態——它由**沒有放這顆積木**表示，不是下拉的一個值。"
     }
   }
 }

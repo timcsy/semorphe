@@ -31,6 +31,9 @@
       "cpp:include",
       "cpp:using_namespace",
       "cpp:io_sync",
+      "cpp:io_flush",
+      "cpp:io_mode",
+      "cpp:io_mode_number",
       "cpp:io_tie"
     ],
     "children": [

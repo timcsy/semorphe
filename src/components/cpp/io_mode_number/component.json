@@ -1,0 +1,25 @@
+{
+  "componentId": "cpp:io_mode_number",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "notation",
+      "kind": "enum",
+      "default": "fixed"
+    }
+  ],
+  "slots": {},
+  "role": "expression",
+  "owner": "<iomanip>",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "requires": [
+    "<iomanip>"
+  ],
+  "_properties_why": "🔴 **與同族那顆帶一個值的設定不是同一顆**：引數個數不同（0 vs 1），而判準逐字是「引數個數不同、或語義上做的事不同」⟹ 是身分。\n⚠️ 而 `fixed` 與 `scientific` 之間做的是同一件事（決定數字的寫法），差別只有一個值 ⟹ 一顆 ＋ 屬性。\n🔴 **`scientific` 語料 0 處而仍然收**：它不是一顆要不要做的元件，它是一個**列舉的值**。「沒有人接得住就不要補」那條判準講的是**產出**，不是列舉的值域——一個只有一個值的列舉，會在第二個值出現時逼人開第二顆身分。\n⚠️ 而它**不與位數合成一顆**，雖然語料裡兩者只一起出現：單獨的 `setprecision(2)` 是合法且常見的寫法，合成會讓它表達不出來。**語料剛好怎麼寫，不是語義。**"
+}
