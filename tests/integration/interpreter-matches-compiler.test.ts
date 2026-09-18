@@ -270,6 +270,52 @@ const CASES: [string, string, string, string[]][] = [
     `priority_queue<int> a; a.push(3); a.push(9); a.push(1); cout << a.top(); a.pop(); cout << a.top();\n` +
     `priority_queue<int, vector<int>, greater<int>> b; b.push(3); b.push(9); b.push(1); cout << b.top();`, []],
 
+  /**
+   * 🔴 **結構化繫結**（2026-09-18，語料 16 處／13 支）——`auto [a, b] = …`。
+   *
+   * 在此之前它**不是「沒被 lift」，是安靜地答錯**：那一串名字被塞進自動型別
+   * 宣告的名字那一格，於是執行期真的宣告了一個叫 `[pt,d]` 的變數。
+   * ⚠️ 語料 15/16 處**不寫空格**，而名字馬上被當下標用——**症狀出現在下一行**。
+   */
+  ['🔴 結構化繫結：兩個名字（語料最常見）', '',
+    `deque<pair<int,int>> BFS; BFS.push_back({2,5});\n` +
+    `auto[pt,d] = BFS.front(); cout << pt << d;`, []],
+  ['🔴 結構化繫結：三個名字，而右邊是使用者自己的結構',
+    `struct side{ int u; int v; int w;\n  bool operator< (const side &b) const { return w > b.w; } };`,
+    `priority_queue<side> ms; ms.push({1,2,9}); ms.push({3,4,5});\n` +
+    `auto[u,v,w] = ms.top(); cout << u << v << w;`, []],
+  ['🔴 結構化繫結：名字馬上被當下標用（症狀在下一行）', '',
+    `vector<int> d2[5]; d2[2].push_back(9);\n` +
+    `deque<pair<int,int>> BFS; BFS.push_back({2,1});\n` +
+    `auto[pt,d] = BFS.front(); for (int i : d2[pt]) cout << i << d;`, []],
+  ['🔴 結構化繫結在範圍 for 裡', '',
+    `vector<pair<int,int>> ar[3]; ar[1].push_back({4,5}); int P = 1;\n` +
+    `for (auto[w,to] : ar[P]) cout << w << to;`, []],
+  /**
+   * 🔴 **走訪的容器是一棵樹，不是一串文字**——`d2[pt]`／`m[k]` 都是運算式。
+   * 在此之前執行期拿那串文字去查變數，說「沒有宣告過 `d2[pt]`」
+   * ——**錯誤看起來像學生打錯字**。語料 3 支。
+   */
+  ['🔴 範圍 for 的容器是一個運算式', '',
+    `vector<int> d2[5]; int k = 2; d2[2].push_back(9);\n` +
+    `map<int,vector<int>> m; m[1].push_back(7);\n` +
+    `for (int i : d2[k]) cout << i; for (int i : m[1]) cout << i;`, []],
+  ['★ 正向錨點：範圍 for 的三種舊寫法不得被弄壞', '',
+    `vector<int> v{1,2,3}; for (int x : v) cout << x;\n` +
+    `string s = "ab"; for (char c : s) cout << c;\n` +
+    `vector<string> w{"ab","cd"}; for (const string& t : w) cout << t;`, []],
+  /**
+   * 🔴 **一串格子也要照字典序比**——`tuple` 在執行期是一串格子（只有「一對」
+   * 登記過欄位名）。少了它，`Number(陣列)` 是 `NaN`，**每次比較都是 false**。
+   * 而堆頂還要**問使用者自己的 `operator<`**——排序、去重、查找三條早就問了，
+   * 堆這一條漏掉。
+   */
+  ['🔴 一串值的字典序：排序與堆頂', '',
+    `vector<tuple<int,int,int>> v; v.push_back({7,8,9}); v.push_back({1,2,3});\n` +
+    `sort(v.begin(), v.end()); auto[a,b,c] = v[0]; cout << a << b << c;\n` +
+    `priority_queue<tuple<int,int,int>> pq; pq.push({1,2,3}); pq.push({7,8,9});\n` +
+    `auto[x,y,z] = pq.top(); cout << x << y << z;`, []],
+
   // ⚠️ **刻意沒有**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
   //    ——兩者在 C++ 裡都是未定義行為，而判準裡不得放它們。
 ]

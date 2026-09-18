@@ -1,0 +1,8 @@
+{
+  "CPP_DECL_SEQ_MSG0": "分別取出 %1 %2",
+  "CPP_DECL_SEQ_TOOLTIP": "把一組值按順序拆開，分別取名字。格數要對得上，對不上會停下來說明。",
+  "CPP_DECL_SEQ_BY_VALUE": "複製一份",
+  "CPP_DECL_SEQ_BY_REF": "就地修改",
+  "CPP_DECL_SEQ_OPEN": "← 成為",
+  "CPP_DECL_SEQ_CLOSE": ""
+}

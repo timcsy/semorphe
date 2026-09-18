@@ -12,7 +12,7 @@ export function registerExecute(register: (component: string, executor: Componen
       }
       // 堆頂——**不是** `arr.value[0]`，而且**不一定是最大值**：
       // `greater<T>` 宣告的小根堆，堆頂是最小的。堆序跟著值走。
-      const i = heapTopIndex(arr.value, arr.heapOrder ?? 'max')
+      const i = await heapTopIndex(arr.value, arr.heapOrder ?? 'max', ctx)
       return i === -1 ? defaultValue('int') : arr.value[i]
     })
 }

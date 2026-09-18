@@ -15,6 +15,7 @@ import { buildArrayDeclare } from '../../../../components/cpp/array_declare/lift
 import { buildArrayAt } from '../../../../components/cpp/array_at/lift'
 import { buildForwardDecl } from '../../../../components/cpp/forward_decl/lift'
 import { buildAutoDeclare } from '../../../../components/cpp/var_declare_auto/lift'
+import { buildDeclareSequence } from '../../../../components/cpp/var_declare_sequence/lift'
 import { buildStaticVar } from '../../../../components/cpp/var_declare_static/lift'
 import { buildRawCode } from '../../../../components/cpp/raw_code/lift'
 import { qualifierComponent } from '../../../../core/component/qualifier-components'
@@ -1288,6 +1289,28 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         .map((decl) => {
           const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
           const valueNode = decl.childForFieldName('value')
+          /**
+           * 🔴 **宣告子可能是【一串名字】**（`auto [pt, d] = q.front();`，2026-09-18）。
+           *
+           * 在此之前 `nameNode.text` 把 `[pt,d]` 整串抄進名字那一格，於是執行期
+           * 真的宣告了一個叫 `[pt,d]` 的變數——**下一行用到 `pt` 時說
+           * 「沒有宣告過這個名字」**。錯誤指著使用的那一行，而問題在宣告那一行。
+           *
+           * ⚠️ `auto&` 時外面還包一層 `reference_declarator`（`& [k, val]`），
+           *    而**那個 `&` 屬於 `auto` 不屬於第一個名字**——所以它是一個**參數**。
+           */
+          const bare = nameNode?.type === 'reference_declarator'
+            ? nameNode.namedChildren[0] : nameNode
+          if (bare?.type === 'structured_binding_declarator') {
+            const names = bare.namedChildren.filter((c) => c.type === 'identifier').map((c) => c.text)
+            if (names.length > 0) {
+              return buildDeclareSequence(
+                names,
+                nameNode?.type === 'reference_declarator' ? 'reference' : 'value',
+                valueNode ? ctx.lift(valueNode) : null,
+              )
+            }
+          }
           return buildAutoDeclare(nameNode?.text ?? 'x', valueNode ? ctx.lift(valueNode) : null)
         })
       if (built.length === 1) return built[0]

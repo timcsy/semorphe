@@ -278,3 +278,26 @@ export const SHAPE_CHANGES_V19: ShapeChange[] = [
   { blockType: 'cpp_vector_pop', retiredFields: ['VECTOR'], why: WHY },
   { blockType: 'cpp_vector_size', retiredFields: ['VECTOR'], why: WHY },
 ]
+
+
+/**
+ * `v19 → v20`：**走訪的容器從欄位換成接點**（範圍 for）。
+ *
+ * 一個欄位只裝得下一串文字，而 `for (int i : d2[pt])` 的容器是一個**運算式**
+ * ——執行期拿那串文字去查變數，說「沒有宣告過 `d2[pt]`」。
+ * **錯誤看起來像學生打錯字，而問題在我們把它壓成了文字。**
+ *
+ * 🔴 同一個病 2026-09-18 早上才在接收者那一族治過一次（`SHAPE_CHANGES_V19`，39 顆）
+ * ——而**這一顆不在那 39 顆裡**，因為它的那一格叫 `CONTAINER` 不叫 `OBJ`。
+ *
+ * > **一次批次的治療，治得到的是被列進那份名單的；
+ * > 而名單是按【欄位名】列的，同一個病換一個欄位名就會被漏掉。**
+ */
+export const SHAPE_CHANGES_V20: ShapeChange[] = [
+  {
+    blockType: 'cpp_loop_range',
+    retiredFields: ['CONTAINER'],
+    why: '走訪的容器 `CONTAINER` 從欄位換成接點——`d2[pt]`／`m[k]` 是運算式，'
+      + '而一個欄位只裝得下一串文字。',
+  },
+]

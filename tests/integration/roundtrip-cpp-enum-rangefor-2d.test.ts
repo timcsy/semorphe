@@ -59,7 +59,8 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     expect(body[0].componentId).toBe('cpp:loop_range')
     expect(body[0].properties.var_type).toBe('auto')
     expect(body[0].properties.var_name).toBe('x')
-    expect(body[0].properties.container).toBe('vec')
+    // 🔴 走訪的對象 2026-09-18 從字串屬性換成接點——`d2[pt]` 是運算式
+    expect(body[0].slots.iterable?.[0].properties.name).toBe('vec')
 
     const code = generateCode(tree!, 'cpp', style)
     expect(code).toContain('for (auto x : vec)')

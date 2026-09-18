@@ -16,6 +16,7 @@
         "cpp_var_declare_const",
         "cpp_var_declare_constexpr",
         "cpp_var_declare_ref",
+        "cpp_var_declare_sequence",
         "cpp_var_declare_static",
         "cpp_var_ref",
         "cpp_var_declare_auto_expression",

@@ -17,7 +17,7 @@ export function registerExecute(register: (component: string, executor: Componen
           // 🔴 **拿掉的必須是 `top()` 剛給你的那一顆**，不是最後推入的。
           // 原本走 `pop()`（陣列末端），於是「看一眼再拿掉」這個最常見的
           // 用法會拿掉另一顆——而堆裡還剩幾個元素看起來完全正常。
-          const i = heapTopIndex(arr.value, arr.heapOrder ?? 'max')
+          const i = await heapTopIndex(arr.value, arr.heapOrder ?? 'max', ctx)
           if (i !== -1) arr.value.splice(i, 1)
         } else {
           arr.value.pop()

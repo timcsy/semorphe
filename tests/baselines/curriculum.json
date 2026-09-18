@@ -376,6 +376,7 @@
           "cpp:range_sum",
           "cpp:range_fill_sequence",
           "cpp:range_sum_partial",
+          "cpp:var_declare_sequence",
           "cpp:container_iter",
           "cpp:container_find",
           "cpp:range_find_lower",

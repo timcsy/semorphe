@@ -400,6 +400,11 @@
       "decision": "open",
       "field": "field_dynamic_dropdown",
       "reason": "元素型別在現實中開放（`deque<pair<int,int>>` 是語料真的寫的形狀）——與同族的列表宣告同一個判定，而**這顆的整個存在理由就是讓那個型別被記下來**"
+    },
+    "cpp_var_declare_sequence.BINDING": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "C++ 的結構化繫結只有兩種：複製一份（`auto`）與就地修改（`auto&`）。**這是語言的封閉集合，不是我們挑的**——多一個值不會對應到任何合法的 C++。"
     }
   }
 }
