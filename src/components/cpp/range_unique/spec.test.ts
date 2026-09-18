@@ -1,6 +1,5 @@
 /**
- * `cpp:range_find` 的自證測——**語料要的那一顆**
- *（`basic/14_array_2.cpp` 的 `find(begin(array), end(array), search)`）。
+ * `cpp:range_unique` 與 `cpp:range_remove` 的自證測——**「刪除-移除」那個慣用法的兩半**。
  *
  * ## 🔴 它們為什麼是一起誕生的
  *
@@ -14,8 +13,11 @@
  *
  * 這就是那一刀。
  *
- * ⚠️ 而 `range_find` 不在那根釘子上——它是**語料**要的
- *（`basic/14_array_2.cpp` 的 `find(begin(array), end(array), search)`）。
+ * ⚠️ **兩顆寫在同一支**，理由不是省事：它們做的是**同一件事**（把不要的往後擠，
+ * 回傳新的結尾，而且**不改變長度**），差別只在判準——一個問「等不等於這個值」，
+ * 一個問「與前一格一不一樣」。那個差別在接點結構上看得見，所以是兩顆身分；
+ * 而**它們錯起來會一起錯**，所以測試放在一起讀得出對照。
+ * ⚠️ `cpp:range_find` 有自己的一支——它不在那根釘子上，是**語料**要的。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -50,51 +52,42 @@ const run = async (c: string): Promise<{ out: string; err: string }> => {
 }
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
-describe('膠囊自證：範圍那一族的三顆新元件', () => {
-  it('★ lift：三個名字都認得，而且兩端是【接點】不是屬性', () => {
+describe('膠囊自證：擠掉不要的那兩顆', () => {
+  it('★ lift：兩個名字都認得，而且兩端是【接點】不是屬性', () => {
     const src = `${H}int main(){ vector<int> v{1,1,2};\n`
-      + ` auto a = find(v.begin(), v.end(), 2);\n`
       + ` auto b = unique(v.begin(), v.end());\n`
       + ` auto c = remove(v.begin(), v.end(), 1);\n`
       + ` return 0; }`
     const tree = lift(src)
-    const ids = collect(tree)
-    // ← 正向錨點先釘：`lift` 回 null 時集合是空的，負向斷言會空過
-    expect(ids).toContain('cpp:range_find')
-    expect(ids).toContain('cpp:range_unique')
-    expect(ids).toContain('cpp:range_remove')
-    expect(ids).not.toContain('cpp:raw_code')
+    const all = collect(tree)
+    expect(all).toContain('cpp:range_unique')   // ← 正向錨點先釘
+    expect(all).toContain('cpp:range_remove')
+    expect(all).not.toContain('cpp:raw_code')
 
-    // 🔴 **兩端要在接點上，不在屬性上**——這一刀的重點就是這件事
-    const find = (function dig(n: SemanticNode): SemanticNode | null {
-      if (n.componentId === 'cpp:range_find') return n
+    const dig = (n: SemanticNode, id: string): SemanticNode | null => {
+      if (n.componentId === id) return n
       for (const ks of Object.values(n.slots ?? {})) for (const k of ks) {
-        const f = dig(k); if (f) return f
+        const f = dig(k, id); if (f) return f
       }
       return null
-    })(tree)!
-    expect(Object.keys(find.properties ?? {})).toEqual([])
-    expect(find.slots.begin?.[0]?.componentId).toBe('cpp:container_iter')
-    expect(find.slots.end?.[0]?.componentId).toBe('cpp:container_iter')
+    }
+    const u = dig(tree, 'cpp:range_unique')!
+    expect(Object.keys(u.properties ?? {})).toEqual([])
+    expect(u.slots.begin?.[0]?.componentId).toBe('cpp:container_iter')
+    expect(u.slots.end?.[0]?.componentId).toBe('cpp:container_iter')
+    // 🔴 **擠掉某個值的那一顆多一個接點**——那正是它們是兩顆身分的理由
+    const r = dig(tree, 'cpp:range_remove')!
+    expect(r.slots.value?.length).toBe(1)
   })
 
-  it('★ generate：產回去一字不差（含自由函式那一形）', () => {
-    const src = `${H}int main(){ int a[3]={1,2,3};\n`
-      + ` int* p = find(begin(a), end(a), 2);\n`
+  it('★ generate：產回去一字不差', () => {
+    const src = `${H}int main(){ vector<int> v{1,1,2};\n`
+      + ` v.erase(unique(v.begin(), v.end()), v.end());\n`
+      + ` v.erase(remove(v.begin(), v.end(), 1), v.end());\n`
       + ` return 0; }`
     const code = generateCode(lift(src), 'cpp', apcs as unknown as StylePreset)
-    // 🔴 原生陣列**沒有成員 `begin`**——產成 `a.begin()` 的話編不過
-    expect(code).toContain('find(begin(a), end(a), 2)')
-    expect(code).not.toContain('a.begin()')
-  })
-
-  it('★ execute：找得到就是那一格，找不到就是結尾之後', async () => {
-    const r = await run(`${H}int main(){ int a[4]={4,5,6,7};\n`
-      + ` cout << (find(begin(a), end(a), 6) - begin(a));\n`
-      + ` cout << (find(begin(a), end(a), 9) == end(a));\n`
-      + ` return 0; }`)
-    expect(r.err).toBe('')
-    expect(r.out).toBe('21')
+    expect(code).toContain('v.erase(unique(v.begin(), v.end()), v.end())')
+    expect(code).toContain('v.erase(remove(v.begin(), v.end(), 1), v.end())')
   })
 
   /**
@@ -144,11 +137,10 @@ describe('膠囊自證：範圍那一族的三顆新元件', () => {
 
   /**
    * 🔴 **名字很短的函式，使用者自己也寫得出來**——判不出來就讓開。
-   * ⚠️ 這一條前面有正向錨點（上面那幾支），所以「沒有認領」才是有意義的讀數。
    */
   it('🔴 lift：引數個數不對的同名函式不得被認領', () => {
-    const ids = collect(lift(`${H}int find(int x){ return x; }\nint main(){ cout << find(3); return 0; }`))
+    const ids = collect(lift(`${H}int remove(int x){ return x; }\nint main(){ cout << remove(3); return 0; }`))
     expect(ids).toContain('cpp:func_call')
-    expect(ids).not.toContain('cpp:range_find')
+    expect(ids).not.toContain('cpp:range_remove')
   })
 })

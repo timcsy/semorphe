@@ -40,7 +40,7 @@
  * 而它該在**下一次遷移開始時重建**，不是留一個空殼在這裡等。
  * 形狀寫在 `knowledge/skills/component-encapsulate/SKILL.md`。
  */
-import { componentTraits } from '../../../core/component/traits'
+import { componentTraits, usableAsExpression } from '../../../core/component/traits'
 import { registeredComponents } from '../../../core/component/registry'
 
 export interface NodeTraits {
@@ -238,8 +238,45 @@ export function precedenceOf(componentId: string): number | undefined {
   return traits(componentId)?.precedence
 }
 
-/** 這顆元件放得進 for 迴圈的三個位置嗎。沒宣告＝不行（保守）。 */
+/**
+ * 這顆元件放得進 for 迴圈的三個位置嗎。
+ *
+ * ## 🪦 這裡本來是一張手寫的白名單（2026-09-18 換掉）
+ *
+ * 它曾經是 `traits(componentId)?.forLoopPart === true`——**沒宣告＝不行**。
+ * 那個預設本身是保守而正確的，錯的是**沒有人在加元件時被問到這一題**：
+ *
+ * ```
+ * 2026-09-17   cpp:var_declare_auto    沒宣告 → for (auto it = v.begin(); …) 整段掉進 raw code
+ * 2026-09-18   cpp:pointer_declare     沒宣告 → for (int* p = begin(a); …) 同上
+ *              ——而那天量出來：27 顆宣告式元件裡 25 顆沒宣告，
+ *                114 顆運算式裡 96 顆沒宣告
+ * ```
+ *
+ * 🔴 **而那張白名單問的東西，元件早就宣告過了**：
+ * 「我放得進一個要運算式的格子嗎」是 `role`／`positions`，
+ * 而 `usableAsExpression` 從一開始就在讀它。
+ *
+ * > **一個查得到的東西查兩次，比替它開第二張表便宜
+ * > ——而第二張表的成本不是「多一行」，是【它會忘記跟上】。**
+ *
+ * ## 判準（C++ 的文法，不是我們挑的）
+ *
+ * ```
+ * for ( 第一格 ; 第二格 ; 第三格 )
+ *        宣告或運算式   運算式    運算式
+ * ```
+ *
+ * 所以：**是運算式** → 可以；**是一個宣告** → 可以（第一格）；其餘 → 不行。
+ * ⚠️ 「其餘」真的存在：`cpp:if`／`cpp:print`／`cpp:return` 放進去不是合法的 C++，
+ *    而它們會照舊降級成 `cpp:raw_expression`（那顆的註解說它是這三格的兜底）。
+ *
+ * 🟢 換掉之後多認得的東西裡有一個是真的：`for (; cin >> x; )`
+ *    ——讀輸入當條件是 C++ 的標準寫法，而它以前整段變成一串文字。
+ */
 export function canBeForLoopPart(componentId: string): boolean {
+  if (usableAsExpression(componentId)) return true
+  // 第一格收得下一個**宣告**——而「我是一個宣告」是元件自己宣告的性質。
   return traits(componentId)?.forLoopPart === true
 }
 
