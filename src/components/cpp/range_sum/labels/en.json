@@ -1,4 +1,4 @@
 {
-  "CPP_ACCUMULATE_MSG0": "Sum %1 from %2 initial %3",
-  "CPP_ACCUMULATE_TOOLTIP": "Sum up elements in a range with an initial value"
+  "CPP_ACCUMULATE_MSG0": "Sum %1 through %2, starting from %3",
+  "CPP_ACCUMULATE_TOOLTIP": "Adds up the elements in this range. The starting value decides where the total starts and what type it is. The end position itself is not included."
 }

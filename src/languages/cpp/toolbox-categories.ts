@@ -63,6 +63,20 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       { from: '(core)', category: 'control' },
       { from: '(core)', category: 'loops' },
       { from: '(core)', category: 'conditions' },
+      /**
+       * 🔴 **`<stdexcept>` 一直沒有段落**（2026-09-18，可拿性護欄指名）。
+       *
+       * `cpp:try_catch` 與 `cpp:throw` 的擁有者是 `(core)`，所以它們一直拿得到；
+       * 而**造一個例外**（`cpp:exception_make`）的擁有者是 `<stdexcept>`，
+       * 於是它**在課程清單裡，而工具箱裡沒有**。
+       *
+       * ⚠️ 症狀是「學生找不到那塊積木」，**不是報錯**——
+       * 而它在這條護欄裡被歸成「缺陷（忘了加進工具箱）」已經一段時間了。
+       *
+       * > **一顆積木宣告過、收錄過、畫得出來，而它的擁有者沒有段落時，
+       * > 它就是不存在——而三個「有」都不會說話。**
+       */
+      { from: '<stdexcept>', category: 'advanced' },
       { from: '<cstdlib>', category: 'stdlib' },
       // `map()` 是數值換算，歸運算而不是硬體——⚠️ 它的擁有者是 (arduino) 而分類是 math
       { from: '(arduino)', category: 'math' },

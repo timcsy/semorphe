@@ -18,6 +18,11 @@
           "type": "input_value",
           "name": "KEY",
           "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "KEY_END",
+          "check": "Expression"
         }
       ],
       "previousStatement": "Statement",
@@ -36,7 +41,8 @@
       "fields": {},
       "inputs": {
         "KEY": "key",
-        "OBJ": "obj"
+        "OBJ": "obj",
+        "KEY_END": "key_end"
       }
     }
   }

@@ -301,3 +301,50 @@ export const SHAPE_CHANGES_V20: ShapeChange[] = [
       + '而一個欄位只裝得下一串文字。',
   },
 ]
+
+/**
+ * ## V21：範圍演算法的兩端從欄位換成接點（2026-09-18）
+ *
+ * 十顆範圍演算法的 `BEGIN`／`END`（`sort` 與 `reverse`／`fill` 那三顆叫
+ * `CONTAINER`，因為它們的積木上**只有一格**）＋ 前綴和的 `DEST`。
+ *
+ * 一個欄位只裝得下一串文字，而執行期用一條 regex 把那串文字解析回
+ * 「哪個陣列、從哪到哪」——那條 regex 只認得**一個裸識別字**開頭的東西，
+ * 於是學生真的寫的 `begin(a)`、`d2[i].begin()`、`d2[0]` 全部斷在那裡。
+ *
+ * 🔴 **同一個病的第三次**（`SHAPE_CHANGES_V19` 的接收者 39 顆 ·
+ * `V20` 的走訪對象 1 顆 · 這裡 10 顆）。而三次的判準都一樣：
+ *
+ * > **需要 parse 回結構才能用的字串，就不該是字串。**
+ *
+ * ⚠️ 而 V20 的註解已經寫下了「為什麼漏掉」的形狀，這一次它又成立了一次：
+ * 那 39 顆是按**欄位名** `OBJ` 列的，而這一族的欄位叫 `BEGIN`／`END`／`CONTAINER`。
+ *
+ * 🟢 **`cpp_range_sort` 那一格特別要記住**：它的積木上**只有 `CONTAINER` 一格**，
+ * 對到 `begin` 屬性——也就是說 **`end` 在積木上從來沒有落點**。
+ * 第三十一條（投影遺失）看不到它，因為那條掃的是**接點**而 `end` 當時是屬性。
+ *
+ * > **一個「還沒結構化」的欄位，連「它有沒有被畫出來」都不會被問。**
+ */
+export const SHAPE_CHANGES_V21: ShapeChange[] = [
+  { blockType: 'cpp_range_sort', retiredFields: ['CONTAINER'],
+    why: '範圍的兩端從欄位換成接點；而這一顆的積木上只有一格，`end` 從來沒有落點。' },
+  { blockType: 'cpp_range_reverse', retiredFields: ['CONTAINER'],
+    why: '範圍的兩端從欄位換成接點；而這一顆的積木上只有一格，`end` 從來沒有落點。' },
+  { blockType: 'cpp_range_fill', retiredFields: ['CONTAINER'],
+    why: '範圍的兩端從欄位換成接點；而這一顆的積木上只有一格，`end` 從來沒有落點。' },
+  { blockType: 'cpp_range_fill_sequence', retiredFields: ['BEGIN', 'END'],
+    why: '範圍的兩端從欄位換成接點——一個欄位只裝得下一串文字。' },
+  { blockType: 'cpp_range_sum', retiredFields: ['BEGIN', 'END'],
+    why: '範圍的兩端從欄位換成接點——一個欄位只裝得下一串文字。' },
+  { blockType: 'cpp_range_sum_partial', retiredFields: ['BEGIN', 'END', 'DEST'],
+    why: '範圍的兩端與寫入的目的地從欄位換成接點——目的地也是一個位置（`b+1` 是合法的）。' },
+  { blockType: 'cpp_range_max', retiredFields: ['BEGIN', 'END'],
+    why: '範圍的兩端從欄位換成接點——一個欄位只裝得下一串文字。' },
+  { blockType: 'cpp_range_min', retiredFields: ['BEGIN', 'END'],
+    why: '範圍的兩端從欄位換成接點——一個欄位只裝得下一串文字。' },
+  { blockType: 'cpp_range_find_lower', retiredFields: ['BEGIN', 'END'],
+    why: '範圍的兩端從欄位換成接點——一個欄位只裝得下一串文字。' },
+  { blockType: 'cpp_range_find_upper', retiredFields: ['BEGIN', 'END'],
+    why: '範圍的兩端從欄位換成接點——一個欄位只裝得下一串文字。' },
+]

@@ -1,19 +1,22 @@
 {
   "componentId": "cpp:range_sort",
   "abstractComponent": null,
-  "properties": [
-    {
-      "name": "begin",
-      "kind": "literal",
-      "default": "v.begin()"
-    },
-    {
-      "name": "end",
-      "kind": "literal",
-      "default": "v.end()"
-    }
-  ],
+  "properties": [],
   "slots": {
+    "begin": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
+    "end": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
     "comparator": {
       "allowed": [
         "expression"
@@ -33,5 +36,5 @@
   "requires": [
     "<algorithm>"
   ],
-  "_children_why": "`comparator` 是**接點不是屬性**，因為它是一個運算式（lambda 或函式名）。\n⚠️ 而 `begin`／`end` 今天是文字屬性——那不是設計上的不一致，是**迭代器範圍還沒結構化**。兩者該一起收，見 `draft/2026-08-13-三情境補齊的續作清單.md` 的 A 類。"
+  "_children_why": "🔴 **範圍的兩端是【接點】不是文字**（2026-09-18）。在此之前 `begin`／`end` 是兩個字串屬性，裝著原始碼的片段，而執行期用一條 regex 把它們解析回「哪個陣列、從哪到哪」——那條 regex 只認得一個裸識別字開頭的東西，於是 `begin(a)`、`d2[i].begin()`、`d2[0]` 全部斷在那裡。\n🟢 而拆掉之後發現**結構早就在了**：容器與位置在這個直譯器裡是同一個形狀（見 `interpreter/pointer.ts` 的 `isCellPointer`），`A+n` 的位置算術也早就有人做。\n> **那條 regex 解析的東西，執行期早就會算了——它不是在補一個缺口，它是在繞過一個已經存在的機制。**\n🔴 **屬性整個退場，不留欄位**：留著它等於留下第二份真相（與同族那顆迴圈的走訪對象同一個處置）。舊存檔由 `SHAPE_CHANGES_V21` 丟掉快取、從程式碼重 lift——程式碼那一份從來沒有掉過。\n`comparator` 一直是接點，因為它是一個運算式（lambda 或函式名）。"
 }

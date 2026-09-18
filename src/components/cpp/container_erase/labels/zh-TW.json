@@ -1,4 +1,4 @@
 {
-  "CPP_CONTAINER_ERASE_MSG0": "從 %1 移除 %2",
-  "CPP_CONTAINER_ERASE_TOOLTIP": "從容器移除元素"
+  "CPP_CONTAINER_ERASE_MSG0": "從 %1 移除 %2 到 %3",
+  "CPP_CONTAINER_ERASE_TOOLTIP": "「到」留空時，移除的是那一個位置或那一個值。接上另一個位置時，移除的是兩個位置之間的一整段——不含結尾那一格。"
 }

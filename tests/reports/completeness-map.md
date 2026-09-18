@@ -6,7 +6,7 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：337｜✅ 實作 1529｜📄 已宣告不提供 34｜❔ 判不出來 120｜🈳 殼 0｜❌ 缺 2（以路徑數計）
+元件：340｜✅ 實作 1544｜📄 已宣告不提供 34｜❔ 判不出來 120｜🈳 殼 0｜❌ 缺 2（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -173,15 +173,18 @@
 | `cpp:random_seed` | ✅ | ✅ | ✅ | ✅ | 📄 |
 | `cpp:range_fill` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_fill_sequence` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_find` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_find_lower` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_find_upper` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_max` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_remap` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_remove` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_reverse` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_sort` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_sum` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:range_sum_partial` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_unique` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cpp:raw_code` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:raw_expression` | ✅ | ❔ | ✅ | ✅ | ✅ |
 | `cpp:return` | ✅ | ✅ | ✅ | ✅ | ✅ |

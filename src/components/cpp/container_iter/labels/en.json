@@ -1,8 +1,10 @@
 {
-  "CPP_CONTAINER_ITER_MSG0": "%2 of %1",
+  "CPP_CONTAINER_ITER_MSG0": "%2 of %1 (%3)",
   "CPP_CONTAINER_ITER_BEGIN": "start position",
   "CPP_CONTAINER_ITER_END": "past-the-end position",
   "CPP_CONTAINER_ITER_TOOLTIP": "Gets a position in the container. Past-the-end and before-the-start are deliberate: they mark the boundaries and do not point at any element. Moving on from the last position goes backwards.",
   "CPP_CONTAINER_ITER_RBEGIN": "last position",
-  "CPP_CONTAINER_ITER_REND": "before-the-start position"
+  "CPP_CONTAINER_ITER_REND": "before-the-start position",
+  "CPP_CONTAINER_ITER_CALL_METHOD": "member form",
+  "CPP_CONTAINER_ITER_CALL_FREE": "free form"
 }

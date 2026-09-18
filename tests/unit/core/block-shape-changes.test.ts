@@ -9,7 +9,7 @@
  * 判準（`migrate-storage` 第 3／4／5 步）：冪等 · 只改確定的位置 · 表空時不亂丟。
  */
 import { describe, it, expect } from 'vitest'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16 } from '../../../src/migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V21 } from '../../../src/migrations/block-shape-changes'
 import { UPGRADES, CURRENT_VERSION } from '../../../src/core/storage/storage-version'
 
 const oldState = {
@@ -171,5 +171,71 @@ describe('v11 → v12：形狀變了的快取', () => {
     const cpp = { blocks: { blocks: [{ type: 'cpp_var_assign_compound', fields: { NAME: 'x' } }] } }
     expect(staleShapeIn(cpp, SHAPE_CHANGES_V12),
       '🔴 兩張表混在一起 → 已經升過 v12 的存檔會被重複丟快取').toBeNull()
+  })
+})
+
+/**
+ * **v20 → v21：範圍那一族的兩端從欄位換成接點**（2026-09-18）。
+ *
+ * 十顆範圍演算法的 `BEGIN`／`END`（`sort`／`reverse`／`fill` 三顆叫 `CONTAINER`，
+ * 因為它們的積木上**只有一格**）＋ 前綴和的 `DEST`。
+ *
+ * 🔴 **屬性整個退場，不留欄位**——留著它等於留下第二份真相。
+ * 舊存檔丟掉快取、從程式碼重 lift；**程式碼那一份從來沒有掉過**。
+ */
+describe('v20 → v21：範圍那一族的兩端換成接點', () => {
+  const oldSort = { blocks: { blocks: [{
+    type: 'cpp_range_sort', fields: { CONTAINER: 'v' },
+  }] } }
+  const oldPartial = { blocks: { blocks: [{
+    type: 'cpp_range_sum_partial', fields: { BEGIN: 'a', END: 'a+n', DEST: 'b' },
+  }] } }
+  const newSort = { blocks: { blocks: [{
+    type: 'cpp_range_sort',
+    inputs: { BEGIN: { block: { type: 'cpp_var_ref', fields: { NAME: 'v' } } } },
+  }] } }
+
+  it('★ 正向：帶著退場欄位的舊快取要被認出來', () => {
+    const hit = staleShapeIn(oldSort, SHAPE_CHANGES_V21)
+    expect(hit, '🔴 認不出來 → 舊存檔的範圍會安靜地消失').not.toBeNull()
+    expect(hit!.blockType).toBe('cpp_range_sort')
+  })
+
+  it('★ 正向：三個欄位那一顆也要認得出來', () => {
+    expect(staleShapeIn(oldPartial, SHAPE_CHANGES_V21)).not.toBeNull()
+  })
+
+  it('★ 反向：已經是新形狀（接點）的快取不得被亂丟', () => {
+    expect(staleShapeIn(newSort, SHAPE_CHANGES_V21),
+      '🔴 誤判 → 每一個使用者的排版都會無故重算').toBeNull()
+  })
+
+  /**
+   * 🔴 **`cpp:container_erase` 的 `key_end` 刻意【不】進這張表**。
+   *
+   * 它是**純新增**：沒有任何欄位退場，舊存檔那一格本來就是空的。
+   * 把一個沒有退場欄位的積木寫進遷移表，等於每次升級都白丟一次它的快取。
+   *
+   * > **遷移表認的是「這個欄位不存在了」，不是「這顆積木改過」。**
+   */
+  it('🔴 純新增的積木不得進遷移表（`cpp_container_erase` 多了一格插槽）', () => {
+    const erase = { blocks: { blocks: [{
+      type: 'cpp_container_erase',
+      inputs: { OBJ: { block: { type: 'cpp_var_ref', fields: { NAME: 'v' } } } },
+    }] } }
+    expect(staleShapeIn(erase, SHAPE_CHANGES_V21),
+      '🔴 一個沒有欄位退場的積木被判成過期 → 白丟使用者的排版').toBeNull()
+  })
+
+  it('★ 升級步驟：舊快取被丟掉，而 code 原封不動', () => {
+    const raw = { version: 20, code: 'sort(v.begin(), v.end());\n', codeHash: 'abc', blocklyState: oldSort }
+    const up = UPGRADES[20](raw)
+    expect(up.version).toBe(21)
+    expect(up.code, '🔴 真相被動到了').toBe('sort(v.begin(), v.end());\n')
+    expect(Object.keys(up.blocklyState as object), '🔴 快取沒被丟掉').toEqual([])
+  })
+
+  it('★ `CURRENT_VERSION` 要跟著走到 21', () => {
+    expect(CURRENT_VERSION).toBe(21)
   })
 })

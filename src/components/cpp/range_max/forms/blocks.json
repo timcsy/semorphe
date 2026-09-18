@@ -10,14 +10,14 @@
       "message0": "%{BKY_CPP_RANGE_MAX_MSG0}",
       "args0": [
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "BEGIN",
-          "text": "v.begin()"
+          "check": "Expression"
         },
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "END",
-          "text": "v.end()"
+          "check": "Expression"
         }
       ],
       "inputsInline": true,
@@ -26,11 +26,11 @@
       "tooltip": "%{BKY_CPP_RANGE_MAX_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": {
+      "fields": {},
+      "inputs": {
         "BEGIN": "begin",
         "END": "end"
-      },
-      "inputs": {}
+      }
     }
   }
 ]

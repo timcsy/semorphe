@@ -57,7 +57,26 @@ export function registerExecute(register: (component: string, executor: Componen
         : (ctx.scope.has(objName) ? receiverOf(ctx.scope, objName) : null)
       if (base && base.type === 'array' && Array.isArray(base.value)) {
         const i = Number((await ctx.evaluate(idxNode)).value)
-        if (!Number.isInteger(i) || i < 0 || i >= base.value.length) {
+        /**
+         * 🔴 **`&a[n]` 是結尾指標的慣用寫法**（2026-09-18，盲測抓到）。
+         *
+         * ```cpp
+         * int a[8];
+         * int* p = max_element(&a[0], &a[8]);   // 🟢 而我們丟 INDEX_OUT_OF_RANGE: 8
+         * ```
+         *
+         * 判準與範圍那一族**一模一樣**：`i === length` 就是「尾端之後一格」，
+         * 而那是合法的位置；只有**解參考**才是錯的（`pointer_deref` 已經在檢查）。
+         *
+         * 🔴 而更根本的理由是：**取位址不讀那一格**。
+         * 這裡本來先算出 `a[i]` 的合法性再取它的位置——那等於替一個
+         * 不需要讀的動作加上一個讀的限制。
+         *
+         * > **一個「不會讀」的運算，不該被「讀得到嗎」擋下來。**
+         *
+         * ⚠️ 再往後（`i > length`）仍然出聲：那不是任何慣用法。
+         */
+        if (!Number.isInteger(i) || i < 0 || i > base.value.length) {
           throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(i) })
         }
         // ⚠️ 共用 `base.value`，不是複製——見檔頭。

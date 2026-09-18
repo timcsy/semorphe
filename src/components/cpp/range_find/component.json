@@ -1,0 +1,41 @@
+{
+  "componentId": "cpp:range_find",
+  "abstractComponent": null,
+  "properties": [],
+  "slots": {
+    "begin": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
+    "end": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
+    "value": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    }
+  },
+  "role": "expression",
+  "requires": [
+    "<algorithm>"
+  ],
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_execute_why": "回傳的是**位置**不是值——與同族一致，而 C++ 的 `find` 正是這樣：「找不到」用『結尾之後的位置』表示，沒有別的哨兵值。",
+  "_children_why": "範圍的兩端與要找的東西都是**接點**——它們是運算式（`v.begin()`、`a+n`、`begin(a)` 都是）。\n⚠️ 這一族從一開始就是接點：它們是在「範圍從字串屬性換成接點」那一刀之後才誕生的。"
+}

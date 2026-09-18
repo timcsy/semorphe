@@ -9,7 +9,7 @@
  * ——它只放得下「名字 → 身分」。
  */
 import type { SemanticNode } from '../../../core/types'
-import { registerMethodBranch } from '../../../core/component/lift-branches'
+import { registerCallBranch, registerMethodBranch } from '../../../core/component/lift-branches'
 import { recordedTypeIsDevice } from '../../../core/component/container-templates'
 import { createNode } from '../../../core/semantic-tree'
 
@@ -50,6 +50,29 @@ export function registerLift(): void {
     // 🔴 **接收者是一棵樹**（2026-09-18）——`v[i].begin()`／`m[k].find(x)`
     const recv = objNode ? ctx.lift(objNode) : null
     if (!recv) return null
-    return createNode('cpp:container_iter', { which: method }, { obj: [recv] })
+    return createNode('cpp:container_iter', { which: method, call: 'method' }, { obj: [recv] })
+  })
+
+  /**
+   * 🔴 **自由函式那一形**（2026-09-18）：`begin(a)`／`end(a)`。
+   *
+   * 語料 4 支這樣寫，而它們**全部**是原生陣列——那不是巧合：
+   * `int a[5]` 沒有成員 `begin`，所以自由函式是**唯一**寫得出來的形式。
+   *
+   * > **位置不是身分，是形態**——接點結構一樣（一個容器 ＋ 哪一端），
+   * > 所以這裡回的是同一顆身分，差別進 `call` 屬性。
+   *
+   * ⚠️ **只有一個引數時才是我**：`begin` 這個名字很短，而使用者自己也寫得出
+   *    `int begin(int l, int r)`。判不出來就讓開。
+   * ⚠️ 反向的 `rbegin(x)`／`rend(x)` 在 C++17 才有，而語料 0 處
+   *    ——**沒有人接得住的東西補了只會讓失敗的位置往後移**，所以不收。
+   */
+  registerCallBranch('cpp/container_iter', (funcName, argChildren, ctx, _argsNode): SemanticNode | null => {
+    const bare = funcName.startsWith('std::') ? funcName.slice(5) : funcName
+    if (bare !== 'begin' && bare !== 'end') return null
+    if (argChildren.length !== 1) return null
+    const recv = ctx.lift(argChildren[0])
+    if (!recv) return null
+    return createNode('cpp:container_iter', { which: bare, call: 'free' }, { obj: [recv] })
   })
 }

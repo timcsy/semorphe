@@ -1,0 +1,4 @@
+{
+  "CPP_RANGE_UNIQUE_MSG0": "Squeeze out adjacent duplicates in %1 through %2 and give the new end",
+  "CPP_RANGE_UNIQUE_TOOLTIP": "Only adjacent duplicates are squeezed out, so the range usually needs to be sorted first. It does not shorten the container: the tail is still there but no longer meaningful. To actually shorten it, hand the returned position to the erase block."
+}

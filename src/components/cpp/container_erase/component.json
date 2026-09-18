@@ -3,8 +3,15 @@
   "abstractComponent": null,
   "properties": [],
   "slots": {
+    "obj": "expression",
     "key": "expression",
-    "obj": "expression"
+    "key_end": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
+    }
   },
   "role": "statement",
   "positions": [
@@ -20,5 +27,5 @@
     "execute": "./execute.ts",
     "lift": "./lift.ts"
   },
-  "_slots_why": "🔴 **接收者是一個【接點】，不是一串文字**（2026-09-18）。\n解開那串文字的地方（`interpreter/receiver.ts`）只認得「名字、數字、以及它們的加減」——於是 `m[name]`（字串鍵）、`buckets[keys[i%2]]`（巢狀下標）、`m[1]`（巢狀容器）在執行期就斷了。十支資訊隔離的盲測有 7 支死在上面。\n⚠️ Python 那一側**早就是接點**——同一顆元件、同一個引數名，兩種做法。"
+  "_slots_why": "🔴 **接收者是一個【接點】，不是一串文字**（2026-09-18）。\n解開那串文字的地方（`interpreter/receiver.ts`）只認得「名字、數字、以及它們的加減」——於是 `m[name]`（字串鍵）、`buckets[keys[i%2]]`（巢狀下標）、`m[1]`（巢狀容器）在執行期就斷了。十支資訊隔離的盲測有 7 支死在上面。\n⚠️ Python 那一側**早就是接點**——同一顆元件、同一個引數名，兩種做法。\n🔴 **第二個位置是【自己的接點】，不是 `key` 的第二個孩子**（2026-09-18，走一趟積木回來那一關抓到）。\n在此之前兩個引數都放在 `key` 裡，而積木上只有**一格** `KEY`——渲染器的 `inputs` 一格只接得住 `slots[0]`，於是走一趟積木回來：`v.erase(unique(v.begin(), v.end()), v.end())` 變成 `v.erase(unique(...))`。\n⚠️ **那不是少一個引數，是換了一個意思**：刪一整段變成刪一格，而它**編得過**。\n> **一個接點有落點，不代表那個落點裝得下它全部的孩子——而『有沒有落點』是今天唯一被檢查的那一個。**\n🟢 拆成兩個接點之後，兩端各有一格，而第三十一條（投影遺失）看得到它們。"
 }

@@ -1,4 +1,4 @@
 {
-  "CPP_RANGE_FIND_UPPER_MSG0": "first position in %1 to %2 greater than %3",
+  "CPP_RANGE_FIND_UPPER_MSG0": "First position in %1 through %2 that is greater than %3",
   "CPP_RANGE_FIND_UPPER_TOOLTIP": "The range must be sorted. Differs from lower bound on whether equal elements count."
 }

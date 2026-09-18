@@ -1,4 +1,4 @@
 {
-  "CPP_PARTIAL_SUM_MSG0": "前綴和 %1 存入 %2（運算 %3）",
-  "CPP_PARTIAL_SUM_TOOLTIP": "計算範圍的前綴和，儲存到目標位置"
+  "CPP_PARTIAL_SUM_MSG0": "把 %1 到 %2 的逐步累加結果寫到 %3 起",
+  "CPP_PARTIAL_SUM_TOOLTIP": "每一格放的是「從開頭到這一格」的總和。寫入的位置可以是另一個容器，也可以是同一個。範圍不含結尾那一格。"
 }

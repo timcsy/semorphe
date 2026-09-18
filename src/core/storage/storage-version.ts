@@ -13,11 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../../migrations/block-type-migrations'
 import { mergedIdentities } from '../../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20 } from '../../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20, SHAPE_CHANGES_V21 } from '../../migrations/block-shape-changes'
 import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 20
+export const CURRENT_VERSION = 21
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -434,6 +434,7 @@ export const UPGRADES: Record<number, Upgrade> = {
    * 同一個病與 v19 那 39 顆一樣，而這一顆被漏掉是因為它的欄位名叫 `CONTAINER`。
    */
   19: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V20, 20),
+  20: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V21, 21),
 }
 
 /**

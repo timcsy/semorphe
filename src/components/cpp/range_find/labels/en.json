@@ -1,0 +1,4 @@
+{
+  "CPP_RANGE_FIND_MSG0": "Position of %3 in %1 through %2",
+  "CPP_RANGE_FIND_TOOLTIP": "Scans forwards and returns the first position that matches. When nothing matches it returns the end position, so compare against the end to tell whether it found anything. The range does not need to be sorted."
+}

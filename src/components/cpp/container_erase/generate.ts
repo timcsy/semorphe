@@ -11,7 +11,13 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
        * 少了它的症狀不是「產出少一個引數」——是**來回轉換就換了一個意思**：
        * `ms.erase(a, b)` 變成 `ms.erase(a)`（只刪一格），而那**編得過**。
        */
-      const keys = (node.slots.key ?? []).map((k) => generateExpression(k, ctx))
+      /**
+       * 🔴 **第二個位置住在它自己的接點**（2026-09-18）——見 `component.json`。
+       * ⚠️ 仍然收 `key` 的第二個孩子：舊存檔（`CURRENT_VERSION` 21 之前）
+       *    那一份是兩個孩子擠在同一格，而**產碼那一路不該是遷移把關的地方**。
+       */
+      const keys = [...(node.slots.key ?? []), ...(node.slots.key_end ?? [])]
+        .map((k) => generateExpression(k, ctx))
       return `${indent(ctx)}${obj}.erase(${keys.join(', ')});\n`
     })
 }

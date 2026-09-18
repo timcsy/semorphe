@@ -1,4 +1,4 @@
 {
-  "CPP_REVERSE_MSG0": "Reverse %1",
-  "CPP_REVERSE_TOOLTIP": "Reverse the order of elements in the specified range"
+  "CPP_REVERSE_MSG0": "Reverse %1 through %2",
+  "CPP_REVERSE_TOOLTIP": "Reverses the order of the elements in this range. The end position itself is not included."
 }

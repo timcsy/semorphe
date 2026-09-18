@@ -1,4 +1,4 @@
 {
-  "CPP_PARTIAL_SUM_MSG0": "Prefix sums %1 from %2 to %3",
-  "CPP_PARTIAL_SUM_TOOLTIP": "Compute prefix sums of a range and store in destination"
+  "CPP_PARTIAL_SUM_MSG0": "Write the running totals of %1 through %2 starting at %3",
+  "CPP_PARTIAL_SUM_TOOLTIP": "Each slot receives the total from the start up to that slot. The destination may be another container or the same one. The end position itself is not included."
 }

@@ -1,4 +1,4 @@
 {
-  "CPP_REVERSE_MSG0": "反轉（ %1 ）",
-  "CPP_REVERSE_TOOLTIP": "把指定範圍內的元素順序反轉"
+  "CPP_REVERSE_MSG0": "把 %1 到 %2 反轉",
+  "CPP_REVERSE_TOOLTIP": "把這一段範圍裡的東西前後顛倒。範圍不含結尾那一格。"
 }

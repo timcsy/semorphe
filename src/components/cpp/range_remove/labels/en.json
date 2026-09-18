@@ -1,0 +1,4 @@
+{
+  "CPP_RANGE_REMOVE_MSG0": "Squeeze out everything equal to %3 in %1 through %2 and give the new end",
+  "CPP_RANGE_REMOVE_TOOLTIP": "Moves everything that is not equal to the value forwards and returns the new end. It does not shorten the container: to actually shorten it, hand the returned position to the erase block."
+}

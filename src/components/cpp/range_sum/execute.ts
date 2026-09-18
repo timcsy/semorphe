@@ -13,7 +13,7 @@ export function registerExecute(register: (component: string, executor: Componen
      * 那句話的下面兩行——同一個檔案同時記著教訓與教訓的反例。
      */
     register('cpp:range_sum', async (node, ctx) => {
-      const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
+      const r = await resolveRange(ctx, (node.slots.begin ?? [])[0], (node.slots.end ?? [])[0])
       const init = (node.slots.init ?? [])[0]
       let sum = init ? ctx.toNumber(await ctx.evaluate(init)) : 0
       for (let i = r.from; i < r.to; i++) sum += numOf(r.arr[i])

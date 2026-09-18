@@ -355,6 +355,86 @@ const CASES: [string, string, string, string[]][] = [
     `double r = 0; r = 7 / 2; cout << r << '\\n';\n` +
     `string t = "x"; t = "yz"; t += "!"; cout << t << '\\n';`, []],
 
+  /**
+   * 🔴 **範圍的兩端從字串屬性換成接點**（2026-09-18）。
+   *
+   * 在此之前 `begin`／`end` 是兩個字串屬性，裝著原始碼的片段，而執行期用一條
+   * regex 把它們解析回「哪個陣列、從哪到哪」——那條 regex 只認得**一個裸識別字**
+   * 開頭的東西，於是學生真的寫的三種形狀全部斷在那裡。
+   *
+   * ⚠️ **前七條是【正向錨點】，而它們是這一刀最大的風險**：`sort(A, A+n)` 這種
+   *    裸指標算術語料裡有 33 處，今天是綠的，而換成接點之後那條路**整個換人走**。
+   *    ⚠️ 第二條特別重要：那一族的字串 parser 2026-09-16 才為了「偏移是算出來的」
+   *    補過一次（`sort(h, h+N)`）。
+   */
+  ['★ 範圍錨點：裸陣列 ＋ 字面偏移', '',
+    `int A[5]={5,3,1,4,2}; sort(A, A+5); for(int i=0;i<5;i++) cout << A[i];`, []],
+  ['★ 範圍錨點：偏移是【算出來的】', '',
+    `int h[5]={5,4,3,2,1}; int N=5; sort(h, h+N); for(int i=0;i<5;i++) cout << h[i];`, []],
+  ['★ 範圍錨點：成員形式', '',
+    `vector<int> v{3,1,2}; sort(v.begin(), v.end()); for(int x:v) cout << x;`, []],
+  ['★ 範圍錨點：兩端都有偏移', '',
+    `int fx[6]={9,5,3,8,1,7}; sort(fx+1, fx+6); for(int i=0;i<6;i++) cout << fx[i];`, []],
+  ['★ 範圍錨點：部分範圍 ＋ 寫入型 ＋ 帶初值', '',
+    `int a[4]={1,2,3,4}; reverse(a, a+3); for(int i=0;i<4;i++) cout << a[i];\n` +
+    `int c[3]={1,1,1}; fill(c, c+3, 7); for(int i=0;i<3;i++) cout << c[i];\n` +
+    `vector<int> v2{1,2,3}; cout << accumulate(v2.begin(), v2.end(), 0);`, []],
+  ['★ 範圍錨點：遞增填充與前綴和', '',
+    `vector<int> v(4); iota(v.begin(), v.end(), 3); for(int x:v) cout << x;\n` +
+    `int a[4]={1,2,3,4}; int b[4]; partial_sum(a, a+4, b); for(int i=0;i<4;i++) cout << b[i];`, []],
+  ['★ 範圍錨點：最大最小與二分', '',
+    `int a[5]={3,9,1,7,2}; cout << *max_element(a,a+5) << *min_element(a,a+5);\n` +
+    `vector<int> v{1,3,3,5};\n` +
+    `cout << (lower_bound(v.begin(),v.end(),3)-v.begin()) << (upper_bound(v.begin(),v.end(),3)-v.begin());`, []],
+  ['🔴 範圍的兩端可以是自由函式（原生陣列沒有成員 begin）', '',
+    `int a[4]={4,2,3,1}; sort(begin(a), end(a)); for(int i=0;i<4;i++) cout << a[i];`, []],
+  ['🔴 範圍的兩端可以是運算式（語料 tioj/17_toj575）', '',
+    `vector<int> d2[3]; d2[1].push_back(5); d2[1].push_back(2);\n` +
+    `sort(d2[1].begin(), d2[1].end()); for(int x:d2[1]) cout << x;`, []],
+  /**
+   * 🔴 **`forLoopPart` 這個病的第三次**（2026-09-18）。一般的變數宣告早就宣告了
+   * 「我可以當 for 的初始化子」，`auto` 那顆 2026-09-17 才補，而**其餘 25 顆都沒有**
+   * ——於是這一行整段掉進 raw code，而錯誤訊息指著那一整段，沒有指著少掉的宣告。
+   */
+  ['🔴 指標宣告可以當 for 的初始化子（語料 basic/14_array_1）', '',
+    `int a[3]={7,8,9}; for(int* p = begin(a); p != end(a); p++) cout << *p;`, []],
+  ['🔴 位置相減換算成索引（語料 basic/14_array_2）', '',
+    `int a[4]={4,5,6,7}; int n = find(begin(a), end(a), 6) - begin(a); cout << n;`, []],
+  ['🔴 找不到用「結尾之後的位置」表示，沒有別的哨兵值', '',
+    `int a[3]={1,2,3}; cout << (find(begin(a), end(a), 9) == end(a));`, []],
+  /**
+   * 🔴 **「刪除-移除」的慣用法**——這兩顆是一根 `it.fails` 釘子指名要的，
+   * 而那根釘子的阻斷條件逐字寫著「範圍那一族從字串屬性換成接點的那一刀」。
+   * ⚠️ 它是**兩步**：擠掉的那一步**不改變長度**，真的變短是 `erase` 的事。
+   */
+  ['🔴 擠掉相鄰重複，再真的刪掉尾巴', '',
+    `vector<int> v{1,1,2,3,3,3}; v.erase(unique(v.begin(), v.end()), v.end());\n` +
+    `for(int x:v) cout << x;`, []],
+  ['🔴 擠掉等於某個值的，再真的刪掉尾巴', '',
+    `vector<int> v{1,2,1,3}; v.erase(remove(v.begin(), v.end(), 1), v.end());\n` +
+    `for(int x:v) cout << x;`, []],
+  ['★ 比較器仍然走得通（它一直是接點）', '',
+    `vector<int> v{1,3,2}; sort(v.begin(), v.end(), [](int a,int b){return a>b;});\n` +
+    `for(int x:v) cout << x;`, []],
+
+  /**
+   * 🔴 **`&a[n]` 是結尾指標的慣用寫法**（2026-09-18，盲測抓到）。
+   *
+   * 在此之前 `cpp:address_of` 先檢查 `i < length` 再取位置，於是
+   * `max_element(&a[0], &a[8])` 丟 `INDEX_OUT_OF_RANGE: 8`。
+   *
+   * 而**取位址不讀那一格**——判準與範圍那一族一模一樣：
+   * `i === length` 是「尾端之後一格」，只有**解參考**才是錯的。
+   *
+   * > **一個「不會讀」的運算，不該被「讀得到嗎」擋下來。**
+   */
+  ['🔴 `&a[n]` 當結尾，`&a[0]` 當開頭', '',
+    `int a[5]={3,9,1,7,2};\n` +
+    `cout << *max_element(&a[0], &a[5]) << '\\n';\n` +
+    `cout << (max_element(&a[0], &a[5]) - &a[0]) << '\\n';\n` +
+    `cout << accumulate(&a[0], &a[0], 100) << '\\n';\n` +
+    `sort(&a[1], &a[4]); for (int i=0;i<5;i++) cout << a[i];`, []],
+
   // ⚠️ **刻意沒有**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
   //    ——兩者在 C++ 裡都是未定義行為，而判準裡不得放它們。
 ]
