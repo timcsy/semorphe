@@ -220,6 +220,53 @@ describe('範圍那一族：四個面向（兩端換成接點之後）', () => {
   })
 
   /**
+   * **一個沒接上的插槽，產出的碼要編得過**（2026-09-18，瀏覽器驗收抓到）。
+   *
+   * 剛拖出來的積木在畫面上是對的（每一格是一個可讀的圓洞，還帶著 ⚠️），
+   * 而產出的程式碼是 `find(v.begin(), v.end(), );`——**編不過**。
+   *
+   * > **一個半完成的程式該長什麼樣，是一個設計決定；
+   * > 而「有的格子有答案、有的格子留一個語法錯誤」不是決定，是沒有決定。**
+   */
+  describe('★ 空插槽：產出的碼要編得過', () => {
+    const bare = (t: string): string => {
+      const n = { componentId: t, properties: {}, slots: {} } as SemanticNode
+      return generateCode({ componentId: 'cpp:program', properties: {}, slots: { body: [n] } } as SemanticNode, 'cpp', S)
+    }
+    it.each([
+      ['cpp:range_sort', 'sort(v.begin(), v.end());'],
+      ['cpp:range_find', 'find(v.begin(), v.end(), 0)'],
+      ['cpp:range_remove', 'remove(v.begin(), v.end(), 0)'],
+      ['cpp:range_unique', 'unique(v.begin(), v.end())'],
+      ['cpp:range_sum', 'accumulate(v.begin(), v.end(), 0)'],
+      ['cpp:range_sum_partial', 'partial_sum(v.begin(), v.end(), result.begin());'],
+      ['cpp:range_find_lower', 'lower_bound(v.begin(), v.end(), 0)'],
+      ['cpp:range_fill_sequence', 'iota(v.begin(), v.end(), 0);'],
+    ])('%s', (id, want) => {
+      const out = bare(id)
+      expect(out, `🔴 空插槽產出了編不過的東西：${out.trim()}`).toContain(want)
+      expect(out, '🔴 產出了一個空引數').not.toMatch(/,\s*\)/)
+    })
+
+    /**
+     * 🟠 **接收者那一族還沒補**——`cpp:container_erase` 的接收者沒接上時產出
+     * `.erase();`，而那也編不過。
+     *
+     * ⚠️ **語料 0 處**（沒有人存一個半完成的程式再去編它），而它是
+     * **56 顆元件**共同的形狀：每一顆都寫著
+     * `generateExpression((node.slots.obj ?? [])[0], ctx)`，
+     * 而 `generateExpression(undefined)` 回的是空字串。
+     *
+     * 🟠 為什麼不現在修：56 顆要一起改才不會留下「有的有、有的沒有」的不一致
+     *    ——而那個不一致**正是這一條被漏掉的原因**。
+     * 🔴 何時該修：**接收者的空值預設**那一刀（56 顆 ＋ 一條護欄）。
+     */
+    it.fails('[UNSUPPORTED:接收者的空值預設] 🟠 接收者沒接上時不得產出 `.erase()`', () => {
+      expect(bare('cpp:container_erase')).not.toMatch(/(^|\s)\.\w+\(/m)
+    })
+  })
+
+  /**
    * 🔴 **身分驗證**——只比字串的話，一顆用錯身分而碰巧產得出對的碼的元件會空過。
    */
   describe('★ 元件身分：不得退化成通用概念', () => {

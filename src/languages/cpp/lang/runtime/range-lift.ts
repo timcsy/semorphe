@@ -46,3 +46,32 @@ export function rangeEndsCode(
     e ? gen(e, ctx as never) : 'v.end()',
   ]
 }
+
+/**
+ * **一個沒接上的插槽，要產出看得懂而且【編得過】的東西**（2026-09-18，瀏覽器驗收抓到）。
+ *
+ * 剛拖出來的積木在畫面上是對的（每一格是一個可讀的圓洞，還帶著 ⚠️），
+ * 而**產出的程式碼是這樣**：
+ *
+ * ```cpp
+ * find(v.begin(), v.end(), );        // 🔴 編不過
+ * partial_sum(v.begin(), v.end(), ); // 🔴 編不過
+ * ```
+ *
+ * ⚠️ 而這一族**早就有慣例**：兩端沒接時產 `v.begin()`／`v.end()`，
+ * 填充那顆的值沒接時產 `0`。**只有後補的那幾格沒有跟上**——
+ * 而那個不一致正是它會被漏掉的原因：同一顆積木上，有的格子有預設，有的沒有。
+ *
+ * > **一個半完成的程式該長什麼樣，是一個設計決定；
+ * > 而「有的格子有答案、有的格子留一個語法錯誤」不是決定，是沒有決定。**
+ */
+export function slotCode(
+  node: SemanticNode,
+  slot: string,
+  ctx: unknown,
+  gen: (n: SemanticNode, c: never) => string,
+  fallback: string,
+): string {
+  const n = (node.slots[slot] ?? [])[0]
+  return n ? gen(n, ctx as never) : fallback
+}
