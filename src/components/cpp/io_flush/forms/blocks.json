@@ -1,0 +1,16 @@
+[
+  {
+    "id": "cpp_io_flush",
+    "componentId": "cpp:io_flush",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_io_flush",
+      "message0": "%{BKY_CPP_IO_FLUSH_MSG0}",
+      "output": "Expression",
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_CPP_IO_FLUSH_TOOLTIP}"
+    }
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "componentId": "cpp:io_flush",
+  "abstractComponent": null,
+  "properties": [],
+  "slots": {},
+  "role": "expression",
+  "owner": "(universal)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift-pattern.json"
+  },
+  "requires": [
+    "<iostream>"
+  ],
+  "_owner_why": "與同族那顆換行的一樣蓋 `(universal)`、要 `<iostream>`——`flush` 在 C++ 裡屬於 `<ostream>`，而 `<iostream>` 帶進來。⚠️ **不要蓋 `<iomanip>`**：那是 `setw` 那一族的家，蓋錯的症狀是它出現在錯的工具箱分類裡。",
+  "_traits_why": "🔴 **刻意【沒有】 `lineBreak`**。同族那顆換行的宣告了它，而產生器靠它決定換不換行。\n這一顆只送出、不換行——**那正是它是另一顆身分的理由**：\n判準（`元件代數.md`）逐字是「引數個數不同、**或語義上做的事不同**」，而兩顆的形狀全同（0 引數／0 接點／運算式），差別在**做的事**。\n> **合成一顆的話，那個 trait 會變成「依屬性的值而定」——而那是第二份真相的形狀。**"
+}

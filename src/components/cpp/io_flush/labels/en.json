@@ -1,0 +1,4 @@
+{
+  "CPP_IO_FLUSH_MSG0": "Push out what has been printed",
+  "CPP_IO_FLUSH_TOOLTIP": "In this simulator whatever is printed is visible immediately, so this block does not change any output. It exists so that your code converts back unchanged — real C++ needs it before waiting for input, otherwise a prompt can still be sitting in the buffer."
+}

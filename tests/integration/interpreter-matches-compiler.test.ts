@@ -435,6 +435,42 @@ const CASES: [string, string, string, string[]][] = [
     `cout << accumulate(&a[0], &a[0], 100) << '\\n';\n` +
     `sort(&a[1], &a[4]); for (int i=0;i<5;i++) cout << a[i];`, []],
 
+  /**
+   * 🔴 **I/O 操縱子**（2026-09-18／19）：`setw`／`setprecision`／`setfill`／
+   * `fixed`／`scientific`／`flush`。
+   *
+   * ⚠️ **第一條是正向錨點**，而它在開發途中真的紅過：新的 lift 樣式用了
+   * `match: '^(fixed|scientific)$'`，而 `match` 是**比較方式**（`startsWith`）
+   * 不是正規式——於是那條限制等於不存在，**每一個識別字**都被認成操縱子。
+   *
+   * > **一個不存在的欄位不會報錯，它只會讓你以為那個限制生效了。**
+   * > **而當一個新的檢查連【正向錨點】都紅的時候，先懷疑那個檢查。**
+   */
+  ['🔴 I/O 操縱子：★ 錨點：不用操縱子時輸出一字不變', '',
+    `int a=7; double d=1.0/3; cout << a << ' ' << d << '\\n';`, []],
+  ['🔴 I/O 操縱子：setw 只影響下一項', '',
+    `cout << setw(4) << 7 << 8 << '\\n';`, []],
+  ['🔴 I/O 操縱子：setfill 之後 setw 補的是那個字', '',
+    `cout << setfill('0') << setw(3) << 5 << '\\n';`, []],
+  ['🔴 I/O 操縱子：fixed ＋ setprecision', '',
+    `cout << fixed << setprecision(2) << 3.14159 << '\\n';`, []],
+  ['🔴 I/O 操縱子：單獨的 setprecision（有效數字）', '',
+    `cout << setprecision(3) << 3.14159 << ' ' << 123456.0 << '\\n';`, []],
+  ['🔴 I/O 操縱子：scientific', '',
+    `cout << scientific << setprecision(3) << 1234.5 << '\\n';`, []],
+  ['🔴 I/O 操縱子：flush 不改變輸出', '',
+    `cout << "ab" << flush << "cd" << flush << '\\n';`, []],
+  ['🔴 I/O 操縱子：setprecision 一直有效', '',
+    `cout << setprecision(2) << 1.23456 << ' ' << 2.34567 << '\\n';`, []],
+  ['🔴 I/O 操縱子：setw 每次都要重設', '',
+    `cout << setw(3) << 1 << setw(3) << 2 << '\\n';`, []],
+  ['🔴 I/O 操縱子：語料的寫法：九九乘法表那一行', '',
+    `for(int y=1;y<=3;y++){ cout << 2 << '*' << y << '=' << setw(2) << 2*y << ' '; } cout << '\\n';`, []],
+  ['🔴 I/O 操縱子：語料的寫法：二維陣列對齊', '',
+    `int a[2][2]={{1,22},{333,4}}; for(int r=0;r<2;r++){ for(int c=0;c<2;c++) cout << setw(4) << a[r][c] << ' '; cout << '\\n'; }`, []],
+  ['🔴 I/O 操縱子：fixed 之後回不到預設（C++ 也是）', '',
+    `cout << fixed << setprecision(1) << 2.5 << ' ' << 100000.0 << '\\n';`, []],
+
   // ⚠️ **刻意沒有**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
   //    ——兩者在 C++ 裡都是未定義行為，而判準裡不得放它們。
 ]

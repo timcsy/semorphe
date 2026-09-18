@@ -1,0 +1,33 @@
+{
+  "componentId": "cpp:io_mode",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "setting",
+      "kind": "enum",
+      "default": "width"
+    }
+  ],
+  "slots": {
+    "value": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    }
+  },
+  "role": "expression",
+  "owner": "<iomanip>",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "requires": [
+    "<iomanip>"
+  ],
+  "_properties_why": "🔴 **三個名字是同一顆身分**（`setw`／`setprecision`／`setfill`）。\n判準（`元件代數.md`）逐字：「引數個數相同、接點相同、角色相同——差別只有【一個值】」＝參數。\n三者都是 1 引數／1 接點／運算式，而**做的是同一件事**：設定輸出的一個選項。\n⚠️ 這正是「量什麼不是身分，是參數」那一條的形狀（讀濕度／讀溫度 → 一顆 ＋ 量什麼）。\n⚠️ 而**作用範圍的差別不進語義樹**：欄寬只影響下一項、位數一直有效——那是那個設定的意思，住在 execute。\n🔴 **硬條件成立**：那個差別在程式碼裡是真的，所以屬性必須被帶著——不帶的話 `setw` 會被改寫成 `setprecision`，而那會改掉學生的程式。"
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "cpp_io_mode_number_fixed",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "cpp:io_mode_number"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "fixed",
+        "notDeclared": true
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "notation",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ],
+    "priority": 5
+  },
+  {
+    "id": "cpp_io_mode_number_scientific",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "cpp:io_mode_number"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "scientific",
+        "notDeclared": true
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "notation",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ],
+    "priority": 5
+  }
+]

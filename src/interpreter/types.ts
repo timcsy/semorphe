@@ -9,6 +9,7 @@ import { resolveAlias } from './aliases'
  */
 export type { ExecutionStatus, ExecutionSpeed, RuntimeType, StepInfo } from '../core/execution'
 import type { RuntimeType } from '../core/execution'
+import { toSignificant } from './decimal'
 
 
 /**
@@ -414,50 +415,27 @@ export function valueToString(val: RuntimeValue): string {
  * > **一個「直接沿用」的註解，說的是「我沒有比對過」。**
  */
 function formatDefaultPrecision(n: number): string {
+  /**
+   * 🔴 **規則整段搬到 `decimal.ts`**（2026-09-18 第四次修）。
+   *
+   * 那一支是「十進位的四捨五入，收尾照 C 的規矩」——**逢五取偶**，
+   * 而 JS 的 `toFixed`／`toPrecision` 是逢五進位：
+   *
+   * ```
+   *              g++      JS
+   * 2.5  → 0 位   2        3
+   * 0.25 → 1 位   0.2      0.3
+   * 3.5  → 0 位   4        4      ← 這一格兩邊一樣，而那正是它難被發現的原因
+   * ```
+   *
+   * ⚠️ 兩者**只在精確的平手上不同**，而一半的測資會讓那個差別隱形。
+   *
+   * 🟢 而它搬到那裡還有第二個理由：**`setprecision(n)` 要的是同一條規則，位數是參數**。
+   *    留在這裡的話那邊得抄一份，而**兩份會漂移**。
+   */
   if (!Number.isFinite(n)) return String(n)
-  if (n === 0) return '0'
-  /**
-   * 🔴 **切換門檻要照 C 的 `%g`，不是照 JS 的 `toPrecision`**（2026-09-18 第二次修）。
-   *
-   * ```
-   *                     g++            toPrecision(6)
-   * 0.000012345         1.2345e-05     0.0000123450   ← JS 還沒切到科學記號
-   * ```
-   *
-   * `%g` 的規則：**指數 < -4 或 ≥ 有效位數**時用科學記號，否則用小數。
-   * 而 JS 的門檻是「指數 < -7」——**兩個門檻之間那一段，兩邊寫法不同**。
-   *
-   * > **一個「大致上一樣」的格式函式，它的差別會落在邊界上
-   * > ——而邊界正是學生的測資最常踩到的地方。**
-   */
-  const P = 6
-  /**
-   * 🔴 **指數要在【四捨五入到 P 位有效數字之後】才算**（2026-09-18 第三次修，
-   * 而這一次是先問 g++ 才寫的）。
-   *
-   * ```
-   * 999999.5   g++ 印 1e+06     先進位成 1.00000e6，指數變成 6 ⟹ 切到科學記號
-   * 999999.4   g++ 印 999999    沒有進位，指數還是 5 ⟹ 小數
-   * ```
-   *
-   * 直接對原值取 `log10` 的話兩個都算成 5，於是前者印成 `1000000`——
-   * **七位數字，而它宣稱自己只印六位有效數字**。
-   *
-   * > **一個「先判斷再四捨五入」的格式，會在進位剛好跨過一位時自己打自己的臉。**
-   */
-  const exp = Number(Math.abs(n).toExponential(P - 1).split('e')[1])
-  if (exp < -4 || exp >= P) {
-    // 尾數去尾零（`1.00000` → `1`），指數補成至少兩位（`e+9` → `e+09`）。
-    const t = n.toExponential(P - 1)
-    const e = t.indexOf('e')
-    const mant = t.slice(0, e).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
-    const sign = t[e + 1] === '-' ? '-' : '+'
-    const digits = t.slice(e + 2)
-    return `${mant}e${sign}${digits.padStart(2, '0')}`
-  }
-  const fixed = n.toFixed(Math.max(0, P - 1 - exp))
-  return fixed.includes('.')
-    ? fixed.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
-    : fixed
+  if (Number.isInteger(n) && Math.abs(n) < 1e6) return String(n)
+  return toSignificant(n, 6)
 }
+
 

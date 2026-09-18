@@ -93,6 +93,9 @@
     "cpp:input",
     "cpp:input_formatted",
     "cpp:input_line",
+    "cpp:io_flush",
+    "cpp:io_mode",
+    "cpp:io_mode_number",
     "cpp:io_sync",
     "cpp:io_tie",
     "cpp:istringstream_declare",
@@ -360,5 +363,5 @@
       "CPP_VECTOR_DECLARE_TYPE_STRING": "string (text)"
     }
   },
-  "note": "\n\n📈 **2026-09-18：`cpp:deque_declare` 加入**（探索報告的 P1）。\n  `deque` 在此之前沒有主人，於是 `deque<pair<int,int>>` 掉進一般的變數宣告而\n  失去元素型別。語料 22 支用 deque。\n\n\n📈 **2026-09-18：`cpp:var_declare_sequence` 加入**（結構化繫結，語料 16 處／13 支）。\n\n📈 **2026-09-18（範圍那一族，管線 188）：身分集合 238 → 241。**\n  `cpp:range_find`／`cpp:range_unique`／`cpp:range_remove` 三顆新元件。\n  🟢 **其餘一字不變**——這份基準不是棘輪，任何一筆差異都要說得出為什麼，\n  而這一筆的原因是「刻意新增了三顆」，不是搬家改變了行為。\n  ⚠️ **重產會把這一段註記整個洗掉**（2026-09-18 實測，當場接回來）——\n  > **一份「要重產必須說明為什麼」的基準，如果重產會刪掉那些說明，\n  > 那麼每一次重產都在刪掉上一個人的理由。**\n"
+  "note": "\n\n📈 **2026-09-18：`cpp:deque_declare` 加入**（探索報告的 P1）。\n  `deque` 在此之前沒有主人，於是 `deque<pair<int,int>>` 掉進一般的變數宣告而\n  失去元素型別。語料 22 支用 deque。\n\n\n📈 **2026-09-18：`cpp:var_declare_sequence` 加入**（結構化繫結，語料 16 處／13 支）。\n\n📈 **2026-09-18（範圍那一族，管線 188）：身分集合 238 → 241。**\n  `cpp:range_find`／`cpp:range_unique`／`cpp:range_remove` 三顆新元件。\n  🟢 **其餘一字不變**——這份基準不是棘輪，任何一筆差異都要說得出為什麼，\n  而這一筆的原因是「刻意新增了三顆」，不是搬家改變了行為。\n  ⚠️ **重產會把這一段註記整個洗掉**（2026-09-18 實測，當場接回來）——\n  > **一份「要重產必須說明為什麼」的基準，如果重產會刪掉那些說明，\n  > 那麼每一次重產都在刪掉上一個人的理由。**\n\n📈 **2026-09-19（I/O 操縱子三顆，管線 189）：＋3 顆身分。**\n  `cpp:io_flush`／`cpp:io_mode`／`cpp:io_mode_number`。\n  ⚠️ **重產會把這一段註記整個洗掉**（2026-09-18 實測過一次，這一次先接回來）。\n  > **一份「要重產必須說明為什麼」的基準，如果重產會刪掉那些說明，\n  > 那麼每一次重產都在刪掉上一個人的理由。**\n"
 }
