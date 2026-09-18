@@ -34,6 +34,8 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
+import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCppDetailed } from '../helpers/run-cpp'
 import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
@@ -221,6 +223,42 @@ describe('結構化繫結與走訪的對象：五個面向', () => {
       expect(back.properties.type).toBe('int')
       expect(gen(back)).toContain('deque<int> dq;')
     })
+  })
+
+  /**
+   * **跨概念的組合**（整合那一關要的）——新元件放進既有的結構裡。
+   *
+   * ⚠️ 單獨測過不等於組合起來也對：`audit-completeness` 的檔頭逐字寫著
+   * 「本護欄只抓『殼』……**不檢測條件性正確**——單獨測通過、組合起來才壞的問題」。
+   */
+  describe('跨概念：放進既有的結構裡', () => {
+    const COMBOS: [string, string][] = [
+      ['放進條件的主體',
+        `deque<pair<int,int>> q; q.push_back({2, 5});
+         if (!q.empty()) { auto [a, b] = q.front(); cout << a << b; }`],
+      ['放進巢狀的迴圈',
+        `vector<vector<pair<int,int>>> g(2); g[0].push_back({1, 2}); g[1].push_back({3, 4});
+         for (int i = 0; i < 2; i++) for (auto [x, y] : g[i]) cout << x << y;`],
+      ['放進函式，而名字當引數傳出去',
+        `deque<pair<int,int>> q; q.push_back({3, 4}); auto [a, b] = q.front(); cout << add(a, b);`],
+      ['與既有的走訪並列',
+        `vector<int> v{1, 2}; for (int x : v) cout << x;
+         map<int,pair<int,int>> m; m[1] = {7, 8};
+         for (auto [k, pr] : m) { auto [lo, hi] = pr; cout << k << lo << hi; }`],
+    ]
+    for (const [name, body] of COMBOS) {
+      it(`⑤ ${name}`, async () => {
+        const glob = name.includes('函式') ? 'int add(int p, int q){ return p + q; }' : ''
+        const src = `${H}${glob}\nint main(){ ${body} return 0; }\n`
+        const ref = runCppDetailed(src)
+        expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
+        const out: string[] = []
+        const interp = new SemanticInterpreter({ maxSteps: 300_000 })
+        interp.setOutputCallback((x) => out.push(x))
+        await interp.execute(lift(src), [])
+        expect(out.join(''), '🔴 單獨測通過、組合起來才壞').toBe(ref.output)
+      }, 60_000)
+    }
   })
 
   // ── 身分（COMPONENT_IDENTITY）────────────────────────
