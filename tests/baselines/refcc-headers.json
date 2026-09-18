@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "note": "本機是 Apple clang（libc++）、CI 是 GNU g++（libstdc++），兩者對「哪個標頭遞移帶進哪個」的答案不同。手列標頭的檔會在 CI 上紅而本機全綠。",
+    "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+  },
+  "scanned": {
+    "testFiles": 518,
+    "feeders": 16
+  },
+  "handListed": 2,
+  "details": [
+    "tests/integration/audit-behavior-error.test.ts",
+    "tests/integration/run-cpp-no-orphans.test.ts"
+  ],
+  "note": "🎯 **2026-09-18：8 → 2（下調）。** 六個檔換成墊片（`bits/stdc++.h`）。\n\n🟠 **剩下的兩個各有理由，不是還沒做**：\n\n- `audit-behavior-error.test.ts`——它的**標頭多樣性本身就是語料**\n  （五組不同的標頭組合是被量的東西）。換掉等於改語料。\n- `run-cpp-no-orphans.test.ts`——它量的是「逾時之後有沒有留下孤兒行程」，\n  而 `bits/stdc++.h` 是一個很大的標頭；**換掉會讓那支測試變慢，而慢正是它在量的東西**。\n\n🔴 **何時該修**：這兩個在 CI 上紅的那一天——而它們今天用的都是\n`<iostream>`／`<cstdio>`／`<string>` 這種兩套標準函式庫都直接提供的標頭，\n所以那一天不會因為「遞移帶不帶進來」而來。\n"
+}

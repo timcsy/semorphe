@@ -52,7 +52,16 @@ tests/
 | 🔴 **改 lift／產生器**（`lifters/strategies.ts`、`code-generator.ts`、膠囊的 `lift`／`generate`） | **拿真實語料重量一次**（見下） | 十秒 |
 | 🔴 **改宣告的 lift／渲染／抽取** | **四個面向全掃**（見下，要參照編譯器） | 兩分鐘 |
 | commit 前 | `npm test`（全套） | 四分鐘 |
+| 🔴 **push 之後** | **`gh run list --limit 3`** | 十秒 |
 | PR | CI 跑全套 ＋ `npm run test:e2e` | — |
+
+🔴 **「push 之後看 CI」那一列是 2026-09-18 加的，而它是使用者發現的**：
+CI 從第 182 刀起紅，**連續四次合併**，而每一次我都跑了全套（7000+ 綠）、
+每一次都沒有看 CI。使用者只說了三個字：「CI失敗」。
+
+> **一條「本機全綠就等於好了」的習慣，量到的是本機那台機器的寬鬆程度。**
+
+⚠️ 而那四次紅的**原因是同一個**，下一節說。
 
 🔴 **全套的並行度壓在 2**（2026-09-17 量的，兩次被系統砍掉之後）——
 **已經寫進 `vitest.config.ts`，不必記得加旗標**。
@@ -150,6 +159,26 @@ STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-loadable   # ③
 ```
 
 > **一份「有 N 個缺陷」的報告，先問那 N 裡有幾個是量測工具自己的。**
+
+🔴 **而「參照編譯器」不是一個東西**（2026-09-18，CI 抓到七支）：
+
+```
+本機   Apple clang（libc++）    <set> 遞移帶進 <deque>、<map> 帶進 <queue>／<tuple>
+CI     GNU g++（libstdc++）     不帶
+```
+
+於是七支手列標頭的測試**本機全綠、CI 全紅**，訊息還說「測試自己的問題」
+——那句話是對的，只是它說不出**是哪一台**參照編譯器。
+
+⚠️ 同一個坑咬過兩次：2026-09-17 缺 `<set>`（當時的修法是補上那一個標頭），
+2026-09-18 缺 `<queue>` 與 `<tuple>`。**補一個實例不會讓下一個不發生。**
+
+> **本機那一台比 CI 那一台寬鬆的地方，量不出來的不是缺陷
+> ——是【我的判準有多寬】。**
+
+🟢 **處方**：餵給參照編譯器的程式一律 `#include <bits/stdc++.h>`
+（本機由 `SEMORPHE_REFCC_INCLUDE` 指到 `tests/fixtures/refcc-shim`，CI 上是真的 GCC 標頭），
+而第 120 條護欄 `audit-refcc-headers` 盯著還在手列的檔數。
 
 ⚠️ 現在 `audit-lesson-blockmaps` 會替你紅（它比對 `engineHash`），
 所以**不用記得**——但要知道紅的時候該跑什麼。

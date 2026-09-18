@@ -71,7 +71,13 @@ const run = async (src: string): Promise<string> => {
   await interp.execute(lift(src), [])
   return out.join('')
 }
-const H = `#include <iostream>\n#include <set>\n#include <map>\n#include <vector>\n#include <string>\nusing namespace std;\n`
+/**
+ * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
+ * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
+ * 手列的話，本機全綠而 CI 紅，訊息還會說「測試自己的問題」。
+ * 見第 120 條護欄 `audit-refcc-headers`。
+ */
+const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 const prog = (body: string, glob = ''): string => `${H}${glob}\nint main(){ ${body} return 0; }\n`
 
 const sameAsCompiler = async (body: string, hint: string, glob = ''): Promise<void> => {

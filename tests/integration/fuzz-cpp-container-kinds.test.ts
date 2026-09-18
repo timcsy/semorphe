@@ -57,7 +57,22 @@ const run = async (src: string): Promise<string> => {
   await interp.execute(lift(src), [])
   return out.join('')
 }
-const H = `#include <iostream>\n#include <set>\n#include <map>\n#include <vector>\n#include <string>\n#include <unordered_map>\nusing namespace std;\n`
+/**
+ * 🔴 **標頭不手列**（2026-09-18，CI 抓到）。
+ *
+ * 本機的參照編譯器是 **Apple clang（libc++）**，而 CI 上是 **GNU g++（libstdc++）**
+ * ——libc++ 從 `<set>` 遞移帶進 `<deque>`，libstdc++ 不會。
+ * 於是 `deque<int> d{1,3};` 在我的機器上編得過，**而 CI 紅**。
+ *
+ * > **「參照編譯器」不是一個東西。本機那一台比 CI 那一台寬鬆的地方，
+ * > 量不出來的不是缺陷——是【我的判準有多寬】。**
+ *
+ * ⚠️ 同一個坑 2026-09-17 撞過一次（缺 `<set>`），而那次的修法是「補上那一個」
+ * ——**補一個實例不會讓下一個不發生**。這個 repo 本來就有墊片
+ *（`tests/fixtures/refcc-shim`，給 `SEMORPHE_REFCC_INCLUDE` 用），
+ * 而 CI 上用的是真的 GCC 標頭。
+ */
+const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 const prog = (body: string): string => `${H}int main(){ ${body} return 0; }\n`
 const S = apcs as unknown as StylePreset
 

@@ -41,7 +41,13 @@ beforeAll(async () => {
   registerCppLanguage()
 }, 120_000)
 
-const H = '#include <iostream>\n#include <deque>\n#include <vector>\n#include <string>\nusing namespace std;\n'
+/**
+ * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
+ * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
+ * 手列的話，本機全綠而 CI 紅，訊息還會說「測試自己的問題」。
+ * 見第 120 條護欄 `audit-refcc-headers`。
+ */
+const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
 /** 跑一遍：拿 g++ 當權威，兩邊比 stdout。 */
 async function both(glob: string, body: string): Promise<{ ref: string; got: string }> {
@@ -136,8 +142,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
    * 十支資訊隔離的盲測有 **7 支**死在上面。
    */
   it('★ 接收者的下標是字串鍵', async () => {
-    // ⚠️ `<map>` 由 glob 補進來——`H` 那一份只有 deque／vector／string
-    const { ref, got } = await both('#include <map>',
+    const { ref, got } = await both('',
       `map<string, vector<int>> m; string k = "a"; m[k].push_back(5); m[k].push_back(7);`
       + ` cout << m[k].size();`)
     expect(got).toBe(ref)
@@ -156,7 +161,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
    * 而 `push_back` 說「這不是一個容器」。
    */
   it('★ 對照表的值是容器時，第一次存取就要建得出那個容器', async () => {
-    const { ref, got } = await both('#include <map>',
+    const { ref, got } = await both('',
       `map<int, vector<int>> g; g[3].push_back(1); g[3].push_back(2); g[5].push_back(9);`
       + ` cout << g[3].size() << g[5].front() << g.size();`)
     expect(got).toBe(ref)
@@ -175,7 +180,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
    * > ——而把判斷放在分得出來的那一邊，比在另一邊猜便宜。**
    */
   it('★ 對照表上的雙下標', async () => {
-    const { ref, got } = await both('#include <map>',
+    const { ref, got } = await both('',
       `map<int, vector<int>> g; g[5].push_back(9); cout << g[5][0];`)
     expect(got).toBe(ref)
   }, 60_000)
@@ -185,7 +190,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
    * ⚠️ 兩個正向錨點跟著：真的二維陣列與向量的向量**不得被弄壞**。
    */
   it('★ 雙下標的身分由「那個容器是什麼」決定', async () => {
-    const { ref, got } = await both('#include <map>',
+    const { ref, got } = await both('',
       `map<int, map<int,int>> gg; gg[1][2] = 3;
        string w[2] = {"ab", "cd"};
        int t[2][3] = {{1,2,3},{4,5,6}};
