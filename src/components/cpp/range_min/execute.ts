@@ -10,7 +10,7 @@ import { positionIn } from '../../../interpreter/pointer'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_min', async (node, ctx) => {
-      const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
+      const r = await resolveRange(ctx, (node.slots.begin ?? [])[0], (node.slots.end ?? [])[0])
       // `resolveRange` 的 `arr` 宣告成 `unknown[]`（它不必知道元素是什麼）——
       // 這裡收窄一次，而不是讓每一行各自 cast。
       const cells = r.arr as RuntimeValue[]

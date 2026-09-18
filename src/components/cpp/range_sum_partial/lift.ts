@@ -12,14 +12,20 @@
 import type { SemanticNode } from '../../../core/types'
 import { registerCallBranch } from '../../../core/component/lift-branches'
 import { createNode } from '../../../core/semantic-tree'
+import { liftRangeEnds } from '../../../languages/cpp/lang/runtime/range-lift'
 
 export function registerLift(): void {
-  registerCallBranch('cpp/range_sum_partial', (funcName, _argChildren, _ctx, argsNode): SemanticNode | null => {
+  registerCallBranch('cpp/range_sum_partial', (funcName, _argChildren, ctx, argsNode): SemanticNode | null => {
     if (!(funcName === 'partial_sum' || funcName === 'std::partial_sum')) return null
     const psArgs = argsNode ? argsNode.namedChildren : []
-    const beginText = psArgs[0]?.text ?? 'v.begin()'
-    const endText = psArgs[1]?.text ?? 'v.end()'
-    const destText = psArgs[2]?.text ?? 'result.begin()'
-    return createNode('cpp:range_sum_partial', { begin: beginText, end: endText, dest: destText }, {})
+    /**
+     * 🔴 **兩端是【接點】不是 `.text`**（2026-09-18）——見 `component.json` 的 `_children_why`。
+     * ⚠️ 接不出來就**讓開**：猜一個錯的專屬身分比誠實降級更糟。
+     */
+    const ends = liftRangeEnds(psArgs, ctx)
+    if (!ends) return null
+    const dest = psArgs[2] ? ctx.lift(psArgs[2]) : null
+    if (!dest) return null
+    return createNode('cpp:range_sum_partial', {}, { ...ends, dest: [dest] })
   })
 }

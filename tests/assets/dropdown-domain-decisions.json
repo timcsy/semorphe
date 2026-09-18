@@ -410,6 +410,11 @@
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "一個鍵能有幾個值只有兩種：一個（`map`／`unordered_map`）與多個（`multimap`）。**這是語言的封閉集合**，與同族集合宣告的「留不留重複」同一個判定。"
+    },
+    "cpp_container_iter.CALL": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "C++ 取容器一端只有這兩種寫法：成員（`v.begin()`）與自由函式（`begin(v)`）。**這是語言的封閉集合，不是我們挑的**——而它必須被記住而不是猜出來：原生陣列沒有成員 `begin`，所以第三個值不會對應到任何合法的 C++。"
     }
   }
 }

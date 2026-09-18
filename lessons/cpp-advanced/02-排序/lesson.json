@@ -5,6 +5,7 @@
     "target": "cpp-advanced"
   },
   "components": [
+    "cpp:container_iter",
     "cpp:endl",
     "cpp:lambda",
     "cpp:literal_number",

@@ -12,15 +12,21 @@
 import type { SemanticNode } from '../../../core/types'
 import { registerCallBranch } from '../../../core/component/lift-branches'
 import { createNode } from '../../../core/semantic-tree'
+import { liftRangeEnds } from '../../../languages/cpp/lang/runtime/range-lift'
 
 export function registerLift(): void {
   registerCallBranch('cpp/range_fill_sequence', (funcName, _argChildren, ctx, argsNode): SemanticNode | null => {
     if (!(funcName === 'iota' || funcName === 'std::iota')) return null
     const iotaArgs = argsNode ? argsNode.namedChildren : []
-    const beginText = iotaArgs[0]?.text ?? 'v.begin()'
-    const endText = iotaArgs[1]?.text ?? 'v.end()'
+    /**
+     * 🔴 **兩端是【接點】不是 `.text`**（2026-09-18）——見 `component.json` 的 `_children_why`。
+     * ⚠️ 接不出來就**讓開**：猜一個錯的專屬身分比誠實降級更糟。
+     */
+    const ends = liftRangeEnds(iotaArgs, ctx)
+    if (!ends) return null
     const valueChild = iotaArgs[2] ? ctx.lift(iotaArgs[2]) : null
-    return createNode('cpp:range_fill_sequence', { begin: beginText, end: endText }, {
+    return createNode('cpp:range_fill_sequence', {}, {
+    ...ends,
     value: valueChild ? [valueChild] : [],
     })
   })

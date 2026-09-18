@@ -4,8 +4,8 @@ import { resolveRange, numOf } from '../../../languages/cpp/lang/runtime/range'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_sum_partial', async (node, ctx) => {
-      const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
-      const dest = resolveRange(ctx as never, String(node.properties.dest), String(node.properties.dest))
+      const r = await resolveRange(ctx, (node.slots.begin ?? [])[0], (node.slots.end ?? [])[0])
+      const dest = await resolveRange(ctx, (node.slots.dest ?? [])[0], (node.slots.dest ?? [])[0])
       let acc = 0
       for (let i = r.from; i < r.to; i++) {
         acc += numOf(r.arr[i])

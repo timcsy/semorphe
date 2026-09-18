@@ -14,8 +14,8 @@ export function registerGenerateUnused(): void {}
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_sort', async (node, ctx) => {
-      const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
-      const cells = r.arr as RuntimeValue[]
+      const r = await resolveRange(ctx, (node.slots.begin ?? [])[0], (node.slots.end ?? [])[0])
+      const cells = r.arr
       const cmpNode = (node.slots.comparator ?? [])[0]
 
       // 沒有比較器 → C++ 的預設 `operator<`（對 `pair` 是字典序）

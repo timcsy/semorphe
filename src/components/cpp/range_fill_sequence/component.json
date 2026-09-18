@@ -1,17 +1,22 @@
 {
   "componentId": "cpp:range_fill_sequence",
   "abstractComponent": null,
-  "properties": [
-    {
-      "name": "begin",
-      "kind": "literal"
-    },
-    {
-      "name": "end",
-      "kind": "literal"
-    }
-  ],
+  "properties": [],
   "slots": {
+    "begin": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
+    "end": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
     "value": "expression"
   },
   "role": "statement",
@@ -24,5 +29,6 @@
   },
   "requires": [
     "<numeric>"
-  ]
+  ],
+  "_children_why": "🔴 **範圍的兩端是【接點】不是文字**（2026-09-18）。在此之前它們是字串屬性，裝著原始碼的片段，而執行期用一條 regex 解析回來——那條 regex 只認得一個裸識別字開頭的東西，於是 `begin(a)`、`d2[i].begin()`、`d2[0]` 全部斷在那裡。\n🟢 拆掉之後發現**結構早就在了**：容器與位置在這個直譯器裡是同一個形狀（`interpreter/pointer.ts` 的 `isCellPointer`），`A+n` 的位置算術也早就有人做。\n> **那條 regex 解析的東西，執行期早就會算了——它不是在補一個缺口，它是在繞過一個已經存在的機制。**\n🔴 **屬性整個退場，不留欄位**：留著它等於留下第二份真相。舊存檔由 `SHAPE_CHANGES_V21` 丟掉快取、從程式碼重 lift——程式碼那一份從來沒有掉過。"
 }

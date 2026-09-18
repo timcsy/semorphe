@@ -10,9 +10,14 @@
       "message0": "%{BKY_CPP_SORT_MSG0}",
       "args0": [
         {
-          "type": "field_input",
-          "name": "CONTAINER",
-          "text": "v"
+          "type": "input_value",
+          "name": "BEGIN",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "END",
+          "check": "Expression"
         },
         {
           "type": "input_value",
@@ -27,10 +32,10 @@
       "tooltip": "%{BKY_CPP_SORT_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": {
-        "CONTAINER": "begin"
-      },
+      "fields": {},
       "inputs": {
+        "BEGIN": "begin",
+        "END": "end",
         "COMPARATOR": "comparator"
       },
       "statementInputs": {}

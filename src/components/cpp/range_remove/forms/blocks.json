@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cpp:range_remove",
+    "componentId": "cpp:range_remove",
+    "language": "cpp",
+    "category": "algorithms",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_range_remove",
+      "message0": "%{BKY_CPP_RANGE_REMOVE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "BEGIN",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "END",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_CPP_RANGE_REMOVE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "BEGIN": "begin",
+        "END": "end",
+        "VALUE": "value"
+      }
+    }
+  }
+]

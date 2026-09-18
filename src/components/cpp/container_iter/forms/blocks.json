@@ -35,6 +35,20 @@
               "rend"
             ]
           ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "CALL",
+          "options": [
+            [
+              "%{BKY_CPP_CONTAINER_ITER_CALL_METHOD}",
+              "method"
+            ],
+            [
+              "%{BKY_CPP_CONTAINER_ITER_CALL_FREE}",
+              "free"
+            ]
+          ]
         }
       ],
       "inputsInline": true,
@@ -44,7 +58,8 @@
     },
     "renderMapping": {
       "fields": {
-        "WHICH": "which"
+        "WHICH": "which",
+        "CALL": "call"
       },
       "inputs": {
         "OBJ": "obj"

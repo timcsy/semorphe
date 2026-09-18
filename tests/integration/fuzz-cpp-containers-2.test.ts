@@ -191,14 +191,26 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
        cout << s;`, '')
   }, 60_000)
 
-  it.fails('[UNSUPPORTED:std::unique 與 std::remove] 🟠 刪除-移除的慣用法', async () => {
-    // 🟠 **為什麼不現在修**：這兩個是**範圍演算法**，回傳一個位置而不改變長度
-    //    ——而「範圍」今天還是兩個字串屬性（第七十二條在追）。
-    //    在範圍結構化之前補這兩顆，它們的第一個引數會是一串文字。
-    // 🔴 何時該修：範圍那一族從字串屬性換成接點的那一刀。
+  /**
+   * 🟢 **釘子拔了**（2026-09-18）。它的阻斷條件逐字寫著「範圍那一族從字串屬性
+   * 換成接點的那一刀」，而那一刀做完了——`cpp:range_unique`／`cpp:range_remove`
+   * 兩顆隨之誕生（它們回傳一個位置，而位置在那一刀之前表達不出來）。
+   *
+   * ⚠️ **這一次真的回來拔了**。上一根同樣寫著「那一天回來拔」的釘子沒有人回來，
+   * 而缺陷換了一個形狀活下去（見 `set_insert/execute.ts` 的註解）。
+   *
+   * > **一根釘子如果只寫著「誰擋住我」，它不會在那個人讓開的時候自己掉下來。**
+   */
+  it('🟢 刪除-移除的慣用法（釘子已拔）', async () => {
     await same(
       `vector<int> v{3,1,1,2}; sort(v.begin(), v.end());
        v.erase(unique(v.begin(), v.end()), v.end()); for (int x : v) cout << x;`, '')
+  }, 60_000)
+
+  it('🟢 刪除-移除：擠掉等於某個值的（同一族的另一半）', async () => {
+    await same(
+      `vector<int> v{1,2,1,3};
+       v.erase(remove(v.begin(), v.end(), 1), v.end()); for (int x : v) cout << x;`, '')
   }, 60_000)
 
   it.fails('[UNSUPPORTED:std::make_tuple] 🟠 三個值的一組', async () => {

@@ -84,8 +84,16 @@ describe('C++ Algorithm Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:range_sort')
       expect(node).not.toBeNull()
-      expect(node!.properties.begin).toBe('v.begin()')
-      expect(node!.properties.end).toBe('v.end()')
+      /**
+       * 🔴 **兩端是【接點】不是屬性**（2026-09-18）。這三行本來斷言
+       * `properties.begin === 'v.begin()'`——也就是**一段原始碼的文字**，
+       * 而那正是第七十二條在追的東西：需要 parse 回結構才能用的字串。
+       * 🟢 換成接點之後這裡問的是「那一格接的是哪一顆元件」。
+       */
+      expect(node!.slots.begin?.[0]?.componentId).toBe('cpp:container_iter')
+      expect(node!.slots.begin?.[0]?.properties.which).toBe('begin')
+      expect(node!.slots.end?.[0]?.componentId).toBe('cpp:container_iter')
+      expect(node!.slots.end?.[0]?.properties.which).toBe('end')
     })
 
     it('should generate code containing sort()', () => {
@@ -100,7 +108,7 @@ describe('C++ Algorithm Roundtrip', () => {
       const tree2 = liftCode(output)
       const node2 = findComponent(tree2, 'cpp:range_sort')
       expect(node2).not.toBeNull()
-      expect(node2!.properties.begin).toBe('v.begin()')
+      expect(node2!.slots.begin?.[0]?.componentId).toBe('cpp:container_iter')
     })
   })
 
@@ -111,8 +119,16 @@ describe('C++ Algorithm Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:range_reverse')
       expect(node).not.toBeNull()
-      expect(node!.properties.begin).toBe('v.begin()')
-      expect(node!.properties.end).toBe('v.end()')
+      /**
+       * 🔴 **兩端是【接點】不是屬性**（2026-09-18）。這三行本來斷言
+       * `properties.begin === 'v.begin()'`——也就是**一段原始碼的文字**，
+       * 而那正是第七十二條在追的東西：需要 parse 回結構才能用的字串。
+       * 🟢 換成接點之後這裡問的是「那一格接的是哪一顆元件」。
+       */
+      expect(node!.slots.begin?.[0]?.componentId).toBe('cpp:container_iter')
+      expect(node!.slots.begin?.[0]?.properties.which).toBe('begin')
+      expect(node!.slots.end?.[0]?.componentId).toBe('cpp:container_iter')
+      expect(node!.slots.end?.[0]?.properties.which).toBe('end')
     })
 
     it('should generate code containing reverse()', () => {
@@ -135,7 +151,13 @@ describe('C++ Algorithm Roundtrip', () => {
       const tree = liftCode(code)
       const node = findComponent(tree, 'cpp:range_fill')
       expect(node).not.toBeNull()
-      expect(node!.properties.begin).toBe('v.begin()')
+      /**
+       * 🔴 **兩端是【接點】不是屬性**（2026-09-18）。這三行本來斷言
+       * `properties.begin === 'v.begin()'`——也就是**一段原始碼的文字**，
+       * 而那正是第七十二條在追的東西：需要 parse 回結構才能用的字串。
+       * 🟢 換成接點之後這裡問的是「那一格接的是哪一顆元件」。
+       */
+      expect(node!.slots.begin?.[0]?.componentId).toBe('cpp:container_iter')
       expect(node!.slots.value).toBeDefined()
       expect(node!.slots.value!.length).toBe(1)
     })

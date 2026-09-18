@@ -7,12 +7,17 @@
 import type { SemanticNode } from '../../../core/types'
 import { registerCallBranch } from '../../../core/component/lift-branches'
 import { createNode } from '../../../core/semantic-tree'
+import { liftRangeEnds } from '../../../languages/cpp/lang/runtime/range-lift'
 
 export function registerLift(): void {
-  registerCallBranch('cpp/range_reverse', (funcName, argChildren, _ctx, _argsNode): SemanticNode | null => {
+  registerCallBranch('cpp/range_reverse', (funcName, argChildren, ctx, _argsNode): SemanticNode | null => {
     if (!((funcName === 'reverse' || funcName === 'std::reverse') && argChildren.length === 2)) return null
-    const beginText = argChildren[0]?.text ?? 'v.begin()'
-    const endText = argChildren[1]?.text ?? 'v.end()'
-    return createNode('cpp:range_reverse', { begin: beginText, end: endText })
+    /**
+     * 🔴 **兩端是【接點】不是 `.text`**（2026-09-18）——見 `component.json` 的 `_children_why`。
+     * ⚠️ 接不出來就**讓開**：猜一個錯的專屬身分比誠實降級更糟。
+     */
+    const ends = liftRangeEnds(argChildren, ctx)
+    if (!ends) return null
+    return createNode('cpp:range_reverse', {}, ends)
   })
 }

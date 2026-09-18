@@ -4,7 +4,7 @@ import { resolveRange } from '../../../languages/cpp/lang/runtime/range'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:range_reverse', async (node, ctx) => {
-      const r = resolveRange(ctx as never, String(node.properties.begin), String(node.properties.end))
+      const r = await resolveRange(ctx, (node.slots.begin ?? [])[0], (node.slots.end ?? [])[0])
       const slice = r.arr.slice(r.from, r.to).reverse()
       for (let i = 0; i < slice.length; i++) r.arr[r.from + i] = slice[i]
     })
