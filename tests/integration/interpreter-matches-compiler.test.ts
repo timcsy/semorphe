@@ -417,6 +417,24 @@ const CASES: [string, string, string, string[]][] = [
     `vector<int> v{1,3,2}; sort(v.begin(), v.end(), [](int a,int b){return a>b;});\n` +
     `for(int x:v) cout << x;`, []],
 
+  /**
+   * 🔴 **`&a[n]` 是結尾指標的慣用寫法**（2026-09-18，盲測抓到）。
+   *
+   * 在此之前 `cpp:address_of` 先檢查 `i < length` 再取位置，於是
+   * `max_element(&a[0], &a[8])` 丟 `INDEX_OUT_OF_RANGE: 8`。
+   *
+   * 而**取位址不讀那一格**——判準與範圍那一族一模一樣：
+   * `i === length` 是「尾端之後一格」，只有**解參考**才是錯的。
+   *
+   * > **一個「不會讀」的運算，不該被「讀得到嗎」擋下來。**
+   */
+  ['🔴 `&a[n]` 當結尾，`&a[0]` 當開頭', '',
+    `int a[5]={3,9,1,7,2};\n` +
+    `cout << *max_element(&a[0], &a[5]) << '\\n';\n` +
+    `cout << (max_element(&a[0], &a[5]) - &a[0]) << '\\n';\n` +
+    `cout << accumulate(&a[0], &a[0], 100) << '\\n';\n` +
+    `sort(&a[1], &a[4]); for (int i=0;i<5;i++) cout << a[i];`, []],
+
   // ⚠️ **刻意沒有**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
   //    ——兩者在 C++ 裡都是未定義行為，而判準裡不得放它們。
 ]
