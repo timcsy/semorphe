@@ -84,6 +84,28 @@ export class Lifter {
    * 見 `knowledge/concepts/執行機構.md`「機制有了，沒人接上」第五個實例。
    */
   private recordDeclaration(r: SemanticNode, data: LiftContextData): void {
+    /**
+     * 🔴 **一行宣告 N 個名字時，那 N 個是【子節點】**（2026-09-18）。
+     *
+     * ```
+     * vector<int> v, w;
+     *   cpp:var_declare { type: "vector<int>" }        ← 沒有 name，下面那一行就 return 了
+     *     [declarators]
+     *       cpp:vector_declare { type:"int", name:"v" }  ← 這兩顆從來沒被記下來
+     *       cpp:vector_declare { type:"int", name:"w" }
+     * ```
+     *
+     * 而它們**不會自己經過這個掛鉤**：宣告子是由具名策略
+     *（`liftSingleDeclarator`）直接組出來的，不走 `liftWithContext` 的回傳點。
+     *
+     * > **一個掛在「每個 lift 回傳點」上的收集器，收不到那些沒有經過 lift 的節點
+     * > ——而「由策略直接組出來」與「lift 出來」在樹上長得一模一樣。**
+     *
+     * ⚠️ 症狀是**型別查不到**，而查不到的下游全都走「判不出來就讓開」
+     *    ——於是 `vector<int> v;` 好好的，`vector<int> v, w;` 的 `v.erase(a,b)`
+     *    認不出是容器。**同一個變數，宣告時多一個逗號就換了一種行為。**
+     */
+    for (const d of r.slots?.declarators ?? []) this.recordDeclaration(d, data)
     const name = r.properties?.name
     if (name === undefined) return
     // 型別的來源依概念而異：一般宣告放在 `type`，容器宣告的專屬概念名本身

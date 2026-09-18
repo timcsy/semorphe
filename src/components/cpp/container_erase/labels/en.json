@@ -1,4 +1,4 @@
 {
-  "CPP_CONTAINER_ERASE_MSG0": "Erase %2 from %1",
-  "CPP_CONTAINER_ERASE_TOOLTIP": "Remove an element from the container"
+  "CPP_CONTAINER_ERASE_MSG0": "Remove %2 through %3 from %1",
+  "CPP_CONTAINER_ERASE_TOOLTIP": "Leaving the second position empty removes just that one position or value. Connecting another position removes everything between them, not including the end position."
 }

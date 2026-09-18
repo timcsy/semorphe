@@ -85,7 +85,10 @@ export function registerExecute(register: (component: string, executor: Componen
        *
        * ⚠️ C++ 的範圍是**半開**的：`[first, last)`，`last` 那一格不刪。
        */
-      const endVal = keyNodes.length > 1 ? await ctx.evaluate(keyNodes[1]) : null
+      // 🔴 **結尾住在它自己的接點**（2026-09-18）。⚠️ 仍然收 `key` 的第二個孩子——
+      //    舊存檔那一份是兩個擠在同一格。
+      const endNode = (node.slots.key_end ?? [])[0] ?? keyNodes[1]
+      const endVal = endNode ? await ctx.evaluate(endNode) : null
       if (isCellPointer(keyVal) && endVal && isCellPointer(endVal)) {
         if (!sameCells(keyVal, arr) || !sameCells(endVal, arr)) {
           throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
