@@ -54,8 +54,13 @@ const ids = (n: SemanticNode, out: string[] = []): string[] => {
 }
 
 /** 那 18 支的共同形狀——BFS 的佇列迴圈。 */
-const BFS = `#include <iostream>
-#include <deque>
+/**
+ * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
+ * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
+ * 手列的話，本機全綠而 CI 紅，訊息還會說「測試自己的問題」。
+ * 見第 120 條護欄 `audit-refcc-headers`。
+ */
+const BFS = `#include <bits/stdc++.h>
 using namespace std;
 int main(){
     deque<int> dq;
@@ -101,7 +106,7 @@ describe('round-trip：容器的前端移除', () => {
   }, 60_000)
 
   it('🔴 帶下標的接收者：`d2[i].pop_front()`（相鄰串列的慣用寫法）', async () => {
-    const src = `#include <iostream>\n#include <deque>\nusing namespace std;\ndeque<int> d2[5];\n`
+    const src = `#include <bits/stdc++.h>\nusing namespace std;\ndeque<int> d2[5];\n`
       + `int main(){ int i=3; d2[i].push_back(7); d2[i].push_back(9); d2[i].pop_front();`
       + ` cout << d2[3].front(); return 0; }\n`
     expect(ids(lift(src))).toContain('cpp:container_pop_front')

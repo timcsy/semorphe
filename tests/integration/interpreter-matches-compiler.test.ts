@@ -327,12 +327,24 @@ describe('解譯器與參照編譯器：同一段程式，印出來的要一樣'
 
   for (const [name, glob, body, stdin] of CASES) {
     it(`🔴 ${name}`, async () => {
-      // ⚠️ **這一行是【判準的一部分】**：少一個標頭，那一題會以
-      //    「參照編譯器收不下」紅掉，而訊息會說「測試自己的問題」——
-      //    2026-09-17 加 multiset 那三題時正是這樣紅的（缺 `<set>`）。
-      const src = '#include <iostream>\n#include <string>\n#include <vector>\n'
-        + '#include <algorithm>\n#include <map>\n#include <set>\n'
-        + '#include <unordered_map>\n#include <deque>\n'
+      /**
+       * 🔴 **標頭不手列**（2026-09-18，CI 抓到）。
+       *
+       * 這裡本來手列八個標頭，而註解寫著「⚠️ 這一行是【判準的一部分】：
+       * 少一個標頭，那一題會以『參照編譯器收不下』紅掉」——**那句話是對的，
+       * 而它描述的是一個陷阱，不是一個想要的性質**。
+       *
+       * 它咬過兩次：2026-09-17 缺 `<set>`，2026-09-18 缺 `<queue>` 與 `<tuple>`。
+       * 而第二次**本機全綠**——因為本機是 Apple clang（libc++），
+       * 它從 `<map>` 遞移帶進那些，而 CI 的 GNU libstdc++ 不會。
+       *
+       * > **「參照編譯器」不是一個東西。本機那一台比 CI 那一台寬鬆的地方，
+       * > 量不出來的不是缺陷——是【我的判準有多寬】。**
+       *
+       * ⚠️ `bits/stdc++.h` 在 CI 上是真的 GCC 標頭，在本機由
+       *    `tests/fixtures/refcc-shim` 提供（`SEMORPHE_REFCC_INCLUDE`）。
+       */
+      const src = '#include <bits/stdc++.h>\n'
         + `using namespace std;\n${glob}\nint main(){ ${body} return 0; }\n`
       // ⚠️ **兩邊餵同一份 stdin**——`runCppDetailed` 的第二個參數是 2026-09-16
       //    才補的；在那之前它寫死忽略輸入，於是每個要讀輸入的案例，

@@ -43,7 +43,13 @@ import { CppParser } from '../../src/languages/cpp/parser'
 import { runCppBatchDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import type { SemanticNode } from '../../src/core/types'
 
-const HEAD = '#include <iostream>\n#include <cstdio>\n#include <string>\nusing namespace std;\n'
+/**
+ * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
+ * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
+ * 手列的話，本機全綠而 CI 紅，訊息還會說「測試自己的問題」。
+ * 見第 120 條護欄 `audit-refcc-headers`。
+ */
+const HEAD = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
 let parser: CppParser
 let lifter: ReturnType<typeof createTestLifter>
