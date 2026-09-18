@@ -27,7 +27,7 @@
  * 那些是標了 pre-existing bug 的刻意跳過。
  */
 import { execSync, execFileSync, spawn } from 'node:child_process'
-import { writeFileSync, mkdirSync, rmSync } from 'node:fs'
+import { writeFileSync, mkdirSync, rmSync, openSync, closeSync } from 'node:fs'
 import path from 'node:path'
 
 const flag = '-std=c++17'
@@ -87,6 +87,7 @@ export function runCppDetailed(code: string, stdin?: string): execResult {
   const name = `r${process.pid}_${seq++}`
   const src = path.join(cwd, `${name}.cpp`)
   const bin = path.join(cwd, name)
+  const inFile = path.join(cwd, `${name}.in`)
   try {
     writeFileSync(src, code)
     try {
@@ -99,16 +100,41 @@ export function runCppDetailed(code: string, stdin?: string): execResult {
       // ⚠️ **要餵 stdin 的請走 `runCppBatchDetailed`。** 這一支是 `execSync`，
       // 它阻塞整條 Node 執行緒——在 `it()` 裡連跑七次會把同一輪的
       // 時間敏感測試推過門檻（2026-08-21 實測，`bus-update` 每輪紅不同支）。
-      return {
-        ok: true,
-        // 🔴 **`execFileSync` 不是 `execSync`**（2026-09-17）：後者是
-        //    `/bin/sh -c "<bin>"`，逾時時 Node 殺得到的是**那個 shell**，
-        //    而真正在跑的程式是它的孫子——於是它**變成孤兒繼續跑**。
-        //    直接 spawn 那支執行檔，逾時殺的就是它本人。
-        output: execFileSync(bin, [], {
-          encoding: 'utf-8', timeout: timeoutMs, input: stdin ?? '',
-          stdio: ['pipe', 'pipe', 'pipe'],
-        }),
+      /**
+       * 🔴 **stdin 走檔案描述子，不走管線**（2026-09-18，CI 紅了第五次）。
+       *
+       * 在此之前這裡寫 `input: stdin ?? ''`，而那是一條**管線**：Node 要把
+       * 那串位元組寫進子行程。**程式不把輸入讀完就結束時，那一端關掉**，
+       * 於是 `spawnSync` 拿到 `EPIPE` 而 `execFileSync` **丟例外**
+       * ——即使 stdout 早就完整產出了。
+       *
+       * ```
+       * 本機（macOS）   綠    寫得完／時序不同
+       * CI（Linux）     紅    spawnSync … EPIPE
+       * ```
+       *
+       * ⚠️ 症狀會偽裝成「參照編譯器收不下這一段」，也就是**測試說自己壞了**
+       *    ——而真正壞的是餵法。批次那一支早就走檔案重導（`< inFile`），
+       *    所以同一段程式在那裡從來沒紅過。
+       *
+       * > **兩條路餵同一份輸入而只有一條會 EPIPE，那個差別不在程式，
+       * > 在「誰負責把剩下的位元組吞掉」——檔案沒有那個責任，管線有。**
+       *
+       * 🟢 而 `execFileSync`（不是 `execSync`）要留著：逾時殺得到的是那支
+       *    執行檔本人，不是它的 shell 祖父（2026-09-17 的孤兒行程那一刀）。
+       */
+      writeFileSync(inFile, stdin ?? '')
+      const fd = openSync(inFile, 'r')
+      try {
+        return {
+          ok: true,
+          output: execFileSync(bin, [], {
+            encoding: 'utf-8', timeout: timeoutMs,
+            stdio: [fd, 'pipe', 'pipe'],
+          }),
+        }
+      } finally {
+        closeSync(fd)
       }
     } catch (e) {
       return { ok: false, stage: 'run', message: String((e as Error).message).slice(0, 200) }
@@ -116,6 +142,7 @@ export function runCppDetailed(code: string, stdin?: string): execResult {
   } finally {
     rmSync(src, { force: true })
     rmSync(bin, { force: true })
+    rmSync(inFile, { force: true })
   }
 }
 

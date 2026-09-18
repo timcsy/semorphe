@@ -23,6 +23,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { resolvePlace } from '../../../interpreter/lvalue'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { keepDeclaredType } from '../../../interpreter/assign-type'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:var_assign', async (node, ctx) => {
@@ -35,12 +36,19 @@ export function registerExecute(register: (component: string, executor: Componen
     if (!valueNodes || valueNodes.length === 0) return
     const val = await ctx.evaluate(valueNodes[0])
     const place = await resolvePlace(targetNode, ctx)
-    place.write(val)
+    /**
+     * 🔴 **一個變數的型別不會因為被指定而改變**（2026-09-18，語料抓到）：
+     * `char c = 'a'; c = c + 7;` 的右邊是 `int`（整數提升），
+     * 而指定回去時它要轉回 `char`——否則 `cout << c` 印出 `104`。
+     * 見 `interpreter/assign-type` 的檔頭。
+     */
+    const written = keepDeclaredType(place.read(), val, ctx)
+    place.write(written)
     // **指派是一個運算式，它求值成被指派的值。**
     //
     // 第一版什麼都不回，於是 `while ((p = f()) != 0)` 這種寫法裡的比較
     // 拿到 undefined —— 判定為假，**迴圈一次都不跑**，而程式照樣「跑完」
     // 印出後面的東西。那是靜默降級最典型的形狀。
-    return val
+    return written
   })
 }

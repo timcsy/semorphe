@@ -3,6 +3,7 @@ import type { RuntimeValue } from '../types'
 import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 import { isCellPointer, movePointer } from '../pointer'
 import { resolvePlace } from '../lvalue'
+import { keepDeclaredType } from '../assign-type'
 
 function computeCompound(op: string, lv: number, rv: number): number {
 switch (op) {
@@ -135,13 +136,17 @@ export const execCompoundAssign: ComponentExecutor = async (node, ctx) => {
   // 這個缺陷在合併 statement／expression 雙版本時才現形（兩個身分共用同一個
   // 執行器，所以兩邊一樣壞）。與 095 讓 `var_assign` 回傳指定值同一個形狀。
   //
-  // ⚠️ **字元那一格保持 char**——`s[i] -= 7` 減完仍然是一個字元，
-  //    轉成 int 的話寫回去會變成一個數字。
-  const newValue = current.type === 'char'
-    ? { type: 'char' as const, value: Math.trunc(result) }
-    : current.type === 'int' && rhs.type === 'int'
-      ? { type: 'int' as const, value: Math.trunc(result) }
-      : { type: 'double' as const, value: result }
+  /**
+   * 🔴 **那一格的型別由【它自己】決定，不由右邊決定**（2026-09-18 收斂）。
+   *
+   * 這裡本來是一條三層的三元式（char 保持 char、int＋int 才是 int、其餘 double）
+   * ——而 `int x; x += 0.5;` 會走到最後那一支變成 **double**，
+   * 那是右邊在決定左邊的型別。
+   * ⚠️ `s[i] -= 7` 仍然是一個字元（那一條原本就對，現在由同一份規則涵蓋）。
+   *
+   * > **一個「看右邊是什麼」的型別規則，在左邊已經宣告過的語言裡是反的。**
+   */
+  const newValue = keepDeclaredType(current, { type: 'double' as const, value: result }, ctx)
   place.write(newValue)
   return newValue
 }

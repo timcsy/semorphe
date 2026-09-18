@@ -19,7 +19,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { execSync } from 'node:child_process'
-import { runCppBatchDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
+import { runCppBatchDetailed, runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 
 /**
  * 現在有幾支**這個行程自己**編出來的程式還在跑。
@@ -70,5 +70,47 @@ describe('量測工具：逾時之後不得留下孤兒', () => {
     expect(after.length,
       `🔴 逾時殺的是 shell，而程式是它的孫子——留下來了：\n  ${after.join('\n  ')}`)
       .toBeLessThanOrEqual(before)
+  }, 120_000)
+})
+
+/**
+ * **餵進去的輸入沒被讀完，不得算成「參照編譯器收不下這一段」**
+ *（2026-09-18，CI 紅了第五次之後）。
+ *
+ * 同步那一路曾經用 `input:` 餵 stdin，而那是一條**管線**——
+ * 程式提早結束時那一端關掉，`spawnSync` 拿到 `EPIPE`，
+ * `execFileSync` 就丟例外，**即使 stdout 早就完整產出了**。
+ *
+ * ```
+ * 本機（macOS）  小份輸入綠、兩百萬字元紅
+ * CI（Linux）    那支語料測試直接紅：spawnSync … EPIPE
+ * ```
+ *
+ * ⚠️ 而它**偽裝成測試自己承認壞掉**（訊息逐字是「參照編譯器收不下這一段
+ * （測試自己的問題）」）——於是四次合併都在找程式的毛病。
+ *
+ * > **兩條路餵同一份輸入而只有一條會 EPIPE，那個差別不在程式，
+ * > 在「誰負責把剩下的位元組吞掉」——檔案沒有那個責任，管線有。**
+ */
+describe('量測工具：輸入沒被讀完不得害死自己', () => {
+  // 正向錨點：**讀得完的那一份要對**，否則下面兩條可能只是在驗「什麼都沒餵」。
+  it.runIf(hasReferenceCompiler())('★ 正向錨點：輸入剛好讀完', () => {
+    const r = runCppDetailed(
+      '#include <cstdio>\nint main(){int a,b;scanf("%d %d",&a,&b);printf("%d\\n",a+b);return 0;}',
+      '3 4\n')
+    expect(r, '🔴 連讀得完的都失敗 → 下面兩條在驗空氣').toEqual({ ok: true, output: '7\n' })
+  }, 120_000)
+
+  it.runIf(hasReferenceCompiler())('🔴 程式一個字都不讀，而我們餵了兩百萬', () => {
+    const r = runCppDetailed('#include <cstdio>\nint main(){printf("hi\\n");return 0;}',
+      'x'.repeat(2_000_000) + '\n')
+    expect(r).toEqual({ ok: true, output: 'hi\n' })
+  }, 120_000)
+
+  it.runIf(hasReferenceCompiler())('🔴 程式只讀一個數，而我們餵了五十萬行', () => {
+    const r = runCppDetailed(
+      '#include <cstdio>\nint main(){int a;scanf("%d",&a);printf("%d\\n",a);return 0;}',
+      '7\n' + '9\n'.repeat(500_000))
+    expect(r).toEqual({ ok: true, output: '7\n' })
   }, 120_000)
 })
