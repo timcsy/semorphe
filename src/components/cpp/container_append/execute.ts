@@ -2,6 +2,8 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { evalInitializer } from '../../../interpreter/aggregate'
+import type { RuntimeValue } from '../../../interpreter/types'
+import { aggregateShapeOf } from '../../../core/component/aggregate-nodes'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:container_append', async (node, ctx) => {
@@ -36,6 +38,37 @@ export function registerExecute(register: (component: string, executor: Componen
        * 🟢 空字串會走 `coerceType` 的 default，原樣回傳——**知道才壓，不知道就不動**。
        */
       arr.elemType ?? '', ctx)
+      /**
+       * 🔴 **`emplace_back(7, 8)` 給的是【建構元素的那些引數】**（2026-09-18，盲測抓到）。
+       *
+       * `v.push_back({7, 8})` 與 `v.emplace_back(7, 8)` 在 C++ 裡建出同一個元素
+       * ——差別只在怎麼建。而這裡只讀第一個引數，於是那個 `pair` 變成一個 `7`，
+       * 下一步 `auto [x, y]` 說「這個值拆不開」。
+       *
+       * > **一個只讀第一個引數的方法，在收到兩個的時候不會出聲
+       * > ——它會把第二個當成不存在。**（同族的刪除記過一模一樣的一句）
+       *
+       * ⚠️ 判準是**那個元素型別登記過幾個欄位**，不是「有幾個引數」
+       * ——不問的話 `v.emplace_back(a, b)` 在一個裝純量的容器上會安靜地多吃一個。
+       */
+      if (valueNodes.length >= 2) {
+        const shape = aggregateShapeOf(String(arr.elemType ?? ''))
+        if (shape && shape.length === valueNodes.length) {
+          const fields = new Map<string, RuntimeValue>()
+          for (let i = 0; i < shape.length; i++) {
+            fields.set(shape[i], await ctx.evaluate(valueNodes[i]))
+          }
+          const bare = String(arr.elemType ?? '')
+          arr.value.push({
+            type: 'object', value: fields,
+            structName: bare.includes('<') ? bare.slice(0, bare.indexOf('<')) : bare,
+          })
+          return
+        }
+        throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+          '%1': `這個容器的元素不是由 ${valueNodes.length} 個值建起來的`,
+        })
+      }
       arr.value.push(val)
     })
 }

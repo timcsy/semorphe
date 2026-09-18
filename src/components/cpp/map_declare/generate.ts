@@ -14,7 +14,13 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const valueType = node.properties.value_type ?? 'int'
       const name = node.properties.name ?? 'mp'
       // ⚠️ 只有明講「沒有序」才是 unordered_map——舊存檔沒有這個屬性，而它們是 map。
-      const kind = String(node.properties.ordered ?? 'true') === 'false' ? 'unordered_map' : 'map'
+      /**
+       * 🔴 **三個名字，兩個性質**（2026-09-18）：有沒有序 × 一個鍵能不能有多個值。
+       * ⚠️ 只有明講才算——舊存檔沒有這兩個屬性，而它們是 `map`。
+       */
+      const kind = String(node.properties.unique ?? 'true') === 'false'
+        ? 'multimap'
+        : String(node.properties.ordered ?? 'true') === 'false' ? 'unordered_map' : 'map'
       // 🔴 同 `set` 那一顆：`map<char,int> r = f();` 的初始值原本整段消失。
       const source = (node.slots.source ?? [])[0]
       if (source) {

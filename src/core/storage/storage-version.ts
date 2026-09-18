@@ -13,11 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../../migrations/block-type-migrations'
 import { mergedIdentities } from '../../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19 } from '../../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20 } from '../../migrations/block-shape-changes'
 import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 19
+export const CURRENT_VERSION = 20
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -429,6 +429,11 @@ export const UPGRADES: Record<number, Upgrade> = {
    * （已經升到 v19 的存檔不會再跑一次 v19，所以往後要再還一顆就開 v20。）
    */
   18: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V19, 19),
+  /**
+   * `v19 → v20`：**走訪的容器從欄位換成接點**（範圍 for）。
+   * 同一個病與 v19 那 39 顆一樣，而這一顆被漏掉是因為它的欄位名叫 `CONTAINER`。
+   */
+  19: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V20, 20),
 }
 
 /**

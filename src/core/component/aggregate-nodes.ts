@@ -51,7 +51,18 @@ export function declareAggregateShape(typeName: string, fields: string[]): void 
  */
 export function aggregateShapeOf(typeName: string): string[] | undefined {
   const bare = typeName.includes('<') ? typeName.slice(0, typeName.indexOf('<')) : typeName
-  return aggregateShapes.get(bare.trim())
+  /**
+   * 🔴 **也要剝掉限定名**（2026-09-18，盲測抓到）：學生寫 `std::pair<int, int>`。
+   *
+   * 登記的是 `pair`，而不剝的話基底名是 `std::pair`——查不到，於是
+   * `v.emplace_back(7, 8)` 說「這個容器的元素不是由 2 個值建起來的」。
+   *
+   * ⚠️ 症狀只在**寫全名的程式**上出現，而這個 repo 自己的測試幾乎都寫
+   * `using namespace std;`——**一個只在別人的寫法上壞掉的缺陷，
+   * 自己的語料量不到它。**
+   */
+  const local = bare.includes('::') ? bare.slice(bare.lastIndexOf('::') + 2) : bare
+  return aggregateShapes.get(local.trim())
 }
 
 /** 護欄用：誰被宣告過。 */

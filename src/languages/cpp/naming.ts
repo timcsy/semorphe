@@ -74,6 +74,10 @@ export const SUBJECTS = [
   'member',
   'input', 'memory', 'print', 'program', 'random', 'range',
   'istringstream', 'literal', 'loop', 'map', 'math', 'method', 'namespace',
+  // ⚠️ `deque` 加入日 2026-09-18——`cpp:deque_declare`。
+  // 它與 `queue`／`stack` 同一列（都是「一種容器」當主體），
+  // 而在此之前那個樣板名**沒有主人**，於是 `deque<pair<…>>` 掉進一般的變數宣告。
+  'deque',
   'ofstream', 'pair', 'pointer', 'priority_queue', 'queue', 'set', 'stack',
   'string', 'stringstream', 'struct', 'template', 'var', 'vector',
   // ⚠️ 兩個加入日 2026-08-18——第 0 批。

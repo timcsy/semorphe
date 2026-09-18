@@ -39,6 +39,25 @@ export function defaultLess(a: RuntimeValue, b: RuntimeValue): boolean {
     const bs = b.value.get('second')
     return as && bs ? defaultLess(as, bs) : false
   }
+  /**
+   * 🔴 **一串格子也要照字典序比**（2026-09-18）——`tuple<int,int,int>` 在執行期
+   * 就是一串格子（只有「一對」登記過欄位名，三個以上沒有）。
+   *
+   * 少了這一條會落到下面那條數值路徑，而 `Number(陣列)` 對多格是 `NaN`
+   * ——**每次比較都是 false，於是順序原封不動**，那看起來像「本來就排好了」。
+   * 症狀：`priority_queue<tuple<int,int,int>>` 的堆頂永遠是先推進去的那一個。
+   *
+   * ⚠️ C++ 的 `tuple` 比較就是逐格字典序，與 `pair` 同一條規則。
+   */
+  if (a.type === 'array' && b.type === 'array' && Array.isArray(a.value) && Array.isArray(b.value)) {
+    const xs = a.value as RuntimeValue[]
+    const ys = b.value as RuntimeValue[]
+    for (let i = 0; i < Math.min(xs.length, ys.length); i++) {
+      if (defaultLess(xs[i], ys[i])) return true
+      if (defaultLess(ys[i], xs[i])) return false
+    }
+    return xs.length < ys.length
+  }
   if (a.type === 'string' || b.type === 'string') return String(a.value) < String(b.value)
   return num(a) < num(b)
 }

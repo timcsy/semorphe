@@ -230,6 +230,92 @@ const CASES: [string, string, string, string[]][] = [
     `int t[2][2] = {{0,0},{0,0}}; int w = (t[1][1] = 6); cout << w << t[1][1];\n` +
     `int v = 0; int* ptr = &v; int u = (*ptr = 3); cout << u << v;`, []],
 
+  /**
+   * 🔴 **容器要記得住自己裝什麼**（2026-09-18，探索階段量到的兩個前置缺陷）。
+   *
+   * ```
+   * vector<pair<int,int>> v; v.push_back({3,4}); v[0].first     🟢 一直是好的
+   * deque <pair<int,int>> q; q.push_back({1,2}); q[0].first     🔴「（不是一個結構）」
+   * queue /priority_queue  .push({1,2}); .front().first          🔴 同上
+   * ```
+   *
+   * 兩個根因不同：`deque` **沒有宣告元件**（掉進一般的變數宣告，型別整串塞進一格），
+   * 而 `.push()` **不照元素型別長**（同族的 `push_back` 早就照了）。
+   *
+   * > **同一族的三顆元件，兩顆做了某件事而一顆沒有——那個差別不會有人發現，
+   * > 直到有人寫出只有前兩顆能表達的程式。**
+   */
+  ['🔴 雙端佇列記得住元素型別（語料 22 支用它）', '',
+    `deque<pair<int,int>> q; q.push_back({1,2}); q.push_front({7,8});\n` +
+    `cout << q[0].first << q.front().second << q.back().first << q.size();`, []],
+  ['★ 正向錨點：純量的雙端佇列本來就是好的', '',
+    `deque<int> d; d.push_front(1); d.push_back(2); cout << d.front() << d.back() << d.size();`, []],
+  ['🔴 雙端佇列的建構子引數 `deque<int> d(3)`', '',
+    `deque<int> d(3); cout << d.size() << d[0];`, []],
+  ['🔴 佇列／堆疊／優先佇列的 `push` 也要照元素型別長', '',
+    `queue<pair<int,int>> q; q.push({1,2});\n` +
+    `stack<pair<int,int>> st; st.push({3,4});\n` +
+    `cout << q.front().first << q.front().second << st.top().second;`, []],
+  /**
+   * 🔴 **而元素長對的那一天，堆頂的比較就開始答錯**：`heapTopIndex` 寫著
+   * `Number(cell.value)`，而一個 `pair` 的 `value` 是一張 `Map`——`Number(Map)`
+   * 是 `NaN`，每一次比較都是 false，**堆頂永遠是先推進去的那一個**。
+   *
+   * > **一個「把值壓成數字」的比較，會在那個值終於長對的那天開始答錯。**
+   */
+  ['🔴 優先佇列裝一對值時，堆頂要照字典序', '',
+    `priority_queue<pair<int,int>> pq; pq.push({1,2}); pq.push({5,6}); pq.push({5,1});\n` +
+    `cout << pq.top().first << pq.top().second; pq.pop(); cout << pq.top().second;`, []],
+  ['★ 正向錨點：純量的優先佇列（大根堆與小根堆）不得被弄壞', '',
+    `priority_queue<int> a; a.push(3); a.push(9); a.push(1); cout << a.top(); a.pop(); cout << a.top();\n` +
+    `priority_queue<int, vector<int>, greater<int>> b; b.push(3); b.push(9); b.push(1); cout << b.top();`, []],
+
+  /**
+   * 🔴 **結構化繫結**（2026-09-18，語料 16 處／13 支）——`auto [a, b] = …`。
+   *
+   * 在此之前它**不是「沒被 lift」，是安靜地答錯**：那一串名字被塞進自動型別
+   * 宣告的名字那一格，於是執行期真的宣告了一個叫 `[pt,d]` 的變數。
+   * ⚠️ 語料 15/16 處**不寫空格**，而名字馬上被當下標用——**症狀出現在下一行**。
+   */
+  ['🔴 結構化繫結：兩個名字（語料最常見）', '',
+    `deque<pair<int,int>> BFS; BFS.push_back({2,5});\n` +
+    `auto[pt,d] = BFS.front(); cout << pt << d;`, []],
+  ['🔴 結構化繫結：三個名字，而右邊是使用者自己的結構',
+    `struct side{ int u; int v; int w;\n  bool operator< (const side &b) const { return w > b.w; } };`,
+    `priority_queue<side> ms; ms.push({1,2,9}); ms.push({3,4,5});\n` +
+    `auto[u,v,w] = ms.top(); cout << u << v << w;`, []],
+  ['🔴 結構化繫結：名字馬上被當下標用（症狀在下一行）', '',
+    `vector<int> d2[5]; d2[2].push_back(9);\n` +
+    `deque<pair<int,int>> BFS; BFS.push_back({2,1});\n` +
+    `auto[pt,d] = BFS.front(); for (int i : d2[pt]) cout << i << d;`, []],
+  ['🔴 結構化繫結在範圍 for 裡', '',
+    `vector<pair<int,int>> ar[3]; ar[1].push_back({4,5}); int P = 1;\n` +
+    `for (auto[w,to] : ar[P]) cout << w << to;`, []],
+  /**
+   * 🔴 **走訪的容器是一棵樹，不是一串文字**——`d2[pt]`／`m[k]` 都是運算式。
+   * 在此之前執行期拿那串文字去查變數，說「沒有宣告過 `d2[pt]`」
+   * ——**錯誤看起來像學生打錯字**。語料 3 支。
+   */
+  ['🔴 範圍 for 的容器是一個運算式', '',
+    `vector<int> d2[5]; int k = 2; d2[2].push_back(9);\n` +
+    `map<int,vector<int>> m; m[1].push_back(7);\n` +
+    `for (int i : d2[k]) cout << i; for (int i : m[1]) cout << i;`, []],
+  ['★ 正向錨點：範圍 for 的三種舊寫法不得被弄壞', '',
+    `vector<int> v{1,2,3}; for (int x : v) cout << x;\n` +
+    `string s = "ab"; for (char c : s) cout << c;\n` +
+    `vector<string> w{"ab","cd"}; for (const string& t : w) cout << t;`, []],
+  /**
+   * 🔴 **一串格子也要照字典序比**——`tuple` 在執行期是一串格子（只有「一對」
+   * 登記過欄位名）。少了它，`Number(陣列)` 是 `NaN`，**每次比較都是 false**。
+   * 而堆頂還要**問使用者自己的 `operator<`**——排序、去重、查找三條早就問了，
+   * 堆這一條漏掉。
+   */
+  ['🔴 一串值的字典序：排序與堆頂', '',
+    `vector<tuple<int,int,int>> v; v.push_back({7,8,9}); v.push_back({1,2,3});\n` +
+    `sort(v.begin(), v.end()); auto[a,b,c] = v[0]; cout << a << b << c;\n` +
+    `priority_queue<tuple<int,int,int>> pq; pq.push({1,2,3}); pq.push({7,8,9});\n` +
+    `auto[x,y,z] = pq.top(); cout << x << y << z;`, []],
+
   // ⚠️ **刻意沒有**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
   //    ——兩者在 C++ 裡都是未定義行為，而判準裡不得放它們。
 ]

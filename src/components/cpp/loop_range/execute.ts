@@ -1,14 +1,28 @@
 /** `cpp:loop_range` 的 **execute** 路——從共用檔原封剪過來（批次第三批：lift 是只產一種身分的具名策略）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { BreakSignal, ContinueSignal } from '../../../interpreter/executors/control-flow'
+import { bindSequence } from '../var_declare_sequence/bind'
+import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:loop_range', async (node, ctx) => {
       const varName = String(node.properties.var_name ?? 'x')
-      const containerName = String(node.properties.container ?? 'vec')
+      // 🔴 **一串名字**（`for (auto [w, to] : ar[P])`）——`targets` 有東西時它是唯一的真實。
+      const boundNames = (node.slots.targets ?? []).map((t) => String(t.properties.name ?? ''))
       const body = node.slots.body ?? []
       const parentScope = ctx.scope
-      const container = ctx.scope.get(containerName)
+      /**
+       * 🔴 **走訪的容器是一棵樹**（2026-09-18）——`d2[pt]`／`m[k]` 都是運算式。
+       * 在此之前這裡拿一串文字去 `scope.get`，於是那些寫法說
+       * 「沒有宣告過 `d2[pt]`」——**錯誤看起來像學生打錯字**。
+       * ⚠️ 接不到東西時**出聲**——「走訪一個不存在的東西」與「走訪一個空容器」
+       * 在畫面上長得一模一樣（迴圈都跑零次）。
+       */
+      const iterableNode = (node.slots.iterable ?? [])[0]
+      if (!iterableNode) {
+        throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': '這個迴圈沒有接上要走訪的對象' })
+      }
+      const container = await ctx.evaluate(iterableNode)
 
       // 🔴 **字串也是可以 range-for 的東西**（2026-08-26）。
       //
@@ -29,7 +43,8 @@ export function registerExecute(register: (component: string, executor: Componen
       if (items) {
         for (const elem of items) {
           ctx.scope = parentScope.createChild()
-          ctx.scope.declare(varName, elem)
+          if (boundNames.length > 0) bindSequence(boundNames, elem, ctx)
+          else ctx.scope.declare(varName, elem)
           try {
             await ctx.executeBody(body)
           } catch (signal) {

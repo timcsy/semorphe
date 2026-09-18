@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "note": "有抽象父、比父多格子、而某一軌只收了父——那一軌上這顆會被降級，多的格子沒有地方放。",
+    "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+  },
+  "scanned": {
+    "components": 337,
+    "tracks": 5
+  },
+  "exposure": 27,
+  "details": [
+    "cpp:deque_declare@c-beginner.json: fill,size,source,values",
+    "cpp:dht_declare@c-beginner.json: ctorCount",
+    "cpp:dht_declare@cpp-advanced.json: ctorCount",
+    "cpp:dht_declare@cpp-beginner.json: ctorCount",
+    "cpp:ifstream_declare@c-beginner.json: file",
+    "cpp:istringstream_declare@c-beginner.json: source",
+    "cpp:lcd_declare@c-beginner.json: ctorCount,decl_type",
+    "cpp:lcd_declare@cpp-advanced.json: ctorCount,decl_type",
+    "cpp:lcd_declare@cpp-beginner.json: ctorCount,decl_type",
+    "cpp:map_assign@c-beginner.json: key",
+    "cpp:map_at@c-beginner.json: key",
+    "cpp:map_declare@c-beginner.json: key_type,ordered,source,unique,value_type",
+    "cpp:method_call@c-beginner.json: method,obj",
+    "cpp:ofstream_declare@c-beginner.json: file",
+    "cpp:pair_declare@c-beginner.json: source,type1,type2",
+    "cpp:pin_attach@c-beginner.json: device,pin,style",
+    "cpp:pin_attach@cpp-advanced.json: device,pin,style",
+    "cpp:pin_attach@cpp-beginner.json: device,pin,style",
+    "cpp:serial_print@c-beginner.json: format,newline,obj,value",
+    "cpp:serial_print@cpp-advanced.json: format,newline,obj,value",
+    "cpp:serial_print@cpp-beginner.json: format,newline,obj,value",
+    "cpp:servo_declare@c-beginner.json: ctorCount",
+    "cpp:servo_declare@cpp-advanced.json: ctorCount",
+    "cpp:servo_declare@cpp-beginner.json: ctorCount",
+    "cpp:set_declare@c-beginner.json: source,unique",
+    "cpp:var_declare_sequence@c-beginner.json: binding,targets,value",
+    "cpp:vector_declare@c-beginner.json: fill,size,source,values"
+  ]
+}

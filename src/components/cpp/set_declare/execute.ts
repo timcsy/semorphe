@@ -2,6 +2,10 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { cloneValue } from '../../../interpreter/clone'
 import { registerContainerDefault } from '../../../languages/cpp/lang/runtime/container-defaults'
+import type { RuntimeValue } from '../../../interpreter/types'
+import { isAggregateList } from '../../../core/component/aggregate-nodes'
+import { evalInitializer } from '../../../interpreter/aggregate'
+import { asyncSort, equivalentInOrder, lessWithOverload } from '../../../languages/cpp/lang/runtime/order'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /**
@@ -49,10 +53,31 @@ export function registerExecute(register: (component: string, executor: Componen
        * 之後 `b` 要留得住重複。
        */
       const source = (node.slots.source ?? [])[0]
-      const initial = source ? await ctx.evaluate(source) : null
-      const cells = initial && initial.type === 'array' && Array.isArray(initial.value)
-        ? initial.value.map(cloneValue)
-        : []
+      /**
+       * 🔴 **大括號初始化不是「另一個容器」**（2026-09-18，盲測抓到）：
+       * `set<int> s{3, 1, 3};` 要**排序並去重**（而可重複的那一種只排序）。
+       * 原樣接管的話順序是寫的順序，重複也留著——**程式跑完，而走訪的順序是錯的**。
+       */
+      const cells: RuntimeValue[] = []
+      if (source && isAggregateList(source.componentId)) {
+        for (const el of source.slots.values ?? []) {
+          const v = await evalInitializer(el, elemType, ctx)
+          if (!allowsDuplicates) {
+            let dup = false
+            for (const c of cells) if (await equivalentInOrder(c, v, ctx)) { dup = true; break }
+            if (dup) continue
+          }
+          cells.push(v)
+        }
+        const sorted = await asyncSort([...cells], (a, b) => lessWithOverload(a, b, ctx))
+        cells.length = 0
+        for (const v of sorted) cells.push(v)
+      } else {
+        const initial = source ? await ctx.evaluate(source) : null
+        if (initial && initial.type === 'array' && Array.isArray(initial.value)) {
+          for (const c of initial.value as RuntimeValue[]) cells.push(cloneValue(c))
+        }
+      }
       ctx.scope.declare(name, { type: 'array', value: cells, allowsDuplicates, elemType })
     })
 }

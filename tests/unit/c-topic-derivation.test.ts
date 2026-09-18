@@ -64,6 +64,9 @@ const CPP_ONLY_LANGUAGE = new Set([
   'cpp:using_namespace', 'cpp:namespace_def', 'cpp:var_declare_ref',
   // C++11 起的宣告形式
   'cpp:loop_range', 'cpp:var_declare_constexpr', 'cpp:var_declare_auto', 'cpp:using_alias',
+  // 🔴 **結構化繫結是 C++17 的**（2026-09-18）——`auto [a, b] = p;`。
+  //    它沒有 `requires`（不需要標頭），所以①抓不到它，要列在這裡。
+  'cpp:var_declare_sequence',
   // 類別與物件
   'cpp:class_def', 'cpp:new', 'cpp:delete', 'cpp:template_function',
   'cpp:method_call', 'cpp:constructor', 'cpp:destructor',

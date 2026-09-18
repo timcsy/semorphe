@@ -1,0 +1,9 @@
+{
+  "CPP_DEQUE_DECLARE_TOOLTIP": "Create a double-ended queue: values can be added or removed at either end, and the middle is still readable by position.",
+  "CPP_DEQUE_DECLARE_CREATE": "create",
+  "CPP_DEQUE_DECLARE_KIND": "double-ended queue",
+  "CPP_DEQUE_DECLARE_INIT": "initial values",
+  "CPP_DEQUE_DECLARE_SIZE": "size",
+  "CPP_DEQUE_DECLARE_FILL": "filled with",
+  "CPP_DEQUE_DECLARE_SOURCE": "copied from"
+}

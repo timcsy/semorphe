@@ -32,6 +32,12 @@ export function registerExecute(register: (component: string, executor: Componen
       // ——程式跑完、印出一個數字、而它是錯的。
       const declared = String(node.properties.type ?? 'int')
       const heapOrder = declared.includes('greater') ? ('min' as const) : ('max' as const)
-      ctx.scope.declare(name, { type: 'array', value: [], tag: 'priority_queue', heapOrder })
+            /**
+       * 🔴 **容器要記得住自己裝什麼**（2026-09-18）——`elemType` 跟著**值**走，
+       * 因為 `q.push({1,2})` 時手上只有變數名，而 `{1,2}` 要變成什麼
+       * 取決於這個容器裝的是什麼。同族的列表宣告 2026-09-16 就這樣做了。
+       */
+      const elemType = String(node.properties.type ?? 'int')
+      ctx.scope.declare(name, { type: 'array', value: [], tag: 'priority_queue', heapOrder, elemType })
     })
 }

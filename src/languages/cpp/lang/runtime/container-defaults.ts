@@ -50,7 +50,14 @@ export function registerContainerDefault(templateName: string, make: Make): void
 export function containerDefaultFor(declaredType: string): RuntimeValue | null {
   const t = declaredType.trim()
   const lt = t.indexOf('<')
-  const base = (lt === -1 ? t : t.slice(0, lt)).trim()
+  const qualified = (lt === -1 ? t : t.slice(0, lt)).trim()
+  /**
+   * 🔴 **剝掉限定名**（2026-09-18，盲測抓到）：學生寫 `std::vector<std::pair<int,int>>`。
+   * 不剝的話基底名是 `std::vector`——查不到，於是 `m[k]` 自動建出來的那一格
+   * 不是一個容器，而 `push_back` 在它上面說「這不是一個容器」。
+   * ⚠️ 與聚合形狀那張表同一個處置（那裡同一天因為同一個理由補過）。
+   */
+  const base = qualified.includes('::') ? qualified.slice(qualified.lastIndexOf('::') + 2) : qualified
   const make = table.get(base)
   if (!make) return null
   const inner = lt === -1 ? '' : t.slice(lt + 1, t.lastIndexOf('>')).trim()

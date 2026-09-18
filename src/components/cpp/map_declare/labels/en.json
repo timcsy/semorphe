@@ -1,5 +1,5 @@
 {
-  "CPP_MAP_DECLARE_MSG0": "Create %4 %3 (key %1, value %2)",
+  "CPP_MAP_DECLARE_MSG0": "Create %4 %3 (key %1, value %2, %5)",
   "CPP_MAP_DECLARE_TOOLTIP": "Create a map that looks up a value by a key, like a dictionary. The hash variant is faster to look up, at the cost of an unspecified iteration order.",
   "CPP_MAP_DECLARE_KEY_TYPE_INT": "int (integer)",
   "CPP_MAP_DECLARE_KEY_TYPE_STRING": "string (text)",
@@ -10,5 +10,7 @@
   "CPP_MAP_DECLARE_VALUE_TYPE_STRING": "string (text)",
   "CPP_MAP_DECLARE_ORDERED_YES": "lookup table",
   "CPP_MAP_DECLARE_ORDERED_NO": "hash lookup table",
-  "CPP_MAP_DECLARE_SOURCE": "copied from"
+  "CPP_MAP_DECLARE_SOURCE": "copied from",
+  "CPP_MAP_DECLARE_UNIQUE_YES": "one value per key",
+  "CPP_MAP_DECLARE_UNIQUE_NO": "many values per key"
 }

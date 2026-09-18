@@ -1,0 +1,8 @@
+{
+  "CPP_DECL_SEQ_MSG0": "Unpack %1 %2 into",
+  "CPP_DECL_SEQ_TOOLTIP": "Split one group of values across several names, in order. The counts must match; a mismatch stops with an explanation.",
+  "CPP_DECL_SEQ_BY_VALUE": "a copy",
+  "CPP_DECL_SEQ_BY_REF": "in place",
+  "CPP_DECL_SEQ_OPEN": "into",
+  "CPP_DECL_SEQ_CLOSE": ""
+}

@@ -163,13 +163,40 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
     expect(gen).toContain('vi v;')
   }, 60_000)
 
-  it.fails('[UNSUPPORTED:迭代器] `v.insert(v.begin(), x)` 是定位插入，而我們沒有迭代器', async () => {
-    // 🟠 **為什麼不現在修**：它的第一個引數是迭代器，而這個直譯器沒有迭代器這個概念。
-    //    語料裡 `.begin(` 33 次、`.end(` 30 次——那是獨立的一刀。
-    //    探索報告：「一個概念如果它的產出沒有人接得住，補上它不會讓任何一支程式跑起來
-    //    ——它只會讓失敗的位置往後移。」
-    // 🔴 何時該修：迭代器那一刀做完的當天，回來拔這根釘子。
-    await sameAsCompiler(`vector<int> v; v.push_back(1); v.insert(v.begin(), 9); cout << v[0] << v[1];`, '')
+  /**
+   * 🟢 **2026-09-18：這根釘子被拔了，而它遲到了一天。**
+   *
+   * 它寫著「🔴 何時該修：**迭代器那一刀做完的當天，回來拔這根釘子**」
+   * ——而那一刀 2026-09-17 就做完了，**沒有人回來**。
+   *
+   * > **一根釘子如果只寫著「誰擋住我」，
+   * > 它不會在那個人讓開的時候自己掉下來。**
+   *
+   * ⚠️ 而阻斷者讓開之後，缺陷**換了一個形狀**：位置不再是「不支援」，
+   * 它變成了**要插入的那個值**——`v.insert(v.begin(), 9)` 被
+   * 字串的 insert 認領（它只看引數個數），整個列表被重建成一串文字，
+   * 而 `v[0]` 印出來是 `[9`。
+   *
+   * > **一個「還不認得」的東西，在它終於被造出來之後會被當成別的東西
+   * > ——而那不是同一個缺陷，是它的下一個形狀。**
+   */
+  it('★ `v.insert(v.begin(), x)` 是定位插入', async () => {
+    await sameAsCompiler(`vector<int> v; v.push_back(1); v.insert(v.begin(), 9); cout << v[0] << v[1] << v.size();`, '')
+  }, 60_000)
+
+  it('★ 定位插入：中間、尾端，而回傳的是新元素的位置', async () => {
+    await sameAsCompiler(
+      `vector<int> v{1,2,3}; auto it = v.insert(v.begin() + 1, 9);
+       cout << *it << (it - v.begin()); for (int x : v) cout << x;
+       vector<int> w{1,2}; w.insert(w.end(), 9); for (int x : w) cout << x;`, '')
+  }, 60_000)
+
+  it('★ 兩端都能進出的容器也定位插入得了', async () => {
+    await sameAsCompiler(`deque<int> d{1,3}; d.insert(d.begin() + 1, 2); for (int x : d) cout << x;`, '')
+  }, 60_000)
+
+  it('★ 正向錨點：字串的 insert 仍然是字串的（它也收兩個引數）', async () => {
+    await sameAsCompiler(`string s = "helo"; s.insert(3, "l"); cout << s;`, '')
   }, 60_000)
 
   /**

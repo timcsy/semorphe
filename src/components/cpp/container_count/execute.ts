@@ -1,7 +1,7 @@
 /** `cpp:container_count` 的 **execute** 路——從共用檔原封剪過來（批次第九批：容器方法資料表）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
-import { mapFind } from '../../../languages/cpp/lang/runtime/map'
+import { mapFind, pairParts } from '../../../languages/cpp/lang/runtime/map'
 import { equivalentInOrder } from '../../../languages/cpp/lang/runtime/order'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 
@@ -23,6 +23,18 @@ export function registerExecute(register: (component: string, executor: Componen
         //
         // > **沉默的正確和沉默的缺失撞在一起時，讓正確的那個說話。**
         throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, { '%1': 'container' })
+      }
+      /**
+       * 🔴 **對照表那一族數的是【鍵】**，而可重複的那一種（`multimap`）
+       * 一個鍵可以有多個值——所以它也要數全部（2026-09-18，盲測抓到）。
+       */
+      if (arr.keyed === true) {
+        let n = 0
+        for (const cell of arr.value as RuntimeValue[]) {
+          const parts = pairParts(cell)
+          if (parts && await equivalentInOrder(parts.key, keyVal, ctx)) n++
+        }
+        return { type: 'int' as const, value: arr.allowsDuplicates === true ? n : (n > 0 ? 1 : 0) }
       }
       // Try map-style count (key-value pairs) first
       const idx = mapFind(arr.value, keyVal)

@@ -395,6 +395,21 @@
       "decision": "open",
       "field": "field_dynamic_dropdown",
       "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_deque_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "元素型別在現實中開放（`deque<pair<int,int>>` 是語料真的寫的形狀）——與同族的列表宣告同一個判定，而**這顆的整個存在理由就是讓那個型別被記下來**"
+    },
+    "cpp_var_declare_sequence.BINDING": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "C++ 的結構化繫結只有兩種：複製一份（`auto`）與就地修改（`auto&`）。**這是語言的封閉集合，不是我們挑的**——多一個值不會對應到任何合法的 C++。"
+    },
+    "cpp_map_declare.UNIQUE": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "一個鍵能有幾個值只有兩種：一個（`map`／`unordered_map`）與多個（`multimap`）。**這是語言的封閉集合**，與同族集合宣告的「留不留重複」同一個判定。"
     }
   }
 }

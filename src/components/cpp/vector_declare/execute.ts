@@ -1,18 +1,13 @@
 /**
  * `cpp:vector_declare` 的 **execute** 路
  *
- * 從 `src/languages/cpp/std/vector/executors.ts` **原封搬過來**——搬移不重寫。
+ * ⚠️ **建構的行為與 `deque` 逐字相同**（初始化列／複製自／`(n)`／`(n, x)`），
+ * 所以它住在 `runtime/sequence-declare`；這裡留的是**身分**與
+ * 「我這一族的空容器長什麼樣」。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
-import { evalInitializer } from '../../../interpreter/aggregate'
-// ⚠️ 這裡原本有一份自己的 `cloneValue`——與核心那份逐字相同。
-//    值語義的複製是**執行期的通則**，不是這顆元件的性質。
-import { cloneValue } from '../../../interpreter/clone'
-import { defaultValue } from '../../../interpreter/types'
-import { registerContainerDefault, containerDefaultFor } from '../../../languages/cpp/lang/runtime/container-defaults'
-
-/** 深拷貝——每一格獨立，見下方 `fill` 的註解 */
-
+import { registerContainerDefault } from '../../../languages/cpp/lang/runtime/container-defaults'
+import { declareSequence } from '../../../languages/cpp/lang/runtime/sequence-declare'
 
 export function registerExecute(
   register: (component: string, executor: ComponentExecutor) => void,
@@ -21,66 +16,5 @@ export function registerExecute(
   registerContainerDefault('vector', (inner) => ({
     type: 'array', value: [], ...(inner ? { elemType: inner } : {}),
   }))
-  register('cpp:vector_declare', async (node, ctx) => {
-    const name = String(node.properties.name)
-    // 元素型別——`vector<pair<int,int>>` 的 `pair<int,int>`。
-    const elemType = String(node.properties.type ?? 'int')
-    // ⚠️ **初始化列表原本被完全忽略**——`vector<int> v = {3,1,4}` 建出一個
-    // 空的向量，於是 `v[1]` 索引越界、`v.size()` 是 0。而**產出的程式碼也
-    // 少了那段初始值**，所以來回轉換看起來「成功」了。
-    // 初始值是一整個運算式（`vector<int> v = f()`）——求值後直接接管它的內容。
-    // 不複製的話，`v` 與 `f()` 回傳的那個陣列會共用同一個物件。
-    const source = (node.slots.source ?? [])[0]
-    if (source) {
-      const produced = await ctx.evaluate(source)
-      const copied = produced.type === 'array' && Array.isArray(produced.value)
-        ? [...produced.value]
-        : []
-      // ⚠️ 複製來的也要記住元素型別——`vt[0] = {3,4}` 靠它照形狀填
-      ctx.scope.declare(name, { type: 'array', value: copied, elemType })
-      return
-    }
-    // `vector<int> v(5)` —— **建構子引數：5 個預設值**。
-    // ⚠️ 這個接點在 2026-08-13 之前不存在：lift 只把 `argument_list`「排除在
-    // source 之外」（那是對的），**而排除之後沒有人接住它**，於是 `v` 建成空的，
-    // `iota(v.begin(), v.end(), 1)` 立刻索引越界。
-    const sizeNode = (node.slots.size ?? [])[0]
-    if (sizeNode) {
-      const n = Number((await ctx.evaluate(sizeNode)).value)
-      // `vector<int> v(5, 7)` —— 第二個引數是「每一格是什麼」。
-      // ⚠️ **每一格都要獨立的複本**：`vector<vector<int>> g(2, vector<int>(3))`
-      // 共用同一個列物件的話，`g[0][0] = 9` 會同時改到 `g[1][0]`。
-      const fillNode = (node.slots.fill ?? [])[0]
-      const fill = fillNode ? await ctx.evaluate(fillNode) : null
-      const cells = []
-      for (let i = 0; i < (Number.isFinite(n) && n > 0 ? Math.trunc(n) : 0); i++) {
-        /**
-         * 🔴 **沒有填充值的時候要照【元素型別】給預設值**（2026-09-16）。
-         *
-         * 在此之前這裡寫死 `int 0`，於是 `vector<pair<int,int>> vt(n);`
-         * 的每一格都是 0 而不是一對——`cin >> vt[i].first` 因此拋錯。
-         * 實測 218 支學生程式裡 8 支撞在這裡（競賽裡 `vector<pii> vt(n)` 很常見）。
-         *
-         * > **一個「沒給就補 0」的預設值，在元素不是數字的時候補的是一個錯的形狀。**
-         *
-         * 🟢 **2026-09-18：元素是【容器】時也一樣**——`vector<set<int>> bins(4);`
-         * 的每一格要是一個真的集合（不留重複），而不是一個空陣列。
-         * 形狀由宣告那顆元件自己登記（見 `runtime/container-defaults`）。
-         * ⚠️ **每一格都要獨立的複本**——工廠每次呼叫都造一個新的，所以這裡不必再 clone。
-         */
-        cells.push(fill ? cloneValue(fill) : (containerDefaultFor(elemType) ?? defaultValue(elemType)))
-      }
-      ctx.scope.declare(name, { type: 'array', value: cells, elemType })
-      return
-    }
-
-    const init = node.slots.values ?? []
-    const elems = []
-    // ⚠️ `evalInitializer` 而不是 `evaluate`：`vector<S> v = {{3},{1}}` 的元素
-    // 本身是一層 `{…}`，而那是**聚合初始化**——要按 `S` 的成員順序填。
-    for (const n of init) elems.push(await evalInitializer(n, elemType, ctx))
-    // **元素型別跟著值走**——`push_back({2,1})` 時手上只有變數名，
-    // 而 `{2,1}` 要變成什麼取決於容器裝的是什麼。
-    ctx.scope.declare(name, { type: 'array', value: elems, elemType })
-  })
+  register('cpp:vector_declare', async (node, ctx) => { await declareSequence(node, ctx) })
 }

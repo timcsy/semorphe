@@ -15,6 +15,7 @@ import { buildArrayDeclare } from '../../../../components/cpp/array_declare/lift
 import { buildArrayAt } from '../../../../components/cpp/array_at/lift'
 import { buildForwardDecl } from '../../../../components/cpp/forward_decl/lift'
 import { buildAutoDeclare } from '../../../../components/cpp/var_declare_auto/lift'
+import { buildDeclareSequence } from '../../../../components/cpp/var_declare_sequence/lift'
 import { buildStaticVar } from '../../../../components/cpp/var_declare_static/lift'
 import { buildRawCode } from '../../../../components/cpp/raw_code/lift'
 import { qualifierComponent } from '../../../../core/component/qualifier-components'
@@ -993,18 +994,41 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
          */
         const extraProps = propsForContainerTemplate(templateName) ?? {}
         const propsFor = (nm: string): Record<string, string> => ({ ...extraProps, ...baseProps(nm) })
+        /**
+         * 🟢 **兩個型別參數要放哪兩格，問那顆元件自己宣告了什麼**（2026-09-18）。
+         *
+         * 這裡本來是一條 `if` 鏈（`templateName === 'map'` ／ `=== 'pair'`），
+         * 而它旁邊逐字寫著：「⚠️ 這是**第二個**「兩個型別參數」的特例。
+         * **第三個出現時該收斂成「從 `component.json` 的 properties 宣告推導」，
+         * 而不是再加一個 `if`。**」
+         *
+         * 🔴 **第三個到了，而它不是一顆新元件**：`unordered_map` 與 `map`
+         * 是**同一顆元件的兩個樣板名**，於是它落到最後那條 `else`，
+         * 產出 `type: "string,bool"`——一個要 parse 回結構才能用的字串。
+         * 而產碼那一側讀不到 `key_type`／`value_type`，就補 `int, int`：
+         * **`unordered_map<string,bool> mp;` 變成 `unordered_map<int,int> mp;`**。
+         *
+         * > **一個按「名字」分派的特例表，在同一個東西有第二個名字的那天
+         * > 會安靜地漏掉它——而那個東西的行為看起來只是「預設值」。**
+         *
+         * ⚠️ 判準是**宣告**：那顆元件的 `properties` 裡有哪兩格。
+         */
+        const declared = new Set(
+          (componentComponents().find((c) => c.componentId === componentId)?.properties ?? [])
+            .map((x) => String((x as { name?: unknown }).name ?? '')),
+        )
+        const twoArgKeys: [string, string] | null =
+          declared.has('key_type') && declared.has('value_type') ? ['key_type', 'value_type']
+            : declared.has('type1') && declared.has('type2') ? ['type1', 'type2']
+              : null
         const baseProps = (nm: string): Record<string, string> =>
-          templateName === 'map'
-            ? { key_type: typeArgs[0]?.text ?? 'int', value_type: typeArgs[1]?.text ?? 'int', name: nm }
-            : templateName === 'pair'
-              // 🔴 這一顆的 lift 是三路裡唯一錯過的那一路：`generate.ts` 讀 `type1`／`type2`、
-              // `forms/blocks.json` 的 renderMapping 也是——而 lift 曾經產出
-              // `type: "int,string"`，一個要 parse 回結構才能用的字串。
-              //
-              // ⚠️ 這是**第二個**「兩個型別參數」的特例。第三個出現時該收斂成
-              // 「從 `component.json` 的 properties 宣告推導」，而不是再加一個 `if`。
-              ? { type1: typeArgs[0]?.text ?? 'int', type2: typeArgs[1]?.text ?? 'int', name: nm }
-              : { type: innerType, name: nm }
+          twoArgKeys
+            ? {
+                [twoArgKeys[0]]: typeArgs[0]?.text ?? 'int',
+                [twoArgKeys[1]]: typeArgs[1]?.text ?? 'int',
+                name: nm,
+              }
+            : { type: innerType, name: nm }
 
         const buildOne = (d: AstNode): SemanticNode => {
           const s = ctorSlots(d, ctx)
@@ -1288,6 +1312,28 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         .map((decl) => {
           const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
           const valueNode = decl.childForFieldName('value')
+          /**
+           * 🔴 **宣告子可能是【一串名字】**（`auto [pt, d] = q.front();`，2026-09-18）。
+           *
+           * 在此之前 `nameNode.text` 把 `[pt,d]` 整串抄進名字那一格，於是執行期
+           * 真的宣告了一個叫 `[pt,d]` 的變數——**下一行用到 `pt` 時說
+           * 「沒有宣告過這個名字」**。錯誤指著使用的那一行，而問題在宣告那一行。
+           *
+           * ⚠️ `auto&` 時外面還包一層 `reference_declarator`（`& [k, val]`），
+           *    而**那個 `&` 屬於 `auto` 不屬於第一個名字**——所以它是一個**參數**。
+           */
+          const bare = nameNode?.type === 'reference_declarator'
+            ? nameNode.namedChildren[0] : nameNode
+          if (bare?.type === 'structured_binding_declarator') {
+            const names = bare.namedChildren.filter((c) => c.type === 'identifier').map((c) => c.text)
+            if (names.length > 0) {
+              return buildDeclareSequence(
+                names,
+                nameNode?.type === 'reference_declarator' ? 'reference' : 'value',
+                valueNode ? ctx.lift(valueNode) : null,
+              )
+            }
+          }
           return buildAutoDeclare(nameNode?.text ?? 'x', valueNode ? ctx.lift(valueNode) : null)
         })
       if (built.length === 1) return built[0]

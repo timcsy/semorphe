@@ -1,40 +1,13 @@
 /**
  * `cpp:vector_declare` 的 **generate** 路
  *
- * 從 `src/languages/cpp/std/vector/generators.ts` **原封搬過來**——搬移不重寫。
- * 註解一起搬，因為那兩段註解各自記著一個真的發生過的缺陷。
+ * ⚠️ **產碼的形狀與 `deque` 逐字相同**（五種建構形式），所以它住在
+ * `runtime/sequence-declare`，而這裡留的是**身分 ＋ 樣板名**。
+ * 抄一份的話兩份會漂移，而第三十八條護欄（共用檔的殼與重複）正是為此存在。
  */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { indent, generateExpression } from '../../../core/projection/code-generator'
+import { generateSequenceDeclare } from '../../../languages/cpp/lang/runtime/sequence-declare'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
-  g.set('cpp:vector_declare', (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? 'vec'
-    // 初始化列表要一起產回去。**少了它的話，來回轉換會靜靜地把
-    // `vector<int> v = {3,1,4}` 變成 `vector<int> v;`**——那是合法程式，
-    // 只是不是使用者寫的那一段。
-    const values = node.slots.values ?? []
-    if (values.length > 0) {
-      const items = values.map((v) => generateExpression(v, ctx)).join(', ')
-      return `${indent(ctx)}vector<${type}> ${name} = {${items}};\n`
-    }
-    // 初始值是一整個運算式（`= f()`）——與上面同一個病，同一個處方
-    const source = (node.slots.source ?? [])[0]
-    if (source) {
-      return `${indent(ctx)}vector<${type}> ${name} = ${generateExpression(source, ctx)};\n`
-    }
-    // `vector<int> v(5)` —— 建構子引數。⚠️ 原本產不回來（lift 也接不住，**兩邊對稱**）。
-    const size = (node.slots.size ?? [])[0]
-    if (size) {
-      // `vector<int> v(5, 7)` —— 第二個引數是「每一格是什麼」。
-      // ⚠️ 少了它的話產出 `v(5)`，那**編得過而且看起來很像**，只是每一格變成 0。
-      const fill = (node.slots.fill ?? [])[0]
-      const args = fill
-        ? `${generateExpression(size, ctx)}, ${generateExpression(fill, ctx)}`
-        : generateExpression(size, ctx)
-      return `${indent(ctx)}vector<${type}> ${name}(${args});\n`
-    }
-    return `${indent(ctx)}vector<${type}> ${name};\n`
-  })
+  g.set('cpp:vector_declare', generateSequenceDeclare('vector', 'vec'))
 }

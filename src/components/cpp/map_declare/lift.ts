@@ -20,4 +20,15 @@ import { registerContainerTemplate } from '../../../core/component/container-tem
 export function registerLift(): void {
   registerContainerTemplate('map', 'cpp:map_declare', 'cpp/map_declare', { ordered: 'true' })
   registerContainerTemplate('unordered_map', 'cpp:map_declare', 'cpp/map_declare', { ordered: 'false' })
+  /**
+   * 🔴 **`multimap` 是第三個名字**（2026-09-18，盲測抓到）——一個鍵可以有多個值。
+   *
+   * 沒登錄的症狀與 `unordered_map` 那次一模一樣：它掉到一般變數宣告，
+   * 於是 `mm.emplace(k, v)` 說「`mm` 不是集合或對照表」。
+   *
+   * ⚠️ 「一個鍵可以有幾個值」是**容器的性質**，所以它跟著宣告走
+   * （與同族集合那顆的重複性同一個做法）。
+   */
+  registerContainerTemplate('multimap', 'cpp:map_declare', 'cpp/map_declare',
+    { ordered: 'true', unique: 'false' })
 }

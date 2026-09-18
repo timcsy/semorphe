@@ -1,0 +1,9 @@
+{
+  "CPP_DEQUE_DECLARE_TOOLTIP": "建立一個雙端佇列：兩端都可以加入或拿掉，而中間的元素一樣用位置讀得到。",
+  "CPP_DEQUE_DECLARE_CREATE": "建立",
+  "CPP_DEQUE_DECLARE_KIND": "雙端佇列",
+  "CPP_DEQUE_DECLARE_INIT": "初始值",
+  "CPP_DEQUE_DECLARE_SIZE": "大小",
+  "CPP_DEQUE_DECLARE_FILL": "每格填",
+  "CPP_DEQUE_DECLARE_SOURCE": "複製自"
+}
