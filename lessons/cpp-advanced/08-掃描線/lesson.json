@@ -9,6 +9,7 @@
     "cpp:array_at",
     "cpp:compare",
     "cpp:container_append",
+    "cpp:container_iter",
     "cpp:endl",
     "cpp:if",
     "cpp:literal_number",
