@@ -11,19 +11,23 @@
       "name": "name",
       "kind": "identifier",
       "default": "arr"
-    },
-    {
-      "name": "rows",
-      "kind": "count",
-      "default": "3"
-    },
-    {
-      "name": "cols",
-      "kind": "count",
-      "default": "4"
     }
   ],
   "slots": {
+    "rows": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
+    "cols": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 1,
+      "max": 1
+    },
     "values": {
       "allowed": [
         "expression"
@@ -40,7 +44,7 @@
     "execute": "./execute.ts",
     "lift": "./lift.ts"
   },
-  "_children_why": "`values` 是初始值列（`int a[2][3] = {{1,2,3},{4,5,6}}`），每一項是一層 `{…}`。\n⚠️ 它原本不存在，因為**帶初始值的多維陣列根本走不到這顆元件**——判別只掛在「沒有初始值」那條路上。",
+  "_children_why": "`values` 是初始值列（`int a[2][3] = {{1,2,3},{4,5,6}}`），每一項是一層 `{…}`。\n⚠️ 它原本不存在，因為**帶初始值的多維陣列根本走不到這顆元件**——判別只掛在「沒有初始值」那條路上。\n🔴 **維度是【接點】不是屬性**（2026-09-19）。在此之前 `rows`／`cols` 是兩個屬性，裝著原始碼的片段，而執行期 `Number(properties.rows)` 讀它\n——於是 `int d2[n][5]` 與 `int d2[x*2][7]` 算出 `NaN`，**零列**。\n⚠️ 而症狀出現在**下一行**：`cin >> d2[i][j]` 說「讀進來的東西不知道要放哪裡」。\n> **一個錯誤訊息指著最後一個碰到它的人，而不是造成它的人。**\n🔴 **而它是一個不對稱**：同族那顆一維陣列的 `size` **早就是接點**，只有這一顆還是屬性。\n⚠️ 第七十二條護欄（字串屬性不得裝結構）**看不到它**——測試語料裡的維度永遠是數字字面值。\n> **語料乾淨不代表模型對：它代表語料是照著模型長的。**\n🔴 屬性整個退場，不留欄位；舊存檔由 `SHAPE_CHANGES_V22` 丟快取、從程式碼重 lift。",
   "traits": {
     "declarator": true,
     "forLoopPart": true

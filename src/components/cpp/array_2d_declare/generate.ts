@@ -6,8 +6,18 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:array_2d_declare', (node, ctx) => {
       const type = node.properties.type ?? 'int'
       const name = node.properties.name ?? 'arr'
-      const rows = node.properties.rows ?? '3'
-      const cols = node.properties.cols ?? '4'
+      /**
+       * 🔴 **維度從接點來**（2026-09-19）。
+       * ⚠️ **空的要產出空字串不是預設值**：`int a[][3] = {…}` 是合法的 C++，
+       *    而補一個 `3` 進去會**改掉學生的程式**。
+       *    這與同族的範圍那一族不同（那裡空的要補 `v.begin()`，因為 `sort(, )` 編不過）。
+       */
+      const dim = (slot: string): string => {
+        const n = (node.slots[slot] ?? [])[0]
+        return n ? generateExpression(n, ctx) : ''
+      }
+      const rows = dim('rows')
+      const cols = dim('cols')
       // 初始值三態，與一維陣列同一條契約：欄位不存在 → 無初始化；
       // `[]` → `= {}`；有內容 → `= {…}`。
       const values = node.slots.values

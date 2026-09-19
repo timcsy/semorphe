@@ -84,11 +84,31 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     expect(body[0].componentId).toBe('cpp:array_2d_declare')
     expect(body[0].properties.type).toBe('int')
     expect(body[0].properties.name).toBe('arr')
-    expect(body[0].properties.rows).toBe('3')
-    expect(body[0].properties.cols).toBe('4')
+    /**
+     * 🔴 **維度是【接點】不是屬性**（2026-09-19）。這兩行本來斷言
+     * `properties.rows === '3'`——也就是**一段原始碼的文字**，
+     * 而執行期 `Number(那串文字)` 對 `n`／`x*2` 都是 `NaN` ⟹ 零列。
+     */
+    expect(body[0].properties.rows, '🔴 屬性該退場了').toBeUndefined()
+    expect(body[0].slots.rows?.[0]?.componentId).toBe('cpp:literal_number')
+    expect(body[0].slots.rows?.[0]?.properties.value).toBe('3')
+    expect(body[0].slots.cols?.[0]?.properties.value).toBe('4')
 
     const code = generateCode(tree!, 'cpp', style)
     expect(code).toContain('int arr[3][4];')
+  })
+
+  /**
+   * 🔴 **維度可以是運算式**——那是這一刀的正題，而它在此之前整個掉了。
+   */
+  it('🔴 維度是運算式時也要轉得回去', () => {
+    const tree = liftCode('int n = 3;\nint arr[n][n * 2];')
+    const body = tree!.slots.body ?? []
+    const decl = body.find((b) => b.componentId === 'cpp:array_2d_declare')!
+    expect(decl, '🔴 沒認出來 → 下面在驗空氣').toBeDefined()
+    expect(decl.slots.rows?.[0]?.componentId).toBe('cpp:var_ref')
+    expect(decl.slots.cols?.[0]?.componentId).toBe('cpp:arithmetic')
+    expect(generateCode(tree!, 'cpp', style)).toContain('int arr[n][n * 2];')
   })
 
   it('should round-trip 2D array access', () => {

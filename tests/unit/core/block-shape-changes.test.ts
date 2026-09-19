@@ -9,7 +9,7 @@
  * 判準（`migrate-storage` 第 3／4／5 步）：冪等 · 只改確定的位置 · 表空時不亂丟。
  */
 import { describe, it, expect } from 'vitest'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V21 } from '../../../src/migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V21, SHAPE_CHANGES_V22 } from '../../../src/migrations/block-shape-changes'
 import { UPGRADES, CURRENT_VERSION } from '../../../src/core/storage/storage-version'
 
 const oldState = {
@@ -236,6 +236,41 @@ describe('v20 → v21：範圍那一族的兩端換成接點', () => {
   })
 
   it('★ `CURRENT_VERSION` 要跟著走到 21', () => {
-    expect(CURRENT_VERSION).toBe(21)
+    expect(CURRENT_VERSION).toBeGreaterThanOrEqual(21)
+  })
+})
+
+/**
+ * **v21 → v22：二維陣列的維度從欄位換成接點**（2026-09-19）。
+ *
+ * 🔴 **同一個病的第四次**（`V19` 接收者 · `V20` 走訪對象 · `V21` 範圍的兩端 · 這裡維度），
+ * 而判準四次都一樣：**需要 parse 回結構才能用的字串，就不該是字串。**
+ */
+describe('v21 → v22：二維陣列的維度換成接點', () => {
+  const oldOne = { blocks: { blocks: [{
+    type: 'cpp_array_2d_declare', fields: { NAME: 'a', ROWS: 'n', COLS: '5' },
+  }] } }
+  const newOne = { blocks: { blocks: [{
+    type: 'cpp_array_2d_declare', fields: { NAME: 'a' },
+    inputs: { ROWS: { block: { type: 'cpp_var_ref', fields: { NAME: 'n' } } } },
+  }] } }
+
+  it('★ 正向：帶著退場欄位的舊快取要被認出來', () => {
+    const hit = staleShapeIn(oldOne, SHAPE_CHANGES_V22)
+    expect(hit, '🔴 認不出來 → 舊存檔的維度會安靜地消失').not.toBeNull()
+    expect(hit!.blockType).toBe('cpp_array_2d_declare')
+  })
+
+  it('★ 反向：已經是接點的快取不得被亂丟', () => {
+    expect(staleShapeIn(newOne, SHAPE_CHANGES_V22),
+      '🔴 誤判 → 每一個使用者的排版都會無故重算').toBeNull()
+  })
+
+  it('★ 升級步驟：舊快取被丟掉，而 code 原封不動', () => {
+    const raw = { version: 21, code: 'int a[n][5];\n', codeHash: 'abc', blocklyState: oldOne }
+    const up = UPGRADES[21](raw)
+    expect(up.version).toBe(22)
+    expect(up.code, '🔴 真相被動到了').toBe('int a[n][5];\n')
+    expect(Object.keys(up.blocklyState as object), '🔴 快取沒被丟掉').toEqual([])
   })
 })
