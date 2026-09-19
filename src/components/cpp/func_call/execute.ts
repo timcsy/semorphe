@@ -50,7 +50,30 @@ export function registerExecute(register: (component: string, executor: Componen
     // 「沒有名稱隔離」這個設計本來就有的代價，不是這一行新增的——
     // 真要隔離就得讓 `namespace_def` 開一個命名空間，而那是另一個題目。
     const bareName = name.includes('::') ? name.slice(name.lastIndexOf('::') + 2) : null
-    const funcDef = ctx.functions.get(name) ?? (bareName ? ctx.functions.get(bareName) : undefined)
+    const found = ctx.functions.get(name) ?? (bareName ? ctx.functions.get(bareName) : undefined)
+    /**
+     * 🔴 **引數比參數多的時候，那不是這一顆函式**（2026-09-19，資訊隔離盲測抓到）。
+     *
+     * 盲測的第七支是一支**合法的 C++**：它自己定義了
+     * `int count(const vector<int>& v, int x)`，然後在同一支程式裡呼叫
+     * `std::count(v.begin(), v.end(), 3)`。
+     *
+     * ```
+     * g++   3     std::count 是三個引數的那一顆
+     * 我們   2     退回裸名 → 撞上使用者那顆兩參數的 count → 綁前兩個、丟掉第三個
+     * ```
+     *
+     * ⚠️ **它不會出聲**：回傳的是一個**型別正確、看起來合理的整數**。
+     *
+     * > **一個「引數對不上就少綁幾個」的呼叫，
+     * > 在遇到同名多載的時候不會報錯——它會回一個錯的答案。**
+     *
+     * 🟢 判準是 C++ 的事實：**使用者定義的函式沒有可變引數**，
+     *    所以「給的比宣告的多」在任何合法的程式裡都不成立。
+     * ⚠️ 反方向（**給的比宣告的少**）是合法的——那是預設引數，
+     *    而下面那一段已經在處理它。**這裡只擋多的那一邊。**
+     */
+    const funcDef = found && (node.slots.args ?? []).length > found.params.length ? undefined : found
     if (!funcDef) {
       /**
        * 🔴 **一個名字如果是登記過的結構，那個呼叫是【建構】**（2026-09-17，盲測抓到）。

@@ -139,6 +139,7 @@
               "cpp:range_sum_partial",
               "cpp:var_declare_sequence",
               "cpp:container_iter",
+              "cpp:pointer_step",
               "cpp:container_find",
               "cpp:range_find_lower",
               "cpp:range_find_upper",

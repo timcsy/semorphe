@@ -1,0 +1,6 @@
+{
+  "CPP_POINTER_STEP_MSG0": "%1 moved %2 by %3",
+  "CPP_POINTER_STEP_PREV": "back",
+  "CPP_POINTER_STEP_NEXT": "forward",
+  "CPP_POINTER_STEP_TOOLTIP": "Gives the position after moving; the original position is unchanged. Leaving the count empty means one step. Going before the start or past the end leaves the container — reading it then reports an error."
+}

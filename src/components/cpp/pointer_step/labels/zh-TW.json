@@ -1,0 +1,6 @@
+{
+  "CPP_POINTER_STEP_MSG0": "%1 往 %2 移 %3 格",
+  "CPP_POINTER_STEP_PREV": "前",
+  "CPP_POINTER_STEP_NEXT": "後",
+  "CPP_POINTER_STEP_TOOLTIP": "給出移動之後的那個位置，而原本那個位置不動。「幾格」留空時就是一格。⚠️ 從開頭再往前、或從結尾之後再往後，都走出了這個容器——那時讀它會出聲。"
+}

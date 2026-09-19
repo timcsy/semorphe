@@ -1,5 +1,5 @@
 {
-  "C_COMMENT_DOC_TOOLTIP": "產生 /** ... */ 形式的文件註解",
+  "C_COMMENT_DOC_TOOLTIP": "產生 / ... */ 形式的文件註解",
   "C_COMMENT_DOC_LABEL": "文件註解",
   "C_COMMENT_DOC_BRIEF": "說明",
   "C_COMMENT_DOC_PARAM": "參數",

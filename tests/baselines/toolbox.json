@@ -98,6 +98,7 @@
         "cpp_container_iter",
         "cpp_istringstream_declare",
         "cpp_method_call",
+        "cpp_pointer_step",
         "cpp_string_at",
         "cpp_method_call_expression"
       ]
@@ -163,6 +164,7 @@
         "cpp_container_find",
         "cpp_container_iter",
         "cpp_istringstream_declare",
+        "cpp_pointer_step",
         "cpp_string_at"
       ]
     },
@@ -221,6 +223,7 @@
         "cpp_container_find",
         "cpp_container_iter",
         "cpp_istringstream_declare",
+        "cpp_pointer_step",
         "cpp_string_at"
       ]
     },
@@ -242,6 +245,7 @@
         "cpp_container_find",
         "cpp_container_iter",
         "cpp_istringstream_declare",
+        "cpp_pointer_step",
         "cpp_string_at",
         "cpp_container_pop_stack",
         "cpp_container_pop_queue",
