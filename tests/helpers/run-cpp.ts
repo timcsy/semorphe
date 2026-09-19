@@ -26,7 +26,7 @@
  * 單獨也紅才是迴歸。⚠️ 而 `test.skip` 掉的 `[BLOCKED…]` 那批**不是**這個：
  * 那些是標了 pre-existing bug 的刻意跳過。
  */
-import { execSync, execFileSync, spawn } from 'node:child_process'
+import { execSync, execFileSync, spawn, spawnSync } from 'node:child_process'
 import { writeFileSync, mkdirSync, rmSync, openSync, closeSync } from 'node:fs'
 import path from 'node:path'
 
@@ -296,4 +296,82 @@ async function runCppAsyncDetailed(code: string, stdin?: string): Promise<asyncO
 export function runCpp(code: string): string | null {
   const r = runCppDetailed(code)
   return r.ok ? r.output : null
+}
+
+/**
+ * **這份輸入，讓這支程式走進未定義行為了嗎**——拿消毒器問參照編譯器。
+ *
+ * ## 🔴 它為什麼存在（2026-09-19）
+ *
+ * 語料的「解譯器出錯」那一欄裡，有一類**不是我們的缺陷**：
+ * `AP325/7/7_6.cpp` 寫 `vector<S> A[n];` 之後 `cin >> u; A[u].push_back(…)`,
+ * 而測資生出來的 `u` 大於 `n`。**g++ 不檢查所以照跑，我們檢查所以出聲。**
+ *
+ * 那不是「我們錯了」，也不是「我們對了」——**是那份測資讓那支程式沒有定義的行為**。
+ * 而它佔了當時 44 支裡的 5 支，足以讓人把一整刀花在一個不存在的缺陷上。
+ *
+ * ## ⚠️ 為什麼不改測資產生器（量過了，2026-09-19）
+ *
+ * 直覺的修法是「之後的整數以第一個整數為上界」（競賽題「讀 n 再讀 n 筆」的慣例）。
+ * **實測：44 → 43。** 修好了 AP325/7 那四支，換來 `10_a277` 爆堆疊、
+ * `8_toj8`／`a005` 除以零（`rnd(bound)` 會生出 0）、`7_11` 負索引。
+ *
+ * > **一個改「測資怎麼生」的改動，如果換掉的支數與修好的支數差不多，
+ * > 它量到的是測資的形狀，不是缺陷的分佈。**
+ *
+ * ## 🔴 判準：**外部權威，不是我的判斷**
+ *
+ * 使用者說過「語料只是參考，實際 fuzz 錯了就是錯了，不要迴避」。
+ * 這一支之所以不是迴避，是因為**它問的不是我**——是 clang／gcc 的消毒器。
+ * 我說「這支有 UB」沒有份量；`UndefinedBehaviorSanitizer` 說了才算。
+ *
+ * ⚠️ 而它只能證實，不能否證：消毒器**沒叫**不代表沒有 UB
+ *（它抓不到未初始化的讀取、抓不到全域陣列的小幅越界）。
+ * 所以回 `false` 的那些**仍然算我們的帳**。
+ *
+ * @returns 消毒器有沒有指名一段未定義行為；`null` 表示消毒器自己編不起來（不下判斷）
+ */
+export function sanitizerSaysUB(code: string, stdin?: string): { ub: boolean | null; detail: string } {
+  if (!hasReferenceCompiler()) {
+    throw new Error('找不到參照編譯器（g++）。護欄不得在此跳過——一筆看不見的缺陷與一筆不存在的缺陷長得一模一樣。')
+  }
+  mkdirSync(cwd, { recursive: true })
+  const name = `s${process.pid}_${seq++}`
+  const src = path.join(cwd, `${name}.cpp`)
+  const bin = path.join(cwd, name)
+  const inFile = path.join(cwd, `${name}.in`)
+  try {
+    writeFileSync(src, code)
+    try {
+      execSync(`g++ ${flag}${extraInc} -fsanitize=address,undefined -g -o ${bin} ${src}`,
+        { encoding: 'utf-8', stdio: 'pipe' })
+    } catch {
+      // 消毒器版編不起來（有些語料只在這個模式下撞到標頭問題）——**不下判斷**
+      return { ub: null, detail: '消毒器版編不起來' }
+    }
+    writeFileSync(inFile, stdin ?? '')
+    const fd = openSync(inFile, 'r')
+    let combined = ''
+    try {
+      /**
+       * 🔴 **用 `spawnSync` 而不是 `execFileSync`**：UBSan 的「runtime error」
+       * 預設**會讓程式繼續跑並且正常退出**（不是 `-fno-sanitize-recover`），
+       * 於是 `execFileSync` **不丟例外**而它的 stderr 就被丟掉了
+       * ——那一路正是最常見的一路（AddressSanitizer 才會讓它死）。
+       *
+       * > **一個只在「它失敗了」那一路讀 stderr 的偵測器，
+       * > 對「它成功了而且順便印出違規」保持沉默。**
+       */
+      const r = spawnSync(bin, [], { encoding: 'utf-8', timeout: timeoutMs, stdio: [fd, 'pipe', 'pipe'] })
+      combined = String(r.stderr ?? '') + String(r.stdout ?? '')
+    } finally {
+      closeSync(fd)
+    }
+    const m = combined.match(/runtime error: [^\n]{0,80}|ERROR: AddressSanitizer: [^\n]{0,80}/)
+    return m ? { ub: true, detail: m[0] } : { ub: false, detail: '' }
+  } finally {
+    rmSync(src, { force: true })
+    rmSync(bin, { force: true })
+    rmSync(inFile, { force: true })
+  }
 }
