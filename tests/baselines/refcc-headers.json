@@ -1,10 +1,10 @@
 {
   "_meta": {
-    "note": "📈 **2026-09-19（解析器解錯的兩種形狀）：輸入量上調，缺陷格未動。**\n  新增 `core/lift/ast-repairs.ts`（「換一棵樹」的登記處，與辨識後處理同形狀）\n  ＋ `languages/cpp/lang/misparse.ts`（`!K--` 與 `a<b && c>-d` 兩條重寫）\n  ＋ `tests/unit/languages/cpp/misparse.test.ts`。\n  🔴 它們補的是**唯一一批「往下追的每一層都是對的」的缺陷**——\n  tree-sitter-cpp 自己解錯，而 lift 只問「這棵樹是什麼意思」。\n  🟢 跨層相依未動（5）：新檔住在 `core/lift/`，語言套件推、核心讀。\n\n📈 **2026-09-19（把東西移出缺陷帳要外部權威）：輸入量上調一個檔，缺陷格未動。**\n  新增第一百二十二條護欄 `audit-sanitizer-verdict`——語料的「解譯器出錯」那一欄裡，\n  有一類是**那份測資讓那支程式走進未定義行為**（`vector<S> A[n]` 之後用輸入來的索引），\n  而把它移出缺陷帳的資格不在我，在 UBSan／ASan。那支判定自己要有錨點。\n  🔴 而它第一版漏掉一半：`execFileSync` 只在「它失敗了」那一路讀 stderr，\n  而 UBSan 預設**讓程式繼續跑並正常退出**——純 UBSan 那半完全看不見。\n  > **一個只在失敗那一路讀 stderr 的偵測器，對「它成功了而且順便印出違規」保持沉默。**\n\n本機是 Apple clang（libc++）、CI 是 GNU g++（libstdc++），兩者對「哪個標頭遞移帶進哪個」的答案不同。手列標頭的檔會在 CI 上紅而本機全綠。",
+    "note": "📈 **2026-09-19（轉型的三種寫法 ＋ 除以零不是錯誤 ＋ 八進位 ＋ 二維扁平初值）：\n  輸入量上調，缺陷格未動。**\n  新增 `tests/probes/studycpp-has-blocks.test.ts`（語料用到的元件都有積木嗎）\n  ＋ `interpreter-matches-compiler` 的 15 條最小重現。\n  🔴 這一刀讓語料的**「內容真的不同」第一次下降**（7 → 5）——\n  那一欄從 2026-09-16 補上第五個面向以來，八刀都沒有動過。\n\n📈 **2026-09-19（解析器解錯的兩種形狀）：輸入量上調，缺陷格未動。**\n  新增 `core/lift/ast-repairs.ts`（「換一棵樹」的登記處，與辨識後處理同形狀）\n  ＋ `languages/cpp/lang/misparse.ts`（`!K--` 與 `a<b && c>-d` 兩條重寫）\n  ＋ `tests/unit/languages/cpp/misparse.test.ts`。\n  🔴 它們補的是**唯一一批「往下追的每一層都是對的」的缺陷**——\n  tree-sitter-cpp 自己解錯，而 lift 只問「這棵樹是什麼意思」。\n  🟢 跨層相依未動（5）：新檔住在 `core/lift/`，語言套件推、核心讀。\n\n📈 **2026-09-19（把東西移出缺陷帳要外部權威）：輸入量上調一個檔，缺陷格未動。**\n  新增第一百二十二條護欄 `audit-sanitizer-verdict`——語料的「解譯器出錯」那一欄裡，\n  有一類是**那份測資讓那支程式走進未定義行為**（`vector<S> A[n]` 之後用輸入來的索引），\n  而把它移出缺陷帳的資格不在我，在 UBSan／ASan。那支判定自己要有錨點。\n  🔴 而它第一版漏掉一半：`execFileSync` 只在「它失敗了」那一路讀 stderr，\n  而 UBSan 預設**讓程式繼續跑並正常退出**——純 UBSan 那半完全看不見。\n  > **一個只在失敗那一路讀 stderr 的偵測器，對「它成功了而且順便印出違規」保持沉默。**\n\n本機是 Apple clang（libc++）、CI 是 GNU g++（libstdc++），兩者對「哪個標頭遞移帶進哪個」的答案不同。手列標頭的檔會在 CI 上紅而本機全綠。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "testFiles": 524,
+    "testFiles": 525,
     "feeders": 17
   },
   "handListed": 2,

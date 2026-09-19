@@ -433,7 +433,13 @@ function formatDefaultPrecision(n: number): string {
    * 🟢 而它搬到那裡還有第二個理由：**`setprecision(n)` 要的是同一條規則，位數是參數**。
    *    留在這裡的話那邊得抄一份，而**兩份會漂移**。
    */
-  if (!Number.isFinite(n)) return String(n)
+  /**
+   * 🔴 **C++ 印的是 `inf`／`-inf`／`nan`**（2026-09-19），不是 JavaScript 的
+   * `Infinity`／`NaN`。在此之前 `cout << 1.0/0` 印出 `Infinity`——
+   * **一個在 C++ 裡不存在的字**。
+   */
+  if (Number.isNaN(n)) return 'nan'
+  if (!Number.isFinite(n)) return n > 0 ? 'inf' : '-inf'
   if (Number.isInteger(n) && Math.abs(n) < 1e6) return String(n)
   return toSignificant(n, 6)
 }

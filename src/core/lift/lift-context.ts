@@ -61,9 +61,19 @@ export class LiftContextData {
   }
 
   /** Declare a variable in the current scope */
-  declare(name: string, type: string): void {
+  declare(name: string, type: string, kind: 'variable' | 'type' = 'variable'): void {
     const frame = this.scopeStack[this.scopeStack.length - 1]
-    frame.declarations.push({ name, type, scope: frame.level })
+    frame.declarations.push({ name, type, scope: frame.level, kind })
+  }
+
+  /**
+   * **這個名字是一個型別嗎**——`typedef` 與 `#define` 取的型別小名。
+   *
+   * 🔴 與 `isKnownType` **不是同一件事**：那一支問的是「這個名字查得到嗎」，
+   * 而變數也查得到。見 `Declaration.kind` 的檔頭。
+   */
+  isTypeName(name: string): boolean {
+    return this.lookup(name)?.kind === 'type'
   }
 
   /** Look up a variable by name, respecting shadowing (innermost scope first) */

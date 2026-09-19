@@ -11,6 +11,7 @@ import { namedCastComponent } from '../../../core/component/named-cast-component
 import { buildMalloc } from '../../../components/cpp/malloc/lift'
 import { buildMethodCall } from '../../../components/cpp/method_call/lift'
 import { buildFuncCall } from '../../../components/cpp/func_call/lift'
+import { buildCast } from '../../../components/cpp/cast/lift'
 
 /**
  * **這顆元件的接收者是一個【接點】，還是一個【字串屬性】？**
@@ -249,6 +250,45 @@ export function registerIOLifters(lifter: Lifter): void {
     const funcNode = node.childForFieldName('function')
     const argsNode = node.childForFieldName('arguments')
     const funcName = funcNode?.text ?? ''
+
+    /**
+     * 🔴 **轉型的第二、第三種寫法**（2026-09-19）——兩者都被解成「呼叫」。
+     *
+     * ```
+     * 寫的          tree-sitter 給的                                 它其實是
+     * int()         call(function: primitive_type, args: [])         值初始化（＝ 0）
+     * double(3)     call(function: primitive_type, args: [3])        函式式轉型
+     * (ll)(x+1)     call(function: parenthesized_expression, args)   C 風格轉型
+     * ```
+     *
+     * ⚠️ 前兩種是**無歧義的**：`primitive_type` 只有型別位置才生得出來。
+     * ⚠️ 第三種**要問宣告**：`(fp)(x)` 在 `fp` 是一個變數時是**函式指標呼叫**，
+     *    不是轉型。判準與 `misparse.ts` 的 `resolveMethodAlias` 是同一句話
+     *    ——**查得到就讓開**。
+     *
+     * > **一個「括號裡是什麼」的判斷，答案不在語法樹裡，在宣告裡。**
+     */
+    if (funcNode && funcNode.type === 'primitive_type') {
+      const arg = argsNode?.namedChildren[0]
+      return buildCast(funcNode.text, arg ? ctx.lift(arg) : null)
+    }
+    if (funcNode && funcNode.type === 'parenthesized_expression') {
+      const inner = funcNode.namedChildren[0]
+      /**
+       * 🔴 **要有正面證據才當轉型**（2026-09-19，第一版是反過來寫的）。
+       *
+       * 第一版的判準是「查不到這個名字 ⟹ 它是型別」，而**查不到有兩種原因**：
+       * 它真的是型別，或者**我們沒有記下那個宣告**。實測：
+       * `int (*fp)(int)=f; (fp)(3);` 的 `fp` 沒有被記下來，於是它被當成轉型
+       * ——而輸出從 `UNDEFINED_FUNC: (fp)`（誠實出聲）變成 **3**（安靜地錯）。
+       *
+       * > **一個 fail-open 的判定，修好的那天會把「我不知道」變成「我確定」。**
+       */
+      if (inner && inner.type === 'identifier' && ctx.data.isTypeName(inner.text)) {
+        const arg = argsNode?.namedChildren[0]
+        return buildCast(inner.text, arg ? ctx.lift(arg) : null)
+      }
+    }
 
     // Method call: obj.method(...) via field_expression
     if (funcNode && funcNode.type === 'field_expression') {
