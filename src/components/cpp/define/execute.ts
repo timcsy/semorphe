@@ -32,18 +32,61 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { defined } from '../../../languages/cpp/lang/executors/preprocessor'
 import { setAlias } from '../../../interpreter/aliases'
+import { unescapeC } from '../../../core/registry/transform-registry'
 
 /**
  * 巨集的值是不是一個**字面常數**。不是就回 `null`——呼叫端據此決定不綁。
  *
  * ⚠️ 只認字面量，不認運算式（`#define AREA (W*H)`）。認了就等於在語義層
  * 做求值，而那條線一跨過去就是在重建前處理器。
+ *
+ * ## 🔴 2026-09-19：補上**漏掉的那幾種字面量**（不是跨過上面那條線）
+ *
+ * 語料量到三種寫得出來而這裡認不得的：
+ *
+ * ```
+ * #define z '0'        字元字面值      w/APCS/j607_2t.cpp（`s[i] - z`）
+ * #define z -'0'       帶正負號的同上
+ * #define MAXN 1e7     科學記號        語料裡 1e7／1e9 很常見
+ * #define M 0x3f3f3f3f 十六進位
+ * #define M 1000000007LL 帶字尾的整數
+ * ```
+ *
+ * ⚠️ **它們全部都是【字面量】**——上面那條線排除的是「運算式」
+ *（`(W*H)`、`SQR(x)`），而這幾個是這支函式自己沒寫完。
+ *
+ * > **一條「只認 X」的規則，與「只認我當時想到的那幾種 X」長得一模一樣
+ * > ——直到有人寫出第五種 X。**
+ *
+ * ⚠️ 正負號那一格**本來就在**（`[+-]?\d+`），所以 `-'0'` 走的是同一條路，
+ *    不是新開的一條。
  */
 function literalValue(raw: string): RuntimeValue | null {
   const s = raw.trim()
   if (!s) return null
-  if (/^[+-]?\d+$/.test(s)) return { type: 'int', value: Number(s) }
-  if (/^[+-]?(\d+\.\d*|\.\d+)$/.test(s)) return { type: 'double', value: Number(s) }
+  /**
+   * 🔴 **帶正負號**——原本只有十進位整數與小數有這一格，而字元與十六進位沒有。
+   * 拆出來一次，下面每一種都適用。
+   */
+  const m = /^([+-]?)\s*(.*)$/.exec(s)
+  const sign = m?.[1] === '-' ? -1 : 1
+  const body = m?.[2] ?? s
+  /** ⚠️ 字尾（`LL`／`ULL`／`u`／`f`）是**型別的事**，不是值的事——這個直譯器不分寬度。 */
+  const int = /^(0[xX][0-9a-fA-F]+|0[bB][01]+|\d+)(u|U|l|L|ll|LL|ul|UL|ull|ULL)?$/.exec(body)
+  if (int) return { type: 'int', value: sign * Number(int[1]) }
+  const dbl = /^(\d+\.\d*|\.\d+|\d+(\.\d*)?[eE][+-]?\d+|\d*\.\d+[eE][+-]?\d+)(f|F|l|L)?$/.exec(body)
+  if (dbl) return { type: 'double', value: sign * Number(dbl[1]) }
+  /**
+   * 🔴 **字元字面值以【數字碼】存放**——這個直譯器裡字元有兩種存法，
+   * 而 `cpp:literal_char` 存的是碼位。這裡要與它一致，否則
+   * `#define z '0'` 之後 `s[i] - z` 會拿一個字串去減。
+   * ⚠️ 解跳脫用**既有的** `unescapeC`（`'\n'` 是兩個字元）——不另寫一份。
+   */
+  const ch = /^'(([^'\\]|\\.)*)'$/.exec(body)
+  if (ch) {
+    const decoded = unescapeC(ch[1])
+    if (decoded.length > 0) return { type: 'char', value: sign * decoded.charCodeAt(0) }
+  }
   if (/^"([^"\\]|\\.)*"$/.test(s)) {
     try {
       return { type: 'string', value: JSON.parse(s) as string }

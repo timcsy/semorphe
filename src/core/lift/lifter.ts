@@ -183,6 +183,42 @@ export class Lifter {
    * > **一個「這個節點宣告了什麼」的收集器，
    * > 它認得的形狀有幾種，就有幾種名字是它看得見的。**
    */
+  /**
+   * **`#define A B` 也是「名字的別名」**（2026-09-19）——與上面那支同一張表。
+   *
+   * ## 🔴 為什麼它非在 lift 記不可
+   *
+   * `interpreter/aliases.ts` 那張表是**執行期**建立的（`cpp:define` 的執行器填它），
+   * 而**身分是在 lift 決定的**：`v.pb(3)` 的 `pb` 在 lift 當下查不到任何方法名，
+   * 於是整句掉到泛用的方法呼叫，執行期才說「這個接收者不是一個物件」。
+   *
+   * > **一張在執行期才建立的別名表，對「身分是在 lift 決定的」這件事完全無能為力。**
+   *
+   * 實測：`#define pb push_back` 之後 `v.pb(3)` **從第一天就沒有work過**
+   *（連一般的 `vector` 都不行），語料 3 支。
+   *
+   * ## ⚠️ 只收「一個名字 → 一個名字」
+   *
+   * `#define rep(i,n) …` 是一段程式不是一個名字（那條墓碑仍然成立），
+   * `#define MAXN 100` 是一個值（執行器那一路處理）。
+   * 這裡收的是 `pb→push_back`／`x→first` 這一族。
+   *
+   * ⚠️ **不開第二張表**——`lift-context.ts` 的 `getType` 檔頭逐字：
+   * 「一個查得到的東西查兩次，比替它開第二張表便宜。」
+   * 而查詢端有一道閘（見 `lifters/io.ts` 的 `resolveMethodAlias`）：
+   * **原名查不到、而別名查得到**時才換，否則一個叫 `size` 的變數
+   * 會讓 `v.size()` 去查一個叫 `int` 的方法。
+   */
+  private recordMacroAlias(r: SemanticNode, data: LiftContextData): void {
+    if (!/^[a-z]+:define$/.test(r.componentId ?? '')) return
+    const name = r.properties?.name
+    const value = r.properties?.value
+    if (typeof name !== 'string' || name === '') return
+    if (typeof value !== 'string' || !/^[A-Za-z_]\w*$/.test(value.trim())) return
+    if (name === value.trim()) return
+    data.declare(name, value.trim())
+  }
+
   private recordTypeAlias(r: SemanticNode, data: LiftContextData): void {
     if (!/^[a-z]+:typedef$/.test(r.componentId ?? '')) return
     const alias = r.properties?.alias
@@ -223,6 +259,7 @@ export class Lifter {
       this.recordDeclaration(r, contextData)
       this.recordEnumerators(r, contextData)
       this.recordTypeAlias(r, contextData)
+      this.recordMacroAlias(r, contextData)
       if (!r.metadata) r.metadata = {}
       if (!r.metadata.sourceRange) {
         // Tree-sitter endPosition points AFTER the last character.

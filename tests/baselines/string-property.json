@@ -1,9 +1,9 @@
 {
   "_meta": {
-    "note": "字串屬性不得裝結構。「非原子」不等於錯——判定在 tests/assets/string-property-decisions.json。\n🔴 而語料乾淨不代表模型對：它代表語料是照著模型長的。",
+    "note": "📈 **2026-09-19（`#define` 取的小名與方法名的拼法）：輸入量上調，缺陷格未動。**\n  新增 `lifter.ts` 的 `recordMacroAlias`（`#define A B` 與 `typedef` 同一張表）、\n  `lifters/io.ts` 的 `resolveMethodAlias`（**原名查不到、別名查得到**時才換）、\n  `container_append`／`set_insert` 的 `method` 屬性（記住使用者寫的那個方法名），\n  以及 `interpreter-matches-compiler` 的 14 條最小重現。\n  🔴 修的是三個**從第一天就沒有work過**的東西：`#define pb push_back`、\n  `#define z '0'` 這一類字面量、以及二維原生陣列上的結構成員。\n\n字串屬性不得裝結構。「非原子」不等於錯——判定在 tests/assets/string-property-decisions.json。\n🔴 而語料乾淨不代表模型對：它代表語料是照著模型長的。",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
-  "語料段數": 1287,
+  "語料段數": 1288,
   "要看": 26,
   "孤兒判定": 0,
   "details": [

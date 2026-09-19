@@ -101,13 +101,26 @@ export function registerExecute(register: (component: string, executor: Componen
           // （`int` 讀一個整數、`string` 讀一個詞），而那要先看得到那一格。
           let place: Awaited<ReturnType<typeof resolvePlace>> | null = null
           let targetType = 'string'
+          /**
+           * 🔴 **解不出來的【原因】要留著**（2026-09-19）。
+           *
+           * 這個 `catch` 原本把原因整個丟掉，換成一句
+           * 「讀進來的東西不知道要放哪裡：<身分>」。而語料裡三支撞到它，
+           * 三支的**真正原因各不相同**——訊息卻一模一樣，
+           * 於是每一支都要從頭讀那支程式才知道發生什麼事。
+           *
+           * > **一個為了「留一條退路」而寫的 catch，
+           * > 會在退路也走不通的那一天，把唯一的線索一起吞掉。**
+           */
+          let whyNoPlace: unknown = null
           try {
             place = await resolvePlace(varRefNode, ctx)
             targetType = place.read().type
-          } catch {
+          } catch (e) {
             // 位置解不出來（多半是那個名字還沒宣告）——`cin >> x` 在這個
             // 直譯器裡會順手宣告它，所以留一條退路，見下面。
             place = null
+            whyNoPlace = e
           }
 
           const got = await extractOne(ctx, targetType)
@@ -128,8 +141,11 @@ export function registerExecute(register: (component: string, executor: Componen
                */
               const target = String(varRefNode.properties.name ?? '')
               if (target === '') {
+                // 🔴 退路也走不通 ⟹ **把原因原樣丟出去**，不要換成一句籠統的話。
+                if (whyNoPlace instanceof RuntimeError) throw whyNoPlace
                 throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
-                  '%1': `讀進來的東西不知道要放哪裡：${varRefNode.componentId}`,
+                  '%1': `讀進來的東西不知道要放哪裡：${varRefNode.componentId}`
+                    + (whyNoPlace ? `（${String(whyNoPlace).slice(0, 80)}）` : ''),
                 })
               }
               ctx.scope.set(target, got.value)

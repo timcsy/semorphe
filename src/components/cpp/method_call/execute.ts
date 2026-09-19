@@ -55,7 +55,21 @@ export function registerExecute(register: (component: string, executor: Componen
     }
     const obj = await ctx.evaluate(objNode)
     if (obj.type !== 'object') {
-      throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName || '這個接收者'}（不是一個物件）` })
+      /**
+       * 🔴 **訊息要說得出「誰．做什麼」**（2026-09-19）。
+       *
+       * 在此之前它只說「這個接收者（不是一個物件）」——語料裡三支撞到它，
+       * 而三支的根因不同（`bitset` 沒有這顆元件、原生陣列上的方法、…）。
+       * ⚠️ 而真正的原因幾乎從來不是「接收者不是物件」，是
+       * **那個方法名沒有人認領，於是掉到這顆泛用的元件上**
+       *（`container_append/lift.ts` 的檔頭逐字寫過這件事）。
+       * 所以訊息要把**方法名**與**接收者是什麼**一起說出來。
+       */
+      throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, {
+        '%1': `${objName || '這個接收者'}.${methodName}() ——`
+          + `「${objName || (objNode?.componentId ?? '？')}」不是一個物件（它是 ${obj.type}）。`
+          + '多半是這個方法名還沒有元件認領它。',
+      })
     }
     const m = ctx.structs.method(obj.structName ?? '', methodName)
     if (!m) {

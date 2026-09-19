@@ -1,7 +1,13 @@
 {
   "componentId": "cpp:set_insert",
   "abstractComponent": null,
-  "properties": [],
+  "properties": [
+    {
+      "name": "method",
+      "kind": "literal",
+      "default": "insert"
+    }
+  ],
   "slots": {
     "value": "expression",
     "obj": "expression"
@@ -17,5 +23,6 @@
   "requires": [
     "<set>"
   ],
-  "_slots_why": "🔴 **接收者是一個【接點】，不是一串文字**（2026-09-18）。\n解開那串文字的地方（`interpreter/receiver.ts`）只認得「名字、數字、以及它們的加減」——於是 `m[name]`（字串鍵）、`buckets[keys[i%2]]`（巢狀下標）、`m[1]`（巢狀容器）在執行期就斷了。十支資訊隔離的盲測有 7 支死在上面。\n⚠️ Python 那一側**早就是接點**——同一顆元件、同一個引數名，兩種做法。"
+  "_slots_why": "🔴 **接收者是一個【接點】，不是一串文字**（2026-09-18）。\n解開那串文字的地方（`interpreter/receiver.ts`）只認得「名字、數字、以及它們的加減」——於是 `m[name]`（字串鍵）、`buckets[keys[i%2]]`（巢狀下標）、`m[1]`（巢狀容器）在執行期就斷了。十支資訊隔離的盲測有 7 支死在上面。\n⚠️ Python 那一側**早就是接點**——同一顆元件、同一個引數名，兩種做法。",
+  "_properties_why": "🔴 **方法名的拼法是【形態】，不是身分**（2026-09-19）。\n這顆元件認了不只一個方法名（見 `lift.ts`），而在此之前產生器**寫死其中一個**：\n`v.emplace_back(3)` 產回 `v.push_back(3)`、`m.emplace(1,2)` 產回 `m.insert(1)`。\n> **一顆元件認了 N 個方法名而只記得其中一個，學生寫的另外 N−1 個會被悄悄改寫。**\n⚠️ 它也裝 `#define pb push_back` 取的**小名**——記的是原文（`pb`），\n因為那正是要保住的東西（`aliases.ts` 檔頭：「替換會回頭改寫使用者的程式碼」）。\n⚠️ **積木上刻意沒有這一格**：它是排版提示，不給學生編輯\n（第五十四條護欄的判定詞彙裡就有這一類，落點寫在 `projection-home-decisions.json`）。"
 }

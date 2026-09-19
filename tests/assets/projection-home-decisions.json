@@ -83,5 +83,15 @@
     "key": "cpp:if:else_body",
     "cause": "投影走具名策略",
     "reason": "**它在積木上有位置，而那個位置是 `extraState` 長出來的**——所以靜態掃描看不到它。實測：`cpp_if` 帶 `{hasElse:true}` 時 `inputList` 多一格 `ELSE`，不帶就沒有。\n\n🔴 而這一格 2026-08-27 之前**根本沒有被宣告**（`slots` 只有 `condition` 與 `then_body`），於是流程視圖上那顆「如果」沒有 else 接點——**使用者在那裡做不出 else**。\n> 一個沒有被宣告的位置，在靠宣告長出接點的視圖裡等於不存在。\n\n⚠️ 補宣告不會讓積木多一格：積木那側仍然由 `extraState` 決定要不要畫 `ELSE`，而樹裡有沒有 `else_body` 由**那一格裡有沒有東西**決定（空插槽在樹裡不存在）。"
+  },
+  {
+    "key": "cpp:container_append.method",
+    "cause": "排版提示，不給學生編輯",
+    "reason": "記的是**使用者寫的那個方法名**（`push_back`／`emplace_back`，以及 `#define pb push_back` 取的小名）。C++ 的那幾個名字**做的是同一件事**，所以它們是一顆身分；而在此之前產生器寫死其中一個，於是 `v.emplace_back(3)` 產回 `v.push_back(3)`、`m.emplace(1,2)` 產回 `m.insert(1)`（**連引數都掉了**）。\\n> **一顆元件認了 N 個方法名而只記得其中一個，學生寫的另外 N−1 個會被悄悄改寫。**\\n⚠️ 給學生一格下拉會讓一個**拼法**看起來像一個語義選擇——與 `python:container_enumerate.start_style` 同一個理由。\\n⚠️ 積木上新拖出來的那一顆沒有原文，產生器退回 `push_back`。"
+  },
+  {
+    "key": "cpp:set_insert.method",
+    "cause": "排版提示，不給學生編輯",
+    "reason": "記的是**使用者寫的那個方法名**（`insert`／`emplace`，以及 `#define pb push_back` 取的小名）。C++ 的那幾個名字**做的是同一件事**，所以它們是一顆身分；而在此之前產生器寫死其中一個，於是 `v.emplace_back(3)` 產回 `v.push_back(3)`、`m.emplace(1,2)` 產回 `m.insert(1)`（**連引數都掉了**）。\\n> **一顆元件認了 N 個方法名而只記得其中一個，學生寫的另外 N−1 個會被悄悄改寫。**\\n⚠️ 給學生一格下拉會讓一個**拼法**看起來像一個語義選擇——與 `python:container_enumerate.start_style` 同一個理由。\\n⚠️ 積木上新拖出來的那一顆沒有原文，產生器退回 `insert`。"
   }
 ]
