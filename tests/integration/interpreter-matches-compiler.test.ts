@@ -53,6 +53,37 @@ beforeAll(async () => {
 /** `[名稱, 全域段, main 內容, stdin]` */
 const CASES: [string, string, string, string[]][] = [
   /**
+   * 🔴 **`long long` 在這個直譯器裡曾經是一個 double**（2026-09-19）。
+   * 見 `src/interpreter/int64.ts`（不變式）與 `src/core/scalar-types.ts`（拼法表）。
+   */
+  ['64位元①：乘積取模（模逆元的核心，AP325/2/2_8_*）', '#define ll long long',
+    'll x=123456789,P=1000000007; cout << x*x%P;', []],
+  ['64位元②：快速冪跑完', '#define ll long long\nll xn(ll x,ll nt,ll P){ ll ans=1; while(nt){ if(nt&1) ans=ans*x%P; x=x*x%P; nt>>=1; } return ans; }',
+    'cout << xn(3,1000000005,1000000007);', []],
+  ['64位元③：位移超過 32 位元', '', 'long long jp=1000000000000LL; jp>>=1; cout << jp;', []],
+  ['64位元④：`for(ll jp=1e12; jp>0; jp>>=1)`（AP325/4/4_10_2）', '#define ll long long',
+    'int n=0; for(ll jp=1e12; jp>0; jp>>=1) n++; cout << n;', []],
+  ['64位元⑤：大整數字面值不得失真', '', 'long long a=9007199254740993LL; cout << a;', []],
+  ['64位元⑥：大整數比較（轉成 double 會變成相等）', '',
+    'long long a=9007199254740993LL, b=9007199254740992LL; cout << (a==b) << (a>b);', []],
+  ['64位元⑦：`&` 在 64 位元上', '', 'long long n=1000000000000LL; cout << (n&1) << (n&1024);', []],
+  /**
+   * 🔴 **宣告的型別如果只在宣告那一行生效，它就不是一個型別，是一句註解。**
+   * `#define ll long long` 的 `ll` 在語料裡 41 處，而它從來沒有進過別名表
+   *（那條正則只收「一個字」）。
+   */
+  ['型別①：`ll n = 2e9` 是整數不是 2e+09', '#define ll long long', 'll n=2e9; cout << n;', []],
+  ['型別②：函式回傳值照宣告的型別轉（AP325/7/7_5_TLE）', '#define ll long long\nll f(){ return 1e9; }',
+    'cout << f();', []],
+  ['型別③：連 `int` 的回傳值也沒轉過', 'int f(){ return 1e9; }', 'cout << f();', []],
+  ['型別④：參數收 double 也要轉', '#define ll long long\nll g(ll v){ return v; }', 'cout << g(1e9);', []],
+  /** ★ 正向錨點：**小整數與浮點不得被動到**。 */
+  ['★ 小整數的算術照舊', '', 'int a=3,b=4; cout << a+b << a*b << a/b << (a%b) << (a<<2) << (a&1);', []],
+  ['★ `double` 不得被升成整數（`1e300*1e300` 是 inf）', '', 'double a=1e300; cout << a*a;', []],
+  ['★ `double d = 1e12` 仍然印成 `1e+12`', '', 'double d=1e12; cout << d;', []],
+  ['★ 整數除法往零截斷', '', 'cout << (-7)/2 << " " << (-7)%2;', []],
+  ['★ `char` 的算術照舊', '', "char c='7'; cout << (c-'0');", []],
+  /**
    * 🔴 **轉型的三種寫法，而我們只認得一種**（2026-09-19，語料 2 支）。
    * 見 `src/languages/cpp/lifters/io.ts` 的 `call_expression` 前兩個分支。
    */

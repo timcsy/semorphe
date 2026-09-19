@@ -5,6 +5,8 @@ import { isSkipped, hasAnnotation, declareSkips, declareAnnotations } from '../c
 import { allLanguageExecutors, allBuiltinConstants, isBuiltinName } from '../core/language-executors'
 import { universalComponents } from '../core/universal'
 import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
+import { runtimeScalarType } from '../core/scalar-types'
+import { resolveAlias } from './aliases'
 import { defaultValue, valueToString, parseInputValue } from './types'
 import type { ExecutionInput } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
@@ -598,6 +600,16 @@ export class SemanticInterpreter implements ExecutionContext {
     // 與上一行講的是同一件事：**一塊存在的儲存體不是空指標。**
     if (val.type === 'array' && Array.isArray(val.value)) return 1
     if (typeof val.value === 'number') return val.value
+    /**
+     * 🔴 **`bigint` 轉回來會失真，而那是這一支的契約**（2026-09-19）。
+     *
+     * `toNumber` 的回傳型別是 `number`，所以呼叫它的地方**本來就只需要一個近似值**
+     *（下標、迴圈次數、`Math.*`）。真正需要精確的那條路**不經過這裡**
+     * ——它在 `arithmetic` 裡直接用 `bigint` 算完（見 `interpreter/int64.ts`）。
+     *
+     * ⚠️ 所以**不要**把精確的比較改成走 `toNumber`：那會把不變式繞過去。
+     */
+    if (typeof val.value === 'bigint') return Number(val.value)
     if (typeof val.value === 'boolean') return val.value ? 1 : 0
     // **`char` 在算術情境下是它的字元碼**——C++ 就是這樣（`'a' + 1` 是 98）。
     //
@@ -634,7 +646,25 @@ export class SemanticInterpreter implements ExecutionContext {
     return false
   }
 
-  coerceType(val: RuntimeValue, targetType: string): RuntimeValue {
+  coerceType(val: RuntimeValue, rawTargetType: string): RuntimeValue {
+    /**
+     * 🔴 **先問「這個拼法在執行期是哪一種」**（2026-09-19）。
+     *
+     * 在此之前 `long long` 掉進 `default: return val`，於是
+     * `long long n = 2e9;` 的值**一直是一個 double**——它印成 `2e+09`，
+     * 而 `n >>= 1` 因此不走整數那一路，被截成 32 位元。
+     *
+     * ⚠️ 拼法表由**語言套件**推進來（`core/scalar-types.ts`）：
+     * `long long` 是 C++ 的字，而這個檔住在核心。
+     */
+    /**
+     * ⚠️ **兩層別名要疊起來**：使用者的 `#define ll long long`／`typedef`
+     * 走 `resolveAlias`，而 `long long → int` 走語言套件登記的拼法表。
+     * 🔴 第一版漏了第一層，於是**語料裡最常見的那個寫法（`ll`，41 處）
+     *    整條鏈都沒接上**——而合成的 `long long n = 2e9` 是綠的。
+     * > **一條有兩段的鏈，只接第二段時，正好對「不用小名的人」有效。**
+     */
+    const targetType = runtimeScalarType(resolveAlias(rawTargetType))
     if (val.type === targetType) return val
     switch (targetType) {
       case 'int': return { type: 'int', value: Math.trunc(this.toNumber(val)) }

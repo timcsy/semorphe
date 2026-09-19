@@ -124,6 +124,18 @@ export function registerExecute(register: (component: string, executor: Componen
      * ⚠️ 也**不做替換**——見 `interpreter/aliases.ts` 的檔頭：
      *    替換會回頭改寫使用者的程式碼。
      */
-    if (/^[A-Za-z_]\w*(\s*<[^>]*>)?(\s*\*)*$/.test(raw)) setAlias(name, raw)
+    /**
+     * 🔴 **多個字的型別名也算**（2026-09-19）——`#define ll long long` 在語料裡 **41 處**，
+     * 而這條正則原本要求「一個字」，於是那 41 處**一個都沒有進表**。
+     *
+     * 症狀不是報錯：`ll n = 2e9;` 的 `coerceType(…, 'll')` 查不到本名，
+     * 於是那個變數**一直是一個 double**，印成 `2e+09`、位移被截成 32 位元。
+     *
+     * > **一個「只認一個字」的規則，對語料裡最常見的那個寫法剛好無效
+     * > ——而它不會出聲，因為「查不到就讓開」本來就是它的設計。**
+     */
+    if (/^(unsigned |signed |const |long |short )*[A-Za-z_]\w*(\s*<[^>]*>)?(\s*\*)*$/.test(raw)) {
+      setAlias(name, raw)
+    }
   })
 }

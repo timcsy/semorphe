@@ -29,6 +29,7 @@
  * ——而「不需要實現」與「可以忽略」是兩件事：忽略的話值就變成 `NaN`。
  */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import { narrow } from '../../../interpreter/int64'
 
 /** 整數／浮點的字面後綴。**只影響型別，不影響值**——見檔頭。 */
 const SUFFIX = /(?:[uU]|[lL]{1,2}|[fF])+$/
@@ -71,6 +72,25 @@ export function registerExecute(register: (component: string, executor: Componen
       // ⚠️ 浮點後綴（`1.5f`）也要算成 double——判準是**剝掉後綴之後**有沒有小數點
       if (bare.includes('.') || /[eE]/.test(bare)) {
         return { type: 'double', value: num }
+      }
+      /**
+       * 🔴 **超過 2^53 的整數字面值要保持精確**（2026-09-19）。
+       *
+       * `Number('9007199254740993')` 是 **9007199254740992**——少了 1，
+       * 而那個 1 不會有任何人出聲。`long long` 精確到 9.2e18。
+       *
+       * ⚠️ 判準是**字面上的位數**，不是 `num` 的大小：`num` 已經失真了，
+       *    拿它來判等於用一個壞掉的尺去量它自己。
+       * ⚠️ 十六進位／二進位也要（`0x7FFFFFFFFFFFFFFF`）——所以用 `BigInt(bare)`，
+       *    它認得 `0x`／`0b` 前綴。八進位那一路上面已經轉成十進位了。
+       */
+      if (!Number.isSafeInteger(num)) {
+        try {
+          const exact = /^0[0-7]+$/.test(bare) ? BigInt(parseInt(bare, 8)) : BigInt(bare)
+          return { type: 'int', value: narrow(exact) }
+        } catch {
+          // `BigInt` 吞不下的形狀（不該發生，因為上面已經確認它是整數）——照舊
+        }
       }
       return { type: 'int', value: Math.trunc(num) }
     })

@@ -1,6 +1,7 @@
 /** `cpp:arithmetic` 的 **execute** 路——從共用檔原封剪過來（批次第三十六批：字面值與二元運算子）。 */
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { big, narrow, needsBig, idiv } from '../../../interpreter/int64'
 import { offsetOf, positionIn } from '../../../interpreter/pointer'
 import type { RuntimeValue } from '../../../interpreter/types'
 
@@ -87,11 +88,61 @@ export function registerExecute(register: (component: string, executor: Componen
        */
       const integral = (t: string): boolean => t === 'int' || t === 'char' || t === 'bool'
 
+      /**
+       * 🔴 **64 位元那一段**（2026-09-19）——見 `interpreter/int64.ts` 的檔頭。
+       *
+       * 兩件事要用 `BigInt` 算：
+       *
+       * ```
+       * ① 位元運算   JS 的 & | ^ << >> 一律先轉 int32，而 long long 是 64 位元
+       * ② 大乘法     ans*x%P（x,P≈1e9）的乘積 ≈ 1e18 > 2^53，double 裝不下
+       * ```
+       *
+       * ⚠️ 判準是**兩邊都是整數型別**——`double` 不得被升上去
+       *（`1e300 * 1e300` 在 C++ 是 `inf`，不是一個大整數）。
+       * ⚠️ 而**先用 number 算一次**：只有算出來不精確時才重算。
+       *    一律走 BigInt 的話每一個 `i + 1` 都要配一個物件。
+       */
+      const bothInt = integral(left.type) && integral(right.type)
+      const BITWISE = new Set(['&', '|', '^', '<<', '>>'])
+      if (bothInt && (BITWISE.has(op) || needsBig(lv) || needsBig(rv))) {
+        const a = big(typeof left.value === 'bigint' ? left.value : lv)
+        const b = big(typeof right.value === 'bigint' ? right.value : rv)
+        let r: bigint
+        switch (op) {
+          case '+': r = a + b; break
+          case '-': r = a - b; break
+          case '*': r = a * b; break
+          case '/':
+            if (b === 0n) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO)
+            r = idiv(a, b); break
+          case '%':
+            if (b === 0n) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO)
+            r = a % b; break
+          case '&': r = a & b; break
+          case '|': r = a | b; break
+          case '^': r = a ^ b; break
+          case '<<': r = a << b; break
+          case '>>': r = a >> b; break
+          default: r = 0n
+        }
+        return { type: 'int', value: narrow(r) }
+      }
+
       let result: number
       switch (op) {
         case '+': result = lv + rv; break
         case '-': result = lv - rv; break
-        case '*': result = lv * rv; break
+        case '*':
+          result = lv * rv
+          /**
+           * 🔴 **乘積失真時重算**——`lv`／`rv` 各自都在安全範圍裡而乘積不是。
+           * 那正是 `ans*x%P` 的形狀（兩個 1e9 相乘得 1e18）。
+           */
+          if (bothInt && !Number.isSafeInteger(result)) {
+            return { type: 'int', value: narrow(big(lv) * big(rv)) }
+          }
+          break
         case '/':
           /**
            * 🔴 **只有【整數】除以零是未定義行為**（2026-09-19）。
