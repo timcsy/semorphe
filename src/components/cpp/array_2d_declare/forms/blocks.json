@@ -21,14 +21,14 @@
           "text": "arr"
         },
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "ROWS",
-          "text": "3"
+          "check": "Expression"
         },
         {
-          "type": "field_input",
+          "type": "input_value",
           "name": "COLS",
-          "text": "4"
+          "check": "Expression"
         },
         {
           "type": "input_dummy",
@@ -54,9 +54,7 @@
     },
     "renderMapping": {
       "fields": {
-        "COLS": "cols",
         "NAME": "name",
-        "ROWS": "rows",
         "TYPE": "type"
       },
       "dynamicRules": [
@@ -65,7 +63,11 @@
           "childSlot": "values",
           "inputPattern": "EXPR{i}"
         }
-      ]
+      ],
+      "inputs": {
+        "ROWS": "rows",
+        "COLS": "cols"
+      }
     },
     "_why": "🟢 **2026-08-26：形狀補上，命令式定義退場。** 上一版的 `_why` 說「初始值需要動態插槽，\n而宣告式的 `args0` 只描述固定欄位」——**那個限制已經不在**（`attachVariadic`，\n與 `cpp_array_declare` 同一天、同一條）。\n🔴 **`TYPE` 從靜態三選一（int／double／char）換成開放下拉**——連 `float`／`long long`\n都選不到，而隔壁那顆一維陣列的清單有五個。**兩顆同族積木的型別清單不一樣，\n而那不是設計，是各寫各的。**"
   }

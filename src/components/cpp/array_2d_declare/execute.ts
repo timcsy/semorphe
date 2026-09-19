@@ -7,8 +7,23 @@ export function registerExecute(register: (component: string, executor: Componen
   register('cpp:array_2d_declare', async (node, ctx) => {
       const name = String(node.properties.name)
       const type = String(node.properties.type || 'int')
-      const rows = Number(node.properties.rows || 0)
-      const cols = Number(node.properties.cols || 0)
+      /**
+       * 🔴 **維度求值，不再把一串文字丟給 `Number`**（2026-09-19）。
+       *
+       * `Number('x*2')` 是 `NaN`，而 `for (let i = 0; i < NaN; i++)` 一次都不跑
+       * ——於是那個陣列**零列**，而錯誤出現在下一行的 `d2[i][j]`。
+       *
+       * > **一個錯誤訊息指著最後一個碰到它的人，而不是造成它的人。**
+       */
+      const dim = async (slot: string): Promise<number> => {
+        const n = (node.slots[slot] ?? [])[0]
+        if (!n) return 0
+        const v = await ctx.evaluate(n)
+        const x = Math.trunc(ctx.toNumber(v))
+        return Number.isFinite(x) && x > 0 ? x : 0
+      }
+      const rows = await dim('rows')
+      const cols = await dim('cols')
 
       const elements: import('../../../interpreter/types').RuntimeValue[] = []
       for (let i = 0; i < rows; i++) {
