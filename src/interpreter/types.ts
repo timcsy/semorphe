@@ -1,6 +1,7 @@
 import type { SemanticNode } from '../core/types'
 import { aggregateShapeOf } from '../core/component/aggregate-nodes'
 import { resolveAlias } from './aliases'
+import { runtimeScalarType } from '../core/scalar-types'
 /**
  * 🔴 **這四個名字住在 `core/execution.ts`**（2026-09-13 搬的）——
  * 因為講它們的是匯流排與視圖，而直譯器只是它們的**第一個實作**。
@@ -86,7 +87,17 @@ export interface RuntimeValue {
    * 查詢／寫入／`in` 仍然走字串鍵，所以每一處既有的判斷都不必改。
    */
   keyValues?: Map<string, RuntimeValue>
-  value: number | string | boolean | null | RuntimeValue[] | ObjectFields | Callable | FuncRef
+  /**
+   * 🔴 **`bigint` 是 2026-09-19 加的**，而它有一條不變式：
+   *
+   * > **一個整數值：`|v| ≤ 2^53` 時是 `number`，超過時是 `bigint`。**
+   *
+   * `long long` 精確到 9.2e18 而 JavaScript 的數字只到 9.0e15，
+   * 於是競賽最常見的 `ans*x%P`（乘積 ≈ 1e18）算出來是另一個數字。
+   * ⚠️ **不是把整數全改成 `BigInt`**——那會讓每一個下標、每一次比較、
+   * 每一處 `Math.*` 都要先轉回來。見 `interpreter/int64.ts` 的檔頭。
+   */
+  value: number | bigint | string | boolean | null | RuntimeValue[] | ObjectFields | Callable | FuncRef
   /** `type === 'object'` 時，它是哪一個結構／類別 */
   structName?: string
   /**
@@ -256,7 +267,12 @@ export function defaultValue(rawType: string): RuntimeValue {
    * 拋「不是一個結構」。實測 218 支學生程式裡 11 支撞在這裡
    * （`#define pii` 出現在 6 支，而它的下游更廣）。
    */
-  const type = resolveAlias(rawType)
+  /**
+   * ⚠️ **兩層別名要疊起來**（2026-09-19）：
+   * 使用者的 `#define ll long long` 走 `resolveAlias`，
+   * 而 `long long → int` 走語言套件登記的拼法表（`core/scalar-types.ts`）。
+   */
+  const type = runtimeScalarType(resolveAlias(rawType))
   switch (type) {
     case 'int': return { type: 'int', value: 0 }
     case 'float': return { type: 'float', value: 0.0 }
@@ -346,6 +362,14 @@ export function valueToString(val: RuntimeValue): string {
   }
 
   if (val.type === 'void') return 'void'
+
+  /**
+   * 🔴 **超過 2^53 的整數以 `bigint` 存放**（2026-09-19，見 `int64.ts`）。
+   * `String(9007199254740993n)` 是精確的，而 `String(Number(…))` 不是。
+   * ⚠️ 這一行要在 `char`／`bool` 之前？**不必**——那兩種不會是 bigint，
+   *    而放在這裡讓「數字怎麼印」那一段維持一個入口。
+   */
+  if (typeof val.value === 'bigint') return String(val.value)
 
   // C++ 的 `cout << (x > 2)` 印出 **1／0**，不是 `true`／`false`
   // ——後者要 `std::boolalpha`。印錯的話每一個印布林的程式輸出都不對，

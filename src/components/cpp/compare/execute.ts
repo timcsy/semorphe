@@ -2,6 +2,7 @@
 import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { isCellPointer, offsetOf, sameCells } from '../../../interpreter/pointer'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
+import { big } from '../../../interpreter/int64'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:compare', async (node, ctx) => {
@@ -94,6 +95,24 @@ export function registerExecute(register: (component: string, executor: Componen
           })
         }
         const r = op === '<' ? lo < ro : op === '>' ? lo > ro : op === '<=' ? lo <= ro : lo >= ro
+        return { type: 'bool', value: r }
+      }
+
+      /**
+       * 🔴 **任一邊是 `bigint` 就用 `bigint` 比**（2026-09-19）。
+       *
+       * `toNumber` 把 `bigint` 轉成 `number` 是**刻意失真**的（見那一支的註解），
+       * 而比較是**唯一一個失真會改變答案**的地方：
+       * `9007199254740993 == 9007199254740992` 轉成 number 之後**變成真**。
+       *
+       * > **`toNumber` 壓平了幾種型別，就有幾個這樣的缺陷等著**
+       * > ——這一段上面那兩條註解（字串、位置）講的是同一件事，而這是第三種。
+       */
+      if (typeof left.value === 'bigint' || typeof right.value === 'bigint') {
+        const a = big(typeof left.value === 'bigint' ? left.value : ctx.toNumber(left))
+        const b = big(typeof right.value === 'bigint' ? right.value : ctx.toNumber(right))
+        const r = op === '<' ? a < b : op === '>' ? a > b : op === '<=' ? a <= b
+          : op === '>=' ? a >= b : op === '==' ? a === b : op === '!=' ? a !== b : false
         return { type: 'bool', value: r }
       }
 

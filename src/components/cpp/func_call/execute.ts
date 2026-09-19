@@ -161,6 +161,28 @@ export function registerExecute(register: (component: string, executor: Componen
     }
 
     await ctx.exitScope(ctx.scope, parentScope)
+    /**
+     * 🔴 **回傳值要照宣告的回傳型別轉一次**（2026-09-19）。
+     *
+     * ```cpp
+     * ll DFS(int x, ll st){ … return 1e9; }   // AP325/7/7_5_TLE.cpp
+     * cout << DFS(0,0);                        // g++ 1000000000 ／ 我們 1e+09
+     * ```
+     *
+     * 在此之前回傳值**原封往外送**，於是一個寫成 `1e9` 的整數常數
+     * 一路帶著 `double` 的型別跑出來——而**印出來才看得到**。
+     * ⚠️ 連 `int f(){ return 1e9; }` 都是（不只是 `long long`）。
+     *
+     * > **宣告的型別如果只在宣告那一行生效，它就不是一個型別，是一句註解。**
+     *
+     * ⚠️ `void` 不轉（`coerceType(…, 'void')` 會把值變成 null）。
+     * ⚠️ 結構／容器／指標也不轉——`coerceType` 對認不得的型別是原樣回傳，
+     *    而 `ctx.structs.has(...)` 那一類本來就不該被壓成純量。
+     */
+    const rt = String(funcDef.returnType || 'void')
+    if (rt !== 'void' && returnValue.type !== 'void' && !ctx.structs.has(rt)) {
+      return ctx.coerceType(returnValue, rt)
+    }
     return returnValue
   }
 

@@ -4,6 +4,39 @@ import { RuntimeError, RUNTIME_ERRORS } from '../errors'
 import { isCellPointer, movePointer } from '../pointer'
 import { resolvePlace } from '../lvalue'
 import { keepDeclaredType } from '../assign-type'
+import { big, narrow, needsBig } from '../int64'
+
+/**
+ * 🔴 **64 位元那一段**（2026-09-19）——與 `cpp:arithmetic` 是同一個不變式。
+ *
+ * `for(ll jp=1e12; jp>0; jp>>=1)` 的 `jp>>=1` 走的是**這裡**，不是那顆元件，
+ * 於是那一刀修了 `a >> b` 而 `a >>= b` 照樣被截成 32 位元。
+ *
+ * > **同一個運算有二元形式與複合形式時，修一個不會修到另一個
+ * > ——而它們錯的是同一件事。**（這個檔自己在字串 `+=` 上記過一模一樣的話。）
+ *
+ * ⚠️ 判準與那邊一致：**位元運算一律 bigint，算術只在失真時升上去**。
+ * ⚠️ 型別由呼叫端判（只有整數型別才進來）——`double` 不得被升上去。
+ */
+function compoundBig(op: string, a: bigint, b: bigint): bigint {
+  switch (op) {
+    case '+=': return a + b
+    case '-=': return a - b
+    case '*=': return a * b
+    case '/=':
+      if (b === 0n) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO)
+      return a / b
+    case '%=':
+      if (b === 0n) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO)
+      return a % b
+    case '&=': return a & b
+    case '|=': return a | b
+    case '^=': return a ^ b
+    case '<<=': return a << b
+    case '>>=': return a >> b
+    default: return a
+  }
+}
 
 function computeCompound(op: string, lv: number, rv: number): number {
 switch (op) {
@@ -126,6 +159,24 @@ export const execCompoundAssign: ComponentExecutor = async (node, ctx) => {
     const moved = movePointer(current, op === '+=' ? step : -step)
     place.write(moved)
     return moved
+  }
+
+  /**
+   * 🔴 **位元運算與大數走 bigint**——見 `compoundBig` 的檔頭。
+   * ⚠️ 只在**兩邊都是整數型別**時：`double` 的 `*=` 不得被升上去。
+   */
+  const INT_TYPES = new Set(['int', 'char', 'bool'])
+  const bothInt = INT_TYPES.has(current.type) && INT_TYPES.has(rhs.type)
+  const BITWISE_ASSIGN = new Set(['&=', '|=', '^=', '<<=', '>>='])
+  if (bothInt && (BITWISE_ASSIGN.has(op)
+      || needsBig(typeof current.value === 'bigint' ? current.value : ctx.toNumber(current))
+      || needsBig(typeof rhs.value === 'bigint' ? rhs.value : ctx.toNumber(rhs)))) {
+    const a = big(typeof current.value === 'bigint' ? current.value : ctx.toNumber(current))
+    const b = big(typeof rhs.value === 'bigint' ? rhs.value : ctx.toNumber(rhs))
+    const out = { type: 'int' as const, value: narrow(compoundBig(op, a, b)) }
+    const kept = keepDeclaredType(current, out, ctx)
+    place.write(kept)
+    return kept
   }
 
   const result = computeCompound(op, ctx.toNumber(current), ctx.toNumber(rhs))

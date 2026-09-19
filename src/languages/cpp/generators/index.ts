@@ -1,4 +1,9 @@
 import { declareVariableDropdownBlock } from '../../../core/blocks/variable-dropdown-blocks'
+/**
+ * ⚠️ **副作用匯入**：C++ 的純量拼法表在那個檔的頂層宣告。
+ * 少了它 `long long n = 2e9;` 的值會一直是一個 double——見那個檔的檔頭。
+ */
+import '../scalar-types'
 import { declareBoardConstantDropdown } from '../../../core/blocks/board-constant-dropdown-blocks'
 import { declareDegradationBlocks } from '../../../core/blocks/degradation-blocks'
 import { CPP_STRING_AT_INPUTS } from '../block-input-names'
