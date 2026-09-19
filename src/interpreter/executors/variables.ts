@@ -20,7 +20,30 @@ export const execVarDeclare: ComponentExecutor = async (node, ctx) => {
   }
 
   const name = String(node.properties.name)
-  const declaredType = String(node.properties.type || 'int')
+  /**
+   * 🔴 **型別名可能是一個別名**（2026-09-20，語料 `AP325/4/4_15_3t.cpp`）。
+   *
+   * ```cpp
+   * #define pii pair<int,int>
+   * pii p = {3,4};      →  p.first 說「p（不是一個結構）」
+   * pair<int,int> p …   →  🟢 好的
+   * ```
+   *
+   * 底下每一個判斷都拿這個字串去查（`ctx.structs.has`、聚合形狀、`defaultValue`）
+   * ——而 `pii` 在每一張表裡都查不到，於是它靜靜地變成一個 `int 0`，
+   * **錯誤要等到有人讀它的欄位才出現**。
+   *
+   * ⚠️ **同一個檔案的下面 80 行早就對【成員名】做了這件事**（`#define F first`）
+   * ——而型別名那一側沒有。
+   * > **一張別名表如果只有一個消費者記得查它，
+   * > 那它治好的是那一個位置，不是那一族。**
+   *
+   * ⚠️ 這裡解的是**執行期的型別查詢**，不是把學生寫的名字換掉：
+   * 產生器讀的是 `properties.type`，它一個字都沒有變
+   * （`pii p = {3,4};` 產回去仍然是 `pii p = {3,4};`）。
+   */
+  const writtenType = String(node.properties.type || 'int')
+  const declaredType = hasAlias(writtenType) ? resolveAlias(writtenType) : writtenType
 
   // `Container<int> c;` —— **樣板實例化：查型別時剝掉樣板引數**。
   //

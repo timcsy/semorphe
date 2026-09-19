@@ -24,6 +24,7 @@ import { defaultValue, type RuntimeValue } from './types'
 import type { SemanticNode } from '../core/types'
 import type { ExecutionContext } from './executor-registry'
 import { isAggregateList, aggregateShapeOf } from '../core/component/aggregate-nodes'
+import { hasAlias, resolveAlias } from './aliases'
 
 /**
  * 這個節點是不是一層 `{…}`。
@@ -66,9 +67,30 @@ function fieldTypesOf(type: string, want: number): string[] {
 
 export async function evalInitializer(
   node: SemanticNode,
-  type: string,
+  written: string,
   ctx: ExecutionContext,
 ): Promise<RuntimeValue> {
+  /**
+   * 🔴 **型別名可能是一個別名**（2026-09-20，語料 `AP325/4/4_15_3t.cpp`）。
+   *
+   * ```cpp
+   * #define pii pair<int,int>
+   * multiset<pii> st;  st.insert({3,4});  →  iter->second 說「不是一個結構」
+   * ```
+   *
+   * 容器把元素型別**照學生寫的字串**記下來（那是對的——產回去要一字不差），
+   * 而底下每一張表查的都是真名：`ctx.structs`、`aggregateShapeOf`、樣板引數。
+   * 別名在三張表裡都查不到，於是 `{3,4}` 變成一串普通的格子，
+   * **錯誤要等到有人讀它的欄位才出現**。
+   *
+   * ⚠️ **這裡是匯流點**：十幾顆容器各自把 `elemType` 記下來，而它們最後都
+   * 走到這一支來把 `{…}` 變成一個值。在這裡解一次，勝過在十幾個記錄點各解一次
+   * ——而後者的下一顆容器又會忘記。
+   *
+   * > **一張別名表如果要每一個消費者記得查它，
+   * > 那它保護的是查過的那幾個，不是那一族。**
+   */
+  const type = hasAlias(written) ? resolveAlias(written) : written
   if (!isBraceList(node)) return ctx.coerceType(await ctx.evaluate(node), type)
 
   const elements = node.slots.values ?? []
