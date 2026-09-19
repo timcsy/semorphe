@@ -10,6 +10,7 @@ import { registerCppLiftStrategies } from '../lang/lifters/strategies'
 import { registerCppRenderStrategies } from '../renderers/strategies'
 import { registerIOLifters } from './io'
 import { declareLiftPostProcessor } from '../../../core/lift/post-processors'
+import { registerMisparseRepairs } from '../lang/misparse'
 import { componentLiftRegistrars } from '../../../core/component/paths'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
@@ -67,6 +68,12 @@ function registerCppLiftersInner(lifter: Lifter, registries?: CppRegistries): vo
 
   // 推給核心的辨識後處理——判準寫著 C++ 的型別名，核心不該認得它們
   declareLiftPostProcessor(cppStreamRead)
+
+  /**
+   * 推給核心的**樹修復**——tree-sitter-cpp 把 `!K--` 與 `a < b && c > -d`
+   * 解錯了，而「C++ 的優先級是什麼」是 C++ 的知識。見 `../lang/misparse.ts`。
+   */
+  registerMisparseRepairs()
 
   // Core lifters
   registerStatementLifters(lifter)

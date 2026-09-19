@@ -30,8 +30,18 @@ export interface Place {
 export async function resolvePlace(node: SemanticNode, ctx: ExecutionContext): Promise<Place> {
   const resolve = lvalueResolverOf(node.componentId)
   if (!resolve) {
+    /**
+     * 🔴 **訊息要說得出是哪一顆**（2026-09-19）。
+     *
+     * 在此之前它只說「這個東西不能被指定值」——而語料裡有兩支撞到它，
+     * 兩支的「這個東西」是**不同的元件**，而訊息長得一模一樣。
+     * 追第二支時我花了一輪去讀那支程式，而答案本來就在手上。
+     *
+     * > **一個說得出「錯了」而說不出「誰」的訊息，
+     * > 讓每一次重複發生都要從頭查一次。**
+     */
     throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
-      '%1': '這個東西不能被指定值（它不是一個位置）',
+      '%1': `這個東西不能被指定值（它不是一個位置）：${node.componentId}`,
     })
   }
   return (await resolve(node, ctx as never)) as Place
