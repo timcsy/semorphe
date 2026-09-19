@@ -26,10 +26,24 @@ export function registerExecute(register: (component: string, executor: Componen
       const cols = await dim('cols')
 
       const elements: import('../../../interpreter/types').RuntimeValue[] = []
+      /**
+       * 🔴 **元素型別是一個【已宣告的結構】時，每一格要是一個結構實例**
+       *（2026-09-19）——**一維那顆 2026-09-04 就修過，而這顆漏了同一行**。
+       *
+       * 症狀：`struct P{int a;}; P g[2][2]; g[1][1].a = 5;` 丟
+       * 「接收者不是一個結構（它是 int）」——而 lift 與產碼都是對的。
+       *
+       * > **同一個病修在一維而沒有修在二維，
+       * > 那不是「還沒做到」——是那兩個地方各寫了一次同樣的迴圈。**
+       *
+       * ⚠️ 判準與一維那顆**一字不差**（`ctx.structs.has(type)`）：
+       * `struct P` 與 `P` 都交給 `structs` 自己認，這裡不再剝一次前綴。
+       */
+      const isStruct = ctx.structs.has(type)
       for (let i = 0; i < rows; i++) {
         const row: import('../../../interpreter/types').RuntimeValue[] = []
         for (let j = 0; j < cols; j++) {
-          row.push(defaultValue(type))
+          row.push(isStruct ? ctx.structs.instantiate(type) : defaultValue(type))
         }
         elements.push({ type: 'array', value: row })
       }

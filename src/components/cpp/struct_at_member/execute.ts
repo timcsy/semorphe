@@ -37,7 +37,15 @@ export function registerLvalue(): void {
     const o = await ctx.evaluate(objNode)
     const objName = String(objNode.properties?.name ?? '')
     if (o.type !== 'object' || !(o.value instanceof Map)) {
-      throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, { '%1': `${objName}（不是一個結構）` })
+      /**
+       * 🔴 **訊息要說得出是誰**（2026-09-19）。接收者不是一個變數時
+       * `objName` 是空字串，於是這句話變成「（不是一個結構）」
+       * ——一個連主詞都沒有的句子。
+       */
+      throw new RuntimeError(RUNTIME_ERRORS.UNDECLARED_VAR, {
+        '%1': `${objName || objNode.componentId}.${String(node.properties.member)}`
+          + ` —— 接收者不是一個結構（它是 ${o.type}）`,
+      })
     }
     const fields = o.value as Map<string, RuntimeValue>
     // 🔴 **寫的那一側也要認別名**（`#define x first`）——只認讀的話，

@@ -53,6 +53,50 @@ beforeAll(async () => {
 /** `[名稱, 全域段, main 內容, stdin]` */
 const CASES: [string, string, string, string[]][] = [
   /**
+   * 🔴 **`#define` 取的小名與常數**（2026-09-19，語料 4 支＋）。
+   * 見 `src/core/lift/lifter.ts` 的 `recordMacroAlias`
+   * 與 `src/components/cpp/define/execute.ts` 的 `literalValue`。
+   */
+  ['小名①：`#define pb push_back`（從第一天就沒有work過）', '#define pb push_back',
+    'vector<int> v; v.pb(3); cout << v[0] << v.size();', []],
+  ['小名②：接收者是一格陣列（AP325/7/7_12 的 `ar[u].pb(...)`）', '#define pb push_back',
+    'vector<int> ar[3]; ar[1].pb(7); cout << ar[1][0];', []],
+  ['常數①：`#define z \'0\'`（字元字面值，w/APCS/j607_2t）', "#define z '0'",
+    'string s="57"; cout << (s[0]-z) << (s[1]-z);', []],
+  ['常數②：`#define z -\'0\'`（帶正負號）', "#define z -'0'",
+    'string s="57"; cout << (s[0]+z);', []],
+  ['常數③：`#define MAXN 1e2`（科學記號）', '#define MAXN 1e2', 'cout << (int)MAXN;', []],
+  ['常數④：`#define M 0x1F`（十六進位）', '#define M 0x1F', 'cout << M;', []],
+  ['常數⑤：`#define M 1000000007LL`（帶字尾）', '#define M 1000000007LL',
+    'long long x=2; cout << (x*3)%M;', []],
+  /**
+   * 🔴 **一顆元件認了 N 個方法名而只記得其中一個**（2026-09-19）。
+   * `v.emplace_back(3)` 在此之前產回 `v.push_back(3)`，`m.emplace(1,2)` 產回 `m.insert(1)`。
+   */
+  ['拼法①：`emplace_back` 不得被改寫成 `push_back`', '',
+    'vector<int> v; v.emplace_back(3); cout << v[0];', []],
+  ['拼法②：`s.emplace` 不得被改寫成 `insert`', '', 'set<int> s; s.emplace(3); cout << *s.begin();', []],
+  /**
+   * 🔴 **二維原生陣列的每一格也要是結構實例**——一維那顆 2026-09-04 修過，
+   * 這顆漏了同一行（w/APCS/o713 那一族）。
+   */
+  /**
+   * ⚠️ **兩個成員都要先寫過**——第一版寫 `cout << g[0][0].b` 而沒有指定過它，
+   * 而區塊範圍的 POD 陣列是**未定值**：g++ 印出 `1`。
+   * 那一題量的是「我們有沒有跟 g++ 一起做出同一個未定義的選擇」，不是行為
+   *（這個檔的檔頭逐字寫過同一件事，而我又犯了一次）。
+   */
+  ['結構①：二維原生陣列上的成員（`P g[2][2]; g[1][1].a`）', 'struct P{int a; int b;};',
+    'P g[2][2]; g[1][1].a=5; g[0][0].b=7; cout << g[1][1].a << g[0][0].b;', []],
+  ['結構②：巢狀 vector 上的 `.first`（w/APCS/o713）', '',
+    'vector<vector<pair<int,int>>> d(2, vector<pair<int,int>>(2)); d[1][1].first=9; cout << d[1][1].first << d[0][0].second;', []],
+  /** ★ 正向錨點：**沒有小名時不得被動到**，而叫 `size` 的變數不得讓 `v.size()` 走錯。 */
+  ['★ 沒有小名時 `push_back` 照舊', '', 'vector<int> v; v.push_back(3); cout << v[0];', []],
+  ['★ 叫 `size` 的變數不得讓 `v.size()` 去查一個叫 `int` 的方法', '',
+    'int size=9; vector<int> v{1,2}; cout << v.size() << size;', []],
+  ['★ `#define MOD 1000000007` 照舊（原本就綠的那一路）', '#define MOD 1000000007',
+    'long long x=2; cout << (x*3)%MOD;', []],
+  /**
    * 🔴 **解析器自己解錯的兩種形狀**（2026-09-19，語料 4 支）。
    * 見 `src/languages/cpp/lang/misparse.ts` 的檔頭——它們是**唯一一批
    * 「往下追的每一層都是對的」的缺陷**。

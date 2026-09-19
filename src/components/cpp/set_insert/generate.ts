@@ -8,6 +8,11 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const obj = generateExpression((node.slots.obj ?? [])[0], ctx)
       const valueNodes = node.slots.value ?? []
       const val = valueNodes.length > 0 ? generateExpression(valueNodes[0], ctx) : '0'
-      return `${indent(ctx)}${obj}.insert(${val});\n`
+      /**
+       * 🔴 **產出使用者寫的那個方法名**（2026-09-19）——見 `component.json` 的 `_properties_why`。
+       * ⚠️ 沒有這一格時退回預設，**那是積木上新拖出來的那一顆**（它沒有原文）。
+       */
+      const method = String(node.properties.method ?? 'insert')
+      return `${indent(ctx)}${obj}.${method}(${val});\n`
     })
 }

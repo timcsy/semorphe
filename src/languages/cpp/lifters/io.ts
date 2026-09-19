@@ -184,6 +184,37 @@ const GENERIC_CONTAINER_METHODS = new Set(['push', 'pop', 'empty', 'clear'])
  *
  * ⚠️ 這個檔裡已經有同樣的先例：`METHOD_OBJ_PROP` 那張表也是這樣退場的。
  */
+/**
+ * **這顆元件宣告了一個叫 `method` 的屬性嗎**——宣告了才把使用者寫的那個字記下來。
+ *
+ * 🔴 為什麼要問宣告而不是列一張名單：同一個理由，`firstSlotOf` 的檔頭逐字
+ *「一顆元件已經說過自己有幾個接點了。共用檔再說一次，就多了一個會忘記更新的地方」。
+ */
+const declaresMethodProp = (componentId: string): boolean =>
+  (componentComponents() as { componentId: string; properties?: { name: string }[] }[])
+    .find((c) => c.componentId === componentId)
+    ?.properties?.some((p) => p.name === 'method') === true
+
+/**
+ * **這個方法名是一個 `#define` 取的小名嗎**——是的話換成本名。
+ *
+ * 🔴 **有一道閘**（2026-09-19）：**原名查不到、而別名查得到**時才換。
+ *
+ * 少了這道閘的話，一個叫 `size` 的 `int` 變數會讓 `v.size()` 去查一個
+ * 叫 `int` 的方法——因為別名與型別**住在同一張表**（那是刻意的，
+ * 見 `lift-context.ts` 的 `getType`：「一個查得到的東西查兩次，
+ * 比替它開第二張表便宜」）。
+ *
+ * > **兩種東西共用一張表是對的；而共用之後，查詢端要自己說清楚它問的是哪一種。**
+ *
+ * @returns 換過的名字，或原名。
+ */
+function resolveMethodAlias(method: string, ctx: LiftContext, known: (m: string) => boolean): string {
+  if (known(method)) return method
+  const alias = ctx.data.getType(method)
+  return alias && alias !== method && known(alias) ? alias : method
+}
+
 const firstSlotOf = (componentId: string): string | null => {
   const decl = (componentComponents() as { componentId: string; slots?: Record<string, unknown> }[])
     .find((c) => c.componentId === componentId)
@@ -234,15 +265,38 @@ export function registerIOLifters(lifter: Lifter): void {
       // 接收者的型別查得到的話，用專屬身分；**查不到就留在通用版**。
       // 猜一個的話，猜錯會靜默產生一個錯的身分——那比誠實降級更糟。
       const objType = objText ? ctx.data.getType(objText) : null
+      /**
+       * 🔴 **`#define pb push_back` 取的小名在這裡換回本名**（2026-09-19）。
+       * 閘的理由見 `resolveMethodAlias` 的檔頭。
+       */
+      const lookupName = resolveMethodAlias(methodName, ctx, (m) =>
+        (objType !== null && (TYPED_METHOD_TO_COMPONENT[objType]?.[m] !== undefined
+          || typedMethodComponent(objType, m) !== undefined))
+        || METHOD_TO_COMPONENT[m] !== undefined
+        || containerMethodComponent(m) !== undefined)
       const componentId =
-        (objType ? TYPED_METHOD_TO_COMPONENT[objType]?.[methodName] : undefined) ??
-        (objType ? typedMethodComponent(objType, methodName) : undefined) ??
-        METHOD_TO_COMPONENT[methodName] ??
-        containerMethodComponent(methodName)
+        (objType ? TYPED_METHOD_TO_COMPONENT[objType]?.[lookupName] : undefined) ??
+        (objType ? typedMethodComponent(objType, lookupName) : undefined) ??
+        METHOD_TO_COMPONENT[lookupName] ??
+        containerMethodComponent(lookupName)
       if (componentId) {
         // 接收者去哪一格由**宣告**決定（見 `receiverInto` 的檔頭）
         const recv = receiverInto(componentId, objNode, objText, ctx)
         const properties: Record<string, string> = { ...recv.props }
+
+        /**
+         * 🔴 **記住使用者寫的那個字**（2026-09-19）。
+         *
+         * 一顆元件可以認好幾個方法名（`push_back` 與 `emplace_back` 是同一件事），
+         * 而在此之前產生器**寫死其中一個**：`v.emplace_back(3)` 產回
+         * `v.push_back(3)`、`m.emplace(1,2)` 產回 `m.insert(1)`（連引數都掉了）。
+         *
+         * > **一顆元件認了 N 個方法名而只記得其中一個，
+         * > 學生寫的另外 N−1 個會被悄悄改寫。**
+         *
+         * ⚠️ 記的是**原文**（`pb`），不是換過的本名——那正是要保住的東西。
+         */
+        if (declaresMethodProp(componentId)) properties.method = methodName
 
         // 容器種類——**投影要用，而投影查不到脈絡**。
         //
@@ -254,7 +308,7 @@ export function registerIOLifters(lifter: Lifter): void {
         //
         // ⚠️ 查不到型別就**不寫**（CK-1）。猜一個會讓積木顯示錯的位置，
         // 那比中性標籤更糟——而中性標籤已經不說謊了（ab84f6c）。
-        if (objType && GENERIC_CONTAINER_METHODS.has(methodName)) {
+        if (objType && GENERIC_CONTAINER_METHODS.has(lookupName)) {
           properties.container_kind = objType
         }
 
