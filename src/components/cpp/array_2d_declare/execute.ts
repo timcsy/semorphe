@@ -48,15 +48,49 @@ export function registerExecute(register: (component: string, executor: Componen
         elements.push({ type: 'array', value: row })
       }
 
-      // 初始值：`int a[2][3] = {{1,2,3},{4,5,6}}`——每一項是一層 `{…}`。
-      // ⚠️ **逐格填而不是整列換掉**：`{{1,2}}` 只給了兩格，
-      // 其餘的必須保持型別預設值（C++ 的規則），整列換掉會讓第三格消失。
+      /**
+       * 初始值有**兩種寫法，而 C++ 不准混用**：
+       *
+       * ```cpp
+       * int a[2][3] = {{1,2,3},{4,5,6}};   // 每一項是一層 {…}
+       * int a[2][3] = {1,2,3,4,5,6};       // 🔴 扁平，照【列優先】填
+       * ```
+       *
+       * 🔴 **第二種在 2026-09-19 之前整個被丟掉**（`basic/15_nD_array_1.cpp`）：
+       * 那時的迴圈假設「每一項是一列」，於是六個純量只跑兩圈、而且一格都沒填中
+       * ——整個陣列是零，**而程式照跑**。
+       *
+       * ⚠️ 那支語料的檔頭逐字寫著「看這樣 input 就懂多維陣列是如何儲存了」
+       * ——它教的正是「列是接著排的」，而我們印出六個 0。
+       *
+       * > **一個把初值靜靜丟掉的宣告，錯誤會出現在讀它的那一行，而那一行是對的。**
+       *
+       * 🟢 判準是**第一項是不是一層 `{…}`**（不准混用，所以看一項就夠）。
+       * ⚠️ 第一項只求值**一次**——`evalInitializer` 會跑使用者的運算式。
+       */
       const init = node.slots.values ?? []
-      for (let i = 0; i < init.length && i < elements.length; i++) {
-        const rowVal = await evalInitializer(init[i], type, ctx)
-        const row = elements[i].value as import('../../../interpreter/types').RuntimeValue[]
-        if (rowVal.type === 'array' && Array.isArray(rowVal.value)) {
+      const rowsOf = (i: number): import('../../../interpreter/types').RuntimeValue[] | null => {
+        const v = elements[i]?.value
+        return Array.isArray(v) ? v as import('../../../interpreter/types').RuntimeValue[] : null
+      }
+      const first = init.length > 0 ? await evalInitializer(init[0], type, ctx) : null
+      const nested = first !== null && first.type === 'array' && Array.isArray(first.value)
+
+      if (nested) {
+        // ⚠️ **逐格填而不是整列換掉**：`{{1,2}}` 只給了兩格，
+        // 其餘的必須保持型別預設值（C++ 的規則），整列換掉會讓第三格消失。
+        for (let i = 0; i < init.length && i < elements.length; i++) {
+          const rowVal = i === 0 ? first : await evalInitializer(init[i], type, ctx)
+          const row = rowsOf(i)
+          if (!row || rowVal.type !== 'array' || !Array.isArray(rowVal.value)) continue
           for (let j = 0; j < rowVal.value.length && j < row.length; j++) row[j] = rowVal.value[j]
+        }
+      } else if (cols > 0) {
+        for (let k = 0; k < init.length; k++) {
+          const r = Math.floor(k / cols)
+          const row = rowsOf(r)
+          if (!row) break
+          row[k % cols] = k === 0 ? first! : await evalInitializer(init[k], type, ctx)
         }
       }
 

@@ -48,7 +48,21 @@ export function registerExecute(register: (component: string, executor: Componen
       const noSep = raw.replace(/'/g, '')
       // ⚠️ 十六進位／二進位不能剝：`0xFF` 的 `F` 是數字不是後綴。
       const bare = /^0[xXbB]/.test(noSep) ? noSep : noSep.replace(SUFFIX, '')
-      const num = Number(bare)
+      /**
+       * 🔴 **開頭是 `0` 的整數是八進位**（2026-09-19，`basic/3_literal_constant.cpp`）。
+       *
+       * `Number('0103')` 在 JavaScript 裡是 **103**，而 C++ 說 **67**。
+       * 那支語料整節在教「開頭 0b 是二進位、開頭 0 是八進位、開頭 0x 是十六進位」
+       * ——三種裡我們只做對了兩種，而**錯的那一種正是它在教的那一行**。
+       *
+       * > **一個把 `0103` 讀成 103 的工具，在一堂教八進位的課上，
+       * > 教的是「這個規則不存在」。**
+       *
+       * ⚠️ `0` 自己不是八進位（它就是零）；`0x`／`0b` 上面已經排掉了；
+       *    `08`／`09` 在 C++ 裡是**編譯錯誤**，這裡讓它走一般路徑（`Number` 給 8／9）
+       *    ——那一段本來就編不過，不會有人跑到。
+       */
+      const num = /^0[0-7]+$/.test(bare) ? parseInt(bare, 8) : Number(bare)
       // 🔴 **判不出來就出聲**——回 `NaN` 的話錯誤會出現在離根因很遠的地方
       //（第三十三條護欄「靜默回退」在看這個）。
       if (Number.isNaN(num)) {

@@ -80,15 +80,40 @@ export function registerExecute(register: (component: string, executor: Componen
       const lv = ctx.toNumber(left)
       const rv = ctx.toNumber(right)
 
+      /**
+       * 🔴 **「整數型別」的判定要在這裡就拿得到**（2026-09-19）。
+       * 它原本宣告在 switch 【之後】，而除法要用它——見下面 `/` 那一格。
+       * ⚠️ `char` 與 `bool` 也是整數型別（2026-09-18 的盲測記過同一條）。
+       */
+      const integral = (t: string): boolean => t === 'int' || t === 'char' || t === 'bool'
+
       let result: number
       switch (op) {
         case '+': result = lv + rv; break
         case '-': result = lv - rv; break
         case '*': result = lv * rv; break
         case '/':
-          if (rv === 0) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO)
+          /**
+           * 🔴 **只有【整數】除以零是未定義行為**（2026-09-19）。
+           *
+           * IEEE 754 說得很清楚：`5.0/0` 是 `inf`、`0.0/0.0` 是 `nan`，
+           * 而 C++ 的浮點除法就是 IEEE 754。丟錯的話：
+           *
+           * ```cpp
+           * // AP325/3/3_14.cpp——這一行【永遠不會】除以零，因為 || 會短路
+           * while(… && (!(d) || (1.0*b - c) / d <= x))
+           * ```
+           * ——而我們在那一支上丟了 DIVISION_BY_ZERO。
+           *
+           * > **一個把「有定義的結果」當成錯誤的檢查，
+           * > 會讓合法的程式停在一行它本來跑得過去的地方。**
+           */
+          if (rv === 0 && integral(left.type) && integral(right.type)) {
+            throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO)
+          }
           result = lv / rv; break
         case '%':
+          // ⚠️ C++ 的 `%` **只吃整數**，所以除數是 0 一律是未定義行為。
           if (rv === 0) throw new RuntimeError(RUNTIME_ERRORS.DIVISION_BY_ZERO)
           result = lv % rv; break
         case '&': result = lv & rv; break
@@ -114,7 +139,6 @@ export function registerExecute(register: (component: string, executor: Componen
        * > **一個型別規則漏掉一種型別，症狀不會出現在那個運算上
        * > ——它出現在下游第一個「整數與小數不同」的地方。**
        */
-      const integral = (t: string): boolean => t === 'int' || t === 'char' || t === 'bool'
       if (integral(left.type) && integral(right.type)) {
         return { type: 'int', value: Math.trunc(result) }
       }

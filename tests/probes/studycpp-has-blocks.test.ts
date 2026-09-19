@@ -33,6 +33,16 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { loadToolbox } from '../helpers/toolbox'
 import { componentComponents } from '../../src/core/component/registry'
+import { nonComponentDecl } from '../../src/core/blocks/non-components'
+/**
+ * ⚠️ **副作用匯入**：`param_decl`／`_compound`／`_multi_field` 的「我不是元件」
+ * 宣告住在這個模組的**頂層**。少了它 `nonComponentDecl()` 看不到那三筆，
+ * 而這支探針會把一個結構節點報成「學生看不到的積木」。
+ *
+ * 🔴 **同一個坑 `tests/helpers/toolbox.ts` 的檔頭也記過**（Python 的分類宣告）。
+ * > **一個「問宣告」的判定，它的正確性綁在「那份宣告被載入了沒」上。**
+ */
+import '../../src/languages/cpp/module'
 import type { SemanticNode } from '../../src/core/types'
 
 const DIR = process.env.STUDYCPP_DIR ?? ''
@@ -83,13 +93,23 @@ describe.skipIf(FS.length === 0)('探針：語料用到的元件，都有積木�
         .map((c) => c.componentId))
 
     /** 使用者在**某一個**工具箱裡拿得到的積木型別。 */
-    const inToolbox = new Set(loadToolbox().categories.flatMap((c) => c.blocks))
+    const inToolbox = new Set(loadToolbox().snapshot.categories.flatMap((c) => c.blocks))
 
-    const DEGRADE = new Set(['cpp:raw_code', 'cpp:unresolved', 'raw_code', 'unresolved'])
+    /**
+     * 🔴 **「這個節點不是元件」由宣告回答，不由一張我手寫的表**（2026-09-19）。
+     *
+     * `core/blocks/non-components.ts` 已經把三種例外分好了，而且**每一筆都要理由**
+     *（那個檔的檔頭逐字：「一個沒有理由的宣告，與『懶得處理』長得一模一樣」）。
+     * 我第一版在這裡寫了一張 `DEGRADE` 常數表，而它**漏了 `param_decl`**
+     * ——於是這支探針把一個結構節點報成「學生看不到的積木」。
+     *
+     * > **一張為了跳過幾筆而手寫的表，它漏掉的那幾筆會被報成缺陷。**
+     */
     const noForm: string[] = []
-    const degraded: string[] = []
+    const notAComponent: string[] = []
     for (const [id, n] of used) {
-      if (DEGRADE.has(id)) { degraded.push(`${id}（${n} 支）`); continue }
+      const decl = nonComponentDecl(id)
+      if (decl) { notAComponent.push(`${id}（${n} 支，${decl.kind}）`); continue }
       if (!hasForm.has(id)) noForm.push(`${id}（${n} 支）`)
     }
 
@@ -102,8 +122,8 @@ describe.skipIf(FS.length === 0)('探針：語料用到的元件，都有積木�
       `  用到的身分    ${used.size} 顆`,
       `  🔴 沒有積木   ${noForm.length} 顆`,
       ...noForm.sort().map((s) => `       ✘ ${s}`),
-      `  ⚪ 降級出口   ${degraded.length} 顆（本來就是灰色方塊）`,
-      ...degraded.sort().map((s) => `       ${s}`),
+      `  ⚪ 不是元件   ${notAComponent.length} 顆（宣告過的三種例外，見 non-components.ts）`,
+      ...notAComponent.sort().map((s) => `       ${s}`),
       `  工具箱裡的型別 ${inToolbox.size} 種`,
       '',
       '  ── 語料用最多的 15 顆 ──',

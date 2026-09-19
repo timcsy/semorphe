@@ -214,9 +214,21 @@ export class Lifter {
     const name = r.properties?.name
     const value = r.properties?.value
     if (typeof name !== 'string' || name === '') return
-    if (typeof value !== 'string' || !/^[A-Za-z_]\w*$/.test(value.trim())) return
-    if (name === value.trim()) return
-    data.declare(name, value.trim())
+    if (typeof value !== 'string') return
+    const v = value.trim()
+    if (v === '' || name === v) return
+    /**
+     * **一個名字 → 一個名字**（`pb`→`push_back`、`x`→`first`），
+     * 或**一個名字 → 一個型別**（`ll`→`long long`、`pii`→`pair<int,int>`）。
+     *
+     * 🔴 後者要標成 `type`，否則 `(ll)(x+1)` 分不出「轉型」與「函式指標呼叫」
+     *（見 `Declaration.kind` 的檔頭）。判準是**它長得像型別嗎**：
+     * 多個字（`long long`）、帶樣板引數（`pair<int,int>`）、或帶星號。
+     */
+    const looksLikeType = /^(unsigned |signed |const |long |short )*\w+(\s*<[^>]*>)?(\s*\*)*$/.test(v)
+      && (/\s/.test(v) || /[<*]/.test(v))
+    if (!looksLikeType && !/^[A-Za-z_]\w*$/.test(v)) return
+    data.declare(name, v, looksLikeType ? 'type' : 'variable')
   }
 
   private recordTypeAlias(r: SemanticNode, data: LiftContextData): void {
@@ -224,7 +236,8 @@ export class Lifter {
     const alias = r.properties?.alias
     const orig = r.properties?.orig_type
     if (typeof alias === 'string' && alias !== '' && typeof orig === 'string' && orig !== '') {
-      data.declare(alias, orig)
+      // 🔴 標成 `type`——`(LL)(x+1)` 要分得出轉型與函式指標呼叫（見 `Declaration.kind`）
+      data.declare(alias, orig, 'type')
     }
   }
 
