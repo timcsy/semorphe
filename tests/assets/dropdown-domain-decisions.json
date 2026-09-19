@@ -425,6 +425,11 @@
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "數字的寫法在 C++ 裡只有這兩種（`fixed`／`scientific`），而「都不選」是第三種狀態——它由**沒有放這顆積木**表示，不是下拉的一個值。"
+    },
+    "cpp_pointer_step.DIRECTION": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "一個位置只有兩個相鄰的方向：前與後。**這是語言的封閉集合，不是我們挑的**——C++ 的 `<iterator>` 也只給了 `prev` 與 `next` 這兩支。⚠️ 而「走 n 格」不是第三個值，它是**同一個方向加一個次數**（那個引數這一刀刻意不做，語料 0 處；見 `specs/component-discovery/cpp-pointer-step.md` 的③）。"
     }
   }
 }

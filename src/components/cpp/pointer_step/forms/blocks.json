@@ -1,0 +1,52 @@
+[
+  {
+    "id": "cpp:pointer_step",
+    "componentId": "cpp:pointer_step",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pointer_step",
+      "message0": "%{BKY_CPP_POINTER_STEP_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "POS",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "DIRECTION",
+          "options": [
+            [
+              "%{BKY_CPP_POINTER_STEP_PREV}",
+              "prev"
+            ],
+            [
+              "%{BKY_CPP_POINTER_STEP_NEXT}",
+              "next"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "COUNT",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_POINTER_STEP_TOOLTIP}",
+      "inputsInline": true
+    },
+    "renderMapping": {
+      "fields": {
+        "DIRECTION": "direction"
+      },
+      "inputs": {
+        "POS": "pos",
+        "COUNT": "count"
+      }
+    }
+  }
+]

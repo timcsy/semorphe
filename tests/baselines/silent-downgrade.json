@@ -1,10 +1,10 @@
 {
   "_meta": {
-    "note": "有抽象父、比父多格子、而某一軌只收了父——那一軌上這顆會被降級，多的格子沒有地方放。\n\n📈 **2026-09-18（範圍那一族：兩端從字串屬性換成接點，管線 188）：語料變大，缺陷那幾格未動。**\n  10 顆範圍演算法的 `begin`／`end`（＋前綴和的 `dest`）從**字串屬性**換成**接點**，\n  ＋ 三顆新元件（`cpp:range_find`／`cpp:range_unique`／`cpp:range_remove`）\n  ＋ `cpp:container_iter` 多一個 `call` 屬性（`begin(a)` 這個自由函式形式）\n  ＋ 27 顆宣告式元件補上 `forLoopPart`（同一個病的第三次，這次整族一起補並加了一條護欄）。\n  🔴 而拆掉那個 regex 之後發現**結構早就在了**：容器與位置在這個直譯器裡是同一個形狀\n  （`interpreter/pointer.ts` 的 `isCellPointer`），`A+n` 的位置算術也早就有人做。\n  > **那條 regex 解析的東西，執行期早就會算了——它不是在補一個缺口，它是在繞過一個已經存在的機制。**\n\n📈 **2026-09-19（I/O 操縱子三顆，管線 189）：語料變大，缺陷那幾格未動。**\n  `cpp:io_flush`（`cout << flush`）· `cpp:io_mode`（`setw`／`setprecision`／`setfill`）·\n  `cpp:io_mode_number`（`fixed`／`scientific`），\n  ＋ 串流狀態（`WeakMap` 以 `ctx.io` 為鍵，**一次執行一份**）\n  ＋ `interpreter/decimal.ts`（十進位的四捨五入，收尾照 C 的**逢五取偶**）。\n  🔴 而命名是**詞彙表逼出來的**：第一版叫 `stream_*`，三個字都不在表裡；\n  換成既有詞（`io` ＋ `mode` ＋ `number`）之後名字反而對得上同族\n  （`cpp:io_sync`／`cpp:io_tie` 早就在那裡）。**只補了一個新詞：`flush`。**\n",
+    "note": "📈 **2026-09-19（第 197 刀：位置的相鄰一格 `cpp:pointer_step`）：新增一顆身分。**\n  `prev(it)`／`next(it)`——語料 `prev(` 10 處 / 8 支，每一處都是 `prev(X.end())`。\n  方向是**屬性**不是身分（元件代數 250）。\n  🟢 曝險 27 未動。\n\n有抽象父、比父多格子、而某一軌只收了父——那一軌上這顆會被降級，多的格子沒有地方放。\n\n📈 **2026-09-18（範圍那一族：兩端從字串屬性換成接點，管線 188）：語料變大，缺陷那幾格未動。**\n  10 顆範圍演算法的 `begin`／`end`（＋前綴和的 `dest`）從**字串屬性**換成**接點**，\n  ＋ 三顆新元件（`cpp:range_find`／`cpp:range_unique`／`cpp:range_remove`）\n  ＋ `cpp:container_iter` 多一個 `call` 屬性（`begin(a)` 這個自由函式形式）\n  ＋ 27 顆宣告式元件補上 `forLoopPart`（同一個病的第三次，這次整族一起補並加了一條護欄）。\n  🔴 而拆掉那個 regex 之後發現**結構早就在了**：容器與位置在這個直譯器裡是同一個形狀\n  （`interpreter/pointer.ts` 的 `isCellPointer`），`A+n` 的位置算術也早就有人做。\n  > **那條 regex 解析的東西，執行期早就會算了——它不是在補一個缺口，它是在繞過一個已經存在的機制。**\n\n📈 **2026-09-19（I/O 操縱子三顆，管線 189）：語料變大，缺陷那幾格未動。**\n  `cpp:io_flush`（`cout << flush`）· `cpp:io_mode`（`setw`／`setprecision`／`setfill`）·\n  `cpp:io_mode_number`（`fixed`／`scientific`），\n  ＋ 串流狀態（`WeakMap` 以 `ctx.io` 為鍵，**一次執行一份**）\n  ＋ `interpreter/decimal.ts`（十進位的四捨五入，收尾照 C 的**逢五取偶**）。\n  🔴 而命名是**詞彙表逼出來的**：第一版叫 `stream_*`，三個字都不在表裡；\n  換成既有詞（`io` ＋ `mode` ＋ `number`）之後名字反而對得上同族\n  （`cpp:io_sync`／`cpp:io_tie` 早就在那裡）。**只補了一個新詞：`flush`。**\n",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "components": 343,
+    "components": 344,
     "tracks": 5
   },
   "exposure": 27,

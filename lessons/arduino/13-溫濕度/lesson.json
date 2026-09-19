@@ -24,7 +24,7 @@
       "id": "follow",
       "title": "跟著做",
       "check": {
-        "stdout": "NaN",
+        "stdout": "nan",
         "stdin": []
       }
     },

@@ -7,28 +7,16 @@
   },
   "decisions": [
     {
+      "componentId": "cpp:container_iter",
+      "label": "%1 的 %2",
+      "cause": "名字在下拉裡",
+      "reason": "下拉是「開頭位置」／「結尾之後的位置」——那才是學生要選的東西，而積木上固定的只有一個「的」。"
+    },
+    {
       "componentId": "cpp:increment",
       "label": "%1 %2 %3",
       "cause": "名字在下拉裡",
       "reason": "下拉是「加 1（++）」／「減 1（--）」＋「後置」／「前置」。🔴 而那個 `++` 是**程式碼裡真的有的符號**，所以積木上出現它不違反 Sc2（積木不可引入文字程式碼中不存在的概念）。"
-    },
-    {
-      "componentId": "cpp:var_assign_compound",
-      "label": "把 %1 %2 %3",
-      "cause": "名字在下拉裡",
-      "reason": "下拉是「加上（+=）」／「減去（-=）」／「乘以（*=）」…。積木上固定的只有一個「把」字。"
-    },
-    {
-      "componentId": "python:var_assign_compound",
-      "label": "把 %1 %2 %3",
-      "cause": "名字在下拉裡",
-      "reason": "同 `cpp:var_assign_compound`，Python 那一側。"
-    },
-    {
-      "componentId": "cpp:math_unary",
-      "label": "%1 （ %2 ）",
-      "cause": "名字在下拉裡",
-      "reason": "🔴 **這一顆的名字就是使用者選的那個函式**（`abs（絕對值）`／`sqrt（平方根）`）——它沒有、也不該有一個自己的名字。"
     },
     {
       "componentId": "cpp:math_binary",
@@ -37,10 +25,28 @@
       "reason": "同上，兩個引數的版本（`fmod`／`hypot`／`atan2`）。"
     },
     {
-      "componentId": "cpp:container_iter",
+      "componentId": "cpp:math_unary",
+      "label": "%1 （ %2 ）",
+      "cause": "名字在下拉裡",
+      "reason": "🔴 **這一顆的名字就是使用者選的那個函式**（`abs（絕對值）`／`sqrt（平方根）`）——它沒有、也不該有一個自己的名字。"
+    },
+    {
+      "componentId": "cpp:pointer_step",
       "label": "%1 的 %2",
       "cause": "名字在下拉裡",
-      "reason": "下拉是「開頭位置」／「結尾之後的位置」——那才是學生要選的東西，而積木上固定的只有一個「的」。"
+      "reason": "下拉是「前一個位置」／「後一個位置」——那才是學生要選的東西，而積木上固定的只有一個「的」。⚠️ 與同族的取端點那顆**一模一樣的句式**（`%1 的 %2`），那是刻意的：兩顆都在說「這個容器／位置的某一格」。"
+    },
+    {
+      "componentId": "cpp:var_assign_compound",
+      "label": "把 %1 %2 %3",
+      "cause": "名字在下拉裡",
+      "reason": "下拉是「加上（+=）」／「減去（-=）」／「乘以（*=）」…。積木上固定的只有一個「把」字。"
+    },
+    {
+      "componentId": "python:container_at",
+      "label": "取 %1 的 %2",
+      "cause": "名字是一個字",
+      "reason": "固定的是「取」與「的」。⚠️ 而課文講的是 `nums[0]`——**它在課文裡的名字是那個方括號，不是一個詞**。"
     },
     {
       "componentId": "python:container_find",
@@ -49,28 +55,16 @@
       "reason": "下拉是「在裡面：」／「不在裡面：」——⚠️ 而那兩個**就是它整句話**，積木上沒有別的固定字。"
     },
     {
-      "componentId": "python:type_is",
-      "label": "%1 是 %2 嗎",
-      "cause": "名字在下拉裡",
-      "reason": "下拉是「整數」／「小數」／「文字」…。固定的部分是「是…嗎」，而那兩個字太通用，當比對鍵會誤中每一課。"
-    },
-    {
-      "componentId": "python:map_iter",
-      "label": "取 %2 的 %1",
-      "cause": "名字在下拉裡",
-      "reason": "下拉是「項目」／「鍵」／「值」——那才是這顆積木在問的事。"
-    },
-    {
       "componentId": "python:loop_for",
       "label": "對 %1",
       "cause": "名字是一個字",
       "reason": "積木上固定的是「對」，而它的第二段「裡的每一個」是接在插槽後面的（`PYTHON_FOR_TARGETS_OPEN`）。⚠️ 課文其實提得到「對每一個」——而「對」這一個字當比對鍵會誤中。"
     },
     {
-      "componentId": "python:container_at",
-      "label": "取 %1 的 %2",
-      "cause": "名字是一個字",
-      "reason": "固定的是「取」與「的」。⚠️ 而課文講的是 `nums[0]`——**它在課文裡的名字是那個方括號，不是一個詞**。"
+      "componentId": "python:map_iter",
+      "label": "取 %2 的 %1",
+      "cause": "名字在下拉裡",
+      "reason": "下拉是「項目」／「鍵」／「值」——那才是這顆積木在問的事。"
     },
     {
       "componentId": "python:member_at",
@@ -83,6 +77,18 @@
       "label": "%1 %2",
       "cause": "形狀就是名字",
       "reason": "🔴 它畫的是那個星號（`*args`）——**積木上一個中文字都沒有**，而那是刻意的：它是一個修飾符，不是一個東西。⚠️ 而它是這 13 顆裡唯一連一個字都沒有的。"
+    },
+    {
+      "componentId": "python:type_is",
+      "label": "%1 是 %2 嗎",
+      "cause": "名字在下拉裡",
+      "reason": "下拉是「整數」／「小數」／「文字」…。固定的部分是「是…嗎」，而那兩個字太通用，當比對鍵會誤中每一課。"
+    },
+    {
+      "componentId": "python:var_assign_compound",
+      "label": "把 %1 %2 %3",
+      "cause": "名字在下拉裡",
+      "reason": "同 `cpp:var_assign_compound`，Python 那一側。"
     }
   ]
 }

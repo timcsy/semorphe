@@ -290,6 +290,33 @@ export function registerIOLifters(lifter: Lifter): void {
       }
     }
 
+    /**
+     * 🔴 **小名的函式式轉型**：`#define ll long long` 之後寫 `ll(x)`（2026-09-19）。
+     *
+     * 上面那兩個分支漏掉了這一格：`primitive_type` 只認得**內建型別的原文**
+     *（`int(…)`、`double(…)`），而 `ll` 在語法樹裡就是一個 `identifier`。
+     * 於是 `ll(x)` 掉進泛用的呼叫，執行時是 `UNDEFINED_FUNC: ll`
+     * ——**而產出的程式碼一字不差**，所以①②③④四個面向全是綠的。
+     *
+     * > **一個只錯在⑤那一路的缺陷，形狀是完美的
+     * > ——而形狀完美正是它活下來的原因。**
+     *
+     * ⚠️ 判準與上面那個分支**同一句話**：`isTypeName` 是**正面證據**
+     *（只有 `typedef` 與 `#define` 的型別小名會是 `kind: 'type'`），
+     * 所以 `f(x)` 這種一般呼叫碰不到這裡。
+     * ⚠️ **引數多於一個時不認領**——`#define pii pair<int,int>` 之後的
+     *    `pii(1,2)` 是**建構**不是轉型，而 `buildCast` 只收得下一個。
+     */
+    if (
+      funcNode &&
+      funcNode.type === 'identifier' &&
+      ctx.data.isTypeName(funcNode.text) &&
+      (argsNode?.namedChildren.length ?? 0) <= 1
+    ) {
+      const arg = argsNode?.namedChildren[0]
+      return buildCast(funcNode.text, arg ? ctx.lift(arg) : null)
+    }
+
     // Method call: obj.method(...) via field_expression
     if (funcNode && funcNode.type === 'field_expression') {
       // Try string-only method calls first (substr, find, append, c_str, length, replace)

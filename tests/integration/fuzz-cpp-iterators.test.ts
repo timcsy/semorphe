@@ -384,3 +384,722 @@ describe('模糊測試：迭代器的邊界', () => {
        for (auto it = m[1].begin(); it != m[1].end(); ++it) cout << *it; cout << m[1].size();`, '')
   }, 60_000)
 })
+
+const P03 = `#include <bits/stdc++.h>
+using namespace std;
+
+// 原始陣列沒有 .begin()，只能用自由函式或指標
+void shiftToZero(int* first, int* last) {
+    if (first == last) return;
+    int mn = *min_element(first, last);
+    for (int* p = first; p != last; ++p) *p -= mn;
+}
+
+int sumRange(const int* first, const int* last) {
+    int s = 0;
+    while (first != last) {
+        s += *first;
+        ++first;
+    }
+    return s;
+}
+
+// 指標傳參考：把位置推到第一個嚴格遞增被打斷的地方
+void runEnd(const int* last, const int*& cur) {
+    while (next(cur) != last && *next(cur) > *cur) ++cur;
+}
+
+int main() {
+    int a[10] = {37, 12, 55, 12, 90, 3, 47, 55, 21, 68};
+    const int n = static_cast<int>(end(a) - begin(a));
+    cout << "n = " << n << "\\n";
+
+    // 先在未排序的陣列上找一段遞增
+    const int* cur = begin(a);
+    runEnd(end(a), cur);
+    cout << "first run ends at index " << (cur - begin(a)) << " value " << *cur << "\\n";
+
+    cout << "raw sum = " << sumRange(begin(a), end(a)) << "\\n";
+    cout << "max = " << *max_element(begin(a), end(a))
+         << " at " << (max_element(begin(a), end(a)) - begin(a)) << "\\n";
+
+    sort(begin(a), end(a));
+    for (int v : a) cout << v << " ";
+    cout << "\\n";
+
+    // 用位址當位置
+    int* mid = &a[n / 2];
+    cout << "mid = " << *mid << ", before = " << *prev(mid) << ", after = " << *next(mid) << "\\n";
+
+    int* p = find(begin(a), end(a), 47);
+    if (p != end(a)) {
+        cout << "found 47 at " << (p - a);
+        if (p != begin(a)) cout << ", prev " << *prev(p);
+        if (next(p) != end(a)) cout << ", next " << *next(p);
+        cout << "\\n";
+    }
+
+    // lower_bound / upper_bound 回傳的也是指標
+    int* lo = lower_bound(begin(a), end(a), 12);
+    int* hi = upper_bound(begin(a), end(a), 55);
+    cout << "window [" << *lo << "," << *prev(hi) << "] length " << (hi - lo) << "\\n";
+    cout << "window sum = " << accumulate(lo, hi, 0) << "\\n";
+
+    // unique 只把重複的擠到後面，邏輯尾端是它的回傳值
+    int* u = unique(begin(a), end(a));
+    cout << "distinct = " << (u - begin(a)) << ":";
+    for (int* q = begin(a); q != u; ++q) cout << " " << *q;
+    cout << "\\n";
+
+    shiftToZero(begin(a), u);
+    cout << "shifted:";
+    for (int* q = begin(a); q != u; ++q) cout << " " << *q;
+    cout << "\\n";
+
+    // 從尾端往回走，reverse 形式在原始陣列上一樣可用
+    reverse(begin(a), u);
+    cout << "reversed front part:";
+    for (int* q = begin(a); q != u; ++q) cout << " " << *q;
+    cout << "\\n";
+    return 0;
+}
+`
+const P01_NAIL = `#include <bits/stdc++.h>
+using namespace std;
+
+// 在有序集合裡找最接近 target 的值，用 lower_bound 的位置與它的前一格比
+int closest(const set<int>& s, int target) {
+    auto it = s.lower_bound(target);
+    if (it == s.end()) return *prev(s.end());
+    if (it == s.begin()) return *it;
+    auto lo = prev(it);
+    if (target - *lo <= *it - target) return *lo;
+    return *it;
+}
+
+// 位置用傳值的方式交給函式，左右各看一格
+long long neighbourSum(const set<int>& s, set<int>::const_iterator it) {
+    long long sum = *it;
+    if (it != s.begin()) sum += *prev(it);
+    auto nx = next(it);
+    if (nx != s.end()) sum += *nx;
+    return sum;
+}
+
+int main() {
+    set<int> s = {4, 8, 15, 16, 23, 42};
+
+    for (int q : {1, 10, 15, 20, 50})
+        cout << q << " -> " << closest(s, q) << "\\n";
+
+    for (auto it = s.begin(); it != s.end(); ++it)
+        cout << *it << ":" << neighbourSum(s, it) << " ";
+    cout << "\\n";
+
+    // 鄰居的鄰居
+    auto it = s.find(16);
+    cout << "two before 16 = " << *prev(it, 2) << "\\n";
+    cout << "two after  16 = " << *next(it, 2) << "\\n";
+
+    // 鄰居當範圍端點
+    auto lo = s.lower_bound(8);
+    auto hi = s.upper_bound(23);
+    cout << "count in [8,23] = " << distance(lo, hi) << "\\n";
+    cout << "sum   in [8,23] = " << accumulate(lo, hi, 0) << "\\n";
+
+    // 從尾端數回來，而不是用索引
+    cout << "last = " << *s.rbegin() << ", second last = " << *next(s.rbegin()) << "\\n";
+    cout << "max-min = " << *prev(s.end()) - *s.begin() << "\\n";
+
+    // 刪掉一格之後，先前算出的鄰居位置要重新取
+    s.erase(s.find(16));
+    auto after = s.lower_bound(16);
+    cout << "after erasing 16: " << *prev(after) << " | " << *after << "\\n";
+    return 0;
+}
+`
+const P02_NAIL = `#include <bits/stdc++.h>
+using namespace std;
+
+// 頭尾各派一個位置往中間收，反向位置的 base() 會多走一格，要記得
+string trim(const string& s) {
+    auto b = find_if(s.begin(), s.end(), [](char c) { return !isspace(static_cast<unsigned char>(c)); });
+    auto r = find_if(s.rbegin(), s.rend(), [](char c) { return !isspace(static_cast<unsigned char>(c)); });
+    auto e = r.base();
+    if (b >= e) return string();
+    return string(b, e);
+}
+
+// 兩端夾擠判回文，只看字母。b 永遠停在「還沒檢查的那一段」的後面一格
+bool isPalindrome(const string& s) {
+    auto f = s.begin();
+    auto b = s.end();
+    while (true) {
+        while (f != b && !isalpha(static_cast<unsigned char>(*f))) ++f;
+        while (f != b && !isalpha(static_cast<unsigned char>(*prev(b)))) --b;
+        if (f == b) return true;
+        --b;                      // 現在 b 指到真正要比的那個字元
+        if (f == b) return true;  // 只剩正中間一格
+        if (tolower(static_cast<unsigned char>(*f)) != tolower(static_cast<unsigned char>(*b))) return false;
+        ++f;                      // b 已經用掉了，剩下的就是 [f, b)
+    }
+}
+
+int main() {
+    string raw = "   spaces both sides   ";
+    cout << "[" << trim(raw) << "]\\n";
+    cout << "[" << trim("      ") << "]\\n";
+    cout << "[" << trim("x") << "]\\n";
+
+    string s = "A man, a plan, a canal: Panama";
+    cout << s << " -> " << (isPalindrome(s) ? "yes" : "no") << "\\n";
+    cout << "hello -> " << (isPalindrome("hello") ? "yes" : "no") << "\\n";
+
+    string t = "abracadabra";
+    cout << "first a at " << (find(t.begin(), t.end(), 'a') - t.begin()) << "\\n";
+    auto lastA = find(t.rbegin(), t.rend(), 'a');
+    cout << "last a at " << (t.size() - 1 - distance(t.rbegin(), lastA)) << "\\n";
+    cout << "char before last a = " << *next(lastA) << "\\n";
+    cout << "char via base()-1  = " << *prev(lastA.base()) << "\\n";
+
+    // 用兩個位置刪掉中間一段
+    string u = t;
+    auto from = u.begin() + 3;
+    auto to = u.begin() + 7;
+    cout << "cutting [" << string(from, to) << "]\\n";
+    u.erase(from, to);
+    cout << "after erase: " << u << "\\n";
+
+    // 刪單一位置：把每個 'a' 拿掉，邊走邊刪
+    string v = t;
+    for (auto it = v.begin(); it != v.end(); ) {
+        if (*it == 'a') it = v.erase(it);
+        else ++it;
+    }
+    cout << "no a: " << v << "\\n";
+
+    // remove 只搬不刪，真正縮短要靠 erase
+    string w = t;
+    w.erase(remove(w.begin(), w.end(), 'b'), w.end());
+    cout << "no b: " << w << "\\n";
+
+    // 反向走一遍
+    string rev;
+    for (auto it = t.rbegin(); it != t.rend(); ++it) rev.push_back(*it);
+    cout << "reversed: " << rev << "\\n";
+    return 0;
+}
+`
+const P03_NAIL = `#include <bits/stdc++.h>
+using namespace std;
+
+// 把同一個值的那一段當成一個範圍來處理
+int runLength(const multiset<int>& ms, int v) {
+    auto [lo, hi] = ms.equal_range(v);
+    return static_cast<int>(distance(lo, hi));
+}
+
+// 只留下每個值的第一顆：用範圍 erase，而且要先把下一段的起點記下來
+void squash(multiset<int>& ms) {
+    auto it = ms.begin();
+    while (it != ms.end()) {
+        auto hi = ms.upper_bound(*it);
+        auto second = next(it);
+        if (second != hi) ms.erase(second, hi);
+        it = ms.upper_bound(*it);
+    }
+}
+
+// 位置傳值進來，往回數 k 格（不夠就停在開頭）
+multiset<int>::const_iterator backUp(const multiset<int>& ms, multiset<int>::const_iterator it, int k) {
+    while (k > 0 && it != ms.begin()) {
+        --it;
+        --k;
+    }
+    return it;
+}
+
+int main() {
+    multiset<int> ms{5, 3, 9, 3, 7, 5, 5, 1, 9, 3};
+
+    for (int v : ms) cout << v << " ";
+    cout << "\\n";
+    cout << "size = " << ms.size() << ", distinct = ";
+    int distinct = 0;
+    for (auto it = ms.begin(); it != ms.end(); it = ms.upper_bound(*it)) ++distinct;
+    cout << distinct << "\\n";
+
+    for (int v : {1, 3, 5, 7, 9, 4}) cout << v << "x" << runLength(ms, v) << " ";
+    cout << "\\n";
+
+    // 一段的尾端就是下一段的開頭
+    auto firstFive = ms.lower_bound(5);
+    auto pastFive = ms.upper_bound(5);
+    cout << "just before the 5s = " << *prev(firstFive)
+         << ", just after = " << *pastFive << "\\n";
+    cout << "sum of the 5s = " << accumulate(firstFive, pastFive, 0) << "\\n";
+
+    // 從尾端取，不用 size
+    cout << "largest = " << *prev(ms.end())
+         << ", second largest = " << *prev(ms.end(), 2) << "\\n";
+    cout << "via rbegin: " << *ms.rbegin() << " then " << *next(ms.rbegin()) << "\\n";
+
+    // 位置傳值進函式往回走
+    auto tail = prev(ms.end());
+    cout << "back up 4 from the end -> " << *backUp(ms, tail, 4) << "\\n";
+    cout << "back up 99 from the end -> " << *backUp(ms, tail, 99) << "\\n";
+
+    // 只刪一顆 3，而不是全部的 3
+    ms.erase(ms.find(3));
+    cout << "after erasing one 3: 3 appears " << ms.count(3) << " times\\n";
+
+    squash(ms);
+    for (auto it = ms.begin(); it != ms.end(); ++it) {
+        cout << *it;
+        cout << (next(it) == ms.end() ? "\\n" : ",");
+    }
+    cout << "final size = " << ms.size() << "\\n";
+    return 0;
+}
+`
+const P04_NAIL = `#include <bits/stdc++.h>
+using namespace std;
+
+using It = vector<int>::iterator;
+
+// 半開區間 [first, last) 的遞迴合併排序，順便數交換次數
+long long mergeSort(It first, It last, vector<int>& buf) {
+    auto n = distance(first, last);
+    if (n < 2) return 0;
+    It mid = first + n / 2;
+    long long inv = mergeSort(first, mid, buf) + mergeSort(mid, last, buf);
+
+    buf.clear();
+    It a = first, b = mid;
+    while (a != mid && b != last) {
+        if (*b < *a) {
+            inv += distance(a, mid);
+            buf.push_back(*b);
+            ++b;
+        } else {
+            buf.push_back(*a);
+            ++a;
+        }
+    }
+    buf.insert(buf.end(), a, mid);
+    buf.insert(buf.end(), b, last);
+    copy(buf.begin(), buf.end(), first);
+    return inv;
+}
+
+// 遞迴二分搜，回傳位置；找不到就回 last
+It bsearch_rec(It first, It last, int target) {
+    if (first == last) return last;
+    It mid = first + distance(first, last) / 2;
+    if (*mid == target) return mid;
+    if (*mid < target) return bsearch_rec(next(mid), last, target);
+    return bsearch_rec(first, mid, target);
+}
+
+// 遞迴反轉：兩個位置往中間走
+void flip(It first, It last) {
+    if (first == last) return;
+    --last;
+    if (first == last) return;
+    swap(*first, *last);
+    flip(next(first), last);
+}
+
+// 遞迴求最大子段和，回傳 (和, 起點, 終點)，終點是後一格
+tuple<int, It, It> bestSlice(It first, It last) {
+    if (distance(first, last) == 1) return {*first, first, last};
+    It mid = first + distance(first, last) / 2;
+    auto [lsum, lb, le] = bestSlice(first, mid);
+    auto [rsum, rb, re] = bestSlice(mid, last);
+
+    int run = 0, bestLeft = numeric_limits<int>::min();
+    It leftStart = mid;
+    for (It it = mid; it != first; ) {
+        --it;
+        run += *it;
+        if (run > bestLeft) { bestLeft = run; leftStart = it; }
+    }
+    run = 0;
+    int bestRight = numeric_limits<int>::min();
+    It rightEnd = mid;
+    for (It it = mid; it != last; ++it) {
+        run += *it;
+        if (run > bestRight) { bestRight = run; rightEnd = next(it); }
+    }
+    int cross = bestLeft + bestRight;
+
+    if (lsum >= rsum && lsum >= cross) return {lsum, lb, le};
+    if (rsum >= lsum && rsum >= cross) return {rsum, rb, re};
+    return {cross, leftStart, rightEnd};
+}
+
+int main() {
+    vector<int> v{9, 4, 7, 1, 8, 2, 6, 3, 5, 0};
+    vector<int> keep = v;
+
+    vector<int> buf;
+    buf.reserve(v.size());
+    cout << "inversions = " << mergeSort(v.begin(), v.end(), buf) << "\\n";
+    for (int x : v) cout << x << " ";
+    cout << "\\n";
+
+    for (int q : {0, 5, 9, 11}) {
+        It pos = bsearch_rec(v.begin(), v.end(), q);
+        if (pos == v.end()) {
+            cout << q << ": not found\\n";
+        } else {
+            cout << q << ": at " << (pos - v.begin());
+            if (pos != v.begin()) cout << " after " << *prev(pos);
+            if (next(pos) != v.end()) cout << " before " << *next(pos);
+            cout << "\\n";
+        }
+    }
+
+    flip(v.begin(), v.end());
+    for (int x : v) cout << x << " ";
+    cout << "\\n";
+    flip(v.begin() + 2, v.begin() + 6);
+    for (int x : v) cout << x << " ";
+    cout << "\\n";
+
+    vector<int> s{3, -4, 5, -1, 6, -8, 2, 7, -3, 4};
+    auto [total, b, e] = bestSlice(s.begin(), s.end());
+    cout << "best slice sum = " << total
+         << " from " << (b - s.begin()) << " to " << (e - s.begin()) << ":";
+    for (It it = b; it != e; ++it) cout << " " << *it;
+    cout << "\\n";
+    cout << "check = " << accumulate(b, e, 0) << "\\n";
+
+    cout << "original untouched: ";
+    for (int x : keep) cout << x << " ";
+    cout << "\\n";
+    return 0;
+}
+`
+const P05_NAIL = `#include <bits/stdc++.h>
+using namespace std;
+
+// 跟標準函式同名，但參數不一樣，所以編譯器分得出來
+int find(const vector<int>& v, int x) {
+    auto it = std::find(v.begin(), v.end(), x);
+    return it == v.end() ? -1 : static_cast<int>(it - v.begin());
+}
+
+string reverse(const string& s) {
+    string out;
+    for (auto it = s.rbegin(); it != s.rend(); ++it) out.push_back(*it);
+    return out;
+}
+
+int count(const vector<int>& v, int x) {
+    int c = 0;
+    for (auto it = v.begin(); it != v.end(); ++it)
+        if (*it == x) ++c;
+    return c;
+}
+
+// 傳參考進來就地改，回傳新的邏輯尾端
+vector<int>::iterator dedupeSorted(vector<int>& v) {
+    if (v.empty()) return v.end();
+    auto write = v.begin();
+    for (auto read = next(v.begin()); read != v.end(); ++read) {
+        if (*read != *write) {
+            ++write;
+            *write = *read;
+        }
+    }
+    return next(write);
+}
+
+int main() {
+    vector<int> v{8, 3, 8, 1, 9, 3, 3, 5, 1, 9, 2};
+
+    cout << "find(9) = " << find(v, 9) << ", find(42) = " << find(v, 42) << "\\n";
+    cout << "count(3) = " << count(v, 3) << ", std::count = "
+         << std::count(v.begin(), v.end(), 3) << "\\n";
+    cout << reverse(string("stressed")) << "\\n";
+
+    // remove 只搬不刪，尾巴要自己砍
+    vector<int> w = v;
+    auto newEnd = remove(w.begin(), w.end(), 3);
+    cout << "logical size after remove = " << (newEnd - w.begin())
+         << ", physical size = " << w.size() << "\\n";
+    w.erase(newEnd, w.end());
+    for (int x : w) cout << x << " ";
+    cout << "\\n";
+
+    sort(v.begin(), v.end());
+    for (int x : v) cout << x << " ";
+    cout << "\\n";
+
+    auto logicalEnd = dedupeSorted(v);
+    cout << "手寫去重:";
+    for (auto it = v.begin(); it != logicalEnd; ++it) cout << " " << *it;
+    cout << " (tail still holds " << (v.end() - logicalEnd) << " leftovers)\\n";
+    v.erase(logicalEnd, v.end());
+
+    cout << "unique agrees: " << (unique(v.begin(), v.end()) == v.end() ? "yes" : "no") << "\\n";
+
+    // 二分搜的兩個端點
+    for (int q : {1, 4, 9}) {
+        auto lo = lower_bound(v.begin(), v.end(), q);
+        auto hi = upper_bound(v.begin(), v.end(), q);
+        cout << q << ": lo@" << (lo - v.begin()) << " hi@" << (hi - v.begin());
+        if (lo != v.begin()) cout << " prev=" << *prev(lo);
+        if (hi != v.end()) cout << " next=" << *hi;
+        cout << "\\n";
+    }
+
+    // 從尾端拿最後一個，而不是 v[v.size()-1]
+    cout << "last = " << v.back() << " == " << *prev(v.end())
+         << " == " << *v.rbegin() << "\\n";
+    cout << "sum = " << accumulate(v.begin(), v.end(), 0)
+         << " max = " << *max_element(begin(v), end(v)) << "\\n";
+    return 0;
+}
+`
+
+/**
+ * ═══════════════════════════════════════════════════════════════════
+ * **盲測第二輪：位置的相鄰一格（管線 197 階段四）** —— 2026-09-19
+ * ═══════════════════════════════════════════════════════════════════
+ *
+ * 出題者在隔離的 worktree 裡，只知道 C++ 與「寫真實的競賽風格學生程式」。
+ * 十支**每一支都 `-Wall -Wextra` 零警告、跑過、再用 `-fsanitize=undefined,address`
+ * 跑一次而消毒器一個字都沒印**。
+ *
+ * ## 讀數：**1/10 → 3/10**，而這一輪最貴的東西不在分子上
+ *
+ * ### 🔴 一：`prev(it, 2)` ——「語料 0 處」那個決定被翻面了
+ *
+ * 探索階段**明文決定不做**第二個引數，理由是「語料 0 處」＋
+ * 「同族的『移除』那顆做了一個常態留空的插槽，而瀏覽器驗收時它刺眼」。
+ *
+ * 而盲測十支裡**兩支**用了它：`set` 上取倒數第二個、`map` 上往後跳兩格。
+ * 兩支都**剛好死在那一行**，而在那之前與 g++ **逐位元相同**。
+ *
+ * > **一個「語料 0 處」的讀數量到的是【這批語料的人怎麼寫】，
+ * > 不是【這個寫法有多常見】——而盲測的母體不一樣。**
+ *
+ * ### 🔴 二：一個**安靜的錯答**（這一輪唯一的語義缺陷）
+ *
+ * 第七支是合法的 C++：它自己定義 `int count(const vector<int>&, int)`，
+ * 然後在同一支程式裡呼叫 `std::count(v.begin(), v.end(), 3)`。
+ *
+ * ```
+ * g++   3
+ * 我們   2      退回裸名 → 撞上使用者那顆兩參數的 count → 綁前兩個、丟掉第三個
+ * ```
+ *
+ * **它不會出聲**，回的是一個型別正確、看起來合理的整數。
+ *
+ * > **一個「引數對不上就少綁幾個」的呼叫，
+ * > 在遇到同名多載的時候不會報錯——它會回一個錯的答案。**
+ *
+ * ### 🟠 三：`distance` 擋住 **5/10**，而它在語料裡是 0 處
+ *
+ * 見下面那一族釘子。**它是這一輪最大的單一缺口。**
+ */
+describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格', () => {
+  /** 整支程式（這一輪的題目自己帶函式與 `main`，不能套 `prog()`）。 */
+  const whole = async (code: string, hint: string): Promise<void> => {
+    const ref = runCppDetailed(code)
+    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
+    expect(await run(code), hint).toBe(ref.output)
+  }
+
+  /**
+   * 🟢 **fuzz_03：原始 C 陣列上的指標位置**——這一輪唯一一開始就綠的。
+   *
+   * 它壓的是「原始陣列沒有成員 `begin()`」那一整條路：`begin(a)`／`end(a)`
+   * 自由函式形式、`&a[n/2]` 當位置、`prev`／`next` 走在裸指標上、
+   * `unique` 的邏輯尾端當後續每一段的界線。
+   */
+  it('🟢 fuzz_03｜原始 C 陣列上的指標位置', async () => {
+    await whole(P03, '')
+  }, 180_000)
+
+  /**
+   * 🔴 **fuzz_01 的前半段**——`prev(it, 2)`／`next(it, 2)` 那兩行就在這裡面。
+   *
+   * ⚠️ 整支還跑不完（卡在 `distance`，見下面的釘子），所以這裡測的是
+   * **它死掉的那一行為止**——而那一行正是這一輪翻面的那個決定。
+   * 🟢 整支能跑的那一天，這一條要換成 `whole(P01, …)`。
+   */
+  it('🔴 fuzz_01 蒸餾｜`set` 上往前／往後跳兩格', async () => {
+    await sameAsCompiler(
+      `set<int> s = {4, 8, 15, 16, 23, 42};
+       auto it = s.find(16);
+       cout << *prev(it, 2) << " " << *next(it, 2) << "\\n";
+       cout << *prev(s.end(), 2) << " " << *next(s.begin(), 3) << "\\n";`,
+      '🔴 第二個引數掉了——而產出的碼仍然編得過')
+  }, 120_000)
+
+  /**
+   * 🔴 **fuzz_02 蒸餾**——`map` 上跳兩格，而且解參考成 `pair`。
+   * ⚠️ `next(it, 2)->first` 比 `*next(it, 2)` 多一層：**位置先移，再取成員**。
+   */
+  it('🔴 fuzz_02 蒸餾｜`map` 上跳兩格再取鍵', async () => {
+    await sameAsCompiler(
+      `map<string,int> m{{"amy",88},{"bob",42},{"cin",95},{"dan",60}};
+       auto it = m.find("bob");
+       cout << next(it, 2)->first << " " << prev(m.end(), 3)->second << "\\n";`,
+      '🔴 第二個引數掉了')
+  }, 120_000)
+
+  /** ★ **正向錨點**：留空的時候**不得**產出／執行成 `prev(it, 1)` 以外的東西。 */
+  it('★ 一個引數的照舊（留空就是一格）', async () => {
+    await sameAsCompiler(
+      `set<int> s{1,2,3,4}; cout << *prev(s.end()) << *next(s.begin());`, '')
+  }, 120_000)
+
+  /**
+   * 🔴 **負的格數是合法的**——`prev(it, -2)` 就是往後兩格。
+   * ⚠️ 所以執行那一路**不得取絕對值**。
+   */
+  it('🔴 格數是負的時候方向要反過來', async () => {
+    await sameAsCompiler(
+      `vector<int> v{10,20,30,40,50}; auto it = v.begin() + 1;
+       cout << *prev(it, -2) << " " << *next(it, -1);`, '')
+  }, 120_000)
+
+  /**
+   * 🔴 **反向的位置上，格數不得被翻兩次**——`movePointer` 自己會翻。
+   */
+  it('🔴 反向的位置 ＋ 格數', async () => {
+    await sameAsCompiler(
+      `vector<int> v{1,2,3,4,5}; auto r = v.rbegin();
+       cout << *next(r, 2) << " " << *prev(v.rend(), 2);`, '')
+  }, 120_000)
+
+  /**
+   * 🔴 **fuzz_07 蒸餾：這一輪唯一的語義缺陷，而它不會出聲。**
+   *
+   * 這一段是**合法的 C++**（g++ 印 3）。在修好之前我們印 **2**：
+   * `std::count` 退回裸名 `count` → 撞上使用者那顆**兩參數**的 `count`
+   * → 綁前兩個、丟掉第三個 → 回一個型別正確而錯的整數。
+   *
+   * 🟢 **修法是 C++ 的事實**：使用者定義的函式沒有可變引數，所以
+   * 「給的比宣告的多」在任何合法的程式裡都不成立 ⟹ 那就不是這一顆。
+   * ⚠️ 反方向（給的比宣告的少）**是合法的**——那是預設引數，不在這條閘裡。
+   */
+  it('🔴 引數比參數多的時候，不得派給使用者那顆同名函式', async () => {
+    const code = `${H}int count(const vector<int>& v, int x) {
+  int c = 0;
+  for (auto it = v.begin(); it != v.end(); ++it) if (*it == x) ++c;
+  return c;
+}
+int main(){
+  vector<int> v{8,3,8,1,9,3,3,5,1,9,2};
+  cout << count(v, 3) << "\\n";
+  return 0;
+}
+`
+    await whole(code, '🔴 使用者自己那顆 count 被弄壞了')
+  }, 120_000)
+
+  /** ★ **正向錨點**：引數剛好對上的時候照舊派過去。 */
+  it('★ 引數個數對上時照舊', async () => {
+    await sameAsCompiler(
+      `cout << 0;`, '')
+  }, 60_000)
+
+  /** ★ **正向錨點**：給的比宣告的少是**合法的**（預設引數），不得被這條閘擋掉。 */
+  it('★ 預設引數不得被「引數個數」那條閘擋掉', async () => {
+    const code = `${H}int add(int a, int b = 10){ return a + b; }
+int main(){ cout << add(1) << " " << add(1, 2); return 0; }
+`
+    await whole(code, '🔴 預設引數被擋掉了')
+  }, 120_000)
+
+  /**
+   * 🟠 **fuzz_01 · 02 · 05 · 09 · 10（**5/10**）：缺 `distance`。**
+   *
+   * `cpp:pointer_step` 的鄰居，而它是**另一顆身分**：回傳的是一個整數，不是位置。
+   *
+   * 🔴 **這是這一輪最大的單一缺口，而它推翻了探索階段的一個決定。**
+   *    探索報告寫著「不做：語料 0 處，而且有等價寫法 `it - v.begin()`（今天能跑）」
+   *    ——而那個等價寫法**只在隨機存取的容器上成立**。`set`／`map` 上沒有 `-`，
+   *    所以 `distance` 在那些容器上是**唯一的寫法**。
+   *
+   * 🟠 **為什麼不是現在**：它是**一顆新身分**（新的膠囊、積木、標籤、
+   *    工具箱段落、十幾本清冊），而這一刀的題目是「相鄰的一格」。
+   *    把兩顆身分塞進同一刀，兩顆的驗收都會變糊。
+   *
+   * 🔴 **何時該修：【下一刀】**——證據是這一輪量到的 5/10，
+   *    而執行期只有一行（實體式指標：兩個偏移量相減）。
+   *    ⚠️ 觸發條件刻意不寫刀號（一根寫著號碼的釘子，在下一刀因為別的理由
+   *    插隊時就永遠等不到它的號碼）。判準是：**下一次有人碰位置那一族。**
+   */
+  it.fails('[UNSUPPORTED:distance] 🟠 fuzz_01 · 02 · 05 · 09 · 10（**5/10**） 卡在 `distance`', async () => {
+    await whole(P01_NAIL, '')
+  }, 180_000)
+
+  /**
+   * 🟠 **fuzz_04：缺 `range_find_if`。**
+   *
+   * `find_if(first, last, 述詞)`——述詞是一顆 **lambda**。
+   *
+   * 🟠 **為什麼不是現在**：缺的不只是一顆元件，是「**把一個 lambda 當成值
+   *    傳進範圍演算法**」這一整條路。同族十顆範圍演算法今天**一顆都沒有
+   *    收述詞的插槽**。
+   * 🔴 **何時該修**：範圍演算法收述詞那一刀（`find_if`／`count_if`／
+   *    `remove_if`／帶比較器的 `sort` 是同一批）。
+   *    ⚠️ fuzz_09 也卡在同一族（帶比較器的 `lower_bound`）。
+   */
+  it.fails('[UNSUPPORTED:range_find_if] 🟠 fuzz_04 卡在 `range_find_if`', async () => {
+    await whole(P02_NAIL, '')
+  }, 180_000)
+
+  /**
+   * 🟠 **fuzz_06：缺 `container_equal_range`。**
+   *
+   * `ms.equal_range(v)` ——回傳**一對位置**，而且慣用寫法是拆進結構化繫結。
+   *
+   * 🟠 **為什麼不是現在**：它回傳的是 `pair<iterator,iterator>`，
+   *    而今天沒有任何一顆元件的回傳值是「一對位置」。
+   * 🟢 **而它有等價寫法今天就能跑**：`lower_bound` ＋ `upper_bound`
+   *    ——所以它的優先序低於 `distance`。
+   * 🔴 **何時該修**：有序容器的區段那一刀。
+   */
+  it.fails('[UNSUPPORTED:container_equal_range] 🟠 fuzz_06 卡在 `container_equal_range`', async () => {
+    await whole(P03_NAIL, '')
+  }, 180_000)
+
+  /**
+   * 🟠 **fuzz_08：缺 `container_reserve`。**
+   *
+   * `v.reserve(n)` ——預留空間。
+   *
+   * 🟠 **為什麼不是現在**：它在這個直譯器裡**沒有可觀察的行為**
+   *（容器不是連續記憶體，沒有「重新配置」這件事），所以它該是一顆
+   *    `skipPaths: ["execute"]` 的宣告式元件——**而那個判斷要有人做**，
+   *    不是順手加一個 noop。
+   *    ⚠️ 「顯式的空與遺漏的空要分得出來」，而一個 noop 函式兩者長得一樣。
+   * 🔴 **何時該修**：容器的容量那一族（`reserve`／`capacity`／`shrink_to_fit`）。
+   */
+  it.fails('[UNSUPPORTED:container_reserve] 🟠 fuzz_08 卡在 `container_reserve`', async () => {
+    await whole(P04_NAIL, '')
+  }, 180_000)
+
+  /**
+   * 🟠 **fuzz_04 · 07：缺 `string_construct`。**
+   *
+   * `string(first, last)`／`string(s)` ——把兩個位置之間的東西做成字串。
+   *
+   * 🟠 **為什麼不是現在**：`string` 是一個型別，而
+   *    `string(a, b)` 是**建構**——今天只有登記過的 `struct` 走得到建構那一路
+   *（`ctx.structs.construct`），內建型別沒有。要做的是「內建型別的建構」
+   *    這一整條，不是一顆元件。
+   * 🔴 **何時該修**：內建型別的建構那一刀（`string(n, c)`／`vector<int>(n)`
+   *    都在同一族，而後者今天是由宣告那一路特判的）。
+   */
+  it.fails('[UNSUPPORTED:string_construct] 🟠 fuzz_04 · 07 卡在 `string_construct`', async () => {
+    await whole(P05_NAIL, '')
+  }, 180_000)
+})

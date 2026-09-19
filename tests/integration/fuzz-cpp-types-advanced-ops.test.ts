@@ -287,22 +287,95 @@ int main() {
   })
 })
 
-// --- Known issues ---
+// --- 🪦 曾經的「已知問題」——2026-09-19 逐條覆核，三根【全部是死的】 ---
 
-describe.skip('[BLOCKED:cpp:increment] fuzz: pre/post increment in variable initializer (ROUNDTRIP_DRIFT)', () => {
-  // types_adv_003: int b = ++a; generates malformed code with extra semicolons
-  // types_adv_009: int b = ++a * 2; similarly broken
-  // Root cause: increment expression in variable initializer RHS is split into
-  // separate increment statement + variable declaration by lifter
-})
+/**
+ * 🔴 **三根 `describe.skip` 在這裡躺了半年，而它們底下的每一件事都早就修好了。**
+ *
+ * 管線 197 的第五關逐條覆核時量到的（拿 g++ 當權威，四個形狀全綠）：
+ *
+ * ```
+ * (char)65           g++ A      我們 A     🟢
+ * sizeof(a)/sizeof(a[0])  g++ 5      我們 5     🟢
+ * enum 常數當值       g++ 1      我們 1     🟢
+ * int b = ++a;       g++ 22     我們 22    🟢   而且是不動點
+ * enum { APPLE = 10 } g++ 10 20  我們 10 20 🟢
+ * ```
+ *
+ * ⚠️ **三根都是「只有標題、沒有本體」**——所以它們**不會在修好的那天變紅**。
+ * 缺陷帳自己把這一類叫做 `DEADSKIP`：**已修好卻沒開回來，白白損失覆蓋。**
+ *
+ * > **一個只有標題的停用測試，與一個修好了的缺陷長得一模一樣
+ * > ——而它們的差別只有去跑一次才知道。**
+ *
+ * 🟢 這也是 `it.fails` 比 `it.todo` 好的理由：**它會在修好的那天自己變紅。**
+ */
+describe('🪦 三根死釘子（拔掉的那天補上的測試）', () => {
+  it('轉型：`(char)65` 印出字元，不是數字', async () => {
+    const i = await runCode(`#include <bits/stdc++.h>
+using namespace std;
+int main() {
+  cout << (char)65 << char(66);
+  return 0;
+}
+`)
+    expect(i.getOutput().join('')).toBe('AB')
+  })
 
-describe.skip('[BLOCKED:cpp:enum] fuzz: enum with explicit values (SEMANTIC_DIFF)', () => {
-  // types_adv_006: enum Fruit { APPLE = 10, BANANA = 20 } -> enum Fruit { APPLE, BANANA }
-  // Root cause: enum lifter does not preserve explicit enumerator values
-})
+  it('`sizeof(a)/sizeof(a[0])` 算得出陣列長度', async () => {
+    const i = await runCode(`#include <bits/stdc++.h>
+using namespace std;
+int main() {
+  int a[5] = {0, 0, 0, 0, 0};
+  cout << sizeof(a) / sizeof(a[0]);
+  return 0;
+}
+`)
+    expect(i.getOutput().join('')).toBe('5')
+  })
 
-describe.skip('[BLOCKED:cpp:cast] fuzz: interpreter limitations (not roundtrip issues)', () => {
-  // Interpreter does not convert int->char for display ((char)65 -> 'A')
-  // Interpreter sizeof(arr)/sizeof(arr[0]) returns 1 (no real memory model)
-  // Interpreter cannot resolve enum constants as values (SOUTH undeclared)
+  it('列舉常數當值讀得到', async () => {
+    const i = await runCode(`#include <bits/stdc++.h>
+using namespace std;
+enum D { N, S };
+int main() {
+  cout << S;
+  return 0;
+}
+`)
+    expect(i.getOutput().join('')).toBe('1')
+  })
+
+  /** 🔴 原本的症狀是「前置遞增被拆成兩句，產出多一個分號」——所以**不動點也要驗**。 */
+  it('前置遞增當初值：值對，而且是不動點', async () => {
+    const code = `#include <bits/stdc++.h>
+using namespace std;
+int main() {
+  int a = 1;
+  int b = ++a;
+  int c = 1;
+  int d = ++c * 2;
+  cout << a << b << c << d;
+  return 0;
+}
+`
+    const i = await runCode(code)
+    expect(i.getOutput().join('')).toBe('2224')
+    const once = roundTrip(code)
+    expect(roundTrip(once), '🔴 產出的碼再 lift 一次就走樣').toBe(once)
+  })
+
+  it('列舉的明寫值不得被吃掉', async () => {
+    const code = `#include <bits/stdc++.h>
+using namespace std;
+enum Fruit { APPLE = 10, BANANA = 20 };
+int main() {
+  cout << APPLE << " " << BANANA;
+  return 0;
+}
+`
+    const i = await runCode(code)
+    expect(i.getOutput().join('')).toBe('10 20')
+    expect(roundTrip(code), '🔴 明寫的值在產出的碼裡不見了').toContain('APPLE = 10')
+  })
 })

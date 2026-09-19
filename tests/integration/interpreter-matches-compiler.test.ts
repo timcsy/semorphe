@@ -53,6 +53,22 @@ beforeAll(async () => {
 /** `[名稱, 全域段, main 內容, stdin]` */
 const CASES: [string, string, string, string[]][] = [
   /**
+   * 🔴 **位置的相鄰一格**（2026-09-19，`cpp:pointer_step`）。
+   * 語料 `prev(` 10 處 / 8 支，**每一處都是 `prev(X.end())`**——那是
+   * 「取最後一個」在有序容器上**唯一的寫法**（`set` 沒有 `back()`）。
+   */
+  ['相鄰①：`*prev(s.end())` 在 set 上（AP325/4/4_8）', '', 'set<int> s{5,1,9}; cout << *prev(s.end());', []],
+  ['相鄰②：在 multiset 上（重複要留著）', '', 'multiset<int> s{5,5,1}; cout << *prev(s.end());', []],
+  ['相鄰③：在 vector 上（w/APCS/j607）', '', 'vector<int> v{3,7,2}; cout << *prev(v.end()) - *v.begin();', []],
+  ['相鄰④：`s.erase(prev(s.end()))`（tioj/20_toj275）', '',
+    'set<int> s{1,2,3}; s.erase(prev(s.end())); for(int x : s) cout << x;', []],
+  ['相鄰⑤：`*next(v.begin())`', '', 'vector<int> v{7,8,9}; cout << *next(v.begin());', []],
+  ['相鄰⑥：反向的位置上方向不得被翻兩次', '', 'vector<int> v{1,2,3}; auto it=v.rbegin(); cout << *next(it);', []],
+  ['相鄰⑦：拿它當範圍的端點', '', 'vector<int> v{4,1,3,9}; sort(v.begin(), prev(v.end())); for(int x : v) cout << x;', []],
+  /** ★ 正向錨點：既有的取端點寫法不得被弄壞，而使用者自己的同名函式不得被搶。 */
+  ['★ `*v.begin()` 與 `v.end()-1` 照舊', '', 'vector<int> v{1,2,3}; cout << *v.begin() << *(v.end()-1);', []],
+  ['★ 使用者自己的 `next(int)` 不得被搶', 'int next(int x){ return x+1; }', 'cout << next(3);', []],
+  /**
    * 🔴 **`long long` 在這個直譯器裡曾經是一個 double**（2026-09-19）。
    * 見 `src/interpreter/int64.ts`（不變式）與 `src/core/scalar-types.ts`（拼法表）。
    */
@@ -96,7 +112,27 @@ const CASES: [string, string, string, string[]][] = [
    * IEEE 754 說 `5.0/0` 是 `inf`、`0.0/0.0` 是 `nan`，而 C++ 的浮點除法就是它。
    */
   ['除法①：浮點除以零是 `inf` 不是錯誤', '', 'int d=0; cout << (1.0*5)/d;', []],
-  ['除法②：`0.0/0.0` 是 `nan`', '', 'double a=0.0,b=0.0; cout << a/b;', []],
+  /**
+   * 🔴 **`0.0/0.0` 的【正負號】是未指定的——所以不得拿印出來的字串當判準**
+   *（2026-09-19，CI 抓到，而它紅了兩次合併）。
+   *
+   * ```
+   * 本機  Apple clang（libc++）   nan
+   * CI    GNU g++（libstdc++）    -nan
+   * ```
+   *
+   * 這一條原本寫的是「印出來要一樣」，於是**本機全綠而 CI 紅**
+   * ——與 2026-09-17／09-18 的標頭那兩次是**同一個形狀**：
+   *
+   * > **本機那一台比 CI 那一台寬鬆的地方，量不出來的不是缺陷
+   * > ——是【我的判準有多寬】。**
+   *
+   * 🟢 **判準換成 C++ 真的保證的那一件事**：那個值**不等於它自己**。
+   *    IEEE 754 定得死死的，兩台機器都印 `1`。
+   * ⚠️ 而「它是不是 `inf`」（除法①③）**有定義**，所以那兩條照舊比字串。
+   */
+  ['除法②：`0.0/0.0` 得到的東西不等於自己', '',
+    'double a=0.0,b=0.0; double c=a/b; cout << (c != c) << (c == c);', []],
   ['除法③：`-1.0/0` 是 `-inf`', '', 'int d=0; cout << (-1.0)/d;', []],
   /** 🔴 **八進位字面值**（2026-09-19，basic/3_literal_constant 整節在教這個）。 */
   ['字面值①：`0103` 是八進位（67，不是 103）', '', 'cout << 0103;', []],
