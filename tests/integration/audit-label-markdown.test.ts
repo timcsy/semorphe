@@ -37,11 +37,34 @@
  * 而那種護欄會被改成讓它閉嘴的樣子。
  */
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { globSync } from 'node:fs'
+import { readFileSync, readdirSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { findFiles } from '../helpers/find-files'
 
-/** 膠囊自己的標籤檔——它們才是有人讀的那一份（`core/component/labels.ts` 直讀）。 */
-const FILES = globSync('src/components/*/*/labels/*.json', { cwd: process.cwd() })
+/**
+ * 膠囊自己的標籤檔——它們才是有人讀的那一份（`core/component/labels.ts` 直讀）。
+ *
+ * 🔴 **不要用 `fs.globSync`**（2026-09-19，這一條護欄自己第一版就踩了）。
+ * 第一版寫 `globSync('src/components/*\/*\/labels/*.json')`，**本機（Node 24）綠、
+ * CI（Node 20）整支炸掉**：`globSync is not a function`——它是 Node 22 才有的。
+ *
+ * ⚠️ 而 `tests/helpers/find-files.ts` **早就為了同一件事存在**，檔頭逐字寫著
+ * 「不依賴 `fs.globSync`」，另外兩個測試檔也留著「不用 `fs.globSync`」的註解。
+ * **知識在，而我沒有去找。**
+ *
+ * > **一個在你機器上綠、在 CI 上紅的測試，
+ * > 比一個兩邊都紅的更貴——它會讓人以為問題出在 CI。**
+ */
+const ROOT = join(process.cwd(), 'src/components')
+const FILES: string[] = existsSync(ROOT)
+  ? readdirSync(ROOT, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .flatMap((scope) =>
+        findFiles(join(ROOT, scope.name), 'labels', '.json').map((rel) =>
+          join('src/components', scope.name, rel),
+        ),
+      )
+  : []
 
 interface Offence { file: string; key: string; text: string }
 
