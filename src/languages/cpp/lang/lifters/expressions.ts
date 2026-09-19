@@ -115,6 +115,22 @@ function isShiftLike(node: { componentId: string; properties?: Record<string, un
   return isBinaryOperator(node.componentId) && node.properties?.operator === '>>'
 }
 
+/**
+ * 一個前綴一元運算子 → 它那顆元件。
+ *
+ * ⚠️ 抽出來是因為**有第二個呼叫點**：解析器把 `!K--` 解成 `(!K)--`
+ *（見 `../misparse.ts`），修回來的時候要走同一張分派表。
+ * > **同一個分派寫兩次，第二次會在加第六個運算子的那天落後。**
+ */
+function buildUnaryOp(op: string, operand: SemanticNode | null): SemanticNode | null {
+  if (op === '!') return buildLogicNot(operand)
+  if (op === '-') return buildNegate(operand)
+  if (op === '~') return buildBitwiseNot(operand)
+  if (op === '&') return buildAddressOf(operand)
+  if (op === '*') return buildPointerDeref(operand)
+  return null
+}
+
 export function registerExpressionLifters(lifter: Lifter): void {
   // number_literal, identifier, true/false/null/nullptr — handled by JSON patterns in lift-patterns.json
   // (cpp_number_literal, cpp_identifier, cpp_endl, cpp_eof, cpp_null_id, cpp_true, cpp_false, cpp_null, cpp_nullptr)
@@ -179,22 +195,8 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const op = node.children.find(c => !c.isNamed)?.text ?? ''
     const operandNode = node.childForFieldName('argument') ?? node.namedChildren[0]
     const operand = operandNode ? ctx.lift(operandNode) : null
-
-    if (op === '!') {
-      return buildLogicNot(operand)
-    }
-    if (op === '-') {
-      return buildNegate(operand)
-    }
-    if (op === '~') {
-      return buildBitwiseNot(operand)
-    }
-    if (op === '&') {
-      return buildAddressOf(operand)
-    }
-    if (op === '*') {
-      return buildPointerDeref(operand)
-    }
+    const built = buildUnaryOp(op, operand)
+    if (built) return built
 
     // Fallback for other unary ops (++, --, etc.)
     const raw = createNode('raw_code', {})

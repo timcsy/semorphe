@@ -5,6 +5,7 @@ import { createNode } from '../semantic-tree'
 import { LiftContextData } from './lift-context'
 import { PatternLifter } from './pattern-lifter'
 import { liftPostProcessors } from './post-processors'
+import { astRepairs } from './ast-repairs'
 // ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
 // 🔴 **不再 import 語言套件**（spec 155）——身分由語言套件宣告。
 //    P9 原文逐字：「拔掉 C++……**無 `languages/cpp/` import**」。
@@ -304,6 +305,24 @@ export class Lifter {
         }
       }
       if (!r.metadata.confidence) r.metadata.confidence = 'high'
+    }
+
+
+    /**
+     * 🔴 **先問「這棵樹是不是一開始就解錯了」**（2026-09-19）。
+     *
+     * 它必須在**所有辨識之前**——包含樣式辨識。一棵解錯的樹，它的每一個
+     * 子節點都會被正確地辨識成錯誤的東西，而下游看不出上游錯了。
+     *
+     * ⚠️ 契約與危險性見 `ast-repairs.ts` 的檔頭。**語言套件不宣告就是空陣列**，
+     * 這一段的成本是一次空迴圈。
+     */
+    for (const repair of astRepairs()) {
+      const repaired = repair(node, ctx)
+      if (repaired) {
+        addSourceRange(repaired)
+        return repaired
+      }
     }
 
     // Single pipeline: PatternLifter first, hand-written fallback
