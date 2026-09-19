@@ -1,4 +1,6 @@
 {
-  "CPP_BITS_COUNT_MSG0": "number of 1 bits in %1",
-  "CPP_BITS_COUNT_TOOLTIP": "Counts the 1 bits in the binary form of this integer. Common in bitmask problems; negatives are read as 32-bit unsigned."
+  "CPP_BITS_COUNT_MSG0": "number of 1 bits in %1 (%2)",
+  "CPP_BITS_COUNT_TOOLTIP": "Counts how many 1 bits there are. For an integer it reads the binary form (negatives are read as 32-bit unsigned); for a row of bits it counts the set positions. The two forms produce different code, and picking the wrong one will not compile.",
+  "CPP_BITS_COUNT_FORM_BUILTIN": "an integer",
+  "CPP_BITS_COUNT_FORM_METHOD": "a row of bits"
 }

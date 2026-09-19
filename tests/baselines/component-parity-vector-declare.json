@@ -2,7 +2,7 @@
   "_meta": {
     "guard": "component-parity",
     "measuredAt": "2026-09-19",
-    "note": "搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。\n\n📈 **2026-09-18：樣本「兄弟元件同場」多了 `cpp:var_ref`。**\n  🟢 **那正是這一刀要的結果**：接收者從一個字串屬性換成一個**接點**，\n  於是 `v.size()` 的 `v` 在語義樹上是一顆真的節點（`cpp:var_ref`），\n  而不再是一格文字。產出的程式碼與執行輸出**逐字不變**（護欄的另外兩欄）。\n  > **一個「多了一顆節點」的讀數，要先問那顆節點是不是本來就該在那裡。**\n"
+    "note": "搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。"
   },
   "identitySet": [
     "cpp:address_of",
@@ -16,7 +16,11 @@
     "cpp:array_assign",
     "cpp:array_at",
     "cpp:array_declare",
+    "cpp:bits_as",
     "cpp:bits_count",
+    "cpp:bits_declare",
+    "cpp:bits_fill",
+    "cpp:bits_is",
     "cpp:bitwise_not",
     "cpp:block",
     "cpp:block_comment",

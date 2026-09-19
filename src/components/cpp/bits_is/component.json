@@ -1,0 +1,25 @@
+{
+  "componentId": "cpp:bits_is",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "method",
+      "kind": "enum",
+      "default": "any"
+    }
+  ],
+  "slots": {
+    "obj": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_properties_why": "🔴 **三個問句一顆身分**（元件代數 250）：`.any()`／`.none()`／`.all()` 的引數個數（0）、接點（一個接收者）、角色（運算式）全同，**差別只有問的是哪一句**——⟹ 是參數。\n⚠️ 屬性名是 `method`，而那是**機制不是取名品味**：共用的方法路由靠 `declaresMethodProp` 把使用者寫的方法名填進它。同族兩顆（整排改值、數 1 的個數）在同一天各踩過一次，取名 `mode`／`form` 的那一格**從來沒有被填過**。\n\n⚠️ **`.test(i)` 不收，而理由【不是】「引數個數不同」**（2026-09-20 改過一次）。\n同族「整排改值」那顆在同一天把 `.set(i)` 收成了**一個常態留空的接點**——所以「引數個數不同 ⟹ 另一顆身分」在這一族已經不成立了，拿它當理由是**兩顆膠囊在同一天講相反的話**。\n🟢 **真正的理由是**：`bs[i]` 與 `bs.test(i)` 是**完全等價**的兩種寫法，而索引那一顆今天就能讀能寫。多一顆積木做同一件事是認知負載（`一個積木 = 一個語義概念`）。\n🔴 **何時該修**：有人要做「一排位元的讀取」那一族時——那時把兩種寫法收進同一顆身分的一個 `method` 屬性，而不是再開一顆。\n⚠️ 釘子在 `tests/integration/fuzz-cpp-bits.test.ts`（`[UNSUPPORTED:bits_test]`）。",
+  "_owner_why": "⚠️ `(core)`、無 `requires`——理由同這一族的其餘幾顆：語料 3 支沒有一支寫過 `<bitset>`，而宣告一個工具箱沒有的段落等於讓積木不存在。"
+}

@@ -389,6 +389,37 @@ const hasSizeDecl = new Set(
 )
 
 /**
+ * **樣板引數是一個「大小」，不是一個型別**——`bitset<26> bs;`（2026-09-19）。
+ *
+ * 上面那條容器宣告的路，樣板引數是這樣讀的：
+ *
+ * ```ts
+ * const innerType = templateArgs.text.slice(1, -1).trim()   // → "26"
+ * … { type: innerType, name: nm }
+ * ```
+ *
+ * 🔴 對 `bitset<26>` 那會把**一個大小**裝進一個叫 `type` 的字串屬性
+ * ——而第七十二條護欄（字串屬性不得裝結構）追的正是這一族。
+ *
+ * 🟢 **判準是那顆元件自己宣告了什麼**（與下面 `twoArgKeys` 同一個做法）：
+ * **有 `size` 接點、而沒有 `type` 屬性** ⟹ 它的樣板引數是一個大小。
+ *
+ * ⚠️ 而「大小是接點不是屬性」在這個 repo 已經是慣例：
+ * 一般陣列的 `size`、二維陣列的 `rows`／`cols`（第 190 刀從屬性換過來的）。
+ *
+ * > **同一個問題有兩種答案的形狀時，先讓它們變成一種。**
+ */
+const templateArgIsSize = new Set(
+  [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
+    .filter(
+      (c) =>
+        (c as { slots?: Record<string, unknown> }).slots?.size !== undefined &&
+        !((c as { properties?: { name?: string }[] }).properties ?? []).some((x) => x.name === 'type'),
+    )
+    .map((c) => (c as { componentId: string }).componentId),
+)
+
+/**
  * 把陣列宣告的初始值列表掛上 `values` 子槽。
  *
  * 三態（見 specs/050-repay-top-blockers/data-model.md 契約 1）：
@@ -1021,18 +1052,70 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           declared.has('key_type') && declared.has('value_type') ? ['key_type', 'value_type']
             : declared.has('type1') && declared.has('type2') ? ['type1', 'type2']
               : null
+        /** 🔴 樣板引數是大小的那些，**沒有 `type` 屬性**——見 `templateArgIsSize`。 */
+        const argIsSize = templateArgIsSize.has(componentId)
         const baseProps = (nm: string): Record<string, string> =>
-          twoArgKeys
-            ? {
-                [twoArgKeys[0]]: typeArgs[0]?.text ?? 'int',
-                [twoArgKeys[1]]: typeArgs[1]?.text ?? 'int',
-                name: nm,
-              }
-            : { type: innerType, name: nm }
+          argIsSize
+            ? { name: nm }
+            : twoArgKeys
+              ? {
+                  [twoArgKeys[0]]: typeArgs[0]?.text ?? 'int',
+                  [twoArgKeys[1]]: typeArgs[1]?.text ?? 'int',
+                  name: nm,
+                }
+              : { type: innerType, name: nm }
 
         const buildOne = (d: AstNode): SemanticNode => {
           const s = ctorSlots(d, ctx)
           const props = propsFor(s.name)
+          /**
+           * 🔴 **樣板引數進 `size` 接點**——`bitset<26> bs;`（2026-09-19）。
+           * ⚠️ 它 lift 成一顆運算式節點（通常是字面數字），**不是一串文字**
+           * ——投影要把它畫成一個放得下運算式的插槽。
+           */
+          if (argIsSize) {
+            /**
+             * 🔴 **樣板引數可能被包在一層 `type_descriptor` 裡**（2026-09-20，盲測抓到）。
+             *
+             * ```
+             * bitset<8>      template_argument_list > number_literal          ← 直接是運算式
+             * bitset<K>      template_argument_list > type_descriptor > type_identifier
+             * bitset<K + 1>  template_argument_list > binary_expression       ← 又是運算式
+             * ```
+             *
+             * tree-sitter 對**裸識別字**的樣板引數一律當成型別（它在語法上分不出
+             * 「型別參數」與「非型別參數」）。lift 一個型別節點的結果是
+             * `raw_code`——**而症狀是整句宣告消失，不是報錯**。
+             *
+             * > **同一個位置的三種寫法，有一種會多包一層——
+             * > 而那一層讓它從運算式變成型別。**
+             */
+            const raw = templateArgs?.namedChildren[0]
+            const argNode = raw?.type === 'type_descriptor' ? (raw.namedChildren[0] ?? raw) : raw
+            /**
+             * ⚠️ 剝完之後那一顆仍然是**型別節點**（`type_identifier`），
+             * 而 lift 一個型別節點的結果是 `raw_code`——所以裸識別字要直接
+             * 造一顆變數引用。**同一個慣用法這個檔裡已經有一處**（樣板引數那一族）。
+             */
+            const lifted = !argNode
+              ? null
+              : argNode.type === 'type_identifier'
+                ? buildVarRef(argNode.text)
+                : ctx.lift(argNode)
+            /**
+             * 🔴 **初始值也要帶上**（2026-09-19，最小重現抓到）。
+             *
+             * 第一版在這裡直接 `return`，於是 `bitset<8> b = a >> 2;` 的
+             * `a >> 2` **整個從語義樹上消失**——而症狀不是報錯，
+             * 是 `b` 每一格都是 0。
+             *
+             * > **一條提早 return 的路徑，漏掉的是它【沒有抄過去】的那幾格。**
+             */
+            const slots: Record<string, SemanticNode[]> = {}
+            if (lifted) slots.size = [lifted]
+            if (s.source && hasInitSourceDecl.has(componentId)) slots.source = [s.source]
+            return createNode(componentId, props, slots)
+          }
           // ⚠️ **每一格都問過宣告才掛**——沒有宣告那個接點的容器不得收到它
           //    （`hasInitSourceDecl` 的檔頭記過那次翻車：一個未宣告的子節點
           //    讓產生器不認得，來回轉換就掉了那一段）。

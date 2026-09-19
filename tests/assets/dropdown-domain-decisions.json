@@ -21,6 +21,26 @@
       "field": "field_dynamic_dropdown",
       "reason": "陣列元素的型別在現實中開放（`string arr[3]`／`bool`／自訂型別）。⚠️ 2026-08-26 之前它是**靜態五選一**（int／float／double／char／long long）——連 `string` 與 `bool` 都選不到，而那兩個是課程裡就會用的"
     },
+    "cpp_bits_as.METHOD": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "`to_ulong`／`to_ullong`／`to_string` 是 C++ 對「整排換成別的東西」提供的全部三種。清單外沒有第四種——寫出來連編都編不過。"
+    },
+    "cpp_bits_count.METHOD": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "「數哪一種東西的 1」只有兩種寫法而 C++ 定死了：內建函式 `__builtin_popcount` 吃一個整數、方法 `count()` 吃一排位元。清單外沒有第三種——寫出來連編都編不過。⚠️ 而那一格裝的**就是使用者寫的那個名字**（兩條路由都填它），所以它同時保證了「產回使用者寫的那一種」。"
+    },
+    "cpp_bits_fill.METHOD": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "`reset`／`set`／`flip` 是 C++ 的 `bitset` 對「整排一起改」提供的全部三種，而它們的值就是使用者寫的那個方法名（產回去一字不差）。⚠️ 帶引數的形式（`.set(i)`）刻意不收——引數個數不同是另一顆身分，而 `bs[i] = 1` 是等價寫法且今天就能跑。"
+    },
+    "cpp_bits_is.METHOD": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "`any`／`none`／`all` 是 C++ 對「整排問一句是非題」提供的全部三種，而那一格裝的就是使用者寫的方法名（產回去一字不差）。⚠️ `test(i)` 不在裡面——它要一個位置，引數個數不同是另一顆身分。"
+    },
     "cpp_builtin_constant.VALUE": {
       "decision": "closed",
       "field": "field_dropdown",
@@ -46,10 +66,20 @@
       "field": "field_dropdown",
       "reason": "三個判準各自對應一個 C++ 的方法名（find／lower_bound／upper_bound）——清單外沒有第四種找法"
     },
+    "cpp_container_iter.CALL": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "C++ 取容器一端只有這兩種寫法：成員（`v.begin()`）與自由函式（`begin(v)`）。**這是語言的封閉集合，不是我們挑的**——而它必須被記住而不是猜出來：原生陣列沒有成員 `begin`，所以第三個值不會對應到任何合法的 C++。"
+    },
     "cpp_container_iter.WHICH": {
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "語言／裝置定義的固定集合"
+    },
+    "cpp_deque_declare.TYPE": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "元素型別在現實中開放（`deque<pair<int,int>>` 是語料真的寫的形狀）——與同族的列表宣告同一個判定，而**這顆的整個存在理由就是讓那個型別被記下來**"
     },
     "cpp_dht_read.QUANTITY": {
       "decision": "closed",
@@ -116,6 +146,16 @@
       "field": "field_dropdown",
       "reason": "語言／裝置定義的固定集合"
     },
+    "cpp_io_mode.SETTING": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "C++ 的 `<iomanip>` 帶一個值的操縱子就這三個（`setw`／`setprecision`／`setfill`）。**這是語言的封閉集合，不是我們挑的**——第四個值不會對應到任何合法的 C++。⚠️ 而對齊那一族（`left`／`right`）不在這裡：它們設的是另一件事，要另一顆身分。"
+    },
+    "cpp_io_mode_number.NOTATION": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "數字的寫法在 C++ 裡只有這兩種（`fixed`／`scientific`），而「都不選」是第三種狀態——它由**沒有放這顆積木**表示，不是下拉的一個值。"
+    },
     "cpp_lcd_declare.DECL_TYPE": {
       "decision": "open",
       "field": "field_dropdown",
@@ -155,6 +195,11 @@
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "「走訪有沒有序」只有兩個值，對應 map／unordered_map——同上，清單外沒有第三種對照表"
+    },
+    "cpp_map_declare.UNIQUE": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "一個鍵能有幾個值只有兩種：一個（`map`／`unordered_map`）與多個（`multimap`）。**這是語言的封閉集合**，與同族集合宣告的「留不留重複」同一個判定。"
     },
     "cpp_map_declare.VALUE_TYPE": {
       "decision": "open",
@@ -215,6 +260,11 @@
       "decision": "open",
       "field": "field_dropdown",
       "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_pointer_step.DIRECTION": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "一個位置只有兩個相鄰的方向：前與後。**這是語言的封閉集合，不是我們挑的**——C++ 的 `<iterator>` 也只給了 `prev` 與 `next` 這兩支。⚠️ 而「走 n 格」不是第三個值，它是**同一個方向加一個次數**（那個引數這一刀刻意不做，語料 0 處；見 `specs/component-discovery/cpp-pointer-step.md` 的③）。"
     },
     "cpp_priority_queue_declare.TYPE": {
       "decision": "open",
@@ -285,6 +335,11 @@
       "decision": "open",
       "field": "field_dropdown",
       "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_var_declare_sequence.BINDING": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "C++ 的結構化繫結只有兩種：複製一份（`auto`）與就地修改（`auto&`）。**這是語言的封閉集合，不是我們挑的**——多一個值不會對應到任何合法的 C++。"
     },
     "cpp_var_declare_static.TYPE": {
       "decision": "open",
@@ -395,41 +450,6 @@
       "decision": "open",
       "field": "field_dynamic_dropdown",
       "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
-    },
-    "cpp_deque_declare.TYPE": {
-      "decision": "open",
-      "field": "field_dynamic_dropdown",
-      "reason": "元素型別在現實中開放（`deque<pair<int,int>>` 是語料真的寫的形狀）——與同族的列表宣告同一個判定，而**這顆的整個存在理由就是讓那個型別被記下來**"
-    },
-    "cpp_var_declare_sequence.BINDING": {
-      "decision": "closed",
-      "field": "field_dropdown",
-      "reason": "C++ 的結構化繫結只有兩種：複製一份（`auto`）與就地修改（`auto&`）。**這是語言的封閉集合，不是我們挑的**——多一個值不會對應到任何合法的 C++。"
-    },
-    "cpp_map_declare.UNIQUE": {
-      "decision": "closed",
-      "field": "field_dropdown",
-      "reason": "一個鍵能有幾個值只有兩種：一個（`map`／`unordered_map`）與多個（`multimap`）。**這是語言的封閉集合**，與同族集合宣告的「留不留重複」同一個判定。"
-    },
-    "cpp_container_iter.CALL": {
-      "decision": "closed",
-      "field": "field_dropdown",
-      "reason": "C++ 取容器一端只有這兩種寫法：成員（`v.begin()`）與自由函式（`begin(v)`）。**這是語言的封閉集合，不是我們挑的**——而它必須被記住而不是猜出來：原生陣列沒有成員 `begin`，所以第三個值不會對應到任何合法的 C++。"
-    },
-    "cpp_io_mode.SETTING": {
-      "decision": "closed",
-      "field": "field_dropdown",
-      "reason": "C++ 的 `<iomanip>` 帶一個值的操縱子就這三個（`setw`／`setprecision`／`setfill`）。**這是語言的封閉集合，不是我們挑的**——第四個值不會對應到任何合法的 C++。⚠️ 而對齊那一族（`left`／`right`）不在這裡：它們設的是另一件事，要另一顆身分。"
-    },
-    "cpp_io_mode_number.NOTATION": {
-      "decision": "closed",
-      "field": "field_dropdown",
-      "reason": "數字的寫法在 C++ 裡只有這兩種（`fixed`／`scientific`），而「都不選」是第三種狀態——它由**沒有放這顆積木**表示，不是下拉的一個值。"
-    },
-    "cpp_pointer_step.DIRECTION": {
-      "decision": "closed",
-      "field": "field_dropdown",
-      "reason": "一個位置只有兩個相鄰的方向：前與後。**這是語言的封閉集合，不是我們挑的**——C++ 的 `<iterator>` 也只給了 `prev` 與 `next` 這兩支。⚠️ 而「走 n 格」不是第三個值，它是**同一個方向加一個次數**（那個引數這一刀刻意不做，語料 0 處；見 `specs/component-discovery/cpp-pointer-step.md` 的③）。"
     }
   }
 }

@@ -1,0 +1,4 @@
+{
+  "CPP_BITS_DECLARE_MSG0": "Create a row of %1 bits named %2 copied from %3",
+  "CPP_BITS_DECLARE_TOOLTIP": "A fixed-length row of bits, each holding 0 or 1. Leaving \"copied from\" empty starts every bit at 0. Read and write a position by index (counting from 0), or combine whole rows with bitwise operators. The length must be a fixed number; plugging in a variable will not compile."
+}

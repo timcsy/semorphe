@@ -1,0 +1,44 @@
+[
+  {
+    "id": "cpp_bits_declare",
+    "componentId": "cpp:bits_declare",
+    "language": "cpp",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_bits_declare",
+      "message0": "%{BKY_CPP_BITS_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "SIZE",
+          "check": "Expression"
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "bs"
+        },
+        {
+          "type": "input_value",
+          "name": "SOURCE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_CPP_BITS_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name"
+      },
+      "inputs": {
+        "SIZE": "size",
+        "SOURCE": "source"
+      }
+    }
+  }
+]

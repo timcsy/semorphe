@@ -1,3 +1,4 @@
+import { componentForContainerTemplate } from '../component/container-templates'
 import type { Declaration, ScopeFrame } from '../types'
 
 /**
@@ -174,6 +175,25 @@ export class LiftContextData {
      * 容器宣告那幾顆元件記下來的本來就是基底名（`cpp:map_declare` → `map`），
      * 所以**一般變數那一條要對齊它**，否則同一個問題有兩種答案的形狀。
      */
-    return (target ?? t).split('<')[0].trim()
+    const base = (target ?? t).split('<')[0].trim()
+    /**
+     * 🔴 **兩條路徑要對同一個變數講同一種話**（2026-09-20，資訊隔離盲測抓到）。
+     *
+     * ```
+     * bitset<8> bs;              容器宣告那條 → 從【身分】推導 → "bits"
+     * typedef bitset<8> Row; Row r;   別名那條 → C++ 的【基底名】 → "bitset"
+     * ```
+     *
+     * 在此之前每一顆容器的兩個名字**剛好相同**（`string`／`map`／`priority_queue`），
+     * 所以這個分歧一直看不見。第一顆不同的出現時，症狀是
+     * 「`r.reset()` ——「r」不是一個物件」——**錯誤指著接收者，而錯的是它的型別名**。
+     *
+     * > **一個一直成立的巧合，在第一個反例出現時看起來會像是那個反例的錯。**
+     *
+     * 🟢 判準問**登錄表**（哪顆元件認領這個樣板名），核心不認得任何 C++ 的字。
+     */
+    const owner = componentForContainerTemplate(base)
+    const derived = owner ? /^[a-z]+:(\w+?)_declare$/.exec(owner)?.[1] : undefined
+    return derived ?? base
   }
 }

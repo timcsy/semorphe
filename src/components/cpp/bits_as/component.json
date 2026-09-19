@@ -1,0 +1,21 @@
+{
+  "componentId": "cpp:bits_as",
+  "abstractComponent": null,
+  "properties": [
+    { "name": "method", "kind": "enum", "default": "to_ulong" }
+  ],
+  "slots": {
+    "obj": "expression"
+  },
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "_properties_why": "🔴 **三種寫法一顆身分**：`.to_ulong()`／`.to_ullong()`／`.to_string()` 的引數個數（0）、接點（一個接收者）、角色（運算式）全同，**差別只有換成哪一種東西**——⟹ 是參數。\n⚠️ 屬性名是 `method`，而那是**機制**：共用的方法路由靠 `declaresMethodProp` 把使用者寫的方法名填進它（同族三顆在兩天內各踩過一次取錯名字的坑）。\n\n🔴 **而這一顆是探索報告明文拒絕過的**（「語料 0 處」），被資訊隔離的盲測推翻——十支裡有四支用它。\n> **「語料 0 處」量到的是【這批語料的人怎麼寫】，不是【這個寫法有多常見】。**\n⚠️ 這已經是同一個判斷在兩刀內被推翻的**第三次**（另兩次：相鄰一格的第二個引數、整排改值的帶位置形式）。",
+  "_owner_why": "⚠️ `(core)`、無 `requires`——理由同這一族的其餘幾顆。"
+}

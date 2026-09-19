@@ -1,0 +1,7 @@
+{
+  "CPP_BITS_IS_MSG0": "%1 %2",
+  "CPP_BITS_IS_ANY": "has any 1",
+  "CPP_BITS_IS_NONE": "is all 0",
+  "CPP_BITS_IS_ALL": "is all 1",
+  "CPP_BITS_IS_TOOLTIP": "Asks one yes-or-no question about the whole row. For a row of length 0, \"has any 1\" is false while both \"is all 0\" and \"is all 1\" are true — an empty set satisfies every condition. To ask about a single position, read it by index instead."
+}

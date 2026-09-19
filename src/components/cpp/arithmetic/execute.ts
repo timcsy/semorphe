@@ -30,6 +30,54 @@ export function registerExecute(register: (component: string, executor: Componen
 
       const right = await ctx.evaluate(node.slots.right[0])
 
+      /**
+       * **一排位元的位元運算**——`bs | bs2`、`bs ^ bs2`、`bs >> x`（2026-09-19）。
+       *
+       * 🔴 **判準是 `elemType`，不是 `type`**：一排位元在執行期就是
+       * `type: 'array'`（那讓索引與寫回免費地沿用既有的機制），而
+       * **`vector<int> a, b; a ^ b;` 在 C++ 裡不合法**——它不該因為兩者在
+       * 這裡長得像就變成合法。
+       *
+       * > **兩個東西在執行期用同一個形狀表示，不代表它們接受同一組運算。
+       * > 分辨它們的那一格，就是那個形狀多帶的那一章。**
+       *
+       * ⚠️ 位移的方向照 C++ 的定義，而**不是照陣列的方向**：
+       * `bs >> 1` 是往【低位】移，而第 0 格是最低位——所以是
+       * 「第 i 格拿原本第 i+x 格的值」。搞反的症狀是答案對稱地錯，而不會出聲。
+       * ⚠️ 超出範圍的位元**丟掉**，空出來的補 0（C++ 的 `bitset` 定死了這一條）。
+       */
+      const bitsOf = (v: RuntimeValue): { value: unknown }[] | null =>
+        v.type === 'array' && Array.isArray(v.value)
+          && (v as { elemType?: string }).elemType === 'bit'
+          ? (v.value as { value: unknown }[])
+          : null
+      const lb = bitsOf(left)
+      if (lb && (op === '&' || op === '|' || op === '^' || op === '<<' || op === '>>')) {
+        const bit = (cs: { value: unknown }[], i: number): number =>
+          i >= 0 && i < cs.length && Number(cs[i].value) ? 1 : 0
+        let out: number[]
+        if (op === '<<' || op === '>>') {
+          const k = Math.trunc(ctx.toNumber(right))
+          out = lb.map((_, i) => bit(lb, op === '>>' ? i + k : i - k))
+        } else {
+          const rb = bitsOf(right)
+          if (!rb) {
+            throw new RuntimeError(RUNTIME_ERRORS.TYPE_MISMATCH, {
+              '%1': `一排位元的「${op}」兩邊都要是一排位元，而右邊是 ${right.type}`,
+            })
+          }
+          out = lb.map((_, i) => {
+            const a = bit(lb, i), b = bit(rb, i)
+            return op === '&' ? (a & b) : op === '|' ? (a | b) : (a ^ b)
+          })
+        }
+        return {
+          type: 'array',
+          value: out.map((v) => ({ type: 'int' as const, value: v })),
+          elemType: 'bit',
+        } as RuntimeValue
+      }
+
       // **指標算術**：`p = p + 2`、`p - 1`。
       //
       // 實體式指標（`new`／`malloc`／陣列退化）在這個直譯器裡是
