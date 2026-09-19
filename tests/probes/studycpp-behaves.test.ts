@@ -33,7 +33,7 @@ import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import { runCppBatchDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
+import { runCppBatchDetailed, hasReferenceCompiler, sanitizerSaysUB } from '../helpers/run-cpp'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -218,7 +218,8 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
     const ref = await runCppBatchDetailed(
       rows.map((r) => r.src), COMPILE_CONCURRENCY, rows.map((r) => r.stdin.join('\n') + '\n'))
 
-    const tally = { compileFail: 0, refRunFail: 0, interpError: 0, stepBudget: 0, same: 0, differ: 0 }
+    const tally = { compileFail: 0, refRunFail: 0, interpError: 0, stepBudget: 0, same: 0, differ: 0, inputUB: 0 }
+    const ubSamples: string[] = []
     const shape = { weStopEarly: 0, wePrintMore: 0, reallyDifferent: 0 }
     const errKinds = new Map<string, number>()
     const errSample = new Map<string, string>()
@@ -246,6 +247,23 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
         // 🔴 **分族，不要一支一支追**——90 支的清單看不出下一刀該切哪裡。
         const msg = String(e)
         if (msg.includes('MAX_STEPS')) { tally.interpError--; tally.stepBudget++; continue }
+        /**
+         * 🔴 **先問「是不是這份測資讓它走進未定義行為」**（2026-09-19）。
+         *
+         * `AP325/7/7_6.cpp` 寫 `vector<S> A[n];` 之後 `cin >> u; A[u].push_back(…)`，
+         * 而測資生出來的 `u` 大於 `n`。**g++ 不檢查所以照跑，我們檢查所以出聲**
+         * ——那不是缺陷，而它當時佔了 44 支裡的 5 支。
+         *
+         * ⚠️ **判準是外部權威**：不是我說「這支有 UB」，是 UBSan／ASan 指名了那一行。
+         * ⚠️ 而它**只能證實不能否證**——消毒器沒叫的仍然算我們的帳。
+         */
+        const san = sanitizerSaysUB(rows[i].src, rows[i].stdin.join('\n') + '\n')
+        if (san.ub === true) {
+          tally.interpError--
+          tally.inputUB++
+          if (ubSamples.length < 12) ubSamples.push(`   ⚪ ${rows[i].file}\n      消毒器：${san.detail}`)
+          continue
+        }
         const key = (msg.match(/RUNTIME_ERR_[A-Z_]+/) ?? msg.match(/Error: [^"{]{0,40}/) ?? ['其他'])[0]
         const detail = (msg.match(/\{"%1":"([^"]{0,40})/) ?? ['', ''])[1]
         const k = `${key}${detail ? ` ｜ ${detail}` : ''}`
@@ -273,6 +291,7 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
       `  編不過          ${tally.compileFail}`,
       `  參照跑不完      ${tally.refRunFail}   ← 多半是餵的測資讓它崩／逾時`,
       `  解譯器出錯      ${tally.interpError}`,
+      `  測資走進 UB     ${tally.inputUB}   ← 🔴 不是缺陷：消毒器指名了那一行（外部權威）`,
       `  步數預算用完    ${tally.stepBudget}   ← 不是缺陷，是樹走式解譯器比編譯碼慢`,
       `  ── 兩邊都跑完 ${ran} 支 ──`,
       `  🟢 一致         ${tally.same}`,
@@ -284,6 +303,7 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
       '  ── 解譯器出錯的分族 ──',
       [...errKinds.entries()].sort((a, b) => b[1] - a[1])
         .map(([k, n2]) => `   ${String(n2).padStart(3)} 支  ${k}\n          例：${errSample.get(k)}`).join('\n'),
+      ubSamples.length > 0 ? '  ── 測資讓程式走進未定義行為的（消毒器指名）──\n' + ubSamples.join('\n') : '',
       diffs.join('\n'),
     ].join('\n'))
     expect(ran, '🔴 一支都沒跑完 → 下面的數字不算數').toBeGreaterThan(20)
