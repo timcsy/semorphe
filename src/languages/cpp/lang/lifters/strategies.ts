@@ -99,6 +99,32 @@ function normalizeParamType(raw: string): string {
  *
  * @returns 剛好一個宣告子，而它是裸名字、初始化、或最令人困惑的解析
  */
+/**
+ * **樣板引數被省略時（CTAD），從填充值身上把它推回來**——只推【證得出來】的。
+ *
+ * ```cpp
+ * vector dp(w+1, vector<int>(n+1));   →  元素型別是 vector<int>   語料 AP325/6/6_9.cpp
+ * ```
+ *
+ * 🔴 **「證得出來」是這支的判準，不是「猜得到」**：填充值是
+ * `vector<int>(n+1)` 這種**呼叫一個樣板**的形狀時，那個樣板的原文**就是**型別
+ * ——不需要推論。其餘形狀（一個變數、一個運算式）回 `undefined`，
+ * 讓它走原本那條路（誠實降級），而不是編一個型別出來。
+ *
+ * > **一個推導不出來時會猜的推導器，
+ * > 與一個推導錯了的推導器在型別表上長得一樣。**
+ */
+function ctadElemType(fill: AstNode): string | undefined {
+  if (fill.type === 'call_expression') {
+    const fn = fill.childForFieldName('function')
+    return fn?.type === 'template_function' ? fn.text : undefined
+  }
+  if (fill.type === 'number_literal') return fill.text.includes('.') ? 'double' : 'int'
+  if (fill.type === 'string_literal') return 'string'
+  if (fill.type === 'char_literal') return 'char'
+  return undefined
+}
+
 /** 一個宣告底下，哪些子節點是「宣告子」。 */
 const DECLARATOR_SHAPES = new Set([
   'init_declarator', 'identifier', 'array_declarator',
@@ -983,10 +1009,43 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         templateTypeNode = named?.type === 'template_type' ? named : undefined
       }
     }
-    if (templateTypeNode) {
-      const templateName = templateTypeNode.namedChildren.find(c => c.type === 'type_identifier')?.text ?? ''
-      const templateArgs = templateTypeNode.namedChildren.find(c => c.type === 'template_argument_list')
-      const innerType = templateArgs ? templateArgs.text.slice(1, -1).trim() : 'int' // strip < >
+    /**
+     * 🔴 **CTAD——樣板引數整段被省略**（C++17，2026-09-20，語料 `AP325/6/6_9.cpp`）。
+     *
+     * ```cpp
+     * vector dp(w+1, vector<int>(n+1));    型別節點是一個【裸的 type_identifier】
+     * ```
+     *
+     * 底下那條容器路要的是 `template_type`（`vector<...>`），而這裡一個角括號都沒有
+     * ——於是它掉進一般的變數宣告，`dp` 變成一個純量，而 `dp[1][2]` 說「dp 不是容器」。
+     *
+     * 🟢 **只有在填充值【說得出自己的型別】時才接手**（見 `ctadElemType`），
+     *    否則讓開走原路。
+     *
+     * ⚠️ **產回去會把省略的那一段補上**（`vector dp(…)` → `vector<vector<int>> dp(…)`）。
+     *    那是**正規化不是缺陷**：CTAD 是純粹的省略，兩種寫法指的是同一個型別
+     *    ——照判準第三層「文字不同 ≠ 錯，行為不同才是」。
+     * 🔴 而它與**別名**不同，不要混為一談：`typedef map<…> Graph;` 的 `Graph`
+     *    是學生取的名字，展開它等於把它拿掉；CTAD 沒有名字可以拿掉。
+     */
+    let ctad: { name: string; inner: string } | undefined
+    if (!templateTypeNode) {
+      const bare = node.namedChildren.find(c => c.type === 'type_identifier')?.text ?? ''
+      if (bare.length > 0 && componentForContainerTemplate(bare)) {
+        const initDecl = node.namedChildren.find(c => c.type === 'init_declarator')
+        const argList = initDecl?.namedChildren.find(c => c.type === 'argument_list')
+        const args = argList?.namedChildren ?? []
+        // ⚠️ 只認【大小 ＋ 填充值】那一種：一個引數的 `vector v(other)` 是複製建構，
+        //    它的型別在別人身上，這裡證不出來。
+        const inner = args.length >= 2 ? ctadElemType(args[args.length - 1]) : undefined
+        if (inner !== undefined) ctad = { name: bare, inner }
+      }
+    }
+    if (templateTypeNode || ctad) {
+      const templateName = ctad?.name
+        ?? templateTypeNode?.namedChildren.find(c => c.type === 'type_identifier')?.text ?? ''
+      const templateArgs = templateTypeNode?.namedChildren.find(c => c.type === 'template_argument_list')
+      const innerType = ctad?.inner ?? (templateArgs ? templateArgs.text.slice(1, -1).trim() : 'int') // strip < >
 
       // 容器宣告概念——**從登錄表讀，不寫死**（見 core/component/container-templates.ts）。
       // 已元件化的由膠囊登錄；還沒的由 `pending-containers.ts` 的過渡表提供。
@@ -1160,7 +1219,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
         if (declList.length === 1) return buildOne(declList[0])
         return buildVarDeclare(
-          { type: templateTypeNode.text },
+          // ⚠️ CTAD 沒有 `template_type` 節點可以照抄原文——把推回來的那一段寫出來。
+          { type: templateTypeNode?.text ?? `${templateName}<${innerType}>` },
           { declarators: declList.map(buildOne) },
         )
       }
@@ -1462,8 +1522,35 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     // const/constexpr declaration
     if (qualifier === 'const' || qualifier === 'constexpr') {
-      const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier' || c.type === 'pointer_declarator')
-      if (decl) {
+      /**
+       * 🔴 **每一個宣告子都走同一支**（2026-09-20）——這裡本來只認得【第一個】。
+       *
+       * ```cpp
+       * const ll M = 998244353, MX = 1e7;   →  MX 整個蒸發   語料 template/Cn_k.cpp
+       * ```
+       *
+       * ⚠️ 而它**不出聲**：`MX` 後來被用到時報的是「沒有宣告過這個名字」
+       * ——錯誤指著使用的那一行，而問題在宣告那一行。
+       *
+       * 🔴 **同一個缺陷這個 repo 修過三次了**，每一次修的都是另一支：
+       * ```
+       * 2026-09-10  容器的宣告      vector<int> C(n), V(n);              V 蒸發
+       * 2026-09-17  自動型別        auto lo = …, hi = …;                 hi 蒸發
+       * 2026-09-20  const／constexpr  const ll M = …, MX = …;            MX 蒸發
+       * ```
+       * > **一個只寫得出「一個」的讀取器，在遇到兩個的時候不會出聲
+       * > ——它會安靜地讀完第一個就回去。**
+       *
+       * 🟢 **這一次不再一支一支修**：底下那條路徑抽成 `buildOne`，
+       * 三種宣告子形狀（陣列／指標／純量）各自照舊，**差別只有跑幾遍**。
+       * ⚠️ 一個宣告子時**回傳那顆概念本身**（行為與先前逐字相同）；
+       *    兩個以上才包一層一般的變數宣告，而它的型別帶著修飾詞
+       *    ——多宣告子的產生器會把那一段前綴從每一個宣告子身上脫掉。
+       */
+      const decls = node.namedChildren.filter(c => c.type === 'init_declarator' || c.type === 'identifier' || c.type === 'pointer_declarator')
+      if (decls.length > 0) {
+        const componentId = qualifierComponent(qualifier)
+        if (!componentId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
         /**
          * 🔴 **`const` ＋ 陣列不再降級**（2026-09-17）。上面那段註解說完整支援
          * 「要一顆概念帶得動修飾詞，而那是概念代數的問題」——而**那對 `const` 不成立**：
@@ -1479,23 +1566,31 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
          *
          * 🟢 這解開了 `fuzz-cpp-hardware` 上三個 `it.todo`（fuzz_3／6／10）。
          */
-        if (arrayDeclarator(decl)) {
-          return liftSingleDeclarator(decl, `${qualifier} ${type}`, ctx)
+        const buildOne = (decl: AstNode): SemanticNode => {
+          if (arrayDeclarator(decl)) {
+            return liftSingleDeclarator(decl, `${qualifier} ${type}`, ctx)
+          }
+          const lifted = liftSingleDeclarator(decl, type, ctx)
+          // Use type from lifted node; append * for pointer components
+          let liftedType = (lifted.properties.type as string) ?? type
+          // ⚠️ 問**性狀**不問身分：「我的型別要接一個 `*`」是那顆元件的性質。
+          // 寫死 `'cpp:pointer_declare'` 的話它永遠搬不進膠囊。
+          liftedType += typeSuffixOf(lifted.componentId)
+          return createNode(componentId, {
+            type: liftedType,
+            name: lifted.properties.name as string ?? 'x',
+          }, {
+            initializer: lifted.slots.initializer ?? [],
+          })
         }
-        const lifted = liftSingleDeclarator(decl, type, ctx)
-        const componentId = qualifierComponent(qualifier)
-        if (!componentId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)
-        // Use type from lifted node; append * for pointer components
-        let liftedType = (lifted.properties.type as string) ?? type
-        // ⚠️ 問**性狀**不問身分：「我的型別要接一個 `*`」是那顆元件的性質。
-        // 寫死 `'cpp:pointer_declare'` 的話它永遠搬不進膠囊。
-        liftedType += typeSuffixOf(lifted.componentId)
-        return createNode(componentId, {
-          type: liftedType,
-          name: lifted.properties.name as string ?? 'x',
-        }, {
-          initializer: lifted.slots.initializer ?? [],
-        })
+        if (decls.length === 1) return buildOne(decls[0])
+        /**
+         * ⚠️ 外層那個型別**帶著修飾詞**（`const int`），而那不是裝飾：
+         * 多宣告子的產生器是靠「脫掉外層型別這段前綴」把每一個宣告子還原成
+         * `N = 5` 的——而每一顆宣告子自己印出來的是 `const int N = 5;`。
+         * 少了修飾詞就脫不掉，產出會退回只印名字，**初始值整批蒸發**。
+         */
+        return buildVarDeclare({ type: `${qualifier} ${type}` }, { declarators: decls.map(buildOne) })
       }
       const componentId = qualifierComponent(qualifier)
       if (!componentId) return degrade(createNode('raw_code', {}), `修飾詞 ${qualifier} 沒有對應的元件`)

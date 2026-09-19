@@ -705,6 +705,40 @@ const CASES: [string, string, string, string[]][] = [
 
   // ⚠️ **刻意沒有**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
   //    ——兩者在 C++ 裡都是未定義行為，而判準裡不得放它們。
+
+  /**
+   * 🔴 **一個宣告裡的第二個宣告子**（2026-09-20，語料 `template/Cn_k.cpp`）。
+   * `const ll M = ..., MX = ...;` ——而 `ll` 還是一個 `#define` 的別名。
+   * 症狀是 `RUNTIME_ERR_UNDECLARED_VAR ｜ MX`：**第二個名字整個不見了**，
+   * 而 CLAUDE.md 的判準第二層逐字寫著「每一個宣告的名字都要被觀察」。
+   */
+  ['多宣告子：const ＋ #define 的型別別名', '#define ll long long\nconst ll M = 998244353, MX = 7;', '  cout << M << " " << MX;', []],
+  ['多宣告子：兩個都要看得到（沒有 const、沒有別名）', 'long long A = 3, B = 4;', '  cout << A << B;', []],
+  /**
+   * 🔴 **型別名是一個 `#define` 別名**（2026-09-20，語料 `AP325/4/4_15_3t.cpp`）。
+   * 症狀是 `iter[0]（不是一個結構）`：`pii` 在 `structs`／聚合形狀／樣板引數
+   * 三張表裡都查不到，於是 `{3,4}` 變成一串普通的格子。
+   * ⚠️ **成員名那一側（`F`／`S`）早就會解別名，型別名那一側沒有。**
+   */
+  ['別名型別：變數 ＋ 真名', '#define pii pair<int,int>\n#define F first\n#define S second\n#define ll long long', '  pii p = {3,4};\n  cout << p.first << p.second;', []],
+  ['別名型別：變數 ＋ 別名成員', '#define pii pair<int,int>\n#define F first\n#define S second\n#define ll long long', '  pii p = {3,4};\n  cout << p.F << p.S;', []],
+  ['別名型別：multiset 的元素', '#define pii pair<int,int>\n#define F first\n#define S second\n#define ll long long', '  multiset<pii> st;\n  st.insert({3,4});\n  auto iter = st.begin();\n  cout << iter->F << iter->S;', []],
+  ['別名型別：upper_bound 之後解參考', '#define pii pair<int,int>\n#define F first\n#define S second\n#define ll long long', '  multiset<pii> st;\n  st.insert({3,4});\n  auto iter = st.upper_bound({1,0});\n  cout << (iter != st.end()) << iter->S;', []],
+  ['別名型別：vector 的元素', '#define pii pair<int,int>\n#define F first\n#define S second\n#define ll long long', '  vector<pii> v;\n  v.push_back({3,4});\n  auto iter = v.begin();\n  cout << iter->S << v[0].F;', []],
+  ['別名型別：一陣列的 pair', '#define pii pair<int,int>\n#define F first\n#define S second\n#define ll long long', '  pii A[3];\n  A[0].F = 7;\n  cout << A[0].F;', []],
+  ['★ 錨點：寫全的 pair 不得被弄壞', '#define pii pair<int,int>\n#define F first\n#define S second\n#define ll long long', '  pair<int,int> p = {3,4};\n  cout << p.first << p.second;', []],
+  ['★ 錨點：數值的別名照舊', '#define pii pair<int,int>\n#define F first\n#define S second\n#define ll long long', '  const ll z = 5;\n  cout << z;', []],
+  /**
+   * 🔴 **CTAD——樣板引數整段被省略**（2026-09-20，語料 `AP325/6/6_9.cpp`）。
+   * 症狀是 `RUNTIME_ERR_TYPE_MISMATCH ｜ dp 不是容器`：型別節點是一個裸的
+   * `type_identifier`，容器那條路要 `template_type`，於是它掉進一般的變數宣告。
+   * ⚠️ 產回去會把省略的那一段補上——**正規化不是缺陷**（判準第三層）。
+   */
+  ['CTAD：省略的樣板引數（語料 AP325/6/6_9）', '', '  int w = 2, n = 3;\n  vector dp(w+1, vector<int>(n+1));\n  dp[1][2] = 7;\n  cout << dp[1][2] << dp.size() << dp[0].size();', []],
+  ['CTAD：填充值是一個數字', '', '  vector v(3, 5);\n  cout << v[0] << v.size();', []],
+  ['★ 錨點：寫全的那一種不得被弄壞', '', '  vector<int> a(3, 5);\n  cout << a[0] << a.size();', []],
+  ['★ 錨點：推不出來時讓開（複製建構）', '', '  vector<int> src(2, 1);\n  vector cp(src);\n  cout << cp.size();', []],
+  ['多宣告子：第二個當陣列大小', 'const int N = 5, K = 3;\nint T[K + 1];', '  cout << N << K << (int)(sizeof(T) / sizeof(T[0]));', []],
 ]
 
 describe('解譯器與參照編譯器：同一段程式，印出來的要一樣', () => {
