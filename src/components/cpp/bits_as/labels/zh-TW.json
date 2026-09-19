@@ -1,0 +1,7 @@
+{
+  "CPP_BITS_AS_MSG0": "%1 當成 %2",
+  "CPP_BITS_AS_ULONG": "一個整數",
+  "CPP_BITS_AS_ULLONG": "一個整數（長的）",
+  "CPP_BITS_AS_STRING": "一串 0 與 1",
+  "CPP_BITS_AS_TOOLTIP": "把整排換成別的東西。第 0 格是最低位，所以換成文字時第一個字元是最高位——兩個方向是相反的。⚠️ 位數超過整數裝得下的範圍時，C++ 會丟出錯誤。"
+}

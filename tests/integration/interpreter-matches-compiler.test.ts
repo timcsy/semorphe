@@ -53,6 +53,40 @@ beforeAll(async () => {
 /** `[名稱, 全域段, main 內容, stdin]` */
 const CASES: [string, string, string, string[]][] = [
   /**
+   * 🔴 **一排位元**（2026-09-19，`cpp:bits_declare`／`cpp:bits_fill`）。
+   * 語料 `bitset<` 4 處 / 3 支，而三支**全部**只缺這一族。
+   * ⚠️ 執行期它就是 `type: 'array'` ＋ `elemType: 'bit'`——索引因此免費沿用
+   *    既有的機制，而那一章讓位元運算子分得出它與一個 `vector<int>`。
+   */
+  ['位元①：宣告 ＋ 索引讀寫（AP325/3/3_11）', '', 'bitset<8> bs; bs[3]=1; cout << bs[3] << bs[0] << bs[7];', []],
+  ['位元②：整排歸零（tioj/25_toj126）', '', 'bitset<8> bs; bs[3]=1; bs.reset(); cout << bs[3];', []],
+  ['位元③：整排設為 1 與反轉', '', 'bitset<4> a; a.set(); bitset<4> b; b[0]=1; b.flip(); cout << a[0] << a[3] << b[0] << b[1];', []],
+  ['位元④：數出有幾個 1（AP325/2/2_7_TLE）', '', 'bitset<8> bs; bs[1]=1; bs[5]=1; cout << bs.count();', []],
+  ['位元⑤：右移（往低位）', '', 'bitset<8> a; a[4]=1; bitset<8> b = a >> 2; cout << b[2] << b[4];', []],
+  ['🔴 位元⑥：左移超出長度的要【丟掉】', '', 'bitset<4> a; a[3]=1; bitset<4> b = a << 1; cout << b[0] << b[3];', []],
+  ['位元⑦：或、且、互斥或', '',
+    'bitset<4> a,b; a[0]=1; a[1]=1; b[1]=1; b[2]=1; bitset<4> o=a|b, n=a&b, x=a^b;'
+    + ' cout << o[0] << o[2] << n[0] << n[1] << x[1] << x[2];', []],
+  /**
+   * 🔴 一陣列的 bitset（`AP325/2/2_7_TLE`）——**每一格都要是一排 26 個格子**。
+   * ⚠️ 這裡不測 `d[0].reset()`：接收者是運算式時型別查不到，而那是整族的
+   *    既有限制（釘在 `cpp:bits_fill` 的自證測裡，`it.fails`）。
+   */
+  ['🔴 位元⑧：一陣列的 bitset（AP325/2/2_7_TLE）', '',
+    "bitset<26> d[3]; string x=\"AC\"; for(int j=0;j<2;j++) d[0][x[j]-'A']=1;"
+    + ' cout << d[0][0] << d[0][2] << d[1][0] << d[2][25];', []],
+  ['位元⑨：語料的整排位移合成（tioj/25_toj126）', '',
+    'bitset<20> bs; bs[10]=1; int x=3; bs=(bs>>x|bs<<x); cout << bs[7] << bs[13] << bs[10];', []],
+  ['位元⑩：語料的互斥或 ＋ 數 1（AP325/2/2_7_TLE）', '',
+    'bitset<26> d[2]; bitset<26> bs; d[0][1]=1; d[1][2]=1; bs=(d[0]^d[1]); cout << bs.count();', []],
+  /** ★ 正向錨點：**整數那一路與同族的容器不得被弄壞**。 */
+  ['★ 整數的位元運算照舊', '', 'int x=6,y=3; cout << (x&y) << (x|y) << (x^y) << (x<<1) << (x>>1);', []],
+  ['★ `__builtin_popcount` 照舊', '', 'cout << __builtin_popcount(7) << __builtin_popcount(0);', []],
+  ['★ 一陣列的 vector 照舊', '', 'vector<int> ar[3]; ar[1].push_back(7); cout << ar[1][0];', []],
+  ['★ `pair` 陣列照舊', '', 'pair<int,int> A[3]; A[0]={3,1}; cout << A[0].first << A[1].second;', []],
+  ['★ 容器的 `count(x)` 照舊（同名不同顆）', '', 'multiset<int> s{1,2,2}; cout << s.count(2);', []],
+  ['★ 容器的 `clear()` 照舊', '', 'vector<int> v{1,2}; v.clear(); cout << v.size();', []],
+  /**
    * 🔴 **位置的相鄰一格**（2026-09-19，`cpp:pointer_step`）。
    * 語料 `prev(` 10 處 / 8 支，**每一處都是 `prev(X.end())`**——那是
    * 「取最後一個」在有序容器上**唯一的寫法**（`set` 沒有 `back()`）。

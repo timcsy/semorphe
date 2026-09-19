@@ -13,11 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../../migrations/block-type-migrations'
 import { mergedIdentities } from '../../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20, SHAPE_CHANGES_V21, SHAPE_CHANGES_V22 } from '../../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20, SHAPE_CHANGES_V21, SHAPE_CHANGES_V22, SHAPE_CHANGES_V23 } from '../../migrations/block-shape-changes'
 import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 22
+export const CURRENT_VERSION = 23
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -436,6 +436,13 @@ export const UPGRADES: Record<number, Upgrade> = {
   19: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V20, 20),
   20: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V21, 21),
   21: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V22, 22),
+  /**
+   * `v22 → v23`：**`cpp_bits_count` 多了第二種寫法**（`bs.count()`），
+   * 而方法那一路把接收者放進 `obj`——**由宣告決定**（`io.ts` 的 `receiverInto`）。
+   * 插槽因此從 `VALUE` 改名成 `OBJ`。
+   * ⚠️ 不改名的症狀不是報錯：接收者掉進一串文字屬性，**執行時數出 0 而不出聲**。
+   */
+  22: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V23, 23),
 }
 
 /**

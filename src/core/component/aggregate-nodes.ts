@@ -65,6 +65,36 @@ export function aggregateShapeOf(typeName: string): string[] | undefined {
   return aggregateShapes.get(local.trim())
 }
 
+/**
+ * 語言套件宣告：「這個**樣板型別**是一排固定長度的格子，長度就是它的樣板引數」。
+ *
+ * ⚠️ 為什麼需要它：`bitset<26> d[3];` 的每一格必須是**一排 26 個格子**，
+ * 而 `defaultValue` 對帶尖括號的型別一律回一個**空容器**
+ * ——於是 `d[0][2] = 1` 說「索引 2 超出範圍」（因為那一格是空的）。
+ *
+ * 🔴 判準與它隔壁那張（聚合形狀）同一條：**問登記處，不問型別名**。
+ * 核心不寫死 `bitset`——**它是 C++ 的知識**。
+ *
+ * > **「帶尖括號」說的是它是一個樣板，不是它是一個容器。**（隔壁那條的原話）
+ */
+const sizedRows = new Map<string, string>()
+
+/**
+ * @param typeName 樣板名（登記 `bitset`，不是 `bitset<26>`）
+ * @param elemType 每一格的元素型別章——位元運算子靠它分辨「一排位元」與「一個 vector」
+ */
+export function declareSizedRowType(typeName: string, elemType: string): void {
+  sizedRows.set(typeName, elemType)
+}
+
+/** 這個型別是一排固定長度的格子嗎；是的話回元素型別章。認不得回 `undefined`——不猜。 */
+export function sizedRowElemType(typeName: string): string | undefined {
+  const bare = typeName.includes('<') ? typeName.slice(0, typeName.indexOf('<')) : typeName
+  // ⚠️ 限定名也要剝——學生寫 `std::bitset<26>`（隔壁那張踩過，盲測抓到的）
+  const local = bare.includes('::') ? bare.slice(bare.lastIndexOf('::') + 2) : bare
+  return sizedRows.get(local.trim())
+}
+
 /** 護欄用：誰被宣告過。 */
 /**
  * **這個範圍（語言）的「大括號串列」元件是誰。**

@@ -1,0 +1,33 @@
+[
+  {
+    "id": "cpp_bits_is",
+    "componentId": "cpp:bits_is",
+    "language": "cpp",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_bits_is",
+      "message0": "%{BKY_CPP_BITS_IS_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "OBJ", "check": "Expression" },
+        {
+          "type": "field_dropdown",
+          "name": "METHOD",
+          "options": [
+            ["%{BKY_CPP_BITS_IS_ANY}", "any"],
+            ["%{BKY_CPP_BITS_IS_NONE}", "none"],
+            ["%{BKY_CPP_BITS_IS_ALL}", "all"]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_CPP_BITS_IS_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "METHOD": "method" },
+      "inputs": { "OBJ": "obj" }
+    }
+  }
+]

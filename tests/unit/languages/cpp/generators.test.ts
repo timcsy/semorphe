@@ -285,6 +285,38 @@ describe('C++ I/O generator', () => {
     expect(code).toContain('printf("%d%d\\n", a, b)')
   })
 
+  /**
+   * 🔴 **printf 那條投影對【每一個運算式】都寫 `%d`——而它不知道型別。**
+   * （2026-09-20 第 199 刀的瀏覽器驗收量到的：使用者的風格停在 printf/scanf 時，
+   *   動一下積木就會產出這種碼。）
+   *
+   * ```
+   * cout << s << d;        s 是 string、d 是 double
+   * printf("%d%d", s, d);  🔴 string 那一格【編不過】，double 那一格印出垃圾
+   * ```
+   *
+   * ⚠️ **這不是 bitset 那一刀造成的**，是 `cpp:print/generate.ts` 一開始就這樣：
+   * 非字串字面值一律 `%d`。bitset 只是讓它第三次被看見。
+   *
+   * 🔴 **阻斷者不是一顆元件，是一個還不存在的機制**：`GeneratorContext` 裡
+   * **沒有型別表**（它只有 `_structNames`，而那是為了 C 目標的 `struct` 標籤）。
+   * 要選 `%s`／`%f`／`%lu` 就得先讓產碼那一側查得到「這個名字是什麼型別」。
+   *
+   * **為什麼不是現在**：那是一條共用路徑，改它會動到 `cout` 以外的每一顆
+   * ——而這一刀的範疇是一排位元。半套的修法（只認得出自己身分的那幾種、
+   * 認不出變數）比誠實的一律 `%d` 更糟：**它會讓「有的對有的錯」看起來像對的**。
+   * **何時該修**：產碼那一側拿到型別表的那一刀（`%s`／`%f`／`%lu` 一起做）。
+   */
+  it.fails('[UNSUPPORTED:產碼那一側沒有型別表] printf 對 string 要產 %s，不是 %d', () => {
+    const print = createNode('cpp:print', {}, {
+      values: [createNode('cpp:var_ref', { name: 's' })],
+    })
+    const code = generateCode(makeProgram(print), 'cpp', printfStyle)
+    // ★ 正向錨點：它確實走了 printf 那條路（否則下面那條在驗空氣）
+    expect(code).toContain('printf(')
+    expect(code, '🔴 string 配 %d ——那一行編不過').toContain('printf("%s", s)')
+  })
+
   it('should generate printf with string_literal embedded in format', () => {
     const print = createNode('cpp:print', {}, {
       values: [

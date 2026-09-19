@@ -15,12 +15,6 @@
   ],
   "slots": {},
   "role": "statement",
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "declarative"
-  },
   "owner": "(core)",
   "paths": {
     "render": "./forms/blocks.json",
@@ -29,5 +23,6 @@
     "execute": "./execute.ts",
     "lift": "./lift-pattern.json",
     "liftStrategy": "./lift-strategy.ts"
-  }
+  },
+  "_execute_why": "🔴 **它在此之前是 noop ＋ `skipPaths`，而那是錯的**（2026-09-20）：`using X = Y;` 與 `typedef Y X;` 是同一件事，而同族那顆在執行期登記別名。少了它，`Row r;` 的 `r` 被建成一個 `int 0`。> **一個 noop 讓「還沒做」與「不必做」長得一模一樣。**"
 }

@@ -1,0 +1,7 @@
+{
+  "CPP_BITS_FILL_MSG0": "Set bit %3 of %1 to %2",
+  "CPP_BITS_FILL_ZERO": "zero",
+  "CPP_BITS_FILL_ONE": "one",
+  "CPP_BITS_FILL_FLIP": "the opposite",
+  "CPP_BITS_FILL_TOOLTIP": "Leaving the position empty changes the whole row; plugging one in changes only that position. The opposite turns each 0 into 1 and each 1 into 0. Positions count from 0; going past the end is undefined behaviour."
+}

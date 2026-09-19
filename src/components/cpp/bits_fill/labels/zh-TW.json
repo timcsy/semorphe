@@ -1,0 +1,7 @@
+{
+  "CPP_BITS_FILL_MSG0": "把 %1 第 %3 格 %2",
+  "CPP_BITS_FILL_ZERO": "歸零",
+  "CPP_BITS_FILL_ONE": "設為 1",
+  "CPP_BITS_FILL_FLIP": "反轉",
+  "CPP_BITS_FILL_TOOLTIP": "「第幾格」留空時改的是整排，接上一個位置時只改那一格。反轉是把 0 變 1、1 變 0。⚠️ 位置從 0 數起，超出長度是未定義行為。"
+}

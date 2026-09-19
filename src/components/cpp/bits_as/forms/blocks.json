@@ -1,0 +1,33 @@
+[
+  {
+    "id": "cpp_bits_as",
+    "componentId": "cpp:bits_as",
+    "language": "cpp",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_bits_as",
+      "message0": "%{BKY_CPP_BITS_AS_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "OBJ", "check": "Expression" },
+        {
+          "type": "field_dropdown",
+          "name": "METHOD",
+          "options": [
+            ["%{BKY_CPP_BITS_AS_ULONG}", "to_ulong"],
+            ["%{BKY_CPP_BITS_AS_ULLONG}", "to_ullong"],
+            ["%{BKY_CPP_BITS_AS_STRING}", "to_string"]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_CPP_BITS_AS_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": { "METHOD": "method" },
+      "inputs": { "OBJ": "obj" }
+    }
+  }
+]

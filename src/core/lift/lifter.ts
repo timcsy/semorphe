@@ -232,7 +232,17 @@ export class Lifter {
   }
 
   private recordTypeAlias(r: SemanticNode, data: LiftContextData): void {
-    if (!/^[a-z]+:typedef$/.test(r.componentId ?? '')) return
+    /**
+     * 🔴 **`using X = Y;` 與 `typedef Y X;` 是同一件事**（2026-09-20，盲測抓到）。
+     *
+     * 在此之前只收 `typedef`，於是 `using Row = bitset<8>; Row r; r.reset();`
+     * 說「r 不是一個物件（它是 int）」——**而 `int` 那個字是預設值**，
+     * 也就是「我完全不知道 r 是什麼」。
+     *
+     * ⚠️ 兩顆元件的屬性名剛好相同（`alias`／`orig_type`），所以這裡只要放寬那個判別。
+     * > **同一件事的第二種寫法，會在第一種寫法的收集器上安靜地缺席。**
+     */
+    if (!/^[a-z]+:(typedef|using_alias)$/.test(r.componentId ?? '')) return
     const alias = r.properties?.alias
     const orig = r.properties?.orig_type
     if (typeof alias === 'string' && alias !== '' && typeof orig === 'string' && orig !== '') {

@@ -1,0 +1,57 @@
+[
+  {
+    "id": "cpp_bits_fill",
+    "componentId": "cpp:bits_fill",
+    "language": "cpp",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_bits_fill",
+      "message0": "%{BKY_CPP_BITS_FILL_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "METHOD",
+          "options": [
+            [
+              "%{BKY_CPP_BITS_FILL_ZERO}",
+              "reset"
+            ],
+            [
+              "%{BKY_CPP_BITS_FILL_ONE}",
+              "set"
+            ],
+            [
+              "%{BKY_CPP_BITS_FILL_FLIP}",
+              "flip"
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "POS",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_CPP_BITS_FILL_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "METHOD": "method"
+      },
+      "inputs": {
+        "OBJ": "obj",
+        "POS": "pos"
+      }
+    }
+  }
+]

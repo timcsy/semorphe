@@ -1,0 +1,7 @@
+{
+  "CPP_BITS_AS_MSG0": "%1 as %2",
+  "CPP_BITS_AS_ULONG": "a number",
+  "CPP_BITS_AS_ULLONG": "a long number",
+  "CPP_BITS_AS_STRING": "a run of 0s and 1s",
+  "CPP_BITS_AS_TOOLTIP": "Converts the whole row into something else. Position 0 is the lowest bit, so in the text form the first character is the highest bit — the two directions are opposite. If the row holds more bits than the number type can take, C++ raises an error."
+}

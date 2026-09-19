@@ -11,8 +11,22 @@
       "args0": [
         {
           "type": "input_value",
-          "name": "VALUE",
+          "name": "OBJ",
           "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "METHOD",
+          "options": [
+            [
+              "%{BKY_CPP_BITS_COUNT_FORM_BUILTIN}",
+              "__builtin_popcount"
+            ],
+            [
+              "%{BKY_CPP_BITS_COUNT_FORM_METHOD}",
+              "count"
+            ]
+          ]
         }
       ],
       "inputsInline": true,
@@ -21,9 +35,11 @@
       "tooltip": "%{BKY_CPP_BITS_COUNT_TOOLTIP}"
     },
     "renderMapping": {
-      "fields": {},
+      "fields": {
+        "METHOD": "method"
+      },
       "inputs": {
-        "VALUE": "value"
+        "OBJ": "obj"
       }
     }
   }

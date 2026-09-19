@@ -47,8 +47,24 @@ export function registerExecute(register: (component: string, executor: Componen
        *    而 `properties.value` 留原文——產生器照樣吐回原本那個寫法。
        */
       const noSep = raw.replace(/'/g, '')
-      // ⚠️ 十六進位／二進位不能剝：`0xFF` 的 `F` 是數字不是後綴。
-      const bare = /^0[xXbB]/.test(noSep) ? noSep : noSep.replace(SUFFIX, '')
+      /**
+       * ⚠️ 十六進位／二進位**不能剝 `f`**：`0xFF` 的 `F` 是數字不是後綴。
+       *
+       * 🔴 **而 `u`／`l` 仍然是後綴**（2026-09-20，資訊隔離盲測抓到）。
+       * 在此之前這一行對 `0x` 開頭的一律不剝，於是 `0xDEADBEEFUL` 走到
+       * `Number()` 得到 `NaN`，而下面那一行**誠實地丟錯**——
+       * 「讀不懂這個數字字面」。
+       *
+       * ⚠️ 症狀停在一個看起來像工具壞掉的地方，而缺的只是兩個字母。
+       * > **一條「這一族不剝後綴」的規則，如果理由只對其中一個字母成立，
+       * > 那它對其餘的字母都是錯的。**
+       *
+       * 🟢 `0xFFUL` 的 `F` 留著、`UL` 剝掉——判準是**哪些字母在十六進位裡是數字**
+       *（`a`–`f`），而 `u`／`l` 不在裡面。二進位更寬（只有 0／1），一併吃這條。
+       */
+      const bare = /^0[xXbB]/.test(noSep)
+        ? noSep.replace(/[uUlL]+$/, '')
+        : noSep.replace(SUFFIX, '')
       /**
        * 🔴 **開頭是 `0` 的整數是八進位**（2026-09-19，`basic/3_literal_constant.cpp`）。
        *
@@ -69,8 +85,21 @@ export function registerExecute(register: (component: string, executor: Componen
       if (Number.isNaN(num)) {
         throw new Error(`讀不懂這個數字字面：${JSON.stringify(raw)}`)
       }
-      // ⚠️ 浮點後綴（`1.5f`）也要算成 double——判準是**剝掉後綴之後**有沒有小數點
-      if (bare.includes('.') || /[eE]/.test(bare)) {
+      /**
+       * ⚠️ 浮點後綴（`1.5f`）也要算成 double——判準是**剝掉後綴之後**有沒有小數點。
+       *
+       * 🔴 **而十六進位不吃這條**（2026-09-20，資訊隔離盲測抓到）：
+       * `0xDEADBEEF` 裡那個 `E` **是一個數字**，不是科學記號。
+       * 在此之前它被判成 double，於是 `cout` 印出 `3.73593e+09`
+       * 而 g++ 印 `3735928559`——**一個合法而印錯的程式**。
+       *
+       * > **同一個字母在兩種進位裡是兩件事，而一條只看字母的判準看不見那個差別。**
+       *
+       * ⚠️ 十六進位浮點（`0x1p3`）在 C++17 存在而**這裡不收**：語料 0 處、
+       *    盲測 0 處，而它的指數字母是 `p` 不是 `e`——收它要另一條判準。
+       */
+      const isHexOrBin = /^0[xXbB]/.test(bare)
+      if (!isHexOrBin && (bare.includes('.') || /[eE]/.test(bare))) {
         return { type: 'double', value: num }
       }
       /**

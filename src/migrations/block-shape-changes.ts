@@ -52,6 +52,21 @@ export interface ShapeChange {
    * > **一個只看得見欄位的失效判定，看不見「同一顆積木換了記憶方式」。**
    */
   retiredExtraState?: string[]
+  /**
+   * 已經退場的**接點名**（2026-09-19 加）。
+   *
+   * 🔴 **在此之前這個機制看不見接點改名，而那是一整類的缺口。**
+   * `staleShapeIn` 只讀 `n.fields` 與 `n.extraState`——它**遞迴進** `n.inputs`
+   * 去找巢狀積木，卻從來不看那些 input 叫什麼名字。
+   *
+   * 於是把一顆積木的 `input_value` 從 `VALUE` 改名成 `OBJ` 時，
+   * 一筆 `retiredFields: ['VALUE']` **完全不會命中**——
+   * 而**症狀不是報錯**：舊存檔裡接在 `VALUE` 的那顆積木安靜地消失。
+   *
+   * > **一個只看得見欄位的失效判定，看不見「同一顆積木換了接點的名字」。**
+   *（上面那一條 2026-08-26 寫的是「換了記憶方式」——**這是同一句話的第三種**。）
+   */
+  retiredInputs?: string[]
   /** 為什麼——會被印進報表 */
   why: string
 }
@@ -99,6 +114,14 @@ export function staleShapeIn(
       const extra = (n.extraState && typeof n.extraState === 'object')
         ? n.extraState as Record<string, unknown> : {}
       if ((change.retiredExtraState ?? []).some((k) => k in extra)) { hit = change; return }
+      /**
+       * 🔴 **接點也會退場**（2026-09-19）——見 `retiredInputs` 的檔頭。
+       * ⚠️ 這一段要在下面那個「遞迴進 inputs」**之前**：那一段找的是巢狀的積木，
+       *    而這一段問的是**這一顆自己的 input 叫什麼名字**。兩件事。
+       */
+      const ins = (n.inputs && typeof n.inputs === 'object')
+        ? n.inputs as Record<string, unknown> : {}
+      if ((change.retiredInputs ?? []).some((k) => k in ins)) { hit = change; return }
     }
     if (n.inputs && typeof n.inputs === 'object') {
       for (const v of Object.values(n.inputs as Record<string, unknown>)) {
@@ -369,6 +392,17 @@ export const SHAPE_CHANGES_V21: ShapeChange[] = [
  *
  * > **語料乾淨不代表模型對：它代表語料是照著模型長的。**
  */
+export const SHAPE_CHANGES_V23: ShapeChange[] = [
+  {
+    blockType: 'cpp_bits_count',
+    retiredFields: [],
+    retiredInputs: ['VALUE'],
+    why: '它多了第二種寫法（`bs.count()`），而方法那一路把接收者放進 `obj`'
+      + '——由**宣告**決定（`io.ts` 的 `receiverInto`）。插槽因此從 `VALUE` 改名成 `OBJ`。'
+      + '⚠️ 不改名的症狀不是報錯：接收者掉進一串文字屬性，執行時數出 0 而不出聲。',
+  },
+]
+
 export const SHAPE_CHANGES_V22: ShapeChange[] = [
   {
     blockType: 'cpp_array_2d_declare',

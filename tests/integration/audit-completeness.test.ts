@@ -226,6 +226,24 @@ for (const [id, decl] of [
   SAMPLE_CONTEXT[id] = (v) => [createNode(decl, { name: v }, {})]
 }
 
+/**
+ * **第七個實例**（2026-09-19）：整排改值那一顆（`bs.reset()`／`.set()`／`.flip()`）。
+ *
+ * 它走的是「**依接收者型別分派**」那一張表——而型別要從**宣告**查。
+ * 孤立樣本裡沒有那個宣告，於是辨識器**正確地**不認，判成殼。
+ *
+ * 🔴 而這一顆的宣告需要**大小**（`bitset<8>`），所以脈絡不是只有一個名字
+ * ——`size` 是一個接點，少了它執行期會出聲「沒有說有幾格」。
+ *
+ * > **用孤立樣本去量一個需要上下文的辨識器，量到的一定是「它不認得」
+ * > ——而那正是它對的地方。**（這一段第五個實例的原話）
+ */
+SAMPLE_CONTEXT['cpp:bits_fill'] = (v) => [
+  createNode('cpp:bits_declare', { name: v }, {
+    size: [createNode('cpp:literal_number', { value: '8' }, {})],
+  }),
+]
+
 SAMPLE_CONTEXT['cpp:pin_attach'] = (v) => [
   createNode('cpp:pin_mode', {}, {
     pin: [createNode('cpp:var_ref', { name: v }, {})],

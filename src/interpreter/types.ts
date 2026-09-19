@@ -1,5 +1,5 @@
 import type { SemanticNode } from '../core/types'
-import { aggregateShapeOf } from '../core/component/aggregate-nodes'
+import { aggregateShapeOf, sizedRowElemType } from '../core/component/aggregate-nodes'
 import { resolveAlias } from './aliases'
 import { runtimeScalarType } from '../core/scalar-types'
 /**
@@ -313,6 +313,28 @@ export function defaultValue(rawType: string): RuntimeValue {
           return { type: 'object', value: fields, structName: bare }
         }
       }
+      /**
+       * 🔴 **一排固定長度的格子**——`bitset<26> d[3];`（2026-09-19）。
+       *
+       * 下面那一行對帶尖括號的型別一律回**空容器**，而那對 `bitset<26>` 是錯的：
+       * 它的長度寫在樣板引數裡，而 `d[0][2] = 1` 需要那 26 格**已經在了**。
+       * 症狀是「索引 2 超出範圍」——指著索引，而錯在宣告。
+       *
+       * ⚠️ 判準問**登記處**（`sizedRowElemType`），不問型別名——核心不認得 `bitset`。
+       */
+      {
+        const rowElem = sizedRowElemType(type)
+        if (rowElem !== undefined) {
+          const n = Number(type.slice(type.indexOf('<') + 1, type.lastIndexOf('>')).trim())
+          if (Number.isFinite(n) && n >= 0) {
+            return {
+              type: 'array',
+              value: Array.from({ length: Math.trunc(n) }, () => ({ type: 'int' as const, value: 0 })),
+              elemType: rowElem,
+            } as RuntimeValue
+          }
+        }
+      }
       if (type.includes('<')) return { type: 'array', value: [] }
       // **指標型別的預設值是空指標**，不是 0。
       //
@@ -388,6 +410,23 @@ export function valueToString(val: RuntimeValue): string {
     // `char s[8]; strcpy(s, "hi"); cout << s;` 原本印 `[array]`——那讓五個
     // cstring 函式**看起來**是壞的，其實壞的是這裡。逐字元讀到結尾的 \0。
     const arr = val.value as RuntimeValue[] | undefined
+    /**
+     * 🔴 **一排位元印出來是一串 0 與 1**（2026-09-20，資訊隔離盲測抓到）。
+     *
+     * `bitset<8> b; b.set(0); cout << b;` 在此之前印 `[array]`
+     * ——**一個內部字串漏到使用者眼前**，而 g++ 印 `00000001`。
+     *
+     * ⚠️ **第 0 格是最低位，而印出來最高位在前**——兩個方向相反。
+     * ⚠️ 判準問 `elemType` 那一章，不問「它是不是一個 array」：
+     *    一個 `vector<int>` 在這裡長得一樣，而 `cout << v` 在 C++ 裡**編不過**。
+     *
+     * > **同一個執行期形狀，兩種東西——分辨它們的那一格就是它多帶的那一章。**
+     */
+    if (Array.isArray(arr) && (val as { elemType?: string }).elemType === 'bit') {
+      let out = ''
+      for (let i = arr.length - 1; i >= 0; i--) out += Number(arr[i]?.value) ? '1' : '0'
+      return out
+    }
     if (Array.isArray(arr) && arr.every((c) => c?.type === 'char')) {
       const out: string[] = []
       for (const c of arr) {

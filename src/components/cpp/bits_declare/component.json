@@ -1,0 +1,41 @@
+{
+  "componentId": "cpp:bits_declare",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "bs"
+    }
+  ],
+  "slots": {
+    "size": "expression",
+    "source": {
+      "allowed": [
+        "expression"
+      ],
+      "min": 0,
+      "max": 1
+    }
+  },
+  "role": "statement",
+  "annotations": {
+    "debug_step": true
+  },
+  "owner": "(core)",
+  "paths": {
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "generate": "./generate.ts",
+    "execute": "./execute.ts",
+    "lift": "./lift.ts"
+  },
+  "traits": {
+    "declarator": true,
+    "forLoopPart": true
+  },
+  "_properties_why": "🔴 **沒有 `type` 屬性，而那是刻意的——它就是判準。**\n共用的容器宣告路把樣板引數當型別讀（`vector<int>` → `type: \"int\"`），而 `bitset<26>` 的樣板引數是**一個大小**。把它裝進一個叫 `type` 的字串屬性，正是第七十二條護欄（字串屬性不得裝結構）追的那一族。\n🟢 所以共用檔改成**問這顆元件自己宣告了什麼**：有 `size` 接點而沒有 `type` 屬性 ⟹ 樣板引數是大小（見 `strategies.ts` 的 `templateArgIsSize`，做法抄它隔壁的 `twoArgKeys`）。",
+  "_slots_why": "🔴 **大小是接點，不是屬性**——同族的一般陣列 `size` 早就是接點，二維陣列的 `rows`／`cols` 也在第 190 刀從屬性換過來了。\n⚠️ 而 C++ 這裡有一個限制要在 tooltip 說清楚：`bitset<n>` 的 `n` 必須是**編譯期常數**，所以這一格接一顆變數積木時**產出的碼編不過**。那與一般陣列是同一個既有問題（C++ 的可變長度陣列也不標準）。\n\n🔴 **`source` 是初始值**（`bitset<8> b = a >> 2;`）——2026-09-19 的最小重現抓到：\n共用檔那一支「樣板引數是大小」的路徑第一版直接 return，於是初始值**整個從語義樹上消失**，而症狀不是報錯，是 `b` 每一格都是 0。\n> **一條提早 return 的路徑，漏掉的是它【沒有抄過去】的那幾格。**",
+  "_owner_why": "⚠️ `(core)` 而不是 `<bitset>`——語料 3 支**沒有一支寫過那個標頭**（全部走 `bits/stdc++.h`）。而宣告 `requires: [\"<bitset>\"]` 會需要工具箱裡有那一段，而**沒有**：`<iomanip>` 與 `<stdexcept>` 都踩過「宣告過而沒有段落 ⟹ 它就是不存在」。同族的一般陣列也是這個處置。",
+  "_traits_why": "`declarator: true` ＋ `forLoopPart: true` ——**整族一起宣告**那一條（第 188 刀補了 27 顆）。判準是 C++ 的文法事實：一個宣告放得進 `for` 的第一格，而 `bitset<8> b;` 是一個宣告。"
+}
