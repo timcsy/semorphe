@@ -91,8 +91,17 @@ export interface NodeMetadata {
    *
    * ⚠️ 使用者在積木那側改過之後這一格會不在，那時產出預設的排版
    * ——**仍然正確**。排版的遺失不是語義的遺失。
+   *
+   * 🔴 **2026-09-20：值從 `boolean` 放寬成 `boolean | string`。**
+   * 第二個消費者是**帶參數的巨集**：`rep(i,m) s += i;` 與
+   * `for (int i = 0; i < m; i++) s += i;` 是同一個迴圈的兩種拼法，
+   * 而「學生是用哪一種寫的」要存得下**一串字**（`macroHeader: "rep(i,m)"`）。
+   *
+   * ⚠️ 上面那一句「積木改過之後這一格會不在」在巨集這個消費者身上
+   * **是必要的安全性質，不只是可接受的損失**：迴圈的界線一旦在積木那側被改過，
+   * 再印回 `rep(i,m)` 就是一句謊話。
    */
-  layoutHints?: Record<string, boolean>
+  layoutHints?: Record<string, boolean | string>
 }
 
 export interface SourceRange {

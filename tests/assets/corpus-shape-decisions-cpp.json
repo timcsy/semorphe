@@ -265,16 +265,6 @@
     "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
   },
   {
-    "type": "preproc_function_def",
-    "cause": "語言有而這個工具不做",
-    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
-  },
-  {
-    "type": "preproc_params",
-    "cause": "語言有而這個工具不做",
-    "reason": "各自獨立的進階語法。共通點：**它們不在初學課與競賽的路徑上**，而每一個都會誠實降級成灰色方塊。"
-  },
-  {
     "type": "pure_virtual_clause",
     "cause": "文法宣告了而這個版本不產生",
     "reason": "🔴 **查證（2026-08-23）：裝的這一版 tree-sitter-cpp 不產生這個節點**。`virtual void f() = 0;` 解析出來是 `field_declaration` ＋ `default_value: number_literal`（實測），而 `pure_virtual_clause` 只出現在 `node-types.json` 的宣告裡。\n⚠️ 所以它**補不進語料**：我們支援純虛擬（`cpp:method_virtual_pure` 有語料了），而那個形狀在這一版文法裡叫別的名字。"

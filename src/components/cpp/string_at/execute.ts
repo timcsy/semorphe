@@ -13,7 +13,24 @@ export function registerExecute(register: (component: string, executor: Componen
       const str = String(val.value)
       const indexNodes = node.slots.index ?? []
       const idx = indexNodes.length > 0 ? ctx.toNumber(await ctx.evaluate(indexNodes[0])) : 0
-      if (idx < 0 || idx >= str.length) throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE)
+      /**
+       * 🔴 **`s[s.size()]` 不是越界——C++11 起它【有定義】，回一個空字元。**
+       *（2026-09-20，語料 `AP325/7/7_4.cpp`）
+       *
+       * ```cpp
+       * string s = "1";   cout << (int)s[1];   g++ 印 0   ← 標準規定的
+       *                   cout << (int)s[2];   🔴 這一個才是 UB
+       * ```
+       *
+       * > **一條「超過長度就是錯」的規則，對【剛好等於長度】那一格說了一個
+       * > 標準沒有說的話——而它比標準嚴格的地方，看起來與缺陷一模一樣。**
+       *
+       * ⚠️ **只有【讀】是這樣**：寫進 `s[s.size()]` 仍然是 UB（左值那一路在下面，照舊）。
+       * ⚠️ 而同一件事**有兩份實作**——取第幾格那一顆也有一份，兩邊一起改
+       *    （這個檔上面那段註解記過同一個病的另一個面貌）。
+       */
+      if (idx < 0 || idx > str.length) throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE)
+      if (idx === str.length) return { type: 'char', value: 0 }
       // ⚠️ `s[i]` 的型別是 **char**，而 char 在這個直譯器裡是**碼位（數字）**
       // ——`cpp:literal_char` 就是那樣回的（`{ type: 'char', value: ch.charCodeAt(0) }`）。
       //

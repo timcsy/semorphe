@@ -6,6 +6,18 @@ import { LiftContextData } from './lift-context'
 import { PatternLifter } from './pattern-lifter'
 import { liftPostProcessors } from './post-processors'
 import { astRepairs } from './ast-repairs'
+
+/**
+ * 一個 AST 節點的穩定鍵——型別＋在原文裡的位置。見 `repairedSpans` 的檔頭。
+ *
+ * ⚠️ 用 `startPosition`／`endPosition`（介面上有的）而不是 `startIndex`
+ * ——後者是 web-tree-sitter 的實作細節，`AstNode` 這個結構型介面沒有它。
+ */
+function spanKey(node: AstNode): string {
+  const s = node.startPosition
+  const e = node.endPosition
+  return `${node.type}:${s.row}:${s.column}:${e.row}:${e.column}`
+}
 // ⚠️ 共用檔呼叫膠囊匯出的**建構子**——身分字串只留在膠囊裡一處。
 // 🔴 **不再 import 語言套件**（spec 155）——身分由語言套件宣告。
 //    P9 原文逐字：「拔掉 C++……**無 `languages/cpp/` import**」。
@@ -73,6 +85,8 @@ export class Lifter {
   }
 
   lift(node: AstNode): SemanticNode | null {
+    // ⚠️ 每一趟辨識各自一份——上一棵樹的位置在這一棵樹上沒有意義。
+    this.repairedSpans.clear()
     return this.liftWithContext(node, new LiftContextData())
   }
 
@@ -380,6 +394,29 @@ export class Lifter {
     for (const repair of astRepairs()) {
       const repaired = repair(node, ctx)
       if (repaired) {
+        /**
+         * 🔴 **記下「這一段的 ERROR 已經有人處理了」**（2026-09-20，第六關量到的）。
+         *
+         * 樹修復把樹修好了，**而原本那棵 AST 裡的 `ERROR` 節點還在**
+         * ——於是底下 `setConfidenceHigh` 走到祖先（`func_def`／`program`）時
+         * 仍然看到 `hasError`，把整支程式標成 `syntax_error`。
+         *
+         * 而執行前的閘（`core/diagnostics.ts` 的 `canExecute`）讀的正是那個標記：
+         *
+         * ```
+         * 語義樹     🟢 修好了（rep(i,n) 展開成一顆計數迴圈）
+         * 積木       🟢 畫得出來
+         * 程式碼     🟢 一字不差
+         * 按「執行」  🔴 「這段程式有一處語法還不完整，所以還不能執行」
+         * ```
+         *
+         * 🔴 **而所有測試都是綠的**——它們直接呼叫 `execute(tree)`，
+         * 那道閘只在使用者按下按鈕的那條路上。
+         *
+         * > **一道「使用者按下去才會走到」的檢查，
+         * > 任何直接呼叫下一層的測試都看不到它。**
+         */
+        this.repairedSpans.add(spanKey(node))
         addSourceRange(repaired)
         return repaired
       }
@@ -778,10 +815,34 @@ export class Lifter {
     return out
   }
 
+  /**
+   * **被樹修復認領過的 AST 子樹**——它們原本的 `ERROR` 不再算成語法錯誤。
+   *
+   * 🔴 **鍵是「型別＋位置」，不是物件本身**（2026-09-20，第一版寫錯）：
+   * web-tree-sitter **每一次存取 `.children` 都產生一個新的 JS 包裝物件**，
+   * 所以 `WeakSet<Node>` 的比對永遠不會命中——而它不會報錯，
+   * 它只是**永遠回答「沒有」**，看起來就像那個修復從來沒發生過。
+   *
+   * > **一個用物件同一性當鍵的集合，在那些物件每次都是新的時候，
+   * > 與一個空集合的行為完全相同。**
+   */
+  private readonly repairedSpans = new Set<string>()
+
   private hasErrorDescendant(node: AstNode): boolean {
-    if (node.type === 'ERROR') return true
-    // 解析器算好的傳播旗標——比遞迴找 ERROR 更快，而且認得沒有 ERROR 節點的那一種
-    if (node.hasError) return true
+    // 🔴 **修好的那一段不算**——見上面登記它的那一段。
+    if (this.repairedSpans.has(spanKey(node))) return false
+    if (node.type === 'ERROR' || node.isMissing === true) return true
+    /**
+     * 解析器算好的傳播旗標——**沒有它就是底下乾淨，可以早退**。
+     *
+     * 🔴 **而有它的時候不能直接回 true**（2026-09-20 修）：那個旗標是
+     * **往上傳播**的，它說「我底下某處有錯」，而**它不知道那一處已經被
+     * 樹修復認領了**。早退的話上面那一行（跳過修好的子樹）永遠不會被走到
+     * ——症狀是使用者按「執行」被擋，而積木與程式碼兩側都是好的。
+     *
+     * ⚠️ 代價是**有錯時要真的遞迴一次**，而那只發生在有錯的那些節點上。
+     */
+    if (!node.hasError) return false
     for (const child of node.children) {
       if (this.hasErrorDescendant(child)) return true
     }

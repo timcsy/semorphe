@@ -11,6 +11,7 @@ import { registerCppRenderStrategies } from '../renderers/strategies'
 import { registerIOLifters } from './io'
 import { declareLiftPostProcessor } from '../../../core/lift/post-processors'
 import { registerMisparseRepairs } from '../lang/misparse'
+import { registerMacroExpansion } from '../lang/macro-expand'
 import { componentLiftRegistrars } from '../../../core/component/paths'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
@@ -74,6 +75,13 @@ function registerCppLiftersInner(lifter: Lifter, registries?: CppRegistries): vo
    * 解錯了，而「C++ 的優先級是什麼」是 C++ 的知識。見 `../lang/misparse.ts`。
    */
   registerMisparseRepairs()
+
+  /**
+   * 🔴 **帶參數的巨集**——tree-sitter 對 `rep(i,m) s += i;` 不給 ERROR，
+   * 它給一棵**看起來合法而少一個名字**的樹。見 `../lang/macro-expand.ts`。
+   * ⚠️ 它要排在上面那條之後：兩者互不重疊（節點型別不同），而順序寫死比較好讀。
+   */
+  registerMacroExpansion()
 
   // Core lifters
   registerStatementLifters(lifter)

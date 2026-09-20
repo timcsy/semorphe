@@ -174,5 +174,12 @@
     "signal": "t === 'nullptr' || t === 'NULL' → if (t === 'nullptr' || t === 'NULL') ret",
     "decision": "合法",
     "reason": "**這不是回退，是一格辨識**：這個函式一行一種字面（數字／字元／字串／true／false／nullptr），每一格認出來就回那個值，而**認不得的在最後丟錯**。回退是「認不出來時給一個猜的值」，而這裡認不出來時出聲。"
+  },
+  {
+    "key": "src/components/cpp/string_at/execute.ts#h12jo1",
+    "position": "src/components/cpp/string_at/execute.ts:33",
+    "signal": "idx === str.length → if (idx === str.length) return { type: 'char', value: 0 }",
+    "decision": "合法",
+    "reason": "🔴 **這是語義，不是回退**：C++11 起 `s[s.size()]` 有定義——回一個空字元（實測 g++ 印 0）。真的越界（`idx > size`）在上一行就丟出來了，這一格是標準規定的那一格。⚠️ 只有【讀】是這樣；寫進 `s[s.size()]` 仍然是 UB，而那條路在左值那一支，照舊。語料 `AP325/7/7_4.cpp` 因為這一格整支停住。"
   }
 ]

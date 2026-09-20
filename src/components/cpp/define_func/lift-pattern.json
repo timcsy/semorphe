@@ -1,0 +1,26 @@
+{
+  "id": "cpp_preproc_function_def",
+  "grammar": "tree-sitter-cpp",
+  "astNodeType": "preproc_function_def",
+  "component": {
+    "componentId": "cpp:define_func"
+  },
+  "fieldMappings": [
+    {
+      "semantic": "name",
+      "ast": "name",
+      "extract": "text"
+    },
+    {
+      "semantic": "params",
+      "ast": "parameters",
+      "extract": "text",
+      "transform": "stripParens"
+    },
+    {
+      "semantic": "value",
+      "ast": "value",
+      "extract": "text"
+    }
+  ]
+}

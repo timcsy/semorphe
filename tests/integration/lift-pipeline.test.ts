@@ -127,12 +127,69 @@ describe('Four-level lift pipeline', () => {
       expect(['raw_code', 'unresolved', 'cpp:template_function']).toContain(body[0].componentId)
     })
 
-    it('should degrade preprocessor macros to raw_code', () => {
+    /**
+     * 🔴 **2026-09-20：這一支不再是「降級」，而那是刻意的。**
+     *
+     * 帶參數的 `#define` 在此之前整行掉進 `unresolved`，而**它從來不是誠實的降級**：
+     * 使用處（`MAX(a,b)` 出現的那一行）被 tree-sitter 解成一棵看起來合法的樹，
+     * 產出的程式碼因此**靜默少東西**。
+     *
+     * 現在定義那一行有自己的身分（`cpp:define_func`），
+     * 而**展開**由 `languages/cpp/lang/macro-expand.ts` 的樹修復負責
+     * ——只在「代入之後解得乾淨」時接手，否則讓開。
+     *
+     * ⚠️ 這一支改成釘住**新的正確行為**，而不是刪掉：
+     * 它守的是「定義那一行不得再掉進 raw_code／unresolved」。
+     */
+    it('帶參數的 #define 不再降級——它有自己的身分', () => {
       const tree = liftCode('#define MAX(a, b) ((a) > (b) ? (a) : (b))')
       expect(tree).not.toBeNull()
       const body = tree!.slots.body
       expect(body.length).toBeGreaterThan(0)
-      expect(['raw_code', 'unresolved']).toContain(body[0].componentId)
+      expect(body[0].componentId).toBe('cpp:define_func')
+    })
+
+    /**
+     * 🔴 **語法錯誤在【運算式位置】時，產回去會靜默少一段。**
+     *（2026-09-20，管線 201 第五關量到的）
+     *
+     * ```
+     * 位置          原文              產回去           出聲嗎
+     * 語句          x @@ 2;           x @@            🟢 UNRECOGNIZED_CODE
+     * 括號運算式    cout << (x @@ 2)  cout << (x)     🔴 安靜，而 @@ 2 不見了
+     * 宣告的初值    int x = @@@;      int x =         🔴 安靜，而整行壞掉
+     * ```
+     *
+     * 🔴 **語句那一路早就誠實了**（`raw_code` ＋ `unresolved`），
+     * 而運算式那一路沒有——`lifter.ts` 的 `setConfidenceHigh` 會標上
+     * `degradationCause: 'syntax_error'` ＋ `rawCode`，**而產生器不讀它**。
+     *
+     * > **「這一段我看不懂」如果只在【執行】那一路出聲，
+     * > 那麼【程式碼】那一路的沉默就是一個錯的答案。**
+     *
+     * **為什麼不是現在**：修法是讓產生器在
+     * `metadata.degradationCause === 'syntax_error'` 時**原文照抄**，
+     * 而那會動到**每一個**語法錯誤的產出——包含「少一個分號」這種最常見的，
+     * 今天它被順手補回去（`int x = 1` → `int x = 1;`）。
+     * 那個改變要整族一起量，不是在巨集這一刀順手做。
+     *
+     * 🔴 **何時該修**：產生器讀 `degradationCause` 的那一刀
+     *（與「接收者的空值預設」那一根同一個形狀：一個共用退路要整族一起改）。
+     */
+    it.fails('[UNSUPPORTED:產生器不讀 degradationCause] 運算式位置的語法錯誤要原文照抄', () => {
+      const tree = liftCode('int main(){ int x = 1; int y = (x @@ 2); return y; }')
+      expect(tree).not.toBeNull()
+      const code = generateCode(tree!, 'cpp', style)
+      // ★ 正向錨點：這一段真的被 lift 了（否則下面在驗空氣）
+      expect(code).toContain('int x = 1')
+      expect(code, '🔴 `@@ 2` 靜默消失了').toContain('@@')
+    })
+
+    it('★ 錨點：語句位置的語法錯誤【已經】誠實了——不得退步', () => {
+      const tree = liftCode('int main(){ int x = 1; x @@ 2; return x; }')
+      expect(tree).not.toBeNull()
+      const code = generateCode(tree!, 'cpp', style)
+      expect(code, '🔴 語句位置也開始吞掉語法錯誤了').toContain('@@')
     })
 
     it('should not crash on complex C++ constructs', () => {

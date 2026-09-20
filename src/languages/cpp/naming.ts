@@ -321,6 +321,16 @@ export const ATOMIC_NAMES = [
   'comma_expr', 'address_of', 'cast', 'constructor', 'destructor',
   'operator_overload', 'typedef', 'using_alias', 'using_namespace',
   'include', 'include_local', 'define', 'ifdef', 'ifndef',
+  // ⚠️ `define_func` 加入日 2026-09-20——`#define rep(i,n) for(int i=0;i<n;i++)`。
+  // 🔴 **它是【多字的單字名】，不是「主體 ＋ 操作」**，先例是 `if_else`／
+  //    `initializer_list`／`delay_microseconds`：那個「多字」是一個**不可分的語言構造**。
+  // ⚠️ **不叫 `func_define`**：`func` 在這裡不是被操作的主體——
+  //    一個函式形巨集**不是一個函式**（它在編譯前就被代換掉了，沒有呼叫、
+  //    沒有型別、沒有作用域）。把它排進 `func_*` 那一族會讓那一族多一個冒牌貨。
+  // 🔴 而它**與 `define` 分成兩顆**的理由：`#define f (x)` 與 `#define f(x)`
+  //    差一個空格而是兩種東西——前者綁一個值，後者是一個可展開的樣板。
+  //    「語義上做的事不同 ⟹ 是身分」（`元件代數.md:250`）。
+  'define_func',
   'forward_decl', 'builtin_constant',
   // 降級標記——不是元件，應走 declareNonComponent
   'raw_code', 'raw_expression',

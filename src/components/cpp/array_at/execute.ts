@@ -26,9 +26,30 @@ export function registerExecute(register: (component: string, executor: Componen
 
       // String subscript: s[i] returns char
       if (container.type === 'string' && typeof container.value === 'string') {
-        if (index < 0 || index >= container.value.length) {
+        /**
+         * 🔴 **`s[s.size()]` 不是越界——C++11 起它【有定義】，回一個空字元。**
+         *（2026-09-20，語料 `AP325/7/7_4.cpp`）
+         *
+         * ```cpp
+         * string s = "1";
+         * cout << (int)s[1];   g++ 印 0        ← 標準規定的，不是 UB
+         * cout << (int)s[2];   🔴 這一個才是 UB
+         * ```
+         *
+         * 語料那一支拿 `d2[i][j]` 掃一張格子圖，而餵進去的測資讓某一列比較短
+         * ——於是 `j == size()` 命中，g++ 讀到 `'\0'`（判斷為「不是 `'0'`」），
+         * 而我們**丟出越界**，整支程式停在那裡。
+         *
+         * > **一條「超過長度就是錯」的規則，對【剛好等於長度】那一格說了一個
+         * > 標準沒有說的話——而它比標準嚴格的地方，看起來與缺陷一模一樣。**
+         *
+         * ⚠️ **只有【讀】是這樣**：寫進 `s[s.size()]` 仍然是 UB。
+         *    這一段是讀的那一路（寫的那一路在下面 `place()` 裡，它照舊）。
+         */
+        if (index < 0 || index > container.value.length) {
           throw new RuntimeError(RUNTIME_ERRORS.INDEX_OUT_OF_RANGE, { '%1': String(index) })
         }
+        if (index === container.value.length) return { type: 'char', value: '\0' }
         return { type: 'char', value: container.value[index] }
       }
 

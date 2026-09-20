@@ -1,0 +1,4 @@
+{
+  "CPP_DEFINE_FUNC_MSG0": "Define expandable template %1 with parameters %2 as %3",
+  "CPP_DEFINE_FUNC_TOOLTIP": "Give a short name to a piece of code you write repeatedly; the arguments are substituted in wherever it is used. Note that this happens before compilation, so the names inside the expansion refer to whatever was substituted, not to the original variables."
+}

@@ -455,6 +455,7 @@
           "cpp:destructor",
           "cpp:include_local",
           "cpp:define",
+          "cpp:define_func",
           "cpp:ifdef",
           "cpp:ifndef",
           "cpp:forward_decl",

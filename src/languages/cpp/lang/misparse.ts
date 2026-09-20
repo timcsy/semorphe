@@ -149,7 +149,7 @@ const PARSERS = new WeakMap<object, Parser>()
  * 🔴 **拿不到就回 `null`**——那時整段照舊走降級（會出聲），
  *    **不要靜默地回原本那棵錯的樹**。
  */
-function parserFor(node: AstNode): Parser | null {
+export function parserFor(node: AstNode): Parser | null {
   const language = (node as unknown as { tree?: { language?: unknown } }).tree?.language
   if (!language) return null
   let parser = PARSERS.get(language as object)
@@ -210,6 +210,54 @@ export function reparseExpression(node: AstNode, text: string): AstNode | null {
  * > **一個掛在「手寫 lifter」上的修復，修的是那些沒有樣式認領的節點
  * > ——而解析器解錯的地方，樣式照樣認領得很順。**
  */
+/**
+ * **把一段文字當【語句】重解一次**，回傳那個語句裡的運算式。
+ *
+ * 🔴 為什麼需要它（`reparseExpression` 不夠）：tree-sitter 對**逗號運算式**
+ * 的處置**隨位置而變**（2026-09-20 實測）：
+ *
+ * ```
+ * x = 3, x + 1;      語句位置   →  comma_expression（對的）
+ * (x = 3, x + 1)     括號裡     →  assignment_expression ＋ 一個 ERROR  🔴
+ * return (x=3, x+1); 回傳位置   →  同樣錯
+ * ```
+ *
+ * 所以要把它搬到**解得對的那個位置**去重解。
+ */
+function reparseAsStatement(node: AstNode, text: string): AstNode | null {
+  const parser = parserFor(node)
+  if (!parser) return null
+  const tree = parser.parse(`void __semorphe_stmt(){ ${text}; }`)
+  if (!tree || tree.rootNode.hasError) return null
+  let found: AstNode | null = null
+  const walk = (n: AstNode): void => {
+    if (found) return
+    if (n.type === 'expression_statement') { found = n.namedChildren[0] ?? null; return }
+    for (const c of n.namedChildren) walk(c)
+  }
+  walk(tree.rootNode as never)
+  return found
+}
+
+/** 這段文字的**最外層**有沒有逗號（括號／角括號／引號裡的不算）。 */
+function hasTopLevelComma(text: string): boolean {
+  let depth = 0
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (ch === "'" || ch === '"') {
+      for (i++; i < text.length; i++) {
+        if (text[i] === '\\') { i++; continue }
+        if (text[i] === ch) break
+      }
+      continue
+    }
+    if (ch === '(' || ch === '[' || ch === '{' || ch === '<') depth++
+    else if (ch === ')' || ch === ']' || ch === '}' || ch === '>') depth--
+    else if (ch === ',' && depth === 0) return true
+  }
+  return false
+}
+
 export function registerMisparseRepairs(): void {
   /** ① `!K--` → `!(K--)`：重解成一棵把括號補在對的地方的樹。 */
   declareAstRepair((node: AstNode, ctx: LiftContext): SemanticNode | null => {
@@ -230,6 +278,51 @@ export function registerMisparseRepairs(): void {
      * C++ 的後置 `--` 本來就綁得比 `!` 緊，所以產生器照優先級也不會補。
      */
     if (lifted) stripParenHintAt(lifted, 0, WRAP_PREFIX.length + inserted.length)
+    return lifted
+  })
+
+  /**
+   * ③ `(x = 3, x + 1)`：**括號裡的逗號運算式，tree-sitter 解錯**（2026-09-20，盲測抓到）。
+   *
+   * ```
+   * 寫的                     tree-sitter 給的                      C++ 說的
+   * (x = 3, x + 1)           assignment_expression                 逗號運算式
+   *                            identifier x
+   *                            ERROR ⟪3⟫        ← 那個 3 在這裡面
+   *                            binary_expression x + 1
+   * ```
+   *
+   * 🔴 **而我們把那個 ERROR 安靜吞掉了**：產出 `(x = x + 1)`——`3` 不見了，
+   * 兩邊熔成一句，**而輸出是一個型別正確、看起來合理的數字**（g++ 4、我們 2）。
+   *
+   * > **一個解析器的 ERROR 節點如果沒有人看它，
+   * > 它會變成一段「乾淨的樹」——而乾淨正是它活下來的原因。**
+   *
+   * ## 它憑什麼是「唯一合法的讀法」
+   *
+   * `(A, B)` 在 C++ 裡只有一種讀法：一個括號包住的逗號運算式。
+   * tree-sitter 給的那棵樹**根本不是合法的 C++**（它有 ERROR）。
+   *
+   * 🟢 **處方是把它搬到解得對的位置去重解**：同一段文字在**語句位置**
+   * （`x = 3, x + 1;`）tree-sitter 解得完全正確。
+   * ⚠️ 而**括號要記回去**——它是使用者寫的，而這條路繞過了拆括號那個樣式。
+   */
+  declareAstRepair((node: AstNode, ctx: LiftContext): SemanticNode | null => {
+    if (node.type !== 'parenthesized_expression' || !node.hasError) return null
+    const text = node.text.trim()
+    if (!text.startsWith('(') || !text.endsWith(')')) return null
+    const inner = text.slice(1, -1)
+    // 沒有頂層逗號 ⟹ 這不是逗號運算式，那個 ERROR 是別的東西——讓開
+    if (!hasTopLevelComma(inner)) return null
+    const reparsed = reparseAsStatement(node, inner)
+    if (!reparsed || reparsed.type !== 'comma_expression') return null
+    const lifted = ctx.lift(reparsed)
+    if (!lifted || lifted.componentId === 'raw_code' || lifted.componentId === 'unresolved') return null
+    // ⚠️ 括號是使用者寫的——這條路沒有經過 `cpp_unwrap_parens`，要自己記
+    lifted.metadata = {
+      ...(lifted.metadata ?? {}),
+      layoutHints: { ...(lifted.metadata?.layoutHints ?? {}), parenthesized: true },
+    }
     return lifted
   })
 
