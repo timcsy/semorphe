@@ -116,7 +116,7 @@ describe('護欄：存檔欄位的歸屬與讀取點（第六十一條）', () =
    *
    * ## ⚠️ 為什麼 `context` 也算
    *
-   * `context` 桶（`topicId`／`targetId`／`enabledBranches`）的定義是
+   * `context` 桶（`topicId`／`targetId`）的定義是
    * 「屬於現在在上哪一課」——**沒有課的時候它本來就不該在**。
    * 把它列為必填等於要求「每一份存檔都在上課」。
    */

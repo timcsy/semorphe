@@ -1,5 +1,4 @@
 import type { SemanticNode, StylePreset, Topic } from '../types'
-import { getVisibleComponents } from '../lesson/level-tree'
 import type { ProgramScaffold, ScaffoldResult } from '../program-scaffold'
 // 🔴 **不再 import 語言套件**（spec 153）——風格分析由組裝點推進來。
 //
@@ -176,9 +175,21 @@ export class SyncController {
   private codingStyle: StylePreset | null = null
   private programScaffold: ProgramScaffold | null = null
   private currentTopic: Topic | null = null
-  private enabledBranches: Set<string> = new Set()
   /**
-   * 🔴 **由組裝點餵，不再自己從 `enabledBranches` 算。**
+   * **這一刻使用者看得到哪些元件**——由組裝點餵（`ui/app.ts` 的 `toolboxComponents`
+   * 那一族），這個檔不自己算。
+   *
+   * 🪦 **2026-09-20 之前這裡是 `enabledBranches: Set<string>`**，而它搭配
+   * `getVisibleComponents(topic, branches)` 現算——那是 `ui/app.ts` 裡同一個決定的
+   * 第二份實作。兩份都讀同一個集合時它們碰巧一致，所以那個雙重真相一直沒有出聲。
+   * 層級樹退場（見 `core/types.ts` 的 `Topic.components`）之後，
+   * 「看得到什麼」只剩一個來源：**自由模式是主題的清單，課程模式是那一課的**。
+   *
+   * > **一個「自己算得出來」的欄位，會在算法變的那天留下兩個答案。**
+   */
+  private visibleComponents: Set<string> = new Set()
+  /**
+   * 🔴 **由組裝點餵，不再自己算。**
    * 那是同一個決定的第二份實作——兩份都讀同一個集合時它們碰巧一致，
    * 所以那個雙重真相一直沒有出聲，而只修一份的時候症狀不會消失。
    */
@@ -270,19 +281,20 @@ export class SyncController {
     this.programScaffold = scaffold
   }
 
-  setTopic(topic: Topic, enabledBranches: Set<string>): void {
+  setTopic(topic: Topic, visibleComponents: Set<string>): void {
     this.currentTopic = topic
-    this.enabledBranches = enabledBranches
+    this.visibleComponents = visibleComponents
   }
 
-  setBranches(enabledBranches: Set<string>): void {
-    this.enabledBranches = enabledBranches
+  /** 可見集合變了（換課、換目標、鷹架深度變）——由組裝點推。 */
+  setVisibleComponents(visibleComponents: Set<string>): void {
+    this.visibleComponents = visibleComponents
   }
 
   /**
    * 積木上要不要看到鷹架（`#include`／`int main()`）：0 剝掉 · 1 幽靈 · 2+ 可編輯。
    *
-   * ## 🔴 它曾經是 `enabledBranches` 的函數，而那是一個混用
+   * ## 🔴 它曾經是「已啟用分支」那個集合的函數，而那是一個混用
    *
    * 那個集合同時扛了**兩個決定**——「哪些元件看得到」與「鷹架露到第幾層」。
    * 於是 2026-08-28 的「預設全開」（**只想改前者**）連帶把鷹架
@@ -294,7 +306,7 @@ export class SyncController {
    * > **兩個決定共用一個載體時，改動其中一個永遠會偷偷改到另一個。**
    *
    * ⚠️ **這裡與 `ui/app.ts` 是同一個決定的兩份實作**——那本身是雙重真相，
-   * 而兩份都讀 `enabledBranches` 的時候它們碰巧一致。拆開之後兩邊都固定 0，
+   * 而兩份都讀同一個集合的時候它們碰巧一致。拆開之後兩邊都固定 0，
    * 而**真的要讓它變動的那天，來源要是同一個**（多半是課的 `pins`）。
    */
   private getScaffoldDepth(): number {
@@ -352,7 +364,7 @@ export class SyncController {
       ? tree
       : this.displayTreeEnhancer(
         tree,
-        getVisibleComponents(this.currentTopic, this.enabledBranches),
+        this.visibleComponents,
         !this.shouldStripScaffold(),
       )
     // 🔴 **畫出來的是這一棵，不是 `currentTree`**（2026-09-02）。
@@ -709,7 +721,7 @@ export class SyncController {
       let downgradedTree = tree
       this.identityBeforeDowngrade.clear()
       if (this.currentTopic) {
-        const visible = getVisibleComponents(this.currentTopic, this.enabledBranches)
+        const visible = this.visibleComponents
         downgradedTree = this.cloneTree(tree)
         this.downgradeComponentsForLevel(downgradedTree, visible)
       }
@@ -957,7 +969,7 @@ export class SyncController {
       // 同上：降級只作用在顯示用的拷貝上，`fullTree` 保持真實
       let downgradedTree = fullTree
       if (this.currentTopic) {
-        const visible = getVisibleComponents(this.currentTopic, this.enabledBranches)
+        const visible = this.visibleComponents
         downgradedTree = this.cloneTree(fullTree)
         this.downgradeComponentsForLevel(downgradedTree, visible)
       }

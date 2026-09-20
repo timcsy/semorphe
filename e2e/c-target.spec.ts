@@ -22,17 +22,21 @@
  * 第一刀兩筆目標**綁到同一個課程清單**，於是「選一次而不是三次」
  * **只兌現了三分之一**：產出換成 C 了，**而工具箱裡還是 `vector`／`string`**。
  *
- * ⚠️ **而這一半有一個空過的陷阱**：開機時 `enabledBranches` 只有根節點
- * （`app.ts`：`new Set([this.currentTopic.levelTree.id])`），
- * 而 **L0 那 19 顆一顆都不用排除**。
+ * ⚠️ **而這一半有一個空過的陷阱**：那時開機只展開根節點，
+ * 於是「C++ 專屬概念」在**切過去之前就已經是 0**，而「切過去之後是 0」
+ * 什麼都沒證明。
  *
  * ```
- * 不展開層級   選 C++ 時 C++ 專屬概念 = 0  →  選 C 之後也是 0  →  【什麼都沒證明】
- * 展開層級     選 C++ 時 C++ 專屬概念 > 0  →  選 C 之後是 0    →  🟢 證明了
+ * 只有根節點   選 C++ 時 C++ 專屬概念 = 0  →  選 C 之後也是 0  →  【什麼都沒證明】
+ * 全部展開     選 C++ 時 C++ 專屬概念 > 0  →  選 C 之後是 0    →  🟢 證明了
  * ```
  *
  * → 所以「★ 入口條件」那一段**比結論重要**（`build-guardrail` 第 10 步：
  * 「測試通過之前，先證明它真的測到了東西」）。
+ *
+ * 🪦 **2026-09-20：層級樹退場之後，自由模式本來就是「這個主題的全部」**
+ * ——那個陷阱的成因不存在了，而**入口條件那一段留著**：它現在守的是
+ * 「C++ 那一側真的看得到 C++ 專屬積木」，而那仍然是結論的前提。
  *
  * ## 這支不檢測什麼
  *
@@ -181,27 +185,9 @@ test('★ 使用者自己寫的 #include，在 C 目標下也要換掉', async (
 test('★ 選 C 目標 → 工具箱裡拿不到 C 沒有的東西', async ({ page }) => {
   await ready(page)
 
-  // 🔴 展開全部層級——不展開的話下面那個 0 在功能做出來之前就成立了（見檔頭）
-  await page.evaluate(() => {
-    const app = window as never as {
-      __app: {
-        currentTopic: { levelTree: unknown }
-        enabledBranches: Set<string>
-        reloadBlockSpecsForTopic(): void
-        updateToolbox(): void
-      }
-    }
-    const all = new Set<string>()
-    const walk = (n: { id: string; children: unknown[] }): void => {
-      all.add(n.id)
-      for (const k of n.children) walk(k as { id: string; children: unknown[] })
-    }
-    walk(app.__app.currentTopic.levelTree as { id: string; children: unknown[] })
-    app.__app.enabledBranches = all
-    app.__app.reloadBlockSpecsForTopic()
-    app.__app.updateToolbox()
-  })
-  await page.waitForTimeout(600)
+  // 🪦 這裡在 2026-09-20 之前要**手動展開全部層級**——層級退場之後
+  //    自由模式本來就是「這個主題的全部」，所以不必做任何事。
+  //    ⚠️ 下面的「★ 入口條件」照舊——它才是這一支不空過的保證。
 
   // ★ 入口條件：展開之後，C++ 那一側【真的看得到】這些東西
   const cppSide = await toolboxText(page)

@@ -84,7 +84,6 @@ const probe: SavedState = {
   language: 'probe-lang',
   styleId: 'probe-style',
   topicId: 'probe-topic',
-  enabledBranches: ['probe-branch'],
   lastModified: '2026-01-01T00:00:00.000Z',
   blockStyleId: 'probe-block-style',
   locale: 'probe-locale',

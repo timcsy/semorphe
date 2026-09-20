@@ -61,7 +61,6 @@ const filledState: SavedState = {
   styleId: 'google',
   topicId: 'apcs-basic',
   targetId: 'c',
-  enabledBranches: ['a', 'b'],
   lastModified: '2026-08-06T00:00:00.000Z',
   blockStyleId: 'zelos',
   locale: 'en',
@@ -103,7 +102,11 @@ describe('欄位守恆：存檔格式宣告的每個欄位都載得回來', () =
     // 這支守的是「有人把 SAVED_STATE_FIELDS 縮水好讓上面那支通過」
     // ⚠️ 11 → 12（2026-08-17，spec 136）：新增 `targetId`，見 storage-version.test.ts 的說明。
     // ⚠️ 12 → 13（2026-08-27，v17）：新增 `flowLayout`，同上。
-    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(13)
+    // 🪦 13 → 12（2026-09-20，v24）：**`enabledBranches` 退場**（層級樹退場那一刀）。
+    //    **下調是刻意的**：那一格記的是「哪幾個教學分支打開了」，而那個機制
+    //    整個不存在了——收窄只剩一個來源，就是課。使用者：「我們現在已經有
+    //    課程了，應該就沒有需要再用 levelTree 了吧」。舊存檔那一格由 `UPGRADES[23]` 丟掉。
+    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(12)
     // 🔴 **比鍵，不是比數量**（2026-08-27 改）。
     //
     // 原本是 `filledState 的長度 === 宣告的長度`——而它放過了一個**六個版本**的

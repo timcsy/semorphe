@@ -43,7 +43,6 @@ const SAVED = JSON.stringify({
   flowLayout: [],
   topicId: 'cpp-beginner',
   targetId: 'cpp',
-  enabledBranches: ['L0', 'L1a', 'L2a', 'L3a', 'L1b', 'L2b', 'L2c', 'L3b', 'L3c', 'L1c'],
   blockStyleId: 'scratch',
   locale: 'zh-TW',
 })

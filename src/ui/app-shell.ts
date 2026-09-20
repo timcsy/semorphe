@@ -82,8 +82,7 @@ export interface AppShellElements {
 }
 
 export interface AppShellCallbacks {
-  onTargetChange: (target: Target, topic: Topic, enabledBranches: Set<string>) => void
-  onBranchesChange: (enabledBranches: Set<string>) => void
+  onTargetChange: (target: Target, topic: Topic) => void
   onStyleChange: (style: StylePreset) => void
   onBlockStyleChange: (preset: BlockStylePreset, toolbox: object) => void
   onLocaleChange: (locale: string) => void

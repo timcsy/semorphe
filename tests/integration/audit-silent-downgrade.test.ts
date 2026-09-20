@@ -81,16 +81,9 @@ function tracks(): Map<string, Set<string>> {
     if (!existsSync(dir)) continue
     for (const file of readdirSync(dir)) {
       if (!file.endsWith('.json')) continue
-      const d = JSON.parse(readFileSync(path.join(dir, file), 'utf8')) as {
-        levelTree: { components?: string[]; children?: unknown[] }
-      }
-      const s = new Set<string>()
-      const walk = (n: { components?: string[]; children?: unknown[] }): void => {
-        for (const c of n.components ?? []) s.add(c)
-        for (const k of (n.children ?? []) as { components?: string[]; children?: unknown[] }[]) walk(k)
-      }
-      walk(d.levelTree)
-      out.set(file, s)
+      // 🪦 2026-09-20 之前這裡走的是 `levelTree` 那棵樹——它退場之後清單是平的。
+      const d = JSON.parse(readFileSync(path.join(dir, file), 'utf8')) as { components?: string[] }
+      out.set(file, new Set(d.components ?? []))
     }
   }
   return out

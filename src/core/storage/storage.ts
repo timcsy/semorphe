@@ -84,7 +84,11 @@ export interface SavedState {
    * P8「不做向後相容」管的是投影與程式碼，**不管存檔**（見 `history/026`）。
    */
   targetId?: string
-  enabledBranches?: string[]
+  /**
+   * 🪦 **`enabledBranches` 於 2026-09-20 退場**（層級樹退場那一刀）。
+   * 它記的是「哪幾個教學分支打開了」，而那個機制整個不存在了
+   * ——收窄由**課**做。舊存檔那一格由 `UPGRADES[23]` 丟掉。
+   */
   lastModified: string
   blockStyleId?: string
   locale?: string

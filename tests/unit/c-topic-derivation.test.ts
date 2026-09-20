@@ -52,7 +52,6 @@ import cppBeginner from '../../src/languages/cpp/topics/cpp-beginner.json'
 import cBeginner from '../../src/languages/cpp/topics/c-beginner.json'
 import { toCHeader } from '../../src/languages/cpp/header-aliases'
 import { allComponentDefs } from '../helpers/component-scan'
-import type { LevelNode } from '../../src/core/types'
 
 /**
  * ② 語言層的 C++ 專屬概念——**不需要標頭，所以 `requires` 看不到它們**。
@@ -109,28 +108,10 @@ function libraryLevelExclusions(): Set<string> {
   return out
 }
 
-function componentsOf(root: LevelNode): Set<string> {
-  const out = new Set<string>()
-  const walk = (n: LevelNode): void => {
-    for (const c of n.components) out.add(c)
-    for (const k of n.children) walk(k)
-  }
-  walk(root)
-  return out
-}
 
-function shapeOf(root: LevelNode): string[] {
-  const out: string[] = []
-  const walk = (n: LevelNode, d: number): void => {
-    out.push(`${'  '.repeat(d)}${n.id}/${n.level}`)
-    for (const k of n.children) walk(k, d + 1)
-  }
-  walk(root, 0)
-  return out
-}
 
-const CPP = componentsOf((cppBeginner as { levelTree: LevelNode }).levelTree)
-const C = componentsOf((cBeginner as { levelTree: LevelNode }).levelTree)
+const CPP = new Set((cppBeginner as { components: string[] }).components)
+const C = new Set((cBeginner as { components: string[] }).components)
 
 describe('C 課程清單的推導', () => {
   it('★ 入口條件：兩份清單都真的載入了（合成量）', () => {
@@ -150,26 +131,26 @@ describe('C 課程清單的推導', () => {
   })
 
   /**
-   * ⚠️ 判準是「**子集**」不是「相同」——因為**整個子樹都空的節點被剪掉了**。
+   * 🪦 **「形狀是子集」那一條於 2026-09-20 退場**（層級樹退場那一刀）。
    *
-   * C 沒有 STL 容器（L3a）、沒有 OOP（L3b）、沒有例外（L3c）——
-   * 那三個節點扣完之後一顆概念都不剩。**留著會在選單裡顯示成三個空分類**，
-   * 而一個空的「L3b: OOP 進階」告訴學生的是「這裡有東西而你看不到」，
-   * **那正好是相反的訊息**。
+   * 它檢查的是 C 那棵樹的**節點與層級**（`L0/0`、`L1a/1`…）逐字是 C++ 那棵的子集
+   * ——而那些節點不存在了。使用者：「我們現在已經有課程了，應該就沒有需要再用
+   * levelTree 了吧」，而那一層確實從來沒有被用來收窄過。
    *
-   * 🔴 **而剪掉空子樹仍然是過濾（P4），不是另寫一棵樹**：
-   * 留下來的每一個節點，`id`／`level`／巢狀關係都與 C++ 那份**逐字相同**。
+   * 🟢 **而它活下來的那一半仍然要守**：C 是 C++ 的**過濾**（P4），不是另寫一份。
+   * 那一半就是下面這條——**而且它比舊的那條強**：舊的比「樹長什麼樣」，
+   * 這一條比「裡面有什麼」，而後者才是學生看得到的東西。
+   *
+   * > **一個形狀的檢查，在形狀消失之後，要問的是它本來想保護什麼。**
    */
-  it('★ 形狀是子集——節點與層級不得被改寫，只准整個空子樹被剪掉', () => {
-    const cShape = shapeOf((cBeginner as { levelTree: LevelNode }).levelTree)
-    const cppShape = new Set(shapeOf((cppBeginner as { levelTree: LevelNode }).levelTree))
-    const foreign = cShape.filter((s) => !cppShape.has(s))
+  it('★ C 是 C++ 的【真】子集——它是過濾，不是另外寫一份', () => {
+    const foreign = [...C].filter((c) => !CPP.has(c))
     expect(
       foreign,
-      '🔴 C 課程清單有 C++ 那份沒有的節點——它是**過濾**（P4），不是另外寫一棵樹。',
+      '🔴 C 課程清單有 C++ 那份沒有的元件——它是**過濾**（P4），不是另外寫一份。',
     ).toEqual([])
-    // ★ 入口條件：真的還剩下節點（合成量），否則上一行對空陣列恆為真
-    expect(cShape.length, '🔴 C 的樹被剪成空的').toBeGreaterThan(4)
+    // ★ 入口條件：真的**有扣掉東西**（否則上一行對「兩份一樣」也是綠的）
+    expect(CPP.size - C.size, '🔴 C 與 C++ 一樣大 ⟹ 上一行什麼都沒證明').toBeGreaterThan(20)
   })
 
   it('★ 交叉驗證①：具名清單裡不得有幽靈（指向不存在的概念）', () => {

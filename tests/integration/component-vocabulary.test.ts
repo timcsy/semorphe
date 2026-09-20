@@ -238,7 +238,7 @@ describe('spec 158 · 舊詞彙不准回來', () => {
    *
    * 2026-08-20 判官實測：spec 159 把程式碼改完了，而 5 支 skill 還寫著
    * `findConcepts(`（程式碼 **0 處**，實際叫 `findComponents`，91 處）、
-   * `UniversalConcept`（0 處）、`getVisibleConcepts`（實際 `getVisibleComponents`）。
+   * `UniversalConcept`（0 處）、`getVisibleConcepts`（它 2026-09-20 隨層級樹一起退場）。
    * 窄規則一個都沒擋到——**skill 會照著做，它不只是誤導。**
    */
   it('🔴 `skills/` 不得指名 concept 家族——除非那一行在立墓碑', () => {

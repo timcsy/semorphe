@@ -27,7 +27,7 @@ import { loadToolbox, curriculumSnapshot } from '../helpers/toolbox'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { buildToolbox } from '../../src/core/blocks/toolbox-builder'
 import { CATEGORY_COLORS } from '../../src/core/blocks/category-colors'
-import { getVisibleComponents } from '../../src/core/lesson/level-tree'
+import { topicComponents } from '../../src/core/lesson/topic-components'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { cppCategoryDefs } from '../../src/languages/cpp/toolbox-categories'
 import { REPO_ROOT } from '../helpers/guardrail'
@@ -101,11 +101,22 @@ describe('起始關卡的工具箱——**使用者第一眼看到的東西**', 
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(allCppComponents(), allCppProjections())
 
-  /** 一門課的**起始關卡**——使用者第一次打開看到的就是這個 */
+  /**
+   * **使用者第一次打開看到的就是這個**。
+   *
+   * 🪦 2026-09-20 之前這裡取的是層級樹的 `L0`（起始關卡），而那一層退場了
+   *（見 `src/core/types.ts` 的 `Topic.components`）。冷開時**沒有選課**，
+   * 而自由模式就是「這個主題的全部」——所以第一眼看到的換成了這一份。
+   *
+   * ⚠️ **上面那段檔頭的敏感度論證因此弱了一點**（L0 幾乎只有通用積木，
+   * 所以整批來源消失時它裸露得最清楚）。🟢 而下面每一條斷言**仍然抓得到**
+   * 那個病：`(universal)` 段落回零筆的話，`cpp_var_declare`／`cpp_print`
+   * 就不在清單裡，而那正是那幾條在問的。
+   */
   function startLevel(topic: unknown): { classify: string[]; blocks: string[] } {
     const tb = buildToolbox({
       blockSpecRegistry: reg,
-      visibleComponents: getVisibleComponents(topic as never, new Set(['L0'])),
+      visibleComponents: topicComponents(topic as never),
       ioPreference: 'iostream',
       msgs: {},
       categoryColors: CATEGORY_COLORS,
@@ -167,9 +178,9 @@ describe('課程清單快照', () => {
     ).toEqual(base)
   })
 
-  it('★ 自我檢查：兩份清單都有層級', () => {
+  it('★ 自我檢查：兩份清單都不是空的', () => {
     for (const s of snaps) {
-      expect(s.levels.length, `${s.id} 沒有任何層級 → 是解析壞了`).toBeGreaterThan(0)
+      expect(s.components.length, `${s.id} 清單是空的 → 是解析壞了`).toBeGreaterThan(0)
     }
   })
 })

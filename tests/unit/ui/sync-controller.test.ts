@@ -305,7 +305,7 @@ describe('SyncController (bus-based)', () => {
 
   describe('resyncForTopic (topic change)', () => {
     it('should emit resync event with both code and blockState', () => {
-      controller.setTopic({ id: 'basics', language: 'cpp', name: 'Basics', description: '', levelTree: { id: 'root', level: 0, label: 'root', children: [] } }, new Set())
+      controller.setTopic({ id: 'basics', language: 'cpp', name: 'Basics', description: '', components: [] }, new Set())
 
       const handler = vi.fn()
       bus.on('semantic:update', handler)
@@ -332,7 +332,7 @@ describe('SyncController (bus-based)', () => {
     })
 
     it('should produce complete code even with body-only tree', () => {
-      controller.setTopic({ id: 'basics', language: 'cpp', name: 'Basics', description: '', levelTree: { id: 'root', level: 0, label: 'root', children: [] } }, new Set())
+      controller.setTopic({ id: 'basics', language: 'cpp', name: 'Basics', description: '', components: [] }, new Set())
 
       const handler = vi.fn()
       bus.on('semantic:update', handler)

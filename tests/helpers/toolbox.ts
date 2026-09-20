@@ -153,18 +153,17 @@ export function loadToolbox(
   return { registry, allComponents, allProjections, origins, snapshot, categoriesOf }
 }
 
-/** 課程清單的快照——成員是策展，這裡只負責留照片 */
+/**
+ * 課程清單的快照——成員是策展，這裡只負責留照片。
+ *
+ * 🪦 **2026-09-20 之前它照的是一棵樹**（`levelTree` ＋ `children`），
+ * 而那一層退場了（見 `src/core/types.ts` 的 `Topic.components`）。
+ * 照片的形狀跟著變平，**而它保護的東西一格沒變**：
+ *「這份清單的成員與順序不得被【演算法】決定」。
+ */
 export function curriculumSnapshot(topic: {
   id?: string
-  levelTree?: unknown
-}): { id: string; levels: { id: string; label: string; components: string[] }[] } {
-  const levels: { id: string; label: string; components: string[] }[] = []
-  const walk = (node: unknown): void => {
-    if (!node || typeof node !== 'object') return
-    const n = node as { id?: string; label?: string; components?: string[]; children?: unknown[] }
-    if (n.id) levels.push({ id: n.id, label: n.label ?? '', components: [...(n.components ?? [])] })
-    for (const c of n.children ?? []) walk(c)
-  }
-  walk(topic.levelTree)
-  return { id: topic.id ?? '(未命名)', levels }
+  components?: string[]
+}): { id: string; components: string[] } {
+  return { id: topic.id ?? '(未命名)', components: [...(topic.components ?? [])] }
 }
