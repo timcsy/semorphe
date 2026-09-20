@@ -481,6 +481,53 @@ describe('巨集體不是一個值：`#define z -\'0\'`', () => {
     expect(squash(out), '🔴 語句位置的 `z` 被展開掉了').toContain(squash('x = x*10+(s[0]z);'))
   })
 
+  /**
+   * 🔴 **[UNSUPPORTED:兩種巨集修復不相組合]**（2026-09-20，**瀏覽器驗收**抓到的）
+   *
+   * 一支同時用到兩種巨集的程式：
+   *
+   * ```cpp
+   * #define rep(i,n) for(int i=0;i<n;i++)
+   * #define z -'0'
+   * rep(i,2) x = x*10+(s[i]z);      整句掉進 raw_code
+   * ```
+   *
+   * 函式形那條修復（`repairMacroStatements`）會把整句**重解一次**，而那段文字
+   * 裡還有 `z`——解不乾淨就讓開（契約②），於是整句誠實降級。
+   *
+   * 🟢 **而它是誠實的，不是錯答案**：程式碼那一側一字不差、積木上是一塊灰色的
+   *「直接寫程式碼」、執行時主控台指名那一行說「這一塊我還不會執行」。
+   *
+   * **為什麼不是現在**：最直接的修法是讓 `reparseStatements` 先代入物件形巨集
+   * ——而那會**把 `z` 換掉**，於是迴圈主體產回去變成 `s[i] - '0'`，
+   * **使用者寫的字被改掉了**。要兩者兼顧得讓內層那一段各自帶自己的
+   * `layoutHints.verbatim`，而那是一個新的組合機制，不是一個分支。
+   *
+   * > **兩條各自誠實的修復，組合起來的預設是【兩條都讓開】
+   * > ——而那比其中一條猜錯好，所以它是對的預設，不是一個 bug。**
+   *
+   * ⚠️ **語料 0 處**：4 支用 `rep` 的不用 `z`，用 `z` 的那支不用 `rep`。
+   * 抓到它的是**開瀏覽器貼一段兩者都用的程式**。
+   *
+   * **何時該修**：巨集展開需要「內層各自記住自己的拼法」的那一刀。
+   */
+  it.fails('[UNSUPPORTED:兩種巨集修復不相組合] 🔴 `rep(i,2) x = …(s[i]z);`', () => {
+    const src = `#include <iostream>\n#include <string>\nusing namespace std;\n`
+      + `#define rep(i,n) for(int i=0;i<n;i++)\n#define z -'0'\n`
+      + `int main(){ string s="47"; int x=0;\n  rep(i,2) x = x*10+(s[i]z);\n  return x; }`
+    expect(idsOf(src), '🔴 兩種都展開了——那表示這根釘子可以拔了').toContain('cpp:loop_count')
+  })
+
+  it('★ 而它【誠實】：原文一字不差，且降級看得見', () => {
+    const src = `#include <iostream>\n#include <string>\nusing namespace std;\n`
+      + `#define rep(i,n) for(int i=0;i<n;i++)\n#define z -'0'\n`
+      + `int main(){ string s="47"; int x=0;\n  rep(i,2) x = x*10+(s[i]z);\n  return x; }`
+    const got = idsOf(src)
+    expect(got, '🔴 不展開就要出聲——安靜地少東西才是缺陷').toContain('cpp:raw_code')
+    const out = generateCode(lift(src), 'cpp', S)
+    expect(squash(out), '🔴 使用者寫的那一行被改掉了').toContain(squash('rep(i,2) x = x*10+(s[i]z);'))
+  })
+
   it('★ 不動點：產回去再 lift，還是同一棵', () => {
     const src = `${FRAG}int main(){ string s="47"; int x = (s[0]z); return x; }`
     const once = generateCode(lift(src), 'cpp', S)

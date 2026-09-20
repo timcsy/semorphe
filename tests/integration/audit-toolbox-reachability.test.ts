@@ -312,3 +312,76 @@ describe('可拿性護欄', () => {
     ])
   })
 })
+
+/**
+ * **一條軌不得比它的前一條少東西**——進階軌拿不到入門軌的積木（2026-09-20）。
+ *
+ * ## 🔴 它從瀏覽器驗收來，而三層機構都看不見它
+ *
+ * 語料收尾三刀做完、7000+ 支測試全綠、e2e 441 綠之後，開瀏覽器問
+ *「語料用到的積木，使用者拿得到嗎」，量到兩顆**只在進階軌缺席**的：
+ *
+ * ```
+ * cpp:string_at    s[i]——最基本的字串索引。而 L2a 有【33 顆】字串元件
+ * cpp:queue_back   q.back()——而 L2a 有 cpp:queue_front，進階軌還有一課「05-佇列與堆疊」
+ * ```
+ *
+ * ⚠️ **為什麼三層都看不見**：
+ *
+ * ```
+ * 可拿性護欄（上面那一條）  問「有沒有【某個】分類收它」  → 有（入門軌收了）🟢
+ * studycpp-has-blocks      問「這顆身分有沒有積木」      → 有 🟢
+ * 課程清單快照              問「清單有沒有被改掉」        → 沒有 🟢
+ * ```
+ *
+ * 三個問題都是對的，而**沒有一個問「換一條軌之後還在不在」**。
+ *
+ * > **一顆積木「拿得到」不是一個性質，是一個【在哪裡】的問題
+ * > ——而三條各自正確的檢查，可以一起漏掉同一個位置。**
+ *
+ * ## 判準：為什麼是「後一條 ⊇ 前一條」
+ *
+ * 進階軌的定位逐字是「**會 C++ 之後**」（`cpp-advanced.json` 的 description）。
+ * 一個已經學會入門內容的學生，切過去**不該弄丟任何一塊他已經會用的積木**。
+ *
+ * ⚠️ 反過來**不成立**：入門軌當然可以少於進階軌（那正是漸進揭露）。
+ * 所以這是一條**單向**的包含關係，不是相等。
+ */
+describe('一條軌不得比它的前一條少東西', () => {
+  const componentsOf = (topicFile: string): Set<string> => {
+    const raw = JSON.parse(
+      fs.readFileSync(path.join(REPO_ROOT, 'src/languages/cpp/topics', topicFile), 'utf8'),
+    ) as { levelTree: unknown }
+    const out = new Set<string>()
+    const walk = (n: unknown): void => {
+      const node = n as { components?: string[]; children?: unknown[] }
+      for (const c of node.components ?? []) out.add(c)
+      for (const c of node.children ?? []) walk(c)
+    }
+    walk(raw.levelTree)
+    return out
+  }
+
+  it('★ 入口條件：兩份清單都讀得到東西（否則下面在驗空氣）', () => {
+    expect(componentsOf('cpp-beginner.json').size).toBeGreaterThan(100)
+    expect(componentsOf('cpp-advanced.json').size).toBeGreaterThan(100)
+  })
+
+  it('🔴 `cpp-advanced` 要涵蓋 `cpp-beginner` 的每一顆', () => {
+    const beginner = componentsOf('cpp-beginner.json')
+    const advanced = componentsOf('cpp-advanced.json')
+    const lost = [...beginner].filter((c) => !advanced.has(c)).sort()
+    expect(
+      lost,
+      '🔴 從入門切到進階會【弄丟】這些積木——而學生已經學會它們了。'
+      + '\n   處置：把它們加進 `cpp-advanced.json` 裡【同族兄弟所在的那一層】。',
+    ).toEqual([])
+  })
+
+  it('★ 反向不成立——進階本來就可以多（這一條是在守判準的方向）', () => {
+    const beginner = componentsOf('cpp-beginner.json')
+    const advanced = componentsOf('cpp-advanced.json')
+    const extra = [...advanced].filter((c) => !beginner.has(c))
+    expect(extra.length, '🔴 進階沒有任何多出來的東西 ⟹ 上面那條包含關係是空話').toBeGreaterThan(10)
+  })
+})
