@@ -290,6 +290,137 @@ function contentDigest(node: SemanticNode): string {
   return value.length > 0 ? ` | ${value.join(' | ')}` : ''
 }
 
+/**
+ * **產出不得比使用者寫的少**——語法錯誤那一族的誠實閘。
+ *
+ * ## 🔴 為什麼判準是「少了沒」，不是「有沒有語法錯誤」
+ *
+ * 一段解不乾淨的程式，產生器今天的表現**分成兩種，而兩種都要留著**
+ *（2026-09-20 拿七種形狀量的）：
+ *
+ * ```
+ * 漏分號（下一行是宣告）  int x = 1            → int x = 1;           🟢 順手補回去
+ * 漏右大括號              int main(){ …        → 補上 }               🟢 順手補回去
+ * 語句位置的亂碼          x @@ 2;              → x @@ ⏎ 2;           🟢 字都在
+ * 引數位置的亂碼          max(x, @@)           → max(x, , @@)        🟢 字都在
+ * ──
+ * 漏分號（下一行是 cout） int x = 1 ⏎ cout<<x; → int x = cout << x;  🔴🔴 變成【另一支程式】
+ * 括號運算式裡的亂碼      (x @@ 2)             → (x)                 🔴 弄丟
+ * 宣告初值是亂碼          int x = @@@;         → int x;              🔴 弄丟
+ * ```
+ *
+ * 🔴 **所以「一律照抄 `rawCode`」是錯的**——它會把上面那四種「順手補回去」
+ * 一起拿掉（而「補一個分號」正是最常見的那一種）。
+ * 而「都不照抄」就是下面那三種：**使用者的字在走一趟積木之後不見了**。
+ *
+ * > **一個「這一段我看不懂」的節點，產出可以比原文【多】（補一個分號），
+ * > 不可以比原文【少】——少掉的那幾個字是使用者打的。**
+ *
+ * ⚠️ 而第二種裡最糟的不是「弄丟」，是 `int x = cout << x;`
+ * ——它**編得過、看起來合理、而意思完全不同**。
+ *
+ * ## 判準：非空白字元的多重集合
+ *
+ * 比「包含子字串」寬鬆（排版、換行、補上的分號都不算差異），
+ * 比「相等」嚴格（少一個 `@` 就抓得到）。
+ *
+ * ⚠️ **只對已經標成 `syntax_error` 的節點問**——正常的節點本來就會正規化
+ *（`1e9` → `1000000000`、`(a)` → `a`），拿這把尺去量它們會全部誤判。
+ */
+function keepsEveryCharacter(out: string, raw: string): boolean {
+  const bag = new Map<string, number>()
+  for (const ch of out) { if (!/\s/.test(ch)) bag.set(ch, (bag.get(ch) ?? 0) + 1) }
+  for (const ch of raw) {
+    if (/\s/.test(ch)) continue
+    const n = bag.get(ch) ?? 0
+    if (n === 0) return false
+    bag.set(ch, n - 1)
+  }
+  return true
+}
+
+/**
+ * 🔴 **「產出比原文少」是症狀，而它有【兩個】來源**——這個旗標分開它們。
+ *
+ * ```
+ * 樹弄丟了東西    int x = 1 ⏎ cout << x;  的那個 1 沒有人認領   🔴 要修
+ * 風格換掉了寫法  cout << x;  →  printf("%d", x);              🟢 是投影
+ * ```
+ *
+ * ⚠️ **兩者在字面上長得一模一樣**（2026-09-20 撞到）：`cout << x;` 這個
+ * **頂層裸片段**會被標成 `syntax_error`（它確實不是一份合法的翻譯單元），
+ * 而它**完全被理解了**——樹裡是一顆 `print` 帶著 `x`。在 printf 風格下
+ * 產出 `printf("%d", x)`，`cout` 與 `<<` 不見了，而那正是這個產品在做的事。
+ *
+ * 🟢 分開它們的問法是：**少掉的字，換一個風格會不會回來。**
+ *
+ * > **少掉的字如果換一個風格就回來了，那它是投影，不是弄丟。**
+ *
+ * 這個旗標讓「再問一次」那一趟**不再走誠實閘**（否則會無窮遞迴）。
+ */
+let inHonestyRecheck = false
+
+/**
+ * 這個節點是不是「解不乾淨而【真的】弄丟了東西」的那一種——是的話，
+ * 產出就**改成照抄原文**。
+ *
+ * `reproduce` 是「拿另一個風格再產一次」，見 `inHonestyRecheck` 的檔頭。
+ */
+function honestly(
+  node: SemanticNode,
+  produced: string,
+  ctx: GeneratorContext,
+  reproduce: (ctx: GeneratorContext) => string,
+  wrap: (raw: string) => string,
+): string {
+  if (inHonestyRecheck) return produced
+  if (node.metadata?.degradationCause !== 'syntax_error') return produced
+  const raw = node.metadata.rawCode
+  if (raw == null) return produced
+  if (keepsEveryCharacter(produced, String(raw))) return produced
+
+  // 🟢 換一個風格再問一次——回得來的話，少掉的那幾個字是投影不是弄丟。
+  inHonestyRecheck = true
+  try {
+    for (const alt of otherStyleContexts(ctx)) {
+      if (keepsEveryCharacter(reproduce(alt), String(raw))) return produced
+    }
+  } finally {
+    inHonestyRecheck = false
+  }
+  return wrap(String(raw))
+}
+
+/**
+ * 同一棵樹、**另一種風格**的產生脈絡。
+ *
+ * 🔴 **換風格不是換 `ctx.style` 就好**（2026-09-20 第一版就是這樣寫的，沒有用）：
+ * 風格是在**建產生器表時**綁進閉包的——`registerGenerate(g, style)`，
+ * 而 `cpp:print` 讀的是那個閉包裡的 `style.io_style`，不是 `ctx.style`。
+ * 所以要重新叫一次 `factory(style)`。
+ *
+ * > **一個綁在閉包裡的設定，換掉它要換的是【產它的那張表】，
+ * > 不是那個同名的欄位。**
+ *
+ * ⚠️ `_mappings`／`_lineBox` 一律拿掉——這一趟是拿來**問問題**的，
+ * 它的產出不是給人看的，不得記進行號對照。
+ */
+function otherStyleContexts(ctx: GeneratorContext): GeneratorContext[] {
+  const factory = languageFactories.get(ctx.language)
+  if (!factory) return []
+  // ⚠️ `io_style` 是 `StylePreset` **自己**的欄位（`core/types.ts`），
+  //    不是某個語言的元件身分——核心讀它不違反中立性那一條。
+  const others: StylePreset['io_style'][] = ctx.style.io_style === 'cout' ? ['printf'] : ['cout']
+  return others.map((io) => {
+    const style: StylePreset = { ...ctx.style, io_style: io }
+    const generators = factory(style)
+    registerMetaComponentGenerators(generators)
+    const alt: GeneratorContext = { ...ctx, style, generators, _mappings: undefined, _lineBox: undefined }
+    wireTemplateFallbacks(alt)
+    return alt
+  })
+}
+
 export function generateNode(node: SemanticNode, ctx: GeneratorContext): string {
   const nodeId = node.id
   const tracking = ctx._mappings && nodeId
@@ -368,6 +499,16 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     }
   }
 
+  // 🔴 **產出不得比使用者寫的少**——見 `honestly` 的檔頭。
+  result = honestly(
+    node,
+    result,
+    ctx,
+    // ⚠️ 再產一次**不得動到行號對照**——那一趟是拿來問問題的，不是產物。
+    (alt) => generateNode(node, alt),
+    (raw) => (ctx.isExpression ? raw : `${indent(ctx)}${raw.trim()}\n`),
+  )
+
   // Update line count via shared box (survives indented() spread copies)
   if (ctx._mappings !== undefined) {
     const newlines = countNewlines(result)
@@ -424,6 +565,15 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
   }
   if (node.metadata?.layoutHints?.parenthesized === true) {
     const inner = generateExpression({ ...node, metadata: { ...node.metadata, layoutHints: { ...node.metadata.layoutHints, parenthesized: false } } }, ctx)
+    // 🔴 **`honestly` 照抄的原文【自己就帶著那對括號】**——再包一次就是上面那句
+    //    「兩處都加的話會變成 `((...))`」的第三個加括號點（2026-09-20 量到）。
+    //    ⚠️ 判準只對 `syntax_error` 問：正常的節點 `(x + 1)` 的 `inner` 是 `x + 1`，
+    //    少了那對括號 ⟹ 這裡為假 ⟹ 照舊包起來。
+    if (
+      node.metadata.degradationCause === 'syntax_error' &&
+      node.metadata.rawCode != null &&
+      keepsEveryCharacter(inner, String(node.metadata.rawCode))
+    ) return inner
     return `(${inner})`
   }
 
@@ -434,7 +584,16 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
 
   const exprCtx = ctx.isExpression ? ctx : { ...ctx, isExpression: true }
   const generator = exprCtx.generators.get(node.componentId)
-  if (generator) return asExpression(node, generator(node, exprCtx), exprCtx)
+  // 🔴 **產出不得比使用者寫的少**——見 `honestly` 的檔頭。
+  if (generator) {
+    return honestly(
+      node,
+      asExpression(node, generator(node, exprCtx), exprCtx),
+      exprCtx,
+      (alt) => generateExpression(node, alt),
+      (raw) => raw,
+    )
+  }
   // Meta-components that carry raw code — expression context returns raw value without formatting
   if (node.metadata?.rawCode != null) return String(node.metadata.rawCode)
   return `⟨${node.componentId}⟩`
