@@ -2265,8 +2265,25 @@ export class App {
       ...alwaysInScopeComponents(),
     ])
     if (!this.currentLesson) return base
-    // 🔴 **交集，不是取代**——課宣告了一顆這個目標根本沒有的元件時，
-    //    它不該憑空出現。而那種不一致由 `audit-lessons` 那條護欄擋在上游。
+    /**
+     * 🔴 **課說了算——不再與主題取交集**（2026-09-20，層級樹退場那一刀的後半）。
+     *
+     * 在此之前這裡是「交集，不是取代」，理由寫著「課宣告了一顆這個目標根本
+     * 沒有的元件時，它不該憑空出現」。⚠️ **而那個理由把兩件事混成一件**：
+     *
+     * ```
+     * 課宣告了一顆【不存在】的元件     🔴 是錯的 → 而它由護欄擋在上游（幽靈引用）
+     * 課宣告了一顆【主題沒列】的元件   🟢 是課的決定 → 而交集把它靜默吃掉了
+     * ```
+     *
+     * 📌 實測：`arduino/13-溫濕度` 宣告了 `cpp:container_iter`，而 arduino 的
+     * 清單沒有它 → **學生在那一課拿不到課文要他用的積木，而沒有人出聲**。
+     *
+     * > **一個「以防萬一」的交集，擋掉的第一個東西通常是別人刻意放進去的。**
+     *
+     * 🟢 而主題那一份**仍然是自由模式的範圍**（上面那個 early return）
+     * ——它沒有退場，退場的是它對課程的否決權。
+     */
     const want = new Set(this.currentLesson.components)
     // 🔴 **鷹架不是學生選的，所以它在【範圍】內——而不在【工具箱】裡。**
     //
@@ -2304,8 +2321,13 @@ export class App {
     //    所以範圍 ＝ 這一課要的 ∪ **畫面上真的是骨架的那幾塊的元件**。
     // 🔴 **不是概念的東西不受課程範圍管**（2026-09-02）——見 `isAlwaysInScope`。
     //    註解是第一個：它落在課程那張表外面，而那不代表學生不該碰它。
-    return new Set([...base].filter((c) =>
-      want.has(c) || isAlwaysInScope(c) || isScaffoldComponent(c) || this.scaffoldComponentIds().has(c)))
+    return new Set([
+      // 課宣告的**直接進來**——主題沒列不是拒絕的理由（見上）
+      ...want,
+      // 而「不是概念的」與「畫面上真的是骨架的」照舊從主題那一份補
+      ...[...base].filter((c) =>
+        isAlwaysInScope(c) || isScaffoldComponent(c) || this.scaffoldComponentIds().has(c)),
+    ])
   }
 
   /**
