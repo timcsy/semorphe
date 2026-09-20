@@ -393,6 +393,229 @@ function containsDegraded(n: SemanticNode): boolean {
   return false
 }
 
+// ── 巨集體不是一個值的【物件形】巨集 ────────────────────────────────
+
+/**
+ * 這棵樹裡的物件形巨集（`#define z -'0'`）——名字 → 展開文字。
+ *
+ * ⚠️ **與上面那張表刻意分開**：函式形（`preproc_function_def`）要記參數名，
+ * 物件形（`preproc_def`）只有一段文字。合成一張的話，每一個消費者都要先問
+ * 「這一筆是哪一種」——而那正是「一張表服務兩件事」的形狀。
+ */
+const OBJ_MACROS = new WeakMap<object, Map<string, string>>()
+
+function objectMacrosOf(node: AstNode): Map<string, string> {
+  const tree = (node as unknown as { tree?: object }).tree
+  if (!tree) return new Map()
+  const hit = OBJ_MACROS.get(tree)
+  if (hit) return hit
+  const out = new Map<string, string>()
+  const root = (tree as { rootNode?: AstNode }).rootNode
+  if (root) {
+    const walk = (n: AstNode): void => {
+      if (n.type === 'preproc_def') {
+        const name = n.childForFieldName('name')?.text
+        const body = n.childForFieldName('value')?.text
+        if (name && body !== undefined && body.trim() !== '') out.set(name, body.trim())
+        return
+      }
+      for (const c of n.namedChildren) walk(c)
+    }
+    walk(root)
+  }
+  OBJ_MACROS.set(tree as unknown as object, out)
+  return out
+}
+
+/** 把一段文字當成一個**運算式**重解一次；有語法錯誤就回 `null`。 */
+function reparseAsExpression(node: AstNode, text: string): AstNode | null {
+  const parser = parserFor(node)
+  if (!parser) return null
+  const tree = parser.parse(`void __semorphe_frag(){ ${text}; }`)
+  if (!tree || tree.rootNode.hasError) return null
+  // 重解出來的樹少了 `#define` 行——兩張巨集表都要帶過去（見上面那段的教訓）
+  MACROS.set(tree as unknown as object, macrosOf(node))
+  OBJ_MACROS.set(tree as unknown as object, objectMacrosOf(node))
+  let found: AstNode | null = null
+  const walk = (n: AstNode): void => {
+    if (found) return
+    if (n.type === 'expression_statement') { found = n.namedChildren[0] ?? null; return }
+    for (const c of n.namedChildren) walk(c)
+  }
+  walk(tree.rootNode as never)
+  return found
+}
+
+/**
+ * 🔴 **巨集體不是一個值的物件形巨集**（2026-09-20，語料 `w/APCS/j607_trash`）。
+ *
+ * ```cpp
+ * #define z -'0'
+ * x = x*10 + (s[i]z);      // 展開之後是 (s[i] - '0')
+ * ```
+ *
+ * `cpp:define` 那條路把它記進**別名表**（名字 → 名字），而 `-'0'` 不是一個名字，
+ * 它是**一段運算子片段**。於是 tree-sitter 在那個位置給一個 `ERROR` 節點：
+ *
+ * ```
+ * parenthesized_expression ⚠hasError
+ *   subscript_expression  «s[0]»
+ *   ERROR ⚠hasError       «z»       ← 巨集名整個變成一個錯誤節點
+ * ```
+ *
+ * 而在這一刀之前它**兩路都錯，其中一路是安靜的**：
+ *
+ * ```
+ * 執行    (s[0]z) 算成 52（把 z 整個忽略）   🔴 錯，而且不出聲
+ * 產回去  (s[0]z) → (s[0])                  🔴 z 靜默消失
+ * ```
+ *
+ * > **一個「這一段我看不懂」的節點，如果兩條投影都不說，
+ * > 那它就不是降級，是一個錯的答案。**
+ *
+ * ## 接手的條件（缺一就回 `null`，走原本那一路）
+ *
+ * ① 這個節點 `hasError`，而它的**直屬**子節點裡有 `ERROR`
+ * ② **每一個** `ERROR` 的文字都剛好是一個已知的物件形巨集名
+ *    ——不認得的名字本來就是一個錯誤，把它換掉會弄壞一整族診斷
+ * ③ 代入之後那段文字**解得乾淨**
+ * ④ 代入之後的樹**認得出來**（不是 raw_code／unresolved）
+ *
+ * ## 產出一字不差怎麼做到的
+ *
+ * 🟢 `layoutHints.verbatim` ＋ `metadata.rawCode` **本來就在**
+ *（`generateExpression` 的第一個分支，`"abc" "def"` 那條線在用）
+ * ——這裡只是接上它。⚠️ 而「積木改過之後這一格會不在」在這個消費者身上
+ * 同樣是一個**安全性質**：運算式一旦在積木那側被改過，再印 `(s[i]z)` 就是謊話。
+ */
+/**
+ * 把一段文字裡**引號外**的完整識別字換成它的巨集展開。
+ *
+ * ⚠️ **引號裡的不換**：`cout << "z"` 裡那個 `z` 是一個字元，不是一個巨集名。
+ * 🔴 而「完整識別字」要靠前後字元判——`zz` 裡有一個 `z`，而它不是那個巨集。
+ */
+function substituteObjectMacros(text: string, macros: Map<string, string>): { out: string; hits: number } {
+  const isWord = (c: string | undefined): boolean => c !== undefined && /[A-Za-z0-9_]/.test(c)
+  let out = ''
+  let hits = 0
+  let i = 0
+  while (i < text.length) {
+    const ch = text[i]
+    if (ch === "'" || ch === '"') {
+      const end = skipQuoted(text, i)
+      out += text.slice(i, end)
+      i = end
+      continue
+    }
+    if (/[A-Za-z_]/.test(ch) && !isWord(text[i - 1])) {
+      let j = i
+      while (j < text.length && isWord(text[j])) j++
+      const word = text.slice(i, j)
+      const body = macros.get(word)
+      if (body !== undefined) {
+        out += ` ${body} `
+        hits++
+      } else {
+        out += word
+      }
+      i = j
+      continue
+    }
+    out += ch
+    i++
+  }
+  return { out, hits }
+}
+
+/**
+ * 🔴 **巨集體不是一個值的物件形巨集**（2026-09-20，語料 `w/APCS/j607_trash`）。
+ *
+ * ```cpp
+ * #define z -'0'
+ * x = x*10 + (s[i]z);      // 展開之後是 (s[i] - '0')
+ * ```
+ *
+ * `cpp:define` 那條路把它記進**別名表**（名字 → 名字），而 `-'0'` 不是一個名字，
+ * 它是**一段運算子片段**。於是那個位置解不出來，而在這一刀之前
+ * **兩條投影都錯，而兩條都不出聲**：
+ *
+ * ```
+ * 執行    (s[0]z) 算成 52（把 z 整個忽略）   🔴 錯，而且不出聲
+ * 產回去  (s[0]z) → (s[0])                  🔴 z 靜默消失
+ * ```
+ *
+ * > **一個「這一段我看不懂」的節點，如果兩條投影都不說，
+ * > 那它就不是降級，是一個錯的答案。**
+ *
+ * ## 為什麼「代入」在這裡不是一個猜測
+ *
+ * `ast-repairs.ts` 的契約②逐字：「**只准做『這段文字唯一合法的讀法就是這個』
+ * 的重寫**」。而**把一個已定義的物件形巨集換成它的展開文字，正是這個語言
+ * 定義的那一步**——不是我對它的理解。所以這條規則做的是「照 C 的規矩讀一次」，
+ * 而它與「猜」的差別，在於那一步寫在標準裡。
+ *
+ * ⚠️ 而 repo 對別名的立場（「一個別名的意義就是那個短名字；把它換掉等於把它
+ * 拿掉」）**仍然成立**——所以樹上代入、而**產出照抄原文**（見下）。
+ *
+ * ## 接手的條件（缺一就回 `null`，走原本那一路）
+ *
+ * ① 這是一個**運算式**節點（`*_expression`）而且 `hasError`
+ * ② 它是**最外層**那一個（父節點不是一個也帶錯的運算式）
+ *    ——不分層的話同一段會被代入兩次，而外層那次拿到的是已經代過的文字
+ * ③ 文字裡**真的有**一個已知的物件形巨集名（引號外、完整識別字）
+ * ④ 代入之後那段文字**解得乾淨**，而且**認得出來**（不是 raw_code／unresolved）
+ *
+ * ## 產出一字不差怎麼做到的
+ *
+ * 🟢 `layoutHints.verbatim` ＋ `metadata.rawCode` **本來就在**
+ *（`generateExpression` 的第一個分支，`"abc" "def"` 那條線在用）——這裡只是接上它。
+ * ⚠️ 而「積木改過之後這一格會不在」在這個消費者身上同樣是一個**安全性質**：
+ * 運算式一旦在積木那側被改過，再印 `(s[i]z)` 就是一句謊話。
+ *
+ * ## ⚠️ 一個已知的取捨：同一句裡的【值型】巨集也會被代入
+ *
+ * 代入是**整句一起**做的，所以 `(s[i]z) + N` 裡的 `N`（`#define N 100`）
+ * 也會變成 `100`——於是**積木上看到的是 100，不是 N**。
+ *
+ * 🟢 而**程式碼那一側仍然一字不差**（`verbatim` 照抄原文），
+ * 所以學生的檔案不會被改掉；受影響的只有積木上那一格的顯示。
+ *
+ * 🔴 **為什麼不只代入「造成錯誤的那一個」**：`ERROR` 蓋在哪個節點上由解析器
+ * 決定（實測 `(s[0]z)` 蓋在 `z`、`(a plus1)` 蓋在 `a`），所以「哪一個造成錯誤」
+ * **問不出來**——而照它去猜，等於把解析器挑錯誤位置的方式當成規格。
+ *
+ * ⚠️ 觸發條件很窄：那一句本來就解不開，而代入之後解得乾淨。
+ * 語料 0 處（`j607_trash` 那一句裡沒有別的巨集）。
+ */
+function repairFragmentMacro(node: AstNode, ctx: LiftContext): SemanticNode | null {
+  if (!node.hasError) return null
+  if (!node.type.endsWith('_expression')) return null
+  // 只在**最外層**那一個運算式上動手（與 `misparse.ts` 的第二條同一個理由）
+  const p = node.parent
+  if (p && p.type.endsWith('_expression') && p.hasError) return null
+
+  const macros = objectMacrosOf(node)
+  if (macros.size === 0) return null
+  const { out: text, hits } = substituteObjectMacros(node.text, macros)
+  if (hits === 0) return null
+
+  const reparsed = reparseAsExpression(node, text)
+  if (!reparsed) return null
+  const lifted = ctx.lift(reparsed)
+  if (!lifted || containsDegraded(lifted)) return null
+  lifted.metadata = {
+    ...(lifted.metadata ?? {}),
+    rawCode: node.text,
+    layoutHints: { ...(lifted.metadata?.layoutHints ?? {}), verbatim: true },
+  }
+  return lifted
+}
+
 export function registerMacroExpansion(): void {
   declareAstRepair(repairMacroStatements)
+  /**
+   * ⚠️ **排在語句那一條之後**：兩者互不重疊（一個認 `compound_statement`、
+   * 一個認帶 `ERROR` 的運算式），而順序寫死比較好讀。
+   */
+  declareAstRepair(repairFragmentMacro)
 }

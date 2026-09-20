@@ -303,6 +303,25 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
 
   let result: string
 
+  /**
+   * 🔴 **語句那一路也要認得「原文就是它的排版真相」**（2026-09-20）。
+   *
+   * `generateExpression` 從很早以前就讀 `layoutHints.verbatim`
+   *（`"abc" "def"` 那條線），而**語句那一路沒有**——於是
+   * `x = x*10+(s[i]z);`（它在語句位置）產回去是展開後的樣子，
+   * **而那是把學生寫的巨集換掉了**。
+   *
+   * ⚠️ 症狀不是「產出錯了」，是**語義不動點破掉**：第一趟走修復那條路
+   *（重解出來的樹少了型別上下文 ⟹ `array_at`），第二趟走一般路（`string_at`）。
+   *
+   * > **一個只在其中一條投影上生效的「照抄原文」，
+   * > 會讓那兩條投影對同一段程式給出兩棵不同的樹。**
+   */
+  if (node.metadata?.layoutHints?.verbatim === true && node.metadata.rawCode != null) {
+    const raw = String(node.metadata.rawCode)
+    return ctx.isExpression ? raw : `${indent(ctx)}${raw};\n`
+  }
+
   // Try JSON-driven template generator first
   const tg = ctx.templateGenerator ?? globalTemplateGenerator
   const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style, isExpression: ctx.isExpression }) ?? null
