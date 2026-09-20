@@ -369,8 +369,31 @@ export function parseInputValue(input: string, targetType: string): RuntimeValue
       return { type: 'char', value: input.charAt(0) || '' }
     case 'string':
       return { type: 'string', value: input }
+    /**
+     * 🔴 **`>>` 對 `bool` 只收 `0` 與 `1`**（2026-09-20，語料 `AP325/1/1_11`）。
+     *
+     * 在此之前這裡寫 `input === 'true' || input === '1'`——**兩處都錯**：
+     * `true` 這個拼法要 `std::boolalpha` 才收，而 `12` 這種**不是**
+     * 「值為 false」，它是**讀取失敗**。g++ 實測的表：
+     *
+     * ```
+     * 0                     false，不設 failbit
+     * 1                     true， 不設 failbit
+     * 2 / 12 / -1（是數字）  true， 設 failbit     ← 標準逐字：「otherwise failbit，而存 true」
+     * abc / true（非數字）   false，設 failbit
+     * ```
+     *
+     * ⚠️ 這裡只答得出「合不合法」（回 `null` ＝ 不合法）；
+     * **失敗時要存什麼**由 `cpp:input` 的 `extractOne` 決定——那是
+     * `>>` 的語義，不是「一個字串怎麼變成一個值」的語義。
+     *
+     * > **「這個值是 false」與「這一次讀取失敗了」是兩件事，
+     * > 而把後者寫成前者，程式會照常跑完並印出一個錯的答案。**
+     */
     case 'bool':
-      return { type: 'bool', value: input === 'true' || input === '1' }
+      return input === '0' ? { type: 'bool', value: false }
+        : input === '1' ? { type: 'bool', value: true }
+          : null
     default:
       return { type: 'string', value: input }
   }

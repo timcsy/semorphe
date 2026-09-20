@@ -62,9 +62,9 @@ export class LiftContextData {
   }
 
   /** Declare a variable in the current scope */
-  declare(name: string, type: string, kind: 'variable' | 'type' = 'variable'): void {
+  declare(name: string, type: string, kind: 'variable' | 'type' = 'variable', elem?: string): void {
     const frame = this.scopeStack[this.scopeStack.length - 1]
-    frame.declarations.push({ name, type, scope: frame.level, kind })
+    frame.declarations.push({ name, type, scope: frame.level, kind, elem })
   }
 
   /**
@@ -192,6 +192,36 @@ export class LiftContextData {
      *
      * 🟢 判準問**登錄表**（哪顆元件認領這個樣板名），核心不認得任何 C++ 的字。
      */
+    return this.normalizeTypeName(base)
+  }
+
+  /**
+   * **這個名字的每一格裝的是什麼**——`bitset<8> d[3]` 問 `d` 回 `bits`。
+   *
+   * 🔴 為什麼需要它：依接收者型別分派的那張表拿**接收者的原文**去查名字，
+   * 而 `d[i]` 不是一個名字。在此之前的處置是「查不到就留在通用版」
+   *（那是對的，見 `method-components.ts`「型別查不到時不猜」），
+   * 於是 `d[i].reset()` 永遠掉進泛用的方法呼叫。
+   *
+   * 🟢 現在查得到了，所以它不再是「不猜」，是**知道**。
+   *
+   * ⚠️ 回的是與 `getType` **同一套正規化過的名字**（`bitset` → `bits`），
+   * 否則同一張表會被兩種拼法查——那正是 2026-09-20 早上那個缺陷的形狀。
+   */
+  getElementType(name: string): string | null {
+    const e = this.lookup(name)?.elem
+    if (e === undefined) return null
+    const bare = e.replace(/\bconst\b/g, '').replace(/[&\s]/g, '')
+    const target = bare === name ? null : this.lookup(bare)?.type
+    return this.normalizeTypeName((target ?? e).split('<')[0].trim())
+  }
+
+  /**
+   * 一個 C++ 的基底型別名 → 這個系統用的型別章。
+   *
+   * 🟢 判準問**登錄表**（哪顆元件認領這個樣板名），核心不認得任何 C++ 的字。
+   */
+  private normalizeTypeName(base: string): string {
     const owner = componentForContainerTemplate(base)
     const derived = owner ? /^[a-z]+:(\w+?)_declare$/.exec(owner)?.[1] : undefined
     return derived ?? base

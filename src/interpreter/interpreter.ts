@@ -6,7 +6,7 @@ import { allLanguageExecutors, allBuiltinConstants, isBuiltinName } from '../cor
 import { universalComponents } from '../core/universal'
 import type { RuntimeValue, FunctionDef, ExecutionStatus, StepInfo } from './types'
 import { runtimeScalarType } from '../core/scalar-types'
-import { resolveAlias } from './aliases'
+import { resolveAlias, resetAliases } from './aliases'
 import { defaultValue, valueToString, parseInputValue } from './types'
 import type { ExecutionInput } from './types'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
@@ -371,6 +371,32 @@ export class SemanticInterpreter implements ExecutionContext {
     // ⚠️ **每一次開跑都要清**——不清的話第二次執行會把第一次到過的算進去，
     //    而那個 bug 的樣子是「沒跑到的積木越來越少」，看起來像是自己好了。
     this.visitCounts.clear()
+    /**
+     * 🔴 **別名表也要清，而它的 `reset` 在 2026-09-20 之前【零個呼叫者】**。
+     *
+     * `aliases.ts` 的那一支逐字寫著「⚠️ 每一次執行前要清——別名是那一份程式的，
+     * 不是這個行程的」，而**沒有人照做**。填表的（`cpp:define`／`cpp:typedef`／
+     * `cpp:using_alias`）與讀表的都在執行那一路，所以它是一張**跨程式殘留**的
+     * 行程級全域表。
+     *
+     * 症狀是一個**與這一支程式無關的**錯答案：
+     *
+     * ```
+     * 先跑   #define S second        S → second 留在表裡
+     * 再跑   struct S { int a; };    S s;  的型別被解成 second ⟹ s 變成一個 int
+     *        S s; s.a = 0;           「s.a —— 接收者不是一個結構（它是 int）」
+     * ```
+     *
+     * ⚠️ 抓到它的**不是**哪一支測試在紅——是同一個檔裡 251 條案例
+     * 一起跑會紅三條、單獨跑每一條都綠。
+     *
+     * > **一個只在「跑過別的東西之後」才錯的缺陷，
+     * > 單獨重現它的每一次嘗試都會告訴你它不存在。**
+     *
+     * 🔴 而使用者踩得到：網頁版開第二份程式、或同一份改完再跑一次，
+     *    走的都是這一支。
+     */
+    resetAliases()
     this.scope = new Scope()
     this.io = new IOSystem(stdin)
     if (this.outputCallback) this.io.onOutput(this.outputCallback)

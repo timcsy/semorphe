@@ -1307,3 +1307,42 @@ describe('Interpreter - abort', () => {
     expect(interp.getOutput().join('')).toBe('5')
   })
 })
+
+/**
+ * 🔴 **`RAND_MAX` 要與我們自己的 `rand()` 對得起來**（2026-09-20）。
+ *
+ * 語料 `basic/6_count` 印的就是它，而在這一刀之前它是 `UNDECLARED_VAR`
+ * ——**整支程式停在那裡**。
+ *
+ * ⚠️ 判準**不是**「與參照編譯器同一個數」：C++ 標準只要求 `RAND_MAX >= 32767`，
+ * 沒有定死它是多少，而兩台參照編譯器給的也不一樣。
+ * 判準是**自洽**：`rand()` 的每一個回傳值都要落在 `[0, RAND_MAX]` 裡，
+ * 否則 `(double)rand()/RAND_MAX` 這個招牌寫法會跑出 1 以上的數。
+ *
+ * > **一個從別的系統抄來的常數，它的正確性住在
+ * > 【抄它的人有沒有一起抄那個系統】。**
+ */
+describe('RAND_MAX 與 rand() 要自洽', () => {
+  it('RAND_MAX 查得到，而且不小於標準要求的 32767', async () => {
+    const interp = await run([
+      createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'RAND_MAX' }, {})] }),
+    ])
+    const v = Number(interp.getOutput().join(''))
+    expect(Number.isFinite(v), '🔴 RAND_MAX 查不到——語料那一支會整支停住').toBe(true)
+    expect(v).toBeGreaterThanOrEqual(32767)
+  })
+
+  it('🔴 rand() 的回傳值落在 [0, RAND_MAX] 裡（抽 200 次）', async () => {
+    const body: SemanticNode[] = []
+    for (let i = 0; i < 200; i++) {
+      body.push(createNode('cpp:print', {}, { values: [createNode('cpp:random_next', {}, {})] }))
+      body.push(createNode('cpp:print', {}, { values: [createNode('cpp:literal_string', { value: ' ' }, {})] }))
+    }
+    const interp = await run(body)
+    const xs = interp.getOutput().join('').trim().split(/\s+/).map(Number)
+    expect(xs.length, '★ 正向錨點：真的抽到了 200 個數').toBe(200)
+    const max = Math.max(...xs)
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(0)
+    expect(max, `🔴 rand() 跑出 ${max}，而 RAND_MAX 是 32767`).toBeLessThanOrEqual(32767)
+  })
+})
