@@ -194,6 +194,21 @@ describe('回歸樣本：改名前的真實 v9 存檔還打得開', () => {
     expect(v.version).toBe(CURRENT_VERSION)
     // 🔴 v11 的實質：樹不再被儲存——它是從程式碼導出的
     expect('tree' in v, '`tree` 還在存檔裡——v11 的實質就是把它拿掉').toBe(false)
+    /**
+     * 🔴 **v24 的實質：`enabledBranches` 被拿掉**（2026-09-20，層級樹退場）。
+     *
+     * ★ **正向錨點先釘**：那份 v9 樣本裡**真的有**這一格——
+     * 沒有它的話下面那一行對「本來就沒有」也是綠的。
+     *
+     * > **一支驗「某某被拿掉了」的測試，如果不先證明它本來在，
+     * > 它驗的是自己的樣本挑得好不好。**
+     */
+    expect('enabledBranches' in s, '★ 樣本裡沒有這一格 → 下一行什麼都沒證明').toBe(true)
+    expect(
+      'enabledBranches' in v,
+      '`enabledBranches` 還在升級後的存檔裡——它記的是分支 id（`L0`／`L2b`），'
+      + '而那些 id 從此沒有任何東西認得（v24 的實質就是把它拿掉）',
+    ).toBe(false)
     // ⚠️ 而使用者的東西**不准跟著掉**
     expect(v.blocklyState, '積木狀態掉了——那是使用者的工作區').toBeTruthy()
     expect(typeof v.code, '程式碼掉了——它是真相').toBe('string')
