@@ -4,7 +4,7 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "components": 348,
+    "components": 349,
     "tracks": 5
   },
   "exposure": 27,
@@ -36,5 +36,6 @@
     "cpp:set_declare@c-beginner.json: source,unique",
     "cpp:var_declare_sequence@c-beginner.json: binding,targets,value",
     "cpp:vector_declare@c-beginner.json: fill,size,source,values"
-  ]
+  ],
+  "note": "\n📈 **2026-09-20（帶參數的巨集）：掃描的元件數 348 → 349。**\n  **母體變大，缺陷那幾格未動**——新增一顆身分（`cpp:define_func`）＋ 一支樹修復（`languages/cpp/lang/macro-expand.ts`）＋ 一支回歸網（`roundtrip-cpp-func-macro.test.ts`）。\n"
 }

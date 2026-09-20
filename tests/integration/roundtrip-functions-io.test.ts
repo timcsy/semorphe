@@ -249,9 +249,20 @@ int main() {
     return 0;
 }`
 
-  // 阻斷者是 `#define` 巨集展開（墓碑），不是 print——原本的 [BLOCKED:cpp:print]
-  // 標記是錯的。歸因見 knowledge/experience.md「宣稱『與我無關』之前先去量」。
-  it.skip('[BLOCKED:cpp:define] executes correctly', async () => {
+  /**
+   * 🎯 **2026-09-20：這根釘子拔掉了，而它已經死了一年多。**
+   *
+   * 它寫著阻斷者是「`#define` 巨集展開（墓碑）」，而**那個歸因本身就是錯的**：
+   * `#define MAX_SIZE 100` 要的不是巨集展開，是**把一個具名常數綁進 scope**
+   * ——而那件事 2026-08-13 就做了（`cpp:define` 的執行器）。
+   *
+   * ⚠️ 它是 `it.skip`（有本體），所以**修好的那天它不會變紅**
+   * ——這正是缺陷帳自己定義的 `DEADSKIP`：**已修好卻沒開回來，白白損失覆蓋。**
+   *
+   * > **一根釘子如果把「這件事做不到」寫成「那座墓碑擋著」，
+   * > 那麼做到的那天，沒有人會想到回來看它。**
+   */
+  it('executes correctly', async () => {
     const interp = await runCode(code)
     const out = interp.getOutput().join('')
     expect(out).toContain('100')

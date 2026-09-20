@@ -65,6 +65,7 @@
     "cpp:cstring_size",
     "cpp:default",
     "cpp:define",
+    "cpp:define_func",
     "cpp:delay",
     "cpp:delay_microseconds",
     "cpp:delete",

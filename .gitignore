@@ -32,3 +32,9 @@ examples/**/dist/
 # 🔴 `cpp:ofstream_declare` 的預設檔名——跑到檔案輸出的測試會在根目錄留下它。
 # （2026-09-13 從版控裡刪掉一份 0 位元組的，它是這樣進來的。）
 output.txt
+
+# 🔴 子代理的隔離 worktree（`isolation: "worktree"`）——它住在 `.claude/` 底下，
+# 而 `.claude/skills/` 是版控的，所以要逐目錄排除而不是整個 `.claude/`。
+# ⚠️ 症狀：fuzz 那一關跑完之後 `git status` 多一筆 `??`，
+# 而那底下是**另一個工作區的完整 checkout**——`git add -A` 會把它整個收進來。
+.claude/worktrees/

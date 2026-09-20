@@ -346,6 +346,7 @@
       "name": "程式設定",
       "blocks": [
         "cpp_define",
+        "cpp_define_func",
         "cpp_ifdef",
         "cpp_ifndef",
         "cpp_include",

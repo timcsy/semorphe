@@ -272,9 +272,20 @@ int main() {
     return 0;
 }`
 
-  // Interpreter does not expand #define macros into scope, so execution fails
-  // with RUNTIME_ERR_UNDECLARED_VAR for LIMIT. Roundtrip + g++ compilation works.
-  it.skip('[TOMBSTONE:014-墓碑目錄#模擬-c-preprocessor-來解決巨集] executes correctly (interpreter lacks #define expansion)', async () => {
+  /**
+   * 🎯 **2026-09-20：這根釘子拔掉了，而它與上一支是同一個誤判。**
+   *
+   * 原文寫著「直譯器不把 `#define` 展開進 scope，所以 `LIMIT` 是未宣告的」
+   * ——而 `#define LIMIT <一個整數>` 要的不是展開，是**綁一個具名常數**，
+   * 那件事 2026-08-13 就做了。
+   *
+   * ⚠️ 兩根釘子**在兩個不同的檔案裡寫著同一個錯的歸因**，而兩根都是
+   * `it.skip`（有本體、不會變紅）。
+   *
+   * > **同一個誤判如果被抄進第二個檔案，它就有了兩份互相佐證的證據
+   * > ——而那兩份的來源是同一個人在同一天的同一個猜測。**
+   */
+  it('executes correctly', async () => {
     const interp = await runCode(code)
     const out = interp.getOutput().join('')
     expect(out).toContain('8')

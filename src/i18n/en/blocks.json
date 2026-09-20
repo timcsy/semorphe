@@ -327,6 +327,7 @@
   "FLOW_TITLE_CPP_CSTRING_SIZE": "C-string length",
   "FLOW_TITLE_CPP_DEFAULT": "Default",
   "FLOW_TITLE_CPP_DEFINE": "#define",
+  "FLOW_TITLE_CPP_DEFINE_FUNC": "Define expandable template",
   "FLOW_TITLE_CPP_DELAY": "Delay (ms)",
   "FLOW_TITLE_CPP_DELAY_MICROSECONDS": "Delay (µs)",
   "FLOW_TITLE_CPP_DELETE": "Delete",

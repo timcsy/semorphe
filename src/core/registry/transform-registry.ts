@@ -54,4 +54,26 @@ export function registerCoreTransforms(registry: TransformRegistry): void {
     }
     return text
   })
+
+  /**
+   * `(i,n)` → `i,n`。**與上面兩支同一個形狀**——文法把括號算進那個節點的原文裡，
+   * 而要存的是括號裡面那一段。
+   *
+   * ⚠️ 只剝**最外層**的一對，而且兩端都要在：`(a)(b)` 不動它
+   * （那不是「一對括號包住全部」，剝掉會改變意思）。
+   */
+  registry.register('stripParens', (text) => {
+    const t = text.trim()
+    if (!t.startsWith('(') || !t.endsWith(')')) return text
+    let depth = 0
+    for (let i = 0; i < t.length; i++) {
+      if (t[i] === '(') depth++
+      else if (t[i] === ')') {
+        depth--
+        // 最外層那一對在中途就收掉了 ⟹ 它不是「包住全部」的那一對
+        if (depth === 0 && i !== t.length - 1) return text
+      }
+    }
+    return t.slice(1, -1)
+  })
 }

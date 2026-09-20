@@ -1,0 +1,33 @@
+{
+  "componentId": "cpp:define_func",
+  "abstractComponent": null,
+  "_abstractComponent_why": "與同族那顆具名常數的巨集【做的事不同】——一個綁一個值，一個是可展開的樣板。指同一個抽象父會讓「它們可以互換」這句話變成假的。",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": ""
+    },
+    {
+      "name": "params",
+      "kind": "literal",
+      "default": ""
+    },
+    {
+      "name": "value",
+      "kind": "literal",
+      "default": ""
+    }
+  ],
+  "_properties_why": "🔴 **為什麼不是同族那顆多一個 `params`**：照 `元件代數.md:250` 的判準，差別不只是【一個值】——`#define MAX 100` 宣告的是一個**具名常數**，而這一顆宣告的是一個**可展開的樣板**。「語義上做的事不同 ⟹ 是身分」。\n⚠️ 而 `params` 存的是**括號裡面那一段的原文**（`i,n`），不含括號——括號由產生器放回去，所以 `#define rep(i, n)` 的內部空白一字不差。\n🔴 **三格都宣告 `default: \"\"`，而不是 `required: true`**——第 96 條護欄逼出來的：\n`required` 的意思是「沒有預設值」，而產生器與執行器**各自都要有一個退路**（TypeScript 不讓你讀一個可能不存在的東西）。兩邊各寫一個不同的退路時，\n規格說「沒有預設」而程式說「有兩個不同的預設」——**規格在說謊**。\n> **一個「沒有預設值」的宣告，如果它的兩個消費者各自編了一個預設值，\n> 那它宣告的不是事實，是一個沒有人遵守的願望。**\n⚠️ 同族那顆（具名常數的巨集）今天仍然是 `required` ＋ 產生器退路 `\"MACRO\"`，而那一筆在缺陷基線上——**不要照抄它**。",
+  "slots": {},
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "lift": "./lift-pattern.json",
+    "generate": "./generate.ts",
+    "render": "./forms/blocks.json",
+    "extract": "./forms/blocks.json",
+    "execute": "./execute.ts"
+  }
+}

@@ -30,5 +30,9 @@
     "generate": "./generate.ts",
     "execute": "./execute.ts",
     "lift": "./lift-pattern.json"
-  }
+  },
+  "traits": {
+    "macroHeaderHost": true
+  },
+  "_traits_why": "🔴 **`macroHeaderHost` ＝「我的表頭可以是一個巨集的拼法」**（2026-09-20）。\n`#define rep(i,n) for(int i=0;i<n;i++)` 之後，`rep(i,m) …` 與 `for (int i = 0; …)` 是同一個迴圈的兩種寫法，而學生寫的是前者。展開那條樹修復把原文的拼法存進 `metadata.layoutHints.macroHeader`，這顆元件的產生器照它印回去。\n⚠️ **這一格是給樹修復【問性狀】用的**——它不准寫死任何一顆元件的身分，否則那顆元件改名的那天沒有人會發現。\n🔴 而宣告了它就等於承諾**產生器讀得懂那個註記**：多一顆宿主要同時教它的產生器，否則展開之後原文的拼法會**安靜地**變成 `for (…)`。"
 }

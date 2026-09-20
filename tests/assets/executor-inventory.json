@@ -60,6 +60,7 @@
     "cpp:cstring_find_char",
     "cpp:cstring_size",
     "cpp:define",
+    "cpp:define_func",
     "cpp:delay",
     "cpp:delay_microseconds",
     "cpp:delete",
