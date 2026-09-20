@@ -80,9 +80,34 @@ function stringParamNamesInFunc(funcDefNode: AstNode): string[] {
   return names
 }
 
-// Walk up AST scopes; globals (translation_unit) are scanned without position filter
-// so they're visible regardless of declaration order, matching C++ semantics.
-function isStringVar(varName: string, fromNode: AstNode): boolean {
+/**
+ * 這個名字是一個字串變數嗎。
+ *
+ * 往 AST 上面走找宣告；全域（`translation_unit`）不看位置，
+ * 所以宣告順序不影響可見性——與 C++ 的語義一致。
+ *
+ * 🔴 **而「往上走」有一個前提：這個節點還在原本那棵樹上**（2026-09-20）。
+ *
+ * 樹修復（`misparse.ts`／`macro-expand.ts`）會把一段文字**重解成一棵新的樹**，
+ * 而那棵樹裡只有那一段——`string s;` 不在上面。於是
+ *
+ * ```
+ * #define z -'0'
+ * string s;  …  (s[i]z)     第一趟走修復 → 重解 → 查不到宣告 → cpp:array_at
+ *                           第二趟走一般路               → cpp:string_at
+ * ```
+ *
+ * ——**同一段程式碼，兩條路徑給出兩顆不同的身分**（而學生因此看到錯的積木）。
+ *
+ * 🟢 **處置：先問型別表**。`ctx.data` 是**跨那棵重解的樹活著**的，
+ * 而 `lift-context.ts` 的檔頭逐字：「**一個查得到的東西查兩次，
+ * 比替它開第二張表便宜。**」
+ *
+ * ⚠️ 型別表**查不到**時照舊往 AST 上面走——兩者都不是唯一來源：
+ * 表裡沒有的（還沒走到的宣告）AST 上找得到，AST 上沒有的（重解的樹）表裡有。
+ */
+function isStringVar(varName: string, fromNode: AstNode, ctx?: LiftContext): boolean {
+  if (ctx && isStringTypeName(String(ctx.data.getType(varName) ?? ''))) return true
   let current = fromNode.parent
   while (current) {
     if (current.type === 'compound_statement') {
@@ -271,7 +296,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     const indexNode = indicesNode?.namedChildren[0] ?? node.childForFieldName('index') ?? node.namedChildren[1]
     const index = indexNode ? ctx.lift(indexNode) : null
 
-    if (isStringVar(name, node)) {
+    if (isStringVar(name, node, ctx)) {
       /**
        * 🟠 **這一顆的接收者【刻意】還是一串文字**（2026-09-18 的接收者重構把它排除）。
        *
@@ -288,8 +313,8 @@ export function registerExpressionLifters(lifter: Lifter): void {
     }
     // 🟢 **容器一律 lift**（2026-08-26）——`obj.arr[i]` 的容器是一個成員存取，
     //    而它本來被 `.text` 抄成字串（連讀都是壞的）。
-    //    ⚠️ `isStringVar(name, node)` 仍然用**字串**判斷——那是 lift 期看 AST 的
-    //    啟發式，與節點的形狀無關。
+    //    ⚠️ `isStringVar(name, node, ctx)` 仍然用**字串**判斷——那是 lift 期
+    //    看型別表／看 AST 的啟發式，與節點的形狀無關。
     const container = arrayNode ? ctx.lift(arrayNode) : null
     return buildArrayAt({
       obj: container ? [container] : [],

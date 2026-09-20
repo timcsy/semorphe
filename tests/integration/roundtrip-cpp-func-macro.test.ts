@@ -372,3 +372,119 @@ describe('帶參數的巨集：讓開的那幾種', () => {
     expect(got).toContain('cpp:func_call')
   })
 })
+
+/**
+ * **巨集體不是一個值的物件形巨集**——`#define z -'0'`（2026-09-20，第 203 刀）。
+ *
+ * 語料 `w/APCS/j607_trash` 用的就是它（`x = x*10+(s[i]z)`），而在這一刀之前
+ * **兩條投影都錯，而兩條都不出聲**：
+ *
+ * ```
+ * 執行    (s[0]z) 算成 52（把 z 整個忽略）   🔴 錯，而且不出聲
+ * 產回去  (s[0]z) → (s[0])                  🔴 z 靜默消失
+ * ```
+ *
+ * > **一個「這一段我看不懂」的節點，如果兩條投影都不說，
+ * > 那它就不是降級，是一個錯的答案。**
+ *
+ * 🟢 而「產出一字不差」的機制**本來就在**（`generateExpression` 的第一個分支，
+ * `layoutHints.verbatim` ＋ `metadata.rawCode`，`"abc" "def"` 那條線在用）
+ * ——這一刀只是接上它。
+ */
+describe('巨集體不是一個值：`#define z -\'0\'`', () => {
+  const idsOf = (src: string): string[] => ids(lift(src))
+  const FRAG = '#include <iostream>\n#include <string>\nusing namespace std;\n#define z -\'0\'\n'
+
+  it('★ 入口條件：這個形狀真的解出一個 ERROR 節點（否則下面在驗空氣）', () => {
+    const t = parser.parse('int main(){ string s="47"; int x = (s[0]zz); return 0; }')!
+    expect(t.rootNode.hasError, '🔴 tree-sitter 不再給 ERROR ⟹ 這一族的判準要重寫').toBe(true)
+  })
+
+  it('🔴 產回去一字不差——`(s[0]z)` 不得變成 `(s[0])`', () => {
+    const src = `${FRAG}int main(){ string s="47"; int x = (s[0]z); return x; }`
+    const out = generateCode(lift(src), 'cpp', S)
+    expect(squash(out), '🔴 `z` 靜默消失了').toContain(squash('(s[0]z)'))
+    expect(squash(out), '🔴 把學生寫的巨集換成了展開的樣子').not.toContain(squash("(s[0] - '0')"))
+  })
+
+  it('🔴 展開之後認得出來——不得留在降級通道', () => {
+    const got = idsOf(`${FRAG}int main(){ string s="47"; int x = (s[0]z); return x; }`)
+    expect(got, '★ 正向錨點：定義那一行還在').toContain('cpp:define')
+    expect(got, '🔴 整段掉進 raw_code').not.toContain('raw_code')
+    expect(got).not.toContain('unresolved')
+  })
+
+  /**
+   * ⚠️ **不能用檔案共用的 `throughBlocks`**——它 `wrap()` 的是這個檔自己的
+   * 那兩個 `#define rep/per`，而這一族要的是 `#define z`。
+   * 🔴 第一版就這樣寫，於是它量到的是「`z` 沒定義所以沒展開」——
+   * **一支看起來在驗展開、而其實在驗沒展開的測試。**
+   */
+  it('★ 走一趟積木回來：拼法消失，而語義一格都沒掉', () => {
+    const src = `${FRAG}int main(){ string s="47"; int x = (s[0]z); return x; }`
+    const { blockMappings: _drop, ...state } = renderToBlocklyState(lift(src))
+    const backs = (state.blocks.blocks as unknown[]).flatMap(chainOf)
+    const back = { componentId: 'cpp:program', properties: {}, slots: { body: backs } } as SemanticNode
+    const out = generateCode(back, 'cpp', S)
+    expect(squash(out), '★ 正向錨點：真的走回來了').toContain(squash('int x ='))
+    // 積木碰過了 ⟹ `layoutHints` 不在 ⟹ 產出展開後的樣子，而那是【對的】
+    expect(squash(out), '🔴 拼法還在——而它可能已經是一句謊話').not.toContain(squash('(s[0]z)'))
+    expect(squash(out), '🔴 語義掉了一格').toContain(squash("s[0] - '0'"))
+  })
+
+  it('🔴 ★ 錨點：不是巨集的名字【不得】被這條規則認領', () => {
+    // `zz` 沒有定義過 ⟹ 這條修復要讓開，行為與這一刀之前逐字相同
+    const t = lift('#include <string>\nusing namespace std;\nint main(){ string s="47"; int x = (s[0]zz); return x; }')
+    const hasVerbatim = (n: SemanticNode): boolean =>
+      n.metadata?.layoutHints?.verbatim === true
+      || Object.values(n.slots ?? {}).some((ks) => ks.some(hasVerbatim))
+    expect(hasVerbatim(t), '🔴 把一個不認得的名字當成巨集展開了').toBe(false)
+  })
+
+  it('🔴 ★ 錨點：一般的物件形巨集與別名巨集都不得被碰', () => {
+    const a = idsOf('#include <iostream>\nusing namespace std;\n#define N 100\nint main(){ cout << N; return 0; }')
+    expect(a).toContain('cpp:define')
+    const b = idsOf('#include <utility>\nusing namespace std;\n#define F first\nint main(){ pair<int,int> p={3,4}; return p.F; }')
+    expect(b).toContain('cpp:define')
+    // 兩者都沒有 ERROR 節點 ⟹ 這條修復根本不會被叫到
+    expect(a).not.toContain('raw_code')
+    expect(b).not.toContain('raw_code')
+  })
+
+  /**
+   * 🔴 **重解出來的那棵樹少了型別上下文**（第二次踩到同一個形狀）。
+   *
+   * `isStringVar` 是**往 AST 上面走**找宣告的，而重解出來的樹裡只有那一段
+   * ——`string s;` 不在上面。於是同一段程式碼**兩條路徑給出兩顆不同的身分**：
+   *
+   * ```
+   * 第一趟（走修復）  重解 → 查不到宣告 → cpp:array_at
+   * 第二趟（走一般路）                   → cpp:string_at
+   * ```
+   *
+   * 症狀有兩個，而**第二個比較貴**：語義不動點破掉（語料 `w/APCS/j607_trash`），
+   * 以及**學生看到錯的積木**（`cpp:array_at` 與 `cpp:string_at` 是兩塊積木）。
+   *
+   * 🟢 處置：`isStringVar` **先問型別表**（它跨那棵重解的樹活著），查不到才走 AST。
+   */
+  it('🔴 重解出來的子樹要拿到型別——`s[i]` 是字串的一格，不是陣列的一格', () => {
+    const got = idsOf(`${FRAG}int main(){ string s="47"; int x = (s[0]z); return x; }`)
+    expect(got, '🔴 重解掉了型別上下文 ⟹ 學生看到的是【陣列】那塊積木').toContain('cpp:string_at')
+    expect(got).not.toContain('cpp:array_at')
+  })
+
+  it('🔴 產出一字不差在【語句位置】也要成立', () => {
+    // `x = x*10+(s[i]z);` 是一個【語句】——`generateExpression` 讀 `verbatim`，
+    // 而在這一刀之前 `generateNode`（語句那一路）不讀，於是這一種被展開掉了。
+    const src = `${FRAG}int main(){ string s="47"; int x = 0;\n  x = x*10+(s[0]z);\n  return x; }`
+    const out = generateCode(lift(src), 'cpp', S)
+    expect(squash(out), '🔴 語句位置的 `z` 被展開掉了').toContain(squash('x = x*10+(s[0]z);'))
+  })
+
+  it('★ 不動點：產回去再 lift，還是同一棵', () => {
+    const src = `${FRAG}int main(){ string s="47"; int x = (s[0]z); return x; }`
+    const once = generateCode(lift(src), 'cpp', S)
+    const twice = generateCode(lift(once), 'cpp', S)
+    expect(twice).toBe(once)
+  })
+})
