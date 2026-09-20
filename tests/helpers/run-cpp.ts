@@ -26,7 +26,7 @@
  * 單獨也紅才是迴歸。⚠️ 而 `test.skip` 掉的 `[BLOCKED…]` 那批**不是**這個：
  * 那些是標了 pre-existing bug 的刻意跳過。
  */
-import { execSync, execFileSync, spawn, spawnSync } from 'node:child_process'
+import { execSync, execFileSync, spawn } from 'node:child_process'
 import { writeFileSync, mkdirSync, rmSync, openSync, closeSync } from 'node:fs'
 import path from 'node:path'
 
@@ -211,6 +211,34 @@ async function runCppAsync(code: string): Promise<string | null> {
   return r.ok ? r.output : null
 }
 
+export function runShell(cmd: string, timeout: number): Promise<{ out: string | null; err: string }> {
+  return new Promise((res) => {
+    // 🔴 **`spawn` 不是 `exec`**：`detached` 不在 `exec` 的選項表裡，
+    //    它是 `spawn` 的。寫給 `exec` 會被**靜默忽略**——實測那個 shell 的
+    //    PGID 仍是呼叫者的群組，於是 `kill(-pid)` 回 ESRCH，而我以為我殺了它。
+    //
+    //    > **一個不存在的選項不會報錯，它只會讓你以為那件事生效了。**
+    const child = spawn('/bin/sh', ['-c', cmd], { detached: true })
+    let out = '', err = '', done = false
+    child.stdout.on('data', (d: Buffer) => { out += d.toString() })
+    child.stderr.on('data', (d: Buffer) => { err += d.toString() })
+    const finish = (ok: boolean, msg: string): void => {
+      if (done) return
+      done = true
+      clearTimeout(timer)
+      res({ out: ok ? out : null, err: err || msg })
+    }
+    const timer = setTimeout(() => {
+      // ⚠️ 負的 pid ＝ 整個行程群組（`detached` 讓 shell 當上群組長）。
+      //    少了這一步，被殺掉的是 shell 而**真正在跑的程式是它的孫子**。
+      try { if (child.pid) process.kill(-child.pid, 'SIGKILL') } catch { child.kill('SIGKILL') }
+      finish(false, `timeout after ${timeout}ms`)
+    }, timeout)
+    child.on('error', (e: Error) => finish(false, e.message))
+    child.on('close', (code: number | null) => finish(code === 0, `exit ${code}`))
+  })
+}
+
 /** 見 `runCppBatchDetailed`——同一件事，而**不丟掉 stderr**。 */
 async function runCppAsyncDetailed(code: string, stdin?: string): Promise<asyncOutcome> {
   if (!hasReferenceCompiler()) {
@@ -241,42 +269,16 @@ async function runCppAsyncDetailed(code: string, stdin?: string): Promise<asyncO
    *
    * 🟢 `detached: true` 讓 shell 自己當群組長，`kill(-pid)` 就整群帶走。
    */
-  const run = (cmd: string, timeout: number): Promise<{ out: string | null; err: string }> =>
-    new Promise((res) => {
-      // 🔴 **`spawn` 不是 `exec`**：`detached` 不在 `exec` 的選項表裡，
-      //    它是 `spawn` 的。寫給 `exec` 會被**靜默忽略**——實測那個 shell 的
-      //    PGID 仍是呼叫者的群組，於是 `kill(-pid)` 回 ESRCH，而我以為我殺了它。
-      //
-      //    > **一個不存在的選項不會報錯，它只會讓你以為那件事生效了。**
-      const child = spawn('/bin/sh', ['-c', cmd], { detached: true })
-      let out = '', err = '', done = false
-      child.stdout.on('data', (d: Buffer) => { out += d.toString() })
-      child.stderr.on('data', (d: Buffer) => { err += d.toString() })
-      const finish = (ok: boolean, msg: string): void => {
-        if (done) return
-        done = true
-        clearTimeout(timer)
-        res({ out: ok ? out : null, err: err || msg })
-      }
-      const timer = setTimeout(() => {
-        // ⚠️ 負的 pid ＝ 整個行程群組（`detached` 讓 shell 當上群組長）。
-        //    少了這一步，被殺掉的是 shell 而**真正在跑的程式是它的孫子**。
-        try { if (child.pid) process.kill(-child.pid, 'SIGKILL') } catch { child.kill('SIGKILL') }
-        finish(false, `timeout after ${timeout}ms`)
-      }, timeout)
-      child.on('error', (e: Error) => finish(false, e.message))
-      child.on('close', (code: number | null) => finish(code === 0, `exit ${code}`))
-    })
   try {
     writeFileSync(src, code)
-    const compiled = await run(`g++ ${flag}${extraInc} -o ${bin} ${src}`, 30000)
+    const compiled = await runShell(`g++ ${flag}${extraInc} -o ${bin} ${src}`, 30000)
     if (compiled.out === null) {
       return { ok: false, output: null, stage: 'compile', message: compiled.err.slice(0, 400) }
     }
     // ⚠️ stdin 走**檔案重導**而不是管線：`exec` 的 callback 形式沒有寫入端，
     //    而「沒有輸入」與「輸入耗盡」必須是同一條路才量得準。
     if (stdin !== undefined) writeFileSync(inFile, stdin)
-    const ran = await run(`${bin} < ${stdin === undefined ? '/dev/null' : inFile}`, timeoutMs)
+    const ran = await runShell(`${bin} < ${stdin === undefined ? '/dev/null' : inFile}`, timeoutMs)
     if (ran.out === null) return { ok: false, output: null, stage: 'run', message: ran.err.slice(0, 400) }
     return { ok: true, output: ran.out }
   } finally {
@@ -331,7 +333,7 @@ export function runCpp(code: string): string | null {
  *
  * @returns 消毒器有沒有指名一段未定義行為；`null` 表示消毒器自己編不起來（不下判斷）
  */
-export function sanitizerSaysUB(code: string, stdin?: string): { ub: boolean | null; detail: string } {
+export async function sanitizerSaysUB(code: string, stdin?: string): Promise<{ ub: boolean | null; detail: string }> {
   if (!hasReferenceCompiler()) {
     throw new Error('找不到參照編譯器（g++）。護欄不得在此跳過——一筆看不見的缺陷與一筆不存在的缺陷長得一模一樣。')
   }
@@ -342,31 +344,36 @@ export function sanitizerSaysUB(code: string, stdin?: string): { ub: boolean | n
   const inFile = path.join(cwd, `${name}.in`)
   try {
     writeFileSync(src, code)
-    try {
-      execSync(`g++ ${flag}${extraInc} -fsanitize=address,undefined -g -o ${bin} ${src}`,
-        { encoding: 'utf-8', stdio: 'pipe' })
-    } catch {
+    const built = await runShell(
+      `g++ ${flag}${extraInc} -fsanitize=address,undefined -g -o ${bin} ${src}`, 60000)
+    if (built.out === null) {
       // 消毒器版編不起來（有些語料只在這個模式下撞到標頭問題）——**不下判斷**
       return { ub: null, detail: '消毒器版編不起來' }
     }
     writeFileSync(inFile, stdin ?? '')
-    const fd = openSync(inFile, 'r')
-    let combined = ''
-    try {
-      /**
-       * 🔴 **用 `spawnSync` 而不是 `execFileSync`**：UBSan 的「runtime error」
-       * 預設**會讓程式繼續跑並且正常退出**（不是 `-fno-sanitize-recover`），
-       * 於是 `execFileSync` **不丟例外**而它的 stderr 就被丟掉了
-       * ——那一路正是最常見的一路（AddressSanitizer 才會讓它死）。
-       *
-       * > **一個只在「它失敗了」那一路讀 stderr 的偵測器，
-       * > 對「它成功了而且順便印出違規」保持沉默。**
-       */
-      const r = spawnSync(bin, [], { encoding: 'utf-8', timeout: timeoutMs, stdio: [fd, 'pipe', 'pipe'] })
-      combined = String(r.stderr ?? '') + String(r.stdout ?? '')
-    } finally {
-      closeSync(fd)
-    }
+    /**
+     * 🔴 **stderr 在「它成功了」那一路也要讀**：UBSan 的「runtime error」
+     * 預設**會讓程式繼續跑並且正常退出**（不是 `-fno-sanitize-recover`），
+     * 而 AddressSanitizer 才會讓它死。
+     *
+     * > **一個只在「它失敗了」那一路讀 stderr 的偵測器，
+     * > 對「它成功了而且順便印出違規」保持沉默。**
+     *
+     * 🔴 **而它必須是【非同步】的那一條路**（2026-09-20）。
+     * 在此之前這裡是 `spawnSync`，而 `spawnSync` 的 `timeout` 送得出訊號、
+     * **卻要等那個行程真的死掉**。一個卡在 `UE`（不可中斷的等待）的行程
+     * 永遠不會死，於是整個 vitest 停在 0% CPU——看起來像「測試太重被砍了」。
+     *
+     * ⚠️ 那一天量到的殘骸逐字是 `s<pid>_5`、`s<pid>_219` 這一族，
+     *    七次執行各留一個，而 `memory_pressure` 說記憶體 45% 空閒。
+     *
+     * > **一個在使用者空間殺不掉的行程，唯一的處置是【不要等它】。**
+     *
+     * 🟢 `runShell` 的計時器自己 resolve，不等孩子——它會留下一個孤兒，
+     *    而那比卡住整套測試便宜。
+     */
+    const ran = await runShell(`${bin} < ${inFile}`, timeoutMs)
+    const combined = String(ran.err ?? '') + String(ran.out ?? '')
     const m = combined.match(/runtime error: [^\n]{0,80}|ERROR: AddressSanitizer: [^\n]{0,80}/)
     return m ? { ub: true, detail: m[0] } : { ub: false, detail: '' }
   } finally {

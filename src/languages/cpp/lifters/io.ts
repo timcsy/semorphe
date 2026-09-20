@@ -68,6 +68,17 @@ function receiverInto(
   return lifted ? { props: {}, slots: { obj: [lifted] } } : { props: { obj: objText }, slots: {} }
 }
 
+/**
+ * `d1[i]` → `d1` 的元素型別；不是「一個名字加一組中括號」就回 null。
+ *
+ * ⚠️ **只認最單純的那一種**（識別字 ＋ 一層下標）。`a[i][j]`、`p->q[i]`
+ * 這些留給查得到的那一天——**認不出來要回 null，不要回一個猜的**。
+ */
+function elementTypeOfIndexed(objText: string, ctx: LiftContext): string | null {
+  const m = /^([A-Za-z_]\w*)\s*\[[^\[\]]*\]$/.exec(objText.trim())
+  return m ? ctx.data.getElementType(m[1]) : null
+}
+
 /** Try to lift a method call (field_expression) into a string-specific component.
  *  Returns null for shared methods (empty, clear, push_back, etc.) so the caller
  *  can dispatch them via METHOD_TO_COMPONENT for container support. */
@@ -331,7 +342,20 @@ export function registerIOLifters(lifter: Lifter): void {
 
       // 接收者的型別查得到的話，用專屬身分；**查不到就留在通用版**。
       // 猜一個的話，猜錯會靜默產生一個錯的身分——那比誠實降級更糟。
-      const objType = objText ? ctx.data.getType(objText) : null
+      /**
+       * 🔴 **接收者是「一格」的時候，問的是【元素的型別】**（2026-09-20）。
+       *
+       * ```
+       * bs.reset()      查 bs      → bits   🟢
+       * d1[i].reset()   查 d1[i]   → 查不到 🔴 ——而 d1 的每一格是 bitset
+       * ```
+       *
+       * ⚠️ 這**不是**「查不到就猜」：`getElementType` 查得到才回答，
+       * 查不到照舊回 null，留在通用版。判準沒有變寬，是**問對了名字**。
+       */
+      const objType = objText
+        ? (ctx.data.getType(objText) ?? elementTypeOfIndexed(objText, ctx))
+        : null
       /**
        * 🔴 **`#define pb push_back` 取的小名在這裡換回本名**（2026-09-19）。
        * 閘的理由見 `resolveMethodAlias` 的檔頭。

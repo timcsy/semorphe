@@ -106,3 +106,63 @@ describe('Scope', () => {
     expect(parent.get('n'), '往外找那條路不得被一起關掉').toEqual({ type: 'int', value: 2 })
   })
 })
+
+/**
+ * 🔴 **一個名字可以綁到「一個算出來的位置」**（2026-09-20）。
+ *
+ * 在此之前 `refs` 只存得下 `(作用域, 名字)` 一組字串，於是兩個綁定點
+ *（`cpp:func_call` 的參照參數、`cpp:var_declare_ref`）都只認得**裸的變數名**
+ * ——而「否則」那一條是**安靜地改用傳值**。
+ *
+ * 這裡量的是機構本身：讀、寫、以及**寫進去之後原處真的變了**。
+ */
+describe('Scope：綁到一個算出來的位置', () => {
+  /** 一個假的位置——背後是一個格子陣列的第 i 格。 */
+  function cellPlace(cells: number[], i: number): { read(): { type: 'int', value: number }, write(v: { value: unknown }): void } {
+    return {
+      read: () => ({ type: 'int' as const, value: cells[i] }),
+      write: (v) => { cells[i] = Number(v.value) },
+    }
+  }
+
+  it('讀得到那一格', () => {
+    const cells = [10, 20, 30]
+    const s = new Scope()
+    s.declarePlaceRef('r', cellPlace(cells, 1))
+    expect(s.get('r')).toEqual({ type: 'int', value: 20 })
+  })
+
+  it('🔴 寫進去之後【原處】真的變了——這一條才是重點', () => {
+    const cells = [10, 20, 30]
+    const s = new Scope()
+    s.declarePlaceRef('r', cellPlace(cells, 1))
+    s.set('r', { type: 'int', value: 7 })
+    expect(cells, '🔴 寫回去掉了——那正是「傳參考變成傳值」的症狀').toEqual([10, 7, 30])
+  })
+
+  it('子作用域看得到父層綁的位置，而且寫得回去', () => {
+    const cells = [0, 0]
+    const parent = new Scope()
+    parent.declarePlaceRef('r', cellPlace(cells, 0))
+    const child = parent.createChild()
+    expect(child.get('r')).toEqual({ type: 'int', value: 0 })
+    child.set('r', { type: 'int', value: 5 })
+    expect(cells).toEqual([5, 0])
+  })
+
+  it('★ 錨點：綁到名字的那一種照舊', () => {
+    const owner = new Scope()
+    owner.declare('x', { type: 'int', value: 1 })
+    const s = owner.createChild()
+    s.declareRef('r', owner, 'x')
+    s.set('r', { type: 'int', value: 9 })
+    expect(owner.get('x')).toEqual({ type: 'int', value: 9 })
+  })
+
+  it('has／hasLocal 認得它', () => {
+    const s = new Scope()
+    s.declarePlaceRef('r', cellPlace([1], 0))
+    expect(s.has('r')).toBe(true)
+    expect(s.hasLocal('r')).toBe(true)
+  })
+})

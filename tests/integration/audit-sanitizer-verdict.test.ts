@@ -28,9 +28,9 @@ import { sanitizerSaysUB, hasReferenceCompiler, referenceCompilerInfo } from '..
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
 describe('量測工具的錨點：未定義行為的判定', () => {
-  it('★ 健康檢查：這台機器上消毒器裝得起來（跳過的話下面在驗空氣）', () => {
+  it('★ 健康檢查：這台機器上消毒器裝得起來（跳過的話下面在驗空氣）', async () => {
     expect(hasReferenceCompiler(), '🔴 找不到參照編譯器').toBe(true)
-    const r = sanitizerSaysUB(`${H}int main(){ int x=2147483647; x=x+1; cout<<x; return 0; }`, '')
+    const r = await sanitizerSaysUB(`${H}int main(){ int x=2147483647; x=x+1; cout<<x; return 0; }`, '')
     expect(r.ub,
       `🔴 消毒器在這台機器上不可用（${referenceCompilerInfo().version}）——`
       + '語料的「測資走進 UB」那一欄會整欄歸零，而那看起來像「缺陷變多了」。'
@@ -43,15 +43,15 @@ describe('量測工具的錨點：未定義行為的判定', () => {
    * ⚠️ 而它走的是**程式正常退出**那一路（UBSan 預設會讓程式繼續跑），
    *    第一版的 `execFileSync` 只在「它失敗了」時讀 stderr，**對這一路是沉默的**。
    */
-  it('★ 正向錨點①：越界索引要被指名，而且程式是正常退出的那一路', () => {
-    const r = sanitizerSaysUB(
+  it('★ 正向錨點①：越界索引要被指名，而且程式是正常退出的那一路', async () => {
+    const r = await sanitizerSaysUB(
       `${H}int main(){ int n; cin>>n; vector<int> a[3]; a[n].push_back(1); cout<<"done"; return 0; }`, '7\n')
     expect(r.ub).toBe(true)
     expect(r.detail).toMatch(/out of bounds|AddressSanitizer/)
   }, 180_000)
 
-  it('★ 正向錨點②：有號整數溢位（純 UBSan，程式不會死）', () => {
-    const r = sanitizerSaysUB(`${H}int main(){ int x = 2147483647; x = x + 1; cout << x; return 0; }`, '')
+  it('★ 正向錨點②：有號整數溢位（純 UBSan，程式不會死）', async () => {
+    const r = await sanitizerSaysUB(`${H}int main(){ int x = 2147483647; x = x + 1; cout << x; return 0; }`, '')
     expect(r.ub).toBe(true)
     expect(r.detail).toMatch(/signed integer overflow/)
   }, 180_000)
@@ -60,8 +60,8 @@ describe('量測工具的錨點：未定義行為的判定', () => {
    * 🔴 **負向：這一條才是真正危險的方向。**
    * 判定往寬了壞（每一支都說 UB）會讓真的缺陷從帳上消失，而且全綠。
    */
-  it('🔴 乾淨的程式不得被指名——否則整排缺陷會安靜地從帳上消失', () => {
-    const r = sanitizerSaysUB(
+  it('🔴 乾淨的程式不得被指名——否則整排缺陷會安靜地從帳上消失', async () => {
+    const r = await sanitizerSaysUB(
       `${H}int main(){ int n; cin>>n; vector<int> v(n); for(int i=0;i<n;i++) v[i]=i; cout<<v[n-1]; return 0; }`,
       '5\n')
     expect(r.ub).toBe(false)
@@ -72,9 +72,9 @@ describe('量測工具的錨點：未定義行為的判定', () => {
    * ⚠️ **餵不同的輸入要給不同的答案**——同一支程式，UB 與否**由那份測資決定**。
    * 這一條擋的是「它其實只看程式碼、根本沒餵進去」那種壞法。
    */
-  it('🔴 同一支程式換一份輸入要換一個答案（否則它根本沒在餵 stdin）', () => {
+  it('🔴 同一支程式換一份輸入要換一個答案（否則它根本沒在餵 stdin）', async () => {
     const prog = `${H}int main(){ int n; cin>>n; vector<int> a(3); cout<<a[n]; return 0; }`
-    expect(sanitizerSaysUB(prog, '1\n').ub, '界內的索引不得被指名').toBe(false)
-    expect(sanitizerSaysUB(prog, '9\n').ub, '界外的索引要被指名').toBe(true)
+    expect((await sanitizerSaysUB(prog, '1\n')).ub, '界內的索引不得被指名').toBe(false)
+    expect((await sanitizerSaysUB(prog, '9\n')).ub, '界外的索引要被指名').toBe(true)
   }, 180_000)
 })

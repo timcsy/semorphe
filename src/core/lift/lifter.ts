@@ -150,8 +150,24 @@ export class Lifter {
      * > 會給出一個看起來像型別的字串——而它比沒有更糟。**
      */
     const usable = fromComponent !== undefined && fromComponent !== 'var' ? fromComponent : undefined
-    const type = usable ?? (r.properties?.type !== undefined ? String(r.properties.type) : undefined)
-    if (type) data.declare(String(name), type)
+    const written = r.properties?.type !== undefined ? String(r.properties.type) : undefined
+    const type = usable ?? written
+    /**
+     * 🔴 **容器那一條要把【元素的型別】一起記下來**（2026-09-20）。
+     *
+     * 上面那條規則刻意讓概念名贏過 `properties.type`——因為對容器來說
+     * `properties.type` 是**元素**型別（`cpp:vector_declare` 的 `int`），
+     * 拿它當變數的型別會把容器記成 `int`（那段註解就在上面）。
+     *
+     * ⚠️ 而「不當變數的型別」被做成了「**丟掉**」：`bitset<8> d[3]` 之後
+     * 沒有任何地方說得出 `d` 的每一格裝的是 `bitset<8>`，於是
+     * `d[i].reset()` 認不出身分（既有的釘子逐字寫著它在等這一天）。
+     *
+     * > **一個「這個值不該放在這一格」的判斷，如果沒有替它找一格，
+     * > 就等於把它刪掉——而刪掉與「本來就沒有」看起來一樣。**
+     */
+    const elem = usable !== undefined && written !== undefined && written !== usable ? written : undefined
+    if (type) data.declare(String(name), type, 'variable', elem)
   }
 
   /**

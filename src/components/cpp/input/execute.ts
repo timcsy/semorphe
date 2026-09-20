@@ -40,6 +40,29 @@ import { resolvePlace } from '../../../interpreter/lvalue'
  */
 type Extraction = { value: RuntimeValue | null; ok: boolean }
 
+/**
+ * 讀取失敗的那一刻，那一格要留下什麼。
+ *
+ * 🔴 **`bool` 是唯一一個【不是零值】的**（2026-09-20，g++ 實測的表）：
+ *
+ * ```
+ * bool ← "12"    failbit ＋ 存 【true】     ← 標準：「otherwise failbit，而存 true」
+ * bool ← "abc"   failbit ＋ 存 false        （連一個數字都讀不出來）
+ * int  ← "abc"   failbit ＋ 存 0
+ * ```
+ *
+ * ⚠️ 語料 `AP325/1/1_11` 讀的是一整片 `bool`，而測資餵的是 `12` 這種數字
+ * ——第一格就 failbit，之後每一格都不動。g++ 印 0，而我們（把 12 當成 false、
+ * 又不設 failbit）整片讀下去印 1。
+ *
+ * > **一個「格式不符就給零值」的通則，在唯一一個例外上
+ * > 會安靜地給出一個【合法而錯誤】的答案。**
+ */
+function failedValue(raw: string, targetType: string): RuntimeValue {
+  if (targetType === 'bool' && /^[+-]?\d+$/.test(raw)) return { type: 'bool', value: true }
+  return defaultValue(targetType)
+}
+
 /** 讀一個 token 並轉成 `targetType`。已經在失敗狀態就**什麼都不做**。 */
 async function extractOne(ctx: ExecutionContext, targetType: string): Promise<Extraction> {
   if (ctx.cinFailed) return { value: null, ok: false }
@@ -56,7 +79,7 @@ async function extractOne(ctx: ExecutionContext, targetType: string): Promise<Ex
   if (raw === null) { ctx.failCin(); return { value: null, ok: false } }
   const parsed = parseInputValue(raw, targetType)
   // 格式不符：`failbit` 要設，而變數**設成零值**
-  if (parsed === null) { ctx.failCin(); return { value: defaultValue(targetType), ok: false } }
+  if (parsed === null) { ctx.failCin(); return { value: failedValue(raw, targetType), ok: false } }
   return { value: parsed, ok: true }
 }
 

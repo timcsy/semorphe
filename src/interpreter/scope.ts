@@ -1,12 +1,54 @@
 import type { RuntimeValue } from './types'
+import type { Place } from './lvalue'
 import { hasAlias, resolveAlias } from './aliases'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
 import { findNearMiss } from './near-miss'
 import { isBuiltinName } from '../core/language-executors'
 
+/**
+ * 一個引用指到的東西——**兩種**。
+ *
+ * ```
+ * { scope, name }   指到另一個作用域裡的【一個名字】      int &r = x;      g(x)
+ * { place }         指到一個【算出來的位置】              int &r = a[1];   g(a[1])  g(s.a)
+ * ```
+ *
+ * 🔴 **第二種是 2026-09-20 才有的，而在此之前缺的不是機制，是【接上】**：
+ * 兩個呼叫點（`cpp:func_call` 的參照參數、`cpp:var_declare_ref`）都寫著
+ * 「引數是一個裸的變數名就綁引用，否則……」——而那個「否則」是
+ * **安靜地改用傳值**。於是
+ *
+ * ```
+ * void g(int &r){ r = 7; }
+ * int a[3] = {0,0,0};  g(a[1]);  cout << a[1];   g++ 印 7，我們印 0
+ * struct S{int a;}; S s;  g(s.a);                g++ 印 7，我們印 0
+ * ```
+ *
+ * ——**不報錯、程式跑完、答案是錯的**。實測五種形狀全中
+ *（C 陣列元素／vector 元素／struct 陣列元素／struct 的成員／綁到參照變數）。
+ *
+ * > **一個「認得出裸名字就做對，否則悄悄改做別的事」的分支，
+ * > 它的正確性等於【使用者只會寫裸名字】這個假設。**
+ *
+ * 🟢 而「算出來的位置」這個抽象**本來就在**（`lvalue.ts` 的 `Place`，
+ * `swap(a[j], a[j+1])` 在用）——這裡只是讓引用也拿得到它。
+ */
+type RefTarget = { scope: Scope, name: string } | { place: Place }
+
+/** 讀一個引用指到的東西。 */
+function readRef(t: RefTarget): RuntimeValue {
+  return 'place' in t ? t.place.read() : t.scope.get(t.name)
+}
+
+/** 寫一個引用指到的東西。 */
+function writeRef(t: RefTarget, v: RuntimeValue): void {
+  if ('place' in t) t.place.write(v)
+  else t.scope.set(t.name, v)
+}
+
 export class Scope {
   private variables = new Map<string, RuntimeValue>()
-  private refs = new Map<string, { scope: Scope, name: string }>()
+  private refs = new Map<string, RefTarget>()
   readonly parent: Scope | null
 
   constructor(parent: Scope | null = null) {
@@ -52,9 +94,19 @@ export class Scope {
     this.refs.set(name, { scope: targetScope, name: targetName })
   }
 
+  /**
+   * **把一個名字綁到一個【算出來的位置】**——`int &r = a[1];`、`g(s.a)`。
+   *
+   * ⚠️ 位置要在**呼叫端的作用域**解好再傳進來：`a[1]` 的 `a` 與 `1`
+   * 是呼叫端的東西，而這個作用域是被呼叫端的。
+   */
+  declarePlaceRef(name: string, place: Place): void {
+    this.refs.set(name, { place })
+  }
+
   get(name: string): RuntimeValue {
     const ref = this.refs.get(name)
-    if (ref) return ref.scope.get(ref.name)
+    if (ref) return readRef(ref)
     if (this.variables.has(name)) {
       return this.variables.get(name)!
     }
@@ -68,7 +120,7 @@ export class Scope {
     // 而跑真的程式一句建議都沒有。**驗證必須在行為端。**
     for (let s: Scope | null = this.parent; s; s = s.parent) {
       const r = s.refs.get(name)
-      if (r) return r.scope.get(r.name)
+      if (r) return readRef(r)
       if (s.variables.has(name)) return s.variables.get(name)!
     }
     /**
@@ -89,7 +141,7 @@ export class Scope {
       if (real !== name) {
         for (let s: Scope | null = this; s; s = s.parent) {
           const r = s.refs.get(real)
-          if (r) return r.scope.get(r.name)
+          if (r) return readRef(r)
           if (s.variables.has(real)) return s.variables.get(real)!
         }
       }
@@ -152,7 +204,7 @@ export class Scope {
    */
   set(name: string, value: RuntimeValue): void {
     const ref = this.refs.get(name)
-    if (ref) { ref.scope.set(ref.name, value); return }
+    if (ref) { writeRef(ref, value); return }
     if (this.variables.has(name)) {
       this.variables.set(name, value)
       return
@@ -160,7 +212,7 @@ export class Scope {
     // 同上——拋錯的必須是**發起查找的這一層**，它才看得到完整的可見集合。
     for (let s: Scope | null = this.parent; s; s = s.parent) {
       const r = s.refs.get(name)
-      if (r) { r.scope.set(r.name, value); return }
+      if (r) { writeRef(r, value); return }
       if (s.variables.has(name)) { s.variables.set(name, value); return }
     }
     throw this.undeclared(name)

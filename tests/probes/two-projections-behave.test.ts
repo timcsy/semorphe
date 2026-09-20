@@ -65,6 +65,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 import { execSync } from 'node:child_process'
+import { runShell } from '../helpers/run-cpp'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
@@ -107,21 +108,40 @@ function neutralCorpus(limit: number): string[] {
   return [...new Set(out)]
 }
 
-/** 編譯並執行；回 `null` 代表**編不過**（不進分母）。 */
-function compileRun(code: string, lang: 'c' | 'c++', dir: string, tag: string): string | null {
+/**
+ * 編譯並執行；回 `null` 代表**編不過或跑不完**（不進分母）。
+ *
+ * 🔴 **必須是非同步的那一條路**（2026-09-20）。
+ *
+ * 在此之前這裡是 `execSync(bin, { timeout: 10000 })`，而 `execSync` 的
+ * `timeout` 送得出訊號、**卻要等那個行程真的死掉**。一個卡在 `UE`
+ *（不可中斷的等待）的行程永遠不會死，於是整個 vitest 停在 0% CPU
+ * ——看起來像「這一批太重被系統砍了」。
+ *
+ * ⚠️ 那一天的殘骸逐字是暫存目錄底下的 `twoproj-XXXX` 裡那支 `x2c`，**五次執行各留一個**，
+ *    RSS 416 bytes（它根本沒進到使用者程式碼），而 `memory_pressure`
+ *    同時說記憶體 45% 空閒。
+ *
+ * > **一個在使用者空間殺不掉的行程，唯一的處置是【不要等它】。**
+ *
+ * 🟢 `runShell`（`tests/helpers/run-cpp.ts`）的計時器自己 resolve，
+ *    而且 `detached` ＋ `kill(-pid)` 會把整個行程群組帶走——
+ *    留下一個孤兒比卡住整套測試便宜。
+ */
+async function compileRun(code: string, lang: 'c' | 'c++', dir: string, tag: string): Promise<string | null> {
   const ext = lang === 'c' ? 'c' : 'cpp'
   const src = path.join(dir, `${tag}.${ext}`)
   const bin = path.join(dir, tag)
   fs.writeFileSync(src, code)
   const cc = lang === 'c' ? 'gcc -x c -std=c99' : 'g++ -x c++ -std=c++17'
-  try {
-    execSync(`${cc} -w -o ${bin} ${src}`, { stdio: 'pipe', timeout: 20000 })
-    return execSync(bin, { stdio: 'pipe', timeout: 10000 }).toString()
-  } catch { return null }
+  const built = await runShell(`${cc} -w -o ${bin} ${src}`, 20000)
+  if (built.out === null) return null
+  const ran = await runShell(bin, 10000)
+  return ran.out
 }
 
 describe('探測：同一棵樹的兩種投影，跑起來一樣嗎', () => {
-  it.skipIf(!hasCC)('★ 逐段比對輸出', () => {
+  it.skipIf(!hasCC)('★ 逐段比對輸出', async () => {
     const corpus = neutralCorpus(12)
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'twoproj-'))
 
@@ -133,8 +153,8 @@ describe('探測：同一棵樹的兩種投影，跑起來一樣嗎', () => {
       // 🔴 **同一棵樹**投影兩次——中間沒有第二次 lift。
       // 那是「切換不改語義樹」最強的證明：**根本沒有第二棵樹**。
       const tree = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
-      const outCpp = compileRun(generateCode(tree, 'cpp', CPP), 'c++', tmp, `x${i}cpp`)
-      const outC = compileRun(generateCode(tree, 'cpp', C), 'c', tmp, `x${i}c`)
+      const outCpp = await compileRun(generateCode(tree, 'cpp', CPP), 'c++', tmp, `x${i}cpp`)
+      const outC = await compileRun(generateCode(tree, 'cpp', C), 'c', tmp, `x${i}c`)
 
       // ⚠️ 有一邊編不過或跑不動 → **不可判定，不進任一邊**
       // （`build-guardrail` 第 5 步：為了讓數字好看而樂觀歸類，比沒有分類更糟）

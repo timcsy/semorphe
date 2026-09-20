@@ -790,6 +790,83 @@ const CASES: [string, string, string, string[]][] = [
   ['★ 錨點：寫全的那一種不得被弄壞', '', '  vector<int> a(3, 5);\n  cout << a[0] << a.size();', []],
   ['★ 錨點：推不出來時讓開（複製建構）', '', '  vector<int> src(2, 1);\n  vector cp(src);\n  cout << cp.size();', []],
   ['多宣告子：第二個當陣列大小', 'const int N = 5, K = 3;\nint T[K + 1];', '  cout << N << K << (int)(sizeof(T) / sizeof(T[0]));', []],
+  /**
+   * 🔴 **參照綁到一個【算出來的位置】**（2026-09-20，語料 `AP325/2/2_5`）。
+   *
+   * 在此之前兩個綁定點都寫著「引數是一個裸的變數名就綁引用，否則……」
+   * ——而那個「否則」是**安靜地改用傳值**。實測**五種形狀全中**，
+   * 而五種都是「跑得完的錯答案」：不報錯、有輸出、值是初值。
+   *
+   * ```
+   * void g(int &r){ r = 7; }
+   * int a[3]={0,0,0};  g(a[1]);   g++ 印 7，我們印 0
+   * struct S{int a;};  g(s.a);    g++ 印 7，我們印 0
+   * ```
+   *
+   * > **「傳參考」與「傳值」在解譯器裡的差別只有【有沒有複製】這一個動作，
+   * > 而少做那個動作的症狀，是一個跑得完的錯答案。**
+   *
+   * 🟢 修法不是新機制：`lvalue.ts` 的 `Place`（`swap(a[j],a[j+1])` 在用）
+   *    本來就解得出這些位置——缺的是**讓引用也拿得到它**。
+   */
+  ['參照①：C 陣列的一格當出參數', 'void g(int &r){ r = 7; }', '  int a[3] = {0,0,0};\n  g(a[1]);\n  cout << a[0] << a[1] << a[2];', []],
+  ['參照②：vector 的一格', 'void g(int &r){ r = 7; }', '  vector<int> v(3, 0);\n  g(v[1]);\n  cout << v[0] << v[1];', []],
+  ['參照③：struct 陣列的一格', 'struct S{ long long a; long long b; };\nvoid f(S A, S B, S &C){ C.a = A.a + B.a; C.b = A.b * B.b; }',
+    '  S A[3];\n  A[0] = {2,3};\n  f(A[0], A[0], A[1]);\n  cout << A[1].a << "," << A[1].b;', []],
+  ['參照④：struct 的一個成員', 'struct S{ int a; };\nvoid g(int &r){ r = 7; }', '  S s;\n  s.a = 0;\n  g(s.a);\n  cout << s.a;', []],
+  ['參照⑤：把一個參照變數綁到一格', '', '  int a[3] = {0,0,0};\n  int &r = a[1];\n  r = 7;\n  cout << a[0] << a[1];', []],
+  ['參照⑥：巢狀——一格的成員當出參數', 'struct S{ int a; };\nvoid g(int &r){ r = 7; }', '  S A[2];\n  A[1].a = 0;\n  g(A[1].a);\n  cout << A[1].a;', []],
+  ['★ 錨點：純量變數當出參數照舊', 'void g(int &r){ r = 7; }', '  int a = 0;\n  g(a);\n  cout << a;', []],
+  ['★ 錨點：傳值【不得】被改成傳參考', 'void g(int r){ r = 7; }', '  int a[3] = {0,0,0};\n  g(a[1]);\n  cout << a[1];', []],
+  ['★ 錨點：const 參照收得下一個算出來的值', 'int twice(const int &r){ return r * 2; }', '  cout << twice(3 + 4);', []],
+  ['★ 錨點：整個容器當出參數照舊', 'void fill3(vector<int> &v){ v.push_back(3); }', '  vector<int> v;\n  fill3(v);\n  cout << v.size() << v[0];', []],
+  ['★ 錨點：出參數的索引只准算一次', 'void g(int &r){ r = 7; }', '  int a[3] = {0,0,0};\n  int i = 0;\n  g(a[i++]);\n  cout << i << a[0] << a[1];', []],
+  /**
+   * 🔴 **把一個參照參數再往下傳**（同一族的最後一種形狀）。
+   * `findOwner` 逐字「只看 `variables` 不看 `refs`」，所以裸名字那條
+   * 對 `h(r)` 裡的 `r` 答不出擁有者 ⟹ 掉到傳值。
+   */
+  ['參照⑧：把出參數再往下傳一層', 'void h(int &q){ q = 7; }\nvoid g(int &r){ h(r); }', '  int a[3] = {0,0,0};\n  g(a[1]);\n  cout << a[0] << a[1];', []],
+  ['參照⑨：再往下傳，而起點是一個純量', 'void h(int &q){ q = 7; }\nvoid g(int &r){ h(r); }', '  int x = 0;\n  g(x);\n  cout << x;', []],
+  ['參照⑩：再往下傳，而起點是一個成員', 'struct S{ int a; };\nvoid h(int &q){ q = 7; }\nvoid g(int &r){ h(r); }', '  S s;\n  s.a = 0;\n  g(s.a);\n  cout << s.a;', []],
+  ['參照⑦：矩陣快速冪（語料 AP325/2/2_5 的核心）',
+    'const long long p = 1000000007;\nstruct s{ long long a; long long b; long long c; long long d; };\n'
+    + 'void times(s A, s B, s &C){\n  C.a = (A.a*B.a + A.b*B.c)%p; C.b = (A.a*B.b + A.b*B.d)%p;\n'
+    + '  C.c = (A.c*B.a + A.d*B.c)%p; C.d = (A.c*B.b + A.d*B.d)%p; return; }\n'
+    + 'long long An(long long n){ if(n <= 0) return 0;\n  s A[100],ans = {1,0,0,1}; A[0] = {1,1,1,0}; int i=-1;\n'
+    + '  while(n!=0){ i++; times(A[i],A[i],A[i+1]); if(n&1){ times(A[i],ans,ans); } n >>= 1; }\n  return ans.a; }',
+    '  for (int k = 1; k <= 10; k++) cout << An(k) << \' \';', []],
+  /**
+   * 🔴 **一格的專屬方法**（2026-09-20，語料 `AP325/2/2_7_TLE`）。
+   *
+   * 依接收者型別分派的那張表拿**接收者的原文**去查名字，而 `d[i]` 不是名字。
+   * 既有的釘子逐字寫著它在等「宣告表記得住陣列的元素型別」的那一天
+   * ——而那個型別**本來就在手上**（`cpp:array_declare` 的 `properties.type`
+   * 逐字是 `bitset<8>`），只是 `recordDeclaration` 把它丟了。
+   *
+   * > **一個「這個值不該放在這一格」的判斷，如果沒有替它找一格，
+   * > 就等於把它刪掉——而刪掉與「本來就沒有」看起來一樣。**
+   */
+  ['一格的專屬方法①：bitset 陣列', '', '  bitset<8> d[3];\n  d[0].set(2);\n  cout << d[0].count() << d[0][2];\n  d[0].reset();\n  cout << d[0].count();', []],
+  ['一格的專屬方法②：vector 裝 bitset', '', '  vector<bitset<8>> vb(2);\n  vb[1].set(3);\n  cout << vb[1].count() << vb[0].count();', []],
+  ['★ 錨點：字串陣列的一格仍然走字串的方法', '', '  string s[2];\n  s[0] = "abc";\n  cout << s[0].size() << s[0].substr(1);', []],
+  ['★ 錨點：自訂 struct 陣列的一格叫自己的方法', 'struct S{ int a; int get(){ return a; } };', '  S A[2];\n  A[0].a = 3;\n  cout << A[0].get();', []],
+  /**
+   * 🔴 **`>>` 對 `bool` 只收 `0` 與 `1`**（2026-09-20，語料 `AP325/1/1_11`）。
+   * 在此之前 `parseInputValue` 寫的是 `input === 'true' || input === '1'`
+   * ——`12` 變成 false 而且**不設 failbit**，於是整片讀下去都不對。
+   *
+   * > **「這個值是 false」與「這一次讀取失敗了」是兩件事，
+   * > 而把後者寫成前者，程式會照常跑完並印出一個錯的答案。**
+   */
+  ['布林輸入①：合法的 0 與 1', '', '  bool a, b;\n  cin >> a >> b;\n  cout << a << b;', ['1', '0']],
+  ['布林輸入②：數字但不是 0/1 ⟹ failbit ＋ 存 true', '', '  bool a = false, z = false;\n  cin >> a >> z;\n  cout << a << z;', ['12', '1']],
+  ['布林輸入③：不是數字 ⟹ failbit ＋ 存 false', '', '  bool a = true, z = true;\n  cin >> a >> z;\n  cout << a << z;', ['abc', '1']],
+  ['布林輸入④：failbit 之後每一格都不動', '', '  bool a = false, b = false, c = false;\n  cin >> a >> b >> c;\n  cout << a << b << c;', ['1', '12', '1']],
+  ['布林輸入⑤：一整片（語料 AP325/1/1_11 的形狀）', 'bool d2[4][4];',
+    '  int m = 2, n = 2;\n  bool x;\n  for (int i = 1; i <= m; i++) for (int j = 1; j <= n; j++) { cin >> x; d2[i][j] = x; }\n'
+    + '  cout << d2[1][1] << d2[1][2] << d2[2][1] << d2[2][2];', ['1', '12', '1', '0']],
+  ['★ 錨點：整數的讀取失敗照舊存零值', '', '  int x = 9, z = 5;\n  cin >> x >> z;\n  cout << x << "," << z;', ['abc', '3']],
 ]
 
 describe('解譯器與參照編譯器：同一段程式，印出來的要一樣', () => {
@@ -833,4 +910,73 @@ describe('解譯器與參照編譯器：同一段程式，印出來的要一樣'
         .toBe(ref.ok ? ref.output : '')
     }, 60_000)
   }
+
+  /**
+   * 🔴 **[UNSUPPORTED:多維陣列的一格沒有元素型別] `g[0][1].set(1)`**（2026-09-20）
+   *
+   * 這一刀讓「一格」問得出自己的型別（`bitset<8> d[3]` → `d[i]` 是 `bits`），
+   * 而判別走的是**接收者的原文**：`^名字[…]$`，**只認一層下標**。
+   *
+   * ```
+   * bitset<8> d[3];     d[0].set(1)      🟢
+   * bitset<8> g[2][2];  g[0][1].set(1)   🔴 兩層，認不出
+   * ```
+   *
+   * **為什麼不是現在**：放寬成「名字後面接幾層都算」是**錯的**——
+   * 同一張表會讓 `g[0]`（它是一排 bitset，不是一個 bitset）也答出 `bits`，
+   * 而那是一個**猜錯的專屬身分**。`method-components.ts` 逐字：
+   * 「型別查不到時不猜——猜一個錯的專屬身分比誠實降級更糟。」
+   *
+   * 要做對得先記下**維度數**，而宣告表今天只記一個型別字串。
+   *
+   * > **一個放寬判準就能多接住一族的修法，先問它同時多接住了哪些【不該接】的。**
+   *
+   * 🟢 而它今天**誠實**：丟 `UNDECLARED_VAR` 並指名
+   *「`cpp:array_2d_at` 不是一個物件」——不是一個安靜的錯答案。
+   *
+   * **何時該修**：宣告表記得住陣列維度數的那一刀（與元素型別同一張表）。
+   * ⚠️ 語料 0 處——`AP325/2/2_7_TLE` 用的是一維。
+   */
+  /**
+   * 🔴 **[UNSUPPORTED:串流的狀態查詢] `cin.fail()`／`cin.eof()`**（2026-09-20）
+   *
+   * 量布林輸入那一族的時候順手撞到的：`cin.fail()` 掉進泛用的方法呼叫，
+   * 而求值 `cin` 會丟 `STREAM_NOT_VARIABLE`——**整支程式停住**。
+   *
+   * 🟢 而 `while (cin >> n)` 那一種**是好的**（`cpp:input` 自己回報成敗），
+   *    所以最常見的那條路沒有被擋住。
+   *
+   * **為什麼不是現在**：`cin` 在這個直譯器裡不是一個物件（`cpp:method_call`
+   * 的 `STREAMS` 白名單只放行**不讀走東西**的那幾個方法），要讓
+   * `fail`／`eof`／`good`／`clear` 有意義，得先決定「串流的狀態」住在哪裡
+   * ——那是一顆元件的設計題，不是一個分支。
+   * ⚠️ 語料 0 處。
+   *
+   * **何時該修**：`cin` 變成一個有狀態的接收者的那一刀。
+   */
+  it.fails('[UNSUPPORTED:串流的狀態查詢] 🔴 cin.fail() 讀不出來', async () => {
+    const src = '#include <bits/stdc++.h>\nusing namespace std;\n'
+      + 'int main(){   int x;\n  cin >> x;\n  cout << cin.fail(); return 0; }\n'
+    const ref = runCppDetailed(src, 'abc\n')
+    expect(ref.ok, '★ 正向錨點：參照編譯器收得下這一段').toBe(true)
+    const tree = lifter.lift(parser.parse(src).rootNode as never) as SemanticNode
+    const out: string[] = []
+    const interp = new SemanticInterpreter({ maxSteps: 200_000 })
+    interp.setOutputCallback((x) => out.push(x))
+    await interp.execute(tree, ['abc'])
+    expect(out.join('')).toBe(ref.output)
+  }, 60_000)
+
+  it.fails('[UNSUPPORTED:多維陣列的一格沒有元素型別] 🔴 g[0][1].set(1)', async () => {
+    const src = '#include <bits/stdc++.h>\nusing namespace std;\n'
+      + 'int main(){   bitset<8> g[2][2];\n  g[0][1].set(1);\n  cout << g[0][1].count(); return 0; }\n'
+    const ref = runCppDetailed(src, '\n')
+    expect(ref.ok, '★ 正向錨點：參照編譯器收得下這一段').toBe(true)
+    const tree = lifter.lift(parser.parse(src).rootNode as never) as SemanticNode
+    const out: string[] = []
+    const interp = new SemanticInterpreter({ maxSteps: 200_000 })
+    interp.setOutputCallback((x) => out.push(x))
+    await interp.execute(tree, [])
+    expect(out.join('')).toBe(ref.output)
+  }, 60_000)
 })

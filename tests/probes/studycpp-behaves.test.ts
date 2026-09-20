@@ -235,9 +235,23 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
          * ⚠️ **步數預算不是缺陷判準**——撞到上限的那些是 N 皇后回溯那一類，
          * g++ 幾毫秒跑完，而樹走式解譯器慢 10–100 倍。所以它獨立成一格，
          * 不混進「解譯器出錯」。
+         *
+         * 🔴 **而預算要與【產品】的同一個數**（2026-09-20，2_000_000 → 10_000_000）。
+         *
+         * 在此之前這裡寫 2,000,000，而 `src/ui/execution-controller.ts` 的三個
+         * 進入點都給 **10,000,000**——**探針比使用者實際會遇到的嚴 5 倍**。
+         * 實測：2M 撞上限的 15 支裡，**4 支在 10M 之下跑得完**
+         *（`AP325/1/1_11` · `AP325/4/4_18` · `play/fake_random` · `play/fake_random_2`）。
+         *
+         * > **一個量測工具如果比產品嚴，它報出來的「跑不完」
+         * > 有一部分是它自己的帳——而那一部分看起來與缺陷一模一樣。**
+         *
+         * ⚠️ 而剩下的 11 支**不是**都該記在解譯器頭上：`basic/13_while_1`
+         * 與 `basic/13_while_2` 的迴圈出口是**哨兵值**（輸入 `-999`／猜中答案），
+         * 而合成測資永遠給不到那個值——**兩邊都跑不完**，那是測資的帳。
          */
         const interp = new SemanticInterpreter({
-          maxSteps: Number(process.env.PROBE_STEPS ?? 2_000_000),
+          maxSteps: Number(process.env.PROBE_STEPS ?? 10_000_000),
         })
         interp.setOutputCallback((x) => out.push(x))
         await interp.execute(tree, rows[i].stdin)
@@ -257,7 +271,7 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
          * ⚠️ **判準是外部權威**：不是我說「這支有 UB」，是 UBSan／ASan 指名了那一行。
          * ⚠️ 而它**只能證實不能否證**——消毒器沒叫的仍然算我們的帳。
          */
-        const san = sanitizerSaysUB(rows[i].src, rows[i].stdin.join('\n') + '\n')
+        const san = await sanitizerSaysUB(rows[i].src, rows[i].stdin.join('\n') + '\n')
         if (san.ub === true) {
           tally.interpError--
           tally.inputUB++

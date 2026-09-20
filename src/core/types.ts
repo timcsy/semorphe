@@ -807,6 +807,23 @@ export interface Declaration {
    * ⚠️ 省略 ＝ `variable`（既有的每一個呼叫點都不帶它，行為必須一格不變）。
    */
   kind?: 'variable' | 'type'
+  /**
+   * 🔴 **這一格裝的是什麼**（2026-09-20）——`bitset<8> d[3]` 的 `bitset<8>`。
+   *
+   * `type` 記的是「它是哪一種東西」（`array`／`vector`），而**元素的型別
+   * 在那之前一個字都沒有留下**。症狀是 `d[i].reset()`：
+   * 依接收者型別分派那張表拿 `d[i]` 去查，查不到名字 ⟹ 掉進泛用的方法呼叫
+   * ⟹ 「`cpp:array_at` 不是一個物件」。
+   *
+   * ⚠️ 而**那個值本來就在手上**：`cpp:array_declare` 的 `properties.type`
+   * 逐字就是 `bitset<8>`。缺的不是資訊，是**有沒有人把它記下來**。
+   *
+   * > **一個「這是哪一種容器」的欄位，答得出裝東西的盒子是什麼，
+   * > 答不出裡面裝的是什麼——而問「這顆能不能 .reset()」的人要的是後者。**
+   *
+   * ⚠️ 省略 ＝ 不知道（既有每一個呼叫點都不帶它，行為必須一格不變）。
+   */
+  elem?: string
 }
 
 export interface LiftContextData {

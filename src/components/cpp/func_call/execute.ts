@@ -16,6 +16,8 @@ import { cloneValue } from '../../../interpreter/clone'
 import { cppParamDefault } from '../../../languages/cpp/lang/executors/param-default'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { Scope } from '../../../interpreter/scope'
+import { resolvePlace } from '../../../interpreter/lvalue'
+import type { Place } from '../../../interpreter/lvalue'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   const execFuncCall: ComponentExecutor = async (node, ctx) => {
@@ -98,7 +100,63 @@ export function registerExecute(register: (component: string, executor: Componen
 
     const args = node.slots.args ?? []
     const argValues: RuntimeValue[] = []
-    for (const argNode of args) {
+    /**
+     * 🔴 **參照參數要在【呼叫端的作用域】解成一個位置**（2026-09-20）。
+     *
+     * `a[1]` 的 `a` 與 `1` 是呼叫端的東西，而下面那行就要把 `ctx.scope`
+     * 換成被呼叫端的了——所以這件事必須在換之前做。
+     *
+     * ⚠️ **與求值同一趟**：`g(a[i++])` 的索引只准算一次。解得出位置的
+     * 就用 `place.read()` 當那一格的值，不再另外 `ctx.evaluate` 一次。
+     */
+    const argPlaces: (Place | undefined)[] = []
+    for (let i = 0; i < args.length; i++) {
+      const argNode = args[i]
+      const param = funcDef.params[i]
+      const wantsRef = param !== undefined && param.type.includes('&')
+      /**
+       * 裸的變數名走既有那條（`declareRef`）——它便宜，而且行為已經被釘住了。
+       *
+       * 🔴 **而「裸的名字」還要問它【綁得到】嗎**：`findOwner` 逐字
+       *「只看 `variables` 不看 `refs`」（`scope.ts` 的註解），所以
+       * **把一個參照參數再往下傳**的時候它答不出來：
+       *
+       * ```cpp
+       * void h(int &q){ q = 7; }
+       * void g(int &r){ h(r); }     // r 住在 refs 裡 ⟹ findOwner 回 null
+       * g(a[1]);                    // ⟹ h 拿到一份複本，寫回去掉了
+       * ```
+       *
+       * 🟢 那一種改走位置：`cpp:var_ref` 的左值解析走 `scope.get`／`set`，
+       * 而**那兩支認得 refs**——於是一路轉下去都指到同一格。
+       */
+      const bareName = argNode.properties.name
+      const bindableByName = typeof bareName === 'string' && bareName !== ''
+        && ctx.scope.findOwner(bareName) !== null
+      if (wantsRef && !bindableByName) {
+        // ⚠️ **兩個 push 都要等到全部成功**：`place.read()` 也會丟
+        //    （名字根本沒宣告過），而先 push 再丟會讓 catch 再 push 一次
+        //    ——`argPlaces` 從那一格起**整排錯位**，而下標錯位不會報錯。
+        let resolved: Place | undefined
+        let value: RuntimeValue | undefined
+        try {
+          resolved = await resolvePlace(argNode, ctx)
+          value = resolved.read()
+        } catch {
+          // 🔴 **解不出位置就讓開**——`g(f())`／`g(x + 1)` 本來就不是位置，
+          //    而 C++ 的 `const T&` 可以綁暫時值。走原本那條（傳值）。
+          resolved = undefined
+        }
+        if (resolved !== undefined && value !== undefined) {
+          argPlaces.push(resolved)
+          argValues.push(value)
+          continue
+        }
+        argPlaces.push(undefined)
+        argValues.push(await ctx.evaluate(argNode))
+        continue
+      }
+      argPlaces.push(undefined)
       argValues.push(await ctx.evaluate(argNode))
     }
 
@@ -118,6 +176,21 @@ export function registerExecute(register: (component: string, executor: Componen
             ctx.scope.declareRef(param.name, ownerScope, argVarName)
             continue
           }
+        }
+        /**
+         * 🔴 **不是裸名字時綁到那個【位置】**（2026-09-20）。
+         *
+         * 在此之前這裡沒有 else——掉下去就是傳值，**而那不會報錯**：
+         * `void f(s &C)` 收到 `A[i+1]` 之後寫回去的東西留在函式裡，
+         * 呼叫者拿到的永遠是初值。語料 `AP325/2/2_5` 整支輸出全是 0。
+         *
+         * > **「傳參考」與「傳值」在解譯器裡的差別只有一個動作，
+         * > 而少做那個動作的症狀是一個【跑得完的錯答案】。**
+         */
+        const place = argPlaces[i]
+        if (place) {
+          ctx.scope.declarePlaceRef(param.name, place)
+          continue
         }
       }
 

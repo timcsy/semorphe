@@ -3,6 +3,7 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { execVarDeclare } from '../../../interpreter/executors/variables'
 // ⚠️ 問**性狀**不問身分——一顆膠囊裡寫另一顆的身分，就近性護欄的反向檢查會指名。
 import { isVariableRef } from '../../../languages/cpp/lang/node-traits'
+import { resolvePlace } from '../../../interpreter/lvalue'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   /**
@@ -22,7 +23,25 @@ export function registerExecute(register: (component: string, executor: Componen
         ctx.scope.declareRef(name, ctx.scope, String(target.properties.name))
         return
       }
-      // 綁到非變數（例如 `int& r = f();`）——**不是別名做得到的事**。
+      /**
+       * 🔴 **綁到一個【算出來的位置】**（2026-09-20）——`int &r = a[1];`、`int &r = s.a;`。
+       *
+       * 在此之前這裡只有下面那條「退回一般宣告」，於是 `r = 7` 只改到 `r`
+       * ——**與上面那段檔頭在治的病一模一樣，只是換一種左值**。
+       *
+       * > **一個修好了「變數」那一格的修法，會讓其餘每一種左值
+       * > 看起來像是「還沒輪到」，而它們其實走的是同一條錯的退路。**
+       */
+      if (target) {
+        try {
+          const place = await resolvePlace(target, ctx)
+          ctx.scope.declarePlaceRef(name, place)
+          return
+        } catch {
+          // 解不出位置（`int& r = f();`）——不是別名做得到的事，走下面那條
+        }
+      }
+      // 綁到非位置（例如 `int& r = f();`）——**不是別名做得到的事**。
       // 退回一般宣告，行為與加入本執行器之前相同。
       await execVarDeclare(node, ctx)
     })
