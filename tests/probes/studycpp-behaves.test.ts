@@ -220,7 +220,7 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
 
     const tally = { compileFail: 0, refRunFail: 0, interpError: 0, stepBudget: 0, same: 0, differ: 0, inputUB: 0 }
     const ubSamples: string[] = []
-    const shape = { weStopEarly: 0, wePrintMore: 0, reallyDifferent: 0 }
+    const shape = { wePrintedNothing: 0, weStopEarly: 0, wePrintMore: 0, reallyDifferent: 0 }
     const errKinds = new Map<string, number>()
     const errSample = new Map<string, string>()
     const diffs: string[] = []
@@ -291,7 +291,17 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
         const a = norm(r.output ?? ''), b = norm(got)
         // 🔴 **先分形狀再談缺陷**：「我們的是它的前綴」多半是餵的測資不夠，
         //    程式讀到 EOF 就停了——那是量測工具的帳，不是解譯器的。
-        if (a.startsWith(b)) shape.weStopEarly++
+        //
+        // 🔴 **而「一個字都沒印」不是那一種**（2026-09-20，第 209 刀抓到）：
+        //    空字串是**每一個**字串的前綴，所以它會靜靜落進「少了尾巴」那一欄，
+        //    而那一欄的標籤寫著「多半是測資餵不夠（量測工具的帳）」。
+        //    語料 `AP325/3/3_2.cpp` 因此躲了過去：它的 `while (getline(cin, s))`
+        //    條件拿到 `undefined`，迴圈一次都不進去，**輸出整個是空的**。
+        //
+        // > **一個「前綴就算少了尾巴」的判準，對「我們一個字都沒印」保持沉默
+        // > ——因為空字串通過每一次前綴檢查。**
+        if (b.length === 0 && a.length > 0) shape.wePrintedNothing++
+        else if (a.startsWith(b)) shape.weStopEarly++
         else if (b.startsWith(a)) shape.wePrintMore++
         else shape.reallyDifferent++
         if (diffs.length < 45) diffs.push(
@@ -310,6 +320,7 @@ describe.skipIf(FS.length === 0 || !hasReferenceCompiler())(
       `  ── 兩邊都跑完 ${ran} 支 ──`,
       `  🟢 一致         ${tally.same}`,
       `  🔴 不一致       ${tally.differ}`,
+      `       ├ 🔴 我們一個字都沒印 ${shape.wePrintedNothing}   ← 🔴 這也是缺陷：空字串會通過前綴檢查`,
       `       ├ 我們少了尾巴 ${shape.weStopEarly}   ← 多半是測資餵不夠（量測工具的帳）`,
       `       ├ 我們多了尾巴 ${shape.wePrintMore}`,
       `       └ 內容真的不同 ${shape.reallyDifferent}   ← 🔴 這一欄才是缺陷`,
