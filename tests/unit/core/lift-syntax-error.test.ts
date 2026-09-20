@@ -56,10 +56,28 @@ describe('語法錯誤要在樹上出聲', () => {
     expect(broken(lift('int main(){ int x = 1; cout << x; return 0; }'))).toEqual([])
   })
 
-  it('★ 少一個分號——第一週最常撞的那個', () => {
+  /**
+   * 🔴 **2026-09-21 起這一種的身分是 `raw_code`，而那是進步不是迴歸。**
+   *
+   * 「下一行是 `cout`」這一種，解析器把兩行併成**一個宣告**
+   *（初值是那句輸出），於是使用者寫的那個 `1` **不在樹裡**。
+   * 而標成 `cpp:var_declare` 的話，走一趟積木回來就產出
+   * `int x = cout << x;`——**一支別的程式**。
+   *
+   * 🟢 `core/lift/honest-degradation.ts` 的判準問「**脫下原文還站得住嗎**」，
+   * 而這一顆站不住 ⟹ 整段換成「看不懂的程式碼」。
+   * ⚠️ **出聲仍然在**（`degradationCause` 沒動，`broken()` 照樣抓得到）
+   * ——換的是「它假裝自己是什麼」。
+   *
+   * ⚠️ 而下面 A／C 兩種**沒有**變：`int x = 1` 補一個分號就還原得出來，
+   * 它們站得住。**這一支與那兩支的差別，正是那個判準在分的東西。**
+   */
+  it('★ 少一個分號（下一行是 cout）——併成了另一支程式，所以整段降級', () => {
     const hits = broken(lift('int main(){ int x = 1\n  cout << x;\n  return 0; }'))
     expect(hits, '語法壞了而樹上一聲不吭').toHaveLength(1)
-    expect(hits[0].id, '標在宣告那一顆上').toBe('cpp:var_declare')
+    expect(hits[0].id, '它站不住而還假裝自己是一個宣告 → 走一趟積木回來會變成另一支程式').toBe('raw_code')
+    expect(hits[0].raw, '而原文一個字都不准少').toContain('int x = 1')
+    expect(hits[0].raw).toContain('cout << x')
   })
 
   /**
@@ -115,8 +133,20 @@ describe('語法錯誤要在樹上出聲', () => {
   it('★ 只標最內層那一顆，不標祖先', () => {
     // 🔴 第一版把 `claimed` 只查直接子節點，於是 `cpp:program` 也被標上
     // ——而那讓「哪裡壞了」又變回「整棵樹壞了」，正好抵消這個標記的用處。
+    // ⚠️ 身分是 `raw_code`（2026-09-21 起，見上面那一支）——而**落點沒有變**。
     const hits = broken(lift('int main(){ int x = 1\n  cout << x;\n  return 0; }'))
-    expect(hits.map((h) => h.id), 'program／func_def 不該被標').toEqual(['cpp:var_declare'])
+    expect(hits.map((h) => h.id), 'program／func_def 不該被標').toEqual(['raw_code'])
+  })
+
+  it('★ 而 A／C 兩種【不】降級——它們補一個分號就還原得出來', () => {
+    // 🔴 這一條是上面那個判準的**反面**，缺了它就看不出「降級」是有條件的。
+    //    整族一律降級的話，最常見的打字錯誤（漏一個分號）會讓積木整段變灰。
+    for (const src of [
+      'int main(){ int x = 1\n  return 0; }',
+      'int main(){ int x = 1\n  int y = 2;\n  return 0; }',
+    ]) {
+      expect(broken(lift(src))[0].id, `這一種站得住，不該變成 raw_code：${src}`).toBe('cpp:var_declare')
+    }
   })
 
   /**

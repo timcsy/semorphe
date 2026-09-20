@@ -1,3 +1,5 @@
+import { provideReproducer, type Reproducer } from '../../../core/lift/honest-degradation'
+import { generateCode, generateExpressionCode } from '../../../core/projection/code-generator'
 import { declareVariableDropdownBlock } from '../../../core/blocks/variable-dropdown-blocks'
 /**
  * ⚠️ **副作用匯入**：C++ 的純量拼法表在那個檔的頂層宣告。
@@ -46,8 +48,43 @@ export function createCppGenerators(style: StylePreset): Map<string, NodeGenerat
   return g
 }
 
+/**
+ * 「脫下原文還站得住嗎」那一問要的產碼能力——**由這裡接上**。
+ *
+ * 🔴 **接在語言套件而不是核心**：`core/lift` 與 `core/projection` 之間
+ * 今天沒有邊，而那一問只需要「幫我產一次碼」。語言套件本來就是
+ * 把核心各路接起來的地方（與 `registerLanguage`／`registerCppExecutors` 同一列）。
+ *
+ * 🟢 而**測試與產品走同一條**：測試 helper 也叫 `registerCppLanguage()`
+ * ——所以那一路不會「產品裡生效、測試裡讓開」。
+ *
+ * ⚠️ 兩種 I/O 風格都要給（見 `honest-degradation.ts` 的保守條款①）：
+ * 風格投影本來就會換掉使用者寫的字，只問一種會把它誤判成「弄丟」。
+ */
+function cppReproducer(): Reproducer {
+  const base: StylePreset = {
+    id: 'honesty-probe',
+    name: { 'zh-TW': '誠實探問', en: 'Honesty probe' },
+    io_style: 'cout',
+    naming_convention: 'camelCase',
+    indent_size: 4,
+    brace_style: 'K&R',
+    namespace_style: 'using',
+    header_style: 'individual',
+  }
+  const quiet = <T,>(fn: () => T): T | null => {
+    try { return fn() } catch { return null }
+  }
+  return {
+    asStatement: (node, style) => quiet(() => generateCode(node, 'cpp', style)),
+    asExpression: (node, style) => quiet(() => generateExpressionCode(node, 'cpp', style)),
+    styles: () => [base, { ...base, io_style: 'printf' }],
+  }
+}
+
 export function registerCppLanguage(): void {
   registerLanguage('cpp', createCppGenerators)
+  provideReproducer(cppReproducer())
   registerCppSkipDeclarations()
   registerCppExecutors()
   // 註解的**語法**（`//`、`/** *​/`、`/* *​/`，以及從原始碼剝掉它們的規則）

@@ -34,6 +34,26 @@
  * - ⚠️ **不驗 `for (i = 0, …)`（賦值當初始）整條無黑盒**：`cpp:var_assign`
  *   沒有運算式形態，而**那與逗號無關**（`for (i = 0; …)` 今天本來就是黑盒）。
  *   那是另一刀，記在報告裡。
+ *
+ * ## 🔴 一段【帶 main 的】語料——2026-09-21 補的，而理由是它被推出過母體
+ *
+ * 第 211 刀的誠實降級（`core/lift/honest-degradation.ts`）把
+ * `ios::sync_with_stdio(0),cin.tie(0);` 這個**頂層裸片段**換成了 `raw_code`
+ * ——而那是**對的**：那一段 lift 出來的節點帶著整段原文，
+ * 而 `sync_with_stdio` 那一半不在樹裡，它假裝自己是整段。
+ *
+ * ⚠️ 而它的副作用是**量測母體少了一顆**：語料掃描器收的是測試檔的反引號片語，
+ * 而那兩段都沒有 `main` ⟹ `cpp:io_tie` 從「語料碰得到」掉進「無法確定」。
+ *
+ * > **一個降級如果把某顆元件推出了量測母體，處置是【補一段真語料】，
+ * > 不是上調那個「無法確定」的基線。**
+ *
+ * 🟢 所以檔案下方多了一段**完整、g++ 跑得動、輸出固定**的語料
+ *（`TIE_CORPUS`，見最後一個 describe）。
+ *
+ * ⚠️ 它**不能放在這個註解裡**：掃描器取的是反引號之間的原始文字，
+ * 而註解每一行開頭那個 `*` 會一起被收進去 —— 那段程式碼就編不過了。
+ * **一段要被當成語料的程式碼，必須是真的程式碼。**
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -96,6 +116,18 @@ function statementOf(body: string): SemanticNode {
   const tree = parser.parse(`int i, j, n;\nint main() {\n${body}\n}`)
   const root = createTestLifter().lift(tree!.rootNode as never) as SemanticNode
   return root.slots.body![1].slots.body![0]
+}
+
+/** 一整支程式（含 `#include`／`main`）裡出現的每一顆元件身分。 */
+function componentsOf(source: string): string[] {
+  const root = createTestLifter().lift(parser.parse(source)!.rootNode as never) as SemanticNode
+  const out: string[] = []
+  const walk = (n: SemanticNode): void => {
+    out.push(n.componentId)
+    for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) walk(k)
+  }
+  walk(root)
+  return out
 }
 
 /** 這段程式碼投影成積木之後，出現了哪些積木型別。 */
@@ -286,5 +318,31 @@ describe('第一百一十六條護欄：逗號的積木', () => {
       (back?.slots.declarators ?? []).length,
       '🔴 抽取回來只剩一個宣告子——學生動了積木，`b = n` 就不見了',
     ).toBe(2)
+  })
+})
+
+/**
+ * 🔴 **一段帶 `main` 的逗號運算式語料**——見檔頭「它被推出過母體」。
+ *
+ * ⚠️ 這個常數**同時是兩件東西**：這一支測試的輸入，
+ * 以及 `audit-declared-slots`／`audit-behavior-error` 那些掃描器的**語料**
+ *（它們收測試檔的反引號片語）。所以它要是**真的跑得動的程式**。
+ */
+const TIE_CORPUS = `#include <bits/stdc++.h>
+using namespace std;
+int main(){ ios::sync_with_stdio(0), cin.tie(0); cout << 42; return 0; }`
+
+describe('帶 main 的逗號運算式——兩顆都要在', () => {
+  it('🔴 `ios::sync_with_stdio(0), cin.tie(0);` 在完整程式裡是兩顆，不是一顆', () => {
+    const ids = componentsOf(TIE_CORPUS)
+    expect(ids, '兩顆都要在——只認出一顆的話，另一半會靜靜跟著它的原文走').toContain('cpp:io_sync')
+    expect(ids, '兩顆都要在').toContain('cpp:io_tie')
+  })
+
+  it('★ 而它不得退成「看不懂的程式碼」——那正是頂層裸片段會發生的事', () => {
+    // ⚠️ 頂層裸片段（沒有 main）會被標 syntax_error，而那一顆帶著整段原文、
+    //    `sync_with_stdio` 那一半卻不在樹裡 ⟹ 第 211 刀的誠實降級會把它換掉。
+    //    **有 main 就不會**——而這一條就是在守那個差別。
+    expect(componentsOf(TIE_CORPUS).filter((x) => x === 'raw_code')).toEqual([])
   })
 })

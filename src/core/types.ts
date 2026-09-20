@@ -62,6 +62,18 @@ export interface NodeMetadata {
   confidence?: ConfidenceLevel
   degradationCause?: DegradationCause
   /**
+   * **這顆本來是什麼**——被「脫下原文就站不住」判回「看不懂的程式碼」的那些。
+   *
+   * 🔴 它是**診斷用的痕跡，不是契約**（2026-09-21，`core/lift/honest-degradation.ts`）：
+   * 一個 `syntax_error` 的節點如果脫下 `rawCode` 之後還原不出使用者寫的字，
+   * 它就不該假裝自己是那個東西——於是整段換成 `raw_code`，
+   * 而這一格記下「它原本被認成什麼」。
+   *
+   * ⚠️ **不要拿它來還原**：那個身分正是被判定為「站不住」的那一個。
+   * 它的用途是**問「為什麼這一段變灰了」**。
+   */
+  degradedFrom?: string
+  /**
    * **解析器指名的「該有而沒有」**（spec 143）。
    *
    * ⚠️ **陣列而不是單值**：一個節點底下可能少好幾個東西，

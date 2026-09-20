@@ -50,11 +50,6 @@
     "reason": "`#include \"my.h\"`（雙引號的本地標頭）——測試檔裡的片段幾乎都用角括號的系統標頭。加一段語料就會動。"
   },
   {
-    "componentId": "cpp:io_sync",
-    "cause": "lift 是登錄表裡的資料，靜態掃不到",
-    "reason": "這一路搬回膠囊的是**一筆資料**（`ios::sync_with_stdio` 這個名字屬於我），判別邏輯留在共用路由器。掃描器讀不到執行期才組起來的登錄表，所以歸「無法確定」——**而宣告與實際是一致的**：`slots.value` 對上 `argSlots: ['value']`，膠囊自證測從真語料 lift 出這顆並斷言接點在原地。⚠️ 這與 `cpp:queue_back` 那種「辨識到不了」不同：那是真缺口，這是量測方法的邊界。"
-  },
-  {
     "componentId": "cpp:istringstream_declare",
     "cause": "語料沒覆蓋",
     "reason": "istringstream 宣告。sstream 的語料只有幾段而且都在做別的事。加一段就會動。"

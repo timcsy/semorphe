@@ -197,24 +197,27 @@ describe('🔴 而走一趟積木回來，這把尺沒有依據', () => {
    * 沒有那兩格。而積木本身顯示的就已經是**錯的語義**
    *（「宣告 int 變數 x ＝ 直接寫運算式 cout << x」），程式碼只是忠實地跟著它。
    *
-   * **為什麼不是現在**：三個修法方向，而**判準不明**——
+   * ✅ **2026-09-21 修好了（第 211 刀），而修法是 B 的一個變形。**
+   *
+   * 當時列了三個方向：A 讓積木存得下 metadata（新的存檔契約）·
+   * B lift 時就整段降級成 raw_code · C 維持現狀。
+   * B 卡在「什麼時候降級」那個判準上，而上面檔頭記了五種試過的、**每一種都誤傷**。
+   *
+   * 🟢 **而第六種成立，因為它問的不是「弄丟了嗎」，是「脫下原文還站得住嗎」**：
    *
    * ```
-   * A 讓積木存得下 metadata        一個新的存檔契約（`CURRENT_VERSION` 要動）
-   * B lift 時就整段降級成 raw_code  兩側都誠實，而「什麼時候降級」正是那個不明的判準
-   * C 維持現狀                      積木顯示的就是錯的語義，程式碼跟著它是【一致】的
+   * 把節點的 rawCode 與 degradationCause 拿掉，再產一次碼
+   *   還原得出使用者寫的字  → 站得住 → 不動它（漏一個分號那種）
+   *   還原不出              → 它本來就不該假裝自己是那個東西 → 換成 raw_code
    * ```
    *
-   * B 最根本，而它需要一個「lift 弄丟了東西」的判準。上面檔頭那一節
-   *（「而這把尺第一版是錯的」）記了五種試過的判準，**每一種都誤傷**：
-   * 子節點認領、重新 parse、只看字面值、前綴、換行——
-   * 而風格投影那個反例（`cout << x` → `printf("%d", x)`）在 lift 那一側**不存在**，
-   * 所以 B 的判準**可能比產生器那一側簡單**。那是下一刀該量的。
+   * ⚠️ 而「脫下原文」**正是走一趟積木回來的處境**——所以這一問問的，
+   * 恰好就是那條路上會發生什麼。見 `core/lift/honest-degradation.ts`。
    *
-   * 🔴 **何時該修**：B 的判準想清楚的那一刀。
-   * 見 `knowledge/history/272-宣告說得出的位置形態沒做.md` 最後一節。
+   * ⚠️ 風格投影那個反例（`cout << x` → `printf`）**在 lift 那一側仍然存在**
+   *（我當時猜它不存在，猜錯了）——所以那邊也要「換一個風格再問一次」。
    */
-  it.fails('[UNSUPPORTED:走一趟積木回來誠實閘沒有依據] 🔴 extract 回來再產碼，字不得不見', async () => {
+  it('🪦 已拔釘：extract 回來再產碼，字不得不見', async () => {
     const { renderToBlocklyState } = await import('../../src/core/projection/block-renderer')
     const { PatternExtractor } = await import('../../src/core/projection/pattern-extractor')
     const { BlockSpecRegistry } = await import('../../src/core/blocks/block-spec-registry')
