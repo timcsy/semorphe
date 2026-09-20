@@ -195,6 +195,21 @@ STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-
 ```
 
 ⚠️ **沒有 `STUDYCPP_DIR` 那兩支探針就跳過**——語料是別人的 repo，沒有收進來。
+
+🔴 **而 `/private/tmp` 會被系統清掉**（2026-09-21 撞到）：clone 好的語料
+放在 scratchpad 底下，隔一段時間再跑，**目錄結構還在而 `.cpp` 全部不見**。
+
+```
+同一棵 0｜走樣 0｜產碼丟例外 0        ← 每一格都是 0，看起來像「完美」
+```
+
+🟢 **抓到它的是探針自己的入口條件斷言**（`★ 每一支都要載得進去` 紅了）
+——那一條問的是「母體不是空的」。
+
+> **一個「零缺陷」的讀數，與一個「零樣本」的讀數，數字長得一模一樣
+> ——分開它們的只有入口條件。**
+
+處方：重跑前先 `find $STUDYCPP_DIR -name "*.cpp" | wc -l`，不是 218 就重新 clone。
 🟢 而**形狀收進來了**：第一百一十五條護欄 `declaration-shapes-roundtrip`
 （53 條，`npm test` 會跑）。
 

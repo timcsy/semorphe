@@ -1,3 +1,4 @@
+import { degradeWhatCannotStand } from './honest-degradation'
 import type { SyntaxGap } from '../diagnostics'
 import type { SemanticNode, DegradationCause } from '../types'
 import type { AstNode, NodeLifter, LiftContext } from './types'
@@ -87,7 +88,19 @@ export class Lifter {
   lift(node: AstNode): SemanticNode | null {
     // ⚠️ 每一趟辨識各自一份——上一棵樹的位置在這一棵樹上沒有意義。
     this.repairedSpans.clear()
-    return this.liftWithContext(node, new LiftContextData())
+    const tree = this.liftWithContext(node, new LiftContextData())
+    /**
+     * 🔴 **最後一步：把「脫下原文就站不住」的那些換成「看不懂的程式碼」**
+     *（2026-09-21，見 `honest-degradation.ts` 的檔頭）。
+     *
+     * 一個標成 `syntax_error` 的節點，如果脫下 `rawCode` 之後還原不出
+     * 使用者寫的字，它就不該假裝自己是那個東西——因為**走一趟積木回來
+     * 它就是那個處境**（`rawCode` 存不進積木）。
+     *
+     * ⚠️ **這一路預設讓開**：產生器沒接上、產碼丟例外、沒有 `rawCode`
+     * ——一律不動。所以它不會在組裝點還沒接好時把整棵樹變灰。
+     */
+    return tree == null ? null : degradeWhatCannotStand(tree, 'raw_code')
   }
 
   /**
