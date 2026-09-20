@@ -70,7 +70,7 @@ function savedState(version = CURRENT_VERSION, extra: Record<string, unknown> = 
 }
 
 describe('欄位清單由編譯器釘住', () => {
-  it('SAVED_STATE_FIELDS 是 13 個欄位', () => {
+  it('SAVED_STATE_FIELDS 是 12 個欄位', () => {
     // 守的是「有人把 satisfies 拿掉之後清單縮水」
     // ⚠️ 11 → 12（2026-08-17，spec 136）：新增 `targetId`。
     // **上調是刻意的**——目標取代了「課程清單 ＋ 風格」兩次分開的選擇，
@@ -79,7 +79,11 @@ describe('欄位清單由編譯器釘住', () => {
     // **上調是刻意的**：在此之前那份佈局只活在記憶體裡，重新整理就沒了。
     // 🔴 它與 `blocklyState` 同桶（sideCar）而**性質不同**：積木狀態導得出來
     // （從程式碼重 lift）＝ 快取，而**沒有人算得出使用者想把盒子放哪** ＝ 狀態。
-    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(13)
+    // 🪦 13 → 12（2026-09-20，v24）：**`enabledBranches` 退場**（層級樹退場那一刀）。
+    //    **下調是刻意的**：那一格記的是「哪幾個教學分支打開了」，而那個機制
+    //    整個不存在了——收窄只剩一個來源，就是課。使用者：「我們現在已經有
+    //    課程了，應該就沒有需要再用 levelTree 了吧」。舊存檔那一格由 `UPGRADES[23]` 丟掉。
+    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(12)
   })
 
   it('REQUIRED_FIELDS 是 SAVED_STATE_FIELDS 的子集', () => {

@@ -29,7 +29,7 @@ import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeader
 import { TopicRegistry } from '../core/lesson/topic-registry'
 import { TargetRegistry } from '../core/target-registry'
 import { filterByTarget } from '../core/component/traits'
-import { getVisibleComponents, flattenLevelTree } from '../core/lesson/level-tree'
+import { topicComponents } from '../core/lesson/topic-components'
 import { isAlwaysInScope, alwaysInScopeComponents, componentTraits } from '../core/component/traits'
 import type { Target, Topic } from '../core/types'
 // spec 142：三塊板子。⚠️ 它們**共用** `arduino` 課程清單，差別只在 `provides`
@@ -143,16 +143,6 @@ function isScaffoldComponent(componentId: string): boolean {
 // 🪦 `isScaffoldInMainComponent` 已搬進 `core/scaffold-nodes.ts`（2026-08-30）——流程視圖也要問同一件事。
 
 
-/**
- * 一個主題的**全部**層級節點。
- *
- * 🔴 它有兩個呼叫端（開機的預設、選課之後），而**它們必須是同一份**
- * ——各寫一次的話，其中一個哪天改了，症狀是「選課前後工具箱不一樣大」
- * 而沒有人看得出來為什麼。
- */
-function allBranchesOf(topic: Topic): Set<string> {
-  return new Set(flattenLevelTree(topic.levelTree).map((n) => n.id))
-}
 
 export class App {
   private bus: SemanticBus
@@ -221,7 +211,11 @@ export class App {
   private autoSync = true
   private codeToBlocksTimer: ReturnType<typeof setTimeout> | null = null
   private currentTopic: Topic
-  private enabledBranches: Set<string>
+  /**
+   * 🪦 **`enabledBranches` 於 2026-09-20 退場**（見 `core/types.ts` 的
+   * `Topic.components`）。可見集合只剩兩個來源：自由模式是主題的清單，
+   * 課程模式是那一課的。
+   */
   /**
    * 這一輪選了哪一堂課——`?lesson=` 帶進來的。
    *
@@ -689,7 +683,7 @@ export class App {
 
   /** 控制項的回呼——面板的下拉與宿主的 QuickPick **共用這一組**。 */
   private controlCallbacks: Pick<AppShellCallbacks,
-    'onTargetChange' | 'onBranchesChange' | 'onStyleChange' | 'onBlockStyleChange' | 'onLocaleChange'> | null = null
+    'onTargetChange' | 'onStyleChange' | 'onBlockStyleChange' | 'onLocaleChange'> | null = null
   /**
    * 目前語言的解析器。
    *
@@ -769,7 +763,9 @@ export class App {
     // > 「我會乾脆叫學生把全部都打勾，**那有沒有這個漸進揭露是沒用的**」
     //
     // 🎯 收窄由**課**來做（`?lesson=`），不由一個沒有人答得出來的打勾清單做。
-    this.enabledBranches = allBranchesOf(this.currentTopic)
+    // 🪦 **而那個打勾清單於 2026-09-20 整個退場**——見 `core/types.ts` 的
+    //    `Topic.components`。這裡在此之前是 `enabledBranches = allBranchesOf(topic)`，
+    //    **而每一個呼叫點都是「全開」**：那一層從來沒有被用來收窄過。
 
     // 🔴 **一堂課替使用者做決定**——`?lesson=<軌道>/<課>`。
     //
@@ -1198,7 +1194,7 @@ export class App {
         this.currentLesson = undefined
         this.currentTrack = undefined
         this.currentTaskId = FREE_PRACTICE
-        this.handleTargetChange(target, this.topicRegistry.get(target.topic)!, allBranchesOf(this.topicRegistry.get(target.topic)!))
+        this.handleTargetChange(target, this.topicRegistry.get(target.topic)!)
       }
       this.codeView?.setCode(t.code)
       void this.syncController?.syncCodeToBlocks(t.code)
@@ -1269,9 +1265,9 @@ export class App {
     const wantId = lesson?.pins.target ?? this.currentTarget.id
     const target = this.targetRegistry.all().find((t) => t.id === wantId) ?? this.currentTarget
     const topic = this.topicRegistry.get(target.topic)!
-    this.handleTargetChange(target, topic, allBranchesOf(topic))
-    // ⚠️ `handleTargetChange` 會依層級重算深度——**課的設定要蓋過它**。
-    //    （順序不能反：那個函式在後面的話，課說的話會被層級蓋掉。）
+    this.handleTargetChange(target, topic)
+    // ⚠️ `handleTargetChange` 會把深度設成「可編輯」——**課的設定要蓋過它**。
+    //    （順序不能反：那個函式在後面的話，課說的話會被蓋掉。）
     if (lesson) {
       this.scaffoldDepth = scaffoldDepthOf(
         lesson.pins.scaffold ?? allTracks().get(trackOf(lesson.id))?.scaffold ?? 'editable',
@@ -1343,9 +1339,9 @@ export class App {
         this.adoptSkeleton(target.skeleton ?? 'main')
       }
     }
-    // 🔴 **層級全開**——收窄由課的 `components` 做，不由層級做。
-    //    留一半層級一半課的話，同一件事有兩個開關，而它們會不同意。
-    this.enabledBranches = allBranchesOf(this.currentTopic)
+    // 🪦 **這裡在此之前是「層級全開」**——而那句註解逐字寫著
+    //    「收窄由課的 `components` 做，不由層級做」「留一半層級一半課的話，
+    //    同一件事有兩個開關，而它們會不同意」。2026-09-20 把那個開關整個拿掉了。
     // 🔴 **鷹架露多少由【課程組態】決定**（2026-08-28 使用者拍板：
     //    「在課程的組態就可以設定要使用哪一種鷹架」）。
     //    ⚠️ 課可以覆寫軌道；兩個都沒說就 `editable`。
@@ -1591,7 +1587,7 @@ export class App {
       }
     })
 
-    this.syncController.setTopic(this.currentTopic, this.enabledBranches)
+    this.syncController.setTopic(this.currentTopic, this.getVisibleComponents())
 
     this.syncController?.setScaffoldDepth(this.scaffoldDepth)
     // ── 視圖：登錄，而不是硬編 ────────────────────────────────
@@ -1764,26 +1760,10 @@ export class App {
       // ⚠️ 而它**不新寫第三條路**——底下走的仍然是既有的兩條
       //（課程清單那條在這裡、風格那條是 `applyStyle`），
       // 新寫一條會讓「切換之後畫面長什麼樣」有兩個真相來源。
-      onTargetChange: (target, topic, branches) => this.handleTargetChange(target, topic, branches),
-      onBranchesChange: (branches) => {
-        const prevDepth = this.getScaffoldDepth()
-        this.enabledBranches = branches
-        // 🔴 剝不掉的骨架（Arduino）不得停在「隱藏」——見 `enforceShellDepthFloor`
-        this.enforceShellDepthFloor()
-        const newDepth = this.getScaffoldDepth()
-        setScaffoldConfig({ scaffoldDepth: newDepth })
-        this.syncController?.setBranches(branches)
-        this.updateToolbox()
-        this.markOutOfScopeBlocks()
-        if (!this._restoringState) {
-          if ((prevDepth === 0) !== (newDepth === 0)) {
-            this.resyncAfterTopicChange()
-          } else {
-            this.syncBlocksToCodeWithMappings()
-          }
-        }
-        this.refreshStatusBar()
-      },
+      onTargetChange: (target, topic) => this.handleTargetChange(target, topic),
+      // 🪦 **`onBranchesChange` 於 2026-09-20 退場**——「選擇範圍」那個下拉
+      //    與它背後的 `enabledBranches` 一起拿掉了。見 `core/types.ts`
+      //    的 `Topic.components`：漸進揭露整個交給課程。
       onStyleChange: (style) => {
         this.syncController?.setStyle(style)
         this.blocklyPanel?.setCodeContext(this.currentTopic.language, style)  // 面板不得落後於同步控制器
@@ -2277,11 +2257,11 @@ export class App {
 
   private getVisibleComponents(): Set<string> {
     // 🔴 **不是概念的那幾顆先補進來**（2026-09-02）——見 `alwaysInScopeComponents`。
-    //    ⚠️ 沒有選課的時候範圍來自**層級樹**，而註解不一定被列在任何一層裡；
+    //    ⚠️ 沒有選課的時候範圍是**這個主題的全部**，而註解不一定被列在清單裡；
     //       使用者：「剛開 ArduinoIDE 的樣子，是不正常的」（註解是暗的），
     //       而選了課之後反而正常——因為那條路已經補過了。
     const base = new Set([
-      ...getVisibleComponents(this.currentTopic, this.enabledBranches),
+      ...topicComponents(this.currentTopic),
       ...alwaysInScopeComponents(),
     ])
     if (!this.currentLesson) return base
@@ -2660,19 +2640,22 @@ export class App {
     return made
   }
 
-  private handleTargetChange(target: Target, topic: Topic, branches: Set<string>): void {
+  private handleTargetChange(target: Target, topic: Topic): void {
     // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
     this.adoptSkeleton(target.skeleton ?? 'main')
         const prevDepth = this.getScaffoldDepth()
         this.currentTarget = target
         this.currentTopic = topic
-        this.enabledBranches = branches
-        // ⚠️ **與拆開前逐字相同**：`onTargetChange` 傳的是全部的層級，
-        //    而舊的 `getScaffoldDepth()` 讀它 → 切過目標之後鷹架看得見。
-        this.scaffoldDepth = Math.max(
-          ...flattenLevelTree(topic.levelTree)
-            .filter((n) => branches.has(n.id))
-            .map((n) => n.level), 0)
+        /**
+         * ⚠️ **與層級樹退場前逐字相同**：那時 `onTargetChange` 傳的是**全部**的層級，
+         * 而這裡取「已啟用層級的最大 `level`」——五個主題的最深層是 2 或 3，
+         * 而 `program-scaffold.ts` 逐字「`2+ = editable`」，所以結果一律是
+         * `scaffoldDepthOf('editable')`。
+         *
+         * > **一個「算出來的值」如果每一條輸入都給同一個答案，
+         * > 那它記的不是一個計算，是一個常數——而常數該寫出它的名字。**
+         */
+        this.scaffoldDepth = scaffoldDepthOf('editable')
         // 風格那一半——走既有的 `applyStylePreset`（它同時更新選擇器的顯示值）
         const style = STYLE_PRESETS.find(p => p.id === target.style)
         if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
@@ -2696,7 +2679,7 @@ export class App {
         this.setActiveGrammar?.(topic.language)
         this.syncController?.setLanguage(topic.language)
         this.blocklyPanel?.setCodeContext(topic.language, this.currentStylePreset)
-        this.syncController?.setTopic(topic, branches)
+        this.syncController?.setTopic(topic, this.getVisibleComponents())
         this.syncController?.setScaffoldDepth(this.scaffoldDepth)
         this.reloadBlockSpecsForTopic()
         this.updateToolbox()
@@ -2809,7 +2792,7 @@ export class App {
     //    不新開一個旗標——兩個意思一樣的旗標會各自漂移。
     this._restoringState = true
     try {
-      this.handleTargetChange(target, topic, new Set([topic.levelTree.id]))
+      this.handleTargetChange(target, topic)
     } finally {
       this._restoringState = false
     }
@@ -2897,6 +2880,16 @@ export class App {
   }
 
   private updateToolbox(): void {
+    /**
+     * 🔴 **可見集合與工具箱一起更新**（2026-09-20，層級樹退場那一刀）。
+     *
+     * `SyncController` 拿它做畫布上的降級（`downgradeComponentsForLevel`），
+     * 而在此之前它**自己從 `enabledBranches` 現算**——那是同一個決定的第二份實作。
+     * 兩份都讀同一個集合時它們碰巧一致，所以那個雙重真相一直沒有出聲。
+     *
+     * > **一個「自己算得出來」的欄位，會在算法變的那天留下兩個答案。**
+     */
+    this.syncController?.setVisibleComponents(this.getVisibleComponents())
     const ws = this.blocklyPanel?.getWorkspace()
     if (!ws) return
     ws.updateToolbox(this.callBuildToolbox() as Blockly.utils.toolbox.ToolboxDefinition)
@@ -3533,7 +3526,7 @@ export class App {
           const target = this.targetRegistry.get(invoke.value ?? '')
           const topic = target ? this.topicRegistry.get(target.topic) : null
           if (!target || !topic) return
-          cb.onTargetChange(target, topic, new Set(flattenLevelTree(topic.levelTree).map((n) => n.id)))
+          cb.onTargetChange(target, topic)
           persist('target', invoke.value)
           break
         }
@@ -3930,7 +3923,7 @@ export class App {
       //    失效條件內建在配對裡（對不上就退回自動排版）。
       flowLayout: this.flowPanel?.saveLayout() ?? [],
       language: this.currentTopic.language, styleId: this.currentStylePreset.id,
-      topicId: this.currentTopic.id, targetId: this.currentTarget.id, enabledBranches: [...this.enabledBranches],
+      topicId: this.currentTopic.id, targetId: this.currentTarget.id,
       lastModified: new Date().toISOString(), blockStyleId: this.currentBlockStyleId, locale: this.currentLocale }
   }
 
@@ -4114,13 +4107,10 @@ export class App {
         // > **一個「存檔蓋掉課程」的缺陷修一格是不夠的
         // > ——課程釘住的是【一組】決定，而存檔也是一組。**
         //
-        // ⚠️ `applyLesson` 已經把它設成「這個主題全開」（收窄由課的
-        //    `components` 做，不由層級做）——這裡只要不覆蓋它。
-        if (pinnedTarget === undefined) {
-          this.enabledBranches = state.enabledBranches
-            ? new Set(state.enabledBranches)
-            : new Set([topic.levelTree.id])
-        }
+        // 🪦 **而「層級」那一格於 2026-09-20 整個退場**（層級樹退場那一刀），
+        //    所以這裡不再需要擋它——**那個缺陷的一整個來源不存在了**。
+        //    ⚠️ 舊存檔裡的 `enabledBranches` 由 `storage-version.ts` 的
+        //    轉換丟掉（它記的是一個已經沒有意義的集合）。
       }
     }
     // 舊存檔沒有 `targetId`，而它的 `styleId` 仍然照舊生效（下面既有的還原路徑）。
@@ -4129,7 +4119,7 @@ export class App {
       if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style)
     }
     setScaffoldConfig({ scaffoldDepth: this.getScaffoldDepth() })
-    this.syncController?.setTopic(this.currentTopic, this.enabledBranches)
+    this.syncController?.setTopic(this.currentTopic, this.getVisibleComponents())
     this.syncController?.setScaffoldDepth(this.scaffoldDepth)
     this.updateToolbox()
     this._restoringState = false

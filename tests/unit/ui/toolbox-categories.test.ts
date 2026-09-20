@@ -7,7 +7,19 @@ import { buildToolbox } from '../../../src/core/blocks/toolbox-builder'
 import { BlockSpecRegistry } from '../../../src/core/blocks/block-spec-registry'
 import { CATEGORY_COLORS } from '../../../src/core/blocks/category-colors'
 import type { ComponentDefJSON, BlockProjectionJSON, Topic } from '../../../src/core/types'
-import { getVisibleComponents } from '../../../src/core/lesson/level-tree'
+import { topicComponents } from '../../../src/core/lesson/topic-components'
+
+/**
+ * 取這個主題的前 n 顆——**只是為了造兩個大小不同的可見集合**。
+ *
+ * 🪦 這裡在 2026-09-20 之前是 `getVisibleComponents(topic, new Set(['L0', …]))`。
+ * 層級樹退場之後「可見集合」只有兩個來源（主題的全部／那一課的），
+ * 而這幾支測的是 `buildToolbox`「**集合越大，積木越多**」——
+ * 它與那個集合**怎麼算出來的**無關。
+ *
+ * > **一支測「B 隨 A 變大」的測試，不該綁在「A 怎麼算出來」上。**
+ */
+const firstN = (t: Topic, n: number): Set<string> => new Set([...topicComponents(t)].slice(0, n))
 // ⚠️ 走蓋過 owner 章的匯出，不要直接 import 原始 JSON——
 // 工具箱靠 owner 決定歸屬，少了它整個通用分類會是空的。
 import { universalComponents, universalBlocks } from '../../../src/core/universal'
@@ -69,7 +81,7 @@ describe('C++ toolbox categories (language module)', () => {
   // 改成走 `buildToolbox` 的真實路徑。
   function ioContents(pref: 'iostream' | 'cstdio'): string[] {
     const reg = createRegistry()
-    const visible = getVisibleComponents(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
+    const visible = topicComponents(topic)
     const tb = buildToolbox({
       blockSpecRegistry: reg,
       visibleComponents: visible,
@@ -139,7 +151,7 @@ describe('C++ toolbox categories (language module)', () => {
 
   it('buildToolbox accepts external categoryDefs', () => {
     const reg = createRegistry()
-    const allComponents = getVisibleComponents(topic, new Set(['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c']))
+    const allComponents = topicComponents(topic)
     const result = buildToolbox({
       blockSpecRegistry: reg,
       visibleComponents: allComponents,

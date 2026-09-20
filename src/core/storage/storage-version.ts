@@ -17,7 +17,7 @@ import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, 
 import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 23
+export const CURRENT_VERSION = 24
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -44,7 +44,6 @@ export const SAVED_STATE_FIELDS = {
   styleId: 1,
   topicId: 1,
   targetId: 1,
-  enabledBranches: 1,
   lastModified: 1,
   blockStyleId: 1,
   locale: 1,
@@ -104,7 +103,6 @@ export const FIELD_OWNERSHIP = {
   // 🔴 【教學情境】——歸屬待判：換檔案不該換課程，而換課程時它要換
   topicId: 'context',
   targetId: 'context',
-  enabledBranches: 'context',
 } satisfies Record<keyof Required<SavedState>, 'document' | 'sideCar' | 'user' | 'context' | 'meta'>
 
 /**
@@ -443,6 +441,24 @@ export const UPGRADES: Record<number, Upgrade> = {
    * ⚠️ 不改名的症狀不是報錯：接收者掉進一串文字屬性，**執行時數出 0 而不出聲**。
    */
   22: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V23, 23),
+  /**
+   * `v23 → v24`：**`enabledBranches` 退場**（2026-09-20，層級樹退場那一刀）。
+   *
+   * 那一格記的是「哪幾個教學分支打開了」，而**那個機制整個不存在了**：
+   * 工具箱的收窄從此只有一個來源——課。使用者（2026-09-20）：
+   *「我們現在已經有課程了，應該就沒有需要再用 levelTree 了吧」。
+   *
+   * 🔴 **一定要丟掉，不能放著不管**：那一格的值是**分支的 id**
+   *（`L0`／`L1a`／`L2b`），而那些 id 從此沒有任何東西認得。
+   * 留著的話它會在「這個存檔有哪些欄位」的形狀驗證上變成一個無主的鍵。
+   *
+   * 🟢 冪等：`delete` 一個不存在的鍵是安全的，跑兩次結果相同。
+   * ⚠️ **只動這一格**（`migrate-storage` 第 4 步）——不碰使用者的程式碼與積木。
+   */
+  23: (raw) => {
+    const { enabledBranches: _dropped, ...rest } = raw as Record<string, unknown>
+    return { ...rest, version: 24 }
+  },
 }
 
 /**

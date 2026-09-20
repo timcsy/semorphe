@@ -348,18 +348,14 @@ describe('可拿性護欄', () => {
  * 所以這是一條**單向**的包含關係，不是相等。
  */
 describe('一條軌不得比它的前一條少東西', () => {
+  // 🪦 2026-09-20 之前這裡走的是 `levelTree` 那棵樹——它退場之後清單是平的。
+  //    ⚠️ **這條護欄本身沒有退場**：它問的是「換一條軌會不會弄丟積木」，
+  //    而那個問題與清單是樹還是平的無關。
   const componentsOf = (topicFile: string): Set<string> => {
     const raw = JSON.parse(
       fs.readFileSync(path.join(REPO_ROOT, 'src/languages/cpp/topics', topicFile), 'utf8'),
-    ) as { levelTree: unknown }
-    const out = new Set<string>()
-    const walk = (n: unknown): void => {
-      const node = n as { components?: string[]; children?: unknown[] }
-      for (const c of node.components ?? []) out.add(c)
-      for (const c of node.children ?? []) walk(c)
-    }
-    walk(raw.levelTree)
-    return out
+    ) as { components?: string[] }
+    return new Set(raw.components ?? [])
   }
 
   it('★ 入口條件：兩份清單都讀得到東西（否則下面在驗空氣）', () => {

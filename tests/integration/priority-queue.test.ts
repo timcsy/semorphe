@@ -118,7 +118,7 @@ describe('工具箱（E 項的第一次回報）', () => {
   // ⚠️ **上面那一支是使用者拿不到的證據，不是拿得到的證據。**
   //
   // `loadToolbox()` 用「全部概念可見」。而使用者看到的是**課程**的可見集合——
-  // 一顆沒有被任何課程收錄的元件，`getVisibleComponents` 會把它擋掉，
+  // 一顆沒有被任何課程收錄的元件，主題的清單裡沒有它，
   // 學生**永遠看不到**。
   //
   // 第一版只有上面那一支，於是它綠著，而使用者回報「priority_queue 我沒看到呀」。
@@ -127,7 +127,7 @@ describe('工具箱（E 項的第一次回報）', () => {
   // 而「快照要釘在使用者實際會看到的狀態上，不是最大的那個狀態」這句話
   // 三個 commit 前才寫進 experience.md。
   it('★ **學生真的看得到**——在課程的可見集合裡', async () => {
-    const { getVisibleComponents } = await import('../../src/core/lesson/level-tree')
+    const { topicComponents } = await import('../../src/core/lesson/topic-components')
     const { BlockSpecRegistry } = await import('../../src/core/blocks/block-spec-registry')
     const { buildToolbox } = await import('../../src/core/blocks/toolbox-builder')
     const { CATEGORY_COLORS } = await import('../../src/core/blocks/category-colors')
@@ -139,13 +139,16 @@ describe('工具箱（E 項的第一次回報）', () => {
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(allCppComponents(), allCppProjections())
 
-    for (const [name, topic, levels] of [
-      ['初學 C++', beginner, ['L0', 'L1a', 'L1b', 'L2a', 'L2b', 'L2c', 'L3a']],
-      ['競程 C++', competitive, ['L0', 'L1a', 'L2a']],
+    // 🪦 2026-09-20 之前這裡列的是「解鎖到最深的關卡」那幾個分支 id。
+    //    層級退場之後「學生看得到的最大範圍」就是**這個主題的清單**
+    //    ——判準一格沒變：這顆元件要在其中至少一門課的清單裡。
+    for (const [name, topic] of [
+      ['初學 C++', beginner],
+      ['競程 C++', competitive],
     ] as const) {
       const tb = buildToolbox({
         blockSpecRegistry: reg,
-        visibleComponents: getVisibleComponents(topic as never, new Set(levels)),
+        visibleComponents: topicComponents(topic as never),
         ioPreference: 'iostream',
         msgs: {},
         categoryColors: CATEGORY_COLORS,
@@ -154,7 +157,7 @@ describe('工具箱（E 項的第一次回報）', () => {
       const all = tb.contents.flatMap((c) => c.contents.map((b) => b.type))
       // ⚠️ `b.type` 是**積木型別**，遷移不動它（B 項加法式保留）
       for (const t of ['cpp_priority_queue_declare', 'cpp_priority_queue_peek']) {
-        expect(all, `${name}：學生解鎖到最深的關卡也看不到 ${t}——它沒有被任何課程收錄`).toContain(t)
+        expect(all, `${name}：這個主題的清單裡看不到 ${t}——它沒有被任何課程收錄`).toContain(t)
       }
     }
   })

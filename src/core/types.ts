@@ -1079,17 +1079,47 @@ export interface Topic {
   name: string
   default?: boolean
   description?: string
-  levelTree: LevelNode
-  blockOverrides?: Record<string, BlockOverride>
-}
-
-/** 層級樹中的一個節點 */
-export interface LevelNode {
-  id: string
-  level: number
-  label: string
+  /**
+   * **這個世界有哪些積木**——一張平的清單。
+   *
+   * ## 🔴 它在 2026-09-20 之前是一棵【層級樹】，而那一層是多餘的
+   *
+   * 舊的形狀是 `levelTree`（`LevelNode` ＋ `children` ＋ 一個
+   *「已啟用分支」的集合），而工具箱的內容是
+   *
+   * ```
+   * levelTree ∩ 已啟用分支 ∩ 當前那一課
+   * ```
+   *
+   * 使用者（2026-09-20）：「我們現在已經有課程了，應該就沒有需要再用 levelTree 了吧」
+   * ——而那句話指的是**中間那一項**：
+   *
+   * > **「分支開關」與「課」是同一件事做兩次
+   * > ——而做兩次的那一次會【靜默地】把另一次說要的東西吃掉。**
+   *
+   * 📌 實測當時：`arduino/13-溫濕度` 宣告了 `cpp:container_iter`，
+   * 而 arduino 的 levelTree 沒有它 → 學生在那一課**拿不到課文要他用的積木**，
+   * 而沒有任何人出聲。
+   *
+   * ## ⚠️ 而「這個主題有哪些積木」本身**不是**多餘的
+   *
+   * 它今天是**唯一**擋住「C 目標拿得到 `vector`／`class`／`cout`」的東西
+   * ——`Target.provides`（原設計四格之一）逐字「本輪沒做」
+   * （`languages/cpp/target-dialect.ts` 的檔頭），而 `filterByTarget` 的第一行是
+   * 「沒宣告 provides 就什麼都不濾」。
+   *
+   * > **C 與 Arduino 是不同的世界，而「世界有什麼」不是分層，是清單。**
+   *
+   * 🟢 所以拿掉的是**層**（`children`／`level`／`enabledBranches`／「選擇範圍」下拉），
+   * 留下的是**一張平的清單**。漸進揭露整個交給課程：
+   *
+   * ```
+   * 自由模式   這個主題的全部       ← 使用者：「自由模式就是全部揭露」
+   * 課程模式   那一課宣告的         ← 使用者：「要漸進揭露就去課程」
+   * ```
+   */
   components: string[]
-  children: LevelNode[]
+  blockOverrides?: Record<string, BlockOverride>
 }
 
 /** Topic 對特定概念的積木呈現覆蓋 */

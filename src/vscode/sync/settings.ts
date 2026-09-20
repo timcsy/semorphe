@@ -16,7 +16,8 @@
  *
  * ```
  * tree / blocklyState / code                        ① 文件內容
- * targetId / topicId / styleId / enabledBranches    ② 組態  ← 只有這一類進設定
+ * targetId / topicId / styleId                      ② 組態  ← 只有這一類進設定
+ *   🪦 `enabledBranches` 於 2026-09-20 退場（層級樹退場那一刀）
  * blockStyleId / locale                             ③ 使用者偏好
  * ```
  *
