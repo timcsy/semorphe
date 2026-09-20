@@ -184,6 +184,63 @@ describe('「這一段我看不懂」的產出不得比原文少', () => {
   })
 })
 
+describe('🔴 而走一趟積木回來，這把尺沒有依據', () => {
+  /**
+   * 🔴 **誠實閘只守住【一條】路**（2026-09-20 瀏覽器驗收量到，第 210 刀記下）。
+   *
+   * ```
+   * lift → 產碼          metadata.rawCode 還在 → honestly 有依據 → 🟢 誠實
+   * lift → render → extract → 產碼   metadata 整個不見 → 🔴 int x = cout << x;
+   * ```
+   *
+   * 積木上**存不下** `rawCode` 與 `degradationCause`，所以 extract 回來的樹
+   * 沒有那兩格。而積木本身顯示的就已經是**錯的語義**
+   *（「宣告 int 變數 x ＝ 直接寫運算式 cout << x」），程式碼只是忠實地跟著它。
+   *
+   * **為什麼不是現在**：三個修法方向，而**判準不明**——
+   *
+   * ```
+   * A 讓積木存得下 metadata        一個新的存檔契約（`CURRENT_VERSION` 要動）
+   * B lift 時就整段降級成 raw_code  兩側都誠實，而「什麼時候降級」正是那個不明的判準
+   * C 維持現狀                      積木顯示的就是錯的語義，程式碼跟著它是【一致】的
+   * ```
+   *
+   * B 最根本，而它需要一個「lift 弄丟了東西」的判準。上面檔頭那一節
+   *（「而這把尺第一版是錯的」）記了五種試過的判準，**每一種都誤傷**：
+   * 子節點認領、重新 parse、只看字面值、前綴、換行——
+   * 而風格投影那個反例（`cout << x` → `printf("%d", x)`）在 lift 那一側**不存在**，
+   * 所以 B 的判準**可能比產生器那一側簡單**。那是下一刀該量的。
+   *
+   * 🔴 **何時該修**：B 的判準想清楚的那一刀。
+   * 見 `knowledge/history/272-宣告說得出的位置形態沒做.md` 最後一節。
+   */
+  it.fails('[UNSUPPORTED:走一趟積木回來誠實閘沒有依據] 🔴 extract 回來再產碼，字不得不見', async () => {
+    const { renderToBlocklyState } = await import('../../src/core/projection/block-renderer')
+    const { PatternExtractor } = await import('../../src/core/projection/pattern-extractor')
+    const { BlockSpecRegistry } = await import('../../src/core/blocks/block-spec-registry')
+    const { registerCppExtractStrategies } = await import('../../src/languages/cpp/extractors/extract-strategies')
+    const { allCppProjections, allCppComponents } = await import('../../src/languages/cpp/all-declarations')
+
+    const src = SHAPES[4].code
+    const tree = roundtrip(src).tree
+    // ★ 錨點：**產碼那一路是誠實的**——否則下面紅的是別的東西
+    expect(charsLost(roundtrip(src).out, src), '產碼那一路就已經弄丟了 → 這一支量的不是它要量的').toEqual([])
+
+    const reg = new BlockSpecRegistry()
+    reg.loadFromSplit(allCppComponents() as never, allCppProjections() as never)
+    const ex = new PatternExtractor()
+    ex.loadBlockSpecs(reg.getAll())
+    registerCppExtractStrategies(ex)
+
+    const st = renderToBlocklyState(tree) as { blocks: { blocks: unknown[] } }
+    const back = st.blocks.blocks.map((b) => ex.extract(b as never)).filter(Boolean) as SemanticNode[]
+    expect(back.length, '一塊積木都抽不回來 → 那是另一個病').toBeGreaterThan(0)
+    const rebuilt = { ...tree, slots: { body: back } } as SemanticNode
+    const again = generateCode(rebuilt, 'cpp', style)
+    expect(charsLost(again, src), `走一趟積木回來之後：\n${again}`).toEqual([])
+  })
+})
+
 describe('★ 錨點：這把尺不得漏到【乾淨的】節點上', () => {
   /**
    * 🔴 這一段守的是 `honestly` 的**適用範圍**，而它要證的是兩件事**同時**成立：

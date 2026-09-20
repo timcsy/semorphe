@@ -36,5 +36,38 @@
       }
     },
     "_why": "🟢 **2026-08-25：`NAME` 換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。"
+  },
+  {
+    "id": "cpp_input_line_expression",
+    "componentId": "cpp:input_line",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_input_line_expression",
+      "message0": "%{BKY_CPP_GETLINE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#5B80A5",
+      "tooltip": "%{BKY_CPP_GETLINE_TOOLTIP}",
+      "inputsInline": true
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "TARGET": "target"
+      }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    },
+    "_why": "🔴 **2026-09-20（第 210 刀）：`while (getline(cin, s))` 的積木本來是一顆灰色的「直接寫運算式」。**\n這顆元件的 `component.json` **早就宣告了** `positions: [\"statement\", \"expression\"]`（`_positions_why` 逐字：「回傳 istream&」），而形態只做了語句那一個——於是渲染在運算式位置**挑不到形態**，退成逃生艙。\n⚠️ 語料 16 支把讀取當迴圈條件，而**三條最像的路都有運算式形態**（`cin >>` 那顆的運算式形態、語句位置的自己）——**兄弟的綠替它背書**。\n🟢 形狀照抄 `cin >>` 那顆的運算式形態（`form: {axis: 'role', value: 'expression'}`），而**訊息與顏色與語句版同一個**——它是同一顆積木的另一個位置，不是另一個概念。"
   }
 ]
