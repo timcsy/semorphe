@@ -40,7 +40,7 @@ interface blockRow { type: string; owner: string; category: string; colour: stri
  */
 function blocks(): blockRow[] {
   const out: blockRow[] = []
-  for (const form of componentBlocks() as { blockDef?: { type?: string; colour?: unknown }; category?: string; owner?: string }[]) {
+  for (const form of componentBlocks() as { blockDef?: { type?: string; colour?: unknown }; category?: string; owner?: string; form?: unknown }[]) {
     const bd = form.blockDef
     if (!bd?.type || typeof bd.colour !== 'string') continue
     out.push({
@@ -48,6 +48,7 @@ function blocks(): blockRow[] {
       owner: String(form.owner ?? ''),
       category: String(form.category ?? ''),
       colour: bd.colour,
+      isVariant: form.form != null,
     })
   }
   return out
@@ -75,9 +76,30 @@ function groupOf(rows: readonly string[]): [string, number][] {
   return [...c].sort((a, b) => b[1] - a[1])
 }
 
+/**
+ * 🔴 **一個元件只數一次——變體形態不進這個母體**（2026-09-21 修）。
+ *
+ * ## 它為什麼是錯的判準
+ *
+ * 第一百二十七條護欄**強制同一顆元件的所有形態同色**，所以一個變體形態
+ * （有宣告 `form` 的那些）**不可能**與它的中性形態不同色。把它也數進來，
+ * ⚠️（這裡刻意不把 `form:` 那個物件字面寫進反引號——它有大括號，
+ *    而七支護欄拿測試檔的反引號區間當 C++ 語料。今天第三次。）
+ * 等於同一個問題數兩次。
+ *
+ * 症狀是：**替一顆元件補一個形態，這條棘輪就退步**——而顏色的一致性
+ * 一格都沒有變差。第 217 刀補了七個運算式形態，它從 53 跳到 56。
+ *
+ * > **一條「只准下降」的棘輪，如果它的母體會因為【做對事情】而變大，
+ * > 那它擋的就不是退步，是那件對的事。**
+ *
+ * ⚠️ 而**不是把基線上調**：上調會讓它往後默許真的退步。
+ * 判準本身錯了就修判準。
+ */
 function mismatches(defs: readonly ToolboxCategoryDef[], ownerPrefix: string): string[] {
   const out: string[] = []
   for (const b of blocks()) {
+    if (b.isVariant) continue
     if (!b.owner.startsWith(ownerPrefix)) continue
     const home = homeCategory(b, defs)
     if (!home) continue // 沒有抽屜是「可拿性」那條護欄的事，不是這一條

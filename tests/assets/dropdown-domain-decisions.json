@@ -450,6 +450,11 @@
       "decision": "open",
       "field": "field_dynamic_dropdown",
       "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值"
+    },
+    "cpp_array_assign_expression.NAME": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值（運算式形態，2026-09-21 第 217 刀——**與語句形態同一個欄位**，判定跟著它走）"
     }
   }
 }

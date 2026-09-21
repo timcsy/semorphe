@@ -34,5 +34,44 @@
       }
     },
     "_why": "🔴 **spec 165：靜態 `field_input` → 動態下拉**（與 `cpp_var_ref` 同一條，spec 164）。\n命令式那份是 `createOpenDropdown(() => getWorkspaceVarOptions())`——**列出工作區裡真的變數**。\n🟢 **2026-08-25：`NAME` 那顆變數下拉換成 `TARGET` 接點**（路線圖「左值是接點，不是字串」）。🔴 下拉列的是變數清單，而它裝的是 `p.x` 這種東西——點一下就毀掉。"
+  },
+  {
+    "id": "cpp_var_assign_expression",
+    "componentId": "cpp:var_assign",
+    "language": "universal",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_var_assign_expression",
+      "message0": "%{BKY_U_VAR_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "TARGET",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_U_VAR_ASSIGN_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "TARGET": "target",
+        "VALUE": "value"
+      }
+    },
+    "_why": "🔴 **運算式形態**（2026-09-21，第 217 刀）——第一百二十六條護欄落地時掃出的八顆之一。\n`positions` 早就宣告了 `expression`（見 `component.json` 的 `_positions_why`：那是**文法**），而形態只做了語句那一個 ⟹ 渲染在運算式位置**挑不到形態**，退成灰色的逃生艙。\n> **一個宣告說得出、而形態沒做的位置，渲染時不會出聲——它會退成逃生艙。**\n⚠️ 實測過症狀（`tests/probes/expression-position-reachable.test.ts`）：語句位置畫得出來、運算式位置是 `cpp_raw_expression`。\n⚠️ **沿用同一組標籤與顏色**——同一個身分的兩個位置不得長得像兩種東西（第一百二十七條護欄：同元件同色）。",
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    }
   }
 ]

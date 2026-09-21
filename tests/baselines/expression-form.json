@@ -1,18 +1,11 @@
 {
   "_meta": {
-    "note": "🆕 **2026-09-20（第 210 刀）第一百二十六條護欄落地。**\n\n一顆元件宣告了 `positions` 含 `expression`，就要有至少一個放得進運算式位置的形態\n（`form: {axis:'role', value:'expression'}`／`expressionCounterpart`／`blockDef.output`）。\n\n🔴 **誕生場景**：`while (getline(cin, s))` 的積木是一顆灰色的「直接寫運算式」。\n樹是對的、產碼也是對的，而 `cpp:input_line` 的宣告早就寫了\n`positions: [\"statement\", \"expression\"]`，形態只做了語句那一個。\n\n> **一個宣告說得出、而形態沒做的位置，渲染時不會出聲——它會退成逃生艙。**\n\n⚠️ **落地時掃出 8 顆，而那是【起點】不是缺陷帳**（`cpp:input_line` 修掉之後）。\n每一顆有兩種修法，選哪一種要逐顆判斷：\n  補形態  那個位置真的會出現（`while ((x = f()) != 0)` 這種很常見）\n  改宣告  `positions` 寫寬了 → 拿掉 expression\n\n🔴 而「從今天起不准再多」是硬的。",
+    "note": "🆕 **2026-09-20（第 210 刀）第一百二十六條護欄落地。**\n\n一顆元件宣告了 `positions` 含 `expression`，就要有至少一個放得進運算式位置的形態\n（`form: {axis:'role', value:'expression'}`／`expressionCounterpart`／`blockDef.output`）。\n\n🔴 **誕生場景**：`while (getline(cin, s))` 的積木是一顆灰色的「直接寫運算式」。\n樹是對的、產碼也是對的，而 `cpp:input_line` 的宣告早就寫了\n`positions: [\"statement\", \"expression\"]`，形態只做了語句那一個。\n\n> **一個宣告說得出、而形態沒做的位置，渲染時不會出聲——它會退成逃生艙。**\n\n⚠️ **落地時掃出 8 顆，而那是【起點】不是缺陷帳**（`cpp:input_line` 修掉之後）。\n每一顆有兩種修法，選哪一種要逐顆判斷：\n  補形態  那個位置真的會出現（`while ((x = f()) != 0)` 這種很常見）\n  改宣告  `positions` 寫寬了 → 拿掉 expression\n\n🔴 而「從今天起不准再多」是硬的。\n\n🎯 **2026-09-21（第 217 刀）：8 → 1（顯式下調）。**\n\n八顆**逐顆查過 `_positions_why`，而「改宣告」對八顆都不成立**\n——每一條寫的都是**文法**上的理由（`a = b` 回傳左值 · `v.erase(it)` 回傳\niterator · `cout << x` 回傳 `ostream&`），而 `positions` 就是文法。\n\n🔴 所以問的是第三個問題，而那要量：\n\n```\n文法上放得進去   八顆都是\nlift 真的放進去  八顆都是（探針量到插槽 left／value／exprs）\n渲染畫得出來     ❌ 八顆都是 cpp_raw_expression ——真缺陷，不是理論\n```\n\n探針留在 `tests/probes/expression-position-reachable.test.ts`。\n⚠️ 它的第一版**整批報「畫不出來」，包括語句位置**——那不可能，\n真相是探針沒把渲染那一套註冊起來。\n> **一份「有 N 個缺陷」的報告，先問那 N 裡有幾個是量測工具自己的。**\n🟢 現在每一列都有【語句位置】那一欄當錨點，錨點倒了就說「這支探針壞了」。\n\n🪦 **而 `cpp:container_push` 今天做不到，理由是機制的**：\n`buildFormSets`（`core/projection/form-selection.ts`）**一個元件只支援一條軸**，\n而它已經用了 `container_kind`（stack／queue）。再加 `role` 會把 `expression`\n混成 `container_kind` 上的一個值。\n\n> **一個「只差一筆」的清單，那一筆常常不是被漏掉的——是機制裝不下它。**\n\n要清它得先讓形態集合支援多條軸，那是另一刀。\n",
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "declared": 17,
-  "missing": 8,
+  "missing": 1,
   "details": [
-    "cpp:array_2d_assign",
-    "cpp:array_assign",
-    "cpp:container_append",
-    "cpp:container_erase",
-    "cpp:container_push",
-    "cpp:map_assign",
-    "cpp:print",
-    "cpp:var_assign"
+    "cpp:container_push"
   ]
 }

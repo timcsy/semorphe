@@ -51,5 +51,57 @@
         "VALUE": "value"
       }
     }
+  },
+  {
+    "id": "cpp_array_2d_assign_expression",
+    "componentId": "cpp:array_2d_assign",
+    "language": "cpp",
+    "category": "arrays",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_array_2d_assign_expression",
+      "message0": "%{BKY_C_ARRAY_2D_ASSIGN_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "arr"
+        },
+        {
+          "type": "input_value",
+          "name": "ROW",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "COL",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_C_ARRAY_2D_ASSIGN_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "obj"
+      },
+      "inputs": {
+        "COL": "col",
+        "ROW": "row",
+        "VALUE": "value"
+      }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    },
+    "_why": "🔴 **運算式形態**（2026-09-21，第 217 刀）——第一百二十六條護欄落地時掃出的八顆之一。\n`positions` 早就宣告了 `expression`（見 `component.json` 的 `_positions_why`：那是**文法**），而形態只做了語句那一個 ⟹ 渲染在運算式位置**挑不到形態**，退成灰色的逃生艙。\n> **一個宣告說得出、而形態沒做的位置，渲染時不會出聲——它會退成逃生艙。**\n⚠️ 實測過症狀（`tests/probes/expression-position-reachable.test.ts`）：語句位置畫得出來、運算式位置是 `cpp_raw_expression`。\n⚠️ **沿用同一組標籤與顏色**——同一個身分的兩個位置不得長得像兩種東西（第一百二十七條護欄：同元件同色）。"
   }
 ]
