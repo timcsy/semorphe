@@ -392,12 +392,26 @@ export interface ExtractRule {
  * **但不建外掛系統**——軸的解析就是一張表，加一條軸就是加一列。
  */
 export interface FormAxis {
-  /** 軸名，只用於診斷訊息 */
+  /** 軸名。⚠️ **不只用於診斷**——它是 `FormSet.forms` 的鍵的一半（`<軸名>:<軸值>`）。 */
   name: string
   /** 值從哪來 */
   from: 'position' | 'property'
   /** `from: 'property'` 時讀哪個屬性 */
   property?: string
+  /**
+   * **一個元件身上有兩條軸時，誰先問**（小的先）。
+   *
+   * 🔴 它不是品味，是一條說得出理由的順序（2026-09-21，第 219 刀）：
+   *
+   * ```
+   * role           決定這顆積木【放不放得進那個插槽】（output vs previousStatement）
+   * container_kind 只換標籤（「推入堆疊」vs「排進佇列」）
+   * ```
+   *
+   * > **放不進去的形態，標籤再對也是一塊灰的
+   * > ——所以「能不能放」要先問，「叫什麼名字」後問。**
+   */
+  priority: number
 }
 
 /**
@@ -408,9 +422,24 @@ export interface FormAxis {
  */
 export interface FormSet {
   componentId: string
-  /** null = 只有一個形態（絕大多數元件） */
-  axis: FormAxis | null
-  /** 軸值 → 積木型別 */
+  /**
+   * 這個身分用到的選擇軸。**空陣列 ＝ 只有一個形態**（絕大多數元件）。
+   *
+   * 🔴 **可以有不只一條**（2026-09-21，第 219 刀）：`cpp:container_push` 同時要
+   * 「堆疊／佇列」（換標籤）與「運算式版」（換插槽）。在此之前
+   * `buildFormSets` 把第二條軸的值**混進第一條軸**，於是 `expression`
+   * 變成 `container_kind` 上的一個值——而那讓運算式位置退成灰色逃生艙。
+   *
+   * ⚠️ **順序由 `FormAxis.priority` 決定**，不是由宣告的檔案順序
+   * ——檔案順序會讓行為跟著「誰先被 glob 到」跑。
+   */
+  axes: FormAxis[]
+  /**
+   * 形態表。鍵是 `_`（中性）或 **`<軸名>:<軸值>`**。
+   *
+   * ⚠️ 鍵裡帶軸名是這一刀加的：兩條軸可能有同名的值，
+   * 而在此之前鍵只有軸值，於是它們會互相蓋掉。
+   */
   forms: Record<string, string>
   /** 選不出時用哪個。MUST 在 `forms` 的值域裡（FS-2） */
   fallback: string

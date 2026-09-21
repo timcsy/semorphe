@@ -20,27 +20,36 @@ import { createNode } from '../../../src/core/semantic-tree'
 /** 依容器種類分的形態集合——本功能的第一個真實案例 */
 const containerForm: FormSet = {
   componentId: 'synth_container_push',
-  axis: { name: 'container_kind', from: 'property', property: 'container_kind' },
+  axes: [{ name: 'container_kind', from: 'property', property: 'container_kind', priority: 2 }],
   // ⚠️ `_` 是保留鍵＝**中性形態**（軸值取不到時用的那個）。
   // 第一版把中性形態只寫在 `fallback` 而沒放進 `forms`，於是 FS-2
   // （fallback 必須在 forms 的值域裡）永遠不成立——**測試抓到的是設計缺口，
   // 不是實作 bug**。中性形態是一顆真實存在的積木，它本來就該被宣告出來。
-  forms: { _: 'synth_container_push', stack: 'synth_stack_push', queue: 'synth_queue_push' },
+  // ⚠️ 鍵帶軸名（2026-09-21 起）——兩條軸可能有同名的值。
+  forms: {
+    _: 'synth_container_push',
+    'container_kind:stack': 'synth_stack_push',
+    'container_kind:queue': 'synth_queue_push',
+  },
   fallback: 'synth_container_push',
 }
 
 /** 依呈現位置分的形態集合——既有 expressionCounterpart 的一般化 */
 const positionForm: FormSet = {
   componentId: 'synth_increment',
-  axis: { name: 'role', from: 'position' },
-  forms: { _: 'synth_increment', statement: 'synth_increment', expression: 'synth_increment_expr' },
+  axes: [{ name: 'role', from: 'position', priority: 1 }],
+  forms: {
+    _: 'synth_increment',
+    'role:statement': 'synth_increment',
+    'role:expression': 'synth_increment_expr',
+  },
   fallback: 'synth_increment',
 }
 
 /** 沒有軸的形態集合——絕大多數元件是這一種 */
 const singleForm: FormSet = {
   componentId: 'synth_plain',
-  axis: null,
+  axes: [],
   forms: { _: 'synth_plain' },
   fallback: 'synth_plain',
 }
@@ -117,8 +126,15 @@ describe('FS-1..FS-4 形態集合的不變式', () => {
   })
 
   it('★ FS-3：有軸 ⟺ 形態多於一個', () => {
-    expect(validateFormSet({ ...singleForm, axis: { name: 'x', from: 'position' } }).ok, '只有一個形態卻宣告了軸').toBe(false)
-    expect(validateFormSet({ ...containerForm, axis: null }).ok, '多個形態卻沒有軸').toBe(false)
+    expect(validateFormSet({ ...singleForm, axes: [{ name: 'x', from: 'position', priority: 1 }] }).ok,
+      '只有一個形態卻宣告了軸').toBe(false)
+    expect(validateFormSet({ ...containerForm, axes: [] }).ok, '多個形態卻沒有軸').toBe(false)
+    // 🔴 **兩條軸而其中一條沒有形態**（2026-09-21）——一條沒有作用的軸宣告，
+    //    會讓「這個身分有兩條軸」這句話變成假的。
+    expect(validateFormSet({
+      ...containerForm,
+      axes: [...containerForm.axes, { name: 'role', from: 'position', priority: 1 }],
+    }).ok, '宣告了 role 軸卻沒有任何 role 形態').toBe(false)
   })
 
   it('★ 合法的形態集合必須通過', () => {
@@ -143,7 +159,7 @@ describe('C-4 反向唯一——一個 blockType 只能屬於一個 componentId'
   it('★ 兩個形態集合共用同一個 blockType 必須被擋下', () => {
     const another: FormSet = {
       componentId: 'synth_other',
-      axis: null,
+      axes: [],
       forms: { _: 'synth_stack_push' }, // ← 撞到容器形態的 stack 形態
       fallback: 'synth_stack_push',
     }
@@ -193,7 +209,7 @@ describe('FR-002 同一個 componentId 註冊多個形態，後來的不得蓋�
   it('★ 沒有變體的元件仍然拿得到形態集合（走同一條路）', () => {
     const sets = buildFormSets([{ componentId: 'synth_plain2', blockType: 'synth_plain2' }])
     const fs = sets.get('synth_plain2')!
-    expect(fs.axis).toBeNull()
+    expect(fs.axes).toEqual([])
     expect(selectForm(fs, createNode('synth_plain2', {}, {}), {}).blockType).toBe('synth_plain2')
   })
 
@@ -209,7 +225,7 @@ describe('FR-002 同一個 componentId 註冊多個形態，後來的不得蓋�
 // ─── 登錄表的宣告側也要一致（T028）──────────────────────────────────
 
 describe('登錄表：一個 componentId 查得到它所有的形態', () => {
-  it('★ getFormsByComponentId 回傳全部三顆，而不是最後註冊的那顆', async () => {
+  it('★ getFormsByComponentId 回傳全部四顆，而不是最後註冊的那顆', async () => {
     const { BlockSpecRegistry } = await import('../../../src/core/blocks/block-spec-registry')
     // ⚠️ **不要自己列宣告來源**（第三十七條護欄）。這裡原本讀 `core`，
     // 而 `cpp:container_push` 2026-08-11 進了膠囊——症狀會是「三個形態只剩零個」，
@@ -222,7 +238,15 @@ describe('登錄表：一個 componentId 查得到它所有的形態', () => {
       forms.map((s) => (s.blockDef as Record<string, unknown>).type).sort(),
       'byComponentId 是 Map<string, BlockSpec> 的話這裡只會有一顆——' +
         '而宣告與實作分歧正是雙重真相護欄在看的東西',
-    ).toEqual(['cpp_container_push', 'cpp_container_push_queue', 'cpp_container_push_stack'])
+    ).toEqual([
+      'cpp_container_push',
+      // 🔴 2026-09-21（第 219 刀）：第四顆。它與另外兩顆**不在同一條軸上**
+      //    （`role` vs `container_kind`）——而在「一個身分只能有一條軸」的年代，
+      //    它加不進來。
+      'cpp_container_push_expression',
+      'cpp_container_push_queue',
+      'cpp_container_push_stack',
+    ])
   })
 
   it('★ 反向：沒有變體的元件回傳恰好一顆', async () => {
@@ -234,5 +258,64 @@ describe('登錄表：一個 componentId 查得到它所有的形態', () => {
     const reg = new BlockSpecRegistry()
     reg.loadFromSplit(allCppComponents(), allCppProjections())
     expect(reg.getFormsByComponentId('cpp:container_empty')).toHaveLength(1)
+  })
+})
+
+/**
+ * 🔴 **一個身分兩條軸**（2026-09-21，第 219 刀）。
+ *
+ * 在此之前 `buildFormSets` 只記得**第一條**軸的名字，而後來每一條軸的值
+ * 都被倒進同一張表。於是 `cpp:container_push` 的 `role:expression`
+ * 變成 `container_kind` 上的一個叫 `expression` 的值——**永遠選不到**，
+ * 而運算式位置退成灰色逃生艙。
+ *
+ * > **一個「只記得第一個」的欄位，在第二個出現的那天不會報錯
+ * > ——它會安靜地把第二個當成第一個的一部分。**
+ */
+describe('一個身分可以有兩條軸', () => {
+  const decls = [
+    { componentId: 'synth_push2', blockType: 'synth_push2' },
+    { componentId: 'synth_push2', blockType: 'synth_push2_stack', form: { axis: 'container_kind', value: 'stack' } },
+    { componentId: 'synth_push2', blockType: 'synth_push2_queue', form: { axis: 'container_kind', value: 'queue' } },
+    { componentId: 'synth_push2', blockType: 'synth_push2_expr', form: { axis: 'role', value: 'expression' } },
+  ]
+  const fs = (): FormSet => buildFormSets(decls).get('synth_push2')!
+
+  it('★ 兩條軸都被記下來，而不是後來的蓋掉先來的', () => {
+    expect(fs().axes.map((a) => a.name).sort()).toEqual(['container_kind', 'role'])
+    expect(validateFormSet(fs()).ok, validateFormSet(fs()).reason).toBe(true)
+  })
+
+  it('★ 語句位置的堆疊 → 堆疊那顆（標籤那條軸說了算）', () => {
+    const node = createNode('synth_push2', { container_kind: 'stack' }, {})
+    expect(selectForm(fs(), node, { position: 'statement' }).blockType).toBe('synth_push2_stack')
+  })
+
+  it('🔴 運算式位置 → 運算式那顆（**位置那條軸先問**）', () => {
+    // ⚠️ 這裡刻意讓兩條軸都說得上話：它是一個 stack，而它在運算式位置。
+    //    位置優先，因為那條軸決定的是「放不放得進那個插槽」
+    //    ——標籤說錯是讀起來怪，插槽不合是根本畫不出來。
+    const node = createNode('synth_push2', { container_kind: 'stack' }, {})
+    expect(selectForm(fs(), node, { position: 'expression' }).blockType).toBe('synth_push2_expr')
+  })
+
+  it('★ 位置取不到、容器取得到 → 仍然選得到容器那顆', () => {
+    const node = createNode('synth_push2', { container_kind: 'queue' }, {})
+    expect(selectForm(fs(), node, {}).blockType).toBe('synth_push2_queue')
+  })
+
+  it('★ 兩條軸都取不到 → 中性形態，而**不出聲**', () => {
+    const r = selectForm(fs(), createNode('synth_push2', {}, {}), {})
+    expect(r.blockType).toBe('synth_push2')
+    expect(r.degraded, '取不到軸值是合法狀態，不是降級').toBeUndefined()
+  })
+
+  it('★ 兩條軸都取得到值而都沒有宣告 → 出聲', () => {
+    // 🔴 語句位置沒有宣告形態（只宣告了 expression），而 deque 也沒有宣告
+    //    ——兩條都落空才算「宣告與資料不一致」。
+    const node = createNode('synth_push2', { container_kind: 'deque' }, {})
+    const r = selectForm(fs(), node, { position: 'statement' })
+    expect(r.blockType).toBe('synth_push2')
+    expect(r.degraded?.reason, '兩條軸都落空卻沒有出聲').toMatch(/deque/)
   })
 })

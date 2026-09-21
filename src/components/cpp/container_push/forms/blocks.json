@@ -128,5 +128,44 @@
         "OBJ": "obj"
       }
     }
+  },
+  {
+    "id": "cpp_container_push_expression",
+    "componentId": "cpp:container_push",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_container_push_expression",
+      "message0": "%{BKY_CPP_CONTAINER_PUSH_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_CONTAINER_PUSH_TOOLTIP}",
+      "inputsInline": true,
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value",
+        "OBJ": "obj"
+      }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    },
+    "_why": "🔴 **運算式形態**（2026-09-21，第 219 刀）——第一百二十六條護欄那八顆的**最後一顆**。\n第 217 刀補了其餘七顆，而這一顆當時做不到：`buildFormSets` **一個元件只支援一條軸**，\n而它已經用了 `container_kind`（堆疊／佇列）。再加 `role` 會讓 `expression`\n變成 `container_kind` 上的一個值——永遠選不到。\n> **一個「只差一筆」的清單，那一筆常常不是被漏掉的——是機制裝不下它。**\n🟢 第 219 刀讓形態集合支援多條軸（`FormSet.axes` ＋ `FormAxis.priority`），這一顆才做得成。\n⚠️ **沒有做 `stack × expression` 那種組合形態**：一顆堆疊的 push 出現在運算式位置時，\n用的是這個**中性的**運算式形態（標籤是「放進」而不是「推入堆疊」）。\n理由寫在 `FormAxis.priority`：標籤說錯是讀起來怪，插槽不合是根本畫不出來。"
   }
 ]
