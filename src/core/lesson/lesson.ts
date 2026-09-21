@@ -707,7 +707,44 @@ export function summarizeComparison(result: OutputComparison): string | undefine
     const how = describeLineDiff(d.got ?? '', d.want ?? '')
     return how === undefined ? undefined : `第 ${at} 行${how}`
   }
-  if (different > 0) return undefined
+  /**
+   * 🔴 **兩行以上不一樣的時候，指出【第一個】不同的地方**（2026-09-21）。
+   *
+   * 在此之前這裡是 `return undefined`——**完全沉默**，理由寫在上面那段：
+   * 「兩行以上就指不出『差在哪』了，而一個講錯位置的診斷比沒有診斷糟」。
+   *
+   * ⚠️ **那個顧慮是對的，而它的結論下得太遠**：講不出「全部差在哪」，
+   * 不等於講不出「**第一個**差在哪」——後者是**算得出來的**，不是猜的。
+   *
+   * 🔴 而沉默的代價是量到的：一班學生上完前幾課（2026-09-21），
+   * 兩個人分別逐字說「**我卡在最多的是答案的空格上面**」
+   * 「321 看起來 21 有空格，但程式裡面要的是沒有空格的 321」
+   * ——而那一題的輸出**不只一行不同**，所以他們什麼提示都沒拿到。
+   *
+   * > **一個「講不清全部」的回饋，仍然講得清第一個
+   * > ——而學生要修的本來就是第一個。**
+   *
+   * ⚠️ 措辭要說出「還有別的」，不要讓學生以為改完那一個就好了。
+   *
+   * 🔴 **而它只在【行數相同】時說**——這個限制是必要的，不是保守：
+   * `compareOutput` 是**逐行對位**比對，**沒有做對齊**。所以「少印了第一行」
+   * 會讓後面每一行都對不上，產生一整串 `different`
+   * ——那時說「第 1 行不一樣」會讓學生去改內容，而真正的問題是**少了一行**。
+   *
+   * > **一個逐行對位的比對器，它報的「第 N 行不同」在錯位的時候
+   * > 指的是位置，不是原因。**
+   */
+  if (different > 0) {
+    if (extra > 0 || missing > 0) return undefined
+    const d = diffs[0]
+    const at = result.lines.indexOf(d) + 1
+    const how = describeLineDiff(d.got ?? '', d.want ?? '')
+    if (how === undefined) return undefined
+    const rest = different - 1
+    return rest === 0
+      ? `第 ${at} 行${how}`
+      : `先看第 ${at} 行${how}（後面還有 ${rest} 行也不一樣）`
+  }
   if (extra > 0 && missing === 0) {
     return `你多印了 ${extra} 行——把最後${extra === 1 ? '一' : ` ${extra} `}行拿掉就對了`
   }

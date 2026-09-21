@@ -204,6 +204,15 @@ describe('summarizeComparison：把「差在哪」講成一句話', () => {
     expect(summarizeComparison(r)).toBeUndefined()
   })
 
+  it('🔴 ★ 反面錨點：行數不同時【不得】講第 N 行——那可能是錯位', () => {
+    // ⚠️ `compareOutput` 是**逐行對位**，沒有對齊。
+    //    「少印了第一行」會讓後面每一行都對不上，而那時說「第 1 行不一樣」
+    //    指的是位置不是原因——學生會去改內容，而真正的問題是少了一行。
+    const r = compareOutput('b\nc\n', 'a\nb\nc\n')
+    const msg = summarizeComparison(r)
+    expect(msg ?? '', '錯位的時候不得指某一行的內容').not.toContain('第 1 行')
+  })
+
   it('過了 → 不說話', () => {
     expect(summarizeComparison(compareOutput('a\n', 'a\n'))).toBeUndefined()
   })
@@ -255,9 +264,32 @@ describe('summarizeComparison：一行不同的時候接上去', () => {
     expect(summarizeComparison(r)).toBe('第 1 行只差在空白——「你打的是」後面少了一個空格')
   })
 
-  it('⚠️ 兩行以上不同 → 不說話（指不出「差在哪」）', () => {
+  /**
+   * 🔴 **2026-09-21 改了：兩行以上不同【也要】講第一個。**
+   *
+   * 原本這裡期望 `undefined`，理由是「指不出『差在哪』」。
+   * ⚠️ **那個理由對的是「全部」，而結論下到了「第一個」身上**
+   * ——第一個不同的行是**算得出來的**，不是猜的。
+   *
+   * 🔴 而沉默的代價量到了：一班學生上完前幾課（2026-09-21），
+   * 兩個人分別說「我卡在最多的是答案的空格上面」
+   * 「321 看起來 21 有空格，但程式裡面要的是沒有空格的 321」
+   * ——那一題不只一行不同，所以他們**什麼提示都沒拿到**。
+   *
+   * 🟢 而「錯位」那個顧慮由**行數相同**這個條件擋住（見下一支）。
+   */
+  it('🔴 兩行以上不同（行數相同）→ 講第一個，並說還有別的', () => {
     const r = compareOutput('1\n2\n', '3\n4\n')
-    expect(summarizeComparison(r), '🔴 一個講錯位置的診斷比沒有診斷糟').toBeUndefined()
+    const msg = summarizeComparison(r)
+    expect(msg, '沉默 = 學生看著兩段字自己找').toBeDefined()
+    expect(msg).toContain('第 1 行')
+    expect(msg, '要說出還有別的，否則他以為改完那一個就好').toContain('後面還有 1 行')
+  })
+
+  it('🔴 ★ 反著印那一題——學生真的撞到的形狀', () => {
+    // 「321 看起來 21 有空格，但程式裡面要的是沒有空格的 321」
+    const r = compareOutput('3 2 1\n', '321\n')
+    expect(summarizeComparison(r), '只差空白而看不出來 → 那正是他卡住的地方').toContain('空白')
   })
 
   it('行數也不對 → 仍然走行數那一條', () => {
