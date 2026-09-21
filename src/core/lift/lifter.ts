@@ -734,7 +734,36 @@ export class Lifter {
     //    症狀不是「多一行」，是**一段程式碼每存一次就長大一點**。
     if (lifted.componentId === '_compound') return
     const body = lifted.slots.body
-    if (!body) return
+    if (!body) {
+      // 🔴 **沒有主體的節點，它的行末註解也要有人收**（2026-09-21，第 218 刀）。
+      //
+      // 在此之前這裡直接 `return`，於是：
+      //
+      //     #include <cstdlib>                    →  cpp:include   🟢
+      //     #include <cstdlib>    // rand, srand  →  raw_code      🔴 整行變灰
+      //
+      // ⚠️ 那顆註解在 AST 上是 `preproc_include` 的**子節點**，所以
+      // `liftStatementsWithContext` 那條「同一列的註解」分支**看不到它**
+      // （它看的是兄弟）。沒有人收 ⟹ `commentsLost` 判「掉了」⟹ 誠實降級。
+      //
+      // > **一條「沒有東西可放就讓開」的路，讓開之後那個東西不會消失
+      // > ——它會變成別人眼中的「掉了」。**
+      //
+      // 🟢 掛成 `inline` 標註：產碼那一路用 `cs.trailing` 貼回行末，一個字都沒少。
+      // ⚠️ **這一條兩種模式都走**——139 的規則（註解擺在上面／區塊內）在這裡
+      //    根本套用不了：沒有主體可以放，而兄弟清單在這一支裡拿不到。
+      const notes: string[] = []
+      for (const kid of node.namedChildren) {
+        if (kid.type !== 'comment') continue
+        const t = commentSyntax().strip(kid.text).trim()
+        if (t !== '') notes.push(t)
+      }
+      if (notes.length > 0) {
+        lifted.annotations = [...(lifted.annotations ?? []),
+          ...notes.map((text) => ({ type: 'comment' as const, text, position: 'inline' as const }))]
+      }
+      return
+    }
     // 🔴 **`block` 之前的註解也在這裡**（2026-08-24，使用者：「Python 程式碼到積木
     //    會丟失註解」）——不是只有同一列那一顆。實測的 AST：
     //
