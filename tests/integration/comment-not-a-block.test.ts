@@ -157,6 +157,35 @@ describe('「跟著做／排一排」裡，行末註解不做成積木', () => {
     expect(ids(lift(src, true)).filter((x) => x === 'cpp:comment')).toHaveLength(1)
   })
 
+  /**
+   * 🔴 **沒有主體的節點，它的行末註解也要有人收**（2026-09-21，第 218 刀）。
+   *
+   * 這是追「步驟圖畫不乾淨的那 13 段」時翻出來的，而它是**既有缺陷**
+   * ——兩種模式都會中：
+   *
+   *     #include <cstdlib>                    →  cpp:include   🟢
+   *     #include <cstdlib>    // rand, srand  →  raw_code      🔴 整行變灰
+   *
+   * ⚠️ 那顆註解在 AST 上是 `preproc_include` 的**子節點**，所以
+   * 「同一列的註解」那條分支看不到它（它看的是兄弟），而
+   * `attachHeaderComments` 在沒有主體時直接讓開。沒有人收 ⟹
+   * `commentsLost` 判「掉了」⟹ 誠實降級。
+   *
+   * > **一條「沒有東西可放就讓開」的路，讓開之後那個東西不會消失
+   * > ——它會變成別人眼中的「掉了」。**
+   */
+  it('🔴 `#include` 帶行末註解：不得整行變灰，而註解留在行末', () => {
+    const src = '#include <cstdlib>    // rand, srand\n#include <ctime>      // time'
+    for (const asBlocks of [true, false]) {
+      const tree = lift(src, asBlocks)
+      expect(ids(tree), `asBlocks=${asBlocks} 時整行降級了`).not.toContain('raw_code')
+      expect(ids(tree).filter((x) => x === 'cpp:include'), '兩個 include 都要在').toHaveLength(2)
+      const out = generateCode(tree, 'cpp', STYLE)
+      expect(out.split('\n').find((l) => l.includes('cstdlib')), '註解沒有留在那一行')
+        .toContain('// rand, srand')
+    }
+  })
+
   it('★ 自成一行的註解，兩條路都照舊是一顆積木', () => {
     const src = 'int main() {\n    // 先算再印\n    int n = 1;\n    return 0;\n}\n'
     for (const asBlocks of [true, false]) {
