@@ -30,5 +30,40 @@
       ]
     },
     "_why": "🟢 **spec 162 選入宣告式的可變參數建構器**——它在 `block-registrar` 裡的那段命令式定義因此不再被執行。\n\n⚠️ **`builder: \"variadic\"` 是【顯式】的**：第一版從 `dynamicRules` 推論，而 `cpp_vector_declare` 也符合那個形狀、卻另有型別下拉與名稱欄位——推論會把它們弄丟，而**沒有任何測試在看標籤與欄位**（工具箱快照只比 id 與順序）。\n> **「符合這個形狀」不等於「只有這個形狀」。**"
+  },
+  {
+    "id": "cpp_print_expression",
+    "componentId": "cpp:print",
+    "language": "universal",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_print_expression",
+      "inputsInline": true,
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_U_PRINT_TOOLTIP}",
+      "builder": "variadic",
+      "labelKey": "U_PRINT_MSG",
+      "labelFallback": "印出",
+      "slotCheck": "Expression",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    },
+    "_why": "🔴 **運算式形態**（2026-09-21，第 217 刀）——第一百二十六條護欄落地時掃出的八顆之一。\n`positions` 早就宣告了 `expression`（見 `component.json` 的 `_positions_why`：那是**文法**），而形態只做了語句那一個 ⟹ 渲染在運算式位置**挑不到形態**，退成灰色的逃生艙。\n> **一個宣告說得出、而形態沒做的位置，渲染時不會出聲——它會退成逃生艙。**\n⚠️ 實測過症狀（`tests/probes/expression-position-reachable.test.ts`）：語句位置畫得出來、運算式位置是 `cpp_raw_expression`。\n⚠️ **沿用同一組標籤與顏色**——同一個身分的兩個位置不得長得像兩種東西（第一百二十七條護欄：同元件同色）。",
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    }
   }
 ]
