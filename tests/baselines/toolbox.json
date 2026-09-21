@@ -101,6 +101,7 @@
         "cpp_method_call",
         "cpp_pointer_step",
         "cpp_string_at",
+        "cpp_container_push_expression",
         "cpp_method_call_expression"
       ]
     },
@@ -175,7 +176,8 @@
         "cpp_istringstream_declare",
         "cpp_pointer_step",
         "cpp_string_at",
-        "cpp_container_append_expression"
+        "cpp_container_append_expression",
+        "cpp_container_push_expression"
       ]
     },
     {
@@ -236,7 +238,8 @@
         "cpp_istringstream_declare",
         "cpp_pointer_step",
         "cpp_string_at",
-        "cpp_container_erase_expression"
+        "cpp_container_erase_expression",
+        "cpp_container_push_expression"
       ]
     },
     {
@@ -262,7 +265,8 @@
         "cpp_container_pop_stack",
         "cpp_container_pop_queue",
         "cpp_container_push_stack",
-        "cpp_container_push_queue"
+        "cpp_container_push_queue",
+        "cpp_container_push_expression"
       ]
     },
     {
@@ -370,6 +374,6 @@
     }
   ],
   "_meta": {
-    "note": "2026-09-09：「輸入/輸出」多了 `cpp_io_sync_expression` 與 `cpp_io_tie_expression`。逗號的插槽收的是運算式，而這兩顆在此之前只有敘述形態——競賽模板那一行因此拆不開。\n2026-09-09：「運算」多了 `cpp_comma_expr` 與 `cpp_comma_expr_expression`。**逗號從一顆黑盒變成一顆積木**，使用者拍板，理由是**兩根指標的迴圈**（`for (int a = 0, b = n; a < b; a++, b--)`——AP325 的常見技巧）。⚠️ 語句版與運算式版都列出來，形狀與函式呼叫那一顆相同。\n2026-08-11：三顆 `<string>` 膠囊（string_empty／find_first_not_of／find_last_not_of）與三顆 `<cmath>` 膠囊（math_pow／math_unary／math_binary）改變了所屬分類裡的**位置**——膠囊積木排在模組自有積木**之前**、身分字母序，與第一顆膠囊同一條放置規則。**它們不是新積木，是同一批積木換了住處。**\n⚠️ `<cmath>` 這個模組現在自有積木為零，數學分類整段都由膠囊供給——這是第一個被完全清空的模組。\n六顆都不是「該第一眼看到」的那一顆（已知清單只有 vector_declare 排在「陣列與列表」第一），所以不為它們設計順序機制。\n\n📈 **2026-09-21（第 210 刀）：「輸入/輸出」＋1 — `cpp_input_line_expression`。**\n  它排在 `cpp_input_line` 後面，與 `cin >>` 那一對同一個模式（語句版在前、運算式版在後）。\n  🔴 補它的理由：`while (getline(cin, s))` 的積木本來是一顆灰色的「直接寫運算式」\n  ——`component.json` 早就宣告了那個位置，而形態只做了語句那一個。\n\n📈 **2026-09-21（第 217 刀）：工具箱多了七顆運算式形態。**\n  `cpp_{array_2d_assign,array_assign,container_append,container_erase,map_assign,print,var_assign}_expression`\n  ——第一百二十六條護欄那八顆補形態（宣告早就說得出那個位置，而形態沒做\n  ⟹ 渲染退成灰色逃生艙，實測過）。\n  🟢 **逐字比對過：多出來的剛好那七顆，消失的 0 顆。**\n  ⚠️ 重產快照時要看差異，不是看它綠了——`GENERATE_BASELINE=1` 會讓任何改動都變綠。"
+    "note": "2026-09-09：「輸入/輸出」多了 `cpp_io_sync_expression` 與 `cpp_io_tie_expression`。逗號的插槽收的是運算式，而這兩顆在此之前只有敘述形態——競賽模板那一行因此拆不開。\n2026-09-09：「運算」多了 `cpp_comma_expr` 與 `cpp_comma_expr_expression`。**逗號從一顆黑盒變成一顆積木**，使用者拍板，理由是**兩根指標的迴圈**（`for (int a = 0, b = n; a < b; a++, b--)`——AP325 的常見技巧）。⚠️ 語句版與運算式版都列出來，形狀與函式呼叫那一顆相同。\n2026-08-11：三顆 `<string>` 膠囊（string_empty／find_first_not_of／find_last_not_of）與三顆 `<cmath>` 膠囊（math_pow／math_unary／math_binary）改變了所屬分類裡的**位置**——膠囊積木排在模組自有積木**之前**、身分字母序，與第一顆膠囊同一條放置規則。**它們不是新積木，是同一批積木換了住處。**\n⚠️ `<cmath>` 這個模組現在自有積木為零，數學分類整段都由膠囊供給——這是第一個被完全清空的模組。\n六顆都不是「該第一眼看到」的那一顆（已知清單只有 vector_declare 排在「陣列與列表」第一），所以不為它們設計順序機制。\n\n📈 **2026-09-21（第 210 刀）：「輸入/輸出」＋1 — `cpp_input_line_expression`。**\n  它排在 `cpp_input_line` 後面，與 `cin >>` 那一對同一個模式（語句版在前、運算式版在後）。\n  🔴 補它的理由：`while (getline(cin, s))` 的積木本來是一顆灰色的「直接寫運算式」\n  ——`component.json` 早就宣告了那個位置，而形態只做了語句那一個。\n\n📈 **2026-09-21（第 217 刀）：工具箱多了七顆運算式形態。**\n  `cpp_{array_2d_assign,array_assign,container_append,container_erase,map_assign,print,var_assign}_expression`\n  ——第一百二十六條護欄那八顆補形態（宣告早就說得出那個位置，而形態沒做\n  ⟹ 渲染退成灰色逃生艙，實測過）。\n  🟢 **逐字比對過：多出來的剛好那七顆，消失的 0 顆。**\n  ⚠️ 重產快照時要看差異，不是看它綠了——`GENERATE_BASELINE=1` 會讓任何改動都變綠。\n\n📈 **2026-09-21（第 219 刀）：四個分類各 ＋1 — `cpp_container_push_expression`。**\n  `cpp:container_push` 本來就同時出現在「函式／陣列與列表／文字／堆疊與佇列」，\n  這一顆跟著它走，**不是新的住處**。\n  🔴 它是第一百二十六條護欄的**最後一顆**（棘輪 1 → 0）——而補得起來是因為\n  形態集合這一刀開始支援**多條軸**：這顆元件本來就有 `container_kind` 那條軸\n  （`_stack`／`_queue`），在此之前「一顆元件只能有一條軸」，\n  所以 `role: expression` 這條**擠不進去**。\n  ⚠️ 沒有做 `stack × expression` 的笛卡兒積——**沒有人要那顆**，\n  而軸的順序（`role` 先問、`container_kind` 後問）就是為了讓它不必存在。\n"
   }
 }

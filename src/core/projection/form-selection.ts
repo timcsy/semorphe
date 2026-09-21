@@ -61,38 +61,76 @@ export interface FormSelectionResult {
  * ⚠️ **只讀 `node` 與 `ctx`**（C-5）。不得走樹、不得查全域——投影是逐節點的，
  * 而脈絡在存檔往返之後不保證還在。
  */
+/** 形態表的鍵。⚠️ **帶軸名**——兩條軸可能有同名的值。 */
+export function formKey(axisName: string, value: string): string {
+  return `${axisName}:${value}`
+}
+
+/**
+ * 這條軸在這個節點／脈絡上取到什麼值。取不到回 `undefined`。
+ *
+ * ⚠️ **只讀 `node` 與 `ctx`**（C-5）。
+ */
+function axisValue(
+  axis: FormAxis,
+  node: SemanticNode,
+  ctx: FormSelectionContext,
+): string | undefined {
+  const raw = axis.from === 'position'
+    ? ctx.position
+    : axis.property !== undefined
+      ? node.properties?.[axis.property]
+      : undefined
+  if (raw === undefined || raw === null || raw === '') return undefined
+  return String(raw)
+}
+
 export function selectForm(
   formSet: FormSet,
   node: SemanticNode,
   ctx: FormSelectionContext,
 ): FormSelectionResult {
-  const { axis, forms, fallback } = formSet
+  const { axes, forms, fallback } = formSet
 
   // 沒有軸 = 只有一個形態。絕大多數元件走這一條。
-  if (!axis) return { blockType: fallback }
+  if (axes.length === 0) return { blockType: fallback }
 
-  const value = axis.from === 'position'
-    ? ctx.position
-    : axis.property !== undefined
-      ? node.properties?.[axis.property]
-      : undefined
-
-  // 軸值取不到——**合法狀態，不出聲**。
-  // 辨識查不到型別時刻意不寫該屬性（CK-1），而呼叫端也不一定知道呈現位置。
-  // 這裡出聲的話，每一顆沒有脈絡的積木都會噴一次警告。
-  if (value === undefined || value === null || value === '') {
-    return { blockType: fallback }
+  // 🔴 **依 priority 依序問，第一個問得出形態的贏**（2026-09-21，第 219 刀）。
+  //
+  //    在此之前一個身分只能有一條軸，於是 `cpp:container_push` 的
+  //    「運算式版」被混進「容器種類」那條軸，變成它的一個值——
+  //    而運算式位置因此挑不到形態、退成灰色逃生艙。
+  //
+  // ⚠️ **不做笛卡兒積**（`stack × expression` 那種組合形態）：那要宣告 6 顆積木，
+  //    而其中大部分不會有人用。憲章 I（簡約優先）。
+  //    代價說在明處：一顆**堆疊**的 push 出現在運算式位置時，用的是
+  //    **一般的**運算式形態（標籤是中性的「放進」而不是「推入堆疊」）。
+  //
+  // > **兩條軸都說得上話的時候，先聽那條決定「放不放得進去」的
+  // > ——標籤說錯是讀起來怪，插槽不合是根本畫不出來。**
+  const ordered = [...axes].sort((a, b) => a.priority - b.priority)
+  const missed: string[] = []
+  for (const axis of ordered) {
+    const value = axisValue(axis, node, ctx)
+    // 軸值取不到——**合法狀態，不出聲**。
+    // 辨識查不到型別時刻意不寫該屬性（CK-1），而呼叫端也不一定知道呈現位置。
+    if (value === undefined) continue
+    const chosen = forms[formKey(axis.name, value)]
+    if (chosen !== undefined) return { blockType: chosen }
+    missed.push(`${axis.name} 的值「${value}」`)
   }
 
-  const chosen = forms[String(value)]
-  if (chosen !== undefined) return { blockType: chosen }
-
-  // 取得到值、但宣告裡沒有它——**宣告與資料不一致，必須看得見**。
+  // 每一條軸都取得到值、而沒有一條宣告了它——**宣告與資料不一致，必須看得見**。
   // 新增一種容器卻忘了加形態宣告，就會走到這裡。
-  return {
-    blockType: fallback,
-    degraded: { reason: `形態軸 ${axis.name} 的值「${String(value)}」不在宣告的形態裡` },
+  //
+  // ⚠️ 而**只要有一條軸取不到值就不算降級**：那是合法狀態（見上）。
+  if (missed.length > 0 && missed.length === ordered.length) {
+    return {
+      blockType: fallback,
+      degraded: { reason: `形態軸 ${missed.join('、')}不在宣告的形態裡` },
+    }
   }
+  return { blockType: fallback }
 }
 
 export interface FormSetValidation {
@@ -119,11 +157,17 @@ export function validateFormSet(formSet: FormSet, others: readonly FormSet[] = [
 
   // FS-3——用**軸值形態**數，中性形態不計
   const axisValueCount = Object.keys(formSet.forms).filter((k) => k !== NEUTRAL_KEY).length
-  if (formSet.axis === null && axisValueCount > 0) {
+  if (formSet.axes.length === 0 && axisValueCount > 0) {
     return { ok: false, reason: '沒有選擇軸卻宣告了軸值形態' }
   }
-  if (formSet.axis !== null && axisValueCount === 0) {
+  if (formSet.axes.length > 0 && axisValueCount === 0) {
     return { ok: false, reason: '宣告了選擇軸卻沒有任何軸值形態——軸沒有作用' }
+  }
+  // 🔴 **每一條軸都要有自己的軸值形態**（2026-09-21）——一條沒有任何形態的軸
+  //    只是一個沒有作用的宣告，而它會讓「這個身分有兩條軸」這句話變成假的。
+  for (const a of formSet.axes) {
+    const has = Object.keys(formSet.forms).some((k) => k.startsWith(`${a.name}:`))
+    if (!has) return { ok: false, reason: `選擇軸「${a.name}」沒有任何軸值形態` }
   }
   // 兩個**軸值**指向同一顆積木 = 那不是兩個形態，是宣告錯了（C-3）。
   //
@@ -152,7 +196,7 @@ export function validateFormSet(formSet: FormSet, others: readonly FormSet[] = [
  * 呼叫端永遠拿到 `FormSet`，不必分兩種情況處理。
  */
 export function singleForm(componentId: string, blockType: string): FormSet {
-  return { componentId, axis: null, forms: { _: blockType }, fallback: blockType }
+  return { componentId, axes: [], forms: { _: blockType }, fallback: blockType }
 }
 
 /**
@@ -171,9 +215,11 @@ export const KNOWN_AXES: Record<string, FormAxis> = {
    * ——在此之前兩套並存，而且只有舊的那套真的在跑（這一條軸的 13 顆宣告全部落回中性）。
    * 軸值由渲染端餵：`PatternRenderer.render(node, ctx, position)`。
    */
-  role: { name: 'role', from: 'position' },
-  /** 依容器種類：堆疊／佇列／… */
-  container_kind: { name: 'container_kind', from: 'property', property: 'container_kind' },
+  // 🔴 `priority: 1`——**它先問**。理由見 `FormAxis.priority` 的檔頭：
+  //    這條軸決定的是「放不放得進那個插槽」，而另一條只換標籤。
+  role: { name: 'role', from: 'position', priority: 1 },
+  /** 依容器種類：堆疊／佇列／…。**只換標籤，所以後問。** */
+  container_kind: { name: 'container_kind', from: 'property', property: 'container_kind', priority: 2 },
 }
 
 /** 建形態集合所需要的最小資訊——刻意不吃整個 BlockSpec，讓它好測 */
@@ -191,7 +237,8 @@ export interface FormDeclaration {
  */
 export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, FormSet> {
   const neutral = new Map<string, string>()
-  const variant = new Map<string, { axis: string; values: Record<string, string> }>()
+  /** 身分 → 軸名 → 軸值 → 積木型別。**兩層**，因為一個身分可以有不只一條軸。 */
+  const variant = new Map<string, Map<string, Record<string, string>>>()
 
   for (const d of decls) {
     if (!d.form) {
@@ -199,35 +246,69 @@ export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, Fo
       if (!neutral.has(d.componentId)) neutral.set(d.componentId, d.blockType)
       continue
     }
-    const cur = variant.get(d.componentId) ?? { axis: d.form.axis, values: {} }
-    cur.values[d.form.value] = d.blockType
-    variant.set(d.componentId, cur)
+    // 🔴 **依軸分開收**（2026-09-21，第 219 刀）。
+    //
+    //    在此之前這裡是 `{ axis: d.form.axis, values: {…} }`：**第一條軸的名字
+    //    寫進去之後就不再更新**，而後來每一條軸的值都被倒進同一個 `values`。
+    //    於是 `cpp:container_push` 的 `role:expression` 變成
+    //    `container_kind` 上的一個叫 `expression` 的值——永遠選不到。
+    //
+    // > **一個「只記得第一個」的欄位，在第二個出現的那天不會報錯
+    // > ——它會安靜地把第二個當成第一個的一部分。**
+    const byAxis = variant.get(d.componentId) ?? new Map<string, Record<string, string>>()
+    const values = byAxis.get(d.form.axis) ?? {}
+    values[d.form.value] = d.blockType
+    byAxis.set(d.form.axis, values)
+    variant.set(d.componentId, byAxis)
+  }
+
+  /** 把「軸名 → 軸值 → 型別」攤成 `forms` 的鍵，並收出用到的軸。 */
+  const spread = (byAxis: Map<string, Record<string, string>>): {
+    axes: FormAxis[]
+    forms: Record<string, string>
+  } => {
+    const axes: FormAxis[] = []
+    const forms: Record<string, string> = {}
+    for (const [axisName, values] of byAxis) {
+      const axis = KNOWN_AXES[axisName]
+      // ⚠️ 認不得的軸名**整條丟掉**（連同它的形態）——留下來的話那些形態
+      //    永遠選不到，而 `validateFormSet` 會說「沒有選擇軸卻宣告了軸值形態」。
+      //    🔴 而它不是靜默的：`audit-lift-grammar` 那一族在宣告那一側擋著拼錯的軸名。
+      if (!axis) continue
+      axes.push(axis)
+      for (const [v, blockType] of Object.entries(values)) forms[formKey(axisName, v)] = blockType
+    }
+    return { axes, forms }
   }
 
   const out = new Map<string, FormSet>()
   for (const [componentId, blockType] of neutral) {
-    const v = variant.get(componentId)
-    if (!v) {
+    const byAxis = variant.get(componentId)
+    if (!byAxis) {
       out.set(componentId, singleForm(componentId, blockType))
       continue
     }
+    const { axes, forms } = spread(byAxis)
+    if (axes.length === 0) { out.set(componentId, singleForm(componentId, blockType)); continue }
     out.set(componentId, {
       componentId,
-      axis: KNOWN_AXES[v.axis] ?? null,
-      forms: { [NEUTRAL_KEY]: blockType, ...v.values },
+      axes,
+      forms: { [NEUTRAL_KEY]: blockType, ...forms },
       fallback: blockType,
     })
   }
 
-  // 只有變體、沒有中性宣告 → 拿第一個變體當中性，並且**出聲**不了（這裡沒有報表）
-  // ——所以改成不接受：沒有中性形態的元件在 validateFormSet 會被擋下。
-  for (const [componentId, v] of variant) {
+  // 只有變體、沒有中性宣告 → 拿第一個變體當中性。
+  // ⚠️ 那是一個**壞掉的宣告**，而這裡補不出聲——由 `validateFormSet` 擋下。
+  for (const [componentId, byAxis] of variant) {
     if (out.has(componentId)) continue
-    const first = Object.values(v.values)[0]
+    const { axes, forms } = spread(byAxis)
+    const first = Object.values(forms)[0]
+    if (first === undefined) continue
     out.set(componentId, {
       componentId,
-      axis: KNOWN_AXES[v.axis] ?? null,
-      forms: { [NEUTRAL_KEY]: first, ...v.values },
+      axes,
+      forms: { [NEUTRAL_KEY]: first, ...forms },
       fallback: first,
     })
   }
