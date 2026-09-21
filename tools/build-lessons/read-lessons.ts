@@ -51,6 +51,37 @@ export interface LessonPage {
    * （`tests/integration/audit-lesson-blockmaps.test.ts`），不是靠這裡。
    */
   readonly blockmap?: BlockMap
+  /**
+   * **「跟著做」每一步的積木圖**——`tools/demo/record-step-blockmaps.spec.ts` 產的。
+   *
+   * 🔴 授課老師 2026-09-21 轉述兩個學生：「要連**跟著做的過程中拉積木的圖**
+   * 也要給，不是只有完成品」。上面那一格 `blockmap` 正是「只有完成品」。
+   *
+   * ⚠️ **索引是片段的序號**（`step-fragments.ts` 的 `index`）——它是課文裡
+   * 步驟小節的第幾個程式碼圍籬，而那份判斷只有一份，三邊共用。
+   * ⚠️ 少一張就是那一步沒有圖（畫出灰塊的片段**刻意不產**）——由護欄數著。
+   */
+  readonly stepMaps?: Readonly<Record<number, BlockMap>>
+}
+
+/**
+ * **一課的步驟圖**——`assets/blockmaps/steps/<軌道>__<課>__step<N>.json`。
+ *
+ * ⚠️ 檔名由 `step-fragments.ts` 的 `stepMapFile` 決定，**不要在這裡重寫一份**
+ * ——產生器與護欄用的是同一支。
+ */
+function readStepMaps(root: string, id: string): Record<number, BlockMap> | undefined {
+  const dir = join(root, '..', 'assets/blockmaps/steps')
+  if (!existsSync(dir)) return undefined
+  const prefix = `${id.replace('/', '__')}__step`
+  const out: Record<number, BlockMap> = {}
+  for (const name of readdirSync(dir)) {
+    if (!name.startsWith(prefix) || !name.endsWith('.json')) continue
+    const n = Number(name.slice(prefix.length, -'.json'.length))
+    if (!Number.isInteger(n)) continue
+    out[n] = JSON.parse(readFileSync(join(dir, name), 'utf8')) as BlockMap
+  }
+  return Object.keys(out).length > 0 ? out : undefined
 }
 
 /** 一課的對照：那張 SVG，以及每一塊積木對到程式碼的哪幾行。 */
@@ -151,6 +182,7 @@ export function readLessonsOf(root: string, track: Track, gitTimes?: Map<string,
       // ⚠️ 讀不到就沒有——**不要在這裡丟錯**：一個沒有對照的頁仍然是一頁課文，
       //    而「少了」是護欄的事（它說得出少了哪幾課，這裡只會說第一課）。
       blockmap: existsSync(bm) ? JSON.parse(readFileSync(bm, 'utf8')) : undefined,
+      stepMaps: readStepMaps(root, id),
       // ⚠️ git 的路徑是**相對於 repo 根**的，而 `m` 是絕對路徑
       lastmod: gitTimes?.get(relative(process.cwd(), m)),
     })
