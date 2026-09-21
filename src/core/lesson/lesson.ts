@@ -237,6 +237,8 @@ export interface Lesson {
    * ⚠️ 省略 ＝ 這一課不需要教操作（多數課都是這樣）。
    */
   readonly interactions?: readonly string[]
+  /** 見 `TASK_KINDS` 上面那段——**只有在講註解的那一課才宣告 `true`**。 */
+  readonly commentsAsBlocks?: boolean
   /**
    * **這一課做對了長什麼樣**——輸出，以及要餵給它的輸入。
    *
@@ -308,9 +310,35 @@ export interface Lesson {
  * 今天**驗不出來**——編輯來源的計數是 per-lesson 的，不是 per-task。
  * 加一個 `type` 只會是版面建議的別名。
  */
-export type TaskKind = 'arrange' | 'debug'
+/**
+ * 🔴 **`'follow'` 是 2026-09-21 加的，而上面那條「要先問它有沒有機制」成立。**
+ *
+ * 它的機制是**註解不做成積木**（`Lifter.setCommentsAsBlocks`）：
+ * `follow` 與 `arrange` 這兩種題目的程式**是課文給的**，學生照著做或重排，
+ * 而一塊「放哪裡都對」的灰色註解積木在那裡讀起來是工作。
+ *
+ * ⚠️ 在此之前「跟著做」是靠 `id === 'follow'` 這個**慣例**認出來的
+ * ——69 課每一課都叫這個名字，而那是一個沒有人宣告的契約。
+ *
+ * > **一條靠名字成立的規則，在第一個不照那個名字取名的人手上失效，
+ * > 而它不會報錯。**
+ */
+export type TaskKind = 'follow' | 'arrange' | 'debug'
 
-export const TASK_KINDS: readonly TaskKind[] = ['arrange', 'debug']
+export const TASK_KINDS: readonly TaskKind[] = ['follow', 'arrange', 'debug']
+
+/**
+ * **這兩種題目裡，註解要不要照舊做成積木。**
+ *
+ * 🔴 預設 `false`（不做成積木）。宣告 `true` 的唯一正當理由是
+ * **這一課在講註解本身**——那時那塊灰積木就是教材。
+ *
+ * ⚠️ 2026-09-21 量過：**今天沒有任何一課在講註解**（10 課宣告了註解元件，
+ * 而那是因為它們的程式碼裡有註解，不是因為它們在教它）。所以這一格
+ * 今天是 0 個使用者——它存在是因為使用者指名要這個出口
+ * （「除非在講註解的單元」），而不是因為有人在用。
+ */
+
 
 export interface LessonTask {
   /** 這一課裡唯一。⚠️ 它會被存進通過紀錄，所以**改了它等於把紀錄清掉**。 */
@@ -834,6 +862,13 @@ export function parseLesson(id: string, raw: unknown): Lesson {
     },
     components: o.components as string[],
     interactions: inter as string[] | undefined,
+    // ⚠️ 打錯型別要當場丟錯：一個 `"true"`（字串）會安靜地變成「不宣告」。
+    commentsAsBlocks: ((): boolean | undefined => {
+      const v = o.commentsAsBlocks
+      if (v === undefined) return undefined
+      if (typeof v !== 'boolean') throw new Error(`教案 ${id}：commentsAsBlocks 不是布林`)
+      return v
+    })(),
     tasks: parseTasks(id, o.tasks, parseCheck(id, o.check)),
   }
 }

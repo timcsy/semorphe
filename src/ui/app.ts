@@ -2036,6 +2036,27 @@ export class App {
    */
   private setActiveGrammar: ((language: string) => void) | null = null
 
+  /**
+   * **行末註解要不要做成一顆積木。**
+   *
+   * ```
+   * 跟著做（kind: 'follow'）    不做  ← 程式是課文給的，學生照著做
+   * 排一排（kind: 'arrange'）   不做  ← 程式是課文給的，學生重排
+   * 其餘（做一個／練習／自由）   做    ← 那是他自己寫的程式（history/139）
+   * ```
+   *
+   * 🔴 **關掉不等於弄丟**：註解變成前一個語句的 `annotations`，
+   * 產碼時貼回原來那一行的行末。見 `Lifter.setCommentsAsBlocks`。
+   *
+   * ⚠️ `commentsAsBlocks: true` 是課程層級的出口，給**以註解為題的那一課**
+   * ——今天 0 個使用者（使用者指名要這個出口）。
+   */
+  private commentsShouldBeBlocks(): boolean {
+    if (this.currentLesson?.commentsAsBlocks === true) return true
+    const kind = taskById(this.currentLesson, this.currentTaskId)?.kind
+    return !(kind === 'follow' || kind === 'arrange')
+  }
+
   private async setupCodeToBlocksPipeline(): Promise<void> {
     const lifter = new Lifter()
     const transformRegistry = new TransformRegistry()
@@ -2074,6 +2095,11 @@ export class App {
       lifter.setGrammar(g)
     }
     this.setActiveGrammar(this.currentTopic.language)
+
+    // 🔴 **註解在「跟著做／排一排」不做成積木**（2026-09-21 使用者指定的特例）。
+    //    ⚠️ 這裡**只接一次**，而它每次抬升都會被問——理由見
+    //    `Lifter.setCommentsAsBlocks` 的檔頭（課程與題目有 11 個賦值點）。
+    lifter.setCommentsAsBlocks(() => this.commentsShouldBeBlocks())
     pl.loadBlockSpecs(allSpecs, skipByGrammar)
     // 🔴 **問套件，不寫死 import**（spec 167）。
     // 在此之前這一行載的永遠是 C++ 的那份，換了語言也一樣。

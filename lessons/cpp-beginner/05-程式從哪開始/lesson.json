@@ -15,6 +15,7 @@
   "tasks": [
     {
       "id": "follow",
+      "kind": "follow",
       "title": "跟著做",
       "check": {
         "stdout": "Hello!\n",

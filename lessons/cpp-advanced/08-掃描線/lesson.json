@@ -27,6 +27,7 @@
   "tasks": [
     {
       "id": "follow",
+      "kind": "follow",
       "title": "跟著做",
       "check": {
         "stdout": "1",

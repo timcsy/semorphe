@@ -151,7 +151,11 @@ for (const c of CASES) {
   test(`產生 ${c.lesson} 第 ${c.index} 段`, async ({ page }) => {
     test.setTimeout(120_000)
     await page.addInitScript(() => window.localStorage.clear())
-    await page.goto(`/?lesson=${encodeURIComponent(c.lesson)}`)
+    // 🔴 **帶著 `task=follow` 進去**（2026-09-21）——這些圖畫的就是〈跟著做〉那一步，
+    //    而「行末註解不做成積木」是**那個題型**的規則（`app.commentsShouldBeBlocks`）。
+    //    ⚠️ 不帶的話圖上會有灰色的備註積木，而學生在那一題裡看到的沒有
+    //    ——**圖就示範了另一個情境**。
+    await page.goto(`/?lesson=${encodeURIComponent(c.lesson)}&task=follow`)
     await page.waitForFunction(
       () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
       undefined, { timeout: 60_000 })
@@ -251,6 +255,11 @@ for (const c of CASES) {
       lesson: c.lesson,
       index: c.index,
       section: c.section,
+      // 🔴 **把積木的身分一起存下來**（2026-09-21）——護欄要問「圖上有沒有註解積木」，
+      //    而 svg 裡只剩下標籤文字。用文字比對的判準，換一次標籤就安靜地不再擋。
+      //
+      // > **一個「這是什麼東西」的判準，問身分不問它畫出來長什麼字。**
+      blockTypes: r.types,
       badgeLines: got.badgeLines,
       // 🔴 過期就變紅的載體——護欄拿它跟課文現在那一段比。
       codeHash: crypto.createHash('sha256').update(c.code).digest('hex').slice(0, 16),

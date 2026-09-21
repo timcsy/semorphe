@@ -23,6 +23,7 @@
   "tasks": [
     {
       "id": "follow",
+      "kind": "follow",
       "title": "跟著做",
       "check": {
         "stdout": "4\n7\n6\n10\n轉換失敗",
