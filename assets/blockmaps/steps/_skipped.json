@@ -1,0 +1,15 @@
+{
+  "arduino__02-呼吸燈__step2.json": "降級著色：#ff6b6b（放進 arduino 的進入點再試一次：降級著色：#ff6b6b）",
+  "arduino__10-不要用delay__step3.json": "灰色方塊：cpp_raw_code（放進 arduino 的進入點再試一次：灰色方塊：cpp_raw_code）",
+  "c-bridge__05-結構__step4.json": "灰色方塊：cpp_raw_code（放進 main 的進入點再試一次：灰色方塊：cpp_raw_code）",
+  "cpp-advanced__01-預備__step4.json": "灰色方塊：cpp_raw_code（放進 main 的進入點再試一次：灰色方塊：cpp_raw_code）",
+  "cpp-advanced__05-佇列與堆疊__step1.json": "灰色方塊：cpp_raw_code（放進 main 的進入點再試一次：灰色方塊：cpp_raw_code）",
+  "cpp-advanced__09-分治__step1.json": "灰色方塊：cpp_raw_code（放進 main 的進入點再試一次：灰色方塊：cpp_raw_code）",
+  "cpp-beginner__11-for迴圈__step4.json": "降級著色：#ff6b6b（放進 main 的進入點再試一次：降級著色：#ff6b6b）",
+  "cpp-beginner__12-猜數字__step6.json": "灰色方塊：cpp_raw_code（放進 main 的進入點再試一次：灰色方塊：cpp_raw_code）",
+  "cpp-beginner__13-陣列__step4.json": "灰色方塊：cpp_raw_code（放進 main 的進入點再試一次：灰色方塊：cpp_raw_code）",
+  "python-beginner__08-清單__step4.json": "灰色方塊：python_raw_expression",
+  "python-beginner__11-例外__step1.json": "灰色方塊：cpp_raw_code",
+  "python-beginner__11-例外__step2.json": "灰色方塊：python_raw_code",
+  "python-bridge__01-沒有型別也沒有main__step0.json": "灰色方塊：cpp_raw_code"
+}

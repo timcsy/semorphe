@@ -19,7 +19,7 @@
  * > 一個不在渲染路徑上、而且省下它會讓畫面變差的東西，不是它要擋的對象。**
  */
 import MarkdownIt from 'markdown-it'
-import type { LessonPage } from './read-lessons'
+import type { LessonPage, BlockMap } from './read-lessons'
 import { lessonDocHref, editorHref, type Track } from '../../src/core/lesson/lesson'
 import { interactionById, type Interaction } from '../../src/core/lesson/interactions'
 import { BASE } from '../../src/core/base-path'
@@ -137,6 +137,9 @@ th,td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left}
  * ——積木在那個寬度下擠成一團，而「看清楚積木長什麼樣」正是它存在的理由。
  * ⚠️ 只在放得下的時候破，窄螢幕仍然乖乖待在欄內。 */
 @media(min-width:1040px){.blockmap{width:min(62rem,calc(100vw - 4rem));margin-left:50%;transform:translateX(-50%)}}
+/* 🔴 **步驟圖與上面那張【同一套排版】——刻意零個覆寫。**
+   （使用者 2026-09-21 看著畫面指定的：「我是希望其他地方也能比照那樣排版」。
+   中間試過的兩條覆寫都被退掉了，理由寫在 withStepMaps 的檔頭。） */
 .blockmap h2{font-size:1rem;margin:0 0 .2rem;border:none;padding:0}
 .blockmap p.meta{margin:0 0 .9rem}
 .bm-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:1rem;align-items:start}
@@ -360,23 +363,30 @@ function howToBlock(ids: readonly string[]): string {
  *
  * 兩邊照樣都在，只是不會互相點亮——⚠️ 它**降級成並排**，而不是空白。
  */
-function blockmapBlock(p: LessonPage): string {
-  const bm = p.blockmap
-  if (bm === undefined || bm.blocks.length === 0) return ''
-  const lines = bm.code.split('\n')
-  // 🔴 每一行帶著「這一行該亮哪幾塊」——**算在建置期**，頁面上不做這個推導。
-  //    ⚠️ 那份跨度的判斷只該有一份；放到頁面的 script 裡就是第二份。
-  const rows = lines.map((text, i) => {
+/**
+ * 一段程式碼的逐行標號——**完成品那張圖與每一步的圖共用這一支**。
+ *
+ * 🔴 每一行帶著「這一行該亮哪幾塊」——**算在建置期**，頁面上不做這個推導。
+ *    ⚠️ 那份跨度的判斷只該有一份；放到頁面的 script 裡就是第二份。
+ *
+ * ⚠️ **只有「號碼印在積木上」的那幾行**才標成可以配對的。
+ *    收尾的大括號那幾行也落在某塊積木的範圍裡，而它們沒有自己的號碼
+ *    ——標了的話學生會去找一個不存在的圓點。
+ * ⚠️ 舊格式的對照沒有 `badgeLines`——**當成「沒有配對」而不是讓建置死掉**。
+ */
+function numberedCode(bm: BlockMap): string {
+  return bm.code.split('\n').map((text, i) => {
     const line = i + 1
-    // ⚠️ **只有「號碼印在積木上」的那幾行**才標成可以配對的。
-    //    收尾的大括號那幾行也落在某塊積木的範圍裡，而它們沒有自己的號碼
-    //    ——標了的話學生會去找一個不存在的圓點。
-    // ⚠️ 舊格式的對照沒有這一格——**當成「沒有配對」而不是讓建置死掉**。
-    //    「有對照而它是舊格式」由護欄說出是哪幾課（`audit-lesson-blockmaps`）。
     const paired = (bm.badgeLines ?? []).includes(line)
     return `<span class="bm-line"${paired ? ' data-blocks="1"' : ''}>` +
       `<i>${line}</i>${esc(text === '' ? ' ' : text)}</span>`
   }).join('')
+}
+
+function blockmapBlock(p: LessonPage): string {
+  const bm = p.blockmap
+  if (bm === undefined || bm.blocks.length === 0) return ''
+  const rows = numberedCode(bm)
   // 🔴 **只說「這是對照，而它是一個參考做法」**（2026-09-05 使用者拍板）。
   //
   //    原本這裡宣告了一句主張（「它們不是兩個東西，是同一個東西的兩種寫法」）
@@ -545,6 +555,85 @@ function withLessonLinks(html: string): string {
   })
 }
 
+/**
+ * **「跟著做」每一步的積木圖**——把那一步的程式碼框換成一份對照。
+ *
+ * ## 🔴 它從哪來（2026-09-21）
+ *
+ * 兩個學生各自要圖：
+ *
+ * > 建議:每個動作都應該有一個成品圖，因為光是文字很難理解。
+ * > 可以學到許多東西，但是沒有太多圖片有點難以理解。
+ *
+ * 授課老師轉述時把它講準了：「要連**跟著做的過程中拉積木的圖**也要給，
+ * **不是只有完成品**。」而在此之前這一頁上的圖就只有一張——完成品。
+ *
+ * ## 🔴 為什麼是「換掉」而不是「插在後面」
+ *
+ * 與 `withBlockmap` 同一個決定，理由也一樣（2026-09-05 使用者拍板）：
+ * 對照的左半與那個程式碼框**逐字相同**，並排的結果是同一段程式印兩次。
+ *
+ * > **兩個框裡是同一份東西時，第二個框帶來的不是強調，是懷疑
+ * > ——讀者會去找它們哪裡不一樣。**
+ *
+ * ## 🔴 配對靠【程式碼本身】，不靠序號
+ *
+ * 第一版在這裡重數一次「這是第幾段」，而那是這個 repo 付過三次學費的形狀：
+ * 兩邊各數一次，遲早會不一樣——而症狀不是報錯，是**圖配到別段去**
+ * （那比沒有圖糟得多）。
+ *
+ * 🟢 每一份步驟圖自己存著「產它的那段程式碼」，所以這裡拿**內容**去配。
+ * 兩段一模一樣的程式碼配到同一張圖——**那本來就是對的**。
+ *
+ * ⚠️ **沒有圖的那幾段照舊留成程式碼框**（畫出灰塊的片段刻意不產圖）
+ * ——安靜地少一塊，比一塊灰的好。
+ *
+ * ## 🔴 排版與上面那張【一模一樣】——`.step` 這個類別身上刻意零個覆寫
+ *
+ * 中間試過兩條覆寫，**兩條都被使用者退掉**（2026-09-21，看著畫面）：
+ *
+ * ```
+ * 不破版滿寬        理由：坐在文字中間，破出去打斷視線，而有學生說「感覺太擠」
+ * 長行換行不橫捲    理由：欄寬 287px 而那一行要 316px，橫捲軸沒有人會發現
+ * ```
+ *
+ * 使用者逐字：「**現在程式碼那邊的行號不見了，並且程式碼不能滾動。
+ * 我是希望其他地方也能比照「完成的樣子」的那樣排版**」。
+ *
+ * ⚠️ 而**破版滿寬本身就解掉了那個窄欄問題**：同一套規則下程式碼欄從
+ * 287px 變成 435px。我為一個症狀加的兩條規則，其中一條**正是造成它的原因**。
+ *
+ * > **在為一個現象加規則之前，先問「把我剛剛加的那條拿掉，它還在嗎」。**
+ *
+ * ⚠️ 另一件付過學費的：CSS 那一段的註解**不得引用課文的段落名**
+ * ——整段樣式是**內聯進每一頁**的，包括規格頁，而第一百零一條護欄④之十一
+ * （「規格頁不得混進課文的散文」）為此紅過一次。
+ *
+ * > **一段寫給維護者的註解，如果它住在【會被送到使用者面前的那份輸出】裡，
+ * > 那它就不再只是註解。**
+ */
+function withStepMaps(html: string, p: LessonPage): string {
+  const maps = Object.values(p.stepMaps ?? {}).filter((m) => m.blocks.length > 0)
+  if (maps.length === 0) return html
+  const byCode = new Map(maps.map((m) => [m.code, m]))
+  return html.replace(/<pre><code(?: class="language-[a-z]+")?>([\s\S]*?)<\/code><\/pre>/g,
+    (whole, inner: string) => {
+      // ⚠️ markdown-it 會 escape，而且**在結尾多一個換行**——兩邊都要還原再比。
+      const code = unesc(inner).replace(/\n$/, '')
+      const bm = byCode.get(code)
+      if (bm === undefined) return whole
+      return `<section class="blockmap step">` +
+        `<div class="bm-grid"><pre class="bm-code">${numberedCode(bm)}</pre>` +
+        `<div class="bm-blocks">${bm.svg}</div></div></section>`
+    })
+}
+
+/** `esc` 的反向——只還原 markdown-it 會產的那五個。 */
+function unesc(s: string): string {
+  return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+}
+
 function withHowTo(html: string, ids: readonly string[]): string {
   const block = howToBlock(ids)
   if (block === '') return html
@@ -565,7 +654,7 @@ export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): 
     description: descriptionOf(p),
     path: lessonDocHref(p.lesson.id),
     crumb,
-    body: withLessonLinks(withTaskButtons(withBlockmap(withHowTo(md.render(p.md), p.lesson.interactions ?? []), p), p))
+    body: withLessonLinks(withStepMaps(withTaskButtons(withBlockmap(withHowTo(md.render(p.md), p.lesson.interactions ?? []), p), p), p))
       + open + navBlock(neighbours),
     // 🔴 **`Course` 說的每一句都要是實話**：`provider` 是我們、`inLanguage` 是課文的語言，
     //    而 `timeRequired` 只在課程自己宣告了 `estimate` 時才寫（ISO 8601 duration）。
