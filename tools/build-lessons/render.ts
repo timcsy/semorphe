@@ -508,6 +508,43 @@ function withTaskButtons(html: string, p: LessonPage): string {
   }).join('')
 }
 
+/**
+ * **課文之間的連結，出站之後要按得到。**
+ *
+ * ## 🔴 它從哪來（2026-09-21）
+ *
+ * 一個學生逐字：「我覺得網站有一些bug**有一些案下去不會到他寫的部分**」。
+ *
+ * 那句話很含糊，而掃出站的 78 份 HTML（977 條站內連結）之後，
+ * **指不到任何檔案的剛好有一條**：
+ *
+ * ```
+ * cpp-advanced/06-Linked List  →  ../../c-bridge/03-指標/lesson.md
+ * ```
+ *
+ * ⚠️ **兩邊各自都是對的**，而它們對的是不同的東西：
+ *
+ * ```
+ * 在 repo 裡讀 lesson.md    那條相對路徑指到另一份 lesson.md   🟢 按得到
+ * 出站之後                  那個位置是一個資料夾＋index.html   🔴 404
+ * ```
+ *
+ * > **一條在來源裡正確的相對路徑，在投影之後指到的是投影的形狀
+ * > ——而沒有人會去按來源。**
+ *
+ * 🟢 修法是把它交給 `lessonDocHref`——「課程 id → 出站網址」那份**唯一的**
+ * 對應（`core/lesson/lesson.ts`），與麵包屑、上下課、課程清單走同一支。
+ * ⚠️ 來源那一側**不動**：在 repo 裡讀 markdown 的人仍然按得到。
+ */
+function withLessonLinks(html: string): string {
+  return html.replace(/href="([^"]*?)\/lesson\.md"/g, (whole, raw: string) => {
+    // 只認「指到另一課的 lesson.md」——路徑的最後兩段就是 `軌道/課名`。
+    const parts = decodeURIComponent(raw).split('/').filter((x) => x !== '' && x !== '.' && x !== '..')
+    if (parts.length < 2) return whole
+    return `href="${esc(lessonDocHref(parts.slice(-2).join('/')))}"`
+  })
+}
+
 function withHowTo(html: string, ids: readonly string[]): string {
   const block = howToBlock(ids)
   if (block === '') return html
@@ -528,7 +565,7 @@ export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): 
     description: descriptionOf(p),
     path: lessonDocHref(p.lesson.id),
     crumb,
-    body: withTaskButtons(withBlockmap(withHowTo(md.render(p.md), p.lesson.interactions ?? []), p), p)
+    body: withLessonLinks(withTaskButtons(withBlockmap(withHowTo(md.render(p.md), p.lesson.interactions ?? []), p), p))
       + open + navBlock(neighbours),
     // 🔴 **`Course` 說的每一句都要是實話**：`provider` 是我們、`inLanguage` 是課文的語言，
     //    而 `timeRequired` 只在課程自己宣告了 `estimate` 時才寫（ISO 8601 duration）。
