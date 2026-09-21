@@ -3330,3 +3330,55 @@ html, body {
   background: rgba(255, 176, 32, 0.22);
   font-weight: 600;
 }
+
+/* ─── 點得到的最小尺寸（2026-09-21，第 215 刀） ──────────────────────
+ *
+ * 🔴 **它從哪來**：一個學生逐字「網站疑時很完善了只是**有一些感覺太擠**」。
+ *
+ * ⚠️ 「太擠」聽起來沒辦法量——而它有一個量得出來的核心。
+ * 在 1366×768（學校筆電最常見的尺寸）上量，**34 個看得到的互動元素裡
+ * 有 20 個低於 24×24**，最小的只有 18px 高：
+ *
+ *     26x18  📋        26x19  ✕         27x19  ⛶
+ *     38x18  清除      48x22  積木 ▾     20x30  ▾（執行的下拉）
+ *
+ * 24×24 CSS px 是 **WCAG 2.2 AA 的 2.5.8「目標大小（最小）」**——
+ * 它不是品味，是一條寫下來的下限。
+ *
+ * > **一個說不出「哪裡擠」的抱怨，先去量那個領域有標準的那一面
+ * > ——擠不擠很主觀，而「按鈕有沒有 24px」不是。**
+ *
+ * 🟢 用 `min-height`／`min-width` 而不是 `height`：只把不夠的撐開，
+ * 已經夠大的一個都不動（量過：改完 20 → 0，而文字被裁 0、版面沒有位移）。
+ * ⚠️ `inline-flex` 是為了讓撐開之後的字**垂直置中**——只給 min-height
+ * 的話字會貼在上緣。
+ */
+.bottom-panel-action-btn,
+.slot-picker,
+.clipboard-btn,
+#status-bar .status-item-btn,
+.exec-btn,
+#clear-btn {
+  min-height: 24px;
+  min-width: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* ⚠️ 狀態列那幾顆本來寫死 `height: 22px` ＋ `line-height: 22px`
+ *    ——`min-height` 贏不過 `height`，所以這兩格要一起改。 */
+#status-bar .status-item-btn {
+  height: 24px;
+  line-height: 24px;
+}
+/* ⚠️ 「執行」旁邊那顆 `▾` 要**兩件事**才撐得開：
+ *    ① padding 帶著 `!important`（`.exec-btn`），要同樣的重量才蓋得過；
+ *    ② `min-width: 20px` 住在 `.run-group .run-mode-arrow`（特異度 0,2,0），
+ *       而上面那條共用規則只靠 `.exec-btn`（0,1,0）——**輸了**。
+ *       這一條是 `#id.class`（1,1,0），才蓋得過。
+ * > **一條共用規則「對大多數元素有效」，不等於它對每一個都有效
+ * > ——特異度是逐個元素算的。** */
+#run-mode-btn.exec-btn {
+  padding: 4px 6px !important;
+  min-width: 24px;
+}
