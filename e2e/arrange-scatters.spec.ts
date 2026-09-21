@@ -47,11 +47,24 @@ interface Task { id: string; kind?: string; title: string }
  * ⚠️ 這不是「例外清單」，是**待辦清單**：它們的 `arrange` 題等於直接給答案，
  * 而修法是**換一支程式或拿掉那一題**，不是放寬這條護欄。
  * 名單只准變短——多一筆就是有人新種了一題空的。
+ *
+ * ✅ **2026-09-21 清空了，而它是【待辦被做掉】不是【護欄被放寬】。**
+ *
+ * 名單上原本有 `cpp-beginner/01-印出一句話` 與 `05-程式從哪開始`，
+ * 而那一天授課老師把一班學生的回饋整批貼過來，第一條逐字就是
+ *「第一課的排一排沒有意義」「**因為只有一行**」
+ *（見 `knowledge/episodes/2026-09-21-一班學生上完前幾課.md`）。
+ *
+ * 🔴 **那兩題被拿掉了**（`lesson.json` 的 task、課文的連結、`solutions/` 檔），
+ * 而不是把名單留著——**照這段註解自己寫的修法做**。
+ *
+ * > **一個待辦清單如果從來沒有變短，它就已經變成例外清單了。**
+ *
+ * 🟢 而「有沒有東西可排」現在**在測試層也擋得住**：
+ * 第一百二十八條護欄 `audit-arrange-worth-doing`（硬性零，不必開瀏覽器）。
+ * 這一支仍然不可省——它問的是「**實際上打散了沒**」，那一支問的是「理論上有幾塊」。
  */
-const KNOWN_EMPTY = new Set([
-  'cpp-beginner/01-印出一句話',
-  'cpp-beginner/05-程式從哪開始',
-])
+const KNOWN_EMPTY = new Set<string>([])
 
 function arrangeTasks(): { lesson: string; task: Task }[] {
   const out: { lesson: string; task: Task }[] = []
