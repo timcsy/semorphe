@@ -21,6 +21,7 @@
   "tasks": [
     {
       "id": "follow",
+      "kind": "follow",
       "title": "跟著做",
       "check": {
         "stdout": "你打的是 7\n",

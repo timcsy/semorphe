@@ -491,7 +491,21 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
       const commentText = inlineComments.map(a => a.text).join('; ')
       // Insert trailing comment before the final newline
       const cs = commentSyntax()
-      if (result.endsWith('\n')) {
+      // 🔴 **多行的東西，註解貼在【第一行】行末**（2026-09-21）。
+      //
+      //    `while (n <= 5) {  // ② 條件` 的註解說的是**那個表頭**。
+      //    貼在整塊之後的話它會跑到收尾的 `}` 後面：
+      //
+      //        while (n <= 5) {
+      //            …
+      //        } // ② 條件          🔴 它在說哪一行？
+      //
+      // > **一個「貼在行末」的東西，行末指的是【它說的那一行】的末端，
+      // > 不是這個節點產出的最後一個字元。**
+      const nl = result.indexOf('\n')
+      if (nl >= 0 && nl !== result.length - 1) {
+        result = cs.trailing(result.slice(0, nl).trimEnd(), commentText) + result.slice(nl)
+      } else if (result.endsWith('\n')) {
         result = cs.trailing(result.slice(0, -1).trimEnd(), commentText) + '\n'
       } else {
         result = cs.trailing(result.trimEnd(), commentText)

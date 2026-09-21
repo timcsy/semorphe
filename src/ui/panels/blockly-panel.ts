@@ -1581,10 +1581,24 @@ export class BlocklyPanel implements ViewHost {
       }
 
       // Annotation 視覺——`extraState` 帶進來的註解灌進泡泡
+      //
+      // 🔴 **`'inline'` 不灌**（2026-09-21）：那是「跟著做／排一排」那個特例
+      //    產生的行末註解，而使用者逐字說了**不要泡泡**
+      //    ——「我希望在『跟著做』、『排一排』的情境把註解積木取消掉就好」。
+      //
+      // ⚠️ 這是**第二處**。第一處在 `core/projection/block-renderer.ts` 的
+      //    `propagateMetadata`（`block.icons.comment`）——只改一處的症狀是
+      //    積木上照樣掛著一個問號圖示，而它正是我們要拿掉的那個東西。
+      //
+      // > **同一個視覺由兩處產生時，改掉其中一處會讓它「幾乎不見」
+      // > ——而那比完全沒改更難查。**
+      //
+      // 🟢 它仍然存得住：整份 `annotations` 在 `extraState` 裡，
+      //    回程由 `foreign-extra-state` 帶著走。
       const annotations = extra.annotations as Annotation[] | undefined
       if (annotations?.length) {
         const inlineTexts = annotations
-          .filter(a => a.position === 'inline' || a.position === 'after')
+          .filter(a => a.position === 'after')
           .map(a => a.text)
         if (inlineTexts.length > 0) block.setCommentText(inlineTexts.join('\n'))
       }

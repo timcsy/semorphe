@@ -75,7 +75,7 @@ const DIR = path.join(REPO_ROOT, 'assets/blockmaps/steps')
 const FRAGS = allStepFragments(REPO_ROOT)
 const hash = (s: string): string => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16)
 
-interface Map_ { lesson: string; index: number; code: string; codeHash: string; engineHash: string; badgeLines?: number[]; blocks: unknown[]; svg: string }
+interface Map_ { lesson: string; index: number; code: string; codeHash: string; engineHash: string; badgeLines?: number[]; blockTypes?: string[]; blocks: unknown[]; svg: string }
 interface Row { f: StepFragment; bm?: Map_ }
 
 function rows(): Row[] {
@@ -88,6 +88,8 @@ function rows(): Row[] {
 const ROWS = rows()
 const WITH = ROWS.filter((r) => r.bm !== undefined) as { f: StepFragment; bm: Map_ }[]
 const REPRODUCE = '   重產：npx playwright test --config=tools/demo/playwright.demo.config.ts record-step-blockmaps'
+/** 註解積木的**身分**長什麼樣——`cpp:comment`／`python:comment` → `cpp_comment`… */
+const COMMENT_ID = /(^|[^a-z])comment($|[^a-z])/
 
 describe('第一百三十一條護欄：「跟著做」每一步的積木圖', () => {
   it('★ 入口條件——真的掃到片段了', () => {
@@ -167,6 +169,68 @@ describe('第一百三十一條護欄：「跟著做」每一步的積木圖', (
     const n = 'int n = 10;\nn += 5;\ncout << n;'.split('\n').length
     expect([3, 4, 5].some((l) => l < 1 || l > n), '認不出偏移 → 上面那條是空過的').toBe(true)
     expect([1, 2, 3].some((l) => l < 1 || l > n), '把對的報成錯的').toBe(false)
+  })
+
+  it('🔴 硬性零：圖上不得有【行末】註解變成的積木', () => {
+    // 🔴 **它從哪來（2026-09-21）**：授課老師逐字
+    //    「在課文裡面的註解，因為轉過去都會變備注的灰積木，
+    //     但是**學生通常不需要拉這些積木**」。
+    //
+    // 修法不在圖這一側——是「跟著做／排一排」那個題型不把行末註解做成積木
+    //（`Lifter.setCommentsAsBlocks`）。這一條盯的是**產生器有沒有走那條路**：
+    // 少帶一個 `task=follow`，圖上就會冒出灰積木，而**課文頁與編輯器不一致**。
+    //
+    // > **一張示範「你這一步要拉什麼」的圖，多畫一塊學生不用拉的東西，
+    // > 它示範的就是多一件工作。**
+    //
+    // ⚠️ 判準是**積木的身分**，不是 svg 裡的標籤文字
+    //    ——字面判準換一次標籤就會安靜地不再擋。
+    //
+    // 🔴 **而「自成一行」的註解【應該】還是一塊**：那個特例只管行末註解，
+    //    因為它要掛在「它說的那一行」身上。一句
+    //    `// 找到了` 單獨站在一個空的 if 區塊裡，**沒有那一行可以掛**
+    //    ——拿掉它就是真的把使用者的字弄丟。
+    //
+    // > **一個「藏起來」的做法，前提是有地方放它。沒有地方的時候，
+    // > 藏起來與刪掉是同一件事。**
+    //
+    // 🟢 所以判準是**數量**：註解積木不得多於片段裡自成一行的註解。
+    // ⚠️ 舊格式沒有 `blockTypes`——**當成「還沒重產」而不是「沒問題」**，
+    //    由底下那條「有圖的都要有 blockTypes」擋著。
+    const ownLine = (code: string): number => code.split('\n')
+      .filter((l) => /^\s*(\/\/|\/\*|#(?!include|define))/.test(l)).length
+    const bad = WITH.filter((r) => {
+      const n = (r.bm.blockTypes ?? []).filter((t) => COMMENT_ID.test(t)).length
+      return n > ownLine(r.f.code)
+    })
+    expect(
+      bad.map((r) => `${r.f.lesson}#${r.f.index}`),
+      '🔴 圖上的註解積木比「自成一行的註解」多——**行末註解變成積木了**。\n'
+        + '   多半是產生器沒有帶 `task=follow` 進去。\n' + REPRODUCE,
+    ).toEqual([])
+  })
+
+  it('★ 注入：認得出一張有註解積木的圖', () => {
+    // 🔴 合成的——不靠任何一張真的壞掉。
+    expect(COMMENT_ID.test('cpp_comment'), '認不出 cpp_comment').toBe(true)
+    expect(COMMENT_ID.test('python_comment'), '認不出 python_comment').toBe(true)
+    expect(COMMENT_ID.test('cpp_print'), '把正常的積木報成註解').toBe(false)
+    expect(COMMENT_ID.test('cpp_var_assign_compound'), '把正常的積木報成註解').toBe(false)
+  })
+
+  it('★ 注入：「自成一行」數得對——不然上面那條會放過行末註解', () => {
+    const own = (code: string): number => code.split('\n')
+      .filter((l) => /^\s*(\/\/|\/\*|#(?!include|define))/.test(l)).length
+    expect(own('// 找到了'), '認不出自成一行').toBe(1)
+    expect(own('    // 縮排的也算'), '縮排的自成一行').toBe(1)
+    expect(own('n += 5;  // 行末'), '🔴 把行末算成自成一行 → 上面那條會空過').toBe(0)
+    expect(own('#include <iostream>'), '把 include 算成註解').toBe(0)
+  })
+
+  it('🔴 有圖的都要有 blockTypes——少了它，上面那條會空過', () => {
+    const old = WITH.filter((r) => !Array.isArray(r.bm.blockTypes))
+    expect(old.map((r) => `${r.f.lesson}#${r.f.index}`),
+      '🔴 這幾張是舊格式，要重產。\n' + REPRODUCE).toEqual([])
   })
 
   it('★ 注入：雜湊要真的跟著程式碼動', () => {

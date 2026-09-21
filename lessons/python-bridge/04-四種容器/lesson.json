@@ -22,6 +22,7 @@
   "tasks": [
     {
       "id": "follow",
+      "kind": "follow",
       "title": "跟著做",
       "check": {
         "stdout": "3\n16\n4\n2\n2",

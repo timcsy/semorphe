@@ -6,6 +6,8 @@ import { createNode } from '../semantic-tree'
 import { LiftContextData } from './lift-context'
 import { PatternLifter } from './pattern-lifter'
 import { liftPostProcessors } from './post-processors'
+// 🔴 **剝語法符號問語言套件**（`//`／`#`／`;` 各不相同）——不要在這裡寫死。
+import { commentSyntax } from '../comment-syntax'
 import { astRepairs } from './ast-repairs'
 
 /**
@@ -53,6 +55,58 @@ export class Lifter {
   setGrammar(grammar: string): void {
     this.activeGrammar = grammar
   }
+
+  /**
+   * **行末註解要不要變成一顆積木。**
+   *
+   * ## 🔴 預設是「要」——那是 2026-08-24 使用者定的（[history/139]）
+   *
+   * > 「一般的 statement，註解在**上面**；而對於結構，註解在**區塊內**。」
+   * > 「這樣的原因是**可以讓學生比較容易看到註解**，對學習更有幫助。」
+   *
+   * ## ⚠️ 而 2026-09-21 使用者給了一個**有範圍的特例**
+   *
+   * 逐字：「在課文裡面的註解，因為轉過去都會變備注的灰積木，
+   * 但是**學生通常不需要拉這些積木**」
+   * 「我希望在『跟著做』、『排一排』的情境把註解積木取消掉就好
+   * （**除非在講註解的單元**）」。
+   *
+   * 那兩種題目的程式是**課文給的**，學生照著做或重排——一塊「放哪裡都對」
+   * 的灰積木在那裡讀起來是工作，而它不是。
+   *
+   * > **在這個工具裡「看得見」與「拖得動」是同一件事
+   * > ——每一塊積木都拖得動，所以「看得見」順帶說了「這是你要處理的東西」。**
+   *
+   * 🔴 **關掉之後註解【不會不見】**：它變成前一個語句身上的
+   * `annotations`（`position: 'inline'`），而那條路整條是通的——
+   * 渲染放進 `extraState`（`block-renderer` 的 `propagateMetadata`）·
+   * 回程原樣帶著走（`foreign-extra-state`）· 抽取撿回來
+   * （`pattern-extractor:161`）· 產碼貼回**原來那一行的行末**
+   * （`code-generator:487` 的 `cs.trailing`）。
+   *
+   * ⚠️ 也就是說**這個特例比預設更一字不差**：139 記著的具名代價
+   * （行末註解會被搬到自己一行）在這條路上不存在。
+   *
+   * ⚠️ **只管行末註解**。自成一行的註解照舊是一顆積木——它本來就是獨立的一句話，
+   * 沒有「它在說哪一行」這個問題。
+   */
+  /**
+   * 🔴 **收的是一個「去問」的函式，不是一個布林。**
+   *
+   * 課程與題目在 `app.ts` 裡有 **11 個賦值點**。收布林的話，每一個後面都要
+   * 補一行「記得推給 lifter」——而這個 repo 為那個形狀付過學費：
+   *
+   * > **一段「每次改了都必須做」的收尾，如果它住在某個 `if` 的後面，
+   * > 那它保證的不是「每次」，是「那個 if 成立的每次」。**
+   *（`four-independences` 基線，2026-09-14）
+   *
+   * 🟢 收函式的話**只接一次**，而它每次抬升都問一遍——不可能漏。
+   */
+  setCommentsAsBlocks(decide: () => boolean): void {
+    this.commentsAsBlocks = decide
+  }
+
+  private commentsAsBlocks: () => boolean = () => true
 
   register(nodeType: string, lifter: NodeLifter): void {
     this.lifters.set(this.key(this.registeringGrammar, nodeType), lifter)
@@ -568,6 +622,17 @@ export class Lifter {
       if (node.type === 'comment' && results.length > 0) {
         const prev = results[results.length - 1]
         if (node.startPosition.row === (prev.metadata?.sourceRange?.endLine ?? -1)) {
+          // 🔴 **有範圍的特例**（2026-09-21）——見 `setCommentsAsBlocks` 的檔頭。
+          //    關掉時**不產生節點**，而把原文掛回 `prev` 身上；產碼那一路
+          //    會用 `cs.trailing` 把它貼回原來那一行的行末，一個字都沒少。
+          if (!this.commentsAsBlocks()) {
+            const text = commentSyntax().strip(node.text).trim()
+            if (text !== '') {
+              prev.annotations = [...(prev.annotations ?? []),
+                { type: 'comment', text, position: 'inline' }]
+            }
+            continue
+          }
           const made = this.liftWithContext(node, contextData)
           // ⚠️ **插在 `prev` 前面**，不是後面——它說的是 `prev` 那一行
           if (made) results.splice(results.length - 1, 0, made)
@@ -689,6 +754,47 @@ export class Lifter {
     // > 答不出「它屬於誰」——而後者才是要收它的人。**
     //
     // ⚠️ 依原文順序收，全部放到主體最前面（它們本來就在主體之前）。
+    // 🔴 **關掉的時候掛在結構自己身上**（2026-09-21）——見 `setCommentsAsBlocks`。
+    //    ⚠️ 這是**第二條**產生註解節點的路。只改另一條的症狀是
+    //    `while (n <= 5) {  // ② 條件` 照樣長出一塊灰積木，而其他的都沒有
+    //    ——**一個「幾乎都對」的規則，比一個沒有生效的規則難查。**
+    if (!this.commentsAsBlocks()) {
+      const head = lifted.metadata?.sourceRange?.startLine
+      const texts: string[] = []
+      // ① 掛在結構自己身上的（Python 的 `if a:  # 首`——註解是 `if_statement` 的直接子節點）
+      for (const kid of node.namedChildren) {
+        if (kid.type !== 'comment') continue
+        const t = commentSyntax().strip(kid.text).trim()
+        if (t !== '') texts.push(t)
+      }
+      // ② 🔴 **已經被當成語句收進區塊第一格的**（C++ 的 `while (…) {  // 條件`）。
+      //    實測的 AST：那顆註解在 `compound_statement` **裡面**，是它的第一個子節點，
+      //    而它的列號與表頭同一列。`liftStatementsWithContext` 看到它時
+      //    `results` 還是空的，所以那一條分支接不到它。
+      //
+      // > **同一種東西（表頭的行末註解）在兩個語言走兩條不同的路
+      // > ——只堵一條的症狀是「幾乎都對」。**
+      if (typeof head === 'number') {
+        for (let i = body.length - 1; i >= 0; i--) {
+          const kid = body[i]
+          // 🔴 **不得寫死 `cpp:comment`**（護欄：中立性——核心不認得任何語言的身分）。
+          //    ⚠️ 第一版寫了它，`audit-neutrality` 與 `audit-component-locality`
+          //    當場兩條一起紅——**而那正是它們存在的理由**。
+          //    問的是「它是不是註解」，而每個語言的註解都叫 `<語言>:comment`。
+          if (!kid.componentId.endsWith(':comment')) continue
+          if (kid.metadata?.sourceRange?.startLine !== head) continue
+          const t = String(kid.properties?.text ?? '').trim()
+          if (t !== '') texts.unshift(t)
+          body.splice(i, 1)
+        }
+      }
+      if (texts.length > 0) {
+        lifted.annotations = [...(lifted.annotations ?? []),
+          ...texts.map((text) => ({ type: 'comment' as const, text, position: 'inline' as const }))]
+      }
+      return
+    }
+
     const notes: SemanticNode[] = []
     for (const kid of node.namedChildren) {
       if (kid.type !== 'comment') continue
@@ -725,6 +831,18 @@ export class Lifter {
     const kept: string[] = []
     const walk = (n: SemanticNode): void => {
       for (const v of Object.values(n.properties ?? {})) if (typeof v === 'string') kept.push(v)
+      // 🔴 **標註也算「收進去了」**（2026-09-21）。
+      //
+      //    「跟著做／排一排」那個特例把行末註解掛成 `annotations` 而不是一顆節點
+      //    （見 `setCommentsAsBlocks`），而這一支只認節點——於是它判「註解掉了」，
+      //    **整支 main 誠實降級成一塊看不懂的程式碼**。
+      //
+      //    ⚠️ 症狀不是報錯：畫面上是一大塊灰的，而三支測試同時變綠
+      //    （降級節點產碼時把原文原樣吐出來，所以「註解還在行末」也成立）。
+      //
+      // > **一個「東西有沒有掉」的判準，要認得每一種【沒掉】的形狀
+      // > ——少認一種，它就會把一個好的產出報成缺陷。**
+      for (const a of n.annotations ?? []) kept.push(a.text)
       // ⚠️ **只認降級節點的原文**——`metadata.rawCode` **每一顆節點都有**
       //    （那是它的原文範圍），照單全收的話這個判定永遠說「沒掉」。
       //    🔴 同一個坑今天撞第二次（第一次在 `attachHeaderComments` 的去重）。

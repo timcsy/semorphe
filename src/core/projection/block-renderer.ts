@@ -226,9 +226,19 @@ function propagateMetadata(block: BlockState, node: SemanticNode): void {
   if (annotations?.length) extra.annotations = annotations
   block.extraState = extra
 
-  // 🔴 **使用者從右鍵選單加的註解走泡泡**——而**行末註解不走這裡**：
-  //    它在抬升那一路就變成一顆自己的註解積木了（見 `lift/lifter.ts`）。
-  const plain = (annotations ?? []).filter((a) => a.type === 'comment').map((a) => a.text)
+  // 🔴 **使用者從右鍵選單加的註解走泡泡。**
+  //
+  // ⚠️ 而 `position: 'inline'` 的**不走**（2026-09-21）：那是「跟著做／排一排」
+  //    那個特例產生的行末註解，而使用者逐字說了**不要泡泡**
+  //    ——「我希望在『跟著做』、『排一排』的情境把註解積木取消掉就好」。
+  //
+  // 🟢 它仍然**存得住**：上面那一行已經把整份 `annotations` 放進 `extraState`，
+  //    回程由 `foreign-extra-state` 原樣帶著走、`pattern-extractor` 撿回來、
+  //    產碼用 `cs.trailing` 貼回行末。**積木上看不到，而一個字都沒少。**
+  //
+  // > **「看不見」與「不存在」要分得出來——而分開它們的不是註解，是回程。**
+  const plain = (annotations ?? [])
+    .filter((a) => a.type === 'comment' && a.position !== 'inline').map((a) => a.text)
   if (plain.length > 0) {
     block.icons = { ...(block.icons ?? {}), comment: { text: plain.join('; '), pinned: false } }
   }
