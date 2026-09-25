@@ -176,6 +176,23 @@ export class CellaFormalizeError extends Error {
 
 const CPP_INT_TYPES = new Set(['int', 'long', 'long long', 'unsigned', 'size_t'])
 
+/**
+ * ⚠️ **這裡有兩張用【名字】當鍵的表，而名字是最誘人也最錯的鍵。**
+ *
+ * （2026-09-25，cella 那側踩到同一個形狀之後回報的：它用名字去重快取，
+ * 把兩個不同模組的同名概念誤判成重複、丟掉一個；換成指標相等才對。）
+ *
+ * > **判斷「這兩個是同一個東西」時，名字是最誘人也最錯的鍵。**
+ *
+ * 這支走訪器今天的範圍（一個函式、沒有巢狀作用域）**碰不到那個坑**，
+ * 而範圍一長就會碰到：`int A[n]; { int A[m]; A[0]; }` 會拿到錯的長度。
+ *
+ * 🔴 **所以兩張表都在覆寫時擲例外**——不可達的缺陷要是**吵的**，
+ * 因為它一旦可達，症狀是【編出另一支程式】而不是報錯。
+ *
+ * 🟢 而 `used` 那一張用 `componentId` 當鍵是**對的**：身分本來就是登錄表的鍵，
+ * 跨域唯一，同名就是同一顆。
+ */
 interface Env {
   /** 陣列名 → 它宣告的長度（已編成 cella 的項）。`arrayAt` 的第一個引數要它。 */
   readonly arraySize: Map<string, string>
@@ -285,6 +302,10 @@ export function formalizeFunction(fn: SemanticNode, opts: CellaFormalizeOptions 
     const name = String(decl.properties.name)
     const elem = mapType(decl.componentId, String(decl.properties.type))
     const size = expr(one(decl, 'size'), env)
+    // ⚠️ 見 `Env` 的檔頭：名字當鍵，覆寫要吵。
+    if (env.arraySize.has(name)) {
+      throw new CellaFormalizeError(decl.componentId, `陣列名 ${name} 被遮蔽了——名字當鍵在這裡不成立`)
+    }
     env.arraySize.set(name, size)
     params.push(`(${name} : Arr ${elem} ${size})`)
   }
@@ -305,7 +326,14 @@ export function formalizeFunction(fn: SemanticNode, opts: CellaFormalizeOptions 
 
   // 🔴 **證明在這裡進到脈絡裡**，而這是整條規則唯一做的事：
   //    條件的 post 是 `Dec P` ⟹ then 分支多一個 `p : P`。
-  if (g.predicate !== null) env.proofs.set(g.predicate, 'pf')
+  if (g.predicate !== null) {
+    // ⚠️ 這張表的鍵是【印出來的謂詞】，而遮蔽會讓兩個不同的謂詞印成同一個樣子。
+    //    今天碰不到（一層作用域），而碰到的那天要吵不要猜。
+    if (env.proofs.has(g.predicate)) {
+      throw new CellaFormalizeError(ifNode.componentId, `謂詞 ${g.predicate} 已經在場——印出來的形式當鍵在這裡不成立`)
+    }
+    env.proofs.set(g.predicate, 'pf')
+  }
   const thenExpr = expr(one(thenStmts[0]!, 'value'), env)
   env.proofs.clear()
   const elseExpr = expr(one(tail, 'value'), env)
