@@ -1,5 +1,6 @@
 import type { BlockSpec, AstConstraint, ComponentDefJSON, BlockProjectionJSON, Topic } from '../types'
 import { applyBlockOverride } from './block-override'
+import { deriveFactoredSpecs } from '../projection/form-factoring'
 import { paramNames } from '../param-spec'
 
 export class BlockSpecRegistry {
@@ -54,7 +55,11 @@ export class BlockSpecRegistry {
         renderMapping: proj.renderMapping,
       }
     })
-    this.loadFromJSON(specs)
+    // 🟢 **因子化**：軸之間條件獨立時，組合形態是【導出的】不是手寫的。
+    //    四個宣告組出六顆積木，而多出來的兩顆正是今天標籤說謊的那兩顆。
+    //    ⚠️ 不獨立就不產生 —— 見 `form-factoring.ts` 的檔頭。
+    const { derived } = deriveFactoredSpecs(specs)
+    this.loadFromJSON([...specs, ...derived])
   }
 
   loadFromJSON(specs: BlockSpec[]): void {
@@ -71,7 +76,10 @@ export class BlockSpecRegistry {
     // > 否則它只是把順序偽裝成規則。**
     //
     // 處置：在這裡就把中性排到前面，讓輸入順序**不再有影響**。
-    const neutralFirst = [...specs].sort((a, b) => (a.form ? 1 : 0) - (b.form ? 1 : 0))
+    // ⚠️ **組合形態（`forms`）也是變體**，不是中性的（2026-09-25）。
+    //    第一版只看 `form`，於是導出的組合被當成中性排到最前面，把真的中性那顆蓋掉。
+    const isVariant = (s: BlockSpec): number => (s.form || (s.forms?.length ?? 0) > 0 ? 1 : 0)
+    const neutralFirst = [...specs].sort((a, b) => isVariant(a) - isVariant(b))
     for (const spec of neutralFirst) {
       this.specs.set(spec.id, spec)
       if (spec.componentMapping?.componentId) {

@@ -67,6 +67,19 @@ export function formKey(axisName: string, value: string): string {
 }
 
 /**
+ * **組合形態**的鍵：一次帶好幾條軸（2026-09-25，因子化那一刀）。
+ *
+ * ⚠️ 依**軸名字母序**排，不依 `priority`——priority 是「誰先問」，
+ * 它會因為調整選擇順序而改，而**鍵不可以因為那樣就變**。
+ */
+export function comboKey(pairs: readonly { axis: string; value: string }[]): string {
+  return [...pairs]
+    .sort((a, b) => a.axis.localeCompare(b.axis))
+    .map((p) => formKey(p.axis, p.value))
+    .join('|')
+}
+
+/**
  * 這條軸在這個節點／脈絡上取到什麼值。取不到回 `undefined`。
  *
  * ⚠️ **只讀 `node` 與 `ctx`**（C-5）。
@@ -167,6 +180,17 @@ export function selectForm(
   //
   // > **對因子化的偏好是一種歸納偏誤。
   // > 我們跟 transformer 犯了同一個，而且把它寫成了一條通則。**
+  // 🟢 **先問整組**（因子化）：每條軸都取得到值時，組合形態比任何單軸的都精確。
+  //    `cpp:container_push` 在運算式位置又是堆疊時，這一條讓它拿到
+  //    「推入堆疊」＋ 運算式形狀，而不是中性標籤。
+  const all = axes
+    .map((a) => ({ axis: a.name, value: axisValue(a, node, ctx) }))
+    .filter((x): x is { axis: string; value: string } => x.value !== undefined)
+  if (all.length === axes.length && all.length > 1) {
+    const combo = forms[comboKey(all)]
+    if (combo !== undefined) return { blockType: combo }
+  }
+
   const ordered = [...axes].sort((a, b) => a.priority - b.priority)
   const missed: string[] = []
   for (const axis of ordered) {
@@ -283,6 +307,8 @@ export const KNOWN_AXES: Record<string, FormAxis> = {
 
 /** 建形態集合所需要的最小資訊——刻意不吃整個 BlockSpec，讓它好測 */
 export interface FormDeclaration {
+  /** 🟢 組合形態（導出的，見 `form-factoring.ts`）。有它時 `form` 不填。 */
+  forms?: readonly { axis: string; value: string }[]
   componentId: string
   blockType: string
   form?: { axis: string; value: string }
@@ -299,7 +325,16 @@ export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, Fo
   /** 身分 → 軸名 → 軸值 → 積木型別。**兩層**，因為一個身分可以有不只一條軸。 */
   const variant = new Map<string, Map<string, Record<string, string>>>()
 
+  /** 組合形態：鍵是 `comboKey`，而它不屬於任何單一條軸。 */
+  const combos = new Map<string, Record<string, string>>()
+
   for (const d of decls) {
+    if (d.forms && d.forms.length > 1) {
+      const m = combos.get(d.componentId) ?? {}
+      m[comboKey(d.forms)] = d.blockType
+      combos.set(d.componentId, m)
+      continue
+    }
     if (!d.form) {
       // 第一個中性宣告勝出——後來的不覆寫，否則載入順序會決定行為
       if (!neutral.has(d.componentId)) neutral.set(d.componentId, d.blockType)
@@ -352,7 +387,7 @@ export function buildFormSets(decls: readonly FormDeclaration[]): Map<string, Fo
     out.set(componentId, {
       componentId,
       axes,
-      forms: { [NEUTRAL_KEY]: blockType, ...forms },
+      forms: { [NEUTRAL_KEY]: blockType, ...forms, ...(combos.get(componentId) ?? {}) },
       fallback: blockType,
     })
   }
