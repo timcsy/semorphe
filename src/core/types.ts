@@ -168,6 +168,18 @@ export interface BlockSpec {
   form?: { axis: string; value: string }
 
   /**
+   * **組合形態**：一次帶好幾條軸的值（2026-09-25，因子化那一刀）。
+   *
+   * 🔴 由 `deriveFactoredSpecs` **導出**，不手寫——那正是「因子化而不是乘積」
+   * 的意思：四個宣告組出六顆積木，而多出來的兩顆不需要有人寫。
+   *
+   * ⚠️ 只有在**每條軸動的 `blockDef` 欄位彼此不相交**（條件獨立）時才會產生。
+   * 有交集的話機制不產生，並把交集說出來——假設獨立的症狀是
+   * **安靜地組出一個錯的形態**。
+   */
+  forms?: { axis: string; value: string }[]
+
+  /**
    * 這顆積木是**誰宣告的**——std 模組的 header、`'(core)'` 或 `'(universal)'`。
    *
    * 由組裝處蓋章（`makeModule` / `coreBlocks` / `universalBlocks` 的匯出），

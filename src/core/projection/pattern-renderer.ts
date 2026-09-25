@@ -90,7 +90,7 @@ export class PatternRenderer {
       if (!this.renderSpecs.has(componentId)) this.renderSpecs.set(componentId, { blockType, mapping })
       // 變體的 mapping 也要收——選到變體之後仍然要用它的 mapping 渲染欄位
       this.mappingByBlockType.set(blockType, mapping)
-      this.formDeclarations.push({ componentId, blockType, form: spec.form })
+      this.formDeclarations.push({ componentId, blockType, form: spec.form, forms: spec.forms })
 
       // Track expression-only block types (have output but no previousStatement)
       if (blockDef.output !== undefined && blockDef.previousStatement === undefined) {

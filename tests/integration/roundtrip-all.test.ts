@@ -120,11 +120,28 @@ describe('Full Roundtrip — All 68 Blocks', () => {
         // 而 `role` 軸讀的是**呈現位置**，而 `render()` 是敘述路徑、不帶位置
         // ——所以 role 變體在這裡選不到，會落到中性形態。**那是對的**：
         // 位置由呼叫端說，運算式位置走 `renderExpression`（另有測試驗）。
-        if (form && form.axis !== 'role') sem.properties[form.axis] = form.value
+        // 🔴 **第三次了：一條「處理變體」的規則只認得一種變體**（2026-09-25）。
+        //
+        //    上面那兩段註解記著它被改過兩次（097 多形態、B 項的兩種軸）。
+        //    這一次是**導出的組合形態**（`forms`，一次帶好幾條軸）——而它的
+        //    `form` 是 `undefined`，於是這裡把它當成【中性】，嚴格比對就紅了。
+        //
+        // > **一條「處理變體」的規則，每出現一種新的變體種類就要被改一次
+        // > ——而它每次都是【安靜地】把新的那種當成中性。**
+        //
+        //    同一天同一刀裡這個形狀出現三次：`spec.id` 的鍵、`neutralFirst`
+        //    的排序、以及這裡。
+        const axisPairs = form ? [form] : ((spec as { forms?: { axis: string; value: string }[] }).forms ?? [])
+        const hasRoleAxis = axisPairs.some((a) => a.axis === 'role')
+        for (const a of axisPairs) if (a.axis !== 'role') sem.properties[a.axis] = a.value
         const block = renderer.render(sem)
         expect(block, `Failed to render component '${componentId}'`).not.toBeNull()
-        if (form?.axis === 'role') {
+        if (hasRoleAxis) {
           // 只驗「渲染得出來、而且是這個身分宣告過的某個形態」
+          //
+          // ⚠️ 組合形態（例如 `_stack_expression`）在這裡**本來就選不到**：
+          // `render()` 是敘述路徑，而那顆組合要的是**運算式位置**。
+          // 它會落到 `_stack`——**那是對的**，位置由呼叫端說。
           const allForms = allSpecs
             .filter((s) => s.componentMapping?.componentId === componentId)
             .map((s) => (s.blockDef as any).type)

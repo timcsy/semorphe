@@ -225,7 +225,7 @@ describe('FR-002 同一個 componentId 註冊多個形態，後來的不得蓋�
 // ─── 登錄表的宣告側也要一致（T028）──────────────────────────────────
 
 describe('登錄表：一個 componentId 查得到它所有的形態', () => {
-  it('★ getFormsByComponentId 回傳全部四顆，而不是最後註冊的那顆', async () => {
+  it('★ getFormsByComponentId 回傳全部六顆（四個宣告 ＋ 兩顆導出的組合）', async () => {
     const { BlockSpecRegistry } = await import('../../../src/core/blocks/block-spec-registry')
     // ⚠️ **不要自己列宣告來源**（第三十七條護欄）。這裡原本讀 `core`，
     // 而 `cpp:container_push` 2026-08-11 進了膠囊——症狀會是「三個形態只剩零個」，
@@ -245,7 +245,13 @@ describe('登錄表：一個 componentId 查得到它所有的形態', () => {
       //    它加不進來。
       'cpp_container_push_expression',
       'cpp_container_push_queue',
+      // 🟢 2026-09-25（因子化）：兩顆【導出的】組合形態。
+      //    四個宣告組出六顆積木,而多出來的正是先前標籤說謊的那兩顆
+      //    （一顆堆疊的 push 在運算式位置,標籤是中性的「放進」）。
+      //    判準：兩條軸動的 blockDef 欄位【不相交】⟹ 因子化無損。
+      'cpp_container_push_queue_expression',
       'cpp_container_push_stack',
+      'cpp_container_push_stack_expression',
     ])
   })
 
