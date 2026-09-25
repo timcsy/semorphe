@@ -1,0 +1,10 @@
+-- **第六路的基礎前言**：每一顆元件的契約都站在這幾個之上。
+--
+-- 🔴 **刻意自足，不 `import std`**——理由是 `cella holes` 單檔、不追 import，
+-- 而自足的檔案不綁 stdlib 的版本。驗收測試因此是 hermetic 的。
+-- （`Dec` 在 cella 的 `lib/foundations.cella` 裡有一份逐字相同的定義。）
+
+data Nat = zero | succ Nat
+data Bool = true | false
+data Empty =
+data Dec (P : Type) = yes P | no (P -> Empty)

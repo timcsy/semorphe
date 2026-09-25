@@ -1,0 +1,18 @@
+-- **`cpp:compare` 的形式核**（第六路）。
+--
+-- 🔴 **這一份存在的理由，是 `Bool` 會把證明丟掉。**
+--
+--     if (u < n) A[u]      守衛回傳 Bool  → `match ... with | true =>` 的分支裡【沒有】證明
+--                          守衛回傳 Dec   → `| yes p =>` 的 p 【就是】證明
+--
+-- ⚠️ `LtB` 標 `@[irreducible]`——不標的話 blame 會說 `ltNat u n ≡ true`（實作），
+--    標了才說 `LtB u n`（契約的名字）。2026-09-25 在真實檔案上驗過。
+
+def ltNat (m : Nat) (n : Nat) : Bool := match m with
+  | zero => (match n with | zero => false | succ k => true)
+  | succ j => (match n with | zero => false | succ k => ltNat j k)
+
+@[irreducible]
+def LtB (i : Nat) (n : Nat) : Type := ltNat i n ≡ true
+
+postulate decLt (u : Nat) (n : Nat) : Dec (LtB u n)
