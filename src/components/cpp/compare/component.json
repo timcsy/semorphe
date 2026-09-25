@@ -19,7 +19,8 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "execute": "./execute.ts",
-    "lift": "./lift-pattern.json"
+    "lift": "./lift-pattern.json",
+    "formalize": "./contract.cella"
   },
   "traits": {
     "forLoopPart": true,
@@ -38,5 +39,22 @@
     }
   },
   "_traits_why": "**優先級、我是不是二元運算子、我是不是字串字面值——都是我自己的性質**，不是共用表該列的身分。",
-  "_owner_why": "⚠️ **這顆是 universal 層，章要蓋 `(universal)` 不是 `(core)`。**\n批次工具原本依「概念宣告在哪個檔」蓋章，而 `universal-components.json` 的路徑\n含 `/blocks/`，於是被誤判成核心。症狀不是報錯，是**工具箱的 operators 段落\n變成零筆**——那個段落寫著 `{ from: '(universal)' }`，查無此章就整批回傳空。\n（可拿性護欄的「來源段落對不到積木」抓到的正是這個。）"
+  "_owner_why": "⚠️ **這顆是 universal 層，章要蓋 `(universal)` 不是 `(core)`。**\n批次工具原本依「概念宣告在哪個檔」蓋章，而 `universal-components.json` 的路徑\n含 `/blocks/`，於是被誤判成核心。症狀不是報錯，是**工具箱的 operators 段落\n變成零筆**——那個段落寫著 `{ from: '(universal)' }`，查無此章就整批回傳空。\n（可拿性護欄的「來源段落對不到積木」抓到的正是這個。）",
+  "postconditions": {
+    "formalize": {
+      "why": "🔴 **回傳判定而不是布林，理由是 `Bool` 會把證明丟掉。**\n\n`if (u < n) A[u]` 的守衛若編成布林測試，`| true =>` 那個分支裡沒有任何東西\n能證明 `u < n`——於是取值那一顆的前置條件交不出來，那裡會是一個洞。\n編成判定的話，`| yes p =>` 的 `p` **就是**那個證明，直接傳下去。\n\n⚠️ 而這條規則是**局部**的：分支那一顆只要看「條件的 post 是不是 `Dec P`」，\n不必讀控制流、不必走樹、不必比對守衛的語法。\n\n🔴 語料量過（218 支、342 個 `if` 條件）：**86% 的守衛直接涵蓋**\n（條件就是一個比較 73% ＋ 含比較的合取 13%），而看起來最麻煩的\n「把比較存進 bool 再判斷」逐一查證後**全是答案旗標，不是索引守衛**。",
+      "byOperator": {
+        "<": {
+          "predicate": "LtB",
+          "decider": "decLt"
+        }
+      },
+      "_byOperator_why": "⚠️ **今天只有 `<` 一個，而那是刻意的**：第一刀的判準是\n「判定版產 0 個洞、布林版產 1 個」，多填幾個運算子不會讓那個讀數更可信，\n只會讓**沒有被量過的宣告**變多。其餘運算子等有語料驅動的需要再補。",
+      "witness": {
+        "discharged": "if (u < n) return A[u];   守衛在，證明從 yes 分支掉出來",
+        "open": "return A[u];                    沒有守衛，洞 = LtB u n"
+      },
+      "oracle": "machine"
+    }
+  }
 }

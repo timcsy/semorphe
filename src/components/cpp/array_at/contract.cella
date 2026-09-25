@@ -1,0 +1,7 @@
+-- **`cpp:array_at` 的形式核**（第六路）。
+--
+-- 前置條件成為一個【必須交出東西來填的參數】：`(0 pf : LtB i n)`。
+-- 🔴 多重性 `0` ＝ 它只進型別、不進執行期（證明抹除）。
+
+postulate Arr : Type -> Nat -> Type
+postulate arrayAt {T : Type} (n : Nat) (a : Arr T n) (i : Nat) (0 pf : LtB i n) : T
