@@ -162,10 +162,11 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
   },
   generate: {
     kind: 'grammar',
-    evidence: 'tests/integration/roundtrip-all.test.ts',
-    judges: '「Code generation coverage」。⚠️ **而它的標題說謊**：`if (!spec.codeTemplate?.pattern) continue`'
-      + ' —— 走【手寫產生器】的那些整批跳過，而那正是最可能出錯的一批。',
-    coverage: { covered: 99, of: 349 },
+    evidence: 'tests/integration/roundtrip-all.test.ts',   // ⚠️ 而它只是【兩個判定者之一】,見 judges
+    judges: '**兩個判定者的聯集**：roundtrip-all 的「Code generation coverage」驗有 `codeTemplate.pattern` 的'
+      + ' 101 顆（它第二行 `if (!spec.codeTemplate?.pattern) continue`）＋ 膠囊自己的測試檔驗 128 顆。'
+      + '⚠️ 剩下的 134 顆**只被語料驗到**——而語料驗的是「這一段程式碼產得出來」，不是「這一顆元件產得出來」。',
+    coverage: { covered: 215, of: 349 },
   },
   render: {
     kind: 'renderer',
