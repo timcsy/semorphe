@@ -48,6 +48,11 @@ export interface ScanResult {
   note: string
   /** 🟡 判不了的：舊的「做完才退場」被下面的更正推翻時，兩句都還在檔裡 */
   adjudicate?: boolean
+  /**
+   * 🟡 **這一項的輸入本來就可能不在**（例如 memory 只存在於使用者那台機器上）。
+   * 母體為 0 時**不算**「路徑寫錯了」——而它會出聲說自己跳過了，不會靜默通過。
+   */
+  optional?: boolean
 }
 
 const SUBDIRS = ['concepts', 'episodes', 'history', 'draft'] as const
@@ -408,10 +413,67 @@ function scanAgentCache(root: string, repo: string): ScanResult[] {
   return out
 }
 
+
+/**
+ * ⑧ **memory 這個快取：只放指標，而指標要指得到東西。**
+ *
+ * 🔴 它是 `history/291` 的機制。那一天量到 `MEMORY.md` 裡
+ * **11 個 repo 路徑有 7 個是死的**，而原因不是疏忽：
+ *
+ * > **兩個快取裡先爛掉的，正是那個檢查不到的。**
+ *
+ * ⚠️ 而它**不能是硬性零**：那個檔在使用者的機器上、每人一份，**CI 上不存在**。
+ * 所以這一項是 `optional`——不在就說自己跳過（不靜默通過），在就檢查。
+ *
+ * ```
+ * 本機   檢查得到 ⟹ 死指標會被報出來
+ * CI     檔不在   ⟹ 母體 0,而它【出聲】說跳過,不算「路徑寫錯了」
+ * ```
+ *
+ * 🔴 **只讀，不寫。**那是使用者的檔。
+ */
+function scanMemoryCache(repo: string): ScanResult {
+  // `~/.claude/projects/<把 cwd 的斜線換成減號>/memory/MEMORY.md`
+  const home = process.env.HOME ?? ''
+  const slug = repo.replace(/\//g, '-')
+  const f = join(home, '.claude', 'projects', slug, 'memory', 'MEMORY.md')
+  if (!home || !existsSync(f)) {
+    return {
+      name: 'memory 快取：指標要指得到（本機才有）',
+      population: 0,
+      hits: [],
+      note: `⚠️ 跳過：${f || '(沒有 HOME)'} 不存在。memory 是 per-machine 的，CI 上本來就沒有。`,
+      optional: true,
+    }
+  }
+  const txt = readFileSync(f, 'utf8')
+  // 🔴 **字元集就是命名空間。**第一版寫 `[A-Za-z0-9_./-]+`，於是
+  //    `knowledge/concepts/積木投影管線.md` 這種**中文檔名全部被靜默跳過**
+  //    ——而這個庫的 concepts／episodes／history 全都是中文檔名。
+  //    注入一條中文的死指標時它回報「發現 0」，而那不是綠，是沒掃到。
+  //
+  // > **一個掃描如果不知道自己在掃什麼字元集，它會對半個母體保持沉默。**
+  const paths = [...new Set([...txt.matchAll(/`([^`\s]+\.(?:ts|json|md|sh))`/g)].map((m) => m[1]))]
+  // memory 自己的檔（feedback_* / project_* / reference_*）住在 memory 目錄裡，不是 repo 裡。
+  // ⚠️ 而帶 `<…>`／`{…}` 的是**樣板**不是指標（`src/components/<lang>/…/blocks.json`）
+  //    ——第一次跑就是被我自己剛寫的那一行誤報的。
+  const repoPaths = paths.filter(
+    (x) => !/^(feedback|project|reference)_/.test(x) && !/[<>{}]/.test(x),
+  )
+  return {
+    name: 'memory 快取：指標要指得到（本機才有）',
+    population: repoPaths.length,
+    hits: repoPaths.filter((x) => !existsSync(join(repo, x))).map((x) => `MEMORY.md → ${x}  ← 指不到`),
+    note: 'memory 護欄在 CI 上看不到它 ⟹ 它只放指標不放內容，而指標至少要在本機被驗一次。',
+    optional: true,
+  }
+}
+
 export function scanKnowledge(repoRoot: string): ScanResult[] {
   const root = join(repoRoot, 'knowledge')
   return [
     ...scanAgentCache(root, repoRoot),
+    scanMemoryCache(repoRoot),
     scanLinks(root),
     scanNamed(root),
     ...scanOrphans(root),
@@ -428,7 +490,8 @@ export function mechanicalHits(results: ScanResult[]): string[] {
 
 /** 母體為 0 的項目——**那是路徑寫錯了，不是它乾淨了**。 */
 export function emptyPopulations(results: ScanResult[]): string[] {
-  return results.filter((r) => r.population === 0).map((r) => r.name)
+  // ⚠️ `optional` 的項目母體可以是 0（它的輸入本來就可能不在，而它會出聲說跳過）
+  return results.filter((r) => !r.optional && r.population === 0).map((r) => r.name)
 }
 
 export function formatReport(results: ScanResult[]): string {
