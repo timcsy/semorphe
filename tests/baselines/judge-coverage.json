@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "note": "第一刀只接【已經在跑】的四路 ＋ formalize。preconditions／invariants 的判定者刻意不碰——那兩格要宣告，而宣告出來的欄位會說謊。",
+    "ratchet": "naked 只准下降。分母（元件 × 路）走 assertCorpus，變大變小都要出聲。"
+  },
+  "scanned": {
+    "components": 349,
+    "cells": 1712
+  },
+  "naked": 0,
+  "unmeasuredPaths": 5,
+  "byPath": {
+    "lift": 342,
+    "generate": 346,
+    "render": 348,
+    "extract": 348,
+    "execute": 326,
+    "formalize": 2
+  }
+}

@@ -54,7 +54,8 @@
         "discharged": "if (u < n) return A[u];   守衛在，證明從 yes 分支掉出來",
         "open": "return A[u];                    沒有守衛，洞 = LtB u n"
       },
-      "oracle": "machine"
+      "judge": "formal",
+      "_judge_why": "「判定版產 0 個洞、布林版產 1 個」這件事是型別檢查器算出來的——它是全稱的，不是對某一次的斷言。"
     }
   }
 }
