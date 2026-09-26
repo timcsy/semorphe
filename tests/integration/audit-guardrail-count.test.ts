@@ -38,6 +38,29 @@
  *   退場留洞。所以「第一百條」與這裡印的「99 條」可以同時是對的
  *   （2026-09-03 判官掃出兩邊對不上時補的這一行）。
  *
+ * ## 🔴 而發號在 2026-09-26 退場了（判官第二次掃到）
+ *
+ * 那一行說「只增、不重用」，而**發號從來沒有發號機**——每一次都是從檔數推回來的：
+ *
+ * ```
+ * 2026-09-21   發到 127 · 130 · 131 · 132      history/277 278 279
+ * 2026-09-26   又發了 128 · 129                history/283 ＋ audit-declared-uniqueness
+ *              而 129 同時指 g++ 那一支         tests/probes/judge-coverage-execute.test.ts
+ *              兩支最新的護欄檔自己沒寫發號
+ * ```
+ *
+ * ⟹ **退行、重用、兩個東西同一個號**——「只增、不重用」三件事全破。
+ * 而它破得無聲，因為**這支護欄逐字宣告過自己不管它**。
+ *
+ * > **一條規則寫在一份明說「我不管這個」的文件裡，
+ * > 它的違反不會有任何機構出聲——而那不是漏檢，是【宣告了不檢】。**
+ *
+ * 🟢 **處置是退場不是補發號機**：檔名已經是身分，發號是第二份，
+ * 而它沒有任何一個檔名做不到的用途。**已發出的 174 筆引用留著**
+ * ——它們是病歷，不是現況。新護欄**用檔名**。
+ *
+ * 而退場要機械化，否則下一個 AI 會再發一個 133：**上限凍結在 132**（下面那一支）。
+ *
  * > **一個看起來像計數的編號，如果它其實是流水號，
  * > 那它與真正的計數遲早會差一——而差一的那天沒有人知道哪個錯了。**
  */
@@ -46,6 +69,18 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const DIR = join(process.cwd(), 'tests/integration')
+
+/** 遞迴列出 .ts／.md（發號上限那一支要掃整個 repo 的這三個目錄）。 */
+function walk(dir: string): string[] {
+  const out: string[] = []
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === 'node_modules' || e.name.startsWith('.')) continue
+    const p = join(dir, e.name)
+    if (e.isDirectory()) out.push(...walk(p))
+    else if (e.name.endsWith('.ts') || e.name.endsWith('.md')) out.push(p)
+  }
+  return out
+}
 
 /**
  * 一個測試檔算不算護欄。
@@ -127,6 +162,48 @@ describe('護欄：護欄的條數要有一個地方說了算', () => {
       console.log('     （命名是慣例不是規範——見檔頭「本護欄不檢測什麼」）')
     }
     expect(files.length).toBeGreaterThan(0)
+  })
+
+  it('🔴 發號已退場：不得出現大於 132 的「第 N 條護欄」', () => {
+    // ⚠️ **為什麼是凍結上限而不是禁止全部**：已發出的 174 筆是病歷。
+    //    禁止全部等於要竄改紀錄，而紀錄裡那些數字**當時是對的**。
+    //
+    // 🔴 而這一支盯的是**新發**：發號在 2026-09-26 退場（見檔頭），
+    //    132 是最後一個。第 133 號一出現就紅。
+    const CEILING = 132
+    const bad: string[] = []
+    for (const dir of ['tests', 'knowledge', 'src']) {
+      for (const f of walk(join(process.cwd(), dir))) {
+        // 🔴 **行內程式碼（`…`）裡的不算發號，是【引用】**。
+        //    實測：`history/287`（記錄發號退場那一筆）引用了 `第 133 條護欄` 當例子，
+        //    而它被這一支判成「又發了一個新的」。
+        //    ⚠️ 同一條規則在 `tools/knowie-scan.ts` 裡也出現一次（指名掃描）
+        //    ——**一個掃散文的判準，都要先把行內程式碼挖掉。**
+        const src = readFileSync(f, 'utf8').replace(/`[^`\n]*`/g, '')
+        for (const m of src.matchAll(/第 ?(\d{1,4}) 條護欄/g)) {
+          const n = Number(m[1])
+          if (n > CEILING) bad.push(`${f.replace(process.cwd() + '/', '')}  第 ${n} 條`)
+        }
+      }
+    }
+    expect(
+      bad,
+      '\n🔴 發號已退場（2026-09-26），而這裡又發了新的：\n' +
+        bad.join('\n') +
+        '\n\n⚠️ 新護欄用**檔名**指稱（例：`audit-declared-uniqueness`）。\n' +
+        '理由見本檔檔頭：發號從來沒有發號機，而它的三條規則已經全破過一次。\n',
+    ).toEqual([])
+  })
+
+  it('★ 注入：一個超過上限的發號字串必須被上面那一支抓到', () => {
+    // 🔴 **注入字串要【拼】出來，不能寫成字面值**——寫成字面值的話，
+    //    上面那一支會掃到本檔而紅。第一次跑就是這樣紅的，
+    //    而那正是 `history/140`（第五十五條抓到的第一個是護欄自己）同一個形狀。
+    //
+    // > **一條掃全 repo 的護欄，它自己也在 repo 裡。**
+    const injected = '第 ' + '133' + ' 條' + '護欄'
+    expect(/第 ?(\d{1,4}) 條護欄/.exec(injected)?.[1], '判準認不出這個句型 → 上面那一支是假綠').toBe('133')
+    expect(Number('133') > 132, '上限沒有在擋').toBe(true)
   })
 
   it('🔴 知識庫裡不得把護欄條數宣稱成【現況】', () => {

@@ -135,7 +135,7 @@ describe('探針：execute 判定者的覆蓋率（上界）', () => {
     const denom = cpp.length - excused.length
 
     console.log(`\n╔══ execute 判定者的覆蓋率（上界）══╗`)
-    console.log(`語料：課文解答 ${lesson.length} 支（判定者＝第 129 條護欄的 g++）`)
+    console.log(`語料：課文解答 ${lesson.length} 支（判定者＝audit-lesson-answers-vs-compiler 的 g++）`)
     console.log(`      StudyCpp ${study.length} 支${study.length === 0 ? '  ⚠️ 沒有 STUDYCPP_DIR，這一半沒數到' : ''}`)
     console.log(`      合計 ${files.length} 支｜樹裡出現的身分 ${seen.size} 種｜cpp 元件 ${cpp.length} 顆`)
     console.log(`\n  各自看到：課文 ${seenLesson.size} 種 · StudyCpp ${seenStudy.size} 種`)
