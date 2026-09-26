@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "note": "第一刀只接【已經在跑】的四路 ＋ formalize。preconditions／invariants 的判定者刻意不碰——那兩格要宣告，而宣告出來的欄位會說謊。",
+    "note": "📉 **2026-09-26（第 248 刀）下調 5 → 1：把 evidence 讓人讀了一遍。**\n  第一版的 evidence 是照 draft 填的、沒有人讀過那些檔。讀完改正三格：\n  🔴 lift 指著 roundtrip-all 而那個檔 `lift` 出現 0 次 ⟹ 它【沒有逐元件的判定者】\n  🔴 generate 真正的判定者是 roundtrip-all，而它的標題說謊：`if (!spec.codeTemplate?.pattern) continue`\n     —— 走手寫產生器的 250 顆整批跳過，覆蓋率 99 / 349（28%）\n  🟡 render 改指 roundtrip-all 的 Render coverage：345 / 349\n  ⟹ 剩下【真的沒有人量過】的只有 lift 一路。\n  ⚠️ 而「量過」不等於「覆蓋得好」：generate 量過而它是 28%。那是另一條該長出來的棘輪。\n第一刀只接【已經在跑】的四路 ＋ formalize。preconditions／invariants 的判定者刻意不碰——那兩格要宣告，而宣告出來的欄位會說謊。",
     "ratchet": "naked 只准下降。分母（元件 × 路）走 assertCorpus，變大變小都要出聲。"
   },
   "scanned": {
@@ -8,7 +8,7 @@
     "cells": 1712
   },
   "naked": 0,
-  "unmeasuredPaths": 5,
+  "unmeasuredPaths": 1,
   "byPath": {
     "lift": 342,
     "generate": 346,

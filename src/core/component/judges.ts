@@ -66,6 +66,28 @@
  * 🟢 抓到它的是護欄自己那條「覆蓋率不是 100%，那代表工具壞了」——
  * **寫在量測之前的自我否證聲明，第一次跑就兌現了。**
  *
+ * ## 🔴 而第二輪（把 `evidence` 讓人讀一遍）改正了三格
+ *
+ * 第一版的 `evidence` 是**照 draft 填的，沒有人讀過那些檔**。讀完之後：
+ *
+ * ```
+ * lift      🔴 指著 roundtrip-all,而那個檔 `lift` 出現【0 次】
+ *           它的三個 describe 是 Render／Extract／Code generation
+ *           ⟹ lift 【沒有逐元件的判定者】,只有 29 個手寫案例
+ * generate  🔴 指著 audit-completeness（那條只驗「有沒有檔案」)
+ *           真正的判定者是 roundtrip-all,而它的標題【說謊】：
+ *           `if (!spec.codeTemplate?.pattern) continue` —— 走手寫產生器的 250 顆整批跳過
+ * render    🟡 指著 audit-lesson-loadable（只涵蓋課文用到的）
+ *           真正逐元件的是 roundtrip-all 的 Render coverage：345 / 349
+ * ```
+ *
+ * > **一個叫「every component」的檢查，可以在第二行就 `continue` 掉七成
+ * > ——而它的名字與它的讀數都不會出聲。**
+ *
+ * ⟹ 於是這張表多兩欄：`judges`（**它判的是什麼**，人讀出來的一句）
+ * 與 `coverage`（逐元件的覆蓋率，`null` ＝ 沒有人量過）。
+ * **`judges` 的存在讓下一個人否證得了我**——那是正向錨點的形狀。
+ *
  * ## 本檔不回答什麼
  *
  * - **不回答「那個判定者判得對不對」**——它只說「有一個」。
@@ -124,19 +146,51 @@ export const SIX_PATHS: readonly SixPath[] = [...FIVE_PATHS, 'formalize']
  * ⚠️ **預設不是每顆元件各寫一份**：`generate` 的判定者對 349 顆都是同一個。
  * 逐顆寫等於造 349 份雙重真相。**per-元件只在它【不同】的時候才寫。**
  */
-export const PATH_JUDGE: Readonly<Record<SixPath, { kind: JudgeKind | null; evidence: string }>> = {
-  /** 「lift → generate 回到同一段程式碼」。 */
-  lift: { kind: 'equality', evidence: 'tests/integration/roundtrip-all.test.ts' },
-  /** 「產出的每一段都 parse 得過」。 */
-  generate: { kind: 'grammar', evidence: 'tests/integration/audit-completeness.test.ts' },
-  /** 「產出的 state 載得進工作區」。 */
-  render: { kind: 'renderer', evidence: 'tests/integration/audit-lesson-loadable.test.ts' },
-  /** 「取回的身分是我」。 */
-  extract: { kind: 'equality', evidence: 'tests/integration/roundtrip-all.test.ts' },
-  /** 「跑出來跟參照一樣」。 */
-  execute: { kind: 'reference', evidence: 'tests/integration/interpreter-matches-compiler.test.ts' },
-  /** 「編碼沒有漏契約」。 */
-  formalize: { kind: 'formal', evidence: 'tests/probes/cella-formalize-guard.test.ts' },
+export const PATH_JUDGE: Readonly<Record<SixPath, {
+  kind: JudgeKind | null
+  evidence: string
+  /** 🔴 **它判的【是什麼】——這一句是人讀出來的**，而下一個人可以拿它否證我。 */
+  judges: string
+  /** 逐元件的覆蓋率。`null` ＝ **沒有人量過**（棘輪數的就是它）。 */
+  coverage: { covered: number; of: number } | null
+}>> = {
+  lift: {
+    kind: 'equality',
+    evidence: 'tests/integration/full-roundtrip.test.ts',
+    judges: '29 個【手寫】案例的 code → 語義樹 → code 回到原文。🔴 **沒有逐元件的檢查**。',
+    coverage: null,
+  },
+  generate: {
+    kind: 'grammar',
+    evidence: 'tests/integration/roundtrip-all.test.ts',
+    judges: '「Code generation coverage」。⚠️ **而它的標題說謊**：`if (!spec.codeTemplate?.pattern) continue`'
+      + ' —— 走【手寫產生器】的那些整批跳過，而那正是最可能出錯的一批。',
+    coverage: { covered: 99, of: 349 },
+  },
+  render: {
+    kind: 'renderer',
+    evidence: 'tests/integration/roundtrip-all.test.ts',
+    judges: '「Render coverage」：每一顆渲染成它宣告的積木型別。',
+    coverage: { covered: 345, of: 349 },
+  },
+  extract: {
+    kind: 'equality',
+    evidence: 'tests/integration/roundtrip-all.test.ts',
+    judges: '「Extract coverage」：每一顆積木抽回它自己的身分。',
+    coverage: { covered: 345, of: 349 },
+  },
+  execute: {
+    kind: 'reference',
+    evidence: 'tests/integration/interpreter-matches-compiler.test.ts',
+    judges: '跟參照編譯器對答案（語料驅動，不是逐元件）。',
+    coverage: { covered: 125, of: 210 },
+  },
+  formalize: {
+    kind: 'formal',
+    evidence: 'tests/probes/cella-formalize-guard.test.ts',
+    judges: '形式核載得進 cella，而洞的型別逐字是缺的那段契約。',
+    coverage: { covered: 2, of: 2 },
+  },
 }
 
 /** 一顆元件在某一路上的判定者——**per-元件覆蓋優先，否則吃該路的預設**。 */
