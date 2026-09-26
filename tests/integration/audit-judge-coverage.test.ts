@@ -98,17 +98,6 @@ function scan(): { components: number; cells: Cell[]; naked: Cell[]; own: Cell[]
   return { components: defs.length, cells, naked: cells.filter((c) => c.judge === null), own }
 }
 
-/**
- * 🔴 **真正的棘輪**：判定者**宣稱**覆蓋那一路，而**有沒有人量過它實際覆蓋到哪些元件**。
- *
- * 今天只有 `execute` 量過（`tests/probes/judge-coverage-execute.test.ts`：125 / 210，裸著 85）。
- * ⚠️ 這一欄是**手寫的**，而那是刻意的：一支測試存在 ≠ 它量的是覆蓋率。
- * **判不出來的一律算「沒量過」。**
- */
-const COVERAGE_MEASURED: Partial<Record<string, string>> = {
-  execute: 'tests/probes/judge-coverage-execute.test.ts',
-}
-
 describe('判定者覆蓋率', () => {
   it('★ 入口條件：掃得到元件，而且解析出格子', () => {
     const { components, cells } = scan()
@@ -140,6 +129,12 @@ describe('判定者覆蓋率', () => {
     expect(missing, `🔴 判定者指到不存在的檔：${missing.join('、')}`).toEqual([])
   })
 
+  it('🔴 硬性零：每一路都要說得出【它判的是什麼】', () => {
+    const silent = SIX_PATHS.filter((p) => PATH_JUDGE[p].kind !== null && !PATH_JUDGE[p].judges.trim())
+    expect(silent, `🔴 這幾路宣告了判定者而沒說它判什麼：${silent.join('、')}`
+      + '｜⚠️ 那一句是【人讀出來的】,而它的用途是讓下一個人否證得了填表的人').toEqual([])
+  })
+
   it('⚠️ 注入：判別真的分得出「有判定者」與「沒有」', () => {
     expect(judgeOf('generate', undefined), '🔴 沒寫也該吃預設').toBe('grammar')
     expect(judgeOf('generate', { generate: { judge: 'human' } }), '🔴 per-元件覆蓋該優先').toBe('human')
@@ -151,16 +146,19 @@ describe('判定者覆蓋率', () => {
     const { components, cells, naked, own } = scan()
     const byPath = new Map<string, number>()
     for (const c of cells) byPath.set(c.path, (byPath.get(c.path) ?? 0) + 1)
-    const unmeasured = SIX_PATHS.filter((p) => PATH_JUDGE[p].kind !== null && !COVERAGE_MEASURED[p])
+    const unmeasured = SIX_PATHS.filter((p) => PATH_JUDGE[p].kind !== null && PATH_JUDGE[p].coverage === null)
     printReport('判定者覆蓋率', [
       `分母   ${components} 顆｜格子 ${cells.length}（只算元件真的有的那一路）`,
       `逐路   ${[...byPath].map(([p, n]) => `${p} ${n}`).join('｜')}`,
       `judge == null   ${naked.length} 格`,
       `per-元件覆蓋    ${own.length} 格（其餘吃該路的預設）`,
       '',
-      `🔴 判定者【宣稱】覆蓋而【沒有人量過】的路：${unmeasured.length} / ${SIX_PATHS.length}`,
-      `   ${unmeasured.join('、')}`,
-      `🟢 量過的：${Object.keys(COVERAGE_MEASURED).join('、')}（execute：125 / 210，裸著 85）`,
+      `🔴 判定者的覆蓋率【沒有人量過】的路：${unmeasured.length} / ${SIX_PATHS.length}   ${unmeasured.join('、')}`,
+      ...SIX_PATHS.map((p) => {
+        const c = PATH_JUDGE[p].coverage
+        const pct = c ? `${c.covered} / ${c.of}（${Math.round(c.covered / c.of * 100)}%）` : '🔴 沒有人量過'
+        return `   ${p.padEnd(10)} ${pct.padEnd(22)} ${PATH_JUDGE[p].judges.slice(0, 64)}`
+      }),
       '',
       '⚠️ 本護欄不檢測那個判定者判得【對】不對——判錯的與對的在這裡長得一樣。',
       '⚠️ 也不檢測 evidence 那個檔真的在判那一路——它只驗檔案存在。那需要人讀。',
