@@ -146,10 +146,20 @@ function resolveTargets(root: string) {
   return { names, heads, skills }
 }
 
-/** ② 指名 `[[X]]`：三個命名空間 ＋ `history/NNN` 前綴形 ＋ 小節標題。 */
-function scanNamed(root: string): ScanResult {
+/**
+ * **一行是不是「被快取的教訓」**——判準就是它是一個蒸餾引言區塊的開頭。
+ *
+ * 🔴 匯出是為了**注入**：這一項第一次跑是綠的（8 條臟行在蓋它之前就被寫回了），
+ * 所以它的錨只能是合成輸入，不能是「還有幾條臟行」。
+ */
+export function isCachedLessonLine(line: string): boolean {
+  return line.startsWith('> **')
+}
+
+/** 指名的解析器——`scanNamed`、CLAUDE.md 那一項、以及注入測試共用同一套命名空間。 */
+export function makeResolver(root: string): (x: string) => boolean {
   const { names, heads, skills } = resolveTargets(root)
-  const resolves = (x: string): boolean => {
+  return (x: string): boolean => {
     if (skills.has(x) || CORE.has(x) || heads.has(x) || PREFIXED.test(x)) return true
     for (const n of names) if (x === n || n.includes(x)) return true
     // 🔴 只認「指名是標題的一部分」這個方向。反向（標題是指名的一部分）會讓
@@ -160,6 +170,11 @@ function scanNamed(root: string): ScanResult {
     for (const h of heads) if (h.includes(x)) return true
     return false
   }
+}
+
+/** ② 指名 `[[X]]`：三個命名空間 ＋ `history/NNN` 前綴形 ＋ 小節標題。 */
+function scanNamed(root: string): ScanResult {
+  const resolves = makeResolver(root)
   let population = 0
   const bad = new Map<string, string[]>()
   for (const p of walkMd(root)) {
@@ -329,9 +344,74 @@ function scanSkills(root: string, repo: string): ScanResult {
   }
 }
 
+/**
+ * ⑦ **快取：`CLAUDE.md` 不得自己存教訓。**
+ *
+ * 🔴 使用者 2026-09-26 定案：**教訓的家在 `experience.md`，而 `CLAUDE.md` 與 memory 是快取。**
+ * 而那天量到的狀態是一個**從來沒有 flush 過的 write-back 快取**：
+ * 12 條蒸餾過的引言裡 **8 條在 `experience.md` 找不到**——它們是臟行。
+ *
+ * ⚠️ **判準刻意不是「引言要逐字出現在 experience」**：那會留下逐字複本，而複本會漂。
+ * 判準是**一句蒸餾引言都不留**——`CLAUDE.md` 裡一個 `> **…**` 區塊，
+ * 定義上就是一條被快取的教訓。於是檢查連文字比對都不需要。
+ *
+ * ```
+ * 可推廣的那一句（教訓）        → experience.md,唯一真相,CLAUDE.md 用 [[指名]] 引用
+ * 「什麼時候會咬人」（觸發條件）  → CLAUDE.md 自己的散文,不是快取
+ * ```
+ *
+ * 🔴 收**硬性零**：留一條，「`CLAUDE.md` 是快取」那句話就是假的。
+ * 而修一筆便宜——措辭已經蒸餾好了，貼進 `experience.md` 再改成指名。
+ *
+ * ## 本項不檢測什麼
+ *
+ * - **管不到 `~/.claude/.../memory/`**：它在使用者的機器上、每人一份，
+ *   護欄永遠看不到它。⟹ 那個快取的規則只能是結構性的：**只放指標，不放內容。**
+ *   ⚠️ 而它已經爛過一次（`MEMORY.md` 指向 2026-08-05 刪掉的 `docs/`，
+ *   而**同一個檔的另一行就記著那次刪除**）。
+ *
+ *   > **兩個快取裡先爛掉的，正是那個檢查不到的。**
+ */
+function scanAgentCache(root: string, repo: string): ScanResult[] {
+  const f = join(repo, 'CLAUDE.md')
+  if (!existsSync(f)) {
+    return [{ name: '快取（CLAUDE.md）', population: 0, hits: ['CLAUDE.md 不存在'], note: '' }]
+  }
+  const lines = readFileSync(f, 'utf8').split('\n')
+  const out: ScanResult[] = [{
+    name: '快取：CLAUDE.md 不得自己存教訓',
+    population: lines.length,
+    hits: lines
+      .map((l, i) => [l, i + 1] as const)
+      .filter(([l]) => l.startsWith('> **'))
+      .map(([l, i]) => `CLAUDE.md:${i}  ${l.slice(0, 44)}… ← 蒸餾引言＝快取的教訓，搬去 experience 並改成指名`),
+    note: '一個 `> **…**` 區塊在 CLAUDE.md 裡，定義上就是一條被快取的教訓。',
+  }]
+
+  const resolves = makeResolver(root)
+  const bad: string[] = []
+  let named = 0
+  lines.forEach((line, i) => {
+    for (const x of matches(NAMED, line.replace(INLINE_CODE, ''))) {
+      const name = x.trim()
+      if (CODEISH.test(name)) continue
+      named++
+      if (!resolves(name)) bad.push(`CLAUDE.md:${i + 1}  [[${name}]] ← 指不到 knowledge/ 裡的任何東西`)
+    }
+  })
+  out.push({
+    name: '快取：CLAUDE.md 的指名要解析得到',
+    population: named,
+    hits: bad,
+    note: '🔴 這就是快取的【失效機制】：experience 那一條改了名字，這裡會紅。',
+  })
+  return out
+}
+
 export function scanKnowledge(repoRoot: string): ScanResult[] {
   const root = join(repoRoot, 'knowledge')
   return [
+    ...scanAgentCache(root, repoRoot),
     scanLinks(root),
     scanNamed(root),
     ...scanOrphans(root),
