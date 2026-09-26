@@ -33,7 +33,9 @@
         "discharged": "arrayAt n A u p",
         "open": "arrayAt n A u ?bound"
       },
-      "oracle": "reference:ubsan"
+      "judge": "reference",
+      "judgeBy": "ubsan",
+      "_judge_why": "🔴 不是 g++ 而是 ubsan：越界是未定義行為，而 g++ 不檢查所以【照跑】——拿它當參照會得到「沒問題」。⚠️ 種類（reference）在核心的閉集裡，而【哪一個參照】是 C++ 這個域的事，所以它在 judgeBy 不在 judge。"
     }
   }
 }
