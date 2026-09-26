@@ -189,8 +189,19 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
   formalize: {
     kind: 'formal',
     evidence: 'tests/probes/cella-formalize-guard.test.ts',
-    judges: '形式核載得進 cella，而洞的型別逐字是缺的那段契約。',
-    coverage: { covered: 2, of: 2 },
+    judges: '形式核載得進 cella，而洞的型別逐字是缺的那段契約。'
+      + '🔴 而**分母是量出來的**（`tests/probes/formalize-residual.test.ts`）：'
+      + '課文 88 支解答用到 64 顆 cpp 身分，宣告了 `paths.formalize` 的 2 顆。'
+      + '⚠️ 而形狀那一面更遠：那 88 支裡的 105 個函式，走訪器產得出項的是 **0 個**——'
+      + '不碰 I/O 的只有 15 個，而 15 個全部接不住（形狀 10 · 型別 3 · 運算子宣告 2）。',
+    // 🔴 **原本是 `{ covered: 2, of: 2 }`＝100%，而那個分母是「已經寫了形式核的」**
+    //    ——它對「一支程式的保證說不出來」這件事保持沉默。
+    //
+    // > **一個分母如果是照著分子挑的，那個比率不回答任何問題。**
+    //
+    // 2026-09-26 量出來的分母是 64（課文解答用到的 cpp 身分）。與 `execute` 的
+    // `of: 210` 同一個體例：**每一路的母體是那一路真的要走的那些**。
+    coverage: { covered: 2, of: 64 },
   },
 }
 
