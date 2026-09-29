@@ -77,7 +77,7 @@ except ValueError as e:
 ## 三、🔴 不要接住你不打算處理的東西
 下面這個寫法**不要學**，它會把所有錯誤都吞掉：
 
-```python
+```python counter
 try:
     ...
 except:              # 🔴 光禿禿的 except

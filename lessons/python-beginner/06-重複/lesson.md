@@ -47,7 +47,7 @@ while n <= 5:      # ② 條件  ——什麼時候還要繼續
 
 **漏掉的通常是第三樣。**
 
-```python
+```python counter
 n = 1
 while n <= 5:
     print(n)
