@@ -20,7 +20,7 @@
 ## 一、讀一支腳
 讀一支腳的狀態，用 `digitalRead`：
 
-```cpp
+```cpp demo
 pinMode(2, INPUT);
 int v = digitalRead(2);      // HIGH 或 LOW
 ```

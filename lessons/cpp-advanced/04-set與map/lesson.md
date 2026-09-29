@@ -86,7 +86,7 @@ cout << m.size() << endl;          // 3   ← 🔴 多了一個
 
 ⚠️ 而這個行為也常常剛好是你要的：
 
-```cpp
+```cpp demo
 map<string, int> cnt;
 for (string w : words) cnt[w]++;      // 🟢 沒見過的自動從 0 開始
 ```

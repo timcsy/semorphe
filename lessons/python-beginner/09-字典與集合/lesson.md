@@ -29,7 +29,7 @@ print(ages["ming"])      # 16
 | 鍵（key） | 拿來找的東西——多半是文字或數字 |
 | 值（value） | 找到的東西——**什麼都可以** |
 
-```python
+```python demo
 ages["new"] = 18         # 沒有就新增，有就覆蓋
 del ages["hua"]          # 刪掉
 print(len(ages))         # 幾筆
@@ -50,7 +50,7 @@ for k in ages:
 
 想同時要鍵和值：
 
-```python
+```python demo
 for k, v in ages.items():
     print(k, v)
 ```
@@ -64,13 +64,13 @@ for k, v in ages.items():
 ## 三、🔴 不存在的鍵
 問一個不存在的鍵，它會出事：
 
-```python
+```python counter
 print(ages["nobody"])          # 💥 KeyError
 ```
 
 三種處理方式：
 
-```python
+```python demo
 if "nobody" in ages:           # ① 先問
     print(ages["nobody"])
 
@@ -82,7 +82,7 @@ print(ages.get("nobody", 0))       # ③ 給預設值 0
 
 計數的時候 `get` 特別好用：
 
-```python
+```python demo
 counts = {}
 for w in words:
     counts[w] = counts.get(w, 0) + 1
@@ -100,7 +100,7 @@ print(len(tags))          # 2   ← 重複的自動變一個
 
 ⚠️ **`{}` 是空的 dict，不是空的 set。** 空的 set 要寫 `set()`。
 
-```python
+```python demo
 tags.add("c")             # 加（已經有就不變）
 tags.remove("a")          # 拿掉
 print("b" in tags)        # True

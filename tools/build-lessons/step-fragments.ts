@@ -44,6 +44,29 @@ const STEP_HEADING = /^#{2,3}\s+[一二三四五六七八九十]+、/
  */
 export const RENDERABLE_LANGS = new Set(['cpp', 'c', 'arduino', 'ino', 'python', 'py'])
 
+/**
+ * 一段片段的**身分**——而它是**宣告的**，不是從標題推的。
+ *
+ * ```
+ * ```cpp          （預設）跟著做的一步 —— 它會累積到〈完成的樣子〉
+ * ```cpp demo     試一下 —— 打了看結果,不留在程式裡
+ * ```cpp counter  反例 —— 課文叫學生【不要】這樣寫
+ * ```
+ *
+ * 🔴 **為什麼要宣告**（2026-09-29，使用者帶學生上課時發現）：
+ * 判斷「這一節是不是跟著做的步驟」今天靠 `STEP_HEADING`——**標題有沒有編號**。
+ * 於是第 6 課的 §三（五種運算）與 §四（開根號）被當成步驟，
+ * 而學生照著頁面打完，手上是 `sqrt`——而那一課的裁判要的是「分數是 100」。
+ *
+ * > **編號回答不了「這一節是跟著做還是講解」。**
+ *
+ * ⚠️ 而「改用『那一節有沒有說照著打』」是**量過之後否決的**：
+ * 269 個編號小節裡只有 35 個說了，換過去會刪掉 **86%** 的圖。
+ *
+ * > **一條只認得一種變體的規則，它漏掉的是那些沒有用那個字的。**
+ */
+export type StepKind = 'step' | 'demo' | 'counter'
+
 export interface StepFragment {
   /** `cpp-beginner/08-組合技` */
   lesson: string
@@ -52,6 +75,8 @@ export interface StepFragment {
   /** 小節標題，例如 `三、把印出拉出來`（給報表看的，不進判準）。 */
   section: string
   lang: string
+  /** 宣告的身分。圍籬上沒寫就是 `step`。 */
+  kind: StepKind
   code: string
 }
 
@@ -61,17 +86,31 @@ export function stepFragmentsOf(md: string, lesson: string): StepFragment[] {
   let section: string | null = null
   let open = false
   let lang = ''
+  let kind: StepKind = 'step'
   let buf: string[] = []
   for (const line of md.split('\n')) {
     if (!open && /^#{2,3}\s/.test(line)) {
       section = STEP_HEADING.test(line) ? line.replace(/^#+\s+/, '').trim() : null
     }
     if (line.startsWith('```')) {
-      if (!open) { open = true; lang = line.slice(3).trim(); buf = [] }
+      if (!open) {
+        // 🔴 **資訊字串要【拆】**：第一個詞是語言，其餘是旗標。
+        //    ⚠️ 這裡原本是 `lang = line.slice(3).trim()` ＋ `RENDERABLE_LANGS.has(lang)`
+        //    的完全比對——寫 ```cpp demo 會讓 lang 變成 `cpp demo`，於是那一段
+        //    **靜默消失**，而 `index: out.length` 會讓它後面每一張圖的檔名位移。
+        //
+        // > **一個用完全比對讀「語言」的解析器，容不下任何第二個詞
+        // > ——而它失敗的方式是安靜地少一個東西。**
+        const info = line.slice(3).trim().split(/\s+/)
+        open = true
+        lang = info[0] ?? ''
+        kind = info.includes('counter') ? 'counter' : info.includes('demo') ? 'demo' : 'step'
+        buf = []
+      }
       else {
         open = false
         if (section !== null && buf.length > 0 && RENDERABLE_LANGS.has(lang)) {
-          out.push({ lesson, index: out.length, section, lang, code: buf.join('\n') })
+          out.push({ lesson, index: out.length, section, lang, kind, code: buf.join('\n') })
         }
       }
       continue

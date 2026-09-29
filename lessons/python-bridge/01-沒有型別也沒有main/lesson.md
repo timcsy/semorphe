@@ -23,7 +23,7 @@
 
 C++ 那邊：
 
-```cpp
+```cpp demo
 int main() {
     cout << "hi" << endl;
     return 0;
@@ -32,7 +32,7 @@ int main() {
 
 Python：
 
-```python
+```python demo
 print("hi")
 ```
 
@@ -91,7 +91,7 @@ name = input()
 
 ⚠️ **`input()` 讀進來的一定是文字**，即使你打的是數字。
 
-```python
+```python counter
 n = input()        # 打 5 → n 是 "5"，不是 5
 print(n + 1)       # 💥 出錯：文字不能加數字
 print(int(n) + 1)  # ✅ 6

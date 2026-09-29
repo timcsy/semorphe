@@ -60,7 +60,7 @@ v:      1    3    3    3    5
 
 `lower_bound` 永遠會回一個位置，即使 x 不在裡面。
 
-```cpp
+```cpp demo
 auto it = lower_bound(v.begin(), v.end(), 4);
 // 指向 5 的位置——因為 5 是第一個 ≥ 4 的
 ```

@@ -25,7 +25,7 @@ nums = [3, 1, 4, 1, 5]
 
 > 積木盤上它叫「**串列**」——`list` 的中文說法。
 
-```python
+```python demo
 print(len(nums))      # 5   ← 有幾個
 ```
 
@@ -34,7 +34,7 @@ print(len(nums))      # 5   ← 有幾個
 ## 二、拿第幾個
 要拿其中一個，用方括號加上編號：
 
-```python
+```python demo
 print(nums[0])        # 3    ← 第一個
 print(nums[4])        # 5    ← 第五個
 print(nums[-1])       # 5    ← 🟢 最後一個
@@ -76,7 +76,7 @@ print(nums)           # [99, 1, 4, 1, 5, 9]
 
 ⚠️ `nums.sort()` **改的是原本那個**，回傳 `None`：
 
-```python
+```python demo
 nums = nums.sort()    # 🔴 nums 變成 None
 nums.sort()           # ✅
 sorted(nums)          # ✅ 這個才是回傳新的
@@ -85,7 +85,7 @@ sorted(nums)          # ✅ 這個才是回傳新的
 ## 四、切片
 要一次拿好幾個，中間加一個冒號：
 
-```python
+```python demo
 print(nums[1:3])      # [1, 4]    ← 位置 1 到 2
 ```
 
@@ -93,7 +93,7 @@ print(nums[1:3])      # [1, 4]    ← 位置 1 到 2
 
 > 切片那顆積木有第三個格子「**每次跳 …**」，那是步長（`nums[::2]` 的 `2`）。
 
-```python
+```python demo
 nums[:3]      # 前三個
 nums[2:]      # 從位置 2 到最後
 nums[:]       # 整份【複本】

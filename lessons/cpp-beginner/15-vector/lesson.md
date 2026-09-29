@@ -69,7 +69,7 @@ cout << v.size() << endl;    // 3
 
 和陣列一模一樣：
 
-```cpp
+```cpp demo
 cout << v[0] << endl;    // 3
 ```
 

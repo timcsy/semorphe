@@ -52,7 +52,7 @@ evens = [n for n in nums if n % 2 == 0]
 
 兩件事可以一起做：
 
-```python
+```python demo
 [n * n for n in nums if n % 2 == 0]     # [4, 16]
 ```
 
@@ -74,7 +74,7 @@ table = {n: n * n for n in nums}
 
 下面這個寫法**不要學**——它塞了太多件事：
 
-```python
+```python counter
 # 🔴 不要這樣
 r = [f(x) for row in grid for x in row if g(x) and h(x) or k(x)]
 ```

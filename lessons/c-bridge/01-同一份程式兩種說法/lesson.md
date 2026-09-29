@@ -79,7 +79,7 @@ printf("%d\n", n);
 
 讀進來對應的是 `scanf`：
 
-```c
+```c demo
 scanf("%d", &n);      // ⚠️ 注意那個 &
 ```
 

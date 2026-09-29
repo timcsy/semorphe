@@ -54,7 +54,7 @@ int raw = analogRead(A0);
 
 先把它印出來，遮住感應器再看一次：
 
-```cpp
+```cpp demo
 Serial.println(raw);
 ```
 

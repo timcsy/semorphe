@@ -98,7 +98,7 @@ score == 60     # 「score 是不是 60」——它【只是問】
 ## 五、串起來
 兩個條件都要成立，用 `and` 串起來：
 
-```python
+```python demo
 if 60 <= score < 90 and score != 75:
     print("普通")
 ```

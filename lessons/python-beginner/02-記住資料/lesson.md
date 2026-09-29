@@ -36,7 +36,7 @@ age = 16
 ## 二、印出來
 有名字之後，印的時候就叫它的名字——注意有沒有引號：
 
-```python
+```python demo
 print(name)      # 小明
 print("name")    # name    ← 🔴 差一對引號，完全不同
 ```
@@ -51,7 +51,7 @@ print("name")    # name    ← 🔴 差一對引號，完全不同
 ## 三、四種基本的資料
 照著打上這四行，每一行裝的是不同種類的東西：
 
-```python
+```python demo
 name = "小明"          # str
 age = 16               # int
 height = 1.72          # float
@@ -69,7 +69,7 @@ is_student = True      # bool
 
 想知道某個東西是什麼型別，可以問它：
 
-```python
+```python demo
 print(type(age))       # <class 'int'>
 ```
 

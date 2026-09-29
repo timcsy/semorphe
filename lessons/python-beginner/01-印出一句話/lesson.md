@@ -71,7 +71,7 @@ Hello!
 單引號 `'Hello!'` 和雙引號 `"Hello!"` 在 Python 裡**完全一樣**，挑一種用就好。
 而句子裡有引號的時候，用另一種可以省事：
 
-```python
+```python demo
 print("他說：'好'")
 ```
 

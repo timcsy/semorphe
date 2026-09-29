@@ -59,7 +59,7 @@ print(total)      # 55
 | **`for`** | **知道要跑幾次**、或要走過一串現成的東西 |
 | **`while`** | **不知道要跑幾次**——跑到某件事發生為止 |
 
-```python
+```python demo
 for i in range(10):
 while user_says_yes():
 ```
@@ -70,7 +70,7 @@ while user_says_yes():
 ## 四、`for` 也可以走別的東西
 `for` 走得過的不只數字，一段文字也可以：
 
-```python
+```python demo
 for c in "Python":
     print(c)
 ```
@@ -82,7 +82,7 @@ for c in "Python":
 
 ⚠️ **不要為了拿位置而寫 `range(len(x))`**：
 
-```python
+```python demo
 names = ["a", "b", "c"]
 for n in names:              # ✅
 for i in range(len(names)):  # ⚠️ 除非你真的需要 i

@@ -67,7 +67,7 @@ try 裡面出事的那一刻 → 剩下的【立刻跳過】 → 跳到 except �
 
 拿到那個錯誤本身：
 
-```python
+```python demo
 except ValueError as e:
     print("出事了：", e)
 ```

@@ -40,7 +40,7 @@ int msum(vector<int>& a, int lo, int hi) {
 ## 二、`vector<int>&` 的那個 `&`
 那個 `&` 在這裡是這個意思：
 
-```cpp
+```cpp demo
 int msum(vector<int>& a, int lo, int hi)
               ↑
         「傳參考」——不複製
