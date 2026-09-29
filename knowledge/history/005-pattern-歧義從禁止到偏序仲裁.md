@@ -33,4 +33,4 @@
 
 ~~✅ 已採用。~~同套件內的 pattern 開發者仍有義務自洽（應在一個 pattern 中用 constraints 區分）；跨套件允許偏序特化。空 constraints 自動成為最寬泛的兜底，可預測但實務上仍應避免。
 
-蒸餾出的教訓見 [experience.md](../experience.md)「『只加 JSON 不改程式碼』不等於『不影響既有行為』」。
+蒸餾出的教訓見 [experience.md](../experience.md#只加-json-不改程式碼不等於不影響既有行為)「『只加 JSON 不改程式碼』不等於『不影響既有行為』」。

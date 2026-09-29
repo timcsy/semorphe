@@ -100,7 +100,7 @@ src/ui/app.ts:69-84   blocklyPanel / monacoPanel / syncController
 留著的代價               🔴 讓「VSCode 那條路幾乎免費」讀起來像已經有基礎
 ```
 
-而 [experience](../experience.md)：「**修一個沒有人在用的東西，改善不會兌現**」。
+而 [experience](../experience.md#修一個沒有人在用的東西改善不會兌現)：「**修一個沒有人在用的東西，改善不會兌現**」。
 
 ⚠️ **而重寫的時機不是現在**：委派那條路今天卡在
 「clangd 真的吐得出一則診斷」，而**那一步在瀏覽器上驗比在 VSCode 上便宜**。

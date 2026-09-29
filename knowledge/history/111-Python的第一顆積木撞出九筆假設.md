@@ -35,7 +35,7 @@ if (tree.componentId !== programRootComponent()) return { blocks: [] }
 第二個語言宣告 `programRoot` 之後，**其中一個會靜默失效**——回空清單、零錯誤，
 使用者看到**空白畫布**。已改成 `isProgramRoot()`：**問這顆自己的宣告，不跟全域單值比**。
 
-教訓進了 [experience](../experience.md)：
+教訓進了 [experience](../experience.md#全域只有一個的假設在第二個成員出現時不會報錯它會挑一個)：
 > **一個「全域只有一個」的假設，在第二個成員出現時不會報錯——它會挑一個。**
 
 ## 鄰域的邊界（階段 7 的第二個交付）
