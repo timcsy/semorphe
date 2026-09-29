@@ -32,7 +32,7 @@ import os from 'node:os'
 import { execFileSync } from 'node:child_process'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { formalizeFunction, type ContractSources } from './cella-formalize'
+import { formalizeFunction, CellaFormalizeError, type ContractSources } from './cella-formalize'
 import type { SemanticNode } from '../../src/core/types'
 
 const CELLA_BIN = process.env.CELLA_BIN
@@ -49,13 +49,19 @@ const SRC = `int pick(int n, int u, int fallback) {
 let fn: SemanticNode
 let contracts: ContractSources
 let prelude: string
+let parser: Parser
+
+/** 把一段 C++ lift 成它的第一個函式。 */
+function liftFn(src: string): SemanticNode {
+  const root = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
+  return (root.slots.body ?? [])[0] as SemanticNode
+}
 
 beforeAll(async () => {
   await Parser.init({ locateFile: (f: string) => `${process.cwd()}/public/${f}` })
-  const parser = new Parser()
+  parser = new Parser()
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
-  const root = createTestLifter().lift(parser.parse(SRC)!.rootNode as never) as SemanticNode
-  fn = (root.slots.body ?? [])[0] as SemanticNode
+  fn = liftFn(SRC)
 
   // 🔴 **讀的是宣告說的那個檔**（`paths.formalize`），不是寫死的路徑——
   //    宣告與形式核分岔的話，這裡要紅。
@@ -115,6 +121,65 @@ describe.skipIf(!HAVE_CELLA)('探針：第六路（語義樹 → cella 項）', 
   it('★ 認不得的東西要擲例外，不准猜（猜出來的項會安靜地通過）', () => {
     const bad = { ...fn, properties: { ...fn.properties, return_type: 'std::string' } } as SemanticNode
     expect(() => formalizeFunction(bad, { contracts, prelude })).toThrow(/還不認得型別/)
+  })
+})
+
+/**
+ * 🔴 **第六路產出的項，語法上站不站得住**（2026-09-30）。
+ *
+ * 起點是 cella 那側的一句提醒：「`bound_${idx}_lt_${size}` 只要 idx、size
+ * 是單純的識別字或數字也沒問題；若它們可能是運算式，組名字前要先清掉。」
+ *
+ * 拿嶾狀索引量一次，而同一行裡有**兩個**缺陷：
+ *
+ * ```
+ * arrayAt n A arrayAt m B u ?bound_u_lt_m ?bound_arrayAt m B u ?bound_u_lt_m_lt_n
+ *             ~~~~~~~~~~~~                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *             ① 子運算式沒有括號      ② 洞名帶空白（cella 說的那個）
+ * ```
+ *
+ * 🔴 **① 比 ② 嚴重**：② 是一個 cella 載不進去的檔（吵的），
+ * 而 ① 是**編出另一支程式**——本檔檔頭逐字寫著的那件事。
+ *
+ * ⚠️ 這一支**不需要 cella 的執行檔**，所以它不在 `skipIf` 裡
+ * ——一條只在裝了 cella 的機器上跑的護欄，CI 上等於不存在。
+ */
+describe('探針：第六路產出的項，語法上站得住（不需要 cella）', () => {
+  /** 嶾狀索引，而外層的前置條件沒有被守衛涵蓋——外層要開洞。 */
+  const NESTED = `int pick(int n, int m, int u, int fallback) {
+  int A[n];
+  int B[m];
+  if (u < n) return A[B[u]];
+  return fallback;
+}`
+
+  /** 嶾狀索引，而守衛正好涵蓋外層——外層拿得到證明，不開洞。 */
+  const NESTED_GUARDED = `int pick(int n, int m, int u, int fallback) {
+  int A[n];
+  int B[m];
+  if (B[u] < n) return A[B[u]];
+  return fallback;
+}`
+
+  it('★ 入口條件：兩段都 lift 得出函式（否則下面在量別的東西）', () => {
+    expect(liftFn(NESTED)?.componentId).toBe('cpp:func_def')
+    expect(liftFn(NESTED_GUARDED)?.componentId).toBe('cpp:func_def')
+  })
+
+  it('🔴 洞的名字塞不進一個運算式時，要擲例外——不准產出一個 cella 載不進去的檔', () => {
+    expect(() => formalizeFunction(liftFn(NESTED), { contracts, prelude }))
+      .toThrow(CellaFormalizeError)
+    expect(() => formalizeFunction(liftFn(NESTED), { contracts, prelude }))
+      .toThrow(/洞的名字組不成合法的識別字/)
+  })
+
+  it('🔴 子運算式當引數時要加括號——沒加的話編出來的是【另一支程式】', () => {
+    const out = formalizeFunction(liftFn(NESTED_GUARDED), { contracts, prelude })
+    const body = out.split('\n').filter((l) => l.startsWith('  | yes')).join('\n')
+    expect(body, `外層 arrayAt 的索引沒有括號：\n${out}`).toContain('(arrayAt ')
+    // ★ 正向對照：單層的那一支不得被加上多餘的括號
+    const flat = formalizeFunction(fn, { contracts, prelude })
+    expect(flat, '單層的索引被加了括號 —— asArg 包過頭了').toContain('arrayAt n A u pf')
   })
 })
 

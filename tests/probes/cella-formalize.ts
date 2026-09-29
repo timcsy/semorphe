@@ -174,6 +174,33 @@ export class CellaFormalizeError extends Error {
   }
 }
 
+/**
+ * 🔴 **當引數用的時候，複合項要加括號**（2026-09-30）。
+ *
+ * 沒有這一步的症狀不是編不過，是**編出另一支程式**：
+ *
+ * ```
+ * A[B[u]]   錯   arrayAt n A arrayAt m B u ?h1 ?h2      ← arrayAt 吃了七個引數
+ *           對   arrayAt n A (arrayAt m B u ?h1) ?h2
+ * ```
+ *
+ * ⚠️ 而這正是本檔檔頭寫的那件事：**這一路壞掉的症狀是全綣**。
+ * 它是 cella 那側提醒「組洞名前要先清掉運算式」的時候，順手量到的。
+ */
+function asArg(s: string): string {
+  return /\s/.test(s) ? `(${s})` : s
+}
+
+/**
+ * cella 的識別字：**字母或底線開頭，其後字母／數字／底線／單引號**
+ * （2026-09-30 cella 那側對過 `lexer.rs` 並逐一實測的規則）。
+ *
+ * ⚠️ **沒有檢關鍵字**，而那是有理由的：洞名一律以 `bound_` 開頭，
+ * 而 cella 沒有這個前綴的關鍵字。**前綴要是改了，這裡要補一張關鍵字表**
+ * ——列一張我們猜的、不完整的關鍵字表，比不列更差。
+ */
+const CELLA_IDENT = /^[\p{L}_][\p{L}\p{N}_']*$/u
+
 const CPP_INT_TYPES = new Set(['int', 'long', 'long long', 'unsigned', 'size_t'])
 
 /**
@@ -237,8 +264,26 @@ function expr(node: SemanticNode, env: Env): string {
       const idx = expr(one(node, 'index'), env)
       // 🔴 前置條件在這裡兌現：在場有證明就用它，沒有就【開一個具名的洞】。
       //    洞的名字會出現在 blame 訊息裡，所以它要說得出缺的是什麼。
-      const proof = env.proofs.get(`LtB ${idx} ${size}`) ?? `?bound_${idx}_lt_${size}`
-      return `arrayAt ${size} ${name} ${idx} ${proof}`
+      const held = env.proofs.get(`LtB ${asArg(idx)} ${asArg(size)}`)
+      let proof: string
+      if (held !== undefined) {
+        proof = held
+      } else {
+        // 🔴 **洞是一個【名字】，而一個運算式塞不進名字裡**。
+        //    吐出來不管的話，產出的是 cella 語法上不合法的檔；
+        //    偷偷清掉的話，兩個不同的洞會清成同一個名字
+        //    ——那就是 `Env` 檔頭那個【名字當鍵】的病。所以擲例外。
+        const bare = `bound_${idx}_lt_${size}`
+        if (!CELLA_IDENT.test(bare)) {
+          throw new CellaFormalizeError(
+            node.componentId,
+            `洞的名字組不成合法的識別字：?${bare}`
+            + `——今天的索引與長度只認得單純的名字或數字（嶾狀的取值會落到這裡）`,
+          )
+        }
+        proof = `?${bare}`
+      }
+      return `arrayAt ${asArg(size)} ${name} ${asArg(idx)} ${asArg(proof)}`
     }
 
     default:
@@ -262,8 +307,12 @@ function guard(node: SemanticNode, env: Env): { scrutinee: string; predicate: st
   if (op !== '<') {
     throw new CellaFormalizeError(node.componentId, `還沒有 ${op} 的宣告——見 component.json 的 _byOperator_why`)
   }
-  const l = expr(one(node, 'left'), env)
-  const r = expr(one(node, 'right'), env)
+  // ⚠️ 兩邊都走 `asArg`，而這不只是為了印得對：
+  //    `predicate` 同時是 **印出來的項** 與 **`env.proofs` 的鍵**，
+  //    而 `arrayAt` 那邊查的時候也走 `asArg`——兩邊寫法不一致的話，
+  //    一個【在場的證明】會查不到，然後安靜地變成一個洞。
+  const l = asArg(expr(one(node, 'left'), env))
+  const r = asArg(expr(one(node, 'right'), env))
   return env.opts.control
     ? { scrutinee: `ltNat ${l} ${r}`, predicate: null }
     : { scrutinee: `decLt ${l} ${r}`, predicate: `LtB ${l} ${r}` }
