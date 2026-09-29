@@ -61,7 +61,7 @@ EEPROM 的每一格大約可以寫 10 萬次。聽起來很多，而：
 
 下面這個寫法**不要學**，它會把那一格寫爛：
 
-```cpp
+```cpp counter
 void loop() {
     EEPROM.write(0, n);      // 🔴 千萬不要這樣
 }

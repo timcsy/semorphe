@@ -64,7 +64,7 @@ while (n <= 5) {    // ② 條件   ——什麼時候還要繼續
 ## 三、少了「變動」會怎樣
 把剛才那一段的最後一行拿掉，看看會怎樣：
 
-```cpp
+```cpp counter
 int n = 1;
 while (n <= 5) {
     cout << n << endl;
@@ -136,7 +136,7 @@ while (i <= 5) {
 
 還有一種寫法，它先做一次再問：
 
-```cpp
+```cpp demo
 do {
     cout << n << endl;
     n = n + 1;

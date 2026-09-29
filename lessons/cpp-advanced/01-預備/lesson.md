@@ -22,7 +22,7 @@
 ## 一、溢位：安靜的錯
 試試看這一段，它不會報錯，而答案是錯的：
 
-```cpp demo
+```cpp counter
 int a = 1000000;
 cout << a * a << endl;      // 🔴 印出一個負數
 ```
@@ -38,7 +38,7 @@ cout << big << endl;        // 1000000000000  ✅
 
 ⚠️ **那個 `LL` 不能省。**
 
-```cpp demo
+```cpp counter
 long long big = 1000000 * 1000000;    // 🔴 還是錯的
 ```
 
