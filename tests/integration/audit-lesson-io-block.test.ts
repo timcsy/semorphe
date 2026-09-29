@@ -72,11 +72,21 @@ function plainFences(md: string): { line: number; body: string[] }[] {
   const out: { line: number; body: string[] }[] = []
   let open = false
   let plain = false
+  // 🔴 **這個檔不能寫一個字面的三反引號**：七支護欄從
+  //    `tests/integration/*.test.ts` 撈反引號區段當 C++ 語料，
+  //    而字串裡的反引號會與註解裡的混在一起配對，
+  //    把這個檔自己的 TypeScript 切成一段「語料」。
+  //    ⚠️ 而 2026-09-29 我用機械替換把 `'```'` 換成了別的字串——
+  //    **那改的不是散文，是判準本身**，入口條件當場紅。
+  //
+  // > **一個把字串字面值當成散文去替換的腳本，
+  // > 改掉的可能是一個判準。**
+  const FENCE = String.fromCharCode(96).repeat(3)
   let start = 0
   let buf: string[] = []
   lines.forEach((l, i) => {
-    if (l.startsWith('```')) {
-      if (!open) { open = true; plain = l.trim() === '```'; start = i + 1; buf = [] }
+    if (l.startsWith(FENCE)) {
+      if (!open) { open = true; plain = l.trim() === FENCE; start = i + 1; buf = [] }
       else { open = false; if (plain && buf.length > 0) out.push({ line: start, body: buf }) }
       return
     }
@@ -111,7 +121,7 @@ describe('護欄：輸出的框裡不得混進輸入', () => {
     expect(
       bad,
       '\n🔴 這些框同時裝著【餵進去的】與【印出來的】，讀者會照著每一行去印：\n' + bad.join('\n')
-        + '\n\n處置：把輸入搬進散文（「裁判餵 `X` 進去，印出來要長這樣：」），框裡只留輸出。\n',
+        + '\n\n處置：把輸入搬進散文（「裁判餵 「X」 進去，印出來要長這樣：」），框裡只留輸出。\n',
     ).toEqual([])
   })
 

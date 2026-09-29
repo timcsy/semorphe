@@ -64,7 +64,7 @@ google       cout     explicit   individual  snake_case   ← 🔴 explicit 而�
 
 > **一份只走得到其中一條路徑的測試，會讓另一條路徑的缺陷全綠通過。**
 
-⚠️ 而它是 [experience](../experience.md)「重構後開瀏覽器實測」抓到的
+⚠️ 而它是 [experience](../experience.md#測試跑的是一個全部可見的世界而使用者跑的是一個被收窄的世界)「重構後開瀏覽器實測」抓到的
 ——**那條規則第一次真的救了人**。已收成 `e2e/c-target.spec.ts`。
 
 ## 四、⚠️ 而 `c.json` 從來沒進過選單
