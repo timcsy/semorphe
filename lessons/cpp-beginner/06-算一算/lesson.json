@@ -24,7 +24,7 @@
       "kind": "follow",
       "title": "跟著做",
       "check": {
-        "stdout": "分數是 100\n每人 33 分\n剩下 1 分\n",
+        "stdout": "分數是 100\n每人 33 分\n剩下 1 分\n開根號是 10\n10 的 2 次方是 100\n",
         "stdin": []
       },
       "view": "compare"
@@ -35,7 +35,7 @@
       "kind": "arrange",
       "view": "blocks",
       "check": {
-        "stdout": "分數是 100\n每人 33 分\n剩下 1 分\n",
+        "stdout": "分數是 100\n每人 33 分\n剩下 1 分\n開根號是 10\n10 的 2 次方是 100\n",
         "stdin": []
       }
     },
