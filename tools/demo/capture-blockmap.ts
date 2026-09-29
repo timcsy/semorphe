@@ -53,13 +53,21 @@ export interface CapturedBlockmap {
  * > 不是錨在我們餵進去的那一份。**
  */
 export interface CaptureWindow {
-  /** 片段的第一行，在編輯器裡是第幾行（1 起算）。整份程式時是 1。 */
-  firstLine: number
-  /** 片段有幾行。整份程式時給一個夠大的數。 */
+  /**
+   * 🔴 **編輯器行號 → 課文片段行號**，一張逐行的表（見 `tools/demo/line-map.ts`）。
+   *
+   * ⚠️ 這裡原本是 `firstLine` 一個**單一位移**，而位移假設兩份文字逐行一對一。
+   * 產生器會吃掉片段裡的空行 ⟹ 空行之後每一行都錯位，於是
+   * 「badge 落在空行」與「badge 超出行數」同時發生（2026-09-29 使用者回報）。
+   *
+   * > **兩份文字之間的對應，只有在它們逐行一樣的時候才是一個減法。**
+   */
+  lineMap: Record<number, number>
+  /** 課文片段有幾行——超出的一律夾住 */
   lineCount: number
 }
 
-export function captureBlockmap(win: CaptureWindow = { firstLine: 1, lineCount: 1e9 }): CapturedBlockmap {
+export function captureBlockmap(win: CaptureWindow): CapturedBlockmap {
 
 const app = (window as never as Record<string, never>).__app as unknown as {
   blocklyPanel: {
@@ -74,16 +82,36 @@ const app = (window as never as Record<string, never>).__app as unknown as {
 const ws = app.blocklyPanel.workspace
 const blocks: { id: string; startLine: number; endLine: number }[] = []
 const at = new Map<string, { x: number; y: number }>()
+/** 積木 id → 它起始那一行在課文裡的行號。查不到的（合成的鷹架）不進表。 */
+const anchor = new Map<string, number>()
 for (const b of ws.getAllBlocks(false)) {
   const nodeId = app.blocklyPanel.getNodeIdForBlockId(b.id)
   if (!nodeId) continue
   const r = app.syncController.codeRangeForNode(nodeId)
   if (!r) continue
-  // 🔴 校正到片段自己的行號，並**丟掉整個落在窗外的那幾塊**（鷹架）。
-  const s0 = r.startLine + 1 - (win.firstLine - 1)
-  const e0 = r.endLine + 1 - (win.firstLine - 1)
-  if (e0 < 1 || s0 > win.lineCount) continue
-  blocks.push({ id: b.id, startLine: Math.max(1, s0), endLine: Math.min(win.lineCount, e0) })
+  // 🔴 **查表**換到課文片段的行號，並丟掉整個落在表外的那幾塊（鷹架）。
+  //
+  // ⚠️ 一塊積木可能跨好幾行，而那個範圍裡只有一部分在表裡（`main` 就是）。
+  //    所以取**範圍內第一個查得到的**當開始、**最後一個**當結束；
+  //    一個都查不到 ⟹ 它整塊都是鷹架，丟掉。
+  let s0 = 0
+  let e0 = 0
+  for (let L = r.startLine + 1; L <= r.endLine + 1; L++) {
+    const m = win.lineMap[L]
+    if (m === undefined) continue
+    if (s0 === 0) s0 = m
+    e0 = m
+  }
+  if (s0 === 0) continue
+  blocks.push({
+    id: b.id,
+    startLine: Math.max(1, Math.min(win.lineCount, s0)),
+    endLine: Math.max(1, Math.min(win.lineCount, e0)),
+  })
+  // 🔴 **錨 ＝ 它【起始那一行】在課文裡的行號，而不是「範圍裡第一個看得到的」。**
+  //    合成出來的 `int main(){…}` 的起始行在課文裡不存在 ⟹ 它沒有錨 ⟹ 不配號碼。
+  const anchorLine = win.lineMap[r.startLine + 1]
+  if (anchorLine !== undefined) anchor.set(b.id, anchorLine)
   const xy = (b as unknown as { getRelativeToSurfaceXY(): { x: number; y: number } })
     .getRelativeToSurfaceXY()
   at.set(b.id, { x: xy.x, y: xy.y })
@@ -108,7 +136,6 @@ for (const b of ws.getAllBlocks(false)) {
  * 再取其中**最靠外**的那一顆。
  */
 const badges: { line: number; x: number; y: number }[] = []
-const maxLine = blocks.reduce((m, b) => Math.max(m, b.endLine), 0)
 // 🔴 **一顆積木只有一個號碼，而那個號碼是它【開始】的那一行。**
 //
 // ⚠️ 第一版是每一行各標一次、後蓋前，於是 `main`（涵蓋 1–8 行）
@@ -117,24 +144,41 @@ const maxLine = blocks.reduce((m, b) => Math.max(m, b.endLine), 0)
 //
 // > **一個涵蓋多行的東西，它的號碼是【它從哪裡開始】，
 // > 不是「最後一次提到它的地方」。**
-const firstLine = new Map<string, number>()
-for (let line = 1; line <= maxLine; line++) {
-  const hit = blocks.filter((b) => b.startLine <= line && line <= b.endLine)
-  if (hit.length === 0) continue
-  const span = Math.min(...hit.map((b) => b.endLine - b.startLine))
-  const inner = hit.filter((b) => b.endLine - b.startLine === span)
-  // 最靠外的那一顆 ＝ 位置最左上的那一顆（巢狀的孩子一定更靠右）
-  let best = inner[0]
-  for (const b of inner) {
-    const a = at.get(b.id), c = at.get(best.id)
-    if (a && c && (a.x < c.x || (a.x === c.x && a.y < c.y))) best = b
-  }
-  if (!firstLine.has(best.id)) firstLine.set(best.id, line)
+// 🔴 **一顆積木只有在讀者看得到它起始那一行的時候，才配一個號碼。**
+//
+// ⚠️ 2026-09-29 之前這裡是「走過每一行，誰在這一行勝出就給它號碼」，而那讓
+//    一顆**合成出來的**積木拿到號碼：`cpp-beginner/06` 第 5 段的片段是
+//
+//    ```
+//    1  #include <cmath>
+//    2  （空行）
+//    3  cout << pow(2, 10) << endl;
+//    ```
+//
+//    第 1 行 `include` 勝出拿到 ①；第 2 行是空行，只剩包在外面那顆
+//    **課文裡根本沒有**的 `int main(){…}` 涵蓋它，於是它拿到 ②。
+//    使用者看到的就是那個：「上面 cmath 的積木好像放錯地方」。
+//
+// > **一個號碼是一句「去看那一行」的指示。
+// > 而它指的那一行，讀者必須看得到。**
+//
+// 所以現在：號碼**從錨出發**（它起始那一行），而沒有錨的積木一個號碼都不拿。
+// ⚠️ 同一行有好幾顆從它開始的積木（`int n = 1;` 的宣告與它的初值）
+//    ⟹ 取跨度最小的那一顆；同跨度取最靠左上的（巢狀的孩子一定更靠右）。
+const pick = new Map<number, { id: string; span: number; x: number; y: number }>()
+for (const b of blocks) {
+  const line = anchor.get(b.id)
+  if (line === undefined) continue
+  const xy = at.get(b.id)
+  if (!xy) continue
+  const span = b.endLine - b.startLine
+  const cur = pick.get(line)
+  const better = cur === undefined
+    || span < cur.span
+    || (span === cur.span && (xy.x < cur.x || (xy.x === cur.x && xy.y < cur.y)))
+  if (better) pick.set(line, { id: b.id, span, x: xy.x, y: xy.y })
 }
-for (const [id, line] of firstLine) {
-  const xy = at.get(id)
-  if (xy) badges.push({ line, x: xy.x, y: xy.y })
-}
+for (const [line, p] of pick) badges.push({ line, x: p.x, y: p.y })
 
 // ── 把積木那一層抽成一份【獨立可用】的 SVG ──────────────────
 //

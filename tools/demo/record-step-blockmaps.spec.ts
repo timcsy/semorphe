@@ -49,6 +49,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { engineHash } from '../blockmap/engine-hash'
 import { captureBlockmap } from './capture-blockmap'
+import { buildLineMap } from './line-map'
 import { allStepFragments, stepMapFile } from '../build-lessons/step-fragments'
 import { parseSkeleton, type Skeleton } from '../../src/core/skeleton'
 import { DEGRADATION_VISUALS } from '../../src/core/blocks/category-colors'
@@ -239,14 +240,21 @@ for (const c of CASES) {
     //
     // 所以位移要**當場量**，不能假設它是 0——也不能假設它是 2。
     // ⚠️ 比對用 `trim()`：包進 `main` 那一路會加縮排。
+    // 🔴 **不是一個位移，是一張逐行的表**（2026-09-29）。
+    //    位移假設兩份文字逐行一對一，而產生器會吃掉片段裡的空行
+    //    ⟹ 空行之後每一行都錯位。見 `tools/demo/line-map.ts` 的檔頭。
     const synced = r.synced
-    const want = c.code.split('\n').find((l) => l.trim() !== '')?.trim() ?? ''
-    const firstLine = synced.split('\n').findIndex((l) => l.trim() === want) + 1
-    // ★ 自我否證：找不到那一行 ⟹ 同步把它換掉了，這張圖對不回課文，不要寫出去
-    expect(firstLine, `🔴 ${c.lesson}#${c.index}：同步之後找不到片段的第一行——對不回課文`).toBeGreaterThan(0)
+    const lm = buildLineMap(synced, c.code)
+    // ★ 自我否證：一行都對不上 ⟹ 同步把整段換掉了，這張圖對不回課文，不要寫出去
+    expect(Object.keys(lm.map).length,
+      `🔴 ${c.lesson}#${c.index}：同步之後一行都對不回課文`).toBeGreaterThan(0)
+    // ★ 而對不上的那幾行要**出聲**——它是一個讀數，不是一個靜默
+    if (lm.unmatched.length > 0) {
+      console.log(`  ⚠️ ${c.lesson}#${c.index}：課文第 ${lm.unmatched.join('、')} 行`
+        + `在同步後的程式碼裡找不到（產生器改寫了它），那幾行不會有號碼`)
+    }
 
-    const got = await page.evaluate(captureBlockmap,
-      { firstLine, lineCount: c.code.split('\n').length })
+    const got = await page.evaluate(captureBlockmap, { lineMap: lm.map, lineCount: lm.lineCount })
     // ★ 自我否證：一塊都對不到 ⟹ 產出是一張沒有用的圖，不要寫出去
     expect(got.blocks.length, `🔴 ${c.lesson}#${c.index}：一塊積木都對不到程式碼`).toBeGreaterThan(0)
     expect(got.svg.length, `🔴 ${c.lesson}#${c.index}：抽不出積木的 SVG`).toBeGreaterThan(200)
