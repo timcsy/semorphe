@@ -64,7 +64,7 @@ print(double(5))          # 10
 
 它的用處在「**把一個函式當參數傳進去**」：
 
-```python
+```python demo
 sorted(names, key=lambda s: len(s))     # 依長度排序
 ```
 

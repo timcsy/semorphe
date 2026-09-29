@@ -35,14 +35,14 @@ name = input()
 
 可以順便給一句提示：
 
-```python
+```python demo
 name = input("請輸入你的名字：")
 ```
 
 ## 二、🔴 讀進來的一定是文字
 試試看直接拿它去加——它會出事：
 
-```python
+```python counter
 n = input()      # 打 5
 print(n + 1)     # 💥 TypeError
 ```
@@ -53,7 +53,7 @@ print(n + 1)     # 💥 TypeError
 
 要當成數字用，得自己說：
 
-```python
+```python demo
 n = int(input())     # 讀進來 → 轉成整數
 print(n + 1)         # 6
 ```
@@ -78,7 +78,7 @@ print("你好，" + name)
 
 ⚠️ 兩邊型別要一樣：
 
-```python
+```python counter
 print("我今年 " + 16)          # 💥 TypeError
 print("我今年 " + str(16))     # ✅
 print("我今年", 16)            # ✅ 逗號更省事

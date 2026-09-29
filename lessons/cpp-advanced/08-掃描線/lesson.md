@@ -19,7 +19,7 @@
 ## 一、`pair`：把兩個值綁在一起
 `pair` 把兩個值當成一個東西：
 
-```cpp
+```cpp demo
 pair<int, int> p = make_pair(1, 2);
 cout << p.first << " " << p.second << endl;
 ```
@@ -49,7 +49,7 @@ cout << p.first << " " << p.second << endl;
 
 於是每個人變成兩個 `pair`：
 
-```cpp
+```cpp demo
 events.push_back(make_pair(a, 1));      // 進場
 events.push_back(make_pair(b, -1));     // 離場
 ```

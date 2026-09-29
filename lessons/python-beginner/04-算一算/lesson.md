@@ -32,14 +32,14 @@ print(a ** b)     # 49     ← 次方
 ## 二、🔴 `/` 和 `//`
 兩條斜線與一條斜線不是同一件事：
 
-```python
+```python demo
 7 / 2      # 3.5   ——永遠是小數（float）
 7 // 2     # 3     ——把小數點後面丟掉
 ```
 
 ⚠️ **`/` 就算除得盡也是小數**：
 
-```python
+```python demo
 print(6 / 2)      # 3.0   ← 不是 3
 print(6 // 2)     # 3
 ```
@@ -48,7 +48,7 @@ print(6 // 2)     # 3
 
 ⚠️ **`//` 不是四捨五入，是往下取整**：
 
-```python
+```python demo
 print(7 // 2)     # 3
 print(-7 // 2)    # -4    ← 🔴 不是 -3
 ```
@@ -58,7 +58,7 @@ print(-7 // 2)    # -4    ← 🔴 不是 -3
 ## 三、`%` 取餘數
 餘數用 `%`：
 
-```python
+```python demo
 print(7 % 2)      # 1
 ```
 
@@ -74,7 +74,7 @@ print(7 % 2)      # 1
 
 和數學一樣：`**` 最先、然後 `* / // %`、最後 `+ -`。
 
-```python
+```python demo
 print(2 + 3 * 4)        # 14，不是 20
 print((2 + 3) * 4)      # 20
 ```
@@ -84,7 +84,7 @@ print((2 + 3) * 4)      # 20
 ## 五、`+=`
 這是同一件事的簡寫：
 
-```python
+```python demo
 total = 0
 total = total + 5
 ```
@@ -93,7 +93,7 @@ total = total + 5
 
 它太常用了，所以有縮寫：
 
-```python
+```python demo
 total += 5      # 完全等於 total = total + 5
 ```
 

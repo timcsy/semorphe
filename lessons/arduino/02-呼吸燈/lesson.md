@@ -22,7 +22,7 @@
 ## 一、0 到 255
 亮度用 `analogWrite`，第二個數字就是亮度：
 
-```cpp
+```cpp demo
 analogWrite(9, 128);
 ```
 

@@ -124,7 +124,7 @@ for (int i = 1; i <= 5; i++) {
 
 而處理資料的時候幾乎都這樣寫：
 
-```cpp
+```cpp demo
 for (int i = 0; i < n; i++) {
 ```
 

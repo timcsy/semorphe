@@ -19,7 +19,7 @@
 ## 一、兩個，一眼看完
 兩個放在一起比，差別只在拿出來的是哪一端：
 
-```cpp
+```cpp demo
 queue<int> q;                  stack<int> st;
 q.push(1);                     st.push(1);
 q.push(2);                     st.push(2);
@@ -66,7 +66,7 @@ cout << q.front();  // 2       cout << st.top();  // 1
 
 C++ 入門第 16 課的階乘：
 
-```cpp
+```cpp demo
 f(5) → f(4) → f(3) → f(2) → f(1)
                                  ↓ 回來
                         ← ← ← ← ←

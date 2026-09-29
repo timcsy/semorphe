@@ -29,7 +29,7 @@ print(len(s))          # 12
 
 ⚠️ **它們都回傳新的，不會改到 `s`**。
 
-```python
+```python counter
 s.upper()              # 算出來了，而沒有人接住它 → 白做
 s = s.upper()          # ✅
 ```
@@ -50,7 +50,7 @@ s = s.upper()          # ✅
 ## 二、`split`：拆成一串
 要把一段文字拆開，用 `.split()`：
 
-```python
+```python demo
 print(s.split(", "))      # ['Hello', 'World']
 ```
 
@@ -58,7 +58,7 @@ print(s.split(", "))      # ['Hello', 'World']
 
 **一段文字 → 一個清單**。這是處理輸入最常用的一招：
 
-```python
+```python demo
 line = "3 1 4 1 5"
 parts = line.split()              # ['3','1','4','1','5']
 nums = [int(x) for x in parts]    # [3, 1, 4, 1, 5]
@@ -68,7 +68,7 @@ nums = [int(x) for x in parts]    # [3, 1, 4, 1, 5]
 
 反過來是 `join`：
 
-```python
+```python demo
 print(", ".join(["a", "b", "c"]))     # a, b, c
 ```
 
@@ -87,7 +87,7 @@ print([len(w) for w in words])        # [1, 2, 3]
 
 它就是這四行壓成一行：
 
-```python
+```python demo
 result = []
 for w in words:
     result.append(len(w))
@@ -97,7 +97,7 @@ for w in words:
 
 加上篩選：
 
-```python
+```python demo
 [w for w in words if len(w) > 1]      # ['bb', 'ccc']
 ```
 
@@ -110,7 +110,7 @@ for w in words:
 ## 四、串起來
 把前面那幾個接起來用：
 
-```python
+```python demo
 line = input()
 words = line.strip().split()
 lengths = [len(w) for w in words]

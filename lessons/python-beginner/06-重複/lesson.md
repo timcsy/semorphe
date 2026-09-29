@@ -38,7 +38,7 @@ while n <= 5:
 ## 二、三樣東西，缺一不可
 回頭看剛才那一段，三樣東西都在裡面：
 
-```python
+```python demo
 n = 1              # ① 起點  ——從哪裡開始
 while n <= 5:      # ② 條件  ——什麼時候還要繼續
     print(n)
@@ -81,7 +81,7 @@ print(total)        # 15
 ## 四、`break` 和 `continue`
 這兩個字讓你在迴圈中間離開或跳過一圈：
 
-```python
+```python demo
 while True:
     s = input()
     if s == "":

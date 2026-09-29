@@ -73,7 +73,7 @@ if (score >= 60) {
 
 只有一行的時候，大括號可以省略：
 
-```cpp
+```cpp demo
 if (score >= 60) cout << "及格" << endl;
 ```
 

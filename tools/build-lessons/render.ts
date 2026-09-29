@@ -19,6 +19,7 @@
  * > 一個不在渲染路徑上、而且省下它會讓畫面變差的東西，不是它要擋的對象。**
  */
 import MarkdownIt from 'markdown-it'
+import { stepFragmentsOf } from './step-fragments'
 import type { LessonPage, BlockMap } from './read-lessons'
 import { lessonDocHref, editorHref, type Track } from '../../src/core/lesson/lesson'
 import { interactionById, type Interaction } from '../../src/core/lesson/interactions'
@@ -141,6 +142,11 @@ th,td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left}
    （使用者 2026-09-21 看著畫面指定的：「我是希望其他地方也能比照那樣排版」。
    中間試過的兩條覆寫都被退掉了，理由寫在 withStepMaps 的檔頭。） */
 .blockmap h2{font-size:1rem;margin:0 0 .2rem;border:none;padding:0}
+.blockmap .bm-kind{margin:0 0 .7rem;padding:.45rem .7rem;border-radius:6px;font-size:.92rem;line-height:1.6}
+.blockmap.demo .bm-kind{background:#fff6e5;color:#7a4a00;border:1px solid #f0d9a8}
+.blockmap.counter .bm-kind{background:#ffeceb;color:#8a1c14;border:1px solid #f3c2bd}
+@media(prefers-color-scheme:dark){.blockmap.demo .bm-kind{background:#3a2c10;color:#f0cf95;border-color:#5c4620}
+.blockmap.counter .bm-kind{background:#3d1c19;color:#f3b3ac;border-color:#6b2e28}}
 .blockmap p.meta{margin:0 0 .9rem}
 .bm-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:1rem;align-items:start}
 @media(max-width:720px){.bm-grid{grid-template-columns:1fr}}
@@ -612,7 +618,21 @@ function withLessonLinks(html: string): string {
  * > **一段寫給維護者的註解，如果它住在【會被送到使用者面前的那份輸出】裡，
  * > 那它就不再只是註解。**
  */
-function withStepMaps(html: string, p: LessonPage): string {
+/**
+ * 每一張步驟圖上面那一句**身分**。
+ *
+ * 🔴 使用者 2026-09-29 的判準逐字：「如果要有，後面必須**明確說要移除積木**，
+ * 或是說**這段積木只是示範**，又或者可以改課程去符合這個需要。」
+ *
+ * ⟹ 那句話由**宣告**產生（圍籬上的 `demo`／`counter`），不是作者每一處自己寫
+ * ——寫兩次就會漂，而漂掉的那一次沒有人會發現。
+ */
+const KIND_NOTE: Record<string, string> = {
+  demo: '🔎 <b>這一段是試一下</b>——打了看結果就好，<b>不要留在程式裡</b>。',
+  counter: '🚫 <b>這一段是反例</b>——課文在說<b>不要這樣寫</b>，別照著拉。',
+}
+
+function withStepMaps(html: string, p: LessonPage, kinds: ReadonlyMap<string, string>): string {
   const maps = Object.values(p.stepMaps ?? {}).filter((m) => m.blocks.length > 0)
   if (maps.length === 0) return html
   const byCode = new Map(maps.map((m) => [m.code, m]))
@@ -622,7 +642,10 @@ function withStepMaps(html: string, p: LessonPage): string {
       const code = unesc(inner).replace(/\n$/, '')
       const bm = byCode.get(code)
       if (bm === undefined) return whole
-      return `<section class="blockmap step">` +
+      const kind = kinds.get(code) ?? 'step'
+      const note = KIND_NOTE[kind]
+      return `<section class="blockmap step${kind === 'step' ? '' : ` ${kind}`}">` +
+        (note === undefined ? '' : `<p class="bm-kind">${note}</p>`) +
         `<div class="bm-grid"><pre class="bm-code">${numberedCode(bm)}</pre>` +
         `<div class="bm-blocks">${bm.svg}</div></div></section>`
     })
@@ -654,7 +677,13 @@ export function renderLesson(p: LessonPage, neighbours: LessonNeighbours = {}): 
     description: descriptionOf(p),
     path: lessonDocHref(p.lesson.id),
     crumb,
-    body: withLessonLinks(withStepMaps(withTaskButtons(withBlockmap(withHowTo(md.render(p.md), p.lesson.interactions ?? []), p), p), p))
+    // 🔴 身分**當場從課文算**（`stepFragmentsOf`），不從圖的 json 讀
+    //    ——那樣圖不必重產，而且抽取點仍然只有一個。
+    body: withLessonLinks(withStepMaps(
+      withTaskButtons(withBlockmap(withHowTo(md.render(p.md), p.lesson.interactions ?? []), p), p),
+      p,
+      new Map(stepFragmentsOf(p.md, p.lesson.id).map((f) => [f.code, f.kind])),
+    ))
       + open + navBlock(neighbours),
     // 🔴 **`Course` 說的每一句都要是實話**：`provider` 是我們、`inLanguage` 是課文的語言，
     //    而 `timeRequired` 只在課程自己宣告了 `estimate` 時才寫（ISO 8601 duration）。

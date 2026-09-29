@@ -44,14 +44,14 @@ v:    5    2    8    1
 
 **排一部分**也就順理成章：
 
-```cpp
+```cpp demo
 sort(v.begin(), v.begin() + 3);      // 只排前三個
 ```
 
 ## 三、由大到小
 第三個參數決定怎麼比：
 
-```cpp
+```cpp demo
 sort(v.begin(), v.end(), greater<int>());
 ```
 
@@ -59,7 +59,7 @@ sort(v.begin(), v.end(), greater<int>());
 
 自己定規則也可以：
 
-```cpp
+```cpp demo
 sort(v.begin(), v.end(), [](int a, int b) {
     return abs(a) < abs(b);       // 依絕對值排
 });

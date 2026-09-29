@@ -21,7 +21,7 @@
 ## 一、`delay` 的代價
 `delay` 這一行的期間，這支程式**什麼都不能做**：
 
-```cpp
+```cpp demo
 delay(1000);
 ```
 
@@ -35,7 +35,7 @@ delay(1000);
 ## 二、`millis()`
 `millis()` 回的是「開機到現在幾毫秒」：
 
-```cpp
+```cpp demo
 unsigned long t = millis();
 ```
 

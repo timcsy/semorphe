@@ -38,7 +38,7 @@ cout << pq.top() << endl;      // 3   ← 剩下裡面最大的
 ## 二、要最小的
 要反過來，宣告的時候多寫兩個參數：
 
-```cpp
+```cpp demo
 priority_queue<int, vector<int>, greater<int>> pq;
 ```
 

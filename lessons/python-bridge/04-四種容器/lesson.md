@@ -20,7 +20,7 @@ Python 這四種是**內建的、有專屬語法的**，所以它們是這個語
 ## 一、四種，一眼看完
 四種放在一起比：
 
-```python
+```python demo
 nums  = [3, 1, 4]                    # list  ——有順序、可以重複、可以改
 ages  = {"ming": 16, "hua": 17}      # dict  ——鍵 → 值
 tags  = {"a", "b"}                   # set   ——不重複、沒順序
@@ -44,7 +44,7 @@ point = (1, 2)                       # tuple ——像 list，而【不能改】
 ## 二、拿東西
 拿的寫法都是方括號：
 
-```python
+```python demo
 print(nums[0])            # 3
 print(ages["ming"])       # 16
 print(point[1])           # 2
@@ -54,7 +54,7 @@ print(point[1])           # 2
 
 ⚠️ `set` **不能用方括號拿**，因為它沒有順序。它只回答「在不在裡面」：
 
-```python
+```python demo
 print("a" in tags)        # True
 ```
 
@@ -64,7 +64,7 @@ print("a" in tags)        # True
 
 加的寫法各有各的：
 
-```python
+```python demo
 nums.append(5)            # list  →  [3, 1, 4, 5]
 ages["new"] = 18          # dict  →  多一個鍵
 tags.add("c")             # set   →  已經有的話不會變多
@@ -74,14 +74,14 @@ tags.add("c")             # set   →  已經有的話不會變多
 
 `len(x)` 對四種都通：
 
-```python
+```python demo
 print(len(nums))          # 4
 ```
 
 ## 四、⚠️ `tuple` 不能改
 `tuple` 做好就不能改：
 
-```python
+```python counter
 point[0] = 9              # 💥 TypeError
 ```
 

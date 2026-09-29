@@ -45,7 +45,7 @@ def add(a, b):
 1. 把值交出去
 2. **立刻結束這個函式**，後面的行不會跑
 
-```python
+```python demo
 def f(n):
     return n
     print("印不出來")      # ← 永遠不會跑
@@ -71,7 +71,7 @@ print(x)              # None
 ## 三、參數可以有預設值
 參數後面加上 `=`，不給的時候就用那個值：
 
-```python
+```python demo
 def greet(name, greeting="你好"):
     print(greeting + "，" + name)
 
@@ -84,7 +84,7 @@ greet("小明", "早安")      # 早安，小明
 ## 四、🔴 裡面的變數只活在裡面
 函式裡面取的名字，外面看不到：
 
-```python
+```python counter
 def f():
     x = 10
     print(x)
@@ -99,7 +99,7 @@ print(x)          # 💥 NameError：外面沒有 x
 
 ⚠️ 反過來，函式讀得到外面的變數，而**改不到**：
 
-```python
+```python counter
 total = 0
 def add():
     total = total + 1      # 💥 UnboundLocalError
@@ -107,7 +107,7 @@ def add():
 
 要改外面的東西，正確的做法是回傳它：
 
-```python
+```python demo
 def add(total):
     return total + 1
 

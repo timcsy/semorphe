@@ -59,7 +59,7 @@ score  =  score + 5
 
 ⚠️ **順序是先右後左。** 只要記住這一件事，這種寫法就不再奇怪了：
 
-```cpp
+```cpp demo
 count = count + 1;   // 計數器加一
 total = total + n;   // 累加
 ```
@@ -73,7 +73,7 @@ total = total + n;   // 累加
 
 照著打上這一段，五種運算各印一次：
 
-```cpp
+```cpp demo
 int a = 7, b = 2;
 cout << a + b << endl;   // 9
 cout << a - b << endl;   // 5
@@ -89,7 +89,7 @@ cout << a % b << endl;   // 1   ← 餘數
 
 想要 `3.5`，其中一邊要是小數：
 
-```cpp
+```cpp demo
 double c = 7.0 / 2;   // 3.5
 ```
 
@@ -104,7 +104,7 @@ double c = 7.0 / 2;   // 3.5
 五種運算裡沒有「次方」，也沒有「開根號」。而 `^` 在 C++ 裡**不是次方**，
 它是另一件事，這一課用不到。這兩個要另外叫：
 
-```cpp
+```cpp demo
 #include <cmath>
 
 cout << pow(2, 10) << endl;   // 1024   ← 2 的 10 次方
@@ -116,7 +116,7 @@ cout << sqrt(16) << endl;     // 4      ← 16 開根號
 
 ⚠️ **它們回傳的是小數**（`double`），不是整數。所以：
 
-```cpp
+```cpp demo
 cout << sqrt(16) << endl;     // 4      ← 剛好整除，看起來像整數
 cout << sqrt(2) << endl;      // 1.41421
 ```

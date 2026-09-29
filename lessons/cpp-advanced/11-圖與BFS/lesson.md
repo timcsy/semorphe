@@ -32,7 +32,7 @@ vector<vector<int>> g;      // g[u] ＝ u 連到哪些點
 
 ⚠️ 無向圖要**兩邊都加**：
 
-```cpp
+```cpp demo
 g[a].push_back(b);
 g[b].push_back(a);      // ← 漏了就變成單向
 ```
