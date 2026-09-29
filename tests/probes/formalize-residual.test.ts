@@ -70,6 +70,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { formalizeFunction, CellaFormalizeError, type ContractSources } from './cella-formalize'
 import { assertCorpus, assertRatchet, writeBaseline, RATCHET_NOTE } from '../helpers/guardrail'
+import { PATH_JUDGE } from '../../src/core/component/judges'
 import type { SemanticNode } from '../../src/core/types'
 
 const GUARD = 'formalize-residual'
@@ -349,11 +350,45 @@ describe('探針：形式化的殘差表（第六路今天到不了哪裡）', (
     const declared = cpp.filter((i) => contracts.has(i))
     console.log(`\n╔══ 母體 B：宣告的覆蓋 ══╗`)
     console.log(`解答用到的 cpp 身分 ${cpp.length} 顆｜宣告了 paths.formalize 的 ${declared.length} 顆`)
-    console.log(`  🔴 而 PATH_JUDGE.formalize 的 coverage 今天寫死 { covered: 2, of: 2 }`)
-    console.log(`     ——那個分母是「已經寫了形式核的」，不是「要用到的」。`)
     console.log(`\n  宣告了的：${declared.join('、') || '（無）'}`)
     const missing = cpp.filter((i) => !contracts.has(i))
     console.log(`  沒宣告的前 20 顆（共 ${missing.length}）：\n    ${missing.slice(0, 20).join('、')}`)
     expect(cpp.length, '樹裡一顆 cpp 身分都沒有 → 走訪壞了').toBeGreaterThan(10)
+  })
+
+  /**
+   * 🔴 **判決的分母是拄過去的，所以它會漂**（2026-09-30 量到的）。
+   *
+   * 第 265 刀把 `formalize.coverage` 從 `{ covered: 2, of: 2 }` 改成量出來的
+   * `of: 64`——而**那個「量出來的」只量了一次**。第 270–274 刀重新設計
+   * 第六課，`rebuild.cpp` 多了一個 `pow`（→ `cpp:math_pow`），
+   * 於是母體變成 65，而判決還寫著 64。
+   *
+   * ```
+   * 探針算得出真值   65
+   * judges.ts 寫著   64      ← 沒有人比對,所以沒有人知道
+   * ```
+   *
+   * > **一個「量出來的」數字被拄進另一個檔案之後，
+   * > 它就不再是量出來的了。**
+   *
+   * 🟢 所以這裡不是把 65 再拄一次，是**讓兩邊對不起來就紅**。
+   *
+   * ⚠️ 而它刻意**不是棘輪**：母體變大是課文長了（好事），
+   * 變小是課文縮了，**兩個方向都該更新判決並寫理由**
+   * ——棘輪只准一個方向，會擋掉其中一半。
+   */
+  it('🔴 硬性零：判決寫的分母，要等於這裡量出來的', () => {
+    const seen = new Set<string>()
+    for (const { fn } of fns) idsIn(fn, seen)
+    const measured = [...seen].filter((i) => i.startsWith('cpp:')).length
+    const cov = PATH_JUDGE.formalize.coverage
+    expect(cov, 'formalize 這一路的 coverage 變成 null 了 —— 判決被改壞了').not.toBeNull()
+    expect(
+      cov!.of,
+      `判決的分母漂了：judges.ts 寫 ${cov?.of}，而課文解答現在用到 ${measured} 顆 cpp 身分。`
+      + `\n改 src/core/component/judges.ts 的 PATH_JUDGE.formalize.coverage.of，`
+      + `並在旁邊寫下**為什麼變了**（哪一課、多了哪一顆）。`,
+    ).toBe(measured)
   })
 })

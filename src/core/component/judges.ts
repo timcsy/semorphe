@@ -191,7 +191,7 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
     evidence: 'tests/probes/cella-formalize-guard.test.ts',
     judges: '形式核載得進 cella，而洞的型別逐字是缺的那段契約。'
       + '🔴 而**分母是量出來的**（`tests/probes/formalize-residual.test.ts`）：'
-      + '課文 88 支解答用到 64 顆 cpp 身分，宣告了 `paths.formalize` 的 2 顆。'
+      + '課文 88 支解答用到 65 顆 cpp 身分，宣告了 `paths.formalize` 的 2 顆。'
       + '⚠️ 而形狀那一面更遠：那 88 支裡的 105 個函式，走訪器產得出項的是 **0 個**——'
       + '不碰 I/O 的只有 15 個，而 15 個全部接不住（形狀 10 · 型別 3 · 運算子宣告 2）。',
     // 🔴 **原本是 `{ covered: 2, of: 2 }`＝100%，而那個分母是「已經寫了形式核的」**
@@ -201,7 +201,15 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
     //
     // 2026-09-26 量出來的分母是 64（課文解答用到的 cpp 身分）。與 `execute` 的
     // `of: 210` 同一個體例：**每一路的母體是那一路真的要走的那些**。
-    coverage: { covered: 2, of: 64 },
+    //
+    // 🔴 **64 → 65（2026-09-30）**：第 270–274 刀重新設計第六課，
+    //    `算一算/solutions/rebuild.cpp` 多了一個 `pow` → `cpp:math_pow`。
+    //    （`sqrt` 不算新的——第九課就在用了。）
+    //
+    // ⚠️ **而它是靠一支新的硬性零才發現的，不是有人記得**：
+    //    這個數字是從 `formalize-residual` 拄過來的，而拄過來的那一刻
+    //    它就不再是量出來的了。那支比對現在盯著兩邊。
+    coverage: { covered: 2, of: 65 },
   },
 }
 
