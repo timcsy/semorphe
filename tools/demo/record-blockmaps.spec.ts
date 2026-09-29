@@ -38,6 +38,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { engineHash } from '../blockmap/engine-hash'
 import { captureBlockmap } from './capture-blockmap'
+import { buildLineMap } from './line-map'
 
 const ROOT = path.resolve(process.cwd())
 const OUT = path.join(ROOT, 'assets/blockmaps')
@@ -140,7 +141,20 @@ for (const c of CASES) {
     //
     // > **與其讓兩份東西「盡量像」，不如讓它們是同一份。**
 
-    const got = await page.evaluate(captureBlockmap)
+    // 🔴 **即使「三者是同一份」，也要建表**（2026-09-29）。
+    //    實測 `arduino/13-溫濕度` 的課文 14 行，而 badge 編到 15
+    //    ——產生器對 Arduino 的正規化多了一行，而舊版沒有夾住上界。
+    //
+    // > **一句「它們是同一份」是一個宣稱，而宣稱要有人去量。**
+    const editorCode = await page.evaluate(() =>
+      (window as never as { __app: { codeView: { getCode(): string } } }).__app.codeView.getCode())
+    const lm = buildLineMap(editorCode, c.code)
+    expect(Object.keys(lm.map).length, `🔴 ${c.id}：一行都對不回課文`).toBeGreaterThan(0)
+    if (lm.unmatched.length > 0) {
+      console.log(`  ⚠️ ${c.id}：課文第 ${lm.unmatched.join('、')} 行在編輯器那份裡找不到`)
+    }
+
+    const got = await page.evaluate(captureBlockmap, { lineMap: lm.map, lineCount: lm.lineCount })
 
     // ★ 自我否證：一塊都對不到 ⟹ 產出是一張沒有用的圖，不要寫出去
     expect(got.blocks.length, `🔴 ${c.id}：一塊積木都對不到程式碼`).toBeGreaterThan(0)
