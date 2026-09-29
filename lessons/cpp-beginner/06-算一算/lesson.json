@@ -8,6 +8,7 @@
     "cpp:arithmetic",
     "cpp:endl",
     "cpp:include",
+    "cpp:input",
     "cpp:literal_number",
     "cpp:literal_string",
     "cpp:math_pow",

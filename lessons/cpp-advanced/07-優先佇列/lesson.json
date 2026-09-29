@@ -5,15 +5,22 @@
     "target": "cpp-advanced"
   },
   "components": [
+    "cpp:arithmetic",
+    "cpp:compare",
     "cpp:container_iter",
     "cpp:container_pop",
     "cpp:container_push",
     "cpp:endl",
     "cpp:literal_number",
+    "cpp:loop_count",
+    "cpp:loop_while",
     "cpp:print",
     "cpp:priority_queue_declare",
     "cpp:priority_queue_peek",
-    "cpp:var_ref"
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref",
+    "cpp:vector_size"
   ],
   "tasks": [
     {

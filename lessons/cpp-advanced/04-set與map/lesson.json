@@ -5,10 +5,14 @@
     "target": "cpp-advanced"
   },
   "components": [
+    "cpp:arithmetic",
+    "cpp:compare",
     "cpp:container_count",
     "cpp:endl",
+    "cpp:if",
     "cpp:literal_number",
     "cpp:literal_string",
+    "cpp:loop_range",
     "cpp:map_assign",
     "cpp:map_at",
     "cpp:map_declare",
@@ -17,6 +21,7 @@
     "cpp:set_insert",
     "cpp:struct_at_member",
     "cpp:var_ref",
+    "cpp:vector_declare",
     "cpp:vector_size"
   ],
   "tasks": [

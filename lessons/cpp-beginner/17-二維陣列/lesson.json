@@ -5,6 +5,7 @@
     "target": "cpp"
   },
   "components": [
+    "cpp:arithmetic",
     "cpp:array_2d_at",
     "cpp:array_2d_declare",
     "cpp:compare",

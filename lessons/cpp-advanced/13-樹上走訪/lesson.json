@@ -16,8 +16,11 @@
     "cpp:func_def",
     "cpp:if",
     "cpp:literal_number",
+    "cpp:loop_count",
     "cpp:loop_range",
     "cpp:print",
+    "cpp:var_assign",
+    "cpp:var_declare",
     "cpp:var_ref",
     "cpp:vector_declare"
   ],

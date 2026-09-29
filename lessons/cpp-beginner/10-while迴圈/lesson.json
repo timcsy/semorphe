@@ -8,6 +8,8 @@
     "cpp:arithmetic",
     "cpp:compare",
     "cpp:endl",
+    "cpp:if",
+    "cpp:input",
     "cpp:literal_number",
     "cpp:loop_do_while",
     "cpp:loop_while",

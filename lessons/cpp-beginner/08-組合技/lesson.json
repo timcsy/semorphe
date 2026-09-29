@@ -5,10 +5,12 @@
     "target": "cpp"
   },
   "components": [
+    "cpp:arithmetic",
     "cpp:endl",
     "cpp:increment",
     "cpp:literal_number",
     "cpp:print",
+    "cpp:var_assign",
     "cpp:var_assign_compound",
     "cpp:var_declare",
     "cpp:var_ref"
