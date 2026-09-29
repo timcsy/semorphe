@@ -33,6 +33,29 @@
  * **而那才是這一條真正生效的前提**。
  *
  * > **一條只驗「有交上來的那些」的規則，它的覆蓋率等於交件率。**
+ *
+ * ## 🔴 而它有第二個盲點，2026-09-29 學生撞到（使用者當場回報）
+ *
+ * 第 6 課「算一算」的〈練習：兩倍與餘數〉**少了「輸入」那塊積木**
+ * ——而這一條是綠的。
+ *
+ * 原因是母體：
+ *
+ * ```
+ * 這一條的判準   「這一課 ∪ 之前每一課」的 components         ← 累積
+ * 產品的行為     src/ui/app.ts: new Set(currentLesson.components)  ← 只有【這一課】
+ * ```
+ *
+ * 第 4 課「讀進來」宣告了 `cpp:input`，於是**聯集裡有它**，這一條放它過。
+ * 而學生在第 6 課的工具箱裡按不到。
+ *
+ * ⚠️ 而「各課的宣告是累積的嗎」是**查證過的**：第 5 課只宣告 5 顆，
+ * 丟掉了第 4 課的 `var_declare`／`input`。**每一課宣告的是「這一課自己要用的」。**
+ *
+ * > **兩個名字很像的檢查，差別常常不在判準，在母體
+ * > ——而這一次兩個母體分別對應【教過嗎】與【拿得到嗎】，兩個都要問。**
+ *
+ * ⟹ 於是下面有**兩條硬性零**：累積那條問課程設計，per-lesson 那條問學生按不按得到。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import fs from 'node:fs'
@@ -129,6 +152,34 @@ function findingsFor(track: string): string[] {
   return out
 }
 
+/**
+ * **per-lesson：這一課的工具箱拿得到嗎。**
+ *
+ * 🔴 判準逐字對齊產品：`src/ui/app.ts` 的 `new Set(this.currentLesson.components)`
+ * ——**不含之前每一課**。骨架那六顆除外（課程刻意不教，而它們一直在）。
+ */
+function reachabilityFor(track: string): string[] {
+  const dir = path.join(ROOT, 'lessons', track)
+  const out: string[] = []
+  for (const d of fs.readdirSync(dir).sort()) {
+    const j = path.join(dir, d, 'lesson.json')
+    if (!fs.existsSync(j)) continue
+    const declared = new Set<string>(JSON.parse(fs.readFileSync(j, 'utf8')).components ?? [])
+    const sd = path.join(dir, d, 'solutions')
+    if (!fs.existsSync(sd)) continue
+    for (const f of fs.readdirSync(sd).sort()) {
+      if (!f.endsWith('.cpp')) continue
+      let used: Set<string>
+      try { used = componentsOf(fs.readFileSync(path.join(sd, f), 'utf8')) } catch { continue }
+      for (const c of [...used].sort()) {
+        if (SKELETON.has(c) || declared.has(c)) continue
+        out.push(`${track}/${d}/${f} · ${c}`)
+      }
+    }
+  }
+  return out
+}
+
 const CPP_TRACKS = ['cpp-beginner', 'cpp-advanced', 'c-bridge']
 
 describe('第一百二十八條護欄：參考解答不得用到還沒教過的元件', () => {
@@ -137,6 +188,19 @@ describe('第一百二十八條護欄：參考解答不得用到還沒教過的�
       fs.readdirSync(path.join(ROOT, 'lessons', t))
         .filter((d) => fs.existsSync(path.join(ROOT, 'lessons', t, d, 'solutions'))))
     expect(n.length, '🔴 一份解答都沒讀到 → 下面那條是空過的').toBeGreaterThan(20)
+  })
+
+  it('🔴 硬性零（per-lesson）：解答用的元件，**這一課的工具箱**就要拿得到', () => {
+    // 🔴 2026-09-29 學生撞到：第 6 課的〈練習：兩倍與餘數〉少了「輸入」積木，
+    //    而上面那條（累積）是綠的——第 4 課宣告過 `cpp:input`。
+    //    **學生按得到的是這一課宣告的那些。**
+    const findings = CPP_TRACKS.flatMap(reachabilityFor)
+    expect(
+      findings,
+      '\n🔴 這些解答用到的元件，在【那一課的工具箱裡拿不到】：\n' + findings.join('\n')
+        + '\n\n處置：把它加進那一課 lesson.json 的 components。'
+        + '\n⚠️ 不是改產品——各課的宣告刻意是「這一課自己要用的」（第 5 課就丟掉了第 4 課的 input）。\n',
+    ).toEqual([])
   })
 
   it('🔴 硬性零：每一份參考解答用的元件，這一課或之前都宣告過', () => {

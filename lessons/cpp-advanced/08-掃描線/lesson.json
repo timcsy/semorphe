@@ -22,7 +22,8 @@
     "cpp:var_assign",
     "cpp:var_declare",
     "cpp:var_ref",
-    "cpp:vector_declare"
+    "cpp:vector_declare",
+    "cpp:vector_size"
   ],
   "tasks": [
     {

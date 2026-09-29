@@ -5,8 +5,10 @@
     "target": "cpp"
   },
   "components": [
+    "cpp:arithmetic",
     "cpp:compare",
     "cpp:endl",
+    "cpp:input",
     "cpp:literal_number",
     "cpp:logic",
     "cpp:logic_not",

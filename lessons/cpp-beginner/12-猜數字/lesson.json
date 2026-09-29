@@ -7,6 +7,7 @@
   "components": [
     "cpp:arithmetic",
     "cpp:break",
+    "cpp:builtin_constant",
     "cpp:compare",
     "cpp:endl",
     "cpp:func_call",
@@ -15,6 +16,7 @@
     "cpp:input",
     "cpp:literal_number",
     "cpp:literal_string",
+    "cpp:loop_count",
     "cpp:loop_while",
     "cpp:print",
     "cpp:random_next",

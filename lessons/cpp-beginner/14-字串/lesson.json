@@ -8,6 +8,7 @@
     "cpp:arithmetic",
     "cpp:array_at",
     "cpp:endl",
+    "cpp:input",
     "cpp:literal_number",
     "cpp:literal_string",
     "cpp:print",

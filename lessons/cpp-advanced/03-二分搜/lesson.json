@@ -6,9 +6,11 @@
   },
   "components": [
     "cpp:arithmetic",
+    "cpp:container_append",
     "cpp:container_iter",
     "cpp:endl",
     "cpp:literal_number",
+    "cpp:loop_range",
     "cpp:print",
     "cpp:range_find_lower",
     "cpp:range_find_upper",

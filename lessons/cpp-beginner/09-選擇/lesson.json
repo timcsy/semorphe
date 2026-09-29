@@ -5,6 +5,7 @@
     "target": "cpp"
   },
   "components": [
+    "cpp:arithmetic",
     "cpp:compare",
     "cpp:endl",
     "cpp:if",
