@@ -64,12 +64,21 @@ import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
 const ROOT = path.resolve(__dirname, '../..')
-const CORPUS = process.env.STUDYCPP_DIR ?? '/tmp/StudyCpp'
+// 🔴 **預設值拿掉了**（2026-09-30）。原本寫 `?? '/tmp/StudyCpp'`，而跟它同一個
+//    目錄的另外五支都是 `skipIf(!process.env.STUDYCPP_DIR)`——只有這一支例外。
+//
+//    症狀是一個**假紅**：`/private/tmp` 被系統清掉之後，目錄還在而 `.cpp` 是 0，
+//    於是「目錄在不在」說「跑吧」、而入口條件「檔有幾個」說「空的」。
+//    兩個條件中間的縫隱就是語料被清掉的那一格。
+//
+// 🟢 入口條件（`n > 150`）**留著**：有人明確設了 `STUDYCPP_DIR`，
+//    而語料是空的，那就該紅——「我要了」與「它剛好在」是兩件事。
+const CORPUS = process.env.STUDYCPP_DIR ?? ''
 
 let tsParser: Parser
 let lifter: Lifter
 
-describe('探針：學生真的寫過的程式，違反宣告的有多少', () => {
+describe.skipIf(!process.env.STUDYCPP_DIR)('探針：學生真的寫過的程式，違反宣告的有多少', () => {
   beforeAll(async () => {
     await Parser.init({ locateFile: (s: string) => `${ROOT}/public/${s}` })
     tsParser = new Parser()
