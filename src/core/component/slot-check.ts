@@ -188,3 +188,90 @@ export function checkSlots(tree: SemanticNode): SlotFinding[] {
   walk(tree)
   return out
 }
+
+/**
+ * **我們沒讀懂的那幾顆**——`checkSlots` 跳過了誰。
+ *
+ * ## 🔴 它從哪來（2026-10-01，姊妹專案 cella 改了我一個字）
+ *
+ * 我告訴他們「降級節點與任何宣告相容」，而他們寫回來的是
+ * 「對任何宣告判成 **`Unknown`**，不是 `Reject`」。**那個字他們是對的。**
+ *
+ * ```
+ * fitsSlot    isDynamic → return true      「與一切相容」
+ * checkSlots  !isDynamic → 才檢查            整顆跳過
+ * ⟹ 輸出是二值的,所以「我不知道」只能被寫成「沒問題」
+ * ```
+ *
+ * 一棵樹裡有十顆灰積木，`SlotFinding[]` 回空陣列，而讀的人看到「全部合格」。
+ *
+ * ⚠️ 而這踩到本庫自己的 **P6 誠實降級**，逐字：
+ *
+ * > 降級必須單調遞減、**必須可見**、必須區分原因——否則鷹架變成認知牢籠。
+ *
+ * 「必須可見」在這一路沒有做到。
+ *
+ * ## 🟢 為什麼是獨立的通道，不是 `SlotFinding` 的第三個 kind
+ *
+ * `checkSlots` 餵的是 `diagnostics.ts` 的**使用者可見診斷**。把「沒讀懂」
+ * 混進 findings 的話，**灰積木會在面板上變紅**——而那正是 `isDynamic`
+ * 檔頭在警告的那件事：
+ *
+ * > **把「我不知道」算成「你錯了」的檢查器，
+ * > 量的是它自己的辨識率，不是使用者的程式。**
+ *
+ * ⟹ 「沒讀懂」要**看得見**，而不是要**被當成錯**。兩件事，兩條通道。
+ *
+ * 🟢 而它也正好是 P6 說的那個度量：**raw_code 覆蓋率是誠實度的度量，
+ * 不是缺陷數量的度量。**
+ */
+export interface SlotUnread {
+  /** 那顆降級節點自己 */
+  nodeId?: string
+  componentId: string
+  /** 它坐在誰的哪一個槽裡——樹根沒有父 */
+  parent?: { componentId: string; slot: string }
+}
+
+/**
+ * 走一趟樹，回「`checkSlots` 因為讀不懂而跳過的那幾顆」。
+ *
+ * ⚠️ **與 `checkSlots` 是同一趟走訪的兩個答案**，所以兩支要一起改
+ * ——一支多跳過一顆而另一支沒多報一顆，那個洞就是靜默的。
+ */
+/**
+ * 🔴 **「沒讀懂」比 `isDynamic` 窄，而那個差別就是 P6 要求的「區分原因」。**
+ *
+ * `isDynamic` 收兩種東西，而它們在認識論上**不是同一件事**：
+ *
+ * ```
+ * raw_code／raw_expression／unresolved   我們【沒讀懂】        ← 這一支要報
+ * nonComponentDecl（param_decl …）        我們完全讀懂了,       ← 這一支不報
+ *                                        它只是不是一顆元件
+ * ```
+ *
+ * ⚠️ 這個區別是**這一支的第一版漏掉、而護欄當場抓到的**：課文語料報出 41 筆，
+ * 全是 `param_decl`。把它們算成「沒讀懂」的話，這個度量就不再是誠實度的度量，
+ * 它會變成「有幾個非元件節點」——一個與誠實無關的數字。
+ *
+ * > **一個把「不是元件」算成「沒讀懂」的度量，
+ * > 量的是宣告的分類法，不是我們的理解力。**
+ */
+function isUnread(componentId: string): boolean {
+  const bare = componentId.split(':').pop() ?? componentId
+  return bare === 'raw_code' || bare === 'raw_expression' || bare === 'unresolved'
+}
+
+export function unreadSlots(tree: SemanticNode): SlotUnread[] {
+  const out: SlotUnread[] = []
+  const walk = (n: SemanticNode, parent?: { componentId: string; slot: string }): void => {
+    if (isUnread(n.componentId)) {
+      out.push({ nodeId: n.id, componentId: n.componentId, ...(parent ? { parent } : {}) })
+    }
+    for (const [slot, bucket] of Object.entries((n.slots ?? {}) as Record<string, SemanticNode[]>)) {
+      for (const c of bucket ?? []) walk(c, { componentId: n.componentId, slot })
+    }
+  }
+  walk(tree)
+  return out
+}
