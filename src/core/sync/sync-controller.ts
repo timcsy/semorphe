@@ -639,9 +639,19 @@ export class SyncController {
     // ⚠️ **`syncing` 的設定與清除要包住整段 `await`**——重入守衛的窗口
     //    因為非同步而變長了，而 `try/finally` 已經在外面（見函式尾）。
     this.syncing = true
+    // 🔴 **tree-sitter 的樹配置在 wasm 的線性記憶體裡，不 `delete()` 就不回收**
+    //    （2026-10-02 實測：同一份程式 parse 300 次，RSS +276.5 MB、單調上升；
+    //      加上 `delete()` 之後 −6.4 MB，持平）。而這個函式**每次編輯都跑**。
+    //
+    // ⚠️ 掛在 `finally` 不是掛在用完的那一行——中間丟例外的話那一棵就漏了。
+    //    而刪**太早**比漏更糟：那是 wasm 的 use-after-free。
+    //    🟢 刪在這裡是安全的，因為語義樹不留 AST 的參照
+    //      （`PropertyValue` 是純值、`NodeMetadata` 全是基本型別與 `SourceRange`）。
+    let parsed: { delete?: () => void } | null = null
     try {
       const code = data.code
       const parseResult = await this.parser.parse(code)
+      parsed = parseResult as unknown as { delete?: () => void }
       const rootNode = parseResult.rootNode as import('../lift/types').AstNode
 
       // Report parse errors but continue sync — lifter degrades ERROR nodes to raw_code.
@@ -746,6 +756,7 @@ export class SyncController {
       this.bus.emit('semantic:update', { tree, code, blockState: renderResult, source: 'code', mappings: this.codeMappings, scaffold: this.scaffoldNotice(tree), derivedNodeIds: this.derivedIds })
     } finally {
       this.syncing = false
+      parsed?.delete?.()
     }
   }
 
@@ -945,10 +956,15 @@ export class SyncController {
           n => isFunctionDefinition(n.componentId) && n.properties.name === name))
       if (relift && this.getScaffoldDepth() > 0 && !framePresent && this.lifter && this.parser) {
         const parseResult = await this.parser.parse(currentCode)
-        const rootNode = parseResult.rootNode as import('../lift/types').AstNode
-        if (rootNode) {
-          const lifted = this.lifter.lift(rootNode)
-          if (lifted) fullTree = lifted
+        try {
+          const rootNode = parseResult.rootNode as import('../lift/types').AstNode
+          if (rootNode) {
+            const lifted = this.lifter.lift(rootNode)
+            if (lifted) fullTree = lifted
+          }
+        } finally {
+          // 見 `handleEditCode` 的註解：不 delete 就不回收。
+          (parseResult as unknown as { delete?: () => void }).delete?.()
         }
       }
 
