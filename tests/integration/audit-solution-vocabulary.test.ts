@@ -65,6 +65,7 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import '../../src/languages/cpp/module'
 import type { Lifter } from '../../src/core/lift/lifter'
+import { componentsForLesson } from '../../src/core/lesson/load-lessons'
 import type { SemanticNode } from '../../src/core/types'
 
 const ROOT = path.resolve(__dirname, '../..')
@@ -153,10 +154,19 @@ function findingsFor(track: string): string[] {
 }
 
 /**
- * **per-lesson：這一課的工具箱拿得到嗎。**
+ * **這一課的工具箱拿得到嗎。**
  *
- * 🔴 判準逐字對齊產品：`src/ui/app.ts` 的 `new Set(this.currentLesson.components)`
- * ——**不含之前每一課**。骨架那六顆除外（課程刻意不教，而它們一直在）。
+ * 🔴 **判準不是抄來的，是【呼叫產品那一支】**（2026-10-01 改）。
+ *
+ * 原本這裡寫死 `new Set(lesson.components)`，註解說「判準逐字對齊產品」
+ * ——而那正是問題：**逐字對齊是兩份判斷**，而兩份判斷會各自漂。
+ * 使用者 2026-10-01 回報「前面課程有的積木到後面就不見了」，根因就是
+ * 產品那一份是單課的；修法是把產品改成累積，而**這裡跟著改成呼叫它**。
+ *
+ * > **一條護欄要與產品共用同一支函式，不是與它寫得一樣。**
+ * > （`viewForLesson` 的檔頭早就記過這句，而這一條當時沒跟上。）
+ *
+ * 骨架那六顆除外（課程刻意不教，而它們一直在）。
  */
 function reachabilityFor(track: string): string[] {
   const dir = path.join(ROOT, 'lessons', track)
@@ -164,7 +174,7 @@ function reachabilityFor(track: string): string[] {
   for (const d of fs.readdirSync(dir).sort()) {
     const j = path.join(dir, d, 'lesson.json')
     if (!fs.existsSync(j)) continue
-    const declared = new Set<string>(JSON.parse(fs.readFileSync(j, 'utf8')).components ?? [])
+    const declared = componentsForLesson(`${track}/${d}`)
     const sd = path.join(dir, d, 'solutions')
     if (!fs.existsSync(sd)) continue
     for (const f of fs.readdirSync(sd).sort()) {
@@ -190,10 +200,16 @@ describe('第一百二十八條護欄：參考解答不得用到還沒教過的�
     expect(n.length, '🔴 一份解答都沒讀到 → 下面那條是空過的').toBeGreaterThan(20)
   })
 
-  it('🔴 硬性零（per-lesson）：解答用的元件，**這一課的工具箱**就要拿得到', () => {
-    // 🔴 2026-09-29 學生撞到：第 6 課的〈練習：兩倍與餘數〉少了「輸入」積木，
-    //    而上面那條（累積）是綠的——第 4 課宣告過 `cpp:input`。
-    //    **學生按得到的是這一課宣告的那些。**
+  it('🔴 硬性零：解答用的元件，**那一課的工具箱**就要拿得到', () => {
+    // 🔴 2026-09-29 學生撞到：第 6 課的〈練習：兩倍與餘數〉少了「輸入」積木。
+    //    當時的修法是把這一條收緊成 per-lesson（把護欄對齊到產品）。
+    //
+    // ⚠️ **2026-10-01 使用者推翻了那個方向**：「有一些前面課程有的積木到後面
+    //    就不見了，而且我是希望不只跟著做是這樣，練習也要。」
+    //    ⟹ 產品改成累積，而這一條改成**呼叫產品那一支**。
+    //
+    // 🟢 於是這一條與上面那條的差別只剩**母體**（課文 vs 解答），
+    //    判準同一個——而那正是它們本來該有的關係。
     const findings = CPP_TRACKS.flatMap(reachabilityFor)
     expect(
       findings,

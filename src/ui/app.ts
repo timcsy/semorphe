@@ -78,7 +78,7 @@ import { scatterOrder } from '../core/arrange'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
-import { lessonById, allTracks, lessonsOfTrack, solutionFor, starterFor, viewForLesson } from '../core/lesson/load-lessons'
+import { lessonById, allTracks, lessonsOfTrack, solutionFor, starterFor, viewForLesson, componentsForLesson } from '../core/lesson/load-lessons'
 import { suggestLessonFor } from '../core/lesson/lesson-suggest'
 import type { LessonNudgeBar } from './lesson-nudge-bar'
 import { allTemplates, templateById } from '../core/lesson/load-templates'
@@ -2310,7 +2310,11 @@ export class App {
      * 🟢 而主題那一份**仍然是自由模式的範圍**（上面那個 early return）
      * ——它沒有退場，退場的是它對課程的否決權。
      */
-    const want = new Set(this.currentLesson.components)
+    // 🔴 **累積，不是只有這一課**（2026-10-01）——見 `componentsForLesson`。
+    //    ⚠️ 這一行與 `toolboxComponents()` 那一行**必須是同一支**：
+    //       只改工具箱的話，學生剛從工具箱拖出來的積木會立刻被打暗，
+    //       而那正是 2026-08-28「為何積木變這麼暗？」那個形狀。
+    const want = componentsForLesson(this.currentLesson.id)
     // 🔴 **鷹架不是學生選的，所以它在【範圍】內——而不在【工具箱】裡。**
     //
     // 這個函式有兩個消費者，而它們要的不是同一件事：
@@ -2391,7 +2395,9 @@ export class App {
     const usable = new Set([...visible].filter(
       (c) => this.scaffoldDepth >= 2 || !isScaffoldComponent(c)))
     if (!this.currentLesson) return usable
-    const want = new Set(this.currentLesson.components)
+    // 🔴 **累積**：「這一課 ∪ 同一軌之前每一課」。見 `componentsForLesson` 的檔頭
+    //    ——原本只拿這一課那一份，於是前面教過的積木會在後面的課【不見】。
+    const want = componentsForLesson(this.currentLesson.id)
     return new Set([...usable].filter((c) => want.has(c)))
   }
 
