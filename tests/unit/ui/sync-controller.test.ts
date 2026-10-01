@@ -156,6 +156,59 @@ describe('SyncController (bus-based)', () => {
       expect(data.blockState).toBeDefined()
     })
 
+    /**
+     * 🔴 **parse 幾棵樹，就要 delete 幾棵。**
+     *
+     * ## 它從哪來（2026-10-02）
+     *
+     * web-tree-sitter 的樹配置在 **wasm 的線性記憶體**裡，而 GC 不管它
+     * ——物件在 JS 這邊被回收，wasm 那邊的配置還在。實測同一份程式
+     * parse 300 次：**RSS +276.5 MB，單調上升**；加上 `delete()` 之後持平。
+     * 而 `handleEditCode` 是**每次編輯都跑**的。
+     *
+     * ## ⚠️ 而既有的測試全綠也抓不到它
+     *
+     * 上面那個 `mockParser` 回的是 `{ rootNode }`——**沒有 `delete`**。
+     * 所以產品裡那一行 `parsed?.delete?.()` 在測試裡是個 no-op，
+     * 而「1693 支全綠」對這件事**一個字都沒說**。
+     *
+     * > **一個被 mock 掉的資源，它的生命週期缺陷不會出現在任何一條測試裡。**
+     *
+     * ## 🟢 判準刻意不是記憶體讀數
+     *
+     * 量記憶體的測試會因為機器而假紅，而假紅會讓人學會忽略它。
+     * 這一條**數次數**：`parse` 幾次、`delete` 幾次，兩個數字要相等。
+     * 確定性、跨機器相同。
+     */
+    it('🔴 parse 出來的樹要被釋放——wasm 的記憶體 GC 不管', async () => {
+      let parsed = 0
+      let freed = 0
+      const rootNode = {
+        type: 'translation_unit', text: '', isNamed: true,
+        children: [], namedChildren: [], childForFieldName: () => null,
+        startPosition: { row: 0, column: 0 }, endPosition: { row: 0, column: 0 },
+      }
+      // ⚠️ 關鍵差別：這個 mock 的樹**有** `delete`，所以那一行不再是 no-op。
+      const countingParser: CodeParser = {
+        parse: vi.fn(async () => {
+          parsed++
+          return { rootNode, delete: () => { freed++ } } as never
+        }),
+      }
+      const lifter = new Lifter()
+      lifter.register('translation_unit', () => createNode('cpp:program', {}, { body: [] }))
+      controller.setCodeToBlocksPipeline(lifter, countingParser)
+
+      for (const code of ['int x;', 'int y;', 'int z;']) {
+        bus.emit('edit:code', { code })
+        await new Promise((r) => setTimeout(r, 0))
+      }
+
+      expect(parsed, '一次都沒 parse → 這一條是空過的').toBeGreaterThan(0)
+      expect(freed, `parse ${parsed} 棵而只釋放 ${freed} 棵`
+        + '——每次編輯漏一棵，而 wasm 的線性記憶體只增不減').toBe(parsed)
+    })
+
     it('should call error callback on parse errors', async () => {
       const errorNode = {
         type: 'ERROR',
