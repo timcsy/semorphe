@@ -171,3 +171,100 @@ export function viewForLesson(lessonId: string): LessonView | undefined {
   }
   return current
 }
+
+/**
+ * **這一軌之前的軌教過的全部**——沿 `track.json` 的 `after` 遞迴往上。
+ *
+ * ⚠️ `seen` 不是裝飾：一份寫成環的 `after` 不該讓整個課程載不起來
+ * （`allLessons()` 的註解逐字：「一堂課打錯字會讓**所有**課都開不起來」）。
+ */
+function inheritedComponents(track: string, seen = new Set<string>()): Set<string> {
+  const out = new Set<string>()
+  if (seen.has(track)) return out
+  seen.add(track)
+  const after = allTracks().get(track)?.after
+  if (after === undefined) return out
+  for (const c of inheritedComponents(after, seen)) out.add(c)
+  for (const l of lessonsOfTrack(after)) for (const c of l.components) out.add(c)
+  return out
+}
+
+/**
+ * **這一課拿得到哪些元件**——「這一課 ∪ 同一軌之前每一課」。
+ *
+ * ## 🔴 它從哪來（2026-10-01，使用者看著畫面）
+ *
+ * > 「我發現你提供的積木並沒有嚴格漸近增加，**有一些前面課程有的積木到後面
+ * > 就不見了**，而且我是希望不只跟著做是這樣，練習也要。」
+ *
+ * 量出來的規模不是零星：**69 課裡有 62 課**掉過前面教過的元件，
+ * 六條軌全部中，合計 1092 次「這一課少了前面教過的」。
+ *
+ * ```
+ * cpp-beginner/05-程式從哪開始   掉 9 顆（var_declare、input、arithmetic …）
+ * cpp-beginner/19-遞迴           掉 30 顆
+ * arduino/14-記住設定            掉 45 顆
+ * ```
+ *
+ * ## 🔴 根因是【兩份判斷】，而 `viewForLesson` 的註解早就寫過這件事
+ *
+ * ```
+ * audit-solution-vocabulary   「這一課 ∪ 之前每一課」   ← 累積
+ * src/ui/app.ts               new Set(currentLesson.components)  ← 只有這一課
+ * ```
+ *
+ * 於是一份參考解答可以**過得了護欄而學生做不出來**：第 4 課宣告了
+ * `cpp:input`，聯集裡有它，護欄放行；而學生在第 6 課的工具箱裡按不到。
+ * （2026-09-29 學生就是這樣撞到〈練習：兩倍與餘數〉少了「輸入」。）
+ *
+ * ⟹ 所以這一支的**存在理由**是上面那一支的註解逐字寫的那句：
+ *
+ * > 🟢 **而護欄抓到它，是因為護欄與產品共用這一支**
+ * > ——兩份判斷會讓護欄驗過一條產品不會走的路。
+ *
+ * ## 🟢 而它與 `viewForLesson` 是同一個形狀：宣告轉折，不宣告每一格
+ *
+ * ```
+ * ❌ 每一課自己那一份        這一課用到的 → 讀成「拿得到的」→ 一條鋸齒
+ * 🟢 累積（繼承前面每一課）   嚴格不遞減 → 那才是漸進揭露
+ * ```
+ *
+ * ⚠️ **原本那個行為不是漸進揭露，是【滑動視窗】**——它藏的是已經教過的東西，
+ * 而漸進揭露藏的是還沒教的。兩者在第 1 課長得一樣，之後完全相反。
+ *
+ * ## 這一支不做什麼
+ *
+ * - **不管鷹架與能力過濾**——那兩刀在 `toolboxComponents()` 與 `buildToolboxInner`。
+ * - **不管 `target`**——跨軌繼承進來的 `cpp:*` 在 python 軌上由
+ *   `filterByTarget` 濾掉，那是另一刀。這裡只回答「教過了沒」。
+ *
+ * ## 🟢 跨軌走 `track.after`——而那個宣告【早就在了】
+ *
+ * ⚠️ 我第一版寫「不跨軌」，而那是錯的：`track.json` 的 `after` 已經宣告好了
+ * （`cpp-advanced`、`c-bridge`、`python-bridge` 都是 `after: cpp-beginner`），
+ * 而 `audit-solution-vocabulary` 的 `inherited()` 一直在走它。
+ *
+ * > **少了它，進階軌與兩條銜接軌會被要求「重新教一次陣列與迴圈」
+ * > ——而它們的第 1 課逐字寫著「你已經會了」。**
+ *
+ * `after` 遞迴往上走，而**帶環偵測**：一份寫錯的宣告不該讓課程載不起來。
+ *
+ * @param lessonId `<軌道>/<編號>-<課名>`
+ * @returns 累積到這一課（含）的元件身分；課不存在時回空集合
+ */
+export function componentsForLesson(lessonId: string): Set<string> {
+  const track = trackOf(lessonId)
+  const out = inheritedComponents(track)
+  // ⚠️ 與 `viewForLesson`／`suggestLessonFor` 同一條規矩：課程 id 帶編號，
+  //    所以字典序**就是**課程順序。三處都靠它，改了要一起改。
+  const ids = [...allLessons().keys()]
+    .filter((id) => trackOf(id) === track)
+    .sort((a, b) => a.localeCompare(b))
+  for (const id of ids) {
+    for (const c of allLessons().get(id)?.components ?? []) out.add(c)
+    if (id === lessonId) return out
+  }
+  // 🔴 走到這裡＝那一課不在它自己的軌裡，而那是不可能的。
+  //    回空集合而不是回全部——**一個空工具箱看得見，一個多出來的不會。**
+  return new Set()
+}
