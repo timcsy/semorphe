@@ -1,0 +1,14 @@
+[
+  {
+    "key": "audit-slot-declarations.test.ts#1b1y8ms",
+    "position": "audit-slot-declarations.test.ts:264",
+    "decision": "已知答案樣本",
+    "reason": "這一行的 cpp:raw_expression 是【這支測試自己造的那顆節點】——注入素材,不是在斷言某個缺陷還存在。它要驗的是「unreadSlots 會不會把沒讀懂的那顆報出來」,而降級詞彙(raw_code／raw_expression／unresolved)是這個系統的固定詞彙,不是會被修掉的缺陷。⚠️ 它會在那三個詞被改名時紅,而那時候本來就該有人看。"
+  },
+  {
+    "key": "audit-slot-declarations.test.ts#atwqn4",
+    "position": "audit-slot-declarations.test.ts:266",
+    "decision": "已知答案樣本",
+    "reason": "同上,cpp:loop_while 是注入時當父節點用的 fixture。這一行驗的是 parent 欄位說不說得出「它坐在誰的哪一個槽裡」——沒有它,一個報得出數量而指不回畫面的實作也會過。"
+  }
+]

@@ -65,7 +65,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 // ⚠️ **為了它的副作用**：`param_decl` 之類的結構節點是在這裡 `declareNonComponent` 的，
 //    不載它的話下面那條「每一個字都指得到東西」會把 8 個合法的宣告當成錯字。
 import '../../src/languages/cpp/module'
-import { checkSlots, fitsSlot, slotDeclsOf, isDynamic } from '../../src/core/component/slot-check'
+import { checkSlots, unreadSlots, fitsSlot, slotDeclsOf, isDynamic } from '../../src/core/component/slot-check'
 import { positionsOf } from '../../src/core/component/traits'
 import { registeredComponents } from '../../src/core/component/registry'
 import { nonComponentDecl } from '../../src/core/blocks/non-components'
@@ -85,6 +85,35 @@ beforeAll(async () => {
   lifter = createTestLifter()
   registerCppLanguage()
 }, 120_000)
+
+/**
+ * 課文語料：每一份 `solutions/*.cpp` ＋ 每一課〈完成的樣子〉的那一段。
+ *
+ * ⚠️ **抽出來是因為有兩個消費者**（「不得違反宣告」與「不得有讀不懂的」），
+ * 而兩份各自走一次目錄的話，有一天會變成兩個不同的母體。
+ */
+function lessonSources(): { name: string; code: string }[] {
+  const L = path.join(ROOT, 'lessons')
+  const srcs: { name: string; code: string }[] = []
+  for (const t of fs.readdirSync(L)) {
+    const td = path.join(L, t)
+    if (!fs.statSync(td).isDirectory()) continue
+    for (const d of fs.readdirSync(td)) {
+      const sd = path.join(td, d, 'solutions')
+      if (fs.existsSync(sd)) {
+        for (const f of fs.readdirSync(sd)) {
+          if (f.endsWith('.cpp')) srcs.push({ name: `${t}/${d}/${f}`, code: fs.readFileSync(path.join(sd, f), 'utf8') })
+        }
+      }
+      const md = path.join(td, d, 'lesson.md')
+      if (!fs.existsSync(md)) continue
+      const code = fs.readFileSync(md, 'utf8').split('## 完成的樣子')[1]?.split('\n## ')[0]
+        ?.match(/```cpp\n([\s\S]+?)\n```/)?.[1]
+      if (code) srcs.push({ name: `${t}/${d}/完成的樣子`, code })
+    }
+  }
+  return srcs
+}
 
 describe('第一百二十六條護欄：槽的宣告，要真的有人讀', () => {
   it('★ 入口條件——真的讀到元件了', () => {
@@ -157,25 +186,7 @@ describe('第一百二十六條護欄：槽的宣告，要真的有人讀', () =
    * 學生語料（StudyCpp）在 `tests/probes/` 那一支，它不進 `npm test`。
    */
   it('🔴 硬性零：課文語料 lift 出來的樹，一筆都不違反宣告', () => {
-    const L = path.join(ROOT, 'lessons')
-    const srcs: { name: string; code: string }[] = []
-    for (const t of fs.readdirSync(L)) {
-      const td = path.join(L, t)
-      if (!fs.statSync(td).isDirectory()) continue
-      for (const d of fs.readdirSync(td)) {
-        const sd = path.join(td, d, 'solutions')
-        if (fs.existsSync(sd)) {
-          for (const f of fs.readdirSync(sd)) {
-            if (f.endsWith('.cpp')) srcs.push({ name: `${t}/${d}/${f}`, code: fs.readFileSync(path.join(sd, f), 'utf8') })
-          }
-        }
-        const md = path.join(td, d, 'lesson.md')
-        if (!fs.existsSync(md)) continue
-        const code = fs.readFileSync(md, 'utf8').split('## 完成的樣子')[1]?.split('\n## ')[0]
-          ?.match(/```cpp\n([\s\S]+?)\n```/)?.[1]
-        if (code) srcs.push({ name: `${t}/${d}/完成的樣子`, code })
-      }
-    }
+    const srcs = lessonSources()
     expect(srcs.length, '🔴 一支語料都沒讀到 → 這一條是空過的').toBeGreaterThan(50)
 
     const findings: string[] = []
@@ -212,6 +223,72 @@ describe('第一百二十六條護欄：槽的宣告，要真的有人讀', () =
     expect(checkSlots(loop).map((f) => f.kind), '🔴 `allowed` 那一條沒抓到——'
       + '一個 `while` 迴圈被當成條件塞進另一個 `while` 的條件格').toContain('allowed')
   })
+
+  /**
+   * 🔴 **「我不知道」要看得見，而不是被當成「沒問題」。**
+   *
+   * ## 它從哪來（2026-10-01，姊妹專案 cella 改了一個字）
+   *
+   * 我告訴他們「降級節點與任何宣告相容」，而他們寫回來的是
+   * 「對任何宣告判成 **`Unknown`**，不是 `Reject`」。**那個字他們是對的。**
+   *
+   * ```
+   * fitsSlot    isDynamic → return true   「與一切相容」
+   * checkSlots  !isDynamic → 才檢查         整顆跳過
+   * ⟹ 輸出是二值的,所以「我不知道」只能被寫成「沒問題」
+   * ```
+   *
+   * ⚠️ 而這踩到 `principles.md` 的 **P6 誠實降級**，逐字：
+   * 「降級必須單調遞減、**必須可見**、必須區分原因——否則鷹架變成認知牢籠。」
+   *
+   * ## 🟢 而「看得見」不等於「算成錯」
+   *
+   * `checkSlots` 餵的是使用者可見的診斷。把它混進 findings 的話，
+   * **灰積木會在面板上變紅**——那正是 `isDynamic` 檔頭警告的事：
+   *
+   * > **把「我不知道」算成「你錯了」的檢查器，
+   * > 量的是它自己的辨識率，不是使用者的程式。**
+   *
+   * ⟹ 兩件事，兩條通道。而這一支驗的是**兩條通道都在**。
+   */
+  it('★ 注入：一顆降級節點 —— checkSlots 不得報錯，而 unreadSlots 必須報出來', () => {
+    const grey = { id: 'n1', componentId: 'cpp:raw_expression', properties: {}, slots: {} } as never as SemanticNode
+    const tree = {
+      id: 'n0', componentId: 'cpp:loop_while', properties: {}, slots: { condition: [grey] },
+    } as never as SemanticNode
+
+    expect(checkSlots(tree), '🔴 灰積木被當成違反了——那會讓它在面板上變紅').toEqual([])
+
+    const unread = unreadSlots(tree)
+    expect(unread.map((u) => u.componentId), '🔴 沒讀懂的那一顆【不見了】——'
+      + '而那正是「我不知道」被寫成「沒問題」的那一刻').toContain('cpp:raw_expression')
+    expect(unread[0]?.parent, '🔴 要說得出它坐在誰的哪一個槽裡，否則指不回畫面')
+      .toEqual({ componentId: 'cpp:loop_while', slot: 'condition' })
+  })
+
+  /**
+   * 🔴 **我們自己的課文解答，不得有讀不懂的節點。**
+   *
+   * ⚠️ 它與上面那條「不得違反宣告」是**同一份語料的兩個問題**：
+   * 一條問「你寫錯了嗎」，這一條問「我讀懂了嗎」。
+   * 兩條都綠才叫「這份語料是乾淨的」——而在這一條存在之前，
+   * 一份**整個 lift 不出來**的解答會讓上面那條**也是綠的**。
+   */
+  it('🔴 硬性零：課文語料裡沒讀懂的節點，一顆都不准有', () => {
+    const srcs = lessonSources()
+    expect(srcs.length, '🔴 一支語料都沒讀到 → 這一條是空過的').toBeGreaterThan(50)
+    const found: string[] = []
+    for (const s of srcs) {
+      let tree: SemanticNode
+      try { tree = lifter.lift(tsParser.parse(s.code)!.rootNode as never) as SemanticNode } catch { continue }
+      for (const u of unreadSlots(tree)) {
+        found.push(`${s.name} · ${u.componentId}${u.parent ? ` @ ${u.parent.componentId}.${u.parent.slot}` : ''}`)
+      }
+    }
+    expect(found, '🔴 課文的解答裡有我們【讀不懂】的東西——'
+      + '學生看到的會是一塊灰積木，而他做不出那一題。\n'
+      + '🟢 要嘛 lift 學會它，要嘛把那段課文換掉。').toEqual([])
+  }, 300_000)
 
   /**
    * ★ **反向注入**——降級節點是動態型別（`?`），它**不算違反**。
