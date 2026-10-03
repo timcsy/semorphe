@@ -81,14 +81,47 @@ beforeAll(async () => {
   prelude = fs.readFileSync('src/languages/cpp/cella-prelude.cella', 'utf8')
 }, 120_000)
 
-function holes(source: string, tag: string): { count: number; report: string } {
+interface hole { name: string | null; type: string }
+interface checker { name: string; version: string; hash: string; covers: string[] }
+
+/**
+ * 🔴 **走 `--json`，不走文字版**（2026-10-03 換的）。
+ *
+ * 換的理由有兩個，而第二個比第一個重要：
+ *
+ * ```
+ * ① 結構化      型別從 /LtB u n/ 這個 regex 變成 holes[i].type —— 不必剖字串
+ * 🔴 ② 版本釘得住  文字版【完全沒有】版本資訊,而 --json 帶 checker
+ * ```
+ *
+ * ⚠️ ②是一個實測到的缺口：2026-10-03 同一天，本機那支 cella 的
+ * `checker.hash` 從 `2ff7b715…` 變成 `f2e02b1e…`，**而我們的探針一聲都不吭**
+ * ——它這幾個月是對著「機器上剛好是哪一支」在綠的。
+ *
+ * ## 而雜湊**不上棘輪**，它進報表
+ *
+ * 對方每重建一次它就變。上棘輪的話這支測試會一直紅，而**一條會假紅的護欄，
+ * 人很快就學會忽略它**（我們的 e2e 吃過這個虧）。
+ *
+ * 🟢 **它的工作是鑑識，不是閘門**：哪天這支紅了，報表上說得出那是對著哪一支 build。
+ * 而真正當閘門的是下面那條入口條件——`covers` 要含 `kernel`。
+ */
+function holes(source: string, tag: string): { count: number; holes: hole[]; checker: checker; report: string } {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'semorphe-cella-'))
   const file = path.join(dir, `${tag}.cella`)
   fs.writeFileSync(file, source)
-  const out = execFileSync(CELLA_BIN, ['holes', file], { encoding: 'utf8', timeout: 120_000 })
-  const m = /holes:\s*(\d+)/.exec(out)
-  if (!m) throw new Error(`讀不出洞的數量，cella 說：${out.slice(0, 300)}`)
-  return { count: Number(m[1]), report: out }
+  const out = execFileSync(CELLA_BIN, ['holes', '--json', file], { encoding: 'utf8', timeout: 120_000 })
+  let j: { ok?: boolean; holes?: hole[]; checker?: checker; errors?: unknown[] }
+  try { j = JSON.parse(out) as never } catch {
+    throw new Error(`cella 回的不是 JSON：${out.slice(0, 300)}`)
+  }
+  // ⚠️ `ok:false` 時【沒有】 holes 欄位——那是對方刻意的設計：
+  //    「0 個洞」與「沒通過」在結構上分得開,不是靠一個數字。
+  if (j.holes === undefined) {
+    throw new Error(`cella 沒給 holes（多半是沒通過）：${out.slice(0, 300)}`)
+  }
+  if (j.checker === undefined) throw new Error(`cella 沒說它是哪一支：${out.slice(0, 300)}`)
+  return { count: j.holes.length, holes: j.holes, checker: j.checker, report: out }
 }
 
 describe.skipIf(!HAVE_CELLA)('探針：第六路（語義樹 → cella 項）', () => {
@@ -97,6 +130,18 @@ describe.skipIf(!HAVE_CELLA)('探針：第六路（語義樹 → cella 項）', 
     const ids = JSON.stringify(fn)
     expect(ids, '樹裡沒有比較 —— 守衛不見了').toContain('cpp:compare')
     expect(ids, '樹裡沒有取值 —— 前置條件的消費者不見了').toContain('cpp:array_at')
+  })
+
+  it('★ 入口條件：cella 說得出自己是誰，而且 kernel 真的在驗', () => {
+    // 🔴 下面每一個「0 個洞」的綠，都預設了 kernel 有跑過。
+    //    `covers` 哪天不含 kernel，那些綠的意思就變了——而那會是靜默的。
+    const r = holes(formalizeFunction(fn, { contracts, prelude }), 'anchor')
+    console.log(`\n⚙️ 對著 ${r.checker.name} ${r.checker.version}+${r.checker.hash}`
+      + `（covers: ${r.checker.covers.join('、')}）`)
+    expect(r.checker.hash, 'cella 沒給雜湊 —— 那表示這支測試說不出它對著哪一支 build 綠')
+      .toMatch(/^[0-9a-f]{8,}$/)
+    expect(r.checker.covers, '🔴 covers 不含 kernel —— 那下面每一個「0 個洞」的意思都變了')
+      .toContain('kernel')
   })
 
   it('★ 入口條件：兩顆元件的形式核都讀得到（宣告與檔案不得分岔）', () => {
@@ -109,7 +154,8 @@ describe.skipIf(!HAVE_CELLA)('探針：第六路（語義樹 → cella 項）', 
     const r = holes(src, 'control')
     expect(r.count, `布林版應該剛好一個洞。cella 說：\n${r.report}`).toBe(1)
     // cella 建議的那一條：只數數量的話，在【錯的位置】開洞也會過。
-    expect(r.report, `洞的型別不是 LtB u n：\n${r.report}`).toMatch(/LtB u n/)
+    // 🟢 換成 `--json` 之後這裡讀的是結構化的型別，不是對整串輸出做 regex。
+    expect(r.holes[0]?.type, `洞的型別不是 LtB u n：\n${r.report}`).toBe('LtB u n')
   })
 
   it('🟢 守衛編成【判定】時，零個洞 —— 證明從 yes 分支掉出來', () => {
