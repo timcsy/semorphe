@@ -178,6 +178,47 @@ test('★ 使用者自己寫的 #include，在 C 目標下也要換掉', async (
   const code = await page.evaluate(() =>
     (window as never as { __app: { codeView: { getCode(): string } } }).__app.codeView.getCode())
 
+  // 🔴 **陷阱，不是探針**（2026-10-03）。
+  //
+  // 這一支會間歇性地少掉標頭（收到的是 `"int main() {"`），而**我重現不了它**：
+  //
+  // ```
+  // 單獨跑 28 次              全綠
+  // 單獨 ＋ 六個燒滿 CPU 的行程  全綠 —— ⟹ 條件不是瞬時 CPU
+  // 兩檔 × 6（加了儀器）       全綠 —— ⟹ 🔴 輪詢本身會改變被量的東西
+  // 兩檔 × 6（原指令,事後重跑） 全綠
+  // 🔴 而紅過的兩次,都在【剛跑完 28 分鐘整輪 e2e 之後】
+  // ```
+  //
+  // ⟹ 條件是「一次長跑累積出來的狀態」，而那是**量不來的**（量它就要再跑一次長跑）。
+  //
+  // 🟢 所以這裡放的是陷阱：**下次它自然發作時，自己把現場說出來。**
+  // 排除過的假說與完整證據在
+  // `knowledge/draft/2026-10-02-C-目標下有時候少一個標頭.md`。
+  if (!code.includes('stdio.h')) {
+    const d = await page.evaluate(() => {
+      const a = (window as never as { __app: Record<string, unknown> }).__app
+      const ids: string[] = []
+      const walk = (n: { componentId?: string; slots?: Record<string, unknown[]> }): void => {
+        if (n?.componentId) ids.push(n.componentId)
+        for (const b of Object.values(n?.slots ?? {})) for (const c of (b ?? [])) walk(c as never)
+      }
+      const sc = a.syncController as { currentTree?: unknown } | undefined
+      if (sc?.currentTree) walk(sc.currentTree as never)
+      return {
+        target: JSON.stringify(a.currentTarget ?? null),
+        skeleton: String(a.currentSkeletonId ?? '?'),
+        depth: String((a as { scaffoldDepth?: unknown }).scaffoldDepth ?? '?'),
+        style: JSON.stringify((a as { currentStylePreset?: unknown }).currentStylePreset ?? null).slice(0, 200),
+        topic: JSON.stringify((a as { currentTopic?: unknown }).currentTopic ?? null).slice(0, 140),
+        ids: ids.join(','),
+      }
+    })
+    console.log('\n🔴 少標頭的現場（而好的那一輪長這樣：target.id=c｜skeleton=main｜depth=2）')
+    console.log(`  code     ${JSON.stringify(code.split('\n')[0])}`)
+    for (const [k, v] of Object.entries(d)) console.log(`  ${k.padEnd(8)} ${v}`)
+  }
+
   expect(code, '🔴 使用者寫的 <iostream> 沒有被換掉——C 裡沒有這個標頭').not.toContain('iostream')
   expect(code, 'I/O 那個等價類在 C 那一側的成員是 <stdio.h>').toContain('stdio.h')
 })
