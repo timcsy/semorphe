@@ -29,15 +29,35 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
-import { execFileSync } from 'node:child_process'
+import cellaInit, { holes as cellaHoles, stdlib_mode } from 'cella-lang'
+import { assets } from 'cella-lang/assets'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { formalizeFunction, CellaFormalizeError, type ContractSources } from './cella-formalize'
 import type { SemanticNode } from '../../src/core/types'
 
-const CELLA_BIN = process.env.CELLA_BIN
-  ?? path.join(os.homedir(), 'Documents/Projects/cella/target/release/cella')
-const HAVE_CELLA = fs.existsSync(CELLA_BIN)
+/**
+ * 🔴 **從 CLI 改讀 npm 套件**（2026-10-04）——而這一刀的重點不是「換個呼叫方式」，
+ * 是**這支探針第一次在 CI 上跑**。
+ *
+ * 在此之前它是 `describe.skipIf(!HAVE_CELLA)`，而 CI 上沒有那支執行檔：
+ *
+ * > **一條只在裝了 cella 的機器上跑的護欄，CI 上等於不存在。**
+ *
+ * ⚠️ 而**刻意不留跳過的退路**：`cella-lang` 是 devDependency，`npm ci` 之後
+ * 一定在。一條會自己跳過的護欄，它的覆蓋率等於有人記得裝東西。
+ *
+ * ## 不預載模式
+ *
+ * **不呼叫 `init_stdlib_cached`** ⟹ 單檔、不追 import、看不到 stdlib 的名字。
+ * 那正是我們要的語義（我們的 prelude 刻意自足，見它的檔頭），
+ * 而它也讓 `Nat`／`Bool`／`Dec` 不會跟 stdlib 撞名。
+ *
+ * 🔴 ⚠️ **stdlib 的狀態是整個行程共用的**：同一個 worker 裡只要有人呼叫過
+ * `init_stdlib_cached`，之後的 `holes` 就變成預載模式——而那個模式切換的症狀
+ * **不是紅，是綠**（我們的 prelude 少了什麼，stdlib 會補上）。
+ * 所以下面有一條入口條件在問「我現在在哪個模式」。
+ */
 
 /** 語料 `AP325/7/7_6.cpp` 的形狀：讀進來的索引去取一個長度也是讀進來的陣列。 */
 const SRC = `int pick(int n, int u, int fallback) {
@@ -79,6 +99,9 @@ beforeAll(async () => {
   }
   contracts = m
   prelude = fs.readFileSync('src/languages/cpp/cella-prelude.cella', 'utf8')
+
+  // ⚠️ 一個行程 init 一次就夠；不預載模式連 stdlib 都不載（實測 init 約 30 ms）。
+  await cellaInit({ module_or_path: fs.readFileSync(assets.wasm) })
 }, 120_000)
 
 interface hole { name: string | null; type: string }
@@ -107,10 +130,8 @@ interface checker { name: string; version: string; hash: string; covers: string[
  * 而真正當閘門的是下面那條入口條件——`covers` 要含 `kernel`。
  */
 function holes(source: string, tag: string): { count: number; holes: hole[]; checker: checker; report: string } {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'semorphe-cella-'))
-  const file = path.join(dir, `${tag}.cella`)
-  fs.writeFileSync(file, source)
-  const out = execFileSync(CELLA_BIN, ['holes', '--json', file], { encoding: 'utf8', timeout: 120_000 })
+  void tag   // 保留參數：失敗訊息要說得出是哪一半（判定版／負向對照）
+  const out = cellaHoles(source)
   let j: { ok?: boolean; holes?: hole[]; checker?: checker; errors?: unknown[] }
   try { j = JSON.parse(out) as never } catch {
     throw new Error(`cella 回的不是 JSON：${out.slice(0, 300)}`)
@@ -124,12 +145,19 @@ function holes(source: string, tag: string): { count: number; holes: hole[]; che
   return { count: j.holes.length, holes: j.holes, checker: j.checker, report: out }
 }
 
-describe.skipIf(!HAVE_CELLA)('探針：第六路（語義樹 → cella 項）', () => {
+describe('探針：第六路（語義樹 → cella 項）', () => {
   it('★ 入口條件：語義樹真的是那個形狀（否則下面在編別的東西）', () => {
     expect(fn?.componentId, '入口不是函式定義').toBe('cpp:func_def')
     const ids = JSON.stringify(fn)
     expect(ids, '樹裡沒有比較 —— 守衛不見了').toContain('cpp:compare')
     expect(ids, '樹裡沒有取值 —— 前置條件的消費者不見了').toContain('cpp:array_at')
+  })
+
+  it('★ 入口條件：現在是【不預載】模式——預載的話,下面的綠會是假的', () => {
+    // 🔴 行程共用的狀態:有人呼叫過 init_stdlib_cached 之後就回不去了。
+    //    而那個切換的症狀是綠不是紅——我們的 prelude 少什麼,stdlib 會補上。
+    expect(stdlib_mode(), '🔴 跑在預載模式 —— 我們自足的 prelude 會被 stdlib 補洞，'
+      + '於是「它自足」這件事就沒有被驗到').toBe('standalone')
   })
 
   it('★ 入口條件：cella 說得出自己是誰，而且 kernel 真的在驗', () => {
@@ -226,12 +254,5 @@ describe('探針：第六路產出的項，語法上站得住（不需要 cella�
     // ★ 正向對照：單層的那一支不得被加上多餘的括號
     const flat = formalizeFunction(fn, { contracts, prelude })
     expect(flat, '單層的索引被加了括號 —— asArg 包過頭了').toContain('arrayAt n A u pf')
-  })
-})
-
-describe.skipIf(HAVE_CELLA)('探針：第六路（跳過）', () => {
-  it('⚠️ 找不到 cella 的執行檔 —— 這一批沒有跑', () => {
-    console.log(`\n⚠️ 第六路探針跳過：${CELLA_BIN} 不存在。設 CELLA_BIN 指到它。`)
-    expect(HAVE_CELLA).toBe(false)
   })
 })
