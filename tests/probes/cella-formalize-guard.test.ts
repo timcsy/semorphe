@@ -191,9 +191,30 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
       unknown?: { reason?: string }[]
     }
     const assumptions = v.assumptions ?? []
+    /**
+     * 🔴 **兩種假設的【信任等級不同】，所以分開印**（2026-10-04，cella 那側更正）。
+     *
+     * 我第一版把 `termination_by_elaborator` 讀成「假設的，不是證出來的」
+     * ——**那是錯的**。它的意思是：
+     *
+     * ```
+     * postulate                  我們自己扛的 —— 【沒有任何人查過】
+     * termination_by_elaborator  Cella 的終止檢查【查過了】,
+     *                            而兩個 kernel 都沒有獨立重驗
+     *                            ⟹ 是「只有一份檢查」,不是「沒人查」
+     * ```
+     *
+     * ⚠️ 混在一起印的話，讀的人會把「沒人查」與「只查了一次」當成同一件事
+     * ——而它們差一個數量級。
+     */
+    const ours = assumptions.filter((x) => x.kind === 'postulate')
+    const once = assumptions.filter((x) => x.kind !== 'postulate')
     console.log(`\n⚙️ 對著 ${r.checker.name} ${r.checker.version}+${r.checker.hash}`
       + `\n   判決 ${v.verdict}，而它站在這些假設上：`)
-    for (const a of assumptions) console.log(`     ${a.kind}${a.name ? ` · ${a.name}` : ''}`)
+    console.log(`   🔴 我們自己扛的（沒有任何人查過）：${ours.length}`)
+    for (const x of ours) console.log(`        ${x.kind} · ${x.name ?? ''}`)
+    console.log(`   🟡 Cella 查過而沒有第二份重驗：${once.length}`)
+    for (const x of once) console.log(`        ${x.kind} · ${x.name ?? ''}`)
 
     expect(r.checker.hash, 'cella 沒給雜湊 —— 那表示這支測試說不出它對著哪一支 build 綠')
       .toMatch(/^[0-9a-f]{8,}$/)
