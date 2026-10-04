@@ -378,10 +378,14 @@ describe('探針：形式化的殘差表（第六路今天到不了哪裡）', (
    * 變小是課文縮了，**兩個方向都該更新判決並寫理由**
    * ——棘輪只准一個方向，會擋掉其中一半。
    */
-  it('🔴 硬性零：判決寫的分母，要等於這裡量出來的', () => {
+  it('🔴 硬性零：判決寫的分母【與分子】，都要等於這裡量出來的', () => {
     const seen = new Set<string>()
     for (const { fn } of fns) idsIn(fn, seen)
     const measured = [...seen].filter((i) => i.startsWith('cpp:')).length
+    // 🔴 **分子也要釘**（2026-10-04 補）——第一版只釘了分母,
+    //    於是 `covered: 2` 在 `cpp:arithmetic` 宣告形式核之後【過期了一陣子
+    //    而沒有人知道】。同一個病的另一半：抄過去的數字會漂,【兩個】都會。
+    const measuredCovered = [...seen].filter((i) => i.startsWith('cpp:') && contracts.has(i)).length
     const cov = PATH_JUDGE.formalize.coverage
     expect(cov, 'formalize 這一路的 coverage 變成 null 了 —— 判決被改壞了').not.toBeNull()
     expect(
@@ -390,5 +394,10 @@ describe('探針：形式化的殘差表（第六路今天到不了哪裡）', (
       + `\n改 src/core/component/judges.ts 的 PATH_JUDGE.formalize.coverage.of，`
       + `並在旁邊寫下**為什麼變了**（哪一課、多了哪一顆）。`,
     ).toBe(measured)
+    expect(
+      cov!.covered,
+      `判決的分子漂了：judges.ts 寫 ${cov?.covered}，而現在有 ${measuredCovered} 顆`
+      + `宣告了 \`paths.formalize\`（${[...contracts.keys()].sort().join('、')}）。`,
+    ).toBe(measuredCovered)
   })
 })
