@@ -29,7 +29,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
-import cellaInit, { holes as cellaHoles, stdlib_mode } from 'cella-lang'
+import cellaInit, { holes as cellaHoles, check as cellaCheck, stdlib_mode } from 'cella-lang'
 import { assets } from 'cella-lang/assets'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
@@ -160,16 +160,55 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
       + '於是「它自足」這件事就沒有被驗到').toBe('standalone')
   })
 
-  it('★ 入口條件：cella 說得出自己是誰，而且 kernel 真的在驗', () => {
-    // 🔴 下面每一個「0 個洞」的綠，都預設了 kernel 有跑過。
-    //    `covers` 哪天不含 kernel，那些綠的意思就變了——而那會是靜默的。
-    const r = holes(formalizeFunction(fn, { contracts, prelude }), 'anchor')
+  /**
+   * 🔴 **這一條第一版是假的，而那是 cella 那側抓到的**（2026-10-04）。
+   *
+   * 第一版斷言 `checker.covers` 要含 `kernel`，訊息還寫著
+   * 「covers 不含 kernel ⟹ 下面每一個『0 個洞』的意思都變了」。
+   *
+   * ⚠️ 而 `covers` 是**建置期的常數**——它說的是「`checker.hash` 這個指紋
+   * 涵蓋了哪些原始碼」，每一份判決都一樣，永遠是 `["kernel","elaborator"]`。
+   *
+   * ```
+   * ⟹ 那條斷言【永遠會過】。它守不住任何東西,
+   *    而它的訊息還宣稱自己守得住 —— 那比沒有斷言更糟
+   * ```
+   *
+   * > **一條永遠綠的斷言，加上一句說明它守著什麼的話，
+   * > 是兩個錯：它不量東西，而且它讓人以為有人在量。**
+   *
+   * 🟢 **逐份判決的那兩個欄位在 `check` 裡**（對方給的）：
+   * `assumptions` 裡的 `not_rechecked_by_kernel`、`unknown` 裡的 `kernel_skipped`。
+   * ⚠️ 而 `holes` 的輸出**沒有**那兩個欄位（它只有 `ok` / `holes` / `checker`），
+   * 所以這裡要多叫一次 `check`。
+   */
+  it('★ 入口條件：這一份判決，kernel 真的重驗過', () => {
+    const src = formalizeFunction(fn, { contracts, prelude })
+    const r = holes(src, 'anchor')
+    const v = JSON.parse(cellaCheck(src)) as {
+      verdict?: string
+      assumptions?: { kind: string; name?: string }[]
+      unknown?: { reason?: string }[]
+    }
+    const assumptions = v.assumptions ?? []
     console.log(`\n⚙️ 對著 ${r.checker.name} ${r.checker.version}+${r.checker.hash}`
-      + `（covers: ${r.checker.covers.join('、')}）`)
+      + `\n   判決 ${v.verdict}，而它站在這些假設上：`)
+    for (const a of assumptions) console.log(`     ${a.kind}${a.name ? ` · ${a.name}` : ''}`)
+
     expect(r.checker.hash, 'cella 沒給雜湊 —— 那表示這支測試說不出它對著哪一支 build 綠')
       .toMatch(/^[0-9a-f]{8,}$/)
-    expect(r.checker.covers, '🔴 covers 不含 kernel —— 那下面每一個「0 個洞」的意思都變了')
-      .toContain('kernel')
+    // 🔴 這兩條才是【逐份判決】的
+    expect(
+      assumptions.map((a) => a.kind),
+      '🔴 這份判決帶著 `not_rechecked_by_kernel` —— 那表示第二個 kernel 沒有重驗，'
+      + '而下面每一個「0 個洞」的意思就變了',
+    ).not.toContain('not_rechecked_by_kernel')
+    expect(
+      (v.unknown ?? []).map((u) => u.reason),
+      '🔴 判決裡有 `kernel_skipped`',
+    ).not.toContain('kernel_skipped')
+    expect(v.verdict, '🔴 我們自己的形式核沒有 accept —— 下面在驗一個站不住的東西')
+      .toBe('accept')
   })
 
   it('★ 入口條件：兩顆元件的形式核都讀得到（宣告與檔案不得分岔）', () => {
