@@ -1,6 +1,6 @@
 # C++ 的 int 在 cella 裡是 `cpp.Int32`，而它該是一個 Library
 
-> 狀態：**問題已有答案（C15）；歸屬已定；使用者決定獨立發版（2026-10-05）；住處與兩個提問待 cella 回覆**。
+> 狀態：**問題已有答案（C15）；歸屬已定；使用者決定獨立發版（2026-10-05）；cella 同意住處、Merkle 雜湊、寬度參數化；等使用者同意發新 npm 套件**。
 
 ## 一、事實（cella-ee 2026-10-04 回覆，對方原則 C15，已經使用者確認）
 
@@ -91,6 +91,25 @@ semorphe lang-cpp   積木 ↔ 定義的對應（③） contract.cella 寫 impor
 
 附帶的收穫：cpp Library 可以當直譯器的第二個對照（β 缺的那一個執行環境）：
 `我們的直譯器 ↔ cpp Library ↔ g++` 三方，不一致時能定位是哪一方。
+
+## 三之三、cella 的評估（2026-10-05）
+
+- **住處：同意** monorepo 多套件發 `cella-lib-cpp`。只發編譯產物（模組包＋指紋），`lib/cpp.cella` 原始碼不進 npm。
+  ⚠️ **第一版要使用者本人登入 npm 發**，之後才交給 CI。
+- **相容性**：`cella-lib-cpp` 依賴 cella-lang 的檢查器與 std／int／hlevel 模組包
+  ⟹ `index.json` 寫明需要的 **CBF 版號與 checkerHash，不符就拒絕載入**（不默默載入）。
+- **每個定義的雜湊：可行，而且有一個陷阱。** 現有 ContentHash 只雜湊定義自己的項（cella history 074）：
+  `int` 的 `quotInt` 變了，`cpp.div` 自己的項沒變，雜湊不變——**行為卻變了**。
+  ⟹ 要 **Merkle 式**（含依賴閉包）。每個定義兩欄：`own` 與 `merkle`，我們拿 `merkle` 判斷重驗。
+  這命中 cella vision 一個等觸發的項目（「Merkle root 取代 content_root」）——**我們就是那個消費者**。
+
+  > 我提問時只想到「每個定義一個雜湊」，沒想到依賴閉包——那會是一個**只量自己、不量依賴**的指紋，
+  > 與量測錯誤家族「母體定義太窄」同形。
+
+- **寬度：一開始就參數化。** `cpp.core` 的 `IntN (bits)`（對應定理對任意寬度一次證完）＋
+  `cpp.lp64`（int 32、long 64）＋ `cpp.avr`（int 16、long 32），由 Semorphe 的目標選 profile。
+  `int x = 30000 + 30000;` 在 avr 下前置條件證不出來 ⟹ Reject，正是教學效果。
+- **順序**：先修快照（存 elaborate 出來的項），再交 cpp。
 
 ## 四、還開著的
 
