@@ -1,6 +1,6 @@
 # C++ 的 int 在 cella 裡是 `cpp.Int32`，而它該是一個 Library
 
-> 狀態：**問題已有答案（C15）；歸屬已定；使用者決定獨立發版（2026-10-05）；cella 同意住處、Merkle 雜湊、寬度參數化；等使用者同意發新 npm 套件**。
+> 狀態：**問題已有答案（C15）；歸屬已定；使用者決定獨立發版（2026-10-05）；cella 已做完參數化與打包（bcbc957f）；等使用者本人發 `cella-lib-cpp` 第一版**。
 
 ## 一、事實（cella-ee 2026-10-04 回覆，對方原則 C15，已經使用者確認）
 
@@ -125,6 +125,26 @@ semorphe lang-cpp   積木 ↔ 定義的對應（③） contract.cella 寫 impor
 🟡 **我們這邊先不接**：pin 的 `cella-lang@0.1.202610031643` 裡沒有它，而且**接 `Int32` 之後再改成
 `IntN 32` 正是 cella 自己說要避免的那個成本**（「事後再補要搬動所有已經依賴 Int32 的契約」）。
 ⟹ 等寬度參數化與 `cella-lib-cpp` 一起到。
+
+## 三之五、寬度參數化與套件打包完成（2026-10-05，cella commit `bcbc957f`）
+
+- 型別 `cpp.IntN bits`（界 `[−2^(bits−1), 2^(bits−1)−1]`）；profile：`cpp.lp64.Int = IntN 32`、
+  `cpp.lp64.Long = IntN 64`、`cpp.avr.Int = IntN 16`、`cpp.avr.Long = IntN 32`；`cpp.Int32` 保留。
+- 運算帶隱式 `{bits}`，**寬度從期望型別來**：同一句 `30000 + 30000` 在 `cpp.avr.Int` reject、在 `cpp.lp64.Int` accept。
+  ⚠️ 沒有東西決定寬度的地方要**註記型別**（C++ 字面量的寬度本來就依平台）——走訪器產項時要記得。
+- 前置條件 `cpp.InRange bits X`、`cpp.NonZero b`；對應定理對任意寬度一份。
+- 套件 `cella-lib-cpp`（**第一版未發，等使用者本人**）：`cpp.cell` ＋ `index.json`
+  （`cbfVersion`、`checkerHash`、`requires["cella-lang"].modules`、`defs` 的 `own`／`merkle`）。
+  載入用 `load_library_pack(index_json, "cpp", bytes)`，失敗回 `{"ok":false,"error":…}`
+  ——**這個函式在下一版 cella-lang 才有**。`peerDependencies.cella-lang` 釘到檢查器指紋相同的那一版。
+
+### 我們接的時候要做的（等兩件事：`cella-lib-cpp` 發布 ＋ 帶 `load_library_pack` 的 cella-lang）
+
+1. 兩個都 exact pin；`audit-cella-pinned` 擴成也比 `cbfVersion`／`checkerHash`／cpp 的 `merkle`
+2. 走訪器型別表：目標 C++／C → `cpp.lp64.Int`，Arduino → `cpp.avr.Int`；字面量註記型別
+3. `arithmetic`／`compare` 的 `contract.cella` 改成對應到 `cpp.add`… 而不是 `addNat`（305 刀的三個項換過去）
+4. 負向對照：同一支 `30000 + 30000` 在 avr 目標要 reject
+5. 第一個遞迴案例 `cpp-beginner/19` 的 `f`，與 cella 一起做
 
 ## 四、還開著的
 
