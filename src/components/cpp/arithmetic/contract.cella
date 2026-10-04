@@ -1,0 +1,23 @@
+-- **`cpp:arithmetic` 的形式核**（第六路）。
+--
+-- 🔴 **今天只收 `+` 與 `*`，而那不是偷懶，是 `Nat` 的邊界**：
+--
+--     a - b   在 Nat 上【會下溢】 —— 3 - 5 不是負二,它是什麼要先決定
+--     a / b   整數除法要先說 b ≠ 0,而那是一個【前置條件】不是一個函式
+--     a % b   同上
+--
+-- ⟹ 那三個不是「還沒寫」，是**它們需要先決定一件事**。
+--    走訪器碰到它們會擲例外（見 `cella-formalize.ts` 的「不准猜」那一條），
+--    而那比給一個看起來能用的定義誠實。
+--
+-- ⚠️ 兩個都照 `Nat` 的歸納結構寫，所以停機性是結構遞迴的
+--    ——而判決裡仍然會帶一條 `termination_by_elaborator`
+--    （Cella 查過，而兩個 kernel 都沒有獨立重驗。那是「只查了一次」，不是「沒人查」）。
+
+def addNat (m : Nat) (n : Nat) : Nat := match m with
+  | zero => n
+  | succ k => succ (addNat k n)
+
+def mulNat (m : Nat) (n : Nat) : Nat := match m with
+  | zero => zero
+  | succ k => addNat n (mulNat k n)

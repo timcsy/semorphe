@@ -1,11 +1,11 @@
 {
   "_meta": {
-    "note": "📉 **2026-09-26（第 248 刀）下調 5 → 1：把 evidence 讓人讀了一遍。**\n  第一版的 evidence 是照 draft 填的、沒有人讀過那些檔。讀完改正三格：\n  🔴 lift 指著 roundtrip-all 而那個檔 `lift` 出現 0 次 ⟹ 它【沒有逐元件的判定者】\n  🔴 generate 真正的判定者是 roundtrip-all，而它的標題說謊：`if (!spec.codeTemplate?.pattern) continue`\n     —— 走手寫產生器的 250 顆整批跳過，覆蓋率 99 / 349（28%）\n  🟡 render 改指 roundtrip-all 的 Render coverage：345 / 349\n  ⟹ 剩下【真的沒有人量過】的只有 lift 一路。\n  ⚠️ 而「量過」不等於「覆蓋得好」：generate 量過而它是 28%。那是另一條該長出來的棘輪。\n第一刀只接【已經在跑】的四路 ＋ formalize。preconditions／invariants 的判定者刻意不碰——那兩格要宣告，而宣告出來的欄位會說謊。",
+    "note": "📉 **2026-09-26（第 248 刀）下調 5 → 1：把 evidence 讓人讀了一遍。**\n  第一版的 evidence 是照 draft 填的、沒有人讀過那些檔。讀完改正三格：\n  🔴 lift 指著 roundtrip-all 而那個檔 `lift` 出現 0 次 ⟹ 它【沒有逐元件的判定者】\n  🔴 generate 真正的判定者是 roundtrip-all，而它的標題說謊：`if (!spec.codeTemplate?.pattern) continue`\n     —— 走手寫產生器的 250 顆整批跳過，覆蓋率 99 / 349（28%）\n  🟡 render 改指 roundtrip-all 的 Render coverage：345 / 349\n  ⟹ 剩下【真的沒有人量過】的只有 lift 一路。\n  ⚠️ 而「量過」不等於「覆蓋得好」：generate 量過而它是 28%。那是另一條該長出來的棘輪。\n第一刀只接【已經在跑】的四路 ＋ formalize。preconditions／invariants 的判定者刻意不碰——那兩格要宣告，而宣告出來的欄位會說謊。\n\n📈 **2026-10-04（第 305 刀）：格子 1712 → 1713。** `cpp:arithmetic` 宣告了\n`paths.formalize`（`addNat`／`mulNat`），於是多一格。\n\n🔴 **而同一刀修掉了這個檔裡一條寫死的入口條件**：它原本斷言\n「formalize 今天就是 2 顆」——**那是那個數字的第三份拷貝**\n（`judges.ts` 的 `coverage.covered` 一份、`formalize-residual` 的硬性零一份、\n這裡一份），而它在 arithmetic 宣告的那一刻就過期了。\n\n> **一個入口條件的工作是「掃描真的掃到東西」，不是「這個數字剛好是幾」。**\n\n改成導出的：掃到的 formalize 格子數，要等於**宣告了 `paths.formalize` 的顆數**。",
     "ratchet": "naked 只准下降。分母（元件 × 路）走 assertCorpus，變大變小都要出聲。"
   },
   "scanned": {
     "components": 349,
-    "cells": 1712
+    "cells": 1713
   },
   "naked": 0,
   "unmeasuredPaths": 1,

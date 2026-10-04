@@ -19,7 +19,8 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "execute": "./execute.ts",
-    "lift": "./lift-pattern.json"
+    "lift": "./lift-pattern.json",
+    "formalize": "./contract.cella"
   },
   "traits": {
     "forLoopPart": true,
@@ -38,5 +39,12 @@
     }
   },
   "_traits_why": "**優先級、我是不是二元運算子、我是不是字串字面值——都是我自己的性質**，不是共用表該列的身分。",
-  "_owner_why": "⚠️ **這顆是 universal 層，章要蓋 `(universal)` 不是 `(core)`。**\n批次工具原本依「概念宣告在哪個檔」蓋章，而 `universal-components.json` 的路徑\n含 `/blocks/`，於是被誤判成核心。症狀不是報錯，是**工具箱的 operators 段落\n變成零筆**——那個段落寫著 `{ from: '(universal)' }`，查無此章就整批回傳空。\n（可拿性護欄的「來源段落對不到積木」抓到的正是這個。）"
+  "_owner_why": "⚠️ **這顆是 universal 層，章要蓋 `(universal)` 不是 `(core)`。**\n批次工具原本依「概念宣告在哪個檔」蓋章，而 `universal-components.json` 的路徑\n含 `/blocks/`，於是被誤判成核心。症狀不是報錯，是**工具箱的 operators 段落\n變成零筆**——那個段落寫著 `{ from: '(universal)' }`，查無此章就整批回傳空。\n（可拿性護欄的「來源段落對不到積木」抓到的正是這個。）",
+  "postconditions": {
+    "formalize": {
+      "claim": "加與乘對到 Nat 上的 addNat／mulNat",
+      "why": "🔴 **只收 `+` 與 `*`，而那是 `Nat` 的邊界不是偷懶**：\n`a - b` 在 Nat 上會下溢、`a / b` 與 `a % b` 需要「除數不為零」這個前置條件。\n那三個不是「還沒寫」，是**它們需要先決定一件事**——而走訪器碰到它們會擲例外，不猜。",
+      "judge": "cella"
+    }
+  }
 }

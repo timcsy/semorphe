@@ -108,9 +108,26 @@ describe('判定者覆蓋率', () => {
   it('★ 入口條件：格子只算元件【真的有】的那些路', () => {
     const { cells, components } = scan()
     expect(cells.length, '🔴 一格都沒有 → 判別壞了').toBeGreaterThan(components)
-    expect(cells.length, '🔴 每顆都有六路是不可能的 —— formalize 今天只有 2 顆')
+    expect(cells.length, '🔴 每顆都有六路是不可能的 —— formalize 只有少數幾顆宣告了')
       .toBeLessThan(components * SIX_PATHS.length)
-    expect(cells.filter((c) => c.path === 'formalize').length, '🔴 formalize 今天就是 2 顆').toBe(2)
+    // 🔴 **這一行原本寫死「formalize 今天就是 2 顆」**（2026-10-04 改）。
+    //    那是這個數字的【第三份拷貝】——`judges.ts` 的 `coverage.covered` 一份、
+    //    `formalize-residual` 的硬性零一份、這裡一份。而第三份在
+    //    `cpp:arithmetic` 宣告形式核的那一刻就過期了。
+    //
+    // > **一個入口條件的工作是「掃描真的掃到東西」，不是「這個數字剛好是幾」。**
+    //
+    // 🟢 改成導出的：掃到的格子數，要等於【宣告了 `paths.formalize` 的顆數】。
+    //    那是一條真的不變式——掃描看得到的就該是宣告了的那些。
+    const declaredFormalize = allComponentDefs()
+      .filter((d) => typeof (d as { paths?: Record<string, unknown> }).paths?.formalize === 'string').length
+    expect(declaredFormalize, '🔴 一顆宣告 paths.formalize 的都沒有 → 下面那個相等是空的')
+      .toBeGreaterThan(0)
+    expect(
+      cells.filter((c) => c.path === 'formalize').length,
+      `🔴 掃到的 formalize 格子數與【宣告了 paths.formalize 的顆數】對不上`
+      + `（宣告了 ${declaredFormalize} 顆）`,
+    ).toBe(declaredFormalize)
   })
 
   it('🔴 硬性零：judge 的值一律在閉集裡', () => {

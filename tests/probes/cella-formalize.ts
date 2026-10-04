@@ -286,6 +286,21 @@ function expr(node: SemanticNode, env: Env): string {
       return `arrayAt ${asArg(size)} ${name} ${asArg(idx)} ${asArg(proof)}`
     }
 
+    case 'cpp:arithmetic': {
+      // 🔴 **只收 `+` 與 `*`**——而那是 `Nat` 的邊界，不是還沒寫：
+      //    `-` 在 Nat 上會下溢、`/` 與 `%` 需要「除數不為零」這個前置條件。
+      //    那三個**需要先決定一件事**，而在決定之前擲例外比猜一個定義誠實。
+      const op = String(node.properties.operator)
+      const f = op === '+' ? 'addNat' : op === '*' ? 'mulNat' : null
+      if (f === null) {
+        throw new CellaFormalizeError(
+          node.componentId,
+          `還沒有 ${op} 的形式核——Nat 上的減會下溢、除與餘需要「除數不為零」的前置條件`,
+        )
+      }
+      return `${f} ${asArg(expr(one(node, 'left'), env))} ${asArg(expr(one(node, 'right'), env))}`
+    }
+
     default:
       throw new CellaFormalizeError(node.componentId, '這一路還不認得它')
   }
@@ -357,6 +372,34 @@ export function formalizeFunction(fn: SemanticNode, opts: CellaFormalizeOptions 
     }
     env.arraySize.set(name, size)
     params.push(`(${name} : Arr ${elem} ${size})`)
+  }
+
+  const ret0 = mapType(fn.componentId, String(fn.properties.return_type))
+
+  // ②a 🔴 **最簡單的那個形狀：body 只有一個 `return`**（2026-10-04 加的）
+  //
+  //     int add(int a, int b) { return a + b; }
+  //
+  // ⚠️ 它刻意放在守衛那個形狀【之前】——因為它是後者的退化情形,
+  //    而不是一個特例。沒有守衛就沒有 match,整個 body 就是那個運算式。
+  if (stmts.length === 1 && stmts[0]!.componentId === 'cpp:return') {
+    env.used.add(stmts[0]!.componentId)
+    const body0 = expr(one(stmts[0]!, 'value'), env)
+    const cores0: string[] = []
+    for (const id of topoSort([...env.used], opts.contracts)) {
+      const src = opts.contracts.get(id)
+      if (src !== undefined) cores0.push(src.trimEnd())
+    }
+    return [
+      `-- 由第六路從語義樹產生（body 只有一個 return）`,
+      '',
+      opts.prelude.trimEnd(),
+      '',
+      ...cores0.flatMap((c) => [c, '']),
+      `def ${String(fn.properties.name)} ${params.join(' ')} : ${ret0} :=`,
+      `  ${body0}`,
+      '',
+    ].join('\n')
   }
 
   // ② `if (守衛) return X; return Y;` → 一次 match

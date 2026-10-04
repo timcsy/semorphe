@@ -191,9 +191,9 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
     evidence: 'tests/probes/cella-formalize-guard.test.ts',
     judges: '形式核載得進 cella，而洞的型別逐字是缺的那段契約。'
       + '🔴 而**分母是量出來的**（`tests/probes/formalize-residual.test.ts`）：'
-      + '課文 88 支解答用到 65 顆 cpp 身分，宣告了 `paths.formalize` 的 2 顆。'
-      + '⚠️ 而形狀那一面更遠：那 88 支裡的 105 個函式，走訪器產得出項的是 **0 個**——'
-      + '不碰 I/O 的只有 15 個，而 15 個全部接不住（形狀 10 · 型別 3 · 運算子宣告 2）。',
+      + '課文 88 支解答用到 65 顆 cpp 身分，宣告了 `paths.formalize` 的 3 顆。'
+      + '⚠️ 而形狀那一面更遠：那 88 支裡的 105 個函式，走訪器產得出項的是 **3 個**——'
+      + '不碰 I/O 的 15 個裡接得住 3 個（型別 6 · 形狀 3 · 運算子 2 · 算術 1）。',
     // 🔴 **原本是 `{ covered: 2, of: 2 }`＝100%，而那個分母是「已經寫了形式核的」**
     //    ——它對「一支程式的保證說不出來」這件事保持沉默。
     //
@@ -209,7 +209,12 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
     // ⚠️ **而它是靠一支新的硬性零才發現的，不是有人記得**：
     //    這個數字是從 `formalize-residual` 拄過來的，而拄過來的那一刻
     //    它就不再是量出來的了。那支比對現在盯著兩邊。
-    coverage: { covered: 2, of: 65 },
+    //
+    // 📈 **2026-10-04：covered 2 → 3**（第 305 刀）——`cpp:arithmetic` 宣告了形式核
+    //    （`addNat`／`mulNat`）。而它露出一個缺口：第 279 刀的那條硬性零
+    //    **只釘了分母,沒釘分子** ⟹ 這個 2 已經過期了一陣子而沒有人知道。
+    //    那條護欄同一刀補上了分子。
+    coverage: { covered: 3, of: 65 },
   },
 }
 
