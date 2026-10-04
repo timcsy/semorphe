@@ -100,12 +100,43 @@ let rows: FnRow[] = []
 let pure: { file: string; fn: SemanticNode }[] = []
 /** 不碰 I/O **而且**產不出項的個數——棘輪盯的就是這個。 */
 let pureUnformalized = 0
+/** 不碰 I/O **也不碰外面的狀態**（沒有自由名字）的函式——真正閉合的那一群。 */
+let closed: { file: string; fn: SemanticNode }[] = []
+/** 閉合**而且**產不出項的個數——第二條棘輪，比上一條準。 */
+let closedUnformalized = 0
 
 /** 這一顆（含子樹）碰不碰 I/O。 */
 const IO_IDS = new Set(['cpp:print', 'cpp:input', 'cpp:endl'])
 function hasIO(n: SemanticNode): boolean {
   if (IO_IDS.has(n.componentId)) return true
   return Object.values(n.slots ?? {}).some((kids) => kids.some((k) => hasIO(k)))
+}
+
+/**
+ * 這個函式讀或寫了**它自己沒有綁定**的名字嗎（全域的 `par`／`depth`／`g`）。
+ *
+ * 🔴 **「不碰 I/O」不等於「沒有效果」**（2026-10-04 量到的）：`find`／`unite`／
+ * `dfs` 不碰 I/O，而它們讀寫全域的 vector——`unite` 回傳 `void`，它**全部的意義**
+ * 就是那個效果。把它們算進「最接近閉環的那一群」，那一群的上界就被灌水了。
+ *
+ * 綁定 ＝ 參數 ＋ 任何 `*_declare` 的 `name` ＋ 迴圈變數；
+ * 用到 ＝ `var_ref` 的名字 ＋ `*_assign` 的 `obj`。函式名不是 `var_ref`，不會被算進來。
+ */
+function freeNames(fn: SemanticNode): Set<string> {
+  const bound = new Set<string>()
+  const used = new Set<string>()
+  const rec = (n: SemanticNode): void => {
+    const p = (n.properties ?? {}) as Record<string, unknown>
+    if (n.componentId === 'param_decl' || n.componentId.endsWith('_declare')) {
+      if (typeof p.name === 'string') bound.add(p.name)
+    }
+    if (typeof p.var_name === 'string') bound.add(p.var_name)
+    if (n.componentId === 'cpp:var_ref' && typeof p.name === 'string') used.add(p.name)
+    if (n.componentId.endsWith('_assign') && typeof p.obj === 'string') used.add(p.obj)
+    for (const kids of Object.values(n.slots ?? {})) for (const k of kids) rec(k)
+  }
+  rec(fn)
+  return new Set([...used].filter((x) => !bound.has(x)))
 }
 
 /** 理由字串 → 類別（把「還不認得型別 std::string」這種尾巴切掉，否則直方圖只會有一堆各一筆）。 */
@@ -199,6 +230,11 @@ beforeAll(async () => {
     const name = String(fn.properties?.name ?? '(匿名)')
     return rows.find((r) => r.file === file && r.name === name)?.ok !== true
   }).length
+  closed = pure.filter(({ fn }) => freeNames(fn).size === 0)
+  closedUnformalized = closed.filter(({ file, fn }) => {
+    const name = String(fn.properties?.name ?? '(匿名)')
+    return rows.find((r) => r.file === file && r.name === name)?.ok !== true
+  }).length
 }, 180_000)
 
 describe('探針：形式化的殘差表（第六路今天到不了哪裡）', () => {
@@ -232,6 +268,18 @@ describe('探針：形式化的殘差表（第六路今天到不了哪裡）', (
     const fn = funcDefs(root, [])[0]
     const bad = { ...fn, properties: { ...fn.properties, return_type: 'std::string' } } as SemanticNode
     expect(() => formalizeFunction(bad, { contracts, prelude })).toThrow(CellaFormalizeError)
+  })
+
+  it('★ 自由名字的判準：兩個方向都要釘（否則「閉合」那一群在量判準自己）', () => {
+    const lift = (src: string): SemanticNode =>
+      funcDefs(createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode, [])[0]!
+    // 正向：區域陣列、參數、迴圈變數都是綁定的
+    expect([...freeNames(lift(KNOWN_GOOD))], 'KNOWN_GOOD 的 A 是區域的，卻被算成自由名字').toEqual([])
+    expect([...freeNames(lift('int s(int n){ int t = 0; for (int i = 0; i < n; i++) t += i; return t; }'))],
+      '迴圈變數或區域變數被算成自由名字').toEqual([])
+    // 負向：讀全域、寫全域（`find` 的骨架）
+    expect([...freeNames(lift('vector<int> par;\nint find(int x){ par[x] = x; return par[x]; }'))],
+      '🔴 寫全域 vector 的函式被算成閉合').toEqual(['par'])
   })
 
   // ── 🔴 讀數 ───────────────────────────────────────────────────
@@ -297,6 +345,12 @@ describe('探針：形式化的殘差表（第六路今天到不了哪裡）', (
       console.log(`     ${String(n).padStart(4)} 個  ${k}`)
     }
 
+    // 🔴 **而「不碰 I/O」還不是「沒有效果」**——那 15 個裡有讀寫全域的。
+    console.log(`\n  ↳ 🔴 其中【也不碰外面的狀態】的：${closed.length} / ${pure.length} 個（沒有自由名字）`)
+    for (const { file, fn } of pure.filter((x) => !closed.includes(x))) {
+      console.log(`     ✗ ${String(fn.properties?.name)}()  讀寫 ${[...freeNames(fn)].join('、')}  ↳ ${path.relative(process.cwd(), file)}`)
+    }
+
     // 🔴 不是「殘差必須是 N」——那會在做對事的那天紅。這裡只要求它量到了東西。
     expect(rows.length, '一個函式都沒走到').toBeGreaterThan(0)
     expect([...hist.keys()].length + ok.length, '既沒有成功也沒有失敗 → 迴圈沒有跑').toBeGreaterThan(0)
@@ -322,6 +376,8 @@ describe('探針：形式化的殘差表（第六路今天到不了哪裡）', (
       '解答裡的函式': fns.length,
       '不碰 I/O 的函式': pure.length,
       '不碰 I/O 而產不出項的函式': pureUnformalized,
+      '閉合的函式': closed.length,
+      '閉合而產不出項的函式': closedUnformalized,
     })
     expect(true).toBe(true)
   })
@@ -331,6 +387,7 @@ describe('探針：形式化的殘差表（第六路今天到不了哪裡）', (
       ['課文解答檔', files.length],
       ['解答裡的函式', fns.length],
       ['不碰 I/O 的函式', pure.length],
+      ['閉合的函式', closed.length],
     ], 'formalize-residual')
   })
 
@@ -340,7 +397,11 @@ describe('探針：形式化的殘差表（第六路今天到不了哪裡）', (
     //
     // 🟢 而它今天是 15 / 15 —— **走訪器一個都接不住**，
     //    卡的是形狀（10）· 型別（3）· 運算子宣告（2）。
-    assertRatchet([['不碰 I/O 而產不出項的函式', pureUnformalized]], 'formalize-residual')
+    assertRatchet([
+      ['不碰 I/O 而產不出項的函式', pureUnformalized],
+      // 🔴 第二列比第一列準：它扣掉了讀寫全域的那幾個（那些缺的是效果模型，不是形狀）
+      ['閉合而產不出項的函式', closedUnformalized],
+    ], 'formalize-residual')
   })
 
   it('🔴 母體 B（宣告）：解答的樹裡出現的身分，有幾顆宣告了 paths.formalize', () => {
