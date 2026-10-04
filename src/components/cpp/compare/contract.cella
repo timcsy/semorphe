@@ -5,6 +5,13 @@
 --     if (u < n) A[u]      守衛回傳 Bool  → `match ... with | true =>` 的分支裡【沒有】證明
 --                          守衛回傳 Dec   → `| yes p =>` 的 p 【就是】證明
 --
+-- 🔴 **而用 `Nat` 代表 C++ 的 `int`，本身就違反 Cella 的原則 C15**（2026-10-04 得知）：
+--    C++ 的 int 是 32 位元、有號溢位與除以零是 UB（前置條件）、`7 / -2 = -3`。
+--    Cella 的結論是「每個語言用自己的型別（`cpp.Int32`），與 ℤ 的關係只由證明擔保」，
+--    否決「以名字等同」。⟹ 這裡的判決證的是【Nat 上的】運算，不是 C++ 的 int。
+--    待 cella 的 `cpp` Library 出來後換過去——見
+--    `knowledge/draft/2026-10-04-C++-int-在-cella-裡是-cpp-Int32-而它該是一個-Library.md`。
+--
 -- ⚠️ `LtB` 標 `@[irreducible]`——不標的話 blame 會說 `ltNat u n ≡ true`（實作），
 --    標了才說 `LtB u n`（契約的名字）。2026-09-25 在真實檔案上驗過。
 
