@@ -111,6 +111,21 @@ semorphe lang-cpp   積木 ↔ 定義的對應（③） contract.cella 寫 impor
   `int x = 30000 + 30000;` 在 avr 下前置條件證不出來 ⟹ Reject，正是教學效果。
 - **順序**：先修快照（存 elaborate 出來的項），再交 cpp。
 
+## 三之四、`cpp.Int32` 進了 cella 的 lib（2026-10-05，cella commit `e99044cd`）
+
+名字（namespace `cpp`）：`Int32`（`mkInt32 (v : Int) (ok : InRange v)`）· `lit v (ok : inRangeB v ≡ true)`
+（具體值寫 `cpp.lit (pos 212) refl`、`cpp.lit (negsucc 39) refl` ＝ −40）· `minInt32`／`maxInt32` ·
+`add`／`sub`／`mul`／`neg`（前置條件 `InRange (addIntF …)` 等，具體值以 `(cpp.inRange refl)` 證）·
+`div`／`rem`（另帶 `NonZero b`）· `lt`／`le`／`eq`（無前置條件）· `toInt` ＋ `toInt_add`… ＋ `toInt_inj`。
+溢位、除以零、`INT_MIN / −1` 都是前置條件，**沒有默默回傳某個值的路徑**。
+
+⚠️ **還沒有**：寬度參數化（`cpp.core`／`lp64`／`avr`）· Merkle 雜湊 · npm 套件 `cella-lib-cpp` ·
+遞迴範例（`fact` 要每層證中間值不溢位——等我們第一個遞迴案例一起做）。
+
+🟡 **我們這邊先不接**：pin 的 `cella-lang@0.1.202610031643` 裡沒有它，而且**接 `Int32` 之後再改成
+`IntN 32` 正是 cella 自己說要避免的那個成本**（「事後再補要搬動所有已經依賴 Int32 的契約」）。
+⟹ 等寬度參數化與 `cella-lib-cpp` 一起到。
+
 ## 四、還開著的
 
 - 等交付：具體名字、`index.json` 的指紋欄位 ⟹ 我們把 `audit-cella-pinned` 擴成守 cpp 那一條
