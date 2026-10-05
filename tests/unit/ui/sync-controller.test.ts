@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
-import { SyncController } from '../../../src/core/sync/sync-controller'
+import { SyncController, slotsLostByDowngrade } from '../../../src/core/sync/sync-controller'
+import { abstractComponentOf } from '../../../src/core/language-executors'
+import { setupTestRenderer } from '../../helpers/setup-renderer'
 import { cppStripScaffoldNodes as stripScaffoldNodes } from '../../../src/languages/cpp/cpp-scaffold-filter'
 import type { CodeParser, SyncError } from '../../../src/core/sync/sync-controller'
 import type { StylePreset } from '../../../src/core/types'
@@ -402,6 +404,80 @@ describe('SyncController (bus-based)', () => {
       const data = handler.mock.calls[0][0]
       // Code should be complete (scaffold wraps the body)
       expect(data.code).toContain('int x;')
+    })
+  })
+
+  /**
+   * 🔴 **父概念裝不下的，不降級**（2026-10-05）。
+   *
+   * C 橋接第 1 課的 `scanf("%d", &n);`：可見範圍沒有 `input_formatted` ⟹ 降成 `input`，
+   * 而 `input` 沒有 `args` 那一格 ⟹ 畫成一顆空的「讀取輸入」，學生一動積木 `&n` 就沒了。
+   * 量過母體：40 對降級裡 19 對有父概念裝不下的槽。
+   *
+   * ⚠️ 走**真的** `SyncController`（`resyncForTopic`），不是複製一份規則來測
+   * ——`degrade-does-not-mutate-truth` 那支用的是複製品，它量不到這一條。
+   * ⚠️ 拿掉修正時：兩條 🔴 紅、正向那條綠（2026-10-05 驗過）。
+   */
+  describe('降級：父概念裝不下的槽，不得悄悄丟掉', () => {
+    beforeAll(() => { setupTestRenderer() })
+
+    /** blockState 裡出現過的積木型別（遞迴收集）。 */
+    const blockTypes = (state: unknown): string[] => {
+      const out: string[] = []
+      const walk = (x: unknown): void => {
+        if (Array.isArray(x)) { x.forEach(walk); return }
+        if (x && typeof x === 'object') {
+          const o = x as Record<string, unknown>
+          if (typeof o.type === 'string' && 'id' in o) out.push(o.type)
+          Object.values(o).forEach(walk)
+        }
+      }
+      walk(state)
+      return out
+    }
+    const shown = (body: ReturnType<typeof createNode>[], visible: string[]): string[] => {
+      controller.setTopic({ id: 't', language: 'cpp', name: 'T', description: '', components: [] }, new Set(visible))
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+      controller.resyncForTopic(createNode('cpp:program', {}, {
+        body: [createNode('cpp:func_def', { name: 'main', return_type: 'int' }, { params: [], body })],
+      }), '')
+      const types = blockTypes(handler.mock.calls.at(-1)![0].blockState)
+      // 入口條件：一顆都沒畫出來的話，下面每一條「不含 X」都是空集合的真
+      expect(types.length, '🔴 一顆積木都沒畫出來 —— 測的是空集合').toBeGreaterThan(0)
+      return types
+    }
+    const BASE = ['cpp:program', 'cpp:func_def', 'cpp:var_ref', 'cpp:literal_number', 'cpp:var_declare', 'cpp:input']
+
+    it('★ 前提：兩對都真的會降級（否則下面的「沒降級」可能只是因為沒有父概念）', () => {
+      expect(abstractComponentOf('cpp:input_formatted')).toBe('cpp:input')
+      expect(abstractComponentOf('cpp:vector_declare')).toBe('cpp:var_declare')
+    })
+
+    it('🔴 scanf 帶著變數：不降級——畫原元件（淡色），變數那一顆還在', () => {
+      const types = shown([createNode('cpp:input_formatted', { format: '%d' },
+        { args: [createNode('cpp:var_ref', { name: 'n' })] })], BASE)
+      expect(types, '🔴 降級成了空的「讀取輸入」——&n 會在下一次編輯積木時丟掉').toContain('cpp_input_formatted')
+      expect(types).not.toContain('cpp_input')
+      expect(types, '變數那一顆不見了').toContain('cpp_var_ref')
+    })
+
+    it('★ 正向：沒有東西會丟的降級照舊發生（vector<int> v; → 宣告）', () => {
+      const types = shown([createNode('cpp:vector_declare', { name: 'v', type: 'int' }, {})], BASE)
+      expect(types, '🔴 正當的降級被擋掉了——判準太寬').toContain('cpp_var_declare')
+      expect(types).not.toContain('cpp_vector_declare')
+    })
+
+    it('🔴 同一顆元件，槽有東西時不降級（vector<int> v = {1, 2}）', () => {
+      const types = shown([createNode('cpp:vector_declare', { name: 'v', type: 'int' },
+        { values: [createNode('cpp:literal_number', { value: '1' }), createNode('cpp:literal_number', { value: '2' })] })], BASE)
+      expect(types, '🔴 初始值會在降級時丟掉').toContain('cpp_vector_declare')
+    })
+
+    it('★ slotsLostByDowngrade：空槽不算丟、非空而父概念沒有的才算', () => {
+      const withArgs = createNode('cpp:input_formatted', { format: '%d' }, { args: [createNode('cpp:var_ref', { name: 'n' })] })
+      expect(slotsLostByDowngrade(withArgs, 'cpp:input')).toEqual(['args'])
+      expect(slotsLostByDowngrade(createNode('cpp:input_formatted', { format: '%d' }, { args: [] }), 'cpp:input')).toEqual([])
     })
   })
 

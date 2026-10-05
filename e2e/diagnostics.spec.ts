@@ -318,7 +318,11 @@ for (const [name, code] of Object.entries({
 
     // ★ 入口條件：這段程式真的被標記了（合成量）。沒標記的話這支測的是辨識層，
     //   而那時失敗訊息會把人推去改閘門——**指錯方向的失敗訊息比失敗本身更貴**。
-    const marked = await page.evaluate(() => {
+    //
+    // ⚠️ **輪詢，不是讀一次**（2026-10-06，全套裡 1.3 秒就紅、單獨跑綠）：
+    //    `treeReady` 只等「有一棵非空的樹」，而 `freshApp` 一開始就有預設程式那一棵
+    //    ⟹ 機器忙的時候讀到的是【同步之前】的舊樹，0 個標記。
+    const marked = (): Promise<number> => page.evaluate(() => {
       const app = (window as never as { __app: any }).__app
       const t = app.currentTree
       let n = 0
@@ -329,7 +333,8 @@ for (const [name, code] of Object.entries({
       if (t) walk(t)
       return n
     })
-    expect(marked, '這段程式沒有被標成語法錯誤 → 這支測的是辨識層不是閘門').toBeGreaterThan(0)
+    await expect.poll(marked, { message: '這段程式沒有被標成語法錯誤 → 這支測的是辨識層不是閘門', timeout: 10_000 })
+      .toBeGreaterThan(0)
 
     await page.getByText('執行').first().click()
     await page.waitForTimeout(1500)
