@@ -1,10 +1,18 @@
 -- **第六路的基礎前言**：每一顆元件的契約都站在這幾個之上。
 --
--- 🔴 **刻意自足，不 `import std`**——理由是 `cella holes` 單檔、不追 import，
--- 而自足的檔案不綁 stdlib 的版本。驗收測試因此是 hermetic 的。
--- （`Dec` 在 cella 的 `lib/foundations.cella` 裡有一份逐字相同的定義。）
+-- 🔴 **2026-10-05 起改成 import，不再自己定義 `Nat`／`Bool`／`Empty`／`Dec`**。
+--
+-- 舊版刻意自足（理由是 `cella holes` 單檔、不追 import），而接上 `@cella-lang/cpp`
+-- 之後那個自足變成一個**靜默的分岔**：我們的 `data Nat` 與 std 的 `Nat` 是兩個型別
+-- （身分是 `模組.Nat`），宣告時沒有錯誤也沒有警告，相遇時才報
+-- 「expected Nat／actual Nat」。cella 那側實測、並為它補了遮蔽警告。
+--
+-- ⚠️ 而 hermetic 那件事沒有丟：判決跑在 **explicit 模式**（沒有隱式匯入），
+-- 判決的 `imports` 逐次列出它實際看得到的模組與檢查器指紋——護欄斷言的是那一欄。
+--
+-- 🔴 **C++ 的 `int` 是 `cpp.<profile>.Int`，不是 `Nat`**（cella 的原則 C15）：
+-- 32 位元（lp64）或 16 位元（avr）、溢位與除以零是前置條件、除法向零截斷。
 
-data Nat = zero | succ Nat
-data Bool = true | false
-data Empty =
-data Dec (P : Type) = yes P | no (P -> Empty)
+import std
+import int
+import cpp

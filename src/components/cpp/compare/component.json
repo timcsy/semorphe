@@ -51,7 +51,7 @@
       },
       "_byOperator_why": "⚠️ **今天只有 `<` 一個，而那是刻意的**：第一刀的判準是\n「判定版產 0 個洞、布林版產 1 個」，多填幾個運算子不會讓那個讀數更可信，\n只會讓**沒有被量過的宣告**變多。其餘運算子等有語料驅動的需要再補。",
       "witness": {
-        "discharged": "if (u < n) return A[u];   守衛在，證明從 yes 分支掉出來",
+        "discharged": "if (u < n) return A[u];   守衛在，LtB 的證明從 yes 分支掉出來（NonNeg 仍是洞）",
         "open": "return A[u];                    沒有守衛，洞 = LtB u n"
       },
       "judge": "formal",

@@ -1,7 +1,25 @@
 -- **`cpp:array_at` 的形式核**（第六路）。
 --
--- 前置條件成為一個【必須交出東西來填的參數】：`(0 pf : LtB i n)`。
--- 🔴 多重性 `0` ＝ 它只進型別、不進執行期（證明抹除）。
+-- 前置條件成為【必須交出東西來填的參數】，而 C++ 的索引有**兩個**：
+--
+--     0 ≤ i      `nn : NonNeg i`    ← 2026-10-05 才出現的那一個
+--     i < n      `pf : LtB i n`
+--
+-- 🔴 **`NonNeg` 是換掉 `Nat` 之後才看得見的**：索引用 `Nat` 的時候負數不存在，
+--    於是 `if (u < n) return A[u];` 判 0 個洞——而在 C++ 裡 `u = -1` 是越界，
+--    那支程式**不安全**。舊的「0 個洞」是對一支【另一支程式】的判決。
+--
+-- ⚠️ 非負用 `toInt` 的建構子判（`pos`／`negsucc`），而不是 `cpp.le (lit 0) i`：
+--    寬度是隱式參數時 `lit 0` 的範圍證明要化簡 `2^(bits−1)`，化簡不下去。
+--
+-- 🔴 多重性 `0` ＝ 兩個證明都只進型別、不進執行期（證明抹除）。
 
-postulate Arr : Type -> Nat -> Type
-postulate arrayAt {T : Type} (n : Nat) (a : Arr T n) (i : Nat) (0 pf : LtB i n) : T
+def nonnegB (z : Int) : Bool := match z with
+  | pos _ => true
+  | negsucc _ => false
+
+@[irreducible]
+def NonNeg {bits : Nat} (i : cpp.IntN bits) : Type := nonnegB (cpp.toInt i) ≡ true
+
+postulate Arr {bits : Nat} (T : Type) (n : cpp.IntN bits) : Type
+postulate arrayAt {bits : Nat} {T : Type} (n : cpp.IntN bits) (a : Arr T n) (i : cpp.IntN bits) (0 nn : NonNeg i) (0 pf : LtB i n) : T

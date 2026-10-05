@@ -1,30 +1,18 @@
 -- **`cpp:arithmetic` 的形式核**（第六路）。
 --
--- 🔴 **今天只收 `+` 與 `*`，而那不是偷懶，是 `Nat` 的邊界**：
+-- 🔴 **這一份今天沒有定義**——五個運算直接對到 `@cella-lang/cpp`：
 --
---     a - b   在 Nat 上【會下溢】 —— 3 - 5 不是負二,它是什麼要先決定
---     a / b   整數除法要先說 b ≠ 0,而那是一個【前置條件】不是一個函式
---     a % b   同上
+--     a + b   cpp.add a b ok      ok : InRange bits (a + b)        不溢位
+--     a - b   cpp.sub a b ok      ok : InRange bits (a - b)
+--     a * b   cpp.mul a b ok      ok : InRange bits (a * b)
+--     a / b   cpp.div a b nz ok   nz : NonZero b ＋ 不溢位（INT_MIN / -1）
+--     a % b   cpp.rem a b nz ok
 --
--- ⟹ 那三個不是「還沒寫」，是**它們需要先決定一件事**。
---    走訪器碰到它們會擲例外（見 `cella-formalize.ts` 的「不准猜」那一條），
---    而那比給一個看起來能用的定義誠實。
+-- ⟹ **C++ 的語義由 cella 的 Library 負責，這顆元件只負責「`+` 對到 `cpp.add`」**
+--   （2026-10-05 使用者定的分工：語言語義住 Library、對應住膠囊）。
+--   那張對應表在走訪器裡（`tests/probes/cella-formalize.ts` 的 `ARITH`）。
 --
--- 🔴 **而用 `Nat` 代表 C++ 的 `int`，本身就違反 Cella 的原則 C15**（2026-10-04 得知）：
---    C++ 的 int 是 32 位元、有號溢位與除以零是 UB（前置條件）、`7 / -2 = -3`。
---    Cella 的結論是「每個語言用自己的型別（`cpp.Int32`），與 ℤ 的關係只由證明擔保」，
---    否決「以名字等同」。⟹ 這裡的判決證的是【Nat 上的】運算，不是 C++ 的 int。
---    待 cella 的 `cpp` Library 出來後換過去——見
---    `knowledge/draft/2026-10-04-C++-int-在-cella-裡是-cpp-Int32-而它該是一個-Library.md`。
---
--- ⚠️ 兩個都照 `Nat` 的歸納結構寫，所以停機性是結構遞迴的
---    ——而判決裡仍然會帶一條 `termination_by_elaborator`
---    （Cella 查過，而兩個 kernel 都沒有獨立重驗。那是「只查了一次」，不是「沒人查」）。
-
-def addNat (m : Nat) (n : Nat) : Nat := match m with
-  | zero => n
-  | succ k => succ (addNat k n)
-
-def mulNat (m : Nat) (n : Nat) : Nat := match m with
-  | zero => zero
-  | succ k => addNat n (mulNat k n)
+-- 🪦 **舊版（第 305 刀）是 `addNat`／`mulNat`**，而那違反 cella 的原則 C15：
+--    用 `Nat` 代表 `int`，證的是 Nat 上的運算——沒有負數、沒有溢位。
+--    `int add(int a, int b) { return a + b; }` 在舊版判 accept、0 個洞；
+--    在這一版有一個洞 `InRange 32 …`——**那個洞是真的**，`a + b` 會溢位。

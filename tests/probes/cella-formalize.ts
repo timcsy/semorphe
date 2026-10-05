@@ -160,6 +160,8 @@ export interface CellaFormalizeOptions {
    * （「布林版必須產出 1 個洞」）。少了它，一個什麼都不做的編碼器也會是 0 個洞。
    */
   readonly control?: boolean
+  /** 平台的資料模型——`int` 對到 `cpp.<profile>.Int`。預設 `lp64`（桌機）。 */
+  readonly profile?: CppProfile
   /** 前言（`cella-prelude.cella` 的內容）。呼叫端讀檔，這裡不碰 I/O。 */
   readonly prelude: string
 }
@@ -201,7 +203,46 @@ function asArg(s: string): string {
  */
 const CELLA_IDENT = /^[\p{L}_][\p{L}\p{N}_']*$/u
 
-const CPP_INT_TYPES = new Set(['int', 'long', 'long long', 'unsigned', 'size_t'])
+/**
+ * 🔴 **C++ 的整數型別 → `@cella-lang/cpp` 的平台型別**（2026-10-05 換過來的）。
+ *
+ * 舊版是 `int`／`long`／`long long`／`unsigned`／`size_t` 全部 → `Nat`，
+ * 而那違反 cella 的原則 C15：**每個語言用自己的型別，關係只由證明擔保**。
+ * 用 `Nat` 代表 `int` 證的是 Nat 上的運算——沒有負數、沒有溢位。
+ *
+ * ⚠️ 只收 Library 有定義的兩個（`int`／`long`）。`unsigned`／`size_t`／`long long`
+ *    **擲例外**：它們的語義（無號的環繞、平台寬度）Library 今天沒有，
+ *    而對到一個「差不多」的型別正是 C15 否決的那件事。
+ */
+const CPP_INT_TYPES: Readonly<Record<string, string>> = { int: 'Int', long: 'Long' }
+
+/** 平台的資料模型（`cpp.lp64` 桌機：int 32、long 64；`cpp.avr` Uno：int 16、long 32）。 */
+export type CppProfile = 'lp64' | 'avr'
+export const INT_BITS: Readonly<Record<CppProfile, number>> = { lp64: 32, avr: 16 }
+
+/** 五個算術運算 → Library 的函式，以及它要不要「除數不為零」。 */
+const ARITH: Readonly<Record<string, { fn: string; tag: string; nz: boolean }>> = {
+  '+': { fn: 'cpp.add', tag: 'add', nz: false },
+  '-': { fn: 'cpp.sub', tag: 'sub', nz: false },
+  '*': { fn: 'cpp.mul', tag: 'mul', nz: false },
+  '/': { fn: 'cpp.div', tag: 'div', nz: true },
+  '%': { fn: 'cpp.rem', tag: 'rem', nz: true },
+}
+
+/**
+ * 開一個具名的洞。**名字組不成識別字就擲例外**（見 `CELLA_IDENT`）
+ * ——偷偷清掉的話，兩個不同的洞會清成同一個名字。
+ */
+function hole(componentId: string, bare: string): string {
+  if (!CELLA_IDENT.test(bare)) {
+    throw new CellaFormalizeError(
+      componentId,
+      `洞的名字組不成合法的識別字：?${bare}`
+      + `——今天的運算元只認得單純的名字或數字（嶾狀的運算式會落到這裡）`,
+    )
+  }
+  return `?${bare}`
+}
 
 /**
  * ⚠️ **這裡有兩張用【名字】當鍵的表，而名字是最誘人也最錯的鍵。**
@@ -239,8 +280,9 @@ function one(node: SemanticNode, slot: string): SemanticNode {
 }
 
 /** 把一個 C++ 型別名對到 cella 的型別。**認不得就擲例外。** */
-function mapType(componentId: string, cppType: string): string {
-  if (CPP_INT_TYPES.has(cppType)) return 'Nat'
+function mapType(componentId: string, cppType: string, profile: CppProfile): string {
+  const t = CPP_INT_TYPES[cppType]
+  if (t !== undefined) return `cpp.${profile}.${t}`
   throw new CellaFormalizeError(componentId, `還不認得型別 ${cppType}`)
 }
 
@@ -264,41 +306,32 @@ function expr(node: SemanticNode, env: Env): string {
       const idx = expr(one(node, 'index'), env)
       // 🔴 前置條件在這裡兌現：在場有證明就用它，沒有就【開一個具名的洞】。
       //    洞的名字會出現在 blame 訊息裡，所以它要說得出缺的是什麼。
-      const held = env.proofs.get(`LtB ${asArg(idx)} ${asArg(size)}`)
-      let proof: string
-      if (held !== undefined) {
-        proof = held
-      } else {
-        // 🔴 **洞是一個【名字】，而一個運算式塞不進名字裡**。
-        //    吐出來不管的話，產出的是 cella 語法上不合法的檔；
-        //    偷偷清掉的話，兩個不同的洞會清成同一個名字
-        //    ——那就是 `Env` 檔頭那個【名字當鍵】的病。所以擲例外。
-        const bare = `bound_${idx}_lt_${size}`
-        if (!CELLA_IDENT.test(bare)) {
-          throw new CellaFormalizeError(
-            node.componentId,
-            `洞的名字組不成合法的識別字：?${bare}`
-            + `——今天的索引與長度只認得單純的名字或數字（嶾狀的取值會落到這裡）`,
-          )
-        }
-        proof = `?${bare}`
-      }
-      return `arrayAt ${asArg(size)} ${name} ${asArg(idx)} ${asArg(proof)}`
+      //    🔴 **洞是一個【名字】，而一個運算式塞不進名字裡**（`hole` 會擲例外）。
+      // 🔴 **兩個前置條件**：`0 ≤ i`（`NonNeg`）與 `i < n`（`LtB`）。
+      //    前者是換掉 `Nat` 之後才看得見的——今天沒有任何守衛會交出它。
+      const nn = env.proofs.get(`NonNeg ${asArg(idx)}`) ?? hole(node.componentId, `nonneg_${idx}`)
+      const lt = env.proofs.get(`LtB ${asArg(idx)} ${asArg(size)}`)
+        ?? hole(node.componentId, `bound_${idx}_lt_${size}`)
+      return `arrayAt ${asArg(size)} ${name} ${asArg(idx)} ${asArg(nn)} ${asArg(lt)}`
     }
 
     case 'cpp:arithmetic': {
-      // 🔴 **只收 `+` 與 `*`**——而那是 `Nat` 的邊界，不是還沒寫：
-      //    `-` 在 Nat 上會下溢、`/` 與 `%` 需要「除數不為零」這個前置條件。
-      //    那三個**需要先決定一件事**，而在決定之前擲例外比猜一個定義誠實。
+      // 🔴 **五個運算都對到 `@cella-lang/cpp`，前置條件成為洞**（2026-10-05）。
+      //    舊版只收 `+`／`*` 並對到 `Nat`——那時 `-`／`/`／`%` 擲例外的理由
+      //    （「需要先決定一件事」）由 cella 的原則 C15 決定了：溢位與除以零是前置條件。
+      //
+      // ⚠️ 前置條件今天**一律開洞**：走訪器沒有區間推理，交不出「不溢位」的證明。
+      //    那不是缺陷，是 C++ 的真相——`a + b` 會溢位，除非有人證明它不會。
       const op = String(node.properties.operator)
-      const f = op === '+' ? 'addNat' : op === '*' ? 'mulNat' : null
-      if (f === null) {
-        throw new CellaFormalizeError(
-          node.componentId,
-          `還沒有 ${op} 的形式核——Nat 上的減會下溢、除與餘需要「除數不為零」的前置條件`,
-        )
+      const a = ARITH[op]
+      if (a === undefined) {
+        throw new CellaFormalizeError(node.componentId, `還沒有 ${op} 的對應`)
       }
-      return `${f} ${asArg(expr(one(node, 'left'), env))} ${asArg(expr(one(node, 'right'), env))}`
+      const l = expr(one(node, 'left'), env)
+      const r = expr(one(node, 'right'), env)
+      const nz = a.nz ? ` ${hole(node.componentId, `nonzero_${r}`)}` : ''
+      const ok = hole(node.componentId, `noovf_${a.tag}_${l}_${r}`)
+      return `${a.fn} ${asArg(l)} ${asArg(r)}${nz} ${ok}`
     }
 
     default:
@@ -329,7 +362,7 @@ function guard(node: SemanticNode, env: Env): { scrutinee: string; predicate: st
   const l = asArg(expr(one(node, 'left'), env))
   const r = asArg(expr(one(node, 'right'), env))
   return env.opts.control
-    ? { scrutinee: `ltNat ${l} ${r}`, predicate: null }
+    ? { scrutinee: `cpp.lt ${l} ${r}`, predicate: null }
     : { scrutinee: `decLt ${l} ${r}`, predicate: `LtB ${l} ${r}` }
 }
 
@@ -351,9 +384,10 @@ export function formalizeFunction(fn: SemanticNode, opts: CellaFormalizeOptions 
     contracts: opts.contracts, used: new Set(), opts,
   }
 
+  const profile = opts.profile ?? 'lp64'
   const params: string[] = []
   for (const p of fn.slots.params ?? []) {
-    params.push(`(${String(p.properties.name)} : ${mapType(fn.componentId, String(p.properties.type))})`)
+    params.push(`(${String(p.properties.name)} : ${mapType(fn.componentId, String(p.properties.type), profile)})`)
   }
 
   const body = fn.slots.body ?? []
@@ -364,7 +398,7 @@ export function formalizeFunction(fn: SemanticNode, opts: CellaFormalizeOptions 
     const decl = stmts.shift()!
     env.used.add(decl.componentId)
     const name = String(decl.properties.name)
-    const elem = mapType(decl.componentId, String(decl.properties.type))
+    const elem = mapType(decl.componentId, String(decl.properties.type), profile)
     const size = expr(one(decl, 'size'), env)
     // ⚠️ 見 `Env` 的檔頭：名字當鍵，覆寫要吵。
     if (env.arraySize.has(name)) {
@@ -374,7 +408,7 @@ export function formalizeFunction(fn: SemanticNode, opts: CellaFormalizeOptions 
     params.push(`(${name} : Arr ${elem} ${size})`)
   }
 
-  const ret0 = mapType(fn.componentId, String(fn.properties.return_type))
+  const ret0 = mapType(fn.componentId, String(fn.properties.return_type), profile)
 
   // ②a 🔴 **最簡單的那個形狀：body 只有一個 `return`**（2026-10-04 加的）
   //
@@ -430,7 +464,7 @@ export function formalizeFunction(fn: SemanticNode, opts: CellaFormalizeOptions 
   env.proofs.clear()
   const elseExpr = expr(one(tail, 'value'), env)
 
-  const ret = mapType(fn.componentId, String(fn.properties.return_type))
+  const ret = mapType(fn.componentId, String(fn.properties.return_type), profile)
   const arms = g.predicate !== null
     ? `  | yes pf => ${thenExpr}\n  | no _ => ${elseExpr}`
     : `  | true => ${thenExpr}\n  | false => ${elseExpr}`

@@ -5,21 +5,17 @@
 --     if (u < n) A[u]      守衛回傳 Bool  → `match ... with | true =>` 的分支裡【沒有】證明
 --                          守衛回傳 Dec   → `| yes p =>` 的 p 【就是】證明
 --
--- 🔴 **而用 `Nat` 代表 C++ 的 `int`，本身就違反 Cella 的原則 C15**（2026-10-04 得知）：
---    C++ 的 int 是 32 位元、有號溢位與除以零是 UB（前置條件）、`7 / -2 = -3`。
---    Cella 的結論是「每個語言用自己的型別（`cpp.Int32`），與 ℤ 的關係只由證明擔保」，
---    否決「以名字等同」。⟹ 這裡的判決證的是【Nat 上的】運算，不是 C++ 的 int。
---    待 cella 的 `cpp` Library 出來後換過去——見
---    `knowledge/draft/2026-10-04-C++-int-在-cella-裡是-cpp-Int32-而它該是一個-Library.md`。
+-- 🔴 **比的是 `cpp.IntN bits`，不是 `Nat`**（2026-10-05 換過來的）。
+--    寬度是隱式參數：同一份契約對 lp64（32）與 avr（16）都成立。
+--    `cpp.lt` 本身沒有前置條件（比較不會溢位）。
 --
--- ⚠️ `LtB` 標 `@[irreducible]`——不標的話 blame 會說 `ltNat u n ≡ true`（實作），
---    標了才說 `LtB u n`（契約的名字）。2026-09-25 在真實檔案上驗過。
-
-def ltNat (m : Nat) (n : Nat) : Bool := match m with
-  | zero => (match n with | zero => false | succ k => true)
-  | succ j => (match n with | zero => false | succ k => ltNat j k)
+-- ⚠️ `LtB` 標 `@[irreducible]`——不標的話 blame 會說 `cpp.lt u n ≡ true`（實作），
+--    標了才說 `LtB u n`（契約的名字）。
+--
+-- ⚠️ `decLt` 仍是 postulate（我們自己扛的）：`cpp.lt` 回 Bool，
+--    把它升成判定要一條「`cpp.lt` 的布林與序關係一致」的引理，cpp Library 今天沒有。
 
 @[irreducible]
-def LtB (i : Nat) (n : Nat) : Type := ltNat i n ≡ true
+def LtB {bits : Nat} (i : cpp.IntN bits) (n : cpp.IntN bits) : Type := cpp.lt i n ≡ true
 
-postulate decLt (u : Nat) (n : Nat) : Dec (LtB u n)
+postulate decLt {bits : Nat} (u : cpp.IntN bits) (n : cpp.IntN bits) : Dec (LtB u n)
