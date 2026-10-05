@@ -140,6 +140,8 @@ semorphe lang-cpp   積木 ↔ 定義的對應（③） contract.cella 寫 impor
 
 ### 我們接的時候要做的（等兩件事：`cella-lib-cpp` 發布 ＋ 帶 `load_library_pack` 的 cella-lang）
 
+0. `cella-prelude.cella` 的自定 `Nat`／`Bool`／`Empty`／`Dec` 換成 `import std`（否則與 cpp 的 Nat 是兩個型別）；
+   護欄入口條件 `'standalone'` → `'explicit'`，並逐次斷言判決的 `imports`
 1. 兩個都 exact pin；`audit-cella-pinned` 擴成也比 `cbfVersion`／`checkerHash`／cpp 的 `merkle`
 2. 走訪器型別表：目標 C++／C → `cpp.lp64.Int`，Arduino → `cpp.avr.Int`；字面量註記型別
 3. `arithmetic`／`compare` 的 `contract.cella` 改成對應到 `cpp.add`… 而不是 `addNat`（305 刀的三個項換過去）
@@ -164,6 +166,23 @@ cella 的根因（阻擋 2）：隱式 `bits` 還是 meta 時 `inRangeB ?bits (p
 訊息品質（reject 說出哪個前置條件，如 `InRange 16 60000`）排在阻擋 1 之後。
 
 🟢 **我們沒有改護欄去遷就 preloaded**；試裝的套件已還原，pin 不動。
+
+## 三之七、阻擋 1 的介面定案（2026-10-05）：模式另立 `"explicit"` ＋ 判決帶 `imports`
+
+- `init_stdlib_explicit(bytes)`：還原 base（第二個 kernel 照樣重驗）而**不開自動匯入**；
+  `check` 只看得到 src 自己 `import` 的模組＋依賴閉包，連 prelude 也不自動進來。
+- 🔴 **模式名另立 `"explicit"`**（我們的意見）：同一個名字換了意思，舊斷言會繼續綠而量的東西變了
+  ——量測錯誤家族那個形狀。另立名字讓 `=== 'standalone'` **紅一次**，逼我們有意識地改。
+- **判決帶 `imports`**（模組＋依賴閉包＋每個包的檢查器指紋）⟹ 護欄**逐次**斷言「只用到我宣告的」，
+  不再相信 `stdlib_mode()` 這個行程全域的值。與第 303 刀同一招：**每一次判決自己的欄位，不是建置期常數**。
+
+### 🔴 我們自足的 prelude 會靜默遮蔽 std 的型別
+
+cella 實測：我們的 `data Nat` 與 std 的 `Nat` 是**兩個型別**（身分是 `模組.Nat`），宣告時**沒有錯誤也沒有警告**；
+相遇時才報「expected Nat／actual Nat，兩邊印出來一樣但結構不同」。cella 會補一個遮蔽警告。
+
+⟹ **接入時改成 import，不再自己定義**：`Nat`／`Bool` 在 `std`，`Empty`／`Dec` 在 `foundations`
+（`prelude` 裡沒有它們）。explicit 下 `import std` 帶進 std＋foundations＋prelude，`imports` 會照實列出。
 
 ## 四、還開著的
 
