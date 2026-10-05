@@ -323,6 +323,32 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
     }
   })
 
+  /**
+   * 🔴 **五個算術運算，每一個的前置條件都要量到**（2026-10-06 補）。
+   *
+   * 在此之前這支只量了 `+`。`@cella-lang/cpp` 的 `cpp.rem` 多了一個前置條件（商不溢位：
+   * `INT_MIN % -1` 是 UB，cella 用 clang＋UBSan 差分抓到的），而走訪器產的 `%` 還是舊的形狀
+   * ——**沒有任何一條測試紅**，因為沒有人量過 `%`。紅的是 merkle 那條（它說得出 `cpp.rem` 變了），
+   * 而它說不出「我們的走訪器跟著錯了」。
+   */
+  it('🔴 五個算術運算：判決不得是 reject，洞的型別逐字是 C++ 的前置條件', () => {
+    const cases: [string, string[]][] = [
+      ['+', ['cpp.InRange 32 (addIntF (cpp.toInt a) (cpp.toInt b))']],
+      ['-', ['cpp.InRange 32 (subIntF (cpp.toInt a) (cpp.toInt b))']],
+      ['*', ['cpp.InRange 32 (mulIntF (cpp.toInt a) (cpp.toInt b))']],
+      ['/', ['cpp.NonZero b', 'cpp.InRange 32 (quotInt (cpp.toInt a) (cpp.toInt b))']],
+      // 🔴 `%` 有三個：除數不為零、【商】不溢位（INT_MIN % -1）、餘數在範圍內
+      ['%', ['cpp.NonZero b', 'cpp.InRange 32 (quotInt (cpp.toInt a) (cpp.toInt b))', 'cpp.InRange 32 (remInt (cpp.toInt a) (cpp.toInt b))']],
+    ]
+    for (const [op, want] of cases) {
+      const src = formalizeFunction(liftFn(`int f(int a, int b) { return a ${op} b; }`), { contracts, prelude })
+      const v = verdict(src)
+      expect(v.verdict, `${op}：判決是 ${v.verdict}（reject 表示呼叫形狀與 Library 對不上）\n${v.report}\n\n${src}`).toBe('unknown')
+      expect(v.unknown.filter((u) => u.reason === 'hole').map((u) => String((u as { typeSource?: string }).typeSource)),
+        `${op}：洞不對\n${v.report}`).toEqual(want)
+    }
+  })
+
   it('★ 認不得的東西要擲例外，不准猜（猜出來的項會安靜地通過）', () => {
     const bad = { ...fn, properties: { ...fn.properties, return_type: 'std::string' } } as SemanticNode
     expect(() => formalizeFunction(bad, { contracts, prelude })).toThrow(/還不認得型別/)
