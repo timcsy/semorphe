@@ -83,11 +83,19 @@ function installed(): pkg | null {
 export const isExactPin = (spec: string | undefined): boolean =>
   spec !== undefined && /^\d+\.\d+\.\d+$/.test(spec)
 
-/** `package.json` 裡寫的那一行——要是**精確**的，不是範圍。 */
+/**
+ * `package.json` 裡寫的那一行——要是**精確**的，不是範圍。
+ *
+ * 🔴 **`dependencies` 與 `devDependencies` 都讀**（2026-10-05 更正）。
+ * cella 今天只有探針在用，所以在 devDependencies；而**設計上它是在使用者編輯時守著的**
+ * （vision〈第六路〉：「洞 → 積木」、「說不出保證的時候要出聲」）——走到那一步它就要進
+ * dependencies。這條護欄守的是「精確釘選」，**不守它今天住哪一格**；
+ * 守住後者的話，它會擋在設計要去的方向上。
+ */
 function declared(name = 'cella-lang'): string | undefined {
   const j = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')) as
-    { devDependencies?: Record<string, string> }
-  return j.devDependencies?.[name]
+    { dependencies?: Record<string, string>; devDependencies?: Record<string, string> }
+  return j.dependencies?.[name] ?? j.devDependencies?.[name]
 }
 
 interface cppIndex {
@@ -155,7 +163,7 @@ describe('護欄：釘住的檢查器，判定語義不得悄悄換人', () => {
 
   it('🔴 硬性零：`package.json` 裡要精確釘選，不得是範圍', () => {
     const d = declared()
-    expect(d, 'cella-lang 不在 devDependencies 裡').toBeTruthy()
+    expect(d, 'package.json 裡沒有 cella-lang').toBeTruthy()
     expect(isExactPin(d), `🔴 cella-lang 寫成「${d}」——那是範圍。\n`
       + '它每次 main 全綠就自動發一版，範圍等於「任何一版都可以」。\n'
       + '🟢 精確釘選讓「升版」變成一次看得見的編輯。').toBe(true)
@@ -214,9 +222,7 @@ describe('護欄：釘住的檢查器，判定語義不得悄悄換人', () => {
     const cpp = installedCpp()
     expect(cpp, '🔴 `node_modules/@cella-lang/cpp` 不在 —— 下面都是假的').not.toBeNull()
     const d = declared('@cella-lang/cpp')
-    // ⚠️ 它只有探針用（第六路），所以住 devDependencies——`npm i` 不帶 -D 會把它放進
-    //    dependencies，而那會讓它跟著產品出貨（2026-10-05 第一次接的時候就這樣）。
-    expect(d, '🔴 @cella-lang/cpp 不在 devDependencies（多半是被裝進了 dependencies）').toBeTruthy()
+    expect(d, '🔴 package.json 裡沒有 @cella-lang/cpp').toBeTruthy()
     expect(isExactPin(d), `🔴 @cella-lang/cpp 寫成「${d}」——那是範圍`).toBe(true)
     const p = installed()!
     expect(cpp!.index.checkerHash, '🔴 cpp 的模組包是另一支檢查器建的 —— load_library_pack 會拒絕它，'
