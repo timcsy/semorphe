@@ -4,9 +4,14 @@
  * 語義樹 → cella 項 → `cella holes`，而判準有**兩半**：
  *
  * ```
- * 判定版（守衛編成 Dec）   holes: 0     證明從 `| yes pf =>` 掉出來
- * 🔴 布林版（負向對照）     holes: 1     而且型別要是 `LtB u n`
+ * 判定版（守衛編成 Dec）   holes: 1     LtB 的證明從 `| yes pf =>` 掉出來，剩 NonNeg
+ * 🔴 布林版（負向對照）     holes: 2     多出來的那一個型別要是 `LtB 32 u n`
  * ```
+ *
+ * 🔴 **2026-10-05 起是 1 與 2，不是 0 與 1**——那是換掉 `Nat` 的結果，不是退步。
+ * 索引用 `Nat` 時負數不存在，於是 `if (u < n) return A[u];` 判 0 個洞；
+ * 換成 `cpp.IntN`（cella 的原則 C15）之後多一個 `NonNeg 32 u`，而**它是真的**：
+ * `u = -1` 在 C++ 裡是越界。**舊的「0 個洞」是對另一支程式的判決。**
  *
  * ## ⚠️ 下半場不可省，而理由踩過五次
  *
@@ -29,11 +34,14 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
-import cellaInit, { holes as cellaHoles, check as cellaCheck, stdlib_mode } from 'cella-lang'
+import { fileURLToPath } from 'node:url'
+import cellaInit, {
+  check as cellaCheck, stdlib_mode, init_stdlib_explicit, load_module_pack, load_library_pack,
+} from 'cella-lang'
 import { assets } from 'cella-lang/assets'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { formalizeFunction, CellaFormalizeError, type ContractSources } from './cella-formalize'
+import { formalizeFunction, CellaFormalizeError, INT_BITS, type ContractSources } from './cella-formalize'
 import type { SemanticNode } from '../../src/core/types'
 
 /**
@@ -47,16 +55,23 @@ import type { SemanticNode } from '../../src/core/types'
  * ⚠️ 而**刻意不留跳過的退路**：`cella-lang` 是 devDependency，`npm ci` 之後
  * 一定在。一條會自己跳過的護欄，它的覆蓋率等於有人記得裝東西。
  *
- * ## 不預載模式
+ * ## explicit 模式（2026-10-05，與 cella 定案的）
  *
- * **不呼叫 `init_stdlib_cached`** ⟹ 單檔、不追 import、看不到 stdlib 的名字。
- * 那正是我們要的語義（我們的 prelude 刻意自足，見它的檔頭），
- * 而它也讓 `Nat`／`Bool`／`Dec` 不會跟 stdlib 撞名。
+ * `init_stdlib_explicit` ⟹ base 在、**沒有任何隱式匯入**：程式只看得到自己
+ * `import` 的模組（連 prelude 也要寫）。`@cella-lang/cpp` 疊在上面。
  *
- * 🔴 ⚠️ **stdlib 的狀態是整個行程共用的**：同一個 worker 裡只要有人呼叫過
- * `init_stdlib_cached`，之後的 `holes` 就變成預載模式——而那個模式切換的症狀
- * **不是紅，是綠**（我們的 prelude 少了什麼，stdlib 會補上）。
- * 所以下面有一條入口條件在問「我現在在哪個模式」。
+ * 🔴 ⚠️ **模式仍是整個行程共用的**，所以判準不再只信 `stdlib_mode()`：
+ * 每一份判決帶 `imports`（它實際看得到的模組＋檢查器指紋），下面**逐次**斷言它
+ * ——與第 303 刀同一招：**每一次判決自己的欄位，不是行程或建置期的常數**。
+ *
+ * 🪦 舊版是 `standalone`（什麼都不載、prelude 自己定義 `Nat`）。接上 cpp 之後那會
+ * 讓我們的 `Nat` 與 std 的 `Nat` 成為兩個型別、宣告時無警告——見 prelude 的檔頭。
+ * 模式名刻意另立（不沿用 `standalone`），讓舊斷言**紅一次**而不是換了意思還綠著。
+ *
+ * ⚠️ 洞從 `check()` 的 `unknown`（`reason: "hole"`）讀，一次呼叫拿到判決與全部的洞。
+ * （2026-10-05 量到兩個缺陷：`check()` 每個 def 只回報第一個洞、`holes()` 在 explicit 下不認
+ * `import`——負向對照因此量不到 `LtB`。回報後 cella F371 兩邊都修，
+ * 並加了一條測試鎖住「兩個 API 列出的洞一致」。）
  */
 
 /** 語料 `AP325/7/7_6.cpp` 的形狀：讀進來的索引去取一個長度也是讀進來的陣列。 */
@@ -66,10 +81,22 @@ const SRC = `int pick(int n, int u, int fallback) {
   return fallback;
 }`
 
+/** 一個**會被判 accept** 的錨：守衛之後兩邊都只回傳變數，沒有取值、沒有算術。 */
+const MAX = `int mx(int a, int b) {
+  if (a < b) return b;
+  return a;
+}`
+
 let fn: SemanticNode
 let contracts: ContractSources
 let prelude: string
 let parser: Parser
+/** cella-lang 自己說的檢查器指紋（`package.json` 的 `cella.checkerHash`）。 */
+let checkerHash: string
+/** `load_library_pack` 的回覆（`{"ok":true}` 或帶理由的拒絕）。 */
+let libLoad: { ok: boolean; error?: string }
+/** 一個【只有那幾行 import】的檔，它的判決看得到哪些模組——我們的產出不得多於它。 */
+let importBase: string[]
 
 /** 把一段 C++ lift 成它的第一個函式。 */
 function liftFn(src: string): SemanticNode {
@@ -100,49 +127,57 @@ beforeAll(async () => {
   contracts = m
   prelude = fs.readFileSync('src/languages/cpp/cella-prelude.cella', 'utf8')
 
-  // ⚠️ 一個行程 init 一次就夠；不預載模式連 stdlib 都不載（實測 init 約 30 ms）。
-  await cellaInit({ module_or_path: fs.readFileSync(assets.wasm) })
+  // ⚠️ 一個行程 init 一次就夠。
+  const R = (u: URL): Uint8Array => fs.readFileSync(fileURLToPath(u))
+  await cellaInit({ module_or_path: R(assets.wasm) })
+  init_stdlib_explicit(R(assets.stdlib))
+  const libDir = path.join(process.cwd(), 'node_modules/@cella-lang/cpp')
+  const index = fs.readFileSync(path.join(libDir, 'index.json'), 'utf8')
+  const req = (JSON.parse(index) as { requires: Record<string, { modules: string[] }> }).requires['cella-lang']!
+  for (const m of req.modules) load_module_pack(R(assets.module(m)))
+  libLoad = JSON.parse(load_library_pack(index, 'cpp', fs.readFileSync(path.join(libDir, 'cpp.cell')))) as never
+  checkerHash = (JSON.parse(fs.readFileSync('node_modules/cella-lang/package.json', 'utf8')) as
+    { cella: { checkerHash: string } }).cella.checkerHash
+  importBase = verdict(prelude).imports.map((i) => i.module).sort()
 }, 120_000)
 
-interface hole { name: string | null; type: string }
 interface checker { name: string; version: string; hash: string; covers: string[] }
+interface Verdict {
+  verdict: string
+  /** 洞的型別（`unknown` 裡 `reason: "hole"` 那幾筆的 `detail`）。 */
+  holes: string[]
+  /** 洞的名字（`?a` 為 "a"），與 `holes` 同序。 */
+  holeNames: (string | null)[]
+  imports: { module: string; checker: string }[]
+  assumptions: { kind: string; name?: string }[]
+  unknown: { reason?: string; detail?: string }[]
+  warnings: { message: string }[]
+  checker: checker
+  report: string
+}
 
 /**
- * 🔴 **走 `--json`，不走文字版**（2026-10-03 換的）。
+ * 🔴 **走 `check` 的 JSON**——洞、假設、匯入、檢查器都在同一份判決裡。
  *
- * 換的理由有兩個，而第二個比第一個重要：
- *
- * ```
- * ① 結構化      型別從 /LtB u n/ 這個 regex 變成 holes[i].type —— 不必剖字串
- * 🔴 ② 版本釘得住  文字版【完全沒有】版本資訊,而 --json 帶 checker
- * ```
- *
- * ⚠️ ②是一個實測到的缺口：2026-10-03 同一天，本機那支 cella 的
- * `checker.hash` 從 `2ff7b715…` 變成 `f2e02b1e…`，**而我們的探針一聲都不吭**
- * ——它這幾個月是對著「機器上剛好是哪一支」在綠的。
- *
- * ## 而雜湊**不上棘輪**，它進報表
- *
- * 對方每重建一次它就變。上棘輪的話這支測試會一直紅，而**一條會假紅的護欄，
- * 人很快就學會忽略它**（我們的 e2e 吃過這個虧）。
- *
- * 🟢 **它的工作是鑑識，不是閘門**：哪天這支紅了，報表上說得出那是對著哪一支 build。
- * 而真正當閘門的是下面那條入口條件——`covers` 要含 `kernel`。
+ * ⚠️ `checker.hash` **不上棘輪**，它進報表（對方每重建一次它就變）；
+ * 真正的閘門是下面的入口條件：逐份判決的 `imports` 與 kernel 重驗欄位。
  */
-function holes(source: string, tag: string): { count: number; holes: hole[]; checker: checker; report: string } {
-  void tag   // 保留參數：失敗訊息要說得出是哪一半（判定版／負向對照）
-  const out = cellaHoles(source)
-  let j: { ok?: boolean; holes?: hole[]; checker?: checker; errors?: unknown[] }
+function verdict(source: string): Verdict {
+  const out = cellaCheck(source)
+  let j: Partial<Verdict> & { unknown?: { reason?: string; detail?: string; name?: string | null }[] }
   try { j = JSON.parse(out) as never } catch {
     throw new Error(`cella 回的不是 JSON：${out.slice(0, 300)}`)
   }
-  // ⚠️ `ok:false` 時【沒有】 holes 欄位——那是對方刻意的設計：
-  //    「0 個洞」與「沒通過」在結構上分得開,不是靠一個數字。
-  if (j.holes === undefined) {
-    throw new Error(`cella 沒給 holes（多半是沒通過）：${out.slice(0, 300)}`)
-  }
   if (j.checker === undefined) throw new Error(`cella 沒說它是哪一支：${out.slice(0, 300)}`)
-  return { count: j.holes.length, holes: j.holes, checker: j.checker, report: out }
+  if (j.imports === undefined) throw new Error(`cella 的判決沒有 imports —— 版本不對？${out.slice(0, 300)}`)
+  const unknown = j.unknown ?? []
+  return {
+    verdict: String(j.verdict),
+    holes: unknown.filter((u) => u.reason === 'hole').map((u) => String(u.detail)),
+    holeNames: unknown.filter((u) => u.reason === 'hole').map((u) => (u as { name?: string | null }).name ?? null),
+    imports: j.imports, assumptions: j.assumptions ?? [], unknown,
+    warnings: j.warnings ?? [], checker: j.checker, report: out,
+  }
 }
 
 describe('探針：第六路（語義樹 → cella 項）', () => {
@@ -153,11 +188,27 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
     expect(ids, '樹裡沒有取值 —— 前置條件的消費者不見了').toContain('cpp:array_at')
   })
 
-  it('★ 入口條件：現在是【不預載】模式——預載的話,下面的綠會是假的', () => {
-    // 🔴 行程共用的狀態:有人呼叫過 init_stdlib_cached 之後就回不去了。
-    //    而那個切換的症狀是綠不是紅——我們的 prelude 少什麼,stdlib 會補上。
-    expect(stdlib_mode(), '🔴 跑在預載模式 —— 我們自足的 prelude 會被 stdlib 補洞，'
-      + '於是「它自足」這件事就沒有被驗到').toBe('standalone')
+  it('★ 入口條件：explicit 模式，而 cpp Library 疊上去了', () => {
+    // 🔴 預載模式下 stdlib 會自動匯入，我們沒寫的 import 也看得到 ——症狀是綠不是紅。
+    expect(stdlib_mode(), '🔴 不是 explicit 模式 —— 判決可能用到我們沒宣告的模組').toBe('explicit')
+    expect(libLoad, `🔴 @cella-lang/cpp 疊不上去：${libLoad?.error ?? ''}`).toEqual({ ok: true })
+  })
+
+  it('★ 入口條件：這一份判決【只用到】我們 import 的模組，而且是同一支檢查器建的', () => {
+    const v = verdict(formalizeFunction(fn, { contracts, prelude }))
+    const mods = v.imports.map((i) => i.module).sort()
+    console.log(`\n📦 判決看得到的模組：${mods.join('、')}`)
+    expect(mods, '🔴 判決裡沒有 cpp —— 契約沒有站在 Library 上').toContain('cpp')
+    // 「只有 import 那幾行的檔」看得到什麼，我們的產出就只能看得到什麼
+    // ——契約與函式本身不得再帶進別的模組。
+    expect(mods, '🔴 產出的項比 prelude 多看到了模組').toEqual(importBase)
+    for (const i of v.imports) {
+      expect(i.checker, `🔴 模組 ${i.module} 是另一支檢查器建的`).toBe(checkerHash)
+    }
+    // 🔴 **警告必須是零**（cella F371 拿掉 IsSchema 的假警告之後才寫得出這條）。
+    //    它最要緊的消費者是遮蔽：契約或 prelude 自己再定義一次 `Nat`，宣告處【不擋】，
+    //    只在這裡出一條「'Nat' shadows an imported definition」——而兩個 Nat 相遇時才紅。
+    expect(v.warnings.map((w) => w.message), '🔴 判決帶著警告（例如遮蔽了 import 的型別）').toEqual([])
   })
 
   /**
@@ -182,15 +233,19 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
    * ⚠️ 而 `holes` 的輸出**沒有**那兩個欄位（它只有 `ok` / `holes` / `checker`），
    * 所以這裡要多叫一次 `check`。
    */
+  it('★ 注入：自己再定義一次 Nat，警告必須出現（否則「警告為零」可能只是永遠沒有警告）', () => {
+    const v = verdict(`${prelude}\ndata Nat = zero | succ Nat\n`)
+    expect(v.warnings.map((w) => w.message).join('\n'), '🔴 遮蔽了 std 的 Nat 卻沒有警告')
+      .toMatch(/'Nat' shadows an imported definition/)
+  })
+
   it('★ 入口條件：這一份判決，kernel 真的重驗過', () => {
-    const src = formalizeFunction(fn, { contracts, prelude })
-    const r = holes(src, 'anchor')
-    const v = JSON.parse(cellaCheck(src)) as {
-      verdict?: string
-      assumptions?: { kind: string; name?: string }[]
-      unknown?: { reason?: string }[]
-    }
-    const assumptions = v.assumptions ?? []
+    // ⚠️ 錨換成 `mx`（2026-10-05）：`pick` 現在有一個真的洞（`NonNeg`），判 unknown，
+    //    而這一條要的是一份 **accept** 的判決——kernel 重驗過的那一種。
+    const src = formalizeFunction(liftFn(MAX), { contracts, prelude })
+    const v = verdict(src)
+    const r = v
+    const assumptions = v.assumptions
     /**
      * 🔴 **兩種假設的【信任等級不同】，所以分開印**（2026-10-04，cella 那側更正）。
      *
@@ -225,10 +280,10 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
       + '而下面每一個「0 個洞」的意思就變了',
     ).not.toContain('not_rechecked_by_kernel')
     expect(
-      (v.unknown ?? []).map((u) => u.reason),
+      v.unknown.map((u) => u.reason),
       '🔴 判決裡有 `kernel_skipped`',
     ).not.toContain('kernel_skipped')
-    expect(v.verdict, '🔴 我們自己的形式核沒有 accept —— 下面在驗一個站不住的東西')
+    expect(v.verdict, `🔴 錨沒有 accept —— 下面在驗一個站不住的東西\n${v.report}\n\n${src}`)
       .toBe('accept')
   })
 
@@ -237,24 +292,43 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
     expect(contracts.get('cpp:array_at'), 'cpp:array_at 的 paths.formalize 讀不到').toBeTruthy()
   })
 
-  it('🔴 負向對照：守衛編成【布林】時，必須有一個洞，而且型別是 LtB u n', () => {
+  it('🔴 負向對照：守衛編成【布林】時，兩個洞，而其中一個是 LtB 32 u n', () => {
     const src = formalizeFunction(fn, { contracts, prelude, control: true })
-    const r = holes(src, 'control')
-    expect(r.count, `布林版應該剛好一個洞。cella 說：\n${r.report}`).toBe(1)
-    // cella 建議的那一條：只數數量的話，在【錯的位置】開洞也會過。
-    // 🟢 換成 `--json` 之後這裡讀的是結構化的型別，不是對整串輸出做 regex。
-    expect(r.holes[0]?.type, `洞的型別不是 LtB u n：\n${r.report}`).toBe('LtB u n')
+    const v = verdict(src)
+    // cella 建議的那一條：只數數量的話，在【錯的位置】開洞也會過。⟹ 型別逐字。
+    // 🔴 依原始碼順序、型別與名字都逐字——「型別對但開在別的位置」也要紅
+    //    （cella F371 起每個洞一條；在那之前每個 def 只回報第一個，這條量不到 LtB）
+    expect(v.holes, `布林版的洞不對。cella 說：\n${v.report}\n\n${src}`)
+      .toEqual(['NonNeg 32 u', 'LtB 32 u n'])
+    expect(v.holeNames, '洞的名字不對 —— 開在別的位置').toEqual(['nonneg_u', 'bound_u_lt_n'])
   })
 
-  it('🟢 守衛編成【判定】時，零個洞 —— 證明從 yes 分支掉出來', () => {
+  it('🟢 守衛編成【判定】時，LtB 的洞消失 —— 證明從 yes 分支掉出來；NonNeg 還在', () => {
     const src = formalizeFunction(fn, { contracts, prelude })
-    const r = holes(src, 'dec')
-    expect(r.count, `判定版應該零個洞。cella 說：\n${r.report}\n\n產出的項：\n${src}`).toBe(0)
+    const v = verdict(src)
+    // 🔴 剩下的那一個【是真的】：`u = -1` 在 C++ 裡越界，而守衛 `u < n` 擋不住它。
+    expect(v.holes, `判定版應該只剩 NonNeg。cella 說：\n${v.report}\n\n產出的項：\n${src}`)
+      .toEqual(['NonNeg 32 u'])
+    expect(v.holeNames).toEqual(['nonneg_u'])
+  })
+
+  it('🔴 平台：同一個 `a + b`，桌機的洞是 32 位元的範圍、Arduino 的是 16 位元的', () => {
+    // 這一條量的是「profile 真的穿過走訪器進到型別裡」——
+    // 只量 lp64 的話，一個把寬度寫死成 32 的走訪器也會全綠。
+    const add = liftFn('int add(int a, int b) { return a + b; }')
+    for (const profile of ['lp64', 'avr'] as const) {
+      const v = verdict(formalizeFunction(add, { contracts, prelude, profile }))
+      expect(v.holes.length, `${profile}：a + b 應該剛好一個洞（不溢位）。\n${v.report}`).toBe(1)
+      expect(v.holes[0], `${profile}：洞的寬度不對`).toMatch(new RegExp(`^cpp\\.InRange ${INT_BITS[profile]} `))
+    }
   })
 
   it('★ 認不得的東西要擲例外，不准猜（猜出來的項會安靜地通過）', () => {
     const bad = { ...fn, properties: { ...fn.properties, return_type: 'std::string' } } as SemanticNode
     expect(() => formalizeFunction(bad, { contracts, prelude })).toThrow(/還不認得型別/)
+    // 🔴 `unsigned` 舊版對到 Nat；Library 沒有無號的語義（環繞），所以它現在也擲
+    const uns = { ...fn, properties: { ...fn.properties, return_type: 'unsigned' } } as SemanticNode
+    expect(() => formalizeFunction(uns, { contracts, prelude })).toThrow(/還不認得型別/)
   })
 })
 
@@ -287,11 +361,17 @@ describe('探針：第六路產出的項，語法上站得住（不需要 cella�
   return fallback;
 }`
 
-  /** 嶾狀索引，而守衛正好涵蓋外層——外層拿得到證明，不開洞。 */
+  /**
+   * 子運算式出現在**守衛**裡（`B[u] < n`），而 then 分支不再取外層。
+   *
+   * ⚠️ 2026-10-05 前這裡是 `return A[B[u]]`（守衛涵蓋外層的 `LtB`）。
+   * 換成 `cpp.IntN` 之後外層多一個 `NonNeg (arrayAt …)` 的洞，而它的名字組不成識別字
+   * ⟹ 擲例外，那一支量不到括號了。所以括號改在守衛那裡量——同一個 `asArg`。
+   */
   const NESTED_GUARDED = `int pick(int n, int m, int u, int fallback) {
   int A[n];
   int B[m];
-  if (B[u] < n) return A[B[u]];
+  if (B[u] < n) return n;
   return fallback;
 }`
 
@@ -309,10 +389,10 @@ describe('探針：第六路產出的項，語法上站得住（不需要 cella�
 
   it('🔴 子運算式當引數時要加括號——沒加的話編出來的是【另一支程式】', () => {
     const out = formalizeFunction(liftFn(NESTED_GUARDED), { contracts, prelude })
-    const body = out.split('\n').filter((l) => l.startsWith('  | yes')).join('\n')
-    expect(body, `外層 arrayAt 的索引沒有括號：\n${out}`).toContain('(arrayAt ')
+    expect(out, `守衛裡的 arrayAt 沒有括號：\n${out}`)
+      .toContain('decLt (arrayAt m B u ?nonneg_u ?bound_u_lt_m) n')
     // ★ 正向對照：單層的那一支不得被加上多餘的括號
     const flat = formalizeFunction(fn, { contracts, prelude })
-    expect(flat, '單層的索引被加了括號 —— asArg 包過頭了').toContain('arrayAt n A u pf')
+    expect(flat, '單層的索引被加了括號 —— asArg 包過頭了').toContain('arrayAt n A u ?nonneg_u pf')
   })
 })
