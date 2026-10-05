@@ -146,6 +146,25 @@ semorphe lang-cpp   積木 ↔ 定義的對應（③） contract.cella 寫 impor
 4. 負向對照：同一支 `30000 + 30000` 在 avr 目標要 reject
 5. 第一個遞迴案例 `cpp-beginner/19` 的 `f`，與 cella 一起做
 
+## 三之六、第一版發了，而接入量到兩個阻擋（2026-10-05）
+
+`@cella-lang/cpp@0.1.202610050726`（peer `cella-lang@0.1.202610050558`，檢查器 `5ea3f5cf372cd1ce`）。
+實裝量到（Node v24、每案例獨立行程）：
+
+```
+阻擋 1  standalone 下 load_module_pack(int) → 0「stdlib not loaded」，cpp 疊不上去
+        preloaded 下 OK —— 而我們的護欄刻意要求 standalone（stdlib 是行程全域，假綠風險）
+阻擋 2  cpp.lit (pos N) refl：N ≤ 3000 accept，N ≥ 5000 RangeError（README 的 30000+30000 也是）
+語義    200*200：lp64 accept · avr reject ✓ ；toC 212 accept ✓
+```
+
+cella 的根因（阻擋 2）：隱式 `bits` 還是 meta 時 `inRangeB ?bits (pos N)` 卡住，
+折疊門檻 2¹⁶ 讓 30000 被一元展開成三萬層，occurs check 沿它遞迴；原生有 stacker、wasm 沒有。
+修法：門檻降到 256（驗證中）。阻擋 1 是需求 ① 還沒做，下一項。
+訊息品質（reject 說出哪個前置條件，如 `InRange 16 60000`）排在阻擋 1 之後。
+
+🟢 **我們沒有改護欄去遷就 preloaded**；試裝的套件已還原，pin 不動。
+
 ## 四、還開著的
 
 - 等交付：具體名字、`index.json` 的指紋欄位 ⟹ 我們把 `audit-cella-pinned` 擴成守 cpp 那一條
