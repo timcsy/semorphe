@@ -15,3 +15,4 @@
 - [C++ 的 int 在 cella 裡是 cpp.Int32，而它該是一個 Library](2026-10-04-C++-int-在-cella-裡是-cpp-Int32-而它該是一個-Library.md) —— 🟡 C15：以 Nat 代表 int 證的是 Nat；語言語義住 cella 的 Library、對應住膠囊；使用者決定 cpp 獨立發版；住處與 int 寬度 profile 待 cella 回覆
 - [cella 接受的程式保證了什麼](2026-10-05-cella-接受的程式保證了什麼.md) —— 🟡 「子集沒有 UB」的四個前提（契約完整·翻譯忠實·postulate·平台）；可靠而不完備；SOTA 補得上與補不上的
 - [cella 推廣到程式語言以外的領域](2026-10-05-cella-推廣到程式語言以外的領域.md) —— 🟡 每個領域一個詞彙 Library；演繹／經驗之牆決定判官；跨投影的保證是 Semorphe 獨有的位置
+- [Semorphe 加 cella 與 DDD](2026-10-05-Semorphe-加-cella-與-DDD.md) —— 🟡 C15 ＝ 限界上下文；走訪器＋契約 ＝ 防腐層（Nat 就是它翻錯）；超出 DDD 的是多投影、帶證明的上下文地圖、判官種類
