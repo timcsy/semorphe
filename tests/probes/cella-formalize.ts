@@ -220,13 +220,19 @@ const CPP_INT_TYPES: Readonly<Record<string, string>> = { int: 'Int', long: 'Lon
 export type CppProfile = 'lp64' | 'avr'
 export const INT_BITS: Readonly<Record<CppProfile, number>> = { lp64: 32, avr: 16 }
 
-/** 五個算術運算 → Library 的函式，以及它要不要「除數不為零」。 */
-const ARITH: Readonly<Record<string, { fn: string; tag: string; nz: boolean }>> = {
-  '+': { fn: 'cpp.add', tag: 'add', nz: false },
-  '-': { fn: 'cpp.sub', tag: 'sub', nz: false },
-  '*': { fn: 'cpp.mul', tag: 'mul', nz: false },
-  '/': { fn: 'cpp.div', tag: 'div', nz: true },
-  '%': { fn: 'cpp.rem', tag: 'rem', nz: true },
+/**
+ * 五個算術運算 → Library 的函式，以及它要哪些前置條件（**依 Library 的引數順序**）。
+ *
+ * 🔴 `%` 有三個（2026-10-06，`@cella-lang/cpp@0.1.202610052212` 起）：除數不為零、
+ *    **商**不溢位、餘數在範圍內。`INT_MIN % -1` 的商不可表示，C++ 規定它是 UB
+ *    ——cella 用 clang＋UBSan 對 1232 個案例做差分時抓到模型漏了這一條。
+ */
+const ARITH: Readonly<Record<string, { fn: string; tag: string; pre: readonly ('nonzero' | 'quot')[] }>> = {
+  '+': { fn: 'cpp.add', tag: 'add', pre: [] },
+  '-': { fn: 'cpp.sub', tag: 'sub', pre: [] },
+  '*': { fn: 'cpp.mul', tag: 'mul', pre: [] },
+  '/': { fn: 'cpp.div', tag: 'div', pre: ['nonzero'] },
+  '%': { fn: 'cpp.rem', tag: 'rem', pre: ['nonzero', 'quot'] },
 }
 
 /**
@@ -329,9 +335,11 @@ function expr(node: SemanticNode, env: Env): string {
       }
       const l = expr(one(node, 'left'), env)
       const r = expr(one(node, 'right'), env)
-      const nz = a.nz ? ` ${hole(node.componentId, `nonzero_${r}`)}` : ''
+      const pre = a.pre.map((p) => ' ' + (p === 'nonzero'
+        ? hole(node.componentId, `nonzero_${r}`)
+        : hole(node.componentId, `noovf_quot_${l}_${r}`))).join('')
       const ok = hole(node.componentId, `noovf_${a.tag}_${l}_${r}`)
-      return `${a.fn} ${asArg(l)} ${asArg(r)}${nz} ${ok}`
+      return `${a.fn} ${asArg(l)} ${asArg(r)}${pre} ${ok}`
     }
 
     default:

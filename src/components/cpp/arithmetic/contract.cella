@@ -6,7 +6,7 @@
 --     a - b   cpp.sub a b ok      ok : InRange bits (a - b)
 --     a * b   cpp.mul a b ok      ok : InRange bits (a * b)
 --     a / b   cpp.div a b nz ok   nz : NonZero b ＋ 不溢位（INT_MIN / -1）
---     a % b   cpp.rem a b nz ok
+--     a % b   cpp.rem a b nz okq ok   ＋ 商不溢位（INT_MIN % -1 是 UB，2026-10-06 起）
 --
 -- ⟹ **C++ 的語義由 cella 的 Library 負責，這顆元件只負責「`+` 對到 `cpp.add`」**
 --   （2026-10-05 使用者定的分工：語言語義住 Library、對應住膠囊）。
