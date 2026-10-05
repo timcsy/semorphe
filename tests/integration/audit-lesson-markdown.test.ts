@@ -94,3 +94,78 @@ describe('護欄：課文頁上不得看得到字面的 **', () => {
     ).toEqual([])
   })
 })
+
+/**
+ * **同一族的另外兩個：markdown 的失敗是安靜的**（2026-10-05，使用者看著頁面說的：
+ * 「格式跑掉」「不要同一行」）。
+ *
+ * ```
+ * ① 表格少了分隔列（|---|---|）   GFM 不認它是表格 ⟹ 頁面上印一串 | 和文字
+ * ② 會變成積木的程式碼（demo／counter）一行放好幾個敘述
+ *    ⟹ 程式碼那一邊擠在一行;而更糟的是並排時第二欄落進【註解】裡:
+ *       cout << q.front();  // 1       cout << st.top();  // 2
+ *                                      ~~~~~~~~~~~~~~~~~~ 這一句被 // 吃掉,積木那一邊根本沒有它
+ * ```
+ *
+ * ⚠️ ②只管 `demo`／`counter` 這兩種會投影成積木的區塊。一般的 ```` ``` ```` 區塊裡
+ * 並排註解是**刻意的**（第 2、6、11 課都有，`int n = 1;  ←→  int i = 1` 那種）。
+ *
+ * ⚠️ 判準量過誤報：`for (int i = 0; i < n; i++)` 的分號在括號裡（先挖掉括號）；
+ * `// ← 忘了 n = n + 1;` 是正當的註解（只抓「註解之後空三格以上再接一個敘述」的並排形狀）。
+ * 修之前恰好抓到使用者看到的那三處，修之後是零。
+ */
+const stripParens = (s: string): string => {
+  let prev: string
+  do { prev = s; s = s.replace(/\([^()]*\)/g, '()') } while (s !== prev)
+  return s
+}
+
+/** 一行 C／C++ 程式碼的兩種毛病：同一行多個敘述、註解裡藏著並排的敘述。 */
+export function demoLineProblems(line: string): string[] {
+  const k = line.indexOf('//')
+  const code = k < 0 ? line : line.slice(0, k)
+  const comment = k < 0 ? '' : line.slice(k)
+  const out: string[] = []
+  if (/;\s*[^\s}]/.test(stripParens(code))) out.push('同一行多個敘述')
+  if (/^\/\/.*\S\s{3,}\S[^;]*;/.test(comment)) out.push('註解裡藏著並排的敘述')
+  return out
+}
+
+/** 一段 inline 內容看起來是「沒被認成表格的表格」。 */
+const looksLikeBrokenTable = (content: string): boolean => /^\|/.test(content) && /\n\|/.test(content)
+
+describe('護欄：markdown 安靜失敗的另外兩種——表格與會變成積木的程式碼', () => {
+  it('★ 注入：兩種毛病都抓得到，而合法的寫法不被誤報', () => {
+    expect(demoLineProblems('n += 5;    n -= 3;')).toContain('同一行多個敘述')
+    expect(demoLineProblems('cout << q.front();  // 1       cout << st.top();  // 2'))
+      .toContain('註解裡藏著並排的敘述')
+    expect(demoLineProblems('for (int i = 0; i < n; i++) {'), 'for 的分號被誤報').toEqual([])
+    expect(demoLineProblems('    // ← 忘了 n = n + 1;'), '正當的註解被誤報').toEqual([])
+    expect(demoLineProblems('n += 5;        // 完全等於 n = n + 5;'), '行尾說明被誤報').toEqual([])
+    const tokens = md.parse('| a | b |\n| c | d |\n', {})
+    expect(tokens.some((t) => t.type === 'inline' && looksLikeBrokenTable(t.content)), '少分隔列的表格沒被抓到').toBe(true)
+    expect(md.parse('| a | b |\n|---|---|\n| c | d |\n', {}).some((t) => t.type === 'table_open'), '正確的表格沒被認出').toBe(true)
+  })
+
+  it('🔴 硬性零：表格都要有分隔列；demo／counter 的程式碼一行一個敘述', () => {
+    const bad: string[] = []
+    let fences = 0
+    for (const f of files) {
+      const rel = path.relative(ROOT, f)
+      for (const tk of md.parse(fs.readFileSync(f, 'utf8'), {})) {
+        if (tk.type === 'inline' && looksLikeBrokenTable(tk.content)) {
+          bad.push(`${rel}:${(tk.map?.[0] ?? 0) + 1}  表格少了分隔列（|---|---|），頁面上會印成一串 |`)
+        }
+        if (tk.type === 'fence' && /^(c|cpp)\b.*\b(demo|counter)\b/.test(tk.info)) {
+          fences++
+          tk.content.split('\n').forEach((l, i) => {
+            for (const p of demoLineProblems(l)) bad.push(`${rel}:${(tk.map?.[0] ?? 0) + 2 + i}  ${p}：${l.trim()}`)
+          })
+        }
+      }
+    }
+    // 入口條件：demo／counter 區塊一個都沒掃到的話，下面的零是假的
+    expect(fences, '🔴 一個 demo／counter 區塊都沒掃到 —— info 字串的判準寫錯了').toBeGreaterThan(20)
+    expect(bad, '\n🔴 這些地方在頁面上會跑掉：\n' + bad.join('\n') + '\n').toEqual([])
+  })
+})

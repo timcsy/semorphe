@@ -17,15 +17,24 @@
 🟢 **先把編輯器打開，跟著下面一起做：**〈跟著做〉
 
 ## 一、兩個，一眼看完
-兩個放在一起比，差別只在拿出來的是哪一端：
+同樣放進 1、2，再拿出來——差別只在拿出來的是哪一端：
 
 ```cpp demo
-queue<int> q;                  stack<int> st;
-q.push(1);                     st.push(1);
-q.push(2);                     st.push(2);
-cout << q.front();  // 1       cout << st.top();  // 2
-q.pop();                       st.pop();
-cout << q.front();  // 2       cout << st.top();  // 1
+queue<int> q;
+q.push(1);
+q.push(2);
+cout << q.front();  // 1
+q.pop();
+cout << q.front();  // 2
+```
+
+```cpp demo
+stack<int> st;
+st.push(1);
+st.push(2);
+cout << st.top();  // 2
+st.pop();
+cout << st.top();  // 1
 ```
 
 | | 從哪裡進 | 從哪裡出 | 叫什麼 |
