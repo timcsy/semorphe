@@ -54,7 +54,7 @@ import { shiftMappings } from '../projection/patch-shift'
 import { Lifter } from '../lift/lifter'
 import { SemanticBus } from './semantic-bus'
 import { abstractComponentOf, variableTypeOf } from '../language-executors'
-import { isFunctionDefinition } from '../component/traits'
+import { isFunctionDefinition, slotsOf } from '../component/traits'
 // 🔴 「樹裡哪一塊是骨架」由**骨架宣告**回答（2026-08-28）——見 `EntryFunction`
 import { skeletonById, skeletonPresent } from '../skeleton'
 
@@ -790,6 +790,7 @@ export class SyncController {
    * Mutates the tree in place.
    */
   private downgradeComponentsForLevel(node: SemanticNode, visible: Set<string>): void {
+    // 🔴 **父概念裝不下的，不降級**（2026-10-05）——見 `slotsLostByDowngrade` 的檔頭。
     // 降級目標由**概念自己宣告的父概念**決定，不再寫死在這裡。
     //
     // 這份清單原本有 16 行，全部在講同一件事：「這些概念是變數宣告的一種」。
@@ -802,7 +803,8 @@ export class SyncController {
       const parent = abstractComponentOf(node.componentId)
       // 型別前綴由概念自己宣告——介面層不該認得哪個概念宣告的是字串
       const downgrade = parent ? { componentId: parent, typePrefix: variableTypeOf(node.componentId) } : undefined
-      if (downgrade && visible.has(downgrade.componentId)) {
+      if (downgrade && visible.has(downgrade.componentId)
+        && slotsLostByDowngrade(node, downgrade.componentId).length === 0) {
         // Preserve type info in properties
         if (downgrade.typePrefix && !node.properties.type) {
           node.properties.type = downgrade.typePrefix
@@ -812,7 +814,8 @@ export class SyncController {
         this.identityBeforeDowngrade.set(node.id, node.componentId)
         node.componentId = downgrade.componentId
       }
-      // If no downgrade mapping or target also not visible → keep original (never raw_code)
+      // If no downgrade mapping, target also not visible, or the parent can't carry
+      // everything → keep original (never raw_code; shown dimmed as out-of-scope)
     }
 
     // Recurse into slots
@@ -1219,4 +1222,29 @@ export interface SyncError {
   line: number
   column: number
   text: string
+}
+
+/**
+ * 這個節點降級成 `parentId` 時，**哪些非空的槽會被丟掉**（父概念沒宣告那一格）。
+ *
+ * ## 🔴 它從哪來（2026-10-05）
+ *
+ * C 橋接第 1 課教 `scanf("%d", &n);`，而那一課的可見範圍裡沒有 `cpp:input_formatted`
+ * ⟹ 降級成父概念 `cpp:input`。降級只換 `componentId`、槽原封不動，而 `input` 只有
+ * `values` 這一格，`input_formatted` 的變數放在 `args` ⟹ **畫出一顆空的「讀取輸入」**。
+ * 學生一動積木，`restoreDowngrade` 只還原得回身分，還原不回 `&n`
+ * ——違反「產出不得比使用者寫的少」（history/270）。
+ *
+ * 量過母體：40 對降級裡 **19 對**有父概念裝不下的槽（`print_formatted` 的引數、
+ * `vector_declare` 的初始值、`loop_for` 的 init／cond／update、`method_call` 的物件…）。
+ *
+ * ⟹ **裝不下就不降級**：保留原元件，畫成「超出這一課範圍」的淡色（誠實），
+ *    而不是一顆看起來能用、其實少了東西的積木（說謊）。
+ *    槽是**空的**就不算丟——`vector<int> v;` 照舊降級成宣告。
+ */
+export function slotsLostByDowngrade(node: SemanticNode, parentId: string): string[] {
+  const carried = new Set(slotsOf(parentId).map((s) => s.slot))
+  return Object.entries(node.slots ?? {})
+    .filter(([name, kids]) => Array.isArray(kids) && kids.length > 0 && !carried.has(name))
+    .map(([name]) => name)
 }

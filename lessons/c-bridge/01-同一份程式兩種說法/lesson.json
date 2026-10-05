@@ -6,6 +6,7 @@
   },
   "components": [
     "cpp:literal_number",
+    "cpp:input_formatted",
     "cpp:print_formatted",
     "cpp:var_declare",
     "cpp:var_ref"

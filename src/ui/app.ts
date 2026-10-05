@@ -1337,6 +1337,12 @@ export class App {
         // 🔴 **骨架要跟著目標換**（2026-08-28）——在此之前這裡漏了它，
         //    於是 `?lesson=arduino/…` 開的課停在 C++ 的骨架上。見 `adoptSkeleton`。
         this.adoptSkeleton(target.skeleton ?? 'main')
+        // 🔴 **風格也要跟著目標換**（2026-10-05）——與骨架同一個病的第二次。
+        //    手動切目標那條路（`onTargetChange`）有換風格，這條沒有，於是
+        //    `?lesson=c-bridge/…` 開的課目標是 C、風格卻停在 apcs（iostream）
+        //    ——積木上多一顆 iostream 的引入，而程式碼是 cstdio。
+        const style = STYLE_PRESETS.find((p) => p.id === target.style)
+        if (style && style.id !== this.currentStylePreset.id) this.applyStylePreset(style, { resync: false })
       }
     }
     // 🪦 **這裡在此之前是「層級全開」**——而那句註解逐字寫著
@@ -2270,7 +2276,11 @@ export class App {
     })
   }
 
-  private applyStylePreset(preset: StylePreset): void {
+  /**
+   * ⚠️ `resync: false` 給**換課**那條路用：那時畫布上還是上一課的積木，
+   *    用它們重產程式碼沒有意義（換課之後會載入這一課自己的程式碼）。
+   */
+  private applyStylePreset(preset: StylePreset, opts: { resync?: boolean } = {}): void {
     this.currentStylePreset = preset
     this.syncController?.setStyle(preset)
     this.blocklyPanel?.setCodeContext(this.currentTopic.language, preset)  // 同上
@@ -2278,7 +2288,7 @@ export class App {
     this.refreshStatusBar()
     const ioPref = preset.io_style === 'printf' ? 'cstdio' : 'iostream'
     if (ioPref !== this.currentIoPreference) { this.currentIoPreference = ioPref; this.updateToolbox() }
-    this.syncBlocksToCodeWithMappings()
+    if (opts.resync !== false) this.syncBlocksToCodeWithMappings()
   }
 
   private getVisibleComponents(): Set<string> {
