@@ -68,8 +68,10 @@ import type { SemanticNode } from '../../src/core/types'
  * 讓我們的 `Nat` 與 std 的 `Nat` 成為兩個型別、宣告時無警告——見 prelude 的檔頭。
  * 模式名刻意另立（不沿用 `standalone`），讓舊斷言**紅一次**而不是換了意思還綠著。
  *
- * ⚠️ **`holes()` 在 explicit 模式下不認 `import`**（2026-10-05 量到，已回報 cella），
- * 所以洞從 `check()` 的 `unknown`（`reason: "hole"`）讀，一次呼叫拿到全部。
+ * ⚠️ 洞從 `check()` 的 `unknown`（`reason: "hole"`）讀，一次呼叫拿到判決與全部的洞。
+ * （2026-10-05 量到兩個缺陷：`check()` 每個 def 只回報第一個洞、`holes()` 在 explicit 下不認
+ * `import`——負向對照因此量不到 `LtB`。回報後 cella F371 兩邊都修，
+ * 並加了一條測試鎖住「兩個 API 列出的洞一致」。）
  */
 
 /** 語料 `AP325/7/7_6.cpp` 的形狀：讀進來的索引去取一個長度也是讀進來的陣列。 */
@@ -144,6 +146,8 @@ interface Verdict {
   verdict: string
   /** 洞的型別（`unknown` 裡 `reason: "hole"` 那幾筆的 `detail`）。 */
   holes: string[]
+  /** 洞的名字（`?a` 為 "a"），與 `holes` 同序。 */
+  holeNames: (string | null)[]
   imports: { module: string; checker: string }[]
   assumptions: { kind: string; name?: string }[]
   unknown: { reason?: string; detail?: string }[]
@@ -160,7 +164,7 @@ interface Verdict {
  */
 function verdict(source: string): Verdict {
   const out = cellaCheck(source)
-  let j: Partial<Verdict> & { unknown?: { reason?: string; detail?: string }[] }
+  let j: Partial<Verdict> & { unknown?: { reason?: string; detail?: string; name?: string | null }[] }
   try { j = JSON.parse(out) as never } catch {
     throw new Error(`cella 回的不是 JSON：${out.slice(0, 300)}`)
   }
@@ -170,6 +174,7 @@ function verdict(source: string): Verdict {
   return {
     verdict: String(j.verdict),
     holes: unknown.filter((u) => u.reason === 'hole').map((u) => String(u.detail)),
+    holeNames: unknown.filter((u) => u.reason === 'hole').map((u) => (u as { name?: string | null }).name ?? null),
     imports: j.imports, assumptions: j.assumptions ?? [], unknown,
     warnings: j.warnings ?? [], checker: j.checker, report: out,
   }
@@ -200,6 +205,10 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
     for (const i of v.imports) {
       expect(i.checker, `🔴 模組 ${i.module} 是另一支檢查器建的`).toBe(checkerHash)
     }
+    // 🔴 **警告必須是零**（cella F371 拿掉 IsSchema 的假警告之後才寫得出這條）。
+    //    它最要緊的消費者是遮蔽：契約或 prelude 自己再定義一次 `Nat`，宣告處【不擋】，
+    //    只在這裡出一條「'Nat' shadows an imported definition」——而兩個 Nat 相遇時才紅。
+    expect(v.warnings.map((w) => w.message), '🔴 判決帶著警告（例如遮蔽了 import 的型別）').toEqual([])
   })
 
   /**
@@ -224,6 +233,12 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
    * ⚠️ 而 `holes` 的輸出**沒有**那兩個欄位（它只有 `ok` / `holes` / `checker`），
    * 所以這裡要多叫一次 `check`。
    */
+  it('★ 注入：自己再定義一次 Nat，警告必須出現（否則「警告為零」可能只是永遠沒有警告）', () => {
+    const v = verdict(`${prelude}\ndata Nat = zero | succ Nat\n`)
+    expect(v.warnings.map((w) => w.message).join('\n'), '🔴 遮蔽了 std 的 Nat 卻沒有警告')
+      .toMatch(/'Nat' shadows an imported definition/)
+  })
+
   it('★ 入口條件：這一份判決，kernel 真的重驗過', () => {
     // ⚠️ 錨換成 `mx`（2026-10-05）：`pick` 現在有一個真的洞（`NonNeg`），判 unknown，
     //    而這一條要的是一份 **accept** 的判決——kernel 重驗過的那一種。
@@ -281,8 +296,11 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
     const src = formalizeFunction(fn, { contracts, prelude, control: true })
     const v = verdict(src)
     // cella 建議的那一條：只數數量的話，在【錯的位置】開洞也會過。⟹ 型別逐字。
-    expect([...v.holes].sort(), `布林版的洞不對。cella 說：\n${v.report}\n\n${src}`)
-      .toEqual(['LtB 32 u n', 'NonNeg 32 u'])
+    // 🔴 依原始碼順序、型別與名字都逐字——「型別對但開在別的位置」也要紅
+    //    （cella F371 起每個洞一條；在那之前每個 def 只回報第一個，這條量不到 LtB）
+    expect(v.holes, `布林版的洞不對。cella 說：\n${v.report}\n\n${src}`)
+      .toEqual(['NonNeg 32 u', 'LtB 32 u n'])
+    expect(v.holeNames, '洞的名字不對 —— 開在別的位置').toEqual(['nonneg_u', 'bound_u_lt_n'])
   })
 
   it('🟢 守衛編成【判定】時，LtB 的洞消失 —— 證明從 yes 分支掉出來；NonNeg 還在', () => {
@@ -291,6 +309,7 @@ describe('探針：第六路（語義樹 → cella 項）', () => {
     // 🔴 剩下的那一個【是真的】：`u = -1` 在 C++ 裡越界，而守衛 `u < n` 擋不住它。
     expect(v.holes, `判定版應該只剩 NonNeg。cella 說：\n${v.report}\n\n產出的項：\n${src}`)
       .toEqual(['NonNeg 32 u'])
+    expect(v.holeNames).toEqual(['nonneg_u'])
   })
 
   it('🔴 平台：同一個 `a + b`，桌機的洞是 32 位元的範圍、Arduino 的是 16 位元的', () => {

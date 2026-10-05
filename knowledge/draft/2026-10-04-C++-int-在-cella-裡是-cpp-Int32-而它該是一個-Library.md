@@ -184,6 +184,27 @@ cella 實測：我們的 `data Nat` 與 std 的 `Nat` 是**兩個型別**（身�
 ⟹ **接入時改成 import，不再自己定義**：`Nat`／`Bool` 在 `std`，`Empty`／`Dec` 在 `foundations`
 （`prelude` 裡沒有它們）。explicit 下 `import std` 帶進 std＋foundations＋prelude，`imports` 會照實列出。
 
+## 三之八、接上了（2026-10-05，第 315 刀）
+
+`cella-lang@0.1.202610051203` ＋ `@cella-lang/cpp@0.1.202610051205`（兩個都精確釘選）。
+上面那張「我們接的時候要做的」：
+
+```
+0. prelude 改 import std／int／cpp；護欄 explicit ＋ 逐次 imports      ✅
+1. 精確釘選；audit-cella-pinned 守 checkerHash 一致與 36 個 merkle    ✅
+2. int → cpp.<profile>.Int（lp64／avr）                              ✅（字面量還沒做）
+3. arithmetic／compare 對到 cpp.*（305 刀的 Nat 項換過去）             ✅ 五個運算都收
+4. 平台對照：同一個 a + b 的洞，lp64 是 InRange 32、avr 是 InRange 16    ✅
+5. 遞迴（cpp-beginner/19 的 f）與 cella 一起做                        ⏳
+```
+
+🔴 **讀數因此變了，而那是真的**：`if (u < n) return A[u];` 從 0 個洞變成 1 個（`NonNeg 32 u`）
+——索引用 `Nat` 時負數不存在；`u = -1` 在 C++ 裡越界。`return a + b;` 從 accept 變成一個「不溢位」的洞。
+
+接入途中回報給 cella、都修了的：standalone 下疊不上（→ explicit 模式）· 字面量 ≥ ~5000 在 wasm
+堆疊溢位（→ 折疊門檻 256）· `check()` 每個 def 只回報第一個洞、`holes()` 不認 import
+（→ F371，負向對照因此才量得到 `LtB`）· IsSchema 假警告（→ 「警告為零」寫得出來了）。
+
 ## 四、還開著的
 
 - 等交付：具體名字、`index.json` 的指紋欄位 ⟹ 我們把 `audit-cella-pinned` 擴成守 cpp 那一條
