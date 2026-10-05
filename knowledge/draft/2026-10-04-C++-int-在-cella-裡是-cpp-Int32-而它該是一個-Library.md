@@ -1,6 +1,9 @@
 # C++ 的 int 在 cella 裡是 `cpp.Int32`，而它該是一個 Library
 
-> 狀態：**問題已有答案（C15）；歸屬已定；使用者決定獨立發版（2026-10-05）；cella 已做完參數化與打包（bcbc957f）；等使用者本人發 `cella-lib-cpp` 第一版**。
+> 狀態：**問題已有答案（C15）；歸屬已定；使用者決定獨立發版（2026-10-05）；cella 已做完參數化與打包（bcbc957f）；已發布為 `@cella-lang/cpp`**。
+>
+> ⚠️ **名字**：提議時叫 cella-lib-cpp，實際發布為 **`@cella-lang/cpp`**（一對一命名：套件 `@cella-lang/X` 只提供模組 `X`）。
+> 下文記錄當時的討論處一律改用實際的名字。
 
 ## 一、事實（cella-ee 2026-10-04 回覆，對方原則 C15，已經使用者確認）
 
@@ -72,7 +75,7 @@ cpp 獨立發版才是真正的觸發（另外兩個觸發：第二個發布者�
 
 ```
 cella-lang          檢查器                 指紋：semanticsHash
-cella-lib-cpp       C++ 語義（詞彙套件②）   指紋：cpp 的內容雜湊   ← 獨立發版
+@cella-lang/cpp     C++ 語義（詞彙套件②）   指紋：cpp 的內容雜湊   ← 獨立發版
 semorphe lang-cpp   積木 ↔ 定義的對應（③） contract.cella 寫 import cpp
 ```
 
@@ -94,9 +97,9 @@ semorphe lang-cpp   積木 ↔ 定義的對應（③） contract.cella 寫 impor
 
 ## 三之三、cella 的評估（2026-10-05）
 
-- **住處：同意** monorepo 多套件發 `cella-lib-cpp`。只發編譯產物（模組包＋指紋），`lib/cpp.cella` 原始碼不進 npm。
+- **住處：同意** monorepo 多套件發 `@cella-lang/cpp`。只發編譯產物（模組包＋指紋），`lib/cpp.cella` 原始碼不進 npm。
   ⚠️ **第一版要使用者本人登入 npm 發**，之後才交給 CI。
-- **相容性**：`cella-lib-cpp` 依賴 cella-lang 的檢查器與 std／int／hlevel 模組包
+- **相容性**：`@cella-lang/cpp` 依賴 cella-lang 的檢查器與 std／int／hlevel 模組包
   ⟹ `index.json` 寫明需要的 **CBF 版號與 checkerHash，不符就拒絕載入**（不默默載入）。
 - **每個定義的雜湊：可行，而且有一個陷阱。** 現有 ContentHash 只雜湊定義自己的項（cella history 074）：
   `int` 的 `quotInt` 變了，`cpp.div` 自己的項沒變，雜湊不變——**行為卻變了**。
@@ -119,12 +122,12 @@ semorphe lang-cpp   積木 ↔ 定義的對應（③） contract.cella 寫 impor
 `div`／`rem`（另帶 `NonZero b`）· `lt`／`le`／`eq`（無前置條件）· `toInt` ＋ `toInt_add`… ＋ `toInt_inj`。
 溢位、除以零、`INT_MIN / −1` 都是前置條件，**沒有默默回傳某個值的路徑**。
 
-⚠️ **還沒有**：寬度參數化（`cpp.core`／`lp64`／`avr`）· Merkle 雜湊 · npm 套件 `cella-lib-cpp` ·
+⚠️ **還沒有**：寬度參數化（`cpp.core`／`lp64`／`avr`）· Merkle 雜湊 · npm 套件 `@cella-lang/cpp` ·
 遞迴範例（`fact` 要每層證中間值不溢位——等我們第一個遞迴案例一起做）。
 
 🟡 **我們這邊先不接**：pin 的 `cella-lang@0.1.202610031643` 裡沒有它，而且**接 `Int32` 之後再改成
 `IntN 32` 正是 cella 自己說要避免的那個成本**（「事後再補要搬動所有已經依賴 Int32 的契約」）。
-⟹ 等寬度參數化與 `cella-lib-cpp` 一起到。
+⟹ 等寬度參數化與 `@cella-lang/cpp` 一起到。
 
 ## 三之五、寬度參數化與套件打包完成（2026-10-05，cella commit `bcbc957f`）
 
@@ -133,12 +136,12 @@ semorphe lang-cpp   積木 ↔ 定義的對應（③） contract.cella 寫 impor
 - 運算帶隱式 `{bits}`，**寬度從期望型別來**：同一句 `30000 + 30000` 在 `cpp.avr.Int` reject、在 `cpp.lp64.Int` accept。
   ⚠️ 沒有東西決定寬度的地方要**註記型別**（C++ 字面量的寬度本來就依平台）——走訪器產項時要記得。
 - 前置條件 `cpp.InRange bits X`、`cpp.NonZero b`；對應定理對任意寬度一份。
-- 套件 `cella-lib-cpp`（**第一版未發，等使用者本人**）：`cpp.cell` ＋ `index.json`
+- 套件 `@cella-lang/cpp`（**第一版未發，等使用者本人**）：`cpp.cell` ＋ `index.json`
   （`cbfVersion`、`checkerHash`、`requires["cella-lang"].modules`、`defs` 的 `own`／`merkle`）。
   載入用 `load_library_pack(index_json, "cpp", bytes)`，失敗回 `{"ok":false,"error":…}`
   ——**這個函式在下一版 cella-lang 才有**。`peerDependencies.cella-lang` 釘到檢查器指紋相同的那一版。
 
-### 我們接的時候要做的（等兩件事：`cella-lib-cpp` 發布 ＋ 帶 `load_library_pack` 的 cella-lang）
+### 我們接的時候要做的（等兩件事：`@cella-lang/cpp` 發布 ＋ 帶 `load_library_pack` 的 cella-lang）
 
 0. `cella-prelude.cella` 的自定 `Nat`／`Bool`／`Empty`／`Dec` 換成 `import std`（否則與 cpp 的 Nat 是兩個型別）；
    護欄入口條件 `'standalone'` → `'explicit'`，並逐次斷言判決的 `imports`
