@@ -23,7 +23,7 @@
  * 而不是一個 `skipIf`——CI 上少了 libasan 的話，紅的是那一支，訊息說得出是哪一台。
  */
 import { describe, it, expect } from 'vitest'
-import { sanitizerSaysUB, hasReferenceCompiler, referenceCompilerInfo } from '../helpers/run-cpp'
+import { sanitizerKind, sanitizerSaysUB, hasReferenceCompiler, referenceCompilerInfo } from '../helpers/run-cpp'
 
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
@@ -47,13 +47,15 @@ describe('量測工具的錨點：未定義行為的判定', () => {
     const r = await sanitizerSaysUB(
       `${H}int main(){ int n; cin>>n; vector<int> a[3]; a[n].push_back(1); cout<<"done"; return 0; }`, '7\n')
     expect(r.ub).toBe(true)
-    expect(r.detail).toMatch(/out of bounds|AddressSanitizer/)
+    // 🔴 比**名字**不比原文（2026-10-11）：固定大小陣列的索引越界，UBSan 報 `array-bounds`、
+    //    ASan 報 `stack-buffer-overflow`——兩者都是 clang 自己的名字，看是哪一個先攔到。
+    expect(['array-bounds', 'stack-buffer-overflow'], `原文：${r.detail}`).toContain(r.kind)
   }, 180_000)
 
   it('★ 正向錨點②：有號整數溢位（純 UBSan，程式不會死）', async () => {
     const r = await sanitizerSaysUB(`${H}int main(){ int x = 2147483647; x = x + 1; cout << x; return 0; }`, '')
     expect(r.ub).toBe(true)
-    expect(r.detail).toMatch(/signed integer overflow/)
+    expect(r.kind, `原文：${r.detail}`).toBe('signed-integer-overflow')
   }, 180_000)
 
   /**
@@ -77,4 +79,32 @@ describe('量測工具的錨點：未定義行為的判定', () => {
     expect((await sanitizerSaysUB(prog, '1\n')).ub, '界內的索引不得被指名').toBe(false)
     expect((await sanitizerSaysUB(prog, '9\n')).ub, '界外的索引要被指名').toBe(true)
   }, 180_000)
+
+  /**
+   * ★ **原文 → clang 的名字**：不需要編譯器的那一半（2026-10-11）。
+   *
+   * 三個地方要講同一件事——Cella 執行時停在 UB 的 `why`、cella 的差分報表、這條護欄。
+   * 兩邊約定用 clang 自己的名字（UBSan 的 check 名、ASan 的報告類別）。
+   * ⚠️ 對不上的要回 `unknown:` 而不是猜一個——下面最後一條就在擋「猜」。
+   */
+  it('★ 注入：sanitizer 的原文要對到 clang 自己的名字，對不上就說不認得', () => {
+    const cases: [string, string][] = [
+      ["runtime error: signed integer overflow: 2147483647 + 1 cannot be represented in type 'int'", 'signed-integer-overflow'],
+      ["runtime error: division of -2147483648 by -1 cannot be represented in type 'int'", 'signed-integer-overflow'],
+      ["runtime error: negation of -2147483648 cannot be represented in type 'int'", 'signed-integer-overflow'],
+      ["runtime error: shift exponent 32 is too large for 32-bit type 'int'", 'shift-exponent'],
+      ["runtime error: left shift of negative value -1", 'shift-base'],
+      ['runtime error: division by zero', 'integer-divide-by-zero'],
+      ["runtime error: 2.14748e+09 is outside the range of representable values of type 'int'", 'float-cast-overflow'],
+      ["runtime error: index 7 out of bounds for type 'int[3]'", 'array-bounds'],
+      ['runtime error: applying non-zero offset 4 to null pointer', 'pointer-overflow'],
+      ["runtime error: load of null pointer of type 'int'", 'null'],
+      ['ERROR: AddressSanitizer: heap-buffer-overflow on address 0x602000000014', 'heap-buffer-overflow'],
+      ['ERROR: AddressSanitizer: heap-use-after-free on address 0x6020', 'heap-use-after-free'],
+      ['ERROR: AddressSanitizer: stack-buffer-overflow on address 0x16', 'stack-buffer-overflow'],
+    ]
+    for (const [raw, want] of cases) expect(sanitizerKind(raw), raw).toBe(want)
+    expect(sanitizerKind('runtime error: something nobody has seen before'), '🔴 對不上卻猜了一個名字')
+      .toMatch(/^unknown:/)
+  })
 })

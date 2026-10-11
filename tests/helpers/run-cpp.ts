@@ -333,7 +333,45 @@ export function runCpp(code: string): string | null {
  *
  * @returns 消毒器有沒有指名一段未定義行為；`null` 表示消毒器自己編不起來（不下判斷）
  */
-export async function sanitizerSaysUB(code: string, stdin?: string): Promise<{ ub: boolean | null; detail: string }> {
+/**
+ * **sanitizer 的原文 → clang 自己的檢查名稱**（2026-10-11）。
+ *
+ * 🔴 **為什麼要一套封閉的名字**：在此之前這裡只回原文（`detail`），護欄拿 regex 比字
+ * （`/signed integer overflow/`）。而網頁版的執行器改由 Cella 接手之後，有**三個地方**要講同一件事
+ * ——Cella 執行時停在 UB 的 `why`、cella 的差分報表、我們的護欄。三邊各用自己的字，就對不起來。
+ *
+ * ⟹ 用**兩個專案之外的權威**：UBSan 的 `-fsanitize=` check 名、ASan 的報告類別。
+ * cella 的差分語料用的已經是這一套（`signed-integer-overflow`、`shift-exponent`…）。
+ *
+ * ⚠️ 對不上的原文回 `unknown:<原文前段>`——**不猜**。猜錯一個名字，比承認不認得更難發現。
+ */
+export function sanitizerKind(detail: string): string {
+  const asan = detail.match(/AddressSanitizer: ([a-z-]+)/)
+  if (asan) return asan[1]!
+  const d = detail.replace(/^runtime error: /, '')
+  const rules: [RegExp, string][] = [
+    [/^signed integer overflow|^negation of .* cannot be represented|^division of .* by -1 cannot be represented/, 'signed-integer-overflow'],
+    [/^unsigned integer overflow/, 'unsigned-integer-overflow'],
+    [/^shift exponent/, 'shift-exponent'],
+    [/^left shift of/, 'shift-base'],
+    [/^division by zero/, 'integer-divide-by-zero'],
+    [/is outside the range of representable values/, 'float-cast-overflow'],
+    [/^index .* out of bounds for type/, 'array-bounds'],
+    [/^(applying (non-)?zero offset|pointer index expression|addition of unsigned offset)/, 'pointer-overflow'],
+    [/null pointer/, 'null'],
+    [/misaligned address/, 'alignment'],
+    [/^variable length array bound/, 'vla-bound'],
+    [/reached the end of a value-returning function/, 'return'],
+    [/^execution reached an unreachable program point/, 'unreachable'],
+    [/which is not a valid value for type '(bool|_Bool)'/, 'bool'],
+    [/which is not a valid value for type/, 'enum'],
+    [/^implicit conversion/, 'implicit-conversion'],
+  ]
+  for (const [re, name] of rules) if (re.test(d)) return name
+  return `unknown:${d.slice(0, 40)}`
+}
+
+export async function sanitizerSaysUB(code: string, stdin?: string): Promise<{ ub: boolean | null; detail: string; kind?: string }> {
   if (!hasReferenceCompiler()) {
     throw new Error('找不到參照編譯器（g++）。護欄不得在此跳過——一筆看不見的缺陷與一筆不存在的缺陷長得一模一樣。')
   }
@@ -375,7 +413,7 @@ export async function sanitizerSaysUB(code: string, stdin?: string): Promise<{ u
     const ran = await runShell(`${bin} < ${inFile}`, timeoutMs)
     const combined = String(ran.err ?? '') + String(ran.out ?? '')
     const m = combined.match(/runtime error: [^\n]{0,80}|ERROR: AddressSanitizer: [^\n]{0,80}/)
-    return m ? { ub: true, detail: m[0] } : { ub: false, detail: '' }
+    return m ? { ub: true, detail: m[0], kind: sanitizerKind(m[0]) } : { ub: false, detail: '' }
   } finally {
     rmSync(src, { force: true })
     rmSync(bin, { force: true })
