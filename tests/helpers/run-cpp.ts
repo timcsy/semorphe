@@ -348,6 +348,8 @@ export function runCpp(code: string): string | null {
 export function sanitizerKind(detail: string): string {
   const asan = detail.match(/AddressSanitizer: ([a-z-]+)/)
   if (asan) return asan[1]!
+  // libstdc++ 的 `_GLIBCXX_ASSERTIONS`（不是 clang 的名字，是那個函式庫自己的檢查）
+  if (/Assertion '[^']*' failed/.test(detail)) return 'glibcxx-assertions'
   const d = detail.replace(/^runtime error: /, '')
   const rules: [RegExp, string][] = [
     [/^signed integer overflow|^negation of .* cannot be represented|^division of .* by -1 cannot be represented/, 'signed-integer-overflow'],
@@ -383,7 +385,12 @@ export async function sanitizerSaysUB(code: string, stdin?: string): Promise<{ u
   try {
     writeFileSync(src, code)
     const built = await runShell(
-      `g++ ${flag}${extraInc} -fsanitize=address,undefined -g -o ${bin} ${src}`, 60000)
+      // 🔴 `-D_GLIBCXX_ASSERTIONS`（2026-10-11 實測之後加的）：Linux／libstdc++ 預設**不**替 vector
+      //    做 ASan 標註，於是 `v.reserve(10); v[3]`（容量之內、大小之外）完全不報。
+      //    macOS／libc++ 預設就有標註，報 `container-overflow`——libc++ 會忽略這個巨集。
+      //    ⚠️ **刻意不開 libc++ 的 hardening**：開了之後它靜默中止（只剩 shell 的 `Abort trap: 6`），
+      //    反而讀不到——實測的同一支程式，不開報 container-overflow，開了什麼都讀不到。
+      `g++ ${flag}${extraInc} -D_GLIBCXX_ASSERTIONS -fsanitize=address,undefined -g -o ${bin} ${src}`, 60000)
     if (built.out === null) {
       // 消毒器版編不起來（有些語料只在這個模式下撞到標頭問題）——**不下判斷**
       return { ub: null, detail: '消毒器版編不起來' }
@@ -412,7 +419,7 @@ export async function sanitizerSaysUB(code: string, stdin?: string): Promise<{ u
      */
     const ran = await runShell(`${bin} < ${inFile}`, timeoutMs)
     const combined = String(ran.err ?? '') + String(ran.out ?? '')
-    const m = combined.match(/runtime error: [^\n]{0,80}|ERROR: AddressSanitizer: [^\n]{0,80}/)
+    const m = combined.match(/runtime error: [^\n]{0,80}|ERROR: AddressSanitizer: [^\n]{0,80}|Assertion '[^']*' failed/)
     return m ? { ub: true, detail: m[0], kind: sanitizerKind(m[0]) } : { ub: false, detail: '' }
   } finally {
     rmSync(src, { force: true })
