@@ -59,6 +59,20 @@ describe('量測工具的錨點：未定義行為的判定', () => {
   }, 180_000)
 
   /**
+   * ★ **正向錨點③：容量之內、大小之外的 vector 索引**（2026-10-11）。
+   *
+   * 這一格兩個平台走不同的工具：macOS／libc++ 的 ASan 標註報 `container-overflow`；
+   * Linux／libstdc++ 要靠 `_GLIBCXX_ASSERTIONS`。少了後者，CI 那一台**完全不報**——
+   * 而「沒報」在這條護欄的語言裡是「沒有 UB」。
+   */
+  it('★ 正向錨點③：vector 容量之內、大小之外的索引也要被指名（兩個平台各走各的工具）', async () => {
+    const r = await sanitizerSaysUB(
+      `${H}int main(){ vector<int> v; v.reserve(10); v.push_back(1); int i; cin>>i; cout<<v[i]; return 0; }`, '3\n')
+    expect(r.ub, `沒被指名。原文：${r.detail}`).toBe(true)
+    expect(['container-overflow', 'glibcxx-assertions'], `原文：${r.detail}`).toContain(r.kind)
+  }, 180_000)
+
+  /**
    * 🔴 **負向：這一條才是真正危險的方向。**
    * 判定往寬了壞（每一支都說 UB）會讓真的缺陷從帳上消失，而且全綠。
    */
@@ -102,6 +116,8 @@ describe('量測工具的錨點：未定義行為的判定', () => {
       ['ERROR: AddressSanitizer: heap-buffer-overflow on address 0x602000000014', 'heap-buffer-overflow'],
       ['ERROR: AddressSanitizer: heap-use-after-free on address 0x6020', 'heap-use-after-free'],
       ['ERROR: AddressSanitizer: stack-buffer-overflow on address 0x16', 'stack-buffer-overflow'],
+      ['ERROR: AddressSanitizer: container-overflow on address 0x6040000003dc', 'container-overflow'],
+      ["/usr/include/c++/13/bits/stl_vector.h:1125: std::vector<_Tp>::operator[](size_type): Assertion '__n < this->size()' failed.", 'glibcxx-assertions'],
     ]
     for (const [raw, want] of cases) expect(sanitizerKind(raw), raw).toBe(want)
     expect(sanitizerKind('runtime error: something nobody has seen before'), '🔴 對不上卻猜了一個名字')
