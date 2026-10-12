@@ -135,6 +135,25 @@ describe('cpp:program 的進入點', () => {
     ).toBe('M')
   })
 
+  /**
+   * 🔴 **第二次按執行，loop 也要跑**（2026-10-13，cella 讀我們的 code 時指出來的）。
+   *
+   * `arduino-clock` 的模擬時鐘是模組層的狀態，而 `resetClock()` 的註解寫著
+   * 「每次 `execute` 都要叫」——**產品路徑上零個呼叫者**，只有測試在叫。
+   * 於是同一頁第二次執行時，時鐘從上一次的 5000 毫秒接著走、預算已用完，
+   * **`loop()` 一圈都不跑**，而 `millis()` 也不從 0 開始。
+   *
+   * ⚠️ 其他測試抓不到它，因為它們的 `run` 自己先叫了 `resetClock()`——
+   * 測試替產品做了產品該做的事。這一支刻意**不叫**。
+   */
+  it('★ 同一個 sketch 連跑兩次，第二次的 loop 圈數與第一次相同', async () => {
+    const sketch = program(printingFunc('setup', 'S'), printingFunc('loop', 'L'))
+    const first = await run(sketch)
+    const second = await run(sketch)
+    expect(first.out.length, '前提：第一次 loop 有在重複').toBeGreaterThan(2)
+    expect(second.out, `🔴 第二次執行的 loop 跑了 ${second.out.length - 1} 圈（第一次 ${first.out.length - 1} 圈）——時鐘沒有歸零`).toBe(first.out)
+  })
+
   it('★ setup 拋錯 → loop 不繼續跑', async () => {
     const boom = node('cpp:func_def', { name: 'setup', return_type: 'void' }, {
       params: [], body: [node('cpp:var_ref', { name: '這個名字不存在' })],

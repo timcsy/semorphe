@@ -29,10 +29,16 @@ import type { ComponentExecutor } from '../../../interpreter/executor-registry'
 import { RuntimeError, RUNTIME_ERRORS } from '../../../interpreter/errors'
 import { isFunctionDefinition } from '../../../core/component/traits'
 import { buildFuncCall } from '../func_call/lift'
-import { loopBudget, tickLoop } from '../../../languages/cpp/lang/runtime/arduino-clock'
+import { loopBudget, tickLoop, resetClock, markRealStart } from '../../../languages/cpp/lang/runtime/arduino-clock'
 
 export function registerExecute(register: (component: string, executor: ComponentExecutor) => void): void {
   register('cpp:program', async (node, ctx) => {
+      // 🔴 **一次執行從時間 0 開始**——時鐘是模組層的狀態，不歸零的話
+      //    第二次按執行會接著上一次的時間走，預算已用完，`loop()` 一圈都不跑。
+      //    （2026-10-13：`resetClock` 的註解一直寫著「每次 execute 都要叫」，
+      //    而產品路徑上零個呼叫者——只有測試在叫，所以測試抓不到。）
+      resetClock()
+      markRealStart()
       const body = node.slots.body ?? []
       await ctx.executeBody(body)
 
