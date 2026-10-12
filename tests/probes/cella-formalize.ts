@@ -351,7 +351,7 @@ function expr(node: SemanticNode, env: Env): string {
  * 守衛。回傳「要 match 的那個項」與「它判定的謂詞」。
  *
  * 🔴 判定版回 `{ scrutinee: 'decLt u n', predicate: 'LtB u n' }`；
- *    對照組（布林）回 `{ scrutinee: 'ltNat u n', predicate: null }`——
+ *    對照組（布林）回 `{ scrutinee: 'cpp.lt u n', predicate: null }`——
  *    **沒有謂詞就沒有證明**，那正是要示範的那件事。
  */
 function guard(node: SemanticNode, env: Env): { scrutinee: string; predicate: string | null } {
