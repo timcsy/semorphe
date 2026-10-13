@@ -236,7 +236,9 @@ describe('第 2／3 批與前兩批混用', () => {
     expect(i.getOutput().join('')).toBe('')
     const j = new SemanticInterpreter({ maxSteps: 200_000 })
     await j.execute(lift(COUNTER))
-    expect(j.getOutput().join(''), 'EEPROM 從 0 開始，加一之後是 1').toContain('1')
+    // 🔴 沒寫過的 EEPROM 是 255（2026-10-13 以前這裡寫「從 0 開始」，而那是直譯器的錯）；
+    //    `count` 是 int，所以印的是 256——繞回 0 的是寫進去的那個位元組，不是這個變數。
+    expect(j.getOutput().join('').trim(), 'EEPROM 從 255 開始，int 加一之後是 256').toBe('256')
   })
 })
 
