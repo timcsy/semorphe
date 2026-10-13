@@ -21,7 +21,7 @@
       "kind": "follow",
       "title": "跟著做",
       "check": {
-        "stdout": "0",
+        "stdout": "255",
         "stdin": []
       }
     },
