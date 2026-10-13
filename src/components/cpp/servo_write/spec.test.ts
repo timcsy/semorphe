@@ -197,6 +197,26 @@ void loop() {}
     expect(i.getOutput().join('')).toContain('42')
   })
 
+  /**
+   * 🔴 **沒寫過的格子是 255，不是 0**（2026-10-13，cella 拿 simavr 差分時抓到）。
+   * 課文〈記住設定〉自己寫著「讀出來是 `255`」，而直譯器初始化成 0、判題也寫 0。
+   * 第二支釘的是一個位元組的繞回：255 + 1 寫進去是 0。
+   */
+  it('🔴 execute ③：沒寫過的 EEPROM 讀出來是 255，而 256 寫進去繞回 0', async () => {
+    const i = new SemanticInterpreter({ maxSteps: 100_000 })
+    await i.execute(lift(`#include <EEPROM.h>
+void setup() {
+  Serial.begin(9600);
+  int n = EEPROM.read(0);
+  Serial.println(n);
+  EEPROM.write(0, n + 1);
+  Serial.println(EEPROM.read(0));
+}
+void loop() {}
+`))
+    expect(i.getOutput().join('').split(/\r?\n/).filter(Boolean)).toEqual(['255', '0'])
+  })
+
   it('🔴 execute ③：溫濕度回「不是數字」——而學生的 isnan 檢查會成功', async () => {
     const i = new SemanticInterpreter({ maxSteps: 100_000 })
     await i.execute(lift(`#include <DHT.h>

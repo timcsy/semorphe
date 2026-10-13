@@ -54,7 +54,7 @@ const byContext = new WeakMap<object, DeviceStore>()
 function storeOf(ctx: ExecutionContext): DeviceStore {
   let s = byContext.get(ctx as object)
   if (!s) {
-    s = { servos: new Map(), lcds: new Map(), eeprom: new Uint8Array(1024) }
+    s = { servos: new Map(), lcds: new Map(), eeprom: new Uint8Array(1024).fill(0xff) }
     byContext.set(ctx as object, s)
   }
   return s
@@ -82,7 +82,12 @@ export function lcdOf(ctx: ExecutionContext, name: string): LcdState {
   return s
 }
 
-/** 內建記憶體。🟢 1024 個位元組，全部初始化成 0。 */
+/**
+ * 內建記憶體。🟢 1024 個位元組，**全部初始化成 0xFF（255）**——擦除過的 EEPROM 就是這個值。
+ *
+ * 🔴 2026-10-13 以前是 0，而課文〈記住設定〉自己寫著「從來沒寫過的格子讀出來是 255」。
+ * cella 拿 simavr（真的 ATmega328P 韌體）差分時抓到；ESP32 的 EEPROM 第一次建立時也是 memset 0xFF。
+ */
 export function eepromOf(ctx: ExecutionContext): Uint8Array {
   return storeOf(ctx).eeprom
 }
