@@ -51,7 +51,33 @@ if (!existsSync(`${DIST}/preview.html`)) {
 const server = spawn('python3', ['-m', 'http.server', String(PORT)], { cwd: DIST, stdio: 'ignore' })
 const stop = () => server.kill()
 process.on('exit', stop)
-await new Promise((r) => setTimeout(r, 1200))
+
+/**
+ * 🔴 **等到伺服器真的回應，不是等一段固定的時間**（2026-10-14，CI 抓到）。
+ *
+ * 原本是 `setTimeout(1200)`——CI 機器忙的時候 python 的 http.server 還沒起來，
+ * `page.goto` 就撞上 `ERR_CONNECTION_REFUSED`，而那一刀只改了一份文件。
+ * 一個固定等待量的是「機器有多快」，不是「伺服器好了沒」。
+ */
+let exited = null
+server.on('exit', (code) => { exited = code })
+const deadline = Date.now() + 20_000
+for (;;) {
+  if (exited !== null) {
+    console.error(`🔴 http.server 在回應之前就結束了（exit ${exited}）——埠 ${PORT} 是不是被佔用？`)
+    process.exit(1)
+  }
+  try {
+    // ⚠️ 單次也要有逾時：埠被一個「接受連線而不回應」的東西佔住時，沒有逾時的 fetch 會永遠等下去
+    const res = await fetch(`http://localhost:${PORT}/preview.html`, { signal: AbortSignal.timeout(2000) })
+    if (res.ok) break
+  } catch { /* 還沒起來 */ }
+  if (Date.now() > deadline) {
+    console.error(`🔴 http.server 20 秒內沒有回應 http://localhost:${PORT}/preview.html`)
+    process.exit(1)
+  }
+  await new Promise((r) => setTimeout(r, 200))
+}
 
 const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 520, height: 620 } })
