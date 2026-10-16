@@ -1,13 +1,14 @@
 /**
  * `python:string_make` 的 **generate** 路——`f"文字{值}文字"`。
  *
- * ⚠️ **引號一律用雙引號**，而內容裡的雙引號要跳脫。
+ * ⚠️ **引號一律用雙引號**，而內容裡沒跳脫的雙引號要跳脫、大括號要加倍。
  * 原始碼可能是單引號寫的（`f'{a}'`），而**引號的選擇不是語義**——
  * 語義是「這一段是格式化文字，由這些片段組成」。
  */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { generateExpression } from '../../../core/projection/code-generator'
 import { componentTraits } from '../../../core/component/traits'
+import { quoteBody } from '../literal_string/body'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:string_make', (node, ctx) => {
@@ -19,7 +20,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         // 🔴 **問性狀，不比身分**：`id === 'python:literal_string'` 在那顆改名時
         //    會安靜地永遠為假，症狀是每一段文字都被當成運算式送去產生器。
         if (componentTraits(p.componentId)?.stringLiteral === true) {
-          return String(p.properties.value ?? '').replace(/"/g, '\\"')
+          // 🔴 片段裡的大括號是字面的——不加倍就變成插值（cella 對照元件時指出）
+          return quoteBody(String(p.properties.value ?? '')).replace(/[{}]/g, '$&$&')
         }
         return generateExpression(p, ctx)
       })
