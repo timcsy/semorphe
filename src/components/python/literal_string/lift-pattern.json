@@ -6,15 +6,9 @@
     "component": {
       "componentId": "python:literal_string"
     },
-    "fieldMappings": [
-      {
-        "semantic": "value",
-        "ast": "$text",
-        "extract": "text",
-        "transform": "stripQuotes"
-      }
-    ],
-    "_why": "⚠️ **tree-sitter-python 的節點叫 `string`，不是 `string_literal`**（C++ 那顆是後者）。\n🟢 而 `stripQuotes` 這個 transform **兩個語言共用**——它只是去掉頭尾的引號，一個 C++ 的字都不認識。"
+    "fieldMappings": [],
+    "_why": "⚠️ **tree-sitter-python 的節點叫 `string`，不是 `string_literal`**（C++ 那顆是後者）。\n🔴 **不用 `stripQuotes`**（2026-10-17，cella 對照元件時指出）：它只拆頭尾一個引號，於是 `r` 前綴、三引號的另外兩個 `\"`、單引號字串裡的裸 `\"` 都進了值——見 `body.ts`。\n⚠️ bytes（`b\"…\"`）回 `null` 走誠實降級——它不是字串。",
+    "liftStrategy": "python:lift_string_literal"
   },
   {
     "id": "python_concatenated_string",

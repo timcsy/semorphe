@@ -27,6 +27,7 @@ import { createNode } from '../../../core/semantic-tree'
 //    身分字串留在別人的資料夾裡，那顆改名時這裡不會有人發現。
 import { buildLiteralString } from '../literal_string/build'
 import { buildStringInsert } from '../string_insert/build'
+import { bodyOf, parseStart } from '../literal_string/body'
 
 /**
  * 前綴帶不帶 `f`。
@@ -46,7 +47,8 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const parts: SemanticNode[] = []
     for (const child of node.namedChildren) {
       if (child.type === 'string_content') {
-        parts.push(buildLiteralString(child.text))
+        // 🔴 片段存成字面那顆的寫法（`{{` → `{`、raw 的反斜線加倍）——見 `literal_string/body.ts`
+        parts.push(buildLiteralString(bodyOf(child, parseStart(start.text))))
         continue
       }
       if (child.type !== 'interpolation') continue // string_start／string_end 是引號，不是內容
