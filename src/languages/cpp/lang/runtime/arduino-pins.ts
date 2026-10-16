@@ -183,6 +183,8 @@ const PIN_CONSTANT_VALUES: Record<string, number> = {
   //
   // > **一個名字的意思由誰宣告它決定**——而這張表是「沒有人宣告時」的那一格。
   DHT11: 11, DHT21: 21, DHT22: 22, AM2301: 21,
+  // `Serial.print(n, HEX)` 的進位（Arduino 的 `Print.h`）——對每塊板子都一樣
+  DEC: 10, HEX: 16, OCT: 8, BIN: 2,
   // WiFi 的連線狀態碼（Arduino 的 `wl_status_t`）
   WL_IDLE_STATUS: 0, WL_NO_SSID_AVAIL: 1, WL_SCAN_COMPLETED: 2,
   WL_CONNECTED: 3, WL_CONNECT_FAILED: 4, WL_CONNECTION_LOST: 5, WL_DISCONNECTED: 6,
