@@ -94,6 +94,20 @@ describe('膠囊自證：Serial 兩顆', () => {
   })
 
   /**
+   * 🔴 **整數的第二個引數是進位，不是小數位數**（2026-10-16，對 cella 回 eConst 時查到）。
+   *
+   * 修之前 `Serial.print(255, HEX)` 印 `255`——第二個引數對整數**被靜默丟掉**。
+   * 照 Arduino 的 `Print::printNumber`：基數 < 2 當 10；非十進位把值當 32 位元無號數印、大寫。
+   */
+  it('★ execute：整數的進位（HEX／BIN／OCT／DEC 與數字基數）', async () => {
+    const { out, err } = await run(
+      'void setup(){ Serial.println(255, HEX); Serial.println(5, BIN); Serial.println(8, OCT);'
+      + ' Serial.println(-1, HEX); Serial.println(-7, DEC); Serial.println(10, 3); Serial.println(2.5, 2); }')
+    expect(err).toBe('')
+    expect(out).toBe('FF\n101\n10\nFFFFFFFF\n-7\n101\n2.50\n')
+  })
+
+  /**
    * 🔴 **這一支釘的是使用者 2026-08-17 的那個決定。**
    *
    * Serial 是「輸出」等價類的**第三個成員**，而它住在**語言套件的 `ioStyle`**

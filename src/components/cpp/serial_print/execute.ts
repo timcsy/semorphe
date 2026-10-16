@@ -18,14 +18,29 @@ export function registerExecute(register: (component: string, executor: Componen
     if (value) {
       const v = await ctx.evaluate(value)
       if (formatNode && v.type === 'double') {
-        // `Serial.print(v, 3)` ＝ 固定三位小數。⚠️ 而 `HEX`／`BIN` 那種進位**沒做**
-        // ——它們是具名常數，而這裡只認得數字。判不出來就照原樣印，不猜。
+        // 浮點的 `Serial.print(v, 3)` ＝ 固定三位小數（整數的第二個引數是進位，見下一支）。
         const digits = ctx.toNumber(await ctx.evaluate(formatNode))
         ctx.io.write(Number.isFinite(digits) ? Number(v.value).toFixed(Math.max(0, Math.trunc(digits))) : valueToString(v))
+      } else if (formatNode && (v.type === 'int' || v.type === 'char' || v.type === 'bool')) {
+        // 🔴 整數的第二個引數是**進位**（`HEX`／`BIN`…是 Print.h 的具名常數），不是小數位數
+        //    ——修之前它被靜默丟掉，`Serial.print(255, HEX)` 印 `255`。
+        ctx.io.write(printNumber(ctx.toNumber(v), ctx.toNumber(await ctx.evaluate(formatNode))))
       } else {
         ctx.io.write(valueToString(v))
       }
     }
     if (String(node.properties.newline ?? 'true') === 'true') ctx.io.writeNewline()
   })
+}
+
+/**
+ * Arduino `Print::print(long n, int base)` 的印法：基數 < 2 當 10；十進位照正負號印，
+ * 其他進位把值當 32 位元無號數（`unsigned long`）印、大寫。
+ * ⚠️ 基數 0 在 Arduino 是「當成一個位元組寫出去」——當成字元印。
+ */
+function printNumber(n: number, base: number): string {
+  const b = Math.trunc(base)
+  if (b === 0) return String.fromCharCode(n & 0xff)
+  if (b < 2 || b === 10) return String(Math.trunc(n))
+  return (Math.trunc(n) >>> 0).toString(Math.min(b, 36)).toUpperCase()
 }
