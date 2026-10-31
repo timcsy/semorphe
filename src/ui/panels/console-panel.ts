@@ -290,7 +290,7 @@ export class ConsolePanel implements ViewHost {
    *
    * ⚠️ **這裡不判寫法**——用 `while` 還是 `for` 不是對錯，那是另一個話題。
    */
-  showVerdict(result: OutputComparison, taskTitle?: string): void {
+  showVerdict(result: OutputComparison, taskTitle?: string, extra?: string): void {
     this.currentLineEl = null
     const box = document.createElement('div')
     box.className = `console-verdict ${result.passed ? 'passed' : 'not-yet'}`
@@ -309,6 +309,13 @@ export class ConsolePanel implements ViewHost {
     box.appendChild(head)
 
     if (!result.passed) {
+      // 🟢 輸出以外的那一件（spec 184：腳位事件）——它對不上時，輸出那張表可能一行都沒錯
+      if (extra) {
+        const x = document.createElement('div')
+        x.className = 'console-verdict-hint'
+        x.textContent = extra
+        box.appendChild(x)
+      }
       // 🔴 **一句話說出差在哪**——那張表的 `—` 學生看不懂，而老師一直在替它翻譯
       //    （使用者 2026-09-15：「我都要跟學生說把最後一行拿掉才會通過」）。
       const hint = summarizeComparison(result)
@@ -338,7 +345,8 @@ export class ConsolePanel implements ViewHost {
           cell(l.want ?? '—', `c ${l.kind}`),
         )
       }
-      box.appendChild(table)
+      // 輸出一行都沒錯（只有腳位對不上）⟹ 那張表全是「一樣」，不畫
+      if (result.lines.some((l) => l.kind !== 'same')) box.appendChild(table)
     }
     this.outputEl.appendChild(box)
     this.scrollToBottom()

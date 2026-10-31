@@ -223,6 +223,8 @@ export const vscodeProfile: HostProfile = {
       clear: 'panelToolbar',
       viewBlocks: 'none',
       viewFlow: 'none',
+      // 硬體分頁的資料來自 Cella 的判決，而 webview 還沒有 Cella（spec 184 範圍外）
+      hardware: 'none',
     },
     indicator: 'hostStatusBar',
     // 🪦 **`hostTerminal` 退場**（2026-09-01）。

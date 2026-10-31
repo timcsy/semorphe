@@ -28,6 +28,10 @@ export interface Verdict {
   out: string
   problems: VerdictProblem[]
   assumes?: { implementation: string; choice: string }[]
+  /** 板子上的程式才有（`@cella-lang/arduino`）：腳位變化、是否截斷、結束時的硬體（JSON 字串）——見 `core/hardware.ts`。 */
+  pins?: { t: number; pin: number; value: number }[]
+  pinsTruncated?: boolean
+  env?: unknown
 }
 
 /**
@@ -87,10 +91,10 @@ export function toDiagnostics(input: {
   tree: SemanticNode
   readsInput: boolean
   hasStdin: boolean
-}): { diagnostics: Diagnostic[]; notes: string[] } {
+}): { diagnostics: Diagnostic[]; notes: string[]; assumes: { implementation: string; text: string }[] } {
   const { verdict, types, tree, readsInput, hasStdin } = input
   const notes: string[] = []
-  if (!verdict) return { diagnostics: [], notes: ['判斷功能需要 Cella（還沒載好，或這個語言還沒有）'] }
+  if (!verdict) return { diagnostics: [], notes: ['判斷功能需要 Cella（還沒載好，或這個語言還沒有）'], assumes: [] }
 
   const known = ids(tree)
   const diagnostics: Diagnostic[] = []
@@ -110,9 +114,8 @@ export function toDiagnostics(input: {
   }
   if (dropped > 0) notes.push('這支程式要讀輸入——給一份輸入，才判得出執行時的問題')
 
-  for (const a of verdict.assumes ?? []) {
-    notes.push(`依 ${a.implementation}：${ASSUMES[a.choice] ?? a.choice}`)
-  }
+  // `assumes`：不改變有錯／沒錯（第 14 題），單獨交出去給「依 libc++」小標——不混進 notes
+  const assumes = (verdict.assumes ?? []).map((a) => ({ implementation: a.implementation, text: ASSUMES[a.choice] ?? a.choice }))
 
   // 型別不合：允許接上、標在那一句（第 16 題）。判決的 reject 也指到同一顆時只留一則
   for (const e of types?.errors ?? []) {
@@ -121,5 +124,5 @@ export function toDiagnostics(input: {
     if (diagnostics.some((d) => d.nodeId === nodeId && d.rule === 'CELLA_REJECT')) continue
     diagnostics.push({ nodeId, severity: 'error', source: 'cella', rule: 'TYPE_MISMATCH', params: { reason: e.reason } })
   }
-  return { diagnostics, notes }
+  return { diagnostics, notes, assumes }
 }

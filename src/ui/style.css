@@ -3391,3 +3391,22 @@ html, body {
   padding: 4px 6px !important;
   min-width: 24px;
 }
+
+/* ── 硬體分頁（spec 184）── */
+.hardware-panel { padding: 8px 12px; font-size: 12px; color: var(--text-secondary, #ccc); overflow: auto; height: 100%; box-sizing: border-box; }
+.hardware-note { margin: 4px 0 8px; opacity: 0.85; }
+.hardware-timeline { width: 100%; max-width: 900px; display: block; }
+.hardware-pin-label, .hardware-tick-label { fill: currentColor; font-size: 11px; }
+.hardware-tick-label { text-anchor: middle; }
+.hardware-axis, .hardware-tick { stroke: currentColor; stroke-opacity: 0.35; }
+.hardware-high { fill: #e5a50a; }
+.hardware-end { margin-top: 8px; }
+.hardware-end-head { font-weight: 600; margin-bottom: 2px; }
+.hardware-end-row { font-family: var(--mono-font, monospace); }
+
+/* ── 「依 libc++」小標（第 14 題）── */
+.status-assumes { font-size: 11px; padding: 0 6px; border: 1px solid currentColor; border-radius: 8px; margin-left: 6px; opacity: 0.9; }
+.status-assumes-pop { position: fixed; z-index: 1000; max-width: 420px; padding: 8px 10px; font-size: 12px; line-height: 1.6;
+  background: var(--panel-bg, #252526); color: var(--text-primary, #ddd); border: 1px solid var(--border-color, #444); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.35); }
+.status-assumes-head { font-weight: 600; margin-bottom: 4px; }
+.status-assumes-foot { margin-top: 6px; opacity: 0.8; }

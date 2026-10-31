@@ -60,6 +60,20 @@ test('判決標在那一塊：有錯是紅的、判不出來是藍的、修好�
   await expect(page.locator('[class*=squiggly]')).toHaveCount(0)
 })
 
+test('「依 libc++」小標：結果依賴實作的選擇時出現、點開是中文說明、不改變綠紅（第 14 題）', async ({ page }) => {
+  test.setTimeout(240_000)
+  await freshApp(page)
+  await page.evaluate(() => (window as any).__app.warmUpChecker())
+  await expect(status(page)).toHaveAttribute('data-state', 'ready', { timeout: 180_000 })
+  await feed(page, '#include <iostream>\n#include <vector>\nusing namespace std;\nint main() {\n    vector<int> v;\n    v.push_back(1);\n    v.push_back(2);\n    v.push_back(3);\n    cout << v.capacity() << endl;\n    return 0;\n}\n', 'cpp:vector_declare')
+  const badge = page.locator('#status-assumes')
+  await expect(badge).toBeVisible({ timeout: 30_000 })
+  await expect(badge).toHaveText(/依 libc\+\+/)
+  await expect(status(page), '小標不改變綠紅').toHaveText(/沒有發現問題/)
+  await badge.click()
+  await expect(page.locator('#status-assumes-pop')).toContainText('vector 的容量')
+})
+
 test('載入失敗：狀態說「無法使用」與原因，編輯照常', async ({ page }) => {
   await page.route('**/*.cell*', (r) => r.abort())
   await freshApp(page)

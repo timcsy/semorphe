@@ -20,7 +20,12 @@
       "title": "跟著做",
       "check": {
         "stdout": "",
-        "stdin": []
+        "stdin": [],
+        "pins": [
+          { "pin": 13, "value": 1, "t": 0 },
+          { "pin": 13, "value": 0, "t": 1000 },
+          { "pin": 13, "value": 1, "t": 2000 }
+        ]
       }
     },
     {

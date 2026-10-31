@@ -1,5 +1,8 @@
 # 面板宣告
 
+> 🟢 **2026-11-01（spec 184）：第六份「硬體」是第一個自己 `mount` 的面板**——畫法住在 `hardware/view.ts`，
+> 殼層的 `addStateTab` 讀宣告的 `mount`、組裝點經 `statePanel(id)` 拿實例餵資料。前五份仍由殼層建（棘輪 5）。
+>
 > 🟢 **2026-09-13：五份宣告在了，而 `mount` 那一半還沒搬。**
 >
 > ```
@@ -36,6 +39,7 @@ src/panels/
   blocks/panel.ts     積木（space）
   console/panel.ts    主控台（state）
   variables/panel.ts  變數（state）← ⚠️ 同一層兩份宣告，是分頁不是兩格
+  hardware/panel.ts   硬體（state）＋ view.ts —— 自己 mount（spec 184）
 ```
 
 ## 🔴 為什麼是宣告

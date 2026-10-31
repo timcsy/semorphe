@@ -9,6 +9,7 @@ import type { BottomPage, BottomVisibility } from '../core/host/console-surface'
 import { createPanelHead } from './layout/cell-head'
 import { BottomPanel } from './layout/bottom-panel'
 import { panelById } from '../core/host/panel-registry'
+import type { PanelInstance } from '../core/host/panel-spec'
 import { LayoutManager } from './layout/layout-manager'
 import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
 import { ConsolePanel } from './panels/console-panel'
@@ -44,6 +45,8 @@ export interface AppShellElements {
   codeView: CodeView
   consolePanel: ConsolePanel
   variablePanel: VariablePanel
+  /** 自己 `mount` 的狀態層面板的實例（spec 184 的硬體分頁是第一個）；宿主不畫那一格時是 undefined。 */
+  statePanel: (id: string) => PanelInstance | undefined
   flowPanel: FlowPanel
   /** 🔴 這個宿主可能一格都不需要——那時它不存在，不是空的。 */
   bottomPanel: BottomPanel | null
@@ -454,6 +457,8 @@ export function createAppLayout(
     // 🟢 **判斷（spec 182）靠左**——IDE 把問題計數擺在左邊，這裡對上。
     statusBar.innerHTML =
       '<span id="status-check" class="status-item" aria-live="polite"></span>' +
+      // 🟢 「依 libc++」小標（第 14 題）：判決的結果依賴某個實作的選擇時才出現；點開是中文說明，不改變綠紅
+      '<button id="status-assumes" class="status-item-btn status-assumes" hidden></button>' +
       // 🟢 這次的執行由誰跑、前面誰不接以及為什麼（spec 183，P6：退回要看得見）
       '<span id="status-runner" class="status-item"></span>' +
       '<span class="status-spacer"></span>' +
@@ -586,7 +591,7 @@ export function createAppLayout(
   //    ——而一條空的分頁列仍然吃掉高度。與快速列同一條規則：不建。
   //
   // > **一個沒有內容的容器不是「比較小的容器」，它是純粹的浪費。**
-  const bottomTabs = CONTROLS.filter((c) => (c.id === 'console' || c.id === 'variables'))
+  const bottomTabs = CONTROLS.filter((c) => (c.id === 'console' || c.id === 'variables' || c.id === 'hardware'))
     .filter((c) => surfaceOf(c, surfaces) === 'panelBottom')
   // 🔴 **主控台是 grid 的一格（`state`），不再掛在程式碼那一欄底下**（spec 168）。
   //    版面可以**搬**它（十字時在右下），但**不得關掉**它——第八十一條的 I4 盯著。
@@ -748,10 +753,19 @@ export function createAppLayout(
    * （見 `PanelSpec.mountedByShell`）。兩者分開搬，才分得出壞的是哪一半。
    */
   const STATE_BODIES: Record<string, Omit<Parameters<BottomPanel['addTab']>[0], 'id' | 'label'>> = {}
+  /** 自己 `mount` 的面板的實例——組裝點要餵資料時從這裡拿（`statePanel`）。 */
+  const STATE_INSTANCES = new Map<string, PanelInstance>()
   const addStateTab = (id: string): void => {
     const spec = panelById(id)
-    const body = STATE_BODIES[id]
-    if (!spec || !body) return
+    if (!spec) return
+    let body = STATE_BODIES[id]
+    // 🟢 **宣告了 `mount` 的面板自己畫**（spec 184 起）——組裝點只給它一個容器
+    if (!body && spec.mount && !spec.mountedByShell) {
+      const el = document.createElement('div')
+      STATE_INSTANCES.set(id, spec.mount(el, { profile, msg: (k: string, f?: string) => Blockly.Msg[k] || f || k }))
+      body = { panel: el }
+    }
+    if (!body) return
     bottomPanel?.addTab({ id, label: Blockly.Msg[spec.nameKey] || id, ...body })
   }
 
@@ -791,6 +805,8 @@ export function createAppLayout(
     STATE_BODIES['variables'] = { panel: variableEl }
     addStateTab('variables')
   }
+  // 🟢 **硬體**（spec 184）——與變數同一層、排在它後面；宿主宣告 `none` 的（擴充）不建。畫法在它自己的 `mount`
+  if (surfaceOf(CONTROLS.find((c) => c.id === 'hardware')!, surfaces) === 'panelBottom') addStateTab('hardware')
 
   // 🔴 **第三個投影**。它出現在這裡只是因為要有一格 DOM——
   //    接線由 `registerViewsIn` 掃出來（見下面的回傳物件），不是這裡硬接的。
@@ -1906,7 +1922,7 @@ export function createAppLayout(
   //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
   showProjection('blocks')
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, lessonNudgeBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, setHostLayer, toggleBottom, bottomVisibility, bottomVisibilityKnown: () => !!bottomPanel || hostSeesBottom, onBottomVisibilityChanged: (cb: () => void) => { bottomVisibilityChanged = cb }, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, statePanel: (id: string) => STATE_INSTANCES.get(id), flowPanel, bottomPanel, quickAccessBar, lessonNudgeBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, setHostLayer, toggleBottom, bottomVisibility, bottomVisibilityKnown: () => !!bottomPanel || hostSeesBottom, onBottomVisibilityChanged: (cb: () => void) => { bottomVisibilityChanged = cb }, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
 }
 
 /*
