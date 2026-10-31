@@ -466,6 +466,7 @@
   "FLOW_TITLE_CPP_QUEUE_FRONT": "Front of queue",
   "FLOW_TITLE_CPP_RANDOM_NEXT": "Random number",
   "FLOW_TITLE_CPP_RANDOM_SEED": "Random seed",
+  "FLOW_TITLE_CPP_TIME": "Current time",
   "FLOW_TITLE_CPP_RANGE_FILL": "Fill range",
   "FLOW_TITLE_CPP_RANGE_FILL_SEQUENCE": "Fill range with sequence",
   "FLOW_TITLE_CPP_RANGE_FIND_LOWER": "Lower bound",
