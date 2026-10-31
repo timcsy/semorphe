@@ -27,6 +27,7 @@ Auto-generated from all feature plans. Last updated: 2026-03-02
 - TypeScript 5.x + Blockly 12.4.1 + Blockly（積木渲染/序列化）, Vitest（測試） (048-unify-extractor)
 
 - TypeScript 5.x + Blockly 12.x, web-tree-sitter 0.26.x, CodeMirror 6.x (001-code-blockly-converter)
+- 🆕 2026-10：編輯器是 Monaco（CodeMirror 那幾行是早期 spec 的紀錄）；形式化與判決走 `cella-lang` ＋ `@cella-lang/*`（見 `knowledge/draft/2026-10-06-第六路的控制流——對-cella-提的需求.md`）
 
 ## Project Structure
 
@@ -39,21 +40,23 @@ tests/
 
 ### 什麼時候跑什麼（2026-08-21 量測之後定的）
 
-全套 412 個檔約需兩分鐘，而**成本是 per-file 的模組載入**——每個測試檔各自
-載入一次 Blockly ＋ tree-sitter wasm ＋ 177 顆膠囊的 glob。所以：
+全套 679 個檔約需 15 分鐘（2026-10-31 量；vitest 快取的每檔時間加總約 1,900 秒、並行 2），而**成本是 per-file 的模組載入**——每個測試檔各自
+載入一次 Blockly ＋ tree-sitter wasm ＋ 349 顆膠囊的 glob。
+⚠️ 其中約 60% 是重構階段 6 要拆的那五支（`interpreter-matches-compiler`、`audit-behavior-error`、`scenario-coverage`、
+`audit-lesson-answers-vs-compiler`、`cella-formalize-guard`）。所以：
 
 | 你在做什麼 | 跑什麼 | 量級 |
 |---|---|---|
 | 改一顆元件、改一段邏輯 | `npx vitest run <那個檔或目錄>` | **秒** |
 | 改核心／投影／解譯器 | `npm run test:unit` ＋ `npm run test:capsule` | 十幾秒 |
-| 🔴 **改宣告、身分、基線、工具箱、課程清單** | `npm run test:guard`（54 條護欄） | 分鐘 |
+| 🔴 **改宣告、身分、基線、工具箱、課程清單** | `npm run test:guard`（`audit-*` 共 138 個檔） | 分鐘 |
 | 🔴 **改了「使用者按得到的東西」**（按鈕、選單、面板結構） | **`npm run test:e2e`** | 十分鐘 |
 | 🔴 **改了「一段程式碼會被 lift 成哪些元件」** | **`npm run test:e2e`** | 十分鐘 |
 | 🔴 **改了「輸出的文字表示」**（`nan`／`inf`／數字格式／跳脫字元） | **`npm run test:e2e`** | 十分鐘 |
 | 🔴 **改了積木的畫法**（膠囊定義、`block-registrar`、renderer） | **重產課文的對照圖**（見下） | 六分鐘 |
 | 🔴 **改 lift／產生器**（`lifters/strategies.ts`、`code-generator.ts`、膠囊的 `lift`／`generate`） | **拿真實語料重量一次**（見下） | 十秒 |
 | 🔴 **改宣告的 lift／渲染／抽取** | **四個面向全掃**（見下，要參照編譯器） | 兩分鐘 |
-| commit 前 | `npm test`（全套） | 四分鐘 |
+| commit 前 | `npm test`（全套） | 約 15 分鐘（放背景跑） |
 | 🔴 **push 之後** | **`gh run list --limit 3`** | 十秒 |
 | PR | CI 跑全套 ＋ `npm run test:e2e` | — |
 
@@ -143,6 +146,8 @@ twoproj-*/x2c ×5                                  每跑一次那支探針就�
 ⚠️ **而「寫死了那段文字的東西」包含課文，它不在 `npm test` 裡**——這一句界定的是
 這一列涵蓋到哪裡，所以它留在這裡。教訓 [[一次「輸出的文字表示變了」的改動]]。
 
+> 🪦 **重構階段 6 拆**（2026-10-31 標記）：這一節講的是參照編譯器那一族，切換到 Cella 那天隨 JS 直譯器一起退場；在那之前照舊有效。
+
 🔴 **而同一刀還留下第二個東西，它更貴**：`interpreter-matches-compiler` 新加的
 「`0.0/0.0` 是 `nan`」那一條，判準是**印出來的字串**：
 
@@ -216,6 +221,8 @@ STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-
 🔴 **而那還不夠**（2026-09-10，使用者：「你到底有沒有整個仔細測過一遍？」）。
 一個宣告有**五個面向**，而上面那兩支只量了前兩個（⑤是 2026-09-16 才補上的）：
 
+> 🪦 ⑤（`execute` vs 參照編譯器）與它的代價段落**隨重構階段 6 退場**；①～④ 留下（動詞會改成 render／lift）。
+
 | 面向 | 怎麼量 | 紅了的症狀 |
 |---|---|---|
 | ① 產出的程式碼 | `lift → 產碼` | 產出不一樣 |
@@ -266,6 +273,8 @@ STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-loadable   # ③
 
 → 教訓 [[一個量測工具，在它自己被量過之前]]（`knowledge/experience.md`）
 
+> 🪦 **重構階段 6 拆**（2026-10-31 標記）：這一節講的是參照編譯器那一族，切換到 Cella 那天隨 JS 直譯器一起退場；在那之前照舊有效。
+
 🔴 **而「參照編譯器」不是一個東西**（2026-09-18，CI 抓到七支）：
 
 ```
@@ -291,10 +300,10 @@ CI     GNU g++（libstdc++）     不帶
 判準一句話：**你改的是「行為」，還是「這個 repo 的形狀」？** 後者才需要護欄。
 
 🔴 **而「跑一塊固定的子集」在這個專案幾乎沒有用**（實測）：排掉最慢的五個檔
-省下 **0 秒**（它們被並行 overlap 掉）；扣掉全部 54 條護欄跑全套**沒有變快**。
+省下 **0 秒**（它們被並行 overlap 掉）；扣掉全部護欄跑全套**沒有變快**。
 有效的子集是「**與這次改動相關的那幾個檔**」，不是「一塊比較小的固定範圍」。
 
-⚠️ **測試環境預設是 `node`**，碰 DOM 的 20 個檔在檔頭寫
+⚠️ **測試環境預設是 `node`**，碰 DOM 的 31 個檔在檔頭寫
 `@vitest-environment happy-dom`。加新測試時如果用到 `document`／`localStorage`／
 面板，記得加上——不加的症狀是那個檔紅，不是靜默錯（`src/` 裡零個
 「偵測 DOM 存在」的分支，已查證）。
