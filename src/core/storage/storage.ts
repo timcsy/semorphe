@@ -73,6 +73,11 @@ export interface SavedState {
    * 是同一條線：**一份對不上的佈局與一份不存在的佈局，結果必須一樣。**
    */
   flowLayout?: { keys: string[]; x: number; y: number }[]
+  /**
+   * **哪幾塊收著**（v25，spec 188）——積木、流程（之後還有程式碼）共享的那一份，存鑰匙不存 `nodeId`。
+   * 見 `core/granularity.ts`。
+   */
+  collapsed?: { keys: string[] }[]
   code: string
   language: string
   styleId: string
