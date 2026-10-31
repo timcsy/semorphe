@@ -16,12 +16,18 @@
   "role": "expression",
   "owner": "(python)",
   "paths": {
-    "lift": "./lift-pattern.json",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "liftStrategy": "./lift-strategy.ts"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_why": "🔴 **第五十三條護欄點名的**（2026-08-22）：`list_splat`／`dictionary_splat` 在「語料沒碰到」裡，而 AI 生的 Python 到處都是 `f(*args)`／`{**a, **b}`。\n⚠️ **它自己算不出一個值**——`*xs` 只有在被呼叫或被字典吃掉的時候才有意思。所以它的執行期回的是**裡面那個值**，而攤開由吃它的人做（見 `languages/python/args.ts`）。",
   "traits": {

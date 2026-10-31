@@ -27,12 +27,18 @@
   "_traits_why": "🔴 **`Serial.println` 是「輸出」這個等價類的【第三個成員】**——`print`（`cout`，`ioStyle: iostream`）與 `print_formatted`（`printf`，`cstdio`）是另外兩個。而它住在**語言套件的 `ioStyle`**，🔴 **不是核心的 `io_style`**（`src/core/types.ts` 的 `'cout' | 'printf'` 一個字都沒改）：核心的聯集加 `'serial'` 等於讓核心認識一個 Arduino 專屬的字，違反 P9。使用者 2026-08-17 拍板。",
   "_why": "⚠️ `print` 與 `println` 是**同一顆概念的兩個形態**，用 `newline` 旗標區分——不是兩顆概念。Sc3 認知一致性：一個積木 = 一個語義概念。 ⚠️ 這裡提到別顆元件時**刻意不寫完整身分**——就近性護欄掃的是「身分出現在自己資料夾外」，而它分不出「引用」與「說明」。完整身分寫在本膠囊的 `spec.test.ts` 檔頭。",
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "lift": "./lift.ts",
-    "formalize": "./formalize.ts"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts"
+      }
+    },
+    "formalize": "./formalize.ts",
+    "execute": "./execute.ts"
   },
   "_children_why": "⚠️ `format` 是 `Serial.print(v, 3)` 的**第二個引數**——小數位數（或 `HEX`／`BIN` 這種進位）。🔴 第一版沒有這一格，於是它被**靜默丟掉**：輸出是 `-50` 而不是 `-50.000`，而沒有任何地方出聲。盲測抓到的。"
 }

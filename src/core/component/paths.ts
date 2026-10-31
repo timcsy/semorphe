@@ -14,6 +14,7 @@
  * 讓「顯式的空」與「遺漏的空」分得出來。
  */
 import { registeredComponents } from './registry'
+import { cellPath, type Cell } from './views'
 
 const GENERATE = import.meta.glob('/src/components/*/*/generate.ts', { eager: true }) as Record<string, Record<string, unknown>>
 const EXECUTE = import.meta.glob('/src/components/*/*/execute.ts', { eager: true }) as Record<string, Record<string, unknown>>
@@ -33,11 +34,11 @@ const LIFT = import.meta.glob('/src/components/*/*/lift.ts', { eager: true }) as
  */
 const LIFT_STRATEGY = import.meta.glob('/src/components/*/*/lift-strategy.ts', { eager: true }) as Record<string, Record<string, unknown>>
 
-function get(mods: Record<string, Record<string, unknown>>, name: string, path: string): ((...a: never[]) => void)[] {
+function get(mods: Record<string, Record<string, unknown>>, name: string, cell: Cell): ((...a: never[]) => void)[] {
   const out: ((...a: never[]) => void)[] = []
   const declared = new Set(
     registeredComponents()
-      .filter((c) => c.manifest.paths?.[path as 'generate'] != null)
+      .filter((c) => cellPath(c.manifest.paths, cell) !== null)
       .map((c) => c.sourceDir),
   )
   for (const [key, mod] of Object.entries(mods)) {
@@ -46,7 +47,7 @@ function get(mods: Record<string, Record<string, unknown>>, name: string, path: 
     const dir = `${parts[i + 1]}/${parts[i + 2]}`
     if (!declared.has(dir)) {
       throw new Error(
-        `${key} 存在，但 ${dir}/component.json 的 paths.${path} 是 null 或缺席——` +
+        `${key} 存在，但 ${dir}/component.json 的 ${cell} 是 null 或缺席——` +
           `**有實作卻沒宣告**，那是孤兒實作。`,
       )
     }
@@ -57,8 +58,8 @@ function get(mods: Record<string, Record<string, unknown>>, name: string, path: 
   return out
 }
 
-export const componentGenerateRegistrars = (): ((...a: never[]) => void)[] => get(GENERATE, 'registerGenerate', 'generate')
+export const componentGenerateRegistrars = (): ((...a: never[]) => void)[] => get(GENERATE, 'registerGenerate', 'code.render')
 export const componentExecuteRegistrars = (): ((...a: never[]) => void)[] => get(EXECUTE, 'registerExecute', 'execute')
-export const componentLiftRegistrars = (): ((...a: never[]) => void)[] => get(LIFT, 'registerLift', 'lift')
+export const componentLiftRegistrars = (): ((...a: never[]) => void)[] => get(LIFT, 'registerLift', 'code.lift')
 export const componentLiftStrategyRegistrars = (): ((...a: never[]) => void)[] =>
-  get(LIFT_STRATEGY, 'registerLiftStrategy', 'liftStrategy')
+  get(LIFT_STRATEGY, 'registerLiftStrategy', 'code.liftStrategy')

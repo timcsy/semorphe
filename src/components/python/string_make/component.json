@@ -9,12 +9,18 @@
   "role": "expression",
   "owner": "(python)",
   "paths": {
-    "lift": "./lift-pattern.json",
-    "liftStrategy": "./lift-strategy.ts",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_lift_why": "**「這是不是 f-string」要跑真邏輯**——同一個 `string` 節點型別既是普通字串也是 f-string，差別在第一個子節點 `string_start` 的文字是 `f\"` 還是 `\"`。純資料的樣式比對表達不了它，所以走具名策略。\n⚠️ 而策略回 `null` 時會**落到下一筆樣式**（`pattern-lifter.ts` 的比對迴圈），普通字串因此仍由同族那顆字面值元件接手。",
   "traits": {

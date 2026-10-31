@@ -97,7 +97,7 @@
  * - **不回答 `preconditions` 與 `invariants` 的判定者**。那兩格的判定者
  *   **要宣告**（draft §十一之四），而宣告出來的欄位會說謊——第一刀刻意不碰。
  */
-import { FIVE_PATHS, type FivePath } from './types'
+import type { Cell } from './views'
 
 /**
  * 判定者的**種類**。閉集——加值是顯式動作。
@@ -129,14 +129,14 @@ export function isJudgeKind(x: unknown): x is JudgeKind {
 }
 
 /**
- * 六路。**`FIVE_PATHS` 不動**——它是完備性護欄的母體，
- * 而還有大半的元件沒有 `formalize`（2026-10-31：250 顆 C++ 元件裡 102 顆有），把它加進去會讓那條護欄一夜之間紅一片。
- * 🔴 `paths.formalize` 從第 393 刀起指向膠囊自己的 `formalize.ts`（深嵌入）；淺嵌入的 `contract.cella` 已退場。
+ * 有判定者的格子（spec 181：每個視圖一對 render／lift，加上 formalize 與 execute）。
+ * `code.liftStrategy` 不單獨判定——它是 `code.lift` 的一部分。
  *
- * > **一條護欄的母體變大，讀數會變差，而那與「品質下降」長得一樣。**
+ * 🪦 舊的「六路」（`lift`／`generate`／`render`／`extract`／`execute`＋`formalize`）退場：
+ *    `lift` → `code.lift`、`generate` → `code.render`、`render` → `blocks.render`、`extract` → `blocks.lift`。
  */
-export type SixPath = FivePath | 'formalize'
-export const SIX_PATHS: readonly SixPath[] = [...FIVE_PATHS, 'formalize']
+export type JudgedCell = Exclude<Cell, 'code.liftStrategy'>
+export const JUDGED_CELLS: readonly JudgedCell[] = ['code.lift', 'code.render', 'blocks.render', 'blocks.lift', 'execute', 'formalize']
 
 /**
  * 每一路的**預設判定者**，以及**它今天在哪裡跑**。
@@ -146,10 +146,10 @@ export const SIX_PATHS: readonly SixPath[] = [...FIVE_PATHS, 'formalize']
  * 護欄會驗那個檔存不存在——⚠️ 而它**不驗那個檔真的在判這一路**，
  * 那需要人讀，而本檔不假裝它做得到。
  *
- * ⚠️ **預設不是每顆元件各寫一份**：`generate` 的判定者對 349 顆都是同一個。
+ * ⚠️ **預設不是每顆元件各寫一份**：`code.render` 的判定者對 349 顆都是同一個。
  * 逐顆寫等於造 349 份雙重真相。**per-元件只在它【不同】的時候才寫。**
  */
-export const PATH_JUDGE: Readonly<Record<SixPath, {
+export const PATH_JUDGE: Readonly<Record<JudgedCell, {
   kind: JudgeKind | null
   evidence: string
   /** 🔴 **它判的【是什麼】——這一句是人讀出來的**，而下一個人可以拿它否證我。 */
@@ -157,13 +157,13 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
   /** 逐元件的覆蓋率。`null` ＝ **沒有人量過**（棘輪數的就是它）。 */
   coverage: { covered: number; of: number } | null
 }>> = {
-  lift: {
+  'code.lift': {
     kind: 'equality',
     evidence: 'tests/integration/full-roundtrip.test.ts',
     judges: '29 個【手寫】案例的 code → 語義樹 → code 回到原文。🔴 **沒有逐元件的檢查**。',
     coverage: null,
   },
-  generate: {
+  'code.render': {
     kind: 'grammar',
     // 🔴 2026-10-31（第 384 刀）：evidence 從 `roundtrip-all` 改成膠囊目錄——判定者只剩膠囊自己的測試。
     evidence: 'src/components',
@@ -175,13 +175,13 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
       + '語料驗的是「這一段程式碼產得出來」，都不是「這一顆元件產得對」。',
     coverage: { covered: 128, of: 349 },
   },
-  render: {
+  'blocks.render': {
     kind: 'renderer',
     evidence: 'tests/integration/roundtrip-all.test.ts',
     judges: '「Render coverage」：每一顆渲染成它宣告的積木型別。',
     coverage: { covered: 345, of: 349 },
   },
-  extract: {
+  'blocks.lift': {
     kind: 'equality',
     evidence: 'tests/integration/roundtrip-all.test.ts',
     judges: '「Extract coverage」：每一顆積木抽回它自己的身分。',
@@ -207,7 +207,7 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
 
 /** 一顆元件在某一路上的判定者——**per-元件覆蓋優先，否則吃該路的預設**。 */
 export function judgeOf(
-  path: SixPath,
+  path: JudgedCell,
   postconditions?: Record<string, { judge?: unknown } | undefined>,
 ): JudgeKind | null {
   const own = postconditions?.[path]?.judge

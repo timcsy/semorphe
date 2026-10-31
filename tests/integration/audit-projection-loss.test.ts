@@ -58,6 +58,7 @@ import { createNode } from '../../src/core/semantic-tree'
 import { synthMinimalNode } from '../helpers/synth-node'
 import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE } from '../helpers/guardrail'
 import type { SemanticNode } from '../../src/core/types'
+import { cellPath } from '../../src/core/component/views'
 
 beforeAll(() => {
   registerCppLanguage()
@@ -142,12 +143,12 @@ function scan(def: {
   paths?: Record<string, unknown>
 }): { losses: Loss[]; markersPut: number } | null {
   if (def.componentId.startsWith('_')) return null              // 偽概念，不是使用者面的積木
-  if ((def.skipPaths ?? []).includes('render')) return null   // 顯式宣告沒有這一路
+  if ((def.skipPaths ?? []).includes('blocks.render')) return null   // 顯式宣告沒有這一路
   // 🔴 **`render` 記成【誠實的缺】的那些，也不在這條的範圍內。**
   //
   // 這條問的是「宣告的接點**在積木上**有沒有落點」——**沒有積木就沒有落點可丟**。
   //
-  // ⚠️ 第一版只認 `skipPaths: ['render']`，於是 `python:program`（程式根）被報成
+  // ⚠️ 第一版只認 `skipPaths: ['blocks.render']`（spec 181 之前叫 `render`），於是 `python:program`（程式根）被報成
   // 「body 填 1 個、積木上找到 0 個」。而程式根**本來就不是一顆積木，它是畫布**
   // ——C++ 那顆同樣沒有 render。
   //
@@ -155,7 +156,7 @@ function scan(def: {
   // （`declarative`／`consumed-by-parent`／`degradation-target`），
   // 沒有一個是「它是容器」，而**發明第三個理由正是 `history/018` 擋的事**。
   // 所以它記在完備性基線的「缺」裡，附理由——**而這條護欄要認得那個形狀。**
-  if (def.paths && 'render' in def.paths && def.paths.render === null) return null
+  if (def.paths && cellPath(def.paths, 'blocks.render') === null) return null
   const declared = Object.entries(def.slots ?? {})
   if (declared.length === 0) return null                       // 沒有接點，無從丟失
 

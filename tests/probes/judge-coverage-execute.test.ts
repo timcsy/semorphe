@@ -53,6 +53,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { allComponentDefs } from '../helpers/component-scan'
 import type { SemanticNode } from '../../src/core/types'
+import { cellPath } from '../../src/core/component/views'
 
 const DIR = process.env.STUDYCPP_DIR ?? ''
 let parser: Parser
@@ -127,7 +128,7 @@ describe('探針：execute 判定者的覆蓋率（上界）', () => {
     const OTHER_ORACLE = /analog_|digital_|delay|dht_|eeprom|pwm_|servo|tone|wifi_|pulse|micros|millis|lcd_|serial|attach|interrupt|random_seed/
     const noLift = new Set(
       allComponentDefs()
-        .filter((d) => (d.skipPaths ?? []).includes('lift') || d.paths?.lift == null)
+        .filter((d) => (d.skipPaths ?? []).includes('code.lift') || cellPath(d.paths, 'code.lift') === null)
         .map((d) => d.componentId),
     )
     const excused = naked.filter((id) => OTHER_ORACLE.test(id) || noLift.has(id))

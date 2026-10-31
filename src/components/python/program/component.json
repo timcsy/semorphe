@@ -17,12 +17,18 @@
     "_programRoot_why": "整棵樹的根。核心用它決定「這棵樹渲染得成積木嗎」。"
   },
   "paths": {
-    "lift": "./lift-pattern.json",
-    "generate": "./generate.ts",
-    "render": null,
-    "_render_why": "🔴 **真的缺，而且是【對的】**：程式根不是一顆積木——它是畫布本身。C++ 那顆程式根同樣沒有 render（它走 `scaffold`）。\n⚠️ 記成誠實的缺，而不是用 `skipPaths` 洗掉——契約的理由詞彙裡沒有「它是容器」這一個，而發明第三個理由正是 `history/018` 擋的事。",
-    "extract": null,
-    "_extract_why": "同 `render`——沒有積木就沒有抽取，兩路必須成對。",
+    "views": {
+      "blocks": {
+        "render": null,
+        "_render_why": "🔴 **真的缺，而且是【對的】**：程式根不是一顆積木——它是畫布本身。C++ 那顆程式根同樣沒有 render（它走 `scaffold`）。\n⚠️ 記成誠實的缺，而不是用 `skipPaths` 洗掉——契約的理由詞彙裡沒有「它是容器」這一個，而發明第三個理由正是 `history/018` 擋的事。",
+        "lift": null,
+        "_lift_why": "同 `render`——沒有積木就沒有抽取，兩路必須成對。"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json"
+      }
+    },
     "execute": "./execute.ts"
   }
 }

@@ -16,12 +16,18 @@
   },
   "owner": "(universal)",
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "lift": "./lift-pattern.json",
-    "formalize": "./formalize.ts"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json"
+      }
+    },
+    "formalize": "./formalize.ts",
+    "execute": "./execute.ts"
   },
   "traits": {
     "ioRole": "print",

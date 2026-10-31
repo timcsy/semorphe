@@ -5,7 +5,8 @@
  * `scanText` 分離同一條：錨在真實檔案上的測試，會在那些檔案被修好的那天失效。
  */
 import { describe, it, expect } from 'vitest'
-import { idToDir, FIVE_PATHS } from '../../src/core/component/types'
+import { idToDir } from '../../src/core/component/types'
+import { CELLS, VIEWS } from '../../src/core/component/views'
 
 describe('膠囊契約：身分與路徑的換算', () => {
   it('C1：<scope>:<name> 換成 <scope>/<name>', () => {
@@ -26,7 +27,8 @@ describe('膠囊契約：身分與路徑的換算', () => {
     expect(idToDir('cpp:a:b')).toBe('cpp/a:b')
   })
 
-  it('五路的順序即完備性護欄的順序，且不多不少五條', () => {
-    expect([...FIVE_PATHS]).toEqual(['lift', 'generate', 'render', 'extract', 'execute'])
+  it('今天的視圖是積木與程式碼兩個、都是雙向；格子不多不少（spec 181）', () => {
+    expect(VIEWS).toEqual({ blocks: 'both', code: 'both' })
+    expect([...CELLS]).toEqual(['blocks.render', 'blocks.lift', 'code.render', 'code.lift', 'code.liftStrategy', 'formalize', 'execute'])
   })
 })

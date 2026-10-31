@@ -10,13 +10,19 @@
   "role": "statement",
   "owner": "(python)",
   "paths": {
-    "render": "./forms/blocks.json",
-    "_render_why": "🟢 **spec 160 補實。** 宣告式——與 C++ 那顆輸出元件同一條路徑（`forms/blocks.json` 同時是 render 與 extract 的來源，因為它們必須成對）。\n\n⚠️ 這裡值得記的是**它有多便宜**：加一顆 Python 積木**沒有動 `block-registrar` 一行**，因為 `import.meta.glob('/src/components/*/*/forms/blocks.json')` 本來就是語言中立的。\n\n> **P3（不修改既有程式碼就能加新語言）在這一顆上是真的。**\n而 `vision` 那 33 筆命令式積木**不在這條路上**——它們是另一批東西，清單見 spec 160。",
-    "extract": "./forms/blocks.json",
-    "_extract_why": "同 `render`——同一份 `forms/blocks.json`，兩路成對。",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "lift": "./lift-pattern.json"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "_render_why": "🟢 **spec 160 補實。** 宣告式——與 C++ 那顆輸出元件同一條路徑（`forms/blocks.json` 同時是 render 與 extract 的來源，因為它們必須成對）。\n\n⚠️ 這裡值得記的是**它有多便宜**：加一顆 Python 積木**沒有動 `block-registrar` 一行**，因為 `import.meta.glob('/src/components/*/*/forms/blocks.json')` 本來就是語言中立的。\n\n> **P3（不修改既有程式碼就能加新語言）在這一顆上是真的。**\n而 `vision` 那 33 筆命令式積木**不在這條路上**——它們是另一批東西，清單見 spec 160。",
+        "lift": "./forms/blocks.json",
+        "_lift_why": "同 `render`——同一份 `forms/blocks.json`，兩路成對。"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "traits": {
     "ioRole": "print",

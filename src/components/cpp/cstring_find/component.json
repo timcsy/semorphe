@@ -8,11 +8,17 @@
   },
   "role": "expression",
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "lift": "./lift.ts",
-    "_lift_why": "**顯式的空，不是遺漏。**",
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "**顯式的空，不是遺漏。**"
+      }
+    },
     "execute": "./execute.ts"
   },
   "requires": [

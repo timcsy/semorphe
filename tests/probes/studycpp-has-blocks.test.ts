@@ -44,6 +44,7 @@ import { nonComponentDecl } from '../../src/core/blocks/non-components'
  */
 import '../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../src/core/types'
+import { cellPath } from '../../src/core/component/views'
 
 const DIR = process.env.STUDYCPP_DIR ?? ''
 const all = (d: string, acc: string[] = []): string[] => {
@@ -86,10 +87,10 @@ describe.skipIf(FS.length === 0)('探針：語料用到的元件，都有積木�
     expect(used.size, '🔴 語料抬升出來的身分數過低 → 探針壞了，不是世界長這樣')
       .toBeGreaterThan(50)
 
-    /** 有形態（積木）的身分——由膠囊自己宣告的 `paths.render` 決定。 */
+    /** 有形態（積木）的身分——由膠囊自己宣告的 `blocks.render` 決定。 */
     const hasForm = new Set(
       (componentComponents() as { componentId: string; paths?: Record<string, unknown> }[])
-        .filter((c) => c.paths?.render != null)
+        .filter((c) => cellPath(c.paths, 'blocks.render') !== null)
         .map((c) => c.componentId))
 
     /** 使用者在**某一個**工具箱裡拿得到的積木型別。 */

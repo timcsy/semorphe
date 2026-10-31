@@ -18,12 +18,18 @@
     "debug_step": true
   },
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "lift": "./lift-pattern.json",
-    "execute": "./execute.ts",
-    "liftStrategy": "./lift-strategy.ts"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "traits": {
     "namedCall": true,

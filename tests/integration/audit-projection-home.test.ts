@@ -45,6 +45,7 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { printReport, assertRatchet, REPO_ROOT } from '../helpers/guardrail'
+import { cellPath } from '../../src/core/component/views'
 
 /** 判定的封閉詞彙——**刻意沒有「還沒想到」**。 */
 type cause =
@@ -118,9 +119,9 @@ function scanCapsules(): { total: number; gaps: gap[] } {
       componentId: string
       properties?: { name: string }[]
       slots?: Record<string, string>
-      paths?: { render?: string | null }
+      paths?: unknown
     }
-    const render = c.paths?.render
+    const render = cellPath(c.paths, 'blocks.render')
     if (!render) continue
     const bp = path.join(path.dirname(cp), render)
     if (!fs.existsSync(bp)) continue

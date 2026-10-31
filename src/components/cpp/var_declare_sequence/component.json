@@ -16,12 +16,18 @@
   "role": "statement",
   "owner": "(core)",
   "paths": {
-    "lift": "./lift.ts",
-    "generate": "./generate.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "execute": "./execute.ts",
-    "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**——「型別修飾詞是 auto、而宣告子是一串名字」的判別是 C++ 語法的知識，留在共用檔，與同族那顆自動型別的宣告一致。"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**——「型別修飾詞是 auto、而宣告子是一串名字」的判別是 C++ 語法的知識，留在共用檔，與同族那顆自動型別的宣告一致。"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_children_why": "**名字是子節點不是屬性**——與同族函式定義的參數同一個做法（`param_decl`）。名字有幾個是變動的（語料量到 2 個 11 處、3 個 5 處），而一個「用逗號串起來的字串」需要 parse 回結構才能用。\n🔴 而那正是這顆元件存在的理由：在它之前那一串名字被塞進自動型別宣告的 `name` 那一格，於是執行期真的宣告了一個叫 `[pt,d]` 的變數——**下一行用到 `pt` 時說「沒有宣告過這個名字」**。",
   "traits": {

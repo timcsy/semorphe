@@ -9,12 +9,18 @@
   "role": "expression",
   "owner": "(python)",
   "paths": {
-    "lift": "./lift-pattern.json",
-    "liftStrategy": "./lift-strategy.ts",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_children_why": "🔴 **接收者是接點不是名字的一部分**——與同族的方法呼叫同一個理由：`parts[0].upper()` 的左邊是一整個運算式。",
   "_lift_why": "同一個 `call` 節點型別，差別在方法名是不是 `upper` ——判別要跑真邏輯。不是的話回 `null`，由同族的一般方法呼叫接手。"

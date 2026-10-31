@@ -16,12 +16,18 @@
     "<string>"
   ],
   "paths": {
-    "lift": "./lift.ts",
-    "generate": "./generate.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "execute": "./execute.ts",
-    "_generate_why": "⚠️ 這一路**搬家前根本不存在**——實測 `generateCode` 回 `⟨unknown component⟩`。原因是身分原本由樣板字串組出來，掃描器看不到，於是「缺了哪一路」也量不出來。理由詳見 `generate.ts` 檔頭。"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "_render_why": "⚠️ 這一路**搬家前根本不存在**——實測 `generateCode` 回 `⟨unknown component⟩`。原因是身分原本由樣板字串組出來，掃描器看不到，於是「缺了哪一路」也量不出來。理由詳見 `generate.ts` 檔頭。",
+        "lift": "./lift.ts"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_slots_why": "🔴 **接收者是一個【接點】，不是一串文字**（2026-09-18）。\n解開那串文字的地方（`interpreter/receiver.ts`）只認得「名字、數字、以及它們的加減」——於是 `m[name]`（字串鍵）、`buckets[keys[i%2]]`（巢狀下標）、`m[1]`（巢狀容器）在執行期就斷了。十支資訊隔離的盲測有 7 支死在上面。\n⚠️ Python 那一側**早就是接點**——同一顆元件、同一個引數名，兩種做法。"
 }

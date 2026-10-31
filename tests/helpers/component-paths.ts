@@ -1,5 +1,5 @@
 /**
- * 元件的四條路徑各自到齊了嗎——**一份報表，不是一道門**。
+ * 元件的四格（積木與程式碼兩個視圖各一對 render／lift）各自到齊了嗎——**一份報表，不是一道門**。
  *
  * 掃描所有概念來源，檢查每個概念的四條路徑：
  * lift（AST→Semantic）、render（Semantic→Block）、extract（Block→Semantic）、generate（Semantic→Code）
@@ -23,12 +23,8 @@ import { programRootComponent } from '../../src/core/component/traits'
 export interface ComponentPathReport {
   componentId: string
   sources: string[]
-  paths: {
-    lift: boolean
-    render: boolean
-    extract: boolean
-    generate: boolean
-  }
+  /** 格子名（spec 181）：`code.lift` 從程式碼辨識、`blocks.render` 畫成積木、`blocks.lift` 從積木抽回、`code.render` 產程式碼。 */
+  paths: Record<'code.lift' | 'blocks.render' | 'blocks.lift' | 'code.render', boolean>
   missing: string[]
 }
 
@@ -272,19 +268,19 @@ export function verify(rootDir: string): { reports: ComponentPathReport[]; exitC
     if (INTERNAL_COMPONENTS.has(componentId)) continue
 
     const missing: string[] = []
-    if (!liftCovered.has(componentId)) missing.push('lift')
-    if (!renderCovered.has(componentId)) missing.push('render')
-    if (!extractCovered.has(componentId)) missing.push('extract')
-    if (!generateCovered.has(componentId)) missing.push('generate')
+    if (!liftCovered.has(componentId)) missing.push('code.lift')
+    if (!renderCovered.has(componentId)) missing.push('blocks.render')
+    if (!extractCovered.has(componentId)) missing.push('blocks.lift')
+    if (!generateCovered.has(componentId)) missing.push('code.render')
 
     reports.push({
       componentId,
       sources: [...new Set(sources)],
       paths: {
-        lift: liftCovered.has(componentId),
-        render: renderCovered.has(componentId),
-        extract: extractCovered.has(componentId),
-        generate: generateCovered.has(componentId),
+        'code.lift': liftCovered.has(componentId),
+        'blocks.render': renderCovered.has(componentId),
+        'blocks.lift': extractCovered.has(componentId),
+        'code.render': generateCovered.has(componentId),
       },
       missing,
     })

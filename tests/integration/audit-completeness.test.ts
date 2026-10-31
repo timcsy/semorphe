@@ -78,7 +78,7 @@ const RULE =
  * 混在一起的話，下一個人會用宣告刷數字，而護欄會替他背書。
  */
 type Verdict = 'implemented' | 'declared' | 'undecidable' | 'shell' | 'missing'
-const PATHS: PathName[] = ['generate', 'lift', 'render', 'extract', 'execute']
+const PATHS: PathName[] = ['code.render', 'code.lift', 'blocks.render', 'blocks.lift', 'execute']
 
 interface PathResult {
   verdict: Verdict
@@ -316,8 +316,8 @@ function classify(def: ComponentDefJSON): { row: Row; generated: string } {
       : null
 
   // ── generate ─────────────────────────────────────────────────────────
-  row.generate =
-    declared('generate') ??
+  row['code.render'] =
+    declared('code.render') ??
     (() => {
       try {
         generated = generateCode(wrap(node, id), 'cpp', STYLE)
@@ -349,20 +349,20 @@ function classify(def: ComponentDefJSON): { row: Row; generated: string } {
     })()
 
   // ── lift（輸入來自 generate 的輸出）────────────────────────────────────
-  row.lift =
-    declared('lift') ??
+  row['code.lift'] =
+    declared('code.lift') ??
     (() => {
       // generate 被宣告為「由父概念消費」時，合成流程產不出程式碼——
       // **lift 因此沒有輸入可測**。那是判不出來，不是殼也不是缺：
       // 怪 lift 沒辦到一件沒有輸入的事，只會讓數字灌水。
       //
       // （只認 `implemented` 的話會誤判成「缺」，那是另一種灌水。兩種都試過。）
-      if (row.generate.verdict === 'declared')
+      if (row['code.render'].verdict === 'declared')
         return {
           verdict: 'undecidable',
           reason: 'generate 由父概念消費，合成流程產不出程式碼——lift 沒有輸入可測',
         } as PathResult
-      if (row.generate.verdict !== 'implemented')
+      if (row['code.render'].verdict !== 'implemented')
         return { verdict: 'missing', reason: 'generate 未產出可解析的程式碼' } as PathResult
       // 🔴 **量測用的是 C++ 解析器**——非 C++ 的元件在這裡是【判不出來】，不是殼。
       //
@@ -427,8 +427,8 @@ function classify(def: ComponentDefJSON): { row: Row; generated: string } {
 
   // ── render ───────────────────────────────────────────────────────────
   let block: ReturnType<PatternRenderer['render']> = null
-  row.render =
-    declared('render') ??
+  row['blocks.render'] =
+    declared('blocks.render') ??
     (() => {
       try {
         block = renderer.render(node)
@@ -440,8 +440,8 @@ function classify(def: ComponentDefJSON): { row: Row; generated: string } {
     })()
 
   // ── extract（輸入來自 render 的輸出）──────────────────────────────────
-  row.extract =
-    declared('extract') ??
+  row['blocks.lift'] =
+    declared('blocks.lift') ??
     (() => {
       if (!block) return { verdict: 'missing', reason: 'render 未產出可還原的積木' } as PathResult
       try {
@@ -577,7 +577,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
       ...REASON_SUMMARY,
       '',
       '殼最多的路徑：',
-      ...PATHS.map((p) => `  ${p.padEnd(9)} 殼 ${shells.filter((s) => s.path === p).length} ｜ 缺 ${missing.filter((s) => s.path === p).length}`),
+      ...PATHS.map((p) => `  ${p.padEnd(13)} 殼 ${shells.filter((s) => s.path === p).length} ｜ 缺 ${missing.filter((s) => s.path === p).length}`),
       '',
       '補完地圖：tests/reports/completeness-map.md',
     ])
@@ -608,7 +608,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
       role: 'statement',
     } as unknown as ComponentDefJSON
     const { row } = classify(fakeComponent)
-    const decision = [row.lift, row.render, row.extract, row.generate, row.execute].map((r) => r.verdict)
+    const decision = [row['code.lift'], row['blocks.render'], row['blocks.lift'], row['code.render'], row.execute].map((r) => r.verdict)
     expect(
       decision.some((v) => v === 'missing' || v === 'shell'),
       '一個**完全不存在**的概念被判為五路俱全 → **量測根本沒有在跑**，' +

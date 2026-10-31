@@ -18,10 +18,7 @@ describe('verify-component-paths', () => {
   it('should check all four paths for each component', () => {
     const { reports } = verify(ROOT_DIR)
     for (const r of reports) {
-      expect(r.paths).toHaveProperty('lift')
-      expect(r.paths).toHaveProperty('render')
-      expect(r.paths).toHaveProperty('extract')
-      expect(r.paths).toHaveProperty('generate')
+      for (const cell of ['code.lift', 'blocks.render', 'blocks.lift', 'code.render']) expect(Object.keys(r.paths)).toContain(cell)
     }
   })
 
@@ -29,10 +26,7 @@ describe('verify-component-paths', () => {
     const { reports } = verify(ROOT_DIR)
     for (const r of reports) {
       const expectedMissing: string[] = []
-      if (!r.paths.lift) expectedMissing.push('lift')
-      if (!r.paths.render) expectedMissing.push('render')
-      if (!r.paths.extract) expectedMissing.push('extract')
-      if (!r.paths.generate) expectedMissing.push('generate')
+      for (const cell of ['code.lift', 'blocks.render', 'blocks.lift', 'code.render'] as const) if (!r.paths[cell]) expectedMissing.push(cell)
       expect(r.missing).toEqual(expectedMissing)
     }
   })

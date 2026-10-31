@@ -18,13 +18,19 @@
   "role": "expression",
   "owner": "(python)",
   "paths": {
-    "lift": null,
-    "_lift_why": "**顯式的空。** `for_in_clause` 只在推導式那顆的策略裡被拆出來——給它一筆樣式等於宣告它可以獨立出現，而一段 `for x in xs` 單獨寫是語法錯誤。",
-    "generate": "./generate.ts",
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": null,
+        "_lift_why": "**顯式的空。** `for_in_clause` 只在推導式那顆的策略裡被拆出來——給它一筆樣式等於宣告它可以獨立出現，而一段 `for x in xs` 單獨寫是語法錯誤。"
+      }
+    },
     "execute": null,
-    "_execute_why": "**顯式的空。** 走訪由父概念主導（它要控制每一圈算什麼、什麼時候還原名字）——這一顆自己執行沒有意義。",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json"
+    "_execute_why": "**顯式的空。** 走訪由父概念主導（它要控制每一圈算什麼、什麼時候還原名字）——這一顆自己執行沒有意義。"
   },
   "skipPaths": [
     "execute"

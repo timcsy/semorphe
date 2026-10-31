@@ -7,11 +7,17 @@
   "role": "expression",
   "owner": "(python)",
   "paths": {
-    "lift": "./lift-pattern.json",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_lift_why": "🔴 `conditional_expression` **沒有欄位名**——三個運算元是位置式的具名子節點，而**順序是原始碼的順序**（真、條件、假），不是語義的順序。"
 }

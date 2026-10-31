@@ -24,11 +24,17 @@
   },
   "_traits_why": "函式呼叫的優先級——它的引數永遠在括號裡，所以外層不必為它加括號。",
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "lift": "./lift.ts"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_owner_why": "⚠️ **不是某個標頭**——`__builtin_popcount` 是編譯器內建，不需要 `#include`。\n所以它沒有 `requires`，而工具箱歸在核心的運算那一格。",
   "_properties_why": "🔴 **同一件事的兩種寫法，是一顆身分 ＋ 一個屬性**（2026-09-19）。\n```\n__builtin_popcount(x)   一個整數的二進位裡有幾個 1\nbs.count()              一排位元裡有幾個 1\n```\n**作用在一個東西上**、接點相同（一格）、角色（運算式）相同，**差別只有怎麼寫**——⚠️ 不寫「引數個數」是刻意的：內建那一形的運算元是**引數**，方法那一形的是**接收者**，而在這個 repo 裡兩者都進 `obj`（見 `_slots_why`）——照元件代數 250 那條判準 ⟹ 是參數。\n🟢 **前例一模一樣**：取端點那顆的 `call`（`v.begin()` 與 `begin(v)` 是同一顆身分）。\n\n⚠️ **屬性名必須是 `method`，而那不是取名品味——是機制**（2026-09-19 踩到，而這是同一天的**第二次**）：\n```\n方法那一路   declaresMethodProp(id) → properties.method = 使用者寫的方法名\n呼叫那一路   registerCallComponent 的 funcProp → 同一格\n```\n第一版把它取名 `form`（值 `builtin`／`method`），於是那一格**從來沒有被填過**⟹ `bs.count()` 產回去變成 `__builtin_popcount(bs)`——**那連編都編不過**。\n> **一顆元件宣告的屬性名，就是它能不能被共用路由填到的條件。**\n🟢 而它順便保證了「產回使用者寫的那一種」：那一格裝的**就是**他寫的字。",

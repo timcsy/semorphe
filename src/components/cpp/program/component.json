@@ -7,20 +7,26 @@
   },
   "role": "statement",
   "skipPaths": [
-    "extract",
-    "render"
+    "blocks.lift",
+    "blocks.render"
   ],
   "skipReasons": {
-    "render": "consumed-by-parent",
-    "extract": "consumed-by-parent"
+    "blocks.render": "consumed-by-parent",
+    "blocks.lift": "consumed-by-parent"
   },
   "owner": "(core)",
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "lift": "./lift-pattern.json"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "traits": {
     "programRoot": true

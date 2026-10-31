@@ -16,11 +16,17 @@
   "role": "expression",
   "owner": "(python)",
   "paths": {
-    "lift": null,
-    "_lift_why": "**顯式的空。** 這一格沒有自己的 AST 節點型別可以對——它只在格式化文字的策略拆解插值時被建出來。給它一筆樣式等於宣告「有一種節點會直接變成它」，而那種節點不存在。",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": null,
+        "_lift_why": "**顯式的空。** 這一格沒有自己的 AST 節點型別可以對——它只在格式化文字的策略拆解插值時被建出來。給它一筆樣式等於宣告「有一種節點會直接變成它」，而那種節點不存在。"
+      }
+    },
+    "execute": "./execute.ts"
   }
 }

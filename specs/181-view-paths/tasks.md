@@ -10,7 +10,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 記下改寫前的計數（research R1 那張表）到 scratchpad 的 `before.json`：各鍵顆數、各鍵的 `null` 數、各 `_why` 數、`liftStrategy` 數
+- [x] T001 記下改寫前的計數（research R1 那張表）到 scratchpad 的 `before.json`：各鍵顆數、各鍵的 `null` 數、各 `_why` 數、`liftStrategy` 數
 
 ---
 
@@ -18,9 +18,9 @@
 
 **⚠️ 這一段完成前，任何讀取者都不能改**
 
-- [ ] T002 先寫契約測試（紅）於 `tests/unit/core/component-paths-contract.test.ts`：新形狀接受；平鋪舊鍵擋下；雙向視圖少 `lift` 鍵擋下；單向視圖有 `lift` 擋下；`null` 無同層 `_why` 擋下；未知視圖名擋下；訊息說出元件與視圖
-- [ ] T003 在 `src/core/component/types.ts` 新增視圖表（`blocks`、`code` 皆雙向）、`ViewPaths`／`ComponentPaths` 型別、格子名（`blocks.render`、`blocks.lift`、`code.render`、`code.lift`、`code.liftStrategy`、`formalize`、`execute`）與 `cellPath(manifest, cell)` 查詢；移除 `FivePath`／`FIVE_PATHS`
-- [ ] T004 在 `src/core/component/registry.ts` 把 C3 換成 data-model 的五條驗證規則（讓 T002 轉綠）
+- [x] T002 先寫契約測試（紅）於 `tests/unit/core/component-paths-contract.test.ts`：新形狀接受；平鋪舊鍵擋下；雙向視圖少 `lift` 鍵擋下；單向視圖有 `lift` 擋下；`null` 無同層 `_why` 擋下；未知視圖名擋下；訊息說出元件與視圖
+- [x] T003 在 `src/core/component/types.ts` 新增視圖表（`blocks`、`code` 皆雙向）、`ViewPaths`／`ComponentPaths` 型別、格子名（`blocks.render`、`blocks.lift`、`code.render`、`code.lift`、`code.liftStrategy`、`formalize`、`execute`）與 `cellPath(manifest, cell)` 查詢；移除 `FivePath`／`FIVE_PATHS`
+- [x] T004 在 `src/core/component/registry.ts` 把 C3 換成 data-model 的五條驗證規則（讓 T002 轉綠）
 
 ---
 
@@ -30,16 +30,16 @@
 
 **Independent Test**: 全套與 e2e 改動前後都全綠；課文解答往返逐一相同
 
-- [ ] T005 [US1] 一次性改寫腳本（scratchpad，不進 repo）：依 research R3 改寫 `src/components/*/*/component.json` 的 `paths`，保留其他欄位、縮排與換行；改完重算計數並與 T001 的 `before.json` 逐格比對，不一致就停（SC-003）
-- [ ] T006 [US1] `src/core/component/paths.ts`：實作檔掃描改用 `cellPath`（generate → `code.render`、lift → `code.lift`、liftStrategy → `code.liftStrategy`、execute → `execute`）
-- [ ] T007 [US1] `src/core/component/judges.ts`：`PATH_JUDGE` 的鍵改成格子名（`liftStrategy` 不單獨判定）、`SIX_PATHS` 換成格子清單、`judgeOf` 照新鍵；說明文字裡的舊鍵名同步
-- [ ] T008 [P] [US1] `tests/helpers/component-paths.ts` 與 `tests/unit/core/component-paths.test.ts`：覆蓋表改用格子
-- [ ] T009 [P] [US1] `tests/integration/audit-judge-coverage.test.ts` 與 `tests/baselines/judge-coverage.json`：`byPath` 鍵改名，數字逐一不變（SC-005）
-- [ ] T010 [P] [US1] `tests/integration/audit-completeness.test.ts`、`audit-projection-home.test.ts`、`audit-projection-loss.test.ts`、`audit-lift-grammar.test.ts`、`python-first-block.test.ts`：改用 `cellPath`
-- [ ] T011 [P] [US1] `tests/probes/studycpp-has-blocks.test.ts`、`tests/probes/judge-coverage-execute.test.ts`、`src/components/cpp/{string_empty,queue_back}/spec.test.ts`、`src/components/cpp/literal_char/lift.ts`：逐一看，判準用到舊鍵的改、純敘述的照 R2 判斷
-- [ ] T012 [US1] `tests/assets/declared-slots-decisions.json`、基線 `declared-slots.json`、`shared-file-husks.json`：判準用到舊鍵的改，純敘述的不動
-- [ ] T013 [US1] 全 repo 搜尋舊鍵的讀取（`paths.render|extract|generate|lift|liftStrategy` 與以字串取鍵）＝ 0；`npx tsc --noEmit` 綠
-- [ ] T014 [US1] 跑相關護欄與單元（`test:unit`、`test:capsule`、`test:guard` 帶 `SEMORPHE_REFCC_INCLUDE`），依理由手動調基線；commit
+- [x] T005 [US1] 一次性改寫腳本（scratchpad，不進 repo）：依 research R3 改寫 `src/components/*/*/component.json` 的 `paths`，保留其他欄位、縮排與換行；改完重算計數並與 T001 的 `before.json` 逐格比對，不一致就停（SC-003）
+- [x] T006 [US1] `src/core/component/paths.ts`：實作檔掃描改用 `cellPath`（generate → `code.render`、lift → `code.lift`、liftStrategy → `code.liftStrategy`、execute → `execute`）
+- [x] T007 [US1] `src/core/component/judges.ts`：`PATH_JUDGE` 的鍵改成格子名（`liftStrategy` 不單獨判定）、`SIX_PATHS` 換成格子清單、`judgeOf` 照新鍵；說明文字裡的舊鍵名同步
+- [x] T008 [P] [US1] `tests/helpers/component-paths.ts` 與 `tests/unit/core/component-paths.test.ts`：覆蓋表改用格子
+- [x] T009 [P] [US1] `tests/integration/audit-judge-coverage.test.ts` 與 `tests/baselines/judge-coverage.json`：`byPath` 鍵改名，數字逐一不變（SC-005）
+- [x] T010 [P] [US1] `tests/integration/audit-completeness.test.ts`、`audit-projection-home.test.ts`、`audit-projection-loss.test.ts`、`audit-lift-grammar.test.ts`、`python-first-block.test.ts`：改用 `cellPath`
+- [x] T011 [P] [US1] `tests/probes/studycpp-has-blocks.test.ts`、`tests/probes/judge-coverage-execute.test.ts`、`src/components/cpp/{string_empty,queue_back}/spec.test.ts`、`src/components/cpp/literal_char/lift.ts`：逐一看，判準用到舊鍵的改、純敘述的照 R2 判斷
+- [x] T012 [US1] `tests/assets/declared-slots-decisions.json`、基線 `declared-slots.json`、`shared-file-husks.json`：判準用到舊鍵的改，純敘述的不動
+- [x] T013 [US1] 全 repo 搜尋舊鍵的讀取（⚠️ 實作時多量到一組同詞彙：`skipPaths`／`skipReasons` 與 `PathName`，一併改成格子名；`audit-completeness` 基線同步）（`paths.render|extract|generate|lift|liftStrategy` 與以字串取鍵）＝ 0；`npx tsc --noEmit` 綠
+- [x] T014 [US1] 跑相關護欄與單元（`test:unit`、`test:capsule`、`test:guard` 帶 `SEMORPHE_REFCC_INCLUDE`），依理由手動調基線；commit
 
 ---
 
@@ -49,7 +49,7 @@
 
 **Independent Test**: T002 裡的單向假視圖、只寫 lift、未知視圖名三支
 
-- [ ] T015 [US2] 在 T002 的檔裡補「加一個單向視圖只動視圖表與宣告」的測試：以測試用的視圖表加一筆 `render-only`，確認核心的格子查詢不必改（SC-004）
+- [x] T015 [US2] 在 T002 的檔裡補「加一個單向視圖只動視圖表與宣告」的測試：以測試用的視圖表加一筆 `render-only`，確認核心的格子查詢不必改（SC-004）
 - [ ] T016 [US2] `src/core/component/types.ts` 的視圖表加註解：加一個視圖＝加一筆；方向由視圖決定（research R4）；commit
 
 ---

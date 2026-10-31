@@ -42,7 +42,7 @@
   {
     "componentId": "cpp:if_else",
     "cause": "宣告過的降級目標",
-    "reason": "components.json 明文 skipPaths:['lift']、skipReasons.lift='degradation-target'，由 cpp:ternary 降級抵達。**它本來就不該從語料 lift 出來**——不是缺口。"
+    "reason": "components.json 明文 skipPaths:['code.lift']、skipReasons['code.lift']='degradation-target'，由 cpp:ternary 降級抵達。**它本來就不該從語料 lift 出來**——不是缺口。"
   },
   {
     "componentId": "cpp:include_local",
@@ -347,7 +347,7 @@
   {
     "componentId": "python:exception_case",
     "cause": "沒有自己的 lift 路，接點由父概念的策略建出來",
-    "reason": "`except:` 單獨寫是語法錯誤——它只在「嘗試」那顆的策略裡被拆出來（`paths.lift` 是顯式的 `null`）。由父概念的 `spec.test.ts` 一起釘住。"
+    "reason": "`except:` 單獨寫是語法錯誤——它只在「嘗試」那顆的策略裡被拆出來（`paths.views.code.lift` 是顯式的 `null`）。由父概念的 `spec.test.ts` 一起釘住。"
   },
   {
     "componentId": "python:func_call",
@@ -427,7 +427,7 @@
   {
     "componentId": "python:loop_iter",
     "cause": "沒有自己的 lift 路，接點由父概念的策略建出來",
-    "reason": "它是推導式底下的**一段走訪來源**——`paths.lift` 是顯式的 `null`（單獨寫一段 `for x in xs` 是語法錯誤）。⚠️ 接點（`iterable`／`outer`）由父概念的 `spec.test.ts` 釘住，含三層巢狀。"
+    "reason": "它是推導式底下的**一段走訪來源**——`paths.views.code.lift` 是顯式的 `null`（單獨寫一段 `for x in xs` 是語法錯誤）。⚠️ 接點（`iterable`／`outer`）由父概念的 `spec.test.ts` 釘住，含三層巢狀。"
   },
   {
     "componentId": "python:loop_while",
@@ -582,7 +582,7 @@
   {
     "componentId": "python:string_insert",
     "cause": "沒有自己的 lift 路，接點由父概念的策略建出來",
-    "reason": "這一格**沒有對應的 AST 節點型別**（`paths.lift` 是顯式的 `null`）——它只在格式化文字的策略拆解插值時被建出來，所以任何靜態掃描都不會看到它產出接點。\n⚠️ 它的接點與 `format` 參數由父概念的 `spec.test.ts` 一起釘住（「冒號是語法不是格式，不得留在值裡」那一支）。"
+    "reason": "這一格**沒有對應的 AST 節點型別**（`paths.views.code.lift` 是顯式的 `null`）——它只在格式化文字的策略拆解插值時被建出來，所以任何靜態掃描都不會看到它產出接點。\n⚠️ 它的接點與 `format` 參數由父概念的 `spec.test.ts` 一起釘住（「冒號是語法不是格式，不得留在值裡」那一支）。"
   },
   {
     "componentId": "python:string_join",

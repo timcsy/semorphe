@@ -538,8 +538,12 @@ export interface ModeExtractRule {
 
 // ─── Split JSON Formats (Phase 3: component/blockDef separation) ───
 
-/** 五路完備性的路徑名 */
-export type PathName = 'lift' | 'render' | 'extract' | 'generate' | 'execute'
+/**
+ * 一顆元件可以宣告「刻意跳過」的那一路（`skipPaths`／`skipReasons`）。
+ * 🔁 spec 181：名字與 `core/component/views.ts` 的格子相同——`code.lift` 從程式碼辨識、`code.render` 產程式碼、
+ *    `blocks.render` 畫成積木、`blocks.lift` 從積木抽回（舊的 lift／generate／render／extract 退場）。
+ */
+export type PathName = 'code.lift' | 'blocks.render' | 'blocks.lift' | 'code.render' | 'execute'
 
 /** Component definition in components.json (semantic layer) */
 /**
