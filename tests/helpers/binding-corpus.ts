@@ -1,6 +1,6 @@
 /**
- * **C18 判決綁定的語料**的產生流程——`tests/probes/c18-corpus.test.ts`（交給 cella 的語料）與
- * `tests/probes/c18-verdict.test.ts`（在我們這側跑 Cella 的判決）共用（spec 180 T010，第 394 刀抽出）。
+ * **判決綁定語料**（Cella 的衍生原則 C18「判決綁定」）的產生流程——`tests/probes/binding-corpus.test.ts`（交給 cella 的語料）與
+ * `tests/probes/binding-verdict.test.ts`（在我們這側跑 Cella 的判決）共用（spec 180 T010，第 394 刀抽出）。
  *
  * 每一筆：`id`、`text`（產品的產碼路徑產回來的程式碼）、`tree`（交給 formalize 的那一棵——含補丁器補的骨架節點）、
  * 以及 `program`（翻得出時）或 `unknown`（翻不出的理由）。
@@ -19,7 +19,7 @@ import google from '../../src/languages/cpp/styles/google.json'
 import cStyle from '../../src/languages/cpp/styles/c.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
-export interface C18Row {
+export interface BindingRow {
   id: string
   text: string
   tree: SemanticNode
@@ -79,14 +79,14 @@ export function sources(): Source[] {
 
 
 /** 產生整份語料（`parser` 由呼叫端初始化好：tree-sitter-cpp，並已 `registerCppLanguage()`）。 */
-export function buildC18Corpus(parser: Parser): C18Row[] {
+export function buildBindingCorpus(parser: Parser): BindingRow[] {
   // 🔴 走產品的那一份 shaping（語言套件交出來的）：文字用補丁器、交給 formalize 的樹用骨架積木那一棵
-  //    ——補丁器補的 `#include`／`using` 也要在 program 裡（cella 比對 C18 時指出），而那幾顆正是畫面上淡色的骨架積木
+  //    ——補丁器補的 `#include`／`using` 也要在 program 裡（cella 比對判決綁定語料時指出），而那幾顆正是畫面上淡色的骨架積木
   const shaping = languagePack('cpp')!.createCodeShaping!() as {
     patchCode: (...a: unknown[]) => string | null
     autoIncludeNodes: (t: SemanticNode, ns: 'using' | 'explicit', styleId: string) => SemanticNode[]
   }
-  const rows: C18Row[] = []
+  const rows: BindingRow[] = []
   for (const s of sources()) {
     const tree = createTestLifter().lift(parser.parse(s.code)!.rootNode as never) as SemanticNode
     const style = (s.board ? google : s.lang === 'c' ? cStyle : apcs) as unknown as StylePreset

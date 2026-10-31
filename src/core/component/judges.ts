@@ -195,11 +195,11 @@ export const PATH_JUDGE: Readonly<Record<JudgedCell, {
   },
   formalize: {
     kind: 'formal',
-    evidence: 'tests/probes/c18-verdict.test.ts',
-    judges: '深嵌入（各膠囊的 `formalize.ts`）：C18 語料交給 Cella 的判決入口（套件，不依賴姊妹 repo）——'
+    evidence: 'tests/probes/binding-verdict.test.ts',
+    judges: '深嵌入（各膠囊的 `formalize.ts`）：判決綁定語料交給 Cella 的判決入口（套件，不依賴姊妹 repo）——'
       + '`invalid` 為 0 ＝ 程式 JSON 的形狀對（cella：「量 invalid 就是量介面的形狀」）、每個 problem 的節點對得回語義樹、'
       + 'accept 的輸出與課文宣告的一致（第 394 刀：95 / 99 accept，其餘 4 支在 Cella 那側）。'
-      + '另由 Cella 的 C18 判決綁定比對——clang 讀我們的 text 與 Cella 的 generate(program)，兩棵樹要相同（cella 那側跑）。',
+      + '另由 Cella 的判決綁定比對——clang 讀我們的 text 與 Cella 的 generate(program)，兩棵樹要相同（cella 那側跑）。',
     // 🪦 **2026-10-31（第 393 刀）：淺嵌入退場**——原本指著 `cella-formalize-guard`（`contract.cella` 載得進 cella、
     //    洞的型別逐字是契約），而 `@cella-lang/cpp` 升版後淺嵌入整個拿掉了（使用者定案：探針、merkle 基線、
     //    `contract.cella` 一起退場）。分母沿用 `formalize-coverage` 那條護欄：C++ 元件 250 顆。

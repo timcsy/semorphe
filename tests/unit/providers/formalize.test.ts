@@ -106,7 +106,7 @@ describe('formalize：最小子集', () => {
     expect(s).toContain('"c":10')
   })
 
-  it('🔴 與產生器同一份寫法：scanf 的引數取址、字串長度是 length（cella 比對 C18 時抓到，第 390 刀）', () => {
+  it('🔴 與產生器同一份寫法：scanf 的引數取址、字串長度是 length（cella 比對判決綁定語料時抓到，第 390 刀）', () => {
     const j = JSON.stringify(formalize(lift('#include <cstdio>\n#include <string>\nusing namespace std;\nint main() { int n; int a[3]; scanf("%d %d", &n, &a[1]); string s; int m = s.length(); return 0; }')).program)
     expect(j).toMatch(/"k":"sScanf".*"args":\[\{"k":"eAddr"[^\]]*"k":"eAddr"/)
     expect(j).toContain('"f":"length"')
