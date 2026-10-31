@@ -5,7 +5,7 @@
  *
  * 編輯器在 init 的前段就建好了，而後段還會從預設的樹重投影一次、把編輯器寫回預設程式。
  * 只等「畫面出現」就 `setCode` 的話，那份程式碼會被蓋掉——樹停在 `program/func_def/return`。
- * 這是 e2e `c-target` 間歇紅了一個月的主因（`knowledge/draft/2026-10-02-C-目標下有時候少一個標頭.md`）。
+ * 這是 e2e `c-target` 間歇紅了一個月的主因（`knowledge/episodes/2026-10-31-一個月重現不了的紅.md`）。
  *
  * 第 392 刀修了共用的 helpers 與兩支 spec，**而漏了自己定義 ready 的那幾支**——下一輪 e2e 就換
  * `console-comes-back` 紅（單獨跑 3 輪紅 2 輪）。同一個坑的第二次 ⟹ 立這一條。

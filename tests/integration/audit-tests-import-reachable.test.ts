@@ -6,7 +6,7 @@
  * 大掃除那天，同一個形狀量到五次：護欄或測試 import 一個**產品走不到**的模組，於是綠燈證明的是
  * 「那份程式碼是對的」，而產品跑的是另一份（`field-write`、`cpp/module.ts`、`identity`、`ComponentRegistry`、
  * `TemplateGenerator`——最後那個還讓 google 風格 70 / 86 份課文解答編不過而沒人發現）。
- * 見 `knowledge/draft/2026-10-31-三條待確認的教訓.md` 第四、五條。
+ * 見 `knowledge/draft/retired/2026-10-31-三條待確認的教訓.md`（已寫進 experience） 第四、五條。
  *
  * ## 怎麼量
  *

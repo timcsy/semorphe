@@ -196,7 +196,7 @@ test('★ 使用者自己寫的 #include，在 C 目標下也要換掉', async (
   //
   // 🟢 所以這裡放的是陷阱：**下次它自然發作時，自己把現場說出來。**
   // 排除過的假說與完整證據在
-  // `knowledge/draft/2026-10-02-C-目標下有時候少一個標頭.md`。
+  // `knowledge/draft/retired/2026-10-02-C-目標下有時候少一個標頭.md`（2026-10-31 結案：`knowledge/episodes/2026-10-31-一個月重現不了的紅.md`）。
   if (!code.includes('stdio.h')) {
     const d = await page.evaluate(() => {
       const a = (window as never as { __app: Record<string, unknown> }).__app
