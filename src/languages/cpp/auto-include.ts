@@ -158,7 +158,8 @@ export function createCppCodePatcher(
     // 2b. 🔴 explicit 風格（google、c）：標準函式庫的名字加 `std::`（2026-10-31，見 `std-qualify.ts`）。
     //     在此之前 explicit 在產碼端沒有實作，而上面那一步（正確地）不補 using ⟹ 產出編不過。
     //     學生自己宣告的名字（`int count;`、自己的 `max`）不動。
-    if (namespaceStyle === 'explicit') {
+    //     🔴 C 方言不做：C 沒有命名空間（第 390 刀量到 C 程式被寫成 `std::abs(x)`）。
+    if (namespaceStyle === 'explicit' && !cDialect) {
       const q = qualifyStd(patched, userDeclaredNames(tree))
       if (q !== patched) { patched = q; changed = true }
     }

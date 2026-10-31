@@ -23,7 +23,7 @@ beforeAll(async () => {
   registerCppLanguage()
 })
 
-const SRC = 'int main() { int n; scanf("%d", &n); int *a = (int*)malloc(n * sizeof(int)); printf("%d\\n", n); free(a); return 0; }'
+const SRC = 'int main() { int n; scanf("%d", &n); n = abs(n); int *a = (int*)malloc(n * sizeof(int)); printf("%d\\n", n); free(a); return 0; }'
 const patched = (styleId?: string): string => {
   const tree = createTestLifter().lift(parser.parse(SRC)!.rootNode as never) as SemanticNode
   const raw = generateCode(tree, 'cpp', cStyle as unknown as StylePreset)
@@ -36,6 +36,12 @@ describe('補丁器：C 方言', () => {
     expect(code).toContain('#include <stdio.h>')
     expect(code).toContain('#include <stdlib.h>')
     expect(code).not.toMatch(/<cstdio>|<cstdlib>/)
+  })
+
+  it('🔴 C 方言不加 std::（C 沒有命名空間）——`abs(n)` 照原樣', () => {
+    const code = patched('c')
+    expect(code).toContain('abs(n)')
+    expect(code).not.toContain('std::')
   })
 
   it('★ C++ 風格照舊是 <cstdio>／<cstdlib>', () => {
