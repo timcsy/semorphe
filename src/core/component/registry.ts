@@ -48,7 +48,8 @@
  * → **A**。而它已經驗過，不是推測。
  */
 import { isValidComponentId } from '../identity'
-import { COMPONENT_ROOT, FIVE_PATHS, idToDir } from './types'
+import { COMPONENT_ROOT, idToDir } from './types'
+import { checkPaths } from './views'
 import type { ComponentManifest, ComponentRegistration } from './types'
 
 // ⚠️ 樣式必須字面常數（見檔頭）。與 COMPONENT_ROOT 的一致性由下面的斷言保證。
@@ -103,21 +104,8 @@ function verifyContract(manifest: ComponentManifest, sourceDir: string): void {
     )
   }
 
-  // C3：五路全列，沒有的要寫 null ＋ 理由
-  if (!manifest.paths || typeof manifest.paths !== 'object') {
-    throw new Error(`${where}：缺少 paths。五路要全部列出，沒有的寫 null ＋ 理由`)
-  }
-  for (const p of FIVE_PATHS) {
-    if (!(p in manifest.paths)) {
-      throw new Error(
-        `${where}：paths 少了「${p}」。**沒有那一路也要寫**（null ＋ _${p}_why）——` +
-          `不然「顯式的空」與「遺漏的空」分不出來，而後者就是殼。`,
-      )
-    }
-    if (manifest.paths[p] === null && !manifest.paths[`_${p}_why`]) {
-      throw new Error(`${where}：paths.${p} 是 null，必須在 _${p}_why 說明理由`)
-    }
-  }
+  // C3：每個視圖一對 render／lift ＋ execute 全列，沒有的要寫 null ＋ 理由（spec 181，見 `views.ts`）
+  checkPaths(manifest.paths, where)
 }
 
 /** 全部膠囊。第一次呼叫時掃描並驗證。 */

@@ -10,12 +10,18 @@
   "role": "expression",
   "owner": "(python)",
   "paths": {
-    "lift": "./lift-pattern.json",
-    "liftStrategy": "./lift-strategy.ts",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_why": "🔴 第五十條護欄的通用桶點名的（`map` ×3）。\n⚠️ **名字裡的 `apply` 不叫 `map`**：那個字在這份詞彙表裡是**主體**（字典），同一個字兩種詞性讀的人要記兩次。"
 }

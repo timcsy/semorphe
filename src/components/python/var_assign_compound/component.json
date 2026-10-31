@@ -19,11 +19,17 @@
   },
   "owner": "(python)",
   "paths": {
-    "lift": "./lift-pattern.json",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_children_why": "🟢 **左邊是一個接點**（2026-08-25，路線圖「左值是接點，不是字串」）。\n在此之前它是 `name: literal`，而那一格裝得下整個文法：`a.b`／`a.b.c`／`self.n`／`nums[0]`／`d[\"k\"]` 全部被壓成字串，而積木上那一格是**變數下拉**——學生點一下，成員存取就沒了，沒有任何東西會出聲。\n⚠️ 這裡曾經寫著「`nums[0] += 1` 走**誠實降級**」，而實測**它沒有**：2026-08-21 為了放行 `self.n += k` 拿掉 `constraints`，`subscript` 就一起進來了。\n見 `knowledge/concepts/左值.md`。",
   "_writesTo_why": "🟢 **已還**——左值是 `target` 接點。判準見 `knowledge/concepts/左值.md`。"

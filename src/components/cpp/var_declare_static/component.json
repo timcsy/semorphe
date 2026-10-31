@@ -21,12 +21,18 @@
   "role": "statement",
   "owner": "(core)",
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "lift": "./lift.ts",
-    "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建靜態變數`）——判別（storage_class 是不是 static、在函式裡還是類別裡）是 C++ 語法的知識，留在共用檔。"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建靜態變數`）——判別（storage_class 是不是 static、在函式裡還是類別裡）是 C++ 語法的知識，留在共用檔。"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "traits": {
     "forLoopPart": true

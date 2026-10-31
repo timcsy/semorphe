@@ -17,12 +17,18 @@
   "role": "expression",
   "owner": "(python)",
   "paths": {
-    "lift": "./lift-pattern.json",
-    "liftStrategy": "./lift-strategy.ts",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是 `enumerate`。",
   "_children_why": "⚠️ `start` 加入日 2026-08-23：`enumerate(names, 1)` 在教學語料裡到處都是（從 1 開始編號），而它本來讓一般呼叫接手——**跑得動而拖不到，身分也沒了**。"

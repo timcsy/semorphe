@@ -9,7 +9,7 @@
  * 這是「**路徑滿的但到不了**」的第二個實例（第一個是 `cpp:if_else`）。
  * 完整診斷見 `draft/2026-08-11-容器方法的辨識不看型別.md`。
  *
- * → 所以 `component.json` 的 `paths` **沒有 `lift`**，而這裡也不假裝測得到它。
+ * → 所以 `component.json` 的 `paths.views.code.lift` **是 null**，而這裡也不假裝測得到它。
  *   **誠實地少一路，勝過一支永遠空過的測試。**
  */
 import { describe, it, expect, beforeAll } from 'vitest'

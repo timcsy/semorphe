@@ -10,11 +10,17 @@
   "owner": "(arduino)",
   "_owner_why": "**它屬於 Arduino／ESP32 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "execute": "./execute.ts",
-    "lift": "./lift.ts"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts"
+      }
+    },
+    "execute": "./execute.ts"
   },
   "_lift_why": "ESP32 core **2.x** 的第二步。⚠️ 名字用 `tie` 而不是 `bind`：`tie` 已經在操作詞彙表裡。⚠️ 而 `attach` 被新版那顆用掉了——**同一個詞不能指兩件不同的事**。",
   "_execute_why": "把腳位繫到通道。⚠️ **先繫再設定也是合法的順序**——不要求設定先發生。",

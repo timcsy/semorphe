@@ -11,11 +11,17 @@
     "<cmath>"
   ],
   "paths": {
-    "lift": "./lift.ts",
-    "generate": "./generate.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "execute": "./execute.ts",
-    "formalize": "./formalize.ts"
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts"
+      }
+    },
+    "formalize": "./formalize.ts",
+    "execute": "./execute.ts"
   }
 }

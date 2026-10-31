@@ -9,19 +9,25 @@
   "role": "statement",
   "skipPaths": [
     "execute",
-    "lift"
+    "code.lift"
   ],
   "skipReasons": {
     "execute": "consumed-by-parent",
-    "lift": "consumed-by-parent"
+    "code.lift": "consumed-by-parent"
   },
   "owner": "(core)",
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "lift": "./lift.ts",
-    "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建case`）——判別留在共用檔。",
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建case`）——判別留在共用檔。"
+      }
+    },
     "execute": null,
     "_execute_why": "**顯式的空，不是遺漏。**"
   },

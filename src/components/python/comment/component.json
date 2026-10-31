@@ -13,10 +13,16 @@
   "role": "statement",
   "owner": "(python)",
   "paths": {
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "generate": "./generate.ts",
-    "lift": "./lift-pattern.json",
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json"
+      }
+    },
     "execute": null,
     "_execute_why": "**顯式的空，不是遺漏。** 註解是宣告性的——執行它沒有任何行為，而寫一個 noop 函式會讓「刻意沒有」與「忘了寫」長得一模一樣。"
   },

@@ -129,7 +129,7 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     expect(generators.size, '🔴 產生器表是空的 → 下面的矛盾偵測什麼都沒驗到').toBeGreaterThan(100)
     const contradictions: string[] = []
     for (const def of allComponentDefs()) {
-      if (!(def.skipPaths ?? []).includes('generate' as never)) continue
+      if (!(def.skipPaths ?? []).includes('code.render' as never)) continue
       if (generators.has(def.componentId)) {
         contradictions.push(`${def.componentId}（宣告不產生，卻註冊了產生器）`)
       }
@@ -143,12 +143,12 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
 
   it('★ 反面：這條檢查不得對「零個宣告者」也通過', () => {
     // 沒有任何概念宣告 skip generate 的話，上面那支什麼都沒驗到
-    const n = allComponentDefs().filter((d) => (d.skipPaths ?? []).includes('generate' as never)).length
+    const n = allComponentDefs().filter((d) => (d.skipPaths ?? []).includes('code.render' as never)).length
     // 目前預期是 0（四筆假宣告已撤）——所以這裡改成釘住**機制**：
     // 合成一個宣告 skip generate 又有模板的假元件，必須被判為矛盾
-    const fakeComponent = { componentId: 'synth_fake', skipPaths: ['generate'] }
+    const fakeComponent = { componentId: 'synth_fake', skipPaths: ['code.render'] }
     const fakeTemplate = new Map<string, unknown>([['synth_fake', {}]])
-    const willCall = (fakeComponent.skipPaths ?? []).includes('generate') && fakeTemplate.has(fakeComponent.componentId)
+    const willCall = (fakeComponent.skipPaths ?? []).includes('code.render') && fakeTemplate.has(fakeComponent.componentId)
     expect(willCall, '合成的矛盾沒被判出來 → 上面那支是死的').toBe(true)
     expect(n, '真實資料目前應為 0（四筆假宣告已撤）').toBe(0)
   })

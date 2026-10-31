@@ -26,7 +26,7 @@
  *
  * ## 為什麼它是**靜默**的
  *
- * `cpp:if_else` 是**降級目標**（`skipPaths: ['lift']`、
+ * `cpp:if_else` 是**降級目標**（`skipPaths: ['code.lift']`、
  * `skipReasons.lift = 'degradation-target'`），由 `cpp:ternary` 在概念不可用時
  * 降級抵達。它不出現在任何原始碼裡，所以：
  *

@@ -284,9 +284,10 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       設計中冒出的三項（判題走哪項能力、提供者目錄、要不要並跑）照推薦進行，記在該檔第五節
 - [x] **1 能力介面**（[spec 179](../specs/179-capability-interface/spec.md)，2026-10-31）——判決／型別查詢／執行與除錯／步數四個介面；JS 直譯器包成第一個提供者；
       驗收：核心與 UI 不 import 任何提供者（分層護欄）、每個結果帶出處、學生行為不變（e2e 全綠）
-- [ ] **2 元件動詞改名**——`generate`／`extract` → 每個視圖一對 `render`／`lift`；驗收：349 顆 `component.json` 新形狀、五路完備性護欄改寫
+- [x] **2 元件動詞改名**——`generate`／`extract` → 每個視圖一對 `render`／`lift`；驗收：349 顆 `component.json` 新形狀、五路完備性護欄改寫
       🟢 形狀已定（2026-10-31）：視圖優先、包一層 `views`（設計 draft 五之五）；同一刀改 P2 與五槽（行為槽 → 形式槽，五之四）。
-      前置已完成：第二套產碼路徑拆掉（第 384 刀）、formalize 進膠囊（第 389 刀，2026-10-31 合進 main）——可以開
+      🟢 2026-10-31（[spec 181](../specs/181-view-paths/spec.md)）：349 個宣告改成 `paths.views.<視圖>.render／lift`；視圖表與格子在 `core/component/views.ts`；
+      P2、五槽（行為 → 形式）、完備性同一刀改寫（[history/308](history/308-元件的動詞改成每個視圖一對-render-lift.md)）
 - [x] **3 升級 Cella**（提前到現在）——換到重組後的套件；淺嵌入的探針、merkle 基線、`contract.cella` 退場
       🟢 2026-10-31（第 393 刀）：`cella-lang`、`@cella-lang/cpp`／`c`／`arduino` 釘在 `0.1.202610310706`（peer 一致、同一支檢查器）；
       `cella-formalize-guard`、`formalize-residual`、三份 `contract.cella` 與 prelude 退場；`paths.formalize` 改指膠囊的 `formalize.ts`

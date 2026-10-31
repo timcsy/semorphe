@@ -7,7 +7,7 @@
  * **從程式碼永遠得不到**，只能從積木拖。
  * `#30` 的判定落點把它記為「**辨識到不了**」——補再多語料也碰不到。
  *
- * → `paths.lift` 是 `null` ＋ `_lift_why`，而這裡**不假裝測得到 lift**。
+ * → `paths.views.code.lift` 是 `null` ＋ `_lift_why`，而這裡**不假裝測得到 lift**。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser } from 'web-tree-sitter'

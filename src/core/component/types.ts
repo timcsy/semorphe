@@ -29,12 +29,10 @@
  */
 
 /** 膠囊放在哪。**scope 分一層**——第三方 `@someone:` 套件要有地方住。 */
+import type { ComponentPaths } from './views'
+
 export const COMPONENT_ROOT = 'src/components'
 
-/** 五路。順序即完備性護欄的順序。 */
-export type FivePath = 'lift' | 'generate' | 'render' | 'extract' | 'execute'
-
-export const FIVE_PATHS: readonly FivePath[] = ['lift', 'generate', 'render', 'extract', 'execute']
 
 /**
  * `component.json` 的形狀。
@@ -66,13 +64,14 @@ export interface ComponentManifest {
   slots?: Record<string, unknown>
   role?: string
   /**
-   * 五路的宣告。**沒有的那幾路寫 `null`，並在 `_<path>_why` 說明理由。**
+   * 每個視圖一對 render／lift，加上 formalize 與 execute（spec 181，見 `views.ts`）。
+   * **沒有的那一路寫 `null`，並在同層的 `_<方向>_why` 說明理由。**
    *
    * 選填的話，忘了接上的路會靜靜地不存在——而那正是「殼」。
    * 紀律沿用 `StdModule.registerExecutors` 的註解：
    * 「讓**顯式的空**與**遺漏的空**分得出來」。
    */
-  paths: Partial<Record<FivePath, string | null>> & Record<string, unknown>
+  paths: ComponentPaths
 }
 
 /**

@@ -67,7 +67,8 @@ import {
   loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, REPO_ROOT,
 } from '../helpers/guardrail'
 import { allComponentDefs } from '../helpers/component-scan'
-import { JUDGE_KINDS, PATH_JUDGE, SIX_PATHS, isJudgeKind, judgeOf } from '../../src/core/component/judges'
+import { JUDGE_KINDS, PATH_JUDGE, JUDGED_CELLS, isJudgeKind, judgeOf } from '../../src/core/component/judges'
+import { cellPath } from '../../src/core/component/views'
 
 const GUARD = 'judge-coverage'
 
@@ -87,8 +88,8 @@ function scan(): { components: number; cells: Cell[]; naked: Cell[]; own: Cell[]
   const cells: Cell[] = []
   const own: Cell[] = []
   for (const d of defs) {
-    for (const p of SIX_PATHS) {
-      if (!d.paths?.[p]) continue
+    for (const p of JUDGED_CELLS) {
+      if (cellPath(d.paths, p) === null) continue
       const declared = d.postconditions?.[p]?.judge
       const j = judgeOf(p, d.postconditions)
       cells.push({ componentId: d.componentId, path: p, judge: j })
@@ -109,7 +110,7 @@ describe('判定者覆蓋率', () => {
     const { cells, components } = scan()
     expect(cells.length, '🔴 一格都沒有 → 判別壞了').toBeGreaterThan(components)
     expect(cells.length, '🔴 每顆都有六路是不可能的 —— formalize 只有少數幾顆宣告了')
-      .toBeLessThan(components * SIX_PATHS.length)
+      .toBeLessThan(components * JUDGED_CELLS.length)
     // 🔴 **這一行原本寫死「formalize 今天就是 2 顆」**（2026-10-04 改）。
     //    那是這個數字的【第三份拷貝】——`judges.ts` 的 `coverage.covered` 一份、
     //    `formalize-residual` 的硬性零一份、這裡一份。而第三份在
@@ -120,7 +121,7 @@ describe('判定者覆蓋率', () => {
     // 🟢 改成導出的：掃到的格子數，要等於【宣告了 `paths.formalize` 的顆數】。
     //    那是一條真的不變式——掃描看得到的就該是宣告了的那些。
     const declaredFormalize = allComponentDefs()
-      .filter((d) => typeof (d as { paths?: Record<string, unknown> }).paths?.formalize === 'string').length
+      .filter((d) => cellPath((d as { paths?: unknown }).paths, 'formalize') !== null).length
     expect(declaredFormalize, '🔴 一顆宣告 paths.formalize 的都沒有 → 下面那個相等是空的')
       .toBeGreaterThan(0)
     expect(
@@ -137,7 +138,7 @@ describe('判定者覆蓋率', () => {
 
   it('🔴 硬性零：每一路的預設判定者都指到一個【存在的】檔', () => {
     const missing: string[] = []
-    for (const p of SIX_PATHS) {
+    for (const p of JUDGED_CELLS) {
       const e = PATH_JUDGE[p]
       if (e.kind === null) continue
       expect(e.evidence, `🔴 ${p} 宣告了判定者卻沒說它在哪裡跑`).not.toBe('')
@@ -147,34 +148,34 @@ describe('判定者覆蓋率', () => {
   })
 
   it('🔴 硬性零：每一路都要說得出【它判的是什麼】', () => {
-    const silent = SIX_PATHS.filter((p) => PATH_JUDGE[p].kind !== null && !PATH_JUDGE[p].judges.trim())
+    const silent = JUDGED_CELLS.filter((p) => PATH_JUDGE[p].kind !== null && !PATH_JUDGE[p].judges.trim())
     expect(silent, `🔴 這幾路宣告了判定者而沒說它判什麼：${silent.join('、')}`
       + '｜⚠️ 那一句是【人讀出來的】,而它的用途是讓下一個人否證得了填表的人').toEqual([])
   })
 
   it('⚠️ 注入：判別真的分得出「有判定者」與「沒有」', () => {
-    expect(judgeOf('generate', undefined), '🔴 沒寫也該吃預設').toBe('grammar')
-    expect(judgeOf('generate', { generate: { judge: 'human' } }), '🔴 per-元件覆蓋該優先').toBe('human')
-    expect(judgeOf('generate', { generate: { judge: null } }), '🔴 顯式寫 null 該是 null').toBe(null)
-    expect(judgeOf('generate', { generate: { judge: 'wibble' } }), '🔴 閉集外的值不該被當成判定者').toBe('grammar')
+    expect(judgeOf('code.render', undefined), '🔴 沒寫也該吃預設').toBe('grammar')
+    expect(judgeOf('code.render', { 'code.render': { judge: 'human' } }), '🔴 per-元件覆蓋該優先').toBe('human')
+    expect(judgeOf('code.render', { 'code.render': { judge: null } }), '🔴 顯式寫 null 該是 null').toBe(null)
+    expect(judgeOf('code.render', { 'code.render': { judge: 'wibble' } }), '🔴 閉集外的值不該被當成判定者').toBe('grammar')
   })
 
   it('棘輪：判定者宣稱覆蓋而沒有人量過的路，只准下降', () => {
     const { components, cells, naked, own } = scan()
     const byPath = new Map<string, number>()
     for (const c of cells) byPath.set(c.path, (byPath.get(c.path) ?? 0) + 1)
-    const unmeasured = SIX_PATHS.filter((p) => PATH_JUDGE[p].kind !== null && PATH_JUDGE[p].coverage === null)
+    const unmeasured = JUDGED_CELLS.filter((p) => PATH_JUDGE[p].kind !== null && PATH_JUDGE[p].coverage === null)
     printReport('判定者覆蓋率', [
       `分母   ${components} 顆｜格子 ${cells.length}（只算元件真的有的那一路）`,
       `逐路   ${[...byPath].map(([p, n]) => `${p} ${n}`).join('｜')}`,
       `judge == null   ${naked.length} 格`,
       `per-元件覆蓋    ${own.length} 格（其餘吃該路的預設）`,
       '',
-      `🔴 判定者的覆蓋率【沒有人量過】的路：${unmeasured.length} / ${SIX_PATHS.length}   ${unmeasured.join('、')}`,
-      ...SIX_PATHS.map((p) => {
+      `🔴 判定者的覆蓋率【沒有人量過】的路：${unmeasured.length} / ${JUDGED_CELLS.length}   ${unmeasured.join('、')}`,
+      ...JUDGED_CELLS.map((p) => {
         const c = PATH_JUDGE[p].coverage
         const pct = c ? `${c.covered} / ${c.of}（${Math.round(c.covered / c.of * 100)}%）` : '🔴 沒有人量過'
-        return `   ${p.padEnd(10)} ${pct.padEnd(22)} ${PATH_JUDGE[p].judges.slice(0, 64)}`
+        return `   ${p.padEnd(13)} ${pct.padEnd(22)} ${PATH_JUDGE[p].judges.slice(0, 64)}`
       }),
       '',
       '⚠️ 本護欄不檢測那個判定者判得【對】不對——判錯的與對的在這裡長得一樣。',
