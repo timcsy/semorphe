@@ -64,7 +64,7 @@
 ## Phase 7: Polish
 
 - [x] T020 護欄：分層（核心不 import 提供者）、tests-import-reachable 例外名單拿掉 `verdict.ts`（它進產品路徑了）、相關基線
-- [ ] T021 `verify-in-browser`：quickstart 第 4 步全走一遍（含重新整理後變快）
+- [x] T021 `verify-in-browser`：quickstart 第 4 步全走一遍（含重新整理後變快）
 - [ ] T022 全套＋e2e（背景）；合進 main；看 CI；vision 5a 打勾；history 一筆（判決第一次被學生看到）
 
 ## Dependencies

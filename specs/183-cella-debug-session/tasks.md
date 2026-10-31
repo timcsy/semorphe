@@ -29,5 +29,5 @@
 
 ## Phase 5: Polish
 
-- [ ] T012 護欄與基線；`verify-in-browser`（執行路徑的四件：停在哪、狀態在不在、繼續之後對不對、有沒有留痕）
+- [x] T012 護欄與基線；`verify-in-browser`（執行路徑的四件：停在哪、狀態在不在、繼續之後對不對、有沒有留痕）
 - [ ] T013 全套＋e2e；合進 main；看 CI；vision 5b 打勾；history 一筆
