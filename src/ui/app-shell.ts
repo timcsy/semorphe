@@ -22,6 +22,7 @@ import { LAYOUT_PRESETS, layoutPreset, hostLayoutOptions, type LayoutPresetId, t
 import type { UnderstandingLayer } from '../core/sync/view-host'
 import { QuickAccessBar } from './toolbar/quick-access-bar'
 import { CodeKeyboard } from './panels/code-keyboard'
+import { HardwarePanel } from './panels/hardware-panel'
 import type { StorageLike } from '../core/host/host-profile'
 import type { SavedState } from '../core/storage/storage'
 import type { BlockSpecRegistry } from '../core/blocks/block-spec-registry'
@@ -44,6 +45,8 @@ export interface AppShellElements {
   codeView: CodeView
   consolePanel: ConsolePanel
   variablePanel: VariablePanel
+  /** 板子做了什麼（spec 184）；宿主不畫這一格時是 null。 */
+  hardwarePanel: HardwarePanel | null
   flowPanel: FlowPanel
   /** 🔴 這個宿主可能一格都不需要——那時它不存在，不是空的。 */
   bottomPanel: BottomPanel | null
@@ -586,7 +589,7 @@ export function createAppLayout(
   //    ——而一條空的分頁列仍然吃掉高度。與快速列同一條規則：不建。
   //
   // > **一個沒有內容的容器不是「比較小的容器」，它是純粹的浪費。**
-  const bottomTabs = CONTROLS.filter((c) => (c.id === 'console' || c.id === 'variables'))
+  const bottomTabs = CONTROLS.filter((c) => (c.id === 'console' || c.id === 'variables' || c.id === 'hardware'))
     .filter((c) => surfaceOf(c, surfaces) === 'panelBottom')
   // 🔴 **主控台是 grid 的一格（`state`），不再掛在程式碼那一欄底下**（spec 168）。
   //    版面可以**搬**它（十字時在右下），但**不得關掉**它——第八十一條的 I4 盯著。
@@ -790,6 +793,14 @@ export function createAppLayout(
   if (surfaceOf(CONTROLS.find((c) => c.id === 'variables')!, surfaces) === 'panelBottom') {
     STATE_BODIES['variables'] = { panel: variableEl }
     addStateTab('variables')
+  }
+  // 🟢 **硬體**（spec 184）——與變數同一層、排在它後面；宿主宣告 `none` 的（擴充）不建
+  let hardwarePanel: HardwarePanel | null = null
+  if (surfaceOf(CONTROLS.find((c) => c.id === 'hardware')!, surfaces) === 'panelBottom') {
+    const hardwareEl = document.createElement('div')
+    hardwarePanel = new HardwarePanel(hardwareEl)
+    STATE_BODIES['hardware'] = { panel: hardwareEl }
+    addStateTab('hardware')
   }
 
   // 🔴 **第三個投影**。它出現在這裡只是因為要有一格 DOM——
@@ -1906,7 +1917,7 @@ export function createAppLayout(
   //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
   showProjection('blocks')
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, flowPanel, bottomPanel, quickAccessBar, lessonNudgeBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, setHostLayer, toggleBottom, bottomVisibility, bottomVisibilityKnown: () => !!bottomPanel || hostSeesBottom, onBottomVisibilityChanged: (cb: () => void) => { bottomVisibilityChanged = cb }, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, hardwarePanel, flowPanel, bottomPanel, quickAccessBar, lessonNudgeBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, setHostLayer, toggleBottom, bottomVisibility, bottomVisibilityKnown: () => !!bottomPanel || hostSeesBottom, onBottomVisibilityChanged: (cb: () => void) => { bottomVisibilityChanged = cb }, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
 }
 
 /*

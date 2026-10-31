@@ -100,6 +100,9 @@ import { ExecutionController } from './execution-controller'
 import { registerProvider, provide, type Provider, type Readiness } from '../core/capabilities'
 import { jsInterpreterProvider } from '../providers/js-interpreter'
 import { toDiagnostics } from '../core/verdict-diagnostics'
+import { hardwareOf, matchPinEvents, DEFAULT_PIN_TOLERANCE_MS, type HardwareRecord, type PinEvent } from '../core/hardware'
+import type { HardwarePanel } from './panels/hardware-panel'
+import type { CheckAnswer } from '../core/capabilities'
 import type { Diagnostic } from '../core/diagnostics'
 registerProvider(jsInterpreterProvider)
 // Semantic layer
@@ -190,6 +193,9 @@ export class App {
    * 判決要幾百毫秒到幾秒，所以它住在這裡等下一次廣播，不是自己廣播一次。
    */
   private checkDiagnostics: Diagnostic[] = []
+  /** 最近一次送出的判決（spec 184）——課文的腳位檢查要等「這一棵樹」的那一次，不用畫面上的快取。 */
+  private lastCheck: { tree: SemanticNode; answer: Promise<CheckAnswer> } | null = null
+  private hardwarePanel: HardwarePanel | null = null
   private checkNotes: string[] = []
   private checkTimer: ReturnType<typeof setTimeout> | null = null
   /** 樹 → 交給判決的那一棵（補上骨架積木：自動補的 `#include` 也是程式的一部分）。init 裡由語言套件設定。 */
@@ -510,7 +516,7 @@ export class App {
       if (e.status !== 'completed') return
       // ⚠️ 預測在裁判**之前**——先「機器做的跟我想的不一樣」，再「這一題對了沒」
       this.revealPrediction(consolePanel)
-      this.judgeCurrentTask(consolePanel)
+      void this.judgeCurrentTask(consolePanel)
     })
 
     // 🔴 **執行覆蓋**：跑完把沒被走到的積木標出來，並在主控台問一句。
@@ -594,12 +600,17 @@ export class App {
    * （他要的是 diff），或他只是在亂試（他不要任何人跳出來說他錯）。
    * **而系統分不出這兩者**，所以由他釘的那一題決定要不要開口。
    */
-  private judgeCurrentTask(consolePanel: ConsolePanel): void {
+  private async judgeCurrentTask(consolePanel: ConsolePanel): Promise<void> {
     const lesson = this.currentLesson
     const task = taskById(lesson, this.currentTaskId)
     if (!lesson || !task?.check) return
-    const result = compareOutput(this.runTranscript, task.check.stdout)
-    consolePanel.showVerdict(result, task.title)
+    const transcript = this.runTranscript
+    // 板子上的題目：腳位事件與輸出都要對（spec 184）
+    const pins = task.check.pins ? await this.judgePins(task.check.pins) : null
+    if (this.currentLesson !== lesson || this.currentTaskId !== task.id) return
+    const output = compareOutput(transcript, task.check.stdout)
+    const result = { ...output, passed: output.passed && (pins?.passed ?? true) }
+    consolePanel.showVerdict(result, task.title, pins?.text)
     if (!result.passed) return
 
     markTaskPassed(lesson.id, task.id)
@@ -1862,6 +1873,7 @@ export class App {
     //    面板自己**不認識執行器**——P9：跨層通訊只走 Bus（`principles.md:177`）。
     elements.variablePanel?.onEditValue((name, value) =>
       this.bus.emit('execution:set-variable', { name, value }))
+    this.hardwarePanel = elements.hardwarePanel
     // 🔴 **流程面板改了一格 → 匯流排**（2026-08-26，(b) 改欄位）。
     //    ⚠️ 走 `edit:tree` 這個**通用**事件，不是 `edit:flow`
     //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。
@@ -4439,30 +4451,74 @@ export class App {
       this.checkNotes = []
       // 沒有提供者 ⟹ 說出來（P6）；提供者在但不判這個語言 ⟹ 那一格空著（不是缺了什麼，是本來就沒有）
       this.renderCheckStatus(p ? { state: 'idle' } : { state: 'unavailable', reason: '判斷功能需要 Cella' })
+      this.showHardware(null)
       return
     }
     // 🔴 還沒暖機就不送：`check` 會建 worker、開始載 Cella——首屏不搶頻寬（research R5）。載好時監聽會補判一次
+    if (p.readiness?.().state !== 'ready') this.showHardware(null)
     if (p.readiness?.().state === 'idle') return
     this.checkTimer = setTimeout(() => void this.runCheck(p), 600)
+  }
+
+  /** 一次判決的請求（判決與腳位檢查共用同一組：骨架積木、目標、風格、骨架、題目的測資）。 */
+  private checkRequest(tree: SemanticNode): { req: Parameters<NonNullable<Provider['check']>>[0]; stdin: readonly string[] } {
+    const stdin = taskById(this.currentLesson, this.currentTaskId)?.check?.stdin ?? []
+    return {
+      // ⚠️ 骨架積木每次產生都是新的 id——判決與轉換要用【同一棵】
+      req: { tree: this.withScaffold(tree), targetId: this.currentTarget.id, styleId: this.currentStylePreset.id, skeletonId: this.currentSkeletonId, input: stdin.map((l) => `${l}\n`).join('') },
+      stdin,
+    }
   }
 
   private async runCheck(p: Provider): Promise<void> {
     const tree = this.currentTree
     if (!tree || !p.check) return
-    const stdin = taskById(this.currentLesson, this.currentTaskId)?.check?.stdin ?? []
-    // ⚠️ 骨架積木每次產生都是新的 id——判決與轉換要用【同一棵】
-    const shown = this.withScaffold(tree)
-    const a = await p.check({
-      tree: shown, targetId: this.currentTarget.id, styleId: this.currentStylePreset.id, skeletonId: this.currentSkeletonId,
-      input: stdin.map((l) => `${l}\n`).join(''),
-    })
+    const { req, stdin } = this.checkRequest(tree)
+    const answer = p.check(req)
+    this.lastCheck = { tree, answer }
+    const a = await answer
     // 送出之後樹又變了 ⟹ 這一筆的節點可能已經不在，丟掉（下一筆會來）
     if (a.stale || tree !== this.currentTree) return
-    const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: shown, readsInput: a.readsInput, hasStdin: stdin.length > 0 })
+    const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: req.tree, readsInput: a.readsInput, hasStdin: stdin.length > 0 })
     this.checkDiagnostics = r.diagnostics
     this.checkNotes = r.notes
     this.runAllDiagnostics()
     this.renderCheckStatus(p.readiness?.() ?? { state: 'ready' })
+    this.showHardware(hardwareOf(a.verdict))
+  }
+
+  /** 硬體分頁（spec 184）：板子的目標畫判決給的腳位；不是板子的目標說出來。 */
+  private showHardware(record: HardwareRecord | null): void {
+    if (!this.hardwarePanel) return
+    if (record) this.hardwarePanel.show({ kind: 'record', record })
+    else if (!this.currentTarget.board) this.hardwarePanel.show({ kind: 'no-board' })
+    else this.hardwarePanel.show({ kind: 'waiting', reason: msg('HARDWARE_WAITING', '判斷功能（Cella）載好之後，這裡會畫出每支腳怎麼變。') })
+  }
+
+  /**
+   * **課文的腳位檢查**（spec 184，第 18 題）——等【這一棵樹】的判決，照順序比關鍵事件。
+   * 判斷功能沒好 ⟹ 照實說判不了，**不判通過**（P6：一個判不了就說對的勾，會讓所有的勾貶值）。
+   */
+  private async judgePins(events: readonly PinEvent[]): Promise<{ passed: boolean; text?: string }> {
+    const tree = this.currentTree
+    const p = provide('verdict').provider
+    const need = msg('CHECK_PINS_NEED_CELLA', '這一題要看腳位怎麼變——判斷功能（Cella）載好之後才判得了')
+    if (!tree || !p?.check || p.readiness?.().state !== 'ready') return { passed: false, text: need }
+    let a = await (this.lastCheck?.tree === tree ? this.lastCheck.answer : p.check(this.checkRequest(tree).req))
+    // 排隊時被更新的請求取代（worker 回 skipped）⟹ 再問一次這一棵
+    if (!a.verdict) a = await p.check(this.checkRequest(tree).req)
+    const hw = hardwareOf(a.verdict)
+    if (!hw) return { passed: false, text: need }
+    const m = matchPinEvents(events, hw.changes)
+    if (m.ok) return { passed: true }
+    const e = m.expected
+    const what = `${msg('CHECK_PIN_EVENT', '第 {n} 個事件').replace('{n}', String(m.index + 1))}：${msg('HARDWARE_PIN', '腳')} ${e.pin} → ${e.value}`
+    if (m.why === 'missing') return { passed: false, text: `${what}${msg('CHECK_PIN_MISSING', '——沒有發生')}` }
+    return {
+      passed: false,
+      text: `${what}${msg('CHECK_PIN_TIME', '——應該在約 {want} 毫秒，實際在 {got} 毫秒（容許 ±{tol}）')
+        .replace('{want}', String(e.t)).replace('{got}', String(m.found!.t)).replace('{tol}', String(e.tolerance ?? DEFAULT_PIN_TOLERANCE_MS))}`,
+    }
   }
 
   /** 狀態列左邊那一格：載入中／幾個問題／無法使用；說明（需要輸入、依 libc++）放在 title。 */

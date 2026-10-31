@@ -89,6 +89,7 @@ export type ControlId =
   | 'sync'
   | 'console'
   | 'variables'
+  | 'hardware'
 
 export interface ControlSpec {
   readonly id: ControlId
@@ -252,6 +253,9 @@ export const CONTROLS: readonly ControlSpec[] = [
   //    而在那之前它的家是 `panel` 區的一個視圖，**與終端機同一排**。
   //    使用者 2026-08-25：「我要的是放在主控台跟終端機一起（在還沒做 DAP 的時候）」。
   { id: 'variables', kind: 'inspector', domain: 'project', mountId: 'variable-panel', bar: 'quickAccess', hostTitle: '變數' },
+  // 🔴 **板子做了什麼**（spec 184）——腳位時間軸與結束時的板子狀態，資料來自 Cella 的判決。
+  //    與變數同一族（執行時看的東西），擴充那側還沒有（webview 沒有 Cella）→ VSCode 宣告成 `none`。
+  { id: 'hardware', kind: 'inspector', domain: 'project', mountId: 'hardware-panel', bar: 'quickAccess', hostTitle: '硬體' },
   { id: 'sync', kind: 'indicator', domain: 'project', mountId: 'sync-menu-btn', bar: 'quickAccess', hostTitle: '同步：暫停／以哪一邊為準' },
 ]
 

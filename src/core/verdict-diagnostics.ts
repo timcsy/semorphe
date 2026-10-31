@@ -28,6 +28,10 @@ export interface Verdict {
   out: string
   problems: VerdictProblem[]
   assumes?: { implementation: string; choice: string }[]
+  /** 板子上的程式才有（`@cella-lang/arduino`）：腳位變化、是否截斷、結束時的硬體（JSON 字串）——見 `core/hardware.ts`。 */
+  pins?: { t: number; pin: number; value: number }[]
+  pinsTruncated?: boolean
+  env?: unknown
 }
 
 /**

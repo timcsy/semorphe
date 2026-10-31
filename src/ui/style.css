@@ -3391,3 +3391,15 @@ html, body {
   padding: 4px 6px !important;
   min-width: 24px;
 }
+
+/* ── 硬體分頁（spec 184）── */
+.hardware-panel { padding: 8px 12px; font-size: 12px; color: var(--text-secondary, #ccc); overflow: auto; height: 100%; box-sizing: border-box; }
+.hardware-note { margin: 4px 0 8px; opacity: 0.85; }
+.hardware-timeline { width: 100%; max-width: 900px; display: block; }
+.hardware-pin-label, .hardware-tick-label { fill: currentColor; font-size: 11px; }
+.hardware-tick-label { text-anchor: middle; }
+.hardware-axis, .hardware-tick { stroke: currentColor; stroke-opacity: 0.35; }
+.hardware-high { fill: #e5a50a; }
+.hardware-end { margin-top: 8px; }
+.hardware-end-head { font-weight: 600; margin-bottom: 2px; }
+.hardware-end-row { font-family: var(--mono-font, monospace); }

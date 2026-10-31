@@ -35,6 +35,7 @@
  * - **不呈現課文**（`lesson.md`）——那是另一刀，而它牽到還沒拍板的互動教材形式。
  * - **不知道任何語言**——`components` 對它只是一串身分。
  */
+import type { PinEvent } from '../hardware'
 import { BASE } from '../base-path'
 import { interactionById } from './interactions'
 import { LESSON_VIEWS, type LessonView } from './semantic-wave'
@@ -514,6 +515,11 @@ export interface LessonCheck {
   readonly stdout: string
   /** 要餵給它的輸入行。⚠️ 空陣列是「這一課不需要輸入」，不是「還沒寫」。 */
   readonly stdin: readonly string[]
+  /**
+   * 板子上的題目：腳位要這樣變（spec 184，第 18 題）——**只寫關鍵事件**、帶容許誤差，照順序比；不比完整軌跡。
+   * 比對見 `core/hardware.ts` 的 `matchPinEvents`；資料來自判決（要 Cella）。
+   */
+  readonly pins?: readonly PinEvent[]
 }
 
 /**
@@ -538,7 +544,13 @@ function parseCheck(id: string, raw: unknown): LessonCheck | undefined {
   if (!Array.isArray(stdin) || stdin.some((x) => typeof x !== 'string')) {
     throw new Error(`教案 ${id}：check.stdin 不是字串陣列`)
   }
-  return { stdout: c.stdout, stdin: stdin as string[] }
+  if (c.pins !== undefined) {
+    const ok = Array.isArray(c.pins) && c.pins.every((e) => e && typeof e === 'object'
+      && typeof (e as PinEvent).pin === 'number' && typeof (e as PinEvent).value === 'number'
+      && ['undefined', 'number'].includes(typeof (e as PinEvent).t) && ['undefined', 'number'].includes(typeof (e as PinEvent).tolerance))
+    if (!ok || (c.pins as unknown[]).length === 0) throw new Error(`教案 ${id}：check.pins 要是非空的 {pin, value, t?, tolerance?} 陣列`)
+  }
+  return { stdout: c.stdout, stdin: stdin as string[], ...(c.pins ? { pins: c.pins as PinEvent[] } : {}) }
 }
 
 /**
