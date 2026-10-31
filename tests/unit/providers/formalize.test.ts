@@ -147,6 +147,24 @@ describe('formalize：最小子集', () => {
     expect(s).toMatch(/"k":"eMCall".*"name":"Serial".*"f":"begin"/)
   })
 
+  it('★ Arduino 課文剩下的五顆：map 是呼叫、Servo／LCD 是方法、EEPROM 是 eConst 接收者（cella 2026-10-31 給的形狀）', () => {
+    const src = '#include <Servo.h>\n#include <EEPROM.h>\n#include <LiquidCrystal_I2C.h>\nServo s;\nLiquidCrystal_I2C lcd(0x27, 16, 2);\n' +
+      'void setup() { s.attach(9); }\nvoid loop() { int v = map(analogRead(A0), 0, 1023, 0, 180); int a = s.read(); lcd.setCursor(0, 1); EEPROM.write(0, v); int e = EEPROM.read(0); }'
+    const r = formalize(lift(src), { board: cellaBoardOf('arduino-uno') })
+    expect(r.unknown).toEqual([])
+    const j = JSON.stringify(r.program)
+    expect(j).toMatch(/"k":"eCall","n":"[^"]+","f":"map"/)
+    expect(j).toMatch(/"k":"eMCall".*"f":"read"/)
+    expect(j).toContain('"f":"setCursor"')
+    expect(j).toMatch(/"k":"eConst","n":"[^"]+\/obj","name":"EEPROM"\},"arrow":false,"f":"write"/)
+    expect(j).toMatch(/"name":"EEPROM"\},"arrow":false,"f":"read"/)
+  })
+
+  it('🔴 整數字面的進位：0x27 是 39、017 是 15（不是 17）、0b101 是 5、分隔符照算', () => {
+    const j = JSON.stringify(formalize(lift("int main() { int a = 0x27; int b = 017; int c = 0b101; int d = 1'000; return 0; }")).program)
+    expect([...j.matchAll(/"k":"eNum","n":"[^"]+","v":(\d+)/g)].map((m) => Number(m[1]))).toEqual([39, 15, 5, 1000, 0])
+  })
+
   it('★ 目標 id 對到 Cella 的板名；不是板子的目標沒有板名', () => {
     expect(cellaBoardOf('esp32s3-cam')).toBe('esp32s3Cam')
     expect(cellaBoardOf('nodemcu-esp8266')).toBe('nodemcuEsp8266')
