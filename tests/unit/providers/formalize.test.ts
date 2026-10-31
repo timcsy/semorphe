@@ -13,6 +13,7 @@ import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import { createTestLifter } from '../../helpers/setup-lifter'
 import { formalize, cellaBoardOf, type CellaJson } from '../../../src/providers/cella/formalize'
 import type { SemanticNode } from '../../../src/core/types'
+import { createNode } from '../../../src/core/semantic-tree'
 
 const SYNTAX = path.resolve(process.cwd(), '../cella/packages/cfamily/src/syntax.cella')
 const hasSyntax = fs.existsSync(SYNTAX)
@@ -163,6 +164,18 @@ describe('formalize：最小子集', () => {
     const errs: string[] = []
     checkShape(r.program, constructorFields(fs.readFileSync(SYNTAX, 'utf8')), '$', errs)
     expect(errs).toEqual([])
+  })
+
+  it('★ 積木上空著的槽翻成洞：eHole，標籤 `<節點>#<槽名>`（型別查詢靠它）', () => {
+    const cond = createNode('cpp:if', {}, { condition: [], then_body: [], else_body: [] })
+    const assign = createNode('cpp:var_assign', {}, { target: [], value: [] })
+    const main = createNode('cpp:func_def', { name: 'main', return_type: 'int' }, { params: [], body: [cond, assign] })
+    const r = formalize(createNode('cpp:program', {}, { body: [main] }))
+    expect(r.unknown).toEqual([])
+    const s = JSON.stringify(r.program)
+    expect(s).toContain(`"k":"eHole","n":"${cond.id}#condition"`)
+    expect(s).toContain(`"k":"eHole","n":"${assign.id}#target"`)
+    expect(s).toContain(`"k":"eHole","n":"${assign.id}#value"`)
   })
 
   /**

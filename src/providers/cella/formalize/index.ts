@@ -191,6 +191,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       case 'cpp:random_seed': return k('eCall', { n: n.id, f: 'srand', args: [exprOf(n, 'seed')] })
       case 'cpp:random_next': return k('eCall', { n: n.id, f: 'rand', args: [] })
       case 'cpp:free': return k('eCall', { n: n.id, f: 'free', args: [exprOf(n, 'ptr')] })
+      case 'cpp:cstring_size': return k('eCall', { n: n.id, f: 'strlen', args: [exprOf(n, 'str')] })
+      case 'cpp:container_count': return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: 'count', args: [exprOf(n, 'key')] })
       // ── Arduino 的核心：腳位、時間、聲音——在 Cella 都是一般的函式呼叫（`@cella-lang/arduino` 的 README）
       case 'cpp:delay': return call(n, 'delay', ['ms'])
       case 'cpp:pin_mode': return call(n, 'pinMode', ['pin', 'mode'])
