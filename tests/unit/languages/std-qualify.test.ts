@@ -26,6 +26,11 @@ describe('qualifyStd', () => {
       .toBe('int count = 0; count++; std::cout << count;')
   })
 
+  it('🔴 只能當樣板的名字，後面接 `<` 才是 std 的（Arduino 的 `map(x, 0, 1023, 0, 255)` 不是 std::map）', () => {
+    expect(qualifyStd('map<int, int> m; int v = map(x, 0, 1023, 0, 255); set <int> s;'))
+      .toBe('std::map<int, int> m; int v = map(x, 0, 1023, 0, 255); std::set <int> s;')
+  })
+
   it('★ 跳脫的引號不會讓字串提早結束', () => {
     expect(qualifyStd('cout << "a\\"cin" << cin;')).toBe('std::cout << "a\\"cin" << std::cin;')
   })
@@ -74,6 +79,15 @@ describe('產生器 → 補丁器：explicit 風格', () => {
 
   it('★ apcs（using）：不加 std::', () => {
     const code = run(apcs as unknown as StylePreset, 'using')
+    expect(code).not.toContain('std::')
+  })
+
+  it('🔴 Arduino 骨架不加 std::（core 的 map() 被寫成 std::map 是第 392 刀量到的）', () => {
+    const src = 'void setup() {}\nvoid loop() { int raw = analogRead(A0); int level = map(raw, 0, 1023, 0, 255); }'
+    const tree = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
+    const raw = generateCode(tree, 'cpp', google as unknown as StylePreset)
+    const code = createCppCodePatcher(createPopulatedRegistry() as never)(raw, tree, 'explicit', 1, 'arduino') ?? raw
+    expect(code).toContain('map(raw, 0, 1023, 0, 255)')
     expect(code).not.toContain('std::')
   })
 })

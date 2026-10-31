@@ -30,6 +30,16 @@ export const STD_NAMES: ReadonlySet<string> = new Set([
   'begin', 'end', 'iota', 'gcd', 'lcm', 'abs',
 ])
 
+/**
+ * 只會以**樣板**出現的名字：後面接 `<` 才是 std 的那一個（第 392 刀）。
+ * 🔴 Arduino core 的 `map(x, 0, 1023, 0, 255)` 被寫成 `std::map(...)`——編不過；
+ *    學生自己沒宣告、而來自別的函式庫的同名函式也一樣。
+ */
+const TEMPLATE_ONLY: ReadonlySet<string> = new Set([
+  'vector', 'deque', 'list', 'stack', 'queue', 'priority_queue', 'set', 'multiset', 'map', 'multimap',
+  'unordered_map', 'unordered_set', 'tuple', 'array', 'bitset', 'greater', 'less', 'numeric_limits',
+])
+
 const IDENT = /[A-Za-z_][A-Za-z0-9_]*/y
 
 /**
@@ -75,7 +85,9 @@ export function qualifyStd(code: string, userNames: ReadonlySet<string> = new Se
       const id = IDENT.exec(code)![0]
       const before = out.replace(/\s+$/, '')
       const qualified = before.endsWith('::') || before.endsWith('.') || before.endsWith('->')
-      out += !qualified && STD_NAMES.has(id) && !userNames.has(id) ? `std::${id}` : id
+      const asTemplate = /^\s*</.test(code.slice(i + id.length, i + id.length + 8))
+      const isStd = STD_NAMES.has(id) && (!TEMPLATE_ONLY.has(id) || asTemplate)
+      out += !qualified && isStd && !userNames.has(id) ? `std::${id}` : id
       i += id.length
       continue
     }

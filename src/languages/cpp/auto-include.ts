@@ -159,7 +159,8 @@ export function createCppCodePatcher(
     //     在此之前 explicit 在產碼端沒有實作，而上面那一步（正確地）不補 using ⟹ 產出編不過。
     //     學生自己宣告的名字（`int count;`、自己的 `max`）不動。
     //     🔴 C 方言不做：C 沒有命名空間（第 390 刀量到 C 程式被寫成 `std::abs(x)`）。
-    if (namespaceStyle === 'explicit' && !cDialect) {
+    //     🔴 Arduino 骨架也不做：Arduino 的寫法不用 `std::`（AVR 沒有標準函式庫），而 core 有自己的 `map()`（第 392 刀）。
+    if (namespaceStyle === 'explicit' && !cDialect && skeletonId !== 'arduino') {
       const q = qualifyStd(patched, userDeclaredNames(tree))
       if (q !== patched) { patched = q; changed = true }
     }
