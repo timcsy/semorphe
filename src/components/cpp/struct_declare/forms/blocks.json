@@ -28,11 +28,6 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement"
     },
-    "codeTemplate": {
-      "pattern": "struct ${NAME} {\n${MEMBERS}\n};",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "struct_specifier",

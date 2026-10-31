@@ -30,11 +30,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_C_ARRAY_2D_ACCESS_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}[${ROW}][${COL}]",
-      "imports": [],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

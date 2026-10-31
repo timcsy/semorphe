@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { BlockSpec, CodeTemplate, AstPattern, ValidationError, WorkspaceState, BlockJSON, WorkspaceJSON } from '../../src/core/types'
+import type { BlockSpec, AstPattern, ValidationError, WorkspaceState, BlockJSON, WorkspaceJSON } from '../../src/core/types'
 import type { CodeMapping } from '../../src/core/projection/code-generator'
 
 describe('BlockSpec 型別驗證', () => {
@@ -14,11 +14,6 @@ describe('BlockSpec 型別驗證', () => {
         message0: 'for %1 ; %2 ; %3',
         colour: 120,
       },
-      codeTemplate: {
-        pattern: 'for (${INIT}; ${COND}; ${UPDATE}) {\n${BODY}\n}',
-        imports: [],
-        order: 0,
-      },
       astPattern: {
         nodeType: 'for_statement',
         constraints: [],
@@ -27,20 +22,10 @@ describe('BlockSpec 型別驗證', () => {
 
     expect(spec.id).toBe('cpp_loop_for')
     expect(spec.category).toBe('loops')
-    expect(spec.codeTemplate?.pattern).toContain('${INIT}')
     expect(spec.astPattern?.nodeType).toBe('for_statement')
   })
 
-  it('should accept CodeTemplate with imports', () => {
-    const template: CodeTemplate = {
-      pattern: 'printf(${FORMAT}, ${ARGS})',
-      imports: ['stdio.h'],
-      order: 0,
-    }
-
-    expect(template.imports).toContain('stdio.h')
-    expect(template.imports).toHaveLength(1)
-  })
+  // 🪦 「should accept CodeTemplate with imports」第 384 刀刪除：`CodeTemplate` 型別隨 `TemplateGenerator` 一起刪了。
 
   it('should accept AstPattern with constraints', () => {
     const pattern: AstPattern = {
@@ -77,7 +62,7 @@ describe('BlockSpec 型別驗證', () => {
     expect(state.customBlockSpecs).toHaveLength(0)
   })
 
-  it('should accept universal BlockSpec without codeTemplate/astPattern', () => {
+  it('should accept universal BlockSpec without astPattern', () => {
     const spec: BlockSpec = {
       id: 'cpp_var_declare',
       language: 'universal',
@@ -91,7 +76,6 @@ describe('BlockSpec 型別驗證', () => {
     }
 
     expect(spec.language).toBe('universal')
-    expect(spec.codeTemplate).toBeUndefined()
     expect(spec.astPattern).toBeUndefined()
   })
 
@@ -102,7 +86,6 @@ describe('BlockSpec 型別驗證', () => {
       category: 'loops',
       version: '1.0.0',
       blockDef: { type: 'cpp_loop_for' },
-      codeTemplate: { pattern: 'for(...)', imports: [], order: 0 },
       astPattern: { nodeType: 'for_statement', constraints: [] },
     }
 

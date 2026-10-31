@@ -30,9 +30,7 @@ import { synthMinimalNode, isPlaceholderOutput, isNoopExecutor } from '../helper
 import { createTestLifter } from '../helpers/setup-lifter'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { generateCode, setTemplateGenerator } from '../../src/core/projection/code-generator'
-import { TemplateGenerator } from '../../src/core/projection/template-generator'
-import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
+import { generateCode } from '../../src/core/projection/code-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
@@ -45,7 +43,6 @@ import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { createNode } from '../../src/core/semantic-tree'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type {
-  UniversalTemplate,
   ComponentDefJSON,
   BlockProjectionJSON,
   SemanticNode,
@@ -101,7 +98,6 @@ let tsParser: Parser
 let interp: SemanticInterpreter
 let renderer: PatternRenderer
 let extractor: PatternExtractor
-let specsCache: ReturnType<BlockSpecRegistry['getAll']> = []
 /**
  * **用真的風格預設，不要造一個假的。**
  *
@@ -136,7 +132,6 @@ beforeAll(async () => {
   // 而它的積木定義好端端地在膠囊裡。
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
   const specs = reg.getAll()
-  specsCache = specs
   const rsr = new RenderStrategyRegistry()
   registerCppRenderStrategies(rsr)
   renderer = new PatternRenderer()
@@ -483,55 +478,10 @@ function measure(): Map<string, Row> {
   return out
 }
 
-/**
- * 兩種組態的 generate 差異（FR-023）
- *
- * **現行組態**：不接 TemplateGenerator——這是 app 的實際行為
- * （`setTemplateGenerator` 在 src/ 內零呼叫、`initCppModule()` 是死碼，見 research.md F2）。
- * **宣告組態**：接上載入 universal templates 與各 blockSpec `codeTemplate`
- * 的 TemplateGenerator——即 JSON 所宣告的樣子。
- *
- * 比對的是**產生的程式碼文字**，不是 verdict——verdict 粒度太粗，
- * 兩邊都產得出有效輸出時看不出差別，而真正的風險是「文字不同」。
- *
- * 差異 = 「JSON 宣告了、實際上沒被用」的那些。也就是：如果哪天把 template
- * 接回去，這些元件的輸出會變。
- */
-function generatedUnderCurrentConfig(): Map<string, string> {
-  const out = new Map<string, string>()
-  for (const def of allComponentDefs()) {
-    if (out.has(def.componentId)) continue
-    const { node } = synthMinimalNode(def)
-    try {
-      out.set(def.componentId, generateCode(wrap(node), 'cpp', STYLE))
-    } catch (e) {
-      out.set(def.componentId, `<<throw:${(e as Error).message.slice(0, 40)}>>`)
-    }
-  }
-  return out
-}
-
-function measureConfigDelta(): { componentId: string; actual: string; declared: string }[] {
-  const actual = generatedUnderCurrentConfig()
-
-  const tg = new TemplateGenerator()
-  tg.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
-  for (const spec of specsCache) {
-    if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
-      tg.registerTemplate(spec.componentMapping.componentId, spec.codeTemplate)
-    }
-  }
-  setTemplateGenerator(tg)
-  const declared = generatedUnderCurrentConfig()
-  setTemplateGenerator(null as never)
-
-  const out: { componentId: string; actual: string; declared: string }[] = []
-  for (const [id, a] of actual) {
-    const d = declared.get(id) ?? ''
-    if (a.trim() !== d.trim()) out.push({ componentId: id, actual: a.trim(), declared: d.trim() })
-  }
-  return out.sort((x, y) => x.componentId.localeCompare(y.componentId))
-}
+// 🪦 **「兩種組態的 generate 差異（FR-023）」第 384 刀（2026-10-31）刪除。**
+//    它比的是「現行組態」（產品的語言產生器表）與「宣告組態」（接上 `TemplateGenerator` ＋ `codeTemplate`）
+//    兩邊產出的文字；而宣告組態**產品從不裝**，那一套連同 101 份 `codeTemplate` 已整批刪除——
+//    沒有第二組態可比了。現行組態那一半就是上面的 `measure()`，照舊。
 
 const flatten = (m: Map<string, Row>, v: Verdict): { componentId: string; path: PathName }[] =>
   [...m].flatMap(([componentId, row]) =>
@@ -632,20 +582,6 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
       '補完地圖：tests/reports/completeness-map.md',
     ])
 
-    const delta = measureConfigDelta()
-    printReport('完備性：兩組態差異（FR-023）', [
-      '現行組態 = app 的實際行為（不接 TemplateGenerator）',
-      '宣告組態 = JSON 所宣告的樣子（接上 TemplateGenerator）',
-      '',
-      delta.length === 0
-        ? '（無差異——若這裡是空的，多半是護欄沒接對，見 research.md F2／F3）'
-        : `${delta.length} 個元件在兩種組態下的 generate 判定不同：`,
-      ...delta.slice(0, 20).map((d) => {
-        const one = (t: string): string => t.split('\n').filter((l) => !/^\s*(#include|using |int main|\}|return 0;)/.test(l) && l.trim()).join(' ⏎ ').slice(0, 70)
-        return `  ${d.componentId}\n      現行: ${one(d.actual)}\n      宣告: ${one(d.declared)}`
-      }),
-      ...(delta.length > 25 ? [`  … 另外 ${delta.length - 25} 個`] : []),
-    ])
 
     expect(result.size).toBe(new Set(allComponentDefs().map((d) => d.componentId)).size)
   })

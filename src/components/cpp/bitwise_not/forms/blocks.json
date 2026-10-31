@@ -20,11 +20,6 @@
       "colour": "#59C059",
       "tooltip": "%{BKY_C_BITWISE_NOT_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "~${OPERAND}",
-      "imports": [],
-      "order": 8
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "unary_expression",

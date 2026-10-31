@@ -21,13 +21,6 @@
       "tooltip": "%{BKY_CPP_CONTAINER_POP_FRONT_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.pop_front();",
-      "imports": [
-        "deque"
-      ],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "call_expression",

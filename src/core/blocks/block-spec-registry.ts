@@ -46,7 +46,6 @@ export class BlockSpecRegistry {
           annotations: component?.annotations,
         },
         blockDef: proj.blockDef,
-        codeTemplate: proj.codeTemplate ?? { pattern: '', imports: [], order: 0 },
         // ⚠️ `_none` 是**哨兵**（`loadBlockSpecs` 用 `startsWith('_')` 整筆跳過），
         // 所以文法也給同款哨兵——**不是給它一個真的文法名**。
         // 🔴 給 `tree-sitter-cpp` 會讓「這顆積木沒有辨識樣式」變成

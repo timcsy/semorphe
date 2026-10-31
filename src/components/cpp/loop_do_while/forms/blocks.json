@@ -28,11 +28,6 @@
       "colour": "#FFAB19",
       "tooltip": "%{BKY_C_DO_WHILE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "do {\n${BODY}\n} while (${COND});",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "do_statement",

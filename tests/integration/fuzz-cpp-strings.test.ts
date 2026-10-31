@@ -208,7 +208,7 @@ int main() {
     expect(tree).not.toBeNull()
   })
 
-  it.skip('[BLOCKED:cpp:print] fuzz_3: round-trip stable and output matches (COMPILE_FAIL — pre-existing bug)', () => {
+  it('fuzz_3: round-trip stable and output matches（`string result, word;` 兩個宣告子都保住——2026-10-31 驗過已修）', () => {
     // BUG: multi-variable declaration `string result, word;` only generates `string result;`.
     // The second declarator `word` is silently dropped by the lifter.
     // Root cause: liftDeclaration only processes the first init_declarator in a
@@ -554,7 +554,7 @@ int main() {
     expect(tree).not.toBeNull()
   })
 
-  it.skip('[BLOCKED:cpp:var_assign] fuzz_10: round-trip stable and output matches (COMPILE_FAIL — pre-existing bug)', () => {
+  it('fuzz_10: round-trip stable and output matches（`while ((pos = s.find(…)) != npos)`——2026-10-31 驗過已修）', () => {
     // BUG: `while ((pos = s.find(from, pos)) != string::npos)` generates malformed code.
     // The assignment-inside-while-condition pattern is not handled by liftWhile.
     // The condition expression involves a method call with 2 args and assignment; the lifter

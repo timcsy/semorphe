@@ -21,11 +21,6 @@
       "colour": "#9966FF",
       "tooltip": "%{BKY_CPP_DELETE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "delete ${PTR};",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "inputs": {
         "PTR": "ptr"

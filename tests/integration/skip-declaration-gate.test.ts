@@ -20,6 +20,10 @@ import { REPO_ROOT } from '../helpers/guardrail'
 import { describe, it, expect } from 'vitest'
 import { allComponentDefs } from '../helpers/component-scan'
 import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { languageGenerators } from '../../src/core/projection/code-generator'
+import apcs from '../../src/languages/cpp/styles/apcs.json'
+import type { StylePreset } from '../../src/core/types'
 import type { PathName } from '../../src/core/types'
 import { deriveBlockType } from '../../src/core/component/derive-block-type'
 
@@ -116,14 +120,18 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
    * 鷹架」的行，而這幾個概念的產出就是那個形狀 → 被判成殼 → 有人用宣告
    * 把殼消掉。**`history/018` 的「用宣告刷數字」，一字不差。**
    */
-  it('★ 宣告 generate 由父概念消費，就不得自己註冊模板（矛盾偵測）', async () => {
-    const { initCppModule } = await import('../../src/languages/cpp/module')
-    const m = initCppModule() as unknown as { templateGenerator: { templates: Map<string, unknown> } }
+  // 🔴 2026-10-31：這一支原本問的是 `cpp/module.ts` 的 `TemplateGenerator`，而產品從不裝它
+  //    （`setTemplateGenerator` 在 `src/` 零呼叫）——**它驗的是一條產品不走的路**。
+  //    改問產品真正查的那張產生器表（`languageGenerators`，產碼也走它）。
+  it('★ 宣告 generate 由父概念消費，就不得自己註冊產生器（矛盾偵測）', async () => {
+    registerCppLanguage()
+    const generators = languageGenerators('cpp', apcs as unknown as StylePreset)
+    expect(generators.size, '🔴 產生器表是空的 → 下面的矛盾偵測什麼都沒驗到').toBeGreaterThan(100)
     const contradictions: string[] = []
     for (const def of allComponentDefs()) {
       if (!(def.skipPaths ?? []).includes('generate' as never)) continue
-      if (m.templateGenerator.templates.has(def.componentId)) {
-        contradictions.push(`${def.componentId}（宣告不產生，卻註冊了模板）`)
+      if (generators.has(def.componentId)) {
+        contradictions.push(`${def.componentId}（宣告不產生，卻註冊了產生器）`)
       }
     }
     expect(

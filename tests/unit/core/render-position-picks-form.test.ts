@@ -41,7 +41,6 @@ function makeSpec(blockType: string, componentId: string, opts: {
     componentMapping: { componentId, properties: [], slots: {} },
     ...(opts.form ? { form: opts.form } : {}),
     blockDef,
-    codeTemplate: { pattern: '', imports: [], order: 0 },
     astPattern: { nodeType: '_none', constraints: [] },
     renderMapping: {
       fields: {},

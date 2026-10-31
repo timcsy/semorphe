@@ -33,11 +33,6 @@
         }
       ]
     },
-    "codeTemplate": {
-      "pattern": "new ${TYPE}(${ARGS})",
-      "imports": [],
-      "order": 8
-    },
     "renderMapping": {
       "fields": {
         "ARGS": "args",

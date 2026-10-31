@@ -19,11 +19,6 @@
       "colour": "#FF8C1A",
       "tooltip": "%{BKY_C_CHAR_LITERAL_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "'${CHAR}'",
-      "imports": [],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {
         "CHAR": "char"

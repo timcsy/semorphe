@@ -11,9 +11,28 @@ import './skeletons'
 import { skeletonById } from '../../core/skeleton'
 import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver, DependencyEdge } from '../../core/dependency-resolver'
-import { expandHeaderAliases, normalizeHeader } from './header-aliases'
+import { expandHeaderAliases, normalizeHeader, toCHeader, cIoHeaderFor } from './header-aliases'
 import { buildInclude } from '../../components/cpp/include/lift'
 import { buildUsingNamespace } from '../../components/cpp/using_namespace/lift'
+import { qualifyStd } from './std-qualify'
+import { isFunctionDefinition } from '../../core/component/traits'
+
+/** 程式自己宣告的名字（變數、參數、函式、struct）——explicit 風格下不得被當成 std 的名字。 */
+function userDeclaredNames(tree: SemanticNode): Set<string> {
+  const out = new Set<string>()
+  const walk = (n: SemanticNode): void => {
+    const p = n.properties ?? {}
+    for (const key of ['name', 'var_name']) {
+      const v = p[key]
+      if (typeof v === 'string' && v !== '' && (n.componentId.endsWith('_declare') || n.componentId === 'param_decl'
+        // 函式名：問元件的宣告（`traits.functionDefinition`），不比身分——第 389 刀（就近性護欄指名）
+        || isFunctionDefinition(n.componentId) || key === 'var_name')) out.add(v)
+    }
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(walk)
+  }
+  walk(tree)
+  return out
+}
 import { isIncludeDirective } from './lang/node-traits'
 
 /**
@@ -65,6 +84,18 @@ export function computeAutoIncludes(
 }
 
 /**
+ * 一組依賴邊在這個方言下要引入的標頭（不帶角括號、依序、去重）。
+ *
+ * 🔴 補丁器（文字）與 `autoIncludeNodes`（淡色的骨架積木、也是交給 formalize 的那幾顆）**讀同一支**
+ * ——2026-10-31 C 方言的 `<cstdio>` 缺陷兩邊都有，因為兩邊各自從 `edge.header` 取。
+ * C 方言：`<cstdio>`／`<iostream>` → `<stdio.h>`、`<cstdlib>` → `<stdlib.h>`。
+ */
+export function dialectHeaders(edges: DependencyEdge[], cDialect: boolean): string[] {
+  const raw = edges.map((e) => e.header.replace(/^<|>$/g, ''))
+  return [...new Set(cDialect ? raw.map((h) => cIoHeaderFor(`<${h}>`) ?? toCHeader(`<${h}>`)) : raw)]
+}
+
+/**
  * Create a code patcher that fixes missing scaffold items (#include, using namespace, int main)
  * based on components used in the semantic tree.
  */
@@ -86,8 +117,14 @@ export function createCppCodePatcher(
    * > 修好一個之後症狀只會少一半——而少一半看起來很像修好了。**
    */
   skeletonId?: string,
+  /**
+   * 風格的 id——`'c'` 是 C 方言（`target-dialect.ts` 的 `isCDialect`）。
+   * 🔴 2026-10-31：在此之前補丁器不知道自己在補 C，C 程式被補上 `#include <cstdio>`（C 編譯器不收）。
+   */
+  styleId?: string,
 ) => string | null {
-  return (code, tree, namespaceStyle, cogLevel = 1, skeletonId = 'main') => {
+  return (code, tree, namespaceStyle, cogLevel = 1, skeletonId = 'main', styleId) => {
+    const cDialect = styleId === 'c'
     const components = new Set<string>()
     collectComponents(tree, components)
     const edges = resolver.resolve([...components])
@@ -101,9 +138,9 @@ export function createCppCodePatcher(
     while ((m = includeRe.exec(code)) !== null) {
       existingHeaders.add(normalizeHeader(m[1]))
     }
-    const missingIncludes = edges.filter(e => !existingHeaders.has(normalizeHeader(e.header)))
-    if (missingIncludes.length > 0) {
-      const patch = missingIncludes.map(e => e.directive).join('\n') + '\n'
+    const missingHeaders = dialectHeaders(edges, cDialect).filter((h) => !existingHeaders.has(normalizeHeader(`<${h}>`)))
+    if (missingHeaders.length > 0) {
+      const patch = missingHeaders.map((h) => `#include <${h}>`).join('\n') + '\n'
       const idx = patched.indexOf('#include')
       patched = idx >= 0 ? patched.slice(0, idx) + patch + patched.slice(idx) : patch + patched
       changed = true
@@ -116,6 +153,16 @@ export function createCppCodePatcher(
       lines.splice(lastInc + 1, 0, 'using namespace std;')
       patched = lines.join('\n')
       changed = true
+    }
+
+    // 2b. 🔴 explicit 風格（google、c）：標準函式庫的名字加 `std::`（2026-10-31，見 `std-qualify.ts`）。
+    //     在此之前 explicit 在產碼端沒有實作，而上面那一步（正確地）不補 using ⟹ 產出編不過。
+    //     學生自己宣告的名字（`int count;`、自己的 `max`）不動。
+    //     🔴 C 方言不做：C 沒有命名空間（第 390 刀量到 C 程式被寫成 `std::abs(x)`）。
+    //     🔴 Arduino 骨架也不做：Arduino 的寫法不用 `std::`（AVR 沒有標準函式庫），而 core 有自己的 `map()`（第 392 刀）。
+    if (namespaceStyle === 'explicit' && !cDialect && skeletonId !== 'arduino') {
+      const q = qualifyStd(patched, userDeclaredNames(tree))
+      if (q !== patched) { patched = q; changed = true }
     }
 
     // 3. Patch missing entry point (L0 only — scaffold manages it)
@@ -195,6 +242,8 @@ export function autoIncludeNodes(
    * > 而只有一種被放回樹裡——不見的一定是另一種。**
    */
   namespaceStyle: 'using' | 'explicit' = 'explicit',
+  /** C 方言（風格 `c`）：積木上的標頭要與補丁器寫進文字的那一份相同（`dialectHeaders`）。 */
+  cDialect = false,
 ): SemanticNode[] {
   // 🔴 **蓋上「這是系統推導的」那一格**（2026-09-15）——`metadata.derived`。
   //
@@ -215,10 +264,7 @@ export function autoIncludeNodes(
   // ⚠️ 前綴 `auto:` 與 `createNode` 的 `node_N_xxx` 不會撞號。
   const derived = (n: SemanticNode, key: string): SemanticNode =>
     ({ ...n, id: `auto:${key}`, metadata: { ...n.metadata, derived: true } })
-  const includes = edges.map((edge) => {
-    const header = edge.header.replace(/^<|>$/g, '')
-    return derived(buildInclude(header), `include:${header}`)
-  })
+  const includes = dialectHeaders(edges, cDialect).map((header) => derived(buildInclude(header), `include:${header}`))
   // ⚠️ 條件與補丁器第 2 步**逐字相同**（`namespaceStyle === 'using' && edges.length > 0`）
   //    ——兩邊看的是同一個決定，錯開的話就是「程式碼有、積木沒有」。
   return namespaceStyle === 'using' && edges.length > 0

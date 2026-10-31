@@ -30,11 +30,6 @@
       "colour": "#59C059",
       "tooltip": "%{BKY_C_TERNARY_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${CONDITION} ? ${TRUE_EXPR} : ${FALSE_EXPR}",
-      "imports": [],
-      "order": 3
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "conditional_expression",

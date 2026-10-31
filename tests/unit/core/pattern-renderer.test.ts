@@ -32,7 +32,6 @@ describe('PatternRenderer', () => {
           ],
         },
         renderMapping: { fields: { NAME: 'name', OP: 'operator' }, inputs: {}, statementInputs: {} },
-        codeTemplate: { pattern: '${NAME}${OP}', imports: [], order: 8 },
         astPattern: { nodeType: 'update_expression', constraints: [] },
       }
       renderer.loadBlockSpecs([spec])
@@ -61,7 +60,6 @@ describe('PatternRenderer', () => {
           role: 'both',
         },
         blockDef: { type: 'cpp_increment' },
-        codeTemplate: { pattern: '${NAME}${OP}', imports: [], order: 8 },
         astPattern: { nodeType: 'update_expression', constraints: [] },
         renderMapping: {
           fields: { NAME: 'name', OP: 'operator' },
@@ -100,7 +98,6 @@ describe('PatternRenderer', () => {
           ],
         },
         renderMapping: { fields: {}, inputs: { VALUE: 'value' }, statementInputs: {} },
-        codeTemplate: { pattern: 'return ${VALUE};', imports: [], order: 0 },
         astPattern: { nodeType: 'return_statement', constraints: [] },
       }
 
@@ -120,7 +117,6 @@ describe('PatternRenderer', () => {
           args0: [{ type: 'field_number', name: 'NUM', value: 0 }],
         },
         renderMapping: { fields: { NUM: 'value' }, inputs: {}, statementInputs: {} },
-        codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: { nodeType: 'number_literal', constraints: [] },
       }
 
@@ -157,7 +153,6 @@ describe('PatternRenderer', () => {
           args1: [{ type: 'input_statement', name: 'BODY', check: 'Statement' }],
         },
         renderMapping: { fields: {}, inputs: { COND: 'condition' }, statementInputs: { BODY: 'body' } },
-        codeTemplate: { pattern: 'while (${COND}) {\n${BODY}\n}', imports: [], order: 0 },
         astPattern: { nodeType: 'while_statement', constraints: [] },
       }
 
@@ -169,7 +164,6 @@ describe('PatternRenderer', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:break', role: 'statement' },
         blockDef: { type: 'cpp_break' },
-        codeTemplate: { pattern: 'break;', imports: [], order: 0 },
         astPattern: { nodeType: 'break_statement', constraints: [] },
       }
 

@@ -25,13 +25,6 @@
       "tooltip": "%{BKY_CPP_STRING_DECLARE_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "std::string ${NAME};",
-      "imports": [
-        "string"
-      ],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "declaration",

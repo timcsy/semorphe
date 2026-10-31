@@ -61,13 +61,6 @@
       "openLabelFallback": "初始值",
       "openLabelOnFirstSlot": true
     },
-    "codeTemplate": {
-      "pattern": "std::vector<${TYPE}> ${NAME};",
-      "imports": [
-        "vector"
-      ],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

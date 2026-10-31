@@ -66,8 +66,8 @@ import { isPlainDeclaration } from '../core/component/traits'
 // ⚠️ 那道「沒注入就當場拋錯」的守衛也一起走：**它守的是一份空契約**，
 //    而一個守著空契約的守衛，與沒有守衛產出一樣。
 //
-// 🟢 `core/blocks/block-input-names.ts` 與 `languages/cpp/block-input-names.ts` **留著**
-//    ——多條護欄拿它們當「插槽名的唯一真相」在比對，那是另一件事。
+// 🟢 `languages/cpp/block-input-names.ts` **留著**——護欄拿它當「插槽名的唯一真相」在比對。
+//    （`core/blocks/block-input-names.ts` 是同一件事的第二份、產品走不到，2026-10-31 刪除。）
 
 export interface WorkspaceAccessors {
   getWorkspace: () => Blockly.Workspace | null

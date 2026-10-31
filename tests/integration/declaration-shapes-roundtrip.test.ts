@@ -104,6 +104,9 @@ const SHAPES: readonly string[] = [
   'int a[10];',
   'int a[10], b[20];',
   'vector<int> v[10];',
+  // 🟢 2026-10-31：原本是 vector_declare/spec.test.ts 裡一支本體只有 `expect(true).toBe(false)` 的 skip，
+  //    標著「render 出的積木沒有 input，初始值掉了」——而積木早就有了 `childSlot: "values"`。收進這裡，四個面向一起驗。
+  'vector<int> v = {3, 1, 4};',
   // ─── 容器的建構式（最令人困惑的解析）───
   'vector<int> v(n);',
   'vector<int> v(5);',

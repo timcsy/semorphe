@@ -46,11 +46,6 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement"
     },
-    "codeTemplate": {
-      "pattern": "template<typename ${T}>\n${RETURN_TYPE} ${FUNC_NAME}(${PARAMS}) {\n${BODY}\n}",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "template_declaration",

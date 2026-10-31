@@ -34,13 +34,6 @@
       ],
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.push_back(${CHAR});",
-      "imports": [
-        "string"
-      ],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

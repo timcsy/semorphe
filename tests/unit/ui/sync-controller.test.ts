@@ -138,6 +138,55 @@ describe('SyncController (bus-based)', () => {
       expect(handler).not.toHaveBeenCalled()
     })
 
+    // 🔴 第 392 刀：管線（tree-sitter 的 wasm）還沒接上時收到的程式碼，在此之前被靜默丟掉
+    //    ⟹ 樹停在空骨架，下一次從樹重產（切到 C 目標）把學生的程式碼整份蓋掉（e2e c-target 間歇紅了一個月）
+    it('🔴 管線接上之前收到的程式碼，接上時補做（只做最後一份）', async () => {
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+      bus.emit('edit:code', { code: 'int x;' })
+      bus.emit('edit:code', { code: 'int y;' })
+      await new Promise((r) => setTimeout(r, 0))
+      expect(handler).not.toHaveBeenCalled()
+      setupPipeline()
+      await new Promise((r) => setTimeout(r, 0))
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler.mock.calls[0][0].code).toBe('int y;')
+    })
+
+    it('🔴 另一次同步還在進行時呼叫 syncCodeToBlocks：等它做完再做，不是丟掉（第 392 刀）', async () => {
+      const rootNode = {
+        type: 'translation_unit', text: '', isNamed: true, children: [], namedChildren: [],
+        childForFieldName: () => null, startPosition: { row: 0, column: 0 }, endPosition: { row: 0, column: 0 },
+      }
+      let release!: () => void
+      const gate = new Promise<void>((r) => { release = r })
+      let calls = 0
+      const slowParser: CodeParser = { parse: vi.fn(async () => { if (calls++ === 0) await gate; return { rootNode } }) }
+      const lifter = new Lifter()
+      lifter.register('translation_unit', () => createNode('cpp:program', {}, { body: [] }))
+      controller.setCodeToBlocksPipeline(lifter, slowParser)
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+      const first = controller.syncCodeToBlocks('int a;')
+      const second = controller.syncCodeToBlocks('int b;')
+      release()
+      await first
+      await second
+      expect(slowParser.parse).toHaveBeenCalledTimes(2)
+      expect(handler.mock.calls.at(-1)![0].code).toBe('int b;')
+    })
+
+    it('🔴 syncCodeToBlocks 在管線接上之前呼叫：等它接上，不回 false', async () => {
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+      const done = controller.syncCodeToBlocks('int x;')
+      await new Promise((r) => setTimeout(r, 0))
+      setupPipeline()
+      expect(await done).toBe(true)
+      expect(handler).toHaveBeenCalled()
+      expect(handler.mock.calls.at(-1)![0].code).toBe('int x;')
+    })
+
     it('should emit semantic:update with blockState when receiving edit:code', async () => {
       setupPipeline()
       const handler = vi.fn()

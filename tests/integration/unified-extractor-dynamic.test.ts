@@ -59,7 +59,6 @@ function createTestBlockSpecs(): BlockSpec[] {
         role: 'expression',
       },
       blockDef: { type: 'test_func_call', output: 'Expression' },
-      codeTemplate: { pattern: '', imports: [], order: 0 },
       astPattern: { nodeType: '', constraints: [] },
       renderMapping: {
         fields: { NAME: 'name' },
@@ -87,7 +86,6 @@ function createTestBlockSpecs(): BlockSpec[] {
         role: 'statement',
       },
       blockDef: { type: 'test_func_def', previousStatement: null, nextStatement: null },
-      codeTemplate: { pattern: '', imports: [], order: 0 },
       astPattern: { nodeType: '', constraints: [] },
       renderMapping: {
         fields: { NAME: 'name', RETURN_TYPE: 'return_type' },
@@ -116,7 +114,6 @@ function createTestBlockSpecs(): BlockSpec[] {
         role: 'statement',
       },
       blockDef: { type: 'test_scanf', previousStatement: null, nextStatement: null },
-      codeTemplate: { pattern: '', imports: [], order: 0 },
       astPattern: { nodeType: '', constraints: [] },
       renderMapping: {
         fields: { FORMAT: 'format' },
@@ -148,7 +145,6 @@ function createTestBlockSpecs(): BlockSpec[] {
         role: 'statement',
       },
       blockDef: { type: 'test_if', previousStatement: null, nextStatement: null },
-      codeTemplate: { pattern: '', imports: [], order: 0 },
       astPattern: { nodeType: '', constraints: [] },
       renderMapping: {
         fields: {},
@@ -182,7 +178,6 @@ function createTestBlockSpecs(): BlockSpec[] {
         role: 'statement',
       },
       blockDef: { type: 'test_print', previousStatement: null, nextStatement: null },
-      codeTemplate: { pattern: '', imports: [], order: 0 },
       astPattern: { nodeType: '', constraints: [] },
       renderMapping: {
         fields: {},

@@ -33,6 +33,7 @@ import {
   isCachedLessonLine, makeResolver,
 } from '../../tools/knowie-scan'
 import { join } from 'node:path'
+import fs from 'node:fs'
 
 const results = scanKnowledge(process.cwd())
 
@@ -84,6 +85,23 @@ describe('護欄：知識庫的連結與指名', () => {
     expect(resolves('經驗'), '三個入口檔的指名解析不到').toBe(true)
     expect(resolves('build-guardrail'), 'skills 的指名解析不到').toBe(true)
     expect(resolves('history/001'), 'NNN 前綴形的指名解析不到').toBe(true)
+  })
+
+  /**
+   * 🔴 **檔名不得有空格**（2026-10-31）：markdown 的連結網址遇到空格就斷了，而上面的死連結檢查**看不到**那種連結
+   * ——history/189、190 因此一直是孤兒，連 190 指向 189 的那一條也是斷的。拿掉空格之後，死連結的母體 2217 → 2225。
+   */
+  it('🔴 硬性零：知識庫的檔名不得有空格（連結會斷，而死連結檢查看不到）', () => {
+    const bad: string[] = []
+    const walk = (d: string): void => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = join(d, e.name)
+        if (e.name.includes(' ')) bad.push(p)
+        if (e.isDirectory()) walk(p)
+      }
+    }
+    walk(join(process.cwd(), 'knowledge'))
+    expect(bad).toEqual([])
   })
 
   it('報出完整讀數（含 🟡 要人再判的那些）', () => {

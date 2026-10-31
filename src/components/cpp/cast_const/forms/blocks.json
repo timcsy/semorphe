@@ -25,11 +25,6 @@
       "colour": "#5BA58C",
       "tooltip": "%{BKY_C_CONST_CAST_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "const_cast<${TARGET_TYPE}>(${VALUE})",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "TARGET_TYPE": "target_type"

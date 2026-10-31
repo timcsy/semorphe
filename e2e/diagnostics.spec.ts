@@ -26,7 +26,7 @@ async function freshApp(page: Page): Promise<void> {
   await page.goto('/')
   await expect(page.locator('.blocklyWorkspace, .injectionDiv').first()).toBeVisible({ timeout: 30_000 })
   // 等 Monaco 的 model 起來——沒有它 `setModelMarkers` 無處可掛
-  await page.waitForFunction(() => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor), undefined, { timeout: 30_000 })
+  await page.waitForFunction(() => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor) && Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
 }
 
 test('一則診斷同時出現在積木側與程式碼側', async ({ page }) => {

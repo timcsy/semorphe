@@ -42,7 +42,7 @@ import { nonComponentDecl } from '../../src/core/blocks/non-components'
  * 🔴 **同一個坑 `tests/helpers/toolbox.ts` 的檔頭也記過**（Python 的分類宣告）。
  * > **一個「問宣告」的判定，它的正確性綁在「那份宣告被載入了沒」上。**
  */
-import '../../src/languages/cpp/module'
+import '../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../src/core/types'
 
 const DIR = process.env.STUDYCPP_DIR ?? ''

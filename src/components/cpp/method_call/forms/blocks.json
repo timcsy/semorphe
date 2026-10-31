@@ -31,11 +31,6 @@
       "tooltip": "%{BKY_CPP_METHOD_CALL_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.${METHOD}(${ARGS});",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "call_expression",
@@ -111,11 +106,6 @@
       "output": "Expression",
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_METHOD_CALL_EXPR_TOOLTIP}"
-    },
-    "codeTemplate": {
-      "pattern": "${OBJ}.${METHOD}(${ARGS})",
-      "imports": [],
-      "order": 20
     },
     "astPattern": {
       "grammar": "tree-sitter-cpp",

@@ -20,11 +20,6 @@
       "colour": "#888888",
       "tooltip": "%{BKY_C_USING_NAMESPACE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "using namespace ${NS};",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "using_declaration",

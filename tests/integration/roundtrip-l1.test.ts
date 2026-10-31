@@ -6,13 +6,11 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { PatternLifter } from '../../src/core/lift/pattern-lifter'
-import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
-import { generateNode, type GeneratorContext, type NodeGenerator } from '../../src/core/projection/code-generator'
-import type { BlockSpec, LiftPattern, UniversalTemplate, StylePreset, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { BlockSpec, LiftPattern, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
@@ -20,7 +18,7 @@ import { universalComponents, universalBlocks } from '../../src/core/universal'
 import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
-import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
+import { productCode } from '../helpers/product-code'
 // ⚠️ **不要自己列宣告來源。**
 // 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
@@ -28,7 +26,6 @@ import universalTemplatesJson from '../../src/languages/cpp/templates/universal-
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
-import { componentGenerateRegistrars } from '../../src/core/component/paths'
 
 function mockNode(
   type: string,
@@ -55,14 +52,12 @@ function unnamed(type: string, text: string): AstNode {
 
 describe('L1 Block Roundtrip', () => {
   let lifter: PatternLifter
-  let generator: TemplateGenerator
   let renderer: PatternRenderer
   let extractor: PatternExtractor
 
   beforeAll(() => {
     lifter = new PatternLifter()
     lifter.setGrammar('tree-sitter-cpp')
-    generator = new TemplateGenerator()
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()
 
@@ -82,12 +77,8 @@ describe('L1 Block Roundtrip', () => {
     renderer.loadBlockSpecs(allSpecs)
     extractor.loadBlockSpecs(allSpecs)
 
-    for (const spec of allSpecs) {
-      if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
-        generator.registerTemplate(spec.componentMapping.componentId, spec.codeTemplate)
-      }
-    }
-    generator.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
+    // 🪦 這裡原本 `new TemplateGenerator()` 並餵 `codeTemplate`——產品不裝的那一套（第 384 刀刪除）。
+    //    產碼一律走 `productCode`（產品的語言產生器表）。
   })
 
   function liftCtx(): LiftContext {
@@ -123,19 +114,10 @@ describe('L1 Block Roundtrip', () => {
 
     it('should generate code for cpp_increment (hand-written generator for prefix/postfix)', () => {
       const node = createNode('cpp:increment', { operator: '--' }, { target: [createNode('cpp:var_ref', { name: 'j' })] })
-      const generators = new Map<string, NodeGenerator>()
-      const style = { indent_size: 4, brace_style: 'K&R' } as StylePreset
-    for (const reg of componentGenerateRegistrars())
-      (reg as (m: typeof generators, s: typeof style) => void)(generators, style)
-      // ⚠️ **膠囊自帶的產生器也要裝。** `cpp:increment` 2026-08-11 進了膠囊，
-      // 而這裡只裝共用的那一批——症狀是 `⟨unknown component: cpp:increment⟩`，
-      // 看起來像產生器不見了。第三十七條護欄講的是宣告那一維，
-      // **產生器這一維是同一個病。**
-      for (const reg of componentGenerateRegistrars())
-        (reg as (m: typeof generators, s: typeof style) => void)(generators, style)
-      const ctx: GeneratorContext = { indent: 0, style, language: 'cpp', generators, templateGenerator: generator }
-      const code = generateNode(node, ctx)
-      expect(code).toBe('j--;\n')
+      // 🔴 第 384 刀：原本自己組一張產生器表、再塞一個 `templateGenerator` 進 ctx——改走產品的產碼。
+      //    期望從 `'j--;\n'` 變成 `'j--;'`：`generateCode` 會 trim，內容相同。
+      const code = productCode(node)
+      expect(code).toBe('j--;')
     })
   })
 
@@ -368,16 +350,17 @@ describe('L1 Block Roundtrip', () => {
     })
   })
 
+  // 🔴 第 384 刀：這三支原本走 `TemplateGenerator`（`universal-templates.json`），產品不走那一套；改走產品的產碼。
   describe('code generation for universal components', () => {
     it('should generate var_ref code', () => {
       const node = createNode('cpp:var_ref', { name: 'myVar' })
-      const code = generator.generate(node, { indent: 0, style: { indent_size: 4 } as any })
+      const code = productCode(node)
       expect(code).toBe('myVar')
     })
 
     it('should generate break code', () => {
       const node = createNode('cpp:break', {})
-      const code = generator.generate(node, { indent: 0, style: { indent_size: 4 } as any })
+      const code = productCode(node)
       expect(code).toBe('break;')
     })
 
@@ -385,7 +368,7 @@ describe('L1 Block Roundtrip', () => {
       const left = createNode('cpp:var_ref', { name: 'x' })
       const right = createNode('cpp:literal_number', { value: '5' })
       const node = createNode('cpp:arithmetic', { operator: '+' }, { left: [left], right: [right] })
-      const code = generator.generate(node, { indent: 0, style: { indent_size: 4 } as any })
+      const code = productCode(node)
       expect(code).toBe('x + 5')
     })
   })

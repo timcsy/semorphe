@@ -31,13 +31,6 @@
       "tooltip": "%{BKY_CPP_STRING_ERASE_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.erase(${POS}, ${LEN});",
-      "imports": [
-        "string"
-      ],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

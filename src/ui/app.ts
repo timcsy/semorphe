@@ -93,6 +93,11 @@ import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
 import {} from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
+// 🔴 **組裝點登記語意的提供者**（spec 179）——核心與介面只認能力介面，不認得是誰在跑。
+//    今天只有 JS 直譯器；〈重構〉階段 5 加 Cella（排在前面），階段 6 拿掉這一行與整個 `providers/js-interpreter/`。
+import { registerProvider } from '../core/capabilities'
+import { jsInterpreterProvider } from '../providers/js-interpreter'
+registerProvider(jsInterpreterProvider)
 // Semantic layer
 // Projection layer
 import { CURRENT_VERSION, hashCode } from '../core/storage/storage-version'
@@ -1551,9 +1556,6 @@ export class App {
       analyzeIoConformance: ((code: string, pref: string) =>
         languagePack(this.currentTopic.language)?.styleExceptions?.analyzeIo(code, pref)) as never,
     })
-    // 面板的降級路徑要產生程式碼文字，用的必須是**同一組**語言與風格
-    // ——面板自己不得寫死一個（FR-003）。見 specs/060-panel-parallel-generator/
-    this.blocklyPanel?.setCodeContext(this.currentTopic.language, DEFAULT_STYLE)
     if (this.scaffold) this.syncController.setProgramScaffold(this.scaffold)
     if (shaping) {
       // 🔴 **把骨架宣告一起交下去**（2026-08-28）——「哪一顆函式是骨架」
@@ -1563,7 +1565,7 @@ export class App {
         (shaping.stripScaffoldNodes as (t: unknown, skeleton: string) => unknown)(
           tree, this.currentSkeletonId)) as never)
       const patch = shaping.patchCode as (
-        code: string, tree: unknown, ns: string, depth: number, skeleton: string) => string
+        code: string, tree: unknown, ns: string, depth: number, skeleton: string, styleId: string) => string
       this.syncController.setCodePatcher(((code: string, tree: unknown) => patch(
       code, tree, this.currentStylePreset.namespace_style, this.getScaffoldDepth(),
       // 🔴 **第二個「要不要 main」的入口**——鷹架是第一個。兩邊都要問同一份宣告。
@@ -1571,6 +1573,8 @@ export class App {
       //    使用者在選單上換了骨架之後，目標那一格**不會變**
       //    ——於是補丁器繼續照舊的骨架補，而鷹架那側已經換了。
       this.currentSkeletonId,
+      // 🔴 風格 id 也要交下去（2026-10-31）：C 方言下要補 C 的標頭（`<stdio.h>` 不是 `<cstdio>`）
+      this.currentStylePreset.id,
       )) as never)
     }
 
@@ -1584,8 +1588,8 @@ export class App {
       // 🔴 **命名空間風格要一起交下去**（2026-09-02）：`using namespace std;`
       //    是補丁器寫進程式碼的，而它要不要出現在積木上，看的是同一格風格。
       const includeNodes = (shaping.autoIncludeNodes as
-        (t: never, ns: 'using' | 'explicit') => SemanticNode[])(
-        tree as never, this.currentStylePreset.namespace_style)
+        (t: never, ns: 'using' | 'explicit', styleId: string) => SemanticNode[])(
+        tree as never, this.currentStylePreset.namespace_style, this.currentStylePreset.id)
       if (includeNodes.length === 0) return tree
       return {
         ...tree,
@@ -1772,7 +1776,6 @@ export class App {
       //    的 `Topic.components`：漸進揭露整個交給課程。
       onStyleChange: (style) => {
         this.syncController?.setStyle(style)
-        this.blocklyPanel?.setCodeContext(this.currentTopic.language, style)  // 面板不得落後於同步控制器
         this.syncController?.setCodingStyle(style)
         this.syncBlocksToCodeWithMappings()
         this.currentStylePreset = style
@@ -2283,7 +2286,6 @@ export class App {
   private applyStylePreset(preset: StylePreset, opts: { resync?: boolean } = {}): void {
     this.currentStylePreset = preset
     this.syncController?.setStyle(preset)
-    this.blocklyPanel?.setCodeContext(this.currentTopic.language, preset)  // 同上
     this.syncController?.setCodingStyle(preset)
     this.refreshStatusBar()
     const ioPref = preset.io_style === 'printf' ? 'cstdio' : 'iostream'
@@ -2742,7 +2744,6 @@ export class App {
         // 而它的症狀更狠：文法不對時**一顆積木都畫不出來**（全部不匹配）。
         this.setActiveGrammar?.(topic.language)
         this.syncController?.setLanguage(topic.language)
-        this.blocklyPanel?.setCodeContext(topic.language, this.currentStylePreset)
         this.syncController?.setTopic(topic, this.getVisibleComponents())
         this.syncController?.setScaffoldDepth(this.scaffoldDepth)
         this.reloadBlockSpecsForTopic()

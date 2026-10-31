@@ -25,13 +25,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STRING_FIND_LAST_NOT_OF_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.find_last_not_of(${ARG})",
-      "imports": [
-        "string"
-      ],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

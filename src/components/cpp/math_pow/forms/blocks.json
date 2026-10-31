@@ -25,13 +25,6 @@
       "colour": "#5C81A6",
       "tooltip": "%{BKY_C_MATH_POW_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "pow(${BASE}, ${EXPONENT})",
-      "imports": [
-        "cmath"
-      ],
-      "order": 20
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "call_expression",

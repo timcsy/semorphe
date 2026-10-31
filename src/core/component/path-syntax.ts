@@ -28,6 +28,8 @@
  * > 選 `.` 而不是 `/` 的決定性理由是核心純淨性……
  * > **所以分隔符不能跟語言走**（那需要核心知道這顆是哪個語言的）。
  */
+import { idToDir } from './types'
+import { deriveBlockType } from './derive-block-type'
 
 /**
  * 一個字串可能是什麼。
@@ -126,7 +128,7 @@ export function identityToDir(id: string): string {
   if (v.kind !== 'identity') {
     throw new Error(`不是一個身分（${v.kind}）：${id}${v.why ? `——${v.why}` : ''}`)
   }
-  return id.replace(':', '/').replace(/\./g, '/')
+  return idToDir(id)
 }
 
 /**
@@ -144,5 +146,5 @@ export function identityToBlockType(id: string): string {
   if (v.kind !== 'identity') {
     throw new Error(`不是一個身分（${v.kind}）：${id}${v.why ? `——${v.why}` : ''}`)
   }
-  return id.replace(':', '_').replace(/\./g, '_')
+  return deriveBlockType(id)
 }

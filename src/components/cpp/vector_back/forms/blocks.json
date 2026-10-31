@@ -20,13 +20,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_VECTOR_BACK_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.back()",
-      "imports": [
-        "vector"
-      ],
-      "order": 20
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "call_expression",

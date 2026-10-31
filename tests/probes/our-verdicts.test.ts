@@ -1,5 +1,5 @@
 /**
- * **探測（不是護欄）**：把「我們的判定」導出成 `/tmp/ours.json`，
+ * **探測（不是護欄）**：把「我們的判定」導出成 JSON（`OUR_VERDICTS_OUT=/tmp/ours.json` 才寫），
  * 給 `tools/clangd-oracle/run.mjs` 當左半邊。
  *
  * ## 為什麼分兩支
@@ -81,7 +81,8 @@ describe('導出我們的判定（給 clangd 裁判當左半邊）', () => {
       }
       rows.push({ ...s, weRefuse: gated, outcome })
     }
-    writeFileSync('/tmp/ours.json', JSON.stringify(rows))
+    // 🔴 2026-10-31：原本每次 `npm test` 都寫 `/tmp/ours.json`（測試的副作用）。改成只有指定了輸出路徑才寫。
+    if (process.env.OUR_VERDICTS_OUT) writeFileSync(process.env.OUR_VERDICTS_OUT, JSON.stringify(rows))
     const n = (o: string) => rows.filter((r) => r.outcome === o).length
     console.log(`\n樣本 ${rows.length}｜執行前擋下 ${n('gated')}｜跑到那一行才停 ${n('stopped')}｜跑完 ${n('ran')}\n`)
   }, 180000)

@@ -26,11 +26,6 @@
       "colour": "#A855F7",
       "tooltip": "%{BKY_C_ENUM_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "enum ${NAME} { ${VALUES} };",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

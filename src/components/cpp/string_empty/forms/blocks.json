@@ -20,13 +20,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STRING_EMPTY_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.empty()",
-      "imports": [
-        "string"
-      ],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

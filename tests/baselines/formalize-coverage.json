@@ -1,0 +1,8 @@
+{
+  "_meta": {
+    "guard": "formalize-coverage"
+  },
+  "C++ 元件數": 250,
+  "還沒對應": 148,
+  "note": "🎯 **2026-10-31（第 391 刀）：還沒對應 153 → 148。** Arduino 課文剩下的五顆（map、Servo.read、LCD setCursor、EEPROM 讀寫），C18 語料附 program 95 → 99（Arduino 15 / 15）。\n🟢 **2026-10-31（第 389 刀：每顆元件的 formalize 搬進自己的膠囊）：154 → 153。** 翻譯一行沒改（C18 語料 104 筆的輸出逐字相同）；變的是**量法**：對照的真相從引擎裡的 `case 'cpp:…'` 換成「哪些元件資料夾有 `formalize.ts`」。舊讀法漏了 `cpp:initializer_list`——巢狀初值串列在 `initOf` 裡用 `if` 判、不是 `case`，它一直有翻譯卻被算成還沒對應。\n\n🟢 **2026-10-31（spec 180：strlen、容器 count；C 分支）：156 → 154。**\n\n🟢 **2026-10-31（spec 180 第六批：Arduino）：184 → 156。** 核心函式（pinMode、digitalWrite、delay…）、板子常數、Serial、DHT、WiFi、超音波（五行）、Servo、LCD、通用方法呼叫；板名對照。Arduino 課文的完整 sketch 5 → 10 / 10。\n\n🟢 **2026-10-31（spec 180 第五批：new／delete／malloc／sizeof）：188 → 184。** 課文解答 79 → 83 / 94 翻得出。\n\n🆕 **2026-10-31（spec 180 第一批）立。** formalize 已對應 62 / 250 顆 C++ 元件。對照的真相是 formalize 自己的分派（不另立一張表）。數字只准下降。"
+}

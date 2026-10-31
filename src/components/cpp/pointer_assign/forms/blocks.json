@@ -26,11 +26,6 @@
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_POINTER_ASSIGN_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "*${OBJ} = ${VALUE};",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "assignment_expression",

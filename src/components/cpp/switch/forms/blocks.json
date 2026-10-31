@@ -28,11 +28,6 @@
       "colour": "#FFAB19",
       "tooltip": "%{BKY_C_SWITCH_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "switch (${EXPR}) {\n${CASES}\n}",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "switch_statement",

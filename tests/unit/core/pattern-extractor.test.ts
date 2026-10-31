@@ -40,7 +40,6 @@ describe('PatternExtractor', () => {
           ],
         },
         renderMapping: { fields: { NAME: 'name', OP: 'operator' }, inputs: {}, statementInputs: {} },
-        codeTemplate: { pattern: '${NAME}${OP}', imports: [], order: 8 },
         astPattern: { nodeType: 'update_expression', constraints: [] },
       }
       extractor.loadBlockSpecs([spec])
@@ -78,7 +77,6 @@ describe('PatternExtractor', () => {
           args0: [{ type: 'input_value', name: 'VALUE', check: 'Expression' }],
         },
         renderMapping: { fields: {}, inputs: { VALUE: 'value' }, statementInputs: {} },
-        codeTemplate: { pattern: 'return ${VALUE};', imports: [], order: 0 },
         astPattern: { nodeType: 'return_statement', constraints: [] },
       }
 
@@ -98,7 +96,6 @@ describe('PatternExtractor', () => {
           args0: [{ type: 'field_number', name: 'NUM', value: 0 }],
         },
         renderMapping: { fields: { NUM: 'value' }, inputs: {}, statementInputs: {} },
-        codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: { nodeType: 'number_literal', constraints: [] },
       }
 
@@ -148,7 +145,6 @@ describe('PatternExtractor', () => {
           args1: [{ type: 'input_statement', name: 'BODY', check: 'Statement' }],
         },
         renderMapping: { fields: {}, inputs: { COND: 'condition' }, statementInputs: { BODY: 'body' } },
-        codeTemplate: { pattern: 'while (${COND}) {\n${BODY}\n}', imports: [], order: 0 },
         astPattern: { nodeType: 'while_statement', constraints: [] },
       }
 
@@ -160,7 +156,6 @@ describe('PatternExtractor', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:break', role: 'statement' },
         blockDef: { type: 'cpp_break' },
-        codeTemplate: { pattern: 'break;', imports: [], order: 0 },
         astPattern: { nodeType: 'break_statement', constraints: [] },
       }
 
@@ -172,7 +167,6 @@ describe('PatternExtractor', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:continue', role: 'statement' },
         blockDef: { type: 'cpp_continue' },
-        codeTemplate: { pattern: 'continue;', imports: [], order: 0 },
         astPattern: { nodeType: 'continue_statement', constraints: [] },
       }
 

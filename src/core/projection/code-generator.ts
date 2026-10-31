@@ -6,7 +6,6 @@ import { roleOf } from '../component/traits'
 import type { SemanticNode, StylePreset } from '../types'
 import type { DependencyResolver } from '../dependency-resolver'
 import type { ProgramScaffold, ScaffoldConfig } from '../program-scaffold'
-import { TemplateGenerator } from './template-generator'
 
 export type NodeGenerator = (node: SemanticNode, ctx: GeneratorContext) => string
 
@@ -28,7 +27,6 @@ export interface GeneratorContext {
   style: StylePreset
   language: string
   generators: Map<string, NodeGenerator>
-  templateGenerator?: TemplateGenerator
   isExpression?: boolean
   _mappings?: CodeMapping[]
   _lineCount?: number
@@ -52,17 +50,11 @@ export interface GeneratorContext {
 // ─── Language module registry ───
 
 const languageFactories = new Map<string, LanguageGeneratorFactory>()
-let globalTemplateGenerator: TemplateGenerator | null = null
 let globalDependencyResolver: DependencyResolver | null = null
 let globalProgramScaffold: ProgramScaffold | null = null
 let globalScaffoldConfig: ScaffoldConfig | null = null
 /** 目前目標的標頭替換表——⚠️ `null` ＝ 不換任何標頭（既有目標的行為）。 */
 let globalHeaderAliases: Readonly<Record<string, string>> | null = null
-
-/** Set the JSON-driven template generator engine */
-export function setTemplateGenerator(tg: TemplateGenerator): void {
-  globalTemplateGenerator = tg
-}
 
 /** Set the dependency resolver for auto-include resolution */
 export function setDependencyResolver(resolver: DependencyResolver): void {
@@ -97,6 +89,18 @@ export function registerLanguage(language: string, factory: LanguageGeneratorFac
 // ─── Meta-component generators ───
 
 /** Register generators for meta-components (raw_code, unresolved, comment, doc_comment, block_comment) */
+/**
+ * 這個語言、這個風格下的**產生器表**——產碼與護欄看的是同一張。
+ *
+ * 🔴 2026-10-31：`skip-declaration-gate` 原本驗的是 `cpp/module.ts` 裝的 `TemplateGenerator`，
+ * 而產品從不裝它（`setTemplateGenerator` 在 `src/` 零呼叫）——**護欄驗的是一條產品不走的路**。
+ * （那一套在第 384 刀整個刪除。）
+ */
+export function languageGenerators(language: string, style: StylePreset): Map<string, NodeGenerator> {
+  const factory = languageFactories.get(language)
+  return factory ? factory(style) : new Map<string, NodeGenerator>()
+}
+
 export function registerMetaComponentGenerators(generators: Map<string, NodeGenerator>): void {
   generators.set('raw_code', (node, ctx) => {
     const raw = String(node.metadata?.rawCode ?? node.properties.code ?? '')
@@ -212,7 +216,6 @@ export function generateCode(tree: SemanticNode, language: string, style: StyleP
   if (globalProgramScaffold) ctx.programScaffold = globalProgramScaffold
   if (globalScaffoldConfig) ctx.scaffoldConfig = globalScaffoldConfig
   if (globalHeaderAliases) ctx.headerAliases = globalHeaderAliases
-  wireTemplateFallbacks(ctx)
   return generateNode(tree, ctx).trim()
 }
 
@@ -229,12 +232,10 @@ export function generateCode(tree: SemanticNode, language: string, style: StyleP
  * 正是被合併掉的那個雙重身分。
  */
 export function generateExpressionCode(node: SemanticNode, language: string, style: StylePreset): string {
-  const factory = languageFactories.get(language)
-  const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
+  const generators = languageGenerators(language, style)
   registerMetaComponentGenerators(generators)
   const ctx: GeneratorContext = { indent: 0, style, language, generators, isExpression: true }
   if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
-  wireTemplateFallbacks(ctx)
   return generateExpression(node, ctx).trim()
 }
 
@@ -243,8 +244,7 @@ export function generateCodeWithMapping(
   language: string,
   style: StylePreset,
 ): { code: string; mappings: CodeMapping[] } {
-  const factory = languageFactories.get(language)
-  const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
+  const generators = languageGenerators(language, style)
   registerMetaComponentGenerators(generators)
   const mappings: CodeMapping[] = []
   const lineBox = { value: 0 }
@@ -253,27 +253,8 @@ export function generateCodeWithMapping(
   if (globalProgramScaffold) ctx.programScaffold = globalProgramScaffold
   if (globalScaffoldConfig) ctx.scaffoldConfig = globalScaffoldConfig
   if (globalHeaderAliases) ctx.headerAliases = globalHeaderAliases
-  wireTemplateFallbacks(ctx)
   const code = generateNode(tree, ctx).trim()
   return { code, mappings }
-}
-
-/** Wire hand-written generators as fallback for template generator's expression/body generation */
-function wireTemplateFallbacks(ctx: GeneratorContext): void {
-  const tg = ctx.templateGenerator ?? globalTemplateGenerator
-  if (!tg) return
-  tg.setExpressionFallback((node, _tgCtx) => {
-    const generator = ctx.generators.get(node.componentId)
-    if (!generator) return null
-    // Hand-written expression generators return just the expression text
-    return generator(node, ctx)
-  })
-  tg.setBodyFallback((node, tgCtx) => {
-    const generator = ctx.generators.get(node.componentId)
-    if (!generator) return null
-    const bodyCtx = { ...ctx, indent: tgCtx.indent }
-    return generator(node, bodyCtx)
-  })
 }
 
 /**
@@ -416,7 +397,6 @@ function otherStyleContexts(ctx: GeneratorContext): GeneratorContext[] {
     const generators = factory(style)
     registerMetaComponentGenerators(generators)
     const alt: GeneratorContext = { ...ctx, style, generators, _mappings: undefined, _lineBox: undefined }
-    wireTemplateFallbacks(alt)
     return alt
   })
 }
@@ -453,14 +433,9 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
     return ctx.isExpression ? raw : `${indent(ctx)}${raw};\n`
   }
 
-  // Try JSON-driven template generator first
-  const tg = ctx.templateGenerator ?? globalTemplateGenerator
-  const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style, isExpression: ctx.isExpression }) ?? null
-
-  if (templateResult !== null) {
-    result = templateResult.endsWith('\n') ? templateResult : templateResult + '\n'
-  } else {
-    // Fall back to hand-written generators (including meta-component generators)
+  // 🔴 2026-10-31（第 384 刀）：這裡原本**先**試 `TemplateGenerator`（`codeTemplate` 那一套），
+  //    而產品從不裝它——那一路已刪除，產碼只有語言產生器表這一條。
+  {
     const generator = ctx.generators.get(node.componentId)
     if (generator) {
       result = generator(node, ctx)
@@ -590,11 +565,6 @@ export function generateExpression(node: SemanticNode, ctx: GeneratorContext): s
     ) return inner
     return `(${inner})`
   }
-
-  // Try JSON-driven template generator first
-  const tg = ctx.templateGenerator ?? globalTemplateGenerator
-  const templateResult = tg?.generate(node, { indent: ctx.indent, style: ctx.style, isExpression: true }) ?? null
-  if (templateResult !== null) return templateResult
 
   const exprCtx = ctx.isExpression ? ctx : { ...ctx, isExpression: true }
   const generator = exprCtx.generators.get(node.componentId)

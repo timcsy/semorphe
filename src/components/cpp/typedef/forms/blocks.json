@@ -26,11 +26,6 @@
       "colour": "#A855F7",
       "tooltip": "%{BKY_C_TYPEDEF_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "typedef ${ORIG_TYPE} ${ALIAS};",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "ALIAS": "alias",

@@ -52,11 +52,6 @@
       "tooltip": "%{BKY_C_COMPOUND_ASSIGN_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${TARGET} ${OP} ${VALUE};",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "assignment_expression",

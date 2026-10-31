@@ -29,11 +29,6 @@
       "colour": "#888888",
       "tooltip": "%{BKY_C_IFDEF_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "#ifdef ${CONDITION}\n${BODY}\n#endif",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "preproc_ifdef",

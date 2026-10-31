@@ -31,11 +31,6 @@
       "tooltip": "%{BKY_CPP_CONTAINER_ERASE_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.erase(${KEY});",
-      "imports": [],
-      "order": 0
-    },
     "toolboxCategory": "maps_sets",
     "renderMapping": {
       "fields": {},

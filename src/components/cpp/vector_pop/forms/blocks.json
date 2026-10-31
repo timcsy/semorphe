@@ -21,13 +21,6 @@
       "tooltip": "%{BKY_CPP_VECTOR_POP_BACK_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.pop_back();",
-      "imports": [
-        "vector"
-      ],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "call_expression",

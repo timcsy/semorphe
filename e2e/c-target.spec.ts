@@ -45,7 +45,7 @@
  * - **只走一個樣本**——它守的是「兩條路徑都改到了」，不是覆蓋率
  */
 import { test, expect, type Page } from '@playwright/test'
-import { useAsSource, treeReady } from './helpers'
+import { useAsSource, treeHas } from './helpers'
 
 /**
  * C++ 專屬、而 C 裡不存在的積木——選 C 之後這些都不該出現在工具箱裡。
@@ -67,7 +67,7 @@ const CPP_ONLY_BLOCK_TEXT: Array<[string, RegExp]> = [
 async function ready(page: Page): Promise<void> {
   await page.goto('/')
   await page.waitForFunction(
-    () => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor),
+    () => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor) && Boolean((window as never as { __appReady?: boolean }).__appReady),
     undefined, { timeout: 30_000 },
   )
 }
@@ -120,7 +120,8 @@ test('★ 選 C 目標 → 產出是乾淨的 C（而不是換了 printf 的 C++
     (window as never as { __app: { codeView: { setCode(c: string): void } } })
       .__app.codeView.setCode('int main(){ bool b = 1 == 2; cout << b << endl; return 0; }'))
   await useAsSource(page, '程式碼')
-  await treeReady(page)
+  // ⚠️ 等的是【這份程式碼】進到樹裡，不是「樹有槽」（預設的空骨架就有）——見 `treeHas`
+  await treeHas(page, 'cpp:var_declare')
 
   // ★ 入口條件：C 目標**選得到**（合成量——2026-08-17 才接上選單）
   expect(
@@ -169,7 +170,8 @@ test('★ 使用者自己寫的 #include，在 C 目標下也要換掉', async (
     (window as never as { __app: { codeView: { setCode(c: string): void } } })
       .__app.codeView.setCode('#include <iostream>\nint main(){ int n = 3; cout << n << endl; return 0; }'))
   await useAsSource(page, '程式碼')
-  await treeReady(page)
+  // ⚠️ 等的是【這份程式碼】進到樹裡，不是「樹有槽」（預設的空骨架就有）——見 `treeHas`
+  await treeHas(page, 'cpp:var_declare')
 
   expect(await pickTarget(page, /^C$/), '🔴 選單裡沒有「C」').toBe(true)
   await useAsSource(page, '積木')
@@ -289,7 +291,7 @@ test('★ 重新整理之後，選的目標還在', async ({ page }) => {
 
   await page.reload()
   await page.waitForFunction(
-    () => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor),
+    () => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor) && Boolean((window as never as { __appReady?: boolean }).__appReady),
     undefined, { timeout: 30_000 },
   )
   await page.waitForTimeout(1500)

@@ -21,14 +21,6 @@
       "tooltip": "%{BKY_CPP_GETLINE_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "getline(std::cin, ${TARGET});",
-      "imports": [
-        "iostream",
-        "string"
-      ],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

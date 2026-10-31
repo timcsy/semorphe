@@ -21,13 +21,6 @@
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_FREE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "free(${PTR});",
-      "imports": [
-        "stdlib.h"
-      ],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "call_expression",

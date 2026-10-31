@@ -20,11 +20,6 @@
     "colour": 120,
     "tooltip": "C for loop"
   },
-  "codeTemplate": {
-    "pattern": "for (${INIT}; ${COND}; ${UPDATE}) {\n${BODY}\n}",
-    "imports": [],
-    "order": 0
-  },
   "astPattern": {
     "nodeType": "for_statement",
     "constraints": []

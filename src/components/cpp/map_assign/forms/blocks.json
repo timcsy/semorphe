@@ -31,13 +31,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_MAP_ASSIGN_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}[${KEY}] = ${VALUE};",
-      "imports": [
-        "map"
-      ],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "OBJ": "obj"

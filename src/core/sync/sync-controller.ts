@@ -254,10 +254,36 @@ export class SyncController {
     bus.on('edit:code', (data) => this.handleEditCode(data))
   }
 
+  /**
+   * 「程式碼 → 樹」那條管線接上之前收到的程式碼——**最後一份**（第 392 刀）。
+   *
+   * 🔴 在此之前管線還沒接上（tree-sitter 的 wasm 是非同步載入的）時，`edit:code` 與
+   *    `syncCodeToBlocks` 都**靜默 return**。學生按「以此為準：程式碼」被吞掉，樹停在預設的空骨架，
+   *    下一次從樹重產（例如切到 C 目標）就把他寫的程式碼整份蓋掉。
+   *    e2e `c-target` 間歇紅了一個月（draft `2026-10-02-C-目標下有時候少一個標頭`）：只在機器忙、wasm 載得慢時發作。
+   */
+  private pendingCode: string | null = null
+  /** 等「另一次同步做完」的那幾個程式碼編輯（第 392 刀，見 `handleEditCode`）。 */
+  private idleWaiters: Array<() => void> = []
+
+  /** 同步結束：放開互斥，叫醒在等的程式碼編輯。 */
+  private endSync(): void {
+    this.syncing = false
+    const waiters = this.idleWaiters
+    this.idleWaiters = []
+    for (const w of waiters) w()
+  }
+  private resolvePipeline!: () => void
+  private readonly pipelineReady = new Promise<void>((r) => { this.resolvePipeline = r })
+
   /** Set lifter and parser for code→blocks direction (US2) */
   setCodeToBlocksPipeline(lifter: Lifter, parser: CodeParser): void {
     this.lifter = lifter
     this.parser = parser
+    this.resolvePipeline()
+    const pending = this.pendingCode
+    this.pendingCode = null
+    if (pending !== null) void this.handleEditCode({ code: pending })
   }
 
   onError(callback: (errors: SyncError[]) => void): void {
@@ -629,13 +655,18 @@ export class SyncController {
         originViewId: data.viewId, mappings, scaffoldResult,
       })
     } finally {
-      this.syncing = false
+      this.endSync()
     }
   }
 
   /** Handle edit:code event — sync code → semantic tree → blocks */
   private async handleEditCode(data: { code: string }): Promise<void> {
-    if (this.syncing || !this.lifter || !this.parser) return
+    // 管線還沒接上：記下最後一份，接上時補做（見 `pendingCode`）
+    if (!this.lifter || !this.parser) { this.pendingCode = data.code; return }
+    // 🔴 另一次同步正在進行（例如開頁時的主題重同步）：**等它做完**，不是丟掉（第 392 刀）。
+    //    丟掉的症狀與管線未就緒那一條相同——「以此為準：程式碼」被吞，下一次重產把程式碼蓋成空骨架。
+    //    ⚠️ 沒有回授迴圈的疑慮：產品裡沒有任何面板自己送 `edit:code`，只有 `syncCodeToBlocks` 這條路。
+    while (this.syncing) await new Promise<void>((r) => this.idleWaiters.push(r))
     // ⚠️ **`syncing` 的設定與清除要包住整段 `await`**——重入守衛的窗口
     //    因為非同步而變長了，而 `try/finally` 已經在外面（見函式尾）。
     this.syncing = true
@@ -755,7 +786,7 @@ export class SyncController {
       // 🟢 程式碼面板不受影響：它只在 `blocks`／`resync` 才回寫（見 monaco-panel）。
       this.bus.emit('semantic:update', { tree, code, blockState: renderResult, source: 'code', mappings: this.codeMappings, scaffold: this.scaffoldNotice(tree), derivedNodeIds: this.derivedIds })
     } finally {
-      this.syncing = false
+      this.endSync()
       parsed?.delete?.()
     }
   }
@@ -1005,7 +1036,7 @@ export class SyncController {
         derivedNodeIds: this.derivedIds,
       })
     } finally {
-      this.syncing = false
+      this.endSync()
     }
   }
 
@@ -1017,7 +1048,8 @@ export class SyncController {
    * 它在同步完成之後才補相依、清旗標。
    */
   async syncCodeToBlocks(code?: string): Promise<boolean> {
-    if (!this.lifter || !this.parser) return false
+    // 管線還沒接上就**等它**，不是回 false——呼叫端 await 回來時以為樹已經是這份程式碼了
+    if (!this.lifter || !this.parser) await this.pipelineReady
     if (code !== undefined) {
       await this.handleEditCode({ code })
       return true

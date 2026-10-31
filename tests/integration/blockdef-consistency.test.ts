@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { extractInputNames, getInputs } from '../../src/core/blocks/block-input-names'
+import { extractInputNames, getInputs } from '../../src/languages/cpp/block-input-names'
 import type { BlockSpec, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 // ⚠️ **第十一個組裝點**：這裡原本只讀 `universal` 的兩個陣列。

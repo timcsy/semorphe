@@ -135,38 +135,7 @@ export function scanParamReads(extra: { file: string; source: string }[] = []): 
   return out
 }
 
-/**
- * `codeTemplate.pattern` 裡的 `${X}` **也是一種讀取**。
- *
- * ⚠️ 少了這一半，宣告式元件會被誤報成「宣告了沒人讀」——實測
- * `cpp_string_find_first_not_of` 的 `obj` 就是這樣被冤枉的：它根本沒有 TS 產生器，
- * 產出走的是 `"${OBJ}.find_first_not_of(${ARG})"`。
- *
- * 模板裡是**積木欄位名**（大寫），對到的參數名是小寫——這是現行的對應慣例，
- * 而它可機械判定。
- */
-export function templateReads(): Map<string, Set<string>> {
-  const out = new Map<string, Set<string>>()
-  for (const rel of listSourceFiles('src', ['.json'])) {
-    if (rel.includes('/i18n/')) continue
-    let arr: unknown
-    try {
-      arr = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'))
-    } catch {
-      continue
-    }
-    if (!Array.isArray(arr)) continue
-    for (const e of arr) {
-      const proj = e as { componentId?: string; codeTemplate?: { pattern?: string } }
-      const pat = proj?.codeTemplate?.pattern
-      if (!proj.componentId || !pat) continue
-      const set = out.get(proj.componentId) ?? new Set<string>()
-      for (const m of pat.matchAll(/\$\{(\w+)\}/g)) set.add(m[1].toLowerCase())
-      if (set.size) out.set(proj.componentId, set)
-    }
-  }
-  return out
-}
+// 🪦 `templateReads()`（`codeTemplate.pattern` 的 `${X}` 也算讀取）第 384 刀刪除——`codeTemplate` 已整批刪除。
 
 /**
  * 「這個參數被當成**變數名**用了」——`ctx.scope.declare/get/set/has(x)`

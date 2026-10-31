@@ -1,9 +1,8 @@
-import { generateExpressionCode, isUngeneratable, UNGENERATABLE_PREFIX } from '../../core/projection/code-generator'
-import type { StylePreset } from '../../core/types'
+import { UNGENERATABLE_PREFIX } from '../../core/projection/code-generator'
 import * as Blockly from 'blockly'
 import { healingDragStrategy, immovableDragStrategy } from './ghost-drag-strategy'
 import { enableMiddleDragPan } from './middle-drag-pan'
-import type { SemanticNode, BlockSpec, DegradationCause, ConfidenceLevel, Annotation } from '../../core/types'
+import type { SemanticNode, DegradationCause, ConfidenceLevel, Annotation } from '../../core/types'
 import { createNode } from '../../core/semantic-tree'
 import { companionFor } from '../../core/component/companion-blocks'
 import type { BlockSpecRegistry } from '../../core/blocks/block-spec-registry'
@@ -25,9 +24,6 @@ export interface BlocklyPanelOptions {
   blockSpecRegistry?: BlockSpecRegistry
   bus?: SemanticBus
   media?: string
-  /** 產生降級用的程式碼文字時，用哪一種語言與風格。**不得寫死**（FR-003） */
-  language?: string
-  style?: StylePreset
   /**
    * 怎麼建「程式」這個根節點——🔴 **由組裝點提供**（spec 153）。
    *
@@ -150,23 +146,8 @@ export class BlocklyPanel implements ViewHost {
   private media: string | undefined
   private patternExtractor: PatternExtractor
 
-  /**
-   * 降級路徑產生程式碼時用的語言與風格。
-   *
-   * 有預設值是因為面板可以在語言未定時先建起來；**它不是寫死的選擇**——
-   * `setCodeContext` 會覆蓋它，而應用層在建立時就會傳進來。
-   */
-  private codeLanguage = 'cpp'
-  /**
-   * 🔴 **沒有預設值**（spec 153）——原本是 `apcsStyle`，
-   * 而那讓視圖層 import 了一個語言套件的檔案（P9 第一項）。
-   *
-   * ⚠️ 而它從來不是真的預設：`app.ts:218` 在建好之後**立刻**
-   * `setCodeContext('cpp', DEFAULT_STYLE)`。那個「預設」只活了幾行。
-   *
-   * > **一個立刻被覆蓋的預設值，買到的是耦合，不是安全。**
-   */
-  private codeStyle: StylePreset | null = null
+  // 🪦 `codeLanguage`／`codeStyle`／`setCodeContext` 第 384 刀刪除：它們只為擷取失敗時
+  //    「用 `codeTemplate` 拼一段程式碼」那條最後手段而存在，而那條路已改成誠實降級的標記。
 
   /**
    * 建程式根節點——⚠️ **省略時退回一個空殼**，而那會讓抽取回來的樹沒有根。
@@ -182,12 +163,6 @@ export class BlocklyPanel implements ViewHost {
    * 不是視圖層的知識**（P9）。⚠️ 而時機從「面板建構時」變成
    * 「app 初始化時」，所以它必須在第一次 `extract` 之前被呼叫。
    */
-  /** 應用層推進來——與同步控制器持有的是同一組值 */
-  setCodeContext(language: string, style: StylePreset): void {
-    this.codeLanguage = language
-    this.codeStyle = style
-  }
-
   constructor(options: BlocklyPanelOptions) {
     this.container = options.container
     this.blockSpecRegistry = options.blockSpecRegistry ?? null
@@ -198,8 +173,6 @@ export class BlocklyPanel implements ViewHost {
     }
     options.installExtractStrategies?.(this.patternExtractor)
     this.media = options.media
-    if (options.language !== undefined) this.codeLanguage = options.language
-    if (options.style !== undefined) this.codeStyle = options.style
     if (options.buildProgramRoot) this.buildProgramRoot = options.buildProgramRoot
   }
 
@@ -1046,13 +1019,11 @@ export class BlocklyPanel implements ViewHost {
       if (extracted) return extracted
     }
 
-    // Last resort: use codeTemplate from JSON spec
-    const generated = this.generateFromTemplate(block)
-    if (generated !== null) {
-      const node = createNode('raw_code', { code: generated })
-      node.metadata = { rawCode: generated }
-      return node
-    }
+    // 🔴 擷取失敗 ⟹ **誠實降級的標記**（P6），不猜一段程式碼。
+    //
+    // 2026-10-31（第 384 刀）之前，這裡先試「用積木定義的 `codeTemplate` 拼字串」再包成 `raw_code`
+    // ——那是**第二份真相**（產品的產碼走語言產生器表，不讀 `codeTemplate`），兩份之間沒有東西檢查一致，
+    // 而拼出來的字串**看起來像正確的程式碼**。`codeTemplate` 已整批刪除，這裡只留下面這個標記。
     const node = createNode('raw_code', {})
     // 語言中立的標記——介面層不知道任何語言的註解怎麼寫
     node.metadata = { rawCode: `${UNGENERATABLE_PREFIX}unknown: ${block.type}⟩` }
@@ -1153,91 +1124,6 @@ export class BlocklyPanel implements ViewHost {
         this.collectMappings(child)
       }
     }
-  }
-
-  /**
-   * Generate code directly from a block's JSON codeTemplate spec.
-   * Substitutes ${FIELD} placeholders with field values and
-   * connected block expressions with recursively generated code.
-   */
-  private generateFromTemplate(block: Blockly.Block): string | null {
-    if (!this.blockSpecRegistry) return null
-    const specs = this.blockSpecRegistry.getAll()
-    const spec = specs.find((s: BlockSpec) => s.blockDef?.type === block.type)
-    if (!spec?.codeTemplate?.pattern) return null
-
-    let code = spec.codeTemplate.pattern
-
-    // Substitute placeholders with field values or connected block expressions
-    code = code.replace(/\$\{(\w+)\}/g, (_match: string, fieldName: string) => {
-      // Try field value first (FieldDropdown, FieldTextInput, etc.)
-      const fieldVal = block.getFieldValue(fieldName)
-      if (fieldVal !== null && fieldVal !== undefined) return String(fieldVal)
-
-      // Try connected value input (input_value)
-      const inputBlock = block.getInputTargetBlock(fieldName)
-      if (inputBlock) {
-        // Recursively extract and generate a simple expression
-        const innerNode = this.extractBlock(inputBlock)
-        if (innerNode) {
-          return this.simpleExpressionToCode(innerNode)
-        }
-      }
-
-      // Try statement input (input_statement) — generate body
-      const stmtBody = this.extractStatementInput(block, fieldName)
-      if (stmtBody.length > 0) {
-        return stmtBody.map(n => {
-          const raw = n.metadata?.rawCode
-          if (raw) return '    ' + raw
-          // Try simpleExpressionToCode for known components as statement
-          const expr = this.simpleExpressionToCode(n)
-          if (!isUngeneratable(expr)) return '    ' + expr + ';'
-          return `    ⟨${n.componentId}⟩`
-        }).join('\n')
-      }
-
-      return fieldName
-    })
-
-    return code
-  }
-
-  /**
-   * 把一個語義節點轉成一行程式碼文字。
-   *
-   * **這裡原本有一個自己的 switch**——十幾個 `case`，涵蓋數字、變數引用、
-   * 算術，以及五個 C++ 專屬概念。那是系統裡的**第二套程式碼產生器**，而
-   * 核心早就有完整的一套（模板引擎 + 語言套件推進來的產生器 + 風格預設）。
-   *
-   * 兩套之間**沒有任何東西在檢查它們一致**。刪掉的時候發現它已經漂移了：
-   * 有一個 `case 'char_literal':` 指向一個**不存在的概念**（真正的是
-   * `cpp_char_literal`），永遠不會觸發，而測試一路全綠。
-   *
-   * 切換前後每一種節點的產出由 `tests/integration/panel-expression-parity.test.ts`
-   * 逐一釘住——這條是**降級路徑**（正常抽取失敗才走到），平常跑不到，
-   * 改壞了不會有人發現。
-   *
-   * 見 specs/060-panel-parallel-generator/
-   */
-  private simpleExpressionToCode(node: SemanticNode): string {
-    // ⚠️ **運算式位置**——不是格式偏好，是位置（見 `generateExpressionCode` 的說明）。
-    // B 項合併掉 `*_expr` 雙重身分之後，位置由呼叫端說，不再由身分編碼。
-    // 🔴 **沒有風格就說不出程式碼**——而這是降級路徑，
-    //    honest degradation：回一個看得出「這裡沒能產出」的記號，
-    //    不要猜一個風格（P6：禁止給出一個看起來合理的結構）。
-    // ⚠️ **用專案既有的「產不出來」標記**，不要自己寫註解語法
-    //    ——第一版寫的是 `/* … */`，而**語法耦合護欄當場抓到**：
-    //    那是 C 的註解記號，出現在視圖層。
-    //    > **連「說不出來」都要用中立的說法。**
-    if (!this.codeStyle) return `${UNGENERATABLE_PREFIX}尚未設定程式碼風格⟩`
-    return generateExpressionCode(node, this.codeLanguage, this.codeStyle)
-  }
-
-  private extractStatementInput(block: Blockly.Block, inputName: string): SemanticNode[] {
-    const firstBlock = block.getInputTargetBlock(inputName)
-    if (!firstBlock) return []
-    return this.extractBlockChain(firstBlock)
   }
 
   onBlockSelect(callback: (blockId: string | null) => void): void {

@@ -47,6 +47,7 @@
  * ```
  * → **A**。而它已經驗過，不是推測。
  */
+import { isValidComponentId } from '../identity'
 import { COMPONENT_ROOT, FIVE_PATHS, idToDir } from './types'
 import type { ComponentManifest, ComponentRegistration } from './types'
 
@@ -86,8 +87,10 @@ function pathToDir(globKey: string): string {
 function verifyContract(manifest: ComponentManifest, sourceDir: string): void {
   const where = `膠囊 ${sourceDir}`
 
-  // C1：身分格式
-  if (typeof manifest.componentId !== 'string' || !manifest.componentId.includes(':')) {
+  // C1：身分格式——與 `audit-identity-namespace` 用同一個判準（`core/identity.ts`）。
+  // 🔴 2026-10-31 以前這裡只問 `includes(':')`，而護欄驗的是更嚴的 `isValidComponentId`
+  //    （scope 只准小寫英數與底線、名字裡不得再有冒號）——**護欄驗的不是產品走的那一道門**。
+  if (typeof manifest.componentId !== 'string' || !isValidComponentId(manifest.componentId)) {
     throw new Error(`${where}：componentId 必須是 <scope>:<name> 格式，收到 ${String(manifest.componentId)}`)
   }
 

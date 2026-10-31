@@ -25,11 +25,6 @@
       "colour": "#888888",
       "tooltip": "%{BKY_C_DEFINE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "#define ${NAME} ${VALUE}",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

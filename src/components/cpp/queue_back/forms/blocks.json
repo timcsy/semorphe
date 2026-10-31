@@ -20,13 +20,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_QUEUE_BACK_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.back()",
-      "imports": [
-        "queue"
-      ],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

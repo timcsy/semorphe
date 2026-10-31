@@ -56,11 +56,6 @@
       "colour": "#5B80A5",
       "tooltip": "%{BKY_C_STATIC_DECLARE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "static ${TYPE} ${NAME} = ${INIT};",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

@@ -25,11 +25,6 @@
       "colour": "#CF63CF",
       "tooltip": "%{BKY_C_STRUCT_MEMBER_ACCESS_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.${MEMBER}",
-      "imports": [],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {
         "MEMBER": "member"

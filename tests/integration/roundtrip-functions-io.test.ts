@@ -328,7 +328,7 @@ int main() {
   // added by code generator, causing prefix duplication on re-lift.
   // Also doc_comment `///` rendered as `// /`.
   // 阻斷者是 block_comment 的 lifter 沒有剝掉 `* ` 前綴，不是 print
-  it.skip('[BLOCKED:cpp:block_comment] roundtrip is stable', () => {
+  it('roundtrip is stable（block_comment 的 `* ` 前綴——2026-10-31 驗過已修）', () => {
     const gen1 = roundTrip(code)
     const gen2 = roundTrip(gen1)
     expect(gen1).toBe(gen2)

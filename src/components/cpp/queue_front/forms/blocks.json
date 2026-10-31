@@ -20,13 +20,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_QUEUE_FRONT_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.front()",
-      "imports": [
-        "queue"
-      ],
-      "order": 20
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "call_expression",

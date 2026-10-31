@@ -21,11 +21,6 @@
       "colour": "#FF6680",
       "tooltip": "%{BKY_C_THROW_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "throw ${VALUE};",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "inputs": {
         "VALUE": "value"

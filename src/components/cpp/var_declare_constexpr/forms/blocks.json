@@ -56,11 +56,6 @@
       "colour": "#A855F7",
       "tooltip": "%{BKY_C_CONSTEXPR_DECLARE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "constexpr ${TYPE} ${NAME} = ${VALUE};",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

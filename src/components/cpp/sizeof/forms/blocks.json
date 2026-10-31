@@ -20,11 +20,6 @@
       "colour": "#59C059",
       "tooltip": "%{BKY_C_SIZEOF_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "sizeof(${TARGET})",
-      "imports": [],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {
         "TARGET": "target"

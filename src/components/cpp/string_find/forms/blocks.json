@@ -33,13 +33,6 @@
         }
       ]
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.find(${ARG})",
-      "imports": [
-        "string"
-      ],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

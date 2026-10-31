@@ -30,13 +30,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STRING_SUBSTR_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.substr(${POS}, ${LEN})",
-      "imports": [
-        "string"
-      ],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

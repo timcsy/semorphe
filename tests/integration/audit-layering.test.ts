@@ -45,11 +45,16 @@ const FORBIDDEN: Record<string, ReadonlySet<string>> = {
   //    解法不是加一條禁令就好：那四個型別（ExecutionStatus／ExecutionSpeed／
   //    RuntimeType／StepInfo）搬進了 `core/execution.ts`，因為**講它們的是
   //    匯流排與視圖，直譯器只是第一個實作**。
-  core: new Set(['ui', 'languages', 'components', 'vscode', 'interpreter']),
+  // 🔴 `providers` 2026-10-31 加進來（spec 179，重構階段 1）：核心與介面只認能力介面
+  //    （`core/capabilities.ts`），實作在 `src/providers/<id>/`，只有組裝點（`ui/app.ts`）登記它們。
+  //    ⟹ 切換到 Cella 那天是**刪一個提供者目錄**，不是在核心裡到處拔。
+  core: new Set(['ui', 'languages', 'components', 'vscode', 'interpreter', 'providers']),
   interpreter: new Set(['ui', 'vscode']),
   languages: new Set(['ui', 'vscode']),
   components: new Set(['ui', 'vscode']),
-  ui: new Set(['languages', 'vscode']),
+  // ⚠️ `ui` 也不准直接 import `interpreter`——執行改向登錄表要 `session`（spec 179）。
+  ui: new Set(['languages', 'vscode', 'interpreter', 'providers']),
+  providers: new Set(['ui', 'vscode']),
 }
 
 /**
@@ -127,6 +132,18 @@ describe('護欄：相依的方向（第六十條）', () => {
 
   it('★ 合成注入：核心 import 語言【必須】被抓到', () => {
     expect(violates('src/core/x.ts', '../languages/cpp/y')).toBe('core → languages')
+  })
+
+  it('★ 合成注入：核心與介面直接拿提供者【必須】被抓到（spec 179）', () => {
+    expect(violates('src/core/x.ts', '../providers/js-interpreter')).toBe('core → providers')
+    expect(violates('src/ui/execution-controller.ts', '../providers/js-interpreter')).toBe('ui → providers')
+    expect(violates('src/ui/execution-controller.ts', '../interpreter/interpreter')).toBe('ui → interpreter')
+    expect(violates('src/providers/js-interpreter/index.ts', '../../interpreter/interpreter'), '提供者包住直譯器是對的').toBeNull()
+  })
+
+  it('🔴 硬性零：核心與介面不得直接拿提供者，介面不得直接拿直譯器（spec 179）', () => {
+    const bad = result.edges.filter((e) => ['core → providers', 'ui → providers', 'ui → interpreter'].includes(e.kind))
+    expect(bad.map((e) => `${e.file} → ${e.spec}`), '留一筆，「換提供者不必改核心」那句話就是假的').toEqual([])
   })
 
   it('★ 合成注入：正確的方向不得亂報', () => {
