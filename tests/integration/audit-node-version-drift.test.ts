@@ -25,9 +25,14 @@
  * ## 為什麼型別檢查沒擋住（🟠 而這是一個更大的洞）
  *
  * ```
- * CI 的 runtime      Node 20      （.github/workflows/deploy.yml）
+ * CI 的 runtime      Node 20      （.github/workflows/deploy.yml）  ← 2026-10-31 升到 24，見下
  * @types/node        25.x         （happy-dom 與 vite 相依帶進來的）
  * ```
+ *
+ * 🔁 **2026-10-31（第 396 刀）：CI 升到 Node 24**——Cella 的判決模組是 WasmGC，Node 20 載不起來
+ * （`Unknown type code 0x50, enable with --experimental-wasm-gc`，本機 24 綠、CI 紅），而 Node 20 已於 2026-04 停止維護。
+ * 同一刀把這條護欄改成**讀 workflow 實際釘的版本**：名單每一筆標「從哪一版開始有」，只擋比 CI 新的。
+ * 在此之前版本寫死在這支的說明裡——升版那一刻它就說錯了，而沒有東西會紅。
  *
  * `npx tsc --noEmit` 因此對**任何 Node 21+ 的 API** 放行。
  * 🟠 真正的修法是讓型別描述「我們真的要跑的那台」——把 `@types/node` 釘到 ^20。
@@ -42,25 +47,34 @@
  * 一條列滿了所有新 API 的護欄會在每次 Node 升級時變成雜訊，而那種護欄會被關掉。
  */
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { listSourceFiles } from '../helpers/guardrail'
 
 /**
- * Node 20 沒有、而這個 repo 用過或差點用到的 API。
- * 🔴 `globSync`／`glob` 是 Node 22；名單之外的**這條護欄看不到**（見檔頭）。
+ * 這個 repo 用過或差點用到、而**不是每一版 Node 都有**的 API，各標從哪一個主版號開始有。
+ * 🔴 名單之外的**這條護欄看不到**（見檔頭）。
  */
-const TOO_NEW: readonly [RegExp, string][] = [
-  [/\bglobSync\s*\(/, 'fs.globSync 是 Node 22 才有的——用 tests/helpers/find-files.ts'],
+const TOO_NEW: readonly [RegExp, string, number][] = [
+  [/\bglobSync\s*\(/, 'fs.globSync 是 Node 22 才有的——用 tests/helpers/find-files.ts', 22],
 ]
+
+/** CI 實際跑的 Node 主版號：所有 workflow 的 `node-version` 裡最小的那個（最舊的那台說了算）。 */
+function ciNodeMajor(): number {
+  const dir = '.github/workflows'
+  const versions = readdirSync(dir).filter((f) => /\.ya?ml$/.test(f))
+    .flatMap((f) => [...readFileSync(`${dir}/${f}`, 'utf-8').matchAll(/node-version:\s*['"]?(\d+)/g)].map((m) => Number(m[1])))
+  return Math.min(...versions)
+}
+const CI_NODE = ciNodeMajor()
 
 interface Hit { file: string; line: number; why: string; text: string }
 
-function scan(text: string, file: string): Hit[] {
+function scan(text: string, file: string, ciMajor = CI_NODE): Hit[] {
   const out: Hit[] = []
   text.split('\n').forEach((l, i) => {
     if (l.trimStart().startsWith('*') || l.trimStart().startsWith('//')) return // 註解裡提到它是合法的
-    for (const [re, why] of TOO_NEW) {
-      if (re.test(l)) out.push({ file, line: i + 1, why, text: l.trim().slice(0, 90) })
+    for (const [re, why, since] of TOO_NEW) {
+      if (since > ciMajor && re.test(l)) out.push({ file, line: i + 1, why, text: l.trim().slice(0, 90) })
     }
   })
   return out
@@ -80,8 +94,14 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
     expect(FILES.length, '🔴 一個檔都沒掃到 ⟹ 下面在驗空氣').toBeGreaterThan(400)
   })
 
-  it('🔴 注入：合成一行 `fs.globSync(`，必須被報出來', () => {
-    expect(scan("const f = globSync('a/*.json')", '(合成)'), '🔴 護欄漏掉了合成的違規').toHaveLength(1)
+  it('★ 入口條件——讀得到 CI 的 Node 版本', () => {
+    expect(CI_NODE, '🔴 workflow 裡讀不到 node-version ⟹ 版本是 Infinity，下面什麼都不擋').toBeGreaterThanOrEqual(18)
+    expect(Number.isFinite(CI_NODE)).toBe(true)
+  })
+
+  it('🔴 注入：CI 是 Node 20 時，合成一行 `fs.globSync(` 必須被報出來；CI 是 Node 22 以上時不報', () => {
+    expect(scan("const f = globSync('a/*.json')", '(合成)', 20), '🔴 護欄漏掉了合成的違規').toHaveLength(1)
+    expect(scan("const f = globSync('a/*.json')", '(合成)', 24), '🔴 CI 已經有的 API 被誤報').toHaveLength(0)
   })
 
   it('★ 注入：註解裡提到它不得被誤報', () => {
@@ -92,6 +112,6 @@ describe('自我驗證：這條護欄真的量得到東西', () => {
 describe('第一百二十四條護欄：測試不得用比 CI 那台 Node 新的 API', () => {
   it('🔴 硬性零：本機綠而 CI 炸掉，比兩邊都紅更貴', () => {
     const report = hits.map((h) => `  ${h.file}:${h.line}\n    ${h.text}\n    → ${h.why}`).join('\n')
-    expect(hits.map((h) => `${h.file}:${h.line}`), `🔴 CI 跑的是 Node 20：\n${report}`).toEqual([])
+    expect(hits.map((h) => `${h.file}:${h.line}`), `🔴 CI 跑的是 Node ${CI_NODE}：\n${report}`).toEqual([])
   })
 })
