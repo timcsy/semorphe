@@ -3,7 +3,7 @@
  */
 /** 硬體分頁（spec 184）——三種「沒有資料」分得開；時間軸照判決的腳位變化畫。 */
 import { describe, it, expect } from 'vitest'
-import { HardwarePanel } from '../../../src/ui/panels/hardware-panel'
+import { HardwarePanel } from '../../../src/panels/hardware/view'
 import { hardwareOf } from '../../../src/core/hardware'
 
 const BLINK = { pins: [

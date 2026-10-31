@@ -101,7 +101,7 @@ import { registerProvider, provide, type Provider, type Readiness } from '../cor
 import { jsInterpreterProvider } from '../providers/js-interpreter'
 import { toDiagnostics } from '../core/verdict-diagnostics'
 import { hardwareOf, matchPinEvents, DEFAULT_PIN_TOLERANCE_MS, type HardwareRecord, type PinEvent } from '../core/hardware'
-import type { HardwarePanel } from './panels/hardware-panel'
+import type { HardwarePanel } from '../panels/hardware/view'
 import type { CheckAnswer } from '../core/capabilities'
 import type { Diagnostic } from '../core/diagnostics'
 registerProvider(jsInterpreterProvider)
@@ -1873,7 +1873,7 @@ export class App {
     //    面板自己**不認識執行器**——P9：跨層通訊只走 Bus（`principles.md:177`）。
     elements.variablePanel?.onEditValue((name, value) =>
       this.bus.emit('execution:set-variable', { name, value }))
-    this.hardwarePanel = elements.hardwarePanel
+    this.hardwarePanel = (elements.statePanel('hardware')?.view as HardwarePanel | undefined) ?? null
     // 🔴 **流程面板改了一格 → 匯流排**（2026-08-26，(b) 改欄位）。
     //    ⚠️ 走 `edit:tree` 這個**通用**事件，不是 `edit:flow`
     //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。
