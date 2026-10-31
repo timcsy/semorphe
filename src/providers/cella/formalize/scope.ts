@@ -11,9 +11,12 @@
  * - `for` 的 init、range-for 與計數迴圈的迴圈變數，住在迴圈自己那一層；
  *   range-for 的 `iterable` 與計數迴圈的 `from` 在外層求值。
  *
- * ⚠️ 這個檔住在 Cella 提供者裡（防腐層），C++ 的元件名寫在這裡是對的——核心不認它。
+ * 🔴 **哪一顆開作用域、宣告什麼、參照什麼，由元件自己註冊**（`formalize.ts` 的 `r.scope`，第 389 刀）；
+ * 這裡只留通用規則（敘述清單開一層、`obj` 文字屬性、`*_declare` 宣告自己的名字）與走訪本身。
  */
 import type { SemanticNode } from '../../../core/types'
+import type { ScopeWalker } from '../../../core/formalize-contract'
+import { FORMALIZE } from './registry'
 
 export interface ScopeResult {
   /** 參照節點 → 宣告節點。 */
@@ -56,44 +59,16 @@ export function resolveScopes(tree: SemanticNode): ScopeResult {
     }
   }
 
+  const resolve = (refId: string, name: string): void => {
+    const hit = lookup(name)
+    if (hit) declOf.set(refId, hit)
+    else unresolved.push({ nodeId: refId, name })
+  }
+  const w: ScopeWalker = { walkSlot, walkSlots, inScope, declare, resolve }
+
   function walk(n: SemanticNode): void {
-    switch (n.componentId) {
-      case 'cpp:var_ref': {
-        const name = String(n.properties?.name ?? '')
-        const hit = lookup(name)
-        if (hit) declOf.set(n.id, hit)
-        else unresolved.push({ nodeId: n.id, name })
-        return
-      }
-      case 'cpp:func_def':
-        inScope(() => {
-          walkSlot(n, 'params')
-          walkSlot(n, 'body')
-        })
-        return
-      case 'cpp:loop_for':
-        inScope(() => {
-          walkSlot(n, 'init')
-          walkSlot(n, 'cond')
-          walkSlot(n, 'update')
-          inScope(() => walkSlot(n, 'body'))
-        })
-        return
-      case 'cpp:loop_range':
-        walkSlot(n, 'iterable')
-        inScope(() => {
-          declare(String(n.properties?.var_name ?? ''), n.id)
-          inScope(() => walkSlot(n, 'body'))
-        })
-        return
-      case 'cpp:loop_count':
-        walkSlot(n, 'from')
-        inScope(() => {
-          declare(String(n.properties?.var_name ?? ''), n.id)
-          walkSlots(n, new Set(['from']))
-        })
-        return
-    }
+    const own = FORMALIZE.scope.get(n.componentId)
+    if (own) { own(n, w); return }
     // 🔴 方法元件的 `obj` 是**文字**（已知缺口：還沒升格成運算式槽）。單一名字就照常解析，
     //    記在 `<id>#obj`；不是單一名字（`servos[i]`）的照實列進 unresolved，由 formalize 標 unknown。
     const obj = n.properties?.obj

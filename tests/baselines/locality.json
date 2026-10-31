@@ -3,15 +3,15 @@
     "guard": "locality",
     "measuredAt": "2026-09-19",
     "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），與中立性護欄同一套規則。掃 src/ 的 .ts 與 .json，但**只計「實作」類的檔**——課程清單（topics/）與工具箱清單（toolbox-categories.ts）是登錄表的視圖，不是實作擴散。",
-    "note": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）"
+    "note": "📈 **2026-10-31（第 389 刀：每顆元件的 formalize 搬進自己的膠囊）**：97 顆元件的檔數上限各 +1、目錄數不變（全部 1）。多出來的那一個檔是它自己資料夾裡的 `formalize.ts`——翻譯原本集中在 `providers/cella/formalize/index.ts`（與 `scope.ts`），那時這 97 顆的實際足跡是「n 檔 / 2 目錄」，**這條護欄搬家前就是紅的**；搬完目錄數回到 1。同一刀順手把 `languages/cpp/auto-include.ts` 的 `cpp:func_def` 身分比對換成 `isFunctionDefinition`（第 386 刀留下的外洩）。\n\n數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）"
   },
   "limits": {
     "cpp:address_of": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:analog_read": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:analog_resolution": {
@@ -19,11 +19,11 @@
       "dirs": 1
     },
     "cpp:analog_write": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:arithmetic": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:array_2d_assign": {
@@ -31,23 +31,23 @@
       "dirs": 1
     },
     "cpp:array_2d_at": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:array_2d_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:array_assign": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:array_at": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:array_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:bits_as": {
@@ -75,7 +75,7 @@
       "dirs": 1
     },
     "cpp:block": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:block_comment": {
@@ -83,11 +83,11 @@
       "dirs": 1
     },
     "cpp:break": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:builtin_constant": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:case": {
@@ -143,7 +143,7 @@
       "dirs": 1
     },
     "cpp:compare": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:constructor": {
@@ -151,7 +151,7 @@
       "dirs": 1
     },
     "cpp:container_append": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_clear": {
@@ -159,11 +159,11 @@
       "dirs": 1
     },
     "cpp:container_count": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_empty": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_erase": {
@@ -175,11 +175,11 @@
       "dirs": 1
     },
     "cpp:container_iter": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_pop": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_pop_front": {
@@ -187,7 +187,7 @@
       "dirs": 1
     },
     "cpp:container_push": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_push_front": {
@@ -195,7 +195,7 @@
       "dirs": 1
     },
     "cpp:continue": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:cstring_append": {
@@ -235,7 +235,7 @@
       "dirs": 1
     },
     "cpp:cstring_size": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:default": {
@@ -251,7 +251,7 @@
       "dirs": 1
     },
     "cpp:delay": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:delay_microseconds": {
@@ -259,7 +259,7 @@
       "dirs": 1
     },
     "cpp:delete": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:deque_declare": {
@@ -271,23 +271,23 @@
       "dirs": 1
     },
     "cpp:dht_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:dht_open": {
-      "files": 2,
+      "files": 3,
       "dirs": 1
     },
     "cpp:dht_read": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:digital_read": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:digital_write": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:doc_comment": {
@@ -303,7 +303,7 @@
       "dirs": 1
     },
     "cpp:endl": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:enum": {
@@ -319,19 +319,19 @@
       "dirs": 1
     },
     "cpp:free": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:func_call": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:func_def": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:if": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:if_else": {
@@ -351,7 +351,7 @@
       "dirs": 1
     },
     "cpp:include": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:include_local": {
@@ -359,19 +359,19 @@
       "dirs": 1
     },
     "cpp:increment": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:initializer_list": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:input": {
       "files": 4,
       "dirs": 1
     },
+    "cpp:initializer_list": {
+      "files": 4,
+      "dirs": 1
+    },
+    "cpp:input": {
+      "files": 5,
+      "dirs": 1
+    },
     "cpp:input_formatted": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:input_line": {
@@ -415,39 +415,39 @@
       "dirs": 1
     },
     "cpp:lcd_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:lcd_open": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:lcd_print": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:literal_char": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:literal_number": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:literal_string": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:logic": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:logic_not": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:loop_count": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:loop_do_while": {
@@ -455,19 +455,19 @@
       "dirs": 1
     },
     "cpp:loop_for": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:loop_range": {
       "files": 4,
       "dirs": 1
     },
+    "cpp:loop_range": {
+      "files": 5,
+      "dirs": 1
+    },
     "cpp:loop_while": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:malloc": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:map_assign": {
@@ -507,7 +507,7 @@
       "dirs": 1
     },
     "cpp:math_max": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:math_min": {
@@ -515,11 +515,11 @@
       "dirs": 1
     },
     "cpp:math_pow": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:math_unary": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:member_static": {
@@ -535,7 +535,7 @@
       "dirs": 1
     },
     "cpp:method_call": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:method_override": {
@@ -555,7 +555,7 @@
       "dirs": 1
     },
     "cpp:millis": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:namespace_def": {
@@ -563,11 +563,11 @@
       "dirs": 1
     },
     "cpp:negate": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:new": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:ofstream_declare": {
@@ -591,23 +591,23 @@
       "dirs": 1
     },
     "cpp:pin_constant": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:pin_mode": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:pointer_assign": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:pointer_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:pointer_deref": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:pointer_step": {
@@ -615,11 +615,11 @@
       "dirs": 1
     },
     "cpp:print": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:print_formatted": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:priority_queue_declare": {
@@ -639,7 +639,7 @@
       "dirs": 1
     },
     "cpp:pulse_read": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:pwm_attach": {
@@ -671,11 +671,11 @@
       "dirs": 1
     },
     "cpp:random_next": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:random_seed": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:range_fill": {
@@ -719,7 +719,7 @@
       "dirs": 1
     },
     "cpp:range_sort": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:range_sum": {
@@ -743,31 +743,31 @@
       "dirs": 1
     },
     "cpp:return": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:serial_count": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:serial_open": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:serial_print": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:serial_read": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:servo_attach": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:servo_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:servo_read": {
@@ -775,7 +775,7 @@
       "dirs": 1
     },
     "cpp:servo_write": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:set_declare": {
@@ -783,11 +783,11 @@
       "dirs": 1
     },
     "cpp:set_insert": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:sizeof": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:stack_declare": {
@@ -819,7 +819,7 @@
       "dirs": 1
     },
     "cpp:string_at": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:string_clear": {
@@ -827,7 +827,7 @@
       "dirs": 1
     },
     "cpp:string_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:string_empty": {
@@ -863,7 +863,7 @@
       "dirs": 1
     },
     "cpp:string_size": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:string_substr": {
@@ -875,15 +875,15 @@
       "dirs": 1
     },
     "cpp:struct_at_member": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:struct_at_ptr": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:struct_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:switch": {
@@ -903,11 +903,11 @@
       "dirs": 1
     },
     "cpp:tone": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:tone_stop": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:touch_read": {
@@ -923,7 +923,7 @@
       "dirs": 1
     },
     "cpp:ultrasonic_trigger": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:using_alias": {
@@ -931,19 +931,19 @@
       "dirs": 1
     },
     "cpp:using_namespace": {
-      "files": 2,
+      "files": 3,
       "dirs": 1
     },
     "cpp:var_assign": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:var_assign_compound": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:var_declare": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:var_declare_auto": {
@@ -971,7 +971,7 @@
       "dirs": 1
     },
     "cpp:var_ref": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:var_swap": {
@@ -983,7 +983,7 @@
       "dirs": 1
     },
     "cpp:vector_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:vector_make": {
@@ -995,15 +995,15 @@
       "dirs": 1
     },
     "cpp:vector_size": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:wifi_open": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:wifi_read": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "python:arithmetic": {

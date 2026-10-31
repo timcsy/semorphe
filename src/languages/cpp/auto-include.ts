@@ -15,6 +15,7 @@ import { expandHeaderAliases, normalizeHeader, toCHeader, cIoHeaderFor } from '.
 import { buildInclude } from '../../components/cpp/include/lift'
 import { buildUsingNamespace } from '../../components/cpp/using_namespace/lift'
 import { qualifyStd } from './std-qualify'
+import { isFunctionDefinition } from '../../core/component/traits'
 
 /** 程式自己宣告的名字（變數、參數、函式、struct）——explicit 風格下不得被當成 std 的名字。 */
 function userDeclaredNames(tree: SemanticNode): Set<string> {
@@ -24,7 +25,8 @@ function userDeclaredNames(tree: SemanticNode): Set<string> {
     for (const key of ['name', 'var_name']) {
       const v = p[key]
       if (typeof v === 'string' && v !== '' && (n.componentId.endsWith('_declare') || n.componentId === 'param_decl'
-        || n.componentId === 'cpp:func_def' || key === 'var_name')) out.add(v)
+        // 函式名：問元件的宣告（`traits.functionDefinition`），不比身分——第 389 刀（就近性護欄指名）
+        || isFunctionDefinition(n.componentId) || key === 'var_name')) out.add(v)
     }
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(walk)
   }
