@@ -12,7 +12,8 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "execute": "./execute.ts",
-    "lift": "./lift-pattern.json"
+    "lift": "./lift-pattern.json",
+    "formalize": "./formalize.ts"
   },
   "traits": {
     "precedence": 14,

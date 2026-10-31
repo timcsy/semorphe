@@ -63,12 +63,6 @@ interface Baseline {
   /** 只是報表用的，不當判準——它每次重建都變。 */
   seenCheckerHash: string
   seenVersion: string
-  /**
-   * `@cella-lang/cpp` 每個定義的 merkle（含依賴閉包的雜湊）。
-   * 🔴 這是**判準**，不是報表：C++ 的語義住在那個 Library，它的某個定義變了，
-   * 依賴它的契約就要重驗——而 merkle 精確說得出是哪幾個。
-   */
-  cppMerkle: Record<string, string>
 }
 
 interface pkg { version?: string; cella?: { checkerHash?: string; semanticsHash?: string } }
@@ -105,9 +99,9 @@ interface cppIndex {
 }
 interface cppPkg { version?: string; peerDependencies?: Record<string, string> }
 
-/** 裝起來的 `@cella-lang/cpp`：它的 `package.json` 與 `index.json`。 */
-function installedCpp(): { pkg: cppPkg; index: cppIndex } | null {
-  const dir = path.join(REPO_ROOT, 'node_modules/@cella-lang/cpp')
+/** 裝起來的 `@cella-lang/<名字>`：它的 `package.json` 與 `index.json`。 */
+function installedPack(name: string): { pkg: cppPkg; index: cppIndex } | null {
+  const dir = path.join(REPO_ROOT, 'node_modules/@cella-lang', name)
   if (!fs.existsSync(path.join(dir, 'index.json'))) return null
   return {
     pkg: JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')) as cppPkg,
@@ -115,16 +109,14 @@ function installedCpp(): { pkg: cppPkg; index: cppIndex } | null {
   }
 }
 
-/** 兩張 merkle 表差在哪：變了的、新增的、消失的。 */
-export function merkleDiff(base: Record<string, string>, now: Record<string, string>): string[] {
-  const out: string[] = []
-  for (const k of Object.keys(base)) {
-    if (!(k in now)) out.push(`消失  ${k}`)
-    else if (base[k] !== now[k]) out.push(`變了  ${k}`)
-  }
-  for (const k of Object.keys(now)) if (!(k in base)) out.push(`新增  ${k}`)
-  return out.sort()
+/** `package.json` 裡宣告的 `@cella-lang/*`（不含 scope）。 */
+function declaredPacks(): string[] {
+  const j = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')) as
+    { dependencies?: Record<string, string>; devDependencies?: Record<string, string> }
+  return Object.keys({ ...j.dependencies, ...j.devDependencies })
+    .filter((n) => n.startsWith('@cella-lang/')).map((n) => n.slice('@cella-lang/'.length))
 }
+
 
 describe('護欄：釘住的檢查器，判定語義不得悄悄換人', () => {
   it('★ 入口條件：套件真的裝起來了，而且它說得出自己的雜湊', () => {
@@ -173,12 +165,10 @@ describe('護欄：釘住的檢查器，判定語義不得悄悄換人', () => {
     const p = installed()!
     const now = p.cella!.semanticsHash!
     if (process.env.GENERATE_BASELINE === '1') {
-      const cpp = installedCpp()
       writeBaseline(GUARD, {
         semanticsHash: now,
         seenCheckerHash: p.cella?.checkerHash ?? '?',
         seenVersion: p.version ?? '?',
-        cppMerkle: Object.fromEntries(Object.entries(cpp?.index.defs ?? {}).map(([k, v]) => [k, v.merkle])),
       })
     }
     const base = loadBaseline<Baseline>(GUARD)
@@ -204,47 +194,28 @@ describe('護欄：釘住的檢查器，判定語義不得悄悄換人', () => {
 
   // ── @cella-lang/cpp ────────────────────────────────────────────
   //
-  // 🔴 **C++ 的語義住在 cella 的 Library**（2026-10-05 使用者定的分工），
-  // 而它獨立於 cella-lang 發版。這裡守三件事：
+  // 🔴 **Cella 的語言套件**獨立於 cella-lang 發版，而且要與檢查器是同一支。這裡守兩件事：
   //
   //   ① 精確釘選            與 cella-lang 同一個理由（隨 main 自動發版）
-  //   ② 與檢查器是同一支    index.json 的 checkerHash ＝ cella-lang 的
-  //   ③ 每個定義的 merkle   C++ 的某個定義變了，紅的就是那一條，而訊息說得出是哪幾個
+  //   ② 與檢查器是同一支    index.json 的 checkerHash ＝ cella-lang 的；peer 釘的 cella-lang ＝ 我們釘的
+  //
+  // 🪦 **③ 每個定義的 merkle 退場**（2026-10-31，第 393 刀）：它守的是淺嵌入的 C++ Library
+  //    （我們的 `contract.cella` 站在上面）；升版後淺嵌入整個拿掉，`contract.cella` 一起退場（使用者定案）。
+  //    深嵌入那一側的判決綁定由 Cella 的 C18 語料比對（clang 讀兩份文字比兩棵樹）。
 
-  it('★ 注入：merkle 的差異要說得出變了、新增、消失三種', () => {
-    const d = merkleDiff({ a: '1', b: '2', c: '3' }, { a: '1', b: '9', d: '4' })
-    expect(d, '🔴 判準看不出差異 —— 下面那條「一樣」可能只是因為它永遠為真')
-      .toEqual(['新增  d', '消失  c', '變了  b'])
-    expect(merkleDiff({ a: '1' }, { a: '1' }), '🔴 相同的表被判成不同').toEqual([])
-  })
-
-  it('🔴 硬性零：@cella-lang/cpp 精確釘選，而且它與 cella-lang 是同一支檢查器', () => {
-    const cpp = installedCpp()
-    expect(cpp, '🔴 `node_modules/@cella-lang/cpp` 不在 —— 下面都是假的').not.toBeNull()
-    const d = declared('@cella-lang/cpp')
-    expect(d, '🔴 package.json 裡沒有 @cella-lang/cpp').toBeTruthy()
-    expect(isExactPin(d), `🔴 @cella-lang/cpp 寫成「${d}」——那是範圍`).toBe(true)
+  it('🔴 硬性零：每個 @cella-lang/* 都精確釘選，而且與 cella-lang 是同一支檢查器', () => {
+    const packs = declaredPacks()
+    expect(packs, '🔴 package.json 裡一個 @cella-lang/* 都沒有 —— 下面是空的').toContain('cpp')
     const p = installed()!
-    expect(cpp!.index.checkerHash, '🔴 cpp 的模組包是另一支檢查器建的 —— load_library_pack 會拒絕它，'
-      + '而形式化那一路會整條紅（或更糟：被跳過）').toBe(p.cella?.checkerHash)
-    expect(cpp!.pkg.peerDependencies?.['cella-lang'], '🔴 cpp 宣告的 cella-lang 與我們釘的不是同一版')
-      .toBe(declared('cella-lang'))
-  })
-
-  it('🔴 硬性零：C++ 語義的每個定義，merkle 要與基線一樣', () => {
-    const cpp = installedCpp()!
-    const now = Object.fromEntries(Object.entries(cpp.index.defs).map(([k, v]) => [k, v.merkle]))
-    const base = loadBaseline<Baseline>(GUARD)
-    const diff = merkleDiff(base.cppMerkle ?? {}, now)
-    printReport('C++ 語義（@cella-lang/cpp）', [
-      `裝起來的   @cella-lang/cpp ${cpp.pkg.version}（cbf ${cpp.index.cbfVersion}）`,
-      `定義       ${Object.keys(now).length} 個${diff.length === 0 ? '，merkle 與基線相同' : `，🔴 ${diff.length} 個不同`}`,
-      ...diff.map((x) => `   ${x}`),
-    ])
-    expect(Object.keys(now).length, '🔴 index.json 沒有任何定義 —— 下面那個「一樣」是空集合的一樣')
-      .toBeGreaterThan(0)
-    expect(diff, '\n🔴 C++ 語義的定義變了。merkle 含依賴閉包，所以列出來的就是【意思可能變了】的那幾個。\n'
-      + '🟢 要做的不是改基線，是先重跑形式化的護欄（tests/probes/cella-formalize-guard），\n'
-      + '   看我們契約的判決有沒有變，再在基線的 note 寫下【差在哪】。\n' + RATCHET_NOTE).toEqual([])
+    for (const name of packs) {
+      const pack = installedPack(name)
+      expect(pack, `🔴 \`node_modules/@cella-lang/${name}\` 不在（或沒有 index.json）`).not.toBeNull()
+      const d = declared(`@cella-lang/${name}`)
+      expect(isExactPin(d), `🔴 @cella-lang/${name} 寫成「${d}」——那是範圍`).toBe(true)
+      expect(pack!.index.checkerHash, `🔴 ${name} 的模組包是另一支檢查器建的 —— load_library_pack 會拒絕它`)
+        .toBe(p.cella?.checkerHash)
+      expect(pack!.pkg.peerDependencies?.['cella-lang'], `🔴 ${name} 宣告的 cella-lang 與我們釘的不是同一版`)
+        .toBe(declared('cella-lang'))
+    }
   })
 })

@@ -42,8 +42,8 @@ tests/
 
 全套 679 個檔約需 15 分鐘（2026-10-31 量；vitest 快取的每檔時間加總約 1,900 秒、並行 2），而**成本是 per-file 的模組載入**——每個測試檔各自
 載入一次 Blockly ＋ tree-sitter wasm ＋ 349 顆膠囊的 glob。
-⚠️ 其中約 60% 是重構階段 6 要拆的那五支（`interpreter-matches-compiler`、`audit-behavior-error`、`scenario-coverage`、
-`audit-lesson-answers-vs-compiler`、`cella-formalize-guard`）。所以：
+⚠️ 其中約 60% 是重構階段 6 要拆的那幾支（`interpreter-matches-compiler`、`audit-behavior-error`、`scenario-coverage`、
+`audit-lesson-answers-vs-compiler`；第五支 `cella-formalize-guard` 已隨階段 3 退場）。所以：
 
 | 你在做什麼 | 跑什麼 | 量級 |
 |---|---|---|

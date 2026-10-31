@@ -28,7 +28,8 @@
     "generate": "./generate.ts",
     "lift": "./lift-pattern.json",
     "execute": null,
-    "_execute_why": "**顯式的空，不是遺漏。**"
+    "_execute_why": "**顯式的空，不是遺漏。**",
+    "formalize": "./formalize.ts"
   },
   "traits": {
     "scaffold": true,
