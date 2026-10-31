@@ -152,6 +152,29 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       case 'cpp:random_seed': return k('eCall', { n: n.id, f: 'srand', args: [exprOf(n, 'seed')] })
       case 'cpp:random_next': return k('eCall', { n: n.id, f: 'rand', args: [] })
       case 'cpp:free': return k('eCall', { n: n.id, f: 'free', args: [exprOf(n, 'ptr')] })
+      case 'cpp:sizeof': {
+        // `target` 是文字屬性：是型別名就翻；是變數或運算式就照實標 unknown（不從文字猜結構）
+        const tt = String(p.target ?? '').trim()
+        const isType = SCALAR[tt] !== undefined || /^(?:struct\s+)?[A-Za-z_]\w*$/.test(tt) && (tt.startsWith('struct ') || structNames.has(tt))
+        return isType ? k('eSizeof', { n: n.id, t: type(tt, n) }) : miss(n, '`sizeof` 的對象是文字屬性，而且不是型別名（還沒升格成運算式槽）')
+      }
+      case 'cpp:new': {
+        const t = type(p.type, n)
+        if (!t) return k('eHole', { n: n.id })
+        if (one(n, 'size')) return k('eNewArr', { n: n.id, t, len: exprOf(n, 'size'), zero: false })
+        // 🔴 `new T(args)` 的引數今天是**文字屬性**（已知缺口：還沒升格成運算式槽）——不從文字猜結構
+        if (String(p.args ?? '') !== '') return miss(n, '`new T(…)` 的引數是文字屬性，還沒升格成運算式槽')
+        return k('eNew', { n: n.id, t, args: null })
+      }
+      case 'cpp:malloc': {
+        const t = type(p.type ?? 'int*', n)
+        if (!t) return k('eHole', { n: n.id })
+        const size = exprOf(n, 'size')
+        const bytes = p.sizeof_type
+          ? (() => { const st = type(p.sizeof_type, n); return st ? k('eBin', { n: `${n.id}/bytes`, op: k('opMul'), a: size, b: k('eSizeof', { n: `${n.id}/sizeof`, t: st }) }) : size })()
+          : size
+        return k('eCast', { n: n.id, t, a: k('eCall', { n: `${n.id}/call`, f: 'malloc', args: [bytes] }) })
+      }
       case 'cpp:range_sort': {
         const args = [exprOf(n, 'begin'), exprOf(n, 'end'), ...(one(n, 'comparator') ? [exprOf(n, 'comparator')] : [])]
         return k('eCall', { n: n.id, f: 'sort', args })
@@ -276,6 +299,7 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       case 'cpp:print_formatted':
         return [k('sPrintf', { n: n.id, fmt: unescapeC(String(p.format ?? '')), args: (n.slots?.args ?? []).map(expr) })]
       case 'cpp:break': return [k('sBreak', { n: n.id })]
+      case 'cpp:delete': return [k('sDelete', { n: n.id, arr: false, e: exprOf(n, 'ptr') })]
       case 'cpp:continue': return [k('sContinue', { n: n.id })]
       case 'cpp:loop_range': {
         if ((n.slots?.targets ?? []).length > 0) { miss(n, '結構化繫結的 range-for 還沒有對應'); return [k('sHole', { n: n.id })] }
