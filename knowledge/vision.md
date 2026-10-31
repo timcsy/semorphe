@@ -293,8 +293,8 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       第二批（第 389–391 刀）：formalize 搬進膠囊、判決綁定語料 109 筆／附 program 99 筆，cella 用 clang 比兩棵樹 95/95 相同；Arduino 15/15
 - [ ] **5 Cella 提供者**——verdict（積木標示、判題）、types（型別不合接上後標錯、工具箱不藏）、session（除錯、變數、步數）、
       `assumes` 小標、硬體時間軸面板、課文 check 的腳位事件（2026-10-31 拆成 5a／5b／5c）
-      ⏳ **剩下的**：`assumes` 的小標只做了一半——說明在狀態列那一格的提示裡，判決旁**看不到**「依 libc++」（第 14 題）；
-      覆蓋標記等 cella 的 `coverage()`；判題改用 `verdict` 照 spec 182 的範圍移到 6。
+      ⏳ **剩下的**：覆蓋標記等 cella 的 `coverage()`；判題改用 `verdict` 照 spec 182 的範圍移到 6。
+      （第 14 題的「依 libc++」小標 2026-11-01 第 402 刀補完：狀態列判斷那一格旁邊，點開是中文說明，不改綠紅）
   - [x] **5a 判決與型別查詢 ＋ 第一個看得見的消費者**（spec 182）——提供者宣告 `verdict`／`types`、排在 JS 直譯器前面；
         → [history/309](history/309-判決第一次被學生看到.md)
   - [x] **5b 除錯工作階段**（spec 183）——`session` 走 `cella-lang/dap` → [history/310](history/310-執行介面換成DAP的形狀.md)

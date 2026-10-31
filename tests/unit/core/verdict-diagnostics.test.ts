@@ -58,10 +58,14 @@ describe('判決 → 診斷', () => {
     expect(r.notes.join()).toMatch(/Cella/)
   })
 
-  it('★ 帶 assumes 的 accept：沒有 error，notes 有「依 libc++」', () => {
-    const r = run(v('accept', [], [{ implementation: 'libc++', choice: 'vector.growth' }]))
-    expect(r.diagnostics.filter((d) => d.severity === 'error')).toEqual([])
-    expect(r.notes.join()).toMatch(/依 libc\+\+/)
+  it('★ 帶 assumes 的 accept：沒有 error（不改綠紅），assumes 單獨交出、帶中文說明（第 14 題的小標）', () => {
+    const r = run(v('accept', [], [{ implementation: 'libc++', choice: 'vector.growth' }, { implementation: 'libc++', choice: 'some.new' }]))
+    expect(r.diagnostics).toEqual([])
+    expect(r.assumes).toEqual([
+      { implementation: 'libc++', text: expect.stringMatching(/vector 的容量/) },
+      { implementation: 'libc++', text: 'some.new' },   // 表上沒有的：原文，不丟掉
+    ])
+    expect(r.notes.join()).not.toMatch(/libc\+\+/)
   })
 })
 

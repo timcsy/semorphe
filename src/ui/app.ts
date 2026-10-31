@@ -197,6 +197,8 @@ export class App {
   private lastCheck: { tree: SemanticNode; answer: Promise<CheckAnswer> } | null = null
   private hardwarePanel: HardwarePanel | null = null
   private checkNotes: string[] = []
+  /** 這次判決依賴的實作選擇（第 14 題的小標）。 */
+  private checkAssumes: { implementation: string; text: string }[] = []
   private checkTimer: ReturnType<typeof setTimeout> | null = null
   /** 樹 → 交給判決的那一棵（補上骨架積木：自動補的 `#include` 也是程式的一部分）。init 裡由語言套件設定。 */
   private withScaffold: (tree: SemanticNode) => SemanticNode = (t) => t
@@ -4449,6 +4451,7 @@ export class App {
     if (!p?.check || p.supports?.(this.currentTopic.language) === false) {
       this.checkDiagnostics = []
       this.checkNotes = []
+      this.checkAssumes = []
       // 沒有提供者 ⟹ 說出來（P6）；提供者在但不判這個語言 ⟹ 那一格空著（不是缺了什麼，是本來就沒有）
       this.renderCheckStatus(p ? { state: 'idle' } : { state: 'unavailable', reason: '判斷功能需要 Cella' })
       this.showHardware(null)
@@ -4482,6 +4485,7 @@ export class App {
     const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: req.tree, readsInput: a.readsInput, hasStdin: stdin.length > 0 })
     this.checkDiagnostics = r.diagnostics
     this.checkNotes = r.notes
+    this.checkAssumes = r.assumes
     this.runAllDiagnostics()
     this.renderCheckStatus(p.readiness?.() ?? { state: 'ready' })
     this.showHardware(hardwareOf(a.verdict))
@@ -4535,6 +4539,46 @@ export class App {
       errors > 0 ? `判斷：${errors} 個問題` :
       infos > 0 ? `判斷：${infos} 處判不出來` : '判斷：沒有發現問題'
     el.title = [r.state === 'unavailable' ? r.reason : '', ...this.checkNotes].filter(Boolean).join('\n')
+    this.renderAssumesBadge(r.state === 'ready' ? this.checkAssumes : [])
+  }
+
+  /**
+   * **「依 libc++」小標**（第 14 題）——結果依賴某個實作的選擇（vector 的容量怎麼長、what() 的字）時才出現；
+   * 點開是頁內的中文說明（不用原生對話框：VSCode 的 webview 停用它，第七十七條護欄守著）。**不改變綠紅。**
+   */
+  private renderAssumesBadge(assumes: readonly { implementation: string; text: string }[]): void {
+    const btn = document.getElementById('status-assumes') as HTMLButtonElement | null
+    if (!btn) return
+    document.getElementById('status-assumes-pop')?.remove()
+    if (assumes.length === 0) { btn.hidden = true; return }
+    const impls = [...new Set(assumes.map((a) => a.implementation))]
+    btn.hidden = false
+    btn.textContent = `依 ${impls.join('／')}`
+    btn.title = msg('ASSUMES_TITLE', '這次的結果依賴一個實作上的選擇——點開看是哪一個')
+    btn.onclick = (): void => {
+      const open = document.getElementById('status-assumes-pop')
+      if (open) { open.remove(); return }
+      const pop = document.createElement('div')
+      pop.id = 'status-assumes-pop'
+      pop.className = 'status-assumes-pop'
+      const head = document.createElement('div')
+      head.className = 'status-assumes-head'
+      head.textContent = msg('ASSUMES_HEAD', '標準允許不只一種做法，這次的結果照下面這些實作算：')
+      pop.appendChild(head)
+      for (const a of assumes) {
+        const row = document.createElement('div')
+        row.textContent = `・依 ${a.implementation}：${a.text}`
+        pop.appendChild(row)
+      }
+      const foot = document.createElement('div')
+      foot.className = 'status-assumes-foot'
+      foot.textContent = msg('ASSUMES_FOOT', '換一個編譯器（例如 GCC 的 libstdc++），這幾處的結果可能不同；程式本身沒有錯。')
+      pop.appendChild(foot)
+      document.body.appendChild(pop)
+      const r = btn.getBoundingClientRect()
+      pop.style.left = `${Math.max(8, r.left)}px`
+      pop.style.bottom = `${window.innerHeight - r.top + 6}px`
+    }
   }
 
   /** 開始載入判決（`__appReady` 之後、瀏覽器閒置時由 `main.ts` 呼叫）。 */
