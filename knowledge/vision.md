@@ -298,6 +298,11 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       第二批（第 389–391 刀）：formalize 搬進膠囊、C18 語料 109 筆／附 program 99 筆，cella 用 clang 比兩棵樹 95/95 相同；Arduino 15/15
 - [ ] **5 Cella 提供者**（spec）——verdict（積木標示、判題）、types（型別不合接上後標錯、工具箱不藏）、session（除錯、變數、步數）、
       `assumes` 小標、硬體時間軸面板、課文 check 的腳位事件
+      🔁 2026-10-31 拆成三段（使用者照 knowie-next 的推薦定：一份 spec 驗收不完；判決與型別今天零消費者，先接最安全、最早讓學生看到）：
+  - [ ] **5a 判決與型別查詢 ＋ 第一個看得見的消費者**（spec 182）——提供者宣告 `verdict`／`types`、排在 JS 直譯器前面；
+        積木上標 reject／unknown 的原因、`assumes` 小標、型別不合接上後標錯；Web Worker、第一次需要才載、快取編好的模組
+  - [ ] **5b 除錯工作階段**——`session` 走 `cella-lang/dap`（變數、步數、輸入）
+  - [ ] **5c 硬體時間軸與課文的腳位檢查**（第 17、18 題）
 - [ ] **6 切換**（spec）——同一天拆 JS 直譯器、326 個 `execute.ts`、參照編譯器那一族；222 個靠直譯器斷言的測試檔改成對 Cella 驗
 - [ ] **7 Python**——4～6 再走一遍
 
