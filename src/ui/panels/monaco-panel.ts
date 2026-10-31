@@ -8,6 +8,7 @@ import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
 import { isResidualCause } from '../../core/diagnostics'
 import type { SemanticBus } from '../../core/sync/semantic-bus'
 import type { SemanticNode } from '../../core/types'
+import { resolveCollapsed, type CollapsedEntry } from '../../core/granularity'
 
 import type { ScaffoldResult, ScaffoldItem } from '../../core/program-scaffold'
 import type { CodeView } from '../../core/host/code-view'
@@ -99,6 +100,82 @@ export class MonacoPanel implements ViewHost, CodeView {
       this.currentTree = event.tree
       this.renderResidual(event.tree)
     }
+    void this.applyFolds()
+  }
+
+  // ─── 粒度（spec 189）────────────────────────────────────────────────────
+  //
+  // 🔴 **程式碼的摺疊是共享狀態的第三個投影**（流程收成框、積木摺成一行、程式碼按行摺）。
+  //    Monaco 的摺疊是【按行】的：一個節點 → 它的對映（`mappings`）起始行 → 從那一行開始的摺疊區段。
+  //    ① 狀態 → 摺疊：語義更新、廣播、以及 Monaco 自己重算區段之後（setCode 之後區段是非同步重算的）
+  //    ② 使用者自己按摺疊箭頭 → 請求（`collapseStateChanged`，而且不是我自己在套的那一次）
+  //    ⚠️ 對不到區段的節點（單行的、或起始行上沒有區段）就不摺——不猜。
+  private collapsedEntries: CollapsedEntry[] = []
+  private collapseCb: ((nodeId: string, collapsed: boolean) => void) | null = null
+  /** 上一次照狀態摺起來的——別的視圖展開時，靠它分得出「該展開」 */
+  private appliedFolded = new Set<string>()
+  private applyingFold = false
+  private watchedFoldingModel: unknown = null
+
+  onGranularity(event: { entries: CollapsedEntry[] }): void {
+    this.collapsedEntries = event.entries
+    void this.applyFolds()
+  }
+
+  onRequestCollapse(cb: ((nodeId: string, collapsed: boolean) => void) | null): void {
+    this.collapseCb = cb
+  }
+
+  /** 從某一行（1 起算）開始的那個節點——同一行有好幾個時取跨最多行的（`for` 的條件也從那一行開始） */
+  private nodeStartingAt(line: number): string | null {
+    let best: CodeMapping | null = null
+    for (const m of this.codeMappings) {
+      if (m.startLine + 1 !== line || m.endLine <= m.startLine) continue
+      if (!best || m.endLine - m.startLine > best.endLine - best.startLine) best = m
+    }
+    return best?.nodeId ?? null
+  }
+
+  private async foldingModel(): Promise<FoldingModelLike | null> {
+    const ctl = this.editor?.getContribution('editor.contrib.folding') as { getFoldingModel?(): Promise<FoldingModelLike | null> | null } | null
+    const model = (await ctl?.getFoldingModel?.()) ?? null
+    if (model && model !== this.watchedFoldingModel) {
+      this.watchedFoldingModel = model
+      model.onDidChange((e) => {
+        if (this.applyingFold) return
+        if (!e.collapseStateChanged) { void this.applyFolds(); return }
+        for (const r of e.collapseStateChanged) {
+          const id = this.nodeStartingAt(r.startLineNumber)
+          if (!id) continue
+          if (r.isCollapsed) this.appliedFolded.add(id)
+          else this.appliedFolded.delete(id)
+          this.collapseCb?.(id, r.isCollapsed)
+        }
+      })
+    }
+    return model
+  }
+
+  private async applyFolds(): Promise<void> {
+    const model = await this.foldingModel()
+    if (!model || !this.currentTree) return
+    const want = resolveCollapsed(this.collapsedEntries, this.currentTree)
+    const regions = model.regions
+    const toggle: FoldingRegionLike[] = []
+    const folded = new Set<string>()
+    for (let i = 0; i < regions.length; i++) {
+      const id = this.nodeStartingAt(regions.getStartLineNumber(i))
+      if (!id) continue
+      const on = want.has(id)
+      const now = regions.isCollapsed(i)
+      if (on) folded.add(id)
+      if (on && !now) toggle.push(regions.toRegion(i))
+      else if (!on && now && this.appliedFolded.has(id)) toggle.push(regions.toRegion(i))
+    }
+    this.appliedFolded = folded
+    if (toggle.length === 0) return
+    this.applyingFold = true
+    try { model.toggleCollapseState(toggle) } finally { this.applyingFold = false }
   }
 
   /**
@@ -689,4 +766,12 @@ export class MonacoPanel implements ViewHost, CodeView {
     this.editor?.dispose()
     this.editor = null
   }
+}
+
+/** Monaco 摺疊模型裡用到的那幾個成員（它不在公開型別裡——`editor.contrib.folding` 的內部模型） */
+interface FoldingRegionLike { startLineNumber: number; isCollapsed: boolean }
+interface FoldingModelLike {
+  regions: { length: number; getStartLineNumber(i: number): number; isCollapsed(i: number): boolean; toRegion(i: number): FoldingRegionLike }
+  toggleCollapseState(regions: FoldingRegionLike[]): void
+  onDidChange(cb: (e: { collapseStateChanged?: FoldingRegionLike[] }) => void): unknown
 }
