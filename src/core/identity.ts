@@ -72,7 +72,10 @@ export function isValidComponentId(id: string): boolean {
   if (!p) return false
   // 🔴 **不比對白名單**（spec 156）——只要求格式正確；
   //    「scope 與資料夾一致」由 `audit-identity-namespace` 用結構判定。
-  return p.scope.length > 0 && /^[a-z][a-z0-9_]*$/.test(p.scope)
+  // `@` 開頭是第三方 scope（`@someone:*`，`concepts/元件.md` 的「名字撞不了」那一節）。
+  // ⚠️ 2026-10-31 這個判準接上產品的 C1 時補的——在那之前它只被護欄用，
+  //    所以「它擋掉第三方」這件事沒有任何東西會發現。
+  return p.scope.length > 0 && /^@?[a-z][a-z0-9_]*$/.test(p.scope)
 }
 
 /** 有命名空間嗎（不檢查 scope 是否在白名單內）——遷移期間用來分辨新舊格式 */

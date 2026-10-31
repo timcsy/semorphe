@@ -64,7 +64,7 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 // ⚠️ **為了它的副作用**：`param_decl` 之類的結構節點是在這裡 `declareNonComponent` 的，
 //    不載它的話下面那條「每一個字都指得到東西」會把 8 個合法的宣告當成錯字。
-import '../../src/languages/cpp/module'
+import '../../src/languages/cpp/generators'
 import { checkSlots, unreadSlots, fitsSlot, slotDeclsOf, isDynamic } from '../../src/core/component/slot-check'
 import { positionsOf } from '../../src/core/component/traits'
 import { registeredComponents } from '../../src/core/component/registry'

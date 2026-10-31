@@ -51,7 +51,7 @@ import { printReport, listSourceFiles, REPO_ROOT } from '../helpers/guardrail'
 import { splitCodeAndComments } from '../helpers/component-scan'
 import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import { nonComponentDecl, allNonComponents } from '../../src/core/blocks/non-components'
-import '../../src/languages/cpp/module'
+import '../../src/languages/cpp/generators'
 
 /** 登錄表認得的身分 */
 const declared = new Set(allCppComponents().map((c) => c.componentId))

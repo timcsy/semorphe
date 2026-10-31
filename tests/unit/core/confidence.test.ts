@@ -4,7 +4,6 @@
 import { describe, it, expect } from 'vitest'
 import { Lifter } from '../../../src/core/lift/lifter'
 import { PatternLifter } from '../../../src/core/lift/pattern-lifter'
-import { ComponentRegistry } from '../../../src/core/component-registry'
 import { createNode } from '../../../src/core/semantic-tree'
 import { LiftContextData } from '../../../src/core/lift/lift-context'
 import type { AstNode, LiftContext } from '../../../src/core/lift/types'
@@ -50,13 +49,11 @@ function unnamed(type: string, text: string): AstNode {
 describe('Confidence & DegradationCause', () => {
   let lifter: Lifter
   let patternLifter: PatternLifter
-  let registry: ComponentRegistry
 
   function setup() {
     lifter = new Lifter()
     patternLifter = new PatternLifter()
     patternLifter.setGrammar('tree-sitter-cpp')
-    registry = new ComponentRegistry()
 
     const specRegistry = new BlockSpecRegistry()
     const allComponents = allCppComponents()
@@ -69,19 +66,6 @@ describe('Confidence & DegradationCause', () => {
     patternLifter.loadLiftPatterns(liftPatternsJson as unknown as LiftPattern[])
     lifter.setPatternLifter(patternLifter)
 
-    // Register known component IDs in ComponentRegistry
-    for (const spec of allSpecs) {
-      const componentId = (spec as BlockSpec).componentId?.componentId
-      if (componentId && !registry.get(componentId)) {
-        registry.register({
-          id: componentId,
-          layer: 'universal',
-          level: 0,
-          propertyNames: [],
-          childNames: [],
-        })
-      }
-    }
 
     // Register hand-written lifters for expressions
     registerExpressionLifters(lifter)
@@ -141,13 +125,6 @@ describe('Confidence & DegradationCause', () => {
       // Let's test with a completely empty compound_statement (no slots to lift)
       // Actually, let me use an approach: register a component for a known AST type,
       // then give a node of that type that doesn't match
-      registry.register({
-        id: 'test_known',
-        layer: 'lang-core',
-        level: 0,
-        propertyNames: [],
-        childNames: [],
-      })
       // Map an AST nodeType to this component in the lifter's component mapping
       lifter.setAstNodeComponentMap(new Map([['some_known_type', 'test_known']]))
 

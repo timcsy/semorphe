@@ -97,6 +97,17 @@ export function registerLanguage(language: string, factory: LanguageGeneratorFac
 // ─── Meta-component generators ───
 
 /** Register generators for meta-components (raw_code, unresolved, comment, doc_comment, block_comment) */
+/**
+ * 這個語言、這個風格下的**產生器表**——產碼與護欄看的是同一張。
+ *
+ * 🔴 2026-10-31：`skip-declaration-gate` 原本驗的是 `cpp/module.ts` 裝的 `TemplateGenerator`，
+ * 而產品從不裝它（`setTemplateGenerator` 在 `src/` 零呼叫）——**護欄驗的是一條產品不走的路**。
+ */
+export function languageGenerators(language: string, style: StylePreset): Map<string, NodeGenerator> {
+  const factory = languageFactories.get(language)
+  return factory ? factory(style) : new Map<string, NodeGenerator>()
+}
+
 export function registerMetaComponentGenerators(generators: Map<string, NodeGenerator>): void {
   generators.set('raw_code', (node, ctx) => {
     const raw = String(node.metadata?.rawCode ?? node.properties.code ?? '')
@@ -229,8 +240,7 @@ export function generateCode(tree: SemanticNode, language: string, style: StyleP
  * 正是被合併掉的那個雙重身分。
  */
 export function generateExpressionCode(node: SemanticNode, language: string, style: StylePreset): string {
-  const factory = languageFactories.get(language)
-  const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
+  const generators = languageGenerators(language, style)
   registerMetaComponentGenerators(generators)
   const ctx: GeneratorContext = { indent: 0, style, language, generators, isExpression: true }
   if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
@@ -243,8 +253,7 @@ export function generateCodeWithMapping(
   language: string,
   style: StylePreset,
 ): { code: string; mappings: CodeMapping[] } {
-  const factory = languageFactories.get(language)
-  const generators = factory ? factory(style) : new Map<string, NodeGenerator>()
+  const generators = languageGenerators(language, style)
   registerMetaComponentGenerators(generators)
   const mappings: CodeMapping[] = []
   const lineBox = { value: 0 }
