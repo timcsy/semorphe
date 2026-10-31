@@ -787,6 +787,8 @@ export function createAppLayout(
       panel: consoleEl,
       actions: [
         { icon: '📋', title: '複製輸出', onClick: () => consolePanel.copyOutput() },
+        // 🟢 重播上一次（vision〈執行的誠實〉）：用上一次打過的輸入再跑一次——不是預設行為，學生按執行期待的是重新打
+        { id: 'replay', icon: '↻', title: Blockly.Msg['CONSOLE_REPLAY'] || '重播上一次（用同一份輸入再跑一次）', onClick: () => consolePanel.requestReplay() },
         { icon: Blockly.Msg['PANEL_CLEAR'] || '清除', title: 'Clear', onClick: () => consolePanel.clear() },
       ],
     }

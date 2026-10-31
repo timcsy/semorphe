@@ -328,6 +328,8 @@ export class BottomPanel {
       btn.className = 'bottom-panel-action-btn'
       btn.title = action.title
       btn.textContent = action.icon
+      // 與面板自己的那幾顆同一個識別方式（`data-action`）——在此之前只有那一邊有
+      btn.dataset.action = action.id ?? ''
       btn.addEventListener('click', action.onClick)
       this.tabActionsArea.appendChild(btn)
     }

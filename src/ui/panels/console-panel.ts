@@ -187,6 +187,22 @@ export class ConsolePanel implements ViewHost {
     this.pendingInputLines.push(line)
   }
 
+  /**
+   * **取消正在等的輸入**——那一次執行停掉了。
+   * 🔴 不取消的話，舊的等待還掛著：下一次餵進來的那一行（重播、終端機先貼好的）會被**已經死掉的那次執行**吃掉，
+   *    新的那次等不到（重播那支 e2e 量到的）。
+   */
+  cancelInput(): void {
+    this.inputResolve = null
+    this.removeInlineInput()
+    this.removeInputRow()
+  }
+
+  private replayHandler: (() => void) | null = null
+  /** 「↻ 重播上一次」被按了（vision〈執行的誠實〉）——由組裝點接到執行器。 */
+  onReplay(handler: (() => void) | null): void { this.replayHandler = handler }
+  requestReplay(): void { this.replayHandler?.() }
+
   onSignal(handler: ((signal: ConsoleSignal) => void) | null): void {
     this.signalHandler = handler
   }

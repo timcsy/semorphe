@@ -1,7 +1,7 @@
 import { RUN_MODES } from '../core/host/controls'
 import * as Blockly from 'blockly'
 import type { BoardPinModel } from '../core/types'
-import { openSession, SessionStop, type ExecutionSession, type Outcome, type SessionOptions, type Stop } from '../core/capabilities'
+import { openSession, SessionStop, type ExecutionSession, type Outcome, type SessionInput, type SessionOptions, type Stop } from '../core/capabilities'
 import { DebugToolbar } from './debug-toolbar'
 import type { StepInfo, ExecutionSpeed } from '../core/execution'
 import { showQuickPick } from './toolbar/quick-pick'
@@ -50,6 +50,8 @@ export class ExecutionController {
   /** 加速／跳出：還在這一群裡就直接往下走，不停。 */
   private skipIds: Set<string> | null = null
   private currentNodeId: string | null = null
+  /** 上一次執行從外面拿到的東西（重播用）。 */
+  private lastInputs: readonly SessionInput[] = []
   private currentBoard?: () => BoardPinModel | undefined
   /** 交給形式化提供者（Cella）的那一份——組裝點才知道骨架積木、目標、風格、骨架（spec 183）。 */
   private formalContext?: (tree: SemanticNode) => SessionOptions['formal']
@@ -312,7 +314,23 @@ export class ExecutionController {
    * **開一次執行**（spec 183）——向登錄表要 `session`，Cella 不接（翻不出來、還沒就緒）就往下找，
    * 而「是誰跑的、前面誰不接、為什麼」都廣播出去（P6：退回要看得見）。
    */
-  private async start(mode: 'run' | 'debug' | 'step' | 'animate', speed: ExecutionSpeed = 'medium'): Promise<void> {
+  /**
+   * **重播上一次**（vision〈執行的誠實〉的 🆕 那一格）——用上一次打過的那幾行輸入再跑一次。
+   * ⚠️ 手動改過的變數、板子的輸入不重播（它們綁在「第幾次停下」上，跑法一變就對不上）——照實說有幾筆沒重播。
+   */
+  replayLast(): void {
+    const lines = this.lastInputs.filter((i): i is Extract<SessionInput, { kind: 'stdin' }> => i.kind === 'stdin').map((i) => i.value)
+    const skipped = this.lastInputs.filter((i) => i.kind === 'set-variable' || i.kind === 'set-input').length
+    if (this.lastInputs.length === 0) {
+      this.broadcastOutput(msg('REPLAY_NOTHING', '上一次沒有從外面拿到任何輸入——直接按執行就好') + '\n', 'stderr')
+      return
+    }
+    void this.start('run', 'medium', lines).then(() => {
+      if (skipped > 0) this.broadcastOutput(msg('REPLAY_SKIPPED', '這次重播沒有包含你手動改的 {n} 筆（變數、板子的輸入）').replace('{n}', String(skipped)) + '\n', 'stderr')
+    })
+  }
+
+  private async start(mode: 'run' | 'debug' | 'step' | 'animate', speed: ExecutionSpeed = 'medium', replay: readonly string[] = []): Promise<void> {
     if (this.getBlocksDirty() && (await this.askSyncBeforeRun())) this.syncBeforeRun()
     const tree = this.panels.syncController?.getCurrentTree()
     if (!tree) return
@@ -323,6 +341,8 @@ export class ExecutionController {
     this.mode = mode
     this.auto = mode === 'animate' ? ExecutionController.ANIMATE_DELAY[speed] : null
     this.panels.consolePanel?.clear()
+    // 重播：上一次打過的輸入先排進主控台的佇列（它照常回顯、照常被讀——與打字是同一條路）
+    for (const line of replay) this.panels.consolePanel?.feedInput(line)
     // 執行與除錯都是跑到中斷點；單步與動畫停在第一步
     this.panels.bottomPanel?.showTab(mode === 'run' ? 'console' : 'variables')
     this.showExecButtons(true, mode === 'step' ? 'stepping' : 'running')
@@ -469,6 +489,7 @@ export class ExecutionController {
   }
 
   private finish(session: ExecutionSession): void {
+    this.lastInputs = session.recordedInputs()
     this.clearHighlights()
     this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
     this.reportInterventions(session)
@@ -483,6 +504,7 @@ export class ExecutionController {
   }
 
   private fail(e: SessionStop): void {
+    if (this.session && e.kind !== 'aborted') this.lastInputs = this.session.recordedInputs()
     this.clearHighlights()
     this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
     if (e.kind === 'aborted') {
@@ -513,6 +535,7 @@ export class ExecutionController {
 
   handleStop(): void {
     this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
+    this.panels.consolePanel?.cancelInput()
     const s = this.session
     this.session = null
     s?.terminate()
@@ -524,6 +547,7 @@ export class ExecutionController {
   }
 
   private resetExecution(): void {
+    this.panels.consolePanel?.cancelInput()
     const s = this.session
     this.session = null
     s?.terminate()
