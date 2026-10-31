@@ -10,7 +10,7 @@
 - [x] T005 元件對照表 ＋ 護欄（FR-007、SC-004）：每顆 C++ 元件都有對應或明確的「不送」理由；未對應數棘輪
 - [ ] T006 支援清單（Cella 的 `supported`）接上：送出前擋 Cella 還沒做的函式與成員（FR-004）
 - [ ] T007 空槽 → 洞（`eHole`／`sHole`，標籤 `<節點>#<槽名>`）的完整處理與測試（FR-005；今天只有 `exprOf` 的缺槽）
-- [ ] T008 Arduino：`board` 與裝置積木（`dht_declare`、`servo_declare`、`lcd_declare`、腳位）
+- [x] T008 Arduino：`board` 與裝置積木（`dht_declare`、`servo_declare`、`lcd_declare`、腳位）
 - [ ] T009 C18 語料的 `text` 半邊交給 Cella
 
 ## 第二批（等 Cella 升級）

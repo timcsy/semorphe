@@ -11,7 +11,7 @@ import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import { createTestLifter } from '../../helpers/setup-lifter'
-import { formalize, type CellaJson } from '../../../src/providers/cella/formalize'
+import { formalize, cellaBoardOf, type CellaJson } from '../../../src/providers/cella/formalize'
 import type { SemanticNode } from '../../../src/core/types'
 
 const SYNTAX = path.resolve(process.cwd(), '../cella/packages/cfamily/src/syntax.cella')
@@ -126,6 +126,30 @@ describe('formalize：最小子集', () => {
     expect(s, '1000000LL：值是 int、字面是 long long → 包').toContain('"k":"eCast","n"')
     const casts = (s.match(/"k":"eCast"/g) ?? []).length
     expect(casts, '5000000000L：值本身就是 long → 不包；100L 要包').toBe(2)
+  })
+
+  it('★ Arduino：帶板子；核心函式是呼叫、常數是 eConst、Serial 是板子的物件', () => {
+    const src = 'void setup() { pinMode(LED_BUILTIN, OUTPUT); Serial.begin(9600); }\nvoid loop() { digitalWrite(LED_BUILTIN, HIGH); delay(1000); Serial.println(1); }'
+    const r = formalize(lift(src), { board: cellaBoardOf('arduino-uno') })
+    expect(r.unknown).toEqual([])
+    const s = JSON.stringify(r.program)
+    expect(r.program?.board).toBe('uno')
+    expect(s).toContain('"f":"pinMode"')
+    expect(s).toContain('"k":"eConst","n"')
+    expect(s).toMatch(/"k":"eMCall".*"name":"Serial".*"f":"begin"/)
+  })
+
+  it('★ 目標 id 對到 Cella 的板名；不是板子的目標沒有板名', () => {
+    expect(cellaBoardOf('esp32s3-cam')).toBe('esp32s3Cam')
+    expect(cellaBoardOf('nodemcu-esp8266')).toBe('nodemcuEsp8266')
+    expect(cellaBoardOf('cpp')).toBeUndefined()
+  })
+
+  it.skipIf(!hasSyntax)('★ Arduino 的 sketch 形狀也對得上語法定義', () => {
+    const fields = constructorFields(fs.readFileSync(SYNTAX, 'utf8'))
+    const errs: string[] = []
+    checkShape(formalize(lift('#include <DHT.h>\nDHT dht(2, DHT11);\nvoid setup() { dht.begin(); }\nvoid loop() { float t = dht.readTemperature(); }'), { board: 'uno' }).program, fields, '$', errs)
+    expect(errs).toEqual([])
   })
 
   /**

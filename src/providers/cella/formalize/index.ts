@@ -42,6 +42,19 @@ function unescapeC(s: string): string {
   })
 }
 
+/**
+ * semorphe 的目標 id → Cella 的板名（`@cella-lang/arduino` 的 README：未知的板子判決是 `invalid`）。
+ * 不是板子的目標（`cpp`、`c`）回 undefined。
+ */
+const CELLA_BOARD: Record<string, string> = {
+  'arduino-uno': 'uno', arduino: 'arduino', 'arduino-nano': 'nano',
+  esp32: 'esp32', esp32c3: 'esp32c3', esp32s3: 'esp32s3', 'esp32s3-cam': 'esp32s3Cam',
+  'nodemcu-esp8266': 'nodemcuEsp8266', 'wemos-d1-mini': 'wemosD1Mini',
+}
+export function cellaBoardOf(targetId: string): string | undefined {
+  return CELLA_BOARD[targetId]
+}
+
 export function formalize(tree: SemanticNode, options: { board?: string } = {}): FormalizeResult {
   const { declOf } = resolveScopes(tree)
   // C++ 的 struct 就是 class：寫不寫 `struct` 都是 tClass（cella 2026-10-31；tStruct 只給 C 程式）。
@@ -80,6 +93,22 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
     return c ? expr(c) : k('eHole', { n: `${n.id}#${slot}` })
   }
 
+  /** 函式呼叫：引數依槽的順序，沒填的選擇性引數（如 tone 的 duration）不送。 */
+  const call = (n: SemanticNode, f: string, slots: string[]): CellaJson =>
+    k('eCall', { n: n.id, f, args: slots.filter((sl) => one(n, sl)).map((sl) => expr(one(n, sl)!)) })
+  /**
+   * 方法呼叫，接收者是文字屬性 `obj`：程式裡宣告過的物件（`dht`）照常指到宣告；
+   * 沒宣告過的（`Serial`、`Serial1`）是板子的全域物件——照 Cella 的板子常數那樣寫成 `eConst`。
+   * ⚠️ 全域物件寫成 eConst 是推論（README 說常數是 eConst、全域物件列在 boardInfo），已向 cella 確認中。
+   */
+  const mcall = (n: SemanticNode, f: string, slots: string[]): CellaJson => {
+    const name = String(n.properties?.obj ?? '')
+    const x = declOf.get(`${n.id}#obj`)
+    const obj = x ? k('eVar', { n: `${n.id}/obj`, x }) : /^Serial[0-9]?$/.test(name) ? k('eConst', { n: `${n.id}/obj`, name }) : null
+    if (!obj) return miss(n, `接收者「${name}」指不到宣告，也不是板子的序列埠`)
+    return k('eMCall', { n: n.id, obj, arrow: false, f, args: slots.filter((sl) => one(n, sl)).map((sl) => expr(one(n, sl)!)) })
+  }
+
   function expr(n: SemanticNode): CellaJson {
     const p = n.properties ?? {}
     switch (n.componentId) {
@@ -115,7 +144,13 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       }
       case 'cpp:var_ref': {
         const x = declOf.get(n.id)
-        return x ? k('eVar', { n: n.id, x }) : miss(n, `名字「${String(p.name)}」指不到宣告`)
+        if (x) return k('eVar', { n: n.id, x })
+        // 板子與函式庫的常數（LED_BUILTIN、DHT11、WL_CONNECTED）今天被 lift 成一般的參照、指不到宣告。
+        // 在板子上，全大寫的名字照 Cella 的寫法送成 eConst——它存不存在由 Cella 依板子與 include 判
+        //（`boardInfo` 是它的真相；不存在的話判決會指回這個節點），不是我們猜。
+        const name = String(p.name ?? '')
+        if (options.board && /^[A-Z][A-Z0-9_]*$/.test(name)) return k('eConst', { n: n.id, name })
+        return miss(n, `名字「${name}」指不到宣告`)
       }
       case 'cpp:arithmetic': case 'cpp:compare': case 'cpp:logic': {
         const op = BIN[String(p.operator ?? '')]
@@ -152,6 +187,34 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       case 'cpp:random_seed': return k('eCall', { n: n.id, f: 'srand', args: [exprOf(n, 'seed')] })
       case 'cpp:random_next': return k('eCall', { n: n.id, f: 'rand', args: [] })
       case 'cpp:free': return k('eCall', { n: n.id, f: 'free', args: [exprOf(n, 'ptr')] })
+      // ── Arduino 的核心：腳位、時間、聲音——在 Cella 都是一般的函式呼叫（`@cella-lang/arduino` 的 README）
+      case 'cpp:delay': return call(n, 'delay', ['ms'])
+      case 'cpp:pin_mode': return call(n, 'pinMode', ['pin', 'mode'])
+      case 'cpp:digital_write': return call(n, 'digitalWrite', ['pin', 'value'])
+      case 'cpp:digital_read': return call(n, 'digitalRead', ['pin'])
+      case 'cpp:analog_write': return call(n, 'analogWrite', ['pin', 'value'])
+      case 'cpp:analog_read': return call(n, 'analogRead', ['pin'])
+      case 'cpp:millis': return call(n, 'millis', [])
+      case 'cpp:tone': return call(n, 'tone', ['pin', 'frequency', 'duration'])
+      case 'cpp:tone_stop': return call(n, 'noTone', ['pin'])
+      case 'cpp:pulse_read': return call(n, 'pulseIn', ['pin', 'state', 'timeout'])
+      // 板子的常數（HIGH、OUTPUT、LED_BUILTIN…）：`{"k": "eConst", "name": …}`
+      case 'cpp:pin_constant': return k('eConst', { n: n.id, name: String(p.value ?? '') })
+      // ── 序列埠與函式庫物件：方法呼叫（`eMCall`）
+      case 'cpp:serial_open': return mcall(n, 'begin', ['baud'])
+      case 'cpp:serial_print': return mcall(n, String(p.newline ?? 'true') === 'true' ? 'println' : 'print', ['value', 'format'])
+      case 'cpp:serial_count': return mcall(n, 'available', [])
+      case 'cpp:serial_read': return mcall(n, 'read', [])
+      case 'cpp:dht_open': return mcall(n, 'begin', [])
+      case 'cpp:servo_write': return mcall(n, 'write', ['angle'])
+      case 'cpp:servo_attach': return mcall(n, 'attach', ['pin'])
+      case 'cpp:lcd_open': return mcall(n, 'begin', ['cols', 'rows'])
+      case 'cpp:lcd_print': return mcall(n, 'print', ['value'])
+      case 'cpp:wifi_open': return k('eMCall', { n: n.id, obj: k('eConst', { n: `${n.id}/obj`, name: 'WiFi' }), arrow: false, f: 'begin', args: [exprOf(n, 'ssid'), exprOf(n, 'password')] })
+      case 'cpp:wifi_read': return k('eMCall', { n: n.id, obj: k('eConst', { n: `${n.id}/obj`, name: 'WiFi' }), arrow: false, f: p.quantity === 'address' ? 'localIP' : 'status', args: [] })
+      // 通用方法呼叫：接收者是接點（`m[k].f()` 的 `m[k]` 是一棵樹）
+      case 'cpp:method_call': return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: String(p.method ?? ''), args: (n.slots?.args ?? []).map(expr) })
+      case 'cpp:dht_read': return mcall(n, p.quantity === 'temperature' ? 'readTemperature' : 'readHumidity', [])
       case 'cpp:sizeof': {
         // `target` 是文字屬性：是型別名就翻；是變數或運算式就照實標 unknown（不從文字猜結構）
         const tt = String(p.target ?? '').trim()
@@ -259,7 +322,17 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
     return [global ? k('iVar', { n: n.id, x: n.id, name, t, init }) : k('sDecl', { n: n.id, x: n.id, name, t, init })]
   }
 
+  function libraryObject(n: SemanticNode, cls: string, global: boolean): CellaJson[] {
+    const name = String(n.properties?.name ?? '')
+    const t = k('tClass', { name: cls })
+    const args = (n.slots?.initializer ?? []).map(expr)
+    return [global ? k('iVarC', { n: n.id, x: n.id, name, t, args }) : k('sDeclC', { n: n.id, x: n.id, name, t, args })]
+  }
+
   function decl(n: SemanticNode, global: boolean): CellaJson[] {
+    if (n.componentId === 'cpp:dht_declare') return libraryObject(n, 'DHT', global)
+    if (n.componentId === 'cpp:servo_declare') return libraryObject(n, 'Servo', global)
+    if (n.componentId === 'cpp:lcd_declare') return libraryObject(n, String(n.properties?.decl_type ?? 'LiquidCrystal'), global)
     if (['cpp:vector_declare', 'cpp:array_declare', 'cpp:array_2d_declare'].includes(n.componentId)) return containerDecl(n, global)
     if (n.componentId === 'cpp:pointer_declare' || n.componentId === 'cpp:string_declare') {
       const base = n.componentId === 'cpp:string_declare' ? k('tString') : type(n.properties?.type, n)
@@ -286,7 +359,8 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
     const p = n.properties ?? {}
     switch (n.componentId) {
       case 'cpp:var_declare': case 'cpp:vector_declare': case 'cpp:array_declare':
-      case 'cpp:pointer_declare': case 'cpp:string_declare': return decl(n, false)
+      case 'cpp:pointer_declare': case 'cpp:string_declare': case 'cpp:dht_declare':
+      case 'cpp:servo_declare': case 'cpp:lcd_declare': return decl(n, false)
       case 'cpp:array_2d_declare': return decl(n, false)
       case 'cpp:input_formatted':
         return [k('sScanf', { n: n.id, fmt: unescapeC(String(p.format ?? '')), args: (n.slots?.args ?? []).map(expr) })]
@@ -299,6 +373,13 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       case 'cpp:print_formatted':
         return [k('sPrintf', { n: n.id, fmt: unescapeC(String(p.format ?? '')), args: (n.slots?.args ?? []).map(expr) })]
       case 'cpp:break': return [k('sBreak', { n: n.id })]
+      case 'cpp:ultrasonic_trigger': {
+        // 一顆積木、五行程式碼：拉低 → 2 µs → 拉高 → 10 µs → 拉低。標籤 <id>/<第幾行>，判決指回這塊積木
+        const pin = exprOf(n, 'pin')
+        const w = (i: number, v: string): CellaJson => k('sExpr', { n: `${n.id}/${i}`, e: k('eCall', { n: `${n.id}/${i}/call`, f: 'digitalWrite', args: [pin, k('eConst', { n: `${n.id}/${i}/v`, name: v })] }) })
+        const d = (i: number, us: number): CellaJson => k('sExpr', { n: `${n.id}/${i}`, e: k('eCall', { n: `${n.id}/${i}/call`, f: 'delayMicroseconds', args: [k('eNum', { n: `${n.id}/${i}/us`, v: us })] }) })
+        return [k('sBlock', { n: n.id, body: [w(1, 'LOW'), d(2, 2), w(3, 'HIGH'), d(4, 10), w(5, 'LOW')] })]
+      }
       case 'cpp:delete': return [k('sDelete', { n: n.id, arr: false, e: exprOf(n, 'ptr') })]
       case 'cpp:continue': return [k('sContinue', { n: n.id })]
       case 'cpp:loop_range': {
@@ -337,6 +418,9 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       case 'cpp:var_assign': case 'cpp:var_assign_compound': case 'cpp:increment': case 'cpp:func_call':
       case 'cpp:container_append': case 'cpp:array_assign': case 'cpp:container_push': case 'cpp:container_pop':
       case 'cpp:set_insert': case 'cpp:pointer_assign': case 'cpp:range_sort': case 'cpp:random_seed': case 'cpp:free':
+      case 'cpp:delay': case 'cpp:pin_mode': case 'cpp:digital_write': case 'cpp:analog_write': case 'cpp:tone': case 'cpp:tone_stop':
+      case 'cpp:serial_open': case 'cpp:serial_print': case 'cpp:dht_open': case 'cpp:wifi_open': case 'cpp:method_call':
+      case 'cpp:servo_write': case 'cpp:servo_attach': case 'cpp:lcd_open': case 'cpp:lcd_print':
         return [k('sExpr', { n: `${n.id}/stmt`, e: expr(n) })]
       default:
         miss(n, '這顆敘述元件還沒有對應到 Cella 的建構子')
@@ -359,7 +443,8 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       case 'cpp:array_2d_declare': return decl(n, true)
       case 'cpp:using_namespace': return [k('iUsing', { n: n.id, name: String(p.ns ?? '') })]
       case 'cpp:var_declare': case 'cpp:vector_declare': case 'cpp:array_declare':
-      case 'cpp:pointer_declare': case 'cpp:string_declare': return decl(n, true)
+      case 'cpp:pointer_declare': case 'cpp:string_declare': case 'cpp:dht_declare':
+      case 'cpp:servo_declare': case 'cpp:lcd_declare': return decl(n, true)
       case 'cpp:func_def': {
         const ret = String(p.return_type ?? '') === 'void' ? null : type(p.return_type, n)
         const params = (n.slots?.params ?? []).map((q) =>
