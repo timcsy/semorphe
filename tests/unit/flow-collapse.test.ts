@@ -95,6 +95,15 @@ describe('共享的收合狀態', () => {
     expect(s.refresh(gone).size, '那一段不在了——安靜地掉').toBe(0)
   })
 
+  it('收起來的那一段裡面被改了（子樹鍵對不到）→ 退回路徑，仍收著同一顆', async () => {
+    const s = new GranularityState()
+    s.refresh(tree)
+    s.set(loop.id, true)
+    const edited = (await liftPython(CODE.replace('x = x - 1', 'x = x - 2')))!
+    const loop2 = edited.slots['body'].find((n) => n.componentId === 'python:loop_while')!
+    expect([...s.refresh(edited)]).toEqual([loop2.id])
+  })
+
   it('展開；不是這棵樹的 id 什麼都不變', () => {
     const s = new GranularityState()
     s.refresh(tree)

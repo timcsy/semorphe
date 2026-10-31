@@ -46,7 +46,7 @@
  */
 import type { SemanticNode } from './types'
 import type { SemanticBus } from './sync/semantic-bus'
-import { keysOfNodes, matchByKeys, walkWithPath, type KeyedNode } from './flow/layout-key'
+import { keysOfNodes, keyByPath, matchByKeys, walkWithPath, type KeyedNode } from './flow/layout-key'
 
 /** 存檔裡的一筆——**只有鑰匙**（與 `PlacedEntry` 同形，而它沒有 x／y）。 */
 export interface CollapsedEntry {
@@ -59,15 +59,59 @@ export interface CollapsedEntry {
  */
 export function resolveCollapsed(saved: readonly CollapsedEntry[], root: SemanticNode): Set<string> {
   const after = walkWithPath(root)
-  const matched = matchByKeys(saved.map((e) => e.keys), after)
-  return new Set(matched.values())
+  const subtreeKeys = after.map((k) => subtreeKey(k.node))
+  const count = new Map<string, number>()
+  for (const sk of subtreeKeys) count.set(sk, (count.get(sk) ?? 0) + 1)
+  const out = new Set<string>()
+  const legacy: string[][] = []
+  for (const e of saved) {
+    const sk = e.keys.find((k) => k.startsWith('S:'))
+    // v25 第一版的存檔沒有子樹鍵——照舊的配對（spec 188 交付的那幾天存下的）
+    if (!sk) { legacy.push(e.keys); continue }
+    const hits = after.flatMap((k, i) => (subtreeKeys[i] === sk ? [k] : []))
+    const pathHit = (k: KeyedNode): boolean => e.keys.includes(`P:${keyByPath(k)}`)
+    let pick: KeyedNode | undefined
+    if (hits.length === 1) pick = hits[0]
+    // 同樣內容的有好幾顆（兩個一模一樣的迴圈）→ 由路徑挑；挑不出就不對（寧可對不回去）
+    else if (hits.length > 1) pick = hits.filter(pathHit).length === 1 ? hits.find(pathHit) : undefined
+    // 一顆都沒有＝收起來的那一段裡面被改了 → 才退回路徑（同一個身分、同一個位置）
+    else pick = after.find(pathHit)
+    if (pick && !out.has(pick.node.id)) out.add(pick.node.id)
+  }
+  if (legacy.length > 0) for (const id of matchByKeys(legacy, after).values()) out.add(id)
+  return out
+}
+
+/**
+ * **子樹鍵**（spec 190）——這一塊連同裡面的全部長什麼樣（身分＋屬性，遞迴），雜湊成一把鑰匙。
+ *
+ * 🔴 為什麼收合需要它、而手拖位置不需要：`matchByKeys` 判「這把鑰匙曖昧嗎」是數**存下來的那一批**，
+ *    流程佈局存的是整棵樹，那個數有意義；**收合只存收著的那幾顆**，每一把鑰匙在那一批裡都「唯一」。
+ *    護欄 `audit-collapse-roundtrip` 量到：在最前面插一行之後，`mul` 的 `return` 的路徑鍵指到了 `add` 的 `return`
+ *    ——兩個 `return` 自己的內容一樣（`cpp:return{}`），只有子樹分得出來。
+ */
+function subtreeKey(n: SemanticNode): string {
+  return `S:${hash(shape(n))}`
+}
+
+function shape(n: SemanticNode): string {
+  const props = Object.entries(n.properties ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([a, b]) => `${a}=${String(b)}`).join(',')
+  const slots = Object.keys(n.slots ?? {}).sort().map((s) => `${s}[${(n.slots[s] ?? []).map((k) => (k ? shape(k) : '_')).join(';')}]`).join('')
+  return `${n.componentId}{${props}}${slots}`
+}
+
+/** FNV-1a（32 位元）——存檔裡放雜湊不放整串（一整個函式的子樹可以很長） */
+function hash(s: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0 }
+  return h.toString(36)
 }
 
 /** `nodeId` → 存檔的鑰匙。**存檔存的是這個。** */
 export function collapsedToKeys(root: SemanticNode, collapsed: ReadonlySet<string>): CollapsedEntry[] {
   const nodes = walkWithPath(root)
   const keys = keysOfNodes(nodes)
-  return nodes.flatMap((k, i) => (collapsed.has(k.node.id) ? [{ keys: keys[i] }] : []))
+  return nodes.flatMap((k, i) => (collapsed.has(k.node.id) ? [{ keys: [...keys[i], subtreeKey(k.node)] }] : []))
 }
 
 /**
