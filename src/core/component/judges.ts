@@ -166,7 +166,7 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
     kind: 'grammar',
     // 🔴 2026-10-31（第 384 刀）：evidence 從 `roundtrip-all` 改成膠囊目錄——判定者只剩膠囊自己的測試。
     evidence: 'src/components',
-    judges: '膠囊自己的測試檔（`src/components/**/*.test.ts`）驗 128 顆。'
+    judges: '膠囊自己的測試檔（每顆元件資料夾裡的 `.test.ts`）驗 128 顆。'
       + '🔴 **第 384 刀之前是兩個判定者的聯集 215**：另一半是 roundtrip-all 的「Code generation coverage」'
       + '（有 `codeTemplate` 的 101 顆），而它驗的是 `TemplateGenerator`——**產品從不裝的那一套**；'
       + '那一套與 `codeTemplate` 已刪除，那 87 顆（101 裡不在膠囊測試的）的「覆蓋」本來就是假的。'
