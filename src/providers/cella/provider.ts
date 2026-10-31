@@ -10,7 +10,8 @@
 import { SessionStop, type CheckAnswer, type CheckRequest, type Declined, type ExecutionSession, type Outcome, type Provider, type Readiness, type SessionInput, type SessionOptions } from '../../core/capabilities'
 import type { SemanticNode } from '../../core/types'
 import { branchOf, type CellaBranch } from './verdict'
-import type { Verdict } from '../../core/verdict-diagnostics'
+import { ownerOf, type Verdict } from '../../core/verdict-diagnostics'
+import type { HardwareState } from '../../core/hardware'
 import { formalize, cellaBoardOf } from './formalize'
 import { withEntryFunctions } from './entry'
 import { isCDialect } from '../../languages/cpp/target-dialect'
@@ -31,9 +32,27 @@ export function readsInput(json: unknown): boolean {
   return Object.values(o).some(readsInput)
 }
 
-/** 跨邊界的 Outcome → 核心的 Outcome（`SessionStop` 在這一側組回來）。 */
+/**
+ * 有 `<id>/stmt` 標籤的那些 id——運算式敘述（`exprStmt`）的外殼。Cella 停在那個 `sExpr` 上，而不是裡面的運算式。
+ * ⚠️ 只收這一種（spec 185 逐一量的）：其他帶後綴的標籤（`<id>/init`、`<id>/lhs`……）設成中斷點，
+ *    Cella 會停在一個與那一行不相干、或拿不到呼叫框的位置——變數面板是空的。
+ */
+function stmtShells(json: unknown, out = new Set<string>()): Set<string> {
+  if (Array.isArray(json)) { for (const x of json) stmtShells(x, out); return out }
+  if (!json || typeof json !== 'object') return out
+  const o = json as Record<string, unknown>
+  if (typeof o.n === 'string' && o.n.endsWith('/stmt')) out.add(o.n.slice(0, -'/stmt'.length))
+  for (const v of Object.values(o)) stmtShells(v, out)
+  return out
+}
+
+/**
+ * 跨邊界的 Outcome → 核心的 Outcome（`SessionStop` 在這一側組回來）。
+ * 🔴 停點與錯誤位置的標籤收回成語義樹的 id——運算式敘述的標籤是 `<id>/stmt`，原樣交出去的話積木不會亮（spec 185 量到）。
+ */
 function toOutcome(w: WireOutcome): Outcome {
-  if (w.kind === 'failed') return { kind: 'failed', error: new SessionStop(w.aborted ? 'aborted' : 'runtime', w.key, w.params, w.nodeId) }
+  if (w.kind === 'failed') return { kind: 'failed', error: new SessionStop(w.aborted ? 'aborted' : 'runtime', w.key, w.params, w.nodeId ? ownerOf(w.nodeId) : null) }
+  if (w.kind === 'stopped') return { kind: 'stopped', stop: { ...w.stop, nodeId: w.stop.nodeId ? ownerOf(w.stop.nodeId) : null } }
   return w
 }
 
@@ -45,20 +64,25 @@ class CellaSession implements ExecutionSession {
   private seq = 0
   private waiting = new Map<number, (r: Extract<WorkerReply, { kind: 'dap-result' }>) => void>()
   private vars: Variable[] = []
+  private env: HardwareState | null = null
   private out: ((text: string) => void) | null = null
   private inputs: SessionInput[] = []
 
   private readonly sid: number
   private readonly send: (m: WorkerRequest) => void
-  constructor(sid: number, send: (m: WorkerRequest) => void) {
+  /** 有 `<id>/stmt` 外殼的 id（中斷點要連那個外殼一起給）。 */
+  private readonly shells: Set<string>
+  constructor(sid: number, send: (m: WorkerRequest) => void, program: unknown) {
     this.sid = sid
     this.send = send
+    this.shells = stmtShells(program)
   }
 
   receive(r: WorkerReply): void {
     if (r.kind === 'dap-output') { this.out?.(r.text); return }
     if (r.kind !== 'dap-result') return
     this.vars = r.variables
+    this.env = (r.env as HardwareState | null) ?? null
     this.waiting.get(r.seq)?.(r)
     this.waiting.delete(r.seq)
   }
@@ -76,7 +100,12 @@ class CellaSession implements ExecutionSession {
   }
 
   onOutput(cb: ((text: string) => void) | null): void { this.out = cb }
-  setBreakpoints(nodeIds: Iterable<string>): void { void this.op({ op: 'setBreakpoints', nodeIds: [...nodeIds] }) }
+  setBreakpoints(nodeIds: Iterable<string>): void {
+    // id 本身 ＋ 它名下的敘述標籤（spec 185 量的：指定敘述停在 `eAssign <id>`、運算式敘述停在 `sExpr <id>/stmt`）。
+    // ⚠️ 不給其他帶後綴的運算式標籤（`<id>/lhs`……）：Cella 會停在拿不到呼叫框的位置，變數面板是空的
+    const labels = [...nodeIds].flatMap((id) => (this.shells.has(id) ? [id, `${id}/stmt`] : [id]))
+    void this.op({ op: 'setBreakpoints', nodeIds: labels })
+  }
   launch(_program: SemanticNode, options: { stopOnEntry: boolean }): Promise<Outcome> { return this.run({ op: 'launch', stopOnEntry: options.stopOnEntry }) }
   continue(): Promise<Outcome> { return this.run({ op: 'continue' }) }
   stepIn(): Promise<Outcome> { return this.run({ op: 'stepIn' }) }
@@ -92,6 +121,12 @@ class CellaSession implements ExecutionSession {
     const r = await this.op({ op: 'setVariable', name, text: raw })
     if (r.ok) this.inputs.push({ kind: 'set-variable', name, value: raw })
     return r.ok === true
+  }
+  environment(): HardwareState | null { return this.env }
+  async setInput(key: string, value: string): Promise<{ ok: boolean; message?: string }> {
+    const r = await this.op({ op: 'setInput', key, value })
+    if (r.ok) this.inputs.push({ kind: 'set-input', key, value })
+    return { ok: r.ok === true, ...(r.message ? { message: r.message } : {}) }
   }
   coverage(): null { return null }
   recordedInputs(): readonly SessionInput[] { return this.inputs }
@@ -167,7 +202,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
       return { declined: st === 'unavailable' ? 'Cella 的除錯模組無法使用' : 'Cella 的除錯模組還在準備（第一次約 20 秒）' }
     }
     const id = ++sid
-    const s = new CellaSession(id, send)
+    const s = new CellaSession(id, send, f.program)
     sessions.set(id, s)
     send({ kind: 'dap-open', sid: id, branch: f.branch, program: f.program })
     return s

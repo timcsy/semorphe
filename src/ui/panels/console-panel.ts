@@ -141,6 +141,9 @@ export class ConsolePanel implements ViewHost {
       if (data.stream === 'stderr') this.error(data.text)
       else this.write(data.text)
     })
+    // 從外面餵進來的輸入（重播）與取消等待——執行器不認識這個面板，走匯流排
+    bus.on('execution:input', (d) => this.feedInput(d.text))
+    bus.on('execution:input-cancel', () => this.cancelInput())
   }
 
   /** Register a handler for terminal signals (Ctrl+C → SIGINT, Ctrl+D → EOF) */
@@ -185,6 +188,17 @@ export class ConsolePanel implements ViewHost {
       return
     }
     this.pendingInputLines.push(line)
+  }
+
+  /**
+   * **取消正在等的輸入**——那一次執行停掉了。
+   * 🔴 不取消的話，舊的等待還掛著：下一次餵進來的那一行（重播、終端機先貼好的）會被**已經死掉的那次執行**吃掉，
+   *    新的那次等不到（重播那支 e2e 量到的）。
+   */
+  cancelInput(): void {
+    this.inputResolve = null
+    this.removeInlineInput()
+    this.removeInputRow()
   }
 
   onSignal(handler: ((signal: ConsoleSignal) => void) | null): void {

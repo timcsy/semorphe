@@ -27,14 +27,20 @@ export function debuggerSource(b: CellaBranch): string {
     `def setVarErr (n : Nat) (x : cfamily.DeclId) (text : String) (s : ${b}.Session) : String := ${b}.setVarErr n x text s`,
     `def setVarConf (n : Nat) (x : cfamily.DeclId) (text : String) (s : ${b}.Session) : ${b}.Session := ${b}.setVarConf n x text s`,
     `def env (x : ${b}.Session) : String := ${b}.env x`,
+    // 板子上的程式多兩個（spec 185）：暫停時改感測器輸入、模擬時鐘（`cella-lang/dap` 的 `setInput`／`inputScript` 用到）
+    ...(b === 'arduino' ? [
+      'def setInput (key : String) (value : String) (x : arduino.Session) : arduino.Session := arduino.setInput key value x',
+      'def clockMs (x : arduino.Session) : Nat := arduino.clockMs x',
+    ] : []),
   ]
   return lines.join('\n') + '\n'
 }
 
 export const DEBUGGER_EXPORTS = ['load', 'run', 'stopConf', 'stopKind', 'stopNode', 'stopOut', 'stopErr', 'stopDetail', 'divergences', 'feed', 'globals', 'frames', 'setVarErr', 'setVarConf', 'env']
+const exportsOf = (b: CellaBranch): string[] => (b === 'arduino' ? [...DEBUGGER_EXPORTS, 'setInput', 'clockMs'] : DEBUGGER_EXPORTS)
 
 /** 編一個分支的除錯模組（約 20 秒）。 */
 export async function compileCellaDebugger(read: CellaRead, b: CellaBranch): Promise<Uint8Array> {
   const cella = await loadCellaPackages(read)
-  return cella.compile_wasm_library(debuggerSource(b), DEBUGGER_EXPORTS.join(','))
+  return cella.compile_wasm_library(debuggerSource(b), exportsOf(b).join(','))
 }

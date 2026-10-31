@@ -50,4 +50,19 @@ describe('硬體分頁', () => {
     const [half, full] = [...root.querySelectorAll('.hardware-high')].map((r) => Number(r.getAttribute('height')))
     expect(half).toBeLessThan(full)
   })
+
+  it('★ 暫停中（spec 185）：畫板子當下的狀態；有 onSetInput 才畫改輸入，送出時交出 key／value', () => {
+    const root = document.createElement('div')
+    const panel = new HardwarePanel(root)
+    const state = hardwareOf(BLINK)!.end!
+    const got: [string, string][] = []
+    panel.show({ kind: 'live', state, onSetInput: (k, v) => got.push([k, v]) })
+    expect(root.textContent).toMatch(/暫停中（6003 ms）/)
+    expect(root.textContent).toMatch(/腳 13.*OUTPUT.*LOW/)
+    ;(root.querySelector('.hardware-input-value') as HTMLInputElement).value = '900'
+    root.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }))
+    expect(got).toEqual([['analog:A0', '900']])
+    panel.show({ kind: 'live', state })
+    expect(root.querySelector('form'), '提供者不能改輸入 ⟹ 不畫那一列').toBeNull()
+  })
 })

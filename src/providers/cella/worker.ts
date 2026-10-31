@@ -32,6 +32,7 @@ export type DapOp =
   | { op: 'supplyInput'; text: string }
   | { op: 'setBreakpoints'; nodeIds: string[] }
   | { op: 'setVariable'; name: string; text: string }
+  | { op: 'setInput'; key: string; value: string }
   | { op: 'pause' } | { op: 'terminate' }
 
 export type Variable = { name: string; type: string; value: string }
@@ -49,7 +50,7 @@ export type WorkerReply =
   | { id: number; kind: 'error'; reason: string }
   | { kind: 'dap-status'; branch: CellaBranch; status: 'loading' | 'ready' | 'unavailable'; reason?: string }
   | { kind: 'dap-output'; sid: number; text: string }
-  | { kind: 'dap-result'; sid: number; seq: number; outcome?: WireOutcome; ok?: boolean; message?: string; variables: Variable[] }
+  | { kind: 'dap-result'; sid: number; seq: number; outcome?: WireOutcome; ok?: boolean; message?: string; variables: Variable[]; env: unknown }
 
 const post = (r: WorkerReply): void => (self as unknown as { postMessage(m: WorkerReply): void }).postMessage(r)
 
@@ -176,6 +177,12 @@ function outcomeOf(d: DapSession, launching: boolean): WireOutcome {
   }
 }
 
+/** 暫停時板子的狀態（`readEnv`）；一般程式是 null。 */
+function envOf(d: DapSession): unknown {
+  if (d.exited || d.terminated) return null
+  try { return d.s.readEnv() } catch { return null }
+}
+
 function variablesOf(d: DapSession): Variable[] {
   if (d.exited || d.terminated) return []
   const show = (v: any): Variable => ({ name: String(v.name), type: String(v.type ?? ''), value: v.value === null ? '?' : String(v.value) })
@@ -187,12 +194,17 @@ function variablesOf(d: DapSession): Variable[] {
 async function dapOp(sid: number, seq: number, body: DapOp): Promise<void> {
   const d = await sessions.get(sid)!
   const reply = (r: Partial<Extract<WorkerReply, { kind: 'dap-result' }>>): void =>
-    post({ kind: 'dap-result', sid, seq, variables: variablesOf(d), ...r })
+    post({ kind: 'dap-result', sid, seq, variables: variablesOf(d), env: envOf(d), ...r })
   // 立即生效的：不排隊（pause 要在執行中送到；terminate 要能打斷）
   if (body.op === 'pause') { d.s.pause(); reply({ ok: true }); return }
   if (body.op === 'terminate') { d.terminated = true; d.s.terminate(); reply({ ok: true }); return }
   if (body.op === 'setBreakpoints') { d.s.setBreakpoints(body.nodeIds); reply({ ok: true }); return }
   d.chain = d.chain.then(async () => {
+    if (body.op === 'setInput') {
+      const r = d.s.setInput(body.key, body.value)
+      reply({ ok: r.ok, message: r.message })
+      return
+    }
     if (body.op === 'setVariable') {
       const v = (d.s.variables(0) ?? []).concat(d.s.variables('globals') ?? []).find((x: any) => x.name === body.name)
       // DAP 用變數的 id（宣告節點）改值，不是名字——名字 → id 在這裡換

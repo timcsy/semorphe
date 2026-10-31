@@ -1,7 +1,7 @@
 import { RUN_MODES } from '../core/host/controls'
 import * as Blockly from 'blockly'
 import type { BoardPinModel } from '../core/types'
-import { openSession, SessionStop, type ExecutionSession, type Outcome, type SessionOptions, type Stop } from '../core/capabilities'
+import { openSession, SessionStop, type ExecutionSession, type Outcome, type SessionInput, type SessionOptions, type Stop } from '../core/capabilities'
 import { DebugToolbar } from './debug-toolbar'
 import type { StepInfo, ExecutionSpeed } from '../core/execution'
 import { showQuickPick } from './toolbar/quick-pick'
@@ -50,6 +50,8 @@ export class ExecutionController {
   /** 加速／跳出：還在這一群裡就直接往下走，不停。 */
   private skipIds: Set<string> | null = null
   private currentNodeId: string | null = null
+  /** 上一次執行從外面拿到的東西（重播用）。 */
+  private lastInputs: readonly SessionInput[] = []
   private currentBoard?: () => BoardPinModel | undefined
   /** 交給形式化提供者（Cella）的那一份——組裝點才知道骨架積木、目標、風格、骨架（spec 183）。 */
   private formalContext?: (tree: SemanticNode) => SessionOptions['formal']
@@ -146,6 +148,13 @@ export class ExecutionController {
       void (async () => {
         const ok = (await this.session?.setVariable(d.name, d.value)) ?? false
         if (!ok) this.broadcastOutput(describeSetVariableRefused(d.name, d.value) + '\n', 'stderr')
+      })()
+    })
+    // 🔴 **暫停中改板子的輸入**（spec 185）——與改變數同一條路：面板不認識執行器，走匯流排
+    this.bus?.on('execution:set-input', (d) => {
+      void (async () => {
+        const r = await this.session?.setInput?.(d.key, d.value)
+        if (!r?.ok) this.broadcastOutput(`改不了 ${d.key}：${r?.message ?? '這個執行器不能改板子的輸入'}\n`, 'stderr')
       })()
     })
     this.debugToolbar = new DebugToolbar()
@@ -305,7 +314,23 @@ export class ExecutionController {
    * **開一次執行**（spec 183）——向登錄表要 `session`，Cella 不接（翻不出來、還沒就緒）就往下找，
    * 而「是誰跑的、前面誰不接、為什麼」都廣播出去（P6：退回要看得見）。
    */
-  private async start(mode: 'run' | 'debug' | 'step' | 'animate', speed: ExecutionSpeed = 'medium'): Promise<void> {
+  /**
+   * **重播上一次**（vision〈執行的誠實〉的 🆕 那一格）——用上一次打過的那幾行輸入再跑一次。
+   * ⚠️ 手動改過的變數、板子的輸入不重播（它們綁在「第幾次停下」上，跑法一變就對不上）——照實說有幾筆沒重播。
+   */
+  replayLast(): void {
+    const lines = this.lastInputs.filter((i): i is Extract<SessionInput, { kind: 'stdin' }> => i.kind === 'stdin').map((i) => i.value)
+    const skipped = this.lastInputs.filter((i) => i.kind === 'set-variable' || i.kind === 'set-input').length
+    if (this.lastInputs.length === 0) {
+      this.broadcastOutput(msg('REPLAY_NOTHING', '上一次沒有從外面拿到任何輸入——直接按執行就好') + '\n', 'stderr')
+      return
+    }
+    void this.start('run', 'medium', lines).then(() => {
+      if (skipped > 0) this.broadcastOutput(msg('REPLAY_SKIPPED', '這次重播沒有包含你手動改的 {n} 筆（變數、板子的輸入）').replace('{n}', String(skipped)) + '\n', 'stderr')
+    })
+  }
+
+  private async start(mode: 'run' | 'debug' | 'step' | 'animate', speed: ExecutionSpeed = 'medium', replay: readonly string[] = []): Promise<void> {
     if (this.getBlocksDirty() && (await this.askSyncBeforeRun())) this.syncBeforeRun()
     const tree = this.panels.syncController?.getCurrentTree()
     if (!tree) return
@@ -316,6 +341,8 @@ export class ExecutionController {
     this.mode = mode
     this.auto = mode === 'animate' ? ExecutionController.ANIMATE_DELAY[speed] : null
     this.panels.consolePanel?.clear()
+    // 重播：上一次打過的輸入先排進主控台的佇列（它照常回顯、照常被讀——與打字是同一條路）；走匯流排（P9，`principles.md:177`）
+    for (const line of replay) this.bus?.emit('execution:input', { text: line })
     // 執行與除錯都是跑到中斷點；單步與動畫停在第一步
     this.panels.bottomPanel?.showTab(mode === 'run' ? 'console' : 'variables')
     this.showExecButtons(true, mode === 'step' ? 'stepping' : 'running')
@@ -427,6 +454,8 @@ export class ExecutionController {
     this.broadcastState({ status: 'paused', ...(reason ? { reason } : {}), step })
     this.broadcastAtNode(stop.nodeId, this.debugToolbar.isAutoScrollEnabled() ?? false)
     this.currentNodeId = stop.nodeId
+    // 板子當下的狀態（spec 185）——硬體分頁在暫停時畫它；給不出來（不是板子、或提供者沒有）就是 null
+    this.bus?.emit('execution:environment', { state: session.environment(), paused: true, canSetInput: typeof session.setInput === 'function' })
     if (this.auto === null) {
       this.debugToolbar.show('paused')
       this.panels.bottomPanel?.showTab('variables')
@@ -460,7 +489,9 @@ export class ExecutionController {
   }
 
   private finish(session: ExecutionSession): void {
+    this.lastInputs = session.recordedInputs()
     this.clearHighlights()
+    this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
     this.reportInterventions(session)
     const counts = session.coverage()
     if (counts) this.broadcastCoverage(counts)
@@ -473,7 +504,9 @@ export class ExecutionController {
   }
 
   private fail(e: SessionStop): void {
+    if (this.session && e.kind !== 'aborted') this.lastInputs = this.session.recordedInputs()
     this.clearHighlights()
+    this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
     if (e.kind === 'aborted') {
       this.broadcastState({ status: 'idle', reason: 'aborted' })
     } else {
@@ -501,6 +534,8 @@ export class ExecutionController {
   }
 
   handleStop(): void {
+    this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
+    this.bus?.emit('execution:input-cancel', {})
     const s = this.session
     this.session = null
     s?.terminate()
@@ -512,6 +547,7 @@ export class ExecutionController {
   }
 
   private resetExecution(): void {
+    this.bus?.emit('execution:input-cancel', {})
     const s = this.session
     this.session = null
     s?.terminate()
@@ -663,7 +699,7 @@ export class ExecutionController {
    */
   private reportInterventions(session: ExecutionSession): void {
     const inputs = session.recordedInputs()
-    const edits = inputs.filter((i) => i.kind === 'set-variable').length
+    const edits = inputs.filter((i) => i.kind === 'set-variable' || i.kind === 'set-input').length
     if (edits === 0) return
     this.broadcastOutput(describeInterventions(edits) + '\n', 'stderr')
   }

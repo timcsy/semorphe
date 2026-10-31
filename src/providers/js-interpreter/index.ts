@@ -129,6 +129,8 @@ class JsSession implements ExecutionSession {
   }
 
   variables() { return this.it.snapshotScope() }
+  /** 板子的即時狀態只由 Cella 給（形狀照 `@cella-lang/arduino`）；直譯器的腳位狀態不是同一個形狀，不假裝（P6）。 */
+  environment(): null { return null }
   setVariable(name: string, raw: string): boolean { return this.it.setVariableFromHost(name, raw) }
   coverage(): ReadonlyMap<string, number> { return this.it.getVisitCounts() }
   recordedInputs() { return this.it.getRecordedInputs() }
