@@ -160,6 +160,11 @@
     "reason": "同 `cpp:string_find_first_not_of`——同一段幽靈語料同時「覆蓋」了這兩顆。"
   },
   {
+    "componentId": "cpp:time",
+    "cause": "這顆沒有接點",
+    "reason": "`time(0)` 是無輸入的運算式——**沒有接點的元件不可能有『產出了宣告裡沒有的接點』**，所以這一筆恆為「無法確定」（先例：Python 的 import 那顆）。lift／generate／round-trip／補丁器補 `<ctime>`／execute 由這顆自己的 `spec.test.ts` 釘住（2026-10-31 新增）。"
+  },
+  {
     "componentId": "cpp:ultrasonic_trigger",
     "cause": "lift 是登錄表裡的資料或分支，靜態掃不到",
     "reason": "lift 那一路是一支**具名策略**，而它比別顆更特別：它認的是**一串連續語句**，掛在 `compound_statement` 與 `translation_unit` 上、自己走訪子節點。靜態掃描看不到它產出的 `pin` 接點。⚠️ 接點的正確性由這顆自己的 `spec.test.ts` 釘住，而那支測試的重點是**四條「不該摺時不摺」**（中間插句／微秒數不對／不同腳／換算不摺）——那才是這顆的主要風險。"

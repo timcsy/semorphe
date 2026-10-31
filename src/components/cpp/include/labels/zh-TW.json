@@ -20,5 +20,7 @@
   "C_INCLUDE_HEADER_CSTDIO": "cstdio（C++ 標準輸入輸出）",
   "C_INCLUDE_HEADER_CSTDLIB": "cstdlib（C++ 標準函式庫）",
   "C_INCLUDE_HEADER_CCTYPE": "cctype（字元分類）",
-  "C_INCLUDE_HEADER_CFLOAT": "cfloat（浮點數範圍常數）"
+  "C_INCLUDE_HEADER_CFLOAT": "cfloat（浮點數範圍常數）",
+  "C_INCLUDE_HEADER_CTIME": "ctime（C++ 時間函式庫）",
+  "C_INCLUDE_HEADER_TIME_H": "time.h（C 時間函式庫）"
 }

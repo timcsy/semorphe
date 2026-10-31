@@ -1,0 +1,4 @@
+{
+  "C_TIME_MSG0": "Current time (seconds)",
+  "C_TIME_TOOLTIP": "time(0) — seconds since January 1, 1970; different every second. Often used as the random seed so each run draws different numbers. Needs <ctime>"
+}

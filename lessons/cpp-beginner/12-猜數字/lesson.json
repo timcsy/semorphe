@@ -10,7 +10,6 @@
     "cpp:builtin_constant",
     "cpp:compare",
     "cpp:endl",
-    "cpp:func_call",
     "cpp:if",
     "cpp:include",
     "cpp:input",
@@ -21,6 +20,7 @@
     "cpp:print",
     "cpp:random_next",
     "cpp:random_seed",
+    "cpp:time",
     "cpp:var_assign",
     "cpp:var_declare",
     "cpp:var_ref"

@@ -20,5 +20,7 @@
   "C_INCLUDE_HEADER_CSTDIO": "cstdio (C++ standard I/O)",
   "C_INCLUDE_HEADER_CSTDLIB": "cstdlib (C++ standard library)",
   "C_INCLUDE_HEADER_CCTYPE": "cctype (character classification)",
-  "C_INCLUDE_HEADER_CFLOAT": "cfloat (float limit constants)"
+  "C_INCLUDE_HEADER_CFLOAT": "cfloat (float limit constants)",
+  "C_INCLUDE_HEADER_CTIME": "ctime (C++ time library)",
+  "C_INCLUDE_HEADER_TIME_H": "time.h (C time library)"
 }

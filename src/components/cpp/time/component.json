@@ -1,0 +1,26 @@
+{
+  "componentId": "cpp:time",
+  "abstractComponent": null,
+  "properties": [],
+  "slots": {},
+  "role": "expression",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json"
+      }
+    },
+    "formalize": "./formalize.ts",
+    "execute": "./execute.ts"
+  },
+  "_lift_why": "只認 `time(0)`——課文只用這一種。`time(NULL)`／`time(nullptr)`／`std::time(0)` 照舊降級成通用的函式呼叫，學生寫的文字原封不動（若收進來，積木上就得多一個「引數寫法」的下拉，否則一動積木就把它改成 `0`）。",
+  "requires": [
+    "<ctime>"
+  ],
+  "_requires_why": "**這一顆存在的理由**（使用者 2026-10-31，設計 draft 五之六）：`time(0)` 原本落到通用的函式呼叫，相依解析只認元件身分，`<ctime>` 從來補不到——產出的程式碼靠遞移 include 才編得過。"
+}

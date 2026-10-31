@@ -314,6 +314,9 @@ export const ATOMIC_NAMES = [
   // `tone` 同理：「發出一個頻率」沒有可拆的主體——而它的**停止**有
   //（`tone_stop`，`tone` 同時進 SUBJECTS，先例是 `print`）。
   'micros', 'delay_microseconds', 'tone',
+  // ⚠️ `time` 加入日 2026-10-31——`time(0)`（`<ctime>`），與 `millis`／`micros` 同一類：讀時鐘，沒有主體可拆
+  //（使用者照推薦定，設計 draft 五之六：給它一塊積木，相依解析才補得到 `<ctime>`）。
+  'time',
   // ⚠️ `initializer_list` 加入日 2026-08-14——`{1, 2, 3}` 這個**語法本身**。
   // 它是語言構造（聚合初始化列），不是抄來的函式庫名：`std::initializer_list`
   // 是那個語法的**型別**，而這顆元件是那個語法。與 `lambda`／`ternary` 同類。

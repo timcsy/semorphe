@@ -1,0 +1,23 @@
+[
+  {
+    "id": "cpp_time",
+    "componentId": "cpp:time",
+    "language": "cpp",
+    "category": "stdlib",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_time",
+      "message0": "%{BKY_C_TIME_MSG0}",
+      "args0": [],
+      "inputsInline": true,
+      "colour": "#D67D3E",
+      "tooltip": "%{BKY_C_TIME_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]
