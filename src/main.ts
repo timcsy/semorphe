@@ -18,7 +18,16 @@ const app = new App(webProfile)
 // 🔴 **init 做完了**——給要「餵一份程式碼進去」的測試等（第 392 刀）。
 //    編輯器在 init 的前段就建好了，而後段還會從預設的樹重投影一次、把編輯器寫回預設程式；
 //    只等編輯器出現就 `setCode` 的話，那份程式碼會被蓋掉（e2e c-target 間歇紅了一個月的最後一個原因）。
-app.init().then(() => { (window as any).__appReady = true }).catch((err) => {
+app.init().then(() => {
+  (window as any).__appReady = true
+  // 判決（Cella，約 35 MB）在首屏之後、瀏覽器閒著的時候才開始載（spec 182）
+  // ⚠️ 自動化瀏覽器不自動載：e2e 四個併行的頁面各編一次判決模組，會把機器忙成假紅
+  //    （`knowledge/experience.md`〈一支在乾淨機器上綠、在忙碌機器上紅的測試，量到的不是你的改動〉）——要判決的測試自己呼叫 `warmUpChecker()`
+  if (!navigator.webdriver) {
+    const idle = (window as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500))
+    idle(() => app.warmUpChecker())
+  }
+}).catch((err) => {
   console.error('Failed to initialize Semorphe:', err)
   const appEl = document.getElementById('app')
   if (appEl) {

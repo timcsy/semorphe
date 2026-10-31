@@ -20,9 +20,9 @@
 |---|---|
 | `source` | 新增 `'cella'` |
 | `severity` | `'error'`（reject、型別不合）／新增 `'info'`（unknown：尚未支援、標準允許不同結果、步數用盡） |
-| `rule` | `cella_<kind>`（例 `cella_ubBounds`）、`type_mismatch` |
+| `rule` | `CELLA_<KIND>`（例 `CELLA_UB_BOUNDS`）、表外的種類 `CELLA_OTHER`、`TYPE_MISMATCH`——照既有規則身分的寫法；身分清單 `VERDICT_RULES` 交給第四十二條護欄 |
 | `nodeId` | problem 標籤的 `<id>` 前段；對不上就往上找可見祖先 |
-| `params` | `reason`（Cella 原文）、`clause`、型別不合時 `expects`／`actual` |
+| `params` | `kind`、`reason`（Cella 原文）、`clause`；文案在 i18n 的 `DIAG_<rule>_BLOCK`／`_CODE`（實作時改：原本寫在核心的表裡，而既有的診斷文案都住 i18n、有護欄守完備性） |
 
 ## 載入狀態
 
@@ -33,9 +33,9 @@ idle ──(init 做完、閒置)──> loading ──> ready
 
 ## 過濾規則（FR-008）
 
-程式含讀取輸入的節點 且 沒有測資 ⟹ 丟掉 `kind` 以 `ub` 開頭與 `fuel` 的 problem，保留其餘；狀態附一句「需要一份輸入」。
+程式會讀輸入（提供者看它自己的程式形式判斷：`eCin`／`sScanf`／讀輸入的函式）且 沒有測資 ⟹ 丟掉 `kind` 以 `ub` 開頭與 `fuel` 的 problem，保留其餘；狀態附一句「需要一份輸入」。
 
-## 問題種類 → 中文說明（初版）
+## 問題種類 → 中文說明（初版；實作後住在 `src/i18n/*/blocks.json`）
 
 | kind | 嚴重度 | 中文 |
 |---|---|---|

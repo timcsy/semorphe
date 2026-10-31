@@ -30,23 +30,35 @@ export interface Verdict {
   assumes?: { implementation: string; choice: string }[]
 }
 
-/** 型別查詢的結果——只用到「不合」的那幾格。 */
+/**
+ * 型別查詢的結果（照抄 `@cella-lang/cfamily` README〈Type query〉）。
+ * 標錯只用 `errors`——已經接上而型別不合的那一句；`slots` 的 `fits` 是「洞裡放什麼合」，留給工具箱提示。
+ */
 export interface TypeQuery {
-  slots: Record<string, { display?: string; expects?: string; actual?: string; fits?: { level?: string } }>
+  nodes?: Record<string, string>
+  slots?: Record<string, { display?: string; expects?: string | null; fits?: Record<string, { level: 'exact' | 'convert' | 'narrowing' | 'no'; reason?: string }> }>
+  errors?: { at: string; reason: string }[]
 }
 
-/** 問題種類 → 嚴重度與中文（data-model 的表）。不在表上的：依判決（reject → error、unknown → info），訊息用原文。 */
-const KINDS: Record<string, { severity: 'error' | 'info'; zh: string }> = {
-  ubUninit: { severity: 'error', zh: '用到還沒有值的變數' },
-  ubBounds: { severity: 'error', zh: '讀寫到陣列（或容器）外面了' },
-  ubOverflow: { severity: 'error', zh: '整數算到超出範圍' },
-  ubDivZero: { severity: 'error', zh: '除以零' },
-  ubOverlap: { severity: 'error', zh: '指定時，來源與目的地重疊' },
-  reject: { severity: 'error', zh: '型別或寫法不合規則' },
-  unsupported: { severity: 'info', zh: '這個用法還判不出來' },
-  fuel: { severity: 'info', zh: '跑太久了，判不出來' },
-  unspecified: { severity: 'info', zh: '這裡的結果，標準允許不只一種' },
+/**
+ * 問題種類 → 規則身分與嚴重度（data-model 的表）。**文案在 i18n**（`DIAG_<規則>_BLOCK`／`_CODE`），
+ * 第四十二條護欄從 `VERDICT_RULES` 導出身分、要求每個面板每種語言都有一份。
+ * 不在表上的種類 → `CELLA_OTHER`（嚴重度依判決：reject → error、其餘 → info），原文放在 `reason`。
+ */
+const KINDS: Record<string, { rule: string; severity: 'error' | 'info' }> = {
+  ubUninit: { rule: 'CELLA_UB_UNINIT', severity: 'error' },
+  ubBounds: { rule: 'CELLA_UB_BOUNDS', severity: 'error' },
+  ubOverflow: { rule: 'CELLA_UB_OVERFLOW', severity: 'error' },
+  ubDivZero: { rule: 'CELLA_UB_DIV_ZERO', severity: 'error' },
+  ubOverlap: { rule: 'CELLA_UB_OVERLAP', severity: 'error' },
+  reject: { rule: 'CELLA_REJECT', severity: 'error' },
+  unsupported: { rule: 'CELLA_UNSUPPORTED', severity: 'info' },
+  fuel: { rule: 'CELLA_FUEL', severity: 'info' },
+  unspecified: { rule: 'CELLA_UNSPECIFIED', severity: 'info' },
 }
+
+/** 判決產出端的全部規則身分（護欄用）。 */
+export const VERDICT_RULES: readonly string[] = [...Object.values(KINDS).map((k) => k.rule), 'CELLA_OTHER', 'TYPE_MISMATCH']
 
 /** 實作假設 → 中文（「依 libc++」小標點開的說明）。 */
 const ASSUMES: Record<string, string> = {
@@ -89,11 +101,11 @@ export function toDiagnostics(input: {
     const nodeId = p.at ? ownerOf(p.at) : ''
     if (!known.has(nodeId)) { notes.push(`有一則判決對不到積木：${p.kind}${p.reason ? `（${p.reason}）` : ''}`); continue }
     const k = KINDS[p.kind]
-    const severity = k?.severity ?? (verdict.verdict === 'reject' ? 'error' : 'info')
-    if (!k) notes.push(`新的判決種類（還沒有中文說明）：${p.kind}`)
     diagnostics.push({
-      nodeId, severity, source: 'cella', rule: `cella_${p.kind}`,
-      params: { message: k?.zh ?? p.reason ?? p.kind, ...(p.reason ? { reason: p.reason } : {}), ...(p.clause ? { clause: p.clause } : {}) },
+      nodeId, source: 'cella',
+      rule: k?.rule ?? 'CELLA_OTHER',
+      severity: k?.severity ?? (verdict.verdict === 'reject' ? 'error' : 'info'),
+      params: { kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
     })
   }
   if (dropped > 0) notes.push('這支程式要讀輸入——給一份輸入，才判得出執行時的問題')
@@ -102,14 +114,12 @@ export function toDiagnostics(input: {
     notes.push(`依 ${a.implementation}：${ASSUMES[a.choice] ?? a.choice}`)
   }
 
-  for (const [label, s] of Object.entries(types?.slots ?? {})) {
-    if (s.fits?.level !== 'no') continue
-    const nodeId = ownerOf(label)
-    if (!known.has(nodeId)) continue
-    diagnostics.push({
-      nodeId, severity: 'error', source: 'cella', rule: 'type_mismatch',
-      params: { message: s.display ?? '型別不合', ...(s.expects ? { expects: s.expects } : {}), ...(s.actual ? { actual: s.actual } : {}) },
-    })
+  // 型別不合：允許接上、標在那一句（第 16 題）。判決的 reject 也指到同一顆時只留一則
+  for (const e of types?.errors ?? []) {
+    const nodeId = ownerOf(e.at)
+    if (!known.has(nodeId)) { notes.push(`有一則型別錯誤對不到積木（${e.reason}）`); continue }
+    if (diagnostics.some((d) => d.nodeId === nodeId && d.rule === 'CELLA_REJECT')) continue
+    diagnostics.push({ nodeId, severity: 'error', source: 'cella', rule: 'TYPE_MISMATCH', params: { reason: e.reason } })
   }
   return { diagnostics, notes }
 }

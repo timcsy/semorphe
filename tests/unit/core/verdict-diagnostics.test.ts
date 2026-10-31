@@ -23,8 +23,8 @@ describe('判決 → 診斷', () => {
   it('★ reject：標在 problem 指到的節點，error、來源 cella、中文說明', () => {
     const { diagnostics } = run(v('reject', [{ kind: 'ubBounds', at: idx.id, clause: 'C++17 [expr.add]', reason: 'pointer out of bounds' }]))
     expect(diagnostics).toHaveLength(1)
-    expect(diagnostics[0]).toMatchObject({ nodeId: idx.id, severity: 'error', source: 'cella', rule: 'cella_ubBounds' })
-    expect(String(diagnostics[0].params.message)).toMatch(/陣列|外面/)
+    expect(diagnostics[0]).toMatchObject({ nodeId: idx.id, severity: 'error', source: 'cella', rule: 'CELLA_UB_BOUNDS' })
+    expect(diagnostics[0].params).toMatchObject({ clause: 'C++17 [expr.add]', reason: 'pointer out of bounds' })
   })
 
   it('🔴 尚未支援的構造：永遠是 info，不是 error（P6：系統能力不足不是學生的錯）', () => {
@@ -46,7 +46,7 @@ describe('判決 → 診斷', () => {
   it('🔴 要讀輸入而沒有測資：丟掉 ub*／fuel，留一句「需要輸入」（SC-005）', () => {
     const problems = [{ kind: 'ubUninit', at: idx.id }, { kind: 'fuel', at: idx.id }, { kind: 'unsupported', at: call.id }]
     const r = run(v('reject', problems), { readsInput: true, hasStdin: false })
-    expect(r.diagnostics.map((d) => d.rule)).toEqual(['cella_unsupported'])
+    expect(r.diagnostics.map((d) => d.rule)).toEqual(['CELLA_UNSUPPORTED'])
     expect(r.notes.join()).toMatch(/輸入/)
     const withStdin = run(v('reject', problems), { readsInput: true, hasStdin: true })
     expect(withStdin.diagnostics).toHaveLength(3)
@@ -62,5 +62,20 @@ describe('判決 → 診斷', () => {
     const r = run(v('accept', [], [{ implementation: 'libc++', choice: 'vector.growth' }]))
     expect(r.diagnostics.filter((d) => d.severity === 'error')).toEqual([])
     expect(r.notes.join()).toMatch(/依 libc\+\+/)
+  })
+})
+
+describe('型別查詢 → 診斷（US4）', () => {
+  it('★ errors 指到的那一句標 type_mismatch（允許接上、標錯）；判決已經 reject 同一顆時不重複', () => {
+    const types = { errors: [{ at: `${idx.id}/value`, reason: 'cannot convert std::string to int' }] }
+    const r = toDiagnostics({ verdict: v('accept'), types, tree, readsInput: false, hasStdin: false })
+    expect(r.diagnostics).toEqual([expect.objectContaining({ nodeId: idx.id, severity: 'error', rule: 'TYPE_MISMATCH' })])
+    const both = toDiagnostics({ verdict: v('reject', [{ kind: 'reject', at: idx.id }]), types, tree, readsInput: false, hasStdin: false })
+    expect(both.diagnostics.map((d) => d.rule)).toEqual(['CELLA_REJECT'])
+  })
+
+  it('★ 洞的 fits（放什麼合）不產生診斷', () => {
+    const types = { slots: { [`${idx.id}#index`]: { expects: 'int', fits: { 'char *': { level: 'no' as const, reason: 'x' } } } } }
+    expect(toDiagnostics({ verdict: v('unknown', [{ kind: 'hole', at: `${idx.id}#index` }]), types, tree, readsInput: false, hasStdin: false }).diagnostics).toEqual([])
   })
 })

@@ -23,6 +23,7 @@
  */
 import type { SemanticNode, BoardPinModel } from './types'
 import type { StepInfo } from './execution'
+import type { Verdict, TypeQuery } from './verdict-diagnostics'
 
 /** 四項能力，加上執行與除錯的兩個細節（缺了也要說得出來）。 */
 export type CapabilityName = 'verdict' | 'types' | 'session' | 'steps'
@@ -76,10 +77,40 @@ export interface SessionOptions {
   board?: BoardPinModel
 }
 
+/** 一次判決的請求：語義樹（含骨架積木）、目標與風格、輸入。翻成提供者自己的形式（語言、板名）是提供者的事。 */
+export interface CheckRequest {
+  tree: SemanticNode
+  targetId: string
+  styleId: string
+  /** 骨架隱藏時樹裡沒有進入點（`main`）——提供者照骨架宣告補上。 */
+  skeletonId: string
+  input: string
+}
+
+/** 判決與型別查詢的答案。`stale`：送出之後又有更新的請求——這一筆的節點可能已經不在，丟掉。 */
+export interface CheckAnswer {
+  verdict: Verdict | null
+  types: TypeQuery | null
+  stale: boolean
+  /** 這支程式會讀標準輸入——沒有測資時，執行期的問題可能是空輸入的假象（由提供者看它自己的程式形式判斷）。 */
+  readsInput: boolean
+}
+
+/** 提供者的就緒狀態（昂貴的提供者要先載入；狀態列照這個顯示）。 */
+export type Readiness = { state: 'idle' | 'loading' | 'ready' } | { state: 'unavailable'; reason: string }
+
 export interface Provider {
   id: string
   declares: CapabilityDeclaration
   createSession?(options: SessionOptions): ExecutionSession
+  /** `verdict`／`types`：判決與型別查詢一起回（同一次翻譯、同一次載入）。 */
+  check?(req: CheckRequest): Promise<CheckAnswer>
+  /** 這個語言判得了嗎（判決只有某些語言的套件）——不宣告就當成都可以。 */
+  supports?(language: string): boolean
+  readiness?(): Readiness
+  onReadiness?(cb: (r: Readiness) => void): void
+  /** 開始載入（宿主在閒置時呼叫；不呼叫就等第一次 `check`）。 */
+  warmUp?(): void
 }
 
 /**

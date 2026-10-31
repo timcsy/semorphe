@@ -16,7 +16,7 @@ import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { buildC18Corpus, type C18Row } from '../helpers/c18-corpus'
-import { createCellaVerdict, type CellaVerdict } from '../../src/providers/cella/verdict'
+import { createCellaChecker, type CellaChecker, type CellaVerdict } from '../../src/providers/cella/verdict'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { formalize } from '../../src/providers/cella/formalize'
 import type { SemanticNode } from '../../src/core/types'
@@ -25,7 +25,8 @@ const read = (pkg: string | null, file: string): Uint8Array =>
   fs.readFileSync(path.join('node_modules', pkg === null ? 'cella-lang' : `@cella-lang/${pkg}`, file))
 
 let parser: Parser
-let verdict: (program: unknown, input?: string, fuel?: number) => CellaVerdict
+let checker: CellaChecker
+let verdict: CellaChecker['verdict']
 let rows: C18Row[]
 /** 語料裡有 program 的每一支與它的判決——跑一次，各支測試共用。 */
 let results: { row: C18Row; v: CellaVerdict; expected?: string }[]
@@ -35,7 +36,8 @@ beforeAll(async () => {
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
   rows = buildC18Corpus(parser)
-  verdict = await createCellaVerdict(read)
+  checker = await createCellaChecker(read)
+  verdict = checker.verdict
   results = rows.filter((r) => r.program).map((row) => {
     const c = checkOf(row.id)
     // Arduino 的 sketch 要模擬到 5 秒（setup 一次、loop 重複）——步數要給夠，否則是 `fuel` 的 unknown
@@ -100,6 +102,18 @@ describe('C18 語料交給 Cella 的判決', () => {
     const known = ids(tree)
     expect(v.problems.length).toBeGreaterThan(0)
     for (const p of v.problems) expect(known.has(owner(p.at ?? '')), `🔴 problem 的節點 ${p.at} 對不回語義樹`).toBe(true)
+  })
+
+  it('★ 型別查詢（US4）：接上錯型別 → errors 指到那一句；洞 → slots 說放得進什麼', () => {
+    const bad = formalize(lift('#include <string>\nint main() { std::string s = "hi"; int x = s; return x; }'))
+    expect(bad.program, '🔴 翻不出來 → 驗的是空氣').toBeTruthy()
+    const t = checker.types(bad.program, ['int', 'std::string'])
+    expect(t.errors?.length, `🔴 字串接進整數沒有型別錯：${JSON.stringify(t).slice(0, 400)}`).toBeGreaterThan(0)
+    const tree = lift('#include <string>\nint main() { std::string s = "hi"; int x = s; return x; }')
+    const known = ids(tree)
+    // 每次 lift 的 id 不同，所以只驗「標籤的形狀對得回某一顆」——同一棵樹再 formalize 一次
+    const again = checker.types(formalize(tree).program, [])
+    for (const e of again.errors ?? []) expect(known.has(owner(e.at)), `🔴 型別錯的 at ${e.at} 對不回語義樹`).toBe(true)
   })
 
   it('★ 入口條件：送進去的支數 ＝ 拿回來的判決數 ＝ 語料裡有 program 的支數', () => {

@@ -41,12 +41,21 @@
   `verdict.ts` 的 `read(pkg, file)` 在 worker 裡用 `fetch(url)` 實作。
 - **Rationale**：不手抄檔案清單（套件升版時模組會變）；`index.json` 決定載入順序，與 Node 那一側同一份。
 - **待量**：產物的總大小與首次載入時間（R7）。
+- **實作時改（T001 量的，2026-10-31）**：`index.json` 也用 `?url`、執行時 `fetch`（與 `.cell` 同一條路，`read(pkg, file)` 一個入口）；
+  cella-lang 自己的資產**不走** `cella-lang/assets`，同樣用 glob 列 `cella_bg.wasm`、`stdlib.cell`、`modules/*.cell`
+  ——兩種寫法並存的話，有一半的資產在 dev 與 build 的行為會不同。
+  建置結果：`dist/assets/` 有 **165 個 `.cell`**（含 cella-lang 全部標準模組，不只用到的）、5 個 `index.json`、`cella_bg.wasm`，
+  **共 45 MB、gzip 後 11.4 MB**；worker 本身 20 KB（cella-lang 的 JS 是另一塊）。
+  ⚠️ 要 `worker: { format: 'es' }`——worker 動態載 cella-lang 會分塊，預設的 IIFE 建置直接失敗。
+  開發模式（未壓縮）實測：暖機 → 第一次出結果約 28 秒。
 
 ## R6. 第二次打開要快——快取
 
 - **Decision**：① 套件與 wasm 檔用 Cache Storage 保存（鍵：`checkerHash` ＋ 檔名）——GitHub Pages 的 `max-age=600` 讓 HTTP 快取十分鐘就失效（設計 draft 五之三）；
   ② 編好的判決模組位元組（`compile_wasm_library` 的輸出）存在 IndexedDB（鍵：`checkerHash` ＋ 模組原始碼的雜湊），下次直接 `loadLibrary`。
 - **Rationale**：SC-004「第二次少一半」——十二秒的編譯是最大的一塊，重用它就過了。
+- **實作時改（T014，2026-10-31）**：只剩 ② 那一層。量到**編好的模組不需要 Cella 執行環境**（4.7 MB 的模組在乾淨的行程裡 13 毫秒載起來就能判），
+  所以命中時連套件都不必下載，① 沒有用處。鍵改成「六個套件的版本 ＋ 判決模組原始碼」的 SHA-256（開發模式的網址不帶雜湊，用網址當鍵會在升版後拿到舊的）。
 - **Alternatives**：Service Worker 管整個快取——範圍比這一刀大（會影響整個網站的更新流程）。否決，留給之後。
 
 ## R7. 什麼時候開始載入

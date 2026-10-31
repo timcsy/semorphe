@@ -44,6 +44,9 @@ export default defineConfig({
   //    放在 repo 根目錄不會被複製進去，而症狀是
   //    「設定裡填了網域，過幾次部署它自己消失了」。
   base: '/',
+  // 🔴 **worker 用 ES 模組**（spec 182）：Cella 的 worker 動態載 `cella-lang`，會分塊——
+  //    預設的 IIFE 不能分塊（建置直接失敗）。各個 `new Worker(..., { type: 'module' })` 都要帶 type。
+  worker: { format: 'es' },
   build: {
     rollupOptions: {
       output: {

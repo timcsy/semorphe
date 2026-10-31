@@ -451,7 +451,9 @@ export function createAppLayout(
     //    是 99 遞減，而 VSCode 右側**優先序愈大愈靠左**——
     //    於是那邊的順序就是「同步 → 五顆 picker」。這裡逐字對上。
     //    ⚠️ 語言掛在最右，那是 VSCode 擺語言模式的位置。
+    // 🟢 **判斷（spec 182）靠左**——IDE 把問題計數擺在左邊，這裡對上。
     statusBar.innerHTML =
+      '<span id="status-check" class="status-item" aria-live="polite"></span>' +
       '<span class="status-spacer"></span>' +
       `${syncBtn}` +
       '<span id="status-controls" class="status-controls"></span>' +
