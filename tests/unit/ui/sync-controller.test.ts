@@ -153,6 +153,29 @@ describe('SyncController (bus-based)', () => {
       expect(handler.mock.calls[0][0].code).toBe('int y;')
     })
 
+    it('🔴 另一次同步還在進行時呼叫 syncCodeToBlocks：等它做完再做，不是丟掉（第 392 刀）', async () => {
+      const rootNode = {
+        type: 'translation_unit', text: '', isNamed: true, children: [], namedChildren: [],
+        childForFieldName: () => null, startPosition: { row: 0, column: 0 }, endPosition: { row: 0, column: 0 },
+      }
+      let release!: () => void
+      const gate = new Promise<void>((r) => { release = r })
+      let calls = 0
+      const slowParser: CodeParser = { parse: vi.fn(async () => { if (calls++ === 0) await gate; return { rootNode } }) }
+      const lifter = new Lifter()
+      lifter.register('translation_unit', () => createNode('cpp:program', {}, { body: [] }))
+      controller.setCodeToBlocksPipeline(lifter, slowParser)
+      const handler = vi.fn()
+      bus.on('semantic:update', handler)
+      const first = controller.syncCodeToBlocks('int a;')
+      const second = controller.syncCodeToBlocks('int b;')
+      release()
+      await first
+      await second
+      expect(slowParser.parse).toHaveBeenCalledTimes(2)
+      expect(handler.mock.calls.at(-1)![0].code).toBe('int b;')
+    })
+
     it('🔴 syncCodeToBlocks 在管線接上之前呼叫：等它接上，不回 false', async () => {
       const handler = vi.fn()
       bus.on('semantic:update', handler)

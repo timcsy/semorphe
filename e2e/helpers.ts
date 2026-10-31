@@ -54,6 +54,8 @@ export async function freshApp(page: Page): Promise<void> {
   await page.goto('/')
   await assertServingOurBuild(page)
   await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+  // 🔴 init 做完才算起來了：後段會把編輯器寫回預設程式，太早餵的程式碼會被蓋掉（第 392 刀，見 `src/main.ts`）
+  await page.waitForFunction(() => Boolean((window as any).__appReady), undefined, { timeout: 30_000 })
 }
 
 /**
@@ -74,6 +76,8 @@ export async function appKeepingStorage(page: Page): Promise<void> {
   await page.evaluate(() => window.localStorage.clear())
   await page.reload()
   await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+  // 🔴 init 做完才算起來了：後段會把編輯器寫回預設程式，太早餵的程式碼會被蓋掉（第 392 刀，見 `src/main.ts`）
+  await page.waitForFunction(() => Boolean((window as any).__appReady), undefined, { timeout: 30_000 })
 }
 
 /**
@@ -272,8 +276,23 @@ export async function useAsSource(page: Page, which: '程式碼' | '積木'): Pr
 export async function appReady(page: Page): Promise<void> {
   await page.waitForFunction(() => {
     const a = (window as any).__app
-    return Boolean(a?.blocklyPanel) && Boolean(a?.currentTarget?.id)
+    // 🔴 `__appReady`：init 做完（第 392 刀）——面板在了不代表後段的重投影做完了
+    return Boolean((window as any).__appReady) && Boolean(a?.blocklyPanel) && Boolean(a?.currentTarget?.id)
   }, undefined, { timeout: 30_000 })
+}
+
+/**
+ * 語義樹裡**有這一顆**了——「我餵的那份程式碼進來了」。
+ *
+ * 🔴 `treeReady` 答不了這一題：它問「樹有槽」，而**預設的空骨架就有**（第 392 刀，
+ *    c-target 間歇紅了一個月，現場是樹停在空骨架）。要等的是自己那份程式碼時用這一支。
+ */
+export async function treeHas(page: Page, componentId: string): Promise<void> {
+  await page.waitForFunction((id) => {
+    const walk = (n: { componentId?: string; slots?: Record<string, unknown[]> } | undefined): boolean =>
+      !!n && (n.componentId === id || Object.values(n.slots ?? {}).some((b) => (b ?? []).some((c) => walk(c as never))))
+    return walk((window as any).__app?.syncController?.currentTree)
+  }, componentId, { timeout: 30_000 })
 }
 
 /** 語義樹**真的有內容**了——`useAsSource` 回來時同步還在跑。 */
@@ -486,6 +505,8 @@ export async function openLessonLink(page: Page, lessonId: string): Promise<void
   )
   // ⚠️ **還要等畫布**——課套用完的下一拍才是積木畫好
   await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+  // 🔴 init 做完才算起來了：後段會把編輯器寫回預設程式，太早餵的程式碼會被蓋掉（第 392 刀，見 `src/main.ts`）
+  await page.waitForFunction(() => Boolean((window as any).__appReady), undefined, { timeout: 30_000 })
 }
 
 /**

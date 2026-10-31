@@ -15,7 +15,10 @@ import { webProfile } from './ui/host/web-profile'
 const app = new App(webProfile)
 ;(window as any).__app = app
 
-app.init().catch((err) => {
+// 🔴 **init 做完了**——給要「餵一份程式碼進去」的測試等（第 392 刀）。
+//    編輯器在 init 的前段就建好了，而後段還會從預設的樹重投影一次、把編輯器寫回預設程式；
+//    只等編輯器出現就 `setCode` 的話，那份程式碼會被蓋掉（e2e c-target 間歇紅了一個月的最後一個原因）。
+app.init().then(() => { (window as any).__appReady = true }).catch((err) => {
   console.error('Failed to initialize Semorphe:', err)
   const appEl = document.getElementById('app')
   if (appEl) {
