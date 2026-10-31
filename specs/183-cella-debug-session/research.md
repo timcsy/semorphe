@@ -23,8 +23,9 @@
 ## R2. 覆蓋標記（「這塊沒跑到」、每塊幾次）
 
 - 今天由 JS 直譯器的 `visitCounts()` 給。DAP 的 `continue` 拿不到；用 `stepIn` 數會慢 25 倍。
-- **Decision（暫定）**：已向 cella 提需求（`run` 順便給每個節點標籤的進入次數，2026-10-31）。
-  回覆之前：Cella 跑的那次**不標覆蓋**，結果的 `missing` 帶 `steps`，畫面說「這次沒有覆蓋資料」（P6：缺了要看得見）。
+- **Decision**：cella 2026-10-31 答應下一輪加：每次 `run` 回傳這一段期間每個節點標籤的進入次數，`cella-lang/dap` 的工作階段累加成 `coverage()`
+  （`{"<node>": n}`，沒跑到的不出現——「沒跑到」由我們用語義樹的節點清單去減；計數點在 `machine.debugger` 的 observe，與 `stepIn` 數的完全一樣）。
+  介面先放 `coverage(): ReadonlyMap<string, number> | null`；**在那一版之前回 null**，結果的 `missing` 帶 `steps`，畫面說「這次沒有覆蓋資料」（P6）。
 
 ## R3. 退回 JS 直譯器的時機與出處
 
