@@ -303,6 +303,8 @@ async function openLesson(page: import('@playwright/test').Page, c: LessonCase):
   await page.waitForFunction(
     () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 30_000 })
+  // 🔴 init 做完才算起來了：後段會把編輯器寫回預設程式，太早餵的程式碼會被蓋掉（第 392 刀，見 `src/main.ts`）
+  await page.waitForFunction(() => Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
   // 🔴 **等【條件】，不等固定秒數**（2026-08-31 量測之後改的）。
   //
   // 這裡原本是 `waitForTimeout(2500)`。整個 `lessons.spec` 是 14.8 分鐘，

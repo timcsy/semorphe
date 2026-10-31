@@ -18,6 +18,8 @@ async function freshApp(page: Page): Promise<void> {
   await page.goto('/')
   // 積木工作區出現 ＝ 應用真的起來了（而不是白畫面）
   await expect(page.locator('.blocklyWorkspace, .injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+  // 🔴 init 做完才算起來了：後段會把編輯器寫回預設程式，太早餵的程式碼會被蓋掉（第 392 刀，見 `src/main.ts`）
+  await page.waitForFunction(() => Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
 }
 
 /** 把程式碼打進 Monaco。⚠️ 用鍵盤而不是設值——設值不會觸發 code→blocks。 */
