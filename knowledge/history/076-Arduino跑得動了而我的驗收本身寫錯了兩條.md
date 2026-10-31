@@ -98,6 +98,6 @@ cout << LOW << endl;      // 參照：-1     我們：0  🔴
 
 - [vision](../vision.md) 階段 6.11——本輪的落點
 - [history/075](075-Arduino先於Python而被否決的那一邊的代價是真的.md)——排序決定與它的代價
-- [draft/支援 Arduino 要加什麼](../draft/2026-08-13-支援Arduino要加什麼.md)——**仍 in-flight**（第 4–6 項沒做）
+- [draft/支援 Arduino 要加什麼](../draft/retired/2026-08-13-支援Arduino要加什麼.md)——**仍 in-flight**（第 4–6 項沒做）
 - [experience](../experience.md) 兩條新的——本輪反流
 - `specs/137-arduino-execution-model/findings.md`——十一條坑

@@ -106,7 +106,7 @@ Python  驗的   🔴 語言無關性（P9）       四項獨立性之一
 
 ## 相關
 
-- [draft/支援 Arduino 要加什麼](../draft/2026-08-13-支援Arduino要加什麼.md)——1–6 的清單與順序，**in-flight**
+- [draft/支援 Arduino 要加什麼](../draft/retired/2026-08-13-支援Arduino要加什麼.md)——1–6 的清單與順序，**in-flight**
 - [draft/Python 的 package 怎麼收](../draft/2026-08-13-Python的package怎麼收.md)§五——那個還沒答的門檻問題
 - [history/074](074-機制有了沒人接上的第十一個而這次它有了執行機構.md)——`target` 做完，本決定的阻斷因此解除
 - [vision](../vision.md) 階段 6.11——本決定的落點
