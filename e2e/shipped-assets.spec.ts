@@ -77,6 +77,8 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
     () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 30_000 },
   )
+  // 🔴 init 做完才餵程式碼（第 392 刀，見 `src/main.ts` 的 `__appReady`）
+  await page.waitForFunction(() => Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
   // 🔴 **必須逼它真的解析一次**——parser 是懶載入的，
   // 只開頁面的話 `tree-sitter-cpp.wasm` 也不會被請求。
   await page.evaluate(() =>

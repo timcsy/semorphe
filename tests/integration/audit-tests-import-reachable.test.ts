@@ -6,7 +6,7 @@
  * 大掃除那天，同一個形狀量到五次：護欄或測試 import 一個**產品走不到**的模組，於是綠燈證明的是
  * 「那份程式碼是對的」，而產品跑的是另一份（`field-write`、`cpp/module.ts`、`identity`、`ComponentRegistry`、
  * `TemplateGenerator`——最後那個還讓 google 風格 70 / 86 份課文解答編不過而沒人發現）。
- * 見 `knowledge/draft/2026-10-31-三條待確認的教訓.md` 第四、五條。
+ * 見 `knowledge/draft/retired/2026-10-31-三條待確認的教訓.md`（已寫進 experience） 第四、五條。
  *
  * ## 怎麼量
  *
@@ -31,6 +31,7 @@ const ALLOWED: Record<string, string> = {
   'src/core/molecule.ts': '同上',
   'src/providers/cella/formalize/index.ts': '重構階段 4：深嵌入的 formalize，階段 5 接上 Cella 提供者時進產品路徑',
   'src/providers/cella/formalize/scope.ts': '同上',
+  'src/providers/cella/verdict.ts': '重構階段 5：Cella 的判決入口，接上 Cella 提供者時進產品路徑（spec 180 T010 先拿它量 C18 語料）',
 }
 
 const EXT = ['', '.ts', '.tsx', '.json', '/index.ts']

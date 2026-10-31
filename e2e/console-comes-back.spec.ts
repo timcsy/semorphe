@@ -29,6 +29,8 @@ async function freshApp(page: Page): Promise<void> {
   await page.addInitScript(() => window.localStorage.clear())
   await page.goto('/')
   await expect(page.locator('.blocklyWorkspace, .injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+  // 🔴 init 做完才算起來了：後段會把編輯器寫回預設程式，太早餵的程式碼會被蓋掉（第 392 刀，見 `src/main.ts`）
+  await page.waitForFunction(() => Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
 }
 
 /** 主控台現在展開著嗎？——判準是**內容區真的有高度**，不是有沒有那個節點。 */

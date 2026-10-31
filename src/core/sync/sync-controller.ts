@@ -260,7 +260,7 @@ export class SyncController {
    * 🔴 在此之前管線還沒接上（tree-sitter 的 wasm 是非同步載入的）時，`edit:code` 與
    *    `syncCodeToBlocks` 都**靜默 return**。學生按「以此為準：程式碼」被吞掉，樹停在預設的空骨架，
    *    下一次從樹重產（例如切到 C 目標）就把他寫的程式碼整份蓋掉。
-   *    e2e `c-target` 間歇紅了一個月（draft `2026-10-02-C-目標下有時候少一個標頭`）：只在機器忙、wasm 載得慢時發作。
+   *    e2e `c-target` 間歇紅了一個月（`knowledge/episodes/2026-10-31-一個月重現不了的紅.md`）：只在機器忙、wasm 載得慢時發作。
    */
   private pendingCode: string | null = null
   /** 等「另一次同步做完」的那幾個程式碼編輯（第 392 刀，見 `handleEditCode`）。 */

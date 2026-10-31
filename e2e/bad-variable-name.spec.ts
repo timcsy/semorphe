@@ -63,6 +63,8 @@ test('🔴 不能當名字的字，畫面上要說得出為什麼', async ({ pag
   await page.waitForFunction(
     () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 30_000 })
+  // 🔴 init 做完才餵程式碼（第 392 刀，見 `src/main.ts` 的 `__appReady`）
+  await page.waitForFunction(() => Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
   await page.evaluate((c) => (window as never as Record<string, any>).__app.codeView.setCode(c), PROGRAM)
   await useAsSource(page, '程式碼')
   await treeReady(page)

@@ -48,6 +48,11 @@ export interface FormalizeContext {
   binary(n: SemanticNode): CellaJson
   /** 運算式敘述：`sExpr`（標籤 `<id>/stmt`）包住這顆的運算式。 */
   exprStmt(n: SemanticNode): CellaJson[]
+  /**
+   * 同一個子運算式要在程式裡出現第二次時，用這一支複製：每個節點標籤 `n` 後面加 `/<tag>`（宣告指向 `x` 不動）。
+   * 🔴 cella（2026-10-31）：**運算式的標籤必須彼此不同**——共用時模型裡以節點命名的暫時物件會互相覆蓋，判決靜默出錯。
+   */
+  copy(json: CellaJson, tag: string): CellaJson
   /** 帶初值的宣告：`iVar`（頂層）或 `sDecl`；初值取 `initializer` 槽。 */
   declVar(n: SemanticNode, t: CellaJson, global: boolean): CellaJson[]
   /** 宣告，初值已備好：`iVar`／`sDecl`。 */

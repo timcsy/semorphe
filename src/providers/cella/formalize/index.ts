@@ -60,6 +60,17 @@ export function cellaBoardOf(targetId: string): string | undefined {
   return CELLA_BOARD[targetId]
 }
 
+/** 深複製一份程式 JSON，每個節點標籤 `n` 加上 `/<tag>`（見契約的 `copy`）。 */
+function relabel(json: CellaJson, tag: string): CellaJson {
+  if (Array.isArray(json)) return json.map((x) => relabel(x as CellaJson, tag)) as never
+  if (!json || typeof json !== 'object') return json
+  const out: Record<string, unknown> = {}
+  for (const [key, v] of Object.entries(json as Record<string, unknown>)) {
+    out[key] = key === 'n' && typeof v === 'string' ? `${v}/${tag}` : relabel(v as CellaJson, tag)
+  }
+  return out as CellaJson
+}
+
 export function formalize(tree: SemanticNode, options: { board?: string; lang?: 'c' | 'cpp' } = {}): FormalizeResult {
   // C 與 C++ 是同一個核心的兩個分支（`@cella-lang/c`／`@cella-lang/cpp`）；差在 lang 與 struct 的寫法（cella 2026-10-31）
   const isC = options.lang === 'c'
@@ -205,6 +216,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const ctx: FormalizeContext = {
     k, expr, stmt, decl, one, exprOf, block, initOf, braceList, type, miss, call, mcall, binary,
     exprStmt: (n) => [k('sExpr', { n: `${n.id}/stmt`, e: expr(n) })],
+    copy: (json, tag) => relabel(json, tag),
     declVar, declInit, declCtor, libraryObject, constInt,
     declOf: (key) => declOf.get(key),
     unescapeC,

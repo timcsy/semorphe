@@ -49,6 +49,8 @@ const blockCount = (page: Page): Promise<number> =>
 async function saveThenReload(page: Page, mutate: (s: Record<string, unknown>) => void): Promise<number> {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.blocklyWorkspace, .injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+  // 🔴 init 做完才餵程式碼（第 392 刀，見 `src/main.ts` 的 `__appReady`）
+  await page.waitForFunction(() => Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
   await page.waitForTimeout(3000)
 
   await page.evaluate((code) => (window as never as {
