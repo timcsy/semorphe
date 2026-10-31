@@ -46,6 +46,8 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       { from: '(core)', category: 'operators' },
       { from: '<cmath>', category: 'math' },
       { from: '<cstdlib>', category: 'stdlib' },
+      // `time(0)`（`<ctime>`）與亂數同處——它在課文裡只當亂數種子用（2026-10-31，設計 draft 五之六）
+      { from: '<ctime>', category: 'stdlib' },
       // `map()` 是數值換算，歸運算而不是硬體——⚠️ 它的擁有者是 (arduino) 而分類是 math
       { from: '(arduino)', category: 'math' },
     ],

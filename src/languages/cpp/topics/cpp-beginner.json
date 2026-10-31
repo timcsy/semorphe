@@ -39,6 +39,7 @@
     "cpp:math_unary",
     "cpp:random_next",
     "cpp:random_seed",
+    "cpp:time",
     "cpp:math_abs",
     "cpp:math_min",
     "cpp:math_max",

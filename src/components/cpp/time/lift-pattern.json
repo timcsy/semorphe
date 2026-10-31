@@ -1,0 +1,22 @@
+[
+  {
+    "id": "cpp_time_now",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "call_expression",
+    "component": {
+      "componentId": "cpp:time"
+    },
+    "constraints": [
+      {
+        "field": "function",
+        "text": "time"
+      },
+      {
+        "field": "arguments",
+        "text": "(0)"
+      }
+    ],
+    "fieldMappings": [],
+    "priority": 8
+  }
+]
