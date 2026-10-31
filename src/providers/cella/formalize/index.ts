@@ -55,7 +55,9 @@ export function cellaBoardOf(targetId: string): string | undefined {
   return CELLA_BOARD[targetId]
 }
 
-export function formalize(tree: SemanticNode, options: { board?: string } = {}): FormalizeResult {
+export function formalize(tree: SemanticNode, options: { board?: string; lang?: 'c' | 'cpp' } = {}): FormalizeResult {
+  // C 與 C++ 是同一個核心的兩個分支（`@cella-lang/c`／`@cella-lang/cpp`）；差在 lang 與 struct 的寫法（cella 2026-10-31）
+  const isC = options.lang === 'c'
   const { declOf } = resolveScopes(tree)
   // C++ 的 struct 就是 class：寫不寫 `struct` 都是 tClass（cella 2026-10-31；tStruct 只給 C 程式）。
   // 不帶關鍵字的型別名（`Node*`）要先知道它是程式裡定義過的 struct，才認得出來。
@@ -82,7 +84,7 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
     const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
     if (vec) { const inner = type(vec[1], at); return inner && k('tVector', { t: inner }) }
     const st = /^(?:struct\s+)?([A-Za-z_]\w*)$/.exec(s)
-    if (st && (s.startsWith('struct ') || structNames.has(st[1]))) return k('tClass', { name: st[1] })
+    if (st && (s.startsWith('struct ') || structNames.has(st[1]))) return k(isC ? 'tStruct' : 'tClass', { name: st[1] })
     miss(at, `型別「${s}」還沒有對應`)
     return null
   }
@@ -440,6 +442,10 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
           const t = type(m.properties?.type, m)
           if (t) fields.push(k('mbField', { acc: k('acPublic'), name: String(m.properties?.name ?? ''), t, init: null }))
         }
+        if (isC) {
+          const cFields = fields.map((f) => k('fld', { name: f.name, t: f.t }))
+          return [k('iStruct', { d: k('sdef', { n: n.id, name: String(p.name ?? ''), fields: cFields }) })]
+        }
         return [k('iClass', { d: k('cdef', { n: n.id, name: String(p.name ?? ''), isClass: false, bases: [], members: fields }) })]
       }
       case 'cpp:array_2d_declare': return decl(n, true)
@@ -462,7 +468,7 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
   const items = (tree.slots?.body ?? []).flatMap(item)
   if (unknown.length > 0) return { program: null, unknown }
   return {
-    program: k('prog', { n: tree.id, lang: k('langCpp'), items, board: options.board ?? null }),
+    program: k('prog', { n: tree.id, lang: k(isC ? 'langC' : 'langCpp'), items, board: options.board ?? null }),
     unknown: [],
   }
 }

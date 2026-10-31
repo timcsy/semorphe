@@ -152,6 +152,19 @@ describe('formalize：最小子集', () => {
     expect(errs).toEqual([])
   })
 
+  it.skipIf(!hasSyntax)('★ C 程式：langC，struct 用 tStruct／iStruct（cella：tStruct 只給 C），形狀對得上', () => {
+    const r = formalize(lift('#include <stdio.h>\nstruct P { int x; };\nint main() { struct P a; a.x = 1; printf("%d\\n", a.x); return 0; }'), { lang: 'c' })
+    expect(r.unknown).toEqual([])
+    const s = JSON.stringify(r.program)
+    expect(r.program?.lang).toEqual({ k: 'langC' })
+    expect(s).toContain('"k":"iStruct"')
+    expect(s).toContain('"k":"tStruct","name":"P"')
+    expect(s).not.toContain('tClass')
+    const errs: string[] = []
+    checkShape(r.program, constructorFields(fs.readFileSync(SYNTAX, 'utf8')), '$', errs)
+    expect(errs).toEqual([])
+  })
+
   /**
    * 讀數（不是護欄）：課文的 C／C++／Arduino 解答，最小子集今天翻得出幾份，缺的元件依次數排。
    * 這是對照表下一批要補誰的依據；覆蓋的棘輪等對照表成形後再立。
