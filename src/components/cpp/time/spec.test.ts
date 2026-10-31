@@ -12,6 +12,8 @@ import { SemanticInterpreter } from '../../../interpreter/interpreter'
 import { generateCode } from '../../../core/projection/code-generator'
 import { createCppCodePatcher } from '../../../languages/cpp/auto-include'
 import { createPopulatedRegistry } from '../../../languages/cpp/std'
+import { renderToBlocklyState } from '../../../core/projection/block-renderer'
+import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import cStyle from '../../../languages/cpp/styles/c.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -22,6 +24,7 @@ beforeAll(async () => {
   parser = new Parser()
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
+  setupTestRenderer()
 })
 
 const lift = (c: string): SemanticNode => createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
@@ -68,5 +71,20 @@ describe('膠囊自證：cpp:time', () => {
     const printed = Number(i.getOutput().join(''))
     expect(printed, '印出來的要是一個數').not.toBeNaN()
     expect(Math.abs(printed - Math.floor(Date.now() / 1000))).toBeLessThan(5)
+  })
+
+  it('★ 積木渲染：`srand(time(0))` 的種子插槽裡是一塊「現在的時間」，不是通用的呼叫積木', () => {
+    const state = renderToBlocklyState(lift(SEED)) as unknown as { blocks: { blocks: unknown[] } }
+    const types: string[] = []
+    const walk = (b: unknown): void => {
+      if (!b || typeof b !== 'object') return
+      const o = b as Record<string, unknown>
+      if (typeof o.type === 'string') types.push(o.type)
+      for (const v of Object.values(o)) if (v && typeof v === 'object') walk(v)
+    }
+    walk(state.blocks.blocks)
+    expect(types, '正向錨點：種子那塊在').toContain('cpp_random_seed')
+    expect(types).toContain('cpp_time')
+    expect(types).not.toContain('cpp_func_call_expression')
   })
 })
