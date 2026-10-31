@@ -82,6 +82,11 @@ export interface ViewRequests {
   'execution:run': { command: 'run' | 'step' | 'stop' | 'reset' }
   'execution:input': { text: string }
   /**
+   * **取消正在等的輸入**——那一次執行停掉了（主控台收）。
+   * 🔴 不取消的話，下一次餵進來的那一行會被已經死掉的那次執行吃掉（重播那支 e2e 量到的）。
+   */
+  'execution:input-cancel': Record<string, never>
+  /**
    * **把一個執行期變數改成別的值**（2026-08-26）。
    *
    * 🔴 它走匯流排而不是「面板呼叫控制器」，理由與 `execution:input` 同一條：

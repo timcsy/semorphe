@@ -1878,7 +1878,7 @@ export class App {
     elements.variablePanel?.onEditValue((name, value) =>
       this.bus.emit('execution:set-variable', { name, value }))
     // 🟢 主控台的「↻ 重播上一次」→ 執行器（面板不認識執行器，組裝點接線）
-    elements.consolePanel?.onReplay(() => this.executionController?.replayLast())
+    elements.onReplayRequested(() => this.executionController?.replayLast())
     this.hardwarePanel = (elements.statePanel('hardware')?.view as HardwarePanel | undefined) ?? null
     // 🟢 暫停中畫板子當下的狀態、可以改輸入（spec 185）；執行結束回到判決的那一份
     this.bus.on('execution:environment', (e) => {

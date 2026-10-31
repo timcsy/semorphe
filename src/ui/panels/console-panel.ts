@@ -141,6 +141,9 @@ export class ConsolePanel implements ViewHost {
       if (data.stream === 'stderr') this.error(data.text)
       else this.write(data.text)
     })
+    // 從外面餵進來的輸入（重播）與取消等待——執行器不認識這個面板，走匯流排
+    bus.on('execution:input', (d) => this.feedInput(d.text))
+    bus.on('execution:input-cancel', () => this.cancelInput())
   }
 
   /** Register a handler for terminal signals (Ctrl+C → SIGINT, Ctrl+D → EOF) */
@@ -197,11 +200,6 @@ export class ConsolePanel implements ViewHost {
     this.removeInlineInput()
     this.removeInputRow()
   }
-
-  private replayHandler: (() => void) | null = null
-  /** 「↻ 重播上一次」被按了（vision〈執行的誠實〉）——由組裝點接到執行器。 */
-  onReplay(handler: (() => void) | null): void { this.replayHandler = handler }
-  requestReplay(): void { this.replayHandler?.() }
 
   onSignal(handler: ((signal: ConsoleSignal) => void) | null): void {
     this.signalHandler = handler

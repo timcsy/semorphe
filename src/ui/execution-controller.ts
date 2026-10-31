@@ -341,8 +341,8 @@ export class ExecutionController {
     this.mode = mode
     this.auto = mode === 'animate' ? ExecutionController.ANIMATE_DELAY[speed] : null
     this.panels.consolePanel?.clear()
-    // 重播：上一次打過的輸入先排進主控台的佇列（它照常回顯、照常被讀——與打字是同一條路）
-    for (const line of replay) this.panels.consolePanel?.feedInput(line)
+    // 重播：上一次打過的輸入先排進主控台的佇列（它照常回顯、照常被讀——與打字是同一條路）；走匯流排（P9，`principles.md:177`）
+    for (const line of replay) this.bus?.emit('execution:input', { text: line })
     // 執行與除錯都是跑到中斷點；單步與動畫停在第一步
     this.panels.bottomPanel?.showTab(mode === 'run' ? 'console' : 'variables')
     this.showExecButtons(true, mode === 'step' ? 'stepping' : 'running')
@@ -535,7 +535,7 @@ export class ExecutionController {
 
   handleStop(): void {
     this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
-    this.panels.consolePanel?.cancelInput()
+    this.bus?.emit('execution:input-cancel', {})
     const s = this.session
     this.session = null
     s?.terminate()
@@ -547,7 +547,7 @@ export class ExecutionController {
   }
 
   private resetExecution(): void {
-    this.panels.consolePanel?.cancelInput()
+    this.bus?.emit('execution:input-cancel', {})
     const s = this.session
     this.session = null
     s?.terminate()

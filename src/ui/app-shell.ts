@@ -82,6 +82,8 @@ export interface AppShellElements {
   enableConsoleTab: () => void
   /** 那條列**晚一點才建**時通知——執行控制器手上是建構當時的那一份。 */
   onBottomPanelReady: (cb: (panel: BottomPanel) => void) => void
+  /** 主控台的「↻ 重播上一次」被按了（vision〈執行的誠實〉）——組裝點接到執行器。 */
+  onReplayRequested: (cb: () => void) => void
 }
 
 export interface AppShellCallbacks {
@@ -740,6 +742,8 @@ export function createAppLayout(
    */
   let consoleTabAdded = false
   let onBottomPanelCreated: ((panel: BottomPanel) => void) | null = null
+  // 「↻ 重播上一次」被按了——由組裝點接到執行器（殼層不認識執行器）
+  let replayRequested: (() => void) | null = null
   /**
    * 🔴 **「狀態」那一層有哪些分頁、叫什麼、什麼順序——問登錄表。**
    *
@@ -788,7 +792,7 @@ export function createAppLayout(
       actions: [
         { icon: '📋', title: '複製輸出', onClick: () => consolePanel.copyOutput() },
         // 🟢 重播上一次（vision〈執行的誠實〉）：用上一次打過的輸入再跑一次——不是預設行為，學生按執行期待的是重新打
-        { id: 'replay', icon: '↻', title: Blockly.Msg['CONSOLE_REPLAY'] || '重播上一次（用同一份輸入再跑一次）', onClick: () => consolePanel.requestReplay() },
+        { id: 'replay', icon: '↻', title: Blockly.Msg['CONSOLE_REPLAY'] || '重播上一次（用同一份輸入再跑一次）', onClick: () => replayRequested?.() },
         { icon: Blockly.Msg['PANEL_CLEAR'] || '清除', title: 'Clear', onClick: () => consolePanel.clear() },
       ],
     }
@@ -1924,7 +1928,7 @@ export function createAppLayout(
   //    少了它的症狀是「兩個分頁都不亮，而畫面上是積木」。
   showProjection('blocks')
 
-  return { blocklyPanel, codeView, consolePanel, variablePanel, statePanel: (id: string) => STATE_INSTANCES.get(id), flowPanel, bottomPanel, quickAccessBar, lessonNudgeBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, setHostLayer, toggleBottom, bottomVisibility, bottomVisibilityKnown: () => !!bottomPanel || hostSeesBottom, onBottomVisibilityChanged: (cb: () => void) => { bottomVisibilityChanged = cb }, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb } }
+  return { blocklyPanel, codeView, consolePanel, variablePanel, statePanel: (id: string) => STATE_INSTANCES.get(id), flowPanel, bottomPanel, quickAccessBar, lessonNudgeBar, layoutManager, mobileTabBar, codeKeyboard, showProjection, setHostLayer, toggleBottom, bottomVisibility, bottomVisibilityKnown: () => !!bottomPanel || hostSeesBottom, onBottomVisibilityChanged: (cb: () => void) => { bottomVisibilityChanged = cb }, applyLayout, layoutOptions: () => hostLayoutOptions(layerAvailable, focusLayer), enableConsoleTab, onBottomPanelReady: (cb: (p: BottomPanel) => void) => { onBottomPanelCreated = cb }, onReplayRequested: (cb: () => void) => { replayRequested = cb } }
 }
 
 /*
