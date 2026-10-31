@@ -302,7 +302,7 @@ int main() {
     expect(components.has('cpp:stack_peek')).toBe(true)
   })
 
-  it.skip('[BLOCKED:cpp:func_def] should generate compilable code producing same output [DEGRADED: stack<T>& param not supported]', () => {
+  it('should generate compilable code producing same output（`stack<int>&` 參數與 `stack<int> a, b;`——2026-10-31 驗過已修）', () => {
     // KNOWN LIMITATION: `stack<int>&` as function parameter type is simplified
     // to `int&` by the lifter, causing compile failure. Also `stack<int> a, b;`
     // multi-var declaration only generates the first variable.
