@@ -1,0 +1,466 @@
+/**
+ * **formalize：語義樹 → Cella 的程式 JSON**（spec 180，重構階段 4；盟約第 2 條的防腐層）。
+ *
+ * 格式是 `@cella-lang/cfamily` 的 `cfamily.syntax`（`deriving Json`：`{"k": 建構子, <參數名>: 值}`；
+ * Option 是值或 null；列舉是 `{"k": "tInt"}`）。每個建構子的 `n` 是語義節點的 id——Cella 的判決、
+ * 除錯器的停點、型別查詢的洞都用它指回積木。展開出來、學生看不到的內部節點用 `<id>/<角色>`。
+ *
+ * 🔴 **翻不了的不送、也不猜**：回 `unknown`，說出哪一顆節點、哪一種元件（P6；四之十「Cella 還沒做的由 semorphe 判斷」）。
+ * 這一版是第一批的**最小子集**；其餘元件逐批加，對照表的覆蓋由護欄盯。
+ */
+import type { SemanticNode } from '../../../core/types'
+import { resolveScopes } from './scope'
+
+/** Cella 程式 JSON 的一個節點。 */
+export type CellaJson = { k: string; [field: string]: unknown }
+
+export interface Unknown { nodeId: string; construct: string; reason: string }
+export type FormalizeResult = { program: CellaJson; unknown: [] } | { program: null; unknown: Unknown[] }
+
+const k = (name: string, fields: Record<string, unknown> = {}): CellaJson => ({ k: name, ...fields })
+
+const BIN: Record<string, string> = {
+  '+': 'opAdd', '-': 'opSub', '*': 'opMul', '/': 'opDiv', '%': 'opRem', '<<': 'opShl', '>>': 'opShr',
+  '<': 'opLt', '<=': 'opLe', '>': 'opGt', '>=': 'opGe', '==': 'opEq', '!=': 'opNe',
+  '&': 'opBitAnd', '|': 'opBitOr', '^': 'opBitXor', '&&': 'opAnd', '||': 'opOr',
+}
+
+const SCALAR: Record<string, string> = {
+  int: 'tInt', long: 'tLong', 'long long': 'tLongLong', unsigned: 'tUnsigned', 'unsigned int': 'tUnsigned',
+  short: 'tShort', 'unsigned short': 'tUShort', 'unsigned long': 'tULong', 'unsigned long long': 'tULongLong',
+  double: 'tDouble', float: 'tFloat', char: 'tChar', 'signed char': 'tSChar', 'unsigned char': 'tUChar',
+  bool: 'tBool', string: 'tString', 'std::string': 'tString',
+}
+
+/** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
+function unescapeC(s: string): string {
+  const map: Record<string, string> = { n: '\n', t: '\t', r: '\r', '0': '\0', '\\': '\\', '"': '"', "'": "'", a: '\x07', b: '\b', f: '\f', v: '\v' }
+  return s.replace(/\\(x[0-9a-fA-F]+|[0-7]{1,3}|.)/g, (m, e: string) => {
+    if (e[0] === 'x') return String.fromCharCode(parseInt(e.slice(1), 16))
+    if (/^[0-7]+$/.test(e) && e !== '0') return String.fromCharCode(parseInt(e, 8))
+    return map[e] ?? m
+  })
+}
+
+/**
+ * semorphe 的目標 id → Cella 的板名（`@cella-lang/arduino` 的 README：未知的板子判決是 `invalid`）。
+ * 不是板子的目標（`cpp`、`c`）回 undefined。
+ */
+const CELLA_BOARD: Record<string, string> = {
+  'arduino-uno': 'uno', arduino: 'arduino', 'arduino-nano': 'nano',
+  esp32: 'esp32', esp32c3: 'esp32c3', esp32s3: 'esp32s3', 'esp32s3-cam': 'esp32s3Cam',
+  'nodemcu-esp8266': 'nodemcuEsp8266', 'wemos-d1-mini': 'wemosD1Mini',
+}
+export function cellaBoardOf(targetId: string): string | undefined {
+  return CELLA_BOARD[targetId]
+}
+
+export function formalize(tree: SemanticNode, options: { board?: string } = {}): FormalizeResult {
+  const { declOf } = resolveScopes(tree)
+  // C++ 的 struct 就是 class：寫不寫 `struct` 都是 tClass（cella 2026-10-31；tStruct 只給 C 程式）。
+  // 不帶關鍵字的型別名（`Node*`）要先知道它是程式裡定義過的 struct，才認得出來。
+  const structNames = new Set<string>()
+  const collect = (n: SemanticNode): void => {
+    if (n.componentId === 'cpp:struct_declare') structNames.add(String(n.properties?.name ?? ''))
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
+  }
+  collect(tree)
+  const unknown: Unknown[] = []
+  const miss = (n: SemanticNode, reason: string): CellaJson => {
+    unknown.push({ nodeId: n.id, construct: n.componentId, reason })
+    return k('eHole', { n: n.id })
+  }
+
+  function type(t: unknown, at: SemanticNode): CellaJson | null {
+    const s = String(t ?? '').trim()
+    if (s === '' ) { miss(at, '沒有型別'); return null }
+    if (s.startsWith('const ')) { const inner = type(s.slice(6), at); return inner && k('tConst', { t: inner }) }
+    if (s.endsWith('&')) { const inner = type(s.slice(0, -1), at); return inner && k('tRef', { t: inner }) }
+    if (s.endsWith('*')) { const inner = type(s.slice(0, -1), at); return inner && k('tPtr', { t: inner }) }
+    const sc = SCALAR[s]
+    if (sc) return k(sc)
+    const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
+    if (vec) { const inner = type(vec[1], at); return inner && k('tVector', { t: inner }) }
+    const st = /^(?:struct\s+)?([A-Za-z_]\w*)$/.exec(s)
+    if (st && (s.startsWith('struct ') || structNames.has(st[1]))) return k('tClass', { name: st[1] })
+    miss(at, `型別「${s}」還沒有對應`)
+    return null
+  }
+
+  const one = (n: SemanticNode, slot: string): SemanticNode | undefined => n.slots?.[slot]?.[0]
+  const exprOf = (n: SemanticNode, slot: string): CellaJson => {
+    const c = one(n, slot)
+    return c ? expr(c) : k('eHole', { n: `${n.id}#${slot}` })
+  }
+
+  /** 函式呼叫：引數依槽的順序，沒填的選擇性引數（如 tone 的 duration）不送。 */
+  const call = (n: SemanticNode, f: string, slots: string[]): CellaJson =>
+    k('eCall', { n: n.id, f, args: slots.filter((sl) => one(n, sl)).map((sl) => expr(one(n, sl)!)) })
+  /**
+   * 方法呼叫，接收者是文字屬性 `obj`：程式裡宣告過的物件（`dht`）照常指到宣告；
+   * 沒宣告過的（`Serial`、`Serial1`）是板子的全域物件——照 Cella 的板子常數那樣寫成 `eConst`。
+   * ⚠️ 全域物件寫成 eConst 是推論（README 說常數是 eConst、全域物件列在 boardInfo），已向 cella 確認中。
+   */
+  const mcall = (n: SemanticNode, f: string, slots: string[]): CellaJson => {
+    const name = String(n.properties?.obj ?? '')
+    const x = declOf.get(`${n.id}#obj`)
+    const obj = x ? k('eVar', { n: `${n.id}/obj`, x }) : /^Serial[0-9]?$/.test(name) ? k('eConst', { n: `${n.id}/obj`, name }) : null
+    if (!obj) return miss(n, `接收者「${name}」指不到宣告，也不是板子的序列埠`)
+    return k('eMCall', { n: n.id, obj, arrow: false, f, args: slots.filter((sl) => one(n, sl)).map((sl) => expr(one(n, sl)!)) })
+  }
+
+  function expr(n: SemanticNode): CellaJson {
+    const p = n.properties ?? {}
+    switch (n.componentId) {
+      case 'cpp:literal_number': {
+        const v = String(p.value ?? '')
+        if (/^[0-9]+$/.test(v)) return k('eNum', { n: n.id, v: Number(v) })
+        // 負數字面：Cella 的 eNum 是整數值，負號照 C++ 的文法是一元運算子
+        if (/^-[0-9]+$/.test(v)) return k('eUn', { n: n.id, op: k('opNeg'), a: k('eNum', { n: `${n.id}/abs`, v: Number(v.slice(1)) }) })
+        // 帶後綴（`1LL`）：Cella 的 eNum 沒有後綴，型別要靠轉型保住——`1000000LL * 1000000LL` 不能變成 int 的溢位
+        const suf = /^([0-9]+)(ll|LL|l|L|u|U|ul|UL|ull|ULL|lu|LU|llu|LLU)$/.exec(v)
+        if (suf) {
+          const t = ({ ll: 'tLongLong', l: 'tLong', u: 'tUnsigned', ul: 'tULong', lu: 'tULong', ull: 'tULongLong', llu: 'tULongLong' } as Record<string, string>)[suf[2].toLowerCase()]
+          // cella 的規則：字面的型別和「靠值本身決定的型別」（< 2^31 是 int、< 2^63 是 long）不同時才包 eCast
+          const val = BigInt(suf[1])
+          const byValue = val < 2n ** 31n ? 'tInt' : val < 2n ** 63n ? 'tLong' : null
+          const num = k('eNum', { n: t === byValue ? n.id : `${n.id}/value`, v: Number(suf[1]) })
+          return t === byValue ? num : k('eCast', { n: n.id, t: k(t), a: num })
+        }
+        if (/^[0-9]*\.[0-9]*([eE][-+]?[0-9]+)?[fF]?$|^[0-9]+[eE][-+]?[0-9]+[fF]?$/.test(v)) {
+          return k('eFloat', { n: n.id, text: v.replace(/[fF]$/, ''), single: /[fF]$/.test(v) })
+        }
+        return miss(n, `數字字面「${v}」還沒有對應`)
+      }
+      case 'cpp:literal_string': return k('eStr', { n: n.id, s: unescapeC(String(p.value ?? '')) })
+      case 'cpp:literal_char': {
+        const c = unescapeC(String(p.char ?? ''))
+        return c.length === 1 ? k('eChar', { n: n.id, c: c.charCodeAt(0) }) : miss(n, '字元字面不是單一字元')
+      }
+      case 'cpp:builtin_constant': {
+        const v = String(p.value ?? '')
+        if (v === 'true' || v === 'false') return k('eBool', { n: n.id, b: v === 'true' })
+        return k('eConst', { n: n.id, name: v })
+      }
+      case 'cpp:var_ref': {
+        const x = declOf.get(n.id)
+        if (x) return k('eVar', { n: n.id, x })
+        // 板子與函式庫的常數（LED_BUILTIN、DHT11、WL_CONNECTED）今天被 lift 成一般的參照、指不到宣告。
+        // 在板子上，全大寫的名字照 Cella 的寫法送成 eConst——它存不存在由 Cella 依板子與 include 判
+        //（`boardInfo` 是它的真相；不存在的話判決會指回這個節點），不是我們猜。
+        const name = String(p.name ?? '')
+        if (options.board && /^[A-Z][A-Z0-9_]*$/.test(name)) return k('eConst', { n: n.id, name })
+        return miss(n, `名字「${name}」指不到宣告`)
+      }
+      case 'cpp:arithmetic': case 'cpp:compare': case 'cpp:logic': {
+        const op = BIN[String(p.operator ?? '')]
+        if (!op) return miss(n, `運算子「${String(p.operator)}」還沒有對應`)
+        return k('eBin', { n: n.id, op: k(op), a: exprOf(n, 'left'), b: exprOf(n, 'right') })
+      }
+      case 'cpp:logic_not': return k('eUn', { n: n.id, op: k('opNot'), a: exprOf(n, 'operand') })
+      case 'cpp:negate': return k('eUn', { n: n.id, op: k('opNeg'), a: exprOf(n, 'value') })
+      case 'cpp:var_assign': return k('eAssign', { n: n.id, lhs: exprOf(n, 'target'), op: null, e: exprOf(n, 'value') })
+      case 'cpp:var_assign_compound': {
+        const op = BIN[String(p.operator ?? '').replace(/=$/, '')]
+        if (!op) return miss(n, `複合賦值「${String(p.operator)}」還沒有對應`)
+        return k('eAssign', { n: n.id, lhs: exprOf(n, 'target'), op: k(op), e: exprOf(n, 'value') })
+      }
+      case 'cpp:increment':
+        return k('eIncDec', { n: n.id, lhs: exprOf(n, 'target'), inc: p.operator === '++', post: p.position === 'postfix' })
+      case 'cpp:func_call':
+        return k('eCall', { n: n.id, f: String(p.name ?? ''), args: (n.slots?.args ?? []).map(expr) })
+      case 'cpp:endl': return k('eEndl', { n: n.id })
+      case 'cpp:array_at': return k('eIndex', { n: n.id, a: exprOf(n, 'obj'), i: exprOf(n, 'index') })
+      case 'cpp:struct_at_ptr': return k('eArrow', { n: n.id, a: exprOf(n, 'obj'), f: String(p.member ?? '') })
+      case 'cpp:container_iter': {
+        const which = String(p.which ?? 'begin')
+        return p.call === 'free'
+          ? k('eCall', { n: n.id, f: which, args: [exprOf(n, 'obj')] })
+          : k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: which, args: [] })
+      }
+      case 'cpp:array_2d_at':
+        return k('eIndex', { n: n.id, a: k('eIndex', { n: `${n.id}/row`, a: exprOf(n, 'obj'), i: exprOf(n, 'row') }), i: exprOf(n, 'col') })
+      // 函式庫的函式：Cella 依名字解析（`using namespace std;` 下不帶前綴的也對到內建，四之十）；沒有模型的由支援清單擋
+      case 'cpp:math_unary': return k('eCall', { n: n.id, f: String(p.func ?? ''), args: [exprOf(n, 'value')] })
+      case 'cpp:math_pow': return k('eCall', { n: n.id, f: 'pow', args: [exprOf(n, 'base'), exprOf(n, 'exponent')] })
+      case 'cpp:math_max': return k('eCall', { n: n.id, f: 'max', args: [exprOf(n, 'a'), exprOf(n, 'b')] })
+      case 'cpp:random_seed': return k('eCall', { n: n.id, f: 'srand', args: [exprOf(n, 'seed')] })
+      case 'cpp:random_next': return k('eCall', { n: n.id, f: 'rand', args: [] })
+      case 'cpp:free': return k('eCall', { n: n.id, f: 'free', args: [exprOf(n, 'ptr')] })
+      // ── Arduino 的核心：腳位、時間、聲音——在 Cella 都是一般的函式呼叫（`@cella-lang/arduino` 的 README）
+      case 'cpp:delay': return call(n, 'delay', ['ms'])
+      case 'cpp:pin_mode': return call(n, 'pinMode', ['pin', 'mode'])
+      case 'cpp:digital_write': return call(n, 'digitalWrite', ['pin', 'value'])
+      case 'cpp:digital_read': return call(n, 'digitalRead', ['pin'])
+      case 'cpp:analog_write': return call(n, 'analogWrite', ['pin', 'value'])
+      case 'cpp:analog_read': return call(n, 'analogRead', ['pin'])
+      case 'cpp:millis': return call(n, 'millis', [])
+      case 'cpp:tone': return call(n, 'tone', ['pin', 'frequency', 'duration'])
+      case 'cpp:tone_stop': return call(n, 'noTone', ['pin'])
+      case 'cpp:pulse_read': return call(n, 'pulseIn', ['pin', 'state', 'timeout'])
+      // 板子的常數（HIGH、OUTPUT、LED_BUILTIN…）：`{"k": "eConst", "name": …}`
+      case 'cpp:pin_constant': return k('eConst', { n: n.id, name: String(p.value ?? '') })
+      // ── 序列埠與函式庫物件：方法呼叫（`eMCall`）
+      case 'cpp:serial_open': return mcall(n, 'begin', ['baud'])
+      case 'cpp:serial_print': return mcall(n, String(p.newline ?? 'true') === 'true' ? 'println' : 'print', ['value', 'format'])
+      case 'cpp:serial_count': return mcall(n, 'available', [])
+      case 'cpp:serial_read': return mcall(n, 'read', [])
+      case 'cpp:dht_open': return mcall(n, 'begin', [])
+      case 'cpp:servo_write': return mcall(n, 'write', ['angle'])
+      case 'cpp:servo_attach': return mcall(n, 'attach', ['pin'])
+      case 'cpp:lcd_open': return mcall(n, 'begin', ['cols', 'rows'])
+      case 'cpp:lcd_print': return mcall(n, 'print', ['value'])
+      case 'cpp:wifi_open': return k('eMCall', { n: n.id, obj: k('eConst', { n: `${n.id}/obj`, name: 'WiFi' }), arrow: false, f: 'begin', args: [exprOf(n, 'ssid'), exprOf(n, 'password')] })
+      case 'cpp:wifi_read': return k('eMCall', { n: n.id, obj: k('eConst', { n: `${n.id}/obj`, name: 'WiFi' }), arrow: false, f: p.quantity === 'address' ? 'localIP' : 'status', args: [] })
+      // 通用方法呼叫：接收者是接點（`m[k].f()` 的 `m[k]` 是一棵樹）
+      case 'cpp:method_call': return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: String(p.method ?? ''), args: (n.slots?.args ?? []).map(expr) })
+      case 'cpp:dht_read': return mcall(n, p.quantity === 'temperature' ? 'readTemperature' : 'readHumidity', [])
+      case 'cpp:sizeof': {
+        // `target` 是文字屬性：是型別名就翻；是變數或運算式就照實標 unknown（不從文字猜結構）
+        const tt = String(p.target ?? '').trim()
+        const isType = SCALAR[tt] !== undefined || /^(?:struct\s+)?[A-Za-z_]\w*$/.test(tt) && (tt.startsWith('struct ') || structNames.has(tt))
+        return isType ? k('eSizeof', { n: n.id, t: type(tt, n) }) : miss(n, '`sizeof` 的對象是文字屬性，而且不是型別名（還沒升格成運算式槽）')
+      }
+      case 'cpp:new': {
+        const t = type(p.type, n)
+        if (!t) return k('eHole', { n: n.id })
+        if (one(n, 'size')) return k('eNewArr', { n: n.id, t, len: exprOf(n, 'size'), zero: false })
+        // 🔴 `new T(args)` 的引數今天是**文字屬性**（已知缺口：還沒升格成運算式槽）——不從文字猜結構
+        if (String(p.args ?? '') !== '') return miss(n, '`new T(…)` 的引數是文字屬性，還沒升格成運算式槽')
+        return k('eNew', { n: n.id, t, args: null })
+      }
+      case 'cpp:malloc': {
+        const t = type(p.type ?? 'int*', n)
+        if (!t) return k('eHole', { n: n.id })
+        const size = exprOf(n, 'size')
+        const bytes = p.sizeof_type
+          ? (() => { const st = type(p.sizeof_type, n); return st ? k('eBin', { n: `${n.id}/bytes`, op: k('opMul'), a: size, b: k('eSizeof', { n: `${n.id}/sizeof`, t: st }) }) : size })()
+          : size
+        return k('eCast', { n: n.id, t, a: k('eCall', { n: `${n.id}/call`, f: 'malloc', args: [bytes] }) })
+      }
+      case 'cpp:range_sort': {
+        const args = [exprOf(n, 'begin'), exprOf(n, 'end'), ...(one(n, 'comparator') ? [exprOf(n, 'comparator')] : [])]
+        return k('eCall', { n: n.id, f: 'sort', args })
+      }
+      case 'cpp:address_of': return k('eAddr', { n: n.id, a: exprOf(n, 'var') })
+      case 'cpp:pointer_deref': return k('eDeref', { n: n.id, a: exprOf(n, 'ptr') })
+      case 'cpp:string_size': return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: 'size', args: [] })
+      case 'cpp:container_empty': return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: 'empty', args: [] })
+      case 'cpp:container_pop': return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: 'pop', args: [] })
+      case 'cpp:container_push':
+        return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: 'push', args: (n.slots?.value ?? []).map(expr) })
+      case 'cpp:set_insert':
+        return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: String(p.method ?? 'insert'), args: (n.slots?.value ?? []).map(expr) })
+      case 'cpp:string_at': {
+        const x = declOf.get(`${n.id}#obj`)
+        if (!x) return miss(n, `字串名「${String(p.obj)}」指不到宣告（或不是單一名字）`)
+        return k('eIndex', { n: n.id, a: k('eVar', { n: `${n.id}/obj`, x }), i: exprOf(n, 'index') })
+      }
+      case 'cpp:pointer_assign': {
+        const x = declOf.get(`${n.id}#obj`)
+        if (!x) return miss(n, `指標名「${String(p.obj)}」指不到宣告（或不是單一名字）`)
+        return k('eAssign', { n: n.id, lhs: k('eDeref', { n: `${n.id}/lhs`, a: k('eVar', { n: `${n.id}/obj`, x }) }), op: null, e: exprOf(n, 'value') })
+      }
+      case 'cpp:struct_at_member': return k('eMember', { n: n.id, a: exprOf(n, 'obj'), f: String(p.member ?? '') })
+      case 'cpp:vector_size': return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: 'size', args: [] })
+      case 'cpp:container_append':
+        return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: String(p.method ?? 'push_back'), args: (n.slots?.value ?? []).map(expr) })
+      case 'cpp:array_assign': {
+        const x = declOf.get(`${n.id}#obj`)
+        if (!x) return miss(n, `陣列名「${String(p.obj)}」指不到宣告（或不是單一名字）`)
+        return k('eAssign', { n: n.id, lhs: k('eIndex', { n: `${n.id}/lhs`, a: k('eVar', { n: `${n.id}/obj`, x }), i: exprOf(n, 'index') }), op: null, e: exprOf(n, 'value') })
+      }
+      default:
+        return miss(n, '這顆元件還沒有對應到 Cella 的建構子')
+    }
+  }
+
+  const block = (n: SemanticNode, slot: string): CellaJson =>
+    k('sBlock', { n: `${n.id}/${slot}`, body: (n.slots?.[slot] ?? []).flatMap(stmt) })
+
+  /** 大括號初值串列。 */
+  /** 大括號初值串列——巢狀的（`{{1,2},{3,4}}`）是 `cpp:initializer_list`，遞迴成 iL。 */
+  const initOf = (c: SemanticNode): CellaJson =>
+    c.componentId === 'cpp:initializer_list'
+      ? k('iL', { n: c.id, xs: (c.slots?.values ?? []).map(initOf) })
+      : k('iE', { e: expr(c) })
+  const braceList = (n: SemanticNode, slot: string): CellaJson =>
+    k('iL', { n: `${n.id}/${slot}`, xs: (n.slots?.[slot] ?? []).map(initOf) })
+
+  function containerDecl(n: SemanticNode, global: boolean): CellaJson[] {
+    const elem = type(n.properties?.type, n)
+    if (!elem) return []
+    const name = String(n.properties?.name ?? '')
+    let t: CellaJson
+    let init: CellaJson | null = null
+    let args: CellaJson[] | null = null
+    if (n.componentId === 'cpp:vector_declare') {
+      t = k('tVector', { t: elem })
+      if ((n.slots?.values ?? []).length > 0) init = braceList(n, 'values')
+      else if (one(n, 'source')) init = k('iE', { e: expr(one(n, 'source')!) })
+      else if (one(n, 'size')) args = [exprOf(n, 'size'), ...(one(n, 'fill') ? [exprOf(n, 'fill')] : [])]
+    } else if (n.componentId === 'cpp:array_2d_declare') {
+      const lit = (slot: string): number | null => {
+        const c = one(n, slot)
+        return c?.componentId === 'cpp:literal_number' && /^[0-9]+$/.test(String(c.properties?.value)) ? Number(c.properties?.value) : null
+      }
+      const rows = lit('rows'), cols = lit('cols')
+      if (rows === null || cols === null) { miss(n, '二維陣列的長度不是整數字面'); return [] }
+      t = k('tArr', { t: k('tArr', { t: elem, n: cols }), n: rows })
+      if ((n.slots?.values ?? []).length > 0) init = braceList(n, 'values')
+    } else {
+      const size = one(n, 'size')
+      const len = size?.componentId === 'cpp:literal_number' && /^[0-9]+$/.test(String(size.properties?.value)) ? Number(size.properties?.value) : null
+      if (len === null) { miss(n, '陣列長度不是整數字面（VLA 或常數名字還沒有對應）'); return [] }
+      t = k('tArr', { t: elem, n: len })
+      if ((n.slots?.values ?? []).length > 0) init = braceList(n, 'values')
+    }
+    if (args) {
+      if (global) return [k('iVarC', { n: n.id, x: n.id, name, t, args })]
+      return [k('sDeclC', { n: n.id, x: n.id, name, t, args })]
+    }
+    return [global ? k('iVar', { n: n.id, x: n.id, name, t, init }) : k('sDecl', { n: n.id, x: n.id, name, t, init })]
+  }
+
+  function libraryObject(n: SemanticNode, cls: string, global: boolean): CellaJson[] {
+    const name = String(n.properties?.name ?? '')
+    const t = k('tClass', { name: cls })
+    const args = (n.slots?.initializer ?? []).map(expr)
+    return [global ? k('iVarC', { n: n.id, x: n.id, name, t, args }) : k('sDeclC', { n: n.id, x: n.id, name, t, args })]
+  }
+
+  function decl(n: SemanticNode, global: boolean): CellaJson[] {
+    if (n.componentId === 'cpp:dht_declare') return libraryObject(n, 'DHT', global)
+    if (n.componentId === 'cpp:servo_declare') return libraryObject(n, 'Servo', global)
+    if (n.componentId === 'cpp:lcd_declare') return libraryObject(n, String(n.properties?.decl_type ?? 'LiquidCrystal'), global)
+    if (['cpp:vector_declare', 'cpp:array_declare', 'cpp:array_2d_declare'].includes(n.componentId)) return containerDecl(n, global)
+    if (n.componentId === 'cpp:pointer_declare' || n.componentId === 'cpp:string_declare') {
+      const base = n.componentId === 'cpp:string_declare' ? k('tString') : type(n.properties?.type, n)
+      if (!base) return []
+      const t = n.componentId === 'cpp:pointer_declare' ? k('tPtr', { t: base }) : base
+      const initNode = one(n, 'initializer')
+      const init = initNode ? k('iE', { e: expr(initNode) }) : null
+      const name = String(n.properties?.name ?? '')
+      return [global ? k('iVar', { n: n.id, x: n.id, name, t, init }) : k('sDecl', { n: n.id, x: n.id, name, t, init })]
+    }
+    const kids = n.slots?.declarators
+    if (kids && kids.length > 0) return kids.flatMap((d) => decl(d, global))
+    const t = type(n.properties?.type, n)
+    if (!t) return []
+    const initNode = one(n, 'initializer')
+    const init = initNode ? k('iE', { e: expr(initNode) }) : null
+    const name = String(n.properties?.name ?? '')
+    return [global
+      ? k('iVar', { n: n.id, x: n.id, name, t, init })
+      : k('sDecl', { n: n.id, x: n.id, name, t, init })]
+  }
+
+  function stmt(n: SemanticNode): CellaJson[] {
+    const p = n.properties ?? {}
+    switch (n.componentId) {
+      case 'cpp:var_declare': case 'cpp:vector_declare': case 'cpp:array_declare':
+      case 'cpp:pointer_declare': case 'cpp:string_declare': case 'cpp:dht_declare':
+      case 'cpp:servo_declare': case 'cpp:lcd_declare': return decl(n, false)
+      case 'cpp:array_2d_declare': return decl(n, false)
+      case 'cpp:input_formatted':
+        return [k('sScanf', { n: n.id, fmt: unescapeC(String(p.format ?? '')), args: (n.slots?.args ?? []).map(expr) })]
+      case 'cpp:loop_for': {
+        const init = (n.slots?.init ?? []).flatMap(stmt)
+        if (init.length > 1) { miss(n, 'for 的 init 有多個宣告還沒有對應'); return [k('sHole', { n: n.id })] }
+        const c = one(n, 'cond'), st = one(n, 'update')
+        return [k('sFor', { n: n.id, init: init[0] ?? null, c: c ? expr(c) : null, step: st ? expr(st) : null, body: block(n, 'body') })]
+      }
+      case 'cpp:print_formatted':
+        return [k('sPrintf', { n: n.id, fmt: unescapeC(String(p.format ?? '')), args: (n.slots?.args ?? []).map(expr) })]
+      case 'cpp:break': return [k('sBreak', { n: n.id })]
+      case 'cpp:ultrasonic_trigger': {
+        // 一顆積木、五行程式碼：拉低 → 2 µs → 拉高 → 10 µs → 拉低。標籤 <id>/<第幾行>，判決指回這塊積木
+        const pin = exprOf(n, 'pin')
+        const w = (i: number, v: string): CellaJson => k('sExpr', { n: `${n.id}/${i}`, e: k('eCall', { n: `${n.id}/${i}/call`, f: 'digitalWrite', args: [pin, k('eConst', { n: `${n.id}/${i}/v`, name: v })] }) })
+        const d = (i: number, us: number): CellaJson => k('sExpr', { n: `${n.id}/${i}`, e: k('eCall', { n: `${n.id}/${i}/call`, f: 'delayMicroseconds', args: [k('eNum', { n: `${n.id}/${i}/us`, v: us })] }) })
+        return [k('sBlock', { n: n.id, body: [w(1, 'LOW'), d(2, 2), w(3, 'HIGH'), d(4, 10), w(5, 'LOW')] })]
+      }
+      case 'cpp:delete': return [k('sDelete', { n: n.id, arr: false, e: exprOf(n, 'ptr') })]
+      case 'cpp:continue': return [k('sContinue', { n: n.id })]
+      case 'cpp:loop_range': {
+        if ((n.slots?.targets ?? []).length > 0) { miss(n, '結構化繫結的 range-for 還沒有對應'); return [k('sHole', { n: n.id })] }
+        const vt = String(p.var_type ?? '')
+        const byRef = vt.endsWith('&')
+        const t = type(byRef ? vt.slice(0, -1).trim() : vt, n)
+        if (!t) return [k('sHole', { n: n.id })]
+        return [k('sForRange', { n: n.id, x: n.id, name: String(p.var_name ?? ''), t, byRef, range: exprOf(n, 'iterable'), body: block(n, 'body') })]
+      }
+      case 'cpp:print':
+        return [k('sCout', { n: n.id, items: (n.slots?.values ?? []).map(expr) })]
+      case 'cpp:input':
+        return [k('sExpr', { n: `${n.id}/stmt`, e: k('eCin', { n: n.id, targets: (n.slots?.values ?? []).map(expr) }) })]
+      case 'cpp:return': {
+        const v = one(n, 'value')
+        return [k('sReturn', { n: n.id, e: v ? expr(v) : null })]
+      }
+      case 'cpp:if':
+        return [k('sIf', { n: n.id, c: exprOf(n, 'condition'), t: block(n, 'then_body'), e: block(n, 'else_body') })]
+      case 'cpp:loop_while':
+        return [k('sWhile', { n: n.id, c: exprOf(n, 'condition'), body: block(n, 'body') })]
+      case 'cpp:loop_count': {
+        // 計數迴圈是比語法高一層的元件：展開成 for，迴圈變數以這顆節點為宣告（作用域走訪也是這樣認的）
+        const name = String(p.var_name ?? 'i')
+        const v = (role: string): CellaJson => k('eVar', { n: `${n.id}/${role}`, x: n.id })
+        return [k('sFor', {
+          n: n.id,
+          init: k('sDecl', { n: `${n.id}/init`, x: n.id, name, t: k('tInt'), init: k('iE', { e: exprOf(n, 'from') }) }),
+          c: k('eBin', { n: `${n.id}/cond`, op: k(p.inclusive === 'TRUE' ? 'opLe' : 'opLt'), a: v('cond-var'), b: exprOf(n, 'to') }),
+          step: k('eIncDec', { n: `${n.id}/step`, lhs: v('step-var'), inc: true, post: true }),
+          body: block(n, 'body'),
+        })]
+      }
+      case 'cpp:block': return [block(n, 'body')]
+      case 'cpp:var_assign': case 'cpp:var_assign_compound': case 'cpp:increment': case 'cpp:func_call':
+      case 'cpp:container_append': case 'cpp:array_assign': case 'cpp:container_push': case 'cpp:container_pop':
+      case 'cpp:set_insert': case 'cpp:pointer_assign': case 'cpp:range_sort': case 'cpp:random_seed': case 'cpp:free':
+      case 'cpp:delay': case 'cpp:pin_mode': case 'cpp:digital_write': case 'cpp:analog_write': case 'cpp:tone': case 'cpp:tone_stop':
+      case 'cpp:serial_open': case 'cpp:serial_print': case 'cpp:dht_open': case 'cpp:wifi_open': case 'cpp:method_call':
+      case 'cpp:servo_write': case 'cpp:servo_attach': case 'cpp:lcd_open': case 'cpp:lcd_print':
+        return [k('sExpr', { n: `${n.id}/stmt`, e: expr(n) })]
+      default:
+        miss(n, '這顆敘述元件還沒有對應到 Cella 的建構子')
+        return [k('sHole', { n: n.id })]
+    }
+  }
+
+  function item(n: SemanticNode): CellaJson[] {
+    const p = n.properties ?? {}
+    switch (n.componentId) {
+      case 'cpp:include': return [k('iInclude', { n: n.id, header: String(p.header ?? '') })]
+      case 'cpp:struct_declare': {
+        const fields: CellaJson[] = []
+        for (const m of n.slots?.members ?? []) {
+          const t = type(m.properties?.type, m)
+          if (t) fields.push(k('mbField', { acc: k('acPublic'), name: String(m.properties?.name ?? ''), t, init: null }))
+        }
+        return [k('iClass', { d: k('cdef', { n: n.id, name: String(p.name ?? ''), isClass: false, bases: [], members: fields }) })]
+      }
+      case 'cpp:array_2d_declare': return decl(n, true)
+      case 'cpp:using_namespace': return [k('iUsing', { n: n.id, name: String(p.ns ?? '') })]
+      case 'cpp:var_declare': case 'cpp:vector_declare': case 'cpp:array_declare':
+      case 'cpp:pointer_declare': case 'cpp:string_declare': case 'cpp:dht_declare':
+      case 'cpp:servo_declare': case 'cpp:lcd_declare': return decl(n, true)
+      case 'cpp:func_def': {
+        const ret = String(p.return_type ?? '') === 'void' ? null : type(p.return_type, n)
+        const params = (n.slots?.params ?? []).map((q) =>
+          k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: type(q.properties?.type, q), dflt: null }))
+        return [k('iFun', { f: k('fdef', { n: n.id, noexc: false, name: String(p.name ?? ''), ret, params, body: block(n, 'body') }) })]
+      }
+      default:
+        miss(n, '這顆頂層元件還沒有對應到 Cella 的建構子')
+        return []
+    }
+  }
+
+  const items = (tree.slots?.body ?? []).flatMap(item)
+  if (unknown.length > 0) return { program: null, unknown }
+  return {
+    program: k('prog', { n: tree.id, lang: k('langCpp'), items, board: options.board ?? null }),
+    unknown: [],
+  }
+}

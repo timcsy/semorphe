@@ -1,0 +1,8 @@
+{
+  "_meta": {
+    "guard": "formalize-coverage"
+  },
+  "C++ 元件數": 250,
+  "還沒對應": 156,
+  "note": "🟢 **2026-10-31（spec 180 第六批：Arduino）：184 → 156。** 核心函式（pinMode、digitalWrite、delay…）、板子常數、Serial、DHT、WiFi、超音波（五行）、Servo、LCD、通用方法呼叫；板名對照。Arduino 課文的完整 sketch 5 → 10 / 10。\n\n🟢 **2026-10-31（spec 180 第五批：new／delete／malloc／sizeof）：188 → 184。** 課文解答 79 → 83 / 94 翻得出。\n\n🆕 **2026-10-31（spec 180 第一批）立。** formalize 已對應 62 / 250 顆 C++ 元件。對照的真相是 formalize 自己的分派（不另立一張表）。數字只准下降。"
+}
