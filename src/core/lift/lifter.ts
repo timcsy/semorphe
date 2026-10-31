@@ -733,8 +733,9 @@ export class Lifter {
     //    ⚠️ 而它是**指數的**：每來回一趟翻一倍（實測 1 → 2 → 4）。
     //    症狀不是「多一行」，是**一段程式碼每存一次就長大一點**。
     if (lifted.componentId === '_compound') return
-    const body = lifted.slots.body
-    if (!body) {
+    const bodyKey = this.bodySlotOf(node, lifted)
+    const body = bodyKey ? lifted.slots[bodyKey] : undefined
+    if (!bodyKey || !body) {
       // 🔴 **沒有主體的節點，它的行末註解也要有人收**（2026-09-21，第 218 刀）。
       //
       // 在此之前這裡直接 `return`，於是：
@@ -830,7 +831,43 @@ export class Lifter {
       const made = this.liftWithContext(kid, ctx)
       if (made) notes.push(made)
     }
-    if (notes.length > 0) lifted.slots.body = [...notes, ...body]
+    if (notes.length > 0) lifted.slots[bodyKey] = [...notes, ...body]
+  }
+
+  /**
+   * **標頭註解該進哪一格**——不是每個結構的主體都叫 `body`。
+   *
+   * 🔴 2026-10-31（StudyCpp 唯一的走樣）：`if (y > z)` ＋ 一行註解 ＋ 沒有大括號的本體。
+   * `cpp:if` 的主體叫 `then_body`，這裡原本只看 `body` ⟹ 走進「沒有主體」那一支，
+   * 註解被掛成行末標註、產成 `if (y > z) { // 註解`，再 lift 一次它變成本體的第一句
+   * ——**同一段程式來回一趟就換了一棵樹**。
+   *
+   * 判準不寫死任何槽名（中立性）：**註解後面那個敘述被收進哪一格，註解就跟著它**。
+   * 找不到直接子節點的註解時，再找「與表頭同一列、已經被收進某一格的註解」（C++ 的 `{ // …`）。
+   */
+  private bodySlotOf(node: AstNode, lifted: SemanticNode): string | undefined {
+    if (lifted.slots.body) return 'body'
+    const holds = (rowFrom: number, rowTo: number): string | undefined => {
+      for (const [key, arr] of Object.entries(lifted.slots)) {
+        if (arr?.some((n) => {
+          const l = n.metadata?.sourceRange?.startLine
+          return typeof l === 'number' && l >= rowFrom && l <= rowTo
+        })) return key
+      }
+      return undefined
+    }
+    const kids = node.namedChildren
+    const i = kids.findIndex((k) => k.type === 'comment')
+    if (i >= 0) {
+      const next = kids.slice(i + 1).find((k) => k.type !== 'comment')
+      return next ? holds(next.startPosition.row, next.endPosition.row) : undefined
+    }
+    const head = lifted.metadata?.sourceRange?.startLine
+    if (typeof head !== 'number') return undefined
+    for (const [key, arr] of Object.entries(lifted.slots)) {
+      if (arr?.some((n) => n.componentId.endsWith(':comment') && n.metadata?.sourceRange?.startLine === head)) return key
+    }
+    return undefined
   }
 
 
