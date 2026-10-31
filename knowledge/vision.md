@@ -285,11 +285,14 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
 - [x] **1 能力介面**（[spec 179](../specs/179-capability-interface/spec.md)，2026-10-31）——判決／型別查詢／執行與除錯／步數四個介面；JS 直譯器包成第一個提供者；
       驗收：核心與 UI 不 import 任何提供者（分層護欄）、每個結果帶出處、學生行為不變（e2e 全綠）
 - [ ] **2 元件動詞改名**——`generate`／`extract` → 每個視圖一對 `render`／`lift`；驗收：349 顆 `component.json` 新形狀、五路完備性護欄改寫
+      ⏳ 形狀等使用者定（提案：動詞 → 視圖 → 檔，見設計 draft 五之五）；前置已完成：第二套產碼路徑拆掉（第 384 刀）
 - [ ] **3 升級 Cella**（提前到現在）——換到重組後的套件；淺嵌入的探針、merkle 基線、`contract.cella` 退場
       ⏳ 換版本那一半**卡在 Cella**：npm 上那一組的 peer 釘選互相矛盾（`machine` 要 `cella-lang 0.1.202610301445`、其餘要 `…1840`），
       2026-10-31 已回報；拆淺嵌入那一半不必等
-- [ ] **4 深嵌入 formalize**（spec，先 C++／Arduino）——語義樹 → 程式 JSON；靜態作用域走訪填 declNode、nodeId 穩定、`iInclude`、
+- [ ] **4 深嵌入 formalize**（[spec 180](../specs/180-deep-formalize/spec.md)，先 C++／Arduino）——語義樹 → 程式 JSON；靜態作用域走訪填 declNode、nodeId 穩定、`iInclude`、
       依支援清單標 unknown；驗收：課文 C／C++／Arduino 解答全部翻得出、交 C18 語料
+      🟡 第一批（2026-10-31）：作用域走訪（852 個參照 0 落空）、課文解答 84 / 94、Arduino sketch 10 / 10、C 分支、空槽變洞、C18 語料第一版交出；
+      剩下的 10 份卡在 Cella 還沒建模的函式庫（pair、queue、set、map、stack、priority_queue）——已給 Cella 清單；支援清單與判決入口等 Cella 升級
 - [ ] **5 Cella 提供者**（spec）——verdict（積木標示、判題）、types（型別不合接上後標錯、工具箱不藏）、session（除錯、變數、步數）、
       `assumes` 小標、硬體時間軸面板、課文 check 的腳位事件
 - [ ] **6 切換**（spec）——同一天拆 JS 直譯器、326 個 `execute.ts`、參照編譯器那一族；222 個靠直譯器斷言的測試檔改成對 Cella 驗
