@@ -50,7 +50,7 @@
 **Independent Test**: T002 裡的單向假視圖、只寫 lift、未知視圖名三支
 
 - [x] T015 [US2] 在 T002 的檔裡補「加一個單向視圖只動視圖表與宣告」的測試：以測試用的視圖表加一筆 `render-only`，確認核心的格子查詢不必改（SC-004）
-- [ ] T016 [US2] `src/core/component/types.ts` 的視圖表加註解：加一個視圖＝加一筆；方向由視圖決定（research R4）；commit
+- [x] T016 [US2] `src/core/component/types.ts` 的視圖表加註解：加一個視圖＝加一筆；方向由視圖決定（research R4）；commit
 
 ---
 
@@ -60,10 +60,10 @@
 
 **Independent Test**: `audit-knowledge-links` 綠；P2 檢驗表的每句對得到一條在跑的護欄
 
-- [ ] T017 [P] [US3] `knowledge/principles.md`：P2 原文與最終檢驗表那一列改成五之四定案的文字
-- [ ] T018 [P] [US3] `knowledge/concepts/元件.md`：五槽表與名詞表改成「身分・接點・參數・形態・形式」，「行為」留在投影族的說明
-- [ ] T019 [P] [US3] `knowledge/concepts/元件代數.md`：完備性 ⑤ 改成「formalize 存在」
-- [ ] T020 [US3] 新增 `knowledge/history/<下一號>-元件的動詞改成每個視圖一對.md`：轉變、理由、連回 306 與設計 draft 五之四／五之五；設計 draft 五之四、五之五標「已落地」；vision 階段 2 打勾；commit
+- [x] T017 [P] [US3] `knowledge/principles.md`：P2 原文與最終檢驗表那一列改成五之四定案的文字
+- [x] T018 [P] [US3] `knowledge/concepts/元件.md`：五槽表與名詞表改成「身分・接點・參數・形態・形式」，「行為」留在投影族的說明
+- [x] T019 [P] [US3] `knowledge/concepts/元件代數.md`：完備性 ⑤ 改成「formalize 存在」
+- [x] T020 [US3] 新增 `knowledge/history/<下一號>-元件的動詞改成每個視圖一對.md`：轉變、理由、連回 306 與設計 draft 五之四／五之五；設計 draft 五之四、五之五標「已落地」；vision 階段 2 打勾；commit
 
 ---
 
