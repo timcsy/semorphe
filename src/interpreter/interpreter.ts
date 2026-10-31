@@ -92,6 +92,11 @@ export class SemanticInterpreter implements ExecutionContext {
     | ((component: string, nodeId: string | null) => Promise<'continue' | 'stop'>)
     | null = null
   private stepRecordCallback: ((step: StepInfo) => Promise<void>) | null = null
+  /**
+   * **執行之前**的掛鉤（spec 183）——除錯器的慣例是停在【即將執行】的那一顆（Cella 的 DAP 也是）。
+   * `stepRecordCallback` 是執行【之後】才回呼，停在 `print` 時它已經印出去了，改值來不及影響。
+   */
+  private beforeStepCallback: ((nodeId: string) => Promise<void>) | null = null
   private currentNode: SemanticNode | null = null
   private executorRegistry: ComponentExecutorRegistry
 
@@ -234,6 +239,10 @@ export class SemanticInterpreter implements ExecutionContext {
    * `examples/bring-your-own-view/`）沒有人可以問，而「沒有人可以問」的
    * 正確處置是停止，不是繼續。
    */
+  setBeforeStepCallback(callback: ((nodeId: string) => Promise<void>) | null): void {
+    this.beforeStepCallback = callback
+  }
+
   setUnknownComponentPause(
     fn: ((component: string, nodeId: string | null) => Promise<'continue' | 'stop'>) | null,
   ): void {
@@ -596,6 +605,8 @@ export class SemanticInterpreter implements ExecutionContext {
 
   async executeBody(nodes: SemanticNode[]): Promise<void> {
     for (const child of nodes) {
+      // 與 `recordStepInfo` 同一道閘門（`debug_step`）——「哪些算一步」由元件自己標註
+      if (this.beforeStepCallback && hasAnnotation(child.componentId, 'debug_step')) await this.beforeStepCallback(child.id)
       await this.executeNode(child)
       await this.recordStepInfo(child)
     }

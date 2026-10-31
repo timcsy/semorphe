@@ -36,15 +36,18 @@ async function direct(src: string) {
 }
 
 async function viaProvider(src: string) {
-  const s = jsInterpreterProvider.createSession!({ maxSteps: 100_000 })
+  const tree = lift(src)
+  const s = jsInterpreterProvider.createSession!({ maxSteps: 100_000 }, tree)
+  if ('declined' in s) throw new Error(s.declined)
   const out: string[] = []
   s.onOutput((t) => out.push(t))
   let stop: string | null = null
-  try { await s.run(lift(src)) } catch (e) {
-    expect(e, '🔴 提供者漏出了直譯器自己的錯誤型別——控制器只認 SessionStop').toBeInstanceOf(SessionStop)
-    stop = (e as SessionStop).i18nKey
+  const o = await s.launch(tree, { stopOnEntry: false })
+  if (o.kind === 'failed') {
+    expect(o.error, '🔴 提供者漏出了直譯器自己的錯誤型別——控制器只認 SessionStop').toBeInstanceOf(SessionStop)
+    stop = o.error.i18nKey
   }
-  return { out: out.join(''), counts: [...s.visitCounts().values()].sort(), stop }
+  return { out: out.join(''), counts: [...(s.coverage() ?? new Map()).values()].sort(), stop }
 }
 
 describe('JS 直譯器提供者：包裝不改語意', () => {
@@ -66,12 +69,12 @@ describe('JS 直譯器提供者：包裝不改語意', () => {
     expect(b).toEqual(a)
   })
 
-  it('★ 中止：種類是 aborted', async () => {
-    const s = jsInterpreterProvider.createSession!({ maxSteps: 10_000_000 })
-    s.setInputProvider(() => new Promise(() => {}))
-    const p = s.run(lift('#include <iostream>\nusing namespace std;\nint main(){ int x; cin >> x; cout << x; }'))
-    await new Promise((r) => setTimeout(r, 20))
-    s.abort()
-    await expect(p).rejects.toMatchObject({ kind: 'aborted' })
+  it('★ 中止：等輸入時 terminate，下一個指令回 aborted（不會卡住）', async () => {
+    const tree = lift('#include <iostream>\nusing namespace std;\nint main(){ int x; cin >> x; cout << x; }')
+    const s = jsInterpreterProvider.createSession!({ maxSteps: 10_000_000 }, tree)
+    if ('declined' in s) throw new Error(s.declined)
+    expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
+    s.terminate()
+    expect(await s.supplyInput('1')).toMatchObject({ kind: 'failed', error: { kind: 'aborted' } })
   })
 })

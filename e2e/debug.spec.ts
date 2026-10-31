@@ -54,6 +54,11 @@ test('加速：跳過整層——執行器問的是「跳過哪些節點」', as
   await expect(page.locator('.debug-toolbar')).toBeVisible({ timeout: 20_000 })
   for (let i = 0; i < 4; i++) await page.locator('.debug-step').click()
   await page.locator('.debug-accelerate').click()
+  // 🔴 spec 183：加速跳出迴圈之後停在 `cout` **之前**（除錯器停在即將執行的那一顆）——再走一步才印出 6。
+  //    在此之前單步是「先把整支跑完、錄下軌跡再重播」，輸出在第一步之前就全印了，
+  //    這一行原本的斷言（加速之後就看得到 6）量到的是那個副作用，不是加速。
+  await expect(page.locator('.console-output')).not.toContainText('6')
+  await page.locator('.debug-step').click()
 
   await expect(page.locator('.console-output')).toContainText('6', { timeout: 20_000 })
 })

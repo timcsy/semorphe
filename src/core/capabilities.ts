@@ -22,7 +22,6 @@
  * 設計：`knowledge/draft/2026-10-31-重構的設計-能力介面與降級路徑.md`。
  */
 import type { SemanticNode, BoardPinModel } from './types'
-import type { StepInfo } from './execution'
 import type { Verdict, TypeQuery } from './verdict-diagnostics'
 
 /** 四項能力，加上執行與除錯的兩個細節（缺了也要說得出來）。 */
@@ -52,23 +51,54 @@ export type SessionInput =
   | { kind: 'pause-decision'; decision: 'continue' | 'stop' }
 
 /**
- * **一次執行**——名字照 DAP 的語彙，但只放今天介面真的用到的事（簡約；階段 5 接 Cella 時再長）。
+ * 停下來的原因（DAP 的 `stopped` 事件；spec 183 R1）。
+ * `unknown-component` 是 JS 直譯器才有的（跑到它認不得的東西，由宿主決定繼續或停止）。
+ */
+export type StopReason = 'entry' | 'breakpoint' | 'step' | 'pause' | 'awaiting-input' | 'unknown-component'
+
+export interface Stop {
+  reason: StopReason
+  /** 停在哪一顆（語義樹的 id）；不知道時是 null。 */
+  nodeId: string | null
+  detail?: Record<string, string>
+}
+
+/**
+ * 一個指令的結果：停在某處（等下一個指令）、跑完了、或停不下去了。
+ * 未定義行為、未捕捉的例外、執行期錯誤、被停止，都是 `failed`——帶核心認得的 `SessionStop`。
+ */
+export type Outcome =
+  | { kind: 'stopped'; stop: Stop }
+  | { kind: 'ended' }
+  | { kind: 'failed'; error: SessionStop }
+
+/**
+ * **一次執行**——形狀照 DAP（spec 183 R1）：**宿主下指令**，每個指令回一個 `Outcome`。
+ *
+ * 🔴 在此之前是「直譯器每走一步回呼宿主、宿主決定停不停」——那是 JS 直譯器的形狀。
+ *    Cella 的工作階段一步要一次 worker 往返（3.5 ms），保留回呼模型的話「執行」會慢 25 倍
+ *    （`tests/probes/cella-dap-cost.test.ts` 量的）。P8：介面換一次，兩個提供者都照新形狀。
  */
 export interface ExecutionSession {
   onOutput(cb: ((text: string) => void) | null): void
-  onWaiting(cb: ((nodeId: string | null) => void) | null): void
-  onStepRecord(cb: ((step: StepInfo) => Promise<void>) | null): void
-  setInputProvider(provider: (() => Promise<string>) | null): void
-  /** 停在認不得的東西上時，由宿主決定繼續或停止。 */
-  setUnknownPause(fn: ((component: string, nodeId: string | null) => Promise<'continue' | 'stop'>) | null): void
-  setRecordSteps(enabled: boolean): void
-  run(program: SemanticNode): Promise<void>
-  runWithSteps(program: SemanticNode): Promise<StepInfo[]>
-  abort(): void
-  scope(): { name: string; type: string; value: string }[]
+  /** 中斷點：節點 id 的集合（翻譯成行號的是懂「行」的那一端）。執行中也可以改。 */
+  setBreakpoints(nodeIds: Iterable<string>): void
+  launch(program: SemanticNode, options: { stopOnEntry: boolean }): Promise<Outcome>
+  continue(): Promise<Outcome>
+  stepIn(): Promise<Outcome>
+  /** 停在 `awaiting-input` 時給一行（不含換行由提供者補）；之後照上一個指令繼續（continue 或 stepIn）。 */
+  supplyInput(line: string): Promise<Outcome>
+  /** 輸入結束（EOF）。 */
+  closeInput(): Promise<Outcome>
+  /** 執行中要求停下（下一個帶標籤的節點之前停成 `pause`）。 */
+  pause(): void
+  terminate(): void
+  /** 停著的時候，目前看得到的變數。 */
+  variables(): { name: string; type: string; value: string }[]
   setVariable(name: string, raw: string): boolean
-  /** 步數能力：每個節點被進入幾次。 */
-  visitCounts(): ReadonlyMap<string, number>
+  /** 每個節點被進入幾次（步數能力）；給不出來時是 null（結果的 `missing` 帶 `steps`，畫面要說出來）。 */
+  coverage(): ReadonlyMap<string, number> | null
+  /** 這次執行從外面拿到的東西（重現用、插手紀錄）。 */
   recordedInputs(): readonly SessionInput[]
 }
 
@@ -99,10 +129,14 @@ export interface CheckAnswer {
 /** 提供者的就緒狀態（昂貴的提供者要先載入；狀態列照這個顯示）。 */
 export type Readiness = { state: 'idle' | 'loading' | 'ready' } | { state: 'unavailable'; reason: string }
 
+/** 這次不接（翻不出來、還沒就緒、無法使用）——說得出原因，登錄表往下找下一個（spec 183 R3）。 */
+export interface Declined { declined: string }
+
 export interface Provider {
   id: string
   declares: CapabilityDeclaration
-  createSession?(options: SessionOptions): ExecutionSession
+  /** `program` 讓提供者判斷這一支它跑不跑得了；跑不了回 `Declined`。 */
+  createSession?(options: SessionOptions, program: SemanticNode): ExecutionSession | Declined
   /** `verdict`／`types`：判決與型別查詢一起回（同一次翻譯、同一次載入）。 */
   check?(req: CheckRequest): Promise<CheckAnswer>
   /** 這個語言判得了嗎（判決只有某些語言的套件）——不宣告就當成都可以。 */
@@ -170,4 +204,32 @@ export function provide(cap: CapabilityName): Provided {
     if (!s.setInput) missing.push('setInput')
   }
   return { provider: p, provenance: p.id, missing }
+}
+
+/** 開一次執行的結果：誰接了、前面誰不接以及為什麼（畫面要說得出來，P6）。 */
+export interface OpenedSession {
+  session: ExecutionSession | null
+  provenance: string | null
+  declined: { provider: string; reason: string }[]
+  missing: Missing[]
+}
+
+/**
+ * **開一次執行**（spec 183 R3）——照登錄順序問每個宣告了 `session` 的提供者；不接的記下原因、往下找。
+ * 階段 6 之前：Cella 翻不出來／還沒就緒時，由 JS 直譯器接，而 `declined` 說得出為什麼。
+ */
+export function openSession(options: SessionOptions, program: SemanticNode): OpenedSession {
+  const declined: { provider: string; reason: string }[] = []
+  for (const p of registry) {
+    if (!p.declares.session || !p.createSession) continue
+    const s = p.createSession(options, program)
+    if ('declined' in s) { declined.push({ provider: p.id, reason: s.declined }); continue }
+    const d = p.declares.session
+    const missing: Missing[] = []
+    if (!d.steps) missing.push('steps')
+    if (!d.setVariable) missing.push('setVariable')
+    if (!d.setInput) missing.push('setInput')
+    return { session: s, provenance: p.id, declined, missing }
+  }
+  return { session: null, provenance: null, declined, missing: ['session'] }
 }

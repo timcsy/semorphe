@@ -107,5 +107,18 @@ describe.skipIf(!RUN)('Cella DAP：一步的成本', () => {
     const stray = [...nodes].filter((n) => !ids.has(n.split(/[/#]/)[0]))
     console.log(`對不回語義樹的停點：${stray.length}／${nodes.size}`, stray.slice(0, 5))
     expect(out2).toBe('1225\n')
+
+    // ④ 停在中斷點時，那一顆執行了沒（DAP 的慣例：停在【即將執行】的那一顆）
+    const print = (function f(n: SemanticNode): SemanticNode | undefined { if (n.componentId === 'cpp:print') return n; for (const k of Object.values(n.slots ?? {})) for (const c of k) { const r = f(c); if (r) return r } })(tree)!
+    const s3 = await createSession(bytes, { program: JSON.stringify(f.program) })
+    let out3 = ''
+    s3.onEvent((ev: string, body: { output?: string }) => { if (ev === 'output') out3 += body.output ?? '' })
+    s3.setBreakpoints([print.id])
+    await s3.launch({ stopOnEntry: false })
+    console.log(`停在 print 時：node=${s3.node === print.id}、已輸出 ${JSON.stringify(out3)}、變數 ${JSON.stringify(s3.variables(0))}`)
+    const sid = s3.variables(0).find((v: { name: string }) => v.name === 's')?.id
+    s3.setVariable(0, sid, '100')
+    await s3.continue()
+    console.log(`改 s=100 之後繼續：${JSON.stringify(out3)}`)
   }, 300_000)
 })

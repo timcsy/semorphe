@@ -30,6 +30,10 @@ export interface SemanticEvents {
    * ⚠️ 廣播的是**到過的**，不是「沒到過的」：誰算「應該要到」是視圖的知識。
    */
   'execution:coverage': { visited: readonly string[]; counts: Readonly<Record<string, number>> }
+  /** 這次的執行器給不出覆蓋資料（spec 183 R2）——「沒跑到」的標示這次沒有，畫面要說得出來。 */
+  'execution:coverage-missing': Record<string, never>
+  /** 這次由誰跑、前面誰不接以及為什麼（spec 183 R3）。 */
+  'execution:provenance': { provider: string | null; declined: readonly { provider: string; reason: string }[] }
   /**
    * ⚠️ **這條線的方向是刻意反過來的。**
    *
