@@ -1588,8 +1588,8 @@ export class App {
       // 🔴 **命名空間風格要一起交下去**（2026-09-02）：`using namespace std;`
       //    是補丁器寫進程式碼的，而它要不要出現在積木上，看的是同一格風格。
       const includeNodes = (shaping.autoIncludeNodes as
-        (t: never, ns: 'using' | 'explicit') => SemanticNode[])(
-        tree as never, this.currentStylePreset.namespace_style)
+        (t: never, ns: 'using' | 'explicit', styleId: string) => SemanticNode[])(
+        tree as never, this.currentStylePreset.namespace_style, this.currentStylePreset.id)
       if (includeNodes.length === 0) return tree
       return {
         ...tree,

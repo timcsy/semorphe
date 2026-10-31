@@ -10,7 +10,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import { createTestLifter } from '../../helpers/setup-lifter'
 import { generateCode } from '../../../src/core/projection/code-generator'
-import { createCppCodePatcher } from '../../../src/languages/cpp/auto-include'
+import { createCppCodePatcher, computeAutoIncludes, autoIncludeNodes } from '../../../src/languages/cpp/auto-include'
 import { createPopulatedRegistry } from '../../../src/languages/cpp/std'
 import cStyle from '../../../src/languages/cpp/styles/c.json'
 import type { StylePreset, SemanticNode } from '../../../src/core/types'
@@ -42,5 +42,13 @@ describe('補丁器：C 方言', () => {
     const code = patched('google')
     expect(code).toContain('<cstdio>')
     expect(code).toContain('<cstdlib>')
+  })
+
+  it('🔴 骨架積木（也是交給 formalize 的那幾顆）與文字同一份：C 方言是 stdio.h／stdlib.h', () => {
+    const tree = createTestLifter().lift(parser.parse(SRC)!.rootNode as never) as SemanticNode
+    const edges = computeAutoIncludes(tree, createPopulatedRegistry() as never)
+    const headers = (c: boolean): string[] => autoIncludeNodes(edges, 'explicit', c).map((n) => String(n.properties.header))
+    expect(headers(true).sort()).toEqual(['stdio.h', 'stdlib.h'])
+    expect(headers(false).sort()).toEqual(['cstdio', 'cstdlib'])
   })
 })

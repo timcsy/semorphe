@@ -84,6 +84,18 @@ export function computeAutoIncludes(
 }
 
 /**
+ * 一組依賴邊在這個方言下要引入的標頭（不帶角括號、依序、去重）。
+ *
+ * 🔴 補丁器（文字）與 `autoIncludeNodes`（淡色的骨架積木、也是交給 formalize 的那幾顆）**讀同一支**
+ * ——2026-10-31 C 方言的 `<cstdio>` 缺陷兩邊都有，因為兩邊各自從 `edge.header` 取。
+ * C 方言：`<cstdio>`／`<iostream>` → `<stdio.h>`、`<cstdlib>` → `<stdlib.h>`。
+ */
+export function dialectHeaders(edges: DependencyEdge[], cDialect: boolean): string[] {
+  const raw = edges.map((e) => e.header.replace(/^<|>$/g, ''))
+  return [...new Set(cDialect ? raw.map((h) => cIoHeaderFor(`<${h}>`) ?? toCHeader(`<${h}>`)) : raw)]
+}
+
+/**
  * Create a code patcher that fixes missing scaffold items (#include, using namespace, int main)
  * based on components used in the semantic tree.
  */
@@ -126,14 +138,9 @@ export function createCppCodePatcher(
     while ((m = includeRe.exec(code)) !== null) {
       existingHeaders.add(normalizeHeader(m[1]))
     }
-    const missingIncludes = edges.filter(e => !existingHeaders.has(normalizeHeader(e.header)))
-    if (missingIncludes.length > 0) {
-      // C 方言：換成 C 的標頭（`<cstdio>` → `<stdio.h>`、`<iostream>` → `<stdio.h>`），並去重
-      const directives = cDialect
-        ? [...new Set(missingIncludes.map((e) => `#include <${cIoHeaderFor(e.header) ?? toCHeader(e.header)}>`))]
-            .filter((d) => !existingHeaders.has(normalizeHeader(d.replace(/^#include\s*/, ''))))
-        : missingIncludes.map(e => e.directive)
-      const patch = directives.join('\n') + (directives.length > 0 ? '\n' : '')
+    const missingHeaders = dialectHeaders(edges, cDialect).filter((h) => !existingHeaders.has(normalizeHeader(`<${h}>`)))
+    if (missingHeaders.length > 0) {
+      const patch = missingHeaders.map((h) => `#include <${h}>`).join('\n') + '\n'
       const idx = patched.indexOf('#include')
       patched = idx >= 0 ? patched.slice(0, idx) + patch + patched.slice(idx) : patch + patched
       changed = true
@@ -233,6 +240,8 @@ export function autoIncludeNodes(
    * > 而只有一種被放回樹裡——不見的一定是另一種。**
    */
   namespaceStyle: 'using' | 'explicit' = 'explicit',
+  /** C 方言（風格 `c`）：積木上的標頭要與補丁器寫進文字的那一份相同（`dialectHeaders`）。 */
+  cDialect = false,
 ): SemanticNode[] {
   // 🔴 **蓋上「這是系統推導的」那一格**（2026-09-15）——`metadata.derived`。
   //
@@ -253,10 +262,7 @@ export function autoIncludeNodes(
   // ⚠️ 前綴 `auto:` 與 `createNode` 的 `node_N_xxx` 不會撞號。
   const derived = (n: SemanticNode, key: string): SemanticNode =>
     ({ ...n, id: `auto:${key}`, metadata: { ...n.metadata, derived: true } })
-  const includes = edges.map((edge) => {
-    const header = edge.header.replace(/^<|>$/g, '')
-    return derived(buildInclude(header), `include:${header}`)
-  })
+  const includes = dialectHeaders(edges, cDialect).map((header) => derived(buildInclude(header), `include:${header}`))
   // ⚠️ 條件與補丁器第 2 步**逐字相同**（`namespaceStyle === 'using' && edges.length > 0`）
   //    ——兩邊看的是同一個決定，錯開的話就是「程式碼有、積木沒有」。
   return namespaceStyle === 'using' && edges.length > 0

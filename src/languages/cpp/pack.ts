@@ -140,14 +140,14 @@ declareLanguagePack({
       scaffold: new CppScaffold(moduleRegistry),
       stripScaffoldNodes: cppStripScaffoldNodes as never,
       patchCode: patcher as never,
-      autoIncludeNodes: ((tree: never, namespaceStyle: 'using' | 'explicit') => {
+      autoIncludeNodes: ((tree: never, namespaceStyle: 'using' | 'explicit', styleId?: string) => {
         const names = computeAutoIncludes(tree, moduleRegistry as never)
         if (names.length === 0) return []
         // ⚠️ 樹裡**已經有**那一句就不再補一顆——與引入那一半的去重同一個道理
         //    （`collectManualIncludes`）。少了它的症狀是兩顆一樣的積木。
         const body = ((tree as unknown as SemanticNode).slots.body ?? [])
         const hasUsing = body.some((n) => n.componentId === 'cpp:using_namespace')
-        return autoIncludeNodes(names, hasUsing ? 'explicit' : namespaceStyle)
+        return autoIncludeNodes(names, hasUsing ? 'explicit' : namespaceStyle, styleId === 'c')
       }) as never,
     }
   },
