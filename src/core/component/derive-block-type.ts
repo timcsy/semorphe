@@ -69,7 +69,8 @@ export interface BlockForm {
  * @param form 非中性形態才傳
  */
 export function deriveBlockType(componentId: string, form?: BlockForm | null): string {
-  const body = componentId.replace(':', '_')
+  // 名字裡的 `.`（身分的階層）也投影成 `_`——與 `path-syntax.ts` 的 `identityToBlockType` 同一份（它呼叫這裡）
+  const body = componentId.replace(':', '_').replace(/\./g, '_')
   return form ? `${body}_${form.value}` : body
 }
 

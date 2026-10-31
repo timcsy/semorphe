@@ -96,9 +96,16 @@ export interface ComponentRegistration {
   manifest: ComponentManifest
 }
 
-/** `<scope>:<name>` → `<scope>/<name>`。路徑與身分的唯一換算處。 */
+/**
+ * `<scope>:<name>` → `<scope>/<name>`。路徑與身分的唯一換算處。
+ *
+ * 名字裡的 `.`（身分的階層，`concepts/元件.md`「`.` 是真實，`/` 與 `_` 是投影」）也變成 `/`。
+ * 🔴 2026-10-31 以前這裡只換 `:`，而 `core/component/path-syntax.ts` 的 `identityToDir` 照概念換兩種
+ * ——護欄驗的是後者，產品用的是前者（今天 0 顆帶 `.` 的身分，所以綠著）。現在後者呼叫這裡，只剩一份。
+ * ⚠️ 膠囊的 glob（`registry.ts`）今天只掃兩層；第一顆階層身分出現時，C2（身分與路徑一致）會當場擋下。
+ */
 export function idToDir(componentId: string): string {
   const i = componentId.indexOf(':')
   if (i < 0) throw new Error(`膠囊身分必須是 <scope>:<name> 格式，收到：${componentId}`)
-  return `${componentId.slice(0, i)}/${componentId.slice(i + 1)}`
+  return `${componentId.slice(0, i)}/${componentId.slice(i + 1).replace(/\./g, '/')}`
 }

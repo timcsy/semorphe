@@ -26,10 +26,9 @@ const ALLOWED: Record<string, string> = {
   'src/languages/cpp/naming.ts': '同上，C++ 的詞彙',
   'src/languages/python/naming.ts': '同上，Python 的詞彙',
   'src/core/component/judges.ts': '「哪條測試判哪一路」的 metadata，本來就是測試的資料',
-  'src/core/component/path-syntax.ts': '階層身分的語法（vision〈分子與粒度切換〉的前置）；⚠️ 投影函式與產品不一致，見重構設計 draft 五之二',
+  'src/core/component/path-syntax.ts': '階層身分的語法（vision〈分子與粒度切換〉的前置）；投影函式呼叫產品的 idToDir／deriveBlockType，只剩分類這一層是它自己的',
   'src/core/granularity.ts': 'vision〈分子與粒度切換〉的已交付機制，等流程面板的投影接上',
   'src/core/molecule.ts': '同上',
-  'src/core/blocks/block-input-names.ts': '⚠️ 與 languages/cpp/block-input-names.ts 重複，待合併（重構設計 draft 五之二）',
   'src/providers/cella/formalize/index.ts': '重構階段 4：深嵌入的 formalize，階段 5 接上 Cella 提供者時進產品路徑',
   'src/providers/cella/formalize/scope.ts': '同上',
 }

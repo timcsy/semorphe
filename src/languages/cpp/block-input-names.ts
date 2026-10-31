@@ -1,7 +1,7 @@
 /**
  * C++ 積木插槽名的唯一真相。
  *
- * 與 `src/core/blocks/block-input-names.ts` 同一個形狀，只是涵蓋**語言專屬**的積木。
+ * （原本與 `src/core/blocks/block-input-names.ts` 並存、同一個形狀；那一份 2026-10-31 刪除，見下面的匯出。以下「兩個模組」一節是當時的理由。）
  *
  * ## 為什麼要分兩個模組
  *
@@ -49,6 +49,12 @@ function getInputs(blockType: string): InputNames {
   if (!spec) throw new Error(`找不到 ${blockType} 的積木宣告——插槽名沒有唯一真相可用`)
   return extract(spec.blockDef as Record<string, unknown>)
 }
+
+/**
+ * 🟢 2026-10-31：`core/blocks/block-input-names.ts`（同一件事的第二份，產品走不到、只有護欄在用）刪除，
+ * 護欄改驗這一份——產品的插槽名就是從這裡來的。
+ */
+export { extract as extractInputNames, getInputs }
 
 export const CPP_STRING_AT_INPUTS = getInputs('cpp_string_at')
 // 🪦 **`C_COMPOUND_ASSIGN_INPUTS` 與 `C_COMPOUND_ASSIGN_EXPR_INPUTS` 已於 2026-08-25 刪除。**
