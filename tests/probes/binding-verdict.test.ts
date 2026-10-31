@@ -1,5 +1,5 @@
 /**
- * **在我們這側跑 Cella 的判決**（spec 180 T010）——C18 語料裡翻得出的每一支，交給 Cella 的判決入口。
+ * **在我們這側跑 Cella 的判決**（spec 180 T010）——判決綁定語料裡翻得出的每一支，交給 Cella 的判決入口。
  *
  * 量兩件事：
  * - **SC-002**：`invalid` 為 0。cella：「invalid 只在程式 JSON 讀不進來時出現（欄位或建構子不對）」——量的是介面的形狀。
@@ -15,7 +15,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { buildC18Corpus, type C18Row } from '../helpers/c18-corpus'
+import { buildBindingCorpus, type BindingRow } from '../helpers/binding-corpus'
 import { createCellaChecker, type CellaChecker, type CellaVerdict } from '../../src/providers/cella/verdict'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { formalize } from '../../src/providers/cella/formalize'
@@ -27,15 +27,15 @@ const read = (pkg: string | null, file: string): Uint8Array =>
 let parser: Parser
 let checker: CellaChecker
 let verdict: CellaChecker['verdict']
-let rows: C18Row[]
+let rows: BindingRow[]
 /** 語料裡有 program 的每一支與它的判決——跑一次，各支測試共用。 */
-let results: { row: C18Row; v: CellaVerdict; expected?: string }[]
+let results: { row: BindingRow; v: CellaVerdict; expected?: string }[]
 beforeAll(async () => {
   await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
   parser = new Parser()
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
-  rows = buildC18Corpus(parser)
+  rows = buildBindingCorpus(parser)
   checker = await createCellaChecker(read)
   verdict = checker.verdict
   results = rows.filter((r) => r.program).map((row) => {
@@ -91,7 +91,7 @@ function labels(program: unknown): string[] {
 
 const lift = (code: string): SemanticNode => createTestLifter().lift(parser.parse(code)!.rootNode as never) as SemanticNode
 
-describe('C18 語料交給 Cella 的判決', () => {
+describe('判決綁定語料交給 Cella 的判決', () => {
   it('★ 注入：寫壞的程式 JSON 判 invalid；未定義行為判 reject，而且 at 對得回節點', () => {
     expect(verdict({ k: 'prog', n: 'x', lang: { k: 'langCpp' }, items: 'not-a-list', board: null }).verdict).toBe('invalid')
     const tree = lift('int main() { int a[3]; int i = 5; return a[i]; }')
@@ -151,7 +151,7 @@ describe('C18 語料交給 Cella 的判決', () => {
       }
       if (v.verdict !== 'accept') detail.push(`  ${v.verdict.padEnd(7)} ${r.id}  ${v.problems.map((p) => `${p.kind}${p.reason ? `（${p.reason.slice(0, 60)}）` : ''}`).join('；')}`)
     }
-    console.log(['C18 語料的 Cella 判決', `  ${Object.entries(tally).map(([k, n]) => `${k} ${n}`).join('｜')}`,
+    console.log(['判決綁定語料的 Cella 判決', `  ${Object.entries(tally).map(([k, n]) => `${k} ${n}`).join('｜')}`,
       `  problem 種類：${Object.entries(kinds).map(([k, n]) => `${k}×${n}`).join(' ') || '（無）'}`, ...detail,
       `accept 而輸出與課文不同：${wrongOut.length}`, ...wrongOut].join('\n'))
     expect(invalid, '🔴 SC-002：有程式 JSON 讀不進 Cella（介面的形狀不對）').toEqual([])

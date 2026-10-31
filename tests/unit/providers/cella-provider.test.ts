@@ -1,6 +1,6 @@
 /**
  * Cella 提供者（spec 182 T007）——主執行緒那一半：formalize、版本號、過期丟棄、worker 起不來。
- * worker 用假的：只看協定，不載 Cella（真的判決在 `tests/probes/c18-verdict`）。
+ * worker 用假的：只看協定，不載 Cella（真的判決在 `tests/probes/binding-verdict`）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'

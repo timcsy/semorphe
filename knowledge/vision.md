@@ -292,10 +292,10 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       🟢 2026-10-31（第 393 刀）：`cella-lang`、`@cella-lang/cpp`／`c`／`arduino` 釘在 `0.1.202610310706`（peer 一致、同一支檢查器）；
       `cella-formalize-guard`、`formalize-residual`、三份 `contract.cella` 與 prelude 退場；`paths.formalize` 改指膠囊的 `formalize.ts`
 - [ ] **4 深嵌入 formalize**（[spec 180](../specs/180-deep-formalize/spec.md)，先 C++／Arduino）——語義樹 → 程式 JSON；靜態作用域走訪填 declNode、nodeId 穩定、`iInclude`、
-      依支援清單標 unknown；驗收：課文 C／C++／Arduino 解答全部翻得出、交 C18 語料
-      🟡 第一批（2026-10-31）：作用域走訪（852 個參照 0 落空）、課文解答 84 / 94、Arduino sketch 10 / 10、C 分支、空槽變洞、C18 語料第一版交出；
+      依支援清單標 unknown；驗收：課文 C／C++／Arduino 解答全部翻得出、交判決綁定語料（Cella 的衍生原則 C18「判決綁定」）
+      🟡 第一批（2026-10-31）：作用域走訪（852 個參照 0 落空）、課文解答 84 / 94、Arduino sketch 10 / 10、C 分支、空槽變洞、判決綁定語料第一版交出；
       剩下的 10 份卡在 Cella 還沒建模的函式庫（pair、queue、set、map、stack、priority_queue）——已給 Cella 清單，Cella 已開工（下一版帶 `tAuto`）；
-      第二批（第 389–391 刀）：formalize 搬進膠囊、C18 語料 109 筆／附 program 99 筆，cella 用 clang 比兩棵樹 95/95 相同；Arduino 15/15
+      第二批（第 389–391 刀）：formalize 搬進膠囊、判決綁定語料 109 筆／附 program 99 筆，cella 用 clang 比兩棵樹 95/95 相同；Arduino 15/15
 - [ ] **5 Cella 提供者**（spec）——verdict（積木標示、判題）、types（型別不合接上後標錯、工具箱不藏）、session（除錯、變數、步數）、
       `assumes` 小標、硬體時間軸面板、課文 check 的腳位事件
       🔁 2026-10-31 拆成三段（使用者照 knowie-next 的推薦定：一份 spec 驗收不完；判決與型別今天零消費者，先接最安全、最早讓學生看到）：

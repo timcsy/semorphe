@@ -4,7 +4,7 @@ import { isAddressable } from '../../../languages/cpp/lang/node-traits'
 
 export function registerFormalize(r: FormalizeRegistrar): void {
   // 🔴 引數的 `&` 與產生器**同一個判準**（`isAddressable`，見 generate.ts）：積木上寫 `n`，程式碼是 `&n`。
-  //    在此之前這裡原樣送出，而 cella 比對 C18 時抓到 program 少了 `&`（第 390 刀）。
+  //    在此之前這裡原樣送出，而 cella 比對判決綁定語料時抓到 program 少了 `&`（第 390 刀）。
   r.stmt('cpp:input_formatted', (n, f) =>
     [f.k('sScanf', {
       n: n.id,

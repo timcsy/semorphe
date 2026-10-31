@@ -66,7 +66,7 @@ const ASSUMES: Record<string, string> = {
   'library.what': '例外的 what() 印出的文字，照 libc++ 的寫法',
 }
 
-/** 標籤 `<id>/<角色>`、`<id>#<槽>` → `<id>`（與 `tests/probes/c18-verdict` 的 `owner` 同一條規則）。 */
+/** 標籤 `<id>/<角色>`、`<id>#<槽>` → `<id>`（與 `tests/probes/binding-verdict` 的 `owner` 同一條規則）。 */
 export const ownerOf = (label: string): string => label.split(/[/#]/)[0]
 
 function ids(tree: SemanticNode): Set<string> {

@@ -201,7 +201,7 @@ describe('護欄：釘住的檢查器，判定語義不得悄悄換人', () => {
   //
   // 🪦 **③ 每個定義的 merkle 退場**（2026-10-31，第 393 刀）：它守的是淺嵌入的 C++ Library
   //    （我們的 `contract.cella` 站在上面）；升版後淺嵌入整個拿掉，`contract.cella` 一起退場（使用者定案）。
-  //    深嵌入那一側的判決綁定由 Cella 的 C18 語料比對（clang 讀兩份文字比兩棵樹）。
+  //    深嵌入那一側的判決綁定由 Cella 的判決綁定語料比對（clang 讀兩份文字比兩棵樹）。
 
   it('🔴 硬性零：每個 @cella-lang/* 都精確釘選，而且與 cella-lang 是同一支檢查器', () => {
     const packs = declaredPacks()
