@@ -9,7 +9,7 @@
  * ```
  * core/sync/view-host.ts          ← ExecutionStatus, StepInfo
  * core/sync/semantic-bus.ts       ← ExecutionStatus, StepInfo
- * core/sync/step-controller.ts    ← ExecutionSpeed
+ * （`core/sync/step-controller.ts` 已於 spec 183 刪除——單步改由執行工作階段的 stepIn 驅動）
  * core/language-executors.ts ← RuntimeType
  * ```
  *

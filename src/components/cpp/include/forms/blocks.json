@@ -62,6 +62,10 @@
               "cstdlib"
             ],
             [
+              "%{BKY_C_INCLUDE_HEADER_CTIME}",
+              "ctime"
+            ],
+            [
               "%{BKY_C_INCLUDE_HEADER_CCTYPE}",
               "cctype"
             ],
@@ -76,6 +80,10 @@
             [
               "%{BKY_C_INCLUDE_HEADER_STDLIB_H}",
               "stdlib.h"
+            ],
+            [
+              "%{BKY_C_INCLUDE_HEADER_TIME_H}",
+              "time.h"
             ],
             [
               "%{BKY_C_INCLUDE_HEADER_STRING_H}",

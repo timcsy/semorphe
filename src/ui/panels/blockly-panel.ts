@@ -1153,23 +1153,31 @@ export class BlocklyPanel implements ViewHost {
    */
   onDiagnostics(event: DiagnosticsEvent): void {
     if (!this.workspace) return
-    for (const b of this.workspace.getAllBlocks(false)) b.setWarningText(null)
+    for (const b of this.workspace.getAllBlocks(false)) {
+      b.setWarningText(null)
+      b.getSvgRoot()?.classList.remove('diag-info')
+    }
 
     // 🔴 **同一顆積木的多則要先併起來再寫。**
     // `setWarningText` 是**後蓋前**的：`int , , ;` 產生三則診斷，
     // 逐則寫的話畫面上只剩最後一則——**三個問題只看得到一個**。
     const byBlock = new Map<string, string[]>()
+    // 🔴 「判不出來」（info）與「有錯」分得開：一顆積木上【只有】info 時圖示換色（style.css 的 `.diag-info`）
+    const hasError = new Set<string>()
     for (const d of event.diagnostics) {
       // nodeId → blockId。⚠️ 診斷可能指向**沒有積木的節點**（未來會有：
       // 來自編譯器的診斷），那時這裡什麼都不做——**而程式碼視圖仍然畫得出來**。
       const blockId = this.nodeIdToBlockId(d.nodeId)
       if (!blockId) continue
+      if (d.severity !== 'info') hasError.add(blockId)
       const lines = byBlock.get(blockId)
       if (lines) lines.push(this.diagnosticMessage(d))
       else byBlock.set(blockId, [this.diagnosticMessage(d)])
     }
     for (const [blockId, lines] of byBlock) {
-      this.workspace.getBlockById(blockId)?.setWarningText(lines.join('\n'))
+      const block = this.workspace.getBlockById(blockId)
+      block?.setWarningText(lines.join('\n'))
+      if (!hasError.has(blockId)) block?.getSvgRoot()?.classList.add('diag-info')
     }
   }
 

@@ -51,20 +51,60 @@ export function branchOf(program: { lang?: { k?: string }; board?: unknown }): C
   return program.lang?.k === 'langC' ? 'c' : 'cpp'
 }
 
-const LIBRARY = [
-  'import c', 'import cpp', 'import arduino',
-  'def verdict_c (src : String) (input : String) (fuel : Nat) : String := c.verdict src input fuel',
-  'def verdict_cpp (src : String) (input : String) (fuel : Nat) : String := cpp.verdict src input fuel',
-  'def verdict_arduino (src : String) (input : String) (fuel : Nat) : String := arduino.verdict src input fuel',
-].join('\n') + '\n'
+const BRANCHES = ['c', 'cpp', 'arduino'] as const
+const LIBRARY = ['import c', 'import cpp', 'import arduino', ...BRANCHES.flatMap((b) => [
+  `def verdict_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.verdict src input fuel`,
+  `def types_${b} (src : String) (candidates : String) : String := ${b}.types src candidates`,
+])].join('\n') + '\n'
+const EXPORTS = BRANCHES.flatMap((b) => [`verdict_${b}`, `types_${b}`]).join(',')
+
+/** 型別查詢（`@cella-lang/cfamily` README〈Type query〉）。 */
+export interface CellaTypes {
+  nodes?: Record<string, string>
+  slots?: Record<string, { display?: string; expects?: string | null; fits?: Record<string, { level: 'exact' | 'convert' | 'narrowing' | 'no'; reason?: string }> }>
+  errors?: { at: string; reason: string }[]
+  [extra: string]: unknown
+}
+
+/** 一個編好的判決器：判決與型別查詢共用同一次載入。 */
+export interface CellaChecker {
+  verdict(program: unknown, input?: string, fuel?: number): CellaVerdict
+  types(program: unknown, candidates?: string[]): CellaTypes
+}
+
+/** 判決模組的原始碼——它與套件版本一起決定快取鍵（`cache.ts`）。 */
+export const CHECKER_SOURCE = LIBRARY
 
 /**
- * 建一個判決器：載入 Cella 與三個語言套件、編好判決模組，回傳 `(program, input, fuel) => 判決`。
+ * 建一個判決器：載入 Cella 與三個語言套件、編好判決模組，回傳判決與型別查詢。
  * ⚠️ 昂貴（十幾秒）——一個宿主建一次。
  */
-export async function createCellaVerdict(read: CellaRead): Promise<(program: unknown, input?: string, fuel?: number) => CellaVerdict> {
+export async function createCellaChecker(read: CellaRead): Promise<CellaChecker> {
+  return checkerFromBytes(await compileCellaChecker(read))
+}
+
+/**
+ * 只編譯：回傳判決模組的 wasm 位元組。
+ * 🟢 **編好的模組不需要 Cella 的執行環境**（2026-10-31 量：4.7 MB 的模組在乾淨的行程裡 13 毫秒載起來就能判）
+ * ——所以快取存這一份就夠，第二次打開連套件都不必下載。
+ */
+export async function compileCellaChecker(read: CellaRead): Promise<Uint8Array> {
+  const cella = await loadCellaPackages(read)
+  return cella.compile_wasm_library(LIBRARY, EXPORTS)
+}
+
+let packagesLoaded: Promise<typeof import('cella-lang')> | null = null
+/**
+ * 載入 Cella 本體與三個語言套件——**一個行程只做一次**（判決模組與除錯模組共用）。
+ * 回傳的 `cella-lang` 模組已經可以 `compile_wasm_library`。
+ */
+export function loadCellaPackages(read: CellaRead): Promise<typeof import('cella-lang')> {
+  packagesLoaded ??= loadPackagesOnce(read).catch((e: unknown) => { packagesLoaded = null; throw e })
+  return packagesLoaded
+}
+
+async function loadPackagesOnce(read: CellaRead): Promise<typeof import('cella-lang')> {
   const cella = await import('cella-lang')
-  const host = await import('cella-lang/host')
   const bytes = async (pkg: string | null, file: string): Promise<Uint8Array> => await read(pkg, file)
   const text = async (pkg: string, file: string): Promise<string> => new TextDecoder().decode(await bytes(pkg, file))
 
@@ -91,12 +131,19 @@ export async function createCellaVerdict(read: CellaRead): Promise<(program: unk
     }
     loaded.add(name)
   }
-  for (const b of ['c', 'cpp', 'arduino'] as const) await loadPackage(b)
+  for (const b of BRANCHES) await loadPackage(b)
+  return cella
+}
 
-  const lib = await host.loadLibrary(cella.compile_wasm_library(LIBRARY, 'verdict_c,verdict_cpp,verdict_arduino'))
-  return (program, input = '', fuel = 1_000_000) => {
-    const fn = `verdict_${branchOf(program as never)}`
-    const raw = lib.toStr(lib.call(fn, lib.str(JSON.stringify(program)), lib.str(input), lib.nat(fuel)))
-    return JSON.parse(raw) as CellaVerdict
+/** 編好的位元組 → 判決器（不載 Cella 本體）。 */
+export async function checkerFromBytes(bytes: Uint8Array): Promise<CellaChecker> {
+  const host = await import('cella-lang/host')
+  const lib = await host.loadLibrary(bytes)
+  const call = (fn: string, ...args: unknown[]): unknown => JSON.parse(lib.toStr(lib.call(fn, ...(args as never[]))))
+  return {
+    verdict: (program, input = '', fuel = 1_000_000) =>
+      call(`verdict_${branchOf(program as never)}`, lib.str(JSON.stringify(program)), lib.str(input), lib.nat(fuel)) as CellaVerdict,
+    types: (program, candidates = []) =>
+      call(`types_${branchOf(program as never)}`, lib.str(JSON.stringify(program)), lib.str(JSON.stringify(candidates))) as CellaTypes,
   }
 }

@@ -10,7 +10,7 @@
  *
  * ## 怎麼量
  *
- * 從產品入口出發，沿靜態 import、`import('…')`、`import.meta.glob('…')` 走一遍得到「產品可達」的集合；
+ * 從產品入口出發，沿靜態 import、`import('…')`、`import.meta.glob('…')`、worker 入口（`new URL('…', import.meta.url)`）走一遍得到「產品可達」的集合；
  * 每支測試 import 的 `src/` 模組都要在裡面。刻意的例外列在 `ALLOWED`，**每一筆附理由**。
  */
 import { describe, it, expect } from 'vitest'
@@ -29,9 +29,7 @@ const ALLOWED: Record<string, string> = {
   'src/core/component/path-syntax.ts': '階層身分的語法（vision〈分子與粒度切換〉的前置）；投影函式呼叫產品的 idToDir／deriveBlockType，只剩分類這一層是它自己的',
   'src/core/granularity.ts': 'vision〈分子與粒度切換〉的已交付機制，等流程面板的投影接上',
   'src/core/molecule.ts': '同上',
-  'src/providers/cella/formalize/index.ts': '重構階段 4：深嵌入的 formalize，階段 5 接上 Cella 提供者時進產品路徑',
-  'src/providers/cella/formalize/scope.ts': '同上',
-  'src/providers/cella/verdict.ts': '重構階段 5：Cella 的判決入口，接上 Cella 提供者時進產品路徑（spec 180 T010 先拿它量 C18 語料）',
+  // 🟢 2026-10-31（spec 182）：`providers/cella/formalize`、`verdict.ts` 三筆拿掉——Cella 提供者接上了，它們在產品路徑上
 }
 
 const EXT = ['', '.ts', '.tsx', '.json', '/index.ts']
@@ -73,6 +71,12 @@ function importsOf(file: string): string[] {
     if (r) out.push(r)
   }
   for (const m of src.matchAll(/import\.meta\.glob\(\s*['"]([^'"]+)['"]/g)) out.push(...expandGlob(m[1]))
+  // 🔴 Web Worker 的入口（spec 182）：`new Worker(new URL('./worker.ts', import.meta.url))` 不是 import，
+  //    而 worker 帶進來的模組（Cella 的判決、資產、快取）全在產品路徑上——不認得它，那一整支會被判成「走不到」
+  for (const m of src.matchAll(/new\s+URL\(\s*['"]([^'"]+\.ts)['"]\s*,\s*import\.meta\.url/g)) {
+    const r = resolve(file, m[1])
+    if (r) out.push(r)
+  }
   return out
 }
 
@@ -118,7 +122,12 @@ describe('護欄：測試驗的是產品執行的那一份', () => {
   })
 
   it('★ 注入：一個產品走不到的模組必須被抓到', () => {
-    expect(reach.has('src/providers/cella/formalize/index.ts'), '今天 formalize 還沒接進產品——它若變成可達，這支注入要換一個例子').toBe(false)
+    expect(reach.has('src/core/molecule.ts'), '今天分子的切口計算還沒接進產品——它若變成可達，這支注入要換一個例子').toBe(false)
+  })
+
+  it('★ 注入：worker 入口（`new Worker(new URL(…))`）帶進來的模組算走得到', () => {
+    expect(reach.has('src/providers/cella/worker.ts'), 'worker 入口沒被認出來').toBe(true)
+    expect(reach.has('src/providers/cella/verdict.ts'), 'worker 帶進來的模組沒走到').toBe(true)
   })
 
   it('★ 例外名單裡的每一筆都還存在，而且真的走不到（走得到了就該從名單拿掉）', () => {

@@ -94,9 +94,14 @@ import { BlockStyleSelector } from './toolbar/block-style-selector'
 import {} from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
 // 🔴 **組裝點登記語意的提供者**（spec 179）——核心與介面只認能力介面，不認得是誰在跑。
-//    今天只有 JS 直譯器；〈重構〉階段 5 加 Cella（排在前面），階段 6 拿掉這一行與整個 `providers/js-interpreter/`。
-import { registerProvider } from '../core/capabilities'
+//    Cella 排在前面（判決與型別查詢，spec 182）；階段 6 拿掉 JS 直譯器那一行與整個 `providers/js-interpreter/`。
+import { registerProvider, provide, type Provider, type Readiness } from '../core/capabilities'
 import { jsInterpreterProvider } from '../providers/js-interpreter'
+import { createCellaProvider } from '../providers/cella/provider'
+import { toDiagnostics } from '../core/verdict-diagnostics'
+import type { Diagnostic } from '../core/diagnostics'
+// ⚠️ worker 是第一次需要時才建（`warmUp` 或第一次 `check`）——首屏不載 Cella
+registerProvider(createCellaProvider(() => new Worker(new URL('../providers/cella/worker.ts', import.meta.url), { type: 'module' })))
 registerProvider(jsInterpreterProvider)
 // Semantic layer
 // Projection layer
@@ -181,6 +186,15 @@ export class App {
   private currentTarget: Target
   private executionController: ExecutionController | null = null
   private currentTree: SemanticNode | null = null
+  /**
+   * **判決的診斷**（spec 182）——與規則、語法那兩批一起廣播（`runAllDiagnostics` 是全集取代）。
+   * 判決要幾百毫秒到幾秒，所以它住在這裡等下一次廣播，不是自己廣播一次。
+   */
+  private checkDiagnostics: Diagnostic[] = []
+  private checkNotes: string[] = []
+  private checkTimer: ReturnType<typeof setTimeout> | null = null
+  /** 樹 → 交給判決的那一棵（補上骨架積木：自動補的 `#include` 也是程式的一部分）。init 裡由語言套件設定。 */
+  private withScaffold: (tree: SemanticNode) => SemanticNode = (t) => t
   /**
    * 同步的三態。🔴 **來源清單是導出的**——`viewsWith('editable')` 的第一個消費者
    * （在此之前那個宣告有三個宣告者而零個讀取點）。
@@ -1582,8 +1596,8 @@ export class App {
     // Auto-includes are generated transiently by computeAutoIncludes() during code generation
     // but not stored as semantic nodes. This enhancer makes them visible as blocks whenever
     // the user is at a level that shows scaffold (i.e., not L0-only mode).
-    this.syncController.setDisplayTreeEnhancer((tree, _visible, scaffoldVisible) => {
-      if (!scaffoldVisible || !shaping) return tree
+    this.withScaffold = (tree) => {
+      if (!shaping) return tree
       // 🟢 哪些引入要補、以及「引入」是哪一顆元件，都是語言套件的知識
       // 🔴 **命名空間風格要一起交下去**（2026-09-02）：`using namespace std;`
       //    是補丁器寫進程式碼的，而它要不要出現在積木上，看的是同一格風格。
@@ -1595,7 +1609,9 @@ export class App {
         ...tree,
         slots: { ...tree.slots, body: [...includeNodes, ...(tree.slots.body ?? [])] },
       }
-    })
+    }
+    this.syncController.setDisplayTreeEnhancer((tree, _visible, scaffoldVisible) =>
+      scaffoldVisible ? this.withScaffold(tree) : tree)
 
     this.syncController.setTopic(this.currentTopic, this.getVisibleComponents())
 
@@ -1686,7 +1702,28 @@ export class App {
       //
       // > **一個「輸入沒變所以輸出一樣」的重算，不是沒有代價的
       // > ——它會把中間那段時間裡別人放進去的東西一起洗掉。**
-      if (!same) this.runAllDiagnostics()
+      if (!same) {
+        this.runAllDiagnostics()
+        this.scheduleCheck()
+      }
+    })
+    // 這次的執行由誰跑（spec 183）——退回 JS 直譯器時說得出為什麼；給不出覆蓋資料時也說出來
+    const RUNNER: Record<string, string> = { cella: 'Cella', 'js-interpreter': 'JS 直譯器' }
+    this.bus.on('execution:provenance', (e) => {
+      const el = document.getElementById('status-runner')
+      if (!el) return
+      el.dataset.provider = e.provider ?? ''
+      el.textContent = e.provider ? `執行：${RUNNER[e.provider] ?? e.provider}` : ''
+      el.title = e.declined.map((d) => `${RUNNER[d.provider] ?? d.provider} 沒有接：${d.reason}`).join('\n')
+    })
+    this.bus.on('execution:coverage-missing', () => {
+      const el = document.getElementById('status-runner')
+      if (el) el.title = [el.title, '這次沒有覆蓋資料（哪幾塊沒跑到）'].filter(Boolean).join('\n')
+    })
+    // 判決的載入狀態 → 狀態列；載好的那一刻判一次（載入期間的編輯不必重做）
+    provide('verdict').provider?.onReadiness?.((r) => {
+      this.renderCheckStatus(r)
+      if (r.state === 'ready') this.scheduleCheck()
     })
 
     // 8. Setup code→blocks pipeline
@@ -1722,6 +1759,8 @@ export class App {
       {
         // 🔴 **每次執行都問一次**——目標會在執行之間被切換（spec 145）。
         currentBoard: () => this.currentTarget.board as never,
+        // 與判決同一組（`runCheck`）：骨架積木要在樹裡，Cella 才看得到自動補的 `#include`
+        formalContext: (tree) => ({ tree: this.withScaffold(tree), targetId: this.currentTarget.id, styleId: this.currentStylePreset.id, skeletonId: this.currentSkeletonId }),
         bus: this.bus,
         // 🔴 **跑之前先猜一下**（2026-09-04 第四刀）——見 `askPrediction`。
         beforeRun: (tree) => this.askPrediction(elements.consolePanel, tree),
@@ -4384,8 +4423,68 @@ export class App {
       ...runDiagnostics(allBlocks.map(adapt),
         (languagePack(this.currentTopic.language)?.diagnosticRules ?? []) as never),
       ...(this.currentTree ? diagnosticsFromTree(this.currentTree) : []),
+      ...this.checkDiagnostics,
     ]
     for (const v of registeredViews()) v.onDiagnostics?.({ diagnostics })
+  }
+
+  /**
+   * **判決**（spec 182）：樹變了之後等一下（防抖）才送——學生打字時不必每個字都判一次。
+   * 只有宣告了 `verdict` 的提供者才送；沒有的話狀態列說「需要 Cella」（P6：缺了要看得見）。
+   */
+  private scheduleCheck(): void {
+    if (this.checkTimer) clearTimeout(this.checkTimer)
+    const p = provide('verdict').provider
+    if (!p?.check || p.supports?.(this.currentTopic.language) === false) {
+      this.checkDiagnostics = []
+      this.checkNotes = []
+      // 沒有提供者 ⟹ 說出來（P6）；提供者在但不判這個語言 ⟹ 那一格空著（不是缺了什麼，是本來就沒有）
+      this.renderCheckStatus(p ? { state: 'idle' } : { state: 'unavailable', reason: '判斷功能需要 Cella' })
+      return
+    }
+    // 🔴 還沒暖機就不送：`check` 會建 worker、開始載 Cella——首屏不搶頻寬（research R5）。載好時監聽會補判一次
+    if (p.readiness?.().state === 'idle') return
+    this.checkTimer = setTimeout(() => void this.runCheck(p), 600)
+  }
+
+  private async runCheck(p: Provider): Promise<void> {
+    const tree = this.currentTree
+    if (!tree || !p.check) return
+    const stdin = taskById(this.currentLesson, this.currentTaskId)?.check?.stdin ?? []
+    // ⚠️ 骨架積木每次產生都是新的 id——判決與轉換要用【同一棵】
+    const shown = this.withScaffold(tree)
+    const a = await p.check({
+      tree: shown, targetId: this.currentTarget.id, styleId: this.currentStylePreset.id, skeletonId: this.currentSkeletonId,
+      input: stdin.map((l) => `${l}\n`).join(''),
+    })
+    // 送出之後樹又變了 ⟹ 這一筆的節點可能已經不在，丟掉（下一筆會來）
+    if (a.stale || tree !== this.currentTree) return
+    const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: shown, readsInput: a.readsInput, hasStdin: stdin.length > 0 })
+    this.checkDiagnostics = r.diagnostics
+    this.checkNotes = r.notes
+    this.runAllDiagnostics()
+    this.renderCheckStatus(p.readiness?.() ?? { state: 'ready' })
+  }
+
+  /** 狀態列左邊那一格：載入中／幾個問題／無法使用；說明（需要輸入、依 libc++）放在 title。 */
+  private renderCheckStatus(r: Readiness): void {
+    const el = document.getElementById('status-check')
+    if (!el) return
+    const errors = this.checkDiagnostics.filter((d) => d.severity === 'error').length
+    const infos = this.checkDiagnostics.length - errors
+    el.dataset.state = r.state
+    el.textContent =
+      r.state === 'idle' ? '' :
+      r.state === 'loading' ? '判斷：載入中…' :
+      r.state === 'unavailable' ? '判斷：無法使用' :
+      errors > 0 ? `判斷：${errors} 個問題` :
+      infos > 0 ? `判斷：${infos} 處判不出來` : '判斷：沒有發現問題'
+    el.title = [r.state === 'unavailable' ? r.reason : '', ...this.checkNotes].filter(Boolean).join('\n')
+  }
+
+  /** 開始載入判決（`__appReady` 之後、瀏覽器閒置時由 `main.ts` 呼叫）。 */
+  warmUpChecker(): void {
+    provide('verdict').provider?.warmUp?.()
   }
 
   dispose(): void {

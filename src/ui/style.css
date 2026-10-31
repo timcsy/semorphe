@@ -1902,6 +1902,15 @@ html, body {
 }
 
 /*
+ * **判不出來（info）與有錯（error）要分得開**（spec 182，P6：系統能力不足不是學生的錯）。
+ * Blockly 只有一種警告圖示；只有 info 的積木把它換成藍色——與程式碼那側 Monaco 的 Info 波浪同色。
+ * ⚠️ 直接子代：巢狀的子積木各自有自己的圖示。
+ */
+.diag-info > .blocklyWarningIcon > .blocklyIconShape {
+  fill: #3794ff;
+}
+
+/*
  * ─── 迴圈跑了幾次 ───
  *
  * 🔴 **它與「沒跑到」用同一個色系（琥珀），因為它們是同一類東西**：

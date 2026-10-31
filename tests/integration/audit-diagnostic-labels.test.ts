@@ -45,6 +45,7 @@
 import { describe, it, expect } from 'vitest'
 import { cppDiagnosticRules } from '../../src/languages/cpp/diagnostics'
 import { DIAGNOSTIC_CAUSES } from '../../src/core/diagnostics'
+import { VERDICT_RULES } from '../../src/core/verdict-diagnostics'
 import zhTW from '../../src/i18n/zh-TW/blocks.json'
 import en from '../../src/i18n/en/blocks.json'
 
@@ -64,7 +65,7 @@ const LOCALES: Record<string, Record<string, string>> = {
  * ——照條目算會多要 2 份不存在的文案。
  */
 function ruleIdentities(): string[] {
-  return [...new Set([...cppDiagnosticRules.map((r) => r.rule), ...TREE_IDENTITIES])].sort()
+  return [...new Set([...cppDiagnosticRules.map((r) => r.rule), ...TREE_IDENTITIES, ...VERDICT_RULES])].sort()
 }
 
 /**

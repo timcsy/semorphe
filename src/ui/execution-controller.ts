@@ -1,11 +1,9 @@
 import { RUN_MODES } from '../core/host/controls'
 import * as Blockly from 'blockly'
 import type { BoardPinModel } from '../core/types'
-import { provide, SessionStop, type ExecutionSession } from '../core/capabilities'
-import { StepController } from '../core/sync/step-controller'
+import { openSession, SessionStop, type ExecutionSession, type Outcome, type SessionOptions, type Stop } from '../core/capabilities'
 import { DebugToolbar } from './debug-toolbar'
 import type { StepInfo, ExecutionSpeed } from '../core/execution'
-import type { SemanticNode as InterpreterNode } from '../core/types'
 import { showQuickPick } from './toolbar/quick-pick'
 import { msg } from '../core/messages'
 import { showToast } from './toolbar/toast'
@@ -40,24 +38,23 @@ export class ExecutionController {
   private bus: SemanticBus | undefined
   /** 有斷點的節點。由程式碼視圖翻譯後推來——見 `semantic-bus.ts` 的 `execution:breakpoints`。 */
   private breakpointNodes = new Set<string>()
-  private interpreter: ExecutionSession | null = null
-  private stepController: StepController | null = null
+  /** 目前這一次執行（spec 183：DAP 的形狀，宿主下指令）。 */
+  private session: ExecutionSession | null = null
+  private mode: 'run' | 'debug' | 'step' | 'animate' = 'run'
+  /** 自動往下走的間隔（毫秒）；null ＝ 每停一次就等使用者。 */
+  private auto: number | null = null
+  private lastAnimateDelay: number | null = null
+  private pauseRequested = false
+  /** 停著等使用者的下一個指令。 */
+  private commandResolve: ((cmd: 'step' | 'continue' | 'stop') => void) | null = null
+  /** 加速／跳出：還在這一群裡就直接往下走，不停。 */
+  private skipIds: Set<string> | null = null
+  private currentNodeId: string | null = null
   private currentBoard?: () => BoardPinModel | undefined
+  /** 交給形式化提供者（Cella）的那一份——組裝點才知道骨架積木、目標、風格、骨架（spec 183）。 */
+  private formalContext?: (tree: SemanticNode) => SessionOptions['formal']
   private debugToolbar: DebugToolbar
   private runMode: 'run' | 'debug' | 'animate-slow' | 'animate-medium' | 'animate-fast' | 'step' = 'run'
-  private stepRecords: StepInfo[] = []
-  private currentStepIndex = -1
-  private animatePaused = false
-  private animateResolve: (() => void) | null = null
-  /**
-   * **停在一個看不懂的東西上時，那個決定的落點**（2026-08-26）。
-   *
-   * ⚠️ 與 `animateResolve` 分開，因為它要回**答案**不只是「解除暫停」：
-   * `continue` 與 `stop` 都會解除暫停，而直譯器需要知道是哪一個。
-   */
-  private unknownResolve: ((d: 'continue' | 'stop') => void) | null = null
-  private animateSpeed: ExecutionSpeed = 'medium'
-  private animateAccelerateSkipIds: Set<string> | null = null
   private getBlocksDirty: () => boolean
   /** 見建構參數的 `beforeRun`。⚠️ 可省略——沒有它時行為與從前逐字相同。 */
   private beforeRun?: (tree: SemanticNode) => Promise<void>
@@ -114,6 +111,7 @@ export class ExecutionController {
        * 而一個開機時抓一次的值會讓「切了板子」不生效。
        */
       currentBoard?: () => BoardPinModel | undefined
+      formalContext?: (tree: SemanticNode) => SessionOptions['formal']
       /**
        * **開跑之前先問一句**（2026-09-04：預測）——由組裝點注入。
        *
@@ -131,6 +129,7 @@ export class ExecutionController {
   ) {
     this.panels = panels
     this.currentBoard = opts.currentBoard
+    this.formalContext = opts.formalContext
     this.beforeRun = opts.beforeRun
     this.getBlocksDirty = opts.getBlocksDirty
     this.syncBeforeRun = opts.syncBeforeRun
@@ -139,12 +138,15 @@ export class ExecutionController {
     // 翻譯發生在懂「行」的那一端（`monaco-panel.推送斷點`）。
     this.bus?.on('execution:breakpoints', (d) => {
       this.breakpointNodes = new Set(d.nodeIds)
+      this.session?.setBreakpoints(this.breakpointNodes)
     })
     // 🔴 **暫停中改一個變數**（2026-08-26）——「調整完狀態才能繼續」的那個「調整」。
     //    ⚠️ 改不到要說。一個按了沒反應的編輯框，比一個唯讀的更糟。
     this.bus?.on('execution:set-variable', (d) => {
-      const ok = this.interpreter?.setVariable(d.name, d.value) ?? false
-      if (!ok) this.broadcastOutput(describeSetVariableRefused(d.name, d.value) + '\n', 'stderr')
+      void (async () => {
+        const ok = (await this.session?.setVariable(d.name, d.value)) ?? false
+        if (!ok) this.broadcastOutput(describeSetVariableRefused(d.name, d.value) + '\n', 'stderr')
+      })()
     })
     this.debugToolbar = new DebugToolbar()
   }
@@ -216,33 +218,6 @@ export class ExecutionController {
     }
   }
 
-  /**
-   * **向登錄表要一次執行**（spec 179）——控制器不認得是誰在跑。
-   * 沒有任何提供者宣告「執行與除錯」時，照實說出來，不靜默（P6）。
-   */
-  private newSession(): ExecutionSession | null {
-    const { provider, missing } = provide('session')
-    if (!provider?.createSession) {
-      this.broadcastOutput(`沒有可用的執行器（缺：${missing.join('、')}）`, 'stderr')
-      this.broadcastState({ status: 'error' })
-      return null
-    }
-    const session = provider.createSession({ maxSteps: 10_000_000, board: this.currentBoard?.() })
-    session.setUnknownPause((component, nodeId) => this.pauseOnUnknown(component, nodeId))
-    session.setInputProvider(() => this.panels.consolePanel!.promptInput())
-    session.onOutput((text: string) => {
-      this.broadcastOutput(text, 'stdout')
-    })
-    session.onWaiting((nodeId) => {
-      // Switch to console tab so the input field is visible
-      this.panels.bottomPanel?.showTab('console')
-      this.broadcastState({ status: 'running', reason: 'awaiting-input' })
-      // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
-      this.broadcastAtNode(nodeId, true)
-    })
-    return session
-  }
-
   getDebugToolbar(): DebugToolbar {
     return this.debugToolbar
   }
@@ -292,12 +267,7 @@ export class ExecutionController {
     })
 
     this.panels.consolePanel?.onSignal((signal) => {
-      if (signal === 'SIGINT') {
-        this.interpreter?.abort()
-        if (this.stepController?.getStatus() === 'stepping' || this.stepController?.getStatus() === 'paused') {
-          this.handleStop()
-        }
-      }
+      if (signal === 'SIGINT' && this.session) this.handleStop()
     })
 
     this.debugToolbar.onAction((action) => {
@@ -305,45 +275,18 @@ export class ExecutionController {
         // ⚠️ 這是 `DebugAction`（繼續執行），不是元件身分 `lang:continue`
         case 'continue':
           // 🔴 停在「看不懂的東西」上時，`繼續` 的意思是
-          //    「我看過狀態了，也改過了，那一行就讓它不執行」——
-          //    **而它與當年的 `'skip'` 的差別就在這一句的前半**。
-          if (this.unknownResolve) {
-            const r = this.unknownResolve
-            this.unknownResolve = null
-            this.debugToolbar.setMode('running')
-            this.broadcastState({ status: 'running' })
-            r('continue')
-            break
-          }
-          if (this.animatePaused && this.animateResolve) {
-            this.animatePaused = false
-            this.debugToolbar.setMode('running')
-            this.broadcastState({ status: 'running' })
-            this.animateResolve()
-          } else if (this.stepController) {
-            this.stepController.resume()
-            this.debugToolbar.setMode('running')
-            this.broadcastState({ status: 'running' })
-          }
-          // If interpreter is running but no animateResolve (e.g., waiting for input), ignore
+          //    「我看過狀態了，也改過了，那一行就讓它不執行」——驅動在那個停點收到它
+          this.command('continue')
           break
         case 'pause':
-          if (this.animateResolve === null && this.interpreter) {
-            this.animatePaused = true
-          } else {
-            this.handlePause()
-          }
+          // 自動往下走（動畫、連續單步）→ 下一步停；執行模式跑在 session 裡 → 請它停
+          if (this.auto !== null) this.pauseRequested = true
+          else this.session?.pause()
           this.debugToolbar.setMode('paused')
           break
         case 'step':
-          if (this.animatePaused && this.animateResolve) {
-            this.animatePaused = true
-            this.animateResolve()
-          } else if (!this.interpreter) {
-            // Only start new step execution if no interpreter is already running
-            this.handleStep()
-          }
-          // If interpreter is running but no animateResolve (e.g., waiting for input), ignore
+          if (this.session) this.command('step')
+          else void this.start('step')
           break
         case 'step-out':
           this.handleStepOut()
@@ -352,284 +295,231 @@ export class ExecutionController {
           this.handleAccelerate()
           break
         case 'stop':
-          if (this.unknownResolve) {
-            const r = this.unknownResolve
-            this.unknownResolve = null
-            r('stop')
-          }
-          if (this.animateResolve) {
-            const resolve = this.animateResolve
-            this.animateResolve = null
-            resolve()
-          }
-          this.interpreter?.abort()
           this.handleStop()
           break
       }
     })
   }
 
-  private async handleRun(): Promise<void> {
+  /**
+   * **開一次執行**（spec 183）——向登錄表要 `session`，Cella 不接（翻不出來、還沒就緒）就往下找，
+   * 而「是誰跑的、前面誰不接、為什麼」都廣播出去（P6：退回要看得見）。
+   */
+  private async start(mode: 'run' | 'debug' | 'step' | 'animate', speed: ExecutionSpeed = 'medium'): Promise<void> {
     if (this.getBlocksDirty() && (await this.askSyncBeforeRun())) this.syncBeforeRun()
-
-    // Execution is a projection of the canonical semantic tree — not biased to any view
     const tree = this.panels.syncController?.getCurrentTree()
     if (!tree) return
     if (this.refuseIfBroken(tree)) return
-
-    // 🔴 **問在這裡，不在按鈕上**：要等到樹是同步過的、而且是跑得動的，
-    //    才值得佔用使用者一次注意力。壞掉的程式不該先問他猜什麼。
-    //    ⚠️ 而它在 `resetExecution()`【之前】——後者會清主控台。
-    await this.beforeRun?.(tree)
+    if (mode === 'run') await this.beforeRun?.(tree)
 
     this.resetExecution()
-    this.interpreter = this.newSession()
-    if (!this.interpreter) return
-
-    // Breakpoint support in run mode: pause on breakpoint, then allow stepping
-    this.animatePaused = false
-    this.animateResolve = null
-    this.stepRecords = []
-    this.currentStepIndex = -1
-    this.interpreter.setRecordSteps(true)
-    this.interpreter.onStepRecord(async (step: StepInfo) => {
-      this.stepRecords.push(step)
-      this.currentStepIndex = this.stepRecords.length - 1
-
-      // If already in stepping mode (user clicked "step" from breakpoint), pause every step
-      let shouldPause = this.animatePaused
-
-      // Check breakpoints
-      if (!shouldPause && step.nodeId && this.breakpointNodes.has(step.nodeId)) {
-        shouldPause = true
-        this.broadcastState({ status: 'paused', reason: 'breakpoint' })
-      }
-
-      if (shouldPause) {
-        this.displayStep(this.currentStepIndex)
-        this.animatePaused = true
-        this.debugToolbar.setMode('paused')
-        this.panels.bottomPanel?.showTab('variables')
-        await new Promise<void>(resolve => { this.animateResolve = resolve })
-        this.animateResolve = null
-      }
-    })
-
-    this.showExecButtons(true, 'running')
+    this.mode = mode
+    this.auto = mode === 'animate' ? ExecutionController.ANIMATE_DELAY[speed] : null
     this.panels.consolePanel?.clear()
+    // 執行與除錯都是跑到中斷點；單步與動畫停在第一步
+    this.panels.bottomPanel?.showTab(mode === 'run' ? 'console' : 'variables')
+    this.showExecButtons(true, mode === 'step' ? 'stepping' : 'running')
     this.broadcastState({ status: 'running' })
-    this.panels.bottomPanel?.showTab('console')
 
-    try {
-      await this.interpreter.run(tree as unknown as InterpreterNode)
-      this.clearHighlights()
-      this.reportInterventions()
-      // 🔴 **跑完之後，「到過誰」是一份回饋**（2026-09-04）——
-      //    初學者的 bug 壓倒性是「這一段從來沒跑到」，而執行器已經知道答案了。
-      //    ⚠️ 廣播的是**到過的**，不是「沒到過的」：誰算「應該要到」是視圖的知識
-      //    （它要排掉骨架、排掉還沒同步的積木），執行器不該認得那些。
-      //    🔴 而**次數**（2026-09-04 第三刀）走同一條線：初學者的另一種 bug 是
-      //    「跑的次數不對」（差一錯誤），而執行器一樣已經知道答案了。
-      this.broadcastCoverage(this.interpreter.visitCounts())
-      this.broadcastState({ status: 'completed' })
-      showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
-    } catch (e) {
-      if (e instanceof SessionStop) {
-        if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
-          this.broadcastState({ status: 'idle', reason: 'aborted' })
-        } else {
-          this.broadcastOutput(describeRuntimeStop(e.i18nKey, e.params), 'stderr')
-          this.broadcastState({ status: 'error' })
-          showToast(Blockly.Msg['TOAST_EXEC_ERROR'] || 'Execution error', 'error')
-        }
-      } else {
-        this.broadcastOutput(String(e), 'stderr')
-        this.broadcastState({ status: 'error' })
-      }
-    } finally {
-      this.showExecButtons(false)
-    }
-  }
-
-  private async handleStep(): Promise<void> {
-    if (this.stepController?.getStatus() === 'stepping' || this.stepController?.getStatus() === 'paused') {
-      this.stepController.step()
-      return
-    }
-
-    if (this.getBlocksDirty() && (await this.askSyncBeforeRun())) this.syncBeforeRun()
-
-    // Execution is a projection of the canonical semantic tree — not biased to any view
-    const tree = this.panels.syncController?.getCurrentTree()
-    if (!tree) return
-    if (this.refuseIfBroken(tree)) return
-
-    this.resetExecution()
-    this.interpreter = this.newSession()
-    if (!this.interpreter) return
-    this.panels.consolePanel?.clear()
-    this.panels.bottomPanel?.showTab('variables')
-    this.showExecButtons(true, 'stepping')
-
-    try {
-      this.stepRecords = await this.interpreter.runWithSteps(tree as unknown as InterpreterNode)
-    } catch (e) {
-      if (e instanceof SessionStop) {
-        this.broadcastOutput(describeRuntimeStop(e.i18nKey, e.params), 'stderr')
+    const options = { maxSteps: 10_000_000, board: this.currentBoard?.(), formal: this.formalContext?.(tree) }
+    const declined: { provider: string; reason: string }[] = []
+    const tried = new Set<string>()
+    for (;;) {
+      const opened = openSession(options, tree, tried)
+      declined.push(...opened.declined)
+      if (!opened.session) {
+        this.broadcastOutput(`沒有可用的執行器（缺：${opened.missing.join('、')}）`, 'stderr')
         this.broadcastState({ status: 'error' })
         this.showExecButtons(false)
         return
       }
-    }
-
-    this.currentStepIndex = -1
-    this.stepController = new StepController()
-
-    const speedSelect = document.getElementById('speed-select') as HTMLSelectElement | null
-    if (speedSelect) {
-      this.stepController.setSpeed(speedSelect.value as ExecutionSpeed)
-    }
-
-    this.stepController.setStepFn(() => {
-      this.currentStepIndex++
-      return this.currentStepIndex < this.stepRecords.length - 1
-    })
-
-    this.stepController.onStep(() => {
-      this.displayStep(this.currentStepIndex)
-
-      const step = this.stepRecords[this.currentStepIndex]
-      if (step?.nodeId) {
-        if (this.breakpointNodes.has(step.nodeId) && this.stepController?.getStatus() === 'running') {
-          this.stepController.pause()
-          this.broadcastState({ status: 'paused', reason: 'breakpoint' })
-          this.debugToolbar.setMode('paused')
-        }
+      const session = opened.session
+      this.session = session
+      session.onOutput((text: string) => this.broadcastOutput(text, 'stdout'))
+      session.setBreakpoints(this.breakpointNodes)
+      const first = await session.launch(tree, { stopOnEntry: mode === 'step' || mode === 'animate' })
+      if (this.session !== session) return
+      // 開跑時才發現跑不了（一步也沒有執行）⟹ 換下一個，並記下原因（P6：退回要看得見）
+      if (first.kind === 'declined') {
+        declined.push({ provider: opened.provenance ?? '', reason: first.reason })
+        tried.add(opened.provenance ?? '')
+        continue
       }
-    })
-
-    this.stepController.onStop(() => {
-      this.clearHighlights()
-      this.panels.variablePanel?.clear()
-      this.showExecButtons(false)
-    })
-
-    this.broadcastState({ status: 'running' })
-    this.stepController.step()
+      this.bus?.emit('execution:provenance', { provider: opened.provenance, declined })
+      await this.drive(session, Promise.resolve(first))
+      return
+    }
   }
 
-  private handlePause(): void {
-    if (this.stepController?.getStatus() === 'running') {
-      this.stepController.pause()
-      this.broadcastState({ status: 'paused' })
-      this.debugToolbar.setMode('paused')
+  /**
+   * **一個驅動迴圈**——拿到一個結果，決定下一個指令。
+   *
+   * 🔴 在此之前是三套（執行、先錄完整條軌跡再重播的單步、動畫），各自掛一個「每一步回呼」。
+   *    介面換成 DAP 的形狀之後（宿主下指令），三種模式只差在「停下來之後誰決定下一步」：
+   *
+   * ```
+   * 執行     continue 到中斷點；停了等使用者
+   * 單步     stepIn 一次；停了等使用者（「繼續」＝照速度自動往下走）
+   * 動畫     stepIn 一次、等一下、再 stepIn——碰到中斷點或「暫停」就等使用者
+   * ```
+   */
+  private async drive(session: ExecutionSession, first: Promise<Outcome>): Promise<void> {
+    let outcome = await first
+    try {
+      for (;;) {
+        if (this.session !== session) return            // 停止了，或已經開了下一次
+        if (outcome.kind === 'ended') return this.finish(session)
+        if (outcome.kind === 'failed') return this.fail(outcome.error)
+        if (outcome.kind === 'declined') return this.fail(new SessionStop('runtime', 'RUNTIME_ERR_FALLBACK', {}))
+        const stop = outcome.stop
+
+        if (stop.reason === 'awaiting-input') {
+          // 等輸入時一定跟著看——使用者正要打字，得知道停在哪
+          this.panels.bottomPanel?.showTab('console')
+          this.broadcastState({ status: 'running', reason: 'awaiting-input' })
+          this.broadcastAtNode(stop.nodeId, true)
+          const line = await this.panels.consolePanel!.promptInput()
+          if (this.session !== session) return
+          outcome = await (line === '\x04' ? session.closeInput() : session.supplyInput(line))
+          continue
+        }
+
+        if (stop.reason === 'unknown-component') {
+          const component = stop.detail?.component ?? ''
+          this.broadcastOutput(describeUnknownPause(component) + '\n', 'stderr')
+          this.showStop(session, stop, 'unknown-component')
+          const next = await this.waitForCommand()
+          if (this.session !== session) return
+          if (next === 'continue' || next === 'step') this.broadcastOutput(describeUnknownContinued(component) + '\n', 'stderr')
+          outcome = await this.issue(session, next)
+          continue
+        }
+
+        // 加速／跳出：還在要跳過的那一群裡就直接往下走
+        if (this.skipIds && stop.nodeId && this.skipIds.has(stop.nodeId)) { outcome = await session.stepIn(); continue }
+        this.skipIds = null
+
+        // 自動往下走（動畫、單步模式按了「繼續」）時，中斷點要由這裡認——session 在 stepIn 時回的原因是 step
+        const atBreakpoint = stop.reason === 'breakpoint' || (stop.nodeId !== null && this.breakpointNodes.has(stop.nodeId) && this.auto !== null)
+        if (this.auto !== null && !atBreakpoint && !this.pauseRequested && stop.reason !== 'pause') {
+          this.showStop(session, stop)
+          if (this.auto > 0) await new Promise((r) => setTimeout(r, this.auto ?? 0))
+          if (this.session !== session) return
+          if (this.auto !== null && !this.pauseRequested) { outcome = await session.stepIn(); continue }
+        }
+
+        // 停下來等使用者
+        this.pauseRequested = false
+        this.auto = null
+        this.showStop(session, stop, atBreakpoint ? 'breakpoint' : undefined)
+        const next = await this.waitForCommand()
+        if (this.session !== session) return
+        outcome = await this.issue(session, next)
+      }
+    } finally {
+      if (this.session === session && outcome.kind !== 'stopped') this.session = null
     }
+  }
+
+  /** 停下的那一刻：哪一塊亮、變數面板有什麼、工具列是什麼樣子（`experience`〈一個「暫停」如果沒有把狀態一起帶出來〉）。 */
+  private showStop(session: ExecutionSession, stop: Stop, reason?: ExecutionReason): void {
+    const step: StepInfo = { node: null as never, nodeId: stop.nodeId ?? '', sourceRange: null, outputLength: 0, scopeSnapshot: session.variables() }
+    this.broadcastState({ status: 'paused', ...(reason ? { reason } : {}), step })
+    this.broadcastAtNode(stop.nodeId, this.debugToolbar.isAutoScrollEnabled() ?? false)
+    this.currentNodeId = stop.nodeId
+    if (this.auto === null) {
+      this.debugToolbar.show('paused')
+      this.panels.bottomPanel?.showTab('variables')
+    }
+  }
+
+  private waitForCommand(): Promise<'step' | 'continue' | 'stop'> {
+    return new Promise((resolve) => { this.commandResolve = resolve })
+  }
+
+  /** 使用者的指令 → session 的指令。單步／動畫模式的「繼續」是照速度自動往下走，執行模式是跑到下一個中斷點。 */
+  private issue(session: ExecutionSession, cmd: 'step' | 'continue' | 'stop'): Promise<Outcome> {
+    if (cmd === 'stop') { session.terminate(); return session.continue() }
+    this.debugToolbar.setMode('running')
+    this.broadcastState({ status: 'running' })
+    if (cmd === 'step') return session.stepIn()
+    if (this.mode === 'run' || this.mode === 'debug') return session.continue()
+    this.auto = this.mode === 'animate' ? (this.lastAnimateDelay ?? 300) : (ExecutionController.ANIMATE_DELAY[this.stepSpeed()] ?? 0)
+    return session.stepIn()
+  }
+
+  private stepSpeed(): ExecutionSpeed {
+    const v = (document.getElementById('speed-select') as HTMLSelectElement | null)?.value
+    return v === 'slow' || v === 'fast' || v === 'instant' ? v as ExecutionSpeed : 'medium'
+  }
+
+  private command(cmd: 'step' | 'continue' | 'stop'): void {
+    const r = this.commandResolve
+    this.commandResolve = null
+    if (r) r(cmd)
+  }
+
+  private finish(session: ExecutionSession): void {
+    this.clearHighlights()
+    this.reportInterventions(session)
+    const counts = session.coverage()
+    if (counts) this.broadcastCoverage(counts)
+    // 給不出覆蓋資料 ⟹ 說出來，不留一片「好像全部都跑到了」的空白（spec 183 R2）
+    else this.bus?.emit('execution:coverage-missing', {})
+    this.broadcastState({ status: 'completed' })
+    if (this.mode === 'run') showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
+    this.session = null
+    this.showExecButtons(false)
+  }
+
+  private fail(e: SessionStop): void {
+    this.clearHighlights()
+    if (e.kind === 'aborted') {
+      this.broadcastState({ status: 'idle', reason: 'aborted' })
+    } else {
+      this.broadcastOutput(describeRuntimeStop(e.i18nKey, e.params), 'stderr')
+      if (e.nodeId) this.broadcastAtNode(e.nodeId, true)
+      this.broadcastState({ status: 'error' })
+      if (this.mode === 'run') showToast(Blockly.Msg['TOAST_EXEC_ERROR'] || 'Execution error', 'error')
+    }
+    this.session = null
+    this.showExecButtons(false)
   }
 
   private handleStepOut(): void {
-    if (!this.stepController || !this.stepRecords.length) return
-    const status = this.stepController.getStatus()
-    if (status !== 'stepping' && status !== 'paused') return
-
-    const currentNodeId = this.stepRecords[this.currentStepIndex]?.nodeId
-    if (!currentNodeId) {
-      this.stepController.step()
-      return
-    }
-
-    while (this.currentStepIndex < this.stepRecords.length - 1) {
-      const nextStep = this.stepRecords[this.currentStepIndex + 1]
-      if (nextStep?.nodeId !== currentNodeId) break
-      this.currentStepIndex++
-    }
-    this.stepController.step()
+    // 「跳過這一顆的重複」：還停在同一顆時繼續往下（迴圈裡同一句的下一次）
+    if (!this.session || !this.currentNodeId) return this.command('step')
+    this.skipIds = new Set([this.currentNodeId])
+    this.command('step')
   }
 
   private handleAccelerate(): void {
-    const currentNodeId = this.stepRecords[this.currentStepIndex]?.nodeId
-    if (!currentNodeId) return
-    if (this.interpreter && !this.stepController) {
-      const level = this.debugToolbar.getAccelerateLevel() ?? 1
-      // ⚠️ 這一句取代了四步積木 API（`getBlockById`／`getSurroundParent`／
-      // `getChildren`／`getBlockMappings`）。執行器問的是一個**語義問題**
-      // ——「跳過哪些節點」——而它原本得走進積木的座標系才問得出來。
-      const skip = this.panels.blocklyPanel?.nodesInAncestorScope(currentNodeId, level) ?? [currentNodeId]
-      this.animateAccelerateSkipIds = new Set(skip)
-
-      if (this.animatePaused && this.animateResolve) {
-        this.animatePaused = false
-        this.debugToolbar.setMode('running')
-        this.animateResolve()
-      }
-      return
-    }
-
-    if (!this.stepController || !this.stepRecords.length) return
-    const status = this.stepController.getStatus()
-    if (status === 'completed' || status === 'idle') return
-
-    const wasRunning = status === 'running'
-    if (wasRunning) this.stepController.pause()
-
+    if (!this.session || !this.currentNodeId) return
     const level = this.debugToolbar.getAccelerateLevel() ?? 1
-
-    if (level <= 1) {
-      while (this.currentStepIndex < this.stepRecords.length - 1) {
-        const nextStep = this.stepRecords[this.currentStepIndex + 1]
-        if (nextStep?.nodeId !== currentNodeId) break
-        this.currentStepIndex++
-      }
-    } else {
-      // ⚠️ 這是上面那段的**第二份逐字拷貝**（動畫路徑一份、逐步路徑一份）。
-      // 兩份一起換掉——而它們是同一段積木知識，換完之後這裡不再有第二份。
-      const skipNodeIds = new Set(this.panels.blocklyPanel?.nodesInAncestorScope(currentNodeId, level) ?? [])
-      while (this.currentStepIndex < this.stepRecords.length - 1) {
-        const nextStep = this.stepRecords[this.currentStepIndex + 1]
-        if (!nextStep?.nodeId || !skipNodeIds.has(nextStep.nodeId)) break
-        this.currentStepIndex++
-      }
-    }
-    this.displayStep(this.currentStepIndex)
-    if (wasRunning) {
-      this.stepController.resume()
-    } else {
-      this.stepController.step()
-    }
+    this.skipIds = new Set(level <= 1 ? [this.currentNodeId] : this.panels.blocklyPanel?.nodesInAncestorScope(this.currentNodeId, level) ?? [this.currentNodeId])
+    if (this.commandResolve) this.command('step')
   }
 
   handleStop(): void {
-    this.stepController?.stop()
+    const s = this.session
+    this.session = null
+    s?.terminate()
+    this.command('stop')
     this.clearHighlights()
     this.panels.variablePanel?.clear()
     this.broadcastState({ status: 'idle' })
     this.showExecButtons(false)
   }
 
-  private displayStep(index: number): void {
-    if (index < 0 || index >= this.stepRecords.length) return
-    const step = this.stepRecords[index]
-
-    // broadcastState，不是命令——誰想看變數，自己登錄成視圖（`core/sync/view-registry.ts`）。
-    // ⚠️ 沒有 bus 時退回直接呼叫：這個類別在測試裡被建構時不一定有匯流排，
-    // 而**讓變數面板在某些情境安靜地不更新**比多留一行退路糟得多。
-    this.broadcastState({ status: 'paused', step })
-    this.panels.bottomPanel?.showTab('variables')
-
-    this.broadcastAtNode(step.nodeId ?? null, this.debugToolbar.isAutoScrollEnabled() ?? false)
-
-    if (this.stepController?.getStatus() === 'completed') {
-      this.reportInterventions()
-      this.broadcastState({ status: 'completed' })
-      this.showExecButtons(false)
-    }
-  }
-
   private resetExecution(): void {
-    this.interpreter = null
-    this.stepController?.stop()
-    this.stepController = null
-    this.stepRecords = []
-    this.currentStepIndex = -1
+    const s = this.session
+    this.session = null
+    s?.terminate()
+    this.command('stop')
+    this.auto = null
+    this.skipIds = null
+    this.pauseRequested = false
+    this.currentNodeId = null
     this.clearHighlights()
   }
 
@@ -662,110 +552,31 @@ export class ExecutionController {
   private executeWithCurrentMode(): void {
     switch (this.runMode) {
       case 'run':
-        this.handleRun()
+        void this.start('run')
         break
       case 'debug':
+        // 除錯＝跑到中斷點，停下時看變數（沒有中斷點就跑完）
+        if (this.session && this.commandResolve) this.command('continue')
+        else void this.start('debug')
+        break
       case 'step':
-        this.handleStep()
+        // 已經停著 ⟹ 走一步；否則開一次、停在第一步
+        if (this.session && this.commandResolve) this.command('step')
+        else void this.start('step')
         break
       case 'animate-slow':
       case 'animate-medium':
       case 'animate-fast': {
-        const speedMap = { 'animate-slow': 'slow', 'animate-medium': 'medium', 'animate-fast': 'fast' } as const
-        this.handleAnimate(speedMap[this.runMode])
+        const speed = ({ 'animate-slow': 'slow', 'animate-medium': 'medium', 'animate-fast': 'fast' } as const)[this.runMode]
+        this.lastAnimateDelay = ExecutionController.ANIMATE_DELAY[speed]
+        // 動畫停著 ⟹ 照新速度繼續走
+        if (this.session && this.commandResolve && this.mode === 'animate') this.command('continue')
+        else void this.start('animate', speed)
         break
       }
     }
   }
 
-  private async handleAnimate(speed: ExecutionSpeed): Promise<void> {
-    if (this.animatePaused && this.animateResolve) {
-      this.animatePaused = false
-      this.animateSpeed = speed
-      this.debugToolbar.setMode('running')
-      this.broadcastState({ status: 'running' })
-      this.animateResolve()
-      return
-    }
-
-    if (this.getBlocksDirty() && (await this.askSyncBeforeRun())) this.syncBeforeRun()
-
-    // Execution is a projection of the canonical semantic tree — not biased to any view
-    const tree = this.panels.syncController?.getCurrentTree()
-    if (!tree) return
-    if (this.refuseIfBroken(tree)) return
-
-    this.resetExecution()
-    this.animatePaused = false
-    this.animateResolve = null
-    this.animateSpeed = speed
-    this.animateAccelerateSkipIds = null
-
-    this.interpreter = this.newSession()
-    if (!this.interpreter) return
-
-    this.stepRecords = []
-    this.currentStepIndex = -1
-    this.interpreter.setRecordSteps(true)
-    this.interpreter.onStepRecord(async (step: StepInfo) => {
-      this.stepRecords.push(step)
-      this.currentStepIndex = this.stepRecords.length - 1
-
-      if (this.animateAccelerateSkipIds && step.nodeId && this.animateAccelerateSkipIds.has(step.nodeId)) {
-        return
-      }
-      this.animateAccelerateSkipIds = null
-
-      this.displayStep(this.currentStepIndex)
-
-      let shouldPause = this.animatePaused
-      if (!shouldPause && step.nodeId) {
-        if (this.breakpointNodes.has(step.nodeId)) {
-          shouldPause = true
-          this.broadcastState({ status: 'paused', reason: 'breakpoint' })
-        }
-      }
-
-      if (shouldPause) {
-        this.animatePaused = true
-        this.debugToolbar.setMode('paused')
-        await new Promise<void>(resolve => { this.animateResolve = resolve })
-        this.animateResolve = null
-        return
-      }
-
-      const delay = ExecutionController.ANIMATE_DELAY[this.animateSpeed]
-      if (delay > 0) {
-        await new Promise(resolve => setTimeout(resolve, delay))
-      }
-    })
-
-    this.panels.consolePanel?.clear()
-    this.panels.bottomPanel?.showTab('variables')
-    this.showExecButtons(true, 'running')
-    this.broadcastState({ status: 'running' })
-
-    try {
-      await this.interpreter.run(tree as unknown as InterpreterNode)
-      this.reportInterventions()
-      this.broadcastState({ status: 'completed' })
-    } catch (e) {
-      if (e instanceof SessionStop) {
-        if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
-          this.broadcastState({ status: 'idle', reason: 'aborted' })
-        } else {
-          this.broadcastOutput(describeRuntimeStop(e.i18nKey, e.params), 'stderr')
-          this.broadcastState({ status: 'error' })
-        }
-      } else {
-        this.broadcastOutput(String(e), 'stderr')
-        this.broadcastState({ status: 'error' })
-      }
-    } finally {
-      this.clearHighlights()
-      this.showExecButtons(false)
-    }
-  }
 
   private updateRunButtonLabel(): void {
     const btn = document.getElementById('run-btn')
@@ -850,8 +661,8 @@ export class ExecutionController {
    * （`setReplayInputs`，第七十六條護欄在守），而**觸發它的動作是新的 UI**，
    * 那是另一刀。這裡先讓那份紀錄**看得見**。
    */
-  private reportInterventions(): void {
-    const inputs = this.interpreter?.recordedInputs() ?? []
+  private reportInterventions(session: ExecutionSession): void {
+    const inputs = session.recordedInputs()
     const edits = inputs.filter((i) => i.kind === 'set-variable').length
     if (edits === 0) return
     this.broadcastOutput(describeInterventions(edits) + '\n', 'stderr')
@@ -898,35 +709,6 @@ export class ExecutionController {
         (picked) => resolve(picked?.[0] === 'sync'),
       )
     })
-  }
-
-  private async pauseOnUnknown(component: string, nodeId: string | null): Promise<'continue' | 'stop'> {
-    this.broadcastOutput(describeUnknownPause(component) + '\n', 'stderr')
-    this.broadcastAtNode(nodeId, true)
-    // 🔴 **帶著變數快照一起廣播**——暫停不是一個 step，所以沒有人會替它送快照。
-    //    實測：少了這一格，工具列出來了、積木亮了，**而變數面板是空的**。
-    this.broadcastState({
-      status: 'paused',
-      reason: 'unknown-component',
-      step: {
-        node: null as never,
-        nodeId: nodeId ?? '',
-        sourceRange: null,
-        outputLength: 0,
-        scopeSnapshot: this.interpreter?.scope() ?? [],
-      },
-    })
-    this.debugToolbar.show('paused')
-    this.panels.bottomPanel?.showTab('variables')
-    const decision = await new Promise<'continue' | 'stop'>((resolve) => {
-      this.unknownResolve = resolve
-    })
-    if (decision === 'continue') {
-      // 🔴 **繼續了要留下痕跡**——`principles.md:135`：降級必須**可見**。
-      //    少了這一行，輸出看起來就像那一行真的跑過了。
-      this.broadcastOutput(describeUnknownContinued(component) + '\n', 'stderr')
-    }
-    return decision
   }
 
   private refuseIfBroken(tree: unknown): boolean {

@@ -883,7 +883,9 @@ class SemorpheSession {
       const diag = new vscode.Diagnostic(
         new vscode.Range(d.startLine, d.startColumn, endLine, endColumn),
         d.message,
-        d.severity === 'error' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning,
+        d.severity === 'error' ? vscode.DiagnosticSeverity.Error
+          : d.severity === 'info' ? vscode.DiagnosticSeverity.Information   // spec 182：判不出來不是錯
+          : vscode.DiagnosticSeverity.Warning,
       )
       // 🔴 具名來源——Problems 上會顯示 `semorphe`，而**使用者要分得出
       //    這一條是誰報的**（同一個檔可能同時有 C/C++ 擴充的診斷）。

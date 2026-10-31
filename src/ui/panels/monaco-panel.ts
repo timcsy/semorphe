@@ -245,7 +245,7 @@ export class MonacoPanel implements ViewHost, CodeView {
       const at = d.at
       markers.push(at
         ? {
-            severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
+            severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : d.severity === 'info' ? monaco.MarkerSeverity.Info : monaco.MarkerSeverity.Warning,
             message: this.diagnosticMessage(d),
             startLineNumber: at.line + 1,
             startColumn: at.column + 1,
@@ -253,7 +253,7 @@ export class MonacoPanel implements ViewHost, CodeView {
             endColumn: Math.max(at.column + 2, model.getLineMaxColumn(at.line + 1)),
           }
         : {
-            severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
+            severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : d.severity === 'info' ? monaco.MarkerSeverity.Info : monaco.MarkerSeverity.Warning,
             message: this.diagnosticMessage(d),
             startLineNumber: startLine,
             startColumn: 1,

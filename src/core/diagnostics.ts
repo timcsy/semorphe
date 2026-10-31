@@ -51,7 +51,11 @@ export interface Diagnostic {
    * （波浪會畫**整行甚至整個函式**，比不標更糟）。
    */
   at?: { line: number; column: number }
-  severity: 'warning' | 'error'
+  /**
+   * ⚠️ `'info'` 加入日 2026-10-31（spec 182）：**判不出來**（Cella 的 unknown——尚未支援的構造、標準允許不同結果、步數用盡）。
+   * 它刻意**不長得像錯誤**：那是「我們還判不出來」，不是學生的錯（P6：必須區分原因）。
+   */
+  severity: 'warning' | 'error' | 'info'
   /**
    * **是哪一條規則**——身分，不是訊息。
    *
@@ -86,12 +90,15 @@ export interface Diagnostic {
    *
    * ⚠️ **只放今天真的有產出端的值**。`compiler`（委派編譯器）與
    * `runtime`（執行期觀察）都還沒有產出端——constitution I：不為假設性未來預留。
+   *
+   * 🔴 2026-10-31（spec 182）：`cella` 加入——**這就是那個「委派的判定者」的第一個產出端**
+   *    （Cella 的判決與型別查詢，見 `core/verdict-diagnostics.ts`）。
    */
   source: DiagnosticSource
 }
 
 /** 診斷的判定來源。⚠️ 字面聯集而非列舉物件——加一個值就是改一行，而 tsc 會指出所有比對處。 */
-export type DiagnosticSource = 'component' | 'parser'
+export type DiagnosticSource = 'component' | 'parser' | 'cella'
 
 /**
  * **走哪一條通道**——而這兩個集合必須剛好把 `DegradationCause` 分完。
