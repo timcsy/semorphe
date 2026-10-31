@@ -20,7 +20,8 @@
     "execute": "./execute.ts",
     "liftStrategy": "./lift-strategy.ts",
     "lift": null,
-    "_lift_why": "辨識由同層的 `lift-strategy.ts` 提供。"
+    "_lift_why": "辨識由同層的 `lift-strategy.ts` 提供。",
+    "formalize": "./formalize.ts"
   },
   "annotations": {
     "control_flow": "sequence"

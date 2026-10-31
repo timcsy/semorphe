@@ -20,7 +20,8 @@
     "generate": "./generate.ts",
     "execute": null,
     "lift": "./lift.ts",
-    "_execute_why": "🔴 **顯式宣告「這一路刻意沒有」，而不是留一個空函式。**\n\n真板子上 `dht.begin()` 設定腳位模式與時序，而模擬裡**沒有那個裝置**——沒有狀態可以記，也沒有任何可觀察的效果。\n\n⚠️ 第一版寫了一個空的執行器，而完備性護欄當場把它判成**殼**。那是對的：\n\n> **顯式的空與遺漏的空要分得出來，而一個 noop 函式兩者長得一樣。**\n\n🟢 而 `skipPaths` 在這裡是**安全的**：直譯器對宣告過的跳過是靜默 return（`interpreter.ts` 的 `isSkipped`），不會撞上未知概念而中止——⚠️ 那對 `role: statement` 成立，對運算式不成立。這顆是 statement。"
+    "_execute_why": "🔴 **顯式宣告「這一路刻意沒有」，而不是留一個空函式。**\n\n真板子上 `dht.begin()` 設定腳位模式與時序，而模擬裡**沒有那個裝置**——沒有狀態可以記，也沒有任何可觀察的效果。\n\n⚠️ 第一版寫了一個空的執行器，而完備性護欄當場把它判成**殼**。那是對的：\n\n> **顯式的空與遺漏的空要分得出來，而一個 noop 函式兩者長得一樣。**\n\n🟢 而 `skipPaths` 在這裡是**安全的**：直譯器對宣告過的跳過是靜默 return（`interpreter.ts` 的 `isSkipped`），不會撞上未知概念而中止——⚠️ 那對 `role: statement` 成立，對運算式不成立。這顆是 statement。",
+    "formalize": "./formalize.ts"
   },
   "skipPaths": [
     "execute"

@@ -17,6 +17,7 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "execute": "./execute.ts",
-    "lift": "./lift.ts"
+    "lift": "./lift.ts",
+    "formalize": "./formalize.ts"
   }
 }

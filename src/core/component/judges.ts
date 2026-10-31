@@ -130,7 +130,8 @@ export function isJudgeKind(x: unknown): x is JudgeKind {
 
 /**
  * 六路。**`FIVE_PATHS` 不動**——它是完備性護欄的母體，
- * 而 347 顆元件沒有 `formalize`，把它加進去會讓那條護欄一夜之間紅 347 筆。
+ * 而還有大半的元件沒有 `formalize`（2026-10-31：250 顆 C++ 元件裡 102 顆有），把它加進去會讓那條護欄一夜之間紅一片。
+ * 🔴 `paths.formalize` 從第 393 刀起指向膠囊自己的 `formalize.ts`（深嵌入）；淺嵌入的 `contract.cella` 已退場。
  *
  * > **一條護欄的母體變大，讀數會變差，而那與「品質下降」長得一樣。**
  */
@@ -194,33 +195,13 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
   },
   formalize: {
     kind: 'formal',
-    evidence: 'tests/probes/cella-formalize-guard.test.ts',
-    judges: '形式核載得進 cella，而洞的型別逐字是缺的那段契約。'
-      + '🔴 而**分母是量出來的**（`tests/probes/formalize-residual.test.ts`）：'
-      + '課文 88 支解答用到 65 顆 cpp 身分，宣告了 `paths.formalize` 的 3 顆。'
-      + '⚠️ 而形狀那一面更遠：那 88 支裡的 105 個函式，走訪器產得出項的是 **3 個**——'
-      + '不碰 I/O 的 15 個裡接得住 3 個（型別 6 · 形狀 3 · 運算子 2 · 算術 1）。',
-    // 🔴 **原本是 `{ covered: 2, of: 2 }`＝100%，而那個分母是「已經寫了形式核的」**
-    //    ——它對「一支程式的保證說不出來」這件事保持沉默。
-    //
-    // > **一個分母如果是照著分子挑的，那個比率不回答任何問題。**
-    //
-    // 2026-09-26 量出來的分母是 64（課文解答用到的 cpp 身分）。與 `execute` 的
-    // `of: 210` 同一個體例：**每一路的母體是那一路真的要走的那些**。
-    //
-    // 🔴 **64 → 65（2026-09-30）**：第 270–274 刀重新設計第六課，
-    //    `算一算/solutions/rebuild.cpp` 多了一個 `pow` → `cpp:math_pow`。
-    //    （`sqrt` 不算新的——第九課就在用了。）
-    //
-    // ⚠️ **而它是靠一支新的硬性零才發現的，不是有人記得**：
-    //    這個數字是從 `formalize-residual` 拄過來的，而拄過來的那一刻
-    //    它就不再是量出來的了。那支比對現在盯著兩邊。
-    //
-    // 📈 **2026-10-04：covered 2 → 3**（第 305 刀）——`cpp:arithmetic` 宣告了形式核
-    //    （`addNat`／`mulNat`）。而它露出一個缺口：第 279 刀的那條硬性零
-    //    **只釘了分母,沒釘分子** ⟹ 這個 2 已經過期了一陣子而沒有人知道。
-    //    那條護欄同一刀補上了分子。
-    coverage: { covered: 3, of: 65 },
+    evidence: 'tests/unit/providers/formalize.test.ts',
+    judges: '深嵌入（各膠囊的 `formalize.ts`）：輸出的每個建構子都要在 Cella 的語法定義裡、欄位一個不多一個不少；'
+      + '另由 Cella 的 C18 判決綁定比對——clang 讀我們的 text 與 Cella 的 generate(program)，兩棵樹要相同（cella 那側跑）。',
+    // 🪦 **2026-10-31（第 393 刀）：淺嵌入退場**——原本指著 `cella-formalize-guard`（`contract.cella` 載得進 cella、
+    //    洞的型別逐字是契約），而 `@cella-lang/cpp` 升版後淺嵌入整個拿掉了（使用者定案：探針、merkle 基線、
+    //    `contract.cella` 一起退場）。分母沿用 `formalize-coverage` 那條護欄：C++ 元件 250 顆。
+    coverage: { covered: 102, of: 250 },
   },
 }
 

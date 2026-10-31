@@ -13,7 +13,8 @@
     "extract": "./forms/blocks.json",
     "generate": "./generate.ts",
     "execute": "./execute.ts",
-    "lift": "./lift.ts"
+    "lift": "./lift.ts",
+    "formalize": "./formalize.ts"
   },
   "_execute_why": "接**既有的**模擬時鐘（`core/runtime/arduino-clock.ts`），不自己記時間——兩顆各記一份的話「`delay` 推進了而 `millis` 讀得到」就不成立。"
 }
