@@ -11,7 +11,7 @@ import './skeletons'
 import { skeletonById } from '../../core/skeleton'
 import type { SemanticNode } from '../../core/types'
 import type { DependencyResolver, DependencyEdge } from '../../core/dependency-resolver'
-import { expandHeaderAliases, normalizeHeader } from './header-aliases'
+import { expandHeaderAliases, normalizeHeader, toCHeader, cIoHeaderFor } from './header-aliases'
 import { buildInclude } from '../../components/cpp/include/lift'
 import { buildUsingNamespace } from '../../components/cpp/using_namespace/lift'
 import { qualifyStd } from './std-qualify'
@@ -103,8 +103,14 @@ export function createCppCodePatcher(
    * > 修好一個之後症狀只會少一半——而少一半看起來很像修好了。**
    */
   skeletonId?: string,
+  /**
+   * 風格的 id——`'c'` 是 C 方言（`target-dialect.ts` 的 `isCDialect`）。
+   * 🔴 2026-10-31：在此之前補丁器不知道自己在補 C，C 程式被補上 `#include <cstdio>`（C 編譯器不收）。
+   */
+  styleId?: string,
 ) => string | null {
-  return (code, tree, namespaceStyle, cogLevel = 1, skeletonId = 'main') => {
+  return (code, tree, namespaceStyle, cogLevel = 1, skeletonId = 'main', styleId) => {
+    const cDialect = styleId === 'c'
     const components = new Set<string>()
     collectComponents(tree, components)
     const edges = resolver.resolve([...components])
@@ -120,7 +126,12 @@ export function createCppCodePatcher(
     }
     const missingIncludes = edges.filter(e => !existingHeaders.has(normalizeHeader(e.header)))
     if (missingIncludes.length > 0) {
-      const patch = missingIncludes.map(e => e.directive).join('\n') + '\n'
+      // C 方言：換成 C 的標頭（`<cstdio>` → `<stdio.h>`、`<iostream>` → `<stdio.h>`），並去重
+      const directives = cDialect
+        ? [...new Set(missingIncludes.map((e) => `#include <${cIoHeaderFor(e.header) ?? toCHeader(e.header)}>`))]
+            .filter((d) => !existingHeaders.has(normalizeHeader(d.replace(/^#include\s*/, ''))))
+        : missingIncludes.map(e => e.directive)
+      const patch = directives.join('\n') + (directives.length > 0 ? '\n' : '')
       const idx = patched.indexOf('#include')
       patched = idx >= 0 ? patched.slice(0, idx) + patch + patched.slice(idx) : patch + patched
       changed = true

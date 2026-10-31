@@ -1565,7 +1565,7 @@ export class App {
         (shaping.stripScaffoldNodes as (t: unknown, skeleton: string) => unknown)(
           tree, this.currentSkeletonId)) as never)
       const patch = shaping.patchCode as (
-        code: string, tree: unknown, ns: string, depth: number, skeleton: string) => string
+        code: string, tree: unknown, ns: string, depth: number, skeleton: string, styleId: string) => string
       this.syncController.setCodePatcher(((code: string, tree: unknown) => patch(
       code, tree, this.currentStylePreset.namespace_style, this.getScaffoldDepth(),
       // 🔴 **第二個「要不要 main」的入口**——鷹架是第一個。兩邊都要問同一份宣告。
@@ -1573,6 +1573,8 @@ export class App {
       //    使用者在選單上換了骨架之後，目標那一格**不會變**
       //    ——於是補丁器繼續照舊的骨架補，而鷹架那側已經換了。
       this.currentSkeletonId,
+      // 🔴 風格 id 也要交下去（2026-10-31）：C 方言下要補 C 的標頭（`<stdio.h>` 不是 `<cstdio>`）
+      this.currentStylePreset.id,
       )) as never)
     }
 
