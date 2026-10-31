@@ -148,6 +148,13 @@ export class ExecutionController {
         if (!ok) this.broadcastOutput(describeSetVariableRefused(d.name, d.value) + '\n', 'stderr')
       })()
     })
+    // 🔴 **暫停中改板子的輸入**（spec 185）——與改變數同一條路：面板不認識執行器，走匯流排
+    this.bus?.on('execution:set-input', (d) => {
+      void (async () => {
+        const r = await this.session?.setInput?.(d.key, d.value)
+        if (!r?.ok) this.broadcastOutput(`改不了 ${d.key}：${r?.message ?? '這個執行器不能改板子的輸入'}\n`, 'stderr')
+      })()
+    })
     this.debugToolbar = new DebugToolbar()
   }
 
@@ -427,6 +434,8 @@ export class ExecutionController {
     this.broadcastState({ status: 'paused', ...(reason ? { reason } : {}), step })
     this.broadcastAtNode(stop.nodeId, this.debugToolbar.isAutoScrollEnabled() ?? false)
     this.currentNodeId = stop.nodeId
+    // 板子當下的狀態（spec 185）——硬體分頁在暫停時畫它；給不出來（不是板子、或提供者沒有）就是 null
+    this.bus?.emit('execution:environment', { state: session.environment(), paused: true, canSetInput: typeof session.setInput === 'function' })
     if (this.auto === null) {
       this.debugToolbar.show('paused')
       this.panels.bottomPanel?.showTab('variables')
@@ -461,6 +470,7 @@ export class ExecutionController {
 
   private finish(session: ExecutionSession): void {
     this.clearHighlights()
+    this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
     this.reportInterventions(session)
     const counts = session.coverage()
     if (counts) this.broadcastCoverage(counts)
@@ -474,6 +484,7 @@ export class ExecutionController {
 
   private fail(e: SessionStop): void {
     this.clearHighlights()
+    this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
     if (e.kind === 'aborted') {
       this.broadcastState({ status: 'idle', reason: 'aborted' })
     } else {
@@ -501,6 +512,7 @@ export class ExecutionController {
   }
 
   handleStop(): void {
+    this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
     const s = this.session
     this.session = null
     s?.terminate()
@@ -663,7 +675,7 @@ export class ExecutionController {
    */
   private reportInterventions(session: ExecutionSession): void {
     const inputs = session.recordedInputs()
-    const edits = inputs.filter((i) => i.kind === 'set-variable').length
+    const edits = inputs.filter((i) => i.kind === 'set-variable' || i.kind === 'set-input').length
     if (edits === 0) return
     this.broadcastOutput(describeInterventions(edits) + '\n', 'stderr')
   }

@@ -121,6 +121,29 @@ describe.skipIf(!RUN)('Cella DAP：一步的成本', () => {
     await s3.continue()
     console.log(`改 s=100 之後繼續：${JSON.stringify(out3)}`)
 
+    // ⑥ 指定敘述（迴圈裡的 s = s + i）：名下每個標籤、各自設成中斷點時停在哪、變數在不在
+    {
+      const loop = lift('#include <iostream>\nusing namespace std;\nint main() {\n  int s = 0;\n  for (int i = 0; i < 4; i++) {\n    s = s + i;\n  }\n  cout << s << endl;\n  return 0;\n}\n')
+      const asg = (function f(n: SemanticNode): SemanticNode | undefined { if (n.componentId === 'cpp:var_assign') return n; for (const k of Object.values(n.slots ?? {})) for (const c of k) { const r = f(c); if (r) return r } })(loop)!
+      const prog = formalize(loop).program
+      const mine: string[] = []
+      JSON.stringify(prog, (k, v) => { if (v && typeof v === 'object' && typeof v.n === 'string' && v.n.split(/[/#]/)[0] === asg.id) mine.push(`${v.k}:${v.n}`); return v })
+      console.log('指定敘述名下的節點', JSON.stringify(mine))
+      {
+        const s6 = await createSession(bytes, { program: JSON.stringify(prog) })
+        s6.setBreakpoints(mine.map((e) => e.slice(e.indexOf(':') + 1)))
+        await s6.launch({ stopOnEntry: false })
+        console.log(`  兩個一起 → 停在 ${s6.node}、變數 ${JSON.stringify(s6.variables(0).map((v: { name: string; value: string }) => `${v.name}=${v.value}`))}`)
+      }
+      for (const entry of mine) {
+        const label = entry.slice(entry.indexOf(':') + 1)
+        const s5 = await createSession(bytes, { program: JSON.stringify(prog) })
+        s5.setBreakpoints([label])
+        await s5.launch({ stopOnEntry: false })
+        console.log(`  中斷點 ${entry} → 停在 ${s5.node}、frames ${s5.stackTrace().length}、變數 ${JSON.stringify(s5.variables(0).map((v: { name: string; value: string }) => `${v.name}=${v.value}`))}`)
+      }
+    }
+
     // ⑤ 停下原因的 detail 長什麼樣（中文訊息要用到的欄位）
     const shapes: Record<string, string> = {
       ub: '#include <iostream>\nint main() { int a[3] = {1, 2, 3}; int i = 5; std::cout << a[i]; return 0; }',

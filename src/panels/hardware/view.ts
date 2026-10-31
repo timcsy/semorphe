@@ -9,7 +9,7 @@
  * 資料是 `core/hardware.ts` 的 `HardwareRecord`，來自 Cella 的判決——不另外執行一次。
  * ⚠️ 「沒有資料」有三種，畫面要分得開（P6）：不是板子的目標、判斷功能還沒好、這次沒有腳位變化。
  */
-import type { HardwareRecord, PinChange } from '../../core/hardware'
+import type { HardwareRecord, HardwareState, PinChange } from '../../core/hardware'
 import { msg } from '../../core/messages'
 
 const ROW_H = 28
@@ -20,6 +20,8 @@ export type HardwareView =
   | { kind: 'record'; record: HardwareRecord }
   | { kind: 'no-board' }
   | { kind: 'waiting'; reason: string }
+  /** 暫停中（spec 185）：板子當下的狀態；`onSetInput` 有給才畫「改輸入」那一列。 */
+  | { kind: 'live'; state: HardwareState; onSetInput?: (key: string, value: string) => void }
 
 export class HardwarePanel {
   private readonly root: HTMLElement
@@ -33,6 +35,7 @@ export class HardwarePanel {
   show(view: HardwareView): void {
     this.root.innerHTML = ''
     this.root.dataset.state = view.kind
+    if (view.kind === 'live') { this.live(view.state, view.onSetInput); return }
     if (view.kind !== 'record') {
       this.note(view.kind === 'no-board'
         ? msg('HARDWARE_NO_BOARD', '這個目標沒有板子——換成 Arduino 或 ESP32 的目標，這裡會畫出每支腳怎麼變。')
@@ -106,6 +109,40 @@ export class HardwarePanel {
     return svg
   }
 
+  /**
+   * **暫停中**：板子當下的狀態 ＋ 改輸入（spec 185）。
+   * ⚠️ 改的是「下一次讀取」——已經讀進變數的值不會變，那要改變數（變數分頁）。
+   */
+  private live(state: HardwareState, onSetInput?: (key: string, value: string) => void): void {
+    const head = document.createElement('div')
+    head.className = 'hardware-live-head'
+    head.textContent = `${msg('HARDWARE_PAUSED', '暫停中')}（${(state.clockUs / 1000).toFixed(0)} ms）`
+    this.root.appendChild(head)
+    this.root.appendChild(this.stateRows(state))
+    if (!onSetInput) return
+    const form = document.createElement('form')
+    form.className = 'hardware-set-input'
+    const key = document.createElement('input')
+    key.className = 'hardware-input-key'
+    key.placeholder = 'analog:A0'
+    key.value = 'analog:A0'
+    const value = document.createElement('input')
+    value.className = 'hardware-input-value'
+    value.placeholder = '512'
+    const go = document.createElement('button')
+    go.type = 'submit'
+    go.textContent = msg('HARDWARE_SET_INPUT', '改輸入')
+    const hint = document.createElement('span')
+    hint.className = 'hardware-note'
+    hint.textContent = msg('HARDWARE_SET_INPUT_HINT', '從下一次讀取開始生效（例：analog:A0＝512、digital:2＝1）')
+    form.append(key, value, go, hint)
+    form.addEventListener('submit', (e) => {
+      e.preventDefault()
+      if (key.value.trim() && value.value.trim()) onSetInput(key.value.trim(), value.value.trim())
+    })
+    this.root.appendChild(form)
+  }
+
   private endState(record: HardwareRecord): HTMLElement {
     const end = record.end!
     const box = document.createElement('div')
@@ -114,18 +151,26 @@ export class HardwarePanel {
     head.className = 'hardware-end-head'
     head.textContent = `${msg('HARDWARE_END', '結束時')}（${(end.clockUs / 1000).toFixed(0)} ms，loop ${end.loops} ${msg('HARDWARE_LOOPS', '次')}）`
     box.appendChild(head)
+    box.appendChild(this.stateRows(end))
+    return box
+  }
+
+  /** 每支腳的模式與值、伺服、LCD——結束時與暫停中共用。 */
+  private stateRows(state: HardwareState): HTMLElement {
+    const box = document.createElement('div')
+    box.className = 'hardware-state'
     const line = (text: string): void => {
       const d = document.createElement('div')
       d.className = 'hardware-end-row'
       d.textContent = text
       box.appendChild(d)
     }
-    for (const p of end.pins ?? []) {
+    for (const p of state.pins ?? []) {
       const value = p.toneHz ? `tone ${p.toneHz} Hz` : p.pwm !== null && p.pwm !== undefined ? `PWM ${p.pwm}` : p.level ? 'HIGH' : 'LOW'
       line(`${msg('HARDWARE_PIN', '腳')} ${p.pin}　${p.mode}　${value}`)
     }
-    for (const s of end.servos ?? []) line(`${msg('HARDWARE_SERVO', '伺服')} ${s.name}（${msg('HARDWARE_PIN', '腳')} ${s.pin}）　${s.angle}°`)
-    for (const l of end.lcds ?? []) line(`LCD ${l.name}　「${(l.lines ?? []).join('｜')}」`)
+    for (const s of state.servos ?? []) line(`${msg('HARDWARE_SERVO', '伺服')} ${s.name}（${msg('HARDWARE_PIN', '腳')} ${s.pin}）　${s.angle}°`)
+    for (const l of state.lcds ?? []) line(`LCD ${l.name}　「${(l.lines ?? []).join('｜')}」`)
     return box
   }
 }

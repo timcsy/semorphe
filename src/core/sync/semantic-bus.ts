@@ -32,6 +32,10 @@ export interface SemanticEvents {
   'execution:coverage': { visited: readonly string[]; counts: Readonly<Record<string, number>> }
   /** 這次的執行器給不出覆蓋資料（spec 183 R2）——「沒跑到」的標示這次沒有，畫面要說得出來。 */
   'execution:coverage-missing': Record<string, never>
+  /** 停下時板子當下的狀態（spec 185）；`paused: false` ＝執行結束，硬體分頁回到判決的那一份。 */
+  'execution:environment': { state: import('../hardware').HardwareState | null; paused: boolean; canSetInput: boolean }
+  /** 硬體分頁要求改一個板子的輸入（只在暫停時有效）。 */
+  'execution:set-input': { key: string; value: string }
   /** 這次由誰跑、前面誰不接以及為什麼（spec 183 R3）。 */
   'execution:provenance': { provider: string | null; declined: readonly { provider: string; reason: string }[] }
   /**

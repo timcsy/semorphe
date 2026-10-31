@@ -106,6 +106,7 @@ for (const entry of PROVIDERS) {
       const o = await s.launch(tree, { stopOnEntry: false })
       expect(o).toMatchObject({ kind: 'stopped', stop: { reason: 'breakpoint', nodeId: target.id } })
       expect(s.variables().find((v) => v.name === 's')?.value, '🔴 停下來而變數面板是空的').toBe('6')
+      expect(s.environment(), '不是板子上的程式 ⟹ 沒有板子狀態（spec 185）').toBeNull()
       expect(await s.continue()).toEqual({ kind: 'ended' })
       expect(out()).toBe('6\n')
     })
@@ -119,6 +120,15 @@ for (const entry of PROVIDERS) {
       expect(out(), '停在呼叫之前，f 還沒印').toBe('')
       expect(await s.continue()).toEqual({ kind: 'ended' })
       expect(out()).toBe('12')
+    })
+
+    it('🔴 中斷點設在迴圈裡的指定敘述上：停在第一次、變數在（不能停在拿不到呼叫框的運算式上）', async () => {
+      const tree = lift(LOOP)
+      const assign = find(tree, (n) => n.componentId === 'cpp:var_assign')!
+      const { s } = open(p, tree)
+      s.setBreakpoints([assign.id])
+      expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'breakpoint', nodeId: assign.id } })
+      expect(Object.fromEntries(s.variables().map((v) => [v.name, v.value]))).toMatchObject({ s: '0', i: '0' })
     })
 
     it('★ 單步：stopOnEntry 停在第一步，每次 stepIn 往前一顆，最後跑完', async () => {

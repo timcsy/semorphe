@@ -3410,3 +3410,6 @@ html, body {
   background: var(--panel-bg, #252526); color: var(--text-primary, #ddd); border: 1px solid var(--border-color, #444); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.35); }
 .status-assumes-head { font-weight: 600; margin-bottom: 4px; }
 .status-assumes-foot { margin-top: 6px; opacity: 0.8; }
+.hardware-live-head { font-weight: 600; margin-bottom: 4px; color: #e5a50a; }
+.hardware-set-input { display: flex; gap: 6px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.hardware-set-input input { width: 90px; font-size: 12px; }

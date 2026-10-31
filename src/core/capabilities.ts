@@ -23,6 +23,7 @@
  */
 import type { SemanticNode, BoardPinModel } from './types'
 import type { Verdict, TypeQuery } from './verdict-diagnostics'
+import type { HardwareState } from './hardware'
 
 /** 四項能力，加上執行與除錯的兩個細節（缺了也要說得出來）。 */
 export type CapabilityName = 'verdict' | 'types' | 'session' | 'steps'
@@ -48,6 +49,8 @@ export interface CapabilityDeclaration {
 export type SessionInput =
   | { kind: 'stdin'; value: string }
   | { kind: 'set-variable'; name: string; value: string }
+  /** 暫停時改了板子的輸入（感測器等，spec 185）。 */
+  | { kind: 'set-input'; key: string; value: string }
   | { kind: 'pause-decision'; decision: 'continue' | 'stop' }
 
 /**
@@ -99,6 +102,13 @@ export interface ExecutionSession {
   variables(): { name: string; type: string; value: string }[]
   /** Cella 那一側要一次 worker 往返，所以可以是 Promise。 */
   setVariable(name: string, raw: string): boolean | Promise<boolean>
+  /** 停著的時候，板子當下的狀態（spec 185）；不是板子上的程式、或提供者給不出來時是 null。 */
+  environment(): HardwareState | null
+  /**
+   * 停著的時候改板子的輸入（`analog:A0`、`digital:2`……），從下一次讀取開始生效（spec 185）。
+   * 只有宣告了 `setInput` 的提供者有。
+   */
+  setInput?(key: string, value: string): Promise<{ ok: boolean; message?: string }>
   /** 每個節點被進入幾次（步數能力）；給不出來時是 null（結果的 `missing` 帶 `steps`，畫面要說出來）。 */
   coverage(): ReadonlyMap<string, number> | null
   /** 這次執行從外面拿到的東西（重現用、插手紀錄）。 */

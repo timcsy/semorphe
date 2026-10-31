@@ -196,6 +196,8 @@ export class App {
   /** 最近一次送出的判決（spec 184）——課文的腳位檢查要等「這一棵樹」的那一次，不用畫面上的快取。 */
   private lastCheck: { tree: SemanticNode; answer: Promise<CheckAnswer> } | null = null
   private hardwarePanel: HardwarePanel | null = null
+  /** 判決給的那一份（暫停結束後硬體分頁回到它）。 */
+  private hardwareRecord: HardwareRecord | null = null
   private checkNotes: string[] = []
   /** 這次判決依賴的實作選擇（第 14 題的小標）。 */
   private checkAssumes: { implementation: string; text: string }[] = []
@@ -1876,6 +1878,16 @@ export class App {
     elements.variablePanel?.onEditValue((name, value) =>
       this.bus.emit('execution:set-variable', { name, value }))
     this.hardwarePanel = (elements.statePanel('hardware')?.view as HardwarePanel | undefined) ?? null
+    // 🟢 暫停中畫板子當下的狀態、可以改輸入（spec 185）；執行結束回到判決的那一份
+    this.bus.on('execution:environment', (e) => {
+      if (!this.hardwarePanel) return
+      if (e.paused && e.state) {
+        this.hardwarePanel.show({
+          kind: 'live', state: e.state,
+          ...(e.canSetInput ? { onSetInput: (key: string, value: string) => this.bus.emit('execution:set-input', { key, value }) } : {}),
+        })
+      } else if (!e.paused) this.showHardware(this.hardwareRecord)
+    })
     // 🔴 **流程面板改了一格 → 匯流排**（2026-08-26，(b) 改欄位）。
     //    ⚠️ 走 `edit:tree` 這個**通用**事件，不是 `edit:flow`
     //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。
@@ -4493,6 +4505,7 @@ export class App {
 
   /** 硬體分頁（spec 184）：板子的目標畫判決給的腳位；不是板子的目標說出來。 */
   private showHardware(record: HardwareRecord | null): void {
+    this.hardwareRecord = record
     if (!this.hardwarePanel) return
     if (record) this.hardwarePanel.show({ kind: 'record', record })
     else if (!this.currentTarget.board) this.hardwarePanel.show({ kind: 'no-board' })
