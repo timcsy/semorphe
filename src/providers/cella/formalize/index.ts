@@ -44,6 +44,14 @@ function unescapeC(s: string): string {
 
 export function formalize(tree: SemanticNode, options: { board?: string } = {}): FormalizeResult {
   const { declOf } = resolveScopes(tree)
+  // C++ 的 struct 就是 class：寫不寫 `struct` 都是 tClass（cella 2026-10-31；tStruct 只給 C 程式）。
+  // 不帶關鍵字的型別名（`Node*`）要先知道它是程式裡定義過的 struct，才認得出來。
+  const structNames = new Set<string>()
+  const collect = (n: SemanticNode): void => {
+    if (n.componentId === 'cpp:struct_declare') structNames.add(String(n.properties?.name ?? ''))
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
+  }
+  collect(tree)
   const unknown: Unknown[] = []
   const miss = (n: SemanticNode, reason: string): CellaJson => {
     unknown.push({ nodeId: n.id, construct: n.componentId, reason })
@@ -60,8 +68,8 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
     if (sc) return k(sc)
     const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
     if (vec) { const inner = type(vec[1], at); return inner && k('tVector', { t: inner }) }
-    const st = /^struct\s+([A-Za-z_]\w*)$/.exec(s)
-    if (st) return k('tStruct', { name: st[1] })
+    const st = /^(?:struct\s+)?([A-Za-z_]\w*)$/.exec(s)
+    if (st && (s.startsWith('struct ') || structNames.has(st[1]))) return k('tClass', { name: st[1] })
     miss(at, `型別「${s}」還沒有對應`)
     return null
   }
@@ -84,7 +92,11 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
         const suf = /^([0-9]+)(ll|LL|l|L|u|U|ul|UL|ull|ULL|lu|LU|llu|LLU)$/.exec(v)
         if (suf) {
           const t = ({ ll: 'tLongLong', l: 'tLong', u: 'tUnsigned', ul: 'tULong', lu: 'tULong', ull: 'tULongLong', llu: 'tULongLong' } as Record<string, string>)[suf[2].toLowerCase()]
-          return k('eCast', { n: n.id, t: k(t), a: k('eNum', { n: `${n.id}/value`, v: Number(suf[1]) }) })
+          // cella 的規則：字面的型別和「靠值本身決定的型別」（< 2^31 是 int、< 2^63 是 long）不同時才包 eCast
+          const val = BigInt(suf[1])
+          const byValue = val < 2n ** 31n ? 'tInt' : val < 2n ** 63n ? 'tLong' : null
+          const num = k('eNum', { n: t === byValue ? n.id : `${n.id}/value`, v: Number(suf[1]) })
+          return t === byValue ? num : k('eCast', { n: n.id, t: k(t), a: num })
         }
         if (/^[0-9]*\.[0-9]*([eE][-+]?[0-9]+)?[fF]?$|^[0-9]+[eE][-+]?[0-9]+[fF]?$/.test(v)) {
           return k('eFloat', { n: n.id, text: v.replace(/[fF]$/, ''), single: /[fF]$/.test(v) })
@@ -316,9 +328,9 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
         const fields: CellaJson[] = []
         for (const m of n.slots?.members ?? []) {
           const t = type(m.properties?.type, m)
-          if (t) fields.push(k('fld', { name: String(m.properties?.name ?? ''), t }))
+          if (t) fields.push(k('mbField', { acc: k('acPublic'), name: String(m.properties?.name ?? ''), t, init: null }))
         }
-        return [k('iStruct', { d: k('sdef', { n: n.id, name: String(p.name ?? ''), fields }) })]
+        return [k('iClass', { d: k('cdef', { n: n.id, name: String(p.name ?? ''), isClass: false, bases: [], members: fields }) })]
       }
       case 'cpp:array_2d_declare': return decl(n, true)
       case 'cpp:using_namespace': return [k('iUsing', { n: n.id, name: String(p.ns ?? '') })]

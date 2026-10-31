@@ -114,6 +114,20 @@ describe('formalize：最小子集', () => {
     expect(loop.body.body[0].items[0].x, '迴圈本體裡的 i 指到同一個宣告').toBe(loop.n)
   })
 
+  it('★ C++ 的 struct 一律是 tClass（cella 2026-10-31：tStruct 只給 C）；定義是 iClass', () => {
+    const s = JSON.stringify(formalize(lift('struct Node { int v; };\nint main() { Node a; struct Node b; Node* p = &a; }')).program)
+    expect(s).not.toContain('tStruct')
+    expect(s.match(/"k":"tClass","name":"Node"/g)?.length).toBeGreaterThanOrEqual(3)
+    expect(s).toContain('"k":"iClass"')
+  })
+
+  it('★ 數字後綴：只在字面型別與「值決定的型別」不同時才包 eCast（cella 的規則）', () => {
+    const s = JSON.stringify(formalize(lift('int main() { long long a = 1000000LL; long b = 5000000000L; long c = 100L; }')).program)
+    expect(s, '1000000LL：值是 int、字面是 long long → 包').toContain('"k":"eCast","n"')
+    const casts = (s.match(/"k":"eCast"/g) ?? []).length
+    expect(casts, '5000000000L：值本身就是 long → 不包；100L 要包').toBe(2)
+  })
+
   /**
    * 讀數（不是護欄）：課文的 C／C++／Arduino 解答，最小子集今天翻得出幾份，缺的元件依次數排。
    * 這是對照表下一批要補誰的依據；覆蓋的棘輪等對照表成形後再立。
