@@ -359,6 +359,13 @@ export interface ViewHost {
    * 每個視圖該畫什麼，而那正是 `execution:at-node` 那次收攏掉的東西。
    */
   onDiagnostics?(event: DiagnosticsEvent): void
+  /**
+   * 收合狀態變了（spec 187）。**可選**——三個視圖的投影結構不同（流程收成有埠的框、積木摺成一行、程式碼按行摺），
+   * 而今天只有流程接。
+   */
+  onGranularity?(event: { entries: import('../granularity').CollapsedEntry[] }): void
+  /** 這個視圖要求收合／展開時呼叫（組裝點接到匯流排）。 */
+  onRequestCollapse?(cb: ((nodeId: string, collapsed: boolean) => void) | null): void
 }
 
 /**

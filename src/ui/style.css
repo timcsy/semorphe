@@ -2705,6 +2705,20 @@ html, body {
   user-select: none;
 }
 
+/* 收著的框（spec 187）：雙線邊框——一眼看得出「裡面還有東西」 */
+.fc-node.fc-collapsed .fc-node-body {
+  stroke-dasharray: 5 3;
+  stroke-width: 1.5;
+}
+
+.fc-collapsed-label {
+  fill: #9cdcfe;
+  font-size: 11px;
+  font-style: italic;
+  pointer-events: none;
+  user-select: none;
+}
+
 .fc-field {
   fill: #d4d4d4;
   font-family: 'SF Mono', Menlo, Consolas, monospace;

@@ -45,6 +45,7 @@
  * - **不碰 DOM、不碰 Blockly、不碰 Monaco。**
  */
 import type { SemanticNode } from './types'
+import type { SemanticBus } from './sync/semantic-bus'
 import { keysOfNodes, matchByKeys, walkWithPath, type KeyedNode } from './flow/layout-key'
 
 /** 存檔裡的一筆——**只有鑰匙**（與 `PlacedEntry` 同形，而它沒有 x／y）。 */
@@ -128,6 +129,60 @@ export function visibilityOf(root: SemanticNode, collapsed: ReadonlySet<string>)
   }
   walk(root)
   return m
+}
+
+/**
+ * **共享的那一份**（spec 187）——誰收著，以鑰匙記。
+ *
+ * 🔴 每一次語義更新都要 `refresh`：`nodeId` 全換了，而鑰匙要跟著換成這一棵的
+ * ——否則連改幾次之後鑰匙與樹漸行漸遠，有一天突然對不回去。
+ */
+export class GranularityState {
+  private entries: CollapsedEntry[] = []
+  private root: SemanticNode | null = null
+
+  /** 對到這一棵樹、換成這一棵的鑰匙；回傳收著的 `nodeId`。 */
+  refresh(root: SemanticNode): Set<string> {
+    this.root = root
+    const ids = resolveCollapsed(this.entries, root)
+    this.entries = collapsedToKeys(root, ids)
+    return ids
+  }
+
+  /** 收合或展開一顆（`nodeId` 是**上一次 `refresh` 那棵樹**的）。回傳有沒有變。 */
+  set(nodeId: string, collapsed: boolean): boolean {
+    if (!this.root) return false
+    const ids = resolveCollapsed(this.entries, this.root)
+    if (ids.has(nodeId) === collapsed) return false
+    if (collapsed) ids.add(nodeId)
+    else ids.delete(nodeId)
+    const next = collapsedToKeys(this.root, ids)
+    // 配不到這棵樹上（不是這棵樹的 id）→ 什麼都沒變
+    if (collapsed && next.length === this.entries.length) return false
+    this.entries = next
+    return true
+  }
+
+  list(): CollapsedEntry[] {
+    return this.entries.map((e) => ({ keys: [...e.keys] }))
+  }
+}
+
+/**
+ * 接上匯流排：收請求、跟著每一次語義更新換鑰匙、廣播給視圖。
+ * ⚠️ 要在 `connectViews` **之前**接——同一次 `semantic:update`，持有者要先換好鑰匙。
+ */
+export function connectGranularity(bus: SemanticBus, state = new GranularityState()): GranularityState {
+  // 換好鑰匙後再廣播一次——視圖手上的鑰匙才會跟著這一棵（它們隨後收到同一次 semantic:update，用新鑰匙對回）
+  bus.on('semantic:update', (d) => {
+    const before = state.list().length
+    state.refresh(d.tree)
+    if (before > 0) bus.emit('granularity:collapsed', { entries: state.list() })
+  })
+  bus.on('granularity:request', (d) => {
+    if (state.set(d.nodeId, d.collapsed)) bus.emit('granularity:collapsed', { entries: state.list() })
+  })
+  return state
 }
 
 export type { KeyedNode }

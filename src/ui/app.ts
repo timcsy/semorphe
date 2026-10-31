@@ -59,6 +59,7 @@ import { installDialogs } from './prompt-dialog'
 import type { StylePreset } from '../core/types'
 import { CATEGORY_COLORS } from '../core/blocks/category-colors'
 import { registerViewsIn, connectViews } from '../core/sync/view-registry'
+import { connectGranularity } from '../core/granularity'
 import { buildToolbox } from '../core/blocks/toolbox-builder'
 import { lessonIdFromQuery, taskIdFromQuery, lessonDocHref, compareOutput, controlsPinnedBy, trackOf, scaffoldDepthOf, taskById, FREE_PRACTICE, type Lesson, type LessonTask, type ScaffoldMode } from '../core/lesson/lesson'
 import { viewLabel, type LessonView } from '../core/lesson/semantic-wave'
@@ -1676,6 +1677,8 @@ export class App {
         )
       }
     }
+    // 🟢 收合狀態的持有者（spec 187）——要在 connectViews 之前：同一次 semantic:update，它先換好鑰匙
+    connectGranularity(this.bus)
     connectViews(this.bus)
     // 兩個面板還用匯流排做契約外的事，自己接：
     // - `console-panel` **收** `execution:output`

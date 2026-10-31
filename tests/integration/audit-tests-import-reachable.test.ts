@@ -27,8 +27,7 @@ const ALLOWED: Record<string, string> = {
   'src/languages/python/naming.ts': '同上，Python 的詞彙',
   'src/core/component/judges.ts': '「哪條測試判哪一路」的 metadata，本來就是測試的資料',
   'src/core/component/path-syntax.ts': '階層身分的語法（vision〈分子與粒度切換〉的前置）；投影函式呼叫產品的 idToDir／deriveBlockType，只剩分類這一層是它自己的',
-  'src/core/granularity.ts': 'vision〈分子與粒度切換〉的已交付機制，等流程面板的投影接上',
-  'src/core/molecule.ts': '同上',
+  'src/core/molecule.ts': 'vision〈分子與粒度切換〉的切口計算——流程的框只收整棵子樹（埠由節點自己的接點給），多選接上時才走到它（spec 187）',
   // 🟢 2026-10-31（spec 182）：`providers/cella/formalize`、`verdict.ts` 三筆拿掉——Cella 提供者接上了，它們在產品路徑上
 }
 
