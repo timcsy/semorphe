@@ -254,10 +254,26 @@ export class SyncController {
     bus.on('edit:code', (data) => this.handleEditCode(data))
   }
 
+  /**
+   * 「程式碼 → 樹」那條管線接上之前收到的程式碼——**最後一份**（第 392 刀）。
+   *
+   * 🔴 在此之前管線還沒接上（tree-sitter 的 wasm 是非同步載入的）時，`edit:code` 與
+   *    `syncCodeToBlocks` 都**靜默 return**。學生按「以此為準：程式碼」被吞掉，樹停在預設的空骨架，
+   *    下一次從樹重產（例如切到 C 目標）就把他寫的程式碼整份蓋掉。
+   *    e2e `c-target` 間歇紅了一個月（draft `2026-10-02-C-目標下有時候少一個標頭`）：只在機器忙、wasm 載得慢時發作。
+   */
+  private pendingCode: string | null = null
+  private resolvePipeline!: () => void
+  private readonly pipelineReady = new Promise<void>((r) => { this.resolvePipeline = r })
+
   /** Set lifter and parser for code→blocks direction (US2) */
   setCodeToBlocksPipeline(lifter: Lifter, parser: CodeParser): void {
     this.lifter = lifter
     this.parser = parser
+    this.resolvePipeline()
+    const pending = this.pendingCode
+    this.pendingCode = null
+    if (pending !== null) void this.handleEditCode({ code: pending })
   }
 
   onError(callback: (errors: SyncError[]) => void): void {
@@ -635,7 +651,9 @@ export class SyncController {
 
   /** Handle edit:code event — sync code → semantic tree → blocks */
   private async handleEditCode(data: { code: string }): Promise<void> {
-    if (this.syncing || !this.lifter || !this.parser) return
+    // 管線還沒接上：記下最後一份，接上時補做（見 `pendingCode`）
+    if (!this.lifter || !this.parser) { this.pendingCode = data.code; return }
+    if (this.syncing) return
     // ⚠️ **`syncing` 的設定與清除要包住整段 `await`**——重入守衛的窗口
     //    因為非同步而變長了，而 `try/finally` 已經在外面（見函式尾）。
     this.syncing = true
@@ -1017,7 +1035,8 @@ export class SyncController {
    * 它在同步完成之後才補相依、清旗標。
    */
   async syncCodeToBlocks(code?: string): Promise<boolean> {
-    if (!this.lifter || !this.parser) return false
+    // 管線還沒接上就**等它**，不是回 false——呼叫端 await 回來時以為樹已經是這份程式碼了
+    if (!this.lifter || !this.parser) await this.pipelineReady
     if (code !== undefined) {
       await this.handleEditCode({ code })
       return true
