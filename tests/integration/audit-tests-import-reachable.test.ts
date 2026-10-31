@@ -31,6 +31,7 @@ const ALLOWED: Record<string, string> = {
   'src/core/molecule.ts': '同上',
   'src/providers/cella/formalize/index.ts': '重構階段 4：深嵌入的 formalize，階段 5 接上 Cella 提供者時進產品路徑',
   'src/providers/cella/formalize/scope.ts': '同上',
+  'src/providers/cella/verdict.ts': '重構階段 5：Cella 的判決入口，接上 Cella 提供者時進產品路徑（spec 180 T010 先拿它量 C18 語料）',
 }
 
 const EXT = ['', '.ts', '.tsx', '.json', '/index.ts']

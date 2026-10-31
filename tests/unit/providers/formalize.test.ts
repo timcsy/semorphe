@@ -165,6 +165,14 @@ describe('formalize：最小子集', () => {
     expect([...j.matchAll(/"k":"eNum","n":"[^"]+","v":(\d+)/g)].map((m) => Number(m[1]))).toEqual([39, 15, 5, 1000, 0])
   })
 
+  it('🔴 第 394 刀（Cella 判決量到）：nullptr／NULL 是字面量；字元陣列的字串初值是 iE 不是 iL', () => {
+    const j = JSON.stringify(formalize(lift('#include <cstdio>\nint main() { int *p = nullptr; int *q = NULL; char s[20] = "Semorphe"; return 0; }')).program)
+    expect(j).toContain('"k":"eNullptr"')
+    expect(j).toContain('"k":"eNull"')
+    expect(j).not.toMatch(/"name":"(nullptr|NULL)"/)
+    expect(j).toMatch(/"k":"iE","e":\{"k":"eStr"/)
+  })
+
   it('★ 目標 id 對到 Cella 的板名；不是板子的目標沒有板名', () => {
     expect(cellaBoardOf('esp32s3-cam')).toBe('esp32s3Cam')
     expect(cellaBoardOf('nodemcu-esp8266')).toBe('nodemcuEsp8266')

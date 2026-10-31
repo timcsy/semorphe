@@ -8,12 +8,12 @@
       ⟹ 課文解答 42 → 56 → 68 → 75 → 79 / 94 翻得出
 - [ ] T004 等 cella 回覆的寫法：結構型別名（`tStruct`／`tClass`）、`pair`、容器樣板（queue／stack／set／map／priority_queue）、`auto`
 - [x] T005 元件對照表 ＋ 護欄（FR-007、SC-004）：每顆 C++ 元件都有對應或明確的「不送」理由；未對應數棘輪
-- [ ] T006 支援清單（Cella 的 `supported`）接上：送出前擋 Cella 還沒做的函式與成員（FR-004）
+- [x] T006 ~~支援清單（Cella 的 `supported`）接上：送出前擋 Cella 還沒做的函式與成員（FR-004）~~ 🔁 **改道**（2026-10-31，cella 確認）：不提供也不打算提供清單——模型還沒有的構造判 `unknown`，`problems` 裡 `kind: "unsupported"`、`at` 指節點；判決本身就是清單。我們不在送出前擋（見 spec FR-004 的更正）
 - [x] T007 空槽 → 洞（`eHole`／`sHole`，標籤 `<節點>#<槽名>`）的完整處理與測試（FR-005；今天只有 `exprOf` 的缺槽）
 - [x] T008 Arduino：`board` 與裝置積木（`dht_declare`、`servo_declare`、`lcd_declare`、腳位）
 - [x] T009 C18 語料（`tests/probes/c18-corpus.test.ts`，`C18_CORPUS_OUT=…` 才寫檔）：104 筆 text、93 筆附 program
 
 ## 第二批（等 Cella 升級）
 
-- [ ] T010 接判決入口，量 SC-002（`invalid` 為 0）與 SC-003（problem 標得回節點）
-- [ ] T011 形狀判定者改讀套件（不依賴姊妹 repo 的路徑）
+- [x] T010 接判決入口，量 SC-002（`invalid` 為 0）與 SC-003（problem 標得回節點）——`src/providers/cella/verdict.ts` ＋ `tests/probes/c18-verdict.test.ts`：99 支 invalid 0、problem 全部對得回、accept 95 而輸出與課文一致；量的途中修了 nullptr、字元陣列字串初值、重複標籤三個缺陷
+- [x] T011 形狀判定者改讀套件（不依賴姊妹 repo 的路徑）——套件只有編譯檔；形狀由判決的 `invalid` 判定（cella：量 invalid 就是量介面的形狀），走套件、CI 上也跑

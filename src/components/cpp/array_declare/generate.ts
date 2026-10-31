@@ -1,6 +1,7 @@
 /** `cpp:array_declare` 的 **generate** 路——從共用檔原封剪過來（批次第十八批：四個重複建立點收成一個建構子）。 */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
+import { isCharStringInit } from './char-string-init'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:array_declare', (node, ctx) => {
@@ -28,7 +29,12 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         : String(node.properties.size ?? '')
       // 初始值三態：欄位不存在 → 無初始化；[] → `= {}`；有內容 → `= {…}`
       const values = node.slots.values
-      const init = values === undefined ? '' : ` = {${values.map(v => generateExpression(v, ctx)).join(', ')}}`
+      // 🔴 字元陣列用一個字串字面量初始化（`char s[20] = "Semorphe";`）：不加大括號（第 394 刀）。
+      //    在此之前一律包成 `{"Semorphe"}`——C 允許，但那不是學生寫的那份，而 formalize 因此翻成初值串列被判型別不合。
+      //    判準與 formalize.ts 相同（`char-string-init.ts`）。
+      const init = values === undefined ? ''
+        : isCharStringInit(node) ? ` = ${generateExpression(values[0], ctx)}`
+        : ` = {${values.map(v => generateExpression(v, ctx)).join(', ')}}`
       return `${indent(ctx)}${type} ${name}[${size}]${init};\n`
     })
 }
