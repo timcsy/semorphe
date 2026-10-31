@@ -89,6 +89,21 @@ export async function createCellaChecker(read: CellaRead): Promise<CellaChecker>
  * ——所以快取存這一份就夠，第二次打開連套件都不必下載。
  */
 export async function compileCellaChecker(read: CellaRead): Promise<Uint8Array> {
+  const cella = await loadCellaPackages(read)
+  return cella.compile_wasm_library(LIBRARY, EXPORTS)
+}
+
+let packagesLoaded: Promise<typeof import('cella-lang')> | null = null
+/**
+ * 載入 Cella 本體與三個語言套件——**一個行程只做一次**（判決模組與除錯模組共用）。
+ * 回傳的 `cella-lang` 模組已經可以 `compile_wasm_library`。
+ */
+export function loadCellaPackages(read: CellaRead): Promise<typeof import('cella-lang')> {
+  packagesLoaded ??= loadPackagesOnce(read).catch((e: unknown) => { packagesLoaded = null; throw e })
+  return packagesLoaded
+}
+
+async function loadPackagesOnce(read: CellaRead): Promise<typeof import('cella-lang')> {
   const cella = await import('cella-lang')
   const bytes = async (pkg: string | null, file: string): Promise<Uint8Array> => await read(pkg, file)
   const text = async (pkg: string, file: string): Promise<string> => new TextDecoder().decode(await bytes(pkg, file))
@@ -117,7 +132,7 @@ export async function compileCellaChecker(read: CellaRead): Promise<Uint8Array> 
     loaded.add(name)
   }
   for (const b of BRANCHES) await loadPackage(b)
-  return cella.compile_wasm_library(LIBRARY, EXPORTS)
+  return cella
 }
 
 /** 編好的位元組 → 判決器（不載 Cella 本體）。 */

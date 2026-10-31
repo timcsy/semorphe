@@ -7,12 +7,14 @@
  * formalize 翻不出來的節點不送 worker——直接回一個 `unknown` 判決，每一顆一筆 `unsupported`
  * （與 Cella 自己判 unsupported 是同一個樣子：系統能力不足，不是學生的錯）。
  */
-import type { CheckAnswer, CheckRequest, Provider, Readiness } from '../../core/capabilities'
+import { SessionStop, type CheckAnswer, type CheckRequest, type Declined, type ExecutionSession, type Outcome, type Provider, type Readiness, type SessionInput, type SessionOptions } from '../../core/capabilities'
+import type { SemanticNode } from '../../core/types'
+import { branchOf, type CellaBranch } from './verdict'
 import type { Verdict } from '../../core/verdict-diagnostics'
 import { formalize, cellaBoardOf } from './formalize'
 import { withEntryFunctions } from './entry'
 import { isCDialect } from '../../languages/cpp/target-dialect'
-import type { WorkerReply, WorkerRequest } from './worker'
+import type { DapOp, Variable, WireOutcome, WorkerReply, WorkerRequest } from './worker'
 
 /** 板子上的 sketch 要模擬到 5 秒（setup 一次、loop 重複）——步數要給夠，否則是 `fuel` 的 unknown（第 394 刀量的）。 */
 const fuelOf = (board: string | undefined): number => (board ? 50_000_000 : 1_000_000)
@@ -29,11 +31,81 @@ export function readsInput(json: unknown): boolean {
   return Object.values(o).some(readsInput)
 }
 
+/** 跨邊界的 Outcome → 核心的 Outcome（`SessionStop` 在這一側組回來）。 */
+function toOutcome(w: WireOutcome): Outcome {
+  if (w.kind === 'failed') return { kind: 'failed', error: new SessionStop(w.aborted ? 'aborted' : 'runtime', w.key, w.params, w.nodeId) }
+  return w
+}
+
+/**
+ * **主執行緒那一側的工作階段**——每個指令送進 worker，等 `dap-result`；變數快照跟著結果回來，`variables()` 讀快照。
+ * `coverage()` 回 null：Cella 的節點進入次數下一版才有（spec 183 R2）。
+ */
+class CellaSession implements ExecutionSession {
+  private seq = 0
+  private waiting = new Map<number, (r: Extract<WorkerReply, { kind: 'dap-result' }>) => void>()
+  private vars: Variable[] = []
+  private out: ((text: string) => void) | null = null
+  private inputs: SessionInput[] = []
+
+  private readonly sid: number
+  private readonly send: (m: WorkerRequest) => void
+  constructor(sid: number, send: (m: WorkerRequest) => void) {
+    this.sid = sid
+    this.send = send
+  }
+
+  receive(r: WorkerReply): void {
+    if (r.kind === 'dap-output') { this.out?.(r.text); return }
+    if (r.kind !== 'dap-result') return
+    this.vars = r.variables
+    this.waiting.get(r.seq)?.(r)
+    this.waiting.delete(r.seq)
+  }
+
+  private op(body: DapOp): Promise<Extract<WorkerReply, { kind: 'dap-result' }>> {
+    const seq = ++this.seq
+    return new Promise((resolve) => {
+      this.waiting.set(seq, resolve)
+      this.send({ kind: 'dap-op', sid: this.sid, seq, body })
+    })
+  }
+  private async run(body: DapOp): Promise<Outcome> {
+    const r = await this.op(body)
+    return r.outcome ? toOutcome(r.outcome) : { kind: 'ended' }
+  }
+
+  onOutput(cb: ((text: string) => void) | null): void { this.out = cb }
+  setBreakpoints(nodeIds: Iterable<string>): void { void this.op({ op: 'setBreakpoints', nodeIds: [...nodeIds] }) }
+  launch(_program: SemanticNode, options: { stopOnEntry: boolean }): Promise<Outcome> { return this.run({ op: 'launch', stopOnEntry: options.stopOnEntry }) }
+  continue(): Promise<Outcome> { return this.run({ op: 'continue' }) }
+  stepIn(): Promise<Outcome> { return this.run({ op: 'stepIn' }) }
+  supplyInput(line: string): Promise<Outcome> {
+    this.inputs.push({ kind: 'stdin', value: line })
+    return this.run({ op: 'supplyInput', text: line + '\n' })
+  }
+  closeInput(): Promise<Outcome> { return this.run({ op: 'closeInput' }) }
+  pause(): void { void this.op({ op: 'pause' }) }
+  terminate(): void { void this.op({ op: 'terminate' }) }
+  variables() { return this.vars }
+  async setVariable(name: string, raw: string): Promise<boolean> {
+    const r = await this.op({ op: 'setVariable', name, text: raw })
+    if (r.ok) this.inputs.push({ kind: 'set-variable', name, value: raw })
+    return r.ok === true
+  }
+  coverage(): null { return null }
+  recordedInputs(): readonly SessionInput[] { return this.inputs }
+}
+
 export function createCellaProvider(makeWorker: () => Worker): Provider {
   let worker: Worker | null = null
   let state: Readiness = { state: 'idle' }
   const listeners: ((r: Readiness) => void)[] = []
   const setState = (r: Readiness): void => { state = r; listeners.forEach((cb) => cb(r)) }
+
+  const debuggerState = new Map<CellaBranch, 'loading' | 'ready' | 'unavailable'>()
+  const sessions = new Map<number, CellaSession>()
+  let sid = 0
 
   let latest = 0
   const waiting = new Map<number, (a: CheckAnswer) => void>()
@@ -54,6 +126,8 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
     }
     worker.onmessage = (e: MessageEvent<WorkerReply>): void => {
       const r = e.data
+      if (r.kind === 'dap-status') { debuggerState.set(r.branch, r.status); return }
+      if (r.kind === 'dap-output' || r.kind === 'dap-result') { sessions.get(r.sid)?.receive(r); return }
       if (r.kind === 'status') {
         setState(r.status === 'unavailable' ? { state: 'unavailable', reason: r.reason ?? '' } : { state: r.status })
       } else if (r.kind === 'result') {
@@ -70,9 +144,39 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
   }
   const send = (m: WorkerRequest): void => ensure().postMessage(m)
 
+  /** 翻成 Cella 的程式；翻不出來回原因。與判決同一條路（補進入點 → formalize）。 */
+  const formalOf = (f: NonNullable<SessionOptions['formal']>): { program: unknown; branch: CellaBranch } | { why: string } => {
+    const board = cellaBoardOf(f.targetId)
+    const r = formalize(withEntryFunctions(f.tree, f.skeletonId), { board, lang: isCDialect({ id: f.styleId } as never) ? 'c' : 'cpp' })
+    if (!r.program) return { why: `Cella 還不支援：${[...new Set(r.unknown.map((u) => u.reason))].join('、')}` }
+    return { program: r.program, branch: branchOf(r.program as never) }
+  }
+
+  const createSession = (options: SessionOptions): ExecutionSession | Declined => {
+    if (!options.formal) return { declined: '這個語言還沒有 Cella' }
+    // 還沒暖機 ⟹ 不為了執行去建 worker、載 35 MB（首屏與 e2e 都靠這一條，見 `src/main.ts`）
+    if (state.state === 'idle' || state.state === 'loading') return { declined: '判斷功能還在載入' }
+    if (state.state === 'unavailable') return { declined: `判斷功能無法使用：${state.reason}` }
+    if (!options.formal.tree.componentId.startsWith('cpp:')) return { declined: '這個語言還沒有 Cella' }
+    const f = formalOf(options.formal)
+    if ('why' in f) return { declined: f.why }
+    const st = debuggerState.get(f.branch)
+    if (st !== 'ready') {
+      // 第一次：背景編好除錯模組（約 20 秒），這一次先交給下一個提供者（research R4）
+      if (st === undefined) { try { send({ kind: 'dap-prepare', branch: f.branch }) } catch { /* worker 起不來 */ } }
+      return { declined: st === 'unavailable' ? 'Cella 的除錯模組無法使用' : 'Cella 的除錯模組還在準備（第一次約 20 秒）' }
+    }
+    const id = ++sid
+    const s = new CellaSession(id, send)
+    sessions.set(id, s)
+    send({ kind: 'dap-open', sid: id, branch: f.branch, program: f.program })
+    return s
+  }
+
   return {
     id: 'cella',
-    declares: { verdict: true, types: true },
+    declares: { verdict: true, types: true, session: { granularity: 'node', setInput: true, setVariable: true, steps: true } },
+    createSession,
     // 判決只有 C 家族（c／cpp／arduino）的套件，三者在 semorphe 都是 cpp 這個語言
     supports: (language) => language === 'cpp',
     readiness: () => state,

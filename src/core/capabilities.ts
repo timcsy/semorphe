@@ -71,6 +71,8 @@ export type Outcome =
   | { kind: 'stopped'; stop: Stop }
   | { kind: 'ended' }
   | { kind: 'failed'; error: SessionStop }
+  /** 只會是 `launch` 的結果：提供者開跑時才發現跑不了（一步也沒有執行）——宿主換下一個提供者。 */
+  | { kind: 'declined'; reason: string }
 
 /**
  * **一次執行**——形狀照 DAP（spec 183 R1）：**宿主下指令**，每個指令回一個 `Outcome`。
@@ -95,7 +97,8 @@ export interface ExecutionSession {
   terminate(): void
   /** 停著的時候，目前看得到的變數。 */
   variables(): { name: string; type: string; value: string }[]
-  setVariable(name: string, raw: string): boolean
+  /** Cella 那一側要一次 worker 往返，所以可以是 Promise。 */
+  setVariable(name: string, raw: string): boolean | Promise<boolean>
   /** 每個節點被進入幾次（步數能力）；給不出來時是 null（結果的 `missing` 帶 `steps`，畫面要說出來）。 */
   coverage(): ReadonlyMap<string, number> | null
   /** 這次執行從外面拿到的東西（重現用、插手紀錄）。 */
@@ -105,6 +108,11 @@ export interface ExecutionSession {
 export interface SessionOptions {
   maxSteps: number
   board?: BoardPinModel
+  /**
+   * 交給「形式化」的提供者（Cella）的那一份：含骨架積木的樹、目標、風格、骨架（與判決的 `CheckRequest` 同一組）。
+   * JS 直譯器用不到——它直接跑 `launch` 收到的樹。
+   */
+  formal?: { tree: SemanticNode; targetId: string; styleId: string; skeletonId: string }
 }
 
 /** 一次判決的請求：語義樹（含骨架積木）、目標與風格、輸入。翻成提供者自己的形式（語言、板名）是提供者的事。 */
@@ -218,10 +226,10 @@ export interface OpenedSession {
  * **開一次執行**（spec 183 R3）——照登錄順序問每個宣告了 `session` 的提供者；不接的記下原因、往下找。
  * 階段 6 之前：Cella 翻不出來／還沒就緒時，由 JS 直譯器接，而 `declined` 說得出為什麼。
  */
-export function openSession(options: SessionOptions, program: SemanticNode): OpenedSession {
+export function openSession(options: SessionOptions, program: SemanticNode, skip: ReadonlySet<string> = new Set()): OpenedSession {
   const declined: { provider: string; reason: string }[] = []
   for (const p of registry) {
-    if (!p.declares.session || !p.createSession) continue
+    if (!p.declares.session || !p.createSession || skip.has(p.id)) continue
     const s = p.createSession(options, program)
     if ('declined' in s) { declined.push({ provider: p.id, reason: s.declined }); continue }
     const d = p.declares.session

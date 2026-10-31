@@ -18,12 +18,13 @@ const VERSIONS = import.meta.glob(
 export const checkerVersions = (): string[] =>
   Object.entries(VERSIONS).sort(([a], [b]) => a.localeCompare(b)).map(([p, v]) => `${p.split('/').slice(-2, -1)[0]}@${v}`)
 
-/** 快取鍵：套件版本（依路徑排序）＋ 判決模組原始碼的雜湊。 */
-export async function checkerKey(): Promise<string> {
-  const versions = checkerVersions()
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(versions.join(',') + '\n' + CHECKER_SOURCE))
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+/** 快取鍵：`<模組名>:` ＋ 套件版本（依路徑排序）與模組原始碼的 SHA-256。模組名讓判決模組與各分支的除錯模組各存一份。 */
+export async function moduleKey(name: string, source: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(checkerVersions().join(',') + '\n' + source))
+  return `${name}:` + [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
+
+export const checkerKey = (): Promise<string> => moduleKey('verdict', CHECKER_SOURCE)
 
 const DB = 'semorphe-cella'
 const STORE = 'checkers'
@@ -50,14 +51,18 @@ export async function loadCompiled(key: string): Promise<Uint8Array | null> {
   }
 }
 
-/** 存一份、清掉其他鍵的舊份（套件升版之後舊模組永遠用不到）。 */
+/** 存一份、清掉【同一個模組】的舊版（套件升版之後舊模組永遠用不到；別的模組不動）。 */
 export async function saveCompiled(key: string, bytes: Uint8Array): Promise<void> {
+  const name = key.slice(0, key.indexOf(':') + 1)
   try {
     const db = await open()
     await new Promise<void>((resolve) => {
       const tx = db.transaction(STORE, 'readwrite')
       const store = tx.objectStore(STORE)
-      store.clear()
+      const keys = store.getAllKeys()
+      keys.onsuccess = () => {
+        for (const k of keys.result) if (typeof k === 'string' && k.startsWith(name) && k !== key) store.delete(k)
+      }
       store.put(bytes, key)
       tx.oncomplete = () => resolve()
       tx.onerror = () => resolve()

@@ -1,7 +1,7 @@
 import { RUN_MODES } from '../core/host/controls'
 import * as Blockly from 'blockly'
 import type { BoardPinModel } from '../core/types'
-import { openSession, SessionStop, type ExecutionSession, type Outcome, type Stop } from '../core/capabilities'
+import { openSession, SessionStop, type ExecutionSession, type Outcome, type SessionOptions, type Stop } from '../core/capabilities'
 import { DebugToolbar } from './debug-toolbar'
 import type { StepInfo, ExecutionSpeed } from '../core/execution'
 import { showQuickPick } from './toolbar/quick-pick'
@@ -51,6 +51,8 @@ export class ExecutionController {
   private skipIds: Set<string> | null = null
   private currentNodeId: string | null = null
   private currentBoard?: () => BoardPinModel | undefined
+  /** 交給形式化提供者（Cella）的那一份——組裝點才知道骨架積木、目標、風格、骨架（spec 183）。 */
+  private formalContext?: (tree: SemanticNode) => SessionOptions['formal']
   private debugToolbar: DebugToolbar
   private runMode: 'run' | 'debug' | 'animate-slow' | 'animate-medium' | 'animate-fast' | 'step' = 'run'
   private getBlocksDirty: () => boolean
@@ -109,6 +111,7 @@ export class ExecutionController {
        * 而一個開機時抓一次的值會讓「切了板子」不生效。
        */
       currentBoard?: () => BoardPinModel | undefined
+      formalContext?: (tree: SemanticNode) => SessionOptions['formal']
       /**
        * **開跑之前先問一句**（2026-09-04：預測）——由組裝點注入。
        *
@@ -126,6 +129,7 @@ export class ExecutionController {
   ) {
     this.panels = panels
     this.currentBoard = opts.currentBoard
+    this.formalContext = opts.formalContext
     this.beforeRun = opts.beforeRun
     this.getBlocksDirty = opts.getBlocksDirty
     this.syncBeforeRun = opts.syncBeforeRun
@@ -139,8 +143,10 @@ export class ExecutionController {
     // 🔴 **暫停中改一個變數**（2026-08-26）——「調整完狀態才能繼續」的那個「調整」。
     //    ⚠️ 改不到要說。一個按了沒反應的編輯框，比一個唯讀的更糟。
     this.bus?.on('execution:set-variable', (d) => {
-      const ok = this.session?.setVariable(d.name, d.value) ?? false
-      if (!ok) this.broadcastOutput(describeSetVariableRefused(d.name, d.value) + '\n', 'stderr')
+      void (async () => {
+        const ok = (await this.session?.setVariable(d.name, d.value)) ?? false
+        if (!ok) this.broadcastOutput(describeSetVariableRefused(d.name, d.value) + '\n', 'stderr')
+      })()
     })
     this.debugToolbar = new DebugToolbar()
   }
@@ -307,26 +313,42 @@ export class ExecutionController {
     if (mode === 'run') await this.beforeRun?.(tree)
 
     this.resetExecution()
-    const opened = openSession({ maxSteps: 10_000_000, board: this.currentBoard?.() }, tree)
-    if (!opened.session) {
-      this.broadcastOutput(`沒有可用的執行器（缺：${opened.missing.join('、')}）`, 'stderr')
-      this.broadcastState({ status: 'error' })
-      return
-    }
-    const session = opened.session
-    this.session = session
-    this.bus?.emit('execution:provenance', { provider: opened.provenance, declined: opened.declined })
-    session.onOutput((text: string) => this.broadcastOutput(text, 'stdout'))
-    session.setBreakpoints(this.breakpointNodes)
-
     this.mode = mode
     this.auto = mode === 'animate' ? ExecutionController.ANIMATE_DELAY[speed] : null
     this.panels.consolePanel?.clear()
-    this.panels.bottomPanel?.showTab(mode === 'run' ? 'console' : 'variables')
     // 執行與除錯都是跑到中斷點；單步與動畫停在第一步
+    this.panels.bottomPanel?.showTab(mode === 'run' ? 'console' : 'variables')
     this.showExecButtons(true, mode === 'step' ? 'stepping' : 'running')
     this.broadcastState({ status: 'running' })
-    await this.drive(session, session.launch(tree, { stopOnEntry: mode === 'step' || mode === 'animate' }))
+
+    const options = { maxSteps: 10_000_000, board: this.currentBoard?.(), formal: this.formalContext?.(tree) }
+    const declined: { provider: string; reason: string }[] = []
+    const tried = new Set<string>()
+    for (;;) {
+      const opened = openSession(options, tree, tried)
+      declined.push(...opened.declined)
+      if (!opened.session) {
+        this.broadcastOutput(`沒有可用的執行器（缺：${opened.missing.join('、')}）`, 'stderr')
+        this.broadcastState({ status: 'error' })
+        this.showExecButtons(false)
+        return
+      }
+      const session = opened.session
+      this.session = session
+      session.onOutput((text: string) => this.broadcastOutput(text, 'stdout'))
+      session.setBreakpoints(this.breakpointNodes)
+      const first = await session.launch(tree, { stopOnEntry: mode === 'step' || mode === 'animate' })
+      if (this.session !== session) return
+      // 開跑時才發現跑不了（一步也沒有執行）⟹ 換下一個，並記下原因（P6：退回要看得見）
+      if (first.kind === 'declined') {
+        declined.push({ provider: opened.provenance ?? '', reason: first.reason })
+        tried.add(opened.provenance ?? '')
+        continue
+      }
+      this.bus?.emit('execution:provenance', { provider: opened.provenance, declined })
+      await this.drive(session, Promise.resolve(first))
+      return
+    }
   }
 
   /**
@@ -348,6 +370,7 @@ export class ExecutionController {
         if (this.session !== session) return            // 停止了，或已經開了下一次
         if (outcome.kind === 'ended') return this.finish(session)
         if (outcome.kind === 'failed') return this.fail(outcome.error)
+        if (outcome.kind === 'declined') return this.fail(new SessionStop('runtime', 'RUNTIME_ERR_FALLBACK', {}))
         const stop = outcome.stop
 
         if (stop.reason === 'awaiting-input') {

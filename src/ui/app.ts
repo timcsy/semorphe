@@ -1746,6 +1746,8 @@ export class App {
       {
         // 🔴 **每次執行都問一次**——目標會在執行之間被切換（spec 145）。
         currentBoard: () => this.currentTarget.board as never,
+        // 與判決同一組（`runCheck`）：骨架積木要在樹裡，Cella 才看得到自動補的 `#include`
+        formalContext: (tree) => ({ tree: this.withScaffold(tree), targetId: this.currentTarget.id, styleId: this.currentStylePreset.id, skeletonId: this.currentSkeletonId }),
         bus: this.bus,
         // 🔴 **跑之前先猜一下**（2026-09-04 第四刀）——見 `askPrediction`。
         beforeRun: (tree) => this.askPrediction(elements.consolePanel, tree),

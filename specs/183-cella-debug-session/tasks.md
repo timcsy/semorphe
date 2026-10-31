@@ -17,10 +17,10 @@
 
 ## Phase 3: Cella 提供者（US1、US2）
 
-- [ ] T006 `src/providers/cella/worker.ts`：DAP 模組（R4：第一次需要時才編、IndexedDB 第二個鍵）；工作階段的訊息協定
-- [ ] T007 `src/providers/cella/provider.ts`：宣告 `session`；`createSession` 對翻不出來／未就緒／無法使用回「不接」＋原因
-- [ ] T008 契約對 Cella 綠（Node 端，走 `cella-lang/dap`，不經 worker）
-- [ ] T009 停下原因的中文：未定義行為（附條文）、例外、等輸入——與 5a 的 i18n 同一族
+- [x] T006 `src/providers/cella/worker.ts`：DAP 模組（R4：第一次需要時才編、IndexedDB 第二個鍵）；工作階段的訊息協定
+- [x] T007 `src/providers/cella/provider.ts`：宣告 `session`；`createSession` 對翻不出來／未就緒／無法使用回「不接」＋原因
+- [x] T008 契約對 Cella 綠（Node 端，走 `cella-lang/dap`，不經 worker）
+- [x] T009 停下原因的中文：未定義行為（附條文）、例外、等輸入——與 5a 的 i18n 同一族
 
 ## Phase 4: 退回與出處（US3）
 

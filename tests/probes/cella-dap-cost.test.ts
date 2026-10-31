@@ -120,5 +120,21 @@ describe.skipIf(!RUN)('Cella DAP：一步的成本', () => {
     s3.setVariable(0, sid, '100')
     await s3.continue()
     console.log(`改 s=100 之後繼續：${JSON.stringify(out3)}`)
+
+    // ⑤ 停下原因的 detail 長什麼樣（中文訊息要用到的欄位）
+    const shapes: Record<string, string> = {
+      ub: '#include <iostream>\nint main() { int a[3] = {1, 2, 3}; int i = 5; std::cout << a[i]; return 0; }',
+      exc: '#include <stdexcept>\nint main() { throw std::runtime_error("boom"); return 0; }',
+      overflow: '#include <climits>\nint main() { int x = INT_MAX; x = x + 1; return 0; }',
+    }
+    for (const [name, code] of Object.entries(shapes)) {
+      const p = formalize(lift(code)).program
+      if (!p) { console.log(`${name}：翻不出來`); continue }
+      const s4 = await createSession(bytes, { program: JSON.stringify(p) })
+      let stop: unknown = null
+      s4.onEvent((ev: string, body: unknown) => { if (ev === 'stopped') stop = body })
+      await s4.launch({ stopOnEntry: false })
+      console.log(`${name} 的停下事件：${JSON.stringify(stop)}`)
+    }
   }, 300_000)
 })

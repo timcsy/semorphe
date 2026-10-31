@@ -11,7 +11,7 @@ describe('Cella 判決模組的快取', () => {
 
   it('★ 鍵是穩定的 SHA-256（同一份套件、同一份原始碼 → 同一個鍵）', async () => {
     const a = await checkerKey()
-    expect(a).toMatch(/^[0-9a-f]{64}$/)
+    expect(a).toMatch(/^verdict:[0-9a-f]{64}$/)
     expect(await checkerKey()).toBe(a)
   })
 
