@@ -1707,6 +1707,19 @@ export class App {
         this.scheduleCheck()
       }
     })
+    // 這次的執行由誰跑（spec 183）——退回 JS 直譯器時說得出為什麼；給不出覆蓋資料時也說出來
+    const RUNNER: Record<string, string> = { cella: 'Cella', 'js-interpreter': 'JS 直譯器' }
+    this.bus.on('execution:provenance', (e) => {
+      const el = document.getElementById('status-runner')
+      if (!el) return
+      el.dataset.provider = e.provider ?? ''
+      el.textContent = e.provider ? `執行：${RUNNER[e.provider] ?? e.provider}` : ''
+      el.title = e.declined.map((d) => `${RUNNER[d.provider] ?? d.provider} 沒有接：${d.reason}`).join('\n')
+    })
+    this.bus.on('execution:coverage-missing', () => {
+      const el = document.getElementById('status-runner')
+      if (el) el.title = [el.title, '這次沒有覆蓋資料（哪幾塊沒跑到）'].filter(Boolean).join('\n')
+    })
     // 判決的載入狀態 → 狀態列；載好的那一刻判一次（載入期間的編輯不必重做）
     provide('verdict').provider?.onReadiness?.((r) => {
       this.renderCheckStatus(r)

@@ -454,6 +454,8 @@ export function createAppLayout(
     // 🟢 **判斷（spec 182）靠左**——IDE 把問題計數擺在左邊，這裡對上。
     statusBar.innerHTML =
       '<span id="status-check" class="status-item" aria-live="polite"></span>' +
+      // 🟢 這次的執行由誰跑、前面誰不接以及為什麼（spec 183，P6：退回要看得見）
+      '<span id="status-runner" class="status-item"></span>' +
       '<span class="status-spacer"></span>' +
       `${syncBtn}` +
       '<span id="status-controls" class="status-controls"></span>' +

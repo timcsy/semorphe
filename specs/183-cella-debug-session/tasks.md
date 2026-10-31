@@ -24,8 +24,8 @@
 
 ## Phase 4: 退回與出處（US3）
 
-- [ ] T010 狀態列顯示這次由誰跑、退回原因；`missing: steps` 時說「這次沒有覆蓋資料」
-- [ ] T011 e2e `e2e/cella-session.spec.ts`：Cella 跑（輸出、中斷點、變數、等輸入、越界停下）＋退回（`map`）標出處
+- [x] T010 狀態列顯示這次由誰跑、退回原因；`missing: steps` 時說「這次沒有覆蓋資料」
+- [x] T011 e2e `e2e/cella-session.spec.ts`：Cella 跑（輸出、中斷點、變數、等輸入、越界停下）＋退回（`map`）標出處
 
 ## Phase 5: Polish
 
