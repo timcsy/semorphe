@@ -63,7 +63,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       # 🔴 **`npm ci` 要能重試**（2026-09-14）。
       #
@@ -148,7 +148,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - name: npm ci（抖了就重試——理由見上面第一處）
         run: |
@@ -212,7 +212,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - name: npm ci（抖了就重試——理由見上面第一處）
         run: |
@@ -286,7 +286,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - name: npm ci（抖了就重試——理由見上面第一處）
         run: |
