@@ -1,12 +1,11 @@
 import { RUN_MODES } from '../core/host/controls'
 import * as Blockly from 'blockly'
 import type { BoardPinModel } from '../core/types'
-import { SemanticInterpreter } from '../interpreter/interpreter'
+import { provide, SessionStop, type ExecutionSession } from '../core/capabilities'
 import { StepController } from '../core/sync/step-controller'
 import { DebugToolbar } from './debug-toolbar'
-import type { StepInfo, ExecutionSpeed } from '../interpreter/types'
+import type { StepInfo, ExecutionSpeed } from '../core/execution'
 import type { SemanticNode as InterpreterNode } from '../core/types'
-import { RuntimeError } from '../interpreter/errors'
 import { showQuickPick } from './toolbar/quick-pick'
 import { msg } from '../core/messages'
 import { showToast } from './toolbar/toast'
@@ -25,7 +24,7 @@ import type { BottomPanel } from './layout/bottom-panel'
 import type { SyncController } from '../core/sync/sync-controller'
 import type { SemanticBus } from '../core/sync/semantic-bus'
 import type { ExecutionReason } from '../core/sync/view-host'
-import type { ExecutionStatus } from '../interpreter/types'
+import type { ExecutionStatus } from '../core/execution'
 
 export interface ExecutionPanels {
   blocklyPanel: BlocklyPanel | null
@@ -41,7 +40,7 @@ export class ExecutionController {
   private bus: SemanticBus | undefined
   /** 有斷點的節點。由程式碼視圖翻譯後推來——見 `semantic-bus.ts` 的 `execution:breakpoints`。 */
   private breakpointNodes = new Set<string>()
-  private interpreter: SemanticInterpreter | null = null
+  private interpreter: ExecutionSession | null = null
   private stepController: StepController | null = null
   private currentBoard?: () => BoardPinModel | undefined
   private debugToolbar: DebugToolbar
@@ -144,7 +143,7 @@ export class ExecutionController {
     // 🔴 **暫停中改一個變數**（2026-08-26）——「調整完狀態才能繼續」的那個「調整」。
     //    ⚠️ 改不到要說。一個按了沒反應的編輯框，比一個唯讀的更糟。
     this.bus?.on('execution:set-variable', (d) => {
-      const ok = this.interpreter?.setVariableFromHost(d.name, d.value) ?? false
+      const ok = this.interpreter?.setVariable(d.name, d.value) ?? false
       if (!ok) this.broadcastOutput(describeSetVariableRefused(d.name, d.value) + '\n', 'stderr')
     })
     this.debugToolbar = new DebugToolbar()
@@ -215,6 +214,33 @@ export class ExecutionController {
     for (const p of [this.panels.blocklyPanel, this.panels.codeView]) {
       p?.onExecutionAtNode?.({ nodeId, follow })
     }
+  }
+
+  /**
+   * **向登錄表要一次執行**（spec 179）——控制器不認得是誰在跑。
+   * 沒有任何提供者宣告「執行與除錯」時，照實說出來，不靜默（P6）。
+   */
+  private newSession(): ExecutionSession | null {
+    const { provider, missing } = provide('session')
+    if (!provider?.createSession) {
+      this.broadcastOutput(`沒有可用的執行器（缺：${missing.join('、')}）`, 'stderr')
+      this.broadcastState({ status: 'error' })
+      return null
+    }
+    const session = provider.createSession({ maxSteps: 10_000_000, board: this.currentBoard?.() })
+    session.setUnknownPause((component, nodeId) => this.pauseOnUnknown(component, nodeId))
+    session.setInputProvider(() => this.panels.consolePanel!.promptInput())
+    session.onOutput((text: string) => {
+      this.broadcastOutput(text, 'stdout')
+    })
+    session.onWaiting((nodeId) => {
+      // Switch to console tab so the input field is visible
+      this.panels.bottomPanel?.showTab('console')
+      this.broadcastState({ status: 'running', reason: 'awaiting-input' })
+      // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
+      this.broadcastAtNode(nodeId, true)
+    })
+    return session
   }
 
   getDebugToolbar(): DebugToolbar {
@@ -357,19 +383,8 @@ export class ExecutionController {
     await this.beforeRun?.(tree)
 
     this.resetExecution()
-    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
-    this.interpreter.setUnknownComponentPause((component, nodeId) => this.pauseOnUnknown(component, nodeId))
-    this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
-    this.interpreter.setOutputCallback((text: string) => {
-      this.broadcastOutput(text, 'stdout')
-    })
-    this.interpreter.setWaitingCallback((nodeId) => {
-      // Switch to console tab so the input field is visible
-      this.panels.bottomPanel?.showTab('console')
-      this.broadcastState({ status: 'running', reason: 'awaiting-input' })
-      // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
-      this.broadcastAtNode(nodeId, true)
-    })
+    this.interpreter = this.newSession()
+    if (!this.interpreter) return
 
     // Breakpoint support in run mode: pause on breakpoint, then allow stepping
     this.animatePaused = false
@@ -377,7 +392,7 @@ export class ExecutionController {
     this.stepRecords = []
     this.currentStepIndex = -1
     this.interpreter.setRecordSteps(true)
-    this.interpreter.setStepRecordCallback(async (step: StepInfo) => {
+    this.interpreter.onStepRecord(async (step: StepInfo) => {
       this.stepRecords.push(step)
       this.currentStepIndex = this.stepRecords.length - 1
 
@@ -406,7 +421,7 @@ export class ExecutionController {
     this.panels.bottomPanel?.showTab('console')
 
     try {
-      await this.interpreter.execute(tree as unknown as InterpreterNode)
+      await this.interpreter.run(tree as unknown as InterpreterNode)
       this.clearHighlights()
       this.reportInterventions()
       // 🔴 **跑完之後，「到過誰」是一份回饋**（2026-09-04）——
@@ -415,11 +430,11 @@ export class ExecutionController {
       //    （它要排掉骨架、排掉還沒同步的積木），執行器不該認得那些。
       //    🔴 而**次數**（2026-09-04 第三刀）走同一條線：初學者的另一種 bug 是
       //    「跑的次數不對」（差一錯誤），而執行器一樣已經知道答案了。
-      this.broadcastCoverage(this.interpreter.getVisitCounts())
+      this.broadcastCoverage(this.interpreter.visitCounts())
       this.broadcastState({ status: 'completed' })
       showToast(Blockly.Msg['TOAST_EXEC_COMPLETE'] || 'Program completed', 'success')
     } catch (e) {
-      if (e instanceof RuntimeError) {
+      if (e instanceof SessionStop) {
         if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
           this.broadcastState({ status: 'idle', reason: 'aborted' })
         } else {
@@ -450,27 +465,16 @@ export class ExecutionController {
     if (this.refuseIfBroken(tree)) return
 
     this.resetExecution()
-    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
-    this.interpreter.setUnknownComponentPause((component, nodeId) => this.pauseOnUnknown(component, nodeId))
-    this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
-    this.interpreter.setOutputCallback((text: string) => {
-      this.broadcastOutput(text, 'stdout')
-    })
-    this.interpreter.setWaitingCallback((nodeId) => {
-      // Switch to console tab so the input field is visible
-      this.panels.bottomPanel?.showTab('console')
-      this.broadcastState({ status: 'running', reason: 'awaiting-input' })
-      // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
-      this.broadcastAtNode(nodeId, true)
-    })
+    this.interpreter = this.newSession()
+    if (!this.interpreter) return
     this.panels.consolePanel?.clear()
     this.panels.bottomPanel?.showTab('variables')
     this.showExecButtons(true, 'stepping')
 
     try {
-      this.stepRecords = await this.interpreter.executeWithSteps(tree as unknown as InterpreterNode)
+      this.stepRecords = await this.interpreter.runWithSteps(tree as unknown as InterpreterNode)
     } catch (e) {
-      if (e instanceof RuntimeError) {
+      if (e instanceof SessionStop) {
         this.broadcastOutput(describeRuntimeStop(e.i18nKey, e.params), 'stderr')
         this.broadcastState({ status: 'error' })
         this.showExecButtons(false)
@@ -697,24 +701,13 @@ export class ExecutionController {
     this.animateSpeed = speed
     this.animateAccelerateSkipIds = null
 
-    this.interpreter = new SemanticInterpreter({ maxSteps: 10_000_000, board: this.currentBoard?.() })
-    this.interpreter.setUnknownComponentPause((component, nodeId) => this.pauseOnUnknown(component, nodeId))
-    this.interpreter.setInputProvider(() => this.panels.consolePanel!.promptInput())
-    this.interpreter.setOutputCallback((text: string) => {
-      this.broadcastOutput(text, 'stdout')
-    })
-    this.interpreter.setWaitingCallback((nodeId) => {
-      // Switch to console tab so the input field is visible
-      this.panels.bottomPanel?.showTab('console')
-      this.broadcastState({ status: 'running', reason: 'awaiting-input' })
-      // 等待輸入時一定跟著看——使用者正要打字，得知道停在哪。
-      this.broadcastAtNode(nodeId, true)
-    })
+    this.interpreter = this.newSession()
+    if (!this.interpreter) return
 
     this.stepRecords = []
     this.currentStepIndex = -1
     this.interpreter.setRecordSteps(true)
-    this.interpreter.setStepRecordCallback(async (step: StepInfo) => {
+    this.interpreter.onStepRecord(async (step: StepInfo) => {
       this.stepRecords.push(step)
       this.currentStepIndex = this.stepRecords.length - 1
 
@@ -753,11 +746,11 @@ export class ExecutionController {
     this.broadcastState({ status: 'running' })
 
     try {
-      await this.interpreter.execute(tree as unknown as InterpreterNode)
+      await this.interpreter.run(tree as unknown as InterpreterNode)
       this.reportInterventions()
       this.broadcastState({ status: 'completed' })
     } catch (e) {
-      if (e instanceof RuntimeError) {
+      if (e instanceof SessionStop) {
         if (e.i18nKey === 'RUNTIME_ERR_ABORTED') {
           this.broadcastState({ status: 'idle', reason: 'aborted' })
         } else {
@@ -802,7 +795,7 @@ export class ExecutionController {
    * ```
    *
    * 兩個理由：① 要求的是**時機**（按執行才判，編輯中的程式大部分時間都不合法）；
-   * ② **既有測試直接呼叫 `interpreter.execute(tree)`**，放那一層會擋掉一大片
+   * ② **既有測試直接呼叫 `interpreter.run(tree)`**，放那一層會擋掉一大片
    * 與本功能無關的測試。
    *
    * ## ✅ 而辨識層 2026-08-14（spec `121`）補齊了
@@ -858,7 +851,7 @@ export class ExecutionController {
    * 那是另一刀。這裡先讓那份紀錄**看得見**。
    */
   private reportInterventions(): void {
-    const inputs = this.interpreter?.getRecordedInputs() ?? []
+    const inputs = this.interpreter?.recordedInputs() ?? []
     const edits = inputs.filter((i) => i.kind === 'set-variable').length
     if (edits === 0) return
     this.broadcastOutput(describeInterventions(edits) + '\n', 'stderr')
@@ -920,7 +913,7 @@ export class ExecutionController {
         nodeId: nodeId ?? '',
         sourceRange: null,
         outputLength: 0,
-        scopeSnapshot: this.interpreter?.snapshotScope() ?? [],
+        scopeSnapshot: this.interpreter?.scope() ?? [],
       },
     })
     this.debugToolbar.show('paused')

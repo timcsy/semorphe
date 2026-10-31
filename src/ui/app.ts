@@ -93,6 +93,11 @@ import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
 import {} from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
+// 🔴 **組裝點登記語意的提供者**（spec 179）——核心與介面只認能力介面，不認得是誰在跑。
+//    今天只有 JS 直譯器；〈重構〉階段 5 加 Cella（排在前面），階段 6 拿掉這一行與整個 `providers/js-interpreter/`。
+import { registerProvider } from '../core/capabilities'
+import { jsInterpreterProvider } from '../providers/js-interpreter'
+registerProvider(jsInterpreterProvider)
 // Semantic layer
 // Projection layer
 import { CURRENT_VERSION, hashCode } from '../core/storage/storage-version'
