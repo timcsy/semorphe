@@ -185,9 +185,11 @@ export interface Provided {
 const registry: Provider[] = []
 
 /** 組裝點呼叫——**有序**：先登記的優先。同一個身分只登記一次。 */
-export function registerProvider(p: Provider): void {
+export function registerProvider(p: Provider, options: { first?: boolean } = {}): void {
   if (registry.some((r) => r.id === p.id)) return
-  registry.push(p)
+  // `first`：排到最前面——宿主的入口才知道有沒有這個提供者（網頁版有 Cella、擴充還沒有），而它要排在共用組裝點登記的那些之前
+  if (options.first) registry.unshift(p)
+  else registry.push(p)
 }
 
 /** ⚠️ 只給測試用。 */

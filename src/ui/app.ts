@@ -94,14 +94,13 @@ import { BlockStyleSelector } from './toolbar/block-style-selector'
 import {} from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
 // 🔴 **組裝點登記語意的提供者**（spec 179）——核心與介面只認能力介面，不認得是誰在跑。
-//    Cella 排在前面（判決與型別查詢，spec 182）；階段 6 拿掉 JS 直譯器那一行與整個 `providers/js-interpreter/`。
+//    兩個宿主共用的只有 JS 直譯器；Cella 由【宿主的入口】登記（網頁版 `src/main.ts`，排在最前面）
+//    ——擴充的 webview 還沒有它（`new Worker` 進了 webview 的 lib 打包，建置直接失敗、而 vsix 會多 45 MB 的套件檔）。
+//    階段 6 拿掉 JS 直譯器那一行與整個 `providers/js-interpreter/`。
 import { registerProvider, provide, type Provider, type Readiness } from '../core/capabilities'
 import { jsInterpreterProvider } from '../providers/js-interpreter'
-import { createCellaProvider } from '../providers/cella/provider'
 import { toDiagnostics } from '../core/verdict-diagnostics'
 import type { Diagnostic } from '../core/diagnostics'
-// ⚠️ worker 是第一次需要時才建（`warmUp` 或第一次 `check`）——首屏不載 Cella
-registerProvider(createCellaProvider(() => new Worker(new URL('../providers/cella/worker.ts', import.meta.url), { type: 'module' })))
 registerProvider(jsInterpreterProvider)
 // Semantic layer
 // Projection layer
