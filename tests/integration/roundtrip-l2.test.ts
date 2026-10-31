@@ -383,8 +383,7 @@ describe('L2 Block Roundtrip', () => {
       const sem = createNode('cpp:vector_declare', { type: 'int', name: 'nums' })
       // ⚠️ 期望改了（第 384 刀）：`std::vector<int> nums;` 是模板寫死的（不看風格）；產品在 `using` 風格下產 `vector<int> nums;`，
       //    而補丁器會補上 `using namespace std;`——同樣正確。
-      // 🔴 而 `namespace_style: 'explicit'`（google）下產品**同樣**產 `vector<int> nums;`、也不補 `using`
-      //    ——那編不過。那是產品缺陷（產碼不認得 explicit），不在這一刀修；見第 384 刀的回報。
+      // 🟢 `namespace_style: 'explicit'`（google）下由補丁器加 `std::`（第 386 刀修好；見 `std-qualify.ts`）。
       const code = productCode(sem)
       expect(code).toBe('vector<int> nums;')
     })
@@ -509,8 +508,7 @@ describe('L2 Block Roundtrip', () => {
       const sem = createNode('cpp:string_declare', { name: 'greeting' })
       // ⚠️ 期望改了（第 384 刀）：`std::string greeting;` 是模板寫死的（不看風格）；產品在 `using` 風格下產 `string greeting;`，
       //    而補丁器會補上 `using namespace std;`——同樣正確。
-      // 🔴 而 `namespace_style: 'explicit'`（google）下產品**同樣**產 `string greeting;`、也不補 `using`
-      //    ——那編不過。那是產品缺陷（產碼不認得 explicit），不在這一刀修；見第 384 刀的回報。
+      // 🟢 `namespace_style: 'explicit'`（google）下由補丁器加 `std::`（第 386 刀修好；見 `std-qualify.ts`）。
       const code = productCode(sem)
       expect(code).toBe('string greeting;')
     })
@@ -548,8 +546,7 @@ describe('L2 Block Roundtrip', () => {
       const sem = createNode('cpp:stack_declare', { type: 'int', name: 'st' })
       // ⚠️ 期望改了（第 384 刀）：`std::stack<int> st;` 是模板寫死的（不看風格）；產品在 `using` 風格下產 `stack<int> st;`，
       //    而補丁器會補上 `using namespace std;`——同樣正確。
-      // 🔴 而 `namespace_style: 'explicit'`（google）下產品**同樣**產 `stack<int> st;`、也不補 `using`
-      //    ——那編不過。那是產品缺陷（產碼不認得 explicit），不在這一刀修；見第 384 刀的回報。
+      // 🟢 `namespace_style: 'explicit'`（google）下由補丁器加 `std::`（第 386 刀修好；見 `std-qualify.ts`）。
       const code = productCode(sem)
       expect(code).toBe('stack<int> st;')
     })
@@ -560,8 +557,7 @@ describe('L2 Block Roundtrip', () => {
       const sem = createNode('cpp:queue_declare', { type: 'int', name: 'q' })
       // ⚠️ 期望改了（第 384 刀）：`std::queue<int> q;` 是模板寫死的（不看風格）；產品在 `using` 風格下產 `queue<int> q;`，
       //    而補丁器會補上 `using namespace std;`——同樣正確。
-      // 🔴 而 `namespace_style: 'explicit'`（google）下產品**同樣**產 `queue<int> q;`、也不補 `using`
-      //    ——那編不過。那是產品缺陷（產碼不認得 explicit），不在這一刀修；見第 384 刀的回報。
+      // 🟢 `namespace_style: 'explicit'`（google）下由補丁器加 `std::`（第 386 刀修好；見 `std-qualify.ts`）。
       const code = productCode(sem)
       expect(code).toBe('queue<int> q;')
     })

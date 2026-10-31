@@ -99,13 +99,14 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
   /**
    * 方法呼叫，接收者是文字屬性 `obj`：程式裡宣告過的物件（`dht`）照常指到宣告；
    * 沒宣告過的（`Serial`、`Serial1`）是板子的全域物件——照 Cella 的板子常數那樣寫成 `eConst`。
-   * ⚠️ 全域物件寫成 eConst 是推論（README 說常數是 eConst、全域物件列在 boardInfo），已向 cella 確認中。
+   * 全域物件寫成 eConst：cella 2026-10-31 確認（同 cpp_to_tree.py：別的標頭宣告的全域變數一律 eConst）。
    */
   const mcall = (n: SemanticNode, f: string, slots: string[]): CellaJson => {
     const name = String(n.properties?.obj ?? '')
     const x = declOf.get(`${n.id}#obj`)
-    const obj = x ? k('eVar', { n: `${n.id}/obj`, x }) : /^Serial[0-9]?$/.test(name) ? k('eConst', { n: `${n.id}/obj`, name }) : null
-    if (!obj) return miss(n, `接收者「${name}」指不到宣告，也不是板子的序列埠`)
+    // 沒宣告的接收者（`Serial`、`Serial1`、`WiFi`）是標頭的全域物件：eConst（cella 2026-10-31 確認）
+    const obj = x ? k('eVar', { n: `${n.id}/obj`, x }) : options.board && /^[A-Za-z_]\w*$/.test(name) ? k('eConst', { n: `${n.id}/obj`, name }) : null
+    if (!obj) return miss(n, `接收者「${name}」指不到宣告`)
     return k('eMCall', { n: n.id, obj, arrow: false, f, args: slots.filter((sl) => one(n, sl)).map((sl) => expr(one(n, sl)!)) })
   }
 
@@ -145,11 +146,12 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       case 'cpp:var_ref': {
         const x = declOf.get(n.id)
         if (x) return k('eVar', { n: n.id, x })
-        // 板子與函式庫的常數（LED_BUILTIN、DHT11、WL_CONNECTED）今天被 lift 成一般的參照、指不到宣告。
-        // 在板子上，全大寫的名字照 Cella 的寫法送成 eConst——它存不存在由 Cella 依板子與 include 判
-        //（`boardInfo` 是它的真相；不存在的話判決會指回這個節點），不是我們猜。
+        // 板子與函式庫的名字（LED_BUILTIN、DHT11、A0、WL_CONNECTED）今天被 lift 成一般的參照、指不到宣告。
+        // cella 2026-10-31 定的分工：**程式自己沒宣告、來自標頭的名字**一律送 eConst（同 cpp_to_tree.py）；
+        // 存不存在由 Cella 依板子與 include 判（不存在時判決指回這個節點）。學生自己宣告的（`const int LED = 13;`）
+        // 已經由作用域走訪解析成 eVar，不會走到這裡。⚠️ 判準不是「全大寫」——`Serial`、`A0` 也是標頭的名字。
         const name = String(p.name ?? '')
-        if (options.board && /^[A-Z][A-Z0-9_]*$/.test(name)) return k('eConst', { n: n.id, name })
+        if (options.board) return k('eConst', { n: n.id, name })
         return miss(n, `名字「${name}」指不到宣告`)
       }
       case 'cpp:arithmetic': case 'cpp:compare': case 'cpp:logic': {

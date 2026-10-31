@@ -14,6 +14,23 @@ import type { DependencyResolver, DependencyEdge } from '../../core/dependency-r
 import { expandHeaderAliases, normalizeHeader } from './header-aliases'
 import { buildInclude } from '../../components/cpp/include/lift'
 import { buildUsingNamespace } from '../../components/cpp/using_namespace/lift'
+import { qualifyStd } from './std-qualify'
+
+/** 程式自己宣告的名字（變數、參數、函式、struct）——explicit 風格下不得被當成 std 的名字。 */
+function userDeclaredNames(tree: SemanticNode): Set<string> {
+  const out = new Set<string>()
+  const walk = (n: SemanticNode): void => {
+    const p = n.properties ?? {}
+    for (const key of ['name', 'var_name']) {
+      const v = p[key]
+      if (typeof v === 'string' && v !== '' && (n.componentId.endsWith('_declare') || n.componentId === 'param_decl'
+        || n.componentId === 'cpp:func_def' || key === 'var_name')) out.add(v)
+    }
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(walk)
+  }
+  walk(tree)
+  return out
+}
 import { isIncludeDirective } from './lang/node-traits'
 
 /**
@@ -116,6 +133,14 @@ export function createCppCodePatcher(
       lines.splice(lastInc + 1, 0, 'using namespace std;')
       patched = lines.join('\n')
       changed = true
+    }
+
+    // 2b. 🔴 explicit 風格（google、c）：標準函式庫的名字加 `std::`（2026-10-31，見 `std-qualify.ts`）。
+    //     在此之前 explicit 在產碼端沒有實作，而上面那一步（正確地）不補 using ⟹ 產出編不過。
+    //     學生自己宣告的名字（`int count;`、自己的 `max`）不動。
+    if (namespaceStyle === 'explicit') {
+      const q = qualifyStd(patched, userDeclaredNames(tree))
+      if (q !== patched) { patched = q; changed = true }
     }
 
     // 3. Patch missing entry point (L0 only — scaffold manages it)
