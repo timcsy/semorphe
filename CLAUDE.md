@@ -56,9 +56,13 @@ tests/
 | 🔴 **改了積木的畫法**（膠囊定義、`block-registrar`、renderer） | **重產課文的對照圖**（見下） | 六分鐘 |
 | 🔴 **改 lift／產生器**（`lifters/strategies.ts`、`code-generator.ts`、膠囊的 `lift`／`generate`） | **拿真實語料重量一次**（見下） | 十秒 |
 | 🔴 **改宣告的 lift／渲染／抽取** | **四個面向全掃**（見下，要參照編譯器） | 兩分鐘 |
-| commit 前 | `npm test`（全套） | 約 15 分鐘（放背景跑） |
+| 🔴 **改了 `vite*.config.ts`、加了 worker／新的資產、改了兩個宿主共用的組裝點（`app.ts`）** | **`npm run build:vscode`**（看 vsix 的大小與檔數） | 兩分鐘 |
+| commit 前 | `npm test`（全套）——用 `tools/long-test.sh`（skill `long-test-run`） | 約 15 分鐘（放背景跑） |
 | 🔴 **push 之後** | **`gh run list --limit 3`** | 十秒 |
 | PR | CI 跑全套 ＋ `npm run test:e2e` | — |
+
+🔴 **「改了 vite 設定／worker／`app.ts` → 建 vsix」那一列是 2026-11-01 加的**（使用者照推薦定）：spec 182 在 `vite.config.ts` 加了 worker 格式，網頁版建置與 e2e 全綠，
+**CI 的 Extension (vsix) 紅**——`vite.vscode.config.ts` 是另一份設定，而本機從來沒建過 vsix。見 `knowledge/draft/2026-11-01-兩個宿主的建置與長測試的排程.md`。
 
 🔴 **「push 之後看 CI」那一列是 2026-09-18 加的，而它是使用者發現的**：
 CI 從第 182 刀起紅，**連續四次合併**，而每一次我都跑了全套（7000+ 綠）、
