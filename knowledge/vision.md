@@ -166,11 +166,11 @@ Semorphe   vericoding（程式）起家 → 延伸到其他領域
 ```
 宿主（瀏覽器 / VSCode / Theia）
   ↕ ViewHost
-面板（積木 · 程式碼 · 流程 · 主控台 · 變數）        src/panels/<name>/panel.ts
+面板（積木 · 程式碼 · 流程 · 主控台 · 變數 · 硬體）  src/panels/<name>/panel.ts
   ↕ SemanticBus
 核心（語義樹 · 元件登錄 · 投影引擎 · 能力介面）      零 DOM，Node 跑得起來
   ↕ 能力登錄表
-提供者（今天：JS 直譯器；〈重構〉階段 5 起：Cella）   src/providers/<id>/（核心不得 import）
+提供者（網頁版：Cella 優先、JS 直譯器接 Cella 不接的；擴充：JS 直譯器）   src/providers/<id>/（核心不得 import）
   ↕ 語言套件介面
 語言套件（cpp · python）＋ 膠囊 src/components/<scope>/<name>/
 ```
@@ -284,34 +284,24 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       設計中冒出的三項（判題走哪項能力、提供者目錄、要不要並跑）照推薦進行，記在該檔第五節
 - [x] **1 能力介面**（[spec 179](../specs/179-capability-interface/spec.md)，2026-10-31）——判決／型別查詢／執行與除錯／步數四個介面；JS 直譯器包成第一個提供者；
       驗收：核心與 UI 不 import 任何提供者（分層護欄）、每個結果帶出處、學生行為不變（e2e 全綠）
-- [x] **2 元件動詞改名**——`generate`／`extract` → 每個視圖一對 `render`／`lift`；驗收：349 顆 `component.json` 新形狀、五路完備性護欄改寫
-      🟢 形狀已定（2026-10-31）：視圖優先、包一層 `views`（設計 draft 五之五）；同一刀改 P2 與五槽（行為槽 → 形式槽，五之四）。
-      🟢 2026-10-31（[spec 181](../specs/181-view-paths/spec.md)）：349 個宣告改成 `paths.views.<視圖>.render／lift`；視圖表與格子在 `core/component/views.ts`；
-      P2、五槽（行為 → 形式）、完備性同一刀改寫（[history/308](history/308-元件的動詞改成每個視圖一對-render-lift.md)）
-- [x] **3 升級 Cella**（提前到現在）——換到重組後的套件；淺嵌入的探針、merkle 基線、`contract.cella` 退場
-      🟢 2026-10-31（第 393 刀）：`cella-lang`、`@cella-lang/cpp`／`c`／`arduino` 釘在 `0.1.202610310706`（peer 一致、同一支檢查器）；
-      `cella-formalize-guard`、`formalize-residual`、三份 `contract.cella` 與 prelude 退場；`paths.formalize` 改指膠囊的 `formalize.ts`
+- [x] **2 元件動詞改名**——每個視圖一對 `render`／`lift`（[spec 181](../specs/181-view-paths/spec.md)）→ [history/308](history/308-元件的動詞改成每個視圖一對-render-lift.md)
+- [x] **3 升級 Cella**——套件釘在 `0.1.202610310706`，淺嵌入的探針、merkle 基線、`contract.cella` 退場（第 393 刀）
 - [ ] **4 深嵌入 formalize**（[spec 180](../specs/180-deep-formalize/spec.md)，先 C++／Arduino）——語義樹 → 程式 JSON；靜態作用域走訪填 declNode、nodeId 穩定、`iInclude`、
       依支援清單標 unknown；驗收：課文 C／C++／Arduino 解答全部翻得出、交判決綁定語料（Cella 的衍生原則 C18「判決綁定」）
       🟡 第一批（2026-10-31）：作用域走訪（852 個參照 0 落空）、課文解答 84 / 94、Arduino sketch 10 / 10、C 分支、空槽變洞、判決綁定語料第一版交出；
       剩下的 10 份卡在 Cella 還沒建模的函式庫（pair、queue、set、map、stack、priority_queue）——已給 Cella 清單，Cella 已開工（下一版帶 `tAuto`）；
       第二批（第 389–391 刀）：formalize 搬進膠囊、判決綁定語料 109 筆／附 program 99 筆，cella 用 clang 比兩棵樹 95/95 相同；Arduino 15/15
-- [ ] **5 Cella 提供者**（spec）——verdict（積木標示、判題）、types（型別不合接上後標錯、工具箱不藏）、session（除錯、變數、步數）、
-      `assumes` 小標、硬體時間軸面板、課文 check 的腳位事件
-      🔁 2026-10-31 拆成三段（使用者照 knowie-next 的推薦定：一份 spec 驗收不完；判決與型別今天零消費者，先接最安全、最早讓學生看到）：
+- [ ] **5 Cella 提供者**——verdict（積木標示、判題）、types（型別不合接上後標錯、工具箱不藏）、session（除錯、變數、步數）、
+      `assumes` 小標、硬體時間軸面板、課文 check 的腳位事件（2026-10-31 拆成 5a／5b／5c）
+      ⏳ **剩下的**：`assumes` 的小標只做了一半——說明在狀態列那一格的提示裡，判決旁**看不到**「依 libc++」（第 14 題）；
+      覆蓋標記等 cella 的 `coverage()`；判題改用 `verdict` 照 spec 182 的範圍移到 6。
   - [x] **5a 判決與型別查詢 ＋ 第一個看得見的消費者**（spec 182）——提供者宣告 `verdict`／`types`、排在 JS 直譯器前面；
-        積木上標 reject／unknown 的原因、`assumes` 小標、型別不合接上後標錯；Web Worker、第一次需要才載、快取編好的模組
-        ✅ 2026-11-01：判決走既有的診斷通道（來源 cella、判不出來是 info 藍色）；編好的模組存 IndexedDB，第二次打開 25.7 秒 → 0.16 秒。
-        [history/309](history/309-判決第一次被學生看到.md)
-  - [x] **5b 除錯工作階段**（spec 183）——`session` 走 `cella-lang/dap`（變數、步數、輸入）
-        ✅ 2026-11-01：執行介面換成 DAP 的形狀（宿主下指令；stepIn 每步 3.5 ms、跑到底 28 ms）；控制器三套驅動收成一個；
-        Cella 翻不出來／還沒就緒時退回 JS 直譯器並在狀態列說原因。⚠️ 覆蓋標記等 cella 下一版的 `coverage()`。
-        [history/310](history/310-執行介面換成DAP的形狀.md)
-  - [x] **5c 硬體時間軸與課文的腳位檢查**（第 17、18 題；spec 184）
-        ✅ 2026-11-01：底部「硬體」分頁（每支腳一條時間軸、PWM 照工作週期、結束時的腳位／伺服／LCD），資料來自判決的 `pins`／`env`；
-        課文 `check.pins` 只寫關鍵事件、帶容許誤差，閃燈課「跟著做」第一個用（在此之前它的檢查是「沒有輸出」）。
-        ⏳ 範圍外：暫停時的即時板子狀態與改感測器輸入（DAP 的 `env`／`setInput`）。[history/311](history/311-板子做了什麼第一次畫得出來.md)
-- [ ] **6 切換**（spec）——同一天拆 JS 直譯器、326 個 `execute.ts`、參照編譯器那一族；222 個靠直譯器斷言的測試檔改成對 Cella 驗
+        → [history/309](history/309-判決第一次被學生看到.md)
+  - [x] **5b 除錯工作階段**（spec 183）——`session` 走 `cella-lang/dap` → [history/310](history/310-執行介面換成DAP的形狀.md)
+  - [x] **5c 硬體時間軸與課文的腳位檢查**（第 17、18 題；spec 184）→ [history/311](history/311-板子做了什麼第一次畫得出來.md)
+        ⏳ 範圍外、還沒排：暫停時的即時板子狀態與改感測器輸入（DAP 的 `env`／`setInput`）
+- [ ] **6 切換**（spec）——同一天拆 JS 直譯器、326 個 `execute.ts`、參照編譯器那一族；222 個靠直譯器斷言的測試檔改成對 Cella 驗；
+      判題（課文 check）改用 `verdict`（設計 draft 五之一的推薦，從 5 移過來）。⚠️ 前提：cella 下一版（容器函式庫、`coverage()`）、課文覆蓋 94／94
 - [ ] **7 Python**——4～6 再走一遍
 
 ⚠️ **不在本項**：Cella 語言本身的課程（重構之後）· Web Component 領域（Cella 那側的深嵌入）。
