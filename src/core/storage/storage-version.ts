@@ -17,7 +17,7 @@ import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, 
 import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 24
+export const CURRENT_VERSION = 25
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -39,6 +39,7 @@ export const SAVED_STATE_FIELDS = {
   blocklyState: 1,
   codeHash: 1,
   flowLayout: 1,
+  collapsed: 1,
   code: 1,
   language: 1,
   styleId: 1,
@@ -96,6 +97,11 @@ export const FIELD_OWNERSHIP = {
    * 對不上就退回自動排版——**失效條件內建在配對裡**（`core/flow/layout-key.ts`）。
    */
   flowLayout: 'sideCar',
+  /**
+   * **哪幾塊收著**（v25，spec 188）——與 `flowLayout` 同一個性質：**導不出來**（沒有人算得出使用者想收哪幾塊）⟹ 狀態，
+   * 存的是鑰匙不是 `nodeId`，對不上就安靜地掉（`core/granularity.ts`），所以也不吃 `codeHash`。
+   */
+  collapsed: 'sideCar',
   // 【使用者】——換一個檔案不該變
   styleId: 'user',
   blockStyleId: 'user',
@@ -459,6 +465,16 @@ export const UPGRADES: Record<number, Upgrade> = {
     const { enabledBranches: _dropped, ...rest } = raw as Record<string, unknown>
     return { ...rest, version: 24 }
   },
+  /**
+   * 24 → 25：**收合狀態有了一格**（`collapsed`，spec 188）。
+   *
+   * ⚠️ 與 16 → 17 同一個理由**不補空陣列**：缺席與空陣列還原時一樣（全部展開）。
+   * 🔴 **舊存檔裡收著的積木不會丟**：它們的 `collapsed: true` 還在 `blocklyState` 裡，
+   *    積木面板第一次同步時把它們收編成共享狀態（`BlocklyPanel` 的收編那一段）——
+   *    這一步算不出鑰匙（要一棵樹），所以不在這裡做。
+   * 🟢 冪等：只改版號。
+   */
+  24: (raw) => ({ ...raw, version: 25 }),
 }
 
 /**

@@ -17,6 +17,7 @@ import { showToast } from '../toolbar/toast'
 import { diagNote } from '../../core/diag-log'
 import type { BlockMapping } from '../../core/projection/code-generator'
 import { createDarkWorkspaceTheme } from '../theme/dark-workspace-theme'
+import { resolveCollapsed, collapsedToKeys, type CollapsedEntry } from '../../core/granularity'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
@@ -181,6 +182,68 @@ export class BlocklyPanel implements ViewHost {
   }
 
   onSemanticUpdate(event: SemanticUpdateEvent): void {
+    this.lastTree = event.tree
+    if (this.pendingAdopt.length > 0) {
+      const ids = resolveCollapsed(this.pendingAdopt, event.tree)
+      this.pendingAdopt = []
+      for (const id of ids) this.collapseCb?.(id, true)
+    }
+    try { this.onSemanticUpdateInner(event) } finally { this.applyCollapse() }
+  }
+
+  // ─── 粒度（spec 188）────────────────────────────────────────────────────
+  //
+  // 🔴 **積木的收合是共享狀態的投影，不是第二個收合機制**（draft〈分子與粒度切換〉：
+  //    「否則 B 到的那一天會有兩個收合機制，而沒有人記得哪個是哪個」）。
+  //    Blockly 原生的收合就是「摺成一行 ＋ 摘要」那個形態——只要訂閱那份狀態：
+  //    ① 狀態 → 積木：重畫之後、廣播之後，照狀態收／展
+  //    ② 積木 → 狀態：使用者用 Blockly 的選單收／展 → 請求（`BUS_GROUP` 以外的 `collapsed` 變更）
+  //    ③ 收編：積木上收著、而狀態裡沒有、上一次也不是我展開的 → 請求（舊存檔的 `blocklyState` 走這條）
+  private lastTree: SemanticNode | null = null
+  private collapsedEntries: CollapsedEntry[] = []
+  private collapseCb: ((nodeId: string, collapsed: boolean) => void) | null = null
+  /** 上一次照狀態收著的那幾顆——別的視圖展開時，靠它分得出「該展開」與「該收編」 */
+  private appliedCollapsed = new Set<string>()
+
+  onGranularity(event: { entries: CollapsedEntry[] }): void {
+    this.collapsedEntries = event.entries
+    this.applyCollapse()
+  }
+
+  onRequestCollapse(cb: ((nodeId: string, collapsed: boolean) => void) | null): void {
+    this.collapseCb = cb
+  }
+
+  private applyCollapse(): void {
+    const ws = this.workspace
+    if (!ws || !this.lastTree) return
+    const want = resolveCollapsed(this.collapsedEntries, this.lastTree)
+    const adopt: string[] = []
+    const prevGroup = Blockly.Events.getGroup()
+    const prevRecord = Blockly.Events.getRecordUndo()
+    // ⚠️ 事件是非同步發的——群組與 recordUndo 要蓋在【造出事件的當下】（見 BUS_GROUP 的檔頭）
+    Blockly.Events.setGroup(BlocklyPanel.BUS_GROUP)
+    Blockly.Events.setRecordUndo(false)
+    try {
+      for (const m of this._blockMappings) {
+        const b = ws.getBlockById(m.blockId)
+        if (!b) continue
+        const on = want.has(m.nodeId)
+        if (on && !b.isCollapsed()) b.setCollapsed(true)
+        else if (!on && b.isCollapsed()) {
+          if (this.appliedCollapsed.has(m.nodeId)) b.setCollapsed(false)
+          else adopt.push(m.nodeId)
+        }
+      }
+    } finally {
+      Blockly.Events.setRecordUndo(prevRecord)
+      Blockly.Events.setGroup(prevGroup)
+    }
+    this.appliedCollapsed = want
+    for (const id of adopt) this.collapseCb?.(id, true)
+  }
+
+  private onSemanticUpdateInner(event: SemanticUpdateEvent): void {
     /** 重畫那條路已經套過骨架了嗎——⚠️ 套兩次不是冪等的（見 `applyScaffoldNotice`）。 */
     let applied = false
     // 🔴 **跳過的是「我自己改的」，不是「某個視圖改的」**（2026-08-27）。
@@ -634,6 +697,17 @@ export class BlocklyPanel implements ViewHost {
         this.recentEvents.push(note)
         while (this.recentEvents.length > 12) this.recentEvents.shift()
         diagNote(note)
+      }
+      // 🟢 使用者用 Blockly 的選單收／展一塊 → 共享狀態的請求（spec 188）
+      if (!fromBus && event.type === Blockly.Events.BLOCK_CHANGE
+          && (event as Blockly.Events.BlockChange).element === 'collapsed') {
+        const ev = event as Blockly.Events.BlockChange
+        const nodeId = ev.blockId ? this.getNodeIdForBlockId(ev.blockId) : null
+        if (nodeId) {
+          if (ev.newValue) this.appliedCollapsed.add(nodeId)
+          else this.appliedCollapsed.delete(nodeId)
+          this.collapseCb?.(nodeId, ev.newValue === true)
+        }
       }
       if (!fromBus && event.type === Blockly.Events.CREATE) {
         this.growCompanion((event as Blockly.Events.BlockCreate).blockId)
@@ -1389,7 +1463,30 @@ export class BlocklyPanel implements ViewHost {
     } finally {
       Blockly.Events.enable()
     }
+    this.noteLoadedCollapse()
   }
+
+  /**
+   * **收編：載入的積木裡收著的那幾塊**（spec 188，舊存檔走這條）。
+   *
+   * 🔴 要在【載入的當下】算鑰匙：開機時工作區「還沒畫過」，不會往外同步，
+   *    接著從程式碼重畫——收合只在這一刻的積木上，下一刻就沒了（e2e 抓到的）。
+   *    ⚠️ 事件在載入時是關著的，所以 `collapsed` 變更的那條路走不到這裡。
+   */
+  private noteLoadedCollapse(): void {
+    const ws = this.workspace
+    if (!ws || !ws.getAllBlocks(false).some((b) => b.isCollapsed())) return
+    const saved = this._blockMappings
+    const tree = this.extractSemanticTree()
+    const ids = new Set(this._blockMappings
+      .filter((m) => ws.getBlockById(m.blockId)?.isCollapsed())
+      .map((m) => m.nodeId))
+    this._blockMappings = saved
+    this.pendingAdopt = collapsedToKeys(tree, ids)
+  }
+
+  /** 載入時收著、還沒交給共享狀態的那幾塊（鑰匙）——下一次語義更新對到樹上再請求 */
+  private pendingAdopt: CollapsedEntry[] = []
 
   /** 遍歷所有積木，根據 extraState 套用降級/confidence/annotation 視覺樣式 */
   applyExtraStateVisuals(): void {

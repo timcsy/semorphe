@@ -236,6 +236,8 @@ export class App {
   /** 這個宿主提供得出來的版面——由 shell 回答（只有它知道哪一層在不在）。 */
   private shellLayoutOptions?: () => readonly HostLayoutOption[]
   private flowPanel?: import('./panels/flow-panel').FlowPanel
+  /** 收合狀態的持有者（spec 187／188）——存檔存它的鑰匙 */
+  private granularity: import('../core/granularity').GranularityState | null = null
   private codeDirty = false
   private autoSync = true
   private codeToBlocksTimer: ReturnType<typeof setTimeout> | null = null
@@ -1678,7 +1680,7 @@ export class App {
       }
     }
     // 🟢 收合狀態的持有者（spec 187）——要在 connectViews 之前：同一次 semantic:update，它先換好鑰匙
-    connectGranularity(this.bus)
+    this.granularity = connectGranularity(this.bus)
     connectViews(this.bus)
     // 兩個面板還用匯流排做契約外的事，自己接：
     // - `console-panel` **收** `execution:output`
@@ -1805,6 +1807,8 @@ export class App {
         // ⚠️ 匯入那條路走**同一個**失效判定——兩條路徑鬆緊度不同是這個模組的老病
         //    （`storage-version.ts` 檔頭記著：自動載入那條什麼都不檢查）
         if (this.sideCarUsable(state)) this.blocklyPanel?.setState(state.blocklyState)
+        // 收合（spec 188）：與自動載入那條同一個做法
+        this.granularity?.load(state.collapsed ?? [])
         if (state.code) this.codeView?.setCode(state.code)
       },
       onUploadCustomBlocks: (blocks: object[]) => {
@@ -4056,6 +4060,8 @@ export class App {
       //    ⚠️ 它與 `blocklyState` 同桶而**不吃 `codeHash`**：
       //    失效條件內建在配對裡（對不上就退回自動排版）。
       flowLayout: this.flowPanel?.saveLayout() ?? [],
+      // 收合存鑰匙（spec 188）——同 flowLayout 不吃 codeHash：對不上就安靜地掉
+      collapsed: this.granularity?.list() ?? [],
       language: this.currentTopic.language, styleId: this.currentStylePreset.id,
       topicId: this.currentTopic.id, targetId: this.currentTarget.id,
       lastModified: new Date().toISOString(), blockStyleId: this.currentBlockStyleId, locale: this.currentLocale }
@@ -4178,6 +4184,8 @@ export class App {
     // 🟢 它**不受 `sideCarUsable` 管**：那道閘守的是積木快取（對不上會變成
     //    第二份真相），而佈局對不上只會退回自動排版——**兩者的最壞情況不同**。
     this.flowPanel?.restoreLayout(state.flowLayout ?? [])
+    // 收合（spec 188）：鑰匙先放進持有者，下一次語義更新對到樹上、廣播給每個視圖
+    this.granularity?.load(state.collapsed ?? [])
     const useSideCar = this.sideCarUsable(state)
     if (useSideCar) {
       this.blocklyPanel?.setState(state.blocklyState)

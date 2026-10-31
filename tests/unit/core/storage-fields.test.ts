@@ -55,6 +55,7 @@ const filledState: SavedState = {
   //    於是一個死鍵剛好抵掉一個漏掉的鍵（`codeHash`）。2026-08-27 修。
   codeHash: 'deadbeef',
   flowLayout: [{ keys: ['C:x:n{value=1}'], x: 10, y: 20 }],
+  collapsed: [{ keys: ['P:cpp:loop_for@/body[1]'] }],
   blocklyState: { blocks: { languageVersion: 0, blocks: [] } },
   code: 'int main(){ return 0; }',
   language: 'cpp',
@@ -106,7 +107,8 @@ describe('欄位守恆：存檔格式宣告的每個欄位都載得回來', () =
     //    **下調是刻意的**：那一格記的是「哪幾個教學分支打開了」，而那個機制
     //    整個不存在了——收窄只剩一個來源，就是課。使用者：「我們現在已經有
     //    課程了，應該就沒有需要再用 levelTree 了吧」。舊存檔那一格由 `UPGRADES[23]` 丟掉。
-    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(12)
+    // ⚠️ 12 → 13（2026-11-01，v25，spec 188）：新增 `collapsed`，見 storage-version.test.ts 的說明。
+    expect(Object.keys(SAVED_STATE_FIELDS).length).toBe(13)
     // 🔴 **比鍵，不是比數量**（2026-08-27 改）。
     //
     // 原本是 `filledState 的長度 === 宣告的長度`——而它放過了一個**六個版本**的

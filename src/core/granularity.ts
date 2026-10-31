@@ -163,6 +163,11 @@ export class GranularityState {
     return true
   }
 
+  /** 從存檔還原（spec 188）——鑰匙先放著，下一次 `refresh` 對到樹上。 */
+  load(entries: readonly CollapsedEntry[]): void {
+    this.entries = entries.map((e) => ({ keys: [...e.keys] }))
+  }
+
   list(): CollapsedEntry[] {
     return this.entries.map((e) => ({ keys: [...e.keys] }))
   }
