@@ -10,7 +10,7 @@
 import { SessionStop, type CheckAnswer, type CheckRequest, type Declined, type ExecutionSession, type Outcome, type Provider, type Readiness, type SessionInput, type SessionOptions } from '../../core/capabilities'
 import type { SemanticNode } from '../../core/types'
 import { branchOf, type CellaBranch } from './verdict'
-import type { Verdict } from '../../core/verdict-diagnostics'
+import { ownerOf, type Verdict } from '../../core/verdict-diagnostics'
 import { formalize, cellaBoardOf } from './formalize'
 import { withEntryFunctions } from './entry'
 import { isCDialect } from '../../languages/cpp/target-dialect'
@@ -31,9 +31,28 @@ export function readsInput(json: unknown): boolean {
   return Object.values(o).some(readsInput)
 }
 
-/** 跨邊界的 Outcome → 核心的 Outcome（`SessionStop` 在這一側組回來）。 */
+/** 程式 JSON 裡每個節點標籤（`n`）——依它歸屬的語義樹節點分組。 */
+function labelsByOwner(json: unknown, out = new Map<string, string[]>()): Map<string, string[]> {
+  if (Array.isArray(json)) { for (const x of json) labelsByOwner(x, out); return out }
+  if (!json || typeof json !== 'object') return out
+  for (const [k, v] of Object.entries(json as Record<string, unknown>)) {
+    if (k === 'n' && typeof v === 'string') {
+      const o = ownerOf(v)
+      const list = out.get(o)
+      if (list) list.push(v)
+      else out.set(o, [v])
+    } else labelsByOwner(v, out)
+  }
+  return out
+}
+
+/**
+ * 跨邊界的 Outcome → 核心的 Outcome（`SessionStop` 在這一側組回來）。
+ * 🔴 停點與錯誤位置的標籤收回成語義樹的 id——運算式敘述的標籤是 `<id>/stmt`，原樣交出去的話積木不會亮（spec 185 量到）。
+ */
 function toOutcome(w: WireOutcome): Outcome {
-  if (w.kind === 'failed') return { kind: 'failed', error: new SessionStop(w.aborted ? 'aborted' : 'runtime', w.key, w.params, w.nodeId) }
+  if (w.kind === 'failed') return { kind: 'failed', error: new SessionStop(w.aborted ? 'aborted' : 'runtime', w.key, w.params, w.nodeId ? ownerOf(w.nodeId) : null) }
+  if (w.kind === 'stopped') return { kind: 'stopped', stop: { ...w.stop, nodeId: w.stop.nodeId ? ownerOf(w.stop.nodeId) : null } }
   return w
 }
 
@@ -50,9 +69,12 @@ class CellaSession implements ExecutionSession {
 
   private readonly sid: number
   private readonly send: (m: WorkerRequest) => void
-  constructor(sid: number, send: (m: WorkerRequest) => void) {
+  /** 語義樹的 id → 它在程式 JSON 裡的每個標籤（中斷點要用標籤；`<id>/stmt` 這種後綴不能漏）。 */
+  private readonly labels: Map<string, string[]>
+  constructor(sid: number, send: (m: WorkerRequest) => void, program: unknown) {
     this.sid = sid
     this.send = send
+    this.labels = labelsByOwner(program)
   }
 
   receive(r: WorkerReply): void {
@@ -76,7 +98,11 @@ class CellaSession implements ExecutionSession {
   }
 
   onOutput(cb: ((text: string) => void) | null): void { this.out = cb }
-  setBreakpoints(nodeIds: Iterable<string>): void { void this.op({ op: 'setBreakpoints', nodeIds: [...nodeIds] }) }
+  setBreakpoints(nodeIds: Iterable<string>): void {
+    // id → 它名下的每個標籤（Cella 只在敘述的標籤上停，多給的無害）
+    const labels = [...nodeIds].flatMap((id) => this.labels.get(id) ?? [id])
+    void this.op({ op: 'setBreakpoints', nodeIds: labels })
+  }
   launch(_program: SemanticNode, options: { stopOnEntry: boolean }): Promise<Outcome> { return this.run({ op: 'launch', stopOnEntry: options.stopOnEntry }) }
   continue(): Promise<Outcome> { return this.run({ op: 'continue' }) }
   stepIn(): Promise<Outcome> { return this.run({ op: 'stepIn' }) }
@@ -167,7 +193,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
       return { declined: st === 'unavailable' ? 'Cella 的除錯模組無法使用' : 'Cella 的除錯模組還在準備（第一次約 20 秒）' }
     }
     const id = ++sid
-    const s = new CellaSession(id, send)
+    const s = new CellaSession(id, send, f.program)
     sessions.set(id, s)
     send({ kind: 'dap-open', sid: id, branch: f.branch, program: f.program })
     return s

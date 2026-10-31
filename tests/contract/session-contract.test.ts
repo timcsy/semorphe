@@ -110,6 +110,17 @@ for (const entry of PROVIDERS) {
       expect(out()).toBe('6\n')
     })
 
+    it('🔴 中斷點設在運算式敘述（函式呼叫）上：會停、回報的是語義樹的 id（Cella 那側的標籤是 `<id>/stmt`）', async () => {
+      const tree = lift('#include <iostream>\nusing namespace std;\nvoid f() {\n  cout << 1;\n}\nint main() {\n  int x = 2;\n  f();\n  cout << x;\n  return 0;\n}\n')
+      const call = find(tree, (n) => n.componentId === 'cpp:func_call')!
+      const { s, out } = open(p, tree)
+      s.setBreakpoints([call.id])
+      expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'breakpoint', nodeId: call.id } })
+      expect(out(), '停在呼叫之前，f 還沒印').toBe('')
+      expect(await s.continue()).toEqual({ kind: 'ended' })
+      expect(out()).toBe('12')
+    })
+
     it('★ 單步：stopOnEntry 停在第一步，每次 stepIn 往前一顆，最後跑完', async () => {
       const tree = lift(LOOP)
       const { s, out } = open(p, tree)
@@ -119,6 +130,7 @@ for (const entry of PROVIDERS) {
       const seen: string[] = []
       let guard = 0
       while (o.kind === 'stopped' && guard++ < 500) { seen.push(o.stop.nodeId ?? ''); o = await s.stepIn() }
+      expect(seen.filter((id) => /[/#]/.test(id)), '🔴 停點回報的要是語義樹的 id，不是提供者自己的標籤').toEqual([])
       expect(o).toEqual({ kind: 'ended' })
       expect(new Set(seen).size, '單步應該經過好幾顆不同的節點').toBeGreaterThan(3)
       expect(out()).toBe('6\n')
