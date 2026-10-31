@@ -110,7 +110,3 @@ export function aggregateListFor(scope: string): string | undefined {
   for (const id of aggregateLists) if (id.startsWith(prefix)) return id
   return undefined
 }
-
-export function declaredAggregateLists(): string[] {
-  return [...aggregateLists]
-}

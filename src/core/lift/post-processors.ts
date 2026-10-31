@@ -48,11 +48,6 @@ export function declareLiftPostProcessor(fn: LiftPostProcessor): void {
   if (!declared.includes(fn)) declared.push(fn)
 }
 
-/** 測試用——還原成「沒有語言套件」的狀態 */
-export function resetLiftPostProcessors(): void {
-  declared.length = 0
-}
-
 /** 核心層讀它。沒有語言套件時是空陣列——不改判就是正確的中立行為 */
 export function liftPostProcessors(): readonly LiftPostProcessor[] {
   return declared

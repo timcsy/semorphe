@@ -33,6 +33,9 @@ const LOW_PREC_OPS = new Set([
  * 不是那顆元件的實作——**共用的是演算法，不是身分。**
  */
 export function needsParensInCout(v: import('../../../../core/types').SemanticNode): boolean {
+  // ⚠️ 使用者自己寫了括號時 `generateExpression` 已經補上了——再括一次會是 `cout << ((a && b))`
+  //    （與 `precedence.ts` 的 `genChild` 同一條；2026-10-31 大掃除驗 skip 時量到這一路漏了）
+  if (v.metadata?.layoutHints?.parenthesized === true) return false
   if (needsParenInCout(v.componentId)) return true
   // ⚠️ 只換掉身分那一半——**清單留著**，那是 `<<` 的排版知識，
   // 不是任何一顆元件的性質。

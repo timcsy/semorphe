@@ -46,8 +46,3 @@ export function loadPanels(): readonly string[] {
   }
   return problems
 }
-
-/** ⚠️ 只給測試用。 */
-export function resetLoadedForTest(): void {
-  loaded = false
-}

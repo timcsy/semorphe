@@ -41,7 +41,6 @@
  * 形狀寫在 `knowledge/skills/component-encapsulate/SKILL.md`。
  */
 import { componentTraits, usableAsExpression } from '../../../core/component/traits'
-import { registeredComponents } from '../../../core/component/registry'
 
 export interface NodeTraits {
   /** 運算子優先級（越大越緊）。沒有＝不需要括號（字面值、變數參照…）。 */
@@ -211,10 +210,6 @@ export interface NodeTraits {
   plainDeclaration?: boolean
 }
 
-/** 有性狀宣告的全部身分。 */
-function allIdentities(): string[] {
-  return registeredComponents().map((c) => c.componentId)
-}
 
 /**
  * ⚠️ **這裡曾經有一份與 `core/component/traits.ts` 逐字相同的實作。**
@@ -225,17 +220,6 @@ function allIdentities(): string[] {
  */
 function traits(componentId: string): NodeTraits | undefined {
   return componentTraits(componentId) as NodeTraits | undefined
-}
-
-/**
- * 這顆元件的固定優先級。
- *
- * ⚠️ 回 `undefined` 的意思是「**不需要括號**」，不是「不知道」——
- * 呼叫端把它當 100（比誰都緊）。運算子相依的優先級（`cpp:logic` 看 `||` 還是 `&&`）
- * 不在這裡：那是**同一顆元件的不同實例有不同答案**，不是一個宣告得出來的常數。
- */
-export function precedenceOf(componentId: string): number | undefined {
-  return traits(componentId)?.precedence
 }
 
 /**
@@ -330,21 +314,6 @@ export function isStringLiteral(componentId: string): boolean {
   return traits(componentId)?.stringLiteral === true
 }
 
-/**
- * 這個節點的優先級——固定的或隨運算子而變的。
- *
- * 回 `undefined` 的意思是「**不需要括號**」，不是「不知道」。
- */
-export function precedenceOfNode(node: { componentId: string; properties?: Record<string, unknown> }): number | undefined {
-  const t = traits(node.componentId)
-  if (t?.precedence !== undefined) return t.precedence
-  const byOperator = t?.precedenceByOperator
-  if (!byOperator) return undefined
-  const op = String(node.properties?.operator ?? '')
-  for (const r of byOperator.rules) if (r.ops.includes(op)) return r.p
-  return byOperator.default
-}
-
 /** 這顆是換行標記嗎。沒宣告＝不是。 */
 export function isLineBreak(componentId: string): boolean {
   return traits(componentId)?.lineBreak === true
@@ -380,20 +349,6 @@ export { isNamedCall } from '../../../core/component/traits'
 // 而視圖層為了問它們而 import 整個語言套件（P9 語言獨立性的字面違反）。
 // 這裡 re-export 給既有的語言套件內部消費者（`style-exceptions.ts`）。
 export { ioTraitOf, isPlainDeclaration } from '../../../core/component/traits'
-
-/**
- * 找「同一個角色、指定風格」的那顆元件。
- *
- * ⚠️ 找不到回 `undefined`——**不猜**。找不到的意思是那個風格還沒有人實作，
- * 而猜一個會讓風格轉換產出一顆不存在的元件。
- */
-export function ioComponentFor(role: string, style: string): string | undefined {
-  for (const id of allIdentities()) {
-    const t = traits(id)
-    if (t?.ioRole === role && t?.ioStyle === style) return id
-  }
-  return undefined
-}
 
 /**
  * 這顆是帶索引的存取嗎。

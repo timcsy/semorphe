@@ -7,10 +7,6 @@ export function generateId(): string {
   return `node_${++idCounter}_${Date.now().toString(36)}`
 }
 
-export function resetIdCounter(): void {
-  idCounter = 0
-}
-
 /**
  * 一棵空的語義樹。
  *

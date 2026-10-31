@@ -39,26 +39,6 @@ export function skipReason(componentId: string, path: PathName): SkipReason | un
   return declarations.get(componentId)?.[path]
 }
 
-/** 全部宣告（護欄報表用） */
-export function allSkipDeclarations(): {
-  componentId: string
-  path: PathName
-  reason: SkipReason
-}[] {
-  const out: { componentId: string; path: PathName; reason: SkipReason }[] = []
-  for (const [componentId, reasons] of declarations) {
-    for (const [path, reason] of Object.entries(reasons)) {
-      if (reason) out.push({ componentId, path: path as PathName, reason })
-    }
-  }
-  return out.sort((a, b) => a.componentId.localeCompare(b.componentId))
-}
-
-/** 測試用：清空（正式流程不呼叫） */
-export function resetSkipDeclarations(): void {
-  declarations.clear()
-}
-
 // ─────────────────────────────────────────────────────────────────────────
 // 語義標註的登記處
 //
@@ -96,9 +76,4 @@ export function hasAnnotation(componentId: string, key: string): boolean {
  */
 export function annotationOf(componentId: string, key: string): unknown {
   return annotations.get(componentId)?.[key]
-}
-
-/** 測試用 */
-export function resetAnnotations(): void {
-  annotations.clear()
 }

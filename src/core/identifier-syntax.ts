@@ -93,8 +93,3 @@ export function whyIllegal(language: string, name: string): IllegalNameReason | 
   //    而「這個字元不能用」對他來說指不出是哪裡錯。
   return /^[0-9]/.test(name) ? 'starts_with_digit' : 'bad_char'
 }
-
-/** ⚠️ 只給測試用——語言套件的宣告是一次性的。 */
-export function resetIdentifierSyntax(): void {
-  registry.clear()
-}

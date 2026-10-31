@@ -54,13 +54,3 @@ export function declareScalarTypeAlias(spelling: string, runtime: string): void 
 export function runtimeScalarType(spelling: string): string {
   return aliases.get(spelling.trim()) ?? spelling
 }
-
-/** 測試用——還原成「沒有語言套件」的狀態。 */
-export function resetScalarTypeAliases(): void {
-  aliases.clear()
-}
-
-/** 護欄用：登記了哪些。 */
-export function allScalarTypeAliases(): ReadonlyMap<string, string> {
-  return aliases
-}

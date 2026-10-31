@@ -50,8 +50,8 @@ describe('BlockRegistrar', () => {
     //    save／load 鉤子時 Blockly **不會替你留著** extraState，實測是 `{}`），
     //    視覺交給面板的 `applyExtraStateVisuals`（它本來就對每一顆積木在做）。
     //    ⚠️ 而「一顆都不剩」**不等於清乾淨了**：檔案裡還有 10 顆命令式定義，
-    //    其中 7 顆的宣告是空殼，見 `tests/baselines/block-def-parity.json`
-    //    的 `hollowDeclaration`。
+    //    其中 7 顆的宣告是空殼（當時記在 `block-def-parity` 基線的 `hollowDeclaration`；
+    //    那份基線在改成硬性零之後零讀者，2026-10-31 刪除）。
     for (const t of expectedTypes) {
       expect(content).toContain(`'${t}'`)
     }

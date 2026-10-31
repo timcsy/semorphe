@@ -131,11 +131,6 @@ export function registeredComponents(): ComponentRegistration[] {
   return cache
 }
 
-/** 測試用：丟掉快取。production 路徑不該需要它。 */
-export function resetComponentCache(): void {
-  cache = null
-}
-
 /** 膠囊宣告的概念定義（形狀與 `components.json` 的一筆相同，因為它就是那一筆）。 */
 export function componentManifests(): ComponentManifest[] {
   return registeredComponents().map((c) => c.manifest)

@@ -409,29 +409,24 @@ describe('一排位元：括號的正規化', () => {
 })
 
 /**
- * 🟠 **`cout <<` 的雙層括號——一個既有的排版疣，量出來記下來，不修。**
+ * 🟢 **`cout <<` 的雙層括號——原本記成「排版疣，不修」，2026-10-31 修掉。**
  *
  * ```
- * 寫的                 產出                走一趟積木回來
+ * 寫的                 修之前的產出         修之後
  * cout << (n & 1);     cout << ((n & 1));  cout << (n & 1);
  * ```
  *
  * 兩對括號各有來源：`needsParensInCout` 加一對（因為 `&` 的優先級低於 `<<`），
- * 而 `layoutHints` 把使用者原本那一對也帶回來。走一趟積木之後
- * metadata 沒了，於是**剩下正確的那一對**。
- *
- * 🟢 **三者都合法、都同義、而且都是不動點**——照判準第三層
- *（「文字不同 ≠ 錯，行為不同才是」）這不是缺陷。
- *
- * **為什麼不是現在**：要修的是「排版提示與優先級規則各自加一次括號」，
- * 而那要動共用的產生器——**語料今天走樣 0，動它的風險大於這個排版疣**。
- * **何時該修**：下一次有人碰 `cout <<` 的排版。
+ * 而 `layoutHints.parenthesized` 讓 `generateExpression` 把使用者原本那一對也帶回來。
+ * 修法與 `precedence.ts` 的 `genChild` 同一條：使用者自己寫了括號，就不再括一次。
+ * 當初說「何時該修：下一次有人碰 `cout <<` 的排版」——大掃除驗 skip 時又撞到它
+ *（`cout << (a && b)` 是另一筆 skip 描述的形狀），改動只有一行，語料仍是不動點。
  */
-describe('🟠 `cout <<` 的雙層括號（既有排版疣，不是缺陷）', () => {
-  it('產出多一對，走一趟積木之後剩正確的那一對——而三者都是不動點', () => {
+describe('🟢 `cout <<` 不再括兩層', () => {
+  it('產出、再 lift 一次、走一趟積木，三者都是使用者寫的那一對', () => {
     const body = '  cout << (n & 1);'
     const once = generateCode(lift(wrap(body)), 'cpp', S)
-    expect(squash(meat(once)), '🔴 排版疣的落點變了').toBe('cout<<((n&1));')
+    expect(squash(meat(once)), '🔴 使用者的括號又被括了一次').toBe('cout<<(n&1);')
     expect(generateCode(lift(once), 'cpp', S), '🔴 不動點破了').toBe(once)
 
     const backs = throughBlocks(body)

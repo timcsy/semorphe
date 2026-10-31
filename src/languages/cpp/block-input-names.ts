@@ -61,7 +61,8 @@ export const CPP_STRING_AT_INPUTS = getInputs('cpp_string_at')
 // ⚠️ 而它還藏著一個更難看見的東西：`.value[0]` 是**順序相依**的。
 //    左值變成 `TARGET` 之後那個 `[0]` 從 `VALUE` 變成 `TARGET`，
 //    **而型別檢查看不到**——兩個都是 string。
-export const C_VAR_DECLARE_EXPR_INPUTS = getInputs('cpp_var_declare_expression')
+// 🪦 `C_VAR_DECLARE_EXPR_INPUTS`、`FUNDEF_INPUTS`、`RETURN_INPUTS`、`ARRAY_ACCESS_INPUTS`、
+//    `ARRAY_ASSIGN_INPUTS`、`VAR_ASSIGN_INPUTS` 於 2026-10-31 大掃除刪除（零消費者）。
 
 // ── 🔴 spec 154：從 `core/blocks/block-input-names.ts` 搬過來的九個 ──────────────
 //
@@ -79,9 +80,4 @@ export const C_VAR_DECLARE_EXPR_INPUTS = getInputs('cpp_var_declare_expression')
 export const IF_INPUTS = getInputs('cpp_if')
 export const WHILE_INPUTS = getInputs('cpp_loop_while')
 export const COUNT_LOOP_INPUTS = getInputs('cpp_loop_count')
-export const FUNDEF_INPUTS = getInputs('cpp_func_def')
-export const RETURN_INPUTS = getInputs('cpp_return')
-export const ARRAY_ACCESS_INPUTS = getInputs('cpp_array_at')
-export const ARRAY_ASSIGN_INPUTS = getInputs('cpp_array_assign')
-export const VAR_ASSIGN_INPUTS = getInputs('cpp_var_assign')
 // ⚠️ `ARRAY_DECLARE_INPUTS` **沒有搬**——它零消費者（只剩一段註解提到它）。

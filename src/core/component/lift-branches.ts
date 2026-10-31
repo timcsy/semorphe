@@ -107,14 +107,6 @@ export function tryMethodBranches(
   return null
 }
 
-/** 護欄用：登錄了哪些分支、各是誰。 */
-export function liftBranchSources(): { kind2: '函式' | '方法'; source: string }[] {
-  return [
-    ...funcBranches.map((b) => ({ kind2: '函式' as const, source: b.source })),
-    ...methodBranches.map((b) => ({ kind2: '方法' as const, source: b.source })),
-  ]
-}
-
 /**
  * **AST 節點型別的分支**——最一般的一種
  *
@@ -155,11 +147,6 @@ export function tryAstBranches(astType: string, node: AstNode, ctx: LiftContext)
     if (n) return n
   }
   return null
-}
-
-/** 護欄用。 */
-export function astBranchSources(): { astType: string; source: string }[] {
-  return [...astBranches.entries()].flatMap(([t, a]) => a.map((b) => ({ astType: t, source: b.source })))
 }
 
 /**
