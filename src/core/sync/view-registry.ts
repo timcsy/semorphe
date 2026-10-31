@@ -224,6 +224,11 @@ export function connectViews(bus: SemanticBus): void {
   bus.on('execution:at-node', (d) => {
     for (const v of registeredViews()) v.onExecutionAtNode?.(d)
   })
+  bus.on('granularity:collapsed', (d) => {
+    for (const v of registeredViews()) v.onGranularity?.(d)
+  })
+  // 視圖的收合請求 → 匯流排（視圖不認識匯流排，也不認識狀態持有者）
+  for (const v of registeredViews()) v.onRequestCollapse?.((nodeId, collapsed) => bus.emit('granularity:request', { nodeId, collapsed }))
 }
 
 /** 測試用：清空登錄表。⚠️ 產品路徑不該呼叫它。 */

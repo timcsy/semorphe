@@ -86,6 +86,11 @@ export interface GraphNode {
    */
   fields: { key: string; label: string | null; value: string }[]
   ports: GraphPort[]
+  /**
+   * **收著的框**（spec 187）：這顆連同整個子樹收起來了，裡面有幾塊。
+   * 沒有這個欄位＝照常畫。⚠️ 框只留**對外**的接點——資料輸入與身體接點都在裡面。
+   */
+  collapsed?: number
   w: number
   h: number
   /** 排版填的絕對位置 */
@@ -129,7 +134,35 @@ function heightOf(rows: number): number {
   return HEADER_H + Math.max(rows, 1) * ROW_H + PAD_Y
 }
 
+/** 子樹裡有幾塊（不含自己）——收著的框上寫這個數 */
+function descendants(node: SemanticNode): number {
+  let n = 0
+  for (const kids of Object.values(node.slots ?? {})) for (const k of kids ?? []) if (k) n += 1 + descendants(k)
+  return n
+}
+
 function build(node: SemanticNode, labels?: FlowLabelSource, opts?: GraphOptions): Built {
+  // 🔴 **收著的框**（spec 187）：子樹不建、不畫；只留對外的接點。
+  //    ⚠️ 只看這一顆在不在集合裡——呼叫端給的是**最外層**的那幾顆（`outermostCollapsed`），
+  //    裡層的收合狀態保留在共享的那一份，不在這裡。
+  if (opts?.collapsed?.has(node.id)) {
+    const isStmt = roleOf(node.componentId) !== 'expression'
+    const ports: GraphPort[] = isStmt
+      ? [
+          { key: '__in__', label: null, kind: 'exec', side: 'in', dx: 0, dy: EXEC_DY },
+          { key: '__next__', label: null, kind: 'exec', side: 'out', dx: NODE_W, dy: EXEC_DY },
+        ]
+      : [{ key: '__out__', label: null, kind: 'data', side: 'out', dx: NODE_W, dy: EXEC_DY }]
+    return {
+      node: {
+        id: node.id, componentId: node.componentId, title: flowTitle(node.componentId, labels),
+        flow: flowKindOf(node.componentId), fields: [], ports, collapsed: descendants(node),
+        w: NODE_W, h: heightOf(1), x: 0, y: 0,
+      },
+      sources: [],
+      bodies: [],
+    }
+  }
   const slots = slotsOf(node.componentId)
   const fields = Object.entries(node.properties ?? {})
     .filter(([, v]) => v !== null && v !== undefined && v !== '')
@@ -303,6 +336,11 @@ export interface GraphOptions {
    * 可編輯 → `true`（**沒有接點就沒有地方下手**）。
    */
   emptySlots?: boolean
+  /**
+   * **收成框的那幾顆**（spec 187）——給**最外層**的就好（`granularity.ts` 的 `outermostCollapsed`）。
+   * 不給＝今天的圖，逐字相同。
+   */
+  collapsed?: ReadonlySet<string>
 }
 
 export function buildNodeGraph(

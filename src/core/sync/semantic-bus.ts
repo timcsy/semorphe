@@ -37,6 +37,11 @@ export interface SemanticEvents {
   /** 硬體分頁要求改一個板子的輸入（只在暫停時有效）。 */
   'execution:set-input': { key: string; value: string }
   /** 這次由誰跑、前面誰不接以及為什麼（spec 183 R3）。 */
+  /**
+   * **哪幾顆收著**（spec 187）——以鑰匙廣播，視圖各自用 `resolveCollapsed` 對回自己手上那棵樹。
+   * 🔴 不廣播 `nodeId`：它每次重新解析都換，用它記的症狀是「打一個字、全部展開」（`granularity.ts` 檔頭）。
+   */
+  'granularity:collapsed': { entries: import('../granularity').CollapsedEntry[] }
   'execution:provenance': { provider: string | null; declined: readonly { provider: string; reason: string }[] }
   /**
    * ⚠️ **這條線的方向是刻意反過來的。**
@@ -97,6 +102,8 @@ export interface ViewRequests {
    * 而那正是 `concepts/模擬的誠實.md:23` 在擋的事。
    */
   'execution:set-variable': { name: string; value: string }
+  /** 視圖要求收合／展開一顆（`nodeId` 是它手上那棵樹的，與最近一次 `semantic:update` 同一棵）。 */
+  'granularity:request': { nodeId: string; collapsed: boolean }
   'config:change': { key: string; value: unknown }
 }
 

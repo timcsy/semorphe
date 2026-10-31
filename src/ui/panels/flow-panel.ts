@@ -52,6 +52,7 @@ import type { PlacedEntry } from '../../core/flow/layout-key'
 import { tryConnect, tryReorder, refusalKeyOf, type RefusalReason } from '../../core/flow/connect'
 import { bodySlotsOf } from '../../core/component/traits'
 import { msg } from '../../core/messages'
+import { resolveCollapsed, outermostCollapsed, type CollapsedEntry } from '../../core/granularity'
 
 /** ⚠️ 面板上的字走既有的訊息表——**沒有第二份文案** */
 
@@ -137,6 +138,28 @@ export class FlowPanel implements ViewHost {
   }
 
   private editCb: ((tree: SemanticNode) => void) | null = null
+
+  // ─── 粒度（spec 187）─────────────────────────────────────────────────────
+  /** 共享的收合狀態（鑰匙）——**不是面板私有的**：它屬於真實那一側，這裡只是投影它。 */
+  private collapsedEntries: CollapsedEntry[] = []
+  /** 被收進框裡的節點 → 包住它的那個框（執行走到裡面時亮框） */
+  private hiddenToBox = new Map<string, string>()
+  private collapseCb: ((nodeId: string, collapsed: boolean) => void) | null = null
+  private collapsedNow = new Set<string>()
+
+  onGranularity(event: { entries: CollapsedEntry[] }): void {
+    this.collapsedEntries = event.entries
+    if (this.tree) this.rebuild()
+  }
+
+  onRequestCollapse(cb: ((nodeId: string, collapsed: boolean) => void) | null): void {
+    this.collapseCb = cb
+  }
+
+  /** 收合／展開一顆——**是請求**，畫面等廣播回來才變（同一份狀態，三個視圖各自投影）。 */
+  requestCollapse(nodeId: string, collapsed: boolean): void {
+    this.collapseCb?.(nodeId, collapsed)
+  }
 
   /**
    * 🪦 `onHistory`／`sayNothingToUndo` 已於 2026-08-30 退場。
@@ -436,9 +459,18 @@ export class FlowPanel implements ViewHost {
       b.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); this.closeMenu(); run() })
       el.appendChild(b)
     }
-    item(kind === 'wire'
-      ? msg('FLOW_MENU_DELETE_WIRE', '刪掉這一端')
-      : msg('FLOW_MENU_DELETE', '刪掉這一塊'), () => this.deleteNode(id))
+    if (kind === 'wire' || (this.capabilities.editable && !this.isGhostNode(id))) {
+      item(kind === 'wire'
+        ? msg('FLOW_MENU_DELETE_WIRE', '刪掉這一端')
+        : msg('FLOW_MENU_DELETE', '刪掉這一塊'), () => this.deleteNode(id))
+    }
+    // 🟢 收合／展開（spec 187）——只有有子節點的才收得起來
+    if (kind === 'node' && this.canCollapse(id)) {
+      const on = this.collapsedNow.has(id)
+      item(on ? msg('FLOW_MENU_EXPAND', '展開這一塊') : msg('FLOW_MENU_COLLAPSE', '收合這一塊'),
+        () => this.requestCollapse(id, !on))
+    }
+    if (!el.firstChild) return
     // 🔴 **記住它**（2026-08-30 實測抓到）：第一版建了選單卻沒有指派，
     //    於是 `closeMenu()` 什麼都沒關——**選單會一直疊上去**。
     //    症狀是第二次右鍵之後畫面上有兩個選單。
@@ -452,6 +484,17 @@ export class FlowPanel implements ViewHost {
       const off = (): void => { this.closeMenu(); window.removeEventListener('pointerdown', off) }
       window.addEventListener('pointerdown', off)
     }, 0)
+  }
+
+  /** 有子節點才收得起來（收一顆葉子沒有意義） */
+  private canCollapse(id: string): boolean {
+    const n = this.tree && this.findNode(this.tree, id)
+    return !!n && Object.values(n.slots ?? {}).some((kids) => (kids ?? []).some(Boolean))
+  }
+
+  /** 該亮的那一顆——走到框裡面時亮框 */
+  private litId(): string | null {
+    return this.highlighted ? (this.hiddenToBox.get(this.highlighted) ?? this.highlighted) : null
   }
 
   private isSelected(kind: 'node' | 'wire', id: string): boolean {
@@ -1172,7 +1215,20 @@ export class FlowPanel implements ViewHost {
 
   private rebuild(): void {
     this.syncLabels()
-    this.graph = buildNodeGraph(this.rootBody(), this.labelSource(), { emptySlots: this.capabilities.editable })
+    // 🟢 粒度（spec 187）：鑰匙對回這一棵、只畫最外層的框；框裡的節點記下是誰包住它
+    const root = this.scopedRoot()
+    const collapsed = root ? resolveCollapsed(this.collapsedEntries, root) : new Set<string>()
+    const outer = root ? outermostCollapsed(root, collapsed) : []
+    this.collapsedNow = collapsed
+    this.hiddenToBox = new Map()
+    for (const id of outer) {
+      const box = root && this.findNode(root, id)
+      const walk = (n: SemanticNode): void => {
+        for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) if (k) { this.hiddenToBox.set(k.id, id); walk(k) }
+      }
+      if (box) walk(box)
+    }
+    this.graph = buildNodeGraph(this.rootBody(), this.labelSource(), { emptySlots: this.capabilities.editable, collapsed: new Set(outer) })
     // 拖曳位移只留給還在的節點——刪掉的節點不該留著一個看不見的位移
     const alive = new Set(this.graph.nodes.map((n) => n.id))
     // 🔴 **把手拖的位置搬到新的 id 上**——2026-08-27。
@@ -1405,8 +1461,9 @@ export class FlowPanel implements ViewHost {
     const g = document.createElementNS(SVG_NS, 'g')
     const ghost = this.isGhostNode(n.id)
     g.setAttribute('class',
-      `fc-node${n.id === this.highlighted ? ' fc-on' : ''}${ghost ? ' fc-ghost' : ''}` +
-      `${this.isSelected('node', n.id) ? ' fc-sel' : ''}`)
+      `fc-node${n.id === this.litId() ? ' fc-on' : ''}${ghost ? ' fc-ghost' : ''}` +
+      `${this.isSelected('node', n.id) ? ' fc-sel' : ''}${n.collapsed !== undefined ? ' fc-collapsed' : ''}`)
+    if (n.collapsed !== undefined) g.setAttribute('data-collapsed', String(n.collapsed))
     g.setAttribute('transform', `translate(${at.x},${at.y})`)
     // 🔴 編輯框要疊在這一顆上面，所以它要找得到（2026-08-26）
     g.setAttribute('data-node', n.id)
@@ -1428,6 +1485,11 @@ export class FlowPanel implements ViewHost {
     // 🔴 **沒有標題就不畫標題**——而不是把身分印上去（第七十八條護欄）。
     if (n.title) g.appendChild(text('fc-node-title', n.w / 2, HEADER_H - 8, truncate(n.title, 20), 'middle'))
 
+    // 🟢 收著的框：說得出裡面有幾塊（spec 187）
+    if (n.collapsed !== undefined) {
+      g.appendChild(text('fc-collapsed-label', n.w / 2, HEADER_H + ROW_H / 2 + 4,
+        msg('FLOW_COLLAPSED_COUNT', '收著 {n} 塊').replace('{n}', String(n.collapsed)), 'middle'))
+    }
     let row = 0
     for (const p of n.ports) {
       if (p.kind === 'data' && p.side === 'in') {
@@ -1511,7 +1573,8 @@ export class FlowPanel implements ViewHost {
     // 🟢 所以這裡不擋拖曳，改在 `commitWire` 擋**關係的改變**。
     this.attachDrag(g, n.id)
     // 🔴 **長按（觸控）／右鍵（桌機）→ 選單**——那兩顆 ✕ 已經退場
-    if (this.capabilities.editable && !ghost) this.attachMenu(g, 'node', n.id)
+    // 🟢 唯讀的宿主也開得出選單——收合不是編輯（spec 187）
+    if ((this.capabilities.editable && !ghost) || this.canCollapse(n.id)) this.attachMenu(g, 'node', n.id)
     return g
   }
 
