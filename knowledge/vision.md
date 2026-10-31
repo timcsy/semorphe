@@ -299,7 +299,7 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
         → [history/309](history/309-判決第一次被學生看到.md)
   - [x] **5b 除錯工作階段**（spec 183）——`session` 走 `cella-lang/dap` → [history/310](history/310-執行介面換成DAP的形狀.md)
   - [x] **5c 硬體時間軸與課文的腳位檢查**（第 17、18 題；spec 184）→ [history/311](history/311-板子做了什麼第一次畫得出來.md)
-        ⏳ 範圍外、還沒排：暫停時的即時板子狀態與改感測器輸入（DAP 的 `env`／`setInput`）
+  - [x] **5d 暫停時的板子狀態與改感測器輸入**（spec 185）→ [history/312](history/312-中斷點停在哪一個標籤上是量出來的.md)
 - [ ] **6 切換**（spec）——同一天拆 JS 直譯器、326 個 `execute.ts`、參照編譯器那一族；222 個靠直譯器斷言的測試檔改成對 Cella 驗；
       判題（課文 check）改用 `verdict`（設計 draft 五之一的推薦，從 5 移過來）。⚠️ 前提：cella 下一版（容器函式庫、`coverage()`）、課文覆蓋 94／94
       🔴 **待定**：照字面「同一天拆 JS 直譯器」會讓 Python（99 顆、18 堂課）停擺到 7——推薦把 6 限定在 C 家族（[設計 draft 五之八](draft/2026-10-31-重構的設計-能力介面與降級路徑.md)）
