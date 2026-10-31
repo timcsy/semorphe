@@ -78,7 +78,7 @@ export interface CodeDiagnostic {
   endLine: number
   /** `null` ＝ 到行尾。⚠️ **視圖那側才知道行尾在哪**，這裡不猜。 */
   endColumn: number | null
-  severity: 'warning' | 'error'
+  severity: 'warning' | 'error' | 'info'
   message: string
 }
 

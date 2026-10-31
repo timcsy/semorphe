@@ -202,7 +202,7 @@ export interface CodeDiagnosticWire {
   endLine: number
   /** `null` ＝ 到行尾。⚠️ **只有主行程知道行尾在哪**（它有文件）。 */
   endColumn: number | null
-  severity: 'warning' | 'error'
+  severity: 'warning' | 'error' | 'info'
   message: string
 }
 

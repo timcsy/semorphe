@@ -16,9 +16,9 @@
 
 ## Phase 2: Foundational（診斷型別與轉換）
 
-- [ ] T002 先寫契約測試（紅）於 `tests/unit/core/verdict-diagnostics.test.ts`：contracts 的五條不變式（accept 無雜訊、unsupported 永遠是 info、nodeId 在樹裡或歸到祖先、要讀輸入而無測資時沒有 ub*／fuel、能力缺時 0 則＋「需要 Cella」）
-- [ ] T003 `src/core/diagnostics.ts`：`DiagnosticSource` 加 `'cella'`、`severity` 加 `'info'`（附 _why：有產出端才加——檔頭那句的兌現）；tsc 指出的每個消費端照改
-- [ ] T004 `src/core/verdict-diagnostics.ts`：`toDiagnostics()`（data-model 的種類表、節點歸屬、過濾），讓 T002 轉綠；核心只認判決的形狀，不 import 提供者
+- [x] T002 先寫契約測試（紅）於 `tests/unit/core/verdict-diagnostics.test.ts`：contracts 的五條不變式（accept 無雜訊、unsupported 永遠是 info、nodeId 在樹裡或歸到祖先、要讀輸入而無測資時沒有 ub*／fuel、能力缺時 0 則＋「需要 Cella」）
+- [x] T003 `src/core/diagnostics.ts`：`DiagnosticSource` 加 `'cella'`、`severity` 加 `'info'`（附 _why：有產出端才加——檔頭那句的兌現）；tsc 指出的每個消費端照改
+- [x] T004 `src/core/verdict-diagnostics.ts`：`toDiagnostics()`（data-model 的種類表、節點歸屬、過濾），讓 T002 轉綠；核心只認判決的形狀，不 import 提供者
 
 ---
 
@@ -49,8 +49,8 @@
 
 ## Phase 5: User Story 3 - 「依 libc++」小標（P2）
 
-- [ ] T016 [US3] `toDiagnostics` 對 `assumes` 產生一則 notes／或一則 info 診斷附在 program 根上（不改有錯／沒錯）；中文說明表（`vector.growth`、`library.what`…）
-- [ ] T017 [US3] 單元測試：帶 assumes 的 accept 不產生 error、有小標
+- [x] T016 [US3] `toDiagnostics` 對 `assumes` 產生一則 notes／或一則 info 診斷附在 program 根上（不改有錯／沒錯）；中文說明表（`vector.growth`、`library.what`…）
+- [x] T017 [US3] 單元測試：帶 assumes 的 accept 不產生 error、有小標
 
 ---
 
