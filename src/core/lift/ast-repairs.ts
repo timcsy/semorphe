@@ -63,11 +63,6 @@ export function declareAstRepair(fn: AstRepair): void {
   if (!declared.includes(fn)) declared.push(fn)
 }
 
-/** 測試用——還原成「沒有語言套件」的狀態 */
-export function resetAstRepairs(): void {
-  declared.length = 0
-}
-
 /** 核心層讀它。沒有語言套件時是空陣列——不換樹就是正確的中立行為 */
 export function astRepairs(): readonly AstRepair[] {
   return declared

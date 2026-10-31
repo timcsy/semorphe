@@ -75,11 +75,6 @@ export function propsForContainerTemplate(templateName: string): Record<string, 
   return table.get(templateName)?.props
 }
 
-/** 護欄用：每一筆是誰登錄的。過渡表的筆數應該只降不升。 */
-export function containerTemplateSources(): [templateName: string, source: string][] {
-  return [...table.entries()].map(([k, v]) => [k, v.source])
-}
-
 /**
  * **非樣板的型別名 → 身分**——`string s;`／`ifstream f;`／`stringstream ss;`
  *

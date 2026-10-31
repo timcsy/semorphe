@@ -37,11 +37,6 @@ export function setMessages(messages: Record<string, string>): void {
   current = { ...current, ...messages }
 }
 
-/** 這個 key 有沒有文案。護欄與面板都用它。 */
-export function hasMessage(key: string): boolean {
-  return key in current
-}
-
 /**
  * 組一則訊息。查不到回 `null`——**不做靜默降級**。
  *

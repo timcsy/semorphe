@@ -409,8 +409,3 @@ int main() {
     expect(gen1).toBe(gen2)
   })
 })
-
-// --- Known issues (regression) ---
-
-describe.skip('[DEADSKIP] fuzz: char literal in function return (fixed)', () => {
-})

@@ -263,16 +263,3 @@ int main() {
     expect(gen1).toBe(gen2)
   })
 })
-
-// ─── Known issues (not in Phase 1 scope) ───
-
-describe.skip('[BLOCKED:cpp:print] fuzz: cout with parenthesized boolean expressions (Phase 3 I/O scope)', () => {
-  // vars_ops_005: cout << (a && b) loses parens → COMPILE_FAIL
-  // vars_ops_009: cout << (f < 0) loses parens → COMPILE_FAIL
-  // Root cause: cout chain lifter strips parentheses from boolean subexpressions
-})
-
-describe.skip('[BLOCKED:cpp:increment] fuzz: pre/post increment in expressions (Phase 2 scope)', () => {
-  // vars_ops_008: int b = a++; has incorrect result in roundtrip
-  // Root cause: increment expression handling in variable initializer context
-})

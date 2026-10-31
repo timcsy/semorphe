@@ -79,11 +79,6 @@ export function methodComponentFor(methodName: string): MethodComponentShape | u
   return table.get(methodName)
 }
 
-/** 護欄用：每一筆是誰登錄的。 */
-export function methodComponentSources(): [methodName: string, source: string][] {
-  return [...table.entries()].map(([k, v]) => [k, v.source])
-}
-
 /**
  * **容器方法**的登錄表——與上面那張分開，因為**查詢點不同**。
  *

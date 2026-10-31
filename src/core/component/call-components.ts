@@ -94,13 +94,3 @@ export function registerSingleArgFunction(funcName: string, componentId: string,
 export function callComponentFor(funcName: string): CallComponentShape | undefined {
   return table.get(funcName)
 }
-
-/** 函式名 → 元件身分。 */
-export function componentForSingleArgFunction(funcName: string): string | undefined {
-  return table.get(funcName)?.componentId
-}
-
-/** 護欄用：每一筆是誰登錄的。過渡表的筆數應該只降不升。 */
-export function singleArgFunctionSources(): [funcName: string, source: string][] {
-  return [...table.entries()].map(([k, v]) => [k, v.source])
-}

@@ -62,8 +62,3 @@ export function declareLvalue(componentId: string, resolve: PlaceResolver): void
 export function lvalueResolverOf(componentId: string): PlaceResolver | undefined {
   return lvalues.get(componentId)
 }
-
-/** 護欄用：誰宣告過。 */
-export function declaredLvalues(): string[] {
-  return [...lvalues.keys()]
-}

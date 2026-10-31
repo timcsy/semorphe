@@ -51,6 +51,3 @@ export const CPP_BUILTIN_CONSTANTS: Record<string, BuiltinConstant> = {
   'string::npos': { type: 'int', value: -1 },
   'npos': { type: 'int', value: -1 },
 }
-
-/** Set of all built-in constant names (for filtering from scope snapshots, lifter checks, etc.) */
-export const CPP_BUILTIN_NAMES: Set<string> = new Set(Object.keys(CPP_BUILTIN_CONSTANTS))

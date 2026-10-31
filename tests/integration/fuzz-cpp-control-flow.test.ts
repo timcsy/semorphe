@@ -612,21 +612,3 @@ int main() {
     expect(gen1).toBe(gen2)
   })
 })
-
-// ─── Known issues (not in Phase 2 scope) ───
-
-describe.skip('[BLOCKED:cpp:switch] fuzz: switch fall-through (Phase 2 scope, to fix)', () => {
-  // COMPILE_FAIL: switch without break causes fall-through behavior
-  // that the current lifter does not handle correctly
-  it.todo('[BLOCKED:cpp:switch] should handle switch case without break (fall-through)')
-})
-
-describe.skip('[BLOCKED:cpp:literal_char] fuzz: char literals in switch cases (COMPILE_FAIL)', () => {
-  // COMPILE_FAIL: char literal case labels (case 'a':) are not
-  // correctly lifted by the switch-case lifter
-})
-
-describe.skip('[BLOCKED:cpp:array_declare] fuzz: array initializer lists (Phase 4 scope, SEMANTIC_DIFF)', () => {
-  // SEMANTIC_DIFF: array initializer lists like int arr[] = {1, 2, 3}
-  // are not yet supported in the semantic tree
-})

@@ -42,8 +42,3 @@ const bridge: HostBridge | null =
 export function postToHost(m: unknown): void {
   bridge?.postMessage(m)
 }
-
-/** 現在有沒有宿主。⚠️ 預檢與真環境的差別，要說得出來而不是猜。 */
-export function hasHost(): boolean {
-  return bridge !== null
-}

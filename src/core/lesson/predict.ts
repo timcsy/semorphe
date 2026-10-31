@@ -37,9 +37,6 @@ import { loopNodes } from '../iterations'
 import type { LessonTask, PredictChoice } from './lesson'
 import type { SemanticNode } from '../types'
 
-/** 宣告裡寫得出來的形式。⚠️ `none` 是**說出口的「這一題不問」**，不是漏掉。 */
-export type PredictKind = 'output' | 'iterations' | 'none' | 'choice'
-
 export interface PredictQuestion {
   readonly kind: 'output' | 'iterations' | 'choice'
   /** 問句本身。 */

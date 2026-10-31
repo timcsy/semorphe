@@ -912,12 +912,6 @@ export interface LiftError {
   level: 'warning' | 'error'
 }
 
-export interface LiftResult {
-  tree: SemanticNode
-  errors: LiftError[]
-  hasUnresolved: boolean
-}
-
 // ─── Toolbox ───
 
 type ExtraBlockDef = string | { type: string; extraState?: Record<string, unknown> }

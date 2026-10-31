@@ -94,8 +94,3 @@ const NEUTRAL: CommentSyntax = {
 export function commentSyntax(): CommentSyntax {
   return (active !== null ? byLanguage.get(active) : undefined) ?? NEUTRAL
 }
-
-/** 有沒有語言套件宣告過（護欄與診斷用） */
-export function hasCommentSyntax(): boolean {
-  return active !== null && byLanguage.has(active)
-}
