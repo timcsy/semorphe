@@ -111,6 +111,16 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       case 'cpp:func_call':
         return k('eCall', { n: n.id, f: String(p.name ?? ''), args: (n.slots?.args ?? []).map(expr) })
       case 'cpp:endl': return k('eEndl', { n: n.id })
+      case 'cpp:array_at': return k('eIndex', { n: n.id, a: exprOf(n, 'obj'), i: exprOf(n, 'index') })
+      case 'cpp:struct_at_member': return k('eMember', { n: n.id, a: exprOf(n, 'obj'), f: String(p.member ?? '') })
+      case 'cpp:vector_size': return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: 'size', args: [] })
+      case 'cpp:container_append':
+        return k('eMCall', { n: n.id, obj: exprOf(n, 'obj'), arrow: false, f: String(p.method ?? 'push_back'), args: (n.slots?.value ?? []).map(expr) })
+      case 'cpp:array_assign': {
+        const x = declOf.get(`${n.id}#obj`)
+        if (!x) return miss(n, `陣列名「${String(p.obj)}」指不到宣告（或不是單一名字）`)
+        return k('eAssign', { n: n.id, lhs: k('eIndex', { n: `${n.id}/lhs`, a: k('eVar', { n: `${n.id}/obj`, x }), i: exprOf(n, 'index') }), op: null, e: exprOf(n, 'value') })
+      }
       default:
         return miss(n, '這顆元件還沒有對應到 Cella 的建構子')
     }
@@ -119,7 +129,38 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
   const block = (n: SemanticNode, slot: string): CellaJson =>
     k('sBlock', { n: `${n.id}/${slot}`, body: (n.slots?.[slot] ?? []).flatMap(stmt) })
 
+  /** 大括號初值串列。 */
+  const braceList = (n: SemanticNode, slot: string): CellaJson =>
+    k('iL', { n: `${n.id}/${slot}`, xs: (n.slots?.[slot] ?? []).map((c) => k('iE', { e: expr(c) })) })
+
+  function containerDecl(n: SemanticNode, global: boolean): CellaJson[] {
+    const elem = type(n.properties?.type, n)
+    if (!elem) return []
+    const name = String(n.properties?.name ?? '')
+    let t: CellaJson
+    let init: CellaJson | null = null
+    let args: CellaJson[] | null = null
+    if (n.componentId === 'cpp:vector_declare') {
+      t = k('tVector', { t: elem })
+      if ((n.slots?.values ?? []).length > 0) init = braceList(n, 'values')
+      else if (one(n, 'source')) init = k('iE', { e: expr(one(n, 'source')!) })
+      else if (one(n, 'size')) args = [exprOf(n, 'size'), ...(one(n, 'fill') ? [exprOf(n, 'fill')] : [])]
+    } else {
+      const size = one(n, 'size')
+      const len = size?.componentId === 'cpp:literal_number' && /^[0-9]+$/.test(String(size.properties?.value)) ? Number(size.properties?.value) : null
+      if (len === null) { miss(n, '陣列長度不是整數字面（VLA 或常數名字還沒有對應）'); return [] }
+      t = k('tArr', { t: elem, n: len })
+      if ((n.slots?.values ?? []).length > 0) init = braceList(n, 'values')
+    }
+    if (args) {
+      if (global) { miss(n, '全域的建構式呼叫（`vector<int> v(n)`）還沒有對應'); return [] }
+      return [k('sDeclC', { n: n.id, x: n.id, name, t, args })]
+    }
+    return [global ? k('iVar', { n: n.id, x: n.id, name, t, init }) : k('sDecl', { n: n.id, x: n.id, name, t, init })]
+  }
+
   function decl(n: SemanticNode, global: boolean): CellaJson[] {
+    if (n.componentId === 'cpp:vector_declare' || n.componentId === 'cpp:array_declare') return containerDecl(n, global)
     const kids = n.slots?.declarators
     if (kids && kids.length > 0) return kids.flatMap((d) => decl(d, global))
     const t = type(n.properties?.type, n)
@@ -135,7 +176,17 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
   function stmt(n: SemanticNode): CellaJson[] {
     const p = n.properties ?? {}
     switch (n.componentId) {
-      case 'cpp:var_declare': return decl(n, false)
+      case 'cpp:var_declare': case 'cpp:vector_declare': case 'cpp:array_declare': return decl(n, false)
+      case 'cpp:break': return [k('sBreak', { n: n.id })]
+      case 'cpp:continue': return [k('sContinue', { n: n.id })]
+      case 'cpp:loop_range': {
+        if ((n.slots?.targets ?? []).length > 0) { miss(n, '結構化繫結的 range-for 還沒有對應'); return [k('sHole', { n: n.id })] }
+        const vt = String(p.var_type ?? '')
+        const byRef = vt.endsWith('&')
+        const t = type(byRef ? vt.slice(0, -1).trim() : vt, n)
+        if (!t) return [k('sHole', { n: n.id })]
+        return [k('sForRange', { n: n.id, x: n.id, name: String(p.var_name ?? ''), t, byRef, range: exprOf(n, 'iterable'), body: block(n, 'body') })]
+      }
       case 'cpp:print':
         return [k('sCout', { n: n.id, items: (n.slots?.values ?? []).map(expr) })]
       case 'cpp:input':
@@ -162,6 +213,7 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
       }
       case 'cpp:block': return [block(n, 'body')]
       case 'cpp:var_assign': case 'cpp:var_assign_compound': case 'cpp:increment': case 'cpp:func_call':
+      case 'cpp:container_append': case 'cpp:array_assign':
         return [k('sExpr', { n: `${n.id}/stmt`, e: expr(n) })]
       default:
         miss(n, '這顆敘述元件還沒有對應到 Cella 的建構子')
@@ -174,7 +226,7 @@ export function formalize(tree: SemanticNode, options: { board?: string } = {}):
     switch (n.componentId) {
       case 'cpp:include': return [k('iInclude', { n: n.id, header: String(p.header ?? '') })]
       case 'cpp:using_namespace': return [k('iUsing', { n: n.id, name: String(p.ns ?? '') })]
-      case 'cpp:var_declare': return decl(n, true)
+      case 'cpp:var_declare': case 'cpp:vector_declare': case 'cpp:array_declare': return decl(n, true)
       case 'cpp:func_def': {
         const ret = String(p.return_type ?? '') === 'void' ? null : type(p.return_type, n)
         const params = (n.slots?.params ?? []).map((q) =>

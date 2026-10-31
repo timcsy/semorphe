@@ -90,7 +90,8 @@ describe('formalize：最小子集', () => {
   })
 
   it('🔴 翻不了的不送：說出節點與元件，不擲例外', () => {
-    const t = lift('#include <vector>\nusing namespace std;\nint main() { vector<int> v; v.push_back(1); }')
+    // ⚠️ 例子要挑「還沒對應」的構造——第二批補了 push_back 之後，原本的例子變成翻得出來
+    const t = lift('#include <map>\nusing namespace std;\nint main() { map<int, int> m; m[1] = 2; }')
     const r = formalize(t)
     expect(r.program).toBeNull()
     expect(r.unknown.length).toBeGreaterThan(0)

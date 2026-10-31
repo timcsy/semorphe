@@ -94,6 +94,14 @@ export function resolveScopes(tree: SemanticNode): ScopeResult {
         })
         return
     }
+    // 🔴 方法元件的 `obj` 是**文字**（已知缺口：還沒升格成運算式槽）。單一名字就照常解析，
+    //    記在 `<id>#obj`；不是單一名字（`servos[i]`）的照實列進 unresolved，由 formalize 標 unknown。
+    const obj = n.properties?.obj
+    if (typeof obj === 'string' && obj !== '') {
+      const hit = /^[A-Za-z_]\w*$/.test(obj) ? lookup(obj) : undefined
+      if (hit) declOf.set(`${n.id}#obj`, hit)
+      else unresolved.push({ nodeId: `${n.id}#obj`, name: obj })
+    }
     const name = declaredName(n)
     if (name) declare(name, n.id)
     walkSlots(n)
