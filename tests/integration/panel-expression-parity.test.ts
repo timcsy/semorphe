@@ -17,6 +17,10 @@
  *
  * 不用 vitest snapshot 的理由見 `knowledge/skills/build-guardrail`：`-u` 會
  * 靜默更新，等於「跑一下就自動接受惡化」。
+ *
+ * 🪦 第 384 刀（2026-10-31）：面板的 `simpleExpressionToCode` 連同它唯一的呼叫者
+ * （擷取失敗時用 `codeTemplate` 拼字串的最後手段）一起刪了——那條路改成誠實降級的標記。
+ * 這支測試留著，它釘的是 `generateExpressionCode` 對這些節點的產出。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { generateExpressionCode } from '../../src/core/projection/code-generator'

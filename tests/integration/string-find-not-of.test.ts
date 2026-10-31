@@ -13,7 +13,7 @@
  * |---|---|
  * | 語義 | `components.json` 的概念定義 |
  * | 投影 | `blocks.json` 的積木 |
- * | 產生 | 積木的 `codeTemplate` |
+ * | 產生 | 膠囊的 `generate.ts`（`components/cpp/string_find_first_not_of/`）——🪦 原本寫「積木的 `codeTemplate`」，那一套產品從不裝，第 384 刀刪除 |
  * | 辨識 | `lifters/io.ts` 的方法分派 |
  * | 執行 | `std/string/executors.ts` |
  *

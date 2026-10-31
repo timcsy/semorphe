@@ -25,13 +25,6 @@
       "slotCheck": "Expression",
       "minCount": 1
     },
-    "codeTemplate": {
-      "pattern": "scanf(\"${FORMAT}\"${ARGS});",
-      "imports": [
-        "stdio.h"
-      ],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "call_expression",

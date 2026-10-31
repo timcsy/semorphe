@@ -11,6 +11,8 @@
  *
  * 🟢 那份樣板已經拿掉了：它與這裡對同一件事的說法不一樣（`std::set` vs `set`），
  * 而一份沒有人跑的第二真相，會在有人裝上它的那天變成一個缺陷。
+ *
+ * 🪦 2026-10-31（第 384 刀）：樣板產生器與全部 `codeTemplate` 整批刪除——產碼只剩這一條。
  */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../core/projection/code-generator'

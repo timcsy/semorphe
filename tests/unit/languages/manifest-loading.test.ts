@@ -33,9 +33,11 @@ describe('Language manifest loading', () => {
     }
   })
 
-  it('provides.templates and liftPatterns paths should exist', () => {
+  // 🪦 `provides.templates`（`universal-templates.json`）第 384 刀刪除——它只餵產品從不裝的 `TemplateGenerator`。
+  it('provides.liftPatterns paths should exist', () => {
     const manifest: LanguageManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
-    for (const relPath of [...manifest.provides.templates, ...manifest.provides.liftPatterns]) {
+    expect(manifest.provides, '🔴 `templates` 長回來了——那一套產碼路徑已刪除').not.toHaveProperty('templates')
+    for (const relPath of manifest.provides.liftPatterns) {
       const absPath = path.resolve(cppDir, relPath)
       expect(fs.existsSync(absPath), `Missing: ${absPath}`).toBe(true)
     }

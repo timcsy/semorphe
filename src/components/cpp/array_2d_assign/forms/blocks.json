@@ -36,11 +36,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_C_ARRAY_2D_ASSIGN_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}[${ROW}][${COL}] = ${VALUE};",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "obj"

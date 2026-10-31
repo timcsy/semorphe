@@ -21,11 +21,6 @@
       "colour": "#FFAB19",
       "tooltip": "%{BKY_C_DEFAULT_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "default:\n${BODY}",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "case_statement",

@@ -20,11 +20,6 @@
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_ADDRESS_OF_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "&${VAR}",
-      "imports": [],
-      "order": 8
-    },
     "renderMapping": {
       "inputs": {
         "VAR": "var"

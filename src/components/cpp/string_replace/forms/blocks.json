@@ -36,13 +36,6 @@
       "tooltip": "%{BKY_CPP_STRING_REPLACE_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.replace(${POS}, ${LEN}, ${VALUE});",
-      "imports": [
-        "string"
-      ],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

@@ -4,22 +4,23 @@
  * Verifies that ALL blocks (68 total) can complete:
  * 1. Semantic→Block render (PatternRenderer)
  * 2. Block→Semantic extract (PatternExtractor)
- * 3. Code generation (TemplateGenerator)
  *
- * This is the completeness validation for the JSON-driven pipeline.
+ * 🪦 原本還有第 3 項「Code generation (TemplateGenerator)」——第 384 刀（2026-10-31）刪除。
+ *    它只對宣告了 `codeTemplate` 的 101 顆、用 `TemplateGenerator` 產碼，而**產品從不裝那一套**
+ *    （`setTemplateGenerator` 在 `src/` 零呼叫）——驗的是一條使用者跑不到的路。那一套連同
+ *    `codeTemplate` 已整批刪除。產品那一路的逐元件檢查在 `audit-completeness` 的 generate 欄
+ *    （合成最小節點 → `generateCode`），而 `judges.ts` 的 generate 判定者改成只算膠囊自己的測試。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
-import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { createNode } from '../../src/core/semantic-tree'
-import type { BlockSpec, UniversalTemplate, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { BlockSpec, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 
 import { universalComponents, universalBlocks } from '../../src/core/universal'
 import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
-import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
 // ⚠️ **不要自己列宣告來源。**
 // 手列 `universalComponents ＋ coreComponents ＋ allStdModules` 會**漏掉膠囊**
 // ——而症狀是「那顆元件的積木不見了／辨識不出來」，指向被害者不是兇手。
@@ -36,22 +37,13 @@ const allSpecs: BlockSpec[] = _registry.getAll()
 
 let renderer: PatternRenderer
 let extractor: PatternExtractor
-let generator: TemplateGenerator
 
 beforeAll(() => {
   renderer = new PatternRenderer()
   extractor = new PatternExtractor()
-  generator = new TemplateGenerator()
 
   renderer.loadBlockSpecs(allSpecs)
   extractor.loadBlockSpecs(allSpecs)
-
-  for (const spec of allSpecs) {
-    if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
-      generator.registerTemplate(spec.componentMapping.componentId, spec.codeTemplate)
-    }
-  }
-  generator.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
 })
 
 /**
@@ -168,21 +160,6 @@ describe('Full Roundtrip — All 68 Blocks', () => {
         const extracted = extractor.extract(block!)
         expect(extracted, `Failed to extract block '${blockType}'`).not.toBeNull()
         expect(extracted!.componentId).toBe(componentId)
-      })
-    }
-  })
-
-  describe('Code generation coverage: every component generates code', () => {
-    for (const spec of allSpecs) {
-      const componentId = spec.componentMapping?.componentId
-      if (!componentId || skipComponents.has(componentId)) continue
-      if (!spec.codeTemplate?.pattern) continue // skip blocks without templates
-
-      it(`${componentId} generates code`, () => {
-        const sem = buildDummyNode(spec)
-        const code = generator.generate(sem, { indent: 0, style: { indent_size: 4 } as any })
-        expect(code, `Failed to generate code for '${componentId}'`).not.toBeNull()
-        expect(typeof code).toBe('string')
       })
     }
   })

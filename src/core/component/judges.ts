@@ -77,6 +77,8 @@
  * generate  🔴 指著 audit-completeness（那條只驗「有沒有檔案」)
  *           真正的判定者是 roundtrip-all,而它的標題【說謊】：
  *           `if (!spec.codeTemplate?.pattern) continue` —— 走手寫產生器的 250 顆整批跳過
+ *           🪦 第 384 刀：那個檢查連同 `codeTemplate` 一起刪了（它驗的是產品不裝的 TemplateGenerator）
+ *              ⟹ generate 的判定者只剩膠囊自己的測試（128 / 349）
  * render    🟡 指著 audit-lesson-loadable（只涵蓋課文用到的）
  *           真正逐元件的是 roundtrip-all 的 Render coverage：345 / 349
  * ```
@@ -162,11 +164,15 @@ export const PATH_JUDGE: Readonly<Record<SixPath, {
   },
   generate: {
     kind: 'grammar',
-    evidence: 'tests/integration/roundtrip-all.test.ts',   // ⚠️ 而它只是【兩個判定者之一】,見 judges
-    judges: '**兩個判定者的聯集**：roundtrip-all 的「Code generation coverage」驗有 `codeTemplate.pattern` 的'
-      + ' 101 顆（它第二行 `if (!spec.codeTemplate?.pattern) continue`）＋ 膠囊自己的測試檔驗 128 顆。'
-      + '⚠️ 剩下的 134 顆**只被語料驗到**——而語料驗的是「這一段程式碼產得出來」，不是「這一顆元件產得出來」。',
-    coverage: { covered: 215, of: 349 },
+    // 🔴 2026-10-31（第 384 刀）：evidence 從 `roundtrip-all` 改成膠囊目錄——判定者只剩膠囊自己的測試。
+    evidence: 'src/components',
+    judges: '膠囊自己的測試檔（`src/components/**/*.test.ts`）驗 128 顆。'
+      + '🔴 **第 384 刀之前是兩個判定者的聯集 215**：另一半是 roundtrip-all 的「Code generation coverage」'
+      + '（有 `codeTemplate` 的 101 顆），而它驗的是 `TemplateGenerator`——**產品從不裝的那一套**；'
+      + '那一套與 `codeTemplate` 已刪除，那 87 顆（101 裡不在膠囊測試的）的「覆蓋」本來就是假的。'
+      + '⚠️ 剩下的 221 顆**沒有逐元件的產碼判定者**——`audit-completeness` 的 generate 欄只問「產得出非佔位的東西」，'
+      + '語料驗的是「這一段程式碼產得出來」，都不是「這一顆元件產得對」。',
+    coverage: { covered: 128, of: 349 },
   },
   render: {
     kind: 'renderer',

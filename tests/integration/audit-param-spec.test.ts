@@ -37,7 +37,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
-import { paramReadsByComponent, scanParamReads, templateReads, fallbacksByComponent } from '../helpers/param-reads'
+import { paramReadsByComponent, scanParamReads, fallbacksByComponent } from '../helpers/param-reads'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { paramNames, paramSpecs, isSpecified } from '../../src/core/param-spec'
 import type { ParamSpec } from '../../src/core/types'
@@ -76,15 +76,15 @@ function measure(extra: { file: string; source: string }[] = []): Finding[] {
     }
   }
 
-  // ⚠️ **模板也是一種讀取。** 少了這一半，宣告式元件會被冤枉——
-  // `cpp_string_find_first_not_of.obj` 就是這樣：它沒有 TS 產生器，
-  // 產出走 `"${OBJ}.find_first_not_of(${ARG})"`。
-  const fromTemplate = templateReads()
+  // 🪦 這裡原本還把 `codeTemplate.pattern` 的 `${X}` 算成一種讀取（`templateReads`）——
+  //    第 384 刀（2026-10-31）刪除：產品從不裝 `TemplateGenerator`，`codeTemplate` 已整批刪除。
+  //    ⚠️ 刪掉之後這一欄多報 4 筆：`cpp:vector_declare`／`cpp:deque_declare` 的 `name`／`type`。
+  //       那是**掃描器的盲點**，不是產品缺陷——產品在共用的 `lang/runtime/sequence-declare.ts` 讀它們，
+  //       而掃描器只看 `g.set` 回呼裡的讀取。原本是模板的 `${TYPE}`／`${NAME}` 剛好替它遮住。
   for (const [cid, decl] of declare) {
     const read = reads.get(cid)
-    const tpl = fromTemplate.get(cid)
     for (const p of decl) {
-      if (read?.has(p) || tpl?.has(p)) continue
+      if (read?.has(p)) continue
       out.push({ componentId: cid, param: p, direction: '宣告了沒人讀', where: '（無）' })
     }
   }

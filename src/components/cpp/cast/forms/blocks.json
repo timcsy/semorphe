@@ -46,11 +46,6 @@
       "colour": "#59C059",
       "tooltip": "%{BKY_C_CAST_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "(${TARGET_TYPE})${VALUE}",
-      "imports": [],
-      "order": 8
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "cast_expression",

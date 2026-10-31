@@ -19,11 +19,6 @@
       "colour": "#888888",
       "tooltip": "%{BKY_PYTHON_RAW_EXPRESSION_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${CODE}",
-      "imports": [],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {
         "CODE": "code"

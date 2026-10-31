@@ -57,11 +57,6 @@
         "INIT": "initializer"
       }
     },
-    "codeTemplate": {
-      "pattern": "${TYPE}& ${NAME} = ${INIT};",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "declaration",

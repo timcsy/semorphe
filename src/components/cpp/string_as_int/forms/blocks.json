@@ -20,13 +20,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STOI_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "std::stoi(${VALUE})",
-      "imports": [
-        "string"
-      ],
-      "order": 20
-    },
     "renderMapping": {
       "inputs": {
         "VALUE": "value"

@@ -26,11 +26,6 @@
       "tooltip": "%{BKY_CPP_CONTAINER_PUSH_BACK_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.push_back(${VALUE});",
-      "imports": [],
-      "order": 0
-    },
     "toolboxCategory": "arrays_lists",
     "renderMapping": {
       "fields": {},

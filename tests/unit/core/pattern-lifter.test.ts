@@ -64,7 +64,6 @@ describe('PatternLifter', () => {
           role: 'expression',
         },
         blockDef: { type: 'cpp_literal_char' },
-        codeTemplate: { pattern: "'${CHAR}'", imports: [], order: 20 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'char_literal',
@@ -99,7 +98,6 @@ describe('PatternLifter', () => {
           role: 'both',
         },
         blockDef: { type: 'cpp_increment' },
-        codeTemplate: { pattern: '${NAME}${OP}', imports: [], order: 8 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'update_expression',
@@ -142,7 +140,6 @@ describe('PatternLifter', () => {
           role: 'statement',
         },
         blockDef: { type: 'cpp_print_formatted' },
-        codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: ['stdio.h'], order: 0 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'call_expression',
@@ -176,7 +173,6 @@ describe('PatternLifter', () => {
           role: 'statement',
         },
         blockDef: { type: 'cpp_print_formatted' },
-        codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: [], order: 0 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'call_expression',
@@ -203,7 +199,6 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'generic_call', role: 'expression' },
         blockDef: { type: 'generic_call' },
-        codeTemplate: { pattern: '${NAME}()', imports: [], order: 20 },
         astPattern: { nodeType: 'call_expression', constraints: [] },
       }
       const printfSpec: BlockSpec = {
@@ -214,7 +209,6 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:print_formatted', role: 'statement' },
         blockDef: { type: 'cpp_print_formatted' },
-        codeTemplate: { pattern: 'printf("${FORMAT}"${ARGS});', imports: [], order: 0 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'call_expression',
@@ -251,7 +245,6 @@ describe('PatternLifter', () => {
           role: 'statement',
         },
         blockDef: { type: 'cpp_var_assign_compound' },
-        codeTemplate: { pattern: '${NAME} ${OP} ${VALUE};', imports: [], order: 0 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'assignment_expression',
@@ -272,7 +265,6 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:literal_number', role: 'expression' },
         blockDef: { type: 'cpp_literal_number' },
-        codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'number_literal',
@@ -343,7 +335,6 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:literal_number', role: 'expression' },
         blockDef: { type: 'cpp_literal_number' },
-        codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'number_literal',
@@ -417,7 +408,6 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:var_ref', role: 'expression' },
         blockDef: { type: 'cpp_var_ref' },
-        codeTemplate: { pattern: '${NAME}', imports: [], order: 20 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'identifier',
@@ -486,7 +476,6 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:literal_number', role: 'expression' },
         blockDef: { type: 'cpp_literal_number' },
-        codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'number_literal',
@@ -594,7 +583,6 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:literal_number', role: 'expression' },
         blockDef: { type: 'cpp_literal_number' },
-        codeTemplate: { pattern: '${NUM}', imports: [], order: 20 },
         astPattern: {
           grammar: 'tree-sitter-cpp',
           nodeType: 'number_literal',
@@ -628,7 +616,6 @@ describe('PatternLifter', () => {
         version: '1.0.0',
         component: { componentId: 'cpp:loop_for', role: 'statement' },
         blockDef: { type: 'cpp_loop_for' },
-        codeTemplate: { pattern: 'for (...) { ... }', imports: [], order: 0 },
         astPattern: { nodeType: 'for_statement', constraints: [] },
       }
 

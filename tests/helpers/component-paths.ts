@@ -67,19 +67,6 @@ export function collectFromLiftPatterns(jsonPath: string): Map<string, string[]>
   return result
 }
 
-/** 從 UniversalTemplate JSON 收集 componentId */
-export function collectFromUniversalTemplates(jsonPath: string): Map<string, string[]> {
-  const result = new Map<string, string[]>()
-  const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as Array<{ componentId?: string }>
-  for (const tmpl of data) {
-    if (!tmpl.componentId) continue
-    const sources = result.get(tmpl.componentId) ?? []
-    sources.push('universal-templates.json')
-    result.set(tmpl.componentId, sources)
-  }
-  return result
-}
-
 /** 從手寫 lifter/generator TS 檔案中提取 componentId（via regex） */
 export function collectFromHandWritten(tsFiles: string[], type: 'lifter' | 'generator'): Set<string> {
   const components = new Set<string>()
@@ -132,31 +119,11 @@ export function getComponentsWithExtract(blockSpecComponentIds: Set<string>, ren
 
 /** 哪些概念有 generate path */
 export function getComponentsWithGenerate(
-  blockSpecWithTemplate: Set<string>,
-  universalTemplateComponents: Set<string>,
   handWrittenGeneratorComponents: Set<string>,
 ): Set<string> {
-  const result = new Set<string>()
-  for (const id of blockSpecWithTemplate) result.add(id)
-  for (const id of universalTemplateComponents) result.add(id)
-  for (const id of handWrittenGeneratorComponents) result.add(id)
-  return result
-}
-
-/** 從 BlockSpec 中提取有 codeTemplate 的概念 */
-export function collectBlockSpecsWithTemplate(jsonPaths: string[]): Set<string> {
-  const result = new Set<string>()
-  for (const p of jsonPaths) {
-    const data = JSON.parse(fs.readFileSync(p, 'utf8')) as Array<{
-      component?: { componentId?: string }
-      codeTemplate?: { pattern?: string }
-    }>
-    for (const spec of data) {
-      const id = spec.component?.componentId
-      if (id && spec.codeTemplate?.pattern) result.add(id)
-    }
-  }
-  return result
+  // 🪦 第 384 刀（2026-10-31）：原本還收「有 `codeTemplate` 的積木」與 `universal-templates.json`
+  //    ——那兩份是 `TemplateGenerator` 的輸入，**產品從不裝它**，已整批刪除。產品的產碼只有產生器表。
+  return new Set(handWrittenGeneratorComponents)
 }
 
 /** 從 render strategy TS 檔案中提取 registered component IDs */
@@ -228,15 +195,17 @@ export function verify(rootDir: string): { reports: ComponentPathReport[]; exitC
   ]
 
   const liftPatternsPath = path.join(rootDir, 'src/languages/cpp/lift-patterns.json')
-  const universalTemplatesPath = path.join(rootDir, 'src/languages/cpp/templates/universal-templates.json')
 
   const lifterFiles = [
     'declarations.ts', 'statements.ts', 'expressions.ts', 'io.ts', 'strategies.ts', 'transforms.ts',
   ].map(f => path.join(rootDir, 'src/languages/cpp/lifters', f)).filter(f => fs.existsSync(f))
 
-  const generatorFiles = [
-    'declarations.ts', 'statements.ts', 'expressions.ts', 'io.ts',
-  ].map(f => path.join(rootDir, 'src/languages/cpp/generators', f)).filter(f => fs.existsSync(f))
+  // ⚠️ 產生器住在**膠囊的 `generate.ts`**（`g.set('cpp:…', …)`）——舊的
+  //    `src/languages/cpp/generators/{declarations,statements,…}.ts` 早就不存在，
+  //    於是 generate 這一欄原本**全靠** `universal-templates.json` 撐著（第 384 刀刪除時量到）。
+  const generatorFiles = componentBlockPaths
+    .map(p => path.join(path.dirname(path.dirname(p)), 'generate.ts'))
+    .filter(f => fs.existsSync(f))
 
   const rendererFiles = [
     path.join(rootDir, 'src/languages/cpp/renderers/strategies.ts'),
@@ -245,7 +214,6 @@ export function verify(rootDir: string): { reports: ComponentPathReport[]; exitC
   // Collect all component IDs and their sources
   const blockSpecComponents = collectFromBlockSpecs(blockSpecPaths)
   const liftPatternComponents = collectFromLiftPatterns(liftPatternsPath)
-  const universalTemplateComponents = collectFromUniversalTemplates(universalTemplatesPath)
 
   // Merge all sources
   const allComponents = new Map<string, string[]>()
@@ -255,17 +223,12 @@ export function verify(rootDir: string): { reports: ComponentPathReport[]; exitC
   for (const [id, sources] of liftPatternComponents) {
     allComponents.set(id, [...(allComponents.get(id) ?? []), ...sources])
   }
-  for (const [id, sources] of universalTemplateComponents) {
-    allComponents.set(id, [...(allComponents.get(id) ?? []), ...sources])
-  }
 
   // Collect path coverage
   const handWrittenLifters = collectFromHandWritten(lifterFiles, 'lifter')
   const handWrittenGenerators = collectFromHandWritten(generatorFiles, 'generator')
   const blockSpecIds = new Set(blockSpecComponents.keys())
   const liftPatternIds = new Set(liftPatternComponents.keys())
-  const universalTemplateIds = new Set(universalTemplateComponents.keys())
-  const blockSpecsWithTemplate = collectBlockSpecsWithTemplate(blockSpecPaths)
 
   // Render strategies produce components that are registered in BlockSpec.renderMapping.strategy
   // But the strategy registry maps component→strategy via the PatternRenderer
@@ -299,7 +262,7 @@ export function verify(rootDir: string): { reports: ComponentPathReport[]; exitC
   const liftCovered = getComponentsWithLift(blockSpecIds, liftPatternIds, handWrittenLifters)
   const renderCovered = getComponentsWithRender(blockSpecIds, renderCoveredComponents)
   const extractCovered = getComponentsWithExtract(blockSpecIds, renderCoveredComponents)
-  const generateCovered = getComponentsWithGenerate(blockSpecsWithTemplate, universalTemplateIds, handWrittenGenerators)
+  const generateCovered = getComponentsWithGenerate(handWrittenGenerators)
 
   // Build reports
   const reports: ComponentPathReport[] = []

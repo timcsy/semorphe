@@ -26,11 +26,6 @@
       "tooltip": "%{BKY_CPP_CONTAINER_PUSH_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.push(${VALUE});",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {
@@ -65,11 +60,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STACK_PUSH_TOOLTIP}",
       "inputsInline": true
-    },
-    "codeTemplate": {
-      "pattern": "${OBJ}.push(${VALUE});",
-      "imports": [],
-      "order": 0
     },
     "form": {
       "axis": "container_kind",
@@ -110,11 +100,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_QUEUE_PUSH_TOOLTIP}",
       "inputsInline": true
-    },
-    "codeTemplate": {
-      "pattern": "${OBJ}.push(${VALUE});",
-      "imports": [],
-      "order": 0
     },
     "form": {
       "axis": "container_kind",

@@ -20,13 +20,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STRING_LENGTH_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.length()",
-      "imports": [
-        "string"
-      ],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

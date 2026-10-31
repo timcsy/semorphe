@@ -20,11 +20,6 @@
       "colour": "#888888",
       "tooltip": "%{BKY_C_INCLUDE_LOCAL_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "#include \"${HEADER}\"",
-      "imports": [],
-      "order": 0
-    },
     "astPattern": {
       "grammar": "tree-sitter-cpp",
       "nodeType": "preproc_include",

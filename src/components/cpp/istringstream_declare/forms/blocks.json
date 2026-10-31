@@ -26,13 +26,6 @@
       "colour": "#D67D3E",
       "tooltip": "%{BKY_CPP_ISTRINGSTREAM_DECLARE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "istringstream ${NAME}(${SOURCE});",
-      "imports": [
-        "sstream"
-      ],
-      "order": 10
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name"

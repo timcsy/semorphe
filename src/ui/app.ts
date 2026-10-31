@@ -1556,9 +1556,6 @@ export class App {
       analyzeIoConformance: ((code: string, pref: string) =>
         languagePack(this.currentTopic.language)?.styleExceptions?.analyzeIo(code, pref)) as never,
     })
-    // 面板的降級路徑要產生程式碼文字，用的必須是**同一組**語言與風格
-    // ——面板自己不得寫死一個（FR-003）。見 specs/060-panel-parallel-generator/
-    this.blocklyPanel?.setCodeContext(this.currentTopic.language, DEFAULT_STYLE)
     if (this.scaffold) this.syncController.setProgramScaffold(this.scaffold)
     if (shaping) {
       // 🔴 **把骨架宣告一起交下去**（2026-08-28）——「哪一顆函式是骨架」
@@ -1777,7 +1774,6 @@ export class App {
       //    的 `Topic.components`：漸進揭露整個交給課程。
       onStyleChange: (style) => {
         this.syncController?.setStyle(style)
-        this.blocklyPanel?.setCodeContext(this.currentTopic.language, style)  // 面板不得落後於同步控制器
         this.syncController?.setCodingStyle(style)
         this.syncBlocksToCodeWithMappings()
         this.currentStylePreset = style
@@ -2288,7 +2284,6 @@ export class App {
   private applyStylePreset(preset: StylePreset, opts: { resync?: boolean } = {}): void {
     this.currentStylePreset = preset
     this.syncController?.setStyle(preset)
-    this.blocklyPanel?.setCodeContext(this.currentTopic.language, preset)  // 同上
     this.syncController?.setCodingStyle(preset)
     this.refreshStatusBar()
     const ioPref = preset.io_style === 'printf' ? 'cstdio' : 'iostream'
@@ -2747,7 +2742,6 @@ export class App {
         // 而它的症狀更狠：文法不對時**一顆積木都畫不出來**（全部不匹配）。
         this.setActiveGrammar?.(topic.language)
         this.syncController?.setLanguage(topic.language)
-        this.blocklyPanel?.setCodeContext(topic.language, this.currentStylePreset)
         this.syncController?.setTopic(topic, this.getVisibleComponents())
         this.syncController?.setScaffoldDepth(this.scaffoldDepth)
         this.reloadBlockSpecsForTopic()

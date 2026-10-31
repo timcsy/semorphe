@@ -20,13 +20,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STRING_C_STR_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.c_str()",
-      "imports": [
-        "string"
-      ],
-      "order": 20
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

@@ -31,13 +31,6 @@
       "tooltip": "%{BKY_CPP_STRING_INSERT_TOOLTIP}",
       "inputsInline": true
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}.insert(${POS}, ${VALUE});",
-      "imports": [
-        "string"
-      ],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {},
       "inputs": {

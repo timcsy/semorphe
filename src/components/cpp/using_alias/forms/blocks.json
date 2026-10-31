@@ -26,11 +26,6 @@
       "colour": "#A855F7",
       "tooltip": "%{BKY_C_USING_ALIAS_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "using ${ALIAS} = ${ORIG_TYPE};",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "ALIAS": "alias",

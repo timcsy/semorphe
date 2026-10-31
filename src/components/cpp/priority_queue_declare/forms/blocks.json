@@ -42,13 +42,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_PRIORITY_QUEUE_DECLARE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "std::priority_queue<${TYPE}> ${NAME};",
-      "imports": [
-        "queue"
-      ],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

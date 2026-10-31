@@ -26,11 +26,6 @@
       "colour": "#A855F7",
       "tooltip": "%{BKY_C_AUTO_DECLARE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "auto ${NAME} = ${VALUE};",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name"

@@ -42,13 +42,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_STACK_DECLARE_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "std::stack<${TYPE}> ${NAME};",
-      "imports": [
-        "stack"
-      ],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

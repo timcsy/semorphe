@@ -6,11 +6,10 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { PatternLifter } from '../../src/core/lift/pattern-lifter'
-import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { createNode } from '../../src/core/semantic-tree'
-import type { BlockSpec, LiftPattern, UniversalTemplate, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import type { BlockSpec, LiftPattern, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
@@ -26,7 +25,7 @@ import { universalComponents, universalBlocks } from '../../src/core/universal'
 import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
 import { allStdModules } from '../../src/languages/cpp/std'
 import liftPatternsJson from '../../src/languages/cpp/lift-patterns.json'
-import universalTemplatesJson from '../../src/languages/cpp/templates/universal-templates.json'
+import { productCode } from '../helpers/product-code'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 
 function mockNode(
@@ -54,7 +53,6 @@ function unnamed(type: string, text: string): AstNode {
 
 describe('L2 Block Roundtrip', () => {
   let lifter: PatternLifter
-  let generator: TemplateGenerator
   let renderer: PatternRenderer
   let extractor: PatternExtractor
 
@@ -69,7 +67,6 @@ describe('L2 Block Roundtrip', () => {
     createTestLifter() // ⚠️ 只為了觸發膠囊的 lift 註冊（見檔頭 import）
     lifter = new PatternLifter()
     lifter.setGrammar('tree-sitter-cpp')
-    generator = new TemplateGenerator()
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()
     registerCppLanguage()
@@ -87,17 +84,8 @@ describe('L2 Block Roundtrip', () => {
     renderer.loadBlockSpecs(allSpecs)
     extractor.loadBlockSpecs(allSpecs)
 
-    for (const spec of allSpecs) {
-      if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
-        // 形態要一起傳——不傳的話變體的模板會蓋掉中性版（實測：少一個分號）
-        generator.registerTemplate(
-          spec.componentMapping.componentId,
-          spec.codeTemplate,
-          (spec as { form?: { axis: string; value: string } }).form,
-        )
-      }
-    }
-    generator.loadUniversalTemplates(universalTemplatesJson as unknown as UniversalTemplate[])
+    // 🪦 這裡原本 `new TemplateGenerator()` 並餵 `codeTemplate`——產品不裝的那一套（第 384 刀刪除）。
+    //    下面的「should generate code」一律走 `productCode`（產品的語言產生器表）。
   })
 
   function liftCtx(): LiftContext {
@@ -109,8 +97,6 @@ describe('L2 Block Roundtrip', () => {
       data,
     }
   }
-
-  const genCtx = { indent: 0, style: { indent_size: 4 } as any }
 
   // ─── Pointer Operations ─────────────────────────────────────
 
@@ -153,7 +139,7 @@ describe('L2 Block Roundtrip', () => {
     it('should generate code', () => {
       const inner = createNode('cpp:var_ref', { name: 'p' })
       const sem = createNode('cpp:pointer_deref', {}, { ptr: [inner] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('*p')
     })
 
@@ -184,7 +170,7 @@ describe('L2 Block Roundtrip', () => {
     it('should generate code', () => {
       const inner = createNode('cpp:var_ref', { name: 'x' })
       const sem = createNode('cpp:address_of', {}, { var: [inner] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('&x')
     })
 
@@ -215,7 +201,7 @@ describe('L2 Block Roundtrip', () => {
     it('should generate code', () => {
       const inner = createNode('cpp:var_ref', { name: 'ptr' })
       const sem = createNode('cpp:free', {}, { ptr: [inner] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('free(ptr);')
     })
 
@@ -252,7 +238,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:struct_at_member', { member: 'y' }, { obj: [createNode('cpp:var_ref', { name: 'point' })] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('point.y')
     })
 
@@ -305,7 +291,7 @@ describe('L2 Block Roundtrip', () => {
     it('should generate code', () => {
       const sem = createNode('cpp:struct_at_ptr', { member: 'next' },
         { obj: [createNode('cpp:var_ref', { name: 'node' })] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('node->next')
     })
   })
@@ -324,11 +310,13 @@ describe('L2 Block Roundtrip', () => {
       expect(sem2!.componentId).toBe('cpp:cstring_size')
     })
 
-    it('should return null from TemplateGenerator (uses hand-written generator)', () => {
+    // 🔴 第 384 刀：原本斷言「`TemplateGenerator` 回 null（這顆走手寫產生器）」——那只是模板路徑的事實。
+    //    改成斷言**產品**產出的碼。
+    it('should generate code via the product generator', () => {
       const inner = createNode('cpp:var_ref', { name: 's' })
       const sem = createNode('cpp:cstring_size', {}, { str: [inner] })
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBeNull()
+      const code = productCode(sem)
+      expect(code).toBe('strlen(s)')
     })
 
     it('should skip call_expression lift (handled by hand-written lifter)', () => {
@@ -351,22 +339,26 @@ describe('L2 Block Roundtrip', () => {
       expect(block!.type).toBe('cpp_cstring_compare')
     })
 
-    it('should return null from TemplateGenerator (uses hand-written generator)', () => {
+    // 🔴 第 384 刀：原本斷言「`TemplateGenerator` 回 null（這顆走手寫產生器）」——那只是模板路徑的事實。
+    //    改成斷言**產品**產出的碼。
+    it('should generate code via the product generator', () => {
       const s1 = createNode('cpp:var_ref', { name: 'a' })
       const s2 = createNode('cpp:var_ref', { name: 'b' })
       const sem = createNode('cpp:cstring_compare', {}, { s1: [s1], s2: [s2] })
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBeNull()
+      const code = productCode(sem)
+      expect(code).toBe('strcmp(a, b)')
     })
   })
 
   describe('cpp_cstring_copy', () => {
-    it('should return null from TemplateGenerator (uses hand-written generator)', () => {
+    // 🔴 第 384 刀：原本斷言「`TemplateGenerator` 回 null（這顆走手寫產生器）」——那只是模板路徑的事實。
+    //    改成斷言**產品**產出的碼。
+    it('should generate code via the product generator', () => {
       const dest = createNode('cpp:var_ref', { name: 'dst' })
       const src = createNode('cpp:var_ref', { name: 'src' })
       const sem = createNode('cpp:cstring_copy', {}, { dest: [dest], src: [src] })
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBeNull()
+      const code = productCode(sem)
+      expect(code).toBe('strcpy(dst, src);')
     })
   })
 
@@ -389,8 +381,12 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:vector_declare', { type: 'int', name: 'nums' })
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBe('std::vector<int> nums;')
+      // ⚠️ 期望改了（第 384 刀）：`std::vector<int> nums;` 是模板寫死的（不看風格）；產品在 `using` 風格下產 `vector<int> nums;`，
+      //    而補丁器會補上 `using namespace std;`——同樣正確。
+      // 🔴 而 `namespace_style: 'explicit'`（google）下產品**同樣**產 `vector<int> nums;`、也不補 `using`
+      //    ——那編不過。那是產品缺陷（產碼不認得 explicit），不在這一刀修；見第 384 刀的回報。
+      const code = productCode(sem)
+      expect(code).toBe('vector<int> nums;')
     })
   })
 
@@ -410,7 +406,7 @@ describe('L2 Block Roundtrip', () => {
     it('should generate code', () => {
       const val = createNode('cpp:literal_number', { value: '5' })
       const sem = createNode('cpp:container_append', {}, { obj: [createNode('cpp:var_ref', { name: 'v' })],  value: [val] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('v.push_back(5);')
     })
   })
@@ -429,7 +425,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:vector_size', {}, { obj: [createNode('cpp:var_ref', { name: 'nums' })] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('nums.size()')
     })
   })
@@ -511,8 +507,12 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:string_declare', { name: 'greeting' })
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBe('std::string greeting;')
+      // ⚠️ 期望改了（第 384 刀）：`std::string greeting;` 是模板寫死的（不看風格）；產品在 `using` 風格下產 `string greeting;`，
+      //    而補丁器會補上 `using namespace std;`——同樣正確。
+      // 🔴 而 `namespace_style: 'explicit'`（google）下產品**同樣**產 `string greeting;`、也不補 `using`
+      //    ——那編不過。那是產品缺陷（產碼不認得 explicit），不在這一刀修；見第 384 刀的回報。
+      const code = productCode(sem)
+      expect(code).toBe('string greeting;')
     })
   })
 
@@ -527,9 +527,9 @@ describe('L2 Block Roundtrip', () => {
     it('should generate code via hand-written generator', () => {
       // cpp_range_sort uses hand-written generator (not codeTemplate), tested in roundtrip-cpp-algorithm.test.ts
       const sem = createNode('cpp:range_sort', { begin: 'v.begin()', end: 'v.end()' })
-      // TemplateGenerator returns null for hand-written generators — expected
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBeNull()
+      // 🔴 第 384 刀：原本斷言 `TemplateGenerator` 回 null——那是模板路徑的事實；改驗產品的產出。
+      const code = productCode(sem)
+      expect(code).toBe('sort(v.begin(), v.end());')
     })
   })
 
@@ -546,16 +546,24 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:stack_declare', { type: 'int', name: 'st' })
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBe('std::stack<int> st;')
+      // ⚠️ 期望改了（第 384 刀）：`std::stack<int> st;` 是模板寫死的（不看風格）；產品在 `using` 風格下產 `stack<int> st;`，
+      //    而補丁器會補上 `using namespace std;`——同樣正確。
+      // 🔴 而 `namespace_style: 'explicit'`（google）下產品**同樣**產 `stack<int> st;`、也不補 `using`
+      //    ——那編不過。那是產品缺陷（產碼不認得 explicit），不在這一刀修；見第 384 刀的回報。
+      const code = productCode(sem)
+      expect(code).toBe('stack<int> st;')
     })
   })
 
   describe('cpp:queue_declare', () => {
     it('should generate code', () => {
       const sem = createNode('cpp:queue_declare', { type: 'int', name: 'q' })
-      const code = generator.generate(sem, genCtx)
-      expect(code).toBe('std::queue<int> q;')
+      // ⚠️ 期望改了（第 384 刀）：`std::queue<int> q;` 是模板寫死的（不看風格）；產品在 `using` 風格下產 `queue<int> q;`，
+      //    而補丁器會補上 `using namespace std;`——同樣正確。
+      // 🔴 而 `namespace_style: 'explicit'`（google）下產品**同樣**產 `queue<int> q;`、也不補 `using`
+      //    ——那編不過。那是產品缺陷（產碼不認得 explicit），不在這一刀修；見第 384 刀的回報。
+      const code = productCode(sem)
+      expect(code).toBe('queue<int> q;')
     })
   })
 
@@ -652,7 +660,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:new', { type: 'int', args: '5' })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('new int(5)')
     })
   })
@@ -669,7 +677,7 @@ describe('L2 Block Roundtrip', () => {
     it('should generate code', () => {
       const inner = createNode('cpp:var_ref', { name: 'p' })
       const sem = createNode('cpp:delete', {}, { ptr: [inner] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('delete p;')
     })
   })
@@ -688,8 +696,10 @@ describe('L2 Block Roundtrip', () => {
     })
 
     it('should generate code', () => {
-      const sem = createNode('cpp:method_call', {method: 'push_back', args: '5'}, { obj: [createNode('cpp:var_ref', { name: 'v' })] })
-      const code = generator.generate(sem, genCtx)
+      // ⚠️ 輸入改了、期望沒改（第 384 刀）：`args` 是**接點**（`component.json` 的 `slots.args`），
+      //    原本寫成屬性字串 `args: '5'`——只有模板的 `${ARGS}` 吃這個形狀，產品的產生器讀接點。
+      const sem = createNode('cpp:method_call', {method: 'push_back'}, { obj: [createNode('cpp:var_ref', { name: 'v' })], args: [createNode('cpp:literal_number', { value: '5' })] })
+      const code = productCode(sem)
       expect(code).toBe('v.push_back(5);')
     })
   })
@@ -708,7 +718,7 @@ describe('L2 Block Roundtrip', () => {
     it('should generate code', () => {
       const sem = createNode('cpp:method_call', {method: 'size', args: ''}, { obj: [createNode('cpp:var_ref', { name: 'v' })] })
       // ⚠️ **運算式位置**——B 項合併身分之後，位置由 ctx 說，不由身分編碼
-      const code = generator.generate(sem, { ...genCtx, isExpression: true })
+      const code = productCode(sem, { position: 'expression' })
       expect(code).toBe('v.size()')
     })
   })
@@ -730,7 +740,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:ifdef', { condition: 'DEBUG' }, { body: [] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toContain('#ifdef DEBUG')
       expect(code).toContain('#endif')
     })
@@ -750,7 +760,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:ifndef', { condition: 'HEADER_H' }, { body: [] })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toContain('#ifndef HEADER_H')
       expect(code).toContain('#endif')
     })
@@ -773,7 +783,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:include', { header: 'stdio.h' })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('#include <stdio.h>')
     })
   })
@@ -793,7 +803,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:define', { name: 'PI', value: '3.14' })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('#define PI 3.14')
     })
   })
@@ -812,7 +822,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:using_namespace', { ns: 'std' })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('using namespace std;')
     })
   })
@@ -831,7 +841,7 @@ describe('L2 Block Roundtrip', () => {
 
     it('should generate code', () => {
       const sem = createNode('cpp:comment', { text: 'test' })
-      const code = generator.generate(sem, genCtx)
+      const code = productCode(sem)
       expect(code).toBe('// test')
     })
   })

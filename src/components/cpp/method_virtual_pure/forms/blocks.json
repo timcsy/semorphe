@@ -31,11 +31,6 @@
       "colour": "#9966FF",
       "tooltip": "%{BKY_C_PURE_VIRTUAL_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "virtual ${RETURN_TYPE} ${NAME}(${PARAMS}) = 0;",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

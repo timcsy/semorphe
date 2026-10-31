@@ -25,13 +25,6 @@
       "colour": "#4C97FF",
       "tooltip": "%{BKY_CPP_MAP_ACCESS_TOOLTIP}"
     },
-    "codeTemplate": {
-      "pattern": "${OBJ}[${KEY}]",
-      "imports": [
-        "map"
-      ],
-      "order": 20
-    },
     "astPattern": null,
     "renderMapping": {
       "fields": {

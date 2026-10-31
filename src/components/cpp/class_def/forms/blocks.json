@@ -67,11 +67,6 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement"
     },
-    "codeTemplate": {
-      "pattern": "class ${NAME} {\npublic:\n${PUBLIC}\nprivate:\n${PRIVATE}\n};",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

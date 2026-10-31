@@ -13,9 +13,6 @@
     "blocks": [
       "./lang/blocks.json"
     ],
-    "templates": [
-      "./templates/universal-templates.json"
-    ],
     "liftPatterns": [
       "./lift-patterns.json"
     ],

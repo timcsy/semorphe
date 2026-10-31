@@ -7,13 +7,12 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { PatternLifter } from '../../src/core/lift/pattern-lifter'
-import { TemplateGenerator } from '../../src/core/projection/template-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { createNode } from '../../src/core/semantic-tree'
-import { generateNode, type GeneratorContext, type NodeGenerator } from '../../src/core/projection/code-generator'
-import type { BlockSpec, LiftPattern, StylePreset, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
+import { productCode } from '../helpers/product-code'
+import type { BlockSpec, LiftPattern, ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 import type { AstNode, LiftContext } from '../../src/core/lift/types'
 import { LiftContextData } from '../../src/core/lift/lift-context'
 
@@ -29,7 +28,6 @@ import { allStdModules } from '../../src/languages/cpp/std'
 // 見 `tests/integration/audit-declaration-assembly.test.ts`（第三十七條護欄）。
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { componentLiftPatterns } from '../../src/core/component/lift-patterns'
-import { componentGenerateRegistrars } from '../../src/core/component/paths'
 
 // Mock AST node helper
 function mockNode(
@@ -58,7 +56,6 @@ function unnamed(type: string, text: string): AstNode {
 describe('P3 Verification: Pure JSON Block Roundtrip', () => {
   let registry: BlockSpecRegistry
   let lifter: PatternLifter
-  let generator: TemplateGenerator
   let renderer: PatternRenderer
   let extractor: PatternExtractor
 
@@ -66,7 +63,6 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     registry = new BlockSpecRegistry()
     lifter = new PatternLifter()
     lifter.setGrammar('tree-sitter-cpp')
-    generator = new TemplateGenerator()
     renderer = new PatternRenderer()
     extractor = new PatternExtractor()
 
@@ -86,11 +82,9 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
     renderer.loadBlockSpecs(specs)
     extractor.loadBlockSpecs(specs)
 
-    for (const spec of specs) {
-      if (spec.codeTemplate?.pattern && spec.componentMapping?.componentId) {
-        generator.registerTemplate(spec.componentMapping.componentId, spec.codeTemplate)
-      }
-    }
+    // 🪦 這裡原本 `new TemplateGenerator()` 並餵 `codeTemplate`——產品不裝的那一套（第 384 刀刪除）。
+    //    「Code」那一步改走產品的語言產生器表（`productCode`）。⚠️ 於是「只靠 JSON」這個前提
+    //    **在產碼那一步不再成立**：產品的產碼本來就是膠囊的 `generate.ts`，JSON 那份從沒被產品讀過。
   })
 
   function liftCtx(): LiftContext {
@@ -121,19 +115,10 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
 
     it('should generate code from semantic node (hand-written generator for prefix/postfix)', () => {
       const node = createNode('cpp:increment', { operator: '++' }, { target: [createNode('cpp:var_ref', { name: 'i' })] })
-      const generators = new Map<string, NodeGenerator>()
-      const style = { indent_size: 4, io_style: 'cout', brace_style: 'K&R' } as StylePreset
-    for (const reg of componentGenerateRegistrars())
-      (reg as (m: typeof generators, s: typeof style) => void)(generators, style)
-      // ⚠️ **膠囊自帶的產生器也要裝。** `cpp:increment` 2026-08-11 進了膠囊，
-      // 而這裡只裝共用的那一批——症狀是 `⟨unknown component: cpp:increment⟩`，
-      // 看起來像產生器不見了。第三十七條護欄講的是宣告那一維，
-      // **產生器這一維是同一個病。**
-      for (const reg of componentGenerateRegistrars())
-        (reg as (m: typeof generators, s: typeof style) => void)(generators, style)
-      const ctx: GeneratorContext = { indent: 0, style, language: 'cpp', generators, templateGenerator: generator }
-      const code = generateNode(node, ctx)
-      expect(code).toBe('i++;\n')
+      // 🔴 第 384 刀：原本自己組一張產生器表、再塞一個 `templateGenerator` 進 ctx——改走產品的產碼。
+      //    期望從 `'i++;\n'` 變成 `'i++;'`：`generateCode` 會 trim，內容相同。
+      const code = productCode(node)
+      expect(code).toBe('i++;')
     })
 
     it('should render semantic to block state', () => {
@@ -209,7 +194,6 @@ describe('P3 Verification: Pure JSON Block Roundtrip', () => {
         version: '1.0.0',
         componentMapping: { componentId: 'cpp:literal_number', role: 'expression' },
         blockDef: { type: 'cpp_literal_number' },
-        codeTemplate: { pattern: '${value}', imports: [], order: 20 },
         astPattern: {
           nodeType: 'number_literal',
           constraints: [],

@@ -17,7 +17,6 @@ function makeBlockSpec(overrides: Partial<BlockSpec> = {}): BlockSpec {
       ],
       tooltip: 'Print a value',
     },
-    codeTemplate: { pattern: 'cout << %VALUE%', imports: ['<iostream>'], order: 1 },
     astPattern: { nodeType: 'call_expression', constraints: [] },
     ...overrides,
   }

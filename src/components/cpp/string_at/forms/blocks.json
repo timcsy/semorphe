@@ -37,13 +37,6 @@
       "inputs": {
         "INDEX": "index"
       }
-    },
-    "codeTemplate": {
-      "pattern": "${OBJ}[${INDEX}]",
-      "imports": [
-        "string"
-      ],
-      "order": 20
     }
   }
 ]

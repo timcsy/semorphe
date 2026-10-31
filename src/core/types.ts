@@ -223,7 +223,6 @@ export interface BlockSpec {
    */
   componentMapping: ComponentMapping
   blockDef: Record<string, unknown>
-  codeTemplate: CodeTemplate
   astPattern: AstPattern
   renderMapping?: RenderMapping
 }
@@ -245,12 +244,6 @@ export interface ComponentMapping {
   slots?: Record<string, string>
   role?: 'statement' | 'expression' | 'both'
   annotations?: Record<string, unknown>
-}
-
-export interface CodeTemplate {
-  pattern: string
-  imports: string[]
-  order: number
 }
 
 /**
@@ -743,7 +736,6 @@ export interface BlockProjectionJSON {
   category: string
   version: string
   blockDef: Record<string, unknown>
-  codeTemplate?: CodeTemplate
   astPattern?: AstPattern
   renderMapping?: RenderMapping
 }
@@ -760,20 +752,8 @@ export interface LanguageManifest {
   provides: {
     components: string[]
     blocks: string[]
-    templates: string[]
     liftPatterns: string[]
   }
-}
-
-// ─── Universal Template (Language-specific code templates for universal components) ───
-
-export interface UniversalTemplate {
-  componentId: string
-  pattern?: string
-  styleVariants?: Record<string, CodeTemplate>
-  styleKey?: string
-  order: number
-  imports?: string[]
 }
 
 // ─── Lift Pattern (JSON-driven AST→Semantic patterns) ───

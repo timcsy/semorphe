@@ -47,11 +47,6 @@
       "openLabelFallback": "初始值",
       "openLabelOnFirstSlot": true
     },
-    "codeTemplate": {
-      "pattern": "${TYPE} ${NAME}[${ROWS}][${COLS}];",
-      "imports": [],
-      "order": 0
-    },
     "renderMapping": {
       "fields": {
         "NAME": "name",

@@ -9,7 +9,6 @@ const sampleSpec: BlockSpec = {
   version: '1.0.0',
   componentMapping: { componentId: 'cpp:var_declare' },
   blockDef: { type: 'cpp_var_declare', message0: 'declare %1 %2', colour: '#FF8C1A' },
-  codeTemplate: { pattern: '${TYPE} ${NAME};', imports: [], order: 0 },
   astPattern: { nodeType: 'declaration', constraints: [] },
 }
 
@@ -20,7 +19,6 @@ const sortSpec: BlockSpec = {
   version: '1.0.0',
   componentMapping: { componentId: 'cpp:stdlib:sort', abstractComponent: 'collection_sort' },
   blockDef: { type: 'cpp_range_sort', message0: 'sort %1 to %2', colour: '#4C97FF' },
-  codeTemplate: { pattern: 'sort(${BEGIN}, ${END});', imports: ['algorithm'], order: 0 },
   astPattern: {
     nodeType: 'call_expression',
     constraints: [{ field: 'function', text: 'sort' }],
