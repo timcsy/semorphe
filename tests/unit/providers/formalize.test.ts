@@ -374,6 +374,14 @@ describe('第 217 刀：可變長度陣列送 sDeclV（Cella 0.1.202611012223）
     expect(find(r.program, 'sDeclV')[0].elem).toMatchObject({ k: 'tArr', n: 5 })
   })
 
+  it('🔴 for (int i{}; …) 的起始值：{} 送 0、{x} 送 x——不送空的大括號串列（Cella 推不出它的型別）', () => {
+    const r = fz('int main() { int s = 0; for (int i{}; i < 3; i++) s += i; for (int j{2}; j < 4; j++) s += j; }')
+    expect(r.unknown).toEqual([])
+    expect(find(r.program, 'eBraced')).toEqual([])
+    const inits = find(r.program, 'sFor').map((x) => x.init.init.e)
+    expect(inits).toEqual([expect.objectContaining({ k: 'eNum', v: 0 }), expect.objectContaining({ k: 'eNum', v: 2 })])
+  })
+
   it('🔴 內層也可變、或全域：照實標翻不出（Cella 的 VLA 只有外層可變；全域長度一定是常數）', () => {
     expect(fz('int main() { int n = 3, m = 2; int g[n][m]; }').unknown.map((u) => u.construct)).toContain('cpp:array_2d_declare')
     expect(fz('int n = 3;\nint d[n];\nint main() {}').unknown.map((u) => u.construct)).toContain('cpp:array_declare')
