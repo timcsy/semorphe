@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 
 /**
  * 擴充的建置——**一份設定、兩個目標**。
@@ -61,8 +61,57 @@ const OUT = 'build/vscode/dist'
  */
 const EXTENSION_ENTRY = 'src/vscode/extension.ts'
 
+/**
+ * 🔴 **第四個目標：webview 裡的 Cella worker**（spec 198，重構階段 6a）。
+ *
+ * 與網頁版**同一支** `providers/cella/worker.ts`——判決、除錯、覆蓋在兩個宿主是同一份程式（P9）。差兩件事：
+ *
+ * ```
+ * formats   iife                 webview 用 classic worker 的 importScripts 載它（blob 啟動，見 src/vscode/webview/cella.ts）
+ *                                ——ES module 的 worker 跨來源載入要 CORS，而 webview 的資源網址不保證給
+ * assets    assets-vscode.ts     lib 模式會把 `?url` 的資產內嵌成 base64（45 MB 的套件全進 bundle）；
+ *                                改成執行期從 `dist/cella/` 抓
+ * ```
+ */
+const CELLA_WORKER_ENTRY = 'src/providers/cella/worker.ts'
+const cellaAssetsForVscode: Plugin = {
+  name: 'semorphe-cella-assets-vscode',
+  enforce: 'pre',
+  resolveId(source: string, importer?: string) {
+    if (source === './assets' && importer?.replace(/\\/g, '/').endsWith('src/providers/cella/worker.ts')) {
+      return this.resolve('./assets-vscode', importer, { skipSelf: true })
+    }
+    return null
+  },
+  // `cella-lang/cella.js` 的預設 wasm 路徑 `new URL('cella_bg.wasm', import.meta.url)` 在 lib 模式會被內嵌成 6 MB 的 base64，
+  // 而我們一律自己傳 bytes（`verdict.ts` 的 `cella.default({ module_or_path: … })`）——那一條路永遠不走，拿掉
+  transform(code: string, id: string) {
+    if (!id.replace(/\\/g, '/').endsWith('node_modules/cella-lang/cella.js')) return null
+    const out = code.replace(/new URL\(\s*['"]cella_bg\.wasm['"]\s*,\s*import\.meta\.url\s*\)/, 'undefined')
+    if (out === code) this.error('cella-lang/cella.js 的預設 wasm 路徑找不到了——套件改了寫法，這個外掛要跟著改')
+    return { code: out, map: null }
+  },
+}
+
 export default defineConfig(
-  target === 'extension-web'
+  target === 'cella-worker'
+    ? {
+        publicDir: false,
+        plugins: [cellaAssetsForVscode],
+        build: {
+          outDir: OUT,
+          emptyOutDir: false,
+          lib: {
+            entry: CELLA_WORKER_ENTRY,
+            formats: ['iife'],
+            name: 'SemorpheCellaWorker',
+            fileName: () => 'cella-worker.js',
+          },
+          rollupOptions: { output: { inlineDynamicImports: true } },
+          minify: false,
+        },
+      }
+    : target === 'extension-web'
     ? {
         publicDir: false,
         build: {

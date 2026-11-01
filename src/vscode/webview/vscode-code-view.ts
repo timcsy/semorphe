@@ -167,6 +167,11 @@ export class VscodeCodeView implements CodeView, ViewHost {
     postToHost({ type: 'syncPhase', phase, source, detail })
   }
 
+  /** 判斷的狀態變了就報給主行程——狀態列住在那裡（spec 198） */
+  reportCheckStatus(status: { state: 'idle' | 'loading' | 'ready' | 'unavailable'; text: string; detail: string; hasErrors: boolean }): void {
+    postToHost({ type: 'checkStatus', ...status })
+  }
+
   private codeMappings: CodeMapping[] = []
   private currentTree: SemanticNode | null = null
 

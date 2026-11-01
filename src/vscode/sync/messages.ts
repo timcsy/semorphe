@@ -243,6 +243,15 @@ export interface ControlStateWire {
 
 export type WebviewMessage =
   | {
+      /** 判斷（Cella 的判決）的狀態——主行程據此更新狀態列（spec 198）。`idle` 是還沒開始載，不顯示 */
+      type: 'checkStatus'
+      state: 'idle' | 'loading' | 'ready' | 'unavailable'
+      text: string
+      /** 說明（需要輸入、對不到積木的那幾則、依哪個實作），一行一則——進 tooltip */
+      detail: string
+      hasErrors: boolean
+    }
+  | {
       /** 三態變了——主行程據此更新狀態列 */
       type: 'syncPhase'
       phase: SyncPhaseWire

@@ -13,6 +13,7 @@
  *
  * ```
  * indicator → host*   ⇒  reportSyncPhase          同步三態
+ *                         reportCheckStatus        判斷（Cella）的狀態——spec 198：對不到積木的問題只有狀態列說得出來
  * picker    → host*   ⇒  reportControls ＋ onControlInvoke
  * action    → host*   ⇒  同上
  * ```
@@ -90,7 +91,10 @@ function cannotReportPhase(files: ProfileFile[], readImpl: (className: string) =
   for (const f of files) {
     // 🔴 **投影到宿主的每一種，都要有對應的能力**——三種投影，三組義務。
     const required = new Set<string>()
-    if (/\bindicator:\s*'host/.test(f.text)) required.add('reportSyncPhase(')
+    if (/\bindicator:\s*'host/.test(f.text)) {
+      required.add('reportSyncPhase(')
+      required.add('reportCheckStatus(')
+    }
     if (/\b(picker|action):\s*'host/.test(f.text)) {
       required.add('reportControls(')
       required.add('onControlInvoke(')
@@ -174,6 +178,8 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
     const view = vscodeProfile.createCodeView(document.createElement('div'))
     // 🟢 這一格是**行為的**：真的建一個實作出來看它有沒有那些方法。
     expect(typeof view.reportSyncPhase, '🔴 面板不畫、宿主也收不到＝三態消失')
+      .toBe('function')
+    expect(typeof view.reportCheckStatus, '🔴 面板不畫、宿主也收不到＝判斷的狀態（載入中、判不出來）消失')
       .toBe('function')
     expect(typeof view.onSyncCommand, '🔴 只能看不能操作的狀態列是死的')
       .toBe('function')
@@ -334,7 +340,7 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
 }`,
     }]
     expect(cannotReportPhase(synthetic, () => 'class ZzFakeView { getCode() { return "" } }'))
-      .toEqual(['zz/zz-fake-bad-host.ts → reportSyncPhase', 'zz/zz-fake-bad-host.ts → reportControls', 'zz/zz-fake-bad-host.ts → onControlInvoke', 'zz/zz-fake-bad-host.ts → reportConsole', 'zz/zz-fake-bad-host.ts → onConsoleInput', 'zz/zz-fake-bad-host.ts → onConsoleFallback', 'zz/zz-fake-bad-host.ts → reportVariables'])
+      .toEqual(['zz/zz-fake-bad-host.ts → reportSyncPhase', 'zz/zz-fake-bad-host.ts → reportCheckStatus', 'zz/zz-fake-bad-host.ts → reportControls', 'zz/zz-fake-bad-host.ts → onControlInvoke', 'zz/zz-fake-bad-host.ts → reportConsole', 'zz/zz-fake-bad-host.ts → onConsoleInput', 'zz/zz-fake-bad-host.ts → onConsoleFallback', 'zz/zz-fake-bad-host.ts → reportVariables'])
   })
 
   it('★ 注入②：交得出三態的、以及自己畫狀態列的，都不得被報', () => {
@@ -352,7 +358,7 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
  controlSurfaces: { picker: 'panelToolbar', action: 'panelToolbar', indicator: 'panelStatusBar', output: 'panelBottom', inspector: 'panelBottom' },
 }`,
     }
-    expect(cannotReportPhase([canReport, drawsItself], () => 'class ZzFakeView { reportSyncPhase(a, b, c) {} reportControls(s) {} onControlInvoke(cb) {} reportConsole(c) {} onConsoleInput(cb) {} onConsoleFallback(cb) {} reportVariables(g) {} }'))
+    expect(cannotReportPhase([canReport, drawsItself], () => 'class ZzFakeView { reportSyncPhase(a, b, c) {} reportCheckStatus(s) {} reportControls(s) {} onControlInvoke(cb) {} reportConsole(c) {} onConsoleInput(cb) {} onConsoleFallback(cb) {} reportVariables(g) {} }'))
       .toEqual([])
   })
 
@@ -364,7 +370,7 @@ describe('第六十三條：投影出去的每一顆，宿主都要接得住', (
  controlSurfaces: { picker: 'hostStatusBar', action: 'hostTitleBar', indicator: 'hostStatusBar', output: 'hostTerminal', inspector: 'hostPanel' },
 }`,
     }]
-    expect(cannotReportPhase(synthetic, () => null)).toEqual(['zz/zz-fake-missing.ts → reportSyncPhase', 'zz/zz-fake-missing.ts → reportControls', 'zz/zz-fake-missing.ts → onControlInvoke', 'zz/zz-fake-missing.ts → reportConsole', 'zz/zz-fake-missing.ts → onConsoleInput', 'zz/zz-fake-missing.ts → onConsoleFallback', 'zz/zz-fake-missing.ts → reportVariables'])
+    expect(cannotReportPhase(synthetic, () => null)).toEqual(['zz/zz-fake-missing.ts → reportSyncPhase', 'zz/zz-fake-missing.ts → reportCheckStatus', 'zz/zz-fake-missing.ts → reportControls', 'zz/zz-fake-missing.ts → onControlInvoke', 'zz/zz-fake-missing.ts → reportConsole', 'zz/zz-fake-missing.ts → onConsoleInput', 'zz/zz-fake-missing.ts → onConsoleFallback', 'zz/zz-fake-missing.ts → reportVariables'])
   })
 
   it('★ 注入④：沒表態的會被報，表了態的不會', () => {

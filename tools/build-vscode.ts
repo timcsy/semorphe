@@ -27,6 +27,24 @@ const run = (cmd: string, args: string[], env: NodeJS.ProcessEnv = {}, cwd?: str
   execFileSync(cmd, args, { stdio: 'inherit', env: { ...process.env, ...env }, cwd })
 }
 
+/**
+ * **Cella 的套件檔照原樣進 `dist/cella/<套件>/`**（spec 198）——worker 執行期才抓（`assets-vscode.ts`），用到的才抓。
+ * 範圍與網頁版的 `providers/cella/assets.ts` 那兩個 glob 相同：`cella-lang` 的 wasm、stdlib、modules，與各套件的 `.cell`／`index.json`。
+ */
+function copyCellaPackages(out: string): void {
+  const core = 'node_modules/cella-lang'
+  mkdirSync(join(out, 'cella-lang', 'modules'), { recursive: true })
+  for (const f of ['cella_bg.wasm', 'stdlib.cell']) cpSync(join(core, f), join(out, 'cella-lang', f))
+  for (const f of readdirSync(join(core, 'modules')).filter((x) => x.endsWith('.cell'))) cpSync(join(core, 'modules', f), join(out, 'cella-lang', 'modules', f))
+  for (const pkg of readdirSync('node_modules/@cella-lang')) {
+    const dir = join('node_modules/@cella-lang', pkg)
+    const files = readdirSync(dir).filter((x) => x.endsWith('.cell') || x === 'index.json')
+    if (files.length === 0) continue
+    mkdirSync(join(out, pkg), { recursive: true })
+    for (const f of files) cpSync(join(dir, f), join(out, pkg, f))
+  }
+}
+
 function main(): void {
   rmSync(OUT, { recursive: true, force: true })
   mkdirSync(join(OUT, 'dist'), { recursive: true })
@@ -39,6 +57,9 @@ function main(): void {
   //    少了它，vscode.dev／github.dev／瀏覽器裡的 Codespaces 只會說
   //    「command 'semorphe.openBlocks' not found」——而擴充看起來裝好了。
   run('npx', vite, { SEMORPHE_VSCODE_TARGET: 'extension-web' })
+  // 🔴 **第四個目標：webview 裡的 Cella worker**（spec 198）——與網頁版同一支 worker.ts，見 `vite.vscode.config.ts`
+  run('npx', vite, { SEMORPHE_VSCODE_TARGET: 'cella-worker' })
+  copyCellaPackages(join(OUT, 'dist', 'cella'))
 
   // 2. Blockly 的圖示與音效——見檔頭。
   cpSync('node_modules/blockly/media', join(OUT, 'dist', 'media'), { recursive: true })

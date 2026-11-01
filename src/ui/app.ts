@@ -4557,20 +4557,28 @@ export class App {
 
   /** 狀態列左邊那一格：載入中／幾個問題／無法使用；說明（需要輸入、依 libc++）放在 title。 */
   private renderCheckStatus(r: Readiness): void {
-    const el = document.getElementById('status-check')
-    if (!el) return
     const placedErrors = this.checkDiagnostics.filter((d) => d.severity === 'error').length
     const errors = placedErrors + this.checkUnplaced.error
     const infos = this.checkDiagnostics.length - placedErrors + this.checkUnplaced.info
-    el.dataset.state = r.state
-    el.textContent =
+    const text =
       r.state === 'idle' ? '' :
       r.state === 'loading' ? '判斷：載入中…' :
       r.state === 'unavailable' ? '判斷：無法使用' :
       errors > 0 ? `判斷：${errors} 個問題` :
       infos > 0 ? `判斷：${infos} 處判不出來` : '判斷：沒有發現問題'
-    el.title = [r.state === 'unavailable' ? r.reason : '', ...this.checkNotes].filter(Boolean).join('\n')
-    this.renderAssumesBadge(r.state === 'ready' ? this.checkAssumes : [])
+    const title = [r.state === 'unavailable' ? r.reason : '', ...this.checkNotes].filter(Boolean).join('\n')
+    const assumes = r.state === 'ready' ? this.checkAssumes : []
+    // 面板不畫狀態列的宿主（VSCode）：交給宿主的狀態列（spec 198）——「依 …」小標的說明併進 detail
+    this.codeView?.reportCheckStatus?.({
+      state: r.state, text, hasErrors: r.state === 'ready' && errors > 0,
+      detail: [title, ...assumes.map((a) => `依 ${a.implementation}：${a.text}`)].filter(Boolean).join('\n'),
+    })
+    const el = document.getElementById('status-check')
+    if (!el) return
+    el.dataset.state = r.state
+    el.textContent = text
+    el.title = title
+    this.renderAssumesBadge(assumes)
   }
 
   /**
