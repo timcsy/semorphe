@@ -4,6 +4,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { toDiagnostics, type Verdict } from '../../../src/core/verdict-diagnostics'
+import { ownerOf } from '../../../src/core/verdict-diagnostics'
 import { createNode } from '../../../src/core/semantic-tree'
 import type { SemanticNode } from '../../../src/core/types'
 
@@ -67,6 +68,14 @@ describe('判決 → 診斷', () => {
     ])
     expect(r.notes.join()).not.toMatch(/libc\+\+/)
   })
+
+  it('🔴 擔保者照判決說的（cella 0.1.202610312349 起不再一律是 libc++）：glibc 的亂數、執行環境的時鐘', () => {
+    const r = run(v('accept', [], [{ implementation: 'glibc', choice: 'rand.sequence' }, { implementation: 'environment', choice: 'time.now' }]))
+    expect(r.assumes).toEqual([
+      { implementation: 'glibc', text: expect.stringMatching(/rand\(\)/) },
+      { implementation: '執行環境', text: expect.stringMatching(/time\(\)/) },
+    ])
+  })
 })
 
 describe('型別查詢 → 診斷（US4）', () => {
@@ -81,5 +90,15 @@ describe('型別查詢 → 診斷（US4）', () => {
   it('★ 洞的 fits（放什麼合）不產生診斷', () => {
     const types = { slots: { [`${idx.id}#index`]: { expects: 'int', fits: { 'char *': { level: 'no' as const, reason: 'x' } } } } }
     expect(toDiagnostics({ verdict: v('unknown', [{ kind: 'hole', at: `${idx.id}#index` }]), types, tree, readsInput: false, hasStdin: false }).diagnostics).toEqual([])
+  })
+})
+
+describe('Cella 的節點標籤 → 語義樹的節點', () => {
+  it('🔴 範圍 for 合成的運算式（`:begin`、`:element`…；cella 2026-11-01）對回範圍 for 本身', () => {
+    expect(ownerOf('node_7_ab:element')).toBe('node_7_ab')
+    expect(ownerOf('node_7_ab:begin')).toBe('node_7_ab')
+    expect(ownerOf('node_7_ab/stmt')).toBe('node_7_ab')
+    expect(ownerOf('node_7_ab#obj')).toBe('node_7_ab')
+    expect(ownerOf('node_7_ab')).toBe('node_7_ab')
   })
 })

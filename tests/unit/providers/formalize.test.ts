@@ -91,8 +91,9 @@ describe('formalize：最小子集', () => {
   })
 
   it('🔴 翻不了的不送：說出節點與元件，不擲例外', () => {
-    // ⚠️ 例子要挑「還沒對應」的構造——第二批補了 push_back 之後，原本的例子變成翻得出來
-    const t = lift('#include <map>\nusing namespace std;\nint main() { map<int, int> m; m[1] = 2; }')
+    // ⚠️ 例子要挑「還沒對應」的構造——第二批補了 push_back、spec 194 補了 map 之後，原本的例子都變成翻得出來
+    //    （Cella 只有 std::map；unordered_map 照實標 unknown）
+    const t = lift('#include <unordered_map>\nusing namespace std;\nint main() { unordered_map<int, int> m; m[1] = 2; }')
     const r = formalize(t)
     expect(r.program).toBeNull()
     expect(r.unknown.length).toBeGreaterThan(0)

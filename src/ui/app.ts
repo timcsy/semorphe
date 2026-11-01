@@ -4598,7 +4598,7 @@ export class App {
       }
       const foot = document.createElement('div')
       foot.className = 'status-assumes-foot'
-      foot.textContent = msg('ASSUMES_FOOT', '換一個編譯器（例如 GCC 的 libstdc++），這幾處的結果可能不同；程式本身沒有錯。')
+      foot.textContent = msg('ASSUMES_FOOT', '換一個編譯器或執行環境（例如 GCC 的 libstdc++、另一台機器的時鐘），這幾處的結果可能不同；程式本身沒有錯。')
       pop.appendChild(foot)
       document.body.appendChild(pop)
       const r = btn.getBoundingClientRect()

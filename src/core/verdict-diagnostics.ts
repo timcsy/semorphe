@@ -68,10 +68,22 @@ export const VERDICT_RULES: readonly string[] = [...Object.values(KINDS).map((k)
 const ASSUMES: Record<string, string> = {
   'vector.growth': 'vector 的容量怎麼長、什麼時候搬家，照 libc++ 的做法',
   'library.what': '例外的 what() 印出的文字，照 libc++ 的寫法',
+  // cella 0.1.202610312349 起（spec 194）
+  'rand.sequence': 'rand() 產生的那一串數字，照 glibc 的演算法（沒有呼叫 srand 時種子是 1）',
+  'time.now': 'time() 讀到的「現在」——判斷時固定當成 0，實際執行每次都不同',
+  'sort.order': 'sort 排序時，相等的元素誰先誰後，照 libc++ 的做法',
+  // cella 下一版（2026-11-01 預告）：math.h 的 sin、cos、exp、log、pow…
+  'math.correctlyRounded': '數學函式（sin、cos、exp、log、pow…）算出的小數照正確捨入算；實際的函式庫最後一位可能不同',
 }
 
-/** 標籤 `<id>/<角色>`、`<id>#<槽>` → `<id>`（與 `tests/probes/binding-verdict` 的 `owner` 同一條規則）。 */
-export const ownerOf = (label: string): string => label.split(/[/#]/)[0]
+/** 擔保者 → 顯示的名字（小標上的「依 …」）。認不得的照原文。 */
+const IMPLEMENTATIONS: Record<string, string> = { environment: '執行環境' }
+
+/**
+ * 標籤 `<id>/<角色>`、`<id>#<槽>`、`<id>:<合成>` → `<id>`（與 `tests/probes/binding-verdict` 的 `owner` 同一條規則）。
+ * `:` 是 Cella 展開範圍 for 時合成的運算式（`:begin`、`:end`、`:element`、`:test`、`:step`；cella 2026-11-01 告知）——對回範圍 for 本身。
+ */
+export const ownerOf = (label: string): string => label.split(/[/#:]/)[0]
 
 function ids(tree: SemanticNode): Set<string> {
   const out = new Set<string>()
@@ -115,7 +127,7 @@ export function toDiagnostics(input: {
   if (dropped > 0) notes.push('這支程式要讀輸入——給一份輸入，才判得出執行時的問題')
 
   // `assumes`：不改變有錯／沒錯（第 14 題），單獨交出去給「依 libc++」小標——不混進 notes
-  const assumes = (verdict.assumes ?? []).map((a) => ({ implementation: a.implementation, text: ASSUMES[a.choice] ?? a.choice }))
+  const assumes = (verdict.assumes ?? []).map((a) => ({ implementation: IMPLEMENTATIONS[a.implementation] ?? a.implementation, text: ASSUMES[a.choice] ?? a.choice }))
 
   // 型別不合：允許接上、標在那一句（第 16 題）。判決的 reject 也指到同一顆時只留一則
   for (const e of types?.errors ?? []) {

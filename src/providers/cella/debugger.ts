@@ -21,6 +21,8 @@ export function debuggerSource(b: CellaBranch): string {
     `def stopErr (s : ${b}.Stopping) : String := ${b}.stopErr s`,
     `def stopDetail (s : ${b}.Stopping) : String := ${b}.stopDetail s`,
     `def divergences (s : ${b}.Stopping) : String := ${b}.divergences s`,
+    // 每個節點進入幾次（cella 0.1.202610312349 起；`cella-lang/dap` 有這個匯出才給 `coverage()`）
+    `def stopVisits (s : ${b}.Stopping) : String := ${b}.stopVisits s`,
     `def feed (text : String) (x : ${b}.Session) : ${b}.Session := ${b}.feed text x`,
     `def globals (x : ${b}.Session) : String := ${b}.globals x`,
     `def frames (at : String) (x : ${b}.Session) : String := ${b}.frames at x`,
@@ -36,7 +38,7 @@ export function debuggerSource(b: CellaBranch): string {
   return lines.join('\n') + '\n'
 }
 
-export const DEBUGGER_EXPORTS = ['load', 'run', 'stopConf', 'stopKind', 'stopNode', 'stopOut', 'stopErr', 'stopDetail', 'divergences', 'feed', 'globals', 'frames', 'setVarErr', 'setVarConf', 'env']
+export const DEBUGGER_EXPORTS = ['load', 'run', 'stopConf', 'stopKind', 'stopNode', 'stopOut', 'stopErr', 'stopDetail', 'divergences', 'stopVisits', 'feed', 'globals', 'frames', 'setVarErr', 'setVarConf', 'env']
 const exportsOf = (b: CellaBranch): string[] => (b === 'arduino' ? [...DEBUGGER_EXPORTS, 'setInput', 'clockMs'] : DEBUGGER_EXPORTS)
 
 /** 編一個分支的除錯模組（約 20 秒）。 */

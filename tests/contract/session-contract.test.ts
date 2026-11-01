@@ -131,6 +131,19 @@ for (const entry of PROVIDERS) {
       expect(Object.fromEntries(s.variables().map((v) => [v.name, v.value]))).toMatchObject({ s: '0', i: '0' })
     })
 
+    it('🔴 覆蓋（spec 194）：一次跑完，迴圈身體的指定敘述進入 4 次、印出那一句 1 次；鍵是語義樹的 id', async () => {
+      const tree = lift(LOOP)
+      const assign = find(tree, (n) => n.componentId === 'cpp:var_assign')!
+      const print = find(tree, (n) => n.componentId === 'cpp:print')!
+      const { s } = open(p, tree)
+      expect(await s.launch(tree, { stopOnEntry: false })).toEqual({ kind: 'ended' })
+      const cov = s.coverage()
+      expect(cov, '🔴 給不出覆蓋（Cella 的除錯模組沒有匯出 stopVisits？）').not.toBeNull()
+      expect(cov!.get(assign.id), '迴圈跑 4 圈').toBe(4)
+      expect(cov!.get(print.id)).toBe(1)
+      expect([...cov!.keys()].every((k) => !k.includes('/')), '鍵是語義樹的 id，不是 Cella 的標籤').toBe(true)
+    })
+
     it('★ 單步：stopOnEntry 停在第一步，每次 stepIn 往前一顆，最後跑完', async () => {
       const tree = lift(LOOP)
       const { s, out } = open(p, tree)

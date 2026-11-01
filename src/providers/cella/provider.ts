@@ -57,8 +57,21 @@ function toOutcome(w: WireOutcome): Outcome {
 }
 
 /**
+ * 標籤 → 語義樹的節點（`ownerOf`）。同一個節點名下的幾個標籤（`<id>`、`<id>/stmt`）是**同一次進入**，取最大值、不加總
+ * ——加總的話一句運算式敘述會被算成跑了兩次。
+ */
+export function visitsByNode(counts: Record<string, number>): Map<string, number> {
+  const out = new Map<string, number>()
+  for (const [label, n] of Object.entries(counts)) {
+    const id = ownerOf(label)
+    out.set(id, Math.max(out.get(id) ?? 0, n))
+  }
+  return out
+}
+
+/**
  * **主執行緒那一側的工作階段**——每個指令送進 worker，等 `dap-result`；變數快照跟著結果回來，`variables()` 讀快照。
- * `coverage()` 回 null：Cella 的節點進入次數下一版才有（spec 183 R2）。
+ * `coverage()`：Cella 的節點進入次數（spec 194 起；cella 0.1.202610312349 的 `stopVisits`）——標籤收回成語義樹的 id。
  */
 class CellaSession implements ExecutionSession {
   private seq = 0
@@ -67,6 +80,7 @@ class CellaSession implements ExecutionSession {
   private env: HardwareState | null = null
   private out: ((text: string) => void) | null = null
   private inputs: SessionInput[] = []
+  private visits: ReadonlyMap<string, number> | null = null
 
   private readonly sid: number
   private readonly send: (m: WorkerRequest) => void
@@ -83,6 +97,7 @@ class CellaSession implements ExecutionSession {
     if (r.kind !== 'dap-result') return
     this.vars = r.variables
     this.env = (r.env as HardwareState | null) ?? null
+    this.visits = r.coverage ? visitsByNode(r.coverage) : null
     this.waiting.get(r.seq)?.(r)
     this.waiting.delete(r.seq)
   }
@@ -128,7 +143,7 @@ class CellaSession implements ExecutionSession {
     if (r.ok) this.inputs.push({ kind: 'set-input', key, value })
     return { ok: r.ok === true, ...(r.message ? { message: r.message } : {}) }
   }
-  coverage(): null { return null }
+  coverage(): ReadonlyMap<string, number> | null { return this.visits }
   recordedInputs(): readonly SessionInput[] { return this.inputs }
 }
 

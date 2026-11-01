@@ -50,7 +50,7 @@ export type WorkerReply =
   | { id: number; kind: 'error'; reason: string }
   | { kind: 'dap-status'; branch: CellaBranch; status: 'loading' | 'ready' | 'unavailable'; reason?: string }
   | { kind: 'dap-output'; sid: number; text: string }
-  | { kind: 'dap-result'; sid: number; seq: number; outcome?: WireOutcome; ok?: boolean; message?: string; variables: Variable[]; env: unknown }
+  | { kind: 'dap-result'; sid: number; seq: number; outcome?: WireOutcome; ok?: boolean; message?: string; variables: Variable[]; env: unknown; coverage: Record<string, number> | null }
 
 const post = (r: WorkerReply): void => (self as unknown as { postMessage(m: WorkerReply): void }).postMessage(r)
 
@@ -177,6 +177,11 @@ function outcomeOf(d: DapSession, launching: boolean): WireOutcome {
   }
 }
 
+/** 到目前為止每個節點標籤進入幾次（`cella-lang/dap` 的 `coverage()`，spec 194）；結束後照樣讀得到——跑完才是整支的覆蓋。 */
+function coverageOf(d: DapSession): Record<string, number> | null {
+  try { return d.s.coverage() ?? null } catch { return null }
+}
+
 /** 暫停時板子的狀態（`readEnv`）；一般程式是 null。 */
 function envOf(d: DapSession): unknown {
   if (d.exited || d.terminated) return null
@@ -194,7 +199,7 @@ function variablesOf(d: DapSession): Variable[] {
 async function dapOp(sid: number, seq: number, body: DapOp): Promise<void> {
   const d = await sessions.get(sid)!
   const reply = (r: Partial<Extract<WorkerReply, { kind: 'dap-result' }>>): void =>
-    post({ kind: 'dap-result', sid, seq, variables: variablesOf(d), env: envOf(d), ...r })
+    post({ kind: 'dap-result', sid, seq, variables: variablesOf(d), env: envOf(d), coverage: coverageOf(d), ...r })
   // 立即生效的：不排隊（pause 要在執行中送到；terminate 要能打斷）
   if (body.op === 'pause') { d.s.pause(); reply({ ok: true }); return }
   if (body.op === 'terminate') { d.terminated = true; d.s.terminate(); reply({ ok: true }); return }

@@ -36,6 +36,8 @@ beforeAll(async () => {
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
   rows = buildBindingCorpus(parser)
+  // 只挑幾筆（修單筆時用）：BINDING_ONLY='04-set與map|12-猜數字'
+  if (process.env.BINDING_ONLY) rows = rows.filter((r) => new RegExp(process.env.BINDING_ONLY!).test(r.id))
   checker = await createCellaChecker(read)
   verdict = checker.verdict
   results = rows.filter((r) => r.program).map((row) => {
@@ -72,7 +74,7 @@ function ids(tree: SemanticNode): Set<string> {
 }
 
 /** 標籤 → 它掛在哪個語義樹節點上：`<id>/<角色>`、`<id>#<槽>` 都歸給 `<id>`。 */
-const owner = (label: string): string => label.split(/[/#]/)[0]
+const owner = (label: string): string => label.split(/[/#:]/)[0]
 
 /** 程式 JSON 裡每個節點的標籤 `n`（cella：運算式的標籤必須彼此不同，共用會讓判決靜默出錯）。 */
 function labels(program: unknown): string[] {
