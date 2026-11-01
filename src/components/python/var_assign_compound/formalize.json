@@ -1,5 +1,4 @@
 {
-  "_source": "cella packages/python/docs/components.json @ a67a8466a",
   "template": {
     "k": "sAugAssign",
     "n": "$id",

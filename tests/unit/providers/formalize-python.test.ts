@@ -54,10 +54,11 @@ describe('Python 的 formalize：Cella 的範例（generate.ts 產生的 Python 
     const r = formalizePython({ id: 'p', componentId: 'python:program', properties: {}, slots: { body: [raw] } } as unknown as SemanticNode)
     expect(r.program).toBeNull()
     expect(r.unknown).toEqual([expect.objectContaining({ nodeId: 'r1', construct: 'python:raw_code' })])
-    // `$only` 的元件出現在不該出現的位置（`max(xs, key=…)`：math_max 用 $slots 收引數）→ unknown，不漏出 `{"$only":…}`
-    const named = { id: 'k1', componentId: 'python:func_call_named', properties: { name: 'key' }, slots: {} }
-    const mx = { id: 'm1', componentId: 'python:math_max', properties: {}, slots: { values: [named] } } as unknown as SemanticNode
-    expect(expandPython(mx, false)).toMatchObject({ program: null, unknown: [expect.objectContaining({ nodeId: 'k1' })] })
+    // `$only` 的元件出現在不該出現的位置 → unknown，不漏出 `{"$only":…}`
+    //    （第一個例子 `max(xs, key=…)` 已由 cella 對照表 c4c423b3e 修好；換成 f-string 的片段出現在 f-string 以外）
+    const piece = { id: 'k1', componentId: 'python:string_insert', properties: {}, slots: {} }
+    const add = { id: 'm1', componentId: 'python:arithmetic', properties: { operator: '+' }, slots: { left: [piece] } } as unknown as SemanticNode
+    expect(expandPython(add, false)).toMatchObject({ program: null, unknown: [expect.objectContaining({ nodeId: 'k1' })] })
     const bad = { id: 'c1', componentId: 'python:compare', properties: { operator: '<>' }, slots: {} } as unknown as SemanticNode
     expect(expandPython(bad, false).unknown[0]).toMatchObject({ nodeId: 'c1', reason: expect.stringMatching(/運算子/) })
   })

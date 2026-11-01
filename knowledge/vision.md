@@ -306,7 +306,7 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       🟢 **使用者定（2026-11-01）：等 Python 也有 Cella 再一起切**——一次切完，不留過渡、不讓 Python（99 顆、18 堂課）停擺；
       ⟹ 6 的開工條件多一項：Cella 的 Python 深嵌入發布 ＋ 我們的 Python formalize 與提供者（原 7 的前半段提前）→ [history/317](history/317-使用者定的四題.md)
 - [ ] **7 Python**——4～5 再走一遍（formalize、提供者）；⚠️ 它的前半段排在 6 的切換**之前**（見上一項）
-      🟡 前半段（spec 195）：formalize（照 Cella 的對照表，課文 47／48 翻得出、判決輸出全部一致）＋ 提供者的 Python 分支（判決、除錯、覆蓋）→ [history/320](history/320-Python-接上-Cella.md)；剩 1 份等 cella 的對照表
+      🟡 前半段（spec 195、196）：formalize（照 Cella 的對照表，**課文 48／48 翻得出、判決輸出全部一致**）＋ 提供者的 Python 分支（判決、除錯、覆蓋）→ [history/320](history/320-Python-接上-Cella.md)
 
 ⚠️ **不在本項**：Cella 語言本身的課程（重構之後）· Web Component 領域（Cella 那側的深嵌入）。
 

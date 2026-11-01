@@ -34,7 +34,8 @@ for cid, tmpl in table['components'].items():
         print(f'  ⚠️ 對照表有、這個 repo 沒有的元件：{cid}')
         continue
     with open(os.path.join(d, 'formalize.json'), 'w') as f:
-        json.dump({'_source': source, 'template': tmpl}, f, ensure_ascii=False, indent=2)
+        # 來源版本只記在 python-tables.json——每顆都記的話，每次同步都是 99 個檔的雜訊差異
+        json.dump({'template': tmpl}, f, ensure_ascii=False, indent=2)
         f.write('\n')
     written += 1
 

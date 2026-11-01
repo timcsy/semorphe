@@ -40,7 +40,7 @@ function solutions(): Sol[] {
  * **已知翻不出、而且原因在別處的**——要與實際翻不出的【完全相符】：修好了也會紅（提醒拿掉這一筆），不是安靜地放過。
  */
 const KNOWN_GAPS: Record<string, string> = {
-  'python-beginner/12-文字處理/ex1.py': 'cella 對照表的 math_max 用 $slots 收引數，`key=` 進不去（2026-11-01 回報 cella）',
+  // 🪦 'python-beginner/12-文字處理/ex1.py'（math_max 的 key=）——cella 對照表 c4c423b3e 修好（2026-11-01）
 }
 
 let checker: CellaChecker

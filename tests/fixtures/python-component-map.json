@@ -1,5 +1,5 @@
 {
- "_source": "cella packages/python/docs/components.json @ a67a8466a",
+ "_source": "cella packages/python/docs/components.json @ c4c423b3e",
  "statementRole": [
   "assert",
   "break",
@@ -3685,17 +3685,295 @@
    }
   },
   {
-   "component": "math_min",
-   "src": "min(xs)",
+   "component": "math_max",
+   "src": "max(xs, key=lambda w: w)",
    "statement": true,
    "instance": {
-    "id": "b201",
-    "componentId": "python:math_min",
+    "id": "b205",
+    "componentId": "python:math_max",
     "properties": {},
     "slots": {
      "values": [
       {
        "id": "b200",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b204",
+       "componentId": "python:func_call_named",
+       "properties": {
+        "name": "key"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b203",
+          "componentId": "python:lambda",
+          "properties": {},
+          "slots": {
+           "params": [
+            {
+             "id": "b201",
+             "componentId": "python:param",
+             "properties": {
+              "name": "w"
+             },
+             "slots": {}
+            }
+           ],
+           "body": [
+            {
+             "id": "b202",
+             "componentId": "python:var_ref",
+             "properties": {
+              "name": "w"
+             },
+             "slots": {}
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "max"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": "key",
+       "value": {
+        "k": "eLambda",
+        "args": {
+         "k": "arguments",
+         "posonlyargs": [],
+         "args": [
+          {
+           "k": "arg",
+           "name": "w"
+          }
+         ],
+         "vararg": null,
+         "kwonlyargs": [],
+         "kwDefaults": [],
+         "kwarg": null,
+         "defaults": []
+        },
+        "body": {
+         "k": "eName",
+         "id": "w"
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "math_min",
+   "src": "min(xs, key=lambda w: w)",
+   "statement": true,
+   "instance": {
+    "id": "b211",
+    "componentId": "python:math_min",
+    "properties": {},
+    "slots": {
+     "values": [
+      {
+       "id": "b206",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b210",
+       "componentId": "python:func_call_named",
+       "properties": {
+        "name": "key"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b209",
+          "componentId": "python:lambda",
+          "properties": {},
+          "slots": {
+           "params": [
+            {
+             "id": "b207",
+             "componentId": "python:param",
+             "properties": {
+              "name": "w"
+             },
+             "slots": {}
+            }
+           ],
+           "body": [
+            {
+             "id": "b208",
+             "componentId": "python:var_ref",
+             "properties": {
+              "name": "w"
+             },
+             "slots": {}
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "min"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": "key",
+       "value": {
+        "k": "eLambda",
+        "args": {
+         "k": "arguments",
+         "posonlyargs": [],
+         "args": [
+          {
+           "k": "arg",
+           "name": "w"
+          }
+         ],
+         "vararg": null,
+         "kwonlyargs": [],
+         "kwDefaults": [],
+         "kwarg": null,
+         "defaults": []
+        },
+        "body": {
+         "k": "eName",
+         "id": "w"
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "range_make",
+   "src": "range(a, step=2)",
+   "statement": true,
+   "instance": {
+    "id": "b215",
+    "componentId": "python:range_make",
+    "properties": {},
+    "slots": {
+     "values": [
+      {
+       "id": "b212",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b214",
+       "componentId": "python:func_call_named",
+       "properties": {
+        "name": "step"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b213",
+          "componentId": "python:literal_number",
+          "properties": {
+           "value": "2"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "range"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "a"
+      }
+     ],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": "step",
+       "value": {
+        "k": "eConstant",
+        "value": {
+         "k": "cInt",
+         "text": "2"
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "math_min",
+   "src": "min(xs)",
+   "statement": true,
+   "instance": {
+    "id": "b217",
+    "componentId": "python:math_min",
+    "properties": {},
+    "slots": {
+     "values": [
+      {
+       "id": "b216",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -3728,13 +4006,13 @@
    "src": "round(x, 2)",
    "statement": true,
    "instance": {
-    "id": "b204",
+    "id": "b220",
     "componentId": "python:math_round",
     "properties": {},
     "slots": {
      "value": [
       {
-       "id": "b202",
+       "id": "b218",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -3744,7 +4022,7 @@
      ],
      "digits": [
       {
-       "id": "b203",
+       "id": "b219",
        "componentId": "python:literal_number",
        "properties": {
         "value": "2"
@@ -3784,13 +4062,13 @@
    "src": "round(x)",
    "statement": true,
    "instance": {
-    "id": "b206",
+    "id": "b222",
     "componentId": "python:math_round",
     "properties": {},
     "slots": {
      "value": [
       {
-       "id": "b205",
+       "id": "b221",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -3823,13 +4101,13 @@
    "src": "input('n? ')",
    "statement": true,
    "instance": {
-    "id": "b208",
+    "id": "b224",
     "componentId": "python:input",
     "properties": {},
     "slots": {
      "prompt": [
       {
-       "id": "b207",
+       "id": "b223",
        "componentId": "python:literal_string",
        "properties": {
         "value": "n? "
@@ -3865,7 +4143,7 @@
    "src": "input()",
    "statement": true,
    "instance": {
-    "id": "b209",
+    "id": "b225",
     "componentId": "python:input",
     "properties": {},
     "slots": {}
@@ -3888,7 +4166,7 @@
    "src": "math.sqrt(2)",
    "statement": true,
    "instance": {
-    "id": "b211",
+    "id": "b227",
     "componentId": "python:func_call",
     "properties": {
      "name": "math.sqrt"
@@ -3896,7 +4174,7 @@
     "slots": {
      "args": [
       {
-       "id": "b210",
+       "id": "b226",
        "componentId": "python:literal_number",
        "properties": {
         "value": "2"
@@ -3936,7 +4214,7 @@
    "src": "f(a, k=1)",
    "statement": true,
    "instance": {
-    "id": "b215",
+    "id": "b231",
     "componentId": "python:func_call",
     "properties": {
      "name": "f"
@@ -3944,7 +4222,7 @@
     "slots": {
      "args": [
       {
-       "id": "b212",
+       "id": "b228",
        "componentId": "python:var_ref",
        "properties": {
         "name": "a"
@@ -3952,7 +4230,7 @@
        "slots": {}
       },
       {
-       "id": "b214",
+       "id": "b230",
        "componentId": "python:func_call_named",
        "properties": {
         "name": "k"
@@ -3960,7 +4238,7 @@
        "slots": {
         "value": [
          {
-          "id": "b213",
+          "id": "b229",
           "componentId": "python:literal_number",
           "properties": {
            "value": "1"
@@ -4008,13 +4286,13 @@
    "src": "lambda a, b: a",
    "statement": true,
    "instance": {
-    "id": "b219",
+    "id": "b235",
     "componentId": "python:lambda",
     "properties": {},
     "slots": {
      "params": [
       {
-       "id": "b216",
+       "id": "b232",
        "componentId": "python:param",
        "properties": {
         "name": "a"
@@ -4022,7 +4300,7 @@
        "slots": {}
       },
       {
-       "id": "b217",
+       "id": "b233",
        "componentId": "python:param",
        "properties": {
         "name": "b"
@@ -4032,7 +4310,7 @@
      ],
      "body": [
       {
-       "id": "b218",
+       "id": "b234",
        "componentId": "python:var_ref",
        "properties": {
         "name": "a"
@@ -4077,7 +4355,7 @@
    "src": "random.randint(1, 6)",
    "statement": true,
    "instance": {
-    "id": "b223",
+    "id": "b239",
     "componentId": "python:method_call",
     "properties": {
      "method": "randint"
@@ -4085,7 +4363,7 @@
     "slots": {
      "obj": [
       {
-       "id": "b220",
+       "id": "b236",
        "componentId": "python:var_ref",
        "properties": {
         "name": "random"
@@ -4095,7 +4373,7 @@
      ],
      "args": [
       {
-       "id": "b221",
+       "id": "b237",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -4103,7 +4381,7 @@
        "slots": {}
       },
       {
-       "id": "b222",
+       "id": "b238",
        "componentId": "python:literal_number",
        "properties": {
         "value": "6"
@@ -4150,13 +4428,13 @@
    "src": "xs.count(1)",
    "statement": true,
    "instance": {
-    "id": "b226",
+    "id": "b242",
     "componentId": "python:container_count",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b224",
+       "id": "b240",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -4166,7 +4444,7 @@
      ],
      "value": [
       {
-       "id": "b225",
+       "id": "b241",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -4206,13 +4484,13 @@
    "src": "xs.index(1)",
    "statement": true,
    "instance": {
-    "id": "b229",
+    "id": "b245",
     "componentId": "python:container_find_position",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b227",
+       "id": "b243",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -4222,7 +4500,7 @@
      ],
      "value": [
       {
-       "id": "b228",
+       "id": "b244",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -4262,13 +4540,13 @@
    "src": "xs.pop()",
    "statement": true,
    "instance": {
-    "id": "b231",
+    "id": "b247",
     "componentId": "python:container_pop",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b230",
+       "id": "b246",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -4300,13 +4578,13 @@
    "src": "xs.pop(0)",
    "statement": true,
    "instance": {
-    "id": "b234",
+    "id": "b250",
     "componentId": "python:container_pop",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b232",
+       "id": "b248",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -4316,7 +4594,7 @@
      ],
      "index": [
       {
-       "id": "b233",
+       "id": "b249",
        "componentId": "python:literal_number",
        "properties": {
         "value": "0"
@@ -4356,13 +4634,13 @@
    "src": "d.get('k', 0)",
    "statement": true,
    "instance": {
-    "id": "b238",
+    "id": "b254",
     "componentId": "python:map_at_default",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b235",
+       "id": "b251",
        "componentId": "python:var_ref",
        "properties": {
         "name": "d"
@@ -4372,7 +4650,7 @@
      ],
      "key": [
       {
-       "id": "b236",
+       "id": "b252",
        "componentId": "python:literal_string",
        "properties": {
         "value": "k"
@@ -4382,7 +4660,7 @@
      ],
      "fallback": [
       {
-       "id": "b237",
+       "id": "b253",
        "componentId": "python:literal_number",
        "properties": {
         "value": "0"
@@ -4429,7 +4707,7 @@
    "src": "d.items()",
    "statement": true,
    "instance": {
-    "id": "b240",
+    "id": "b256",
     "componentId": "python:map_iter",
     "properties": {
      "kind": "items"
@@ -4437,7 +4715,7 @@
     "slots": {
      "obj": [
       {
-       "id": "b239",
+       "id": "b255",
        "componentId": "python:var_ref",
        "properties": {
         "name": "d"
@@ -4469,7 +4747,7 @@
    "src": "d.keys()",
    "statement": true,
    "instance": {
-    "id": "b242",
+    "id": "b258",
     "componentId": "python:map_iter",
     "properties": {
      "kind": "keys"
@@ -4477,7 +4755,7 @@
     "slots": {
      "obj": [
       {
-       "id": "b241",
+       "id": "b257",
        "componentId": "python:var_ref",
        "properties": {
         "name": "d"
@@ -4509,7 +4787,7 @@
    "src": "d.values()",
    "statement": true,
    "instance": {
-    "id": "b244",
+    "id": "b260",
     "componentId": "python:map_iter",
     "properties": {
      "kind": "values"
@@ -4517,7 +4795,7 @@
     "slots": {
      "obj": [
       {
-       "id": "b243",
+       "id": "b259",
        "componentId": "python:var_ref",
        "properties": {
         "name": "d"
@@ -4549,13 +4827,13 @@
    "src": "s.startswith('a')",
    "statement": true,
    "instance": {
-    "id": "b247",
+    "id": "b263",
     "componentId": "python:string_compare_prefix",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b245",
+       "id": "b261",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -4565,7 +4843,7 @@
      ],
      "value": [
       {
-       "id": "b246",
+       "id": "b262",
        "componentId": "python:literal_string",
        "properties": {
         "value": "a"
@@ -4605,13 +4883,13 @@
    "src": "s.endswith('a')",
    "statement": true,
    "instance": {
-    "id": "b250",
+    "id": "b266",
     "componentId": "python:string_compare_suffix",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b248",
+       "id": "b264",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -4621,7 +4899,7 @@
      ],
      "value": [
       {
-       "id": "b249",
+       "id": "b265",
        "componentId": "python:literal_string",
        "properties": {
         "value": "a"
@@ -4661,7 +4939,7 @@
    "src": "s.zfill(5)",
    "statement": true,
    "instance": {
-    "id": "b254",
+    "id": "b270",
     "componentId": "python:string_fill",
     "properties": {
      "method": "zfill"
@@ -4669,7 +4947,7 @@
     "slots": {
      "obj": [
       {
-       "id": "b251",
+       "id": "b267",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -4679,7 +4957,7 @@
      ],
      "width": [
       {
-       "id": "b252",
+       "id": "b268",
        "componentId": "python:literal_number",
        "properties": {
         "value": "5"
@@ -4689,7 +4967,7 @@
      ],
      "fill": [
       {
-       "id": "b253",
+       "id": "b269",
        "componentId": "python:literal_string",
        "properties": {
         "value": "*"
@@ -4729,7 +5007,7 @@
    "src": "s.ljust(5, '*')",
    "statement": true,
    "instance": {
-    "id": "b258",
+    "id": "b274",
     "componentId": "python:string_fill",
     "properties": {
      "method": "ljust"
@@ -4737,7 +5015,7 @@
     "slots": {
      "obj": [
       {
-       "id": "b255",
+       "id": "b271",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -4747,7 +5025,7 @@
      ],
      "width": [
       {
-       "id": "b256",
+       "id": "b272",
        "componentId": "python:literal_number",
        "properties": {
         "value": "5"
@@ -4757,7 +5035,7 @@
      ],
      "fill": [
       {
-       "id": "b257",
+       "id": "b273",
        "componentId": "python:literal_string",
        "properties": {
         "value": "*"
@@ -4804,13 +5082,13 @@
    "src": "s.find('a')",
    "statement": true,
    "instance": {
-    "id": "b261",
+    "id": "b277",
     "componentId": "python:string_find",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b259",
+       "id": "b275",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -4820,7 +5098,7 @@
      ],
      "value": [
       {
-       "id": "b260",
+       "id": "b276",
        "componentId": "python:literal_string",
        "properties": {
         "value": "a"
@@ -4860,13 +5138,13 @@
    "src": "'{}{x}'.format(1, x=2)",
    "statement": true,
    "instance": {
-    "id": "b266",
+    "id": "b282",
     "componentId": "python:string_format",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b262",
+       "id": "b278",
        "componentId": "python:literal_string",
        "properties": {
         "value": "{}{x}"
@@ -4876,7 +5154,7 @@
      ],
      "args": [
       {
-       "id": "b263",
+       "id": "b279",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -4884,7 +5162,7 @@
        "slots": {}
       },
       {
-       "id": "b265",
+       "id": "b281",
        "componentId": "python:func_call_named",
        "properties": {
         "name": "x"
@@ -4892,7 +5170,7 @@
        "slots": {
         "value": [
          {
-          "id": "b264",
+          "id": "b280",
           "componentId": "python:literal_number",
           "properties": {
            "value": "2"
@@ -4950,13 +5228,13 @@
    "src": "','.join(xs)",
    "statement": true,
    "instance": {
-    "id": "b269",
+    "id": "b285",
     "componentId": "python:string_join",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b267",
+       "id": "b283",
        "componentId": "python:literal_string",
        "properties": {
         "value": ","
@@ -4966,7 +5244,7 @@
      ],
      "value": [
       {
-       "id": "b268",
+       "id": "b284",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -5006,13 +5284,13 @@
    "src": "s.lower()",
    "statement": true,
    "instance": {
-    "id": "b271",
+    "id": "b287",
     "componentId": "python:string_lower",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b270",
+       "id": "b286",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -5044,13 +5322,13 @@
    "src": "s.upper()",
    "statement": true,
    "instance": {
-    "id": "b273",
+    "id": "b289",
     "componentId": "python:string_upper",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b272",
+       "id": "b288",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -5082,13 +5360,13 @@
    "src": "s.strip()",
    "statement": true,
    "instance": {
-    "id": "b275",
+    "id": "b291",
     "componentId": "python:string_strip",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b274",
+       "id": "b290",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -5120,13 +5398,13 @@
    "src": "s.replace('a', 'b')",
    "statement": true,
    "instance": {
-    "id": "b279",
+    "id": "b295",
     "componentId": "python:string_replace",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b276",
+       "id": "b292",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -5136,7 +5414,7 @@
      ],
      "old": [
       {
-       "id": "b277",
+       "id": "b293",
        "componentId": "python:literal_string",
        "properties": {
         "value": "a"
@@ -5146,7 +5424,7 @@
      ],
      "new": [
       {
-       "id": "b278",
+       "id": "b294",
        "componentId": "python:literal_string",
        "properties": {
         "value": "b"
@@ -5193,13 +5471,13 @@
    "src": "s.split()",
    "statement": true,
    "instance": {
-    "id": "b281",
+    "id": "b297",
     "componentId": "python:string_split",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b280",
+       "id": "b296",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -5231,13 +5509,13 @@
    "src": "s.split(',')",
    "statement": true,
    "instance": {
-    "id": "b284",
+    "id": "b300",
     "componentId": "python:string_split",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b282",
+       "id": "b298",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -5247,7 +5525,7 @@
      ],
      "value": [
       {
-       "id": "b283",
+       "id": "b299",
        "componentId": "python:literal_string",
        "properties": {
         "value": ","
@@ -5287,13 +5565,13 @@
    "src": "print(a, b, sep='')",
    "statement": true,
    "instance": {
-    "id": "b289",
+    "id": "b305",
     "componentId": "python:print",
     "properties": {},
     "slots": {
      "values": [
       {
-       "id": "b285",
+       "id": "b301",
        "componentId": "python:var_ref",
        "properties": {
         "name": "a"
@@ -5301,7 +5579,7 @@
        "slots": {}
       },
       {
-       "id": "b286",
+       "id": "b302",
        "componentId": "python:var_ref",
        "properties": {
         "name": "b"
@@ -5309,7 +5587,7 @@
        "slots": {}
       },
       {
-       "id": "b288",
+       "id": "b304",
        "componentId": "python:func_call_named",
        "properties": {
         "name": "sep"
@@ -5317,7 +5595,7 @@
        "slots": {
         "value": [
          {
-          "id": "b287",
+          "id": "b303",
           "componentId": "python:literal_string",
           "properties": {
            "value": ""
@@ -5369,13 +5647,13 @@
    "src": "xs.append(1)",
    "statement": true,
    "instance": {
-    "id": "b292",
+    "id": "b308",
     "componentId": "python:container_append",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b290",
+       "id": "b306",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -5385,7 +5663,7 @@
      ],
      "value": [
       {
-       "id": "b291",
+       "id": "b307",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -5425,13 +5703,13 @@
    "src": "xs.insert(0, 1)",
    "statement": true,
    "instance": {
-    "id": "b296",
+    "id": "b312",
     "componentId": "python:container_insert",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b293",
+       "id": "b309",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -5441,7 +5719,7 @@
      ],
      "index": [
       {
-       "id": "b294",
+       "id": "b310",
        "componentId": "python:literal_number",
        "properties": {
         "value": "0"
@@ -5451,7 +5729,7 @@
      ],
      "value": [
       {
-       "id": "b295",
+       "id": "b311",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -5498,13 +5776,13 @@
    "src": "xs.remove(1)",
    "statement": true,
    "instance": {
-    "id": "b299",
+    "id": "b315",
     "componentId": "python:container_erase_value",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b297",
+       "id": "b313",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -5514,7 +5792,7 @@
      ],
      "value": [
       {
-       "id": "b298",
+       "id": "b314",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -5554,13 +5832,13 @@
    "src": "s.add(1)",
    "statement": true,
    "instance": {
-    "id": "b302",
+    "id": "b318",
     "componentId": "python:set_append",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b300",
+       "id": "b316",
        "componentId": "python:var_ref",
        "properties": {
         "name": "s"
@@ -5570,7 +5848,7 @@
      ],
      "value": [
       {
-       "id": "b301",
+       "id": "b317",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -5610,13 +5888,13 @@
    "src": "xs.sort(reverse=True)",
    "statement": true,
    "instance": {
-    "id": "b305",
+    "id": "b321",
     "componentId": "python:container_sort_self",
     "properties": {},
     "slots": {
      "obj": [
       {
-       "id": "b303",
+       "id": "b319",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -5626,7 +5904,7 @@
      ],
      "reverse": [
       {
-       "id": "b304",
+       "id": "b320",
        "componentId": "python:literal_bool",
        "properties": {
         "value": "True"
@@ -5670,7 +5948,7 @@
    "src": "x = 1",
    "statement": true,
    "instance": {
-    "id": "b307",
+    "id": "b323",
     "componentId": "python:var_assign",
     "properties": {
      "obj": "x"
@@ -5678,7 +5956,7 @@
     "slots": {
      "value": [
       {
-       "id": "b306",
+       "id": "b322",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -5710,13 +5988,13 @@
    "src": "a, *b = xs",
    "statement": true,
    "instance": {
-    "id": "b311",
+    "id": "b327",
     "componentId": "python:var_assign_sequence",
     "properties": {},
     "slots": {
      "targets": [
       {
-       "id": "b308",
+       "id": "b324",
        "componentId": "python:param",
        "properties": {
         "name": "a"
@@ -5724,7 +6002,7 @@
        "slots": {}
       },
       {
-       "id": "b309",
+       "id": "b325",
        "componentId": "python:param",
        "properties": {
         "name": "b",
@@ -5735,7 +6013,7 @@
      ],
      "value": [
       {
-       "id": "b310",
+       "id": "b326",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -5776,7 +6054,7 @@
    "src": "(n := x)",
    "statement": true,
    "instance": {
-    "id": "b313",
+    "id": "b329",
     "componentId": "python:var_assign_expr",
     "properties": {
      "obj": "n"
@@ -5784,7 +6062,7 @@
     "slots": {
      "value": [
       {
-       "id": "b312",
+       "id": "b328",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -5814,7 +6092,7 @@
    "src": "x += 2",
    "statement": true,
    "instance": {
-    "id": "b316",
+    "id": "b332",
     "componentId": "python:var_assign_compound",
     "properties": {
      "operator": "+="
@@ -5822,7 +6100,7 @@
     "slots": {
      "target": [
       {
-       "id": "b314",
+       "id": "b330",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -5832,7 +6110,7 @@
      ],
      "value": [
       {
-       "id": "b315",
+       "id": "b331",
        "componentId": "python:literal_number",
        "properties": {
         "value": "2"
@@ -5865,7 +6143,7 @@
    "src": "x -= 2",
    "statement": true,
    "instance": {
-    "id": "b319",
+    "id": "b335",
     "componentId": "python:var_assign_compound",
     "properties": {
      "operator": "-="
@@ -5873,7 +6151,7 @@
     "slots": {
      "target": [
       {
-       "id": "b317",
+       "id": "b333",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -5883,7 +6161,7 @@
      ],
      "value": [
       {
-       "id": "b318",
+       "id": "b334",
        "componentId": "python:literal_number",
        "properties": {
         "value": "2"
@@ -5916,7 +6194,7 @@
    "src": "x *= 2",
    "statement": true,
    "instance": {
-    "id": "b322",
+    "id": "b338",
     "componentId": "python:var_assign_compound",
     "properties": {
      "operator": "*="
@@ -5924,7 +6202,7 @@
     "slots": {
      "target": [
       {
-       "id": "b320",
+       "id": "b336",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -5934,7 +6212,7 @@
      ],
      "value": [
       {
-       "id": "b321",
+       "id": "b337",
        "componentId": "python:literal_number",
        "properties": {
         "value": "2"
@@ -5967,7 +6245,7 @@
    "src": "x /= 2",
    "statement": true,
    "instance": {
-    "id": "b325",
+    "id": "b341",
     "componentId": "python:var_assign_compound",
     "properties": {
      "operator": "/="
@@ -5975,7 +6253,7 @@
     "slots": {
      "target": [
       {
-       "id": "b323",
+       "id": "b339",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -5985,7 +6263,7 @@
      ],
      "value": [
       {
-       "id": "b324",
+       "id": "b340",
        "componentId": "python:literal_number",
        "properties": {
         "value": "2"
@@ -6018,7 +6296,7 @@
    "src": "x //= 2",
    "statement": true,
    "instance": {
-    "id": "b328",
+    "id": "b344",
     "componentId": "python:var_assign_compound",
     "properties": {
      "operator": "//="
@@ -6026,7 +6304,7 @@
     "slots": {
      "target": [
       {
-       "id": "b326",
+       "id": "b342",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -6036,7 +6314,7 @@
      ],
      "value": [
       {
-       "id": "b327",
+       "id": "b343",
        "componentId": "python:literal_number",
        "properties": {
         "value": "2"
@@ -6069,7 +6347,7 @@
    "src": "x %= 2",
    "statement": true,
    "instance": {
-    "id": "b331",
+    "id": "b347",
     "componentId": "python:var_assign_compound",
     "properties": {
      "operator": "%="
@@ -6077,7 +6355,7 @@
     "slots": {
      "target": [
       {
-       "id": "b329",
+       "id": "b345",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -6087,7 +6365,7 @@
      ],
      "value": [
       {
-       "id": "b330",
+       "id": "b346",
        "componentId": "python:literal_number",
        "properties": {
         "value": "2"
@@ -6120,19 +6398,19 @@
    "src": "xs[0] = 1",
    "statement": true,
    "instance": {
-    "id": "b336",
+    "id": "b352",
     "componentId": "python:container_assign",
     "properties": {},
     "slots": {
      "target": [
       {
-       "id": "b334",
+       "id": "b350",
        "componentId": "python:container_at",
        "properties": {},
        "slots": {
         "target": [
          {
-          "id": "b332",
+          "id": "b348",
           "componentId": "python:var_ref",
           "properties": {
            "name": "xs"
@@ -6142,7 +6420,7 @@
         ],
         "key": [
          {
-          "id": "b333",
+          "id": "b349",
           "componentId": "python:literal_number",
           "properties": {
            "value": "0"
@@ -6155,7 +6433,7 @@
      ],
      "value": [
       {
-       "id": "b335",
+       "id": "b351",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -6197,13 +6475,13 @@
    "src": "self.x = 1",
    "statement": true,
    "instance": {
-    "id": "b340",
+    "id": "b356",
     "componentId": "python:member_assign",
     "properties": {},
     "slots": {
      "target": [
       {
-       "id": "b338",
+       "id": "b354",
        "componentId": "python:member_at",
        "properties": {
         "member": "x"
@@ -6211,7 +6489,7 @@
        "slots": {
         "obj": [
          {
-          "id": "b337",
+          "id": "b353",
           "componentId": "python:var_ref",
           "properties": {
            "name": "self"
@@ -6224,7 +6502,7 @@
      ],
      "value": [
       {
-       "id": "b339",
+       "id": "b355",
        "componentId": "python:literal_number",
        "properties": {
         "value": "1"
@@ -6260,19 +6538,19 @@
    "src": "del d['k']",
    "statement": true,
    "instance": {
-    "id": "b344",
+    "id": "b360",
     "componentId": "python:container_erase",
     "properties": {},
     "slots": {
      "target": [
       {
-       "id": "b343",
+       "id": "b359",
        "componentId": "python:container_at",
        "properties": {},
        "slots": {
         "target": [
          {
-          "id": "b341",
+          "id": "b357",
           "componentId": "python:var_ref",
           "properties": {
            "name": "d"
@@ -6282,7 +6560,7 @@
         ],
         "key": [
          {
-          "id": "b342",
+          "id": "b358",
           "componentId": "python:literal_string",
           "properties": {
            "value": "k"
@@ -6320,13 +6598,13 @@
    "src": "if a:\n    pass\nelif b:\n    break\nelse:\n    continue\n",
    "statement": true,
    "instance": {
-    "id": "b351",
+    "id": "b367",
     "componentId": "python:if",
     "properties": {},
     "slots": {
      "condition": [
       {
-       "id": "b345",
+       "id": "b361",
        "componentId": "python:var_ref",
        "properties": {
         "name": "a"
@@ -6336,7 +6614,7 @@
      ],
      "body": [
       {
-       "id": "b346",
+       "id": "b362",
        "componentId": "python:pass",
        "properties": {},
        "slots": {}
@@ -6344,7 +6622,7 @@
      ],
      "elif_condition": [
       {
-       "id": "b347",
+       "id": "b363",
        "componentId": "python:var_ref",
        "properties": {
         "name": "b"
@@ -6354,13 +6632,13 @@
      ],
      "elif_body": [
       {
-       "id": "b349",
+       "id": "b365",
        "componentId": "python:_compound",
        "properties": {},
        "slots": {
         "body": [
          {
-          "id": "b348",
+          "id": "b364",
           "componentId": "python:break",
           "properties": {},
           "slots": {}
@@ -6371,7 +6649,7 @@
      ],
      "else_body": [
       {
-       "id": "b350",
+       "id": "b366",
        "componentId": "python:continue",
        "properties": {},
        "slots": {}
@@ -6416,13 +6694,13 @@
    "src": "while a:\n    pass\n",
    "statement": true,
    "instance": {
-    "id": "b353",
+    "id": "b369",
     "componentId": "python:loop_while",
     "properties": {},
     "slots": {
      "condition": [
       {
-       "id": "b352",
+       "id": "b368",
        "componentId": "python:var_ref",
        "properties": {
         "name": "a"
@@ -6451,7 +6729,7 @@
    "src": "for i in xs:\n    print(i)\n",
    "statement": true,
    "instance": {
-    "id": "b357",
+    "id": "b373",
     "componentId": "python:loop_for",
     "properties": {
      "obj": "i"
@@ -6459,7 +6737,7 @@
     "slots": {
      "iterable": [
       {
-       "id": "b354",
+       "id": "b370",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -6469,13 +6747,13 @@
      ],
      "body": [
       {
-       "id": "b356",
+       "id": "b372",
        "componentId": "python:print",
        "properties": {},
        "slots": {
         "values": [
          {
-          "id": "b355",
+          "id": "b371",
           "componentId": "python:var_ref",
           "properties": {
            "name": "i"
@@ -6525,13 +6803,13 @@
    "src": "for i, x in xs:\n    pass\n",
    "statement": true,
    "instance": {
-    "id": "b361",
+    "id": "b377",
     "componentId": "python:loop_for",
     "properties": {},
     "slots": {
      "targets": [
       {
-       "id": "b358",
+       "id": "b374",
        "componentId": "python:param",
        "properties": {
         "name": "i"
@@ -6539,7 +6817,7 @@
        "slots": {}
       },
       {
-       "id": "b359",
+       "id": "b375",
        "componentId": "python:param",
        "properties": {
         "name": "x"
@@ -6549,7 +6827,7 @@
      ],
      "iterable": [
       {
-       "id": "b360",
+       "id": "b376",
        "componentId": "python:var_ref",
        "properties": {
         "name": "xs"
@@ -6591,7 +6869,7 @@
    "src": "break",
    "statement": true,
    "instance": {
-    "id": "b362",
+    "id": "b378",
     "componentId": "python:break",
     "properties": {},
     "slots": {}
@@ -6605,7 +6883,7 @@
    "src": "continue",
    "statement": true,
    "instance": {
-    "id": "b363",
+    "id": "b379",
     "componentId": "python:continue",
     "properties": {},
     "slots": {}
@@ -6619,7 +6897,7 @@
    "src": "pass",
    "statement": true,
    "instance": {
-    "id": "b364",
+    "id": "b380",
     "componentId": "python:pass",
     "properties": {},
     "slots": {}
@@ -6633,13 +6911,13 @@
    "src": "return x",
    "statement": true,
    "instance": {
-    "id": "b366",
+    "id": "b382",
     "componentId": "python:return",
     "properties": {},
     "slots": {
      "value": [
       {
-       "id": "b365",
+       "id": "b381",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -6662,7 +6940,7 @@
    "src": "return",
    "statement": true,
    "instance": {
-    "id": "b367",
+    "id": "b383",
     "componentId": "python:return",
     "properties": {},
     "slots": {}
@@ -6677,13 +6955,13 @@
    "src": "assert x, 'bad'",
    "statement": true,
    "instance": {
-    "id": "b370",
+    "id": "b386",
     "componentId": "python:assert",
     "properties": {},
     "slots": {
      "condition": [
       {
-       "id": "b368",
+       "id": "b384",
        "componentId": "python:var_ref",
        "properties": {
         "name": "x"
@@ -6693,7 +6971,7 @@
      ],
      "value": [
       {
-       "id": "b369",
+       "id": "b385",
        "componentId": "python:literal_string",
        "properties": {
         "value": "bad"
@@ -6723,7 +7001,7 @@
    "src": "raise ValueError('bad')",
    "statement": true,
    "instance": {
-    "id": "b372",
+    "id": "b388",
     "componentId": "python:throw",
     "properties": {
      "exception": "ValueError"
@@ -6731,7 +7009,7 @@
     "slots": {
      "value": [
       {
-       "id": "b371",
+       "id": "b387",
        "componentId": "python:literal_string",
        "properties": {
         "value": "bad"
@@ -6768,7 +7046,7 @@
    "src": "raise StopIteration",
    "statement": true,
    "instance": {
-    "id": "b373",
+    "id": "b389",
     "componentId": "python:throw",
     "properties": {
      "exception": "StopIteration"
@@ -6789,13 +7067,13 @@
    "src": "try:\n    pass\nexcept (ValueError, KeyError) as e:\n    pass\nexcept:\n    pass\nelse:\n    break\nfinally:\n    print(x)\n",
    "statement": true,
    "instance": {
-    "id": "b380",
+    "id": "b396",
     "componentId": "python:try_catch",
     "properties": {},
     "slots": {
      "body": [
       {
-       "id": "b374",
+       "id": "b390",
        "componentId": "python:pass",
        "properties": {},
        "slots": {}
@@ -6803,7 +7081,7 @@
      ],
      "handlers": [
       {
-       "id": "b375",
+       "id": "b391",
        "componentId": "python:exception_case",
        "properties": {
         "exception": "(ValueError, KeyError)",
@@ -6812,7 +7090,7 @@
        "slots": {}
       },
       {
-       "id": "b376",
+       "id": "b392",
        "componentId": "python:exception_case",
        "properties": {
         "exception": ""
@@ -6822,7 +7100,7 @@
      ],
      "orelse": [
       {
-       "id": "b377",
+       "id": "b393",
        "componentId": "python:break",
        "properties": {},
        "slots": {}
@@ -6830,13 +7108,13 @@
      ],
      "ensure": [
       {
-       "id": "b379",
+       "id": "b395",
        "componentId": "python:print",
        "properties": {},
        "slots": {
         "values": [
          {
-          "id": "b378",
+          "id": "b394",
           "componentId": "python:var_ref",
           "properties": {
            "name": "x"
@@ -6921,13 +7199,13 @@
    "src": "try:\n    pass\nexcept ValueError:\n    pass\n",
    "statement": true,
    "instance": {
-    "id": "b384",
+    "id": "b400",
     "componentId": "python:try_catch",
     "properties": {},
     "slots": {
      "body": [
       {
-       "id": "b381",
+       "id": "b397",
        "componentId": "python:pass",
        "properties": {},
        "slots": {}
@@ -6935,7 +7213,7 @@
      ],
      "handlers": [
       {
-       "id": "b383",
+       "id": "b399",
        "componentId": "python:exception_case",
        "properties": {
         "exception": "ValueError"
@@ -6943,7 +7221,7 @@
        "slots": {
         "body": [
          {
-          "id": "b382",
+          "id": "b398",
           "componentId": "python:pass",
           "properties": {},
           "slots": {}
@@ -6985,7 +7263,7 @@
    "src": "with open('t') as f:\n    pass\n",
    "statement": true,
    "instance": {
-    "id": "b387",
+    "id": "b403",
     "componentId": "python:with",
     "properties": {
      "name": "f"
@@ -6993,7 +7271,7 @@
     "slots": {
      "value": [
       {
-       "id": "b386",
+       "id": "b402",
        "componentId": "python:func_call",
        "properties": {
         "name": "open"
@@ -7001,7 +7279,7 @@
        "slots": {
         "args": [
          {
-          "id": "b385",
+          "id": "b401",
           "componentId": "python:literal_string",
           "properties": {
            "value": "t"
@@ -7054,7 +7332,7 @@
    "src": "def f(a, b=2, *rest, k=None):\n    return a\n",
    "statement": true,
    "instance": {
-    "id": "b394",
+    "id": "b410",
     "componentId": "python:func_def",
     "properties": {
      "name": "f"
@@ -7062,7 +7340,7 @@
     "slots": {
      "params": [
       {
-       "id": "b388",
+       "id": "b404",
        "componentId": "python:param",
        "properties": {
         "name": "a"
@@ -7070,7 +7348,7 @@
        "slots": {}
       },
       {
-       "id": "b389",
+       "id": "b405",
        "componentId": "python:param",
        "properties": {
         "name": "b",
@@ -7079,7 +7357,7 @@
        "slots": {}
       },
       {
-       "id": "b390",
+       "id": "b406",
        "componentId": "python:param",
        "properties": {
         "name": "rest",
@@ -7088,7 +7366,7 @@
        "slots": {}
       },
       {
-       "id": "b391",
+       "id": "b407",
        "componentId": "python:param",
        "properties": {
         "name": "k",
@@ -7099,13 +7377,13 @@
      ],
      "body": [
       {
-       "id": "b393",
+       "id": "b409",
        "componentId": "python:return",
        "properties": {},
        "slots": {
         "value": [
          {
-          "id": "b392",
+          "id": "b408",
           "componentId": "python:var_ref",
           "properties": {
            "name": "a"
@@ -7180,7 +7458,7 @@
    "src": "class A(B):\n    n = 0\n\n    def m(self):\n        pass\n",
    "statement": true,
    "instance": {
-    "id": "b399",
+    "id": "b415",
     "componentId": "python:class_def",
     "properties": {
      "name": "A",
@@ -7189,7 +7467,7 @@
     "slots": {
      "fields": [
       {
-       "id": "b396",
+       "id": "b412",
        "componentId": "python:var_assign",
        "properties": {
         "obj": "n"
@@ -7197,7 +7475,7 @@
        "slots": {
         "value": [
          {
-          "id": "b395",
+          "id": "b411",
           "componentId": "python:literal_number",
           "properties": {
            "value": "0"
@@ -7210,7 +7488,7 @@
      ],
      "methods": [
       {
-       "id": "b398",
+       "id": "b414",
        "componentId": "python:func_def",
        "properties": {
         "name": "m"
@@ -7218,7 +7496,7 @@
        "slots": {
         "params": [
          {
-          "id": "b397",
+          "id": "b413",
           "componentId": "python:param",
           "properties": {
            "name": "self"
@@ -7292,7 +7570,7 @@
    "src": "global x",
    "statement": true,
    "instance": {
-    "id": "b400",
+    "id": "b416",
     "componentId": "python:global",
     "properties": {
      "name": "x"
@@ -7311,13 +7589,13 @@
    "src": "x = 1\nprint(x)\n",
    "statement": false,
    "instance": {
-    "id": "b406",
+    "id": "b422",
     "componentId": "python:program",
     "properties": {},
     "slots": {
      "body": [
       {
-       "id": "b402",
+       "id": "b418",
        "componentId": "python:var_assign",
        "properties": {
         "obj": "x"
@@ -7325,7 +7603,7 @@
        "slots": {
         "value": [
          {
-          "id": "b401",
+          "id": "b417",
           "componentId": "python:literal_number",
           "properties": {
            "value": "1"
@@ -7336,7 +7614,7 @@
        }
       },
       {
-       "id": "b403",
+       "id": "b419",
        "componentId": "python:comment",
        "properties": {
         "text": "c"
@@ -7344,13 +7622,13 @@
        "slots": {}
       },
       {
-       "id": "b405",
+       "id": "b421",
        "componentId": "python:print",
        "properties": {},
        "slots": {
         "values": [
          {
-          "id": "b404",
+          "id": "b420",
           "componentId": "python:var_ref",
           "properties": {
            "name": "x"
@@ -7407,7 +7685,7 @@
    "src": "import math as m",
    "statement": true,
    "instance": {
-    "id": "b407",
+    "id": "b423",
     "componentId": "python:import",
     "properties": {
      "name": "math",
@@ -7431,7 +7709,7 @@
    "src": "import random",
    "statement": true,
    "instance": {
-    "id": "b408",
+    "id": "b424",
     "componentId": "python:import",
     "properties": {
      "name": "random"
@@ -7454,7 +7732,7 @@
    "src": "from math import sqrt, pi as p",
    "statement": true,
    "instance": {
-    "id": "b409",
+    "id": "b425",
     "componentId": "python:import_from",
     "properties": {
      "module": "math",
