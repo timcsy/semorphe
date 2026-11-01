@@ -111,7 +111,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const functionNames = new Set<string>()
   const index = (n: SemanticNode): void => {
     byId.set(n.id, n)
-    for (const m of n.slots?.members ?? []) if (m.properties?.type !== undefined) memberFields.add(m.id)
+    // `int x, y;` 是一顆 `_multi_field` 包著平行的宣告——攤平（第 213 刀，同 struct_declare 的 formalize）
+    const members = (n.slots?.members ?? []).flatMap((m) => (m.componentId === '_multi_field' ? m.slots?.fields ?? [] : [m]))
+    for (const m of members) if (m.properties?.type !== undefined) memberFields.add(m.id)
     if (isFunctionDefinition(n.componentId) && n.properties?.name) functionNames.add(String(n.properties.name))
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(index)
   }
@@ -153,7 +155,15 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     // C++ 的 `auto`（cella 0.1.202610312349 起有 `tAuto`）
     if (s === 'auto' && !isC) return k('tAuto')
     // 標準函式庫的類別範本（cella 照 libc++ 18 實作）：名字不帶 `std::`，同 Cella 用 clang 轉的課文樹（packages/cpp/tools/lessons）
-    const tpl = /^(?:std::)?(pair|queue|stack|priority_queue|set|map|deque|greater|less)\s*<(.+)>$/.exec(s)
+    // `bitset<N>`：N 是非型別範本引數，送 `tVal`（cella 2026-11-01 給的形狀；第 213 刀）——N 要是整數字面或展開得到整數字面的巨集
+    const bits = /^(?:std::)?bitset\s*<\s*(\w+)\s*>$/.exec(s)
+    if (bits && !isC) {
+      const lit = macros.get(bits[1]) ?? bits[1]
+      if (/^\d+$/.test(lit)) return k('tTemplate', { name: 'bitset', args: [k('tVal', { v: Number(lit) })] })
+      miss(at, `bitset 的大小「${bits[1]}」不是整數字面`)
+      return null
+    }
+    const tpl = /^(?:std::)?(pair|queue|stack|priority_queue|set|multiset|map|unordered_map|deque|greater|less)\s*<(.+)>$/.exec(s)
     if (tpl && !isC) {
       const args = splitTypeArgs(tpl[2]).map((x) => type(x, at))
       return args.every(Boolean) ? k('tTemplate', { name: tpl[1], args }) : null

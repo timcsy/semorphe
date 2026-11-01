@@ -273,3 +273,61 @@ describe('C 前端的三個缺口（spec 197；cella 問 C 子集時量到）', 
     expect(body[1].componentId).not.toMatch(/raw_code/)
   })
 })
+
+describe('第 213 刀：學生語料剩下的形狀（Cella 0.1.202611011759）', () => {
+  const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
+  const find = (j: unknown, k: string): any[] => {
+    const out: any[] = []
+    const walk = (v: unknown): void => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') { if ((v as any).k === k) out.push(v); Object.values(v).forEach(walk) } }
+    walk(j)
+    return out
+  }
+  const fz = (body: string) => formalize(lift(H + body), { lang: 'cpp' })
+
+  it('★ bitset<N>：tTemplate "bitset" ＋ tVal；方法名照寫的送', () => {
+    const r = fz('int main() { bitset<8> b; b.set(1); bitset<26> c[3]; cout << b.count() << b.any() << c[1].count(); }')
+    expect(r.unknown).toEqual([])
+    const ts = find(r.program, 'tTemplate').filter((t) => t.name === 'bitset')
+    expect(ts.map((t) => t.args[0])).toEqual(expect.arrayContaining([{ k: 'tVal', v: 8 }, { k: 'tVal', v: 26 }]))
+    expect(find(r.program, 'eMCall').map((m) => m.f)).toEqual(expect.arrayContaining(['set', 'count', 'any']))
+  })
+
+  it('🔴 __builtin_popcount 是編譯器內建：照實標 unknown，不送成 count()', () => {
+    expect(fz('int main() { int x = 5; cout << __builtin_popcount(x); }').unknown.map((u) => u.construct)).toContain('cpp:bits_count')
+  })
+
+  it('★ for 的 init 有兩個宣告：外包一層區塊、init 留空（名字仍只活在迴圈裡）', () => {
+    const r = fz('int main() { for (int l = 0, r = 4; l < r; l++, r--) {} }')
+    expect(r.unknown).toEqual([])
+    const blk = find(r.program, 'sBlock').find((b) => b.body.some((s: any) => s.k === 'sFor'))
+    expect(blk.body.map((s: any) => s.k)).toEqual(['sDecl', 'sDecl', 'sFor'])
+    expect(blk.body[2].init).toBeNull()
+  })
+
+  it('🔴 sizeof 的字面量送型別（sizeof(1) 是 int 的大小）；sizeof(a[0]) 是一個元素', () => {
+    const r = fz('int main() { int a[10]; cout << sizeof(1) << sizeof(1.0) << sizeof(true) << sizeof(a[0]); }')
+    expect(r.unknown).toEqual([])
+    expect(find(r.program, 'eSizeof').map((s) => s.t.k)).toEqual(['tInt', 'tDouble', 'tBool'])
+    expect(find(r.program, 'eSizeofE')[0].e.k).toBe('eIndex')
+  })
+
+  it('★ 純量的 T() 是零：(T)0；類別的照實標 unknown', () => {
+    const r = fz('int main() { int v = int(); }')
+    expect(r.unknown).toEqual([])
+    expect(find(r.program, 'eCast')[0].a).toMatchObject({ k: 'eNum', v: 0 })
+  })
+
+  it('★ 字元字面量的巨集展開成 eChar；struct 裡的 `int x, y;` 兩個欄位都在', () => {
+    const r = fz("#define z '0'\nstruct P { int x, y; };\nint main() { char c = z; }")
+    expect(r.unknown).toEqual([])
+    expect(find(r.program, 'eChar')[0].c).toBe(48)
+    expect(find(r.program, 'mbField').map((m) => m.name)).toEqual(['x', 'y'])
+  })
+
+  it('★ stack 的 top、max_element／fill 照 eMCall／eCall 送（後兩者 Cella 還沒有，由它判 unknown）', () => {
+    const r = fz('int main() { stack<int> s; s.push(1); int a[3]; fill(a, a + 3, 0); cout << s.top() << *max_element(a, a + 3); }')
+    expect(r.unknown).toEqual([])
+    expect(find(r.program, 'eMCall').map((m) => m.f)).toContain('top')
+    expect(find(r.program, 'eCall').map((m) => m.f)).toEqual(expect.arrayContaining(['fill', 'max_element']))
+  })
+})
