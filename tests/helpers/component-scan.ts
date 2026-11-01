@@ -231,11 +231,52 @@ export function splitCodeAndComments(src: string): { code: string; comments: str
       continue
     }
 
+    // 正規式字面量（第 215 刀）：`/'/g` 裡的引號不是字串的開頭。
+    // ⚠️ 原本不認它，於是 `text.replace(/'/g, '')` 讓後面【整個檔】的註解被當成程式碼
+    //    ——第 214 刀在 strategies.ts 撞到：只在註解裡提到的十顆元件一起「外洩」。
+    // 判準是 JavaScript 自己的：`/` 出現在【運算式的開頭】才是正規式，接在一個值後面是除號。
+    if (c === '/' && regexCanStart(code)) {
+      const end = regexEnd(src, i)
+      if (end !== -1) {
+        code += src.slice(i, end)
+        i = end
+        continue
+      }
+    }
+
     code += c
     i++
   }
 
   return { code, comments }
+}
+
+/** 到目前為止的程式碼結尾，接得上一個正規式字面量嗎——前一個有意義的記號是運算子、開括號或關鍵字。 */
+function regexCanStart(codeSoFar: string): boolean {
+  const t = codeSoFar.replace(/\s+$/, '')
+  if (t === '') return true
+  if (/[(,=:[!&|?{};+\-*%<>~^]$/.test(t)) return true
+  return /(?:^|[^\w$])(?:return|typeof|case|in|of|void|delete|throw|new|yield|await)$/.test(t)
+}
+
+/** 從 `/` 開始讀一個正規式字面量，回傳它結束（含旗標）之後的位置；同一行裡讀不完就回 -1（那不是正規式）。 */
+function regexEnd(src: string, start: number): number {
+  let i = start + 1
+  let inClass = false
+  while (i < src.length) {
+    const c = src[i]
+    if (c === '\n') return -1
+    if (c === '\\') { i += 2; continue }
+    if (inClass) { if (c === ']') inClass = false }
+    else if (c === '[') inClass = true
+    else if (c === '/') {
+      i++
+      while (i < src.length && /[a-z]/i.test(src[i])) i++
+      return i
+    }
+    i++
+  }
+  return -1
 }
 
 /** 建立「id → 偵測用 regex」的表。只匹配完整的引號字串字面。 */
