@@ -103,7 +103,7 @@ import { jsInterpreterProvider } from '../providers/js-interpreter'
 import { toDiagnostics } from '../core/verdict-diagnostics'
 import { judgeOutput } from '../core/lesson/judge'
 import { hardwareOf, matchPinEvents, DEFAULT_PIN_TOLERANCE_MS, type HardwareRecord, type PinEvent } from '../core/hardware'
-import type { HardwarePanel } from '../panels/hardware/view'
+import type { HardwarePanel, HardwareView } from '../panels/hardware/view'
 import type { CheckAnswer } from '../core/capabilities'
 import type { Diagnostic } from '../core/diagnostics'
 registerProvider(jsInterpreterProvider)
@@ -201,6 +201,8 @@ export class App {
   private hardwarePanel: HardwarePanel | null = null
   /** 判決給的那一份（暫停結束後硬體分頁回到它）。 */
   private hardwareRecord: HardwareRecord | null = null
+  /** 這個視窗畫的硬體分頁是別的視窗轉送來的（擴充的硬體視窗，spec 203）——自己不產生硬體狀態，免得蓋掉轉送的那一份 */
+  private hardwareFromHost = false
   private checkNotes: string[] = []
   /** 判決裡對不到積木的問題（步數用盡之類）——畫不上積木，但狀態列要算進去。 */
   private checkUnplaced = { error: 0, info: 0 }
@@ -1900,11 +1902,16 @@ export class App {
     // 🟢 主控台的「↻ 重播上一次」→ 執行器（面板不認識執行器，組裝點接線）
     elements.onReplayRequested(() => this.executionController?.replayLast())
     this.hardwarePanel = (elements.statePanel('hardware')?.view as HardwarePanel | undefined) ?? null
+    // 擴充的硬體視窗（spec 203）：畫的是跑程式的那個視窗轉送來的（畫的人不報回去，報的人不畫——同變數）
+    if (this.hardwarePanel && this.codeView?.onHardwareSnapshot) {
+      this.hardwareFromHost = true
+      this.codeView.onHardwareSnapshot((v) => this.hardwarePanel?.show(v as HardwareView))
+    }
     // 🟢 暫停中畫板子當下的狀態、可以改輸入（spec 185）；執行結束回到判決的那一份
     this.bus.on('execution:environment', (e) => {
-      if (!this.hardwarePanel) return
+      if (this.hardwareFromHost) return
       if (e.paused && e.state) {
-        this.hardwarePanel.show({
+        this.presentHardware({
           kind: 'live', state: e.state,
           ...(e.canSetInput ? { onSetInput: (key: string, value: string) => this.bus.emit('execution:set-input', { key, value }) } : {}),
         })
@@ -4534,10 +4541,22 @@ export class App {
   /** 硬體分頁（spec 184）：板子的目標畫判決給的腳位；不是板子的目標說出來。 */
   private showHardware(record: HardwareRecord | null): void {
     this.hardwareRecord = record
-    if (!this.hardwarePanel) return
-    if (record) this.hardwarePanel.show({ kind: 'record', record })
-    else if (!this.currentTarget.board) this.hardwarePanel.show({ kind: 'no-board' })
-    else this.hardwarePanel.show({ kind: 'waiting', reason: msg('HARDWARE_WAITING', '判斷功能（Cella）載好之後，這裡會畫出每支腳怎麼變。') })
+    if (this.hardwareFromHost) return
+    if (record) this.presentHardware({ kind: 'record', record })
+    else if (!this.currentTarget.board) this.presentHardware({ kind: 'no-board' })
+    else this.presentHardware({ kind: 'waiting', reason: msg('HARDWARE_WAITING', '判斷功能（Cella）載好之後，這裡會畫出每支腳怎麼變。') })
+  }
+
+  /**
+   * 硬體分頁：這個視窗畫它就畫，否則交給宿主轉送給畫它的那個視窗（擴充的下方面板區，spec 203）。
+   * ⚠️ 轉送時拿掉回呼（「改輸入」那一列）——跨視窗的反向還沒有接，擴充的硬體視窗第一版只顯示。
+   */
+  private presentHardware(view: HardwareView): void {
+    if (this.hardwarePanel) { this.hardwarePanel.show(view); return }
+    // 只有跑判決的視窗送（主控台、變數那兩個視窗沒有判斷提供者——它們送的「無板子」會蓋掉真的那一份）
+    if (!provide('verdict').provider?.check) return
+    if (view.kind === 'live') { const { onSetInput: _drop, ...rest } = view; this.codeView?.reportHardware?.(rest); return }
+    this.codeView?.reportHardware?.(view)
   }
 
   /**

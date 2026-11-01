@@ -178,7 +178,7 @@ function main(): void {
   // > **一個在啟動時就被讀走的參數，測試環境必須在【啟動之前】給它。**
   // 🔴 `'state'` 拆成 `'console'`／`'variables'`（2026-09-02，spec 171 第二刀）
   //    ——它們是宿主 panel 區的**兩個原生分頁**。
-  for (const view of ['flow', 'console', 'variables'] as const) {
+  for (const view of ['flow', 'console', 'variables', 'hardware'] as const) {
     writeFileSync(
       join(OUT, 'dist', `preview-${view}.html`),
       renderHtml({

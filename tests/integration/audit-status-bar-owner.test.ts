@@ -95,6 +95,11 @@ function cannotReportPhase(files: ProfileFile[], readImpl: (className: string) =
       required.add('reportSyncPhase(')
       required.add('reportCheckStatus(')
     }
+    // 硬體分頁投影到宿主（spec 203）：跑程式的視窗要交得出狀態、畫它的視窗要收得到——否則板子做了什麼沒有顯示處
+    if (/\bhardware:\s*'host/.test(f.text)) {
+      required.add('reportHardware(')
+      required.add('onHardwareSnapshot(')
+    }
     if (/\b(picker|action):\s*'host/.test(f.text)) {
       required.add('reportControls(')
       required.add('onControlInvoke(')

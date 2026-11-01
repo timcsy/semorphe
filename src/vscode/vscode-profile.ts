@@ -87,7 +87,7 @@ class DocumentlessStorage implements StorageLike {
  * 不成立**：那條規矩管的是**投影**，而主控台與變數是**執行的輸出**
  * ——一條資料流本來就只有一個源頭（見 `CodeView.onConsoleOut`）。
  */
-export type VscodeViewKind = 'blocks' | 'flow' | 'console' | 'variables'
+export type VscodeViewKind = 'blocks' | 'flow' | 'console' | 'variables' | 'hardware'
 
 const LAYER_OF: Record<VscodeViewKind, UnderstandingLayer> = {
   blocks: 'space',
@@ -95,6 +95,8 @@ const LAYER_OF: Record<VscodeViewKind, UnderstandingLayer> = {
   // ⚠️ 兩種視圖**同一層**——它們是那一層的兩個分頁，不是兩層。
   console: 'state',
   variables: 'state',
+  // 板子做了什麼（spec 203）——與主控台、變數同一族：執行時的資料，由跑程式的那個視窗轉送過來
+  hardware: 'state',
 }
 
 /**
@@ -149,6 +151,8 @@ export function vscodeProfileFor(kind: VscodeViewKind): HostProfile {
     ...vscodeProfile.controlSurfaces,
     output: kind === 'console' ? 'panelBottom' : 'hostPanel',
     inspector: kind === 'variables' ? 'panelBottom' : 'hostPanel',
+    // 硬體分頁（spec 203，使用者 2026-11-01 定：下方面板區、與主控台和變數並排）——畫它的是硬體那個視窗，其餘視窗把狀態送過去
+    byId: { ...vscodeProfile.controlSurfaces.byId, hardware: kind === 'hardware' ? 'panelBottom' : 'hostPanel' },
   } as HostProfile['controlSurfaces']
   return { ...vscodeProfile, layers: [LAYER_OF[kind]], controlSurfaces: surfaces }
 }
@@ -223,8 +227,8 @@ export const vscodeProfile: HostProfile = {
       clear: 'panelToolbar',
       viewBlocks: 'none',
       viewFlow: 'none',
-      // 硬體分頁的資料來自 Cella 的判決，而 webview 還沒有 Cella（spec 184 範圍外）
-      hardware: 'none',
+      // 硬體分頁：spec 184 時 webview 還沒有 Cella → 'none'；spec 198 起擴充有 Cella，spec 203 讓它住進下方面板區（見 vscodeProfileFor）
+      hardware: 'hostPanel',
     },
     indicator: 'hostStatusBar',
     // 🪦 **`hostTerminal` 退場**（2026-09-01）。

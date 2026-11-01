@@ -114,6 +114,11 @@ export type HostMessage =
       reason?: string
     }
   | {
+      /** 硬體分頁要畫的（`panels/hardware/view` 的 HardwareView，去掉回呼）轉給硬體那個視圖——spec 203 */
+      type: 'hardwareOut'
+      view: unknown
+    }
+  | {
       /** 同上，變數快照轉給變數那個視圖。 */
       type: 'variablesOut'
       groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[]
@@ -284,6 +289,11 @@ export type WebviewMessage =
        */
       type: 'problems'
       items: CodeDiagnosticWire[]
+    }
+  | {
+      /** 硬體分頁要畫的 → 主行程 → `panel` 區的硬體視圖（spec 203） */
+      type: 'hardware'
+      view: unknown
     }
   | {
       /** 變數快照 → 主行程 → `panel` 區的視圖。 */

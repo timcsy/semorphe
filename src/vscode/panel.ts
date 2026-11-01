@@ -93,6 +93,7 @@ const VIEW_TYPES: Record<VscodeViewKind, string> = {
   //    `viewType` 也當成 `data-view` 與登錄表的鍵在用。
   console: 'semorphe.consoleView',
   variables: 'semorphe.variablesView',
+  hardware: 'semorphe.hardwareView',
 }
 const TITLES: Record<VscodeViewKind, string> = {
   blocks: 'Semorphe 積木',
@@ -101,6 +102,7 @@ const TITLES: Record<VscodeViewKind, string> = {
   //    「移到上面的 tab 變成『Semorphe 主控台』、『Semorphe 變數』」）。
   console: 'Semorphe 主控台',
   variables: 'Semorphe 變數',
+  hardware: 'Semorphe 硬體',
 }
 const DIST = ['dist']
 const MEDIA = ['dist', 'media']
@@ -587,6 +589,12 @@ class SemorpheSession {
       sessions.get('variables')?.sendVariablesOut(m.groups)
       return
     }
+    // 板子做了什麼（spec 203）：跑程式的那個視窗 → 硬體那一頁
+    if (m.type === 'hardware') {
+      lastHardwareView = m.view
+      sessions.get('hardware')?.sendHardwareOut(m.view)
+      return
+    }
     if (m.type === 'consoleSubmit') {
       // ⚠️ 送回**正在跑的那一個**，不是 `active`——`active` 是「最後看的」，
       //    而使用者按下 Enter 的那一刻他正在看主控台。
@@ -597,6 +605,8 @@ class SemorpheSession {
       this.resend()
       // ⚠️ 面板剛起來，它還不知道這個宿主做得到什麼。
       this.sendHostCaps(canSwapEditor)
+      // 硬體那一頁比判決晚打開：補送最後一份（spec 203）
+      if (this.kind === 'hardware' && lastHardwareView !== undefined) this.sendHardwareOut(lastHardwareView)
       return
     }
     if (m.type === 'requestDocument') {
@@ -1078,6 +1088,11 @@ class SemorpheSession {
   /** 同上，變數那一頁。 */
   sendVariablesOut(groups: { name: string; collapsed: boolean; variables: { name: string; type: string; value: string }[] }[]): void {
     this.send({ type: 'variablesOut', groups })
+  }
+
+  /** 同上，硬體那一頁（spec 203）。 */
+  sendHardwareOut(view: unknown): void {
+    this.send({ type: 'hardwareOut', view })
   }
 
   /** 宿主那側按了控制項——原封不動送進 webview。 */
@@ -1893,7 +1908,7 @@ export function openPanel(
   // 🔴 **主控台與變數不在編輯器區**（2026-09-02，spec 171）：它們是宿主 panel 區
   //    的兩個視圖，與終端機／問題並排。叫它們出來的方式是宿主自己的 `.focus`
   //    指令——⚠️ 我們不能（也不該）自己 `createWebviewPanel` 一個出來。
-  if (kind === 'console' || kind === 'variables') {
+  if (kind === 'console' || kind === 'variables' || kind === 'hardware') {
     void vscode.commands.executeCommand(`${PANEL_VIEW_IDS[kind]}.focus`)
     return
   }
@@ -1931,9 +1946,13 @@ export function openPanel(
  *
  * ⚠️ 兩邊必須逐字相同，而 `tools/vscode-preflight` 會對這件事出聲。
  */
+/** 最後一份硬體分頁的狀態——硬體那一頁比判決晚打開時補送（spec 203） */
+let lastHardwareView: unknown
+
 export const PANEL_VIEW_IDS = {
   console: 'semorphe.consoleView',
   variables: 'semorphe.variablesView',
+  hardware: 'semorphe.hardwareView',
 } as const
 
 /**
@@ -1993,7 +2012,7 @@ export function registerConsoleView(context: vscode.ExtensionContext): void {
   // ⚠️ **把判斷寫下來**：下次有人問「為什麼這裡沒有程式碼那個選項」，
   //    答案要查得到，而不是要重讀一次原始碼。
   void probeHostCaps()
-  for (const kind of ['console', 'variables'] as const) {
+  for (const kind of ['console', 'variables', 'hardware'] as const) {
     context.subscriptions.push(vscode.window.registerWebviewViewProvider(
       PANEL_VIEW_IDS[kind],
       {
