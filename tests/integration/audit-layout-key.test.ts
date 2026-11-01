@@ -69,6 +69,7 @@ import {
 } from '../../src/core/flow/layout-key'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
+import { sources } from '../helpers/binding-corpus'
 
 const GUARD = 'layout-key'
 
@@ -236,5 +237,53 @@ describe('第八十二條護欄：手拖的佈局活得過一次編輯嗎', () =
        ['contentLost', lost.contentLost], ['allLost', lost.allLost]],
       GUARD,
     )
+  })
+
+  /**
+   * 🔴 **對到別顆是硬性零——拿課文語料、在最前面插一行量**（2026-11-01，第 191 刀）。
+   *
+   * 上面那支只量「還找得到嗎」，不量「找到的是不是同一顆」。在最前面插一行（補一個 `#include`）時，
+   * 行號鍵與路徑鍵全部位移一格，而 `cout`、`endl` 的內容鍵到處重複——第一次量：
+   * 對 1301｜掉 1163｜**對到別顆 758**（手拖的位置掛到隔壁的節點上）。
+   * 修法是三層：子樹鍵（認得整塊）→ 上下文鍵（分開雙胞胎）→ 子節點跟著子樹沒變的父節點走。修後 3222／0／0。
+   */
+  it('🔴 硬性零：課文語料在最前面插一行，沒有一顆對到別顆；掉的只准下降', () => {
+    const pairUp = (a: SemanticNode, b: SemanticNode, off: number): Map<string, string> => {
+      const m = new Map<string, string>([[a.id, b.id]])
+      const go = (x: SemanticNode, y: SemanticNode, sh: number): void => {
+        for (const [slot, xs] of Object.entries(x.slots ?? {})) {
+          const ys = y.slots?.[slot] ?? []
+          ;(xs ?? []).forEach((xk, i) => {
+            const yk = ys[i + sh]
+            if (!xk || !yk || xk.componentId !== yk.componentId) return
+            m.set(xk.id, yk.id)
+            go(xk, yk, 0)
+          })
+        }
+      }
+      go(a, b, off)
+      return m
+    }
+    let ok = 0, lostN = 0
+    const wrong: string[] = []
+    for (const src of sources()) {
+      if (src.lang === 'c') continue
+      const a = lift(src.code)
+      const b = lift(`int zz_pad = 0;\n${src.code}`)
+      const na = walkWithPath(a).map((k) => ({ ...k, line: lineOf(k.node) }))
+      const nb = walkWithPath(b).map((k) => ({ ...k, line: lineOf(k.node) }))
+      const got = matchNodes(na, nb)
+      const truth = pairUp(a, b, 1)
+      for (const k of na.slice(1)) {
+        const g = got.get(k.node.id)
+        if (!g) lostN++
+        else if (g === truth.get(k.node.id)) ok++
+        else wrong.push(`${src.id} ${k.node.componentId}`)
+      }
+    }
+    printReport('第八十二條：最前面插一行（課文語料）', [`對 ${ok}｜掉 ${lostN}｜對到別顆 ${wrong.length}`])
+    expect(ok, '★ 入口條件：語料要有上千顆節點').toBeGreaterThan(1000)
+    expect(wrong, '🔴 位置掛到別的節點上').toEqual([])
+    assertRatchet([['shiftedLost', lostN]], GUARD)
   })
 })
