@@ -30,9 +30,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   r.constInt('cpp:var_ref', (n, f) => {
     const x = f.declOf(n.id)
     if (!x) return f.macro(String(n.properties?.name ?? ''))?.int ?? null
+    // 值是不是編譯期常數，由那個宣告自己回答（它註冊了 constInt 才算；可變的變數不註冊）
     const d = f.nodeById(x)
-    const isConst = d && (d.componentId === 'cpp:var_declare_const' || /^const\s/.test(String(d.properties?.type ?? '')) || /^\s*const\b/.test(String(d.properties?.qualifier ?? '')))
-    return isConst ? f.constInt(f.one(d!, 'initializer')) : null
+    return d ? f.constInt(d) : null
   })
   // 作用域：一個名字的參照——指到宣告它的那個節點
   r.scope('cpp:var_ref', (n, w) => w.resolve(n.id, String(n.properties?.name ?? '')))

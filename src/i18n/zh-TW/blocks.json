@@ -640,6 +640,7 @@
   "FLOW_SLOT_INIT_STYLE": "初始化寫法",
   "FLOW_SLOT_INITIALIZER": "初始值",
   "FLOW_SLOT_INITS": "初始設定",
+  "FLOW_SLOT_IS_CONST": "不改自己（const）",
   "FLOW_SLOT_ITERABLE": "走訪的對象",
   "FLOW_SLOT_KEY": "要找的",
   "FLOW_SLOT_HOW": "判準",

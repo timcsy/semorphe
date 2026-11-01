@@ -72,8 +72,8 @@ export interface FormalizeContext {
   macro(name: string): { expr(usageId: string): CellaJson; int: number | null } | undefined
   /** 這段文字是不是一個認得的型別（不記 unknown）——型別巨集 `#define ll long long` 用（spec 199） */
   isTypeText(text: string): boolean
-  /** 整支程式裡有沒有用到這幾顆元件之一（spec 199：關掉 stdio 同步只在混用 printf／scanf 時才改變輸出） */
-  programUses(componentIds: readonly string[]): boolean
+  /** 整支程式裡有沒有一顆元件符合這個條件（spec 199：關掉 stdio 同步只在混用 printf／scanf 時才改變輸出）——條件問性狀，不列身分 */
+  programUses(test: (componentId: string) => boolean): boolean
   /** 當一句敘述翻：有敘述的翻法就用它，否則包成運算式敘述（`sExpr`）——`a, b;` 等於 `a; b;` 時用（spec 199） */
   asStatement(n: SemanticNode): CellaJson[]
   /** 照 id 找語義樹的節點（`declOf` 給的是宣告的 id；要看那個宣告的內容時用——spec 199：`const int N = 100; int a[N];`） */

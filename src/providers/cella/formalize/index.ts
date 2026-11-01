@@ -313,9 +313,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     asStatement: (c) => (FORMALIZE.stmt.has(c.componentId) || FORMALIZE.decl.has(c.componentId)
       ? stmt(c)
       : [k('sExpr', { n: `${c.id}/stmt`, e: expr(c) })]),
-    programUses: (ids) => {
-      const want = new Set(ids)
-      const walk = (n: SemanticNode): boolean => want.has(n.componentId) || Object.values(n.slots ?? {}).some((kids) => kids.some(walk))
+    programUses: (test) => {
+      const walk = (n: SemanticNode): boolean => test(n.componentId) || Object.values(n.slots ?? {}).some((kids) => kids.some(walk))
       return walk(tree)
     },
     isTypeText: (text) => {

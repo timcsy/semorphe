@@ -9,4 +9,6 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     if (!init) return [f.miss(n, 'const 沒有初值')]
     return f.declInit(n, f.k('tConst', { t }), f.initOf(init), global)
   })
+  // 編譯期的整數值：初值是整數字面（`const int N = 100;`）——`int a[N]` 的長度問這一條（spec 199）
+  r.constInt('cpp:var_declare_const', (n, f) => f.constInt(f.one(n, 'initializer')))
 }
