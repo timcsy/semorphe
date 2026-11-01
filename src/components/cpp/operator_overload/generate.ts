@@ -13,7 +13,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       const paramName = node.properties.param_name ?? ''
       const body = node.slots.body ?? []
       const paramStr = paramType ? (paramName ? `${paramType} ${paramName}` : paramType) : ''
-      const header = `${indent(ctx)}${returnType} operator${op}(${paramStr})${openBrace(ctx)}\n`
+      // 尾端的 const（spec 201）——少了它，`sort`／`priority_queue` 拿 const 物件比較時編不過
+      const qual = String(node.properties.is_const ?? 'false') === 'true' ? ' const' : ''
+      const header = `${indent(ctx)}${returnType} operator${op}(${paramStr})${qual}${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header
       code += generateBody(body, indented(ctx))

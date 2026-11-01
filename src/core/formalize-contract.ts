@@ -78,6 +78,10 @@ export interface FormalizeContext {
   asStatement(n: SemanticNode): CellaJson[]
   /** 照 id 找語義樹的節點（`declOf` 給的是宣告的 id；要看那個宣告的內容時用——spec 199：`const int N = 100; int a[N];`） */
   nodeById(id: string): SemanticNode | undefined
+  /** 當一個類別成員翻（成員函式 → `mbMethod`）；沒有註冊的記 unknown、回 null（spec 201） */
+  member(n: SemanticNode): CellaJson | null
+  /** 這個宣告是不是某個 struct／class 的欄位——成員函式裡的裸名字指到它時是 `eSelf`（隱含的 this，spec 201） */
+  isMemberField(declId: string): boolean
   /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
   unescapeC(s: string): string
   /** C 的二元運算子符號 → Cella 的運算子建構子。 */
@@ -109,6 +113,8 @@ export interface FormalizeRegistrar {
   stmt(id: string, fn: (n: SemanticNode, f: FormalizeContext) => CellaJson[]): void
   /** 頂層（翻譯單元的項）。 */
   item(id: string, fn: (n: SemanticNode, f: FormalizeContext) => CellaJson[]): void
+  /** 類別成員（struct／class 的 members 裡、不是欄位的那幾顆：成員函式、運算子多載——spec 201）。 */
+  member(id: string, fn: (n: SemanticNode, f: FormalizeContext) => CellaJson): void
   /** 宣告：敘述與頂層兩處都用它（除非另註冊了 stmt／item），也是別人的宣告子（`int a, b[3];`）。 */
   decl(id: string, fn: (n: SemanticNode, f: FormalizeContext, global: boolean) => CellaJson[]): void
   /** 大括號初值串列裡的一項（沒註冊的是 `iE` 包運算式）。 */

@@ -21,6 +21,12 @@
       "name": "param_name",
       "kind": "literal",
       "default": ""
+    },
+    {
+      "name": "is_const",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "**`bool operator<(const Node& o) const` 的尾端 const**（spec 201）：在此之前 lift 丟掉它、產碼也不寫——來回一趟之後 `sort`、`priority_queue` 拿 const 物件比較時**編不過**。預設 `'false'` 是存檔相容（既有存檔沒有這一格）。"
     }
   ],
   "slots": {
@@ -45,6 +51,7 @@
         "lift": "./lift.ts"
       }
     },
+    "formalize": "./formalize.ts",
     "execute": null,
     "_execute_why": "**顯式的空，不是遺漏。**"
   },

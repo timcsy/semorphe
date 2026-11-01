@@ -4,6 +4,8 @@ import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.expr('cpp:var_ref', (n, f) => {
     const x = f.declOf(n.id)
+    // 成員函式裡的裸名字指到欄位：隱含的 this（cpp_to_tree.py 的 eSelf；spec 201）
+    if (x && f.isMemberField(x)) return f.k('eSelf', { n: n.id, x: String(n.properties?.name ?? '') })
     if (x) return f.k('eVar', { n: n.id, x })
     // 板子與函式庫的名字（LED_BUILTIN、DHT11、A0、WL_CONNECTED）今天被 lift 成一般的參照、指不到宣告。
     // cella 2026-10-31 定的分工：**程式自己沒宣告、來自標頭的名字**一律送 eConst（同 cpp_to_tree.py）；

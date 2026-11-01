@@ -732,7 +732,9 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
         }
       }
       const body = extractBody(bodyNode, ctx)
-      return buildOperatorOverload({ return_type: returnType, operator: op, param_type: paramType, param_name: paramName }, { body })
+      // 尾端的 `const`（`bool operator<(const Node& o) const`）是 function_declarator 底下的 type_qualifier（spec 201：原本丟掉）
+      const isConst = (declNode?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
+      return buildOperatorOverload({ return_type: returnType, operator: op, param_type: paramType, param_name: paramName, is_const: isConst ? 'true' : 'false' }, { body })
     }
 
     // Check for override keyword (via virtual_specifier node in declarator)

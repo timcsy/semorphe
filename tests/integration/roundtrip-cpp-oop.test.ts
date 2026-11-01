@@ -234,6 +234,18 @@ public:
       expect(result).toContain('result.x')
       expect(result).toContain('result.y')
     })
+
+    it('🔴 尾端的 const 來回一趟還在（spec 201）——掉了的話 sort／priority_queue 拿 const 物件比較時編不過', () => {
+      const code = `struct Node {
+    int x;
+    bool operator<(const Node& o) const {
+        return x < o.x;
+    }
+};`
+      expect(roundTripCode(code)).toMatch(/bool operator<\(const Node& o\) const\s*\{/)
+      // 沒寫 const 的不得被加上
+      expect(roundTripCode(code.replace(') const {', ') {'))).toMatch(/bool operator<\(const Node& o\)\s*\{/)
+    })
   })
 
   // ---- 7. struct_func: struct with member functions ----

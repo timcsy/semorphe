@@ -99,7 +99,13 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   }
   collect(tree)
   const byId = new Map<string, SemanticNode>()
-  const index = (n: SemanticNode): void => { byId.set(n.id, n); for (const kids of Object.values(n.slots ?? {})) kids.forEach(index) }
+  // 類別的欄位：`members` 槽裡、有型別的那幾顆（成員函式沒有 `type`）——成員函式裡的裸名字指到它們時是 eSelf
+  const memberFields = new Set<string>()
+  const index = (n: SemanticNode): void => {
+    byId.set(n.id, n)
+    for (const m of n.slots?.members ?? []) if (m.properties?.type !== undefined) memberFields.add(m.id)
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(index)
+  }
   index(tree)
   const unknown: Unknown[] = []
   const miss = (n: SemanticNode, reason: string): CellaJson => {
@@ -118,9 +124,11 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       expanding.add(s)
       try { return type(mv, at) } finally { expanding.delete(s) }
     }
-    if (s.startsWith('const ')) { const inner = type(s.slice(6), at); return inner && k('tConst', { t: inner }) }
+    // ⚠️ 先剝參照與指標，再剝 const：`const Node&` 是「參照到 const Node」＝ tRef(tConst(Node))，不是 tConst(tRef(Node))
+    //    （spec 201：Cella 判 reject「member reference base type is not a structure or union」抓到的；`const int*` 同理是 tPtr(tConst(int))）
     if (s.endsWith('&')) { const inner = type(s.slice(0, -1), at); return inner && k('tRef', { t: inner }) }
     if (s.endsWith('*')) { const inner = type(s.slice(0, -1), at); return inner && k('tPtr', { t: inner }) }
+    if (s.startsWith('const ')) { const inner = type(s.slice(6), at); return inner && k('tConst', { t: inner }) }
     // `int a[]` 只會出現在參數：C++ 把它調成指標（[dcl.fct]p5）——spec 199 量到 4 支
     if (s.endsWith('[]')) { const inner = type(s.slice(0, -2), at); return inner && k('tPtr', { t: inner }) }
     const sc = SCALAR[s]
@@ -215,6 +223,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     return fn ? fn(c, ctx) : null
   }
 
+  const SCALARS = new Set(Object.values(SCALAR))
+  const isScalar = (t: CellaJson): boolean => SCALARS.has(String(t.k)) || t.k === 'tPtr'
   const declInit = (n: SemanticNode, t: CellaJson, init: CellaJson | null, global: boolean): CellaJson[] => {
     const name = String(n.properties?.name ?? '')
     return [global
@@ -223,8 +233,14 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   }
   const declVar = (n: SemanticNode, t: CellaJson, global: boolean): CellaJson[] => {
     const initNode = one(n, 'initializer')
-    // 初值走 initOf：大括號串列是 iL（`int h{}` 是空的 iL——cpp_to_tree.py 的 init 同形；spec 199 量到 176 處），其餘是 iE
-    const init = initNode ? initOf(initNode) : null
+    // 初值走 initOf：大括號串列是 iL，其餘是 iE。
+    // ⚠️ 純量不收 iL（Cella：「scalar initializer must be an expression」）——`int h{}` 是值初始化（零）、`int h{5}` 就是 5（spec 201）
+    let init = initNode ? initOf(initNode) : null
+    if (init?.k === 'iL' && isScalar(t)) {
+      const xs = init.xs as CellaJson[]
+      if (xs.length > 1) { miss(n, '純量的大括號初值不能有兩個以上'); init = null }
+      else init = xs.length === 1 ? xs[0] : k('iE', { e: k('eNum', { n: initNode!.id, v: 0 }) })
+    }
     return declInit(n, t, init, global)
   }
   const declCtor = (n: SemanticNode, t: CellaJson, args: CellaJson[], global: boolean): CellaJson[] => {
@@ -278,6 +294,13 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     declOf: (key) => declOf.get(key),
     macro,
     nodeById: (id) => byId.get(id),
+    member: (m) => {
+      const fn = FORMALIZE.member.get(m.componentId)
+      if (fn) return fn(m, ctx)
+      miss(m, '這顆類別成員還沒有對應到 Cella 的建構子')
+      return null
+    },
+    isMemberField: (declId) => memberFields.has(declId),
     asStatement: (c) => (FORMALIZE.stmt.has(c.componentId) || FORMALIZE.decl.has(c.componentId)
       ? stmt(c)
       : [k('sExpr', { n: `${c.id}/stmt`, e: expr(c) })]),
