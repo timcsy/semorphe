@@ -76,8 +76,6 @@ const ASSUMES: Record<string, string> = {
   'sort.order': 'sort 排序時，相等的元素誰先誰後，照 libc++ 的做法',
   // cella 下一版（2026-11-01 預告）：math.h 的 sin、cos、exp、log、pow…
   'math.correctlyRounded': '數學函式（sin、cos、exp、log、pow…）算出的小數照正確捨入算；實際的函式庫最後一位可能不同',
-  // cella 2026-11-01 預告：沒有尾端 const 的 operator< 拿去 sort（標準允許，libc++ 編不過、libstdc++ 編得過）
-  'sort.nonConstLess': 'sort 比較元素時呼叫你寫的 operator<，而它沒有標 const——GCC（libstdc++）照樣編得過，有些編譯器（libc++）不收；在 operator< 後面加上 const 兩邊都通',
 }
 
 /** 擔保者 → 顯示的名字（小標上的「依 …」）。認不得的照原文。 */

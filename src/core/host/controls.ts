@@ -254,7 +254,7 @@ export const CONTROLS: readonly ControlSpec[] = [
   //    使用者 2026-08-25：「我要的是放在主控台跟終端機一起（在還沒做 DAP 的時候）」。
   { id: 'variables', kind: 'inspector', domain: 'project', mountId: 'variable-panel', bar: 'quickAccess', hostTitle: '變數' },
   // 🔴 **板子做了什麼**（spec 184）——腳位時間軸與結束時的板子狀態，資料來自 Cella 的判決。
-  //    與變數同一族（執行時看的東西），擴充那側還沒有（webview 沒有 Cella）→ VSCode 宣告成 `none`。
+  //    與變數同一族（執行時看的東西）。擴充：spec 198 起 webview 有 Cella，spec 203 住進下方面板區（與主控台、變數並排）。
   { id: 'hardware', kind: 'inspector', domain: 'project', mountId: 'hardware-panel', bar: 'quickAccess', hostTitle: '硬體' },
   { id: 'sync', kind: 'indicator', domain: 'project', mountId: 'sync-menu-btn', bar: 'quickAccess', hostTitle: '同步：暫停／以哪一邊為準' },
 ]

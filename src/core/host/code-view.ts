@@ -269,6 +269,14 @@ export interface CodeView {
   onConsoleOut?(callback: (m: { chunk?: string; clear?: boolean; awaitingInput?: string }) => void): void
 
   /** 同上，變數那一頁。 */
+  /**
+   * **硬體分頁要畫的**交給宿主（spec 203）——硬體分頁投影到宿主（`hostPanel`）時，跑程式的那個視窗不畫它，把要畫的送出去。
+   * `view` 是 `panels/hardware/view` 的 HardwareView、**去掉回呼**（「改輸入」那一列在擴充的硬體視窗裡第一版不畫）。
+   */
+  reportHardware?(view: unknown): void
+  /** 收宿主轉來的硬體分頁狀態——畫它的那個視窗用（spec 203） */
+  onHardwareSnapshot?(callback: (view: unknown) => void): void
+
   onVariablesSnapshot?(callback: (groups: readonly { name: string; collapsed: boolean; variables: readonly { name: string; type: string; value: string }[] }[]) => void): void
 
   /**
