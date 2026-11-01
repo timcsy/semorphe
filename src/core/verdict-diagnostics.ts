@@ -75,6 +75,8 @@ const ASSUMES: Record<string, string> = {
   'time.now': 'time() 讀到的「現在」——判斷時固定當成 0，實際執行每次都不同',
   'sort.order': 'sort 排序時，相等的元素誰先誰後，照 libc++ 的做法',
   // cella 下一版（2026-11-01 預告）：math.h 的 sin、cos、exp、log、pow…
+  // cella 2026-11-02 預告：只寫 <bits/stdc++.h> 的程式照 libstdc++ 的內容帶進所有標準標頭（int64_t、INT_MAX 不再判 unknown）
+  'header.contents': '<bits/stdc++.h> 會帶進哪些標準標頭，照 GCC（libstdc++）的內容——這個標頭不是 C++ 標準的一部分，有些編譯器沒有它',
   'math.correctlyRounded': '數學函式（sin、cos、exp、log、pow…）算出的小數照正確捨入算；實際的函式庫最後一位可能不同',
 }
 
