@@ -5,6 +5,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:struct_declare', (n, f) => {
     const fields: CellaJson[] = []
     for (const m of n.slots?.members ?? []) {
+      // 成員之間的註解不是成員（spec 199）；成員函式（含運算子多載）還沒有對應——照實說，不要說成「沒有型別」
+      if (/:(comment|block_comment)$/.test(m.componentId)) continue
+      if (m.properties?.type === undefined) { f.miss(m, '結構的成員函式（含運算子多載）還沒有對應'); continue }
       const t = f.type(m.properties?.type, m)
       if (t) fields.push(f.k('mbField', { acc: f.k('acPublic'), name: String(m.properties?.name ?? ''), t, init: null }))
     }

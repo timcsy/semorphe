@@ -76,6 +76,8 @@ export interface FormalizeContext {
   programUses(componentIds: readonly string[]): boolean
   /** 當一句敘述翻：有敘述的翻法就用它，否則包成運算式敘述（`sExpr`）——`a, b;` 等於 `a; b;` 時用（spec 199） */
   asStatement(n: SemanticNode): CellaJson[]
+  /** 照 id 找語義樹的節點（`declOf` 給的是宣告的 id；要看那個宣告的內容時用——spec 199：`const int N = 100; int a[N];`） */
+  nodeById(id: string): SemanticNode | undefined
   /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
   unescapeC(s: string): string
   /** C 的二元運算子符號 → Cella 的運算子建構子。 */

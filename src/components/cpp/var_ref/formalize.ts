@@ -18,7 +18,15 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     return f.k('eConst', { n: n.id, name })
   })
   // 陣列長度寫成巨集名（`int a[N];`）：沒有宣告、而且是物件巨集 → 照值算（spec 197）
-  r.constInt('cpp:var_ref', (n, f) => (f.declOf(n.id) ? null : f.macro(String(n.properties?.name ?? ''))?.int ?? null))
+  // 常數名（`const int N = 100; int a[N];`）：指到的宣告是 const、初值是整數字面 → 照值算（spec 199：學生的程式 16 支；
+  // clang 也把它當定長陣列）。`int a[n]` 的 n 不是常數——仍是 null，由陣列那一顆照實標 unknown
+  r.constInt('cpp:var_ref', (n, f) => {
+    const x = f.declOf(n.id)
+    if (!x) return f.macro(String(n.properties?.name ?? ''))?.int ?? null
+    const d = f.nodeById(x)
+    const isConst = d && (d.componentId === 'cpp:var_declare_const' || /^const\s/.test(String(d.properties?.type ?? '')) || /^\s*const\b/.test(String(d.properties?.qualifier ?? '')))
+    return isConst ? f.constInt(f.one(d!, 'initializer')) : null
+  })
   // 作用域：一個名字的參照——指到宣告它的那個節點
   r.scope('cpp:var_ref', (n, w) => w.resolve(n.id, String(n.properties?.name ?? '')))
 }

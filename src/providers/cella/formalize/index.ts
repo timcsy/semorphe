@@ -98,6 +98,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
   }
   collect(tree)
+  const byId = new Map<string, SemanticNode>()
+  const index = (n: SemanticNode): void => { byId.set(n.id, n); for (const kids of Object.values(n.slots ?? {})) kids.forEach(index) }
+  index(tree)
   const unknown: Unknown[] = []
   const miss = (n: SemanticNode, reason: string): CellaJson => {
     unknown.push({ nodeId: n.id, construct: n.componentId, reason })
@@ -118,6 +121,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (s.startsWith('const ')) { const inner = type(s.slice(6), at); return inner && k('tConst', { t: inner }) }
     if (s.endsWith('&')) { const inner = type(s.slice(0, -1), at); return inner && k('tRef', { t: inner }) }
     if (s.endsWith('*')) { const inner = type(s.slice(0, -1), at); return inner && k('tPtr', { t: inner }) }
+    // `int a[]` 只會出現在參數：C++ 把它調成指標（[dcl.fct]p5）——spec 199 量到 4 支
+    if (s.endsWith('[]')) { const inner = type(s.slice(0, -2), at); return inner && k('tPtr', { t: inner }) }
     const sc = SCALAR[s]
     if (sc) return k(sc)
     const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
@@ -272,6 +277,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     declVar, declInit, declCtor, libraryObject, constInt,
     declOf: (key) => declOf.get(key),
     macro,
+    nodeById: (id) => byId.get(id),
     asStatement: (c) => (FORMALIZE.stmt.has(c.componentId) || FORMALIZE.decl.has(c.componentId)
       ? stmt(c)
       : [k('sExpr', { n: `${c.id}/stmt`, e: expr(c) })]),
