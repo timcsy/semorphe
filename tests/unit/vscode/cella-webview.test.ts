@@ -21,9 +21,8 @@ describe('擴充的 webview 起 Cella worker', () => {
     expect(csp('vscode-resource:')).toMatch(/worker-src blob:/)
   })
 
-  it('🔴 webview 那份 worker 讀資產走執行期的根，不走 import.meta.glob（lib 模式會把 45 MB 內嵌成 base64）', () => {
-    const cfg = fs.readFileSync('vite.vscode.config.ts', 'utf8')
-    expect(cfg).toMatch(/'\.\/assets-vscode'/)
-    expect(fs.readFileSync('src/providers/cella/assets-vscode.ts', 'utf8')).not.toMatch(/import\.meta\.glob\(/)
+  it('🔴 擴充那份 worker 讀資產走執行期的根（glob 在死分支裡被搖掉）——lib 模式會把 45 MB 內嵌成 base64', () => {
+    expect(fs.readFileSync('vite.vscode.config.ts', 'utf8')).toMatch(/SEMORPHE_CELLA_RUNTIME_ASSETS/)
+    expect(fs.readFileSync('src/providers/cella/assets.ts', 'utf8')).toMatch(/RUNTIME_ASSETS \? \{\} : import\.meta\.glob\(/)
   })
 })

@@ -935,6 +935,13 @@ html, body {
   margin-bottom: 6px;
 }
 
+/* 這個結果用哪一份輸出判的（spec 200）——小字、不搶標題；過與不過都在 */
+.console-verdict-source {
+  color: #9aa0a6;
+  font-size: 0.9em;
+  margin-bottom: 6px;
+}
+
 .console-verdict-hint {
   color: #ffd479;
   margin-bottom: 8px;
