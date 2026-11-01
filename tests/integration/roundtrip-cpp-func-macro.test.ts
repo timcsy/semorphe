@@ -74,6 +74,9 @@ const SHAPES: readonly [string, string, string][] = [
   //    > 而照那些形狀去認，等於把解析器的錯當成規格。**
   ['語料：主體是讀取（AP325/7/7_4）', '  rep(i, n) cin >> arr[i];', 'rep(i, n)'],
   ['三層巢狀', '  rep(i,n) rep(j,n) rep(k,n) s += i * j * k;', 'rep(k,n)'],
+  // 🔴 第 216 刀（語料 AP325/7/7_10）：區塊裡【前面有一句】再接一個巨集——
+  //    內層被讀成「rep(k,n) 缺分號」，重解帶錯誤就讓外層整段掉回原文
+  ['語料：區塊裡前面有一句再接巨集（AP325/7/7_10）', '  rep(i,n) {\n    s++;\n    rep(k,4){ s += k; }\n  }', 'rep(k,4)'],
 ]
 
 const wrap = (body: string): string =>
@@ -142,6 +145,15 @@ const throughBlocks = (body: string): SemanticNode => {
 }
 
 describe('帶參數的巨集：四個面向', () => {
+  // 🔴 第 216 刀：這一形狀修之前【產出的程式碼一字不差】（整段帶原文），所以①～④ 都綠——只有身分看得出來
+  it('🔴 區塊裡前面有一句再接巨集：兩層都展開成迴圈，沒有一段掉回原文（AP325/7/7_10）', () => {
+    // ⚠️ 最小重現（從 7_10 逐步刪減量出來的）：區塊裡【前面有一句】、接著一個巨集；`rep(k,4)` 後面被補一個缺的分號
+    const got = ids(lift(wrap('  rep(i,n) {\n    s++;\n    rep(k,4){ s += k; }\n  }')))
+    expect(got.filter((x) => x === 'cpp:loop_count')).toHaveLength(2)
+    expect(got, '🔴 外層整段掉回原文').not.toContain('cpp:raw_code')
+    expect(got).not.toContain('unresolved')
+  })
+
   it('★ 入口條件——這條路真的跑得動（否則下面每一條都在驗空氣）', () => {
     const got = ids(lift(wrap('  rep(i,n) s += i;')))
     expect(got, '🔴 定義那一行沒有身分').toContain('cpp:define_func')
