@@ -39,6 +39,8 @@ export interface KeyedNode {
   path: string
   /** 它在程式碼裡的起始行（沒有對應就是 `null`）。 */
   line: number | null
+  /** 父節點（根沒有）——上下文鍵要它（第 191 刀） */
+  parent?: SemanticNode
 }
 
 /** 走一遍樹，附上路徑。 */
@@ -47,11 +49,11 @@ export function walkWithPath(
   lineOf: (id: string) => number | null = () => null,
 ): KeyedNode[] {
   const out: KeyedNode[] = []
-  const walk = (n: SemanticNode, path: string): void => {
-    out.push({ node: n, path, line: lineOf(n.id) })
+  const walk = (n: SemanticNode, path: string, parent?: SemanticNode): void => {
+    out.push({ node: n, path, line: lineOf(n.id), ...(parent ? { parent } : {}) })
     for (const slot of Object.keys(n.slots ?? {})) {
       const kids = n.slots[slot] ?? []
-      kids.forEach((kid, i) => walk(kid, `${path}/${slot}[${i}]`))
+      kids.forEach((kid, i) => walk(kid, `${path}/${slot}[${i}]`, n))
     }
   }
   walk(root, '')
@@ -138,7 +140,43 @@ export function allKeys(k: KeyedNode, sameLineIndex: number): string[] {
   //     看起來與健康的完全一樣。）
   //
   // 內容（我是誰）→ 行號（我在第幾行）→ 路徑（我排第幾個）。
-  return [`C:${keyByContent(k)}`, `L:${keyByLine(k, sameLineIndex)}`, `P:${keyByPath(k)}`]
+  // 🔴 **最前面多一把子樹鍵**（2026-11-01，第 191 刀）——見 `subtreeKey`。
+  return [subtreeKey(k.node), ...(k.parent ? [contextKey(k)] : []), `C:${keyByContent(k)}`, `L:${keyByLine(k, sameLineIndex)}`, `P:${keyByPath(k)}`]
+}
+
+/**
+ * **子樹鍵**——這一顆連同它裡面的全部長什麼樣（身分＋屬性，遞迴），雜湊成一把。
+ *
+ * 🔴 為什麼要它（2026-11-01 量到）：在程式**最前面**加一行（補一個 `#include`），行號鍵與路徑鍵**全部位移一格**，
+ *    而 `cout`、`endl` 這類節點自己的內容鍵又到處重複——於是舊的 `L:` 指到【新樹裡那一行上的別顆】。
+ *    課文語料逐顆量：對 1301｜掉 1163｜**對到別顆 758**——手拖的位置掛到隔壁的節點上。
+ *    子樹分得出「`return a + b` 與 `return a * b`」，而位移不改變它。
+ * ⚠️ 它也是**驗證**：行號／路徑／內容命中時，若那一塊原本的長相仍在新樹裡、而命中的那顆長得不一樣 ⟹ 是位移造成的錯配，不收。
+ */
+export function subtreeKey(n: SemanticNode): string {
+  return `S:${fnv(shapeOf(n))}`
+}
+
+/**
+ * **上下文鍵**——父節點的子樹 ＋ 我在父節點裡的位置（`slot[i]`）。
+ * 子樹鍵分不開「長得一模一樣的雙胞胎」（兩個 `endl`）；它們的父節點（`cout << "a" << endl` 與 `cout << "b" << endl`）分得開。
+ */
+export function contextKey(k: KeyedNode): string {
+  const last = k.path.slice(k.path.lastIndexOf('/') + 1)
+  return `X:${fnv(shapeOf(k.parent!))}/${last}`
+}
+
+function shapeOf(n: SemanticNode): string {
+  const props = Object.entries(n.properties ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([a, b]) => `${a}=${String(b)}`).join(',')
+  const slots = Object.keys(n.slots ?? {}).sort().map((s) => `${s}[${(n.slots[s] ?? []).map((k) => (k ? shapeOf(k) : '_')).join(';')}]`).join('')
+  return `${n.componentId}{${props}}${slots}`
+}
+
+/** FNV-1a（32 位元）——存檔裡放雜湊不放整串 */
+function fnv(s: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0 }
+  return h.toString(36)
 }
 
 /**
@@ -183,18 +221,79 @@ export function matchByKeys(before: string[][], after: KeyedNode[]): Map<number,
   })
   const out = new Map<number, string>()
   const taken = new Set<string>()
+  const subtreeOf = new Map<string, string>()
+  const contextOf = new Map<string, string>()
+  after.forEach((k, i) => {
+    const sk = afterKeys[i].find((x) => x.startsWith('S:'))
+    if (sk) subtreeOf.set(k.node.id, sk)
+    const xk = afterKeys[i].find((x) => x.startsWith('X:'))
+    if (xk) contextOf.set(k.node.id, xk)
+  })
   before.forEach((keys, i) => {
+    const mine = keys.find((x) => x.startsWith('S:'))
+    const ctx = keys.find((x) => x.startsWith('X:'))
     for (const key of keys) {
       // ⚠️ 曖昧的鍵一律不算命中——**寧可對不回去，不要對到別人身上**。
       if (countA.get(key) !== 1) continue
       const hit = byKey.get(key)
       if (!hit || taken.has(hit.node.id)) continue
+      // 🔴 位移造成的錯配（見 `subtreeKey`）：我原本的長相還在新樹裡，而命中的這顆長得不一樣 ⟹ 不收
+      if (mine && !key.startsWith('S:') && (countB.get(mine) ?? 0) > 0 && subtreeOf.get(hit.node.id) !== mine) continue
+      // 雙胞胎（子樹一樣）：我原本的上下文還在新樹裡，而命中的這顆上下文不同 ⟹ 是位移指到了另一個雙胞胎，不收
+      if (ctx && !key.startsWith('S:') && !key.startsWith('X:') && (countB.get(ctx) ?? 0) > 0 && contextOf.get(hit.node.id) !== ctx) continue
       out.set(i, hit.node.id)
       taken.add(hit.node.id)
       return
     }
   })
+  followParents(before, after, out)
   return out
+}
+
+/**
+ * **子節點跟著父節點走**（第 191 刀）——由淺到深：父節點對到了哪一顆，子節點就是那一顆的同一個位置（同身分才算）。
+ *
+ * 🔴 為什麼要它：三句一模一樣的 `pay += pay / 10;`，句子本身靠上下文鍵分得開（`main` 的第幾句），
+ *    而句子**裡面**的 `pay`、`/`、`10` 是三胞胎——連上下文都一樣，位移之後行號鍵指到隔壁那句的那一顆。
+ *    結構上它們的歸屬是確定的：跟著父節點。
+ * ⚠️ 只在「父節點也在這一批裡、對到了、而且它的子樹一模一樣」時才動——存檔還原時只存手放過的那幾顆，父節點多半不在，照舊。
+ */
+function followParents(before: string[][], after: KeyedNode[], out: Map<number, string>): void {
+  const pathOf = (keys: string[]): { comp: string; path: string } | null => {
+    const p = keys.find((k) => k.startsWith('P:'))
+    if (!p) return null
+    const at = p.indexOf('@')
+    return { comp: p.slice(2, at), path: p.slice(at + 1) }
+  }
+  const entries = before.map(pathOf)
+  const entryAt = new Map<string, number>()
+  entries.forEach((e, i) => { if (e) entryAt.set(e.path, i) })
+  const nodeAt = new Map(after.map((k) => [k.path, k]))
+  const pathOfId = new Map(after.map((k) => [k.node.id, k.path]))
+  const order = entries.map((e, i) => [e ? e.path.split('/').length : 0, i] as const).sort((x, y) => x[0] - y[0]).map(([, i]) => i)
+  const owner = new Map<string, number>()
+  for (const [i, id] of out) owner.set(id, i)
+  for (const i of order) {
+    const e = entries[i]
+    if (!e || e.path === '') continue
+    const cut = e.path.lastIndexOf('/')
+    const pi = entryAt.get(e.path.slice(0, cut))
+    const pid = pi === undefined ? undefined : out.get(pi)
+    if (pid === undefined) continue
+    // 🔴 父節點的子樹【一模一樣】才跟——裡面沒變，位置才一一對應。
+    //    根節點在最前面插一行之後子樹變了，它的孩子（頂層的 #include、函式）不能照索引跟（量到過：錯從 21 升到 56）
+    const parentShape = before[pi!].find((k) => k.startsWith('S:'))
+    const parentNode = nodeAt.get(pathOfId.get(pid)!)
+    if (!parentShape || !parentNode || subtreeKey(parentNode.node) !== parentShape) continue
+    const cand = nodeAt.get(`${pathOfId.get(pid)}${e.path.slice(cut)}`)
+    if (!cand || cand.node.componentId !== e.comp) continue
+    const prev = owner.get(cand.node.id)
+    if (prev !== undefined && prev !== i) out.delete(prev)
+    const mineBefore = out.get(i)
+    if (mineBefore !== undefined) owner.delete(mineBefore)
+    out.set(i, cand.node.id)
+    owner.set(cand.node.id, i)
+  }
 }
 
 /**
