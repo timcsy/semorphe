@@ -287,11 +287,7 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
 - [x] **2 元件動詞改名**——每個視圖一對 `render`／`lift`（[spec 181](../specs/181-view-paths/spec.md)）→ [history/308](history/308-元件的動詞改成每個視圖一對-render-lift.md)
 - [x] **3 升級 Cella**——套件釘在 `0.1.202610310706`，淺嵌入的探針、merkle 基線、`contract.cella` 退場（第 393 刀）
 - [x] **4 深嵌入 formalize**（[spec 180](../specs/180-deep-formalize/spec.md)，先 C++／Arduino）——語義樹 → 程式 JSON；靜態作用域走訪填 declNode、nodeId 穩定、`iInclude`、
-      依支援清單標 unknown；驗收：課文 C／C++／Arduino 解答全部翻得出、交判決綁定語料（Cella 的衍生原則 C18「判決綁定」）
-      🟡 第一批（2026-10-31）：作用域走訪（852 個參照 0 落空）、課文解答 84 / 94、Arduino sketch 10 / 10、C 分支、空槽變洞、判決綁定語料第一版交出；
-      剩下的 10 份卡在 Cella 還沒建模的函式庫（pair、queue、set、map、stack、priority_queue）——已給 Cella 清單，Cella 已開工（下一版帶 `tAuto`）；
-      第二批（第 389–391 刀）：formalize 搬進膠囊、判決綁定語料 109 筆／附 program 99 筆，cella 用 clang 比兩棵樹 95/95 相同；Arduino 15/15
-      🟢 **完成**（spec 194，cella 0.1.202610312349）：109／109 翻得出；Cella 判決 accept 106、輸出全部一致 → [history/319](history/319-Cella-下一版到了.md)
+      依支援清單標 unknown——🟢 **完成**（spec 194）：課文 109／109 翻得出、判決輸出全部一致 → [history/319](history/319-Cella-下一版到了.md)（兩批的交付紀錄也在那裡）
 - [x] **5 Cella 提供者**——verdict（積木標示、判題）、types（型別不合接上後標錯、工具箱不藏）、session（除錯、變數、步數）、
       `assumes` 小標、硬體時間軸面板、課文 check 的腳位事件（2026-10-31 拆成 5a／5b／5c）
       🟢 覆蓋標記（spec 194：`coverage()` 接上）→ [history/319](history/319-Cella-下一版到了.md)；判題改用 `verdict` 照 spec 182 的範圍移到 6。
@@ -309,6 +305,7 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       ⟹ 6 拆成 6a 擴充宿主跑 Cella → 6.0 量 unknown → 6b 判題改用 verdict → 6c 切換，見[設計 draft 五之十](draft/2026-10-31-重構的設計-能力介面與降級路徑.md)
       🟢 6a、6b 完成（spec 198、200）；6.0 量到課文乾淨而學生的程式不是 → 多一步 6.1 補 formalize（spec 199～201）→ [history/322](history/322-切換之前先量學生會失去什麼.md)
       🟢 **使用者定：6c 等 Cella 的四族都補完才切**（驗收：`cella-coverage-gap` 重量）→ [history/323](history/323-使用者定的四題之二.md)
+      ⚠️ 6c 的範圍包含 CLAUDE.md 標 🪦「重構階段 6 拆」的那幾段（參照編譯器族、`execute` 那一路）——切換之前它們仍然有效，切換那天一起改寫
 - [ ] **7 Python**——4～5 再走一遍（formalize、提供者）；⚠️ 它的前半段排在 6 的切換**之前**（見上一項）
       🟡 前半段（spec 195、196）：formalize（照 Cella 的對照表，**課文 48／48 翻得出、判決輸出全部一致**）＋ 提供者的 Python 分支（判決、除錯、覆蓋）→ [history/320](history/320-Python-接上-Cella.md)
 
