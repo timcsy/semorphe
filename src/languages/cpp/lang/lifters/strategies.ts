@@ -18,6 +18,7 @@ import { buildAutoDeclare } from '../../../../components/cpp/var_declare_auto/li
 import { buildDeclareSequence } from '../../../../components/cpp/var_declare_sequence/lift'
 import { buildStaticVar } from '../../../../components/cpp/var_declare_static/lift'
 import { buildRawCode } from '../../../../components/cpp/raw_code/lift'
+import { reparseExpression } from '../misparse'
 import { qualifierComponent } from '../../../../core/component/qualifier-components'
 import { buildStringStreamDecl } from '../../../../components/cpp/istringstream_declare/lift'
 import { buildTemplateFunc } from '../../../../components/cpp/template_function/lift'
@@ -114,12 +115,40 @@ function normalizeParamType(raw: string): string {
  * > **一個推導不出來時會猜的推導器，
  * > 與一個推導錯了的推導器在型別表上長得一樣。**
  */
+/**
+ * 一個數字字面量在 C++ 裡的型別——照字面的規則，**證不出來的回 `undefined`**（第 214 刀）。
+ *
+ * 🔴 原本只看「有沒有小數點」，於是 `vector vis(n, 2e9)`（語料 `AP325/7/7_9_2t.cpp`）被推成 `vector<int>`
+ * ——而 `2e9` 是 `double`。指數記號（`1e7`）與十六進位浮點（`0x1p3`）都是浮點。
+ * ⚠️ 沒有字尾的整數超過 `int` 時型別是 `long`／`long long`（看平台），這裡不猜。
+ */
+function numberLiteralType(text: string): string | undefined {
+  // 數字分隔符號（`10'0000'0000`）。⚠️ 寫成 \x27 不寫引號：護欄的程式碼／註解切分器不認正規式字面量，
+  // 一個裸的引號會讓它把後面整個檔的註解當成程式碼（第 214 刀撞到：十顆元件一起「外洩」）
+  const t = text.replace(/\x27/g, '')
+  const hex = /^0[xX]/.test(t)
+  if (hex ? /[pP]/.test(t) : /[.eE]/.test(t)) {
+    if (/[fF]$/.test(t) && !hex) return 'float'
+    if (/[lL]$/.test(t)) return 'long double'
+    return 'double'
+  }
+  const suffix = (/[uUlLzZ]+$/.exec(t)?.[0] ?? '').toLowerCase()
+  const unsigned = suffix.includes('u')
+  if (suffix.includes('ll')) return unsigned ? 'unsigned long long' : 'long long'
+  if (suffix.includes('l')) return unsigned ? 'unsigned long' : 'long'
+  if (suffix.includes('z')) return undefined
+  if (unsigned) return 'unsigned int'
+  const digits = t.replace(/[uUlLzZ]+$/, '')
+  const v = hex ? parseInt(digits, 16) : /^0[bB]/.test(digits) ? parseInt(digits.slice(2), 2) : /^0\d/.test(digits) ? parseInt(digits, 8) : Number(digits)
+  return Number.isFinite(v) && v <= 2147483647 ? 'int' : undefined
+}
+
 function ctadElemType(fill: AstNode): string | undefined {
   if (fill.type === 'call_expression') {
     const fn = fill.childForFieldName('function')
     return fn?.type === 'template_function' ? fn.text : undefined
   }
-  if (fill.type === 'number_literal') return fill.text.includes('.') ? 'double' : 'int'
+  if (fill.type === 'number_literal') return numberLiteralType(fill.text)
   if (fill.type === 'string_literal') return 'string'
   if (fill.type === 'char_literal') return 'char'
   return undefined
@@ -168,6 +197,36 @@ const DECLARATOR_SHAPES = new Set([
  * ⚠️ **拿不準的一律回 `false`**——把函式宣告誤判成變數，會讓一支程式的
  * 前置宣告整批消失；反過來只是維持今天的行為。
  */
+/**
+ * **巢狀的最令人困惑的解析：一個「參數」其實是一個建構運算式**（第 214 刀，StudyCpp `AP325/7/7_4.cpp`）。
+ *
+ * ```cpp
+ * int m, n; const int oo = …;
+ * vector lt(m, vector<int>(n, oo));
+ *              ^^^^^^^^^^^^^^^^^^ ← template_type ＋ abstract_function_declarator（參數名 n、oo）
+ * ```
+ *
+ * 🟢 判準與 `misparse.ts` 的規則②同一個：括號裡的每一個「參數」都是**單一個、宣告過的名字**
+ * ⟹ 它們不可能是型別 ⟹ 這一段只剩運算式一種讀法。處方也一樣：**讓 tree-sitter 當運算式重解原文**，不自己組。
+ *
+ * ⚠️ 拿不準（有一個不是宣告過的名字、重解有語法錯誤）一律回 `null`——呼叫端照舊帶原文（raw_code）。
+ * 在此之前一律帶原文，而 `vector lt(m, …)`（省略樣板引數）整句被讀成**函式的前置宣告**，變數 `lt` 不見了。
+ */
+function nestedCtorArg(pd: AstNode, ctx: LiftContext): AstNode | null {
+  if (pd.namedChildren.length !== 2) return null
+  const [ty, abs] = pd.namedChildren
+  if (ty.type !== 'template_type' && ty.type !== 'type_identifier') return null
+  if (abs.type !== 'abstract_function_declarator') return null
+  const items = abs.namedChildren.find((c) => c.type === 'parameter_list')?.namedChildren ?? []
+  if (items.length === 0) return null
+  // `true`／`false`／`nullptr` 是關鍵字、不可能是型別名——而 tree-sitter 在這個位置把它們讀成 type_identifier
+  //（語料 w/APCS/o713_AC 的 `vector<bool>(N, false)`）
+  const KEYWORD_VALUES = new Set(['true', 'false', 'nullptr'])
+  const allValues = items.every((it) => it.namedChildren.length === 1 && it.namedChildren[0].type === 'type_identifier'
+    && (KEYWORD_VALUES.has(it.namedChildren[0].text) || ctx.data.lookup(it.namedChildren[0].text) !== null))
+  return allValues ? reparseExpression(pd, pd.text) : null
+}
+
 function looksLikeCtorCall(fnDecl: AstNode, ctx: LiftContext): boolean {
   // 名字本身要是裸識別字（`int (*p)(int)` 那種不算）
   if (!fnDecl.namedChildren.some((c) => c.type === 'identifier')) return false
@@ -175,6 +234,7 @@ function looksLikeCtorCall(fnDecl: AstNode, ctx: LiftContext): boolean {
   const items = params?.namedChildren ?? []
   if (items.length === 0) return false
   return items.every((pd) => {
+    if (nestedCtorArg(pd, ctx) !== null) return true
     const inner = pd.namedChildren[0]
     if (!inner || pd.namedChildren.length !== 1) return false
     if (inner.type !== 'type_identifier') return false
@@ -314,7 +374,11 @@ function ctorSlots(decl: AstNode, ctx: LiftContext): CtorSlots {
         //
         // ⚠️ 這一層**不再往下猜**：把原文原封帶出去（P6 誠實降級）。
         // > **看不懂的時候，帶著原文比帶著一半的理解安全。**
-        if (pd.namedChildren.length > 1) return buildRawCode(pd.text)
+        // 🟢 括號裡全是宣告過的名字時，它只剩運算式一種讀法——重解（`nestedCtorArg`，第 214 刀）
+        if (pd.namedChildren.length > 1) {
+          const e = nestedCtorArg(pd, ctx)
+          return e ? ctx.lift(e) : buildRawCode(pd.text)
+        }
         return inner.type === 'type_identifier' ? buildVarRef(inner.text) : ctx.lift(inner)
       })
       .filter((n): n is SemanticNode => n !== null)
@@ -1039,7 +1103,15 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const args = argList?.namedChildren ?? []
         // ⚠️ 只認【大小 ＋ 填充值】那一種：一個引數的 `vector v(other)` 是複製建構，
         //    它的型別在別人身上，這裡證不出來。
-        const inner = args.length >= 2 ? ctadElemType(args[args.length - 1]) : undefined
+        let inner = args.length >= 2 ? ctadElemType(args[args.length - 1]) : undefined
+        // 填充值被讀成巢狀的最令人困惑的解析時（`vector lt(m, vector<int>(n, oo))`），整句是 function_declarator
+        // ——重解那個引數再推（第 214 刀，見 `nestedCtorArg`）
+        const fnDecl = initDecl ? undefined : node.namedChildren.find(c => c.type === 'function_declarator')
+        const fnArgs = fnDecl?.namedChildren.find(c => c.type === 'parameter_list')?.namedChildren ?? []
+        if (inner === undefined && fnArgs.length >= 2) {
+          const e = nestedCtorArg(fnArgs[fnArgs.length - 1], ctx)
+          if (e) inner = ctadElemType(e)
+        }
         if (inner !== undefined) ctad = { name: bare, inner }
       }
     }

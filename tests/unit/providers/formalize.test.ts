@@ -338,3 +338,14 @@ describe('第 213 刀：學生語料剩下的形狀（Cella 0.1.202611011759）'
     expect(find(r.program, 'eCall').map((m) => m.f)).toEqual(expect.arrayContaining(['fill', 'max_element']))
   })
 })
+
+describe('第 214 刀：函式形巨集（`#define rep(i,n) for(…)`）', () => {
+  const H = '#include <bits/stdc++.h>\nusing namespace std;\n#define rep(i,n) for(int i=0;i<n;i++)\n'
+
+  it('★ 定義本身不產生程式；使用處 lift 時已展開成迴圈', () => {
+    const r = formalize(lift(H + 'int main() { int s = 0; rep(i,3) s += i; cout << s; }'), { lang: 'cpp' })
+    expect(r.unknown).toEqual([])
+    expect(JSON.stringify(r.program)).not.toContain('rep')
+    expect(JSON.stringify(r.program)).toContain('"sFor"')
+  })
+})

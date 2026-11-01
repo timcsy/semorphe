@@ -115,6 +115,10 @@ const SHAPES: readonly string[] = [
   'vector<vector<int>> grid(M, vector<int>(N));',
   'vector<vector<int>> grid(M, vector<int>(N, -1));',
   'vector<vector<bool>> d(M, vector<bool>(N, false));',
+  // 🔴 巢狀引數的括號裡全是名字（第 214 刀，語料 AP325/7/7_4）：`vector<int>(N, n)` 也讀得成「參數名 N、n 的函式型別」
+  //    ——原本整段帶原文（raw_code），現在重解成運算式
+  'vector<vector<int>> lt(M, vector<int>(N, n));',
+  'vector<vector<bool>> seen(M, vector<bool>(N, false));',
   // ─── 競賽模板：逗號運算式（語料裡 136/218 支的第一行）───
   'ios::sync_with_stdio(0), cin.tie(0);',
   // ─── `max`／`min` 的大括號多載 ───
@@ -148,6 +152,10 @@ describe('第一百一十五條護欄：宣告的形狀轉一圈回來還是它�
     ['string s, t, u;', 'cpp:string_declare'],
     ['string s;', 'cpp:string_declare'],
     ['vector<int> v(n);', 'cpp:vector_declare'],
+    // 🔴 省略樣板引數 ＋ 巢狀引數全是名字（第 214 刀）：原本整句被讀成【函式的前置宣告】，變數不見了
+    ['vector lt(M, vector<int>(N, n));', 'cpp:vector_declare'],
+    ['vector<vector<int>> lt(M, vector<int>(N, n));', 'cpp:vector_declare'],
+    ['vector<vector<bool>> seen(M, vector<bool>(N, false));', 'cpp:vector_declare'],
     ['stringstream ss;', 'cpp:stringstream_declare'],
   ])('🔴 身分：%s 仍然是 %s', (shape, id) => {
     expect(

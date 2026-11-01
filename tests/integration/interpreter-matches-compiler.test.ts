@@ -787,6 +787,10 @@ const CASES: [string, string, string, string[]][] = [
    */
   ['CTAD：省略的樣板引數（語料 AP325/6/6_9）', '', '  int w = 2, n = 3;\n  vector dp(w+1, vector<int>(n+1));\n  dp[1][2] = 7;\n  cout << dp[1][2] << dp.size() << dp[0].size();', []],
   ['CTAD：填充值是一個數字', '', '  vector v(3, 5);\n  cout << v[0] << v.size();', []],
+  // 🔴 第 214 刀（語料 AP325/7/7_9_2t）：`2e9` 是 double——原本只看小數點，推成 vector<int>
+  ['CTAD：填充值是指數記號（double）', '', '  int n = 2;\n  vector vis(n, 2e9);\n  cout << vis[0] << " " << vis.size();', []],
+  // 🔴 第 214 刀（語料 AP325/7/7_4）：巢狀引數的括號裡全是名字——原本整句被讀成函式的前置宣告
+  ['CTAD：巢狀引數全是名字', 'const int oo = 1000000000;', '  int m = 2, n = 3;\n  vector lt(m, vector<int>(n, oo));\n  lt[1][2] = 7;\n  cout << lt[1][2] << lt[0][0] << lt.size() << lt[0].size();', []],
   ['★ 錨點：寫全的那一種不得被弄壞', '', '  vector<int> a(3, 5);\n  cout << a[0] << a.size();', []],
   ['★ 錨點：推不出來時讓開（複製建構）', '', '  vector<int> src(2, 1);\n  vector cp(src);\n  cout << cp.size();', []],
   ['多宣告子：第二個當陣列大小', 'const int N = 5, K = 3;\nint T[K + 1];', '  cout << N << K << (int)(sizeof(T) / sizeof(T[0]));', []],
