@@ -12,6 +12,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // 🟢 C／C++ 也一樣（spec 194；cella 0.1.202610312349 起認得標準標頭的巨集常數：INT_MAX、RAND_MAX、EXIT_SUCCESS……）：
     //    引入了定義它的標頭才有值；沒引入、或根本不存在（打錯字）由 Cella 判 reject／unknown，判決指回這個節點——不再在我們這側標 unknown。
     const name = String(n.properties?.name ?? '')
+    // 物件巨集（spec 197）：前端展開——值代進使用處，標籤用使用處的 id（判決指回這一格）
+    const m = f.macroValue(name)
+    if (m) return f.expr({ ...m, id: n.id })
     return f.k('eConst', { n: n.id, name })
   })
   // 作用域：一個名字的參照——指到宣告它的那個節點

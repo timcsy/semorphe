@@ -65,6 +65,11 @@ export interface FormalizeContext {
   constInt(n: SemanticNode | undefined): number | null
   /** 作用域走訪的結果：參照節點（或 `<id>#obj`）→ 宣告節點。 */
   declOf(key: string): string | undefined
+  /**
+   * 物件巨集（`#define N 10`）的值——**前端展開**（cella 2026-11-01：巨集是前處理器的事，語意樹上不該出現；判決的位置照展開處）。
+   * 只認數字字面量；回傳一顆合成的 `cpp:literal_number`（id 由呼叫端換成使用處的）。其他（運算式、字串、帶參數）回 undefined。
+   */
+  macroValue(name: string): SemanticNode | undefined
   /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
   unescapeC(s: string): string
   /** C 的二元運算子符號 → Cella 的運算子建構子。 */

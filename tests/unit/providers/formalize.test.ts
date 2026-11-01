@@ -240,3 +240,36 @@ describe('formalize：最小子集', () => {
     expect(files.length).toBeGreaterThan(80)
   })
 })
+
+describe('C 前端的三個缺口（spec 197；cella 問 C 子集時量到）', () => {
+  const find = (j: unknown, k: string): any[] => {
+    const out: any[] = []
+    const walk = (v: unknown): void => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') { if ((v as any).k === k) out.push(v); Object.values(v).forEach(walk) } }
+    walk(j)
+    return out
+  }
+
+  it('🔴 `int main(void)`：沒有參數（C11 6.7.6.3p10），不是一個型別是 void 的參數', () => {
+    const r = formalize(lift('int main(void) { return 0; }'), { lang: 'c' })
+    expect(r.unknown).toEqual([])
+    expect(find(r.program, 'fdef')[0].params).toEqual([])
+  })
+
+  it('🔴 物件巨集由前端展開：使用處是值、標籤是使用處的 id；陣列長度也認得', () => {
+    const t = lift('#define N 10\nint main(void) { int a[N]; return N; }')
+    const r = formalize(t, { lang: 'c' })
+    expect(r.unknown).toEqual([])
+    const ret = find(r.program, 'sReturn')[0]
+    expect(ret.e ?? ret.v ?? ret.value).toMatchObject({ k: 'eNum', v: 10 })
+    expect(JSON.stringify(r.program)).not.toMatch(/cpp:define|"name":"N"/)
+    // 值不是數字的巨集 → unknown（不猜它展開之後長什麼樣）
+    expect(formalize(lift('#define S (1 + 2)\nint main(void) { return S; }'), { lang: 'c' }).unknown.length).toBeGreaterThan(0)
+  })
+
+  it('🔴 `extern` 的變數宣告照實降級（在此之前 extern 被悄悄丟掉：宣告變成定義）；函式的 extern 照舊', () => {
+    const t = lift('extern int other;\nextern void f(int);\nint main(void) { return 0; }')
+    const body = t.slots.body ?? []
+    expect(body[0].componentId).toMatch(/raw_code/)
+    expect(body[1].componentId).not.toMatch(/raw_code/)
+  })
+})

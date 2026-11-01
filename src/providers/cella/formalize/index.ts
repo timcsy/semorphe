@@ -174,9 +174,27 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const braceList = (n: SemanticNode, slot: string): CellaJson =>
     k('iL', { n: `${n.id}/${slot}`, xs: (n.slots?.[slot] ?? []).map((c) => initOf(c)) })
 
+  // 物件巨集（spec 197）：`#define N 10` → 名字 → 值的原文。只收數字字面量（`macroValue` 的說明）
+  const macros = new Map<string, string>()
+  const collectMacros = (n: SemanticNode): void => {
+    if (n.componentId === 'cpp:define') macros.set(String(n.properties?.name ?? ''), String(n.properties?.value ?? '').trim())
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(collectMacros)
+  }
+  collectMacros(tree)
+  const macroValue = (name: string): SemanticNode | undefined => {
+    const v = macros.get(name)
+    if (v === undefined || !/^-?(0[xXbB])?[0-9a-fA-F']+([uUlL]{0,3})$/.test(v)) return undefined
+    return { id: `macro:${name}`, componentId: 'cpp:literal_number', properties: { value: v }, slots: {} } as SemanticNode
+  }
+
   /** 編譯期的非負整數字面——哪一顆是由元件自己註冊（`constInt`）。 */
   const constInt = (c: SemanticNode | undefined): number | null => {
     if (!c) return null
+    // 陣列長度寫成巨集名（`int a[N];`）：沒有宣告、而且是物件巨集 → 照值算
+    if (c.componentId === 'cpp:var_ref' && !declOf.get(c.id)) {
+      const m = macroValue(String(c.properties?.name ?? ''))
+      if (m) return constInt(m)
+    }
     const fn = FORMALIZE.constInt.get(c.componentId)
     return fn ? fn(c) : null
   }
@@ -241,6 +259,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     copy: (json, tag) => relabel(json, tag),
     declVar, declInit, declCtor, libraryObject, constInt,
     declOf: (key) => declOf.get(key),
+    macroValue,
     unescapeC,
     binOp: (op) => BIN[op],
     scalar: (name) => SCALAR[name],
