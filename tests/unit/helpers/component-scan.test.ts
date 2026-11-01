@@ -72,6 +72,17 @@ describe('splitCodeAndComments', () => {
     expect(comments).toContain('註解')
   })
 
+  // 🔴 第 215c 刀：215 讓正規式回到程式碼之後，`comment-projection-snapshot` 在 CI 紅了——分隔符號 `/` 緊接跳脫的 `\/`
+  //    拼出假的 `/\/`。換掉分隔符號、內容照留；判準照抄那支護欄
+  it('🔴 regexDelimiter：路徑正規式不再拼出假的 //，真的在剝 // 的照樣抓得到', () => {
+    const lineComment = /['"`/]\\?\/\\?\/|\/\\\//
+    const path = splitCodeAndComments(`const id = p.replace(/^\\/lessons\\//, '').replace(/\\/lesson\\.json$/, '')\n`, { regexDelimiter: '«' }).code
+    expect(path).toContain('lesson')
+    expect(lineComment.test(path)).toBe(false)
+    const strip = splitCodeAndComments(`const t = s.replace(/\\/\\/.*$/, '')\n`, { regexDelimiter: '«' }).code
+    expect(lineComment.test(strip)).toBe(true)
+  })
+
   it('★ 除號不是正規式：a / b / c 之後的註解照樣是註解', () => {
     const { code, comments } = splitCodeAndComments(`const q = a / b / c // 'cpp:y'\nconst w = (n) / 2 // 另一個\n`)
     expect(code).toContain('a / b / c')
