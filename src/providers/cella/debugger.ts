@@ -74,6 +74,7 @@ const exportsOf = (b: CellaBranch): string[] =>
 
 /** 編一個分支的除錯模組（約 20 秒）。 */
 export async function compileCellaDebugger(read: CellaRead, b: CellaBranch): Promise<Uint8Array> {
-  const cella = await loadCellaPackages(read)
+  // 只載這個分支要的套件（spec 197c：C 的除錯不必載 Python）
+  const cella = await loadCellaPackages(read, [b])
   return cella.compile_wasm_library(debuggerSource(b), exportsOf(b).join(','))
 }

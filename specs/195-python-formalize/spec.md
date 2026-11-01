@@ -12,7 +12,9 @@
 - **FR-002** 展開器 `providers/cella/formalize/python.ts`：`Expander` 的移植（模板指令＋18 種具名轉換）；字串照 Python 的跳脫規則還原、浮點數照 Python 的 `repr`。
 - **FR-003** 不猜（P6）：模板查不到、運算子查不到、`$unknown`、`$only` 出現在別的位置 → unknown，說出節點與元件；不送出不合法的 JSON。
   與參考實作的差別：參數預設值只認字面量與名字（參考實作把原始碼文字重新剖析）。
-- **FR-004** 判決器多一個 `python` 分支（根節點 `program` → `python.verdict`）。⚠️ Python 編進同一個判決模組，第一次載入變久；之後再改成「用到才編」。
+- **FR-004** 判決器多一個 `python` 分支（根節點 `program` → `python.verdict`）。
+  ⚠️ 第一版把 Python 編進同一個判決模組：12 秒／4.7 MB → 22.7 秒／15.9 MB，瀏覽器暖機超過 e2e 的三分鐘（6 支 Cella e2e 紅）
+  ——spec 197c 改成兩個家族各一個模組：暖機只編 C 家族，Python 第一次遇到 Python 程式才編；套件也用到才載。
 
 ## 驗收（195a）
 

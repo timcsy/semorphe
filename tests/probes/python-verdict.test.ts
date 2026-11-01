@@ -53,7 +53,7 @@ beforeAll(async () => {
     const r = tree ? formalizePython(tree) : { program: null, unknown: [{ nodeId: '-', construct: '-', reason: 'lift 失敗' }] }
     rows.push({ s, program: r.program, unknown: r.unknown })
   }
-  checker = await createCellaChecker(read)
+  checker = await createCellaChecker(read, ['python'])
 }, 900_000)
 
 describe('Python 課文的解答交給 Cella 判決', () => {

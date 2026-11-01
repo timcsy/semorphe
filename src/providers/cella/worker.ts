@@ -12,7 +12,7 @@
  * ← { id, kind: 'error', reason }
  * ```
  */
-import { compileCellaChecker, checkerFromBytes, type CellaChecker, type CellaTypes, type CellaVerdict } from './verdict'
+import { compileCellaChecker, checkerFromBytes, branchOf, familyOf, type CellaChecker, type CellaFamily, type CellaTypes, type CellaVerdict } from './verdict'
 import { fetchCellaAsset } from './assets'
 import { checkerKey, loadCompiled, saveCompiled, moduleKey } from './cache'
 import { compileCellaDebugger, debuggerSource } from './debugger'
@@ -55,29 +55,38 @@ export type WorkerReply =
 const post = (r: WorkerReply): void => (self as unknown as { postMessage(m: WorkerReply): void }).postMessage(r)
 
 /** 先找快取（第二次打開：不下載套件、不編譯）；沒有或載不起來才編。 */
-async function build(): Promise<{ checker: CellaChecker; cached: boolean }> {
-  const key = await checkerKey().catch(() => null)
+async function build(family: CellaFamily): Promise<{ checker: CellaChecker; cached: boolean }> {
+  const key = await checkerKey(family).catch(() => null)
   const hit = key ? await loadCompiled(key) : null
   if (hit) {
     try { return { checker: await checkerFromBytes(hit), cached: true } } catch { /* 壞掉的快取 → 重編 */ }
   }
-  const bytes = await compileCellaChecker(fetchCellaAsset)
+  const bytes = await compileCellaChecker(fetchCellaAsset, family)
   if (key) void saveCompiled(key, bytes)
   return { checker: await checkerFromBytes(bytes), cached: false }
 }
 
-let checker: Promise<CellaChecker> | null = null
-function load(): Promise<CellaChecker> {
-  if (!checker) {
-    post({ kind: 'status', status: 'loading' })
-    const built = build()
-    checker = built.then((b) => b.checker)
+/**
+ * 每一族一個判決器，用到才建（spec 197c）。
+ * ⚠️ 狀態（`status`）只報 C 家族——它是暖機時建的那一個；Python 第一次遇到 Python 程式才編（那一次判決慢一點，之後走快取）。
+ */
+const checkers = new Map<CellaFamily, Promise<CellaChecker>>()
+function load(family: CellaFamily = 'cfamily'): Promise<CellaChecker> {
+  let c = checkers.get(family)
+  if (!c) {
+    if (family === 'cfamily') post({ kind: 'status', status: 'loading' })
+    const built = build(family)
+    c = built.then((b) => b.checker)
+    checkers.set(family, c)
     built.then(
-      (b) => post({ kind: 'status', status: 'ready', cached: b.cached }),
-      (e: unknown) => post({ kind: 'status', status: 'unavailable', reason: e instanceof Error ? e.message : String(e) }),
+      (b) => { if (family === 'cfamily') post({ kind: 'status', status: 'ready', cached: b.cached }) },
+      (e: unknown) => {
+        checkers.delete(family)
+        if (family === 'cfamily') post({ kind: 'status', status: 'unavailable', reason: e instanceof Error ? e.message : String(e) })
+      },
     )
   }
-  return checker
+  return c
 }
 
 let pending: Extract<WorkerRequest, { kind: 'check' }> | null = null
@@ -88,7 +97,7 @@ async function drain(): Promise<void> {
     const req = pending
     pending = null
     try {
-      const c = await load()
+      const c = await load(familyOf(branchOf(req.program as never)))
       if (pending) { post({ id: req.id, kind: 'skipped' }); continue }   // 等載入時來了更新的
       post({ id: req.id, kind: 'result', verdict: c.verdict(req.program, req.input, req.fuel), types: c.types(req.program, []) })
     } catch (e) {
