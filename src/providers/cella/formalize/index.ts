@@ -142,6 +142,12 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (s.endsWith('[]')) { const inner = type(s.slice(0, -2), at); return inner && k('tPtr', { t: inner }) }
     const sc = SCALAR[s]
     if (sc) return k(sc)
+    // 固定寬度與平台相依的整數型別名（int64_t、size_t…）：照名字送 tName——對到哪個整數型別依平台的 ABI 決定（glibc 的 int64_t 是 long、
+    // avr-libc 的 int32_t 是 long），由 Cella 依目標解（cella 2026-11-01；第 208 刀，學生的程式 6 支）
+    {
+      const fixed = /^(?:std::)?((?:u?int(?:_least|_fast)?(?:8|16|32|64)_t)|u?intmax_t|u?intptr_t|size_t|ssize_t|ptrdiff_t)$/.exec(s)
+      if (fixed) return k('tName', { name: fixed[1] })
+    }
     const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
     if (vec) { const inner = type(vec[1], at); return inner && k('tVector', { t: inner }) }
     // C++ 的 `auto`（cella 0.1.202610312349 起有 `tAuto`）

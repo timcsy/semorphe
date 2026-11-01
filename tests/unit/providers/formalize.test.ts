@@ -91,9 +91,9 @@ describe('formalize：最小子集', () => {
   })
 
   it('🔴 翻不了的不送：說出節點與元件，不擲例外', () => {
-    // ⚠️ 例子要挑「還沒對應」的構造——第二批補了 push_back、spec 194 補了 map 之後，原本的例子都變成翻得出來
-    //    （Cella 只有 std::map；unordered_map 照實標 unknown）
-    const t = lift('#include <unordered_map>\nusing namespace std;\nint main() { unordered_map<int, int> m; m[1] = 2; }')
+    // ⚠️ 例子要挑「永遠翻不了」的構造——「還沒對應」的會一直被補上而過期（push_back、map、unordered_map 都曾是這裡的例子，
+    //    第 208 刀 unordered_map 也翻得出了）。原樣保留的程式碼（asm）是 P6 的降級：formalize 不猜它的結構
+    const t = lift('int main() { asm volatile("nop"); return 0; }')
     const r = formalize(t)
     expect(r.program).toBeNull()
     expect(r.unknown.length).toBeGreaterThan(0)
