@@ -39,6 +39,12 @@ const ROOT = path.resolve(__dirname, '../..')
 const DIR = process.env.STUDYCPP_DIR ?? ''
 const STEPS = Number(process.env.PROBE_STEPS ?? 10_000_000)
 const FORMALIZE_ONLY = process.env.CELLA_GAP_FORMALIZE_ONLY === '1'
+/**
+ * 整支探針的時間上限（預設一小時）。⚠️ 2026-11-02 升到 Cella 0.1.202611011759 之後第一次在一小時上限逾時、什麼都沒量到
+ * ——翻得出、真的跑到底的程式變多了。所以上限可調，而且每跑完一支就把那一支寫進 `CELLA_GAP_PROGRESS`（有設才寫）：逾時也留得下讀數。
+ */
+const TIMEOUT = Number(process.env.PROBE_TIMEOUT_MS ?? 3_600_000)
+const PROGRESS = process.env.CELLA_GAP_PROGRESS
 
 function files(): string[] {
   if (!DIR || !fs.existsSync(DIR)) return []
@@ -64,7 +70,7 @@ type Cella =
   | { k: 'untranslated'; constructs: string[] }
   | { k: 'accept'; out: string }
   | { k: 'reject' | 'unknown' | 'invalid'; kinds: string[] }
-interface Row { file: string; js: Js; cella: Cella }
+interface Row { file: string; js: Js; cella: Cella; jsMs?: number; cellaMs?: number }
 
 const FS = files()
 let checker: CellaChecker
@@ -91,6 +97,7 @@ beforeAll(async () => {
       continue
     }
     let js: Js
+    const t0 = Date.now()
     try {
       const out: string[] = []
       const it = new SemanticInterpreter({ maxSteps: STEPS })
@@ -101,7 +108,9 @@ beforeAll(async () => {
       const m = String(e)
       js = { ok: false, why: m.includes('MAX_STEPS') ? '步數用盡' : m.slice(0, 80) }
     }
+    const jsMs = Date.now() - t0
     let cella: Cella
+    const t1 = Date.now()
     const fz = formalize(tree, { lang: 'cpp' })
     if (!fz.program) {
       cella = { k: 'untranslated', constructs: [...new Set((fz.unknown as { construct: string }[]).map((u) => u.construct))] }
@@ -113,9 +122,11 @@ beforeAll(async () => {
         cella = { k: 'invalid', kinds: [`例外：${String(e).slice(0, 60)}`] }
       }
     }
-    rows.push({ file: path.relative(DIR, f), js, cella })
+    const row: Row = { file: path.relative(DIR, f), js, cella, jsMs, cellaMs: Date.now() - t1 }
+    rows.push(row)
+    if (PROGRESS) fs.appendFileSync(PROGRESS, JSON.stringify({ file: row.file, js: js.ok ? 'ok' : js.why, cella: cella.k, kinds: 'kinds' in cella ? cella.kinds : undefined, jsMs, cellaMs: row.cellaMs }) + '\n')
   }
-}, 3_600_000)
+}, TIMEOUT)
 
 describe.skipIf(FS.length === 0)('探針：JS 直譯器跑得動、Cella 給不出結果的（階段 6.0）', () => {
   it('★ 入口條件：兩百支以上載得進來', () => {
@@ -151,6 +162,8 @@ describe.skipIf(FS.length === 0)('探針：JS 直譯器跑得動、Cella 給不�
       `輸出不同 ${differ.length}：`,
       ...differ.slice(0, 15).map((r) => `  ≠ ${r.file}  JS ${JSON.stringify((r.js as { out: string }).out.slice(0, 40))}  Cella ${JSON.stringify((r.cella as { out: string }).out.slice(0, 40))}`),
       `JS 自己跑不完的原因：${count(rows.filter((r) => !r.js.ok).map((r) => (r.js as { why: string }).why))}`,
+      `Cella 最慢的十支（毫秒）：`,
+      ...[...rows].sort((a, b) => (b.cellaMs ?? 0) - (a.cellaMs ?? 0)).slice(0, 10).map((r) => `  ${String(r.cellaMs).padStart(7)}  ${r.cella.k}${'kinds' in r.cella ? `（${r.cella.kinds.join('、')}）` : ''}  ${r.file}`),
     ].join('\n'))
     if (process.env.CELLA_GAP_OUT) fs.writeFileSync(process.env.CELLA_GAP_OUT, JSON.stringify(rows.map((r) => ({ file: r.file, bucket: bucket(r), js: r.js.ok ? 'ok' : r.js.why, cella: r.cella.k, detail: r.cella.k === 'untranslated' ? r.cella.constructs : r.cella.k === 'accept' ? undefined : r.cella.kinds })), null, 1))
     expect(by.length).toBe(rows.length)
