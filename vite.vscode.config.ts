@@ -69,22 +69,14 @@ const EXTENSION_ENTRY = 'src/vscode/extension.ts'
  * ```
  * formats   iife                 webview 用 classic worker 的 importScripts 載它（blob 啟動，見 src/vscode/webview/cella.ts）
  *                                ——ES module 的 worker 跨來源載入要 CORS，而 webview 的資源網址不保證給
- * assets    assets-vscode.ts     lib 模式會把 `?url` 的資產內嵌成 base64（45 MB 的套件全進 bundle）；
- *                                改成執行期從 `dist/cella/` 抓
+ * assets    SEMORPHE_CELLA_RUNTIME_ASSETS   lib 模式會把 `?url` 的資產內嵌成 base64（45 MB 的套件全進 bundle）；
+ *                                改成執行期從 `dist/cella/` 抓（`providers/cella/assets.ts` 的死分支）
  * ```
  */
 const CELLA_WORKER_ENTRY = 'src/providers/cella/worker.ts'
-const cellaAssetsForVscode: Plugin = {
-  name: 'semorphe-cella-assets-vscode',
+const cellaWasmDefaultPath: Plugin = {
+  name: 'semorphe-cella-no-default-wasm',
   enforce: 'pre',
-  resolveId(source: string, importer?: string) {
-    if (source === './assets' && importer?.replace(/\\/g, '/').endsWith('src/providers/cella/worker.ts')) {
-      return this.resolve('./assets-vscode', importer, { skipSelf: true })
-    }
-    return null
-  },
-  // `cella-lang/cella.js` 的預設 wasm 路徑 `new URL('cella_bg.wasm', import.meta.url)` 在 lib 模式會被內嵌成 6 MB 的 base64，
-  // 而我們一律自己傳 bytes（`verdict.ts` 的 `cella.default({ module_or_path: … })`）——那一條路永遠不走，拿掉
   transform(code: string, id: string) {
     if (!id.replace(/\\/g, '/').endsWith('node_modules/cella-lang/cella.js')) return null
     const out = code.replace(/new URL\(\s*['"]cella_bg\.wasm['"]\s*,\s*import\.meta\.url\s*\)/, 'undefined')
@@ -97,7 +89,9 @@ export default defineConfig(
   target === 'cella-worker'
     ? {
         publicDir: false,
-        plugins: [cellaAssetsForVscode],
+        plugins: [cellaWasmDefaultPath],
+        // `providers/cella/assets.ts` 走執行期的根、glob 搖掉（見那個檔）
+        define: { 'import.meta.env.SEMORPHE_CELLA_RUNTIME_ASSETS': JSON.stringify('1') },
         build: {
           outDir: OUT,
           emptyOutDir: false,

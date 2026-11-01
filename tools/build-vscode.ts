@@ -28,7 +28,7 @@ const run = (cmd: string, args: string[], env: NodeJS.ProcessEnv = {}, cwd?: str
 }
 
 /**
- * **Cella 的套件檔照原樣進 `dist/cella/<套件>/`**（spec 198）——worker 執行期才抓（`assets-vscode.ts`），用到的才抓。
+ * **Cella 的套件檔照原樣進 `dist/cella/<套件>/`**（spec 198）——worker 執行期才抓（`providers/cella/assets.ts` 的執行期分支），用到的才抓。
  * 範圍與網頁版的 `providers/cella/assets.ts` 那兩個 glob 相同：`cella-lang` 的 wasm、stdlib、modules，與各套件的 `.cell`／`index.json`。
  */
 function copyCellaPackages(out: string): void {
