@@ -278,7 +278,17 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     return declVar(n, t, global)
   }
 
+  // 翻一句敘述時，運算式裡要提到它前面的敘述（lambda 的 sLambda）——每一句各收各的（巢狀的本體由內層的 stmt 收）
+  let hoisted: CellaJson[] | null = null
   function stmt(n: SemanticNode): CellaJson[] {
+    const outer = hoisted
+    hoisted = []
+    try {
+      const out = stmtOnly(n)
+      return [...hoisted, ...out]
+    } finally { hoisted = outer }
+  }
+  function stmtOnly(n: SemanticNode): CellaJson[] {
     const fn = FORMALIZE.stmt.get(n.componentId)
     if (fn) return fn(n, ctx)
     if (FORMALIZE.decl.has(n.componentId)) return decl(n, false)
@@ -301,6 +311,10 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     declVar, declInit, declCtor, libraryObject, constInt,
     declOf: (key) => declOf.get(key),
     macro,
+    hoist: (s) => {
+      if (hoisted) hoisted.push(s)
+      else miss({ id: String(s.n ?? '-'), componentId: 'hoist', properties: {}, slots: {} } as unknown as SemanticNode, '全域位置的 lambda 還沒有對應（沒有前面的敘述可以放它的定義）')
+    },
     identMacro: (name) => {
       const v = macros.get(name)
       return v !== undefined && /^[A-Za-z_]\w*$/.test(v) ? v : name

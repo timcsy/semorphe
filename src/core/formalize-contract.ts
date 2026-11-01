@@ -75,6 +75,11 @@ export interface FormalizeContext {
    * 用在成員名、方法名、函式名：`p.F` → `p.first`、`v.pb(x)` → `v.push_back(x)`。
    */
   identMacro(name: string): string
+  /**
+   * 把一句敘述放到「目前正在翻的那一句」前面（第 206 刀：lambda 的 `sLambda` 要在用到它的敘述之前——cella 2026-11-01 給的形狀）。
+   * 全域位置沒有「前面的敘述」可放，引擎照實標 unknown。
+   */
+  hoist(stmt: CellaJson): void
   /** 這段文字是不是一個認得的型別（不記 unknown）——型別巨集 `#define ll long long` 用（spec 199） */
   isTypeText(text: string): boolean
   /** 整支程式裡有沒有一顆元件符合這個條件（spec 199：關掉 stdio 同步只在混用 printf／scanf 時才改變輸出）——條件問性狀，不列身分 */
