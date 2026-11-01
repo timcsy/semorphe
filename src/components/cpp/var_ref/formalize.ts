@@ -13,10 +13,12 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     //    引入了定義它的標頭才有值；沒引入、或根本不存在（打錯字）由 Cella 判 reject／unknown，判決指回這個節點——不再在我們這側標 unknown。
     const name = String(n.properties?.name ?? '')
     // 物件巨集（spec 197）：前端展開——值代進使用處，標籤用使用處的 id（判決指回這一格）
-    const m = f.macroValue(name)
-    if (m) return f.expr({ ...m, id: n.id })
+    const m = f.macro(name)
+    if (m) return m.expr(n.id)
     return f.k('eConst', { n: n.id, name })
   })
+  // 陣列長度寫成巨集名（`int a[N];`）：沒有宣告、而且是物件巨集 → 照值算（spec 197）
+  r.constInt('cpp:var_ref', (n, f) => (f.declOf(n.id) ? null : f.macro(String(n.properties?.name ?? ''))?.int ?? null))
   // 作用域：一個名字的參照——指到宣告它的那個節點
   r.scope('cpp:var_ref', (n, w) => w.resolve(n.id, String(n.properties?.name ?? '')))
 }

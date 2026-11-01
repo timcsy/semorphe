@@ -32,6 +32,9 @@ for (const [key, mod] of Object.entries(MODULES)) {
   if (t !== undefined) TEMPLATES.set(`python:${name}`, t)
 }
 
+/** 根元件：模板是 `program` 的那一顆——由模板決定，不在這裡寫死身分（膠囊就近性）。 */
+const ROOT = [...TEMPLATES].find(([, t]) => isObj(t) && t.k === 'program')?.[0]
+
 /** 敘述角色的元件（其餘的放在敘述位置時包一層 `sExpr <id>/stmt`）——照參考實作的 `STATEMENT_ROLE`。 */
 const STATEMENT_ROLE = new Set(['assert', 'break', 'class_def', 'comment', 'container_append', 'container_assign', 'container_erase',
   'container_erase_value', 'container_insert', 'container_sort_self', 'continue', 'exception_case', 'func_def', 'global', 'if', 'import',
@@ -64,7 +67,7 @@ export function formalizePython(tree: SemanticNode): FormalizeResult {
 /** 給測試用：一顆元件在（或不在）敘述位置上展開成什麼（同參考實作的 `Expander.node`）。 */
 export function expandPython(x: SemanticNode, statement: boolean): FormalizeResult {
   return statement
-    ? run({ id: '__root__', componentId: 'python:program', properties: {}, slots: { body: [x] } } as SemanticNode, false)
+    ? run({ id: '__root__', componentId: ROOT ?? '', properties: {}, slots: { body: [x] } } as SemanticNode, false)
     : run(x, true)
 }
 
@@ -289,7 +292,7 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
 
   let program: CellaJson
   try {
-    program = bare || tree.componentId === 'python:program' ? node(tree) : { k: 'program', n: tree.id, body: stmts([tree]) }
+    program = bare || tree.componentId === ROOT ? node(tree) : { k: 'program', n: tree.id, body: stmts([tree]) }
   } catch (e) {
     if (!(e instanceof Miss)) throw e
     unknown.push({ nodeId: e.nodeId, construct: e.construct, reason: e.reason })

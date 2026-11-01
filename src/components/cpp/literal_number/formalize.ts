@@ -41,4 +41,6 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   })
   // 陣列長度要的「編譯期的非負整數字面」——引擎問這一條，不問身分
   r.constInt('cpp:literal_number', (n) => intValue(String(n.properties?.value ?? '')))
+  // 巨集展開（spec 197）：這種文字是數字字面量（十進位／十六進位／八進位／二進位、分隔符、負號、整數後綴）——值由上面的 expr 翻
+  r.literal('cpp:literal_number', (text) => /^-?(0[xXbB][0-9a-fA-F']+|[0-9][0-9']*)([uU]?[lL]{0,2}|[lL]{1,2}[uU])$/.test(text.trim()))
 }
