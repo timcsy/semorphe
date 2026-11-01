@@ -96,7 +96,8 @@ import {} from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
 // 🔴 **組裝點登記語意的提供者**（spec 179）——核心與介面只認能力介面，不認得是誰在跑。
 //    兩個宿主共用的只有 JS 直譯器；Cella 由【宿主的入口】登記（網頁版 `src/main.ts`，排在最前面）
-//    ——擴充的 webview 還沒有它（`new Worker` 進了 webview 的 lib 打包，建置直接失敗、而 vsix 會多 45 MB 的套件檔）。
+//    ——擴充的 webview 也由它自己的入口登記（spec 198：blob ＋ importScripts 起同一支 worker，`src/vscode/webview/cella.ts`）；
+//    不在這裡登記，是因為兩個宿主起 worker 的方式不同（網頁版 `new Worker(new URL(…))`、webview 不能跨源建 worker）。
 //    階段 6 拿掉 JS 直譯器那一行與整個 `providers/js-interpreter/`。
 import { registerProvider, provide, type Provider, type Readiness } from '../core/capabilities'
 import { jsInterpreterProvider } from '../providers/js-interpreter'

@@ -12,7 +12,7 @@ import { registerProvider } from './core/capabilities'
 import { createCellaProvider } from './providers/cella/provider'
 
 // 🔴 **Cella 只在網頁版登記**（spec 182／183）——排在 JS 直譯器前面（`first`）。
-//    ⚠️ worker 是第一次需要時才建（`warmUp`）——首屏不載 Cella；擴充的 webview 還沒有它。
+//    ⚠️ worker 是第一次需要時才建（`warmUp`）——首屏不載 Cella。擴充的 webview 由它自己的入口登記同一支 worker（spec 198，`src/vscode/webview/cella.ts`）。
 registerProvider(createCellaProvider(() => new Worker(new URL('./providers/cella/worker.ts', import.meta.url), { type: 'module' })), { first: true })
 
 // 🔴 **注入網頁版的宿主宣告。**
