@@ -349,3 +349,33 @@ describe('第 214 刀：函式形巨集（`#define rep(i,n) for(…)`）', () =>
     expect(JSON.stringify(r.program)).toContain('"sFor"')
   })
 })
+
+describe('第 217 刀：可變長度陣列送 sDeclV（Cella 0.1.202611012223）', () => {
+  const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
+  const find = (j: unknown, k: string): any[] => {
+    const out: any[] = []
+    const walk = (v: unknown): void => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') { if ((v as any).k === k) out.push(v); Object.values(v).forEach(walk) } }
+    walk(j)
+    return out
+  }
+  const fz = (body: string) => formalize(lift(H + body), { lang: 'cpp' })
+
+  it('★ 區域的 int d[n]：sDeclV，elem 是元素型別、len 是長度運算式', () => {
+    const r = fz('int main() { int n = 3; int d[n]; d[0] = 1; }')
+    expect(r.unknown).toEqual([])
+    const v = find(r.program, 'sDeclV')
+    expect(v).toHaveLength(1)
+    expect(v[0]).toMatchObject({ name: 'd', elem: { k: 'tInt' }, len: { k: 'eVar' } })
+  })
+
+  it('★ 二維：外層可變、內層固定 → elem 是內層的 tArr', () => {
+    const r = fz('int main() { int n = 3; int g[n][5]; g[0][0] = 1; }')
+    expect(r.unknown).toEqual([])
+    expect(find(r.program, 'sDeclV')[0].elem).toMatchObject({ k: 'tArr', n: 5 })
+  })
+
+  it('🔴 內層也可變、或全域：照實標翻不出（Cella 的 VLA 只有外層可變；全域長度一定是常數）', () => {
+    expect(fz('int main() { int n = 3, m = 2; int g[n][m]; }').unknown.map((u) => u.construct)).toContain('cpp:array_2d_declare')
+    expect(fz('int n = 3;\nint d[n];\nint main() {}').unknown.map((u) => u.construct)).toContain('cpp:array_declare')
+  })
+})
