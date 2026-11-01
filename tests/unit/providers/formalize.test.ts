@@ -324,6 +324,13 @@ describe('第 213 刀：學生語料剩下的形狀（Cella 0.1.202611011759）'
     expect(find(r.program, 'mbField').map((m) => m.name)).toEqual(['x', 'y'])
   })
 
+  it('🔴 min({…})／max({…}) 只送一個引數：空著的第二槽不得變成 eHole（Cella 因此判不出串列的型別）', () => {
+    const r = fz('int main() { cout << min({3, 1, 2}) << max({4, 5}) << min(1, 2); }')
+    expect(r.unknown).toEqual([])
+    const calls = find(r.program, 'eCall').filter((c) => c.f === 'min' || c.f === 'max')
+    expect(calls.map((c) => c.args.map((a: any) => a.k))).toEqual([['eBraced'], ['eBraced'], ['eNum', 'eNum']])
+  })
+
   it('★ stack 的 top、max_element／fill 照 eMCall／eCall 送（後兩者 Cella 還沒有，由它判 unknown）', () => {
     const r = fz('int main() { stack<int> s; s.push(1); int a[3]; fill(a, a + 3, 0); cout << s.top() << *max_element(a, a + 3); }')
     expect(r.unknown).toEqual([])
