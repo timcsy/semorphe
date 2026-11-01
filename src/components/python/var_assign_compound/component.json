@@ -18,6 +18,9 @@
     "writesTo": "target"
   },
   "owner": "(python)",
+  "annotations": {
+    "debug_step": true
+  },
   "paths": {
     "views": {
       "blocks": {

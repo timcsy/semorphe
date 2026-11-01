@@ -14,6 +14,7 @@ import { jsInterpreterProvider } from '../../src/providers/js-interpreter'
 import { createCellaProvider } from '../../src/providers/cella/provider'
 import { SessionStop, type ExecutionSession, type Provider } from '../../src/core/capabilities'
 import type { SemanticNode } from '../../src/core/types'
+import { liftPython } from '../helpers/python-lift'
 
 let parser: Parser
 beforeAll(async () => {
@@ -69,9 +70,12 @@ const find = (t: SemanticNode, pred: (n: SemanticNode) => boolean): SemanticNode
   return undefined
 }
 
+let cellaShared: Promise<Provider> | null = null
+
 const PROVIDERS: { id: string; make: () => Provider | Promise<Provider> }[] = [
   { id: 'js-interpreter', make: () => jsInterpreterProvider },
-  { id: 'cella', make: cellaInProcess },
+  // ⚠️ 同一個行程裡只能有一個模擬的 worker——C++ 與 Python 兩組共用同一個提供者
+  { id: 'cella', make: () => (cellaShared ??= cellaInProcess()) },
 ]
 
 function open(p: Provider, tree: SemanticNode): { s: ExecutionSession; out: () => string } {
@@ -199,6 +203,76 @@ for (const entry of PROVIDERS) {
       s.terminate()
       const o = await s.continue()
       expect(o.kind === 'ended' || (o.kind === 'failed' && o.error.kind === 'aborted'), JSON.stringify(o)).toBe(true)
+    })
+  })
+}
+
+// ─── Python（spec 195b）：同一份契約，Python 的程式 ───────────────────────────
+const PY_LOOP = 's = 0\nfor i in range(4):\n    s = s + i\nprint(s)\n'
+const PY_READ = 'n = int(input())\nprint(n * 2)\n'
+const PY_ERR = 'a = 1\nb = 0\nprint(a // b)\n'
+const pyFormal = (tree: SemanticNode) => ({ tree, targetId: 'python', styleId: 'python', skeletonId: 'none' })
+async function liftPy(code: string): Promise<SemanticNode> { return (await liftPython(code))! }
+
+for (const entry of PROVIDERS) {
+  describe(`執行工作階段的契約（Python）：${entry.id}`, () => {
+    let p: Provider
+    const openPy = (tree: SemanticNode): { s: ExecutionSession; out: () => string } => {
+      const s = p.createSession!({ maxSteps: 1_000_000, formal: pyFormal(tree) as never }, tree)
+      if ('declined' in s) throw new Error(`${p.id} 不接：${s.declined}`)
+      let text = ''
+      s.onOutput((t) => { text += t })
+      return { s, out: () => text }
+    }
+    beforeAll(async () => {
+      p = await entry.make()
+      // Cella：第一次 createSession 會開始編 Python 的除錯模組，編好之前它不接
+      const tree = await liftPy(PY_LOOP)
+      await until(() => !('declined' in p.createSession!({ maxSteps: 1, formal: pyFormal(tree) as never }, tree)), 300_000)
+    }, 600_000)
+
+    it('★ 沒有中斷點：一路跑完，輸出正確', async () => {
+      const tree = await liftPy(PY_LOOP)
+      const { s, out } = openPy(tree)
+      expect(await s.launch(tree, { stopOnEntry: false })).toEqual({ kind: 'ended' })
+      expect(out()).toBe('6\n')
+    })
+
+    it('★ 中斷點：停在 print、看得到 s；繼續跑完', async () => {
+      const tree = await liftPy(PY_LOOP)
+      const target = find(tree, (n) => n.componentId === 'python:print')!
+      const { s, out } = openPy(tree)
+      s.setBreakpoints([target.id])
+      expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'breakpoint', nodeId: target.id } })
+      expect(s.variables().find((v) => v.name === 's')?.value).toBe('6')
+      expect(await s.continue()).toEqual({ kind: 'ended' })
+      expect(out()).toBe('6\n')
+    })
+
+    it('★ 讀輸入：停在 awaiting-input，給了一行之後繼續', async () => {
+      const tree = await liftPy(PY_READ)
+      const { s, out } = openPy(tree)
+      expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
+      expect(await s.supplyInput('21')).toEqual({ kind: 'ended' })
+      expect(out()).toBe('42\n')
+    })
+
+    it('★ 執行期錯誤（ZeroDivisionError）：failed，帶 SessionStop', async () => {
+      const tree = await liftPy(PY_ERR)
+      const { s } = openPy(tree)
+      const o = await s.launch(tree, { stopOnEntry: false })
+      expect(o.kind, JSON.stringify(o)).toBe('failed')
+      if (o.kind === 'failed') expect(o.error).toBeInstanceOf(SessionStop)
+    })
+
+    it('🔴 覆蓋：迴圈身體的指定敘述進入 4 次；鍵是語義樹的 id', async () => {
+      const tree = await liftPy(PY_LOOP)
+      const assign = find(tree, (n) => n.componentId === 'python:var_assign' && JSON.stringify(n).includes('"i"'))!
+      const { s } = openPy(tree)
+      expect(await s.launch(tree, { stopOnEntry: false })).toEqual({ kind: 'ended' })
+      const cov = s.coverage()
+      expect(cov, '給不出覆蓋').not.toBeNull()
+      expect(cov!.get(assign.id)).toBe(4)
     })
   })
 }

@@ -21,6 +21,15 @@
   剩 1 份是對照表的缺口（`math_max` 用 `$slots`，`key=` 進不去）——已回報 cella，探針明列為已知缺口。
 - 順帶修的課文缺陷：`python-beginner` 08、12 的「排回去」題，`check.stdout` 少了解答後半段的輸出——**學生排對也過不了**（產品逐行比；e2e 用「包含」所以沒抓到）。
 
-## 195b：提供者的 Python 分支（下一刀）
+## 195b：提供者的 Python 分支
 
-除錯模組（`python.session` 的匯出，含 `stopVisits`）、`formalOf` 認 Python 目標、型別查詢、會話契約跑 Python。
+- **FR-005** `formalizeFor`：Python 的樹走 `formalizePython`，C 家族照舊——判決與除錯工作階段同一支。`supports` 多 `python`；工作階段放行 `python:`。
+- **FR-006** Python 的除錯模組：`python.session` 的匯出（變數 id 是字串、沒有 `divergences`、有 `stopVisits`）。
+- **FR-007** 讀不讀輸入：`input()`（`python.ast` 的 eCall）。
+- **FR-008** 修 JS 直譯器的缺陷（會話契約跑 Python 時抓到）：Python 只有 14 顆元件標了 `debug_step`，`print`、`+=`、`append`、`raise`、`pass`…沒有
+  ——**在 `print(...)` 那一行設中斷點不會停**（Cella 還沒載好、由 JS 直譯器跑的時候）。補齊敘述類的 16 顆，與 CPython 的追蹤器（每一句都停）、Cella 一致。
+
+## 驗收（195b）
+
+- 會話契約的 Python 那一組（跑完、中斷點與變數、讀輸入、執行期錯誤、覆蓋）：JS 直譯器與 Cella 都過（10／10）。
+- 判決模組的快取鍵多 `python` 的版本。
