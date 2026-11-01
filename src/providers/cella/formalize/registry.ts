@@ -22,6 +22,7 @@ export interface FormalizeTables {
   expr: Map<string, (n: SemanticNode, f: FormalizeContext) => CellaJson>
   stmt: Map<string, (n: SemanticNode, f: FormalizeContext) => CellaJson[]>
   item: Map<string, (n: SemanticNode, f: FormalizeContext) => CellaJson[]>
+  member: Map<string, (n: SemanticNode, f: FormalizeContext) => CellaJson>
   decl: Map<string, (n: SemanticNode, f: FormalizeContext, global: boolean) => CellaJson[]>
   init: Map<string, (n: SemanticNode, f: FormalizeContext) => CellaJson>
   constInt: Map<string, (n: SemanticNode, f: FormalizeContext) => number | null>
@@ -33,7 +34,7 @@ export interface FormalizeTables {
 
 function build(): FormalizeTables {
   const t: FormalizeTables = {
-    expr: new Map(), stmt: new Map(), item: new Map(), decl: new Map(),
+    expr: new Map(), stmt: new Map(), item: new Map(), member: new Map(), decl: new Map(),
     init: new Map(), constInt: new Map(), definesType: new Map(), scope: new Map(),
     definesMacro: new Map(), literal: new Map(),
   }
@@ -50,7 +51,7 @@ function build(): FormalizeTables {
       table.set(id, fn)
     }
     const r: FormalizeRegistrar = {
-      expr: put(t.expr, 'expr'), stmt: put(t.stmt, 'stmt'), item: put(t.item, 'item'), decl: put(t.decl, 'decl'),
+      expr: put(t.expr, 'expr'), stmt: put(t.stmt, 'stmt'), item: put(t.item, 'item'), member: put(t.member, 'member'), decl: put(t.decl, 'decl'),
       init: put(t.init, 'init'), constInt: put(t.constInt, 'constInt'), definesType: put(t.definesType, 'definesType'),
       scope: put(t.scope, 'scope'), definesMacro: put(t.definesMacro, 'definesMacro'), literal: put(t.literal, 'literal'),
     }

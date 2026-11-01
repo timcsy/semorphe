@@ -307,6 +307,8 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       ⟹ 6 的開工條件多一項：Cella 的 Python 深嵌入發布 ＋ 我們的 Python formalize 與提供者（原 7 的前半段提前）→ [history/317](history/317-使用者定的四題.md)
       🟡 開工條件到齊（2026-11-01 合併 193～197）；而前提少列了一項——**擴充沒有 Cella**（只有 JS 直譯器），照字面切換擴充就不能執行（P9）
       ⟹ 6 拆成 6a 擴充宿主跑 Cella → 6.0 量 unknown → 6b 判題改用 verdict → 6c 切換，見[設計 draft 五之十](draft/2026-10-31-重構的設計-能力介面與降級路徑.md)
+      🟢 6a、6b 完成（spec 198、200）；6.0 量到課文乾淨而學生的程式不是 → 多一步 6.1 補 formalize（spec 199～201）→ [history/322](history/322-切換之前先量學生會失去什麼.md)
+      🟢 **使用者定：6c 等 Cella 的四族都補完才切**（驗收：`cella-coverage-gap` 重量）→ [history/323](history/323-使用者定的四題之二.md)
 - [ ] **7 Python**——4～5 再走一遍（formalize、提供者）；⚠️ 它的前半段排在 6 的切換**之前**（見上一項）
       🟡 前半段（spec 195、196）：formalize（照 Cella 的對照表，**課文 48／48 翻得出、判決輸出全部一致**）＋ 提供者的 Python 分支（判決、除錯、覆蓋）→ [history/320](history/320-Python-接上-Cella.md)
 

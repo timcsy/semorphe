@@ -70,6 +70,20 @@ export interface FormalizeContext {
    * 值認得（某顆元件登記了「這種字面量的文字是我的」）才有：`expr(usageId)` 是展開在使用處的運算式，`int` 是編譯期整數（陣列長度用）。
    */
   macro(name: string): { expr(usageId: string): CellaJson; int: number | null } | undefined
+  /** 這段文字是不是一個認得的型別（不記 unknown）——型別巨集 `#define ll long long` 用（spec 199） */
+  isTypeText(text: string): boolean
+  /** 整支程式裡有沒有一顆元件符合這個條件（spec 199：關掉 stdio 同步只在混用 printf／scanf 時才改變輸出）——條件問性狀，不列身分 */
+  programUses(test: (componentId: string) => boolean): boolean
+  /** 當一句敘述翻：有敘述的翻法就用它，否則包成運算式敘述（`sExpr`）——`a, b;` 等於 `a; b;` 時用（spec 199） */
+  asStatement(n: SemanticNode): CellaJson[]
+  /** 照 id 找語義樹的節點（`declOf` 給的是宣告的 id；要看那個宣告的內容時用——spec 199：`const int N = 100; int a[N];`） */
+  nodeById(id: string): SemanticNode | undefined
+  /** 當一個類別成員翻（成員函式 → `mbMethod`）；沒有註冊的記 unknown、回 null（spec 201） */
+  member(n: SemanticNode): CellaJson | null
+  /** 這個宣告是不是某個 struct／class 的欄位——成員函式裡的裸名字指到它時是 `eSelf`（隱含的 this，spec 201） */
+  isMemberField(declId: string): boolean
+  /** 程式自己定義的函式名（名字當值用時是 `eFunc`——spec 201） */
+  isFunctionName(name: string): boolean
   /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
   unescapeC(s: string): string
   /** C 的二元運算子符號 → Cella 的運算子建構子。 */
@@ -101,6 +115,8 @@ export interface FormalizeRegistrar {
   stmt(id: string, fn: (n: SemanticNode, f: FormalizeContext) => CellaJson[]): void
   /** 頂層（翻譯單元的項）。 */
   item(id: string, fn: (n: SemanticNode, f: FormalizeContext) => CellaJson[]): void
+  /** 類別成員（struct／class 的 members 裡、不是欄位的那幾顆：成員函式、運算子多載——spec 201）。 */
+  member(id: string, fn: (n: SemanticNode, f: FormalizeContext) => CellaJson): void
   /** 宣告：敘述與頂層兩處都用它（除非另註冊了 stmt／item），也是別人的宣告子（`int a, b[3];`）。 */
   decl(id: string, fn: (n: SemanticNode, f: FormalizeContext, global: boolean) => CellaJson[]): void
   /** 大括號初值串列裡的一項（沒註冊的是 `iE` 包運算式）。 */

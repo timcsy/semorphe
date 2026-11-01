@@ -3,7 +3,7 @@
     "guard": "locality",
     "measuredAt": "2026-09-19",
     "rule": "只匹配完整的引號字串字面（'id' / \"id\" / `id`），與中立性護欄同一套規則。掃 src/ 的 .ts 與 .json，但**只計「實作」類的檔**——課程清單（topics/）與工具箱清單（toolbox-categories.ts）是登錄表的視圖，不是實作擴散。",
-    "note": "📈 **2026-10-31（第 389 刀：每顆元件的 formalize 搬進自己的膠囊）**：97 顆元件的檔數上限各 +1、目錄數不變（全部 1）。多出來的那一個檔是它自己資料夾裡的 `formalize.ts`——翻譯原本集中在 `providers/cella/formalize/index.ts`（與 `scope.ts`），那時這 97 顆的實際足跡是「n 檔 / 2 目錄」，**這條護欄搬家前就是紅的**；搬完目錄數回到 1。同一刀順手把 `languages/cpp/auto-include.ts` 的 `cpp:func_def` 身分比對換成 `isFunctionDefinition`（第 386 刀留下的外洩）。\n\n數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）"
+    "note": "📈 **2026-11-01（spec 199～201：formalize 補到學生的形狀）**：29 顆元件的檔數上限各 +1、目錄數不變（全部 1）。多出來的那一個檔是它自己資料夾裡新增的 `formalize.ts`（6.0 量到學生的程式翻不出，逐顆補上）——同第 389 刀的理由：實作進了自己的膠囊，不是擴散。逐顆核對過：每一顆都剛好 +1、main 上都還沒有 formalize.ts。\n\n📈 **2026-10-31（第 389 刀：每顆元件的 formalize 搬進自己的膠囊）**：97 顆元件的檔數上限各 +1、目錄數不變（全部 1）。多出來的那一個檔是它自己資料夾裡的 `formalize.ts`——翻譯原本集中在 `providers/cella/formalize/index.ts`（與 `scope.ts`），那時這 97 顆的實際足跡是「n 檔 / 2 目錄」，**這條護欄搬家前就是紅的**；搬完目錄數回到 1。同一刀順手把 `languages/cpp/auto-include.ts` 的 `cpp:func_def` 身分比對換成 `isFunctionDefinition`（第 386 刀留下的外洩）。\n\n數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。 只記上限、不記路徑清單——路徑變動頻繁，記了 diff 會不可讀。 ⚠️ 2026-08-07 全體大幅下降（175 顆），原因是**重新分類**而非實作變好：課程清單（topics/）與工具箱清單改歸「清單」，不再計入實作擴散。系統一行都沒有變得更集中——只是我們終於說清楚在量什麼。（history/018：用宣告刷數字看起來會像進步，所以下降必須註記原因。）"
   },
   "limits": {
     "cpp:address_of": {
@@ -27,7 +27,7 @@
       "dirs": 1
     },
     "cpp:array_2d_assign": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:array_2d_at": {
@@ -79,7 +79,7 @@
       "dirs": 1
     },
     "cpp:block_comment": {
-      "files": 2,
+      "files": 3,
       "dirs": 1
     },
     "cpp:break": {
@@ -95,7 +95,7 @@
       "dirs": 1
     },
     "cpp:cast": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:cast_const": {
@@ -119,7 +119,7 @@
       "dirs": 1
     },
     "cpp:char_is_digit": {
-      "files": 2,
+      "files": 3,
       "dirs": 1
     },
     "cpp:char_to_lower": {
@@ -135,11 +135,11 @@
       "dirs": 1
     },
     "cpp:comma_expr": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:comment": {
-      "files": 2,
+      "files": 3,
       "dirs": 1
     },
     "cpp:compare": {
@@ -155,7 +155,7 @@
       "dirs": 1
     },
     "cpp:container_clear": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_count": {
@@ -167,11 +167,11 @@
       "dirs": 1
     },
     "cpp:container_erase": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_find": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_iter": {
@@ -183,7 +183,7 @@
       "dirs": 1
     },
     "cpp:container_pop_front": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:container_push": {
@@ -263,7 +263,7 @@
       "dirs": 1
     },
     "cpp:deque_declare": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:destructor": {
@@ -315,7 +315,7 @@
       "dirs": 1
     },
     "cpp:forward_decl": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:free": {
@@ -375,7 +375,7 @@
       "dirs": 1
     },
     "cpp:input_line": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:io_flush": {
@@ -383,19 +383,19 @@
       "dirs": 1
     },
     "cpp:io_mode": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:io_mode_number": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:io_sync": {
-      "files": 2,
+      "files": 3,
       "dirs": 1
     },
     "cpp:io_tie": {
-      "files": 2,
+      "files": 3,
       "dirs": 1
     },
     "cpp:istringstream_declare": {
@@ -483,7 +483,7 @@
       "dirs": 1
     },
     "cpp:math_abs": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:math_binary": {
@@ -511,7 +511,7 @@
       "dirs": 1
     },
     "cpp:math_min": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:math_pow": {
@@ -575,7 +575,7 @@
       "dirs": 1
     },
     "cpp:operator_overload": {
-      "files": 2,
+      "files": 3,
       "dirs": 1
     },
     "cpp:pair_declare": {
@@ -611,7 +611,7 @@
       "dirs": 1
     },
     "cpp:pointer_step": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:print": {
@@ -887,7 +887,7 @@
       "dirs": 1
     },
     "cpp:switch": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:template_function": {
@@ -895,7 +895,7 @@
       "dirs": 1
     },
     "cpp:ternary": {
-      "files": 4,
+      "files": 5,
       "dirs": 1
     },
     "cpp:throw": {
@@ -947,11 +947,11 @@
       "dirs": 1
     },
     "cpp:var_declare_auto": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:var_declare_const": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:var_declare_constexpr": {
@@ -975,11 +975,11 @@
       "dirs": 1
     },
     "cpp:var_swap": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:vector_back": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:vector_declare": {
@@ -987,11 +987,11 @@
       "dirs": 1
     },
     "cpp:vector_make": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:vector_pop": {
-      "files": 3,
+      "files": 4,
       "dirs": 1
     },
     "cpp:vector_size": {

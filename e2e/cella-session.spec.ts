@@ -38,7 +38,9 @@ async function runUntilCella(page: Page): Promise<void> {
 const LOOP = '#include <iostream>\nusing namespace std;\nint main() {\n    int total = 0;\n    for (int i = 1; i <= 3; i++) {\n        total = total + i;\n    }\n    cout << total << endl;\n    return 0;\n}\n'
 const READ = '#include <iostream>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    cout << n * 2 << endl;\n    return 0;\n}\n'
 const OOB = '#include <iostream>\nusing namespace std;\nint main() {\n    int a[3] = {1, 2, 3};\n    int i = 5;\n    cout << a[i] << endl;\n    return 0;\n}\n'
-const MAP = '#include <iostream>\n#include <map>\nusing namespace std;\nint main() {\n    map<int, int> m;\n    m[1] = 2;\n    cout << m[1] << endl;\n    return 0;\n}\n'
+// ⚠️ 「Cella 還不支援」的範例會一直過期——map 在 spec 194 之後判得出來了。結構化繫結 Cella 還沒有（cella 2026-11-01：會加 sBind），
+//    JS 直譯器跑得動。🪦 6c 拆掉 JS 直譯器時這一支整支退場（退回的那一條路不存在了）
+const BINDING = '#include <iostream>\n#include <utility>\nusing namespace std;\nint main() {\n    pair<int, int> p = {1, 2};\n    auto [a, b] = p;\n    cout << a + b << endl;\n    return 0;\n}\n'
 
 test('執行與除錯由 Cella 跑：輸出、中斷點、變數、讀輸入、越界停下', async ({ page }) => {
   test.setTimeout(400_000)
@@ -84,9 +86,9 @@ test('Cella 還不支援的程式：退回 JS 直譯器，標出處與原因', a
   await freshApp(page)
   await page.evaluate(() => (window as any).__app.warmUpChecker())
   await expect(page.locator('#status-check')).toHaveAttribute('data-state', 'ready', { timeout: 180_000 })
-  await feed(page, MAP, 'cpp:map_declare')
+  await feed(page, BINDING, 'cpp:var_declare_sequence')
   await selectMode(page, 'run')
-  await expect(output(page)).toContainText('2', { timeout: 30_000 })
+  await expect(output(page)).toContainText('3', { timeout: 30_000 })
   await expect(runner(page)).toHaveAttribute('data-provider', 'js-interpreter')
   expect(await runner(page).getAttribute('title')).toMatch(/Cella 沒有接：.*(還不支援|還在準備)/)
 })

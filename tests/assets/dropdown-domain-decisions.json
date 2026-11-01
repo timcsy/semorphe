@@ -226,6 +226,11 @@
       "field": "field_dropdown",
       "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
     },
+    "cpp_operator_overload.IS_CONST": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "成員函式有沒有尾端的 const 只有兩種（spec 201）"
+    },
     "cpp_operator_overload.OP": {
       "decision": "closed",
       "field": "field_dropdown",

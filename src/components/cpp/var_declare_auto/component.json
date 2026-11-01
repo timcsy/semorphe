@@ -26,6 +26,7 @@
         "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建自動宣告`）——「型別修飾詞是 auto」的判別是 C++ 語法的知識，留在共用檔。"
       }
     },
+    "formalize": "./formalize.ts",
     "execute": "./execute.ts"
   },
   "traits": {

@@ -16,6 +16,10 @@ import type { SemanticNode } from '../../../core/types'
 import type { CellaJson, FormalizeContext } from '../../../core/formalize-contract'
 import { resolveScopes } from './scope'
 import { FORMALIZE } from './registry'
+import { isFunctionDefinition } from '../../../core/component/traits'
+
+/** 標準串流物件 → Cella 的建構子（`cin.ignore()` 的接收者；spec 201：送成 eConst 會被判「use of undeclared identifier 'cin'」） */
+const STREAMS: Record<string, string> = { cin: 'eStdin', cout: 'eStdout', cerr: 'eStderr' }
 
 export type { CellaJson } from '../../../core/formalize-contract'
 
@@ -98,18 +102,42 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
   }
   collect(tree)
+  const byId = new Map<string, SemanticNode>()
+  // 類別的欄位：`members` 槽裡、有型別的那幾顆（成員函式沒有 `type`）——成員函式裡的裸名字指到它們時是 eSelf
+  const memberFields = new Set<string>()
+  // 程式自己定義的函式名——名字當值用（`sort(a, a + n, cmp)`）時是 eFunc（cpp_to_tree.py 同形；spec 201）
+  const functionNames = new Set<string>()
+  const index = (n: SemanticNode): void => {
+    byId.set(n.id, n)
+    for (const m of n.slots?.members ?? []) if (m.properties?.type !== undefined) memberFields.add(m.id)
+    if (isFunctionDefinition(n.componentId) && n.properties?.name) functionNames.add(String(n.properties.name))
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(index)
+  }
+  index(tree)
   const unknown: Unknown[] = []
   const miss = (n: SemanticNode, reason: string): CellaJson => {
     unknown.push({ nodeId: n.id, construct: n.componentId, reason })
     return k('eHole', { n: n.id })
   }
 
+  /** 型別巨集展開中的名字（`#define ll long long`；防 `#define T T` 這種自我參照） */
+  const expanding = new Set<string>()
   function type(t: unknown, at: SemanticNode): CellaJson | null {
     const s = String(t ?? '').trim()
     if (s === '' ) { miss(at, '沒有型別'); return null }
-    if (s.startsWith('const ')) { const inner = type(s.slice(6), at); return inner && k('tConst', { t: inner }) }
+    // 型別巨集（spec 199：學生的程式 45 支有 `#define ll long long`）——前端展開，同物件巨集（spec 197）
+    const mv = macros.get(s)
+    if (mv !== undefined && !expanding.has(s)) {
+      expanding.add(s)
+      try { return type(mv, at) } finally { expanding.delete(s) }
+    }
+    // ⚠️ 先剝參照與指標，再剝 const：`const Node&` 是「參照到 const Node」＝ tRef(tConst(Node))，不是 tConst(tRef(Node))
+    //    （spec 201：Cella 判 reject「member reference base type is not a structure or union」抓到的；`const int*` 同理是 tPtr(tConst(int))）
     if (s.endsWith('&')) { const inner = type(s.slice(0, -1), at); return inner && k('tRef', { t: inner }) }
     if (s.endsWith('*')) { const inner = type(s.slice(0, -1), at); return inner && k('tPtr', { t: inner }) }
+    if (s.startsWith('const ')) { const inner = type(s.slice(6), at); return inner && k('tConst', { t: inner }) }
+    // `int a[]` 只會出現在參數：C++ 把它調成指標（[dcl.fct]p5）——spec 199 量到 4 支
+    if (s.endsWith('[]')) { const inner = type(s.slice(0, -2), at); return inner && k('tPtr', { t: inner }) }
     const sc = SCALAR[s]
     if (sc) return k(sc)
     const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
@@ -146,7 +174,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     const name = String(n.properties?.obj ?? '')
     const x = declOf.get(`${n.id}#obj`)
     // 沒宣告的接收者（`Serial`、`Serial1`、`WiFi`）是標頭的全域物件：eConst（cella 2026-10-31 確認）
-    const obj = x ? k('eVar', { n: `${n.id}/obj`, x }) : options.board && /^[A-Za-z_]\w*$/.test(name) ? k('eConst', { n: `${n.id}/obj`, name }) : null
+    const stream = !x && !isC ? STREAMS[name.replace(/^std::/, '')] : undefined
+    const obj = x ? k('eVar', { n: `${n.id}/obj`, x }) : stream ? k(stream, { n: `${n.id}/obj` }) : options.board && /^[A-Za-z_]\w*$/.test(name) ? k('eConst', { n: `${n.id}/obj`, name }) : null
     if (!obj) return miss(n, `接收者「${name}」指不到宣告`)
     return k('eMCall', { n: n.id, obj, arrow: false, f, args: slots.filter((sl) => one(n, sl)).map((sl) => expr(one(n, sl)!)) })
   }
@@ -202,6 +231,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     return fn ? fn(c, ctx) : null
   }
 
+  const SCALARS = new Set(Object.values(SCALAR))
+  const isScalar = (t: CellaJson): boolean => SCALARS.has(String(t.k)) || t.k === 'tPtr'
   const declInit = (n: SemanticNode, t: CellaJson, init: CellaJson | null, global: boolean): CellaJson[] => {
     const name = String(n.properties?.name ?? '')
     return [global
@@ -210,7 +241,14 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   }
   const declVar = (n: SemanticNode, t: CellaJson, global: boolean): CellaJson[] => {
     const initNode = one(n, 'initializer')
-    const init = initNode ? k('iE', { e: expr(initNode) }) : null
+    // 初值走 initOf：大括號串列是 iL，其餘是 iE。
+    // ⚠️ 純量不收 iL（Cella：「scalar initializer must be an expression」）——`int h{}` 是值初始化（零）、`int h{5}` 就是 5（spec 201）
+    let init = initNode ? initOf(initNode) : null
+    if (init?.k === 'iL' && isScalar(t)) {
+      const xs = init.xs as CellaJson[]
+      if (xs.length > 1) { miss(n, '純量的大括號初值不能有兩個以上'); init = null }
+      else init = xs.length === 1 ? xs[0] : k('iE', { e: k('eNum', { n: initNode!.id, v: 0 }) })
+    }
     return declInit(n, t, init, global)
   }
   const declCtor = (n: SemanticNode, t: CellaJson, args: CellaJson[], global: boolean): CellaJson[] => {
@@ -263,6 +301,28 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     declVar, declInit, declCtor, libraryObject, constInt,
     declOf: (key) => declOf.get(key),
     macro,
+    nodeById: (id) => byId.get(id),
+    member: (m) => {
+      const fn = FORMALIZE.member.get(m.componentId)
+      if (fn) return fn(m, ctx)
+      miss(m, '這顆類別成員還沒有對應到 Cella 的建構子')
+      return null
+    },
+    isMemberField: (declId) => memberFields.has(declId),
+    isFunctionName: (name) => functionNames.has(name),
+    asStatement: (c) => (FORMALIZE.stmt.has(c.componentId) || FORMALIZE.decl.has(c.componentId)
+      ? stmt(c)
+      : [k('sExpr', { n: `${c.id}/stmt`, e: expr(c) })]),
+    programUses: (test) => {
+      const walk = (n: SemanticNode): boolean => test(n.componentId) || Object.values(n.slots ?? {}).some((kids) => kids.some(walk))
+      return walk(tree)
+    },
+    isTypeText: (text) => {
+      const before = unknown.length
+      const ok = type(text, tree) !== null
+      unknown.length = before   // 只是問一句，不記 unknown
+      return ok
+    },
     unescapeC,
     binOp: (op) => BIN[op],
     scalar: (name) => SCALAR[name],

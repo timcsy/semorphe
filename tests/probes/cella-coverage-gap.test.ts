@@ -20,6 +20,8 @@
  * ⚠️ 入口條件先於讀數：載得進的程式要有兩百支以上，否則「退步 0」可能只是母體是空的
  *    （〈一個「零缺陷」的讀數，與一個「零樣本」的讀數，數字長得一模一樣〉）。
  * 結果另寫一份 JSON 到 `CELLA_GAP_OUT`（有設才寫）——給 draft 與 cella 那邊看。
+ *
+ * `CELLA_GAP_FORMALIZE_ONLY=1`：只 lift ＋ formalize（秒級、不跑兩邊）——補 formalize 時一批一批量「還有幾支翻不出、卡在哪」用（6.1）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import fs from 'node:fs'
@@ -36,6 +38,7 @@ import type { SemanticNode } from '../../src/core/types'
 const ROOT = path.resolve(__dirname, '../..')
 const DIR = process.env.STUDYCPP_DIR ?? ''
 const STEPS = Number(process.env.PROBE_STEPS ?? 10_000_000)
+const FORMALIZE_ONLY = process.env.CELLA_GAP_FORMALIZE_ONLY === '1'
 
 function files(): string[] {
   if (!DIR || !fs.existsSync(DIR)) return []
@@ -74,13 +77,19 @@ beforeAll(async () => {
   const parser = new Parser()
   parser.setLanguage(await Language.load(`${ROOT}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
-  const lifter = createTestLifter()
-  checker = await createCellaChecker(read)
+  if (!FORMALIZE_ONLY) checker = await createCellaChecker(read)
   for (const f of FS) {
     const src = fs.readFileSync(f, 'utf8')
     let tree: SemanticNode
-    try { tree = lifter.lift(parser.parse(src)!.rootNode as never) as SemanticNode } catch { liftFail++; continue }
+    // ⚠️ 每一支一個新的 lifter：共用一個的話，前一支的狀態（宣告過的名字、型別）會漏進下一支——
+    //    第一版就是這樣把 initializer_list 量成 111 支（逐支新建是 53 處）
+    try { tree = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode } catch { liftFail++; continue }
     const stdin = makeStdin(readSchedule(tree), 1, 200)
+    if (FORMALIZE_ONLY) {
+      const fz = formalize(tree, { lang: 'cpp' })
+      rows.push({ file: path.relative(DIR, f), js: { ok: true, out: '' }, cella: fz.program ? { k: 'accept', out: '' } : { k: 'untranslated', constructs: [...new Set((fz.unknown as { construct: string }[]).map((u) => u.construct))] } })
+      continue
+    }
     let js: Js
     try {
       const out: string[] = []
@@ -122,6 +131,12 @@ describe.skipIf(FS.length === 0)('探針：JS 直譯器跑得動、Cella 給不�
     }
     const count = (xs: string[]): string => Object.entries(xs.reduce<Record<string, number>>((m, x) => ({ ...m, [x]: (m[x] ?? 0) + 1 }), {}))
       .sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join('｜')
+    if (FORMALIZE_ONLY) {
+      const un = rows.filter((r) => r.cella.k === 'untranslated')
+      console.log([`StudyCpp ${FS.length} 支：載得進 ${rows.length}；翻得出 ${rows.length - un.length}、翻不出 ${un.length}`,
+        `翻不出的構造（支數）：${count(un.flatMap((r) => (r.cella as { constructs: string[] }).constructs))}`].join('\n'))
+      return
+    }
     const by = rows.map(bucket)
     const regress = rows.filter((r) => bucket(r) === '退步')
     const why = regress.flatMap((r) => r.cella.k === 'untranslated' ? r.cella.constructs.map((c) => `翻不出：${c}`) : (r.cella as { kinds: string[] }).kinds.map((k) => `${r.cella.k}：${k}`))
