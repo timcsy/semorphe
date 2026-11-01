@@ -84,6 +84,8 @@ test('「依 libc++」小標：結果依賴實作的選擇時出現、點開是�
 })
 
 test('載入失敗：狀態說「無法使用」與原因，編輯照常', async ({ page }) => {
+  // 第 210 刀起先抓建置時編好的模組（`cella-modules/`），抓不到才退回套件檔現場編——兩條都擋，才是「載入失敗」
+  await page.route('**/cella-modules/**', (r) => r.abort())
   await page.route('**/*.cell*', (r) => r.abort())
   await freshApp(page)
   await page.evaluate(() => (window as any).__app.warmUpChecker())
