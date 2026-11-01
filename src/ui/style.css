@@ -2705,6 +2705,23 @@ html, body {
   user-select: none;
 }
 
+/* 麵包屑（spec 193）：只在鑽進去時出現，浮在畫布左上角 */
+.flow-crumbs {
+  position: absolute; top: 6px; left: 8px; z-index: 3;
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+  padding: 2px 6px; border-radius: 4px;
+  background: rgba(30, 30, 30, 0.85); border: 1px solid #3c3c3c;
+  font-size: 12px;
+}
+.flow-crumb {
+  background: none; border: none; color: #9cdcfe; cursor: pointer;
+  padding: 2px 4px; min-height: 24px; font: inherit;
+}
+.flow-crumb:hover { text-decoration: underline; }
+.flow-crumb-current { color: #d4d4d4; cursor: default; font-weight: 600; }
+.flow-crumb-current:hover { text-decoration: none; }
+.flow-crumb-sep { color: #808080; }
+
 /* 收著的框（spec 187）：雙線邊框——一眼看得出「裡面還有東西」 */
 .fc-node.fc-collapsed .fc-node-body {
   stroke-dasharray: 5 3;

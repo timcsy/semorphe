@@ -7,7 +7,7 @@
  * 🔴 research R6 原本是「套件檔用 Cache Storage、模組用 IndexedDB」兩層。
  *    量到編好的模組不需要 Cella 執行環境之後，前一層沒有用處了——只剩這一層。
  */
-import { CHECKER_SOURCE } from './verdict'
+import { CHECKER_SOURCE, checkerSource, type CellaFamily } from './verdict'
 
 const VERSIONS = import.meta.glob(
   ['/node_modules/cella-lang/package.json', '/node_modules/@cella-lang/*/package.json'],
@@ -24,7 +24,9 @@ export async function moduleKey(name: string, source: string): Promise<string> {
   return `${name}:` + [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-export const checkerKey = (): Promise<string> => moduleKey('verdict', CHECKER_SOURCE)
+/** 判決模組的快取鍵——依家族各一個（spec 197c）；C 家族的名字照舊是 `verdict`（換名字等於讓所有人的快取失效）。 */
+export const checkerKey = (family: CellaFamily = 'cfamily'): Promise<string> =>
+  family === 'cfamily' ? moduleKey('verdict', CHECKER_SOURCE) : moduleKey(`verdict-${family}`, checkerSource(family))
 
 const DB = 'semorphe-cella'
 const STORE = 'checkers'

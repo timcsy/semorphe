@@ -1,0 +1,30 @@
+{
+  "template": {
+    "$case": "value",
+    "cases": {
+      "True": {
+        "k": "eConstant",
+        "n": "$id",
+        "value": {
+          "k": "cBool",
+          "b": true
+        }
+      },
+      "False": {
+        "k": "eConstant",
+        "n": "$id",
+        "value": {
+          "k": "cBool",
+          "b": false
+        }
+      },
+      "None": {
+        "k": "eConstant",
+        "n": "$id",
+        "value": {
+          "k": "cNone"
+        }
+      }
+    }
+  }
+}

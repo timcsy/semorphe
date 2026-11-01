@@ -37,6 +37,20 @@ const SCALAR: Record<string, string> = {
   bool: 'tBool', string: 'tString', 'std::string': 'tString',
 }
 
+/** 範本引數依最外層的逗號切開（`int, vector<int>, greater<int>` → 三個） */
+export function splitTypeArgs(s: string): string[] {
+  const out: string[] = []
+  let depth = 0, cur = ''
+  for (const ch of s) {
+    if (ch === '<') depth++
+    if (ch === '>') depth--
+    if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue }
+    cur += ch
+  }
+  if (cur.trim() !== '') out.push(cur.trim())
+  return out
+}
+
 /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
 function unescapeC(s: string): string {
   const map: Record<string, string> = { n: '\n', t: '\t', r: '\r', '0': '\0', '\\': '\\', '"': '"', "'": "'", a: '\x07', b: '\b', f: '\f', v: '\v' }
@@ -100,6 +114,14 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (sc) return k(sc)
     const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
     if (vec) { const inner = type(vec[1], at); return inner && k('tVector', { t: inner }) }
+    // C++ 的 `auto`（cella 0.1.202610312349 起有 `tAuto`）
+    if (s === 'auto' && !isC) return k('tAuto')
+    // 標準函式庫的類別範本（cella 照 libc++ 18 實作）：名字不帶 `std::`，同 Cella 用 clang 轉的課文樹（packages/cpp/tools/lessons）
+    const tpl = /^(?:std::)?(pair|queue|stack|priority_queue|set|map|deque|greater|less)\s*<(.+)>$/.exec(s)
+    if (tpl && !isC) {
+      const args = splitTypeArgs(tpl[2]).map((x) => type(x, at))
+      return args.every(Boolean) ? k('tTemplate', { name: tpl[1], args }) : null
+    }
     const st = /^(?:struct\s+)?([A-Za-z_]\w*)$/.exec(s)
     if (st && (s.startsWith('struct ') || structNames.has(st[1]))) return k(isC ? 'tStruct' : 'tClass', { name: st[1] })
     miss(at, `型別「${s}」還沒有對應`)
@@ -152,11 +174,32 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const braceList = (n: SemanticNode, slot: string): CellaJson =>
     k('iL', { n: `${n.id}/${slot}`, xs: (n.slots?.[slot] ?? []).map((c) => initOf(c)) })
 
+  // 物件巨集（spec 197）：哪一顆定義巨集、哪一顆認得字面量的文字，都由元件自己登記——核心不認識任何一顆元件
+  const macros = new Map<string, string>()
+  const collectMacros = (n: SemanticNode): void => {
+    const m = FORMALIZE.definesMacro.get(n.componentId)?.(n)
+    if (m) macros.set(m.name, m.value.trim())
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(collectMacros)
+  }
+  collectMacros(tree)
+  const literalNode = (text: string, id: string): SemanticNode | undefined => {
+    for (const [componentId, test] of FORMALIZE.literal) {
+      if (test(text)) return { id, componentId, properties: { value: text }, slots: {} } as SemanticNode
+    }
+    return undefined
+  }
+  const macro = (name: string): { expr(usageId: string): CellaJson; int: number | null } | undefined => {
+    const v = macros.get(name)
+    const probe = v === undefined ? undefined : literalNode(v, `macro:${name}`)
+    if (!probe) return undefined
+    return { expr: (usageId) => expr({ ...probe, id: usageId }), int: constInt(probe) }
+  }
+
   /** 編譯期的非負整數字面——哪一顆是由元件自己註冊（`constInt`）。 */
   const constInt = (c: SemanticNode | undefined): number | null => {
     if (!c) return null
     const fn = FORMALIZE.constInt.get(c.componentId)
-    return fn ? fn(c) : null
+    return fn ? fn(c, ctx) : null
   }
 
   const declInit = (n: SemanticNode, t: CellaJson, init: CellaJson | null, global: boolean): CellaJson[] => {
@@ -219,6 +262,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     copy: (json, tag) => relabel(json, tag),
     declVar, declInit, declCtor, libraryObject, constInt,
     declOf: (key) => declOf.get(key),
+    macro,
     unescapeC,
     binOp: (op) => BIN[op],
     scalar: (name) => SCALAR[name],

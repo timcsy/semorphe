@@ -1,0 +1,19 @@
+{
+  "template": {
+    "k": "sTry",
+    "n": "$id",
+    "body": {
+      "$body": "body"
+    },
+    "handlers": {
+      "$transform": "handlers",
+      "slot": "handlers"
+    },
+    "orelse": {
+      "$stmts": "orelse"
+    },
+    "finalbody": {
+      "$stmts": "ensure"
+    }
+  }
+}

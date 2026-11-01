@@ -1,0 +1,20 @@
+{
+  "template": {
+    "k": "eCompare",
+    "n": "$id",
+    "left": {
+      "$slot": "needle"
+    },
+    "ops": [
+      {
+        "$op": "cmpop",
+        "of": "operator"
+      }
+    ],
+    "comparators": [
+      {
+        "$slot": "haystack"
+      }
+    ]
+  }
+}

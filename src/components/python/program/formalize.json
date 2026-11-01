@@ -1,0 +1,9 @@
+{
+  "template": {
+    "k": "program",
+    "n": "$id",
+    "body": {
+      "$stmts": "body"
+    }
+  }
+}

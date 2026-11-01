@@ -1,0 +1,12 @@
+{
+  "template": {
+    "k": "eUnaryOp",
+    "n": "$id",
+    "op": {
+      "k": "opInvert"
+    },
+    "operand": {
+      "$slot": "operand"
+    }
+  }
+}

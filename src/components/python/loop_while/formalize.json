@@ -1,0 +1,13 @@
+{
+  "template": {
+    "k": "sWhile",
+    "n": "$id",
+    "test": {
+      "$slot": "condition"
+    },
+    "body": {
+      "$body": "body"
+    },
+    "orelse": []
+  }
+}

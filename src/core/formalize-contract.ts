@@ -65,6 +65,11 @@ export interface FormalizeContext {
   constInt(n: SemanticNode | undefined): number | null
   /** 作用域走訪的結果：參照節點（或 `<id>#obj`）→ 宣告節點。 */
   declOf(key: string): string | undefined
+  /**
+   * 物件巨集（`#define N 10`）——**前端展開**（cella 2026-11-01：巨集是前處理器的事，語意樹上不該出現；判決的位置照展開處）。
+   * 值認得（某顆元件登記了「這種字面量的文字是我的」）才有：`expr(usageId)` 是展開在使用處的運算式，`int` 是編譯期整數（陣列長度用）。
+   */
+  macro(name: string): { expr(usageId: string): CellaJson; int: number | null } | undefined
   /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
   unescapeC(s: string): string
   /** C 的二元運算子符號 → Cella 的運算子建構子。 */
@@ -100,8 +105,12 @@ export interface FormalizeRegistrar {
   decl(id: string, fn: (n: SemanticNode, f: FormalizeContext, global: boolean) => CellaJson[]): void
   /** 大括號初值串列裡的一項（沒註冊的是 `iE` 包運算式）。 */
   init(id: string, fn: (n: SemanticNode, f: FormalizeContext) => CellaJson): void
-  /** 編譯期的非負整數字面（陣列長度要它）。不是就回 null。 */
-  constInt(id: string, fn: (n: SemanticNode) => number | null): void
+  /** 編譯期的非負整數字面（陣列長度要它）。不是就回 null。`f` 給需要上下文的（例如名字是巨集）。 */
+  constInt(id: string, fn: (n: SemanticNode, f: FormalizeContext) => number | null): void
+  /** 這顆定義了一個物件巨集（`#define 名字 值`，值是原文）——核心照值展開在使用處（spec 197）。 */
+  definesMacro(id: string, fn: (n: SemanticNode) => { name: string; value: string } | null): void
+  /** 這種字面量的原文是我的（`10`、`0x1F`…）——巨集展開時，核心用登記了的元件把值翻出來（spec 197）。 */
+  literal(id: string, test: (text: string) => boolean): void
   /** 這顆定義了一個型別名（不帶關鍵字的 `Node*` 要先認得 `Node`）。 */
   definesType(id: string, fn: (n: SemanticNode) => string): void
   /** 作用域走訪：這顆開不開作用域、宣告什麼、參照什麼（沒註冊的照通用規則）。 */

@@ -1620,6 +1620,13 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       return buildMemberStatic(type, 'x')
     }
 
+    // 🔴 **`extern` 的變數宣告：誠實降級**（spec 197）。在此之前它落到下面的一般宣告，`extern` 被悄悄丟掉
+    //    ——`extern int other;` 轉一圈回來是 `int other;`：宣告變成了定義（cella 問 C 子集時量到）。
+    //    ⚠️ 函式的 `extern`（`extern void f(int);`）與一般的原型同義，照舊走 forward_decl。
+    if (storageSpec?.text === 'extern' && !node.namedChildren.some((c) => c.type === 'function_declarator')) {
+      return degrade(buildRawCode(node.text), 'extern 宣告尚未支援')
+    }
+
     // Forward function declarations: void listp(int *, int); → structured forward_decl
     const funcDeclarator = node.namedChildren.find(c => c.type === 'function_declarator')
     // 🔴 **函式指標不是函式宣告**（2026-09-06 補）——`void (*f)(int);`

@@ -1,0 +1,12 @@
+{
+  "template": {
+    "k": "sAssert",
+    "n": "$id",
+    "test": {
+      "$slot": "condition"
+    },
+    "msg": {
+      "$opt": "value"
+    }
+  }
+}

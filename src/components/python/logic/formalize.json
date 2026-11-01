@@ -1,0 +1,18 @@
+{
+  "template": {
+    "k": "eBoolOp",
+    "n": "$id",
+    "op": {
+      "$op": "boolop",
+      "of": "operator"
+    },
+    "values": [
+      {
+        "$slot": "left"
+      },
+      {
+        "$slot": "right"
+      }
+    ]
+  }
+}

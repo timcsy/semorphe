@@ -4,6 +4,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { toDiagnostics, type Verdict } from '../../../src/core/verdict-diagnostics'
+import { ownerOf } from '../../../src/core/verdict-diagnostics'
 import { createNode } from '../../../src/core/semantic-tree'
 import type { SemanticNode } from '../../../src/core/types'
 
@@ -33,7 +34,7 @@ describe('判決 → 診斷', () => {
     expect(diagnostics[0].severity).toBe('info')
   })
 
-  it('★ 標籤 `<id>/<角色>`、`<id>#<槽>` 歸到那一顆；樹裡沒有的往上找不到就只進 notes', () => {
+  it('★ 標籤 `<id>/<角色>`、`<id>#<槽>` 歸到那一顆；樹裡沒有的畫不上積木、進 notes', () => {
     const a = run(v('reject', [{ kind: 'ubUninit', at: `${idx.id}/value` }])).diagnostics
     const b = run(v('unknown', [{ kind: 'hole', at: `${idx.id}#index` }])).diagnostics
     expect(a[0].nodeId).toBe(idx.id)
@@ -41,6 +42,19 @@ describe('判決 → 診斷', () => {
     const c = run(v('reject', [{ kind: 'ubUninit', at: 'node_does_not_exist' }]))
     expect(c.diagnostics).toEqual([])
     expect(c.notes.join()).toMatch(/對不到/)
+    expect(c.unplaced).toEqual({ error: 1, info: 0 })
+  })
+
+  it('🔴 對不到積木的問題照嚴重度計數——步數用盡（`at` 是空的）不能讓狀態列說「沒有發現問題」（P6）', () => {
+    const r = run(v('unknown', [{ kind: 'fuel', at: '', clause: '', reason: 'step limit reached' }]))
+    expect(r.diagnostics).toEqual([])
+    expect(r.unplaced).toEqual({ error: 0, info: 1 })
+    expect(run(v('accept')).unplaced).toEqual({ error: 0, info: 0 })
+  })
+
+  it('★ 求值順序未指定（`ubOrder`）是「標準允許不只一種」——info、中文的那一則，不是 CELLA_OTHER 的英文原文', () => {
+    const { diagnostics } = run(v('unknown', [{ kind: 'ubOrder', at: call.id, clause: 'C++17 [intro.execution]p11', reason: 'the order of evaluation is unspecified' }]))
+    expect(diagnostics[0]).toMatchObject({ nodeId: call.id, severity: 'info', rule: 'CELLA_UNSPECIFIED' })
   })
 
   it('🔴 要讀輸入而沒有測資：丟掉 ub*／fuel，留一句「需要輸入」（SC-005）', () => {
@@ -67,6 +81,14 @@ describe('判決 → 診斷', () => {
     ])
     expect(r.notes.join()).not.toMatch(/libc\+\+/)
   })
+
+  it('🔴 擔保者照判決說的（cella 0.1.202610312349 起不再一律是 libc++）：glibc 的亂數、執行環境的時鐘', () => {
+    const r = run(v('accept', [], [{ implementation: 'glibc', choice: 'rand.sequence' }, { implementation: 'environment', choice: 'time.now' }]))
+    expect(r.assumes).toEqual([
+      { implementation: 'glibc', text: expect.stringMatching(/rand\(\)/) },
+      { implementation: '執行環境', text: expect.stringMatching(/time\(\)/) },
+    ])
+  })
 })
 
 describe('型別查詢 → 診斷（US4）', () => {
@@ -81,5 +103,15 @@ describe('型別查詢 → 診斷（US4）', () => {
   it('★ 洞的 fits（放什麼合）不產生診斷', () => {
     const types = { slots: { [`${idx.id}#index`]: { expects: 'int', fits: { 'char *': { level: 'no' as const, reason: 'x' } } } } }
     expect(toDiagnostics({ verdict: v('unknown', [{ kind: 'hole', at: `${idx.id}#index` }]), types, tree, readsInput: false, hasStdin: false }).diagnostics).toEqual([])
+  })
+})
+
+describe('Cella 的節點標籤 → 語義樹的節點', () => {
+  it('🔴 範圍 for 合成的運算式（`:begin`、`:element`…；cella 2026-11-01）對回範圍 for 本身', () => {
+    expect(ownerOf('node_7_ab:element')).toBe('node_7_ab')
+    expect(ownerOf('node_7_ab:begin')).toBe('node_7_ab')
+    expect(ownerOf('node_7_ab/stmt')).toBe('node_7_ab')
+    expect(ownerOf('node_7_ab#obj')).toBe('node_7_ab')
+    expect(ownerOf('node_7_ab')).toBe('node_7_ab')
   })
 })

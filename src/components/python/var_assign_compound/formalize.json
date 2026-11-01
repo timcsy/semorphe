@@ -1,0 +1,16 @@
+{
+  "template": {
+    "k": "sAugAssign",
+    "n": "$id",
+    "target": {
+      "$slot": "target"
+    },
+    "op": {
+      "$op": "augop",
+      "of": "operator"
+    },
+    "value": {
+      "$slot": "value"
+    }
+  }
+}

@@ -12,7 +12,8 @@ import type { SemanticNode } from '../../core/types'
 import { branchOf, type CellaBranch } from './verdict'
 import { ownerOf, type Verdict } from '../../core/verdict-diagnostics'
 import type { HardwareState } from '../../core/hardware'
-import { formalize, cellaBoardOf } from './formalize'
+import { formalize, cellaBoardOf, type FormalizeResult } from './formalize'
+import { formalizePython } from './formalize/python'
 import { withEntryFunctions } from './entry'
 import { isCDialect } from '../../languages/cpp/target-dialect'
 import type { DapOp, Variable, WireOutcome, WorkerReply, WorkerRequest } from './worker'
@@ -29,6 +30,8 @@ export function readsInput(json: unknown): boolean {
   const o = json as Record<string, unknown>
   if (READERS.has(o.k as string)) return true
   if (o.k === 'eCall' && READER_CALLS.has(String(o.f ?? o.name ?? ''))) return true
+  // Python：`input()`（`python.ast` 的 eCall，func 是 eName）
+  if (o.k === 'eCall' && (o.func as { k?: string; id?: string } | undefined)?.id === 'input') return true
   return Object.values(o).some(readsInput)
 }
 
@@ -57,8 +60,21 @@ function toOutcome(w: WireOutcome): Outcome {
 }
 
 /**
+ * 標籤 → 語義樹的節點（`ownerOf`）。同一個節點名下的幾個標籤（`<id>`、`<id>/stmt`）是**同一次進入**，取最大值、不加總
+ * ——加總的話一句運算式敘述會被算成跑了兩次。
+ */
+export function visitsByNode(counts: Record<string, number>): Map<string, number> {
+  const out = new Map<string, number>()
+  for (const [label, n] of Object.entries(counts)) {
+    const id = ownerOf(label)
+    out.set(id, Math.max(out.get(id) ?? 0, n))
+  }
+  return out
+}
+
+/**
  * **主執行緒那一側的工作階段**——每個指令送進 worker，等 `dap-result`；變數快照跟著結果回來，`variables()` 讀快照。
- * `coverage()` 回 null：Cella 的節點進入次數下一版才有（spec 183 R2）。
+ * `coverage()`：Cella 的節點進入次數（spec 194 起；cella 0.1.202610312349 的 `stopVisits`）——標籤收回成語義樹的 id。
  */
 class CellaSession implements ExecutionSession {
   private seq = 0
@@ -67,6 +83,7 @@ class CellaSession implements ExecutionSession {
   private env: HardwareState | null = null
   private out: ((text: string) => void) | null = null
   private inputs: SessionInput[] = []
+  private visits: ReadonlyMap<string, number> | null = null
 
   private readonly sid: number
   private readonly send: (m: WorkerRequest) => void
@@ -83,6 +100,7 @@ class CellaSession implements ExecutionSession {
     if (r.kind !== 'dap-result') return
     this.vars = r.variables
     this.env = (r.env as HardwareState | null) ?? null
+    this.visits = r.coverage ? visitsByNode(r.coverage) : null
     this.waiting.get(r.seq)?.(r)
     this.waiting.delete(r.seq)
   }
@@ -128,8 +146,17 @@ class CellaSession implements ExecutionSession {
     if (r.ok) this.inputs.push({ kind: 'set-input', key, value })
     return { ok: r.ok === true, ...(r.message ? { message: r.message } : {}) }
   }
-  coverage(): null { return null }
+  coverage(): ReadonlyMap<string, number> | null { return this.visits }
   recordedInputs(): readonly SessionInput[] { return this.inputs }
+}
+
+/**
+ * 語義樹 → Cella 的程式。Python 的樹走 `python.ast`（spec 195），C 家族照舊（補進入點 → formalize）。
+ * 判決與除錯工作階段走同一支——同一棵樹不會被兩條路翻成兩種程式。
+ */
+export function formalizeFor(f: { tree: SemanticNode; targetId: string; skeletonId?: string; styleId: string }): FormalizeResult {
+  if (f.tree.componentId.startsWith('python:')) return formalizePython(f.tree)
+  return formalize(withEntryFunctions(f.tree, f.skeletonId as never), { board: cellaBoardOf(f.targetId), lang: isCDialect({ id: f.styleId } as never) ? 'c' : 'cpp' })
 }
 
 export function createCellaProvider(makeWorker: () => Worker): Provider {
@@ -181,8 +208,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
 
   /** 翻成 Cella 的程式；翻不出來回原因。與判決同一條路（補進入點 → formalize）。 */
   const formalOf = (f: NonNullable<SessionOptions['formal']>): { program: unknown; branch: CellaBranch } | { why: string } => {
-    const board = cellaBoardOf(f.targetId)
-    const r = formalize(withEntryFunctions(f.tree, f.skeletonId), { board, lang: isCDialect({ id: f.styleId } as never) ? 'c' : 'cpp' })
+    const r = formalizeFor(f)
     if (!r.program) return { why: `Cella 還不支援：${[...new Set(r.unknown.map((u) => u.reason))].join('、')}` }
     return { program: r.program, branch: branchOf(r.program as never) }
   }
@@ -192,7 +218,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
     // 還沒暖機 ⟹ 不為了執行去建 worker、載 35 MB（首屏與 e2e 都靠這一條，見 `src/main.ts`）
     if (state.state === 'idle' || state.state === 'loading') return { declined: '判斷功能還在載入' }
     if (state.state === 'unavailable') return { declined: `判斷功能無法使用：${state.reason}` }
-    if (!options.formal.tree.componentId.startsWith('cpp:')) return { declined: '這個語言還沒有 Cella' }
+    if (!/^(cpp|python):/.test(options.formal.tree.componentId)) return { declined: '這個語言還沒有 Cella' }
     const f = formalOf(options.formal)
     if ('why' in f) return { declined: f.why }
     const st = debuggerState.get(f.branch)
@@ -212,15 +238,15 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
     id: 'cella',
     declares: { verdict: true, types: true, session: { granularity: 'node', setInput: true, setVariable: true, steps: true } },
     createSession,
-    // 判決只有 C 家族（c／cpp／arduino）的套件，三者在 semorphe 都是 cpp 這個語言
-    supports: (language) => language === 'cpp',
+    // C 家族（c／cpp／arduino，在 semorphe 都是 cpp 這個語言）＋ Python（spec 195）
+    supports: (language) => language === 'cpp' || language === 'python',
     readiness: () => state,
     onReadiness: (cb) => { listeners.push(cb) },
     warmUp: () => { if (state.state === 'idle') try { send({ id: 0, kind: 'load' }) } catch { /* 狀態已是 unavailable */ } },
     check: (req: CheckRequest) => {
       const id = ++latest
       const board = cellaBoardOf(req.targetId)
-      const f = formalize(withEntryFunctions(req.tree, req.skeletonId), { board, lang: isCDialect({ id: req.styleId } as never) ? 'c' : 'cpp' })
+      const f = formalizeFor(req)
       if (!f.program) {
         const verdict: Verdict = {
           verdict: 'unknown', basis: 'computed', exit: null, out: '',

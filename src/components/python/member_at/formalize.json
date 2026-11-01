@@ -1,0 +1,12 @@
+{
+  "template": {
+    "k": "eAttribute",
+    "n": "$id",
+    "value": {
+      "$slot": "obj"
+    },
+    "attr": {
+      "$prop": "member"
+    }
+  }
+}

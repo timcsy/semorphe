@@ -1,0 +1,23 @@
+{
+  "template": {
+    "k": "eCall",
+    "n": "$id",
+    "func": {
+      "k": "eAttribute",
+      "n": "$id/func",
+      "value": {
+        "$slot": "obj"
+      },
+      "attr": "split"
+    },
+    "args": [
+      {
+        "$ifSlot": "value",
+        "then": {
+          "$slot": "value"
+        }
+      }
+    ],
+    "keywords": []
+  }
+}

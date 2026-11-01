@@ -1,0 +1,9 @@
+{
+  "template": {
+    "k": "sReturn",
+    "n": "$id",
+    "value": {
+      "$opt": "value"
+    }
+  }
+}

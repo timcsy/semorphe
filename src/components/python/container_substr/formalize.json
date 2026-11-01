@@ -1,0 +1,22 @@
+{
+  "template": {
+    "k": "eSubscript",
+    "n": "$id",
+    "value": {
+      "$slot": "obj"
+    },
+    "slice": {
+      "k": "eSlice",
+      "n": "$id/slice",
+      "lower": {
+        "$opt": "from"
+      },
+      "upper": {
+        "$opt": "to"
+      },
+      "step": {
+        "$opt": "step"
+      }
+    }
+  }
+}

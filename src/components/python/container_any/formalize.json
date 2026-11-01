@@ -1,0 +1,17 @@
+{
+  "template": {
+    "k": "eCall",
+    "n": "$id",
+    "func": {
+      "k": "eName",
+      "n": "$id/func",
+      "id": "any"
+    },
+    "args": [
+      {
+        "$slot": "obj"
+      }
+    ],
+    "keywords": []
+  }
+}

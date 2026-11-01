@@ -1,0 +1,18 @@
+{
+  "template": {
+    "k": "sAssign",
+    "n": "$id",
+    "targets": [
+      {
+        "k": "eName",
+        "n": "$id/target",
+        "id": {
+          "$prop": "obj"
+        }
+      }
+    ],
+    "value": {
+      "$slot": "value"
+    }
+  }
+}

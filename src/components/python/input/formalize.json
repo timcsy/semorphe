@@ -1,0 +1,20 @@
+{
+  "template": {
+    "k": "eCall",
+    "n": "$id",
+    "func": {
+      "k": "eName",
+      "n": "$id/func",
+      "id": "input"
+    },
+    "args": [
+      {
+        "$ifSlot": "prompt",
+        "then": {
+          "$slot": "prompt"
+        }
+      }
+    ],
+    "keywords": []
+  }
+}

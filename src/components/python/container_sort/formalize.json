@@ -1,0 +1,36 @@
+{
+  "template": {
+    "k": "eCall",
+    "n": "$id",
+    "func": {
+      "k": "eName",
+      "n": "$id/func",
+      "id": "sorted"
+    },
+    "args": {
+      "$slots": "obj"
+    },
+    "keywords": [
+      {
+        "$ifSlot": "key",
+        "then": {
+          "k": "keyword",
+          "arg": "key",
+          "value": {
+            "$slot": "key"
+          }
+        }
+      },
+      {
+        "$ifSlot": "reverse",
+        "then": {
+          "k": "keyword",
+          "arg": "reverse",
+          "value": {
+            "$slot": "reverse"
+          }
+        }
+      }
+    ]
+  }
+}

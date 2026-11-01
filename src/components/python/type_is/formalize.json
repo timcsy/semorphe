@@ -1,0 +1,24 @@
+{
+  "template": {
+    "k": "eCall",
+    "n": "$id",
+    "func": {
+      "k": "eName",
+      "n": "$id/func",
+      "id": "isinstance"
+    },
+    "args": [
+      {
+        "$slot": "obj"
+      },
+      {
+        "k": "eName",
+        "n": "$id/type",
+        "id": {
+          "$prop": "target_type"
+        }
+      }
+    ],
+    "keywords": []
+  }
+}

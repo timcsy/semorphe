@@ -1,0 +1,9 @@
+{
+  "template": {
+    "k": "eList",
+    "n": "$id",
+    "elts": {
+      "$slots": "items"
+    }
+  }
+}

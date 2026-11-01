@@ -1,0 +1,9 @@
+{
+  "template": {
+    "k": "sGlobal",
+    "n": "$id",
+    "names": {
+      "$propList": "name"
+    }
+  }
+}

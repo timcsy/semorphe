@@ -1,0 +1,15 @@
+{
+  "template": {
+    "k": "sAssign",
+    "n": "$id",
+    "targets": [
+      {
+        "$transform": "targets",
+        "slot": "targets"
+      }
+    ],
+    "value": {
+      "$slot": "value"
+    }
+  }
+}

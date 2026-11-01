@@ -1,0 +1,11 @@
+{
+  "template": {
+    "k": "sDelete",
+    "n": "$id",
+    "targets": [
+      {
+        "$slot": "target"
+      }
+    ]
+  }
+}

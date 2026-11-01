@@ -1,0 +1,13 @@
+{
+  "template": {
+    "k": "sImportFrom",
+    "n": "$id",
+    "module": {
+      "$prop": "module"
+    },
+    "names": {
+      "$transform": "aliases",
+      "prop": "names"
+    }
+  }
+}

@@ -9,10 +9,16 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // cella 2026-10-31 定的分工：**程式自己沒宣告、來自標頭的名字**一律送 eConst（同 cpp_to_tree.py）；
     // 存不存在由 Cella 依板子與 include 判（不存在時判決指回這個節點）。學生自己宣告的（`const int LED = 13;`）
     // 已經由作用域走訪解析成 eVar，不會走到這裡。⚠️ 判準不是「全大寫」——`Serial`、`A0` 也是標頭的名字。
+    // 🟢 C／C++ 也一樣（spec 194；cella 0.1.202610312349 起認得標準標頭的巨集常數：INT_MAX、RAND_MAX、EXIT_SUCCESS……）：
+    //    引入了定義它的標頭才有值；沒引入、或根本不存在（打錯字）由 Cella 判 reject／unknown，判決指回這個節點——不再在我們這側標 unknown。
     const name = String(n.properties?.name ?? '')
-    if (f.options.board) return f.k('eConst', { n: n.id, name })
-    return f.miss(n, `名字「${name}」指不到宣告`)
+    // 物件巨集（spec 197）：前端展開——值代進使用處，標籤用使用處的 id（判決指回這一格）
+    const m = f.macro(name)
+    if (m) return m.expr(n.id)
+    return f.k('eConst', { n: n.id, name })
   })
+  // 陣列長度寫成巨集名（`int a[N];`）：沒有宣告、而且是物件巨集 → 照值算（spec 197）
+  r.constInt('cpp:var_ref', (n, f) => (f.declOf(n.id) ? null : f.macro(String(n.properties?.name ?? ''))?.int ?? null))
   // 作用域：一個名字的參照——指到宣告它的那個節點
   r.scope('cpp:var_ref', (n, w) => w.resolve(n.id, String(n.properties?.name ?? '')))
 }

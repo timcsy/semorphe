@@ -1,0 +1,27 @@
+{
+  "template": {
+    "k": "sWith",
+    "n": "$id",
+    "items": [
+      {
+        "k": "withItem",
+        "contextExpr": {
+          "$slot": "value"
+        },
+        "optionalVars": {
+          "$ifProp": "name",
+          "then": {
+            "k": "eName",
+            "n": "$id/target",
+            "id": {
+              "$prop": "name"
+            }
+          }
+        }
+      }
+    ],
+    "body": {
+      "$body": "body"
+    }
+  }
+}

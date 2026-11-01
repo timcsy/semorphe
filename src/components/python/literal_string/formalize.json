@@ -1,0 +1,12 @@
+{
+  "template": {
+    "k": "eConstant",
+    "n": "$id",
+    "value": {
+      "k": "cStr",
+      "s": {
+        "$transform": "literalString"
+      }
+    }
+  }
+}

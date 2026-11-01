@@ -59,6 +59,8 @@ const KINDS: Record<string, { rule: string; severity: 'error' | 'info' }> = {
   unsupported: { rule: 'CELLA_UNSUPPORTED', severity: 'info' },
   fuel: { rule: 'CELLA_FUEL', severity: 'info' },
   unspecified: { rule: 'CELLA_UNSPECIFIED', severity: 'info' },
+  // 求值順序未指定、而兩邊的副作用互相衝突（`f() + g()` 兩個都印東西）——標準允許不只一種結果（cella 0.1.202610312349 起）
+  ubOrder: { rule: 'CELLA_UNSPECIFIED', severity: 'info' },
 }
 
 /** 判決產出端的全部規則身分（護欄用）。 */
@@ -68,10 +70,22 @@ export const VERDICT_RULES: readonly string[] = [...Object.values(KINDS).map((k)
 const ASSUMES: Record<string, string> = {
   'vector.growth': 'vector 的容量怎麼長、什麼時候搬家，照 libc++ 的做法',
   'library.what': '例外的 what() 印出的文字，照 libc++ 的寫法',
+  // cella 0.1.202610312349 起（spec 194）
+  'rand.sequence': 'rand() 產生的那一串數字，照 glibc 的演算法（沒有呼叫 srand 時種子是 1）',
+  'time.now': 'time() 讀到的「現在」——判斷時固定當成 0，實際執行每次都不同',
+  'sort.order': 'sort 排序時，相等的元素誰先誰後，照 libc++ 的做法',
+  // cella 下一版（2026-11-01 預告）：math.h 的 sin、cos、exp、log、pow…
+  'math.correctlyRounded': '數學函式（sin、cos、exp、log、pow…）算出的小數照正確捨入算；實際的函式庫最後一位可能不同',
 }
 
-/** 標籤 `<id>/<角色>`、`<id>#<槽>` → `<id>`（與 `tests/probes/binding-verdict` 的 `owner` 同一條規則）。 */
-export const ownerOf = (label: string): string => label.split(/[/#]/)[0]
+/** 擔保者 → 顯示的名字（小標上的「依 …」）。認不得的照原文。 */
+const IMPLEMENTATIONS: Record<string, string> = { environment: '執行環境' }
+
+/**
+ * 標籤 `<id>/<角色>`、`<id>#<槽>`、`<id>:<合成>` → `<id>`（與 `tests/probes/binding-verdict` 的 `owner` 同一條規則）。
+ * `:` 是 Cella 展開範圍 for 時合成的運算式（`:begin`、`:end`、`:element`、`:test`、`:step`；cella 2026-11-01 告知）——對回範圍 for 本身。
+ */
+export const ownerOf = (label: string): string => label.split(/[/#:]/)[0]
 
 function ids(tree: SemanticNode): Set<string> {
   const out = new Set<string>()
@@ -91,10 +105,20 @@ export function toDiagnostics(input: {
   tree: SemanticNode
   readsInput: boolean
   hasStdin: boolean
-}): { diagnostics: Diagnostic[]; notes: string[]; assumes: { implementation: string; text: string }[] } {
+}): {
+  diagnostics: Diagnostic[]
+  notes: string[]
+  assumes: { implementation: string; text: string }[]
+  /**
+   * **對不到積木的問題**（`at` 是空的，或指到樹上沒有的節點——例如步數用盡）：照嚴重度計數，狀態列要算進去。
+   * ⚠️ 2026-11-01 之前它只進 `notes`（狀態列的 title），而狀態列寫「沒有發現問題」——把判不了說成對的（P6）。
+   */
+  unplaced: { error: number; info: number }
+} {
   const { verdict, types, tree, readsInput, hasStdin } = input
   const notes: string[] = []
-  if (!verdict) return { diagnostics: [], notes: ['判斷功能需要 Cella（還沒載好，或這個語言還沒有）'], assumes: [] }
+  const unplaced = { error: 0, info: 0 }
+  if (!verdict) return { diagnostics: [], notes: ['判斷功能需要 Cella（還沒載好，或這個語言還沒有）'], assumes: [], unplaced }
 
   const known = ids(tree)
   const diagnostics: Diagnostic[] = []
@@ -103,26 +127,31 @@ export function toDiagnostics(input: {
     if (p.kind === 'hole') continue                                   // 空槽＝還沒寫完，不顯示
     if (readsInput && !hasStdin && RUNTIME(p.kind)) { dropped++; continue }
     const nodeId = p.at ? ownerOf(p.at) : ''
-    if (!known.has(nodeId)) { notes.push(`有一則判決對不到積木：${p.kind}${p.reason ? `（${p.reason}）` : ''}`); continue }
     const k = KINDS[p.kind]
+    const severity = k?.severity ?? (verdict.verdict === 'reject' ? 'error' : 'info')
+    if (!known.has(nodeId)) {
+      unplaced[severity]++
+      notes.push(`有一則判決對不到積木：${p.kind}${p.reason ? `（${p.reason}）` : ''}`)
+      continue
+    }
     diagnostics.push({
       nodeId, source: 'cella',
       rule: k?.rule ?? 'CELLA_OTHER',
-      severity: k?.severity ?? (verdict.verdict === 'reject' ? 'error' : 'info'),
+      severity,
       params: { kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
     })
   }
   if (dropped > 0) notes.push('這支程式要讀輸入——給一份輸入，才判得出執行時的問題')
 
   // `assumes`：不改變有錯／沒錯（第 14 題），單獨交出去給「依 libc++」小標——不混進 notes
-  const assumes = (verdict.assumes ?? []).map((a) => ({ implementation: a.implementation, text: ASSUMES[a.choice] ?? a.choice }))
+  const assumes = (verdict.assumes ?? []).map((a) => ({ implementation: IMPLEMENTATIONS[a.implementation] ?? a.implementation, text: ASSUMES[a.choice] ?? a.choice }))
 
   // 型別不合：允許接上、標在那一句（第 16 題）。判決的 reject 也指到同一顆時只留一則
   for (const e of types?.errors ?? []) {
     const nodeId = ownerOf(e.at)
-    if (!known.has(nodeId)) { notes.push(`有一則型別錯誤對不到積木（${e.reason}）`); continue }
+    if (!known.has(nodeId)) { unplaced.error++; notes.push(`有一則型別錯誤對不到積木（${e.reason}）`); continue }
     if (diagnostics.some((d) => d.nodeId === nodeId && d.rule === 'CELLA_REJECT')) continue
     diagnostics.push({ nodeId, severity: 'error', source: 'cella', rule: 'TYPE_MISMATCH', params: { reason: e.reason } })
   }
-  return { diagnostics, notes, assumes }
+  return { diagnostics, notes, assumes, unplaced }
 }

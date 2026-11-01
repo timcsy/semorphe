@@ -1,0 +1,16 @@
+{
+  "template": {
+    "k": "sExpr",
+    "n": "$id",
+    "value": {
+      "k": "eCall",
+      "n": "$id/call",
+      "func": {
+        "k": "eName",
+        "n": "$id/call/func",
+        "id": "print"
+      },
+      "$callArgs": "values"
+    }
+  }
+}

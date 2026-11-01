@@ -1,0 +1,17 @@
+{
+  "template": {
+    "k": "sFunctionDef",
+    "n": "$id",
+    "name": {
+      "$prop": "name"
+    },
+    "args": {
+      "$transform": "params",
+      "slot": "params"
+    },
+    "body": {
+      "$body": "body"
+    },
+    "decoratorList": []
+  }
+}

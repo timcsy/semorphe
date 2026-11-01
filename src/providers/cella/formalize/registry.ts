@@ -24,8 +24,10 @@ export interface FormalizeTables {
   item: Map<string, (n: SemanticNode, f: FormalizeContext) => CellaJson[]>
   decl: Map<string, (n: SemanticNode, f: FormalizeContext, global: boolean) => CellaJson[]>
   init: Map<string, (n: SemanticNode, f: FormalizeContext) => CellaJson>
-  constInt: Map<string, (n: SemanticNode) => number | null>
+  constInt: Map<string, (n: SemanticNode, f: FormalizeContext) => number | null>
   definesType: Map<string, (n: SemanticNode) => string>
+  definesMacro: Map<string, (n: SemanticNode) => { name: string; value: string } | null>
+  literal: Map<string, (text: string) => boolean>
   scope: Map<string, (n: SemanticNode, w: ScopeWalker) => void>
 }
 
@@ -33,6 +35,7 @@ function build(): FormalizeTables {
   const t: FormalizeTables = {
     expr: new Map(), stmt: new Map(), item: new Map(), decl: new Map(),
     init: new Map(), constInt: new Map(), definesType: new Map(), scope: new Map(),
+    definesMacro: new Map(), literal: new Map(),
   }
   for (const [key, mod] of Object.entries(MODULES)) {
     // 用 split 不用正則（同 `core/component/registry.ts` 的 pathToDir）
@@ -49,7 +52,7 @@ function build(): FormalizeTables {
     const r: FormalizeRegistrar = {
       expr: put(t.expr, 'expr'), stmt: put(t.stmt, 'stmt'), item: put(t.item, 'item'), decl: put(t.decl, 'decl'),
       init: put(t.init, 'init'), constInt: put(t.constInt, 'constInt'), definesType: put(t.definesType, 'definesType'),
-      scope: put(t.scope, 'scope'),
+      scope: put(t.scope, 'scope'), definesMacro: put(t.definesMacro, 'definesMacro'), literal: put(t.literal, 'literal'),
     }
     mod.registerFormalize(r)
   }

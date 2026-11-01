@@ -14,6 +14,9 @@
   "slots": {},
   "role": "statement",
   "owner": "(python)",
+  "annotations": {
+    "debug_step": true
+  },
   "paths": {
     "views": {
       "blocks": {

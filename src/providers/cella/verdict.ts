@@ -39,24 +39,36 @@ export interface CellaVerdict {
   [extra: string]: unknown
 }
 
-/** 三個分支；由程式 JSON 決定走哪一個。 */
-export type CellaBranch = 'c' | 'cpp' | 'arduino'
+/** 四個分支（C 家族三個 ＋ Python，spec 195）；由程式 JSON 決定走哪一個。 */
+export type CellaBranch = 'c' | 'cpp' | 'arduino' | 'python'
 
 /** 讀檔：`pkg` 為 `null` 是 `cella-lang` 本身的資產。 */
 export type CellaRead = (pkg: string | null, file: string) => Promise<Uint8Array> | Uint8Array
 
 /** 程式 JSON 該交給哪個分支：有板子 → arduino；`langC` → c；其餘 → cpp。 */
-export function branchOf(program: { lang?: { k?: string }; board?: unknown }): CellaBranch {
+export function branchOf(program: { k?: string; lang?: { k?: string }; board?: unknown }): CellaBranch {
+  // Python 的根是 `program`（`python.ast`），C 家族的是 `prog`（`cfamily.syntax`）
+  if (program.k === 'program') return 'python'
   if (program.board != null) return 'arduino'
   return program.lang?.k === 'langC' ? 'c' : 'cpp'
 }
 
-const BRANCHES = ['c', 'cpp', 'arduino'] as const
-const LIBRARY = ['import c', 'import cpp', 'import arduino', ...BRANCHES.flatMap((b) => [
-  `def verdict_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.verdict src input fuel`,
-  `def types_${b} (src : String) (candidates : String) : String := ${b}.types src candidates`,
-])].join('\n') + '\n'
-const EXPORTS = BRANCHES.flatMap((b) => [`verdict_${b}`, `types_${b}`]).join(',')
+/**
+ * **兩個判決模組，用到才編**（spec 197c）。
+ * 🔴 spec 195 第一版把 Python 編進同一個模組：量到 12 秒／4.7 MB → 22.7 秒／15.9 MB，**每一個學生**（包括只學 C++ 的）第一次載入都變慢、
+ *    瀏覽器裡暖機超過 e2e 的三分鐘——所以拆成兩個家族：C 家族在暖機時編；Python 第一次遇到 Python 程式才編。
+ */
+export type CellaFamily = 'cfamily' | 'python'
+const FAMILY_BRANCHES: Record<CellaFamily, readonly CellaBranch[]> = { cfamily: ['c', 'cpp', 'arduino'], python: ['python'] }
+export const familyOf = (b: CellaBranch): CellaFamily => (b === 'python' ? 'python' : 'cfamily')
+const libraryOf = (family: CellaFamily): string => {
+  const bs = FAMILY_BRANCHES[family]
+  return [...bs.map((b) => `import ${b}`), ...bs.flatMap((b) => [
+    `def verdict_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.verdict src input fuel`,
+    `def types_${b} (src : String) (candidates : String) : String := ${b}.types src candidates`,
+  ])].join('\n') + '\n'
+}
+const exportsOf = (family: CellaFamily): string => FAMILY_BRANCHES[family].flatMap((b) => [`verdict_${b}`, `types_${b}`]).join(',')
 
 /** 型別查詢（`@cella-lang/cfamily` README〈Type query〉）。 */
 export interface CellaTypes {
@@ -73,14 +85,23 @@ export interface CellaChecker {
 }
 
 /** 判決模組的原始碼——它與套件版本一起決定快取鍵（`cache.ts`）。 */
-export const CHECKER_SOURCE = LIBRARY
+export const checkerSource = (family: CellaFamily): string => libraryOf(family)
+export const CHECKER_SOURCE = libraryOf('cfamily')
 
 /**
  * 建一個判決器：載入 Cella 與三個語言套件、編好判決模組，回傳判決與型別查詢。
  * ⚠️ 昂貴（十幾秒）——一個宿主建一次。
  */
-export async function createCellaChecker(read: CellaRead): Promise<CellaChecker> {
-  return checkerFromBytes(await compileCellaChecker(read))
+export async function createCellaChecker(read: CellaRead, families: readonly CellaFamily[] = ['cfamily']): Promise<CellaChecker> {
+  const byFamily = new Map<CellaFamily, CellaChecker>()
+  for (const f of families) byFamily.set(f, await checkerFromBytes(await compileCellaChecker(read, f)))
+  const pick = (program: unknown): CellaChecker => {
+    const f = familyOf(branchOf(program as never))
+    const c = byFamily.get(f)
+    if (!c) throw new Error(`判決器沒有編 ${f} 這一族（createCellaChecker 的 families）`)
+    return c
+  }
+  return { verdict: (p, input, fuel) => pick(p).verdict(p, input, fuel), types: (p, cands) => pick(p).types(p, cands) }
 }
 
 /**
@@ -88,22 +109,24 @@ export async function createCellaChecker(read: CellaRead): Promise<CellaChecker>
  * 🟢 **編好的模組不需要 Cella 的執行環境**（2026-10-31 量：4.7 MB 的模組在乾淨的行程裡 13 毫秒載起來就能判）
  * ——所以快取存這一份就夠，第二次打開連套件都不必下載。
  */
-export async function compileCellaChecker(read: CellaRead): Promise<Uint8Array> {
-  const cella = await loadCellaPackages(read)
-  return cella.compile_wasm_library(LIBRARY, EXPORTS)
+export async function compileCellaChecker(read: CellaRead, family: CellaFamily = 'cfamily'): Promise<Uint8Array> {
+  const cella = await loadCellaPackages(read, FAMILY_BRANCHES[family])
+  return cella.compile_wasm_library(libraryOf(family), exportsOf(family))
 }
 
-let packagesLoaded: Promise<typeof import('cella-lang')> | null = null
+let base: Promise<{ cella: typeof import('cella-lang'); loadPackage(name: string): Promise<void> }> | null = null
 /**
- * 載入 Cella 本體與三個語言套件——**一個行程只做一次**（判決模組與除錯模組共用）。
+ * 載入 Cella 本體（一個行程一次）與**要用到的**語言套件（各載一次）——判決模組與除錯模組共用。
  * 回傳的 `cella-lang` 模組已經可以 `compile_wasm_library`。
  */
-export function loadCellaPackages(read: CellaRead): Promise<typeof import('cella-lang')> {
-  packagesLoaded ??= loadPackagesOnce(read).catch((e: unknown) => { packagesLoaded = null; throw e })
-  return packagesLoaded
+export async function loadCellaPackages(read: CellaRead, packages: readonly string[] = FAMILY_BRANCHES.cfamily): Promise<typeof import('cella-lang')> {
+  base ??= loadBase(read).catch((e: unknown) => { base = null; throw e })
+  const b = await base
+  for (const p of packages) await b.loadPackage(p)
+  return b.cella
 }
 
-async function loadPackagesOnce(read: CellaRead): Promise<typeof import('cella-lang')> {
+async function loadBase(read: CellaRead): Promise<{ cella: typeof import('cella-lang'); loadPackage(name: string): Promise<void> }> {
   const cella = await import('cella-lang')
   const bytes = async (pkg: string | null, file: string): Promise<Uint8Array> => await read(pkg, file)
   const text = async (pkg: string, file: string): Promise<string> => new TextDecoder().decode(await bytes(pkg, file))
@@ -111,28 +134,32 @@ async function loadPackagesOnce(read: CellaRead): Promise<typeof import('cella-l
   await cella.default({ module_or_path: await bytes(null, 'cella_bg.wasm') })
   cella.init_stdlib_explicit(await bytes(null, 'stdlib.cell'))
 
-  const loaded = new Set<string>()
-  const loadPackage = async (name: string): Promise<void> => {
-    if (loaded.has(name)) return
-    const indexText = await text(name, 'index.json')
-    const index = JSON.parse(indexText) as {
-      requires: { 'cella-lang': { modules: string[] }; packages?: string[] }
-      modules: Record<string, { deps: string[] }>
+  const loaded = new Map<string, Promise<void>>()
+  const loadPackage = (name: string): Promise<void> => {
+    let p = loaded.get(name)
+    if (!p) {
+      p = (async () => {
+        const indexText = await text(name, 'index.json')
+        const index = JSON.parse(indexText) as {
+          requires: { 'cella-lang': { modules: string[] }; packages?: string[] }
+          modules: Record<string, { deps: string[] }>
+        }
+        for (const m of index.requires['cella-lang'].modules) {
+          if (loaded.has(`module:${m}`)) continue
+          loaded.set(`module:${m}`, Promise.resolve())
+          cella.load_module_pack(await bytes(null, `modules/${m}.cell`))
+        }
+        for (const dep of index.requires.packages ?? []) await loadPackage(dep)
+        for (const m of index.modules[name].deps) {
+          const r = JSON.parse(cella.load_library_pack(indexText, m, await bytes(name, `${m}.cell`))) as { ok: boolean; error?: string }
+          if (!r.ok) throw new Error(`Cella 套件 ${name} 的模組 ${m} 載不進去：${r.error ?? '（沒有理由）'}`)
+        }
+      })()
+      loaded.set(name, p)
     }
-    for (const m of index.requires['cella-lang'].modules) {
-      if (loaded.has(`module:${m}`)) continue
-      cella.load_module_pack(await bytes(null, `modules/${m}.cell`))
-      loaded.add(`module:${m}`)
-    }
-    for (const p of index.requires.packages ?? []) await loadPackage(p)
-    for (const m of index.modules[name].deps) {
-      const r = JSON.parse(cella.load_library_pack(indexText, m, await bytes(name, `${m}.cell`))) as { ok: boolean; error?: string }
-      if (!r.ok) throw new Error(`Cella 套件 ${name} 的模組 ${m} 載不進去：${r.error ?? '（沒有理由）'}`)
-    }
-    loaded.add(name)
+    return p
   }
-  for (const b of BRANCHES) await loadPackage(b)
-  return cella
+  return { cella, loadPackage }
 }
 
 /** 編好的位元組 → 判決器（不載 Cella 本體）。 */

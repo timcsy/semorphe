@@ -1,0 +1,9 @@
+{
+  "template": {
+    "k": "eName",
+    "n": "$id",
+    "id": {
+      "$prop": "name"
+    }
+  }
+}

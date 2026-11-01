@@ -286,14 +286,15 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       驗收：核心與 UI 不 import 任何提供者（分層護欄）、每個結果帶出處、學生行為不變（e2e 全綠）
 - [x] **2 元件動詞改名**——每個視圖一對 `render`／`lift`（[spec 181](../specs/181-view-paths/spec.md)）→ [history/308](history/308-元件的動詞改成每個視圖一對-render-lift.md)
 - [x] **3 升級 Cella**——套件釘在 `0.1.202610310706`，淺嵌入的探針、merkle 基線、`contract.cella` 退場（第 393 刀）
-- [ ] **4 深嵌入 formalize**（[spec 180](../specs/180-deep-formalize/spec.md)，先 C++／Arduino）——語義樹 → 程式 JSON；靜態作用域走訪填 declNode、nodeId 穩定、`iInclude`、
+- [x] **4 深嵌入 formalize**（[spec 180](../specs/180-deep-formalize/spec.md)，先 C++／Arduino）——語義樹 → 程式 JSON；靜態作用域走訪填 declNode、nodeId 穩定、`iInclude`、
       依支援清單標 unknown；驗收：課文 C／C++／Arduino 解答全部翻得出、交判決綁定語料（Cella 的衍生原則 C18「判決綁定」）
       🟡 第一批（2026-10-31）：作用域走訪（852 個參照 0 落空）、課文解答 84 / 94、Arduino sketch 10 / 10、C 分支、空槽變洞、判決綁定語料第一版交出；
       剩下的 10 份卡在 Cella 還沒建模的函式庫（pair、queue、set、map、stack、priority_queue）——已給 Cella 清單，Cella 已開工（下一版帶 `tAuto`）；
       第二批（第 389–391 刀）：formalize 搬進膠囊、判決綁定語料 109 筆／附 program 99 筆，cella 用 clang 比兩棵樹 95/95 相同；Arduino 15/15
-- [ ] **5 Cella 提供者**——verdict（積木標示、判題）、types（型別不合接上後標錯、工具箱不藏）、session（除錯、變數、步數）、
+      🟢 **完成**（spec 194，cella 0.1.202610312349）：109／109 翻得出；Cella 判決 accept 106、輸出全部一致 → [history/319](history/319-Cella-下一版到了.md)
+- [x] **5 Cella 提供者**——verdict（積木標示、判題）、types（型別不合接上後標錯、工具箱不藏）、session（除錯、變數、步數）、
       `assumes` 小標、硬體時間軸面板、課文 check 的腳位事件（2026-10-31 拆成 5a／5b／5c）
-      ⏳ **剩下的**：覆蓋標記等 cella 的 `coverage()`；判題改用 `verdict` 照 spec 182 的範圍移到 6。
+      🟢 覆蓋標記（spec 194：`coverage()` 接上）→ [history/319](history/319-Cella-下一版到了.md)；判題改用 `verdict` 照 spec 182 的範圍移到 6。
       （第 14 題的「依 libc++」小標 2026-11-01 第 402 刀補完：狀態列判斷那一格旁邊，點開是中文說明，不改綠紅）
   - [x] **5a 判決與型別查詢 ＋ 第一個看得見的消費者**（spec 182）——提供者宣告 `verdict`／`types`、排在 JS 直譯器前面；
         → [history/309](history/309-判決第一次被學生看到.md)
@@ -305,6 +306,7 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
       🟢 **使用者定（2026-11-01）：等 Python 也有 Cella 再一起切**——一次切完，不留過渡、不讓 Python（99 顆、18 堂課）停擺；
       ⟹ 6 的開工條件多一項：Cella 的 Python 深嵌入發布 ＋ 我們的 Python formalize 與提供者（原 7 的前半段提前）→ [history/317](history/317-使用者定的四題.md)
 - [ ] **7 Python**——4～5 再走一遍（formalize、提供者）；⚠️ 它的前半段排在 6 的切換**之前**（見上一項）
+      🟡 前半段（spec 195、196）：formalize（照 Cella 的對照表，**課文 48／48 翻得出、判決輸出全部一致**）＋ 提供者的 Python 分支（判決、除錯、覆蓋）→ [history/320](history/320-Python-接上-Cella.md)
 
 ⚠️ **不在本項**：Cella 語言本身的課程（重構之後）· Web Component 領域（Cella 那側的深嵌入）。
 

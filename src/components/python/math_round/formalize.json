@@ -1,0 +1,23 @@
+{
+  "template": {
+    "k": "eCall",
+    "n": "$id",
+    "func": {
+      "k": "eName",
+      "n": "$id/func",
+      "id": "round"
+    },
+    "args": [
+      {
+        "$slot": "value"
+      },
+      {
+        "$ifSlot": "digits",
+        "then": {
+          "$slot": "digits"
+        }
+      }
+    ],
+    "keywords": []
+  }
+}

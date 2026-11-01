@@ -12,7 +12,7 @@
  * ← { id, kind: 'error', reason }
  * ```
  */
-import { compileCellaChecker, checkerFromBytes, type CellaChecker, type CellaTypes, type CellaVerdict } from './verdict'
+import { compileCellaChecker, checkerFromBytes, branchOf, familyOf, type CellaChecker, type CellaFamily, type CellaTypes, type CellaVerdict } from './verdict'
 import { fetchCellaAsset } from './assets'
 import { checkerKey, loadCompiled, saveCompiled, moduleKey } from './cache'
 import { compileCellaDebugger, debuggerSource } from './debugger'
@@ -50,34 +50,43 @@ export type WorkerReply =
   | { id: number; kind: 'error'; reason: string }
   | { kind: 'dap-status'; branch: CellaBranch; status: 'loading' | 'ready' | 'unavailable'; reason?: string }
   | { kind: 'dap-output'; sid: number; text: string }
-  | { kind: 'dap-result'; sid: number; seq: number; outcome?: WireOutcome; ok?: boolean; message?: string; variables: Variable[]; env: unknown }
+  | { kind: 'dap-result'; sid: number; seq: number; outcome?: WireOutcome; ok?: boolean; message?: string; variables: Variable[]; env: unknown; coverage: Record<string, number> | null }
 
 const post = (r: WorkerReply): void => (self as unknown as { postMessage(m: WorkerReply): void }).postMessage(r)
 
 /** 先找快取（第二次打開：不下載套件、不編譯）；沒有或載不起來才編。 */
-async function build(): Promise<{ checker: CellaChecker; cached: boolean }> {
-  const key = await checkerKey().catch(() => null)
+async function build(family: CellaFamily): Promise<{ checker: CellaChecker; cached: boolean }> {
+  const key = await checkerKey(family).catch(() => null)
   const hit = key ? await loadCompiled(key) : null
   if (hit) {
     try { return { checker: await checkerFromBytes(hit), cached: true } } catch { /* 壞掉的快取 → 重編 */ }
   }
-  const bytes = await compileCellaChecker(fetchCellaAsset)
+  const bytes = await compileCellaChecker(fetchCellaAsset, family)
   if (key) void saveCompiled(key, bytes)
   return { checker: await checkerFromBytes(bytes), cached: false }
 }
 
-let checker: Promise<CellaChecker> | null = null
-function load(): Promise<CellaChecker> {
-  if (!checker) {
-    post({ kind: 'status', status: 'loading' })
-    const built = build()
-    checker = built.then((b) => b.checker)
+/**
+ * 每一族一個判決器，用到才建（spec 197c）。
+ * ⚠️ 狀態（`status`）只報 C 家族——它是暖機時建的那一個；Python 第一次遇到 Python 程式才編（那一次判決慢一點，之後走快取）。
+ */
+const checkers = new Map<CellaFamily, Promise<CellaChecker>>()
+function load(family: CellaFamily = 'cfamily'): Promise<CellaChecker> {
+  let c = checkers.get(family)
+  if (!c) {
+    if (family === 'cfamily') post({ kind: 'status', status: 'loading' })
+    const built = build(family)
+    c = built.then((b) => b.checker)
+    checkers.set(family, c)
     built.then(
-      (b) => post({ kind: 'status', status: 'ready', cached: b.cached }),
-      (e: unknown) => post({ kind: 'status', status: 'unavailable', reason: e instanceof Error ? e.message : String(e) }),
+      (b) => { if (family === 'cfamily') post({ kind: 'status', status: 'ready', cached: b.cached }) },
+      (e: unknown) => {
+        checkers.delete(family)
+        if (family === 'cfamily') post({ kind: 'status', status: 'unavailable', reason: e instanceof Error ? e.message : String(e) })
+      },
     )
   }
-  return checker
+  return c
 }
 
 let pending: Extract<WorkerRequest, { kind: 'check' }> | null = null
@@ -88,7 +97,7 @@ async function drain(): Promise<void> {
     const req = pending
     pending = null
     try {
-      const c = await load()
+      const c = await load(familyOf(branchOf(req.program as never)))
       if (pending) { post({ id: req.id, kind: 'skipped' }); continue }   // 等載入時來了更新的
       post({ id: req.id, kind: 'result', verdict: c.verdict(req.program, req.input, req.fuel), types: c.types(req.program, []) })
     } catch (e) {
@@ -177,6 +186,11 @@ function outcomeOf(d: DapSession, launching: boolean): WireOutcome {
   }
 }
 
+/** 到目前為止每個節點標籤進入幾次（`cella-lang/dap` 的 `coverage()`，spec 194）；結束後照樣讀得到——跑完才是整支的覆蓋。 */
+function coverageOf(d: DapSession): Record<string, number> | null {
+  try { return d.s.coverage() ?? null } catch { return null }
+}
+
 /** 暫停時板子的狀態（`readEnv`）；一般程式是 null。 */
 function envOf(d: DapSession): unknown {
   if (d.exited || d.terminated) return null
@@ -194,7 +208,7 @@ function variablesOf(d: DapSession): Variable[] {
 async function dapOp(sid: number, seq: number, body: DapOp): Promise<void> {
   const d = await sessions.get(sid)!
   const reply = (r: Partial<Extract<WorkerReply, { kind: 'dap-result' }>>): void =>
-    post({ kind: 'dap-result', sid, seq, variables: variablesOf(d), env: envOf(d), ...r })
+    post({ kind: 'dap-result', sid, seq, variables: variablesOf(d), env: envOf(d), coverage: coverageOf(d), ...r })
   // 立即生效的：不排隊（pause 要在執行中送到；terminate 要能打斷）
   if (body.op === 'pause') { d.s.pause(); reply({ ok: true }); return }
   if (body.op === 'terminate') { d.terminated = true; d.s.terminate(); reply({ ok: true }); return }

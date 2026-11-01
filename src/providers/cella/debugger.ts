@@ -8,7 +8,35 @@
 import type { CellaBranch, CellaRead } from './verdict'
 import { loadCellaPackages } from './verdict'
 
+/**
+ * **Python 的除錯模組**（spec 195b）——`python.session` 的匯出（`@cella-lang/python` README〈Entries〉）。
+ * 與 C 家族的差別：變數的 id 是字串（不是 `cfamily.DeclId`）、沒有 `divergences`。
+ */
+function pythonDebuggerSource(): string {
+  const S = 'python.session.Session'
+  const T = 'python.session.Stopping'
+  return [
+    'import python.session',
+    `def load (source : String) : ${S} := python.session.load source`,
+    `def run (kind : Nat) (breakpoints : String) (closed : Nat) (fuel : Nat) (x : ${S}) : ${T} := python.session.run kind breakpoints closed fuel x`,
+    `def stopConf (x : ${S}) (s : ${T}) : ${S} := python.session.stopConf x s`,
+    `def stopKind (s : ${T}) : Nat := python.session.stopKind s`,
+    `def stopNode (s : ${T}) : String := python.session.stopNode s`,
+    `def stopOut (s : ${T}) : String := python.session.stopOut s`,
+    `def stopErr (s : ${T}) : String := python.session.stopErr s`,
+    `def stopDetail (s : ${T}) : String := python.session.stopDetail s`,
+    `def stopVisits (s : ${T}) : String := python.session.stopVisits s`,
+    `def feed (text : String) (x : ${S}) : ${S} := python.session.feed text x`,
+    `def globals (x : ${S}) : String := python.session.globals x`,
+    `def frames (at : String) (x : ${S}) : String := python.session.frames at x`,
+    `def setVarErr (n : Nat) (id : String) (text : String) (x : ${S}) : String := python.session.setVarErr n id text x`,
+    `def setVarConf (n : Nat) (id : String) (text : String) (x : ${S}) : ${S} := python.session.setVarConf n id text x`,
+    `def env (x : ${S}) : String := python.session.env x`,
+  ].join('\n') + '\n'
+}
+
 export function debuggerSource(b: CellaBranch): string {
+  if (b === 'python') return pythonDebuggerSource()
   const lines = [
     'import cfamily.syntax',
     `import ${b}`,
@@ -21,6 +49,8 @@ export function debuggerSource(b: CellaBranch): string {
     `def stopErr (s : ${b}.Stopping) : String := ${b}.stopErr s`,
     `def stopDetail (s : ${b}.Stopping) : String := ${b}.stopDetail s`,
     `def divergences (s : ${b}.Stopping) : String := ${b}.divergences s`,
+    // 每個節點進入幾次（cella 0.1.202610312349 起；`cella-lang/dap` 有這個匯出才給 `coverage()`）
+    `def stopVisits (s : ${b}.Stopping) : String := ${b}.stopVisits s`,
     `def feed (text : String) (x : ${b}.Session) : ${b}.Session := ${b}.feed text x`,
     `def globals (x : ${b}.Session) : String := ${b}.globals x`,
     `def frames (at : String) (x : ${b}.Session) : String := ${b}.frames at x`,
@@ -36,11 +66,15 @@ export function debuggerSource(b: CellaBranch): string {
   return lines.join('\n') + '\n'
 }
 
-export const DEBUGGER_EXPORTS = ['load', 'run', 'stopConf', 'stopKind', 'stopNode', 'stopOut', 'stopErr', 'stopDetail', 'divergences', 'feed', 'globals', 'frames', 'setVarErr', 'setVarConf', 'env']
-const exportsOf = (b: CellaBranch): string[] => (b === 'arduino' ? [...DEBUGGER_EXPORTS, 'setInput', 'clockMs'] : DEBUGGER_EXPORTS)
+export const DEBUGGER_EXPORTS = ['load', 'run', 'stopConf', 'stopKind', 'stopNode', 'stopOut', 'stopErr', 'stopDetail', 'divergences', 'stopVisits', 'feed', 'globals', 'frames', 'setVarErr', 'setVarConf', 'env']
+const exportsOf = (b: CellaBranch): string[] =>
+  b === 'arduino' ? [...DEBUGGER_EXPORTS, 'setInput', 'clockMs']
+    : b === 'python' ? DEBUGGER_EXPORTS.filter((e) => e !== 'divergences')
+      : DEBUGGER_EXPORTS
 
 /** 編一個分支的除錯模組（約 20 秒）。 */
 export async function compileCellaDebugger(read: CellaRead, b: CellaBranch): Promise<Uint8Array> {
-  const cella = await loadCellaPackages(read)
+  // 只載這個分支要的套件（spec 197c：C 的除錯不必載 Python）
+  const cella = await loadCellaPackages(read, [b])
   return cella.compile_wasm_library(debuggerSource(b), exportsOf(b).join(','))
 }

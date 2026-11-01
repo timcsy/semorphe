@@ -1,0 +1,41 @@
+{
+  "template": {
+    "k": "sExpr",
+    "n": "$id",
+    "value": {
+      "k": "eCall",
+      "n": "$id/call",
+      "func": {
+        "k": "eAttribute",
+        "n": "$id/call/func",
+        "value": {
+          "$slot": "obj"
+        },
+        "attr": "sort"
+      },
+      "args": [],
+      "keywords": [
+        {
+          "$ifSlot": "key",
+          "then": {
+            "k": "keyword",
+            "arg": "key",
+            "value": {
+              "$slot": "key"
+            }
+          }
+        },
+        {
+          "$ifSlot": "reverse",
+          "then": {
+            "k": "keyword",
+            "arg": "reverse",
+            "value": {
+              "$slot": "reverse"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

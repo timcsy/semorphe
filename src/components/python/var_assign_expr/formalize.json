@@ -1,0 +1,16 @@
+{
+  "template": {
+    "k": "eNamedExpr",
+    "n": "$id",
+    "target": {
+      "k": "eName",
+      "n": "$id/target",
+      "id": {
+        "$prop": "obj"
+      }
+    },
+    "value": {
+      "$slot": "value"
+    }
+  }
+}

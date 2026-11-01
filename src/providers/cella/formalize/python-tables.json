@@ -1,0 +1,47 @@
+{
+  "_source": "cella packages/python/docs/components.json @ c4c423b3e",
+  "binop": {
+    "+": "opAdd",
+    "-": "opSub",
+    "*": "opMult",
+    "/": "opDiv",
+    "//": "opFloorDiv",
+    "%": "opMod",
+    "**": "opPow",
+    "&": "opBitAnd",
+    "|": "opBitOr",
+    "^": "opBitXor",
+    "<<": "opLShift",
+    ">>": "opRShift"
+  },
+  "augop": {
+    "+=": "opAdd",
+    "-=": "opSub",
+    "*=": "opMult",
+    "/=": "opDiv",
+    "//=": "opFloorDiv",
+    "%=": "opMod",
+    "**=": "opPow",
+    "&=": "opBitAnd",
+    "|=": "opBitOr",
+    "^=": "opBitXor",
+    "<<=": "opLShift",
+    ">>=": "opRShift"
+  },
+  "cmpop": {
+    "==": "opEq",
+    "!=": "opNotEq",
+    "<": "opLt",
+    "<=": "opLtE",
+    ">": "opGt",
+    ">=": "opGtE",
+    "is": "opIs",
+    "is not": "opIsNot",
+    "in": "opIn",
+    "not in": "opNotIn"
+  },
+  "boolop": {
+    "and": "opAnd",
+    "or": "opOr"
+  }
+}

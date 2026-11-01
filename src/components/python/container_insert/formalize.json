@@ -1,0 +1,27 @@
+{
+  "template": {
+    "k": "sExpr",
+    "n": "$id",
+    "value": {
+      "k": "eCall",
+      "n": "$id/call",
+      "func": {
+        "k": "eAttribute",
+        "n": "$id/call/func",
+        "value": {
+          "$slot": "obj"
+        },
+        "attr": "insert"
+      },
+      "args": [
+        {
+          "$slot": "index"
+        },
+        {
+          "$slot": "value"
+        }
+      ],
+      "keywords": []
+    }
+  }
+}

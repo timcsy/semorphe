@@ -1,0 +1,26 @@
+{
+  "template": {
+    "k": "eCall",
+    "n": "$id",
+    "func": {
+      "k": "eAttribute",
+      "n": "$id/func",
+      "value": {
+        "$slot": "obj"
+      },
+      "attr": "get"
+    },
+    "args": [
+      {
+        "$slot": "key"
+      },
+      {
+        "$ifSlot": "fallback",
+        "then": {
+          "$slot": "fallback"
+        }
+      }
+    ],
+    "keywords": []
+  }
+}

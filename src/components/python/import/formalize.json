@@ -1,0 +1,20 @@
+{
+  "template": {
+    "k": "sImport",
+    "n": "$id",
+    "names": [
+      {
+        "k": "alias",
+        "name": {
+          "$prop": "name"
+        },
+        "asname": {
+          "$ifProp": "alias",
+          "then": {
+            "$prop": "alias"
+          }
+        }
+      }
+    ]
+  }
+}

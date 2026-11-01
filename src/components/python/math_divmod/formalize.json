@@ -1,0 +1,20 @@
+{
+  "template": {
+    "k": "eCall",
+    "n": "$id",
+    "func": {
+      "k": "eName",
+      "n": "$id/func",
+      "id": "divmod"
+    },
+    "args": [
+      {
+        "$slot": "obj"
+      },
+      {
+        "$slot": "value"
+      }
+    ],
+    "keywords": []
+  }
+}

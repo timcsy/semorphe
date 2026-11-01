@@ -38,6 +38,7 @@
   "_lift_why": "**繼承（`class Dog(Animal)`）也走誠實降級**：`superclasses` 那一格沒有接點，而少了它產出的類別會安靜地不再繼承。",
   "_properties_why": "🔴 **繼承的父類別是一個屬性**（2026-08-22）：`class Dog(Animal):` 的括號裡在教學語料裡一律是一個名字。多重繼承（兩個以上）走誠實降級——積木上只有一格。",
   "annotations": {
+    "debug_step": true,
     "control_flow": "sequence"
   }
 }

@@ -1,0 +1,51 @@
+{
+  "template": {
+    "$case": "method",
+    "cases": {
+      "zfill": {
+        "k": "eCall",
+        "n": "$id",
+        "func": {
+          "k": "eAttribute",
+          "n": "$id/func",
+          "value": {
+            "$slot": "obj"
+          },
+          "attr": "zfill"
+        },
+        "args": [
+          {
+            "$slot": "width"
+          }
+        ],
+        "keywords": []
+      }
+    },
+    "else": {
+      "k": "eCall",
+      "n": "$id",
+      "func": {
+        "k": "eAttribute",
+        "n": "$id/func",
+        "value": {
+          "$slot": "obj"
+        },
+        "attr": {
+          "$prop": "method"
+        }
+      },
+      "args": [
+        {
+          "$slot": "width"
+        },
+        {
+          "$ifSlot": "fill",
+          "then": {
+            "$slot": "fill"
+          }
+        }
+      ],
+      "keywords": []
+    }
+  }
+}

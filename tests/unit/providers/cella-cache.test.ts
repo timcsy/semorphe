@@ -3,9 +3,9 @@ import { describe, it, expect } from 'vitest'
 import { checkerKey, checkerVersions, loadCompiled } from '../../../src/providers/cella/cache'
 
 describe('Cella 判決模組的快取', () => {
-  it('🔴 入口條件：鍵裡有六個套件的版本（glob 落空 → 升版後拿到舊模組，而且不出聲）', () => {
+  it('🔴 入口條件：鍵裡有七個套件的版本（glob 落空 → 升版後拿到舊模組，而且不出聲；spec 195 起多 python）', () => {
     const v = checkerVersions()
-    expect(v.map((x) => x.split('@')[0]).sort()).toEqual(['arduino', 'c', 'cella-lang', 'cfamily', 'cpp', 'machine'])
+    expect(v.map((x) => x.split('@')[0]).sort()).toEqual(['arduino', 'c', 'cella-lang', 'cfamily', 'cpp', 'machine', 'python'])
     expect(v.every((x) => /@\d/.test(x))).toBe(true)
   })
 

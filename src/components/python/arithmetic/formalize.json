@@ -1,0 +1,16 @@
+{
+  "template": {
+    "k": "eBinOp",
+    "n": "$id",
+    "left": {
+      "$slot": "left"
+    },
+    "op": {
+      "$op": "binop",
+      "of": "operator"
+    },
+    "right": {
+      "$slot": "right"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "template": {
+    "k": "sFor",
+    "n": "$id",
+    "target": {
+      "$transform": "forTarget"
+    },
+    "iter": {
+      "$slot": "iterable"
+    },
+    "body": {
+      "$body": "body"
+    },
+    "orelse": []
+  }
+}

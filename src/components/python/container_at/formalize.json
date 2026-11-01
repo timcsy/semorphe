@@ -1,0 +1,12 @@
+{
+  "template": {
+    "k": "eSubscript",
+    "n": "$id",
+    "value": {
+      "$slot": "target"
+    },
+    "slice": {
+      "$slot": "key"
+    }
+  }
+}
