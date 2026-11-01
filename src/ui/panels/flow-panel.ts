@@ -52,7 +52,7 @@ import type { PlacedEntry } from '../../core/flow/layout-key'
 import { tryConnect, tryReorder, refusalKeyOf, type RefusalReason } from '../../core/flow/connect'
 import { bodySlotsOf } from '../../core/component/traits'
 import { msg } from '../../core/messages'
-import { resolveCollapsed, outermostCollapsed, type CollapsedEntry } from '../../core/granularity'
+import { resolveCollapsed, outermostCollapsed, collapsedToKeys, type CollapsedEntry } from '../../core/granularity'
 
 /** ⚠️ 面板上的字走既有的訊息表——**沒有第二份文案** */
 
@@ -465,6 +465,10 @@ export class FlowPanel implements ViewHost {
         : msg('FLOW_MENU_DELETE', '刪掉這一塊'), () => this.deleteNode(id))
     }
     // 🟢 收合／展開（spec 187）——只有有子節點的才收得起來
+    // 🟢 鑽入（spec 193）——有身體的才進得去
+    if (kind === 'node' && this.canDrill(id)) {
+      item(msg('FLOW_MENU_DRILL', '進入這一塊'), () => this.drillInto(id))
+    }
     if (kind === 'node' && this.canCollapse(id)) {
       const on = this.collapsedNow.has(id)
       item(on ? msg('FLOW_MENU_EXPAND', '展開這一塊') : msg('FLOW_MENU_COLLAPSE', '收合這一塊'),
@@ -535,7 +539,12 @@ export class FlowPanel implements ViewHost {
   private attachKeys(): void {
     this.canvas.tabIndex = 0
     this.canvas.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { this.select('node', null); return }
+      if (e.key === 'Escape') {
+        // 有選取先取消選取；沒有選取、又在某一層裡面 ⟹ 上一層（spec 193）
+        if (!this.selection && this.drillIds.length > 0) { this.drillTo(this.drillIds.length - 1); return }
+        this.select('node', null)
+        return
+      }
       if (e.key !== 'Delete' && e.key !== 'Backspace') return
       const sel = this.selection
       if (!sel) return
@@ -830,7 +839,10 @@ export class FlowPanel implements ViewHost {
   ): void {
     if (!this.tree) return
     const node = presetTree(componentId, extraState)
-    const body = (this.tree.slots.body ??= [])
+    // 鑽進去的時候，放下的那一顆落在【這一層】的身體裡（spec 193）
+    const scope = this.scopedRoot() ?? this.tree
+    const slot = scope === this.tree ? 'body' : (bodySlotsOf(scope.componentId)[0] ?? 'body')
+    const body = (scope.slots[slot] ??= [])
     body.push(node)
     this.pendingDrop = { id: node.id, at }
     this.rebuild()
@@ -1154,7 +1166,12 @@ export class FlowPanel implements ViewHost {
     //    橫向捲的時候它們會跟著滑出去。所以捲的是**只裝圖的那一層**。
     this.canvas = document.createElement('div')
     this.canvas.className = 'flow-canvas'
-    this.canvas.append(this.empty, this.svg)
+    // 🟢 麵包屑（spec 193）——**只在鑽進去時才出現**：沒用的時候它不佔任何位置
+    //    （history/193：「一個要等到東西變多才有價值的控制項，在那之前是純粹的成本」）
+    this.crumbsEl = document.createElement('div')
+    this.crumbsEl.className = 'flow-crumbs'
+    this.crumbsEl.style.display = 'none'
+    this.canvas.append(this.crumbsEl, this.empty, this.svg)
     this.attachZoomGestures()
     this.attachKeys()
     // 工具區與畫布並排——⚠️ 分類條在**這一列**裡面，所以它是排版的一部分，
@@ -1191,14 +1208,125 @@ export class FlowPanel implements ViewHost {
    */
   private scopedRoot(): SemanticNode | null {
     if (!this.tree) return null
-    return this.tree
+    const last = this.drillIds[this.drillIds.length - 1]
+    return (last && this.findNode(this.tree, last)) || this.tree
+  }
+
+  // ─── 鑽入（spec 193）────────────────────────────────────────────────────
+  //
+  // 🔴 draft〈分子與粒度切換〉§四：「**一個手勢管一件事：縮放管大小，鑽入管深淺**」——不用語意縮放。
+  //    鑽進一塊＝這張圖只畫那一塊的身體；麵包屑說得出「我在哪」、點一下回到那一層；Esc 上一層。
+  //    鑽入是**這個面板的檢視**（同鏡頭），不是共享狀態——積木與程式碼不跟著鑽。
+  //    鍵是鑰匙不是 `nodeId`（同收合：打一個字 id 全換，用 id 記會被踢回最外層）。
+  private drillKeys: CollapsedEntry[] = []
+  private drillIds: string[] = []
+  private crumbsEl!: HTMLElement
+  /**
+   * 外面每一層的手拖位置與鏡頭——回到上一層時「回到原位」。
+   * ⚠️ 位置存**鑰匙**（`PlacedEntry`）不存 id：在裡層改一個字，外層的 id 全換了。
+   */
+  private scopeStack: { layout: PlacedEntry[]; zoom: number; pan: { x: number; y: number } }[] = []
+
+  /** 這一塊能不能鑽進去：有身體、而且身體裡有東西 */
+  private canDrill(id: string): boolean {
+    const n = this.tree && this.findNode(this.tree, id)
+    return !!n && bodySlotsOf(n.componentId).some((sl) => (n.slots[sl] ?? []).length > 0)
+  }
+
+  /** 這一層手拖過的位置，以鑰匙記 */
+  private layoutOfScope(): PlacedEntry[] {
+    if (this.offsets.size === 0) return []
+    const nodes = this.keyedNodes()
+    const keys = keysOfNodes(nodes)
+    return nodes.flatMap((k, i) => {
+      const at = this.offsets.get(k.node.id)
+      return at ? [{ keys: keys[i], x: at.x, y: at.y }] : []
+    })
+  }
+
+  /** 鑽進一塊——外面這一層的位置與鏡頭推進堆疊，裡面從自動排版開始 */
+  drillInto(id: string): void {
+    if (!this.tree || !this.canDrill(id)) return
+    this.scopeStack.push({ layout: this.layoutOfScope(), zoom: this.zoom, pan: { ...this.pan } })
+    this.drillIds = [...this.drillIds, id]
+    this.drillKeys = [...this.drillKeys, ...collapsedToKeys(this.tree, new Set([id]))]
+    this.offsets = new Map()
+    this.zoom = 1
+    this.pan = { x: 0, y: 0 }
+    this.prevKeyed = null
+    this.select('node', null)
+    this.rebuild()
+    this.syncZoomLabel()
+  }
+
+  /** 回到第 `depth` 層（0 ＝ 整份程式）——那一層的位置與鏡頭從堆疊還原 */
+  drillTo(depth: number): void {
+    if (depth >= this.drillIds.length) return
+    const st = this.scopeStack[depth]
+    this.scopeStack = this.scopeStack.slice(0, depth)
+    this.drillIds = this.drillIds.slice(0, depth)
+    this.drillKeys = this.drillKeys.slice(0, depth)
+    this.offsets = new Map()
+    this.prevKeyed = null
+    if (st) { this.zoom = st.zoom; this.pan = { ...st.pan }; this.pendingLayout = st.layout.length > 0 ? st.layout : null }
+    this.select('node', null)
+    this.rebuild()
+    this.syncZoomLabel()
+  }
+
+  /** 每次重建：鑰匙對回這一棵；對不回的那一層起全部退出（那一塊不在了）——而且說出來 */
+  private resolveDrill(): void {
+    if (!this.tree || this.drillKeys.length === 0) { this.drillIds = []; return }
+    const ids: string[] = []
+    for (const e of this.drillKeys) {
+      const [id] = [...resolveCollapsed([e], this.tree)]
+      if (!id || !this.canDrill(id)) break
+      ids.push(id)
+    }
+    if (ids.length < this.drillKeys.length) {
+      this.showNotice(msg('FLOW_DRILL_GONE', '剛才所在的那一塊不在了——回到上一層'))
+      this.offsets = new Map()
+      const st = this.scopeStack[ids.length]
+      if (st) { this.zoom = st.zoom; this.pan = { ...st.pan }; this.pendingLayout = st.layout.length > 0 ? st.layout : null }
+      this.scopeStack = this.scopeStack.slice(0, ids.length)
+    }
+    this.drillIds = ids
+    // 鑰匙換成這一棵的（同收合：連改幾次之後鑰匙才不會與樹漸行漸遠）
+    this.drillKeys = ids.map((id) => collapsedToKeys(this.tree!, new Set([id]))[0])
+  }
+
+  private renderCrumbs(): void {
+    const el = this.crumbsEl
+    if (!el) return
+    el.innerHTML = ''
+    el.style.display = this.drillIds.length === 0 ? 'none' : ''
+    if (this.drillIds.length === 0) return
+    const crumb = (label: string, depth: number, current: boolean): void => {
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.className = `flow-crumb${current ? ' flow-crumb-current' : ''}`
+      b.dataset.depth = String(depth)
+      b.textContent = label
+      if (!current) b.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); this.drillTo(depth) })
+      el.appendChild(b)
+    }
+    crumb(msg('FLOW_DRILL_ROOT', '整份程式'), 0, false)
+    this.drillIds.forEach((id, i) => {
+      const sep = document.createElement('span')
+      sep.className = 'flow-crumb-sep'
+      sep.textContent = '›'
+      el.appendChild(sep)
+      const n = this.tree && this.findNode(this.tree, id)
+      const title = (n && flowTitle(n.componentId, this.labelSource())) || n?.componentId || id
+      crumb(title, i + 1, i === this.drillIds.length - 1)
+    })
   }
 
   private rootBody(): SemanticNode[] {
     const target = this.scopedRoot()
     if (!target) return []
     const body = bodySlotsOf(target.componentId).flatMap((s) => target.slots[s] ?? [])
-    if (this.scaffoldMode !== 'hidden') return body
+    if (this.scaffoldMode !== 'hidden' || this.drillIds.length > 0) return body
     // 🔴 **`hidden` ＝「只留你自己的邏輯」，而那句話要跨視圖同一個意思。**
     //
     // ⚠️ 這裡**不問語言**——它只用告示給的 `nodeIds`：骨架的那一顆讓位，
@@ -1216,9 +1344,12 @@ export class FlowPanel implements ViewHost {
   private rebuild(): void {
     this.syncLabels()
     // 🟢 粒度（spec 187）：鑰匙對回這一棵、只畫最外層的框；框裡的節點記下是誰包住它
-    const root = this.scopedRoot()
+    this.resolveDrill()
+    this.renderCrumbs()
+    const root = this.tree
     const collapsed = root ? resolveCollapsed(this.collapsedEntries, root) : new Set<string>()
-    const outer = root ? outermostCollapsed(root, collapsed) : []
+    // 最外層的框是相對於【這一層】算的——鑽進一個收著的框之後，裡面的框照樣畫
+    const outer = this.rootBody().flatMap((c) => outermostCollapsed(c, collapsed))
     this.collapsedNow = collapsed
     this.hiddenToBox = new Map()
     for (const id of outer) {
@@ -1574,7 +1705,7 @@ export class FlowPanel implements ViewHost {
     this.attachDrag(g, n.id)
     // 🔴 **長按（觸控）／右鍵（桌機）→ 選單**——那兩顆 ✕ 已經退場
     // 🟢 唯讀的宿主也開得出選單——收合不是編輯（spec 187）
-    if ((this.capabilities.editable && !ghost) || this.canCollapse(n.id)) this.attachMenu(g, 'node', n.id)
+    if ((this.capabilities.editable && !ghost) || this.canCollapse(n.id) || this.canDrill(n.id)) this.attachMenu(g, 'node', n.id)
     return g
   }
 
@@ -2112,6 +2243,8 @@ export class FlowPanel implements ViewHost {
    * ——而且會讓 side-car 隨程式長度膨脹。
    */
   saveLayout(): PlacedEntry[] {
+    // 鑽進去的時候，存的是【整份程式】那一層的位置（堆疊最底下那一格）——存檔只記最外層（spec 193）
+    if (this.drillIds.length > 0) return this.scopeStack[0]?.layout ?? []
     if (this.offsets.size === 0) return []
     const nodes = this.keyedNodes()
     const keys = keysOfNodes(nodes)
