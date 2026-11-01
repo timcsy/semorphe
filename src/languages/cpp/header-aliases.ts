@@ -1,3 +1,5 @@
+import { canonicalBoardHeader } from './board-headers'
+
 /**
  * C-style ↔ C++-style header equivalence mapping.
  *
@@ -69,6 +71,9 @@ export function expandHeaderAliases(headers: Set<string>): Set<string> {
   const expanded = new Set(headers)
   for (const h of headers) {
     const bare = h.replace(/^<|>$/g, '')
+    // 板子專屬名與正典名等價（`<ESP8266WiFi.h>` ≡ `<WiFi.h>`，第 204 刀）——手寫的是前者、自動補的是後者時不重複
+    const canonical = canonicalBoardHeader(bare)
+    if (canonical !== bare) expanded.add(`<${canonical}>`)
     const cppEquiv = C_TO_CPP[bare]
     if (cppEquiv) expanded.add(`<${cppEquiv}>`)
     const cEquiv = CPP_TO_C[bare]
