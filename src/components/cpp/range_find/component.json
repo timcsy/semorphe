@@ -40,6 +40,7 @@
         "lift": "./lift.ts"
       }
     },
+    "formalize": "./formalize.ts",
     "execute": "./execute.ts"
   },
   "_execute_why": "回傳的是**位置**不是值——與同族一致，而 C++ 的 `find` 正是這樣：「找不到」用『結尾之後的位置』表示，沒有別的哨兵值。",

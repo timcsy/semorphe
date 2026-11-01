@@ -115,6 +115,11 @@ export interface ScopeWalker {
   declare(name: string, nodeId: string): void
   /** 解析一個名字的參照：指得到 → 記進 declOf；指不到 → 列進 unresolved。 */
   resolve(refId: string, name: string): void
+  /**
+   * 同上，但**指不到不算落空**——函式呼叫的名字（`sort`、`printf`）本來就不是變數，只有指得到變數時才有意義
+   * （第 206 刀：裝著 lambda 的變數被呼叫；`sizeof(a)`）。
+   */
+  resolveIfDeclared(refId: string, name: string): void
 }
 
 /** 元件向引擎註冊的形狀。一顆元件可以在多個位置註冊；**每一個身分只能是它自己資料夾的**（引擎會核對）。 */

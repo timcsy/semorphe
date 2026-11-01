@@ -11,7 +11,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   })
   // 作用域：名字照常解析——指得到變數宣告的就是在呼叫那個值（函式定義不進作用域表，所以呼叫函式不會被誤認）
   r.scope('cpp:func_call', (n, w) => {
-    w.resolve(n.id, String(n.properties?.name ?? ''))
+    w.resolveIfDeclared(n.id, String(n.properties?.name ?? ''))
     w.walkSlots(n)
   })
   // 當敘述用：運算式敘述

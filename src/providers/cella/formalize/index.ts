@@ -32,6 +32,8 @@ const BIN: Record<string, string> = {
   '+': 'opAdd', '-': 'opSub', '*': 'opMul', '/': 'opDiv', '%': 'opRem', '<<': 'opShl', '>>': 'opShr',
   '<': 'opLt', '<=': 'opLe', '>': 'opGt', '>=': 'opGe', '==': 'opEq', '!=': 'opNe',
   '&': 'opBitAnd', '|': 'opBitOr', '^': 'opBitXor', '&&': 'opAnd', '||': 'opOr',
+  // 替代記號（[lex.digraph]：`a or b`、`a and b`）——第 207 刀，學生的程式這樣寫
+  and: 'opAnd', or: 'opOr', bitand: 'opBitAnd', bitor: 'opBitOr', xor: 'opBitXor',
 }
 
 const SCALAR: Record<string, string> = {
