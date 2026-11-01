@@ -38,9 +38,10 @@ async function runUntilCella(page: Page): Promise<void> {
 const LOOP = '#include <iostream>\nusing namespace std;\nint main() {\n    int total = 0;\n    for (int i = 1; i <= 3; i++) {\n        total = total + i;\n    }\n    cout << total << endl;\n    return 0;\n}\n'
 const READ = '#include <iostream>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    cout << n * 2 << endl;\n    return 0;\n}\n'
 const OOB = '#include <iostream>\nusing namespace std;\nint main() {\n    int a[3] = {1, 2, 3};\n    int i = 5;\n    cout << a[i] << endl;\n    return 0;\n}\n'
-// ⚠️ 「Cella 還不支援」的範例會一直過期——map 在 spec 194 之後判得出來了。結構化繫結 Cella 還沒有（cella 2026-11-01：會加 sBind），
-//    JS 直譯器跑得動。🪦 6c 拆掉 JS 直譯器時這一支整支退場（退回的那一條路不存在了）
-const BINDING = '#include <iostream>\n#include <utility>\nusing namespace std;\nint main() {\n    pair<int, int> p = {1, 2};\n    auto [a, b] = p;\n    cout << a + b << endl;\n    return 0;\n}\n'
+// ⚠️ 「Cella 還不支援」的範例會一直過期——map（spec 194）、結構化繫結（第 202b 刀）都曾是這裡的例子。
+//    改用依定義就不會被支援的：VLA（`int a[n]`）是 GNU 擴充、不是標準 C++，Cella 照實標 unknown（cella 2026-11-01 確認）；JS 直譯器跑得動。
+//    （experience〈拿「今天還沒做的」當「不支援」的測試範例，範例的壽命以天計〉）🪦 6c 拆掉 JS 直譯器時這一支整支退場
+const VLA = '#include <iostream>\nusing namespace std;\nint main() {\n    int n = 3;\n    int a[n];\n    a[0] = 1;\n    cout << a[0] + 2 << endl;\n    return 0;\n}\n'
 
 test('執行與除錯由 Cella 跑：輸出、中斷點、變數、讀輸入、越界停下', async ({ page }) => {
   test.setTimeout(400_000)
@@ -86,7 +87,7 @@ test('Cella 還不支援的程式：退回 JS 直譯器，標出處與原因', a
   await freshApp(page)
   await page.evaluate(() => (window as any).__app.warmUpChecker())
   await expect(page.locator('#status-check')).toHaveAttribute('data-state', 'ready', { timeout: 180_000 })
-  await feed(page, BINDING, 'cpp:var_declare_sequence')
+  await feed(page, VLA, 'cpp:array_declare')
   await selectMode(page, 'run')
   await expect(output(page)).toContainText('3', { timeout: 30_000 })
   await expect(runner(page)).toHaveAttribute('data-provider', 'js-interpreter')

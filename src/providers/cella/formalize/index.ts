@@ -32,6 +32,8 @@ const BIN: Record<string, string> = {
   '+': 'opAdd', '-': 'opSub', '*': 'opMul', '/': 'opDiv', '%': 'opRem', '<<': 'opShl', '>>': 'opShr',
   '<': 'opLt', '<=': 'opLe', '>': 'opGt', '>=': 'opGe', '==': 'opEq', '!=': 'opNe',
   '&': 'opBitAnd', '|': 'opBitOr', '^': 'opBitXor', '&&': 'opAnd', '||': 'opOr',
+  // 替代記號（[lex.digraph]：`a or b`、`a and b`）——第 207 刀，學生的程式這樣寫
+  and: 'opAnd', or: 'opOr', bitand: 'opBitAnd', bitor: 'opBitOr', xor: 'opBitXor',
 }
 
 const SCALAR: Record<string, string> = {
@@ -109,7 +111,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const functionNames = new Set<string>()
   const index = (n: SemanticNode): void => {
     byId.set(n.id, n)
-    for (const m of n.slots?.members ?? []) if (m.properties?.type !== undefined) memberFields.add(m.id)
+    // `int x, y;` 是一顆 `_multi_field` 包著平行的宣告——攤平（第 213 刀，同 struct_declare 的 formalize）
+    const members = (n.slots?.members ?? []).flatMap((m) => (m.componentId === '_multi_field' ? m.slots?.fields ?? [] : [m]))
+    for (const m of members) if (m.properties?.type !== undefined) memberFields.add(m.id)
     if (isFunctionDefinition(n.componentId) && n.properties?.name) functionNames.add(String(n.properties.name))
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(index)
   }
@@ -140,12 +144,26 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (s.endsWith('[]')) { const inner = type(s.slice(0, -2), at); return inner && k('tPtr', { t: inner }) }
     const sc = SCALAR[s]
     if (sc) return k(sc)
+    // 固定寬度與平台相依的整數型別名（int64_t、size_t…）：照名字送 tName——對到哪個整數型別依平台的 ABI 決定（glibc 的 int64_t 是 long、
+    // avr-libc 的 int32_t 是 long），由 Cella 依目標解（cella 2026-11-01；第 208 刀，學生的程式 6 支）
+    {
+      const fixed = /^(?:std::)?((?:u?int(?:_least|_fast)?(?:8|16|32|64)_t)|u?intmax_t|u?intptr_t|size_t|ssize_t|ptrdiff_t)$/.exec(s)
+      if (fixed) return k('tName', { name: fixed[1] })
+    }
     const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
     if (vec) { const inner = type(vec[1], at); return inner && k('tVector', { t: inner }) }
     // C++ 的 `auto`（cella 0.1.202610312349 起有 `tAuto`）
     if (s === 'auto' && !isC) return k('tAuto')
     // 標準函式庫的類別範本（cella 照 libc++ 18 實作）：名字不帶 `std::`，同 Cella 用 clang 轉的課文樹（packages/cpp/tools/lessons）
-    const tpl = /^(?:std::)?(pair|queue|stack|priority_queue|set|map|deque|greater|less)\s*<(.+)>$/.exec(s)
+    // `bitset<N>`：N 是非型別範本引數，送 `tVal`（cella 2026-11-01 給的形狀；第 213 刀）——N 要是整數字面或展開得到整數字面的巨集
+    const bits = /^(?:std::)?bitset\s*<\s*(\w+)\s*>$/.exec(s)
+    if (bits && !isC) {
+      const lit = macros.get(bits[1]) ?? bits[1]
+      if (/^\d+$/.test(lit)) return k('tTemplate', { name: 'bitset', args: [k('tVal', { v: Number(lit) })] })
+      miss(at, `bitset 的大小「${bits[1]}」不是整數字面`)
+      return null
+    }
+    const tpl = /^(?:std::)?(pair|queue|stack|priority_queue|set|multiset|map|unordered_map|deque|greater|less)\s*<(.+)>$/.exec(s)
     if (tpl && !isC) {
       const args = splitTypeArgs(tpl[2]).map((x) => type(x, at))
       return args.every(Boolean) ? k('tTemplate', { name: tpl[1], args }) : null
@@ -278,7 +296,17 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     return declVar(n, t, global)
   }
 
+  // 翻一句敘述時，運算式裡要提到它前面的敘述（lambda 的 sLambda）——每一句各收各的（巢狀的本體由內層的 stmt 收）
+  let hoisted: CellaJson[] | null = null
   function stmt(n: SemanticNode): CellaJson[] {
+    const outer = hoisted
+    hoisted = []
+    try {
+      const out = stmtOnly(n)
+      return [...hoisted, ...out]
+    } finally { hoisted = outer }
+  }
+  function stmtOnly(n: SemanticNode): CellaJson[] {
     const fn = FORMALIZE.stmt.get(n.componentId)
     if (fn) return fn(n, ctx)
     if (FORMALIZE.decl.has(n.componentId)) return decl(n, false)
@@ -301,6 +329,14 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     declVar, declInit, declCtor, libraryObject, constInt,
     declOf: (key) => declOf.get(key),
     macro,
+    hoist: (s) => {
+      if (hoisted) hoisted.push(s)
+      else miss({ id: String(s.n ?? '-'), componentId: 'hoist', properties: {}, slots: {} } as unknown as SemanticNode, '全域位置的 lambda 還沒有對應（沒有前面的敘述可以放它的定義）')
+    },
+    identMacro: (name) => {
+      const v = macros.get(name)
+      return v !== undefined && /^[A-Za-z_]\w*$/.test(v) ? v : name
+    },
     nodeById: (id) => byId.get(id),
     member: (m) => {
       const fn = FORMALIZE.member.get(m.componentId)

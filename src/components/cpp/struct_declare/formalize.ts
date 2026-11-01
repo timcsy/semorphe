@@ -5,7 +5,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:struct_declare', (n, f) => {
     const fields: CellaJson[] = []
     const methods: CellaJson[] = []
-    for (const m of n.slots?.members ?? []) {
+    // `int x, y;` 在 lift 成一顆 `_multi_field`、裡面是平行的宣告（產碼那一路也是攤平，見 generators/declarations.ts）⟹ 這裡同樣攤平（第 213 刀）
+    const members = (n.slots?.members ?? []).flatMap((m) => (m.componentId === '_multi_field' ? m.slots?.fields ?? [] : [m]))
+    for (const m of members) {
       // 成員之間的註解不是成員（spec 199）
       if (/:(comment|block_comment)$/.test(m.componentId)) continue
       // 沒有型別的是成員函式（含運算子多載）：由那顆元件自己翻成 mbMethod（spec 201）

@@ -89,6 +89,11 @@ describe('判決 → 診斷', () => {
       { implementation: '執行環境', text: expect.stringMatching(/time\(\)/) },
     ])
   })
+
+  it('★ 只寫 <bits/stdc++.h>：依 libstdc++ 的標頭內容（cella 2026-11-02 預告），說明是中文、不是代號', () => {
+    const r = run(v('accept', [], [{ implementation: 'libstdc++', choice: 'header.contents' }]))
+    expect(r.assumes).toEqual([{ implementation: 'libstdc++', text: expect.stringMatching(/bits\/stdc\+\+\.h/) }])
+  })
 })
 
 describe('型別查詢 → 診斷（US4）', () => {

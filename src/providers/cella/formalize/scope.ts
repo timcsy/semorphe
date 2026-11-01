@@ -67,7 +67,11 @@ export function resolveScopes(tree: SemanticNode): ScopeResult {
     if (hit) declOf.set(refId, hit)
     else unresolved.push({ nodeId: refId, name })
   }
-  const w: ScopeWalker = { walkSlot, walkSlots, inScope, declare, resolve }
+  const resolveIfDeclared = (refId: string, name: string): void => {
+    const hit = lookup(name)
+    if (hit) declOf.set(refId, hit)
+  }
+  const w: ScopeWalker = { walkSlot, walkSlots, inScope, declare, resolve, resolveIfDeclared }
 
   function walk(n: SemanticNode): void {
     const own = FORMALIZE.scope.get(n.componentId)

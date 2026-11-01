@@ -38,6 +38,25 @@ export function cellaAssetUrl(pkg: string | null, file: string): string | undefi
 /** 資產清單的大小——量測與狀態列用（建置後應該是 1 ＋ 1 ＋ 模組數 ＋ 各套件的檔數）。 */
 export const cellaAssetCount = (): number => Object.keys(CORE).length + Object.keys(PACKAGES).length
 
+/**
+ * **建置時編好的模組**（第 210 刀，`tools/precompile-cella.ts`）——`verdict-cfamily`、`debugger-cpp`…
+ * 網頁版在 `BASE_URL/cella-modules/`，擴充在 `dist/cella-modules/`（`dist/cella/` 的旁邊）。
+ * 沒有（開發模式沒跑預先編譯）或抓不到 → `null`，呼叫端退回現場編譯。
+ */
+const modulesBase = (): string => (RUNTIME_ASSETS ? `${runtimeBase()}../cella-modules/` : `${import.meta.env.BASE_URL ?? '/'}cella-modules/`)
+let manifest: Promise<Record<string, string> | null> | null = null
+export async function fetchPrecompiled(name: string): Promise<Uint8Array | null> {
+  try {
+    manifest ??= fetch(modulesBase() + 'manifest.json').then((r) => (r.ok ? r.json() : null)).then((m) => m?.modules ?? null).catch(() => null)
+    const file = (await manifest)?.[name]
+    if (!file) return null
+    const res = await fetch(modulesBase() + file)
+    return res.ok ? new Uint8Array(await res.arrayBuffer()) : null
+  } catch {
+    return null
+  }
+}
+
 export const fetchCellaAsset: CellaRead = async (pkg, file) => {
   const url = cellaAssetUrl(pkg, file)
   if (!url) throw new Error(`Cella 的資產不在建置裡：${pkg ?? 'cella-lang'}/${file}`)

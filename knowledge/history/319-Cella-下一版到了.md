@@ -34,3 +34,11 @@ Cella 判決     accept 106（輸出與課文全部一致）｜reject 3
 - 覆蓋：`coverage()` 接上，階段 5 剩下的那一項完成（會話契約多一條，兩個提供者都過）。
 - 「依 …」小標：擔保者不再一律是 libc++（`glibc` 的亂數、`執行環境` 的時鐘）。
 - C／C++ 沒宣告的名字送 `eConst`（`INT_MAX`……）——cella 早上問的那件，答應的那一行。
+
+## 前情：階段 4 的前兩批（2026-11-01 knowie-judge 從 vision 收進來）
+
+vision〈重構〉階段 4 原本逐批記著交付，收斂成一行時原文搬到這裡：
+
+- 第一批（2026-10-31）：作用域走訪（852 個參照 0 落空）、課文解答 84 / 94、Arduino sketch 10 / 10、C 分支、空槽變洞、判決綁定語料第一版交出；
+  剩下的 10 份卡在 Cella 還沒建模的函式庫（pair、queue、set、map、stack、priority_queue）——已給 Cella 清單，Cella 已開工（下一版帶 `tAuto`）。
+- 第二批（第 389–391 刀）：formalize 搬進膠囊、判決綁定語料 109 筆／附 program 99 筆，cella 用 clang 比兩棵樹 95/95 相同；Arduino 15/15。

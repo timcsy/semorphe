@@ -8,6 +8,7 @@ import { isCDialect, C_BOOL_HEADER, usesBool, collectStructNames } from '../../.
 import type { DependencyResolver } from '../../../core/dependency-resolver'
 import { isIncludeDirective } from '../../../languages/cpp/lang/node-traits'
 import { buildInclude } from '../include/lift'
+import { canonicalBoardHeader } from '../../../languages/cpp/board-headers'
 import { isFunctionDefinition } from '../../../core/component/traits'
 // 🔴 「骨架已經在樹裡了嗎」由**骨架宣告**回答（2026-08-28）
 import { skeletonById, skeletonPresent } from '../../../core/skeleton'
@@ -44,10 +45,11 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     const aliasTable = new Map(
       Object.entries(ctx.headerAliases ?? {}).map(([k, v]) => [bareOf(k), bareOf(v)]),
     )
-    const aliasHeader = (h: string) => aliasTable.get(bareOf(h)) ?? bareOf(h)
+    // 🔴 **先收回正典名、再換成這塊板子的名字**（第 204 刀）——樹裡可能已經是別塊板子的名字（ESP8266 的產出來回一趟），
+    //    沒有替換表的板子（ESP32）也要收回，否則 `<ESP8266WiFi.h>` 換不回 `<WiFi.h>`
+    const aliasHeader = (h: string) => { const c = canonicalBoardHeader(h); return aliasTable.get(c) ?? c }
     const aliasIncludeLine = (line: string) =>
-      aliasTable.size === 0 ? line
-        : line.replace(/#include\s*<([^>]+)>/g, (_m, h: string) => `#include <${aliasHeader(h)}>`)
+      line.replace(/#include\s*<([^>]+)>/g, (_m, h: string) => `#include <${aliasHeader(h)}>`)
 
       const body = node.slots.body ?? []
       // C 目標的型別名要加 `struct` 標籤——先收集這棵樹宣告了哪些 struct。
@@ -132,7 +134,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
             // ⚠️ 分隔符不用 `:`——**元件身分本身含冒號**（`cpp:include`），
             // 用冒號組複合鍵會讓 `cpp:include:iostream` 的切法變曖昧。
             // 全樹只有這一處把身分與別的東西組成鍵（其餘六處組字串都只是給人看的訊息）。
-            const key = `${n.componentId} ${normalizeHeader(String(n.properties.header))}`
+            const key = `${n.componentId}\u0000${normalizeHeader(canonicalBoardHeader(String(n.properties.header)))}`
             if (seenIncludes.has(key)) continue
             seenIncludes.add(key)
             const line = generateBody([n], ctx)
@@ -316,7 +318,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       // > ——而它們答的是不同的問題**（spec 146 的病歷）。
       //
       // 🟢 而板子與 C 方言**互斥**（C 目標沒有板子），所以順序不會撞在一起。
-      if (aliasTable.size > 0) {
+      {
+        // ⚠️ 一律走（第 204 刀）：沒有替換表的板子也要把別塊板子的名字收回正典名
         // ⚠️ **`properties.header` 存的是【裸名】（`WiFi.h`），而替換表寫的是 `<WiFi.h>`**
         //    ——給人讀的那一面帶角括號比較不會寫錯，所以兩邊都先剝掉。
         effectiveBody = effectiveBody.map(n => {

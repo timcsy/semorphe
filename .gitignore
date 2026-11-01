@@ -38,3 +38,6 @@ output.txt
 # ⚠️ 症狀：fuzz 那一關跑完之後 `git status` 多一筆 `??`，
 # 而那底下是**另一個工作區的完整 checkout**——`git add -A` 會把它整個收進來。
 .claude/worktrees/
+
+# 建置時編好的 Cella 模組（tools/precompile-cella.ts；第 210 刀）——每次建置重產，不進版控
+public/cella-modules/

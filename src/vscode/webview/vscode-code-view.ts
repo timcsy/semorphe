@@ -172,6 +172,17 @@ export class VscodeCodeView implements CodeView, ViewHost {
     postToHost({ type: 'checkStatus', ...status })
   }
 
+  /** 硬體分頁要畫的 → 主行程 → 硬體那個視圖（spec 203） */
+  reportHardware(view: unknown): void {
+    postToHost({ type: 'hardware', view })
+  }
+
+  onHardwareSnapshot(callback: (view: unknown) => void): void {
+    this.hardwareOutCb = callback
+  }
+
+  private hardwareOutCb: ((view: unknown) => void) | null = null
+
   private codeMappings: CodeMapping[] = []
   private currentTree: SemanticNode | null = null
 
@@ -354,6 +365,10 @@ export class VscodeCodeView implements CodeView, ViewHost {
     }
     if (m.type === 'execStatusOut') {
       this.execStateCb?.({ status: m.status, reason: m.reason })
+      return
+    }
+    if (m.type === 'hardwareOut') {
+      this.hardwareOutCb?.(m.view)
       return
     }
     if (m.type === 'variablesOut') {

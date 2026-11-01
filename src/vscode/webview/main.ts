@@ -67,7 +67,7 @@ async function boot(): Promise<void> {
   //    ⚠️ 認不得的值退回 `blocks`：一個空白的面板比一個「畫錯東西」的面板
   //       更難查，而這一格是宿主寫的，寫錯是我們自己的 bug。
   const v = appEl.dataset.view
-  const kind = v === 'flow' || v === 'console' || v === 'variables' ? v : 'blocks'
+  const kind = v === 'flow' || v === 'console' || v === 'variables' || v === 'hardware' ? v : 'blocks'
   // 🔴 **Cella（判決、除錯、覆蓋）**——跑程式的那兩種視窗才登記（主控台與變數只畫轉送過來的資料）。
   //    與網頁版同一支 worker，資產在 `dist/cella/`（spec 198，重構階段 6a；見 `./cella.ts`）
   const assetBase = (window as unknown as { __SEMORPHE_ASSET_BASE__?: string }).__SEMORPHE_ASSET_BASE__

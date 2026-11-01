@@ -23,6 +23,7 @@
         "lift": "./lift-pattern.json"
       }
     },
+    "formalize": "./formalize.ts",
     "execute": "./execute.ts"
   }
 }

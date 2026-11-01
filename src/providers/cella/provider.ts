@@ -223,9 +223,10 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
     if ('why' in f) return { declined: f.why }
     const st = debuggerState.get(f.branch)
     if (st !== 'ready') {
-      // 第一次：背景編好除錯模組（約 20 秒），這一次先交給下一個提供者（research R4）
+      // 還沒準備好：背景準備除錯模組（建置時編好的只是下載；開發模式沒有就現場編，約 20 秒），這一次先交給下一個提供者（research R4）。
+      // ⚠️ 判決時就會順手準備（見 check）——走到這裡多半是判決還沒跑過
       if (st === undefined) { try { send({ kind: 'dap-prepare', branch: f.branch }) } catch { /* worker 起不來 */ } }
-      return { declined: st === 'unavailable' ? 'Cella 的除錯模組無法使用' : 'Cella 的除錯模組還在準備（第一次約 20 秒）' }
+      return { declined: st === 'unavailable' ? 'Cella 的除錯模組無法使用' : 'Cella 的除錯模組還在準備' }
     }
     const id = ++sid
     const s = new CellaSession(id, send, f.program)
@@ -255,6 +256,10 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
         return Promise.resolve({ verdict, types: null, stale: false, readsInput: false })
       }
       if (state.state === 'unavailable') return Promise.resolve({ verdict: null, types: null, stale: false, readsInput: false })
+      // 判決時就知道這支程式屬於哪個分支——順手把那個分支的除錯模組準備好（第 210 刀）：模組是建置時編好的、準備只是一次小下載，
+      // 學生按執行時它早就好了，不必「第一次先退回 JS 直譯器」（6c 拆掉 JS 直譯器之後沒有那條退路）
+      const branch = branchOf(f.program as never)
+      if (state.state === 'ready' && debuggerState.get(branch) === undefined) { try { send({ kind: 'dap-prepare', branch }) } catch { /* worker 起不來 */ } }
       return new Promise<CheckAnswer>((resolve) => {
         waiting.set(id, resolve)
         reads.set(id, readsInput(f.program))

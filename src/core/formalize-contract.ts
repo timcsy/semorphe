@@ -70,6 +70,16 @@ export interface FormalizeContext {
    * 值認得（某顆元件登記了「這種字面量的文字是我的」）才有：`expr(usageId)` 是展開在使用處的運算式，`int` 是編譯期整數（陣列長度用）。
    */
   macro(name: string): { expr(usageId: string): CellaJson; int: number | null } | undefined
+  /**
+   * 記號替換巨集（`#define F first`、`#define pb push_back`）——值是一個識別字時回它，否則原樣回名字（第 205 刀：學生的程式 20 支）。
+   * 用在成員名、方法名、函式名：`p.F` → `p.first`、`v.pb(x)` → `v.push_back(x)`。
+   */
+  identMacro(name: string): string
+  /**
+   * 把一句敘述放到「目前正在翻的那一句」前面（第 206 刀：lambda 的 `sLambda` 要在用到它的敘述之前——cella 2026-11-01 給的形狀）。
+   * 全域位置沒有「前面的敘述」可放，引擎照實標 unknown。
+   */
+  hoist(stmt: CellaJson): void
   /** 這段文字是不是一個認得的型別（不記 unknown）——型別巨集 `#define ll long long` 用（spec 199） */
   isTypeText(text: string): boolean
   /** 整支程式裡有沒有一顆元件符合這個條件（spec 199：關掉 stdio 同步只在混用 printf／scanf 時才改變輸出）——條件問性狀，不列身分 */
@@ -105,6 +115,11 @@ export interface ScopeWalker {
   declare(name: string, nodeId: string): void
   /** 解析一個名字的參照：指得到 → 記進 declOf；指不到 → 列進 unresolved。 */
   resolve(refId: string, name: string): void
+  /**
+   * 同上，但**指不到不算落空**——函式呼叫的名字（`sort`、`printf`）本來就不是變數，只有指得到變數時才有意義
+   * （第 206 刀：裝著 lambda 的變數被呼叫；`sizeof(a)`）。
+   */
+  resolveIfDeclared(refId: string, name: string): void
 }
 
 /** 元件向引擎註冊的形狀。一顆元件可以在多個位置註冊；**每一個身分只能是它自己資料夾的**（引擎會核對）。 */

@@ -336,6 +336,8 @@ const WINDOWS = [
   //    那一頁（另一頁的投影是 `hostPanel`，由**另一個視窗**畫）。
   { page: 'preview-console.html', label: '主控台視窗', cell: 'bottom-container', tabs: 1, solo: true },
   { page: 'preview-variables.html', label: '變數視窗', cell: 'bottom-container', tabs: 1, solo: true },
+  // spec 203：硬體分頁住進下方面板區（使用者 2026-11-01 定），與主控台、變數同一族
+  { page: 'preview-hardware.html', label: '硬體視窗', cell: 'bottom-container', tabs: 1, solo: true },
 ]
 let windowsOk = true
 console.log('\n面板獨立 → 每種視窗只畫一層：')
@@ -515,11 +517,11 @@ const panelViews = Object.values(manifest.contributes?.views ?? {}).flat()
 const src = readFileSync('src/vscode/panel.ts', 'utf8')
 // 🔴 **兩個容器兩個視圖**（一個容器 ＝ panel 那一排上的一個分頁），
 //    而 id 兩邊要逐字相同——差一個字，視圖就永遠是一片空白**而沒有任何錯誤**。
-const 主控台在panel區 = panelContainers.length === 2
-  && panelViews.length === 2
-  && ['semorphe.consoleView', 'semorphe.variablesView']
+const 主控台在panel區 = panelContainers.length === 3
+  && panelViews.length === 3
+  && ['semorphe.consoleView', 'semorphe.variablesView', 'semorphe.hardwareView']
     .every((id) => panelViews.some((v) => v.id === id) && src.includes(`'${id}'`))
-console.log(`\n主控台與變數在 panel 區：${主控台在panel區 ? '🟢 兩個原生分頁，宣告與實作對得上' :
+console.log(`\n主控台、變數、硬體在 panel 區：${主控台在panel區 ? '🟢 三個原生分頁，宣告與實作對得上' :
   `🔴 容器 ${panelContainers.length}／webview 視圖 ${panelViews.length}` +
   `（${panelViews.map((v) => v.id).join('、') || '無'}）`}`)
 

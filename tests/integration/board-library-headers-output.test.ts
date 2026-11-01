@@ -104,4 +104,16 @@ describe('spec 150 · 產出端（🔴 走【鷹架】那條路——產品走�
     const out = generateCode(t!, 'cpp', googleStyle as unknown as StylePreset)
     expect(out, '上一塊板子的替換留下來了').toContain('#include <WiFi.h>')
   })
+
+  // 🔴 **反向**（第 204 刀；history 101 的已知缺口）：樹裡已經是別塊板子的名字（ESP8266 的產出來回一趟）
+  const SRC_ESP8266 = '#include <ESP8266WiFi.h>\nvoid setup(){ WiFi.begin("ssid", "pw"); }\nvoid loop(){}'
+  const includes = (out: string): string[] => out.split('\n').filter((l) => l.startsWith('#include'))
+
+  it('🔴 反向：ESP8266 的產出切到 ESP32，換回 `<WiFi.h>`（不留 `<ESP8266WiFi.h>`）', () => {
+    expect(includes(gen(esp32 as never, SRC_ESP8266))).toEqual(['#include <WiFi.h>'])
+  })
+
+  it('🔴 D1 mini 上自己的產出來回一趟不多一行（手寫的專屬名與自動補的正典名是同一個）', () => {
+    expect(includes(gen(d1mini as never, SRC_ESP8266))).toEqual(['#include <ESP8266WiFi.h>'])
+  })
 })

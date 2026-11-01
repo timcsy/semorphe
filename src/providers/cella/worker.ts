@@ -13,7 +13,7 @@
  * ```
  */
 import { compileCellaChecker, checkerFromBytes, branchOf, familyOf, type CellaChecker, type CellaFamily, type CellaTypes, type CellaVerdict } from './verdict'
-import { fetchCellaAsset } from './assets'
+import { fetchCellaAsset, fetchPrecompiled } from './assets'
 import { checkerKey, loadCompiled, saveCompiled, moduleKey } from './cache'
 import { compileCellaDebugger, debuggerSource } from './debugger'
 import type { CellaBranch } from './verdict'
@@ -61,7 +61,8 @@ async function build(family: CellaFamily): Promise<{ checker: CellaChecker; cach
   if (hit) {
     try { return { checker: await checkerFromBytes(hit), cached: true } } catch { /* 壞掉的快取 → 重編 */ }
   }
-  const bytes = await compileCellaChecker(fetchCellaAsset, family)
+  // 建置時編好的（第 210 刀）——抓得到就不必下載套件檔、不必現場編十幾秒；抓不到才現場編
+  const bytes = await fetchPrecompiled(`verdict-${family}`) ?? await compileCellaChecker(fetchCellaAsset, family)
   if (key) void saveCompiled(key, bytes)
   return { checker: await checkerFromBytes(bytes), cached: false }
 }
@@ -120,7 +121,7 @@ function debuggerBytes(b: CellaBranch): Promise<Uint8Array> {
       const key = await moduleKey(`debugger-${b}`, debuggerSource(b)).catch(() => null)
       const hit = key ? await loadCompiled(key) : null
       if (hit) return hit
-      const bytes = await compileCellaDebugger(fetchCellaAsset, b)
+      const bytes = await fetchPrecompiled(`debugger-${b}`) ?? await compileCellaDebugger(fetchCellaAsset, b)
       if (key) void saveCompiled(key, bytes)
       return bytes
     })()

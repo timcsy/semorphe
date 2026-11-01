@@ -396,12 +396,15 @@ export function buildManifest(): ExtensionManifest {
         panel: [
           { id: 'semorphe-console', title: 'Semorphe 主控台', icon: 'assets/logo-dark-theme.svg' },
           { id: 'semorphe-variables', title: 'Semorphe 變數', icon: 'assets/logo-dark-theme.svg' },
+          // 板子做了什麼（spec 203）——與主控台、變數並排（使用者 2026-11-01 定）
+          { id: 'semorphe-hardware', title: 'Semorphe 硬體', icon: 'assets/logo-dark-theme.svg' },
         ],
       },
       views: {
         // 🔴 id 與 `panel.ts` 的 `PANEL_VIEW_IDS` **逐字相同**（預檢會出聲）
         'semorphe-console': [{ id: 'semorphe.consoleView', name: '主控台', type: 'webview' }],
         'semorphe-variables': [{ id: 'semorphe.variablesView', name: '變數', type: 'webview' }],
+        'semorphe-hardware': [{ id: 'semorphe.hardwareView', name: '硬體', type: 'webview' }],
       },
       // 🪦 **舊的 `viewsContainers` ＋ `views`（2026-09-01 退場的那一組）**：
       //

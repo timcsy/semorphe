@@ -7,4 +7,6 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     if (!x) return f.miss(n, `對應表「${String(n.properties?.obj)}」指不到宣告（或不是單一名字）`)
     return f.k('eIndex', { n: n.id, a: f.k('eVar', { n: `${n.id}/obj`, x }), i: f.exprOf(n, 'key') })
   })
+  // 當敘述用（`cond ? a = 1 : b = 2;`）：運算式敘述（第 207 刀）
+  r.stmt('cpp:map_at', (n, f) => f.exprStmt(n))
 }
