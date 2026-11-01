@@ -237,7 +237,7 @@ function reparseStatements(node: AstNode, text: string): AstNode[] | null {
   const parser = parserFor(node)
   if (!parser) return null
   const tree = parser.parse(`${WRAP_PREFIX}${text} }`)
-  if (!tree || tree.rootNode.hasError) return null
+  if (!tree || (tree.rootNode.hasError && !onlyMacroCallGaps(tree.rootNode as never, macrosOf(node)))) return null
   /**
    * 🔴 **重解出來的那棵樹裡沒有 `#define` 行**——把巨集表帶過去。
    *
@@ -263,6 +263,38 @@ function reparseStatements(node: AstNode, text: string): AstNode[] | null {
   walk(tree.rootNode as never)
   const found = body as AstNode | null
   return found ? found.namedChildren : null
+}
+
+/**
+ * 這棵樹的錯誤，是不是**全部**都是「巨集呼叫後面缺的分號」（第 216 刀，語料 `AP325/7/7_10.cpp`）。
+ *
+ * ```cpp
+ * rep(i,m) rep(j,n){            ← 外層展開成兩個 for、重解
+ *     h = max(h,(ll)1);
+ *     rep(k,4){ … }             ← 內層：tree-sitter 讀成 `rep(k,4)` 運算式 ＋ MISSING ";" ＋ 一個區塊
+ * }
+ * ```
+ *
+ * 原檔第一次解析時就是這個形狀，而那時修補照常接手（它就是這條規則要認的東西）；
+ * 只有重解這一步用 `hasError` 一律放棄，於是**外層**整段掉回原文。
+ * 🟢 這一種錯誤由下一層同一條修補展開（內層的 `compound_statement` 被 lift 時），所以放過它是安全的。
+ * ⚠️ 其他任何錯誤照舊整段讓開——只放過證得出無害的那一種。
+ */
+function onlyMacroCallGaps(root: AstNode, macros: Map<string, FuncMacro>): boolean {
+  let ok = true
+  const walk = (n: AstNode): void => {
+    if (!ok) return
+    const missing = (n as unknown as { isMissing?: boolean }).isMissing === true
+    if (n.type === 'ERROR') { ok = false; return }
+    if (missing) {
+      const stmt = n.parent
+      ok = n.type === ';' && stmt?.type === 'expression_statement' && matchMacroPrefix(stmt.text, macros) !== null
+      return
+    }
+    for (const c of (n as unknown as { children: AstNode[] }).children) walk(c)
+  }
+  walk(root)
+  return ok
 }
 
 /** 這顆元件收不收得下「原文是用巨集寫的」這件事——**問性狀，不問身分**。 */
