@@ -16,6 +16,10 @@ import type { SemanticNode } from '../../../core/types'
 import type { CellaJson, FormalizeContext } from '../../../core/formalize-contract'
 import { resolveScopes } from './scope'
 import { FORMALIZE } from './registry'
+import { isFunctionDefinition } from '../../../core/component/traits'
+
+/** 標準串流物件 → Cella 的建構子（`cin.ignore()` 的接收者；spec 201：送成 eConst 會被判「use of undeclared identifier 'cin'」） */
+const STREAMS: Record<string, string> = { cin: 'eStdin', cout: 'eStdout', cerr: 'eStderr' }
 
 export type { CellaJson } from '../../../core/formalize-contract'
 
@@ -101,9 +105,12 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const byId = new Map<string, SemanticNode>()
   // 類別的欄位：`members` 槽裡、有型別的那幾顆（成員函式沒有 `type`）——成員函式裡的裸名字指到它們時是 eSelf
   const memberFields = new Set<string>()
+  // 程式自己定義的函式名——名字當值用（`sort(a, a + n, cmp)`）時是 eFunc（cpp_to_tree.py 同形；spec 201）
+  const functionNames = new Set<string>()
   const index = (n: SemanticNode): void => {
     byId.set(n.id, n)
     for (const m of n.slots?.members ?? []) if (m.properties?.type !== undefined) memberFields.add(m.id)
+    if (isFunctionDefinition(n.componentId) && n.properties?.name) functionNames.add(String(n.properties.name))
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(index)
   }
   index(tree)
@@ -167,7 +174,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     const name = String(n.properties?.obj ?? '')
     const x = declOf.get(`${n.id}#obj`)
     // 沒宣告的接收者（`Serial`、`Serial1`、`WiFi`）是標頭的全域物件：eConst（cella 2026-10-31 確認）
-    const obj = x ? k('eVar', { n: `${n.id}/obj`, x }) : options.board && /^[A-Za-z_]\w*$/.test(name) ? k('eConst', { n: `${n.id}/obj`, name }) : null
+    const stream = !x && !isC ? STREAMS[name.replace(/^std::/, '')] : undefined
+    const obj = x ? k('eVar', { n: `${n.id}/obj`, x }) : stream ? k(stream, { n: `${n.id}/obj` }) : options.board && /^[A-Za-z_]\w*$/.test(name) ? k('eConst', { n: `${n.id}/obj`, name }) : null
     if (!obj) return miss(n, `接收者「${name}」指不到宣告`)
     return k('eMCall', { n: n.id, obj, arrow: false, f, args: slots.filter((sl) => one(n, sl)).map((sl) => expr(one(n, sl)!)) })
   }
@@ -301,6 +309,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       return null
     },
     isMemberField: (declId) => memberFields.has(declId),
+    isFunctionName: (name) => functionNames.has(name),
     asStatement: (c) => (FORMALIZE.stmt.has(c.componentId) || FORMALIZE.decl.has(c.componentId)
       ? stmt(c)
       : [k('sExpr', { n: `${c.id}/stmt`, e: expr(c) })]),

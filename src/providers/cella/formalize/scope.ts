@@ -33,6 +33,9 @@ function declaredName(n: SemanticNode): string | null {
   if (typeof name !== 'string' || name === '') return null
   if (n.componentId === 'param_decl') return name
   if (n.componentId.endsWith('_declare')) return name
+  // 名字不以 `_declare` 結尾的宣告（var_declare_const、var_declare_auto…）：在 formalize 註冊了 decl 的就是宣告（spec 201：
+  // 原本 `const int P = 1e9+9;` 的 P 指不到宣告，被送成 eConst，Cella 判「use of undeclared identifier 'P'」）
+  if (FORMALIZE.decl.has(n.componentId)) return name
   return null
 }
 

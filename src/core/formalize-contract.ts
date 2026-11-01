@@ -82,6 +82,8 @@ export interface FormalizeContext {
   member(n: SemanticNode): CellaJson | null
   /** 這個宣告是不是某個 struct／class 的欄位——成員函式裡的裸名字指到它時是 `eSelf`（隱含的 this，spec 201） */
   isMemberField(declId: string): boolean
+  /** 程式自己定義的函式名（名字當值用時是 `eFunc`——spec 201） */
+  isFunctionName(name: string): boolean
   /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
   unescapeC(s: string): string
   /** C 的二元運算子符號 → Cella 的運算子建構子。 */

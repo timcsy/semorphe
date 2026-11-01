@@ -17,6 +17,11 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // 物件巨集（spec 197）：前端展開——值代進使用處，標籤用使用處的 id（判決指回這一格）
     const m = f.macro(name)
     if (m) return m.expr(n.id)
+    // 標準串流物件（`cin.ignore()` 的接收者）：eStdin／eStdout／eStderr（spec 201：送成 eConst 會被判 undeclared identifier）
+    const stream = f.options.isC ? undefined : ({ cin: 'eStdin', cout: 'eStdout', cerr: 'eStderr' } as Record<string, string>)[name.replace(/^std::/, '')]
+    if (stream) return f.k(stream, { n: n.id })
+    // 函式名當值（`sort(a, a + n, cmp)`）：eFunc（spec 201：送成 eConst 會被判 undeclared identifier）
+    if (f.isFunctionName(name)) return f.k('eFunc', { n: n.id, f: name })
     return f.k('eConst', { n: n.id, name })
   })
   // 陣列長度寫成巨集名（`int a[N];`）：沒有宣告、而且是物件巨集 → 照值算（spec 197）
