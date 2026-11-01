@@ -34,6 +34,8 @@ import { formalize } from '../../src/providers/cella/formalize'
 import { createCellaChecker, type CellaChecker } from '../../src/providers/cella/verdict'
 import { readSchedule, makeStdin } from '../helpers/stdin-from-tree'
 import type { SemanticNode } from '../../src/core/types'
+import { spawn, type ChildProcess } from 'node:child_process'
+import readline from 'node:readline'
 
 const ROOT = path.resolve(__dirname, '../..')
 const DIR = process.env.STUDYCPP_DIR ?? ''
@@ -45,6 +47,54 @@ const FORMALIZE_ONLY = process.env.CELLA_GAP_FORMALIZE_ONLY === '1'
  */
 const TIMEOUT = Number(process.env.PROBE_TIMEOUT_MS ?? 3_600_000)
 const PROGRESS = process.env.CELLA_GAP_PROGRESS
+/**
+ * **每一支的時間上限**（毫秒；有設才啟用，第 215 刀）。步數上限擋不住「步數不多、每一步卻很貴」的程式
+ *（`vector<int> d2[1000005]`：一支跑了二十分鐘以上還沒完，後面五十幾支全被擋住）。
+ * 啟用時 Cella 判決改在子行程（`tests/helpers/cella-verdict-child.ts`）裡跑，逾時就砍掉重開，那一支記成 unknown（逾時）。
+ */
+const FILE_TIMEOUT = Number(process.env.CELLA_GAP_FILE_TIMEOUT_MS ?? 0)
+const TIMED_OUT = '逾時（每支上限）'
+
+type ChildVerdict = { verdict: { verdict: string; out: string; problems: { kind: string }[] } } | { error: string } | { timeout: true }
+
+/** 常駐的判決子行程：逾時就砍掉，下一支再重開（重開要重新編譯 Cella 的模組，所以不每支都開）。 */
+function verdictChild(): { ask: (program: unknown, stdin: string, steps: number) => Promise<ChildVerdict>; close: () => void } {
+  let child: ChildProcess | null = null
+  let ready: Promise<void> | null = null
+  let pending: ((v: ChildVerdict) => void) | null = null
+  let seq = 0
+  // ⚠️ npx 底下還有一層 node：開成自己的行程群組（detached），砍的時候整組砍，否則砍到的只是 npx
+  const kill = (c: ChildProcess | null): void => { if (c?.pid) try { process.kill(-c.pid, 'SIGKILL') } catch { /* 已經結束 */ } }
+  const start = (): Promise<void> => {
+    const c = spawn('npx', ['--no-install', 'tsx', path.join(ROOT, 'tests/helpers/cella-verdict-child.ts')], { cwd: ROOT, stdio: ['pipe', 'pipe', 'inherit'], detached: true })
+    child = c
+    return new Promise<void>((res, rej) => {
+      readline.createInterface({ input: c.stdout! }).on('line', (line) => {
+        const m = JSON.parse(line) as { ready?: boolean } & ChildVerdict
+        if (m.ready) { res(); return }
+        const p = pending; pending = null; p?.(m)
+      })
+      // 子行程自己結束（啟動失敗、記憶體耗盡）：不要讓等它的人永遠等下去
+      c.on('exit', (code, sig) => {
+        if (child === c) child = null
+        rej(new Error(`判決子行程啟動前就結束（${code ?? sig}）`))
+        const p = pending; pending = null; p?.({ error: `判決子行程結束（${code ?? sig}）` })
+      })
+    })
+  }
+  return {
+    async ask(program, stdin, steps) {
+      if (!child) ready = start()
+      await ready
+      return new Promise<ChildVerdict>((res) => {
+        const timer = setTimeout(() => { pending = null; const c = child; child = null; kill(c); res({ timeout: true }) }, FILE_TIMEOUT)
+        pending = (v) => { clearTimeout(timer); res(v) }
+        child!.stdin!.write(JSON.stringify({ id: ++seq, program, stdin, steps }) + '\n')
+      })
+    },
+    close() { const c = child; child = null; kill(c) },
+  }
+}
 
 function files(): string[] {
   if (!DIR || !fs.existsSync(DIR)) return []
@@ -83,7 +133,8 @@ beforeAll(async () => {
   const parser = new Parser()
   parser.setLanguage(await Language.load(`${ROOT}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
-  if (!FORMALIZE_ONLY) checker = await createCellaChecker(read)
+  if (!FORMALIZE_ONLY && !FILE_TIMEOUT) checker = await createCellaChecker(read)
+  const child = FILE_TIMEOUT && !FORMALIZE_ONLY ? verdictChild() : null
   for (const f of FS) {
     const src = fs.readFileSync(f, 'utf8')
     let tree: SemanticNode
@@ -114,6 +165,12 @@ beforeAll(async () => {
     const fz = formalize(tree, { lang: 'cpp' })
     if (!fz.program) {
       cella = { k: 'untranslated', constructs: [...new Set((fz.unknown as { construct: string }[]).map((u) => u.construct))] }
+    } else if (child) {
+      const r = await child.ask(fz.program, stdin.map((l) => `${l}\n`).join(''), STEPS)
+      cella = 'timeout' in r ? { k: 'unknown', kinds: [TIMED_OUT] }
+        : 'error' in r ? { k: 'invalid', kinds: [`例外：${r.error.slice(0, 60)}`] }
+        : r.verdict.verdict === 'accept' ? { k: 'accept', out: r.verdict.out }
+        : { k: r.verdict.verdict as 'reject' | 'unknown' | 'invalid', kinds: [...new Set(r.verdict.problems.map((p) => p.kind))].filter((k) => k !== 'hole') }
     } else {
       try {
         const v = checker.verdict(fz.program, stdin.map((l) => `${l}\n`).join(''), STEPS)
@@ -126,6 +183,7 @@ beforeAll(async () => {
     rows.push(row)
     if (PROGRESS) fs.appendFileSync(PROGRESS, JSON.stringify({ file: row.file, js: js.ok ? 'ok' : js.why, cella: cella.k, kinds: 'kinds' in cella ? cella.kinds : undefined, jsMs, cellaMs: row.cellaMs }) + '\n')
   }
+  child?.close()
 }, TIMEOUT)
 
 describe.skipIf(FS.length === 0)('探針：JS 直譯器跑得動、Cella 給不出結果的（階段 6.0）', () => {
