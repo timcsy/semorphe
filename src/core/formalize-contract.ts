@@ -70,6 +70,11 @@ export interface FormalizeContext {
    * 值認得（某顆元件登記了「這種字面量的文字是我的」）才有：`expr(usageId)` 是展開在使用處的運算式，`int` 是編譯期整數（陣列長度用）。
    */
   macro(name: string): { expr(usageId: string): CellaJson; int: number | null } | undefined
+  /**
+   * 記號替換巨集（`#define F first`、`#define pb push_back`）——值是一個識別字時回它，否則原樣回名字（第 205 刀：學生的程式 20 支）。
+   * 用在成員名、方法名、函式名：`p.F` → `p.first`、`v.pb(x)` → `v.push_back(x)`。
+   */
+  identMacro(name: string): string
   /** 這段文字是不是一個認得的型別（不記 unknown）——型別巨集 `#define ll long long` 用（spec 199） */
   isTypeText(text: string): boolean
   /** 整支程式裡有沒有一顆元件符合這個條件（spec 199：關掉 stdio 同步只在混用 printf／scanf 時才改變輸出）——條件問性狀，不列身分 */

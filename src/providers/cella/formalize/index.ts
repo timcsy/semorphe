@@ -301,6 +301,10 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     declVar, declInit, declCtor, libraryObject, constInt,
     declOf: (key) => declOf.get(key),
     macro,
+    identMacro: (name) => {
+      const v = macros.get(name)
+      return v !== undefined && /^[A-Za-z_]\w*$/.test(v) ? v : name
+    },
     nodeById: (id) => byId.get(id),
     member: (m) => {
       const fn = FORMALIZE.member.get(m.componentId)

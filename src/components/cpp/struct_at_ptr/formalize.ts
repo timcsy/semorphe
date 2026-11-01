@@ -2,5 +2,5 @@
 import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
 export function registerFormalize(r: FormalizeRegistrar): void {
-  r.expr('cpp:struct_at_ptr', (n, f) => f.k('eArrow', { n: n.id, a: f.exprOf(n, 'obj'), f: String(n.properties?.member ?? '') }))
+  r.expr('cpp:struct_at_ptr', (n, f) => f.k('eArrow', { n: n.id, a: f.exprOf(n, 'obj'), f: f.identMacro(String(n.properties?.member ?? '')) }))
 }

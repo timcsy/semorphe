@@ -3,7 +3,7 @@ import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.expr('cpp:func_call', (n, f) =>
-    f.k('eCall', { n: n.id, f: String(n.properties?.name ?? ''), args: (n.slots?.args ?? []).map((c) => f.expr(c)) }))
+    f.k('eCall', { n: n.id, f: f.identMacro(String(n.properties?.name ?? '')), args: (n.slots?.args ?? []).map((c) => f.expr(c)) }))
   // 當敘述用：運算式敘述
   r.stmt('cpp:func_call', (n, f) => f.exprStmt(n))
 }
