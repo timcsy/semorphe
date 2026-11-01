@@ -59,6 +59,8 @@ const KINDS: Record<string, { rule: string; severity: 'error' | 'info' }> = {
   unsupported: { rule: 'CELLA_UNSUPPORTED', severity: 'info' },
   fuel: { rule: 'CELLA_FUEL', severity: 'info' },
   unspecified: { rule: 'CELLA_UNSPECIFIED', severity: 'info' },
+  // 求值順序未指定、而兩邊的副作用互相衝突（`f() + g()` 兩個都印東西）——標準允許不只一種結果（cella 0.1.202610312349 起）
+  ubOrder: { rule: 'CELLA_UNSPECIFIED', severity: 'info' },
 }
 
 /** 判決產出端的全部規則身分（護欄用）。 */
@@ -103,10 +105,20 @@ export function toDiagnostics(input: {
   tree: SemanticNode
   readsInput: boolean
   hasStdin: boolean
-}): { diagnostics: Diagnostic[]; notes: string[]; assumes: { implementation: string; text: string }[] } {
+}): {
+  diagnostics: Diagnostic[]
+  notes: string[]
+  assumes: { implementation: string; text: string }[]
+  /**
+   * **對不到積木的問題**（`at` 是空的，或指到樹上沒有的節點——例如步數用盡）：照嚴重度計數，狀態列要算進去。
+   * ⚠️ 2026-11-01 之前它只進 `notes`（狀態列的 title），而狀態列寫「沒有發現問題」——把判不了說成對的（P6）。
+   */
+  unplaced: { error: number; info: number }
+} {
   const { verdict, types, tree, readsInput, hasStdin } = input
   const notes: string[] = []
-  if (!verdict) return { diagnostics: [], notes: ['判斷功能需要 Cella（還沒載好，或這個語言還沒有）'], assumes: [] }
+  const unplaced = { error: 0, info: 0 }
+  if (!verdict) return { diagnostics: [], notes: ['判斷功能需要 Cella（還沒載好，或這個語言還沒有）'], assumes: [], unplaced }
 
   const known = ids(tree)
   const diagnostics: Diagnostic[] = []
@@ -115,12 +127,17 @@ export function toDiagnostics(input: {
     if (p.kind === 'hole') continue                                   // 空槽＝還沒寫完，不顯示
     if (readsInput && !hasStdin && RUNTIME(p.kind)) { dropped++; continue }
     const nodeId = p.at ? ownerOf(p.at) : ''
-    if (!known.has(nodeId)) { notes.push(`有一則判決對不到積木：${p.kind}${p.reason ? `（${p.reason}）` : ''}`); continue }
     const k = KINDS[p.kind]
+    const severity = k?.severity ?? (verdict.verdict === 'reject' ? 'error' : 'info')
+    if (!known.has(nodeId)) {
+      unplaced[severity]++
+      notes.push(`有一則判決對不到積木：${p.kind}${p.reason ? `（${p.reason}）` : ''}`)
+      continue
+    }
     diagnostics.push({
       nodeId, source: 'cella',
       rule: k?.rule ?? 'CELLA_OTHER',
-      severity: k?.severity ?? (verdict.verdict === 'reject' ? 'error' : 'info'),
+      severity,
       params: { kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
     })
   }
@@ -132,9 +149,9 @@ export function toDiagnostics(input: {
   // 型別不合：允許接上、標在那一句（第 16 題）。判決的 reject 也指到同一顆時只留一則
   for (const e of types?.errors ?? []) {
     const nodeId = ownerOf(e.at)
-    if (!known.has(nodeId)) { notes.push(`有一則型別錯誤對不到積木（${e.reason}）`); continue }
+    if (!known.has(nodeId)) { unplaced.error++; notes.push(`有一則型別錯誤對不到積木（${e.reason}）`); continue }
     if (diagnostics.some((d) => d.nodeId === nodeId && d.rule === 'CELLA_REJECT')) continue
     diagnostics.push({ nodeId, severity: 'error', source: 'cella', rule: 'TYPE_MISMATCH', params: { reason: e.reason } })
   }
-  return { diagnostics, notes, assumes }
+  return { diagnostics, notes, assumes, unplaced }
 }

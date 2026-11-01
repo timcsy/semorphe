@@ -3,7 +3,7 @@
  *
  * ```
  * ① 最外層手拖一顆、記下每一顆的位置
- * ② 右鍵 →「進入這一塊」三層（main → for → if），麵包屑一層一層長出來、圖只剩那一層的身體
+ * ② 右鍵 →「進入這一塊」三層（外層 for → 內層 for → if），麵包屑一層一層長出來、圖只剩那一層的身體
  * ③ 在裡層時改一個不相干的值 → 🔴 仍停在同一層（鑰匙不是 id）
  * ④ 點麵包屑跳回第一層、Esc 回到最外層 → 麵包屑消失、每一顆回到原位（含手拖的那一顆）
  * ```
@@ -13,7 +13,8 @@ import { test, expect, type Page } from '@playwright/test'
 import { showFlowSlot, freshApp, appReady, useAsSource, treeReady, flowReady } from './helpers'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const PROG = 'int main() {\n    int k = 1;\n    for (int i = 0; i < 3; i++) {\n        if (i > k) {\n            cout << i << endl;\n        }\n    }\n    return 0;\n}\n'
+// ⚠️ 三層都在 main 的身體裡——預設的骨架模式把 main 本身攤開（流程圖上沒有 main 那一顆），第一版從 main 鑽起就找不到
+const PROG = 'int main() {\n    int k = 1;\n    for (int i = 0; i < 3; i++) {\n        for (int j = 0; j < 2; j++) {\n            if (i > k) {\n                cout << i << j << endl;\n            }\n        }\n    }\n    return 0;\n}\n'
 
 const crumbs = (page: Page) => page.locator('.flow-crumbs .flow-crumb')
 const positions = (page: Page): Promise<{ id: string; x: number; y: number }[]> =>
@@ -56,14 +57,15 @@ test('★ 三層進出回到原位；在裡層改一個字仍停在那一層', a
   expect(before.find((p) => p.id === first.id)!.x).toBe(first.x + 40)
 
   // ② 三層
-  await enter(page, 'cpp:func_def')
+  await enter(page, 'cpp:loop')
   await expect(crumbs(page)).toHaveCount(2)
+  expect((await comps(page)).filter((c) => c.startsWith('cpp:loop')), '外層迴圈的身體裡只剩內層那一個迴圈').toHaveLength(1)
   await enter(page, 'cpp:loop')
   await expect(crumbs(page)).toHaveCount(3)
   await enter(page, 'cpp:if')
   await expect(crumbs(page)).toHaveCount(4)
   expect(await comps(page), '最裡層只剩 if 的身體').not.toContain('cpp:if')
-  expect((await comps(page)).some((c) => c.startsWith('cpp:loop')), '外面那層的迴圈不在圖上').toBe(false)
+  expect((await comps(page)).some((c) => c.startsWith('cpp:loop')), '外面兩層的迴圈不在圖上').toBe(false)
 
   // ③ 在裡層改一個不相干的值
   await page.evaluate(async (c) => {

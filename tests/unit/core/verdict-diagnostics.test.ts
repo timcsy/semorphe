@@ -34,7 +34,7 @@ describe('判決 → 診斷', () => {
     expect(diagnostics[0].severity).toBe('info')
   })
 
-  it('★ 標籤 `<id>/<角色>`、`<id>#<槽>` 歸到那一顆；樹裡沒有的往上找不到就只進 notes', () => {
+  it('★ 標籤 `<id>/<角色>`、`<id>#<槽>` 歸到那一顆；樹裡沒有的畫不上積木、進 notes', () => {
     const a = run(v('reject', [{ kind: 'ubUninit', at: `${idx.id}/value` }])).diagnostics
     const b = run(v('unknown', [{ kind: 'hole', at: `${idx.id}#index` }])).diagnostics
     expect(a[0].nodeId).toBe(idx.id)
@@ -42,6 +42,19 @@ describe('判決 → 診斷', () => {
     const c = run(v('reject', [{ kind: 'ubUninit', at: 'node_does_not_exist' }]))
     expect(c.diagnostics).toEqual([])
     expect(c.notes.join()).toMatch(/對不到/)
+    expect(c.unplaced).toEqual({ error: 1, info: 0 })
+  })
+
+  it('🔴 對不到積木的問題照嚴重度計數——步數用盡（`at` 是空的）不能讓狀態列說「沒有發現問題」（P6）', () => {
+    const r = run(v('unknown', [{ kind: 'fuel', at: '', clause: '', reason: 'step limit reached' }]))
+    expect(r.diagnostics).toEqual([])
+    expect(r.unplaced).toEqual({ error: 0, info: 1 })
+    expect(run(v('accept')).unplaced).toEqual({ error: 0, info: 0 })
+  })
+
+  it('★ 求值順序未指定（`ubOrder`）是「標準允許不只一種」——info、中文的那一則，不是 CELLA_OTHER 的英文原文', () => {
+    const { diagnostics } = run(v('unknown', [{ kind: 'ubOrder', at: call.id, clause: 'C++17 [intro.execution]p11', reason: 'the order of evaluation is unspecified' }]))
+    expect(diagnostics[0]).toMatchObject({ nodeId: call.id, severity: 'info', rule: 'CELLA_UNSPECIFIED' })
   })
 
   it('🔴 要讀輸入而沒有測資：丟掉 ub*／fuel，留一句「需要輸入」（SC-005）', () => {

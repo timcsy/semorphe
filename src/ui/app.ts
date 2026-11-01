@@ -200,6 +200,8 @@ export class App {
   /** 判決給的那一份（暫停結束後硬體分頁回到它）。 */
   private hardwareRecord: HardwareRecord | null = null
   private checkNotes: string[] = []
+  /** 判決裡對不到積木的問題（步數用盡之類）——畫不上積木，但狀態列要算進去。 */
+  private checkUnplaced = { error: 0, info: 0 }
   /** 這次判決依賴的實作選擇（第 14 題的小標）。 */
   private checkAssumes: { implementation: string; text: string }[] = []
   private checkTimer: ReturnType<typeof setTimeout> | null = null
@@ -4476,6 +4478,7 @@ export class App {
     if (!p?.check || p.supports?.(this.currentTopic.language) === false) {
       this.checkDiagnostics = []
       this.checkNotes = []
+      this.checkUnplaced = { error: 0, info: 0 }
       this.checkAssumes = []
       // 沒有提供者 ⟹ 說出來（P6）；提供者在但不判這個語言 ⟹ 那一格空著（不是缺了什麼，是本來就沒有）
       this.renderCheckStatus(p ? { state: 'idle' } : { state: 'unavailable', reason: '判斷功能需要 Cella' })
@@ -4510,6 +4513,7 @@ export class App {
     const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: req.tree, readsInput: a.readsInput, hasStdin: stdin.length > 0 })
     this.checkDiagnostics = r.diagnostics
     this.checkNotes = r.notes
+    this.checkUnplaced = r.unplaced
     this.checkAssumes = r.assumes
     this.runAllDiagnostics()
     this.renderCheckStatus(p.readiness?.() ?? { state: 'ready' })
@@ -4555,8 +4559,9 @@ export class App {
   private renderCheckStatus(r: Readiness): void {
     const el = document.getElementById('status-check')
     if (!el) return
-    const errors = this.checkDiagnostics.filter((d) => d.severity === 'error').length
-    const infos = this.checkDiagnostics.length - errors
+    const placedErrors = this.checkDiagnostics.filter((d) => d.severity === 'error').length
+    const errors = placedErrors + this.checkUnplaced.error
+    const infos = this.checkDiagnostics.length - placedErrors + this.checkUnplaced.info
     el.dataset.state = r.state
     el.textContent =
       r.state === 'idle' ? '' :
