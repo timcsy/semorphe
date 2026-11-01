@@ -104,9 +104,17 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     return k('eHole', { n: n.id })
   }
 
+  /** 型別巨集展開中的名字（`#define ll long long`；防 `#define T T` 這種自我參照） */
+  const expanding = new Set<string>()
   function type(t: unknown, at: SemanticNode): CellaJson | null {
     const s = String(t ?? '').trim()
     if (s === '' ) { miss(at, '沒有型別'); return null }
+    // 型別巨集（spec 199：學生的程式 45 支有 `#define ll long long`）——前端展開，同物件巨集（spec 197）
+    const mv = macros.get(s)
+    if (mv !== undefined && !expanding.has(s)) {
+      expanding.add(s)
+      try { return type(mv, at) } finally { expanding.delete(s) }
+    }
     if (s.startsWith('const ')) { const inner = type(s.slice(6), at); return inner && k('tConst', { t: inner }) }
     if (s.endsWith('&')) { const inner = type(s.slice(0, -1), at); return inner && k('tRef', { t: inner }) }
     if (s.endsWith('*')) { const inner = type(s.slice(0, -1), at); return inner && k('tPtr', { t: inner }) }
@@ -210,7 +218,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   }
   const declVar = (n: SemanticNode, t: CellaJson, global: boolean): CellaJson[] => {
     const initNode = one(n, 'initializer')
-    const init = initNode ? k('iE', { e: expr(initNode) }) : null
+    // 初值走 initOf：大括號串列是 iL（`int h{}` 是空的 iL——cpp_to_tree.py 的 init 同形；spec 199 量到 176 處），其餘是 iE
+    const init = initNode ? initOf(initNode) : null
     return declInit(n, t, init, global)
   }
   const declCtor = (n: SemanticNode, t: CellaJson, args: CellaJson[], global: boolean): CellaJson[] => {
@@ -263,6 +272,20 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     declVar, declInit, declCtor, libraryObject, constInt,
     declOf: (key) => declOf.get(key),
     macro,
+    asStatement: (c) => (FORMALIZE.stmt.has(c.componentId) || FORMALIZE.decl.has(c.componentId)
+      ? stmt(c)
+      : [k('sExpr', { n: `${c.id}/stmt`, e: expr(c) })]),
+    programUses: (ids) => {
+      const want = new Set(ids)
+      const walk = (n: SemanticNode): boolean => want.has(n.componentId) || Object.values(n.slots ?? {}).some((kids) => kids.some(walk))
+      return walk(tree)
+    },
+    isTypeText: (text) => {
+      const before = unknown.length
+      const ok = type(text, tree) !== null
+      unknown.length = before   // 只是問一句，不記 unknown
+      return ok
+    },
     unescapeC,
     binOp: (op) => BIN[op],
     scalar: (name) => SCALAR[name],

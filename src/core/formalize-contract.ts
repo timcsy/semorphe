@@ -70,6 +70,12 @@ export interface FormalizeContext {
    * 值認得（某顆元件登記了「這種字面量的文字是我的」）才有：`expr(usageId)` 是展開在使用處的運算式，`int` 是編譯期整數（陣列長度用）。
    */
   macro(name: string): { expr(usageId: string): CellaJson; int: number | null } | undefined
+  /** 這段文字是不是一個認得的型別（不記 unknown）——型別巨集 `#define ll long long` 用（spec 199） */
+  isTypeText(text: string): boolean
+  /** 整支程式裡有沒有用到這幾顆元件之一（spec 199：關掉 stdio 同步只在混用 printf／scanf 時才改變輸出） */
+  programUses(componentIds: readonly string[]): boolean
+  /** 當一句敘述翻：有敘述的翻法就用它，否則包成運算式敘述（`sExpr`）——`a, b;` 等於 `a; b;` 時用（spec 199） */
+  asStatement(n: SemanticNode): CellaJson[]
   /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
   unescapeC(s: string): string
   /** C 的二元運算子符號 → Cella 的運算子建構子。 */

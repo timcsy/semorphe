@@ -28,6 +28,7 @@
         "lift": "./lift-pattern.json"
       }
     },
+    "formalize": "./formalize.ts",
     "execute": null,
     "_execute_why": "**顯式的空，不是遺漏。**"
   },

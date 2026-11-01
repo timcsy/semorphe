@@ -6,6 +6,10 @@
 import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
 export function registerFormalize(r: FormalizeRegistrar): void {
-  r.definesMacro('cpp:define', (n) => ({ name: String(n.properties?.name ?? ''), value: String(n.properties?.value ?? '') }))
-  r.item('cpp:define', (n, f) => (f.macro(String(n.properties?.name ?? '')) ? [] : [f.miss(n, '巨集的值不是認得的字面量（運算式、字串還沒有展開）')]))
+  // 值後面的註解不是值（`#define ll long long //要longlong打ll就好`——spec 199 量到）
+  const valueOf = (n: { properties?: Record<string, unknown> }): string => String(n.properties?.value ?? '').replace(/\/\/.*$|\/\*.*?\*\//g, '').trim()
+  r.definesMacro('cpp:define', (n) => ({ name: String(n.properties?.name ?? ''), value: valueOf(n) }))
+  // 字面量巨集在用到的地方展開（`macro`）；型別巨集（`#define ll long long`）在 `type()` 展開（spec 199）——兩者本身都不產生程式
+  r.item('cpp:define', (n, f) => (f.macro(String(n.properties?.name ?? '')) || f.isTypeText(valueOf(n))
+    ? [] : [f.miss(n, '巨集的值不是認得的字面量或型別（運算式、字串還沒有展開）')]))
 }
