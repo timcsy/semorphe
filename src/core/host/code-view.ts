@@ -151,6 +151,15 @@ export interface CodeView {
    */
   reportSyncPhase?(phase: SyncPhase, source: string | null, detail: string): void
 
+  /**
+   * 把判斷（Cella 的判決）的狀態交給宿主的狀態列（spec 198）——面板不畫狀態列的宿主（VSCode）才實作。
+   *
+   * 🔴 與 `reportSyncPhase` 同一條理由：面板不畫，就一定要有人畫。少了它，擴充裡「載入中」「判不出來」
+   *    「依 libc++」全都看不到——而對不到積木的問題（步數用盡）**只有**狀態列說得出來。
+   * `detail` 是本來放在 title 的說明（需要輸入、對不到積木的那幾則、依哪個實作），一行一則。
+   */
+  reportCheckStatus?(status: { state: 'idle' | 'loading' | 'ready' | 'unavailable'; text: string; detail: string; hasErrors: boolean }): void
+
   /** 宿主那側下的同步指令（它的狀態列／命令面板）。 */
   onSyncCommand?(callback: (command: HostSyncCommand) => void): void
 

@@ -101,6 +101,7 @@ import { ExecutionController } from './execution-controller'
 import { registerProvider, provide, type Provider, type Readiness } from '../core/capabilities'
 import { jsInterpreterProvider } from '../providers/js-interpreter'
 import { toDiagnostics } from '../core/verdict-diagnostics'
+import { judgeOutput } from '../core/lesson/judge'
 import { hardwareOf, matchPinEvents, DEFAULT_PIN_TOLERANCE_MS, type HardwareRecord, type PinEvent } from '../core/hardware'
 import type { HardwarePanel } from '../panels/hardware/view'
 import type { CheckAnswer } from '../core/capabilities'
@@ -195,7 +196,8 @@ export class App {
    */
   private checkDiagnostics: Diagnostic[] = []
   /** 最近一次送出的判決（spec 184）——課文的腳位檢查要等「這一棵樹」的那一次，不用畫面上的快取。 */
-  private lastCheck: { tree: SemanticNode; answer: Promise<CheckAnswer> } | null = null
+  /** 最近一次判決——`input` 是送出時那一題的測資（題目換了，同一棵樹的判決就不能再用）。 */
+  private lastCheck: { tree: SemanticNode; input: string; answer: Promise<CheckAnswer> } | null = null
   private hardwarePanel: HardwarePanel | null = null
   /** 判決給的那一份（暫停結束後硬體分頁回到它）。 */
   private hardwareRecord: HardwareRecord | null = null
@@ -616,10 +618,19 @@ export class App {
     const transcript = this.runTranscript
     // 板子上的題目：腳位事件與輸出都要對（spec 184）
     const pins = task.check.pins ? await this.judgePins(task.check.pins) : null
+    // 🔴 判題先問判決（題目的測資、同時看未定義行為），判決給不出結果才用這一次執行的輸出——並說出用的是哪一份（spec 200）
+    const answer = await this.answerForJudging()
     if (this.currentLesson !== lesson || this.currentTaskId !== task.id) return
-    const output = compareOutput(transcript, task.check.stdout)
-    const result = { ...output, passed: output.passed && (pins?.passed ?? true) }
-    consolePanel.showVerdict(result, task.title, pins?.text)
+    const judged = judgeOutput({
+      verdict: answer?.verdict ?? null, readsInput: answer?.readsInput ?? false,
+      hasStdin: (task.check.stdin ?? []).length > 0, transcript, want: task.check.stdout,
+    })
+    const result = { ...judged.comparison, passed: judged.comparison.passed && (pins?.passed ?? true) }
+    const source =
+      judged.source === 'verdict' ? msg('CHECK_SOURCE_VERDICT', '依判斷：用這一題的測資跑你的程式') :
+      judged.source === 'verdict-reject' ? msg('CHECK_SOURCE_REJECT', '依判斷：程式有問題（{why}）——輸出就算一樣，換一台機器也不一定').replace('{why}', judged.why ?? '') :
+      msg('CHECK_SOURCE_RUN', '依這一次執行的輸出（{why}）').replace('{why}', judged.why ?? '')
+    consolePanel.showVerdict(result, task.title, pins?.text, source)
     if (!result.passed) return
 
     markTaskPassed(lesson.id, task.id)
@@ -4506,7 +4517,7 @@ export class App {
     if (!tree || !p.check) return
     const { req, stdin } = this.checkRequest(tree)
     const answer = p.check(req)
-    this.lastCheck = { tree, answer }
+    this.lastCheck = { tree, input: req.input, answer }
     const a = await answer
     // 送出之後樹又變了 ⟹ 這一筆的節點可能已經不在，丟掉（下一筆會來）
     if (a.stale || tree !== this.currentTree) return
@@ -4533,14 +4544,25 @@ export class App {
    * **課文的腳位檢查**（spec 184，第 18 題）——等【這一棵樹】的判決，照順序比關鍵事件。
    * 判斷功能沒好 ⟹ 照實說判不了，**不判通過**（P6：一個判不了就說對的勾，會讓所有的勾貶值）。
    */
-  private async judgePins(events: readonly PinEvent[]): Promise<{ passed: boolean; text?: string }> {
+  /**
+   * 判題用的判決：**目前這棵樹 ＋ 目前這一題的測資**（spec 200）。判決不在（沒有提供者、還沒載好）回 `null`。
+   * 背景判斷剛判過同一組就直接用，不再跑一次。
+   */
+  private async answerForJudging(): Promise<CheckAnswer | null> {
     const tree = this.currentTree
     const p = provide('verdict').provider
-    const need = msg('CHECK_PINS_NEED_CELLA', '這一題要看腳位怎麼變——判斷功能（Cella）載好之後才判得了')
-    if (!tree || !p?.check || p.readiness?.().state !== 'ready') return { passed: false, text: need }
-    let a = await (this.lastCheck?.tree === tree ? this.lastCheck.answer : p.check(this.checkRequest(tree).req))
+    if (!tree || !p?.check || p.readiness?.().state !== 'ready') return null
+    const { req } = this.checkRequest(tree)
+    let a = await (this.lastCheck?.tree === tree && this.lastCheck.input === req.input ? this.lastCheck.answer : p.check(req))
     // 排隊時被更新的請求取代（worker 回 skipped）⟹ 再問一次這一棵
-    if (!a.verdict) a = await p.check(this.checkRequest(tree).req)
+    if (!a.verdict) a = await p.check(req)
+    return a
+  }
+
+  private async judgePins(events: readonly PinEvent[]): Promise<{ passed: boolean; text?: string }> {
+    const need = msg('CHECK_PINS_NEED_CELLA', '這一題要看腳位怎麼變——判斷功能（Cella）載好之後才判得了')
+    const a = await this.answerForJudging()
+    if (!a) return { passed: false, text: need }
     const hw = hardwareOf(a.verdict)
     if (!hw) return { passed: false, text: need }
     const m = matchPinEvents(events, hw.changes)
@@ -4557,20 +4579,28 @@ export class App {
 
   /** 狀態列左邊那一格：載入中／幾個問題／無法使用；說明（需要輸入、依 libc++）放在 title。 */
   private renderCheckStatus(r: Readiness): void {
-    const el = document.getElementById('status-check')
-    if (!el) return
     const placedErrors = this.checkDiagnostics.filter((d) => d.severity === 'error').length
     const errors = placedErrors + this.checkUnplaced.error
     const infos = this.checkDiagnostics.length - placedErrors + this.checkUnplaced.info
-    el.dataset.state = r.state
-    el.textContent =
+    const text =
       r.state === 'idle' ? '' :
       r.state === 'loading' ? '判斷：載入中…' :
       r.state === 'unavailable' ? '判斷：無法使用' :
       errors > 0 ? `判斷：${errors} 個問題` :
       infos > 0 ? `判斷：${infos} 處判不出來` : '判斷：沒有發現問題'
-    el.title = [r.state === 'unavailable' ? r.reason : '', ...this.checkNotes].filter(Boolean).join('\n')
-    this.renderAssumesBadge(r.state === 'ready' ? this.checkAssumes : [])
+    const title = [r.state === 'unavailable' ? r.reason : '', ...this.checkNotes].filter(Boolean).join('\n')
+    const assumes = r.state === 'ready' ? this.checkAssumes : []
+    // 面板不畫狀態列的宿主（VSCode）：交給宿主的狀態列（spec 198）——「依 …」小標的說明併進 detail
+    this.codeView?.reportCheckStatus?.({
+      state: r.state, text, hasErrors: r.state === 'ready' && errors > 0,
+      detail: [title, ...assumes.map((a) => `依 ${a.implementation}：${a.text}`)].filter(Boolean).join('\n'),
+    })
+    const el = document.getElementById('status-check')
+    if (!el) return
+    el.dataset.state = r.state
+    el.textContent = text
+    el.title = title
+    this.renderAssumesBadge(assumes)
   }
 
   /**

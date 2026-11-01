@@ -304,7 +304,8 @@ export class ConsolePanel implements ViewHost {
    *
    * ⚠️ **這裡不判寫法**——用 `while` 還是 `for` 不是對錯，那是另一個話題。
    */
-  showVerdict(result: OutputComparison, taskTitle?: string, extra?: string): void {
+  /** `source`：這個結果用哪一份輸出判的（判斷的測資／這一次執行；spec 200）——過與不過都顯示。 */
+  showVerdict(result: OutputComparison, taskTitle?: string, extra?: string, source?: string): void {
     this.currentLineEl = null
     const box = document.createElement('div')
     box.className = `console-verdict ${result.passed ? 'passed' : 'not-yet'}`
@@ -321,6 +322,12 @@ export class ConsolePanel implements ViewHost {
       ? (named ? `✅ 你完成了〈${taskTitle}〉` : msg('CHECK_PASSED', '✅ 輸出對了'))
       : (named ? `〈${taskTitle}〉還沒對——看看差在哪` : msg('CHECK_NOT_YET', '還沒對——看看差在哪'))
     box.appendChild(head)
+    if (source) {
+      const src = document.createElement('div')
+      src.className = 'console-verdict-source'
+      src.textContent = source
+      box.appendChild(src)
+    }
 
     if (!result.passed) {
       // 🟢 輸出以外的那一件（spec 184：腳位事件）——它對不上時，輸出那張表可能一行都沒錯

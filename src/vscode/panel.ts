@@ -542,6 +542,7 @@ class SemorpheSession {
     // > **「重送目前的狀態」與「重新決定狀態是什麼」是兩件事
     // > ——而後者在焦點不在編輯器上時，答案是錯的。**
     if (m.type === 'syncPhase') { updateSyncStatusBar(m.phase, m.source, m.detail); return }
+    if (m.type === 'checkStatus') { updateCheckStatusBar(m.state, m.text, m.detail, m.hasErrors); return }
     if (m.type === 'controls') {
       // 🔴 **記在自己名下**，而不是覆蓋一份全域的——見 `statesBySession`。
       statesBySession.set(this.kind, m.items)
@@ -1163,6 +1164,25 @@ function updateSyncStatusBar(phase: 'live' | 'paused' | 'diverged', source: stri
     ? new vscode.ThemeColor('statusBarItem.warningBackground')
     : undefined
   syncItem.show()
+}
+
+let checkItem: vscode.StatusBarItem | undefined
+
+/**
+ * **判斷（Cella 的判決）的狀態列**（spec 198，重構階段 6a）——網頁版狀態列左邊那一格「判斷：…」在這個宿主的位置。
+ *
+ * ⚠️ `idle` 不隱藏已經顯示的那一格：積木與流程兩個視窗各有一個提供者，流程那一個用到才載，
+ *    它報的 `idle` 不代表判斷沒有了。
+ */
+function updateCheckStatusBar(state: 'idle' | 'loading' | 'ready' | 'unavailable', text: string, detail: string, hasErrors: boolean): void {
+  if (state === 'idle') return
+  if (!checkItem) checkItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 101)
+  const icon = state === 'loading' ? '$(loading~spin)' : state === 'unavailable' ? '$(circle-slash)' : hasErrors ? '$(error)' : '$(beaker)'
+  checkItem.text = `${icon} ${text}`
+  // ⚠️ Theia 把 `\n` 吃掉（見 updateSyncStatusBar）——每一則前面留分隔號
+  checkItem.tooltip = detail ? detail.split('\n').map((l) => `— ${l}`).join('\n') : undefined
+  checkItem.backgroundColor = hasErrors ? new vscode.ThemeColor('statusBarItem.errorBackground') : undefined
+  checkItem.show()
 }
 
 /**

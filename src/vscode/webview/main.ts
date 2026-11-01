@@ -36,6 +36,8 @@ import { postToHost } from './host-bridge'
 import { attachNoDocumentBanner } from './no-document-banner'
 import { EXTENSION_VERSION } from '../manifest'
 import { diagLines } from '../../core/diag-log'
+import { isDocumentWriter } from '../vscode-profile'
+import { registerCellaInWebview } from './cella'
 
 async function boot(): Promise<void> {
   const appEl = document.getElementById('app')
@@ -66,9 +68,19 @@ async function boot(): Promise<void> {
   //       更難查，而這一格是宿主寫的，寫錯是我們自己的 bug。
   const v = appEl.dataset.view
   const kind = v === 'flow' || v === 'console' || v === 'variables' ? v : 'blocks'
+  // 🔴 **Cella（判決、除錯、覆蓋）**——跑程式的那兩種視窗才登記（主控台與變數只畫轉送過來的資料）。
+  //    與網頁版同一支 worker，資產在 `dist/cella/`（spec 198，重構階段 6a；見 `./cella.ts`）
+  const assetBase = (window as unknown as { __SEMORPHE_ASSET_BASE__?: string }).__SEMORPHE_ASSET_BASE__
+  const runsCella = !!assetBase && isDocumentWriter(kind)
+  if (runsCella) registerCellaInWebview(assetBase)
   const app = new App(vscodeProfileFor(kind))
   ;(window as unknown as { __app?: unknown }).__app = app
   await app.init()
+  // 與網頁版同一條規則（`src/main.ts`）：首屏之後、閒著的時候才載；自動化瀏覽器（預檢）不自動載
+  if (runsCella && kind === 'blocks' && !navigator.webdriver) {
+    const idle = (window as unknown as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500))
+    idle(() => app.warmUpChecker())
+  }
 
   // 🔴 **診斷【被動】量測，並且只在被問到時回報**（FR-009）。
   //

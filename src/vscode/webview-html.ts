@@ -85,6 +85,9 @@ export function csp(source: string): string {
     `img-src ${source} data:`,
     `media-src ${source}`,
     `connect-src ${source}`,
+    // 🔴 Cella 的 worker 從 blob 起（spec 198）：webview 的資源網址與文件不同源，不能直接 `new Worker(資源網址)`；
+    //    blob 裡的 classic worker 再 `importScripts` 那份打包——那一步看的是 `script-src`
+    `worker-src blob:`,
     `font-src ${source}`,
   ].join('; ')
 }
