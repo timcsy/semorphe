@@ -1,0 +1,16 @@
+{
+  "_source": "cella packages/python/docs/components.json @ a67a8466a",
+  "template": {
+    "k": "eIfExp",
+    "n": "$id",
+    "test": {
+      "$slot": "condition"
+    },
+    "body": {
+      "$slot": "then_value"
+    },
+    "orelse": {
+      "$slot": "else_value"
+    }
+  }
+}

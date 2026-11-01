@@ -1,0 +1,7483 @@
+{
+ "_source": "cella packages/python/docs/components.json @ a67a8466a",
+ "statementRole": [
+  "assert",
+  "break",
+  "class_def",
+  "comment",
+  "container_append",
+  "container_assign",
+  "container_erase",
+  "container_erase_value",
+  "container_insert",
+  "container_sort_self",
+  "continue",
+  "exception_case",
+  "func_def",
+  "global",
+  "if",
+  "import",
+  "import_from",
+  "loop_for",
+  "loop_while",
+  "member_assign",
+  "pass",
+  "print",
+  "program",
+  "raw_code",
+  "return",
+  "set_append",
+  "throw",
+  "try_catch",
+  "var_assign",
+  "var_assign_compound",
+  "var_assign_sequence",
+  "with"
+ ],
+ "cases": [
+  {
+   "component": "arithmetic",
+   "src": "a + 2",
+   "statement": true,
+   "instance": {
+    "id": "b3",
+    "componentId": "python:arithmetic",
+    "properties": {
+     "operator": "+"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b1",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b2",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eBinOp",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "op": {
+      "k": "opAdd"
+     },
+     "right": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "2"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "arithmetic",
+   "src": "a - 2",
+   "statement": true,
+   "instance": {
+    "id": "b6",
+    "componentId": "python:arithmetic",
+    "properties": {
+     "operator": "-"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b4",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b5",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eBinOp",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "op": {
+      "k": "opSub"
+     },
+     "right": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "2"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "arithmetic",
+   "src": "a * 2",
+   "statement": true,
+   "instance": {
+    "id": "b9",
+    "componentId": "python:arithmetic",
+    "properties": {
+     "operator": "*"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b7",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b8",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eBinOp",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "op": {
+      "k": "opMult"
+     },
+     "right": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "2"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "arithmetic",
+   "src": "a / 2",
+   "statement": true,
+   "instance": {
+    "id": "b12",
+    "componentId": "python:arithmetic",
+    "properties": {
+     "operator": "/"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b10",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b11",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eBinOp",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "op": {
+      "k": "opDiv"
+     },
+     "right": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "2"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "arithmetic",
+   "src": "a // 2",
+   "statement": true,
+   "instance": {
+    "id": "b15",
+    "componentId": "python:arithmetic",
+    "properties": {
+     "operator": "//"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b13",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b14",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eBinOp",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "op": {
+      "k": "opFloorDiv"
+     },
+     "right": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "2"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "arithmetic",
+   "src": "a % 2",
+   "statement": true,
+   "instance": {
+    "id": "b18",
+    "componentId": "python:arithmetic",
+    "properties": {
+     "operator": "%"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b16",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b17",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eBinOp",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "op": {
+      "k": "opMod"
+     },
+     "right": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "2"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "arithmetic",
+   "src": "a ** 2",
+   "statement": true,
+   "instance": {
+    "id": "b21",
+    "componentId": "python:arithmetic",
+    "properties": {
+     "operator": "**"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b19",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b20",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eBinOp",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "op": {
+      "k": "opPow"
+     },
+     "right": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "2"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "compare",
+   "src": "a < b",
+   "statement": true,
+   "instance": {
+    "id": "b24",
+    "componentId": "python:compare",
+    "properties": {
+     "operator": "<"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b22",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b23",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCompare",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "ops": [
+      {
+       "k": "opLt"
+      }
+     ],
+     "comparators": [
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "compare",
+   "src": "a <= b",
+   "statement": true,
+   "instance": {
+    "id": "b27",
+    "componentId": "python:compare",
+    "properties": {
+     "operator": "<="
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b25",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b26",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCompare",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "ops": [
+      {
+       "k": "opLtE"
+      }
+     ],
+     "comparators": [
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "compare",
+   "src": "a > b",
+   "statement": true,
+   "instance": {
+    "id": "b30",
+    "componentId": "python:compare",
+    "properties": {
+     "operator": ">"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b28",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b29",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCompare",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "ops": [
+      {
+       "k": "opGt"
+      }
+     ],
+     "comparators": [
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "compare",
+   "src": "a >= b",
+   "statement": true,
+   "instance": {
+    "id": "b33",
+    "componentId": "python:compare",
+    "properties": {
+     "operator": ">="
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b31",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b32",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCompare",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "ops": [
+      {
+       "k": "opGtE"
+      }
+     ],
+     "comparators": [
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "compare",
+   "src": "a == b",
+   "statement": true,
+   "instance": {
+    "id": "b36",
+    "componentId": "python:compare",
+    "properties": {
+     "operator": "=="
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b34",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b35",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCompare",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "ops": [
+      {
+       "k": "opEq"
+      }
+     ],
+     "comparators": [
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "compare",
+   "src": "a != b",
+   "statement": true,
+   "instance": {
+    "id": "b39",
+    "componentId": "python:compare",
+    "properties": {
+     "operator": "!="
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b37",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b38",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCompare",
+     "left": {
+      "k": "eName",
+      "id": "a"
+     },
+     "ops": [
+      {
+       "k": "opNotEq"
+      }
+     ],
+     "comparators": [
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "compare_chain",
+   "src": "0 < x <= 9",
+   "statement": true,
+   "instance": {
+    "id": "b43",
+    "componentId": "python:compare_chain",
+    "properties": {
+     "operator": "<",
+     "operator2": "<="
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b40",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "0"
+       },
+       "slots": {}
+      }
+     ],
+     "middle": [
+      {
+       "id": "b41",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b42",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "9"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCompare",
+     "left": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "0"
+      }
+     },
+     "ops": [
+      {
+       "k": "opLt"
+      },
+      {
+       "k": "opLtE"
+      }
+     ],
+     "comparators": [
+      {
+       "k": "eName",
+       "id": "x"
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "9"
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "container_find",
+   "src": "x not in xs",
+   "statement": true,
+   "instance": {
+    "id": "b46",
+    "componentId": "python:container_find",
+    "properties": {
+     "operator": "not in"
+    },
+    "slots": {
+     "needle": [
+      {
+       "id": "b44",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "haystack": [
+      {
+       "id": "b45",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCompare",
+     "left": {
+      "k": "eName",
+      "id": "x"
+     },
+     "ops": [
+      {
+       "k": "opNotIn"
+      }
+     ],
+     "comparators": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "logic",
+   "src": "a or b",
+   "statement": true,
+   "instance": {
+    "id": "b49",
+    "componentId": "python:logic",
+    "properties": {
+     "operator": "or"
+    },
+    "slots": {
+     "left": [
+      {
+       "id": "b47",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "right": [
+      {
+       "id": "b48",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eBoolOp",
+     "op": {
+      "k": "opOr"
+     },
+     "values": [
+      {
+       "k": "eName",
+       "id": "a"
+      },
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "logic_not",
+   "src": "not a",
+   "statement": true,
+   "instance": {
+    "id": "b51",
+    "componentId": "python:logic_not",
+    "properties": {},
+    "slots": {
+     "value": [
+      {
+       "id": "b50",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eUnaryOp",
+     "op": {
+      "k": "opNot"
+     },
+     "operand": {
+      "k": "eName",
+      "id": "a"
+     }
+    }
+   }
+  },
+  {
+   "component": "negate",
+   "src": "-a",
+   "statement": true,
+   "instance": {
+    "id": "b53",
+    "componentId": "python:negate",
+    "properties": {},
+    "slots": {
+     "value": [
+      {
+       "id": "b52",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eUnaryOp",
+     "op": {
+      "k": "opUSub"
+     },
+     "operand": {
+      "k": "eName",
+      "id": "a"
+     }
+    }
+   }
+  },
+  {
+   "component": "bitwise_not",
+   "src": "~a",
+   "statement": true,
+   "instance": {
+    "id": "b55",
+    "componentId": "python:bitwise_not",
+    "properties": {},
+    "slots": {
+     "operand": [
+      {
+       "id": "b54",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eUnaryOp",
+     "op": {
+      "k": "opInvert"
+     },
+     "operand": {
+      "k": "eName",
+      "id": "a"
+     }
+    }
+   }
+  },
+  {
+   "component": "ternary",
+   "src": "1 if c else 2",
+   "statement": true,
+   "instance": {
+    "id": "b59",
+    "componentId": "python:ternary",
+    "properties": {},
+    "slots": {
+     "condition": [
+      {
+       "id": "b56",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "c"
+       },
+       "slots": {}
+      }
+     ],
+     "then_value": [
+      {
+       "id": "b57",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ],
+     "else_value": [
+      {
+       "id": "b58",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eIfExp",
+     "test": {
+      "k": "eName",
+      "id": "c"
+     },
+     "body": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "1"
+      }
+     },
+     "orelse": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "2"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "literal_number",
+   "src": "1_000",
+   "statement": true,
+   "instance": {
+    "id": "b60",
+    "componentId": "python:literal_number",
+    "properties": {
+     "value": "1_000"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "1000"
+     }
+    }
+   }
+  },
+  {
+   "component": "literal_number",
+   "src": "0x1F",
+   "statement": true,
+   "instance": {
+    "id": "b61",
+    "componentId": "python:literal_number",
+    "properties": {
+     "value": "0x1F"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "31"
+     }
+    }
+   }
+  },
+  {
+   "component": "literal_number",
+   "src": "1.5e3",
+   "statement": true,
+   "instance": {
+    "id": "b62",
+    "componentId": "python:literal_number",
+    "properties": {
+     "value": "1.5e3"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cFloat",
+      "text": "1500.0"
+     }
+    }
+   }
+  },
+  {
+   "component": "literal_string",
+   "src": "'hi'",
+   "statement": true,
+   "instance": {
+    "id": "b63",
+    "componentId": "python:literal_string",
+    "properties": {
+     "value": "hi"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cStr",
+      "s": "hi"
+     }
+    }
+   }
+  },
+  {
+   "component": "literal_string",
+   "src": "'say \"hi\"\\n'",
+   "statement": true,
+   "instance": {
+    "id": "b64",
+    "componentId": "python:literal_string",
+    "properties": {
+     "value": "say \\\"hi\\\"\\n"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cStr",
+      "s": "say \"hi\"\n"
+     }
+    }
+   }
+  },
+  {
+   "component": "literal_bool",
+   "src": "True",
+   "statement": true,
+   "instance": {
+    "id": "b65",
+    "componentId": "python:literal_bool",
+    "properties": {
+     "value": "True"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cBool",
+      "b": true
+     }
+    }
+   }
+  },
+  {
+   "component": "literal_bool",
+   "src": "False",
+   "statement": true,
+   "instance": {
+    "id": "b66",
+    "componentId": "python:literal_bool",
+    "properties": {
+     "value": "False"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cBool",
+      "b": false
+     }
+    }
+   }
+  },
+  {
+   "component": "literal_bool",
+   "src": "None",
+   "statement": true,
+   "instance": {
+    "id": "b67",
+    "componentId": "python:literal_bool",
+    "properties": {
+     "value": "None"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cNone"
+     }
+    }
+   }
+  },
+  {
+   "component": "var_ref",
+   "src": "x",
+   "statement": true,
+   "instance": {
+    "id": "b68",
+    "componentId": "python:var_ref",
+    "properties": {
+     "name": "x"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eName",
+     "id": "x"
+    }
+   }
+  },
+  {
+   "component": "member_at",
+   "src": "z.real",
+   "statement": true,
+   "instance": {
+    "id": "b70",
+    "componentId": "python:member_at",
+    "properties": {
+     "member": "real"
+    },
+    "slots": {
+     "obj": [
+      {
+       "id": "b69",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "z"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eAttribute",
+     "value": {
+      "k": "eName",
+      "id": "z"
+     },
+     "attr": "real"
+    }
+   }
+  },
+  {
+   "component": "container_at",
+   "src": "xs[0]",
+   "statement": true,
+   "instance": {
+    "id": "b73",
+    "componentId": "python:container_at",
+    "properties": {},
+    "slots": {
+     "target": [
+      {
+       "id": "b71",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "key": [
+      {
+       "id": "b72",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "0"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eSubscript",
+     "value": {
+      "k": "eName",
+      "id": "xs"
+     },
+     "slice": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "0"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "container_substr",
+   "src": "s[1:3]",
+   "statement": true,
+   "instance": {
+    "id": "b77",
+    "componentId": "python:container_substr",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b74",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "from": [
+      {
+       "id": "b75",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ],
+     "to": [
+      {
+       "id": "b76",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "3"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eSubscript",
+     "value": {
+      "k": "eName",
+      "id": "s"
+     },
+     "slice": {
+      "k": "eSlice",
+      "lower": {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      },
+      "upper": {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "3"
+       }
+      },
+      "step": null
+     }
+    }
+   }
+  },
+  {
+   "component": "container_substr",
+   "src": "s[::-1]",
+   "statement": true,
+   "instance": {
+    "id": "b80",
+    "componentId": "python:container_substr",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b78",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "step": [
+      {
+       "id": "b79",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "-1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eSubscript",
+     "value": {
+      "k": "eName",
+      "id": "s"
+     },
+     "slice": {
+      "k": "eSlice",
+      "lower": null,
+      "upper": null,
+      "step": {
+       "k": "eUnaryOp",
+       "op": {
+        "k": "opUSub"
+       },
+       "operand": {
+        "k": "eConstant",
+        "value": {
+         "k": "cInt",
+         "text": "1"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "array_make",
+   "src": "[1, 2]",
+   "statement": true,
+   "instance": {
+    "id": "b83",
+    "componentId": "python:array_make",
+    "properties": {},
+    "slots": {
+     "items": [
+      {
+       "id": "b81",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b82",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eList",
+     "elts": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "2"
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "tuple_make",
+   "src": "(1, 2)",
+   "statement": true,
+   "instance": {
+    "id": "b86",
+    "componentId": "python:tuple_make",
+    "properties": {},
+    "slots": {
+     "items": [
+      {
+       "id": "b84",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b85",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eTuple",
+     "elts": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "2"
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "set_make",
+   "src": "{1}",
+   "statement": true,
+   "instance": {
+    "id": "b88",
+    "componentId": "python:set_make",
+    "properties": {},
+    "slots": {
+     "items": [
+      {
+       "id": "b87",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eSet",
+     "elts": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "literal_number",
+   "src": "-1",
+   "statement": true,
+   "instance": {
+    "id": "b89",
+    "componentId": "python:literal_number",
+    "properties": {
+     "value": "-1"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eUnaryOp",
+     "op": {
+      "k": "opUSub"
+     },
+     "operand": {
+      "k": "eConstant",
+      "value": {
+       "k": "cInt",
+       "text": "1"
+      }
+     }
+    }
+   }
+  },
+  {
+   "component": "pair_make",
+   "src": "{1: 2}",
+   "statement": true,
+   "instance": {
+    "id": "b93",
+    "componentId": "python:map_make",
+    "properties": {},
+    "slots": {
+     "pairs": [
+      {
+       "id": "b92",
+       "componentId": "python:pair_make",
+       "properties": {},
+       "slots": {
+        "key": [
+         {
+          "id": "b90",
+          "componentId": "python:literal_number",
+          "properties": {
+           "value": "1"
+          },
+          "slots": {}
+         }
+        ],
+        "value": [
+         {
+          "id": "b91",
+          "componentId": "python:literal_number",
+          "properties": {
+           "value": "2"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eDict",
+     "keys": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ],
+     "values": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "2"
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "string_insert",
+   "src": "f\"{x}\"",
+   "statement": true,
+   "instance": {
+    "id": "b96",
+    "componentId": "python:string_make",
+    "properties": {},
+    "slots": {
+     "parts": [
+      {
+       "id": "b95",
+       "componentId": "python:string_insert",
+       "properties": {},
+       "slots": {
+        "value": [
+         {
+          "id": "b94",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "x"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eJoinedStr",
+     "values": [
+      {
+       "k": "eFormattedValue",
+       "value": {
+        "k": "eName",
+        "id": "x"
+       },
+       "conversion": -1,
+       "formatSpec": null
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "string_make",
+   "src": "f\"a{{b}}\\t{x}\"",
+   "statement": true,
+   "instance": {
+    "id": "b100",
+    "componentId": "python:string_make",
+    "properties": {},
+    "slots": {
+     "parts": [
+      {
+       "id": "b97",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "a{b}\\t"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b99",
+       "componentId": "python:string_insert",
+       "properties": {},
+       "slots": {
+        "value": [
+         {
+          "id": "b98",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "x"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eJoinedStr",
+     "values": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "a{b}\t"
+       }
+      },
+      {
+       "k": "eFormattedValue",
+       "value": {
+        "k": "eName",
+        "id": "x"
+       },
+       "conversion": -1,
+       "formatSpec": null
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "loop_iter",
+   "src": "[k for i in a for j in b for k in c]",
+   "statement": true,
+   "instance": {
+    "id": "b107",
+    "componentId": "python:array_make_for",
+    "properties": {
+     "obj": "k",
+     "wrap": ""
+    },
+    "slots": {
+     "expression": [
+      {
+       "id": "b101",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "k"
+       },
+       "slots": {}
+      }
+     ],
+     "iterable": [
+      {
+       "id": "b102",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "c"
+       },
+       "slots": {}
+      }
+     ],
+     "outer": [
+      {
+       "id": "b106",
+       "componentId": "python:loop_iter",
+       "properties": {
+        "obj": "j"
+       },
+       "slots": {
+        "iterable": [
+         {
+          "id": "b103",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "b"
+          },
+          "slots": {}
+         }
+        ],
+        "outer": [
+         {
+          "id": "b105",
+          "componentId": "python:loop_iter",
+          "properties": {
+           "obj": "i"
+          },
+          "slots": {
+           "iterable": [
+            {
+             "id": "b104",
+             "componentId": "python:var_ref",
+             "properties": {
+              "name": "a"
+             },
+             "slots": {}
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eListComp",
+     "elt": {
+      "k": "eName",
+      "id": "k"
+     },
+     "generators": [
+      {
+       "k": "comprehension",
+       "target": {
+        "k": "eName",
+        "id": "i"
+       },
+       "iter": {
+        "k": "eName",
+        "id": "a"
+       },
+       "ifs": []
+      },
+      {
+       "k": "comprehension",
+       "target": {
+        "k": "eName",
+        "id": "j"
+       },
+       "iter": {
+        "k": "eName",
+        "id": "b"
+       },
+       "ifs": []
+      },
+      {
+       "k": "comprehension",
+       "target": {
+        "k": "eName",
+        "id": "k"
+       },
+       "iter": {
+        "k": "eName",
+        "id": "c"
+       },
+       "ifs": []
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "map_make",
+   "src": "{'a': 1, **d}",
+   "statement": true,
+   "instance": {
+    "id": "b113",
+    "componentId": "python:map_make",
+    "properties": {},
+    "slots": {
+     "pairs": [
+      {
+       "id": "b110",
+       "componentId": "python:pair_make",
+       "properties": {},
+       "slots": {
+        "key": [
+         {
+          "id": "b108",
+          "componentId": "python:literal_string",
+          "properties": {
+           "value": "a"
+          },
+          "slots": {}
+         }
+        ],
+        "value": [
+         {
+          "id": "b109",
+          "componentId": "python:literal_number",
+          "properties": {
+           "value": "1"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      },
+      {
+       "id": "b112",
+       "componentId": "python:splat",
+       "properties": {
+        "kind": "dict"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b111",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "d"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eDict",
+     "keys": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "a"
+       }
+      },
+      null
+     ],
+     "values": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      },
+      {
+       "k": "eName",
+       "id": "d"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "range_make",
+   "src": "range(1, 10, 2)",
+   "statement": true,
+   "instance": {
+    "id": "b117",
+    "componentId": "python:range_make",
+    "properties": {},
+    "slots": {
+     "values": [
+      {
+       "id": "b114",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b115",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "10"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b116",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "range"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "10"
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "2"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "array_make_for",
+   "src": "[x for x in xs if x]",
+   "statement": true,
+   "instance": {
+    "id": "b121",
+    "componentId": "python:array_make_for",
+    "properties": {
+     "obj": "x",
+     "wrap": ""
+    },
+    "slots": {
+     "expression": [
+      {
+       "id": "b118",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "iterable": [
+      {
+       "id": "b119",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "condition": [
+      {
+       "id": "b120",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eListComp",
+     "elt": {
+      "k": "eName",
+      "id": "x"
+     },
+     "generators": [
+      {
+       "k": "comprehension",
+       "target": {
+        "k": "eName",
+        "id": "x"
+       },
+       "iter": {
+        "k": "eName",
+        "id": "xs"
+       },
+       "ifs": [
+        {
+         "k": "eName",
+         "id": "x"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "array_make_for",
+   "src": "{i for i in a for j in b}",
+   "statement": true,
+   "instance": {
+    "id": "b126",
+    "componentId": "python:array_make_for",
+    "properties": {
+     "obj": "j",
+     "wrap": "set"
+    },
+    "slots": {
+     "expression": [
+      {
+       "id": "b122",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "i"
+       },
+       "slots": {}
+      }
+     ],
+     "iterable": [
+      {
+       "id": "b123",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ],
+     "outer": [
+      {
+       "id": "b125",
+       "componentId": "python:loop_iter",
+       "properties": {
+        "obj": "i"
+       },
+       "slots": {
+        "iterable": [
+         {
+          "id": "b124",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "a"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eSetComp",
+     "elt": {
+      "k": "eName",
+      "id": "i"
+     },
+     "generators": [
+      {
+       "k": "comprehension",
+       "target": {
+        "k": "eName",
+        "id": "i"
+       },
+       "iter": {
+        "k": "eName",
+        "id": "a"
+       },
+       "ifs": []
+      },
+      {
+       "k": "comprehension",
+       "target": {
+        "k": "eName",
+        "id": "j"
+       },
+       "iter": {
+        "k": "eName",
+        "id": "b"
+       },
+       "ifs": []
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "array_make_for",
+   "src": "(k for k, w in d)",
+   "statement": true,
+   "instance": {
+    "id": "b129",
+    "componentId": "python:array_make_for",
+    "properties": {
+     "obj": "k, w",
+     "wrap": "generator"
+    },
+    "slots": {
+     "expression": [
+      {
+       "id": "b127",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "k"
+       },
+       "slots": {}
+      }
+     ],
+     "iterable": [
+      {
+       "id": "b128",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "d"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eGeneratorExp",
+     "elt": {
+      "k": "eName",
+      "id": "k"
+     },
+     "generators": [
+      {
+       "k": "comprehension",
+       "target": {
+        "k": "eTuple",
+        "elts": [
+         {
+          "k": "eName",
+          "id": "k"
+         },
+         {
+          "k": "eName",
+          "id": "w"
+         }
+        ]
+       },
+       "iter": {
+        "k": "eName",
+        "id": "d"
+       },
+       "ifs": []
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "map_make_for",
+   "src": "{k: w for k, w in d if w}",
+   "statement": true,
+   "instance": {
+    "id": "b136",
+    "componentId": "python:map_make_for",
+    "properties": {},
+    "slots": {
+     "targets": [
+      {
+       "id": "b130",
+       "componentId": "python:param",
+       "properties": {
+        "name": "k"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b131",
+       "componentId": "python:param",
+       "properties": {
+        "name": "w"
+       },
+       "slots": {}
+      }
+     ],
+     "key": [
+      {
+       "id": "b132",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "k"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b133",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "w"
+       },
+       "slots": {}
+      }
+     ],
+     "iterable": [
+      {
+       "id": "b134",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "d"
+       },
+       "slots": {}
+      }
+     ],
+     "condition": [
+      {
+       "id": "b135",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "w"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eDictComp",
+     "key": {
+      "k": "eName",
+      "id": "k"
+     },
+     "value": {
+      "k": "eName",
+      "id": "w"
+     },
+     "generators": [
+      {
+       "k": "comprehension",
+       "target": {
+        "k": "eTuple",
+        "elts": [
+         {
+          "k": "eName",
+          "id": "k"
+         },
+         {
+          "k": "eName",
+          "id": "w"
+         }
+        ]
+       },
+       "iter": {
+        "k": "eName",
+        "id": "d"
+       },
+       "ifs": [
+        {
+         "k": "eName",
+         "id": "w"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "string_make",
+   "src": "f\"a{x:>5}b{y}\"",
+   "statement": true,
+   "instance": {
+    "id": "b143",
+    "componentId": "python:string_make",
+    "properties": {},
+    "slots": {
+     "parts": [
+      {
+       "id": "b137",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "a"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b139",
+       "componentId": "python:string_insert",
+       "properties": {
+        "format": ">5"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b138",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "x"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      },
+      {
+       "id": "b140",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "b"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b142",
+       "componentId": "python:string_insert",
+       "properties": {},
+       "slots": {
+        "value": [
+         {
+          "id": "b141",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "y"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eJoinedStr",
+     "values": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "a"
+       }
+      },
+      {
+       "k": "eFormattedValue",
+       "value": {
+        "k": "eName",
+        "id": "x"
+       },
+       "conversion": -1,
+       "formatSpec": {
+        "k": "eJoinedStr",
+        "values": [
+         {
+          "k": "eConstant",
+          "value": {
+           "k": "cStr",
+           "s": ">5"
+          }
+         }
+        ]
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "b"
+       }
+      },
+      {
+       "k": "eFormattedValue",
+       "value": {
+        "k": "eName",
+        "id": "y"
+       },
+       "conversion": -1,
+       "formatSpec": null
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "splat",
+   "src": "f(*xs, **kw)",
+   "statement": true,
+   "instance": {
+    "id": "b148",
+    "componentId": "python:func_call",
+    "properties": {
+     "name": "f"
+    },
+    "slots": {
+     "args": [
+      {
+       "id": "b145",
+       "componentId": "python:splat",
+       "properties": {
+        "kind": "list"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b144",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "xs"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      },
+      {
+       "id": "b147",
+       "componentId": "python:splat",
+       "properties": {
+        "kind": "dict"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b146",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "kw"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "f"
+     },
+     "args": [
+      {
+       "k": "eStarred",
+       "value": {
+        "k": "eName",
+        "id": "xs"
+       }
+      }
+     ],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": null,
+       "value": {
+        "k": "eName",
+        "id": "kw"
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "cast",
+   "src": "int(x)",
+   "statement": true,
+   "instance": {
+    "id": "b150",
+    "componentId": "python:cast",
+    "properties": {
+     "target_type": "int"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b149",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "int"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "cast",
+   "src": "float(x)",
+   "statement": true,
+   "instance": {
+    "id": "b152",
+    "componentId": "python:cast",
+    "properties": {
+     "target_type": "float"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b151",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "float"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "cast",
+   "src": "str(x)",
+   "statement": true,
+   "instance": {
+    "id": "b154",
+    "componentId": "python:cast",
+    "properties": {
+     "target_type": "str"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b153",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "str"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "cast",
+   "src": "bool(x)",
+   "statement": true,
+   "instance": {
+    "id": "b156",
+    "componentId": "python:cast",
+    "properties": {
+     "target_type": "bool"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b155",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "bool"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "cast",
+   "src": "list(x)",
+   "statement": true,
+   "instance": {
+    "id": "b158",
+    "componentId": "python:cast",
+    "properties": {
+     "target_type": "list"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b157",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "list"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "cast",
+   "src": "set(x)",
+   "statement": true,
+   "instance": {
+    "id": "b160",
+    "componentId": "python:cast",
+    "properties": {
+     "target_type": "set"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b159",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "set"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "type_is",
+   "src": "isinstance(x, dict)",
+   "statement": true,
+   "instance": {
+    "id": "b162",
+    "componentId": "python:type_is",
+    "properties": {
+     "target_type": "dict"
+    },
+    "slots": {
+     "obj": [
+      {
+       "id": "b161",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "isinstance"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      },
+      {
+       "k": "eName",
+       "id": "dict"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_all",
+   "src": "all(xs)",
+   "statement": true,
+   "instance": {
+    "id": "b164",
+    "componentId": "python:container_all",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b163",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "all"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_any",
+   "src": "any(xs)",
+   "statement": true,
+   "instance": {
+    "id": "b166",
+    "componentId": "python:container_any",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b165",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "any"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_sum",
+   "src": "sum(xs)",
+   "statement": true,
+   "instance": {
+    "id": "b168",
+    "componentId": "python:container_sum",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b167",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "sum"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_size",
+   "src": "len(xs)",
+   "statement": true,
+   "instance": {
+    "id": "b170",
+    "componentId": "python:container_size",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b169",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "len"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_apply",
+   "src": "map(str, xs)",
+   "statement": true,
+   "instance": {
+    "id": "b173",
+    "componentId": "python:container_apply",
+    "properties": {},
+    "slots": {
+     "func": [
+      {
+       "id": "b171",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "str"
+       },
+       "slots": {}
+      }
+     ],
+     "obj": [
+      {
+       "id": "b172",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "map"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "str"
+      },
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_filter",
+   "src": "filter(f, xs)",
+   "statement": true,
+   "instance": {
+    "id": "b176",
+    "componentId": "python:container_filter",
+    "properties": {},
+    "slots": {
+     "func": [
+      {
+       "id": "b174",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "f"
+       },
+       "slots": {}
+      }
+     ],
+     "obj": [
+      {
+       "id": "b175",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "filter"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "f"
+      },
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_zip",
+   "src": "zip(a, b)",
+   "statement": true,
+   "instance": {
+    "id": "b179",
+    "componentId": "python:container_zip",
+    "properties": {},
+    "slots": {
+     "first": [
+      {
+       "id": "b177",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "second": [
+      {
+       "id": "b178",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "zip"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "a"
+      },
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_sort",
+   "src": "sorted(xs, key=len, reverse=True)",
+   "statement": true,
+   "instance": {
+    "id": "b183",
+    "componentId": "python:container_sort",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b180",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "key": [
+      {
+       "id": "b181",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "len"
+       },
+       "slots": {}
+      }
+     ],
+     "reverse": [
+      {
+       "id": "b182",
+       "componentId": "python:literal_bool",
+       "properties": {
+        "value": "True"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "sorted"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": "key",
+       "value": {
+        "k": "eName",
+        "id": "len"
+       }
+      },
+      {
+       "k": "keyword",
+       "arg": "reverse",
+       "value": {
+        "k": "eConstant",
+        "value": {
+         "k": "cBool",
+         "b": true
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "container_sort",
+   "src": "sorted(xs)",
+   "statement": true,
+   "instance": {
+    "id": "b185",
+    "componentId": "python:container_sort",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b184",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "sorted"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_enumerate",
+   "src": "enumerate(xs, start=1)",
+   "statement": true,
+   "instance": {
+    "id": "b188",
+    "componentId": "python:container_enumerate",
+    "properties": {
+     "start_style": "keyword"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b186",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "start": [
+      {
+       "id": "b187",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "enumerate"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": "start",
+       "value": {
+        "k": "eConstant",
+        "value": {
+         "k": "cInt",
+         "text": "1"
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "container_enumerate",
+   "src": "enumerate(xs, 1)",
+   "statement": true,
+   "instance": {
+    "id": "b191",
+    "componentId": "python:container_enumerate",
+    "properties": {
+     "start_style": "positional"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b189",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "start": [
+      {
+       "id": "b190",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "enumerate"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "math_abs",
+   "src": "abs(x)",
+   "statement": true,
+   "instance": {
+    "id": "b193",
+    "componentId": "python:math_abs",
+    "properties": {},
+    "slots": {
+     "value": [
+      {
+       "id": "b192",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "abs"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "math_divmod",
+   "src": "divmod(a, b)",
+   "statement": true,
+   "instance": {
+    "id": "b196",
+    "componentId": "python:math_divmod",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b194",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b195",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "divmod"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "a"
+      },
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "math_max",
+   "src": "max(a, b)",
+   "statement": true,
+   "instance": {
+    "id": "b199",
+    "componentId": "python:math_max",
+    "properties": {},
+    "slots": {
+     "values": [
+      {
+       "id": "b197",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b198",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "max"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "a"
+      },
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "math_min",
+   "src": "min(xs)",
+   "statement": true,
+   "instance": {
+    "id": "b201",
+    "componentId": "python:math_min",
+    "properties": {},
+    "slots": {
+     "values": [
+      {
+       "id": "b200",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "min"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "math_round",
+   "src": "round(x, 2)",
+   "statement": true,
+   "instance": {
+    "id": "b204",
+    "componentId": "python:math_round",
+    "properties": {},
+    "slots": {
+     "value": [
+      {
+       "id": "b202",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "digits": [
+      {
+       "id": "b203",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "round"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "2"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "math_round",
+   "src": "round(x)",
+   "statement": true,
+   "instance": {
+    "id": "b206",
+    "componentId": "python:math_round",
+    "properties": {},
+    "slots": {
+     "value": [
+      {
+       "id": "b205",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "round"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "x"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "input",
+   "src": "input('n? ')",
+   "statement": true,
+   "instance": {
+    "id": "b208",
+    "componentId": "python:input",
+    "properties": {},
+    "slots": {
+     "prompt": [
+      {
+       "id": "b207",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "n? "
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "input"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "n? "
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "input",
+   "src": "input()",
+   "statement": true,
+   "instance": {
+    "id": "b209",
+    "componentId": "python:input",
+    "properties": {},
+    "slots": {}
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "input"
+     },
+     "args": [],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "func_call",
+   "src": "math.sqrt(2)",
+   "statement": true,
+   "instance": {
+    "id": "b211",
+    "componentId": "python:func_call",
+    "properties": {
+     "name": "math.sqrt"
+    },
+    "slots": {
+     "args": [
+      {
+       "id": "b210",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "math"
+      },
+      "attr": "sqrt"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "2"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "func_call_named",
+   "src": "f(a, k=1)",
+   "statement": true,
+   "instance": {
+    "id": "b215",
+    "componentId": "python:func_call",
+    "properties": {
+     "name": "f"
+    },
+    "slots": {
+     "args": [
+      {
+       "id": "b212",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b214",
+       "componentId": "python:func_call_named",
+       "properties": {
+        "name": "k"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b213",
+          "componentId": "python:literal_number",
+          "properties": {
+           "value": "1"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "f"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "a"
+      }
+     ],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": "k",
+       "value": {
+        "k": "eConstant",
+        "value": {
+         "k": "cInt",
+         "text": "1"
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "lambda",
+   "src": "lambda a, b: a",
+   "statement": true,
+   "instance": {
+    "id": "b219",
+    "componentId": "python:lambda",
+    "properties": {},
+    "slots": {
+     "params": [
+      {
+       "id": "b216",
+       "componentId": "python:param",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b217",
+       "componentId": "python:param",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ],
+     "body": [
+      {
+       "id": "b218",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eLambda",
+     "args": {
+      "k": "arguments",
+      "posonlyargs": [],
+      "args": [
+       {
+        "k": "arg",
+        "name": "a"
+       },
+       {
+        "k": "arg",
+        "name": "b"
+       }
+      ],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kwDefaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": {
+      "k": "eName",
+      "id": "a"
+     }
+    }
+   }
+  },
+  {
+   "component": "method_call",
+   "src": "random.randint(1, 6)",
+   "statement": true,
+   "instance": {
+    "id": "b223",
+    "componentId": "python:method_call",
+    "properties": {
+     "method": "randint"
+    },
+    "slots": {
+     "obj": [
+      {
+       "id": "b220",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "random"
+       },
+       "slots": {}
+      }
+     ],
+     "args": [
+      {
+       "id": "b221",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b222",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "6"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "random"
+      },
+      "attr": "randint"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "6"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_count",
+   "src": "xs.count(1)",
+   "statement": true,
+   "instance": {
+    "id": "b226",
+    "componentId": "python:container_count",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b224",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b225",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "xs"
+      },
+      "attr": "count"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_find_position",
+   "src": "xs.index(1)",
+   "statement": true,
+   "instance": {
+    "id": "b229",
+    "componentId": "python:container_find_position",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b227",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b228",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "xs"
+      },
+      "attr": "index"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_pop",
+   "src": "xs.pop()",
+   "statement": true,
+   "instance": {
+    "id": "b231",
+    "componentId": "python:container_pop",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b230",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "xs"
+      },
+      "attr": "pop"
+     },
+     "args": [],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_pop",
+   "src": "xs.pop(0)",
+   "statement": true,
+   "instance": {
+    "id": "b234",
+    "componentId": "python:container_pop",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b232",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "index": [
+      {
+       "id": "b233",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "0"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "xs"
+      },
+      "attr": "pop"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "0"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "map_at_default",
+   "src": "d.get('k', 0)",
+   "statement": true,
+   "instance": {
+    "id": "b238",
+    "componentId": "python:map_at_default",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b235",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "d"
+       },
+       "slots": {}
+      }
+     ],
+     "key": [
+      {
+       "id": "b236",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "k"
+       },
+       "slots": {}
+      }
+     ],
+     "fallback": [
+      {
+       "id": "b237",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "0"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "d"
+      },
+      "attr": "get"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "k"
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "0"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "map_iter",
+   "src": "d.items()",
+   "statement": true,
+   "instance": {
+    "id": "b240",
+    "componentId": "python:map_iter",
+    "properties": {
+     "kind": "items"
+    },
+    "slots": {
+     "obj": [
+      {
+       "id": "b239",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "d"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "d"
+      },
+      "attr": "items"
+     },
+     "args": [],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "map_iter",
+   "src": "d.keys()",
+   "statement": true,
+   "instance": {
+    "id": "b242",
+    "componentId": "python:map_iter",
+    "properties": {
+     "kind": "keys"
+    },
+    "slots": {
+     "obj": [
+      {
+       "id": "b241",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "d"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "d"
+      },
+      "attr": "keys"
+     },
+     "args": [],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "map_iter",
+   "src": "d.values()",
+   "statement": true,
+   "instance": {
+    "id": "b244",
+    "componentId": "python:map_iter",
+    "properties": {
+     "kind": "values"
+    },
+    "slots": {
+     "obj": [
+      {
+       "id": "b243",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "d"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "d"
+      },
+      "attr": "values"
+     },
+     "args": [],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_compare_prefix",
+   "src": "s.startswith('a')",
+   "statement": true,
+   "instance": {
+    "id": "b247",
+    "componentId": "python:string_compare_prefix",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b245",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b246",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "a"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "startswith"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "a"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_compare_suffix",
+   "src": "s.endswith('a')",
+   "statement": true,
+   "instance": {
+    "id": "b250",
+    "componentId": "python:string_compare_suffix",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b248",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b249",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "a"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "endswith"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "a"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_fill",
+   "src": "s.zfill(5)",
+   "statement": true,
+   "instance": {
+    "id": "b254",
+    "componentId": "python:string_fill",
+    "properties": {
+     "method": "zfill"
+    },
+    "slots": {
+     "obj": [
+      {
+       "id": "b251",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "width": [
+      {
+       "id": "b252",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "5"
+       },
+       "slots": {}
+      }
+     ],
+     "fill": [
+      {
+       "id": "b253",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "*"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "zfill"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "5"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_fill",
+   "src": "s.ljust(5, '*')",
+   "statement": true,
+   "instance": {
+    "id": "b258",
+    "componentId": "python:string_fill",
+    "properties": {
+     "method": "ljust"
+    },
+    "slots": {
+     "obj": [
+      {
+       "id": "b255",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "width": [
+      {
+       "id": "b256",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "5"
+       },
+       "slots": {}
+      }
+     ],
+     "fill": [
+      {
+       "id": "b257",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "*"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "ljust"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "5"
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "*"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_find",
+   "src": "s.find('a')",
+   "statement": true,
+   "instance": {
+    "id": "b261",
+    "componentId": "python:string_find",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b259",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b260",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "a"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "find"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "a"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_format",
+   "src": "'{}{x}'.format(1, x=2)",
+   "statement": true,
+   "instance": {
+    "id": "b266",
+    "componentId": "python:string_format",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b262",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "{}{x}"
+       },
+       "slots": {}
+      }
+     ],
+     "args": [
+      {
+       "id": "b263",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b265",
+       "componentId": "python:func_call_named",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b264",
+          "componentId": "python:literal_number",
+          "properties": {
+           "value": "2"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "{}{x}"
+       }
+      },
+      "attr": "format"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": "x",
+       "value": {
+        "k": "eConstant",
+        "value": {
+         "k": "cInt",
+         "text": "2"
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "string_join",
+   "src": "','.join(xs)",
+   "statement": true,
+   "instance": {
+    "id": "b269",
+    "componentId": "python:string_join",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b267",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": ","
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b268",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": ","
+       }
+      },
+      "attr": "join"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "xs"
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_lower",
+   "src": "s.lower()",
+   "statement": true,
+   "instance": {
+    "id": "b271",
+    "componentId": "python:string_lower",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b270",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "lower"
+     },
+     "args": [],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_upper",
+   "src": "s.upper()",
+   "statement": true,
+   "instance": {
+    "id": "b273",
+    "componentId": "python:string_upper",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b272",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "upper"
+     },
+     "args": [],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_strip",
+   "src": "s.strip()",
+   "statement": true,
+   "instance": {
+    "id": "b275",
+    "componentId": "python:string_strip",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b274",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "strip"
+     },
+     "args": [],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_replace",
+   "src": "s.replace('a', 'b')",
+   "statement": true,
+   "instance": {
+    "id": "b279",
+    "componentId": "python:string_replace",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b276",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "old": [
+      {
+       "id": "b277",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "new": [
+      {
+       "id": "b278",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "b"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "replace"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "a"
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "b"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_split",
+   "src": "s.split()",
+   "statement": true,
+   "instance": {
+    "id": "b281",
+    "componentId": "python:string_split",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b280",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "split"
+     },
+     "args": [],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "string_split",
+   "src": "s.split(',')",
+   "statement": true,
+   "instance": {
+    "id": "b284",
+    "componentId": "python:string_split",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b282",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b283",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": ","
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "split"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": ","
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "print",
+   "src": "print(a, b, sep='')",
+   "statement": true,
+   "instance": {
+    "id": "b289",
+    "componentId": "python:print",
+    "properties": {},
+    "slots": {
+     "values": [
+      {
+       "id": "b285",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b286",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b288",
+       "componentId": "python:func_call_named",
+       "properties": {
+        "name": "sep"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b287",
+          "componentId": "python:literal_string",
+          "properties": {
+           "value": ""
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "print"
+     },
+     "args": [
+      {
+       "k": "eName",
+       "id": "a"
+      },
+      {
+       "k": "eName",
+       "id": "b"
+      }
+     ],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": "sep",
+       "value": {
+        "k": "eConstant",
+        "value": {
+         "k": "cStr",
+         "s": ""
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "container_append",
+   "src": "xs.append(1)",
+   "statement": true,
+   "instance": {
+    "id": "b292",
+    "componentId": "python:container_append",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b290",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b291",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "xs"
+      },
+      "attr": "append"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_insert",
+   "src": "xs.insert(0, 1)",
+   "statement": true,
+   "instance": {
+    "id": "b296",
+    "componentId": "python:container_insert",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b293",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "index": [
+      {
+       "id": "b294",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "0"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b295",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "xs"
+      },
+      "attr": "insert"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "0"
+       }
+      },
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_erase_value",
+   "src": "xs.remove(1)",
+   "statement": true,
+   "instance": {
+    "id": "b299",
+    "componentId": "python:container_erase_value",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b297",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b298",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "xs"
+      },
+      "attr": "remove"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "set_append",
+   "src": "s.add(1)",
+   "statement": true,
+   "instance": {
+    "id": "b302",
+    "componentId": "python:set_append",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b300",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "s"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b301",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "s"
+      },
+      "attr": "add"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     ],
+     "keywords": []
+    }
+   }
+  },
+  {
+   "component": "container_sort_self",
+   "src": "xs.sort(reverse=True)",
+   "statement": true,
+   "instance": {
+    "id": "b305",
+    "componentId": "python:container_sort_self",
+    "properties": {},
+    "slots": {
+     "obj": [
+      {
+       "id": "b303",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "reverse": [
+      {
+       "id": "b304",
+       "componentId": "python:literal_bool",
+       "properties": {
+        "value": "True"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eCall",
+     "func": {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "xs"
+      },
+      "attr": "sort"
+     },
+     "args": [],
+     "keywords": [
+      {
+       "k": "keyword",
+       "arg": "reverse",
+       "value": {
+        "k": "eConstant",
+        "value": {
+         "k": "cBool",
+         "b": true
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "component": "var_assign",
+   "src": "x = 1",
+   "statement": true,
+   "instance": {
+    "id": "b307",
+    "componentId": "python:var_assign",
+    "properties": {
+     "obj": "x"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b306",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAssign",
+    "targets": [
+     {
+      "k": "eName",
+      "id": "x"
+     }
+    ],
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "1"
+     }
+    }
+   }
+  },
+  {
+   "component": "var_assign_sequence",
+   "src": "a, *b = xs",
+   "statement": true,
+   "instance": {
+    "id": "b311",
+    "componentId": "python:var_assign_sequence",
+    "properties": {},
+    "slots": {
+     "targets": [
+      {
+       "id": "b308",
+       "componentId": "python:param",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b309",
+       "componentId": "python:param",
+       "properties": {
+        "name": "b",
+        "variadic": "list"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b310",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAssign",
+    "targets": [
+     {
+      "k": "eTuple",
+      "elts": [
+       {
+        "k": "eName",
+        "id": "a"
+       },
+       {
+        "k": "eStarred",
+        "value": {
+         "k": "eName",
+         "id": "b"
+        }
+       }
+      ]
+     }
+    ],
+    "value": {
+     "k": "eName",
+     "id": "xs"
+    }
+   }
+  },
+  {
+   "component": "var_assign_expr",
+   "src": "(n := x)",
+   "statement": true,
+   "instance": {
+    "id": "b313",
+    "componentId": "python:var_assign_expr",
+    "properties": {
+     "obj": "n"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b312",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sExpr",
+    "value": {
+     "k": "eNamedExpr",
+     "target": {
+      "k": "eName",
+      "id": "n"
+     },
+     "value": {
+      "k": "eName",
+      "id": "x"
+     }
+    }
+   }
+  },
+  {
+   "component": "var_assign_compound",
+   "src": "x += 2",
+   "statement": true,
+   "instance": {
+    "id": "b316",
+    "componentId": "python:var_assign_compound",
+    "properties": {
+     "operator": "+="
+    },
+    "slots": {
+     "target": [
+      {
+       "id": "b314",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b315",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAugAssign",
+    "target": {
+     "k": "eName",
+     "id": "x"
+    },
+    "op": {
+     "k": "opAdd"
+    },
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "2"
+     }
+    }
+   }
+  },
+  {
+   "component": "var_assign_compound",
+   "src": "x -= 2",
+   "statement": true,
+   "instance": {
+    "id": "b319",
+    "componentId": "python:var_assign_compound",
+    "properties": {
+     "operator": "-="
+    },
+    "slots": {
+     "target": [
+      {
+       "id": "b317",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b318",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAugAssign",
+    "target": {
+     "k": "eName",
+     "id": "x"
+    },
+    "op": {
+     "k": "opSub"
+    },
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "2"
+     }
+    }
+   }
+  },
+  {
+   "component": "var_assign_compound",
+   "src": "x *= 2",
+   "statement": true,
+   "instance": {
+    "id": "b322",
+    "componentId": "python:var_assign_compound",
+    "properties": {
+     "operator": "*="
+    },
+    "slots": {
+     "target": [
+      {
+       "id": "b320",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b321",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAugAssign",
+    "target": {
+     "k": "eName",
+     "id": "x"
+    },
+    "op": {
+     "k": "opMult"
+    },
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "2"
+     }
+    }
+   }
+  },
+  {
+   "component": "var_assign_compound",
+   "src": "x /= 2",
+   "statement": true,
+   "instance": {
+    "id": "b325",
+    "componentId": "python:var_assign_compound",
+    "properties": {
+     "operator": "/="
+    },
+    "slots": {
+     "target": [
+      {
+       "id": "b323",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b324",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAugAssign",
+    "target": {
+     "k": "eName",
+     "id": "x"
+    },
+    "op": {
+     "k": "opDiv"
+    },
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "2"
+     }
+    }
+   }
+  },
+  {
+   "component": "var_assign_compound",
+   "src": "x //= 2",
+   "statement": true,
+   "instance": {
+    "id": "b328",
+    "componentId": "python:var_assign_compound",
+    "properties": {
+     "operator": "//="
+    },
+    "slots": {
+     "target": [
+      {
+       "id": "b326",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b327",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAugAssign",
+    "target": {
+     "k": "eName",
+     "id": "x"
+    },
+    "op": {
+     "k": "opFloorDiv"
+    },
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "2"
+     }
+    }
+   }
+  },
+  {
+   "component": "var_assign_compound",
+   "src": "x %= 2",
+   "statement": true,
+   "instance": {
+    "id": "b331",
+    "componentId": "python:var_assign_compound",
+    "properties": {
+     "operator": "%="
+    },
+    "slots": {
+     "target": [
+      {
+       "id": "b329",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b330",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "2"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAugAssign",
+    "target": {
+     "k": "eName",
+     "id": "x"
+    },
+    "op": {
+     "k": "opMod"
+    },
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "2"
+     }
+    }
+   }
+  },
+  {
+   "component": "container_assign",
+   "src": "xs[0] = 1",
+   "statement": true,
+   "instance": {
+    "id": "b336",
+    "componentId": "python:container_assign",
+    "properties": {},
+    "slots": {
+     "target": [
+      {
+       "id": "b334",
+       "componentId": "python:container_at",
+       "properties": {},
+       "slots": {
+        "target": [
+         {
+          "id": "b332",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "xs"
+          },
+          "slots": {}
+         }
+        ],
+        "key": [
+         {
+          "id": "b333",
+          "componentId": "python:literal_number",
+          "properties": {
+           "value": "0"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "id": "b335",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAssign",
+    "targets": [
+     {
+      "k": "eSubscript",
+      "value": {
+       "k": "eName",
+       "id": "xs"
+      },
+      "slice": {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "0"
+       }
+      }
+     }
+    ],
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "1"
+     }
+    }
+   }
+  },
+  {
+   "component": "member_assign",
+   "src": "self.x = 1",
+   "statement": true,
+   "instance": {
+    "id": "b340",
+    "componentId": "python:member_assign",
+    "properties": {},
+    "slots": {
+     "target": [
+      {
+       "id": "b338",
+       "componentId": "python:member_at",
+       "properties": {
+        "member": "x"
+       },
+       "slots": {
+        "obj": [
+         {
+          "id": "b337",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "self"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ],
+     "value": [
+      {
+       "id": "b339",
+       "componentId": "python:literal_number",
+       "properties": {
+        "value": "1"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAssign",
+    "targets": [
+     {
+      "k": "eAttribute",
+      "value": {
+       "k": "eName",
+       "id": "self"
+      },
+      "attr": "x"
+     }
+    ],
+    "value": {
+     "k": "eConstant",
+     "value": {
+      "k": "cInt",
+      "text": "1"
+     }
+    }
+   }
+  },
+  {
+   "component": "container_erase",
+   "src": "del d['k']",
+   "statement": true,
+   "instance": {
+    "id": "b344",
+    "componentId": "python:container_erase",
+    "properties": {},
+    "slots": {
+     "target": [
+      {
+       "id": "b343",
+       "componentId": "python:container_at",
+       "properties": {},
+       "slots": {
+        "target": [
+         {
+          "id": "b341",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "d"
+          },
+          "slots": {}
+         }
+        ],
+        "key": [
+         {
+          "id": "b342",
+          "componentId": "python:literal_string",
+          "properties": {
+           "value": "k"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sDelete",
+    "targets": [
+     {
+      "k": "eSubscript",
+      "value": {
+       "k": "eName",
+       "id": "d"
+      },
+      "slice": {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "k"
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "component": "if",
+   "src": "if a:\n    pass\nelif b:\n    break\nelse:\n    continue\n",
+   "statement": true,
+   "instance": {
+    "id": "b351",
+    "componentId": "python:if",
+    "properties": {},
+    "slots": {
+     "condition": [
+      {
+       "id": "b345",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ],
+     "body": [
+      {
+       "id": "b346",
+       "componentId": "python:pass",
+       "properties": {},
+       "slots": {}
+      }
+     ],
+     "elif_condition": [
+      {
+       "id": "b347",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "b"
+       },
+       "slots": {}
+      }
+     ],
+     "elif_body": [
+      {
+       "id": "b349",
+       "componentId": "python:_compound",
+       "properties": {},
+       "slots": {
+        "body": [
+         {
+          "id": "b348",
+          "componentId": "python:break",
+          "properties": {},
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ],
+     "else_body": [
+      {
+       "id": "b350",
+       "componentId": "python:continue",
+       "properties": {},
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sIf",
+    "test": {
+     "k": "eName",
+     "id": "a"
+    },
+    "body": [
+     {
+      "k": "sPass"
+     }
+    ],
+    "orelse": [
+     {
+      "k": "sIf",
+      "test": {
+       "k": "eName",
+       "id": "b"
+      },
+      "body": [
+       {
+        "k": "sBreak"
+       }
+      ],
+      "orelse": [
+       {
+        "k": "sContinue"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "component": "loop_while",
+   "src": "while a:\n    pass\n",
+   "statement": true,
+   "instance": {
+    "id": "b353",
+    "componentId": "python:loop_while",
+    "properties": {},
+    "slots": {
+     "condition": [
+      {
+       "id": "b352",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sWhile",
+    "test": {
+     "k": "eName",
+     "id": "a"
+    },
+    "body": [
+     {
+      "k": "sPass"
+     }
+    ],
+    "orelse": []
+   }
+  },
+  {
+   "component": "loop_for",
+   "src": "for i in xs:\n    print(i)\n",
+   "statement": true,
+   "instance": {
+    "id": "b357",
+    "componentId": "python:loop_for",
+    "properties": {
+     "obj": "i"
+    },
+    "slots": {
+     "iterable": [
+      {
+       "id": "b354",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ],
+     "body": [
+      {
+       "id": "b356",
+       "componentId": "python:print",
+       "properties": {},
+       "slots": {
+        "values": [
+         {
+          "id": "b355",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "i"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sFor",
+    "target": {
+     "k": "eName",
+     "id": "i"
+    },
+    "iter": {
+     "k": "eName",
+     "id": "xs"
+    },
+    "body": [
+     {
+      "k": "sExpr",
+      "value": {
+       "k": "eCall",
+       "func": {
+        "k": "eName",
+        "id": "print"
+       },
+       "args": [
+        {
+         "k": "eName",
+         "id": "i"
+        }
+       ],
+       "keywords": []
+      }
+     }
+    ],
+    "orelse": []
+   }
+  },
+  {
+   "component": "loop_for",
+   "src": "for i, x in xs:\n    pass\n",
+   "statement": true,
+   "instance": {
+    "id": "b361",
+    "componentId": "python:loop_for",
+    "properties": {},
+    "slots": {
+     "targets": [
+      {
+       "id": "b358",
+       "componentId": "python:param",
+       "properties": {
+        "name": "i"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b359",
+       "componentId": "python:param",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "iterable": [
+      {
+       "id": "b360",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "xs"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sFor",
+    "target": {
+     "k": "eTuple",
+     "elts": [
+      {
+       "k": "eName",
+       "id": "i"
+      },
+      {
+       "k": "eName",
+       "id": "x"
+      }
+     ]
+    },
+    "iter": {
+     "k": "eName",
+     "id": "xs"
+    },
+    "body": [
+     {
+      "k": "sPass"
+     }
+    ],
+    "orelse": []
+   }
+  },
+  {
+   "component": "break",
+   "src": "break",
+   "statement": true,
+   "instance": {
+    "id": "b362",
+    "componentId": "python:break",
+    "properties": {},
+    "slots": {}
+   },
+   "want": {
+    "k": "sBreak"
+   }
+  },
+  {
+   "component": "continue",
+   "src": "continue",
+   "statement": true,
+   "instance": {
+    "id": "b363",
+    "componentId": "python:continue",
+    "properties": {},
+    "slots": {}
+   },
+   "want": {
+    "k": "sContinue"
+   }
+  },
+  {
+   "component": "pass",
+   "src": "pass",
+   "statement": true,
+   "instance": {
+    "id": "b364",
+    "componentId": "python:pass",
+    "properties": {},
+    "slots": {}
+   },
+   "want": {
+    "k": "sPass"
+   }
+  },
+  {
+   "component": "return",
+   "src": "return x",
+   "statement": true,
+   "instance": {
+    "id": "b366",
+    "componentId": "python:return",
+    "properties": {},
+    "slots": {
+     "value": [
+      {
+       "id": "b365",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sReturn",
+    "value": {
+     "k": "eName",
+     "id": "x"
+    }
+   }
+  },
+  {
+   "component": "return",
+   "src": "return",
+   "statement": true,
+   "instance": {
+    "id": "b367",
+    "componentId": "python:return",
+    "properties": {},
+    "slots": {}
+   },
+   "want": {
+    "k": "sReturn",
+    "value": null
+   }
+  },
+  {
+   "component": "assert",
+   "src": "assert x, 'bad'",
+   "statement": true,
+   "instance": {
+    "id": "b370",
+    "componentId": "python:assert",
+    "properties": {},
+    "slots": {
+     "condition": [
+      {
+       "id": "b368",
+       "componentId": "python:var_ref",
+       "properties": {
+        "name": "x"
+       },
+       "slots": {}
+      }
+     ],
+     "value": [
+      {
+       "id": "b369",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "bad"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sAssert",
+    "test": {
+     "k": "eName",
+     "id": "x"
+    },
+    "msg": {
+     "k": "eConstant",
+     "value": {
+      "k": "cStr",
+      "s": "bad"
+     }
+    }
+   }
+  },
+  {
+   "component": "throw",
+   "src": "raise ValueError('bad')",
+   "statement": true,
+   "instance": {
+    "id": "b372",
+    "componentId": "python:throw",
+    "properties": {
+     "exception": "ValueError"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b371",
+       "componentId": "python:literal_string",
+       "properties": {
+        "value": "bad"
+       },
+       "slots": {}
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sRaise",
+    "exc": {
+     "k": "eCall",
+     "func": {
+      "k": "eName",
+      "id": "ValueError"
+     },
+     "args": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cStr",
+        "s": "bad"
+       }
+      }
+     ],
+     "keywords": []
+    },
+    "cause": null
+   }
+  },
+  {
+   "component": "throw",
+   "src": "raise StopIteration",
+   "statement": true,
+   "instance": {
+    "id": "b373",
+    "componentId": "python:throw",
+    "properties": {
+     "exception": "StopIteration"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sRaise",
+    "exc": {
+     "k": "eName",
+     "id": "StopIteration"
+    },
+    "cause": null
+   }
+  },
+  {
+   "component": "try_catch",
+   "src": "try:\n    pass\nexcept (ValueError, KeyError) as e:\n    pass\nexcept:\n    pass\nelse:\n    break\nfinally:\n    print(x)\n",
+   "statement": true,
+   "instance": {
+    "id": "b380",
+    "componentId": "python:try_catch",
+    "properties": {},
+    "slots": {
+     "body": [
+      {
+       "id": "b374",
+       "componentId": "python:pass",
+       "properties": {},
+       "slots": {}
+      }
+     ],
+     "handlers": [
+      {
+       "id": "b375",
+       "componentId": "python:exception_case",
+       "properties": {
+        "exception": "(ValueError, KeyError)",
+        "alias": "e"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b376",
+       "componentId": "python:exception_case",
+       "properties": {
+        "exception": ""
+       },
+       "slots": {}
+      }
+     ],
+     "orelse": [
+      {
+       "id": "b377",
+       "componentId": "python:break",
+       "properties": {},
+       "slots": {}
+      }
+     ],
+     "ensure": [
+      {
+       "id": "b379",
+       "componentId": "python:print",
+       "properties": {},
+       "slots": {
+        "values": [
+         {
+          "id": "b378",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "x"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sTry",
+    "body": [
+     {
+      "k": "sPass"
+     }
+    ],
+    "handlers": [
+     {
+      "k": "exceptHandler",
+      "type": {
+       "k": "eTuple",
+       "elts": [
+        {
+         "k": "eName",
+         "id": "ValueError"
+        },
+        {
+         "k": "eName",
+         "id": "KeyError"
+        }
+       ]
+      },
+      "name": "e",
+      "body": [
+       {
+        "k": "sPass"
+       }
+      ]
+     },
+     {
+      "k": "exceptHandler",
+      "type": null,
+      "name": null,
+      "body": [
+       {
+        "k": "sPass"
+       }
+      ]
+     }
+    ],
+    "orelse": [
+     {
+      "k": "sBreak"
+     }
+    ],
+    "finalbody": [
+     {
+      "k": "sExpr",
+      "value": {
+       "k": "eCall",
+       "func": {
+        "k": "eName",
+        "id": "print"
+       },
+       "args": [
+        {
+         "k": "eName",
+         "id": "x"
+        }
+       ],
+       "keywords": []
+      }
+     }
+    ]
+   }
+  },
+  {
+   "component": "exception_case",
+   "src": "try:\n    pass\nexcept ValueError:\n    pass\n",
+   "statement": true,
+   "instance": {
+    "id": "b384",
+    "componentId": "python:try_catch",
+    "properties": {},
+    "slots": {
+     "body": [
+      {
+       "id": "b381",
+       "componentId": "python:pass",
+       "properties": {},
+       "slots": {}
+      }
+     ],
+     "handlers": [
+      {
+       "id": "b383",
+       "componentId": "python:exception_case",
+       "properties": {
+        "exception": "ValueError"
+       },
+       "slots": {
+        "body": [
+         {
+          "id": "b382",
+          "componentId": "python:pass",
+          "properties": {},
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sTry",
+    "body": [
+     {
+      "k": "sPass"
+     }
+    ],
+    "handlers": [
+     {
+      "k": "exceptHandler",
+      "type": {
+       "k": "eName",
+       "id": "ValueError"
+      },
+      "name": null,
+      "body": [
+       {
+        "k": "sPass"
+       }
+      ]
+     }
+    ],
+    "orelse": [],
+    "finalbody": []
+   }
+  },
+  {
+   "component": "with",
+   "src": "with open('t') as f:\n    pass\n",
+   "statement": true,
+   "instance": {
+    "id": "b387",
+    "componentId": "python:with",
+    "properties": {
+     "name": "f"
+    },
+    "slots": {
+     "value": [
+      {
+       "id": "b386",
+       "componentId": "python:func_call",
+       "properties": {
+        "name": "open"
+       },
+       "slots": {
+        "args": [
+         {
+          "id": "b385",
+          "componentId": "python:literal_string",
+          "properties": {
+           "value": "t"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sWith",
+    "items": [
+     {
+      "k": "withItem",
+      "contextExpr": {
+       "k": "eCall",
+       "func": {
+        "k": "eName",
+        "id": "open"
+       },
+       "args": [
+        {
+         "k": "eConstant",
+         "value": {
+          "k": "cStr",
+          "s": "t"
+         }
+        }
+       ],
+       "keywords": []
+      },
+      "optionalVars": {
+       "k": "eName",
+       "id": "f"
+      }
+     }
+    ],
+    "body": [
+     {
+      "k": "sPass"
+     }
+    ]
+   }
+  },
+  {
+   "component": "func_def",
+   "src": "def f(a, b=2, *rest, k=None):\n    return a\n",
+   "statement": true,
+   "instance": {
+    "id": "b394",
+    "componentId": "python:func_def",
+    "properties": {
+     "name": "f"
+    },
+    "slots": {
+     "params": [
+      {
+       "id": "b388",
+       "componentId": "python:param",
+       "properties": {
+        "name": "a"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b389",
+       "componentId": "python:param",
+       "properties": {
+        "name": "b",
+        "default": "2"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b390",
+       "componentId": "python:param",
+       "properties": {
+        "name": "rest",
+        "variadic": "list"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b391",
+       "componentId": "python:param",
+       "properties": {
+        "name": "k",
+        "default": "None"
+       },
+       "slots": {}
+      }
+     ],
+     "body": [
+      {
+       "id": "b393",
+       "componentId": "python:return",
+       "properties": {},
+       "slots": {
+        "value": [
+         {
+          "id": "b392",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "a"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sFunctionDef",
+    "name": "f",
+    "args": {
+     "k": "arguments",
+     "posonlyargs": [],
+     "args": [
+      {
+       "k": "arg",
+       "name": "a"
+      },
+      {
+       "k": "arg",
+       "name": "b"
+      }
+     ],
+     "vararg": {
+      "k": "arg",
+      "name": "rest"
+     },
+     "kwonlyargs": [
+      {
+       "k": "arg",
+       "name": "k"
+      }
+     ],
+     "kwDefaults": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cNone"
+       }
+      }
+     ],
+     "kwarg": null,
+     "defaults": [
+      {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "2"
+       }
+      }
+     ]
+    },
+    "body": [
+     {
+      "k": "sReturn",
+      "value": {
+       "k": "eName",
+       "id": "a"
+      }
+     }
+    ],
+    "decoratorList": []
+   }
+  },
+  {
+   "component": "class_def",
+   "src": "class A(B):\n    n = 0\n\n    def m(self):\n        pass\n",
+   "statement": true,
+   "instance": {
+    "id": "b399",
+    "componentId": "python:class_def",
+    "properties": {
+     "name": "A",
+     "base": "B"
+    },
+    "slots": {
+     "fields": [
+      {
+       "id": "b396",
+       "componentId": "python:var_assign",
+       "properties": {
+        "obj": "n"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b395",
+          "componentId": "python:literal_number",
+          "properties": {
+           "value": "0"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ],
+     "methods": [
+      {
+       "id": "b398",
+       "componentId": "python:func_def",
+       "properties": {
+        "name": "m"
+       },
+       "slots": {
+        "params": [
+         {
+          "id": "b397",
+          "componentId": "python:param",
+          "properties": {
+           "name": "self"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "sClassDef",
+    "name": "A",
+    "bases": [
+     {
+      "k": "eName",
+      "id": "B"
+     }
+    ],
+    "keywords": [],
+    "body": [
+     {
+      "k": "sAssign",
+      "targets": [
+       {
+        "k": "eName",
+        "id": "n"
+       }
+      ],
+      "value": {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "0"
+       }
+      }
+     },
+     {
+      "k": "sFunctionDef",
+      "name": "m",
+      "args": {
+       "k": "arguments",
+       "posonlyargs": [],
+       "args": [
+        {
+         "k": "arg",
+         "name": "self"
+        }
+       ],
+       "vararg": null,
+       "kwonlyargs": [],
+       "kwDefaults": [],
+       "kwarg": null,
+       "defaults": []
+      },
+      "body": [
+       {
+        "k": "sPass"
+       }
+      ],
+      "decoratorList": []
+     }
+    ],
+    "decoratorList": []
+   }
+  },
+  {
+   "component": "global",
+   "src": "global x",
+   "statement": true,
+   "instance": {
+    "id": "b400",
+    "componentId": "python:global",
+    "properties": {
+     "name": "x"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sGlobal",
+    "names": [
+     "x"
+    ]
+   }
+  },
+  {
+   "component": "program",
+   "src": "x = 1\nprint(x)\n",
+   "statement": false,
+   "instance": {
+    "id": "b406",
+    "componentId": "python:program",
+    "properties": {},
+    "slots": {
+     "body": [
+      {
+       "id": "b402",
+       "componentId": "python:var_assign",
+       "properties": {
+        "obj": "x"
+       },
+       "slots": {
+        "value": [
+         {
+          "id": "b401",
+          "componentId": "python:literal_number",
+          "properties": {
+           "value": "1"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      },
+      {
+       "id": "b403",
+       "componentId": "python:comment",
+       "properties": {
+        "text": "c"
+       },
+       "slots": {}
+      },
+      {
+       "id": "b405",
+       "componentId": "python:print",
+       "properties": {},
+       "slots": {
+        "values": [
+         {
+          "id": "b404",
+          "componentId": "python:var_ref",
+          "properties": {
+           "name": "x"
+          },
+          "slots": {}
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   "want": {
+    "k": "program",
+    "body": [
+     {
+      "k": "sAssign",
+      "targets": [
+       {
+        "k": "eName",
+        "id": "x"
+       }
+      ],
+      "value": {
+       "k": "eConstant",
+       "value": {
+        "k": "cInt",
+        "text": "1"
+       }
+      }
+     },
+     {
+      "k": "sExpr",
+      "value": {
+       "k": "eCall",
+       "func": {
+        "k": "eName",
+        "id": "print"
+       },
+       "args": [
+        {
+         "k": "eName",
+         "id": "x"
+        }
+       ],
+       "keywords": []
+      }
+     }
+    ]
+   }
+  },
+  {
+   "component": "import",
+   "src": "import math as m",
+   "statement": true,
+   "instance": {
+    "id": "b407",
+    "componentId": "python:import",
+    "properties": {
+     "name": "math",
+     "alias": "m"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sImport",
+    "names": [
+     {
+      "k": "alias",
+      "name": "math",
+      "asname": "m"
+     }
+    ]
+   }
+  },
+  {
+   "component": "import",
+   "src": "import random",
+   "statement": true,
+   "instance": {
+    "id": "b408",
+    "componentId": "python:import",
+    "properties": {
+     "name": "random"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sImport",
+    "names": [
+     {
+      "k": "alias",
+      "name": "random",
+      "asname": null
+     }
+    ]
+   }
+  },
+  {
+   "component": "import_from",
+   "src": "from math import sqrt, pi as p",
+   "statement": true,
+   "instance": {
+    "id": "b409",
+    "componentId": "python:import_from",
+    "properties": {
+     "module": "math",
+     "names": "sqrt, pi as p"
+    },
+    "slots": {}
+   },
+   "want": {
+    "k": "sImportFrom",
+    "module": "math",
+    "names": [
+     {
+      "k": "alias",
+      "name": "sqrt",
+      "asname": null
+     },
+     {
+      "k": "alias",
+      "name": "pi",
+      "asname": "p"
+     }
+    ]
+   }
+  }
+ ]
+}

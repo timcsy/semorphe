@@ -1,0 +1,14 @@
+{
+  "_source": "cella packages/python/docs/components.json @ a67a8466a",
+  "template": {
+    "k": "sWhile",
+    "n": "$id",
+    "test": {
+      "$slot": "condition"
+    },
+    "body": {
+      "$body": "body"
+    },
+    "orelse": []
+  }
+}

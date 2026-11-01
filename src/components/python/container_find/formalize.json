@@ -1,0 +1,21 @@
+{
+  "_source": "cella packages/python/docs/components.json @ a67a8466a",
+  "template": {
+    "k": "eCompare",
+    "n": "$id",
+    "left": {
+      "$slot": "needle"
+    },
+    "ops": [
+      {
+        "$op": "cmpop",
+        "of": "operator"
+      }
+    ],
+    "comparators": [
+      {
+        "$slot": "haystack"
+      }
+    ]
+  }
+}

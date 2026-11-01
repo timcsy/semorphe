@@ -1,0 +1,20 @@
+{
+  "_source": "cella packages/python/docs/components.json @ a67a8466a",
+  "template": {
+    "k": "eCall",
+    "n": "$id",
+    "func": {
+      "k": "eName",
+      "n": "$id/func",
+      "id": {
+        "$prop": "target_type"
+      }
+    },
+    "args": [
+      {
+        "$slot": "value"
+      }
+    ],
+    "keywords": []
+  }
+}

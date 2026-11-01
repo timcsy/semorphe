@@ -1,0 +1,18 @@
+{
+  "_source": "cella packages/python/docs/components.json @ a67a8466a",
+  "template": {
+    "$case": "kind",
+    "cases": {
+      "list": {
+        "k": "eStarred",
+        "n": "$id",
+        "value": {
+          "$slot": "value"
+        }
+      }
+    },
+    "else": {
+      "$only": "callArgs, dictItems"
+    }
+  }
+}

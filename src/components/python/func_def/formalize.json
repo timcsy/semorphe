@@ -1,0 +1,18 @@
+{
+  "_source": "cella packages/python/docs/components.json @ a67a8466a",
+  "template": {
+    "k": "sFunctionDef",
+    "n": "$id",
+    "name": {
+      "$prop": "name"
+    },
+    "args": {
+      "$transform": "params",
+      "slot": "params"
+    },
+    "body": {
+      "$body": "body"
+    },
+    "decoratorList": []
+  }
+}

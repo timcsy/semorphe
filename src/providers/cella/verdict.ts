@@ -39,20 +39,23 @@ export interface CellaVerdict {
   [extra: string]: unknown
 }
 
-/** 三個分支；由程式 JSON 決定走哪一個。 */
-export type CellaBranch = 'c' | 'cpp' | 'arduino'
+/** 四個分支（C 家族三個 ＋ Python，spec 195）；由程式 JSON 決定走哪一個。 */
+export type CellaBranch = 'c' | 'cpp' | 'arduino' | 'python'
 
 /** 讀檔：`pkg` 為 `null` 是 `cella-lang` 本身的資產。 */
 export type CellaRead = (pkg: string | null, file: string) => Promise<Uint8Array> | Uint8Array
 
 /** 程式 JSON 該交給哪個分支：有板子 → arduino；`langC` → c；其餘 → cpp。 */
-export function branchOf(program: { lang?: { k?: string }; board?: unknown }): CellaBranch {
+export function branchOf(program: { k?: string; lang?: { k?: string }; board?: unknown }): CellaBranch {
+  // Python 的根是 `program`（`python.ast`），C 家族的是 `prog`（`cfamily.syntax`）
+  if (program.k === 'program') return 'python'
   if (program.board != null) return 'arduino'
   return program.lang?.k === 'langC' ? 'c' : 'cpp'
 }
 
-const BRANCHES = ['c', 'cpp', 'arduino'] as const
-const LIBRARY = ['import c', 'import cpp', 'import arduino', ...BRANCHES.flatMap((b) => [
+// ⚠️ Python 也編進同一個判決模組（spec 195）：第一次載入多編一個套件；改成「用到哪個語言才編哪個」是之後的優化
+const BRANCHES = ['c', 'cpp', 'arduino', 'python'] as const
+const LIBRARY = ['import c', 'import cpp', 'import arduino', 'import python', ...BRANCHES.flatMap((b) => [
   `def verdict_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.verdict src input fuel`,
   `def types_${b} (src : String) (candidates : String) : String := ${b}.types src candidates`,
 ])].join('\n') + '\n'
