@@ -8,4 +8,6 @@ import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:define_func', () => [])
+  // spec 200：而【運算式位置】的用法（`cout << SQR(3)`）不會被展開，它被 lift 成一般的函式呼叫——登記名字，讓呼叫端照實標翻不出
+  r.definesMacro('cpp:define_func', (n) => ({ name: String(n.properties?.name ?? ''), value: String(n.properties?.value ?? ''), function: true }))
 }

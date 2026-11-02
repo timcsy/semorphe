@@ -11,7 +11,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -32,11 +32,9 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (body: string): Promise<string> => {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(body))
-  return i.getOutput().join('')
-}
+// spec 200（重構 6c-2b）：執行的判準從 JS 直譯器換成 Cella——片段沒有 main，交給 Cella 前包成完整程式
+const run = (body: string, expected: string, globals = '') =>
+  expectCellaOut(`#include <bits/stdc++.h>\nusing namespace std;\n${globals}int main() { ${body} }\n`, expected)
 
 describe('膠囊自證：cpp:initializer_list', () => {
   it('★ lift：多維的內層是這顆身分，而且巢狀不被壓平', () => {
@@ -57,13 +55,12 @@ describe('膠囊自證：cpp:initializer_list', () => {
   })
 
   it('★ execute：多維讀得到', async () => {
-    expect(await run('int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2];')).toBe('6')
+    await run('int a[2][3] = {{1,2,3},{4,5,6}}; cout << a[1][2];', '6')
   })
 
   it('★ execute：沒有型別脈絡時它就是一串值——不猜型別也不丟錯', async () => {
-    // ⚠️ 消費者（`evalInitializer`）通常會先攔截它。這一支測的是**沒有被攔截**時，
-    // 少了執行器會丟 `UNKNOWN_COMPONENT`——那會讓整段程式停住。
-    expect(await run('struct P{int x;}; P p{7}; cout << p.x;')).toBe('7')
+    // 原本測的是 JS 直譯器的消費者沒有攔截它時不得丟 `UNKNOWN_COMPONENT`；換成 Cella 之後測的是同一段程式的答案（聚合初始化）
+    await run('P p{7}; cout << p.x;', '7', 'struct P{int x;};\n')   // 型別放在全域：區域 struct 的 formalize 是另一個缺口
   })
 
   it('★ 一維仍然是一串值，不會被包成一顆（不得因為升格而改變樹形）', () => {

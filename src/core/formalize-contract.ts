@@ -24,6 +24,8 @@ export interface FormalizeContext {
   expr(n: SemanticNode): CellaJson
   /** 把一顆節點翻成敘述（可能展開成多句；查不到 → `sHole`＋unknown）。 */
   stmt(n: SemanticNode): CellaJson[]
+  /** 把一顆頂層項目翻成 Cella 的項目（namespace 的本體要它；spec 200）。 */
+  item(n: SemanticNode): CellaJson[]
   /** 把一顆宣告翻成敘述層（`global = false`）或頂層（`true`）的宣告；沒註冊的照通用宣告子的形狀。 */
   decl(n: SemanticNode, global: boolean): CellaJson[]
   /** 槽裡的第一顆。 */
@@ -75,6 +77,11 @@ export interface FormalizeContext {
    * 用在成員名、方法名、函式名：`p.F` → `p.first`、`v.pb(x)` → `v.push_back(x)`。
    */
   identMacro(name: string): string
+  /**
+   * 這個名字是函式形巨集嗎（`#define SQR(x) ((x)*(x))`）——spec 200：運算式位置的 `SQR(3)` 會被 lift 成一般的函式呼叫，
+   * 照送的話 Cella 判 reject「呼叫未宣告的函式」，而真的 C++ 印 9。呼叫端問它，照實標翻不出。
+   */
+  functionMacro(name: string): boolean
   /**
    * 把一句敘述放到「目前正在翻的那一句」前面（第 206 刀：lambda 的 `sLambda` 要在用到它的敘述之前——cella 2026-11-01 給的形狀）。
    * 全域位置沒有「前面的敘述」可放，引擎照實標 unknown。
@@ -138,8 +145,11 @@ export interface FormalizeRegistrar {
   init(id: string, fn: (n: SemanticNode, f: FormalizeContext) => CellaJson): void
   /** 編譯期的非負整數字面（陣列長度要它）。不是就回 null。`f` 給需要上下文的（例如名字是巨集）。 */
   constInt(id: string, fn: (n: SemanticNode, f: FormalizeContext) => number | null): void
-  /** 這顆定義了一個物件巨集（`#define 名字 值`，值是原文）——核心照值展開在使用處（spec 197）。 */
-  definesMacro(id: string, fn: (n: SemanticNode) => { name: string; value: string } | null): void
+  /**
+   * 這顆定義了一個物件巨集（`#define 名字 值`，值是原文）——核心照值展開在使用處（spec 197）。
+   * `function: true` 是函式形巨集（spec 200）：不進物件巨集的展開表，只讓 `functionMacro(name)` 答得出來。
+   */
+  definesMacro(id: string, fn: (n: SemanticNode) => { name: string; value: string; function?: boolean } | null): void
   /** 這種字面量的原文是我的（`10`、`0x1F`…）——巨集展開時，核心用登記了的元件把值翻出來（spec 197）。 */
   literal(id: string, test: (text: string) => boolean): void
   /** 這顆定義了一個型別名（不帶關鍵字的 `Node*` 要先認得 `Node`）。 */
