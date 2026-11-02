@@ -271,14 +271,23 @@ describe('執行工作階段：切換前要知道的兩件事（Cella）', () =>
     expect(out(), '出錯前印的不得消失').toBe('before\n')
   }, 120_000)
 
-  it('🟡 已知缺陷（修好時這條會紅）：印 8000 字會在 6666 字停住——訊息說得出是「輸出太長」，不是「說不出為什麼」', async () => {
+  /**
+   * 長輸出：🔴 **結果取決於那台機器的堆疊大小**（2026-11-02 量到）——本機 macOS 的 Node 印到 6666 字就爆 Cella 的 wasm 堆疊，
+   * CI 的 Linux 整段跑完。所以這條不綁在某一台機器上：只准兩種結果——整段印完，或停在「輸出太長」（中文、說得出原因）；
+   * 落到「說不出為什麼」或別的原因都是紅。學生的瀏覽器會是哪一種還沒量（切換前要量，spec 205 T008）。
+   */
+  it('長輸出（8000 字）：整段印完，或停在「輸出太長」——不得是「說不出為什麼」', async () => {
     const tree = lift('#include <iostream>\nusing namespace std;\nint main() {\n  for (int i = 0; i < 8000; i++) cout << "x";\n  return 0;\n}\n')
     const s = p.createSession!({ maxSteps: 10_000_000, formal: formalOf(tree) }, tree)
     if ('declined' in s) throw new Error(`Cella 不接：${s.declined}`)
     let text = ''
     s.onOutput((t) => { text += t })
     const o = await s.launch(tree, { stopOnEntry: false })
-    expect(o, '🟢 這裡變成 ended 就是 Cella 修好了：改斷言 8000 字整段印出、拿掉 spec 205 的 T008 阻斷').toMatchObject({ kind: 'failed', error: { i18nKey: 'RUNTIME_ERR_CELLA_TOO_DEEP' } })
-    expect(text.length).toBeLessThan(8000)
+    if (o.kind === 'ended') {
+      expect(text.length, '跑完了就要整段印出').toBe(8000)
+    } else {
+      expect(o, '堆疊不夠的機器上要說得出是「輸出太長」').toMatchObject({ kind: 'failed', error: { i18nKey: 'RUNTIME_ERR_CELLA_TOO_DEEP' } })
+      expect(text.length).toBeLessThan(8000)
+    }
   }, 300_000)
 })
