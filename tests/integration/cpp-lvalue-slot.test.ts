@@ -259,10 +259,9 @@ describe('C++ 的左值是接點', () => {
    */
   // Cella 判錯：`f['a']++` 只有一次 operator[] 呼叫、沒有未定序的副作用（g++ 印 2），Cella 0.1.202611020258 判 unknown(ubOrder)；
   // 我們送的是單一個 eIncDec(eIndex)，沒有複製子運算式。`f['a'] += 1` 與 `f['a'] = 7` 都判 accept。
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 `m[k]++`——對應表的一格也是左值', async () => {
+  it('🔴 `m[k]++`——對應表的一格也是左值', async () => {
     const M = '#include <iostream>\n#include <map>\nusing namespace std;\n'
-    await knownCellaGap(/ubOrder：the order of evaluation is unspecified/, async () =>
-      expect(await run(`${M}int main(){ map<char,int> f; f['a']++; f['a']++; cout << f['a']; }`)).toBe('2'))
+    expect(await run(`${M}int main(){ map<char,int> f; f['a']++; f['a']++; cout << f['a']; }`)).toBe('2')
   })
 
   it('🔴 `m[k] = v`——對應表的一格也是左值', async () => {

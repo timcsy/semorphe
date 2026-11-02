@@ -157,27 +157,23 @@ describe('round-trip：容器的重複性與有序性', () => {
   }, 60_000)
 
   // 歸類：Cella 判錯——`mp[k]++` 只有一次 operator[] 呼叫（formalize 送的是單一個 eIncDec），沒有求值順序可言，Cella 判 unknown(ubOrder)；spec 202 同一族已回報
-  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 行為：unordered_map 跑起來與參照編譯器一樣', async () => {
-    await knownCellaGap(/ubOrder/, async () => {
-      const ref = runCppDetailed(UM)
-      expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-      expect(await run(UM), '🔴 沒登錄的話這裡是 INDEX_OUT_OF_RANGE').toBe(ref.output)
-    })
+  it.runIf(hasReferenceCompiler())('🔴 行為：unordered_map 跑起來與參照編譯器一樣', async () => {
+    const ref = runCppDetailed(UM)
+    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
+    expect(await run(UM), '🔴 沒登錄的話這裡是 INDEX_OUT_OF_RANGE').toBe(ref.output)
   }, 60_000)
 
   // 歸類：Cella 判錯——`mp["ab"]++` 同上，ubOrder 誤判
-  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 行為：字串當鍵（語料 21_toj55_2 的形狀）', async () => {
-    await knownCellaGap(/ubOrder/, async () => {
-      const src = `${H}int main(){
-      unordered_map<string,int> mp;
-      mp["ab"] = 1; mp["cd"] = 2; mp["ab"]++;
-      cout << mp["ab"] << mp["cd"] << mp.size();
-      return 0;
-  }
-  `
-      const ref = runCppDetailed(src)
-      expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-      expect(await run(src)).toBe(ref.output)
-    })
+  it.runIf(hasReferenceCompiler())('🔴 行為：字串當鍵（語料 21_toj55_2 的形狀）', async () => {
+    const src = `${H}int main(){
+    unordered_map<string,int> mp;
+    mp["ab"] = 1; mp["cd"] = 2; mp["ab"]++;
+    cout << mp["ab"] << mp["cd"] << mp.size();
+    return 0;
+}
+`
+    const ref = runCppDetailed(src)
+    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
+    expect(await run(src)).toBe(ref.output)
   }, 60_000)
 })

@@ -185,7 +185,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
 
   // 歸類：Cella 判錯——`deque<int> d{1,2,3}` 的 initializer_list 建構子被判 reject（擋在 resize 前面）
   it('🟡 已知缺陷（修好時這條會紅）：🟠 `d.resize(n)` 縮放一個容器', async () => {
-    await knownCellaGap(/no matching constructor for initialization of 'std::deque<int>'/, async () => {
+    await knownCellaGap(/'std::deque<int>' has no member 'resize'/, async () => {
       // 🟠 **為什麼不現在修**：`resize` 是一顆**新元件**（五路 ＋ 積木 ＋ 課程清單），
       //    而這一輪是模糊測試那一關，不是產生那一關。
       // 🔴 何時該修：它與 `at` 兩顆一起走一次 `component-pipeline`
@@ -229,17 +229,15 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
    * > **一根釘子如果只寫著「誰擋住我」，它不會在那個人讓開的時候自己掉下來。**
    */
   // 歸類：Cella 未支援——vector::erase
-  it('🟡 已知缺陷（修好時這條會紅）：🟢 刪除-移除的慣用法（釘子已拔）', async () => {
-    await knownCellaGap(/'std::vector<int>' has no member 'erase'/, async () => {
-      await same(
-        `vector<int> v{3,1,1,2}; sort(v.begin(), v.end());
-         v.erase(unique(v.begin(), v.end()), v.end()); for (int x : v) cout << x;`, '')
-    })
+  it('🟢 刪除-移除的慣用法（釘子已拔）', async () => {
+    await same(
+      `vector<int> v{3,1,1,2}; sort(v.begin(), v.end());
+       v.erase(unique(v.begin(), v.end()), v.end()); for (int x : v) cout << x;`, '')
   }, 60_000)
 
   // 歸類：Cella 未支援——vector::erase
   it('🟡 已知缺陷（修好時這條會紅）：🟢 刪除-移除：擠掉等於某個值的（同一族的另一半）', async () => {
-    await knownCellaGap(/'std::vector<int>' has no member 'erase'/, async () => {
+    await knownCellaGap(/remove is not supported yet/, async () => {
       await same(
         `vector<int> v{1,2,1,3};
          v.erase(remove(v.begin(), v.end(), 1), v.end()); for (int x : v) cout << x;`, '')

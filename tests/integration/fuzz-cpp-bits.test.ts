@@ -93,12 +93,10 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
 
   /** ★ 正向錨點：**無引數的形式照舊是整排**。 */
   // 歸類：Cella 判錯——`std::bitset::flip()` 無引數的多載是標準的（[template.bitset]），Cella 判 reject
-  it('🟡 已知缺陷（修好時這條會紅）：★ 無引數的 set／reset／flip 仍然改整排', async () => {
-    await knownCellaGap(/no matching member function for call to 'flip'/, async () => {
-      await same(
-        '  bitset<4> a; a.set(); bitset<4> b; b.set(); b.reset(); bitset<4> c; c.flip();\n'
-        + '  cout << a.count() << b.count() << c.count();', '')
-    })
+  it('★ 無引數的 set／reset／flip 仍然改整排', async () => {
+    await same(
+      '  bitset<4> a; a.set(); bitset<4> b; b.set(); b.reset(); bitset<4> c; c.flip();\n'
+      + '  cout << a.count() << b.count() << c.count();', '')
   })
 
   /**
@@ -155,7 +153,7 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    */
   // 歸類：Cella 判錯——`operator<<(ostream&, const bitset<N>&)` 是標準的（[bitset.operators]），Cella 判 reject
   it('🟡 已知缺陷（修好時這條會紅）：🔴 整排印出來是一串 0 與 1（最高位在前）', async () => {
-    await knownCellaGap(/cannot print this type with std::cout/, async () => {
+    await knownCellaGap(/template argument deduction failed/, async () => {
       await same('  bitset<8> b; b.set(0); b.set(3); bitset<4> z;\n  cout << b << " " << z;',
         '🔴 印出了內部字串')
     })

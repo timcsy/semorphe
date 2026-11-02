@@ -1,11 +1,22 @@
 /** `cpp:func_call` 的 **formalize** 路——從 `providers/cella/formalize/` 的分派原封搬過來（第 389 刀）。契約見 `core/formalize-contract.ts`。 */
 import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
+/** `<functional>` 的函式物件類別（帶範本引數）：`greater<int>`、`std::less<>`… */
+const FUNCTOR = /^(?:std::)?(?:greater|less|greater_equal|less_equal|equal_to|not_equal_to|plus|minus|multiplies|divides|modulus|negate|logical_and|logical_or|logical_not|bit_and|bit_or|bit_xor|hash)\s*<.*>$/
+
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.expr('cpp:func_call', (n, f) => {
     const name = String(n.properties?.name ?? '')
     // spec 200：函式形巨集在運算式位置沒有被展開——照送會被判「呼叫未宣告的函式」（假的 reject），照實標翻不出
     if (f.functionMacro(name)) return f.miss(n, `「${name}(…)」是函式形巨集；運算式位置的展開還沒有對應`)
+    // `greater<int>()` 是建一個暫時的函式物件（函式風格轉型，[expr.type.conv]），不是呼叫一個叫 greater<int> 的函式
+    // ——照 eCall 送會被判「呼叫未宣告的函式」（假的 reject；Cella 0.1.202611021533 露出來的）。形狀是 eTemp，名字寫完整的 `std::greater`（cella 2026-11-03 給的）
+    if (FUNCTOR.test(name)) {
+      const t = f.type(name, n) as { k: string; name?: string } | null
+      if (!t) return f.miss(n, `「${name}()」是建一個暫時的函式物件；這個型別還沒有對應`)
+      const full = t.k === 'tTemplate' && t.name && !t.name.startsWith('std::') ? { ...t, name: `std::${t.name}` } : t
+      return f.k('eTemp', { n: n.id, t: full, args: (n.slots?.args ?? []).map((c) => f.expr(c)) })
+    }
     const args = (n.slots?.args ?? []).map((c) => f.expr(c))
     // 名字指到一個變數（`auto add = [&](int x){…}; add(5)`）：呼叫的是那個值，不是一個叫 add 的函式——eCallE（cpp_to_tree.py 同形；第 206 刀）
     const x = f.declOf(n.id)

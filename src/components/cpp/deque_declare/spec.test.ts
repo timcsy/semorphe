@@ -82,9 +82,9 @@ describe('cpp:deque_declare 自證測', () => {
   // 🟡 Cella 0.1.202611020258 判錯：`deque<int> d(3);` 判 reject「no matching constructor for initialization of 'std::deque<int>'」
   //    （formalize 送的是一個引數的建構子；真的 C++ 合法，g++ 實測印 30），已回報
   //    （原本這一條與上一條的 generate 寫在同一個 it 裡；拆開是為了讓 generate 那一半照跑）
-  it('🟡 已知缺陷（修好時這條會紅）：正向：`deque<int> d(3)` 真的有三格', () => knownCellaGap(/no matching constructor/, async () => {
+  it('正向：`deque<int> d(3)` 真的有三格', async () => {
     await run('int main() { deque<int> d(3); cout << d.size() << d[0]; }', '30')
-  }))
+  })
 
   it('★ 語義：它記得住元素型別（推導不出來的那一條）', async () => {
     // 🔴 沒有這顆元件的話 `{1,2}` 只是「兩個數字」，而 `.first` 說「不是一個結構」
@@ -93,10 +93,10 @@ describe('cpp:deque_declare 自證測', () => {
   })
 
   // 🟡 Cella 0.1.202611020258 判錯：spec 199 補上複製初始化的 formalize 之後，走到的是 `deque<int> a = {1, 2};` 被判 reject「no matching constructor」（與 `d(3)` 同一族，已回報）；期望值 g++ 實測 21
-  it('🟡 已知缺陷（修好時這條會紅）：★ 語義：運算式初始值是**複製**不是共用', () => knownCellaGap(/no matching constructor/, async () => {
+  it('★ 語義：運算式初始值是**複製**不是共用', async () => {
     await run(
       'int main() { deque<int> a = {1, 2}; deque<int> b = a; b.pop_back(); cout << a.size() << b.size(); }', '21')
-  }))
+  })
 
   // ── 負向（不可省）────────────────────────────────────────
   it('負向：其他容器不得被認領成雙端佇列', () => {

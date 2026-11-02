@@ -255,7 +255,7 @@ for (const entry of PROVIDERS) {
 /**
  * spec 205（重構 6c-3）：學生按執行走的是工作階段——切換之前先量它在兩種情況下給學生什麼。
  * ① 執行到一半出錯：出錯前印的要看得到（判決那條路的 `out` 在 reject 時是空的，工作階段這條路不是）。
- * ② 長輸出：🟡 Cella 0.1.202611020258 印到 6666 字就爆 wasm 的堆疊（已回報，擋切換）——修好那天這條會紅：改成斷言 8000 字整段跑完、解除 6c-3 的阻斷。
+ * ② 長輸出：🟢 0.1.202611021533 修好（之前 0.1.202611020258 印到 6666 字就爆）——斷言 2 萬字整段跑完，6c-3 的這個阻斷解除。
  */
 describe('執行工作階段：切換前要知道的兩件事（Cella）', () => {
   let p: Provider
@@ -272,22 +272,16 @@ describe('執行工作階段：切換前要知道的兩件事（Cella）', () =>
   }, 120_000)
 
   /**
-   * 長輸出：🔴 **結果取決於那台機器的堆疊大小**（2026-11-02 量到）——本機 macOS 的 Node 印到 6666 字就爆 Cella 的 wasm 堆疊，
-   * CI 的 Linux 整段跑完。所以這條不綁在某一台機器上：只准兩種結果——整段印完，或停在「輸出太長」（中文、說得出原因）；
-   * 落到「說不出為什麼」或別的原因都是紅。學生的瀏覽器會是哪一種還沒量（切換前要量，spec 205 T008）。
+   * 長輸出：🟢 Cella 0.1.202611021533 把輸出那一路的遞迴改成迴圈（Text.utf8／Json.quote）——2 萬字整段印完，跟機器的堆疊大小無關。
+   * （之前 0.1.202611020258 在本機 macOS 的 Node 印到 6666 字就爆、CI 的 Linux 跑得完，所以那時這條只要求「說得出原因」。）
    */
-  it('長輸出（8000 字）：整段印完，或停在「輸出太長」——不得是「說不出為什麼」', async () => {
-    const tree = lift('#include <iostream>\nusing namespace std;\nint main() {\n  for (int i = 0; i < 8000; i++) cout << "x";\n  return 0;\n}\n')
+  it('長輸出（2 萬字）：整段印完', async () => {
+    const tree = lift('#include <iostream>\nusing namespace std;\nint main() {\n  for (int i = 0; i < 20000; i++) cout << "x";\n  return 0;\n}\n')
     const s = p.createSession!({ maxSteps: 10_000_000, formal: formalOf(tree) }, tree)
     if ('declined' in s) throw new Error(`Cella 不接：${s.declined}`)
     let text = ''
     s.onOutput((t) => { text += t })
-    const o = await s.launch(tree, { stopOnEntry: false })
-    if (o.kind === 'ended') {
-      expect(text.length, '跑完了就要整段印出').toBe(8000)
-    } else {
-      expect(o, '堆疊不夠的機器上要說得出是「輸出太長」').toMatchObject({ kind: 'failed', error: { i18nKey: 'RUNTIME_ERR_CELLA_TOO_DEEP' } })
-      expect(text.length).toBeLessThan(8000)
-    }
+    expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'ended' })
+    expect(text.length, '跑完了就要整段印出').toBe(20000)
   }, 300_000)
 })

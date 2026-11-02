@@ -63,7 +63,7 @@ describe('膠囊自證：擠掉等於某個值的', () => {
   })
 
   // 🟡 Cella 0.1.202611020258 判 unknown：vector 沒有 erase 成員（spec 199 補上 range_remove 的 formalize 之後量到），已回報；期望值 g++ 實測相同
-  it('🟡 已知缺陷（修好時這條會紅）：★ execute：值可以是運算式，而且比較不是只比 `.value`', () => knownCellaGap(/no member 'erase'/, async () => {
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：值可以是運算式，而且比較不是只比 `.value`', () => knownCellaGap(/remove is not supported yet/, async () => {
     await run(`${H}int main(){ vector<string> v{"a","b","a"}; string t = "a";\n`
       + ` v.erase(remove(v.begin(), v.end(), t), v.end());\n`
       + ` for (auto& s : v) cout << s; cout << v.size();\n`

@@ -34,7 +34,7 @@
  *（見 `set_insert/execute.ts`）。**這一批不要重蹈。**
  */
 import { describe, it, expect } from 'vitest'
-import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
+import { runCella, describeCellaResult, knownCellaGap, expectCellaOut } from '../helpers/cella-run'
 import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 
 
@@ -87,21 +87,19 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
   }, 60_000)
 
   // 歸類：Cella 未支援——std::unique
-  it('🟡 已知缺陷（修好時這條會紅）：🟢 fuzz_2｜unique called as a bare statement with its return value thrown away, next to the correct erase-remove form on other vectors.', async () => {
-    await knownCellaGap(/std::unique is not supported yet/, async () => {
-      // 🟢 **這一支一開始就綠**——The discarded unique must not change the container’s size, while the tail past the returned iterator is unspecified so only the kept prefix may be printed.
-      await same(`vector<int> v = {1, 1, 2, 2, 2, 3, 1, 1}, w = {5, 5, 5, 9};
-      sort(v.begin(), v.end());
-      unique(v.begin(), v.end());
-      cout << v.size() << ' ' << v[0] << v[1] << v[2] << '\\n';
-      vector<int> u = {1, 1, 1, 1, 2, 2, 2, 3};
-      auto it = unique(u.begin(), u.end());
-      cout << "kept=" << (it - u.begin()) << " isend=" << (it == u.end()) << '\\n';
-      u.erase(it, u.end());
-      cout << u.size() << ' ' << accumulate(u.begin(), u.end(), 0) << '\\n';
-      w.erase(unique(w.begin(), w.end()), w.end());
-      cout << w.size() << ' ' << *max_element(w.begin(), w.end()) << '\\n';`, '🔴 盲測的回歸')
-    })
+  it('🟢 fuzz_2｜unique called as a bare statement with its return value thrown away, next to the correct erase-remove form on other vectors.', async () => {
+    // 🟢 **這一支一開始就綠**——The discarded unique must not change the container’s size, while the tail past the returned iterator is unspecified so only the kept prefix may be printed.
+    await same(`vector<int> v = {1, 1, 2, 2, 2, 3, 1, 1}, w = {5, 5, 5, 9};
+    sort(v.begin(), v.end());
+    unique(v.begin(), v.end());
+    cout << v.size() << ' ' << v[0] << v[1] << v[2] << '\\n';
+    vector<int> u = {1, 1, 1, 1, 2, 2, 2, 3};
+    auto it = unique(u.begin(), u.end());
+    cout << "kept=" << (it - u.begin()) << " isend=" << (it == u.end()) << '\\n';
+    u.erase(it, u.end());
+    cout << u.size() << ' ' << accumulate(u.begin(), u.end(), 0) << '\\n';
+    w.erase(unique(w.begin(), w.end()), w.end());
+    cout << w.size() << ' ' << *max_element(w.begin(), w.end()) << '\\n';`, '🔴 盲測的回歸')
   }, 60_000)
 
   // 歸類：我們這側缺——iota 沒有 formalize（spec 202 量過 Cella 也還沒有 iota）
@@ -130,27 +128,33 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
     })
   }, 60_000)
 
-  // 歸類：Cella 未支援——std::accumulate（formalize 已補，spec 203）
-  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_4｜Iterators returned by find used as accumulate endpoints, compared against end(), offset by +1, and handed to sort as a range boundary.', async () => {
-    await knownCellaGap(/std::accumulate is not supported yet/, async () => {
-      // 🟠 **為什麼不現在修**：缺的是 `greater<int>()`——**新元件，不是做不到**。
-      //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
-      //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。
-      // 🔴 何時該修：**「範圍演算法的第二批」那一刀**。
-      //    ⚠️ 觸發條件刻意【不寫編號】——一個寫著「管線 189」的釘子，
-      //    在下一刀因為別的理由插隊時就永遠等不到它的號碼。
-      //    它們現在做得起來了：`resolveRange` 換成「求值兩個接點」之後，
-      //    一顆新的範圍演算法只剩下「它自己那幾行」。
-      await same(`vector<int> v = {5, 8, 13, 0, 21, 34, 0, 55};
-      auto z = find(v.begin(), v.end(), 0);
-      cout << (z == v.end() ? -1 : (int)(z - v.begin())) << ' ' << accumulate(v.begin(), z, 0) << '\\n';
-      auto z2 = find(z + 1, v.end(), 0);
-      cout << (z2 - v.begin()) << ' ' << accumulate(z + 1, z2, 0) << '\\n';
-      auto q = find(v.begin(), v.end(), 99);
-      cout << (q == v.end()) << ' ' << (q - v.begin()) << '\\n';
-      sort(v.begin(), z, greater<int>());
-      cout << v[0] << ' ' << v[1] << ' ' << v[2] << ' ' << v[3] << '\\n';`, '🟠 這一支在等 189')
-    })
+  /**
+   * 🔴 **「greater<int>()」是建一個暫時的函式物件，不是呼叫一個叫 greater<int> 的函式**（0.1.202611021533 補了 accumulate 之後露出來）。
+   * 原本送 eCall，被判「呼叫未宣告的函式」（假的 reject）；改送 eTemp（cella 2026-11-03 給的形狀，名字寫完整的 std::greater）。g++ 印「3 2 1」。
+   */
+  it('★ 由大到小排序：sort 的第三個引數是 greater<int>()', async () => {
+    await expectCellaOut('#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n  vector<int> v = {2, 3, 1};\n  sort(v.begin(), v.end(), greater<int>());\n  cout << v[0] << " " << v[1] << " " << v[2];\n}\n', '3 2 1')
+  }, 120_000)
+
+  // 🟢 0.1.202611021533 補了 accumulate、formalize 把 greater<int>() 改送 eTemp 之後整支綠
+  it('🟠 fuzz_4｜Iterators returned by find used as accumulate endpoints, compared against end(), offset by +1, and handed to sort as a range boundary.', async () => {
+    // 🟠 **為什麼不現在修**：缺的是 `greater<int>()`——**新元件，不是做不到**。
+    //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
+    //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。
+    // 🔴 何時該修：**「範圍演算法的第二批」那一刀**。
+    //    ⚠️ 觸發條件刻意【不寫編號】——一個寫著「管線 189」的釘子，
+    //    在下一刀因為別的理由插隊時就永遠等不到它的號碼。
+    //    它們現在做得起來了：`resolveRange` 換成「求值兩個接點」之後，
+    //    一顆新的範圍演算法只剩下「它自己那幾行」。
+    await same(`vector<int> v = {5, 8, 13, 0, 21, 34, 0, 55};
+    auto z = find(v.begin(), v.end(), 0);
+    cout << (z == v.end() ? -1 : (int)(z - v.begin())) << ' ' << accumulate(v.begin(), z, 0) << '\\n';
+    auto z2 = find(z + 1, v.end(), 0);
+    cout << (z2 - v.begin()) << ' ' << accumulate(z + 1, z2, 0) << '\\n';
+    auto q = find(v.begin(), v.end(), 99);
+    cout << (q == v.end()) << ' ' << (q - v.begin()) << '\\n';
+    sort(v.begin(), z, greater<int>());
+    cout << v[0] << ' ' << v[1] << ' ' << v[2] << ' ' << v[3] << '\\n';`, '🟠 這一支在等 189')
   }, 60_000)
 
   // 歸類：我們這側（lift）——transform／count 自由函式那一形 lift 成 raw_code
@@ -231,9 +235,9 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
     })
   }, 60_000)
 
-  // 歸類：Cella 未支援——自由函式 std::begin／std::end
+  // 歸類：Cella 判錯——內層三個元素的大括號被判「沒有對應的建構子」（0.1.202611021533 補了 begin／end 之後露出來；兩個元素時是安靜錯答，見下一條；已回報）
   it('🟡 已知缺陷（修好時這條會紅）：🟢 fuzz_8｜Nested ranges: begin(d2[i])/end(d2[i]) on rows of a 2D vector and m[k].begin() on the vectors stored inside a map.', async () => {
-    await knownCellaGap(/std::begin is not supported yet/, async () => {
+    await knownCellaGap(/no matching constructor for initialization of 'std::vector<int>'/, async () => {
       // 🟢 **這一支一開始就綠**——An empty row makes end(row) - begin(row) zero, and map element access inside the range expression creates the vector the iterators come from.
       await same(`vector<vector<int>> d2 = {{4, 1, 3}, {9, 7}, {}, {5, 5, 2, 8}};
       for (auto &row : d2) sort(begin(row), end(row));
@@ -250,9 +254,9 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
     })
   }, 60_000)
 
-  // 歸類：Cella 未支援——std::accumulate
+  // 歸類：Cella 未支援——std::remove（0.1.202611021533 補了 accumulate 之後露出來）
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_9｜A vector sorted, grown with push_back, sorted again, then queried with lower_bound/upper_bound before an erase-remove shrinks it.', async () => {
-    await knownCellaGap(/std::accumulate is not supported yet/, async () => {
+    await knownCellaGap(/remove is not supported yet/, async () => {
       // 🟠 **為什麼不現在修**：缺的是 `distance`——**新元件，不是做不到**。
       //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
       //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。

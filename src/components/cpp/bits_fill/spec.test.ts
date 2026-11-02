@@ -78,9 +78,9 @@ describe('膠囊自證：把整排位元變成什麼', () => {
 
   // 🟡 Cella 0.1.202611020258 判錯：無引數的 `bitset::flip()` 被判 reject「no matching member function for call to 'flip'」
   // （`flip(pos)` 是 accept；g++ 實測 `c[0]=1; c.flip(); cout << c[0] << c[1];` 印 01），已回報。
-  it('🟡 已知缺陷（修好時這條會紅）：★ execute：反轉', () => knownCellaGap(/flip/, async () => {
+  it('★ execute：反轉', async () => {
     await run('bitset<4> c; c[0]=1; c.flip(); cout << c[0] << c[1];', '01')
-  }))
+  })
 
   /**
    * 🪦 **[UNSUPPORTED:陣列的元素型別沒有被記在宣告表裡] 接收者是運算式時認不出來。**

@@ -86,23 +86,19 @@ describe('模糊測試：迭代器的邊界', () => {
   }, 60_000)
 
   // 歸類：Cella 判錯——類別迭代器的 `it->second`（`operator->`）被判「不是指標」；`(*it).second` 是好的
-  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 邊走邊刪：對照表那一側', async () => {
-    await knownCellaGap(/indirection requires a pointer/, async () => {
-      await sameAsCompiler(
-        `map<int,int> m; for (int i = 1; i <= 5; i++) m[i] = i * i;
-         for (auto it = m.begin(); it != m.end(); ) { if (it->second > 9) it = m.erase(it); else ++it; }
-         cout << m.size(); for (auto& p : m) cout << p.first;`, '')
-    })
+  it.runIf(hasReferenceCompiler())('🔴 邊走邊刪：對照表那一側', async () => {
+    await sameAsCompiler(
+      `map<int,int> m; for (int i = 1; i <= 5; i++) m[i] = i * i;
+       for (auto it = m.begin(); it != m.end(); ) { if (it->second > 9) it = m.erase(it); else ++it; }
+       cout << m.size(); for (auto& p : m) cout << p.first;`, '')
   }, 60_000)
 
   // 歸類：Cella 未支援——vector::erase
-  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 邊走邊刪：列表那一側（`erase` 回傳下一個）', async () => {
-    await knownCellaGap(/'std::vector<int>' has no member 'erase'/, async () => {
-      await sameAsCompiler(
-        `vector<int> v{1,2,3,4};
-         for (auto it = v.begin(); it != v.end(); ) { if (*it % 2 == 0) it = v.erase(it); else ++it; }
-         for (int x : v) cout << x;`, '')
-    })
+  it.runIf(hasReferenceCompiler())('🔴 邊走邊刪：列表那一側（`erase` 回傳下一個）', async () => {
+    await sameAsCompiler(
+      `vector<int> v{1,2,3,4};
+       for (auto it = v.begin(); it != v.end(); ) { if (*it % 2 == 0) it = v.erase(it); else ++it; }
+       for (int x : v) cout << x;`, '')
   }, 60_000)
 
   it.runIf(hasReferenceCompiler())('★ 空容器：`begin() == end()`，而迴圈跑零次', async () => {
@@ -235,25 +231,21 @@ describe('模糊測試：迭代器的邊界', () => {
    * > ——而那讓人以為自己改錯了地方。**
    */
   // 歸類：Cella 判錯——類別迭代器的 `->` 被判「不是指標」
-  it('🟡 已知缺陷（修好時這條會紅）：`->` 的接收者可以是一棵樹', async () => {
-    await knownCellaGap(/indirection requires a pointer/, async () => {
-      await sameAsCompiler(
-        `map<int, vector<int>> m; m[1].push_back(7);
-         cout << m.begin()->second.size() << m.begin()->first;`,
-        '🔴 `->` 的接收者被壓成文字了')
-    })
+  it('`->` 的接收者可以是一棵樹', async () => {
+    await sameAsCompiler(
+      `map<int, vector<int>> m; m[1].push_back(7);
+       cout << m.begin()->second.size() << m.begin()->first;`,
+      '🔴 `->` 的接收者被壓成文字了')
   }, 60_000)
 
   // 歸類：Cella 判錯——類別迭代器的 `->` 被判「不是指標」
-  it('🟡 已知缺陷（修好時這條會紅）：`it->second` 當函式引數', async () => {
-    await knownCellaGap(/indirection requires a pointer/, async () => {
-      const src = `${H}int g(const vector<int>& v){ return v.size(); }\n`
-        + `int main(){ map<int,vector<int>> m; m[1].push_back(7); m[2].push_back(1); m[2].push_back(2);\n`
-        + `  for (auto it = m.begin(); it != m.end(); ++it) cout << g(it->second); return 0; }\n`
-      const ref = runCppDetailed(src)
-      expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-      expect(await run(src), '🔴 `it->second` 當引數傳不過去').toBe(ref.output)
-    })
+  it('`it->second` 當函式引數', async () => {
+    const src = `${H}int g(const vector<int>& v){ return v.size(); }\n`
+      + `int main(){ map<int,vector<int>> m; m[1].push_back(7); m[2].push_back(1); m[2].push_back(2);\n`
+      + `  for (auto it = m.begin(); it != m.end(); ++it) cout << g(it->second); return 0; }\n`
+    const ref = runCppDetailed(src)
+    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+    expect(await run(src), '🔴 `it->second` 當引數傳不過去').toBe(ref.output)
   }, 60_000)
 
   // ─── 壓出來而這一刀不修的，各留一支 ────────────────────────
@@ -303,7 +295,7 @@ describe('模糊測試：迭代器的邊界', () => {
 
   // 歸類：Cella 判錯——類別迭代器的 `->` 被判「不是指標」
   it('🟡 已知缺陷（修好時這條會紅）：★ `erase(it++)` 在對照表上，而值也要跟著', async () => {
-    await knownCellaGap(/indirection requires a pointer/, async () => {
+    await knownCellaGap(/no matching member function for call to 'operator\+\+'/, async () => {
       await sameAsCompiler(
         `map<int,int> m; for (int i = 0; i < 5; i++) m[i] = i * i;
          auto it = m.begin(); int n = 0;
@@ -313,25 +305,21 @@ describe('模糊測試：迭代器的邊界', () => {
   }, 60_000)
 
   // 歸類：Cella 未支援——vector::erase
-  it('🟡 已知缺陷（修好時這條會紅）：★ `it = c.erase(it)` 那一半不得被弄壞', async () => {
-    await knownCellaGap(/'std::vector<int>' has no member 'erase'/, async () => {
-      await sameAsCompiler(
-        `vector<int> v{1,2,3,4,5,6}; auto it = v.begin(); int n = 0;
-         while (it != v.end()) { if (*it % 2) { it = v.erase(it); n++; } else ++it; }
-         cout << n << v.size(); for (int x : v) cout << x;`, '')
-    })
+  it('★ `it = c.erase(it)` 那一半不得被弄壞', async () => {
+    await sameAsCompiler(
+      `vector<int> v{1,2,3,4,5,6}; auto it = v.begin(); int n = 0;
+       while (it != v.end()) { if (*it % 2) { it = v.erase(it); n++; } else ++it; }
+       cout << n << v.size(); for (int x : v) cout << x;`, '')
   }, 60_000)
 
   // 歸類：Cella 判錯——`multiset<int> ms{…}` 的 initializer_list 建構子被判 reject
-  it('🟡 已知缺陷（修好時這條會紅）：★ 兩個位置存在變數裡，中間刪掉前面一格', async () => {
-    await knownCellaGap(/no matching constructor for initialization of 'std::multiset/, async () => {
-      await sameAsCompiler(
-        `multiset<int> ms{1,2,3,4,5,6,7};
-         auto lo = ms.lower_bound(3); auto hi = ms.upper_bound(5);
-         ms.erase(ms.find(1));
-         cout << *lo << *hi << ms.size();`,
-        '🔴 刪掉第 0 格之後，手上那兩個位置各該往前一格')
-    })
+  it('★ 兩個位置存在變數裡，中間刪掉前面一格', async () => {
+    await sameAsCompiler(
+      `multiset<int> ms{1,2,3,4,5,6,7};
+       auto lo = ms.lower_bound(3); auto hi = ms.upper_bound(5);
+       ms.erase(ms.find(1));
+       cout << *lo << *hi << ms.size();`,
+      '🔴 刪掉第 0 格之後，手上那兩個位置各該往前一格')
   }, 60_000)
 
   /**
@@ -975,15 +963,13 @@ describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格'
    * 🟢 整支能跑的那一天，這一條要換成 `whole(P01, …)`。
    */
   // 歸類：Cella 判錯——`set<int> s = {…}` 的 initializer_list 建構子被判 reject
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 fuzz_01 蒸餾｜`set` 上往前／往後跳兩格', async () => {
-    await knownCellaGap(/no matching constructor for initialization of 'std::set/, async () => {
-      await sameAsCompiler(
-        `set<int> s = {4, 8, 15, 16, 23, 42};
-         auto it = s.find(16);
-         cout << *prev(it, 2) << " " << *next(it, 2) << "\\n";
-         cout << *prev(s.end(), 2) << " " << *next(s.begin(), 3) << "\\n";`,
-        '🔴 第二個引數掉了——而產出的碼仍然編得過')
-    })
+  it('🔴 fuzz_01 蒸餾｜`set` 上往前／往後跳兩格', async () => {
+    await sameAsCompiler(
+      `set<int> s = {4, 8, 15, 16, 23, 42};
+       auto it = s.find(16);
+       cout << *prev(it, 2) << " " << *next(it, 2) << "\\n";
+       cout << *prev(s.end(), 2) << " " << *next(s.begin(), 3) << "\\n";`,
+      '🔴 第二個引數掉了——而產出的碼仍然編得過')
   }, 120_000)
 
   /**
@@ -1003,11 +989,9 @@ describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格'
 
   /** ★ **正向錨點**：留空的時候**不得**產出／執行成 `prev(it, 1)` 以外的東西。 */
   // 歸類：Cella 判錯——`set<int> s{…}` 的 initializer_list 建構子被判 reject
-  it('🟡 已知缺陷（修好時這條會紅）：★ 一個引數的照舊（留空就是一格）', async () => {
-    await knownCellaGap(/no matching constructor for initialization of 'std::set/, async () => {
-      await sameAsCompiler(
-        `set<int> s{1,2,3,4}; cout << *prev(s.end()) << *next(s.begin());`, '')
-    })
+  it('★ 一個引數的照舊（留空就是一格）', async () => {
+    await sameAsCompiler(
+      `set<int> s{1,2,3,4}; cout << *prev(s.end()) << *next(s.begin());`, '')
   }, 120_000)
 
   /**
@@ -1015,12 +999,10 @@ describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格'
    * ⚠️ 所以執行那一路**不得取絕對值**。
    */
   // 歸類：Cella 判錯——安靜的錯答：`prev(it, -2)`／`next(it, -1)` 的負格數被當成 0（[iterator.operations]：負數往反方向走）
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 格數是負的時候方向要反過來', async () => {
-    await knownCellaGap(/expected '20 20' to be '40 10'/, async () => {
-      await sameAsCompiler(
-        `vector<int> v{10,20,30,40,50}; auto it = v.begin() + 1;
-         cout << *prev(it, -2) << " " << *next(it, -1);`, '')
-    })
+  it('🔴 格數是負的時候方向要反過來', async () => {
+    await sameAsCompiler(
+      `vector<int> v{10,20,30,40,50}; auto it = v.begin() + 1;
+       cout << *prev(it, -2) << " " << *next(it, -1);`, '')
   }, 120_000)
 
   /**

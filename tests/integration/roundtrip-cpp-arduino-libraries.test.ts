@@ -249,12 +249,10 @@ describe('第 2／3 批與前兩批混用', () => {
   // 歸類：Cella 那側（宿主／判決器）——輸出超過約 7,000 字元時判決呼叫本身爆 JS 堆疊。
   // 感測器沒接（沒給 dht 的輸入）→ DHT 函式庫 2 秒內回快取的 NaN、loop 不 delay → 前 2 秒就印上千行「sensor error」。
   // 純 C++ 的最小重現：`for (int i = 0; i < 8000; i++) cout << "x";`（6000 次 accept、8000 次就爆；見回報）。
-  it('🟡 已知缺陷（修好時這條會紅）：感測器沒接時 isnan 那條分支被走到——而輸出太長讓判決爆堆疊', async () => {
-    await knownCellaGap(/Maximum call stack size exceeded/, async () => {
-      const r = await runCella(WEATHER, { board: 'uno' })
-      expect(r.verdict, describeCellaResult(r)).toBe('accept')
-      expect(r.out.startsWith('sensor error\r\n'), 'isnan 分支要被走到').toBe(true)
-    })
+  it('感測器沒接時 isnan 那條分支被走到——而輸出太長讓判決爆堆疊', async () => {
+    const r = await runCella(WEATHER, { board: 'uno' })
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    expect(r.out.startsWith('sensor error\r\n'), 'isnan 分支要被走到').toBe(true)
   }, 120_000)
 
   it('🔴 execute：EEPROM 計數器——沒寫過的格子是 255，int 加一印 256，寫回去的位元組繞回 0', async () => {
