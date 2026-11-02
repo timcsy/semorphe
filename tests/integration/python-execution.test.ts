@@ -19,10 +19,9 @@
  *
  * ## spec 205（重構 6c-3）：改由 Cella 背書
  *
- * ```
- * 跑出來的值（算術、迴圈、函式、分支、/、%、input 是字串）   runCella(code, { lang: 'python' })——python 家族的判決
- * 提示要先印、沒輸入要說實話、認不出的語法要出聲             Cella 的 Python 工作階段（學生按執行走的那條）
- * ```
+ *   跑出來的值（算術、迴圈、函式、分支、/、%、input 是字串）   runCella(code, { lang: 'python' })——python 家族的判決
+ *   提示要先印、沒輸入要說實話、認不出的語法要出聲             Cella 的 Python 工作階段（學生按執行走的那條）
+ *   （⚠️ 這段刻意不用反引號圍起來：語料護欄把反引號之間的文字收成語料）
  *
  * 🟡 **「提示要先印出來」今天不成立——Cella 判錯**（2026-11-02 量到）：`input("請輸入名字：")` 停在 awaiting-input 時輸出是空的，
  * 提示要等讀到一行之後才出現；`print("a")` 再 `input()` 則看得到 `a`——不是送輸出的時機，是 Cella 的 `input` 先讀後寫提示
@@ -145,7 +144,7 @@ describe('spec 170 · Python 的執行期（Cella 工作階段：互動與訊息
     const line = describeRuntimeStop(o.error.i18nKey, o.error.params)
     resetMessages()
     expect(line, '學生看到的那一句要說得出是 EOF').toContain('EOFError')
-    // 🟢 spec 205 T012（D7）修好（原本是釘子）：那一句原本把例外的細節整包 JSON 印出來（`{"type":"EOFError",…}`）——
+    // 🟢 spec 205 T012（D7）修好（原本是釘子）：那一句原本把例外的細節整包 JSON 印出來（「{"type":"EOFError",…}」）——
     //    正是 `lesson-mistakes` 那條「畫面上不得出現代號」的形狀。現在是「型別：說明」
     expect(line, '🔴 畫面上出現了 JSON').not.toMatch(/\{"/)
     expect(line).toContain('EOFError：EOF when reading a line')

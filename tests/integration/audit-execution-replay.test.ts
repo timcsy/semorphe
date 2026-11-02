@@ -50,7 +50,7 @@
  *
  * ## spec 205（重構 6c-3）：接手的是 Cella 的工作階段
  *
- * Cella 提供者宣告了 `session: { setInput: true, setVariable: true }`，工作階段有 `supplyInput`、`setVariable`、`recordedInputs`
+ * Cella 提供者宣告了 「session: { setInput: true, setVariable: true }」，工作階段有 `supplyInput`、`setVariable`、`recordedInputs`
  * （`src/providers/cella/provider.ts`）。重播照產品的做法（`execution-controller` 的 `replayLast`）：上一次的 stdin 排成佇列，
  * 每一次 `awaiting-input` 先從佇列拿，拿不到才問人。
  *
@@ -104,7 +104,7 @@ int main() {
 }
 `
 
-/** 一支在中途停下來讓人改值的程式——**合成的**（停點是 `total = total + 7;` 那一句）。 */
+/** 一支在中途停下來讓人改值的程式——**合成的**（停點是 「total = total + 7;」 那一句）。 */
 const EDITABLE = `
 #include <iostream>
 using namespace std;
@@ -140,7 +140,7 @@ async function runWith(tree: SemanticNode, typed: string[]): Promise<{ out: stri
   return { out: out(), asked, inputs: s.recordedInputs() }
 }
 
-/** 停在 `total = total + 7;`，把 total 改成 100，繼續跑完 */
+/** 停在 「total = total + 7;」，把 total 改成 100，繼續跑完 */
 async function runEdited(tree: SemanticNode): Promise<{ out: string; inputs: readonly SessionInput[] }> {
   const target = (tree.slots.body ?? []).flatMap(function walk(n: SemanticNode): SemanticNode[] {
     return [n, ...Object.values(n.slots ?? {}).flat().flatMap(walk)]
@@ -190,7 +190,7 @@ describe('第七十六條護欄：同一份輸入，重播得到同一個答案�
   /**
    * 🟡 **今天沒有（修好時這條會紅）**：手填過的那次執行，重播得不到同一個答案。
    *
-   * - Cella 工作階段的紀錄只有 `{ kind, name, value }`——**沒有「在第幾次停下時改的」**，重播不知道該在哪裡套用；
+   * - Cella 工作階段的紀錄只有 「{ kind, name, value }」——**沒有「在第幾次停下時改的」**，重播不知道該在哪裡套用；
    *   `cella-lang/dap` 自己的 `trace()` 有 `afterStop`，但只記 stdin 與環境輸入，**不記 setVariable**（Cella 未支援）。
    * - 產品因此照實不重播它：`replayLast` 只重播 stdin，並說「這次重播沒有包含你手動改的 n 筆」（`REPLAY_SKIPPED`）——P6 的誠實，不是靜默。
    *
