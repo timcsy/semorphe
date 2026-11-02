@@ -11,7 +11,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import { createNode } from '../../../core/semantic-tree'
 import apcs from '../../../languages/cpp/styles/apcs.json'
@@ -50,13 +50,13 @@ describe('膠囊自證：cpp:math_binary', () => {
     expect(generateCode(t, 'cpp', apcs as unknown as StylePreset)).toContain('fmax(3.0, 7.0)')
   })
 
-  it('★ execute：`fmax(3.0, 7.0)` 印出 7', async () => {
+  // 🟡 Cella 0.1.202611020258 判 unknown：fmax is not supported yet（spec 199 補上 formalize 之後量到；同一顆的 fmod 已 accept），已回報；期望值 C++ 的答案
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：`fmax(3.0, 7.0)` 印出 7', () => knownCellaGap(/fmax is not supported/, async () => {
     const t = tree(program('fmax(3.0, 7.0)'))
     expect(JSON.stringify(t)).toContain('cpp:math_binary')   // ← 先證明它進了樹
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(t)
-    expect(i.getOutput().join('').trim()).toBe('7')
-  })
+    // spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella
+    await expectCellaOut(program('fmax(3.0, 7.0)'), '7')
+  }))
 
   it('★ 5 個函式名共用一顆身分', () => {
     for (const f of ['fmod', 'hypot', 'atan2', 'fmin', 'fmax']) {

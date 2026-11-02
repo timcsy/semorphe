@@ -12,7 +12,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import { createNode } from '../../../core/semantic-tree'
 import apcs from '../../../languages/cpp/styles/apcs.json'
@@ -29,19 +29,15 @@ describe('膠囊自證：cpp:string_empty', () => {
     expect(generateCode(tree, 'cpp', apcs as unknown as StylePreset)).toContain('s.empty()')
   })
 
+  // spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella。
+  // ⚠️ 原本是手搭的語義樹（`cpp:string_empty`）；改成同一個語義的最小程式。
+  // 而這顆身分**從程式碼得不到**（見檔頭）——`s.empty()` lift 成中性的 `cpp:container_empty`，
+  // 所以這一條驗的是「字串的 empty() 該印什麼」，不是這顆身分自己的 formalize 路。
   it('★ execute：空字串回 1、非空回 0', async () => {
-    const run = async (value: string): Promise<string> => {
-      const i = new SemanticInterpreter({ maxSteps: 100000 })
-      await i.execute(createNode('cpp:program', {}, {
-        body: [
-          createNode('cpp:string_declare', { name: 's' }, { value: [createNode('cpp:literal_string', { value: value })] }),
-          createNode('cpp:print', {}, { values: [createNode('cpp:string_empty', {}, { obj: [createNode('cpp:var_ref', { name: 's' })] })] }),
-        ],
-      }))
-      return i.getOutput().join('')
-    }
+    const run = (value: string, expected: string) => expectCellaOut(
+      `#include <iostream>\n#include <string>\nusing namespace std;\nint main(){ string s = "${value}"; cout << s.empty(); }`, expected)
     // ⚠️ C++ 的 cout 印 bool 是 1／0，不是 true／false
-    expect(await run(''), '空字串').toBe('1')
-    expect(await run('hi'), '非空字串').toBe('0')
+    await run('', '1')     // 空字串
+    await run('hi', '0')   // 非空字串
   })
 })

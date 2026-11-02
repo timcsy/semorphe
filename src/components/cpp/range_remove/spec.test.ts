@@ -21,7 +21,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -41,13 +41,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(c, expected)
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
 describe('膠囊自證：擠掉等於某個值的', () => {
@@ -67,12 +62,11 @@ describe('膠囊自證：擠掉等於某個值的', () => {
     expect(r.slots.end?.length).toBe(1)
   })
 
-  it('★ execute：值可以是運算式，而且比較不是只比 `.value`', async () => {
-    const r = await run(`${H}int main(){ vector<string> v{"a","b","a"}; string t = "a";\n`
+  // 🟡 Cella 0.1.202611020258 判 unknown：vector 沒有 erase 成員（spec 199 補上 range_remove 的 formalize 之後量到），已回報；期望值 g++ 實測相同
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：值可以是運算式，而且比較不是只比 `.value`', () => knownCellaGap(/no member 'erase'/, async () => {
+    await run(`${H}int main(){ vector<string> v{"a","b","a"}; string t = "a";\n`
       + ` v.erase(remove(v.begin(), v.end(), t), v.end());\n`
       + ` for (auto& s : v) cout << s; cout << v.size();\n`
-      + ` return 0; }`)
-    expect(r.err).toBe('')
-    expect(r.out).toBe('b1')
-  })
+      + ` return 0; }`, 'b1')
+  }))
 })

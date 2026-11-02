@@ -24,7 +24,7 @@ import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { generateCode } from '../../../core/projection/code-generator'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 import apcs from '../../../languages/cpp/styles/apcs.json'
@@ -51,12 +51,10 @@ function ids(n: SemanticNode | null, out = new Set<string>()): Set<string> {
   return out
 }
 
-async function run(code: string): Promise<string> {
-  const tree = lift(code)
-  const interp = new SemanticInterpreter()
-  await interp.execute(tree!, [])
-  return interp.getOutput().join('')
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+// 測試裡的片段沒寫標頭；交給 Cella 的是補上標頭的完整程式
+const run = (code: string, expected: string) =>
+  expectCellaOut('#include <bits/stdc++.h>\nusing namespace std;\n' + code, expected)
 
 describe('cpp:vector_declare 自證測', () => {
   // ── 後設檢查：這支測試真的碰到這顆元件了嗎 ──────────────
@@ -83,12 +81,9 @@ describe('cpp:vector_declare 自證測', () => {
 
   it('★ 語義：運算式初始值是**複製**不是共用（推導不出來的那一條）', async () => {
     // 這是這顆元件唯一真正的語義主張。`vector<int> b = a;` 之後改 b 不得動到 a。
-    expect(
-      await run(
+    await run(
         'int main() { vector<int> a = {1, 2}; vector<int> b = a; b.pop_back(); ' +
-          'cout << a.size() << "," << b.size() << endl; }',
-      ),
-    ).toBe('2,1\n')
+          'cout << a.size() << "," << b.size() << endl; }', '2,1\n')
   })
 
   // ── 負向（不可省）────────────────────────────────────────

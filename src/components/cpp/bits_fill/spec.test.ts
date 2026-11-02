@@ -17,7 +17,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, runCella, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -39,11 +39,9 @@ const ids = (n: SemanticNode, out: string[] = []): string[] => {
   return out
 }
 const gen = (body: string): string => generateCode(lift(body), 'cpp', apcs as unknown as StylePreset)
-const run = async (body: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 200_000 })
-  try { await i.execute(lift(body)); return { out: i.getOutput().join(''), err: '' } }
-  catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const program = (body: string): string => `${H}int main(){ ${body} return 0; }`
+const run = (body: string, expected: string) => expectCellaOut(program(body), expected)
 const dig = (n: SemanticNode, id: string): SemanticNode | null => {
   if (n.componentId === id) return n
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) { const r = dig(k, id); if (r) return r }
@@ -74,12 +72,15 @@ describe('膠囊自證：把整排位元變成什麼', () => {
     expect(code, '🔴 `reset` 被換成 `clear` 了').not.toContain('bs.clear()')
   })
 
-  it('★ execute：歸零／設為 1／反轉', async () => {
-    const r = await run('bitset<4> a; a[1]=1; a.reset(); bitset<4> b; b.set(); bitset<4> c; c[0]=1; c.flip();'
-      + ' cout << a[1] << b[0] << b[3] << c[0] << c[1];')
-    expect(r.err).toBe('')
-    expect(r.out).toBe('01101')
+  it('★ execute：歸零／設為 1', async () => {
+    await run('bitset<4> a; a[1]=1; a.reset(); bitset<4> b; b.set(); cout << a[1] << b[0] << b[3];', '011')
   })
+
+  // 🟡 Cella 0.1.202611020258 判錯：無引數的 `bitset::flip()` 被判 reject「no matching member function for call to 'flip'」
+  // （`flip(pos)` 是 accept；g++ 實測 `c[0]=1; c.flip(); cout << c[0] << c[1];` 印 01），已回報。
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：反轉', () => knownCellaGap(/flip/, async () => {
+    await run('bitset<4> c; c[0]=1; c.flip(); cout << c[0] << c[1];', '01')
+  }))
 
   /**
    * 🪦 **[UNSUPPORTED:陣列的元素型別沒有被記在宣告表裡] 接收者是運算式時認不出來。**
@@ -111,24 +112,22 @@ describe('膠囊自證：把整排位元變成什麼', () => {
    * 查不到照舊留在通用版。判準不是變寬，是**問對了名字**。
    */
   it('🪦 已拔釘：`d[i].reset()`——一格問得出自己的型別', async () => {
-    const r = await run('bitset<26> d[2]; d[0][3]=1; d[1][3]=1; d[0].reset(); cout << d[0][3] << d[1][3];')
-    expect(r.err).toBe('')
-    expect(r.out).toBe('01')
+    await run('bitset<26> d[2]; d[0][3]=1; d[1][3]=1; d[0].reset(); cout << d[0][3] << d[1][3];', '01')
   })
 
   it('★ 錨點：型別查不到的接收者仍然留在通用版（不得被搶走）', async () => {
-    const r = await run('bitset<26> d[2]; d[0].reset();')
-    expect(r.err, '★ 正向錨點：查得到的那一支是對的').toBe('')
+    await run('bitset<26> d[2]; d[0].reset();', '')   // ★ 正向錨點：查得到的那一支是對的
     // `obj` 沒有宣告過——`.reset()` 不得被一排位元搶走
-    const bad = await run('obj.reset();')
-    expect(bad.err, '🔴 型別查不到卻猜了一個專屬身分').not.toBe('')
+    expect(ids(lift('obj.reset();')), '🔴 型別查不到卻猜了一個專屬身分').not.toContain('cpp:bits_fill')
+    const bad = await runCella(program('obj.reset();'))
+    expect(bad.verdict, '🔴 一個沒宣告過的名字被當成合法程式了').not.toBe('accept')
   })
 
   it('🔴 execute：接收者不是一排位元時要出聲，而且說得出它是什麼', async () => {
-    const r = await run('int n = 5; bitset<4> bs; bs.reset(); cout << n;')
-    expect(r.err).toBe('')   // ★ 正向錨點：正常的那一支不受影響
-    const bad = await run('string s = "ab"; s.flip();')
-    expect(bad.err, '🔴 說不出接收者是什麼').toMatch(/不是一排位元|string/)
+    await run('int n = 5; bitset<4> bs; bs.reset(); cout << n;', '5')   // ★ 正向錨點：正常的那一支不受影響
+    const bad = await runCella(program('string s = "ab"; s.flip();'))
+    expect(bad.verdict, '🔴 string 沒有 flip()，卻被判成合法').not.toBe('accept')
+    expect(JSON.stringify([bad.problems, bad.untranslated]), '🔴 說不出接收者是什麼').toMatch(/flip|string/)
   })
 
   it('★ round-trip：產回去再 lift，身分與方法名都不變', () => {

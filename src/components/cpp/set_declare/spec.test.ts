@@ -11,7 +11,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -32,13 +32,6 @@ const collect = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   return out
 }
 const ids = (n: SemanticNode): string[] => collect(n).map((x) => x.componentId)
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
 const H = '#include <iostream>\n#include <set>\nusing namespace std;\n'
 const S = apcs as unknown as StylePreset
 
@@ -76,8 +69,7 @@ describe('膠囊自證：集合的宣告與重複性', () => {
 
   it('★ execute：舊存檔沒有這個屬性時，它是 set（不留重複）', async () => {
     // 屬性缺席走的是同一條預設，而預設值寫在兩處（產碼與執行）——這一條盯的是後者。
-    const r = await run(`${H}int main(){ set<int> s; s.insert(3); s.insert(3); cout << s.size(); }`)
-    expect(r.err).toBe('')
-    expect(r.out).toBe('1')
+    // spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+    await expectCellaOut(`${H}int main(){ set<int> s; s.insert(3); s.insert(3); cout << s.size(); }`, '1')
   })
 })

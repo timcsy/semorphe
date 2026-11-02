@@ -10,7 +10,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -33,11 +33,8 @@ const collect = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
 const ids = (n: SemanticNode): string[] => collect(n).map((x) => x.componentId)
 const declOf = (c: string): SemanticNode | undefined =>
   collect(lift(c)).find((n) => n.componentId === 'cpp:map_declare')
-const run = async (c: string): Promise<string> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try { await i.execute(lift(c)); return i.getOutput().join('') }
-  catch (e) { return 'ERR=' + (e as Error).message }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(c, expected)
 const H = '#include <iostream>\n#include <map>\n#include <string>\nusing namespace std;\n'
 const S = apcs as unknown as StylePreset
 
@@ -99,18 +96,17 @@ describe('膠囊自證：對照表的宣告', () => {
   })
 
   it('★ execute：宣告建得出來，而 m[k] 寫得進去', async () => {
-    expect(await run(`${H}int main(){ map<string,int> m; m["a"]=3; cout<<m["a"]<<m.size(); }`)).toBe('31')
+    await run(`${H}int main(){ map<string,int> m; m["a"]=3; cout<<m["a"]<<m.size(); }`, '31')
   })
 
   it('🔴 execute：接住回傳的容器，內容要真的在', async () => {
-    expect(await run(
+    await run(
       `${H}map<char,int> f(){ map<char,int> m; m['a']=1; return m; }\n`
-      + `int main(){ map<char,int> r=f(); cout<<r.size()<<r['a']; }`)).toBe('11')
+      + `int main(){ map<char,int> r=f(); cout<<r.size()<<r['a']; }`, '11')
   })
 
   it('🔴 execute：複製要真的是複製（不是接管同一串格子）', async () => {
-    expect(await run(
-      `${H}int main(){ map<int,int> a; a[1]=1; map<int,int> b=a; b[2]=2; cout<<a.size()<<b.size(); }`),
-    ).toBe('12')
+    await run(
+      `${H}int main(){ map<int,int> a; a[1]=1; map<int,int> b=a; b[2]=2; cout<<a.size()<<b.size(); }`, '12')
   })
 })

@@ -5,7 +5,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -26,11 +26,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<string> => {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(c))
-  return i.getOutput().join('')
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(H + c, expected)
 
 describe('膠囊自證：cpp:bits_count', () => {
   it('★ lift：認得，且不落進殘差', () => {
@@ -45,17 +42,23 @@ describe('膠囊自證：cpp:bits_count', () => {
     expect(code).toContain('__builtin_popcount(7)')
   })
 
-  it('★ execute：數 1 的個數', async () => {
-    expect(await run('int main(){ cout << __builtin_popcount(7); }'), '7 = 0b111').toBe('3')
-    expect(await run('int main(){ cout << __builtin_popcount(0); }'), '0 沒有 1').toBe('0')
-    expect(await run('int main(){ cout << __builtin_popcount(8); }'), '8 = 0b1000').toBe('1')
-  })
+  // 🟡 不是 Cella 判錯，是 semorphe 這一側缺一段：formalize 回「cpp:bits_count：「__builtin_popcount」是編譯器內建函式，還沒有對應」
+  // （`bits_count/formalize.ts` 只翻 `b.count()`）。期望值是 g++ 實測的答案，補上對應之後拿掉 skip。
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：數 1 的個數', () => knownCellaGap(/編譯器內建/, async () => {
+    await run('int main(){ cout << __builtin_popcount(7); }', '3')   // 7 = 0b111
+    await run('int main(){ cout << __builtin_popcount(0); }', '0')   // 0 沒有 1
+    await run('int main(){ cout << __builtin_popcount(8); }', '1')   // 8 = 0b1000
+  }))
 
-  it('★ execute：負數以 32 位無號解讀——**帶號位移會讓迴圈不結束**', async () => {
-    expect(await run('int main(){ cout << __builtin_popcount(-1); }')).toBe('32')
-  })
+  // 🟡 不是 Cella 判錯，是 semorphe 這一側缺一段：formalize 回「cpp:bits_count：「__builtin_popcount」是編譯器內建函式，還沒有對應」
+  // （`bits_count/formalize.ts` 只翻 `b.count()`）。期望值是 g++ 實測的答案，補上對應之後拿掉 skip。
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：負數以 32 位無號解讀——**帶號位移會讓迴圈不結束**', () => knownCellaGap(/編譯器內建/, async () => {
+    await run('int main(){ cout << __builtin_popcount(-1); }', '32')
+  }))
 
-  it('★ execute：引數是運算式而不只是常值', async () => {
-    expect(await run('int main(){ int x = 5; cout << __builtin_popcount(x | 2); }'), '5|2 = 7').toBe('3')
-  })
+  // 🟡 不是 Cella 判錯，是 semorphe 這一側缺一段：formalize 回「cpp:bits_count：「__builtin_popcount」是編譯器內建函式，還沒有對應」
+  // （`bits_count/formalize.ts` 只翻 `b.count()`）。期望值是 g++ 實測的答案，補上對應之後拿掉 skip。
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：引數是運算式而不只是常值', () => knownCellaGap(/編譯器內建/, async () => {
+    await run('int main(){ int x = 5; cout << __builtin_popcount(x | 2); }', '3')   // 5|2 = 7
+  }))
 })

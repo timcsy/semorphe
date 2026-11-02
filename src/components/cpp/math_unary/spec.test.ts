@@ -11,7 +11,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import { createNode } from '../../../core/semantic-tree'
 import apcs from '../../../languages/cpp/styles/apcs.json'
@@ -52,9 +52,8 @@ describe('膠囊自證：cpp:math_unary', () => {
   it('★ execute：`sqrt(16.0)` 印出 4', async () => {
     const t = tree(program('sqrt(16.0)'))
     expect(JSON.stringify(t)).toContain('cpp:math_unary')   // ← 先證明它進了樹
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(t)
-    expect(i.getOutput().join('').trim()).toBe('4')
+    // spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella
+    await expectCellaOut(program('sqrt(16.0)'), '4')
   })
 
   it('★ 18 個函式名共用一顆身分，靠 func 屬性區分', () => {

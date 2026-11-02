@@ -14,7 +14,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -34,13 +34,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(c, expected)
 const H = '#include <iostream>\n#include <deque>\n#include <string>\nusing namespace std;\n'
 const S = apcs as unknown as StylePreset
 
@@ -71,25 +66,22 @@ describe('膠囊自證：容器的前端加入', () => {
   })
 
   it('🔴 execute：放進去的是【最前面】那一個', async () => {
-    const r = await run(`${H}int main(){ deque<int> dq; dq.push_back(3); dq.push_back(5);`
-      + ` dq.push_front(9); cout << dq.front() << dq.back() << dq.size(); }`)
-    expect(r.err).toBe('')
-    expect(r.out, '🔴 放錯端的話最前面會是 3').toBe('953')
+    // 🔴 放錯端的話最前面會是 3
+    await run(`${H}int main(){ deque<int> dq; dq.push_back(3); dq.push_back(5);`
+      + ` dq.push_front(9); cout << dq.front() << dq.back() << dq.size(); }`, '953')
   })
 
   it('🔴 execute：接收者帶下標也認得（`d2[3].push_front(x)`）', async () => {
-    const r = await run(`${H}deque<int> d2[5];\nint main(){ d2[3].push_back(7);`
-      + ` d2[3].push_front(4); cout << d2[3].front() << d2[3].back(); }`)
-    expect(r.err, '🔴 帶下標的接收者在組裝時被壓成字串——要走 receiverOf').toBe('')
-    expect(r.out).toBe('47')
+    // 🔴 帶下標的接收者在組裝時被壓成字串——要走 receiverOf
+    await run(`${H}deque<int> d2[5];\nint main(){ d2[3].push_back(7);`
+      + ` d2[3].push_front(4); cout << d2[3].front() << d2[3].back(); }`, '47')
   })
 
   it('🔴 execute：字串的元素不得被壓成 0', async () => {
     // 🪦 同族那顆「在尾端加入」的元件曾經寫 `elemType ?? 'int'`，於是
     //    `deque<string>` 的元素變成 0——程式跑完、印出東西、而它是錯的。
-    const r = await run(`${H}int main(){ deque<string> d; d.push_front("ab");`
-      + ` d.push_front("cd"); cout << d.front() << d.back(); }`)
-    expect(r.err).toBe('')
-    expect(r.out, '🔴 不知道元素型別就不要假裝知道').toBe('cdab')
+    // 🔴 不知道元素型別就不要假裝知道
+    await run(`${H}int main(){ deque<string> d; d.push_front("ab");`
+      + ` d.push_front("cd"); cout << d.front() << d.back(); }`, 'cdab')
   })
 })

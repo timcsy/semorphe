@@ -7,7 +7,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const args = splitTypeArgs(String(n.properties?.type ?? 'int')).map((x) => f.type(x, n))
     if (!args.every(Boolean)) return []
     const t = f.k('tTemplate', { name: 'deque', args })
-    if (f.one(n, 'source')) return [f.miss(n, '從另一個容器建 deque 還沒有對應')]
+    // `deque<int> b = a;`：複製初始化（spec 199 補上，照 vector 的送法）
+    const source = f.one(n, 'source')
+    if (source) return f.declInit(n, t, f.k('iE', { e: f.expr(source) }), global)
     const values = n.slots?.values ?? []
     if (values.length > 0) return f.declInit(n, t, f.braceList(n, 'values'), global)
     // `deque<int> d(n)`、`deque<int> d(n, v)`：大小與填值是建構子的引數

@@ -15,7 +15,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, runCella, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -36,11 +36,9 @@ const ids = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) ids(k, out)
   return out
 }
-const run = async (body: string, glob = ''): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try { await i.execute(lift(body, glob)); return { out: i.getOutput().join(''), err: '' } }
-  catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (body: string, expected: string, glob = '') =>
+  expectCellaOut(`${H}${glob}\nint main(){ ${body} return 0; }`, expected)
 const gen = (body: string): string =>
   generateCode(lift(body), 'cpp', apcs as unknown as StylePreset)
 
@@ -74,33 +72,28 @@ describe('膠囊自證：位置的相鄰一格', () => {
     expect(code).not.toContain('- 1')
   })
 
-  it('★ execute：有序容器的最後一個（語料 10/10 處的形狀）', async () => {
-    const r = await run('set<int> s{5,1,9}; cout << *prev(s.end());')
-    expect(r.err).toBe('')
-    expect(r.out).toBe('9')
-  })
+  // 🟡 Cella 0.1.202611020258 判錯：spec 199 把 set 的大括號初始值改走 braceList（原本包成 iE，判 unknown「braced list … not known」）之後，判 reject「no matching constructor for … std::set」（已回報）；期望值 g++ 實測 9
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：有序容器的最後一個（語料 10/10 處的形狀）', () => knownCellaGap(/no matching constructor/, async () => {
+    await run('set<int> s{5,1,9}; cout << *prev(s.end());', '9')
+  }))
 
   it('★ execute：`next` 從開頭往後一格', async () => {
-    const r = await run('vector<int> v{7,8,9}; cout << *next(v.begin());')
-    expect(r.err).toBe('')
-    expect(r.out).toBe('8')
+    await run('vector<int> v{7,8,9}; cout << *next(v.begin());', '8')
   })
 
-  it('★ execute：拿它當刪除的目標（語料 2 處）', async () => {
-    const r = await run('set<int> s{1,2,3}; s.erase(prev(s.end())); for(int x : s) cout << x;')
-    expect(r.err).toBe('')
-    expect(r.out).toBe('12')
-  })
+  // 🟡 釘子：同上，`set<int> s{1,2,3}` 的串列建構被判 reject；期望值 g++ 實測 12
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：拿它當刪除的目標（語料 2 處）', () => knownCellaGap(/no matching constructor/, async () => {
+    await run('set<int> s{1,2,3}; s.erase(prev(s.end())); for(int x : s) cout << x;', '12')
+  }))
 
   /**
    * 🔴 **反向的位置，「前一個」要往後走**——而那是 `movePointer` 做的，
    * 這顆不得再翻一次。翻兩次的症狀是**順序安靜地反過來**，不是報錯。
    */
-  it('🔴 execute：反向的位置上方向不得被翻兩次', async () => {
-    const r = await run('vector<int> v{1,2,3}; auto it = v.rbegin(); cout << *next(it);')
-    expect(r.err).toBe('')
-    expect(r.out).toBe('2')
-  })
+  // 🟡 Cella 0.1.202611020258 判 unknown：the model's 'std::vector<int>' has no member 'rbegin'，已回報；期望值 g++ 實測 2
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：反向的位置上方向不得被翻兩次', () => knownCellaGap(/no member 'rbegin'/, async () => {
+    await run('vector<int> v{1,2,3}; auto it = v.rbegin(); cout << *next(it);', '2')
+  }))
 
   it('★ round-trip：產回去再 lift，身分不變', () => {
     const once = gen('set<int> s{1,2}; auto a = prev(s.end());')
@@ -166,9 +159,12 @@ describe('膠囊自證：位置的相鄰一格', () => {
     expect(got).not.toContain('cpp:pointer_step')
   })
 
+  // 真的 C++ 編不過（g++ 實測：no matching function for call to 'prev'）；原本斷言的錯誤訊息文字是 JS 直譯器的。
+  //    換成 Cella 之後改錨判決：不得被 accept，而且要指得出是哪一段。
   it('🔴 execute：接到的不是一個位置時要出聲，而且說得出是誰', async () => {
-    const r = await run('int n = 5; cout << *prev(n);')
-    expect(r.err).toContain('prev')
-    expect(r.err).toContain('位置')
+    const r = await runCella(`${H}\nint main(){ int n = 5; cout << *prev(n); return 0; }`)
+    expect(r.verdict).toBe('reject')
+    expect(r.problems.map((p) => p.kind)).toContain('reject')
+    expect(r.problems.some((p) => p.source?.text.includes('prev(n)'))).toBe(true)
   })
 })

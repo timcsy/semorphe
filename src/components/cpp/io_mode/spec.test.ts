@@ -21,7 +21,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -42,13 +42,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(c, expected)
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 const prog = (body: string): string => `${H}int main(){ ${body} return 0; }`
 
@@ -102,15 +97,11 @@ describe('膠囊自證：I/O 操縱子三顆', () => {
   })
 
   it('🔴 execute：欄寬只影響下一項，用掉就沒了', async () => {
-    const r = await run(prog(`cout << setw(4) << 7 << 8;`))
-    expect(r.err).toBe('')
-    expect(r.out).toBe('   78')
+    await run(prog(`cout << setw(4) << 7 << 8;`), '   78')
   })
 
   it('🔴 execute：補位的字會影響欄寬怎麼補（兩個設定互相影響）', async () => {
-    const r = await run(prog(`cout << setfill('0') << setw(3) << 5 << ',' << setw(3) << 6;`))
-    expect(r.err).toBe('')
-    expect(r.out).toBe('005,006')
+    await run(prog(`cout << setfill('0') << setw(3) << 5 << ',' << setw(3) << 6;`), '005,006')
   })
 
   /**
@@ -118,16 +109,15 @@ describe('膠囊自證：I/O 操縱子三顆', () => {
    * 而它只有在兩顆一起用的時候才看得出來。
    */
   it('🔴 execute：位數的意思跟著數字的寫法走', async () => {
-    const a = await run(prog(`cout << setprecision(2) << 3.14159;`))
-    expect(a.out, '🔴 沒選寫法時是【總共兩位有效數字】').toBe('3.1')
-    const b = await run(prog(`cout << fixed << setprecision(2) << 3.14159;`))
-    expect(b.out, '🔴 選了固定小數之後是【小數點後兩位】').toBe('3.14')
+    // 🔴 沒選寫法時是【總共兩位有效數字】
+    await run(prog(`cout << setprecision(2) << 3.14159;`), '3.1')
+    // 🔴 選了固定小數之後是【小數點後兩位】
+    await run(prog(`cout << fixed << setprecision(2) << 3.14159;`), '3.14')
   })
 
   it('🔴 execute：印零個字的那一項不得吃掉欄寬', async () => {
-    const r = await run(prog(`cout << setw(3) << fixed << 7;`))
-    expect(r.err).toBe('')
-    expect(r.out, '🔴 那個 3 要給 7，不是給 fixed').toBe('  7')
+    // 🔴 那個 3 要給 7，不是給 fixed
+    await run(prog(`cout << setw(3) << fixed << 7;`), '  7')
   })
 
   /**
@@ -135,15 +125,11 @@ describe('膠囊自證：I/O 操縱子三顆', () => {
    * 這一條驗的是「它不會弄壞任何東西」，不是「它做了什麼」。
    */
   it('★ execute：送出不改變輸出', async () => {
-    const r = await run(prog(`cout << "ab" << flush << "cd";`))
-    expect(r.err).toBe('')
-    expect(r.out).toBe('abcd')
+    await run(prog(`cout << "ab" << flush << "cd";`), 'abcd')
   })
 
   it('🔴 execute：設定一直有效，直到被改掉', async () => {
-    const r = await run(prog(`cout << setprecision(2) << 1.23456 << ' ' << 2.34567;`))
-    expect(r.err).toBe('')
-    expect(r.out).toBe('1.2 2.3')
+    await run(prog(`cout << setprecision(2) << 1.23456 << ' ' << 2.34567;`), '1.2 2.3')
   })
 
   /**
@@ -151,8 +137,8 @@ describe('膠囊自證：I/O 操縱子三顆', () => {
    * 而那種污染的症狀是「單獨跑綠、整批跑紅」。
    */
   it('🔴 execute：上一次執行的設定不得洩漏到下一次', async () => {
-    await run(prog(`cout << fixed << setprecision(4) << 1.0;`))
-    const r = await run(prog(`cout << 1.0 / 3;`))
-    expect(r.out, '🔴 上一次的設定洩漏了').toBe('0.333333')
+    await run(prog(`cout << fixed << setprecision(4) << 1.0;`), '1.0000')
+    // 🔴 上一次的設定若洩漏，這裡會是 0.3333
+    await run(prog(`cout << 1.0 / 3;`), '0.333333')
   })
 })

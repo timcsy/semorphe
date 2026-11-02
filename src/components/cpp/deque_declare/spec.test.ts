@@ -20,7 +20,7 @@ import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { generateCode } from '../../../core/projection/code-generator'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 import apcs from '../../../languages/cpp/styles/apcs.json'
@@ -47,11 +47,10 @@ function ids(n: SemanticNode | null, out = new Set<string>()): Set<string> {
   return out
 }
 
-async function run(code: string): Promise<string> {
-  const interp = new SemanticInterpreter()
-  await interp.execute(lift(code)!, [])
-  return interp.getOutput().join('')
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+// 測試裡的片段沒寫標頭；交給 Cella 的是補上標頭的完整程式
+const run = (code: string, expected: string) =>
+  expectCellaOut('#include <bits/stdc++.h>\nusing namespace std;\n' + code, expected)
 
 describe('cpp:deque_declare 自證測', () => {
   // ── 後設檢查：這支測試真的碰到這顆元件了嗎 ──────────────
@@ -75,24 +74,29 @@ describe('cpp:deque_declare 自證測', () => {
     }
   })
 
-  it('正向：建構子引數 `deque<int> d(3)` 產得回去，而且真的有三格', async () => {
+  it('正向：建構子引數 `deque<int> d(3)` 產得回去', () => {
     const src = 'int main() { deque<int> d(3); cout << d.size() << d[0]; }'
     expect(generateCode(lift(src)!, 'cpp', style)).toContain('deque<int> d(3);')
-    expect(await run(src)).toBe('30')
   })
+
+  // 🟡 Cella 0.1.202611020258 判錯：`deque<int> d(3);` 判 reject「no matching constructor for initialization of 'std::deque<int>'」
+  //    （formalize 送的是一個引數的建構子；真的 C++ 合法，g++ 實測印 30），已回報
+  //    （原本這一條與上一條的 generate 寫在同一個 it 裡；拆開是為了讓 generate 那一半照跑）
+  it('🟡 已知缺陷（修好時這條會紅）：正向：`deque<int> d(3)` 真的有三格', () => knownCellaGap(/no matching constructor/, async () => {
+    await run('int main() { deque<int> d(3); cout << d.size() << d[0]; }', '30')
+  }))
 
   it('★ 語義：它記得住元素型別（推導不出來的那一條）', async () => {
     // 🔴 沒有這顆元件的話 `{1,2}` 只是「兩個數字」，而 `.first` 說「不是一個結構」
-    expect(await run(
-      'int main() { deque<pair<int,int>> q; q.push_back({1,2}); cout << q[0].first << q.front().second; }',
-    )).toBe('12')
+    await run(
+      'int main() { deque<pair<int,int>> q; q.push_back({1,2}); cout << q[0].first << q.front().second; }', '12')
   })
 
-  it('★ 語義：運算式初始值是**複製**不是共用', async () => {
-    expect(await run(
-      'int main() { deque<int> a = {1, 2}; deque<int> b = a; b.pop_back(); cout << a.size() << b.size(); }',
-    )).toBe('21')
-  })
+  // 🟡 Cella 0.1.202611020258 判錯：spec 199 補上複製初始化的 formalize 之後，走到的是 `deque<int> a = {1, 2};` 被判 reject「no matching constructor」（與 `d(3)` 同一族，已回報）；期望值 g++ 實測 21
+  it('🟡 已知缺陷（修好時這條會紅）：★ 語義：運算式初始值是**複製**不是共用', () => knownCellaGap(/no matching constructor/, async () => {
+    await run(
+      'int main() { deque<int> a = {1, 2}; deque<int> b = a; b.pop_back(); cout << a.size() << b.size(); }', '21')
+  }))
 
   // ── 負向（不可省）────────────────────────────────────────
   it('負向：其他容器不得被認領成雙端佇列', () => {

@@ -119,3 +119,19 @@ export async function expectCellaOut(code: string, expected: string, opts: Cella
   }
   return r
 }
+
+/**
+ * 已知缺陷的釘子（spec 199）：包住一段原本用 `expectCellaOut` 寫的本體，斷言它【還】失敗、而且原因吻合 `why`。
+ * 缺陷還在＝綠；修好的那天（本體不再丟錯）它會紅——那時拿掉這層包裝。原因變了（換成另一個缺陷）也會紅。
+ * 不用 `it.skip`：skip 在缺陷修好時一聲都不出，也不檢查缺陷是不是還是同一個（`audit-defect-ledger` 的棘輪也不准 skip 變多）。
+ */
+export async function knownCellaGap(why: RegExp, body: () => Promise<unknown>): Promise<void> {
+  try {
+    await body()
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    if (why.test(msg)) return
+    throw new Error(`已知缺陷的形狀變了（期望原因吻合 ${why}）：\n${msg}`)
+  }
+  throw new Error('這個已知缺陷不在了：本體整段通過——拿掉 knownCellaGap 這層包裝，讓它變回一般的測試')
+}

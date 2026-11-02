@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -24,11 +24,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (body: string): Promise<string> => {
-  const i = new SemanticInterpreter({ maxSteps: 200000 })
-  await i.execute(lift(body))
-  return i.getOutput().join('')
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (body: string, expected: string) => expectCellaOut(H + `int main(){ ${body} }`, expected)
 
 describe('膠囊自證：cpp:vector_make', () => {
   it('★ lift：認得，且不落進殘差', () => {
@@ -47,20 +44,20 @@ describe('膠囊自證：cpp:vector_make', () => {
   })
 
   it('★ execute：二維向量讀得到', async () => {
-    expect(await run('vector<vector<int>> g(2, vector<int>(3, 7)); cout << g[1][2];')).toBe('7')
+    await run('vector<vector<int>> g(2, vector<int>(3, 7)); cout << g[1][2];', '7')
   })
 
   it('★ execute：**每一列是獨立的複本**', async () => {
     // 🔴 共用同一個列物件的話，`g[0][0] = 9` 會同時改到 `g[1][0]`
     // ——而症狀離現場很遠：程式跑完、印出東西、而它是錯的。
-    expect(await run('vector<vector<int>> g(2, vector<int>(3, 0)); g[0][0]=9; cout << g[1][0];')).toBe('0')
+    await run('vector<vector<int>> g(2, vector<int>(3, 0)); g[0][0]=9; cout << g[1][0];', '0')
   })
 
   it('★ 一維的填充值形式（不得因為修二維而壞掉）', async () => {
-    expect(await run('vector<int> v(3, 5); cout << v[0] << v[2];')).toBe('55')
+    await run('vector<int> v(3, 5); cout << v[0] << v[2];', '55')
   })
 
   it('★ 只有大小時仍是預設值', async () => {
-    expect(await run('vector<int> v(3); cout << v.size() << v[0];')).toBe('30')
+    await run('vector<int> v(3); cout << v.size() << v[0];', '30')
   })
 })
