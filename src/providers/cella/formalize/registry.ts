@@ -27,7 +27,7 @@ export interface FormalizeTables {
   init: Map<string, (n: SemanticNode, f: FormalizeContext) => CellaJson>
   constInt: Map<string, (n: SemanticNode, f: FormalizeContext) => number | null>
   definesType: Map<string, (n: SemanticNode) => string>
-  definesMacro: Map<string, (n: SemanticNode) => { name: string; value: string } | null>
+  definesMacro: Map<string, (n: SemanticNode) => { name: string; value: string; function?: boolean } | null>
   literal: Map<string, (text: string) => boolean>
   scope: Map<string, (n: SemanticNode, w: ScopeWalker) => void>
 }

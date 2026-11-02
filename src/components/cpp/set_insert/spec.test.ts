@@ -10,7 +10,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -30,12 +30,10 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
+// spec 200（重構 6c-2b）：執行的判準從 JS 直譯器換成 Cella——不是 accept 的話 err 是說得出原因的判決描述
+const run = async (c: string): Promise<{ out: string; err: string; verdict: string }> => {
+  const r = await runCella(c)
+  return { out: r.out, err: r.verdict === 'accept' ? '' : describeCellaResult(r), verdict: r.verdict }
 }
 const H = '#include <iostream>\n#include <set>\n#include <vector>\nusing namespace std;\n'
 const S = apcs as unknown as StylePreset
@@ -71,9 +69,11 @@ describe('膠囊自證：集合的插入', () => {
     expect(r.out, '🔴 修之前這裡是 35——少掉的那個 5 不會有人發現').toBe('355')
   })
 
-  it('🔴 接收者不是集合時要【出聲】，不得安靜地去重排序', async () => {
+  // 🔴 spec 200：`vector<int>::insert(3)` 在真的 C++ 編不過（vector 的 insert 要一個位置）——要被判 reject。
+  // 原本的斷言是「錯誤訊息非空且提到 v」：換成 Cella 之後它會因為【未支援】而假綠，所以收緊成判決種類。
+  // 🟡 Cella 0.1.202611020258 判 unknown：vector 沒有 insert 成員，已回報。
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 接收者不是集合時要【出聲】，不得安靜地去重排序', () => knownCellaGap(/no member 'insert'/, async () => {
     const r = await run(`${H}int main(){ vector<int> v; v.insert(3); cout << v.size(); }`)
-    expect(r.err, '🔴 安靜地當成集合處理的話，學生的 vector 會被重新排過').not.toBe('')
-    expect(r.err).toContain('v')
-  })
+    expect(r.verdict, r.err).toBe('reject')
+  }))
 })

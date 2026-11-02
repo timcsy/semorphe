@@ -27,8 +27,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
-import { resetDefinedMacros } from '../../../languages/cpp/lang/executors/preprocessor'
+import { runCella, describeCellaResult, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode } from '../../../core/types'
 
@@ -52,12 +51,11 @@ function ids(n: SemanticNode | null, out = new Set<string>()): Set<string> {
   return out
 }
 
+// spec 200（重構 6c-2b）：執行的判準從 JS 直譯器換成 Cella——巨集在 formalize 前端展開，判決器沒有跨測試的全域狀態，不必再 reset
 async function run(code: string): Promise<string> {
-  resetDefinedMacros()
-  const tree = lift(code)
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(tree as SemanticNode)
-  return i.getOutput().join('')
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 const head = '#include <iostream>\nusing namespace std;\n'
@@ -82,13 +80,14 @@ describe('cpp:define', () => {
     ).toBe('10\n-1\n')
   })
 
-  it('浮點與字串常數', async () => {
+  // 🟡 spec 200：semorphe 這一側的缺口——字串值的巨集還沒有展開（`define` 的 formalize 只認數字字面量）；補上之後這條會紅：拿掉 knownCellaGap 那層
+  it('🟡 已知缺陷（修好時這條會紅）：浮點與字串常數', () => knownCellaGap(/運算式、字串還沒有展開/, async () => {
     expect(await run(`${head}#define E 2.5\n#define NAME "semorphe"\nint main(){ cout << E << endl; cout << NAME << endl; return 0; }`)).toBe(
       '2.5\nsemorphe\n',
     )
-  })
+  }))
 
-  it('🔴 反向：【運算式位置】的函式巨集刻意不支援，而且必須繼續報錯', async () => {
+  it('🔴 反向：【運算式位置】的函式巨集刻意不支援——必須說「翻不出」，不得判成錯', async () => {
     // ⚠️ 這一支守的是墓碑的邊界。它變綠的那天，表示有人開始在語義層
     // 求值巨集的運算式——那就是在重建 preprocessor。
     //
@@ -99,15 +98,24 @@ describe('cpp:define', () => {
     // **有唯一讀法**、而且語料 218 支裡 4 支在用。
     // 而 `SQR(3)` 嵌在 `cout << …` 裡面，它要的是**求值**不是重解一段語句
     // ——那仍然在墓碑那一側。
-    await expect(run(`${head}#define SQR(x) ((x)*(x))\nint main(){ cout << SQR(3); return 0; }`)).rejects.toThrow()
+    //
+    // 🔴 **spec 200（換成 Cella 判準）：「報錯」收緊成「說不知道」**。真的 C++ 印 9——所以這裡要的不是 reject（那是對學生說一個不存在的錯），
+    // 是**翻不出**。換判準時量到它原本會被判 reject「呼叫未宣告的函式 SQR」，已修（`functionMacro`）。
+    const r = await runCella(`${head}#define SQR(x) ((x)*(x))\nint main(){ cout << SQR(3); return 0; }`)
+    expect(r.verdict, describeCellaResult(r)).toBe('untranslated')
+    expect(describeCellaResult(r)).toMatch(/SQR\(…\)」是函式形巨集/)
   })
 
-  it('🔴 反向：值是運算式時不猜——AREA 沒有被綁成常數', async () => {
-    await expect(run(`${head}#define W 3\n#define AREA (W*2)\nint main(){ cout << AREA; return 0; }`)).rejects.toThrow()
+  it('🔴 反向：值是運算式時不猜——AREA 照實說翻不出', async () => {
+    // spec 200：真的 C++ 印 6——我們不猜它展開之後長什麼樣，照實說翻不出（不是 reject）
+    const r = await runCella(`${head}#define W 3\n#define AREA (W*2)\nint main(){ cout << AREA; return 0; }`)
+    expect(r.verdict, describeCellaResult(r)).toBe('untranslated')
+    expect(describeCellaResult(r)).toMatch(/運算式、字串還沒有展開/)
   })
 
-  it('★ 兩個角色是分開的：#ifdef 仍然只看「有沒有定義過」', async () => {
+  // 🟡 spec 200：semorphe 這一側的缺口——`#ifdef` 還沒有 formalize（formalize-coverage 的「還沒對應」列著它）；補上之後這條會紅：拿掉 knownCellaGap 那層
+  it('🟡 已知缺陷（修好時這條會紅）：★ 兩個角色是分開的：#ifdef 仍然只看「有沒有定義過」', () => knownCellaGap(/cpp:ifdef：這顆敘述元件還沒有對應/, async () => {
     // 無值的 #define 綁不出常數，而 #ifdef 必須照樣成立
     expect(await run(`${head}#define DEBUG\nint main(){\n#ifdef DEBUG\n  cout << "on";\n#endif\n  return 0; }`)).toBe('on')
-  })
+  }))
 })

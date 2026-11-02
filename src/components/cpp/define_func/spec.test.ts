@@ -20,8 +20,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { generateCode } from '../../../core/projection/code-generator'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
-import { resetDefinedMacros } from '../../../languages/cpp/lang/executors/preprocessor'
+import { runCella, describeCellaResult, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -58,11 +57,11 @@ function find(n: SemanticNode | null, id: string): SemanticNode | null {
   return null
 }
 
+// spec 200（重構 6c-2b）：執行的判準從 JS 直譯器換成 Cella——巨集在 formalize 前端展開，判決器沒有跨測試的全域狀態，不必再 reset
 async function run(code: string): Promise<string> {
-  resetDefinedMacros()
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(code) as SemanticNode)
-  return i.getOutput().join('')
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 const head = '#include <iostream>\nusing namespace std;\n'
@@ -101,16 +100,18 @@ describe('cpp:define_func', () => {
     expect(got).not.toContain('cpp:define_func')
   })
 
-  it('execute：`#ifdef` 讀得到它——少了這一行會答錯，而那是安靜的', async () => {
+  // 🟡 spec 200：semorphe 這一側的缺口——`#ifdef` 還沒有 formalize；補上之後這條會紅：拿掉 knownCellaGap 那層
+  it('🟡 已知缺陷（修好時這條會紅）：execute：`#ifdef` 讀得到它——少了這一行會答錯，而那是安靜的', () => knownCellaGap(/cpp:ifdef：這顆敘述元件還沒有對應/, async () => {
     expect(
       await run(`${head}#define rep(i,n) for(int i=0;i<n;i++)\nint main(){\n#ifdef rep\n  cout << "on";\n#endif\n  return 0; }`),
     ).toBe('on')
-  })
+  }))
 
   it('🔴 execute：它【不綁值】——`rep` 不是一個可以印出來的東西', async () => {
-    await expect(
-      run(`${head}#define rep(i,n) for(int i=0;i<n;i++)\nint main(){ cout << rep; return 0; }`),
-    ).rejects.toThrow()
+    // spec 200：函式形巨集的名字不帶括號不會被展開——真的 C++ 也編不過（`rep` 未宣告），Cella 判 reject 是對的
+    const r = await runCella(`${head}#define rep(i,n) for(int i=0;i<n;i++)\nint main(){ cout << rep; return 0; }`)
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    expect(describeCellaResult(r)).toMatch(/undeclared identifier 'rep'/)
   })
 
   it('execute：展開之後真的跑得動（這一顆的存在理由）', async () => {

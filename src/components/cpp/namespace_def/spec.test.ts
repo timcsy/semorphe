@@ -18,7 +18,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { runCella, describeCellaResult } from '../../../../tests/helpers/cella-run'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode } from '../../../core/types'
 
@@ -42,13 +42,15 @@ function ids(n: SemanticNode | null, out = new Set<string>()): Set<string> {
   return out
 }
 
+// spec 200（重構 6c-2b）：執行的判準從 JS 直譯器換成 Cella——不是 accept 就丟出說得出原因的判決描述
 async function run(code: string): Promise<string> {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(code) as SemanticNode)
-  return i.getOutput().join('')
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 const head = '#include <iostream>\nusing namespace std;\n'
+
 
 describe('cpp:namespace_def', () => {
   it('★ 正向錨點：這段碼真的產生了 cpp:namespace_def', () => {
@@ -69,18 +71,19 @@ describe('cpp:namespace_def', () => {
     ).toBe('5\n6\n')
   })
 
-  it('★ 裸名仍然叫得到——沒有名稱隔離的另一面', async () => {
-    // ⚠️ 這在真的 C++ 裡是錯的（要 using 或限定），而在這個直譯器裡**刻意**成立。
-    // 釘住它，是因為它是上面那條退回查找的前提；哪天要做真的隔離，這支會紅，
-    // 而那時該紅——它在說「你正在改變一個被依賴的設計」。
-    expect(await run(`${head}namespace Math {\n  int square(int x){ return x * x; }\n}\nint main(){ cout << square(4) << endl; return 0; }`)).toBe(
-      '16\n',
-    )
+  it('🔴 裸名【叫不到】——namespace 的名字是隔離的', async () => {
+    // spec 200：這一條原本斷言「裸名叫得到」——那是 JS 直譯器**刻意**做錯的地方（它的註解逐字寫著「這在真的 C++ 裡是錯的」），
+    // 用來撐住它的退回查找。換成 Cella 之後改成 C++ 的答案：`square` 沒有在全域宣告，要被判 reject。
+    const r = await runCella(`${head}namespace Math {\n  int square(int x){ return x * x; }\n}\nint main(){ cout << square(4) << endl; return 0; }`)
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    expect(describeCellaResult(r)).toMatch(/undeclared|square/)
   })
 
   it('🔴 反向：不存在的限定名仍然要報錯——退回查找不得吞掉錯誤', async () => {
     // 沒有這一支的話，一個「限定名一律當成成功」的實作也會通過上面全部。
-    await expect(run(`${head}namespace Math {\n  int square(int x){ return x * x; }\n}\nint main(){ cout << Math::cube(5); return 0; }`)).rejects.toThrow()
+    const r = await runCella(`${head}namespace Math {\n  int square(int x){ return x * x; }\n}\nint main(){ cout << Math::cube(5); return 0; }`)
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    expect(describeCellaResult(r), '要指名那個不存在的名字').toMatch(/cube/)
   })
 
   it('🔴 反向：完整名優先於裸名', async () => {

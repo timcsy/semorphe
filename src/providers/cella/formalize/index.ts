@@ -223,9 +223,11 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
 
   // 物件巨集（spec 197）：哪一顆定義巨集、哪一顆認得字面量的文字，都由元件自己登記——核心不認識任何一顆元件
   const macros = new Map<string, string>()
+  const functionMacros = new Set<string>()
   const collectMacros = (n: SemanticNode): void => {
     const m = FORMALIZE.definesMacro.get(n.componentId)?.(n)
-    if (m) macros.set(m.name, m.value.trim())
+    if (m?.function) functionMacros.add(m.name)
+    else if (m) macros.set(m.name, m.value.trim())
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(collectMacros)
   }
   collectMacros(tree)
@@ -337,6 +339,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       const v = macros.get(name)
       return v !== undefined && /^[A-Za-z_]\w*$/.test(v) ? v : name
     },
+    functionMacro: (name) => functionMacros.has(name),
+    item: (n) => item(n),
     nodeById: (id) => byId.get(id),
     member: (m) => {
       const fn = FORMALIZE.member.get(m.componentId)
