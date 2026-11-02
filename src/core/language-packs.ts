@@ -211,6 +211,8 @@ export interface LanguagePack extends Pack {
    * 樹裡宣告過的名字由判決診斷自己收；這裡只放不在樹裡、卻常被打錯的那些。
    */
   wellKnownNames?: readonly string[]
+  /** **串流名 → 它要配的運算子**（spec 207）——`cin < x` 這種配錯時給提示；沒有串流的語言不給 */
+  streamOperators?: Readonly<Record<string, string>>
   /**
    * **這個語言的風格例外**——偵測、轉換、以及 I/O 符合度分析。
    *

@@ -152,3 +152,41 @@ describe('近似名的建議（Cella 判未宣告）', () => {
     expect(d[0]).toMatchObject({ rule: 'CELLA_REJECT' })
   })
 })
+
+/**
+ * spec 207：**串流配錯運算子**——`cin < x`、`cout < "Hi" << endl` 判決給的是「invalid operands」或指著 `endl` 說「不是 C++」，
+ * 說不出「cin 要配 >>」。比較運算的左邊是串流時，那一定是配錯（輸出入串流不能比大小）——判決是 reject 時給提示，
+ * 並**取代**落在同一個比較運算子樹裡的那則 reject（否則學生同時看到一句對的和一句讓人更困惑的）。
+ * 哪些名字是串流、該配哪個運算子：語言給（`LanguagePack.streamOperators`）。
+ */
+describe('串流配錯運算子', () => {
+  const streams = { cout: '<<', cerr: '<<', cin: '>>' }
+  const mk = (stream: string, op: string, right: SemanticNode) => {
+    const left = createNode('cpp:var_ref', { name: stream }, {})
+    const cmp = createNode('cpp:compare', { operator: op }, { left: [left], right: [right] })
+    return { cmp, t: createNode('cpp:program', {}, { body: [cmp] }) }
+  }
+  const go = (t: SemanticNode, verdict: Verdict) => toDiagnostics({ verdict, types: null, tree: t, readsInput: false, hasStdin: false, streamOperators: streams })
+
+  it('★ cin < x → 「cin 要配 >>」，取代 invalid operands 那一則', () => {
+    const { cmp, t } = mk('cin', '<', createNode('cpp:var_ref', { name: 'x' }, {}))
+    const d = go(t, v('reject', [{ kind: 'reject', at: cmp.id, reason: 'invalid operands to a binary operator' }])).diagnostics
+    expect(d).toEqual([expect.objectContaining({ nodeId: cmp.id, rule: 'STREAM_OPERATOR_SUGGEST', params: expect.objectContaining({ stream: 'cin', op: '<', want: '>>' }) })])
+  })
+  it('★ cout < "Hi" << endl → 「cout 要配 <<」，取代指著 endl 的那一則', () => {
+    const endl = createNode('cpp:endl', {}, {})
+    const right = createNode('cpp:arithmetic', { operator: '<<' }, { left: [createNode('cpp:literal_string', { value: 'Hi' }, {})], right: [endl] })
+    const { cmp, t } = mk('cout', '<', right)
+    const d = go(t, v('reject', [{ kind: 'reject', at: endl.id, reason: 'this construct is not part of C++' }])).diagnostics
+    expect(d.map((x) => [x.nodeId, x.rule])).toEqual([[cmp.id, 'STREAM_OPERATOR_SUGGEST']])
+  })
+  it('判決不是 reject → 不提示（比較運算的左邊碰巧叫 cin 的合法程式不受影響）', () => {
+    const { t } = mk('cin', '<', createNode('cpp:var_ref', { name: 'x' }, {}))
+    expect(go(t, v('accept')).diagnostics).toEqual([])
+  })
+  it('左邊不是串流 → 照原本的 reject', () => {
+    const { cmp, t } = mk('n', '<', createNode('cpp:var_ref', { name: 'x' }, {}))
+    const d = go(t, v('reject', [{ kind: 'reject', at: cmp.id, reason: 'invalid operands to a binary operator' }])).diagnostics
+    expect(d[0]).toMatchObject({ rule: 'CELLA_REJECT' })
+  })
+})

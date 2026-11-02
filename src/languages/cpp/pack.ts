@@ -132,6 +132,8 @@ declareLanguagePack({
   diagnosticRules: cppDiagnosticRules as never,
   // 近似名建議的候選（spec 206）：串流與常用函式——學生最常打錯大小寫的那幾個
   wellKnownNames: ['cout', 'cin', 'cerr', 'endl', 'printf', 'scanf', 'string', 'vector', 'main', 'return'],
+  // 串流配錯運算子的提示（spec 207）：輸出串流配 <<、輸入串流配 >>
+  streamOperators: { cout: '<<', cerr: '<<', clog: '<<', cin: '>>' },
   createCodeShaping: () => {
     // ⚠️ 這一份登記表被**四個消費者**共用（相依解析、鷹架、修補、自動引入）
     //    ——所以在這裡建一次，交出去，而不是讓組裝點傳來傳去。

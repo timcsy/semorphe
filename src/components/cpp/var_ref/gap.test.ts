@@ -81,8 +81,7 @@ describe('串流名字不是變數（Cella）', () => {
   /**
    * 🟢 spec 205 T011（D4）修好一半：formalize 原本不收「運算式當敘述」，`cout <`、`cin <`、`Cout <<` 都翻不出，
    * 學生看到「Cella 還不支援」——把學生的錯說成系統的能力不足。現在照實送出，判決**歸類成學生的錯（reject）並指到那一行**。
-   * 🟡 **還開著的是友善建議（診斷層要補，修好時下面三條會紅）**：判決給的是 clang 式的說法，說不出「要配 <<」「要配 >>」
-   * 「是 cout、它不是變數」（clang 自己的說法是 `did you mean 'cout'?`）。
+   * 🟢 友善建議由判決診斷補上：「是 cout」（spec 206，近似名）、「要配 << ／ >>」（spec 207，串流配錯運算子）——見下面兩組。
    */
   it.each([
     ['cout <', 'int main(){ cout < "Hello!" << endl; }'],
@@ -94,12 +93,18 @@ describe('串流名字不是變數（Cella）', () => {
     expect(r.problems[0]?.source?.line, '要指得到是哪一行').toBeGreaterThan(0)
   })
 
-  it('🟡 已知缺陷：`cout <` 說不出「要配 <<」（診斷層要補）', async () => {
-    await knownCellaGap(/this construct is not part of C\+\+|invalid operands/, () => expectRejectSaying('int main(){ cout < "Hello!" << endl; }', /<</))
-  })
 
-  it('🟡 已知缺陷：`cin <` 說不出「要配 >>」（診斷層要補）', async () => {
-    await knownCellaGap(/invalid operands/, () => expectRejectSaying('int main(){ int x; cin < x; }', />>/))
+
+  // 🟢 spec 207 修好（原本是兩根釘子）：比較運算的左邊是串流 → 判決診斷說「要配 << ／ >>」，並取代那則讓人困惑的 reject
+  it.each([
+    ['cout <', 'int main(){ cout < "Hello!" << endl; }', 'cout', '<<'],
+    ['cin <', 'int main(){ int x; cin < x; }', 'cin', '>>'],
+  ])('★ `%s`：判決診斷說得出「%s 要配」哪個運算子（產品同一支 toDiagnostics）', async (_n, body, stream, want) => {
+    const r = await run(body)
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    const pack = languagePack('cpp')
+    const { diagnostics } = toDiagnostics({ verdict: r.raw as unknown as Verdict, types: null, tree: r.tree, readsInput: false, hasStdin: false, knownNames: pack?.wellKnownNames, streamOperators: pack?.streamOperators })
+    expect(diagnostics.map((d) => [d.rule, d.params?.stream, d.params?.want])).toEqual([['STREAM_OPERATOR_SUGGEST', stream, want]])
   })
 
   // 🟢 spec 206 修好（原本是釘子）：近似名的建議從 JS 直譯器搬到判決診斷——Cella 判「未宣告的 Cout」，產品的 toDiagnostics 說「是不是要寫 cout」
