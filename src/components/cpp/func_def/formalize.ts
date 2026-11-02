@@ -19,7 +19,10 @@ function defaultOf(q: SemanticNode, f: FormalizeContext): unknown {
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:func_def', (n, f) => {
     const p = n.properties ?? {}
-    const ret = String(p.return_type ?? '') === 'void' ? null : f.type(p.return_type, n)
+    // 回傳型別保留了學生寫的 `static`／`inline`／`extern`／`constexpr`（spec 204：產碼要一字不少）——它們是連結性與求值時機的事，
+    // 在單一翻譯單元裡不改變執行結果，送給 Cella 的型別剝掉
+    const retText = String(p.return_type ?? '').replace(/^(?:(?:static|inline|extern|constexpr)\s+)+/, '')
+    const ret = retText === 'void' ? null : f.type(retText, n)
     // `f(void)`＝沒有參數（C11 6.7.6.3p10）——不是一個型別是 void 的參數（spec 197：`int main(void)` 整支卡在「型別 void 還沒有對應」）
     const raw = n.slots?.params ?? []
     const onlyVoid = raw.length === 1 && String(raw[0].properties?.type ?? '').trim() === 'void' && String(raw[0].properties?.name ?? '').trim() === ''
