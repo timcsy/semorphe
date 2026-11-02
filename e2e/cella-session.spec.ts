@@ -93,3 +93,20 @@ test('Cella 還不支援的程式：退回 JS 直譯器，標出處與原因', a
   await expect(runner(page)).toHaveAttribute('data-provider', 'js-interpreter')
   expect(await runner(page).getAttribute('title')).toMatch(/Cella 沒有接：.*(還不支援|還在準備)/)
 })
+
+/**
+ * 長輸出（spec 205 T008 的驗收）：Cella 0.1.202611021533 把輸出那一路的遞迴改成迴圈——瀏覽器的 worker 裡 2 萬字也要整段印完。
+ * （之前 0.1.202611020258 在本機 Node 印到 6666 字就爆 wasm 的堆疊；瀏覽器的堆疊大小跟 Node 不同，所以要在瀏覽器裡量。）
+ */
+const LONG = '#include <iostream>\nusing namespace std;\nint main() {\n    for (int i = 0; i < 20000; i++) {\n        cout << "x";\n    }\n    return 0;\n}\n'
+
+test('長輸出：Cella 在瀏覽器裡印 2 萬字，整段印完', async ({ page }) => {
+  test.setTimeout(400_000)
+  await freshApp(page)
+  await page.evaluate(() => (window as any).__app.warmUpChecker())
+  await expect(page.locator('#status-check')).toHaveAttribute('data-state', 'ready', { timeout: 180_000 })
+  await feed(page, LONG, 'cpp:print')
+  await selectMode(page, 'run')
+  await runUntilCella(page)
+  await expect.poll(async () => ((await output(page).textContent()) ?? '').split('x').length - 1, { timeout: 60_000 }).toBe(20000)
+})

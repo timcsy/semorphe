@@ -86,10 +86,10 @@ describe('膠囊自證：容器的刪除', () => {
   })
 
   // 🟡 Cella 0.1.202611020258 判 unknown：map 沒有 erase 成員，已回報
-  it('🟡 已知缺陷（修好時這條會紅）：★ execute：對照表刪鍵', () => knownCellaGap(/no member 'erase'/, async () => {
+  it('★ execute：對照表刪鍵', async () => {
     await expectCellaOut(main(
       `map<string,int> m; m["a"]=1; m["b"]=2; m.erase("a"); cout<<m.size()<<m["b"];`), '12')
-  }))
+  })
 
   /**
    * 🟢 字串的 `erase(位置)` 走的是**字元格子**那一條——格子是延遲攤出來並
@@ -98,15 +98,15 @@ describe('膠囊自證：容器的刪除', () => {
   // 🟡 Cella 0.1.202611020258 判 unknown：the model's 'std::string' has no member 'erase'，已回報。
   // ⚠️ 程式從 `string::iterator it` 改成 `auto it`：這一條的主角是 erase(位置)；`string::iterator` 這個型別名 formalize 還不認得（另一個缺口），
   //    留著它的話本體卡在翻不出、量不到 erase。
-  it('🟡 已知缺陷（修好時這條會紅）：★ execute：字串刪一個字，並回傳下一個位置', () => knownCellaGap(/no member 'erase'/, async () => {
+  it('★ execute：字串刪一個字，並回傳下一個位置', async () => {
     await expectCellaOut(main(
       `string s="aXb"; auto it=s.begin(); ++it; it=s.erase(it); cout<<s<<*it;`), 'abb')
-  }))
+  })
 
   // 🔴 spec 200：拿別的字串的位置去刪是未定義行為（[string.modifiers]：位置必須是這個字串的有效迭代器）——要被判 reject。
   // 原本的斷言是「輸出含 ERR=」：換成 Cella 之後它會因為【翻不出 string::iterator】而假綠，所以收緊成判決種類。
   // 🟡 Cella 0.1.202611020258 判 unknown（string 沒有 erase），已回報。
-  it('🟡 已知缺陷（修好時這條會紅）：★ 負向：位置不是這個容器裡的，要出聲而不是刪錯東西', () => knownCellaGap(/no member 'erase'/, async () => {
+  it('🟡 已知缺陷（修好時這條會紅）：★ 負向：位置不是這個容器裡的，要出聲而不是刪錯東西', () => knownCellaGap(/ubPtrOrder/, async () => {
     const r = await runCella(main(
       `string a="ab"; string b="cd"; auto it=b.begin(); a.erase(it); cout<<a;`))
     expect(r.verdict, describeCellaResult(r)).toBe('reject')

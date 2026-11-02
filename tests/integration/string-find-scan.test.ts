@@ -41,12 +41,12 @@ async function run(body: string): Promise<string> {
 }
 
 describe('搜尋的起點', () => {
-  // Cella 判錯：帶起點的 `find(x, pos)` 是合法的 C++（g++ 印 3），Cella 0.1.202611020258 判 reject「no matching member function」
-  it('🟡 已知缺陷（修好時這條會紅）：★ 從指定位置往後找', async () => {
-    await knownCellaGap(/no matching member function for call to 'find'/, async () => expect(
+  // 帶起點的 `find(x, pos)`：g++ 印 3（Cella 0.1.202611020258 曾判 reject，0.1.202611021533 修好）
+  it('★ 從指定位置往後找', async () => {
+    expect(
       (await run('string s = "aXbXc"; cout << s.find("X", 2);')).trim(),
       '起點被丟掉 → 永遠從頭找 → 掃描迴圈**無限跑**',
-    ).toBe('3'))
+    ).toBe('3')
   })
 
   it('★ 沒給起點時從頭找——只驗有起點的話，「一律用起點 0」也會過', async () => {
@@ -66,18 +66,16 @@ describe('找不到時的回傳值', () => {
 
 describe('掃描迴圈——兩個 bug 疊起來的實際症狀', () => {
   // Cella 判錯：同上，`s.find("X", pos)` 被判 reject（g++ 印 2）
-  it('🟡 已知缺陷（修好時這條會紅）：★ 數出所有出現次數（期望值由 g++ 決定）', async () => {
-    await knownCellaGap(/no matching member function for call to 'find'/, async () => {
-      const out = await run(`string s = "aXbXc";
-    int pos = 0;
-    int n = 0;
-    while ((pos = s.find("X", pos)) != -1) {
-        n = n + 1;
-        pos = pos + 1;
-    }
-    cout << n;`)
-      expect(out.trim(), '兩個 bug 湊起來的症狀是**爆步數上限**——離現場很遠').toBe('2')
-    })
+  it('★ 數出所有出現次數（期望值由 g++ 決定）', async () => {
+    const out = await run(`string s = "aXbXc";
+  int pos = 0;
+  int n = 0;
+  while ((pos = s.find("X", pos)) != -1) {
+      n = n + 1;
+      pos = pos + 1;
+  }
+  cout << n;`)
+    expect(out.trim(), '兩個 bug 湊起來的症狀是**爆步數上限**——離現場很遠').toBe('2')
   })
 })
 

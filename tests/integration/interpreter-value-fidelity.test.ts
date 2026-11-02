@@ -73,17 +73,17 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
 
   // ── 根因 4：cpp:range_sum 是回傳 0 的空實作 ──────────────────────
   // 🟡 Cella 0.1.202611020258 判 unknown：std::accumulate is not supported yet（模型未支援；formalize 照 generate 送 eCall，spec 203 補的）
-  it('🟡 已知缺陷（修好時這條會紅）：★ 範圍加總要真的加', () => knownCellaGap(/std::accumulate is not supported/, async () => {
+  it('★ 範圍加總要真的加', async () => {
     // 🔴 修之前回 0——`register('cpp:range_sum', async () => ({ type:'int', value: 0 }))`。
     // ⚠️ 而那個空實作**就寫在同一個檔案裡**「解析不了時擲錯，不回傳『沒事』」
     //    這句話的下面兩行。
     await expectCellaOut(NUM + `int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(v.begin(), v.end(), 0); }`, '15')
-  }))
+  })
 
   // 🟡 同上：Cella 未支援 std::accumulate
-  it('🟡 已知缺陷（修好時這條會紅）：★ 初值要被算進去', () => knownCellaGap(/std::accumulate is not supported/, async () => {
+  it('★ 初值要被算進去', async () => {
     await expectCellaOut(NUM + `int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.begin(), v.end(), 100); }`, '106')
-  }))
+  })
 
   // ── 根因 5：constructorOf 零呼叫者 ──────────────────────────────
   it('★ 預設建構子要被呼叫', async () => {

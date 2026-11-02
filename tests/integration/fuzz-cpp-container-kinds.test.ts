@@ -206,25 +206,21 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    * > ——而那不是同一個缺陷，是它的下一個形狀。**
    */
   // 歸類：Cella 未支援——vector::insert
-  it('🟡 已知缺陷（修好時這條會紅）：★ `v.insert(v.begin(), x)` 是定位插入', async () => {
-    await knownCellaGap(/'std::vector<int>' has no member 'insert'/, async () => {
-      await sameAsCompiler(`vector<int> v; v.push_back(1); v.insert(v.begin(), 9); cout << v[0] << v[1] << v.size();`, '')
-    })
+  it('★ `v.insert(v.begin(), x)` 是定位插入', async () => {
+    await sameAsCompiler(`vector<int> v; v.push_back(1); v.insert(v.begin(), 9); cout << v[0] << v[1] << v.size();`, '')
   }, 60_000)
 
   // 歸類：Cella 未支援——vector::insert
-  it('🟡 已知缺陷（修好時這條會紅）：★ 定位插入：中間、尾端，而回傳的是新元素的位置', async () => {
-    await knownCellaGap(/'std::vector<int>' has no member 'insert'/, async () => {
-      await sameAsCompiler(
-        `vector<int> v{1,2,3}; auto it = v.insert(v.begin() + 1, 9);
-         cout << *it << (it - v.begin()); for (int x : v) cout << x;
-         vector<int> w{1,2}; w.insert(w.end(), 9); for (int x : w) cout << x;`, '')
-    })
+  it('★ 定位插入：中間、尾端，而回傳的是新元素的位置', async () => {
+    await sameAsCompiler(
+      `vector<int> v{1,2,3}; auto it = v.insert(v.begin() + 1, 9);
+       cout << *it << (it - v.begin()); for (int x : v) cout << x;
+       vector<int> w{1,2}; w.insert(w.end(), 9); for (int x : w) cout << x;`, '')
   }, 60_000)
 
   // 歸類：Cella 判錯——`deque<int> d{1,3}` 的 initializer_list 建構子是標準的，Cella 判 reject
   it('🟡 已知缺陷（修好時這條會紅）：★ 兩端都能進出的容器也定位插入得了', async () => {
-    await knownCellaGap(/no matching constructor for initialization of 'std::deque<int>'/, async () => {
+    await knownCellaGap(/'std::deque<int>' has no member 'insert'/, async () => {
       await sameAsCompiler(`deque<int> d{1,3}; d.insert(d.begin() + 1, 2); for (int x : d) cout << x;`, '')
     })
   }, 60_000)
@@ -290,10 +286,8 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
   }, 60_000)
 
   // 歸類：Cella 未支援——string::erase（formalize 已補，spec 203）
-  it('🟡 已知缺陷（修好時這條會紅）：★ 而字串的 erase(位置, 長度) 不得被弄壞', async () => {
-    await knownCellaGap(/'std::string' has no member 'erase'/, async () => {
-      await sameAsCompiler(`string s = "abcdef"; s.erase(1, 2); cout << s;`, '🔴 字串的兩引數刪除壞了')
-    })
+  it('★ 而字串的 erase(位置, 長度) 不得被弄壞', async () => {
+    await sameAsCompiler(`string s = "abcdef"; s.erase(1, 2); cout << s;`, '🔴 字串的兩引數刪除壞了')
   }, 60_000)
 
   /**

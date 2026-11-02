@@ -108,11 +108,9 @@ async function run(code: string): Promise<string> {
 
 /**
  * 判決今天與基準不同、而錯在 Cella 的樣本——基準照 C++ 的答案留著，判決另外釘住（修好時那一條會紅）。
- * Cella 判錯：帶起點的 `s.find(x, pos)` 是合法的 C++（g++ -std=c++17 印 4），Cella 0.1.202611020258 判 reject「no matching member function」。
+ * 🟢 2026-11-03 清空：帶起點的 `s.find(x, pos)` 在 Cella 0.1.202611021533 修好。
  */
-const KNOWN_GAPS: Record<string, RegExp> = {
-  string_find: /no matching member function for call to 'find'/,
-}
+const KNOWN_GAPS: Record<string, RegExp> = {}
 
 async function measureOnce(): Promise<Omit<baseline, '_meta'>> {
   const generated: Record<string, string> = {}

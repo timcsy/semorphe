@@ -92,21 +92,20 @@ describe('產生：來回轉換保住方法名', () => {
 })
 
 describe('執行：期望值由 g++ 決定', () => {
-  it('🟡 已知缺陷（修好時這條會紅）：★ 去頭尾空白的兩個位置（g++ 印 `2 3`）', async () => {
-    await knownCellaGap(UNSUPPORTED, () =>
-      run('string s = "  hi  "; cout << s.find_first_not_of(" ") << " " << s.find_last_not_of(" ");', '2 3'))
+  it('★ 去頭尾空白的兩個位置（g++ 印 `2 3`）', async () => {
+    await run('string s = "  hi  "; cout << s.find_first_not_of(" ") << " " << s.find_last_not_of(" ");', '2 3')
   })
 
   // 依據：g++ -std=c++17 印 18446744073709551615（npos = size_t(-1)）；原本的 -1 是 JS 直譯器的取捨（理由見 092）
-  it('🟡 已知缺陷（修好時這條會紅）：★ 全部都屬於那組字元時回 npos', async () => {
-    await knownCellaGap(UNSUPPORTED, () => run('string s = "   "; cout << s.find_first_not_of(" ");', '18446744073709551615'))
+  it('★ 全部都屬於那組字元時回 npos', async () => {
+    await run('string s = "   "; cout << s.find_first_not_of(" ");', '18446744073709551615')
   })
 
-  it('🟡 已知缺陷（修好時這條會紅）：★ 多個字元的集合', async () => {
-    await knownCellaGap(UNSUPPORTED, () => run('string s = "aab1"; cout << s.find_first_not_of("ab");', '3'))
+  it('★ 多個字元的集合', async () => {
+    await run('string s = "aab1"; cout << s.find_first_not_of("ab");', '3')
   })
 
-  it('🟡 已知缺陷（修好時這條會紅）：★ 空集合 → 第一個字元就不屬於它', async () => {
-    await knownCellaGap(UNSUPPORTED, () => run('string s = "xy"; cout << s.find_first_not_of("");', '0'))
+  it('★ 空集合 → 第一個字元就不屬於它', async () => {
+    await run('string s = "xy"; cout << s.find_first_not_of("");', '0')
   })
 })

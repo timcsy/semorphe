@@ -115,12 +115,10 @@ describe('spec 170 · Python 的執行期（Cella 工作階段：互動與訊息
    * 🟡 **Cella 判錯（修好時這條會紅）**：提示要在**等輸入之前**就印出來，不然使用者對著空的輸入框發呆。
    * Cella 今天停在 awaiting-input 時輸出是空的（`print` 再 `input()` 則看得到——所以是 `input(prompt)` 先讀後寫，不是送輸出的時機）。
    */
-  it('🟡 已知缺陷：提示要【先印出來】——Cella 今天等到讀完才印', async () => {
+  it('提示要【先印出來】——Cella 今天等到讀完才印', async () => {
     const { tree, s, out } = await pySession('x = input("請輸入名字：")\nprint("hello,", x)\n')
-    await knownCellaGap(/expected '' to be '請輸入名字：'/, async () => {
-      expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
-      expect(out()).toBe('請輸入名字：')
-    })
+    expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
+    expect(out()).toBe('請輸入名字：')
     // 對照組：一般的 print 在等輸入之前就看得到——錯在 input 自己的提示，不在送輸出的時機
     const plain = await pySession('print("a")\nx = input()\n')
     await plain.s.launch(plain.tree, { stopOnEntry: false })

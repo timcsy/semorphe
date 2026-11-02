@@ -124,10 +124,7 @@ const CASES: { name: string; body: string; stdin: string[]; cellaGap?: RegExp }[
     name: 'getline 在乾淨的流上遇到 EOF 要把字串清空',
     body: 'int main(){string s="OLD";getline(cin,s);cout<<"s=["<<s<<"]\\n";return 0;}',
     stdin: [],
-    // 🟡 **Cella 判錯**（2026-11-02 量到）：Cella 印 `s=[OLD]`。標準 [string.io]：getline 建好 sentry（乾淨的流 ⟹ 為真）
-    //    就先 `str.erase()` 再讀——遇 EOF 讀不到任何字元時字串已經清空（並設 failbit）。libc++ 與 libstdc++ 都印 `s=[]`。
-    //    formalize 是直接翻成 Cella 的 `eGetline`，沒有中間的改寫。
-    cellaGap: /期望 "s=\[\]\\n"[\s\S]*實際 "s=\[OLD\]\\n"/,
+    // 🟢 Cella 0.1.202611021533 修好（之前印 `s=[OLD]`）。標準 [string.io]：getline 建好 sentry 就先 `str.erase()` 再讀——遇 EOF 時字串已經清空。
   },
 ]
 

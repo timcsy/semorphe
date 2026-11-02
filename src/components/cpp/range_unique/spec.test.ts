@@ -90,15 +90,15 @@ describe('膠囊自證：擠掉不要的那兩顆', () => {
    * 而它是最容易被實作成「順手刪掉」的一條。
    */
   // 🟡 Cella 0.1.202611020258 判 unknown：std::unique is not supported yet（spec 199 補上 formalize 之後量到），已回報；期望值 g++ 實測相同
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：擠掉之後容器【還是原來那麼長】', () => knownCellaGap(/std::unique is not supported/, async () => {
+  it('🔴 execute：擠掉之後容器【還是原來那麼長】', async () => {
     await run(`${H}int main(){ vector<int> v{1,1,2,3,3};\n`
       + ` auto it = unique(v.begin(), v.end());\n`
       + ` cout << v.size() << ',' << (it - v.begin());\n`
       + ` return 0; }`, '5,3')
-  }))
+  })
 
   // 🟡 Cella 0.1.202611020258 判 unknown：vector 沒有 erase 成員（spec 199 補上 range_remove 的 formalize 之後量到），已回報；期望值 g++ 實測相同
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：擠掉 ＋ 刪掉尾巴 ＝ 真的變短', () => knownCellaGap(/no member 'erase'/, async () => {
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：擠掉 ＋ 刪掉尾巴 ＝ 真的變短', () => knownCellaGap(/remove is not supported yet/, async () => {
     await run(`${H}int main(){ vector<int> v{1,2,1,3};\n`
       + ` v.erase(remove(v.begin(), v.end(), 1), v.end());\n`
       + ` for (int x : v) cout << x;\n`
@@ -110,12 +110,12 @@ describe('膠囊自證：擠掉不要的那兩顆', () => {
    * 🔴 **不要替使用者先排序**：那會改掉他沒叫我們改的東西。
    */
   // 🟡 Cella 0.1.202611020258 判 unknown：std::unique is not supported yet（spec 199 補上 formalize 之後量到），已回報；期望值 g++ 實測相同
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：沒排序過時只擠掉相鄰的，而不是全部', () => knownCellaGap(/std::unique is not supported/, async () => {
+  it('🔴 execute：沒排序過時只擠掉相鄰的，而不是全部', async () => {
     await run(`${H}int main(){ vector<int> v{1,2,1};\n`
       + ` auto it = unique(v.begin(), v.end());\n`
       + ` cout << (it - v.begin());\n`
       + ` return 0; }`, '3')
-  }))
+  })
 
   it('★ round-trip：產回去再 lift，身分不變', () => {
     const src = `${H}int main(){ vector<int> v{1,1,2};\n`

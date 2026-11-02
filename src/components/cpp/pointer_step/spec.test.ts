@@ -73,18 +73,18 @@ describe('膠囊自證：位置的相鄰一格', () => {
   })
 
   // 🟡 Cella 0.1.202611020258 判錯：spec 199 把 set 的大括號初始值改走 braceList（原本包成 iE，判 unknown「braced list … not known」）之後，判 reject「no matching constructor for … std::set」（已回報）；期望值 g++ 實測 9
-  it('🟡 已知缺陷（修好時這條會紅）：★ execute：有序容器的最後一個（語料 10/10 處的形狀）', () => knownCellaGap(/no matching constructor/, async () => {
+  it('★ execute：有序容器的最後一個（語料 10/10 處的形狀）', async () => {
     await run('set<int> s{5,1,9}; cout << *prev(s.end());', '9')
-  }))
+  })
 
   it('★ execute：`next` 從開頭往後一格', async () => {
     await run('vector<int> v{7,8,9}; cout << *next(v.begin());', '8')
   })
 
   // 🟡 釘子：同上，`set<int> s{1,2,3}` 的串列建構被判 reject；期望值 g++ 實測 12
-  it('🟡 已知缺陷（修好時這條會紅）：★ execute：拿它當刪除的目標（語料 2 處）', () => knownCellaGap(/no matching constructor/, async () => {
+  it('★ execute：拿它當刪除的目標（語料 2 處）', async () => {
     await run('set<int> s{1,2,3}; s.erase(prev(s.end())); for(int x : s) cout << x;', '12')
-  }))
+  })
 
   /**
    * 🔴 **反向的位置，「前一個」要往後走**——而那是 `movePointer` 做的，

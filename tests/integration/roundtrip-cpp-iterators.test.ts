@@ -127,10 +127,8 @@ describe('round-trip：迭代器一族', () => {
   })
 
   // 歸類：Cella 判錯——類別迭代器的 `it->first` 被判「不是指標」；`(*it).first` 是好的
-  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 行為：位置迴圈與 `it->`', async () => {
-    await knownCellaGap(/indirection requires a pointer/, async () => {
-      await sameAsCompiler(WALK, '🔴 修之前這一段整個是 raw code')
-    })
+  it.runIf(hasReferenceCompiler())('🔴 行為：位置迴圈與 `it->`', async () => {
+    await sameAsCompiler(WALK, '🔴 修之前這一段整個是 raw code')
   }, 60_000)
 
   it.runIf(hasReferenceCompiler())('🔴 行為：`erase(find(x))` 只刪一個（語料最常見的寫法）', async () => {
@@ -149,14 +147,12 @@ describe('round-trip：迭代器一族', () => {
   }, 60_000)
 
   // 歸類：Cella 判錯——類別迭代器的 `->` 被判「不是指標」
-  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 行為：有序容器裝一對值（AP325/4/4_15 的形狀）', async () => {
-    await knownCellaGap(/indirection requires a pointer/, async () => {
-      await sameAsCompiler(
-        `multiset<pair<int,int>> st; st.insert({3,4}); st.insert({1,2});
-         for (auto it = st.begin(); it != st.end(); ++it) cout << it->first << it->second;
-         auto lo = st.lower_bound({2,0}); cout << lo->first;`,
-        '🔴 三個缺陷疊在這裡：容器不記元素型別、比較規則不認一對值、查找把每一格拆開')
-    })
+  it.runIf(hasReferenceCompiler())('🔴 行為：有序容器裝一對值（AP325/4/4_15 的形狀）', async () => {
+    await sameAsCompiler(
+      `multiset<pair<int,int>> st; st.insert({3,4}); st.insert({1,2});
+       for (auto it = st.begin(); it != st.end(); ++it) cout << it->first << it->second;
+       auto lo = st.lower_bound({2,0}); cout << lo->first;`,
+      '🔴 三個缺陷疊在這裡：容器不記元素型別、比較規則不認一對值、查找把每一格拆開')
   }, 60_000)
 
   it.runIf(hasReferenceCompiler())('🔴 行為：最大的那一個與反向走訪', async () => {

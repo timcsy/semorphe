@@ -72,8 +72,8 @@ describe('膠囊自證：集合的插入', () => {
   // 🔴 spec 200：`vector<int>::insert(3)` 在真的 C++ 編不過（vector 的 insert 要一個位置）——要被判 reject。
   // 原本的斷言是「錯誤訊息非空且提到 v」：換成 Cella 之後它會因為【未支援】而假綠，所以收緊成判決種類。
   // 🟡 Cella 0.1.202611020258 判 unknown：vector 沒有 insert 成員，已回報。
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 接收者不是集合時要【出聲】，不得安靜地去重排序', () => knownCellaGap(/no member 'insert'/, async () => {
+  it('🔴 接收者不是集合時要【出聲】，不得安靜地去重排序', async () => {
     const r = await run(`${H}int main(){ vector<int> v; v.insert(3); cout << v.size(); }`)
     expect(r.verdict, r.err).toBe('reject')
-  }))
+  })
 })

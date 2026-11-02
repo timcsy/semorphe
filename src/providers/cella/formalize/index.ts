@@ -270,7 +270,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (init?.k === 'iL' && isScalar(t)) {
       const xs = init.xs as CellaJson[]
       if (xs.length > 1) { miss(n, '純量的大括號初值不能有兩個以上'); init = null }
-      else init = xs.length === 1 ? xs[0] : k('iE', { e: k('eNum', { n: initNode!.id, v: 0 }) })
+      // 空的大括號是值初始化：數字是 0；而字串是【空字串】（預設建構子）——送 0 等於 `string x = 0`（從空指標建字串，Cella 判 ubNull；
+      // 0.1.202611021533 補了 cin.ignore 之後在學生的 6_advanced_inout 露出來）
+      else init = xs.length === 1 ? xs[0] : t.k === 'tString' ? null : k('iE', { e: k('eNum', { n: initNode!.id, v: 0 }) })
     }
     return declInit(n, t, init, global)
   }
