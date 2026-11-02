@@ -188,7 +188,7 @@ describe('模糊測試：迭代器的邊界', () => {
    */
   // 歸類：我們這側缺——`string::iterator` 這種巢狀型別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：傳值的字串被刪字之後，呼叫者的走訪不得跟著變', async () => {
-    await knownCellaGap(/型別「string::iterator」還沒有對應/, async () => {
+    await knownCellaGap(/unknown type/, async () => {
       const src = `${H}string squeeze(string s, char drop){\n`
         + `  string::iterator it = s.begin();\n`
         + `  while (it != s.end()) { if (*it == drop) it = s.erase(it); else ++it; }\n`
@@ -372,7 +372,7 @@ describe('模糊測試：迭代器的邊界', () => {
    */
   // 歸類：我們這側缺——`X<T>::iterator` 巢狀型別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：★ 迭代器傳值進函式，仍然指著同一串格子', async () => {
-    await knownCellaGap(/型別「vector<int>::iterator」還沒有對應/, async () => {
+    await knownCellaGap(/unknown type/, async () => {
       const src = `${H}int eat(vector<int>::iterator it, vector<int>::iterator end){\n`
         + `  int n = 0; while (it != end) { n += *it; ++it; } return n; }\n`
         + `int main(){ vector<int> v{1,2,3,4}; cout << eat(v.begin(), v.end()); return 0; }\n`
@@ -388,7 +388,7 @@ describe('模糊測試：迭代器的邊界', () => {
    */
   // 歸類：我們這側缺——`string::const_iterator` 巢狀型別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：★ 字元相減之後的整數除法', async () => {
-    await knownCellaGap(/型別「string::const_iterator」還沒有對應/, async () => {
+    await knownCellaGap(/unknown type/, async () => {
       await sameAsCompiler(
         `string t = "100"; long long n = 0;
          for (string::const_iterator c = t.begin(); c != t.end(); ++c) n = n * 10 + (*c - '0');
@@ -1076,7 +1076,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    */
   // 歸類：我們這側缺——`X<T>::const_iterator` 巢狀型別名的 formalize（擋在 distance 前面）
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_01 · 02 · 05 · 09 · 10（**5/10**） 卡在 `distance`', async () => {
-    await knownCellaGap(/型別「set<int>::const_iterator」還沒有對應/, async () => {
+    await knownCellaGap(/unknown type/, async () => {
       await whole(P01_NAIL, '')
     })
   }, 180_000)
@@ -1113,7 +1113,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    */
   // 歸類：我們這側缺——巢狀型別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_06 卡在 `container_equal_range`', async () => {
-    await knownCellaGap(/型別「multiset<int>::const_iterator」還沒有對應/, async () => {
+    await knownCellaGap(/unknown type/, async () => {
       await whole(P03_NAIL, '')
     })
   }, 180_000)
@@ -1132,7 +1132,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    */
   // 歸類：我們這側缺——using 別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_08 卡在 `container_reserve`', async () => {
-    await knownCellaGap(/型別「vector<int>::iterator」還沒有對應/, async () => {
+    await knownCellaGap(/型別「tuple<int, It, It>」還沒有對應/, async () => {
       await whole(P04_NAIL, '')
     })
   }, 180_000)
@@ -1151,7 +1151,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    */
   // 歸類：我們這側缺——巢狀型別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_04 · 07 卡在 `string_construct`', async () => {
-    await knownCellaGap(/型別「vector<int>::iterator」還沒有對應/, async () => {
+    await knownCellaGap(/unknown type/, async () => {
       await whole(P05_NAIL, '')
     })
   }, 180_000)

@@ -251,11 +251,9 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    *（那會一併解決「別名的容器拿不到元素型別」那一族）。
    */
   // 歸類：我們這側缺——typedef 別名的 formalize
-  it('🟡 已知缺陷（修好時這條會紅）：🪦 `typedef bitset<B> Big;` 的 B', async () => {
-    await knownCellaGap(/bitset 的大小「B」不是整數字面/, async () => {
-      await same('  Big b; b.set(0); cout << b.size() << b.count();',
-        '', 'const int B = 96;\ntypedef bitset<B> Big;')
-    })
+  it('🪦 `typedef bitset<B> Big;` 的 B', async () => {
+    await same('  Big b; b.set(0); cout << b.size() << b.count();',
+      '', 'const int B = 96;\ntypedef bitset<B> Big;')
   })
 
   /**
