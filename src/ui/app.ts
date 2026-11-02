@@ -89,7 +89,7 @@ import { createAppLayout, setupToolbarButtons, setupFileButtons, updateStatusBar
 import { GITHUB_MARK, type AppShellElements, type AppShellCallbacks } from './app-shell'
 import { renderStatusControls, openSettings, type MenuAction } from './layout/status-bar-controls'
 import { openDrawer } from './layout/drawer'
-import type { ConsolePanel } from './panels/console-panel'
+import type { ConsolePanel } from '../panels/console/view'
 import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
 import {} from '../core/component/traits'
