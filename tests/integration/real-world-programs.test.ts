@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import type { Lifter } from '../../src/core/lift/lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, expectCellaOut, knownCellaGap } from '../helpers/cella-run'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
@@ -58,13 +58,15 @@ beforeAll(async () => {
   setPatternRenderer(patternRenderer)
 })
 
-async function runCode(code: string, stdin: string[] = []) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 5000000 })
-  await interp.execute(sem!, stdin)
-  return interp
+/**
+ * 執行判準是 Cella（spec 202，重構 6c-2d）：走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept（翻不出、未支援、判定有錯、跑不完）一律拋錯並說清楚原因——不是空字串。
+ * stdin 原本是 JS 直譯器的一串 token，這裡以換行接起來交給 Cella。
+ */
+async function runCode(code: string, stdin: string[] = []): Promise<{ out: string }> {
+  const r = await runCella(code, { stdin: stdin.join('\n'), steps: 5_000_000 })
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r
 }
 
 function liftCode(code: string) {
@@ -77,7 +79,7 @@ function liftCode(code: string) {
 // ============================================================
 describe('forward function declarations', () => {
   it('should handle forward declaration then definition', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int add(int, int);
@@ -89,11 +91,11 @@ describe('forward function declarations', () => {
         return a + b;
       }
     `)
-    expect(interp.getOutput().join('')).toBe('7\n')
+    expect(r.out).toBe('7\n')
   })
 
   it('should handle multiple forward declarations', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void greet();
@@ -106,11 +108,11 @@ describe('forward function declarations', () => {
       void greet() { cout << "hi" << endl; }
       int square(int x) { return x * x; }
     `)
-    expect(interp.getOutput().join('')).toBe('hi\n25\n')
+    expect(r.out).toBe('hi\n25\n')
   })
 
   it('should handle forward decl with pointer params', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void fill(int*, int);
@@ -125,7 +127,7 @@ describe('forward function declarations', () => {
         for (int i = 0; i < n; i++) a[i] = i + 1;
       }
     `)
-    expect(interp.getOutput().join('')).toBe('1 2 3 \n')
+    expect(r.out).toBe('1 2 3 \n')
   })
 })
 
@@ -134,7 +136,7 @@ describe('forward function declarations', () => {
 // ============================================================
 describe('const variables', () => {
   it('should handle const int declaration', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -143,11 +145,11 @@ describe('const variables', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toBe('42\n')
+    expect(r.out).toBe('42\n')
   })
 
   it('should handle const with expression initializer', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -157,7 +159,7 @@ describe('const variables', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toBe('11\n')
+    expect(r.out).toBe('11\n')
   })
 })
 
@@ -165,8 +167,10 @@ describe('const variables', () => {
 // scanf return value in expression
 // ============================================================
 describe('scanf in expression context', () => {
-  it('should handle while(scanf()!=EOF)', async () => {
-    const interp = await runCode(`
+  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——我們的 formalize 只有敘述位置的 sScanf；
+  //    試送 eCall scanf，Cella 0.1.202611020258 判 unknown「scanf is not supported yet」，所以不送。期望值 g++ 實測 '6\n10\n14\n'
+  it('🟡 已知缺陷（修好時這條會紅）：should handle while(scanf()!=EOF)', () => knownCellaGap(/cpp:input_formatted：這顆元件還沒有對應到 Cella 的建構子/, async () => {
+    await expectCellaOut(`
       #include <cstdio>
       int main() {
         int n;
@@ -175,12 +179,13 @@ describe('scanf in expression context', () => {
         }
         return 0;
       }
-    `, ['3', '5', '7'])
-    expect(interp.getOutput().join('')).toBe('6\n10\n14\n')
-  })
+    `, '6\n10\n14\n', { stdin: ['3', '5', '7'].join('\n') })
+  }))
 
-  it('should handle scanf return value comparison', async () => {
-    const interp = await runCode(`
+  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——我們的 formalize 只有敘述位置的 sScanf；
+  //    試送 eCall scanf，Cella 0.1.202611020258 判 unknown「scanf is not supported yet」，所以不送。期望值 g++ 實測 '3\n7\n'
+  it('🟡 已知缺陷（修好時這條會紅）：should handle scanf return value comparison', () => knownCellaGap(/cpp:input_formatted：這顆元件還沒有對應到 Cella 的建構子/, async () => {
+    await expectCellaOut(`
       #include <cstdio>
       int main() {
         int a, b;
@@ -189,9 +194,8 @@ describe('scanf in expression context', () => {
         }
         return 0;
       }
-    `, ['1 2', '3 4'])
-    expect(interp.getOutput().join('')).toBe('3\n7\n')
-  })
+    `, '3\n7\n', { stdin: ['1 2', '3 4'].join('\n') })
+  }))
 })
 
 // ============================================================
@@ -199,7 +203,7 @@ describe('scanf in expression context', () => {
 // ============================================================
 describe('array with initializer', () => {
   it('should handle int arr[N]={0}', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -209,7 +213,7 @@ describe('array with initializer', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toBe('0 0 0 0 0 \n')
+    expect(r.out).toBe('0 0 0 0 0 \n')
   })
 })
 
@@ -218,7 +222,7 @@ describe('array with initializer', () => {
 // ============================================================
 describe('variable-length arrays', () => {
   it('should handle bool VLA with variable size', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -234,7 +238,7 @@ describe('variable-length arrays', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toBe('4\n')
+    expect(r.out).toBe('4\n')
   })
 })
 
@@ -243,7 +247,7 @@ describe('variable-length arrays', () => {
 // ============================================================
 describe('ternary in printf args', () => {
   it('should handle printf with ternary string result', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <cstdio>
       int main() {
         int x = 7;
@@ -251,7 +255,7 @@ describe('ternary in printf args', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toBe('big\n')
+    expect(r.out).toBe('big\n')
   })
 })
 
@@ -259,9 +263,11 @@ describe('ternary in printf args', () => {
 // Combined: Prime checker program (the user's full program)
 // ============================================================
 describe('prime checker program', () => {
-  it('should handle forward declarations + pointer params + do-while + scanf loop', async () => {
+  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——我們的 formalize 只有敘述位置的 sScanf；
+  //    試送 eCall scanf，Cella 0.1.202611020258 判 unknown「scanf is not supported yet」，所以不送。期望值 g++ 實測 'prime\nnot prime\nnot prime\nprime\n'
+  it('🟡 已知缺陷（修好時這條會紅）：should handle forward declarations + pointer params + do-while + scanf loop', () => knownCellaGap(/cpp:input_formatted：這顆元件還沒有對應到 Cella 的建構子/, async () => {
     // Simplified version focusing on the key constructs
-    const interp = await runCode(`
+    await expectCellaOut(`
       #include <cstdio>
       using namespace std;
       int checkp(int, int*);
@@ -284,9 +290,8 @@ describe('prime checker program', () => {
         if (b && n > 1) return 1;
         else return 0;
       }
-    `, ['7', '10', '1', '29'])
-    expect(interp.getOutput().join('')).toBe('prime\nnot prime\nnot prime\nprime\n')
-  })
+    `, 'prime\nnot prime\nnot prime\nprime\n', { stdin: ['7', '10', '1', '29'].join('\n') })
+  }))
 
   it('should lift the full prime sieve program without error', () => {
     const sem = liftCode(`
@@ -343,7 +348,7 @@ describe('prime checker program', () => {
 // ============================================================
 describe('compound for-loop conditions', () => {
   it('should handle && in for condition', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -357,7 +362,7 @@ describe('compound for-loop conditions', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toBe('29\n')
+    expect(r.out).toBe('29\n')
   })
 })
 
@@ -366,7 +371,7 @@ describe('compound for-loop conditions', () => {
 // ============================================================
 describe('post-increment in array index', () => {
   it('should handle p[m++] = value', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -379,7 +384,7 @@ describe('post-increment in array index', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toBe('10 20 30 3\n')
+    expect(r.out).toBe('10 20 30 3\n')
   })
 })
 

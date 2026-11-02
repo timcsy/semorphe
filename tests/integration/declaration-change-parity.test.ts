@@ -30,7 +30,7 @@ import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { registerCppExtractStrategies } from '../../src/languages/cpp/extractors/extract-strategies'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import { createNode } from '../../src/core/semantic-tree'
 import { REPO_ROOT } from '../helpers/guardrail'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -92,16 +92,26 @@ function roundTrip(code: string): string {
   return back.length ? generateCode(createNode('cpp:program', {}, { body: back }), 'cpp', style) : '<extract 失敗>'
 }
 
+/**
+ * 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）。
+ *
+ * - 樣本本身沒有標頭（產生碼與來回轉換的基準量的就是這幾行，不能動）——送給 Cella 前補上
+ *   `#include <bits/stdc++.h>` 與 `using namespace std;`（沒有它們，`cout` 在 C++ 裡是未宣告的名字）。
+ * - 紀錄的形狀從 `<直譯器狀態>|<輸出>` 換成 `<判決>|<輸出>`：基準檔裡的 `completed|` 逐筆改成 `accept|`，
+ *   輸出逐筆對過、一字未改（見 `KNOWN_GAPS` 之外的每一筆都要逐字相同）。
+ */
+const PRELUDE = '#include <bits/stdc++.h>\nusing namespace std;\n'
 async function run(code: string): Promise<string> {
-  const tree = lift(code)
-  if (!tree) return '<lift 失敗>'
-  const interp = new SemanticInterpreter()
-  try {
-    await interp.execute(tree, [])
-  } catch (e) {
-    return `<例外：${(e as Error).message.slice(0, 60)}>`
-  }
-  return `${interp.getState().status}|${interp.getOutput().join('')}`
+  const r = await runCella(PRELUDE + code)
+  return `${r.verdict}|${r.out}`
+}
+
+/**
+ * 判決今天與基準不同、而錯在 Cella 的樣本——基準照 C++ 的答案留著，判決另外釘住（修好時那一條會紅）。
+ * Cella 判錯：帶起點的 `s.find(x, pos)` 是合法的 C++（g++ -std=c++17 印 4），Cella 0.1.202611020258 判 reject「no matching member function」。
+ */
+const KNOWN_GAPS: Record<string, RegExp> = {
+  string_find: /no matching member function for call to 'find'/,
 }
 
 async function measureOnce(): Promise<Omit<baseline, '_meta'>> {
@@ -166,6 +176,21 @@ describe('宣告改動不得改變行為（specs/106 的對照組）', () => {
 
   it('執行輸出逐字相同', async () => {
     const base: baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
-    expect((await measureOnce()).execute).toEqual(base.execute)
+    const now = (await measureOnce()).execute
+    const without = (o: Record<string, string>): Record<string, string> =>
+      Object.fromEntries(Object.entries(o).filter(([k]) => !(k in KNOWN_GAPS)))
+    expect(without(now)).toEqual(without(base.execute))
   })
+
+  for (const [name, why] of Object.entries(KNOWN_GAPS)) {
+    it(`🟡 已知缺陷（修好時這條會紅）：執行輸出逐字相同——${name}`, async () => {
+      const base: baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
+      const sample = samples.find((s) => s.name === name)!
+      await knownCellaGap(why, async () => {
+        const r = await runCella(PRELUDE + sample.code)
+        if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+        if (`${r.verdict}|${r.out}` !== base.execute[name]) throw new Error(`與基準不同：${JSON.stringify(r.out)} ≠ ${JSON.stringify(base.execute[name])}`)
+      })
+    })
+  }
 })

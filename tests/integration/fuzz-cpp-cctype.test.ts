@@ -5,7 +5,7 @@
  * Tests cctype components: isalpha, isdigit, toupper, tolower.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { expectCellaOut } from '../helpers/cella-run'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -301,12 +301,9 @@ describe('fuzz_6: 驗證識別字：字串陣列初始化列表', () => {
     expect(gen, '初始化列表在辨識時被丟掉了').toMatch(/\{[^}]+\}/)
   })
 
+  // 執行交給 Cella（spec 202）；程式結尾沒有換行，原本 `.trim()` 後的值就是全文
   it('執行結果正確——只驗來回轉換的話，值全變 0 也看不出來', async () => {
-    const tree = tsParser.parse(code)
-    const sem = lifter.lift(tree.rootNode as never)
-    const interp = new SemanticInterpreter({ maxSteps: 200000 })
-    await interp.execute(sem!)
-    expect(interp.getOutput().join('').trim()).toBe("1")
+    await expectCellaOut(code, '1')
   })
 })
 
@@ -321,12 +318,9 @@ describe('fuzz_9: 回文檢查：字元陣列初始化列表', () => {
     expect(gen, '初始化列表在辨識時被丟掉了').toMatch(/\{[^}]+\}/)
   })
 
+  // 執行交給 Cella（spec 202）；程式結尾沒有換行，原本 `.trim()` 後的值就是全文
   it('執行結果正確——只驗來回轉換的話，值全變 0 也看不出來', async () => {
-    const tree = tsParser.parse(code)
-    const sem = lifter.lift(tree.rootNode as never)
-    const interp = new SemanticInterpreter({ maxSteps: 200000 })
-    await interp.execute(sem!)
-    expect(interp.getOutput().join('').trim()).toBe("1")
+    await expectCellaOut(code, '1')
   })
 })
 
@@ -341,11 +335,8 @@ describe('fuzz_10: 字元分類：整數陣列初始化列表 {0,0,0}', () => {
     expect(gen, '初始化列表在辨識時被丟掉了').toMatch(/\{[^}]+\}/)
   })
 
+  // 執行交給 Cella（spec 202）；程式結尾沒有換行，原本 `.trim()` 後的值就是全文
   it('執行結果正確——只驗來回轉換的話，值全變 0 也看不出來', async () => {
-    const tree = tsParser.parse(code)
-    const sem = lifter.lift(tree.rootNode as never)
-    const interp = new SemanticInterpreter({ maxSteps: 200000 })
-    await interp.execute(sem!)
-    expect(interp.getOutput().join('').trim()).toBe("121")
+    await expectCellaOut(code, '121')
   })
 })

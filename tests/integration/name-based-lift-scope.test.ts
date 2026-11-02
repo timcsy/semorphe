@@ -39,7 +39,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import type { SemanticNode } from '../../src/core/types'
 
 let parser: Parser
@@ -68,10 +68,11 @@ function componentsOf(code: string, name: string): string[] {
     .map((n) => n.componentId ?? '(無身分)'))]
 }
 
+// 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
 async function run(code: string): Promise<string> {
-  const interp = new SemanticInterpreter({ maxSteps: 50000 })
-  await interp.execute(lift(code) as never)
-  return interp.getOutput().join('')
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 const HEAD = '#include <iostream>\nusing namespace std;\n'
@@ -121,16 +122,31 @@ describe('靠名字認人的樣式：先問「被宣告過嗎」', () => {
       expect(out.trim(), '🔴 判例回來了——樣式又把使用者宣告的名字搶走了').toBe('-1')
     })
 
-    it('🔴 `enum Marker { EOF = -99 }` → 印出 -99，而且不丟錯', async () => {
-      let out = ''
-      let err = ''
-      try {
-        out = await run(`${HEAD}enum Marker { EOF = -99 };\n`
+    /**
+     * 🔴 spec 202：這一條原本靠 JS 直譯器的輸出（印 -99、不丟「重複宣告」）觀察 lift 有沒有搶走 `EOF`。
+     * 換成 Cella 後量到：**這段程式在真的編譯器上不合法**——`<iostream>` 實際上帶進 `EOF` 巨集
+     * （Apple clang -std=c++17：`error: expected identifier`，`EOF` 展開成 `(-1)`；libstdc++ 的 `<string>` 也經
+     * `<ext/string_conversions.h>` 引入 `<cstdio>`）。所以輸出不再是 lift 的好觀察點：
+     * 守 lift 的那一半改成直接看身分（使用處指到使用者的列舉常數，不是內建常數）；執行那一半照 C++ 的答案釘住。
+     */
+    it('🔴 `enum Marker { EOF = -99 }` → 使用處的 `EOF` 是他宣告的那一個，不是內建常數', () => {
+      const ids = componentsOf(`${HEAD}enum Marker { EOF = -99 };\n`
+        + 'int main() {\n    cout << EOF << endl;\n    return 0;\n}\n', 'EOF')
+      expect(ids, '🔴 判例回來了——樣式把使用者宣告的 EOF 搶走了').not.toContain('cpp:builtin_constant')
+      expect(ids).toContain('cpp:var_ref')
+    })
+
+    // Cella 判錯（疑似）：`<iostream>` 之下重新宣告 `EOF` 在 libc++ 與 libstdc++ 都編不過（EOF 是巨集），
+    // 而 Cella 0.1.202611020258 判 accept 印 -99；同一個 Cella 對「只引入 <iostream> 就用 EOF」判的是
+    // unknown「whether the headers included declare EOF depends on the library」——兩者不一致。正確的判決至少不是 accept。
+    it('🟡 已知缺陷（修好時這條會紅）：`<iostream>` 之下重新宣告 `EOF` 不是可攜的 C++，不得判 accept', async () => {
+      await knownCellaGap(/Cella 判 accept 了一段在 libc\+\+／libstdc\+\+ 都編不過的程式/, async () => {
+        const r = await runCella(`${HEAD}enum Marker { EOF = -99 };\n`
           + 'int main() {\n    cout << EOF << endl;\n    return 0;\n}\n')
-      } catch (e) { err = (e as Error).message }
-      expect(err, '🔴 丟錯了。⚠️ 而它曾經說「重複宣告」——使用者只宣告了一次，'
-        + '\n   那個訊息說的是【系統自己也宣告了一份】，而它不該').toBe('')
-      expect(out.trim()).toBe('-99')
+        if (r.verdict === 'accept') {
+          throw new Error(`Cella 判 accept 了一段在 libc++／libstdc++ 都編不過的程式（印出 ${JSON.stringify(r.out)}）`)
+        }
+      })
     })
 
     it('宣告了同名的變數：那個名字是他的', () => {

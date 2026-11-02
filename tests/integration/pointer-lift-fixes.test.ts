@@ -25,7 +25,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { StylePreset } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -45,10 +45,11 @@ beforeAll(async () => {
 const roundTrip = (src: string): string =>
   generateCode(lifter.lift(tp.parse(src)!.rootNode as never) as never, 'cpp', style)
 
+/** 執行交給 Cella（spec 202，重構 6c-2d）：不是 accept 就丟出說得出原因的錯 */
 async function run(src: string): Promise<string> {
-  const interp = new SemanticInterpreter({ maxSteps: 200000 })
-  await interp.execute(lifter.lift(tp.parse(src)!.rootNode as never) as never)
-  return interp.getOutput().join('')
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 describe('回傳指標的函式', () => {

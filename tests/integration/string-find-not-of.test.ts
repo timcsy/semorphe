@@ -25,7 +25,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../helpers/cella-run'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { StylePreset, SemanticNode } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -59,11 +59,10 @@ function components(body: string): string[] {
   return out
 }
 
-async function run(body: string): Promise<string> {
-  const interp = new SemanticInterpreter({ maxSteps: 50000 })
-  await interp.execute(lift(body) as never)
-  return interp.getOutput().join('')
-}
+// 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (body: string, want: string) => expectCellaOut(wrap(body), want)
+// Cella 未支援：0.1.202611020258 的 std::string 模型沒有 find_first_not_of／find_last_not_of（判 unknown／unsupported）
+const UNSUPPORTED = /unsupported：the model's 'std::string' has no member 'find_(first|last)_not_of'/
 
 describe('辨識：兩個方法各自拿到專屬身分', () => {
   it('★ find_first_not_of', () => {
@@ -93,21 +92,21 @@ describe('產生：來回轉換保住方法名', () => {
 })
 
 describe('執行：期望值由 g++ 決定', () => {
-  it('★ 去頭尾空白的兩個位置（g++ 印 `2 3`）', async () => {
-    expect((await run('string s = "  hi  "; cout << s.find_first_not_of(" ") << " " << s.find_last_not_of(" ");')).trim())
-      .toBe('2 3')
+  it('🟡 已知缺陷（修好時這條會紅）：★ 去頭尾空白的兩個位置（g++ 印 `2 3`）', async () => {
+    await knownCellaGap(UNSUPPORTED, () =>
+      run('string s = "  hi  "; cout << s.find_first_not_of(" ") << " " << s.find_last_not_of(" ");', '2 3'))
   })
 
-  it('★ 全部都屬於那組字元時回 -1', async () => {
-    // C++ 回 npos；這個直譯器統一回 -1（理由見 092——使用者常寫 `!= -1`）
-    expect((await run('string s = "   "; cout << s.find_first_not_of(" ");')).trim()).toBe('-1')
+  // 依據：g++ -std=c++17 印 18446744073709551615（npos = size_t(-1)）；原本的 -1 是 JS 直譯器的取捨（理由見 092）
+  it('🟡 已知缺陷（修好時這條會紅）：★ 全部都屬於那組字元時回 npos', async () => {
+    await knownCellaGap(UNSUPPORTED, () => run('string s = "   "; cout << s.find_first_not_of(" ");', '18446744073709551615'))
   })
 
-  it('★ 多個字元的集合', async () => {
-    expect((await run('string s = "aab1"; cout << s.find_first_not_of("ab");')).trim()).toBe('3')
+  it('🟡 已知缺陷（修好時這條會紅）：★ 多個字元的集合', async () => {
+    await knownCellaGap(UNSUPPORTED, () => run('string s = "aab1"; cout << s.find_first_not_of("ab");', '3'))
   })
 
-  it('★ 空集合 → 第一個字元就不屬於它', async () => {
-    expect((await run('string s = "xy"; cout << s.find_first_not_of("");')).trim()).toBe('0')
+  it('🟡 已知缺陷（修好時這條會紅）：★ 空集合 → 第一個字元就不屬於它', async () => {
+    await knownCellaGap(UNSUPPORTED, () => run('string s = "xy"; cout << s.find_first_not_of("");', '0'))
   })
 })

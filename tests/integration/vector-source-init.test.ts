@@ -22,7 +22,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { expectCellaOut } from '../helpers/cella-run'
 import type { SemanticNode } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 
@@ -44,14 +44,11 @@ function lift(src: string): SemanticNode {
 }
 
 function liftMain(body: string): SemanticNode {
-  return lift(`int main(){ ${body} return 0; }`)
+  return lift(mainOf(body))
 }
 
-async function run(tree: SemanticNode): Promise<string> {
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(tree)
-  return interp.getOutput().join('')
-}
+/** 執行交給 Cella（spec 202，重構 6c-2d）——與 `lift`／`liftMain` 拼同一份原始碼 */
+const mainOf = (body: string): string => `int main(){ ${body} return 0; }`
 
 function collect(node: SemanticNode, pred: (n: SemanticNode) => boolean): SemanticNode[] {
   const found: SemanticNode[] = []
@@ -72,15 +69,14 @@ const funcReturn =
 
 describe('vector 的運算式初始值（期望值來自 g++ -std=c++17）', () => {
   it('函式回傳值當初始值', async () => {
-    expect(await run(lift(funcReturn))).toBe('72\n')
+    await expectCellaOut(PRELUDE + funcReturn, '72\n')
   })
 
   it('另一個 vector 當初始值，且是**複製**不是共用', async () => {
     // 共用的話，push_back 到 w 會讓 v.size() 也變成 3 → 印出 "33"
-    const out = await run(liftMain(
+    await expectCellaOut(PRELUDE + mainOf(
       'vector<int> v = {1, 2}; vector<int> w = v; w.push_back(9); cout << v.size() << w.size();',
-    ))
-    expect(out).toBe('23')
+    ), '23')
   })
 })
 

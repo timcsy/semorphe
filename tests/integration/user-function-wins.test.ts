@@ -23,6 +23,7 @@ import { CppParser } from '../../src/languages/cpp/parser'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../src/core/types'
+import { expectCellaOut } from '../helpers/cella-run'
 
 let parser: CppParser
 let lifter: ReturnType<typeof createTestLifter>
@@ -90,15 +91,11 @@ describe('使用者自己定義的函式贏過內建樣式', () => {
  * > 會在後面某一步炸出一個【與真正原因無關】的訊息。**
  */
 describe('結構陣列的每一格是一個結構', () => {
+  // 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）。
+  // 原文沒有 `#include <cstdio>`——不引入就呼叫 printf 在 C++ 不合法（g++：use of undeclared identifier 'printf'），補上。
   it('★ 宣告一個結構陣列，填值再讀回來', async () => {
-    const { SemanticInterpreter } = await import('../../src/interpreter/interpreter')
-    const out: string[] = []
-    const i = new SemanticInterpreter()
-    i.setOutputCallback((t) => out.push(t))
-    const tree = await liftCode(
-      'struct Point { int x; int y; };\n' +
-      'int main(){ struct Point ps[2]; ps[0].x = 7; printf("%d\\n", ps[0].x); return 0; }')
-    await i.execute(tree)
-    expect(out.join(''), '🔴 結構陣列的每一格不是一個結構').toContain('7')
+    await expectCellaOut(
+      '#include <cstdio>\nstruct Point { int x; int y; };\n' +
+      'int main(){ struct Point ps[2]; ps[0].x = 7; printf("%d\\n", ps[0].x); return 0; }', '7\n')
   })
 })

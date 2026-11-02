@@ -14,38 +14,15 @@
  *
  * **三層都是靜默降級**：沒有錯誤訊息、沒有例外、輸出看起來像一段跑完的程式。
  */
-import { describe, it, expect, beforeAll } from 'vitest'
-import { Parser, Language } from 'web-tree-sitter'
-import { createTestLifter } from '../helpers/setup-lifter'
-import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import type { Lifter } from '../../src/core/lift/lifter'
+import { describe, it, expect } from 'vitest'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 
-let tp: Parser
-let lifter: Lifter
-
-beforeAll(async () => {
-  await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
-  tp = new Parser()
-  tp.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
-  lifter = createTestLifter()
-  registerCppLanguage()
-})
-
+// 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
+const src = (body: string): string => `#include <iostream>\n#include <cstring>\nusing namespace std;\nint main(){ ${body} return 0; }`
 async function run(body: string): Promise<string> {
-  const src = `#include <iostream>\n#include <cstring>\nusing namespace std;\nint main(){ ${body} return 0; }`
-  const interp = new SemanticInterpreter({ maxSteps: 50000 })
-  await interp.execute(lifter.lift(tp.parse(src)!.rootNode as never) as never)
-  return interp.getOutput().join('')
-}
-
-async function errOf(body: string): Promise<string> {
-  try {
-    await run(body)
-    return ''
-  } catch (e) {
-    return (e as Error).message
-  }
+  const r = await runCella(src(body))
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 describe('指派是一個運算式', () => {
@@ -79,12 +56,22 @@ describe('指標的真假值', () => {
 })
 
 describe('做不到的事要出聲，不得靜默回 0', () => {
-  it('★ strchr 回傳指向陣列中間的指標——這個直譯器表示不了，所以它要說', async () => {
-    const message = await errOf("char s[6] = \"hello\"; char* p = strchr(s, 'l'); cout << (p != 0);")
+  // 🔴 spec 202：原本這一條斷言 JS 直譯器**拒絕**（它表示不了指向陣列中間的指標，所以要說）。
+  // Cella 的記憶體模型表示得了 ⟹ 換成 C++ 的答案（g++ -std=c++17 印 1／0），並守住「不是靜默回 0」：
+  // 判決要是 accept、沒有任何 problem，找得到印 1、找不到印 0（只驗前者的話「一律為真」也會過）。
+  // 若哪天又表示不了，runCella 會回 untranslated／unknown 並指名那顆元件——那就是「出聲」，而不是靜默的 0。
+  it('★ strchr 回傳指向陣列中間的指標——找得到時 != 0 為真', async () => {
+    const r = await runCella(src("char s[6] = \"hello\"; char* p = strchr(s, 'l'); cout << (p != 0);"))
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    expect(r.problems).toEqual([])
     expect(
-      message,
+      r.out,
       'strchr 靜默回 0 → `strchr(...) != 0` 對找得到的字元也是假，' +
         '而程式跑完印出後面的東西。**安靜的錯答案比報錯更糟。**',
-    ).toContain('cstring_find_char')
+    ).toBe('1')
+  })
+
+  it('★ 對照組：找不到時回空指標', async () => {
+    expect(await run("char s[6] = \"hello\"; char* p = strchr(s, 'z'); cout << (p != 0);")).toBe('0')
   })
 })

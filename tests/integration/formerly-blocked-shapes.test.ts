@@ -13,7 +13,8 @@ import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
+// 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -33,9 +34,9 @@ const ids = (n: SemanticNode, o: string[] = []): string[] => {
   return o
 }
 const run = async (c: string): Promise<string> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  await i.execute(lift(c))
-  return i.getOutput().join('')
+  const r = await runCella(c)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 const HEAD = '#include <iostream>\nusing namespace std;\n'

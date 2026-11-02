@@ -25,7 +25,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
+// 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
 import { generateCode } from '../../src/core/projection/code-generator'
 import type { SemanticNode } from '../../src/core/types'
 import googleStyle from '../../src/languages/cpp/styles/google.json'
@@ -47,9 +48,9 @@ function lift(src: string): SemanticNode {
 }
 
 async function run(src: string): Promise<string> {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(src))
-  return i.getOutput().join('')
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 /** 找出那顆普通指派節點——找不到回 null，讓斷言指名。 */
@@ -256,9 +257,16 @@ describe('C++ 的左值是接點', () => {
    *
    * > **兩個缺陷疊在一起時，上面那個會讓下面那個看不見。**
    */
-  it('🔴 `m[k]++` 與 `m[k] = v`——對應表的一格也是左值', async () => {
+  // Cella 判錯：`f['a']++` 只有一次 operator[] 呼叫、沒有未定序的副作用（g++ 印 2），Cella 0.1.202611020258 判 unknown(ubOrder)；
+  // 我們送的是單一個 eIncDec(eIndex)，沒有複製子運算式。`f['a'] += 1` 與 `f['a'] = 7` 都判 accept。
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 `m[k]++`——對應表的一格也是左值', async () => {
     const M = '#include <iostream>\n#include <map>\nusing namespace std;\n'
-    expect(await run(`${M}int main(){ map<char,int> f; f['a']++; f['a']++; cout << f['a']; }`)).toBe('2')
+    await knownCellaGap(/ubOrder：the order of evaluation is unspecified/, async () =>
+      expect(await run(`${M}int main(){ map<char,int> f; f['a']++; f['a']++; cout << f['a']; }`)).toBe('2'))
+  })
+
+  it('🔴 `m[k] = v`——對應表的一格也是左值', async () => {
+    const M = '#include <iostream>\n#include <map>\nusing namespace std;\n'
     expect(await run(`${M}int main(){ map<char,int> f; f['a'] = 7; cout << f['a']; }`)).toBe('7')
   })
 

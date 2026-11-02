@@ -27,7 +27,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
+// 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
 import { generateCode } from '../../src/core/projection/code-generator'
 import type { SemanticNode } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -48,9 +49,9 @@ function lift(src: string): SemanticNode {
 }
 
 async function run(src: string): Promise<string> {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(src))
-  return i.getOutput().join('')
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 const P = '#include <iostream>\nusing namespace std;\n'

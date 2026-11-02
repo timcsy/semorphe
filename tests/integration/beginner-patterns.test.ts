@@ -13,7 +13,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import type { Lifter } from '../../src/core/lift/lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 
@@ -31,13 +31,15 @@ beforeAll(async () => {
   lifter = createTestLifter()
 })
 
-async function runCode(code: string, stdin: string[] = []) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 2000000 })
-  await interp.execute(sem!, stdin)
-  return interp
+/**
+ * 執行判準是 Cella（spec 202，重構 6c-2d）：走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept（翻不出、未支援、判定有錯、跑不完）一律拋錯並說清楚原因——不是空字串。
+ * stdin 原本是 JS 直譯器的一串 token，這裡以換行接起來交給 Cella。
+ */
+async function runCode(code: string, stdin: string[] = []): Promise<{ out: string }> {
+  const r = await runCella(code, { stdin: stdin.join('\n'), steps: 2_000_000 })
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r
 }
 
 // ============================================================
@@ -46,7 +48,7 @@ async function runCode(code: string, stdin: string[] = []) {
 describe('do-while loops', () => {
   it('basic do-while: menu-driven input', async () => {
     // Keep reading until user inputs 0
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -60,11 +62,11 @@ describe('do-while loops', () => {
         return 0;
       }
     `, ['3', '5', '7', '0'])
-    expect(interp.getOutput().join('')).toContain('15')
+    expect(r.out).toContain('15')
   })
 
   it('do-while: input validation (retry until valid)', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -76,11 +78,11 @@ describe('do-while loops', () => {
         return 0;
       }
     `, ['-5', '200', '0', '42'])
-    expect(interp.getOutput().join('')).toContain('42')
+    expect(r.out).toContain('42')
   })
 
   it('do-while: digit extraction (reverse order)', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -94,11 +96,11 @@ describe('do-while loops', () => {
         return 0;
       }
     `, ['12345'])
-    expect(interp.getOutput().join('')).toContain('54321')
+    expect(r.out).toContain('54321')
   })
 
   it('do-while: executes body at least once even if condition is false', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -110,7 +112,7 @@ describe('do-while loops', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1')
+    expect(r.out).toContain('1')
   })
 })
 
@@ -119,7 +121,7 @@ describe('do-while loops', () => {
 // ============================================================
 describe('switch-case', () => {
   it('basic switch: day of week', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -137,12 +139,12 @@ describe('switch-case', () => {
         return 0;
       }
     `, ['3'])
-    expect(interp.getOutput().join('')).toContain('Wed')
+    expect(r.out).toContain('Wed')
   })
 
   it('switch: fall-through behavior', async () => {
     // Without break, cases fall through
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -159,11 +161,11 @@ describe('switch-case', () => {
       }
     `)
     // Falls through all cases from 1: count becomes 4
-    expect(interp.getOutput().join('')).toContain('4')
+    expect(r.out).toContain('4')
   })
 
   it('switch: calculator with operator', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -180,11 +182,11 @@ describe('switch-case', () => {
         return 0;
       }
     `, ['10', '3', '3'])
-    expect(interp.getOutput().join('')).toContain('30')
+    expect(r.out).toContain('30')
   })
 
   it('switch: grade classification', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -203,11 +205,11 @@ describe('switch-case', () => {
         return 0;
       }
     `, ['85'])
-    expect(interp.getOutput().join('')).toContain('B')
+    expect(r.out).toContain('B')
   })
 
   it('switch: default case only', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -221,7 +223,7 @@ describe('switch-case', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('other')
+    expect(r.out).toContain('other')
   })
 })
 
@@ -230,7 +232,7 @@ describe('switch-case', () => {
 // ============================================================
 describe('ternary operator', () => {
   it('basic ternary: min of two numbers', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -241,11 +243,11 @@ describe('ternary operator', () => {
         return 0;
       }
     `, ['7', '3'])
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(r.out).toContain('3')
   })
 
   it('ternary: absolute value', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -256,11 +258,11 @@ describe('ternary operator', () => {
         return 0;
       }
     `, ['-42'])
-    expect(interp.getOutput().join('')).toContain('42')
+    expect(r.out).toContain('42')
   })
 
   it('ternary in expression: clamp value', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -273,11 +275,11 @@ describe('ternary operator', () => {
         return 0;
       }
     `, ['150'])
-    expect(interp.getOutput().join('')).toContain('100')
+    expect(r.out).toContain('100')
   })
 
   it('ternary in cout: even/odd', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -287,7 +289,7 @@ describe('ternary operator', () => {
         return 0;
       }
     `, ['7'])
-    expect(interp.getOutput().join('')).toContain('odd')
+    expect(r.out).toContain('odd')
   })
 })
 
@@ -296,7 +298,7 @@ describe('ternary operator', () => {
 // ============================================================
 describe('char operations', () => {
   it('char literal comparison: is uppercase', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -311,12 +313,12 @@ describe('char operations', () => {
       }
     `, ['72'])
     // 72 = 'H'
-    expect(interp.getOutput().join('')).toContain('upper')
+    expect(r.out).toContain('upper')
   })
 
   it('char arithmetic: Caesar cipher with int codes', async () => {
     // Simple shift cipher using integer character codes
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -342,7 +344,7 @@ describe('char operations', () => {
       }
     `, ['3', '65', '66', '90'])
     // A(65)->D(68), B(66)->E(69), Z(90)->C(67)
-    expect(interp.getOutput().join('')).toContain('68 69 67')
+    expect(r.out).toContain('68 69 67')
   })
 })
 
@@ -351,7 +353,7 @@ describe('char operations', () => {
 // ============================================================
 describe('beginner patterns: correct usage', () => {
   it('off-by-one: fence post problem (n items, n-1 separators)', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -367,11 +369,11 @@ describe('beginner patterns: correct usage', () => {
         return 0;
       }
     `, ['4', '1', '2', '3', '4'])
-    expect(interp.getOutput().join('')).toContain('1,2,3,4')
+    expect(r.out).toContain('1,2,3,4')
   })
 
   it('accumulator pattern: sum and average', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -388,11 +390,11 @@ describe('beginner patterns: correct usage', () => {
       }
     `, ['4', '10', '20', '30', '40'])
     // sum=100, avg=100/4=25
-    expect(interp.getOutput().join('')).toContain('100 25')
+    expect(r.out).toContain('100 25')
   })
 
   it('integer division truncation', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -405,11 +407,11 @@ describe('beginner patterns: correct usage', () => {
       }
     `)
     // 7/2 = 3 remainder 1
-    expect(interp.getOutput().join('')).toContain('3 1')
+    expect(r.out).toContain('3 1')
   })
 
   it('nested if-else: multi-branch classification', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -429,11 +431,11 @@ describe('beginner patterns: correct usage', () => {
         return 0;
       }
     `, ['-5'])
-    expect(interp.getOutput().join('')).toContain('negative')
+    expect(r.out).toContain('negative')
   })
 
   it('swap two variables using temp', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -446,11 +448,11 @@ describe('beginner patterns: correct usage', () => {
         return 0;
       }
     `, ['3', '7'])
-    expect(interp.getOutput().join('')).toContain('7 3')
+    expect(r.out).toContain('7 3')
   })
 
   it('flag variable pattern: search with found flag', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -475,11 +477,11 @@ describe('beginner patterns: correct usage', () => {
         return 0;
       }
     `, ['5', '30', '10', '20', '30', '40', '50'])
-    expect(interp.getOutput().join('')).toContain('found at 2')
+    expect(r.out).toContain('found at 2')
   })
 
   it('nested loop: multiplication table', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -494,14 +496,14 @@ describe('beginner patterns: correct usage', () => {
         return 0;
       }
     `, ['3'])
-    const output = interp.getOutput().join('')
+    const output = r.out
     expect(output).toContain('1 2 3')
     expect(output).toContain('2 4 6')
     expect(output).toContain('3 6 9')
   })
 
   it('counting pattern: frequency array', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -523,7 +525,7 @@ describe('beginner patterns: correct usage', () => {
         return 0;
       }
     `, ['8', '1', '3', '1', '2', '3', '3', '1', '5'])
-    const output = interp.getOutput().join('')
+    const output = r.out
     expect(output).toContain('1:3')
     expect(output).toContain('2:1')
     expect(output).toContain('3:3')
@@ -531,7 +533,7 @@ describe('beginner patterns: correct usage', () => {
   })
 
   it('max/min tracking in loop', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -549,11 +551,11 @@ describe('beginner patterns: correct usage', () => {
         return 0;
       }
     `, ['5', '3', '7', '1', '9', '4'])
-    expect(interp.getOutput().join('')).toContain('9 1')
+    expect(r.out).toContain('9 1')
   })
 
   it('reverse array in-place', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -573,7 +575,7 @@ describe('beginner patterns: correct usage', () => {
         return 0;
       }
     `, ['5', '1', '2', '3', '4', '5'])
-    expect(interp.getOutput().join('')).toContain('5 4 3 2 1')
+    expect(r.out).toContain('5 4 3 2 1')
   })
 })
 
@@ -582,7 +584,7 @@ describe('beginner patterns: correct usage', () => {
 // ============================================================
 describe('style mixing: cout and printf', () => {
   it('printf for formatted output, cout for simple output', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       #include <cstdio>
       using namespace std;
@@ -593,13 +595,13 @@ describe('style mixing: cout and printf', () => {
         return 0;
       }
     `)
-    const output = interp.getOutput().join('')
+    const output = r.out
     expect(output).toContain('value: ')
     expect(output).toContain('42')
   })
 
   it('scanf for input, cout for output', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       #include <cstdio>
       using namespace std;
@@ -610,11 +612,11 @@ describe('style mixing: cout and printf', () => {
         return 0;
       }
     `, ['10', '20'])
-    expect(interp.getOutput().join('')).toContain('30')
+    expect(r.out).toContain('30')
   })
 
   it('cin for input, printf for output', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       #include <cstdio>
       using namespace std;
@@ -625,11 +627,11 @@ describe('style mixing: cout and printf', () => {
         return 0;
       }
     `, ['15'])
-    expect(interp.getOutput().join('')).toContain('The answer is 30')
+    expect(r.out).toContain('The answer is 30')
   })
 
   it('mixed I/O in loop', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       #include <cstdio>
       using namespace std;
@@ -645,7 +647,7 @@ describe('style mixing: cout and printf', () => {
         return 0;
       }
     `, ['3', '2', '3', '4'])
-    expect(interp.getOutput().join('')).toContain('4 9 16')
+    expect(r.out).toContain('4 9 16')
   })
 })
 
@@ -654,7 +656,7 @@ describe('style mixing: cout and printf', () => {
 // ============================================================
 describe('array edge cases', () => {
   it('single element array', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -664,11 +666,11 @@ describe('array edge cases', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('42')
+    expect(r.out).toContain('42')
   })
 
   it('array filled with zeros, then sparse updates', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -682,11 +684,11 @@ describe('array edge cases', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('300')
+    expect(r.out).toContain('300')
   })
 
   it('array as parameter (passed by array name)', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int sumArray(int arr[], int n) {
@@ -701,11 +703,11 @@ describe('array edge cases', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('15')
+    expect(r.out).toContain('15')
   })
 
   it('2D array simulation with row-major indexing', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -729,11 +731,11 @@ describe('array edge cases', () => {
     `)
     // mat = 1,2,3,4 / 5,6,7,8 / 9,10,11,12
     // diagonal: mat[0]=1, mat[5]=6, mat[10]=11
-    expect(interp.getOutput().join('')).toContain('1 6 11')
+    expect(r.out).toContain('1 6 11')
   })
 
   it('array boundary: access last element correctly', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -744,11 +746,11 @@ describe('array edge cases', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('10 50')
+    expect(r.out).toContain('10 50')
   })
 
   it('array with negative values', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -766,11 +768,11 @@ describe('array edge cases', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(r.out).toContain('3')
   })
 
   it('copy array to another array', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -785,7 +787,7 @@ describe('array edge cases', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('0 1 4 9 16')
+    expect(r.out).toContain('0 1 4 9 16')
   })
 })
 
@@ -794,7 +796,7 @@ describe('array edge cases', () => {
 // ============================================================
 describe('complex control flow', () => {
   it('nested loops with break: find first pair summing to target', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -816,11 +818,11 @@ describe('complex control flow', () => {
         return 0;
       }
     `, ['5', '9', '2', '7', '3', '6', '1'])
-    expect(interp.getOutput().join('')).toContain('2+7=9')
+    expect(r.out).toContain('2+7=9')
   })
 
   it('while loop with multiple exit conditions', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -841,11 +843,11 @@ describe('complex control flow', () => {
         return 0;
       }
     `, ['17'])
-    expect(interp.getOutput().join('')).toContain('prime')
+    expect(r.out).toContain('prime')
   })
 
   it('for loop with continue: skip multiples of 3', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -859,11 +861,11 @@ describe('complex control flow', () => {
       }
     `)
     // 1+2+4+5+7+8+10 = 37
-    expect(interp.getOutput().join('')).toContain('37')
+    expect(r.out).toContain('37')
   })
 
   it('deeply nested if-else: BMI classification', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -886,11 +888,11 @@ describe('complex control flow', () => {
         return 0;
       }
     `, ['27'])
-    expect(interp.getOutput().join('')).toContain('overweight')
+    expect(r.out).toContain('overweight')
   })
 
   it('loop with early return from function', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int indexOf(int arr[], int n, int target) {
@@ -908,7 +910,7 @@ describe('complex control flow', () => {
         return 0;
       }
     `)
-    const output = interp.getOutput().join('')
+    const output = r.out
     expect(output).toContain('2')
     expect(output).toContain('-1')
   })
@@ -919,7 +921,7 @@ describe('complex control flow', () => {
 // ============================================================
 describe('combined patterns', () => {
   it('do-while menu with switch dispatch', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -949,13 +951,13 @@ describe('combined patterns', () => {
         return 0;
       }
     `, ['1', '50', '2', '30', '3', '0'])
-    const output = interp.getOutput().join('')
+    const output = r.out
     expect(output).toContain('120')
     expect(output).toContain('final:120')
   })
 
   it('ternary inside loop: absolute difference array', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -976,11 +978,11 @@ describe('combined patterns', () => {
       }
     `, ['4', '1', '5', '3', '8', '4', '2', '7', '1'])
     // |1-4|+|5-2|+|3-7|+|8-1| = 3+3+4+7 = 17
-    expect(interp.getOutput().join('')).toContain('17')
+    expect(r.out).toContain('17')
   })
 
   it('do-while with nested for: repeated digit sum until single digit', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1000,11 +1002,11 @@ describe('combined patterns', () => {
       }
     `, ['9999'])
     // 9+9+9+9 = 36, 3+6 = 9
-    expect(interp.getOutput().join('')).toContain('9')
+    expect(r.out).toContain('9')
   })
 
   it('switch in function: classify character type by ASCII', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int classify(int code) {
@@ -1029,7 +1031,7 @@ describe('combined patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1 2 3 4 0')
+    expect(r.out).toContain('1 2 3 4 0')
   })
 })
 
@@ -1038,7 +1040,7 @@ describe('combined patterns', () => {
 // ============================================================
 describe('tricky beginner patterns', () => {
   it('nested function calls: max of three', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int maxTwo(int a, int b) {
@@ -1055,11 +1057,11 @@ describe('tricky beginner patterns', () => {
         return 0;
       }
     `, ['5', '12', '8'])
-    expect(interp.getOutput().join('')).toContain('12')
+    expect(r.out).toContain('12')
   })
 
   it('multiple returns from function: sign function', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int sign(int x) {
@@ -1072,11 +1074,11 @@ describe('tricky beginner patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1 -1 0')
+    expect(r.out).toContain('1 -1 0')
   })
 
   it('boolean logic: De Morgan and short-circuit', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1091,11 +1093,11 @@ describe('tricky beginner patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1 1')
+    expect(r.out).toContain('1 1')
   })
 
   it('variable shadowing in nested scope', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1109,11 +1111,11 @@ describe('tricky beginner patterns', () => {
       }
     `)
     // Inner x shadows outer; outer x remains 10
-    expect(interp.getOutput().join('')).toContain('0 100 200 10')
+    expect(r.out).toContain('0 100 200 10')
   })
 
   it('pass-by-value semantics: function does not modify caller variable', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void tryModify(int x) {
@@ -1126,11 +1128,11 @@ describe('tricky beginner patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('42')
+    expect(r.out).toContain('42')
   })
 
   it('recursive countdown with base case', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void countdown(int n) {
@@ -1146,11 +1148,11 @@ describe('tricky beginner patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('5 4 3 2 1 Go!')
+    expect(r.out).toContain('5 4 3 2 1 Go!')
   })
 
   it('palindrome check', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1170,11 +1172,11 @@ describe('tricky beginner patterns', () => {
         return 0;
       }
     `, ['5', '1', '2', '3', '2', '1'])
-    expect(interp.getOutput().join('')).toContain('yes')
+    expect(r.out).toContain('yes')
   })
 
   it('selection with index tracking: second largest', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1196,7 +1198,7 @@ describe('tricky beginner patterns', () => {
         return 0;
       }
     `, ['5', '3', '9', '1', '7', '5'])
-    expect(interp.getOutput().join('')).toContain('7')
+    expect(r.out).toContain('7')
   })
 })
 
@@ -1205,7 +1207,7 @@ describe('tricky beginner patterns', () => {
 // ============================================================
 describe('printf format edge cases', () => {
   it('printf with multiple format specifiers', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <cstdio>
       int main() {
         int a = 10;
@@ -1214,11 +1216,11 @@ describe('printf format edge cases', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('a=10, b=20, sum=30')
+    expect(r.out).toContain('a=10, b=20, sum=30')
   })
 
   it('printf with width specifier', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <cstdio>
       int main() {
         for (int i = 1; i <= 3; i++) {
@@ -1228,11 +1230,11 @@ describe('printf format edge cases', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1 4 9')
+    expect(r.out).toContain('1 4 9')
   })
 
   it('scanf reading multiple values', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <cstdio>
       int main() {
         int x, y, z;
@@ -1241,6 +1243,6 @@ describe('printf format edge cases', () => {
         return 0;
       }
     `, ['10', '20', '30'])
-    expect(interp.getOutput().join('')).toContain('60')
+    expect(r.out).toContain('60')
   })
 })

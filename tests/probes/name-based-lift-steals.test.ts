@@ -32,7 +32,7 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
 let parser: Parser
@@ -61,11 +61,14 @@ function componentOf(code: string, name: string): string[] {
     .map((n) => n.componentId ?? '(無身分)'))]
 }
 
-/** 跑一段完整的程式，回它印出什麼。 */
+/**
+ * 跑一段完整的程式，回它印出什麼（spec 202：判準從 JS 直譯器換成 Cella）。
+ * 不是 accept 就丟出判決的描述（下面那條探針把它當「丟錯」量出來）。
+ */
 async function run(code: string): Promise<string> {
-  const interp = new SemanticInterpreter({ maxSteps: 50000 })
-  await interp.execute(lift(code) as never)
-  return interp.getOutput().join('')
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 describe('探針：靠名字認人的樣式會不會搶走宣告', () => {
@@ -113,6 +116,10 @@ describe('探針：靠名字認人的樣式會不會搶走宣告', () => {
    *
    * 判例（`pin_constant`）當年的症狀逐字：「`cout << LOW` 印出 **0**
    * 而不是 **-1**」。這裡問同一句話，換成 `EOF`。
+   *
+   * ⚠️ spec 202 量到：這段程式在真的編譯器上**不合法**——`<iostream>` 實際上把 `EOF` 巨集帶進來了
+   * （Apple clang：`expected identifier`，`EOF` 展開成 `(-1)`），而 Cella 0.1.202611020258 判 accept 印 -99。
+   * 那一半屬 Cella（見 `tests/integration/name-based-lift-scope.test.ts` 的釘子）；這支探針量的是 lift 有沒有搶走名字。
    */
   it('🔴 執行：使用者宣告 `EOF = -99`，它印出什麼', async () => {
     const code = '#include <iostream>\nusing namespace std;\nenum Marker { EOF = -99 };\n'

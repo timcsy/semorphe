@@ -6,7 +6,7 @@
  * do-while, switch-case, break, continue
  *
  * Each program is tested for:
- * 1. execution correctness (via SemanticInterpreter)
+ * 1. execution correctness (via Cella — spec 202：判準從 JS 直譯器換成 Cella)
  * 2. roundtrip stability (lift → generate → lift → generate, gen1 === gen2)
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -16,7 +16,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import type { StylePreset, SemanticNode } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -56,13 +56,14 @@ function roundTrip(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-async function runCode(code: string, stdin: string[] = []) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode as any)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(sem!, stdin)
-  return interp
+/**
+ * 執行交給 Cella（spec 202，重構 6c-2d）：走產品同一條 lift → formalize → Cella 判決。
+ * 不是 accept（reject／unknown／翻不出）就丟出說得出原因的錯；回傳印出的全文。
+ */
+async function runCode(code: string): Promise<string> {
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 // ─── Program 1: Simple if ───
@@ -78,8 +79,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('big')
   })
 
@@ -105,8 +105,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('odd')
   })
 
@@ -136,8 +135,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('C')
   })
 
@@ -164,8 +162,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('55')
   })
 
@@ -188,8 +185,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('1')
     expect(out).toContain('2')
     expect(out).toContain('3')
@@ -218,8 +214,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('20')
   })
 
@@ -244,8 +239,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('1')
     expect(out).toContain('2')
     expect(out).toContain('4')
@@ -284,8 +278,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('Wed')
   })
 
@@ -311,8 +304,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('8')
   })
 
@@ -339,8 +331,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('1 2 4 5 7 8 10')
   })
 
@@ -370,8 +361,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('* . .')
     expect(out).toContain('. * .')
     expect(out).toContain('. . *')
@@ -428,8 +418,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('140')
     expect(out).toContain('good')
     expect(out).toContain('5')
