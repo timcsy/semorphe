@@ -123,6 +123,8 @@ declareLanguagePack({
   topics: [pythonBeginnerTopic as Topic],
   targets: [pythonTargetDef as Target],
   styles: [pythonPreset as StylePreset],
+  // 近似名建議的常用名字（spec 206 的 Python 那一半）：打錯成 prnt、imput、lenght 時說得出要的是哪一個
+  wellKnownNames: ['print', 'input', 'int', 'float', 'str', 'len', 'range', 'list', 'dict', 'abs', 'max', 'min', 'sum', 'sorted', 'append'],
   categories: pythonCategoryDefs,
   createParser: () => new PythonParser(),
 })

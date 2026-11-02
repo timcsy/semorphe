@@ -223,3 +223,34 @@ describe('判決的類別（class）', () => {
     expect(run(v('unknown', [{ kind: 'unsupported', class: 'unsupported', at: call.id }])).diagnostics[0].severity).toBe('info')
   })
 })
+
+/**
+ * Python 的 NameError 也要有近似名（spec 206 的 Python 那一半；6c 收尾清單）。
+ * Cella 給的是沒接住的例外（`uncaught`、類別 termination）而**沒有位置**——名字沒宣告過，樹上同名的節點都是用到它的地方，標在第一個。
+ */
+describe('近似名的建議（Python 的 NameError）', () => {
+  const decl = createNode('python:var_assign', { name: 'count' }, {})
+  const use = createNode('python:var_ref', { name: 'cuont' }, {})
+  const call = createNode('python:func_call', { name: 'prnt' }, {})
+  const t = createNode('python:program', {}, { body: [decl, createNode('python:print', {}, { values: [use] }), call] })
+  const nameError = (name: string): Verdict => v('accept', [{ kind: 'uncaught', class: 'termination', reason: `NameError: name '${name}' is not defined` }])
+  const go = (verdict: Verdict, knownNames: string[] = []) => toDiagnostics({ verdict, types: null, tree: t, readsInput: false, hasStdin: false, knownNames })
+
+  it('★ 樹裡的名字：cuont → 是不是要寫 count，標在用到它的那一顆', () => {
+    expect(go(nameError('cuont')).diagnostics).toEqual([expect.objectContaining({ nodeId: use.id, rule: 'CELLA_UNDECLARED_SUGGEST', params: expect.objectContaining({ name: 'cuont', near: 'count' }) })])
+  })
+  it('★ 語言給的常用名字：prnt → 是不是要寫 print', () => {
+    expect(go(nameError('prnt'), ['print', 'input']).diagnostics[0]).toMatchObject({ nodeId: call.id, params: { name: 'prnt', near: 'print' } })
+  })
+  it('🔴 找不到近似名 → 照原本的那一則（程式怎麼結束），不亂猜', () => {
+    const t2 = createNode('python:program', {}, { body: [createNode('python:var_ref', { name: 'zzzz' }, {})] })
+    const d = toDiagnostics({ verdict: nameError('zzzz'), types: null, tree: t2, readsInput: false, hasStdin: false, knownNames: ['print'] }).diagnostics
+    expect(d[0]).toMatchObject({ rule: 'CELLA_TERMINATION', severity: 'warning' })
+  })
+  it('🔴 樹上找不到那個名字 → 對不到積木：算進狀態列、說得出原因，不畫在別顆上', () => {
+    const r = go(nameError('ghost'), ['print'])
+    expect(r.diagnostics).toEqual([])
+    expect(r.unplaced.info).toBe(1)
+    expect(r.notes.join('\n')).toMatch(/NameError/)
+  })
+})

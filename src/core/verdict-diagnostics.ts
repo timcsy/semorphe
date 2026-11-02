@@ -125,22 +125,40 @@ function ids(tree: SemanticNode): Set<string> {
 
 /**
  * Cella 判「use of undeclared identifier 'X'」時，在**樹裡宣告過的名字**與**語言給的常用名字**裡找近似名（spec 206）。
- * 樹裡的名字：每顆節點的 `name` 屬性（宣告、函式、參數都用這一格）——它不認得任何元件，只讀這一格。
+ * 樹裡的名字：每顆節點的 `name`／`obj` 屬性（宣告、函式、參數、Python 的指派）——它不認得任何元件，只讀這兩格。
  * ⚠️ 判準寧可漏，不可錯（`near-miss.ts` 檔頭）：找不到就回 undefined，診斷照原本的那一則。
  */
 function nearMissFor(reason: string, tree: SemanticNode, knownNames: Iterable<string> = []): { name: string; near: string } | undefined {
-  const m = /undeclared identifier '([^']+)'/.exec(reason)
+  // C 家族：Clang 的「use of undeclared identifier 'X'」；Python：沒接住的「NameError: name 'X' is not defined」
+  const m = /undeclared identifier '([^']+)'/.exec(reason) ?? /NameError: name '([^']+)' is not defined/.exec(reason)
   if (!m) return undefined
   const names = new Set<string>(knownNames)
+  // 候選：每顆節點的 `name`，以及 `obj`（Python 的指派 `count = 3` 把名字放在這一格；C++ 方法呼叫的接收者也是一個宣告過的名字）
   const walk = (n: SemanticNode): void => {
-    const v = n.properties?.name
-    if (typeof v === 'string' && v !== '') names.add(v)
+    for (const key of ['name', 'obj']) {
+      const v = n.properties?.[key]
+      if (typeof v === 'string' && v !== '') names.add(v)
+    }
     for (const kids of Object.values(n.slots ?? {})) for (const c of kids) walk(c)
   }
   walk(tree)
   names.delete(m[1])
   const near = findNearMiss(m[1], names)
   return near === undefined ? undefined : { name: m[1], near }
+}
+
+/** NameError 的那個名字在樹上第一次出現的節點（只讀 `name` 屬性，不認得任何元件）；不是 NameError 或找不到就回 undefined */
+function unboundNameAt(reason: string, tree: SemanticNode): string | undefined {
+  const m = /NameError: name '([^']+)' is not defined/.exec(reason)
+  if (!m) return undefined
+  let hit: string | undefined
+  const walk = (n: SemanticNode): void => {
+    if (hit) return
+    if (n.properties?.name === m[1]) { hit = n.id; return }
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(walk)
+  }
+  walk(tree)
+  return hit
 }
 
 /**
@@ -202,7 +220,8 @@ export function toDiagnostics(input: {
   for (const p of verdict.problems) {
     if (p.class === 'incomplete' || p.kind === 'hole') continue        // 還沒寫完（空槽），不顯示
     if (readsInput && !hasStdin && RUNTIME(p.kind)) { dropped++; continue }
-    const nodeId = p.at ? ownerOf(p.at) : ''
+    // Python 的 NameError 沒有位置（沒接住的例外指不到節點）——那個名字沒有宣告過，所以樹上叫這個名字的都是用到它的地方：標在第一個
+    const nodeId = p.at ? ownerOf(p.at) : (unboundNameAt(p.reason ?? '', tree) ?? '')
     const k = KINDS[p.kind]
     // 🔴 沒有類別的問題：明說，不猜它是學生的錯還是系統的錯（history/330 的護欄）
     const classified = p.class !== undefined && p.class in CLASS_SEVERITY
@@ -214,7 +233,7 @@ export function toDiagnostics(input: {
       continue
     }
     // spec 206：未宣告的名字——有一個長得很像的就說出來（原本住在 JS 直譯器，6c-4 刪掉它之前搬過來）；找不到就不提
-    const suggest = p.kind === 'reject' ? nearMissFor(p.reason ?? '', tree, input.knownNames) : undefined
+    const suggest = p.kind === 'reject' || p.kind === 'uncaught' ? nearMissFor(p.reason ?? '', tree, input.knownNames) : undefined
     if (suggest) {
       diagnostics.push({ nodeId, source: 'cella', rule: 'CELLA_UNDECLARED_SUGGEST', severity, params: { kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '', ...suggest } })
       continue
