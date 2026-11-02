@@ -120,6 +120,32 @@ function nearMissFor(reason: string, tree: SemanticNode, knownNames: Iterable<st
   return near === undefined ? undefined : { name: m[1], near }
 }
 
+/**
+ * **串流配錯運算子**（spec 207）——比較運算（`<`、`>`）的左邊是串流：輸出入串流不能比大小，所以那一定是配錯（`cin < x` 要 `>>`）。
+ * 判決說不出這句（它說 invalid operands，或指著 `endl` 說不是 C++），所以這裡從樹的形狀補上，並**取代**落在同一個比較運算子樹裡的
+ * 那幾則 Cella 的 reject——不然學生同時看到一句對的和一句讓人更困惑的。
+ * ⚠️ 只讀節點的 `operator` 屬性與 `left` 那一格第一顆的 `name`，不認得任何元件；哪些名字是串流由語言給。
+ */
+function streamHints(tree: SemanticNode, streams: Readonly<Record<string, string>>, diagnostics: Diagnostic[]): void {
+  const hits: { node: SemanticNode; stream: string; op: string; want: string }[] = []
+  const walk = (n: SemanticNode): void => {
+    const op = n.properties?.operator
+    const left = n.slots?.left?.[0]
+    const stream = typeof left?.properties?.name === 'string' ? left.properties.name : undefined
+    if ((op === '<' || op === '>') && stream && streams[stream] && streams[stream] !== op) hits.push({ node: n, stream, op, want: streams[stream] })
+    for (const kids of Object.values(n.slots ?? {})) for (const c of kids) walk(c)
+  }
+  walk(tree)
+  for (const h of hits) {
+    const inside = ids(h.node)
+    for (let i = diagnostics.length - 1; i >= 0; i--) {
+      const d = diagnostics[i]
+      if (d.source === 'cella' && (d.rule === 'CELLA_REJECT' || d.rule === 'CELLA_OTHER') && inside.has(d.nodeId)) diagnostics.splice(i, 1)
+    }
+    diagnostics.push({ nodeId: h.node.id, source: 'cella', rule: 'STREAM_OPERATOR_SUGGEST', severity: 'error', params: { stream: h.stream, op: h.op, want: h.want } })
+  }
+}
+
 const RUNTIME = (kind: string): boolean => kind.startsWith('ub') || kind === 'fuel'
 
 export function toDiagnostics(input: {
@@ -130,6 +156,8 @@ export function toDiagnostics(input: {
   hasStdin: boolean
   /** 語言給的常用名字（`cout`、`cin`…）——近似名建議的候選之一（spec 206）；樹裡宣告過的名字另外收 */
   knownNames?: Iterable<string>
+  /** 串流名 → 它要配的運算子（`cout` → `<<`、`cin` → `>>`）——「串流配錯運算子」的提示（spec 207）；語言給 */
+  streamOperators?: Readonly<Record<string, string>>
 }): {
   diagnostics: Diagnostic[]
   notes: string[]
@@ -173,6 +201,7 @@ export function toDiagnostics(input: {
     })
   }
   if (dropped > 0) notes.push('這支程式要讀輸入——給一份輸入，才判得出執行時的問題')
+  if (verdict.verdict === 'reject' && input.streamOperators) streamHints(tree, input.streamOperators, diagnostics)
 
   // `assumes`：不改變有錯／沒錯（第 14 題），單獨交出去給「依 libc++」小標——不混進 notes
   const assumes = (verdict.assumes ?? []).map((a) => ({ implementation: IMPLEMENTATIONS[a.implementation] ?? a.implementation, text: ASSUMES[a.choice] ?? a.choice }))
