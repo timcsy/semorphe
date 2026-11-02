@@ -17,7 +17,7 @@ import { describeExecutionRefusal, describeUnknownPause, describeUnknownContinue
 // 而第四十四條護欄的第二支測試正是「不得有人繞過它」。
 import { describeRuntimeStop } from './runtime-message'
 import type { SemanticNode } from '../core/types'
-import type { VariablePanel } from './panels/variable-panel'
+import type { VariablePanel } from '../panels/variables/view'
 import type { BottomPanel } from './layout/bottom-panel'
 import type { SyncController } from '../core/sync/sync-controller'
 import type { SemanticBus } from '../core/sync/semantic-bus'
