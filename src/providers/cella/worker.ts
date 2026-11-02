@@ -156,6 +156,8 @@ function openDap(sid: number, branch: CellaBranch, program: unknown): void {
 const UB_KEY: Record<string, string> = {
   ubUninit: 'RUNTIME_ERR_UB_UNINIT', ubBounds: 'RUNTIME_ERR_UB_BOUNDS', ubOverflow: 'RUNTIME_ERR_UB_OVERFLOW',
   ubDivZero: 'RUNTIME_ERR_UB_DIV_ZERO', ubOverlap: 'RUNTIME_ERR_UB_OVERLAP',
+  // spec 205：6c-2 量到的另外兩種（越過結尾、板子上沒有的腳）——原本落到通用的「標準沒有定義」那句
+  ubPastEnd: 'RUNTIME_ERR_UB_PAST_END', ubPin: 'RUNTIME_ERR_UB_PIN',
 }
 
 const flat = (o: unknown): Record<string, string> =>
@@ -235,7 +237,10 @@ async function dapOp(sid: number, seq: number, body: DapOp): Promise<void> {
     else if (body.op === 'closeInput') await d.s.closeInput()
     reply({ outcome: outcomeOf(d, body.op === 'launch') })
   }).catch((e: unknown) => {
-    reply({ outcome: { kind: 'failed', aborted: false, key: 'RUNTIME_ERR_FALLBACK', params: { message: e instanceof Error ? e.message : String(e) }, nodeId: null } })
+    const message = e instanceof Error ? e.message : String(e)
+    // spec 205：Cella 的 wasm 內部堆疊溢位（輸出約六千多字之後；已回報 cella）——說得出原因，不落到「說不出是為什麼」
+    const key = /Maximum call stack/i.test(message) ? 'RUNTIME_ERR_CELLA_TOO_DEEP' : 'RUNTIME_ERR_FALLBACK'
+    reply({ outcome: { kind: 'failed', aborted: false, key, params: { message }, nodeId: null } })
   })
 }
 

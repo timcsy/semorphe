@@ -276,3 +276,34 @@ for (const entry of PROVIDERS) {
     })
   })
 }
+
+/**
+ * spec 205（重構 6c-3）：學生按執行走的是工作階段——切換之前先量它在兩種情況下給學生什麼。
+ * ① 執行到一半出錯：出錯前印的要看得到（判決那條路的 `out` 在 reject 時是空的，工作階段這條路不是）。
+ * ② 長輸出：🟡 Cella 0.1.202611020258 印到 6666 字就爆 wasm 的堆疊（已回報，擋切換）——修好那天這條會紅：改成斷言 8000 字整段跑完、解除 6c-3 的阻斷。
+ */
+describe('執行工作階段：切換前要知道的兩件事（Cella）', () => {
+  let p: Provider
+  beforeAll(async () => { p = await (cellaShared ??= cellaInProcess()) }, 400_000)
+
+  it('★ 執行到一半出錯：出錯前的輸出看得到，停下的原因是中文的鍵、指回那一顆', async () => {
+    const tree = lift('#include <iostream>\nusing namespace std;\nint main() {\n  int d;\n  cout << "before" << endl;\n  cin >> d;\n  cout << 10 / d << endl;\n  return 0;\n}\n')
+    const { s, out } = open(p, tree)
+    expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
+    const o = await s.supplyInput('0')
+    expect(o).toMatchObject({ kind: 'failed', error: { i18nKey: 'RUNTIME_ERR_UB_DIV_ZERO' } })
+    expect((o as { error: { nodeId: string | null } }).error.nodeId, '要指回那一顆，學生才知道是哪一行').toBeTruthy()
+    expect(out(), '出錯前印的不得消失').toBe('before\n')
+  }, 120_000)
+
+  it('🟡 已知缺陷（修好時這條會紅）：印 8000 字會在 6666 字停住——訊息說得出是「輸出太長」，不是「說不出為什麼」', async () => {
+    const tree = lift('#include <iostream>\nusing namespace std;\nint main() {\n  for (int i = 0; i < 8000; i++) cout << "x";\n  return 0;\n}\n')
+    const s = p.createSession!({ maxSteps: 10_000_000, formal: formalOf(tree) }, tree)
+    if ('declined' in s) throw new Error(`Cella 不接：${s.declined}`)
+    let text = ''
+    s.onOutput((t) => { text += t })
+    const o = await s.launch(tree, { stopOnEntry: false })
+    expect(o, '🟢 這裡變成 ended 就是 Cella 修好了：改斷言 8000 字整段印出、拿掉 spec 205 的 T008 阻斷').toMatchObject({ kind: 'failed', error: { i18nKey: 'RUNTIME_ERR_CELLA_TOO_DEEP' } })
+    expect(text.length).toBeLessThan(8000)
+  }, 300_000)
+})
