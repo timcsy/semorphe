@@ -349,6 +349,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       return v !== undefined && /^[A-Za-z_]\w*$/.test(v) ? v : name
     },
     functionMacro: (name) => functionMacros.has(name),
+    macroDefined: (name) => macros.has(name) || functionMacros.has(name),
     literalExpr: (text, id) => { const probe = literalNode(text.trim(), id); return probe ? expr(probe) : undefined },
     ownsMember: (n) => FORMALIZE.member.has(n.componentId),
     item: (n) => item(n),

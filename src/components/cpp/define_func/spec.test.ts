@@ -101,11 +101,11 @@ describe('cpp:define_func', () => {
   })
 
   // 🟡 spec 200：semorphe 這一側的缺口——`#ifdef` 還沒有 formalize；補上之後這條會紅：拿掉 knownCellaGap 那層
-  it('🟡 已知缺陷（修好時這條會紅）：execute：`#ifdef` 讀得到它——少了這一行會答錯，而那是安靜的', () => knownCellaGap(/cpp:ifdef：這顆敘述元件還沒有對應/, async () => {
+  it('execute：`#ifdef` 讀得到它——少了這一行會答錯，而那是安靜的', async () => {
     expect(
       await run(`${head}#define rep(i,n) for(int i=0;i<n;i++)\nint main(){\n#ifdef rep\n  cout << "on";\n#endif\n  return 0; }`),
     ).toBe('on')
-  }))
+  })
 
   it('🔴 execute：它【不綁值】——`rep` 不是一個可以印出來的東西', async () => {
     // spec 200：函式形巨集的名字不帶括號不會被展開——真的 C++ 也編不過（`rep` 未宣告），Cella 判 reject 是對的

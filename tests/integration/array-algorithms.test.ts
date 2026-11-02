@@ -173,25 +173,25 @@ describe('條件編譯：#ifdef / #ifndef 的 body 真的會跑', () => {
     await expectCellaOut(`#include <iostream>\nusing namespace std;\nint main(){ \n${body}\n return 0; }\n`, expected)
   }
 
-  // 🟡 我們 formalize 缺：cpp:ifdef／cpp:ifndef（與函式裡的 #define）還沒有對應到 Cella——條件編譯是前處理器的事，要在前端展開，還沒做。期望值 g++ 實測 7
-  it('🟡 已知缺陷（修好時這條會紅）：#define 之後 #ifdef 的 body 會跑', () => knownCellaGap(/cpp:ifn?def：這顆敘述元件還沒有對應到 Cella 的建構子/, async () => {
+  // 條件編譯在前端展開（第 237 刀：cpp:ifdef／ifndef 的 formalize、函式裡的 #define）。期望值 g++ 實測 7
+  it('#define 之後 #ifdef 的 body 會跑', async () => {
     await runPP(`#define N 1\n#ifdef N\ncout << 7;\n#endif`, '7')
-  }))
+  })
 
-  // 🟡 我們 formalize 缺：cpp:ifdef／cpp:ifndef（與函式裡的 #define）還沒有對應到 Cella——條件編譯是前處理器的事，要在前端展開，還沒做。期望值 g++ 實測 1
-  it('🟡 已知缺陷（修好時這條會紅）：未定義時 #ifdef 的 body 不跑', () => knownCellaGap(/cpp:ifn?def：這顆敘述元件還沒有對應到 Cella 的建構子/, async () => {
+  // 條件編譯在前端展開（第 237 刀：cpp:ifdef／ifndef 的 formalize、函式裡的 #define）。期望值 g++ 實測 1
+  it('未定義時 #ifdef 的 body 不跑', async () => {
     await runPP(`#ifdef ZZZ\ncout << 7;\n#endif\ncout << 1;`, '1')
-  }))
+  })
 
-  // 🟡 我們 formalize 缺：cpp:ifdef／cpp:ifndef（與函式裡的 #define）還沒有對應到 Cella——條件編譯是前處理器的事，要在前端展開，還沒做。期望值 g++ 實測 7
-  it('🟡 已知缺陷（修好時這條會紅）：未定義時 #ifndef 的 body 會跑', () => knownCellaGap(/cpp:ifn?def：這顆敘述元件還沒有對應到 Cella 的建構子/, async () => {
+  // 條件編譯在前端展開（第 237 刀：cpp:ifdef／ifndef 的 formalize、函式裡的 #define）。期望值 g++ 實測 7
+  it('未定義時 #ifndef 的 body 會跑', async () => {
     await runPP(`#ifndef ZZZ\ncout << 7;\n#endif`, '7')
-  }))
+  })
 
-  // 🟡 我們 formalize 缺：cpp:ifdef／cpp:ifndef（與函式裡的 #define）還沒有對應到 Cella——條件編譯是前處理器的事，要在前端展開，還沒做。期望值 g++ 實測 1
-  it('🟡 已知缺陷（修好時這條會紅）：已定義時 #ifndef 的 body 不跑', () => knownCellaGap(/cpp:ifn?def：這顆敘述元件還沒有對應到 Cella 的建構子/, async () => {
+  // 條件編譯在前端展開（第 237 刀：cpp:ifdef／ifndef 的 formalize、函式裡的 #define）。期望值 g++ 實測 1
+  it('已定義時 #ifndef 的 body 不跑', async () => {
     await runPP(`#define M 1\n#ifndef M\ncout << 7;\n#endif\ncout << 1;`, '1')
-  }))
+  })
 
   it('★ 巨集名本身不得被當成變數 lift 進 body', async () => {
     // 實測過：`childForFieldName('name')` 在這個位置不一定回傳巨集名節點，

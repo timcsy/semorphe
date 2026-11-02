@@ -82,6 +82,8 @@ export interface FormalizeContext {
    * 照送的話 Cella 判 reject「呼叫未宣告的函式」，而真的 C++ 印 9。呼叫端問它，照實標翻不出。
    */
   functionMacro(name: string): boolean
+  /** 這個名字被 `#define` 過嗎（物件或函式形都算）——`#ifdef`／`#ifndef` 在前端展開要它（⚠️ 整支程式收一次，不看先後：`#ifdef N` 寫在 `#define N` 之前會判成已定義——罕見，照實記下）。 */
+  macroDefined(name: string): boolean
   /**
    * 一段字面量的原文（`3`、`'a'`、`"hi"`）→ 運算式：照登記了 `literal` 的元件翻（spec 203：參數預設值要它）。
    * 沒有任何一顆認得 → undefined（呼叫端照實標翻不出）。核心不認識任何一顆字面元件。
