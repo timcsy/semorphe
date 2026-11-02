@@ -23,6 +23,8 @@
 /** 判決的一個問題。`at` 是 formalize 給的節點標籤（語義樹的 id，或 `<id>/<角色>`、`<id>#<槽>`）。 */
 export interface CellaProblem {
   kind: string
+  /** 類別由 Cella 給（0.1.202611021901 起）：error／unsupported／indeterminate／termination／incomplete／invalid——見 `core/verdict-diagnostics.ts` 的 `VerdictProblem.class` */
+  class?: string
   at?: string
   clause?: string
   reason?: string

@@ -19,7 +19,18 @@ import type { SemanticNode } from './types'
 import { findNearMiss } from './near-miss'
 
 /** 判決的一個問題（Cella 判決 JSON 的 `problems[]`）。`at` 是 formalize 給的節點標籤。 */
-export interface VerdictProblem { kind: string; at?: string; clause?: string; reason?: string }
+export interface VerdictProblem {
+  kind: string
+  /**
+   * 這一則屬於哪一類——**由 Cella 給**（三方會議第二輪 Q15，cella 0.1.202611021901 起）：
+   * error 學生寫錯｜unsupported 系統還不會｜indeterminate 本質判不出｜termination 程式怎麼結束｜incomplete 還沒寫完｜invalid 程式本身不成形。
+   * 沒有這一格的要**明說**（`CELLA_UNCLASSIFIED`），不得由接收端猜（cos-mos 衍生原則 7：跨邊界的意思由產生的一方宣告）。
+   */
+  class?: string
+  at?: string
+  clause?: string
+  reason?: string
+}
 
 /** 判決（Cella 判決 JSON 的形狀；板子上的程式另有 pins／env，這裡不收窄）。 */
 export interface Verdict {
@@ -46,26 +57,38 @@ export interface TypeQuery {
 }
 
 /**
- * 問題種類 → 規則身分與嚴重度（data-model 的表）。**文案在 i18n**（`DIAG_<規則>_BLOCK`／`_CODE`），
+ * 問題種類 → 規則身分（決定文案）。**文案在 i18n**（`DIAG_<規則>_BLOCK`／`_CODE`），
  * 第四十二條護欄從 `VERDICT_RULES` 導出身分、要求每個面板每種語言都有一份。
- * 不在表上的種類 → `CELLA_OTHER`（嚴重度依判決：reject → error、其餘 → info），原文放在 `reason`。
+ * 不在表上的種類 → `CELLA_OTHER`，原文放在 `reason`。
+ * 🔴 **嚴重度不在這裡**（2026-11-03，cella 0.1.202611021901）：它由 Cella 給的 `class` 決定（`CLASS_SEVERITY`）——
+ * 原本這張表也定嚴重度、表外的照「reject → error」猜，那正是 Q15 要拿掉的「接收端自己歸類」（`ub…` 同時用在未定義與未指定行為）。
  */
-const KINDS: Record<string, { rule: string; severity: 'error' | 'info' }> = {
-  ubUninit: { rule: 'CELLA_UB_UNINIT', severity: 'error' },
-  ubBounds: { rule: 'CELLA_UB_BOUNDS', severity: 'error' },
-  ubOverflow: { rule: 'CELLA_UB_OVERFLOW', severity: 'error' },
-  ubDivZero: { rule: 'CELLA_UB_DIV_ZERO', severity: 'error' },
-  ubOverlap: { rule: 'CELLA_UB_OVERLAP', severity: 'error' },
-  reject: { rule: 'CELLA_REJECT', severity: 'error' },
-  unsupported: { rule: 'CELLA_UNSUPPORTED', severity: 'info' },
-  fuel: { rule: 'CELLA_FUEL', severity: 'info' },
-  unspecified: { rule: 'CELLA_UNSPECIFIED', severity: 'info' },
+const KINDS: Record<string, { rule: string }> = {
+  ubUninit: { rule: 'CELLA_UB_UNINIT' },
+  ubBounds: { rule: 'CELLA_UB_BOUNDS' },
+  ubOverflow: { rule: 'CELLA_UB_OVERFLOW' },
+  ubDivZero: { rule: 'CELLA_UB_DIV_ZERO' },
+  ubOverlap: { rule: 'CELLA_UB_OVERLAP' },
+  reject: { rule: 'CELLA_REJECT' },
+  unsupported: { rule: 'CELLA_UNSUPPORTED' },
+  fuel: { rule: 'CELLA_FUEL' },
+  unspecified: { rule: 'CELLA_UNSPECIFIED' },
   // 求值順序未指定、而兩邊的副作用互相衝突（`f() + g()` 兩個都印東西）——標準允許不只一種結果（cella 0.1.202610312349 起）
-  ubOrder: { rule: 'CELLA_UNSPECIFIED', severity: 'info' },
+  ubOrder: { rule: 'CELLA_UNSPECIFIED' },
+  abort: { rule: 'CELLA_TERMINATION' },
+  uncaught: { rule: 'CELLA_TERMINATION' },
 }
 
 /** 判決產出端的全部規則身分（護欄用）。 */
-export const VERDICT_RULES: readonly string[] = [...Object.values(KINDS).map((k) => k.rule), 'CELLA_OTHER', 'TYPE_MISMATCH']
+export const VERDICT_RULES: readonly string[] = [...new Set(Object.values(KINDS).map((k) => k.rule))].concat('CELLA_OTHER', 'CELLA_UNCLASSIFIED', 'TYPE_MISMATCH')
+
+/**
+ * 類別 → 嚴重度（Q15：分類是 Cella 的事，這裡只決定【怎麼呈現】那一類）。
+ * 系統還不會、本質判不出、程式不成形都不是學生的錯 ⟹ info（P6）；程式怎麼結束照實顯示 ⟹ warning；還沒寫完不顯示。
+ */
+const CLASS_SEVERITY: Record<string, 'error' | 'warning' | 'info' | null> = {
+  error: 'error', unsupported: 'info', indeterminate: 'info', termination: 'warning', incomplete: null, invalid: 'info',
+}
 
 /** 實作假設 → 中文（「依 libc++」小標點開的說明）。 */
 const ASSUMES: Record<string, string> = {
@@ -177,13 +200,16 @@ export function toDiagnostics(input: {
   const diagnostics: Diagnostic[] = []
   let dropped = 0
   for (const p of verdict.problems) {
-    if (p.kind === 'hole') continue                                   // 空槽＝還沒寫完，不顯示
+    if (p.class === 'incomplete' || p.kind === 'hole') continue        // 還沒寫完（空槽），不顯示
     if (readsInput && !hasStdin && RUNTIME(p.kind)) { dropped++; continue }
     const nodeId = p.at ? ownerOf(p.at) : ''
     const k = KINDS[p.kind]
-    const severity = k?.severity ?? (verdict.verdict === 'reject' ? 'error' : 'info')
+    // 🔴 沒有類別的問題：明說，不猜它是學生的錯還是系統的錯（history/330 的護欄）
+    const classified = p.class !== undefined && p.class in CLASS_SEVERITY
+    if (!classified) notes.push(`有一則判決沒有說明類別：${p.kind}${p.class ? `（類別「${p.class}」認不得）` : ''}${p.reason ? `：${p.reason}` : ''}`)
+    const severity = classified ? CLASS_SEVERITY[p.class!]! : 'info'
     if (!known.has(nodeId)) {
-      unplaced[severity]++
+      unplaced[severity === 'error' ? 'error' : 'info']++
       notes.push(`有一則判決對不到積木：${p.kind}${p.reason ? `（${p.reason}）` : ''}`)
       continue
     }
@@ -195,7 +221,7 @@ export function toDiagnostics(input: {
     }
     diagnostics.push({
       nodeId, source: 'cella',
-      rule: k?.rule ?? 'CELLA_OTHER',
+      rule: !classified ? 'CELLA_UNCLASSIFIED' : k?.rule ?? 'CELLA_OTHER',
       severity,
       params: { kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
     })
