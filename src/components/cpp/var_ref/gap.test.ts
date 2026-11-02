@@ -76,24 +76,31 @@ describe('串流名字不是變數（Cella）', () => {
   })
 
   /**
-   * 🟡 **我們缺 ＋ 診斷層要補的友善訊息（修好時這條會紅）**：`cout <` 今天在 formalize 就翻不出（`cpp:compare` 當敘述），
-   * 學生看到的是「Cella 還不支援」——把學生的錯說成系統的能力不足，也說不出要配 `<<`。
+   * 🟢 spec 205 T011（D4）修好一半：formalize 原本不收「運算式當敘述」，`cout <`、`cin <`、`Cout <<` 都翻不出，
+   * 學生看到「Cella 還不支援」——把學生的錯說成系統的能力不足。現在照實送出，判決**歸類成學生的錯（reject）並指到那一行**。
+   * 🟡 **還開著的是友善建議（診斷層要補，修好時下面三條會紅）**：判決給的是 clang 式的說法，說不出「要配 <<」「要配 >>」
+   * 「是 cout、它不是變數」（clang 自己的說法是 `did you mean 'cout'?`）。
    */
-  it('🟡 已知缺陷：`cout <` 說不出「要配 <<」（formalize 翻不出運算式敘述的比較）', async () => {
-    await knownCellaGap(/翻不出[\s\S]*cpp:compare/, () => expectRejectSaying('int main(){ cout < "Hello!" << endl; }', /<</))
+  it.each([
+    ['cout <', 'int main(){ cout < "Hello!" << endl; }'],
+    ['cin <', 'int main(){ int x; cin < x; }'],
+    ['Cout <<', 'int main(){ Cout << "Hello!" << endl; }'],
+  ])('★ `%s` 歸類成學生的錯：判 reject（不是「還不支援」），而且指到那一行', async (_name, body) => {
+    const r = await run(body)
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    expect(r.problems[0]?.source?.line, '要指得到是哪一行').toBeGreaterThan(0)
   })
 
-  it('🟡 已知缺陷：`cin <` 說不出「要配 >>」（同上）', async () => {
-    await knownCellaGap(/翻不出[\s\S]*cpp:compare/, () => expectRejectSaying('int main(){ int x; cin < x; }', />>/))
+  it('🟡 已知缺陷：`cout <` 說不出「要配 <<」（診斷層要補）', async () => {
+    await knownCellaGap(/this construct is not part of C\+\+|invalid operands/, () => expectRejectSaying('int main(){ cout < "Hello!" << endl; }', /<</))
   })
 
-  /**
-   * 🟡 **我們缺 ＋ 診斷層要補的友善訊息**：`Cout << …` 今天在 formalize 就翻不出（`cpp:arithmetic` 當敘述）。
-   * 修好 formalize 之後 Cella 會說 `undeclared identifier 'Cout'`——那時這條仍會因為沒說到 `cout` 而停在「形狀變了」，
-   * 要由診斷層補上「是 `cout`、它不是變數」（clang 自己的說法是 `did you mean 'cout'?`）。
-   */
-  it('🟡 已知缺陷：`Cout` 大小寫打錯說不出「是 cout」（formalize 翻不出運算式敘述的位移）', async () => {
-    await knownCellaGap(/翻不出[\s\S]*cpp:arithmetic/, () => expectRejectSaying('int main(){ Cout << "Hello!" << endl; }', /\bcout\b/))
+  it('🟡 已知缺陷：`cin <` 說不出「要配 >>」（診斷層要補）', async () => {
+    await knownCellaGap(/invalid operands/, () => expectRejectSaying('int main(){ int x; cin < x; }', />>/))
+  })
+
+  it('🟡 已知缺陷：`Cout` 大小寫打錯說不出「是 cout」（診斷層要補）', async () => {
+    await knownCellaGap(/undeclared identifier 'Cout'/, () => expectRejectSaying('int main(){ Cout << "Hello!" << endl; }', /\bcout\b/))
   })
 
   // 🔴 不亂認那一側——一般的未宣告變數**不得**被說成串流
