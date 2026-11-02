@@ -32,12 +32,18 @@ export interface CellaRunResult {
   /** formalize 翻不出時：構造與原因 */
   untranslated: { construct: string; reason: string }[]
   assumes: { implementation: string; choice: string }[]
+  /** 判決 JSON 原樣（板子上的程式另有 pins／env／clock——Arduino 的膠囊測試要讀它們；spec 201）；翻不出時是 null */
+  raw: Record<string, unknown> | null
 }
 export interface CellaRunOptions {
   stdin?: string
   /** 步數上限（預設 1,000,000） */
   steps?: number
   lang?: 'cpp' | 'c'
+  /** Cella 的板名（`uno`、`esp32`…，見 `cellaBoardOf`）——有板子就走 arduino 分支，預設步數跟產品一樣放大到 5,000 萬（spec 201） */
+  board?: string
+  /** 板子的環境輸入（`@cella-lang/arduino` README：`{ t: 毫秒, key: 'analog:A0' | 'digital:2' | 'echo:10' | …, value }`）——放在程式 JSON 的 board 旁邊 */
+  inputs?: { t: number; key: string; value: number }[]
 }
 
 let ready: Promise<{ parser: Parser; checker: CellaChecker }> | null = null
@@ -81,20 +87,22 @@ function locate(tree: SemanticNode, code: string, at: string | undefined): Probl
 export async function runCella(code: string, opts: CellaRunOptions = {}): Promise<CellaRunResult> {
   const { parser, checker } = await prepare()
   const tree = createTestLifter().lift(parser.parse(code)!.rootNode as never) as SemanticNode
-  const fz = formalize(tree, { lang: opts.lang ?? 'cpp' })
+  const fz = formalize(tree, { lang: opts.lang ?? 'cpp', board: opts.board })
   if (!fz.program) {
     return {
-      verdict: 'untranslated', out: '', problems: [], assumes: [],
+      verdict: 'untranslated', out: '', problems: [], assumes: [], raw: null,
       untranslated: (fz.unknown as { construct: string; reason: string }[]).map((u) => ({ construct: u.construct, reason: u.reason })),
     }
   }
-  const v = checker.verdict(fz.program, opts.stdin ?? '', opts.steps ?? 1_000_000)
+  const program = opts.inputs ? { ...(fz.program as Record<string, unknown>), inputs: opts.inputs } : fz.program
+  const v = checker.verdict(program, opts.stdin ?? '', opts.steps ?? (opts.board ? 50_000_000 : 1_000_000))
   return {
     verdict: v.verdict,
     out: v.out,
     problems: v.problems.map((p) => ({ ...p, source: locate(tree, code, p.at) })),
     untranslated: [],
     assumes: v.assumes ?? [],
+    raw: v as unknown as Record<string, unknown>,
   }
 }
 
@@ -135,3 +143,21 @@ export async function knownCellaGap(why: RegExp, body: () => Promise<unknown>): 
   }
   throw new Error('這個已知缺陷不在了：本體整段通過——拿掉 knownCellaGap 這層包裝，讓它變回一般的測試')
 }
+
+/** 板子程式的最終狀態（判決的 `env`，原樣是一段 JSON 字串）——spec 201：Arduino 的膠囊測試讀腳位、時鐘、伺服、液晶、EEPROM */
+export interface CellaBoardEnv {
+  clockUs: number
+  loops: number
+  pins: { pin: number; mode: string | null; level: number | null; pwm: number | null; toneHz: number | null }[]
+  servos: unknown[]
+  lcds: unknown[]
+  eeprom: unknown[]
+}
+export function boardEnv(r: CellaRunResult): CellaBoardEnv {
+  const env = r.raw?.env
+  if (typeof env !== 'string') throw new Error(`判決沒有板子的狀態（不是板子程式，或判決不是 accept）：\n${describeCellaResult(r)}`)
+  return JSON.parse(env) as CellaBoardEnv
+}
+/** 一支腳的最終狀態；那支腳從沒被碰過就是 undefined */
+export const boardPin = (r: CellaRunResult, pin: number): CellaBoardEnv['pins'][number] | undefined =>
+  boardEnv(r).pins.find((p) => p.pin === pin)

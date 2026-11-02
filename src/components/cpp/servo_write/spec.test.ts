@@ -16,7 +16,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import { renderToBlocklyState } from '../../../core/projection/block-renderer'
 import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
@@ -177,24 +177,23 @@ describe('第 2 批：套件物件（型別辨識）', () => {
     expect(d).toContain('DHT dht(2, DHT11);')
   })
 
+  // spec 201：執行那幾條換成 Cella 的板子判決（伺服、EEPROM、溫濕度在 Uno；無線網路只有 ESP 的板子有）
   it('🔴 execute ①：伺服的角度是【記住的】，read 回得到 write 寫進去的值', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100_000 })
-    await i.execute(lift(`#include <Servo.h>
+    // 補了 `Serial.begin(9600)`：真的 AVR 沒 begin 時 UART 的發送器沒開，印不出東西——程式的意思不變
+    await expectCellaOut(`#include <Servo.h>
 Servo myServo;
 void setup() {
+  Serial.begin(9600);
   myServo.attach(9);
   myServo.write(120);
   Serial.println(myServo.read());
 }
 void loop() {}
-`))
-    expect(i.getOutput().join('')).toContain('120')
+`, '120\r\n', { board: 'uno' })
   })
 
   it('🔴 execute ②：內建記憶體【完全模擬得了】——寫進去讀得回來', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100_000 })
-    await i.execute(lift(EEPROM_SK))
-    expect(i.getOutput().join('')).toContain('42')
+    await expectCellaOut(EEPROM_SK, '42\r\n', { board: 'uno' })
   })
 
   /**
@@ -203,8 +202,7 @@ void loop() {}
    * 第二支釘的是一個位元組的繞回：255 + 1 寫進去是 0。
    */
   it('🔴 execute ③：沒寫過的 EEPROM 讀出來是 255，而 256 寫進去繞回 0', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100_000 })
-    await i.execute(lift(`#include <EEPROM.h>
+    await expectCellaOut(`#include <EEPROM.h>
 void setup() {
   Serial.begin(9600);
   int n = EEPROM.read(0);
@@ -213,13 +211,14 @@ void setup() {
   Serial.println(EEPROM.read(0));
 }
 void loop() {}
-`))
-    expect(i.getOutput().join('').split(/\r?\n/).filter(Boolean)).toEqual(['255', '0'])
+`, '255\r\n0\r\n', { board: 'uno' })
   })
 
-  it('🔴 execute ③：溫濕度回「不是數字」——而學生的 isnan 檢查會成功', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100_000 })
-    await i.execute(lift(`#include <DHT.h>
+  // 🟡 我們缺（spec 201）：`isnan` 那顆（cpp:math_is_nan）還沒有 formalize，整支翻不出；而 Cella 的 C 函式庫模型（cfamily）也還沒有 isnan
+  // （只在 ESP 的 core 裡出現）。期望值：真的 Uno 沒接感測器時 readHumidity 回 NAN，isnan 成立，印 no sensor
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute ③：溫濕度回「不是數字」——而學生的 isnan 檢查會成功', () => knownCellaGap(/cpp:math_is_nan/, async () => {
+    // 🔴 那條檢查分支**真的被走到**——這就是「NaN 不是投降」的證據
+    await expectCellaOut(`#include <DHT.h>
 DHT dht(2, DHT11);
 void setup() {
   Serial.begin(9600);
@@ -231,16 +230,27 @@ void setup() {
   }
 }
 void loop() {}
-`))
-    // 🔴 那條檢查分支**真的被走到**——這就是「NaN 不是投降」的證據
-    expect(i.getOutput().join('')).toContain('no sensor')
+`, 'no sensor\r\n', { board: 'uno' })
+  }))
+
+  it('🔴 execute ③b：沒接感測器 → 不是數字（Serial 印成 nan）', async () => {
+    // 上一條的本體在 isnan 翻得出來之前驗不到——這一條直接看那個值：Arduino 的 Print::printFloat 遇到 NaN 印 "nan"
+    // ⚠️ 帶了 `dht.begin()`：沒有它時 Cella 判 reject（ubUninit），見回報
+    await expectCellaOut(`#include <DHT.h>
+DHT dht(2, DHT11);
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+  float h = dht.readHumidity();
+  Serial.println(h);
+}
+void loop() {}
+`, 'nan\r\n', { board: 'uno' })
   })
 
   it('🔴 execute ④：無線網路回已連上，讓教學程式的等待迴圈跑得完', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 50_000 })
-    await i.execute(lift(WIFI))
-    // ⚠️ 沒卡在 while 裡，而且印得出位址——那是這個【取捨】的全部目的
-    expect(i.getOutput().join('')).toContain('192.168.1.100')
+    // ⚠️ 沒卡在 while 裡，而且印得出位址——那是這個【取捨】的全部目的（Cella：`wifi` 沒給是 WL_CONNECTED）
+    await expectCellaOut(WIFI, '192.168.1.100\r\n', { board: 'esp32' })
   })
 
   it('🔴 I2C 液晶：兩個型別名一個身分，而【哪一個函式庫不得被改寫】', () => {

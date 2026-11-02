@@ -13,7 +13,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { runCella, expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -33,11 +33,11 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<string> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  await i.execute(lift(c))
-  return i.getOutput().join('')
-}
+/**
+ * spec 201：執行判準換成 Cella 的 Uno 板子判決。原本的程式是 `main` ＋ `cout`——AVR 沒有 `<iostream>`，
+ * 改成 sketch 真正會寫的 `Serial.println`（程式的意思不變）。`echo:<腳位>` 是環境給 `pulseIn` 的脈衝寬度（微秒）。
+ */
+const S = (setup: string): string => `void setup(){ Serial.begin(9600); ${setup} }\nvoid loop(){}\n`
 
 describe('cpp:pulse_read', () => {
   it('lift —— 認得出身分（而 pulseIn 不叫 pulse_in）', () => {
@@ -63,34 +63,22 @@ describe('cpp:pulse_read', () => {
   })
 
   it('🔴 執行 —— 沒接東西回 0，而那與真板子的逾時行為一致（不是靜默降級）', async () => {
-    const out = await run(`
-      #include <iostream>
-      using namespace std;
-      int main() {
-        long d = pulseIn(7, HIGH);
-        cout << d << endl;
-        return 0;
-      }
-    `)
-    expect(out.trim()).toBe('0')
+    await expectCellaOut(S('long d = pulseIn(7, HIGH); Serial.println(d);'), '0\r\n', { board: 'uno' })
+    // 而接了東西就讀得到寬度——回 0 不是「還沒實作」
+    await expectCellaOut(S('long d = pulseIn(7, HIGH); Serial.println(d);'), '1200\r\n',
+      { board: 'uno', inputs: [{ t: 0, key: 'echo:7', value: 1200 }] })
   })
 
   it('🔴 它是【運算式】——回傳值進得了算術，不會炸', async () => {
     // ⚠️ 這一條就是「為什麼不能 skipPaths」的執行機構：
     //    安靜 return undefined 的話，這裡的乘法會把 undefined 餵給 toNumber。
-    const out = await run(`
-      #include <iostream>
-      using namespace std;
-      int main() {
-        long cm = pulseIn(7, HIGH) * 0.034 / 2;
-        cout << cm << endl;
-        return 0;
-      }
-    `)
-    expect(out.trim()).toBe('0')
+    await expectCellaOut(S('long cm = pulseIn(7, HIGH) * 0.034 / 2; Serial.println(cm);'), '0\r\n', { board: 'uno' })
   })
 
   it('⚠️ 腳位超出範圍要出聲，不是安靜回 0', async () => {
-    await expect(run('int main() { long d = pulseIn(99, HIGH); return 0; }')).rejects.toThrow(/腳位號碼/)
+    const r = await runCella(S('long d = pulseIn(99, HIGH);'), { board: 'uno' })
+    expect(r.verdict).toBe('reject')
+    expect(r.problems[0]?.kind).toBe('ubPin')
+    expect(r.problems[0]?.reason).toMatch(/pin 99 is not on the board/)
   })
 })

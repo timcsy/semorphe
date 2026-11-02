@@ -8,7 +8,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { runCella, describeCellaResult } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import { createCppCodePatcher } from '../../../languages/cpp/auto-include'
 import { createPopulatedRegistry } from '../../../languages/cpp/std'
@@ -65,12 +65,23 @@ describe('膠囊自證：cpp:time', () => {
     expect(c).not.toContain('<ctime>')
   })
 
-  it('★ execute：回傳現在的秒數（與 JavaScript 的時鐘相差不到幾秒）', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 10_000 })
-    await i.execute(lift('#include <iostream>\nusing namespace std;\nint main() { cout << time(0); return 0; }'))
-    const printed = Number(i.getOutput().join(''))
-    expect(printed, '印出來的要是一個數').not.toBeNaN()
-    expect(Math.abs(printed - Math.floor(Date.now() / 1000))).toBeLessThan(5)
+  /**
+   * 🔴 原本斷言「與 JavaScript 的時鐘相差不到幾秒」——那量的是 JS 直譯器去讀牆上時鐘。
+   * Cella 是確定性的判決：實測 `time(0)` 回 0，並在判決的 `assumes` 裡記下 `{ environment, time.now }`
+   * ——「現在幾點」是環境給的，判決不假裝知道，而是把這個假設說出來。
+   * 所以斷言改成三個說得出道理的性質：
+   *   ① 判決記下「現在的時間由環境決定」這個假設（這是判決誠實的地方；少了它，固定值就是在說謊）；
+   *   ② 印出來的是一個非負整數（time_t 的秒數）；
+   *   ③ 時間不倒退：先後兩次呼叫，後一次不小於前一次。
+   * ⚠️ 刻意不斷言「是 0」：那是 Cella 選的代表值，不是 time() 的語義。
+   */
+  it('★ execute：判決說出「現在的時間由環境決定」，回傳非負的秒數、而且不倒退', async () => {
+    const r = await runCella('#include <iostream>\n#include <ctime>\nusing namespace std;\nint main() { long a = time(0); long b = time(0); cout << a << " " << (b - a); return 0; }')
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    expect(r.assumes, '🔴 判決沒有記下 time.now 這個環境假設').toContainEqual({ implementation: 'environment', choice: 'time.now' })
+    const [a, diff] = r.out.split(' ')
+    expect(a, '印出來的要是一個非負整數').toMatch(/^\d+$/)
+    expect(Number(diff), '時間倒退了').toBeGreaterThanOrEqual(0)
   })
 
   it('★ 積木渲染：`srand(time(0))` 的種子插槽裡是一塊「現在的時間」，不是通用的呼叫積木', () => {

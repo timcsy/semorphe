@@ -21,8 +21,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { generateCode } from '../../../core/projection/code-generator'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
-import { pinsOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
+import { runCella, boardPin, describeCellaResult } from '../../../../tests/helpers/cella-run'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 
@@ -114,10 +113,14 @@ describe('cpp:ultrasonic_trigger', () => {
   })
 
   it('execute —— 跑完之後觸發腳停在低電位（與那五句一致）', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100_000 })
-    await i.execute(lift(sketch(TRIG('trigPin'))))
-    const pins = pinsOf(i as never)
-    expect(pins.has(9)).toBe(true)                             // ← 正向錨點：真的碰到那根腳
-    expect(pins.get(9)?.value).toBe(0)
+    // spec 201：Cella 的 Uno 板子判決——loop 跑到模擬的 5 秒；`env` 是結束時的硬體、`raw.pins` 是每一次腳位變化
+    // ⚠️ 本體放在 setup、loop 留空：放在 loop 的話它要跑滿模擬的 5 秒（每圈十幾微秒 → 幾十萬圈，一支測試 36 秒）——斷言的是「一次觸發之後」的狀態，跑一次就夠
+    const once = `const int trigPin = 9;\nconst int echoPin = 10;\nvoid setup() {\n  pinMode(trigPin, OUTPUT);\n${TRIG('trigPin')}}\nvoid loop() {}\n`
+    const r = await runCella(once, { board: 'uno' })
+    if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+    const timeline = (r.raw?.pins ?? []) as { pin: number; value: number }[]
+    expect(timeline.some((e) => e.pin === 9 && e.value === 1), '觸發脈衝真的拉高過腳位 9').toBe(true)  // ← 正向錨點：真的碰到那根腳
+    expect(boardPin(r, 9)?.mode).toBe('OUTPUT')
+    expect(boardPin(r, 9)?.level).toBe(0)
   })
 })

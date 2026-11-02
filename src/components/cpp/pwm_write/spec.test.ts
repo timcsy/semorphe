@@ -15,9 +15,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
 import { generateCode } from '../../../core/projection/code-generator'
-import { pinsOf } from '../../../languages/cpp/lang/runtime/arduino-pins'
+import { runCella, boardEnv, boardPin, describeCellaResult, expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 
@@ -38,10 +37,11 @@ const ids = (n: SemanticNode, out: string[] = []): string[] => {
 }
 const sketch = (body: string): string =>
   `void setup() {\n${body}}\nvoid loop() {}\n`
-const runPins = async (c: string): Promise<Map<number, { value: number }>> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  await i.execute(lift(c))
-  return pinsOf(i as never) as Map<number, { value: number }>
+/** ESP32 板子上跑一段（Cella 的板子判決；spec 201），accept 才回結果 */
+const runEsp32 = async (c: string) => {
+  const r = await runCella(c, { board: 'esp32' })
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r
 }
 
 describe('ESP32 PWM（第 3 批五顆）', () => {
@@ -94,40 +94,41 @@ describe('ESP32 PWM（第 3 批五顆）', () => {
     }
   })
 
-  it('🔴 execute ①：舊版——duty 寫到【被繫住的那根腳位】，不是通道號', async () => {
-    const pins = await runPins(sketch('  ledcSetup(0, 5000, 8);\n  ledcAttachPin(4, 0);\n  ledcWrite(0, 128);\n'))
-    expect(pins.has(4), '腳位 4 應該被寫到').toBe(true)      // ← 正向錨點
-    expect(pins.get(4)?.value).toBe(128)
-    // 🔴 通道號 0 不是腳位——不得被當成腳位寫
-    expect(pins.has(0)).toBe(false)
+  // 🟡 Cella 未支援（0.1.202611020258）：Cella 的 ESP32 模型照 arduino-esp32 3.0.7，而 3.x 移除了 `ledcSetup`／`ledcAttachPin`（模型裡沒有這兩個名字）；
+  // 我們這側那兩顆（pwm_open、pwm_tie）也就沒有 formalize——不硬送（送了就是「呼叫未宣告的函式」，學生的 2.x 程式被判成假錯）
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute ①：舊版——duty 寫到【被繫住的那根腳位】，不是通道號', async () => {
+    await knownCellaGap(/cpp:pwm_open[\s\S]*cpp:pwm_tie/, async () => {
+      const r = await runEsp32(sketch('  ledcSetup(0, 5000, 8);\n  ledcAttachPin(4, 0);\n  ledcWrite(0, 128);\n'))
+      expect(boardPin(r, 4)?.pwm, '腳位 4 應該被寫到').toBe(128)  // ← 正向錨點
+      // 🔴 通道號 0 不是腳位——不得被當成腳位寫
+      expect(boardPin(r, 0)).toBeUndefined()
+    })
   })
 
   it('🔴 execute ②：新版——第一格就是腳位', async () => {
-    const pins = await runPins(sketch('  ledcAttach(4, 5000, 8);\n  ledcWrite(4, 200);\n'))
-    expect(pins.has(4)).toBe(true)                           // ← 正向錨點
-    expect(pins.get(4)?.value).toBe(200)
+    const r = await runEsp32(sketch('  ledcAttach(4, 5000, 8);\n  ledcWrite(4, 200);\n'))
+    expect(boardPin(r, 4), '腳位 4 應該被寫到').toBeDefined()   // ← 正向錨點
+    expect(boardPin(r, 4)?.pwm).toBe(200)
   })
 
   it('🔴 execute ③：解析度決定上限——10 位元時 1000 不得被夾成 255', async () => {
-    const pins = await runPins(sketch('  ledcAttach(4, 5000, 10);\n  ledcWrite(4, 1000);\n'))
-    expect(pins.get(4)?.value, '10 位元的上限是 1023').toBe(1000)
+    const r = await runEsp32(sketch('  ledcAttach(4, 5000, 10);\n  ledcWrite(4, 1000);\n'))
+    expect(boardPin(r, 4)?.pwm, '10 位元的上限是 1023').toBe(1000)
   })
 
-  it('🔴 execute ④：設定了通道卻沒接腳位 → 出聲，不得安靜地寫到通道號', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100_000 })
-    let err: string | null = null
-    try {
-      await i.execute(lift(sketch('  ledcSetup(0, 5000, 8);\n  ledcWrite(0, 128);\n')))
-    } catch (e) {
-      err = e instanceof Error ? e.message : String(e)
-    }
-    expect(err, '應該要丟錯而不是安靜地寫').toBeTruthy()
-    expect(err).toContain('沒有接到任何腳位')
+  // 🟡 Cella 未支援（0.1.202611020258）：同 ①——「設定了通道卻沒接腳位」只在 2.x 的 API 寫得出來，而模型與我們這側都沒有那兩個呼叫
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute ④：設定了通道卻沒接腳位 → 出聲，不得安靜地寫到通道號', async () => {
+    await knownCellaGap(/cpp:pwm_open/, async () => {
+      const r = await runCella(sketch('  ledcSetup(0, 5000, 8);\n  ledcWrite(0, 128);\n'), { board: 'esp32' })
+      // 期望：Cella 判 reject，指回那一句 ledcWrite（通道 0 沒有接到任何腳位）——而不是 accept 後安靜地寫到腳位 0
+      if (r.verdict !== 'reject') throw new Error(describeCellaResult(r))
+      expect(r.problems[0]?.source?.text).toContain('ledcWrite')
+      expect(boardEnv(r).pins.find((p) => p.pin === 0)).toBeUndefined()
+    })
   })
 
-  it('execute ⑤：touchRead 回固定的未觸碰讀數（⚠️ 取捨不是模擬）', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100_000 })
-    await i.execute(lift(sketch('  Serial.println(touchRead(4));\n')))
-    expect(i.getOutput().join('')).toContain('75')
+  it('execute ⑤：touchRead 沒有給觸控輸入時回未觸碰的讀數 75（⚠️ 取捨不是模擬）', async () => {
+    // Cella 的 ESP32 模型：`touch:<腳位>` 沒給時讀 75（`@cella-lang/arduino` README），與原本的取捨同一個值
+    await expectCellaOut(sketch('  Serial.begin(115200);\n  Serial.println(touchRead(4));\n'), '75\r\n', { board: 'esp32' })
   })
 })

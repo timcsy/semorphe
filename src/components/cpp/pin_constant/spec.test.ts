@@ -16,9 +16,10 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
+// ⚠️ 只為拿 `PIN_CONSTANTS` 這張表（最後一條）；6c-4 刪 execute.ts 時這張表要搬家
 import { PIN_CONSTANTS } from './execute'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 
@@ -37,12 +38,6 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<string> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  await i.execute(lift(c))
-  return i.getOutput().join('')
-}
-
 describe('膠囊自證：cpp:pin_constant', () => {
   /**
    * 🔴 **這顆的 lift 路被拿掉過一次，而 2026-09-06 它回來了。**
@@ -81,11 +76,12 @@ describe('膠囊自證：cpp:pin_constant', () => {
     expect(ids).toContain('cpp:var_ref')
   })
 
-  it('★ 而使用者自己宣告的同名東西不會被搶走', async () => {
-    const out = await run('#include <iostream>\nusing namespace std;\n' +
-      'int main(){ enum Level { LOW = -1, MEDIUM = 0, HIGH = 1 }; cout << LOW; }')
-    expect(out, '🔴 使用者宣告的 LOW = -1 被腳位常數搶成 0').toBe('-1')
-  })
+  // 🟡 我們缺（spec 201）：`enum` 那顆（cpp:enum）還沒有 formalize，整支翻不出（放到全域也一樣）。期望值：g++ 印 -1
+  // （這一支是一般的 C++，不在板子上——真的 Arduino 上 LOW 是巨集，`enum { LOW = -1 }` 編不過）
+  it('🟡 已知缺陷（修好時這條會紅）：★ 而使用者自己宣告的同名東西不會被搶走', () => knownCellaGap(/cpp:enum/, async () => {
+    await expectCellaOut('#include <iostream>\nusing namespace std;\n' +
+      'int main(){ enum Level { LOW = -1, MEDIUM = 0, HIGH = 1 }; cout << LOW; }', '-1')
+  }))
 
   /**
    * ⚠️ 從**積木**來的節點才會有 `cpp:pin_constant` 這顆身分
@@ -114,8 +110,10 @@ describe('膠囊自證：cpp:pin_constant', () => {
   })
 
   it('★ execute：真的算得出數字（不是回 0 了事）', async () => {
-    const out = await run('#include <iostream>\nusing namespace std;\nint main(){ cout << HIGH << "," << INPUT_PULLUP << "," << A0; }')
-    expect(out, '🔴 執行路沒有實際輸出——一個全錄成空字串的基準等於沒被覆蓋').toBe('1,2,14')
+    // spec 201：Cella 的 Uno 板子判決；原本的 `main` ＋ `cout` 換成 sketch 的 `Serial.print`（AVR 沒有 <iostream>）。Uno 的 A0 是 14
+    await expectCellaOut(
+      'void setup(){ Serial.begin(9600); Serial.print(HIGH); Serial.print(","); Serial.print(INPUT_PULLUP); Serial.print(","); Serial.print(A0); }\nvoid loop(){}\n',
+      '1,2,14', { board: 'uno' })
   })
 
   /**
