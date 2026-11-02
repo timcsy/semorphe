@@ -315,6 +315,10 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     const fn = FORMALIZE.stmt.get(n.componentId)
     if (fn) return fn(n, ctx)
     if (FORMALIZE.decl.has(n.componentId)) return decl(n, false)
+    // 🔴 運算式當敘述（spec 205 T011，D4）：C++ 的任何運算式都可以單獨成一句（[stmt.expr]）。沒有專屬敘述形式、
+    //    但認得成運算式的，就是運算式敘述——原本 `cout < "x";`、`Cout << x;` 這種學生打錯的程式在這裡翻不出，
+    //    被說成「Cella 還不支援」（把學生的錯說成系統的錯）；照實送出之後，判決說得出它錯在哪裡
+    if (FORMALIZE.expr.has(n.componentId)) return [k('sExpr', { n: `${n.id}/stmt`, e: expr(n) })]
     miss(n, '這顆敘述元件還沒有對應到 Cella 的建構子')
     return [k('sHole', { n: n.id })]
   }

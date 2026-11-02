@@ -183,10 +183,12 @@ export class ExecutionController {
   }
 
   /** 廣播這一次到過哪些節點。⚠️ 沒有匯流排時不退路——覆蓋是加分項，不是必需品。 */
-  private broadcastCoverage(counts: ReadonlyMap<string, number>): void {
+  private broadcastCoverage(counts: ReadonlyMap<string, number>, loopCounts: 'entries' | 'checks'): void {
     this.bus?.emit('execution:coverage', {
       visited: [...counts.keys()],
       counts: Object.fromEntries(counts),
+      // 迴圈節點的次數算的是什麼——換算圈數要它（spec 205：Cella 與 JS 的定義不同）
+      loopCounts,
     })
   }
 
@@ -494,7 +496,7 @@ export class ExecutionController {
     this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
     this.reportInterventions(session)
     const counts = session.coverage()
-    if (counts) this.broadcastCoverage(counts)
+    if (counts) this.broadcastCoverage(counts, session.loopCounts ?? 'entries')
     // 給不出覆蓋資料 ⟹ 說出來，不留一片「好像全部都跑到了」的空白（spec 183 R2）
     else this.bus?.emit('execution:coverage-missing', {})
     this.broadcastState({ status: 'completed' })

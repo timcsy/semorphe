@@ -111,6 +111,8 @@ export interface ExecutionSession {
   setInput?(key: string, value: string): Promise<{ ok: boolean; message?: string }>
   /** 每個節點被進入幾次（步數能力）；給不出來時是 null（結果的 `missing` 帶 `steps`，畫面要說出來）。 */
   coverage(): ReadonlyMap<string, number> | null
+  /** `coverage()` 裡迴圈節點的次數算的是什麼（spec 205）：沒寫是 `entries`（進入次數）；Cella 是 `checks`（圈數＋進入次數）。見 `core/iterations.ts` */
+  readonly loopCounts?: 'entries' | 'checks'
   /** 這次執行從外面拿到的東西（重現用、插手紀錄）。 */
   recordedInputs(): readonly SessionInput[]
 }
@@ -148,7 +150,8 @@ export interface CheckAnswer {
 export type Readiness = { state: 'idle' | 'loading' | 'ready' } | { state: 'unavailable'; reason: string }
 
 /** 這次不接（翻不出來、還沒就緒、無法使用）——說得出原因，登錄表往下找下一個（spec 183 R3）。 */
-export interface Declined { declined: string }
+/** 不接：原因，以及（翻不出時）卡在哪一顆節點——畫面要指得到那一行（spec 205 T013） */
+export interface Declined { declined: string; nodeId?: string }
 
 export interface Provider {
   id: string
@@ -230,7 +233,7 @@ export function provide(cap: CapabilityName): Provided {
 export interface OpenedSession {
   session: ExecutionSession | null
   provenance: string | null
-  declined: { provider: string; reason: string }[]
+  declined: { provider: string; reason: string; nodeId?: string }[]
   missing: Missing[]
 }
 
@@ -239,11 +242,11 @@ export interface OpenedSession {
  * 階段 6 之前：Cella 翻不出來／還沒就緒時，由 JS 直譯器接，而 `declined` 說得出為什麼。
  */
 export function openSession(options: SessionOptions, program: SemanticNode, skip: ReadonlySet<string> = new Set()): OpenedSession {
-  const declined: { provider: string; reason: string }[] = []
+  const declined: { provider: string; reason: string; nodeId?: string }[] = []
   for (const p of registry) {
     if (!p.declares.session || !p.createSession || skip.has(p.id)) continue
     const s = p.createSession(options, program)
-    if ('declined' in s) { declined.push({ provider: p.id, reason: s.declined }); continue }
+    if ('declined' in s) { declined.push({ provider: p.id, reason: s.declined, ...(s.nodeId ? { nodeId: s.nodeId } : {}) }); continue }
     const d = p.declares.session
     const missing: Missing[] = []
     if (!d.steps) missing.push('steps')

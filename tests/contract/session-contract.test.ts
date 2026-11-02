@@ -3,18 +3,21 @@
  *
  * 形狀照 DAP（`core/capabilities.ts` 的 `ExecutionSession`）：宿主下指令，每個指令回 `Outcome`。
  * 控制器只靠這一組行為；一個提供者過不了其中一條，控制器在那條路上就會壞。
+ *
+ * 🔴 **spec 205（重構 6c-3）盤點過**：每一條都對兩個提供者各跑一次（`PROVIDERS` 的迴圈）——**沒有只對 JS 跑的條目**，
+ * 所以 Cella 那一格已經涵蓋整份契約（C++ 十條、Python 五條）。JS 那一格刻意留著：JS 提供者還登記在產品裡，
+ * 要等 Cella 修好堆疊溢位（本檔最後一條）才拿（spec 205 的 US4）；拿掉的那一刀把 `PROVIDERS` 的第一筆刪掉即可。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { createTestLifter } from '../helpers/setup-lifter'
-import fs from 'node:fs'
-import path from 'node:path'
 import { jsInterpreterProvider } from '../../src/providers/js-interpreter'
 import { createCellaProvider } from '../../src/providers/cella/provider'
 import { SessionStop, type ExecutionSession, type Provider } from '../../src/core/capabilities'
 import type { SemanticNode } from '../../src/core/types'
 import { liftPython } from '../helpers/python-lift'
+import { cellaProvider, waitSession, until } from '../helpers/cella-session'
 
 let parser: Parser
 beforeAll(async () => {
@@ -25,41 +28,13 @@ beforeAll(async () => {
 })
 
 /**
- * **Cella 提供者，worker 原地跑**——不 mock 判決或工作階段：`worker.ts` 在這個行程裡載入，
- * `fetch` 讀 `node_modules` 的檔（`?url` 在 vitest 裡是 `/node_modules/...`），沒有 IndexedDB 就每次編（快取的失敗路徑）。
+ * **Cella 提供者，worker 原地跑**——不 mock 判決或工作階段（`tests/helpers/cella-session.ts`；spec 205 起與其他執行相關的測試共用同一份，
+ * 編好的模組走產品的建置路 `fetchPrecompiled`，不再每次現場編）。第一次 createSession 會讓 worker 開始準備除錯模組（R4），準備好之前它不接。
  */
 async function cellaInProcess(): Promise<Provider> {
-  const g = globalThis as unknown as { self?: { postMessage(m: unknown): void; onmessage?: (e: { data: unknown }) => void }; fetch: typeof fetch }
-  const toMain: { onmessage: ((e: { data: unknown }) => void) | null; onerror: null; postMessage(m: unknown): void } = {
-    onmessage: null, onerror: null,
-    postMessage: (m) => queueMicrotask(() => g.self!.onmessage!({ data: m })),
-  }
-  g.self = { postMessage: (m) => queueMicrotask(() => toMain.onmessage?.({ data: m })) }
-  const realFetch = g.fetch
-  g.fetch = (async (url: string) => {
-    const u = String(url)
-    // `?url` 在 vitest 裡是 `/node_modules/...`；node_modules 是符號連結（worktree）時是 `/@fs/<絕對路徑>`
-    const file = u.startsWith('/@fs/') ? u.slice(4) : u.startsWith('/node_modules/') ? path.join(process.cwd(), u) : null
-    if (!file) return realFetch(url)
-    const bytes = fs.readFileSync(file.replace(/\?.*$/, ''))
-    return { ok: true, status: 200, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) }
-  }) as never
-  await import('../../src/providers/cella/worker')
-  const p = createCellaProvider(() => toMain as unknown as Worker)
-  p.warmUp!()
-  await until(() => p.readiness!().state === 'ready', 180_000)
-  // 第一次 createSession 會讓 worker 開始編除錯模組（R4）；編好之前它不接
-  const tree = lift(LOOP)
-  await until(() => !('declined' in p.createSession!({ maxSteps: 1, formal: formalOf(tree) }, tree)), 180_000)
+  const p = await cellaProvider()
+  await waitSession(p, lift(LOOP))
   return p
-}
-
-async function until(ok: () => boolean, ms: number): Promise<void> {
-  const t = Date.now()
-  while (!ok()) {
-    if (Date.now() - t > ms) throw new Error('等不到')
-    await new Promise((r) => setTimeout(r, 200))
-  }
 }
 
 const formalOf = (tree: SemanticNode) => ({ tree, targetId: 'cpp', styleId: 'apcs', skeletonId: 'main' })
@@ -276,3 +251,34 @@ for (const entry of PROVIDERS) {
     })
   })
 }
+
+/**
+ * spec 205（重構 6c-3）：學生按執行走的是工作階段——切換之前先量它在兩種情況下給學生什麼。
+ * ① 執行到一半出錯：出錯前印的要看得到（判決那條路的 `out` 在 reject 時是空的，工作階段這條路不是）。
+ * ② 長輸出：🟡 Cella 0.1.202611020258 印到 6666 字就爆 wasm 的堆疊（已回報，擋切換）——修好那天這條會紅：改成斷言 8000 字整段跑完、解除 6c-3 的阻斷。
+ */
+describe('執行工作階段：切換前要知道的兩件事（Cella）', () => {
+  let p: Provider
+  beforeAll(async () => { p = await (cellaShared ??= cellaInProcess()) }, 400_000)
+
+  it('★ 執行到一半出錯：出錯前的輸出看得到，停下的原因是中文的鍵、指回那一顆', async () => {
+    const tree = lift('#include <iostream>\nusing namespace std;\nint main() {\n  int d;\n  cout << "before" << endl;\n  cin >> d;\n  cout << 10 / d << endl;\n  return 0;\n}\n')
+    const { s, out } = open(p, tree)
+    expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
+    const o = await s.supplyInput('0')
+    expect(o).toMatchObject({ kind: 'failed', error: { i18nKey: 'RUNTIME_ERR_UB_DIV_ZERO' } })
+    expect((o as { error: { nodeId: string | null } }).error.nodeId, '要指回那一顆，學生才知道是哪一行').toBeTruthy()
+    expect(out(), '出錯前印的不得消失').toBe('before\n')
+  }, 120_000)
+
+  it('🟡 已知缺陷（修好時這條會紅）：印 8000 字會在 6666 字停住——訊息說得出是「輸出太長」，不是「說不出為什麼」', async () => {
+    const tree = lift('#include <iostream>\nusing namespace std;\nint main() {\n  for (int i = 0; i < 8000; i++) cout << "x";\n  return 0;\n}\n')
+    const s = p.createSession!({ maxSteps: 10_000_000, formal: formalOf(tree) }, tree)
+    if ('declined' in s) throw new Error(`Cella 不接：${s.declined}`)
+    let text = ''
+    s.onOutput((t) => { text += t })
+    const o = await s.launch(tree, { stopOnEntry: false })
+    expect(o, '🟢 這裡變成 ended 就是 Cella 修好了：改斷言 8000 字整段印出、拿掉 spec 205 的 T008 阻斷').toMatchObject({ kind: 'failed', error: { i18nKey: 'RUNTIME_ERR_CELLA_TOO_DEEP' } })
+    expect(text.length).toBeLessThan(8000)
+  }, 300_000)
+})

@@ -47,46 +47,51 @@
  * - **不檢測「紀錄存到哪」**（存檔／匯出）——這一刀只到記憶體裡的一次執行。
  * - ⚠️ **不檢測「人改的東西合不合理」**——重播只保證**重現**，不保證正確。
  *   一個把 `total` 改成 100 的執行，重播還是 100。**那是誠實，不是背書。**
+ *
+ * ## spec 205（重構 6c-3）：接手的是 Cella 的工作階段
+ *
+ * Cella 提供者宣告了 「session: { setInput: true, setVariable: true }」，工作階段有 `supplyInput`、`setVariable`、`recordedInputs`
+ * （`src/providers/cella/provider.ts`）。重播照產品的做法（`execution-controller` 的 `replayLast`）：上一次的 stdin 排成佇列，
+ * 每一次 `awaiting-input` 先從佇列拿，拿不到才問人。
+ *
+ * ```
+ * ① 人打的字被記下來                ✅ Cella
+ * ② 拿紀錄重播 → 同樣輸出、不再問人   ✅ Cella（佇列照產品的 replayLast）
+ * ③ 人改的狀態被記下來              ✅ Cella（停在中斷點 → setVariable）
+ * ④ 人改的狀態重播得到同一個答案      🟡 今天沒有——見那一條
+ * ```
+ *
+ * ⚠️ ③ 原本走「跑到認不出來的東西 → 暫停 → 手填 → 繼續」（`setUnknownComponentPause`、紀錄裡多一筆 `pause-decision`）。
+ * Cella 那一側**沒有那條路**：認不出的東西整支不送（`unknown-component-stops.test.ts`）——改走「停在中斷點 → 手填」，
+ * 它是 Cella 唯一能改值的時機（`setVariable` 只在停下時）。`pause-decision` 那一筆隨那條路一起退場。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { createTestLifter } from '../helpers/setup-lifter'
-import type { Lifter } from '../../src/core/lift/lifter'
+import { cellaProvider, openCella, waitSession } from '../helpers/cella-session'
+import type { ExecutionSession, Outcome, Provider, SessionInput } from '../../src/core/capabilities'
 import type { SemanticNode } from '../../src/core/types'
 
-let tsParser: Parser
-let lifter: Lifter
+let parser: Parser
+let p: Provider
 
-beforeAll(async () => {
-  registerCppLanguage()
-  await Parser.init({ locateFile: (n: string) => `${process.cwd()}/public/${n}` })
-  tsParser = new Parser()
-  tsParser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
-  lifter = createTestLifter()
-})
-
-const liftCppToSemantic = async (code: string): Promise<SemanticNode> => {
-  const sem = lifter.lift(tsParser.parse(code)!.rootNode)
+const liftCpp = (code: string): SemanticNode => {
+  const sem = createTestLifter().lift(parser.parse(code)!.rootNode as never)
   expect(sem, '合成程式 lift 不出來 → 下面比的不是這支程式').not.toBeNull()
   return sem as SemanticNode
 }
 
-/** 一支會讀兩個數字並印出總和的程式——**合成的**，不是真實語料。 */
-/** 一支跑到一半會撞到認不出來的東西的程式——**合成的**。 */
-const HAS_UNKNOWN = `
-#include <iostream>
-using namespace std;
-int main() {
-  int total = 0;
-  asm volatile("nop");
-  total = total + 7;
-  cout << total << endl;
-  return 0;
-}
-`
+beforeAll(async () => {
+  registerCppLanguage()
+  await Parser.init({ locateFile: (n: string) => `${process.cwd()}/public/${n}` })
+  parser = new Parser()
+  parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
+  p = await cellaProvider()
+  await waitSession(p, liftCpp('int main() { return 0; }'))
+}, 400_000)
 
+/** 一支會讀兩個數字並印出總和的程式——**合成的**，不是真實語料。 */
 const SUM_TWO = `
 #include <iostream>
 using namespace std;
@@ -99,33 +104,65 @@ int main() {
 }
 `
 
-async function runWith(
-  tree: SemanticNode,
-  typed: string[],
-): Promise<{ out: string; asked: number; inputs: readonly unknown[] }> {
-  const interp = new SemanticInterpreter({ maxSteps: 100_000 })
+/** 一支在中途停下來讓人改值的程式——**合成的**（停點是 「total = total + 7;」 那一句）。 */
+const EDITABLE = `
+#include <iostream>
+using namespace std;
+int main() {
+  int total = 0;
+  total = total + 7;
+  cout << total << endl;
+  return 0;
+}
+`
+
+/**
+ * 跑到底：每一次 `awaiting-input`，先從佇列拿（重播），拿不到才問人（`ask`，計次）。
+ * 與產品同形：`replayLast` 把上一次的 stdin 排進主控台的佇列，`awaiting-input` 時照常被讀。
+ */
+async function drive(
+  s: ExecutionSession, tree: SemanticNode, queue: string[], ask: () => string,
+): Promise<{ asked: number; outcome: Outcome }> {
   let asked = 0
-  const queue = [...typed]
-  interp.setInputProvider(async () => { asked++; return queue.shift() ?? '\x04' })
-  const out: string[] = []
-  interp.setOutputCallback((t) => out.push(t))
-  await interp.execute(tree as never)
-  return { out: out.join(''), asked, inputs: interp.getRecordedInputs() }
+  let o = await s.launch(tree, { stopOnEntry: false })
+  while (o.kind === 'stopped' && o.stop.reason === 'awaiting-input') {
+    const line = queue.length > 0 ? queue.shift()! : (asked++, ask())
+    o = await s.supplyInput(line)
+  }
+  return { asked, outcome: o }
 }
 
-describe('第七十六條護欄：同一份輸入，重播得到同一個答案', () => {
+async function runWith(tree: SemanticNode, typed: string[]): Promise<{ out: string; asked: number; inputs: readonly SessionInput[] }> {
+  const { s, out } = openCella(p, tree)
+  const rest = [...typed]
+  const { asked, outcome } = await drive(s, tree, [], () => rest.shift() ?? '')
+  expect(outcome, '合成程式要跑完').toEqual({ kind: 'ended' })
+  return { out: out(), asked, inputs: s.recordedInputs() }
+}
+
+/** 停在 「total = total + 7;」，把 total 改成 100，繼續跑完 */
+async function runEdited(tree: SemanticNode): Promise<{ out: string; inputs: readonly SessionInput[] }> {
+  const target = (tree.slots.body ?? []).flatMap(function walk(n: SemanticNode): SemanticNode[] {
+    return [n, ...Object.values(n.slots ?? {}).flat().flatMap(walk)]
+  }).find((n) => n.componentId === 'cpp:var_assign')!
+  const { s, out } = openCella(p, tree)
+  s.setBreakpoints([target.id])
+  expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'breakpoint', nodeId: target.id } })
+  expect(await s.setVariable('total', '100'), '改不了值 → 這支驗的不是那條路').toBe(true)
+  expect(await s.continue()).toEqual({ kind: 'ended' })
+  return { out: out(), inputs: s.recordedInputs() }
+}
+
+describe('第七十六條護欄：同一份輸入，重播得到同一個答案（Cella 工作階段）', () => {
   it('★ 入口條件：這支測試真的餵了輸入進去', async () => {
     // ⚠️ 錨在**這支自己造的合成輸入筆數**上——它不隨任何缺陷被修好而變小。
-    const tree = await liftCppToSemantic(SUM_TWO)
-    const first = await runWith(tree, ['3', '4'])
-    expect(first.asked, '一次都沒被問 → 這支沒有走到它要驗的路，下面的綠不算數')
-      .toBe(2)
+    const first = await runWith(liftCpp(SUM_TWO), ['3', '4'])
+    expect(first.asked, '一次都沒被問 → 這支沒有走到它要驗的路，下面的綠不算數').toBe(2)
     expect(first.out.trim(), '合成程式本身要跑得對，否則下面比的是兩個錯的').toBe('7')
   })
 
   it('🔴 ① 人打的字要被記下來', async () => {
-    const tree = await liftCppToSemantic(SUM_TWO)
-    const { inputs } = await runWith(tree, ['3', '4'])
+    const { inputs } = await runWith(liftCpp(SUM_TWO), ['3', '4'])
     expect(inputs, '打了兩個值而紀錄是空的 → 這次執行重現不出來').toEqual([
       { kind: 'stdin', value: '3' },
       { kind: 'stdin', value: '4' },
@@ -133,71 +170,47 @@ describe('第七十六條護欄：同一份輸入，重播得到同一個答案'
   })
 
   it('🔴 ② 拿那份紀錄重播 → 輸出逐字相同，而且【不再問人】', async () => {
-    const tree = await liftCppToSemantic(SUM_TWO)
+    const tree = liftCpp(SUM_TWO)
     const first = await runWith(tree, ['3', '4'])
-
-    const replay = new SemanticInterpreter({ maxSteps: 100_000 })
-    let askedAgain = 0
-    replay.setInputProvider(async () => { askedAgain++; return '999' })
-    const out: string[] = []
-    replay.setOutputCallback((t) => out.push(t))
-    replay.setReplayInputs(first.inputs as never)
-    await replay.execute(tree as never)
-
-    expect(out.join(''), '重播的輸出與第一次不同 → 那份紀錄沒有被用上').toBe(first.out)
-    expect(askedAgain, '🔴 重播還在問人 → 它不是重播，是重跑').toBe(0)
+    const replayQueue = first.inputs.filter((i): i is Extract<SessionInput, { kind: 'stdin' }> => i.kind === 'stdin').map((i) => i.value)
+    const { s, out } = openCella(p, tree)
+    const { asked, outcome } = await drive(s, tree, replayQueue, () => '999')
+    expect(outcome).toEqual({ kind: 'ended' })
+    expect(out(), '重播的輸出與第一次不同 → 那份紀錄沒有被用上').toBe(first.out)
+    expect(asked, '🔴 重播還在問人 → 它不是重播，是重跑').toBe(0)
   })
 
   it('🔴 ③ 人改的狀態也要被記下來——而它正是 2026-08-26 造出來的那個洞', async () => {
-    // ⚠️ **走真的路徑**：跑到一顆認不出來的東西 → 暫停 → 手填 → 繼續。
-    //    不用「直接對一個空的直譯器呼叫 setVariableFromHost」——
-    //    那樣改不到任何變數（名字不在作用域裡），驗到的是失敗路徑。
-    const tree = await liftCppToSemantic(HAS_UNKNOWN)
-    const interp = new SemanticInterpreter({ maxSteps: 100_000 })
-    const out: string[] = []
-    interp.setOutputCallback((t) => out.push(t))
-    interp.setUnknownComponentPause(async () => {
-      interp.setVariableFromHost('total', '100')
-      return 'continue'
-    })
-    await interp.execute(tree as never)
-
-    expect(out.join('').trim(), '手填沒有生效 → 這支驗的不是那條路').toBe('107')
-    expect(interp.getRecordedInputs()).toEqual([
-      { kind: 'set-variable', name: 'total', value: '100' },
-      { kind: 'pause-decision', decision: 'continue' },
-    ])
+    // ⚠️ **走真的路徑**：停下 → 手填 → 繼續（不是對一個沒開跑的工作階段改值——那樣改不到任何變數，驗到的是失敗路徑）
+    const { out, inputs } = await runEdited(liftCpp(EDITABLE))
+    expect(out.trim(), '手填沒有生效 → 這支驗的不是那條路').toBe('107')
+    expect(inputs).toEqual([{ kind: 'set-variable', name: 'total', value: '100' }])
   })
 
-  it('🔴 ④ 手填過的那次執行，重播要得到【同一個】答案', async () => {
-    // 這一條是整條規範的重點：`模擬的誠實` §① 說的正是這件事。
-    const tree = await liftCppToSemantic(HAS_UNKNOWN)
-    const first = new SemanticInterpreter({ maxSteps: 100_000 })
-    const o1: string[] = []
-    first.setOutputCallback((t) => o1.push(t))
-    first.setUnknownComponentPause(async () => {
-      first.setVariableFromHost('total', '100')
-      return 'continue'
-    })
-    await first.execute(tree as never)
-
-    const replay = new SemanticInterpreter({ maxSteps: 100_000 })
-    const o2: string[] = []
-    replay.setOutputCallback((t) => o2.push(t))
-    let askedAgain = 0
-    replay.setUnknownComponentPause(async () => { askedAgain++; return 'stop' })
-    replay.setReplayInputs(first.getRecordedInputs())
-    await replay.execute(tree as never)
-
-    expect(o2.join(''), '🔴 重播沒有拿到同一個答案 → 那次執行重現不出來').toBe(o1.join(''))
-    expect(askedAgain, '🔴 重播還在問人 → 它不是重播').toBe(0)
+  /**
+   * 🟡 **今天沒有（修好時這條會紅）**：手填過的那次執行，重播得不到同一個答案。
+   *
+   * - Cella 工作階段的紀錄只有 「{ kind, name, value }」——**沒有「在第幾次停下時改的」**，重播不知道該在哪裡套用；
+   *   `cella-lang/dap` 自己的 `trace()` 有 `afterStop`，但只記 stdin 與環境輸入，**不記 setVariable**（Cella 未支援）。
+   * - 產品因此照實不重播它：`replayLast` 只重播 stdin，並說「這次重播沒有包含你手動改的 n 筆」（`REPLAY_SKIPPED`）——P6 的誠實，不是靜默。
+   *
+   * 這裡斷言今天的狀態：紀錄沒有位置、只重播 stdin 的那一次得到的是程式自己的答案（7），不是手填過的（107）。
+   * 修好的那天（紀錄帶位置、重播在同一個停點套用）第一個斷言會紅——那時改成「重播得到 107、而且不再問人」。
+   */
+  it('🟡 ④ 手填過的那次執行，重播今天得不到同一個答案（紀錄沒有位置；產品照實說沒重播）', async () => {
+    const tree = liftCpp(EDITABLE)
+    const first = await runEdited(tree)
+    const edit = first.inputs.find((i) => i.kind === 'set-variable')!
+    expect(Object.keys(edit).sort(), '🟢 紀錄開始帶「在哪裡改的」⟹ 改成真的重播並斷言同一個答案').toEqual(['kind', 'name', 'value'])
+    const replay = await runWith(tree, [])
+    expect(first.out.trim()).toBe('107')
+    expect(replay.out.trim(), '只重播 stdin：拿到的是程式自己的答案').toBe('7')
   })
 
   it('★ 反向：沒有人打過字的執行，紀錄要是空的（不得無中生有）', async () => {
     // 缺了這一條，一個「什麼都記」的實作也能通過上面幾條，
     // 而那會讓「這次執行有沒有人介入過」這個問題失去答案。
-    const tree = await liftCppToSemantic('int main() { return 0; }')
-    const { inputs } = await runWith(tree, [])
+    const { inputs } = await runWith(liftCpp('int main() { return 0; }'), [])
     expect(inputs).toEqual([])
   })
 })

@@ -140,8 +140,10 @@ export interface DiagnosticBlock {
 /** Data-driven diagnostic rule definition. */
 export interface DiagnosticRule {
   blockTypes: string[]
-  check: 'hasInput' | 'varDeclareNames'
+  check: 'hasInput' | 'varDeclareNames' | 'numberInputRange'
   inputName?: string
+  /** `numberInputRange`：插槽接的是數字積木時，值要落在 [min, max]（spec 205）。數字積木的型別與欄位由語言給 */
+  range?: { min: number; max: number; numberBlock: string; numberField: string }
   severity: 'warning' | 'error'
   /** 規則的身分。⚠️ 這個欄位以前叫 `message`——**而它從來就不是訊息**。 */
   rule: string
@@ -184,6 +186,24 @@ export function runDiagnostics(blocks: DiagnosticBlock[], rules: DiagnosticRule[
             })
           }
           break
+
+        case 'numberInputRange': {
+          // spec 205：只判「接的是數字積木」的情形——變數、運算式不猜它的值；空插槽是另一條規則的事
+          const target = rule.inputName ? block.getInputTargetBlock(rule.inputName) : null
+          const r = rule.range
+          if (!target || !r || target.type !== r.numberBlock) break
+          const text = target.getFieldValue(r.numberField)
+          const v = text === null ? NaN : Number(text)
+          if (!Number.isFinite(v) || (v >= r.min && v <= r.max)) break
+          diagnostics.push({
+            nodeId: block.nodeId,
+            severity: rule.severity,
+            rule: rule.rule,
+            params: { inputName: rule.inputName ?? '', value: text ?? '', min: r.min, max: r.max },
+            source: 'component',
+          })
+          break
+        }
 
         case 'varDeclareNames': {
           // 🔴 **第幾個名字是空的，以前在這裡被丟掉。**

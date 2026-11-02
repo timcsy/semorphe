@@ -41,7 +41,7 @@ export type WorkerRequest =
   | { id: number; kind: 'load' }
   | { id: number; kind: 'check'; program: unknown; input: string; fuel?: number }
   | { kind: 'dap-prepare'; branch: CellaBranch }
-  | { kind: 'dap-open'; sid: number; branch: CellaBranch; program: unknown }
+  | { kind: 'dap-open'; sid: number; branch: CellaBranch; program: unknown; maxSteps?: number }
   | { kind: 'dap-op'; sid: number; seq: number; body: DapOp }
 export type WorkerReply =
   | { kind: 'status'; status: 'loading' | 'ready' | 'unavailable'; reason?: string; cached?: boolean }
@@ -135,14 +135,14 @@ function debuggerBytes(b: CellaBranch): Promise<Uint8Array> {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- cella-lang/dap 沒有型別宣告 */
-interface DapSession { sid: number; s: any; last: any; exited: boolean; terminated: boolean; chain: Promise<void> }
+interface DapSession { sid: number; s: any; last: any; exited: boolean; terminated: boolean; chain: Promise<void>; maxSteps: number | null; overBudget: boolean }
 const sessions = new Map<number, Promise<DapSession>>()
 
-function openDap(sid: number, branch: CellaBranch, program: unknown): void {
+function openDap(sid: number, branch: CellaBranch, program: unknown, maxSteps: number | null): void {
   sessions.set(sid, (async () => {
     const { createSession } = await import('cella-lang/dap' as string)
     const s = await createSession(await debuggerBytes(branch), { program: JSON.stringify(program) })
-    const d: DapSession = { sid, s, last: null, exited: false, terminated: false, chain: Promise.resolve() }
+    const d: DapSession = { sid, s, last: null, exited: false, terminated: false, chain: Promise.resolve(), maxSteps, overBudget: false }
     s.onEvent((ev: string, body: any) => {
       if (ev === 'output') post({ kind: 'dap-output', sid, text: String(body.output ?? '') })
       else if (ev === 'stopped') d.last = body
@@ -156,14 +156,25 @@ function openDap(sid: number, branch: CellaBranch, program: unknown): void {
 const UB_KEY: Record<string, string> = {
   ubUninit: 'RUNTIME_ERR_UB_UNINIT', ubBounds: 'RUNTIME_ERR_UB_BOUNDS', ubOverflow: 'RUNTIME_ERR_UB_OVERFLOW',
   ubDivZero: 'RUNTIME_ERR_UB_DIV_ZERO', ubOverlap: 'RUNTIME_ERR_UB_OVERLAP',
+  // spec 205：6c-2 量到的另外兩種（越過結尾、板子上沒有的腳）——原本落到通用的「標準沒有定義」那句
+  ubPastEnd: 'RUNTIME_ERR_UB_PAST_END', ubPin: 'RUNTIME_ERR_UB_PIN',
 }
 
 const flat = (o: unknown): Record<string, string> =>
   Object.fromEntries(Object.entries((o ?? {}) as Record<string, unknown>).map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)]))
 
+/** 沒有接住的例外 → 一句話：`EOFError：EOF when reading a line`（C++ 的 what() 同理）；認不出欄位時才退回原文 */
+function exceptionText(detail: any): string {
+  const d = (detail ?? {}) as Record<string, unknown>
+  const parts = [d.type ?? d.name, d.what ?? d.message].filter((x): x is string => typeof x === 'string' && x !== '')
+  return parts.length > 0 ? parts.join('：') : JSON.stringify(d)
+}
+
 /** DAP 的停下事件 → 跨邊界的 Outcome。 */
 function outcomeOf(d: DapSession, launching: boolean): WireOutcome {
   const b = d.last
+  // 步數用完（spec 205 T010）：在上限處暫停的，不是學生按的暫停——停成「步數用完」，工作階段到此為止
+  if (d.overBudget) return { kind: 'failed', aborted: false, key: 'RUNTIME_ERR_MAX_STEPS', params: { max: String(d.maxSteps ?? '') }, nodeId: b?.nodeId || null }
   if (d.terminated) return { kind: 'failed', aborted: true, key: 'RUNTIME_ERR_ABORTED', params: {}, nodeId: null }
   if (!b) return { kind: 'ended' }
   const nodeId: string | null = b.nodeId || null
@@ -175,7 +186,8 @@ function outcomeOf(d: DapSession, launching: boolean): WireOutcome {
     case 'unspecified-behavior':
       return { kind: 'failed', aborted: false, key: 'RUNTIME_ERR_UNSPECIFIED_BEHAVIOR', params: flat(b.detail), nodeId }
     case 'exception':
-      return { kind: 'failed', aborted: false, key: 'RUNTIME_ERR_UNCAUGHT_EXCEPTION', params: { ...flat(b.detail), text: JSON.stringify(b.detail ?? {}) }, nodeId }
+      // spec 205 T012（D7）：{text} 是學生看到的那一句——原本是整包 JSON（`{"type":"EOFError",…}`），改成「型別：說明」
+      return { kind: 'failed', aborted: false, key: 'RUNTIME_ERR_UNCAUGHT_EXCEPTION', params: { ...flat(b.detail), text: exceptionText(b.detail) }, nodeId }
     case 'unsupported':
       // 一步也沒有執行：交給下一個提供者（啟動之後才遇到的不會走到這裡——Cella 在檢查時就判了）
       if (launching) return { kind: 'declined', reason: String(b.detail?.why ?? b.detail?.reason ?? 'unsupported') }
@@ -228,14 +240,32 @@ async function dapOp(sid: number, seq: number, body: DapOp): Promise<void> {
       return
     }
     d.last = null
-    if (body.op === 'launch') await d.s.launch({ stopOnEntry: body.stopOnEntry })
-    else if (body.op === 'continue') await d.s.continue()
-    else if (body.op === 'stepIn') await d.s.stepIn()
-    else if (body.op === 'supplyInput') await d.s.supplyInput(body.text)
-    else if (body.op === 'closeInput') await d.s.closeInput()
+    // 🔴 步數上限（spec 205 T010）：`cella-lang/dap` 的 fuel 是「每一段」的步數（段與段之間交回事件迴圈），不是總預算——
+    //    不另外看的話無窮迴圈要學生自己按停止（JS 直譯器照 maxSteps 停）。段與段之間這個計時器排得進來：
+    //    加總各節點走過的次數（與 JS 直譯器的「步」同一個意思），超過就暫停，outcomeOf 把它停成「步數用完」
+    const watch = d.maxSteps === null ? null : setInterval(() => {
+      const visits = coverageOf(d)
+      if (!visits || d.overBudget) return
+      let used = 0
+      for (const n of Object.values(visits)) used += n
+      if (used > d.maxSteps!) { d.overBudget = true; d.s.pause() }
+    }, 30)
+    try {
+      if (body.op === 'launch') await d.s.launch({ stopOnEntry: body.stopOnEntry })
+      else if (body.op === 'continue') await d.s.continue()
+      else if (body.op === 'stepIn') await d.s.stepIn()
+      else if (body.op === 'supplyInput') await d.s.supplyInput(body.text)
+      else if (body.op === 'closeInput') await d.s.closeInput()
+    } finally {
+      if (watch !== null) clearInterval(watch)
+    }
+    if (d.overBudget) { d.terminated = true; try { d.s.terminate() } catch { /* 已經結束 */ } }
     reply({ outcome: outcomeOf(d, body.op === 'launch') })
   }).catch((e: unknown) => {
-    reply({ outcome: { kind: 'failed', aborted: false, key: 'RUNTIME_ERR_FALLBACK', params: { message: e instanceof Error ? e.message : String(e) }, nodeId: null } })
+    const message = e instanceof Error ? e.message : String(e)
+    // spec 205：Cella 的 wasm 內部堆疊溢位（輸出約六千多字之後；已回報 cella）——說得出原因，不落到「說不出是為什麼」
+    const key = /Maximum call stack/i.test(message) ? 'RUNTIME_ERR_CELLA_TOO_DEEP' : 'RUNTIME_ERR_FALLBACK'
+    reply({ outcome: { kind: 'failed', aborted: false, key, params: { message }, nodeId: null } })
   })
 }
 
@@ -243,7 +273,7 @@ self.onmessage = (e: MessageEvent<WorkerRequest>): void => {
   const msg = e.data
   if (msg.kind === 'load') { void load(); return }
   if (msg.kind === 'dap-prepare') { void debuggerBytes(msg.branch).catch(() => undefined); return }
-  if (msg.kind === 'dap-open') { openDap(msg.sid, msg.branch, msg.program); return }
+  if (msg.kind === 'dap-open') { openDap(msg.sid, msg.branch, msg.program, msg.maxSteps ?? null); return }
   if (msg.kind === 'dap-op') { void dapOp(msg.sid, msg.seq, msg.body); return }
   if (pending) post({ id: pending.id, kind: 'skipped' })
   pending = msg

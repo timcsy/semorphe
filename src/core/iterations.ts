@@ -34,6 +34,45 @@ import { annotationOf } from './skip-declarations'
 import { bodySlotsOf } from './component/traits'
 import type { SemanticNode } from './types'
 
+/**
+ * **迴圈節點的次數算的是什麼**——提供者自己說（`ExecutionSession.loopCounts`，spec 205）。
+ *
+ * ```
+ * entries   JS 直譯器   迴圈節點只在進入時算一次           跑 3 圈 → 迴圈 1、身體 3
+ * checks    Cella       每檢查一次條件算一次（圈數＋進入）   跑 3 圈 → 迴圈 4、身體 3
+ * ```
+ *
+ * 2026-11-02 實測 Cella：while／for／do-while 一律「圈數＋進入次數」（巢狀外 3 內 4 → 內層 15＝12＋3；一圈都沒跑 → 1）。
+ * 照 JS 的定義去除的話是 floor(3／4)＝0——徽章不顯示、「預測揭曉」說 0 圈，而畫面上沒有任何錯誤。
+ */
+export type LoopCounts = 'entries' | 'checks'
+
+/** 這顆迴圈被**進入**了幾次：JS 的迴圈次數就是它；Cella 的要扣掉圈數（＝身體最常跑的那一句的次數） */
+function entriesOf(own: number, body: number, loopCounts: LoopCounts): number {
+  return loopCounts === 'checks' ? own - body : own
+}
+
+/**
+ * 一句敘述**被執行了幾次**。一般的敘述就是它的次數；而 Cella 的計數下，**身體裡的迴圈**的次數是「圈數＋進入次數」，
+ * 外層要的是它被執行（進入）了幾次——不換算的話巢狀的外層會被內層的圈數灌大（外 3 內 4 → 外層讀到 15）。
+ */
+function runsOf(node: SemanticNode, counts: ReadonlyMap<string, number>, loopCounts: LoopCounts): number {
+  const own = node.id === undefined ? 0 : (counts.get(node.id) ?? 0)
+  if (loopCounts !== 'checks' || !isLoop(node) || own === 0) return own
+  return entriesOf(own, bodyRuns(node, counts, loopCounts), loopCounts)
+}
+
+/** 一顆迴圈的身體跑了幾圈：裝語句的格子裡，最常被執行的那一句 */
+function bodyRuns(node: SemanticNode, counts: ReadonlyMap<string, number>, loopCounts: LoopCounts): number {
+  let body = 0
+  for (const slot of bodySlotsOf(node.componentId)) {
+    for (const child of node.slots?.[slot] ?? []) {
+      if (child) body = Math.max(body, runsOf(child, counts, loopCounts))
+    }
+  }
+  return body
+}
+
 /** 這顆節點是不是一個**重複器**——⚠️ 讀宣告，不看元件名。 */
 export function isLoop(node: SemanticNode): boolean {
   return annotationOf(node.componentId, 'control_flow') === 'loop'
@@ -73,27 +112,26 @@ export function loopNodeById(
 export function loopRatio(
   node: SemanticNode,
   counts: ReadonlyMap<string, number>,
+  loopCounts: LoopCounts = 'entries',
 ): number | undefined {
   if (node.id === undefined || !isLoop(node)) return undefined
   const own = counts.get(node.id) ?? 0
   if (own === 0) return undefined      // 這顆迴圈整個沒被走到（在沒進去的分支裡）
-  let body = 0
-  for (const slot of bodySlotsOf(node.componentId)) {
-    for (const child of node.slots?.[slot] ?? []) {
-      if (child?.id !== undefined) body = Math.max(body, counts.get(child.id) ?? 0)
-    }
-  }
-  return Math.floor(body / own)
+  const body = bodyRuns(node, counts, loopCounts)
+  const entries = entriesOf(own, body, loopCounts)
+  return entries > 0 ? Math.floor(body / entries) : undefined
 }
 
 /**
  * @param root   這一次跑的那棵樹（**顯示樹**——學生看到的就是它；`null` 就是還沒有）
- * @param counts `SemanticInterpreter.getVisitCounts()`
+ * @param counts 工作階段的 `coverage()`（每個節點走過幾次）
+ * @param loopCounts 那份次數裡迴圈節點算的是什麼（見 `LoopCounts`）
  * @returns 迴圈節點 id → 跑了幾輪。⚠️ **只收 > 1 的**，理由見下。
  */
 export function iterationCounts(
   root: SemanticNode | null | undefined,
   counts: ReadonlyMap<string, number>,
+  loopCounts: LoopCounts = 'entries',
 ): Map<string, number> {
   const out = new Map<string, number>()
   if (!root) return out
@@ -126,14 +164,9 @@ export function iterationCounts(
         //
         // > **一份「哪些格子裝語句」的清單，只要寫第二份，
         // > 第二份就會漏掉那 41 顆用另一種寫法宣告的。**
-        const bodySlots = bodySlotsOf(node.componentId)
-        let body = 0
-        for (const slot of bodySlots) {
-          for (const child of kids[slot] ?? []) {
-            if (child?.id !== undefined) body = Math.max(body, counts.get(child.id) ?? 0)
-          }
-        }
-        const times = Math.floor(body / own)
+        const body = bodyRuns(node, counts, loopCounts)
+        const entries = entriesOf(own, body, loopCounts)
+        const times = entries > 0 ? Math.floor(body / entries) : 0
         // ⚠️ **只收 > 1 的**：
         //    `×1` 是雜訊（跑一輪的迴圈畫面上不需要一個標籤）；
         //    `×0`（一輪都沒進去）**已經由「執行覆蓋」標過了**——兩個機制

@@ -147,6 +147,8 @@ class CellaSession implements ExecutionSession {
     return { ok: r.ok === true, ...(r.message ? { message: r.message } : {}) }
   }
   coverage(): ReadonlyMap<string, number> | null { return this.visits }
+  /** Cella 每檢查一次迴圈條件算一次（圈數＋進入次數；2026-11-02 實測，spec 205） */
+  readonly loopCounts = 'checks' as const
   recordedInputs(): readonly SessionInput[] { return this.inputs }
 }
 
@@ -207,9 +209,10 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
   const send = (m: WorkerRequest): void => ensure().postMessage(m)
 
   /** 翻成 Cella 的程式；翻不出來回原因。與判決同一條路（補進入點 → formalize）。 */
-  const formalOf = (f: NonNullable<SessionOptions['formal']>): { program: unknown; branch: CellaBranch } | { why: string } => {
+  const formalOf = (f: NonNullable<SessionOptions['formal']>): { program: unknown; branch: CellaBranch } | { why: string; nodeId?: string } => {
     const r = formalizeFor(f)
-    if (!r.program) return { why: `Cella 還不支援：${[...new Set(r.unknown.map((u) => u.reason))].join('、')}` }
+    // 帶出第一個翻不出的節點——畫面要指得到是哪一行還不支援（spec 205 T013）
+    if (!r.program) return { why: `Cella 還不支援：${[...new Set(r.unknown.map((u) => u.reason))].join('、')}`, ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
     return { program: r.program, branch: branchOf(r.program as never) }
   }
 
@@ -220,7 +223,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
     if (state.state === 'unavailable') return { declined: `判斷功能無法使用：${state.reason}` }
     if (!/^(cpp|python):/.test(options.formal.tree.componentId)) return { declined: '這個語言還沒有 Cella' }
     const f = formalOf(options.formal)
-    if ('why' in f) return { declined: f.why }
+    if ('why' in f) return { declined: f.why, ...(f.nodeId ? { nodeId: f.nodeId } : {}) }
     const st = debuggerState.get(f.branch)
     if (st !== 'ready') {
       // 還沒準備好：背景準備除錯模組（建置時編好的只是下載；開發模式沒有就現場編，約 20 秒），這一次先交給下一個提供者（research R4）。
@@ -231,7 +234,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
     const id = ++sid
     const s = new CellaSession(id, send, f.program)
     sessions.set(id, s)
-    send({ kind: 'dap-open', sid: id, branch: f.branch, program: f.program })
+    send({ kind: 'dap-open', sid: id, branch: f.branch, program: f.program, maxSteps: options.maxSteps })
     return s
   }
 

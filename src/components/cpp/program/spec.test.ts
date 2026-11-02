@@ -33,133 +33,135 @@
  *
  * - **不檢測 `loop()` 跑幾圈**——那是「界」的問題，由呼叫端決定（見 `arduino-clock`）
  * - **不檢測腳位／Serial**——那些是別的膠囊
+ *
+ * ## spec 205（重構 6c-3）：改由 Cella 背書
+ *
+ * 原本手搭 `cpp:program` 的樹給 JS 直譯器跑。現在每一條都是**一段程式碼**交給 Cella：C++ 用 `runCella`，
+ * Arduino 用板子的判決（`runCella(code, { board: 'uno' })`——Cella 帶著 Arduino 核心的 `main.cpp`：setup 一次、loop 重複）。
+ * 骨架補進入點（學生只寫本體、`int main() {` 是骨架包上去的）走產品的判決入口 `provider.check`（`withEntryFunctions`）。
+ *
+ * 🔴 **一條期望值改了**：「沒有 main、只有 setup → setup 跑一次」。真實的 Arduino 核心 `main.cpp` 呼叫 `setup()` 與 `loop()`，
+ * 少了 `loop` 連結就失敗（`undefined reference to 'loop'`）——Cella 照核心判 reject 並說出缺的是 `loop`。
+ * JS 直譯器「只跑 setup」是它自己的寬鬆，不是板子的行為 ⟹ 改成「出聲並說出缺 loop」。
  */
-import { describe, it, expect } from 'vitest'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
+import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
+import { runCella, expectCellaOut, describeCellaResult } from '../../../../tests/helpers/cella-run'
+import { cellaProvider, openCella, waitSession } from '../../../../tests/helpers/cella-session'
+import type { Provider } from '../../../core/capabilities'
 import type { SemanticNode } from '../../../core/types'
 
-registerCppLanguage()
+const H = '#include <iostream>\nusing namespace std;\n'
+/** `void <name>() { 印出 <text> }`——C++ 用 cout，板子用 Serial */
+const cppFn = (name: string, text: string): string => `void ${name}() {\n  cout << "${text}";\n}\n`
+const ardFn = (name: string, text: string): string => `void ${name}() {\n  Serial.begin(9600);\n  Serial.print("${text}");\n}\n`
+const ARD_LOOP = 'void loop() {\n  Serial.print("L");\n  delay(1000);\n}\n'
 
-const node = (componentId: string, properties: Record<string, unknown> = {}, slots: Record<string, SemanticNode[]> = {}): SemanticNode =>
-  ({ componentId, properties, slots } as SemanticNode)
+let parser: Parser
+let p: Provider
+const lift = (c: string): SemanticNode => createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
+beforeAll(async () => {
+  await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
+  parser = new Parser()
+  parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
+  registerCppLanguage()
+  p = await cellaProvider()
+}, 400_000)
 
-/** `void <name>(){ cout << <text> << endl; }` */
-const printingFunc = (name: string, text: string): SemanticNode =>
-  node('cpp:func_def', { name, return_type: 'void' }, {
-    params: [],
-    body: [node('cpp:print', {}, { values: [node('cpp:literal_string', { value: text })] })],
-  })
+/** 產品的判決入口：照骨架補進入點（`withEntryFunctions`）再判 */
+const checkWithSkeleton = (code: string, skeletonId: string, targetId = 'cpp') =>
+  p.check!({ tree: lift(code), targetId, styleId: 'apcs', skeletonId, input: '' })
 
-const program = (...body: SemanticNode[]): SemanticNode => node('cpp:program', {}, { body })
-
-async function run(tree: SemanticNode): Promise<{ out: string; err: string }> {
-  const i = new SemanticInterpreter({ maxSteps: 50_000 })
-  try {
-    await i.execute(tree)
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) {
-    return { out: i.getOutput().join(''), err: (e as Error).message }
-  }
-}
-
-describe('cpp:program 的進入點', () => {
+describe('cpp:program 的進入點（Cella）', () => {
   it('★ 有 main → 跑 main（既有行為，不得改變）', async () => {
-    const { out } = await run(program(printingFunc('main', 'M')))
-    expect(out).toBe('M')
+    await expectCellaOut(H + 'int main() {\n  cout << "M";\n  return 0;\n}\n', 'M')
   })
 
-  it('★ 沒有 main 而有 setup → setup 跑一次', async () => {
-    const { out, err } = await run(program(printingFunc('setup', 'S')))
-    expect(err, '🔴 setup 應該跑得起來').toBe('')
-    expect(out).toBe('S')
+  it('★ 板子上有 setup 與 loop → setup 先跑一次，loop 重複', async () => {
+    const r = await runCella(ardFn('setup', 'S') + ARD_LOOP, { board: 'uno' })
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    expect(r.out.startsWith('S'), `🔴 setup 沒有先跑：${r.out}`).toBe(true)
+    expect(r.out.slice(1), `🔴 loop 沒有重複（輸出 ${JSON.stringify(r.out)}）`).toMatch(/^L{2,}$/)
   })
 
-  it('★ setup 先於 loop，而 loop 會重複', async () => {
-    const { out } = await run(program(printingFunc('setup', 'S'), printingFunc('loop', 'L')))
-    expect(out.startsWith('S'), `🔴 setup 沒有先跑：${out}`).toBe(true)
-    expect(
-      out.length,
-      `🔴 loop 只跑了一次（輸出 ${JSON.stringify(out)}）——那不是「重複執行」，是「多呼叫了一次」。`,
-    ).toBeGreaterThan(2)
+  it('★ 板子上只有 setup（沒有 loop）→ 出聲，並說出缺的是 loop（真實的 Arduino 核心連結不過）', async () => {
+    // 期望值改過：原本是「setup 跑一次」（JS 直譯器的寬鬆）。依據：Arduino 核心的 main.cpp 呼叫 loop()，少了它是連結錯誤。
+    const r = await runCella(ardFn('setup', 'S'), { board: 'uno' })
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    expect(r.problems.map((x) => x.reason).join('\n')).toMatch(/\bloop\b/)
   })
 
   /**
-   * 🔴 **這一支在修好之前必須是紅的。**
-   *
-   * 今天的行為是**安靜結束**——而那正是本功能的起因：
+   * 🔴 **「都沒有 → 出聲」**——今天的 JS 行為曾經是**安靜結束**，而那正是本功能的起因：
    * 「找不到進入點」與「跑完了什麼都沒印」在報表上長得一樣。
    */
-  it('★ 都沒有 → 出聲，不得安靜結束', async () => {
-    const { err } = await run(program(printingFunc('helper', 'H')))
-    expect(
-      err,
-      '🔴 一個沒有任何進入點的程式【安靜地結束了】。\n' +
-        '而那與「跑完了什麼都沒印」在報表上長得一模一樣——' +
-        '那正是十段 Arduino 語料曾經被誤報成「跑完了」的原因。',
-    ).not.toBe('')
+  it('★ 都沒有 → 出聲，不得安靜結束（C++ 與板子各一次）', async () => {
+    const cpp = await runCella(H + cppFn('helper', 'H'))
+    expect(cpp.verdict, '🔴 一個沒有任何進入點的程式【安靜地結束了】').toBe('reject')
+    expect(cpp.problems.map((x) => x.reason).join('\n')).toMatch(/main/)
+    const ard = await runCella('void helper() {\n}\n', { board: 'uno' })
+    expect(ard.verdict, describeCellaResult(ard)).toBe('reject')
+    expect(ard.problems.map((x) => x.reason).join('\n')).toMatch(/\bsetup\b/)
   })
 
   /**
-   * 🔴 **這兩支釘的是那條規則的【邊界】，而它們是兩次翻車換來的。**
+   * 🔴 **這兩支釘的是那條規則的【邊界】，而它們是兩次翻車換來的**（第一版只問函式 → 144 支紅；第二版漏了空程式）。
    *
-   * ```
-   * 第一版   只問 `ctx.functions` → 144 支既有測試當場紅
-   *          而它們是對的：body 裡直接放敘述的程式【沒有函式，而它跑得好好的】
-   * 第二版   補了「有非函式節點就放行」→ 剩 1 支紅：【空程式】
-   *          `[].some()` 是 false ——⚠️ 一支比 144 支難發現
-   * ```
+   * > **「沒有進入點」與「進入點不是一個函式」是兩件事。**
    *
-   * > **「沒有進入點」與「進入點不是一個函式」是兩件事，
-   * > 而只問 `functions` 的話，第二種會被誤判成第一種。**
+   * Cella 那一側：學生只寫本體時，骨架（`main.json`／`arduino.json`）把它包進進入點——`withEntryFunctions`，與產碼同一條規則。
    */
-  it('★ 頂層敘述【本身就是進入點】——不得因為沒有函式就報錯', async () => {
-    const { out, err } = await run(program(
-      node('cpp:print', {}, { values: [node('cpp:literal_string', { value: 'T' })] })))
-    expect(err, '🔴 一個沒有函式、而直接放敘述的程式被判成「找不到進入點」').toBe('')
-    expect(out).toBe('T')
+  it('★ 頂層敘述【本身就是進入點】（骨架包進 main）——不得因為沒有函式就報錯', async () => {
+    const a = await checkWithSkeleton('cout << "T";', 'main')
+    expect(a.verdict?.verdict, JSON.stringify(a.verdict?.problems)).toBe('accept')
+    expect(a.verdict?.out).toBe('T')
   })
 
-  it('★ 空程式不算「找不到進入點」——它什麼都沒有', async () => {
-    const { err } = await run(program())
-    expect(err, '🔴 學生剛打開編輯器按執行，不該看到錯誤').toBe('')
+  it('★ 空程式不算「找不到進入點」——學生剛打開編輯器按執行，不該看到錯誤（main 與 Arduino 骨架）', async () => {
+    const main = await checkWithSkeleton('', 'main')
+    expect(main.verdict?.verdict, JSON.stringify(main.verdict?.problems)).toBe('accept')
+    expect(main.verdict?.out).toBe('')
+    const ard = await checkWithSkeleton('', 'arduino', 'arduino-uno')
+    expect(ard.verdict?.verdict, JSON.stringify(ard.verdict?.problems)).toBe('accept')
   })
 
-  it('★ main 與 setup 同時存在 → main 贏（不看載入順序）', async () => {
-    const both = program(printingFunc('setup', 'S'), printingFunc('main', 'M'))
-    const reversed = program(printingFunc('main', 'M'), printingFunc('setup', 'S'))
-    expect((await run(both)).out, '🔴 兩者都在時應該跑 main').toBe('M')
-    expect(
-      (await run(reversed)).out,
-      '🔴 換個順序結果就不同 → 勝負由【載入順序】決定，而那個順序不是任何人設計的',
-    ).toBe('M')
+  it('★ main 與 setup 同時存在 → main 贏（不看載入順序；C++ 與板子都是）', async () => {
+    const both = H + cppFn('setup', 'S') + 'int main() {\n  cout << "M";\n  return 0;\n}\n'
+    const reversed = H + 'int main() {\n  cout << "M";\n  return 0;\n}\n' + cppFn('setup', 'S')
+    await expectCellaOut(both, 'M')
+    await expectCellaOut(reversed, 'M')
+    // 板子：自己寫了 main 就不走核心的 main.cpp（核心是靜態函式庫，main 已有定義就不連進來）——依據是 AVR 核心的連結方式
+    const ard = await runCella(ardFn('setup', 'S') + 'int main() {\n  Serial.begin(9600);\n  Serial.print("M");\n  return 0;\n}\n', { board: 'uno' })
+    expect(ard.verdict, describeCellaResult(ard)).toBe('accept')
+    expect(ard.out).toBe('M')
   })
 
   /**
-   * 🔴 **第二次按執行，loop 也要跑**（2026-10-13，cella 讀我們的 code 時指出來的）。
-   *
-   * `arduino-clock` 的模擬時鐘是模組層的狀態，而 `resetClock()` 的註解寫著
-   * 「每次 `execute` 都要叫」——**產品路徑上零個呼叫者**，只有測試在叫。
-   * 於是同一頁第二次執行時，時鐘從上一次的 5000 毫秒接著走、預算已用完，
-   * **`loop()` 一圈都不跑**，而 `millis()` 也不從 0 開始。
-   *
-   * ⚠️ 其他測試抓不到它，因為它們的 `run` 自己先叫了 `resetClock()`——
-   * 測試替產品做了產品該做的事。這一支刻意**不叫**。
+   * 🔴 **第二次按執行，loop 也要跑**（2026-10-13，cella 讀我們的 code 時指出來的：JS 直譯器的模擬時鐘是模組層的狀態，沒有人歸零）。
+   * Cella 的判決是程式 JSON 的純函式——這一條留著當回歸：同一支 sketch 判兩次，輸出逐字相同。
    */
   it('★ 同一個 sketch 連跑兩次，第二次的 loop 圈數與第一次相同', async () => {
-    const sketch = program(printingFunc('setup', 'S'), printingFunc('loop', 'L'))
-    const first = await run(sketch)
-    const second = await run(sketch)
+    const sketch = ardFn('setup', 'S') + ARD_LOOP
+    const first = await runCella(sketch, { board: 'uno' })
+    const second = await runCella(sketch, { board: 'uno' })
     expect(first.out.length, '前提：第一次 loop 有在重複').toBeGreaterThan(2)
-    expect(second.out, `🔴 第二次執行的 loop 跑了 ${second.out.length - 1} 圈（第一次 ${first.out.length - 1} 圈）——時鐘沒有歸零`).toBe(first.out)
+    expect(second.out, '🔴 第二次執行的 loop 圈數不同——狀態跨執行殘留').toBe(first.out)
   })
 
-  it('★ setup 拋錯 → loop 不繼續跑', async () => {
-    const boom = node('cpp:func_def', { name: 'setup', return_type: 'void' }, {
-      params: [], body: [node('cpp:var_ref', { name: '這個名字不存在' })],
-    })
-    const { out, err } = await run(program(boom, printingFunc('loop', 'L')))
-    expect(err, '🔴 setup 拋的錯應該傳出來').not.toBe('')
-    expect(out, `🔴 setup 失敗了而 loop 還在跑（輸出 ${JSON.stringify(out)}）`).toBe('')
-  })
+  /**
+   * setup 在執行期出錯 → loop 不得繼續跑。判決 reject 時 `out` 一律是空的（看不出 loop 有沒有跑），
+   * 所以走工作階段（學生按執行的那條路）：出錯前印的 `S` 看得到、停在那一顆、後面沒有任何 `L`。
+   * （原本用「setup 讀一個不存在的名字」——那在 C++ 是編譯錯誤，整支不會跑；改成真正的執行期錯誤：讀未初始化的變數。）
+   */
+  it('★ setup 執行期出錯 → loop 不繼續跑', async () => {
+    const tree = lift('void setup() {\n  Serial.begin(9600);\n  Serial.print("S");\n  int a;\n  int b = a + 1;\n  Serial.print(b);\n}\n' + ARD_LOOP)
+    const formal = { tree, targetId: 'arduino-uno', styleId: 'apcs', skeletonId: 'arduino' }
+    await waitSession(p, tree, formal)
+    const { s, out } = openCella(p, tree, { formal })
+    const o = await s.launch(tree, { stopOnEntry: false })
+    expect(o, '🔴 setup 的錯應該讓執行停下').toMatchObject({ kind: 'failed', error: { i18nKey: 'RUNTIME_ERR_UB_UNINIT' } })
+    expect(out(), `🔴 setup 失敗了而 loop 還在跑（輸出 ${JSON.stringify(out())}）`).toBe('S')
+  }, 120_000)
 })

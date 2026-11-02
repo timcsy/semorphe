@@ -136,3 +136,30 @@ describe('runDiagnostics', () => {
     expect(result.map(d => d.nodeId)).toEqual(['n_b1', 'n_b3'])
   })
 })
+
+// spec 205（6c-3 T006）：板子的判決照 arduino-esp32 的真實行為——位元數超出 1～16 時 analogReadResolution 直接 return、不報錯；
+// 「參數不合理要出聲」是教學提示，住在診斷層（warning），不是板子判決（原本是 JS 直譯器丟錯）
+describe('數字插槽的範圍（numberInputRange）', () => {
+  const num = (v: string) => makeBlock({ id: 'n1', type: 'cpp_literal_number', getFieldValue: (f: string) => (f === 'NUM' ? v : null) })
+  const res = (target: DiagnosticBlock | null) => makeBlock({ id: 'r1', type: 'cpp_analog_resolution', getInputTargetBlock: (n: string) => (n === 'BITS' ? target : null) })
+  const run = (b: DiagnosticBlock) => runDiagnostics([b], cppDiagnosticRules).filter((d) => d.rule === 'VALUE_OUT_OF_RANGE')
+
+  it('★ 99 位元 → 一則 warning，帶著值與範圍', () => {
+    const d = run(res(num('99')))
+    expect(d).toHaveLength(1)
+    expect(d[0]).toMatchObject({ nodeId: 'n_r1', severity: 'warning', params: { inputName: 'BITS', value: '99', min: 1, max: 16 } })
+  })
+  it('★ 正向錨點：12 位元不提示', () => {
+    expect(run(res(num('12')))).toHaveLength(0)
+  })
+  it('邊界：0 與 17 提示、1 與 16 不提示', () => {
+    expect(run(res(num('0')))).toHaveLength(1)
+    expect(run(res(num('17')))).toHaveLength(1)
+    expect(run(res(num('1')))).toHaveLength(0)
+    expect(run(res(num('16')))).toHaveLength(0)
+  })
+  it('接的不是數字積木（變數、運算式）→ 不猜、不提示；空插槽也不提示（那是另一條規則的事）', () => {
+    expect(run(res(makeBlock({ id: 'v1', type: 'cpp_var_ref' })))).toHaveLength(0)
+    expect(run(res(null))).toHaveLength(0)
+  })
+})
