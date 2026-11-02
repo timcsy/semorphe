@@ -203,10 +203,8 @@ int main() {
   // 我們 formalize 缺：Cella 有頂層的 `iTypedef`（cfamily 的 Item），而 `cpp:typedef`／`cpp:using_alias` 還沒有 formalize.ts，
   // 型別名 `Integer`／`Real`／`UInt` 也要引擎的型別解析認得——不是一個呼叫就送得完的形狀，先釘住。
   // 期望值 g++ -std=c++17 實測：42\n3.14\n100\n（原本只斷言 toContain 三個值）
-  it('🟡 已知缺陷（修好時這條會紅）：executes correctly', async () => {
-    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
-      await expectCellaOut(code, '42\n3.14\n100\n')
-    })
+  it('executes correctly', async () => {
+    await expectCellaOut(code, '42\n3.14\n100\n')
   })
 
   it('roundtrip is stable', () => {

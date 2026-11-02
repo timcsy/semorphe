@@ -3,6 +3,7 @@
  * 錨點是 2026-11-02 第 226 刀（spec 201）手動調過的那一次：6 顆、79→73、1892→1898、1478→1484、六顆 files 各 +1。
  */
 import { describe, it, expect } from 'vitest'
+import { execFileSync } from 'node:child_process'
 import { plan } from '../../../tools/bump-formalize-baselines'
 
 const SIX = ['cpp:delay_microseconds', 'cpp:micros', 'cpp:pin_attach', 'cpp:pwm_attach', 'cpp:pwm_write', 'cpp:touch_read']
@@ -36,4 +37,15 @@ describe('補了 formalize 之後的四份基線', () => {
     const b = before()
     expect(() => plan(['cpp:no_such'], 'x', (n) => b[n])).toThrow(/上限表裡沒有/)
   })
+})
+
+/**
+ * 🔴 **從命令列真的跑一次**（第 234 刀第一次用它就壞了）：這個 repo 是 ESM，`__dirname` 在 tsx 底下不存在，
+ * 而 vitest 會補上它——上面那幾條只測 `plan`，所以一直是綠的。只預覽，不寫檔；相對於 HEAD 沒有新增的 formalize。
+ */
+describe('命令列', () => {
+  it('★ npx tsx 跑得起來（不寫檔）', () => {
+    const out = execFileSync('npx', ['tsx', 'tools/bump-formalize-baselines.ts', '--base', 'HEAD', '--why', '冒煙測試'], { encoding: 'utf8' })
+    expect(out).toMatch(/沒有新增的 formalize\.ts|新增的 formalize/)
+  }, 60_000)
 })

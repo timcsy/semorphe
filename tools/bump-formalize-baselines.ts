@@ -21,8 +21,11 @@
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const ROOT = path.resolve(__dirname, '..')
+// ⚠️ 這個 repo 是 ESM（package.json 的 type: module）——沒有 __dirname／__filename；它的單元測試在 vitest 底下有，所以從命令列跑才會壞（第 234 刀第一次真的用它時撞到）
+const SELF = fileURLToPath(import.meta.url)
+const ROOT = path.resolve(path.dirname(SELF), '..')
 const BASE_DIR = path.join(ROOT, 'tests/baselines')
 
 /** 這一刀新增的 formalize（相對於 base；含還沒提交的） */
@@ -81,4 +84,4 @@ function main(): void {
   if (!process.argv.includes('--write')) console.log('加 --write 寫進去；寫完照樣跑 npm run test:guard')
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) main()
+if (process.argv[1] && path.resolve(process.argv[1]) === SELF) main()
