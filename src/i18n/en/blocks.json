@@ -456,6 +456,7 @@
   "FLOW_TITLE_CPP_MEMORY_FILL": "Fill memory",
   "FLOW_TITLE_CPP_METHOD_CALL": "Call method",
   "FLOW_TITLE_CPP_METHOD_OVERRIDE": "Override method",
+  "FLOW_TITLE_CPP_METHOD_DEF": "Method",
   "FLOW_TITLE_CPP_METHOD_VIRTUAL": "Virtual method",
   "FLOW_TITLE_CPP_METHOD_VIRTUAL_PURE": "Pure virtual method",
   "FLOW_TITLE_CPP_MICROS": "Microseconds since start",

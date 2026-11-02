@@ -1,0 +1,6 @@
+{
+  "C_METHOD_DEF_MSG0": "方法 %1 %2（%3）%4",
+  "C_METHOD_DEF_TOOLTIP": "定義這個類別的成員函式；選 const 表示它不會改動物件自己，const 物件也能呼叫它",
+  "C_METHOD_DEF_CONST_NO": "（會改自己）",
+  "C_METHOD_DEF_CONST_YES": "const（不改自己）"
+}

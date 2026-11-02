@@ -26,6 +26,7 @@ import { buildConstructor } from '../../../../components/cpp/constructor/lift'
 import { buildDestructor } from '../../../../components/cpp/destructor/lift'
 import { buildMethodVirtual } from '../../../../components/cpp/method_virtual/lift'
 import { buildMethodOverride } from '../../../../components/cpp/method_override/lift'
+import { buildMethodDef } from '../../../../components/cpp/method_def/lift'
 import { buildMethodVirtualPure } from '../../../../components/cpp/method_virtual_pure/lift'
 import { buildOperatorOverload } from '../../../../components/cpp/operator_overload/lift'
 import { buildCast } from '../../../../components/cpp/cast/lift'
@@ -824,7 +825,23 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       return buildMethodVirtual({ return_type: returnType, name: methodName }, { params, body })
     }
 
-    // Regular member function → lift as func_def
+    // 一般的成員函式 → 類別成員函式那顆（第 218 刀；使用者 2026-11-02 定另立元件，history/326）。
+    // 🔴 原本 lift 成頂層函式那顆，而它沒有地方放尾端的 const——`int area() const` 來回一趟變 `int area()`，
+    //    在 `const P&` 上呼叫就編不過。
+    // ⚠️ 只接【形狀單純】的：回傳型別、名字、參數、可有可無的尾端 const。static、noexcept、`&`／`&&` 限定、
+    //    回傳指標或參考（宣告子外面多包一層）都照舊走原路——新元件沒有地方放它們，接了就是靜默丟資訊。
+    // ⚠️ 比位置不比物件：tree-sitter 每次取節點都是新的物件，`===` 永遠不成立
+    const same = (a: AstNode | null | undefined, b: AstNode | null | undefined): boolean =>
+      !!a && !!b && a.type === b.type && a.startIndex === b.startIndex
+    const plainShape = declNode?.type === 'function_declarator'
+      && (nameNode?.type === 'field_identifier' || nameNode?.type === 'identifier')
+      && node.namedChildren.every((c) => same(c, typeNode) || same(c, declNode) || same(c, bodyNode))
+      && declNode.namedChildren.every((c) => same(c, nameNode) || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const'))
+    if (plainShape && typeNode && bodyNode) {
+      const isConst = declNode.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
+      const params = liftParamList(declNode.childForFieldName('parameters') ?? null, ctx)
+      return buildMethodDef({ return_type: typeNode.text, name: nameNode.text, is_const: isConst ? 'true' : 'false' }, { params, body: extractBody(bodyNode, ctx) })
+    }
     return ctx.lift(node)
   }
 
