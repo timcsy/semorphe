@@ -833,14 +833,26 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     // ⚠️ 比位置不比物件：tree-sitter 每次取節點都是新的物件，`===` 永遠不成立
     const same = (a: AstNode | null | undefined, b: AstNode | null | undefined): boolean =>
       !!a && !!b && a.type === b.type && a.startIndex === b.startIndex
-    const plainShape = declNode?.type === 'function_declarator'
-      && (nameNode?.type === 'field_identifier' || nameNode?.type === 'identifier')
-      && node.namedChildren.every((c) => same(c, typeNode) || same(c, declNode) || same(c, bodyNode))
-      && declNode.namedChildren.every((c) => same(c, nameNode) || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const'))
-    if (plainShape && typeNode && bodyNode) {
-      const isConst = declNode.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
-      const params = liftParamList(declNode.childForFieldName('parameters') ?? null, ctx)
-      return buildMethodDef({ return_type: typeNode.text, name: nameNode.text, is_const: isConst ? 'true' : 'false' }, { params, body: extractBody(bodyNode, ctx) })
+    // 🔴 回傳參考或指標（`Counter& tick()`、`const Time& getStart() const`、`int* raw()`）：宣告子外面包一層
+    //    reference_declarator／pointer_declarator——剝一層，符號併進回傳型別。回傳型別前的 `const` 是 function_definition 底下的 type_qualifier。
+    //    （第 218 刀模糊測試抓到：原路把它們產成 `Counter tick()() {`——參考符號不見、宣告子文字跑進名字，編不過；main 上就是這樣）
+    let fnDecl = declNode
+    let retSuffix = ''
+    if (fnDecl && (fnDecl.type === 'reference_declarator' || fnDecl.type === 'pointer_declarator') && fnDecl.namedChildren.length === 1) {
+      retSuffix = fnDecl.type === 'pointer_declarator' ? '*' : (fnDecl.children.find((c) => !c.isNamed)?.text ?? '&')
+      fnDecl = fnDecl.namedChildren[0]
+    }
+    const fnName = fnDecl?.type === 'function_declarator' ? fnDecl.childForFieldName('declarator') : null
+    const leadQuals = node.namedChildren.filter((c) => c.type === 'type_qualifier')
+    const plainShape = fnDecl?.type === 'function_declarator'
+      && (fnName?.type === 'field_identifier' || fnName?.type === 'identifier')
+      && node.namedChildren.every((c) => same(c, typeNode) || same(c, declNode) || same(c, bodyNode) || (c.type === 'type_qualifier' && c.text === 'const'))
+      && fnDecl.namedChildren.every((c) => same(c, fnName) || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const'))
+    if (plainShape && typeNode && bodyNode && fnDecl && fnName) {
+      const isConst = fnDecl.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
+      const returnType = `${leadQuals.length > 0 ? 'const ' : ''}${typeNode.text}${retSuffix}`
+      const params = liftParamList(fnDecl.childForFieldName('parameters') ?? null, ctx)
+      return buildMethodDef({ return_type: returnType, name: fnName.text, is_const: isConst ? 'true' : 'false' }, { params, body: extractBody(bodyNode, ctx) })
     }
     return ctx.lift(node)
   }

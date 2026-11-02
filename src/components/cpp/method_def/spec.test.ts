@@ -87,9 +87,25 @@ describe('cpp:method_def', () => {
   })
 
   it('🔴 形狀不單純的不准被吃掉：static、回傳參考、noexcept 照舊走原路', () => {
-    for (const member of ['static int count() { return 1; }', 'int& ref() { return x; }', 'int f() noexcept { return 1; }']) {
+    for (const member of ['static int count() { return 1; }', 'int f() noexcept { return 1; }']) {
       const t = lift(`${head}struct Q {\n    int x;\n    ${member}\n};\nint main() { return 0; }\n`)
       expect(all(t, 'cpp:method_def'), member).toHaveLength(0)
+    }
+  })
+
+  // 🔴 模糊測試抓到（main 上就壞）：原路把 `Counter& tick()` 產成 `Counter tick()() {`——參考符號不見、宣告子的文字跑進名字
+  it('🔴 回傳參考、指標、const 回傳：符號併進回傳型別，來回一趟一字不差', () => {
+    const members = [
+      ['Q& self() {\n        return *this;\n    }', 'Q&', 'false'],
+      ['const int& ref() const {\n        return x;\n    }', 'const int&', 'true'],
+      ['int* raw() {\n        return &x;\n    }', 'int*', 'false'],
+      ['const string name() const {\n        return "q";\n    }', 'const string', 'true'],
+    ] as const
+    for (const [member, ret, isConst] of members) {
+      const code = `${head}struct Q {\n    int x;\n    ${member}\n};\nint main() {\n    return 0;\n}\n`
+      const [m] = all(lift(code), 'cpp:method_def')
+      expect(m?.properties, member).toMatchObject({ return_type: ret, is_const: isConst })
+      expect(gen(code), member).toContain(member.split('\n')[0])
     }
   })
 })
