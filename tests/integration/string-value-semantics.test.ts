@@ -25,7 +25,7 @@
 // （後者要 `std::boolalpha`）。這個檔原本的斷言記錄的是**舊的錯誤輸出**，
 // 期望值已改為 g++ 實際印出的東西。
 import { describe, it, expect } from 'vitest'
-import { runCella, describeCellaResult } from '../helpers/cella-run'
+import { runCella, describeCellaResult, expectCellaOut } from '../helpers/cella-run'
 
 // 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
 async function run(body: string): Promise<string> {
@@ -95,4 +95,20 @@ describe('push_back', () => {
       (await run("string s = \"\"; for (int i=0;i<3;i++){ s.push_back('x'); } if (s == \"xxx\") { cout << \"match\"; } else { cout << s; }")).trim(),
     ).toBe('match')
   })
+})
+
+/**
+ * 🔴 **「string x{};」是空字串，不是「用 0 建一個字串」**（2026-11-03，升級 Cella 0.1.202611021533 時在學生的 6_advanced_inout 露出來）：
+ * formalize 原本把空大括號一律翻成 0，字串那一格就成了 `string x = 0`——從空指標建字串，Cella 判 ubNull（判得對，送錯的是我們）。
+ */
+describe('空大括號初始化的字串', () => {
+  it('★ string x{} 之後 getline 讀得進來', async () => {
+    await expectCellaOut('#include <iostream>\n#include <string>\nusing namespace std;\nint main() {\n  string x{};\n  getline(cin, x);\n  cout << "[" << x << "]" << x.size();\n}\n', '[hi]2', { stdin: 'hi\n' })
+  }, 120_000)
+  it('★ string x{} 本身是空字串', async () => {
+    await expectCellaOut('#include <iostream>\n#include <string>\nusing namespace std;\nint main() {\n  string x{};\n  cout << "[" << x << "]" << x.size();\n}\n', '[]0')
+  }, 120_000)
+  it('★ 數字的空大括號仍是 0', async () => {
+    await expectCellaOut('#include <iostream>\nusing namespace std;\nint main() {\n  int n{};\n  char c{};\n  cout << n << (c == 0);\n}\n', '01')
+  }, 120_000)
 })
