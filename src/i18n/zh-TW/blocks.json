@@ -258,6 +258,8 @@
   "DIAG_MISSING_CONDITION_CODE": "條件運算式缺漏（{inputName}）",
   "DIAG_MISSING_VALUE_BLOCK": "缺少要輸出的內容",
   "DIAG_MISSING_VALUE_CODE": "輸出敘述缺少運算元（{inputName}）",
+  "DIAG_VALUE_OUT_OF_RANGE_BLOCK": "這個值（{value}）不在 {min}～{max} 之間——板子會忽略這一行，設定不會改變",
+  "DIAG_VALUE_OUT_OF_RANGE_CODE": "值 {value} 超出 {min}～{max}（{inputName}）：板子會忽略這一行",
   "DIAG_MISSING_VAR_NAME_BLOCK": "第 {position} 個變數還沒有名字",
   "DIAG_MISSING_VAR_NAME_CODE": "第 {position} 個宣告子沒有名稱",
   "DIAG_CELLA_UB_UNINIT_BLOCK": "用到還沒有值的變數",

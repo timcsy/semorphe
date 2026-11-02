@@ -258,6 +258,8 @@
   "DIAG_MISSING_CONDITION_CODE": "expected expression for '{inputName}'",
   "DIAG_MISSING_VALUE_BLOCK": "Missing value to print",
   "DIAG_MISSING_VALUE_CODE": "output statement has no operand ('{inputName}')",
+  "DIAG_VALUE_OUT_OF_RANGE_BLOCK": "This value ({value}) is not between {min} and {max} — the board ignores this line and keeps its setting",
+  "DIAG_VALUE_OUT_OF_RANGE_CODE": "value {value} is outside {min}–{max} ({inputName}): the board ignores this line",
   "DIAG_MISSING_VAR_NAME_BLOCK": "Variable {position} has no name yet",
   "DIAG_MISSING_VAR_NAME_CODE": "declarator {position} has no name",
   "DIAG_CELLA_UB_UNINIT_BLOCK": "This variable has no value yet",

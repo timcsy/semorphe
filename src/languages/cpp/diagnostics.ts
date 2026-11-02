@@ -51,4 +51,13 @@ export const cppDiagnosticRules: DiagnosticRule[] = [
     severity: 'warning',
     rule: 'MISSING_VAR_NAME',
   },
+  {
+    // spec 205：arduino-esp32 對 1～16 以外的位元數直接 return、不報錯——板子判決照實不出聲，這裡給學生一則提示
+    blockTypes: ['cpp_analog_resolution'],
+    check: 'numberInputRange',
+    inputName: 'BITS',
+    range: { min: 1, max: 16, numberBlock: 'cpp_literal_number', numberField: 'NUM' },
+    severity: 'warning',
+    rule: 'VALUE_OUT_OF_RANGE',
+  },
 ]
