@@ -42,10 +42,10 @@
 **Goal**：三支示範檔不再引用 JS 直譯器，斷言照樣成立；不成立的逐條判斷。
 **Independent Test**：三檔各自單獨跑綠；`grep SemanticInterpreter` 三檔無結果。
 
-- [ ] T011 [P] [US3] 改 `tests/integration/execution-cpp-containers.test.ts`：執行改用 `expectCellaOut`／`runCella`，移除直譯器 import
-- [ ] T012 [P] [US3] 改 `tests/integration/vector-initializer-list.test.ts`：同上
-- [ ] T013 [P] [US3] 改 `src/components/cpp/range_max/spec.test.ts`：執行的那幾條改用 `expectCellaOut`，其餘（lift／generate）不動
-- [ ] T014 [US3] 三檔單獨跑；有不成立的斷言，逐條判斷誰對（Cella 依標準／原期望值的來源），記進〈量測紀錄〉；記下改寫後的執行時間
+- [X] T011 [P] [US3] 改 `tests/integration/execution-cpp-containers.test.ts`：執行改用 `expectCellaOut`／`runCella`，移除直譯器 import
+- [X] T012 [P] [US3] 改 `tests/integration/vector-initializer-list.test.ts`：同上
+- [X] T013 [P] [US3] 改 `src/components/cpp/range_max/spec.test.ts`：執行的那幾條改用 `expectCellaOut`，其餘（lift／generate）不動
+- [X] T014 [US3] 三檔單獨跑；有不成立的斷言，逐條判斷誰對（Cella 依標準／原期望值的來源），記進〈量測紀錄〉；記下改寫後的執行時間
 
 ## Phase 6: Polish
 
@@ -68,3 +68,12 @@ MVP ＝ Phase 2 ＋ US1 ＋ US2（入口與失敗語義）；US3 證明它在真
 - **helper 本身**（T007）：第一次準備模組 1.3 秒（讀 `node_modules/.cache/semorphe-cella/` 的快取，沒有重編）；之後每次判決約 15 毫秒（20 次 302 毫秒）
   ⟹ 一支測試檔多約 1.3 秒；127 個 B 類以並行 2 計約多 1.4 分鐘（盤點擔心的是「每檔重編 12 秒、多 13 分鐘以上」）
 - **變異檢查**（T010）：把 `expectCellaOut` 改成不檢查判決種類，三條注入（unknown／reject／翻不出）全紅——它們守得住失敗語義
+- **改寫後**（T014，機器同時在跑另一條長測試，import 時間浮動大）：
+  | 檔 | 改寫前（Duration／tests） | 改寫後（Duration／tests） |
+  |---|---|---|
+  | execution-cpp-containers（9 條） | 7.57 秒／0.007 秒 | 24.75 秒／3.05 秒 |
+  | vector-initializer-list（6 條） | 11.88 秒／0.21 秒 | 15.27 秒／3.21 秒 |
+  | range_max（4 條） | 13.51 秒／0.50 秒 | 14.12 秒／2.00 秒 |
+  ⟹ **判決本身每檔約多 2～3 秒**（含第一次準備模組 1.3 秒）；Duration 的差主要是 import（載入）在忙碌的機器上浮動
+- **斷言**：三支在 Cella 底下全部成立，沒有需要依 FR-009 逐條判斷的不一致；execution-cpp-containers 從手搭語義樹改成程式碼字串、`toContain` 收緊成完整輸出
+
