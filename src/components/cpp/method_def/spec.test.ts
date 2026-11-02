@@ -17,6 +17,9 @@ import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { generateCode } from '../../../core/projection/code-generator'
 import { SemanticInterpreter } from '../../../interpreter/interpreter'
 import { formalize } from '../../../providers/cella/formalize'
+import { renderToBlocklyState } from '../../../core/projection/block-renderer'
+import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
+import competitive from '../../../languages/cpp/styles/competitive.json'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -30,6 +33,7 @@ beforeAll(async () => {
   tsParser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   lifter = createTestLifter()
   registerCppLanguage()
+  setupTestRenderer()
 })
 
 const S = apcs as unknown as StylePreset
@@ -107,5 +111,30 @@ describe('cpp:method_def', () => {
       expect(m?.properties, member).toMatchObject({ return_type: ret, is_const: isConst })
       expect(gen(code), member).toContain(member.split('\n')[0])
     }
+  })
+
+  // ── 整合關卡（component-integrate 第四、五步）──
+  it('★ 積木渲染：類別裡是方法那塊、const 下拉照實、名字與回傳型別在欄位上', () => {
+    const state = renderToBlocklyState(lift(SRC)) as unknown as { blocks: { blocks: unknown[] } }
+    const found: Record<string, unknown>[] = []
+    const walk = (b: unknown): void => {
+      if (!b || typeof b !== 'object') return
+      const o = b as Record<string, unknown>
+      if (o.type === 'cpp_method_def') found.push(o)
+      for (const v of Object.values(o)) if (v && typeof v === 'object') walk(v)
+    }
+    walk(state.blocks.blocks)
+    expect(found.map((b) => (b.fields as Record<string, string>))).toEqual([
+      expect.objectContaining({ NAME: 'area', RETURN_TYPE: 'int', IS_CONST: 'true' }),
+      expect.objectContaining({ NAME: 'grow', RETURN_TYPE: 'void', IS_CONST: 'false' }),
+    ])
+  })
+
+  it('★ 跨概念：方法本體裡有迴圈與條件、主程式在迴圈裡呼叫 const 方法；printf 風格產碼也保住 const', () => {
+    const code = `${head}struct Acc {\n    int s;\n    void addUpTo(int n) {\n        for (int i = 1; i <= n; i++) {\n            if (i % 2 == 0) {\n                s += i;\n            }\n        }\n    }\n    int get() const {\n        return s;\n    }\n};\nint main() {\n    Acc a;\n    a.s = 0;\n    for (int k = 0; k < 3; k++) {\n        a.addUpTo(4);\n        cout << a.get() << endl;\n    }\n    return 0;\n}\n`
+    const t = lift(code)
+    expect(all(t, 'cpp:method_def').map((n) => [n.properties.name, n.properties.is_const])).toEqual([['addUpTo', 'false'], ['get', 'true']])
+    expect(generateCode(t, 'cpp', competitive as unknown as StylePreset)).toContain('int get() const {')
+    return run(code).then((out) => expect(out).toBe('6\n12\n18\n'))
   })
 })
