@@ -120,3 +120,35 @@ describe('Cella 的節點標籤 → 語義樹的節點', () => {
     expect(ownerOf('node_7_ab')).toBe('node_7_ab')
   })
 })
+
+/**
+ * spec 206：**近似名的建議搬到判決診斷**——它原本住在 JS 直譯器（`interpreter/scope.ts` 的 `undeclared`），6c-4 刪直譯器就沒地方放
+ * （6c 測試盤點的 F 類）。Cella 判「use of undeclared identifier 'X'」時，在語意樹宣告過的名字 ＋ 語言給的常用名字裡找近似名。
+ * 規矩照舊：**寧可漏，不可錯**——找不到就照原本的 CELLA_REJECT，一個字都不多。
+ */
+describe('近似名的建議（Cella 判未宣告）', () => {
+  const use = createNode('cpp:var_ref', { name: 'Cout' }, {})
+  const decl = createNode('cpp:var_declare', { name: 'score', type: 'int' }, {})
+  const use2 = createNode('cpp:var_ref', { name: 'scoer' }, {})
+  const t = createNode('cpp:program', {}, { body: [decl, createNode('cpp:print', {}, { values: [use, use2] })] })
+  const undeclared = (at: string, name: string): Verdict => v('reject', [{ kind: 'reject', at, reason: `use of undeclared identifier '${name}'` }])
+  const go = (verdict: Verdict, knownNames: string[] = []) =>
+    toDiagnostics({ verdict, types: null, tree: t, readsInput: false, hasStdin: false, knownNames })
+
+  it('★ 語言給的常用名字：Cout → 是不是要寫 cout', () => {
+    const d = go(undeclared(use.id, 'Cout'), ['cout', 'cin', 'endl']).diagnostics
+    expect(d).toEqual([expect.objectContaining({ nodeId: use.id, rule: 'CELLA_UNDECLARED_SUGGEST', params: expect.objectContaining({ name: 'Cout', near: 'cout' }) })])
+  })
+  it('★ 樹裡宣告過的名字：scoer → 是不是要寫 score（相鄰兩字對調也算）', () => {
+    const d = go(undeclared(use2.id, 'scoer')).diagnostics
+    expect(d[0]).toMatchObject({ rule: 'CELLA_UNDECLARED_SUGGEST', params: { name: 'scoer', near: 'score' } })
+  })
+  it('🔴 找不到近似名 → 照原本的 CELLA_REJECT，不亂猜', () => {
+    const d = go(undeclared(use.id, 'qqqq'), ['cout']).diagnostics
+    expect(d[0]).toMatchObject({ rule: 'CELLA_REJECT' })
+  })
+  it('不是未宣告的 reject 不受影響', () => {
+    const d = go(v('reject', [{ kind: 'reject', at: use.id, reason: 'invalid operands to a binary operator' }]), ['cout']).diagnostics
+    expect(d[0]).toMatchObject({ rule: 'CELLA_REJECT' })
+  })
+})

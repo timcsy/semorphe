@@ -16,6 +16,7 @@
  */
 import type { Diagnostic } from './diagnostics'
 import type { SemanticNode } from './types'
+import { findNearMiss } from './near-miss'
 
 /** 判決的一個問題（Cella 判決 JSON 的 `problems[]`）。`at` 是 formalize 給的節點標籤。 */
 export interface VerdictProblem { kind: string; at?: string; clause?: string; reason?: string }
@@ -99,6 +100,26 @@ function ids(tree: SemanticNode): Set<string> {
   return out
 }
 
+/**
+ * Cella 判「use of undeclared identifier 'X'」時，在**樹裡宣告過的名字**與**語言給的常用名字**裡找近似名（spec 206）。
+ * 樹裡的名字：每顆節點的 `name` 屬性（宣告、函式、參數都用這一格）——它不認得任何元件，只讀這一格。
+ * ⚠️ 判準寧可漏，不可錯（`near-miss.ts` 檔頭）：找不到就回 undefined，診斷照原本的那一則。
+ */
+function nearMissFor(reason: string, tree: SemanticNode, knownNames: Iterable<string> = []): { name: string; near: string } | undefined {
+  const m = /undeclared identifier '([^']+)'/.exec(reason)
+  if (!m) return undefined
+  const names = new Set<string>(knownNames)
+  const walk = (n: SemanticNode): void => {
+    const v = n.properties?.name
+    if (typeof v === 'string' && v !== '') names.add(v)
+    for (const kids of Object.values(n.slots ?? {})) for (const c of kids) walk(c)
+  }
+  walk(tree)
+  names.delete(m[1])
+  const near = findNearMiss(m[1], names)
+  return near === undefined ? undefined : { name: m[1], near }
+}
+
 const RUNTIME = (kind: string): boolean => kind.startsWith('ub') || kind === 'fuel'
 
 export function toDiagnostics(input: {
@@ -107,6 +128,8 @@ export function toDiagnostics(input: {
   tree: SemanticNode
   readsInput: boolean
   hasStdin: boolean
+  /** 語言給的常用名字（`cout`、`cin`…）——近似名建議的候選之一（spec 206）；樹裡宣告過的名字另外收 */
+  knownNames?: Iterable<string>
 }): {
   diagnostics: Diagnostic[]
   notes: string[]
@@ -134,6 +157,12 @@ export function toDiagnostics(input: {
     if (!known.has(nodeId)) {
       unplaced[severity]++
       notes.push(`有一則判決對不到積木：${p.kind}${p.reason ? `（${p.reason}）` : ''}`)
+      continue
+    }
+    // spec 206：未宣告的名字——有一個長得很像的就說出來（原本住在 JS 直譯器，6c-4 刪掉它之前搬過來）；找不到就不提
+    const suggest = p.kind === 'reject' ? nearMissFor(p.reason ?? '', tree, input.knownNames) : undefined
+    if (suggest) {
+      diagnostics.push({ nodeId, source: 'cella', rule: 'CELLA_UNDECLARED_SUGGEST', severity, params: { kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '', ...suggest } })
       continue
     }
     diagnostics.push({

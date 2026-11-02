@@ -274,6 +274,8 @@
   "DIAG_CELLA_UB_OVERLAP_CODE": "Assignment between overlapping objects ({clause})",
   "DIAG_CELLA_REJECT_BLOCK": "This is not allowed: {reason}",
   "DIAG_CELLA_REJECT_CODE": "Ill-formed: {reason} ({clause})",
+  "DIAG_CELLA_UNDECLARED_SUGGEST_BLOCK": "'{name}' was never declared — did you mean '{near}'?",
+  "DIAG_CELLA_UNDECLARED_SUGGEST_CODE": "use of undeclared identifier '{name}'; did you mean '{near}'? ({clause})",
   "DIAG_CELLA_UNSUPPORTED_BLOCK": "This can't be checked yet (not your mistake)",
   "DIAG_CELLA_UNSUPPORTED_CODE": "Not supported by the checker yet: {reason}",
   "DIAG_CELLA_FUEL_BLOCK": "This ran too long to check (maybe an infinite loop)",

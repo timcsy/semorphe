@@ -207,6 +207,11 @@ export interface LanguagePack extends Pack {
    */
   diagnosticRules?: readonly unknown[]
   /**
+   * **這個語言人人都會用到的名字**（spec 206）——Cella 判「未宣告」時，近似名建議的候選之一（`Cout` → `cout`）。
+   * 樹裡宣告過的名字由判決診斷自己收；這裡只放不在樹裡、卻常被打錯的那些。
+   */
+  wellKnownNames?: readonly string[]
+  /**
    * **這個語言的風格例外**——偵測、轉換、以及 I/O 符合度分析。
    *
    * ⚠️ 三支是一組（同一個「風格」概念的三個問法），所以一格交出來。

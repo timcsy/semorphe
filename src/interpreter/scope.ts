@@ -2,7 +2,7 @@ import type { RuntimeValue } from './types'
 import type { Place } from './lvalue'
 import { hasAlias, resolveAlias } from './aliases'
 import { RuntimeError, RUNTIME_ERRORS } from './errors'
-import { findNearMiss } from './near-miss'
+import { findNearMiss } from '../core/near-miss'
 import { isBuiltinName } from '../core/language-executors'
 
 /**
