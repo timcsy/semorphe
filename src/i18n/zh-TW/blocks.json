@@ -274,6 +274,8 @@
   "DIAG_CELLA_UB_OVERLAP_CODE": "重疊的物件之間指定（{clause}）",
   "DIAG_CELLA_REJECT_BLOCK": "這樣寫不合規則：{reason}",
   "DIAG_CELLA_REJECT_CODE": "不合規則：{reason}（{clause}）",
+  "DIAG_CELLA_UNDECLARED_SUGGEST_BLOCK": "沒有宣告過「{name}」——是不是要寫「{near}」？",
+  "DIAG_CELLA_UNDECLARED_SUGGEST_CODE": "未宣告的名字「{name}」——是不是要寫「{near}」？（{clause}）",
   "DIAG_CELLA_UNSUPPORTED_BLOCK": "這個用法還判不出來（不是你的錯）",
   "DIAG_CELLA_UNSUPPORTED_CODE": "判斷功能還不支援這個構造：{reason}",
   "DIAG_CELLA_FUEL_BLOCK": "跑太久了，判不出來（可能是無窮迴圈）",

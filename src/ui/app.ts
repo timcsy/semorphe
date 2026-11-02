@@ -4532,7 +4532,7 @@ export class App {
     const a = await answer
     // 送出之後樹又變了 ⟹ 這一筆的節點可能已經不在，丟掉（下一筆會來）
     if (a.stale || tree !== this.currentTree) return
-    const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: req.tree, readsInput: a.readsInput, hasStdin: stdin.length > 0 })
+    const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: req.tree, readsInput: a.readsInput, hasStdin: stdin.length > 0, knownNames: languagePack(this.currentTopic.language)?.wellKnownNames })
     this.checkDiagnostics = r.diagnostics
     this.checkNotes = r.notes
     this.checkUnplaced = r.unplaced

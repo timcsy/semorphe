@@ -55,6 +55,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import { runCella, expectCellaOut, knownCellaGap, describeCellaResult } from '../../../../tests/helpers/cella-run'
+import { toDiagnostics, type Verdict } from '../../../core/verdict-diagnostics'
+import '../../../languages/cpp/pack'
+import { languagePack } from '../../../core/language-packs'
 
 /** 產品的跑法：照風格補上自動引入（`withScaffold`）再判——第一課的學生不寫 #include */
 const run = (src: string) => runCella(src, { style: 'apcs' })
@@ -99,8 +102,12 @@ describe('串流名字不是變數（Cella）', () => {
     await knownCellaGap(/invalid operands/, () => expectRejectSaying('int main(){ int x; cin < x; }', />>/))
   })
 
-  it('🟡 已知缺陷：`Cout` 大小寫打錯說不出「是 cout」（診斷層要補）', async () => {
-    await knownCellaGap(/undeclared identifier 'Cout'/, () => expectRejectSaying('int main(){ Cout << "Hello!" << endl; }', /\bcout\b/))
+  // 🟢 spec 206 修好（原本是釘子）：近似名的建議從 JS 直譯器搬到判決診斷——Cella 判「未宣告的 Cout」，產品的 toDiagnostics 說「是不是要寫 cout」
+  it('★ `Cout` 大小寫打錯：判決診斷說得出「是不是要寫 cout」（產品同一支 toDiagnostics）', async () => {
+    const r = await run('int main(){ Cout << "Hello!" << endl; }')
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    const { diagnostics } = toDiagnostics({ verdict: r.raw as unknown as Verdict, types: null, tree: r.tree, readsInput: false, hasStdin: false, knownNames: languagePack('cpp')?.wellKnownNames })
+    expect(diagnostics.map((d) => [d.rule, d.params?.near])).toContainEqual(['CELLA_UNDECLARED_SUGGEST', 'cout'])
   })
 
   // 🔴 不亂認那一側——一般的未宣告變數**不得**被說成串流

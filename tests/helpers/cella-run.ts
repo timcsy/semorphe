@@ -37,6 +37,8 @@ export interface CellaRunResult {
   assumes: { implementation: string; choice: string }[]
   /** 判決 JSON 原樣（板子上的程式另有 pins／env／clock——Arduino 的膠囊測試要讀它們；spec 201）；翻不出時是 null */
   raw: Record<string, unknown> | null
+  /** 交給 formalize 的那棵語意樹——判決的 `at` 指的是它的節點（spec 206：拿判決去跑產品的 toDiagnostics 要它） */
+  tree: SemanticNode
 }
 export interface CellaRunOptions {
   stdin?: string
@@ -138,7 +140,7 @@ export async function runCella(code: string, opts: CellaRunOptions = {}): Promis
   }
   if (!fz.program) {
     return {
-      verdict: 'untranslated', out: '', problems: [], assumes: [], raw: null,
+      verdict: 'untranslated', out: '', problems: [], assumes: [], raw: null, tree,
       untranslated: (fz.unknown as { construct: string; reason: string }[]).map((u) => ({ construct: u.construct, reason: u.reason })),
     }
   }
@@ -151,6 +153,7 @@ export async function runCella(code: string, opts: CellaRunOptions = {}): Promis
     untranslated: [],
     assumes: v.assumes ?? [],
     raw: v as unknown as Record<string, unknown>,
+    tree,
   }
 }
 
