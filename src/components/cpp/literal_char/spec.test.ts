@@ -8,7 +8,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -30,28 +30,25 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   return out
 }
 const produce = (c: string): string => generateCode(lift(c), 'cpp', apcs as unknown as StylePreset)
-async function run(c: string): Promise<string> {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(c))
-  return i.getOutput().join('')
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(H + c, expected)
 
 describe('膠囊自證：cpp:literal_char', () => {
   // ── 基準的三個樣本（specs/114/baseline.json）逐字對 ──────────────
   it('★ 基準①：char c = \'x\'; cout << c;', async () => {
     expect(collect(lift(`int main(){ char c = 'x'; cout << c; }`))).toContain('cpp:literal_char')
     expect(produce(`int main(){ char c = 'x'; cout << c; }`)).toContain("char c = 'x'")
-    expect(await run(`int main(){ char c = 'x'; cout << c; }`)).toBe('x')
+    await run(`int main(){ char c = 'x'; cout << c; }`, 'x')
   })
 
   it('★ 基準②：直接印字面', async () => {
-    expect(await run(`int main(){ cout << 'B'; }`)).toBe('B')
+    await run(`int main(){ cout << 'B'; }`, 'B')
   })
 
   it('★ 基準③：兩顆字元', async () => {
     const ids = collect(lift(`int main(){ char c = 'a'; char d = 'b'; cout << c << d; }`))
     expect(ids.filter((x) => x === 'cpp:literal_char'), '兩顆都要在').toHaveLength(2)
-    expect(await run(`int main(){ char c = 'a'; char d = 'b'; cout << c << d; }`)).toBe('ab')
+    await run(`int main(){ char c = 'a'; char d = 'b'; cout << c << d; }`, 'ab')
   })
 
   // ── 負向：前面都有正向錨點 ────────────────────────────────────

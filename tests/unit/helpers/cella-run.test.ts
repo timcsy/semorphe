@@ -9,7 +9,7 @@
  * 不會因為 Cella 或 formalize 補了東西就過期（experience〈拿「今天還沒做的」當「不支援」的測試範例〉）。
  */
 import { describe, it, expect } from 'vitest'
-import { runCella, expectCellaOut } from '../../helpers/cella-run'
+import { runCella, expectCellaOut, knownCellaGap } from '../../helpers/cella-run'
 
 const H = '#include <iostream>\nusing namespace std;\n'
 
@@ -72,5 +72,18 @@ describe('expectCellaOut：非 accept 一律失敗並說清楚（P6）', () => {
     expect(r.verdict).toBe('reject')
     expect(r.problems.map((p) => p.kind)).toContain('ubUninit')
     expect(r.problems[0].source?.line, '問題要對回原始碼的行號').toBeGreaterThan(0)
+  })
+})
+
+// spec 199：已知缺陷的釘子——三種結果各一條（不碰 Cella，只驗包裝本身）
+describe('knownCellaGap', () => {
+  it('缺陷還在（本體丟錯、原因吻合）→ 通過', async () => {
+    await knownCellaGap(/fmax/, async () => { throw new Error('unsupported：fmax is not supported yet') })
+  })
+  it('缺陷修好了（本體通過）→ 紅，並叫人拿掉包裝', async () => {
+    await expect(knownCellaGap(/fmax/, async () => {})).rejects.toThrow(/不在了/)
+  })
+  it('缺陷換了一個（原因不吻合）→ 紅', async () => {
+    await expect(knownCellaGap(/fmax/, async () => { throw new Error('reject：別的東西') })).rejects.toThrow(/形狀變了/)
   })
 })

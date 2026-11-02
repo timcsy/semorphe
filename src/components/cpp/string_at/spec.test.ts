@@ -25,7 +25,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, runCella } from '../../../../tests/helpers/cella-run'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode } from '../../../core/types'
 
@@ -49,11 +49,8 @@ function ids(n: SemanticNode | null, out = new Set<string>()): Set<string> {
   return out
 }
 
-async function run(code: string): Promise<string> {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(code) as SemanticNode)
-  return i.getOutput().join('')
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (code: string, expected: string) => expectCellaOut(code, expected)
 
 const H = '#include <iostream>\n#include <string>\n#include <cctype>\nusing namespace std;\n'
 
@@ -64,29 +61,34 @@ describe('cpp:string_at', () => {
 
   it('🔴 算術：s[0] - 32 是 65，不是 -32', async () => {
     // 這一支就是那 4 筆誤差的最小重現。
-    expect(await run(`${H}int main(){ string s="ab"; cout << (s[0]-32); return 0; }`)).toBe('65')
+    await run(`${H}int main(){ string s="ab"; cout << (s[0]-32); return 0; }`, '65')
   })
 
   it('大小寫轉換的整族——寫回字串也要生效', async () => {
-    expect(
-      await run(`${H}int main(){ string s="ab"; for(int i=0;i<s.size();i++){ if(s[i]>='a'&&s[i]<='z') s[i]=s[i]-32; } cout << s; return 0; }`),
-    ).toBe('AB')
+    await run(`${H}int main(){ string s="ab"; for(int i=0;i<s.size();i++){ if(s[i]>='a'&&s[i]<='z') s[i]=s[i]-32; } cout << s; return 0; }`, 'AB')
   })
 
   it('★ 而顯示仍然是字元，不是數字', async () => {
     // ⚠️ 改成碼位之後最容易壞的就是這裡：`cout << s[0]` 若印出 97 就是換了一個病。
-    expect(await run(`${H}int main(){ string s="ab"; cout << s[0]; return 0; }`)).toBe('a')
+    await run(`${H}int main(){ string s="ab"; cout << s[0]; return 0; }`, 'a')
   })
 
   it('★ 比較仍然對——它本來就是對的，不得被這次改動弄壞', async () => {
-    expect(await run(`${H}int main(){ string s="ab"; cout << (s[0]>='a') << (s[0]=='a') << (s[0]<'b'); return 0; }`)).toBe('111')
+    await run(`${H}int main(){ string s="ab"; cout << (s[0]>='a') << (s[0]=='a') << (s[0]<'b'); return 0; }`, '111')
   })
 
+  // ⏸ 不是 Cella 判錯，是 semorphe 這一側缺一段：formalize 回「cpp:char_is_alpha：這顆元件還沒有對應到 Cella 的建構子」
+  // （這顆膠囊沒有 `formalize.ts`，判決走不到 Cella）。期望值照 C++ 的答案寫好了，補上 formalize 之後拿掉 skip。
+  // ⚠️ `isalpha`／`isdigit` 只保證回【非零】（Apple clang 印 1、glibc 印 1024／2048）——原本的 '11' 綁在 JS 直譯器上，
+  // 所以改成比 `!= 0`，兩台機器都印 11。
   it('★ cctype 認得它', async () => {
-    expect(await run(`${H}int main(){ string s="a1"; cout << isalpha(s[0]) << isdigit(s[1]); return 0; }`)).toBe('11')
+    await run(`${H}int main(){ string s="a1"; cout << (isalpha(s[0]) != 0) << (isdigit(s[1]) != 0); return 0; }`, '11')
   })
 
+  // `s[9]` 對長度 2 的字串是未定義行為（[string.access]：pos > size() 時 UB）——判決必須是 reject
   it('🔴 反向：索引越界要出聲', async () => {
-    await expect(run(`${H}int main(){ string s="ab"; cout << s[9]; return 0; }`)).rejects.toThrow()
+    const r = await runCella(`${H}int main(){ string s="ab"; cout << s[9]; return 0; }`)
+    expect(r.verdict).toBe('reject')
+    expect(r.problems.map((p) => p.kind)).toContain('ubBounds')
   })
 })

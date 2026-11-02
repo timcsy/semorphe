@@ -9,6 +9,8 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // 🔴 沒有初始值＝**預設建構**（`sDeclC … []`），不是「未初始化」——送 `sDecl` 而 `init: null` 的話 Cella 判讀到不確定的值（spec 194 量到）
     // multiset：同 set 的送法、名字換掉（cella 2026-11-01：insert、find、count、size、begin／end；erase 兩者都還沒有）
     const t = f.k('tTemplate', { name: String(n.properties?.unique ?? 'true') === 'false' ? 'multiset' : 'set', args: [elem] })
-    return source ? f.declInit(n, t, f.k('iE', { e: f.expr(source) }), global) : f.declCtor(n, t, [], global)
+    if (!source) return f.declCtor(n, t, [], global)
+    // `set<int> s{5,1,9}`：大括號串列要走它自己登記的初值形狀（iL）——原本一律包成 `iE`，Cella 不知道那個串列初始化的是什麼型別（spec 199 量到 unknown）
+    return f.declInit(n, t, f.initOf(source), global)
   })
 }

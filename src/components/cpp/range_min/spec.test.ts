@@ -5,7 +5,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -26,11 +26,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (body: string): Promise<string> => {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(body))
-  return i.getOutput().join('')
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (body: string, expected: string) => expectCellaOut(H + `int main(){ ${body} }`, expected)
 
 describe('膠囊自證：cpp:range_min', () => {
   it('★ lift：認得，且不落進殘差', () => {
@@ -46,10 +43,10 @@ describe('膠囊自證：cpp:range_min', () => {
   })
 
   it('★ execute', async () => {
-    expect(await run(`vector<int> v={4,2,8}; cout << *min_element(v.begin(), v.end());`)).toBe('2')
+    await run(`vector<int> v={4,2,8}; cout << *min_element(v.begin(), v.end());`, '2')
   })
 
   it('★ 回傳的是位置不是值', async () => {
-    expect(await run(`vector<int> v={4,2,8}; cout << (min_element(v.begin(),v.end())-v.begin());`)).toBe('1')
+    await run(`vector<int> v={4,2,8}; cout << (min_element(v.begin(),v.end())-v.begin());`, '1')
   })
 })

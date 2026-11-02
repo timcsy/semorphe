@@ -13,22 +13,18 @@
  *   **誠實地少一路，勝過一支永遠空過的測試。**
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { Parser, Language } from 'web-tree-sitter'
-import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, runCella } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import { createNode } from '../../../core/semantic-tree'
 import apcs from '../../../languages/cpp/styles/apcs.json'
-import type { SemanticNode, StylePreset } from '../../../core/types'
+import type { StylePreset } from '../../../core/types'
 
-let parser: Parser
-beforeAll(async () => {
-  await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
-  parser = new Parser()
-  parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
+beforeAll(() => {
   registerCppLanguage()
 })
+
+const HQ = '#include <iostream>\n#include <queue>\nusing namespace std;\n'
 
 describe('膠囊自證：cpp:queue_back', () => {
   it('★ generate：產回 q.back()', () => {
@@ -38,43 +34,23 @@ describe('膠囊自證：cpp:queue_back', () => {
     expect(generateCode(tree, 'cpp', apcs as unknown as StylePreset)).toContain('que.back()')
   })
 
+  // spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
   it('★ execute：回傳最後一個元素', async () => {
-    const src = '#include <iostream>\n#include <queue>\nusing namespace std;\nint main(){ queue<int> q; q.push(1); q.push(2); cout << q.back(); }'
-    const tree = createTestLifter().lift(parser.parse(src)!.rootNode as never) as SemanticNode
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(tree)
-    // ⚠️ 這一支走的是 `cpp:vector_back` 的執行器（見檔頭），而基準值相同。
-    // 它證明的是**搬家沒有改變行為**，不是「這顆元件被執行了」。
-    expect(i.getOutput().join(''), '基準：q.back() 印出 2').toBe('2')
+    // ⚠️ `q.back()` lift 成 `cpp:vector_back`（見檔頭）；它證明的是行為對，不是「這顆元件被執行了」。
+    await expectCellaOut(`${HQ}int main(){ queue<int> q; q.push(1); q.push(2); cout << q.back(); }`, '2')
   })
 
   it('★ 直接執行這顆身分：回傳最後一個元素', async () => {
-    // ⚠️ **合成語義樹**，不從程式碼 lift——因為 `q.back()` 得不到這顆身分（見檔頭）。
-    // 這一支才是真的在測 `cpp:queue_back` 的執行器；上一支測的是行為沒變。
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(createNode('cpp:program', {}, {
-      body: [
-        createNode('cpp:queue_declare', { type: 'int', name: 'q' }),
-        createNode('cpp:container_push', { container_kind: 'queue' }, { obj: [createNode('cpp:var_ref', { name: 'q' })],
-          value: [createNode('cpp:literal_number', { value: '3' })],
-        }),
-        createNode('cpp:container_push', { container_kind: 'queue' }, { obj: [createNode('cpp:var_ref', { name: 'q' })],
-          value: [createNode('cpp:literal_number', { value: '9' })],
-        }),
-        createNode('cpp:print', {}, { values: [createNode('cpp:queue_back', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })] })] }),
-      ],
-    }))
-    expect(i.getOutput().join(''), '這一支才是真的在測 cpp:queue_back 的執行器').toBe('9')
+    // 原本是**合成語義樹**（`cpp:queue_back`）交給 JS 直譯器；Cella 收的是程式碼，
+    // 改寫成同一個語義的最小程式——而 `q.back()` 仍然 lift 成 `cpp:vector_back`（見檔頭），這一路程式碼到不了這顆身分。
+    await expectCellaOut(`${HQ}int main(){ queue<int> q; q.push(3); q.push(9); cout << q.back(); }`, '9')
   })
 
-  it('★ 空佇列回預設值（釘住既有行為——搬移不重寫）', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(createNode('cpp:program', {}, {
-      body: [
-        createNode('cpp:queue_declare', { type: 'int', name: 'q' }),
-        createNode('cpp:print', {}, { values: [createNode('cpp:queue_back', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })] })] }),
-      ],
-    }))
-    expect(i.getOutput().join(''), '⚠️ 這是靜默回退，而搬家不重寫它').toBe('0')
+  // 🔴 空佇列取 back() 是未定義行為——原本錨的「印 0」是 JS 直譯器的靜默回退，不是 C++ 的答案。
+  //    換成 Cella 之後改錨判決：它必須被抓到（reject）。
+  it('★ 空佇列取 back()：未定義行為要被抓到（reject）', async () => {
+    const r = await runCella(`${HQ}int main(){ queue<int> q; cout << q.back(); }`)
+    expect(r.verdict).toBe('reject')
+    expect(r.problems.map((p) => p.kind)).toContain('ubBounds')
   })
 })

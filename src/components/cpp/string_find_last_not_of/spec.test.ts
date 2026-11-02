@@ -16,7 +16,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import { createNode } from '../../../core/semantic-tree'
 import apcs from '../../../languages/cpp/styles/apcs.json'
@@ -68,20 +68,19 @@ describe('膠囊自證：cpp:string_find_last_not_of', () => {
     expect(generateCode(tree, 'cpp', apcs as unknown as StylePreset)).toContain('s.find_last_not_of(')
   })
 
-  it('★ execute："hi  " 去空白的位置是 1', async () => {
+  // 🟡 Cella 0.1.202611020258 判 unknown：the model's 'std::string' has no member 'find_last_not_of'（spec 199 補上 formalize 之後量到），已回報
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute："hi  " 去空白的位置是 1', () => knownCellaGap(/no member 'find_last_not_of'/, async () => {
     const tree = createTestLifter().lift(parser.parse(program)!.rootNode as never) as SemanticNode
     expect(JSON.stringify(tree)).toContain('cpp:string_find_last_not_of')  // ← 先證明它進了樹
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(tree)
-    expect(i.getOutput().join('').trim()).toBe('1')
-  })
+    // spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella
+    await expectCellaOut(program, '1')
+  }))
 
-  it('★ execute：全部都在集合裡時回 -1（不是 npos）', async () => {
-    const tree = createTestLifter().lift(parser.parse(
+  // 🟡 釘子：同上
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：全部都在集合裡時回 npos', () => knownCellaGap(/no member 'find_last_not_of'/, async () => {
+    await expectCellaOut(
       `#include <iostream>\n#include <string>\nusing namespace std;\nint main() { string s = "   "; cout << s.find_last_not_of(" "); }`,
-    )!.rootNode as never) as SemanticNode
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(tree)
-    expect(i.getOutput().join('').trim()).toBe('-1')
-  })
+      '18446744073709551615',
+    )
+  }))
 })

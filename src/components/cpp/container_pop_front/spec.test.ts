@@ -12,7 +12,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, runCella } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -32,13 +32,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(c, expected)
 const H = '#include <iostream>\n#include <deque>\nusing namespace std;\n'
 const S = apcs as unknown as StylePreset
 
@@ -69,24 +64,22 @@ describe('膠囊自證：容器的前端移除', () => {
   })
 
   it('🔴 execute：拿掉的是【最前面】那一個', async () => {
-    const r = await run(`${H}int main(){ deque<int> dq; dq.push_back(3); dq.push_back(5);`
-      + ` dq.pop_front(); cout << dq.front() << dq.size(); }`)
-    expect(r.err).toBe('')
-    expect(r.out, '🔴 拿錯端的話這裡會是 3').toBe('51')
+    // 🔴 拿錯端的話這裡會是 3
+    await run(`${H}int main(){ deque<int> dq; dq.push_back(3); dq.push_back(5);`
+      + ` dq.pop_front(); cout << dq.front() << dq.size(); }`, '51')
   })
 
   it('🔴 execute：接收者帶下標也認得（`d2[3].pop_front()`）', async () => {
-    const r = await run(`${H}deque<int> d2[5];\nint main(){ d2[3].push_back(7); d2[3].push_back(9);`
-      + ` d2[3].pop_front(); cout << d2[3].front(); }`)
-    expect(r.err, '🔴 帶下標的接收者在組裝時被壓成字串——要走 receiverOf').toBe('')
-    expect(r.out).toBe('9')
+    // 🔴 帶下標的接收者在組裝時被壓成字串——要走 receiverOf
+    await run(`${H}deque<int> d2[5];\nint main(){ d2[3].push_back(7); d2[3].push_back(9);`
+      + ` d2[3].pop_front(); cout << d2[3].front(); }`, '9')
   })
 
-  it('⚠️ 空容器上呼叫：我們選擇什麼都不做，而它【不出錯】', async () => {
-    // 🔴 這是未定義行為，所以**這一條只錨我們自己的選擇**，
-    //    不得寫進拿 g++ 當權威的那條護欄（見檔頭與 interpreter-matches-compiler 的檔頭）。
-    const r = await run(`${H}int main(){ deque<int> dq; dq.pop_front(); cout << dq.size(); }`)
-    expect(r.err).toBe('')
-    expect(r.out).toBe('0')
+  // 🔴 空容器上 pop_front 是未定義行為——原本錨的「什麼都不做、印 0」是 JS 直譯器自己的選擇，不是 C++ 的答案。
+  //    換成 Cella 之後改錨判決：它必須被抓到（reject，越界）。
+  it('⚠️ 空容器上呼叫：未定義行為要被抓到（reject）', async () => {
+    const r = await runCella(`${H}int main(){ deque<int> dq; dq.pop_front(); cout << dq.size(); }`)
+    expect(r.verdict).toBe('reject')
+    expect(r.problems.map((p) => p.kind)).toContain('ubBounds')
   })
 })

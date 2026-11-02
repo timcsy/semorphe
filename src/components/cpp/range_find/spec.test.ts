@@ -21,7 +21,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -41,13 +41,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(c, expected)
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
 describe('膠囊自證：範圍那一族的三顆新元件', () => {
@@ -88,49 +83,45 @@ describe('膠囊自證：範圍那一族的三顆新元件', () => {
     expect(code).not.toContain('a.begin()')
   })
 
-  it('★ execute：找得到就是那一格，找不到就是結尾之後', async () => {
-    const r = await run(`${H}int main(){ int a[4]={4,5,6,7};\n`
+  // 🟡 Cella 0.1.202611020258 判 unknown：std::begin is not supported yet（`begin(a)`／`end(a)` 自由函式），已回報；期望值 g++ 實測 21
+  it('🟡 已知缺陷（修好時這條會紅）：★ execute：找得到就是那一格，找不到就是結尾之後', () => knownCellaGap(/std::begin is not supported/, async () => {
+    await run(`${H}int main(){ int a[4]={4,5,6,7};\n`
       + ` cout << (find(begin(a), end(a), 6) - begin(a));\n`
       + ` cout << (find(begin(a), end(a), 9) == end(a));\n`
-      + ` return 0; }`)
-    expect(r.err).toBe('')
-    expect(r.out).toBe('21')
-  })
+      + ` return 0; }`, '21')
+  }))
 
   /**
    * 🔴 **不改變長度**——這是「刪除-移除」為什麼是兩步的原因，
    * 而它是最容易被實作成「順手刪掉」的一條。
    */
-  it('🔴 execute：擠掉之後容器【還是原來那麼長】', async () => {
-    const r = await run(`${H}int main(){ vector<int> v{1,1,2,3,3};\n`
+  // 🟡 Cella 0.1.202611020258 判 unknown：std::unique is not supported yet（spec 199 補上 formalize 之後量到），已回報；期望值 g++ 實測相同
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：擠掉之後容器【還是原來那麼長】', () => knownCellaGap(/std::unique is not supported/, async () => {
+    await run(`${H}int main(){ vector<int> v{1,1,2,3,3};\n`
       + ` auto it = unique(v.begin(), v.end());\n`
       + ` cout << v.size() << ',' << (it - v.begin());\n`
-      + ` return 0; }`)
-    expect(r.err).toBe('')
-    expect(r.out).toBe('5,3')
-  })
+      + ` return 0; }`, '5,3')
+  }))
 
-  it('🔴 execute：擠掉 ＋ 刪掉尾巴 ＝ 真的變短', async () => {
-    const r = await run(`${H}int main(){ vector<int> v{1,2,1,3};\n`
+  // 🟡 Cella 0.1.202611020258 判 unknown：vector 沒有 erase 成員（spec 199 補上 range_remove 的 formalize 之後量到），已回報；期望值 g++ 實測相同
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：擠掉 ＋ 刪掉尾巴 ＝ 真的變短', () => knownCellaGap(/no member 'erase'/, async () => {
+    await run(`${H}int main(){ vector<int> v{1,2,1,3};\n`
       + ` v.erase(remove(v.begin(), v.end(), 1), v.end());\n`
       + ` for (int x : v) cout << x;\n`
-      + ` return 0; }`)
-    expect(r.err).toBe('')
-    expect(r.out).toBe('23')
-  })
+      + ` return 0; }`, '23')
+  }))
 
   /**
    * ⚠️ **只擠掉相鄰的**——沒排序過時結果「不完整」而**不是錯的**（C++ 也是這樣）。
    * 🔴 **不要替使用者先排序**：那會改掉他沒叫我們改的東西。
    */
-  it('🔴 execute：沒排序過時只擠掉相鄰的，而不是全部', async () => {
-    const r = await run(`${H}int main(){ vector<int> v{1,2,1};\n`
+  // 🟡 Cella 0.1.202611020258 判 unknown：std::unique is not supported yet（spec 199 補上 formalize 之後量到），已回報；期望值 g++ 實測相同
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：沒排序過時只擠掉相鄰的，而不是全部', () => knownCellaGap(/std::unique is not supported/, async () => {
+    await run(`${H}int main(){ vector<int> v{1,2,1};\n`
       + ` auto it = unique(v.begin(), v.end());\n`
       + ` cout << (it - v.begin());\n`
-      + ` return 0; }`)
-    expect(r.err).toBe('')
-    expect(r.out).toBe('3')
-  })
+      + ` return 0; }`, '3')
+  }))
 
   it('★ round-trip：產回去再 lift，身分不變', () => {
     const src = `${H}int main(){ vector<int> v{1,1,2};\n`

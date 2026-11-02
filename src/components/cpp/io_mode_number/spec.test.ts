@@ -13,7 +13,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -34,13 +34,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(c, expected)
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 const prog = (body: string): string => `${H}int main(){ ${body} return 0; }`
 
@@ -75,9 +70,7 @@ describe('膠囊自證：數字的寫法', () => {
   })
 
   it('🔴 execute：兩種寫法印出來不一樣', async () => {
-    const a = await run(prog(`cout << fixed << setprecision(2) << 1234.5;`))
-    expect(a.out).toBe('1234.50')
-    const b = await run(prog(`cout << scientific << setprecision(2) << 1234.5;`))
-    expect(b.out).toBe('1.23e+03')
+    await run(prog(`cout << fixed << setprecision(2) << 1234.5;`), '1234.50')
+    await run(prog(`cout << scientific << setprecision(2) << 1234.5;`), '1.23e+03')
   })
 })

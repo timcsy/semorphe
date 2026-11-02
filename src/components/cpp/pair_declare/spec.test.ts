@@ -37,7 +37,7 @@ import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { generateCode } from '../../../core/projection/code-generator'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 import apcs from '../../../languages/cpp/styles/apcs.json'
@@ -69,11 +69,8 @@ function find(n: SemanticNode | null, id: string): SemanticNode | null {
   return null
 }
 
-async function run(code: string): Promise<string> {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(code) as SemanticNode)
-  return i.getOutput().join('')
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (code: string, expected: string) => expectCellaOut(code, expected)
 
 const H = '#include <iostream>\n#include <utility>\n#include <string>\nusing namespace std;\n'
 
@@ -92,16 +89,20 @@ describe('cpp:pair_declare', () => {
   })
 
   it('宣告 + 欄位讀寫——這 5 段是第三十二條護欄的缺口', async () => {
-    expect(await run(`${H}int main(){ pair<int,int> p; p.first=1; p.second=2; cout << p.first << " " << p.second << endl; return 0; }`)).toBe(
+    await run(
+      `${H}int main(){ pair<int,int> p; p.first=1; p.second=2; cout << p.first << " " << p.second << endl; return 0; }`,
       '1 2\n',
     )
   })
 
-  it('make_pair 初始化——初始值不再被對稱地丟掉', async () => {
-    expect(await run(`${H}int main(){ pair<int,string> p = make_pair(42,"hello"); cout << p.first << " " << p.second << endl; return 0; }`)).toBe(
+  // Cella 0.1.202611020258 判錯：判 reject「no matching constructor for initialization of 'std::pair<int, std::string>'」，
+  // 而真的 C++ 合法（pair<int,const char*> → pair<int,string> 的轉換建構子），g++ 實測印 `42 hello`。已回報。
+  it('🟡 已知缺陷（修好時這條會紅）：make_pair 初始化——初始值不再被對稱地丟掉', () => knownCellaGap(/no matching constructor/, async () => {
+    await run(
+      `${H}int main(){ pair<int,string> p = make_pair(42,"hello"); cout << p.first << " " << p.second << endl; return 0; }`,
       '42 hello\n',
     )
-  })
+  }))
 
   it('★ 而產生器要把初始值產回去——對稱遺失的另一半', () => {
     const src = `${H}int main(){ pair<int,string> p = make_pair(42,"hello"); return 0; }`
@@ -114,24 +115,25 @@ describe('cpp:pair_declare', () => {
   })
 
   it('函式回傳 pair', async () => {
-    expect(
-      await run(
-        `${H}pair<int,int> mm(int a,int b){ if(a<b) return make_pair(a,b); return make_pair(b,a); }\nint main(){ pair<int,int> r = mm(7,3); cout << r.first << " " << r.second << endl; return 0; }`,
-      ),
-    ).toBe('3 7\n')
+    await run(
+      `${H}pair<int,int> mm(int a,int b){ if(a<b) return make_pair(a,b); return make_pair(b,a); }\nint main(){ pair<int,int> r = mm(7,3); cout << r.first << " " << r.second << endl; return 0; }`,
+      '3 7\n',
+    )
   })
 
   it('未初始化的欄位用型別的預設值', async () => {
-    expect(await run(`${H}int main(){ pair<int,double> p; cout << p.first << endl; return 0; }`)).toBe('0\n')
+    await run(
+      `${H}int main(){ pair<int,double> p; cout << p.first << endl; return 0; }`,
+      '0\n',
+    )
   })
 
   it('🔴 反向：初始值是複製不是共用', async () => {
     // 與 vector_declare 同一條理由。共用的話改一個另一個跟著變，
     // 而那種錯只在「先複製再改」的程式裡現形。
-    expect(
-      await run(
-        `${H}int main(){ pair<int,int> a = make_pair(1,2); pair<int,int> b = a; b.first = 99; cout << a.first << " " << b.first << endl; return 0; }`,
-      ),
-    ).toBe('1 99\n')
+    await run(
+      `${H}int main(){ pair<int,int> a = make_pair(1,2); pair<int,int> b = a; b.first = 99; cout << a.first << " " << b.first << endl; return 0; }`,
+      '1 99\n',
+    )
   })
 })

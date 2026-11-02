@@ -18,7 +18,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
+import { formalize } from '../../../providers/cella/formalize'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -40,11 +41,8 @@ const ids = (n: SemanticNode, out: string[] = []): string[] => {
   return out
 }
 const gen = (body: string): string => generateCode(lift(body), 'cpp', apcs as unknown as StylePreset)
-const run = async (body: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 200_000 })
-  try { await i.execute(lift(body)); return { out: i.getOutput().join(''), err: '' } }
-  catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (body: string, expected: string) => expectCellaOut(`${H}int main(){ ${body} return 0; }`, expected)
 const dig = (n: SemanticNode, id: string): SemanticNode | null => {
   if (n.componentId === id) return n
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) { const r = dig(k, id); if (r) return r }
@@ -91,24 +89,26 @@ describe('膠囊自證：一排位元', () => {
   })
 
   it('★ execute：每一格從 0 開始，而索引讀寫都會', async () => {
-    const r = await run('bitset<8> bs; bs[3]=1; cout << bs[3] << bs[0] << bs[7];')
-    expect(r.err).toBe('')
-    expect(r.out).toBe('100')
+    await run('bitset<8> bs; bs[3]=1; cout << bs[3] << bs[0] << bs[7];', '100')
   })
 
   /** 🔴 語料 `AP325/2/2_7_TLE` 的形狀：**一陣列的 bitset**。 */
   it('🔴 execute：一陣列的 bitset，每一格都是一排', async () => {
-    const r = await run('bitset<26> d[3]; d[0][2]=1; cout << d[0][2] << d[1][2] << d[2][25];')
-    expect(r.err).toBe('')
-    expect(r.out).toBe('100')
+    await run('bitset<26> d[3]; d[0][2]=1; cout << d[0][2] << d[1][2] << d[2][25];', '100')
   })
 
-  /** 🔴 沒有大小要出聲——不得默默建一個空的（那會讓 `bs[0]` 說「索引超出範圍」）。 */
-  it('🔴 execute：沒有大小要出聲，而且說得出是誰', async () => {
+  /**
+   * 🔴 沒有大小要出聲——不得默默建一個空的（那會讓 `bs[0]` 說「索引超出範圍」）。
+   * 這是一棵【程式碼寫不出來】的樹（積木拖出來、大小接點空著），所以不走 `expectCellaOut`：
+   * 直接問 formalize——它必須拒絕翻譯，並指回那一顆宣告（「說得出是誰」＝ nodeId）。
+   */
+  it('🔴 execute：沒有大小要出聲，而且說得出是誰', () => {
     const t = createTestLifter().lift(parser.parse(`${H}int main(){ bitset<8> bs; return 0; }`)!.rootNode as never) as SemanticNode
     const node = dig(t, 'cpp:bits_declare')!
     node.slots.size = []
-    const i = new SemanticInterpreter({ maxSteps: 10_000 })
-    await expect(i.execute(t)).rejects.toThrow(/bs/)
+    const fz = formalize(t, { lang: 'cpp' })
+    expect(fz.program, '🔴 沒有大小卻翻出了一支程式').toBeNull()
+    expect(fz.unknown.map((u) => u.nodeId), '🔴 說不出是哪一顆宣告').toContain(node.id)
+    expect(fz.unknown.map((u) => u.construct)).toContain('cpp:bits_declare')
   })
 })

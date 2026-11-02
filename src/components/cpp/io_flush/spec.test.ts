@@ -18,7 +18,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -39,13 +39,8 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
+const run = (c: string, expected: string) => expectCellaOut(c, expected)
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 const prog = (body: string): string => `${H}int main(){ ${body} return 0; }`
 
@@ -74,10 +69,8 @@ describe('膠囊自證：立刻送出', () => {
    * 而「印出零個字」與「這一項不存在」在那條路上是兩件事。
    */
   it('🔴 execute：不改變輸出，也不吃掉欄寬', async () => {
-    const a = await run(prog(`cout << "ab" << flush << "cd";`))
-    expect(a.err).toBe('')
-    expect(a.out).toBe('abcd')
-    const b = await run(prog(`cout << setw(3) << flush << 7;`))
-    expect(b.out, '🔴 那個 3 要給 7，不是給送出').toBe('  7')
+    await run(prog(`cout << "ab" << flush << "cd";`), 'abcd')
+    // 🔴 那個 3 要給 7，不是給送出
+    await run(prog(`cout << setw(3) << flush << 7;`), '  7')
   })
 })
