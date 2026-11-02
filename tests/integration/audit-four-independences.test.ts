@@ -224,7 +224,22 @@ function uiFiles(): string[] {
     }
   }
   walk(path.join(REPO_ROOT, 'src/ui'))
+  /**
+   * 🔴 **`src/panels/` 也是視圖**（2026-11-03，第 239 刀）。面板自己 `mount` 之後，畫法住在 `src/panels/<面板>/view.ts`
+   * （spec 184 的硬體、第 239 刀的變數）——而這條護欄原本只掃 `src/ui`，**搬過去的視圖就安靜地離開了「視圖之間零 import」的檢查**。
+   * 是搬變數面板時語料縮水（ui 檔數 36 → 35）才看到：
+   *
+   * > **一條按「住在哪個資料夾」劃範圍的護欄，會在東西搬家的那天失去它。**
+   */
+  walk(path.join(REPO_ROOT, 'src/panels'))
   return out
+}
+
+/** `src/panels/<甲>/…` 引用了 `../<乙>/…`（另一份面板的資料夾）——宣告式面板之間的跨視圖 import */
+export function isCrossPanelDirImport(rel: string, line: string): boolean {
+  if (!rel.replace(/\\/g, '/').startsWith('src/panels/')) return false
+  const m = line.match(/from\s+'([^']+)'/)
+  return !!m && /^\.\.\/[\w-]+\//.test(m[1])
 }
 
 function measure(): Baseline {
@@ -255,7 +270,9 @@ function measure(): Baseline {
           else if (isView) viewImportsLanguage.push(key)
           else otherUiImportsLanguage.push(key)
         }
-        if (isView && isCrossViewImport(line)) crossViewImports.push(key)
+        // `src/panels/` 底下用資料夾判（名字裡帶 panel 的 `core/host/panel-spec` 不是另一份視圖）；`src/ui/panels/` 照舊用名字判
+        const crossView = rel.startsWith('src/panels/') ? isCrossPanelDirImport(rel, line) : isCrossViewImport(line)
+        if (isView && crossView) crossViewImports.push(key)
       }
       // 🔴 **註解不算呼叫**（2026-08-26）。
       //
@@ -361,6 +378,9 @@ describe('第三十九條護欄：P9 四項獨立性', () => {
   it('★ 注入③：視圖間 import 會被報，非視圖的不會', () => {
     expect(isCrossViewImport("import { Foo } from './foo-panel'")).toBe(true)
     expect(isCrossViewImport("import { Bar } from '../panels/bar-panel.ts'")).toBe(true)
+    expect(isCrossPanelDirImport('src/panels/variables/view.ts', "import { HardwarePanel } from '../hardware/view'"), 'src/panels 底下的兩份面板互相 import').toBe(true)
+    expect(isCrossPanelDirImport('src/panels/variables/panel.ts', "import { VariablePanel } from './view'"), '同一份面板自己的畫法不算').toBe(false)
+    expect(isCrossPanelDirImport('src/panels/variables/view.ts', "import type { ViewHost } from '../../core/sync/view-host'"), '往上兩層到核心不算').toBe(false)
     expect(isCrossViewImport("import { Baz } from '../../core/sync/view-host'")).toBe(false)
     expect(isCrossViewImport("import { Qux } from './panel-helpers/util'")).toBe(false)
   })
