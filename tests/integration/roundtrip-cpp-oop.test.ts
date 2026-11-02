@@ -389,7 +389,7 @@ int main() {
     it('類別裡的 static 成員函式產回去保留 static', () => {
       const code = `struct P {\n    static int zero() {\n        return 0;\n    }\n};\nint main() {\n    return P::zero();\n}\n`
       const out = roundTripCode(code)
-      expect(out, '🔴 修之前這裡是 `int zero() {`').toContain('static int zero() {')
+      expect(out, '🔴 修之前這裡是 int zero() {——static 不見了').toContain('static int zero() {')
       expect(roundTripCode(out)).toBe(out)
     })
   })
