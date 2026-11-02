@@ -49,7 +49,7 @@
 
 ## Phase 6: Polish
 
-- [ ] T015 `npx tsc --noEmit`；`npm run test:guard`（新增的 helper 與測試檔會動到計數基線——照實上調並寫理由）
+- [X] T015 `npx tsc --noEmit`；`npm run test:guard`（新增的 helper 與測試檔會動到計數基線——照實上調並寫理由）
 - [ ] T016 合併 main 之後的狀態跑全套（`tools/long-test.sh … --suite`），確認沒有新增的 skip
 - [ ] T017 在 `knowledge/draft/2026-11-02-6c測試盤點.md` 的風險 1、2 標上「6c-1 已處理」與量到的秒數，並註明 6c-2 用這個入口
 
