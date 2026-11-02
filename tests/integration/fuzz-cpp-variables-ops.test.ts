@@ -15,7 +15,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import type { StylePreset } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -44,13 +44,14 @@ beforeAll(async () => {
   setupTestRenderer()
 })
 
-async function runCode(code: string) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode as any)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(sem!, [])
-  return interp
+/**
+ * 執行交給 Cella（spec 202，重構 6c-2d）：走產品同一條 lift → formalize → Cella 判決。
+ * 不是 accept（reject／unknown／翻不出）就丟出說得出原因的錯；回傳印出的全文。
+ */
+async function runCode(code: string): Promise<string> {
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 function roundTrip(code: string): string {
@@ -78,8 +79,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('3')
     expect(out).toContain('1')
     expect(out).toContain('7')
@@ -110,8 +110,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('-3')
     expect(out).toContain('-1')
   })
@@ -141,8 +140,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('2.5')
     expect(out).toContain('2')
   })
@@ -175,9 +173,8 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
-    expect(out).toContain('1')  // r1 = true (interpreter prints 'true' not '1')
+    const out = await runCode(code)
+    expect(out).toContain('1')  // r1 = true（cout 印 bool 是 1）
     expect(out).toContain('3')  // 3 true comparisons
   })
 
@@ -210,8 +207,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('-5')
     expect(out).toContain('5')   // c = -(-5) = 5, d = -(-5) = 5
     expect(out).toContain('-10')
@@ -249,8 +245,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('14')  // 2+3*4
     expect(out).toContain('20')  // (2+3)*4
     expect(out).toContain('3')   // 10-4-3

@@ -24,29 +24,15 @@
 // ⚠️ 091：C++ 的 `cout << (x > 2)` 印出 **1／0**，不是 `true`／`false`
 // （後者要 `std::boolalpha`）。這個檔原本的斷言記錄的是**舊的錯誤輸出**，
 // 期望值已改為 g++ 實際印出的東西。
-import { describe, it, expect, beforeAll } from 'vitest'
-import { Parser, Language } from 'web-tree-sitter'
-import { createTestLifter } from '../helpers/setup-lifter'
-import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import type { Lifter } from '../../src/core/lift/lifter'
+import { describe, it, expect } from 'vitest'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 
-let tp: Parser
-let lifter: Lifter
-
-beforeAll(async () => {
-  await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
-  tp = new Parser()
-  tp.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
-  lifter = createTestLifter()
-  registerCppLanguage()
-})
-
+// 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
 async function run(body: string): Promise<string> {
   const src = `#include <iostream>\n#include <string>\nusing namespace std;\nint main(){ ${body} return 0; }`
-  const interp = new SemanticInterpreter({ maxSteps: 50000 })
-  await interp.execute(lifter.lift(tp.parse(src)!.rootNode as never) as never)
-  return interp.getOutput().join('')
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 describe('字串宣告要讀初始值（根因）', () => {

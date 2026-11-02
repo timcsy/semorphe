@@ -23,29 +23,15 @@
  * 列舉要把常數放進作用域。「刻意不執行」的理由**經不起一支會用到那些常數
  * 的程式**。
  */
-import { describe, it, expect, beforeAll } from 'vitest'
-import { Parser, Language } from 'web-tree-sitter'
-import { createTestLifter } from '../helpers/setup-lifter'
-import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import type { Lifter } from '../../src/core/lift/lifter'
+import { describe, it, expect } from 'vitest'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 
-let tp: Parser
-let lifter: Lifter
-
-beforeAll(async () => {
-  await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
-  tp = new Parser()
-  tp.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
-  lifter = createTestLifter()
-  registerCppLanguage()
-})
-
+// 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
 async function run(body: string, decls = ''): Promise<string> {
   const src = `#include <iostream>\n#include <cstdlib>\nusing namespace std;\n${decls}\nint main(){ ${body} return 0; }`
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(lifter.lift(tp.parse(src)!.rootNode as never) as never)
-  return interp.getOutput().join('')
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 describe('布林印成 1／0，不是 true／false', () => {

@@ -5,7 +5,7 @@
  * Tests numeric components: accumulate, iota, partial_sum, gcd, lcm.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { expectCellaOut } from '../helpers/cella-run'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -371,11 +371,8 @@ describe('fuzz_4: 最小公倍數鏈：C 風格陣列初始化列表 {2,3,4,5}',
     expect(gen, '初始化列表在辨識時被丟掉了').toMatch(/\{[^}]+\}/)
   })
 
+  // 執行交給 Cella（spec 202，重構 6c-2d）；程式只印 `acc`、沒有換行，所以原本的 `.trim()` 之後的 "60" 就是全文
   it('執行結果正確——只驗來回轉換的話，值全變 0 也看不出來', async () => {
-    const tree = tsParser.parse(code)
-    const sem = lifter.lift(tree.rootNode as never)
-    const interp = new SemanticInterpreter({ maxSteps: 200000 })
-    await interp.execute(sem!)
-    expect(interp.getOutput().join('').trim()).toBe("60")
+    await expectCellaOut(code, '60')
   })
 })

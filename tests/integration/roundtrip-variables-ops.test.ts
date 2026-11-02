@@ -8,7 +8,7 @@
  * Each component is tested for:
  * 1. code → lift → semantic tree correctness
  * 2. semantic tree → code generation fidelity
- * 3. execution correctness (via interpreter)
+ * 3. execution correctness (via Cella — spec 202：判準從 JS 直譯器換成 Cella)
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -17,7 +17,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import type { StylePreset, SemanticNode } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -57,13 +57,14 @@ function roundTrip(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-async function runCode(code: string, stdin: string[] = []) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode as any)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(sem!, stdin)
-  return interp
+/**
+ * 執行交給 Cella（spec 202，重構 6c-2d）：走產品同一條 lift → formalize → Cella 判決。
+ * 不是 accept（reject／unknown／翻不出）就丟出說得出原因的錯；回傳印出的全文。
+ */
+async function runCode(code: string): Promise<string> {
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 // ─── number_literal ───
@@ -89,21 +90,21 @@ describe('cpp:literal_number', () => {
   })
 
   it('executes integer literal correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() { cout << 42 << endl; return 0; }
     `)
-    expect(interp.getOutput().join('')).toContain('42')
+    expect(out).toContain('42')
   })
 
   it('executes float literal correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() { cout << 3.14 << endl; return 0; }
     `)
-    expect(interp.getOutput().join('')).toContain('3.14')
+    expect(out).toContain('3.14')
   })
 })
 
@@ -125,12 +126,12 @@ describe('cpp:literal_string', () => {
   })
 
   it('executes string literal correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() { cout << "hello world" << endl; return 0; }
     `)
-    expect(interp.getOutput().join('')).toContain('hello world')
+    expect(out).toContain('hello world')
   })
 })
 
@@ -152,7 +153,7 @@ describe('cpp:builtin_constant', () => {
   })
 
   it('executes true/false correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -161,7 +162,6 @@ describe('cpp:builtin_constant', () => {
         return 0;
       }
     `)
-    const out = interp.getOutput().join('')
     expect(out).toContain('yes')
     expect(out).not.toContain('no')
   })
@@ -211,7 +211,7 @@ describe('cpp:var_declare', () => {
   })
 
   it('executes declaration correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -220,11 +220,14 @@ describe('cpp:var_declare', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('10')
+    expect(out).toContain('10')
   })
 
-  it('executes uninitialized int as 0', async () => {
-    const interp = await runCode(`
+  // 🔴 期望值改了（spec 202）：原本斷言印出 0，那是 JS 直譯器自己的取捨。
+  // C++ 標準：自動儲存期的 `int x;` 沒有初值，值是不確定的（[dcl.init]/12、[basic.indet]），讀它是未定義行為
+  // ⟹ 判 reject，種類是 ubUninit，位置指著 `x` 的讀取。
+  it('reading an uninitialized local int is undefined behaviour → Cella rejects (ubUninit)', async () => {
+    const r = await runCella(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -233,7 +236,9 @@ describe('cpp:var_declare', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('0')
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    expect(r.problems.map((p) => p.kind)).toEqual(['ubUninit'])
+    expect(r.problems[0].source?.text).toBe('x')
   })
 })
 
@@ -250,7 +255,7 @@ describe('cpp:var_assign', () => {
   })
 
   it('executes assignment correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -260,7 +265,7 @@ describe('cpp:var_assign', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('42')
+    expect(out).toContain('42')
   })
 })
 
@@ -302,7 +307,7 @@ describe('cpp:arithmetic', () => {
   })
 
   it('executes arithmetic correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -314,7 +319,6 @@ describe('cpp:arithmetic', () => {
         return 0;
       }
     `)
-    const out = interp.getOutput().join('')
     expect(out).toContain('5')
     expect(out).toContain('6')
     expect(out).toContain('21')
@@ -323,7 +327,7 @@ describe('cpp:arithmetic', () => {
   })
 
   it('integer division truncates', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -332,7 +336,7 @@ describe('cpp:arithmetic', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(out).toContain('3')
   })
 })
 
@@ -347,7 +351,7 @@ describe('cpp:compare', () => {
   }
 
   it('executes comparison correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -360,7 +364,6 @@ describe('cpp:compare', () => {
         return 0;
       }
     `)
-    const out = interp.getOutput().join('')
     expect(out).toContain('lt')
     expect(out).toContain('gt')
     expect(out).toContain('le')
@@ -383,7 +386,7 @@ describe('cpp:logic', () => {
   })
 
   it('short-circuit && execution', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -393,11 +396,11 @@ describe('cpp:logic', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('0')
+    expect(out).toContain('0')
   })
 
   it('short-circuit || execution', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -407,7 +410,7 @@ describe('cpp:logic', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1')
+    expect(out).toContain('1')
   })
 })
 
@@ -419,7 +422,7 @@ describe('cpp:logic_not', () => {
   })
 
   it('executes correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -428,7 +431,7 @@ describe('cpp:logic_not', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('negated')
+    expect(out).toContain('negated')
   })
 })
 
@@ -440,7 +443,7 @@ describe('cpp:negate', () => {
   })
 
   it('executes correctly', async () => {
-    const interp = await runCode(`
+    const out = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -449,7 +452,7 @@ describe('cpp:negate', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('-5')
+    expect(out).toContain('-5')
   })
 })
 
@@ -476,8 +479,7 @@ describe('Combined program roundtrip', () => {
       }
     `
     // Verify execution
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('13')  // 10+3
     expect(out).toContain('7')   // 10-3
     expect(out).toContain('30')  // 10*3
@@ -513,8 +515,7 @@ describe('Combined program roundtrip', () => {
         return 0;
       }
     `
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('in range')
     expect(out).not.toContain('out of range')
     expect(out).toContain('nonzero')

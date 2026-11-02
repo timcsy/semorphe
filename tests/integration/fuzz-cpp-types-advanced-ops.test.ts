@@ -12,7 +12,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, expectCellaOut, knownCellaGap } from '../helpers/cella-run'
 import type { StylePreset } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -41,13 +41,14 @@ beforeAll(async () => {
   setupTestRenderer()
 })
 
-async function runCode(code: string) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode as any)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(sem!, [])
-  return interp
+/**
+ * 執行交給 Cella（spec 202，重構 6c-2d）：走產品同一條 lift → formalize → Cella 判決。
+ * 不是 accept（reject／unknown／翻不出）就丟出說得出原因的錯；回傳印出的全文。
+ */
+async function runCode(code: string): Promise<string> {
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 function roundTrip(code: string): string {
@@ -75,8 +76,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('20')
     expect(out).toContain('30')
     expect(out).toContain('1')
@@ -107,12 +107,10 @@ int main() {
     return 0;
 }`
 
+  // spec 202：原本只斷言 toContain('3')／('90')，並註明 JS 直譯器把 (char)65 印成數字。
+  // 換成 Cella 後斷言全文；期望值 g++ -std=c++17 實測：(int)3.14 = 3、(char)65 印 'A'、(int)'Z' = 90、(double)3 印 3
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
-    expect(out).toContain('3')   // (int)3.14 = 3
-    expect(out).toContain('90')  // (int)'Z' = 90
-    // Note: interpreter outputs numeric value for (char)65, not 'A'
+    await expectCellaOut(code, '3\nA\n90\n3\n')
   })
 
   it('roundtrip is stable', () => {
@@ -144,8 +142,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('15')
     expect(out).toContain('12')
     expect(out).toContain('24')
@@ -173,13 +170,11 @@ int main() {
     return 0;
 }`
 
+  // spec 202：原本只斷言 toContain('4'／'8'／'1')，並註明 JS 直譯器的 sizeof(arr)/sizeof(arr[0]) 得 1。
+  // 換成 Cella 後斷言全文；期望值 g++ -std=c++17 實測（int 4、double 8、char 1、bool 1、陣列長度 5——
+  // sizeof(char) 是標準定死的 1，其餘是 LP64 的實作定義值，與 g++ 一致）
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
-    expect(out).toContain('4')
-    expect(out).toContain('8')
-    expect(out).toContain('1')
-    // Note: sizeof(arr)/sizeof(arr[0]) returns 1 in interpreter (no real memory model)
+    await expectCellaOut(code, '4\n8\n1\n1\n5\n')
   })
 
   it('roundtrip is stable', () => {
@@ -205,12 +200,13 @@ int main() {
     return 0;
 }`
 
-  it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
-    expect(out).toContain('42')
-    expect(out).toContain('3.14')
-    expect(out).toContain('100')
+  // 我們 formalize 缺：Cella 有頂層的 `iTypedef`（cfamily 的 Item），而 `cpp:typedef`／`cpp:using_alias` 還沒有 formalize.ts，
+  // 型別名 `Integer`／`Real`／`UInt` 也要引擎的型別解析認得——不是一個呼叫就送得完的形狀，先釘住。
+  // 期望值 g++ -std=c++17 實測：42\n3.14\n100\n（原本只斷言 toContain 三個值）
+  it('🟡 已知缺陷（修好時這條會紅）：executes correctly', async () => {
+    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
+      await expectCellaOut(code, '42\n3.14\n100\n')
+    })
   })
 
   it('roundtrip is stable', () => {
@@ -236,8 +232,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('-1')
     expect(out).toContain('-256')
     expect(out).toContain('0')
@@ -312,18 +307,18 @@ int main() {
  */
 describe('🪦 三根死釘子（拔掉的那天補上的測試）', () => {
   it('轉型：`(char)65` 印出字元，不是數字', async () => {
-    const i = await runCode(`#include <bits/stdc++.h>
+    const out = await runCode(`#include <bits/stdc++.h>
 using namespace std;
 int main() {
   cout << (char)65 << char(66);
   return 0;
 }
 `)
-    expect(i.getOutput().join('')).toBe('AB')
+    expect(out).toBe('AB')
   })
 
   it('`sizeof(a)/sizeof(a[0])` 算得出陣列長度', async () => {
-    const i = await runCode(`#include <bits/stdc++.h>
+    const out = await runCode(`#include <bits/stdc++.h>
 using namespace std;
 int main() {
   int a[5] = {0, 0, 0, 0, 0};
@@ -331,19 +326,18 @@ int main() {
   return 0;
 }
 `)
-    expect(i.getOutput().join('')).toBe('5')
+    expect(out).toBe('5')
   })
 
   it('列舉常數當值讀得到', async () => {
-    const i = await runCode(`#include <bits/stdc++.h>
+    await expectCellaOut(`#include <bits/stdc++.h>
 using namespace std;
 enum D { N, S };
 int main() {
   cout << S;
   return 0;
 }
-`)
-    expect(i.getOutput().join('')).toBe('1')
+`, '1')
   })
 
   /** 🔴 原本的症狀是「前置遞增被拆成兩句，產出多一個分號」——所以**不動點也要驗**。 */
@@ -359,8 +353,8 @@ int main() {
   return 0;
 }
 `
-    const i = await runCode(code)
-    expect(i.getOutput().join('')).toBe('2224')
+    const out = await runCode(code)
+    expect(out).toBe('2224')
     const once = roundTrip(code)
     expect(roundTrip(once), '🔴 產出的碼再 lift 一次就走樣').toBe(once)
   })
@@ -374,8 +368,7 @@ int main() {
   return 0;
 }
 `
-    const i = await runCode(code)
-    expect(i.getOutput().join('')).toBe('10 20')
+    await expectCellaOut(code, '10 20')
     expect(roundTrip(code), '🔴 明寫的值在產出的碼裡不見了').toContain('APPLE = 10')
   })
 })

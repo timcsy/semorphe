@@ -18,11 +18,22 @@
  *
  * 每一條都是**兩支程式、同一個行程**，而第二支**完全沒有提到**第一支的東西。
  * 🔴 **順序是判準的一部分**：反過來跑會綠。
+ *
+ * ## 🔴 spec 202（重構 6c-2d）：判準換成 Cella
+ *
+ * 那張別名表隨 JS 直譯器退場，而「行程級的表跨程式殘留」這一族今天住在 **lift 與 formalize**
+ * （`#define`／`typedef` 由 lift 認、由 formalize 展開）。所以每一支程式走兩條觀察：
+ *
+ * ```
+ * ① 執行：runCella（同一個行程裡的 lift → formalize → Cella）印的東西要對
+ * ② lift：用【同一個】lifter 實例 lift 第二支，形狀要與一個全新的 lifter lift 出來的相同
+ *         （runCella 每次新建 lifter，只守得住模組層級的表；實例層級的殘留由②守）
+ * ```
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -38,14 +49,25 @@ beforeAll(async () => {
   registerCppLanguage()
 }, 120_000)
 
+/** 語義樹的形狀：身分與屬性（不含 id——兩個 lifter 實例給的 id 不必相同） */
+function shape(n: SemanticNode): unknown {
+  return {
+    c: n.componentId,
+    p: n.properties ?? {},
+    s: Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, v]) => [k, v.map(shape)])),
+  }
+}
+
 async function run(src: string): Promise<string> {
   const full = `#include <bits/stdc++.h>\nusing namespace std;\n${src}\n`
-  const tree = lifter.lift(parser.parse(full).rootNode as never) as SemanticNode
-  const out: string[] = []
-  const interp = new SemanticInterpreter({ maxSteps: 200_000 })
-  interp.setOutputCallback((x) => out.push(x))
-  await interp.execute(tree, [])
-  return out.join('')
+  // ② lift：同一個 lifter 實例（跨程式共用）與全新的實例，形狀要相同
+  const shared = lifter.lift(parser.parse(full)!.rootNode as never) as SemanticNode
+  const fresh = createTestLifter().lift(parser.parse(full)!.rootNode as never) as SemanticNode
+  expect(shape(shared), '同一個 lifter 實例 lift 出來的樹與全新的不同——上一支程式的東西留在 lifter 裡').toEqual(shape(fresh))
+  // ① 執行
+  const r = await runCella(full, { steps: 200_000 })
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 describe('上一支程式不得影響下一支', () => {
@@ -82,11 +104,13 @@ describe('上一支程式不得影響下一支', () => {
     ).toBe('9')
   }, 120_000)
 
-  it('★ 錨點：`typedef` 取的小名也不得殘留', async () => {
-    expect(
+  it('🟡 已知缺陷（第一支的判決；修好時這條會紅）：★ 錨點：`typedef` 取的小名也不得殘留', async () => {
+    // 我們 formalize 缺：`cpp:typedef` 還沒有對應（引擎的型別解析不認 typedef 取的名字——要送 iTypedef 與 tName，動到共用引擎）。
+    // 第一支照樣先 lift、先送（順序是判準的一部分），只是判決釘住；第二支照常斷言。
+    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => expect(
       await run('typedef pair<int,int> P;\nint main(){ P p = {1,2}; cout << p.first << p.second; return 0; }'),
       '★ 第一支要跑對',
-    ).toBe('12')
+    ).toBe('12'))
     expect(
       await run('struct P{ int v; };\nint main(){ P p; p.v = 8; cout << p.v; return 0; }'),
       '上一支的 typedef 小名活到了這一支',

@@ -15,7 +15,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import type { Lifter } from '../../src/core/lift/lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 
@@ -33,13 +33,15 @@ beforeAll(async () => {
   lifter = createTestLifter()
 })
 
-async function runCode(code: string, stdin: string[] = []) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 2000000 })
-  await interp.execute(sem!, stdin)
-  return interp
+/**
+ * 執行判準是 Cella（spec 202，重構 6c-2d）：走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept（翻不出、未支援、判定有錯、跑不完）一律拋錯並說清楚原因——不是空字串。
+ * stdin 原本是 JS 直譯器的一串 token，這裡以換行接起來交給 Cella。
+ */
+async function runCode(code: string, stdin: string[] = []): Promise<{ out: string }> {
+  const r = await runCella(code, { stdin: stdin.join('\n'), steps: 2_000_000 })
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r
 }
 
 // ============================================================
@@ -47,7 +49,7 @@ async function runCode(code: string, stdin: string[] = []) {
 // ============================================================
 describe('decrement for loops', () => {
   it('reverse iteration: print array backwards', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -60,11 +62,11 @@ describe('decrement for loops', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('50 40 30 20 10')
+    expect(r.out).toContain('50 40 30 20 10')
   })
 
   it('countdown loop', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -75,11 +77,11 @@ describe('decrement for loops', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('5 4 3 2 1')
+    expect(r.out).toContain('5 4 3 2 1')
   })
 
   it('decrement loop: find last occurrence', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -98,11 +100,11 @@ describe('decrement for loops', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('5')
+    expect(r.out).toContain('5')
   })
 
   it('step-by-2 decrement', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -113,7 +115,7 @@ describe('decrement for loops', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('10 8 6 4 2')
+    expect(r.out).toContain('10 8 6 4 2')
   })
 })
 
@@ -122,7 +124,7 @@ describe('decrement for loops', () => {
 // ============================================================
 describe('two-pointer patterns', () => {
   it('comma in for-loop update: reverse array in-place', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -139,11 +141,11 @@ describe('two-pointer patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('5 4 3 2 1')
+    expect(r.out).toContain('5 4 3 2 1')
   })
 
   it('two-pointer: palindrome check', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -162,11 +164,11 @@ describe('two-pointer patterns', () => {
         return 0;
       }
     `, ['5', '1', '2', '3', '2', '1'])
-    expect(interp.getOutput().join('')).toContain('1')
+    expect(r.out).toContain('1')
   })
 
   it('two-pointer: partition around pivot', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -195,7 +197,7 @@ describe('two-pointer patterns', () => {
       }
     `)
     // Elements < 5: 3, 1, 2, 4 → count = 4
-    expect(interp.getOutput().join('')).toContain('4')
+    expect(r.out).toContain('4')
   })
 })
 
@@ -204,7 +206,7 @@ describe('two-pointer patterns', () => {
 // ============================================================
 describe('bitwise operators', () => {
   it('basic AND, OR, XOR', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -216,11 +218,11 @@ describe('bitwise operators', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('8 14 6')
+    expect(r.out).toContain('8 14 6')
   })
 
   it('bitwise NOT', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -229,11 +231,11 @@ describe('bitwise operators', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('-1')
+    expect(r.out).toContain('-1')
   })
 
   it('left and right shift', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -244,11 +246,11 @@ describe('bitwise operators', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('8 16')
+    expect(r.out).toContain('8 16')
   })
 
   it('check if number is power of 2', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -266,11 +268,11 @@ describe('bitwise operators', () => {
       }
     `)
     // Powers of 2: 1, 2, 4, 16
-    expect(interp.getOutput().join('')).toContain('1 2 4 16')
+    expect(r.out).toContain('1 2 4 16')
   })
 
   it('count set bits (Kernighan method)', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int countBits(int n) {
@@ -289,11 +291,11 @@ describe('bitwise operators', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('3 4 2 8')
+    expect(r.out).toContain('3 4 2 8')
   })
 
   it('extract individual bits', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -305,11 +307,11 @@ describe('bitwise operators', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('00101010')
+    expect(r.out).toContain('00101010')
   })
 
   it('set, clear, toggle bits', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -324,11 +326,11 @@ describe('bitwise operators', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('10 8 0')
+    expect(r.out).toContain('10 8 0')
   })
 
   it('XOR swap (no temp variable)', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -341,7 +343,7 @@ describe('bitwise operators', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('17 42')
+    expect(r.out).toContain('17 42')
   })
 })
 
@@ -350,7 +352,7 @@ describe('bitwise operators', () => {
 // ============================================================
 describe('bitwise compound assignments', () => {
   it('&= |= ^= operations', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -366,11 +368,11 @@ describe('bitwise compound assignments', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('6 15 6')
+    expect(r.out).toContain('6 15 6')
   })
 
   it('<<= >>= shift assignments', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -382,11 +384,11 @@ describe('bitwise compound assignments', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('48 12')
+    expect(r.out).toContain('48 12')
   })
 
   it('bitmask construction with |=', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -401,7 +403,7 @@ describe('bitwise compound assignments', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('149')
+    expect(r.out).toContain('149')
   })
 })
 
@@ -410,7 +412,7 @@ describe('bitwise compound assignments', () => {
 // ============================================================
 describe('type casting', () => {
   it('C-style cast: integer division to float', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <cstdio>
       int main() {
         int a = 7;
@@ -419,11 +421,11 @@ describe('type casting', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('3.5')
+    expect(r.out).toContain('3.5')
   })
 
   it('cast to int: truncate float', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -433,11 +435,11 @@ describe('type casting', () => {
       }
     `)
     // Note: 3.7 is parsed as number_literal
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(r.out).toContain('3')
   })
 
   it('cast in arithmetic: avoid overflow', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -452,7 +454,7 @@ describe('type casting', () => {
       }
     `)
     // 100000 * 100000 / 1000 = 10000000
-    expect(interp.getOutput().join('')).toContain('10000000')
+    expect(r.out).toContain('10000000')
   })
 })
 
@@ -461,7 +463,7 @@ describe('type casting', () => {
 // ============================================================
 describe('pre/post increment semantics', () => {
   it('post-increment returns old value', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -472,11 +474,11 @@ describe('pre/post increment semantics', () => {
       }
     `)
     // x should be 5 (old value), i should be 6
-    expect(interp.getOutput().join('')).toContain('5 6')
+    expect(r.out).toContain('5 6')
   })
 
   it('pre-increment returns new value', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -487,11 +489,11 @@ describe('pre/post increment semantics', () => {
       }
     `)
     // x should be 6 (new value), i should be 6
-    expect(interp.getOutput().join('')).toContain('6 6')
+    expect(r.out).toContain('6 6')
   })
 
   it('post-decrement in expression', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -503,11 +505,11 @@ describe('pre/post increment semantics', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('40 2')
+    expect(r.out).toContain('40 2')
   })
 
   it('pre-increment in array index', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -519,7 +521,7 @@ describe('pre/post increment semantics', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('3 99')
+    expect(r.out).toContain('3 99')
   })
 })
 
@@ -528,7 +530,7 @@ describe('pre/post increment semantics', () => {
 // ============================================================
 describe('reference parameters', () => {
   it('swap by reference', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void swapRef(int& a, int& b) {
@@ -544,11 +546,11 @@ describe('reference parameters', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('20 10')
+    expect(r.out).toContain('20 10')
   })
 
   it('modify variable via reference', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void doubleIt(int& val) {
@@ -561,11 +563,11 @@ describe('reference parameters', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('14')
+    expect(r.out).toContain('14')
   })
 
   it('multiple return values via reference', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void minMax(int arr[], int n, int& minVal, int& maxVal) {
@@ -586,7 +588,7 @@ describe('reference parameters', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1 9')
+    expect(r.out).toContain('1 9')
   })
 })
 
@@ -596,7 +598,7 @@ describe('reference parameters', () => {
 describe('bit manipulation algorithms', () => {
   it('find single non-duplicate element with XOR', async () => {
     // XOR of all elements: duplicates cancel out
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -613,12 +615,12 @@ describe('bit manipulation algorithms', () => {
       }
     `, ['7', '2', '3', '5', '3', '2', '5', '7'])
     // 7 is the single element
-    expect(interp.getOutput().join('')).toContain('7')
+    expect(r.out).toContain('7')
   })
 
   it('subset enumeration with bitmask', async () => {
     // Enumerate all subsets of {1,2,3} using bitmask 0..7
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -641,11 +643,11 @@ describe('bit manipulation algorithms', () => {
     `)
     // Subsets summing to 5: {2,3} and {1,2,3}... wait {1,2,3}=6
     // Actually: {2,3}=5 → count = 1
-    expect(interp.getOutput().join('')).toContain('1')
+    expect(r.out).toContain('1')
   })
 
   it('binary representation using shifts', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -671,12 +673,12 @@ describe('bit manipulation algorithms', () => {
       }
     `, ['42'])
     // 42 = 101010
-    expect(interp.getOutput().join('')).toContain('101010')
+    expect(r.out).toContain('101010')
   })
 
   it('gray code generation', async () => {
     // Gray code: G(n) = n ^ (n >> 1)
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -689,11 +691,11 @@ describe('bit manipulation algorithms', () => {
       }
     `)
     // 0,1,3,2,6,7,5,4
-    expect(interp.getOutput().join('')).toContain('0 1 3 2 6 7 5 4')
+    expect(r.out).toContain('0 1 3 2 6 7 5 4')
   })
 
   it('lowest set bit isolation', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -703,7 +705,7 @@ describe('bit manipulation algorithms', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('4')
+    expect(r.out).toContain('4')
   })
 })
 
@@ -712,7 +714,7 @@ describe('bit manipulation algorithms', () => {
 // ============================================================
 describe('advanced loop patterns', () => {
   it('nested decrement: triangle pattern', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -726,7 +728,7 @@ describe('advanced loop patterns', () => {
         return 0;
       }
     `)
-    const output = interp.getOutput().join('')
+    const output = r.out
     expect(output).toContain('****')
     expect(output).toContain('***')
     expect(output).toContain('**')
@@ -734,7 +736,7 @@ describe('advanced loop patterns', () => {
   })
 
   it('step-based for loop: powers of 2', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -745,11 +747,11 @@ describe('advanced loop patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1 2 4 8 16 32 64 128 256')
+    expect(r.out).toContain('1 2 4 8 16 32 64 128 256')
   })
 
   it('do-while with break: binary search variant', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -775,11 +777,11 @@ describe('advanced loop patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('5')
+    expect(r.out).toContain('5')
   })
 
   it('for loop with complex condition: GCD by subtraction', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -793,7 +795,7 @@ describe('advanced loop patterns', () => {
         return 0;
       }
     `, ['48', '18'])
-    expect(interp.getOutput().join('')).toContain('6')
+    expect(r.out).toContain('6')
   })
 })
 
@@ -802,7 +804,7 @@ describe('advanced loop patterns', () => {
 // ============================================================
 describe('complex engineering patterns', () => {
   it('sieve of Eratosthenes with bitwise flag array', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -827,11 +829,11 @@ describe('complex engineering patterns', () => {
       }
     `)
     // Primes up to 30: 2,3,5,7,11,13,17,19,23,29 → 10
-    expect(interp.getOutput().join('')).toContain('10')
+    expect(r.out).toContain('10')
   })
 
   it('matrix determinant with cofactor expansion', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -848,11 +850,11 @@ describe('complex engineering patterns', () => {
       }
     `)
     // det = 1*(0-48) - 2*(0-42) + 3*(32-35) = -48 + 84 - 9 = 27
-    expect(interp.getOutput().join('')).toContain('27')
+    expect(r.out).toContain('27')
   })
 
   it('radix sort (single digit, counting sort based)', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -882,11 +884,11 @@ describe('complex engineering patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('2 24 45 66 75 90 170 802')
+    expect(r.out).toContain('2 24 45 66 75 90 170 802')
   })
 
   it('simulate hash table with chaining (using arrays)', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -917,12 +919,12 @@ describe('complex engineering patterns', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1')
+    expect(r.out).toContain('1')
   })
 
   it('bit-parallel string matching (simplified)', async () => {
     // Match pattern in text using bit operations
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -950,11 +952,11 @@ describe('complex engineering patterns', () => {
       }
     `)
     // Pattern {2,3,4} appears at positions 3 and 6 → 2 matches
-    expect(interp.getOutput().join('')).toContain('2')
+    expect(r.out).toContain('2')
   })
 
   it('LRU cache simulation with arrays', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -999,7 +1001,7 @@ describe('complex engineering patterns', () => {
     // r=6: page=1, hit(idx=2), cache=[1,2,4], hits=2
     // r=7: page=3, miss, evict cache[2]=4, cache=[3,1,2], size=3
     // Total hits = 2
-    expect(interp.getOutput().join('')).toContain('2')
+    expect(r.out).toContain('2')
   })
 })
 
@@ -1008,7 +1010,7 @@ describe('complex engineering patterns', () => {
 // ============================================================
 describe('advanced switch patterns', () => {
   it('switch with arithmetic: roman numeral converter', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1027,11 +1029,11 @@ describe('advanced switch patterns', () => {
       }
     `, ['2024'])
     // 2024: 2*M + 0*C + 2*X + 4*I = 8 symbols (simplified, not real roman)
-    expect(interp.getOutput().join('')).toContain('8')
+    expect(r.out).toContain('8')
   })
 
   it('state machine with switch', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1064,11 +1066,11 @@ describe('advanced switch patterns', () => {
       }
     `)
     // Groups of 1s: {1,1}, {1}, {1,1,1}, {1}, {1,1} → 5 words
-    expect(interp.getOutput().join('')).toContain('5')
+    expect(r.out).toContain('5')
   })
 
   it('switch inside do-while: FSM tokenizer', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1089,7 +1091,7 @@ describe('advanced switch patterns', () => {
       }
     `)
     // 0→1→2→0→1→1→2→2→0→0: transitions at indices 1,2,3,4,6,8 = 6
-    expect(interp.getOutput().join('')).toContain('6')
+    expect(r.out).toContain('6')
   })
 })
 
@@ -1098,7 +1100,7 @@ describe('advanced switch patterns', () => {
 // ============================================================
 describe('advanced ternary usage', () => {
   it('nested ternary: three-way comparison', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1109,11 +1111,11 @@ describe('advanced ternary usage', () => {
         return 0;
       }
     `, ['5', '5'])
-    expect(interp.getOutput().join('')).toContain('0')
+    expect(r.out).toContain('0')
   })
 
   it('ternary as function argument', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int square(int x) {
@@ -1127,11 +1129,11 @@ describe('advanced ternary usage', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('49')
+    expect(r.out).toContain('49')
   })
 
   it('ternary in loop: conditional accumulation', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1151,7 +1153,7 @@ describe('advanced ternary usage', () => {
       }
     `, ['6', '3', '-2', '5', '-4', '1', '-6'])
     // posSum = 3+5+1 = 9, negSum = -2-4-6 = -12
-    expect(interp.getOutput().join('')).toContain('9 -12')
+    expect(r.out).toContain('9 -12')
   })
 })
 
@@ -1160,7 +1162,7 @@ describe('advanced ternary usage', () => {
 // ============================================================
 describe('pointer operations', () => {
   it('basic pointer: declare, address-of, dereference', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1170,11 +1172,11 @@ describe('pointer operations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('42')
+    expect(r.out).toContain('42')
   })
 
   it('modify value through pointer', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1185,11 +1187,11 @@ describe('pointer operations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('99')
+    expect(r.out).toContain('99')
   })
 
   it('swap via pointers (function with pointer params)', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void swapPtr(int* a, int* b) {
@@ -1205,11 +1207,11 @@ describe('pointer operations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('20 10')
+    expect(r.out).toContain('20 10')
   })
 
   it('pointer to track max element', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1223,11 +1225,11 @@ describe('pointer operations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('9')
+    expect(r.out).toContain('9')
   })
 
   it('pointer read and write through dereference', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1241,7 +1243,7 @@ describe('pointer operations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('15')
+    expect(r.out).toContain('15')
   })
 })
 
@@ -1250,7 +1252,7 @@ describe('pointer operations', () => {
 // ============================================================
 describe('advanced declarations', () => {
   it('multiple variable declaration with initializers', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1259,12 +1261,12 @@ describe('advanced declarations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('6')
+    expect(r.out).toContain('6')
   })
 
   it('const variable', async () => {
     // const is parsed but we treat it as regular var
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1275,11 +1277,11 @@ describe('advanced declarations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('15')
+    expect(r.out).toContain('15')
   })
 
   it('global variable shared between functions', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int counter = 0;
@@ -1294,12 +1296,12 @@ describe('advanced declarations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(r.out).toContain('3')
   })
 
   it('function returning pointer (as int simulation)', async () => {
     // Since we can't really return pointers, test function returning value
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int findMax(int arr[], int n) {
@@ -1317,11 +1319,11 @@ describe('advanced declarations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1 9')
+    expect(r.out).toContain('1 9')
   })
 
   it('void function with reference and array params combined', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void stats(int arr[], int n, int& sum, int& maxVal) {
@@ -1342,7 +1344,7 @@ describe('advanced declarations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('20 9')
+    expect(r.out).toContain('20 9')
   })
 })
 
@@ -1351,7 +1353,7 @@ describe('advanced declarations', () => {
 // ============================================================
 describe('bitwise engineering', () => {
   it('Fenwick tree (BIT) — point update range query', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int bit[20];
@@ -1386,11 +1388,11 @@ describe('bitwise engineering', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('10 15 8')
+    expect(r.out).toContain('10 15 8')
   })
 
   it('bit-parallel even/odd parity check', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1410,11 +1412,11 @@ describe('bitwise engineering', () => {
       }
     `)
     // 7=111(odd), 12=1100(even), 15=1111(even), 8=1000(odd), 3=11(even)
-    expect(interp.getOutput().join('')).toContain('1 0 0 1 0')
+    expect(r.out).toContain('1 0 0 1 0')
   })
 
   it('compress/decompress coordinates with bit packing', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1429,7 +1431,7 @@ describe('bitwise engineering', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('42 17')
+    expect(r.out).toContain('42 17')
   })
 })
 
@@ -1438,7 +1440,7 @@ describe('bitwise engineering', () => {
 // ============================================================
 describe('advanced control flow combinations', () => {
   it('calculator with do-while and switch', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1460,11 +1462,11 @@ describe('advanced control flow combinations', () => {
       }
     `, ['1', '10', '1', '5', '3', '2', '2', '1', '0'])
     // 0 +10=10, +5=15, *2=30, -1=29
-    expect(interp.getOutput().join('')).toContain('29')
+    expect(r.out).toContain('29')
   })
 
   it('ternary + bitwise: conditional bit set', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1479,11 +1481,11 @@ describe('advanced control flow combinations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('13')
+    expect(r.out).toContain('13')
   })
 
   it('reference + array: selection sort with swap function', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       void mySwap(int& a, int& b) {
@@ -1513,11 +1515,11 @@ describe('advanced control flow combinations', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('1 3 4 5 8')
+    expect(r.out).toContain('1 3 4 5 8')
   })
 
   it('do-while + ternary: collatz conjecture', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1533,11 +1535,11 @@ describe('advanced control flow combinations', () => {
       }
     `, ['27'])
     // Collatz 27 takes 111 steps
-    expect(interp.getOutput().join('')).toContain('111')
+    expect(r.out).toContain('111')
   })
 
   it('switch + cast: type-aware formatter', async () => {
-    const interp = await runCode(`
+    const r = await runCode(`
       #include <cstdio>
       int main() {
         int values[3];
@@ -1551,6 +1553,6 @@ describe('advanced control flow combinations', () => {
       }
     `)
     // (100+7+3)/3 = 110/3 = 36.666... → 36.7
-    expect(interp.getOutput().join('')).toContain('avg=36.7')
+    expect(r.out).toContain('avg=36.7')
   })
 })

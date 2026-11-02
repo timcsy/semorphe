@@ -7,7 +7,7 @@
  * comment, block_comment, doc_comment
  *
  * Each program is tested for:
- * 1. execution correctness (via SemanticInterpreter)
+ * 1. execution correctness (via Cella — spec 202：判準從 JS 直譯器換成 Cella)
  * 2. roundtrip stability (lift -> generate -> lift -> generate, gen1 === gen2)
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -17,7 +17,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, expectCellaOut } from '../helpers/cella-run'
 import type { StylePreset, SemanticNode } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -57,13 +57,14 @@ function roundTrip(code: string): string {
   return generateCode(tree!, 'cpp', style)
 }
 
-async function runCode(code: string, stdin: string[] = []) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode as any)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(sem!, stdin)
-  return interp
+/**
+ * 執行交給 Cella（spec 202，重構 6c-2d）：走產品同一條 lift → formalize → Cella 判決。
+ * 不是 accept（reject／unknown／翻不出）就丟出說得出原因的錯；回傳印出的全文。
+ */
+async function runCode(code: string): Promise<string> {
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 // ─── Program 1: Hello World (basic cout with endl) ───
@@ -76,8 +77,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('Hello, World!')
   })
 
@@ -100,8 +100,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('x = ')
     expect(out).toContain('10')
     expect(out).toContain('sum = ')
@@ -130,8 +129,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('42')
   })
 
@@ -157,8 +155,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('Line 1')
     expect(out).toContain('Line 2')
     expect(out).toContain('Line 3')
@@ -192,8 +189,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('5')
     expect(out).toContain('0')
     expect(out).toContain('100')
@@ -225,8 +221,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('22')
   })
 
@@ -263,8 +258,7 @@ int main() {
    * > 那麼做到的那天，沒有人會想到回來看它。**
    */
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('100')
     expect(out).toContain('3')
   })
@@ -288,8 +282,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('10 + 20 = 30')
   })
 
@@ -316,12 +309,10 @@ int main() {
     return 0;
 }`
 
-  // 阻斷者是 block_comment 的執行，不是 print——原本的標記是錯的
-  it.skip('[BLOCKED:cpp:block_comment] executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
-    expect(out).toContain('comments work')
-    expect(out).toContain('done')
+  // 🟢 spec 202 開回來：原本是被 cpp:block_comment 擋住的停用測試（阻斷者是 JS 直譯器裡 block_comment 的執行）。
+  // 換成 Cella 判之後註解不進執行，整段 accept；期望值 g++ -std=c++17 實測 "comments work\ndone\n"
+  it('executes correctly', async () => {
+    await expectCellaOut(code, 'comments work\ndone\n')
   })
 
   // SKIP: block_comment P1 instability - lifter does not strip `* ` prefixes
@@ -362,8 +353,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
+    const out = await runCode(code)
     expect(out).toContain('square(3) = 9')
     expect(out).toContain('square(5) = 25')
     expect(out).toContain('sum(1..10) = 55')

@@ -35,13 +35,13 @@
     "fstream": "int main() {\n    ifstream fin(\"in.txt\");\n    ofstream fout(\"out.txt\");\n}"
   },
   "execute": {
-    "func_def + func_call": "completed|3\n",
-    "method_call": "completed|el\n",
-    "print_formatted": "completed|1 2\n",
-    "array_declare + values": "completed|2\n",
-    "var_declare 多變數": "completed|3\n",
-    "string_declare": "completed|abc\n",
-    "string_find": "completed|4\n",
-    "string_append_char": "completed|abc\n"
+    "func_def + func_call": "accept|3\n",
+    "method_call": "accept|el\n",
+    "print_formatted": "accept|1 2\n",
+    "array_declare + values": "accept|2\n",
+    "var_declare 多變數": "accept|3\n",
+    "string_declare": "accept|abc\n",
+    "string_find": "accept|4\n",
+    "string_append_char": "accept|abc\n"
   }
 }

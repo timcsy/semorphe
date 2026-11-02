@@ -25,8 +25,8 @@ import { setupTestRenderer, clearTestRenderer } from '../helpers/setup-renderer'
 import { renderToBlocklyState } from '../../src/core/projection/block-renderer'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import { createNode } from '../../src/core/semantic-tree'
+import { expectCellaOut } from '../helpers/cella-run'
+import { formalize } from '../../src/providers/cella/formalize'
 import type { SemanticNode } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 // ⚠️ **不要自己列宣告來源**（第三十七條護欄）。這裡原本只讀 `core`，
@@ -167,41 +167,49 @@ describe('C-3 兩個形態產出相同、行為相同', () => {
     expect(generateCode(lift(queueProgram), 'cpp', apcs as never)).toContain('q.push(1);')
   })
 
+  // 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
   it('★ 執行結果由容器決定，不由形態決定', async () => {
-    const run = async (tree: SemanticNode): Promise<string> => {
-      const i = new SemanticInterpreter({ maxSteps: 50000 })
-      await i.execute(tree)
-      return i.getOutput().join('')
-    }
+    const src = (body: string): string => `${PRELUDE}int main(){ ${body} return 0; }`
     // 堆疊 LIFO：推 1、2 之後 top 是 2
-    const stack = lift('stack<int> st; st.push(1); st.push(2); cout << st.top();')
+    await expectCellaOut(src('stack<int> st; st.push(1); st.push(2); cout << st.top();'), '2')
     // 佇列 FIFO：推 1、2 之後 front 是 1
-    const queue = lift('queue<int> q; q.push(1); q.push(2); cout << q.front();')
-    expect(await run(stack)).toBe('2')
-    expect(await run(queue)).toBe('1')
+    await expectCellaOut(src('queue<int> q; q.push(1); q.push(2); cout << q.front();'), '1')
   })
 
-  it('★ CK-3：執行器 MUST NOT 讀 container_kind——改成錯的值，行為不變', async () => {
-    const run = async (kind: string | undefined): Promise<string> => {
-      const props: Record<string, string> = {}
-      if (kind !== undefined) props.container_kind = kind
-      // 🔴 接收者是接點（2026-09-18）——`container_kind` 仍然是屬性（形態要用）
-      const recv = (): SemanticNode[] => [createNode('cpp:var_ref', { name: 's' })]
-      const tree = createNode('cpp:program', {}, {
-        body: [
-          createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-          createNode('cpp:container_push', { ...props }, { obj: recv(), value: [createNode('cpp:literal_number', { value: '1' }, {})] }),
-          createNode('cpp:container_push', { ...props }, { obj: recv(), value: [createNode('cpp:literal_number', { value: '2' }, {})] }),
-          createNode('cpp:print', {}, { values: [createNode('cpp:stack_peek', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })] }),
-        ],
-      })
-      const i = new SemanticInterpreter({ maxSteps: 50000 })
-      await i.execute(tree)
-      return i.getOutput().join('')
+  // 🔴 spec 202：原本是「執行器不讀 container_kind」——JS 直譯器退場後，把語義樹交給執行的是 formalize。
+  // 同一個守法換到它身上：只改 `container_kind`（形態）的兩棵樹，翻出來的 Cella 程式必須**逐位元相同**
+  // （比輸出更嚴：輸出相同可能是巧合，程式相同就沒有任何一條路讀到它）。另驗那支程式真的印 2。
+  it('★ CK-3：formalize MUST NOT 讀 container_kind——改成錯的值，送給 Cella 的程式不變', async () => {
+    const code = `${PRELUDE}int main(){ stack<int> s; s.push(1); s.push(2); cout << s.top(); return 0; }`
+    await expectCellaOut(code, '2')
+    const base = lift('stack<int> s; s.push(1); s.push(2); cout << s.top();')
+    const withKind = (kind: string | undefined): SemanticNode => {
+      const walk = (n: SemanticNode): SemanticNode => {
+        const props = { ...(n.properties ?? {}) } as Record<string, unknown>
+        if (n.componentId === 'cpp:container_push') {
+          delete props.container_kind
+          if (kind !== undefined) props.container_kind = kind
+        }
+        const slots = Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, v]) => [k, v.map(walk)]))
+        return { ...n, properties: props, slots } as SemanticNode
+      }
+      return walk(base)
     }
-    const correct = await run('stack')
-    expect(await run('queue'), '執行器讀了 container_kind → 形態污染了行為').toBe(correct)
-    expect(await run(undefined)).toBe(correct)
+    const pushes: SemanticNode[] = []
+    const collectPush = (n: SemanticNode): void => {
+      if (n.componentId === 'cpp:container_push') pushes.push(n)
+      for (const v of Object.values(n.slots ?? {})) v.forEach(collectPush)
+    }
+    collectPush(base)
+    expect(pushes.length, '前提：那兩句 push 要被認成 cpp:container_push').toBe(2)
+    const program = (kind: string | undefined): string => {
+      const r = formalize(withKind(kind), { lang: 'cpp' })
+      expect(r.unknown, '前提：整支翻得出來').toEqual([])
+      return JSON.stringify(r.program)
+    }
+    const correct = program('stack')
+    expect(program('queue'), 'formalize 讀了 container_kind → 形態污染了行為').toBe(correct)
+    expect(program(undefined)).toBe(correct)
   })
 })
 

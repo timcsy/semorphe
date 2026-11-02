@@ -12,7 +12,6 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import type { StylePreset, SemanticNode } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -41,14 +40,6 @@ beforeAll(async () => {
   setupTestRenderer()
 })
 
-async function runCode(code: string) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode as any)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(sem!, [])
-  return interp
-}
 
 function roundTrip(code: string): string {
   const tree = tsParser.parse(code)

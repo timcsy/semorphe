@@ -32,7 +32,8 @@ import { setupTestRenderer, clearTestRenderer } from '../helpers/setup-renderer'
 import { renderToBlocklyState } from '../../src/core/projection/block-renderer'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
+// 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
 import type { SemanticNode } from '../../src/core/types'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { coreComponents, coreBlocks } from '../../src/languages/cpp/lang'
@@ -150,9 +151,9 @@ describe('六對雙版本已合併成六個身分', () => {
 
 describe('兩個位置的行為都不變', () => {
   const run = async (body: string): Promise<string> => {
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(lift(body))
-    return i.getOutput().join('')
+    const r = await runCella(`#include <iostream>\n#include <cstdio>\nusing namespace std;\nint main(){ ${body} return 0; }`)
+    if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+    return r.out
   }
 
   it('★ i++ 當敘述：g++ 說是 1', async () => {

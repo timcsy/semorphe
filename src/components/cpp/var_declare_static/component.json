@@ -32,6 +32,7 @@
         "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建靜態變數`）——判別（storage_class 是不是 static、在函式裡還是類別裡）是 C++ 語法的知識，留在共用檔。"
       }
     },
+    "formalize": "./formalize.ts",
     "execute": "./execute.ts"
   },
   "traits": {
