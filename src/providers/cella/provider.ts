@@ -233,7 +233,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
     const id = ++sid
     const s = new CellaSession(id, send, f.program)
     sessions.set(id, s)
-    send({ kind: 'dap-open', sid: id, branch: f.branch, program: f.program })
+    send({ kind: 'dap-open', sid: id, branch: f.branch, program: f.program, maxSteps: options.maxSteps })
     return s
   }
 

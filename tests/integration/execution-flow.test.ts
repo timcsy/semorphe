@@ -80,22 +80,25 @@ describe('執行流程（Cella 工作階段）', () => {
   })
 
   /**
-   * 🟡 **我們缺（修好時這條會紅）**：工作階段不看 `maxSteps`——產品的控制器傳 1000 萬步（`execution-controller`），
-   * JS 直譯器照它停、Cella 的工作階段一直跑。這裡給 50 步、等 1.5 秒：它還沒停（`pending`），按停止才收得掉（aborted）。
-   * 修好的那天（提供者把 `maxSteps` 換算成段數，用完就停並帶一個「步數用完」的鍵）launch 會在 1.5 秒內回來，這條會紅
-   * ——那時改成斷言 `failed` ＋ 那個鍵。
+   * 🟢 spec 205 T010 修好（原本是釘子）：工作階段原本不看 `maxSteps`——產品的控制器傳 1000 萬步，JS 直譯器照它停、
+   * Cella 的工作階段一直跑，學生寫出無窮迴圈要自己按停止。現在 worker 在段與段之間加總步數（各節點走過的次數），
+   * 超過上限就暫停並停成「步數用完」（`RUNTIME_ERR_MAX_STEPS`，中文說「可能是無窮迴圈或過深的遞迴」）。
    */
-  it('🟡 已知缺陷：工作階段的步數上限沒有作用——無窮迴圈要按停止才停', async () => {
+  it('🔴 工作階段的步數上限：無窮迴圈在上限處停下，停止原因是「步數用完」', async () => {
     const tree = lift(INFINITE)
-    const { s } = openCella(p, tree, { maxSteps: 50 })
+    const { s } = openCella(p, tree, { maxSteps: 50_000 })
     let settled: Outcome | 'pending' = 'pending'
     void s.launch(tree, { stopOnEntry: false }).then((o) => { settled = o })
-    await new Promise((r) => setTimeout(r, 1500))
-    expect(settled, '🟢 這裡回來了 ⟹ 工作階段開始看 maxSteps：改斷言「步數用完」的停止原因').toBe('pending')
-    s.terminate()
     const t = Date.now()
     while (settled === 'pending' && Date.now() - t < 10_000) await new Promise((r) => setTimeout(r, 50))
-    expect(settled).toMatchObject({ kind: 'failed', error: { kind: 'aborted' } })
+    expect(settled, '🔴 十秒內沒回來 ⟹ 工作階段沒有看 maxSteps').toMatchObject({ kind: 'failed', error: { i18nKey: 'RUNTIME_ERR_MAX_STEPS' } })
+  }, 30_000)
+
+  it('★ 正向錨點：步數夠的程式照常跑完（上限不是一律停）', async () => {
+    const tree = lift(H + 'int main() {\n  int s = 0;\n  for (int i = 0; i < 100; i++) s = s + i;\n  cout << s;\n  return 0;\n}\n')
+    const { s, out } = openCella(p, tree, { maxSteps: 50_000 })
+    expect(await s.launch(tree, { stopOnEntry: false })).toEqual({ kind: 'ended' })
+    expect(out()).toBe('4950')
   }, 30_000)
 
   it('讀輸入：停在 awaiting-input，給一行之後繼續、印出讀到的值', async () => {
