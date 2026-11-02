@@ -388,7 +388,13 @@ int main() {
     //    產回去在 `P::zero()` 編不過；JS 直譯器也不認 `P::zero()`。
     //    為什麼不現在修：探索報告把 static 列為範圍外（method_def 沒有地方放它；加進來是 const／static 互斥的修飾，要改積木的設計）。
     //    何時修：補「類別成員的 static」那一刀時（draft〈成員函式的尾端 const〉已記這一筆）——修好把它改成 it。
-    it.todo('static 成員函式來回一趟保留 static（t4：P::zero() 編得過、JS 直譯器跑得出 0）')
+    // ⚠️ 不用 it.todo（todo 修好時不出聲）——斷言缺陷還在；修好的那天這條會紅，換成正向的「保留 static」
+    it('🟡 已知缺陷還在（修好時這條會紅）：類別裡的 static 成員函式產回去丟了 static', () => {
+      const code = `struct P {\n    static int zero() {\n        return 0;\n    }\n};\nint main() {\n    return P::zero();\n}\n`
+      const out = roundTripCode(code)
+      expect(out).toContain('int zero() {')
+      expect(out).not.toContain('static int zero()')
+    })
   })
 
   // ---- 7. struct_func: struct with member functions ----

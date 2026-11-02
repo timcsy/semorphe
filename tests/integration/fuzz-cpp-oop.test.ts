@@ -723,7 +723,7 @@ int main() {
  * 剩下的四支（＋一支漂移）是建構子與宣告那一族的既有缺陷，不在這顆元件的範圍——登記成 todo，寫明原因與何時修。
  */
 describe('fuzz（第 218 刀）：類別裡的一般成員函式與尾端 const', () => {
-  type Row = { id: string; description: string; code: string; status: 'pass' | 'todo' | 'drift'; why: string }
+  type Row = { id: string; description: string; code: string; status: 'pass' | 'todo' | 'drift'; why: string; defect?: string }
   const rows: Row[] = JSON.parse(readFileSync(`${process.cwd()}/tests/fixtures/fuzz-cpp-method-def.json`, 'utf8'))
   const lift = (code: string): any => lifter.lift(tsParser.parse(code)!.rootNode as any)
   const all = (n: any, id: string, out: any[] = []): any[] => {
@@ -764,5 +764,12 @@ describe('fuzz（第 218 刀）：類別裡的一般成員函式與尾端 const'
   // 為什麼不現在修：都是建構子／宣告那一族（不是 method_def 的範圍），main 上就是這樣。
   // 何時修：draft〈成員函式的尾端 const〉「做了之後量到的」那一段列了推薦——補建構子的預設引數、初始化列的多引數、
   //         const 物件的建構引數、類別成員的 static 那一刀；修好把對應的 todo 改成 it（並把 fixture 的 status 改成 pass）。
-  for (const r of rows.filter((x) => x.status !== 'pass')) it.todo(`${r.id}：${r.why}`)
+  // ⚠️ 不用 `it.todo`（這個檔上面記過：todo 是一種殼，缺陷修好時它一聲都不出）——斷言【缺陷還在】：
+  //    產碼裡那段走樣的文字（fixture 的 `defect`）。修好的那天這條會紅 ⟹ 把 fixture 的 status 改成 pass、這條就換成上面的正向測試
+  for (const r of rows.filter((x) => x.status !== 'pass')) {
+    it(`🟡 已知缺陷還在（修好時這條會紅）：${r.id}——${r.why}`, () => {
+      expect(r.defect, 'fixture 要寫缺陷的指紋').toBeTruthy()
+      expect(generateCode(lift(r.code), 'cpp', style)).toContain(r.defect!)
+    })
+  }
 })
