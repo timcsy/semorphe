@@ -4,22 +4,17 @@
  * ⚠️ **兩顆寫在一起，因為它們共用同一個時鐘**——分開測的話
  * 「`delay` 推進了時間而 `millis` 讀得到」**沒有任何一支測得到**。
  *
- * ## 🔴 而這裡有兩條執行路徑，兩條都要被測
- *
- * 使用者 2026-08-17 拍板「模擬為主、可切真實」，**而他是在看過這個代價之後選的**：
- *
- * > **兩條路 ＝ 兩份行為，而只有一條會被測到。**
- *
- * 所以本檔**兩條都測**——而那正是那個代價被「看得見」的方式。
+ * 🔴 執行那幾條由 Cella 的板子判決背書（spec 201）。Cella 的時鐘是**確定性的模擬時鐘**：
+ * 原本「模擬／真實時間兩條路」裡真實時間那一條是 JS 直譯器的執行時（`arduino-clock` 的 `useRealTime`），
+ * 它不屬於這顆膠囊的語義，跟著 JS 直譯器退場（重構階段 6）——本檔不再測它。
  */
-import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
-import { resetClock, useRealTime, markRealStart } from '../../../languages/cpp/lang/runtime/arduino-clock'
+import { expectCellaOut, boardEnv } from '../../../../tests/helpers/cella-run'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 
 let parser: Parser
@@ -30,10 +25,6 @@ beforeAll(async () => {
   registerCppLanguage()
 })
 
-// ⚠️ 每支之後都要關掉真實時間，否則**下一支會在另一條路上跑**——
-// 而那個症狀是「時好時壞」，不是「紅」。
-afterEach(() => { useRealTime(false); resetClock() })
-
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 const collect = (n: SemanticNode, out: string[] = []): string[] => {
@@ -41,15 +32,6 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<string> => {
-  resetClock()
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  await i.execute(lift(c))
-  return i.getOutput().join('')
-}
-
-const H = '#include <iostream>\nusing namespace std;\n'
-
 describe('膠囊自證：時間兩顆', () => {
   it('★ lift：兩個名字都認得，且不落進殘差', () => {
     const ids = collect(lift('void loop(){ delay(100); unsigned long t = millis(); }'))
@@ -73,31 +55,26 @@ describe('膠囊自證：時間兩顆', () => {
   })
 
   /** 🔴 這一支是兩顆共用時鐘的理由——分開做的話它測不出來。 */
-  it('★ execute（模擬）：delay 推進了時間，而 millis 讀得到', async () => {
-    const out = await run(H + 'void setup(){ cout << millis() << ","; delay(1000); cout << millis(); }')
-    expect(out, '🔴 delay 沒有推進模擬時鐘，或 millis 讀的是另一份時間').toBe('0,1000')
+  it('★ execute（ESP32）：delay 推進了時間，而 millis 讀得到', async () => {
+    // 原本是 cout（JS 直譯器才收）；板子上改成 Serial（先 begin：arduino-esp32 沒開 UART 時 print 什麼都不送）。ESP32 的 millis() 由 1 µs 的 esp_timer 換算，delay(1000) 之後正好 1000
+    await expectCellaOut('void setup(){ Serial.begin(9600); Serial.print(millis()); Serial.print(","); delay(1000); Serial.print(millis()); }\nvoid loop(){}',
+      '0,1000', { board: 'esp32' })
   })
 
-  it('★ execute（模擬）：三次 delay(1000) 幾乎不花時間，而時鐘走了 3000', async () => {
-    const t0 = Date.now()
-    const out = await run(H + 'void setup(){ delay(1000); delay(1000); delay(1000); cout << millis(); }')
-    const wall = Date.now() - t0
-    expect(out, '模擬時鐘要累加').toBe('3000')
-    expect(wall, `🔴 模擬模式卻真的等了 ${wall}ms——那是真實時間那條路`).toBeLessThan(500)
+  it('★ execute（Uno）：delay(1000) 之後 millis 是 999——timer0 每 1.024 ms 一跳', async () => {
+    // 🔴 期望值改了：原本 '0,1000'（JS 直譯器的毫秒時鐘）→ Uno 上 '0,999'。
+    // 依據：AVR 核心的 millis() 由 timer0 溢位推進（每 1024 µs 一次，+1 ms，小數累到 125×8 µs 再多 +1）；
+    // 到 1,000,000 µs 共 976 次溢位、補 23 ⟹ 999。真板子在 delay(1000) 剛結束時讀到的也是 999。
+    await expectCellaOut('void setup(){ Serial.begin(9600); Serial.print(millis()); Serial.print(","); delay(1000); Serial.print(millis()); }\nvoid loop(){}',
+      '0,999', { board: 'uno' })
   })
 
-  /**
-   * 🔴 **第二條路。**
-   *
-   * ⚠️ 它**故意用很小的數字**（50ms）：真實時間那條路要被測到，
-   * 而測試不能因此變慢——**一支慢到會被人略過的測試，等於沒有**。
-   */
-  it('★ execute（真實時間）：delay 真的等了，而 millis 走的是牆上時鐘', async () => {
-    useRealTime(true)
-    markRealStart()
-    const t0 = Date.now()
-    await run(H + 'void setup(){ delay(50); }')
-    const wall = Date.now() - t0
-    expect(wall, `🔴 真實時間模式卻沒有真的等（只花了 ${wall}ms）——那條路沒接上`).toBeGreaterThanOrEqual(40)
+  it('★ execute（Uno）：三次 delay(1000) 累加——時鐘走了 3 秒', async () => {
+    // 🔴 期望值改了：原本 '3000' → '2999'（同上：3,000,000 µs 是 2929 次溢位、補 70）。
+    // ⚠️ 原本另有「牆上時間 < 500 ms」：那量的是 JS 直譯器的模擬模式沒有真的等；Cella 的時鐘本來就只有模擬的一條，
+    //    牆上時間只反映判決的計算量（隨機器負載變），不再斷言——改斷言板子的時鐘：草稿碼跑到模擬的 5 秒為止。
+    const r = await expectCellaOut('void setup(){ Serial.begin(9600); delay(1000); delay(1000); delay(1000); Serial.print(millis()); }\nvoid loop(){}',
+      '2999', { board: 'uno' })
+    expect(boardEnv(r).clockUs, '草稿碼跑到模擬的 5 秒').toBe(5_000_000)
   })
 })

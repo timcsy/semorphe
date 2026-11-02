@@ -13,8 +13,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
 import { generateCode } from '../../../core/projection/code-generator'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 
@@ -32,12 +32,6 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<string> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  await i.execute(lift(c))
-  return i.getOutput().join('')
-}
-
 describe('cpp:serial_count / cpp:serial_read', () => {
   it('lift —— 成對的那個寫法認得出兩顆', () => {
     const ids = collect(lift(
@@ -66,43 +60,44 @@ describe('cpp:serial_count / cpp:serial_read', () => {
     expect(generateCode(lift(once), 'cpp', apcs as StylePreset)).toBe(once)
   })
 
+  // 原本三條都是 int main() ＋ cout（JS 直譯器才收）；板子上沒有 cout，改成 sketch ＋ Serial（println 印 \r\n，AVR 核心 Print::println）。
   it('🔴 執行 —— 沒有資料時 read 回 -1（不是 0），而那正是那個陷阱', async () => {
-    const out = await run(`
-      #include <iostream>
-      using namespace std;
-      int main() {
-        cout << Serial.available() << " " << Serial.read() << endl;
-        return 0;
+    // 依據：AVR 核心 HardwareSerial::read() 緩衝空時 return -1；available() 回 0
+    await expectCellaOut(`
+      void setup() {
+        Serial.begin(9600);
+        Serial.print(Serial.available());
+        Serial.print(" ");
+        Serial.println(Serial.read());
       }
-    `)
-    expect(out.trim()).toBe('0 -1')
+      void loop() {}
+    `, '0 -1\r\n', { board: 'uno' })
   })
 
   it('🔴 而 -1 在條件裡是【真】——這條把陷阱本身釘住', async () => {
-    const out = await run(`
-      #include <iostream>
-      using namespace std;
-      int main() {
-        if (Serial.read()) cout << "truthy" << endl;
-        else cout << "falsy" << endl;
-        return 0;
-      }
-    `)
     // ⚠️ 學生寫 `if (Serial.read())` 會以為「沒資料就不進去」——而它進去了
-    expect(out.trim()).toBe('truthy')
+    await expectCellaOut(`
+      void setup() {
+        Serial.begin(9600);
+        if (Serial.read()) Serial.println("truthy");
+        else Serial.println("falsy");
+      }
+      void loop() {}
+    `, 'truthy\r\n', { board: 'uno' })
   })
 
-  it('成對的迴圈不會空轉（可讀數是 0 → 迴圈一次都不跑）', async () => {
-    const out = await run(`
-      #include <iostream>
-      using namespace std;
-      int main() {
+  it('成對的迴圈不會空轉（可讀數是 0 → 迴圈一次都不跑；有 3 個位元組 → 跑 3 次）', async () => {
+    const SRC = `
+      void setup() {
+        Serial.begin(9600);
         int n = 0;
         while (Serial.available()) { Serial.read(); n = n + 1; }
-        cout << n << endl;
-        return 0;
+        Serial.println(n);
       }
-    `)
-    expect(out.trim()).toBe('0')
+      void loop() {}
+    `
+    await expectCellaOut(SRC, '0\r\n', { board: 'uno' })
+    // ← 正向錨點：餵了輸入時迴圈真的會跑——否則上面的 0 分不出「沒資料」與「available 永遠是 0」
+    await expectCellaOut(SRC, '3\r\n', { board: 'uno', stdin: 'abc' })
   })
 })

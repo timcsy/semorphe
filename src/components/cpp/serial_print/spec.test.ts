@@ -21,8 +21,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
 import { generateCode } from '../../../core/projection/code-generator'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { ioTraitOf } from '../../../core/component/traits'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -42,14 +42,6 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
-}
-
 describe('膠囊自證：Serial 兩顆', () => {
   it('★ lift：兩個都認得，且不落進殘差', () => {
     const ids = collect(lift('void setup(){ Serial.begin(9600); Serial.println("hi"); Serial.print(1); }'))
@@ -87,10 +79,11 @@ describe('膠囊自證：Serial 兩顆', () => {
     expect(twice).toBe(once)
   })
 
-  it('★ execute：輸出真的到了【現有的】主控台', async () => {
-    const { out, err } = await run('void setup(){ Serial.begin(9600); Serial.print("a"); Serial.println("b"); }')
-    expect(err).toBe('')
-    expect(out, '🔴 序列埠輸出沒有接到既有的 IO 出口').toBe('ab\n')
+  it('★ execute：輸出真的到了序列埠（println 印 \\r\\n）', async () => {
+    // 🔴 期望值改了：原本 'ab\n' → 'ab\r\n'。依據：AVR 核心 Print::println() 寫的是 "\r\n"（真板子在序列監控視窗收到的就是 CR LF）。
+    // ⚠️ 程式補了 `void loop(){}`：沒有 loop 的 sketch 在真板子上連結不過（undefined reference to `loop'），Cella 也判 reject。
+    await expectCellaOut('void setup(){ Serial.begin(9600); Serial.print("a"); Serial.println("b"); }\nvoid loop(){}',
+      'ab\r\n', { board: 'uno' })
   })
 
   /**
@@ -100,11 +93,11 @@ describe('膠囊自證：Serial 兩顆', () => {
    * 照 Arduino 的 `Print::printNumber`：基數 < 2 當 10；非十進位把值當 32 位元無號數印、大寫。
    */
   it('★ execute：整數的進位（HEX／BIN／OCT／DEC 與數字基數）', async () => {
-    const { out, err } = await run(
-      'void setup(){ Serial.println(255, HEX); Serial.println(5, BIN); Serial.println(8, OCT);'
-      + ' Serial.println(-1, HEX); Serial.println(-7, DEC); Serial.println(10, 3); Serial.println(2.5, 2); }')
-    expect(err).toBe('')
-    expect(out).toBe('FF\n101\n10\nFFFFFFFF\n-7\n101\n2.50\n')
+    // 期望值只把每個 \n 換成 \r\n（println 的 CR LF，同上）；其餘照 Print::printNumber 不變。補 `void loop(){}` 理由同上；補 Serial.begin：沒開序列埠時真板子不送出任何東西。
+    await expectCellaOut(
+      'void setup(){ Serial.begin(9600); Serial.println(255, HEX); Serial.println(5, BIN); Serial.println(8, OCT);'
+      + ' Serial.println(-1, HEX); Serial.println(-7, DEC); Serial.println(10, 3); Serial.println(2.5, 2); }\nvoid loop(){}',
+      'FF\r\n101\r\n10\r\nFFFFFFFF\r\n-7\r\n101\r\n2.50\r\n', { board: 'uno' })
   })
 
   /**

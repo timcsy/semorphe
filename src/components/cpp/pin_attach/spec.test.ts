@@ -20,7 +20,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { boardPin, expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -104,16 +104,25 @@ describe('cpp:pin_attach', () => {
   })
 
   it('🔴 execute —— 變數的值是【腳位號】，不是型別預設值', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100_000 })
-    await i.execute(
-      lift(
-        'const int ledPin = 13;\n' +
-          'void setup() { pinMode(ledPin, OUTPUT); Serial.println(ledPin); }\n' +
-          'void loop() {}\n',
-      ),
-    )
+    // spec 201：Cella 的 Uno 板子判決（補了 `Serial.begin(9600)`：真的 AVR 沒 begin 時印不出東西）
     // ⚠️ 這一條就是那個 bug 本身：沿用常數宣告的執行器會印出 0
-    expect(i.getOutput().join('')).toContain('13')
+    const r = await expectCellaOut(
+      'const int ledPin = 13;\n' +
+        'void setup() { Serial.begin(9600); pinMode(ledPin, OUTPUT); Serial.println(ledPin); }\n' +
+        'void loop() {}\n',
+      '13\r\n', { board: 'uno' })
+    // 而腳位 13 真的被設成輸出——不是腳位 0
+    expect(boardPin(r, 13)?.mode).toBe('OUTPUT')
+    expect(boardPin(r, 0)).toBeUndefined()
+  })
+
+  it('🔴 execute ②：三種宣告形式跑起來都是腳位 13', async () => {
+    for (const decl of ['const int ledPin = 13;\n', '#define ledPin 13\n', 'int ledPin = 13;\n']) {
+      const r = await expectCellaOut(
+        `${decl}void setup() { Serial.begin(9600); pinMode(ledPin, OUTPUT); digitalWrite(ledPin, HIGH); Serial.println(ledPin); }\nvoid loop() {}\n`,
+        '13\r\n', { board: 'uno' })
+      expect(boardPin(r, 13)?.level, `${decl.trim()}：腳位 13 沒被點亮`).toBe(1)
+    }
   })
 
   it('🔴 ⑥ 三種宣告形式都認得，而 round-trip 回得去【原樣】', () => {

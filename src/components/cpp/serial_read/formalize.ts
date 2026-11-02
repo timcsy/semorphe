@@ -4,4 +4,6 @@ import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 export function registerFormalize(r: FormalizeRegistrar): void {
   // 序列埠與函式庫物件：方法呼叫（`eMCall`）
   r.expr('cpp:serial_read', (n, f) => f.mcall(n, 'read', []))
+  // 當敘述用（`Serial.read();` 丟掉讀到的值，清緩衝常見的寫法）：運算式敘述
+  r.stmt('cpp:serial_read', (n, f) => f.exprStmt(n))
 }

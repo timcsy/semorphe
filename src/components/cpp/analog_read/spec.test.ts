@@ -15,7 +15,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { runCella, boardPin, describeCellaResult, expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -35,14 +35,16 @@ const collect = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) collect(k, out)
   return out
 }
-const run = async (c: string): Promise<{ out: string; err: string }> => {
-  const i = new SemanticInterpreter({ maxSteps: 100_000 })
-  try {
-    await i.execute(lift(c))
-    return { out: i.getOutput().join(''), err: '' }
-  } catch (e) { return { out: i.getOutput().join(''), err: (e as Error).message } }
+/**
+ * spec 201：執行判準換成 Cella 的 Uno 板子判決。原本的程式用 `cout`——AVR 沒有 `<iostream>`，
+ * 改成 sketch 真正會寫的 `Serial.print`（程式的意思不變）。
+ */
+const S = (setup: string): string => `void setup(){ Serial.begin(9600); ${setup} }\nvoid loop(){}\n`
+const uno = async (c: string, inputs?: { t: number; key: string; value: number }[]) => {
+  const r = await runCella(c, { board: 'uno', inputs })
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r
 }
-const H = '#include <iostream>\nusing namespace std;\n'
 
 describe('膠囊自證：類比三顆', () => {
   it('★ lift：三個名字都認得，且不落進殘差', () => {
@@ -76,10 +78,13 @@ describe('膠囊自證：類比三顆', () => {
     expect(twice).toBe(once)
   })
 
-  it('★ execute：寫進類比腳位，讀得回來', async () => {
-    const { out, err } = await run(H + 'void setup(){ analogWrite(9, 200); cout << analogRead(9); }')
-    expect(err).toBe('')
-    expect(out).toBe('200')
+  // 改寫了（原本是「analogWrite(9, 200) 之後 analogRead(9) 讀回 200」）。依據：真的 Uno 上兩者不是同一個東西——
+  // analogWrite 是計時器的 PWM，analogRead 讀 ADC；AVR 核心的 `analogRead(9)` 讀的是 ADC 通道 9 & 7 = 1（A1），不是腳位 9 的 PWM。
+  // 所以兩件事分開驗：寫——腳位 9 的 PWM 是 200；讀——讀得到環境給 A0 的值
+  it('★ execute：寫進類比腳位、讀得到類比輸入', async () => {
+    const r = await uno(S('analogWrite(9, 200); Serial.print(analogRead(A0));'), [{ t: 0, key: 'analog:A0', value: 512 }])
+    expect(boardPin(r, 9)?.pwm).toBe(200)
+    expect(r.out).toBe('512')
   })
 
   /**
@@ -89,17 +94,21 @@ describe('膠囊自證：類比三顆', () => {
    * ⚠️ 這一支釘住它，免得未來有人「順手」改成浮點——**那會讓積木與真板子算出不同的數**。
    */
   it('★ map 用整數運算而會捨去——那是真板子的行為', async () => {
-    const { out } = await run(H + 'void setup(){ cout << map(511, 0, 1023, 0, 255); }')
-    expect(out, '🔴 改成浮點的話這裡會是 128').toBe('127')
+    await expectCellaOut(S('Serial.print(map(511, 0, 1023, 0, 255));'), '127', { board: 'uno' })
   })
 
   it('★ map 的來源區間零寬 → 出聲，不得回一個看起來合理的數', async () => {
-    const { err } = await run(H + 'void setup(){ cout << map(5, 3, 3, 0, 100); }')
-    expect(err).toContain('除以零')
+    // `map` 是 (x - in_min) * (out_max - out_min) / (in_max - in_min)：分母 0 是整數除以零（未定義行為）
+    const r = await runCella(S('Serial.print(map(5, 3, 3, 0, 100));'), { board: 'uno' })
+    expect(r.verdict).toBe('reject')
+    expect(r.problems[0]?.kind).toBe('ubDivZero')
+    expect(r.problems[0]?.source?.text).toContain('map(5, 3, 3')
   })
 
   it('★ analogWrite 夾在 0～255——超出範圍不靜默溢位', async () => {
-    const { out } = await run(H + 'void setup(){ analogWrite(9, 999); cout << analogRead(9); }')
-    expect(out).toBe('255')
+    // 依據（期望值不變、理由更正）：AVR 核心不夾——腳位 9 是 Timer1A，`OCR1A = 999`，而 8 位元相位正確 PWM 的 TOP 是 255，
+    // 比較值永遠超過 TOP ⟹ 整個週期都是高電位，效果等於 255；Cella 的板子記成 255
+    const r = await uno(S('analogWrite(9, 999);'))
+    expect(boardPin(r, 9)?.pwm).toBe(255)
   })
 })
