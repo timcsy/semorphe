@@ -105,7 +105,8 @@ describe('核心層零註解語法（FR-012）', () => {
   it('★ src/core 的程式碼裡不得出現註解的語法符號', () => {
     const hits: string[] = []
     for (const rel of listSourceFiles('src/core')) {
-      const { code } = splitCodeAndComments(readFileSync(join(REPO_ROOT, rel), 'utf8'))
+      // 正規式的分隔符號換掉：`/\/lesson\.json$/` 的開頭會拼出假的 `/\/`；內容照留，真的在剝 `//` 的正規式照樣抓得到（第 215c 刀）
+      const { code } = splitCodeAndComments(readFileSync(join(REPO_ROOT, rel), 'utf8'), { regexDelimiter: '«' })
       for (const { name, re } of commentSyntax) {
         if (re.test(code)) hits.push(`${rel} → ${name}`)
       }

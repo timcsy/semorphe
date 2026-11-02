@@ -180,7 +180,13 @@ export function maskNonIdentityPositions(src: string): string {
   return out
 }
 
-export function splitCodeAndComments(src: string): { code: string; comments: string } {
+/**
+ * `regexDelimiter`：正規式字面量的**分隔符號**換成這個字元（內容照留）。
+ * 給「在程式碼裡找 `//`」的護欄用——`.replace(/\/lesson\.json$/, '')` 的分隔符號 `/` 緊接著跳脫的 `\/`，
+ * 會拼出一個假的 `/\/`（第 215c 刀：215 讓正規式回到程式碼之後，`comment-projection-snapshot` 在 CI 上紅了兩個路徑正規式）。
+ * 內容照留，所以 `/\/\/.*$/` 這種真的在剝註解的正規式照樣抓得到。
+ */
+export function splitCodeAndComments(src: string, opts: { regexDelimiter?: string } = {}): { code: string; comments: string } {
   let code = ''
   let comments = ''
   let i = 0
@@ -238,7 +244,13 @@ export function splitCodeAndComments(src: string): { code: string; comments: str
     if (c === '/' && regexCanStart(code)) {
       const end = regexEnd(src, i)
       if (end !== -1) {
-        code += src.slice(i, end)
+        const lit = src.slice(i, end)
+        const d = opts.regexDelimiter
+        if (d === undefined) code += lit
+        else {
+          const close = lit.lastIndexOf('/')
+          code += d + lit.slice(1, close) + d + lit.slice(close + 1)
+        }
         i = end
         continue
       }
