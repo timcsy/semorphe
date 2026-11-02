@@ -92,4 +92,30 @@ describe('最外層的東西留在最外層', () => {
     expect(lineOf(out, 'twice'), '函式跑到 main 後面了：\n' + out)
       .toBeLessThan(lineOf(out, 'int main'))
   })
+
+  // 🔴 第 223 刀（218 的瀏覽器驗收翻出來的）：隱藏骨架下，積木一動、轉回程式碼，**頂層的 struct 跑進了 main**。
+  //    區域類別在 C++ 合法、輸出不變，所以來回測試抓不到——而 main 外面的函式一用到那個型別就編不過。
+  it.each([
+    ['struct', 'struct P {\n  int x;\n};', 'struct P'],
+    ['class', 'class C {\npublic:\n  int v;\n};', 'class C'],
+    ['enum', 'enum Color { RED, GREEN };', 'enum Color'],
+    ['樣板函式（函式裡根本不能宣告樣板）', 'template <typename T>\nT big(T a, T b) {\n  return a > b ? a : b;\n}', 'template'],
+  ])('🔴 型別定義不得跑進 main 裡面：%s', (_n, decl, needle) => {
+    const out = roundTrip(`${decl}\nint main() {\n  return 0;\n}`)
+    expect(lineOf(out, needle), '產出：\n' + out).toBeGreaterThanOrEqual(0)
+    expect(lineOf(out, needle), `${needle} 跑到 main 後面了：\n` + out).toBeLessThan(lineOf(out, 'int main'))
+  })
+
+  it('🔴 struct 與用到它的函式：兩個都在 main 外面、順序不變（否則那個函式編不過）', () => {
+    const out = roundTrip('struct P {\n  int x;\n};\nint get(P p) {\n  return p.x;\n}\nint main() {\n  P p;\n  p.x = 3;\n  return get(p);\n}')
+    const s = lineOf(out, 'struct P'), f = lineOf(out, 'int get'), m = lineOf(out, 'int main')
+    expect(s, '產出：\n' + out).toBeGreaterThanOrEqual(0)
+    expect(s < f && f < m, '產出：\n' + out).toBe(true)
+  })
+
+  it('★ 錨點：main 裡的區域變數宣告留在 main 裡（只搬型別與函式，不是什麼都搬出去）', () => {
+    const out = roundTrip('int main() {\n  int n = 3;\n  return n;\n}')
+    expect(lineOf(out, 'int n'), '產出：\n' + out).toBeGreaterThan(lineOf(out, 'int main'))
+  })
 })
+
