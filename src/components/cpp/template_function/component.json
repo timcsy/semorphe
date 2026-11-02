@@ -41,5 +41,9 @@
   "_children_why": "🔴 `params` 裝的是 **`param_decl`**（帶 `{type, name}` 的結構節點），不是裸的運算式。\n\n⚠️ 第一版宣告 `'expressions'`，而它的投影規則（`slotAsField`）明寫著 `childComponent: 'param_decl'`——**兩份宣告在同一顆元件裡互相矛盾**，而沒有人在看。\n\n> **一個說謊的宣告會讓信任它的護欄一起說謊**——投影遺失那條照宣告合成裸數字，於是量到「參數掉了」，而真正掉的是我的合成物。",
   "annotations": {
     "control_flow": "sequence"
-  }
+  },
+  "traits": {
+    "topLevelOnly": true
+  },
+  "_traits_why": "**這顆只能待在最外層**（第 223 刀）：隱藏骨架把工作區最外層的積木包進 main 時，它要留在 main 外面——C++ 不准把它放進函式（樣板、命名空間），或放進去之後 main 外面的函式就看不到它（型別定義）。在此之前產生器只認函式定義與前處理指示詞，於是 struct 被搬進 main。"
 }

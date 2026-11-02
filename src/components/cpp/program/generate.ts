@@ -9,7 +9,7 @@ import type { DependencyResolver } from '../../../core/dependency-resolver'
 import { isIncludeDirective } from '../../../languages/cpp/lang/node-traits'
 import { buildInclude } from '../include/lift'
 import { canonicalBoardHeader } from '../../../languages/cpp/board-headers'
-import { isFunctionDefinition } from '../../../core/component/traits'
+import { isFunctionDefinition, isTopLevelOnly } from '../../../core/component/traits'
 // 🔴 「骨架已經在樹裡了嗎」由**骨架宣告**回答（2026-08-28）
 import { skeletonById, skeletonPresent } from '../../../core/skeleton'
 
@@ -185,6 +185,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         const mustStayTopLevel = (n: typeof userBody[number]): boolean => {
           // 使用者自己的函式——C++ 不允許巢狀函式定義。
           if (isFunctionDefinition(n.componentId)) return true
+          // 型別定義、樣板、命名空間——宣告了 `topLevelOnly` 的（第 223 刀：struct 原本被搬進 main，
+          // 區域類別合法而輸出不變、來回測試抓不到，main 外面的函式一用到它就編不過）
+          if (isTopLevelOnly(n.componentId)) return true
           // 前處理指示詞（`#define`／`#pragma`…）——它認不出來所以是 raw_code，
           // ⚠️ 而「它是頂層的」寫在**文字**裡：第一個非空白字元是 `#`。
           const raw = (n.metadata as { rawCode?: string } | undefined)?.rawCode

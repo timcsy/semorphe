@@ -227,6 +227,14 @@ export function isProgramRoot(componentId: string): boolean {
   return componentTraits(componentId)?.programRoot === true
 }
 
+/**
+ * 這顆**只能待在最外層**嗎——隱藏骨架把最外層的積木包進進入點（main）時，它要留在外面（第 223 刀）。
+ * 型別定義（struct／class／enum）、樣板、命名空間宣告它；函式定義另有 `functionDefinition`。
+ */
+export function isTopLevelOnly(componentId: string): boolean {
+  return componentTraits(componentId)?.topLevelOnly === true
+}
+
 /** 這顆是**函式定義**嗎（`properties.name` 是函式名）。 */
 export function isFunctionDefinition(componentId: string): boolean {
   return componentTraits(componentId)?.functionDefinition === true
