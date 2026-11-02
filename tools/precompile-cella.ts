@@ -21,24 +21,17 @@
  *
  * 用法：npx tsx tools/precompile-cella.ts <輸出目錄>
  */
-import { mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync, rmSync } from 'node:fs'
-import { createHash } from 'node:crypto'
+import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { cachedCellaModule, cellaPackageVersions, sha256 } from './cella-module-cache'
 import { compileCellaChecker, checkerSource, type CellaBranch, type CellaFamily } from '../src/providers/cella/verdict'
 import { compileCellaDebugger, debuggerSource } from '../src/providers/cella/debugger'
 
 const OUT = process.argv[2]
 if (!OUT) { console.error('用法：npx tsx tools/precompile-cella.ts <輸出目錄>'); process.exit(2) }
-const CACHE = 'node_modules/.cache/semorphe-cella'
-
 const read = (pkg: string | null, file: string): Uint8Array =>
   readFileSync(join('node_modules', pkg === null ? 'cella-lang' : `@cella-lang/${pkg}`, file))
 
-/** 套件版本——任何一個變了，快取鍵就變 */
-const versions = (): string => ['cella-lang', ...readdirSync('node_modules/@cella-lang').map((p) => `@cella-lang/${p}`)]
-  .sort().map((p) => `${p}@${JSON.parse(readFileSync(join('node_modules', p, 'package.json'), 'utf8')).version}`).join(',')
-
-const sha = (b: Uint8Array | string): string => createHash('sha256').update(b).digest('hex')
 
 /** 要編的模組：判決依家族、除錯依分支（與 worker 用的名字同一套） */
 const JOBS: { name: string; source: string; compile: () => Promise<Uint8Array> }[] = [
@@ -49,20 +42,16 @@ const JOBS: { name: string; source: string; compile: () => Promise<Uint8Array> }
 async function main(): Promise<void> {
   rmSync(OUT, { recursive: true, force: true })
   mkdirSync(OUT, { recursive: true })
-  mkdirSync(CACHE, { recursive: true })
-  const v = versions()
+  const v = cellaPackageVersions()
   const manifest: Record<string, string> = {}
   for (const job of JOBS) {
-    const key = sha(`${v}\n${job.source}`)
-    const cached = join(CACHE, `${job.name}.${key}.wasm`)
     const t = Date.now()
-    let bytes: Uint8Array
-    if (existsSync(cached)) bytes = readFileSync(cached)
-    else { bytes = await job.compile(); writeFileSync(cached, bytes) }
-    const file = `${job.name}.${sha(bytes).slice(0, 12)}.wasm`
+    // 鍵與快取位置住在 cella-module-cache.ts——測試（tests/helpers/cella-run.ts）讀同一份
+    const { bytes, cached } = await cachedCellaModule(job.name, job.source, job.compile, { versions: v })
+    const file = `${job.name}.${sha256(bytes).slice(0, 12)}.wasm`
     writeFileSync(join(OUT, file), bytes)
     manifest[job.name] = file
-    console.log(`  ${job.name.padEnd(18)} ${(bytes.length / 1e6).toFixed(1).padStart(5)} MB  ${existsSync(cached) && Date.now() - t < 1000 ? '（快取）' : `編 ${((Date.now() - t) / 1000).toFixed(1)} 秒`}`)
+    console.log(`  ${job.name.padEnd(18)} ${(bytes.length / 1e6).toFixed(1).padStart(5)} MB  ${cached ? '（快取）' : `編 ${((Date.now() - t) / 1000).toFixed(1)} 秒`}`)
   }
   writeFileSync(join(OUT, 'manifest.json'), JSON.stringify({ versions: v, modules: manifest }, null, 2) + '\n')
   console.log(`Cella 模組 ${JOBS.length} 個 → ${OUT}`)

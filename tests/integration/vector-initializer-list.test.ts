@@ -19,7 +19,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { expectCellaOut } from '../helpers/cella-run'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { StylePreset } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -41,11 +41,8 @@ const wrap = (body: string, extra = ''): string =>
 const lift = (b: string) => lifter.lift(tp.parse(wrap(b))!.rootNode as never)
 const roundTrip = (b: string): string => generateCode(lift(b) as never, 'cpp', style)
 
-async function run(b: string): Promise<string> {
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(lift(b) as never)
-  return interp.getOutput().join('')
-}
+// spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella——期望值照舊是 g++ 印的（`tests/helpers/cella-run.ts`）
+const run = (b: string, expected: string) => expectCellaOut(wrap(b), expected)
 
 describe('產生：初始化列表要一起產回去', () => {
   it('★ 整數', () => {
@@ -64,20 +61,16 @@ describe('產生：初始化列表要一起產回去', () => {
 
 describe('執行：期望值由 g++ 決定', () => {
   it('★ 元素與長度都對（g++ 印 `8 1`）', async () => {
-    expect(
-      (await run('vector<int> v = {3,1,4}; int s=0; for(int i=0;i<v.size();i++){ s=s+v[i]; } cout<<s<<" "<<v[1];')).trim(),
-      '空的向量 → 索引越界、size 是 0',
-    ).toBe('8 1')
+    // 原本的錯：空的向量 → 索引越界、size 是 0
+    await run('vector<int> v = {3,1,4}; int s=0; for(int i=0;i<v.size();i++){ s=s+v[i]; } cout<<s<<" "<<v[1];', '8 1')
   })
 
   it('★ 字串向量（g++ 印 `bob 2 0`）', async () => {
-    expect(
-      (await run('vector<string> names = {"ann","bob"}; vector<int> e; cout << names[1] << " " << names.size() << " " << e.size();')).trim(),
-    ).toBe('bob 2 0')
+    await run('vector<string> names = {"ann","bob"}; vector<int> e; cout << names[1] << " " << names.size() << " " << e.size();', 'bob 2 0')
   })
 
   it('★ 空向量仍是空的——只驗有初始值的話，「一律填東西」也會過', async () => {
-    expect((await run('vector<int> v; cout << v.size();')).trim()).toBe('0')
+    await run('vector<int> v; cout << v.size();', '0')
   })
 
   it('★ `vector<int> v(5)` 不是列表初始化，不得被當成初始值', async () => {
