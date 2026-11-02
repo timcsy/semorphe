@@ -71,6 +71,8 @@ const CPP_ONLY_LANGUAGE = new Set([
   'cpp:method_call', 'cpp:constructor', 'cpp:destructor',
   'cpp:method_virtual', 'cpp:method_virtual_pure', 'cpp:method_override',
   'cpp:operator_overload', 'cpp:member_static', 'cpp:lambda',
+  // 第 218 刀：類別裡的一般成員函式另立元件——同族，C 沒有
+  'cpp:method_def',
   // 例外與轉型
   'cpp:try_catch', 'cpp:throw',
   'cpp:cast_static', 'cpp:cast_dynamic', 'cpp:cast_reinterpret', 'cpp:cast_const',

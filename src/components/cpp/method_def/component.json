@@ -1,0 +1,55 @@
+{
+  "componentId": "cpp:method_def",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "return_type",
+      "kind": "type_expr",
+      "default": "void"
+    },
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "method"
+    },
+    {
+      "name": "is_const",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "**尾端的 const（`int area() const`）**：const 成員函式裡的 `this` 指到 const，所以能在 const 物件上呼叫。在這顆之前一般成員函式借用頂層函式那顆積木，lift 丟了 const、產碼也不寫——來回一趟之後在 `const P&` 上呼叫就編不過（第 218 刀；使用者 2026-11-02 定另立元件，history/326）。預設 `'false'` 與運算子多載那顆同一個慣例。"
+    }
+  ],
+  "slots": {
+    "params": "statements",
+    "body": "statements"
+  },
+  "role": "statement",
+  "skipPaths": [
+    "execute"
+  ],
+  "skipReasons": {
+    "execute": "consumed-by-parent"
+  },
+  "owner": "(core)",
+  "_owner_why": "與同族（虛擬方法、覆寫、運算子多載）同一個章——課程清單與工具箱照同族的位置放。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts"
+      }
+    },
+    "formalize": "./formalize.ts",
+    "execute": null,
+    "_execute_why": "**顯式的空，不是遺漏。** 類別宣告那顆依 memberRole 把它收進方法表，執行的是它的本體。"
+  },
+  "memberRole": "method",
+  "_memberRole_why": "**這顆在類別裡扮演什麼角色，由它自己宣告。**（見 registry.ts 的 `memberRoleOf`）——宣告成 method，JS 直譯器的類別執行器不用改就收得到它。",
+  "annotations": {
+    "control_flow": "sequence"
+  }
+}

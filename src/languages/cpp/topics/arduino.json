@@ -201,6 +201,7 @@
     "cpp:math_binary",
     "cpp:constructor",
     "cpp:destructor",
+    "cpp:method_def",
     "cpp:method_virtual",
     "cpp:method_virtual_pure",
     "cpp:method_override",

@@ -54,7 +54,7 @@
           "check": "Statement"
         }
       ],
-      "colour": "#9966FF",
+      "colour": "#CF63CF",
       "tooltip": "%{BKY_CPP_CLASS_DEF_TOOLTIP}",
       "message3": "%{BKY_CPP_CLASS_DEF_MSG3}",
       "args3": [

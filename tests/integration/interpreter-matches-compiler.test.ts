@@ -819,6 +819,11 @@ const CASES: [string, string, string, string[]][] = [
     '  S A[3];\n  A[0] = {2,3};\n  f(A[0], A[0], A[1]);\n  cout << A[1].a << "," << A[1].b;', []],
   ['參照④：struct 的一個成員', 'struct S{ int a; };\nvoid g(int &r){ r = 7; }', '  S s;\n  s.a = 0;\n  g(s.a);\n  cout << s.a;', []],
   ['參照⑤：把一個參照變數綁到一格', '', '  int a[3] = {0,0,0};\n  int &r = a[1];\n  r = 7;\n  cout << a[0] << a[1];', []],
+  // 🔴 第 218 刀：類別裡的一般成員函式另立元件（cpp:method_def）——執行那一路依 memberRole 收它；
+  //    方法裡不帶限定地呼叫同類別的方法（隱含的 this->get()）原本說「沒有這個函式：get」，修在 func_call 的執行器
+  ['成員函式①：const 取值方法在 const& 上呼叫', 'struct Rect{ int w; int h; int area() const { return w * h; } void scale(int k){ w *= k; h *= k; } };\nint total(const Rect& a, const Rect& b){ return a.area() + b.area(); }', '  Rect a; a.w = 2; a.h = 3;\n  Rect b; b.w = 1; b.h = 4;\n  b.scale(2);\n  cout << total(a, b);', []],
+  ['成員函式②：方法裡呼叫同類別的方法（隱含的 this）', 'class Counter{ int n; public: Counter(){ n = 0; } void add(int k){ n += k; } int get() const { return n; } bool big() const { return get() > 10; } };', '  Counter c;\n  c.add(7);\n  c.add(5);\n  cout << c.get() << " " << c.big();', []],
+  ['成員函式③：回傳字串、兩個參數', 'struct Student{ string name; int score; string grade() const { if (score >= 90) { return "A"; } return "B"; } void bonus(int pts, int cap){ score += pts; if (score > cap) { score = cap; } } };', '  Student s;\n  s.name = "Amy";\n  s.score = 85;\n  cout << s.grade();\n  s.bonus(10, 100);\n  cout << s.name << " " << s.score << " " << s.grade();', []],
   ['參照⑥：巢狀——一格的成員當出參數', 'struct S{ int a; };\nvoid g(int &r){ r = 7; }', '  S A[2];\n  A[1].a = 0;\n  g(A[1].a);\n  cout << A[1].a;', []],
   ['★ 錨點：純量變數當出參數照舊', 'void g(int &r){ r = 7; }', '  int a = 0;\n  g(a);\n  cout << a;', []],
   ['★ 錨點：傳值【不得】被改成傳參考', 'void g(int r){ r = 7; }', '  int a[3] = {0,0,0};\n  g(a[1]);\n  cout << a[1];', []],

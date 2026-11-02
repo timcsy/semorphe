@@ -16,6 +16,7 @@ import { cloneValue } from '../../../interpreter/clone'
 import { cppParamDefault } from '../../../languages/cpp/lang/executors/param-default'
 import type { RuntimeValue } from '../../../interpreter/types'
 import { Scope } from '../../../interpreter/scope'
+import { runOnInstance } from '../../../languages/cpp/lang/executors/structs'
 import { resolvePlace } from '../../../interpreter/lvalue'
 import type { Place } from '../../../interpreter/lvalue'
 
@@ -51,6 +52,15 @@ export function registerExecute(register: (component: string, executor: Componen
     // ⚠️ 已知代價：使用者自己定義的 `max` 會被 `std::max` 撞上。那是
     // 「沒有名稱隔離」這個設計本來就有的代價，不是這一行新增的——
     // 真要隔離就得讓 `namespace_def` 開一個命名空間，而那是另一個題目。
+    // 🔴 **成員函式裡不帶限定的呼叫，先找自己類別的方法**（第 218 刀，roundtrip 抓到）：
+    //    `bool big() const { return get() > 10; }` 的 `get()` 是隱含的 `this->get()`。
+    //    C++ 的名稱查找先看類別範圍、再看外層——所以這一段排在全域函式表之前（區域變數同名的遮蔽在上面已經處理）。
+    //    在此之前它說「沒有這個函式：get」。
+    if (!name.includes('::') && ctx.scope.has('this')) {
+      const self = ctx.scope.get('this')
+      const m = self?.type === 'object' ? ctx.structs.method(self.structName ?? '', name) : undefined
+      if (m && !m.pure) return runOnInstance(self, m, node.slots.args ?? [], ctx)
+    }
     const bareName = name.includes('::') ? name.slice(name.lastIndexOf('::') + 2) : null
     const found = ctx.functions.get(name) ?? (bareName ? ctx.functions.get(bareName) : undefined)
     /**

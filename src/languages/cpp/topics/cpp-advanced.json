@@ -200,6 +200,7 @@
     "cpp:cast_dynamic",
     "cpp:cast_reinterpret",
     "cpp:cast_const",
+    "cpp:method_def",
     "cpp:method_virtual",
     "cpp:method_virtual_pure",
     "cpp:method_override",
