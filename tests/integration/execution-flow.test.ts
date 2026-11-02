@@ -1,84 +1,108 @@
-import { describe, it, expect } from 'vitest'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import { createNode } from '../../src/core/semantic-tree'
-import type { SemanticNode } from '../../src/core/types'
-import { RuntimeError } from '../../src/interpreter/errors'
+/**
+ * **執行流程**（spec 205 重構 6c-3：改由 Cella 的工作階段背書）——學生按執行／單步走的那一條路。
+ *
+ * 原本對 JS 直譯器的 `execute`／`executeWithSteps`／`maxSteps` 斷言；同樣的五件事改問 Cella：
+ *
+ * ```
+ * 印一句 · 宣告後印出 · 單步紀錄（stepIn 一顆一顆往前）· 步數上限 · 讀輸入（awaiting-input → supplyInput）
+ * ```
+ *
+ * 🔴 **步數上限在工作階段那條路今天不成立**：`createCellaProvider` 的工作階段沒有讀 `SessionOptions.maxSteps`
+ * （`cella-lang/dap` 的 `fuel` 是「每一段」的步數，段與段之間交回事件迴圈、不是總預算）——無窮迴圈會一直跑到使用者按停止。
+ * 判決那條路有（`fuel` 的 unknown）。見「步數上限」那兩條。
+ */
+import { describe, it, expect, beforeAll } from 'vitest'
+import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { createTestLifter } from '../helpers/setup-lifter'
+import { cellaProvider, openCella, waitSession } from '../helpers/cella-session'
+import { runCella } from '../helpers/cella-run'
+import type { Outcome, Provider } from '../../src/core/capabilities'
+import type { SemanticNode } from '../../src/core/types'
 
-registerCppLanguage()
+const H = '#include <iostream>\nusing namespace std;\n'
+let parser: Parser
+let p: Provider
+const lift = (c: string): SemanticNode => createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
 
-function makeProgram(body: SemanticNode[]): SemanticNode {
-  return createNode('cpp:program', {}, { body })
+beforeAll(async () => {
+  await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
+  parser = new Parser()
+  parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
+  registerCppLanguage()
+  p = await cellaProvider()
+  await waitSession(p, lift(H + 'int main() { return 0; }'))
+}, 400_000)
+
+const find = (t: SemanticNode, id: string | null): SemanticNode | undefined => {
+  if (t.id === id) return t
+  for (const k of Object.values(t.slots ?? {})) for (const c of k) { const r = find(c, id); if (r) return r }
+  return undefined
 }
 
-describe('Execution flow integration', () => {
-  it('should execute a simple print program', async () => {
-    const interp = new SemanticInterpreter({ maxSteps: 1000 })
-    await interp.execute(makeProgram([
-      createNode('cpp:print', {}, {
-        values: [createNode('cpp:literal_string', { value: 'Hello, World!' }, {})]
-      })
-    ]))
-    expect(interp.getOutput().join('')).toBe('Hello, World!')
+const INFINITE = H + 'int main() {\n  int x = 1;\n  while (x > 0) {\n    x = 1;\n  }\n  return 0;\n}\n'
+
+describe('執行流程（Cella 工作階段）', () => {
+  it('印一句：一路跑完，輸出正確', async () => {
+    const tree = lift(H + 'int main() {\n  cout << "Hello, World!";\n  return 0;\n}\n')
+    const { s, out } = openCella(p, tree)
+    expect(await s.launch(tree, { stopOnEntry: false })).toEqual({ kind: 'ended' })
+    expect(out()).toBe('Hello, World!')
   })
 
-  it('should execute variable declaration and print', async () => {
-    const interp = new SemanticInterpreter({ maxSteps: 1000 })
-    await interp.execute(makeProgram([
-      createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:literal_number', { value: '42' }, {})]
-      }),
-      createNode('cpp:print', {}, {
-        values: [createNode('cpp:var_ref', { name: 'x' }, {})]
-      })
-    ]))
-    expect(interp.getOutput().join('')).toContain('42')
+  it('宣告變數後印出', async () => {
+    const tree = lift(H + 'int main() {\n  int x = 42;\n  cout << x;\n  return 0;\n}\n')
+    const { s, out } = openCella(p, tree)
+    expect(await s.launch(tree, { stopOnEntry: false })).toEqual({ kind: 'ended' })
+    expect(out()).toBe('42')
   })
 
-  it('should provide step records via executeWithSteps', async () => {
-    const interp = new SemanticInterpreter({ maxSteps: 1000 })
-    const steps = await interp.executeWithSteps(makeProgram([
-      createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-        initializer: [createNode('cpp:literal_number', { value: '10' }, {})]
-      }),
-      createNode('cpp:var_assign', {}, {
-        // 🟢 左值是接點（2026-08-25）——在此之前是 `obj: 'x'`
-        target: [createNode('cpp:var_ref', { name: 'x' })],
-        value: [createNode('cpp:literal_number', { value: '20' }, {})]
-      }),
-    ]))
-    expect(steps.length).toBeGreaterThan(0)
+  it('單步紀錄：stopOnEntry 之後每次 stepIn 往前一顆，經過宣告與指定、最後跑完', async () => {
+    const tree = lift(H + 'int main() {\n  int x = 10;\n  x = 20;\n  return 0;\n}\n')
+    const { s } = openCella(p, tree)
+    let o: Outcome = await s.launch(tree, { stopOnEntry: true })
+    const steps: string[] = []
+    let guard = 0
+    while (o.kind === 'stopped' && guard++ < 100) {
+      steps.push(find(tree, o.stop.nodeId)?.componentId ?? `?${o.stop.nodeId}`)
+      o = await s.stepIn()
+    }
+    expect(o).toEqual({ kind: 'ended' })
+    expect(steps.filter((x) => x.startsWith('?')), '停點要對得回語義樹的節點').toEqual([])
+    expect(steps).toEqual(expect.arrayContaining(['cpp:var_declare', 'cpp:var_assign']))
+    expect(steps.indexOf('cpp:var_declare')).toBeLessThan(steps.indexOf('cpp:var_assign'))
   })
 
-  it('should throw on max steps exceeded', async () => {
-    const interp = new SemanticInterpreter({ maxSteps: 50 })
-    await expect(
-      interp.execute(makeProgram([
-        createNode('cpp:loop_while', {}, {
-          condition: [createNode('cpp:compare', { operator: '>' }, {
-            left: [createNode('cpp:literal_number', { value: '1' }, {})],
-            right: [createNode('cpp:literal_number', { value: '0' }, {})],
-          })],
-          body: [
-            createNode('cpp:var_declare', { name: 'x', type: 'int' }, {
-              initializer: [createNode('cpp:literal_number', { value: '0' }, {})]
-            }),
-          ],
-        })
-      ]))
-    ).rejects.toThrow(RuntimeError)
+  it('步數上限（判決那條路）：無窮迴圈 → unknown，原因是 fuel，不是 accept 也不是 reject', async () => {
+    const r = await runCella(INFINITE, { steps: 2000 })
+    expect(r.verdict).toBe('unknown')
+    expect(r.problems.map((x) => x.kind)).toEqual(['fuel'])
   })
 
-  it('should handle stdin input', async () => {
-    const interp = new SemanticInterpreter({ maxSteps: 1000 })
-    await interp.execute(makeProgram([
-      createNode('cpp:var_declare', { name: 'n', type: 'int' }, {
-        initializer: [createNode('cpp:input', { type: 'int' }, {})]
-      }),
-      createNode('cpp:print', {}, {
-        values: [createNode('cpp:var_ref', { name: 'n' }, {})]
-      })
-    ]), ['7'])
-    expect(interp.getOutput().join('')).toContain('7')
+  /**
+   * 🟡 **我們缺（修好時這條會紅）**：工作階段不看 `maxSteps`——產品的控制器傳 1000 萬步（`execution-controller`），
+   * JS 直譯器照它停、Cella 的工作階段一直跑。這裡給 50 步、等 1.5 秒：它還沒停（`pending`），按停止才收得掉（aborted）。
+   * 修好的那天（提供者把 `maxSteps` 換算成段數，用完就停並帶一個「步數用完」的鍵）launch 會在 1.5 秒內回來，這條會紅
+   * ——那時改成斷言 `failed` ＋ 那個鍵。
+   */
+  it('🟡 已知缺陷：工作階段的步數上限沒有作用——無窮迴圈要按停止才停', async () => {
+    const tree = lift(INFINITE)
+    const { s } = openCella(p, tree, { maxSteps: 50 })
+    let settled: Outcome | 'pending' = 'pending'
+    void s.launch(tree, { stopOnEntry: false }).then((o) => { settled = o })
+    await new Promise((r) => setTimeout(r, 1500))
+    expect(settled, '🟢 這裡回來了 ⟹ 工作階段開始看 maxSteps：改斷言「步數用完」的停止原因').toBe('pending')
+    s.terminate()
+    const t = Date.now()
+    while (settled === 'pending' && Date.now() - t < 10_000) await new Promise((r) => setTimeout(r, 50))
+    expect(settled).toMatchObject({ kind: 'failed', error: { kind: 'aborted' } })
+  }, 30_000)
+
+  it('讀輸入：停在 awaiting-input，給一行之後繼續、印出讀到的值', async () => {
+    const tree = lift(H + 'int main() {\n  int n;\n  cin >> n;\n  cout << n;\n  return 0;\n}\n')
+    const { s, out } = openCella(p, tree)
+    expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
+    expect(await s.supplyInput('7')).toEqual({ kind: 'ended' })
+    expect(out()).toBe('7')
   })
 })

@@ -3,18 +3,21 @@
  *
  * 形狀照 DAP（`core/capabilities.ts` 的 `ExecutionSession`）：宿主下指令，每個指令回 `Outcome`。
  * 控制器只靠這一組行為；一個提供者過不了其中一條，控制器在那條路上就會壞。
+ *
+ * 🔴 **spec 205（重構 6c-3）盤點過**：每一條都對兩個提供者各跑一次（`PROVIDERS` 的迴圈）——**沒有只對 JS 跑的條目**，
+ * 所以 Cella 那一格已經涵蓋整份契約（C++ 十條、Python 五條）。JS 那一格刻意留著：JS 提供者還登記在產品裡，
+ * 要等 Cella 修好堆疊溢位（本檔最後一條）才拿（spec 205 的 US4）；拿掉的那一刀把 `PROVIDERS` 的第一筆刪掉即可。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { createTestLifter } from '../helpers/setup-lifter'
-import fs from 'node:fs'
-import path from 'node:path'
 import { jsInterpreterProvider } from '../../src/providers/js-interpreter'
 import { createCellaProvider } from '../../src/providers/cella/provider'
 import { SessionStop, type ExecutionSession, type Provider } from '../../src/core/capabilities'
 import type { SemanticNode } from '../../src/core/types'
 import { liftPython } from '../helpers/python-lift'
+import { cellaProvider, waitSession, until } from '../helpers/cella-session'
 
 let parser: Parser
 beforeAll(async () => {
@@ -25,41 +28,13 @@ beforeAll(async () => {
 })
 
 /**
- * **Cella 提供者，worker 原地跑**——不 mock 判決或工作階段：`worker.ts` 在這個行程裡載入，
- * `fetch` 讀 `node_modules` 的檔（`?url` 在 vitest 裡是 `/node_modules/...`），沒有 IndexedDB 就每次編（快取的失敗路徑）。
+ * **Cella 提供者，worker 原地跑**——不 mock 判決或工作階段（`tests/helpers/cella-session.ts`；spec 205 起與其他執行相關的測試共用同一份，
+ * 編好的模組走產品的建置路 `fetchPrecompiled`，不再每次現場編）。第一次 createSession 會讓 worker 開始準備除錯模組（R4），準備好之前它不接。
  */
 async function cellaInProcess(): Promise<Provider> {
-  const g = globalThis as unknown as { self?: { postMessage(m: unknown): void; onmessage?: (e: { data: unknown }) => void }; fetch: typeof fetch }
-  const toMain: { onmessage: ((e: { data: unknown }) => void) | null; onerror: null; postMessage(m: unknown): void } = {
-    onmessage: null, onerror: null,
-    postMessage: (m) => queueMicrotask(() => g.self!.onmessage!({ data: m })),
-  }
-  g.self = { postMessage: (m) => queueMicrotask(() => toMain.onmessage?.({ data: m })) }
-  const realFetch = g.fetch
-  g.fetch = (async (url: string) => {
-    const u = String(url)
-    // `?url` 在 vitest 裡是 `/node_modules/...`；node_modules 是符號連結（worktree）時是 `/@fs/<絕對路徑>`
-    const file = u.startsWith('/@fs/') ? u.slice(4) : u.startsWith('/node_modules/') ? path.join(process.cwd(), u) : null
-    if (!file) return realFetch(url)
-    const bytes = fs.readFileSync(file.replace(/\?.*$/, ''))
-    return { ok: true, status: 200, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) }
-  }) as never
-  await import('../../src/providers/cella/worker')
-  const p = createCellaProvider(() => toMain as unknown as Worker)
-  p.warmUp!()
-  await until(() => p.readiness!().state === 'ready', 180_000)
-  // 第一次 createSession 會讓 worker 開始編除錯模組（R4）；編好之前它不接
-  const tree = lift(LOOP)
-  await until(() => !('declined' in p.createSession!({ maxSteps: 1, formal: formalOf(tree) }, tree)), 180_000)
+  const p = await cellaProvider()
+  await waitSession(p, lift(LOOP))
   return p
-}
-
-async function until(ok: () => boolean, ms: number): Promise<void> {
-  const t = Date.now()
-  while (!ok()) {
-    if (Date.now() - t > ms) throw new Error('等不到')
-    await new Promise((r) => setTimeout(r, 200))
-  }
 }
 
 const formalOf = (tree: SemanticNode) => ({ tree, targetId: 'cpp', styleId: 'apcs', skeletonId: 'main' })

@@ -24,6 +24,17 @@
  * 那一欄**推導不出任何結論**，已移除。
  * （`build-guardrail` 6.5：「紅的是世界，還是語料？」）
  *
+ * ## spec 205（重構 6c-3）：來源換成 Cella
+ *
+ * 學生按執行走的是 Cella 的工作階段：閘門放行 → `createSession`（翻不出就 declined，一步也不跑）→ `launch`；
+ * 停下來的話，畫面那一句是 `describeRuntimeStop(SessionStop.i18nKey, params)`（`execution-controller` 的 `fail`）。
+ * 原本的來源是 JS 直譯器的 `RuntimeError`。⚠️ declined 那一格今天產品會退回 JS 直譯器；US4 拿掉 JS 之後由 US1 的畫面接住
+ * ——這裡照實印出 declined 的原因，那一句也不得帶代號。
+ *
+ * ⚠️ 2026-11-02 第一次用 Cella 量到：⑦ `Cout`、⑧ `cout <` **都是 declined「Cella 還不支援」**——formalize 翻不出
+ * 「運算式當敘述」的 `cpp:arithmetic`／`cpp:compare`，於是一個**學生的錯**被說成**系統的能力不足**（JS 直譯器原本說的是
+ * 「`cout` 不是變數、要配 `<<`」）。歸類：我們缺（formalize）＋ 診斷層要補的友善訊息；`components/cpp/var_ref/gap.test.ts` 釘著。
+ *
  * ## 這支不檢測什麼
  *
  * - **不檢測錯誤訊息的措辭好不好**——沒有機械判準
@@ -34,21 +45,24 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { canExecute } from '../../src/core/diagnostics'
-import { RuntimeError } from '../../src/interpreter/errors'
+import { cellaProvider, cppFormal, waitSession } from '../helpers/cella-session'
 import { setMessages, resetMessages } from '../../src/i18n/messages'
 import { describeRuntimeStop } from '../../src/ui/runtime-message'
 import zhTW from '../../src/i18n/zh-TW/blocks.json'
+import type { Provider } from '../../src/core/capabilities'
 import type { SemanticNode } from '../../src/core/types'
 
 let parser: Parser
+let cella: Provider
 beforeAll(async () => {
   await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
   parser = new Parser()
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
-}, 30000)
+  cella = await cellaProvider()
+  await waitSession(cella, createTestLifter().lift(parser.parse('int main() { return 0; }')!.rootNode as never) as SemanticNode)
+}, 400_000)
 
 /** 第一課的成品。所有樣本都是它的變異。 */
 const OK = `int main() {
@@ -90,15 +104,17 @@ describe('探測：第一課的學生犯錯時看到什麼', () => {
       const gate = canExecute(st)
       let shown = '🟢 語法閘門擋下'
       if (gate.ok) {
-        const i = new SemanticInterpreter({ maxSteps: 100000 })
-        try {
-          await i.execute(st)
-          shown = `跑完，輸出 ${JSON.stringify(i.getOutput().join(''))}`
-        } catch (e) {
+        const session = cella.createSession!({ maxSteps: 1_000_000, formal: cppFormal(st) as never }, st)
+        if ('declined' in session) {
+          shown = `⏸ Cella 不接：「${session.declined}」`
+        } else {
+          let out = ''
+          session.onOutput((t) => { out += t })
+          const o = await session.launch(st, { stopOnEntry: false })
           shown =
-            e instanceof RuntimeError
-              ? `🔴 停下來：「${describeRuntimeStop(e.i18nKey, e.params)}」`
-              : `✘ ${String(e).slice(0, 60)}`
+            o.kind === 'ended' ? `跑完，輸出 ${JSON.stringify(out)}`
+            : o.kind === 'failed' ? `🔴 停下來：「${describeRuntimeStop(o.error.i18nKey, o.error.params)}」`
+            : `✘ ${JSON.stringify(o).slice(0, 60)}`
         }
       }
       rows.push(`${label.padEnd(18)} | ${shown}`)

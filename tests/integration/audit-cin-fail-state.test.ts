@@ -34,13 +34,25 @@
  *
  * > **一支自己會過的測試，可以只因為它【佔住執行緒的時間】而弄紅別人。
  * > 而那時紅的是別人，沒有人會來查這一支。**
+ *
+ * ## spec 205（重構 6c-3）：受測的換成 Cella，權威仍是參照編譯器
+ *
+ * ```
+ * 前半（failbit 黏住）    受測：Cella 的判決（runCella，stdin 一次給完）   權威：參照編譯器（不變）
+ * 後半（getline 要等人）  受測：Cella 的工作階段（awaiting-input → supplyInput）
+ * ```
+ *
+ * ⚠️ **三條的程式換了輸出的寫法**（`printf("%s", s.c_str())` → `cout << s`）：formalize 今天翻不出 `c_str()`（`cpp:string_as_cstring`），
+ * 照原樣的話這三條會停在「翻不出」、守不到 failbit。換寫法不換語義——兩邊（Cella 與參照編譯器）跑的是同一段新程式，期望值照舊由參照編譯器給；
+ * `c_str()` 那個缺口另外釘一條（最後一支）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { CppParser } from '../../src/languages/cpp/parser'
 import { runCppBatchDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
+import { runCella, expectCellaOut, knownCellaGap } from '../helpers/cella-run'
+import { cellaProvider, openCella, waitSession } from '../helpers/cella-session'
 import type { SemanticNode } from '../../src/core/types'
 
 /**
@@ -56,16 +68,13 @@ let lifter: ReturnType<typeof createTestLifter>
 /** 參照編譯器的答案，與 `CASES` 同序。 */
 let reference: string[]
 
-async function runSemorphe(body: string, stdin: string[]): Promise<string> {
-  const tree = lifter.lift((await parser.parse(body)).rootNode as never) as SemanticNode
-  expect(tree, '提升不得回 null——負向斷言在空樹上會空過').not.toBeNull()
-  const interp = new SemanticInterpreter()
-  await interp.execute(tree, stdin)
-  return interp.getOutput().join('')
-}
+/** `stdin` 以陣列寫，餵兩邊時都接成同一串（每行補換行；空陣列是空檔案）——**同一份輸入**。 */
+const stdinOf = (lines: string[]): string => (lines.length > 0 ? lines.join('\n') + '\n' : '')
 
-/** `stdin` 以陣列給 Semorphe、以換行串給參照編譯器——**同一份輸入的兩種投影**。 */
-const CASES: { name: string; body: string; stdin: string[] }[] = [
+/**
+ * `cellaGap`：Cella 今天與參照編譯器不一致、而**參照編譯器是對的**的那幾條——照 knownCellaGap 釘住（修好時會紅），原因寫在那一條上。
+ */
+const CASES: { name: string; body: string; stdin: string[]; cellaGap?: RegExp }[] = [
   {
     name: '格式錯的 token 之後，下一個 >> 也必須失敗（failbit 黏住）',
     body: 'int main(){int n=9,m=7;cin>>n;cin>>m;printf("n=%d m=%d\\n",n,m);return 0;}',
@@ -81,7 +90,7 @@ const CASES: { name: string; body: string; stdin: string[] }[] = [
     body: 'int main(){int a=9,b=8,c=7;cin>>a>>b;cin>>c;printf("a=%d b=%d c=%d\\n",a,b,c);return 0;}',
     stdin: ['5'],
   },
-  // 🔴 以下兩條是**反向**的：它們今天就是對的，這一刀不得把它們弄壞。
+  // 🔴 以下三條是**反向**的：它們今天就是對的，這一刀不得把它們弄壞。
   {
     name: '正常讀到底的 while(cin>>x) 要照常跑完（回 0 是它的終止條件）',
     body: 'int main(){int x=0,s=0;while(cin>>x){s+=x;}printf("s=%d\\n",s);return 0;}',
@@ -99,7 +108,8 @@ const CASES: { name: string; body: string; stdin: string[] }[] = [
   },
   {
     name: '字串的 >> 讀不到時同樣黏住',
-    body: 'int main(){string s="old";int n=9;cin>>n;cin>>s;printf("n=%d s=%s\\n",n,s.c_str());return 0;}',
+    // spec 205：原本 printf("%s", s.c_str())——見檔頭
+    body: 'int main(){string s="old";int n=9;cin>>n;cin>>s;cout<<"n="<<n<<" s="<<s<<"\\n";return 0;}',
     stdin: ['zz 7'],
   },
   // `getline` 與 `>>` 是**同一條流**，所以它也看同一個 failbit。
@@ -107,13 +117,17 @@ const CASES: { name: string; body: string; stdin: string[] }[] = [
   //    已經失敗 → 完全不動；乾淨的流遇 EOF → **清空**。
   {
     name: 'getline 在 >> 失敗之後不得再讀到東西，而且不動變數',
-    body: 'int main(){int n=9;string s="OLD";cin>>n;getline(cin,s);printf("n=%d s=[%s]\\n",n,s.c_str());return 0;}',
+    body: 'int main(){int n=9;string s="OLD";cin>>n;getline(cin,s);cout<<"n="<<n<<" s=["<<s<<"]\\n";return 0;}',
     stdin: ['abc', 'hello'],
   },
   {
     name: 'getline 在乾淨的流上遇到 EOF 要把字串清空',
-    body: 'int main(){string s="OLD";getline(cin,s);printf("s=[%s]\\n",s.c_str());return 0;}',
+    body: 'int main(){string s="OLD";getline(cin,s);cout<<"s=["<<s<<"]\\n";return 0;}',
     stdin: [],
+    // 🟡 **Cella 判錯**（2026-11-02 量到）：Cella 印 `s=[OLD]`。標準 [string.io]：getline 建好 sentry（乾淨的流 ⟹ 為真）
+    //    就先 `str.erase()` 再讀——遇 EOF 讀不到任何字元時字串已經清空（並設 failbit）。libc++ 與 libstdc++ 都印 `s=[]`。
+    //    formalize 是直接翻成 Cella 的 `eGetline`，沒有中間的改寫。
+    cellaGap: /期望 "s=\[\]\\n"[\s\S]*實際 "s=\[OLD\]\\n"/,
   },
 ]
 
@@ -127,7 +141,7 @@ beforeAll(async () => {
     8,
     // 空的 stdin 也要餵**空檔案**而不是省略——「沒有輸入」與「輸入耗盡」
     // 在這條護欄裡必須走同一條路。
-    CASES.map((c) => (c.stdin.length > 0 ? c.stdin.join('\n') + '\n' : '')),
+    CASES.map((c) => stdinOf(c.stdin)),
   )
   reference = outcomes.map((r, i) => {
     if (!r.ok) throw new Error(`參照編譯器跑不動第 ${i + 1} 段（${CASES[i].name}）：${r.message}`)
@@ -135,7 +149,7 @@ beforeAll(async () => {
   })
 }, 60_000)
 
-describe('cin 的失敗狀態（對照參照編譯器）', () => {
+describe('cin 的失敗狀態（Cella 對照參照編譯器）', () => {
   it('參照編譯器必須在——沒有它就量不出對錯，不得跳過', () => {
     expect(hasReferenceCompiler()).toBe(true)
   })
@@ -144,8 +158,16 @@ describe('cin 的失敗狀態（對照參照編譯器）', () => {
     it(c.name, async () => {
       const expected = reference[i]
       expect(expected.length, '參照輸出不得是空的——空的比對會空過').toBeGreaterThan(0)
-      expect(await runSemorphe(c.body, c.stdin)).toBe(expected)
+      const body = () => expectCellaOut(HEAD + c.body, expected, { stdin: stdinOf(c.stdin) })
+      if (c.cellaGap) await knownCellaGap(c.cellaGap, body)
+      else await body()
     })
+  })
+
+  /** 🟡 **我們缺（修好時這條會紅）**：`s.c_str()` formalize 翻不出——上面三條因此換了輸出的寫法 */
+  it('🟡 已知缺陷：`printf("%s", s.c_str())` 翻不出（cpp:string_as_cstring）', async () => {
+    await knownCellaGap(/翻不出[\s\S]*cpp:string_as_cstring/, () =>
+      expectCellaOut(HEAD + 'int main(){string s="old";printf("s=%s\\n",s.c_str());return 0;}', 's=old\n'))
   })
 })
 
@@ -155,18 +177,27 @@ describe('cin 的失敗狀態（對照參照編譯器）', () => {
  * Python 的 `input()` 犯過一模一樣的病（spec 173）：用 `io.read()` 而不等使用者，
  * 於是學生按下執行，提示印出來了，而程式**當場就用空字串跑完**。
  * `getline(cin, name)` 是同一顆病在 C++ 這一側。
+ *
+ * spec 205：受測的換成 Cella 的工作階段——學生按執行走的那條路。
  */
-describe('getline 要等使用者（瀏覽器條件）', () => {
-  it('有 inputProvider 時必須等，而不是拿空字串就走', async () => {
+describe('getline 要等使用者（Cella 工作階段）', () => {
+  it('跑到 getline 必須停下來等（awaiting-input），提示已經印出來；給了一行之後才繼續', async () => {
     const body = 'int main(){string name;cout<<"請輸入名字：";getline(cin,name);cout<<"hello, "<<name<<endl;return 0;}'
-    const tree = lifter.lift((await parser.parse(body)).rootNode as never) as SemanticNode
+    const tree = lifter.lift((await parser.parse(HEAD + body)).rootNode as never) as SemanticNode
     expect(tree).not.toBeNull()
-    const interp = new SemanticInterpreter()
-    let waited = false
-    interp.setWaitingCallback(() => { waited = true })
-    interp.setInputProvider(() => Promise.resolve('小明'))
-    await interp.execute(tree, [])
-    expect(waited, '沒有進入等待＝沒有問使用者').toBe(true)
-    expect(interp.getOutput().join('')).toBe('請輸入名字：hello, 小明\n')
+    const p = await cellaProvider()
+    await waitSession(p, tree)
+    const { s, out } = openCella(p, tree)
+    const o = await s.launch(tree, { stopOnEntry: false })
+    expect(o, '沒有進入等待＝沒有問使用者（拿空字串就走了）').toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
+    expect(out(), '等的時候提示要已經看得到').toBe('請輸入名字：')
+    expect(await s.supplyInput('小明')).toEqual({ kind: 'ended' })
+    expect(out()).toBe('請輸入名字：hello, 小明\n')
+  }, 400_000)
+
+  it('★ 反向：判決那條路（stdin 一次給完）不停下來，直接讀', async () => {
+    const r = await runCella(HEAD + 'int main(){string name;getline(cin,name);cout<<"hello, "<<name<<endl;return 0;}', { stdin: '小明\n' })
+    expect(r.verdict).toBe('accept')
+    expect(r.out).toBe('hello, 小明\n')
   })
 })
