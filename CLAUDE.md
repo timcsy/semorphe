@@ -56,6 +56,7 @@ tests/
 | 🔴 **改了積木的畫法**（膠囊定義、`block-registrar`、renderer） | **重產課文的對照圖**（見下） | 六分鐘 |
 | 🔴 **改 lift／產生器**（`lifters/strategies.ts`、`code-generator.ts`、膠囊的 `lift`／`generate`） | **拿真實語料重量一次**（見下） | 十秒 |
 | 🔴 **改宣告的 lift／渲染／抽取** | **四個面向全掃**（見下，要參照編譯器） | 兩分鐘 |
+| **新增了 `formalize.ts`** | `npx tsx tools/bump-formalize-baselines.ts --base main --why "第 N 刀，spec M"`（先預覽，加 `--write` 寫入）→ 再跑 `npm run test:guard` | 秒 |
 | 🔴 **改了 `vite*.config.ts`、加了 worker／新的資產、改了兩個宿主共用的組裝點（`app.ts`）** | **`npm run build:vscode`**（看 vsix 的大小與檔數） | 兩分鐘 |
 | commit 前 | `npm test`（全套）——用 `tools/long-test.sh`（skill `long-test-run`） | 約 15 分鐘（放背景跑） |
 | 🔴 **push 之後** | **`gh run list --limit 3`** | 十秒 |
