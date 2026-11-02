@@ -987,7 +987,17 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const declaratorNode = node.childForFieldName('declarator')
     const bodyNode = node.childForFieldName('body')
 
-    let returnType = typeNode?.text ?? 'void'
+    /**
+     * 🔴 **回傳型別是「宣告子之前的那一整段原文」，不是型別節點**（spec 204，2026-11-02）。
+     * 型別節點只有 `char`——它前面的 `const`（type_qualifier）、`static`／`inline`（storage_class_specifier）
+     * 是 function_definition 的兄弟節點，原本沒有人讀，於是 `static const char* h()` 轉一圈變成 `char* h()`。
+     * ⚠️ 空白正規化成一格（`unsigned   long` 照樣是一個型別）。
+     */
+    // ⚠️ 切出來的那段要包含型別節點本身才算數（位置資訊不可靠時——例如手搭的節點——退回型別節點）
+    const lead = typeNode && declaratorNode
+      ? node.text.slice(0, declaratorNode.startIndex - node.startIndex).trim().replace(/\s+/g, ' ')
+      : ''
+    let returnType = typeNode && lead.includes(typeNode.text) ? lead : (typeNode?.text ?? 'void')
     let name = 'f'
     const paramChildren: SemanticNode[] = []
 
@@ -996,10 +1006,18 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     // 於是產出 `int f(int* p)()`——**星號跑錯位置，還多出一對括號**。
     //
     // 每下鑽一層就把一顆星號還給回傳型別，這樣 `int**` 也對。
+    // 🔴 **參考也一樣**（spec 204）：`string& k(string& s)` 外面包的是 reference_declarator，而原本只剝指標——
+    //    於是整個 `k(string& s)` 被當成名字、參數變成零個，產出 `string k(string& s)() {`（編不過）。
+    //    第 218 刀替類別成員修過同一件事（`liftMethodDef` 那一段），一般函式這條路沒有跟著修。
     let fnDecl = declaratorNode
-    while (fnDecl?.type === 'pointer_declarator') {
-      returnType += '*'
-      fnDecl = fnDecl.childForFieldName('declarator')
+    while (fnDecl?.type === 'pointer_declarator' || fnDecl?.type === 'reference_declarator') {
+      if (fnDecl.type === 'pointer_declarator') {
+        returnType += '*'
+        fnDecl = fnDecl.childForFieldName('declarator')
+      } else {
+        returnType += fnDecl.children.find((c) => !c.isNamed)?.text ?? '&'
+        fnDecl = fnDecl.namedChildren[0] ?? null
+      }
     }
 
     if (fnDecl) {
