@@ -584,8 +584,8 @@ export function createAppLayout(
   }
   codeColumn.appendChild(monacoWrapper)
 
-  // 🔴 **由宿主決定這一格是誰**——這個檔不認識任何一個具體的編輯器。
-  const codeView = profile.createCodeView(monacoWrapper)
+  // 🔴 **由宿主決定這一格是誰**——這個檔不認識任何一個具體的編輯器；畫法經這一格自己的 `mount`（第 241 刀），而 mount 問的是 `profile.createCodeView`
+  const codeView = panelById('code')!.mount!(monacoWrapper, { profile, msg: (k: string, f?: string) => Blockly.Msg[k] || f || k }).view as CodeView
 
   // 🔴 **下方面板是一個容器，它的存在取決於裡面有沒有東西**。
   //
