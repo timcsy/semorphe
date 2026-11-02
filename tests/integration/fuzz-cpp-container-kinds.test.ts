@@ -24,7 +24,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import { generateCode } from '../../src/core/projection/code-generator'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -50,13 +50,17 @@ const ids = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) ids(k as SemanticNode, out)
   return out
 }
-const run = async (src: string): Promise<string> => {
-  const out: string[] = []
-  const interp = new SemanticInterpreter({ maxSteps: 200_000 })
-  interp.setOutputCallback((x) => out.push(x))
-  await interp.execute(lift(src), [])
-  return out.join('')
+/**
+ * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
+ * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ */
+const cellaOut = async (src: string): Promise<string> => {
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
+const run = cellaOut
 /**
  * 🔴 **標頭不手列**（2026-09-18，CI 抓到）。
  *
@@ -90,8 +94,11 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
       '🔴 「不是集合就丟錯」會把對照表一起擋掉——那是修一個缺陷造出另一個')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 對照表的 insert——`make_pair` 那個形式', async () => {
-    await sameAsCompiler(`map<int,int> m; m.insert(make_pair(3,7)); cout << m[3] << m.size();`, '')
+  // 歸類：Cella 判錯——`map::insert(P&&)`（[map.modifiers]）收得下 `pair<int,int>`，Cella 判 reject
+  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 對照表的 insert——`make_pair` 那個形式', async () => {
+    await knownCellaGap(/no matching member function for call to 'insert'/, async () => {
+      await sameAsCompiler(`map<int,int> m; m.insert(make_pair(3,7)); cout << m[3] << m.size();`, '')
+    })
   }, 60_000)
 
   it.runIf(hasReferenceCompiler())('🔴 對照表的 insert 在鍵已存在時【什麼都不做】（不是覆蓋）', async () => {
@@ -164,18 +171,21 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    * `map<int, set<int>> g;`——一支與學生寫的不同的程式。
    * > **一個別名的意義就是那個短名字；把它換掉等於把它拿掉。**
    */
-  it('★ typedef 指向容器時，那個變數要真的是那種容器', async () => {
-    const src = `${H}typedef map<int, set<int>> Graph;\ntypedef vector<int> vi;\ntypedef pair<int,int> pii;\n`
-      + `int main(){ Graph g; g[1].insert(2); g[1].insert(2);\n`
-      + `  vi v; v.push_back(7); pii p = make_pair(3, 4);\n`
-      + `  cout << g[1].size() << g.size() << v[0] << p.first << p.second; return 0; }\n`
-    const ref = runCppDetailed(src)
-    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-    expect(await run(src), '🔴 別名沒有被解開').toBe(ref.output)
-    // 🔴 **產出的程式碼要保住那個短名字**——別名的意義就在它
-    const gen = generateCode(lift(src), 'cpp', S)
-    expect(gen, '🔴 別名被展開了——學生的程式碼變成另一支').toContain('Graph g;')
-    expect(gen).toContain('vi v;')
+  // 歸類：我們這側缺——typedef 別名的 formalize
+  it('🟡 已知缺陷（修好時這條會紅）：★ typedef 指向容器時，那個變數要真的是那種容器', async () => {
+    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
+      const src = `${H}typedef map<int, set<int>> Graph;\ntypedef vector<int> vi;\ntypedef pair<int,int> pii;\n`
+        + `int main(){ Graph g; g[1].insert(2); g[1].insert(2);\n`
+        + `  vi v; v.push_back(7); pii p = make_pair(3, 4);\n`
+        + `  cout << g[1].size() << g.size() << v[0] << p.first << p.second; return 0; }\n`
+      const ref = runCppDetailed(src)
+      expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+      expect(await run(src), '🔴 別名沒有被解開').toBe(ref.output)
+      // 🔴 **產出的程式碼要保住那個短名字**——別名的意義就在它
+      const gen = generateCode(lift(src), 'cpp', S)
+      expect(gen, '🔴 別名被展開了——學生的程式碼變成另一支').toContain('Graph g;')
+      expect(gen).toContain('vi v;')
+    })
   }, 60_000)
 
   /**
@@ -195,23 +205,35 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    * > **一個「還不認得」的東西，在它終於被造出來之後會被當成別的東西
    * > ——而那不是同一個缺陷，是它的下一個形狀。**
    */
-  it('★ `v.insert(v.begin(), x)` 是定位插入', async () => {
-    await sameAsCompiler(`vector<int> v; v.push_back(1); v.insert(v.begin(), 9); cout << v[0] << v[1] << v.size();`, '')
+  // 歸類：Cella 未支援——vector::insert
+  it('🟡 已知缺陷（修好時這條會紅）：★ `v.insert(v.begin(), x)` 是定位插入', async () => {
+    await knownCellaGap(/'std::vector<int>' has no member 'insert'/, async () => {
+      await sameAsCompiler(`vector<int> v; v.push_back(1); v.insert(v.begin(), 9); cout << v[0] << v[1] << v.size();`, '')
+    })
   }, 60_000)
 
-  it('★ 定位插入：中間、尾端，而回傳的是新元素的位置', async () => {
-    await sameAsCompiler(
-      `vector<int> v{1,2,3}; auto it = v.insert(v.begin() + 1, 9);
-       cout << *it << (it - v.begin()); for (int x : v) cout << x;
-       vector<int> w{1,2}; w.insert(w.end(), 9); for (int x : w) cout << x;`, '')
+  // 歸類：Cella 未支援——vector::insert
+  it('🟡 已知缺陷（修好時這條會紅）：★ 定位插入：中間、尾端，而回傳的是新元素的位置', async () => {
+    await knownCellaGap(/'std::vector<int>' has no member 'insert'/, async () => {
+      await sameAsCompiler(
+        `vector<int> v{1,2,3}; auto it = v.insert(v.begin() + 1, 9);
+         cout << *it << (it - v.begin()); for (int x : v) cout << x;
+         vector<int> w{1,2}; w.insert(w.end(), 9); for (int x : w) cout << x;`, '')
+    })
   }, 60_000)
 
-  it('★ 兩端都能進出的容器也定位插入得了', async () => {
-    await sameAsCompiler(`deque<int> d{1,3}; d.insert(d.begin() + 1, 2); for (int x : d) cout << x;`, '')
+  // 歸類：Cella 判錯——`deque<int> d{1,3}` 的 initializer_list 建構子是標準的，Cella 判 reject
+  it('🟡 已知缺陷（修好時這條會紅）：★ 兩端都能進出的容器也定位插入得了', async () => {
+    await knownCellaGap(/no matching constructor for initialization of 'std::deque<int>'/, async () => {
+      await sameAsCompiler(`deque<int> d{1,3}; d.insert(d.begin() + 1, 2); for (int x : d) cout << x;`, '')
+    })
   }, 60_000)
 
-  it('★ 正向錨點：字串的 insert 仍然是字串的（它也收兩個引數）', async () => {
-    await sameAsCompiler(`string s = "helo"; s.insert(3, "l"); cout << s;`, '')
+  // 歸類：Cella 未支援——string::insert（formalize 已補，spec 203）
+  it('🟡 已知缺陷（修好時這條會紅）：★ 正向錨點：字串的 insert 仍然是字串的（它也收兩個引數）', async () => {
+    await knownCellaGap(/'std::string' has no member 'insert'/, async () => {
+      await sameAsCompiler(`string s = "helo"; s.insert(3, "l"); cout << s;`, '')
+    })
   }, 60_000)
 
   /**
@@ -255,17 +277,23 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    * > **一個只看引數個數的判別，在另一個型別剛好也收兩個引數時
    * > 不會落空——它會安靜地把那個東西當成自己的。**
    */
-  it('★ erase(第一個位置, 最後一個之後) 刪一整段', async () => {
-    await sameAsCompiler(
-      `multiset<int> ms; for (int i = 1; i <= 6; i++) ms.insert(i);
-       multiset<int>::iterator a = ms.lower_bound(2); multiset<int>::iterator b = ms.upper_bound(4);
-       int before = (int)ms.size(); ms.erase(a, b);
-       cout << before - (int)ms.size() << ms.size() << *ms.begin();`,
-      '🔴 範圍刪除沒做對')
+  // 歸類：我們這側缺——`X<T>::iterator` 這種巢狀型別名的 formalize
+  it('🟡 已知缺陷（修好時這條會紅）：★ erase(第一個位置, 最後一個之後) 刪一整段', async () => {
+    await knownCellaGap(/型別「multiset<int>::iterator」還沒有對應/, async () => {
+      await sameAsCompiler(
+        `multiset<int> ms; for (int i = 1; i <= 6; i++) ms.insert(i);
+         multiset<int>::iterator a = ms.lower_bound(2); multiset<int>::iterator b = ms.upper_bound(4);
+         int before = (int)ms.size(); ms.erase(a, b);
+         cout << before - (int)ms.size() << ms.size() << *ms.begin();`,
+        '🔴 範圍刪除沒做對')
+    })
   }, 60_000)
 
-  it('★ 而字串的 erase(位置, 長度) 不得被弄壞', async () => {
-    await sameAsCompiler(`string s = "abcdef"; s.erase(1, 2); cout << s;`, '🔴 字串的兩引數刪除壞了')
+  // 歸類：Cella 未支援——string::erase（formalize 已補，spec 203）
+  it('🟡 已知缺陷（修好時這條會紅）：★ 而字串的 erase(位置, 長度) 不得被弄壞', async () => {
+    await knownCellaGap(/'std::string' has no member 'erase'/, async () => {
+      await sameAsCompiler(`string s = "abcdef"; s.erase(1, 2); cout << s;`, '🔴 字串的兩引數刪除壞了')
+    })
   }, 60_000)
 
   /**
@@ -289,15 +317,18 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    * ⚠️ **機制早就齊了**——`cpp:compare` 與 `cpp:arithmetic` 都會問運算子多載。
    * > **一個機制的消費者少一個，那個機制就對那條路徑不存在。**
    */
-  it('★ 自訂結構的排序、去重、查找、計數要用同一份規則', async () => {
-    const src = `${H}struct T { int k; T(int a) : k(a) {}\n`
-      + `  bool operator<(const T& o) const { return k < o.k; } };\n`
-      + `int main(){ vector<T> v; v.push_back(T(3)); v.push_back(T(1)); sort(v.begin(), v.end());\n`
-      + `  set<T> s; s.insert(T(3)); s.insert(T(3)); s.insert(T(1));\n`
-      + `  cout << v[0].k << v[1].k << s.size() << s.begin()->k\n`
-      + `       << (s.find(T(2)) == s.end() ? "no2" : "has2") << s.count(T(1)); return 0; }\n`
-    const ref = runCppDetailed(src)
-    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-    expect(await run(src), '🔴 自訂比較沒有被問到').toBe(ref.output)
+  // 歸類：我們這側缺——`T(3)` 這種「型別名(引數)」的暫時物件被翻成一個變數
+  it('🟡 已知缺陷（修好時這條會紅）：★ 自訂結構的排序、去重、查找、計數要用同一份規則', async () => {
+    await knownCellaGap(/use of an undeclared variable/, async () => {
+      const src = `${H}struct T { int k; T(int a) : k(a) {}\n`
+        + `  bool operator<(const T& o) const { return k < o.k; } };\n`
+        + `int main(){ vector<T> v; v.push_back(T(3)); v.push_back(T(1)); sort(v.begin(), v.end());\n`
+        + `  set<T> s; s.insert(T(3)); s.insert(T(3)); s.insert(T(1));\n`
+        + `  cout << v[0].k << v[1].k << s.size() << s.begin()->k\n`
+        + `       << (s.find(T(2)) == s.end() ? "no2" : "has2") << s.count(T(1)); return 0; }\n`
+      const ref = runCppDetailed(src)
+      expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+      expect(await run(src), '🔴 自訂比較沒有被問到').toBe(ref.output)
+    })
   }, 60_000)
 })

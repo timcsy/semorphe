@@ -214,9 +214,9 @@ void loop() {}
 `, '255\r\n0\r\n', { board: 'uno' })
   })
 
-  // 🟡 我們缺（spec 201）：`isnan` 那顆（cpp:math_is_nan）還沒有 formalize，整支翻不出；而 Cella 的 C 函式庫模型（cfamily）也還沒有 isnan
-  // （只在 ESP 的 core 裡出現）。期望值：真的 Uno 沒接感測器時 readHumidity 回 NAN，isnan 成立，印 no sensor
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute ③：溫濕度回「不是數字」——而學生的 isnan 檢查會成功', () => knownCellaGap(/cpp:math_is_nan/, async () => {
+  // 🟡 Cella 判錯（0.1.202611020258，已回報）：spec 203 補了 isnan 的 formalize 之後，往下走到「DHT 沒呼叫 begin() 就讀」被判 reject ubUninit——
+  // 全域物件是靜態儲存期、成員先清成零，真板子印 nan。期望值：真的 Uno 沒接感測器時 readHumidity 回 NAN，isnan 成立，印 no sensor
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute ③：溫濕度回「不是數字」——而學生的 isnan 檢查會成功', () => knownCellaGap(/ubUninit/, async () => {
     // 🔴 那條檢查分支**真的被走到**——這就是「NaN 不是投降」的證據
     await expectCellaOut(`#include <DHT.h>
 DHT dht(2, DHT11);

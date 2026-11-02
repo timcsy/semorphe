@@ -6,7 +6,7 @@
  * code → lift → generate → re-lift → structural equivalence.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { expectCellaOut, runCella, describeCellaResult } from '../helpers/cella-run'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -279,9 +279,29 @@ int main() {
     cout << s;
     return 0;
 }`
-      const interp = new SemanticInterpreter({ maxSteps: 100000 })
-      await interp.execute(lifter.lift(tsParser.parse(code)!.rootNode as never)!)
-      expect(interp.getOutput().join('').trim()).toBe('137')
+      // spec 203（重構 6c-2e）：執行的判準從 JS 直譯器換成 Cella；g++ 印 137（不帶換行，原本 trim 過，現在逐字比）
+      await expectCellaOut(code, '137')
     })
+  })
+
+  // spec 203 新增：固定種子的 rand 序列是【實作定義】的（C++17 [c.math.rand] 只規定介面，不規定序列）——
+  // 不寫死任何一個平台的數字（macOS 與 glibc 不同），而是斷言判決說出它依賴哪一個實作的選擇。
+  it('★ rand 的序列是實作定義的：判決要在 assumes 裡說出它照哪一個實作', async () => {
+    const code = `#include <iostream>
+#include <cstdlib>
+using namespace std;
+int main() {
+    srand(42);
+    int a = rand() % 100;
+    int b = rand() % 100;
+    cout << (a >= 0 && a < 100) << (b >= 0 && b < 100) << endl;
+    return 0;
+}`
+    const r = await runCella(code)
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    // 輸出只看「值在範圍內」——這一段與實作無關（[c.math.rand]：0..RAND_MAX）
+    expect(r.out).toBe('11\n')
+    // 哪一個實作（Cella 0.1.202611020258 是 glibc）不釘——釘的是「它說出來了」
+    expect(r.assumes.map((a) => a.choice), `用到 rand 的判決要標出它依賴的序列：${JSON.stringify(r.assumes)}`).toContain('rand.sequence')
   })
 })

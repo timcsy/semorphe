@@ -83,6 +83,13 @@ export interface FormalizeContext {
    */
   functionMacro(name: string): boolean
   /**
+   * 一段字面量的原文（`3`、`'a'`、`"hi"`）→ 運算式：照登記了 `literal` 的元件翻（spec 203：參數預設值要它）。
+   * 沒有任何一顆認得 → undefined（呼叫端照實標翻不出）。核心不認識任何一顆字面元件。
+   */
+  literalExpr(text: string, id: string): CellaJson | undefined
+  /** 這顆自己翻成類別成員嗎（登記了 `member`）——類別／struct 分「欄位」與「自己翻的成員」時問它，不點名身分（spec 203） */
+  ownsMember(n: SemanticNode): boolean
+  /**
    * 把一句敘述放到「目前正在翻的那一句」前面（第 206 刀：lambda 的 `sLambda` 要在用到它的敘述之前——cella 2026-11-01 給的形狀）。
    * 全域位置沒有「前面的敘述」可放，引擎照實標 unknown。
    */
@@ -150,8 +157,11 @@ export interface FormalizeRegistrar {
    * `function: true` 是函式形巨集（spec 200）：不進物件巨集的展開表，只讓 `functionMacro(name)` 答得出來。
    */
   definesMacro(id: string, fn: (n: SemanticNode) => { name: string; value: string; function?: boolean } | null): void
-  /** 這種字面量的原文是我的（`10`、`0x1F`…）——巨集展開時，核心用登記了的元件把值翻出來（spec 197）。 */
-  literal(id: string, test: (text: string) => boolean): void
+  /**
+   * 這種字面量的原文是我的（`10`、`0x1F`…）——巨集展開時，核心用登記了的元件把值翻出來（spec 197）。
+   * `value`：原文 → 這顆元件的 `value` 屬性（字串字面的屬性不帶引號；spec 203）。沒給就是原文本身。
+   */
+  literal(id: string, test: (text: string) => boolean, value?: (text: string) => string): void
   /** 這顆定義了一個型別名（不帶關鍵字的 `Node*` 要先認得 `Node`）。 */
   definesType(id: string, fn: (n: SemanticNode) => string): void
   /** 作用域走訪：這顆開不開作用域、宣告什麼、參照什麼（沒註冊的照通用規則）。 */

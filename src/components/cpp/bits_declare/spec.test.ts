@@ -111,4 +111,18 @@ describe('膠囊自證：一排位元', () => {
     expect(fz.unknown.map((u) => u.nodeId), '🔴 說不出是哪一顆宣告').toContain(node.id)
     expect(fz.unknown.map((u) => u.construct)).toContain('cpp:bits_declare')
   })
+
+  /**
+   * 🔴 **建構子的寫法 `b(42)`：不得安靜地丟掉引數**（spec 203，與參照編譯器交叉比對時抓到）。
+   * `size` 這一格是樣板引數（`<8>`），建構引數沒有地方放 ⟹ 原本轉一圈變成 `bitset<8> b;`，判決印 0 而參照編譯器印 42。
+   * 現在整句降級成原文。
+   */
+  it('🔴 `bitset<8> b(42)`：轉一圈原文一字不差（收不下就整句降級，不丟引數）', () => {
+    expect(gen('bitset<8> b(42); cout << b.to_ulong();'), '🔴 修之前這裡是 `bitset<8> b;`').toContain('bitset<8> b(42);')
+    expect(gen('bitset<8> a(0xF0UL);')).toContain('bitset<8> a(0xF0UL);')
+    expect(ids(lift('bitset<8> b(42);'))).toContain('cpp:raw_code')
+    // 正向錨點：沒有建構引數的照舊是這顆身分
+    expect(ids(lift('bitset<8> c;'))).toContain('cpp:bits_declare')
+  })
 })
+

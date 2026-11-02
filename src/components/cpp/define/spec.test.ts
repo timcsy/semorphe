@@ -80,12 +80,12 @@ describe('cpp:define', () => {
     ).toBe('10\n-1\n')
   })
 
-  // 🟡 spec 200：semorphe 這一側的缺口——字串值的巨集還沒有展開（`define` 的 formalize 只認數字字面量）；補上之後這條會紅：拿掉 knownCellaGap 那層
-  it('🟡 已知缺陷（修好時這條會紅）：浮點與字串常數', () => knownCellaGap(/運算式、字串還沒有展開/, async () => {
+  // 🟢 spec 203 拔掉釘子：字串字面也登記了「這種原文是我的」（`literal_string` 的 `literal`），`#define NAME "semorphe"` 於是在使用處展開
+  it('浮點與字串常數', async () => {
     expect(await run(`${head}#define E 2.5\n#define NAME "semorphe"\nint main(){ cout << E << endl; cout << NAME << endl; return 0; }`)).toBe(
       '2.5\nsemorphe\n',
     )
-  }))
+  })
 
   it('🔴 反向：【運算式位置】的函式巨集刻意不支援——必須說「翻不出」，不得判成錯', async () => {
     // ⚠️ 這一支守的是墓碑的邊界。它變綠的那天，表示有人開始在語義層

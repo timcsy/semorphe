@@ -20,16 +20,18 @@
  *
  * `g++` 編不動 sketch，本專案沒接 `arduino-cli`。量的是辨識、產生、
  * round-trip 穩定性與概念身分——**不是**行為等價。（前三輪報告同此聲明。）
+ * 🟢 2026-11-02（spec 203）起，標 `execute` 的那幾條改由 Cella 的板子判決跑（`@cella-lang/arduino`，Uno 的核心與函式庫模型），
+ * 讀輸出與板子結束時的狀態（液晶、EEPROM）。ESP 那段沒有執行：Cella 的 esp32 核心照 arduino-esp32 3.0.7，
+ * 而 `ledcSetup`／`ledcAttachPin` 在 3.x 已移除、模型裡沒有。
  */
-import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import { resetClock, useRealTime } from '../../src/languages/cpp/lang/runtime/arduino-clock'
+import { runCella, expectCellaOut, knownCellaGap, boardEnv, describeCellaResult } from '../helpers/cella-run'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -40,7 +42,6 @@ beforeAll(async () => {
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
 })
-afterEach(() => { useRealTime(false); resetClock() })
 
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode
@@ -229,17 +230,40 @@ describe('第 2／3 批與前兩批混用', () => {
     expect(once, '#define 被改寫了').toContain('#define LED_PIN 13')
   })
 
-  it('🔴 execute：整段天氣站跑得完，而 isnan 那條分支真的被走到', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 200_000 })
-    await i.execute(lift(WEATHER.replace('void loop() {', 'void loop2() {')))
-    // ⚠️ loop 改名 → 只跑 setup，證明宣告與 begin 都不炸
-    expect(i.getOutput().join('')).toBe('')
-    const j = new SemanticInterpreter({ maxSteps: 200_000 })
-    await j.execute(lift(COUNTER))
+  // 執行判準：Cella 的板子判決（spec 203，重構 6c-2e）。
+  // ⚠️ 原本把 `loop` 改名成 `loop2` 只跑 setup——在 Cella（與真板子）上那是錯的程式：AVR 核心的 main 會呼叫 `loop`，
+  //    Cella 判 reject「call to an undeclared function 'loop'」。現在改成整段照跑 5 秒模擬時間、餵感測器讀值。
+  it('🔴 execute：整段天氣站跑得完——感測器接上時，液晶顯示溫濕度、序列埠不印錯誤', async () => {
+    const r = await runCella(WEATHER, {
+      board: 'uno',
+      inputs: [{ t: 0, key: 'dht:dht.temperature', value: 25 }, { t: 0, key: 'dht:dht.humidity', value: 60 }],
+    })
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    expect(r.out, '感測器有讀值 → isnan 分支不走 → 不印 sensor error').toBe('')
+    const env = boardEnv(r)
+    expect(env.loops, 'loop 至少跑了一圈').toBeGreaterThan(0)
+    // lcd.print(float) 印兩位小數（Arduino Print::print(double, 2)），一行 16 格以空白補齊
+    expect(env.lcds).toEqual([{ name: 'lcd', lines: ['25.00           ', '60.00           '] }])
+  }, 60_000)
+
+  // 歸類：Cella 那側（宿主／判決器）——輸出超過約 7,000 字元時判決呼叫本身爆 JS 堆疊。
+  // 感測器沒接（沒給 dht 的輸入）→ DHT 函式庫 2 秒內回快取的 NaN、loop 不 delay → 前 2 秒就印上千行「sensor error」。
+  // 純 C++ 的最小重現：`for (int i = 0; i < 8000; i++) cout << "x";`（6000 次 accept、8000 次就爆；見回報）。
+  it('🟡 已知缺陷（修好時這條會紅）：感測器沒接時 isnan 那條分支被走到——而輸出太長讓判決爆堆疊', async () => {
+    await knownCellaGap(/Maximum call stack size exceeded/, async () => {
+      const r = await runCella(WEATHER, { board: 'uno' })
+      expect(r.verdict, describeCellaResult(r)).toBe('accept')
+      expect(r.out.startsWith('sensor error\r\n'), 'isnan 分支要被走到').toBe(true)
+    })
+  }, 120_000)
+
+  it('🔴 execute：EEPROM 計數器——沒寫過的格子是 255，int 加一印 256，寫回去的位元組繞回 0', async () => {
     // 🔴 沒寫過的 EEPROM 是 255（2026-10-13 以前這裡寫「從 0 開始」，而那是直譯器的錯）；
     //    `count` 是 int，所以印的是 256——繞回 0 的是寫進去的那個位元組，不是這個變數。
-    expect(j.getOutput().join('').trim(), 'EEPROM 從 255 開始，int 加一之後是 256').toBe('256')
-  })
+    //    （Serial.println 印 \r\n；原本比 trim 之後的 '256'。）
+    const r = await expectCellaOut(COUNTER, '256\r\n', { board: 'uno' })
+    expect(boardEnv(r).eeprom, 'EEPROM.write(0, 256) 寫進的是低位元組 0').toEqual([[0, 0]])
+  }, 60_000)
 })
 
 // ── 🔴 回歸：這一批改了兩個共用的東西 ─────────────────────────────
@@ -274,19 +298,24 @@ describe('🔴 回歸：共用層的兩個改動沒有弄壞既有行為', () =>
 enum Mode { DHT11 = 99 };
 int main() { cout << DHT11 << endl; return 0; }
 `
-    const i = new SemanticInterpreter({ maxSteps: 50_000 })
-    await i.execute(lift(src))
-    const out = i.getOutput().join('')
+    // 執行判準：Cella（spec 203）
+    const r = await runCella(src)
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    const out = r.out
     expect(out.length, '沒有輸出——下一條會空過').toBeGreaterThan(0)                 // ← 正向錨點
     expect(out, '🔴 使用者宣告的 DHT11 被環境常數表搶走了').toContain('99')
     expect(out).not.toContain('11\n')
   })
 
-  it('🔴 B-2 而沒有人宣告時，環境常數表仍然答得出來', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 50_000 })
-    await i.execute(lift('#include <iostream>\nint main() { cout << DHT11 << endl; return 0; }\n'))
-    expect(i.getOutput().join('')).toContain('11')
-  })
+  it('🔴 B-2 而沒有人宣告時，環境常數表仍然答得出來——前提是 #include <DHT.h>', async () => {
+    // 🔁 期望改了（2026-11-02，spec 203）：原本在【沒有任何 include 的純 C++】裡 `cout << DHT11` 期望印 11——那是 JS 直譯器
+    //    的環境常數表寬鬆。真的 C++ 編不過（`DHT11` 是 DHT.h 的巨集；Uno 上沒 include DHT.h 也一樣），Cella 判 reject。
+    //    名字由標頭帶進才是真的「環境答得出來」：sketch 有 `#include <DHT.h>` 時印 11（Adafruit DHT 函式庫 `#define DHT11 11`）。
+    const bare = await runCella('#include <iostream>\nint main() { cout << DHT11 << endl; return 0; }\n')
+    expect(bare.verdict, describeCellaResult(bare)).toBe('reject')
+    expect(bare.problems.map((p) => p.reason).join('\n')).toMatch(/use of undeclared identifier 'DHT11'/)
+    await expectCellaOut('#include <DHT.h>\nvoid setup() { Serial.begin(9600); Serial.println(DHT11); }\nvoid loop() {}\n', '11\r\n', { board: 'uno' })
+  }, 60_000)
 
   it('🔴 C 前三批的語料殘差仍然是零', () => {
     const files = ['arduino-realistic-corpus.json', 'arduino-builtins-corpus.json', 'arduino-parts-corpus.json']

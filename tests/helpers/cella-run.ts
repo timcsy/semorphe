@@ -5,6 +5,7 @@
  *
  * ```
  * runCella(code, opts)            → 完整判決（給刻意驗 reject／unknown 的測試）
+ * runCella(code, { lang: 'python' }) → Python：產品的 Python 分支（lift → `formalizePython` → python 家族的判決器；spec 203）
  * expectCellaOut(code, out, opts) → accept 且輸出相同才通過；其餘一律失敗並說清楚
  * ```
  *
@@ -16,7 +17,8 @@ import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from './setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { formalize } from '../../src/providers/cella/formalize'
+import { formalize, type FormalizeResult } from '../../src/providers/cella/formalize'
+import { formalizePython } from '../../src/providers/cella/formalize/python'
 import { checkerFromBytes, checkerSource, compileCellaChecker, type CellaChecker, type CellaProblem } from '../../src/providers/cella/verdict'
 import { cachedCellaModule } from '../../tools/cella-module-cache'
 import type { SemanticNode } from '../../src/core/types'
@@ -27,6 +29,7 @@ export interface ProblemSource { line: number; text: string }
 export interface CellaRunProblem extends CellaProblem { source?: ProblemSource }
 export interface CellaRunResult {
   verdict: 'accept' | 'reject' | 'unknown' | 'invalid' | 'untranslated'
+  /** 印出的東西。⚠️ 判 reject 時一律是空字串——即使錯在執行到一半（先印再除以 0）；已問 cella 能否帶回停下之前的輸出（spec 203 量到，6c-3 的「部分輸出」要它） */
   out: string
   problems: CellaRunProblem[]
   /** formalize 翻不出時：構造與原因 */
@@ -39,7 +42,13 @@ export interface CellaRunOptions {
   stdin?: string
   /** 步數上限（預設 1,000,000） */
   steps?: number
-  lang?: 'cpp' | 'c'
+  /**
+   * 產品的風格 id（`apcs`、`competitive`、`c`…，`src/languages/cpp/styles/`）：給了就照產品的 `withScaffold` 補上自動引入
+   * （語言套件的 `autoIncludeNodes`，含 `using namespace std;`）再判——課文的參考解答只寫本體、不寫 #include（spec 203）
+   */
+  style?: string
+  /** `python` 走產品的 Python 分支（`formalizePython`、python 家族的判決器，第一次用到才準備）——board／inputs 不適用 */
+  lang?: 'cpp' | 'c' | 'python'
   /** Cella 的板名（`uno`、`esp32`…，見 `cellaBoardOf`）——有板子就走 arduino 分支，預設步數跟產品一樣放大到 5,000 萬（spec 201） */
   board?: string
   /** 板子的環境輸入（`@cella-lang/arduino` README：`{ t: 毫秒, key: 'analog:A0' | 'digital:2' | 'echo:10' | …, value }`）——放在程式 JSON 的 board 旁邊 */
@@ -61,6 +70,29 @@ function prepare(): Promise<{ parser: Parser; checker: CellaChecker }> {
     return { parser, checker: await checkerFromBytes(bytes) }
   })()
   return ready
+}
+
+let readyPython: Promise<CellaChecker> | null = null
+/** python 家族的判決器：懶建，只有用到 Python 的測試檔才付這筆（讀建置時編好的那一份，鍵同 `tools/precompile-cella.ts`） */
+function preparePython(): Promise<CellaChecker> {
+  readyPython ??= (async () => {
+    const read = (pkg: string | null, file: string): Uint8Array =>
+      fs.readFileSync(path.join(ROOT, 'node_modules', pkg === null ? 'cella-lang' : `@cella-lang/${pkg}`, file))
+    const { bytes } = await cachedCellaModule('verdict-python', checkerSource('python'), () => compileCellaChecker(read, 'python'), { root: ROOT })
+    return checkerFromBytes(bytes)
+  })()
+  return readyPython
+}
+
+/** 產品的 `withScaffold`（`src/ui/app.ts`）：語言套件的自動引入節點接在本體前面——同一個語言套件、同一張相依表 */
+async function withAutoIncludes(tree: SemanticNode, styleId: string): Promise<SemanticNode> {
+  await import('../../src/languages/cpp/pack')
+  const { languagePack } = await import('../../src/core/language-packs')
+  const style = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/languages/cpp/styles', `${styleId}.json`), 'utf8')) as { namespace_style: 'using' | 'explicit' }
+  const shaping = languagePack('cpp')?.createCodeShaping?.()
+  if (!shaping) throw new Error('runCella：拿不到 C++ 語言套件的 createCodeShaping')
+  const nodes = (shaping.autoIncludeNodes as unknown as (t: SemanticNode, ns: 'using' | 'explicit', id: string) => SemanticNode[])(tree, style.namespace_style, styleId)
+  return nodes.length === 0 ? tree : { ...tree, slots: { ...tree.slots, body: [...nodes, ...(tree.slots?.body ?? [])] } }
 }
 
 /** `at` 是語義樹的 id，或 `<id>/<角色>`、`<id>#<槽>`——對回原始碼的那一段 */
@@ -85,9 +117,25 @@ function locate(tree: SemanticNode, code: string, at: string | undefined): Probl
 
 /** 完整判決——不擋任何判決種類 */
 export async function runCella(code: string, opts: CellaRunOptions = {}): Promise<CellaRunResult> {
-  const { parser, checker } = await prepare()
-  const tree = createTestLifter().lift(parser.parse(code)!.rootNode as never) as SemanticNode
-  const fz = formalize(tree, { lang: opts.lang ?? 'cpp', board: opts.board })
+  let tree: SemanticNode
+  let fz: FormalizeResult
+  let checker: CellaChecker
+  if (opts.lang === 'python') {
+    if (opts.board || opts.inputs) throw new Error('runCella：Python 沒有板子（board／inputs 只給 C 家族）')
+    // ⚠️ 動態載入：python-lift 會載全部語言套件，C 家族的測試檔不必付這筆
+    const { liftPython } = await import('./python-lift')
+    const lifted = await liftPython(code)
+    if (!lifted) throw new Error('runCella：Python 的 lift 失敗（回 null）')
+    tree = lifted
+    fz = formalizePython(tree)
+    checker = await preparePython()
+  } else {
+    const p = await prepare()
+    tree = createTestLifter().lift(p.parser.parse(code)!.rootNode as never) as SemanticNode
+    if (opts.style) tree = await withAutoIncludes(tree, opts.style)
+    fz = formalize(tree, { lang: opts.lang ?? 'cpp', board: opts.board })
+    checker = p.checker
+  }
   if (!fz.program) {
     return {
       verdict: 'untranslated', out: '', problems: [], assumes: [], raw: null,
@@ -122,6 +170,8 @@ export function describeCellaResult(r: CellaRunResult): string {
 export async function expectCellaOut(code: string, expected: string, opts: CellaRunOptions = {}): Promise<CellaRunResult> {
   const r = await runCella(code, opts)
   if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  // Python：沒接住的例外是【有定義的】行為（traceback、結束碼 1），判決照樣 accept、問題列 `uncaught`——對「輸出應該是 X」的斷言那是失敗
+  if (opts.lang === 'python' && r.problems.some((p) => p.kind === 'uncaught')) throw new Error(describeCellaResult(r))
   if (r.out !== expected) {
     throw new Error(`Cella 判 accept，但輸出不同：\n  期望 ${JSON.stringify(expected)}\n  實際 ${JSON.stringify(r.out)}`)
   }

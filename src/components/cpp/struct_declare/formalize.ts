@@ -10,10 +10,12 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     for (const m of members) {
       // 成員之間的註解不是成員（spec 199）
       if (/:(comment|block_comment)$/.test(m.componentId)) continue
-      // 沒有型別的是成員函式（含運算子多載）：由那顆元件自己翻成 mbMethod（spec 201）
-      if (m.properties?.type === undefined) { const x = f.member(m); if (x) methods.push(x); continue }
+      // 沒有型別的是成員函式（含運算子多載）：由那顆元件自己翻成 mbMethod（spec 201）；靜態成員有型別但不是欄位，同樣自己翻（spec 203）
+      if (m.properties?.type === undefined || f.ownsMember(m)) { const x = f.member(m); if (x) methods.push(x); continue }
       const t = f.type(m.properties?.type, m)
-      if (t) fields.push(f.k('mbField', { acc: f.k('acPublic'), name: String(m.properties?.name ?? ''), t, init: null }))
+      // 預設成員初值（`struct P { int x = 3; };`，C++11 [class.mem]p10）放 init（spec 203：在此之前一律送 null，Cella 判讀到未初始化的值）
+      const initNode = f.options.isC ? undefined : f.one(m, 'initializer')
+      if (t) fields.push(f.k('mbField', { acc: f.k('acPublic'), name: String(m.properties?.name ?? ''), t, init: initNode ? f.expr(initNode) : null }))
     }
     if (f.options.isC && methods.length > 0) return [f.miss(n, 'C 的 struct 沒有成員函式')]
     if (f.options.isC) {

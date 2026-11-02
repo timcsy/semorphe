@@ -39,7 +39,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
+import { formalize } from '../../src/providers/cella/formalize'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -66,13 +67,17 @@ const nodes = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   return out
 }
 const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.componentId)
-const run = async (src: string): Promise<string> => {
-  const out: string[] = []
-  const interp = new SemanticInterpreter({ maxSteps: 200_000 })
-  interp.setOutputCallback((x) => out.push(x))
-  await interp.execute(lift(src), [])
-  return out.join('')
+/**
+ * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
+ * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ */
+const cellaOut = async (src: string): Promise<string> => {
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
+const run = cellaOut
 /**
  * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
  * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
@@ -134,13 +139,15 @@ describe('round-trip：容器的重複性與有序性', () => {
     const old = `${H}int main(){ set<int> s; s.insert(2); s.insert(2); cout << s.size(); return 0; }\n`
     const tree = lift(old)
     const decl = nodes(tree).find((n) => n.componentId === 'cpp:set_declare')!
+    // 執行那一路（spec 203 起是 Cella）：缺那一格的樹 formalize 出來，要與明寫「去重」的同一棵樹【逐字相同】
+    decl.properties.unique = 'true'
+    const explicit = JSON.stringify(formalize(tree, { lang: 'cpp' }).program)
     delete decl.properties.unique                      // 模擬既有存檔：那一格不存在
     expect(generateCode(tree, 'cpp', S)).toContain('set<int> s;')
-    const out: string[] = []
-    const interp = new SemanticInterpreter({ maxSteps: 200_000 })
-    interp.setOutputCallback((x) => out.push(x))
-    await interp.execute(tree, [])
-    expect(out.join(''), '🔴 預設成 multiset 的話舊存檔的集合會開始留重複').toBe('1')
+    expect(JSON.stringify(formalize(tree, { lang: 'cpp' }).program),
+      '🔴 預設成 multiset 的話舊存檔的集合會開始留重複').toBe(explicit)
+    // 而那棵明寫的樹跑起來確實去重（C++：set 的 insert 遇到等價鍵不插入）
+    expect(await cellaOut(old)).toBe('1')
   })
 
   it.runIf(hasReferenceCompiler())('🔴 行為：multiset 跑起來與參照編譯器一樣', async () => {
@@ -149,22 +156,28 @@ describe('round-trip：容器的重複性與有序性', () => {
     expect(await run(MS), '🔴 去重的話這裡會少兩個元素，而 size 也會小').toBe(ref.output)
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 行為：unordered_map 跑起來與參照編譯器一樣', async () => {
-    const ref = runCppDetailed(UM)
-    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-    expect(await run(UM), '🔴 沒登錄的話這裡是 INDEX_OUT_OF_RANGE').toBe(ref.output)
+  // 歸類：Cella 判錯——`mp[k]++` 只有一次 operator[] 呼叫（formalize 送的是單一個 eIncDec），沒有求值順序可言，Cella 判 unknown(ubOrder)；spec 202 同一族已回報
+  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 行為：unordered_map 跑起來與參照編譯器一樣', async () => {
+    await knownCellaGap(/ubOrder/, async () => {
+      const ref = runCppDetailed(UM)
+      expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
+      expect(await run(UM), '🔴 沒登錄的話這裡是 INDEX_OUT_OF_RANGE').toBe(ref.output)
+    })
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 行為：字串當鍵（語料 21_toj55_2 的形狀）', async () => {
-    const src = `${H}int main(){
-    unordered_map<string,int> mp;
-    mp["ab"] = 1; mp["cd"] = 2; mp["ab"]++;
-    cout << mp["ab"] << mp["cd"] << mp.size();
-    return 0;
-}
-`
-    const ref = runCppDetailed(src)
-    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-    expect(await run(src)).toBe(ref.output)
+  // 歸類：Cella 判錯——`mp["ab"]++` 同上，ubOrder 誤判
+  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 行為：字串當鍵（語料 21_toj55_2 的形狀）', async () => {
+    await knownCellaGap(/ubOrder/, async () => {
+      const src = `${H}int main(){
+      unordered_map<string,int> mp;
+      mp["ab"] = 1; mp["cd"] = 2; mp["ab"]++;
+      cout << mp["ab"] << mp["cd"] << mp.size();
+      return 0;
+  }
+  `
+      const ref = runCppDetailed(src)
+      expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
+      expect(await run(src)).toBe(ref.output)
+    })
   }, 60_000)
 })
