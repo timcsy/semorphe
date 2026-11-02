@@ -109,19 +109,15 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    * > **一個一直成立的巧合，在第一個反例出現時看起來會像是那個反例的錯。**
    */
   // 歸類：我們這側缺——typedef 別名的 formalize（spec 202 同一根）
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 `typedef bitset<8> Row;` 之後 `Row r;` 認得出來', async () => {
-    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
-      await same('  Row r; r.set(); cout << r.count() << r.size();',
-        '🔴 別名沒有解開', 'typedef bitset<8> Row;')
-    })
+  it('🔴 `typedef bitset<8> Row;` 之後 `Row r;` 認得出來', async () => {
+    await same('  Row r; r.set(); cout << r.count() << r.size();',
+      '🔴 別名沒有解開', 'typedef bitset<8> Row;')
   })
 
   // 歸類：我們這側缺——using 別名的 formalize（spec 202 同一根）
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 `using Row = bitset<8>;` 之後也一樣（它的執行器原本是 noop）', async () => {
-    await knownCellaGap(/cpp:using_alias：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
-      await same('  Row r; r.set(); r.reset(1); cout << r.count() << r[1];',
-        '🔴 using 別名沒有被登記', 'using Row = bitset<8>;')
-    })
+  it('🔴 `using Row = bitset<8>;` 之後也一樣（它的執行器原本是 noop）', async () => {
+    await same('  Row r; r.set(); r.reset(1); cout << r.count() << r[1];',
+      '🔴 using 別名沒有被登記', 'using Row = bitset<8>;')
   })
 
   /**
@@ -256,7 +252,7 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    */
   // 歸類：我們這側缺——typedef 別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：🪦 `typedef bitset<B> Big;` 的 B', async () => {
-    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
+    await knownCellaGap(/bitset 的大小「B」不是整數字面/, async () => {
       await same('  Big b; b.set(0); cout << b.size() << b.count();',
         '', 'const int B = 96;\ntypedef bitset<B> Big;')
     })

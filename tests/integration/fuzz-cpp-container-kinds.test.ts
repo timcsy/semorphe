@@ -172,20 +172,18 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    * > **一個別名的意義就是那個短名字；把它換掉等於把它拿掉。**
    */
   // 歸類：我們這側缺——typedef 別名的 formalize
-  it('🟡 已知缺陷（修好時這條會紅）：★ typedef 指向容器時，那個變數要真的是那種容器', async () => {
-    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
-      const src = `${H}typedef map<int, set<int>> Graph;\ntypedef vector<int> vi;\ntypedef pair<int,int> pii;\n`
-        + `int main(){ Graph g; g[1].insert(2); g[1].insert(2);\n`
-        + `  vi v; v.push_back(7); pii p = make_pair(3, 4);\n`
-        + `  cout << g[1].size() << g.size() << v[0] << p.first << p.second; return 0; }\n`
-      const ref = runCppDetailed(src)
-      expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-      expect(await run(src), '🔴 別名沒有被解開').toBe(ref.output)
-      // 🔴 **產出的程式碼要保住那個短名字**——別名的意義就在它
-      const gen = generateCode(lift(src), 'cpp', S)
-      expect(gen, '🔴 別名被展開了——學生的程式碼變成另一支').toContain('Graph g;')
-      expect(gen).toContain('vi v;')
-    })
+  it('★ typedef 指向容器時，那個變數要真的是那種容器', async () => {
+    const src = `${H}typedef map<int, set<int>> Graph;\ntypedef vector<int> vi;\ntypedef pair<int,int> pii;\n`
+      + `int main(){ Graph g; g[1].insert(2); g[1].insert(2);\n`
+      + `  vi v; v.push_back(7); pii p = make_pair(3, 4);\n`
+      + `  cout << g[1].size() << g.size() << v[0] << p.first << p.second; return 0; }\n`
+    const ref = runCppDetailed(src)
+    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+    expect(await run(src), '🔴 別名沒有被解開').toBe(ref.output)
+    // 🔴 **產出的程式碼要保住那個短名字**——別名的意義就在它
+    const gen = generateCode(lift(src), 'cpp', S)
+    expect(gen, '🔴 別名被展開了——學生的程式碼變成另一支').toContain('Graph g;')
+    expect(gen).toContain('vi v;')
   }, 60_000)
 
   /**

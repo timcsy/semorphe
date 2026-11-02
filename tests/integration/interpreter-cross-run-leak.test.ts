@@ -104,13 +104,12 @@ describe('上一支程式不得影響下一支', () => {
     ).toBe('9')
   }, 120_000)
 
-  it('🟡 已知缺陷（第一支的判決；修好時這條會紅）：★ 錨點：`typedef` 取的小名也不得殘留', async () => {
-    // 我們 formalize 缺：`cpp:typedef` 還沒有對應（引擎的型別解析不認 typedef 取的名字——要送 iTypedef 與 tName，動到共用引擎）。
-    // 第一支照樣先 lift、先送（順序是判準的一部分），只是判決釘住；第二支照常斷言。
-    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => expect(
+  it('★ 錨點：`typedef` 取的小名也不得殘留', async () => {
+    // `cpp:typedef` 的 formalize 在型別那一格展開別名（同 `#define ll long long`，第 234 刀）——第一支先 lift、先送（順序是判準的一部分）
+    expect(
       await run('typedef pair<int,int> P;\nint main(){ P p = {1,2}; cout << p.first << p.second; return 0; }'),
       '★ 第一支要跑對',
-    ).toBe('12'))
+    ).toBe('12')
     expect(
       await run('struct P{ int v; };\nint main(){ P p; p.v = 8; cout << p.v; return 0; }'),
       '上一支的 typedef 小名活到了這一支',

@@ -340,25 +340,23 @@ describe('模糊測試：迭代器的邊界', () => {
    * ⚠️ 斷言**身分**而不只是輸出：認錯身分而輸出碰巧對，是這一族的常態。
    */
   // 歸類：我們這側缺——typedef 別名的 formalize
-  it('🟡 已知缺陷（修好時這條會紅）：★ `typedef` 的容器當 `const &` 參數傳進去', async () => {
-    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
-      const src = `${H}typedef map<int, set<int>> Graph;\n`
-        + `int deg(const Graph &g, int u){ auto row = g.find(u);\n`
-        + `  if (row == g.end()) return -1; return row->second.size(); }\n`
-        + `int main(){ Graph g; g[1].insert(2); g[1].insert(3); g[2].insert(1);\n`
-        + `  cout << deg(g, 1) << deg(g, 2) << deg(g, 9); return 0; }\n`
-      const ids = new Set<string>()
-      const walk = (n: SemanticNode): void => {
-        ids.add(n.componentId)
-        for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) walk(k)
-      }
-      walk(lift(src))
-      expect([...ids], '🔴 `g.find(u)` 被認成字串的 find（回 -1）').toContain('cpp:container_find')
-      expect([...ids], '🔴 接收者的型別查不到，於是落到字串那一支').not.toContain('cpp:string_find')
-      const ref = runCppDetailed(src)
-      expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-      expect(await run(src), '🔴 別名 ＋ 修飾詞的參數型別沒解開').toBe(ref.output)
-    })
+  it('★ `typedef` 的容器當 `const &` 參數傳進去', async () => {
+    const src = `${H}typedef map<int, set<int>> Graph;\n`
+      + `int deg(const Graph &g, int u){ auto row = g.find(u);\n`
+      + `  if (row == g.end()) return -1; return row->second.size(); }\n`
+      + `int main(){ Graph g; g[1].insert(2); g[1].insert(3); g[2].insert(1);\n`
+      + `  cout << deg(g, 1) << deg(g, 2) << deg(g, 9); return 0; }\n`
+    const ids = new Set<string>()
+    const walk = (n: SemanticNode): void => {
+      ids.add(n.componentId)
+      for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) walk(k)
+    }
+    walk(lift(src))
+    expect([...ids], '🔴 `g.find(u)` 被認成字串的 find（回 -1）').toContain('cpp:container_find')
+    expect([...ids], '🔴 接收者的型別查不到，於是落到字串那一支').not.toContain('cpp:string_find')
+    const ref = runCppDetailed(src)
+    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
+    expect(await run(src), '🔴 別名 ＋ 修飾詞的參數型別沒解開').toBe(ref.output)
   }, 60_000)
 
   /**
@@ -1134,7 +1132,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    */
   // 歸類：我們這側缺——using 別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_08 卡在 `container_reserve`', async () => {
-    await knownCellaGap(/cpp:using_alias：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
+    await knownCellaGap(/型別「vector<int>::iterator」還沒有對應/, async () => {
       await whole(P04_NAIL, '')
     })
   }, 180_000)
