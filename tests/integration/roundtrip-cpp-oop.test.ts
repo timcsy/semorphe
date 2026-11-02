@@ -248,6 +248,155 @@ public:
     })
   })
 
+  // ---- 第 218 刀：cpp:method_def（類別裡的一般成員函式，帶尾端 const）----
+  // 五支程式在 roundtrip 階段以本機編譯器跑過：原始與產回來的 stdout 相同（t4 除外，見下面的 todo）
+  describe('cpp:method_def（第 218 刀）', () => {
+    const SRC: Record<string, string> = {
+      t1_const_getter: `#include <iostream>
+using namespace std;
+struct Rect {
+    int w;
+    int h;
+    int area() const {
+        return w * h;
+    }
+    void scale(int k) {
+        w *= k;
+        h *= k;
+    }
+};
+int total(const Rect& a, const Rect& b) {
+    return a.area() + b.area();
+}
+int main() {
+    Rect a;
+    a.w = 2;
+    a.h = 3;
+    Rect b;
+    b.w = 1;
+    b.h = 4;
+    b.scale(2);
+    cout << total(a, b) << endl;
+    return 0;
+}
+`,
+      t2_method_calls_method: `#include <iostream>
+using namespace std;
+class Counter {
+private:
+    int n;
+public:
+    Counter() {
+        n = 0;
+    }
+    void add(int k) {
+        n += k;
+    }
+    int get() const {
+        return n;
+    }
+    bool big() const {
+        return get() > 10;
+    }
+};
+int main() {
+    Counter c;
+    c.add(7);
+    c.add(5);
+    cout << c.get() << " " << c.big() << endl;
+    return 0;
+}
+`,
+      t3_const_in_lambda: `#include <bits/stdc++.h>
+using namespace std;
+struct Item {
+    string name;
+    int price;
+    int cost(int qty) const {
+        return price * qty;
+    }
+};
+int main() {
+    vector<Item> v = {{"pen", 3}, {"book", 12}, {"cup", 5}};
+    sort(v.begin(), v.end(), [](const Item& a, const Item& b) {
+        return a.cost(2) < b.cost(2);
+    });
+    for (const Item& it : v) {
+        cout << it.name << " " << it.cost(2) << endl;
+    }
+    return 0;
+}
+`,
+      t5_string_and_two_params: `#include <iostream>
+#include <string>
+using namespace std;
+struct Student {
+    string name;
+    int score;
+    string grade() const {
+        if (score >= 90) {
+            return "A";
+        }
+        return "B";
+    }
+    void bonus(int pts, int cap) {
+        score += pts;
+        if (score > cap) {
+            score = cap;
+        }
+    }
+};
+int main() {
+    Student s;
+    s.name = "Amy";
+    s.score = 85;
+    cout << s.grade() << endl;
+    s.bonus(10, 100);
+    cout << s.name << " " << s.score << " " << s.grade() << endl;
+    return 0;
+}
+`,
+    }
+    const all = (n: any, id: string, out: any[] = []): any[] => {
+      if (n.componentId === id) out.push(n)
+      for (const kids of Object.values(n.slots ?? {})) for (const k of kids as any[]) all(k, id, out)
+      return out
+    }
+    const shape = (n: any): unknown => ({ c: n.componentId, p: n.properties, s: Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, v]) => [k, (v as any[]).map(shape)])) })
+
+    it.each(Object.entries(SRC))('★ 身分：%s 的成員函式都是 method_def，沒有降級', (_name, code) => {
+      const t = liftCode(code)!
+      expect(all(t, 'cpp:method_def').length).toBeGreaterThan(0)
+      expect(findComponent(t, 'raw_code')).toBe(false)
+      expect(findComponent(t, 'unresolved')).toBe(false)
+    })
+
+    it.each(Object.entries(SRC))('🔴 const 保留、產碼是不動點、再 lift 是同一棵樹：%s', (_name, code) => {
+      const t = liftCode(code)!
+      const out = generateCode(t, 'cpp', style)
+      for (const m of all(t, 'cpp:method_def')) {
+        const head = `${m.properties.name}(`
+        expect(out, head).toContain(head)
+        if (m.properties.is_const === 'true') expect(out).toMatch(new RegExp(`\\b${m.properties.name}\\([^)]*\\) const \\{`))
+      }
+      const t2 = liftCode(out)!
+      expect(generateCode(t2, 'cpp', style)).toBe(out)
+      expect(JSON.stringify(shape(t2))).toBe(JSON.stringify(shape(t)))
+    })
+
+    // 🔴 既有缺陷（main 上就有，不是 218 帶進來的）：類別裡的 `static int zero()` 走頂層函式那顆，`static` 掉了，
+    //    產回去在 `P::zero()` 編不過；JS 直譯器也不認 `P::zero()`。
+    //    為什麼不現在修：探索報告把 static 列為範圍外（method_def 沒有地方放它；加進來是 const／static 互斥的修飾，要改積木的設計）。
+    //    何時修：補「類別成員的 static」那一刀時（draft〈成員函式的尾端 const〉已記這一筆）——修好把它改成 it。
+    // ⚠️ 不用 it.todo（todo 修好時不出聲）——斷言缺陷還在；修好的那天這條會紅，換成正向的「保留 static」
+    it('🟡 已知缺陷還在（修好時這條會紅）：類別裡的 static 成員函式產回去丟了 static', () => {
+      const code = `struct P {\n    static int zero() {\n        return 0;\n    }\n};\nint main() {\n    return P::zero();\n}\n`
+      const out = roundTripCode(code)
+      expect(out).toContain('int zero() {')
+      expect(out).not.toContain('static int zero()')
+    })
+  })
+
   // ---- 7. struct_func: struct with member functions ----
   describe('cpp_struct_declare with methods (struct_func)', () => {
     it('struct with methods lifts correctly', () => {

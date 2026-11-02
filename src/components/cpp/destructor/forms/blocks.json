@@ -23,7 +23,7 @@
       "inputsInline": false,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": "#9966FF",
+      "colour": "#CF63CF",
       "tooltip": "%{BKY_C_DESTRUCTOR_TOOLTIP}"
     },
     "renderMapping": {

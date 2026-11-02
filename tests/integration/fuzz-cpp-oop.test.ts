@@ -6,6 +6,7 @@
  * classes, constructors, destructors, operator overloading.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { Parser, Language } from 'web-tree-sitter'
 import type { Lifter } from '../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
@@ -712,4 +713,63 @@ int main() {
     const gen2 = roundTrip(gen1)
     expect(gen1).toBe(gen2)
   })
+})
+
+/**
+ * 🔴 第 218 刀：類別裡的一般成員函式另立元件（cpp:method_def）——資訊隔離的模糊測試，10 支（出題者不知道實作）。
+ *
+ * 程式與編譯器的預期輸出在 `tests/fixtures/fuzz-cpp-method-def.json`。驗證時以本機編譯器跑過：
+ * main（218 之前）10 支裡 9 支產回來編不過、1 支輸出不同；218 之後 6 支產回來的輸出與原始相同。
+ * 剩下的四支（＋一支漂移）是建構子與宣告那一族的既有缺陷，不在這顆元件的範圍——登記成 todo，寫明原因與何時修。
+ */
+describe('fuzz（第 218 刀）：類別裡的一般成員函式與尾端 const', () => {
+  type Row = { id: string; description: string; code: string; status: 'pass' | 'todo' | 'drift'; why: string; defect?: string }
+  const rows: Row[] = JSON.parse(readFileSync(`${process.cwd()}/tests/fixtures/fuzz-cpp-method-def.json`, 'utf8'))
+  const lift = (code: string): any => lifter.lift(tsParser.parse(code)!.rootNode as any)
+  const all = (n: any, id: string, out: any[] = []): any[] => {
+    if (n.componentId === id) out.push(n)
+    for (const kids of Object.values(n.slots ?? {})) for (const k of kids as any[]) all(k, id, out)
+    return out
+  }
+  const shape = (n: any): unknown => ({ c: n.componentId, p: n.properties, s: Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, v]) => [k, (v as any[]).map(shape)])) })
+
+  it('★ 入口條件：fixture 有 10 支——pass 5、漂移 1（輸出相同、再 lift 的樹不同）、todo 4', () => {
+    expect(rows).toHaveLength(10)
+    expect(rows.filter((r) => r.status === 'pass')).toHaveLength(5)
+    expect(rows.filter((r) => r.status === 'drift')).toHaveLength(1)
+  })
+
+  for (const r of rows.filter((x) => x.status !== 'todo')) {
+    it(`★ ${r.id}：身分——類別裡的成員函式是 method_def，沒有降級；const 的標頭產回去還在`, () => {
+      const t = lift(r.code)
+      const ms = all(t, 'cpp:method_def')
+      expect(ms.length).toBeGreaterThan(0)
+      // ⚠️ `this` 今天沒有元件認領它（降級成原文、照抄回去，輸出不受影響）——覆蓋缺口，不是這顆的錯；其餘的降級一律不准
+      expect(all(t, 'raw_code').filter((n) => n.metadata?.rawCode !== 'this').map((n) => n.metadata?.rawCode)).toEqual([])
+      expect(all(t, 'unresolved')).toHaveLength(0)
+      const out = generateCode(t, 'cpp', style)
+      for (const m of ms.filter((x) => x.properties.is_const === 'true')) expect(out).toContain(`${m.properties.name}(`)
+      expect(out.match(/\) const \{/g)?.length ?? 0).toBeGreaterThanOrEqual(ms.filter((x) => x.properties.is_const === 'true').length)
+      expect(generateCode(lift(out), 'cpp', style)).toBe(out)
+    })
+  }
+
+  for (const r of rows.filter((x) => x.status === 'pass')) {
+    it(`🔴 ${r.id}：再 lift 是同一棵樹`, () => {
+      const t = lift(r.code)
+      expect(JSON.stringify(shape(lift(generateCode(t, 'cpp', style))))).toBe(JSON.stringify(shape(t)))
+    })
+  }
+
+  // 為什麼不現在修：都是建構子／宣告那一族（不是 method_def 的範圍），main 上就是這樣。
+  // 何時修：draft〈成員函式的尾端 const〉「做了之後量到的」那一段列了推薦——補建構子的預設引數、初始化列的多引數、
+  //         const 物件的建構引數、類別成員的 static 那一刀；修好把對應的 todo 改成 it（並把 fixture 的 status 改成 pass）。
+  // ⚠️ 不用 `it.todo`（這個檔上面記過：todo 是一種殼，缺陷修好時它一聲都不出）——斷言【缺陷還在】：
+  //    產碼裡那段走樣的文字（fixture 的 `defect`）。修好的那天這條會紅 ⟹ 把 fixture 的 status 改成 pass、這條就換成上面的正向測試
+  for (const r of rows.filter((x) => x.status !== 'pass')) {
+    it(`🟡 已知缺陷還在（修好時這條會紅）：${r.id}——${r.why}`, () => {
+      expect(r.defect, 'fixture 要寫缺陷的指紋').toBeTruthy()
+      expect(generateCode(lift(r.code), 'cpp', style)).toContain(r.defect!)
+    })
+  }
 })

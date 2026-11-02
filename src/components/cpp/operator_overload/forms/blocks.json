@@ -92,7 +92,7 @@
       "inputsInline": true,
       "previousStatement": "Statement",
       "nextStatement": "Statement",
-      "colour": "#9966FF",
+      "colour": "#CF63CF",
       "tooltip": "%{BKY_C_OPERATOR_OVERLOAD_TOOLTIP}"
     },
     "renderMapping": {

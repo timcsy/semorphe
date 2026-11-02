@@ -1,0 +1,6 @@
+{
+  "C_METHOD_DEF_MSG0": "Method %1 %2 (%3) %4",
+  "C_METHOD_DEF_TOOLTIP": "Define a member function of this class; choose const if it does not modify the object itself, so it can also be called on const objects",
+  "C_METHOD_DEF_CONST_NO": "(may modify itself)",
+  "C_METHOD_DEF_CONST_YES": "const (does not modify itself)"
+}
