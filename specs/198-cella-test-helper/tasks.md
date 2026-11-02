@@ -7,12 +7,12 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 量基準：記下三支示範檔改寫前的執行時間（`npx vitest run <檔>` 的 Duration），寫進本檔末的〈量測紀錄〉
+- [X] T001 量基準：記下三支示範檔改寫前的執行時間（`npx vitest run <檔>` 的 Duration），寫進本檔末的〈量測紀錄〉
 
 ## Phase 2: Foundational（模組快取共用）
 
-- [ ] T002 新增 `tools/cella-module-cache.ts`：`cachedCellaModule(name, source, compile, { cacheDir?, versions? })`——鍵 ＝ sha256(套件版本 ＋ 原始碼)、檔名 `<name>.<鍵>.wasm`、有就讀、沒有就 compile 並寫回；匯出 `cellaPackageVersions()`
-- [ ] T003 改 `tools/precompile-cella.ts` 改用 `cachedCellaModule`（行為與輸出檔名不變），跑 `npx tsx tools/precompile-cella.ts <暫存目錄>` 確認產出同樣的模組與 manifest
+- [X] T002 新增 `tools/cella-module-cache.ts`：`cachedCellaModule(name, source, compile, { cacheDir?, versions? })`——鍵 ＝ sha256(套件版本 ＋ 原始碼)、檔名 `<name>.<鍵>.wasm`、有就讀、沒有就 compile 並寫回；匯出 `cellaPackageVersions()`
+- [X] T003 改 `tools/precompile-cella.ts` 改用 `cachedCellaModule`（行為與輸出檔名不變），跑 `npx tsx tools/precompile-cella.ts <暫存目錄>` 確認產出同樣的模組與 manifest
 
 **Checkpoint**：建置工具照常產出；快取鍵只住一處。
 
@@ -21,19 +21,19 @@
 **Goal**：`runCella(code, opts)` 走 lift → formalize → verdict，回傳 data-model 的判決結果。
 **Independent Test**：`cout << 1 + 2;` → accept、`3`；同一檔裡二十次呼叫，第二次起不付模組準備成本。
 
-- [ ] T004 [US1] 寫 `tests/unit/helpers/cella-run.test.ts` 的正向錨點兩條（accept 與輸出；二十次呼叫的總時間遠小於第一次準備的時間）——先紅（helper 還不存在）
-- [ ] T005 [US1] 實作 `tests/helpers/cella-run.ts` 的 `runCella`：懶建判決器（模組層級 Promise；讀 `cachedCellaModule('verdict-cfamily', …)` → `checkerFromBytes`）、tree-sitter 解析 → `createTestLifter().lift` → `formalize(tree, { lang })` → `checker.verdict(program, stdin, steps)`；回傳 verdict／out／problems（含 source）／untranslated／assumes
-- [ ] T006 [US1] 實作問題的原始碼位置：`at` → 樹裡同 id 節點 → `metadata.sourceRange`；衍生 id（`<id>/…`）退到 `<id>`；找不到只給 id
-- [ ] T007 [US1] 跑 T004，綠；記下第一次準備與之後每次判決的時間到〈量測紀錄〉
+- [X] T004 [US1] 寫 `tests/unit/helpers/cella-run.test.ts` 的正向錨點兩條（accept 與輸出；二十次呼叫的總時間遠小於第一次準備的時間）——先紅（helper 還不存在）
+- [X] T005 [US1] 實作 `tests/helpers/cella-run.ts` 的 `runCella`：懶建判決器（模組層級 Promise；讀 `cachedCellaModule('verdict-cfamily', …)` → `checkerFromBytes`）、tree-sitter 解析 → `createTestLifter().lift` → `formalize(tree, { lang })` → `checker.verdict(program, stdin, steps)`；回傳 verdict／out／problems（含 source）／untranslated／assumes
+- [X] T006 [US1] 實作問題的原始碼位置：`at` → 樹裡同 id 節點 → `metadata.sourceRange`；衍生 id（`<id>/…`）退到 `<id>`；找不到只給 id
+- [X] T007 [US1] 跑 T004，綠；記下第一次準備與之後每次判決的時間到〈量測紀錄〉
 
 ## Phase 4: User Story 2 — 判不出來、翻不出來、判定有錯，都會紅並說清楚（P1）
 
 **Goal**：`expectCellaOut(code, out, opts)` 對非 accept 一律失敗並說清楚；`runCella` 給刻意驗 reject 的測試拿完整判決。
 **Independent Test**：三條注入（unknown＝無窮迴圈、reject＝讀未初始化、翻不出＝內嵌組語）讓 `expectCellaOut` 拋出，訊息含判決種類、問題種類、原因、原始碼片段。
 
-- [ ] T008 [US2] 在 `tests/unit/helpers/cella-run.test.ts` 加三條注入（unknown／reject／翻不出）與一條「`runCella` 拿得到 reject 的完整判決」——先紅
-- [ ] T009 [US2] 實作 `expectCellaOut`：accept 且輸出相同才通過；其餘拋錯，訊息逐筆列問題（kind、reason、行號與原始碼片段）、翻不出列構造；輸出不同時印期望與實際
-- [ ] T010 [US2] 跑 T008，綠
+- [X] T008 [US2] 在 `tests/unit/helpers/cella-run.test.ts` 加三條注入（unknown／reject／翻不出）與一條「`runCella` 拿得到 reject 的完整判決」——先紅
+- [X] T009 [US2] 實作 `expectCellaOut`：accept 且輸出相同才通過；其餘拋錯，訊息逐筆列問題（kind、reason、行號與原始碼片段）、翻不出列構造；輸出不同時印期望與實際
+- [X] T010 [US2] 跑 T008，綠
 
 **Checkpoint**：失敗語義有注入測試守著（P6）。
 
@@ -64,4 +64,7 @@ MVP ＝ Phase 2 ＋ US1 ＋ US2（入口與失敗語義）；US3 證明它在真
 
 ## 量測紀錄
 
-（實作時填）
+- **改寫前**（T001，機器同時在跑另一條長測試）：execution-cpp-containers 7.57 秒（9 條）、vector-initializer-list 11.88 秒（6 條）、range_max 13.51 秒（4 條）
+- **helper 本身**（T007）：第一次準備模組 1.3 秒（讀 `node_modules/.cache/semorphe-cella/` 的快取，沒有重編）；之後每次判決約 15 毫秒（20 次 302 毫秒）
+  ⟹ 一支測試檔多約 1.3 秒；127 個 B 類以並行 2 計約多 1.4 分鐘（盤點擔心的是「每檔重編 12 秒、多 13 分鐘以上」）
+- **變異檢查**（T010）：把 `expectCellaOut` 改成不檢查判決種類，三條注入（unknown／reject／翻不出）全紅——它們守得住失敗語義
