@@ -1832,7 +1832,7 @@ export function invokeControl(id: string, value?: string): void {
  * ——它停在最後一筆，看起來完全正常。
  *
  * 🟢 而它們沒有被丟掉：它們是 `state` 面板裡的兩個分頁，
- * **與網頁版逐格相同的那一份**（`ui/panels/console-panel.ts`）。
+ * **與網頁版逐格相同的那一份**（`panels/console/view.ts`）。
  */
 export function showConsole(): void {
   if (extensionContext) openPanel(extensionContext, 'console')

@@ -9,7 +9,7 @@ import { msg } from '../core/messages'
 import { showToast } from './toolbar/toast'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
-import type { ConsolePanel } from './panels/console-panel'
+import type { ConsolePanel } from '../panels/console/view'
 import { canExecute } from '../core/diagnostics'
 import { describeExecutionRefusal, describeUnknownPause, describeUnknownContinued, describeSetVariableRefused, describeInterventions } from '../core/refusal-message'
 // 🔴 **不得直接推 `e.message`**——那是給開發者看的湊合字串（身分 ＋ JSON）。

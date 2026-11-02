@@ -12,7 +12,7 @@ import { panelById } from '../core/host/panel-registry'
 import type { PanelInstance } from '../core/host/panel-spec'
 import { LayoutManager } from './layout/layout-manager'
 import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
-import { ConsolePanel } from './panels/console-panel'
+import type { ConsolePanel } from '../panels/console/view'
 import type { VariablePanel } from '../panels/variables/view'
 import { FlowPanel } from './panels/flow-panel'
 import { BlocklyPanel } from './panels/blockly-panel'
@@ -724,8 +724,10 @@ export function createAppLayout(
   //
   // > **「不畫那一格」與「沒有主控台」是兩件事；
   // > 把它們寫成同一件，會讓執行在那個宿主上直接沒有出口。**
+  // 🟢 **畫法在它自己的 `mount`**（第 240 刀，同變數）——實例照建（上面那段說的理由），加不加分頁另外問宿主（`enableConsoleTab`）
   const consoleEl = document.createElement('div')
-  const consolePanel = new ConsolePanel(consoleEl)
+  const consoleInstance = panelById('console')!.mount!(consoleEl, { profile, msg: (k: string, f?: string) => Blockly.Msg[k] || f || k })
+  const consolePanel = consoleInstance.view as ConsolePanel
   // 🔴 **主控台知道自己開不開**（spec 171）——而「有輸出就自己回來」那條規則
   //    住在 `ConsolePanel` 的寫入路徑上，不是各宿主各寫一份。
   //    ⚠️ 沒有下方面板的宿主給 `null`：那時它沒有可關的主控台，
@@ -759,6 +761,7 @@ export function createAppLayout(
   const STATE_BODIES: Record<string, Omit<Parameters<BottomPanel['addTab']>[0], 'id' | 'label'>> = {}
   /** 自己 `mount` 的面板的實例——組裝點要餵資料時從這裡拿（`statePanel`）。 */
   const STATE_INSTANCES = new Map<string, PanelInstance>()
+  STATE_INSTANCES.set('console', consoleInstance)
   const addStateTab = (id: string): void => {
     const spec = panelById(id)
     if (!spec) return

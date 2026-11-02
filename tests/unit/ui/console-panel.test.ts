@@ -5,7 +5,7 @@
  * 這個檔碰得到 DOM（`document`／`localStorage`／面板），所以顯式加回來。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ConsolePanel } from '../../../src/ui/panels/console-panel'
+import { ConsolePanel } from '../../../src/panels/console/view'
 
 describe('ConsolePanel', () => {
   let container: HTMLElement

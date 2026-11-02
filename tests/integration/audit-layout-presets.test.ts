@@ -170,7 +170,7 @@ describe('第八十一條護欄：佈局宣告是二維的格子表', () => {
     // ② 接線側：那條規則**真的在產品的寫入路徑上**。
     //    🔴 少了這一半，`console-surface.ts` 可以是一支沒有人呼叫的純函數，
     //    而上面三條照樣全綠。
-    const panel = read('src/ui/panels/console-panel.ts')
+    const panel = read('src/panels/console/view.ts')
     expect(panel, '主控台的寫入路徑沒有接上「有輸出就回來」').toMatch(/revealForOutput\(/)
     const shell = read('src/ui/app-shell.ts')
     expect(shell, '沒有人把「怎麼開關」交給主控台——它叫不回來')
