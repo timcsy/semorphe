@@ -145,10 +145,10 @@ describe('spec 170 · Python 的執行期（Cella 工作階段：互動與訊息
     const line = describeRuntimeStop(o.error.i18nKey, o.error.params)
     resetMessages()
     expect(line, '學生看到的那一句要說得出是 EOF').toContain('EOFError')
-    // 🟡 **我們缺（修好時這條會紅）**：那一句今天把例外的細節整包 JSON 印出來（worker 的 `exception` → params.text = JSON.stringify(detail)，
-    //    zh-TW 的 `RUNTIME_ERR_UNCAUGHT_EXCEPTION` 是「…沒有接住的例外：{text}」）——畫面上出現 `{"type":"EOFError",…}`，
-    //    正是 `lesson-mistakes` 那條「畫面上不得出現代號」的形狀。
-    await knownCellaGap(/not to match/, async () => { expect(line).not.toMatch(/\{"/) })
+    // 🟢 spec 205 T012（D7）修好（原本是釘子）：那一句原本把例外的細節整包 JSON 印出來（`{"type":"EOFError",…}`）——
+    //    正是 `lesson-mistakes` 那條「畫面上不得出現代號」的形狀。現在是「型別：說明」
+    expect(line, '🔴 畫面上出現了 JSON').not.toMatch(/\{"/)
+    expect(line).toContain('EOFError：EOF when reading a line')
     // 判決那條路（stdin 一次給完、是空的）同樣說實話：uncaught EOFError，不是 unknown／翻不出
     const r = await runCella('x = input()\nprint(x)\n', { lang: 'python' })
     expect(r.problems.map((x) => [x.kind, x.reason])).toEqual([['uncaught', expect.stringMatching(/^EOFError/)]])

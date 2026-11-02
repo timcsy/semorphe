@@ -163,6 +163,13 @@ const UB_KEY: Record<string, string> = {
 const flat = (o: unknown): Record<string, string> =>
   Object.fromEntries(Object.entries((o ?? {}) as Record<string, unknown>).map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)]))
 
+/** 沒有接住的例外 → 一句話：`EOFError：EOF when reading a line`（C++ 的 what() 同理）；認不出欄位時才退回原文 */
+function exceptionText(detail: any): string {
+  const d = (detail ?? {}) as Record<string, unknown>
+  const parts = [d.type ?? d.name, d.what ?? d.message].filter((x): x is string => typeof x === 'string' && x !== '')
+  return parts.length > 0 ? parts.join('：') : JSON.stringify(d)
+}
+
 /** DAP 的停下事件 → 跨邊界的 Outcome。 */
 function outcomeOf(d: DapSession, launching: boolean): WireOutcome {
   const b = d.last
@@ -179,7 +186,8 @@ function outcomeOf(d: DapSession, launching: boolean): WireOutcome {
     case 'unspecified-behavior':
       return { kind: 'failed', aborted: false, key: 'RUNTIME_ERR_UNSPECIFIED_BEHAVIOR', params: flat(b.detail), nodeId }
     case 'exception':
-      return { kind: 'failed', aborted: false, key: 'RUNTIME_ERR_UNCAUGHT_EXCEPTION', params: { ...flat(b.detail), text: JSON.stringify(b.detail ?? {}) }, nodeId }
+      // spec 205 T012（D7）：{text} 是學生看到的那一句——原本是整包 JSON（`{"type":"EOFError",…}`），改成「型別：說明」
+      return { kind: 'failed', aborted: false, key: 'RUNTIME_ERR_UNCAUGHT_EXCEPTION', params: { ...flat(b.detail), text: exceptionText(b.detail) }, nodeId }
     case 'unsupported':
       // 一步也沒有執行：交給下一個提供者（啟動之後才遇到的不會走到這裡——Cella 在檢查時就判了）
       if (launching) return { kind: 'declined', reason: String(b.detail?.why ?? b.detail?.reason ?? 'unsupported') }

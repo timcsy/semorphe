@@ -78,11 +78,12 @@ describe('沒看過的元件：停下來並指名（Cella）', () => {
   })
 
   it('🔴 工作階段：不開跑（declined），而原因說的是「還不支援」——系統能力不足，不是學生寫錯', async () => {
-    const { tree } = withStranger()
+    const { tree, stranger } = withStranger()
     const s = p.createSession!({ maxSteps: 1000, formal: cppFormal(tree) as never }, tree)
     expect('declined' in s, '🔴 帶著一顆翻不出的元件開跑了').toBe(true)
     if ('declined' in s) expect(s.declined).toMatch(/還不支援/)
-    // ⚠️ declined 的原因今天不帶那一顆的 id——指名靠判決那一條（上一支）；「指出哪一行還不支援」是 spec 205 US1 的畫面
+    // 🟢 spec 205 T013（D8）：declined 帶出卡住的那一顆——「指出哪一行還不支援」的畫面（US1）要它
+    if ('declined' in s) expect(s.nodeId, '🔴 不接的原因指不到是哪一顆').toBe(stranger.id)
   })
 
   it('🔴 學生看到的那一句要**把原因放進去**（具名佔位符有被替換）', () => {
