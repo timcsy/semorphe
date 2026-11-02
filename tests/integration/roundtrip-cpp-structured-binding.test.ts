@@ -34,7 +34,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import { runCppDetailed } from '../helpers/run-cpp'
 import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
@@ -246,18 +246,32 @@ describe('結構化繫結與走訪的對象：五個面向', () => {
          map<int,pair<int,int>> m; m[1] = {7, 8};
          for (auto [k, pr] : m) { auto [lo, hi] = pr; cout << k << lo << hi; }`],
     ]
+    /**
+     * 已知缺陷（Cella 那側）：賦值右邊的大括號串列（`m[1] = {7, 8};`，C++11 起合法——`operator=` 收 `pair` 的大括號初始化）。
+     * 判決原文：`unsupported：a braced list where the type it initializes is not known`。
+     * 最小重現：`pair<int,int> p; p = {7, 8}; cout << p.first;` 應印 `7`（`m[1] = make_pair(7, 8)` 則 accept）。
+     */
+    const GAPS: Record<string, RegExp> = {
+      '與既有的走訪並列': /a braced list where the type it initializes is not known/,
+    }
+    const run5 = async (src: string): Promise<void> => {
+      const ref = runCppDetailed(src)
+      expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
+      // 執行那一邊：Cella（spec 203，重構 6c-2e）——參照編譯器那一邊不動（6c-5 才退場），這裡成了 Cella 對參照編譯器的交叉檢查
+      const r = await runCella(src)
+      expect(r.verdict, describeCellaResult(r)).toBe('accept')
+      expect(r.out, '🔴 單獨測通過、組合起來才壞').toBe(ref.output)
+    }
     for (const [name, body] of COMBOS) {
-      it(`⑤ ${name}`, async () => {
-        const glob = name.includes('函式') ? 'int add(int p, int q){ return p + q; }' : ''
-        const src = `${H}${glob}\nint main(){ ${body} return 0; }\n`
-        const ref = runCppDetailed(src)
-        expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-        const out: string[] = []
-        const interp = new SemanticInterpreter({ maxSteps: 300_000 })
-        interp.setOutputCallback((x) => out.push(x))
-        await interp.execute(lift(src), [])
-        expect(out.join(''), '🔴 單獨測通過、組合起來才壞').toBe(ref.output)
-      }, 60_000)
+      const glob = name.includes('函式') ? 'int add(int p, int q){ return p + q; }' : ''
+      const src = `${H}${glob}\nint main(){ ${body} return 0; }\n`
+      const gap = GAPS[name]
+      if (gap) {
+        // 歸類：Cella 那側（賦值右邊的大括號串列不支援）
+        it(`🟡 已知缺陷（修好時這條會紅）：⑤ ${name}`, async () => { await knownCellaGap(gap, () => run5(src)) }, 60_000)
+      } else {
+        it(`⑤ ${name}`, async () => { await run5(src) }, 60_000)
+      }
     }
   })
 

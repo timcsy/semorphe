@@ -9,7 +9,7 @@
  * 不會因為 Cella 或 formalize 補了東西就過期（experience〈拿「今天還沒做的」當「不支援」的測試範例〉）。
  */
 import { describe, it, expect } from 'vitest'
-import { runCella, expectCellaOut, knownCellaGap } from '../../helpers/cella-run'
+import { runCella, expectCellaOut, knownCellaGap, describeCellaResult } from '../../helpers/cella-run'
 
 const H = '#include <iostream>\nusing namespace std;\n'
 
@@ -85,5 +85,29 @@ describe('knownCellaGap', () => {
   })
   it('缺陷換了一個（原因不吻合）→ 紅', async () => {
     await expect(knownCellaGap(/fmax/, async () => { throw new Error('reject：別的東西') })).rejects.toThrow(/形狀變了/)
+  })
+})
+
+// spec 203：Python 的入口——產品的 Python 分支（lift → formalizePython → python 家族的判決器）
+describe("runCella(code, { lang: 'python' })", () => {
+  it('★ 正向錨點：讀一行、轉整數、印出運算結果 → accept 與輸出', async () => {
+    const t0 = Date.now()
+    const r = await runCella('n = int(input())\nprint(n * 2, "ok")\n', { lang: 'python', stdin: '21\n' })
+    // 第一次要準備 python 家族的判決器（讀建置快取；沒有快取時當場編）
+    console.log(`[cella-run] python 判決器準備＋第一次判決：${Date.now() - t0} ms`)
+    expect(r).toMatchObject({ verdict: 'accept', out: '42 ok\n' })
+  }, 180_000)
+
+  it('🔴 Python 沒接住的例外：判決 accept（有定義的行為）而問題列 uncaught——expectCellaOut 要當成失敗', async () => {
+    const r = await runCella('print("a")\nprint(1 // 0)\n', { lang: 'python' })
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    expect(r.problems.map((p) => `${p.kind}:${p.reason}`)).toContain('uncaught:ZeroDivisionError: division by zero')
+    const err = await expectCellaOut('print("a")\nprint(1 // 0)\n', 'a\n', { lang: 'python' }).then(() => null, (e: Error) => e)
+    expect(err, '例外中止不得當成通過').not.toBeNull()
+    expect(err!.message).toMatch(/ZeroDivisionError/)
+  }, 60_000)
+
+  it('🔴 Python 沒有板子：帶 board 直接丟錯', async () => {
+    await expect(runCella('print(1)\n', { lang: 'python', board: 'uno' })).rejects.toThrow(/Python 沒有板子/)
   })
 })

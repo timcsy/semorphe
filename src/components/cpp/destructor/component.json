@@ -30,6 +30,7 @@
         "lift": "./lift.ts"
       }
     },
+    "formalize": "./formalize.ts",
     "execute": null,
     "_execute_why": "**顯式的空，不是遺漏。**"
   },

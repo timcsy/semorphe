@@ -5,51 +5,20 @@
  * Written WITHOUT knowledge of internal implementation details.
  * Covers: DP, graph theory, number theory, greedy, divide & conquer, etc.
  */
-import { describe, it, expect, beforeAll } from 'vitest'
-import { Parser, Language } from 'web-tree-sitter'
-import { createTestLifter } from '../helpers/setup-lifter'
-import type { Lifter } from '../../src/core/lift/lifter'
-import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { setupTestRenderer } from '../helpers/setup-renderer'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import type { StylePreset } from '../../src/core/types'
+import { describe, it, expect } from 'vitest'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 
 // ─── Test Infrastructure ───
 
-const coutStyle: StylePreset = {
-  id: 'apcs', name: { 'zh-TW': 'APCS', en: 'APCS' },
-  io_style: 'cout', naming_convention: 'camelCase', indent_size: 4,
-  brace_style: 'K&R', namespace_style: 'using', header_style: 'individual',
-}
-
-const printfStyle: StylePreset = {
-  id: 'competitive', name: { 'zh-TW': '競賽', en: 'Competitive' },
-  io_style: 'printf', naming_convention: 'snake_case', indent_size: 4,
-  brace_style: 'K&R', namespace_style: 'using', header_style: 'bits',
-}
-
-let tsParser: Parser
-let lifter: Lifter
-
-beforeAll(async () => {
-  await Parser.init({
-    locateFile: (scriptName: string) => `${process.cwd()}/public/${scriptName}`,
-  })
-  tsParser = new Parser()
-  const lang = await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`)
-  tsParser.setLanguage(lang)
-  lifter = createTestLifter()
-  registerCppLanguage()
-  setupTestRenderer()
-})
-
-async function runCode(code: string, stdin: string[] = []) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 2000000 })
-  await interp.execute(sem!, stdin)
-  return interp
+/**
+ * 執行判準：Cella（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
+ * 不是 accept（reject／unknown／翻不出）一律紅，並說出原因與位置。
+ * stdin 原本是 token 陣列（JS 直譯器的介面），這裡以換行接成一段文字（cin／scanf 都以空白分隔，等價）。
+ */
+async function runCode(code: string, stdin: string[] = []): Promise<{ out: string }> {
+  const r = await runCella(code, { stdin: stdin.join('\n'), steps: 20_000_000 })
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return { out: r.out }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -58,7 +27,7 @@ async function runCode(code: string, stdin: string[] = []) {
 
 describe('Dynamic Programming (1D)', () => {
   it('fibonacci with memoization (bottom-up DP)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -74,12 +43,12 @@ describe('Dynamic Programming (1D)', () => {
         return 0;
       }
     `, ['10'])
-    expect(interp.getOutput().join('')).toContain('55')
+    expect(run.out).toContain('55')
   })
 
   it('climbing stairs — dp[i] = dp[i-1] + dp[i-2]', async () => {
     // How many ways to climb n stairs (1 or 2 steps at a time)
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -96,11 +65,11 @@ describe('Dynamic Programming (1D)', () => {
       }
     `, ['5'])
     // Ways: 1+1+1+1+1, 1+1+1+2, 1+1+2+1, 1+2+1+1, 2+1+1+1, 1+2+2, 2+1+2, 2+2+1 = 8
-    expect(interp.getOutput().join('')).toContain('8')
+    expect(run.out).toContain('8')
   })
 
   it('maximum subarray sum (Kadane\'s algorithm)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <cstdio>
       using namespace std;
       int main() {
@@ -127,12 +96,12 @@ describe('Dynamic Programming (1D)', () => {
       }
     `, ['9', '-2', '1', '-3', '4', '-1', '2', '1', '-5', '4'])
     // Maximum subarray: [4, -1, 2, 1] = 6
-    expect(interp.getOutput().join('')).toContain('6')
+    expect(run.out).toContain('6')
   })
 
   it('coin change — minimum coins (DP)', async () => {
     // Given coins [1, 5, 10, 25], find min coins for amount
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -161,11 +130,11 @@ describe('Dynamic Programming (1D)', () => {
       }
     `, ['41'])
     // 41 = 25 + 10 + 5 + 1 = 4 coins
-    expect(interp.getOutput().join('')).toContain('4')
+    expect(run.out).toContain('4')
   })
 
   it('longest increasing subsequence length (O(n^2) DP)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -195,12 +164,12 @@ describe('Dynamic Programming (1D)', () => {
       }
     `, ['8', '10', '22', '9', '33', '21', '50', '41', '60'])
     // LIS: 10, 22, 33, 50, 60 → length 5
-    expect(interp.getOutput().join('')).toContain('5')
+    expect(run.out).toContain('5')
   })
 
   it('0/1 knapsack (1D DP with reverse iteration)', async () => {
     // 3 items: weight [2,3,4], value [3,4,5], capacity 5
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -227,7 +196,7 @@ describe('Dynamic Programming (1D)', () => {
       }
     `, ['3', '5', '2', '3', '3', '4', '4', '5'])
     // Best: items 0+1 (weight 2+3=5, value 3+4=7)
-    expect(interp.getOutput().join('')).toContain('7')
+    expect(run.out).toContain('7')
   })
 })
 
@@ -240,7 +209,7 @@ describe('Dynamic Programming (2D flattened)', () => {
     // Compute edit distance between two strings represented as int arrays
     // "kitten" = [1,2,3,3,4,5] and "sitting" = [6,2,3,3,2,5,7]
     // Using arr[i * cols + j] for 2D indexing
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -282,13 +251,13 @@ describe('Dynamic Programming (2D flattened)', () => {
       }
     `, ['6', '7', '1', '2', '3', '3', '4', '5', '6', '2', '3', '3', '2', '5', '7'])
     // Edit distance between [1,2,3,3,4,5] and [6,2,3,3,2,5,7] = 3
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(run.out).toContain('3')
   })
 
   it('matrix chain multiplication (flattened 2D)', async () => {
     // Find minimum number of scalar multiplications for chain A1*A2*...*An
     // Dimensions: p[0]xp[1], p[1]xp[2], ..., p[n-1]xp[n]
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -322,7 +291,7 @@ describe('Dynamic Programming (2D flattened)', () => {
     // Optimal: ((A1(A2A3))A4) = 20*30*40 + 10*20*40 + 10*40*30 = 24000+8000+12000 = 30000
     // Actually let me recalculate: dp[1][4] with standard MCM
     // This should give 30000
-    expect(interp.getOutput().join('')).toContain('30000')
+    expect(run.out).toContain('30000')
   })
 })
 
@@ -332,7 +301,7 @@ describe('Dynamic Programming (2D flattened)', () => {
 
 describe('Number Theory', () => {
   it('Sieve of Eratosthenes', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -366,11 +335,11 @@ describe('Number Theory', () => {
       }
     `, ['100'])
     // Primes up to 100: 25
-    expect(interp.getOutput().join('')).toContain('25')
+    expect(run.out).toContain('25')
   })
 
   it('GCD and LCM', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int gcd(int a, int b) {
@@ -390,14 +359,14 @@ describe('Number Theory', () => {
         return 0;
       }
     `, ['12', '18'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('6')
     expect(output).toContain('36')
   })
 
   it('modular exponentiation (fast power)', async () => {
     // Compute base^exp % mod using repeated squaring
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int power(int base, int exp, int mod) {
@@ -420,11 +389,11 @@ describe('Number Theory', () => {
       }
     `, ['2', '10', '1000'])
     // 2^10 % 1000 = 1024 % 1000 = 24
-    expect(interp.getOutput().join('')).toContain('24')
+    expect(run.out).toContain('24')
   })
 
   it('prime factorization', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -446,7 +415,7 @@ describe('Number Theory', () => {
       }
     `, ['360'])
     // 360 = 2*2*2*3*3*5
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('2')
     expect(output).toContain('3')
     expect(output).toContain('5')
@@ -455,7 +424,7 @@ describe('Number Theory', () => {
   it('extended Euclidean algorithm', async () => {
     // Find x, y such that a*x + b*y = gcd(a, b)
     // Using iterative version
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -484,7 +453,7 @@ describe('Number Theory', () => {
       }
     `, ['35', '15'])
     // gcd(35,15) = 5, 35*1 + 15*(-2) = 5
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('5')
   })
 })
@@ -496,7 +465,7 @@ describe('Number Theory', () => {
 describe('Graph Algorithms', () => {
   it('Floyd-Warshall shortest paths (flattened 2D)', async () => {
     // 4 nodes, edges: 0→1(3), 0→3(7), 1→0(8), 1→2(2), 2→0(5), 2→3(1), 3→0(2)
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -532,7 +501,7 @@ describe('Graph Algorithms', () => {
         return 0;
       }
     `, ['4', '7', '0', '1', '3', '0', '3', '7', '1', '0', '8', '1', '2', '2', '2', '0', '5', '2', '3', '1', '3', '0', '2'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     // Shortest 0→2: 0→1→2 = 3+2 = 5
     expect(output).toContain('5')
     // Shortest 1→3: 1→2→3 = 2+1 = 3
@@ -542,7 +511,7 @@ describe('Graph Algorithms', () => {
   it('BFS shortest path (using array as queue)', async () => {
     // Simple BFS on unweighted graph
     // 5 nodes, edges: 0-1, 0-2, 1-3, 2-3, 3-4
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -590,12 +559,12 @@ describe('Graph Algorithms', () => {
       }
     `, ['5', '5', '0', '1', '0', '2', '1', '3', '2', '3', '3', '4', '0', '4'])
     // Shortest path 0→4: 0→1→3→4 or 0→2→3→4 = 3
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(run.out).toContain('3')
   })
 
   it('topological sort (Kahn\'s algorithm)', async () => {
     // DAG: 5→2, 5→0, 4→0, 4→1, 2→3, 3→1
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -644,7 +613,7 @@ describe('Graph Algorithms', () => {
       }
     `, ['6', '6', '5', '2', '5', '0', '4', '0', '4', '1', '2', '3', '3', '1'])
     // All 6 nodes should be visited
-    expect(interp.getOutput().join('')).toContain('6')
+    expect(run.out).toContain('6')
   })
 })
 
@@ -655,7 +624,7 @@ describe('Graph Algorithms', () => {
 describe('Sorting & Searching', () => {
   it('merge sort', async () => {
     // Iterative merge sort (bottom-up)
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -712,11 +681,11 @@ describe('Sorting & Searching', () => {
         return 0;
       }
     `, ['8', '38', '27', '43', '3', '9', '82', '10', '1'])
-    expect(interp.getOutput().join('')).toContain('1 3 9 10 27 38 43 82')
+    expect(run.out).toContain('1 3 9 10 27 38 43 82')
   })
 
   it('counting sort', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -746,12 +715,12 @@ describe('Sorting & Searching', () => {
         return 0;
       }
     `, ['7', '4', '2', '2', '8', '3', '3', '1'])
-    expect(interp.getOutput().join('')).toContain('1 2 2 3 3 4 8')
+    expect(run.out).toContain('1 2 2 3 3 4 8')
   })
 
   it('lower bound binary search', async () => {
     // Find first position where arr[pos] >= target
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -777,11 +746,11 @@ describe('Sorting & Searching', () => {
       }
     `, ['7', '1', '3', '5', '7', '9', '11', '13', '6'])
     // First position where arr[pos] >= 6 is index 3 (value 7)
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(run.out).toContain('3')
   })
 
   it('inversion count with merge sort', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int arr[100];
@@ -844,7 +813,7 @@ describe('Sorting & Searching', () => {
       }
     `, ['5', '2', '4', '1', '3', '5'])
     // Inversions: (2,1), (4,1), (4,3) = 3
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(run.out).toContain('3')
   })
 })
 
@@ -857,7 +826,7 @@ describe('Greedy Algorithms', () => {
     // Select maximum non-overlapping activities
     // Sort by finish time, greedily select
     // Activities already sorted by finish: (1,2),(3,4),(0,6),(5,7),(8,9),(5,9)
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -881,13 +850,13 @@ describe('Greedy Algorithms', () => {
       }
     `, ['6', '1', '2', '3', '4', '0', '6', '5', '7', '8', '9', '5', '9'])
     // Select: (1,2), (3,4), (5,7), (8,9) = 4
-    expect(interp.getOutput().join('')).toContain('4')
+    expect(run.out).toContain('4')
   })
 
   it('fractional knapsack style — coin greedy', async () => {
     // Make change for amount using greedy (largest coins first)
     // Coins: 100, 50, 10, 5, 1
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -910,7 +879,7 @@ describe('Greedy Algorithms', () => {
       }
     `, ['267'])
     // 267 = 2*100 + 1*50 + 1*10 + 1*5 + 2*1 = 7 coins
-    expect(interp.getOutput().join('')).toContain('7')
+    expect(run.out).toContain('7')
   })
 })
 
@@ -921,7 +890,7 @@ describe('Greedy Algorithms', () => {
 describe('APCS Classic Problems', () => {
   it('APCS: 成績分佈 — count students in score ranges', async () => {
     // Count students scoring in [0,59], [60,69], [70,79], [80,89], [90,100]
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -953,13 +922,13 @@ describe('APCS Classic Problems', () => {
         return 0;
       }
     `, ['10', '55', '72', '88', '91', '63', '45', '78', '95', '80', '69'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     // [0,59]: 55,45 = 2; [60,69]: 63,69 = 2; [70,79]: 72,78 = 2; [80,89]: 88,80 = 2; [90,100]: 91,95 = 2
     expect(output).toContain('2 2 2 2 2')
   })
 
   it('APCS: 矩陣轉置 (flattened)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -986,7 +955,7 @@ describe('APCS Classic Problems', () => {
         return 0;
       }
     `, ['2', '3', '1', '2', '3', '4', '5', '6'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     // Transpose of [[1,2,3],[4,5,6]] = [[1,4],[2,5],[3,6]]
     expect(output).toContain('1 4')
     expect(output).toContain('2 5')
@@ -994,7 +963,7 @@ describe('APCS Classic Problems', () => {
   })
 
   it('APCS: 三角形判斷 (triangle validity)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1014,11 +983,11 @@ describe('APCS Classic Problems', () => {
         return 0;
       }
     `, ['3', '4', '5'])
-    expect(interp.getOutput().join('')).toContain('scalene')
+    expect(run.out).toContain('scalene')
   })
 
   it('APCS: 最大公因數互質判定', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int gcd(int a, int b) {
@@ -1043,12 +1012,12 @@ describe('APCS Classic Problems', () => {
       }
     `, ['12'])
     // Euler's totient φ(12) = 4 (numbers 1,5,7,11 are coprime with 12)
-    expect(interp.getOutput().join('')).toContain('4')
+    expect(run.out).toContain('4')
   })
 
   it('APCS: 矩陣乘法 (flattened 2D)', async () => {
     // A(2x3) * B(3x2) = C(2x2)
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1084,7 +1053,7 @@ describe('APCS Classic Problems', () => {
         return 0;
       }
     `, ['2', '3', '2', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     // C[0][0] = 1*7 + 2*9 + 3*11 = 7+18+33 = 58
     // C[0][1] = 1*8 + 2*10 + 3*12 = 8+20+36 = 64
     // C[1][0] = 4*7 + 5*9 + 6*11 = 28+45+66 = 139
@@ -1103,7 +1072,7 @@ describe('APCS Classic Problems', () => {
 describe('Stack & Queue with Arrays', () => {
   it('balanced parentheses check (stack)', async () => {
     // Check if sequence of 1(open) and 2(close) is balanced
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1142,13 +1111,13 @@ describe('Stack & Queue with Arrays', () => {
     // (()(())()) → balanced... wait: 1,1,2,1,2,1,2,2 = (()()()) — wait let me recheck
     // 1=open: ((   2=close: )  1=open: (  2=close: )  1=open: (  2=close: )  2=close: )
     // Stack trace: [1], [1,1], [1], [1,1], [1], [1,1], [1], [] → balanced!
-    expect(interp.getOutput().join('')).toContain('YES')
+    expect(run.out).toContain('YES')
   })
 
   it('evaluate postfix expression', async () => {
     // Evaluate: 2 3 + 4 * = (2+3)*4 = 20
     // Use negative numbers as operators: -1=+, -2=-, -3=*, -4=/
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1189,7 +1158,7 @@ describe('Stack & Queue with Arrays', () => {
       }
     `, ['5', '2', '3', '-1', '4', '-3'])
     // 2 3 + 4 * = (2+3)*4 = 20
-    expect(interp.getOutput().join('')).toContain('20')
+    expect(run.out).toContain('20')
   })
 })
 
@@ -1199,7 +1168,7 @@ describe('Stack & Queue with Arrays', () => {
 
 describe('Recursion & Divide and Conquer', () => {
   it('Tower of Hanoi', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int moves;
@@ -1217,11 +1186,11 @@ describe('Recursion & Divide and Conquer', () => {
       }
     `, ['10'])
     // 2^10 - 1 = 1023
-    expect(interp.getOutput().join('')).toContain('1023')
+    expect(run.out).toContain('1023')
   })
 
   it('recursive binary search', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int arr[20];
@@ -1250,11 +1219,11 @@ describe('Recursion & Divide and Conquer', () => {
       }
     `, ['10', '2', '5', '8', '12', '16', '23', '38', '56', '72', '91', '23'])
     // 23 is at index 5
-    expect(interp.getOutput().join('')).toContain('5')
+    expect(run.out).toContain('5')
   })
 
   it('recursive power with memoization', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int power(int base, int exp) {
@@ -1273,7 +1242,7 @@ describe('Recursion & Divide and Conquer', () => {
       }
     `)
     // 3^7 = 2187
-    expect(interp.getOutput().join('')).toContain('2187')
+    expect(run.out).toContain('2187')
   })
 })
 
@@ -1283,7 +1252,7 @@ describe('Recursion & Divide and Conquer', () => {
 
 describe('Complex Multi-function Programs', () => {
   it('complete sorting benchmark: insertion sort + verify', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1316,13 +1285,13 @@ describe('Complex Multi-function Programs', () => {
         return 0;
       }
     `, ['10', '64', '34', '25', '12', '22', '11', '90', '1', '55', '42'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('1')  // sorted flag
     expect(output).toContain('1 11 12 22 25 34 42 55 64 90')
   })
 
   it('prefix sum queries', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1349,7 +1318,7 @@ describe('Complex Multi-function Programs', () => {
         return 0;
       }
     `, ['5', '3', '1', '3', '5', '7', '9', '0', '4', '1', '3', '2', '2'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     // sum[0..4] = 1+3+5+7+9 = 25
     expect(output).toContain('25')
     // sum[1..3] = 3+5+7 = 15
@@ -1360,7 +1329,7 @@ describe('Complex Multi-function Programs', () => {
 
   it('two pointers: pair sum', async () => {
     // Find if there exists a pair with given sum in sorted array
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1392,7 +1361,7 @@ describe('Complex Multi-function Programs', () => {
         return 0;
       }
     `, ['6', '1', '3', '5', '7', '9', '11', '12'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     // 1+11=12 or 3+9=12 or 5+7=12
     expect(output).toContain('1')
     expect(output).toContain('11')
@@ -1401,7 +1370,7 @@ describe('Complex Multi-function Programs', () => {
   it('simulation: Josephus problem', async () => {
     // N people in circle, every K-th person eliminated
     // Mathematical formula: J(n,k) = (J(n-1,k) + k) % n, J(1,k) = 0
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1416,7 +1385,7 @@ describe('Complex Multi-function Programs', () => {
       }
     `, ['7', '3'])
     // Josephus(7,3) = position 4 (1-indexed)
-    expect(interp.getOutput().join('')).toContain('4')
+    expect(run.out).toContain('4')
   })
 })
 
@@ -1427,7 +1396,7 @@ describe('Complex Multi-function Programs', () => {
 describe('Edge Cases & Stress', () => {
   it('large array with 100 elements', async () => {
     const nums = Array.from({ length: 100 }, (_, i) => String(100 - i))
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1446,12 +1415,12 @@ describe('Edge Cases & Stress', () => {
       }
     `, ['100', ...nums])
     // Sum of 1 to 100 = 5050
-    expect(interp.getOutput().join('')).toContain('5050')
+    expect(run.out).toContain('5050')
   })
 
   it('nested loops — O(n^3) matrix operations', async () => {
     // 5x5 identity matrix check
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1474,11 +1443,11 @@ describe('Edge Cases & Stress', () => {
         return 0;
       }
     `)
-    expect(interp.getOutput().join('')).toContain('5')
+    expect(run.out).toContain('5')
   })
 
   it('multiple function calls with different return types', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int add(int a, int b) {
@@ -1501,14 +1470,14 @@ describe('Edge Cases & Stress', () => {
         return 0;
       }
     `)
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('7')   // add(3,4)
     expect(output).toContain('14')  // multiply(7,2)
     expect(output).toContain('120') // factorial(5)
   })
 
   it('deeply recursive function (fibonacci n=20)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int fib(int n) {
@@ -1523,11 +1492,51 @@ describe('Edge Cases & Stress', () => {
       }
     `)
     // fib(20) = 6765
-    expect(interp.getOutput().join('')).toContain('6765')
+    expect(run.out).toContain('6765')
   })
 
   it('global arrays shared between functions', async () => {
-    const interp = await runCode(`
+    // 🔁 程式改了變數名（2026-11-02，spec 203）：原本的全域陣列叫 `data`，而 C++17 起 `std::data`（<iterator>，經 <iostream> 遞移帶進）
+    // 在 `using namespace std;` 下與它同名 ⟹ 未限定的 `data` 有歧義、編不過。Apple clang -std=c++17 實測：
+    // 「error: reference to 'data' is ambiguous」；JS 直譯器照跑是它寬鬆。改名 `vals` 保留這一條原本要測的「全域陣列跨函式共用」，
+    // 原名的那一份變成下一條反向測試。
+    const run = await runCode(`
+      #include <iostream>
+      using namespace std;
+      int vals[100];
+      int n;
+      int sumArray() {
+        int s = 0;
+        for (int i = 0; i < n; i++) {
+          s += vals[i];
+        }
+        return s;
+      }
+      int maxArray() {
+        int mx = vals[0];
+        for (int i = 1; i < n; i++) {
+          if (vals[i] > mx) {
+            mx = vals[i];
+          }
+        }
+        return mx;
+      }
+      int main() {
+        cin >> n;
+        for (int i = 0; i < n; i++) {
+          cin >> vals[i];
+        }
+        cout << sumArray() << " " << maxArray() << endl;
+        return 0;
+      }
+    `, ['5', '3', '7', '1', '9', '4'])
+    const output = run.out
+    expect(output).toContain('24')  // sum
+    expect(output).toContain('9')   // max
+  })
+
+  it('全域陣列叫 data 撞到 std::data——C++17 下是歧義，Cella 要判 reject', async () => {
+    const r = await runCella(`
       #include <iostream>
       using namespace std;
       int data[100];
@@ -1556,10 +1565,9 @@ describe('Edge Cases & Stress', () => {
         cout << sumArray() << " " << maxArray() << endl;
         return 0;
       }
-    `, ['5', '3', '7', '1', '9', '4'])
-    const output = interp.getOutput().join('')
-    expect(output).toContain('24')  // sum
-    expect(output).toContain('9')   // max
+    `, { stdin: '5 3 7 1 9 4' })
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    expect(r.problems.some((p) => /reference to 'data' is ambiguous/.test(p.reason ?? ''))).toBe(true)
   })
 })
 
@@ -1570,7 +1578,7 @@ describe('Edge Cases & Stress', () => {
 describe('Advanced DP', () => {
   it('longest common subsequence (LCS) with backtrack', async () => {
     // Classic LCS: find length of LCS between two sequences
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1607,12 +1615,12 @@ describe('Advanced DP', () => {
       }
     `, ['5', '4', '1', '3', '4', '1', '2', '1', '4', '1', '3'])
     // a=[1,3,4,1,2], b=[1,4,1,3] → LCS=[1,4,1] or [1,3,1] → length 3
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(run.out).toContain('3')
   })
 
   it('maximum path sum in triangle (top-down)', async () => {
     // Triangle stored as flattened array, dp from top to bottom
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1663,11 +1671,11 @@ describe('Advanced DP', () => {
     //        4   1   8   3
     // Best path: 2→4→7→8 = 21 or 2→3→6→4=15... let me recalculate
     // 2→4→7→8 = 21
-    expect(interp.getOutput().join('')).toContain('21')
+    expect(run.out).toContain('21')
   })
 
   it('subset sum — boolean DP', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1692,11 +1700,11 @@ describe('Advanced DP', () => {
       }
     `, ['5', '11', '1', '5', '3', '7', '4'])
     // {1,5,3,7,4}: can we make 11? 7+4=11 → YES
-    expect(interp.getOutput().join('')).toContain('YES')
+    expect(run.out).toContain('YES')
   })
 
   it('rod cutting — unbounded knapsack style', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1719,12 +1727,12 @@ describe('Advanced DP', () => {
     `, ['8', '1', '5', '8', '9', '10', '17', '17', '20'])
     // Rod length 8, prices [1,5,8,9,10,17,17,20]
     // Optimal: cut into 2+6 → 5+17=22
-    expect(interp.getOutput().join('')).toContain('22')
+    expect(run.out).toContain('22')
   })
 
   it('longest palindromic subsequence', async () => {
     // LPS via 2D DP, dp[i][j] = LPS length of substring i..j
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1761,7 +1769,7 @@ describe('Advanced DP', () => {
     `, ['7', '1', '2', '3', '4', '3', '2', '1'])
     // [1,2,3,4,3,2,1] → LPS = [1,2,3,4,3,2,1] itself → 7
     // (it's a palindrome!)
-    expect(interp.getOutput().join('')).toContain('7')
+    expect(run.out).toContain('7')
   })
 })
 
@@ -1772,7 +1780,7 @@ describe('Advanced DP', () => {
 describe('Advanced Graph Algorithms', () => {
   it('Dijkstra shortest path (dense graph, adjacency matrix)', async () => {
     // Dijkstra with O(V^2) on adjacency matrix
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -1834,7 +1842,7 @@ describe('Advanced Graph Algorithms', () => {
         '0'])
     // Graph: 0→1(4), 0→2(1), 1→2(2), 1→3(5), 2→3(8), 2→4(10), 3→4(2)
     // From 0: dist=[0, 3, 1, 8, 10]
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('0')
     expect(output).toContain('3')  // 0→2→1 = 1+2=3
     expect(output).toContain('1')  // 0→2 = 1
@@ -1844,7 +1852,7 @@ describe('Advanced Graph Algorithms', () => {
 
   it('detect cycle in directed graph (DFS coloring)', async () => {
     // 0=white, 1=gray, 2=black. Gray→Gray = cycle
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int adj[100];
@@ -1891,11 +1899,11 @@ describe('Advanced Graph Algorithms', () => {
       }
     `, ['4', '5', '0', '1', '1', '2', '2', '3', '3', '1', '0', '3'])
     // 0→1→2→3→1 (cycle!)
-    expect(interp.getOutput().join('')).toContain('CYCLE')
+    expect(run.out).toContain('CYCLE')
   })
 
   it('detect cycle in directed graph — DAG case', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int adj[100];
@@ -1942,11 +1950,11 @@ describe('Advanced Graph Algorithms', () => {
       }
     `, ['4', '4', '0', '1', '0', '2', '1', '3', '2', '3'])
     // 0→1→3, 0→2→3 (no cycle)
-    expect(interp.getOutput().join('')).toContain('DAG')
+    expect(run.out).toContain('DAG')
   })
 
   it('connected components (undirected graph, DFS)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int adj[400];
@@ -1984,11 +1992,11 @@ describe('Advanced Graph Algorithms', () => {
       }
     `, ['7', '4', '0', '1', '1', '2', '3', '4', '5', '6'])
     // {0,1,2}, {3,4}, {5,6}, {6} — 3 components
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(run.out).toContain('3')
   })
 
   it('bipartite check (BFS 2-coloring)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2042,11 +2050,11 @@ describe('Advanced Graph Algorithms', () => {
       }
     `, ['4', '4', '0', '1', '1', '2', '2', '3', '3', '0'])
     // Square: 0-1-2-3-0, even cycle → bipartite
-    expect(interp.getOutput().join('')).toContain('YES')
+    expect(run.out).toContain('YES')
   })
 
   it('bipartite check — odd cycle (not bipartite)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2100,7 +2108,7 @@ describe('Advanced Graph Algorithms', () => {
       }
     `, ['3', '3', '0', '1', '1', '2', '2', '0'])
     // Triangle: 0-1-2-0, odd cycle → not bipartite
-    expect(interp.getOutput().join('')).toContain('NO')
+    expect(run.out).toContain('NO')
   })
 })
 
@@ -2111,7 +2119,7 @@ describe('Advanced Graph Algorithms', () => {
 describe('Complex Array Manipulation', () => {
   it('next permutation algorithm', async () => {
     // Standard next permutation: find rightmost ascent, swap, reverse suffix
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2157,11 +2165,11 @@ describe('Complex Array Manipulation', () => {
       }
     `, ['4', '1', '3', '4', '2'])
     // [1,3,4,2] → next perm = [1,4,2,3]
-    expect(interp.getOutput().join('')).toContain('1 4 2 3')
+    expect(run.out).toContain('1 4 2 3')
   })
 
   it('Dutch national flag (3-way partition)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2197,7 +2205,7 @@ describe('Complex Array Manipulation', () => {
       }
     `, ['9', '3', '1', '4', '1', '5', '9', '2', '6', '5', '5'])
     // Partition around 5: [<5] [==5] [>5]
-    const output = interp.getOutput().join('')
+    const output = run.out
     // All elements < 5 should come before 5s, all > 5 after
     const nums = output.trim().split(/\s+/).map(Number)
     const fiveStart = nums.indexOf(5)
@@ -2208,7 +2216,7 @@ describe('Complex Array Manipulation', () => {
   })
 
   it('rotate array by k positions', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       void reverse(int arr[], int lo, int hi) {
@@ -2236,12 +2244,12 @@ describe('Complex Array Manipulation', () => {
       }
     `, ['7', '3', '1', '2', '3', '4', '5', '6', '7'])
     // Rotate [1,2,3,4,5,6,7] by 3 → [5,6,7,1,2,3,4]
-    expect(interp.getOutput().join('')).toContain('5 6 7 1 2 3 4')
+    expect(run.out).toContain('5 6 7 1 2 3 4')
   })
 
   it('kadane 2D — maximum submatrix sum (flattened)', async () => {
     // Fix left/right columns, reduce to 1D Kadane on row sums
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2289,7 +2297,7 @@ describe('Complex Array Manipulation', () => {
     // Row2 col0-4: 3+8+10+1+3=25
     // Actually row2-3, col1-3: (8+10+1)+(-1+1+7) = 19+7 = 26
     // Let me just check it finds a reasonable max
-    const val = parseInt(interp.getOutput().join('').trim())
+    const val = parseInt(run.out.trim())
     expect(val).toBeGreaterThanOrEqual(25)
   })
 })
@@ -2300,7 +2308,7 @@ describe('Complex Array Manipulation', () => {
 
 describe('Advanced Recursion & D&C', () => {
   it('quicksort (Lomuto partition)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int arr[100];
@@ -2338,11 +2346,11 @@ describe('Advanced Recursion & D&C', () => {
         return 0;
       }
     `, ['10', '3', '6', '8', '10', '1', '2', '1', '4', '7', '9'])
-    expect(interp.getOutput().join('')).toContain('1 1 2 3 4 6 7 8 9 10')
+    expect(run.out).toContain('1 1 2 3 4 6 7 8 9 10')
   })
 
   it('maximum subarray via divide and conquer', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int arr[100];
@@ -2381,11 +2389,11 @@ describe('Advanced Recursion & D&C', () => {
       }
     `, ['9', '-2', '1', '-3', '4', '-1', '2', '1', '-5', '4'])
     // Maximum subarray: [4,-1,2,1] = 6
-    expect(interp.getOutput().join('')).toContain('6')
+    expect(run.out).toContain('6')
   })
 
   it('exponentiation by squaring (recursive)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int power(int base, int exp, int mod) {
@@ -2403,11 +2411,11 @@ describe('Advanced Recursion & D&C', () => {
       }
     `)
     // 3^13 = 1594323, 1594323 % 1000 = 323
-    expect(interp.getOutput().join('')).toContain('323')
+    expect(run.out).toContain('323')
   })
 
   it('merge sort with auxiliary array (recursive)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int arr[100];
@@ -2457,7 +2465,7 @@ describe('Advanced Recursion & D&C', () => {
         return 0;
       }
     `, ['8', '38', '27', '43', '3', '9', '82', '10', '15'])
-    expect(interp.getOutput().join('')).toContain('3 9 10 15 27 38 43 82')
+    expect(run.out).toContain('3 9 10 15 27 38 43 82')
   })
 })
 
@@ -2467,7 +2475,7 @@ describe('Advanced Recursion & D&C', () => {
 
 describe('Simulation & Implementation', () => {
   it('spiral matrix traversal (flattened)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2510,11 +2518,11 @@ describe('Simulation & Implementation', () => {
       }
     `, ['3', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
     // Spiral: 1 2 3 6 9 8 7 4 5
-    expect(interp.getOutput().join('')).toContain('1 2 3 6 9 8 7 4 5')
+    expect(run.out).toContain('1 2 3 6 9 8 7 4 5')
   })
 
   it('Pascal triangle row computation', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2536,14 +2544,14 @@ describe('Simulation & Implementation', () => {
       }
     `, ['6'])
     // Row 6 of Pascal's triangle: 1 6 15 20 15 6 1
-    expect(interp.getOutput().join('')).toContain('1 6 15 20 15 6 1')
+    expect(run.out).toContain('1 6 15 20 15 6 1')
   })
 
   it('simulate stack-based calculator with multiple operations', async () => {
     // RPN calculator: each token is one input.
     // Positive numbers are operands pushed to stack.
     // -1=+, -2=-, -3=*, -4=/ are operators that pop two and push result.
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2576,12 +2584,12 @@ describe('Simulation & Implementation', () => {
       }
     `, ['7', '3', '4', '-3', '2', '-1', '5', '-2'])
     // 3 4 * 2 + 5 - → (3*4)+2-5 = 12+2-5 = 9
-    expect(interp.getOutput().join('')).toContain('9')
+    expect(run.out).toContain('9')
   })
 
   it('sparse polynomial multiplication', async () => {
     // Multiply two polynomials represented as coefficient arrays
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2607,11 +2615,11 @@ describe('Simulation & Implementation', () => {
       }
     `, ['3', '3', '1', '2', '3', '4', '5', '6'])
     // (1+2x+3x^2)(4+5x+6x^2) = 4+13x+28x^2+27x^3+18x^4
-    expect(interp.getOutput().join('')).toContain('4 13 28 27 18')
+    expect(run.out).toContain('4 13 28 27 18')
   })
 
   it('magic square verification', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2655,7 +2663,7 @@ describe('Simulation & Implementation', () => {
       }
     `, ['3', '2', '7', '6', '9', '5', '1', '4', '3', '8'])
     // Lo Shu magic square, all lines = 15
-    expect(interp.getOutput().join('')).toContain('MAGIC 15')
+    expect(run.out).toContain('MAGIC 15')
   })
 })
 
@@ -2665,7 +2673,7 @@ describe('Simulation & Implementation', () => {
 
 describe('printf/scanf Programs', () => {
   it('matrix determinant 3x3 with printf', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <cstdio>
       using namespace std;
       int main() {
@@ -2679,11 +2687,11 @@ describe('printf/scanf Programs', () => {
       }
     `, ['1', '2', '3', '4', '5', '6', '7', '8', '9'])
     // det = 1*(45-48) - 2*(36-42) + 3*(32-35) = -3+12-9 = 0
-    expect(interp.getOutput().join('')).toContain('0')
+    expect(run.out).toContain('0')
   })
 
   it('selection sort with scanf/printf', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <cstdio>
       using namespace std;
       int main() {
@@ -2707,11 +2715,11 @@ describe('printf/scanf Programs', () => {
         return 0;
       }
     `, ['6', '64', '25', '12', '22', '11', '1'])
-    expect(interp.getOutput().join('')).toContain('1 11 12 22 25 64')
+    expect(run.out).toContain('1 11 12 22 25 64')
   })
 
   it('bubble sort with early termination (printf)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <cstdio>
       using namespace std;
       int main() {
@@ -2739,7 +2747,7 @@ describe('printf/scanf Programs', () => {
         return 0;
       }
     `, ['5', '5', '1', '4', '2', '8'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('1 2 4 5 8')
   })
 })
@@ -2750,7 +2758,7 @@ describe('printf/scanf Programs', () => {
 
 describe('Complex Multi-function Programs', () => {
   it('complete number theory toolkit: gcd, lcm, isPrime, factorize', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int gcd(int a, int b) {
@@ -2785,7 +2793,7 @@ describe('Complex Multi-function Programs', () => {
         return 0;
       }
     `, ['12', '30'])
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('GCD: 6')
     expect(output).toContain('LCM: 60')
     // Primes between 12 and 30: 13, 17, 19, 23, 29 → 5
@@ -2793,7 +2801,7 @@ describe('Complex Multi-function Programs', () => {
   })
 
   it('recursive flood fill on 2D grid', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int grid[100];
@@ -2833,7 +2841,7 @@ describe('Complex Multi-function Programs', () => {
         '0', '0', '1', '1',
         '1', '1'])
     // Fill from (1,1) which is 1 → all connected 1s become 9
-    const output = interp.getOutput().join('')
+    const output = run.out
     // Original 1-region at (1,1) connects to: (0,0),(0,1),(1,0),(1,1),(1,2),(2,2),(2,3)
     expect(output).toContain('9 9 0 0')  // row 0
     expect(output).toContain('9 9 9 0')  // row 1
@@ -2841,7 +2849,7 @@ describe('Complex Multi-function Programs', () => {
   })
 
   it('counting islands (connected components on grid)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int grid[100];
@@ -2881,11 +2889,11 @@ describe('Complex Multi-function Programs', () => {
         '0', '0', '1', '0', '0',
         '0', '0', '0', '1', '1'])
     // 3 islands: {(0,0),(0,1),(1,0),(1,1)}, {(2,2)}, {(3,3),(3,4)}
-    expect(interp.getOutput().join('')).toContain('3')
+    expect(run.out).toContain('3')
   })
 
   it('multiple recursive functions: ackermann (small values)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int ack(int m, int n) {
@@ -2901,7 +2909,7 @@ describe('Complex Multi-function Programs', () => {
         return 0;
       }
     `)
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('1')   // ack(0,0) = 1
     expect(output).toContain('3')   // ack(1,1) = 3
     expect(output).toContain('7')   // ack(2,2) = 7
@@ -2915,7 +2923,7 @@ describe('Complex Multi-function Programs', () => {
 
 describe('APCS Classic Extended', () => {
   it('APCS: 數字反轉 (digit reversal)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2936,12 +2944,12 @@ describe('APCS Classic Extended', () => {
         return 0;
       }
     `, ['-12345'])
-    expect(interp.getOutput().join('')).toContain('-54321')
+    expect(run.out).toContain('-54321')
   })
 
   it('APCS: 身分證驗證 (checksum validation)', async () => {
     // Simplified: given 9 digits, compute weighted checksum
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2969,11 +2977,11 @@ describe('APCS Classic Extended', () => {
     // weights: 9,8,7,6,5,4,3,2,1
     // sum = 9+16+21+24+25+24+21+16+9 = 165
     // 165 % 11 = 0 → VALID
-    expect(interp.getOutput().join('')).toContain('VALID')
+    expect(run.out).toContain('VALID')
   })
 
   it('APCS: 最長連續遞增子序列 (longest consecutive increasing)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -2996,11 +3004,11 @@ describe('APCS Classic Extended', () => {
       }
     `, ['10', '1', '3', '5', '4', '2', '3', '4', '5', '6', '1'])
     // Longest: [2,3,4,5,6] = length 5
-    expect(interp.getOutput().join('')).toContain('5')
+    expect(run.out).toContain('5')
   })
 
   it('APCS: 矩陣旋轉90度 (rotate matrix clockwise)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -3032,14 +3040,14 @@ describe('APCS Classic Extended', () => {
     // 1 2 3       7 4 1
     // 4 5 6  →    8 5 2
     // 7 8 9       9 6 3
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('7 4 1')
     expect(output).toContain('8 5 2')
     expect(output).toContain('9 6 3')
   })
 
   it('APCS: 最大利潤 (max profit stock, one transaction)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -3059,11 +3067,11 @@ describe('APCS Classic Extended', () => {
       }
     `, ['6', '7', '1', '5', '3', '6', '4'])
     // Buy at 1, sell at 6 → profit 5
-    expect(interp.getOutput().join('')).toContain('5')
+    expect(run.out).toContain('5')
   })
 
   it('APCS: 二進位轉換 (decimal to binary)', async () => {
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -3089,12 +3097,12 @@ describe('APCS Classic Extended', () => {
       }
     `, ['42'])
     // 42 = 101010
-    expect(interp.getOutput().join('')).toContain('101010')
+    expect(run.out).toContain('101010')
   })
 
   it('APCS: 區間合併 (merge overlapping intervals)', async () => {
     // Sort by start (use insertion sort), then merge
-    const interp = await runCode(`
+    const run = await runCode(`
       #include <iostream>
       using namespace std;
       int main() {
@@ -3141,7 +3149,7 @@ describe('APCS Classic Extended', () => {
     `, ['5', '1', '3', '2', '6', '8', '10', '15', '18', '17', '20'])
     // Sorted: [1,3],[2,6],[8,10],[15,18],[17,20]
     // Merged: [1,6],[8,10],[15,20]
-    const output = interp.getOutput().join('')
+    const output = run.out
     expect(output).toContain('1 6')
     expect(output).toContain('8 10')
     expect(output).toContain('15 20')

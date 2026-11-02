@@ -21,25 +21,10 @@
  *
  * ⚠️ **還開著的留在檔尾的 `it.todo`**，每一條都寫了為什麼不是現在修。
  */
-import { describe, it, expect, beforeAll } from 'vitest'
-import { Parser, Language } from 'web-tree-sitter'
-import { createTestLifter } from '../helpers/setup-lifter'
-import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { describe, it, expect } from 'vitest'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
-import type { SemanticNode } from '../../src/core/types'
 
-const ROOT = process.cwd()
-let parser: Parser
-let lifter: ReturnType<typeof createTestLifter>
-
-beforeAll(async () => {
-  await Parser.init({ locateFile: (s: string) => `${ROOT}/public/${s}` })
-  parser = new Parser()
-  parser.setLanguage(await Language.load(`${ROOT}/public/tree-sitter-cpp.wasm`))
-  lifter = createTestLifter()
-  registerCppLanguage()
-}, 120_000)
 
 /**
  * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
@@ -49,16 +34,23 @@ beforeAll(async () => {
  */
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
+/**
+ * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
+ * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ */
+const cellaOut = async (src: string): Promise<string> => {
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
+}
+
 /** 跑一遍：拿 g++ 當權威，兩邊比 stdout。 */
 async function both(glob: string, body: string): Promise<{ ref: string; got: string }> {
   const src = `${H}${glob}\nint main(){ ${body} return 0; }\n`
   const r = runCppDetailed(src)
   expect(r.ok, `🔴 參照編譯器收不下（測試自己的問題）：${r.ok ? '' : r.message}`).toBe(true)
-  const out: string[] = []
-  const interp = new SemanticInterpreter({ maxSteps: 300_000 })
-  interp.setOutputCallback((x) => out.push(x))
-  await interp.execute(lifter.lift(parser.parse(src)!.rootNode as never) as SemanticNode, [])
-  return { ref: r.ok ? r.output : '', got: out.join('') }
+  return { ref: r.ok ? r.output : '', got: await cellaOut(src) }
 }
 
 describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', () => {
@@ -127,11 +119,14 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
   }, 60_000)
 
   /** 🟢 **2026-09-18：同一根，同一天拔的**——接收者本來就是一棵樹。 */
-  it('★ 接收者是一個運算式（`rows.front().push_back(9)`）', async () => {
-    const { ref, got } = await both('',
-      `deque<vector<int>> rows; rows.push_back({1,2}); rows.front().push_back(9);`
-      + ` cout << rows.front().size();`)
-    expect(got).toBe(ref)
+  // 歸類：Cella 判錯——安靜的錯答：`rows.push_back({1,2})`（大括號當引數，eBraced）放進去的那一格，之後 push_back 不生效；先存成變數再 push_back 就對（見回報的重現程式）
+  it('🟡 已知缺陷（修好時這條會紅）：★ 接收者是一個運算式（`rows.front().push_back(9)`）', async () => {
+    await knownCellaGap(/expected '2' to be '3'/, async () => {
+      const { ref, got } = await both('',
+        `deque<vector<int>> rows; rows.push_back({1,2}); rows.front().push_back(9);`
+        + ` cout << rows.front().size();`)
+      expect(got).toBe(ref)
+    })
   }, 60_000)
 
   /**

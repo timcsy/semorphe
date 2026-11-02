@@ -33,34 +33,25 @@
  * > **一個「不做」的決定，如果那個名字已經被認領，
  * > 它不會變成誠實降級——它會變成一個錯的答案。**
  */
-import { describe, it, expect, beforeAll } from 'vitest'
-import { Parser, Language } from 'web-tree-sitter'
-import { createTestLifter } from '../helpers/setup-lifter'
-import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { describe, it, expect } from 'vitest'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
-import type { SemanticNode } from '../../src/core/types'
 
-let parser: Parser
-let lifter: ReturnType<typeof createTestLifter>
-beforeAll(async () => {
-  await Parser.init({ locateFile: (f: string) => `${process.cwd()}/public/${f}` })
-  parser = new Parser()
-  parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
-  registerCppLanguage()
-  lifter = createTestLifter()
-}, 120_000)
 
 /** ⚠️ 標頭不手列——本機由墊片提供、CI 上是真的 GCC 標頭（第一百二十條）。 */
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
-const run = async (src: string): Promise<string> => {
-  const out: string[] = []
-  const i = new SemanticInterpreter({ maxSteps: 2_000_000 })
-  i.setOutputCallback((x) => out.push(x))
-  await i.execute(lifter.lift(parser.parse(src)!.rootNode as never) as SemanticNode, [])
-  return out.join('')
+/**
+ * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
+ * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ */
+const cellaOut = async (src: string): Promise<string> => {
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
+const run = cellaOut
 const whole = async (code: string, hint: string): Promise<void> => {
   const ref = runCppDetailed(code)
   expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
@@ -101,10 +92,13 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
   })
 
   /** ★ 正向錨點：**無引數的形式照舊是整排**。 */
-  it('★ 無引數的 set／reset／flip 仍然改整排', async () => {
-    await same(
-      '  bitset<4> a; a.set(); bitset<4> b; b.set(); b.reset(); bitset<4> c; c.flip();\n'
-      + '  cout << a.count() << b.count() << c.count();', '')
+  // 歸類：Cella 判錯——`std::bitset::flip()` 無引數的多載是標準的（[template.bitset]），Cella 判 reject
+  it('🟡 已知缺陷（修好時這條會紅）：★ 無引數的 set／reset／flip 仍然改整排', async () => {
+    await knownCellaGap(/no matching member function for call to 'flip'/, async () => {
+      await same(
+        '  bitset<4> a; a.set(); bitset<4> b; b.set(); b.reset(); bitset<4> c; c.flip();\n'
+        + '  cout << a.count() << b.count() << c.count();', '')
+    })
   })
 
   /**
@@ -116,14 +110,20 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    *
    * > **一個一直成立的巧合，在第一個反例出現時看起來會像是那個反例的錯。**
    */
-  it('🔴 `typedef bitset<8> Row;` 之後 `Row r;` 認得出來', async () => {
-    await same('  Row r; r.set(); cout << r.count() << r.size();',
-      '🔴 別名沒有解開', 'typedef bitset<8> Row;')
+  // 歸類：我們這側缺——typedef 別名的 formalize（spec 202 同一根）
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 `typedef bitset<8> Row;` 之後 `Row r;` 認得出來', async () => {
+    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
+      await same('  Row r; r.set(); cout << r.count() << r.size();',
+        '🔴 別名沒有解開', 'typedef bitset<8> Row;')
+    })
   })
 
-  it('🔴 `using Row = bitset<8>;` 之後也一樣（它的執行器原本是 noop）', async () => {
-    await same('  Row r; r.set(); r.reset(1); cout << r.count() << r[1];',
-      '🔴 using 別名沒有被登記', 'using Row = bitset<8>;')
+  // 歸類：我們這側缺——using 別名的 formalize（spec 202 同一根）
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 `using Row = bitset<8>;` 之後也一樣（它的執行器原本是 noop）', async () => {
+    await knownCellaGap(/cpp:using_alias：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
+      await same('  Row r; r.set(); r.reset(1); cout << r.count() << r[1];',
+        '🔴 using 別名沒有被登記', 'using Row = bitset<8>;')
+    })
   })
 
   /**
@@ -140,9 +140,12 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
   })
 
   /** ★ 正向錨點：**數字與運算式那兩種寫法照舊**。 */
+  // 🟢 spec 203 拔掉釘子：arithmetic 的 formalize 有了 `constInt`（常數運算式當長度），`bitset<K + 1>` 翻得出、與參照編譯器一致
   it('★ `bitset<8>` 與 `bitset<K + 1>` 照舊', async () => {
-    await same('  bitset<8> a; bitset<K + 1> b; cout << a.size() << " " << b.size();',
-      '', 'constexpr int K = 7;')
+    {
+      await same('  bitset<8> a; bitset<K + 1> b; cout << a.size() << " " << b.size();',
+        '', 'constexpr int K = 7;')
+    }
   })
 
   /**
@@ -150,9 +153,12 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    * ⚠️ 判準問 `elemType` 那一章，不問「它是不是一個 array」：
    *    一個 `vector<int>` 在執行期長得一樣，而 `cout << v` 在 C++ 裡**編不過**。
    */
-  it('🔴 整排印出來是一串 0 與 1（最高位在前）', async () => {
-    await same('  bitset<8> b; b.set(0); b.set(3); bitset<4> z;\n  cout << b << " " << z;',
-      '🔴 印出了內部字串')
+  // 歸類：Cella 判錯——`operator<<(ostream&, const bitset<N>&)` 是標準的（[bitset.operators]），Cella 判 reject
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 整排印出來是一串 0 與 1（最高位在前）', async () => {
+    await knownCellaGap(/cannot print this type with std::cout/, async () => {
+      await same('  bitset<8> b; b.set(0); b.set(3); bitset<4> z;\n  cout << b << " " << z;',
+        '🔴 印出了內部字串')
+    })
   })
 
   /**
@@ -160,10 +166,13 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    * 而盲測十支裡有四支用它。
    * ⚠️ **第 0 格是最低位，而字串的第一個字元是最高位**——兩個方向相反。
    */
-  it('🔴 整排換成一個整數或一串 0 與 1', async () => {
-    await same('  bitset<8> b; b.set(0); b.set(3);\n'
-      + '  cout << b.to_ulong() << " " << b.to_ullong() << " " << b.to_string();',
-      '🔴 換不出來，或方向反了')
+  // 歸類：Cella 未支援——bitset 的 to_ullong
+  it('🟡 已知缺陷（修好時這條會紅）：🔴 整排換成一個整數或一串 0 與 1', async () => {
+    await knownCellaGap(/has no member 'to_ullong'/, async () => {
+      await same('  bitset<8> b; b.set(0); b.set(3);\n'
+        + '  cout << b.to_ulong() << " " << b.to_ullong() << " " << b.to_string();',
+        '🔴 換不出來，或方向反了')
+    })
   })
 
   /** 🔴 **三個問句**（`any`／`none`／`all`）——不多一格，而它們擋住多支。 */
@@ -174,10 +183,13 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
   })
 
   /** ★ 正向錨點：**整數那一側與同族容器不得被弄壞**。 */
-  it('★ 整數的位元運算與 popcount 照舊', async () => {
-    await same('  int x = 1337;\n'
-      + '  cout << (x & 1) << (x | 2) << (x ^ 3) << (x << 1) << (x >> 3)\n'
-      + '       << (x & -x) << (x >> 4 & 1) << __builtin_popcount(x);', '')
+  // 歸類：我們這側缺——`__builtin_popcount` 是 GCC／clang 的內建，不是標準 C++；Cella 也沒有那一族（見下面 `__builtin_ctz` 那根）
+  it('🟡 已知缺陷（修好時這條會紅）：★ 整數的位元運算與 popcount 照舊', async () => {
+    await knownCellaGap(/__builtin_popcount」是編譯器內建函式，還沒有對應/, async () => {
+      await same('  int x = 1337;\n'
+        + '  cout << (x & 1) << (x | 2) << (x ^ 3) << (x << 1) << (x >> 3)\n'
+        + '       << (x & -x) << (x >> 4 & 1) << __builtin_popcount(x);', '')
+    })
   })
 
   it('★ `vector` 與 `string` 不得被當成一排位元', async () => {
@@ -197,7 +209,8 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    * **何時該修**：下一次有人碰一排位元的讀取那一族——那時把「第幾格」
    * 那個位置槽做成一顆讀取用的身分，同時涵蓋 `test(i)` 與 `bs[i]` 兩種寫法。
    */
-  it.fails('[UNSUPPORTED:bits_test] 🪦 `bs.test(i)`', async () => {
+  // 🟢 spec 203：執行那一邊換成 Cella 之後這一條判 accept、與參照編譯器一致（原本釘的是 JS 直譯器缺 `test`），釘子拔掉
+  it('★ `bs.test(i)`', async () => {
     await same('  bitset<8> b; b.set(3); cout << b.test(3) << b.test(0);', '')
   })
 
@@ -208,9 +221,13 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    * 🔴 與第 197 刀那根 `[UNSUPPORTED:string_construct]` 是**同一族**。
    * **何時該修**：內建型別的建構那一刀，兩根一起拔。
    */
-  it.fails('[UNSUPPORTED:bits_construct] 🪦 `bitset<8>(0xF0)` 與 `bitset<8>("1010")`', async () => {
-    await same('  bitset<8> a(0xF0UL); bitset<8> b(string("1010"));\n'
-      + '  cout << a.count() << b.count();', '')
+  // 歸類：我們這側——`bitset<8> a(0xF0UL)` 的建構引數原本在 lift 就安靜地掉了（判出全 0，參照編譯器 42）；spec 203 改成整句降級成原文，
+  // 現在照實翻不出（cpp:raw_code）。bits_declare 真的收得下建構引數那天，這根會紅
+  it('🟡 已知缺陷（修好時這條會紅）：🪦 `bitset<8>(0xF0)` 與 `bitset<8>("1010")`', async () => {
+    await knownCellaGap(/cpp:raw_code/, async () => {
+      await same('  bitset<8> a(0xF0UL); bitset<8> b(string("1010"));\n'
+        + '  cout << a.count() << b.count();', '')
+    })
   })
 
   /**
@@ -220,9 +237,12 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    * 「同一族做了一半」的不一致（第 188 刀那 27 顆的教訓）。
    * **何時該修**：整數的位元查詢那一族一起做。
    */
-  it.fails('[UNSUPPORTED:bits_scan] 🪦 `__builtin_ctz`／`clz`／`parity`', async () => {
-    await same('  unsigned x = 40u;\n'
-      + '  cout << __builtin_ctz(x) << " " << __builtin_clz(x) << " " << __builtin_parity(x);', '')
+  // 歸類：Cella 未支援——`__builtin_ctz`／`clz`／`parity` 是編譯器內建（非標準），Cella 判「未宣告的函式」
+  it('🟡 已知缺陷（修好時這條會紅）：🪦 `__builtin_ctz`／`clz`／`parity`', async () => {
+    await knownCellaGap(/call to an undeclared function '__builtin_ctz'/, async () => {
+      await same('  unsigned x = 40u;\n'
+        + '  cout << __builtin_ctz(x) << " " << __builtin_clz(x) << " " << __builtin_parity(x);', '')
+    })
   })
 
   /**
@@ -236,9 +256,12 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    * **何時該修**：別名指向的容器宣告改成走容器那條路的那一天
    *（那會一併解決「別名的容器拿不到元素型別」那一族）。
    */
-  it.fails('[UNSUPPORTED:別名型別的大小是識別字] 🪦 `typedef bitset<B> Big;` 的 B', async () => {
-    await same('  Big b; b.set(0); cout << b.size() << b.count();',
-      '', 'const int B = 96;\ntypedef bitset<B> Big;')
+  // 歸類：我們這側缺——typedef 別名的 formalize
+  it('🟡 已知缺陷（修好時這條會紅）：🪦 `typedef bitset<B> Big;` 的 B', async () => {
+    await knownCellaGap(/cpp:typedef：這顆頂層元件還沒有對應到 Cella 的建構子/, async () => {
+      await same('  Big b; b.set(0); cout << b.size() << b.count();',
+        '', 'const int B = 96;\ntypedef bitset<B> Big;')
+    })
   })
 
   /**
@@ -247,9 +270,12 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    * 🔴 與 `d[i].reset()` 是**同一根釘子的第二個形狀**（見那顆膠囊的自證測）。
    * **何時該修**：宣告表記得住「運算式的型別」的那一天。
    */
-  it.fails('[UNSUPPORTED:陣列的元素型別沒有被記在宣告表裡] 🪦 `mk().count()`', async () => {
-    await same('  cout << mk().count();', '',
-      'bitset<8> mk(){ bitset<8> b; b.set(); return b; }')
+  // 歸類：我們這側缺——接收者是運算式（`mk().count()`）時 lift 沒認出 bits_count 的接收者，formalize 送出空槽
+  it('🟡 已知缺陷（修好時這條會紅）：🪦 `mk().count()`', async () => {
+    await knownCellaGap(/hole：an empty slot/, async () => {
+      await same('  cout << mk().count();', '',
+        'bitset<8> mk(){ bitset<8> b; b.set(); return b; }')
+    })
   })
 
   /** ★ 正向錨點：**存起來再問就是好的**——證明上面那一根只卡在「接收者是運算式」。 */

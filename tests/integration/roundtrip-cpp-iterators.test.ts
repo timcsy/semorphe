@@ -37,7 +37,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -64,13 +64,17 @@ const nodes = (n: SemanticNode, out: SemanticNode[] = []): SemanticNode[] => {
   return out
 }
 const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.componentId)
-const run = async (src: string): Promise<string> => {
-  const out: string[] = []
-  const interp = new SemanticInterpreter({ maxSteps: 400_000 })
-  interp.setOutputCallback((x) => out.push(x))
-  await interp.execute(lift(src), [])
-  return out.join('')
+/**
+ * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
+ * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ */
+const cellaOut = async (src: string): Promise<string> => {
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
+const run = cellaOut
 /**
  * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
  * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
@@ -122,8 +126,11 @@ describe('round-trip：迭代器一族', () => {
     }
   })
 
-  it.runIf(hasReferenceCompiler())('🔴 行為：位置迴圈與 `it->`', async () => {
-    await sameAsCompiler(WALK, '🔴 修之前這一段整個是 raw code')
+  // 歸類：Cella 判錯——類別迭代器的 `it->first` 被判「不是指標」；`(*it).first` 是好的
+  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 行為：位置迴圈與 `it->`', async () => {
+    await knownCellaGap(/indirection requires a pointer/, async () => {
+      await sameAsCompiler(WALK, '🔴 修之前這一段整個是 raw code')
+    })
   }, 60_000)
 
   it.runIf(hasReferenceCompiler())('🔴 行為：`erase(find(x))` 只刪一個（語料最常見的寫法）', async () => {
@@ -141,12 +148,15 @@ describe('round-trip：迭代器一族', () => {
       '🔴 找不到必須回「結尾之後」，否則這個寫法整個失去意義')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 行為：有序容器裝一對值（AP325/4/4_15 的形狀）', async () => {
-    await sameAsCompiler(
-      `multiset<pair<int,int>> st; st.insert({3,4}); st.insert({1,2});
-       for (auto it = st.begin(); it != st.end(); ++it) cout << it->first << it->second;
-       auto lo = st.lower_bound({2,0}); cout << lo->first;`,
-      '🔴 三個缺陷疊在這裡：容器不記元素型別、比較規則不認一對值、查找把每一格拆開')
+  // 歸類：Cella 判錯——類別迭代器的 `->` 被判「不是指標」
+  it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 行為：有序容器裝一對值（AP325/4/4_15 的形狀）', async () => {
+    await knownCellaGap(/indirection requires a pointer/, async () => {
+      await sameAsCompiler(
+        `multiset<pair<int,int>> st; st.insert({3,4}); st.insert({1,2});
+         for (auto it = st.begin(); it != st.end(); ++it) cout << it->first << it->second;
+         auto lo = st.lower_bound({2,0}); cout << lo->first;`,
+        '🔴 三個缺陷疊在這裡：容器不記元素型別、比較規則不認一對值、查找把每一格拆開')
+    })
   }, 60_000)
 
   it.runIf(hasReferenceCompiler())('🔴 行為：最大的那一個與反向走訪', async () => {

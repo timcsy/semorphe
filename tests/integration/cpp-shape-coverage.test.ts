@@ -27,7 +27,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import { runCpp, hasReferenceCompiler } from '../helpers/run-cpp'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { StylePreset, SemanticNode } from '../../src/core/types'
@@ -52,11 +52,17 @@ const idsOf = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) idsOf(k, out)
   return out
 }
-async function run(src: string): Promise<string> {
-  const interp = new SemanticInterpreter({ maxSteps: 200000 })
-  await interp.execute(lift(src) as never)
-  return interp.getOutput().join('')
+/**
+ * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
+ * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ */
+const cellaOut = async (src: string): Promise<string> => {
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
+const run = cellaOut
 
 // ─────────────────────────────────────────────────────────
 // 收得下的四個形狀——**身分、來回、答案**三項都要

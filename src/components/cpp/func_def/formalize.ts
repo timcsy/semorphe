@@ -1,5 +1,20 @@
 /** `cpp:func_def` 的 **formalize** 路——從 `providers/cella/formalize/` 的分派原封搬過來（第 389 刀）。契約見 `core/formalize-contract.ts`。 */
-import type { FormalizeRegistrar } from '../../../core/formalize-contract'
+import type { FormalizeRegistrar, FormalizeContext } from '../../../core/formalize-contract'
+import type { SemanticNode } from '../../../core/types'
+
+/**
+ * 參數的預設值（`int b = 10`）：lift 把它留成**原文**（`param_decl.properties.default`），不是一棵子樹。
+ * 字面（數字、字元、字串）就借那幾顆字面元件自己的 formalize 翻；其餘的運算式誠實 unknown（spec 203：
+ * 在此之前一律送 `dflt: null`，於是 `add(1)` 被 Cella 判「no matching function」——那是我們少送了，不是 Cella 錯）。
+ */
+function defaultOf(q: SemanticNode, f: FormalizeContext): unknown {
+  const text = String(q.properties?.default ?? '').trim()
+  if (text === '') return null
+  // 字面量照登記翻（哪一顆認得這段原文由元件自己登記——不點名身分；spec 203 的就近性護欄）
+  const lit = f.literalExpr(text, `${q.id}/default`)
+  if (lit) return lit
+  return f.miss(q, `參數預設值「${text}」不是字面，還沒有對應`)
+}
 
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:func_def', (n, f) => {
@@ -9,7 +24,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const raw = n.slots?.params ?? []
     const onlyVoid = raw.length === 1 && String(raw[0].properties?.type ?? '').trim() === 'void' && String(raw[0].properties?.name ?? '').trim() === ''
     const params = (onlyVoid ? [] : raw).map((q) =>
-      f.k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: f.type(q.properties?.type, q), dflt: null }))
+      f.k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: f.type(q.properties?.type, q), dflt: defaultOf(q, f) }))
     return [f.k('iFun', { f: f.k('fdef', { n: n.id, noexc: false, name: String(p.name ?? ''), ret, params, body: f.block(n, 'body') }) })]
   })
   // 作用域：參數與本體同一層

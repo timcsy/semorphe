@@ -1320,6 +1320,25 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           return createNode(componentId, props)
         }
 
+        /**
+         * 🔴 **建構引數收不下 → 整句降級，不得安靜地丟掉**（spec 203，2026-11-02）。
+         *
+         * `pair<int,int> p(1, 2);` 與 `bitset<8> b(42);` 的 `(…)` 被 `ctorSlots` 收成 size／fill，
+         * 而這兩顆元件沒有宣告能放建構引數的接點（bitset 的 `size` 是樣板引數那一格）——
+         * 於是走到 `buildOne` 最後那個 `createNode(componentId, props)`，**引數整個消失**：
+         *
+         *     學生寫     pair<int,int> p(1, 2);     bitset<8> b(42);
+         *     轉一圈     pair<int, int> p;           bitset<8> b;
+         *
+         * 換成 Cella 判準時、拿參照編譯器交叉比對才抓到（判決照那棵樹印出 `00`、`0`）。
+         * 處置與「宣告說不下這麼多初始值」那一支相同：**降級的單位是整句**（`buildRawCode`），
+         * 原文一字不差地留著。讓這兩顆真的收得下建構引數是另一刀（新的接點、積木插槽、formalize）。
+         */
+        const dropsCtorArgs = declList.some((d) => {
+          const s = ctorSlots(d, ctx)
+          return s.size !== null && (argIsSize || !hasSizeDecl.has(componentId))
+        })
+        if (dropsCtorArgs) return buildRawCode(node.text)
         if (declList.length === 1) return buildOne(declList[0])
         return buildVarDeclare(
           // ⚠️ CTAD 沒有 `template_type` 節點可以照抄原文——把推回來的那一段寫出來。

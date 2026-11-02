@@ -112,8 +112,11 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const index = (n: SemanticNode): void => {
     byId.set(n.id, n)
     // `int x, y;` 是一顆 `_multi_field` 包著平行的宣告——攤平（第 213 刀，同 struct_declare 的 formalize）
-    const members = (n.slots?.members ?? []).flatMap((m) => (m.componentId === '_multi_field' ? m.slots?.fields ?? [] : [m]))
-    for (const m of members) if (m.properties?.type !== undefined) memberFields.add(m.id)
+    // spec 203：class 的成員分在 public／protected／private 三個槽（struct 是 members 一個槽）；
+    //   有型別、但自己註冊成成員的（靜態成員：所有物件共用一份，參照它是 eVar 不是 eSelf）不是欄位
+    const members = ['members', 'public', 'protected', 'private'].flatMap((slot) => n.slots?.[slot] ?? [])
+      .flatMap((m) => (m.componentId === '_multi_field' ? m.slots?.fields ?? [] : [m]))
+    for (const m of members) if (m.properties?.type !== undefined && !FORMALIZE.member.has(m.componentId)) memberFields.add(m.id)
     if (isFunctionDefinition(n.componentId) && n.properties?.name) functionNames.add(String(n.properties.name))
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(index)
   }
@@ -232,8 +235,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   }
   collectMacros(tree)
   const literalNode = (text: string, id: string): SemanticNode | undefined => {
-    for (const [componentId, test] of FORMALIZE.literal) {
-      if (test(text)) return { id, componentId, properties: { value: text }, slots: {} } as SemanticNode
+    for (const [componentId, { test, value }] of FORMALIZE.literal) {
+      if (test(text)) return { id, componentId, properties: { value: value ? value(text) : text }, slots: {} } as SemanticNode
     }
     return undefined
   }
@@ -340,6 +343,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       return v !== undefined && /^[A-Za-z_]\w*$/.test(v) ? v : name
     },
     functionMacro: (name) => functionMacros.has(name),
+    literalExpr: (text, id) => { const probe = literalNode(text.trim(), id); return probe ? expr(probe) : undefined },
+    ownsMember: (n) => FORMALIZE.member.has(n.componentId),
     item: (n) => item(n),
     nodeById: (id) => byId.get(id),
     member: (m) => {

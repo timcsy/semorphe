@@ -14,29 +14,15 @@
  * 護欄的失敗訊息是「這 31 段程式輸出不同」，**它說不出為什麼**。
  * 而這五支說得出——一支紅，就知道是哪一個機制壞了。
  */
-import { describe, it, expect, beforeAll } from 'vitest'
-import { Parser, Language } from 'web-tree-sitter'
-import { createTestLifter } from '../helpers/setup-lifter'
-import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import type { SemanticNode } from '../../src/core/types'
+import { describe, it, expect } from 'vitest'
+import { runCella, describeCellaResult, expectCellaOut, knownCellaGap } from '../helpers/cella-run'
 
-let parser: Parser
-
-beforeAll(async () => {
-  await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
-  parser = new Parser()
-  parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
-  registerCppLanguage()
-})
-
+// spec 203（重構 6c-2e）：執行的判準從 JS 直譯器換成 Cella（走產品同一條 lift → formalize → 判決）。
+// 這支的五個根因都是「直譯器印出來的值」；換成 Cella 之後它們守的是**同一段程式經 lift ＋ formalize 之後，C++ 的答案還是那個值**
+// ——lift 讀漏了初值、formalize 翻錯了形狀，都會在這裡紅。不是 accept 的話回 `ERR=` ＋ 說得出原因的判決描述。
 async function run(prelude: string, bodyText: string): Promise<string> {
-  const tree = parser.parse(prelude + bodyText)
-  if (!tree) throw new Error('parse 失敗')
-  const semanticTree = createTestLifter().lift(tree.rootNode as never) as SemanticNode
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(semanticTree)
-  return i.getOutput().join('')
+  const r = await runCella(prelude + bodyText)
+  return r.verdict === 'accept' ? r.out : 'ERR=' + describeCellaResult(r)
 }
 
 const IO = '#include <iostream>\nusing namespace std;\n'
@@ -86,20 +72,18 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
   })
 
   // ── 根因 4：cpp:range_sum 是回傳 0 的空實作 ──────────────────────
-  it('★ 範圍加總要真的加', async () => {
+  // 🟡 Cella 0.1.202611020258 判 unknown：std::accumulate is not supported yet（模型未支援；formalize 照 generate 送 eCall，spec 203 補的）
+  it('🟡 已知缺陷（修好時這條會紅）：★ 範圍加總要真的加', () => knownCellaGap(/std::accumulate is not supported/, async () => {
     // 🔴 修之前回 0——`register('cpp:range_sum', async () => ({ type:'int', value: 0 }))`。
     // ⚠️ 而那個空實作**就寫在同一個檔案裡**「解析不了時擲錯，不回傳『沒事』」
     //    這句話的下面兩行。
-    expect(
-      await run(NUM, `int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(v.begin(), v.end(), 0); }`),
-    ).toBe('15')
-  })
+    await expectCellaOut(NUM + `int main(){ vector<int> v = {1,2,3,4,5}; cout << accumulate(v.begin(), v.end(), 0); }`, '15')
+  }))
 
-  it('★ 初值要被算進去', async () => {
-    expect(
-      await run(NUM, `int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.begin(), v.end(), 100); }`),
-    ).toBe('106')
-  })
+  // 🟡 同上：Cella 未支援 std::accumulate
+  it('🟡 已知缺陷（修好時這條會紅）：★ 初值要被算進去', () => knownCellaGap(/std::accumulate is not supported/, async () => {
+    await expectCellaOut(NUM + `int main(){ vector<int> v = {1,2,3}; cout << accumulate(v.begin(), v.end(), 100); }`, '106')
+  }))
 
   // ── 根因 5：constructorOf 零呼叫者 ──────────────────────────────
   it('★ 預設建構子要被呼叫', async () => {
@@ -149,15 +133,16 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
   //
   // 辨識那一路產出 `cpp_initializer_list`（結構節點），而執行器只認元件
   // ——於是巢狀的 `{…}` 直接丟 `UNKNOWN_COMPONENT`。三種形狀共用一支
-  // `evalInitializer`（`core/runtime/aggregate.ts`）。
-  it('★ 結構體陣列的聚合初始化', async () => {
-    expect(
-      await run(
-        `#include <iostream>\n#include <string>\nusing namespace std;\n`,
+  // `evalInitializer`（當時在直譯器的聚合初始化模組裡；spec 203 起這裡守的是 lift ＋ formalize 之後 Cella 的答案）。
+  // 🟡 Cella 0.1.202611020258 判錯（reject「no matching constructor for initialization of 'S'」）：成員有 std::string 的聚合初始化。
+  //    g++／clang 印 a80（本機實測）；只有整數成員的同形狀（下一條）Cella 判對。formalize 送的是 `iL [iE eStr, iE eNum]`，已回報。
+  it('🟡 已知缺陷（修好時這條會紅）：★ 結構體陣列的聚合初始化', () => knownCellaGap(/no matching constructor for initialization of 'S'/, async () => {
+    await expectCellaOut(
+      `#include <iostream>\n#include <string>\nusing namespace std;\n` +
         `struct S { string n; int s; }; int main(){ S arr[2] = {{"a",90},{"b",80}}; cout << arr[0].n << arr[1].s; }`,
-      ),
-    ).toBe('a80')
-  })
+      'a80',
+    )
+  }))
 
   it('★ 聚合初始化按成員宣告順序填，不是按名字', async () => {
     expect(
@@ -230,8 +215,18 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
     ).toBe('21')
   })
 
-  it('★ 沒有初始值的二維陣列仍然是零（不得因為修上面而壞掉）', async () => {
-    expect(await run(IO, `int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][0]; }`)).toBe('80')
+  // spec 203：期望值照 C++ 改。原本期望 `80`——那是 JS 直譯器把沒有初值的區域陣列填 0 的取捨。
+  // C++17 [dcl.init]p12：自動儲存期、沒有初值的物件是不定值，讀它是未定義行為 ⟹ `g[0][0]` 要被判 reject（ubUninit）。
+  // 「零」只對靜態儲存期成立（[basic.start.static]）——那一半用全域陣列釘住。寫進去的那一格（g[1][1]）照樣讀得到。
+  it('★ 沒有初始值的區域二維陣列：讀沒寫過的那一格是未定義行為', async () => {
+    const r = await runCella(IO + `int main(){ int g[2][2]; g[1][1]=8; cout << g[1][1] << g[0][0]; }`)
+    expect(r.verdict, describeCellaResult(r)).toBe('reject')
+    expect(r.problems.map((p) => p.kind)).toEqual(['ubUninit'])
+    expect(r.problems[0].source?.text, '要指在讀沒寫過的那一格，不是寫進去的那一格').toBe('g[0][0]')
+  })
+
+  it('★ 沒有初始值的全域二維陣列仍然是零（不得因為修上面而壞掉）', async () => {
+    expect(await run(IO, `int g[2][2]; int main(){ g[1][1]=8; cout << g[1][1] << g[0][0]; }`)).toBe('80')
   })
 
   // ── swap 的運算元是位置，不是名字 ───────────────────────────────────

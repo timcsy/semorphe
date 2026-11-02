@@ -31,6 +31,7 @@
         "liftStrategy": "./lift-strategy.ts"
       }
     },
+    "formalize": "./formalize.ts",
     "execute": "./execute.ts"
   },
   "annotations": {

@@ -12,7 +12,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { expectCellaOut } from '../helpers/cella-run'
 import type { StylePreset } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -41,14 +41,12 @@ beforeAll(async () => {
   setupTestRenderer()
 })
 
-async function runCode(code: string) {
-  const tree = tsParser.parse(code)
-  const sem = lifter.lift(tree.rootNode as any)
-  expect(sem).not.toBeNull()
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(sem!, [])
-  return interp
-}
+/**
+ * spec 203（重構 6c-2e）：執行的判準從 JS 直譯器換成 Cella（產品同一條 lift → formalize → 判決），accept 且輸出逐字相同才通過。
+ * 期望值是本機 `g++ -std=c++17` 編譯執行的輸出（2026-11-02 實測）。原本的斷言是 `toContain` 幾個數字——
+ * 換成逐字比對：`toContain('0')` 對任何含 0 的輸出都綠（例如 `100`），那是假綠的形狀。
+ */
+const runExpect = (code: string, expected: string): Promise<unknown> => expectCellaOut(code, expected)
 
 function roundTrip(code: string): string {
   const tree = tsParser.parse(code)
@@ -96,11 +94,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
-    expect(out).toContain('0')
-    expect(out).toContain('16')
-    expect(out).toContain('81')
+    await runExpect(code, '0\n16\n81\n')
   })
 
   it('roundtrip is stable', () => {
@@ -154,12 +148,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
-    expect(out).toContain('3')
-    expect(out).toContain('6')
-    expect(out).toContain('9')
-    expect(out).toContain('12')
+    await runExpect(code, '3 6 9 12 \n')
   })
 
   it('roundtrip is stable', () => {
@@ -186,10 +175,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
-    expect(out).toContain('50')
-    expect(out).toContain('100')
+    await runExpect(code, '50\n100\n100\n')
   })
 
   it('roundtrip is stable', () => {
@@ -217,7 +203,10 @@ int main() {
     return 0;
 }`
 
-  it.todo('[BLOCKED:cpp:new] executes correctly (interpreter new/delete semantics)')
+  // spec 203：原本是 it.todo（JS 直譯器沒有 new／delete 的語義）——Cella 有，g++ 印 40 40
+  it('executes correctly', async () => {
+    await runExpect(code, '40\n40\n')
+  })
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)
@@ -242,7 +231,10 @@ int main() {
     return 0;
 }`
 
-  it.todo('[BLOCKED:cpp:malloc] executes correctly (interpreter malloc/free semantics)')
+  // spec 203：原本是 it.todo（JS 直譯器沒有 malloc／free 的語義）——Cella 有，g++ 印 600
+  it('executes correctly', async () => {
+    await runExpect(code, '600\n')
+  })
 
   it('roundtrip is stable', () => {
     const gen1 = roundTrip(code)
@@ -265,9 +257,7 @@ int main() {
 }`
 
   it('executes correctly', async () => {
-    const interp = await runCode(code)
-    const out = interp.getOutput().join('')
-    expect(out).toContain('99')
+    await runExpect(code, '99\n99\n99\n')
   })
 
   it('roundtrip is stable', () => {
@@ -304,10 +294,7 @@ int main() {
   })
 
   it('★ 執行結果正確——期望值由 g++ 實際編譯執行決定，不心算', async () => {
-    const interp = new SemanticInterpreter({ maxSteps: 200000 })
-    const sem = lifter.lift(tsParser.parse(code)!.rootNode as never)
-    await interp.execute(sem!)
-    expect(interp.getOutput().join('').replace(/\s/g, '')).toBe('6')
+    await runExpect(code, '6\n')
   })
 })
 
@@ -334,10 +321,7 @@ int main() {
   })
 
   it('★ 執行結果正確——期望值由 g++ 實際編譯執行決定，不心算', async () => {
-    const interp = new SemanticInterpreter({ maxSteps: 200000 })
-    const sem = lifter.lift(tsParser.parse(code)!.rootNode as never)
-    await interp.execute(sem!)
-    expect(interp.getOutput().join('').replace(/\s/g, '')).toBe('777888')
+    await runExpect(code, '777\n888\n')
   })
 })
 
@@ -353,10 +337,9 @@ describe('曾經的已知問題：陣列與指標', () => {
     expect(roundTrip(`#include <iostream>
 using namespace std;
 ${code}`)).toMatch(/\{[^}]*,[^}]*\}/)
-    const interp = new SemanticInterpreter({ maxSteps: 100000 })
-    await interp.execute(lifter.lift(tsParser.parse(`#include <iostream>
+    // 初始值沒有進到陣列裡的話不是 9（讀到不定值會被判 reject）
+    await runExpect(`#include <iostream>
 using namespace std;
-${code}`)!.rootNode as never)!)
-    expect(interp.getOutput().join('').trim(), '初始值沒有進到陣列裡').toBe('9')
+${code}`, '9')
   })
 })

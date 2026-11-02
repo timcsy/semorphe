@@ -28,7 +28,7 @@ export interface FormalizeTables {
   constInt: Map<string, (n: SemanticNode, f: FormalizeContext) => number | null>
   definesType: Map<string, (n: SemanticNode) => string>
   definesMacro: Map<string, (n: SemanticNode) => { name: string; value: string; function?: boolean } | null>
-  literal: Map<string, (text: string) => boolean>
+  literal: Map<string, { test: (text: string) => boolean; value?: (text: string) => string }>
   scope: Map<string, (n: SemanticNode, w: ScopeWalker) => void>
 }
 
@@ -53,7 +53,8 @@ function build(): FormalizeTables {
     const r: FormalizeRegistrar = {
       expr: put(t.expr, 'expr'), stmt: put(t.stmt, 'stmt'), item: put(t.item, 'item'), member: put(t.member, 'member'), decl: put(t.decl, 'decl'),
       init: put(t.init, 'init'), constInt: put(t.constInt, 'constInt'), definesType: put(t.definesType, 'definesType'),
-      scope: put(t.scope, 'scope'), definesMacro: put(t.definesMacro, 'definesMacro'), literal: put(t.literal, 'literal'),
+      scope: put(t.scope, 'scope'), definesMacro: put(t.definesMacro, 'definesMacro'),
+      literal: (id, test, value) => put(t.literal, 'literal')(id, { test, value }),
     }
     mod.registerFormalize(r)
   }

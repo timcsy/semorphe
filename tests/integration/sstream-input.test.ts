@@ -14,7 +14,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../helpers/cella-run'
 import type { SemanticNode } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 
@@ -37,11 +37,9 @@ function lift(body: string): SemanticNode {
   return lifter.lift(tree.rootNode as never) as SemanticNode
 }
 
-async function run(body: string): Promise<string> {
-  const interp = new SemanticInterpreter({ maxSteps: 100000 })
-  await interp.execute(lift(body))
-  return interp.getOutput().join('')
-}
+// spec 203（重構 6c-2e）：執行的判準從 JS 直譯器換成 Cella（產品同一條 lift → formalize → 判決）——accept 且輸出相同才通過
+const runExpect = (body: string, expected: string): Promise<unknown> =>
+  expectCellaOut(`${PRELUDE}int main(){ ${body} return 0; }`, expected)
 
 /** 蒐集整棵樹裡符合條件的節點——用來斷言概念身分，不只斷言輸出字串 */
 function collect(node: SemanticNode, pred: (n: SemanticNode) => boolean): SemanticNode[] {
@@ -57,33 +55,37 @@ function collect(node: SemanticNode, pred: (n: SemanticNode) => boolean): Semant
   return found
 }
 
+/**
+ * 🟡 已知缺陷（四條）：istringstream 翻不出。
+ * - 我們這側：`cpp:istringstream_declare` 沒有 formalize；`in >> a`（input 帶 `from`）也照實標翻不出——原本會被送成讀標準輸入的 eCin（spec 203 擋下）。
+ * - Cella 0.1.202611020258 那側：`@cella-lang/cpp` 的 CHANGES 有字串串流的模型（isstream／osstream），但程式 JSON 還沒有對應的寫法——
+ *   實測 `tClass "istringstream"`（含 `std::`、`tName`、`tTemplate`）帶建構引數都判 reject「a constructor's arguments for a type that is not a class」、
+ *   不帶判「variable has an incomplete type」。⟹ 不硬送；要等 Cella 給送法（已回報）。
+ */
 describe('istringstream 執行（期望值來自 g++）', () => {
-  it('連續讀三個整數', async () => {
-    const out = await run('istringstream in("10 20 30"); int a; int b; int c; in >> a >> b >> c; cout << a+b+c;')
-    expect(out).toBe('60')
-  })
+  const GAP = /istringstream_declare/
 
-  it('讀字串，且順序正確', async () => {
+  it('🟡 已知缺陷（修好時這條會紅）：連續讀三個整數', () => knownCellaGap(GAP, async () => {
+    await runExpect('istringstream in("10 20 30"); int a; int b; int c; in >> a >> b >> c; cout << a+b+c;', '60')
+  }))
+
+  it('🟡 已知缺陷（修好時這條會紅）：讀字串，且順序正確', () => knownCellaGap(GAP, async () => {
     // 讀反了的話會是 alphabeta——所以這條同時釘住順序
-    const out = await run('istringstream words("alpha beta"); string s1; string s2; words >> s1 >> s2; cout << s2 << s1;')
-    expect(out).toBe('betaalpha')
-  })
+    await runExpect('istringstream words("alpha beta"); string s1; string s2; words >> s1 >> s2; cout << s2 << s1;', 'betaalpha')
+  }))
 
-  it('同一個串流可以混讀不同型別', async () => {
-    const out = await run('istringstream mixed("7 hi"); int n; string w; mixed >> n >> w; cout << n << w;')
-    expect(out).toBe('7hi')
-  })
+  it('🟡 已知缺陷（修好時這條會紅）：同一個串流可以混讀不同型別', () => knownCellaGap(GAP, async () => {
+    await runExpect('istringstream mixed("7 hi"); int n; string w; mixed >> n >> w; cout << n << w;', '7hi')
+  }))
 
-  it('只讀一個值時，串流仍是串流（不是位移）', async () => {
-    const out = await run('istringstream one("42"); int v; one >> v; cout << v;')
-    expect(out).toBe('42')
-  })
+  it('🟡 已知缺陷（修好時這條會紅）：只讀一個值時，串流仍是串流（不是位移）', () => knownCellaGap(GAP, async () => {
+    await runExpect('istringstream one("42"); int v; one >> v; cout << v;', '42')
+  }))
 })
 
 describe('負向：`>>` 在非串流變數上仍是位元位移', () => {
   it('int 的 `>>` 不得被改判成串流讀取', async () => {
-    const out = await run('int num = 8; cout << (num >> 1);')
-    expect(out).toBe('4')
+    await runExpect('int num = 8; cout << (num >> 1);', '4')
   })
 
   it('位移的概念身分是 arithmetic，不是 input', () => {

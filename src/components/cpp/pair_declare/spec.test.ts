@@ -136,4 +136,17 @@ describe('cpp:pair_declare', () => {
       '1 99\n',
     )
   })
+
+  /**
+   * 🔴 **建構子的寫法 `p(1, 2)`：不得安靜地丟掉引數**（spec 203，換成 Cella 判準、與參照編譯器交叉比對時抓到）。
+   * 原本 lift 收到了 `(1, 2)`，而這顆沒有能放建構引數的接點 ⟹ 轉一圈變成 `pair<int, int> p;`，判決印 `00`。
+   * 現在整句降級成原文（`raw_code`）——誠實，而學生打的字一個都沒少。讓這顆真的收得下 `(a, b)` 是另一刀。
+   */
+  it('🔴 `pair<int,int> p(1, 2)`：轉一圈原文一字不差（收不下就整句降級，不丟引數）', () => {
+    const src = `${H}int main(){ pair<int,int> p(1, 2); cout << p.first << p.second; return 0; }`
+    const gen = generateCode(lift(src)!, 'cpp', style)
+    expect(gen, '🔴 修之前這裡是 `pair<int, int> p;`').toContain('pair<int,int> p(1, 2);')
+    expect(find(lift(src), 'cpp:raw_code'), '降級要看得見：整句是一顆原文積木').not.toBeNull()
+  })
 })
+

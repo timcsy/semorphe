@@ -13,7 +13,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { expectCellaOut, knownCellaGap } from '../helpers/cella-run'
 import type { StylePreset } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -326,21 +326,19 @@ int main() {
     return 0;
 }`
 
+  // spec 203（重構 6c-2e）：執行的判準從 JS 直譯器換成 Cella——同一段程式經 lift → formalize 之後，C++ 的解構時機還是那一個
+  // （lift 把區塊展平的話，formalize 送出去的就是展平的程式，Cella 會照實印出 main 結束才 exit）
   it('★ 獨立區塊有自己的作用域——解構子在區塊結束時跑，不是 main 結束', async () => {
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
-    await i.execute(lifter.lift(tsParser.parse(code).rootNode as never) as never)
     // ⚠️ 順序是重點：`exit` 必須在 `main end` **之前**。
     // 展平之後兩者都會印，只是順序反了——**而「都印了」看起來像通過**。
-    expect(i.getOutput().join('')).toBe('main start\nenter\ninner\nexit\nmain end\n')
+    await expectCellaOut(code, 'main start\nenter\ninner\nexit\nmain end\n')
   })
 
   it('★ 反向：`if` 的 body 不得多一層作用域', async () => {
     // 沒有這一支的話，一個「所有 compound 都不展平」的實作也會通過上一支
     // ——而那會讓 `if (c) { int x=1; x++; }` 的 x 在每一輪重新宣告。
-    const i = new SemanticInterpreter({ maxSteps: 100000 })
     const src = `#include <iostream>\nusing namespace std;\nint main(){ int n=0; for(int i=0;i<3;i++){ n+=i; } cout << n; return 0; }`
-    await i.execute(lifter.lift(tsParser.parse(src).rootNode as never) as never)
-    expect(i.getOutput().join('')).toBe('3')
+    await expectCellaOut(src, '3')
   })
 
   it('roundtrip is stable', () => {
@@ -618,13 +616,8 @@ int main() {
   })
 
   it('★ 反序，且在離開區塊時就跑完——不是程式結束才跑', async () => {
-    const tree = tsParser.parse(code)
-    const sem = lifter.lift(tree.rootNode as any)
-    const interp = new SemanticInterpreter({ maxSteps: 20000 })
-    registerCppLanguage()
-    await interp.execute(sem!)
-    const out = interp.getOutput().join('')
-    expect(out.replace(/\s/g, ''), 'C++ 保證後宣告的先解構，且在離開區塊時就跑').toBe('21-')
+    // C++ 保證後宣告的先解構，且在離開區塊時就跑（[stmt.jump]p2、[class.dtor]）——g++ 印 `21-`（原本比對前去掉空白；程式不印空白，逐字比）
+    await expectCellaOut(code, '21-')
   })
 })
 // fuzz_10: static int count; and int Widget::count = 0; not supported
@@ -656,14 +649,13 @@ int main() {
     expect(gen).toContain('static int total')
   })
 
-  it('靜態成員由所有實例共用——執行結果證明它不是每個實例各一份', async () => {
-    const tree = tsParser.parse(code)
-    const sem = lifter.lift(tree.rootNode as any)
-    const interp = new SemanticInterpreter({ maxSteps: 20000 })
-    registerCppLanguage()
-    await interp.execute(sem!)
-    expect(interp.getOutput().join('').trim(), '第二個實例拿到 1 → 靜態成員被當成實例欄位了').toContain('2')
-  })
+  // spec 203：期望值的依據換了。上面那段程式**沒有**類別外的定義（`int Counter::total = 0;`）——odr-use 的靜態成員必須有定義
+  // （C++17 [basic.def.odr]p4，不需診斷），本機 clang 連結失敗（Undefined symbols: Counter::total）；原本「印出含 2」是 JS 直譯器的寬鬆。
+  // ⟹ 執行的這一條改用補上定義的版本（g++ 實測印 `2\n`）；來回轉換那一條照舊用原程式。
+  // 🟡 我們缺：類別外的靜態成員定義翻不出（lift 成一顆名字是 `Counter::total` 的頂層宣告，初值要併進類別的 mbStatic——還沒做，照實標翻不出）
+  it('🟡 已知缺陷（修好時這條會紅）：靜態成員由所有實例共用——執行結果證明它不是每個實例各一份', () => knownCellaGap(/類別外的靜態成員定義/, async () => {
+    await expectCellaOut(code.replace('};\nint main', '};\nint Counter::total = 0;\nint main'), '2\n')
+  }))
 })
 
 // --- oop_010: two classes with constructors/destructors, destruction order ---

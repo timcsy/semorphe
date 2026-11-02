@@ -26,7 +26,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -51,6 +51,17 @@ const ids = (n: SemanticNode, out: string[] = []): string[] => {
   out.push(n.componentId)
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) ids(k as SemanticNode, out)
   return out
+}
+
+/**
+ * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
+ * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
+ * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ */
+const cellaOut = async (src: string): Promise<string> => {
+  const r = await runCella(src)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 /** 那 18 支的共同形狀——BFS 的佇列迴圈。 */
@@ -98,11 +109,7 @@ describe('round-trip：容器的前端移除', () => {
   it.runIf(hasReferenceCompiler())('🔴 行為：跑起來與參照編譯器一樣', async () => {
     const ref = runCppDetailed(BFS)
     expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-    const out: string[] = []
-    const interp = new SemanticInterpreter({ maxSteps: 200_000 })
-    interp.setOutputCallback((x) => out.push(x))
-    await interp.execute(lift(BFS), [])
-    expect(out.join(''), '🔴 取出的順序不對——先進先出變成後進先出').toBe(ref.ok ? ref.output : '')
+    expect(await cellaOut(BFS), '🔴 取出的順序不對——先進先出變成後進先出').toBe(ref.ok ? ref.output : '')
   }, 60_000)
 
   it('🔴 帶下標的接收者：`d2[i].pop_front()`（相鄰串列的慣用寫法）', async () => {
@@ -110,10 +117,6 @@ describe('round-trip：容器的前端移除', () => {
       + `int main(){ int i=3; d2[i].push_back(7); d2[i].push_back(9); d2[i].pop_front();`
       + ` cout << d2[3].front(); return 0; }\n`
     expect(ids(lift(src))).toContain('cpp:container_pop_front')
-    const out: string[] = []
-    const interp = new SemanticInterpreter({ maxSteps: 200_000 })
-    interp.setOutputCallback((x) => out.push(x))
-    await interp.execute(lift(src), [])
-    expect(out.join(''), '🔴 接收者在組裝時被壓成字串——要走 receiverOf').toBe('9')
+    expect(await cellaOut(src), '🔴 接收者在組裝時被壓成字串——要走 receiverOf').toBe('9')
   })
 })

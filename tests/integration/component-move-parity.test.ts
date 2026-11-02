@@ -49,7 +49,7 @@ import type { Lifter } from '../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella } from '../helpers/cella-run'
 import type { StylePreset } from '../../src/core/types'
 import type { SemanticNode } from '../../src/core/semantic-tree'
 import { allCppComponents } from '../../src/languages/cpp/all-declarations'
@@ -131,25 +131,30 @@ function collectIds(node: SemanticNode | null, out: Set<string> = new Set()): Se
   return out
 }
 
+/**
+ * 執行那一路：`判決|輸出|問題…`。
+ *
+ * 🔄 **spec 203（重構 6c-2e）：判準從 JS 直譯器換成 Cella**（產品同一條 lift → formalize → 判決）。
+ * 舊格式是 `<直譯器狀態>|<輸出>`（`completed|3 4\n2\n`）；新格式的第一欄是 Cella 的判決（accept／reject／unknown／invalid／untranslated），
+ * 不是 accept 時後面接每一個問題的種類、理由與行號——**理由變了也算執行輸出變了**。
+ * ⚠️ 不放節點 id（`node_4_…` 每次 lift 都不同，放了就每次都紅）。基線逐筆的差異與理由寫在基線的 `_meta.note`。
+ *
+ * ⚠️ **歷史：不是 `getState()`。** 第一版寫成 `getState().output`，而 `getState()`
+ * 只回傳 `{ status }`——於是七個樣本的執行輸出**全部錄成空字串**，
+ * 包含那支應該印出 `3 4` 的兄弟元件樣本。
+ *
+ * 而它不會讓任何測試變紅：空字串 === 空字串，防線一照樣全綠，
+ * **執行那一路等於完全沒有被防線覆蓋**。
+ *
+ * 抓到它的是 `build-guardrail` 第 10 步——「測試通過之前，先證明它真的測到了
+ * 東西」，也就是打開基準檔看裡面有沒有內容。這是那條規則的第 N 個實例（下面「注入」那一節現在有一條機械地問它）。
+ */
 async function runProgram(code: string): Promise<string> {
-  const tree = liftCode(code)
-  if (!tree) return '<lift 失敗>'
-  const interp = new SemanticInterpreter()
-  try {
-    await interp.execute(tree, [])
-  } catch (e) {
-    return `<執行例外：${(e as Error).message}>`
-  }
-  // ⚠️ **不是 `getState()`。** 第一版寫成 `getState().output`，而 `getState()`
-  // 只回傳 `{ status }`——於是七個樣本的執行輸出**全部錄成空字串**，
-  // 包含那支應該印出 `3 4` 的兄弟元件樣本。
-  //
-  // 而它不會讓任何測試變紅：空字串 === 空字串，防線一照樣全綠，
-  // **執行那一路等於完全沒有被防線覆蓋**。
-  //
-  // 抓到它的是 `build-guardrail` 第 10 步——「測試通過之前，先證明它真的測到了
-  // 東西」，也就是打開基準檔看裡面有沒有內容。這是那條規則的第 N 個實例。
-  return `${interp.getState().status}|${interp.getOutput().join('')}`
+  const r = await runCella(code)
+  const why = r.verdict === 'untranslated'
+    ? r.untranslated.map((u) => `${u.construct}：${u.reason}`)
+    : r.problems.map((p) => `${p.kind}：${p.reason ?? ''}${p.source ? `（第 ${p.source.line} 行）` : ''}`)
+  return [r.verdict, r.out, ...why].join('|')
 }
 
 /** 標籤的來源——搬家過程中它會從共用 i18n 檔移進膠囊，而**值必須不變**。 */
@@ -284,6 +289,19 @@ describe('膠囊搬家：兩條防線', () => {
     it('好的輸入不亂報：身分與路徑一致時，防線二必須沉默', () => {
       expect(idToDir('cpp:vector_declare')).toBe('cpp/vector_declare')
       expect(idToDir('@someone:boost_vector')).toBe('@someone/boost_vector')
+    })
+
+    // spec 203：執行那一路換成 Cella 之後，再問一次「基準真的錄到東西了嗎」——全部是空輸出的話，逐字比對只是在比空字串
+    it('基準的執行那一路真的有量到東西：兄弟元件那一支印得出輸出，而且是 accept', () => {
+      const base: baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
+      expect(base.execOutput['兄弟元件同場'], '🔴 全部錄成空的（或判不出來）＝執行那一路沒被防線覆蓋').toBe('accept|3 4\n2\n')
+    })
+
+    it('壞的輸入會報：執行輸出改了一個字，防線一的逐字比對必須發現', async () => {
+      const base: baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'))
+      // 合成：同一個樣本，pop_back 換成 push_back(9)——size 從 2 變 4；runProgram 量到的必須與基準不同
+      const broke = samples.find((x) => x.name === '兄弟元件同場')!.code.replace('v.pop_back();', 'v.push_back(9);')
+      expect(await runProgram(broke)).not.toBe(base.execOutput['兄弟元件同場'])
     })
 
     it('⚠️ 集合比對抓不到錯置——這一則證明那個盲區是真的', () => {

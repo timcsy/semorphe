@@ -31,9 +31,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { resetClock } from '../../src/languages/cpp/lang/runtime/arduino-clock'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -53,11 +52,14 @@ const componentsIn = (n: SemanticNode, out: string[] = []): string[] => {
   for (const ks of Object.values(n.slots ?? {})) for (const k of ks) componentsIn(k, out)
   return out
 }
+/**
+ * 執行判準：Cella 的板子判決（spec 203，重構 6c-2e）——Uno，setup 一次、loop 跑到模擬的 5 秒。
+ * 不是 accept 一律紅並說出原因。⚠️ `Serial.println` 印 `\r\n`（真板子也是），所以比對仍是前綴／包含。
+ */
 const run = async (src: string): Promise<string> => {
-  resetClock()
-  const i = new SemanticInterpreter({ maxSteps: 400_000 })
-  await i.execute(lift(src))
-  return i.getOutput().join('')
+  const r = await runCella(src, { board: 'uno' })
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 describe('盲測回歸：Arduino sketch', () => {
@@ -102,7 +104,9 @@ void loop() {
   }, 60000)
 
   /** 遞迴二分法依序點亮六顆 LED，遞迴函式裡直接呼叫 digitalWrite 和 delay　⚠️ 棘手處：遞迴呼叫夾在 digitalWrite(HIGH) 和 digitalWrite(LOW) 中間，所以腳位的開關順序是前序進後序出，而 mid 用整數除法讓左右子區間不對稱 */
-  it('★ fuzz_5：遞迴二分法依序點亮六顆 LED，遞迴函式裡直接呼叫 ', async () => {
+  // 歸類：我們這側（formalize 核心的型別表沒有 Arduino 的 `byte`）＋ Cella 那側（sketch 沒有 Arduino.h 隱含帶進的 typedef：
+  //   `uint8_t` 不 include 判 reject「use of undeclared identifier 'uint8_t'」，`tName byte` 判 reject「unknown type」）
+  it('🟡 已知缺陷（修好時這條會紅）：★ fuzz_5：遞迴二分法依序點亮六顆 LED，遞迴函式裡直接呼叫 ', async () => {
     const src = `byte pattern[6] = {2, 3, 4, 5, 6, 7};
 
 void ripple(int lo, int hi, int depth) {
@@ -138,11 +142,13 @@ void loop() {
     const once = generateCode(lift(src), 'cpp', S)
     expect(generateCode(lift(once), 'cpp', S)).toBe(once)
     // 輸出比對**前綴**——見檔頭
-    expect(await run(src)).toContain(`0/2`)
+    await knownCellaGap(/型別「byte」還沒有對應/, async () => { expect(await run(src)).toContain(`0/2`) })
   }, 60000)
 
   /** enum 四狀態的防盜警報狀態機，用 switch 轉移並跑一段寫死的觸發腳本　⚠️ 棘手處：轉移條件混用了狀態、輸入和「第幾拍」三個東西，ARMED 用 ticks > 2 而不是自己的計時器，換個起始拍數整條路徑就變了 */
-  it('★ fuzz_7：enum 四狀態的防盜警報狀態機，用 switch ', async () => {
+  // 歸類：我們這側——formalize 核心的 type() 不認列舉型別名（Cella 有 `tEnum`）；而後面還有一個 lift 的缺陷：
+  //   `const char* nameOf(...)` 的 const 在 lift 時被丟掉（return_type 存成 `char*`），Cella 照 C++11 判 reject「assignment discards the const qualifier」
+  it('🟡 已知缺陷（修好時這條會紅）：★ fuzz_7：enum 四狀態的防盜警報狀態機，用 switch ', async () => {
     const src = `#define BTN_PIN 2
 #define BUZZER 8
 
@@ -203,7 +209,7 @@ void loop() {
     const once = generateCode(lift(src), 'cpp', S)
     expect(generateCode(lift(once), 'cpp', S)).toBe(once)
     // 輸出比對**前綴**——見檔頭
-    expect(await run(src)).toContain(`0 IDLE`)
+    await knownCellaGap(/型別「Mode」還沒有對應/, async () => { expect(await run(src)).toContain(`0 IDLE`) })
   }, 60000)
 
   /** 把 map() 拿去做負數區間、反向輸出區間、反向輸入區間三種換算並自己夾邊界　⚠️ 棘手處：map() 不夾邊界，超出來源區間就直接外插到 318 或 -63；負數的整數除法往零截斷，所以正向和反向兩條線加起來多半不是 255。預期輸出是用經典截斷版 map() 算的 */
@@ -310,7 +316,10 @@ void loop() {
   }, 60000)
 
   /** 帶記憶表的遞迴費氏數列，記憶表跨迴圈不重置，順便數呼叫次數　⚠️ 棘手處：呼叫次數只有前兩筆是特例，之後因為 memo 沒被清掉全部固定成 3——這段量到的「遞迴成本」完全取決於呼叫順序，單獨跑 fib(12) 會是幾百次 */
-  it('★ fuzz_16：帶記憶表的遞迴費氏數列，記憶表跨迴圈不重置，順便數呼', async () => {
+  // 歸類：Cella 那側（疑似過度保守）——`fib(n - 1) + fib(n - 2)` 判 unknown（ubOrder：求值順序未指定且兩邊的效果衝突）。
+  //   兩個呼叫的效果是 `calls++`（可交換）與 memo 的讀寫，而這支程式兩種順序印出的完全一樣（clang 實測把兩個呼叫拆成兩種順序：
+  //   0:0/1 1:1/1 2:1/3 3:2/3 … 12:144/3，兩份一字不差）——判決說「the result depends on it」在這裡不成立。
+  it('🟡 已知缺陷（修好時這條會紅）：★ fuzz_16：帶記憶表的遞迴費氏數列，記憶表跨迴圈不重置，順便數呼', async () => {
     const src = `long memo[16];
 bool ready[16];
 int calls = 0;
@@ -363,7 +372,7 @@ void loop() {
     const once = generateCode(lift(src), 'cpp', S)
     expect(generateCode(lift(once), 'cpp', S)).toBe(once)
     // 輸出比對**前綴**——見檔頭
-    expect(await run(src)).toContain(`0:0/1`)
+    await knownCellaGap(/ubOrder：the order of evaluation is unspecified/, async () => { expect(await run(src)).toContain(`0:0/1`) })
   }, 60000)
 
   /** 五格環形緩衝區做移動平均，索引倒著算還要補模數避免負數　⚠️ 棘手處：head - 1 - i 最小會到 -5，靠 + N * 2 才拉回正數（只加一次 N 還不夠）；緩衝區填滿之前平均的分母一直在變 */
@@ -495,7 +504,8 @@ void loop() {
    * **`const` ＋ 二維陣列**——🟢 同 fuzz_3，2026-09-17 一起解開。
    * ⚠️ 同樣是重建的一支（原始程式沒有留下來）。
    */
-  it('★ fuzz_6：const ＋ 陣列宣告（二維）', async () => {
+  // 歸類：同 fuzz_5——`byte` 型別（formalize 核心的型別表 ＋ Cella 的 sketch 沒有 Arduino.h 的 typedef）
+  it('🟡 已知缺陷（修好時這條會紅）：★ fuzz_6：const ＋ 陣列宣告（二維）', async () => {
     const src = `const byte GRID[2][3] = {{2, 3, 4}, {5, 6, 7}};
 
 void setup() {
@@ -511,7 +521,7 @@ void loop() {
     expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
     const once = generateCode(lift(src), 'cpp', S)
     expect(generateCode(lift(once), 'cpp', S)).toBe(once)
-    expect(await run(src)).toContain('7')
+    await knownCellaGap(/型別「byte」還沒有對應/, async () => { expect(await run(src)).toContain('7') })
   }, 60000)
 
   /**
