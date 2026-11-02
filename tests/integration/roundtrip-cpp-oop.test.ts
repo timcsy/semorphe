@@ -384,16 +384,13 @@ int main() {
       expect(JSON.stringify(shape(t2))).toBe(JSON.stringify(shape(t)))
     })
 
-    // 🔴 既有缺陷（main 上就有，不是 218 帶進來的）：類別裡的 `static int zero()` 走頂層函式那顆，`static` 掉了，
-    //    產回去在 `P::zero()` 編不過；JS 直譯器也不認 `P::zero()`。
-    //    為什麼不現在修：探索報告把 static 列為範圍外（method_def 沒有地方放它；加進來是 const／static 互斥的修飾，要改積木的設計）。
-    //    何時修：補「類別成員的 static」那一刀時（draft〈成員函式的尾端 const〉已記這一筆）——修好把它改成 it。
-    // ⚠️ 不用 it.todo（todo 修好時不出聲）——斷言缺陷還在；修好的那天這條會紅，換成正向的「保留 static」
-    it('🟡 已知缺陷還在（修好時這條會紅）：類別裡的 static 成員函式產回去丟了 static', () => {
+    // 🟢 第 229 刀修好（spec 204）：原本類別裡的 `static int zero()` 走頂層函式那顆而 `static` 掉了（產回去在 `P::zero()` 編不過）——
+    //    回傳型別改成保留宣告子之前的整段原文之後，static 跟著回去
+    it('類別裡的 static 成員函式產回去保留 static', () => {
       const code = `struct P {\n    static int zero() {\n        return 0;\n    }\n};\nint main() {\n    return P::zero();\n}\n`
       const out = roundTripCode(code)
-      expect(out).toContain('int zero() {')
-      expect(out).not.toContain('static int zero()')
+      expect(out, '🔴 修之前這裡是 `int zero() {`').toContain('static int zero() {')
+      expect(roundTripCode(out)).toBe(out)
     })
   })
 

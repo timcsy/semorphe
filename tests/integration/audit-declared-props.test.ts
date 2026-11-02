@@ -49,6 +49,7 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { allCppComponents } from '../../src/languages/cpp/all-declarations'
 import { REPO_ROOT, loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, RATCHET_NOTE } from '../helpers/guardrail'
+import { backtickSpans } from '../helpers/backtick-corpus'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -111,8 +112,11 @@ function takeCorpus(): string[] {
   const out: string[] = []
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.test.ts')) continue
-    for (const m of fs.readFileSync(path.join(dir, f), 'utf8').matchAll(/`([^`]{4,600})`/g)) {
-      const c = m[1].replace(/\\\\/g, '\\')
+    // 🔴 2026-11-02：原本自己寫 /`([^`]{4,600})`/g——長度條件寫進配對規則，一段配不到對就讓整個檔錯開一格，
+    //    把測試程式本身（`expect(interp.getOutput()…`）當成 C++ 收進來。七支護欄裡另外六支 2026-08-26 就改用共用的
+    //    backtickSpans，這一支沒有跟上；6c-2e 改寫測試時，「有宣告表的節點」跟著 TS 的改動掉了 526 個才被看見。
+    for (const span of backtickSpans(fs.readFileSync(path.join(dir, f), 'utf8'), 4, 600)) {
+      const c = span.replace(/\\\\/g, '\\')
       if (!/[;{]/.test(c) || c.includes('${')) continue
       out.push(c)
     }

@@ -365,3 +365,43 @@ int main() {
     expect(gen1).toBe(gen2)
   })
 })
+
+/**
+ * 🔴 **一般函式的回傳型別要一字不少**（spec 204，2026-11-02；main 上就壞，6c-2e 的盲測抓到）。
+ *
+ *   學生寫  string& k(string& s)        轉一圈（修之前）  string k(string& s)() {   ← 參考那一層沒剝，名字吞掉參數，編不過
+ *   學生寫  const char* nameOf(int m)   轉一圈（修之前）  char* nameOf(int m)       ← 回傳型別前的 const 不見
+ *   學生寫  static const char* h()      轉一圈（修之前）  char* h()                 ← static 與 const 都不見
+ *
+ * 類別成員那一條（liftMethodDef）第 218 刀修過同一件事，一般函式這條路沒有跟著修。
+ * 斷言三件事：原文一字不差、第二趟不動點、身分仍是 cpp:func_def（不是降級成原文）——最後那支程式還交給 Cella 跑。
+ * ⚠️ 這段註解刻意不用反引號：語料護欄（第三十一、三十二、七十二條）把反引號之間的文字當成程式收進分母（2026-09-19 那次「自己造的雜訊」）。
+ */
+describe('functions & io: 回傳型別的修飾與參考（spec 204）', () => {
+  const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
+  const heads = [
+    'string& k(string& s)',
+    'const string& g(const string& s)',
+    'const char* nameOf(int m)',
+    'static const char* h()',
+    'static int m()',
+    'inline int il()',
+    'unsigned long long u()',
+    'int** pp(int** x)',
+  ]
+  for (const head of heads) {
+    it(`\`${head}\` 轉一圈原文一字不差、仍是 cpp:func_def`, () => {
+      const code = `${H}${head} { throw 0; }\nint main() { return 0; }\n`
+      const gen1 = roundTrip(code)
+      expect(gen1, '🔴 修之前回傳型別的修飾會消失，參考會讓名字吞掉參數').toContain(`${head} {`)
+      expect(roundTrip(gen1)).toBe(gen1)
+      const ids = JSON.stringify(liftCode(code))
+      expect(ids).toContain('"cpp:func_def"')
+      expect(ids).not.toContain('raw_code')
+    })
+  }
+
+  it('回傳參考的函式真的回傳那個物件（Cella 判）', async () => {
+    await expectCellaOut(`${H}string& k(string& s) { s += "!"; return s; }\nstatic const char* h() { return "b"; }\nconst int c() { return 3; }\nint main() { string t = "hi"; k(t) += "?"; cout << t << h() << c(); return 0; }\n`, 'hi!?b3')
+  })
+})
