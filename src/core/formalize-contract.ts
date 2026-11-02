@@ -166,6 +166,8 @@ export interface FormalizeRegistrar {
   literal(id: string, test: (text: string) => boolean, value?: (text: string) => string): void
   /** 這顆定義了一個型別名（不帶關鍵字的 `Node*` 要先認得 `Node`）。 */
   definesType(id: string, fn: (n: SemanticNode) => string): void
+  /** 這顆定義了一個列舉型別名（`enum Color {…}` 之後 `Color c` 的 Color）——型別那一格送 `tEnum`（cella 2026-11-03；不是 tClass）。 */
+  definesEnum(id: string, fn: (n: SemanticNode) => string): void
   /** 作用域走訪：這顆開不開作用域、宣告什麼、參照什麼（沒註冊的照通用規則）。 */
   scope(id: string, fn: (n: SemanticNode, w: ScopeWalker) => void): void
 }

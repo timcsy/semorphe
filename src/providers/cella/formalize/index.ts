@@ -98,9 +98,12 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   // C++ 的 struct 就是 class：寫不寫 `struct` 都是 tClass（cella 2026-10-31；tStruct 只給 C 程式）。
   // 不帶關鍵字的型別名（`Node*`）要先知道它是程式裡定義過的 struct，才認得出來——哪一顆定義型別名由元件自己註冊（`definesType`）。
   const structNames = new Set<string>()
+  const enumNames = new Set<string>()
   const collect = (n: SemanticNode): void => {
     const named = FORMALIZE.definesType.get(n.componentId)
     if (named) structNames.add(named(n))
+    const en = FORMALIZE.definesEnum.get(n.componentId)
+    if (en) enumNames.add(en(n))
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
   }
   collect(tree)
@@ -171,6 +174,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       const args = splitTypeArgs(tpl[2]).map((x) => type(x, at))
       return args.every(Boolean) ? k('tTemplate', { name: tpl[1], args }) : null
     }
+    // 列舉型別名（`Color c`、C 的 `enum Color c`）：tEnum（cella 2026-11-03；檔案範圍與區域的列舉同一個型別形狀）
+    const en = /^(?:enum\s+)?([A-Za-z_]\w*)$/.exec(s)
+    if (en && enumNames.has(en[1])) return k('tEnum', { name: en[1] })
     const st = /^(?:struct\s+)?([A-Za-z_]\w*)$/.exec(s)
     if (st && (s.startsWith('struct ') || structNames.has(st[1]))) return k(isC ? 'tStruct' : 'tClass', { name: st[1] })
     miss(at, `型別「${s}」還沒有對應`)

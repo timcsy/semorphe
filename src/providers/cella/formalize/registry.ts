@@ -27,6 +27,7 @@ export interface FormalizeTables {
   init: Map<string, (n: SemanticNode, f: FormalizeContext) => CellaJson>
   constInt: Map<string, (n: SemanticNode, f: FormalizeContext) => number | null>
   definesType: Map<string, (n: SemanticNode) => string>
+  definesEnum: Map<string, (n: SemanticNode) => string>
   definesMacro: Map<string, (n: SemanticNode) => { name: string; value: string; function?: boolean } | null>
   literal: Map<string, { test: (text: string) => boolean; value?: (text: string) => string }>
   scope: Map<string, (n: SemanticNode, w: ScopeWalker) => void>
@@ -35,7 +36,7 @@ export interface FormalizeTables {
 function build(): FormalizeTables {
   const t: FormalizeTables = {
     expr: new Map(), stmt: new Map(), item: new Map(), member: new Map(), decl: new Map(),
-    init: new Map(), constInt: new Map(), definesType: new Map(), scope: new Map(),
+    init: new Map(), constInt: new Map(), definesType: new Map(), definesEnum: new Map(), scope: new Map(),
     definesMacro: new Map(), literal: new Map(),
   }
   for (const [key, mod] of Object.entries(MODULES)) {
@@ -52,7 +53,7 @@ function build(): FormalizeTables {
     }
     const r: FormalizeRegistrar = {
       expr: put(t.expr, 'expr'), stmt: put(t.stmt, 'stmt'), item: put(t.item, 'item'), member: put(t.member, 'member'), decl: put(t.decl, 'decl'),
-      init: put(t.init, 'init'), constInt: put(t.constInt, 'constInt'), definesType: put(t.definesType, 'definesType'),
+      init: put(t.init, 'init'), constInt: put(t.constInt, 'constInt'), definesType: put(t.definesType, 'definesType'), definesEnum: put(t.definesEnum, 'definesEnum'),
       scope: put(t.scope, 'scope'), definesMacro: put(t.definesMacro, 'definesMacro'),
       literal: (id, test, value) => put(t.literal, 'literal')(id, { test, value }),
     }
