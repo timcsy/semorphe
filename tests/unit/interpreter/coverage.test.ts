@@ -20,14 +20,13 @@
  * 🔴 **而「迴圈自己被走一次」那一條換了定義**：Cella 數的是「進入那顆節點幾次」——與 stepIn 停下的定義相同，
  * 迴圈的標籤每檢查一次條件就算一次（跑 3 圈 → 4 次；for、do-while 也一樣）。JS 直譯器數的是「迴圈敘述被執行幾次」（1 次）。
  * 產品的 `core/iterations.ts`（`loopRatio`／`iterationCounts`，迴圈徽章與「預測揭曉」）拿迴圈自己的次數當分母，
- * 是照 JS 的定義寫的——見最後一條釘子。
+ * 是照 JS 的定義寫的——spec 205 T009 改成依工作階段宣告的 `loopCounts` 換算（見最後一條）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import { createTestLifter } from '../../helpers/setup-lifter'
 import { cellaProvider, openCella, waitSession } from '../../helpers/cella-session'
-import { knownCellaGap } from '../../helpers/cella-run'
 import { loopRatio } from '../../../src/core/iterations'
 import type { Provider } from '../../../src/core/capabilities'
 import type { SemanticNode } from '../../../src/core/types'
@@ -112,16 +111,18 @@ describe('執行覆蓋（Cella 工作階段）', () => {
   })
 
   /**
-   * 🟡 **我們缺（修好時這條會紅）**：迴圈徽章與「預測揭曉」的 `loopRatio` 把迴圈自己的次數當分母（JS 直譯器的定義：1），
-   * Cella 給的是條件檢查的次數（4）⟹ `floor(3 / 4) = 0`——學生猜 3 圈，畫面說 0 圈。
-   * 修法在 `core/iterations.ts`（分母不能再是迴圈自己的次數），不是 Cella。
+   * 🟢 spec 205 T009 修好（原本是 knownCellaGap 的釘子）：迴圈徽章與「預測揭曉」的 `loopRatio` 原本把迴圈自己的次數當分母（JS 的定義：1），
+   * Cella 給的是條件檢查的次數（4）⟹ floor(3／4)＝0，學生猜 3 圈、畫面說 0 圈。
+   * 修法：工作階段自己說次數是哪一種（`loopCounts`），`core/iterations.ts` 依它換算（Cella：進入次數＝迴圈次數－圈數）。
    */
-  it('🟡 已知缺陷：用 Cella 的覆蓋算「迴圈跑了幾圈」會算成 0', async () => {
+  it('🔴 用 Cella 的覆蓋算「迴圈跑了幾圈」：照工作階段宣告的計數方式換算，是 3 不是 0', async () => {
     const tree = lift(WHILE3)
-    const cov = await coverageOf(tree)
+    const { s } = openCella(p, tree)
+    expect(await s.launch(tree, { stopOnEntry: false })).toEqual({ kind: 'ended' })
+    expect(s.loopCounts, 'Cella 的工作階段要說出它數的是條件檢查').toBe('checks')
     const w = all(tree, (n) => n.componentId === 'cpp:loop_while')[0]
-    await knownCellaGap(/expected \+?0 to be 3/, async () => {
-      expect(loopRatio(w, cov)).toBe(3)
-    })
+    expect(loopRatio(w, s.coverage()!, s.loopCounts)).toBe(3)
+    // 對照：照 JS 的定義去除就是那個缺陷的樣子
+    expect(loopRatio(w, s.coverage()!, 'entries')).toBe(0)
   })
 })

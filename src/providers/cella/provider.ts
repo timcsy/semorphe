@@ -147,6 +147,8 @@ class CellaSession implements ExecutionSession {
     return { ok: r.ok === true, ...(r.message ? { message: r.message } : {}) }
   }
   coverage(): ReadonlyMap<string, number> | null { return this.visits }
+  /** Cella 每檢查一次迴圈條件算一次（圈數＋進入次數；2026-11-02 實測，spec 205） */
+  readonly loopCounts = 'checks' as const
   recordedInputs(): readonly SessionInput[] { return this.inputs }
 }
 

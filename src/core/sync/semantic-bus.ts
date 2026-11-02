@@ -29,7 +29,7 @@ export interface SemanticEvents {
    *
    * ⚠️ 廣播的是**到過的**，不是「沒到過的」：誰算「應該要到」是視圖的知識。
    */
-  'execution:coverage': { visited: readonly string[]; counts: Readonly<Record<string, number>> }
+  'execution:coverage': { visited: readonly string[]; counts: Readonly<Record<string, number>>; loopCounts?: 'entries' | 'checks' }
   /** 這次的執行器給不出覆蓋資料（spec 183 R2）——「沒跑到」的標示這次沒有，畫面要說得出來。 */
   'execution:coverage-missing': Record<string, never>
   /** 停下時板子當下的狀態（spec 185）；`paused: false` ＝執行結束，硬體分頁回到判決的那一份。 */

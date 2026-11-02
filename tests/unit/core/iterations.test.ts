@@ -5,7 +5,7 @@
  * **身體比自己多出來的倍數**。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { iterationCounts } from '../../../src/core/iterations'
+import { iterationCounts, loopRatio } from '../../../src/core/iterations'
 import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import { createNode } from '../../../src/core/semantic-tree'
 import type { SemanticNode } from '../../../src/core/types'
@@ -86,5 +86,38 @@ describe('迴圈跑了幾次', () => {
   it('沒有樹 → 回空，不要丟錯', () => {
     expect(iterationCounts(null, new Map()).size).toBe(0)
     expect(iterationCounts(undefined, new Map()).size).toBe(0)
+  })
+})
+
+/**
+ * spec 205（6c-3 T009，D1）：**Cella 數迴圈的方式不一樣**——迴圈節點的次數是「跑的圈數 ＋ 進入的次數」（每檢查一次條件算一次；
+ * while／for／do-while 一律如此，2026-11-02 實測：跑 3 圈 → 迴圈 4、身體 3；巢狀外 3 內 4 → 內層 15＝12＋3；一圈都沒跑 → 1、身體 0）。
+ * 照 JS 直譯器的定義（迴圈節點＝進入次數）去除的話是 floor(3／4)＝0：徽章不顯示、「預測揭曉」說 0 圈。
+ */
+describe('迴圈跑了幾次：Cella 的計數（loopCounts: checks）', () => {
+  it('★ 跑 3 圈：迴圈 4、身體 3 → ×3', () => {
+    const body = show(1)
+    const w = whileLoop(num(1), [body])
+    const counts = new Map([[w.id, 4], [body.id, 3]])
+    expect(iterationCounts(prog(w), counts, 'checks').get(w.id)).toBe(3)
+    expect(loopRatio(w, counts, 'checks')).toBe(3)
+  })
+  it('🔴 巢狀：外層 4、內層 15、身體 12 → 外 ×3、內 ×4', () => {
+    const inner = show(1)
+    const innerLoop = whileLoop(num(1), [inner])
+    const outer = whileLoop(num(1), [innerLoop])
+    const got = iterationCounts(prog(outer), new Map([[outer.id, 4], [innerLoop.id, 15], [inner.id, 12]]), 'checks')
+    expect(got.get(outer.id)).toBe(3)
+    expect(got.get(innerLoop.id)).toBe(4)
+  })
+  it('一圈都沒跑：迴圈 1、身體 0 → 揭曉是 0（不是 undefined）', () => {
+    const body = show(1)
+    const w = whileLoop(num(1), [body])
+    expect(loopRatio(w, new Map([[w.id, 1]]), 'checks')).toBe(0)
+  })
+  it('正向錨點：沒說是哪一種時照舊是 JS 的定義（自己 1、身體 5 → ×5）', () => {
+    const body = show(1)
+    const w = whileLoop(num(1), [body])
+    expect(loopRatio(w, new Map([[w.id, 1], [body.id, 5]]))).toBe(5)
   })
 })

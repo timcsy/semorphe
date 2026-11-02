@@ -111,6 +111,8 @@ export interface ExecutionSession {
   setInput?(key: string, value: string): Promise<{ ok: boolean; message?: string }>
   /** 每個節點被進入幾次（步數能力）；給不出來時是 null（結果的 `missing` 帶 `steps`，畫面要說出來）。 */
   coverage(): ReadonlyMap<string, number> | null
+  /** `coverage()` 裡迴圈節點的次數算的是什麼（spec 205）：沒寫是 `entries`（進入次數）；Cella 是 `checks`（圈數＋進入次數）。見 `core/iterations.ts` */
+  readonly loopCounts?: 'entries' | 'checks'
   /** 這次執行從外面拿到的東西（重現用、插手紀錄）。 */
   recordedInputs(): readonly SessionInput[]
 }

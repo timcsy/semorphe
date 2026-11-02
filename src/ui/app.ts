@@ -294,6 +294,8 @@ export class App {
   private lastPredictedProgram = ''
   /** 最近一次執行的節點次數——揭曉「跑幾次」要用。 */
   private lastCounts: ReadonlyMap<string, number> = new Map()
+  /** 上面那份次數裡迴圈節點算的是什麼（spec 205）——`loopRatio` 換算圈數要它 */
+  private lastLoopCounts: 'entries' | 'checks' = 'entries'
   /**
    * 上一次跑的步數——「這一版是上一版的幾倍」要它。
    *
@@ -543,6 +545,7 @@ export class App {
     this.bus.on('execution:coverage', (e) => {
       // ⚠️ 留一份給揭曉用——`execution:coverage` 在 `completed` **之前**送達
       this.lastCounts = new Map(Object.entries(e.counts))
+      this.lastLoopCounts = e.loopCounts ?? 'entries'
       const n = this.blocklyPanel?.markNeverRan(new Set(e.visited)) ?? 0
       if (n > 0) consolePanel.log(msg('COVERAGE_NEVER_RAN', `⚠️ 有 ${n} 塊積木這一次沒有被跑到——是故意的嗎？`)
         .replace('{n}', String(n)))
@@ -556,7 +559,7 @@ export class App {
       //    ⚠️ 樹要用**顯示樹**（學生看到的那一棵），不是內部樹——
       //    id 對不上的話一塊都標不出來，而畫面上與「這次沒有迴圈」一模一樣。
       this.blocklyPanel?.markIterations(
-        iterationCounts(this.syncController?.getDisplayTree(), this.lastCounts),
+        iterationCounts(this.syncController?.getDisplayTree(), this.lastCounts, this.lastLoopCounts),
       )
       /**
        * 🔴 **跑了幾步——而【比較】才是重點**（2026-09-07）。
@@ -717,7 +720,7 @@ export class App {
       ? undefined
       : loopNodeById(this.syncController?.getDisplayTree(), p.q.nodeId)
         ?? loopNodeById(this.syncController?.getCurrentTree(), p.q.nodeId)
-    const actual = node ? loopRatio(node, this.lastCounts) : undefined
+    const actual = node ? loopRatio(node, this.lastCounts, this.lastLoopCounts) : undefined
     if (actual === undefined) return   // ⚠️ 那顆迴圈整個沒被走到——沒有數字可以揭曉
     const guessed = Number.parseInt(p.guess.trim(), 10)
     consolePanel.showPrediction(

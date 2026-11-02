@@ -12,7 +12,7 @@
 
 ## T004 翻出的產品端缺陷（2026-11-02，子代理回報；我們這側的照規矩要修，也是 US4 的前提）
 
-- [ ] T009 D1 迴圈圈數：`src/core/iterations.ts` 的 `loopRatio`／`iterationCounts` 照 JS 的定義（迴圈節點的次數＝進入次數）寫；Cella 數的是條件檢查次數 ⟹ 徽章顯示 0、「預測揭曉」說 0 圈——**現在就影響學生**（Cella 已排在前面）
+- [X] T009 D1 迴圈圈數：`src/core/iterations.ts` 的 `loopRatio`／`iterationCounts` 照 JS 的定義（迴圈節點的次數＝進入次數）寫；Cella 數的是條件檢查次數 ⟹ 徽章顯示 0、「預測揭曉」說 0 圈——**現在就影響學生**（Cella 已排在前面）
 - [ ] T010 D2 步數上限：Cella 工作階段不讀 `SessionOptions.maxSteps`（`cella-lang/dap` 的 fuel 是每一段的）⟹ 無窮迴圈要學生按停止才停——worker 端累計步數、超過就停並給中文訊息
 - [ ] T011 D4 運算式當敘述：formalize 不收 `cpp:compare`／`cpp:arithmetic` 當敘述 ⟹ `cout < "x"`、`Cout << …` 被說成「Cella 還不支援」（把學生的錯說成系統的錯）——補 stmt；友善提示是診斷層的事（US4 前要有）
 - [ ] T012 D7 例外訊息的 `{text}` 是整包 JSON ⟹ 取出 type 與 message 組成一句話
