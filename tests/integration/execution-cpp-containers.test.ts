@@ -1,110 +1,38 @@
 /**
- * Interpreter execution tests for Stack and Queue containers.
+ * Stack 與 Queue 的執行語義：Stack 是 LIFO、Queue 是 FIFO。
  *
- * Roundtrip tests only verify code↔semantic-tree structural equivalence.
- * These tests verify the interpreter produces correct runtime output,
- * specifically that:
- *   - Stack is LIFO: pop removes the most recently pushed element
- *   - Queue is FIFO: pop removes the earliest pushed element
+ * 🔴 spec 198（重構 6c-1）：判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）。
+ * 原本是**手搭語義樹**交給直譯器跑——換成程式碼字串之後，同一條斷言多守了一件事：
+ * lift 與 formalize 有沒有把這段程式翻對（6c 測試盤點的風險 3：手搭樹的語義在拆掉直譯器後要有程式碼字串接手）。
+ * 斷言也從 `toContain` 收緊成完整輸出。
  */
-// ⚠️ 091：C++ 的 `cout << (x > 2)` 印出 **1／0**，不是 `true`／`false`
-// （後者要 `std::boolalpha`）。這個檔原本的斷言記錄的是**舊的錯誤輸出**，
-// 期望值已改為 g++ 實際印出的東西。
-import { describe, it, expect } from 'vitest'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import { createNode } from '../../src/core/semantic-tree'
-import type { SemanticNode } from '../../src/core/types'
-import { registerCppLanguage } from '../../src/languages/cpp/generators'
+// ⚠️ 091：C++ 的 `cout << (x > 2)` 印出 **1／0**，不是 `true`／`false`（後者要 `std::boolalpha`）。
+import { describe, it } from 'vitest'
+import { expectCellaOut } from '../helpers/cella-run'
 
-registerCppLanguage()
+const program = (decl: string, body: string): string =>
+  `#include <iostream>\n#include <stack>\n#include <queue>\nusing namespace std;\nint main() {\n    ${decl}\n${body}\n    return 0;\n}\n`
 
-function makeProgram(body: SemanticNode[]): SemanticNode {
-  return createNode('cpp:program', {}, { body })
-}
-
-function num(v: number) {
-  return createNode('cpp:literal_number', { value: String(v) }, {})
-}
-
-function varRef(name: string) {
-  return createNode('cpp:var_ref', { name }, {})
-}
-
-function printNode(expr: SemanticNode) {
-  return createNode('cpp:print', {}, { values: [expr] })
-}
-
-function printLine(expr: SemanticNode) {
-  return createNode('cpp:print', {}, {
-    values: [expr, createNode('cpp:literal_string', { value: '\n' }, {})],
-  })
-}
-
-async function run(body: SemanticNode[]): Promise<string> {
-  const interp = new SemanticInterpreter({ maxSteps: 10000 })
-  await interp.execute(makeProgram(body))
-  return interp.getOutput().join('')
-}
+const pushAll = (c: string, xs: number[]): string => xs.map((x) => `    ${c}.push(${x});`).join('\n')
 
 // ─── Stack (LIFO) ─────────────────────────────────────────────────────────────
 
 describe('Stack execution (LIFO)', () => {
   it('top() returns the last pushed element', async () => {
-    const output = await run([
-      createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(10)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(20)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(30)] }),
-      printNode(createNode('cpp:stack_peek', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })),
-    ])
-    expect(output).toContain('30')
+    await expectCellaOut(program('stack<int> s;', `${pushAll('s', [10, 20, 30])}\n    cout << s.top();`), '30')
   })
 
   it('pop() removes the top element (LIFO order)', async () => {
-    const output = await run([
-      createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(10)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(20)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(30)] }),
-      createNode('cpp:container_pop', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], }),
-      printNode(createNode('cpp:stack_peek', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })),
-    ])
-    expect(output).toContain('20')
+    await expectCellaOut(program('stack<int> s;', `${pushAll('s', [10, 20, 30])}\n    s.pop();\n    cout << s.top();`), '20')
   })
 
   it('empty() returns true on empty stack, false after push', async () => {
-    const emptyBefore = await run([
-      createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-      printNode(createNode('cpp:container_empty', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })),
-    ])
-    expect(emptyBefore).toContain('1')
-
-    const emptyAfter = await run([
-      createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(1)] }),
-      printNode(createNode('cpp:container_empty', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })),
-    ])
-    expect(emptyAfter).toContain('0')
+    await expectCellaOut(program('stack<int> s;', '    cout << s.empty();'), '1')
+    await expectCellaOut(program('stack<int> s;', '    s.push(1);\n    cout << s.empty();'), '0')
   })
 
   it('drain loop prints in LIFO order (30 20 10)', async () => {
-    const output = await run([
-      createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(10)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(20)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(30)] }),
-      createNode('cpp:loop_while', {}, {
-        condition: [createNode('cpp:logic_not', {}, {
-          operand: [createNode('cpp:container_empty', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })],
-        })],
-        body: [
-          printLine(createNode('cpp:stack_peek', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })),
-          createNode('cpp:container_pop', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], }),
-        ],
-      }),
-    ])
-    const lines = output.trim().split('\n')
-    expect(lines).toEqual(['30', '20', '10'])
+    await expectCellaOut(program('stack<int> s;', `${pushAll('s', [10, 20, 30])}\n    while (!s.empty()) {\n        cout << s.top() << "\\n";\n        s.pop();\n    }`), '30\n20\n10\n')
   })
 })
 
@@ -112,97 +40,24 @@ describe('Stack execution (LIFO)', () => {
 
 describe('Queue execution (FIFO)', () => {
   it('front() returns the first pushed element', async () => {
-    const output = await run([
-      createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(10)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(20)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(30)] }),
-      printNode(createNode('cpp:queue_front', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], })),
-    ])
-    expect(output).toContain('10')
+    await expectCellaOut(program('queue<int> q;', `${pushAll('q', [10, 20, 30])}\n    cout << q.front();`), '10')
   })
 
   it('pop() removes the front element (FIFO order)', async () => {
-    const output = await run([
-      createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(10)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(20)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(30)] }),
-      createNode('cpp:container_pop', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], }),
-      printNode(createNode('cpp:queue_front', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], })),
-    ])
-    expect(output).toContain('20')
+    await expectCellaOut(program('queue<int> q;', `${pushAll('q', [10, 20, 30])}\n    q.pop();\n    cout << q.front();`), '20')
   })
 
   it('empty() returns true on empty queue, false after push', async () => {
-    const emptyBefore = await run([
-      createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      printNode(createNode('cpp:container_empty', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], })),
-    ])
-    expect(emptyBefore).toContain('1')
-
-    const emptyAfter = await run([
-      createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(1)] }),
-      printNode(createNode('cpp:container_empty', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], })),
-    ])
-    expect(emptyAfter).toContain('0')
+    await expectCellaOut(program('queue<int> q;', '    cout << q.empty();'), '1')
+    await expectCellaOut(program('queue<int> q;', '    q.push(1);\n    cout << q.empty();'), '0')
   })
 
   it('drain loop prints in FIFO order (10 20 30)', async () => {
-    const output = await run([
-      createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(10)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(20)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(30)] }),
-      createNode('cpp:loop_while', {}, {
-        condition: [createNode('cpp:logic_not', {}, {
-          operand: [createNode('cpp:container_empty', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], })],
-        })],
-        body: [
-          printLine(createNode('cpp:queue_front', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], })),
-          createNode('cpp:container_pop', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], }),
-        ],
-      }),
-    ])
-    const lines = output.trim().split('\n')
-    expect(lines).toEqual(['10', '20', '30'])
+    await expectCellaOut(program('queue<int> q;', `${pushAll('q', [10, 20, 30])}\n    while (!q.empty()) {\n        cout << q.front() << "\\n";\n        q.pop();\n    }`), '10\n20\n30\n')
   })
 
   it('queue and stack with same values produce opposite drain orders', async () => {
-    const stackOutput = await run([
-      createNode('cpp:stack_declare', { name: 's', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(1)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(2)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 's' })],  value: [num(3)] }),
-      createNode('cpp:loop_while', {}, {
-        condition: [createNode('cpp:logic_not', {}, {
-          operand: [createNode('cpp:container_empty', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })],
-        })],
-        body: [
-          printLine(createNode('cpp:stack_peek', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], })),
-          createNode('cpp:container_pop', {}, { obj: [createNode('cpp:var_ref', { name: 's' })], }),
-        ],
-      }),
-    ])
-
-    const queueOutput = await run([
-      createNode('cpp:queue_declare', { name: 'q', type: 'int' }, {}),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(1)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(2)] }),
-      createNode('cpp:container_push', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })],  value: [num(3)] }),
-      createNode('cpp:loop_while', {}, {
-        condition: [createNode('cpp:logic_not', {}, {
-          operand: [createNode('cpp:container_empty', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], })],
-        })],
-        body: [
-          printLine(createNode('cpp:queue_front', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], })),
-          createNode('cpp:container_pop', {}, { obj: [createNode('cpp:var_ref', { name: 'q' })], }),
-        ],
-      }),
-    ])
-
-    expect(stackOutput.trim().split('\n')).toEqual(['3', '2', '1'])
-    expect(queueOutput.trim().split('\n')).toEqual(['1', '2', '3'])
+    await expectCellaOut(program('stack<int> s;', `${pushAll('s', [1, 2, 3])}\n    while (!s.empty()) {\n        cout << s.top() << "\\n";\n        s.pop();\n    }`), '3\n2\n1\n')
+    await expectCellaOut(program('queue<int> q;', `${pushAll('q', [1, 2, 3])}\n    while (!q.empty()) {\n        cout << q.front() << "\\n";\n        q.pop();\n    }`), '1\n2\n3\n')
   })
 })
