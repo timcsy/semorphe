@@ -138,6 +138,6 @@ class JsSession implements ExecutionSession {
 
 export const jsInterpreterProvider: Provider = {
   id: 'js-interpreter',
-  declares: { session: { granularity: 'node', setInput: false, setVariable: true, steps: true, stepping: true, interactiveInput: true } },
+  declares: { session: { granularity: 'node', setInput: false, setVariable: true, steps: true, stepping: true, interactiveInput: true, hardware: false } },
   createSession: (options) => new JsSession(options),
 }

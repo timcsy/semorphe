@@ -51,15 +51,15 @@ let cellaShared: Promise<Provider> | null = null
  *   stepping → 中斷點、單步、停著時改變數與 terminate ｜ interactiveInput → 讀輸入、讀到 EOF ｜ steps → 覆蓋
  * ⚠️ 每一筆的 `session` 要與提供者自己宣告的一致（第一條斷言在守），否則分層就是在跳過它宣告了的能力。
  */
-const MINIMAL: SessionDetails = { granularity: 'node', setInput: false, setVariable: false, steps: false, stepping: false, interactiveInput: false }
+const MINIMAL: SessionDetails = { granularity: 'node', setInput: false, setVariable: false, steps: false, stepping: false, interactiveInput: false, hardware: false }
 const PROVIDERS: { id: string; session: SessionDetails; make: () => Provider | Promise<Provider> }[] = [
   // ⚠️ 同一個行程裡只能有一個模擬的 worker——C++ 與 Python 兩組共用同一個提供者
-  { id: 'cella', session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true }, make: () => (cellaShared ??= cellaInProcess()) },
+  { id: 'cella', session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true, hardware: false }, make: () => (cellaShared ??= cellaInProcess()) },
   // 「只能一路跑到底」的提供者長什麼樣（cos-mos 宿主第一版）：同一個 Cella、只宣告最少的能力——證明分層真的照宣告跳過，而核心那幾條過得了
   { id: 'cella-minimal', session: MINIMAL, make: async () => { const c = await (cellaShared ??= cellaInProcess()); return { ...c, id: 'cella-minimal', declares: { session: MINIMAL } } } },
 ]
 /** 這一條要求的能力；核心（`[]`）每一個提供者都要過 */
-const needs = (entry: (typeof PROVIDERS)[number], ...caps: ('stepping' | 'interactiveInput' | 'steps' | 'setVariable')[]) =>
+const needs = (entry: (typeof PROVIDERS)[number], ...caps: ('stepping' | 'interactiveInput' | 'steps' | 'setVariable' | 'hardware')[]) =>
   caps.every((c) => entry.session[c] === true) ? it : it.skip
 
 function open(p: Provider, tree: SemanticNode): { s: ExecutionSession; out: () => string } {
@@ -192,6 +192,21 @@ for (const entry of PROVIDERS) {
         expect(o.error).toBeInstanceOf(SessionStop)
         expect(o.error.kind).toBe('runtime')
       }
+    })
+
+    // spec 211（cos-mos 狀態流頻道 (b)）：宣告了 hardware 的提供者，跑完交得出這一次的板子紀錄——形狀同判決那一路（core/hardware.ts）
+    needs(entry, 'hardware')('★ 板子紀錄：跑之前是 null，ended 之後交出腳位變化（t 是模擬的毫秒、照時間排序）', async () => {
+      const code = 'void setup() {\n  pinMode(13, OUTPUT);\n  digitalWrite(13, HIGH);\n  delay(100);\n  digitalWrite(13, LOW);\n}\nvoid loop() {}\n'
+      const tree = lift(code)
+      const s = p.createSession!({ maxSteps: 50_000_000, formal: { tree, targetId: 'arduino-uno', styleId: 'google', skeletonId: 'arduino' } }, tree)
+      if ('declined' in s) throw new Error(`${p.id} 不接：${s.declined}`)
+      expect(s.hardware?.() ?? null, '跑之前沒有紀錄').toBeNull()
+      expect(await s.launch(tree, { stopOnEntry: false })).toEqual({ kind: 'ended' })
+      const rec = s.hardware!()
+      expect(rec, '宣告了 hardware 卻交不出紀錄').not.toBeNull()
+      const on13 = rec!.changes.filter((c) => c.pin === 13)
+      expect(on13.map((c) => c.value)).toEqual([1, 0])
+      expect(on13[1].t - on13[0].t, 'delay(100) 推進模擬時鐘').toBe(100)
     })
 
     needs(entry, 'stepping')('🔴 停著時 terminate：下一個指令不會卡住，回 aborted', async () => {

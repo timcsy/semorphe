@@ -23,7 +23,7 @@
  */
 import type { SemanticNode, BoardPinModel } from './types'
 import type { Verdict, TypeQuery } from './verdict-diagnostics'
-import type { HardwareState } from './hardware'
+import type { HardwareState, HardwareRecord } from './hardware'
 
 /** 四項能力，加上執行與除錯的兩個細節（缺了也要說得出來）。 */
 export type CapabilityName = 'verdict' | 'types' | 'session' | 'steps'
@@ -44,6 +44,11 @@ export interface SessionDetails {
   stepping: boolean
   /** 能在讀輸入時停下來等（`stopped(awaiting-input)` → `supplyInput`／`closeInput`）。沒有的話輸入要事先給完（批次）。 */
   interactiveInput: boolean
+  /**
+   * 跑完交得出這一次的板子紀錄（`ExecutionSession.hardware()`；spec 211，cos-mos 狀態流頻道 (b)）。
+   * 沒有的話硬體分頁照舊畫判決順手給的那一份（Cella 今天是這樣）。
+   */
+  hardware: boolean
 }
 
 /** 程式的輸出走哪一條（cos-mos `console.wit` 的 `enum output`，2026-11-04 定案）。判題只看 stdout。 */
@@ -126,6 +131,11 @@ export interface ExecutionSession {
   readonly loopCounts?: 'entries' | 'checks'
   /** 這次執行從外面拿到的東西（重現用、插手紀錄）。 */
   recordedInputs(): readonly SessionInput[]
+  /**
+   * 這一次執行的板子紀錄（spec 211）：跑之前是 null，`ended`／`failed` 之後交出。只有宣告了 `hardware` 的提供者有。
+   * 形狀同判決那一路（`core/hardware.ts`）：`changes` 的 `t` 是模擬的毫秒、最多 1000 筆（超過照實標 `truncated`）；`end` 給不出是 null。
+   */
+  hardware?(): HardwareRecord | null
 }
 
 export interface SessionOptions {

@@ -1918,6 +1918,8 @@ export class App {
         })
       } else if (!e.paused) this.showHardware(this.hardwareRecord)
     })
+    // 這一次執行的板子紀錄（spec 211：cos-mos 的宿主跑完交出）——優先於判決順手給的那一份；下一次判決再換回
+    this.bus.on('execution:hardware-record', (e) => { if (!this.hardwareFromHost) this.showHardware(e.record) })
     // 🔴 **流程面板改了一格 → 匯流排**（2026-08-26，(b) 改欄位）。
     //    ⚠️ 走 `edit:tree` 這個**通用**事件，不是 `edit:flow`
     //    ——一個以視圖命名的事件，會逼下一個視圖也要一個自己的名字。

@@ -34,6 +34,8 @@ export interface SemanticEvents {
   'execution:coverage-missing': Record<string, never>
   /** 停下時板子當下的狀態（spec 185）；`paused: false` ＝執行結束，硬體分頁回到判決的那一份。 */
   'execution:environment': { state: import('../hardware').HardwareState | null; paused: boolean; canSetInput: boolean }
+  /** 這一次執行的板子紀錄（spec 211：提供者宣告了 `hardware` 才有；跑完或出錯時送一次）——硬體分頁優先畫它，蓋過判決順手給的那一份 */
+  'execution:hardware-record': { record: import('../hardware').HardwareRecord }
   /** 硬體分頁要求改一個板子的輸入（只在暫停時有效）。 */
   'execution:set-input': { key: string; value: string }
   /** 這次由誰跑、前面誰不接以及為什麼（spec 183 R3）。 */
