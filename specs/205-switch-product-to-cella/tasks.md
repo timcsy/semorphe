@@ -7,7 +7,7 @@
 - [X] T004 [US2] 盤點 C 類 6 支 ＋ 移過來的 4 支：逐支改由 Cella 背書（session-contract 拿掉 JS 那一格等）
 - [X] T005 🪦 [US3] 查證：`useRealTime(true)` 在產品裡沒有呼叫者——真實時間那條路從來沒開過，沒有東西要搬（隨 6c-4 刪 runtime 退場）
 - [X] T006 診斷層：analogReadResolution 超出範圍的 warning
-- [ ] T007 e2e：三種接不了的情況各一支；瀏覽器驗收四件事
+- [X] T007 （🟢 2026-11-03：e2e 準備中／翻不出／除以零各一支，另加除錯模式出錯；瀏覽器驗收抓到四件事並修好，見 history/333）e2e：三種接不了的情況各一支；瀏覽器驗收四件事
 - [X] T008 [US4] 等 Cella 修好堆疊溢位：升級、驗證長輸出、拿掉 jsInterpreterProvider 的登記、加護欄。🟢 2026-11-03：Cella 0.1.202611030133（四族到齊）；`app.ts` 不再登記任何提供者；護欄 `audit-cella-only`；翻不出時照實說並指回那一行。⚠️ Safari／Firefox 的長輸出待使用者決定要不要量（6c 盤點 draft）
   ⚠️ 上限跟機器有關（CI 的 Linux 8000 字跑得完、本機 macOS 6666 字爆）——**先在 Chromium／Safari／Firefox 的瀏覽器裡量**學生會遇到哪一種
 
