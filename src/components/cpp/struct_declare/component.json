@@ -6,6 +6,18 @@
       "name": "name",
       "kind": "literal",
       "default": "MyStruct"
+    },
+    {
+      "name": "base_class",
+      "kind": "literal",
+      "default": "",
+      "_kind_why": "**`struct B : A`**：單一基底。原本沒有這一格，來回一趟丟掉繼承，override 因此對不到基底（spec 209）。多重／virtual 繼承照實降級。"
+    },
+    {
+      "name": "base_access",
+      "kind": "enum",
+      "default": "implicit",
+      "_kind_why": "沒寫存取（`struct B : A`）記成 `implicit`——struct 的預設是 public，產回去也不寫，來回一趟一字不差（spec 209）。"
     }
   ],
   "slots": {

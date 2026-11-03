@@ -4,6 +4,7 @@ import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 import { liftClassMember } from '../../../languages/cpp/lang/lifters/strategies'
+import { parseBaseClause } from '../../../languages/cpp/base-clause'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   // class_specifier: class Name : public Base { public: ... private: ... protected: ... };
@@ -12,20 +13,9 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       const className = nameNode?.text ?? 'MyClass'
       const bodyNode = node.childForFieldName('body')
 
-      // Extract base class from base_class_clause
-      const baseClause = node.namedChildren.find(c => c.type === 'base_class_clause')
-      let baseClass = ''
-      let baseAccess = 'public'
-      if (baseClause) {
-        // base_class_clause contains access_specifier? and type_identifier
-        for (const child of baseClause.namedChildren) {
-          if (child.type === 'access_specifier') {
-            baseAccess = child.text.replace(/:$/, '').trim()
-          } else if (child.type === 'type_identifier' || child.type === 'qualified_identifier') {
-            baseClass = child.text
-          }
-        }
-      }
+      // 基底（spec 209：共用的解析；沒寫存取是 implicit——class 的預設是 private，原本被記成 public）。多重／virtual 繼承照實降級
+      const base = parseBaseClause(node)
+      if (base === 'unsupported') return null
 
       const publicMembers: SemanticNode[] = []
       const privateMembers: SemanticNode[] = []
@@ -49,9 +39,9 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       }
 
       const props: Record<string, string> = { name: className }
-      if (baseClass) {
-        props.base_class = baseClass
-        props.base_access = baseAccess
+      if (base) {
+        props.base_class = base.base
+        props.base_access = base.access
       }
 
       return createNode('cpp:class_def', props, {

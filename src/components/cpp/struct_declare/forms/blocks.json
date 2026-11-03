@@ -13,6 +13,33 @@
           "type": "field_input",
           "name": "NAME",
           "text": "MyStruct"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "BASE_ACCESS",
+          "options": [
+            [
+              "%{BKY_C_STRUCT_DECLARE_ACCESS_IMPLICIT}",
+              "implicit"
+            ],
+            [
+              "public",
+              "public"
+            ],
+            [
+              "protected",
+              "protected"
+            ],
+            [
+              "private",
+              "private"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "BASE_CLASS",
+          "text": ""
         }
       ],
       "message1": "%1",
@@ -37,7 +64,9 @@
     },
     "renderMapping": {
       "fields": {
-        "NAME": "name"
+        "NAME": "name",
+        "BASE_CLASS": "base_class",
+        "BASE_ACCESS": "base_access"
       },
       "statementInputs": {
         "MEMBERS": "members"

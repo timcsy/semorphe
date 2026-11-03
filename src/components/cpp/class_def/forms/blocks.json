@@ -19,6 +19,10 @@
           "name": "BASE_ACCESS",
           "options": [
             [
+              "%{BKY_CPP_CLASS_DEF_ACCESS_IMPLICIT}",
+              "implicit"
+            ],
+            [
               "public",
               "public"
             ],

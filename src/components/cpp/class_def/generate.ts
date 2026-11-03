@@ -1,4 +1,5 @@
 /** `cpp:class_def` 的 **generate** 路——從共用檔原封剪過來（批次第四批：閉包提升之後才搬得動的三顆）。 */
+import { baseClauseCode } from '../../../languages/cpp/base-clause'
 import type { StylePreset } from '../../../core/types'
 import { openBraceFor } from '../../../languages/cpp/lang/generators/statements'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
@@ -14,7 +15,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       const publicBody = node.slots.public ?? []
       const protectedBody = node.slots.protected ?? []
       const privateBody = node.slots.private ?? []
-      const inheritance = baseClass ? ` : ${baseAccess} ${baseClass}` : ''
+      const inheritance = baseClauseCode(String(baseClass), String(baseAccess))   // implicit 不寫存取（spec 209）
       let code = `${indent(ctx)}class ${name}${inheritance}${openBrace(ctx)}\n`
       if (publicBody.length > 0) {
         code += `${indent(ctx)}public:\n`

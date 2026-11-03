@@ -94,3 +94,33 @@ class B : public A { public: ~B() { cout << "b"; } };
 int main() { A* p = new B(); delete p; return 0; }`, 'ba')
   })
 })
+
+describe('② struct 的基底', () => {
+  const SRC = `${H}struct A {\n    int x;\n};\nstruct B : A {\n    int y;\n};\nint main() {\n    return 0;\n}\n`
+  it('🔴 語意樹記下基底；來回一趟一字不差（struct 不寫存取時是 public，產回也不寫）', () => {
+    const b = nodes(lift(SRC), 'cpp:struct_declare').find((n) => n.properties.name === 'B')!
+    expect(b.properties.base_class).toBe('A')
+    expect(gen(SRC)).toContain('struct B : A {')
+  })
+  it('★ 寫了存取的照寫回', () => {
+    expect(gen(`${H}struct A {};\nstruct B : private A {};\nint main() {\n    return 0;\n}\n`)).toContain('struct B : private A {')
+  })
+  it('★ 積木：基底名字在欄位上', () => {
+    expect(blocks(SRC, 'cpp_struct_declare')).toEqual(expect.arrayContaining([expect.objectContaining({ NAME: 'B', BASE_CLASS: 'A' })]))
+  })
+  it('🔴 執行：struct 繼承之後的 override 對得到基底，經參照分派', async () => {
+    await expectCellaOut(`${H}struct A { virtual void hi() { cout << "A"; } };
+struct B : A { void hi() override { cout << "B"; } };
+void call(A& a) { a.hi(); }
+int main() { A a; B b; call(a); call(b); return 0; }`, 'AB')
+  })
+  it('🔴 class 不寫存取時是 private 繼承——不得被改寫成 public', () => {
+    expect(gen(`${H}class A {};\nclass B : A {};\nint main() {\n    return 0;\n}\n`)).not.toContain('public A')
+  })
+  it('🔴 多重繼承、virtual 繼承：不支援就照實降級，不得只留一個基底', () => {
+    for (const s of [`${H}struct A {};\nstruct C {};\nstruct B : A, C {};\nint main() {\n    return 0;\n}\n`, `${H}struct A {};\nstruct B : virtual A {};\nint main() {\n    return 0;\n}\n`]) {
+      const out = gen(s)
+      expect(out, '原文必須完整保留').toMatch(/struct B : (A, C|virtual A)/)
+    }
+  })
+})

@@ -55,11 +55,11 @@ int main() { B b; cout << f(b); return 0; }`, '2')
 class B : public A { public: int v() override { return 2; } };
 int main() { B b; A* p = &b; cout << p->v(); return 0; }`, '2'))
   })
-  it('🟡 已知缺陷（修好時這條會紅）：`struct B : A` 的繼承——lift 丟掉基底，override 對不到', async () => {
-    await knownCellaGap(/marked 'override' but does not override/, () => expectCellaOut(`${H}struct A { virtual void hi() { cout << "A"; } };
+  it('★ `struct B : A` 的繼承：override 對得到基底（spec 209 修好 lift 之前是釘子）', async () => {
+    await expectCellaOut(`${H}struct A { virtual void hi() { cout << "A"; } };
 struct B : A { void hi() override { cout << "B"; } };
 void call(A& a) { a.hi(); }
-int main() { B b; call(b); return 0; }`, 'B'))
+int main() { B b; call(b); return 0; }`, 'B')
   })
 })
 
