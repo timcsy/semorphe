@@ -8,7 +8,12 @@
 
 ## Phase 2：先補接手者（刪之前）
 
-- [ ] T002 [P] [US3] 新增 `tests/integration/cella-oop-semantics.test.ts`：解構反序（兩個物件、函式回傳時、每個實例各一次）、方法呼叫方法、虛擬分派（基底指標呼叫衍生類別）、lambda `[&]`／`[=]` 捕捉——全部用 expectCellaOut；Cella 判不出的用 knownCellaGap 釘住並回報 cella
+- [X] T002 [P] [US3] `tests/integration/cella-oop-semantics.test.ts`（9 條綠 ＋ 2 根釘子；f728e323）。🔴 **補的時候抓到五個被直譯器蓋住的缺陷**：
+  - ✅ 修了：計數迴圈的變數沒記進 lift 的查找表 ⟹ 迴圈裡的 `T t(k);` 被當成前置宣告（9b7e7e78）
+  - ✅ 修了：成員函式裡的裸名字方法呼叫送成 eCall（被判「呼叫未宣告的函式」）⟹ eMCall { obj: eThis }
+  - ✅ 修了：method_virtual／method_override／method_virtual_pure 沒有 formalize（學生寫虛擬函式完全不能跑）
+  - 🟡 釘住、交給 **spec 209「OOP 來回一趟」**：`p->m()` 來回一趟變 `p.m()`；`struct B : A` 丟掉繼承；`virtual ~A()` 丟掉 virtual；
+    虛擬／覆寫方法丟掉尾端 const——四個都要動元件宣告（屬性、積木形態、產生器），**排在段 3（刪）之前做**
 - [ ] T003 [P] [US3] `tests/contract/session-contract.test.ts` 加 Ctrl+D（closeInput）當 EOF 的一條；拿掉 js-interpreter 那一格
 - [ ] T004 [P] [US1] `src/components/cpp/method_def/spec.test.ts`、`tests/probes/our-verdicts.test.ts`、`tests/unit/interpreter/float-format.test.ts`（搬到 `tests/integration/cout-float-format.test.ts`）改成 Cella 背書
 - [ ] T005 [P] [US1] `src/components/cpp/pin_constant/spec.test.ts` 的 PIN_CONSTANTS 那條改成 Cella 判；`tests/integration/board-registry.test.ts` 的 `hasPin`／`describePins` 搬進測試本身；兩支 Arduino roundtrip 拿掉時鐘重設
@@ -39,4 +44,6 @@
 
 ## 依賴
 
-T001 → T002～T005（可並行）→ T006～T008 → T009～T014 → T015 → T016 → T017
+T001 → T002～T005（可並行）→ **spec 209（OOP 來回一趟）** → T006～T008 → T009～T014 → T015 → T016 → T017
+
+⚠️ spec 209 為什麼擋在刪之前：直譯器裡那幾支手搭樹的 OOP 測試（destructor／class-method／oop-slice3）刪掉之後，指標分派與 struct 繼承只剩兩根釘子在看——先修好，讓它們變成正向的 Cella 測試再刪。
