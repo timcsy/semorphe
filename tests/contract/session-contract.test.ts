@@ -12,7 +12,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { createCellaProvider } from '../../src/providers/cella/provider'
-import { SessionStop, type ExecutionSession, type Provider } from '../../src/core/capabilities'
+import { SessionStop, type ExecutionSession, type Provider, type SessionDetails } from '../../src/core/capabilities'
 import type { SemanticNode } from '../../src/core/types'
 import { liftPython } from '../helpers/python-lift'
 import { cellaProvider, waitSession, until } from '../helpers/cella-session'
@@ -45,10 +45,22 @@ const find = (t: SemanticNode, pred: (n: SemanticNode) => boolean): SemanticNode
 
 let cellaShared: Promise<Provider> | null = null
 
-const PROVIDERS: { id: string; make: () => Provider | Promise<Provider> }[] = [
+/**
+ * **契約依宣告分層**（spec 210；使用者 2026-11-04 定，cos-mos 階段 3 的驗收＝「通過核心＋自己宣告的部分」）：
+ * 核心（一路跑完、執行期錯誤回 failed）每一個提供者都要過；其餘照 `declares.session` 宣告了才要求——
+ *   stepping → 中斷點、單步、停著時改變數與 terminate ｜ interactiveInput → 讀輸入、讀到 EOF ｜ steps → 覆蓋
+ * ⚠️ 每一筆的 `session` 要與提供者自己宣告的一致（第一條斷言在守），否則分層就是在跳過它宣告了的能力。
+ */
+const MINIMAL: SessionDetails = { granularity: 'node', setInput: false, setVariable: false, steps: false, stepping: false, interactiveInput: false }
+const PROVIDERS: { id: string; session: SessionDetails; make: () => Provider | Promise<Provider> }[] = [
   // ⚠️ 同一個行程裡只能有一個模擬的 worker——C++ 與 Python 兩組共用同一個提供者
-  { id: 'cella', make: () => (cellaShared ??= cellaInProcess()) },
+  { id: 'cella', session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true }, make: () => (cellaShared ??= cellaInProcess()) },
+  // 「只能一路跑到底」的提供者長什麼樣（cos-mos 宿主第一版）：同一個 Cella、只宣告最少的能力——證明分層真的照宣告跳過，而核心那幾條過得了
+  { id: 'cella-minimal', session: MINIMAL, make: async () => { const c = await (cellaShared ??= cellaInProcess()); return { ...c, id: 'cella-minimal', declares: { session: MINIMAL } } } },
 ]
+/** 這一條要求的能力；核心（`[]`）每一個提供者都要過 */
+const needs = (entry: (typeof PROVIDERS)[number], ...caps: ('stepping' | 'interactiveInput' | 'steps' | 'setVariable')[]) =>
+  caps.every((c) => entry.session[c] === true) ? it : it.skip
 
 function open(p: Provider, tree: SemanticNode): { s: ExecutionSession; out: () => string } {
   const s = p.createSession!({ maxSteps: 1_000_000, formal: formalOf(tree) }, tree)
@@ -67,6 +79,10 @@ for (const entry of PROVIDERS) {
     let p: Provider
     beforeAll(async () => { p = await entry.make() }, 400_000)
 
+    it('★ 這一筆的分層照提供者自己的宣告（不得替它跳過它宣告了的能力）', () => {
+      expect(p.declares.session).toEqual(entry.session)
+    })
+
     it('★ 沒有中斷點：launch 一路跑完，輸出正確', async () => {
       const tree = lift(LOOP)
       const { s, out } = open(p, tree)
@@ -74,7 +90,7 @@ for (const entry of PROVIDERS) {
       expect(out()).toBe('6\n')
     })
 
-    it('★ 中斷點：停在那一顆、看得到變數；continue 跑完', async () => {
+    needs(entry, 'stepping')('★ 中斷點：停在那一顆、看得到變數；continue 跑完', async () => {
       const tree = lift(LOOP)
       const target = find(tree, (n) => n.componentId === 'cpp:print')!
       const { s, out } = open(p, tree)
@@ -87,7 +103,7 @@ for (const entry of PROVIDERS) {
       expect(out()).toBe('6\n')
     })
 
-    it('🔴 中斷點設在運算式敘述（函式呼叫）上：會停、回報的是語義樹的 id（Cella 那側的標籤是 `<id>/stmt`）', async () => {
+    needs(entry, 'stepping')('🔴 中斷點設在運算式敘述（函式呼叫）上：會停、回報的是語義樹的 id（Cella 那側的標籤是 `<id>/stmt`）', async () => {
       const tree = lift('#include <iostream>\nusing namespace std;\nvoid f() {\n  cout << 1;\n}\nint main() {\n  int x = 2;\n  f();\n  cout << x;\n  return 0;\n}\n')
       const call = find(tree, (n) => n.componentId === 'cpp:func_call')!
       const { s, out } = open(p, tree)
@@ -98,7 +114,7 @@ for (const entry of PROVIDERS) {
       expect(out()).toBe('12')
     })
 
-    it('🔴 中斷點設在迴圈裡的指定敘述上：停在第一次、變數在（不能停在拿不到呼叫框的運算式上）', async () => {
+    needs(entry, 'stepping')('🔴 中斷點設在迴圈裡的指定敘述上：停在第一次、變數在（不能停在拿不到呼叫框的運算式上）', async () => {
       const tree = lift(LOOP)
       const assign = find(tree, (n) => n.componentId === 'cpp:var_assign')!
       const { s } = open(p, tree)
@@ -107,7 +123,7 @@ for (const entry of PROVIDERS) {
       expect(Object.fromEntries(s.variables().map((v) => [v.name, v.value]))).toMatchObject({ s: '0', i: '0' })
     })
 
-    it('🔴 覆蓋（spec 194）：一次跑完，迴圈身體的指定敘述進入 4 次、印出那一句 1 次；鍵是語義樹的 id', async () => {
+    needs(entry, 'steps')('🔴 覆蓋（spec 194）：一次跑完，迴圈身體的指定敘述進入 4 次、印出那一句 1 次；鍵是語義樹的 id', async () => {
       const tree = lift(LOOP)
       const assign = find(tree, (n) => n.componentId === 'cpp:var_assign')!
       const print = find(tree, (n) => n.componentId === 'cpp:print')!
@@ -120,7 +136,7 @@ for (const entry of PROVIDERS) {
       expect([...cov!.keys()].every((k) => !k.includes('/')), '鍵是語義樹的 id，不是 Cella 的標籤').toBe(true)
     })
 
-    it('★ 單步：stopOnEntry 停在第一步，每次 stepIn 往前一顆，最後跑完', async () => {
+    needs(entry, 'stepping')('★ 單步：stopOnEntry 停在第一步，每次 stepIn 往前一顆，最後跑完', async () => {
       const tree = lift(LOOP)
       const { s, out } = open(p, tree)
       let o = await s.launch(tree, { stopOnEntry: true })
@@ -135,7 +151,7 @@ for (const entry of PROVIDERS) {
       expect(out()).toBe('6\n')
     })
 
-    it('★ 讀輸入：停在 awaiting-input，給了一行之後繼續', async () => {
+    needs(entry, 'interactiveInput')('★ 讀輸入：停在 awaiting-input，給了一行之後繼續', async () => {
       const tree = lift(READ)
       const { s, out } = open(p, tree)
       const o = await s.launch(tree, { stopOnEntry: false })
@@ -146,7 +162,7 @@ for (const entry of PROVIDERS) {
     })
 
     // spec 208 T003：Ctrl+D（主控台送 `\x04`）＝ closeInput。原本只有直譯器的 interpreter.test 守這一條，刪掉之前補成工作階段的契約
-    it('★ 讀到 EOF：closeInput 之後 `while (cin >> n)` 結束，照常印出', async () => {
+    needs(entry, 'interactiveInput')('★ 讀到 EOF：closeInput 之後 `while (cin >> n)` 結束，照常印出', async () => {
       const tree = lift('#include <iostream>\nusing namespace std;\nint main() {\n  int n, s = 0;\n  while (cin >> n) s += n;\n  cout << s;\n  return 0;\n}\n')
       const { s, out } = open(p, tree)
       expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
@@ -155,7 +171,7 @@ for (const entry of PROVIDERS) {
       expect(out()).toBe('7')
     })
 
-    it('★ 改變數：停著改值，繼續之後的輸出反映它，而且留下紀錄', async () => {
+    needs(entry, 'stepping', 'setVariable')('★ 改變數：停著改值，繼續之後的輸出反映它，而且留下紀錄', async () => {
       const tree = lift(LOOP)
       const target = find(tree, (n) => n.componentId === 'cpp:print')!
       const { s, out } = open(p, tree)
@@ -178,7 +194,7 @@ for (const entry of PROVIDERS) {
       }
     })
 
-    it('🔴 停著時 terminate：下一個指令不會卡住，回 aborted', async () => {
+    needs(entry, 'stepping')('🔴 停著時 terminate：下一個指令不會卡住，回 aborted', async () => {
       const tree = lift(LOOP)
       const { s } = open(p, tree)
       await s.launch(tree, { stopOnEntry: true })
@@ -220,7 +236,7 @@ for (const entry of PROVIDERS) {
       expect(out()).toBe('6\n')
     })
 
-    it('★ 中斷點：停在 print、看得到 s；繼續跑完', async () => {
+    needs(entry, 'stepping')('★ 中斷點：停在 print、看得到 s；繼續跑完', async () => {
       const tree = await liftPy(PY_LOOP)
       const target = find(tree, (n) => n.componentId === 'python:print')!
       const { s, out } = openPy(tree)
@@ -231,7 +247,7 @@ for (const entry of PROVIDERS) {
       expect(out()).toBe('6\n')
     })
 
-    it('★ 讀輸入：停在 awaiting-input，給了一行之後繼續', async () => {
+    needs(entry, 'interactiveInput')('★ 讀輸入：停在 awaiting-input，給了一行之後繼續', async () => {
       const tree = await liftPy(PY_READ)
       const { s, out } = openPy(tree)
       expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
@@ -247,7 +263,7 @@ for (const entry of PROVIDERS) {
       if (o.kind === 'failed') expect(o.error).toBeInstanceOf(SessionStop)
     })
 
-    it('🔴 覆蓋：迴圈身體的指定敘述進入 4 次；鍵是語義樹的 id', async () => {
+    needs(entry, 'steps')('🔴 覆蓋：迴圈身體的指定敘述進入 4 次；鍵是語義樹的 id', async () => {
       const tree = await liftPy(PY_LOOP)
       const assign = find(tree, (n) => n.componentId === 'python:var_assign' && JSON.stringify(n).includes('"i"'))!
       const { s } = openPy(tree)

@@ -503,6 +503,8 @@ UI 域與硬體域本身（它們是這一格的**消費者**）。
 - [ ] 🆕 **Provider 對接說明（給 cos-mos 階段 3）**——三方會議第三輪議題三（[history/334](history/334-三方會議第三輪符號學三面向與操作者介面.md)）：cos-mos 的瀏覽器宿主在入口登記一個 Provider 就能接上「執行」。
       驗收：說明列出 Provider／ExecutionSession 的方法（哪些可選）、狀態回報（準備中／翻不出／執行中出錯）；`tests/contract/session-contract.test.ts` 能對任一提供者跑，當對接的驗收。與第 6 階段收尾平行。
       🟡 **說明已寫**（2026-11-03）：[Provider 對接說明](draft/2026-11-03-Provider對接說明.md)，已交 cos-mos；等他們回饋與 2b-2 完成後實際對接。
+      ⏳ **待 cos-mos 通知再做**（2026-11-04）：① `onOutput` 多帶 `stdout`／`stderr`（cos-mos 的 `console.wit` 用 `enum output`；判題只看 stdout）——等 Cella 確認、`console.wit` 成為正本 ② 契約依 `declares` 分層（必過核心＋依宣告才要求）——會改使用者確認過的驗收，等主持人問過使用者。
+      ⚠️ Cella 第一版的元件是**批次的**（read-line 讀到 EOF 才跑、一次輸出）：互動模式下 cin 課文的提示會在輸入之後才出現，第一批（Arduino 類）建議批次輸入。
 - [ ] 🆕 **換形態，判決不變（第一層）**——三方會議第三輪的不變式 ①（[history/334](history/334-三方會議第三輪符號學三面向與操作者介面.md) 後記）：同一棵語意樹換一種形態再轉回來（程式碼換風格重產再 lift、積木渲染再抽取），**翻給 Cella 的程式相同**（節點 id 正規化後比）。
       這是宣告的第五個面向（①產出的程式碼 ②語義的不動點 ③載得進工作區 ④走一趟積木回來 ⑤翻給 Cella 的程式），補上之後「換形態，判決不變」在 semorphe 這側成立。
       驗收：課文語料與 StudyCpp 全掃，五個面向各自的不一致數為零或釘住；之後（cos-mos 階段 3 之後）擴成跨專案的成對語料。

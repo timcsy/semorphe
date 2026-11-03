@@ -395,9 +395,12 @@ export class ExecutionController {
       const session = opened.session
       this.session = session
       if (announced) this.broadcastState({ status: 'running' })
-      session.onOutput((text: string) => this.broadcastOutput(text, 'stdout'))
-      session.setBreakpoints(this.breakpointNodes)
-      const first = await session.launch(tree, { stopOnEntry: mode === 'step' || mode === 'animate' })
+      session.onOutput((text, stream) => this.broadcastOutput(text, stream ?? 'stdout'))
+      // 不能停下來的提供者（spec 210：cos-mos 宿主第一版只能一路跑到底）——除錯／單步／動畫照實說一句、改成直接跑完，不得卡在等一個永遠不會來的「停下」
+      const canStep = !opened.missing.includes('stepping')
+      if (!canStep && mode !== 'run') this.broadcastOutput(msg('EXEC_NO_STEPPING', '這個執行器不能逐步執行——改成直接跑完') + '\n', 'stderr')
+      if (canStep) session.setBreakpoints(this.breakpointNodes)
+      const first = await session.launch(tree, { stopOnEntry: canStep && (mode === 'step' || mode === 'animate') })
       if (this.session !== session) return
       // 開跑時才發現跑不了（一步也沒有執行）⟹ 換下一個，並記下原因（P6：退回要看得見）
       if (first.kind === 'declined') {
