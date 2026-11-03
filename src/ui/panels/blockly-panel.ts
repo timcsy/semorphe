@@ -49,7 +49,7 @@ export class BlocklyPanel implements ViewHost {
   readonly capabilities: ViewCapabilities = {
     editable: true,
     needsLanguageProjection: true,
-    consumedAnnotations: ['control_flow', 'introduces_scope'],
+    consumedAnnotations: ['control_flow'],
     /** 積木＝**它們怎麼被擺在一起**——`concepts/理解的層次.md` */
     layer: 'space' as const,
   }

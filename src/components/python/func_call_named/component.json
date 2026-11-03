@@ -18,8 +18,7 @@
         "render": "./generate.ts",
         "lift": "./lift-pattern.json"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_properties_why": "**參數的名字是一個標籤**（`key=`／`sep=`）——它不對應任何值，所以是欄位不是接點。"
 }

@@ -24,7 +24,9 @@ describe('python:set_append', () => {
 
   it('🔴 串列上要出聲——Python 的串列沒有 add', async () => {
     const out = await runPython('xs = [1]\nxs.add(2)\n')
-    expect(out).toMatch(/append/)   // 錯誤訊息裡直接寫修法
+    // spec 208：由 Cella 跑之後是 Python 自己的 AttributeError；「錯誤訊息裡直接寫修法（改用 append）」原本是 JS 直譯器的訊息，
+    //   照三方定的分工屬於 semorphe 的呈現層（用學生懂的話說），記在 vision〈形態檢查與判決的界線盤點〉之後的提示層
+    expect(out).toMatch(/^error\|.*AttributeError.*add/s)
   })
 
   it('★ 邊界：`.append` 不得被認走', async () => {

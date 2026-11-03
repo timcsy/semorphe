@@ -12,9 +12,6 @@
     "args": "expressions"
   },
   "role": "statement",
-  "annotations": {
-    "debug_step": true
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -26,8 +23,7 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "traits": {
     "ioRole": "print",

@@ -84,3 +84,27 @@ describe('四捨五入的收尾：逢五取偶（問過 g++）', () => {
     await expectCellaOut(prog(`cout << setprecision(${p}) << ${lit(n)};`), want)
   })
 })
+
+// 2026-11-04（第 251 刀）：這五顆（io_mode／io_mode_number／io_flush／range_min／range_find_upper）
+// 原本只被刪掉的直譯器測試碰到——宣告完整性護欄的語料因此掉了它們。這一支走產品那條路（lift → formalize → Cella），
+// 同時把它們放回語料（最後一行的 `'\n'` 與 `set<pair<int, int>>` 也是：字串屬性護欄的字元常值判定、
+// 與「型別字串裡裝了結構」那一筆待看的，原本都靠刪掉的 interpreter-matches-compiler 撐著）。
+// ⚠️ `cout.flush()`（方法呼叫的寫法）Cella 0.1.202611031229 判 reject（「no member named 'flush' in ''」）
+//    ——我們送的是忠實的 `eMCall { obj: eStdout, f: 'flush' }`，已附最小重現回報 cella（2026-11-04）。
+describe('串流修飾與範圍查找（走 lift → Cella）', () => {
+  it('fixed／setprecision／flush／min_element／upper_bound', async () => {
+    await expectCellaOut(`#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    vector<int> v = {1, 2, 3};
+    set<pair<int, int>> st;
+    st.insert({2, 1});
+    cout << st.size() << endl;
+    cout << fixed << setprecision(2) << 1.5 << endl;
+    cout << flush;
+    cout << *min_element(v.begin(), v.end()) << endl;
+    cout << *upper_bound(v.begin(), v.end(), 1) << '\\n';
+    return 0;
+}`, '1\n1.50\n1\n2\n')
+  })
+})

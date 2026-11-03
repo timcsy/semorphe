@@ -17,8 +17,7 @@
   },
   "role": "statement",
   "annotations": {
-    "control_flow": "loop",
-    "debug_step": true
+    "control_flow": "loop"
   },
   "owner": "(core)",
   "paths": {
@@ -33,8 +32,7 @@
         "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建for迴圈`）——判別留在共用檔。"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "_slots_why": "`init` 收「一個運算式**或**一顆宣告」——`for (int i = 0; …)` 的 init 位置在 C++ 文法裡是 `init-statement`，宣告是合法的。原本只寫 `\"expression\"`，於是最常見的那一行在流程面板上組不出來（2026-09-14 實測）。"
 }

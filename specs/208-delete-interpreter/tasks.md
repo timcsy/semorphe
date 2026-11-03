@@ -20,18 +20,18 @@
 
 ## Phase 3：宣告不再有 execute（段 2）
 
-- [ ] T006 [US2] `src/core/component/{views,judges,paths}.ts`、`src/core/types.ts`：拿掉 execute 格；views 對出現 `execute` 的宣告報錯
-- [ ] T007 [US2] 一次性腳本（JSON 讀寫）拿掉 351 份 component.json 的 `paths.execute` 與 `_execute_why`
-- [ ] T008 [US2] `tests/integration/audit-completeness.test.ts` 的 execute 路改判 formalize；其餘寫死五路的護欄（以 `grep -rn "'execute'" tests/integration` 為準）改新定義，各保留注入測試
+- [x] T006 [US2] `src/core/component/{views,judges,paths}.ts`、`src/core/types.ts`：拿掉 execute 格；views 對出現 `execute` 的宣告報錯
+- [x] T007 [US2] 一次性腳本（JSON 讀寫）拿掉 351 份 component.json 的 `paths.execute` 與 `_execute_why`
+- [x] T008 [US2] `tests/integration/audit-completeness.test.ts` 的 execute 路改判 formalize；其餘寫死五路的護欄（以 `grep -rn "'execute'" tests/integration` 為準）改新定義，各保留注入測試
 
 ## Phase 4：刪（段 3）
 
-- [ ] T009 [US1] 刪 `src/interpreter/`、`src/components/**/execute.ts`、`src/languages/cpp/lang/{executors,runtime}/`、`src/providers/js-interpreter/`、只給執行用的輔助檔（spec 輸入列的那 14 支）、`src/languages/cpp/generators/index.ts` 的 `registerCoreExecutors`；tsc 為準修到乾淨
-- [ ] T010 [US1] 刪 research 表 D 類與 E 類的測試檔、`skip-declaration-gate` L167 與 `audit-no-silent-continue` L174–210 那幾支；`tests/helpers/python-lift.ts` 的 `runPython` 一起刪
-- [ ] T011 [US1] G 類：掃描清單拿掉已刪的目錄；`audit-tests-import-reachable` 拿掉兩筆 ALLOWED；`audit-param-spec` 的證據字串；註解
-- [ ] T012 [US4] `tests/integration/audit-runtime-message.test.ts` 改掃 Cella 的錯誤鏈（`RUNTIME_ERR_*`／`CELLA_*` 的 kind→文案），入口條件 > 0，加注入測試
-- [ ] T013 新護欄（或併入 `audit-cella-only`）：src 與 tests 零個 import 指向已刪路徑，含注入測試
-- [ ] T014 基線：`test:guard` 逐支看，每份動到的基線 note 寫「6c-4：execute 那一路退場」
+- [x] T009 [US1] 刪 `src/interpreter/`、`src/components/**/execute.ts`、`src/languages/cpp/lang/{executors,runtime}/`、`src/providers/js-interpreter/`、只給執行用的輔助檔（spec 輸入列的那 14 支）、`src/languages/cpp/generators/index.ts` 的 `registerCoreExecutors`；tsc 為準修到乾淨
+- [x] T010 [US1] 刪 research 表 D 類與 E 類的測試檔、`skip-declaration-gate` L167 與 `audit-no-silent-continue` L174–210 那幾支；`tests/helpers/python-lift.ts` 的 `runPython` 一起刪
+- [x] T011 [US1] G 類：掃描清單拿掉已刪的目錄；`audit-tests-import-reachable` 拿掉兩筆 ALLOWED；`audit-param-spec` 的證據字串；註解
+- [x] T012 [US4] `tests/integration/audit-runtime-message.test.ts` 改掃 Cella 的錯誤鏈（`RUNTIME_ERR_*`／`CELLA_*` 的 kind→文案），入口條件 > 0，加注入測試
+- [x] T013 新護欄（或併入 `audit-cella-only`）：src 與 tests 零個 import 指向已刪路徑，含注入測試
+- [x] T014 基線：`test:guard` 逐支看，每份動到的基線 note 寫「6c-4：execute 那一路退場」
 
 ## Phase 5：文件（段 5）
 
@@ -47,3 +47,13 @@
 T001 → T002～T005（可並行）→ **spec 209（OOP 來回一趟）** → T006～T008 → T009～T014 → T015 → T016 → T017
 
 ⚠️ spec 209 為什麼擋在刪之前：直譯器裡那幾支手搭樹的 OOP 測試（destructor／class-method／oop-slice3）刪掉之後，指標分派與 struct 繼承只剩兩根釘子在看——先修好，讓它們變成正向的 Cella 測試再刪。
+
+## 實作時的偏離（第 251 刀，2026-11-04）
+
+- T007：用文字層級刪除（不是 JSON 讀寫），因為 `json.dumps` 會把單行物件展開；刪完逐份做結構比對，0 不一致。
+- T008：完備性護欄改成**四路**（lift／generate／render／extract），沒有把 execute 那一格改判 formalize——formalize 已有 `audit-formalize-coverage` 在量，同一格量兩次只會讓兩份基線各漂各的。`consumed-by-parent` 從 `skipReasons.execute` 搬到 `traits.insideParentOnly`（12 顆）。
+- T010：`runPython` 沒有刪，改走 Cella（Python 元件測試的判準仍要它）；認得 `uncaught`。
+- T013：併進 `audit-cella-only`（已刪的路徑不得存在、`src`／`tests`／`e2e`／`tools` 不得 import 它們，含注入）。
+- T014：另退場一支護欄 `audit-silent-fallback`（它的母體是執行器檔，全刪之後是空的）；標註 `debug_step`／`introduces_scope` 從宣告刪掉（唯一讀者是直譯器）。
+- 範圍外但當場修：位元欄位來回一趟丟寬度（照實降級）；近似名演算法的測試移到 `tests/unit/core/near-miss.test.ts`。
+

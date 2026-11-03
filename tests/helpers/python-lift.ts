@@ -160,28 +160,15 @@ export function generatePython(tree: SemanticNode | null): string {
  * （`component-move-parity` 的檔頭記著同一個坑）。
  */
 export async function runPython(code: string, stdin: string[] = []): Promise<string> {
-  const { SemanticInterpreter } = await import('../../src/interpreter/interpreter')
-  const { registerCppExecutors, registerCppSkipDeclarations } =
-    await import('../../src/languages/cpp/generators/index')
-  // 🔴 **兩個都要叫，而它們都住在 C++ 名字的函式裡**——
-  // 它們做的事分別是 `componentExecuteRegistrars()` 與 `componentComponents()`，
-  // **兩個都是掃【全部】膠囊的 glob**。Python 因此是「順帶」被收的。
-  //
-  // ⚠️ 少了第二個的症狀：`# 註解` 讓整支程式在執行時掛掉
-  // （`RUNTIME_ERR_UNKNOWN_COMPONENT`）——因為「這顆刻意沒有執行器」這件事
-  // 沒有到達直譯器。
-  //
-  // > **一個語言中立的登記，如果它的呼叫點掛在某個語言的名字底下，
-  // > 那麼「有沒有被呼叫」就變成那個語言的內部細節。**
-  registerCppSkipDeclarations()
-  registerCppExecutors()
-  const tree = await liftPython(code)
-  if (!tree) return '<lift 失敗>'
-  const interp = new SemanticInterpreter()
-  try {
-    await interp.execute(tree, stdin)
-  } catch (e) {
-    return `<執行例外：${(e as Error).message}>`
-  }
-  return `${interp.getState().status}|${interp.getOutput().join('')}`
+  // spec 208（6c-4）：原本由 JS 直譯器跑；直譯器刪掉之後由 Cella（Python 分支）背書，回傳的形狀不變（`狀態|輸出`）。
+  // 🔴 判不出（unknown）不得混進 error——期望「出錯」的測試碰到 Cella 判不出時要紅，不是假綠（P6）
+  const { runCella, describeCellaResult } = await import('./cella-run')
+  const r = await runCella(code, { lang: 'python', stdin: stdin.map((l) => `${l}\n`).join('') })
+  if (r.verdict === 'untranslated') return `<執行例外：翻不出（${r.untranslated.map((u) => u.construct).join('、')}）>`
+  // 未接住的例外：Cella 判 accept（以例外結束是有定義的行為），附一則 kind `uncaught`、類別 `termination`——對學生而言是「出錯停下」
+  const uncaught = r.problems.find((p) => p.kind === 'uncaught')
+  if (r.verdict === 'accept' && uncaught) return `error|${r.out}<執行例外：${uncaught.reason ?? ''}>`
+  if (r.verdict === 'accept') return `completed|${r.out}`
+  if (r.verdict === 'reject') return `error|${r.out}<執行例外：${describeCellaResult(r)}>`
+  return `${r.verdict}|${r.out}<判不出：${describeCellaResult(r)}>`
 }

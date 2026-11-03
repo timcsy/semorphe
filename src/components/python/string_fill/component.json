@@ -28,8 +28,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 第五十條護欄的通用桶點名的（`.zfill`／`.ljust`／`.rjust` 各一次）。\n⚠️ **補的字元那一格只有靠左／靠右吃得到**：`zfill` 一律補零，多給它一個引數在真的 Python 裡會出錯——所以產生那一路要擋。"
 }

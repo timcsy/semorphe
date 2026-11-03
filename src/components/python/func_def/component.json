@@ -22,8 +22,7 @@
   "owner": "(python)",
   "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**。",
   "annotations": {
-    "control_flow": "sequence",
-    "debug_step": true
+    "control_flow": "sequence"
   },
   "paths": {
     "views": {
@@ -36,8 +35,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_children_why": "🟢 **spec 169：參數從一個字串變成【接點】。**\n\n上一版存的是 `\"a, b\"`，而 `knowledge` 記著「**需要 parse 回結構才能用的字串，就不該是字串**」——那筆已知權宜寫在這裡等人來還。\n\n🔴 而還它的是使用者：「函式定義還沒有 mutation」。做得出 `+`／`−` 的前提是**每個參數是一格**，而一個逗號分隔的字串表達不出「三格」。\n\n> **一個 UI 上的 mutation，逼出的是資料模型上的一個結構。**\n\n⚠️ 用的是既有的結構節點（`non-components` 裡那顆），**沒有新增元件**——它本來就不帶語言前綴，兩個語言共用。",
   "traits": {

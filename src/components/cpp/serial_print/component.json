@@ -37,8 +37,7 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "_children_why": "⚠️ `format` 是 `Serial.print(v, 3)` 的**第二個引數**——小數位數（或 `HEX`／`BIN` 這種進位）。🔴 第一版沒有這一格，於是它被**靜默丟掉**：輸出是 `-50` 而不是 `-50.000`，而沒有任何地方出聲。盲測抓到的。"
 }

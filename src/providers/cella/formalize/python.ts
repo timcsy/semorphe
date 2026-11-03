@@ -71,6 +71,23 @@ export function expandPython(x: SemanticNode, statement: boolean): FormalizeResu
     : run(x, true)
 }
 
+/** 在最外層的逗號切開（括號與引號裡的逗號不算）——參數預設值是原始碼文字，`(1, (2, 3), "a,b")` 要切成三項 */
+function splitTopLevel(text: string): string[] {
+  const out: string[] = []
+  let depth = 0, quote: string | null = null, cur = ''
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (quote) { cur += c; if (c === '\\') { cur += text[++i] ?? ''; continue } if (c === quote) quote = null; continue }
+    if (c === '"' || c === "'") { quote = c; cur += c; continue }
+    if (c === '(' || c === '[' || c === '{') depth++
+    if (c === ')' || c === ']' || c === '}') depth--
+    if (c === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue }
+    cur += c
+  }
+  out.push(cur.trim())
+  return out.length === 1 && out[0] === '' ? [] : out
+}
+
 function run(tree: SemanticNode, bare: boolean): FormalizeResult {
   const unknown: Unknown[] = []
   const node = (x: SemanticNode, stmtPos = false): CellaJson => {
@@ -82,6 +99,9 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
     if (isObj(t) && t.$only) throw new Miss(x.id, x.componentId, `這顆只能出現在 ${String(t.$only)} 裡（對照表還沒涵蓋這個組合）`)
     const out = tmpl(t, x) as CellaJson
     if (stmtPos && !STATEMENT_ROLE.has(short(x.componentId))) return { k: 'sExpr', n: `${x.id}/stmt`, value: out }
+    // 敘述角色的元件出現在**運算式位置**（`print(xs.sort())`——合法的 Python，印出 None）：模板外層是 `sExpr`，拆出裡面的運算式。
+    // ⚠️ 不拆的話送出「運算式裡有一句敘述」，Cella 判 invalid（spec 208 刪直譯器之後 fuzz_2 露出來的；之前直譯器照跑）
+    if (!stmtPos && isObj(out) && out.k === 'sExpr' && isObj(out.value)) return out.value as CellaJson
     return out
   }
   /** 一串敘述：每一句各自收 unknown（一句翻不了不拖垮整個身體——同 C 家族的做法，unknown 全部列出） */
@@ -182,7 +202,16 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
     if (s === 'True' || s === 'False') return { k: 'eConstant', n, value: { k: 'cBool', b: s === 'True' } }
     if (s === 'None') return { k: 'eConstant', n, value: { k: 'cNone' } }
     if (/^[A-Za-z_]\w*$/.test(s)) return name(n, s)
-    throw new Miss(at.id, at.componentId, `預設值「${s}」是一段運算式，還不能翻（只認字面量與名字）`)
+    // 空的容器字面（`def f(x=[])`）：Python 最有名的陷阱之一——同一個串列在每次呼叫之間共用；交給 Cella 照實跑（spec 208：之前只有直譯器收）
+    if (/^\{\s*\}$/.test(s)) return { k: 'eDict', n, keys: [], values: [] }
+    // 由字面量組成的串列／元組（`coins=(25, 10, 5, 1)`、`x=[]`）：在最外層的逗號切開，每一項再交給這一支
+    const wrap = /^\[([\s\S]*)\]$/.exec(s) ?? /^\(([\s\S]*)\)$/.exec(s)
+    if (wrap) {
+      const items = splitTopLevel(wrap[1]).filter((x, i, all) => x !== '' || i < all.length - 1)
+      const elts = items.map((it, i) => literalOf(it, at, `${n}/${i}`))
+      return s.startsWith('[') ? { k: 'eList', n, elts } : { k: 'eTuple', n, elts }
+    }
+    throw new Miss(at.id, at.componentId, `預設值「${s}」是一段運算式，還不能翻（只認字面量、名字，以及由它們組成的串列／元組）`)
   }
   const argumentsOf = (ps: SemanticNode[]): CellaJson => {
     const args: CellaJson[] = []

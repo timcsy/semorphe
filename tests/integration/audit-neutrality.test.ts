@@ -30,7 +30,7 @@ import neutralityBaseline from '../baselines/neutrality.json'
 import { allComponentIds, allComponentBlockTypes, languageImportsIn, COMPOSITION_ROOT, scanDirs, scanText, splitCodeAndComments } from '../helpers/component-scan'
 
 /** 掃描範圍：核心與呈現層。這些地方不該認得任何特定語言的元件。 */
-const NEUTRAL_DIRS = ['src/core', 'src/ui', 'src/interpreter', 'src/views'] as const
+const NEUTRAL_DIRS = ['src/core', 'src/ui', 'src/views'] as const
 
 const RULE =
   '只匹配完整的引號字串字面（\'id\' / "id" / `id`），但**先遮掉拼法像身分、實際不是**的位置' +
@@ -119,7 +119,7 @@ const falsePositiveList = [
 // ─────────────────────────────────────────────────────────────────────
 function coreImportsOfLanguagePackages(): { file: string; spec: string }[] {
   const out: { file: string; spec: string }[] = []
-  for (const rel of [...listSourceFiles('src/core'), ...listSourceFiles('src/interpreter')]) {
+  for (const rel of [...listSourceFiles('src/core')]) {
     // **只看程式碼，不看註解**——本檔的概念身分掃描早就在做這件事了，
     // 而這條新檢查第一版忘了套用，於是把一句解釋 P9 的註解報成違規。
     const { code } = splitCodeAndComments(readFileSync(join(REPO_ROOT, rel), 'utf8'))

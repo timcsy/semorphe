@@ -34,7 +34,6 @@
         "lift": "./lift.ts"
       }
     },
-    "execute": "./execute.ts",
     "formalize": "./formalize.ts"
   },
   "_owner_why": "⚠️ **不是某個標頭**——`__builtin_popcount` 是編譯器內建，不需要 `#include`。\n所以它沒有 `requires`，而工具箱歸在核心的運算那一格。",

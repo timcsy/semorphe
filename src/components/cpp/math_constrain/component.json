@@ -20,9 +20,7 @@
         "render": "./generate.ts",
         "lift": "./lift.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
-  "_execute_why": "夾值 `min(max(v, lo), hi)`。⚠️ 而真的 `constrain` 是**巨集**——參數會被求值**多次**（`constrain(i++, 0, 10)` 在真板子上會讓 `i` 加好幾次）。**本輪不模那個副作用**：這裡每個參數只求值一次。那是一個已知的差異，不是疏漏。",
   "_lift_why": "身分進 `math_` 家族（與 `math_min`／`math_max`／`math_abs` 同族）而不叫 `cpp:constrain`——**同一種東西用同一種形狀**。"
 }

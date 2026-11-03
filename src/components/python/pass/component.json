@@ -6,9 +6,6 @@
   "slots": {},
   "role": "statement",
   "owner": "(python)",
-  "annotations": {
-    "debug_step": true
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -19,8 +16,7 @@
         "render": "./generate.ts",
         "lift": "./lift-pattern.json"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 **本來降級成灰色方塊**（2026-08-22 第五十一條護欄點名：那一段的積木狀態根本載不進工作區）。\n⚠️ 而 `pass` 在 AI 生的 Python 裡到處都是——它是「這裡刻意什麼都不做」的唯一寫法，Python 沒有空區塊。"
 }

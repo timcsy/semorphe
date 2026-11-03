@@ -16,8 +16,7 @@
         "render": "./generate.ts",
         "lift": "./lift-pattern.json"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "traits": { "sequenceLiteral": true },
   "_traits_why": "**我算出來的是一個有順序的容器**——讓「哪些元件產出序列」問得出來，而不必比對身分。"

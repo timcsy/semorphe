@@ -20,8 +20,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是 `zip`。\n⚠️ **只認兩串的**：Python 的 `zip` 吃任意多串，而積木上是兩格——三串以上讓一般呼叫接手，不然會產出一個少了引數的呼叫。"
 }

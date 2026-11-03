@@ -15,12 +15,6 @@
     "initializer": "expression"
   },
   "role": "statement",
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "declarative"
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -31,9 +25,7 @@
         "render": "./generate.ts",
         "lift": "./lift.ts"
       }
-    },
-    "execute": null,
-    "_execute_why": "這顆沒有獨立的執行語義。**顯式的空，不是遺漏。**"
+    }
   },
   "requires": [
     "<fstream>"

@@ -35,19 +35,22 @@ $ARGUMENTS
 
 ## 背景
 
-這是新概念正式成為 Semorphe 一部分之前的**最終關卡**。它驗證所有產出物（BlockSpec、generator、lifter、渲染映射、executor、測試）能正確協同運作，然後將一切接入系統。
+這是新概念正式成為 Semorphe 一部分之前的**最終關卡**。它驗證所有產出物（積木形態、generator、lifter、渲染映射、formalize、測試）能正確協同運作，然後將一切接入系統。
 
 ## 前置檢查清單
 
-在執行整合之前，驗證目標概念的這些檔案是否存在：
+在執行整合之前，驗證目標概念的膠囊 `src/components/{scope}/{name}/` 裡這些檔案是否存在
+（⚠️ 這張清單原本列的是 `src/languages/{lang}/core/…` 的共用檔——那個目錄已不存在，元件住在膠囊裡，見 `/component-generate`）：
 
-- [ ] Block spec JSON 條目在核心 `src/languages/{lang}/core/blocks.json` 或 STD `src/languages/{lang}/std/{module}/blocks.json`
-- [ ] 程式碼產生器在 `src/languages/{lang}/core/generators/*.ts`
-- [ ] 提升器在 `src/languages/{lang}/core/lifters/*.ts`
-- [ ] 渲染映射在 block spec JSON 中（auto-derive 或顯式 renderStrategy 或 dynamicRules）
-- [ ] Interpreter executor 在 `src/interpreter/executors/*.ts` 中註冊（可執行概念需實作邏輯，宣告性概念需 noop）
-- [ ] 單元測試在 `tests/`（含執行測試）
-- [ ] 概念在核心 `src/languages/{lang}/core/components.json` 或 STD `src/languages/{lang}/std/{module}/components.json` 中註冊
+- [ ] `component.json`（`paths.views` 的 render／lift 全列，沒有的寫 `null` ＋ `_why`）
+- [ ] 積木形態 `forms/blocks.json`（含渲染映射：auto-derive 或 `renderMapping`／`dynamicRules`）
+- [ ] 程式碼產生器 `generate.ts`
+- [ ] 提升器 `lift.ts`／`lift-pattern.json`／`lift-strategy.ts`（三選一）
+- [ ] `formalize.ts`（語義樹 → Cella 程式；Python 是 `formalize.json`）——Cella 還沒有對應時可缺，`audit-formalize-coverage` 的棘輪會數到它
+- [ ] 單元測試 `spec.test.ts`（含用 `expectCellaOut` 斷言輸出的執行測試）
+
+🪦 2026-11-04 之前這裡還有一條「Interpreter executor 在 `src/interpreter/executors/` 註冊（宣告性概念需 noop）」
+——JS 直譯器在 spec 208 整個刪掉，執行只走 Cella。
 
 如果是通用概念，額外檢查：
 - [ ] ~~`src/core/types.ts` 中的 `UniversalConcept` 型別已更新~~ ← **該型別已刪**（`58d64eb`）
@@ -57,32 +60,36 @@ $ARGUMENTS
 
 ## 工作流程
 
-### 步驟零：五路完備性自動掃描（強制阻擋）
+### 步驟零：四路完備性自動掃描（強制阻擋）
 
 **這是整合的第一道關卡，不可跳過。**
 
-對目標概念執行自動化掃描：**五路**（`FIVE_PATHS`，程式碼裡的常數）＋ **測試**。
-⚠️ **用語統一成「五路」**——這裡曾經寫「六路掃描（四路 + Execute + Test）」，
-而測試不是一路（它不是投影），把它算進去會讓「五路完備」這個詞在三份文件裡有三個意思。
+對目標概念執行自動化掃描：**四路**（lift／generate／render／extract，格子名見 `src/core/component/views.ts` 的 `CELLS`）
+＋ **`formalize`**（接 Cella）＋ **測試**。
+⚠️ **測試不是一路**（它不是投影），把它算進去會讓「完備」這個詞在三份文件裡有三個意思
+（這裡曾經寫「六路掃描」）。
+🪦 **2026-11-04 之前是五路**：第五路 execute 隨 JS 直譯器在 spec 208 退場。
 
 
 ```bash
-# 用 grep 搜尋概念在各路徑中的存在性
-grep -rn "'{component_id}'" src/languages/{lang}/ src/interpreter/executors/ tests/ --include="*.ts" --include="*.json"
+# 膠囊裡有哪些檔（各路的實作都在這裡）
+ls src/components/{scope}/{name}/
+# 完備性與 formalize 的護欄（不要只靠 grep——它有合法命中，見 /component-generate 步驟六之二）
+npx vitest run tests/integration/audit-completeness.test.ts tests/integration/audit-formalize-coverage.test.ts
 ```
 
 逐一確認：
 
 | # | 路徑 | 搜尋目標 | 存在？ |
 |---|------|---------|-------|
-| 1 | Lift | lifter `register()` 或 `lift-patterns.json` 條目 | |
-| 2 | Render | blocks.json 中的 BlockSpec + `renderMapping` | |
-| 3 | Extract | PatternExtractor auto-derive 可反向提取（blockDef args + component children）；動態概念需有 `dynamicRules`；expression counterpart 須有完整 blockDef args0 | |
-| 4 | Generate | generator `generators.set()` | |
-| 5 | Execute | executor `register()` | |
-| 6 | Test | 測試檔含 lift/generate/round-trip 測試 | |
+| 1 | Lift（`code.lift`） | `lift.ts` 匯出 `registerLift`，或 `lift-pattern.json` | |
+| 2 | Render（`blocks.render`） | `forms/blocks.json` 的積木定義 + `renderMapping` | |
+| 3 | Extract（`blocks.lift`） | PatternExtractor auto-derive 可反向提取（blockDef args + component children）；動態概念需有 `dynamicRules`；expression counterpart 須有完整 blockDef args0 | |
+| 4 | Generate（`code.render`） | `generate.ts` 匯出 `registerGenerate` | |
+| ＋ | Formalize | `formalize.ts` 匯出 `registerFormalize`（Cella 還沒有對應時可缺，棘輪在數） | |
+| ＋ | Test | `spec.test.ts` 含 lift/generate/round-trip，執行用 `expectCellaOut` | |
 
-**任何路徑缺失即為阻擋問題**：
+**四路與測試任何一項缺失即為阻擋問題**（刻意不做的那一路要在 `skipPaths` ＋ `skipReasons` 宣告）：
 - 報告缺失路徑清單
 - 建議執行 `/component-generate {lang} {component}` 補全，或 `/component-refactor {lang} fix {component}` 修復
 - **不可繼續後續步驟**
@@ -262,12 +269,13 @@ grep -rn 'it\.todo\|it\.skip' tests/ --include="*.test.ts" | grep -i "{component
 ## 整合完成：{component_name}（{language}）
 
 ### 整合的產出物
-- Block spec：核心 `src/languages/{lang}/core/blocks.json` 或 STD `src/languages/{lang}/std/{module}/blocks.json` — {block_type}
-- Generator：核心 `src/languages/{lang}/core/generators/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/generators.ts`
-- Lifter：核心 `src/languages/{lang}/core/lifters/{file}.ts` 或 STD `src/languages/{lang}/std/{module}/lifters.ts`
-- Executor：`src/interpreter/executors/{file}.ts`（可執行概念需實作邏輯，宣告性概念需 noop）
-- Component def：核心 `src/languages/{lang}/core/components.json` 或 STD `src/languages/{lang}/std/{module}/components.json`
-- 測試：`tests/unit/languages/{lang}/{component}.test.ts`
+膠囊 `src/components/{scope}/{name}/`：
+- 宣告：`component.json`
+- 積木形態：`forms/blocks.json` — {block_type}
+- Generator：`generate.ts`
+- Lifter：`lift.ts`／`lift-pattern.json`／`lift-strategy.ts`
+- Formalize：`formalize.ts`（或「Cella 尚無對應」）
+- 測試：`spec.test.ts`
 
 ### 測試結果
 - TypeScript：✅ 無錯誤

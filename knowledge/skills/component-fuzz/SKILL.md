@@ -3,7 +3,7 @@ name: component-fuzz
 description: >
   為 Semorphe 的程式碼↔積木管線產生資訊隔離的模糊測試。
   使用雙代理架構：Agent A（不知道實作）寫真實程式，
-  Agent B 驗證 round-trip 正確性和編譯器/直譯器輸出等價性。
+  Agent B 驗證 round-trip 正確性和編譯器／Cella 輸出等價性（JS 直譯器 2026-11-04 退場，spec 208）。
   用於找出實作感知測試會遺漏的邊界案例和 bug。支援任何語言。
 user-invocable: true
 ---

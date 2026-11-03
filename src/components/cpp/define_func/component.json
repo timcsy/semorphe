@@ -34,7 +34,6 @@
         "lift": "./lift-pattern.json"
       }
     },
-    "execute": "./execute.ts",
     "formalize": "./formalize.ts"
   }
 }

@@ -9,9 +9,6 @@
   },
   "role": "statement",
   "owner": "(python)",
-  "annotations": {
-    "debug_step": true
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -23,8 +20,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 第五十條護欄的通用桶點名的（`.add` ×2，2026-08-23）——集合的加入在同一天才進內建表，而積木要跟上。\n⚠️ **名字是 `set_append` 不是 `container_add`**：做的仍然是 `append`（加一個進去），而**主體是集合**——「同一個操作在任何主體上用同一個字」。"
 }

@@ -7,75 +7,75 @@
   },
   "limits": {
     "cpp:address_of": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:analog_read": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:analog_resolution": {
       "files": 3,
       "dirs": 1
     },
+    "cpp:analog_resolution": {
+      "files": 2,
+      "dirs": 1
+    },
     "cpp:analog_write": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:arithmetic": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:array_2d_assign": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:array_2d_at": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:array_2d_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:array_assign": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:array_at": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:array_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:bits_as": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:bits_count": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:bits_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:bits_fill": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:bits_is": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:bitwise_not": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:block": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:block_comment": {
@@ -83,11 +83,11 @@
       "dirs": 1
     },
     "cpp:break": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:builtin_constant": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:case": {
@@ -95,47 +95,47 @@
       "dirs": 1
     },
     "cpp:cast": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:cast_const": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:cast_dynamic": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:cast_reinterpret": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:cast_static": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:char_is_alpha": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:char_is_digit": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:char_to_lower": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:char_to_upper": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:class_def": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:comma_expr": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:comment": {
@@ -143,7 +143,7 @@
       "dirs": 1
     },
     "cpp:compare": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:constructor": {
@@ -151,91 +151,91 @@
       "dirs": 1
     },
     "cpp:container_append": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_clear": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_count": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_empty": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_erase": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_find": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_iter": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_pop": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_pop_front": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_push": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:container_push_front": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:continue": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:cstring_append": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:cstring_as_double": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:cstring_as_int": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:cstring_compare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:cstring_compare_bounded": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:cstring_copy": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:cstring_copy_bounded": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:cstring_find": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:cstring_find_char": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:cstring_size": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:default": {
@@ -243,27 +243,27 @@
       "dirs": 1
     },
     "cpp:define": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:define_func": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:delay": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:delay_microseconds": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:delete": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:deque_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:destructor": {
@@ -271,7 +271,7 @@
       "dirs": 1
     },
     "cpp:dht_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:dht_open": {
@@ -279,15 +279,15 @@
       "dirs": 1
     },
     "cpp:dht_read": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:digital_read": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:digital_write": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:doc_comment": {
@@ -295,55 +295,55 @@
       "dirs": 1
     },
     "cpp:eeprom_read": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:eeprom_write": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:endl": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:enum": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:exception_make": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:forward_decl": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:free": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:func_call": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:func_def": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:if": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:if_else": {
-      "files": 2,
+      "files": 1,
       "dirs": 1
     },
     "cpp:ifdef": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:ifndef": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:ifstream_declare": {
@@ -359,35 +359,35 @@
       "dirs": 1
     },
     "cpp:increment": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:initializer_list": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:input": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:input_formatted": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:input_line": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:io_flush": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:io_mode": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:io_mode_number": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:io_sync": {
@@ -399,143 +399,143 @@
       "dirs": 1
     },
     "cpp:istringstream_declare": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:lambda": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:lcd_at": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:lcd_clear": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:lcd_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:lcd_open": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:lcd_print": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:literal_char": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:literal_number": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:literal_string": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:logic": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:logic_not": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:loop_count": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:loop_do_while": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:loop_for": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:loop_range": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:loop_while": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:malloc": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:map_assign": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:map_at": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:map_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:math_abs": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:math_binary": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:math_constrain": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:math_gcd": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:math_is_nan": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:math_lcm": {
       "files": 3,
       "dirs": 1
     },
+    "cpp:math_lcm": {
+      "files": 2,
+      "dirs": 1
+    },
     "cpp:math_max": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:math_min": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:math_pow": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:math_unary": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:member_static": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:memory_copy": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:memory_fill": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:method_call": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:method_override": {
@@ -555,23 +555,23 @@
       "dirs": 1
     },
     "cpp:micros": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:millis": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:namespace_def": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:negate": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:new": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:ofstream_declare": {
@@ -583,295 +583,295 @@
       "dirs": 1
     },
     "cpp:pair_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:pair_make": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:pin_attach": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:pin_constant": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:pin_mode": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:pointer_assign": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:pointer_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:pointer_deref": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:pointer_step": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:print": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:print_formatted": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:priority_queue_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:priority_queue_peek": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:program": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:program_exit": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:pulse_read": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:pwm_attach": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:pwm_open": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:pwm_tie": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:pwm_write": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:queue_back": {
-      "files": 2,
+      "files": 1,
       "dirs": 1
     },
     "cpp:queue_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:queue_front": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:random_next": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:random_seed": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:range_fill": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:range_fill_sequence": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:range_find": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_find_lower": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_find_upper": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_max": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_min": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_remap": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_remove": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_reverse": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_sort": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_sum": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:range_sum_partial": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:range_unique": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:raw_code": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:raw_expression": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:return": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:serial_count": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:serial_open": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:serial_print": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:serial_read": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:servo_attach": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:servo_declare": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:servo_read": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:servo_write": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:set_declare": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:set_insert": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:sizeof": {
-      "files": 5,
-      "dirs": 1
-    },
-    "cpp:stack_declare": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:stack_peek": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:string_append": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:string_append_char": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:string_as_cstring": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:string_as_double": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:string_as_int": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:string_at": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:string_clear": {
-      "files": 3,
-      "dirs": 1
-    },
-    "cpp:string_declare": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:string_empty": {
       "files": 2,
       "dirs": 1
     },
-    "cpp:string_erase": {
+    "cpp:range_find": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_find_lower": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_find_upper": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_max": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_min": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_remap": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_remove": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_reverse": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_sort": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_sum": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:range_sum_partial": {
+      "files": 2,
+      "dirs": 1
+    },
+    "cpp:range_unique": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:raw_code": {
+      "files": 2,
+      "dirs": 1
+    },
+    "cpp:raw_expression": {
+      "files": 2,
+      "dirs": 1
+    },
+    "cpp:return": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:serial_count": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:serial_open": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:serial_print": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:serial_read": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:servo_attach": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:servo_declare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:servo_read": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:servo_write": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:set_declare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:set_insert": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:sizeof": {
       "files": 4,
+      "dirs": 1
+    },
+    "cpp:stack_declare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:stack_peek": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:string_append": {
+      "files": 2,
+      "dirs": 1
+    },
+    "cpp:string_append_char": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:string_as_cstring": {
+      "files": 2,
+      "dirs": 1
+    },
+    "cpp:string_as_double": {
+      "files": 2,
+      "dirs": 1
+    },
+    "cpp:string_as_int": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:string_at": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:string_clear": {
+      "files": 2,
+      "dirs": 1
+    },
+    "cpp:string_declare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:string_empty": {
+      "files": 1,
+      "dirs": 1
+    },
+    "cpp:string_erase": {
+      "files": 3,
       "dirs": 1
     },
     "cpp:string_find": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:string_find_first_not_of": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:string_find_last_not_of": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:string_insert": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:string_make": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:string_replace": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "cpp:string_size": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:string_substr": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:stringstream_declare": {
@@ -879,59 +879,59 @@
       "dirs": 1
     },
     "cpp:struct_at_member": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:struct_at_ptr": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:struct_declare": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:switch": {
-      "files": 4,
-      "dirs": 1
-    },
-    "cpp:template_function": {
       "files": 3,
       "dirs": 1
     },
+    "cpp:struct_at_ptr": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:struct_declare": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:switch": {
+      "files": 3,
+      "dirs": 1
+    },
+    "cpp:template_function": {
+      "files": 2,
+      "dirs": 1
+    },
     "cpp:ternary": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:throw": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:tone": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:tone_stop": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:touch_read": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:try_catch": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:typedef": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:ultrasonic_trigger": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:using_alias": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:using_namespace": {
@@ -939,107 +939,107 @@
       "dirs": 1
     },
     "cpp:var_assign": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:var_assign_compound": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:var_declare": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:var_declare_auto": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:var_declare_const": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:var_declare_constexpr": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:var_declare_ref": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:var_declare_sequence": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:var_declare_static": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:var_ref": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "cpp:var_swap": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:vector_back": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:vector_declare": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:vector_make": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:vector_pop": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:vector_size": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:wifi_open": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:wifi_read": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:arithmetic": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:array_make": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:array_make_for": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:assert": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:bitwise_not": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:break": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:cast": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:class_def": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:comment": {
@@ -1047,99 +1047,99 @@
       "dirs": 1
     },
     "python:compare": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:compare_chain": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_all": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_any": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_append": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_apply": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_assign": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:container_at": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:container_count": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_enumerate": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_erase": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_erase_value": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_filter": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_find": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:container_find_position": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_insert": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_pop": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_size": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_sort": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_sort_self": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_substr": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_sum": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:container_zip": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:continue": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:exception_case": {
@@ -1147,63 +1147,63 @@
       "dirs": 1
     },
     "python:func_call": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:func_call_named": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:func_def": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:global": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:if": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:import": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:import_from": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:input": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:lambda": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:literal_bool": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:literal_number": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:literal_string": {
-      "files": 5,
+      "files": 4,
       "dirs": 1
     },
     "python:logic": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:logic_not": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:loop_for": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:loop_iter": {
@@ -1211,205 +1211,205 @@
       "dirs": 1
     },
     "python:loop_while": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:map_at_default": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:map_iter": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:map_make": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:map_make_for": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:math_abs": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:math_divmod": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:math_max": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:math_min": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:math_round": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:member_assign": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:member_at": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:method_call": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:negate": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:pair_make": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:pass": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:print": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:program": {
-      "files": 3,
-      "dirs": 1
-    },
-    "python:range_make": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:raw_code": {
       "files": 2,
       "dirs": 1
     },
-    "python:raw_expression": {
+    "python:map_at_default": {
       "files": 3,
+      "dirs": 1
+    },
+    "python:map_iter": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:map_make": {
+      "files": 2,
+      "dirs": 1
+    },
+    "python:map_make_for": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:math_abs": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:math_divmod": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:math_max": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:math_min": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:math_round": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:member_assign": {
+      "files": 2,
+      "dirs": 1
+    },
+    "python:member_at": {
+      "files": 2,
+      "dirs": 1
+    },
+    "python:method_call": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:negate": {
+      "files": 2,
+      "dirs": 1
+    },
+    "python:pair_make": {
+      "files": 2,
+      "dirs": 1
+    },
+    "python:pass": {
+      "files": 2,
+      "dirs": 1
+    },
+    "python:print": {
+      "files": 2,
+      "dirs": 1
+    },
+    "python:program": {
+      "files": 2,
+      "dirs": 1
+    },
+    "python:range_make": {
+      "files": 3,
+      "dirs": 1
+    },
+    "python:raw_code": {
+      "files": 1,
+      "dirs": 1
+    },
+    "python:raw_expression": {
+      "files": 2,
       "dirs": 1
     },
     "python:return": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:set_append": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:set_make": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:splat": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_compare_prefix": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_compare_suffix": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_fill": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_find": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_format": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_insert": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:string_join": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_lower": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_make": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_replace": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_split": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_strip": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:string_upper": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:ternary": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:throw": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:try_catch": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:tuple_make": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:type_is": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "python:var_assign": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:var_assign_compound": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:var_assign_expr": {
-      "files": 3,
+      "files": 2,
       "dirs": 1
     },
     "python:var_assign_sequence": {
-      "files": 4,
-      "dirs": 1
-    },
-    "python:var_ref": {
       "files": 3,
       "dirs": 1
     },
+    "python:var_ref": {
+      "files": 2,
+      "dirs": 1
+    },
     "python:with": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     },
     "cpp:time": {
-      "files": 4,
+      "files": 3,
       "dirs": 1
     }
   },
-  "note": "📈 2026-11-03（spec 208：method_virtual／method_override／method_virtual_pure 接上 formalize（virt：vVirtual／vOverride／vPure））：method_override、method_virtual、method_virtual_pure 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-03（spec 205 T008，c-bridge/02 的 strcmp）：cstring_compare 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 238 刀，const_cast 送 eConstCast）：cast_const 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 237 刀，#ifdef／#ifndef 在前端展開）：ifdef、ifndef 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 234 刀，typedef／using 別名）：typedef、using_alias 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 228 刀，spec 203：22 支整合測試換成 Cella 判準）：char_to_lower、char_to_upper、class_def、constructor、destructor、lcd_clear、math_is_nan、member_static、range_sum、string_erase、string_insert、throw、try_catch 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 227 刀，spec 202：40 支整合測試換成 Cella 判準）：cast_static、enum、string_find、string_substr、string_append_char、string_as_int、cstring_find_char、cstring_copy、cstring_append、memory_fill、memory_copy、var_declare_ref、var_declare_static 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 226 刀，spec 201：Arduino 的膠囊自證測換成 Cella 的板子判決）：micros、delay_microseconds、pwm_write、pwm_attach、pin_attach、touch_read 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 225 刀，spec 200：膠囊自證測換判準第二批）：namespace_def 多一個 formalize.ts，files 4 → 5（同一個資料夾）。\n\n📈 2026-11-02（第 224 刀，spec 199）：char_is_alpha、math_binary、range_unique、range_remove、string_find_first_not_of、string_find_last_not_of 各多一個 formalize.ts，files 3 → 4（同一個資料夾，dirs 不變）。\n\n📈 **2026-11-01（spec 194、197：12 顆容器元件與 `cpp:define` 的 formalize 進自己的膠囊）**：13 顆元件的檔數上限各 +1、目錄數不變（全部 1）。多出來的那一個檔是它自己資料夾裡的 `formalize.ts`——同第 389 刀。\n\n📈 **2026-10-31（第 395 刀：新增 `cpp:time`——`time(0)`，requires `<ctime>`）：新元件 `cpp:time` 的上限 4 檔／1 目錄。**\n📈 **2026-10-31（第 391 刀）：五顆元件的檔數上限 3 → 4，目錄仍是 1。** `range_remap`／`servo_read`／`lcd_at`／`eeprom_read`／`eeprom_write` 多了自己的 formalize.ts（cella 確認 Cella 的模型都已有）。\n📈 **2026-09-19（第 197 刀）：新增 `cpp:pointer_step`（3 檔 / 1 目錄）。**\n  五路全在自己的資料夾裡；lift 只往共用的呼叫路由登錄一筆分支。\n  ⚠️ 重產時 `GENERATE_BASELINE=1` 會把這個 `note` 擦掉——先存後補。\n\n📈 **2026-09-16（第一百七十九刀，第二顆）**：新增 `cpp:container_push_front`。\n  🔴 它是**模糊測試**升級上來的：探索報告原本把它排在最後（真語料只有 1 支用到），\n  而隔離出題的 10 支程式有 5 支卡在它——**一個沒有 push_front 的 deque 只有一半**。\n  **新增一顆元件，輸入量本來就會長。**\n\n📈 **2026-09-16（第一百七十九刀）**：新增 `cpp:container_pop_front`\n  （`dq.pop_front()`，語料 218 支裡 18 支用到）。**新增一顆元件，輸入量本來就會長。**\n\n\n\n📈 **2026-09-18（三元式的括號）：`cpp:ternary` 檔數上限 3 → 4，而目錄仍是 1。**\n  多的那一個是**膠囊自己資料夾裡**的 `build.ts`（建構子）。\n  它存在的理由正是這條護欄要的：`c ? a : b = d` 的重組住在指定那一路的共用檔\n  （判別是文法的知識），而**產出的身分是這顆的**——沒有建構子的話，\n  `createNode('cpp:ternary', …)` 就會寫在共用檔裡，而那是**目錄**的擴散。\n\n  > **把一個檔加進自己的資料夾，換掉一個身分寫在別人家裡——\n  > 那不是擴散，那正是就近性。**\n\n\n📈 **2026-09-18（`cpp:deque_declare`，探索報告的 P1）：＋1 顆元件。**\n  `deque` 在此之前**沒有主人**，於是 `deque<pair<int,int>> q;` 掉進一般的變數宣告，\n  `type` 裝著一整串 `deque<pair<int,int>>`——那個容器因此沒有 `elemType`，\n  而 `q[0].first` 說「（不是一個結構）」。語料 **22 支**用 deque。\n  🔴 這件事早就寫在 `cpp:vector_push` 的執行器註解裡等人來修。\n  ⚠️ 上限 **3 檔 / 1 目錄**——比同族的列表宣告少一個檔，因為它的\n  產碼與建構行為**與那顆共用一份**（`runtime/sequence-declare`）。\n  > **兩份逐字相同的實作會漂移，而漂移的那天沒有人會發現。**\n\n\n📈 **2026-09-18（`cpp:var_declare_sequence` ＋ 走訪的容器換成接點）**：\n  新增一顆元件（結構化繫結，語料 16 處／13 支），並把範圍 for 的容器\n  從欄位換成接點（`d2[pt]`／`m[k]` 是運算式，語料 3 支）。\n  ⚠️ 上限 **4 檔 / 1 目錄**——第四個檔是 `bind.ts`（拆開一個值分給幾個名字），\n  而它**被範圍 for 那顆共用**：兩者拆的方式一模一樣，差別只在「拆的是誰」。\n  寫兩份的症狀會是「宣告式拆得開而迴圈裡拆不開」——同一支程式裡兩種行為。\n\n📈 **2026-09-18（範圍那一族，管線 188）：語料變大，缺陷那幾格未動。**\n  三顆新元件（`cpp:range_find`／`range_unique`／`range_remove`）\n  ＋ 一條新護欄（第一百二十一條：宣告式元件要答得出「我放得進 for 的第一格嗎」）。\n  ⚠️ 三顆都是 **3 檔 / 1 目錄**——與同族既有的十顆一樣，全在自己的膠囊裡。\n\n📈 **2026-09-19（I/O 操縱子三顆，管線 189）：語料變大，缺陷那幾格未動。**\n  `cpp:io_flush`（`cout << flush`）· `cpp:io_mode`（`setw`／`setprecision`／`setfill`）·\n  `cpp:io_mode_number`（`fixed`／`scientific`），\n  ＋ 串流狀態（`WeakMap` 以 `ctx.io` 為鍵，**一次執行一份**）\n  ＋ `interpreter/decimal.ts`（十進位的四捨五入，收尾照 C 的**逢五取偶**）。\n  🔴 而命名是**詞彙表逼出來的**：第一版叫 `stream_*`，三個字都不在表裡；\n  換成既有詞（`io` ＋ `mode` ＋ `number`）之後名字反而對得上同族\n  （`cpp:io_sync`／`cpp:io_tie` 早就在那裡）。**只補了一個新詞：`flush`。**\n  ⚠️ 三顆都是 **3 檔 / 1 目錄**，全在自己的膠囊裡。\n\n📈 **2026-09-19（第 199 刀：一排位元）：兩顆新元件各 3 檔 / 1 目錄。**\n  `cpp:bits_declare` 與 `cpp:bits_fill`——全部住在自己的膠囊裡。\n📈 **2026-09-20（帶參數的巨集）：新增 `cpp:define_func`（3 檔 / 1 目錄）。**\n  **新增一顆元件，足跡本來就會多一筆**——三個檔全在它自己的資料夾裡\n（`component.json`／`generate.ts`／`execute.ts`），擴散是 0。\n"
+  "note": "📉 **2026-11-04（第 251 刀：刪掉 JS 直譯器，spec 208 後半）**：327 顆元件的檔數上限各 −1（各自資料夾裡的 `execute.ts`），目錄數全部不變；沒有任何一顆上升。\n\n📈 2026-11-03（spec 208：method_virtual／method_override／method_virtual_pure 接上 formalize（virt：vVirtual／vOverride／vPure））：method_override、method_virtual、method_virtual_pure 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-03（spec 205 T008，c-bridge/02 的 strcmp）：cstring_compare 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 238 刀，const_cast 送 eConstCast）：cast_const 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 237 刀，#ifdef／#ifndef 在前端展開）：ifdef、ifndef 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 234 刀，typedef／using 別名）：typedef、using_alias 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 228 刀，spec 203：22 支整合測試換成 Cella 判準）：char_to_lower、char_to_upper、class_def、constructor、destructor、lcd_clear、math_is_nan、member_static、range_sum、string_erase、string_insert、throw、try_catch 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 227 刀，spec 202：40 支整合測試換成 Cella 判準）：cast_static、enum、string_find、string_substr、string_append_char、string_as_int、cstring_find_char、cstring_copy、cstring_append、memory_fill、memory_copy、var_declare_ref、var_declare_static 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 226 刀，spec 201：Arduino 的膠囊自證測換成 Cella 的板子判決）：micros、delay_microseconds、pwm_write、pwm_attach、pin_attach、touch_read 各多一個 formalize.ts，files 各加 1（同一個資料夾）。\n\n📈 2026-11-02（第 225 刀，spec 200：膠囊自證測換判準第二批）：namespace_def 多一個 formalize.ts，files 4 → 5（同一個資料夾）。\n\n📈 2026-11-02（第 224 刀，spec 199）：char_is_alpha、math_binary、range_unique、range_remove、string_find_first_not_of、string_find_last_not_of 各多一個 formalize.ts，files 3 → 4（同一個資料夾，dirs 不變）。\n\n📈 **2026-11-01（spec 194、197：12 顆容器元件與 `cpp:define` 的 formalize 進自己的膠囊）**：13 顆元件的檔數上限各 +1、目錄數不變（全部 1）。多出來的那一個檔是它自己資料夾裡的 `formalize.ts`——同第 389 刀。\n\n📈 **2026-10-31（第 395 刀：新增 `cpp:time`——`time(0)`，requires `<ctime>`）：新元件 `cpp:time` 的上限 4 檔／1 目錄。**\n📈 **2026-10-31（第 391 刀）：五顆元件的檔數上限 3 → 4，目錄仍是 1。** `range_remap`／`servo_read`／`lcd_at`／`eeprom_read`／`eeprom_write` 多了自己的 formalize.ts（cella 確認 Cella 的模型都已有）。\n📈 **2026-09-19（第 197 刀）：新增 `cpp:pointer_step`（3 檔 / 1 目錄）。**\n  五路全在自己的資料夾裡；lift 只往共用的呼叫路由登錄一筆分支。\n  ⚠️ 重產時 `GENERATE_BASELINE=1` 會把這個 `note` 擦掉——先存後補。\n\n📈 **2026-09-16（第一百七十九刀，第二顆）**：新增 `cpp:container_push_front`。\n  🔴 它是**模糊測試**升級上來的：探索報告原本把它排在最後（真語料只有 1 支用到），\n  而隔離出題的 10 支程式有 5 支卡在它——**一個沒有 push_front 的 deque 只有一半**。\n  **新增一顆元件，輸入量本來就會長。**\n\n📈 **2026-09-16（第一百七十九刀）**：新增 `cpp:container_pop_front`\n  （`dq.pop_front()`，語料 218 支裡 18 支用到）。**新增一顆元件，輸入量本來就會長。**\n\n\n\n📈 **2026-09-18（三元式的括號）：`cpp:ternary` 檔數上限 3 → 4，而目錄仍是 1。**\n  多的那一個是**膠囊自己資料夾裡**的 `build.ts`（建構子）。\n  它存在的理由正是這條護欄要的：`c ? a : b = d` 的重組住在指定那一路的共用檔\n  （判別是文法的知識），而**產出的身分是這顆的**——沒有建構子的話，\n  `createNode('cpp:ternary', …)` 就會寫在共用檔裡，而那是**目錄**的擴散。\n\n  > **把一個檔加進自己的資料夾，換掉一個身分寫在別人家裡——\n  > 那不是擴散，那正是就近性。**\n\n\n📈 **2026-09-18（`cpp:deque_declare`，探索報告的 P1）：＋1 顆元件。**\n  `deque` 在此之前**沒有主人**，於是 `deque<pair<int,int>> q;` 掉進一般的變數宣告，\n  `type` 裝著一整串 `deque<pair<int,int>>`——那個容器因此沒有 `elemType`，\n  而 `q[0].first` 說「（不是一個結構）」。語料 **22 支**用 deque。\n  🔴 這件事早就寫在 `cpp:vector_push` 的執行器註解裡等人來修。\n  ⚠️ 上限 **3 檔 / 1 目錄**——比同族的列表宣告少一個檔，因為它的\n  產碼與建構行為**與那顆共用一份**（`runtime/sequence-declare`）。\n  > **兩份逐字相同的實作會漂移，而漂移的那天沒有人會發現。**\n\n\n📈 **2026-09-18（`cpp:var_declare_sequence` ＋ 走訪的容器換成接點）**：\n  新增一顆元件（結構化繫結，語料 16 處／13 支），並把範圍 for 的容器\n  從欄位換成接點（`d2[pt]`／`m[k]` 是運算式，語料 3 支）。\n  ⚠️ 上限 **4 檔 / 1 目錄**——第四個檔是 `bind.ts`（拆開一個值分給幾個名字），\n  而它**被範圍 for 那顆共用**：兩者拆的方式一模一樣，差別只在「拆的是誰」。\n  寫兩份的症狀會是「宣告式拆得開而迴圈裡拆不開」——同一支程式裡兩種行為。\n\n📈 **2026-09-18（範圍那一族，管線 188）：語料變大，缺陷那幾格未動。**\n  三顆新元件（`cpp:range_find`／`range_unique`／`range_remove`）\n  ＋ 一條新護欄（第一百二十一條：宣告式元件要答得出「我放得進 for 的第一格嗎」）。\n  ⚠️ 三顆都是 **3 檔 / 1 目錄**——與同族既有的十顆一樣，全在自己的膠囊裡。\n\n📈 **2026-09-19（I/O 操縱子三顆，管線 189）：語料變大，缺陷那幾格未動。**\n  `cpp:io_flush`（`cout << flush`）· `cpp:io_mode`（`setw`／`setprecision`／`setfill`）·\n  `cpp:io_mode_number`（`fixed`／`scientific`），\n  ＋ 串流狀態（`WeakMap` 以 `ctx.io` 為鍵，**一次執行一份**）\n  ＋ `interpreter/decimal.ts`（十進位的四捨五入，收尾照 C 的**逢五取偶**）。\n  🔴 而命名是**詞彙表逼出來的**：第一版叫 `stream_*`，三個字都不在表裡；\n  換成既有詞（`io` ＋ `mode` ＋ `number`）之後名字反而對得上同族\n  （`cpp:io_sync`／`cpp:io_tie` 早就在那裡）。**只補了一個新詞：`flush`。**\n  ⚠️ 三顆都是 **3 檔 / 1 目錄**，全在自己的膠囊裡。\n\n📈 **2026-09-19（第 199 刀：一排位元）：兩顆新元件各 3 檔 / 1 目錄。**\n  `cpp:bits_declare` 與 `cpp:bits_fill`——全部住在自己的膠囊裡。\n📈 **2026-09-20（帶參數的巨集）：新增 `cpp:define_func`（3 檔 / 1 目錄）。**\n  **新增一顆元件，足跡本來就會多一筆**——三個檔全在它自己的資料夾裡\n（`component.json`／`generate.ts`／`execute.ts`），擴散是 0。\n"
 }

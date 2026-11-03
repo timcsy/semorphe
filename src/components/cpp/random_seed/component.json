@@ -6,12 +6,6 @@
     "seed": "expression"
   },
   "role": "statement",
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "declarative"
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -23,8 +17,7 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "requires": [
     "<cstdlib>"

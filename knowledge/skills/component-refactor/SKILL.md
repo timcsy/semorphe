@@ -1,7 +1,7 @@
 ---
 name: component-refactor
 description: >
-  審計、修復並重構 Semorphe 已有的元件膠囊。偵測五路完備性缺口、信心等級違規、
+  審計、修復並重構 Semorphe 已有的元件膠囊。偵測四路完備性（＋ formalize）缺口、信心等級違規、
   雙重註冊、死概念，並修復缺失的產出物。⚠️ **審計的主力是那批護欄**
   （`npm test` 就會跑），本 skill 負責讀它們的報表並修。支援任何語言。
 user-invocable: true
@@ -27,8 +27,12 @@ $ARGUMENTS
 
 ### 審計模式（唯讀，不修改程式碼）
 
-- `{lang} audit` — 完整審計：五路完備性 + 信心等級 + 雙重註冊 + 渲染一致性
-- `{lang} audit completeness` — 只審計五路完備性
+- `{lang} audit` — 完整審計：四路完備性（＋ formalize）+ 信心等級 + 雙重註冊 + 渲染一致性
+- `{lang} audit completeness` — 只審計四路完備性（＋ formalize）
+
+⚠️ **「四路」**＝ lift（`code.lift`）／generate（`code.render`）／render（`blocks.render`）／extract（`blocks.lift`），
+**加上 `formalize`（語義樹 → Cella 程式，接 Cella）**；格子定義在 `src/core/component/views.ts`。
+🪦 2026-11-04 之前是五路，第五路 execute 隨 JS 直譯器在 spec 208 退場（`execute.ts`、`src/interpreter/` 都已刪除）。
 - `{lang} audit confidence` — 只審計信心等級合規性
 - `{lang} audit dedup` — 只審計雙重註冊
 - `{lang} audit render` — 只審計渲染一致性
@@ -67,14 +71,13 @@ $ARGUMENTS
 
 | 你想 audit 的 | 已有的護欄 | 還要自己掃嗎 |
 |---|---|---|
-| 五路完備性 | `audit-completeness`（「分辨做完了與看起來做完了」） | ❌ 跑護欄 |
-| 雙重註冊 | `audit-dual-truth`、`audit-lift-ambiguity`、`audit-executor-duplicates` | ❌ 跑護欄 |
-| 死概念 | `audit-orphan-implementations`（有實作沒宣告） | ❌ 跑護欄 |
+| 四路完備性 | `audit-completeness`（「分辨做完了與看起來做完了」；地圖 `tests/reports/completeness-map.md`） | ❌ 跑護欄 |
+| formalize 覆蓋 | `audit-formalize-coverage`（「還沒對應」只准下降） | ❌ 跑護欄 |
+| 雙重註冊 | `audit-dual-truth`、`audit-lift-ambiguity` | ❌ 跑護欄 |
 | 宣告完整性 | `audit-declared-{props,slots,children}`、`audit-param-spec` | ❌ 跑護欄 |
 | 膠囊化 | `audit-component-locality`（基線 `notEncapsulated: 0`） | ❌ 跑護欄 |
 | 積木參數 | `audit-block-message-args` | ❌ 跑護欄 |
 | 命名一致性 | `audit-naming` | ❌ 跑護欄 |
-| 靜默回退 | `audit-silent-fallback` | ❌ 跑護欄 |
 | **i18n 標籤風格** | **無** | ✅ **A5 仍要自己掃** |
 | **信心等級合規** | **無** | ✅ **A2 仍要自己掃** |
 
@@ -88,11 +91,11 @@ $ARGUMENTS
 
 隨著概念數量增長，實作可能出現這幾類問題：
 
-1. **五路不完備**（P2 §2.2）：概念只有部分路徑（如有 generate 但沒 lift），導致管線斷裂
+1. **四路不完備**（P2 §2.2）：概念只有部分路徑（如有 generate 但沒 lift），導致管線斷裂
 2. **信心等級違規**（P1 §2.1）：composite pattern 未經語義驗證就設 `high`，`warning` 從未使用
 3. **雙重註冊**：同一 AST 節點類型在多個 lift 來源中重複註冊（JSON pattern + BlockSpec astPattern + liftStrategy 等）。注意：BlockExtractorRegistry 已刪除，不再有 hand-written extractors；extraction 統一由 PatternExtractor 處理
 4. **宣告式不足**：可用 JSON pattern 表達的邏輯仍在 TypeScript 中
-5. **死概念**：`component.json` 宣告了但五路全空的概念（`audit-orphan-implementations` 問的是反方向：有實作卻沒宣告）
+5. **死概念**：`component.json` 宣告了但四路全空的概念（反方向「有實作卻沒宣告」原本由 `audit-orphan-implementations` 看，它 2026-11-04 隨 JS 直譯器在 spec 208 退場；今天膠囊外的實作由 `audit-component-locality`／`audit-locality` 看）
 6. **i18n 標籤不一致**：積木標籤風格混亂（描述式 vs 語法式、中文 vs 英文品質不一、tooltip 重複 message0）
 7. **Expression counterpart 缺失 blockDef**：expression counterpart 積木只有 `{type: "..."}` 而無完整 args0，導致 PatternExtractor auto-derive 失敗
 
@@ -104,26 +107,27 @@ $ARGUMENTS
 - `src/core/lift/lifter.ts` — 優先權鏈
 - `src/core/lift/pattern-lifter.ts` — pattern types 和信心等級設定邏輯
 - `src/core/component/registry.ts` — **膠囊登錄表**（掃 `component.json`，這是概念的來源）
-- `src/core/component/paths.ts` — 五路的組裝點，匯出函式名是契約
-- `src/components/<scope>/<name>/` — **一顆元件的全部**：宣告、五路、形態、標籤、測試
-- `src/languages/{lang}/core/generators/` — 共用產生器（**判別邏輯**留在這，身分不該在）
-- `src/languages/{lang}/core/lifters/` — 共用分派表（同上）
+- `src/core/component/views.ts` — `paths` 的形狀與格子（`Cell`／`CELLS`）
+- `src/core/component/paths.ts` — code 視圖的組裝點，匯出函式名是契約
+- `src/core/formalize-contract.ts` — `formalize.ts` 的契約（收集者 `src/providers/cella/formalize/registry.ts`）
+- `src/components/<scope>/<name>/` — **一顆元件的全部**：宣告、四路、formalize、形態、標籤、測試
+- `src/languages/{lang}/generators/` — 共用產生器（**判別邏輯**留在這，身分不該在）
+- `src/languages/{lang}/lifters/` — 共用分派表（同上）
 - `src/languages/{lang}/lift-patterns.json` — JSON pattern
-- `src/interpreter/executors/` — executor 註冊
 - `tests/` — 測試檔案
 
 ---
 
 ## 模式一：Audit（審計）
 
-### A1. 五路完備性掃描
+### A1. 四路完備性（＋ formalize）掃描
 
 ⚠️ **先跑護欄**——`audit-completeness` 已經在做這件事，而它有基線與棘輪：
 
 ```bash
 npx vitest run tests/integration/audit-completeness.test.ts \
              tests/integration/audit-component-locality.test.ts \
-             tests/integration/audit-orphan-implementations.test.ts
+             tests/integration/audit-formalize-coverage.test.ts
 ```
 
 只有在**要看單一概念的細節**、或護欄報出東西要診斷時，才自己掃。
@@ -131,15 +135,16 @@ npx vitest run tests/integration/audit-completeness.test.ts \
 概念的來源是**膠囊的 `component.json`**（`concepts.json`／`components.json` 那種共用檔已不存在）：
 
 ```bash
-# 收集所有概念 ID 與它宣告的五路
+# 收集所有概念 ID 與它宣告的格子（paths.views.<視圖>.<render|lift> ＋ formalize）
 python3 -c "
 import json,glob
 for f in sorted(glob.glob('src/components/*/*/component.json')):
-    d=json.load(open(f))
-    print(d['componentId'], sorted(d.get('paths',{}).keys()), 'skip:', d.get('skipPaths',[]))"
+    d=json.load(open(f)); p=d.get('paths',{})
+    cells=sorted(v+'.'+k for v,c in p.get('views',{}).items() for k,x in c.items() if not k.startswith('_') and x)
+    print(d['componentId'], cells, 'formalize' if p.get('formalize') else '-', 'skip:', d.get('skipPaths',[]))"
 ```
 
-對每個概念，逐一檢查（`FIVE_PATHS` ＋ 測試）：
+對每個概念，逐一檢查（四路 ＋ formalize ＋ 測試）：
 
 | # | 路徑 | 搜尋位置 | 搜尋方式 |
 |---|------|---------|---------|
@@ -147,8 +152,8 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 | 2 | **Render** | 膠囊的 `forms/blocks.json` | 有條目且 `renderMapping` 覆蓋屬性與接點 |
 | 3 | **Extract** | 同上 | PatternExtractor auto-derive；動態結構需 `dynamicRules`；expression 形態需完整 `args0` |
 | 4 | **Generate** | 膠囊的 `generate.ts` | 匯出 `registerGenerate` |
-| 5 | **Execute** | 膠囊的 `execute.ts` | 匯出 `registerExecute` |
-| 6 | **Test** | 膠囊的 `spec.test.ts` | 含 lift／generate／round-trip |
+| 5 | **Test** | 膠囊的 `spec.test.ts` | 含 lift／generate／round-trip；執行用 `expectCellaOut` |
+| ＋ | **Formalize** | 膠囊的 `formalize.ts`（Python 是 `formalize.json`） | 匯出 `registerFormalize`；Cella 尚無對應可缺（不算進分母，棘輪在數） |
 
 ⚠️ **`skipPaths` 裡的路徑算通過**——但 `skipReasons` 必須有理由，
 而「還沒做」不是理由。**顯式的空與遺漏的空要分得出來。**
@@ -160,18 +165,19 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 輸出完備性矩陣：
 
 ```markdown
-### 五路完備性矩陣
+### 四路完備性矩陣（分母 ＝ 四路 ＋ 測試；formalize 另列）
 
-| 概念 | Lift | Render | Extract | Generate | Execute | Test | 完整？ |
-|------|------|--------|---------|----------|---------|------|--------|
-| var_declare | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ 6/6 |
-| cpp:cout | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ⚠️ 5/6 |
-| cpp:vector_push | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 💀 0/6 |
+| 概念 | Lift | Render | Extract | Generate | Test | 完整？ | Formalize |
+|------|------|--------|---------|----------|------|--------|-----------|
+| var_declare | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ 5/5 | ✅ |
+| cpp:cout | ✅ | ✅ | ✅ | ✅ | ❌ | ⚠️ 4/5 | ✅ |
+| cpp:vector_push | ❌ | ❌ | ❌ | ❌ | ❌ | 💀 0/5 | — |
 
 ### 統計
-- 完整（6/6）：{N} 個（{%}）
-- 部分（1-5/6）：{N} 個（{%}）
-- 死概念（0/6）：{N} 個（{%}）
+- 完整（5/5）：{N} 個（{%}）
+- 部分（1-4/5）：{N} 個（{%}）
+- 死概念（0/5）：{N} 個（{%}）
+- 有 formalize：{N} 個（還沒對應的數字以 `audit-formalize-coverage` 的棘輪為準）
 ```
 
 ### A2. 信心等級合規掃描
@@ -289,7 +295,8 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 
 ### 總覽
 - 已註冊概念：{N}
-- 五路完整：{N}（{%}）
+- 四路 ＋ 測試完整：{N}（{%}）
+- 有 formalize：{N}（{%}）
 - 部分實作：{N}（{%}）
 - 死概念：{N}（{%}）
 - 信心合規：{PASS/FAIL}
@@ -297,7 +304,7 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 - Render 問題：{N}
 - i18n 標籤問題：{N}（P0: {N}, P1: {N}, P2: {N}）
 
-### 五路完備性矩陣
+### 四路完備性矩陣
 {表格}
 
 ### 信心等級合規
@@ -335,10 +342,10 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
   Render:   ❌ 缺失 — 膠囊無 forms/blocks.json 條目
   Extract:  ❌ 缺失 — renderMapping 沒覆蓋接點 values
   Generate: ✅ 存在 — generate.ts
-  Execute:  ⚪ 顯式跳過 — skipPaths: ["execute"]（declarative）
   Test:     ❌ 缺失 — 膠囊無 spec.test.ts
+  Formalize: ⚪ 無 — Cella 尚無對應的建構子（不阻擋，棘輪在數）
 
-  需修復：4 條路徑（Execute 已宣告跳過，不算缺）
+  需修復：4 項（Lift、Render、Extract、Test）
 ```
 
 #### H2. 修復策略決定
@@ -350,9 +357,9 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 | 缺 Lift 但有 Generate | 從 generator 反推 AST 結構，產生 lifter |
 | 缺 Render/Extract 但有 Lift | 從 lifter 的 SemanticNode 結構推導 BlockSpec |
 | 缺 Generate 但有 Lift | 從 lifter 的輸出結構產生 generator |
-| 缺 Execute | 可執行 → 寫 `execute.ts`；宣告性 → ⚠️ **不要寫 noop**，宣告 `skipPaths` ＋ `skipReasons` |
+| 缺 Formalize | Cella 有對應的建構子 → 寫 `formalize.ts`（見 `/component-generate` 步驟五），測試加 `expectCellaOut`；沒有 → 照實留著（formalize 回 unknown），**不要寫一個猜的翻譯** |
 | 缺 Test | 根據已有的 lift/generate 產生基本測試 |
-| 死概念（0/6） | 評估是否該保留——如果有探索報告則產生全部，否則建議 purge |
+| 死概念（0/5） | 評估是否該保留——如果有探索報告則產生全部，否則建議 purge |
 
 #### H3. 執行修復
 
@@ -374,8 +381,8 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 - **Lifter**：必須設定正確的信心等級（見信心等級規則）
 - **BlockSpec**：必須有完整的 `renderMapping`（fields + inputs），i18n 使用 `%{BKY_...}` key，**標籤必須符合 `/component-generate` 步驟二的 i18n 風格規範**（中文描述式、英文動詞短語、函式名不當標籤、tooltip 補充說明、同類一致句式）
 - **Generator**：必須處理缺失子節點（空字串或預設值）
-- **Executor**：可執行概念需實作邏輯；宣告性概念用 `skipPaths` 宣告，**不寫 noop**
-  （一個 noop 函式讓「顯式的空」與「遺漏的空」長得一樣）
+- **Formalize**：只註冊自己的身分；翻不了用 `f.miss` 照實記 unknown，不猜
+  （🪦 2026-11-04 之前這一條是 Executor，「宣告性概念用 `skipPaths` 宣告、不寫 noop」——JS 直譯器在 spec 208 退場）
 - **Test**：必須包含 lift、generate、round-trip 三種測試
 
 #### H4. 信心等級修復
@@ -400,7 +407,7 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 
 1. `npx tsc --noEmit` — 型別檢查
 2. `npm test` — 全部測試通過
-3. 重新掃描五路完備性——確認 6/6
+3. 重新掃描四路完備性——確認 5/5（四路 ＋ 測試）；有 Cella 對應的確認 formalize 也在
 
 #### H6. 輸出修復報告
 
@@ -411,15 +418,15 @@ for f in sorted(glob.glob('src/components/*/*/component.json')):
 
 | 概念 | 修復前 | 修復後 | 修復的路徑 |
 |------|--------|--------|-----------|
-| cpp:cout | 3/6 | 6/6 | +Lift, +Render, +Test |
-| cpp:vector_push | 0/6 | 6/6 | +All |
+| cpp:cout | 2/5 | 5/5 | +Lift, +Render, +Test |
+| cpp:vector_push | 0/5 | 5/5 | +All |
 
 ### 統計
 - 修復概念數：{N}
 - 新增 lifter：{N}
 - 新增 BlockSpec：{N}
 - 新增 generator：{N}
-- 新增 executor：{N}
+- 新增 formalize：{N}
 - 新增測試：{N}
 - 信心等級修復：{N}
 
@@ -490,7 +497,7 @@ npx tsc --noEmit && npm test
 
 ### P1. 識別死概念
 
-從審計結果中找出 0/6 完備性的概念——`component.json` 存在但五路全空（且不是 `skipPaths` 宣告的）。
+從審計結果中找出 0/5 完備性的概念——`component.json` 存在但四路全空（且不是 `skipPaths` 宣告的）。
 
 ### P2. 評估保留價值
 
@@ -522,7 +529,7 @@ npx tsc --noEmit && npm test
 
 ```
 1. Audit（完整審計）     → 產出審計報告（含 i18n 標籤風格）
-2. Fix all（修復全部）   → 修復所有五路缺口
+2. Fix all（修復全部）   → 修復所有四路缺口
 3. Dedup（去重）         → 清除確認等價的雙重註冊
 4. Migrate all（遷移）   → 遷移所有 L1/L2-ready 概念
 5. Render-fix（渲染修復）→ 修復渲染一致性
@@ -542,7 +549,7 @@ npx tsc --noEmit && npm test
 - **保守判斷** — 不確定遷移是否安全時保留 hand-written；不確定概念是否該刪時保留
 - **宣告式優先** — 目標是讓盡可能多的概念用 JSON 描述（P3 §2.3）
 - **信心等級合規** — 每次修復都要設定正確的信心等級（P1 §2.1）
-- **五路完備為底線** — 修復後的概念必須 6/6 完備，否則標記為阻擋
+- **四路完備為底線** — 修復後的概念必須 5/5（四路 ＋ 測試）完備，否則標記為阻擋
 - **保留 fallback 價值** — 如果 hand-written 作為安全網有意義，標記 `FALLBACK` 而非移除
 - **修復優先於清除** — 能修復的概念不刪，只有完全無價值且無法修復的才 purge
 

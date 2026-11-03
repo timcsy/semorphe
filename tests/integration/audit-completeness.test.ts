@@ -26,7 +26,7 @@ import {
   type BaselineMeta,
 } from '../helpers/guardrail'
 import { allComponentDefs } from '../helpers/component-scan'
-import { synthMinimalNode, isPlaceholderOutput, isNoopExecutor } from '../helpers/synth-node'
+import { synthMinimalNode, isPlaceholderOutput } from '../helpers/synth-node'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
@@ -36,7 +36,7 @@ import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { componentTraits } from '../../src/core/component/traits'
 import { universalBlocks } from '../../src/core/universal'
 import { coreBlocks } from '../../src/languages/cpp/lang'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
@@ -78,7 +78,11 @@ const RULE =
  * 混在一起的話，下一個人會用宣告刷數字，而護欄會替他背書。
  */
 type Verdict = 'implemented' | 'declared' | 'undecidable' | 'shell' | 'missing'
-const PATHS: PathName[] = ['code.render', 'code.lift', 'blocks.render', 'blocks.lift', 'execute']
+/**
+ * 四路（spec 208：execute 那一路隨 JS 直譯器退場——執行只走 Cella）。第五個面向「翻給 Cella 的那一段」由
+ * `audit-formalize-coverage` 逐顆量，這裡不重複。
+ */
+const PATHS: PathName[] = ['code.render', 'code.lift', 'blocks.render', 'blocks.lift']
 
 interface PathResult {
   verdict: Verdict
@@ -95,7 +99,6 @@ interface CompletenessBaseline {
 
 let lifter: Lifter
 let tsParser: Parser
-let interp: SemanticInterpreter
 let renderer: PatternRenderer
 let extractor: PatternExtractor
 /**
@@ -121,7 +124,6 @@ beforeAll(async () => {
   lifter = createTestLifter()
   registerCppLanguage()
   setupTestRenderer()
-  interp = new SemanticInterpreter()
 
   // render／extract 直接用 PatternRenderer／PatternExtractor：
   // renderToBlocklyState 需要 program 外殼且只處理 statement，
@@ -411,7 +413,7 @@ function classify(def: ComponentDefJSON): { row: Row; generated: string } {
         //
         // 這裡不新增宣告，**重用既有的那個**：能宣告 `consumed-by-parent`
         // 的門檻已經很嚴（要有逐一查證的證據測試），沿用它就沿用了那道門檻。
-        if (skipReason(id, 'execute') === 'consumed-by-parent') {
+        if (componentTraits(id)?.insideParentOnly === true) {
           return {
             verdict: 'undecidable',
             reason: '概念宣告了 consumed-by-parent——它只在父節點裡出現，單獨量不到',
@@ -453,17 +455,6 @@ function classify(def: ComponentDefJSON): { row: Row; generated: string } {
       } catch (e) {
         return { verdict: 'shell', reason: `擲出例外：${(e as Error).message.slice(0, 60)}` } as PathResult
       }
-    })()
-
-  // ── execute ──────────────────────────────────────────────────────────
-  row.execute =
-    declared('execute') ??
-    (() => {
-      const fn = interp.getExecutor(id)
-      if (!fn) return { verdict: 'missing', reason: '無 executor 註冊' } as PathResult
-      if (isNoopExecutor(fn))
-        return { verdict: 'shell', reason: '空操作且未宣告 skipPaths' } as PathResult
-      return { verdict: 'implemented' } as PathResult
     })()
 
   return { row, generated }
@@ -525,7 +516,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
         '棘輪只看 🈳 與 ❌。',
     )
     md.push('')
-    md.push('| 元件 | generate | lift | render | extract | execute |')
+    md.push('| 元件 | generate | lift | render | extract |')
     md.push('|---|---|---|---|---|---|')
     const icon = (v: Verdict): string =>
       v === 'implemented' ? '✅' : v === 'declared' ? '📄' : v === 'undecidable' ? '❔' : v === 'shell' ? '🈳' : '❌'
@@ -608,7 +599,7 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
       role: 'statement',
     } as unknown as ComponentDefJSON
     const { row } = classify(fakeComponent)
-    const decision = [row['code.lift'], row['blocks.render'], row['blocks.lift'], row['code.render'], row.execute].map((r) => r.verdict)
+    const decision = [row['code.lift'], row['blocks.render'], row['blocks.lift'], row['code.render']].map((r) => r.verdict)
     expect(
       decision.some((v) => v === 'missing' || v === 'shell'),
       '一個**完全不存在**的概念被判為五路俱全 → **量測根本沒有在跑**，' +
@@ -620,7 +611,6 @@ describe('護欄：完備性（五路是實作／殼／缺）', () => {
     // 沒有這支的話，一個「什麼都判缺」的量測也會通過上一支
     const real = allComponentDefs().find((d) => d.componentId === 'cpp:var_declare')!
     const { row } = classify(real)
-    expect(row.execute.verdict, 'var_declare 的執行被判為缺 → 量測壞了').not.toBe('missing')
   })
 
   it('棘輪：殼與缺不得出現基線之外的新項目（FR-003、FR-005）', () => {

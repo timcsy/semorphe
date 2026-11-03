@@ -184,3 +184,28 @@ describe('舊存檔：沒有新屬性的節點照樣載入（spec 209 T006）', 
     for (const t of ['cpp_struct_declare', 'cpp_destructor', 'cpp_method_virtual']) expect(types, `${t} 沒畫出來`).toContain(t)
   })
 })
+
+describe('位元欄位（2026-11-04，第 251 刀補語料判定時實測到）', () => {
+  // 🔴 之前 `unsigned a : 3;` 被當成一般欄位，來回一趟靜默變成 `unsigned a;`。
+  // ⚠️ 寫成多行字面、不用插值拼：語料形狀護欄讀的是測試檔裡反引號的原文，這一段要被它讀到（`bitfield_clause`）
+  const SRC = `#include <iostream>
+using namespace std;
+struct Flags {
+    unsigned a : 3;
+    int b;
+};
+int main() {
+    return 0;
+}
+`
+  it('🔴 照實降級：那一行留原文，不是一個丟了寬度的欄位', () => {
+    const t = lift(SRC)
+    const raws = nodes(t, 'cpp:raw_code')
+    expect(raws.map((n) => n.properties.code)).toEqual(['unsigned a : 3;'])
+    expect(raws[0].metadata?.degradationCause).toBe('unsupported')
+    expect(nodes(t, 'cpp:var_declare').map((n) => n.properties.name)).toEqual(['b'])
+  })
+  it('🔴 來回一趟寬度還在', () => {
+    expect(gen(SRC)).toContain('unsigned a : 3;')
+  })
+})

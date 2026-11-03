@@ -82,7 +82,7 @@ $ARGUMENTS
 | **先備知識** | 學習者必須已經知道的概念 |
 | **錯誤模式** | 初學者常犯的錯誤 |
 
-**五路完備性 gate**：每個概念必須滿足五路完備性——程式碼裡的常數逐字是 `FIVE_PATHS = ['lift', 'generate', 'render', 'extract', 'execute']`（`src/core/component/types.ts:37`）。⚠️ **用語統一成「五路」**：這份文件曾經寫「四路 ＋ 第五層」、`component-integrate` 寫「六路掃描」，而**同一件事三個名字**讓人以為它們是不同的檢查。缺一 = 覆蓋缺口（§2.2）。Extract 路徑由 PatternExtractor 自動從 blockDef args + component children 推導（auto-derive），無需手寫 extractor——只需確保 blockDef 和 component 定義正確即可。若概念有動態結構（repeat inputs、multi-mode slots 等），renderMapping 須包含 `dynamicRules`。當系統提供語義直譯器時，還需要第五層——**execute path**（component → Behavior）：可執行概念需 interpreter executor，宣告性概念需 noop executor（見 `knowledge/history/011-四路完備性擴充為五層.md`）。
+**四路完備性 gate**：每個概念必須滿足四路完備性——lift（`code.lift`）／generate（`code.render`）／render（`blocks.render`）／extract（`blocks.lift`），**加上 `formalize`（語義樹 → Cella 程式，接 Cella 判決）**。格子的定義在 `src/core/component/views.ts`（`Cell`／`CELLS`）；四路由 `audit-completeness` 量，formalize 由 `audit-formalize-coverage` 量。🪦 **2026-11-04 之前是五路**（程式碼裡曾有常數 `FIVE_PATHS`，更早就已移除），第五路 execute 隨 JS 直譯器在 spec 208 退場。⚠️ **用語統一成「四路」**：這份文件曾經寫「四路 ＋ 第五層」、`component-integrate` 寫「六路掃描」，而**同一件事三個名字**讓人以為它們是不同的檢查。缺一 = 覆蓋缺口（§2.2）。Extract 路徑由 PatternExtractor 自動從 blockDef args + component children 推導（auto-derive），無需手寫 extractor——只需確保 blockDef 和 component 定義正確即可。若概念有動態結構（repeat inputs、multi-mode slots 等），renderMapping 須包含 `dynamicRules`。探索時要多問一句：**Cella 有沒有對應這個概念的建構子**——有，`formalize.ts` 就翻得過去，執行／判對錯／逐步除錯才走得通；沒有，就照實記成缺口（formalize 會回 unknown，不猜）。🪦 歷史：第五層 execute path（可執行概念寫 interpreter executor、宣告性概念寫 noop）是 `knowledge/history/011-四路完備性擴充為五層.md` 加的，2026-11-04 隨 JS 直譯器在 spec 208 退場。
 
 ### 階段三：Topic 層級樹分類
 
@@ -132,7 +132,7 @@ $ARGUMENTS
   `universal-components.json` 與 `universal-blocks.json` 都是 `[]`。
 
 > **一顆新元件今天的家是膠囊**：`src/components/<scope>/<name>/`
-> ——宣告、形態、標籤、五路實作全在裡面。見 [[元件]] 的五槽與
+> ——宣告、形態、標籤、四路實作與 formalize 全在裡面。見 [[元件]] 的五槽與
 > `component-encapsulate` skill。
 
 舊的分層對應留在下面當**歷史參考**（讀舊程式碼時用得上），

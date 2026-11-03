@@ -28,7 +28,6 @@
         "render": "./generate.ts",
         "lift": "./lift-pattern.json"
       }
-    },
-    "execute": "./execute.ts"
+    }
   }
 }

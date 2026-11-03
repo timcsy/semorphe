@@ -19,8 +19,7 @@
   "owner": "(python)",
   "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**。",
   "annotations": {
-    "control_flow": "loop",
-    "debug_step": true
+    "control_flow": "loop"
   },
   "paths": {
     "views": {
@@ -33,8 +32,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "traits": {
     "declaresVariable": [

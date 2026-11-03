@@ -23,8 +23,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "traits": { "mappingLiteral": true, "declaresVariable": ["PARAM_{i}"] },
   "_traits_why": "**它算出來的是一個鍵值對應**（與字典字面同一個性狀），而**它也生出變數**——那些名字只在這個運算式裡活著，而變數下拉仍然要看得到。",

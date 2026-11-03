@@ -19,7 +19,6 @@
         "_lift_why": "**顯式的空，不是遺漏。**"
       }
     },
-    "execute": "./execute.ts",
     "formalize": "./formalize.ts"
   },
   "requires": [

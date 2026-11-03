@@ -98,7 +98,8 @@ describe('super 與類別層級的屬性', () => {
   })
 
   it('🔴 不在方法裡用 `super()` 要出聲', async () => {
-    expect(await runPython('super().x()\n')).toMatch(/例外|錯誤|Error/)
+    // spec 208：Cella 判 unknown 並說出原因（也是「出聲」）；不得被當成跑完
+    expect(await runPython('super().x()\n')).not.toMatch(/^completed\|/)
   })
 
   it('🔴 類別層級的屬性變成每個實例的初始值', async () => {

@@ -18,8 +18,7 @@
         "render": "./generate.ts",
         "lift": "./lift-pattern.json"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "traits": {
     "precedence": 7,

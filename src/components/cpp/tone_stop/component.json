@@ -19,9 +19,7 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
-  "_execute_why": "清掉腳位狀態上的頻率——與發聲那一顆共用同一份狀態，否則「停了沒有」問不出來。",
   "_lift_why": "程式碼裡的名字是 `noTone`，而**身分不叫 `no_tone`**：`no_` 是語法的否定前綴，不是語義。這顆做的事是**停止**，而 `stop` 是詞彙表裡的操作。"
 }

@@ -20,8 +20,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_lift_why": "同一個 `call` 節點型別，差別在方法名是不是 `join`。\n⚠️ **接收者是分隔用的那一段文字**（`\"-\".join(xs)`）——這是 Python 特有的語序，而標籤上刻意把它讀成「用 %1 把 %2 接起來」。",
   "_children_why": "🔴 **接收者是接點不是名字的一部分**——與同族的方法呼叫同一個理由：`parts[0].upper()` 的左邊是一整個運算式。"

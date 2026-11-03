@@ -33,9 +33,7 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
-  "_execute_why": "回傳**新的結尾**（一個位置），而且**不改變長度**——那是 C++ 的規矩，也是「刪除-移除」這個慣用法的兩個步驟為什麼是兩步。",
   "_children_why": "範圍的兩端與要找的東西都是**接點**——它們是運算式（`v.begin()`、`a+n`、`begin(a)` 都是）。\n⚠️ 這一族從一開始就是接點：它們是在「範圍從字串屬性換成接點」那一刀之後才誕生的。"
 }

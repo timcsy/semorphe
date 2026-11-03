@@ -12,9 +12,6 @@
     "writesTo": "target"
   },
   "owner": "(python)",
-  "annotations": {
-    "debug_step": true
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -25,8 +22,7 @@
         "render": "./generate.ts",
         "lift": "./lift-pattern.json"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_children_why": "🔴 **被指派的那一邊是一個【接點】不是一個字串**——`grid[1][1] = 9` 的左邊是一整個運算式，而壓成字串的話**每一種新的左邊都會變成一道新的解析題**（同族的一般指派用正規表示式拆，`grid[1][1]` 拆出來的名字是 `1][1`）。",
   "_lift_why": "左邊是 `attribute`（`self.name`／`d.age`）——**整段用 `lift`**，於是接收者可以是任何運算式。",

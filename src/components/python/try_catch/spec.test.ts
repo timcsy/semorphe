@@ -51,9 +51,11 @@ describe('python:try_catch', () => {
    * 那是一個已知的簡化（見執行器的檔頭），而**它比整顆降級好**：
    * 程式跑得動、積木看得見，而那一行說清楚它哪裡還不對。
    */
-  it('🟡 已知的簡化：例外的名字今天不比對', async () => {
+  // spec 208：原本釘的是 JS 直譯器的簡化（例外的名字不比對、印「第一個」）；由 Cella 跑之後照真的 Python 比對名字
+  it('★ 例外的名字要比對：IndexError 不會被 except KeyError 接走', async () => {
     const out = await runPython('try:\n    x = [1]\n    print(x[9])\nexcept KeyError:\n    print("第一個")\nexcept IndexError:\n    print("第二個")\n')
-    expect(out, '真 Python 會印「第二個」——這一支釘住我們今天的行為').toContain('第一個')
+    expect(out).toContain('第二個')
+    expect(out).not.toContain('第一個')
   })
 
   it('執行：出錯時跳到處理那一段', async () => {

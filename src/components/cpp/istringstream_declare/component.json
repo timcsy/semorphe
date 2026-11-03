@@ -29,8 +29,7 @@
         "lift": "./lift.ts",
         "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**（`建字串流宣告`）——判別留在共用檔。"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "owner": "(core)",
   "traits": {

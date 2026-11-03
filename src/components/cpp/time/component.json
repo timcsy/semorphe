@@ -15,8 +15,7 @@
         "lift": "./lift-pattern.json"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "_lift_why": "只認 `time(0)`——課文只用這一種。`time(NULL)`／`time(nullptr)`／`std::time(0)` 照舊降級成通用的函式呼叫，學生寫的文字原封不動（若收進來，積木上就得多一個「引數寫法」的下拉，否則一動積木就把它改成 `0`）。",
   "requires": [

@@ -101,7 +101,7 @@ export function countReaders(source: string, annotation: string): number {
 
 function allSource(): string {
   let s = ''
-  for (const dir of ['src/core', 'src/ui', 'src/interpreter', 'src/views', 'src/languages']) {
+  for (const dir of ['src/core', 'src/ui', 'src/views', 'src/languages']) {
     for (const rel of listSourceFiles(dir)) s += readFileSync(join(REPO_ROOT, rel), 'utf8')
   }
   return s
@@ -171,7 +171,9 @@ describe('護欄：標註採用率（機制有沒有人用）', () => {
   })
 
   it('★ 標註清單不是空的——空的話這條什麼都沒量', () => {
-    expect(rows.length).toBeGreaterThan(2)
+    // 2026-11-04：`debug_step`／`introduces_scope` 隨 JS 直譯器退場（唯一的讀取者是直譯器），只剩 `control_flow`
+    // ——門檻 >2 → >0。它問的本來就是「掃到東西沒有」，不是「有幾種」。
+    expect(rows.length).toBeGreaterThan(0)
   })
 
   it('★ 每個零讀取點的標註都要有**可複查的**理由', () => {

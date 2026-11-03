@@ -16,8 +16,7 @@
         "render": "./generate.ts",
         "lift": "./lift-pattern.json"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "traits": { "mappingLiteral": true },
   "_traits_why": "**我算出來的是一個鍵值對應**——與序列不同，讓兩者問得出來而不必比對身分。"

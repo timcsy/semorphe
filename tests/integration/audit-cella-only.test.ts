@@ -9,8 +9,13 @@
  *
  * > **一個被拿掉的退路，最容易用「先暫時加回來」的形式回來——而它回來的那天測試全綠。**
  *
- * 所以這一支數的是「產品的入口裡，有誰在登記 JS 直譯器」——硬性零。6c-4 刪掉 `providers/js-interpreter/` 之後，
- * 這一支的第二條（那個資料夾還在不在）會紅，那時改成斷言它不存在。
+ * 所以這一支數的是「產品的入口裡，有誰在登記 JS 直譯器」——硬性零。
+ *
+ * ## 6c-4（spec 208 T013，2026-11-04）：直譯器整個刪掉了
+ *
+ * 加一條：**已刪的路徑不得存在，`src/`、`tests/`、`e2e/`、`tools/` 也不得有任何 import 指向它們**。
+ * ⚠️ `tsconfig.json` 的 `include` 只有 `src`——測試檔 import 一個已刪的路徑，型別檢查不會出聲，只有跑到那支才紅；
+ * 而一支被 `skipIf` 跳過的探針永遠不會跑到。這一條讓它在護欄裡就紅。
  *
  * ## ⚠️ 自我否證
  * 入口一個都讀不到 ⟹ 這支在驗空氣（★ 入口條件）。
@@ -27,6 +32,58 @@ const ENTRIES = ['src/main.ts', 'src/ui/app.ts', ...fs.readdirSync(path.join(ROO
 export function bringsJsInterpreter(src: string): boolean {
   return /providers\/js-interpreter|jsInterpreterProvider/.test(src)
 }
+
+/** 6c-4 刪掉的路徑（目錄或檔名形狀）。 */
+const DELETED_DIRS = ['src/interpreter', 'src/languages/cpp/lang/executors', 'src/languages/cpp/lang/runtime', 'src/providers/js-interpreter']
+
+/** 偵測器：這一段原始碼有沒有 import 6c-4 刪掉的東西 */
+export function importsDeletedPath(src: string): string[] {
+  const specs = [...src.matchAll(/(?:from\s+|import\s*\(\s*|import\s+)['"]([^'"]+)['"]/g)].map((m) => m[1])
+  return specs.filter((p) =>
+    /(^|\/)interpreter(\/|$)/.test(p) || /lang\/(executors|runtime)(\/|$)/.test(p) ||
+    /providers\/js-interpreter/.test(p) || /(^|\/)language-executors$/.test(p) || /\/execute(\.ts)?$/.test(p))
+}
+
+function walk(dir: string, out: string[] = []): string[] {
+  if (!fs.existsSync(dir)) return out
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === 'node_modules' || e.name.startsWith('.')) continue
+    const f = path.join(dir, e.name)
+    if (e.isDirectory()) walk(f, out)
+    else if (/\.(ts|tsx|js|mjs)$/.test(e.name) && !e.name.endsWith('.d.ts')) out.push(f)
+  }
+  return out
+}
+
+describe('護欄：JS 直譯器刪掉之後不得回來（spec 208 T013）', () => {
+  it('★ 注入：認得出指向已刪路徑的 import，也不誤認名字像的', () => {
+    expect(importsDeletedPath("import { x } from '../../interpreter/interpreter'")).toHaveLength(1)
+    expect(importsDeletedPath("import { reg } from './execute'")).toHaveLength(1)
+    expect(importsDeletedPath("const m = await import('../providers/js-interpreter')")).toHaveLength(1)
+    expect(importsDeletedPath("import { f } from '../lang/executors/io'")).toHaveLength(1)
+    expect(importsDeletedPath("import { formalize } from './formalize'")).toEqual([])
+    expect(importsDeletedPath("import { ExecutionController } from '../ui/execution-controller'")).toEqual([])
+    expect(importsDeletedPath("import { interpretVerdict } from './interpret-verdict'")).toEqual([])
+  })
+
+  it('★ 入口條件：掃得到原始碼與測試', () => {
+    const files = ['src', 'tests', 'e2e', 'tools'].flatMap((d) => walk(path.join(ROOT, d)))
+    expect(files.length).toBeGreaterThan(1000)
+  })
+
+  it('🔴 硬性零：已刪的目錄與元件的 execute.ts 不存在', () => {
+    const back = DELETED_DIRS.filter((d) => fs.existsSync(path.join(ROOT, d)))
+    const executes = walk(path.join(ROOT, 'src/components')).filter((f) => path.basename(f) === 'execute.ts').map((f) => path.relative(ROOT, f))
+    expect([...back, ...executes], '🔴 直譯器的一部分回來了——執行只走 Cella（spec 208）').toEqual([])
+  })
+
+  it('🔴 硬性零：沒有任何 import 指向已刪的路徑', () => {
+    const hits = ['src', 'tests', 'e2e', 'tools'].flatMap((d) => walk(path.join(ROOT, d)))
+      .filter((f) => !f.endsWith('audit-cella-only.test.ts'))
+      .flatMap((f) => importsDeletedPath(fs.readFileSync(f, 'utf8')).map((p) => `${path.relative(ROOT, f)} → ${p}`))
+    expect(hits).toEqual([])
+  })
+})
 
 describe('護欄：產品的入口只登記 Cella（spec 205 T008）', () => {
   it('★ 注入：偵測器認得出那兩種寫法，也不會把 Cella 的登記誤認', () => {

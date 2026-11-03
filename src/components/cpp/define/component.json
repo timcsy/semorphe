@@ -5,7 +5,7 @@
     {
       "name": "name",
       "kind": "literal",
-      "required": true
+      "default": "MACRO"
     },
     {
       "name": "value",
@@ -27,7 +27,6 @@
         "lift": "./lift-pattern.json"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   }
 }

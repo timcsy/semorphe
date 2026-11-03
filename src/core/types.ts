@@ -543,7 +543,7 @@ export interface ModeExtractRule {
  * 🔁 spec 181：名字與 `core/component/views.ts` 的格子相同——`code.lift` 從程式碼辨識、`code.render` 產程式碼、
  *    `blocks.render` 畫成積木、`blocks.lift` 從積木抽回（舊的 lift／generate／render／extract 退場）。
  */
-export type PathName = 'code.lift' | 'blocks.render' | 'blocks.lift' | 'code.render' | 'execute'
+export type PathName = 'code.lift' | 'blocks.render' | 'blocks.lift' | 'code.render'
 
 /** Component definition in components.json (semantic layer) */
 /**
@@ -690,7 +690,7 @@ export type SkipReason =
    *   ② 必須不在工具箱裡——使用者拖得到的話它就該辨識得回來
    */
   | 'degradation-target'
-  /** 有子槽，但由父概念的執行器負責走訪（cpp_case ← cpp_switch） */
+  /** 只在父概念裡成立（cpp_case ← cpp_switch）。⚠️ 2026-11-04 起元件宣告改寫成 `traits.insideParentOnly`（原本借放在 `skipReasons.execute`，execute 隨 JS 直譯器退場，spec 208） */
   | 'consumed-by-parent'
 
 /** Block projection in block-specs.json (projection layer) */

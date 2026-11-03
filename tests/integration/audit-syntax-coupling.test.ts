@@ -41,7 +41,7 @@ import {
 import { splitCodeAndComments, maskNonIdentityPositions } from '../helpers/component-scan'
 import { scanSyntaxTokens, DEFINITE_TOKENS, REGEX_ESCAPED_TOKENS } from '../helpers/syntax-tokens'
 
-const SCAN_DIRS = ['src/core', 'src/ui', 'src/interpreter', 'src/views'] as const
+const SCAN_DIRS = ['src/core', 'src/ui', 'src/views'] as const
 
 const RULE =
   '掃字串字面與正則字面裡的語言專屬語法記號（前置處理指令、`std::`、`->`、註解符號…）。' +

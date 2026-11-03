@@ -14,7 +14,6 @@ const ok = {
     code: { render: './generate.ts', lift: './lift-pattern.json', liftStrategy: './lift-strategy.ts' },
   },
   formalize: './formalize.ts',
-  execute: './execute.ts',
 }
 const check = (paths: unknown, views: ViewTable = VIEWS): void => checkPaths(paths, '膠囊 cpp/x', views)
 
@@ -25,12 +24,11 @@ describe('paths 契約：每個視圖一對 render／lift', () => {
 
   it('★ 顯式的空（null ＋ 同層的 _why）接受', () => {
     expect(() => check({ ...ok, views: { ...ok.views, code: { render: './generate.ts', lift: null, _lift_why: '只由別顆產生' } } })).not.toThrow()
-    expect(() => check({ ...ok, execute: null, _execute_why: '沒有執行期行為' })).not.toThrow()
   })
 
   it('🔴 平鋪的舊鍵擋下（P8 不留轉接層）', () => {
     expect(() => check({ ...ok, generate: './generate.ts' })).toThrow(/cpp\/x.*generate/)
-    expect(() => check({ render: './forms/blocks.json', extract: './forms/blocks.json', generate: './generate.ts', lift: './lift.ts', execute: './execute.ts' }))
+    expect(() => check({ render: './forms/blocks.json', extract: './forms/blocks.json', generate: './generate.ts', lift: './lift.ts' }))
       .toThrow(/views/)
   })
 
@@ -40,16 +38,16 @@ describe('paths 契約：每個視圖一對 render／lift', () => {
 
   it('🔴 null 而沒有同層的 _why 擋下', () => {
     expect(() => check({ ...ok, views: { ...ok.views, code: { render: null, lift: './lift.ts' } } })).toThrow(/cpp\/x.*code.*_render_why/)
-    expect(() => check({ ...ok, execute: null })).toThrow(/_execute_why/)
   })
 
   it('🔴 未知的視圖名擋下——加一個視圖是在視圖表上加一筆', () => {
     expect(() => check({ ...ok, views: { ...ok.views, flow: { render: './flow.ts', lift: './flow.ts' } } })).toThrow(/cpp\/x.*flow/)
   })
 
-  it('🔴 少了 execute 鍵擋下（階段 6 退場之前都要寫）', () => {
-    const { execute: _e, ...rest } = ok
-    expect(() => check(rest)).toThrow(/execute/)
+  // spec 208（重構 6c-4）：execute 那一格隨 JS 直譯器退場——執行只走 Cella。殘留的宣告會讓人以為還要寫，所以出現就擋
+  it('🔴 execute 那一格已退場：出現就擋（含顯式的空與它的 _why）', () => {
+    expect(() => check({ ...ok, execute: './execute.ts' })).toThrow(/cpp\/x.*execute/)
+    expect(() => check({ ...ok, execute: null, _execute_why: '沒有執行期行為' })).toThrow(/execute/)
   })
 
   // ── US2：加一個視圖不必發明新動詞 ──────────────────────────
@@ -72,8 +70,6 @@ describe('paths 契約：每個視圖一對 render／lift', () => {
     expect(cellPath(ok, 'blocks.render')).toBe('./forms/blocks.json')
     expect(cellPath(ok, 'code.liftStrategy')).toBe('./lift-strategy.ts')
     expect(cellPath(ok, 'formalize')).toBe('./formalize.ts')
-    expect(cellPath(ok, 'execute')).toBe('./execute.ts')
-    expect(cellPath({ ...ok, execute: null, _execute_why: 'x' }, 'execute')).toBeNull()
-    expect(cellPath({ views: { blocks: { render: './a', lift: './a' } }, execute: null }, 'code.render')).toBeNull()
+    expect(cellPath({ views: { blocks: { render: './a', lift: './a' } } }, 'code.render')).toBeNull()
   })
 })

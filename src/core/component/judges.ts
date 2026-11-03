@@ -136,7 +136,7 @@ export function isJudgeKind(x: unknown): x is JudgeKind {
  *    `lift` → `code.lift`、`generate` → `code.render`、`render` → `blocks.render`、`extract` → `blocks.lift`。
  */
 export type JudgedCell = Exclude<Cell, 'code.liftStrategy'>
-export const JUDGED_CELLS: readonly JudgedCell[] = ['code.lift', 'code.render', 'blocks.render', 'blocks.lift', 'execute', 'formalize']
+export const JUDGED_CELLS: readonly JudgedCell[] = ['code.lift', 'code.render', 'blocks.render', 'blocks.lift', 'formalize']
 
 /**
  * 每一路的**預設判定者**，以及**它今天在哪裡跑**。
@@ -186,12 +186,6 @@ export const PATH_JUDGE: Readonly<Record<JudgedCell, {
     evidence: 'tests/integration/roundtrip-all.test.ts',
     judges: '「Extract coverage」：每一顆積木抽回它自己的身分。',
     coverage: { covered: 345, of: 349 },
-  },
-  execute: {
-    kind: 'reference',
-    evidence: 'tests/integration/interpreter-matches-compiler.test.ts',
-    judges: '跟參照編譯器對答案（語料驅動，不是逐元件）。',
-    coverage: { covered: 125, of: 210 },
   },
   formalize: {
     kind: 'formal',

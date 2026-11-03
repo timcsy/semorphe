@@ -31,8 +31,7 @@
         "liftStrategy": "./lift-strategy.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "annotations": {
     "control_flow": "branch"

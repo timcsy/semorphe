@@ -32,7 +32,8 @@ describe('python:cast', () => {
 
   it('🟢 而 `set(...)` 收得下（2026-08-23 起）——去重之後印出來是 `{…}`', async () => {
     expect(componentIdsOf(await liftPython('s = set(xs)\n'))).toContain('python:cast')
-    expect(await runPython('print(set([3, 1, 3]))\n')).toContain('{3, 1}')
+    // spec 208：由 Cella 跑之後印的是真的 CPython 的順序（小整數依雜湊值）——原本的 `{3, 1}` 是 JS 直譯器的插入順序
+    expect(await runPython('print(set([3, 1, 3]))\n')).toContain('{1, 3}')
   })
 
   it('🟢 而 `list(...)` 收得下——「把走訪得到的東西收成一串」到處都是', async () => {

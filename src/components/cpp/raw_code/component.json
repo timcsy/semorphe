@@ -21,8 +21,6 @@
         "render": "./generate.ts",
         "lift": "./lift.ts"
       }
-    },
-    "execute": "./execute.ts",
-    "_execute_why": "**顯式的空，不是遺漏。**"
+    }
   }
 }

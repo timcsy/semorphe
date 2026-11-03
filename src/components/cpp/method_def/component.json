@@ -24,14 +24,10 @@
     "body": "statements"
   },
   "role": "statement",
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "consumed-by-parent"
-  },
   "owner": "(core)",
   "_owner_why": "與同族（虛擬方法、覆寫、運算子多載）同一個章——課程清單與工具箱照同族的位置放。",
+  "traits": { "insideParentOnly": true },
+  "_traits_why": "**只出現在父節點裡**（類別成員、switch 的分支、例外的 except 分支、迴圈的走訪項）——單獨合成一份樣本去量它，是在量一個不存在的位置。原本借放在 `skipReasons.execute: consumed-by-parent`；spec 208 隨 JS 直譯器拿掉 execute 那一格，搬到性狀（完備性護欄讀它）。",
   "paths": {
     "views": {
       "blocks": {
@@ -43,9 +39,7 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": null,
-    "_execute_why": "**顯式的空，不是遺漏。** 類別宣告那顆依 memberRole 把它收進方法表，執行的是它的本體。"
+    "formalize": "./formalize.ts"
   },
   "memberRole": "method",
   "_memberRole_why": "**這顆在類別裡扮演什麼角色，由它自己宣告。**（見 registry.ts 的 `memberRoleOf`）——宣告成 method，JS 直譯器的類別執行器不用改就收得到它。",
