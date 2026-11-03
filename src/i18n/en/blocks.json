@@ -148,6 +148,7 @@
   "STATUS_CHECK_UNKNOWN": "Check: {n} place(s) undecided",
   "STATUS_CHECK_CLEAN": "Check: no problems found",
   "STATUS_RUNNER": "Run: {name}",
+  "CELLA_UNSUPPORTED_CONSTRUCTS": "Cella does not support yet: {list}",
   "RUNTIME_ERR_CELLA_UNSUPPORTED": "The checker does not support something in this program yet ({why})",
   "RUNTIME_ERR_CELLA_REJECTED": "This program is ill-formed and was not run: {why}",
   "RUNTIME_ERR_FALLBACK": "The program stopped and I can't say why — that's the system's problem, not yours",

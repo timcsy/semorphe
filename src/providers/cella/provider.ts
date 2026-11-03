@@ -12,6 +12,7 @@ import type { SemanticNode } from '../../core/types'
 import { branchOf, type CellaBranch } from './verdict'
 import { ownerOf, type Verdict } from '../../core/verdict-diagnostics'
 import type { HardwareState } from '../../core/hardware'
+import { msg } from '../../core/messages'
 import { formalize, cellaBoardOf, type FormalizeResult } from './formalize'
 import { formalizePython } from './formalize/python'
 import { withEntryFunctions } from './entry'
@@ -212,9 +213,9 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
   const formalOf = (f: NonNullable<SessionOptions['formal']>): { program: unknown; branch: CellaBranch } | { why: string; nodeId?: string } => {
     const r = formalizeFor(f)
     // 帶出第一個翻不出的節點——畫面要指得到是哪一行還不支援（spec 205 T013）
-    // why 只放構造名稱（`unresolved`、`cpp:xxx`）：句子由語系模板 RUNTIME_ERR_CELLA_UNSUPPORTED 說——
-    //    formalize 的原因是寫給開發者的中文，切成 English 時會原樣漏出來（2026-11-03 瀏覽器驗收）
-    if (!r.program) return { why: [...new Set(r.unknown.map((u) => u.construct))].join(', '), ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
+    // why 是一份契約（說得出「還不支援」——系統能力不足，不是學生寫錯；狀態列的提示也讀它），由語系查字；
+    //    只列構造名稱——formalize 的原因是寫給開發者的中文，切成 English 時會原樣漏出來（2026-11-03 瀏覽器驗收）
+    if (!r.program) return { why: msg('CELLA_UNSUPPORTED_CONSTRUCTS', 'Cella 還不支援：{list}').replace('{list}', [...new Set(r.unknown.map((u) => u.construct))].join(', ')), ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
     return { program: r.program, branch: branchOf(r.program as never) }
   }
 
