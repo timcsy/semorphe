@@ -237,7 +237,13 @@ export interface SemanticUpdateEvent {
  * 它與 `'breakpoint'` **走同一條暫停路，而理由不同**——前者是使用者放的，
  * 這一個是系統自己撞到的，而畫面上要說得出差別。
  */
+/*
+ * 🟢 `'preparing'`（2026-11-03，spec 205 T003）：**還沒開始，而等一下會自動開始**——JS 直譯器拿掉之後，第一次執行要等 Cella 的模組載好。
+ * 它與 `'refused'` 都是「還沒開始」，差在**會不會自己開始**；與 `'awaiting-input'` 都是「在等」，差在**等的是系統不是學生**。
+ * ⚠️ 它原本印在主控台的**輸出**裡——而那是學生的程式印的東西：數輸出行數的 e2e 多兩行（lesson-pins 的 12 → 14）才抓到。狀態不是輸出。
+ */
 export type ExecutionReason =
+  | 'preparing'
   | 'awaiting-input'
   | 'breakpoint'
   | 'unknown-component'

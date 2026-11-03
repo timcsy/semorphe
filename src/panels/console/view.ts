@@ -99,6 +99,10 @@ export class ConsolePanel implements ViewHost {
    * 這個面板為了查三個字拉進整個 Blockly，而它與積木沒有任何關係。
    */
   onExecutionState(event: ExecutionStateEvent): void {
+    if (event.reason === 'preparing') {
+      this.setStatus(msg('EXEC_STATUS_PREPARING', 'Preparing… (it will start automatically)'), 'running')
+      return
+    }
     if (event.reason === 'awaiting-input') {
       this.setStatus(msg('EXEC_STATUS_WAITING', 'Waiting for input...'), 'running')
       return

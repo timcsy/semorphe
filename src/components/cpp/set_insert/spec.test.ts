@@ -71,9 +71,12 @@ describe('膠囊自證：集合的插入', () => {
 
   // 🔴 spec 200：`vector<int>::insert(3)` 在真的 C++ 編不過（vector 的 insert 要一個位置）——要被判 reject。
   // 原本的斷言是「錯誤訊息非空且提到 v」：換成 Cella 之後它會因為【未支援】而假綠，所以收緊成判決種類。
-  // 🟡 Cella 0.1.202611020258 判 unknown：vector 沒有 insert 成員，已回報。
+  // 🟡 Cella 0.1.202611020258 判 unknown、0.1.202611030133 判 reject；0.1.202611030753 起刻意改回 unknown（unsupported）：
+  //    「成員多載找不到」它分不出是程式錯、還是模型還沒補那個多載，所以不判 reject（cella 發版說明；代價是這一條）。
+  //    仍然【出聲】（unknown 帶原因）——不是安靜地去重排序。哪天 Cella 認得出 vector 根本沒有這個多載，這根釘子會紅。
   it('🔴 接收者不是集合時要【出聲】，不得安靜地去重排序', async () => {
     const r = await run(`${H}int main(){ vector<int> v; v.insert(3); cout << v.size(); }`)
-    expect(r.verdict, r.err).toBe('reject')
+    expect(r.verdict, '不得判 accept——那就是安靜地照集合的語義跑了').not.toBe('accept')
+    await knownCellaGap(/has no overload of 'insert'/, async () => { expect(r.verdict, r.err).toBe('reject') })
   })
 })

@@ -153,8 +153,14 @@ interface Exercise {
  * （`猜數字` 宣告 7 而實際 6；`二分搜` 宣告 `3\n2` 而實際 `3\n4`）。
  */
 async function programOutput(page: import('@playwright/test').Page): Promise<string> {
-  return (await page.locator('.console-output .console-line').allInnerTexts()).join('\n').trim()
+  return (await page.locator('.console-output .console-line').allInnerTexts()).map(noCR).join('\n').trim()
 }
+
+/**
+ * 行尾的 `\r` 拿掉（spec 205 T008，2026-11-03）：Arduino 的 `Serial.println` 印的是 `\r\n`——Cella 照真的板子印（JS 直譯器只印 `\n`），
+ * 而 `\r` 在主控台上看不見：學生看到的與課文寫的是同一行。比的是「學生看到什麼」，不是位元組。
+ */
+const noCR = (line: string): string => line.replace(/\r$/, '')
 
 /**
  * 一行一行的輸出——**不修剪行首的空白**。
@@ -170,7 +176,7 @@ async function programOutput(page: import('@playwright/test').Page): Promise<str
  * > **一個為了寬容而做的修剪，會在它修剪的那一端有意義的時候變成缺陷。**
  */
 async function programLines(page: import('@playwright/test').Page): Promise<string[]> {
-  return await page.locator('.console-output .console-line').allInnerTexts()
+  return (await page.locator('.console-output .console-line').allInnerTexts()).map(noCR)
 }
 
 /**
@@ -446,6 +452,13 @@ for (const c of CASES) {
     //
     // 所以改成：有宣告 `stdout` 就比對；沒有的話**仍然跑**，
     // 只驗它沒有把錯誤印在主控台上。
+    // ⏳ **板子的課放寬時限**（spec 205 T008，2026-11-03）：JS 直譯器拿掉之後，板子的程式走 Cella（判決 ＋ 除錯工作階段）。
+    //    Cella 0.1.202611030753 把工作階段加快到約判決的 1.5 倍——Node 上量到第二次只要 5.0 秒；
+    //    **而每一頁的【第一次】判決與第一次工作階段各要約 11 秒**（第一次判決會把九塊板子都建一次，cella 說下一版修）。
+    //    e2e 每一課都是新的一頁，兩筆第一次加起來超過 20 秒。其他課照舊 20 秒，所以別的地方變慢仍然抓得到。
+    //    **cella 修好「第一次建九塊板子」之後收回來**（收回之前先量：第一次判決要降到幾秒內）。
+    const isBoard = /^(arduino|esp)/.test(c.target ?? '')   // 課文的板子目標：arduino-uno、esp32
+    if (isBoard) test.setTimeout(150_000)
     await openLesson(page, c)
 
     await page.evaluate((code) =>
@@ -480,7 +493,7 @@ for (const c of CASES) {
     //    ⚠️ 三種結局都要收（完畢／錯誤／英文），否則錯誤的那一課會等滿 20 秒
     //    然後用一個過期的輸出去比對。
     await expect
-      .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
+      .poll(() => page.locator('.console-status').innerText(), { timeout: isBoard ? 90_000 : 20_000 })
       .toMatch(/程式執行完畢|錯誤|Error|Completed/)
 
     const output = await programOutput(page)

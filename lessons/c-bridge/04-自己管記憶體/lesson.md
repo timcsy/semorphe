@@ -103,8 +103,8 @@ if (a == NULL) {
 ## 完成的樣子
 
 ```c
-#include <cstdio>
-using namespace std;
+#include <stdio.h>
+#include <stdlib.h>
 int main() {
     int *a = (int*)malloc(5 * sizeof(int));
     for (int i = 0; i < 5; i++) {

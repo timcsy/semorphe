@@ -94,9 +94,10 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
       '🔴 「不是集合就丟錯」會把對照表一起擋掉——那是修一個缺陷造出另一個')
   }, 60_000)
 
-  // 歸類：Cella 判錯——`map::insert(P&&)`（[map.modifiers]）收得下 `pair<int,int>`，Cella 判 reject
+  // 歸類：Cella 未支援——`map::insert(P&&)`（[map.modifiers]）收得下 `pair<int,int>`；
+  //       0.1.202611030133 判 reject（誤判），0.1.202611030753 起「成員多載找不到」改判 unsupported
   it.runIf(hasReferenceCompiler())('🟡 已知缺陷（修好時這條會紅）：🔴 對照表的 insert——`make_pair` 那個形式', async () => {
-    await knownCellaGap(/no matching member function for call to 'insert'/, async () => {
+    await knownCellaGap(/has no overload of 'insert'/, async () => {
       await sameAsCompiler(`map<int,int> m; m.insert(make_pair(3,7)); cout << m[3] << m.size();`, '')
     })
   }, 60_000)
@@ -271,16 +272,14 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    * > **一個只看引數個數的判別，在另一個型別剛好也收兩個引數時
    * > 不會落空——它會安靜地把那個東西當成自己的。**
    */
-  // 歸類：我們這側缺——`X<T>::iterator` 這種巢狀型別名的 formalize
-  it('🟡 已知缺陷（修好時這條會紅）：★ erase(第一個位置, 最後一個之後) 刪一整段', async () => {
-    await knownCellaGap(/no matching member function for call to 'erase'/, async () => {
-      await sameAsCompiler(
-        `multiset<int> ms; for (int i = 1; i <= 6; i++) ms.insert(i);
-         multiset<int>::iterator a = ms.lower_bound(2); multiset<int>::iterator b = ms.upper_bound(4);
-         int before = (int)ms.size(); ms.erase(a, b);
-         cout << before - (int)ms.size() << ms.size() << *ms.begin();`,
-        '🔴 範圍刪除沒做對')
-    })
+  // 🟢 Cella 0.1.202611030753 補上範圍 erase（之前判「no matching member function for call to 'erase'」）——釘子拆掉
+  it('★ erase(第一個位置, 最後一個之後) 刪一整段', async () => {
+    await sameAsCompiler(
+      `multiset<int> ms; for (int i = 1; i <= 6; i++) ms.insert(i);
+       multiset<int>::iterator a = ms.lower_bound(2); multiset<int>::iterator b = ms.upper_bound(4);
+       int before = (int)ms.size(); ms.erase(a, b);
+       cout << before - (int)ms.size() << ms.size() << *ms.begin();`,
+      '🔴 範圍刪除沒做對')
   }, 60_000)
 
   // 歸類：Cella 未支援——string::erase（formalize 已補，spec 203）

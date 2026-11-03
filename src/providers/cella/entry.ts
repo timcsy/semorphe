@@ -12,15 +12,11 @@
  */
 import type { SemanticNode } from '../../core/types'
 import { skeletonById, skeletonPresent } from '../../core/skeleton'
-import { isFunctionDefinition } from '../../core/component/traits'
+import { isFunctionDefinition, staysTopLevel } from '../../core/component/traits'
 import { registeredComponents } from '../../core/component/registry'
-import { isIncludeDirective } from '../../languages/cpp/lang/node-traits'
 
-const topLevel = (n: SemanticNode): boolean => {
-  if (isFunctionDefinition(n.componentId) || isIncludeDirective(n.componentId)) return true
-  const raw = (n.metadata as { rawCode?: string } | undefined)?.rawCode
-  return typeof raw === 'string' && raw.trimStart().startsWith('#')
-}
+// 哪些留在函式外面：與產生器同一份判斷（`core/component/traits.ts` 的 `staysTopLevel`）
+const topLevel = (n: SemanticNode): boolean => staysTopLevel(n)
 
 export function withEntryFunctions(tree: SemanticNode, skeletonId: string): SemanticNode {
   const skeleton = skeletonById(skeletonId)

@@ -6,6 +6,7 @@ import { DebugToolbar } from './debug-toolbar'
 import type { StepInfo, ExecutionSpeed } from '../core/execution'
 import { showQuickPick } from './toolbar/quick-pick'
 import { msg } from '../core/messages'
+import { nodesInEnclosingScope } from '../core/execution-scope'
 import { showToast } from './toolbar/toast'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
@@ -40,6 +41,11 @@ export class ExecutionController {
   private breakpointNodes = new Set<string>()
   /** 目前這一次執行（spec 183：DAP 的形狀，宿主下指令）。 */
   private session: ExecutionSession | null = null
+  /** 每一次開跑（或停止）加一——「準備中」的等待迴圈用它知道自己還算不算數（spec 205 T003） */
+  private runId = 0
+  /** 等執行的模組準備好的上限與間隔：建置時編好的模組只是下載（通常幾秒），開發模式現場編約 20 秒 */
+  static PREPARE_TIMEOUT_MS = 120_000
+  static PREPARE_POLL_MS = 400
   private mode: 'run' | 'debug' | 'step' | 'animate' = 'run'
   /** 自動往下走的間隔（毫秒）；null ＝ 每停一次就等使用者。 */
   private auto: number | null = null
@@ -353,10 +359,34 @@ export class ExecutionController {
     const options = { maxSteps: 10_000_000, board: this.currentBoard?.(), formal: this.formalContext?.(tree) }
     const declined: { provider: string; reason: string }[] = []
     const tried = new Set<string>()
+    const run = ++this.runId
+    const waitedSince = Date.now()
+    let announced = false
     for (;;) {
       const opened = openSession(options, tree, tried)
+      /**
+       * 🟢 **準備中**（spec 205 T003）：JS 直譯器拿掉之後，執行只有 Cella——它還在載入（第一次打開、除錯模組在下載）時
+       * 不是「跑不了」，是「等一下」。說一次「準備中」，好了自動開跑；按停止就不等了；等太久照實說。
+       */
+      if (!opened.session && opened.declined.length > 0 && opened.declined.every((d) => d.pending)) {
+        // 「準備中」是系統的狀態，不是學生的程式印的東西——走狀態列（`ExecutionReason` 的 `preparing`），不進輸出
+        if (!announced) { announced = true; this.broadcastState({ status: 'running', reason: 'preparing' }) }
+        if (Date.now() - waitedSince > ExecutionController.PREPARE_TIMEOUT_MS) {
+          this.broadcastOutput(msg('RUNTIME_PREPARE_TIMEOUT', '執行的模組一直沒有準備好（{why}）——請重新整理頁面再試一次').replace('{why}', opened.declined.map((d) => d.reason).join('；')) + '\n', 'stderr')
+          this.broadcastState({ status: 'error' })
+          this.showExecButtons(false)
+          return
+        }
+        await new Promise((r) => setTimeout(r, ExecutionController.PREPARE_POLL_MS))
+        if (this.runId !== run) return            // 等的時候按了停止、或開了下一次
+        continue
+      }
       declined.push(...opened.declined)
       if (!opened.session) {
+        // 🔴 沒有退路了（spec 205 T008）：照實說為什麼——哪一個寫法 Cella 還不會，並指回那一行（T013 的 nodeId）。
+        //    「沒有可用的執行器」只留給真的一個提供者都沒有登記的情況（宿主沒接上）
+        const first = opened.declined.find((d) => d.nodeId) ?? opened.declined[0]
+        if (first) return this.fail(new SessionStop('runtime', 'RUNTIME_ERR_CELLA_UNSUPPORTED', { why: opened.declined.map((d) => d.reason).join('；') }, first.nodeId ?? null))
         this.broadcastOutput(`沒有可用的執行器（缺：${opened.missing.join('、')}）`, 'stderr')
         this.broadcastState({ status: 'error' })
         this.showExecButtons(false)
@@ -364,6 +394,7 @@ export class ExecutionController {
       }
       const session = opened.session
       this.session = session
+      if (announced) this.broadcastState({ status: 'running' })
       session.onOutput((text: string) => this.broadcastOutput(text, 'stdout'))
       session.setBreakpoints(this.breakpointNodes)
       const first = await session.launch(tree, { stopOnEntry: mode === 'step' || mode === 'animate' })
@@ -531,7 +562,8 @@ export class ExecutionController {
   private handleAccelerate(): void {
     if (!this.session || !this.currentNodeId) return
     const level = this.debugToolbar.getAccelerateLevel() ?? 1
-    this.skipIds = new Set(level <= 1 ? [this.currentNodeId] : this.panels.blocklyPanel?.nodesInAncestorScope(this.currentNodeId, level) ?? [this.currentNodeId])
+    // 從語意樹算（`core/execution-scope.ts`）——Cella 會停在沒有自己積木的節點上，用積木的對照表算會漏掉它們；第 1 層＝包住它的最內層
+    this.skipIds = new Set(nodesInEnclosingScope(this.panels.syncController?.getCurrentTree(), this.currentNodeId, level))
     if (this.commandResolve) this.command('step')
   }
 
@@ -549,6 +581,7 @@ export class ExecutionController {
   }
 
   private resetExecution(): void {
+    this.runId++                                   // 「準備中」那個等待迴圈看得到：不等了
     this.bus?.emit('execution:input-cancel', {})
     const s = this.session
     this.session = null

@@ -29,6 +29,9 @@ const ALLOWED: Record<string, string> = {
   'src/core/component/path-syntax.ts': '階層身分的語法（vision〈分子與粒度切換〉的前置）；投影函式呼叫產品的 idToDir／deriveBlockType，只剩分類這一層是它自己的',
   'src/core/molecule.ts': 'vision〈分子與粒度切換〉的切口計算——流程的框只收整棵子樹（埠由節點自己的接點給），多選接上時才走到它（spec 187）',
   // 🟢 2026-10-31（spec 182）：`providers/cella/formalize`、`verdict.ts` 三筆拿掉——Cella 提供者接上了，它們在產品路徑上
+  // ⏳ 2026-11-03（spec 205 T008）：JS 直譯器的登記拿掉了，它與它的提供者從產品走不到——**期限是 6c-4**：直譯器連同 import 它的測試一起刪，這兩筆也跟著拿掉
+  'src/interpreter/interpreter.ts': 'JS 直譯器——T008 之後產品不再登記；6c-4 連同 import 它的測試（A 類、對照族）一起刪（6c 盤點 draft〈6c-4 的盤點〉）',
+  'src/providers/js-interpreter/index.ts': '同上，JS 直譯器的提供者；session-contract 仍拿它對照工作階段契約，6c-4 拿掉那一格',
 }
 
 const EXT = ['', '.ts', '.tsx', '.json', '/index.ts']
