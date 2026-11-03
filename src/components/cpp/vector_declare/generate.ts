@@ -6,7 +6,7 @@
  * 抄一份的話兩份會漂移，而第三十八條護欄（共用檔的殼與重複）正是為此存在。
  */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { generateSequenceDeclare } from '../../../languages/cpp/lang/runtime/sequence-declare'
+import { generateSequenceDeclare } from '../../../languages/cpp/generators/sequence-declare'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:vector_declare', generateSequenceDeclare('vector', 'vec'))

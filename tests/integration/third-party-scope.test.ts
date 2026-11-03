@@ -24,7 +24,7 @@
 import { describe, it, expect } from 'vitest'
 import { idToDir } from '../../src/core/component/types'
 import { isValidComponentId } from '../../src/core/identity'
-import { declareAbstract, abstractComponentOf } from '../../src/core/language-executors'
+import { declareAbstract, abstractComponentOf } from '../../src/core/component-abstract'
 
 describe('第三方 scope：`@someone:*`', () => {
   describe('① 認得出——身分與路徑的換算', () => {

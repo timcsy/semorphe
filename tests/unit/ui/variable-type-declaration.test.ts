@@ -21,7 +21,7 @@ import { registerCppLanguage } from '../../../src/languages/cpp/generators'
 import {
   variableTypeOf,
   componentsDeclaringVariableType,
-} from '../../../src/core/language-executors'
+} from '../../../src/core/component-abstract'
 import { allVariableDropdownBlocks } from '../../../src/core/blocks/variable-dropdown-blocks'
 
 beforeAll(() => {

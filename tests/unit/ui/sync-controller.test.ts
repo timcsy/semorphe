@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import { SyncController, slotsLostByDowngrade } from '../../../src/core/sync/sync-controller'
-import { abstractComponentOf } from '../../../src/core/language-executors'
+import { abstractComponentOf } from '../../../src/core/component-abstract'
 import { setupTestRenderer } from '../../helpers/setup-renderer'
 import { cppStripScaffoldNodes as stripScaffoldNodes } from '../../../src/languages/cpp/cpp-scaffold-filter'
 import type { CodeParser, SyncError } from '../../../src/core/sync/sync-controller'

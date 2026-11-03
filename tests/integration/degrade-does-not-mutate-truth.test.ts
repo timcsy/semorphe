@@ -27,7 +27,7 @@
 import { describe, it, expect } from 'vitest'
 import { createNode } from '../../src/core/semantic-tree'
 import type { SemanticNode } from '../../src/core/types'
-import { abstractComponentOf } from '../../src/core/language-executors'
+import { abstractComponentOf } from '../../src/core/component-abstract'
 import '../../src/languages/cpp/all-declarations'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 
