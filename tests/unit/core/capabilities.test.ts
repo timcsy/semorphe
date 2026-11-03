@@ -12,12 +12,12 @@ import {
 
 const sessionOnly: Provider = {
   id: 'fake-session',
-  declares: { session: { granularity: 'statement', setInput: true, setVariable: false, steps: false } },
+  declares: { session: { granularity: 'statement', setInput: true, setVariable: false, steps: false, stepping: false, interactiveInput: false } },
   createSession: () => ({}) as never,
 }
 const sessionAndSteps: Provider = {
   id: 'fake-full',
-  declares: { session: { granularity: 'node', setInput: false, setVariable: true, steps: true } },
+  declares: { session: { granularity: 'node', setInput: false, setVariable: true, steps: true, stepping: true, interactiveInput: true } },
   createSession: () => ({}) as never,
 }
 
@@ -35,7 +35,7 @@ describe('能力登錄表', () => {
 
   it('★ 結果說得出少了什麼——提供者給的執行沒有步數、不能改變數', () => {
     registerProvider(sessionOnly)
-    expect(provide('session').missing).toEqual(['steps', 'setVariable'])
+    expect(provide('session').missing).toEqual(['steps', 'setVariable', 'stepping', 'interactiveInput'])
   })
 
   it('🔴 沒有任何提供者：回帶缺項的結果，不是 undefined', () => {
@@ -73,7 +73,7 @@ describe('開一次執行：還在準備 vs 接不了', () => {
   const tree = { id: 'p', componentId: 'cpp:program', properties: {}, slots: {} } as never
   const opts = { maxSteps: 10 } as never
   const declines = (d: { declined: string; nodeId?: string; pending?: true }): Provider => ({
-    id: 'cella', declares: { session: { granularity: 'node', setInput: true, setVariable: true, steps: true } }, createSession: () => d,
+    id: 'cella', declares: { session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true } }, createSession: () => d,
   })
 
   it('★ 還在準備：pending 原樣帶出來（呼叫端靠它決定等不等）', () => {
