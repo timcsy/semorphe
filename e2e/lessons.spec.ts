@@ -454,10 +454,12 @@ for (const c of CASES) {
     // 只驗它沒有把錯誤印在主控台上。
     // ⏳ **板子的課時限依量測訂**（2026-11-04）：板子的程式走 Cella（判決 ＋ 除錯工作階段），每一頁各付一次「第一次」——
     //    Node 上量到第一次判決約 5.5 秒、第一次工作階段約 7 秒（cella-lang 0.1.202611031229：只建用到的那塊板子之後）。
-    //    拿掉放寬整輪跑過：271 支裡只有 `arduino/13-溫濕度`（DHT）超過 20 秒，21.1 秒。⟹ 板子課給 40 秒（最慢的約兩倍），
-    //    比原本的 90 秒緊得多，變慢仍然抓得到；其他課照舊 20 秒。cella 正在拆第一次 launch 的約 3 秒，拆完再量一次。
+    //    拿掉放寬整輪跑過：271 支裡只有 `arduino/13-溫濕度`（DHT）超過 20 秒，21.1 秒。⟹ 板子課本機最慢的約 21 秒，
+    //    ⚠️ 本機量的不算數：250 收成 40／60 秒之後，**CI 上這一課兩次都在 40 秒時還在「執行中」**（Deploy 41723535842），
+    //    退回 CI 上驗過的 90／150 秒。CI 的報表（`github`）不印每支的時間，要收緊得先在 CI 上量到它（不是在本機）。
+    //    其他課照舊 20 秒。cella 正在拆第一次 launch 的約 3 秒，拆完再量一次。
     const isBoard = /^(arduino|esp)/.test(c.target ?? '')   // 課文的板子目標：arduino-uno、esp32
-    if (isBoard) test.setTimeout(60_000)
+    if (isBoard) test.setTimeout(150_000)
     await openLesson(page, c)
 
     await page.evaluate((code) =>
@@ -492,7 +494,7 @@ for (const c of CASES) {
     //    ⚠️ 三種結局都要收（完畢／錯誤／英文），否則錯誤的那一課會等滿 20 秒
     //    然後用一個過期的輸出去比對。
     await expect
-      .poll(() => page.locator('.console-status').innerText(), { timeout: isBoard ? 40_000 : 20_000 })
+      .poll(() => page.locator('.console-status').innerText(), { timeout: isBoard ? 90_000 : 20_000 })
       .toMatch(/程式執行完畢|錯誤|Error|Completed/)
 
     const output = await programOutput(page)
