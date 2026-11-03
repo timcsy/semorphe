@@ -1748,7 +1748,7 @@ export class App {
       const el = document.getElementById('status-runner')
       if (!el) return
       el.dataset.provider = e.provider ?? ''
-      el.textContent = e.provider ? `執行：${RUNNER[e.provider] ?? e.provider}` : ''
+      el.textContent = e.provider ? msg('STATUS_RUNNER', '執行：{name}').replace('{name}', RUNNER[e.provider] ?? e.provider) : ''
       el.title = e.declined.map((d) => `${RUNNER[d.provider] ?? d.provider} 沒有接：${d.reason}`).join('\n')
     })
     this.bus.on('execution:coverage-missing', () => {
@@ -4604,10 +4604,10 @@ export class App {
     const infos = this.checkDiagnostics.length - placedErrors + this.checkUnplaced.info
     const text =
       r.state === 'idle' ? '' :
-      r.state === 'loading' ? '判斷：載入中…' :
-      r.state === 'unavailable' ? '判斷：無法使用' :
-      errors > 0 ? `判斷：${errors} 個問題` :
-      infos > 0 ? `判斷：${infos} 處判不出來` : '判斷：沒有發現問題'
+      r.state === 'loading' ? msg('STATUS_CHECK_LOADING', '判斷：載入中…') :
+      r.state === 'unavailable' ? msg('STATUS_CHECK_UNAVAILABLE', '判斷：無法使用') :
+      errors > 0 ? msg('STATUS_CHECK_ERRORS', '判斷：{n} 個問題').replace('{n}', String(errors)) :
+      infos > 0 ? msg('STATUS_CHECK_UNKNOWN', '判斷：{n} 處判不出來').replace('{n}', String(infos)) : msg('STATUS_CHECK_CLEAN', '判斷：沒有發現問題')
     const title = [r.state === 'unavailable' ? r.reason : '', ...this.checkNotes].filter(Boolean).join('\n')
     const assumes = r.state === 'ready' ? this.checkAssumes : []
     // 面板不畫狀態列的宿主（VSCode）：交給宿主的狀態列（spec 198）——「依 …」小標的說明併進 detail

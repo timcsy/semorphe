@@ -120,3 +120,25 @@ describe('ConsolePanel', () => {
     expect(lastLine?.textContent).toBe('^C')
   })
 })
+
+/** 出錯時把主控台帶到前面（2026-11-03 瀏覽器驗收：除錯模式一開始在「變數」分頁，出錯的說明在主控台，學生看不到）。 */
+describe('ConsolePanel：出錯時把自己帶到前面', () => {
+  const surface = () => {
+    const calls: string[] = []
+    return { calls, s: { show: () => calls.push('show'), hide: () => calls.push('hide'), isHidden: () => false, focus: () => calls.push('focus') } }
+  }
+  it('🔴 error → focus', () => {
+    const panel = new ConsolePanel(document.createElement('div'))
+    const { calls, s } = surface()
+    panel.setSurface(s)
+    panel.onExecutionState({ status: 'error' } as never)
+    expect(calls).toContain('focus')
+  })
+  it('★ 其他狀態不搶焦點（否則使用者再也切不出去）', () => {
+    const panel = new ConsolePanel(document.createElement('div'))
+    const { calls, s } = surface()
+    panel.setSurface(s)
+    for (const status of ['running', 'paused', 'completed', 'idle']) panel.onExecutionState({ status } as never)
+    expect(calls).not.toContain('focus')
+  })
+})

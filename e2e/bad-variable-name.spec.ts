@@ -58,6 +58,7 @@ const warnings = (page: import('@playwright/test').Page): Promise<string[]> =>
   })
 
 test('🔴 不能當名字的字，畫面上要說得出為什麼', async ({ page }) => {
+  test.setTimeout(240_000)   // 最後一段要等 Cella 第一次準備好
   await page.addInitScript(() => window.localStorage.clear())
   await page.goto('/')
   await page.waitForFunction(
@@ -98,7 +99,8 @@ test('🔴 不能當名字的字，畫面上要說得出為什麼', async ({ pag
   await rename(page, 'age')
   expect(await warnings(page), '🔴 改回合法之後警告沒消——那比不報還糟').toEqual([])
   await page.locator('#run-btn').click()
-  await page.waitForTimeout(2500)
-  expect(await page.locator('.console-output').innerText(),
-    '🔴 改好了還是被擋——那比一開始就擋更糟').toContain('16')
+  // ⚠️ 等【條件】不等固定時間（2026-11-03 CI 紅過）：JS 直譯器拿掉之後，這一頁第一次按執行時 Cella 還在準備
+  //    （說「準備中」、好了自動開跑），CI 的機器上 2.5 秒還沒印出來
+  await expect(page.locator('.console-output'),
+    '🔴 改好了還是被擋——那比一開始就擋更糟').toContainText('16', { timeout: 180_000 })
 })

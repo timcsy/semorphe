@@ -118,6 +118,31 @@ test('執行到一半除以零：中文說明、指到那一行、之前的輸�
 })
 
 /**
+ * 除錯模式下出錯（2026-11-03 瀏覽器驗收抓到兩件事，修在 execution-controller）：
+ * ① 說明印在主控台，而除錯模式一開始切到「變數」分頁——出錯時要切回主控台，否則學生看不到錯在哪；
+ * ② 變數面板留著【上一支程式】的變數——開始執行時要清掉。
+ */
+test('除錯模式出錯：切回主控台、變數面板不留上一支程式的變數', async ({ page }) => {
+  test.setTimeout(240_000)
+  await freshApp(page)
+  await page.evaluate(() => (window as any).__app.warmUpChecker())
+  await expect(page.locator('#status-check')).toHaveAttribute('data-state', 'ready', { timeout: 180_000 })
+  // 先跑一支會停下來、變數面板有 total 的程式
+  await feed(page, LOOP, 'cpp:print')
+  await setBreakpoint(page, await lineNumberOf(page, 'cout << total'))
+  await selectMode(page, 'debug')
+  await expect(page.locator('.console-status')).toHaveText(/已暫停|Paused/, { timeout: 30_000 })
+  await expect(page.locator('.var-name', { hasText: /^total$/ })).toHaveCount(1)   // 正向錨點：上一支的變數確實在
+  await page.locator('.debug-stop').click()
+  // 再跑一支一開始就出錯的（除以零在第一次停下之前）
+  await feed(page, DIV0, 'cpp:print')
+  await page.locator('#run-btn').click()
+  await expect(output(page)).toContainText('除以零', { timeout: 60_000 })
+  await expect(output(page), '🔴 出錯了而畫面停在「變數」分頁——學生看不到說明').toBeVisible()
+  await expect(page.locator('.var-name', { hasText: /^total$/ }), '🔴 變數面板還留著上一支程式的 total').toHaveCount(0)
+})
+
+/**
  * 準備中（spec 205 T003）：沒暖機就按執行——不是「沒有可用的執行器」，是說一次「準備中」、好了自動開跑。
  */
 test('沒暖機就按執行：說「準備中」，好了自動開跑（spec 205 T003）', async ({ page }) => {

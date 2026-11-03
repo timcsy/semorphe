@@ -174,6 +174,7 @@ export class BottomPanel {
    */
   asConsoleSurface(): ConsoleSurface {
     return {
+      focus: () => { this.hidden = false; this.showTab('console'); this.applyHeight() },
       show: () => {
         this.hidden = false
         if (this.collapsed) {

@@ -111,6 +111,8 @@ export class ConsolePanel implements ViewHost {
       this.setStatus(msg('EXEC_STATUS_ABORTED', 'Interrupted'), '')
       return
     }
+    // 出錯的說明印在這裡——把這一格帶到前面（除錯模式一開始在「變數」分頁；2026-11-03 瀏覽器驗收）
+    if (event.status === 'error') this.surface?.focus?.()
     switch (event.status) {
       case 'running':
         this.setStatus(msg('EXEC_STATUS_RUNNING', 'Running'), 'running')

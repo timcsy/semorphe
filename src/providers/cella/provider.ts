@@ -212,7 +212,9 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
   const formalOf = (f: NonNullable<SessionOptions['formal']>): { program: unknown; branch: CellaBranch } | { why: string; nodeId?: string } => {
     const r = formalizeFor(f)
     // 帶出第一個翻不出的節點——畫面要指得到是哪一行還不支援（spec 205 T013）
-    if (!r.program) return { why: `Cella 還不支援：${[...new Set(r.unknown.map((u) => `${u.reason}（${u.construct}）`))].join('、')}`, ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
+    // why 只放構造名稱（`unresolved`、`cpp:xxx`）：句子由語系模板 RUNTIME_ERR_CELLA_UNSUPPORTED 說——
+    //    formalize 的原因是寫給開發者的中文，切成 English 時會原樣漏出來（2026-11-03 瀏覽器驗收）
+    if (!r.program) return { why: [...new Set(r.unknown.map((u) => u.construct))].join(', '), ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
     return { program: r.program, branch: branchOf(r.program as never) }
   }
 

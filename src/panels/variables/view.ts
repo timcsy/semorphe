@@ -59,6 +59,9 @@ export class VariablePanel implements ViewHost {
   onExecutionState(event: ExecutionStateEvent): void {
     // 🔴 只有**暫停中**才改得動——而它要在畫快照【之前】更新，
     //    否則這一次的列還是照舊唯讀，使用者要等下一個事件才點得動。
+    // 一次【新的】執行開始（之前不是停著、也不是等輸入／準備中）：清掉上一支程式的變數——
+    //    不清的話，這一次在停下之前就出錯時，面板上還是上一支程式的變數（2026-11-03 瀏覽器驗收）
+    if (event.status === 'running' && !event.reason && !this.paused) this.clear()
     this.paused = event.status === 'paused'
     this.container.classList.toggle('paused', this.paused)
     const step = event.step
@@ -195,14 +198,19 @@ export class VariablePanel implements ViewHost {
       const input = document.createElement('input')
       input.className = 'var-value-input'
       input.value = v.value
+      // 🔴 只結束一次：Enter／Esc 把輸入框換掉，而輸入框離開畫面會觸發 blur——
+      //    沒有這個旗標，Enter 會送兩次（「有 2 筆是你手動填進去的」），Esc 的取消會被 blur 變成送出（2026-11-03 瀏覽器驗收）
+      let done = false
       const commit = (): void => {
+        if (done) return
+        done = true
         const next = input.value
         cell.textContent = next
         if (next !== v.value) this.editCb?.(v.name, next)
       }
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { commit(); e.preventDefault() }
-        if (e.key === 'Escape') { cell.textContent = v.value; e.preventDefault() }
+        if (e.key === 'Escape') { done = true; cell.textContent = v.value; e.preventDefault() }
       })
       input.addEventListener('blur', commit)
       cell.textContent = ''
