@@ -112,8 +112,11 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const memberFields = new Set<string>()
   // 程式自己定義的函式名——名字當值用（`sort(a, a + n, cmp)`）時是 eFunc（cpp_to_tree.py 同形；spec 201）
   const functionNames = new Set<string>()
-  const index = (n: SemanticNode): void => {
+  // 類別成員裡的每一顆節點 → 那個類別的方法名（隱含 this 的呼叫要它；spec 208）
+  const ownMethods = new Map<string, Set<string>>()
+  const index = (n: SemanticNode, methods?: Set<string>): void => {
     byId.set(n.id, n)
+    if (methods) ownMethods.set(n.id, methods)
     // `int x, y;` 是一顆 `_multi_field` 包著平行的宣告——攤平（第 213 刀，同 struct_declare 的 formalize）
     // spec 203：class 的成員分在 public／protected／private 三個槽（struct 是 members 一個槽）；
     //   有型別、但自己註冊成成員的（靜態成員：所有物件共用一份，參照它是 eVar 不是 eSelf）不是欄位
@@ -121,7 +124,15 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       .flatMap((m) => (m.componentId === '_multi_field' ? m.slots?.fields ?? [] : [m]))
     for (const m of members) if (m.properties?.type !== undefined && !FORMALIZE.member.has(m.componentId)) memberFields.add(m.id)
     if (isFunctionDefinition(n.componentId) && n.properties?.name) functionNames.add(String(n.properties.name))
-    for (const kids of Object.values(n.slots ?? {})) kids.forEach(index)
+    // 這一顆是類別：成員槽裡註冊成成員、有名字的那幾顆就是它的方法；成員槽底下的節點都看得到這組名字（巢狀類別換成自己的）
+    const isClass = members.length > 0
+    const own = isClass
+      ? new Set(members.filter((m) => FORMALIZE.member.has(m.componentId) && m.properties?.name).map((m) => String(m.properties!.name)))
+      : methods
+    for (const [slot, kids] of Object.entries(n.slots ?? {})) {
+      const inMembers = isClass && ['members', 'public', 'protected', 'private'].includes(slot)
+      kids.forEach((c) => index(c, inMembers ? own : methods))
+    }
   }
   index(tree)
   const unknown: Unknown[] = []
@@ -391,6 +402,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     },
     isMemberField: (declId) => memberFields.has(declId),
     isFunctionName: (name) => functionNames.has(name),
+    isOwnMethod: (nodeId, name) => ownMethods.get(nodeId)?.has(name) ?? false,
     asStatement: (c) => (FORMALIZE.stmt.has(c.componentId) || FORMALIZE.decl.has(c.componentId)
       ? stmt(c)
       : [k('sExpr', { n: `${c.id}/stmt`, e: expr(c) })]),

@@ -26,6 +26,7 @@
   },
   "owner": "(core)",
   "paths": {
+    "formalize": "./formalize.ts",
     "views": {
       "blocks": {
         "render": "./forms/blocks.json",
