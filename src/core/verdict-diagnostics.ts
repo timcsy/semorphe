@@ -23,7 +23,8 @@ export interface VerdictProblem {
   kind: string
   /**
    * 這一則屬於哪一類——**由 Cella 給**（三方會議第二輪 Q15；cella 0.1.202611021901 起叫 `class`，0.1.202611030113 起改名 `category`——使用者定，history/330 後記）：
-   * error 學生寫錯｜unsupported 系統還不會｜indeterminate 本質判不出｜termination 程式怎麼結束｜incomplete 還沒寫完｜invalid 程式本身不成形。
+   * error 學生寫錯｜unsupported 系統還不會｜indeterminate 本質判不出｜termination 程式怎麼結束｜incomplete 還沒寫完｜
+   * invalid **系統之間的問題**（semorphe 送給 Cella 的程式格式有誤——使用者 2026-11-03 定「獨立成第六類」，不算學生寫錯，cos-mos history/009）。
    * 沒有這一格的要**明說**（`CELLA_UNCLASSIFIED`），不得由接收端猜（cos-mos 衍生原則 7：跨邊界的意思由產生的一方宣告）。
    */
   category?: string
@@ -80,7 +81,7 @@ const KINDS: Record<string, { rule: string }> = {
 }
 
 /** 判決產出端的全部規則身分（護欄用）。 */
-export const VERDICT_RULES: readonly string[] = [...new Set(Object.values(KINDS).map((k) => k.rule))].concat('CELLA_OTHER', 'CELLA_UNCLASSIFIED', 'TYPE_MISMATCH')
+export const VERDICT_RULES: readonly string[] = [...new Set(Object.values(KINDS).map((k) => k.rule))].concat('CELLA_OTHER', 'CELLA_UNCLASSIFIED', 'CELLA_INVALID', 'TYPE_MISMATCH')
 
 /**
  * 類別 → 嚴重度（Q15：分類是 Cella 的事，這裡只決定【怎麼呈現】那一類）。
@@ -240,7 +241,8 @@ export function toDiagnostics(input: {
     }
     diagnostics.push({
       nodeId, source: 'cella',
-      rule: !classified ? 'CELLA_UNCLASSIFIED' : k?.rule ?? 'CELLA_OTHER',
+      // invalid 一律說成系統之間的問題（不看 kind 的文案——那些是說給「學生寫的程式」聽的）
+      rule: !classified ? 'CELLA_UNCLASSIFIED' : p.category === 'invalid' ? 'CELLA_INVALID' : k?.rule ?? 'CELLA_OTHER',
       severity,
       params: { kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
     })

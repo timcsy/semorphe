@@ -254,3 +254,13 @@ describe('近似名的建議（Python 的 NameError）', () => {
     expect(r.notes.join('\n')).toMatch(/NameError/)
   })
 })
+
+/**
+ * 第六類 invalid（使用者 2026-11-03 定「獨立成第六類」，cos-mos history/009）：程式資料的格式不合法——**系統之間的問題**，不算學生寫錯。
+ */
+describe('判決的第六類：invalid 是系統之間的問題', () => {
+  it('🔴 說成「semorphe 送給 Cella 的格式有誤」，不是學生寫錯（不是紅的）', () => {
+    const d = run(v('invalid', [{ kind: 'malformed', category: 'invalid', at: idx.id, reason: 'unknown node kind' }])).diagnostics
+    expect(d).toMatchObject([{ nodeId: idx.id, rule: 'CELLA_INVALID', severity: 'info' }])
+  })
+})
