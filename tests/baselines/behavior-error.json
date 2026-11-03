@@ -8,7 +8,7 @@
   "corpus": {
     "undecidable": 100,
     "bothRun": 453,
-    "onlyReferenceRuns": 12,
+    "onlyReferenceRuns": 13,
     "onlyInterpreterRuns": 58,
     "neitherRuns": 33
   },

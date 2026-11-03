@@ -980,6 +980,9 @@ export class BlockRegistrar {
          */
         buildHead_: function (this: any) {
           const method = this.getFieldValue('METHOD') ?? 'method'
+          // 🔴 箭號（spec 209）：`p->m()` 與 `o.m()`——JSON 宣告裡有 ARROW，而這份命令式定義蓋過它；
+          //    不在這裡建，載入時那個值會被默默丟掉（2026-11-04 瀏覽器驗收抓到，tests/integration/oop-blocks-load.test.ts）
+          const arrow = this.getFieldValue('ARROW') ?? 'false'
           // 接收者那一格**只建一次**——它不參與重排
           if (!this.getInput('OBJ')) {
             this.appendValueInput('OBJ')
@@ -988,8 +991,14 @@ export class BlockRegistrar {
           }
           if (this.getInput('LABEL')) this.removeInput('LABEL')
           const input = this.appendDummyInput('LABEL')
+            .appendField(new Blockly.FieldDropdown([
+              // 退路文字刻意不是語法記號（第五十五條護欄：核心層不寫死語言的語法）；真正的文字由元件的標籤給
+              [Blockly.Msg[`${msgKey}_DOT`] || 'object', 'false'],
+              [Blockly.Msg[`${msgKey}_ARROW`] || 'pointer', 'true'],
+            ]), 'ARROW')
             .appendField(Blockly.Msg['CPP_METHOD_CALL_DO'] || '執行')
             .appendField(new Blockly.FieldTextInput(method), 'METHOD')
+          this.setFieldValue(arrow, 'ARROW')
           this.moveInputBefore('OBJ', 'LABEL')
           if (this.argCount_ > 0) input.appendField(Blockly.Msg['U_FUNC_CALL_OPEN'] || '（')
         },
