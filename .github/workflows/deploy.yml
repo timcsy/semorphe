@@ -277,6 +277,52 @@ jobs:
   #
   # 🔴 **而它是整條路上唯一一個「主線真的換版」的地方**——
   #    前面那次部署的 `/` 是上一版。
+  # 🟢 **發到 npm**（2026-11-03，使用者定：先發 npm，再讓 semorphe.com 從 jsDelivr 抓大檔——draft〈發到 npm 與套件的拆法〉§〇）。
+  #
+  # ⚠️ 接在 `promote` 之後：只發**測試全綠**的那一版（與主線換版同一個條件）。
+  # ⚠️ **沒有 `NPM_TOKEN` 就跳過，不紅**——token 由使用者放進 GitHub Secrets（npm 的 granular token、`semorphe` 的 publish 權限），不經過 AI。
+  # ⚠️ repo 裡的 package.json 保持 `private: true`；`tools/prepare-npm-package.mjs` 在這裡才改成可發布的樣子（時間戳版本、只發 dist）。
+  publish-npm:
+    needs: promote
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: 還沒設 NPM_TOKEN 就跳過
+        if: env.NPM_TOKEN == ''
+        run: echo "::notice::還沒設 NPM_TOKEN（GitHub Secrets）——這一次不發 npm"
+      - uses: actions/checkout@v4
+        if: env.NPM_TOKEN != ''
+      - uses: actions/setup-node@v4
+        if: env.NPM_TOKEN != ''
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+      - name: npm ci（抖了就重試——理由見 test 那一格）
+        if: env.NPM_TOKEN != ''
+        run: |
+          for i in 1 2 3; do
+            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
+            sleep 20
+          done
+          exit 1
+      - if: env.NPM_TOKEN != ''
+        run: npm run build
+      - name: 改成可發布的樣子（時間戳版本、只發 dist）
+        if: env.NPM_TOKEN != ''
+        run: echo "::notice::semorphe@$(node tools/prepare-npm-package.mjs)"
+      - name: npm publish
+        if: env.NPM_TOKEN != ''
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   redeploy:
     needs: promote
     runs-on: ubuntu-latest

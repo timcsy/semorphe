@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
-  registerProvider, resetProvidersForTest, provide, SessionStop,
+  registerProvider, resetProvidersForTest, provide, SessionStop, openSession,
   type Provider,
 } from '../../../src/core/capabilities'
 
@@ -62,5 +62,30 @@ describe('SessionStop——控制器只認這一種停止', () => {
     expect(s).toBeInstanceOf(Error)
     expect([s.kind, s.i18nKey, s.params, s.nodeId]).toEqual(['runtime', 'RUNTIME_ERR_DIV_ZERO', { a: '1' }, 'n1'])
     expect(new SessionStop('aborted', 'RUNTIME_ERR_ABORTED').nodeId).toBeNull()
+  })
+})
+
+/**
+ * spec 205 T003／T008：JS 直譯器拿掉之後，「還在準備」與「接不了」要分得開——前者呼叫端說「準備中」再試，後者照實說原因。
+ */
+describe('開一次執行：還在準備 vs 接不了', () => {
+  beforeEach(() => resetProvidersForTest())
+  const tree = { id: 'p', componentId: 'cpp:program', properties: {}, slots: {} } as never
+  const opts = { maxSteps: 10 } as never
+  const declines = (d: { declined: string; nodeId?: string; pending?: true }): Provider => ({
+    id: 'cella', declares: { session: { granularity: 'node', setInput: true, setVariable: true, steps: true } }, createSession: () => d,
+  })
+
+  it('★ 還在準備：pending 原樣帶出來（呼叫端靠它決定等不等）', () => {
+    registerProvider(declines({ declined: '判斷功能還在載入', pending: true }))
+    const o = openSession(opts, tree)
+    expect(o.session).toBeNull()
+    expect(o.declined).toEqual([{ provider: 'cella', reason: '判斷功能還在載入', pending: true }])
+  })
+  it('🔴 接不了：沒有 pending，nodeId 照帶（畫面要指得到那一行）', () => {
+    registerProvider(declines({ declined: 'Cella 還不支援：VLA', nodeId: 'n7' }))
+    const o = openSession(opts, tree)
+    expect(o.declined).toEqual([{ provider: 'cella', reason: 'Cella 還不支援：VLA', nodeId: 'n7' }])
+    expect(o.declined[0].pending).toBeUndefined()
   })
 })

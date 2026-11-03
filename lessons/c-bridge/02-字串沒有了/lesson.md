@@ -76,7 +76,7 @@ char s[20] = "hello";
 長度、複製、比較各有一支：
 
 ```c
-printf("%d\n", strlen(s));      // 5
+printf("%zu\n", strlen(s));     // 5（strlen 回傳的是 size_t，要配 %zu；配 %d 是未定義行為）
 char t[20];
 strcpy(t, s);
 printf("%d\n", strcmp(s, t));   // 0
@@ -115,12 +115,11 @@ if (s == t)      // 🔴 這是在比【位址】，不是比內容
 ## 完成的樣子
 
 ```c
-#include <cstdio>
-#include <cstring>
-using namespace std;
+#include <stdio.h>
+#include <string.h>
 int main() {
     char s[20] = "hello";
-    printf("%d\n", strlen(s));
+    printf("%zu\n", strlen(s));
     char t[20];
     strcpy(t, s);
     printf("%d\n", strcmp(s, t));

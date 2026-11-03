@@ -107,8 +107,7 @@ scanf("%d", &n);      // ⚠️ 注意那個 &
 ## 完成的樣子
 
 ```c
-#include <cstdio>
-using namespace std;
+#include <stdio.h>
 int main() {
     int n = 5;
     printf("%d\n", n);

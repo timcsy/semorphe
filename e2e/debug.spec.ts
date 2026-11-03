@@ -32,8 +32,10 @@ test('斷點：設得上，而且執行會停在那裡', async ({ page }) => {
   // > **「執行到哪裡」不能從輸出推——那是兩個時間軸。**
   //
   // 而這個錯誤假設只有 e2e 抓得到：單元測試裡沒有「主控台」這個東西。
-  await expect(page.locator('.var-name')).toHaveText('total')
-  await expect(page.locator('.var-value')).toHaveText('0')
+  // ⚠️ 2026-11-03（spec 205 T008）：停在迴圈體裡時作用域有 `total` 與 `i` 兩個——Cella 照 C++ 的作用域列（JS 直譯器只列 `total`）。
+  //    所以找名字是 total 的那一列，不假設只有一列。
+  const totalRow = page.locator('.variable-table tr', { has: page.locator('.var-name', { hasText: /^total$/ }) })
+  await expect(totalRow.locator('.var-value')).toHaveText('0')
 })
 
 test('斷點：沒設斷點時不會停', async ({ page }) => {
@@ -46,19 +48,33 @@ test('斷點：沒設斷點時不會停', async ({ page }) => {
 })
 
 test('加速：跳過整層——執行器問的是「跳過哪些節點」', async ({ page }) => {
-  // ⚠️ 2026-08-12 把這段從四步積木 API 換成一句 `nodesInAncestorScope`，而當時沒驗到。
+  // ⚠️ 2026-08-12 把這段從四步積木 API 換成一句 `nodesInAncestorScope`，而當時沒驗到；2026-11-03 改成從語意樹算（`core/execution-scope.ts`）。
   await freshApp(page)
   await typeAndFormat(page, LOOP_PROGRAM)
   await selectMode(page, 'step')
 
   await expect(page.locator('.debug-toolbar')).toBeVisible({ timeout: 20_000 })
-  for (let i = 0; i < 4; i++) await page.locator('.debug-step').click()
+  // 先走進迴圈體——「在迴圈裡按加速，一次跳出整層」是這支的前提。
+  // ⚠️ 2026-11-03（spec 205 T008）：原本固定按 4 下（JS 直譯器以敘述為單位，4 步剛好在迴圈裡）；
+  //    Cella 以節點為單位，4 步還停在 `int total = 0` 的子節點——前提沒成立。改成走到變數面板出現 `i`（進了 for）為止。
+  const iRow = page.locator('.variable-table tr', { has: page.locator('.var-name', { hasText: /^i$/ }) })
+  for (let n = 0; n < 40 && (await iRow.count()) === 0; n++) {
+    await page.locator('.debug-step').click()
+    await page.waitForTimeout(200)
+  }
+  await expect(iRow, '走了 40 步還沒進到迴圈——前提沒成立，不是加速壞了').toHaveCount(1)
   await page.locator('.debug-accelerate').click()
   // 🔴 spec 183：加速跳出迴圈之後停在 `cout` **之前**（除錯器停在即將執行的那一顆）——再走一步才印出 6。
   //    在此之前單步是「先把整支跑完、錄下軌跡再重播」，輸出在第一步之前就全印了，
   //    這一行原本的斷言（加速之後就看得到 6）量到的是那個副作用，不是加速。
   await expect(page.locator('.console-output')).not.toContainText('6')
-  await page.locator('.debug-step').click()
-
+  // ⚠️ 2026-11-03（spec 205 T008）：Cella 的單步以**節點**為單位（`granularity: 'node'`），比 JS 直譯器的敘述細——
+  //    跳出迴圈之後，`cout << total << endl` 要走幾個子節點才真的印出。所以「最多再走幾步」而不是「恰好一步」；
+  //    仍然量得到加速：不加速的話三圈迴圈要走的步數遠多於這個上限。
+  for (let i = 0; i < 8; i++) {
+    if ((await page.locator('.console-output').innerText()).includes('6')) break
+    await page.locator('.debug-step').click()
+    await page.waitForTimeout(300)
+  }
   await expect(page.locator('.console-output')).toContainText('6', { timeout: 20_000 })
 })

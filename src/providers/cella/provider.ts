@@ -212,14 +212,18 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
   const formalOf = (f: NonNullable<SessionOptions['formal']>): { program: unknown; branch: CellaBranch } | { why: string; nodeId?: string } => {
     const r = formalizeFor(f)
     // 帶出第一個翻不出的節點——畫面要指得到是哪一行還不支援（spec 205 T013）
-    if (!r.program) return { why: `Cella 還不支援：${[...new Set(r.unknown.map((u) => u.reason))].join('、')}`, ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
+    if (!r.program) return { why: `Cella 還不支援：${[...new Set(r.unknown.map((u) => `${u.reason}（${u.construct}）`))].join('、')}`, ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
     return { program: r.program, branch: branchOf(r.program as never) }
   }
 
+  const warmUp = (): void => { if (state.state === 'idle') try { send({ id: 0, kind: 'load' }) } catch { /* 狀態已是 unavailable */ } }
+
   const createSession = (options: SessionOptions): ExecutionSession | Declined => {
     if (!options.formal) return { declined: '這個語言還沒有 Cella' }
-    // 還沒暖機 ⟹ 不為了執行去建 worker、載 35 MB（首屏與 e2e 都靠這一條，見 `src/main.ts`）
-    if (state.state === 'idle' || state.state === 'loading') return { declined: '判斷功能還在載入' }
+    // 還沒就緒 ⟹ 回「準備中」（spec 205 T003：JS 直譯器拿掉之後沒有退路——等它好，而不是說跑不了）。
+    //    沒暖機過的（自動化瀏覽器不自動暖機，見 `src/main.ts`）就在學生按執行的這一刻開始暖機
+    if (state.state === 'idle') { warmUp(); return { declined: '判斷功能還在載入', pending: true } }
+    if (state.state === 'loading') return { declined: '判斷功能還在載入', pending: true }
     if (state.state === 'unavailable') return { declined: `判斷功能無法使用：${state.reason}` }
     if (!/^(cpp|python):/.test(options.formal.tree.componentId)) return { declined: '這個語言還沒有 Cella' }
     const f = formalOf(options.formal)
@@ -229,7 +233,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
       // 還沒準備好：背景準備除錯模組（建置時編好的只是下載；開發模式沒有就現場編，約 20 秒），這一次先交給下一個提供者（research R4）。
       // ⚠️ 判決時就會順手準備（見 check）——走到這裡多半是判決還沒跑過
       if (st === undefined) { try { send({ kind: 'dap-prepare', branch: f.branch }) } catch { /* worker 起不來 */ } }
-      return { declined: st === 'unavailable' ? 'Cella 的除錯模組無法使用' : 'Cella 的除錯模組還在準備' }
+      return st === 'unavailable' ? { declined: 'Cella 的除錯模組無法使用' } : { declined: 'Cella 的除錯模組還在準備', pending: true }
     }
     const id = ++sid
     const s = new CellaSession(id, send, f.program)
@@ -246,7 +250,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
     supports: (language) => language === 'cpp' || language === 'python',
     readiness: () => state,
     onReadiness: (cb) => { listeners.push(cb) },
-    warmUp: () => { if (state.state === 'idle') try { send({ id: 0, kind: 'load' }) } catch { /* 狀態已是 unavailable */ } },
+    warmUp,
     check: (req: CheckRequest) => {
       const id = ++latest
       const board = cellaBoardOf(req.targetId)
