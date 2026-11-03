@@ -37,7 +37,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
+import { runCella, describeCellaResult, knownCellaGap, expectCellaOut } from '../helpers/cella-run'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -168,4 +168,18 @@ describe('round-trip：迭代器一族', () => {
       `set<int> a; a.insert(5); a.insert(1); for (int v : a) cout << v;
        set<string> b; b.insert("bb"); b.insert("aa"); cout << *b.begin();`, '')
   }, 60_000)
+})
+
+/**
+ * 巢狀的型別名（第 235 刀）：`map<int,int>::iterator` 送 tMember（cella 2026-11-03 給的形狀；宣告、參數、typedef 三種位置同一個）。
+ * ⚠️ vector／string 的 iterator 與 set／multiset 的 const_iterator 等 Cella 補成員型別（今天判 reject「unknown type」，釘在 fuzz-cpp-iterators）。
+ */
+describe('巢狀的型別名：容器的 iterator', () => {
+  const P = '#include <bits/stdc++.h>\nusing namespace std;\n'
+  it('★ map 的 iterator 當參數與宣告', async () => {
+    await expectCellaOut(P + 'int sum(map<int,int>::iterator a, map<int,int>::iterator b) { int s = 0; for (; a != b; ++a) s += a->second; return s; }\nint main() { map<int,int> m; m[1] = 10; m[2] = 20; map<int,int>::iterator it = m.begin(); cout << it->first << " " << sum(m.begin(), m.end()); }\n', '1 30')
+  }, 120_000)
+  it('★ set 的 iterator 宣告', async () => {
+    await expectCellaOut(P + 'int main() { set<int> s = {5, 3, 9}; set<int>::iterator it = s.begin(); cout << *it; }\n', '3')
+  }, 120_000)
 })
