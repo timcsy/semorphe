@@ -151,7 +151,15 @@ export type Readiness = { state: 'idle' | 'loading' | 'ready' } | { state: 'unav
 
 /** 這次不接（翻不出來、還沒就緒、無法使用）——說得出原因，登錄表往下找下一個（spec 183 R3）。 */
 /** 不接：原因，以及（翻不出時）卡在哪一顆節點——畫面要指得到那一行（spec 205 T013） */
-export interface Declined { declined: string; nodeId?: string }
+export interface Declined {
+  declined: string
+  nodeId?: string
+  /**
+   * **還在準備，等一下就會好**（暖機中、除錯模組還在下載；spec 205 T003）——呼叫端可以顯示「準備中」再試，而不是當成跑不了。
+   * 沒有這一格＝這一支這個提供者就是接不了（翻不出、這個語言沒有、無法使用）。
+   */
+  pending?: true
+}
 
 export interface Provider {
   id: string
@@ -233,20 +241,20 @@ export function provide(cap: CapabilityName): Provided {
 export interface OpenedSession {
   session: ExecutionSession | null
   provenance: string | null
-  declined: { provider: string; reason: string; nodeId?: string }[]
+  declined: { provider: string; reason: string; nodeId?: string; pending?: true }[]
   missing: Missing[]
 }
 
 /**
  * **開一次執行**（spec 183 R3）——照登錄順序問每個宣告了 `session` 的提供者；不接的記下原因、往下找。
- * 階段 6 之前：Cella 翻不出來／還沒就緒時，由 JS 直譯器接，而 `declined` 說得出為什麼。
+ * 6c-3 T008 之後只有 Cella：還沒就緒時回 `pending`（呼叫端顯示「準備中」再試）；翻不出來時照實說，沒有退路（`declined` 說得出為什麼）。
  */
 export function openSession(options: SessionOptions, program: SemanticNode, skip: ReadonlySet<string> = new Set()): OpenedSession {
-  const declined: { provider: string; reason: string; nodeId?: string }[] = []
+  const declined: OpenedSession['declined'] = []
   for (const p of registry) {
     if (!p.declares.session || !p.createSession || skip.has(p.id)) continue
     const s = p.createSession(options, program)
-    if ('declined' in s) { declined.push({ provider: p.id, reason: s.declined, ...(s.nodeId ? { nodeId: s.nodeId } : {}) }); continue }
+    if ('declined' in s) { declined.push({ provider: p.id, reason: s.declined, ...(s.nodeId ? { nodeId: s.nodeId } : {}), ...(s.pending ? { pending: true as const } : {}) }); continue }
     const d = p.declares.session
     const missing: Missing[] = []
     if (!d.steps) missing.push('steps')

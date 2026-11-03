@@ -2,9 +2,9 @@
  * **執行與除錯由 Cella 跑**（spec 183，重構階段 5b）——走真的 worker、真的 `cella-lang/dap`。
  *
  * ```
- * ① 第一次執行：除錯模組還在背景編 → 由 JS 直譯器跑，狀態列說得出為什麼（R4）
- * ② 編好之後：由 Cella 跑——輸出、中斷點停在【即將執行】的那一顆、變數、讀輸入、越界停下說明
- * ③ Cella 還不支援的程式 → 退回 JS 直譯器，標出處與原因（US3）
+ * ① 第一次執行：還在準備 → 說「準備中」、好了自動開跑（spec 205 T003；之前是由 JS 直譯器先跑）
+ * ② 由 Cella 跑——輸出、中斷點停在【即將執行】的那一顆、變數、讀輸入、越界停下說明
+ * ③ Cella 還不支援的程式 → 照實說、指回那一行，沒有退路（spec 205 T008；之前是退回 JS 直譯器）
  * ```
  * ⚠️ 自動化瀏覽器不自動暖機（`src/main.ts`）——這裡自己呼叫 `warmUpChecker()`。
  */
@@ -21,18 +21,13 @@ async function feed(page: Page, code: string, marker: string): Promise<void> {
   await treeHas(page, marker)
 }
 
-/** 跑到 Cella 接手為止（第一次除錯模組在背景編，約 20 秒；之間的執行由 JS 跑）。 */
+/**
+ * 按一次執行，等 Cella 跑（spec 205 T008 之後只有 Cella：還在準備時說「準備中」、好了自動開跑——不必再反覆按）。
+ * ⚠️ 選模式那一下可能已經開跑了（見 `selectMode`）——那時執行鈕是藏著的，就不再按。
+ */
 async function runUntilCella(page: Page): Promise<void> {
-  const t = Date.now()
-  for (;;) {
-    await expect(page.locator('#run-btn')).toBeVisible({ timeout: 30_000 })
-    await page.locator('#run-btn').click()
-    await expect(runner(page)).not.toHaveText('', { timeout: 30_000 })
-    if ((await runner(page).getAttribute('data-provider')) === 'cella') return
-    expect(await runner(page).getAttribute('title'), '退回 JS 時要說得出原因').toMatch(/Cella 沒有接/)
-    if (Date.now() - t > 180_000) throw new Error('Cella 一直沒有接手')
-    await page.waitForTimeout(3000)
-  }
+  if (await page.locator('#run-btn').isVisible()) await page.locator('#run-btn').click()
+  await expect(runner(page)).toHaveAttribute('data-provider', 'cella', { timeout: 180_000 })
 }
 
 const LOOP = '#include <iostream>\nusing namespace std;\nint main() {\n    int total = 0;\n    for (int i = 1; i <= 3; i++) {\n        total = total + i;\n    }\n    cout << total << endl;\n    return 0;\n}\n'
@@ -50,7 +45,7 @@ test('執行與除錯由 Cella 跑：輸出、中斷點、變數、讀輸入、�
   await expect(page.locator('#status-check')).toHaveAttribute('data-state', 'ready', { timeout: 180_000 })
 
   await feed(page, LOOP, 'cpp:print')
-  await selectMode(page, 'run')   // 這一下就跑了一次（多半由 JS：除錯模組從這時才開始編）
+  await selectMode(page, 'run')   // 這一下就跑了一次（還在準備時說「準備中」，好了自動開跑）
   await runUntilCella(page)
   await expect(output(page)).toContainText('6')
 
@@ -83,15 +78,29 @@ test('執行與除錯由 Cella 跑：輸出、中斷點、變數、讀輸入、�
   await expect(page.locator('#run-btn')).toBeVisible()
 })
 
-test('Cella 還不支援的程式：退回 JS 直譯器，標出處與原因', async ({ page }) => {
+test('Cella 還不支援的程式：照實說還不支援、指回那一行——沒有退路（spec 205 T008）', async ({ page }) => {
   await freshApp(page)
   await page.evaluate(() => (window as any).__app.warmUpChecker())
   await expect(page.locator('#status-check')).toHaveAttribute('data-state', 'ready', { timeout: 180_000 })
   await feed(page, VLA, 'cpp:array_declare')
   await selectMode(page, 'run')
-  await expect(output(page)).toContainText('3', { timeout: 30_000 })
-  await expect(runner(page)).toHaveAttribute('data-provider', 'js-interpreter')
-  expect(await runner(page).getAttribute('title')).toMatch(/Cella 沒有接：.*(還不支援|還在準備)/)
+  // JS 直譯器拿掉之後不會再「跑出 3」——它是 GNU 擴充（VLA），Cella 照實標不支援
+  await expect(output(page)).toContainText('還不支援', { timeout: 60_000 })
+  await expect(output(page)).not.toContainText('3\n')
+  await expect(runner(page)).not.toHaveAttribute('data-provider', 'js-interpreter')
+})
+
+/**
+ * 準備中（spec 205 T003）：沒暖機就按執行——不是「沒有可用的執行器」，是說一次「準備中」、好了自動開跑。
+ */
+test('沒暖機就按執行：說「準備中」，好了自動開跑（spec 205 T003）', async ({ page }) => {
+  test.setTimeout(240_000)
+  await freshApp(page)
+  await feed(page, LOOP, 'cpp:print')
+  await selectMode(page, 'run')
+  await expect(output(page)).toContainText('準備中', { timeout: 30_000 })
+  await expect(output(page)).toContainText('6', { timeout: 180_000 })
+  await expect(runner(page)).toHaveAttribute('data-provider', 'cella')
 })
 
 /**

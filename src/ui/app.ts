@@ -94,20 +94,17 @@ import { showQuickPick } from './toolbar/quick-pick'
 import { BlockStyleSelector } from './toolbar/block-style-selector'
 import {} from '../core/component/traits'
 import { ExecutionController } from './execution-controller'
-// 🔴 **組裝點登記語意的提供者**（spec 179）——核心與介面只認能力介面，不認得是誰在跑。
-//    兩個宿主共用的只有 JS 直譯器；Cella 由【宿主的入口】登記（網頁版 `src/main.ts`，排在最前面）
-//    ——擴充的 webview 也由它自己的入口登記（spec 198：blob ＋ importScripts 起同一支 worker，`src/vscode/webview/cella.ts`）；
-//    不在這裡登記，是因為兩個宿主起 worker 的方式不同（網頁版 `new Worker(new URL(…))`、webview 不能跨源建 worker）。
-//    階段 6 拿掉 JS 直譯器那一行與整個 `providers/js-interpreter/`。
-import { registerProvider, provide, type Provider, type Readiness } from '../core/capabilities'
-import { jsInterpreterProvider } from '../providers/js-interpreter'
+// 🔴 **語意的提供者由宿主的入口登記**（spec 179）——核心與介面只認能力介面，不認得是誰在跑。
+//    Cella 由【宿主的入口】登記：網頁版 `src/main.ts`、擴充的 webview `src/vscode/webview/cella.ts`（兩個宿主起 worker 的方式不同）。
+//    🟢 **這個組裝點不再登記任何提供者**（spec 205 T008，2026-11-03）：JS 直譯器的登記拿掉了——執行只走 Cella，
+//    還沒準備好時顯示「準備中」（`execution-controller.ts`），翻不出時照實說，沒有退路。護欄 `audit-cella-only` 盯著它不回來。
+import { provide, type Provider, type Readiness } from '../core/capabilities'
 import { toDiagnostics } from '../core/verdict-diagnostics'
 import { judgeOutput } from '../core/lesson/judge'
 import { hardwareOf, matchPinEvents, DEFAULT_PIN_TOLERANCE_MS, type HardwareRecord, type PinEvent } from '../core/hardware'
 import type { HardwarePanel, HardwareView } from '../panels/hardware/view'
 import type { CheckAnswer } from '../core/capabilities'
 import type { Diagnostic } from '../core/diagnostics'
-registerProvider(jsInterpreterProvider)
 // Semantic layer
 // Projection layer
 import { CURRENT_VERSION, hashCode } from '../core/storage/storage-version'
