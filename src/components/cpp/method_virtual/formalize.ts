@@ -1,6 +1,6 @@
 /**
  * `cpp:method_virtual` 的 **formalize** 路（spec 208）——類別成員 mbMethod ＋ fdef，virt 送 `vVirtual`（形狀 cella 2026-11-03 給的：Virtuality = vNone | vVirtual | vOverride | vPure）。
- * ⚠️ 這顆元件今天沒有記尾端的 const（`virtual int f() const` 來回一趟會丟掉 const）——照實送 false；補上屬性是另一刀。契約見 `core/formalize-contract.ts`。
+ * 尾端 const 由 `is_const` 照實送（spec 209）。契約見 `core/formalize-contract.ts`。
  */
 import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
@@ -11,7 +11,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const params = (n.slots?.params ?? []).map((q) =>
       f.k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: f.type(q.properties?.type, q), dflt: null }))
     const fdef = f.k('fdef', { n: n.id, noexc: false, name: String(p.name ?? ''), ret, params, body: f.block(n, 'body') })
-    return f.k('mbMethod', { acc: f.k('acPublic'), isConst: false, expl: false, virt: f.k('vVirtual'), f: fdef })
+    return f.k('mbMethod', { acc: f.k('acPublic'), isConst: String(p.is_const ?? 'false') === 'true', expl: false, virt: f.k('vVirtual'), f: fdef })
   })
   r.scope('cpp:method_virtual', (n, w) => w.inScope(() => {
     w.walkSlot(n, 'params')

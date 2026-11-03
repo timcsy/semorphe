@@ -812,7 +812,9 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return buildMethodOverride({ return_type: returnType, name: methodName }, { params, body })
+      // 尾端 const（spec 209）：與運算子多載那支同一個讀法
+      const isConst = (declNode?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
+      return buildMethodOverride({ return_type: returnType, name: methodName, is_const: isConst ? 'true' : 'false' }, { params, body })
     }
 
     // Virtual method with body
@@ -822,7 +824,9 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return buildMethodVirtual({ return_type: returnType, name: methodName }, { params, body })
+      // 尾端 const（spec 209）：與運算子多載那支同一個讀法
+      const isConst = (declNode?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
+      return buildMethodVirtual({ return_type: returnType, name: methodName, is_const: isConst ? 'true' : 'false' }, { params, body })
     }
 
     // 一般的成員函式 → 類別成員函式那顆（第 218 刀；使用者 2026-11-02 定另立元件，history/326）。

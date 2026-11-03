@@ -13,7 +13,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       const paramChildren = node.slots.params ?? []
       const body = node.slots.body ?? []
       const paramStr = formatParams(paramChildren)
-      const header = `${indent(ctx)}virtual ${returnType} ${name}(${paramStr})${openBrace(ctx)}\n`
+      const cq = node.properties.is_const === 'true' ? ' const' : ''   // 尾端 const（spec 209）
+      const header = `${indent(ctx)}virtual ${returnType} ${name}(${paramStr})${cq}${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header
       code += generateBody(body, indented(ctx))
