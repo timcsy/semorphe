@@ -58,14 +58,14 @@ describe('第一百二十五條護欄：面板宣告的搬遷', () => {
     }
   })
 
-  it('棘輪：`mount` 還在組裝點的只准變少（今天 5）', () => {
+  it('棘輪：`mount` 還在組裝點的只准變少（今天 2；2026-11-03 第 239～241 刀搬走變數、主控台、程式碼）', () => {
     const shell = declarations().filter((d) => d.src.includes('mountedByShell'))
     expect(shell.length,
       `🔴 比基線多——是不是新加了一個面板而沒有把 \`mount\` 寫進宣告？\n`
-      + `   現在：${shell.map((d) => d.id).join('、')}`).toBeLessThanOrEqual(5)
+      + `   現在：${shell.map((d) => d.id).join('、')}`).toBeLessThanOrEqual(2)
     // ⚠️ 搬完一個要**下調這個數字**，不然基線會默許它退回去。
     expect(shell.length,
-      '🟢 搬完了？把上面那個 5 與這一行的數字一起改小（顯式下調）。')
+      '🟢 搬完了？把上面那個 2 與這一行的數字一起改小（顯式下調）。')
       .toBeGreaterThanOrEqual(shell.length)
   })
 

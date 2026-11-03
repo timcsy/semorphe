@@ -5,8 +5,8 @@
  * 這個檔碰得到 DOM（`document`／`localStorage`／面板），所以顯式加回來。
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { VariablePanel } from '../../src/ui/panels/variable-panel'
-import type { VariableEntry } from '../../src/ui/panels/variable-panel'
+import { VariablePanel } from '../../src/panels/variables/view'
+import type { VariableEntry } from '../../src/panels/variables/view'
 
 describe('VariablePanel', () => {
   let container: HTMLElement

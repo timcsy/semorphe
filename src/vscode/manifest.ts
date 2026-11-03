@@ -368,7 +368,7 @@ export function buildManifest(): ExtensionManifest {
       //    拿掉的理由是「變數在那裡是一個**被餵的**薄視圖」（它有自己一份
       //    `reportVariables` schema，餵它的面板關掉之後沒有人清它）。
       //    🟢 而現在住進去的**不是**薄視圖：是**與網頁版逐格相同的那一份**
-      //    主控台（`ui/panels/console-panel.ts`），跑在我們自己的 webview 裡
+      //    主控台（`panels/console/view.ts`），跑在我們自己的 webview 裡
       //    ——它有輸入框，`cin` 有家；它自己 lift 那份文件，不必被餵。
       //
       //    使用者 2026-09-02：「把我們的主控台跟原生的綁在一起，就是**多塞幾個

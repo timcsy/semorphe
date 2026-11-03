@@ -21,50 +21,15 @@
  * > ——第三十八條護欄（共用檔的殼與重複）就是為這件事存在的。**
  *
  * 所以**判別與行為共用，而身分留在各自的膠囊裡**（`template` 那個參數）。
+ *
+ * ⚠️ 產碼那一半（`generateSequenceDeclare`）在第 242 刀搬到 `languages/cpp/generators/sequence-declare.ts`——這一份只剩執行，隨 6c-4 刪。
  */
 import type { ExecutionContext } from '../../../../interpreter/executor-registry'
-import type { NodeGenerator } from '../../../../core/projection/code-generator'
 import type { SemanticNode } from '../../../../core/types'
-import { indent, generateExpression } from '../../../../core/projection/code-generator'
 import { evalInitializer } from '../../../../interpreter/aggregate'
 import { cloneValue } from '../../../../interpreter/clone'
 import { defaultValue } from '../../../../interpreter/types'
 import { containerDefaultFor } from './container-defaults'
-
-/** 產碼：`template<T> name;`／`= {…}`／`= e`／`(n)`／`(n, x)` 五種形式。 */
-export function generateSequenceDeclare(
-  template: string, fallbackName: string,
-): NodeGenerator {
-  return (node, ctx) => {
-    const type = node.properties.type ?? 'int'
-    const name = node.properties.name ?? fallbackName
-    // 初始化列表要一起產回去。**少了它的話，來回轉換會靜靜地把
-    // `vector<int> v = {3,1,4}` 變成 `vector<int> v;`**——那是合法程式，
-    // 只是不是使用者寫的那一段。
-    const values = node.slots.values ?? []
-    if (values.length > 0) {
-      const items = values.map((v) => generateExpression(v, ctx)).join(', ')
-      return `${indent(ctx)}${template}<${type}> ${name} = {${items}};\n`
-    }
-    // 初始值是一整個運算式（`= f()`）——與上面同一個病，同一個處方
-    const source = (node.slots.source ?? [])[0]
-    if (source) {
-      return `${indent(ctx)}${template}<${type}> ${name} = ${generateExpression(source, ctx)};\n`
-    }
-    // `vector<int> v(5)` —— 建構子引數。⚠️ 原本產不回來（lift 也接不住，**兩邊對稱**）。
-    const size = (node.slots.size ?? [])[0]
-    if (size) {
-      // `vector<int> v(5, 7)` —— 第二個引數是「每一格是什麼」。
-      // ⚠️ 少了它的話產出 `v(5)`，那**編得過而且看起來很像**，只是每一格變成 0。
-      const fill = (node.slots.fill ?? [])[0]
-      const args = fill
-        ? `${generateExpression(size, ctx)}, ${generateExpression(fill, ctx)}`
-        : generateExpression(size, ctx)
-      return `${indent(ctx)}${template}<${type}> ${name}(${args});\n`
-    }
-    return `${indent(ctx)}${template}<${type}> ${name};\n`
-  }
-}
 
 /** 執行：把那個序列真的建出來，而**元素型別跟著值走**。 */
 export async function declareSequence(node: SemanticNode, ctx: ExecutionContext): Promise<void> {

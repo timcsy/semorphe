@@ -1,7 +1,7 @@
 import { allVariableDropdownBlocks } from '../core/blocks/variable-dropdown-blocks'
 import { allBoardConstantDropdowns, boardConstantOptions } from '../core/blocks/board-constant-dropdown-blocks'
 import type { BoardPinModel } from '../core/types'
-import { componentsDeclaringVariableType } from '../core/language-executors'
+import { componentsDeclaringVariableType } from '../core/component-abstract'
 import * as Blockly from 'blockly'
 /**
  * 🔴 **這個 import 是一次【註冊】，不是一個用不到的符號。**
@@ -41,7 +41,7 @@ import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-d
 import { componentsDeclaringVariables, componentTraits } from '../core/component/traits'
 import type { DropdownContext } from '../core/blocks/dropdown-sources'
 import { deriveBlockType } from '../core/component/derive-block-type'
-import { abstractComponentOf } from '../core/language-executors'
+import { abstractComponentOf } from '../core/component-abstract'
 // 🪦 `setFieldSafely` 的匯入已於 2026-08-26 刪除——它的最後幾個消費者
 //    （多模式插槽的 `SEL_i` 寫入）隨那套機制一起退場。
 import { isPlainDeclaration } from '../core/component/traits'
