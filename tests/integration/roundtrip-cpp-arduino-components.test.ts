@@ -29,14 +29,13 @@
  * ——**那不在本檔的宣稱範圍內**（第 0 批的報告也是這樣寫的）。
  * 本檔量的是辨識、產生、與 round-trip 的穩定性。
  */
-import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { resetClock, useRealTime } from '../../src/languages/cpp/lang/runtime/arduino-clock'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -47,7 +46,6 @@ beforeAll(async () => {
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
 })
-afterEach(() => { useRealTime(false); resetClock() })
 
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode

@@ -24,12 +24,11 @@
  * pulse_read 的 0、serial_read 的 -1、constrain 的型別、參數驗證）——那些在各自的
  * `spec.test.ts` 裡。重複測會讓「哪一條在守什麼」變模糊。
  */
-import { describe, it, expect, beforeAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { resetClock, useRealTime } from '../../src/languages/cpp/lang/runtime/arduino-clock'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -40,7 +39,6 @@ beforeAll(async () => {
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
 })
-afterEach(() => { useRealTime(false); resetClock() })
 
 const lift = (c: string): SemanticNode =>
   createTestLifter().lift(parser.parse(c)!.rootNode as never) as SemanticNode

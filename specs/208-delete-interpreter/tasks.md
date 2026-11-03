@@ -16,7 +16,7 @@
     虛擬／覆寫方法丟掉尾端 const——四個都要動元件宣告（屬性、積木形態、產生器），**排在段 3（刪）之前做**
 - [X] T003 [P] [US3] `tests/contract/session-contract.test.ts` 加 Ctrl+D（closeInput）當 EOF 的一條；拿掉 js-interpreter 那一格
 - [X] T004 [P] [US1] `src/components/cpp/method_def/spec.test.ts`、`tests/probes/our-verdicts.test.ts`、`tests/unit/interpreter/float-format.test.ts`（搬到 `tests/integration/cout-float-format.test.ts`）改成 Cella 背書
-- [ ] T005 [P] [US1] `src/components/cpp/pin_constant/spec.test.ts` 的 PIN_CONSTANTS 那條改成 Cella 判；`tests/integration/board-registry.test.ts` 的 `hasPin`／`describePins` 搬進測試本身；兩支 Arduino roundtrip 拿掉時鐘重設
+- [X] T005 [P] [US1] `src/components/cpp/pin_constant/spec.test.ts` 的 PIN_CONSTANTS 那條改成 Cella 判；`tests/integration/board-registry.test.ts` 的 `hasPin`／`describePins` 搬進測試本身；兩支 Arduino roundtrip 拿掉時鐘重設
 
 ## Phase 3：宣告不再有 execute（段 2）
 
