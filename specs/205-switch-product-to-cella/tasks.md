@@ -18,5 +18,5 @@
 - [X] T011 D4（友善建議仍開著：診斷層） 運算式當敘述：formalize 不收 `cpp:compare`／`cpp:arithmetic` 當敘述 ⟹ `cout < "x"`、`Cout << …` 被說成「Cella 還不支援」（把學生的錯說成系統的錯）——補 stmt；友善提示是診斷層的事（US4 前要有）
 - [X] T012 D7 例外訊息的 `{text}` 是整包 JSON ⟹ 取出 type 與 message 組成一句話
 - [X] T013 D8 declined 的原因不帶節點 id ⟹ 帶 `nodeId`，US1「指出哪一行還不支援」要它
-- [ ] T014 回報 cella：D3（Python `input(prompt)` 先讀才寫提示）、D5（getline 在乾淨的流上遇 EOF 沒清空字串，[string.io]）、D6（`trace()` 不記 setVariable 的位置）
+- [X] T014 （🟢 2026-11-03 對 0753 重驗後回報：D3 已不在、D5 在 1533 修好、D6 只是告知——我們的介入紀錄由提供者自己記）回報 cella：D3（Python `input(prompt)` 先讀才寫提示）、D5（getline 在乾淨的流上遇 EOF 沒清空字串，[string.io]）、D6（`trace()` 不記 setVariable 的位置）
 - D9（`#include "foo.h"` 該不該照跑）：未決，不阻塞
