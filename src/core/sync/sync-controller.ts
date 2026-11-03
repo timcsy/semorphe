@@ -53,7 +53,7 @@ import { renderToBlocklyState } from '../projection/block-renderer'
 import { shiftMappings } from '../projection/patch-shift'
 import { Lifter } from '../lift/lifter'
 import { SemanticBus } from './semantic-bus'
-import { abstractComponentOf, variableTypeOf } from '../language-executors'
+import { abstractComponentOf, variableTypeOf } from '../component-abstract'
 import { isFunctionDefinition, slotsOf } from '../component/traits'
 // 🔴 「樹裡哪一塊是骨架」由**骨架宣告**回答（2026-08-28）——見 `EntryFunction`
 import { skeletonById, skeletonPresent } from '../skeleton'
