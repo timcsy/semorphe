@@ -162,6 +162,23 @@ export function formalizeFor(f: { tree: SemanticNode; targetId: string; skeleton
   return formalize(withEntryFunctions(f.tree, f.skeletonId as never), { board: cellaBoardOf(f.targetId), lang: isCDialect({ id: f.styleId } as never) ? 'c' : 'cpp' })
 }
 
+/** 翻成 Cella 的程式（給執行工作階段）：成功回 `{ program, branch }`，翻不出回 `{ why, nodeId? }`。 */
+export type FormalOutcome = { program: unknown; branch: CellaBranch } | { why: string; nodeId?: string }
+
+/**
+ * **語意樹 → Cella 的程式 JSON**，給任何要跑學生程式的提供者用（spec 210；cos-mos 階段 3 的提供者由宿主入口注入它）。
+ *
+ * 三方定的分工（`knowledge/history/334` 後記）：程式的正本是語意樹，Cella 的程式 JSON 是它的單向投影，**翻錯是 semorphe 的缺陷**——
+ * 所以翻譯只有這一份；別的提供者不得自己翻（兩份翻譯遲早漂開）。與判決同一條路（補進入點 → formalize）。
+ * 翻不出時：帶出第一個翻不出的節點（畫面要指得到那一行，spec 205 T013）；`why` 是一份契約——說得出「還不支援」
+ * （系統能力不足，不是學生寫錯；狀態列的提示也讀它），由語系查字，只列構造名稱（formalize 的原因是寫給開發者的中文）。
+ */
+export function formalizeForSession(f: NonNullable<SessionOptions['formal']>): FormalOutcome {
+  const r = formalizeFor(f)
+  if (!r.program) return { why: msg('CELLA_UNSUPPORTED_CONSTRUCTS', 'Cella 還不支援：{list}').replace('{list}', [...new Set(r.unknown.map((u) => u.construct))].join(', ')), ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
+  return { program: r.program, branch: branchOf(r.program as never) }
+}
+
 export function createCellaProvider(makeWorker: () => Worker): Provider {
   let worker: Worker | null = null
   let state: Readiness = { state: 'idle' }
@@ -209,15 +226,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
   }
   const send = (m: WorkerRequest): void => ensure().postMessage(m)
 
-  /** 翻成 Cella 的程式；翻不出來回原因。與判決同一條路（補進入點 → formalize）。 */
-  const formalOf = (f: NonNullable<SessionOptions['formal']>): { program: unknown; branch: CellaBranch } | { why: string; nodeId?: string } => {
-    const r = formalizeFor(f)
-    // 帶出第一個翻不出的節點——畫面要指得到是哪一行還不支援（spec 205 T013）
-    // why 是一份契約（說得出「還不支援」——系統能力不足，不是學生寫錯；狀態列的提示也讀它），由語系查字；
-    //    只列構造名稱——formalize 的原因是寫給開發者的中文，切成 English 時會原樣漏出來（2026-11-03 瀏覽器驗收）
-    if (!r.program) return { why: msg('CELLA_UNSUPPORTED_CONSTRUCTS', 'Cella 還不支援：{list}').replace('{list}', [...new Set(r.unknown.map((u) => u.construct))].join(', ')), ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
-    return { program: r.program, branch: branchOf(r.program as never) }
-  }
+  const formalOf = formalizeForSession
 
   const warmUp = (): void => { if (state.state === 'idle') try { send({ id: 0, kind: 'load' }) } catch { /* 狀態已是 unavailable */ } }
 
