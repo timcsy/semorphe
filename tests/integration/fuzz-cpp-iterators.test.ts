@@ -282,26 +282,22 @@ describe('模糊測試：迭代器的邊界', () => {
    * 症狀不是當掉，是**數字偏小**（`pruned=1` 而 g++ 說 2）。
    */
   // 歸類：Cella 判錯——迭代器的後置 `it++` 當引數時被判沒有那個多載（單獨一句 `it++;` 是好的）
-  it('🟡 已知缺陷（修好時這條會紅）：★ `erase(it++)`：集合／對照表／文字三種容器', async () => {
-    await knownCellaGap(/no matching member function for call to 'operator\+\+'/, async () => {
-      await sameAsCompiler(
-        `set<int> s; for (int i = 1; i <= 6; i++) s.insert(i);
-         auto it = s.begin(); int n = 0;
-         while (it != s.end()) { if (*it % 2 == 0) { s.erase(it++); n++; } else ++it; }
-         cout << n << s.size(); for (int x : s) cout << x;`,
-        '🔴 挪過去的位置指到了再下一個——每刪一格就跳過一格')
-    })
+  it('★ `erase(it++)`：集合／對照表／文字三種容器', async () => {
+    await sameAsCompiler(
+      `set<int> s; for (int i = 1; i <= 6; i++) s.insert(i);
+       auto it = s.begin(); int n = 0;
+       while (it != s.end()) { if (*it % 2 == 0) { s.erase(it++); n++; } else ++it; }
+       cout << n << s.size(); for (int x : s) cout << x;`,
+      '🔴 挪過去的位置指到了再下一個——每刪一格就跳過一格')
   }, 60_000)
 
   // 歸類：Cella 判錯——類別迭代器的 `->` 被判「不是指標」
-  it('🟡 已知缺陷（修好時這條會紅）：★ `erase(it++)` 在對照表上，而值也要跟著', async () => {
-    await knownCellaGap(/no matching member function for call to 'operator\+\+'/, async () => {
-      await sameAsCompiler(
-        `map<int,int> m; for (int i = 0; i < 5; i++) m[i] = i * i;
-         auto it = m.begin(); int n = 0;
-         while (it != m.end()) { if (it->second < 9) { m.erase(it++); n++; } else ++it; }
-         cout << n << m.size();`, '')
-    })
+  it('★ `erase(it++)` 在對照表上，而值也要跟著', async () => {
+    await sameAsCompiler(
+      `map<int,int> m; for (int i = 0; i < 5; i++) m[i] = i * i;
+       auto it = m.begin(); int n = 0;
+       while (it != m.end()) { if (it->second < 9) { m.erase(it++); n++; } else ++it; }
+       cout << n << m.size();`, '')
   }, 60_000)
 
   // 歸類：Cella 未支援——vector::erase

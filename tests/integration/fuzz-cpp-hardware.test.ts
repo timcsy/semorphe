@@ -148,7 +148,7 @@ void loop() {
   /** enum 四狀態的防盜警報狀態機，用 switch 轉移並跑一段寫死的觸發腳本　⚠️ 棘手處：轉移條件混用了狀態、輸入和「第幾拍」三個東西，ARMED 用 ticks > 2 而不是自己的計時器，換個起始拍數整條路徑就變了 */
   // 歸類：我們這側——formalize 核心的 type() 不認列舉型別名（Cella 有 `tEnum`）；而後面還有一個 lift 的缺陷：
   //   `const char* nameOf(...)` 的 const 在 lift 時被丟掉（return_type 存成 `char*`），Cella 照 C++11 判 reject「assignment discards the const qualifier」
-  it('🟡 已知缺陷（修好時這條會紅）：★ fuzz_7：enum 四狀態的防盜警報狀態機，用 switch ', async () => {
+  it('★ fuzz_7：enum 四狀態的防盜警報狀態機，用 switch ', async () => {
     const src = `#define BTN_PIN 2
 #define BUZZER 8
 
@@ -209,7 +209,8 @@ void loop() {
     const once = generateCode(lift(src), 'cpp', S)
     expect(generateCode(lift(once), 'cpp', S)).toBe(once)
     // 輸出比對**前綴**——見檔頭
-    await knownCellaGap(/型別「Mode」還沒有對應/, async () => { expect(await run(src)).toContain(`0 IDLE`) })
+    // 列舉名當型別（第 238 刀：tEnum）
+    expect(await run(src)).toContain(`0 IDLE`)
   }, 60000)
 
   /** 把 map() 拿去做負數區間、反向輸出區間、反向輸入區間三種換算並自己夾邊界　⚠️ 棘手處：map() 不夾邊界，超出來源區間就直接外插到 318 或 -63；負數的整數除法往零截斷，所以正向和反向兩條線加起來多半不是 255。預期輸出是用經典截斷版 map() 算的 */
