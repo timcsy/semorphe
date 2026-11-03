@@ -23,7 +23,7 @@ import { writeFileSync } from 'node:fs'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { canExecute } from '../../src/core/diagnostics'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
+import { runCella } from '../helpers/cella-run'
 import { H, COMPETITIVE, APCS_CORPUS, ARDUINO } from './scenario-corpus'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -74,16 +74,17 @@ describe('導出我們的判定（給 clangd 裁判當左半邊）', () => {
     for (const s of samples) {
       const tree = createTestLifter().lift(parser.parse(s.code)!.rootNode as never) as SemanticNode
       const gated = !canExecute(tree).ok
-      let outcome: 'gated' | 'stopped' | 'ran' = 'gated'
+      // spec 208：「跑到那一行才停／跑完」改由 Cella 判（直譯器刪了）——accept ＝ 跑完、reject ＝ 停在那一行、其餘＝判不出來
+      let outcome: 'gated' | 'stopped' | 'ran' | 'unknown' = 'gated'
       if (!gated) {
-        const i = new SemanticInterpreter({ maxSteps: 100000 })
-        try { await i.execute(tree); outcome = 'ran' } catch { outcome = 'stopped' }
+        const v = (await runCella(s.code)).verdict
+        outcome = v === 'accept' ? 'ran' : v === 'reject' ? 'stopped' : 'unknown'
       }
       rows.push({ ...s, weRefuse: gated, outcome })
     }
     // 🔴 2026-10-31：原本每次 `npm test` 都寫 `/tmp/ours.json`（測試的副作用）。改成只有指定了輸出路徑才寫。
     if (process.env.OUR_VERDICTS_OUT) writeFileSync(process.env.OUR_VERDICTS_OUT, JSON.stringify(rows))
     const n = (o: string) => rows.filter((r) => r.outcome === o).length
-    console.log(`\n樣本 ${rows.length}｜執行前擋下 ${n('gated')}｜跑到那一行才停 ${n('stopped')}｜跑完 ${n('ran')}\n`)
+    console.log(`\n樣本 ${rows.length}｜執行前擋下 ${n('gated')}｜跑到那一行才停 ${n('stopped')}｜跑完 ${n('ran')}｜判不出來 ${n('unknown')}\n`)
   }, 180000)
 })
