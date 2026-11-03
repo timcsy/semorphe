@@ -4,15 +4,13 @@
  * 形狀照 DAP（`core/capabilities.ts` 的 `ExecutionSession`）：宿主下指令，每個指令回 `Outcome`。
  * 控制器只靠這一組行為；一個提供者過不了其中一條，控制器在那條路上就會壞。
  *
- * 🔴 **spec 205（重構 6c-3）盤點過**：每一條都對兩個提供者各跑一次（`PROVIDERS` 的迴圈）——**沒有只對 JS 跑的條目**，
- * 所以 Cella 那一格已經涵蓋整份契約（C++ 十條、Python 五條）。JS 那一格刻意留著：JS 提供者還登記在產品裡，
- * 要等 Cella 修好堆疊溢位（本檔最後一條）才拿（spec 205 的 US4）；拿掉的那一刀把 `PROVIDERS` 的第一筆刪掉即可。
+ * 🔴 **spec 208（重構 6c-4）拿掉了 JS 直譯器那一格**——spec 205 盤點過沒有只對 JS 跑的條目，Cella 那一格涵蓋整份契約；
+ * 同一刀補上原本只有直譯器測試守的「讀到 EOF（Ctrl+D ＝ closeInput）」。`PROVIDERS` 留著迴圈的形狀：之後若有第二個提供者（cos-mos 的宿主），加一筆即可。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { jsInterpreterProvider } from '../../src/providers/js-interpreter'
 import { createCellaProvider } from '../../src/providers/cella/provider'
 import { SessionStop, type ExecutionSession, type Provider } from '../../src/core/capabilities'
 import type { SemanticNode } from '../../src/core/types'
@@ -48,7 +46,6 @@ const find = (t: SemanticNode, pred: (n: SemanticNode) => boolean): SemanticNode
 let cellaShared: Promise<Provider> | null = null
 
 const PROVIDERS: { id: string; make: () => Provider | Promise<Provider> }[] = [
-  { id: 'js-interpreter', make: () => jsInterpreterProvider },
   // ⚠️ 同一個行程裡只能有一個模擬的 worker——C++ 與 Python 兩組共用同一個提供者
   { id: 'cella', make: () => (cellaShared ??= cellaInProcess()) },
 ]
@@ -146,6 +143,16 @@ for (const entry of PROVIDERS) {
       expect(await s.supplyInput('21')).toEqual({ kind: 'ended' })
       expect(out()).toBe('42\n')
       expect(s.recordedInputs()).toContainEqual({ kind: 'stdin', value: '21' })
+    })
+
+    // spec 208 T003：Ctrl+D（主控台送 `\x04`）＝ closeInput。原本只有直譯器的 interpreter.test 守這一條，刪掉之前補成工作階段的契約
+    it('★ 讀到 EOF：closeInput 之後 `while (cin >> n)` 結束，照常印出', async () => {
+      const tree = lift('#include <iostream>\nusing namespace std;\nint main() {\n  int n, s = 0;\n  while (cin >> n) s += n;\n  cout << s;\n  return 0;\n}\n')
+      const { s, out } = open(p, tree)
+      expect(await s.launch(tree, { stopOnEntry: false })).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
+      expect(await s.supplyInput('3 4')).toMatchObject({ kind: 'stopped', stop: { reason: 'awaiting-input' } })
+      expect(await s.closeInput()).toEqual({ kind: 'ended' })
+      expect(out()).toBe('7')
     })
 
     it('★ 改變數：停著改值，繼續之後的輸出反映它，而且留下紀錄', async () => {
