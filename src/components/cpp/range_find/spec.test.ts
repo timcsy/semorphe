@@ -143,3 +143,15 @@ describe('膠囊自證：範圍那一族的三顆新元件', () => {
     expect(ids).not.toContain('cpp:range_find')
   })
 })
+
+/**
+ * 🔴 **寫了 `std::` 的就是標準的那一個**（升級 Cella 0.1.202611030133 時在盲測 fuzz_04·07 露出來）：
+ * 程式自己定義了一個 `find(const vector<int>&, int)`，而裡面呼叫 `std::find(v.begin(), v.end(), x)`——formalize 原本送 `f: "find"`，
+ * 限定被丟掉，Cella 去找使用者那一個（兩個參數）→ 判 reject「no matching function」。改送 `std::find`（使用者自己的函式在 lift 時先贏，
+ * 會走到這一顆的一定是標準的那一個，所以一律送限定名）。g++ 印 `2-1`。
+ */
+describe('膠囊自證：std::find 不得被使用者的同名函式搶走', () => {
+  it('★ 同名的使用者函式在旁邊，std::find 仍是標準的那一個', async () => {
+    await expectCellaOut('#include <bits/stdc++.h>\nusing namespace std;\nint find(const vector<int>& v, int x) {\n  auto it = std::find(v.begin(), v.end(), x);\n  return it == v.end() ? -1 : (int)(it - v.begin());\n}\nint main() { vector<int> v = {3, 1, 4}; cout << find(v, 4) << find(v, 9); }\n', '2-1')
+  }, 120_000)
+})

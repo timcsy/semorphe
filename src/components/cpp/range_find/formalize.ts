@@ -2,5 +2,5 @@
 import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
 export function registerFormalize(r: FormalizeRegistrar): void {
-  r.expr('cpp:range_find', (n, f) => f.k('eCall', { n: n.id, f: 'find', args: [f.exprOf(n, 'begin'), f.exprOf(n, 'end'), f.exprOf(n, 'value')] }))
+  r.expr('cpp:range_find', (n, f) => f.k('eCall', { n: n.id, f: 'std::find', args: [f.exprOf(n, 'begin'), f.exprOf(n, 'end'), f.exprOf(n, 'value')] }))
 }

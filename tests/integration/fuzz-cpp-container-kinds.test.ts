@@ -273,7 +273,7 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    */
   // 歸類：我們這側缺——`X<T>::iterator` 這種巢狀型別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：★ erase(第一個位置, 最後一個之後) 刪一整段', async () => {
-    await knownCellaGap(/型別「multiset<int>::iterator」還沒有對應/, async () => {
+    await knownCellaGap(/no matching member function for call to 'erase'/, async () => {
       await sameAsCompiler(
         `multiset<int> ms; for (int i = 1; i <= 6; i++) ms.insert(i);
          multiset<int>::iterator a = ms.lower_bound(2); multiset<int>::iterator b = ms.upper_bound(4);
