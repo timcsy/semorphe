@@ -9,7 +9,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
   g.set('cpp:destructor', (node, ctx) => {
       const className = node.properties.class_name ?? 'MyClass'
       const body = node.slots.body ?? []
-      const header = `${indent(ctx)}~${className}()${openBrace(ctx)}\n`
+      const virt = node.properties.is_virtual === 'true' ? 'virtual ' : ''   // spec 209
+      const header = `${indent(ctx)}${virt}~${className}()${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header
       code += generateBody(body, indented(ctx))

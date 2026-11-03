@@ -73,3 +73,24 @@ int f(const A& a) { return a.v(); }
 int main() { A a; B b; cout << f(a) << f(b); return 0; }`, '12')
   })
 })
+
+describe('③ 虛擬解構子', () => {
+  const SRC = `${H}class A {\npublic:\n    virtual ~A() {\n        cout << "a";\n    }\n};\nint main() {\n    return 0;\n}\n`
+  it('🔴 語意樹記下 virtual；來回一趟一字不差', () => {
+    expect(nodes(lift(SRC), 'cpp:destructor').map((n) => n.properties.is_virtual)).toEqual(['true'])
+    expect(gen(SRC)).toContain('    virtual ~A() {')
+  })
+  it('★ 反向：一般的解構子照舊不是 virtual', () => {
+    const s = `${H}class A {\npublic:\n    ~A() {\n    }\n};\nint main() {\n    return 0;\n}\n`
+    expect(nodes(lift(s), 'cpp:destructor')[0].properties.is_virtual).toBe('false')
+    expect(gen(s)).not.toContain('virtual')
+  })
+  it('★ 積木：virtual 下拉照實', () => {
+    expect(blocks(SRC, 'cpp_destructor')).toEqual([expect.objectContaining({ CLASS_NAME: 'A', IS_VIRTUAL: 'true' })])
+  })
+  it('🔴 執行：經基底的指標 delete，衍生類別的解構子也跑（先衍生、再基底）', async () => {
+    await expectCellaOut(`${H}class A { public: virtual ~A() { cout << "a"; } };
+class B : public A { public: ~B() { cout << "b"; } };
+int main() { A* p = new B(); delete p; return 0; }`, 'ba')
+  })
+})

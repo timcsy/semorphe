@@ -778,7 +778,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     // Destructor: function_definition where declarator is destructor_name
     if (nameNode?.type === 'destructor_name') {
       const body = extractBody(bodyNode, ctx)
-      return buildDestructor({ class_name: className }, { body })
+      return buildDestructor({ class_name: className, is_virtual: isVirtual ? 'true' : 'false' }, { body })   // virtual（spec 209）
     }
 
     // Operator overload: function_definition where declarator is operator_name
