@@ -54,7 +54,7 @@ describe('JS 直譯器提供者：包裝不改語意', () => {
   it('★ 宣告的能力與它真的有的一致——沒有判決、沒有型別查詢', () => {
     expect(jsInterpreterProvider.declares.verdict).toBeUndefined()
     expect(jsInterpreterProvider.declares.types).toBeUndefined()
-    expect(jsInterpreterProvider.declares.session).toEqual({ granularity: 'node', setInput: false, setVariable: true, steps: true })
+    expect(jsInterpreterProvider.declares.session).toEqual({ granularity: 'node', setInput: false, setVariable: true, steps: true, stepping: true, interactiveInput: true })
   })
 
   it('★ 正常結束：輸出與進入次數相同', async () => {

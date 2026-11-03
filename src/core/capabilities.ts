@@ -27,7 +27,7 @@ import type { HardwareState } from './hardware'
 
 /** 四項能力，加上執行與除錯的兩個細節（缺了也要說得出來）。 */
 export type CapabilityName = 'verdict' | 'types' | 'session' | 'steps'
-export type Missing = CapabilityName | 'setInput' | 'setVariable'
+export type Missing = CapabilityName | 'setInput' | 'setVariable' | 'stepping' | 'interactiveInput'
 
 /** 執行與除錯的細節——照盟約第 4 條：粒度、`setInput` 與 `setVariable` 分開、給不給步數。 */
 export interface SessionDetails {
@@ -37,7 +37,17 @@ export interface SessionDetails {
   /** 改變數。 */
   setVariable: boolean
   steps: boolean
+  /**
+   * 能停下來：中斷點、單步（`stepIn`、`stopOnEntry`）、停著時看變數與 `terminate`（spec 210；cos-mos 階段 3 的宿主第一版只能一路跑到底）。
+   * 沒有的話「除錯／單步／動畫」模式會照實說、改成直接跑完。
+   */
+  stepping: boolean
+  /** 能在讀輸入時停下來等（`stopped(awaiting-input)` → `supplyInput`／`closeInput`）。沒有的話輸入要事先給完（批次）。 */
+  interactiveInput: boolean
 }
+
+/** 程式的輸出走哪一條（cos-mos `console.wit` 的 `enum output`，2026-11-04 定案）。判題只看 stdout。 */
+export type OutputStream = 'stdout' | 'stderr'
 
 export interface CapabilityDeclaration {
   session?: SessionDetails
@@ -85,7 +95,8 @@ export type Outcome =
  *    （`tests/probes/cella-dap-cost.test.ts` 量的）。P8：介面換一次，兩個提供者都照新形狀。
  */
 export interface ExecutionSession {
-  onOutput(cb: ((text: string) => void) | null): void
+  /** 程式印的東西，邊跑邊送；`stream` 沒給是 stdout（spec 210） */
+  onOutput(cb: ((text: string, stream?: OutputStream) => void) | null): void
   /** 中斷點：節點 id 的集合（翻譯成行號的是懂「行」的那一端）。執行中也可以改。 */
   setBreakpoints(nodeIds: Iterable<string>): void
   launch(program: SemanticNode, options: { stopOnEntry: boolean }): Promise<Outcome>
@@ -233,6 +244,8 @@ export function provide(cap: CapabilityName): Provided {
     if (!s.steps) missing.push('steps')
     if (!s.setVariable) missing.push('setVariable')
     if (!s.setInput) missing.push('setInput')
+    if (!s.stepping) missing.push('stepping')
+    if (!s.interactiveInput) missing.push('interactiveInput')
   }
   return { provider: p, provenance: p.id, missing }
 }
@@ -260,6 +273,8 @@ export function openSession(options: SessionOptions, program: SemanticNode, skip
     if (!d.steps) missing.push('steps')
     if (!d.setVariable) missing.push('setVariable')
     if (!d.setInput) missing.push('setInput')
+    if (!d.stepping) missing.push('stepping')
+    if (!d.interactiveInput) missing.push('interactiveInput')
     return { session: s, provenance: p.id, declined, missing }
   }
   return { session: null, provenance: null, declined, missing: ['session'] }
