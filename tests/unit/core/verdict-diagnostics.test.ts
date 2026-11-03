@@ -11,8 +11,13 @@ import type { SemanticNode } from '../../../src/core/types'
 const idx = createNode('cpp:array_at', {}, {})
 const call = createNode('cpp:func_call', { name: 'foo' }, {})
 const tree: SemanticNode = createNode('cpp:program', {}, { body: [createNode('cpp:print', {}, { values: [idx, call] })] })
+/** Cella 給的類別（cella 0.1.202611021901 的分法）——假判決照它補 `class`；要測「沒有類別」的那幾條直接寫 `class: undefined` */
+const CLASS_OF = (kind: string): string =>
+  kind === 'hole' ? 'incomplete' : kind === 'unsupported' ? 'unsupported'
+    : kind === 'fuel' || kind === 'ubOrder' || kind === 'unspecified' ? 'indeterminate'
+      : kind === 'abort' || kind === 'uncaught' ? 'termination' : 'error'
 const v = (verdict: Verdict['verdict'], problems: Verdict['problems'] = [], assumes?: Verdict['assumes']): Verdict =>
-  ({ verdict, basis: 'computed', exit: 0, out: '', problems, ...(assumes ? { assumes } : {}) })
+  ({ verdict, basis: 'computed', exit: 0, out: '', problems: problems.map((p) => ('class' in p ? p : { ...p, class: CLASS_OF(p.kind) })), ...(assumes ? { assumes } : {}) })
 const run = (verdict: Verdict | null, opts: { readsInput?: boolean; hasStdin?: boolean } = {}) =>
   toDiagnostics({ verdict, types: null, tree, readsInput: opts.readsInput ?? false, hasStdin: opts.hasStdin ?? false })
 
@@ -188,5 +193,33 @@ describe('串流配錯運算子', () => {
     const { cmp, t } = mk('n', '<', createNode('cpp:var_ref', { name: 'x' }, {}))
     const d = go(t, v('reject', [{ kind: 'reject', at: cmp.id, reason: 'invalid operands to a binary operator' }])).diagnostics
     expect(d[0]).toMatchObject({ rule: 'CELLA_REJECT' })
+  })
+})
+
+/**
+ * 🔴 **類別由 Cella 給，接收端不猜**（三方會議第二輪 Q15、history/330；cella 0.1.202611021901 起判決帶 `class`）。
+ */
+describe('判決的類別（class）', () => {
+  it('🔴 沒有類別的問題：明說「判決沒有說明類別」，不安靜地歸進某一類', () => {
+    const r = run(v('reject', [{ kind: 'reject', class: undefined, at: idx.id, reason: 'x' }]))
+    expect(r.diagnostics).toMatchObject([{ nodeId: idx.id, rule: 'CELLA_UNCLASSIFIED', severity: 'info' }])
+    expect(r.notes.join('\n')).toMatch(/沒有說明類別/)
+  })
+  it('🔴 認不得的類別也要明說', () => {
+    const r = run(v('reject', [{ kind: 'reject', class: 'mystery', at: idx.id, reason: 'x' }]))
+    expect(r.diagnostics[0].rule).toBe('CELLA_UNCLASSIFIED')
+    expect(r.notes.join('\n')).toMatch(/類別「mystery」認不得/)
+  })
+  it('★ 嚴重度跟著類別走，不跟著種類：同一個 ub… 前綴，未定義是 error、未指定是 info', () => {
+    expect(run(v('reject', [{ kind: 'ubBounds', class: 'error', at: idx.id }])).diagnostics[0].severity).toBe('error')
+    expect(run(v('unknown', [{ kind: 'ubOrder', class: 'indeterminate', at: idx.id }])).diagnostics[0].severity).toBe('info')
+  })
+  it('★ 程式怎麼結束（termination）照實顯示：警告、指回那一行', () => {
+    expect(run(v('accept', [{ kind: 'uncaught', class: 'termination', at: idx.id, reason: 'std::runtime_error' }])).diagnostics)
+      .toMatchObject([{ nodeId: idx.id, rule: 'CELLA_TERMINATION', severity: 'warning' }])
+  })
+  it('★ 還沒寫完（incomplete）不顯示；系統還不會（unsupported）不是學生的錯', () => {
+    expect(run(v('unknown', [{ kind: 'hole', class: 'incomplete', at: idx.id }])).diagnostics).toEqual([])
+    expect(run(v('unknown', [{ kind: 'unsupported', class: 'unsupported', at: call.id }])).diagnostics[0].severity).toBe('info')
   })
 })

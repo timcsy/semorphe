@@ -82,12 +82,15 @@ describe('執行：期望值由 g++ 決定', () => {
 })
 
 /**
- * 🔴 **安靜的錯答**（Cella 0.1.202611021533 量到，已回報）：內層大括號只有兩個元素時，Cella 把它當成建構引數 `(n, val)`
- * ——`{{4, 1}, {9, 7}}` 的第一列變成「4 個 1」。標準 [over.match.list]：有 initializer_list 建構子時大括號串列優先選它（g++ 印 `2 4 2`）。
- * 我們送的是忠實的巢狀初始值串列（`iL` 裡面一個 `iL`）。
+ * 巢狀的大括號初始值：內層兩個元素的大括號是兩個元素，不是建構引數 `(n, val)`——標準 [over.match.list]：有 initializer_list 建構子時優先選它（g++ 印 `2 4 2`）。
+ * 🟢 Cella 0.1.202611021533 是**安靜錯答**（印「4 1 9」），0.1.202611021901 修好。
+ * 🔴 而同一刀帶出回歸：內層**空的**大括號 `{}` 判 reject（g++ 印 `305`）——已回報，釘在下面。
  */
-describe('巢狀的大括號初始值（Cella 判錯）', () => {
-  it('🟡 已知缺陷（修好時這條會紅）：內層兩個元素的大括號是兩個元素，不是建構引數', () => knownCellaGap(/期望 "2 4 2"[\s\S]*實際 "4 1 9"/, async () => {
+describe('巢狀的大括號初始值', () => {
+  it('內層兩個元素的大括號是兩個元素，不是建構引數', async () => {
     await expectCellaOut('#include <iostream>\n#include <vector>\nusing namespace std;\nint main() {\n  vector<vector<int>> d2 = {{4, 1}, {9, 7}};\n  cout << d2[0].size() << " " << d2[0][0] << " " << d2[1].size();\n}\n', '2 4 2')
+  }, 120_000)
+  it('🟡 已知缺陷（修好時這條會紅）：內層空的大括號是一個空的 vector', () => knownCellaGap(/variable has an incomplete type/, async () => {
+    await expectCellaOut('#include <iostream>\n#include <vector>\nusing namespace std;\nint main() {\n  vector<vector<int>> d = {{4, 1}, {}, {5}};\n  cout << d.size() << d[1].size() << d[2][0];\n}\n', '305')
   }), 120_000)
 })

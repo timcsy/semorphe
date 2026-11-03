@@ -146,6 +146,9 @@ export async function runCella(code: string, opts: CellaRunOptions = {}): Promis
   }
   const program = opts.inputs ? { ...(fz.program as Record<string, unknown>), inputs: opts.inputs } : fz.program
   const v = checker.verdict(program, opts.stdin ?? '', opts.steps ?? (opts.board ? 50_000_000 : 1_000_000))
+  // 🔴 類別由 Cella 給（history/330）：真的判決裡有一則沒帶 `class`，就是協定沒守住——紅，不讓診斷層替它猜
+  const unclassified = v.problems.filter((p) => !p.class)
+  if (unclassified.length > 0) throw new Error(`判決沒有說明類別（Cella 0.1.202611021901 起每一則都要有 class）：${unclassified.map((p) => p.kind).join('、')}`)
   return {
     verdict: v.verdict,
     out: v.out,
