@@ -89,6 +89,34 @@ test('Cella 還不支援的程式：照實說還不支援、指回那一行—�
   await expect(runner(page)).not.toHaveAttribute('data-provider', 'js-interpreter')
 })
 
+const DIV0 = '#include <iostream>\nusing namespace std;\nint main() {\n    int a = 10;\n    int b = 0;\n    cout << "before" << endl;\n    int c = a / b;\n    cout << c << endl;\n    return 0;\n}\n'
+
+/**
+ * 執行到一半出錯（spec 205 US1 的第三種「接不了」，T007）：除以零——說中文、指到那一行、**出錯前印的東西還在**。
+ * ⚠️ 判決（reject）那一路的輸出是空的；按「執行」走的是工作階段，停下之前的輸出要留著——學生要靠它知道程式走到哪裡。
+ */
+test('執行到一半除以零：中文說明、指到那一行、之前的輸出還在（spec 205 T007）', async ({ page }) => {
+  await freshApp(page)
+  await page.evaluate(() => (window as any).__app.warmUpChecker())
+  await expect(page.locator('#status-check')).toHaveAttribute('data-state', 'ready', { timeout: 180_000 })
+  await feed(page, DIV0, 'cpp:print')
+  await selectMode(page, 'run')
+  await expect(output(page)).toContainText('除以零', { timeout: 60_000 })
+  await expect(output(page), '出錯前印的東西不得被吃掉').toContainText('before')
+  await expect(output(page), '不是英文的例外字串').not.toContainText(/Error:|exception/i)
+  await expect(runner(page)).toHaveAttribute('data-provider', 'cella')
+  // 指到那一行：程式碼面板亮起來的是做除法的那一行
+  const lit = await page.evaluate(() => {
+    const hi = document.querySelector('.monaco-line-highlight') as HTMLElement | null
+    if (!hi) return null
+    const top = hi.getBoundingClientRect().top
+    const near = ([...document.querySelectorAll('.view-line')] as HTMLElement[]).find((l) => Math.abs(l.getBoundingClientRect().top - top) < 4)
+    return (near?.textContent ?? '').replace(/\u00a0/g, ' ')   // Monaco 用不換行空白畫空格
+  })
+  expect(lit, '🔴 出錯了而程式碼沒有亮任何一行——學生不知道錯在哪').not.toBeNull()
+  expect(lit).toContain('a / b')
+})
+
 /**
  * 準備中（spec 205 T003）：沒暖機就按執行——不是「沒有可用的執行器」，是說一次「準備中」、好了自動開跑。
  */
