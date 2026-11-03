@@ -153,8 +153,14 @@ interface Exercise {
  * （`猜數字` 宣告 7 而實際 6；`二分搜` 宣告 `3\n2` 而實際 `3\n4`）。
  */
 async function programOutput(page: import('@playwright/test').Page): Promise<string> {
-  return (await page.locator('.console-output .console-line').allInnerTexts()).join('\n').trim()
+  return (await page.locator('.console-output .console-line').allInnerTexts()).map(noCR).join('\n').trim()
 }
+
+/**
+ * 行尾的 `\r` 拿掉（spec 205 T008，2026-11-03）：Arduino 的 `Serial.println` 印的是 `\r\n`——Cella 照真的板子印（JS 直譯器只印 `\n`），
+ * 而 `\r` 在主控台上看不見：學生看到的與課文寫的是同一行。比的是「學生看到什麼」，不是位元組。
+ */
+const noCR = (line: string): string => line.replace(/\r$/, '')
 
 /**
  * 一行一行的輸出——**不修剪行首的空白**。
@@ -170,7 +176,7 @@ async function programOutput(page: import('@playwright/test').Page): Promise<str
  * > **一個為了寬容而做的修剪，會在它修剪的那一端有意義的時候變成缺陷。**
  */
 async function programLines(page: import('@playwright/test').Page): Promise<string[]> {
-  return await page.locator('.console-output .console-line').allInnerTexts()
+  return (await page.locator('.console-output .console-line').allInnerTexts()).map(noCR)
 }
 
 /**

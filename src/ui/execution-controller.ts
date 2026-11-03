@@ -6,6 +6,7 @@ import { DebugToolbar } from './debug-toolbar'
 import type { StepInfo, ExecutionSpeed } from '../core/execution'
 import { showQuickPick } from './toolbar/quick-pick'
 import { msg } from '../core/messages'
+import { nodesInEnclosingScope } from '../core/execution-scope'
 import { showToast } from './toolbar/toast'
 import type { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
@@ -561,7 +562,8 @@ export class ExecutionController {
   private handleAccelerate(): void {
     if (!this.session || !this.currentNodeId) return
     const level = this.debugToolbar.getAccelerateLevel() ?? 1
-    this.skipIds = new Set(level <= 1 ? [this.currentNodeId] : this.panels.blocklyPanel?.nodesInAncestorScope(this.currentNodeId, level) ?? [this.currentNodeId])
+    // 從語意樹算（`core/execution-scope.ts`）——Cella 會停在沒有自己積木的節點上，用積木的對照表算會漏掉它們；第 1 層＝包住它的最內層
+    this.skipIds = new Set(nodesInEnclosingScope(this.panels.syncController?.getCurrentTree(), this.currentNodeId, level))
     if (this.commandResolve) this.command('step')
   }
 
