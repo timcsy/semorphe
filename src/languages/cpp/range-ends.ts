@@ -8,7 +8,7 @@
  * ⚠️ **這裡沒有任何元件身分**——它組裝的是「兩個接點」，不是「誰的接點」。
  *    要組裝別顆元件的節點時得在那顆膠囊裡放 `build.ts`（就近性護欄兩個方向都報）。
  */
-import type { SemanticNode } from '../../../../core/types'
+import type { SemanticNode } from '../../core/types'
 
 interface AstLike { }
 

@@ -1,7 +1,7 @@
 /** `cpp:range_sort` 的 **generate** 路 */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
-import { rangeEndsCode } from '../../../languages/cpp/lang/runtime/range-lift'
+import { rangeEndsCode } from '../../../languages/cpp/range-ends'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:range_sort', (node, ctx) => {

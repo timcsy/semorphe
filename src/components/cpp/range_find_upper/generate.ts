@@ -1,6 +1,6 @@
 /** `cpp:range_find_upper` 的 **generate** 路 */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { rangeEndsCode, slotCode } from '../../../languages/cpp/lang/runtime/range-lift'
+import { rangeEndsCode, slotCode } from '../../../languages/cpp/range-ends'
 import { generateExpression } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {

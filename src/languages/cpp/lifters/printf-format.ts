@@ -4,10 +4,10 @@
  * 原本住在 `core/runtime/printf.ts`，而那個檔的 `registerCstdioLifters`
  * 在兩顆元件搬進膠囊之後空了。
  */
-import type { AstNode, LiftContext } from '../../../../core/lift/types'
-import { buildPrintFormatted } from '../../../../components/cpp/print_formatted/lift'
-import { buildInputFormatted } from '../../../../components/cpp/input_formatted/lift'
-import { buildVarRef } from '../../../../components/cpp/var_ref/lift'
+import type { AstNode, LiftContext } from '../../../core/lift/types'
+import { buildPrintFormatted } from '../../../components/cpp/print_formatted/lift'
+import { buildInputFormatted } from '../../../components/cpp/input_formatted/lift'
+import { buildVarRef } from '../../../components/cpp/var_ref/lift'
 
 
 
