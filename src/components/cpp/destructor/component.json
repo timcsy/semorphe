@@ -6,6 +6,12 @@
       "name": "class_name",
       "kind": "literal",
       "default": "MyClass"
+    },
+    {
+      "name": "is_virtual",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "**`virtual ~A()`**：經基底的指標 delete 衍生物件時，只有虛擬解構子會先跑衍生類別的那一個；不是虛擬的話那是未定義行為。原本沒有這一格，來回一趟丟掉 virtual（spec 209，spec 208 T002 量到）。"
     }
   ],
   "slots": {

@@ -1,5 +1,5 @@
 /**
- * **`cout` 的預設浮點格式，逐格對上 g++**（2026-09-18）。
+ * **`cout` 的預設浮點格式，逐格對上 g++**（2026-09-18；spec 208 起由 Cella 背書）。
  *
  * ## 🔴 它從哪來
  *
@@ -31,17 +31,24 @@
  * 語料量到的那一支（`AP325/7/7_5_TLE.cpp`）只是第一個被看見的。
  *
  * ⚠️ **每一個期望值都是問 g++ 來的**，不是推的——第四個錯就是推出來的那一版。
+ *
+ * 🟢 **spec 208（重構 6c-4）**：原本量的是直譯器自己的格式化函式（`valueToString`、`toFixedHalfEven`…）。直譯器刪掉之後，
+ * 學生看到的數字由 Cella 印——同一張表（每一格都是問 g++ 來的）改成每一格寫成一支 `cout` 程式交給 Cella。
  */
-import { describe, it, expect } from 'vitest'
-import { valueToString } from '../../../src/interpreter/types'
-import { toFixedHalfEven, toExponentialHalfEven, toSignificant } from '../../../src/interpreter/decimal'
+import { describe, it } from 'vitest'
+import { expectCellaOut } from '../helpers/cella-run'
+
+/** JS 的數字寫成 C++ 的 double 字面量（整數形狀補 `.0`，否則 1.5e20 會是溢位的整數字面量） */
+const lit = (n: number): string => { const t = String(n); return /[.e]/.test(t) ? t : `${t}.0` }
+const prog = (stmt: string): string => `#include <iostream>\n#include <iomanip>\nusing namespace std;\nint main() { ${stmt} return 0; }\n`
+
 describe('`cout` 的預設浮點格式：逐格對上 g++', () => {
   it.each([
     [1e9, '1e+09'], [123456789.0, '1.23457e+08'], [0.000012345, '1.2345e-05'],
     [1/3, '0.333333'], [1.0, '1'], [2.5, '2.5'], [1e-7, '1e-07'], [1.5e20, '1.5e+20'],
     [-1e9, '-1e+09'], [1e100, '1e+100'], [999999.5, '1e+06'], [0.0001, '0.0001'], [0.00001, '1e-05'], [100000.0, '100000'], [1000000.0, '1e+06'], [3.14159265, '3.14159'], [0.1, '0.1'], [1e6+0.5, '1e+06'], [999999.4, '999999'], [1234567.0, '1.23457e+06'], [99999.99, '100000'],
-  ])('%s → %s', (n, want) => {
-    expect(valueToString({ type: 'double', value: n } as never)).toBe(want)
+  ])('%s → %s', async (n, want) => {
+    await expectCellaOut(prog(`cout << ${lit(n)};`), want)
   })
 })
 
@@ -60,20 +67,20 @@ describe('四捨五入的收尾：逢五取偶（問過 g++）', () => {
     [2.5, 0, '2'], [3.5, 0, '4'], [0.5, 0, '0'], [1.5, 0, '2'],
     [0.25, 1, '0.2'], [0.35, 1, '0.3'], [2.25, 1, '2.2'], [2.75, 1, '2.8'],
     [3.14159, 2, '3.14'], [-2.5, 0, '-2'], [1.005, 2, '1.00'],
-  ])('固定小數 %s → %s 位 = %s', (n, d, want) => {
-    expect(toFixedHalfEven(n, d)).toBe(want)
+  ])('固定小數 %s → %s 位 = %s', async (n, d, want) => {
+    await expectCellaOut(prog(`cout << fixed << setprecision(${d}) << ${lit(n)};`), want)
   })
 
   it.each([
     [1234.5, 3, '1.234e+03'], [1e9, 5, '1.00000e+09'], [0.000012345, 4, '1.2345e-05'],
-  ])('科學記號 %s → %s 位 = %s', (n, p, want) => {
-    expect(toExponentialHalfEven(n, p)).toBe(want)
+  ])('科學記號 %s → %s 位 = %s', async (n, p, want) => {
+    await expectCellaOut(prog(`cout << scientific << setprecision(${p}) << ${lit(n)};`), want)
   })
 
   it.each([
     [1.25, 2, '1.2'], [1.35, 2, '1.4'], [3.14159, 3, '3.14'],
     [123456.0, 3, '1.23e+05'], [1.0000005, 6, '1'],
-  ])('有效數字 %s → %s 位 = %s', (n, p, want) => {
-    expect(toSignificant(n, p)).toBe(want)
+  ])('有效數字 %s → %s 位 = %s', async (n, p, want) => {
+    await expectCellaOut(prog(`cout << setprecision(${p}) << ${lit(n)};`), want)
   })
 })

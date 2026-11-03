@@ -4,6 +4,7 @@ import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 import { liftClassMember } from '../../../languages/cpp/lang/lifters/strategies'
+import { parseBaseClause } from '../../../languages/cpp/base-clause'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   // struct_specifier: struct Name { members };
@@ -11,6 +12,11 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       const nameNode = node.childForFieldName('name')
       const structName = nameNode?.text ?? 'MyStruct'
       const bodyNode = node.childForFieldName('body')
+      // 基底（spec 209）：多重／virtual 繼承這顆裝不下 ⟹ 讓開，照實降級（不留半套）
+      const base = parseBaseClause(node)
+      if (base === 'unsupported') return null
+      // `class A final`（spec 209）：沒有元件記得住 final ⟹ 讓開，照實降級
+      if (node.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'final')) return null
       const members: SemanticNode[] = []
 
       if (bodyNode) {
@@ -21,6 +27,8 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
         }
       }
 
-      return createNode('cpp:struct_declare', { name: structName }, { members })
+      const props: Record<string, string> = { name: structName }
+      if (base) { props.base_class = base.base; props.base_access = base.access }
+      return createNode('cpp:struct_declare', props, { members })
     })
 }

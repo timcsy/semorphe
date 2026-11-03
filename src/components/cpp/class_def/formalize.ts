@@ -7,6 +7,7 @@
  * - 欄位（有 `type`、不是自己會翻成成員的那幾顆）→ `mbField`，預設初值（`int v = 7;`）放 `init`。
  * - 其餘成員（成員函式、建構子、解構子、靜態成員、運算子多載）由那顆元件自己翻（`f.member`），這裡只蓋上那一節的存取權。
  */
+import { effectiveAccess } from '../../../languages/cpp/base-clause'
 import type { CellaJson, FormalizeContext, FormalizeRegistrar } from '../../../core/formalize-contract'
 import type { SemanticNode } from '../../../core/types'
 
@@ -41,7 +42,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
       }
     }
     const baseName = String(n.properties?.base_class ?? '').trim()
-    const baseAcc = ({ public: 'acPublic', protected: 'acProtected', private: 'acPrivate' } as Record<string, string>)[String(n.properties?.base_access ?? 'public')] ?? 'acPublic'
+    const baseAcc = ({ public: 'acPublic', protected: 'acProtected', private: 'acPrivate' } as const)[effectiveAccess(String(n.properties?.base_access ?? 'public'), true)]   // implicit ＝ class 的 private（spec 209）
     const bases = baseName ? [f.k('base', { acc: f.k(baseAcc), virt: false, name: baseName })] : []
     return [f.k('iClass', { d: f.k('cdef', { n: n.id, name: String(n.properties?.name ?? ''), isClass: true, bases, members }) })]
   })

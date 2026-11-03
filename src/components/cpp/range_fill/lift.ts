@@ -7,7 +7,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { registerCallBranch } from '../../../core/component/lift-branches'
 import { createNode } from '../../../core/semantic-tree'
-import { liftRangeEnds } from '../../../languages/cpp/lang/runtime/range-lift'
+import { liftRangeEnds } from '../../../languages/cpp/range-ends'
 
 export function registerLift(): void {
   registerCallBranch('cpp/range_fill', (funcName, argChildren, ctx, _argsNode): SemanticNode | null => {

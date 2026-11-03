@@ -15,7 +15,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { generateCode } from '../../../core/projection/code-generator'
-import { SemanticInterpreter } from '../../../interpreter/interpreter'
+import { runCella, describeCellaResult } from '../../../../tests/helpers/cella-run'
 import { formalize } from '../../../providers/cella/formalize'
 import { renderToBlocklyState } from '../../../core/projection/block-renderer'
 import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
@@ -46,10 +46,11 @@ function all(n: SemanticNode, id: string, out: SemanticNode[] = []): SemanticNod
   return out
 }
 
+/** 由 Cella 跑（spec 208：直譯器刪掉之後的判準）——判不是 accept 就把原因當訊息丟出來，不回空字串 */
 async function run(code: string): Promise<string> {
-  const i = new SemanticInterpreter({ maxSteps: 100000 })
-  await i.execute(lift(code))
-  return i.getOutput().join('')
+  const r = await runCella(code)
+  if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+  return r.out
 }
 
 const head = '#include <iostream>\nusing namespace std;\n'
@@ -77,7 +78,7 @@ describe('cpp:method_def', () => {
     expect(gen(out)).toBe(out)
   })
 
-  it('★ execute：JS 直譯器照舊執行（類別執行器依 memberRole 收它）', async () => {
+  it('★ 執行：Cella 跑出來的與 C++ 一樣（const 方法在 const 參照上呼叫得到）', async () => {
     expect(await run(SRC)).toBe('9')
   })
 

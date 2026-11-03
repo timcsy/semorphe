@@ -1,5 +1,14 @@
 /** `cpp:struct_declare` 的 **formalize** 路——從 `providers/cella/formalize/` 的分派原封搬過來（第 389 刀）。契約見 `core/formalize-contract.ts`。 */
+import { effectiveAccess } from '../../../languages/cpp/base-clause'
 import type { CellaJson, FormalizeRegistrar } from '../../../core/formalize-contract'
+
+/** 單一基底（spec 209）；implicit ＝ struct 的 public */
+function basesOf(n: Parameters<Parameters<FormalizeRegistrar['item']>[1]>[0], f: Parameters<Parameters<FormalizeRegistrar['item']>[1]>[1], isClass: boolean): CellaJson[] {
+  const name = String(n.properties?.base_class ?? '').trim()
+  if (!name) return []
+  const acc = ({ public: 'acPublic', protected: 'acProtected', private: 'acPrivate' } as const)[effectiveAccess(String(n.properties?.base_access ?? 'implicit'), isClass)]
+  return [f.k('base', { acc: f.k(acc), virt: false, name })]
+}
 
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:struct_declare', (n, f) => {
@@ -22,7 +31,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
       const cFields = fields.map((x) => f.k('fld', { name: x.name, t: x.t }))
       return [f.k('iStruct', { d: f.k('sdef', { n: n.id, name: String(n.properties?.name ?? ''), fields: cFields }) })]
     }
-    return [f.k('iClass', { d: f.k('cdef', { n: n.id, name: String(n.properties?.name ?? ''), isClass: false, bases: [], members: [...fields, ...methods] }) })]
+    return [f.k('iClass', { d: f.k('cdef', { n: n.id, name: String(n.properties?.name ?? ''), isClass: false, bases: basesOf(n, f, false), members: [...fields, ...methods] }) })]
   })
   // 定義了一個型別名：不帶關鍵字的 `Node*` 要先認得 `Node`
   r.definesType('cpp:struct_declare', (n) => String(n.properties?.name ?? ''))

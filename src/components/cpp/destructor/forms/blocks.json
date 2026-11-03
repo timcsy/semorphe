@@ -15,6 +15,20 @@
           "text": "MyClass"
         },
         {
+          "type": "field_dropdown",
+          "name": "IS_VIRTUAL",
+          "options": [
+            [
+              "%{BKY_C_DESTRUCTOR_VIRTUAL_NO}",
+              "false"
+            ],
+            [
+              "%{BKY_C_DESTRUCTOR_VIRTUAL_YES}",
+              "true"
+            ]
+          ]
+        },
+        {
           "type": "input_statement",
           "name": "BODY",
           "check": "Statement"
@@ -28,7 +42,8 @@
     },
     "renderMapping": {
       "fields": {
-        "CLASS_NAME": "class_name"
+        "CLASS_NAME": "class_name",
+        "IS_VIRTUAL": "is_virtual"
       },
       "statementInputs": {
         "BODY": "body"

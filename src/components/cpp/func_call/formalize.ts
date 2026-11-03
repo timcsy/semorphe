@@ -18,6 +18,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
       return f.k('eTemp', { n: n.id, t: full, args: (n.slots?.args ?? []).map((c) => f.expr(c)) })
     }
     const args = (n.slots?.args ?? []).map((c) => f.expr(c))
+    // 成員函式裡用裸名字呼叫同一個類別的方法：隱含的 this（spec 208；原本送 eCall，被判「呼叫未宣告的函式」）
+    //   ⚠️ 名字指到區域變數（lambda）的情況在下面先由 declOf 接住——那個比類別的方法更近
+    if (!f.declOf(n.id) && f.isOwnMethod(n.id, name)) return f.k('eMCall', { n: n.id, obj: f.k('eThis', { n: `${n.id}/this` }), arrow: true, f: name, args })
     // 名字指到一個變數（`auto add = [&](int x){…}; add(5)`）：呼叫的是那個值，不是一個叫 add 的函式——eCallE（cpp_to_tree.py 同形；第 206 刀）
     const x = f.declOf(n.id)
     if (x) return f.k('eCallE', { n: n.id, callee: f.k('eVar', { n: `${n.id}/callee`, x }), args })

@@ -27,7 +27,15 @@ export function registerStatementLifters(lifter: Lifter): void {
       const fromNode = extractForFrom(initNode, ctx)
       const toNode = extractForTo(condNode, ctx)
       const inclusive = extractForInclusive(condNode)
-      const body = extractBody(bodyNode, ctx)
+      // 🔴 迴圈變數要在 lift 本體【之前】記進查找表，而且只在本體裡（spec 208：`for (...) { T t(k); }` 被當成前置宣告）
+      ctx.data.pushScope()
+      let body: import('../../../../core/types').SemanticNode[]
+      try {
+        ctx.data.declare(varName, initNode?.childForFieldName('type')?.text ?? 'int')
+        body = extractBody(bodyNode, ctx)
+      } finally {
+        ctx.data.popScope()
+      }
 
       return buildLoopCount(varName, inclusive, {
         from: fromNode ? [fromNode] : [],

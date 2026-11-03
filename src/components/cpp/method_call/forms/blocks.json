@@ -15,6 +15,20 @@
           "check": "Expression"
         },
         {
+          "type": "field_dropdown",
+          "name": "ARROW",
+          "options": [
+            [
+              "%{BKY_CPP_METHOD_CALL_DOT}",
+              "false"
+            ],
+            [
+              "%{BKY_CPP_METHOD_CALL_ARROW}",
+              "true"
+            ]
+          ]
+        },
+        {
           "type": "field_input",
           "name": "METHOD",
           "text": "push_back"
@@ -60,7 +74,8 @@
     },
     "renderMapping": {
       "fields": {
-        "METHOD": "method"
+        "METHOD": "method",
+        "ARROW": "arrow"
       },
       "inputs": {
         "OBJ": "obj"
@@ -90,6 +105,20 @@
           "type": "input_value",
           "name": "OBJ",
           "check": "Expression"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "ARROW",
+          "options": [
+            [
+              "%{BKY_CPP_METHOD_CALL_EXPR_DOT}",
+              "false"
+            ],
+            [
+              "%{BKY_CPP_METHOD_CALL_EXPR_ARROW}",
+              "true"
+            ]
+          ]
         },
         {
           "type": "field_input",
@@ -141,7 +170,8 @@
     "toolboxCategory": "functions",
     "renderMapping": {
       "fields": {
-        "METHOD": "method"
+        "METHOD": "method",
+        "ARROW": "arrow"
       },
       "inputs": {
         "OBJ": "obj"

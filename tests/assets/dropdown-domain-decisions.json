@@ -226,6 +226,36 @@
       "field": "field_dropdown",
       "reason": "運算子是語言定義的封閉集合——清單外的值本來就不該存在"
     },
+    "cpp_destructor.IS_VIRTUAL": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "解構子是不是虛擬的只有兩種（spec 209）"
+    },
+    "cpp_method_call.ARROW": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "經過物件（.）或經過指標（->）只有兩種——C++ 的成員存取運算子（spec 209）"
+    },
+    "cpp_method_call_expression.ARROW": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "同 cpp_method_call.ARROW（運算式形態）"
+    },
+    "cpp_method_override.IS_CONST": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "尾端 const 有或沒有兩種（spec 209；與一般方法那顆同一條）"
+    },
+    "cpp_method_virtual.IS_CONST": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "尾端 const 有或沒有兩種（spec 209；與一般方法那顆同一條）"
+    },
+    "cpp_struct_declare.BASE_ACCESS": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "繼承的存取只有不寫／public／protected／private 四種——語言定義的封閉集合（spec 209；同 class_def）"
+    },
     "cpp_method_def.IS_CONST": {
       "decision": "closed",
       "field": "field_dropdown",

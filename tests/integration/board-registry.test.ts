@@ -19,7 +19,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import type { BoardPinModel } from '../../src/core/types'
-import { hasPin, describePins } from '../../src/languages/cpp/lang/runtime/arduino-pins'
+// spec 208：這兩個原本住在直譯器的 runtime（執行時檢查腳位用），隨直譯器刪掉；這裡只拿它們讀板子資料，就地寫一份
+const hasPin = (board: BoardPinModel, pin: number): boolean => board.pins.some((r) => pin >= r.from && pin <= r.to)
+const describePins = (board: BoardPinModel): string => board.pins.map((r) => (r.from === r.to ? String(r.from) : `${r.from}–${r.to}`)).join(', ')
 
 const modules = import.meta.glob('../../src/languages/cpp/targets/*.json', { eager: true }) as Record<
   string,

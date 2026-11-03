@@ -19,8 +19,6 @@ import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
-// ⚠️ 只為拿 `PIN_CONSTANTS` 這張表（最後一條）；6c-4 刪 execute.ts 時這張表要搬家
-import { PIN_CONSTANTS } from './execute'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 
 let parser: Parser
@@ -125,9 +123,8 @@ describe('膠囊自證：cpp:pin_constant', () => {
    * ⚠️ 本輪**不擋這個誤用**（擋它要知道引數的角色，那是診斷系統的事），
    * 而**把這個事實釘下來**，免得未來有人「順手」把數值改成不重疊的。
    */
-  it('★ LOW/INPUT 都是 0、HIGH/OUTPUT 都是 1——那是 Arduino 的定義，不是筆誤', () => {
-    expect(PIN_CONSTANTS.LOW).toBe(PIN_CONSTANTS.INPUT)
-    expect(PIN_CONSTANTS.HIGH).toBe(PIN_CONSTANTS.OUTPUT)
-    expect(PIN_CONSTANTS.INPUT_PULLUP).toBe(2)
+  // spec 208：原本讀直譯器的常數表；直譯器刪掉之後，問板子本身（Cella 的 Uno 核心）印出來的值
+  it('★ LOW/INPUT 都是 0、HIGH/OUTPUT 都是 1——那是 Arduino 的定義，不是筆誤', async () => {
+    await expectCellaOut('void setup() {\n  Serial.begin(9600);\n  Serial.print(LOW); Serial.print(INPUT); Serial.print(HIGH); Serial.print(OUTPUT); Serial.print(INPUT_PULLUP);\n}\nvoid loop() {}\n', '00112', { board: 'uno' })
   })
 })

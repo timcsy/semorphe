@@ -13,7 +13,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       const paramChildren = node.slots.params ?? []
       const body = node.slots.body ?? []
       const paramStr = formatParams(paramChildren)
-      const header = `${indent(ctx)}${returnType} ${name}(${paramStr}) override${openBrace(ctx)}\n`
+      const cq = node.properties.is_const === 'true' ? ' const' : ''   // 尾端 const 在 override 之前（spec 209）
+      const header = `${indent(ctx)}${returnType} ${name}(${paramStr})${cq} override${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header
       code += generateBody(body, indented(ctx))

@@ -23,6 +23,20 @@
           "type": "field_input",
           "name": "PARAMS",
           "text": ""
+        },
+        {
+          "type": "field_dropdown",
+          "name": "IS_CONST",
+          "options": [
+            [
+              "%{BKY_C_OVERRIDE_METHOD_CONST_NO}",
+              "false"
+            ],
+            [
+              "%{BKY_C_OVERRIDE_METHOD_CONST_YES}",
+              "true"
+            ]
+          ]
         }
       ],
       "message1": "%1",
@@ -42,7 +56,8 @@
     "renderMapping": {
       "fields": {
         "NAME": "name",
-        "RETURN_TYPE": "return_type"
+        "RETURN_TYPE": "return_type",
+        "IS_CONST": "is_const"
       },
       "statementInputs": {
         "BODY": "body"

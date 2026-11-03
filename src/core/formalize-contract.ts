@@ -110,6 +110,11 @@ export interface FormalizeContext {
   isMemberField(declId: string): boolean
   /** 程式自己定義的函式名（名字當值用時是 `eFunc`——spec 201） */
   isFunctionName(name: string): boolean
+  /**
+   * 這一顆（呼叫）在某個類別的成員裡，而那個類別有叫這個名字的方法——裸名字的呼叫是隱含的 this：`eMCall { obj: eThis, arrow: true }`
+   *（cella 2026-11-03 給的形狀；spec 208）。C++ 先在類別的範圍找名字，所以同名的頂層函式讓位。
+   */
+  isOwnMethod(nodeId: string, name: string): boolean
   /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
   unescapeC(s: string): string
   /** C 的二元運算子符號 → Cella 的運算子建構子。 */

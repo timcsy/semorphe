@@ -748,6 +748,14 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     const nameNode = declNode?.childForFieldName('declarator')
     const isVirtual = node.children.some(c => !c.isNamed && c.text === 'virtual')
 
+    // 🔴 `final`（spec 209）：Cella 還沒有它的形狀（cella 2026-11-03），沒有任何一顆元件記得住它——原樣保留、照實降級。
+    //    原本安靜地丟掉：`void f() final` 來回一趟變 `void f()`，覆寫 final 方法的錯程式會被接受。
+    if (declNode?.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'final')) {
+      const raw = createNode('raw_code', {})
+      raw.metadata = { rawCode: node.text, degradationCause: 'unsupported' }
+      return raw
+    }
+
     // Constructor: function_definition where declarator name matches class name
     if (nameNode?.type === 'identifier' && nameNode.text === className) {
       const paramList = declNode?.childForFieldName('parameters') ?? null
@@ -778,7 +786,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     // Destructor: function_definition where declarator is destructor_name
     if (nameNode?.type === 'destructor_name') {
       const body = extractBody(bodyNode, ctx)
-      return buildDestructor({ class_name: className }, { body })
+      return buildDestructor({ class_name: className, is_virtual: isVirtual ? 'true' : 'false' }, { body })   // virtual（spec 209）
     }
 
     // Operator overload: function_definition where declarator is operator_name
@@ -812,7 +820,9 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return buildMethodOverride({ return_type: returnType, name: methodName }, { params, body })
+      // 尾端 const（spec 209）：與運算子多載那支同一個讀法
+      const isConst = (declNode?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
+      return buildMethodOverride({ return_type: returnType, name: methodName, is_const: isConst ? 'true' : 'false' }, { params, body })
     }
 
     // Virtual method with body
@@ -822,7 +832,9 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const paramList = declNode?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
-      return buildMethodVirtual({ return_type: returnType, name: methodName }, { params, body })
+      // 尾端 const（spec 209）：與運算子多載那支同一個讀法
+      const isConst = (declNode?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
+      return buildMethodVirtual({ return_type: returnType, name: methodName, is_const: isConst ? 'true' : 'false' }, { params, body })
     }
 
     // 一般的成員函式 → 類別成員函式那顆（第 218 刀；使用者 2026-11-02 定另立元件，history/326）。
@@ -1970,7 +1982,15 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     const from = fromNode ? ctx.lift(fromNode) : null
     const to = toNode ? ctx.lift(toNode) : null
-    const body = extractBody(bodyNode, ctx)
+    // 🔴 迴圈變數要在 lift 本體【之前】記進查找表，而且只在本體裡（spec 208：`for (...) { T t(k); }` 被當成前置宣告）
+    ctx.data.pushScope()
+    let body: SemanticNode[]
+    try {
+      ctx.data.declare(varName, initNode.childForFieldName('type')?.text ?? 'int')
+      body = extractBody(bodyNode, ctx)
+    } finally {
+      ctx.data.popScope()
+    }
 
     return buildLoopCount(varName, inclusive, {
       from: from ? [from] : [],
