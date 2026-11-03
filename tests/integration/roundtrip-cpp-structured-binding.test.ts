@@ -247,12 +247,12 @@ describe('結構化繫結與走訪的對象：五個面向', () => {
          for (auto [k, pr] : m) { auto [lo, hi] = pr; cout << k << lo << hi; }`],
     ]
     /**
-     * 已知缺陷（Cella 那側）：賦值右邊的大括號串列（`m[1] = {7, 8};`，C++11 起合法——`operator=` 收 `pair` 的大括號初始化）。
-     * 判決原文：`unsupported：a braced list where the type it initializes is not known`。
-     * 最小重現：`pair<int,int> p; p = {7, 8}; cout << p.first;` 應印 `7`（`m[1] = make_pair(7, 8)` 則 accept）。
+     * 已知缺陷（Cella 那側）：結構化繫結的範圍 for（`sForBind`）本體裡再寫一個結構化繫結，被判「a structured binding outside a block」（unsupported）。
+     * 我們送的本體是 `sBlock`（與一般的範圍 for 同形）；一般範圍 for、計數迴圈裡的同一行都 accept。2026-11-04 回報。
+     * ⚠️ 之前（0.1.202611030753）擋在前面的是賦值右邊的大括號串列（`m[1] = {7, 8};`），cella-lang 0.1.202611031229 修好了——這一個才看得見。
      */
     const GAPS: Record<string, RegExp> = {
-      '與既有的走訪並列': /a braced list where the type it initializes is not known/,
+      '與既有的走訪並列': /a structured binding outside a block/,
     }
     const run5 = async (src: string): Promise<void> => {
       const ref = runCppDetailed(src)

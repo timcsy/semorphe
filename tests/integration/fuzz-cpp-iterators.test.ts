@@ -1064,9 +1064,10 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    *    ⚠️ 觸發條件刻意不寫刀號（一根寫著號碼的釘子，在下一刀因為別的理由
    *    插隊時就永遠等不到它的號碼）。判準是：**下一次有人碰位置那一族。**
    */
-  // 歸類：Cella 未支援 `std::distance`（0.1.202611030753 起；之前那一版在它前面誤判「expression is not assignable」，已修）
+  // 歸類：Cella 判錯——`next(s.rbegin())`（set 的反向迭代器）誤判 reject「invalid operands to a binary operator」（2026-11-04 回報）。
+  //   `distance` 在 cella-lang 0.1.202611031229／cpp 0.1.202611031448 補上之後才看得見；兩版都一樣，不是升級帶來的。
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_01 · 02 · 05 · 09 · 10（**5/10**） 卡在 `distance`', async () => {
-    await knownCellaGap(/std::distance is not supported yet/, async () => {
+    await knownCellaGap(/invalid operands to a binary operator/, async () => {
       await whole(P01_NAIL, '')
     })
   }, 180_000)
@@ -1101,9 +1102,9 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    *    ——所以它的優先序低於 `distance`。
    * 🔴 **何時該修**：有序容器的區段那一刀。
    */
-  // 歸類：equal_range 在 Cella 0.1.202611030753 補上了；擋在後面的是同一支程式裡的 `std::distance`（Cella 未支援）
+  // 歸類：equal_range（0753）、distance（1448）都補上了；擋在後面的是 `next(ms.rbegin())` 的誤判 reject（同上，已回報）
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_06 卡在 `container_equal_range`', async () => {
-    await knownCellaGap(/std::distance is not supported yet/, async () => {
+    await knownCellaGap(/invalid operands to a binary operator/, async () => {
       await whole(P03_NAIL, '')
     })
   }, 180_000)
