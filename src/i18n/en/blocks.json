@@ -288,6 +288,8 @@
   "DIAG_CELLA_UNSPECIFIED_CODE": "Unspecified behavior ({clause})",
   "DIAG_CELLA_OTHER_BLOCK": "The checker found something here: {reason}",
   "DIAG_CELLA_OTHER_CODE": "{kind}: {reason}",
+  "DIAG_CELLA_INVALID_BLOCK": "Not your mistake: semorphe sent the checker a malformed program ({reason})",
+  "DIAG_CELLA_INVALID_CODE": "A problem between the systems — semorphe sent Cella a malformed program; your code is not at fault ({kind}: {reason})",
   "DIAG_CELLA_UNCLASSIFIED_BLOCK": "The checker did not say what kind of problem this is: {reason}",
   "DIAG_CELLA_UNCLASSIFIED_CODE": "Unclassified verdict ({kind}): {reason}",
   "DIAG_CELLA_TERMINATION_BLOCK": "The program ended here: {reason}",

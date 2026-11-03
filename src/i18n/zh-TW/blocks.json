@@ -288,6 +288,8 @@
   "DIAG_CELLA_UNSPECIFIED_CODE": "未指定的行為（{clause}）",
   "DIAG_CELLA_OTHER_BLOCK": "判斷功能說這裡有狀況：{reason}",
   "DIAG_CELLA_OTHER_CODE": "{kind}：{reason}",
+  "DIAG_CELLA_INVALID_BLOCK": "這不是你的錯：semorphe 送給判斷功能的程式格式有誤（{reason}）",
+  "DIAG_CELLA_INVALID_CODE": "系統之間的問題——semorphe 送給 Cella 的程式格式有誤，不是程式寫錯（{kind}：{reason}）",
   "DIAG_CELLA_UNCLASSIFIED_BLOCK": "判斷功能沒有說這一則是哪一類：{reason}",
   "DIAG_CELLA_UNCLASSIFIED_CODE": "判決沒有說明類別（{kind}）：{reason}",
   "DIAG_CELLA_TERMINATION_BLOCK": "程式在這裡結束了：{reason}",
