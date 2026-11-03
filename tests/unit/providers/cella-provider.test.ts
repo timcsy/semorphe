@@ -36,7 +36,7 @@ const accept = { verdict: 'accept', basis: 'computed', exit: 0, out: '', problem
 describe('Cella 提供者', () => {
   it('★ 宣告 verdict、types 與 session（spec 183：除錯工作階段走 cella-lang/dap）', () => {
     const p = createCellaProvider(() => fakeWorker().w as unknown as Worker)
-    expect(p.declares).toEqual({ verdict: true, types: true, session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true } })
+    expect(p.declares).toEqual({ verdict: true, types: true, session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true, hardware: false } })
   })
 
   it('★ 回來的不是最新那一筆 → stale；最新的那一筆不是', async () => {

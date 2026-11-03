@@ -12,12 +12,12 @@ import {
 
 const sessionOnly: Provider = {
   id: 'fake-session',
-  declares: { session: { granularity: 'statement', setInput: true, setVariable: false, steps: false, stepping: false, interactiveInput: false } },
+  declares: { session: { granularity: 'statement', setInput: true, setVariable: false, steps: false, stepping: false, interactiveInput: false, hardware: false } },
   createSession: () => ({}) as never,
 }
 const sessionAndSteps: Provider = {
   id: 'fake-full',
-  declares: { session: { granularity: 'node', setInput: false, setVariable: true, steps: true, stepping: true, interactiveInput: true } },
+  declares: { session: { granularity: 'node', setInput: false, setVariable: true, steps: true, stepping: true, interactiveInput: true, hardware: false } },
   createSession: () => ({}) as never,
 }
 
@@ -73,7 +73,7 @@ describe('開一次執行：還在準備 vs 接不了', () => {
   const tree = { id: 'p', componentId: 'cpp:program', properties: {}, slots: {} } as never
   const opts = { maxSteps: 10 } as never
   const declines = (d: { declined: string; nodeId?: string; pending?: true }): Provider => ({
-    id: 'cella', declares: { session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true } }, createSession: () => d,
+    id: 'cella', declares: { session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true, hardware: false } }, createSession: () => d,
   })
 
   it('★ 還在準備：pending 原樣帶出來（呼叫端靠它決定等不等）', () => {

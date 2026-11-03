@@ -528,6 +528,7 @@ export class ExecutionController {
     this.lastInputs = session.recordedInputs()
     this.clearHighlights()
     this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
+    this.reportHardware(session)
     this.reportInterventions(session)
     const counts = session.coverage()
     if (counts) this.broadcastCoverage(counts, session.loopCounts ?? 'entries')
@@ -543,6 +544,7 @@ export class ExecutionController {
     if (this.session && e.kind !== 'aborted') this.lastInputs = this.session.recordedInputs()
     this.clearHighlights()
     this.bus?.emit('execution:environment', { state: null, paused: false, canSetInput: false })
+    if (this.session && e.kind !== 'aborted') this.reportHardware(this.session)
     if (e.kind === 'aborted') {
       this.broadcastState({ status: 'idle', reason: 'aborted' })
     } else {
@@ -553,6 +555,15 @@ export class ExecutionController {
     }
     this.session = null
     this.showExecButtons(false)
+  }
+
+  /**
+   * 這一次執行的板子紀錄（spec 211）：提供者給得出就送給硬體分頁，**排在「回到判決那一份」之後**——晚到的蓋過早到的。
+   * 給不出（沒宣告、或這支不是板子上的程式）就不送，硬體分頁照舊畫判決順手給的那一份。
+   */
+  private reportHardware(session: ExecutionSession): void {
+    const record = session.hardware?.() ?? null
+    if (record) this.bus?.emit('execution:hardware-record', { record })
   }
 
   private handleStepOut(): void {

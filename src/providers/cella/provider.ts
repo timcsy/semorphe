@@ -256,7 +256,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
 
   return {
     id: 'cella',
-    declares: { verdict: true, types: true, session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true } },
+    declares: { verdict: true, types: true, session: { granularity: 'node', setInput: true, setVariable: true, steps: true, stepping: true, interactiveInput: true, hardware: false } },
     createSession,
     // C 家族（c／cpp／arduino，在 semorphe 都是 cpp 這個語言）＋ Python（spec 195）
     supports: (language) => language === 'cpp' || language === 'python',
