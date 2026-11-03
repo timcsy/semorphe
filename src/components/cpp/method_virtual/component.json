@@ -16,7 +16,7 @@
       "name": "is_const",
       "kind": "enum",
       "default": "false",
-      "_kind_why": "**尾端的 const（`virtual int f() const`／`int f() const override`）**：const 成員函式能在 const 物件上呼叫。原本沒有這一格，lift 丟掉、產碼也不寫——來回一趟之後在 `const A&` 上呼叫就編不過（spec 209，spec 208 T002 量到）。慣例同 `cpp:method_def`。"
+      "_kind_why": "**尾端的 const（`virtual int f() const`／`int f() const override`）**：const 成員函式能在 const 物件上呼叫。原本沒有這一格，lift 丟掉、產碼也不寫——來回一趟之後在 `const A&` 上呼叫就編不過（spec 209，spec 208 T002 量到）。慣例同類別裡的一般方法那顆。"
     }
   ],
   "slots": {
