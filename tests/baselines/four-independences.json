@@ -5,13 +5,13 @@
   },
   "scanned": {
     "files": 43,
-    "importLines": 261,
-    "anyMethodCalls": 3228
+    "importLines": 262,
+    "anyMethodCalls": 3217
   },
   "viewImportsLanguage": 0,
   "otherUiImportsLanguage": 0,
   "crossViewImports": 0,
-  "directViewCalls": 17,
+  "directViewCalls": 16,
   "visibleNotRatcheted": {
     "compositionRootImportsLanguage": 0,
     "compositionRootViewCalls": 73

@@ -452,11 +452,6 @@ for (const c of CASES) {
     //
     // 所以改成：有宣告 `stdout` 就比對；沒有的話**仍然跑**，
     // 只驗它沒有把錯誤印在主控台上。
-    // ⏳ **已知的退步**（spec 205 T008，2026-11-03）：JS 直譯器拿掉之後，板子的程式走 Cella 的除錯工作階段跑到模擬 5 秒，
-    //    在 Node 上量到約 15～30 秒（判決那條路約 1.5～7 秒）——已回報 cella（工作階段比判決慢約 5～10 倍）。
-    //    在那之前板子的課放寬時限；其他課照舊 20 秒，所以別的地方變慢仍然抓得到。**cella 優化之後收回來。**
-    const isBoard = /^(arduino|esp)/.test(c.target ?? '')   // 課文的板子目標：arduino-uno、esp32
-    if (isBoard) test.setTimeout(150_000)
     await openLesson(page, c)
 
     await page.evaluate((code) =>
@@ -491,7 +486,7 @@ for (const c of CASES) {
     //    ⚠️ 三種結局都要收（完畢／錯誤／英文），否則錯誤的那一課會等滿 20 秒
     //    然後用一個過期的輸出去比對。
     await expect
-      .poll(() => page.locator('.console-status').innerText(), { timeout: isBoard ? 90_000 : 20_000 })
+      .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
       .toMatch(/程式執行完畢|錯誤|Error|Completed/)
 
     const output = await programOutput(page)
