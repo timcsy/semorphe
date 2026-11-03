@@ -147,3 +147,40 @@ class B : public A { public: int v() override { return 2; } };
 int main() { A a; B b; A* p = &a; cout << p->v(); p = &b; cout << p->v(); return 0; }`, '12')
   })
 })
+
+describe('`final`：還不支援就照實說（spec 209 T005）', () => {
+  // cella 2026-11-03：Cella 還沒有 final 的形狀，不得送成 virtual／override——否則覆寫 final 方法的錯程式會被接受
+  it.each([
+    ['方法上的 final', `${H}class A { public: virtual void f() {} };\nclass B : public A { public: void f() final {} };\nint main() { return 0; }\n`, 'void f() final'],
+    ['override final', `${H}class A { public: virtual void f() {} };\nclass B : public A { public: void f() override final {} };\nint main() { return 0; }\n`, 'void f() override final'],
+    ['類別上的 final', `${H}class A final {};\nint main() { return 0; }\n`, 'class A final'],
+  ])('🔴 %s：原文保留，而且判決說得出還不支援', async (_name, code, kept) => {
+    expect(gen(code), '安靜地丟掉 final ＝ 改了程式的意思').toContain(kept)
+    const { runCella } = await import('../helpers/cella-run')
+    const r = await runCella(code)
+    expect(r.verdict, '不得被當成沒有 final 的程式判 accept').not.toBe('accept')
+  })
+})
+
+describe('舊存檔：沒有新屬性的節點照樣載入（spec 209 T006）', () => {
+  // 舊存檔存的是語意樹；這四顆在 spec 209 之前沒有 arrow／base_class／is_virtual／is_const——由宣告的 default 補，不寫遷移
+  it('★ 四種舊節點：產碼取預設值（點、沒有基底、非 virtual、非 const），積木渲染不丟節點', async () => {
+    const { createNode } = await import('../../src/core/semantic-tree')
+    const call = createNode('cpp:method_call', { method: 'f' }, { obj: [createNode('cpp:var_ref', { name: 'o' })], args: [] })
+    const st = createNode('cpp:struct_declare', { name: 'S' }, { members: [] })
+    const dt = createNode('cpp:destructor', { class_name: 'C' }, { body: [] })
+    const vm = createNode('cpp:method_virtual', { return_type: 'int', name: 'g' }, { params: [], body: [] })
+    const prog = createNode('cpp:program', {}, { body: [st, createNode('cpp:class_def', { name: 'C' }, { public: [dt, vm], private: [], protected: [] }), call] })
+    const code = generateCode(prog, 'cpp', apcs as unknown as StylePreset)
+    expect(code).toContain('o.f()')
+    expect(code).toContain('struct S {')
+    expect(code).toContain('~C()')
+    expect(code).not.toContain('virtual ~C')
+    expect(code).toContain('virtual int g() {')
+    const state = renderToBlocklyState(prog) as unknown as { blocks: { blocks: unknown[] } }
+    const types: string[] = []
+    const walk = (b: unknown): void => { if (!b || typeof b !== 'object') return; const o = b as Record<string, unknown>; if (typeof o.type === 'string') types.push(o.type); for (const v of Object.values(o)) if (v && typeof v === 'object') walk(v) }
+    walk(state.blocks.blocks)
+    for (const t of ['cpp_struct_declare', 'cpp_destructor', 'cpp_method_virtual']) expect(types, `${t} 沒畫出來`).toContain(t)
+  })
+})

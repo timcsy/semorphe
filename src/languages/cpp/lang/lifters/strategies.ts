@@ -748,6 +748,14 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     const nameNode = declNode?.childForFieldName('declarator')
     const isVirtual = node.children.some(c => !c.isNamed && c.text === 'virtual')
 
+    // 🔴 `final`（spec 209）：Cella 還沒有它的形狀（cella 2026-11-03），沒有任何一顆元件記得住它——原樣保留、照實降級。
+    //    原本安靜地丟掉：`void f() final` 來回一趟變 `void f()`，覆寫 final 方法的錯程式會被接受。
+    if (declNode?.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'final')) {
+      const raw = createNode('raw_code', {})
+      raw.metadata = { rawCode: node.text, degradationCause: 'unsupported' }
+      return raw
+    }
+
     // Constructor: function_definition where declarator name matches class name
     if (nameNode?.type === 'identifier' && nameNode.text === className) {
       const paramList = declNode?.childForFieldName('parameters') ?? null

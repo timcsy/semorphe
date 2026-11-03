@@ -16,6 +16,8 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       // 基底（spec 209：共用的解析；沒寫存取是 implicit——class 的預設是 private，原本被記成 public）。多重／virtual 繼承照實降級
       const base = parseBaseClause(node)
       if (base === 'unsupported') return null
+      // `class A final`（spec 209）：沒有元件記得住 final ⟹ 讓開，照實降級
+      if (node.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'final')) return null
 
       const publicMembers: SemanticNode[] = []
       const privateMembers: SemanticNode[] = []

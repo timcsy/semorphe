@@ -15,6 +15,8 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       // 基底（spec 209）：多重／virtual 繼承這顆裝不下 ⟹ 讓開，照實降級（不留半套）
       const base = parseBaseClause(node)
       if (base === 'unsupported') return null
+      // `class A final`（spec 209）：沒有元件記得住 final ⟹ 讓開，照實降級
+      if (node.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'final')) return null
       const members: SemanticNode[] = []
 
       if (bodyNode) {
