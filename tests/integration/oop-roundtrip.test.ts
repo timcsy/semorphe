@@ -124,3 +124,26 @@ int main() { A a; B b; call(a); call(b); return 0; }`, 'AB')
     }
   })
 })
+
+describe('① 經過指標呼叫方法 `p->m()`', () => {
+  const SRC = `${H}class A {\npublic:\n    int v() {\n        return 1;\n    }\n};\nint main() {\n    A a;\n    A* p = &a;\n    p->v();\n    cout << p->v();\n    return 0;\n}\n`
+  it('🔴 語意樹記下箭號；來回一趟一字不差（敘述與運算式兩個位置）', () => {
+    expect(nodes(lift(SRC), 'cpp:method_call').map((n) => n.properties.arrow)).toEqual(['true', 'true'])
+    expect(gen(SRC)).toContain('    p->v();')
+    expect(gen(SRC)).toContain('cout << p->v();')
+  })
+  it('★ 反向：點照舊是點', () => {
+    const s = `${H}class A {\npublic:\n    int v() {\n        return 1;\n    }\n};\nint main() {\n    A a;\n    a.v();\n    return 0;\n}\n`
+    expect(nodes(lift(s), 'cpp:method_call')[0].properties.arrow).toBe('false')
+    expect(gen(s)).toContain('    a.v();')
+  })
+  it('★ 積木：箭號下拉照實（敘述版與運算式版）', () => {
+    expect(blocks(SRC, 'cpp_method_call')).toEqual([expect.objectContaining({ METHOD: 'v', ARROW: 'true' })])
+    expect(blocks(SRC, 'cpp_method_call_expression')).toEqual([expect.objectContaining({ METHOD: 'v', ARROW: 'true' })])
+  })
+  it('🔴 執行：虛擬分派經過基底的指標', async () => {
+    await expectCellaOut(`${H}class A { public: virtual int v() { return 1; } virtual ~A() {} };
+class B : public A { public: int v() override { return 2; } };
+int main() { A a; B b; A* p = &a; cout << p->v(); p = &b; cout << p->v(); return 0; }`, '12')
+  })
+})

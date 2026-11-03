@@ -1,6 +1,10 @@
 {
-  "CPP_METHOD_CALL_MSG0": "對 %1 執行 %2（ %3 ）",
+  "CPP_METHOD_CALL_MSG0": "對 %1 %2 執行 %3（ %4 ）",
   "CPP_METHOD_CALL_TOOLTIP": "對物件執行一個操作（方法），可以傳入參數",
-  "CPP_METHOD_CALL_EXPR_MSG0": "對 %1 執行 %2（ %3 ）的結果",
-  "CPP_METHOD_CALL_EXPR_TOOLTIP": "對物件執行一個操作（方法），並取得結果"
+  "CPP_METHOD_CALL_EXPR_MSG0": "對 %1 %2 執行 %3（ %4 ）的結果",
+  "CPP_METHOD_CALL_EXPR_TOOLTIP": "對物件執行一個操作（方法），並取得結果",
+  "CPP_METHOD_CALL_DOT": "（物件本身）",
+  "CPP_METHOD_CALL_ARROW": "指到的物件（->）",
+  "CPP_METHOD_CALL_EXPR_DOT": "（物件本身）",
+  "CPP_METHOD_CALL_EXPR_ARROW": "指到的物件（->）"
 }

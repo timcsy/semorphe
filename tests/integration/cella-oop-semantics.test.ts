@@ -6,7 +6,7 @@
  * 期望值是 C++ 標準規定的輸出（每一支都可以拿任何編譯器重跑）。
  */
 import { describe, it } from 'vitest'
-import { expectCellaOut, knownCellaGap } from '../helpers/cella-run'
+import { expectCellaOut } from '../helpers/cella-run'
 
 const H = '#include <iostream>\nusing namespace std;\n'
 
@@ -48,12 +48,10 @@ class B : public A { public: int v() { return 2; } };
 int f(A& a) { return a.v(); }
 int main() { B b; cout << f(b); return 0; }`, '2')
   })
-  // 🟡 已知缺陷（修好時這兩條會紅——拿掉 knownCellaGap 這層包裝）：都是【我們這一側】lift 的來回一趟缺陷，不是 Cella 的
-  //    （spec 208 T002 量到，修在 spec 209「OOP 來回一趟」，刪直譯器之前先做）。
-  it('🟡 已知缺陷（修好時這條會紅）：虛擬分派經過基底的指標 `p->v()`——lift 把 `->` 當成 `.`', async () => {
-    await knownCellaGap(/no member named 'v'/, () => expectCellaOut(`${H}class A { public: virtual int v() { return 1; } virtual ~A() {} };
+  it('★ 虛擬分派經過基底的指標 `p->v()`（spec 209 修好 lift 之前是釘子）', async () => {
+    await expectCellaOut(`${H}class A { public: virtual int v() { return 1; } virtual ~A() {} };
 class B : public A { public: int v() override { return 2; } };
-int main() { B b; A* p = &b; cout << p->v(); return 0; }`, '2'))
+int main() { B b; A* p = &b; cout << p->v(); return 0; }`, '2')
   })
   it('★ `struct B : A` 的繼承：override 對得到基底（spec 209 修好 lift 之前是釘子）', async () => {
     await expectCellaOut(`${H}struct A { virtual void hi() { cout << "A"; } };

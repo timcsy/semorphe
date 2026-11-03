@@ -8,7 +8,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const obj = generateExpression((node.slots.obj ?? [])[0], ctx)
       const method = node.properties.method ?? 'method'
       const args = (node.slots.args ?? []).map(a => generateExpression(a, ctx))
-      const expr = `${obj}.${method}(${args.join(', ')})`
+      const op = node.properties.arrow === 'true' ? '->' : '.'   // spec 209
+      const expr = `${obj}${op}${method}(${args.join(', ')})`
       if (ctx.isExpression) return expr
       return `${indent(ctx)}${expr};\n`
     })

@@ -586,8 +586,40 @@ int main() {
 })
 
 // --- Known limitations (EXPECTED_DEGRADATION, fuzz 2026-03-13) ---
-// fuzz_3, fuzz_4: ptr->method() via pointer array generates as .method()
-it.todo('[BLOCKED:cpp:pointer_declare] fuzz: pointer array dispatch animals[i]->describe() (needs ptr->method support)')
+// fuzz_3, fuzz_4: ptr->method() via pointer array generates as .method()——spec 209 修好（method_call 記下箭號）
+describe('fuzz: 指標陣列的虛擬分派 `animals[i]->describe()`', () => {
+  const code = `#include <iostream>
+using namespace std;
+class Animal {
+public:
+    virtual void describe() {
+        cout << "animal ";
+    }
+    virtual ~Animal() {
+    }
+};
+class Dog : public Animal {
+public:
+    void describe() override {
+        cout << "dog ";
+    }
+};
+int main() {
+    Animal a;
+    Dog d;
+    Animal* animals[2] = {&a, &d};
+    for (int i = 0; i < 2; i++) {
+        animals[i]->describe();
+    }
+    return 0;
+}`
+  it('來回一趟保住箭號', () => {
+    expect(roundTrip(code)).toContain('animals[i]->describe();')
+  })
+  it('執行：經基底的指標分派到各自的覆寫', async () => {
+    await expectCellaOut(code, 'animal dog ')
+  })
+})
 // fuzz_5: inner block { } scope flattened, destructor order wrong
 // 080 實作了解構式與作用域結束的時機
 describe('fuzz: 解構式的順序', () => {

@@ -1,6 +1,10 @@
 {
-  "CPP_METHOD_CALL_MSG0": "On %1 call %2 with %3",
+  "CPP_METHOD_CALL_MSG0": "On %1 %2 call %3 with %4",
   "CPP_METHOD_CALL_TOOLTIP": "Call a method on an object, optionally passing arguments",
-  "CPP_METHOD_CALL_EXPR_MSG0": "Result of %1.%2(%3)",
-  "CPP_METHOD_CALL_EXPR_TOOLTIP": "Call a method on an object and get the result"
+  "CPP_METHOD_CALL_EXPR_MSG0": "Result of %1%2%3(%4)",
+  "CPP_METHOD_CALL_EXPR_TOOLTIP": "Call a method on an object and get the result",
+  "CPP_METHOD_CALL_DOT": "(the object)",
+  "CPP_METHOD_CALL_ARROW": "(what it points to, ->)",
+  "CPP_METHOD_CALL_EXPR_DOT": ".",
+  "CPP_METHOD_CALL_EXPR_ARROW": "->"
 }

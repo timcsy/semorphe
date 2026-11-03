@@ -424,7 +424,9 @@ export function registerIOLifters(lifter: Lifter): void {
       // 都要在五路上各維護一份，而 `saveExtraState` 的格式契約要人工同步。
       const allArgs = argsNode?.namedChildren ?? []
       const liftedArgs = allArgs.map(a => ctx.lift(a)).filter((n): n is NonNullable<typeof n> => n !== null)
-      return buildMethodCall(objNode ? ctx.lift(objNode) : null, methodName, liftedArgs)
+      // `p->m()`：記下箭號（spec 209；原本來回一趟變 `p.m()`）
+      const arrow = funcNode.childForFieldName('operator')?.text === '->'
+      return buildMethodCall(objNode ? ctx.lift(objNode) : null, methodName, liftedArgs, arrow)
     }
 
     // printf("...", args) → cstdio module

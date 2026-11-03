@@ -6,6 +6,12 @@
       "name": "method",
       "kind": "literal",
       "default": "method"
+    },
+    {
+      "name": "arrow",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "**`p->m()` 與 `o.m()`**：經過指標呼叫。原本沒有這一格，`p->m()` 來回一趟變 `p.m()`（編不過），交給 Cella 也送成點（spec 209；fuzz-cpp-oop 的指標陣列那條 todo 同因）。"
     }
   ],
   "slots": {
