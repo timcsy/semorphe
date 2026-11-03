@@ -34,6 +34,8 @@ import { liftPython } from '../helpers/python-lift'
 import { setMessages, resetMessages } from '../../src/i18n/messages'
 import { describeRuntimeStop } from '../../src/ui/runtime-message'
 import type { Provider } from '../../src/core/capabilities'
+import { toDiagnostics, type Verdict } from '../../src/core/verdict-diagnostics'
+import { languagePack } from '../../src/core/language-packs'
 import type { SemanticNode } from '../../src/core/types'
 import zhTW from '../../src/i18n/zh-TW/blocks.json'
 
@@ -159,4 +161,21 @@ describe('spec 170 · Python 的執行期（Cella 工作階段：互動與訊息
     const r = await runCella('class Foo:\n    pass\n', { lang: 'python' })
     expect(r.verdict, '判決那條路：翻不出，不是 accept').toBe('untranslated')
   })
+})
+
+/**
+ * 打錯名字（spec 206 的 Python 那一半）：走真的 Cella 與 Python 的 lift——判決是沒接住的 NameError（沒有位置），
+ * 診斷層從樹上找到用到它的那一顆、說得出「是不是要寫 print／count」。
+ */
+describe('Python 打錯名字：近似名建議（真的 Cella）', () => {
+  const diagOf = async (code: string) => {
+    const r = await runCella(code, { lang: 'python' })
+    return toDiagnostics({ verdict: r.raw as unknown as Verdict, types: null, tree: r.tree!, readsInput: false, hasStdin: false, knownNames: languagePack('python')?.wellKnownNames }).diagnostics
+  }
+  it('★ prnt("hi") → 是不是要寫 print', async () => {
+    expect(await diagOf('prnt("hi")\n')).toEqual([expect.objectContaining({ rule: 'CELLA_UNDECLARED_SUGGEST', params: expect.objectContaining({ name: 'prnt', near: 'print' }) })])
+  }, 300_000)
+  it('★ 自己的變數打錯：cuont → 是不是要寫 count', async () => {
+    expect(await diagOf('count = 3\nprint(cuont + 1)\n')).toEqual([expect.objectContaining({ rule: 'CELLA_UNDECLARED_SUGGEST', params: expect.objectContaining({ name: 'cuont', near: 'count' }) })])
+  }, 300_000)
 })

@@ -98,9 +98,12 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   // C++ 的 struct 就是 class：寫不寫 `struct` 都是 tClass（cella 2026-10-31；tStruct 只給 C 程式）。
   // 不帶關鍵字的型別名（`Node*`）要先知道它是程式裡定義過的 struct，才認得出來——哪一顆定義型別名由元件自己註冊（`definesType`）。
   const structNames = new Set<string>()
+  const enumNames = new Set<string>()
   const collect = (n: SemanticNode): void => {
     const named = FORMALIZE.definesType.get(n.componentId)
     if (named) structNames.add(named(n))
+    const en = FORMALIZE.definesEnum.get(n.componentId)
+    if (en) enumNames.add(en(n))
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
   }
   collect(tree)
@@ -163,6 +166,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (bits && !isC) {
       const lit = macros.get(bits[1]) ?? bits[1]
       if (/^\d+$/.test(lit)) return k('tTemplate', { name: 'bitset', args: [k('tVal', { v: Number(lit) })] })
+      // `const int B = 96; bitset<B>`：tVal 只收整數，前端把常數算出來（cella 2026-11-03）——值由那個宣告自己的 constInt 回答
+      const v = constNamed(bits[1])
+      if (v !== null) return k('tTemplate', { name: 'bitset', args: [k('tVal', { v })] })
       miss(at, `bitset 的大小「${bits[1]}」不是整數字面`)
       return null
     }
@@ -171,8 +177,18 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       const args = splitTypeArgs(tpl[2]).map((x) => type(x, at))
       return args.every(Boolean) ? k('tTemplate', { name: tpl[1], args }) : null
     }
+    // 列舉型別名（`Color c`、C 的 `enum Color c`）：tEnum（cella 2026-11-03；檔案範圍與區域的列舉同一個型別形狀）
+    const en = /^(?:enum\s+)?([A-Za-z_]\w*)$/.exec(s)
+    if (en && enumNames.has(en[1])) return k('tEnum', { name: en[1] })
     const st = /^(?:struct\s+)?([A-Za-z_]\w*)$/.exec(s)
     if (st && (s.startsWith('struct ') || structNames.has(st[1]))) return k(isC ? 'tStruct' : 'tClass', { name: st[1] })
+    // 巢狀的型別名：`vector<int>::iterator`、`set<int>::const_iterator`、`string::iterator`——tMember（cella 2026-11-03 給的形狀；
+    // 宣告、參數、typedef 三種位置都是它）。⚠️ vector／string 的 iterator 成員型別要等 Cella 補（之前判 reject「unknown type」）——照送，不自己展開成指標
+    const mem = /^(.+)::(iterator|const_iterator|reverse_iterator|const_reverse_iterator)$/.exec(s)
+    if (mem && !isC) {
+      const owner = type(mem[1], at)
+      return owner && k('tMember', { owner, name: mem[2] })
+    }
     miss(at, `型別「${s}」還沒有對應`)
     return null
   }
@@ -252,6 +268,19 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (!c) return null
     const fn = FORMALIZE.constInt.get(c.componentId)
     return fn ? fn(c, ctx) : null
+  }
+  /**
+   * 型別文字裡的常數名（`bitset<B>` 的 B）：沒有節點可以走作用域，就找【會回答 constInt 的宣告】裡叫這個名字的——
+   * 哪一顆算宣告、值是不是編譯期常數，都由元件自己登記（decl ＋ constInt），核心不點名。同名而值不同（遮蔽）就不猜。
+   */
+  const constNamed = (name: string): number | null => {
+    const vals = new Set<number | null>()
+    const walk = (n: SemanticNode): void => {
+      if (n.properties?.name === name && FORMALIZE.decl.has(n.componentId) && FORMALIZE.constInt.has(n.componentId)) vals.add(constInt(n))
+      for (const kids of Object.values(n.slots ?? {})) kids.forEach(walk)
+    }
+    walk(tree)
+    return vals.size === 1 ? [...vals][0] : null
   }
 
   const SCALARS = new Set(Object.values(SCALAR))
@@ -349,6 +378,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       return v !== undefined && /^[A-Za-z_]\w*$/.test(v) ? v : name
     },
     functionMacro: (name) => functionMacros.has(name),
+    macroDefined: (name) => macros.has(name) || functionMacros.has(name),
     literalExpr: (text, id) => { const probe = literalNode(text.trim(), id); return probe ? expr(probe) : undefined },
     ownsMember: (n) => FORMALIZE.member.has(n.componentId),
     item: (n) => item(n),

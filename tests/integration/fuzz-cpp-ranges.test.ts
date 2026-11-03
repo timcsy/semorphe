@@ -235,9 +235,9 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
     })
   }, 60_000)
 
-  // 歸類：Cella 判錯——內層空的大括號「{}」被判 reject「variable has an incomplete type」（0.1.202611021901 修好巢狀大括號之後的回歸；0.1.202611021533 是 accept；已回報）
+  // 歸類：Cella 未支援——自由函式 std::begin／std::end（內層空的大括號在 0.1.202611022353 修好之後露出來）
   it('🟡 已知缺陷（修好時這條會紅）：🟢 fuzz_8｜Nested ranges: begin(d2[i])/end(d2[i]) on rows of a 2D vector and m[k].begin() on the vectors stored inside a map.', async () => {
-    await knownCellaGap(/variable has an incomplete type/, async () => {
+    await knownCellaGap(/std::begin is not supported yet/, async () => {
       // 🟢 **這一支一開始就綠**——An empty row makes end(row) - begin(row) zero, and map element access inside the range expression creates the vector the iterators come from.
       await same(`vector<vector<int>> d2 = {{4, 1, 3}, {9, 7}, {}, {5, 5, 2, 8}};
       for (auto &row : d2) sort(begin(row), end(row));

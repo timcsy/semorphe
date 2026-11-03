@@ -11,13 +11,13 @@ import type { SemanticNode } from '../../../src/core/types'
 const idx = createNode('cpp:array_at', {}, {})
 const call = createNode('cpp:func_call', { name: 'foo' }, {})
 const tree: SemanticNode = createNode('cpp:program', {}, { body: [createNode('cpp:print', {}, { values: [idx, call] })] })
-/** Cella 給的類別（cella 0.1.202611021901 的分法）——假判決照它補 `class`；要測「沒有類別」的那幾條直接寫 `class: undefined` */
-const CLASS_OF = (kind: string): string =>
+/** Cella 給的類別（0.1.202611030113 起欄位叫 category）——假判決照它補 `category`；要測「沒有類別」的那幾條直接寫 `category: undefined` */
+const CATEGORY_OF = (kind: string): string =>
   kind === 'hole' ? 'incomplete' : kind === 'unsupported' ? 'unsupported'
     : kind === 'fuel' || kind === 'ubOrder' || kind === 'unspecified' ? 'indeterminate'
       : kind === 'abort' || kind === 'uncaught' ? 'termination' : 'error'
 const v = (verdict: Verdict['verdict'], problems: Verdict['problems'] = [], assumes?: Verdict['assumes']): Verdict =>
-  ({ verdict, basis: 'computed', exit: 0, out: '', problems: problems.map((p) => ('class' in p ? p : { ...p, class: CLASS_OF(p.kind) })), ...(assumes ? { assumes } : {}) })
+  ({ verdict, basis: 'computed', exit: 0, out: '', problems: problems.map((p) => ('category' in p ? p : { ...p, category: CATEGORY_OF(p.kind) })), ...(assumes ? { assumes } : {}) })
 const run = (verdict: Verdict | null, opts: { readsInput?: boolean; hasStdin?: boolean } = {}) =>
   toDiagnostics({ verdict, types: null, tree, readsInput: opts.readsInput ?? false, hasStdin: opts.hasStdin ?? false })
 
@@ -197,29 +197,60 @@ describe('串流配錯運算子', () => {
 })
 
 /**
- * 🔴 **類別由 Cella 給，接收端不猜**（三方會議第二輪 Q15、history/330；cella 0.1.202611021901 起判決帶 `class`）。
+ * 🔴 **類別由 Cella 給，接收端不猜**（三方會議第二輪 Q15、history/330；cella 0.1.202611030113 起判決帶 `category`，之前一版叫 `class`）。
  */
-describe('判決的類別（class）', () => {
+describe('判決的類別（category）', () => {
   it('🔴 沒有類別的問題：明說「判決沒有說明類別」，不安靜地歸進某一類', () => {
-    const r = run(v('reject', [{ kind: 'reject', class: undefined, at: idx.id, reason: 'x' }]))
+    const r = run(v('reject', [{ kind: 'reject', category: undefined, at: idx.id, reason: 'x' }]))
     expect(r.diagnostics).toMatchObject([{ nodeId: idx.id, rule: 'CELLA_UNCLASSIFIED', severity: 'info' }])
     expect(r.notes.join('\n')).toMatch(/沒有說明類別/)
   })
   it('🔴 認不得的類別也要明說', () => {
-    const r = run(v('reject', [{ kind: 'reject', class: 'mystery', at: idx.id, reason: 'x' }]))
+    const r = run(v('reject', [{ kind: 'reject', category: 'mystery', at: idx.id, reason: 'x' }]))
     expect(r.diagnostics[0].rule).toBe('CELLA_UNCLASSIFIED')
     expect(r.notes.join('\n')).toMatch(/類別「mystery」認不得/)
   })
   it('★ 嚴重度跟著類別走，不跟著種類：同一個 ub… 前綴，未定義是 error、未指定是 info', () => {
-    expect(run(v('reject', [{ kind: 'ubBounds', class: 'error', at: idx.id }])).diagnostics[0].severity).toBe('error')
-    expect(run(v('unknown', [{ kind: 'ubOrder', class: 'indeterminate', at: idx.id }])).diagnostics[0].severity).toBe('info')
+    expect(run(v('reject', [{ kind: 'ubBounds', category: 'error', at: idx.id }])).diagnostics[0].severity).toBe('error')
+    expect(run(v('unknown', [{ kind: 'ubOrder', category: 'indeterminate', at: idx.id }])).diagnostics[0].severity).toBe('info')
   })
   it('★ 程式怎麼結束（termination）照實顯示：警告、指回那一行', () => {
-    expect(run(v('accept', [{ kind: 'uncaught', class: 'termination', at: idx.id, reason: 'std::runtime_error' }])).diagnostics)
+    expect(run(v('accept', [{ kind: 'uncaught', category: 'termination', at: idx.id, reason: 'std::runtime_error' }])).diagnostics)
       .toMatchObject([{ nodeId: idx.id, rule: 'CELLA_TERMINATION', severity: 'warning' }])
   })
   it('★ 還沒寫完（incomplete）不顯示；系統還不會（unsupported）不是學生的錯', () => {
-    expect(run(v('unknown', [{ kind: 'hole', class: 'incomplete', at: idx.id }])).diagnostics).toEqual([])
-    expect(run(v('unknown', [{ kind: 'unsupported', class: 'unsupported', at: call.id }])).diagnostics[0].severity).toBe('info')
+    expect(run(v('unknown', [{ kind: 'hole', category: 'incomplete', at: idx.id }])).diagnostics).toEqual([])
+    expect(run(v('unknown', [{ kind: 'unsupported', category: 'unsupported', at: call.id }])).diagnostics[0].severity).toBe('info')
+  })
+})
+
+/**
+ * Python 的 NameError 也要有近似名（spec 206 的 Python 那一半；6c 收尾清單）。
+ * Cella 給的是沒接住的例外（`uncaught`、類別 termination）而**沒有位置**——名字沒宣告過，樹上同名的節點都是用到它的地方，標在第一個。
+ */
+describe('近似名的建議（Python 的 NameError）', () => {
+  const decl = createNode('python:var_assign', { name: 'count' }, {})
+  const use = createNode('python:var_ref', { name: 'cuont' }, {})
+  const call = createNode('python:func_call', { name: 'prnt' }, {})
+  const t = createNode('python:program', {}, { body: [decl, createNode('python:print', {}, { values: [use] }), call] })
+  const nameError = (name: string): Verdict => v('accept', [{ kind: 'uncaught', category: 'termination', reason: `NameError: name '${name}' is not defined` }])
+  const go = (verdict: Verdict, knownNames: string[] = []) => toDiagnostics({ verdict, types: null, tree: t, readsInput: false, hasStdin: false, knownNames })
+
+  it('★ 樹裡的名字：cuont → 是不是要寫 count，標在用到它的那一顆', () => {
+    expect(go(nameError('cuont')).diagnostics).toEqual([expect.objectContaining({ nodeId: use.id, rule: 'CELLA_UNDECLARED_SUGGEST', params: expect.objectContaining({ name: 'cuont', near: 'count' }) })])
+  })
+  it('★ 語言給的常用名字：prnt → 是不是要寫 print', () => {
+    expect(go(nameError('prnt'), ['print', 'input']).diagnostics[0]).toMatchObject({ nodeId: call.id, params: { name: 'prnt', near: 'print' } })
+  })
+  it('🔴 找不到近似名 → 照原本的那一則（程式怎麼結束），不亂猜', () => {
+    const t2 = createNode('python:program', {}, { body: [createNode('python:var_ref', { name: 'zzzz' }, {})] })
+    const d = toDiagnostics({ verdict: nameError('zzzz'), types: null, tree: t2, readsInput: false, hasStdin: false, knownNames: ['print'] }).diagnostics
+    expect(d[0]).toMatchObject({ rule: 'CELLA_TERMINATION', severity: 'warning' })
+  })
+  it('🔴 樹上找不到那個名字 → 對不到積木：算進狀態列、說得出原因，不畫在別顆上', () => {
+    const r = go(nameError('ghost'), ['print'])
+    expect(r.diagnostics).toEqual([])
+    expect(r.unplaced.info).toBe(1)
+    expect(r.notes.join('\n')).toMatch(/NameError/)
   })
 })

@@ -114,8 +114,8 @@ describe('cpp:define', () => {
   })
 
   // 🟡 spec 200：semorphe 這一側的缺口——`#ifdef` 還沒有 formalize（formalize-coverage 的「還沒對應」列著它）；補上之後這條會紅：拿掉 knownCellaGap 那層
-  it('🟡 已知缺陷（修好時這條會紅）：★ 兩個角色是分開的：#ifdef 仍然只看「有沒有定義過」', () => knownCellaGap(/cpp:ifdef：這顆敘述元件還沒有對應/, async () => {
+  it('★ 兩個角色是分開的：#ifdef 仍然只看「有沒有定義過」', async () => {
     // 無值的 #define 綁不出常數，而 #ifdef 必須照樣成立
     expect(await run(`${head}#define DEBUG\nint main(){\n#ifdef DEBUG\n  cout << "on";\n#endif\n  return 0; }`)).toBe('on')
-  }))
+  })
 })

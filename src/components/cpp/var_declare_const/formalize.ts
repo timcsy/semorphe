@@ -3,11 +3,12 @@ import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.decl('cpp:var_declare_const', (n, f, global) => {
-    const t = f.type(n.properties?.type ?? 'int', n)
+    // `const` 交給 type() 一起剝：`const int&` 是「參照到 const int」＝ tRef(tConst(int))，不是 tConst(tRef(int))（第 238 刀）
+    const t = f.type(`const ${n.properties?.type ?? 'int'}`, n)
     if (!t) return []
     const init = f.one(n, 'initializer')
     if (!init) return [f.miss(n, 'const 沒有初值')]
-    return f.declInit(n, f.k('tConst', { t }), f.initOf(init), global)
+    return f.declInit(n, t, f.initOf(init), global)
   })
   // 編譯期的整數值：初值是整數字面（`const int N = 100;`）——`int a[N]` 的長度問這一條（spec 199）
   r.constInt('cpp:var_declare_const', (n, f) => f.constInt(f.one(n, 'initializer')))

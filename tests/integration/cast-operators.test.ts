@@ -51,10 +51,14 @@ describe('轉型運算：實作一直都在，只是被清單蓋掉', () => {
     expect(r.untranslated.map((u) => u.construct)).toContain('cpp:cast_reinterpret')
   })
 
-  // 我們 formalize 缺：cpp:cast_const 還沒有對應（結果是參照、是左值，不是 eCast 能直接表達的值轉換）
-  it('🟡 已知缺陷（修好時這條會紅）：const_cast 有回傳值', async () => {
-    await knownCellaGap(/cpp:cast_const：這顆元件還沒有對應到 Cella 的建構子/, () =>
-      run(`int a = 5; const int c = a; cout << const_cast<int&>(c);`, '5'))
+  // const_cast 送 eConstCast（第 238 刀；cella 2026-11-03 給的專用形狀——結果是參照、是左值，不是 eCast 的值轉換）
+  it('const_cast 有回傳值', async () => {
+    await run(`int a = 5; const int c = a; cout << const_cast<int&>(c);`, '5')
+  })
+
+  // 原本不是 const、經 const 參照看到的物件，拿掉 const 之後可以寫（g++ 印 7）；寫一個本來就是 const 的物件才是未定義行為
+  it('★ const_cast 拿掉 const 之後寫得回原本的物件', async () => {
+    await run(`int x = 3; const int &c = x; const_cast<int &>(c) = 7; cout << x;`, '7')
   })
 
   it('轉型可以進運算式，不只是單獨印出來', async () => {
