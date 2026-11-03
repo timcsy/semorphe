@@ -1970,7 +1970,15 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     const from = fromNode ? ctx.lift(fromNode) : null
     const to = toNode ? ctx.lift(toNode) : null
-    const body = extractBody(bodyNode, ctx)
+    // 🔴 迴圈變數要在 lift 本體【之前】記進查找表，而且只在本體裡（spec 208：`for (...) { T t(k); }` 被當成前置宣告）
+    ctx.data.pushScope()
+    let body: SemanticNode[]
+    try {
+      ctx.data.declare(varName, initNode.childForFieldName('type')?.text ?? 'int')
+      body = extractBody(bodyNode, ctx)
+    } finally {
+      ctx.data.popScope()
+    }
 
     return buildLoopCount(varName, inclusive, {
       from: from ? [from] : [],
