@@ -368,7 +368,8 @@ export class ExecutionController {
        * 不是「跑不了」，是「等一下」。說一次「準備中」，好了自動開跑；按停止就不等了；等太久照實說。
        */
       if (!opened.session && opened.declined.length > 0 && opened.declined.every((d) => d.pending)) {
-        if (!announced) { announced = true; this.broadcastOutput(msg('RUNTIME_PREPARING', '準備中——第一次執行要先載入判斷與執行的模組，好了會自動開始…') + '\n', 'stderr') }
+        // 「準備中」是系統的狀態，不是學生的程式印的東西——走狀態列（`ExecutionReason` 的 `preparing`），不進輸出
+        if (!announced) { announced = true; this.broadcastState({ status: 'running', reason: 'preparing' }) }
         if (Date.now() - waitedSince > ExecutionController.PREPARE_TIMEOUT_MS) {
           this.broadcastOutput(msg('RUNTIME_PREPARE_TIMEOUT', '執行的模組一直沒有準備好（{why}）——請重新整理頁面再試一次').replace('{why}', opened.declined.map((d) => d.reason).join('；')) + '\n', 'stderr')
           this.broadcastState({ status: 'error' })
@@ -392,6 +393,7 @@ export class ExecutionController {
       }
       const session = opened.session
       this.session = session
+      if (announced) this.broadcastState({ status: 'running' })
       session.onOutput((text: string) => this.broadcastOutput(text, 'stdout'))
       session.setBreakpoints(this.breakpointNodes)
       const first = await session.launch(tree, { stopOnEntry: mode === 'step' || mode === 'animate' })

@@ -212,7 +212,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
   const formalOf = (f: NonNullable<SessionOptions['formal']>): { program: unknown; branch: CellaBranch } | { why: string; nodeId?: string } => {
     const r = formalizeFor(f)
     // 帶出第一個翻不出的節點——畫面要指得到是哪一行還不支援（spec 205 T013）
-    if (!r.program) return { why: `Cella 還不支援：${[...new Set(r.unknown.map((u) => u.reason))].join('、')}`, ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
+    if (!r.program) return { why: `Cella 還不支援：${[...new Set(r.unknown.map((u) => `${u.reason}（${u.construct}）`))].join('、')}`, ...(r.unknown[0]?.nodeId ? { nodeId: r.unknown[0].nodeId } : {}) }
     return { program: r.program, branch: branchOf(r.program as never) }
   }
 

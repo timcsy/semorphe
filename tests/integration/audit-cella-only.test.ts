@@ -23,7 +23,18 @@ const ROOT = path.resolve(__dirname, '../..')
 /** 產品的入口與組裝點：網頁版、兩個宿主共用的組裝點、擴充的 webview */
 const ENTRIES = ['src/main.ts', 'src/ui/app.ts', ...fs.readdirSync(path.join(ROOT, 'src/vscode/webview')).filter((f) => f.endsWith('.ts')).map((f) => `src/vscode/webview/${f}`)]
 
+/** 偵測器：這一段原始碼有沒有把 JS 直譯器帶進產品的入口 */
+export function bringsJsInterpreter(src: string): boolean {
+  return /providers\/js-interpreter|jsInterpreterProvider/.test(src)
+}
+
 describe('護欄：產品的入口只登記 Cella（spec 205 T008）', () => {
+  it('★ 注入：偵測器認得出那兩種寫法，也不會把 Cella 的登記誤認', () => {
+    expect(bringsJsInterpreter("import { jsInterpreterProvider } from '../providers/js-interpreter'")).toBe(true)
+    expect(bringsJsInterpreter('registerProvider(jsInterpreterProvider)')).toBe(true)
+    expect(bringsJsInterpreter("registerProvider(createCellaProvider(() => new Worker(url)), { first: true })")).toBe(false)
+  })
+
   it('★ 入口條件：讀得到入口，而且網頁版與擴充都登記了 Cella', () => {
     const src = ENTRIES.map((f) => fs.readFileSync(path.join(ROOT, f), 'utf8'))
     expect(src.length).toBeGreaterThanOrEqual(3)
@@ -32,7 +43,7 @@ describe('護欄：產品的入口只登記 Cella（spec 205 T008）', () => {
   })
 
   it('🔴 硬性零：產品的入口不得 import 或登記 JS 直譯器', () => {
-    const hits = ENTRIES.filter((f) => /providers\/js-interpreter|jsInterpreterProvider/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')))
+    const hits = ENTRIES.filter((f) => bringsJsInterpreter(fs.readFileSync(path.join(ROOT, f), 'utf8')))
     expect(hits, `🔴 JS 直譯器回到了產品的入口：${hits.join('、')}\n   執行只走 Cella（spec 205 T008）——還沒好時顯示「準備中」，翻不出時照實說，沒有退路。`).toEqual([])
   })
 })

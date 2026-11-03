@@ -33,10 +33,9 @@ async function runUntilCella(page: Page): Promise<void> {
 const LOOP = '#include <iostream>\nusing namespace std;\nint main() {\n    int total = 0;\n    for (int i = 1; i <= 3; i++) {\n        total = total + i;\n    }\n    cout << total << endl;\n    return 0;\n}\n'
 const READ = '#include <iostream>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    cout << n * 2 << endl;\n    return 0;\n}\n'
 const OOB = '#include <iostream>\nusing namespace std;\nint main() {\n    int a[3] = {1, 2, 3};\n    int i = 5;\n    cout << a[i] << endl;\n    return 0;\n}\n'
-// ⚠️ 「Cella 還不支援」的範例會一直過期——map（spec 194）、結構化繫結（第 202b 刀）都曾是這裡的例子。
-//    改用依定義就不會被支援的：VLA（`int a[n]`）是 GNU 擴充、不是標準 C++，Cella 照實標 unknown（cella 2026-11-01 確認）；JS 直譯器跑得動。
-//    （experience〈拿「今天還沒做的」當「不支援」的測試範例，範例的壽命以天計〉）🪦 6c 拆掉 JS 直譯器時這一支整支退場
-const VLA = '#include <iostream>\nusing namespace std;\nint main() {\n    int n = 3;\n    int a[n];\n    a[0] = 1;\n    cout << a[0] + 2 << endl;\n    return 0;\n}\n'
+// ⚠️ 「Cella 還不支援」的範例會一直過期——map（spec 194）、結構化繫結（第 202b 刀）、VLA（Cella 0.1.202611030133 起跑得動）都曾是這裡的例子。
+//    改用**依定義就不會被支援的**：內嵌組語（`asm`）——它是平台的機器碼，P6 照原樣保留、降級成原文（experience〈拿「今天還沒做的」當「不支援」的測試範例，範例的壽命以天計〉）。
+const ASM = '#include <iostream>\nusing namespace std;\nint main() {\n    int n = 3;\n    asm volatile("nop");\n    cout << n << endl;\n    return 0;\n}\n'
 
 test('執行與除錯由 Cella 跑：輸出、中斷點、變數、讀輸入、越界停下', async ({ page }) => {
   test.setTimeout(400_000)
@@ -82,9 +81,9 @@ test('Cella 還不支援的程式：照實說還不支援、指回那一行—�
   await freshApp(page)
   await page.evaluate(() => (window as any).__app.warmUpChecker())
   await expect(page.locator('#status-check')).toHaveAttribute('data-state', 'ready', { timeout: 180_000 })
-  await feed(page, VLA, 'cpp:array_declare')
+  await feed(page, ASM, 'cpp:print')
   await selectMode(page, 'run')
-  // JS 直譯器拿掉之後不會再「跑出 3」——它是 GNU 擴充（VLA），Cella 照實標不支援
+  // JS 直譯器拿掉之後，內嵌組語不會再「照樣跑出 3」——Cella 照實說還不支援
   await expect(output(page)).toContainText('還不支援', { timeout: 60_000 })
   await expect(output(page)).not.toContainText('3\n')
   await expect(runner(page)).not.toHaveAttribute('data-provider', 'js-interpreter')
@@ -98,8 +97,10 @@ test('沒暖機就按執行：說「準備中」，好了自動開跑（spec 205
   await freshApp(page)
   await feed(page, LOOP, 'cpp:print')
   await selectMode(page, 'run')
-  await expect(output(page)).toContainText('準備中', { timeout: 30_000 })
+  // 「準備中」在狀態列，不在輸出裡（輸出是學生的程式印的東西）
+  await expect(page.locator('.console-status')).toHaveText(/準備中/, { timeout: 30_000 })
   await expect(output(page)).toContainText('6', { timeout: 180_000 })
+  await expect(output(page), '輸出裡只有程式印的東西').not.toContainText('準備中')
   await expect(runner(page)).toHaveAttribute('data-provider', 'cella')
 })
 

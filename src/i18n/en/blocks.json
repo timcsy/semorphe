@@ -140,7 +140,7 @@
   "RUNTIME_ERR_UNDEFINED_BEHAVIOR": "Stopped here: the standard leaves this step undefined ({clause}): {pre}",
   "RUNTIME_ERR_UNSPECIFIED_BEHAVIOR": "Stopped here: the standard allows more than one result and no definite value can be computed ({clause})",
   "RUNTIME_ERR_UNCAUGHT_EXCEPTION": "The program threw an exception that nothing caught: {text}",
-  "RUNTIME_PREPARING": "Preparing — the first run loads the checking and running modules; it will start automatically…",
+  "EXEC_STATUS_PREPARING": "Preparing… (it will start automatically)",
   "RUNTIME_PREPARE_TIMEOUT": "The running modules never became ready ({why}) — please reload the page and try again",
   "RUNTIME_ERR_CELLA_UNSUPPORTED": "The checker does not support something in this program yet: {why}",
   "RUNTIME_ERR_CELLA_REJECTED": "This program is ill-formed and was not run: {why}",

@@ -236,6 +236,24 @@ export function isTopLevelOnly(componentId: string): boolean {
 }
 
 /** 這顆是**函式定義**嗎（`properties.name` 是函式名）。 */
+/**
+ * **這顆節點要留在函式外面（頂層）嗎**——補進入點的兩個地方共用這一份（spec 205 T008，2026-11-03）。
+ *
+ * 🔴 在此之前有兩份，而它們已經漂開了：產生器（`cpp/program/generate.ts`）問「函式定義／`topLevelOnly`／`#` 開頭的原文」，
+ * Cella 的進入點（`providers/cella/entry.ts`）問「函式定義／`#include`／`#` 開頭的原文」——少了 `topLevelOnly` 也少了鷹架。
+ * JS 直譯器拿掉之後才露出來：自動補上的 `using namespace std;` 被包進 `main`，Cella 判翻不出（e2e debug.spec 三支）。
+ *
+ * 只問元件自己宣告的性狀（不認得任何身分）：函式定義、`topLevelOnly`（型別定義、樣板、命名空間）、
+ * 引入指示詞與鷹架（`#include`、`using namespace`）；認不出來的 `raw_code` 看文字——第一個非空白字元是 `#`。
+ */
+export function staysTopLevel(n: { componentId: string; metadata?: unknown }): boolean {
+  if (isFunctionDefinition(n.componentId) || isTopLevelOnly(n.componentId)) return true
+  const t = componentTraits(n.componentId)
+  if (t?.includeDirective === true || t?.scaffold === true) return true
+  const raw = (n.metadata as { rawCode?: string } | undefined)?.rawCode
+  return typeof raw === 'string' && raw.trimStart().startsWith('#')
+}
+
 export function isFunctionDefinition(componentId: string): boolean {
   return componentTraits(componentId)?.functionDefinition === true
 }

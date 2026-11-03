@@ -105,8 +105,7 @@ void move(struct Point *p) {
 ## 完成的樣子
 
 ```c
-#include <cstdio>
-using namespace std;
+#include <stdio.h>
 struct Point {
     int x;
     int y;

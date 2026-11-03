@@ -140,7 +140,7 @@
   "RUNTIME_ERR_UNDEFINED_BEHAVIOR": "停在這裡：這一步的結果標準沒有定義（{clause}）：{pre}",
   "RUNTIME_ERR_UNSPECIFIED_BEHAVIOR": "停在這裡：這一步的結果標準允許不只一種，判不出確定的值（{clause}）",
   "RUNTIME_ERR_UNCAUGHT_EXCEPTION": "程式丟出了一個沒有接住的例外：{text}",
-  "RUNTIME_PREPARING": "準備中——第一次執行要先載入判斷與執行的模組，好了會自動開始…",
+  "EXEC_STATUS_PREPARING": "準備中（好了會自動開始）",
   "RUNTIME_PREPARE_TIMEOUT": "執行的模組一直沒有準備好（{why}）——請重新整理頁面再試一次",
   "RUNTIME_ERR_CELLA_UNSUPPORTED": "判斷功能還不支援這支程式裡的某個寫法：{why}",
   "RUNTIME_ERR_CELLA_REJECTED": "這支程式不合規則，沒有執行：{why}",
