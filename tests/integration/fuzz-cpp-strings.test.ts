@@ -413,9 +413,11 @@ int main() {
     const gen1 = generateCode(tree!, 'cpp', style)
     const gen2 = generateCode(liftCode(gen1)!, 'cpp', style)
     expect(gen1).toBe(gen2)
-    // 歸類：Cella 判錯（cella 2026-11-04 確認）——模型的 std::string 沒有宣告 npos 這個靜態成員，名字查不到判 undeclared；
-    //   我們送的 `eConst { name: 'string::npos' }` 是對的形狀（cella 說 `std::string::npos` 也照樣送、帶前綴）。cella 下一版修。
-    await knownCellaGap(/undeclared identifier 'string::npos'/, async () => {
+    // ~~Cella 判 undeclared 'string::npos'~~——cella 0.1.202611041233 補上（引入 <string> 時是 size_t 的最大值）。
+    // 🟡 而 npos 一通，背後的下一個就露出來了（舊版也一樣，只是被 undeclared 蓋住）：
+    //   歸類：Cella 判錯——`s.substr(k) + s.substr(0, k)` 判 ubOrder「兩個呼叫的副作用衝突」，而 substr 是 const 成員、沒有副作用。
+    //   我們送的是忠實的 `eBin opAdd(eMCall substr, eMCall substr)`；拆成先存變數就 accept。2026-11-04 附最小重現回報 cella。
+    await knownCellaGap(/ubOrder|unspecified and the calls have conflicting effects/, async () => {
       await expectSameOnCella(code, gen1)
     })
   })
