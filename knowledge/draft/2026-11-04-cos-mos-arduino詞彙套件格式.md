@@ -48,6 +48,16 @@
 
 另附一份對照表（同一個套件裡的 `semorphe-map.json`）：`"arduino:digital_write" ↔ "cpp:digital_write"`，一對一；之後正本翻轉到詞彙套件時，semorphe 讀它對齊。
 
+## contentHash 的算法（正本，2026-11-04 與 cos-mos 對過）
+
+- 對 `components` 做正規化 JSON：物件的鍵**遞迴排序**（UTF-16 碼元順序，JS 預設）、陣列保持順序、沒有空白、字串照 `JSON.stringify` 跳脫（不轉 `\u` 的非 ASCII 照原字）、UTF-8 編碼後 sha256、小寫十六進位、前綴 `sha256:`。
+- 鍵只准 ASCII（匯出工具斷言）——UTF-16 與碼點的排序只在 BMP 以外的字元分歧；值只有字串、整數、布林（不放浮點）。
+- 測試向量：`{"b:x":{"params":{"z":{"type":"int"},"a":{"type":"enum","values":["LOW","HIGH"]}},"kind":"statement","pins":"未定"}}`
+  → `{"b:x":{"kind":"statement","params":{"a":{"type":"enum","values":["LOW","HIGH"]},"z":{"type":"int"}},"pins":"未定"}}`
+  → `sha256:73f64748215b7fb660afa65c35fb47f814578be842dbac667338a49934e00a75`（cos-mos、semorphe 的 Node 與 Python 各算一次相同）。
+- 結構頻道的訊息帶 `contentHash`（與 `vocab` 並列）；宿主載入的與它不同 ⟹ 整份拒絕。
+- 腳位範圍（0–31 之類）**不放套件**：那是板子的事實，歸宿主（Cella 判 `ubPin` 也是讀板子的腳位模型）。套件只宣告 `type: "int"`。
+
 ## params 從哪裡來
 
 | 來源 | 規則 |
