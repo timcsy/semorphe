@@ -69,7 +69,7 @@ describe('原本是 Cella 那側的缺口（0.1.202611042110 修好，釘子拔�
 })
 
 describe('Cella 那側的缺口（釘住：修好時會紅）', () => {
-  it('🟡 字串下標 s[0]：Cella 0.1.202611042110 給的型別是 char *（應為 char）——表把 char * 當 C 字串，產出 %s', async () => {
+  it('🟡 字串下標 s[0]：Cella 給的型別是 char *（應為 char；上一版是 std::string *、被保守退路蓋住）——表把 char * 當 C 字串，產出 %s', async () => {
     const code = main('  string s = "ab";\n  cout << s[0] << endl;')
     const { out } = await toPrintf(code)
     // 2026-11-05 回報 cella；修好時 Cella 給 char ⟹ %c ⟹ 這層包裝會紅
