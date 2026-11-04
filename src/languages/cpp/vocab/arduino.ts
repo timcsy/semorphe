@@ -18,7 +18,8 @@ export interface VocabParam { type: ParamType; values?: string[]; required?: boo
 export interface VocabComponent { kind: 'statement' | 'expression'; params: Record<string, VocabParam>; pins: '未定' }
 export interface Vocab { name: '@cos-mos/arduino'; version: string; components: Record<string, VocabComponent> }
 
-export const VOCAB_VERSION = '0.1.1'
+/** 我們實作的契約版本——正本在 cos-mos（`vocab/arduino/`）；`audit-arduino-contract` 核對它與契約副本相同。 */
+export const VOCAB_VERSION = '0.1.2'
 const OWNER = '(arduino)'
 /** 簿記用的屬性——由別的欄位推得出來（`ctorCount` ＝ 建構參數的個數），不是詞彙的一部分。 */
 const BOOKKEEPING = new Set(['ctorCount'])

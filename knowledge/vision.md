@@ -485,7 +485,8 @@ UI 域與硬體域本身（它們是這一格的**消費者**）。
       驗收：① 6 份面板全部自己 `mount`（第一百二十五條護欄的棘輪 5 → 0）② 一個不經 `app.ts` 的頁面只靠套件組得出積木＋程式碼互轉
       ③ semorphe.com 改成 playground 之後仍是 semorphe 自己的 e2e 宿主（不依賴 cos-mos）。轉變見 [history/331](history/331-semorphe往面板與編輯器收學生入口分階段移到cos-mos.md)
       🟡 **進度（2026-11-03）**：① 棘輪 5 → 2——變數、主控台、程式碼三格自己 `mount`（第 239～241 刀；實例照建、加不加分頁另外問宿主）。
-      剩下積木與流程圖：兩者都要積木登錄表，碰到「面板該不該知道本體插槽」——**待使用者決定**，推薦見 [draft/可嵌入與可插拔的四個軸 §九](draft/2026-08-24-可嵌入與可插拔的四個軸.md)
+      剩下積木與流程圖：兩者都要積木登錄表，碰到「面板該不該知道本體插槽」——🟢 **使用者 2026-11-04 定 A'**（經 cos-mos 主持人，cos-mos history/015）：
+      積木與流程圖從 `@cos-mos/<領域>` 讀接點與角色，**顏色與形狀留在 `@semorphe/<領域>`**——呈現不進協定（改配色、深色模式、高對比都不必動契約）。設計脈絡見 [draft/可嵌入與可插拔的四個軸 §九](draft/2026-08-24-可嵌入與可插拔的四個軸.md)
 - [ ] 🆕 **Provider 對接說明（給 cos-mos 階段 3）**——三方會議第三輪議題三（[history/334](history/334-三方會議第三輪符號學三面向與操作者介面.md)）：cos-mos 的瀏覽器宿主在入口登記一個 Provider 就能接上「執行」。
       驗收：說明列出 Provider／ExecutionSession 的方法（哪些可選）、狀態回報（準備中／翻不出／執行中出錯）；`tests/contract/session-contract.test.ts` 能對任一提供者跑，當對接的驗收。與第 6 階段收尾平行。
       🟡 **說明已寫**（2026-11-03）：[Provider 對接說明](draft/2026-11-03-Provider對接說明.md)，已交 cos-mos；等他們回饋與 2b-2 完成後實際對接。
@@ -505,6 +506,10 @@ UI 域與硬體域本身（它們是這一格的**消費者**）。
       排在〈重構〉第 6 項之後，約 1 天。⚠️ **發布前要問使用者**：第一版交給 cos-mos 的主持人，不自己發。
       驗收：43 顆都在、對照表一對一（`audit` 數得出）；先交匯出格式草案給 cos-mos（它先接「動作清單」那一半）。
       🟡 **格式草案**（2026-11-04）：[cos-mos-arduino 詞彙套件格式](draft/2026-11-04-cos-mos-arduino詞彙套件格式.md)——量到接點沒有型別，推薦在元件宣告裡補（53 個）。
+- [ ] 🆕 **每個領域三方各一個套件：`@cos-mos/<領域>`（契約）、`@cella-lang/<領域>`（意思）、`@semorphe/<領域>`（形式與表面）**——使用者 2026-11-04 定（cos-mos history/015）；後兩者只依賴契約。
+      Arduino 走六步（cos-mos 的草案）：① 對照表搬出契約到 `@semorphe/arduino` ＋ ③ 匯出工具改成核對工具（我們這側併成一刀）② 契約正本搬到 cos-mos（✅ 0.1.2）④ 兩個實作端各宣告 `implements` ⑤ 結構頻道樣本加上 Cella 判決成為契約的 examples ⑥ 第一次發布前由 cos-mos 主持人問使用者。
+      契約修改：我們改元件宣告 → `audit-arduino-contract` 紅 → 跑提案工具（`propose-arduino-vocab`）交 cos-mos → 合併回版號 → 換 fixture 與 `implements`。
+      🟢 **①＋③＋④（semorphe 側）完成**（2026-11-05，第 266 刀）→ [history/340](history/340-semorphe-arduino拆出與核對契約.md)。剩 ⑤（等 Cella 的 ubOrder 結構化）、⑥（使用者）。
 - [ ] 🆕 **形態檢查與判決的界線盤點**——同一則後記：semorphe「不判斷對錯」；形態完整度的檢查（語法缺口、空的接點、名字合不合法、canExecute）一律標成形態／提示，不得標成判決。驗收：診斷的每一種來源都標得出是「形態」「提示」還是「判決（Cella）」，有護欄在數；「名字合不合法」的灰色地帶盤點結果告訴 cos-mos。
       ➕ **不解析 Cella 的 reason**（後記二，使用者定）：`verdict-diagnostics.ts` 的 `nearMissFor`／`unboundNameAt` 改讀 Cella 的結構化 params（已向 cella 要 `{ name }` 與 NameError 帶 `at`）；學生看到的文字不得直接是 reason 原文。驗收：產品程式碼裡零個對 `reason` 的正規表示式（護欄）。
       🟢 **形狀已定（cella 2026-11-03）**：每則 problem 帶 `params`（值只有字串與布林；整數一律十進位字串、負數帶 `-`；不知道的欄位不出現）與 `structured`；未宣告的名字統一成 kind `undeclared` ＋ `{ name, what: variable|function|name }`（⚠️ 不相容，發版說明會標）；Python 的 NameError 一律帶 `at`；cfamily／python 套件附 `verdict-kinds.json`（每個 kind 是否結構化、帶哪些 params）——semorphe 加護欄：每個結構化的 kind 都有中英文說明。排在 cella 的 2b-2 之後。
