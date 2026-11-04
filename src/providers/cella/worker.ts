@@ -17,6 +17,7 @@ import { fetchCellaAsset, fetchPrecompiled } from './assets'
 import { checkerKey, loadCompiled, saveCompiled, moduleKey } from './cache'
 import { compileCellaDebugger, debuggerSource } from './debugger'
 import type { CellaBranch } from './verdict'
+import { UB_KEY } from './stop-of-verdict'
 
 /** 跨 worker 的 Outcome（`SessionStop` 是類別，過不了邊界——主執行緒那一側再組回來）。 */
 export type WireOutcome =
@@ -152,13 +153,7 @@ function openDap(sid: number, branch: CellaBranch, program: unknown, maxSteps: n
   })())
 }
 
-/** 未定義行為的種類 → 執行期訊息的鍵（中文說法與 5a 判決的 `DIAG_CELLA_UB_*` 同一套）。 */
-const UB_KEY: Record<string, string> = {
-  ubUninit: 'RUNTIME_ERR_UB_UNINIT', ubBounds: 'RUNTIME_ERR_UB_BOUNDS', ubOverflow: 'RUNTIME_ERR_UB_OVERFLOW',
-  ubDivZero: 'RUNTIME_ERR_UB_DIV_ZERO', ubOverlap: 'RUNTIME_ERR_UB_OVERLAP',
-  // spec 205：6c-2 量到的另外兩種（越過結尾、板子上沒有的腳）——原本落到通用的「標準沒有定義」那句
-  ubPastEnd: 'RUNTIME_ERR_UB_PAST_END', ubPin: 'RUNTIME_ERR_UB_PIN',
-}
+// 未定義行為的種類 → 執行期訊息的鍵：與 cos-mos 共用的那一張（`stop-of-verdict.ts`，換宿主結果不變）
 
 const flat = (o: unknown): Record<string, string> =>
   Object.fromEntries(Object.entries((o ?? {}) as Record<string, unknown>).map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)]))
