@@ -18,7 +18,7 @@ export interface VocabParam { type: ParamType; values?: string[]; required?: boo
 export interface VocabComponent { kind: 'statement' | 'expression'; params: Record<string, VocabParam>; pins: '未定' }
 export interface Vocab { name: '@cos-mos/arduino'; version: string; components: Record<string, VocabComponent> }
 
-export const VOCAB_VERSION = '0.1.0'
+export const VOCAB_VERSION = '0.1.1'
 const OWNER = '(arduino)'
 /** 簿記用的屬性——由別的欄位推得出來（`ctorCount` ＝ 建構參數的個數），不是詞彙的一部分。 */
 const BOOKKEEPING = new Set(['ctorCount'])
@@ -74,7 +74,14 @@ export function buildArduinoVocab(): { vocab: Vocab; map: Record<string, string>
     for (const s of Object.keys(m.slots ?? {})) {
       const t = m.slotTypes?.[s]
       if (!t) throw new Error(`${m.componentId} 的接點 ${s} 沒有宣告型別（component.json 的 slotTypes）`)
-      params[s] = t
+      // C++ 依位置帶參數：可以省略的接點在宣告裡明寫 `required: false`（產生器有「沒接就不寫」那一支的才是），套件裡不寫 required
+      const { required: _optional, ...rest } = t
+      params[s] = rest
+    }
+    // 沒有預設值、不是可變長度、也沒有宣告可省略的參數 ⟹ 必填（cos-mos 2026-11-04：沒有這一條，`digital_write` 少給參數也會被放行）
+    for (const [pn, d] of Object.entries(params)) {
+      const optional = m.slotTypes?.[pn]?.required === false
+      if (d.default === undefined && !d.variadic && !optional) params[pn] = { ...d, required: true }
     }
     if (m.role !== 'statement' && m.role !== 'expression') throw new Error(`${m.componentId} 的 role 不是 statement／expression：${m.role}`)
     components[name] = { kind: m.role, params, pins: '未定' }
