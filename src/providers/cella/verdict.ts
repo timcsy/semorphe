@@ -28,6 +28,9 @@ export interface CellaProblem {
   at?: string
   clause?: string
   reason?: string
+  /** 結構化的細節（cella 0.1.202611032234 起；見 `core/verdict-diagnostics.ts` 的 `VerdictProblem.params`） */
+  params?: Readonly<Record<string, string | boolean>>
+  structured?: boolean
 }
 
 /** `@cella-lang/cfamily` 的判決 JSON（板子上的程式另有 pins／env／clock，這裡不收窄）。 */

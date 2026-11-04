@@ -177,7 +177,8 @@ export async function expectCellaOut(code: string, expected: string, opts: Cella
   const r = await runCella(code, opts)
   if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
   // Python：沒接住的例外是【有定義的】行為（traceback、結束碼 1），判決照樣 accept、問題列 `uncaught`——對「輸出應該是 X」的斷言那是失敗
-  if (opts.lang === 'python' && r.problems.some((p) => p.kind === 'uncaught')) throw new Error(describeCellaResult(r))
+  // （cella 0.1.202611032235 起 NameError 是 `undeclared`，同樣以例外結束）
+  if (opts.lang === 'python' && r.problems.some((p) => p.kind === 'uncaught' || p.kind === 'undeclared')) throw new Error(describeCellaResult(r))
   if (r.out !== expected) {
     throw new Error(`Cella 判 accept，但輸出不同：\n  期望 ${JSON.stringify(expected)}\n  實際 ${JSON.stringify(r.out)}`)
   }

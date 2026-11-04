@@ -310,7 +310,7 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    */
   // 歸類：我們這側缺——`T(3)` 這種「型別名(引數)」的暫時物件被翻成一個變數
   it('🟡 已知缺陷（修好時這條會紅）：★ 自訂結構的排序、去重、查找、計數要用同一份規則', async () => {
-    await knownCellaGap(/use of an undeclared variable/, async () => {
+    await knownCellaGap(/use of undeclared identifier/, async () => {
       const src = `${H}struct T { int k; T(int a) : k(a) {}\n`
         + `  bool operator<(const T& o) const { return k < o.k; } };\n`
         + `int main(){ vector<T> v; v.push_back(T(3)); v.push_back(T(1)); sort(v.begin(), v.end());\n`

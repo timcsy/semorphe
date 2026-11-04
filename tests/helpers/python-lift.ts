@@ -166,7 +166,8 @@ export async function runPython(code: string, stdin: string[] = []): Promise<str
   const r = await runCella(code, { lang: 'python', stdin: stdin.map((l) => `${l}\n`).join('') })
   if (r.verdict === 'untranslated') return `<執行例外：翻不出（${r.untranslated.map((u) => u.construct).join('、')}）>`
   // 未接住的例外：Cella 判 accept（以例外結束是有定義的行為），附一則 kind `uncaught`、類別 `termination`——對學生而言是「出錯停下」
-  const uncaught = r.problems.find((p) => p.kind === 'uncaught')
+  // cella 0.1.202611032235 起 NameError 另立 `undeclared`（類別照舊 termination）——兩種都是「出錯停下」
+  const uncaught = r.problems.find((p) => p.kind === 'uncaught' || p.kind === 'undeclared')
   if (r.verdict === 'accept' && uncaught) return `error|${r.out}<執行例外：${uncaught.reason ?? ''}>`
   if (r.verdict === 'accept') return `completed|${r.out}`
   if (r.verdict === 'reject') return `error|${r.out}<執行例外：${describeCellaResult(r)}>`

@@ -251,9 +251,8 @@ describe('結構化繫結與走訪的對象：五個面向', () => {
      * 我們送的本體是 `sBlock`（與一般的範圍 for 同形）；一般範圍 for、計數迴圈裡的同一行都 accept。2026-11-04 回報。
      * ⚠️ 之前（0.1.202611030753）擋在前面的是賦值右邊的大括號串列（`m[1] = {7, 8};`），cella-lang 0.1.202611031229 修好了——這一個才看得見。
      */
-    const GAPS: Record<string, RegExp> = {
-      '與既有的走訪並列': /a structured binding outside a block/,
-    }
+    // 🟢 2026-11-04：上面那一筆（sForBind 本體裡再一個結構化繫結）在 cfamily／cpp 0.1.202611032234 修好，轉正。
+    const GAPS: Record<string, RegExp> = {}
     const run5 = async (src: string): Promise<void> => {
       const ref = runCppDetailed(src)
       expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
