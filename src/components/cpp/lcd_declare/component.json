@@ -23,6 +23,7 @@
   "slots": {
     "initializer": "expressions"
   },
+  "slotTypes": {"initializer": {"type": "expr", "variadic": true}},
   "role": "statement",
   "declaresVariableType": "LiquidCrystal",
   "_declaresVariableType_why": "🟢 **這一格是這一批的關鍵**：它讓作用域記住 `lcd` 的型別是 `LiquidCrystal`，之後那個變數上的方法才查得到主人。⚠️ 沒有它的話，`lcd.someMethod()` 會落回通用的方法呼叫——而那正是這一批要治的病。",

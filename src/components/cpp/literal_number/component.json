@@ -25,6 +25,7 @@
     "formalize": "./formalize.ts"
   },
   "traits": {
+    "literalValue": "value",
     "forLoopPart": true
   },
   "_traits_why": "**優先級、我是不是二元運算子、我是不是字串字面值——都是我自己的性質**，不是共用表該列的身分。",

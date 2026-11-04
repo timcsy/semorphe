@@ -9,6 +9,7 @@
     }
   ],
   "slots": {},
+  "traits": {"unrecognized": true},
   "role": "statement",
   "owner": "(core)",
   "paths": {

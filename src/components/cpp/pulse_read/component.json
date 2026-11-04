@@ -7,6 +7,7 @@
     "state": "expression",
     "timeout": "expression"
   },
+  "slotTypes": {"pin": {"type": "int"}, "state": {"type": "enum", "values": ["HIGH", "LOW"]}, "timeout": {"type": "int"}},
   "role": "expression",
   "owner": "(arduino)",
   "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
