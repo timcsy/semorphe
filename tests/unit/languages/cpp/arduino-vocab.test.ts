@@ -21,7 +21,7 @@ describe('套件：從 owner＝(arduino) 的元件宣告抽出', () => {
     const dw = vocab.components['arduino:digital_write']
     expect(dw.kind).toBe('statement')
     expect(Object.keys(dw.params)).toEqual(['pin', 'value'])
-    expect(dw.params.value).toEqual({ type: 'enum', values: ['HIGH', 'LOW'] })
+    expect(dw.params.value).toEqual({ type: 'enum', values: ['HIGH', 'LOW'], required: true })
     expect(vocab.components['arduino:analog_read'].kind).toBe('expression')
     const sp = vocab.components['arduino:serial_print']
     expect(Object.keys(sp.params)).toEqual(['obj', 'newline', 'value', 'format'])
@@ -31,6 +31,20 @@ describe('套件：從 owner＝(arduino) 的元件宣告抽出', () => {
       expect(c.pins).toBe('未定')
       for (const [p, d] of Object.entries(c.params)) expect(types.has(d.type), `${n}.${p} 的型別 ${d.type}`).toBe(true)
     }
+  })
+
+  it('🔴 必填照實宣告：沒有預設值、不是可變長度、沒有宣告可省略的 ⟹ required（cos-mos 2026-11-04 量到少給參數會被放行）', () => {
+    expect(vocab.components['arduino:digital_write'].params.pin).toEqual({ type: 'int', required: true })
+    expect(vocab.components['arduino:delay'].params.ms.required).toBe(true)
+    // C++ 本來就能省的三個（產生器有「沒接就不寫」那一支）：不寫 required
+    expect(vocab.components['arduino:tone'].params.duration).toEqual({ type: 'int' })
+    expect(vocab.components['arduino:pulse_read'].params.timeout).toEqual({ type: 'int' })
+    expect(vocab.components['arduino:serial_print'].params.format.required).toBeUndefined()
+    // 有預設值的、可變長度的不是必填
+    expect(vocab.components['arduino:dht_read'].params.quantity.required).toBeUndefined()
+    expect(vocab.components['arduino:dht_declare'].params.initializer.required).toBeUndefined()
+    // 沒有「required 又帶 default」的衝突
+    for (const c of Object.values(vocab.components)) for (const d of Object.values(c.params)) expect(d.required && d.default !== undefined).toBeFalsy()
   })
 
   it('★ 下拉的選項變成 enum 的 values；簿記用的屬性（ctorCount）不進套件', () => {
