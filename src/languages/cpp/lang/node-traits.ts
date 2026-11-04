@@ -208,6 +208,17 @@ export interface NodeTraits {
   streamInput?: boolean
   /** 是最單純的變數宣告嗎（`int x;`）——動態積木蒐集變數名時要分辨它。 */
   plainDeclaration?: boolean
+  /**
+   * 這顆會改變串流的格式狀態（`fixed`、`setprecision`、`boolalpha`、`hex`、`setw`…）。
+   * ⚠️ 換成 printf 時要認得它（spec 215）：格式狀態是**執行期**的、會黏著影響之後的每一次輸出，
+   * 形式上保守的答案是「出現過就不換」——那不是這顆的實作，是風格轉換的知識。
+   */
+  changesStreamFormat?: boolean
+  /**
+   * 這顆會關掉 iostream 與 stdio 的同步（`ios::sync_with_stdio(false)`）。
+   * ⚠️ 換成 printf 時要認得它（spec 215）：之後 `cout` 與 `printf` 混用，輸出順序不保證——要嘛全換、要嘛全不換。
+   */
+  unsyncsStdio?: boolean
 }
 
 
@@ -312,6 +323,16 @@ export function isBinaryOperator(componentId: string): boolean {
 /** 這是字串字面值嗎（`properties.value` 是那串文字）。沒宣告＝不是。 */
 export function isStringLiteral(componentId: string): boolean {
   return traits(componentId)?.stringLiteral === true
+}
+
+/** 這顆會改變串流的格式狀態嗎（spec 215）。沒宣告＝不會。 */
+export function changesStreamFormat(componentId: string): boolean {
+  return traits(componentId)?.changesStreamFormat === true
+}
+
+/** 這顆會關掉 iostream 與 stdio 的同步嗎（spec 215）。沒宣告＝不會。 */
+export function unsyncsStdio(componentId: string): boolean {
+  return traits(componentId)?.unsyncsStdio === true
 }
 
 /** 這顆是換行標記嗎。沒宣告＝不是。 */

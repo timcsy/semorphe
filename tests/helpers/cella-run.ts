@@ -160,6 +160,17 @@ export async function runCella(code: string, opts: CellaRunOptions = {}): Promis
   }
 }
 
+/**
+ * 一棵樹每個運算式的型別（Cella 的 `types(program, []).nodes`，鍵是語意樹節點 id）——換風格產碼時用（spec 215）。
+ * 翻不出時回空表（產生器會保守：全部保留 cout）。
+ */
+export async function cellaTypesOfTree(tree: SemanticNode, opts: { lang?: 'cpp' | 'c'; board?: string } = {}): Promise<Record<string, string>> {
+  const p = await prepare()
+  const fz = formalize(tree, { lang: opts.lang ?? 'cpp', board: opts.board })
+  if (!fz.program) return {}
+  return p.checker.types(fz.program, []).nodes ?? {}
+}
+
 /** 一段說得出「為什麼不是 accept」的訊息 */
 export function describeCellaResult(r: CellaRunResult): string {
   if (r.verdict === 'untranslated') {

@@ -6,6 +6,7 @@ import { roleOf } from '../component/traits'
 import type { SemanticNode, StylePreset } from '../types'
 import type { DependencyResolver } from '../dependency-resolver'
 import type { ProgramScaffold, ScaffoldConfig } from '../program-scaffold'
+import { withoutGeneratedNotes } from './generated-notes'
 
 export type NodeGenerator = (node: SemanticNode, ctx: GeneratorContext) => string
 
@@ -45,6 +46,13 @@ export interface GeneratorContext {
   scaffoldConfig?: ScaffoldConfig
   /** 目前目標的標頭替換表（spec 150）——⚠️ 省略 ＝ 不換。 */
   headerAliases?: Readonly<Record<string, string>>
+  /**
+   * **運算式的型別**（spec 215）：語意樹節點 id → 型別字串（判決提供者給的，例如 Cella 的 `types().nodes`）。
+   * 換風格時要知道型別才產得對（`cout` → `printf` 的格式）。⚠️ 省略或查不到 ＝「不知道」——產生器要保守。
+   */
+  expressionTypes?: Readonly<Record<string, string>>
+  /** 這一趟產碼的根——要看整支程式的產生器用（例如「有沒有黏著的串流狀態」），核心只傳遞。 */
+  root?: SemanticNode
 }
 
 // ─── Language module registry ───
@@ -55,6 +63,13 @@ let globalProgramScaffold: ProgramScaffold | null = null
 let globalScaffoldConfig: ScaffoldConfig | null = null
 /** 目前目標的標頭替換表——⚠️ `null` ＝ 不換任何標頭（既有目標的行為）。 */
 let globalHeaderAliases: Readonly<Record<string, string>> | null = null
+/** 運算式的型別（spec 215）——⚠️ `null` ＝ 一律不知道。 */
+let globalExpressionTypes: Readonly<Record<string, string>> | null = null
+
+/** 設定（或清掉）運算式的型別——組裝點在判決提供者回來時呼叫；測試直接設。 */
+export function setExpressionTypes(types: Readonly<Record<string, string>> | null | undefined): void {
+  globalExpressionTypes = types ?? null
+}
 
 /** Set the dependency resolver for auto-include resolution */
 export function setDependencyResolver(resolver: DependencyResolver): void {
@@ -216,6 +231,8 @@ export function generateCode(tree: SemanticNode, language: string, style: StyleP
   if (globalProgramScaffold) ctx.programScaffold = globalProgramScaffold
   if (globalScaffoldConfig) ctx.scaffoldConfig = globalScaffoldConfig
   if (globalHeaderAliases) ctx.headerAliases = globalHeaderAliases
+  if (globalExpressionTypes) ctx.expressionTypes = globalExpressionTypes
+  ctx.root = tree
   return generateNode(tree, ctx).trim()
 }
 
@@ -248,8 +265,9 @@ export function generateCodeWithMapping(
   registerMetaComponentGenerators(generators)
   const mappings: CodeMapping[] = []
   const lineBox = { value: 0 }
-  const ctx: GeneratorContext = { indent: 0, style, language, generators, _mappings: mappings, _lineCount: 0, _lineBox: lineBox }
+  const ctx: GeneratorContext = { indent: 0, style, language, generators, _mappings: mappings, _lineCount: 0, _lineBox: lineBox, root: tree }
   if (globalDependencyResolver) ctx.dependencyResolver = globalDependencyResolver
+  if (globalExpressionTypes) ctx.expressionTypes = globalExpressionTypes
   if (globalProgramScaffold) ctx.programScaffold = globalProgramScaffold
   if (globalScaffoldConfig) ctx.scaffoldConfig = globalScaffoldConfig
   if (globalHeaderAliases) ctx.headerAliases = globalHeaderAliases
@@ -402,6 +420,12 @@ function otherStyleContexts(ctx: GeneratorContext): GeneratorContext[] {
 }
 
 export function generateNode(node: SemanticNode, ctx: GeneratorContext): string {
+  // 產碼自己加的註明（spec 215）讀回來也可能成為一顆獨立的註解節點（每個語言的註解都叫 `<語言>:comment`）——拿掉
+  if (node.componentId.endsWith(':comment') && typeof node.properties?.text === 'string') {
+    const kept = withoutGeneratedNotes(node.properties.text)
+    if (kept === '') return ''
+    if (kept !== node.properties.text) node = { ...node, properties: { ...node.properties, text: kept } }
+  }
   const nodeId = node.id
   const tracking = ctx._mappings && nodeId
   const box = ctx._lineBox
@@ -461,7 +485,11 @@ export function generateNode(node: SemanticNode, ctx: GeneratorContext): string 
 
   // Append inline annotations as trailing comments
   if (node.annotations?.length) {
-    const inlineComments = node.annotations.filter(a => a.position === 'inline')
+    // 產碼自己加的註明（spec 215）讀回來會變成標註——拿掉；那一行還需要的話，產生器自己會再加
+    const inlineComments = node.annotations
+      .filter(a => a.position === 'inline')
+      .map(a => ({ ...a, text: withoutGeneratedNotes(a.text) }))
+      .filter(a => a.text !== '')
     if (inlineComments.length > 0) {
       const commentText = inlineComments.map(a => a.text).join('; ')
       // Insert trailing comment before the final newline

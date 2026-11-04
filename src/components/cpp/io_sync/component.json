@@ -34,5 +34,9 @@
     },
     "formalize": "./formalize.ts"
   },
-  "_owner_why": "⚠️ **不是 `<iostream>`**——工具箱的 45 段有序來源裡沒有 `<iostream>`，而輸入輸出那一格收的是 `(universal) io`。`print`／`input`／`endl` 全在那裡，這兩顆與它們同族（都是輸入輸出流本身的事），所以同格。\n為兩顆加速元件單開一段的話，學生會看到一個只有兩顆積木的分類。\n而它們**只出現在競程課程清單**，初學者的工具箱不受影響——過濾是關卡做的，不是分類做的。"
+  "_owner_why": "⚠️ **不是 `<iostream>`**——工具箱的 45 段有序來源裡沒有 `<iostream>`，而輸入輸出那一格收的是 `(universal) io`。`print`／`input`／`endl` 全在那裡，這兩顆與它們同族（都是輸入輸出流本身的事），所以同格。\n為兩顆加速元件單開一段的話，學生會看到一個只有兩顆積木的分類。\n而它們**只出現在競程課程清單**，初學者的工具箱不受影響——過濾是關卡做的，不是分類做的。",
+  "traits": {
+    "unsyncsStdio": true
+  },
+  "_traits_why": "`ios::sync_with_stdio(false)` 之後 cout 與 printf 混用，輸出順序不保證——換成 printf 時要嘛全換、要嘛全不換（spec 215）。"
 }

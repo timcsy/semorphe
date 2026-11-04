@@ -26,7 +26,10 @@ export function extractScanf(argsNode: AstNode | null, ctx: LiftContext) {
   const values = args.slice(1).map(varArg => {
     if (varArg.type === 'unary_expression' || varArg.type === 'pointer_expression') {
       const inner = varArg.namedChildren[0]
-      if (inner?.type === 'subscript_expression') {
+      // 🔴 `&` 後面不是單純的名字（`&a[i]`、`&d[i].x`、`&p->x`）：照一般的運算式讀回。
+      //    原本只認下標，其餘把原文當成一個名字——`&d1[i].x` 變成名字叫 `d1[i].x` 的變數，結構整個丟了，
+      //    Cella 判「不是左值」（spec 215 量學生語料 I/O 切換時抓到；cin 那一側一直是對的）。
+      if (inner && inner.type !== 'identifier') {
         const lifted = ctx.lift(inner)
         if (lifted) return lifted
       }

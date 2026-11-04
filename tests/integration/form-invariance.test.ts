@@ -17,7 +17,7 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { sources } from '../helpers/binding-corpus'
 import { normalizeFormal, firstDifference } from '../helpers/normalize-formal'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { generateCode, setHeaderAliases } from '../../src/core/projection/code-generator'
+import { generateCode, setHeaderAliases, setExpressionTypes } from '../../src/core/projection/code-generator'
 import { formalize } from '../../src/providers/cella/formalize'
 import '../../src/languages/cpp/pack'
 import { languagePack } from '../../src/core/language-packs'
@@ -39,7 +39,7 @@ import apcs from '../../src/languages/cpp/styles/apcs.json'
 import google from '../../src/languages/cpp/styles/google.json'
 import cStyle from '../../src/languages/cpp/styles/c.json'
 import competitive from '../../src/languages/cpp/styles/competitive.json'
-import { runCella } from '../helpers/cella-run'
+import { runCella, cellaTypesOfTree } from '../helpers/cella-run'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
 const S = (x: unknown) => x as StylePreset
@@ -233,7 +233,10 @@ describe('換形態，判決不變（第五個面向）', () => {
     const out: string[] = []
     for (const r of rs) {
       const before = await runCella(generateCode(r.tree, 'cpp', r.style))
-      const after = await runCella(generateCode(viaCode(r, S(competitive)), 'cpp', S(competitive)))
+      // 型別由 Cella 給（spec 215）——產品裡是每次檢查回來的 `types.nodes`，這裡直接問
+      setExpressionTypes(await cellaTypesOfTree(shown(r.tree, r.style)))
+      let after
+      try { after = await runCella(generateCode(viaCode(r, S(competitive)), 'cpp', S(competitive))) } finally { setExpressionTypes(null) }
       if (before.verdict !== after.verdict || before.out !== after.out) {
         out.push(`${r.id}｜${before.verdict} ${JSON.stringify(before.out).slice(0, 40)} → ${after.verdict} ${JSON.stringify(after.out).slice(0, 40)}${after.problems[0] ? `（${after.problems[0].kind}：${(after.problems[0].reason ?? '').slice(0, 60)}）` : ''}`)
       }
@@ -247,21 +250,11 @@ describe('換形態，判決不變（第五個面向）', () => {
 })
 
 /**
- * I/O 風格切換的已知不一致（2026-11-04 spec 213 第一次量，17 支；Cella 那一族 7 支已修，剩 10 支）：
- * - **我們這側：產碼沒有型別表**（缺陷帳 2026-09-20 那根釘子：printf 對每一個運算式都寫 `%d`）——
- *   char 印成數字、double／long long 被判 ubPrintf、string 被當指標。何時修：產碼那一側拿到型別表的那一刀（`%c`／`%f`／`%lld`／`%s` 一起）。
- * - ~~Cella：printf 的格式字串裡直接寫中文會亂碼~~——cella 0.1.202611041233 修好（格式字串沒有轉成 UTF-8 位元組），7 支的釘子拔掉。
+ * I/O 風格切換的已知不一致——**今天是零**（2026-11-04）。
+ * spec 213 第一次量到 17 支：
+ * - ~~Cella：printf 的格式字串裡直接寫中文會亂碼~~（7 支）——cella 0.1.202611041233 修好。
+ * - ~~我們這側：printf 產碼沒有型別表~~（10 支：char 印成數字、double／long long 判 ubPrintf、string 當指標）——
+ *   spec 215 照 Cella 給的型別產（`%c`／`%g`／`%lld`／`%s` ＋ `.c_str()`／`%zu`），推不出的保留 cout 並註明。
+ * 新的不一致照樣先判是誰的缺陷：修掉，或附理由釘進這裡（修好時「過期」那一條會紅，逼人來拔）。
  */
-const TYPES = '我們這側：printf 產碼沒有型別表（%d 一律）'
-const IO_SWITCH_KNOWN: Record<string, string> = {
-  'cpp-beginner/02-型別/ex1.cpp': TYPES,
-  'cpp-beginner/02-型別/make.cpp': TYPES,
-  'cpp-beginner/02-型別/rebuild.cpp': TYPES,
-  'cpp-beginner/03-變數/make.cpp': TYPES,
-  'cpp-beginner/06-算一算/rebuild.cpp': TYPES,
-  'cpp-beginner/14-字串/ex1.cpp': TYPES,
-  'cpp-beginner/14-字串/rebuild.cpp': TYPES,
-  'cpp-beginner/15-vector/rebuild.cpp': TYPES,
-  'cpp-beginner/18-函式/ex2.cpp': TYPES,
-  'cpp-advanced/01-預備/make.cpp': TYPES,
-}
+const IO_SWITCH_KNOWN: Record<string, string> = {}
