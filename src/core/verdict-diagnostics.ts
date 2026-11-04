@@ -82,6 +82,8 @@ const KINDS: Record<string, { rule: string }> = {
   fuel: { rule: 'CELLA_FUEL' },
   // 求值順序未指定、而兩邊的副作用互相衝突（`f() + g()` 兩個都印東西）——標準允許不只一種結果（cella 0.1.202610312349 起）
   ubOrder: { rule: 'CELLA_UNSPECIFIED' },
+  // 兩種求值順序判斷功能沒有比較（why：access＝呼叫之外的讀寫、budget＝比較超過預算）——判不出，不是學生的錯（cella 0.1.202611042110）
+  orderUncompared: { rule: 'CELLA_ORDER_UNCOMPARED' },
   abort: { rule: 'CELLA_TERMINATION' },
   uncaught: { rule: 'CELLA_TERMINATION' },
 }
@@ -257,7 +259,8 @@ export function toDiagnostics(input: {
       // invalid 一律說成系統之間的問題（不看 kind 的文案——那些是說給「學生寫的程式」聽的）
       rule: !classified ? 'CELLA_UNCLASSIFIED' : p.category === 'invalid' ? 'CELLA_INVALID' : k?.rule ?? 'CELLA_OTHER',
       severity,
-      params: { kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
+      // 結構化的 params（字串與布林——cella 的值慣例）一併帶上，文案用得到（例如 orderUncompared 的 why）
+      params: { ...Object.fromEntries(Object.entries(p.params ?? {}).filter(([, v]) => typeof v === 'string' || typeof v === 'boolean').map(([k, v]) => [k, String(v)])), kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
     })
   }
   if (dropped > 0) notes.push('這支程式要讀輸入——給一份輸入，才判得出執行時的問題')

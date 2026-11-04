@@ -886,5 +886,7 @@
   "DIAG_KIND_ubTypeName": "型別名稱的用法有誤",
   "DIAG_KIND_ubUnseq": "同一個式子裡改了兩次同一個東西（先後順序沒有規定）",
   "DIAG_KIND_ubUnwind": "例外傳遞時出錯",
-  "DIAG_KIND_ubVlaSize": "可變長度陣列的大小不合法"
+  "DIAG_KIND_ubVlaSize": "可變長度陣列的大小不合法",
+  "DIAG_CELLA_ORDER_UNCOMPARED_BLOCK": "這裡的先後順序可能影響結果，判斷功能還比不出來",
+  "DIAG_CELLA_ORDER_UNCOMPARED_CODE": "求值順序可能影響結果，判斷功能沒有比較兩種順序（{why}）"
 }

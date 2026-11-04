@@ -317,10 +317,10 @@ void loop() {
   }, 60000)
 
   /** 帶記憶表的遞迴費氏數列，記憶表跨迴圈不重置，順便數呼叫次數　⚠️ 棘手處：呼叫次數只有前兩筆是特例，之後因為 memo 沒被清掉全部固定成 3——這段量到的「遞迴成本」完全取決於呼叫順序，單獨跑 fib(12) 會是幾百次 */
-  // 歸類：Cella 那側（疑似過度保守）——`fib(n - 1) + fib(n - 2)` 判 unknown（ubOrder：求值順序未指定且兩邊的效果衝突）。
+  // ~~Cella 那側（過度保守）——`fib(n - 1) + fib(n - 2)` 判 unknown（ubOrder）~~：0.1.202611042110 修好（兩種順序各跑一次再比，結果相同就照常判）。
   //   兩個呼叫的效果是 `calls++`（可交換）與 memo 的讀寫，而這支程式兩種順序印出的完全一樣（clang 實測把兩個呼叫拆成兩種順序：
   //   0:0/1 1:1/1 2:1/3 3:2/3 … 12:144/3，兩份一字不差）——判決說「the result depends on it」在這裡不成立。
-  it('🟡 已知缺陷（修好時這條會紅）：★ fuzz_16：帶記憶表的遞迴費氏數列，記憶表跨迴圈不重置，順便數呼', async () => {
+  it('★ fuzz_16：帶記憶表的遞迴費氏數列，記憶表跨迴圈不重置，順便數呼', async () => {
     const src = `long memo[16];
 bool ready[16];
 int calls = 0;
@@ -373,7 +373,7 @@ void loop() {
     const once = generateCode(lift(src), 'cpp', S)
     expect(generateCode(lift(once), 'cpp', S)).toBe(once)
     // 輸出比對**前綴**——見檔頭
-    await knownCellaGap(/ubOrder：the order of evaluation is unspecified/, async () => { expect(await run(src)).toContain(`0:0/1`) })
+    expect(await run(src)).toContain(`0:0/1`)
   }, 60000)
 
   /** 五格環形緩衝區做移動平均，索引倒著算還要補模數避免負數　⚠️ 棘手處：head - 1 - i 最小會到 -5，靠 + N * 2 才拉回正數（只加一次 N 還不夠）；緩衝區填滿之前平均的分母一直在變 */

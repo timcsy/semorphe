@@ -886,5 +886,7 @@
   "DIAG_KIND_ubTypeName": "misusing a type name",
   "DIAG_KIND_ubUnseq": "modifying the same thing twice without a defined order",
   "DIAG_KIND_ubUnwind": "an error while unwinding an exception",
-  "DIAG_KIND_ubVlaSize": "an invalid variable-length array size"
+  "DIAG_KIND_ubVlaSize": "an invalid variable-length array size",
+  "DIAG_CELLA_ORDER_UNCOMPARED_BLOCK": "The order of evaluation here may matter, and the checker could not compare the orders",
+  "DIAG_CELLA_ORDER_UNCOMPARED_CODE": "The order of evaluation may matter; the checker did not compare both orders ({why})"
 }

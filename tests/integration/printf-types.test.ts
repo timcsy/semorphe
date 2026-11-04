@@ -47,26 +47,33 @@ describe('printf：照型別', () => {
   })
 })
 
-describe('Cella 那側的缺口（釘住：修好時會紅）', () => {
-  it('🟡 v.size()：Cella 給那個 eMCall 節點的型別是接收者指標（std::vector<int> *），不是 unsigned long——我們保守地保留 cout', async () => {
+describe('原本是 Cella 那側的缺口（0.1.202611042110 修好，釘子拔掉）', () => {
+  it('🔴 v.size() → %lu（Cella 給呼叫結果的型別 unsigned long；原本被接收者的 this 蓋掉）', async () => {
     const code = main('  vector<int> v(3);\n  cout << v.size() << endl;')
     const { out } = await toPrintf(code)
-    // 保守設計擋住了：表上沒有指標型別 ⟹ 推不出 ⟹ 保留 cout（沒有寫成錯的格式）
+    expect(out).toContain('printf("%lu\\n", v.size());')
     await sameRun(code, out)
-    // 2026-11-04 回報 cella；修好時 Cella 給 unsigned long（LP64 的 size_t）⟹ 產出 %lu ⟹ 這層包裝會紅
-    await knownCellaGap(/to contain 'printf\("%lu/, async () => { expect(out).toContain('printf("%lu\\n", v.size());') })
   })
-  it('🟡 scanf(" %c")：Cella 沒有照格式先跳過空白（讀到 \\0）——我們產的是對的 C', async () => {
+  it('🔴 scanf(" %c")：先跳過空白再讀一個字元（原本 %c 後面多寫一個 \\0 蓋掉讀到的字元）', async () => {
     const code = main('  char c;\n  cin >> c;\n  cout << c << endl;')
     const { out } = await toPrintf(code)
     expect(out).toContain('scanf(" %c", &c);')
-    await knownCellaGap(/to deeply equal|toEqual/, async () => { await sameRun(code, out, '  z\n') })
+    await sameRun(code, out, '  z\n')
   })
-  it('🟡 while (scanf(…) == 1)：Cella 說 scanf 當運算式還不支援', async () => {
+  it('🔴 while (cin >> x) → while (scanf(…) == 1)：scanf 當運算式回傳讀到的個數', async () => {
     const code = main('  int x, sum = 0;\n  while (cin >> x) {\n    sum += x;\n  }\n  cout << sum << endl;')
     const { out } = await toPrintf(code)
     expect(out).toContain('while (scanf("%d", &x) == 1)')
-    await knownCellaGap(/to deeply equal|unknown/, async () => { await sameRun(code, out, '1 2 3\n') })
+    await sameRun(code, out, '1 2 3\n')
+  })
+})
+
+describe('Cella 那側的缺口（釘住：修好時會紅）', () => {
+  it('🟡 字串下標 s[0]：Cella 給的型別是 char *（應為 char；上一版是 std::string *、被保守退路蓋住）——表把 char * 當 C 字串，產出 %s', async () => {
+    const code = main('  string s = "ab";\n  cout << s[0] << endl;')
+    const { out } = await toPrintf(code)
+    // 2026-11-05 回報 cella；修好時 Cella 給 char ⟹ %c ⟹ 這層包裝會紅
+    await knownCellaGap(/to contain 'printf\("%c/, async () => { expect(out).toContain('printf("%c\\n", s[0]);') })
   })
 })
 
