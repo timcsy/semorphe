@@ -6,6 +6,7 @@
     "pin": "expression",
     "mode": "expression"
   },
+  "slotTypes": {"pin": {"type": "int"}, "mode": {"type": "enum", "values": ["INPUT", "OUTPUT", "INPUT_PULLUP"]}},
   "role": "statement",
   "owner": "(arduino)",
   "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",

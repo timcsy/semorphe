@@ -12,6 +12,7 @@
   "slots": {
     "baud": "expression"
   },
+  "slotTypes": {"baud": {"type": "int"}},
   "role": "statement",
   "owner": "(arduino)",
   "_owner_why": "**它屬於 Arduino 這個執行環境**——sketch 一行 `#include` 都沒有。",

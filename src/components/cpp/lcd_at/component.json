@@ -13,6 +13,7 @@
     "col": "expression",
     "row": "expression"
   },
+  "slotTypes": {"col": {"type": "int"}, "row": {"type": "int"}},
   "role": "statement",
   "owner": "(arduino)",
   "_owner_why": "**它屬於 Arduino 的套件生態**——`#include` 那一行就是它的申請書。",

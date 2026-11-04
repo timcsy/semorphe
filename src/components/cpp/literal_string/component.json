@@ -26,6 +26,7 @@
     "formalize": "./formalize.ts"
   },
   "traits": {
+    "literalValue": "value",
     "forLoopPart": true,
     "stringLiteral": true
   },

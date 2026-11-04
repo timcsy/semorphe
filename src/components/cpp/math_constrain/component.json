@@ -7,6 +7,7 @@
     "low": "expression",
     "high": "expression"
   },
+  "slotTypes": {"value": {"type": "expr"}, "low": {"type": "expr"}, "high": {"type": "expr"}},
   "role": "expression",
   "owner": "(arduino)",
   "_owner_why": "⚠️ 與同族的 `math_min`／`math_max` **不一樣**：那兩顆來自 `<algorithm>`，而 `constrain` 是 **Arduino 自己的巨集**，sketch 一行 `#include` 都不用。所以 `owner` 是 `(arduino)` 而 `requires` 是空的。 🟢 而工具箱分類跟著 （）走——它們在教學上就是一起用的（先對應範圍、再夾住），而學生會在同一格找。",

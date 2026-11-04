@@ -18,6 +18,7 @@
     "value": "expression",
     "format": "expression"
   },
+  "slotTypes": {"value": {"type": "expr"}, "format": {"type": "enum", "values": ["DEC", "HEX", "OCT", "BIN"]}},
   "role": "statement",
   "owner": "(arduino)",
   "traits": {

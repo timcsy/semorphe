@@ -96,9 +96,17 @@
 - 翻不出的（沒有詞彙名字的元件）進 `unmapped`，不靜默丟。
 - 推送：semorphe 在宿主層提供 `onStructure(cb)`，樹每變一次推一份（SemanticBus 的樹變事件）。
 
+## 實作時定下的（第 258 刀，2026-11-04）
+
+- 接點型別寫在宣告的**平行欄位** `slotTypes`（`"slotTypes": {"pin": {"type": "int"}, …}`），不改 `slots` 的形狀——讀 `slots` 的地方（四路、形態、護欄）一個都不用動。32 份宣告、56 個接點（53 單一 ＋ 3 可變長度）。
+- 只有 `true`／`false` 兩個選項的下拉（`serial_print` 的 `newline`）在套件裡是 `bool`，動作清單給真的布林。
+- 簿記用的屬性（`ctorCount`）不進套件——它是建構參數的個數，由 `initializer` 推得出來。
+- 「字面值」與「認不出來的那一段」由元件自己宣告（`traits.literalValue`、`traits.unrecognized`），詞彙模組不點名身分。
+- 匯出：`ARDUINO_VOCAB_OUT=<目錄> npx vitest run tests/probes/export-arduino-vocab.test.ts` → `package.json`、`vocab.json`（帶 `contentHash`）、`semorphe-map.json`。第一版的雜湊 `sha256:fcc8b12f…d3d`。
+
 ## 還沒做的（實作那一刀，約 1 天）
 
-1. 依 (b) 補 53 個接點的型別（或使用者選別的選項）。
-2. 匯出工具：`tools/export-arduino-vocab.ts` → `build/cos-mos-arduino/`（套件 JSON ＋ 對照表 ＋ 雜湊）；護欄：43 顆都在、對照表一對一、每個 param 都有型別。
-3. `onStructure`：語意樹 → 動作清單的投影，附單元測試（含 `unmapped`、`{ expr }`、版本遞增）。
+1. ✅ 補接點型別（`slotTypes`）。
+2. ✅ 匯出（探針，見上）；單元測試守著：43 顆都在、對照表一對一、每個 param 都有型別、雜湊的測試向量。
+3. 🟡 `structureOf`（語意樹 → 動作清單）✅ 附單元測試；**宿主層的 `onStructure` 推送還沒接**——接上時產品才走到這個模組（`audit-tests-import-reachable` 的例外記著）。
 4. 交給 cos-mos 的主持人；發布前由主持人問使用者。

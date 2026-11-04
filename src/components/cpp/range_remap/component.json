@@ -9,6 +9,7 @@
     "to_low": "expression",
     "to_high": "expression"
   },
+  "slotTypes": {"value": {"type": "expr"}, "from_low": {"type": "expr"}, "from_high": {"type": "expr"}, "to_low": {"type": "expr"}, "to_high": {"type": "expr"}},
   "role": "expression",
   "owner": "(arduino)",
   "_owner_why": "**它屬於 Arduino 這個執行環境**，不屬於任何 C++ 標頭——sketch 一行 `#include` 都沒有。",
