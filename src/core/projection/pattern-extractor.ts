@@ -4,6 +4,7 @@ import { createNode } from '../semantic-tree'
 import type { Annotation } from '../types'
 import { resolvePath, resolvePattern } from './common-mappings'
 import { componentWithTrait } from '../component/traits'
+import { isExpressionStatementBlock } from '../blocks/degradation-blocks'
 
 export interface BlockState {
   type: string
@@ -92,6 +93,11 @@ export class PatternExtractor {
 
   /** Extract a SemanticNode from a BlockState. Returns null if no extract spec found. */
   extract(block: BlockState): SemanticNode | null {
+    // 「運算式當敘述」的包裝不是語意節點（spec 214）——拆掉，抽裡面那顆運算式；空的包裝是還沒寫完，不產節點
+    if (isExpressionStatementBlock(block.type)) {
+      const inner = block.inputs?.EXPR?.block
+      return inner ? this.extract(inner) : null
+    }
     // Check for hand-written extraction strategy FIRST
     const strategy = this.extractStrategies.get(block.type)
     if (strategy) {

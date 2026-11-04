@@ -83,5 +83,72 @@
         }
       ]
     }
+  },
+  {
+    "id": "cpp_pointer_declare_expression",
+    "componentId": "cpp:pointer_declare",
+    "language": "cpp",
+    "category": "pointers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pointer_declare_expression",
+      "message0": "%{BKY_C_POINTER_DECLARE_EXPR_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_DOUBLE}",
+              "double"
+            ],
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_CHAR}",
+              "char"
+            ],
+            [
+              "%{BKY_C_POINTER_DECLARE_TYPE_VOID}",
+              "void"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "ptr"
+        },
+        {
+          "type": "input_value",
+          "name": "INIT",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_C_POINTER_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "TYPE": "type",
+        "NAME": "name"
+      },
+      "inputs": {
+        "INIT": "initializer"
+      }
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    },
+    "_why": "spec 214：`for (int* p = begin(a); …)` 的第一格是一顆指標宣告，而 `for` 的 INIT 只收運算式——沒有這個形態時它被降級成原文積木（`statement_in_expression`），走一趟積木就翻不出（學生語料 basic/14_array_1）。與 `cpp_var_declare_expression` 同一個形狀：版面緊湊、住在 `for` 的第一格。"
   }
 ]

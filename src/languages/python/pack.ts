@@ -31,6 +31,7 @@ import { registerPythonLanguage } from './install'
 declareDegradationBlocks('python', {
   statement: 'python_raw_code',
   expression: 'python_raw_expression',
+  expressionStatement: 'python_expression_statement',
 })
 declareCommentSyntax('python', pythonCommentSyntax)
 

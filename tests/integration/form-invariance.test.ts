@@ -144,7 +144,7 @@ describe('換形態，判決不變（第五個面向）', () => {
 
   /**
    * 學生語料量到、課文沒有的形狀（2026-11-04 spec 213 的探針 form-invariance-studycpp）：走一趟積木就換意思或翻不出。
-   * 修好的兩族在這裡常駐；「運算式當敘述」那一族還沒修，用 knownGap 釘住（修好會紅）。
+   * 修好的三族在這裡常駐（「運算式當敘述」那一族在 spec 214 修好）。
    */
   const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
   const same = (code: string): string | null => {
@@ -162,10 +162,25 @@ describe('換形態，判決不變（第五個面向）', () => {
   it.each([
     ['cc[1];（運算式當敘述）', H + 'int main() {\n  map<int, int> cc;\n  cc[1];\n  return 0;\n}\n'],
     ['(c ? A = 1 : A = 0);', H + 'int main() {\n  int A;\n  (1 ? A = 1 : A = 0);\n  return 0;\n}\n'],
-  ])('🟡 已知缺陷（修好時這條會紅）：%s 走一趟積木會跑到 main 外面', (_l, code) => {
-    // 歸類：積木那一側——沒有敘述形態的運算式渲染成浮動的頂層積木（2026-09-10 的決定：不丟、不硬接），
-    // 而抽回來時它就不在 main 裡了。何時修：「運算式當敘述」的包裝積木那一刀（spec 214）。
-    expect(same(code)).toMatch(/翻不出|≠/)
+  ])('🔴 運算式當敘述走一趟積木：%s 留在原位（spec 214 的包裝積木）', (_l, code) => {
+    // 原本：沒有敘述形態的運算式渲染成浮動的頂層積木（2026-09-10：不丟、不硬接），抽回來時跑到 main 外面。
+    expect(same(code)).toBeNull()
+    // ③ 載得進工作區：包裝接在鏈上，Blockly 不拒絕
+    const { blockMappings: _drop, ...state } = renderToBlocklyState(lift(code))
+    const ws = new Blockly.Workspace()
+    Blockly.serialization.workspaces.load(state as never, ws)
+    expect(ws.getAllBlocks(false).some((b) => b.type === 'cpp_expression_statement')).toBe(true)
+    expect(ws.getTopBlocks(false), '整支程式是一串，沒有浮在旁邊的').toHaveLength(1)
+    ws.dispose()
+  })
+  it('🔴 for 的第一格是指標宣告（for (int* p = begin(a); …)）走一趟積木：照樣翻得出', () => {
+    // 原本 pointer_declare 沒有運算式形態，在 for 的 INIT 被降級成原文積木（學生語料 basic/14_array_1，spec 214 順手修）
+    expect(same(H + 'int main() {\n  int a[3] = {1, 2, 3};\n  for (int* p = begin(a); p != end(a); p++) {\n    cout << *p;\n  }\n  return 0;\n}\n')).toBeNull()
+  })
+  it('🔴 有敘述形態的元件不套包裝；空的包裝不產節點', () => {
+    const { blockMappings: _drop, ...state } = renderToBlocklyState(lift(H + 'int main() {\n  vector<int> v;\n  v.push_back(1);\n  return 0;\n}\n'))
+    expect(JSON.stringify(state)).not.toContain('cpp_expression_statement')
+    expect(extractor.extract({ type: 'cpp_expression_statement', id: 'w', fields: {}, inputs: {} } as never)).toBeNull()
   })
 
   it('🔴 (a) 同風格產碼再讀回：翻給 Cella 的程式相同', () => {

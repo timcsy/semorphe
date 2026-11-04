@@ -5,5 +5,6 @@
   "C_POINTER_DECLARE_TYPE_FLOAT": "float（小數）",
   "C_POINTER_DECLARE_TYPE_DOUBLE": "double（精確小數）",
   "C_POINTER_DECLARE_TYPE_CHAR": "char（字元）",
-  "C_POINTER_DECLARE_TYPE_VOID": "void（無回傳）"
+  "C_POINTER_DECLARE_TYPE_VOID": "void（無回傳）",
+  "C_POINTER_DECLARE_EXPR_MSG0": "%1 指標 %2 = %3"
 }
