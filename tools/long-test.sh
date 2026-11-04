@@ -8,6 +8,9 @@
 #   ① 等 cella 用「沒有【正在跑】的」——cella 讓出空檔是 SIGSTOP（行程還在、STAT 是 T），`pgrep` 照樣查得到，會永遠等下去
 #   ② （2026-11-04 退場）全套曾經要帶參照編譯器的墊片——6c-5 之後 npm test 不再呼叫參照編譯器，只有探針 refcc-cross-check 要它
 #   ③ e2e 不佔 4173／4199 以外的人：用暫存設定在指定的埠起 preview，跑完刪掉暫存設定
+#   ④ 跑的期間 worktree 被改過，量到的是一個沒有人提交過的混合狀態（experience〈長測試讀的是 worktree 的【現在】〉）
+#      ——處方寫了「不動」而 2026-11-04、05 又各犯一次，所以改成機器在擋：開跑與結束各取一次【檔案內容】的指紋，
+#      不一樣就大聲說、結束碼改成 3。指紋是內容的樹雜湊（暫時的 index ＋ write-tree），中途【提交】不算改（內容沒變）。
 set -u
 WT=${1:?用法：tools/long-test.sh <worktree> <輸出目錄> [--suite] [--build] [--e2e] [--port N] [--only 檔名…]}
 OUT=${2:?缺輸出目錄（放 scratchpad）}
@@ -36,6 +39,8 @@ strip() { LC_ALL=C sed 's/\x1b\[[0-9;]*m//g'; }
 
 cd "$WT" || exit 1
 status=0
+fingerprint() { local idx; idx=$(mktemp); cp "$(git rev-parse --git-path index)" "$idx" 2>/dev/null; GIT_INDEX_FILE="$idx" git add -A . >/dev/null 2>&1; GIT_INDEX_FILE="$idx" git write-tree; rm -f "$idx"; }
+FP_START=$(fingerprint)
 
 if [ $SUITE = 1 ]; then
   wait_cella
@@ -69,5 +74,9 @@ EOF
   grep -E '✘|passed|failed|flaky' "$OUT/e2e-$NAME.log" | tail -12
 fi
 
+if [ "$(fingerprint)" != "$FP_START" ]; then
+  echo "🔴 跑的期間 $WT 的檔案被改過——這一輪量到的是混合狀態，結果不能當合併的依據；改好後重跑（長測試在跑的 worktree 不動，要做別的就開新的 worktree）"
+  status=3
+fi
 echo "結束 $(date +%T)"
 exit $status
