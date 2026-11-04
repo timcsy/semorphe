@@ -17,13 +17,15 @@
  *
  * > **一個只寫得出「一個」的讀取器，在遇到兩個的時候不會出聲
  * > ——它會安靜地讀完第一個就回去。**
+ *
+ * 2026-11-04（spec 212，6c-5）：參照編譯器那一半拿掉——期望值是當時 g++ 跑出來、與 Cella 一致的字串，寫死在這裡
+ * （擷取在本機的 Apple clang 上做；這一檔的呼叫點全部兩邊相同，不同的那幾條原本就包在 `knownCellaGap` 裡，期望字串照樣寫 g++ 的值）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
-import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import type { SemanticNode } from '../../src/core/types'
 
 const ROOT = process.cwd()
@@ -43,7 +45,7 @@ const lift = (c: string): SemanticNode =>
 /**
  * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
  * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
- * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ * 比對的另一邊是參照編譯器當時跑出來的字串（spec 212，6c-5 起寫死在呼叫點），所以這裡仍是「Cella 對參照編譯器」的交叉檢查。
  */
 const cellaOut = async (src: string): Promise<string> => {
   const r = await runCella(src)
@@ -51,79 +53,71 @@ const cellaOut = async (src: string): Promise<string> => {
   return r.out
 }
 const run = cellaOut
-/**
- * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
- * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
- * 手列的話，本機全綠而 CI 紅，訊息還會說「測試自己的問題」。
- * 見第 120 條護欄 `audit-refcc-headers`。
- */
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 const prog = (body: string): string => `${H}int main(){ ${body} return 0; }\n`
 
-const sameAsCompiler = async (body: string, hint: string): Promise<void> => {
-  const src = prog(body)
-  const ref = runCppDetailed(src)
-  expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-  expect(await run(src), hint).toBe(ref.output)
+/** `expected`：當時 g++ 跑出來、與 Cella 一致的輸出（寫死，spec 212）。 */
+const sameAsCompiler = async (body: string, expected: string, hint: string): Promise<void> => {
+  expect(await run(prog(body)), hint).toBe(expected)
 }
 
 describe('模糊測試：迭代器的邊界', () => {
-  it.runIf(hasReferenceCompiler())('🔴 一個 `auto` 宣告兩個名字', async () => {
+  it('🔴 一個 `auto` 宣告兩個名字', async () => {
     await sameAsCompiler(
       `set<int> s; for (int i = 1; i <= 9; i++) s.insert(i);
        auto lo = s.lower_bound(3), hi = s.upper_bound(6);
        int n = 0, sum = 0; for (auto it = lo; it != hi; ++it) { n++; sum += *it; }
-       cout << n << ' ' << sum;`,
+       cout << n << ' ' << sum;`, "4 18",
       '🔴 只認得第一個宣告子的話，第二個名字整個蒸發，而錯誤會指著【使用】的那一行')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 邊走邊刪：`it = c.erase(it)`（語料用的那一個）', async () => {
+  it('🔴 邊走邊刪：`it = c.erase(it)`（語料用的那一個）', async () => {
     await sameAsCompiler(
       `set<int> s; for (int i = 1; i <= 6; i++) s.insert(i);
        for (auto it = s.begin(); it != s.end(); ) { if (*it % 2 == 0) it = s.erase(it); else ++it; }
-       for (int v : s) cout << v; cout << s.size();`,
+       for (int v : s) cout << v; cout << s.size();`, "1353",
       '🔴 刪除要回傳下一個位置，否則迴圈會跳過一格或走不完')
   }, 60_000)
 
   // 歸類：Cella 判錯——類別迭代器的 `it->second`（`operator->`）被判「不是指標」；`(*it).second` 是好的
-  it.runIf(hasReferenceCompiler())('🔴 邊走邊刪：對照表那一側', async () => {
+  it('🔴 邊走邊刪：對照表那一側', async () => {
     await sameAsCompiler(
       `map<int,int> m; for (int i = 1; i <= 5; i++) m[i] = i * i;
        for (auto it = m.begin(); it != m.end(); ) { if (it->second > 9) it = m.erase(it); else ++it; }
-       cout << m.size(); for (auto& p : m) cout << p.first;`, '')
+       cout << m.size(); for (auto& p : m) cout << p.first;`, "3123", '')
   }, 60_000)
 
   // 歸類：Cella 未支援——vector::erase
-  it.runIf(hasReferenceCompiler())('🔴 邊走邊刪：列表那一側（`erase` 回傳下一個）', async () => {
+  it('🔴 邊走邊刪：列表那一側（`erase` 回傳下一個）', async () => {
     await sameAsCompiler(
       `vector<int> v{1,2,3,4};
        for (auto it = v.begin(); it != v.end(); ) { if (*it % 2 == 0) it = v.erase(it); else ++it; }
-       for (int x : v) cout << x;`, '')
+       for (int x : v) cout << x;`, "13", '')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('★ 空容器：`begin() == end()`，而迴圈跑零次', async () => {
+  it('★ 空容器：`begin() == end()`，而迴圈跑零次', async () => {
     await sameAsCompiler(
       `set<int> s; cout << (s.begin() == s.end()) << s.empty();
-       int n = 0; for (auto it = s.begin(); it != s.end(); ++it) n++; cout << n;`,
+       int n = 0; for (auto it = s.begin(); it != s.end(); ++it) n++; cout << n;`, "110",
       '🔴 這是良好定義的——而空容器上【解參考】才是未定義，那一條不在這裡')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 位置算術：排序過的列表上二分搜', async () => {
+  it('🔴 位置算術：排序過的列表上二分搜', async () => {
     await sameAsCompiler(
       `vector<int> v{5,3,9,1}; sort(v.begin(), v.end());
-       auto it = lower_bound(v.begin(), v.end(), 4); cout << *it << (it - v.begin());`,
+       auto it = lower_bound(v.begin(), v.end(), 4); cout << *it << (it - v.begin());`, "52",
       '🔴 自由函式那一形式吃的是兩個位置——與方法那一形式是不同的身分')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 後置遞增在運算式位置回傳舊的', async () => {
-    await sameAsCompiler(`vector<int> v{7,8,9}; auto it = v.begin(); cout << *it++ << *it;`,
+  it('🔴 後置遞增在運算式位置回傳舊的', async () => {
+    await sameAsCompiler(`vector<int> v{7,8,9}; auto it = v.begin(); cout << *it++ << *it;`, "78",
       '🔴 `*it++` 印的是舊位置上的值，而 `it` 已經往前一格')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('★ 找不到：`c.find(x) == c.end()` 的標準寫法', async () => {
+  it('★ 找不到：`c.find(x) == c.end()` 的標準寫法', async () => {
     await sameAsCompiler(
       `set<string> s; s.insert("ab");
-       cout << (s.find("zz") == s.end()) << (s.find("ab") != s.end());`, '')
+       cout << (s.find("zz") == s.end()) << (s.find("ab") != s.end());`, "11", '')
   }, 60_000)
 
   // ─── 第二輪盲測壓出來的三個（2026-09-17，全部當場修好） ──────
@@ -141,16 +135,14 @@ describe('模糊測試：迭代器的邊界', () => {
   it('回傳一個對照表，接住它的宣告要真的接到', async () => {
     const src = `${H}map<char,int> f(){ map<char,int> m; m['a']=1; return m; }\n`
       + `int main(){ map<char,int> r=f(); cout<<r.size()<<r['a']; return 0; }\n`
-    const ref = runCppDetailed(src)
-    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-    expect(await run(src), '🔴 回傳的容器整個掉了').toBe(ref.output)
+    expect(await run(src), '🔴 回傳的容器整個掉了').toBe("11")
   }, 60_000)
 
   it('用另一個集合建起來——而複製要真的是複製', async () => {
     // ⚠️ 正向錨點在後半段：`a.size()` 必須是 1。
     //    淺複製的話 `b.insert(4)` 會同時改到 `a`，而那種錯不在建立的那一行出聲。
     await sameAsCompiler(
-      `set<int> a; a.insert(3); set<int> b = a; b.insert(4); cout << a.size() << b.size();`,
+      `set<int> a; a.insert(3); set<int> b = a; b.insert(4); cout << a.size() << b.size();`, "12",
       '🔴 兩個集合共用了同一串格子')
   }, 60_000)
 
@@ -167,12 +159,12 @@ describe('模糊測試：迭代器的邊界', () => {
   it('const ＋ 陣列：一維、指標元素、不寫大小', async () => {
     await sameAsCompiler(
       `const int a[3] = {1,2,3}; const char* n[2] = {"ab","cd"}; const char* m[] = {"x","y"};
-       cout << a[1] << n[1] << m[0];`, '🔴 const 把陣列那一層吃掉了')
+       cout << a[1] << n[1] << m[0];`, "2cdx", '🔴 const 把陣列那一層吃掉了')
   }, 60_000)
 
   it('const ＋ 二維陣列', async () => {
     await sameAsCompiler(
-      `const int t[2][3] = {{1,2,3},{4,5,6}}; cout << t[1][2] << t[0][0];`,
+      `const int t[2][3] = {{1,2,3},{4,5,6}}; cout << t[1][2] << t[0][0];`, "61",
       '🔴 const ＋ 二維：維度被塞進名字')
   }, 60_000)
 
@@ -195,9 +187,7 @@ describe('模糊測試：迭代器的邊界', () => {
       + `int main(){ string base = "banana"; string t = squeeze(base, 'a');\n`
       + `  int n = 0; for (string::const_iterator it = base.begin(); it != base.end(); ++it) n++;\n`
       + `  cout << t << ' ' << base << ' ' << n; return 0; }\n`
-    const ref = runCppDetailed(src)
-    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-    expect(await run(src), '🔴 傳值的複本與呼叫者共用了字元格子').toBe(ref.output)
+    expect(await run(src), '🔴 傳值的複本與呼叫者共用了字元格子').toBe("bnn banana 6")
   }, 60_000)
 
   /**
@@ -212,7 +202,7 @@ describe('模糊測試：迭代器的邊界', () => {
   it('建構參數裡的下標不得消失：`string w(names[i])`', async () => {
     await sameAsCompiler(
       `const char* names[3] = {"do","re","mi"};
-       for (int i = 0; i < 3; i++) { string w(names[i]); cout << w << w.size(); }`,
+       for (int i = 0; i < 3; i++) { string w(names[i]); cout << w << w.size(); }`, "do2re2mi2",
       '🔴 兩個不同的下標 lift 成同一棵樹')
   }, 60_000)
 
@@ -232,7 +222,7 @@ describe('模糊測試：迭代器的邊界', () => {
   it('`->` 的接收者可以是一棵樹', async () => {
     await sameAsCompiler(
       `map<int, vector<int>> m; m[1].push_back(7);
-       cout << m.begin()->second.size() << m.begin()->first;`,
+       cout << m.begin()->second.size() << m.begin()->first;`, "11",
       '🔴 `->` 的接收者被壓成文字了')
   }, 60_000)
 
@@ -241,9 +231,7 @@ describe('模糊測試：迭代器的邊界', () => {
     const src = `${H}int g(const vector<int>& v){ return v.size(); }\n`
       + `int main(){ map<int,vector<int>> m; m[1].push_back(7); m[2].push_back(1); m[2].push_back(2);\n`
       + `  for (auto it = m.begin(); it != m.end(); ++it) cout << g(it->second); return 0; }\n`
-    const ref = runCppDetailed(src)
-    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-    expect(await run(src), '🔴 `it->second` 當引數傳不過去').toBe(ref.output)
+    expect(await run(src), '🔴 `it->second` 當引數傳不過去').toBe("12")
   }, 60_000)
 
   // ─── 壓出來而這一刀不修的，各留一支 ────────────────────────
@@ -270,7 +258,7 @@ describe('模糊測試：迭代器的邊界', () => {
     //    別人手上的仍然有效——所以這一格有唯一的正確答案，進得了判準。
     await sameAsCompiler(
       `set<int> s; for (int i = 1; i <= 4; i++) s.insert(i);
-       auto a = s.begin(); auto b = a; ++b; ++b; s.erase(a); cout << *b;`, '')
+       auto a = s.begin(); auto b = a; ++b; ++b; s.erase(a); cout << *b;`, "3", '')
   }, 60_000)
 
   /**
@@ -285,7 +273,7 @@ describe('模糊測試：迭代器的邊界', () => {
       `set<int> s; for (int i = 1; i <= 6; i++) s.insert(i);
        auto it = s.begin(); int n = 0;
        while (it != s.end()) { if (*it % 2 == 0) { s.erase(it++); n++; } else ++it; }
-       cout << n << s.size(); for (int x : s) cout << x;`,
+       cout << n << s.size(); for (int x : s) cout << x;`, "33135",
       '🔴 挪過去的位置指到了再下一個——每刪一格就跳過一格')
   }, 60_000)
 
@@ -295,7 +283,7 @@ describe('模糊測試：迭代器的邊界', () => {
       `map<int,int> m; for (int i = 0; i < 5; i++) m[i] = i * i;
        auto it = m.begin(); int n = 0;
        while (it != m.end()) { if (it->second < 9) { m.erase(it++); n++; } else ++it; }
-       cout << n << m.size();`, '')
+       cout << n << m.size();`, "32", '')
   }, 60_000)
 
   // 歸類：Cella 未支援——vector::erase
@@ -303,7 +291,7 @@ describe('模糊測試：迭代器的邊界', () => {
     await sameAsCompiler(
       `vector<int> v{1,2,3,4,5,6}; auto it = v.begin(); int n = 0;
        while (it != v.end()) { if (*it % 2) { it = v.erase(it); n++; } else ++it; }
-       cout << n << v.size(); for (int x : v) cout << x;`, '')
+       cout << n << v.size(); for (int x : v) cout << x;`, "33246", '')
   }, 60_000)
 
   // 歸類：Cella 判錯——`multiset<int> ms{…}` 的 initializer_list 建構子被判 reject
@@ -312,7 +300,7 @@ describe('模糊測試：迭代器的邊界', () => {
       `multiset<int> ms{1,2,3,4,5,6,7};
        auto lo = ms.lower_bound(3); auto hi = ms.upper_bound(5);
        ms.erase(ms.find(1));
-       cout << *lo << *hi << ms.size();`,
+       cout << *lo << *hi << ms.size();`, "366",
       '🔴 刪掉第 0 格之後，手上那兩個位置各該往前一格')
   }, 60_000)
 
@@ -348,9 +336,7 @@ describe('模糊測試：迭代器的邊界', () => {
     walk(lift(src))
     expect([...ids], '🔴 `g.find(u)` 被認成字串的 find（回 -1）').toContain('cpp:container_find')
     expect([...ids], '🔴 接收者的型別查不到，於是落到字串那一支').not.toContain('cpp:string_find')
-    const ref = runCppDetailed(src)
-    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-    expect(await run(src), '🔴 別名 ＋ 修飾詞的參數型別沒解開').toBe(ref.output)
+    expect(await run(src), '🔴 別名 ＋ 修飾詞的參數型別沒解開').toBe("21-1")
   }, 60_000)
 
   /**
@@ -369,9 +355,7 @@ describe('模糊測試：迭代器的邊界', () => {
     const src = `${H}int eat(vector<int>::iterator it, vector<int>::iterator end){\n`
       + `  int n = 0; while (it != end) { n += *it; ++it; } return n; }\n`
       + `int main(){ vector<int> v{1,2,3,4}; cout << eat(v.begin(), v.end()); return 0; }\n`
-    const ref = runCppDetailed(src)
-    expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-    expect(await run(src), '🔴 傳值把位置底下那串格子複製走了').toBe(ref.output)
+    expect(await run(src), '🔴 傳值把位置底下那串格子複製走了').toBe("10")
   }, 60_000)
 
   /**
@@ -383,7 +367,7 @@ describe('模糊測試：迭代器的邊界', () => {
     await sameAsCompiler(
       `string t = "100"; long long n = 0;
        for (string::const_iterator c = t.begin(); c != t.end(); ++c) n = n * 10 + (*c - '0');
-       long long r = 7; n /= r; cout << n;`,
+       long long r = 7; n /= r; cout << n;`, "14",
       '🔴 `char - char` 被算成小數了')
   }, 60_000)
 
@@ -397,7 +381,7 @@ describe('模糊測試：迭代器的邊界', () => {
   it('★ 巢狀容器的接收者：`m[1].insert(5)`', async () => {
     await sameAsCompiler(
       `map<int,set<int>> m; m[1].insert(5); m[1].insert(3);
-       for (auto it = m[1].begin(); it != m[1].end(); ++it) cout << *it; cout << m[1].size();`, '')
+       for (auto it = m[1].begin(); it != m[1].end(); ++it) cout << *it; cout << m[1].size();`, "352", '')
   }, 60_000)
 })
 
@@ -921,12 +905,10 @@ int main() {
  *
  * 見下面那一族釘子。**它是這一輪最大的單一缺口。**
  */
-describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格', () => {
+describe('盲測第二輪：位置的相鄰一格', () => {
   /** 整支程式（這一輪的題目自己帶函式與 `main`，不能套 `prog()`）。 */
-  const whole = async (code: string, hint: string): Promise<void> => {
-    const ref = runCppDetailed(code)
-    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-    expect(await run(code), hint).toBe(ref.output)
+  const whole = async (code: string, expected: string, hint: string): Promise<void> => {
+    expect(await run(code), hint).toBe(expected)
   }
 
   /**
@@ -939,7 +921,7 @@ describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格'
   // 歸類：Cella 未支援——自由函式 std::begin／std::end
   it('🟡 已知缺陷（修好時這條會紅）：🟢 fuzz_03｜原始 C 陣列上的指標位置', async () => {
     await knownCellaGap(/std::end is not supported yet/, async () => {
-      await whole(P03, '')
+      await whole(P03, "n = 10\nfirst run ends at index 0 value 37\nraw sum = 400\nmax = 90 at 4\n3 12 12 21 37 47 55 55 68 90 \nmid = 47, before = 37, after = 55\nfound 47 at 5, prev 37, next 55\nwindow [12,55] length 7\nwindow sum = 239\ndistinct = 8: 3 12 21 37 47 55 68 90\nshifted: 0 9 18 34 44 52 65 87\nreversed front part: 87 65 52 44 34 18 9 0\n", '')
     })
   }, 180_000)
 
@@ -956,7 +938,7 @@ describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格'
       `set<int> s = {4, 8, 15, 16, 23, 42};
        auto it = s.find(16);
        cout << *prev(it, 2) << " " << *next(it, 2) << "\\n";
-       cout << *prev(s.end(), 2) << " " << *next(s.begin(), 3) << "\\n";`,
+       cout << *prev(s.end(), 2) << " " << *next(s.begin(), 3) << "\\n";`, "8 42\n23 16\n",
       '🔴 第二個引數掉了——而產出的碼仍然編得過')
   }, 120_000)
 
@@ -970,7 +952,7 @@ describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格'
       await sameAsCompiler(
         `map<string,int> m{{"amy",88},{"bob",42},{"cin",95},{"dan",60}};
          auto it = m.find("bob");
-         cout << next(it, 2)->first << " " << prev(m.end(), 3)->second << "\\n";`,
+         cout << next(it, 2)->first << " " << prev(m.end(), 3)->second << "\\n";`, "dan 42\n",
         '🔴 第二個引數掉了')
     })
   }, 120_000)
@@ -979,7 +961,7 @@ describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格'
   // 歸類：Cella 判錯——`set<int> s{…}` 的 initializer_list 建構子被判 reject
   it('★ 一個引數的照舊（留空就是一格）', async () => {
     await sameAsCompiler(
-      `set<int> s{1,2,3,4}; cout << *prev(s.end()) << *next(s.begin());`, '')
+      `set<int> s{1,2,3,4}; cout << *prev(s.end()) << *next(s.begin());`, "42", '')
   }, 120_000)
 
   /**
@@ -990,7 +972,7 @@ describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格'
   it('🔴 格數是負的時候方向要反過來', async () => {
     await sameAsCompiler(
       `vector<int> v{10,20,30,40,50}; auto it = v.begin() + 1;
-       cout << *prev(it, -2) << " " << *next(it, -1);`, '')
+       cout << *prev(it, -2) << " " << *next(it, -1);`, "40 10", '')
   }, 120_000)
 
   /**
@@ -1001,7 +983,7 @@ describe.runIf(hasReferenceCompiler())('盲測第二輪：位置的相鄰一格'
     await knownCellaGap(/'std::vector<int>' has no member 'rbegin'/, async () => {
       await sameAsCompiler(
         `vector<int> v{1,2,3,4,5}; auto r = v.rbegin();
-         cout << *next(r, 2) << " " << *prev(v.rend(), 2);`, '')
+         cout << *next(r, 2) << " " << *prev(v.rend(), 2);`, "3 2", '')
     })
   }, 120_000)
 
@@ -1028,13 +1010,13 @@ int main(){
   return 0;
 }
 `
-    await whole(code, '🔴 使用者自己那顆 count 被弄壞了')
+    await whole(code, "3\n", '🔴 使用者自己那顆 count 被弄壞了')
   }, 120_000)
 
   /** ★ **正向錨點**：引數剛好對上的時候照舊派過去。 */
   it('★ 引數個數對上時照舊', async () => {
     await sameAsCompiler(
-      `cout << 0;`, '')
+      `cout << 0;`, "0", '')
   }, 60_000)
 
   /** ★ **正向錨點**：給的比宣告的少是**合法的**（預設引數），不得被這條閘擋掉。 */
@@ -1042,7 +1024,7 @@ int main(){
     const code = `${H}int add(int a, int b = 10){ return a + b; }
 int main(){ cout << add(1) << " " << add(1, 2); return 0; }
 `
-    await whole(code, '🔴 預設引數被擋掉了')
+    await whole(code, "11 3", '🔴 預設引數被擋掉了')
   }, 120_000)
 
   /**
@@ -1066,7 +1048,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    */
   // 🟢 2026-11-04 轉正：`distance`（cpp 0.1.202611031448）與 `next(s.rbegin())` 的誤判（cfamily／cpp 0.1.202611032234 修好，我們回報的）都過了。
   it('★ fuzz_01 · 02 · 05 · 09 · 10（**5/10**）：`distance` 與 set 的反向位置', async () => {
-    await whole(P01_NAIL, '')
+    await whole(P01_NAIL, "1 -> 4\n10 -> 8\n15 -> 15\n20 -> 23\n50 -> 42\n4:12 8:27 15:39 16:54 23:81 42:65 \ntwo before 16 = 8\ntwo after  16 = 42\ncount in [8,23] = 4\nsum   in [8,23] = 62\nlast = 42, second last = 23\nmax-min = 38\nafter erasing 16: 15 | 23\n", '')
   }, 180_000)
 
   /**
@@ -1084,7 +1066,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
   // 歸類：Cella 未支援——std::find_if
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_04 卡在 `range_find_if`', async () => {
     await knownCellaGap(/std::find_if is not supported yet/, async () => {
-      await whole(P02_NAIL, '')
+      await whole(P02_NAIL, "[spaces both sides]\n[]\n[x]\nA man, a plan, a canal: Panama -> yes\nhello -> no\nfirst a at 0\nlast a at 10\nchar before last a = r\nchar via base()-1  = a\ncutting [acad]\nafter erase: abrabra\nno a: brcdbr\nno b: aracadara\nreversed: arbadacarba\n", '')
     })
   }, 180_000)
 
@@ -1101,7 +1083,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    */
   // 🟢 2026-11-04 轉正：equal_range（0753）、distance（1448）、`next(ms.rbegin())` 的誤判（2234 修好）
   it('★ fuzz_06：`container_equal_range`', async () => {
-    await whole(P03_NAIL, '')
+    await whole(P03_NAIL, "1 3 3 3 5 5 5 7 9 9 \nsize = 10, distinct = 5\n1x1 3x3 5x3 7x1 9x2 4x0 \njust before the 5s = 3, just after = 7\nsum of the 5s = 15\nlargest = 9, second largest = 9\nvia rbegin: 9 then 9\nback up 4 from the end -> 5\nback up 99 from the end -> 1\nafter erasing one 3: 3 appears 2 times\n1,3,5,7,9\nfinal size = 5\n", '')
   }, 180_000)
 
   /**
@@ -1119,7 +1101,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
   // 歸類：我們這側缺——using 別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_08 卡在 `container_reserve`', async () => {
     await knownCellaGap(/型別「tuple<int, It, It>」還沒有對應/, async () => {
-      await whole(P04_NAIL, '')
+      await whole(P04_NAIL, "inversions = 31\n0 1 2 3 4 5 6 7 8 9 \n0: at 0 before 1\n5: at 5 after 4 before 6\n9: at 9 after 8\n11: not found\n9 8 7 6 5 4 3 2 1 0 \n9 8 4 5 6 7 3 2 1 0 \nbest slice sum = 12 from 2 to 10: 5 -1 6 -8 2 7 -3 4\ncheck = 12\noriginal untouched: 9 4 7 1 8 2 6 3 5 0 \n", '')
     })
   }, 180_000)
 
@@ -1138,7 +1120,7 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
   // 歸類：我們這側缺——巢狀型別名的 formalize
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_04 · 07 卡在 `string_construct`', async () => {
     await knownCellaGap(/'std::string' has no member 'rbegin'/, async () => {
-      await whole(P05_NAIL, '')
+      await whole(P05_NAIL, "find(9) = 4, find(42) = -1\ncount(3) = 3, std::count = 3\ndesserts\nlogical size after remove = 8, physical size = 11\n8 8 1 9 5 1 9 2 \n1 1 2 3 3 3 5 8 8 9 9 \n手寫去重: 1 2 3 5 8 9 (tail still holds 5 leftovers)\nunique agrees: yes\n1: lo@0 hi@1 next=2\n4: lo@3 hi@3 prev=3 next=5\n9: lo@5 hi@6 prev=8\nlast = 9 == 9 == 9\nsum = 28 max = 9\n", '')
     })
   }, 180_000)
 })

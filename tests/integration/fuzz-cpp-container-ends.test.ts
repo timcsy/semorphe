@@ -20,24 +20,19 @@
  * ```
  *
  * ⚠️ **還開著的留在檔尾的 `it.todo`**，每一條都寫了為什麼不是現在修。
+ *
+ * 2026-11-04（spec 212，6c-5）：參照編譯器那一半拿掉——期望值是當時 g++ 跑出來、與 Cella 一致的字串，寫死在這裡
+ * （擷取在本機的 Apple clang 上做；這一檔的呼叫點全部兩邊相同，不同的那幾條原本就包在 `knownCellaGap` 裡，期望字串照樣寫 g++ 的值）。
  */
 import { describe, it, expect } from 'vitest'
 import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
-import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 
-
-/**
- * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
- * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
- * 手列的話，本機全綠而 CI 紅，訊息還會說「測試自己的問題」。
- * 見第 120 條護欄 `audit-refcc-headers`。
- */
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
 /**
  * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
  * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
- * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ * 比對的另一邊是參照編譯器當時跑出來的字串（spec 212，6c-5 起寫死在呼叫點），所以這裡仍是「Cella 對參照編譯器」的交叉檢查。
  */
 const cellaOut = async (src: string): Promise<string> => {
   const r = await runCella(src)
@@ -45,52 +40,52 @@ const cellaOut = async (src: string): Promise<string> => {
   return r.out
 }
 
-/** 跑一遍：拿 g++ 當權威，兩邊比 stdout。 */
-async function both(glob: string, body: string): Promise<{ ref: string; got: string }> {
+/**
+ * 跑一遍：`ref` 是當時 g++ 跑出來、與 Cella 一致的輸出（第三個引數，寫死，spec 212），`got` 是 Cella 這一次的輸出。
+ */
+async function both(glob: string, body: string, ref: string): Promise<{ ref: string; got: string }> {
   const src = `${H}${glob}\nint main(){ ${body} return 0; }\n`
-  const r = runCppDetailed(src)
-  expect(r.ok, `🔴 參照編譯器收不下（測試自己的問題）：${r.ok ? '' : r.message}`).toBe(true)
-  return { ref: r.ok ? r.output : '', got: await cellaOut(src) }
+  return { ref, got: await cellaOut(src) }
 }
 
-describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', () => {
+describe('模糊測試的回歸：容器兩端', () => {
   it('🔴 傳值進函式要複製——被呼叫端改不到呼叫者的容器', async () => {
     const { ref, got } = await both(
       'int drain(deque<int> d){ int n=0; while(!d.empty()){ d.pop_front(); n++; } return n; }',
-      `deque<int> dq; dq.push_back(1); dq.push_back(2); int n=drain(dq); cout << n << dq.size();`)
+      `deque<int> dq; dq.push_back(1); dq.push_back(2); int n=drain(dq); cout << n << dq.size();`, "22")
     expect(got, '🔴 少了複製的話「傳值」與「傳參考」行為完全相同').toBe(ref)
   }, 60_000)
 
   it('🔴 而【陣列參數】不複製——C++ 裡它退化成指標', async () => {
     const { ref, got } = await both(
       'void feed(deque<int> b[], int v){ b[1].push_back(v); }',
-      `deque<int> bins[3]; feed(bins, 8); cout << bins[1].size() << bins[1].front();`)
+      `deque<int> bins[3]; feed(bins, 8); cout << bins[1].size() << bins[1].front();`, "18")
     expect(got, '🔴 複製掉的話餵進去的東西全部留在函式裡').toBe(ref)
   }, 60_000)
 
   it('🔴 參考參數當然也改得到', async () => {
     const { ref, got } = await both(
       'int take(deque<int>& d){ int v=d.front(); d.pop_front(); return v; }',
-      `deque<int> dq; dq.push_back(3); dq.push_back(5); cout << take(dq) << dq.size();`)
+      `deque<int> dq; dq.push_back(3); dq.push_back(5); cout << take(dq) << dq.size();`, "31")
     expect(got).toBe(ref)
   }, 60_000)
 
   it('🔴 不知道元素型別就不要假裝是 int（`deque<string>`）', async () => {
     const { ref, got } = await both('',
-      `deque<string> d; d.push_back("ab"); d.push_front("cd"); cout << d.front() << d.back() << d.size();`)
+      `deque<string> d; d.push_back("ab"); d.push_front("cd"); cout << d.front() << d.back() << d.size();`, "cdab2")
     expect(got, '🔴 壓成 int 的話字串會變成 0——程式跑完、印出東西、而它是錯的').toBe(ref)
   }, 60_000)
 
   it('🔴 帶下標的宣告子不得被字串那一支認領（`string w[3] = {…}`）', async () => {
     const { ref, got } = await both('',
-      `string w[3] = {"aa","bb","cc"}; cout << w[1] << w[2].size();`)
+      `string w[3] = {"aa","bb","cc"}; cout << w[1] << w[2].size();`, "bb2")
     expect(got, '🔴 `[3]` 被吞進名字的話，`w` 根本沒有被宣告').toBe(ref)
   }, 60_000)
 
   it('🔴 兩端交錯：push_front／push_back／pop_front／pop_back', async () => {
     const { ref, got } = await both('',
       `deque<int> d; for(int i=1;i<=6;i++){ if(i%2==0) d.push_front(i); else d.push_back(i); }`
-      + ` d.pop_front(); d.pop_back(); cout << d.front() << d.back() << d.size();`)
+      + ` d.pop_front(); d.pop_back(); cout << d.front() << d.back() << d.size();`, "434")
     expect(got).toBe(ref)
   }, 60_000)
 
@@ -114,7 +109,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
    */
   it('★ 接收者的下標帶乘除取餘', async () => {
     const { ref, got } = await both('',
-      `vector<deque<int>> h(3); int i=4; h[i % 3].push_back(6); cout << h[1].front();`)
+      `vector<deque<int>> h(3); int i=4; h[i % 3].push_back(6); cout << h[1].front();`, "6")
     expect(got).toBe(ref)
   }, 60_000)
 
@@ -124,7 +119,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
     await knownCellaGap(/expected '2' to be '3'/, async () => {
       const { ref, got } = await both('',
         `deque<vector<int>> rows; rows.push_back({1,2}); rows.front().push_back(9);`
-        + ` cout << rows.front().size();`)
+        + ` cout << rows.front().size();`, "3")
       expect(got).toBe(ref)
     })
   }, 60_000)
@@ -139,14 +134,14 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
   it('★ 接收者的下標是字串鍵', async () => {
     const { ref, got } = await both('',
       `map<string, vector<int>> m; string k = "a"; m[k].push_back(5); m[k].push_back(7);`
-      + ` cout << m[k].size();`)
+      + ` cout << m[k].size();`, "2")
     expect(got).toBe(ref)
   }, 60_000)
 
   it('★ 接收者的下標裡還有一個下標', async () => {
     const { ref, got } = await both('',
       `vector<int> b[2]; int keys[2] = {0, 1}; int i = 3; b[keys[i % 2]].push_back(9);`
-      + ` cout << b[1].size() << b[1][0];`)
+      + ` cout << b[1].size() << b[1][0];`, "19")
     expect(got).toBe(ref)
   }, 60_000)
 
@@ -158,7 +153,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
   it('★ 對照表的值是容器時，第一次存取就要建得出那個容器', async () => {
     const { ref, got } = await both('',
       `map<int, vector<int>> g; g[3].push_back(1); g[3].push_back(2); g[5].push_back(9);`
-      + ` cout << g[3].size() << g[5].front() << g.size();`)
+      + ` cout << g[3].size() << g[5].front() << g.size();`, "292")
     expect(got).toBe(ref)
   }, 60_000)
 
@@ -176,7 +171,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
    */
   it('★ 對照表上的雙下標', async () => {
     const { ref, got } = await both('',
-      `map<int, vector<int>> g; g[5].push_back(9); cout << g[5][0];`)
+      `map<int, vector<int>> g; g[5].push_back(9); cout << g[5][0];`, "9")
     expect(got).toBe(ref)
   }, 60_000)
 
@@ -190,7 +185,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器兩端', (
        string w[2] = {"ab", "cd"};
        int t[2][3] = {{1,2,3},{4,5,6}};
        vector<vector<int>> vv(2); vv[0].push_back(7);
-       cout << gg[1][2] << gg.size() << w[1][0] << t[1][2] << vv[0][0];`)
+       cout << gg[1][2] << gg.size() << w[1][0] << t[1][2] << vv[0][0];`, "31c67")
     expect(got, '🔴 雙下標的身分選錯了').toBe(ref)
   }, 60_000)
 

@@ -24,18 +24,19 @@
  *
  * ⚠️ **最後兩條是疊在一起的**：限定名那條修好的當天，寫死 `int` 那條才第一次被執行。
  * > **一段「從來沒有被走到」的程式碼，與一段正確的程式碼長得一模一樣。**
+ *
+ * 2026-11-04（spec 212，6c-5）：參照編譯器那一半拿掉——期望值是當時 g++ 跑出來、與 Cella 一致的字串，寫死在這裡
+ * （擷取在本機的 Apple clang 上做；這一檔的呼叫點全部兩邊相同，不同的那幾條原本就包在 `knownCellaGap` 裡，期望字串照樣寫 g++ 的值）。
  */
 import { describe, it, expect } from 'vitest'
 import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
-import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
-
 
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
 /**
  * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
  * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
- * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ * 比對的另一邊是參照編譯器當時跑出來的字串（spec 212，6c-5 起寫死在呼叫點），所以這裡仍是「Cella 對參照編譯器」的交叉檢查。
  */
 const cellaOut = async (src: string): Promise<string> => {
   const r = await runCella(src)
@@ -43,27 +44,23 @@ const cellaOut = async (src: string): Promise<string> => {
   return r.out
 }
 
-/** 拿 g++ 當權威，兩邊比 stdout。 */
-async function same(body: string, hint: string, glob = ''): Promise<void> {
+/** 比 stdout——`expected` 是當時 g++ 跑出來、與 Cella 一致的輸出（寫死，spec 212）。 */
+async function same(body: string, expected: string, hint: string, glob = ''): Promise<void> {
   const src = `${H}${glob}\nint main(){ ${body} return 0; }\n`
-  const ref = runCppDetailed(src)
-  expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-  expect(await cellaOut(src), hint).toBe(ref.output)
+  expect(await cellaOut(src), hint).toBe(expected)
 }
 
 /** 寫全名的版本——不加 `using namespace std;`。 */
-async function sameQualified(src: string, hint: string): Promise<void> {
-  const ref = runCppDetailed(src)
-  expect(ref.ok, '🔴 參照編譯器收不下（測試自己的問題）').toBe(true)
-  expect(await cellaOut(src), hint).toBe(ref.output)
+async function sameQualified(src: string, expected: string, hint: string): Promise<void> {
+  expect(await cellaOut(src), hint).toBe(expected)
 }
 
-describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪', () => {
+describe('模糊測試的回歸：容器第二輪', () => {
   // 歸類：Cella 未支援——vector::emplace_back
   it('🟡 已知缺陷（修好時這條會紅）：🔴 `emplace_back` 與 `push_back` 是同一件事', async () => {
     await knownCellaGap(/has no member 'emplace_back'/, async () => {
       await same(
-        `vector<int> v; v.emplace_back(3); v.emplace_back(5); for (int x : v) cout << x; cout << v.size();`,
+        `vector<int> v; v.emplace_back(3); v.emplace_back(5); for (int x : v) cout << x; cout << v.size();`, "352",
         '🔴 沒登錄的症狀不是報錯——它掉到泛用的方法呼叫，然後說「這個接收者不是一個物件」')
     })
   }, 60_000)
@@ -73,7 +70,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
     await knownCellaGap(/has no member 'emplace_back'/, async () => {
       await same(
         `vector<pair<int,int>> v; v.emplace_back(7, 8); v.push_back({1, 2});`
-        + ` for (auto [x, y] : v) cout << x << y; cout << v.size();`,
+        + ` for (auto [x, y] : v) cout << x << y; cout << v.size();`, "78122",
         '🔴 只讀第一個引數的話，那個 pair 變成一個 7')
     })
   }, 60_000)
@@ -81,7 +78,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
   // 歸類：Cella 未支援——vector::emplace_back
   it('🟡 已知缺陷（修好時這條會紅）：★ 正向錨點：一個引數的 `emplace_back` 與非聚合的元素', async () => {
     await knownCellaGap(/has no member 'emplace_back'/, async () => {
-      await same(`vector<int> v; v.emplace_back(3); vector<string> s; s.emplace_back("ab"); cout << v[0] << s[0];`, '')
+      await same(`vector<int> v; v.emplace_back(3); vector<string> s; s.emplace_back("ab"); cout << v[0] << s[0];`, "3ab", '')
     })
   }, 60_000)
 
@@ -89,7 +86,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
   it('🟡 已知缺陷（修好時這條會紅）：🔴 `m.emplace(k, v)` 給的是兩個引數，不是一個大括號', async () => {
     await knownCellaGap(/has no member 'emplace'/, async () => {
       await same(
-        `map<string,int> m; m.emplace("a", 3); m.emplace("a", 9); cout << m["a"] << m.size();`,
+        `map<string,int> m; m.emplace("a", 3); m.emplace("a", 9); cout << m["a"] << m.size();`, "31",
         '🔴 對照表的 emplace 收「鍵, 值」')
     })
   }, 60_000)
@@ -100,7 +97,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
       await same(
         `map<string,int> c{{"a",1},{"b",2}}; cout << c.size() << c["a"] << c["b"];`
         + ` set<int> s{3,1,3,2}; for (int x : s) cout << x; cout << s.size();`
-        + ` multiset<int> ms{3,1,3}; for (int x : ms) cout << x; cout << ms.size();`,
+        + ` multiset<int> ms{3,1,3}; for (int x : ms) cout << x; cout << ms.size();`, "21212331333",
         '🔴 被當成「另一個容器」原樣接管的話，順序是寫的順序而重複也留著')
     })
   }, 60_000)
@@ -110,7 +107,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
     await knownCellaGap(/a braced list where the type it initializes is not known/, async () => {
       await same(
         `map<string,int> c{{"a",1}}; auto [it,ok] = c.insert({"c",3}); cout << ok << it->first;`
-        + ` auto [it2,ok2] = c.insert({"a",99}); cout << ok2 << it2->second << c.size();`,
+        + ` auto [it2,ok2] = c.insert({"a",99}); cout << ok2 << it2->second << c.size();`, "1c012",
         '🔴 `auto [it, ok] = m.insert(…)` 是判斷「這次插入有沒有生效」的標準寫法')
     })
   }, 60_000)
@@ -120,7 +117,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
     await knownCellaGap(/cpp:map_declare：multimap 還沒有對應/, async () => {
       await same(
         `multimap<string,int> mm; mm.emplace("a",1); mm.emplace("a",2); mm.emplace("b",3);`
-        + ` cout << mm.size() << mm.count("a") << mm.count("b") << mm.count("z");`,
+        + ` cout << mm.size() << mm.count("a") << mm.count("b") << mm.count("z");`, "3210",
         '🔴 沒登錄的話它掉到一般變數宣告')
     })
   }, 60_000)
@@ -130,7 +127,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
     await knownCellaGap(/has no member 'emplace'/, async () => {
       await same(
         `map<string,int> m; m.emplace("a",1); m.emplace("a",2); cout << m.size() << m["a"];`
-        + ` set<int> s; s.insert(3); s.insert(3); cout << s.size() << s.count(3);`,
+        + ` set<int> s; s.insert(3); s.insert(3); cout << s.size() << s.count(3);`, "1111",
         '')
     })
   }, 60_000)
@@ -147,7 +144,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
       await sameQualified(
         `#include <bits/stdc++.h>\nint main(){ std::vector<std::pair<int,int>> v;`
         + ` v.emplace_back(7, 8); v.push_back({1, 2});`
-        + ` for (const auto& [x, y] : v) std::cout << x << y; std::cout << v.size(); return 0; }\n`,
+        + ` for (const auto& [x, y] : v) std::cout << x << y; std::cout << v.size(); return 0; }\n`, "78122",
         '🔴 基底名沒剝掉 `std::` 的話，聚合形狀整個查不到')
     })
   }, 60_000)
@@ -159,7 +156,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
         `#include <bits/stdc++.h>\nint main(){ std::map<std::string, std::vector<std::pair<int,int>>> ix;`
         + ` ix["a"].push_back({1,2}); ix["a"].emplace_back(7,8);`
         + ` int s = 0; for (const auto& [k, vec] : ix) for (const auto& [x, y] : vec) s += x * y;`
-        + ` std::cout << s << ix["a"].size(); return 0; }\n`,
+        + ` std::cout << s << ix["a"].size(); return 0; }\n`, "582",
         '🔴 `m[k]` 自動建出來的那一格不是容器的話，`push_back` 說「這不是一個容器」')
     })
   }, 60_000)
@@ -173,7 +170,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
   it('🔴 `pair<string,int>` 的字串不得被壓成 0', async () => {
     await same(
       `priority_queue<pair<string,int>> ps; ps.push({"a",9}); ps.push({"a",2}); ps.push({"b",1});`
-      + ` while (!ps.empty()) { auto [nm, k] = ps.top(); ps.pop(); cout << nm << k << " "; }`,
+      + ` while (!ps.empty()) { auto [nm, k] = ps.top(); ps.pop(); cout << nm << k << " "; }`, "b1 a9 a2 ",
       '🔴 每一格都寫死 int 的話，`"a"` 被 coerce 成 0')
   }, 60_000)
 
@@ -190,7 +187,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
       //    而這一輪是模糊測試那一關，不是產生那一關。
       // 🔴 何時該修：它與 `at` 兩顆一起走一次 `component-pipeline`
       //    ——盲測 10 支裡它們各擋掉一支，而語料也用得到。
-      await same(`deque<int> d{1,2,3}; d.resize(5); cout << d.size() << d[4]; d.resize(2); cout << d.size();`, '')
+      await same(`deque<int> d{1,2,3}; d.resize(5); cout << d.size() << d[4]; d.resize(2); cout << d.size();`, "502", '')
     })
   }, 60_000)
 
@@ -200,7 +197,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
       // 🟠 **為什麼不現在修**：同上——它是一顆新元件。
       // ⚠️ 而它與下標**不是同一顆**：`at` 越界時丟例外，`[]` 是未定義行為。
       // 🔴 何時該修：與 `resize` 一起。
-      await same(`map<string,int> m{{"a",1}}; cout << m.at("a"); vector<int> v{1,2}; cout << v.at(1);`, '')
+      await same(`map<string,int> m{{"a",1}}; cout << m.at("a"); vector<int> v{1,2}; cout << v.at(1);`, "12", '')
     })
   }, 60_000)
 
@@ -214,7 +211,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
       await same(
         `multimap<string,int> mm; mm.emplace("a",1); mm.emplace("a",2);
          auto [lo, hi] = mm.equal_range("a"); int s = 0; for (auto i = lo; i != hi; ++i) s += i->second;
-         cout << s;`, '')
+         cout << s;`, "3", '')
     })
   }, 60_000)
 
@@ -232,7 +229,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
   it('🟢 刪除-移除的慣用法（釘子已拔）', async () => {
     await same(
       `vector<int> v{3,1,1,2}; sort(v.begin(), v.end());
-       v.erase(unique(v.begin(), v.end()), v.end()); for (int x : v) cout << x;`, '')
+       v.erase(unique(v.begin(), v.end()), v.end()); for (int x : v) cout << x;`, "123", '')
   }, 60_000)
 
   // 歸類：Cella 未支援——vector::erase
@@ -240,7 +237,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
     await knownCellaGap(/remove is not supported yet/, async () => {
       await same(
         `vector<int> v{1,2,1,3};
-         v.erase(remove(v.begin(), v.end(), 1), v.end()); for (int x : v) cout << x;`, '')
+         v.erase(remove(v.begin(), v.end(), 1), v.end()); for (int x : v) cout << x;`, "23", '')
     })
   }, 60_000)
 
@@ -271,7 +268,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
   // 現在照實翻不出（cpp:raw_code）。pair_declare 真的收得下建構引數那天，這根會紅
   it('🟡 已知缺陷（修好時這條會紅）：🟠 `pair<int,int> p(1, 2)` 的建構引數', async () => {
     await knownCellaGap(/cpp:raw_code/, async () => {
-      await same(`pair<int,int> p(1, 2); cout << p.first << p.second;`, '')
+      await same(`pair<int,int> p(1, 2); cout << p.first << p.second;`, "12", '')
     })
   }, 60_000)
 
@@ -281,7 +278,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
       // 🟠 **為什麼不現在修**：`tuple` 在執行期是一串格子（只有「一對」登記過欄位名），
       //    而 `make_tuple` 要的是「造一個那樣的東西」——它是一顆新元件。
       // 🔴 何時該修：與 `make_pair` 同一顆元件收下它時（同族，同一個形狀）。
-      await same(`auto t = make_tuple(1, 2, 3); auto [a, b, c] = t; cout << a << b << c;`, '')
+      await same(`auto t = make_tuple(1, 2, 3); auto [a, b, c] = t; cout << a << b << c;`, "123", '')
     })
   }, 60_000)
 
@@ -291,7 +288,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：容器第二輪'
       // 🟠 **為什麼不現在修**：`型別{…}` 是一個**暫時物件**，而這個直譯器今天
       //    只在宣告那一行認得大括號。它要的是「一個運算式位置的容器字面值」。
       // 🔴 何時該修：盲測或語料再出現一次。
-      await same(`deque<int> d = deque<int>{4, 5}; cout << d[0] << d[1];`, '')
+      await same(`deque<int> d = deque<int>{4, 5}; cout << d[0] << d[1];`, "45", '')
     })
   }, 60_000)
 })

@@ -21,6 +21,9 @@
  *
  * ⚠️ **這個檔同時是語料**：第三十一條與第五十三條都掃 `tests/integration/*.test.ts`
  * 裡的反引號片段。所以下面每一段程式碼**要是完整、可編譯的 C++**。
+ *
+ * 2026-11-04（spec 212，6c-5）：參照編譯器那一半拿掉——期望值是當時 g++ 跑出來、與 Cella 一致的字串，寫死在這裡
+ * （擷取在本機的 Apple clang 上做；這一檔的呼叫點全部兩邊相同，不同的那幾條原本就包在 `knownCellaGap` 裡，期望字串照樣寫 g++ 的值）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -28,7 +31,6 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { runCella, describeCellaResult } from '../helpers/cella-run'
-import { runCpp, hasReferenceCompiler } from '../helpers/run-cpp'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { StylePreset, SemanticNode } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -55,7 +57,7 @@ const idsOf = (n: SemanticNode, out: string[] = []): string[] => {
 /**
  * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
  * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
- * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ * 比對的另一邊是參照編譯器當時跑出來的字串（spec 212，6c-5 起寫死在呼叫點），所以這裡仍是「Cella 對參照編譯器」的交叉檢查。
  */
 const cellaOut = async (src: string): Promise<string> => {
   const r = await runCella(src)
@@ -133,8 +135,8 @@ describe('C++ 形狀補課：收得下的那幾個', () => {
   })
 
   it('★ 與參照編譯器對答案（`g++` 說了算）', async () => {
-    if (!hasReferenceCompiler()) return
-    expect(runCpp(DEFAULT_PARAM)).toBe(await run(DEFAULT_PARAM))
+    // spec 212：當時 g++ 跑出來的是 "11 3\n"（與 Cella 一致），寫死在這裡
+    expect(await run(DEFAULT_PARAM)).toBe("11 3\n")
   })
 
   it('相鄰的字串字面是【一個】字串，而寫法要留住', async () => {
