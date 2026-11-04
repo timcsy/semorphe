@@ -16,7 +16,7 @@ import type { SyncError } from '../core/sync/sync-controller'
 import { SemanticBus } from '../core/sync/semantic-bus'
 import { showToast } from './toolbar/toast'
 import { showStyleActionBar } from './toolbar/style-action-bar'
-import { runDiagnostics, diagnosticsFromTree } from '../core/diagnostics'
+import { runDiagnostics, diagnosticsFromTree, dropRejectsCoveredByNameChecks } from '../core/diagnostics'
 import type { SemanticNode } from '../core/types'
 import { createNode } from '../core/semantic-tree'
 import type { DiagnosticBlock } from '../core/diagnostics'
@@ -4499,7 +4499,9 @@ export class App {
       ...(this.currentTree ? diagnosticsFromTree(this.currentTree) : []),
       ...this.checkDiagnostics,
     ]
-    for (const v of registeredViews()) v.onDiagnostics?.({ diagnostics })
+    // 名字不合法：形態那一則已經說了，判決對同一顆的 reject 不再疊一次（spec 216）
+    const shown = dropRejectsCoveredByNameChecks(diagnostics)
+    for (const v of registeredViews()) v.onDiagnostics?.({ diagnostics: shown })
   }
 
   /**
