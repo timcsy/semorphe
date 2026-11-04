@@ -22,7 +22,8 @@ const ENTRIES = ['src/main.ts', 'src/vscode/extension.ts', 'src/vscode/webview/m
 
 /** 刻意不在產品路徑上的模組——每一筆說得出為什麼。 */
 const ALLOWED: Record<string, string> = {
-  'src/languages/cpp/vocab/arduino.ts': '`@cos-mos/arduino` 詞彙套件第一版（2026-11-04）：匯出探針與單元測試先用；宿主層的結構頻道 `onStructure` 接上時產品才走到它（vision〈@cos-mos/arduino 詞彙套件〉的步驟 3，cos-mos specs/017 T004）',
+  'src/languages/cpp/vocab/arduino.ts': '`@cos-mos/arduino` 詞彙套件（2026-11-04）：匯出探針、單元測試與結構頻道用；**宿主的嵌入介面**做好時產品才走到它——那是 vision〈面板拆成可獨立掛載的視圖套件〉，卡在「面板該不該知道本體插槽」待使用者決定；不在 app 上先開一個沒有消費者的方法（簡約優先）',
+  'src/languages/cpp/vocab/structure-channel.ts': '同上——結構頻道（createStructureChannel）已就緒，等宿主的嵌入介面把它接到 cos-mos 的 `createStructureReceiver`',
   'src/core/naming.ts': '護欄專用的命名詞彙表（審 component.json 的資料，產品不需要）',
   'src/languages/cpp/naming.ts': '同上，C++ 的詞彙',
   'src/languages/python/naming.ts': '同上，Python 的詞彙',

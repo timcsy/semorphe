@@ -108,5 +108,8 @@
 
 1. ✅ 補接點型別（`slotTypes`）。
 2. ✅ 匯出（探針，見上）；單元測試守著：43 顆都在、對照表一對一、每個 param 都有型別、雜湊的測試向量。
-3. 🟡 `structureOf`（語意樹 → 動作清單）✅ 附單元測試；**宿主層的 `onStructure` 推送還沒接**——接上時產品才走到這個模組（`audit-tests-import-reachable` 的例外記著）。
+3. 🟡 `structureOf`（語意樹 → 動作清單）✅；結構頻道 `createStructureChannel(bus, { codeOf })` ✅（訂 `semantic:update`、同一棵樹不推、版本遞增、帶 contentHash、晚訂閱拿最後一份；第 260 刀）。
+   ⏳ **產品還沒接**：要一個宿主的嵌入介面——那是 vision〈面板拆成可獨立掛載的視圖套件〉，卡在「面板該不該知道本體插槽」待使用者決定。
+   刻意不在 app 上先開一個沒有消費者的方法（簡約優先）；`audit-tests-import-reachable` 的例外記著。
+   0.1.1（第 259 刀）：必填照實宣告——cos-mos 的核對器量到少給參數會被放行；可省略的照產生器裡「沒接就不寫」那一支認（tone.duration、pulse_read.timeout、serial_print.format）。
 4. 交給 cos-mos 的主持人；發布前由主持人問使用者。
