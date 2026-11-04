@@ -501,6 +501,7 @@ UI 域與硬體域本身（它們是這一格的**消費者**）。
       ② 結構頻道傳「**接線圖＋動作清單**」，用詞彙套件的名字表達，**不傳語意樹** ③ 接點第一版留空、標「未定」，ArduinoCAD 合流時補。
       排在〈重構〉第 6 項之後，約 1 天。⚠️ **發布前要問使用者**：第一版交給 cos-mos 的主持人，不自己發。
       驗收：43 顆都在、對照表一對一（`audit` 數得出）；先交匯出格式草案給 cos-mos（它先接「動作清單」那一半）。
+      🟡 **格式草案**（2026-11-04）：[cos-mos-arduino 詞彙套件格式](draft/2026-11-04-cos-mos-arduino詞彙套件格式.md)——量到接點沒有型別，推薦在元件宣告裡補（53 個）。
 - [ ] 🆕 **形態檢查與判決的界線盤點**——同一則後記：semorphe「不判斷對錯」；形態完整度的檢查（語法缺口、空的接點、名字合不合法、canExecute）一律標成形態／提示，不得標成判決。驗收：診斷的每一種來源都標得出是「形態」「提示」還是「判決（Cella）」，有護欄在數；「名字合不合法」的灰色地帶盤點結果告訴 cos-mos。
       ➕ **不解析 Cella 的 reason**（後記二，使用者定）：`verdict-diagnostics.ts` 的 `nearMissFor`／`unboundNameAt` 改讀 Cella 的結構化 params（已向 cella 要 `{ name }` 與 NameError 帶 `at`）；學生看到的文字不得直接是 reason 原文。驗收：產品程式碼裡零個對 `reason` 的正規表示式（護欄）。
       🟢 **形狀已定（cella 2026-11-03）**：每則 problem 帶 `params`（值只有字串與布林；整數一律十進位字串、負數帶 `-`；不知道的欄位不出現）與 `structured`；未宣告的名字統一成 kind `undeclared` ＋ `{ name, what: variable|function|name }`（⚠️ 不相容，發版說明會標）；Python 的 NameError 一律帶 `at`；cfamily／python 套件附 `verdict-kinds.json`（每個 kind 是否結構化、帶哪些 params）——semorphe 加護欄：每個結構化的 kind 都有中英文說明。排在 cella 的 2b-2 之後。
