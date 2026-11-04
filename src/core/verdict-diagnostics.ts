@@ -93,7 +93,7 @@ export const VERDICT_RULES: readonly string[] = [...new Set(Object.values(KINDS)
 export const KIND_RULES: Readonly<Record<string, { rule: string }>> = KINDS
 
 /**
- * **刻意走通用那一句**（`CELLA_OTHER`：「判斷功能說這裡有狀況：{reason}」）的種類——判過了，不是忘了。
+ * **刻意走通用那一句**（`CELLA_OTHER`：積木側「判斷功能說這裡有狀況：{種類的名稱}」——spec 216 起不顯示 reason 原文，名稱在 `DIAG_KIND_<種類>`）的種類——判過了，不是忘了。
  * 它們今天沒有結構化的 params，專屬文案只能從 reason 拼，而 reason 只是開發者的紀錄（cella 0.1.202611032234）；
  * 等某一種結構化了、或某一種常在學生的程式裡出現，就搬進 `KINDS` 寫專屬文案。
  * 🔴 Cella 加了新種類而這裡與 `KINDS` 都沒有 ⟹ 護欄 `audit-verdict-kinds` 紅：要人判它歸哪裡。

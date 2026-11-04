@@ -505,6 +505,7 @@ UI 域與硬體域本身（它們是這一格的**消費者**）。
 - [ ] 🆕 **形態檢查與判決的界線盤點**——同一則後記：semorphe「不判斷對錯」；形態完整度的檢查（語法缺口、空的接點、名字合不合法、canExecute）一律標成形態／提示，不得標成判決。驗收：診斷的每一種來源都標得出是「形態」「提示」還是「判決（Cella）」，有護欄在數；「名字合不合法」的灰色地帶盤點結果告訴 cos-mos。
       ➕ **不解析 Cella 的 reason**（後記二，使用者定）：`verdict-diagnostics.ts` 的 `nearMissFor`／`unboundNameAt` 改讀 Cella 的結構化 params（已向 cella 要 `{ name }` 與 NameError 帶 `at`）；學生看到的文字不得直接是 reason 原文。驗收：產品程式碼裡零個對 `reason` 的正規表示式（護欄）。
       🟢 **形狀已定（cella 2026-11-03）**：每則 problem 帶 `params`（值只有字串與布林；整數一律十進位字串、負數帶 `-`；不知道的欄位不出現）與 `structured`；未宣告的名字統一成 kind `undeclared` ＋ `{ name, what: variable|function|name }`（⚠️ 不相容，發版說明會標）；Python 的 NameError 一律帶 `at`；cfamily／python 套件附 `verdict-kinds.json`（每個 kind 是否結構化、帶哪些 params）——semorphe 加護欄：每個結構化的 kind 都有中英文說明。排在 cella 的 2b-2 之後。
+      🟡 **進度（2026-11-05，spec 216）**：「零個對 reason 的正規表示式」護欄上線（`audit-verdict-reason-unparsed`）；積木側通用那一句改說種類名稱。待使用者：其餘文案的 reason 給不給學生看（推薦積木側不給、程式碼側像編譯器保留）；「名字合不合法」盤點完——詞法的形態，與 Cella 的 reject 去重。見 [draft](draft/2026-11-05-判決文案與形態檢查的界線.md)。
 - [ ] 🆕 **操作者介面：讓 AI 用和人一樣的操作改語意樹**——三方會議第三輪（[history/334](history/334-三方會議第三輪符號學三面向與操作者介面.md)）：semorphe＝語法層（形式與形式之間的轉換），也是**操作者**（人或 AI）的介面。
       排在〈重構〉階段 6 之後；不擋 cos-mos 階段 3。四個缺口，依序：
       ① **提議中的變更**（使用者定：AI 的變更預設待人確認、可委派；看差異／接受／退回歸 semorphe）
