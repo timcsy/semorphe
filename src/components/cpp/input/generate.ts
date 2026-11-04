@@ -3,7 +3,8 @@ import type { NodeGenerator, GeneratorContext } from '../../../core/projection/c
 import type { SemanticNode, StylePreset } from '../../../core/types'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
 import { commentSyntax } from '../../../core/comment-syntax'
-import { scanfOf, streamFacts, everyIostreamConvertible, declareConvertible, KEEP_CIN_NOTE, KEEP_UNSYNC_NOTE } from '../../../languages/cpp/printf-types'
+import { scanfOf, streamFacts, everyIostreamConvertible, declareConvertible, KEEP_CIN_NOTE, KEEP_UNSYNC_NOTE, C_FALLBACK_NOTE } from '../../../languages/cpp/printf-types'
+import { isCDialect } from '../../../languages/cpp/target-dialect'
 
 /** 每一個讀取目標的 scanf 轉換；`null` ＝ 有一個推不出（保留 cin）。字串串流（`in >> a`）不是標準輸入，不換。 */
 function scanfPlan(node: SemanticNode, ctx: GeneratorContext): string[] | null {
@@ -32,7 +33,13 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
     //    推不出的保留 cin、行尾註明（使用者 2026-11-04 定 A）。
     const facts = streamFacts(ctx.root)
     const unsyncBlocked = facts.unsynced && ctx.root !== undefined && !everyIostreamConvertible(ctx.root, ctx)
-    const plan = unsyncBlocked ? null : scanfPlan(node, ctx)
+    let plan = unsyncBlocked ? null : scanfPlan(node, ctx)
+    let cNote: string | null = null
+    if (!plan && isCDialect(style) && node.properties.from === undefined) {
+      // C 目標：保留 cin 編不過——推不出的那一格暫用 %d，照實註明
+      plan = valueNodes.map((v) => scanfOf(ctx.expressionTypes?.[v.id]) ?? '%d')
+      cNote = C_FALLBACK_NOTE
+    }
     if (!plan) {
       if (ctx.isExpression) return cin()
       return `${commentSyntax().trailing(`${indent(ctx)}${cin()};`, unsyncBlocked ? KEEP_UNSYNC_NOTE : KEEP_CIN_NOTE)}\n`
@@ -40,6 +47,6 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
     const call = `scanf("${plan.join('')}", ${vars.map((v) => `&${v}`).join(', ')})`
     // ⚠️ 運算式位置（`while (cin >> x)`）：scanf 回的是讀到幾個，檔尾是 EOF（-1，**真**）——要比對個數，不然是無窮迴圈
     if (ctx.isExpression) return `${call} == ${plan.length}`
-    return `${indent(ctx)}${call};\n`
+    return cNote ? `${commentSyntax().trailing(`${indent(ctx)}${call};`, cNote)}\n` : `${indent(ctx)}${call};\n`
   })
 }

@@ -167,9 +167,9 @@ describe('const variables', () => {
 // scanf return value in expression
 // ============================================================
 describe('scanf in expression context', () => {
-  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——我們的 formalize 只有敘述位置的 sScanf；
-  //    試送 eCall scanf，Cella 0.1.202611020258 判 unknown「scanf is not supported yet」，所以不送。期望值 g++ 實測 '6\n10\n14\n'
-  it('🟡 已知缺陷（修好時這條會紅）：should handle while(scanf()!=EOF)', () => knownCellaGap(/cpp:input_formatted：這顆元件還沒有對應到 Cella 的建構子/, async () => {
+  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——（敘述位置的 sScanf 沒問題）
+  //    spec 215 起照送 eCall scanf（我們這側補了 formalize）；Cella 判 unknown「scanf is not supported yet」——cella 2026-11-04 確認要補。期望值 g++ 實測 '6\n10\n14\n'
+  it('🟡 已知缺陷（修好時這條會紅）：should handle while(scanf()!=EOF)', () => knownCellaGap(/scanf is not supported yet/, async () => {
     await expectCellaOut(`
       #include <cstdio>
       int main() {
@@ -182,9 +182,9 @@ describe('scanf in expression context', () => {
     `, '6\n10\n14\n', { stdin: ['3', '5', '7'].join('\n') })
   }))
 
-  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——我們的 formalize 只有敘述位置的 sScanf；
-  //    試送 eCall scanf，Cella 0.1.202611020258 判 unknown「scanf is not supported yet」，所以不送。期望值 g++ 實測 '3\n7\n'
-  it('🟡 已知缺陷（修好時這條會紅）：should handle scanf return value comparison', () => knownCellaGap(/cpp:input_formatted：這顆元件還沒有對應到 Cella 的建構子/, async () => {
+  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——（敘述位置的 sScanf 沒問題）
+  //    spec 215 起照送 eCall scanf（我們這側補了 formalize）；Cella 判 unknown「scanf is not supported yet」——cella 2026-11-04 確認要補。期望值 g++ 實測 '3\n7\n'
+  it('🟡 已知缺陷（修好時這條會紅）：should handle scanf return value comparison', () => knownCellaGap(/scanf is not supported yet/, async () => {
     await expectCellaOut(`
       #include <cstdio>
       int main() {
@@ -263,9 +263,9 @@ describe('ternary in printf args', () => {
 // Combined: Prime checker program (the user's full program)
 // ============================================================
 describe('prime checker program', () => {
-  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——我們的 formalize 只有敘述位置的 sScanf；
-  //    試送 eCall scanf，Cella 0.1.202611020258 判 unknown「scanf is not supported yet」，所以不送。期望值 g++ 實測 'prime\nnot prime\nnot prime\nprime\n'
-  it('🟡 已知缺陷（修好時這條會紅）：should handle forward declarations + pointer params + do-while + scanf loop', () => knownCellaGap(/cpp:input_formatted：這顆元件還沒有對應到 Cella 的建構子/, async () => {
+  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——（敘述位置的 sScanf 沒問題）
+  //    spec 215 起照送 eCall scanf（我們這側補了 formalize）；Cella 判 unknown「scanf is not supported yet」——cella 2026-11-04 確認要補。期望值 g++ 實測 'prime\nnot prime\nnot prime\nprime\n'
+  it('🟡 已知缺陷（修好時這條會紅）：should handle forward declarations + pointer params + do-while + scanf loop', () => knownCellaGap(/scanf is not supported yet/, async () => {
     // Simplified version focusing on the key constructs
     await expectCellaOut(`
       #include <cstdio>

@@ -34,7 +34,7 @@
 `cin >> x` 切成 scanf：`int` `%d`、`long long` `%lld`、`double` `%lf`、`char` `" %c"`（與 cin 一樣跳過空白）；`std::string` 讀不進 → 保留 `cin`、同樣註明。
 
 ### Edge Cases
-- C 目標（`c` 風格）：保留 `cout` 在 C 裡不合法——C 程式的輸出是 `print_formatted`，`cpp:print` 只會從 C++ 來；遇到時照樣保留並註明（Cella 會判不合法，照實）。已知限制，記在 history。
+- C 目標（`c` 風格）：保留 `cout` 在 C 裡編不過——推不出的那一格暫用 `%d`，行尾照實註明（長測試的 `gcc -x c` 抓到，原本這裡寫「照樣保留」是錯的）。
 - 型別帶修飾：`const int`、`int &` → 去掉修飾再查表。
 
 ## Requirements

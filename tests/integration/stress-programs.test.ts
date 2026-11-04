@@ -10,7 +10,8 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { generateCode } from '../../src/core/projection/code-generator'
+import type { SemanticNode } from '../../src/core/types'
+import { generateCode, setExpressionTypes } from '../../src/core/projection/code-generator'
 import { renderToBlocklyState } from '../../src/core/projection/block-renderer'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { runCella, describeCellaResult } from '../helpers/cella-run'
@@ -48,6 +49,15 @@ beforeAll(async () => {
 function lift(code: string) {
   const tree = tsParser.parse(code)
   return lifter.lift(tree.rootNode as any)
+}
+
+/** printf 風格要知道型別（spec 215）——這裡的變數一律當 int（產品裡是 Cella 給的 `types().nodes`） */
+function withIntTypes<T>(tree: SemanticNode, gen: () => T): T {
+  const types: Record<string, string> = {}
+  const walk = (x: SemanticNode): void => { if (x.componentId === 'cpp:var_ref') types[x.id] = 'int'; for (const k of Object.values(x.slots ?? {})) k.forEach(walk) }
+  walk(tree)
+  setExpressionTypes(types)
+  try { return gen() } finally { setExpressionTypes(null) }
 }
 
 function roundTrip(code: string, style: StylePreset = coutStyle): string {
@@ -974,6 +984,22 @@ describe('Edge Cases', () => {
 
 describe('Cross-style Code Generation', () => {
   it('cout code generates correctly in printf style', () => {
+    const sem = lift(`
+      #include <iostream>
+      using namespace std;
+      int main() {
+        int x = 5;
+        cout << x << endl;
+        return 0;
+      }
+    `)!
+    const code = withIntTypes(sem, () => generateCode(sem, 'cpp', printfStyle))
+    // print component should generate printf in printf style（型別已知時；推不出的保留 cout——spec 215）
+    expect(code).toContain('printf("%d\\n", x)')
+    expect(code).not.toContain('cout')
+  })
+
+  it('cout code in printf style without types keeps cout (spec 215)', () => {
     const code = roundTrip(`
       #include <iostream>
       using namespace std;
@@ -983,9 +1009,7 @@ describe('Cross-style Code Generation', () => {
         return 0;
       }
     `, printfStyle)
-    // print component should generate printf in printf style
-    expect(code).toContain('printf')
-    expect(code).not.toContain('cout')
+    expect(code).toContain('cout << x << endl; // 型別判斷不出來，保留 cout')
   })
 
   it('printf code generates correctly in cout style', () => {

@@ -15,6 +15,7 @@
 - 核心只傳遞：`GeneratorContext.expressionTypes`（節點 id → 型別字串）、`root`；「產碼自己加的註明」登記處（讀回來時拿掉——不然型別到了、換成 printf 之後，「保留 cout」還掛在那一行上）。
 - C++ 的型別表（`languages/cpp/printf-types.ts`）：`%c`、`%g`（**不是 `%f`**：`cout << 1.5` 印 `1.5`）、`%lld`、`%s` ＋ `.c_str()`、`%zu`／`%lu`；scanf 的 `%lf`、`" %c"`；`std::string` 讀不進 → 保留 cin。
 - 形式上保守（cella 同意：精確的要靠執行）：程式改過串流格式（`fixed`／`setprecision`…，性狀 `changesStreamFormat`）→ 含運算式的輸出保留 cout；`sync_with_stdio(false)`（性狀 `unsyncsStdio`）→ 全換或全不換。
+- **C 目標**：保留 `cout` 在 C 裡編不過（長測試的 `gcc -x c` 抓到）——推不出的那一格暫用 `%d`，行尾照實註明「型別判斷不出來，暫用 %d（C 沒有串流可保留）」。產品裡 C 目標同樣拿得到 Cella 的型別，這條只在型別還沒到時出現。
 - 產品：記下判決帶回的型別；從積木抽回的樹每次是新 id，**照形狀**對過去（`carryTypes`）——形狀不同就不給（學生把 `int x` 改成 `double x` 時，引用 x 的那顆積木沒變而型別已過期），保留 cout，新型別來了再補產；上一步在程式碼那側時不補產（會蓋掉他打的字）。
 
 ## 量到的

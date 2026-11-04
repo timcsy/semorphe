@@ -8,8 +8,9 @@ import { commentSyntax } from '../../../core/comment-syntax'
 import { isStringLiteral, isLineBreak } from '../../../languages/cpp/lang/node-traits'
 import {
   printfLine, streamFacts, everyIostreamConvertible, declareConvertible,
-  KEEP_COUT_NOTE, KEEP_STATE_NOTE, KEEP_UNSYNC_NOTE,
+  KEEP_COUT_NOTE, KEEP_STATE_NOTE, KEEP_UNSYNC_NOTE, C_FALLBACK_NOTE,
 } from '../../../languages/cpp/printf-types'
+import { isCDialect } from '../../../languages/cpp/target-dialect'
 
 const textOf = (v: SemanticNode): string | null => (isStringLiteral(v.componentId) ? String(v.properties.value ?? '') : null)
 const isBreak = (v: SemanticNode): boolean => isLineBreak(v.componentId)
@@ -41,6 +42,12 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
     const facts = streamFacts(ctx.root)
     if (facts.unsynced && ctx.root && !everyIostreamConvertible(ctx.root, ctx)) return keep(KEEP_UNSYNC_NOTE)
     const plan = printfPlan(node, ctx)
+    if (!plan && isCDialect(style)) {
+      // C 目標：保留 cout 編不過——推不出的那一格暫用 %d，照實註明
+      const c = printfLine(values, ctx, (v) => generateExpression(v, ctx), textOf, isBreak, '%d')!
+      const call = `printf("${c.fmt}"${c.args.length > 0 ? `, ${c.args.join(', ')}` : ''})`
+      return ctx.isExpression ? `${indent(ctx)}${call};\n` : `${commentSyntax().trailing(`${indent(ctx)}${call};`, C_FALLBACK_NOTE)}\n`
+    }
     if (!plan) return keep(facts.stateChanged ? KEEP_STATE_NOTE : KEEP_COUT_NOTE)
     if (plan.args.length > 0) return `${indent(ctx)}printf("${plan.fmt}", ${plan.args.join(', ')});\n`
     return `${indent(ctx)}printf("${plan.fmt}");\n`

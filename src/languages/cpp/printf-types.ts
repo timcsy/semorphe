@@ -20,7 +20,9 @@ export const KEEP_COUT_NOTE = '型別判斷不出來，保留 cout'
 export const KEEP_CIN_NOTE = '型別判斷不出來，保留 cin'
 export const KEEP_STATE_NOTE = '程式改了串流的格式（fixed／setprecision…），保留 cout'
 export const KEEP_UNSYNC_NOTE = 'sync_with_stdio(false) 之下不能混用，保留 iostream'
-for (const n of [KEEP_COUT_NOTE, KEEP_CIN_NOTE, KEEP_STATE_NOTE, KEEP_UNSYNC_NOTE]) declareGeneratedNote(n)
+/** C 目標沒有 cout／cin 可以保留——推不出的那一格暫用 `%d`，照實註明（spec 215；保留 cout 在 C 裡編不過） */
+export const C_FALLBACK_NOTE = '型別判斷不出來，暫用 %d（C 沒有串流可保留）'
+for (const n of [KEEP_COUT_NOTE, KEEP_CIN_NOTE, KEEP_STATE_NOTE, KEEP_UNSYNC_NOTE, C_FALLBACK_NOTE]) declareGeneratedNote(n)
 
 /** `const int &` → `int`；`std::size_t` → `size_t`。 */
 function normalize(type: string): string {
@@ -66,6 +68,8 @@ export function scanfOf(type: string | undefined): string | null {
 export function printfLine(
   values: SemanticNode[], ctx: GeneratorContext, gen: (n: SemanticNode) => string,
   isText: (n: SemanticNode) => string | null, isBreak: (n: SemanticNode) => boolean,
+  /** 推不出時用的轉換（只給 C 目標：沒有 cout 可保留）；省略 ＝ 推不出就回 null */
+  fallback?: string,
 ): { fmt: string; args: string[] } | null {
   let fmt = ''
   const args: string[] = []
@@ -73,7 +77,7 @@ export function printfLine(
     if (isBreak(v)) { fmt += '\\n'; continue }
     const text = isText(v)
     if (text !== null) { fmt += text.replace(/%/g, '%%'); continue }
-    const p = printfOf(ctx.expressionTypes?.[v.id])
+    const p = printfOf(ctx.expressionTypes?.[v.id]) ?? (fallback ? { conv: fallback, arg: (e: string) => e } : null)
     if (!p) return null
     fmt += p.conv
     args.push(p.arg(gen(v)))

@@ -3,7 +3,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { Lifter } from '../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { generateCode } from '../../src/core/projection/code-generator'
+import { generateCode, setExpressionTypes } from '../../src/core/projection/code-generator'
 import type { StylePreset } from '../../src/core/types'
 import apcsStyle from '../../src/languages/cpp/styles/apcs.json'
 import competitiveStyle from '../../src/languages/cpp/styles/competitive.json'
@@ -86,11 +86,18 @@ describe('Style Switching — same semantic tree, different code output', () => 
     expect(tree).not.toBeNull()
 
     const apcsCode = generateCode(tree!, 'cpp', APCS)
-    const compCode = generateCode(tree!, 'cpp', COMPETITIVE)
+    // printf 風格要知道型別（spec 215）——x 當 int；推不出的保留 cout
+    const types: Record<string, string> = {}
+    const walk = (n: { id: string; componentId: string; slots?: Record<string, unknown[]> }): void => { if (n.componentId === 'cpp:var_ref') types[n.id] = 'int'; for (const k of Object.values(n.slots ?? {})) (k as never[]).forEach(walk) }
+    walk(tree as never)
+    setExpressionTypes(types)
+    let compCode: string
+    try { compCode = generateCode(tree!, 'cpp', COMPETITIVE) } finally { setExpressionTypes(null) }
 
     // Universal print adapts to style
     expect(apcsCode).toContain('cout')
-    expect(compCode).toContain('printf')
+    expect(compCode).toContain('printf("%d", x)')
+    expect(generateCode(tree!, 'cpp', COMPETITIVE), '沒有型別：保留 cout 並註明').toContain('cout << x; // 型別判斷不出來，保留 cout')
   })
 
   it('should preserve semantic tree across style switches', () => {
