@@ -85,6 +85,30 @@ describe('護欄：JS 直譯器刪掉之後不得回來（spec 208 T013）', () 
   })
 })
 
+/** 偵測器：這一段原始碼有沒有 import 參照編譯器的輔助（6c-5，spec 212）。 */
+export function importsRefcc(src: string): boolean {
+  return [...src.matchAll(/(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g)].some((m) => /(^|\/)run-cpp$/.test(m[1]))
+}
+
+describe('護欄：npm test 不呼叫參照編譯器（spec 212，6c-5）', () => {
+  // 判準只剩 Cella。參照編譯器（g++／clang）只留給 `tests/probes/` 的交叉檢查探針（量的是我們的翻譯，預設跳過）。
+  // 代價是付過的：本機與 CI 的編譯器不同造成過三次 CI 紅（history/251、262），本機要一個標頭墊片才跑得起來。
+  it('★ 注入：認得 import 參照編譯器的輔助，不誤認名字像的', () => {
+    expect(importsRefcc("import { runCpp } from '../helpers/run-cpp'")).toBe(true)
+    expect(importsRefcc("import { runCppDetailed } from '../../tests/helpers/run-cpp'")).toBe(true)
+    expect(importsRefcc("import { runCella } from '../helpers/cella-run'")).toBe(false)
+    expect(importsRefcc("import { runCppish } from '../helpers/run-cpp-extra'")).toBe(false)
+  })
+
+  it('🔴 硬性零：探針以外的測試不得 import 參照編譯器的輔助', () => {
+    const scope = [...walk(path.join(ROOT, 'tests')).filter((f) => !f.includes(`${path.sep}probes${path.sep}`) && !f.includes(`${path.sep}helpers${path.sep}`)),
+      ...walk(path.join(ROOT, 'src/components')).filter((f) => f.endsWith('.test.ts'))]
+    expect(scope.length, '掃不到測試檔 → 量測壞了').toBeGreaterThan(400)
+    const hits = scope.filter((f) => !f.endsWith('audit-cella-only.test.ts') && importsRefcc(fs.readFileSync(f, 'utf8'))).map((f) => path.relative(ROOT, f))
+    expect(hits, '🔴 這些測試還在叫參照編譯器——判準換成 Cella（expectCellaOut／runCella），或搬進 tests/probes/').toEqual([])
+  })
+})
+
 describe('護欄：產品的入口只登記 Cella（spec 205 T008）', () => {
   it('★ 注入：偵測器認得出那兩種寫法，也不會把 Cella 的登記誤認', () => {
     expect(bringsJsInterpreter("import { jsInterpreterProvider } from '../providers/js-interpreter'")).toBe(true)
