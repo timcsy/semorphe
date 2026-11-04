@@ -14,7 +14,7 @@ const tree: SemanticNode = createNode('cpp:program', {}, { body: [createNode('cp
 /** Cella 給的類別（0.1.202611030113 起欄位叫 category）——假判決照它補 `category`；要測「沒有類別」的那幾條直接寫 `category: undefined` */
 const CATEGORY_OF = (kind: string): string =>
   kind === 'hole' ? 'incomplete' : kind === 'unsupported' ? 'unsupported'
-    : kind === 'fuel' || kind === 'ubOrder' || kind === 'unspecified' ? 'indeterminate'
+    : kind === 'fuel' || kind === 'ubOrder' ? 'indeterminate'
       : kind === 'abort' || kind === 'uncaught' ? 'termination' : 'error'
 const v = (verdict: Verdict['verdict'], problems: Verdict['problems'] = [], assumes?: Verdict['assumes']): Verdict =>
   ({ verdict, basis: 'computed', exit: 0, out: '', problems: problems.map((p) => ('category' in p ? p : { ...p, category: CATEGORY_OF(p.kind) })), ...(assumes ? { assumes } : {}) })
@@ -128,15 +128,17 @@ describe('Cella 的節點標籤 → 語義樹的節點', () => {
 
 /**
  * spec 206：**近似名的建議搬到判決診斷**——它原本住在 JS 直譯器（`interpreter/scope.ts` 的 `undeclared`），6c-4 刪直譯器就沒地方放
- * （6c 測試盤點的 F 類）。Cella 判「use of undeclared identifier 'X'」時，在語意樹宣告過的名字 ＋ 語言給的常用名字裡找近似名。
- * 規矩照舊：**寧可漏，不可錯**——找不到就照原本的 CELLA_REJECT，一個字都不多。
+ * （6c 測試盤點的 F 類）。Cella 判未宣告（`undeclared`，`params.name`）時，在語意樹宣告過的名字 ＋ 語言給的常用名字裡找近似名。
+ * 規矩照舊：**寧可漏，不可錯**——找不到就是「找不到這個名字」那一則，一個字都不多。
+ * 🟢 2026-11-04（cella 0.1.202611032234）起名字從 params 讀；之前是從 reason 解析 clang 的句子，而 Cella 的變數與呼叫各用一種句子。
  */
 describe('近似名的建議（Cella 判未宣告）', () => {
   const use = createNode('cpp:var_ref', { name: 'Cout' }, {})
   const decl = createNode('cpp:var_declare', { name: 'score', type: 'int' }, {})
   const use2 = createNode('cpp:var_ref', { name: 'scoer' }, {})
   const t = createNode('cpp:program', {}, { body: [decl, createNode('cpp:print', {}, { values: [use, use2] })] })
-  const undeclared = (at: string, name: string): Verdict => v('reject', [{ kind: 'reject', at, reason: `use of undeclared identifier '${name}'` }])
+  const undeclared = (at: string, name: string, extra: Record<string, string> = {}): Verdict =>
+    v('reject', [{ kind: 'undeclared', at, reason: `use of undeclared identifier '${name}'`, params: { name, what: 'variable', ...extra }, structured: true }])
   const go = (verdict: Verdict, knownNames: string[] = []) =>
     toDiagnostics({ verdict, types: null, tree: t, readsInput: false, hasStdin: false, knownNames })
 
@@ -148,9 +150,17 @@ describe('近似名的建議（Cella 判未宣告）', () => {
     const d = go(undeclared(use2.id, 'scoer')).diagnostics
     expect(d[0]).toMatchObject({ rule: 'CELLA_UNDECLARED_SUGGEST', params: { name: 'scoer', near: 'score' } })
   })
-  it('🔴 找不到近似名 → 照原本的 CELLA_REJECT，不亂猜', () => {
+  it('🔴 找不到近似名 → 「找不到這個名字」，不亂猜', () => {
     const d = go(undeclared(use.id, 'qqqq'), ['cout']).diagnostics
-    expect(d[0]).toMatchObject({ rule: 'CELLA_REJECT' })
+    expect(d).toEqual([expect.objectContaining({ rule: 'CELLA_UNDECLARED', severity: 'error', params: expect.objectContaining({ name: 'qqqq', what: 'variable' }) })])
+  })
+  it('★ 名字是標準標頭檔宣告的、程式沒 include → 說要 include 哪一個，不猜近似名', () => {
+    const d = go(undeclared(use.id, 'Cout', { header: 'iostream' }), ['cout']).diagnostics
+    expect(d).toEqual([expect.objectContaining({ rule: 'CELLA_UNDECLARED_HEADER', params: expect.objectContaining({ name: 'Cout', header: 'iostream' }) })])
+  })
+  it('🔴 文案讀 params，不讀 reason：reason 換了句子，結果不變', () => {
+    const p = { kind: 'undeclared', at: use2.id, reason: 'call to an undeclared function', params: { name: 'scoer', what: 'function' }, structured: true }
+    expect(go(v('reject', [p])).diagnostics[0]).toMatchObject({ rule: 'CELLA_UNDECLARED_SUGGEST', params: { name: 'scoer', near: 'score' } })
   })
   it('不是未宣告的 reject 不受影響', () => {
     const d = go(v('reject', [{ kind: 'reject', at: use.id, reason: 'invalid operands to a binary operator' }]), ['cout']).diagnostics
@@ -226,32 +236,35 @@ describe('判決的類別（category）', () => {
 
 /**
  * Python 的 NameError 也要有近似名（spec 206 的 Python 那一半；6c 收尾清單）。
- * Cella 給的是沒接住的例外（`uncaught`、類別 termination）而**沒有位置**——名字沒宣告過，樹上同名的節點都是用到它的地方，標在第一個。
+ * cella 0.1.202611032235 起 NameError 是 `undeclared`（類別照舊 termination、判決照舊 accept），params 帶 name，**帶 `at`**（拋出的節點）。
+ * 之前是 `uncaught` 而沒有位置，要從 reason 解析名字、標在樹上第一個同名節點——那一段刪了。
  */
 describe('近似名的建議（Python 的 NameError）', () => {
   const decl = createNode('python:var_assign', { name: 'count' }, {})
   const use = createNode('python:var_ref', { name: 'cuont' }, {})
   const call = createNode('python:func_call', { name: 'prnt' }, {})
   const t = createNode('python:program', {}, { body: [decl, createNode('python:print', {}, { values: [use] }), call] })
-  const nameError = (name: string): Verdict => v('accept', [{ kind: 'uncaught', category: 'termination', reason: `NameError: name '${name}' is not defined` }])
+  const nameError = (name: string, at?: string): Verdict =>
+    v('accept', [{ kind: 'undeclared', category: 'termination', ...(at ? { at } : {}), reason: `NameError: name '${name}' is not defined`, params: { name, what: 'name' }, structured: true }])
   const go = (verdict: Verdict, knownNames: string[] = []) => toDiagnostics({ verdict, types: null, tree: t, readsInput: false, hasStdin: false, knownNames })
 
   it('★ 樹裡的名字：cuont → 是不是要寫 count，標在用到它的那一顆', () => {
-    expect(go(nameError('cuont')).diagnostics).toEqual([expect.objectContaining({ nodeId: use.id, rule: 'CELLA_UNDECLARED_SUGGEST', params: expect.objectContaining({ name: 'cuont', near: 'count' }) })])
+    expect(go(nameError('cuont', use.id)).diagnostics).toEqual([expect.objectContaining({ nodeId: use.id, rule: 'CELLA_UNDECLARED_SUGGEST', params: expect.objectContaining({ name: 'cuont', near: 'count' }) })])
   })
   it('★ 語言給的常用名字：prnt → 是不是要寫 print', () => {
-    expect(go(nameError('prnt'), ['print', 'input']).diagnostics[0]).toMatchObject({ nodeId: call.id, params: { name: 'prnt', near: 'print' } })
+    expect(go(nameError('prnt', call.id), ['print', 'input']).diagnostics[0]).toMatchObject({ nodeId: call.id, params: { name: 'prnt', near: 'print' } })
   })
-  it('🔴 找不到近似名 → 照原本的那一則（程式怎麼結束），不亂猜', () => {
-    const t2 = createNode('python:program', {}, { body: [createNode('python:var_ref', { name: 'zzzz' }, {})] })
-    const d = toDiagnostics({ verdict: nameError('zzzz'), types: null, tree: t2, readsInput: false, hasStdin: false, knownNames: ['print'] }).diagnostics
-    expect(d[0]).toMatchObject({ rule: 'CELLA_TERMINATION', severity: 'warning' })
+  it('🔴 找不到近似名 → 「找不到這個名字」，嚴重度照類別（termination ⟹ 警告），不亂猜', () => {
+    const z = createNode('python:var_ref', { name: 'zzzz' }, {})
+    const t2 = createNode('python:program', {}, { body: [z] })
+    const d = toDiagnostics({ verdict: nameError('zzzz', z.id), types: null, tree: t2, readsInput: false, hasStdin: false, knownNames: ['print'] }).diagnostics
+    expect(d[0]).toMatchObject({ nodeId: z.id, rule: 'CELLA_UNDECLARED', severity: 'warning' })
   })
-  it('🔴 樹上找不到那個名字 → 對不到積木：算進狀態列、說得出原因，不畫在別顆上', () => {
-    const r = go(nameError('ghost'), ['print'])
+  it('🔴 沒有 at → 對不到積木：算進狀態列、說得出原因，不在樹上找同名的猜', () => {
+    const r = go(nameError('cuont'), ['print'])
     expect(r.diagnostics).toEqual([])
     expect(r.unplaced.info).toBe(1)
-    expect(r.notes.join('\n')).toMatch(/NameError/)
+    expect(r.notes.join('\n')).toMatch(/undeclared/)
   })
 })
 
