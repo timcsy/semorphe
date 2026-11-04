@@ -247,26 +247,18 @@ describe('換形態，判決不變（第五個面向）', () => {
 })
 
 /**
- * I/O 風格切換的已知不一致（2026-11-04 spec 213 第一次量，17 支）——兩族：
+ * I/O 風格切換的已知不一致（2026-11-04 spec 213 第一次量，17 支；Cella 那一族 7 支已修，剩 10 支）：
  * - **我們這側：產碼沒有型別表**（缺陷帳 2026-09-20 那根釘子：printf 對每一個運算式都寫 `%d`）——
  *   char 印成數字、double／long long 被判 ubPrintf、string 被當指標。何時修：產碼那一側拿到型別表的那一刀（`%c`／`%f`／`%lld`／`%s` 一起）。
- * - **Cella：printf 的格式字串裡直接寫中文會亂碼**（`%s` 帶同一串則正常）——2026-11-04 附最小重現回報。
+ * - ~~Cella：printf 的格式字串裡直接寫中文會亂碼~~——cella 0.1.202611041233 修好（格式字串沒有轉成 UTF-8 位元組），7 支的釘子拔掉。
  */
 const TYPES = '我們這側：printf 產碼沒有型別表（%d 一律）'
-const CJK = 'Cella：printf 格式字串裡的非 ASCII 字元亂碼（已回報）'
 const IO_SWITCH_KNOWN: Record<string, string> = {
-  'cpp-beginner/01-印出一句話/ex1.cpp': CJK,
-  'cpp-beginner/01-印出一句話/make.cpp': CJK,
   'cpp-beginner/02-型別/ex1.cpp': TYPES,
   'cpp-beginner/02-型別/make.cpp': TYPES,
   'cpp-beginner/02-型別/rebuild.cpp': TYPES,
   'cpp-beginner/03-變數/make.cpp': TYPES,
-  'cpp-beginner/05-程式從哪開始/make.cpp': CJK,
   'cpp-beginner/06-算一算/rebuild.cpp': TYPES,
-  'cpp-beginner/09-選擇/ex1.cpp': CJK,
-  'cpp-beginner/09-選擇/rebuild.cpp': CJK,
-  'cpp-beginner/12-猜數字/ex1.cpp': CJK,
-  'cpp-beginner/12-猜數字/rebuild.cpp': CJK,
   'cpp-beginner/14-字串/ex1.cpp': TYPES,
   'cpp-beginner/14-字串/rebuild.cpp': TYPES,
   'cpp-beginner/15-vector/rebuild.cpp': TYPES,

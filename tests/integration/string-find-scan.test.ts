@@ -64,6 +64,18 @@ describe('找不到時的回傳值', () => {
   })
 })
 
+describe('npos 這個名字本身（cella 0.1.202611041233 起認得）', () => {
+  // 兩種寫法都要認成同一顆身分、照原文產回、而 Cella 判得出值。
+  // 🔴 帶 `std::` 的那一種原本讀成 unresolved（辨識規則只寫了 `string::npos`），formalize 翻不出（2026-11-04 升級 Cella 時量到）
+  it.each(['string::npos', 'std::string::npos'])('★ %s', async (name) => {
+    const code = `#include <iostream>\n#include <string>\nusing namespace std;\nint main() {\n  string s = "ab";\n  cout << (s.find("z") == ${name}) << "\\n";\n  return 0;\n}\n`
+    const r = await runCella(code)
+    expect(JSON.stringify(r.tree), '認成 builtin_constant').toContain(`"value":"${name}"`)
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    expect(r.out).toBe('1\n')
+  })
+})
+
 describe('掃描迴圈——兩個 bug 疊起來的實際症狀', () => {
   // Cella 判錯：同上，`s.find("X", pos)` 被判 reject（g++ 印 2）
   it('★ 數出所有出現次數（期望值由 g++ 決定）', async () => {

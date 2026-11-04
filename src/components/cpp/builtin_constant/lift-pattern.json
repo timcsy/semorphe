@@ -126,5 +126,27 @@
       }
     ],
     "priority": 5
+  },
+  {
+    "id": "cpp_npos_std_qualified",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "qualified_identifier",
+    "component": {
+      "componentId": "cpp:builtin_constant"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "std::string::npos"
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ],
+    "priority": 5
   }
 ]
