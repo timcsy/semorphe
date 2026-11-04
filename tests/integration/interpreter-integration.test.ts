@@ -70,6 +70,6 @@ describe('Integration - Scenario 8: Runtime Error', () => {
   it('rejects an undeclared variable, and says which', async () => {
     const r = await runCella(program('    cout << x;'))
     expect(r.verdict, describeCellaResult(r)).toBe('reject')
-    expect(r.problems.map((p) => p.reason).join('\n')).toMatch(/undeclared identifier 'x'/)
+    expect(r.problems.map((p) => [p.kind, p.params?.name])).toContainEqual(['undeclared', 'x'])
   })
 })

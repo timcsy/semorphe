@@ -126,8 +126,9 @@ describe('串流名字不是變數（Cella）', () => {
     const r = await run(src)
     expect(r.verdict, describeCellaResult(r)).toBe('reject')
     expect(r.problems).toHaveLength(1)
-    expect(r.problems[0].kind).toBe('reject')
-    expect(r.problems[0].reason).toBe(`use of undeclared identifier '${name}'`)
+    // cella 0.1.202611032234 起未宣告是結構化的 `undeclared`：名字讀 params，不讀 reason（reason 只當開發者的紀錄）
+    expect(r.problems[0].kind).toBe('undeclared')
+    expect(r.problems[0].params).toMatchObject({ name })   // what 是 name（變數或函式在這個位置分不出來；Cella 給）
     expect(r.problems[0].source?.text, '要指到那個名字').toBe(name)
   })
 

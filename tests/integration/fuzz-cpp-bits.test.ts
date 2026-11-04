@@ -231,7 +231,7 @@ describe.runIf(hasReferenceCompiler())('盲測的回歸：一排位元', () => {
    */
   // 歸類：Cella 未支援——`__builtin_ctz`／`clz`／`parity` 是編譯器內建（非標準），Cella 判「未宣告的函式」
   it('🟡 已知缺陷（修好時這條會紅）：🪦 `__builtin_ctz`／`clz`／`parity`', async () => {
-    await knownCellaGap(/call to an undeclared function '__builtin_ctz'/, async () => {
+    await knownCellaGap(/use of undeclared identifier '__builtin_ctz'/, async () => {
       await same('  unsigned x = 40u;\n'
         + '  cout << __builtin_ctz(x) << " " << __builtin_clz(x) << " " << __builtin_parity(x);', '')
     })
