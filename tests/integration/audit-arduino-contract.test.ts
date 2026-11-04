@@ -82,6 +82,7 @@ describe('★ 第 1 層的每一條都會紅（反例）', () => {
     ['⑩c int 的 default 有前導零', async () => pkgOf({ 'arduino:x': { ...ok, params: { baud: { type: 'int', default: '09' } } } }), /不合 int/],
     ['⑩d int 的 default 帶 +', async () => pkgOf({ 'arduino:x': { ...ok, params: { baud: { type: 'int', default: '+5' } } } }), /不合 int/],
     ['⑩e expr 的 default 是裸字串', async () => pkgOf({ 'arduino:x': { ...ok, params: { v: { type: 'expr', default: 'x' } } } }), /不合 expr/],
+    ['⑩f expr 的 default 多一個鍵', async () => pkgOf({ 'arduino:x': { ...ok, params: { v: { type: 'expr', default: { expr: 'x', color: 'red' } } } } }), /不合 expr/],
     ['⑦b enum 的值不是字串', async () => pkgOf({ 'arduino:x': { ...ok, params: { m: { type: 'enum', values: ['a', 1] } } } }), /enum 沒有值域/],
   ])('%s', async (_n, make, why) => {
     const bad = await layer1(await make() as never, 'arduino')
