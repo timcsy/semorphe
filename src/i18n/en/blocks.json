@@ -141,6 +141,7 @@
   "RUNTIME_ERR_UNSPECIFIED_BEHAVIOR": "Stopped here: the standard allows more than one result and no definite value can be computed ({clause})",
   "RUNTIME_ERR_UNCAUGHT_EXCEPTION": "The program threw an exception that nothing caught: {text}",
   "EXEC_NO_STEPPING": "This runner cannot step through the program—running it to the end instead",
+  "EXEC_NO_INTERACTIVE_INPUT": "This runner cannot wait for input while running—the program only gets input given beforehand (none this time)",
   "EXEC_STATUS_PREPARING": "Preparing… (it will start automatically)",
   "RUNTIME_PREPARE_TIMEOUT": "The running modules never became ready ({why}) — please reload the page and try again",
   "STATUS_CHECK_LOADING": "Check: loading…",
