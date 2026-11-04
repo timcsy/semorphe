@@ -177,6 +177,16 @@ describe('換形態，判決不變（第五個面向）', () => {
     // 原本 pointer_declare 沒有運算式形態，在 for 的 INIT 被降級成原文積木（學生語料 basic/14_array_1，spec 214 順手修）
     expect(same(H + 'int main() {\n  int a[3] = {1, 2, 3};\n  for (int* p = begin(a); p != end(a); p++) {\n    cout << *p;\n  }\n  return 0;\n}\n')).toBeNull()
   })
+  it.each([
+    ['v.emplace_back(1);', H + 'int main() {\n  vector<int> v;\n  v.emplace_back(1);\n  return 0;\n}\n'],
+    ['int &r = v.emplace_back(1);', H + 'int main() {\n  vector<int> v;\n  int &r = v.emplace_back(1);\n  return 0;\n}\n'],
+    ['s.emplace(1);', H + 'int main() {\n  set<int> s;\n  s.emplace(1);\n  return 0;\n}\n'],
+  ])('🔴 排版提示走一趟積木不被改寫：%s（renderMapping.hints，spec 214）', (_l, code) => {
+    // 原本：方法名的拼法積木上刻意沒有一格（「排版提示，不給學生編輯」），而抽回來就退成預設——emplace_back → push_back、emplace → insert
+    const r: Row = { id: 'hint', tree: lift(code), style: S(apcs), opts: {} }
+    expect(generateCode(viaBlocks(r), 'cpp', S(apcs))).toBe(generateCode(r.tree, 'cpp', S(apcs)))
+    expect(same(code)).toBeNull()
+  })
   it('🔴 有敘述形態的元件不套包裝；空的包裝不產節點', () => {
     const { blockMappings: _drop, ...state } = renderToBlocklyState(lift(H + 'int main() {\n  vector<int> v;\n  v.push_back(1);\n  return 0;\n}\n'))
     expect(JSON.stringify(state)).not.toContain('cpp_expression_statement')

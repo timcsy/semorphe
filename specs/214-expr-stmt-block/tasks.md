@@ -7,4 +7,5 @@
 - [X] T005 `tests/integration/form-invariance.test.ts`：兩根釘子轉正 ＋ 載得進工作區 ＋ 有敘述形態不套 ＋ 空包裝
 - [X] T006 學生語料探針：積木來回 3 → 0；第三支是 `pointer_declare` 在 `for` INIT——補運算式形態並加常駐檢查（反證過：拿掉會紅）
 - [X] T007 knowledge：history/338、vision
-- [ ] T008 test:unit／capsule／guard → 重產對照圖 → 長測試（全套 ＋ e2e）→ 合併
+- [X] T008 排版提示：`renderMapping.hints`（types／renderer／extractor）＋ 四顆元件宣告；C++ 進 form-invariance、Python 新增 `layout-hints-roundtrip`（反證過：拿掉宣告 6 支紅）
+- [ ] T009 test:unit／capsule／guard → 重產對照圖 → 長測試（全套 ＋ e2e）→ 合併

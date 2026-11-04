@@ -80,6 +80,7 @@ export class PatternExtractor {
             extraStateFlags: explicit.extraStateFlags,
             slotAsField: explicit.slotAsField,
             fixed: explicit.fixed,
+            hints: explicit.hints,
           }
         : derived
       this.extractSpecs.set(blockType, { componentId, mapping })
@@ -130,6 +131,12 @@ export class PatternExtractor {
     // 形態固定的屬性（積木上沒有欄位，值由形態決定）——spec 213
     for (const [semProp, value] of Object.entries(spec.mapping.fixed ?? {})) {
       if (props[semProp] === undefined) props[semProp] = value
+    }
+
+    // 排版提示（spec 214）：渲染時放進 extraState.hints 的原文寫法，讀回來
+    const hinted = (block.extraState as { hints?: Record<string, string | number> } | undefined)?.hints ?? {}
+    for (const h of spec.mapping.hints ?? []) {
+      if (props[h] === undefined && hinted[h] !== undefined) props[h] = hinted[h]
     }
 
     // Reverse inputs mapping: semanticChild ← blockInput (expression)

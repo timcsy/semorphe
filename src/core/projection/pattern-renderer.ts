@@ -82,6 +82,7 @@ export class PatternRenderer {
             dynamicRules: explicit.dynamicRules,
             extraStateFlags: explicit.extraStateFlags,
             slotAsField: explicit.slotAsField,
+            hints: explicit.hints,
           }
         : derived
       // ⚠️ **第一個宣告勝出，後來的不覆寫。**
@@ -249,6 +250,13 @@ export class PatternRenderer {
       const text = serializeChildren(node.slots[spec.childSlot] ?? [], spec)
       if (text !== null) block.fields[spec.field] = text
     }
+
+    // 排版提示（spec 214）：積木上沒有一格，帶在 extraState 裡走一趟（Blockly 由 preserveForeignExtraState 原樣保住）
+    const hints = Object.fromEntries((formMapping.hints ?? []).flatMap((h) => {
+      const v = node.properties[h]
+      return v !== undefined && v !== '' ? [[h, v]] : []
+    }))
+    if (Object.keys(hints).length > 0) block.extraState = { ...block.extraState, hints }
 
     // Process extraStateFlags: set extraState[key] = true when slots[childSlot] is non-empty
     if (formMapping.extraStateFlags) {

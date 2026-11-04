@@ -469,6 +469,12 @@ export interface RenderMapping {
    */
   fixed?: Record<string, string>
   /**
+   * **排版提示**（spec 214）：積木上刻意沒有一格、而產回去要照原文的屬性（`push_back`／`emplace_back` 的拼法、
+   * `enumerate(xs, start=1)` 的寫法）。渲染時放進 `extraState.hints`、抽取時讀回——學生看不到也改不了，
+   * 而走一趟積木不會被悄悄改寫。落點判定見 `tests/assets/projection-home-decisions.json`（「排版提示，不給學生編輯」）。
+   */
+  hints?: string[]
+  /**
    * 把一個接點的子節點序列化進**一個文字欄位**，並解析回來。
    *
    * 與 `dynamicRules` 是**兩種不同的形態**——那個是「每項一組欄位」
