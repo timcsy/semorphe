@@ -94,7 +94,17 @@ describe('動作清單：從語意樹投影（只放敘述、值用字串、非�
   it('★ 布林參數給真的布林；接收者照屬性寫字串', () => {
     const sp = createNode('cpp:serial_print', { obj: 'Serial', newline: 'false' }, { value: [num('7')] })
     const s = structureOf(createNode('cpp:program', {}, { body: [sp] }), { vocab, map, revision: 4, codeOf })
-    expect(s.actions[0].args).toEqual({ obj: 'Serial', newline: false, value: '7' })
+    // value 宣告成 expr ⟹ 字面值也寫成運算式（cos-mos 的核對器：expr 只收 { expr }）
+    expect(s.actions[0].args).toEqual({ obj: 'Serial', newline: false, value: { expr: 'cpp:literal_number' } })
+  })
+
+  it('🔴 enum 的名字在值域裡就給字串，不包成運算式；不在值域裡才是運算式（2026-11-04 錄樣本時看到 HEX 被包起來）', () => {
+    const hex = createNode('cpp:var_ref', { name: 'HEX' }, {})
+    const sp = createNode('cpp:serial_print', { obj: 'Serial', newline: 'false' }, { value: [num('42')], format: [hex] })
+    const s = structureOf(createNode('cpp:program', {}, { body: [sp] }), { vocab, map, revision: 5, codeOf })
+    expect(s.actions[0].args.format).toBe('HEX')
+    const odd = createNode('cpp:serial_print', { obj: 'Serial', newline: 'false' }, { value: [num('1')], format: [createNode('cpp:var_ref', { name: 'fmt' }, {})] })
+    expect(structureOf(createNode('cpp:program', {}, { body: [odd] }), { vocab, map, revision: 6, codeOf }).actions[0].args.format).toEqual({ expr: 'fmt' })
   })
 
   it('🔴 認不出來的那一段不靜默丟：進 unmapped', () => {

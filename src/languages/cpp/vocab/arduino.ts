@@ -138,8 +138,20 @@ export function structureOf(
   const byComponent = new Map(Object.entries(opts.map).map(([name, id]) => [id, name]))
   const actions: StructureMessage['actions'] = []
   const unmapped: StructureMessage['unmapped'] = []
-  const valueOf = (n: SemanticNode | undefined): ArgValue =>
-    !n ? { expr: '' } : literalOf(n) ?? { expr: opts.codeOf(n) }
+  // 值依參數宣告的型別決定（cos-mos 的核對器：宣告成 expr 的只收 { expr }；enum 要在值域裡）：
+  // - expr ⟹ 一律寫成運算式（字面值也是：`"v="`、`42` 是程式的一段，不是一個設定值）
+  // - enum ⟹ 寫出來的名字在值域裡就給字串（`HEX`、`OUTPUT`），不在就是運算式
+  // - 其餘 ⟹ 字面值給字串，不是字面值給運算式
+  const valueOf = (n: SemanticNode | undefined, d: VocabParam): ArgValue => {
+    if (!n) return { expr: '' }
+    if (d.type === 'expr') return { expr: opts.codeOf(n) }
+    const lit = literalOf(n)
+    if (d.type === 'enum') {
+      const text = lit ?? opts.codeOf(n)
+      return d.values?.includes(text) ? text : { expr: opts.codeOf(n) }
+    }
+    return lit ?? { expr: opts.codeOf(n) }
+  }
 
   const walk = (n: SemanticNode): void => {
     const name = byComponent.get(n.componentId)
@@ -150,8 +162,8 @@ export function structureOf(
       for (const [p, d] of Object.entries(decl.params)) {
         if (p in (n.slots ?? {})) {
           const kids = n.slots[p] ?? []
-          if (d.variadic) args[p] = kids.map((k) => valueOf(k))
-          else if (kids.length > 0) args[p] = valueOf(kids[0])
+          if (d.variadic) args[p] = kids.map((k) => valueOf(k, d))
+          else if (kids.length > 0) args[p] = valueOf(kids[0], d)
         } else if (n.properties[p] !== undefined) {
           const v = n.properties[p]
           args[p] = typeof v === 'boolean' ? v : d.type === 'bool' ? String(v) === 'true' : String(v)
