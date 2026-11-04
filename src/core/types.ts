@@ -462,6 +462,13 @@ export interface RenderMapping {
   /** Extra state flags: set extraState[key] = true when slots[childSlot] is non-empty */
   extraStateFlags?: Record<string, string>
   /**
+   * **這個形態固定了哪些屬性**（spec 213，2026-11-04）：積木上沒有欄位、值由形態本身決定的屬性——
+   * 例如 `Serial.begin` 那顆積木沒有接收者欄位，接收者就是 `Serial`。抽取時照這裡補上。
+   * 🔴 沒有它的話，走一趟積木回來屬性就不見了：產生器會補預設值（程式碼看起來對），而 formalize 照實讀，翻不出
+   * ——前四個面向都量不到，只有「翻給 Cella 的程式」看得到（`tests/integration/form-invariance`）。
+   */
+  fixed?: Record<string, string>
+  /**
    * 把一個接點的子節點序列化進**一個文字欄位**，並解析回來。
    *
    * 與 `dynamicRules` 是**兩種不同的形態**——那個是「每項一組欄位」

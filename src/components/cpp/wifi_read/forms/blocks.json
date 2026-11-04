@@ -29,7 +29,7 @@
         }
       ]
     },
-    "renderMapping": {
+    "renderMapping": {"fixed": {"obj": "WiFi"}, 
       "fields": {
         "QUANTITY": "quantity"
       },

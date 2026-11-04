@@ -1,4 +1,5 @@
 import { degradationBlocks } from '../blocks/degradation-blocks'
+import { nonComponentDecl } from '../blocks/non-components'
 import type { SemanticNode } from '../types'
 import type { BlockMapping } from './code-generator'
 import { PatternRenderer } from './pattern-renderer'
@@ -114,7 +115,11 @@ export function renderToBlocklyState(tree: SemanticNode): WorkspaceBlockState & 
 /** 這一趟渲染裡接不上語句鏈的積木——由 `renderToBlocklyState` 收成頂層積木。 */
 let currentOrphans: BlockState[] = []
 
-function renderStatementChain(nodes: SemanticNode[]): BlockState | null {
+function renderStatementChain(input: SemanticNode[]): BlockState | null {
+  // 🔴 中間節點（非元件登記處宣告為 sentinel 的，例如 struct 裡 `int x, y;` 的那一顆包裝）沒有積木形態——
+  //    原本 renderBlock 回 null 而被跳過，**整組欄位走一趟積木就消失**（spec 213，學生語料量到：
+  //    `struct Point { int x, y; bool operator<… }` 走一趟積木，第一個成員從欄位變成方法）。攤成它裡面那一串再畫。
+  const nodes = input.flatMap((n) => (nonComponentDecl(n.componentId)?.kind === 'sentinel' ? Object.values(n.slots ?? {}).flat() : [n]))
   if (nodes.length === 0) return null
 
   const canFollow = (b: BlockState): boolean =>

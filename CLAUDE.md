@@ -222,7 +222,7 @@ STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-
 | ② 語義的不動點 | `lift → 產碼 → 再 lift` | 來回一趟就變 |
 | 🔴 ③ 載得進工作區嗎 | `render → Blockly load` | **一片空白**（不是少一行） |
 | 🔴 ④ 走一趟積木回來 | `render → extract → 產碼` | 學生一動積木，程式碼就少東西 |
-| 🔴 ⑤ **跑出來一不一樣** | Cella 的判決（課文：`binding-verdict` 的「課文答案」斷言；對 g++：探針 `refcc-cross-check`） | **形狀全對，而它印出別的東西** |
+| 🔴 ⑤ **翻給 Cella 的程式** | 換一種形態再回來，交給 Cella 的程式相同（`form-invariance`：同風格來回、格式風格切換、積木來回；I/O 風格切換比判決）；跑出來的對不對：課文由 `binding-verdict` 斷言、對 g++ 由探針 `refcc-cross-check` | **形狀全對，而意思被換掉**（history/337：走一趟積木，Serial 的接收者、struct 的欄位不見了） |
 
 🔴 **⑤ 是 2026-09-16 加的**，而它也是使用者問出來的：「你有幫我驗證語料庫的
 執行結果與模擬的是一致的嗎？」——沒有。①②③④**四個都是形狀**。

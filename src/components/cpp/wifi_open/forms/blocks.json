@@ -26,7 +26,7 @@
       "previousStatement": null,
       "nextStatement": null
     },
-    "renderMapping": {
+    "renderMapping": {"fixed": {"obj": "WiFi"}, 
       "fields": {},
       "inputs": {
         "SSID": "ssid",

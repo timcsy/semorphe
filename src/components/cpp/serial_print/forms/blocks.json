@@ -40,7 +40,7 @@
       "colour": "#E67E22",
       "tooltip": "%{BKY_C_SERIAL_PRINT_TOOLTIP}"
     },
-    "renderMapping": {
+    "renderMapping": {"fixed": {"obj": "Serial"}, 
       "fields": {
         "NEWLINE": "newline"
       },

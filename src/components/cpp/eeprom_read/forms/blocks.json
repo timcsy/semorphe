@@ -20,7 +20,7 @@
       "tooltip": "%{BKY_C_EEPROM_READ_TOOLTIP}",
       "output": "Expression"
     },
-    "renderMapping": {
+    "renderMapping": {"fixed": {"obj": "EEPROM"}, 
       "fields": {},
       "inputs": {
         "ADDRESS": "address"
