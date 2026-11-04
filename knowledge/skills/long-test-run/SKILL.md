@@ -1,6 +1,6 @@
 ---
 name: long-test-run
-description: 合併前的長測試（全套 ＋ 建置 ＋ 整輪 e2e）怎麼排——一支腳本一個入口，三個踩過的坑寫死在裡面；放背景跑，不擋進度
+description: 合併前的長測試（全套 ＋ 建置 ＋ 整輪 e2e）怎麼排——一支腳本一個入口，四個踩過的坑寫死在裡面；放背景跑，不擋進度
 user-invocable: true
 argument-hint: "[worktree 路徑] [--suite|--build|--e2e] [--port N] [--only 檔名…]"
 ---
@@ -23,13 +23,14 @@ tools/long-test.sh <worktree> <scratchpad 目錄> --suite        # 只跑全套
 log 寫在 `<scratchpad>/test-<worktree 名>.log`、`e2e-<worktree 名>.log`；腳本最後印出紅的那幾支。
 兩個 worktree 同時跑 e2e 時給不同的 `--port`（4199、4198）——**不要用 4173**（使用者的 preview）。
 
-## 🔴 腳本替你擋掉的三個坑（都是 2026-11-01 一天內撞到的）
+## 🔴 腳本替你擋掉的四個坑（①～③ 是 2026-11-01 一天內撞到的，④ 是 2026-11-05 加的）
 
 | | 坑 | 症狀 |
 |---|---|---|
 | ① | 等 cella 用 `pgrep` | cella 讓出空檔是 **SIGSTOP**——行程還在（STAT `T`），`pgrep` 照樣查得到，鏈**永遠等下去**。要用「沒有【正在跑】的」 |
 | ② | 🪦（2026-11-04 退場）全套沒帶 `SEMORPHE_REFCC_INCLUDE` | 6c-5 之後 `npm test` 不再呼叫參照編譯器，不帶也綠；只有探針 `refcc-cross-check` 要它 |
 | ③ | e2e 佔用別人的埠 | 用暫存的 playwright 設定在指定的埠起 preview，跑完刪掉（不留 `pw-*.tmp.config.ts`） |
+| ④ | 跑的期間 worktree 被改過（量到混合狀態） | 開跑與結束各取一次檔案內容的指紋，不同就說出來、結束碼 3——**結果不能當合併依據，改好後重跑**（提交不算改）。處方本來寫「不動」，而 2026-11-04、05 各犯一次 |
 
 ## ⚠️ 腳本管不到的
 
