@@ -10,5 +10,6 @@
   "python-beginner__11-例外__step1.json": "灰色方塊：cpp_raw_code",
   "python-beginner__11-例外__step2.json": "灰色方塊：python_raw_code",
   "python-bridge__01-沒有型別也沒有main__step0.json": "灰色方塊：cpp_raw_code",
-  "cpp-advanced__05-佇列與堆疊__step2.json": "灰色方塊：cpp_raw_code（放進 main 的進入點再試一次：灰色方塊：cpp_raw_code）"
+  "cpp-advanced__05-佇列與堆疊__step2.json": "灰色方塊：cpp_raw_code（放進 main 的進入點再試一次：灰色方塊：cpp_raw_code）",
+  "cpp-beginner__13-陣列__step3.json": "降級著色：#ff6b6b（放進 main 的進入點再試一次：灰色方塊：cpp_raw_code）"
 }
