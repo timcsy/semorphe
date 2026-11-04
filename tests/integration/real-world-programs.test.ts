@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import type { Lifter } from '../../src/core/lift/lifter'
-import { runCella, describeCellaResult, expectCellaOut, knownCellaGap } from '../helpers/cella-run'
+import { runCella, describeCellaResult, expectCellaOut } from '../helpers/cella-run'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { renderToBlocklyState, setPatternRenderer } from '../../src/core/projection/block-renderer'
@@ -167,9 +167,8 @@ describe('const variables', () => {
 // scanf return value in expression
 // ============================================================
 describe('scanf in expression context', () => {
-  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——（敘述位置的 sScanf 沒問題）
-  //    spec 215 起照送 eCall scanf（我們這側補了 formalize）；Cella 判 unknown「scanf is not supported yet」——cella 2026-11-04 確認要補。期望值 g++ 實測 '6\n10\n14\n'
-  it('🟡 已知缺陷（修好時這條會紅）：should handle while(scanf()!=EOF)', () => knownCellaGap(/scanf is not supported yet/, async () => {
+  // scanf 用在運算式位置（拿它的回傳值當條件）：spec 215 補了我們這側的 formalize（eCall scanf），cella 0.1.202611042110 補上回傳值。期望值 g++ 實測 '6\n10\n14\n'
+  it('should handle while(scanf()!=EOF)', () => (async () => {
     await expectCellaOut(`
       #include <cstdio>
       int main() {
@@ -180,11 +179,10 @@ describe('scanf in expression context', () => {
         return 0;
       }
     `, '6\n10\n14\n', { stdin: ['3', '5', '7'].join('\n') })
-  }))
+  })())
 
-  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——（敘述位置的 sScanf 沒問題）
-  //    spec 215 起照送 eCall scanf（我們這側補了 formalize）；Cella 判 unknown「scanf is not supported yet」——cella 2026-11-04 確認要補。期望值 g++ 實測 '3\n7\n'
-  it('🟡 已知缺陷（修好時這條會紅）：should handle scanf return value comparison', () => knownCellaGap(/scanf is not supported yet/, async () => {
+  // scanf 用在運算式位置（拿它的回傳值當條件）：spec 215 補了我們這側的 formalize（eCall scanf），cella 0.1.202611042110 補上回傳值。期望值 g++ 實測 '3\n7\n'
+  it('should handle scanf return value comparison', () => (async () => {
     await expectCellaOut(`
       #include <cstdio>
       int main() {
@@ -195,7 +193,7 @@ describe('scanf in expression context', () => {
         return 0;
       }
     `, '3\n7\n', { stdin: ['1 2', '3 4'].join('\n') })
-  }))
+  })())
 })
 
 // ============================================================
@@ -263,9 +261,8 @@ describe('ternary in printf args', () => {
 // Combined: Prime checker program (the user's full program)
 // ============================================================
 describe('prime checker program', () => {
-  // 🟡 Cella 未支援：scanf 用在運算式位置（拿它的回傳值當條件）——（敘述位置的 sScanf 沒問題）
-  //    spec 215 起照送 eCall scanf（我們這側補了 formalize）；Cella 判 unknown「scanf is not supported yet」——cella 2026-11-04 確認要補。期望值 g++ 實測 'prime\nnot prime\nnot prime\nprime\n'
-  it('🟡 已知缺陷（修好時這條會紅）：should handle forward declarations + pointer params + do-while + scanf loop', () => knownCellaGap(/scanf is not supported yet/, async () => {
+  // scanf 用在運算式位置（拿它的回傳值當條件）：spec 215 補了我們這側的 formalize（eCall scanf），cella 0.1.202611042110 補上回傳值。期望值 g++ 實測 'prime\nnot prime\nnot prime\nprime\n'
+  it('should handle forward declarations + pointer params + do-while + scanf loop', () => (async () => {
     // Simplified version focusing on the key constructs
     await expectCellaOut(`
       #include <cstdio>
@@ -291,7 +288,7 @@ describe('prime checker program', () => {
         else return 0;
       }
     `, 'prime\nnot prime\nnot prime\nprime\n', { stdin: ['7', '10', '1', '29'].join('\n') })
-  }))
+  })())
 
   it('should lift the full prime sieve program without error', () => {
     const sem = liftCode(`

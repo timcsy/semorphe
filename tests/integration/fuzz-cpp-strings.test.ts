@@ -413,13 +413,8 @@ int main() {
     const gen1 = generateCode(tree!, 'cpp', style)
     const gen2 = generateCode(liftCode(gen1)!, 'cpp', style)
     expect(gen1).toBe(gen2)
-    // ~~Cella 判 undeclared 'string::npos'~~——cella 0.1.202611041233 補上（引入 <string> 時是 size_t 的最大值）。
-    // 🟡 而 npos 一通，背後的下一個就露出來了（舊版也一樣，只是被 undeclared 蓋住）：
-    //   歸類：Cella 判錯——`s.substr(k) + s.substr(0, k)` 判 ubOrder「兩個呼叫的副作用衝突」，而 substr 是 const 成員、沒有副作用。
-    //   我們送的是忠實的 `eBin opAdd(eMCall substr, eMCall substr)`；拆成先存變數就 accept。2026-11-04 附最小重現回報 cella。
-    await knownCellaGap(/ubOrder|unspecified and the calls have conflicting effects/, async () => {
-      await expectSameOnCella(code, gen1)
-    })
+    // ~~Cella 判 undeclared 'string::npos'~~（0.1.202611041233 補上）；~~`s.substr(k) + s.substr(0, k)` 誤判 ubOrder~~（0.1.202611042110 修：兩種順序各跑一次再比）
+    await expectSameOnCella(code, gen1)
   })
 })
 

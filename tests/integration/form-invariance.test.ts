@@ -250,11 +250,16 @@ describe('換形態，判決不變（第五個面向）', () => {
 })
 
 /**
- * I/O 風格切換的已知不一致——**今天是零**（2026-11-04）。
+ * I/O 風格切換的已知不一致——265 之後是零；Cella 0.1.202611042110 帶進一個退步（字串下標的型別），2 支釘住。
  * spec 213 第一次量到 17 支：
  * - ~~Cella：printf 的格式字串裡直接寫中文會亂碼~~（7 支）——cella 0.1.202611041233 修好。
  * - ~~我們這側：printf 產碼沒有型別表~~（10 支：char 印成數字、double／long long 判 ubPrintf、string 當指標）——
  *   spec 215 照 Cella 給的型別產（`%c`／`%g`／`%lld`／`%s` ＋ `.c_str()`／`%zu`），推不出的保留 cout 並註明。
  * 新的不一致照樣先判是誰的缺陷：修掉，或附理由釘進這裡（修好時「過期」那一條會紅，逼人來拔）。
  */
-const IO_SWITCH_KNOWN: Record<string, string> = {}
+/** Cella 0.1.202611042110 的退步：字串下標 `s[0]` 的型別給成 `char *`（應為 `char`）——型別表把 `char *` 當 C 字串 ⟹ `%s` ⟹ ubPrintf。已回報 cella。 */
+const CELLA_INDEX_TYPE = 'Cella：字串下標的型別給成 char *（0.1.202611042110 的退步，已回報）'
+const IO_SWITCH_KNOWN: Record<string, string> = {
+  'cpp-beginner/14-字串/ex1.cpp': CELLA_INDEX_TYPE,
+  'cpp-beginner/14-字串/rebuild.cpp': CELLA_INDEX_TYPE,
+}
