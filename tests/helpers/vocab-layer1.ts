@@ -4,6 +4,8 @@
  * cos-mos 也有一份（`hosts/js/vocab-check.mjs`），刻意**不匯入**它：兩邊各寫各的，結果不同就是其中一邊有缺陷
  * （cos-mos 主持人 2026-11-04 的建議，與我們「不把另一方的程式拉進來」同一條理由）。
  * 十條，每一條在 `audit-arduino-contract` 都有一個反例守著。
+ * 🔴 **改了這裡的規則**：重產給 cos-mos 的反例檔（`tests/probes/export-layer1-cases.test.ts`），附 sha256 與 commit 交過去換夾具——
+ *    兩份實作判同一批反例要一致（cos-mos 2026-11-05 固定成夾具）。
  */
 import { contentHash } from '../../src/languages/cpp/vocab/arduino'
 
