@@ -1,0 +1,655 @@
+{
+  "name": "@cos-mos/arduino",
+  "version": "0.1.2",
+  "contentHash": "sha256:a9c293cdd3d073624efaed6cfadfad3c1fddf90465d7ba038d1d1e8dd907d577",
+  "components": {
+    "arduino:analog_read": {
+      "kind": "expression",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:analog_resolution": {
+      "kind": "statement",
+      "params": {
+        "bits": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:analog_write": {
+      "kind": "statement",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        },
+        "value": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:delay": {
+      "kind": "statement",
+      "params": {
+        "ms": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:delay_microseconds": {
+      "kind": "statement",
+      "params": {
+        "us": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:dht_declare": {
+      "kind": "statement",
+      "params": {
+        "name": {
+          "type": "string",
+          "default": "dht"
+        },
+        "initializer": {
+          "type": "expr",
+          "variadic": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:dht_open": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "dht"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:dht_read": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "dht"
+        },
+        "quantity": {
+          "type": "enum",
+          "values": [
+            "humidity",
+            "temperature"
+          ],
+          "default": "humidity"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:digital_read": {
+      "kind": "expression",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:digital_write": {
+      "kind": "statement",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        },
+        "value": {
+          "type": "enum",
+          "values": [
+            "HIGH",
+            "LOW"
+          ],
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:eeprom_read": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "EEPROM"
+        },
+        "address": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:eeprom_write": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "EEPROM"
+        },
+        "address": {
+          "type": "int",
+          "required": true
+        },
+        "value": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:lcd_at": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "lcd"
+        },
+        "col": {
+          "type": "int",
+          "required": true
+        },
+        "row": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:lcd_clear": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "lcd"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:lcd_declare": {
+      "kind": "statement",
+      "params": {
+        "name": {
+          "type": "string",
+          "default": "lcd"
+        },
+        "decl_type": {
+          "type": "enum",
+          "values": [
+            "LiquidCrystal",
+            "LiquidCrystal_I2C"
+          ],
+          "default": "LiquidCrystal"
+        },
+        "initializer": {
+          "type": "expr",
+          "variadic": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:lcd_open": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "lcd"
+        },
+        "cols": {
+          "type": "int",
+          "required": true
+        },
+        "rows": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:lcd_print": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "lcd"
+        },
+        "value": {
+          "type": "expr",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:math_constrain": {
+      "kind": "expression",
+      "params": {
+        "value": {
+          "type": "expr",
+          "required": true
+        },
+        "low": {
+          "type": "expr",
+          "required": true
+        },
+        "high": {
+          "type": "expr",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:micros": {
+      "kind": "expression",
+      "params": {},
+      "pins": "未定"
+    },
+    "arduino:millis": {
+      "kind": "expression",
+      "params": {},
+      "pins": "未定"
+    },
+    "arduino:pin_attach": {
+      "kind": "statement",
+      "params": {
+        "device": {
+          "type": "enum",
+          "values": [
+            "led",
+            "button",
+            "buzzer",
+            "ultrasonic_trig",
+            "ultrasonic_echo",
+            "servo",
+            "analog_sensor",
+            "relay",
+            "motor",
+            "unknown"
+          ],
+          "default": "unknown"
+        },
+        "pin": {
+          "type": "int",
+          "required": true
+        },
+        "name": {
+          "type": "string",
+          "default": "ledPin"
+        },
+        "style": {
+          "type": "enum",
+          "values": [
+            "const",
+            "define",
+            "plain"
+          ],
+          "default": "const"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:pin_constant": {
+      "kind": "expression",
+      "params": {
+        "value": {
+          "type": "enum",
+          "values": [
+            "HIGH",
+            "LOW",
+            "OUTPUT",
+            "INPUT",
+            "INPUT_PULLUP"
+          ],
+          "default": "HIGH"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:pin_mode": {
+      "kind": "statement",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        },
+        "mode": {
+          "type": "enum",
+          "values": [
+            "INPUT",
+            "OUTPUT",
+            "INPUT_PULLUP"
+          ],
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:pulse_read": {
+      "kind": "expression",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        },
+        "state": {
+          "type": "enum",
+          "values": [
+            "HIGH",
+            "LOW"
+          ],
+          "required": true
+        },
+        "timeout": {
+          "type": "int"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:pwm_attach": {
+      "kind": "statement",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        },
+        "freq": {
+          "type": "int",
+          "required": true
+        },
+        "bits": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:pwm_open": {
+      "kind": "statement",
+      "params": {
+        "channel": {
+          "type": "int",
+          "required": true
+        },
+        "freq": {
+          "type": "int",
+          "required": true
+        },
+        "bits": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:pwm_tie": {
+      "kind": "statement",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        },
+        "channel": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:pwm_write": {
+      "kind": "statement",
+      "params": {
+        "target": {
+          "type": "int",
+          "required": true
+        },
+        "duty": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:range_remap": {
+      "kind": "expression",
+      "params": {
+        "value": {
+          "type": "expr",
+          "required": true
+        },
+        "from_low": {
+          "type": "expr",
+          "required": true
+        },
+        "from_high": {
+          "type": "expr",
+          "required": true
+        },
+        "to_low": {
+          "type": "expr",
+          "required": true
+        },
+        "to_high": {
+          "type": "expr",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:serial_count": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "Serial"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:serial_open": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "Serial"
+        },
+        "baud": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:serial_print": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "Serial"
+        },
+        "newline": {
+          "type": "bool",
+          "default": true
+        },
+        "value": {
+          "type": "expr",
+          "required": true
+        },
+        "format": {
+          "type": "enum",
+          "values": [
+            "DEC",
+            "HEX",
+            "OCT",
+            "BIN"
+          ]
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:serial_read": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "Serial"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:servo_attach": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "myServo"
+        },
+        "pin": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:servo_declare": {
+      "kind": "statement",
+      "params": {
+        "name": {
+          "type": "string",
+          "default": "myServo"
+        },
+        "initializer": {
+          "type": "expr",
+          "variadic": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:servo_read": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "myServo"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:servo_write": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "myServo"
+        },
+        "angle": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:tone": {
+      "kind": "statement",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        },
+        "frequency": {
+          "type": "int",
+          "required": true
+        },
+        "duration": {
+          "type": "int"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:tone_stop": {
+      "kind": "statement",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:touch_read": {
+      "kind": "expression",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:ultrasonic_trigger": {
+      "kind": "statement",
+      "params": {
+        "pin": {
+          "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:wifi_open": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "WiFi"
+        },
+        "ssid": {
+          "type": "string",
+          "required": true
+        },
+        "password": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:wifi_read": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "WiFi"
+        },
+        "quantity": {
+          "type": "enum",
+          "values": [
+            "status",
+            "address"
+          ],
+          "default": "status"
+        }
+      },
+      "pins": "未定"
+    }
+  }
+}

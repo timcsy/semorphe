@@ -1,0 +1,11 @@
+{
+  "name": "@semorphe/arduino",
+  "version": "0.1.0",
+  "description": "Arduino 領域的形式與表面（history/015 的三方分工：契約在 @cos-mos/arduino、意思在 @cella-lang/arduino）。第一版只有對照表：契約的元件名 ↔ semorphe 的元件身分；積木與流程圖的畫法、顏色、i18n、C++ 產碼之後搬進來。未發布。",
+  "main": "semorphe-map.json",
+  "files": ["semorphe-map.json"],
+  "implements": {
+    "@cos-mos/arduino": "sha256:a9c293cdd3d073624efaed6cfadfad3c1fddf90465d7ba038d1d1e8dd907d577"
+  },
+  "license": "UNLICENSED"
+}

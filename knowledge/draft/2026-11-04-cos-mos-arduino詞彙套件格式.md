@@ -1,6 +1,6 @@
 # `@cos-mos/arduino` 詞彙套件——第一版的格式草案
 
-> 狀態：🟡 草案（2026-11-04）。給 cos-mos 對欄位（它的 specs/017 T004 等這一份）。
+> 狀態：🟢 已落地（2026-11-05）：格式成為契約 `@cos-mos/arduino`，正本在 cos-mos（0.1.2）；semorphe 核對自己符合它（[history/340](../history/340-semorphe-arduino拆出與核對契約.md)）。這一份留作格式的設計脈絡。
 > 來源：使用者 2026-11-04 定的三題（cos-mos history/014）→ vision〈`@cos-mos/arduino` 詞彙套件第一版〉。
 > 已和 cos-mos 對齊的（訊息往來，2026-11-04）：動作清單從程式來、值用字串、`{ expr }`、kind 必寫、params 順序有意義、`at` 是遞增整數、走宿主層的結構頻道。
 > ⚠️ 發布前要問使用者：第一版交給 cos-mos 的主持人，不自己發。
