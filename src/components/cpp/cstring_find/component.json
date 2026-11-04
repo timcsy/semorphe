@@ -18,8 +18,7 @@
         "lift": "./lift.ts",
         "_lift_why": "**顯式的空，不是遺漏。**"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "requires": [
     "<cstring>"

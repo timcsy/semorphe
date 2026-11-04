@@ -6,360 +6,360 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：351｜✅ 實作 1596｜📄 已宣告不提供 34｜❔ 判不出來 123｜🈳 殼 0｜❌ 缺 2（以路徑數計）
+元件：351｜✅ 實作 1274｜📄 已宣告不提供 5｜❔ 判不出來 123｜🈳 殼 0｜❌ 缺 2（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
-| 元件 | generate | lift | render | extract | execute |
+| 元件 | generate | lift | render | extract |
 |---|---|---|---|---|---|
-| `cpp:address_of` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:analog_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:analog_resolution` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:analog_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:arithmetic` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:array_2d_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:array_2d_at` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:array_2d_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:array_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:array_at` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:array_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:bits_as` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:bits_count` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:bits_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:bits_fill` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:bits_is` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:bitwise_not` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:block` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:block_comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:break` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:builtin_constant` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:case` | ✅ | 📄 | ✅ | ✅ | 📄 |
-| `cpp:cast` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cast_const` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cast_dynamic` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cast_reinterpret` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cast_static` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:char_is_alpha` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:char_is_digit` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:char_to_lower` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:char_to_upper` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:class_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:comma_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:compare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:constructor` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `cpp:container_append` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:container_clear` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:container_count` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:container_empty` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:container_erase` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:container_find` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:container_iter` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:container_pop` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:container_pop_front` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:container_push` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:container_push_front` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:continue` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_append` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_as_double` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_as_int` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_compare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_compare_bounded` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_copy` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_copy_bounded` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_find` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_find_char` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:cstring_size` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:default` | ✅ | 📄 | ✅ | ✅ | 📄 |
-| `cpp:define` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:define_func` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:delay` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:delay_microseconds` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:delete` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:deque_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:destructor` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `cpp:dht_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:dht_open` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:dht_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:digital_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:digital_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:doc_comment` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:eeprom_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:eeprom_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:endl` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:enum` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:exception_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:forward_decl` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:free` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:func_call` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:func_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:if` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:if_else` | ✅ | 📄 | ✅ | ✅ | ✅ |
-| `cpp:ifdef` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:ifndef` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:ifstream_declare` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:include` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:include_local` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:increment` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:initializer_list` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:input` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:input_formatted` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:input_line` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:io_flush` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:io_mode` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:io_mode_number` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:io_sync` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:io_tie` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:istringstream_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:lambda` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:lcd_at` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:lcd_clear` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:lcd_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:lcd_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:lcd_print` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:literal_char` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:literal_number` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:literal_string` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:logic` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:logic_not` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:loop_count` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:loop_do_while` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:loop_for` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:loop_range` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:loop_while` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:malloc` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:map_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:map_at` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:map_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_abs` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_binary` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_constrain` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_gcd` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_is_nan` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_lcm` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_max` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_pow` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:math_unary` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:member_static` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `cpp:memory_copy` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:memory_fill` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:method_call` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:method_def` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `cpp:method_override` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `cpp:method_virtual` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `cpp:method_virtual_pure` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `cpp:micros` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:millis` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:namespace_def` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:negate` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:new` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:ofstream_declare` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:operator_overload` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `cpp:pair_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pair_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pin_attach` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pin_constant` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pin_mode` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pointer_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pointer_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pointer_deref` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pointer_step` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:print` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:print_formatted` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:priority_queue_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:priority_queue_peek` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:program` | ✅ | ✅ | 📄 | 📄 | ✅ |
-| `cpp:program_exit` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pulse_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pwm_attach` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pwm_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pwm_tie` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:pwm_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:queue_back` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:queue_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:queue_front` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:random_next` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:random_seed` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:range_fill` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_fill_sequence` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_find` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_find_lower` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_find_upper` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_max` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_min` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_remap` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_remove` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_reverse` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_sort` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_sum` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_sum_partial` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:range_unique` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:raw_code` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:raw_expression` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:return` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:serial_count` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:serial_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:serial_print` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:serial_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:servo_attach` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:servo_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:servo_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:servo_write` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:set_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:set_insert` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:sizeof` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:stack_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:stack_peek` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_append` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_append_char` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_as_cstring` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_as_double` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_as_int` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_at` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_clear` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_empty` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `cpp:string_erase` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_find` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_find_first_not_of` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_find_last_not_of` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_insert` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_replace` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_size` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:string_substr` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:stringstream_declare` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:struct_at_member` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:struct_at_ptr` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:struct_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:switch` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:template_function` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:ternary` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:throw` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:time` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:tone` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:tone_stop` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:touch_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:try_catch` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:typedef` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:ultrasonic_trigger` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:using_alias` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:using_namespace` | ✅ | ✅ | ✅ | ✅ | 📄 |
-| `cpp:var_assign` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_assign_compound` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_declare_auto` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_declare_const` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_declare_constexpr` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_declare_ref` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_declare_sequence` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_declare_static` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_ref` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:var_swap` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:vector_back` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:vector_declare` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:vector_make` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:vector_pop` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:vector_size` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:wifi_open` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `cpp:wifi_read` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `python:arithmetic` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:array_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:array_make_for` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:assert` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:bitwise_not` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:break` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:cast` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:class_def` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:comment` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `python:compare` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:compare_chain` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_all` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_any` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_append` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_apply` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_assign` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_at` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_count` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_enumerate` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_erase` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_erase_value` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_filter` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_find` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_find_position` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_insert` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_pop` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_size` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_sort` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_sort_self` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_substr` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_sum` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:container_zip` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:continue` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:exception_case` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `python:func_call` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:func_call_named` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:func_def` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:global` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:if` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:import` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:import_from` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:input` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:lambda` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:literal_bool` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:literal_number` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:literal_string` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:logic` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:logic_not` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:loop_for` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:loop_iter` | ✅ | ❔ | ✅ | ✅ | 📄 |
-| `python:loop_while` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:map_at_default` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:map_iter` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:map_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:map_make_for` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:math_abs` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:math_divmod` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:math_max` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:math_min` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:math_round` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:member_assign` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:member_at` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:method_call` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:negate` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:pair_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:pass` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:print` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:program` | ✅ | ❔ | ❌ | ❌ | ✅ |
-| `python:range_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:raw_code` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:raw_expression` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:return` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:set_append` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:set_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:splat` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_compare_prefix` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_compare_suffix` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_fill` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_find` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_format` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_insert` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_join` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_lower` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_replace` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_split` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_strip` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:string_upper` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:ternary` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:throw` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:try_catch` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:tuple_make` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:type_is` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:var_assign` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:var_assign_compound` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:var_assign_expr` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:var_assign_sequence` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:var_ref` | ✅ | ❔ | ✅ | ✅ | ✅ |
-| `python:with` | ✅ | ❔ | ✅ | ✅ | ✅ |
+| `cpp:address_of` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:analog_read` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:analog_resolution` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:analog_write` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:arithmetic` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:array_2d_assign` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:array_2d_at` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:array_2d_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:array_assign` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:array_at` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:array_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:bits_as` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:bits_count` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:bits_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:bits_fill` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:bits_is` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:bitwise_not` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:block` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:block_comment` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:break` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:builtin_constant` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:case` | ✅ | 📄 | ✅ | ✅ |
+| `cpp:cast` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cast_const` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cast_dynamic` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cast_reinterpret` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cast_static` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:char_is_alpha` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:char_is_digit` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:char_to_lower` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:char_to_upper` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:class_def` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:comma_expr` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:comment` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:compare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:constructor` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:container_append` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:container_clear` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:container_count` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:container_empty` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:container_erase` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:container_find` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:container_iter` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:container_pop` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:container_pop_front` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:container_push` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:container_push_front` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:continue` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_append` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_as_double` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_as_int` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_compare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_compare_bounded` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_copy` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_copy_bounded` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_find` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_find_char` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:cstring_size` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:default` | ✅ | 📄 | ✅ | ✅ |
+| `cpp:define` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:define_func` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:delay` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:delay_microseconds` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:delete` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:deque_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:destructor` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:dht_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:dht_open` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:dht_read` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:digital_read` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:digital_write` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:doc_comment` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:eeprom_read` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:eeprom_write` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:endl` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:enum` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:exception_make` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:forward_decl` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:free` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:func_call` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:func_def` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:if` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:if_else` | ✅ | 📄 | ✅ | ✅ |
+| `cpp:ifdef` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:ifndef` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:ifstream_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:include` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:include_local` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:increment` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:initializer_list` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:input` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:input_formatted` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:input_line` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:io_flush` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:io_mode` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:io_mode_number` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:io_sync` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:io_tie` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:istringstream_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lambda` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_at` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_clear` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_open` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:lcd_print` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:literal_char` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:literal_number` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:literal_string` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:logic` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:logic_not` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:loop_count` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:loop_do_while` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:loop_for` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:loop_range` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:loop_while` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:malloc` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:map_assign` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:map_at` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:map_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_abs` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_binary` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_constrain` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_gcd` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_is_nan` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_lcm` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_max` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_min` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_pow` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:math_unary` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:member_static` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:memory_copy` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:memory_fill` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:method_call` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:method_def` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:method_override` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:method_virtual` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:method_virtual_pure` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:micros` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:millis` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:namespace_def` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:negate` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:new` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:ofstream_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:operator_overload` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:pair_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pair_make` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pin_attach` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pin_constant` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pin_mode` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pointer_assign` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pointer_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pointer_deref` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pointer_step` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:print` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:print_formatted` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:priority_queue_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:priority_queue_peek` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:program` | ✅ | ✅ | 📄 | 📄 |
+| `cpp:program_exit` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pulse_read` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pwm_attach` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pwm_open` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pwm_tie` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:pwm_write` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:queue_back` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:queue_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:queue_front` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:random_next` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:random_seed` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_fill` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_fill_sequence` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_find` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_find_lower` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_find_upper` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_max` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_min` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_remap` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_remove` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_reverse` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_sort` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_sum` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_sum_partial` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:range_unique` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:raw_code` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:raw_expression` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:return` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_count` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_open` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_print` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_read` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_attach` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_read` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:servo_write` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:set_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:set_insert` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:sizeof` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:stack_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:stack_peek` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_append` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_append_char` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_as_cstring` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_as_double` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_as_int` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_at` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_clear` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_empty` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:string_erase` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_find` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_find_first_not_of` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_find_last_not_of` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_insert` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_make` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_replace` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_size` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:string_substr` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:stringstream_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:struct_at_member` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:struct_at_ptr` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:struct_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:switch` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:template_function` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:ternary` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:throw` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:time` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:tone` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:tone_stop` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:touch_read` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:try_catch` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:typedef` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:ultrasonic_trigger` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:using_alias` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:using_namespace` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_assign` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_assign_compound` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_declare_auto` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_declare_const` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_declare_constexpr` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_declare_ref` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_declare_sequence` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_declare_static` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_ref` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_swap` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:vector_back` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:vector_declare` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:vector_make` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:vector_pop` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:vector_size` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:wifi_open` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:wifi_read` | ✅ | ✅ | ✅ | ✅ |
+| `python:arithmetic` | ✅ | ❔ | ✅ | ✅ |
+| `python:array_make` | ✅ | ❔ | ✅ | ✅ |
+| `python:array_make_for` | ✅ | ❔ | ✅ | ✅ |
+| `python:assert` | ✅ | ❔ | ✅ | ✅ |
+| `python:bitwise_not` | ✅ | ❔ | ✅ | ✅ |
+| `python:break` | ✅ | ❔ | ✅ | ✅ |
+| `python:cast` | ✅ | ❔ | ✅ | ✅ |
+| `python:class_def` | ✅ | ❔ | ✅ | ✅ |
+| `python:comment` | ✅ | ❔ | ✅ | ✅ |
+| `python:compare` | ✅ | ❔ | ✅ | ✅ |
+| `python:compare_chain` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_all` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_any` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_append` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_apply` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_assign` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_at` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_count` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_enumerate` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_erase` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_erase_value` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_filter` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_find` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_find_position` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_insert` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_pop` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_size` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_sort` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_sort_self` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_substr` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_sum` | ✅ | ❔ | ✅ | ✅ |
+| `python:container_zip` | ✅ | ❔ | ✅ | ✅ |
+| `python:continue` | ✅ | ❔ | ✅ | ✅ |
+| `python:exception_case` | ✅ | ❔ | ✅ | ✅ |
+| `python:func_call` | ✅ | ❔ | ✅ | ✅ |
+| `python:func_call_named` | ✅ | ❔ | ✅ | ✅ |
+| `python:func_def` | ✅ | ❔ | ✅ | ✅ |
+| `python:global` | ✅ | ❔ | ✅ | ✅ |
+| `python:if` | ✅ | ❔ | ✅ | ✅ |
+| `python:import` | ✅ | ❔ | ✅ | ✅ |
+| `python:import_from` | ✅ | ❔ | ✅ | ✅ |
+| `python:input` | ✅ | ❔ | ✅ | ✅ |
+| `python:lambda` | ✅ | ❔ | ✅ | ✅ |
+| `python:literal_bool` | ✅ | ❔ | ✅ | ✅ |
+| `python:literal_number` | ✅ | ❔ | ✅ | ✅ |
+| `python:literal_string` | ✅ | ❔ | ✅ | ✅ |
+| `python:logic` | ✅ | ❔ | ✅ | ✅ |
+| `python:logic_not` | ✅ | ❔ | ✅ | ✅ |
+| `python:loop_for` | ✅ | ❔ | ✅ | ✅ |
+| `python:loop_iter` | ✅ | ❔ | ✅ | ✅ |
+| `python:loop_while` | ✅ | ❔ | ✅ | ✅ |
+| `python:map_at_default` | ✅ | ❔ | ✅ | ✅ |
+| `python:map_iter` | ✅ | ❔ | ✅ | ✅ |
+| `python:map_make` | ✅ | ❔ | ✅ | ✅ |
+| `python:map_make_for` | ✅ | ❔ | ✅ | ✅ |
+| `python:math_abs` | ✅ | ❔ | ✅ | ✅ |
+| `python:math_divmod` | ✅ | ❔ | ✅ | ✅ |
+| `python:math_max` | ✅ | ❔ | ✅ | ✅ |
+| `python:math_min` | ✅ | ❔ | ✅ | ✅ |
+| `python:math_round` | ✅ | ❔ | ✅ | ✅ |
+| `python:member_assign` | ✅ | ❔ | ✅ | ✅ |
+| `python:member_at` | ✅ | ❔ | ✅ | ✅ |
+| `python:method_call` | ✅ | ❔ | ✅ | ✅ |
+| `python:negate` | ✅ | ❔ | ✅ | ✅ |
+| `python:pair_make` | ✅ | ❔ | ✅ | ✅ |
+| `python:pass` | ✅ | ❔ | ✅ | ✅ |
+| `python:print` | ✅ | ❔ | ✅ | ✅ |
+| `python:program` | ✅ | ❔ | ❌ | ❌ |
+| `python:range_make` | ✅ | ❔ | ✅ | ✅ |
+| `python:raw_code` | ✅ | ❔ | ✅ | ✅ |
+| `python:raw_expression` | ✅ | ❔ | ✅ | ✅ |
+| `python:return` | ✅ | ❔ | ✅ | ✅ |
+| `python:set_append` | ✅ | ❔ | ✅ | ✅ |
+| `python:set_make` | ✅ | ❔ | ✅ | ✅ |
+| `python:splat` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_compare_prefix` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_compare_suffix` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_fill` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_find` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_format` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_insert` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_join` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_lower` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_make` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_replace` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_split` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_strip` | ✅ | ❔ | ✅ | ✅ |
+| `python:string_upper` | ✅ | ❔ | ✅ | ✅ |
+| `python:ternary` | ✅ | ❔ | ✅ | ✅ |
+| `python:throw` | ✅ | ❔ | ✅ | ✅ |
+| `python:try_catch` | ✅ | ❔ | ✅ | ✅ |
+| `python:tuple_make` | ✅ | ❔ | ✅ | ✅ |
+| `python:type_is` | ✅ | ❔ | ✅ | ✅ |
+| `python:var_assign` | ✅ | ❔ | ✅ | ✅ |
+| `python:var_assign_compound` | ✅ | ❔ | ✅ | ✅ |
+| `python:var_assign_expr` | ✅ | ❔ | ✅ | ✅ |
+| `python:var_assign_sequence` | ✅ | ❔ | ✅ | ✅ |
+| `python:var_ref` | ✅ | ❔ | ✅ | ✅ |
+| `python:with` | ✅ | ❔ | ✅ | ✅ |

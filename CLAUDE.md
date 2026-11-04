@@ -40,10 +40,11 @@ tests/
 
 ### 什麼時候跑什麼（2026-08-21 量測之後定的）
 
-全套 701 個檔約需 15 分鐘（檔數 2026-11-01 量、時間 2026-10-31 量；vitest 快取的每檔時間加總約 1,900 秒、並行 2），而**成本是 per-file 的模組載入**——每個測試檔各自
-載入一次 Blockly ＋ tree-sitter wasm ＋ 349 顆膠囊的 glob。
-⚠️ 其中約 60% 是重構階段 6 要拆的那幾支（`interpreter-matches-compiler`、`audit-behavior-error`、`scenario-coverage`、
-`audit-lesson-answers-vs-compiler`；第五支 `cella-formalize-guard` 已隨階段 3 退場）。所以：
+全套 685 個檔約需 15 分鐘（2026-11-04 量：887 秒、並行 2），而**成本是 per-file 的模組載入**——每個測試檔各自
+載入一次 Blockly ＋ tree-sitter wasm ＋ 351 顆膠囊的 glob。
+⚠️ 刪掉 JS 直譯器（6c-4）時拆掉了其中三支最慢的（`interpreter-matches-compiler`、`audit-behavior-error`、`scenario-coverage`），
+**全套幾乎沒變快**（約 15 → 14.8 分）——它們被並行 overlap 掉了，與下面「跑一塊固定的子集幾乎沒有用」同一件事。
+剩下的 `audit-lesson-answers-vs-compiler` 隨 6c-5 退場。所以：
 
 | 你在做什麼 | 跑什麼 | 量級 |
 |---|---|---|

@@ -20,8 +20,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 通用桶點名的。與同族「開頭是不是」那顆是同一個操作的兩個種差。"
 }

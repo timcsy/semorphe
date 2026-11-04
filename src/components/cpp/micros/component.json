@@ -17,8 +17,6 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
-  },
-  "_execute_why": "接**既有的**模擬時鐘（`core/runtime/arduino-clock.ts`），與 `delay`／`millis` 同一份時間——⚠️ 而模擬時鐘的解析度是**毫秒**：`micros()` 讀回來的數字精度只有毫秒級（×1000），低三位永遠是 0。那與真板子不同，而判準是 `digital_read` 檔頭那句：**可重現比擬真重要**。⚠️ 真板子約 70 分鐘溢位回 0，**模擬不模它**。"
+    "formalize": "./formalize.ts"
+  }
 }

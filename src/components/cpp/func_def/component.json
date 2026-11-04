@@ -19,9 +19,7 @@
   },
   "role": "statement",
   "annotations": {
-    "control_flow": "sequence",
-    "introduces_scope": true,
-    "debug_step": true
+    "control_flow": "sequence"
   },
   "owner": "(core)",
   "paths": {
@@ -35,8 +33,7 @@
         "lift": "./lift-pattern.json"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "traits": {
     "functionDefinition": true

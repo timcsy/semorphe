@@ -175,9 +175,11 @@ Skill tool: skill="component-discover", args="{lang} $ARGUMENTS"
    ```
    Skill tool: skill="component-generate", args="{lang} {component_name}"
    ```
-2. **關卡**：膠囊 `src/components/<scope>/<name>/` 存在，五路齊全
-   （`FIVE_PATHS` ＝ lift／generate／render／extract／execute，刻意不做的須在
-   `component.json` 宣告 `skipPaths` ＋ `skipReasons`）＋ `spec.test.ts`
+2. **關卡**：膠囊 `src/components/<scope>/<name>/` 存在，四路齊全
+   （lift／generate／render／extract，格子名見 `src/core/component/views.ts`；刻意不做的須在
+   `component.json` 宣告 `skipPaths` ＋ `skipReasons`）＋ `formalize.ts`（接 Cella；Cella 尚無對應時可缺）
+   ＋ `spec.test.ts`（執行用 `expectCellaOut`）。
+   🪦 2026-11-04 之前是五路，第五路 execute 隨 JS 直譯器在 spec 208 退場
 3. **快速檢查**：`npx tsc --noEmit` — 型別必須能編譯
    ⚠️ **膠囊化驗收交給護欄**（`audit-component-locality`／`audit-locality`），
    **不要用「grep 身分期望是空的」**——已驗證它有三類合法命中，見

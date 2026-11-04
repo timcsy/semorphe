@@ -19,8 +19,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 通用桶點名的（`any` ×2）。見同族「每一格都成立」那顆的說明。"
 }

@@ -8,7 +8,6 @@
  *     "code":   { "render": "./generate.ts", "lift": "./lift-pattern.json" }
  *   },
  *   "formalize": "./formalize.ts",
- *   "execute": "./execute.ts"
  * }
  * ```
  *
@@ -46,10 +45,10 @@ export const VIEWS: ViewTable = {
 export type Cell =
   | 'blocks.render' | 'blocks.lift'
   | 'code.render' | 'code.lift' | 'code.liftStrategy'
-  | 'formalize' | 'execute'
+  | 'formalize'
 
 export const CELLS: readonly Cell[] = [
-  'blocks.render', 'blocks.lift', 'code.render', 'code.lift', 'code.liftStrategy', 'formalize', 'execute',
+  'blocks.render', 'blocks.lift', 'code.render', 'code.lift', 'code.liftStrategy', 'formalize',
 ]
 
 /** 一個視圖底下的宣告。 */
@@ -64,12 +63,10 @@ export interface ViewPaths {
 export interface ComponentPaths {
   views: Record<string, ViewPaths>
   formalize?: string
-  execute: string | null
-  _execute_why?: string
 }
 
-/** 舊的平鋪鍵——出現就擋（P8 不留轉接層）。 */
-const RETIRED = ['render', 'extract', 'generate', 'lift', 'liftStrategy']
+/** 舊的平鋪鍵——出現就擋（P8 不留轉接層）。`execute`：spec 208 隨 JS 直譯器退場（執行只走 Cella），殘留的宣告會讓人以為還要寫。 */
+const RETIRED = ['render', 'extract', 'generate', 'lift', 'liftStrategy', 'execute', '_execute_why']
 
 /**
  * 某一格宣告的檔案路徑；`null`（顯式的空）與沒宣告都回 `null`。
@@ -78,7 +75,7 @@ const RETIRED = ['render', 'extract', 'generate', 'lift', 'liftStrategy']
 export function cellPath(paths: unknown, cell: Cell): string | null {
   const p = paths as Partial<ComponentPaths> | undefined
   if (!p) return null
-  if (cell === 'formalize' || cell === 'execute') {
+  if (cell === 'formalize') {
     const v = p[cell]
     return typeof v === 'string' ? v : null
   }
@@ -118,6 +115,4 @@ export function checkPaths(paths: unknown, where: string, views: ViewTable = VIE
     }
   }
 
-  if (!('execute' in p)) throw new Error(`${where}：paths 少了 execute（沒有也要寫 null ＋ _execute_why）`)
-  if (p.execute === null && !p._execute_why) throw new Error(`${where}：paths.execute 是 null，必須在 _execute_why 說明理由`)
 }

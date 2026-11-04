@@ -20,8 +20,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 通用桶點名的。\n⚠️ **名字裡的 `prefix` 是種差**：做的仍然是 `compare`，差別在**只比開頭那一段**。"
 }

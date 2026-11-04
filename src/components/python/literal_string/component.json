@@ -23,8 +23,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "traits": {
     "stringLiteral": true

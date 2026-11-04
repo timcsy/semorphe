@@ -21,8 +21,9 @@ describe('python:with', () => {
     expect(gen(await liftPython(CODE)).trimEnd()).toBe(CODE.trimEnd())
   })
 
-  it('execute：與真的 Python 同一個答案', async () => {
-    expect(await runPython(CODE)).toContain("[1]")
+  // spec 208：真的 Python 對 `with [1] as f:` 丟 TypeError（串列不是 context manager）——原本的 `[1]` 是 JS 直譯器寬鬆放過的
+  it('執行：與真的 Python 同一個答案（串列不是 context manager）', async () => {
+    expect(await runPython(CODE)).toMatch(/^error\|.*TypeError/s)
   })
 
   it('★ 邊界：別的呼叫不得被認走', async () => {

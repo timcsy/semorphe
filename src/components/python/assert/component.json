@@ -10,9 +10,6 @@
   },
   "role": "statement",
   "owner": "(python)",
-  "annotations": {
-    "debug_step": true
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -24,8 +21,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_children_why": "訊息是一個**接點**不是一個字串欄位——`assert n > 0, f\"{n} 不能是負的\"` 的第二段可以是任何運算式。",
   "_lift_why": "`assert_statement` 底下是「條件」或「條件＋訊息」，兩種都收；三段以上（不合法）回 `null`。"

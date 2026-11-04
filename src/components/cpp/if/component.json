@@ -9,9 +9,7 @@
   },
   "role": "statement",
   "annotations": {
-    "control_flow": "branch",
-    "introduces_scope": true,
-    "debug_step": true
+    "control_flow": "branch"
   },
   "owner": "(core)",
   "paths": {
@@ -25,8 +23,7 @@
         "lift": "./lift-pattern.json"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "traits": {
     "elseIfChainable": true

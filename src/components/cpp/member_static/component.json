@@ -15,13 +15,9 @@
   ],
   "slots": {},
   "role": "statement",
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "consumed-by-parent"
-  },
   "owner": "(core)",
+  "traits": { "insideParentOnly": true },
+  "_traits_why": "**只出現在父節點裡**（類別成員、switch 的分支、例外的 except 分支、迴圈的走訪項）——單獨合成一份樣本去量它，是在量一個不存在的位置。原本借放在 `skipReasons.execute: consumed-by-parent`；spec 208 隨 JS 直譯器拿掉 execute 那一格，搬到性狀（完備性護欄讀它）。",
   "paths": {
     "views": {
       "blocks": {
@@ -33,8 +29,7 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "memberRole": "static-field",
   "_memberRole_why": "**這顆在類別裡扮演什麼角色，由它自己宣告。**（見 registry.ts 的 `memberRoleOf`）"

@@ -17,8 +17,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "traits": { "declaresVariable": ["PARAM_{i}"] },
   "_traits_why": "**參數是變數**——它們只在這個運算式裡活著，而變數下拉仍然要看得到。",

@@ -6,9 +6,6 @@
     "value": "expression"
   },
   "role": "statement",
-  "annotations": {
-    "debug_step": true
-  },
   "owner": "(universal)",
   "paths": {
     "views": {
@@ -21,8 +18,7 @@
         "lift": "./lift-pattern.json"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "traits": {
     "scaffoldInMain": true

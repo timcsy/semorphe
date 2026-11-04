@@ -100,12 +100,8 @@ import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 import { REPO_ROOT, printReport } from '../helpers/guardrail'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
-import type { SemanticNode } from '../../src/core/types'
 
 /** 合成的節點——⚠️ **刻意不是任何真實身分**（`build-guardrail` 簽名三）。 */
-const node = (componentId: string): SemanticNode =>
-  ({ id: 'n-probe', componentId, properties: {}, slots: {} }) as unknown as SemanticNode
 
 /**
  * **具名豁免**——每一筆要寫得出理由。空的是對的：這個字現在沒有正當用途。
@@ -169,43 +165,6 @@ describe('第七十五條護欄：沒看過的東西不得無聲地繼續', () =
     expect(silentContinueIn('import { declareSkips } from "../core/skip-declarations"'), '匯入').toBe(false)
     expect(silentContinueIn("      // 'skip' — 繼續執行"), '註解不是程式碼').toBe(false)
     expect(silentContinueIn(" * 例如 `return 'skip'` 那條路"), '檔頭的散文').toBe(false)
-  })
-
-  it('🔴 硬性零（行為）：**沒有宿主可問時，不得返回**', async () => {
-    // 這一條才是規範本身。上面那條只是舊設計的墓碑——
-    // ⚠️ **一個只擋字串的護欄，換個字就通過了**，而 2026-08-26 差一點就是那樣。
-    //
-    // 「無聲」的定義：**沒有任何人被問，而它繼續了**。
-    // 一個沒有 UI 的宿主（Node、測試、`examples/bring-your-own-view/`）
-    // 沒有人可以問，所以它的唯一正確處置是停止。
-    const interp = new SemanticInterpreter({ maxSteps: 100 })
-    await expect(
-      interp.executeNode(node('cpp:this_does_not_exist')),
-      '🔴 沒有註冊宿主而它沒有丟 → 那就是【無聲地繼續】',
-    ).rejects.toThrow()
-  })
-
-  it('🔴 暫停要**指得出位置**——指不出來的暫停不是斷點', async () => {
-    // 使用者要的是「跑到那邊要有斷點」。一個說得出「有東西不會跑」
-    // 而說不出「在哪一行」的暫停，學生沒有辦法對它做任何事。
-    const interp = new SemanticInterpreter({ maxSteps: 100 })
-    const seen: Array<{ component: string; nodeId: string | null }> = []
-    interp.setUnknownComponentPause(async (component, nodeId) => {
-      seen.push({ component, nodeId })
-      return 'stop'
-    })
-    await interp.executeNode(node('cpp:this_does_not_exist')).catch(() => {})
-    expect(seen).toHaveLength(1)
-    expect(seen[0].component).toBe('cpp:this_does_not_exist')
-    expect(seen[0].nodeId, '🔴 宿主拿不到節點 id → 它指不到那一顆積木上').toBe('n-probe')
-  })
-
-  it('★ 反向：宿主說「繼續」時**才**繼續——而那是它明確說的', async () => {
-    // 缺了這一條，一個「永遠丟」的實作也能通過上面兩條，
-    // 而那會讓使用者的「調整完狀態才能繼續跑下去」變成做不到。
-    const interp = new SemanticInterpreter({ maxSteps: 100 })
-    interp.setUnknownComponentPause(async () => 'continue')
-    await expect(interp.executeNode(node('cpp:this_does_not_exist'))).resolves.toBeUndefined()
   })
 
   it('★ 具名豁免不得變成孤兒', () => {

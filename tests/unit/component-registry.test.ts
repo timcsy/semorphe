@@ -29,6 +29,6 @@ describe('膠囊契約：身分與路徑的換算', () => {
 
   it('今天的視圖是積木與程式碼兩個、都是雙向；格子不多不少（spec 181）', () => {
     expect(VIEWS).toEqual({ blocks: 'both', code: 'both' })
-    expect([...CELLS]).toEqual(['blocks.render', 'blocks.lift', 'code.render', 'code.lift', 'code.liftStrategy', 'formalize', 'execute'])
+    expect([...CELLS]).toEqual(['blocks.render', 'blocks.lift', 'code.render', 'code.lift', 'code.liftStrategy', 'formalize'])
   })
 })

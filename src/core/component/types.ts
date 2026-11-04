@@ -64,7 +64,7 @@ export interface ComponentManifest {
   slots?: Record<string, unknown>
   role?: string
   /**
-   * 每個視圖一對 render／lift，加上 formalize 與 execute（spec 181，見 `views.ts`）。
+   * 每個視圖一對 render／lift，加上 formalize（spec 181，見 `views.ts`；execute 那一路 2026-11-04 隨 JS 直譯器退場，spec 208）。
    * **沒有的那一路寫 `null`，並在同層的 `_<方向>_why` 說明理由。**
    *
    * 選填的話，忘了接上的路會靜靜地不存在——而那正是「殼」。

@@ -25,7 +25,6 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   }
 }

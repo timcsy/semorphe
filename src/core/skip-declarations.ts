@@ -66,7 +66,7 @@ export function hasAnnotation(componentId: string, key: string): boolean {
  * 這個概念的某個標註**是什麼值**。
  *
  * ⚠️ 它與 `hasAnnotation` 是**兩種標註**，不是同一件事的兩個寫法：
- * `debug_step`／`introduces_scope` 是布林（有沒有），而 `control_flow` 是
+ * 布林標註（有沒有；`debug_step`／`introduces_scope` 是過去的例子，2026-11-04 隨 JS 直譯器退場），而 `control_flow` 是
  * **封閉詞彙裡的一個值**（`branch`／`loop`／`sequence`）。用 `hasAnnotation`
  * 讀後者會永遠得到 `false`——`'branch' === true` 不成立，而**那個假不會報錯**。
  *

@@ -19,9 +19,6 @@
     }
   },
   "role": "statement",
-  "annotations": {
-    "debug_step": true
-  },
   "owner": "(core)",
   "paths": {
     "views": {
@@ -34,7 +31,6 @@
         "lift": "./lift.ts"
       }
     },
-    "execute": "./execute.ts",
     "formalize": "./formalize.ts"
   },
   "traits": {

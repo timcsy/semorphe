@@ -64,7 +64,7 @@ interface ChildrenBaseline {
 /** 所有原始碼串起來——比對「有沒有任何地方讀它」 */
 function allSource(): string {
   let s = ''
-  for (const dir of ['src/core', 'src/ui', 'src/interpreter', 'src/views', 'src/languages', 'src/blocks']) {
+  for (const dir of ['src/core', 'src/ui', 'src/views', 'src/languages', 'src/blocks']) {
     for (const rel of listSourceFiles(dir)) s += readFileSync(join(REPO_ROOT, rel), 'utf8')
   }
   return s

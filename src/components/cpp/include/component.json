@@ -15,12 +15,6 @@
   ],
   "slots": {},
   "role": "statement",
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "declarative"
-  },
   "owner": "(core)",
   "paths": {
     "views": {
@@ -33,9 +27,7 @@
         "lift": "./lift-pattern.json"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": null,
-    "_execute_why": "**顯式的空，不是遺漏。**"
+    "formalize": "./formalize.ts"
   },
   "traits": {
     "scaffold": true,

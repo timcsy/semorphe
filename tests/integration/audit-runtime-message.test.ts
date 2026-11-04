@@ -186,41 +186,40 @@ function topLevelColon(seg: string): number {
 }
 
 /**
- * 從原始碼掃出 `new RuntimeError(...)` 的 (身分, 參數名) 組合。
+ * 從原始碼掃出「會推給使用者看的執行期錯誤」的 (身分, 參數名) 組合。
  *
- * ⚠️ **只取參數的「名字」不取「值」**——值是文案品質的問題，
- * 而這條護欄問的是「模板要的東西有沒有被填上」。
+ * 🔴 **spec 208（重構 6c-4）改寫**：原本掃 JS 直譯器的 `new RuntimeError(RUNTIME_ERRORS.X, {…})`。直譯器刪掉之後，
+ * 執行期的錯誤全部來自 **Cella 那條鏈**——執行控制器與提供者的 `new SessionStop('runtime', 'RUNTIME_ERR_…', {…})`，
+ * 以及 worker 把 Cella 的 kind 對到鍵的那張表（`UB_KEY` 等）。不改寫的話這條護欄會**掃到零個而空轉**（6c 盤點風險 5）。
+ *
+ * 參數名的來源：
+ * ① 寫在 `new SessionStop(…, '鍵', { a: …, b: … })` 裡的，照原始碼取；
+ * ② 其餘（鍵出現在對照表、參數由 Cella 的判決動態帶來）照**中文文案模板要的佔位符**餵——
+ *    ⚠️ 這一半靜態量不到「Cella 實際有沒有送那個參數」：沒送的話畫面會出現未替換的 `{clause}`。
+ *    那一層等 Cella 的結構化 params 與 `verdict-kinds.json` 出來，由「每個結構化的 kind 都有文案」那條護欄接手。
  */
 function scanThrowSites(): ThrowSite[] {
   const out: ThrowSite[] = []
-  const ident = /RUNTIME_ERRORS\.([A-Z_]+)/
+  const tmpl = zhTW as Record<string, string>
+  const placeholders = (key: string): string[] => {
+    const t = tmpl[key] ?? ''
+    return [...new Set([...t.matchAll(/\{(\w+)\}|(%\d)/g)].map((m) => m[1] ?? m[2]))]
+  }
   for (const file of walk(SRC)) {
     const text = readFileSync(file, 'utf8')
-    if (!text.includes('new RuntimeError')) continue
-    // 一個拋出點可能跨行，抓到下一個 `new RuntimeError` 或檔尾為止
-    const chunks = text.split('new RuntimeError').slice(1)
-    for (const chunk of chunks) {
-      const head = chunk.slice(0, 400)
-      const m = ident.exec(head)
-      if (!m) continue
-      // ⚠️ **括號要配對地數**——用「往後 300 字」的視窗會把後面不相干的
-      // 物件字面一起吃進來（第一版就是這樣，`參數[%1,type,value,offset]`
-      // 裡的後三個根本不是這個拋出點的）。
-      // 那不會造成假違規（多餘的參數只是被忽略），**而它會讓報表說謊**，
-      // 而一份說謊的報表推導不出「使用者到底看到什麼」（spec SC-002b）。
-      const paramNames = topLevelKeys(head.slice(m.index + m[0].length))
-      out.push({ file: file.replace(process.cwd() + '/', ''), key: `RUNTIME_ERR_${m[1]}`, paramNames })
+    const rel = file.replace(process.cwd() + '/', '')
+    const explicit = new Set<string>()
+    for (const m of text.matchAll(/new SessionStop\(\s*'(?:runtime|aborted)'\s*,\s*'(RUNTIME_ERR_[A-Z_]+)'\s*(?:,\s*\{([^}]*)\})?/g)) {
+      explicit.add(m[1])
+      const names = m[2] === undefined ? [] : [...m[2].matchAll(/(\w+)\s*:/g)].map((x) => x[1])
+      out.push({ file: rel, key: m[1], paramNames: names.length > 0 ? names : placeholders(m[1]) })
+    }
+    for (const m of text.matchAll(/'(RUNTIME_ERR_[A-Z_]+)'/g)) {
+      if (explicit.has(m[1])) continue
+      out.push({ file: rel, key: m[1], paramNames: placeholders(m[1]) })
     }
   }
   return out
-}
-
-/** 身分表：`errors.ts` 宣告的常數值，用來把 `UNDECLARED_VAR` 對到真正的 key。 */
-function declaredKeys(): Map<string, string> {
-  const text = readFileSync(join(SRC, 'interpreter/errors.ts'), 'utf8')
-  const map = new Map<string, string>()
-  for (const m of text.matchAll(/(\w+):\s*'(RUNTIME_ERR_[A-Z_]+)'/g)) map.set(m[1], m[2])
-  return map
 }
 
 /** 代號的形狀——這四種出現在畫面上都是缺陷。 */
@@ -243,16 +242,13 @@ describe('第四十四條護欄：執行期停下來時說的是人話', () => {
       sites.length,
       `只掃到 ${sites.length} 個拋出點 → 掃描沒吃到原始碼，這份報表不算數。` +
         `⚠️ 這不代表「缺陷被修好了」——見檔頭的自我否證聲明。`,
-    ).toBeGreaterThanOrEqual(60)
-    expect(new Set(sites.map(s => s.key)).size).toBeGreaterThanOrEqual(5)
+    ).toBeGreaterThanOrEqual(16)
+    // spec 208：直譯器刪掉之後，Cella 那條鏈的鍵（2026-11-04 量到 16 種）——少於這個數就是掃描沒吃到
+    expect(new Set(sites.map(s => s.key)).size).toBeGreaterThanOrEqual(12)
   })
 
   it('★ 每一個 (身分, 參數) 組合走過顯示路徑，結果都不得長得像代號', () => {
-    const alias = declaredKeys()
-    const sites = scanThrowSites().map(s => ({
-      ...s,
-      key: alias.get(s.key.replace('RUNTIME_ERR_', '')) ?? s.key,
-    }))
+    const sites = scanThrowSites()
 
     const violations: string[] = []
     for (const [locale, table] of LOCALES) {

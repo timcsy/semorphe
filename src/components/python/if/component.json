@@ -15,8 +15,7 @@
   "owner": "(python)",
   "_owner_why": "⚠️ 章要蓋 `(python)` 不是 `(core)`。工具箱的來源段落寫著 `{ from: '(python)' }`。",
   "annotations": {
-    "control_flow": "branch",
-    "debug_step": true
+    "control_flow": "branch"
   },
   "paths": {
     "views": {
@@ -29,7 +28,6 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   }
 }

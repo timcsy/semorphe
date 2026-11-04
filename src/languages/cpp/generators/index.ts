@@ -20,12 +20,9 @@ import { registerLanguage } from '../../../core/projection/code-generator'
 import { registerDeclarationGenerators } from '../lang/generators/declarations'
 import { allStdModules } from '../std'
 import { componentComponents } from '../../../core/component/registry'
-import { componentGenerateRegistrars, componentExecuteRegistrars } from '../../../core/component/paths'
+import { componentGenerateRegistrars } from '../../../core/component/paths'
 import { declareSkips, declareAnnotations } from '../../../core/skip-declarations'
-import { declareExecutor, declareBuiltinConstants } from '../../../core/language-executors'
 import { declareAbstract, declareVariableType } from '../../../core/component-abstract'
-import { CPP_BUILTIN_CONSTANTS } from '../builtins'
-import { registerCoreExecutors } from '../lang/executors'
 import { coreComponents } from '../lang'
 import type { PathName, SkipReason } from '../../../core/types'
 
@@ -88,7 +85,6 @@ export function registerCppLanguage(): void {
   registerLanguage('cpp', createCppGenerators)
   provideReproducer(cppReproducer())
   registerCppSkipDeclarations()
-  registerCppExecutors()
   // 註解的**語法**（`//`、`/** *​/`、`/* *​/`，以及從原始碼剝掉它們的規則）
   // 原本寫死在核心層。概念身分留在核心，語法住在這裡。
 
@@ -152,23 +148,6 @@ declareIdentifierSyntax('cpp', {
   ]),
 })
 
-/**
- * 把各模組的執行器推進直譯器。
- *
- * 與 `registerGenerators` / `registerLifters` 同一個形狀：模組提供註冊函式，
- * 載入時被呼叫。核心**不知道**有哪些模組，只知道有人推東西進來。
- */
-export function registerCppExecutors(): void {
-  if (executorsPushed) return
-  executorsPushed = true
-  const push = (component: string, executor: unknown): void =>
-    declareExecutor(component, executor as never)
-  declareBuiltinConstants(CPP_BUILTIN_CONSTANTS)
-  registerCoreExecutors(push as never)
-  for (const reg of componentExecuteRegistrars()) (reg as (p: typeof push) => void)(push)
-}
-
-let executorsPushed = false
 
 /**
  * 把「這個概念刻意不執行」的宣告推進核心。

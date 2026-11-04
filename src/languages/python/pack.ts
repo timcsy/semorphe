@@ -15,12 +15,10 @@ import { declareDegradationBlocks } from '../../core/blocks/degradation-blocks'
 import { declareCommentSyntax } from '../../core/comment-syntax'
 import { declareExpressionStatement } from '../../core/expression-statement'
 import { declareIdentifierSyntax } from '../../core/identifier-syntax'
-import { declareBuiltinConstants } from '../../core/language-executors'
 // ⚠️ 下拉的**選項來源**是一個中立的登記處（那個模組一個語言的字都不認識），
 //    而**選項本身是語言的知識**——所以宣告在這裡。
 import { declareDropdownSource } from '../../core/blocks/dropdown-sources'
 import { msg } from '../../core/messages'
-import { PYTHON_GLOBALS } from './builtins'
 import { pythonCommentSyntax } from './comment-syntax'
 import { registerPythonTransforms } from './transforms'
 import { registerPythonLanguage } from './install'
@@ -67,7 +65,6 @@ declareIdentifierSyntax('python', {
 
 // 🔴 **`__name__` 是 `"__main__"`**——`if __name__ == "__main__":` 是 AI 生的
 //    Python 幾乎必有的一行，而少了這個名字整段會說「沒有這個變數」。
-declareBuiltinConstants(PYTHON_GLOBALS)
 
 /**
  * **型別註記的下拉選單**——`def f(x: int) -> str` 的那幾個字。

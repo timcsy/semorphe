@@ -20,8 +20,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是 `round` ——判別要跑真邏輯，所以走具名策略；不是的話回 `null` 讓一般呼叫那顆接手。"
 }

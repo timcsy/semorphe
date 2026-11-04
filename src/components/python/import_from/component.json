@@ -19,9 +19,6 @@
   "slots": {},
   "role": "statement",
   "owner": "(python)",
-  "annotations": {
-    "debug_step": true
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -33,8 +30,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_lift_why": "🔴 **第五十三條護欄點名的**：`import_from_statement` 在「語料沒碰到」裡，而同族的 `import` 樣式的 `_why` 逐字寫著「它們今天**沒有語料**，等有人碰到再分」——那句話等了兩天。\n⚠️ `from x import *`（萬用）與相對匯入（`from . import y`）回 `null` 走誠實降級。"
 }

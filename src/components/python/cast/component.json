@@ -21,8 +21,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_lift_why": "**同一個 `call` 節點型別**，差別在被呼叫的名字是不是那四個之一——判別要跑真邏輯，所以走具名策略；不是的話回 `null` 讓一般呼叫那顆接手。\n⚠️ 使用者若自己 `def int(x)`，這顆仍然會認走它——**那是一個已知的邊界**（判別在 lift 期，被蓋掉是執行期才知道的事），而執行那一路會讓路。"
 }

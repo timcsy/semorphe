@@ -8,7 +8,7 @@
  *
  * ## ⚠️ 匯出的函式名是契約
  *
- * `generate.ts` → `registerGenerate`、`execute.ts` → `registerExecute`、
+ * `generate.ts` → `registerGenerate`、
  * `lift.ts` → `registerLift`。名字不對就 throw——**不是安靜地少一路**。
  * 這與 `StdModule.registerExecutors` 的紀律同一條：
  * 讓「顯式的空」與「遺漏的空」分得出來。
@@ -17,7 +17,6 @@ import { registeredComponents } from './registry'
 import { cellPath, type Cell } from './views'
 
 const GENERATE = import.meta.glob('/src/components/*/*/generate.ts', { eager: true }) as Record<string, Record<string, unknown>>
-const EXECUTE = import.meta.glob('/src/components/*/*/execute.ts', { eager: true }) as Record<string, Record<string, unknown>>
 const LIFT = import.meta.glob('/src/components/*/*/lift.ts', { eager: true }) as Record<string, Record<string, unknown>>
 /**
  * 膠囊的**具名辨識策略**——與 `lift.ts` 分開的檔，因為它們接的是不同的登錄表。
@@ -59,7 +58,6 @@ function get(mods: Record<string, Record<string, unknown>>, name: string, cell: 
 }
 
 export const componentGenerateRegistrars = (): ((...a: never[]) => void)[] => get(GENERATE, 'registerGenerate', 'code.render')
-export const componentExecuteRegistrars = (): ((...a: never[]) => void)[] => get(EXECUTE, 'registerExecute', 'execute')
 export const componentLiftRegistrars = (): ((...a: never[]) => void)[] => get(LIFT, 'registerLift', 'code.lift')
 export const componentLiftStrategyRegistrars = (): ((...a: never[]) => void)[] =>
   get(LIFT_STRATEGY, 'registerLiftStrategy', 'code.liftStrategy')

@@ -10,9 +10,6 @@
   },
   "role": "statement",
   "owner": "(python)",
-  "annotations": {
-    "debug_step": true
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -24,8 +21,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 通用桶點名的。**它改的是原本那一串**（不產生新的），所以是一個語句不是運算式。"
 }

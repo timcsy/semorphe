@@ -6,12 +6,6 @@
     "ptr": "expression"
   },
   "role": "statement",
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "declarative"
-  },
   "owner": "(core)",
   "paths": {
     "views": {
@@ -24,7 +18,6 @@
         "lift": "./lift-pattern.json"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   }
 }

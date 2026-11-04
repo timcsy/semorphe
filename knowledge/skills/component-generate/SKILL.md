@@ -2,7 +2,7 @@
 name: component-generate
 description: >
   為概念探索報告中定義的概念產生一顆**元件膠囊**——`component.json` 宣告
-  ＋ 五路實作 ＋ 積木形態 ＋ 標籤 ＋ 測試，全部住在
+  ＋ 四路實作（lift／generate／render／extract）＋ formalize ＋ 積木形態 ＋ 標籤 ＋ 測試，全部住在
   `src/components/<scope>/<name>/`。在 /component-discover 之後使用。支援任何語言。
 user-invocable: true
 ---
@@ -38,14 +38,20 @@ $ARGUMENTS
 
 ```
 src/components/<scope>/<name>/
-  component.json      宣告（身分／屬性／接點／角色／五路位置）
-  lift.ts             AST → 語義樹      ⎫
-  generate.ts         語義樹 → 原始碼    ⎬ 五路（render／extract 由 forms/ 提供）
-  execute.ts          語義樹 → 執行行為  ⎭
+  component.json      宣告（身分／屬性／接點／角色／各路位置）
+  lift.ts             AST → 語義樹      ⎫ 四路（render／extract 由 forms/ 提供）
+  generate.ts         語義樹 → 原始碼    ⎭
+  formalize.ts        語義樹 → Cella 程式（執行、判對錯、逐步除錯都走這一路）
   forms/blocks.json   積木形態（可多個——見 form 軸）
   labels/{zh-TW,en}.json   i18n 標籤
   spec.test.ts        這顆自己的測試
 ```
+
+🔴 **「四路」是什麼**：lift（`code.lift`）／generate（`code.render`）／render（`blocks.render`）／
+extract（`blocks.lift`），**加上 `formalize`（接 Cella）**——格子的定義在 `src/core/component/views.ts`
+（`Cell`／`CELLS`）。🪦 **2026-11-04 之前是五路**：第五路 execute（`execute.ts`，餵 JS 直譯器）
+隨 JS 直譯器在 spec 208 退場；`paths` 裡再出現 `execute`／`_execute_why` 會被
+`tests/unit/core/component-paths-contract.test.ts` 擋。
 
 ⚠️ **`<scope>` 不是語言，是套件擁有者**。今天有 `cpp` 與 `python`，
 而 `hw` 已在白名單裡——硬體元件用同一個形狀。
@@ -53,9 +59,12 @@ src/components/<scope>/<name>/
 
 ## 前置作業
 
-- `src/core/component/types.ts` — `ComponentManifest` 契約與 `FIVE_PATHS`
+- `src/core/component/types.ts` — `ComponentManifest` 契約
+- `src/core/component/views.ts` — `paths` 的形狀（視圖 → 一對 render／lift ＋ `formalize`）與格子 `Cell`
 - `src/core/component/registry.ts` — 膠囊怎麼被找到（**檔頭寫了為什麼是掃描**）
-- `src/core/component/paths.ts` — 五路的組裝點，**匯出函式名是契約**
+- `src/core/component/paths.ts` — code 視圖的組裝點（`generate.ts`／`lift.ts`／`lift-strategy.ts`），**匯出函式名是契約**
+- `src/core/formalize-contract.ts` — `formalize.ts` 的契約（`FormalizeRegistrar`／`FormalizeContext`）；
+  收集它的是 `src/providers/cella/formalize/registry.ts`（glob）
 - `knowledge/concepts/元件.md` — 五槽（身分／接點／參數＝真實；形態／行為＝投影）
 - `knowledge/concepts/元件代數.md` — P2 的屬性結構化邊界規則
 
@@ -63,12 +72,12 @@ src/components/<scope>/<name>/
 
 | 你要做的 | 抄這顆 | 它示範什麼 |
 |---|---|---|
-| 一般語句／運算式 | `cpp/vector_declare/` | 最完整的五路 |
+| 一般語句／運算式 | `cpp/vector_declare/` | 四路齊全 ＋ `formalize.ts` ＋ 用 Cella 驗執行的 `spec.test.ts` |
 | lift 是純資料 | 任一有 `lift-pattern.json` 的 | **不寫程式的 lift** |
 | lift 要跑真邏輯 | 任一有 `lift-strategy.ts` 的 | 具名策略 |
 | 一個身分多種形態 | `cpp/increment/` | `form: {axis, value}` ＋ `expressionCounterpart` |
 | 可增減的插槽／欄位／分支 | `python/print`／`python/func_def`／`python/if` | 三種 mutation |
-| 少一路 | 任一 `paths` 裡有 `null` 的 | **顯式的空** |
+| 少一路 | 任一 `paths.views` 裡有 `null` 的（例 `cpp/char_to_lower/`） | **顯式的空** |
 
 ⚠️ **不寫數字**（「44 顆」那種）——每加一顆就過期一次，而 2026-08-21 的健檢發現
 **這份文件裡每一個數字都錯了**（177→255、44→67、11→16、28→31…）。
@@ -95,13 +104,12 @@ src/components/<scope>/<name>/
   },
   "role": "statement",                     // 必要：statement / expression / both
   "owner": "(core)",                       // 🔴 見下面「owner 蓋哪個章」——蓋錯會讓積木【不存在】
-  "paths": {                               // 🔴 必要：五路【全部列出】，沒有的寫 null ＋ _why
-    "lift": "./lift-pattern.json",
-    "generate": "./generate.ts",
-    "render": "./forms/blocks.json",
-    "extract": "./forms/blocks.json",
-    "execute": null,
-    "_execute_why": "**顯式的空，不是遺漏。** 宣告性概念執行起來沒有行為。"
+  "paths": {                               // 🔴 必要：每個視圖的 render／lift【全部列出】，沒有的寫 null ＋ _why
+    "views": {
+      "blocks": { "render": "./forms/blocks.json", "lift": "./forms/blocks.json" },   // render ／ extract
+      "code":   { "render": "./generate.ts",       "lift": "./lift-pattern.json" }    // generate ／ lift
+    },
+    "formalize": "./formalize.ts"          // 接 Cella；還沒有就不寫（formalize 護欄的棘輪在數）
   },
 
   "abstractComponent": "cpp:var_declare",  // 選用：抽象元件
@@ -121,20 +129,23 @@ src/components/<scope>/<name>/
 
 ⚠️ **`layer` 已於 spec 152 退場**（實測 255 顆裡 0 顆有它）。不要寫。
 
-#### 🔴 `paths` 的五路全列，與 `skipPaths` **不是同一件事**
+#### 🔴 `paths` 的四路全列，與 `skipPaths` **不是同一件事**
 
 這一條撞過（2026-08-21）：只寫了 `skipPaths` 就在載入時 throw。
 
 | | 誰檢查 | 意思 |
 |---|---|---|
-| `paths.X: null` ＋ `_X_why` | **契約 C3**（`registry.ts` 的 `verifyContract`） | **沒有這個檔** |
-| `skipPaths` ＋ `skipReasons` | `skip-declarations` 登記處（直譯器讀） | **別為這顆抱怨「沒有執行器」** |
+| `paths.views.<視圖>.X: null` ＋ `_X_why` | **契約 C3**（`registry.ts` 的 `verifyContract`） | **沒有這個檔** |
+| `skipPaths` ＋ `skipReasons` | `src/core/skip-declarations.ts` 登記處（完備性護欄讀） | **別為這顆抱怨「少了這一格」** |
 
-**兩者正交**——實測 22 顆兩者都有、11 顆只有 `null`、9 顆只有 `skipPaths`
-（那 9 顆有真的 `execute.ts`，只是直譯器被告知跳過）。
-
+`skipPaths` 的值是格子名（`code.lift`／`code.render`／`blocks.render`／`blocks.lift`，型別 `PathName`）。
 ⚠️ `skipReasons` 的值是**封閉詞彙**：`declarative`／`consumed-by-parent`／`degradation-target`。
 **刻意沒有「還沒做」**。
+
+🪦 **2026-11-04 之前 `skipPaths` 也收 `execute`**，而且是它最大宗的用途（「這顆宣告性概念不需要執行器」）。
+spec 208 隨 JS 直譯器退場；原本借放在 `skipReasons.execute: "consumed-by-parent"` 的那個意思
+（「我只活在父元件裡面」，例如 switch 的 `default`）改成 `"traits": { "insideParentOnly": true }` ＋ `_traits_why`，
+完備性護欄讀 `componentTraits(id)?.insideParentOnly`。
 
 #### 🔴 `owner` 蓋哪個章——蓋錯的症狀是**積木在工具箱裡不存在**
 
@@ -151,7 +162,7 @@ src/components/<scope>/<name>/
 
 #### ⚠️ 非顯然的宣告要附 `_why`——這是慣例，不是裝飾
 
-`_why` 的慣例在整個膠囊庫裡有數百筆——`_traits_why`／`_lift_why`／`_execute_why`／
+`_why` 的慣例在整個膠囊庫裡有數百筆——`_traits_why`／`_lift_why`／`_render_why`／
 `_owner_why`／`_requires_why`／`_generate_why` 都是常見的。
 
 實例（`cpp:address_of`）：
@@ -435,29 +446,44 @@ Layer 3 JSON + strategy（LiftStrategyRegistry）。見 §2.3。
 - **一對多 AST 映射必須設 `warning`**
 - **每個 lifter 必須有降級路徑**——無法識別時降級為 `raw_code` 而非靜默丟棄
 
-### 步驟五：`execute.ts`
+### 步驟五：`formalize.ts`——語義樹 → Cella 程式
+
+執行（跑程式、判對錯、逐步除錯）**只走 Cella**（套件 `cella-lang`）。一顆元件怎麼翻成 Cella 的程式 JSON，
+住在它自己的 `formalize.ts`；引擎（`src/providers/cella/formalize/`）用 glob 收集、查表分派。
+契約只有型別，在 `src/core/formalize-contract.ts`——**膠囊只 import 它，不 import `src/providers/`**。
+
+匯出的形狀（`RegisterFormalize = (r: FormalizeRegistrar) => void`）。運算式位置，照 `cpp/address_of/formalize.ts` 逐字：
 
 ```typescript
-import type { ComponentExecutor } from '../../../interpreter/executor-registry'
+import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
-export function registerExecute(
-  register: (component: string, executor: ComponentExecutor) => void,
-): void {
-  register('cpp:vector_declare', async (node, ctx) => { /* … */ })
+export function registerFormalize(r: FormalizeRegistrar): void {
+  r.expr('cpp:address_of', (n, f) => f.k('eAddr', { n: n.id, a: f.exprOf(n, 'var') }))
 }
 ```
 
-**宣告性概念**（C++ 的 `#include`／`using namespace`、Python 的 `import`、任何語言的註解）**不要寫 noop**——
-在 `component.json` 宣告 `"skipPaths": ["execute"]` ＋ `"skipReasons": {"execute": "declarative"}`。
+註冊位置看這顆元件出現在哪裡（`FormalizeRegistrar` 的方法）：
 
-> **顯式的空與遺漏的空要分得出來**，而一個 noop 函式兩者長得一樣。
+| 位置 | 方法 | 回傳 | 例 |
+|---|---|---|---|
+| 運算式 | `r.expr(id, (n, f) => …)` | 一個 `CellaJson` | `cpp/address_of/` |
+| 敘述 | `r.stmt(id, (n, f) => …)` | `CellaJson[]` | — |
+| 頂層項目 | `r.item(id, (n, f) => …)` | `CellaJson[]` | `cpp/include/`（`iInclude`） |
+| 宣告（敘述與頂層共用） | `r.decl(id, (n, f, global) => …)` | `CellaJson[]` | `cpp/vector_declare/` |
 
-規則：子節點求值用 `ctx.evaluate()`；轉換用 `ctx.toNumber()`/`ctx.toBool()`；
-回傳 `RuntimeValue`（`{ type, value }`）；語句型不回傳值。
-⚠️ **絕不靜默跳過概念**——未註冊的概念會觸發 `unknownComponentHandler`。
+其餘（`member`／`init`／`constInt`／`definesMacro`／`literal`／`definesType`／`definesEnum`／`scope`）見契約檔的註解。
+引擎給的能力在 `f`（`FormalizeContext`）：`f.k` 建節點、`f.exprOf(n, slot)` 翻一個槽、`f.block` 翻敘述清單、
+`f.call`／`f.mcall` 組呼叫、`f.miss(n, reason)` 翻不了時記一筆 unknown。
 
-⚠️ **不要靜默回退**：多層 fallback 都用同一預設值會掩蓋真正的資料遺失
-（第三十三條護欄在看這個）。判不出來就丟錯，不要回 0。
+規則：
+- 🔴 **只註冊自己的身分**——`audit-formalize-coverage` 會指名「誰的 `formalize.ts` 註冊了別顆」，引擎載入時也會 throw。
+- ⚠️ **翻不了就照實回 unknown（`f.miss`），不猜、不送**（P6 誠實降級）——不要回一個「看起來能跑」的預設值。
+- 宣告性概念（`#include`、`using namespace`、註解）也有 formalize：Cella 有對應的建構子就翻過去（`cpp:include` → `iInclude`）。
+- 還做不出來時**不寫 `formalize.ts`、也不在 `paths` 寫 `formalize`**——`audit-formalize-coverage` 的「還沒對應」棘輪會把它數進去（只准下降）。
+- Python 不手寫：模板是膠囊裡的 `formalize.json`，由 `tools/sync-python-formalize.py` 從 Cella 的對照表同步（見 `src/providers/cella/formalize/python.ts` 檔頭）。
+
+🪦 **2026-11-04 之前這一步是 `execute.ts`**（`registerExecute`，餵 `src/interpreter/` 的 JS 直譯器；宣告性概念用
+`skipPaths: ["execute"]` 而不寫 noop 執行器）。spec 208 把直譯器整個刪掉，那一步隨之退場。
 
 ### 步驟六：`spec.test.ts`——⚠️ 每條負向前面先釘一個正向
 
@@ -473,11 +499,27 @@ it('lift', () => {
 > 而一支空過的測試與健康的長得一模一樣。
 
 至少三支：lift、generate、round-trip。**執行那一路也要有實際輸出的斷言**
-（第一顆膠囊的基準把執行全錄成空字串，等於完全沒被覆蓋）。
+（第一顆膠囊的基準把執行全錄成空字串，等於完全沒被覆蓋）——用 `tests/helpers/cella-run.ts` 的
+`expectCellaOut(code, expected)`：走 lift → formalize → Cella 判決，判 accept **而且**輸出相同才過
+（照 `cpp/vector_declare/spec.test.ts`）：
 
-### 步驟六之二：五路完備性驗證（強制阻擋）
+```typescript
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 
-`FIVE_PATHS = ['lift', 'generate', 'render', 'extract', 'execute']`。
+const run = (code: string, expected: string) =>
+  expectCellaOut('#include <bits/stdc++.h>\nusing namespace std;\n' + code, expected)
+
+it('執行：印出來的是對的', async () => {
+  await run('int main() { vector<int> v = {3, 1, 4}; cout << v[1]; }', '1')
+})
+```
+
+已知是 Cella 那一側的缺口時用同檔的 `knownCellaGap(why, body)` 釘住，不要 `it.skip`。
+
+### 步驟六之二：四路完備性 ＋ formalize 驗證（強制阻擋）
+
+四路是 lift／generate／render／extract（格子名見 `src/core/component/views.ts` 的 `CELLS`），
+加上 `formalize`。（🪦 2026-11-04 之前是五路，第五路 execute 隨 JS 直譯器在 spec 208 退場。）
 逐一確認，缺任何一路就不可繼續：
 
 | # | 路徑 | 驗證方式 | 缺失後果 |
@@ -486,7 +528,7 @@ it('lift', () => {
 | 2 | **Render** | `forms/blocks.json` 有條目，`renderMapping` 覆蓋所有屬性與接點 | ❌ 阻擋 |
 | 3 | **Extract** | PatternExtractor 能 auto-derive；動態結構須有 `dynamicRules` | ❌ 阻擋 |
 | 4 | **Generate** | `generate.ts` 匯出 `registerGenerate` | ❌ 阻擋 |
-| 5 | **Execute** | `execute.ts` 匯出 `registerExecute` | ❌ 阻擋 |
+| 5 | **Formalize** | `formalize.ts` 匯出 `registerFormalize`，`spec.test.ts` 有 `expectCellaOut` | ⚠️ Cella 還沒有對應的建構子時可缺（棘輪在數） |
 | 6 | **Test** | `spec.test.ts` 含 lift／generate／round-trip | ❌ 阻擋 |
 
 **一路刻意不做時**：在 `skipPaths` 宣告 ＋ `skipReasons` 寫理由。
@@ -497,7 +539,8 @@ it('lift', () => {
 ```bash
 npx vitest run tests/integration/audit-component-locality.test.ts \
              tests/integration/audit-locality.test.ts \
-             tests/integration/audit-completeness.test.ts
+             tests/integration/audit-completeness.test.ts \
+             tests/integration/audit-formalize-coverage.test.ts
 ```
 
 ⚠️ **不要用「grep 身分、期望是空的」當驗收**（2026-08-13 實測，這條指令被寫進來過又拿掉）。
@@ -544,7 +587,7 @@ npx vitest run tests/integration/audit-component-locality.test.ts \
 | ✅ **加進課程清單** | `src/languages/{lang}/topics/*.json` 的 `levelTree` 節點 `components[]` |
 | 🟡 **工具箱分類** | **看情況**——見下面那一節。「不用」只對**已經有分類的語言**成立 |
 | ❌ ~~component registry~~ | **不用**——`registry.ts` 掃 `component.json` |
-| ❌ ~~五路的 import~~ | **不用**——`paths.ts` glob 直讀 |
+| ❌ ~~各路的 import~~ | **不用**——`paths.ts` glob 直讀 |
 
 ### 🔴 「第二個語言的第一顆」——這一節整個不一樣
 
@@ -599,9 +642,10 @@ extraTypes: [
 | **課程清單**（Topic 的 `levelTree`） | `audit-curriculum-coverage`（「未收錄 MUST 不得是忘了」） |
 | 積木型別集合基線 | `audit-identity-namespace` |
 | 工具箱與課程快照 | `toolbox-snapshot` |
-| 執行器清冊（`GENERATE_INVENTORY=1`） | `executor-inventory` |
 | 膠囊搬家防線 | `component-move-parity` |
 | 就近性／符合性／完備性基線 | 各自的棘輪 |
+
+🪦 這張表原本還有「執行器清冊 → `executor-inventory`」一列，2026-11-04 隨 JS 直譯器在 spec 208 退場（所以今天是六列）。
 
 ⚠️ **共用檔要用膠囊的東西時，呼叫它匯出的建構子**（`buildXxx`）——
 身分字串只留在膠囊裡一處，否則就近性護欄會**兩個方向都報**。
@@ -629,7 +673,7 @@ src/components/{scope}/{name}/
 - [ ] component.json（六個必要鍵 ＋ 非顯然宣告附 _why）
 - [ ] lift.ts / lift-pattern.json / lift-strategy.ts（三選一）
 - [ ] generate.ts
-- [ ] execute.ts（或 skipPaths 宣告 ＋ 理由）
+- [ ] formalize.ts（或 Cella 還沒有對應 → 不寫，棘輪會數到它）＋ spec.test.ts 裡的 expectCellaOut
 - [ ] forms/blocks.json
 - [ ] labels/zh-TW.json、labels/en.json
 - [ ] spec.test.ts（每條負向前有正向錨點）
@@ -689,7 +733,7 @@ npm test          # 那批護欄在裡面——就近性、可拿性、課程快
 ## 完成標記（強制）
 
 ```
-🏁 SKILL_COMPLETE: component-generate | {scope} | {component_name} | 五路：{N}/5（skip {M}）| tsc: PASS/FAIL
+🏁 SKILL_COMPLETE: component-generate | {scope} | {component_name} | 四路：{N}/4（skip {M}）＋ formalize：有/無 | tsc: PASS/FAIL
 ```
 
 如果未輸出此標記，pipeline 不會繼續下一階段。

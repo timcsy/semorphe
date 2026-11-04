@@ -17,6 +17,8 @@
   },
   "role": "expression",
   "owner": "(python)",
+  "traits": { "insideParentOnly": true },
+  "_traits_why": "**只出現在父節點裡**（類別成員、switch 的分支、例外的 except 分支、迴圈的走訪項）——單獨合成一份樣本去量它，是在量一個不存在的位置。原本借放在 `skipReasons.execute: consumed-by-parent`；spec 208 隨 JS 直譯器拿掉 execute 那一格，搬到性狀（完備性護欄讀它）。",
   "paths": {
     "views": {
       "blocks": {
@@ -28,15 +30,7 @@
         "lift": null,
         "_lift_why": "**顯式的空。** `for_in_clause` 只在推導式那顆的策略裡被拆出來——給它一筆樣式等於宣告它可以獨立出現，而一段 `for x in xs` 單獨寫是語法錯誤。"
       }
-    },
-    "execute": null,
-    "_execute_why": "**顯式的空。** 走訪由父概念主導（它要控制每一圈算什麼、什麼時候還原名字）——這一顆自己執行沒有意義。"
-  },
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "consumed-by-parent"
+    }
   },
   "_children_why": "🔴 **`outer` 讓層數不受限**：一段的外面再接一段，於是 `[x for a in A for b in B for x in b]` 用**同一顆積木**表達得出來。\n> **一個「再外面一層」的插槽，比一個「最多兩層」的欄位多表達了無限層。**"
 }

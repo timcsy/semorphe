@@ -10,12 +10,6 @@
     "<cstdlib>"
   ],
   "_requires_why": "🔴 2026-10-31 補：malloc／free 在 <cstdlib>（C 是 <stdlib.h>，補丁器在 C 方言下換寫）。在此之前沒宣告，自動補標頭補不到它——C 程式產出時缺 <stdlib.h>。",
-  "skipPaths": [
-    "execute"
-  ],
-  "skipReasons": {
-    "execute": "declarative"
-  },
   "owner": "(core)",
   "paths": {
     "views": {
@@ -28,7 +22,6 @@
         "lift": "./lift.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   }
 }

@@ -20,8 +20,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 通用桶點名的（`.index` ×2，串列與字串都有）。\n⚠️ **名字裡的 `position` 是種差**：光是 `find` 在這份詞彙表裡已經被「在不在裡面」（`in` 運算子）佔走了，而這一顆回的是**位置**。"
 }

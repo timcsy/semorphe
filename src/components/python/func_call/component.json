@@ -14,9 +14,6 @@
   },
   "role": "both",
   "owner": "(python)",
-  "annotations": {
-    "debug_step": true
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -28,8 +25,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "traits": {
     "namedCall": true,

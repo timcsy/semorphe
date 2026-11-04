@@ -206,22 +206,3 @@ export function isPlaceholderOutput(code: string): boolean {
   if (/^(\/\*\s*)?(TODO|NOT_IMPLEMENTED|UNSUPPORTED|unresolved)/i.test(t)) return true
   return false
 }
-
-/**
- * 判斷一個 executor 是不是「空操作」——函式體剝掉空白與註解後是空的。
- *
- * 這是「殼」判定的關鍵：`async () => {}` 是空操作。它**可能是對的**
- * （宣告性概念本來就不執行），也**可能是缺的**——兩者長得一模一樣，
- * 所以要求正確的那個用 `skipPaths` 出聲。見 knowledge/concepts/執行機構.md
- */
-export function isNoopExecutor(fn: unknown): boolean {
-  if (typeof fn !== 'function') return false
-  const src = fn.toString()
-  // 剝掉註解
-  const stripped = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
-  // 箭頭函式：=> {} 或 => { }
-  if (/=>\s*\{\s*\}\s*$/.test(stripped.trim())) return true
-  // 一般函式：最後的 {} 是空的
-  if (/\{\s*\}\s*$/.test(stripped.trim()) && !/\breturn\b|\bawait\b|\bctx\b/.test(stripped)) return true
-  return false
-}

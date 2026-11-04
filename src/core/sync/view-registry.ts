@@ -169,7 +169,7 @@ export function viewsByLayer(): { layer: UnderstandingLayer; views: ViewHost[] }
 /**
  * 消費某個標註的視圖。
  *
- * ⚠️ 這一格今天只有 `blockly-panel` 填了（`control_flow`／`introduces_scope`）。
+ * ⚠️ 這一格今天只有 `blockly-panel` 填了（`control_flow`；`introduces_scope` 隨 JS 直譯器在 2026-11-04 退場）。
  * 它存在的理由是「一棵語義樹上掛的標註，該只算給真的有人讀的那些」
  * ——而在有登錄表之前，那個「有人讀」是查不到的。
  */

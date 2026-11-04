@@ -870,6 +870,12 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
   }
 
   if (node.type === 'field_declaration') {
+    // 位元欄位 `unsigned a : 3;`：沒有元件記得住寬度 ⟹ 照實降級，原文保留。
+    // 🔴 2026-11-04 之前它被當成一般欄位，`: 3` 靜默蒸發（`unsigned a;`）——
+    //    刪 JS 直譯器時語料形狀護欄的 `bitfield_clause` 掉出語料，補判定時實測到的。
+    if (node.namedChildren.some((c) => c.type === 'bitfield_clause')) {
+      return degrade(buildRawCode(node.text), '位元欄位尚未支援')
+    }
     // Pure virtual: virtual void method() = 0;
     const isVirtual = node.children.some(c => !c.isNamed && c.text === 'virtual')
     const defaultVal = node.childForFieldName('default_value')

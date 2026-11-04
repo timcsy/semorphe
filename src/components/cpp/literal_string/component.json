@@ -23,8 +23,7 @@
         "liftStrategy": "./lift-strategy.ts"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "traits": {
     "forLoopPart": true,

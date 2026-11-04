@@ -20,8 +20,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 通用桶點名的。\n⚠️ **既有的算術那顆一次只給一個**（`//` 或 `%`），說不出「兩個一起」。而它回的是一個 tuple。"
 }

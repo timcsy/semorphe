@@ -15,8 +15,7 @@
         "render": "./generate.ts",
         "lift": "./lift.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "requires": [
     "<string>"

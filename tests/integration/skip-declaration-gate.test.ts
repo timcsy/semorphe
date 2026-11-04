@@ -19,7 +19,6 @@ import { join } from 'node:path'
 import { REPO_ROOT } from '../helpers/guardrail'
 import { describe, it, expect } from 'vitest'
 import { allComponentDefs } from '../helpers/component-scan'
-import { SemanticInterpreter } from '../../src/interpreter/interpreter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { languageGenerators } from '../../src/core/projection/code-generator'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
@@ -164,85 +163,4 @@ describe('宣告的門檻：說不出理由的不准宣告', () => {
     expect(orphans).toEqual([])
   })
 
-  it('★ 宣告不執行的概念，不得同時註冊「會做事」的執行器（矛盾偵測）', async () => {
-    const interp = new SemanticInterpreter({ maxSteps: 100 })
-    const contradictions: string[] = []
-    for (const def of allComponentDefs()) {
-      if (!(def.skipPaths ?? []).includes('execute')) continue
-      const ex = interp.getExecutor(def.componentId)
-      if (!ex) continue
-      // 空操作的函式原始碼很短且沒有 body 內容；會做事的不是
-      const src = ex.toString().replace(/\s+/g, '')
-      const isNoop = /^async\(?\)?=>\{\}$/.test(src) || /=>\{\}$/.test(src)
-      if (!isNoop) contradictions.push(`${def.componentId}（宣告不執行，卻註冊了會做事的執行器）`)
-    }
-    expect(contradictions, contradictions.join('\n  ')).toEqual([])
-  })
-
-  it('★ 判為「還沒實作」的概念沒有偷偷拿到宣告', () => {
-    // classification.md 判定不得宣告的那些。這支測試是那份判定的釘子——
-    // 有人日後想讓數字好看，最省事的做法就是給它們一個 skipPaths。
-    const mustNotDeclare = [
-      // cpp_destructor（080）與 cpp_lambda（079）已真的實作／被父概念消費，
-      // 從這份「不得宣告」的清單移除。依據見
-      // tests/unit/interpreter/consumed-by-parent-evidence.test.ts
-      // ⚠️ 以下六個已改判為 `consumed-by-parent`（074），而那正是「用宣告刷
-      // 數字」最常見的形狀——053 明明把它們判為「還沒實作」，現在說情況變了。
-      // **「情況變了」本身就是最常見的合理化**，所以理由必須可查證：
-      //
-      //   `tests/unit/interpreter/consumed-by-parent-evidence.test.ts`
-      //
-      // 那支逐一驗 `cpp_class_def` 的執行器**真的**把每一種成員收進型別，
-      // 並附一支反面測試（`cpp_destructor` 不得被誤收——否則「什麼都收」的
-      // 實作也會通過）。那支若被刪掉或改成總是通過，這六個宣告就失去依據。
-      //
-      //   cpp_virtual_method / cpp_override_method / cpp_pure_virtual
-      //   cpp_operator_overload / cpp_static_member / cpp_constructor
-      //
-      // `cpp_class_def` / `cpp_struct_declare` / `cpp_namespace_def` 則是
-      // **真的實作了**（071–073），不需要宣告也不在這份清單裡。
-      'cpp:ifdef', 'cpp:ifndef',
-      'cpp:raw_code', 'cpp:raw_expression',
-      // `var_declarator` 與 `cpp_include_local` 已改判——**附證據，不是因為想讓數字下降**：
-      //   var_declarator：`var_declare` 的產生器直接讀 `declarators` 的 `name` 與
-      //     `initializer`（core/generators/declarations.ts:5-19），extract 策略也是它
-      //     建的。四路都由父概念消費。053 當時判「判不出來」是證據不足。
-      //   cpp_include_local：與 `cpp_include` 是同一件事，後者早已宣告 declarative。
-    ]
-    const smuggled = allComponentDefs()
-      .filter((d) => mustNotDeclare.includes(d.componentId) && (d.skipPaths ?? []).includes('execute'))
-      .map((d) => d.componentId)
-    expect(
-      smuggled,
-      '以下概念實測會產生錯誤的執行結果（或根本測不到），不得宣告成「刻意不執行」：\n  ' +
-        smuggled.join('、') +
-        '\n見 specs/053-declare-noop-execute/classification.md',
-    ).toEqual([])
-  })
-
-  it('★ 對照組：該宣告的 11 個確實都宣告了（證明門檻不是靠「大家都沒宣告」而通過）', () => {
-    const shouldDeclare = [
-      'cpp:comment', 'cpp:block_comment', 'cpp:doc_comment', 'cpp:include', 'cpp:using_namespace',
-      // `cpp_define` 已從這裡移除——實作條件編譯之後它**有可觀察效果了**
-      //（它決定 `#ifdef` 的 body 跑不跑），不再是 declarative。
-      // 宣告會隨系統長出新能力而過期，classification.md 的「複查觸發條件」
-      // 列的就是這種情形。
-      //
-      // ⚠️ **`cpp:pair_declare` 也已移除（2026-08-13），而它是同一個形狀的第二次。**
-      // 差別在於：`define` 那次是「系統長出新能力所以宣告過期」，
-      // 🔴 **這一次是那個宣告從一開始就是錯的**——`pair<int,int> p;` 一直都有
-      // 執行語義（要宣告一個變數），而 `skipReasons: "declarative"` 讓
-      // 完備性護欄綠著，代價是第三十二條護欄的 5 段語料跑不動。
-      //
-      // > **一個假的「顯式的空」不會隨時間過期——它從第一天就是假的，
-      // > 而正因為它長得像一個決定，沒有人會回頭質疑它。**
-      'cpp:stringstream_declare', 'cpp:ifstream_declare',
-      'cpp:ofstream_declare', 'cpp:case', 'cpp:default',
-    ]
-    const omitted = shouldDeclare.filter((id) => {
-      const d = allComponentDefs().find((x) => x.componentId === id)
-      return !d || !(d.skipPaths ?? []).includes('execute')
-    })
-    expect(omitted, `這些通過了實測卻沒拿到宣告：${omitted.join('、')}`).toEqual([])
-  })
 })

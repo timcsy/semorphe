@@ -16,7 +16,8 @@
  */
 import { registerContainerTemplate } from '../../../core/component/container-templates'
 import { declareSizedRowType } from '../../../core/component/aggregate-nodes'
-import { BIT_ELEM } from './execute'
+/** bitset 每一格的元素型別名（原本住在 execute.ts，spec 208 隨直譯器刪除搬到這裡） */
+const BIT_ELEM = 'bit'
 
 export function registerLift(): void {
   registerContainerTemplate('bitset', 'cpp:bits_declare', 'cpp/bits_declare')

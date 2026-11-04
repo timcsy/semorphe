@@ -25,9 +25,6 @@
     "declarators": "declarator"
   },
   "role": "statement",
-  "annotations": {
-    "debug_step": true
-  },
   "owner": "(core)",
   "paths": {
     "views": {
@@ -40,8 +37,7 @@
         "lift": "./lift-pattern.json"
       }
     },
-    "formalize": "./formalize.ts",
-    "execute": "./execute.ts"
+    "formalize": "./formalize.ts"
   },
   "traits": {
     "forLoopPart": true,

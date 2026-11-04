@@ -10,9 +10,6 @@
   },
   "role": "statement",
   "owner": "(python)",
-  "annotations": {
-    "debug_step": true
-  },
   "paths": {
     "views": {
       "blocks": {
@@ -24,8 +21,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    },
-    "execute": "./execute.ts"
+    }
   },
   "_why": "🔴 第五十條護欄的通用桶點名的（`.sort` ×2）。\n⚠️ **名字裡的 `self` 是種差**：做的仍然是 `sort`，差別在**改的是自己**（而且回 `None`）——同族那顆 `sorted(...)` 產一份新的。\n> 一個回 `None` 的東西被當成運算式用，是初學者最常見的錯之一（`xs = xs.sort()`）——**兩顆積木長得不一樣，那個錯就做不出來**。"
 }
