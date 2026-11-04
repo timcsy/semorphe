@@ -36,7 +36,7 @@
  * > ——所以自動排版是一個**動作**，不是一個模式。
  */
 import { isRenamingADefinition, renameReferences, scopeOf } from '../../core/rename-variable'
-import { createPanelHead } from '../layout/cell-head'
+import { createPanelHead } from '../cell-head'
 import type { ViewHost, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, EditableSource } from '../../core/sync/view-host'
 import type { SemanticNode } from '../../core/types'
 import type { CodeMapping } from '../../core/projection/code-generator'

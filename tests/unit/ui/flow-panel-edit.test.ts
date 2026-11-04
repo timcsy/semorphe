@@ -17,7 +17,7 @@
  * > **一個把顯示文字寫回真實的編輯器，會把投影的損失變成真實的損失。**
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { FlowPanel } from '../../../src/ui/panels/flow-panel'
+import { FlowPanel } from '../../../src/panels/flow/view'
 import { BlockSpecRegistry } from '../../../src/core/blocks/block-spec-registry'
 import { allCppComponents, allCppProjections } from '../../../src/languages/cpp/all-declarations'
 import { setMessageSource, resetMessageSource } from '../../../src/core/messages'

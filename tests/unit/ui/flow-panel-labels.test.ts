@@ -29,7 +29,7 @@
  * **標籤的文字沒有人看**——這支補的就是那一格。
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { FlowPanel } from '../../../src/ui/panels/flow-panel'
+import { FlowPanel } from '../../../src/panels/flow/view'
 import { setMessageSource, resetMessageSource } from '../../../src/core/messages'
 import type { SemanticNode } from '../../../src/core/types'
 

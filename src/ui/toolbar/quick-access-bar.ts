@@ -1,4 +1,4 @@
-import { createPanelHead } from '../layout/cell-head'
+import { createPanelHead } from '../../panels/cell-head'
 /**
  * BlockToolbar — 積木面板上方的工具列
  * 包含：同步按鈕、等級選擇、積木風格、undo/redo/clear、匯出/匯入/上傳

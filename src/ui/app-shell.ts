@@ -6,7 +6,7 @@ import { showQuickPick } from './toolbar/quick-pick'
 import { installGridDividers } from './layout/grid-dividers'
 import { identityAssignment, swapTo, effectiveAreas, type SlotAssignment } from '../core/host/slot-assignment'
 import type { BottomPage, BottomVisibility } from '../core/host/console-surface'
-import { createPanelHead } from './layout/cell-head'
+import { createPanelHead } from '../panels/cell-head'
 import { BottomPanel } from './layout/bottom-panel'
 import { panelById } from '../core/host/panel-registry'
 import type { PanelInstance } from '../core/host/panel-spec'
@@ -14,7 +14,7 @@ import { LayoutManager } from './layout/layout-manager'
 import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
 import type { ConsolePanel } from '../panels/console/view'
 import type { VariablePanel } from '../panels/variables/view'
-import { FlowPanel } from './panels/flow-panel'
+import type { FlowPanel } from '../panels/flow/view'
 import { BlocklyPanel } from './panels/blockly-panel'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
@@ -838,7 +838,8 @@ export function createAppLayout(
   //    這裡留 `hidden` 是為了讓那一層自己決定，而不是讓兩層各捲各的。
   flowEl.style.overflow = 'hidden'
   // ⚠️ **不預設藏起來**——grid 之下藏不藏由 `flowColumn` 決定（見 `applyLayout`）
-  const flowPanel = new FlowPanel(flowEl, blockSpecRegistry)
+  // 🟢 這一格自己畫（spec 217 第二刀）——組裝點只給容器與登錄表
+  const flowPanel = panelById('flow')!.mount!(flowEl, { profile, msg: (k: string, f?: string) => Blockly.Msg[k] || f || k, blockSpecs: blockSpecRegistry }).view as FlowPanel
   /**
    * **兩個投影自己一列**（2026-08-26）。
    *

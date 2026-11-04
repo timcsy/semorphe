@@ -1,4 +1,4 @@
-import { createPanelHead } from '../layout/cell-head'
+import { createPanelHead } from '../../panels/cell-head'
 import * as monaco from 'monaco-editor'
 import { preserveBlankLines } from '../../core/projection/preserve-blank-lines'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent, EditableSource } from '../../core/sync/view-host'

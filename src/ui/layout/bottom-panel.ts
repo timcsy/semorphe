@@ -1,4 +1,4 @@
-import { createPanelHead } from './cell-head'
+import { createPanelHead } from '../../panels/cell-head'
 import type { ConsoleSurface } from '../../core/host/console-surface'
 
 export interface TabAction {
