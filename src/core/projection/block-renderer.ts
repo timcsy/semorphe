@@ -125,11 +125,19 @@ function renderStatementChain(input: SemanticNode[]): BlockState | null {
   const canFollow = (b: BlockState): boolean =>
     !(globalPatternRenderer?.isExpressionOnly(b.type) ?? false)
 
+  // 🟢 **運算式當敘述**（spec 214）：沒有敘述形態的運算式積木（`cc[1];`）套上語言宣告的包裝再接進鏈——
+  //    原本它被放在旁邊（下面的 orphans），而抽回來時就不在原位了：那一行跑到 main 外面（spec 213 量到）。
+  //    包裝不是語意節點：抽取端拆掉它，語意樹不變。沒宣告包裝的語言照舊放在旁邊。
+  const wrapper = degradationBlocks()?.expressionStatement
+  const asStatement = (b: BlockState): BlockState =>
+    wrapper && !canFollow(b) ? { type: wrapper, id: nextBlockId('block_'), fields: {}, inputs: { EXPR: { block: b } } } : b
+
   let first: BlockState | null = null
   let current: BlockState | null = null
   for (const node of nodes) {
-    const block = renderBlock(node, 'statement')
-    if (!block) continue
+    const rendered = renderBlock(node, 'statement')
+    if (!rendered) continue
+    const block = asStatement(rendered)
     if (!first) {
       first = block
       current = canFollow(block) ? tailOf(block) : null

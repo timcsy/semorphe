@@ -27,7 +27,7 @@
   {
     "key": "python:array_make_for.wrap",
     "cause": "排版提示，不給學生編輯",
-    "reason": "記的是**原文用哪一種括號**（中括號／沒有括號／大括號）。⚠️ 學生在積木上做的是「推導式」這件事，而括號的樣子是**從程式碼來的排版**——給他一格下拉會讓一個排版看起來像一個語義選擇。"
+    "reason": "記的是**原文用哪一種括號**（中括號／沒有括號／大括號）。⚠️ 學生在積木上做的是「推導式」這件事，而括號的樣子是**從程式碼來的排版**——給他一格下拉會讓一個排版看起來像一個語義選擇。\n🟢 **走一趟積木靠 `renderMapping.hints` 帶著**（2026-11-04，spec 214）：渲染時放進 `extraState.hints`、抽取時讀回——在此之前積木上沒有這一格，也就沒有任何地方記著它，走一趟積木就退成預設（`form-invariance`、`layout-hints-roundtrip` 量到）。"
   },
   {
     "key": "python:loop_for.obj",
@@ -77,7 +77,7 @@
   {
     "key": "python:container_enumerate.start_style",
     "cause": "排版提示，不給學生編輯",
-    "reason": "記的是**原文把起點寫成哪一種**（`enumerate(xs, 1)` 還是 `enumerate(xs, start=1)`）——兩種語義相同，而產回去換一種等於改了使用者的碼。⚠️ 給學生一格下拉會讓一個**寫法**看起來像一個語義選擇。"
+    "reason": "記的是**原文把起點寫成哪一種**（`enumerate(xs, 1)` 還是 `enumerate(xs, start=1)`）——兩種語義相同，而產回去換一種等於改了使用者的碼。⚠️ 給學生一格下拉會讓一個**寫法**看起來像一個語義選擇。\n🟢 **走一趟積木靠 `renderMapping.hints` 帶著**（2026-11-04，spec 214）：渲染時放進 `extraState.hints`、抽取時讀回——在此之前積木上沒有這一格，也就沒有任何地方記著它，走一趟積木就退成預設（`form-invariance`、`layout-hints-roundtrip` 量到）。"
   },
   {
     "key": "cpp:if:else_body",
@@ -87,11 +87,11 @@
   {
     "key": "cpp:container_append.method",
     "cause": "排版提示，不給學生編輯",
-    "reason": "記的是**使用者寫的那個方法名**（`push_back`／`emplace_back`，以及 `#define pb push_back` 取的小名）。C++ 的那幾個名字**做的是同一件事**，所以它們是一顆身分；而在此之前產生器寫死其中一個，於是 `v.emplace_back(3)` 產回 `v.push_back(3)`、`m.emplace(1,2)` 產回 `m.insert(1)`（**連引數都掉了**）。\\n> **一顆元件認了 N 個方法名而只記得其中一個，學生寫的另外 N−1 個會被悄悄改寫。**\\n⚠️ 給學生一格下拉會讓一個**拼法**看起來像一個語義選擇——與 `python:container_enumerate.start_style` 同一個理由。\\n⚠️ 積木上新拖出來的那一顆沒有原文，產生器退回 `push_back`。"
+    "reason": "記的是**使用者寫的那個方法名**（`push_back`／`emplace_back`，以及 `#define pb push_back` 取的小名）。C++ 的那幾個名字**做的是同一件事**，所以它們是一顆身分；而在此之前產生器寫死其中一個，於是 `v.emplace_back(3)` 產回 `v.push_back(3)`、`m.emplace(1,2)` 產回 `m.insert(1)`（**連引數都掉了**）。\\n> **一顆元件認了 N 個方法名而只記得其中一個，學生寫的另外 N−1 個會被悄悄改寫。**\\n⚠️ 給學生一格下拉會讓一個**拼法**看起來像一個語義選擇——與 `python:container_enumerate.start_style` 同一個理由。\\n⚠️ 積木上新拖出來的那一顆沒有原文，產生器退回 `push_back`。\n🟢 **走一趟積木靠 `renderMapping.hints` 帶著**（2026-11-04，spec 214）：渲染時放進 `extraState.hints`、抽取時讀回——在此之前積木上沒有這一格，也就沒有任何地方記著它，走一趟積木就退成預設（`form-invariance`、`layout-hints-roundtrip` 量到）。"
   },
   {
     "key": "cpp:set_insert.method",
     "cause": "排版提示，不給學生編輯",
-    "reason": "記的是**使用者寫的那個方法名**（`insert`／`emplace`，以及 `#define pb push_back` 取的小名）。C++ 的那幾個名字**做的是同一件事**，所以它們是一顆身分；而在此之前產生器寫死其中一個，於是 `v.emplace_back(3)` 產回 `v.push_back(3)`、`m.emplace(1,2)` 產回 `m.insert(1)`（**連引數都掉了**）。\\n> **一顆元件認了 N 個方法名而只記得其中一個，學生寫的另外 N−1 個會被悄悄改寫。**\\n⚠️ 給學生一格下拉會讓一個**拼法**看起來像一個語義選擇——與 `python:container_enumerate.start_style` 同一個理由。\\n⚠️ 積木上新拖出來的那一顆沒有原文，產生器退回 `insert`。"
+    "reason": "記的是**使用者寫的那個方法名**（`insert`／`emplace`，以及 `#define pb push_back` 取的小名）。C++ 的那幾個名字**做的是同一件事**，所以它們是一顆身分；而在此之前產生器寫死其中一個，於是 `v.emplace_back(3)` 產回 `v.push_back(3)`、`m.emplace(1,2)` 產回 `m.insert(1)`（**連引數都掉了**）。\\n> **一顆元件認了 N 個方法名而只記得其中一個，學生寫的另外 N−1 個會被悄悄改寫。**\\n⚠️ 給學生一格下拉會讓一個**拼法**看起來像一個語義選擇——與 `python:container_enumerate.start_style` 同一個理由。\\n⚠️ 積木上新拖出來的那一顆沒有原文，產生器退回 `insert`。\n🟢 **走一趟積木靠 `renderMapping.hints` 帶著**（2026-11-04，spec 214）：渲染時放進 `extraState.hints`、抽取時讀回——在此之前積木上沒有這一格，也就沒有任何地方記著它，走一趟積木就退成預設（`form-invariance`、`layout-hints-roundtrip` 量到）。"
   }
 ]

@@ -842,5 +842,7 @@
   "ENABLE_BLOCK": "Enable Block",
   "HELP": "Help",
   "UNDO": "Undo",
-  "REDO": "Redo"
+  "REDO": "Redo",
+  "EXPRESSION_STATEMENT_LABEL": "evaluate:",
+  "EXPRESSION_STATEMENT_TOOLTIP": "Use an expression as a statement: evaluate it once and discard the result (e.g. cc[1]; creates that entry)"
 }

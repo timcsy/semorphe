@@ -53,7 +53,10 @@
       "inputs": {
         "VALUE": "value",
         "OBJ": "obj"
-      }
+      },
+      "hints": [
+        "method"
+      ]
     }
   }
 ]

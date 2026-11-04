@@ -1,3 +1,4 @@
+import { allExpressionStatementBlocks } from '../core/blocks/degradation-blocks'
 import { allVariableDropdownBlocks } from '../core/blocks/variable-dropdown-blocks'
 import { allBoardConstantDropdowns, boardConstantOptions } from '../core/blocks/board-constant-dropdown-blocks'
 import type { BoardPinModel } from '../core/types'
@@ -1107,6 +1108,23 @@ export class BlockRegistrar {
     // 🪦 **`cpp_array_at` 的命令式定義已於 spec 163 刪除。**
     //    比對護欄（`audit-block-def-parity`）證明**兩份定義建出來的形狀一模一樣**
     //    ——插槽、欄位、output、statement、顏色逐項比過，才刪。
+
+    // ── 「運算式當敘述」的包裝積木（spec 214）
+    //
+    // 一顆沒有敘述形態的運算式（`cc[1];`）被放在敘述位置時，渲染端套上它；它**不是元件**（抽取端拆掉，語意樹不變），
+    // 名字由語言套件宣告（`core/blocks/degradation-blocks.ts` 的 `expressionStatement`）。形狀是通用的，所以在這裡建一次。
+    for (const type of allExpressionStatementBlocks()) {
+      Blockly.Blocks[type] = {
+        init: function (this: Blockly.Block) {
+          this.appendValueInput('EXPR').appendField(Blockly.Msg.EXPRESSION_STATEMENT_LABEL || '算一次：')
+          this.setInputsInline(true)
+          this.setPreviousStatement(true, 'Statement')
+          this.setNextStatement(true, 'Statement')
+          this.setColour('#888888')
+          this.setTooltip(Blockly.Msg.EXPRESSION_STATEMENT_TOOLTIP || '把一個運算式當成一行敘述：算一次，結果不留下')
+        },
+      }
+    }
 
     // ── 有工作區變數下拉選單的積木
     //

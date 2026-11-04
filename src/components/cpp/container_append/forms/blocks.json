@@ -32,7 +32,10 @@
       "inputs": {
         "VALUE": "value",
         "OBJ": "obj"
-      }
+      },
+      "hints": [
+        "method"
+      ]
     }
   },
   {
@@ -67,7 +70,10 @@
       "inputs": {
         "VALUE": "value",
         "OBJ": "obj"
-      }
+      },
+      "hints": [
+        "method"
+      ]
     },
     "form": {
       "axis": "role",

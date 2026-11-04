@@ -4,6 +4,7 @@ import { createNode } from '../semantic-tree'
 import type { Annotation } from '../types'
 import { resolvePath, resolvePattern } from './common-mappings'
 import { componentWithTrait } from '../component/traits'
+import { isExpressionStatementBlock } from '../blocks/degradation-blocks'
 
 export interface BlockState {
   type: string
@@ -79,6 +80,7 @@ export class PatternExtractor {
             extraStateFlags: explicit.extraStateFlags,
             slotAsField: explicit.slotAsField,
             fixed: explicit.fixed,
+            hints: explicit.hints,
           }
         : derived
       this.extractSpecs.set(blockType, { componentId, mapping })
@@ -92,6 +94,11 @@ export class PatternExtractor {
 
   /** Extract a SemanticNode from a BlockState. Returns null if no extract spec found. */
   extract(block: BlockState): SemanticNode | null {
+    // 「運算式當敘述」的包裝不是語意節點（spec 214）——拆掉，抽裡面那顆運算式；空的包裝是還沒寫完，不產節點
+    if (isExpressionStatementBlock(block.type)) {
+      const inner = block.inputs?.EXPR?.block
+      return inner ? this.extract(inner) : null
+    }
     // Check for hand-written extraction strategy FIRST
     const strategy = this.extractStrategies.get(block.type)
     if (strategy) {
@@ -124,6 +131,12 @@ export class PatternExtractor {
     // 形態固定的屬性（積木上沒有欄位，值由形態決定）——spec 213
     for (const [semProp, value] of Object.entries(spec.mapping.fixed ?? {})) {
       if (props[semProp] === undefined) props[semProp] = value
+    }
+
+    // 排版提示（spec 214）：渲染時放進 extraState.hints 的原文寫法，讀回來
+    const hinted = (block.extraState as { hints?: Record<string, string | number> } | undefined)?.hints ?? {}
+    for (const h of spec.mapping.hints ?? []) {
+      if (props[h] === undefined && hinted[h] !== undefined) props[h] = hinted[h]
     }
 
     // Reverse inputs mapping: semanticChild ← blockInput (expression)

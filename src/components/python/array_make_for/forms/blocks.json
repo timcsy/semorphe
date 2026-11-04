@@ -49,7 +49,10 @@
         "ITERABLE": "iterable",
         "CONDITION": "condition",
         "OUTER": "outer"
-      }
+      },
+      "hints": [
+        "wrap"
+      ]
     }
   }
 ]

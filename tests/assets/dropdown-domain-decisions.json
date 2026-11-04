@@ -301,6 +301,11 @@
       "field": "field_dropdown",
       "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
     },
+    "cpp_pointer_declare_expression.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "與 cpp_pointer_declare.TYPE 同一個欄位、同一份選項——這是它住在 for 第一格的運算式形態（spec 214）。"
+    },
     "cpp_pointer_step.DIRECTION": {
       "decision": "closed",
       "field": "field_dropdown",

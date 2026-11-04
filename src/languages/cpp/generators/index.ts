@@ -112,7 +112,7 @@ export function registerCppLanguage(): void {
 //
 // > **一個登記處如果各語言宣告的【時機】不同，那它的內容就依賴呼叫順序
 // > ——而呼叫順序不是任何人設計的。**
-declareDegradationBlocks('cpp', { statement: 'cpp_raw_code', expression: 'cpp_raw_expression' })
+declareDegradationBlocks('cpp', { statement: 'cpp_raw_code', expression: 'cpp_raw_expression', expressionStatement: 'cpp_expression_statement' })
 
 // ⚠️ 與上面同一個理由搬到頂層：宣告的**時機**在各語言之間要一致。
 declareCommentSyntax('cpp', cppCommentSyntax)

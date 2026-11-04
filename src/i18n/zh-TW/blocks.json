@@ -842,5 +842,7 @@
   "ENABLE_BLOCK": "啟用這一塊",
   "HELP": "說明",
   "UNDO": "還原",
-  "REDO": "重做"
+  "REDO": "重做",
+  "EXPRESSION_STATEMENT_LABEL": "算一次：",
+  "EXPRESSION_STATEMENT_TOOLTIP": "把一個運算式當成一行敘述：算一次，結果不留下（例如 cc[1]; 會順手建出那一格）"
 }

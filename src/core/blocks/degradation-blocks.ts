@@ -26,6 +26,12 @@ export interface DegradationBlocks {
   statement: string
   /** 運算式位置的降級積木型別 */
   expression: string
+  /**
+   * 「運算式當敘述」的包裝積木型別（spec 214）——一顆**沒有敘述形態**的運算式積木（`cc[1];`）被放在敘述位置時，
+   * 渲染端套上它、抽取端拆掉它：**語意樹不變**（敘述位置的運算式本來就是合法的節點）。
+   * 沒宣告的語言照 2026-09-10 的舊路：接不上語句鏈的積木放在旁邊。
+   */
+  expressionStatement?: string
 }
 
 /**
@@ -44,6 +50,17 @@ let active: string | null = null
 /** 語言套件載入時呼叫。 */
 export function declareDegradationBlocks(language: string, blocks: DegradationBlocks): void {
   byLanguage.set(language, blocks)
+}
+
+/** 某一顆積木型別是不是某個語言宣告的「運算式當敘述」包裝——抽取端不分語言地問（spec 214）。 */
+export function isExpressionStatementBlock(type: string): boolean {
+  for (const d of byLanguage.values()) if (d.expressionStatement === type) return true
+  return false
+}
+
+/** 每個語言宣告的包裝積木型別——積木註冊用。 */
+export function allExpressionStatementBlocks(): string[] {
+  return [...byLanguage.values()].flatMap((d) => (d.expressionStatement ? [d.expressionStatement] : []))
 }
 
 /** 切語言時呼叫。 */

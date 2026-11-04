@@ -83,9 +83,11 @@ function mapping(specs: BlockSpec[]): { blockType: string; renderKnows: string[]
     }
     const state = r.render(node as never)
     if (!state) continue
-    const renderKnows = Object.keys(state.fields ?? {}).filter((k) =>
-      fieldArgs.some((a) => a.name === k),
-    )
+    const renderKnows = [
+      ...Object.keys(state.fields ?? {}).filter((k) => fieldArgs.some((a) => a.name === k)),
+      // 排版提示（spec 214）不住在欄位上，住在 extraState.hints——也是「渲染帶出去的」，抽取讀得回來才一致
+      ...Object.keys((state.extraState as { hints?: Record<string, unknown> } | undefined)?.hints ?? {}),
+    ]
     const back = e.extract(state as never)
     const extractKnows = Object.entries(back?.properties ?? {})
       .filter(([, v]) => typeof v === 'string' && v.startsWith('«'))
