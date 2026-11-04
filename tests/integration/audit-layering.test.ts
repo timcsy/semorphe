@@ -55,6 +55,10 @@ const FORBIDDEN: Record<string, ReadonlySet<string>> = {
   // ⚠️ `ui` 也不准直接 import `interpreter`——執行改向登錄表要 `session`（spec 179）。
   ui: new Set(['languages', 'vscode', 'interpreter', 'providers']),
   providers: new Set(['ui', 'vscode']),
+  // 🔴 `panels` 2026-11-05 加進來（spec 217，〈面板拆成可獨立掛載的視圖套件〉）：面板是要能被別的宿主單獨引用的套件，
+  //    所以它只准依賴核心——宿主才有的東西（toast、風格、語言的接線、積木登錄表）經 `mount` 的 context 注入。
+  //    在此之前這一層**沒有任何一條限制**：積木與流程圖搬進來時引用 `ui`／`languages` 也不會紅。
+  panels: new Set(['ui', 'languages', 'components', 'vscode', 'interpreter', 'providers']),
 }
 
 /**
@@ -148,6 +152,10 @@ describe('護欄：相依的方向（第六十條）', () => {
 
   it('★ 合成注入：正確的方向不得亂報', () => {
     expect(violates('src/ui/panels/p.ts', '../../core/sync/view-host'), '視圖 import 核心是對的').toBeNull()
+    // spec 217：面板只准依賴核心——宿主的東西（toast、語言）經 mount 的 context 注入
+    expect(violates('src/panels/blocks/view.ts', '../../ui/toolbar/toast'), '面板 import 介面層').toBe('panels → ui')
+    expect(violates('src/panels/blocks/view.ts', '../../languages/style'), '面板 import 語言').toBe('panels → languages')
+    expect(violates('src/panels/blocks/view.ts', '../../core/semantic-tree'), '面板 import 核心是對的').toBeNull()
     expect(violates('src/languages/cpp/pack.ts', '../../core/messages'), '語言 import 核心是對的').toBeNull()
     expect(violates('src/core/a.ts', './b'), '同層互相 import 不管').toBeNull()
     expect(violates('src/ui/x.ts', 'blockly'), 'npm 相依不在這條護欄的範圍').toBeNull()
