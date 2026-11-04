@@ -153,6 +153,7 @@
   "CELLA_UNSUPPORTED_CONSTRUCTS": "Cella 還不支援：{list}",
   "RUNTIME_ERR_CELLA_UNSUPPORTED": "判斷功能還不支援這支程式裡的某個寫法（{why}）",
   "RUNTIME_ERR_CELLA_REJECTED": "這支程式不合規則，沒有執行：{why}",
+  "RUNTIME_ERR_CELLA_INVALID": "沒有執行：semorphe 送給判斷功能的程式格式有誤——這不是你的錯（{why}）",
   "RUNTIME_ERR_FALLBACK": "程式停下來了，而我說不出是為什麼——這是系統的問題，不是你的",
   "RUNTIME_ERR_BREAK_OUTSIDE_LOOP": "break 只能在迴圈內使用",
   "RUNTIME_ERR_CONTINUE_OUTSIDE_LOOP": "continue 只能在迴圈內使用",
