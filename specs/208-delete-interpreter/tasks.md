@@ -35,11 +35,11 @@
 
 ## Phase 5：文件（段 5）
 
-- [ ] T015 [P] 元件 skill（`knowledge/skills/component-*`）與範本的「五路」「execute」改新定義；CLAUDE.md 只改「五路」定義（🪦 段落留給 6c-5）
+- [x] T015 [P] 元件 skill（`knowledge/skills/component-*`）與範本的「五路」「execute」改新定義；CLAUDE.md 只改「五路」定義（🪦 段落留給 6c-5）
 
 ## Phase 6：驗收
 
-- [ ] T016 全套（記時間，對照 main 的這一輪）、整輪 e2e、vsix（記大小）、課文判決綁定語料與 StudyCpp 判決探針逐支對照
+- [x] T016 全套（記時間，對照 main 的這一輪）、整輪 e2e、vsix（記大小）、課文判決綁定語料與 StudyCpp 判決探針逐支對照
 - [ ] T017 合併、推送、看 CI；history 寫轉變；vision 第 6 項狀態行；6c 盤點 draft 標 6c-4 完成；回報 cella（刪掉之後的釘子若有變化）
 
 ## 依賴
