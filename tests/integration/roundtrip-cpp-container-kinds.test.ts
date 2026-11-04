@@ -34,6 +34,9 @@
  *
  * 🔴 **判準裡不得放未指定行為**：真的 `unordered_map` **走訪順序是未指定的**，
  * 所以這裡**沒有任何一題走訪它**。`m[k]`／`size`／`count` 是良好定義的。
+ *
+ * 2026-11-04（spec 212，6c-5）：參照編譯器那一半拿掉——期望值是當時 g++ 跑出來、與 Cella 一致的字串，寫死在這裡
+ * （擷取在本機的 Apple clang 上做；這一檔的呼叫點全部兩邊相同，不同的那幾條原本就包在 `knownCellaGap` 裡，期望字串照樣寫 g++ 的值）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -42,7 +45,6 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
 import { formalize } from '../../src/providers/cella/formalize'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -70,7 +72,7 @@ const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.componentId)
 /**
  * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
  * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
- * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ * 比對的另一邊是參照編譯器當時跑出來的字串（spec 212，6c-5 起寫死在呼叫點），所以這裡仍是「Cella 對參照編譯器」的交叉檢查。
  */
 const cellaOut = async (src: string): Promise<string> => {
   const r = await runCella(src)
@@ -78,12 +80,6 @@ const cellaOut = async (src: string): Promise<string> => {
   return r.out
 }
 const run = cellaOut
-/**
- * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
- * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
- * 手列的話，本機全綠而 CI 紅，訊息還會說「測試自己的問題」。
- * 見第 120 條護欄 `audit-refcc-headers`。
- */
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
 /** 語料的形狀：一串數字丟進 multiset，重複的每一個都要留著。 */
@@ -150,21 +146,17 @@ describe('round-trip：容器的重複性與有序性', () => {
     expect(await cellaOut(old)).toBe('1')
   })
 
-  it.runIf(hasReferenceCompiler())('🔴 行為：multiset 跑起來與參照編譯器一樣', async () => {
-    const ref = runCppDetailed(MS)
-    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-    expect(await run(MS), '🔴 去重的話這裡會少兩個元素，而 size 也會小').toBe(ref.output)
+  it('🔴 行為：multiset 跑起來與參照編譯器一樣', async () => {
+    expect(await run(MS), '🔴 去重的話這裡會少兩個元素，而 size 也會小').toBe("511449")
   }, 60_000)
 
   // 歸類：Cella 判錯——`mp[k]++` 只有一次 operator[] 呼叫（formalize 送的是單一個 eIncDec），沒有求值順序可言，Cella 判 unknown(ubOrder)；spec 202 同一族已回報
-  it.runIf(hasReferenceCompiler())('🔴 行為：unordered_map 跑起來與參照編譯器一樣', async () => {
-    const ref = runCppDetailed(UM)
-    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-    expect(await run(UM), '🔴 沒登錄的話這裡是 INDEX_OUT_OF_RANGE').toBe(ref.output)
+  it('🔴 行為：unordered_map 跑起來與參照編譯器一樣', async () => {
+    expect(await run(UM), '🔴 沒登錄的話這裡是 INDEX_OUT_OF_RANGE').toBe("3213")
   }, 60_000)
 
   // 歸類：Cella 判錯——`mp["ab"]++` 同上，ubOrder 誤判
-  it.runIf(hasReferenceCompiler())('🔴 行為：字串當鍵（語料 21_toj55_2 的形狀）', async () => {
+  it('🔴 行為：字串當鍵（語料 21_toj55_2 的形狀）', async () => {
     const src = `${H}int main(){
     unordered_map<string,int> mp;
     mp["ab"] = 1; mp["cd"] = 2; mp["ab"]++;
@@ -172,8 +164,6 @@ describe('round-trip：容器的重複性與有序性', () => {
     return 0;
 }
 `
-    const ref = runCppDetailed(src)
-    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-    expect(await run(src)).toBe(ref.output)
+    expect(await run(src)).toBe("222")
   }, 60_000)
 })

@@ -1,0 +1,18 @@
+# 改寫前（main e339f24f）：檔 / it( 出現數 / expect 出現數
+fuzz-cpp-stacks-queues 19 71
+fuzz-cpp-strings 21 63
+fuzz-cpp-time 2 6
+fuzz-cpp-macros 3 8
+roundtrip-cpp-time 3 17
+fuzz-cpp-iterators 32 17
+fuzz-cpp-container-kinds 13 12
+roundtrip-cpp-iterators 7 15
+roundtrip-cpp-container-kinds 6 18
+fuzz-cpp-containers-2 19 5
+fuzz-cpp-ranges 11 5
+fuzz-cpp-bits 19 3
+fuzz-cpp-container-ends 13 16
+roundtrip-cpp-container-pop-front 5 10
+roundtrip-cpp-structured-binding 14 35
+cpp-shape-coverage 9 26
+audit-cin-fail-state 6 14

@@ -32,22 +32,19 @@
  *
  * ⚠️ 上一次有一根釘子寫了「那一天回來拔」而沒有人回來，缺陷換了一個形狀活下去
  *（見 `set_insert/execute.ts`）。**這一批不要重蹈。**
+ *
+ * 2026-11-04（spec 212，6c-5）：參照編譯器那一半拿掉——期望值是當時 g++ 跑出來、與 Cella 一致的字串，寫死在這裡
+ * （擷取在本機的 Apple clang 上做；這一檔的呼叫點全部兩邊相同，不同的那幾條原本就包在 `knownCellaGap` 裡，期望字串照樣寫 g++ 的值）。
  */
 import { describe, it, expect } from 'vitest'
 import { runCella, describeCellaResult, knownCellaGap, expectCellaOut } from '../helpers/cella-run'
-import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 
-
-/**
- * ⚠️ **標頭不手列**——`bits/stdc++.h` 在 CI 上是真的 GCC 標頭，在本機由
- *    `tests/fixtures/refcc-shim` 提供。手列的話本機綠而 CI 紅（第一百二十條）。
- */
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 
 /**
  * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
  * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
- * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ * 比對的另一邊是參照編譯器當時跑出來的字串（spec 212，6c-5 起寫死在呼叫點），所以這裡仍是「Cella 對參照編譯器」的交叉檢查。
  */
 const cellaOut = async (src: string): Promise<string> => {
   const r = await runCella(src)
@@ -55,14 +52,13 @@ const cellaOut = async (src: string): Promise<string> => {
   return r.out
 }
 
-async function same(body: string, hint: string): Promise<void> {
+/** 比 stdout——`expected` 是當時 g++ 跑出來、與 Cella 一致的輸出（寫死，spec 212）。 */
+async function same(body: string, expected: string, hint: string): Promise<void> {
   const src = `${H}int main() {\n${body}\n  return 0;\n}\n`
-  const ref = runCppDetailed(src)
-  expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-  expect(await cellaOut(src), hint).toBe(ref.output)
+  expect(await cellaOut(src), hint).toBe(expected)
 }
 
-describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法（第一輪）', () => {
+describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
   // 歸類：我們這側缺——partial_sum 沒有 formalize（spec 202 量過 Cella 也還沒有 partial_sum）
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_1｜Pointer ranges over a raw array with an in-place partial_sum and adjacent_difference that undoes it, plus an empty accumulate range.', async () => {
     await knownCellaGap(/cpp:range_sum_partial：這顆敘述元件還沒有對應到 Cella 的建構子/, async () => {
@@ -82,7 +78,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
       cout << "max=" << *p << " at " << (p - &a[0]) << '\\n';
       cout << "empty=" << accumulate(&a[0], &a[0], 100) << '\\n';
       adjacent_difference(a, a + n, a);
-      cout << "back=" << a[4] << " len=" << (end(a) - begin(a)) << '\\n';`, '🟠 這一支在等 189')
+      cout << "back=" << a[4] << " len=" << (end(a) - begin(a)) << '\\n';`, "3 2 6 7 2 11 13 7\nmax=13 at 6\nempty=100\nback=-5 len=8\n", '🟠 這一支在等 189')
     })
   }, 60_000)
 
@@ -99,7 +95,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
     u.erase(it, u.end());
     cout << u.size() << ' ' << accumulate(u.begin(), u.end(), 0) << '\\n';
     w.erase(unique(w.begin(), w.end()), w.end());
-    cout << w.size() << ' ' << *max_element(w.begin(), w.end()) << '\\n';`, '🔴 盲測的回歸')
+    cout << w.size() << ' ' << *max_element(w.begin(), w.end()) << '\\n';`, "8 123\nkept=3 isend=0\n3 6\n2 9\n", '🔴 盲測的回歸')
   }, 60_000)
 
   // 歸類：我們這側缺——iota 沒有 formalize（spec 202 量過 Cella 也還沒有 iota）
@@ -124,7 +120,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
       for (int x : v) cout << x;
       cout << '\\n';
       cout << count_if(v.begin(), v.end(), [](int x) { return x % 3 == 0; })
-           << ' ' << (end(v) - begin(v)) << '\\n';`, '🟠 這一支在等 189')
+           << ' ' << (end(v) - begin(v)) << '\\n';`, "1 7\n45678910123\n12345678910\n3 10\n", '🟠 這一支在等 189')
     })
   }, 60_000)
 
@@ -154,7 +150,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
     auto q = find(v.begin(), v.end(), 99);
     cout << (q == v.end()) << ' ' << (q - v.begin()) << '\\n';
     sort(v.begin(), z, greater<int>());
-    cout << v[0] << ' ' << v[1] << ' ' << v[2] << ' ' << v[3] << '\\n';`, '🟠 這一支在等 189')
+    cout << v[0] << ' ' << v[1] << ' ' << v[2] << ' ' << v[3] << '\\n';`, "3 26\n6 55\n1 8\n13 8 5 0\n", '🟠 這一支在等 189')
   }, 60_000)
 
   // 歸類：我們這側（lift）——transform／count 自由函式那一形 lift 成 raw_code
@@ -178,7 +174,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
       cout << t << ' ' << t.size() << '\\n';
       string rest(it + 1, s.end());
       cout << (end(s) - begin(s)) << ' ' << rest.substr(0, 4)
-           << ' ' << (int)(find(rest.begin(), rest.end(), 'A') - rest.begin()) << '\\n';`, '🟠 這一支在等 189')
+           << ' ' << (int)(find(rest.begin(), rest.end(), 'A') - rest.begin()) << '\\n';`, "COMPETITIVE PROGRAMMING\n3 1\nEVITITEPMOC 11\n23 PROG 5\n", '🟠 這一支在等 189')
     })
   }, 60_000)
 
@@ -204,7 +200,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
       for (int x : w) cout << x % 3;
       cout << '\\n';
       auto m = min_element(v.begin(), v.end(), [](int a, int b) { return abs(a - 5) < abs(b - 5); });
-      cout << *m << ' ' << count_if(v.begin(), v.end(), [](int x) { return x > 5; }) << '\\n';`, '🟠 這一支在等 189')
+      cout << *m << ' ' << count_if(v.begin(), v.end(), [](int x) { return x > 5; }) << '\\n';`, "median=5\nleftmax=4 rightmin=6\n000111222\n5 4\n", '🟠 這一支在等 189')
     })
   }, 60_000)
 
@@ -231,7 +227,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
            << binary_search(q.begin(), q.begin(), 2)
            << equal(p.begin(), p.begin(), q.begin()) << '\\n';
       prev_permutation(q.begin(), q.end());
-      cout << q[0] << q[1] << q[2] << '\\n';`, '🟠 這一支在等 189')
+      cout << q[0] << q[1] << q[2] << '\\n';`, "123 132 213\n231 312 321\ncnt=6 sorted=1\n1101\n321\n", '🟠 這一支在等 189')
     })
   }, 60_000)
 
@@ -250,7 +246,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
       for (auto &kv : m) cout << kv.first << ':' << accumulate(kv.second.begin(), kv.second.end(), 0) << ' ';
       cout << '\\n';
       cout << *min_element(m[7].begin(), m[7].end()) << ' ' << m[3].size() << ' '
-           << accumulate(m[1].begin(), m[1].begin(), 42) << '\\n';`, '🔴 盲測的回歸')
+           << accumulate(m[1].begin(), m[1].begin(), 42) << '\\n';`, "136\n1:1 3:18 7:147 \n49 2 42\n", '🔴 盲測的回歸')
     })
   }, 60_000)
 
@@ -278,7 +274,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
       cout << v.size() << ' ' << *(v.end() - 1) << ' '
            << v[distance(v.begin(), lower_bound(v.begin(), v.end(), 15))] << '\\n';
       cout << (int)(upper_bound(v.begin(), v.end(), 99) - v.begin()) << ' '
-           << (lower_bound(v.begin(), v.end(), 5) == v.begin()) << '\\n';`, '🟠 這一支在等 189')
+           << (lower_bound(v.begin(), v.end(), 5) == v.begin()) << '\\n';`, "10 15 20 25 30 40 \n2 5 75\n5 40 15\n5 1\n", '🟠 這一支在等 189')
     })
   }, 60_000)
 
@@ -304,7 +300,7 @@ describe.runIf(hasReferenceCompiler())('模糊測試的回歸：範圍演算法�
       sort(a, a);
       sort(a + 1, a + 4, greater<int>());
       for (int x : a) cout << x;
-      cout << ' ' << accumulate(a + 5, a + 5, 7) << '\\n';`, '🟠 這一支在等 189')
+      cout << ' ' << accumulate(a + 5, a + 5, 7) << '\\n';`, "010\n4 7 1\n101\n53214 7\n", '🟠 這一支在等 189')
     })
   }, 60_000)
 

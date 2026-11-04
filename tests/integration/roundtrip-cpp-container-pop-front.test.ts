@@ -21,6 +21,9 @@
  *
  * 常駐測試不得依賴外部 repo（`STUDYCPP_DIR` 沒設時那批探針會跳過，而**跳過的
  * 護欄與不存在的護欄長得一樣**）。所以把那 18 支的共同形狀留在這裡。
+ *
+ * 2026-11-04（spec 212，6c-5）：參照編譯器那一半拿掉——期望值是當時 g++ 跑出來、與 Cella 一致的字串，寫死在這裡
+ * （擷取在本機的 Apple clang 上做；這一檔的呼叫點全部兩邊相同，不同的那幾條原本就包在 `knownCellaGap` 裡，期望字串照樣寫 g++ 的值）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -28,7 +31,6 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { runCella, describeCellaResult } from '../helpers/cella-run'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -56,7 +58,7 @@ const ids = (n: SemanticNode, out: string[] = []): string[] => {
 /**
  * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
  * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
- * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ * 比對的另一邊是參照編譯器當時跑出來的字串（spec 212，6c-5 起寫死在呼叫點），所以這裡仍是「Cella 對參照編譯器」的交叉檢查。
  */
 const cellaOut = async (src: string): Promise<string> => {
   const r = await runCella(src)
@@ -65,12 +67,6 @@ const cellaOut = async (src: string): Promise<string> => {
 }
 
 /** 那 18 支的共同形狀——BFS 的佇列迴圈。 */
-/**
- * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
- * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
- * 手列的話，本機全綠而 CI 紅，訊息還會說「測試自己的問題」。
- * 見第 120 條護欄 `audit-refcc-headers`。
- */
 const BFS = `#include <bits/stdc++.h>
 using namespace std;
 int main(){
@@ -106,10 +102,8 @@ describe('round-trip：容器的前端移除', () => {
     expect(twice).toBe(once)
   })
 
-  it.runIf(hasReferenceCompiler())('🔴 行為：跑起來與參照編譯器一樣', async () => {
-    const ref = runCppDetailed(BFS)
-    expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-    expect(await cellaOut(BFS), '🔴 取出的順序不對——先進先出變成後進先出').toBe(ref.ok ? ref.output : '')
+  it('🔴 行為：跑起來與參照編譯器一樣', async () => {
+    expect(await cellaOut(BFS), '🔴 取出的順序不對——先進先出變成後進先出').toBe("123")
   }, 60_000)
 
   it('🔴 帶下標的接收者：`d2[i].pop_front()`（相鄰串列的慣用寫法）', async () => {

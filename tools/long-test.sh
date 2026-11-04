@@ -6,7 +6,7 @@
 #
 # 🔴 三個這個 repo 踩過的坑，寫死在這裡：
 #   ① 等 cella 用「沒有【正在跑】的」——cella 讓出空檔是 SIGSTOP（行程還在、STAT 是 T），`pgrep` 照樣查得到，會永遠等下去
-#   ② 全套要帶參照編譯器的墊片（SEMORPHE_REFCC_INCLUDE）——不帶的話 audit-sanitizer-verdict 等 7 支假紅
+#   ② （2026-11-04 退場）全套曾經要帶參照編譯器的墊片——6c-5 之後 npm test 不再呼叫參照編譯器，只有探針 refcc-cross-check 要它
 #   ③ e2e 不佔 4173／4199 以外的人：用暫存設定在指定的埠起 preview，跑完刪掉暫存設定
 set -u
 WT=${1:?用法：tools/long-test.sh <worktree> <輸出目錄> [--suite] [--build] [--e2e] [--port N] [--only 檔名…]}
@@ -40,7 +40,7 @@ status=0
 if [ $SUITE = 1 ]; then
   wait_cella
   echo "suite 開始 $(date +%T)（${NAME}）"
-  SEMORPHE_REFCC_INCLUDE="$WT/tests/fixtures/refcc-shim" npm test > "$OUT/test-$NAME.log" 2>&1
+  npm test > "$OUT/test-$NAME.log" 2>&1
   strip < "$OUT/test-$NAME.log" | grep -aE '^ FAIL|Test Files|Tests ' | sort -u | head -30
   strip < "$OUT/test-$NAME.log" | grep -aqE '^ FAIL' && status=1
 fi

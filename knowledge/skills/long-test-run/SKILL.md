@@ -28,7 +28,7 @@ log 寫在 `<scratchpad>/test-<worktree 名>.log`、`e2e-<worktree 名>.log`；�
 | | 坑 | 症狀 |
 |---|---|---|
 | ① | 等 cella 用 `pgrep` | cella 讓出空檔是 **SIGSTOP**——行程還在（STAT `T`），`pgrep` 照樣查得到，鏈**永遠等下去**。要用「沒有【正在跑】的」 |
-| ② | 全套沒帶 `SEMORPHE_REFCC_INCLUDE` | `audit-sanitizer-verdict` 等 7 支**假紅**（macOS 上 `bits/stdc++.h` 要墊片） |
+| ② | 🪦（2026-11-04 退場）全套沒帶 `SEMORPHE_REFCC_INCLUDE` | 6c-5 之後 `npm test` 不再呼叫參照編譯器，不帶也綠；只有探針 `refcc-cross-check` 要它 |
 | ③ | e2e 佔用別人的埠 | 用暫存的 playwright 設定在指定的埠起 preview，跑完刪掉（不留 `pw-*.tmp.config.ts`） |
 
 ## ⚠️ 腳本管不到的
