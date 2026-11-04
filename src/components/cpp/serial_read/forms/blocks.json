@@ -14,6 +14,6 @@
       "tooltip": "%{BKY_C_SERIAL_READ_TOOLTIP}",
       "output": "Expression"
     },
-    "renderMapping": { "fields": {}, "inputs": {}, "statementInputs": {} }
+    "renderMapping": {"fixed": {"obj": "Serial"},  "fields": {}, "inputs": {}, "statementInputs": {} }
   }
 ]

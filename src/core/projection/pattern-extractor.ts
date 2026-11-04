@@ -78,6 +78,7 @@ export class PatternExtractor {
             dynamicRules: explicit.dynamicRules,
             extraStateFlags: explicit.extraStateFlags,
             slotAsField: explicit.slotAsField,
+            fixed: explicit.fixed,
           }
         : derived
       this.extractSpecs.set(blockType, { componentId, mapping })
@@ -118,6 +119,11 @@ export class PatternExtractor {
       if (value !== undefined) {
         props[semProp] = String(value)
       }
+    }
+
+    // 形態固定的屬性（積木上沒有欄位，值由形態決定）——spec 213
+    for (const [semProp, value] of Object.entries(spec.mapping.fixed ?? {})) {
+      if (props[semProp] === undefined) props[semProp] = value
     }
 
     // Reverse inputs mapping: semanticChild ← blockInput (expression)
