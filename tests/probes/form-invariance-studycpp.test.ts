@@ -6,6 +6,7 @@
  *
  * ```bash
  * STUDYCPP_DIR=/path/to/StudyCpp npx vitest run tests/probes/form-invariance-studycpp.test.ts
+ * SC_IO=1 另外量 (d) I/O 風格切換（每支要問 Cella 兩次判決＋一次型別，慢）
  * ```
  * ⚠️ 先 `find $STUDYCPP_DIR -name "*.cpp" | wc -l`——不是 218 就重新 clone（`/private/tmp` 會被系統清掉，CLAUDE.md）。
  */
@@ -18,7 +19,10 @@ import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { normalizeFormal, firstDifference } from '../helpers/normalize-formal'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { generateCode } from '../../src/core/projection/code-generator'
+import { generateCode, setExpressionTypes } from '../../src/core/projection/code-generator'
+import { runCella, cellaTypesOfTree } from '../helpers/cella-run'
+import { readSchedule, makeStdin } from '../helpers/stdin-from-tree'
+import competitive from '../../src/languages/cpp/styles/competitive.json'
 import { formalize } from '../../src/providers/cella/formalize'
 import '../../src/languages/cpp/pack'
 import { languagePack } from '../../src/core/language-packs'
@@ -73,7 +77,7 @@ describe.skipIf(!DIR)('探針：換形態，判決不變（學生語料）', () 
     registerCppExtractStrategies(extractor)
   }, 180_000)
 
-  it('三種轉換的相同／不同', () => {
+  it('三種轉換的相同／不同', async () => {
     const files: string[] = []
     const walk = (d: string): void => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (f.endsWith('.cpp')) files.push(f) } }
     walk(DIR)
@@ -106,9 +110,28 @@ describe.skipIf(!DIR)('探針：換形態，判決不變（學生語料）', () 
         check('c', formal({ ...tree, slots: { ...tree.slots, body: (state.blocks.blocks as unknown[]).flatMap(chainOf) } }, S(apcs)))
       } catch (e) { tally.c.diff++; diffs.push(`(c) ${id}｜丟例外 ${String(e).slice(0, 60)}`) }
     }
+    // (d) I/O 風格切換（cout → printf，spec 215）：語意樹本身會換，比的是 Cella 的判決與輸出（測資問程式自己）
+    const io = { same: 0, diff: 0, kept: 0 }
+    if (process.env.SC_IO === '1') {
+      for (const f of files) {
+        const id = path.relative(DIR, f)
+        const tree = lift(fs.readFileSync(f, 'utf8'))
+        if ((formal(tree, S(apcs)) as { untranslated?: unknown }).untranslated) continue
+        const src = generateCode(tree, 'cpp', S(apcs))
+        const before = await runCella(src, { steps: 5_000_000, stdin: makeStdin(readSchedule(tree), 1, 200).map((l) => `${l}\n`).join('') })
+        setExpressionTypes(await cellaTypesOfTree(tree))
+        let after: string
+        try { after = generateCode(tree, 'cpp', S(competitive)) } finally { setExpressionTypes(null) }
+        if (after.includes('保留 c')) io.kept++
+        const a = await runCella(after, { steps: 5_000_000, stdin: makeStdin(readSchedule(tree), 1, 200).map((l) => `${l}\n`).join('') })
+        if (a.verdict === before.verdict && a.out === before.out) io.same++
+        else { io.diff++; diffs.push(`(d) ${id}｜${before.verdict} → ${a.verdict}${a.out !== before.out ? '（輸出不同）' : ''}${a.problems[0] ? `：${a.problems[0].kind} ${(a.problems[0].reason ?? '').slice(0, 60)}` : ''}${(a as { untranslated?: { construct: string }[] }).untranslated?.length ? `：翻不出 ${(a as { untranslated: { construct: string }[] }).untranslated.map((u) => u.construct).join('、')}` : ''}`) }
+      }
+    }
     console.log([`換形態，判決不變（學生語料 ${files.length} 支；原本就翻不出 ${tally.untranslated}）`,
+      `  (d) I/O 切成 printf 相同 ${io.same}｜不同 ${io.diff}｜有保留 cout／cin 的 ${io.kept}${process.env.SC_IO === '1' ? '' : '（沒開 SC_IO=1，沒量）'}`,
       `  (a) 同風格來回  相同 ${tally.a.same}｜不同 ${tally.a.diff}`,
       `  (b) 格式風格切換 相同 ${tally.b.same}｜不同 ${tally.b.diff}`,
       `  (c) 積木來回    相同 ${tally.c.same}｜不同 ${tally.c.diff}`, ...diffs.slice(0, 80)].join('\n'))
-  }, 1_800_000)
+  }, 3_600_000)
 })

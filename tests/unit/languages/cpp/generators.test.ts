@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { generateCode } from '../../../../src/core/projection/code-generator'
+import { generateCode, setExpressionTypes } from '../../../../src/core/projection/code-generator'
 import { registerCppLanguage } from '../../../../src/languages/cpp/generators'
 import { createNode } from '../../../../src/core/semantic-tree'
 import type { SemanticNode, StylePreset } from '../../../../src/core/types'
@@ -211,6 +211,18 @@ describe('C++ statements generator', () => {
 })
 
 describe('C++ I/O generator', () => {
+  /** printf／scanf 風格要知道型別（spec 215）——這裡的變數一律當 int（產品裡是 Cella 給的 `types().nodes`） */
+  const typed = (tree: SemanticNode): string => {
+    const types: Record<string, string> = {}
+    const walk = (x: SemanticNode): void => { if (x.componentId === 'cpp:var_ref') types[x.id] = 'int'; for (const k of Object.values(x.slots ?? {})) k.forEach(walk) }
+    walk(tree)
+    setExpressionTypes(types)
+    try { return generateCode(tree, 'cpp', printfStyle) } finally { setExpressionTypes(null) }
+  }
+  it('🔴 沒有型別時保留 cout／cin 並註明（spec 215：推錯會讓輸出變掉，寧可保留）', () => {
+    expect(generateCode(makeProgram(createNode('cpp:print', {}, { values: [createNode('cpp:var_ref', { name: 'x' })] })), 'cpp', printfStyle)).toBe('cout << x; // 型別判斷不出來，保留 cout')
+    expect(generateCode(makeProgram(createNode('cpp:input', {}, { values: [createNode('cpp:var_ref', { name: 'n' })] })), 'cpp', printfStyle)).toBe('cin >> n; // 型別判斷不出來，保留 cin')
+  })
   it('should generate cout with multiple values', () => {
     const print = createNode('cpp:print', {}, {
       values: [
@@ -232,13 +244,13 @@ describe('C++ I/O generator', () => {
     const print = createNode('cpp:print', {}, {
       values: [createNode('cpp:var_ref', { name: 'x' })],
     })
-    const code = generateCode(makeProgram(print), 'cpp', printfStyle)
+    const code = typed(makeProgram(print))
     expect(code).toContain('printf')
   })
 
   it('should generate scanf style', () => {
     const input = createNode('cpp:input', {}, { values: [createNode('cpp:var_ref', { name: 'n' })] })
-    const code = generateCode(makeProgram(input), 'cpp', printfStyle)
+    const code = typed(makeProgram(input))
     expect(code).toContain('scanf')
     expect(code).toContain('&n')
   })
@@ -250,7 +262,7 @@ describe('C++ I/O generator', () => {
         createNode('cpp:endl', {}),
       ],
     })
-    const code = generateCode(makeProgram(print), 'cpp', printfStyle)
+    const code = typed(makeProgram(print))
     expect(code).toContain('printf')
     expect(code).toContain('\\n')
     expect(code).not.toContain('endl')
@@ -260,7 +272,7 @@ describe('C++ I/O generator', () => {
     const print = createNode('cpp:print', {}, {
       values: [createNode('cpp:endl', {})],
     })
-    const code = generateCode(makeProgram(print), 'cpp', printfStyle)
+    const code = typed(makeProgram(print))
     expect(code).toContain('printf("\\n")')
   })
 
@@ -268,7 +280,7 @@ describe('C++ I/O generator', () => {
     const print = createNode('cpp:print', {}, {
       values: [createNode('cpp:var_ref', { name: 'x' })],
     })
-    const code = generateCode(makeProgram(print), 'cpp', printfStyle)
+    const code = typed(makeProgram(print))
     expect(code).toContain('printf("%d", x)')
     expect(code).not.toContain('\\n')
   })
@@ -281,7 +293,7 @@ describe('C++ I/O generator', () => {
         createNode('cpp:endl', {}),
       ],
     })
-    const code = generateCode(makeProgram(print), 'cpp', printfStyle)
+    const code = typed(makeProgram(print))
     expect(code).toContain('printf("%d%d\\n", a, b)')
   })
 
@@ -311,7 +323,7 @@ describe('C++ I/O generator', () => {
     const print = createNode('cpp:print', {}, {
       values: [createNode('cpp:var_ref', { name: 's' })],
     })
-    const code = generateCode(makeProgram(print), 'cpp', printfStyle)
+    const code = typed(makeProgram(print))
     // ★ 正向錨點：它確實走了 printf 那條路（否則下面那條在驗空氣）
     expect(code).toContain('printf(')
     expect(code, '🔴 string 配 %d ——那一行編不過').toContain('printf("%s", s)')
@@ -324,7 +336,7 @@ describe('C++ I/O generator', () => {
         createNode('cpp:endl', {}),
       ],
     })
-    const code = generateCode(makeProgram(print), 'cpp', printfStyle)
+    const code = typed(makeProgram(print))
     expect(code).toContain('printf("Done\\n")')
   })
 
@@ -336,7 +348,7 @@ describe('C++ I/O generator', () => {
         createNode('cpp:endl', {}),
       ],
     })
-    const code = generateCode(makeProgram(print), 'cpp', printfStyle)
+    const code = typed(makeProgram(print))
     expect(code).toContain('printf("ans=%d\\n", x)')
   })
 })

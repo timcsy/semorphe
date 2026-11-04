@@ -42,7 +42,7 @@
  * 後半（getline 要等人）  受測：Cella 的工作階段（awaiting-input → supplyInput）
  * ```
  *
- * ⚠️ **三條的程式換了輸出的寫法**（`printf("%s", s.c_str())` → `cout << s`）：formalize 今天翻不出 `c_str()`（`cpp:string_as_cstring`），
+ * ⚠️ **三條的程式換了輸出的寫法**（`printf("%s", s.c_str())` → `cout << s`）：當時 formalize 翻不出 `c_str()`（`cpp:string_as_cstring`；spec 215 補上），
  * 照原樣的話這三條會停在「翻不出」、守不到 failbit。換寫法不換語義——兩邊（Cella 與參照編譯器）跑的是同一段新程式，期望值照舊由參照編譯器給；
  * `c_str()` 那個缺口另外釘一條（最後一支）。
  *
@@ -155,10 +155,9 @@ describe('cin 的失敗狀態（Cella 對照參照編譯器）', () => {
     })
   })
 
-  /** 🟡 **我們缺（修好時這條會紅）**：`s.c_str()` formalize 翻不出——上面三條因此換了輸出的寫法 */
-  it('🟡 已知缺陷：`printf("%s", s.c_str())` 翻不出（cpp:string_as_cstring）', async () => {
-    await knownCellaGap(/翻不出[\s\S]*cpp:string_as_cstring/, () =>
-      expectCellaOut(HEAD + 'int main(){string s="old";printf("s=%s\\n",s.c_str());return 0;}', 's=old\n'))
+  /** `s.c_str()` 原本翻不出（cpp:string_as_cstring）——spec 215 補上 formalize（printf 的 `%s` 引數就是它），釘子拔掉 */
+  it('`printf("%s", s.c_str())` 翻得出、印得對', async () => {
+    await expectCellaOut(HEAD + 'int main(){string s="old";printf("s=%s\\n",s.c_str());return 0;}', 's=old\n')
   })
 })
 

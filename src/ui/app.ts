@@ -21,7 +21,8 @@ import type { SemanticNode } from '../core/types'
 import { createNode } from '../core/semantic-tree'
 import type { DiagnosticBlock } from '../core/diagnostics'
 import type { ProgramScaffold } from '../core/program-scaffold'
-import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases } from '../core/projection/code-generator'
+import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases, setExpressionTypes } from '../core/projection/code-generator'
+import { carryTypes } from '../core/projection/carry-types'
 // 🔴 **spec 153：五樣語言相關的東西在這裡接上。**
 //    它們原本散在 `blockly-panel`／`block-registrar`／`sync-controller` 裡
 //    ——而那三個檔是**視圖與 UI**，不該認得語言套件（P9 第一項）。
@@ -196,6 +197,10 @@ export class App {
   /** 最近一次送出的判決（spec 184）——課文的腳位檢查要等「這一棵樹」的那一次，不用畫面上的快取。 */
   /** 最近一次判決——`input` 是送出時那一題的測資（題目換了，同一棵樹的判決就不能再用）。 */
   private lastCheck: { tree: SemanticNode; input: string; answer: Promise<CheckAnswer> } | null = null
+  /** 最近一次判決帶回的運算式型別與那一棵樹（spec 215：換成 printf 風格時照型別產格式）。 */
+  private lastTypes: { tree: SemanticNode; nodes: Readonly<Record<string, string>> } | null = null
+  /** 上一次從積木產碼時型別對不上（保留了 cout）——下一份型別到了要補產一次。 */
+  private typesPending = false
   private hardwarePanel: HardwarePanel | null = null
   /** 判決給的那一份（暫停結束後硬體分頁回到它）。 */
   private hardwareRecord: HardwareRecord | null = null
@@ -3037,7 +3042,15 @@ export class App {
     }
     const tree = this.blocklyPanel?.extractSemanticTree()
     const blockMappings = this.blocklyPanel?.getBlockMappings()
-    this.syncController?.syncBlocksToCode(tree, blockMappings)
+    // spec 215：上一次判決的型別照形狀對到這棵樹；對不上（樹改過了）就先不給——產生器保守保留 cout，新型別來了再補產
+    const carried = tree && this.lastTypes ? carryTypes(this.lastTypes.tree, this.lastTypes.nodes, tree) : null
+    if (!carried && this.currentStylePreset.io_style === 'printf') this.typesPending = true
+    setExpressionTypes(carried)
+    try {
+      this.syncController?.syncBlocksToCode(tree, blockMappings)
+    } finally {
+      setExpressionTypes(null)
+    }
   }
 
   private updateToolbox(): void {
@@ -4531,6 +4544,16 @@ export class App {
     const a = await answer
     // 送出之後樹又變了 ⟹ 這一筆的節點可能已經不在，丟掉（下一筆會來）
     if (a.stale || tree !== this.currentTree) return
+    // 運算式的型別（spec 215）：換成 printf 風格時照型別產格式。產碼時從積木抽回的樹沒有判決的那份 id
+    //   ⟹ 記下這棵樹，產碼時照形狀對過去（`carryTypes`）；上一次產碼時型別對不上的話，現在補產一次
+    this.lastTypes = { tree, nodes: a.types?.nodes ?? {} }
+    // ⚠️ 上一步是在程式碼那側打的字：不補產（那會用積木蓋掉他剛打的字）——程式碼是他寫的，照原樣
+    if (this.typesPending && this.currentStylePreset.io_style === 'printf' && this.lastEditor !== 'code') {
+      this.typesPending = false
+      this.syncBlocksToCodeWithMappings()
+    } else if (this.lastEditor === 'code') {
+      this.typesPending = false
+    }
     const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: req.tree, readsInput: a.readsInput, hasStdin: stdin.length > 0, knownNames: languagePack(this.currentTopic.language)?.wellKnownNames, streamOperators: languagePack(this.currentTopic.language)?.streamOperators })
     this.checkDiagnostics = r.diagnostics
     this.checkNotes = r.notes

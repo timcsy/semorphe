@@ -11,4 +11,14 @@ export function registerFormalize(r: FormalizeRegistrar): void {
       fmt: f.unescapeC(String(n.properties?.format ?? '')),
       args: (n.slots?.args ?? []).map((c) => isAddressable(c.componentId) ? f.k('eAddr', { n: `${c.id}/addr`, a: f.expr(c) }) : f.expr(c)),
     })])
+  // 運算式位置（`while (scanf("%d", &x) == 1)`）：scanf 是一個回傳讀到幾個的函式呼叫（spec 215 換風格時產得出這個形狀）
+  r.expr('cpp:input_formatted', (n, f) =>
+    f.k('eCall', {
+      n: n.id,
+      f: 'scanf',
+      args: [
+        f.k('eStr', { n: `${n.id}/fmt`, s: f.unescapeC(String(n.properties?.format ?? '')) }),
+        ...(n.slots?.args ?? []).map((c) => isAddressable(c.componentId) ? f.k('eAddr', { n: `${c.id}/addr`, a: f.expr(c) }) : f.expr(c)),
+      ],
+    }))
 }
