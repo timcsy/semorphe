@@ -18,8 +18,8 @@ export async function layer1(pkg: { name?: unknown; components?: Record<string, 
   // ① contentHash：鍵遞迴排序、ASCII、sha256
   if (pkg.contentHash !== await contentHash(comps)) bad.push(`contentHash 與 components 對不上（宣告 ${String(pkg.contentHash)}）`)
   for (const [name, c] of Object.entries(comps)) {
-    // ② 元件名 <領域>:<小寫底線>
-    if (!new RegExp(`^${domain}:[a-z][a-z0-9_]*$`).test(name)) bad.push(`${name}：元件名不是 ${domain}:<小寫底線>`)
+    // ② 元件名 <領域>:<小寫底線>（冒號後可以有數字，也可以數字開頭——與 cos-mos 對過，2026-11-05）
+    if (!new RegExp(`^${domain}:[a-z0-9_]+$`).test(name)) bad.push(`${name}：元件名不是 ${domain}:<小寫底線>`)
     // ③ 元件與參數不得有契約不認得的欄位
     for (const k of Object.keys(c)) if (!COMPONENT_KEYS.has(k)) bad.push(`${name}：不認得的欄位 ${k}`)
     // ④ kind 必填、只有兩種
@@ -32,7 +32,8 @@ export async function layer1(pkg: { name?: unknown; components?: Record<string, 
       // ⑥ type 只有五種
       if (!TYPES.has(p.type as string)) bad.push(`${at}：type 是 ${String(p.type)}`)
       // ⑦ enum 的值域非空
-      if (p.type === 'enum' && !(Array.isArray(p.values) && p.values.length > 0)) bad.push(`${at}：enum 沒有值域`)
+      // （非空、而且每一個都是字串）
+      if (p.type === 'enum' && !(Array.isArray(p.values) && p.values.length > 0 && p.values.every((v) => typeof v === 'string'))) bad.push(`${at}：enum 沒有值域（或值不是字串）`)
       // ⑧ required 與 default 不並存
       if (p.required === true && p.default !== undefined) bad.push(`${at}：required 又有 default`)
       // ⑨ variadic 不帶 default
@@ -40,10 +41,13 @@ export async function layer1(pkg: { name?: unknown; components?: Record<string, 
       // ⑩ default 合型別
       if (p.default !== undefined) {
         const d = p.default
+        // 與 cos-mos 對過（2026-11-05）：值的慣例是「純量一律字串、整數十進位」（cos-mos specs/017，與 Cella 判決的 params 同一條）
+        //   int 只收十進位整數字串（9600 這個 JSON 數字、"09"、"+5" 都拒）；expr 是 { expr: 字串 }（結構頻道上原樣傳）
         const ok = p.type === 'bool' ? typeof d === 'boolean'
-          : p.type === 'int' ? (typeof d === 'number' && Number.isInteger(d)) || (typeof d === 'string' && /^-?\d+$/.test(d))
+          : p.type === 'int' ? typeof d === 'string' && /^-?(0|[1-9][0-9]*)$/.test(d)
             : p.type === 'enum' ? Array.isArray(p.values) && p.values.includes(d)
-              : typeof d === 'string'
+              : p.type === 'expr' ? typeof d === 'object' && d !== null && Object.keys(d).length === 1 && typeof (d as { expr?: unknown }).expr === 'string'
+                : typeof d === 'string'
         if (!ok) bad.push(`${at}：default ${JSON.stringify(d)} 不合 ${String(p.type)}`)
       }
     }

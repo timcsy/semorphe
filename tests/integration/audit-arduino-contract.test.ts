@@ -78,11 +78,17 @@ describe('★ 第 1 層的每一條都會紅（反例）', () => {
     ['⑧ required 又有 default', async () => pkgOf({ 'arduino:x': { ...ok, params: { pin: { type: 'int', required: true, default: '1' } } } }), /required 又有 default/],
     ['⑨ variadic 帶 default', async () => pkgOf({ 'arduino:x': { ...ok, params: { v: { type: 'expr', variadic: true, default: 'x' } } } }), /variadic 帶 default/],
     ['⑩ default 不合型別', async () => pkgOf({ 'arduino:x': { ...ok, params: { b: { type: 'bool', default: 'yes' } } } }), /不合 bool/],
+    ['⑩b int 的 default 是 JSON 數字', async () => pkgOf({ 'arduino:x': { ...ok, params: { baud: { type: 'int', default: 9600 } } } }), /不合 int/],
+    ['⑩c int 的 default 有前導零', async () => pkgOf({ 'arduino:x': { ...ok, params: { baud: { type: 'int', default: '09' } } } }), /不合 int/],
+    ['⑩d int 的 default 帶 +', async () => pkgOf({ 'arduino:x': { ...ok, params: { baud: { type: 'int', default: '+5' } } } }), /不合 int/],
+    ['⑩e expr 的 default 是裸字串', async () => pkgOf({ 'arduino:x': { ...ok, params: { v: { type: 'expr', default: 'x' } } } }), /不合 expr/],
+    ['⑦b enum 的值不是字串', async () => pkgOf({ 'arduino:x': { ...ok, params: { m: { type: 'enum', values: ['a', 1] } } } }), /enum 沒有值域/],
   ])('%s', async (_n, make, why) => {
     const bad = await layer1(await make() as never, 'arduino')
     expect(bad.join('\n')).toMatch(why)
   })
-  it('對照組：好的那一份零發現', async () => {
+  it('對照組：好的那一份零發現（含數字開頭的元件名、int／expr 的合格 default）', async () => {
     expect(await layer1(await pkgOf({ 'arduino:x': ok }) as never, 'arduino')).toEqual([])
+    expect(await layer1(await pkgOf({ 'arduino:7seg': { ...ok, params: { baud: { type: 'int', default: '-9600' }, v: { type: 'expr', default: { expr: 'a + 1' } } } } }) as never, 'arduino')).toEqual([])
   })
 })
