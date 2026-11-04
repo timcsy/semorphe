@@ -25,6 +25,9 @@
  *
  * ⚠️ 形狀**從語料蒸餾**，不抄一整支——常駐測試不得依賴外部 repo
  * （`STUDYCPP_DIR` 沒設時探針會跳過，而**跳過的護欄與不存在的護欄長得一樣**）。
+ *
+ * 2026-11-04（spec 212，6c-5）：參照編譯器那一半拿掉——期望值是當時 g++ 跑出來、與 Cella 一致的字串，寫死在這裡
+ * （擷取在本機的 Apple clang 上做；這一檔的呼叫點全部兩邊相同，不同的那幾條原本就包在 `knownCellaGap` 裡，期望字串照樣寫 g++ 的值）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -35,7 +38,6 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
 import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
-import { runCppDetailed } from '../helpers/run-cpp'
 import { RenderStrategyRegistry } from '../../src/core/registry'
 import { registerCppRenderStrategies } from '../../src/languages/cpp/renderers/strategies'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
@@ -232,19 +234,20 @@ describe('結構化繫結與走訪的對象：五個面向', () => {
    * 「本護欄只抓『殼』……**不檢測條件性正確**——單獨測通過、組合起來才壞的問題」。
    */
   describe('跨概念：放進既有的結構裡', () => {
-    const COMBOS: [string, string][] = [
+    /** [名字, 本體, 期望輸出]——期望輸出是當時 g++ 跑出來、與 Cella 一致的字串（寫死，spec 212） */
+    const COMBOS: [string, string, string][] = [
       ['放進條件的主體',
         `deque<pair<int,int>> q; q.push_back({2, 5});
-         if (!q.empty()) { auto [a, b] = q.front(); cout << a << b; }`],
+         if (!q.empty()) { auto [a, b] = q.front(); cout << a << b; }`, "25"],
       ['放進巢狀的迴圈',
         `vector<vector<pair<int,int>>> g(2); g[0].push_back({1, 2}); g[1].push_back({3, 4});
-         for (int i = 0; i < 2; i++) for (auto [x, y] : g[i]) cout << x << y;`],
+         for (int i = 0; i < 2; i++) for (auto [x, y] : g[i]) cout << x << y;`, "1234"],
       ['放進函式，而名字當引數傳出去',
-        `deque<pair<int,int>> q; q.push_back({3, 4}); auto [a, b] = q.front(); cout << add(a, b);`],
+        `deque<pair<int,int>> q; q.push_back({3, 4}); auto [a, b] = q.front(); cout << add(a, b);`, "7"],
       ['與既有的走訪並列',
         `vector<int> v{1, 2}; for (int x : v) cout << x;
          map<int,pair<int,int>> m; m[1] = {7, 8};
-         for (auto [k, pr] : m) { auto [lo, hi] = pr; cout << k << lo << hi; }`],
+         for (auto [k, pr] : m) { auto [lo, hi] = pr; cout << k << lo << hi; }`, "12178"],
     ]
     /**
      * 已知缺陷（Cella 那側）：結構化繫結的範圍 for（`sForBind`）本體裡再寫一個結構化繫結，被判「a structured binding outside a block」（unsupported）。
@@ -253,23 +256,21 @@ describe('結構化繫結與走訪的對象：五個面向', () => {
      */
     // 🟢 2026-11-04：上面那一筆（sForBind 本體裡再一個結構化繫結）在 cfamily／cpp 0.1.202611032234 修好，轉正。
     const GAPS: Record<string, RegExp> = {}
-    const run5 = async (src: string): Promise<void> => {
-      const ref = runCppDetailed(src)
-      expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-      // 執行那一邊：Cella（spec 203，重構 6c-2e）——參照編譯器那一邊不動（6c-5 才退場），這裡成了 Cella 對參照編譯器的交叉檢查
+    const run5 = async (src: string, expected: string): Promise<void> => {
+      // 執行那一邊：Cella（spec 203，重構 6c-2e）；期望值是當時 g++ 的輸出（spec 212，6c-5 參照編譯器退場）
       const r = await runCella(src)
       expect(r.verdict, describeCellaResult(r)).toBe('accept')
-      expect(r.out, '🔴 單獨測通過、組合起來才壞').toBe(ref.output)
+      expect(r.out, '🔴 單獨測通過、組合起來才壞').toBe(expected)
     }
-    for (const [name, body] of COMBOS) {
+    for (const [name, body, expected] of COMBOS) {
       const glob = name.includes('函式') ? 'int add(int p, int q){ return p + q; }' : ''
       const src = `${H}${glob}\nint main(){ ${body} return 0; }\n`
       const gap = GAPS[name]
       if (gap) {
         // 歸類：Cella 那側（賦值右邊的大括號串列不支援）
-        it(`🟡 已知缺陷（修好時這條會紅）：⑤ ${name}`, async () => { await knownCellaGap(gap, () => run5(src)) }, 60_000)
+        it(`🟡 已知缺陷（修好時這條會紅）：⑤ ${name}`, async () => { await knownCellaGap(gap, () => run5(src, expected)) }, 60_000)
       } else {
-        it(`⑤ ${name}`, async () => { await run5(src) }, 60_000)
+        it(`⑤ ${name}`, async () => { await run5(src, expected) }, 60_000)
       }
     }
   })

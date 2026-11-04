@@ -44,7 +44,7 @@ tests/
 載入一次 Blockly ＋ tree-sitter wasm ＋ 351 顆膠囊的 glob。
 ⚠️ 刪掉 JS 直譯器（6c-4）時拆掉了其中三支最慢的（`interpreter-matches-compiler`、`audit-behavior-error`、`scenario-coverage`），
 **全套幾乎沒變快**（約 15 → 14.8 分）——它們被並行 overlap 掉了，與下面「跑一塊固定的子集幾乎沒有用」同一件事。
-剩下的 `audit-lesson-answers-vs-compiler` 隨 6c-5 退場。所以：
+剩下的 `audit-lesson-answers-vs-compiler` 也在 6c-5 退場（課文答案改由 Cella 斷言）。所以：
 
 | 你在做什麼 | 跑什麼 | 量級 |
 |---|---|---|
@@ -56,7 +56,7 @@ tests/
 | 🔴 **改了「輸出的文字表示」**（`nan`／`inf`／數字格式／跳脫字元） | **`npm run test:e2e`** | 十分鐘 |
 | 🔴 **改了積木的畫法**（膠囊定義、`block-registrar`、renderer） | **重產課文的對照圖**（見下） | 六分鐘 |
 | 🔴 **改 lift／產生器**（`lifters/strategies.ts`、`code-generator.ts`、膠囊的 `lift`／`generate`） | **拿真實語料重量一次**（見下） | 十秒 |
-| 🔴 **改宣告的 lift／渲染／抽取** | **四個面向全掃**（見下，要參照編譯器） | 兩分鐘 |
+| 🔴 **改宣告的 lift／渲染／抽取** | **四個面向全掃**（見下） | 兩分鐘 |
 | **新增了 `formalize.ts`** | `npx tsx tools/bump-formalize-baselines.ts --base main --why "第 N 刀，spec M"`（先預覽，加 `--write` 寫入）→ 再跑 `npm run test:guard` | 秒 |
 | 🔴 **改了 `vite*.config.ts`、加了 worker／新的資產、改了兩個宿主共用的組裝點（`app.ts`）** | **`npm run build:vscode`**（看 vsix 的大小與檔數） | 兩分鐘 |
 | commit 前 | `npm test`（全套）——用 `tools/long-test.sh`（skill `long-test-run`） | 約 15 分鐘（放背景跑） |
@@ -105,7 +105,7 @@ twoproj-*/x2c ×5                                  每跑一次那支探針就�
 
 ⚠️ 卡在 `UE` 的行程**殺不掉**，只有重開機清得掉——那是使用者的機器，要問過他。
 
-🔴 **而它的累積速度要知道**：`studycpp-behaves` 跑一次留下 **約 67 個**
+🔴 **而它的累積速度要知道**：`studycpp-behaves`（6c-4 刪除；今天同形狀的是探針 `refcc-cross-check`，開它時照樣要注意）跑一次留下 **約 67 個**
 （逾時被 SIGKILL 而卡在核心裡的參照程式——「參照跑不完 20」那一欄的那些）。
 一天下來累積到 **379 個**。行程表撐得住，而**它會讓 e2e 假紅**。
 
@@ -152,25 +152,14 @@ twoproj-*/x2c ×5                                  每跑一次那支探針就�
 ⚠️ **而「寫死了那段文字的東西」包含課文，它不在 `npm test` 裡**——這一句界定的是
 這一列涵蓋到哪裡，所以它留在這裡。教訓 [[一次「輸出的文字表示變了」的改動]]。
 
-> 🪦 **重構階段 6 拆**（2026-10-31 標記）：這一節講的是參照編譯器那一族，切換到 Cella 那天隨 JS 直譯器一起退場；在那之前照舊有效。
+> 🪦 **參照編譯器族在 6c-5 退場**（2026-11-04，spec 212）：`npm test` 的判準只剩 Cella，本機不再需要標頭墊片。
+> 下面兩段機器差異的病歷留著——它們只在探針 `tests/probes/refcc-cross-check`（`SEMORPHE_REFCC_PROBE=1`）還會遇到。
 
-🔴 **而同一刀還留下第二個東西，它更貴**：`interpreter-matches-compiler` 新加的
-「`0.0/0.0` 是 `nan`」那一條，判準是**印出來的字串**：
-
-```
-本機   Apple clang（libc++）    nan
-CI     GNU g++（libstdc++）     -nan
-```
-
-NaN 的**正負號是未指定的**，所以那條判準綁在本機那台編譯器上。
-**CI 因此從第 194 刀起紅了三次合併**（194–195、196、以及在 197 修好之前）。
-
-⚠️ 這與 2026-09-17／09-18 的標頭那兩次是**同一個形狀的第三次**。
+🔴 **而同一刀還留下第二個東西**：「`0.0/0.0` 是 `nan`」那一條的判準是印出來的字串，
+而 NaN 的正負號是未指定的（本機 clang 印 `nan`、CI 的 g++ 印 `-nan`）⟹ CI 紅了三次合併。
 → 教訓 [[本機那一台比 CI 那一台寬鬆的地方]]（`knowledge/experience.md`）
 
-🟢 **處方**：拿參照編譯器當權威時，**先問那一段的答案有沒有被標準定死**。
-`inf` 有（除法①③照舊比字串）；NaN 的正負號沒有 ⟹ 判準換成
-「那個值不等於它自己」（`c != c`，兩台機器都印 `1`）。
+🟢 **處方仍然成立，換了權威**：先問那一段的答案有沒有被標準定死；沒定死的，判準看 Cella 判決的 `assumes`，不看某一台機器印什麼。
 
 🔴 **第二列是 2026-09-18 加的**（[history/254]）：那一刀讓 `sort(v.begin(), v.end())` 的
 `v.begin()` 從**一串文字**變成**一顆積木**，於是**同一份課文用到的元件變多了**
@@ -227,78 +216,44 @@ STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-
 🔴 **而那還不夠**（2026-09-10，使用者：「你到底有沒有整個仔細測過一遍？」）。
 一個宣告有**五個面向**，而上面那兩支只量了前兩個（⑤是 2026-09-16 才補上的）：
 
-> 🪦 ⑤（`execute` vs 參照編譯器）與它的代價段落**隨重構階段 6 退場**；①～④ 留下（動詞會改成 render／lift）。
-
 | 面向 | 怎麼量 | 紅了的症狀 |
 |---|---|---|
 | ① 產出的程式碼 | `lift → 產碼` | 產出不一樣 |
 | ② 語義的不動點 | `lift → 產碼 → 再 lift` | 來回一趟就變 |
 | 🔴 ③ 載得進工作區嗎 | `render → Blockly load` | **一片空白**（不是少一行） |
 | 🔴 ④ 走一趟積木回來 | `render → extract → 產碼` | 學生一動積木，程式碼就少東西 |
-| 🔴 ⑤ **跑出來一不一樣** | `execute` vs **參照編譯器** | **形狀全對，而它印出別的東西** |
+| 🔴 ⑤ **跑出來一不一樣** | Cella 的判決（課文：`binding-verdict` 的「課文答案」斷言；對 g++：探針 `refcc-cross-check`） | **形狀全對，而它印出別的東西** |
 
 🔴 **⑤ 是 2026-09-16 加的**，而它也是使用者問出來的：「你有幫我驗證語料庫的
-執行結果與模擬的是一致的嗎？」——沒有。①②③④**四個都是形狀**，
-而四支 `studycpp-*` 探針裡 `interpret`／`execute` 的出現次數是 0。
+執行結果與模擬的是一致的嗎？」——沒有。①②③④**四個都是形狀**。
+原本拿 JS 直譯器對參照編譯器；6c-4／6c-5（2026-11-04）之後拿 Cella 判，而「我們的翻譯對不對」由探針拿 g++ 交叉檢查。
 
-```bash
-STUDYCPP_DIR=/tmp/StudyCpp SEMORPHE_REFCC_INCLUDE=$PWD/tests/fixtures/refcc-shim \
-  npx vitest run tests/probes/studycpp-behaves        # ⑤，要參照編譯器
-```
-
-⚠️ **測資是【問程式自己】生的**：語義樹裡有每一次讀取的型別與順序。
+⚠️ **測資是【問程式自己】生的**（`tests/helpers/stdin-from-tree.ts`）：語義樹裡有每一次讀取的型別與順序。
 判準不是「這份輸入對那一題有意義」，是**兩邊餵同一份**。
-⚠️ `bits/stdc++.h` 是 GCC 專屬的，macOS 上要 `SEMORPHE_REFCC_INCLUDE` 指到墊片
-——不指的話 206/218 會假性編不過。
-
-第一次跑量到：**兩邊都跑完 91 支，41 支輸出不同**，收斂成兩族，
-而**兩族的 lift 與 generate 都是對的**（`cout << '\n'` 印成反斜線、
-`int a{7}` 變成 1）。修完 37 → 14。
 
 → 教訓 [[一個只錯在 execute 那一路的缺陷]]（`knowledge/experience.md`）
-
-🔴 **而它的代價要知道**：那支探針要編 204 支含 `bits/stdc++.h` 的程式
-（單支峰值 94 MB）。並行度**刻意壓在 3**——8 那次把使用者的機器打掛了
-（[history/240]，2,880 次 jetsam ＋ 重開機）。
 
 ```bash
 STUDYCPP_DIR=/tmp/StudyCpp npx vitest run tests/probes/studycpp-loadable   # ③
 ```
 
-而 ①②③④ 的全掃（15 種型別 × 20 種宣告形狀）**要參照編譯器**，跑一次約兩分鐘
-——它留在 `tests/probes/`，不進 `npm test`。常駐的是它抽出來的形狀：
+而 ①②③④ 的形狀已收成常駐護欄（下一行）。常駐的是它抽出來的形狀：
 第一百一十五（產出的程式碼）· 一百一十七（載得進工作區）· 一百一十八（走一趟積木回來）。
 
 ⚠️ **判準有三層，少一層就會追到雜訊或漏掉缺陷**：
 
 ```
-① 先問參照編譯器「這一段是合法的 C++ 嗎」  不問 → 追自己造的雜訊（stack<int> a(5) 沒有那個建構子）
+① 先問權威「這一段是合法的 C++ 嗎」（今天是 Cella） 不問 → 追自己造的雜訊（stack<int> a(5) 沒有那個建構子）
 ② 每一個宣告的名字都要被觀察              不觀察 → 第二個宣告子蒸發也是綠的
 ③ 文字不同 ≠ 錯，行為不同才是             不分 → 121 筆正規化會被算成缺陷
 ```
 
 → 教訓 [[一個量測工具，在它自己被量過之前]]（`knowledge/experience.md`）
 
-> 🪦 **重構階段 6 拆**（2026-10-31 標記）：這一節講的是參照編譯器那一族，切換到 Cella 那天隨 JS 直譯器一起退場；在那之前照舊有效。
-
-🔴 **而「參照編譯器」不是一個東西**（2026-09-18，CI 抓到七支）：
-
-```
-本機   Apple clang（libc++）    <set> 遞移帶進 <deque>、<map> 帶進 <queue>／<tuple>
-CI     GNU g++（libstdc++）     不帶
-```
-
-於是七支手列標頭的測試**本機全綠、CI 全紅**，訊息還說「測試自己的問題」
-——那句話是對的，只是它說不出**是哪一台**參照編譯器。
-
-⚠️ 同一個坑咬過兩次：2026-09-17 缺 `<set>`（當時的修法是補上那一個標頭），
-2026-09-18 缺 `<queue>` 與 `<tuple>`。**補一個實例不會讓下一個不發生。**
-
-→ 教訓 [[本機那一台比 CI 那一台寬鬆的地方]]（`knowledge/experience.md`）
-
-🟢 **處方**：餵給參照編譯器的程式一律 `#include <bits/stdc++.h>`
-（本機由 `SEMORPHE_REFCC_INCLUDE` 指到 `tests/fixtures/refcc-shim`，CI 上是真的 GCC 標頭），
-而 `audit-refcc-headers` 盯著還在手列的檔數。
+> 🪦 **（6c-5 退場，2026-11-04）**「參照編譯器不是一個東西」：本機 clang（libc++）與 CI 的 g++（libstdc++）對「哪個標頭遞移帶進哪個」答案不同，
+> 七支手列標頭的測試本機全綠、CI 全紅——而且同一個坑咬過兩次。`npm test` 不再呼叫參照編譯器之後這一族沒有了；
+> 探針 `refcc-cross-check` 照舊一律 `#include <bits/stdc++.h>`、本機用 `SEMORPHE_REFCC_INCLUDE` 指到 `tests/fixtures/refcc-shim`。
+> → 教訓 [[本機那一台比 CI 那一台寬鬆的地方]]（`knowledge/experience.md`）
 
 ⚠️ 現在 `audit-lesson-blockmaps` 會替你紅（它比對 `engineHash`），
 所以**不用記得**——但要知道紅的時候該跑什麼。

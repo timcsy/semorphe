@@ -32,6 +32,9 @@
  *
  * 🔴 **判準裡不得放未定義行為**：空容器上 `*c.begin()`、`erase` 之後繼續用那個位置
  * （迭代器失效，而我們刻意不模擬）、`unordered_map` 的走訪順序。
+ *
+ * 2026-11-04（spec 212，6c-5）：參照編譯器那一半拿掉——期望值是當時 g++ 跑出來、與 Cella 一致的字串，寫死在這裡
+ * （擷取在本機的 Apple clang 上做；這一檔的呼叫點全部兩邊相同，不同的那幾條原本就包在 `knownCellaGap` 裡，期望字串照樣寫 g++ 的值）。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
@@ -39,7 +42,6 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { runCella, describeCellaResult, knownCellaGap, expectCellaOut } from '../helpers/cella-run'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { runCppDetailed, hasReferenceCompiler } from '../helpers/run-cpp'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -67,7 +69,7 @@ const ids = (n: SemanticNode): string[] => nodes(n).map((x) => x.componentId)
 /**
  * **執行那一邊是 Cella**（spec 203，重構 6c-2e）——走產品同一條 lift → formalize → 判決。
  * 判決不是 accept 就丟出說得出原因的錯（判不出、翻不出、判定有錯都不是空字串）。
- * 比對的另一邊仍是參照編譯器（它整族的退場是 6c-5 的事），所以這裡是「Cella 對參照編譯器」的交叉檢查。
+ * 比對的另一邊是參照編譯器當時跑出來的字串（spec 212，6c-5 起寫死在呼叫點），所以這裡仍是「Cella 對參照編譯器」的交叉檢查。
  */
 const cellaOut = async (src: string): Promise<string> => {
   const r = await runCella(src)
@@ -75,20 +77,12 @@ const cellaOut = async (src: string): Promise<string> => {
   return r.out
 }
 const run = cellaOut
-/**
- * 🔴 **標頭走墊片，不手列**（2026-09-18，CI 抓到）——本機是 Apple clang（libc++）、
- * CI 是 GNU g++（libstdc++），而**兩者對「哪個標頭遞移帶進哪個」的答案不同**。
- * 手列的話，本機全綠而 CI 紅，訊息還會說「測試自己的問題」。
- * 見第 120 條護欄 `audit-refcc-headers`。
- */
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
 const prog = (body: string, glob = ''): string => `${H}${glob}\nint main(){ ${body} return 0; }\n`
 
-const sameAsCompiler = async (body: string, hint: string, glob = ''): Promise<void> => {
-  const src = prog(body, glob)
-  const ref = runCppDetailed(src)
-  expect(ref.ok, `🔴 參照編譯器收不下（測試自己的問題）：${ref.ok ? '' : ref.message}`).toBe(true)
-  expect(await run(src), hint).toBe(ref.output)
+/** `expected`：當時 g++ 跑出來、與 Cella 一致的輸出（寫死，spec 212）。 */
+const sameAsCompiler = async (body: string, expected: string, hint: string, glob = ''): Promise<void> => {
+  expect(await run(prog(body, glob)), hint).toBe(expected)
 }
 
 /** 語料最常見的形狀：對照表的位置迴圈。 */
@@ -127,46 +121,46 @@ describe('round-trip：迭代器一族', () => {
   })
 
   // 歸類：Cella 判錯——類別迭代器的 `it->first` 被判「不是指標」；`(*it).first` 是好的
-  it.runIf(hasReferenceCompiler())('🔴 行為：位置迴圈與 `it->`', async () => {
-    await sameAsCompiler(WALK, '🔴 修之前這一段整個是 raw code')
+  it('🔴 行為：位置迴圈與 `it->`', async () => {
+    await sameAsCompiler(WALK, "1927", '🔴 修之前這一段整個是 raw code')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 行為：`erase(find(x))` 只刪一個（語料最常見的寫法）', async () => {
+  it('🔴 行為：`erase(find(x))` 只刪一個（語料最常見的寫法）', async () => {
     await sameAsCompiler(
       `multiset<int> ms; ms.insert(4); ms.insert(4); ms.insert(7);
-       ms.erase(ms.find(4)); cout << ms.size() << ms.count(4);`,
+       ms.erase(ms.find(4)); cout << ms.size() << ms.count(4);`, "21",
       '🔴 走成「刪全部」的話，一個計數會少掉不只一個')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 行為：`lower_bound` ＋ `!= end()` 的標準寫法', async () => {
+  it('🔴 行為：`lower_bound` ＋ `!= end()` 的標準寫法', async () => {
     await sameAsCompiler(
       `set<int> s; s.insert(1); s.insert(3); s.insert(5);
        auto it = s.lower_bound(2); if (it != s.end()) cout << *it;
-       auto j = s.lower_bound(9); cout << (j == s.end());`,
+       auto j = s.lower_bound(9); cout << (j == s.end());`, "31",
       '🔴 找不到必須回「結尾之後」，否則這個寫法整個失去意義')
   }, 60_000)
 
   // 歸類：Cella 判錯——類別迭代器的 `->` 被判「不是指標」
-  it.runIf(hasReferenceCompiler())('🔴 行為：有序容器裝一對值（AP325/4/4_15 的形狀）', async () => {
+  it('🔴 行為：有序容器裝一對值（AP325/4/4_15 的形狀）', async () => {
     await sameAsCompiler(
       `multiset<pair<int,int>> st; st.insert({3,4}); st.insert({1,2});
        for (auto it = st.begin(); it != st.end(); ++it) cout << it->first << it->second;
-       auto lo = st.lower_bound({2,0}); cout << lo->first;`,
+       auto lo = st.lower_bound({2,0}); cout << lo->first;`, "12343",
       '🔴 三個缺陷疊在這裡：容器不記元素型別、比較規則不認一對值、查找把每一格拆開')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('🔴 行為：最大的那一個與反向走訪', async () => {
+  it('🔴 行為：最大的那一個與反向走訪', async () => {
     await sameAsCompiler(
       `set<int> s; s.insert(1); s.insert(5); s.insert(3);
        cout << *s.rbegin();
-       for (auto it = s.rbegin(); it != s.rend(); ++it) cout << *it;`,
+       for (auto it = s.rbegin(); it != s.rend(); ++it) cout << *it;`, "5531",
       '🔴 `++rit` 往後走的話，由大到小會安靜地變成由小到大')
   }, 60_000)
 
-  it.runIf(hasReferenceCompiler())('★ 正向錨點：純量與字串的集合不得被這一刀帶偏', async () => {
+  it('★ 正向錨點：純量與字串的集合不得被這一刀帶偏', async () => {
     await sameAsCompiler(
       `set<int> a; a.insert(5); a.insert(1); for (int v : a) cout << v;
-       set<string> b; b.insert("bb"); b.insert("aa"); cout << *b.begin();`, '')
+       set<string> b; b.insert("bb"); b.insert("aa"); cout << *b.begin();`, "15aa", '')
   }, 60_000)
 })
 

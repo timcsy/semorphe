@@ -159,4 +159,35 @@ describe('判決綁定語料交給 Cella 的判決', () => {
     expect(invalid, '🔴 SC-002：有程式 JSON 讀不進 Cella（介面的形狀不對）').toEqual([])
     expect(orphan, '🔴 SC-003：problem 的節點對不回語義樹').toEqual([])
   })
+
+  /**
+   * 🔴 **課文承諾的答案，Cella 跑得出來**（spec 212，6c-5：接手 `audit-lesson-answers-vs-compiler`）。
+   *
+   * 那條護欄來自授課老師 2026-09-21 的回饋：「要幫每一課所有題目會遇到的練習都加入執行比對」——
+   * 它拿 g++ 跑每一題的參考解答、比課文寫的 `check.stdout`。參照編譯器族退場之後，這件事由 Cella 守；
+   * 而上面那一支只**印**「accept 而輸出與課文不同」，不會紅——這一支把它變成斷言。
+   */
+  it('🔴 課文答案：有預期輸出的每一題，Cella 判 accept、而且輸出逐字等於課文寫的', () => {
+    const covered = results.filter((r) => r.expected !== undefined)
+    // 入口條件：不得比被接手的那條護欄量得少（它量 78 題：有參考解答、也寫了 check.stdout）
+    expect(covered.length, '🔴 量到的題數比 audit-lesson-answers-vs-compiler 少——語料縮水了').toBeGreaterThanOrEqual(78)
+    const wrong = covered
+      .filter(({ v, expected }) => !(v.verdict === 'accept' && v.out === expected))
+      .filter(({ row }) => !(row.id in LESSON_NOT_ACCEPT))
+      .map(({ row, v, expected }) => `${row.id}：${v.verdict}｜預期 ${JSON.stringify(expected).slice(0, 80)}｜Cella ${JSON.stringify(v.out).slice(0, 80)}${v.problems.length ? `｜${v.problems.map((p) => p.kind).join('、')}` : ''}`)
+    expect(wrong, '🔴 課文的答案與 Cella 跑出來的不一樣——修課文，或在 LESSON_NOT_ACCEPT 寫下理由').toEqual([])
+    // 釘子要會掉：名單上的那一題如果已經對了，名單要拿掉它
+    const stale = Object.keys(LESSON_NOT_ACCEPT).filter((id) => covered.some(({ row, v, expected }) => row.id === id && v.verdict === 'accept' && v.out === expected))
+    expect(stale, '這幾題已經對了——從 LESSON_NOT_ACCEPT 拿掉').toEqual([])
+  })
+
+  it('★ 注入：預期輸出改錯一個字，上面那一支會紅', () => {
+    const one = results.find((r) => r.expected !== undefined && r.v.verdict === 'accept' && r.v.out === r.expected)!
+    expect(one, '找不到一題對的來注入').toBeTruthy()
+    const tampered = one.expected!.length > 0 ? `${one.expected!.slice(0, -1)}#` : '#'
+    expect(one.v.out === tampered).toBe(false)
+  })
 })
+
+/** 課文裡刻意不是 accept 的題目（例如示範錯誤的那一題）——每一筆要說得出為什麼。 */
+const LESSON_NOT_ACCEPT: Record<string, string> = {}
