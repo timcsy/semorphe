@@ -90,6 +90,18 @@ for (const entry of PROVIDERS) {
       expect(out()).toBe('6\n')
     })
 
+    it('★ 帶了批次輸入（SessionOptions.input）不會壞：不讀輸入的程式照樣跑完', async () => {
+      // 2026-11-04 與 cos-mos 定的 (a)。「真的吃這一份」由不能邊跑邊等輸入的提供者守（cos-mos 那側）；
+      // 能邊跑邊等的（Cella）介面允許忽略它——重播時那幾行已經排進主控台，再吃一次會重複
+      const tree = lift(LOOP)
+      const s = p.createSession!({ maxSteps: 1_000_000, formal: formalOf(tree), input: '7\n' }, tree)
+      if ('declined' in s) throw new Error(`${p.id} 不接：${s.declined}`)
+      let text = ''
+      s.onOutput((t) => { text += t })
+      expect(await s.launch(tree, { stopOnEntry: false })).toEqual({ kind: 'ended' })
+      expect(text).toBe('6\n')
+    })
+
     needs(entry, 'stepping')('★ 中斷點：停在那一顆、看得到變數；continue 跑完', async () => {
       const tree = lift(LOOP)
       const target = find(tree, (n) => n.componentId === 'cpp:print')!

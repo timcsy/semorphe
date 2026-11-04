@@ -356,7 +356,9 @@ export class ExecutionController {
     this.showExecButtons(true, mode === 'step' ? 'stepping' : 'running')
     this.broadcastState({ status: 'running' })
 
-    const options = { maxSteps: 10_000_000, board: this.currentBoard?.(), formal: this.formalContext?.(tree) }
+    // 批次輸入（SessionOptions.input）：重播時那幾行整段先給——不能邊跑邊等輸入的提供者只吃得到這一份
+    const input = replay.length > 0 ? replay.map((l) => `${l}\n`).join('') : undefined
+    const options = { maxSteps: 10_000_000, board: this.currentBoard?.(), formal: this.formalContext?.(tree), ...(input !== undefined ? { input } : {}) }
     const declined: { provider: string; reason: string }[] = []
     const tried = new Set<string>()
     const run = ++this.runId
@@ -399,6 +401,8 @@ export class ExecutionController {
       // 不能停下來的提供者（spec 210：cos-mos 宿主第一版只能一路跑到底）——除錯／單步／動畫照實說一句、改成直接跑完，不得卡在等一個永遠不會來的「停下」
       const canStep = !opened.missing.includes('stepping')
       if (!canStep && mode !== 'run') this.broadcastOutput(msg('EXEC_NO_STEPPING', '這個執行器不能逐步執行——改成直接跑完') + '\n', 'stderr')
+      // 不能邊跑邊等輸入的提供者：程式讀到的只有事先給的那一份（沒有就是空的）——照實說一句，不讓「讀到 EOF」看起來像程式的行為（P6）
+      if (opened.missing.includes('interactiveInput') && input === undefined) this.broadcastOutput(msg('EXEC_NO_INTERACTIVE_INPUT', '這個執行器不能邊跑邊等輸入——程式讀到的輸入只有事先給的（這一次沒有）') + '\n', 'stderr')
       if (canStep) session.setBreakpoints(this.breakpointNodes)
       const first = await session.launch(tree, { stopOnEntry: canStep && (mode === 'step' || mode === 'animate') })
       if (this.session !== session) return
