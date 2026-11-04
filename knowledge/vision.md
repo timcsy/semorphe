@@ -491,9 +491,16 @@ UI 域與硬體域本身（它們是這一格的**消費者**）。
       🟡 **說明已寫**（2026-11-03）：[Provider 對接說明](draft/2026-11-03-Provider對接說明.md)，已交 cos-mos；等他們回饋與 2b-2 完成後實際對接。
       ⏳ **待 cos-mos 通知再做**（2026-11-04）：① `onOutput` 多帶 `stdout`／`stderr`（cos-mos 的 `console.wit` 用 `enum output`；判題只看 stdout）——等 Cella 確認、`console.wit` 成為正本 ② 契約依 `declares` 分層（必過核心＋依宣告才要求）——會改使用者確認過的驗收，等主持人問過使用者。
       ⚠️ Cella 第一版的元件是**批次的**（read-line 讀到 EOF 才跑、一次輸出）：互動模式下 cin 課文的提示會在輸入之後才出現，第一批（Arduino 類）建議批次輸入。
+      🟢 **批次輸入定了 (a)**（2026-11-04，與 cos-mos）：`SessionOptions.input?: string`，與 `CheckRequest.input` 同一格式；缺席＝沒有輸入。重播時控制器整段帶上；不能邊跑邊等輸入的提供者、而這一次沒給時，主控台照實說一句（`EXEC_NO_INTERACTIVE_INPUT`）。cos-mos 5bf9a4f 已接上。
+      ⏳ 還沒做：**執行前先讓學生把輸入一次填完**的畫面——只有不能邊跑邊等輸入的提供者會用到，而產品今天只登記 Cella；cos-mos 進產品那一刀一起做（判準：讀不讀輸入用判決的 `readsInput`，不要另猜）。
 - [ ] 🆕 **換形態，判決不變（第一層）**——三方會議第三輪的不變式 ①（[history/334](history/334-三方會議第三輪符號學三面向與操作者介面.md) 後記）：同一棵語意樹換一種形態再轉回來（程式碼換風格重產再 lift、積木渲染再抽取），**翻給 Cella 的程式相同**（節點 id 正規化後比）。
       這是宣告的第五個面向（①產出的程式碼 ②語義的不動點 ③載得進工作區 ④走一趟積木回來 ⑤翻給 Cella 的程式），補上之後「換形態，判決不變」在 semorphe 這側成立。
       驗收：課文語料與 StudyCpp 全掃，五個面向各自的不一致數為零或釘住；之後（cos-mos 階段 3 之後）擴成跨專案的成對語料。
+- [ ] 🆕 **`@cos-mos/arduino` 詞彙套件第一版（由 semorphe 抽出）**——使用者 2026-11-04 定三題、都照我們的推薦（cos-mos history/014，f6d672c）：
+      ① 套件放 `@cos-mos/<領域>` 名下；第一版由 semorphe 從 owner＝(arduino) 的 43 顆元件**只抽身分與參數**，名字用 `arduino:…`，附對照表；之後**正本翻轉**到詞彙套件，semorphe 與 Cella 對齊它
+      ② 結構頻道傳「**接線圖＋動作清單**」，用詞彙套件的名字表達，**不傳語意樹** ③ 接點第一版留空、標「未定」，ArduinoCAD 合流時補。
+      排在〈重構〉第 6 項之後，約 1 天。⚠️ **發布前要問使用者**：第一版交給 cos-mos 的主持人，不自己發。
+      驗收：43 顆都在、對照表一對一（`audit` 數得出）；先交匯出格式草案給 cos-mos（它先接「動作清單」那一半）。
 - [ ] 🆕 **形態檢查與判決的界線盤點**——同一則後記：semorphe「不判斷對錯」；形態完整度的檢查（語法缺口、空的接點、名字合不合法、canExecute）一律標成形態／提示，不得標成判決。驗收：診斷的每一種來源都標得出是「形態」「提示」還是「判決（Cella）」，有護欄在數；「名字合不合法」的灰色地帶盤點結果告訴 cos-mos。
       ➕ **不解析 Cella 的 reason**（後記二，使用者定）：`verdict-diagnostics.ts` 的 `nearMissFor`／`unboundNameAt` 改讀 Cella 的結構化 params（已向 cella 要 `{ name }` 與 NameError 帶 `at`）；學生看到的文字不得直接是 reason 原文。驗收：產品程式碼裡零個對 `reason` 的正規表示式（護欄）。
       🟢 **形狀已定（cella 2026-11-03）**：每則 problem 帶 `params`（值只有字串與布林；整數一律十進位字串、負數帶 `-`；不知道的欄位不出現）與 `structured`；未宣告的名字統一成 kind `undeclared` ＋ `{ name, what: variable|function|name }`（⚠️ 不相容，發版說明會標）；Python 的 NameError 一律帶 `at`；cfamily／python 套件附 `verdict-kinds.json`（每個 kind 是否結構化、帶哪些 params）——semorphe 加護欄：每個結構化的 kind 都有中英文說明。排在 cella 的 2b-2 之後。

@@ -141,6 +141,7 @@
   "RUNTIME_ERR_UNSPECIFIED_BEHAVIOR": "停在這裡：這一步的結果標準允許不只一種，判不出確定的值（{clause}）",
   "RUNTIME_ERR_UNCAUGHT_EXCEPTION": "程式丟出了一個沒有接住的例外：{text}",
   "EXEC_NO_STEPPING": "這個執行器不能逐步執行——改成直接跑完",
+  "EXEC_NO_INTERACTIVE_INPUT": "這個執行器不能邊跑邊等輸入——程式讀到的輸入只有事先給的（這一次沒有）",
   "EXEC_STATUS_PREPARING": "準備中（好了會自動開始）",
   "RUNTIME_PREPARE_TIMEOUT": "執行的模組一直沒有準備好（{why}）——請重新整理頁面再試一次",
   "STATUS_CHECK_LOADING": "判斷：載入中…",

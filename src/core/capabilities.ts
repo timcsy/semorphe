@@ -146,6 +146,14 @@ export interface SessionOptions {
    * JS 直譯器用不到——它直接跑 `launch` 收到的樹。
    */
   formal?: { tree: SemanticNode; targetId: string; styleId: string; skeletonId: string }
+  /**
+   * **批次輸入**（2026-11-04，與 cos-mos 定的 (a)）：整段標準輸入，行與行之間 `\n`——與 `CheckRequest.input` 同一個格式，
+   * 「換宿主，結果不變」才守得住（判決與執行吃同一份測資）。
+   * 缺席 ＝ 沒有輸入（程式一讀就是 EOF），**不是**「等使用者」。
+   * 宣告了 `interactiveInput` 的提供者（Cella）可以忽略它、照舊停下來等；有給的話也可以先吃這一份，吃完才停。
+   * 🟢 內建的 Cella 提供者**忽略它**：重播時控制器已經把那幾行排進主控台（照常回顯、照常被讀），它再吃一次會重複。
+   */
+  input?: string
 }
 
 /** 一次判決的請求：語義樹（含骨架積木）、目標與風格、輸入。翻成提供者自己的形式（語言、板名）是提供者的事。 */
