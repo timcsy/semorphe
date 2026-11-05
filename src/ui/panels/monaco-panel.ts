@@ -3,7 +3,7 @@ import * as monaco from 'monaco-editor'
 import { preserveBlankLines } from '../../core/projection/preserve-blank-lines'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent, EditableSource } from '../../core/sync/view-host'
 import type { CodeMapping } from '../../core/projection/code-generator'
-import { mappingFor, codeDiagnosticMessage } from '../../core/projection/diagnostic-projection'
+import { mappingFor, codeDiagnosticMessage, codeDiagnosticDetail } from '../../core/projection/diagnostic-projection'
 import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
 import { isResidualCause } from '../../core/diagnostics'
 import type { SemanticBus } from '../../core/sync/semantic-bus'
@@ -324,6 +324,7 @@ export class MonacoPanel implements ViewHost, CodeView {
         ? {
             severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : d.severity === 'info' ? monaco.MarkerSeverity.Info : monaco.MarkerSeverity.Warning,
             message: this.diagnosticMessage(d),
+            ...(codeDiagnosticDetail(d) ? { code: codeDiagnosticDetail(d) } : {}),
             startLineNumber: at.line + 1,
             startColumn: at.column + 1,
             endLineNumber: at.line + 1,
@@ -332,6 +333,7 @@ export class MonacoPanel implements ViewHost, CodeView {
         : {
             severity: d.severity === 'error' ? monaco.MarkerSeverity.Error : d.severity === 'info' ? monaco.MarkerSeverity.Info : monaco.MarkerSeverity.Warning,
             message: this.diagnosticMessage(d),
+            ...(codeDiagnosticDetail(d) ? { code: codeDiagnosticDetail(d) } : {}),
             startLineNumber: startLine,
             startColumn: 1,
             endLineNumber: endLine,

@@ -209,6 +209,8 @@ export interface CodeDiagnosticWire {
   endColumn: number | null
   severity: 'warning' | 'error' | 'info'
   message: string
+  /** 詳細資訊（標準的條號）——Problems 上放在 `code`，不放進訊息本身。 */
+  detail?: string
 }
 
 /** ⚠️ 線上的形狀刻意與 `core/host/controls.ts` 的 `ControlState` 一致。 */
