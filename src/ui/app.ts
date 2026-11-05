@@ -81,6 +81,7 @@ import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skel
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
 import { lessonById, allTracks, lessonsOfTrack, solutionFor, starterFor, viewForLesson, componentsForLesson } from '../core/lesson/load-lessons'
+import { chapterLabel } from '../core/lesson/chapter-label'
 import { suggestLessonFor } from '../core/lesson/lesson-suggest'
 import type { LessonNudgeBar } from './lesson-nudge-bar'
 import { allTemplates, templateById } from '../core/lesson/load-templates'
@@ -154,6 +155,7 @@ function isScaffoldComponent(componentId: string): boolean {
 
 
 // 🪦 `isScaffoldInMainComponent` 已搬進 `core/scaffold-nodes.ts`（2026-08-30）——流程視圖也要問同一件事。
+
 
 
 
@@ -3436,8 +3438,10 @@ export class App {
         const mine = tid ? lessonsOfTrack(tid) : []
         const options: ControlOption[] = mine.map((l) => ({
           value: l.id,
-          // ⚠️ 資料夾名的 `NN-` 前綴留著——它就是章節編號
-          label: `${l.id.split('/')[1] ?? l.id}${l.estimate ? `　${l.estimate}` : ''}`,
+          // ⚠️ 資料夾名的 `NN-` 前綴留著——它就是章節編號；名字用**課文的標題**，不用資料夾名
+          //    （2026-11-05 使用者抓到：第 10 課的資料夾叫「while迴圈」、課文標題是「重複」，選單照資料夾顯示）。
+          //    資料夾名是課程的身分（存檔、連結、e2e、對照圖都認它），不改；顯示的是標題。
+          label: `${chapterLabel(l.id, l.title)}${l.estimate ? `　${l.estimate}` : ''}`,
           // 🟢 **這一課建議看哪一邊**——`Track.view`／`pins.view` 那條曲線的投影。
           //    ⚠️ 它說的是**課程**，不是這個人。
           ...(viewForLesson(l.id) !== undefined
