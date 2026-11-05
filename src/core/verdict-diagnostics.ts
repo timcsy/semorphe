@@ -95,6 +95,9 @@ const KINDS: Record<string, { rule: string }> = {
   uncaught: { rule: 'CELLA_TERMINATION' },
 }
 
+/** 「編譯不過」這一族（籠統的 reject ＋ 0546 起的細分）——更具體的說法（串流配錯運算子、型別不合）要取代它們時，一律看這一組。 */
+const REJECT_FAMILY = new Set(['CELLA_REJECT', 'CELLA_NOT_ASSIGNABLE', 'CELLA_CALL_ARGUMENTS', 'CELLA_REDECLARED', 'CELLA_RETURN_VALUE', 'CELLA_OPERAND_TYPES', 'CELLA_NO_CONVERSION'])
+
 /** 判決產出端的全部規則身分（護欄用）。 */
 export const VERDICT_RULES: readonly string[] = [...new Set(Object.values(KINDS).map((k) => k.rule))].concat('CELLA_UNDECLARED_HEADER', 'CELLA_OTHER', 'CELLA_UNCLASSIFIED', 'CELLA_INVALID', 'TYPE_MISMATCH')
 
@@ -226,7 +229,7 @@ function streamHints(tree: SemanticNode, streams: Readonly<Record<string, string
     const inside = ids(h.node)
     for (let i = diagnostics.length - 1; i >= 0; i--) {
       const d = diagnostics[i]
-      if (d.source === 'cella' && (d.rule === 'CELLA_REJECT' || d.rule === 'CELLA_OTHER') && inside.has(d.nodeId)) diagnostics.splice(i, 1)
+      if (d.source === 'cella' && (REJECT_FAMILY.has(d.rule) || d.rule === 'CELLA_OTHER') && inside.has(d.nodeId)) diagnostics.splice(i, 1)
     }
     diagnostics.push({ nodeId: h.node.id, source: 'cella', rule: 'STREAM_OPERATOR_SUGGEST', severity: 'error', params: { stream: h.stream, op: h.op, want: h.want } })
   }
@@ -310,7 +313,7 @@ export function toDiagnostics(input: {
   for (const e of types?.errors ?? []) {
     const nodeId = ownerOf(e.at)
     if (!known.has(nodeId)) { unplaced.error++; notes.push(`有一則型別錯誤對不到積木（${e.reason}）`); continue }
-    if (diagnostics.some((d) => d.nodeId === nodeId && d.rule === 'CELLA_REJECT')) continue
+    if (diagnostics.some((d) => d.nodeId === nodeId && REJECT_FAMILY.has(d.rule))) continue
     diagnostics.push({ nodeId, severity: 'error', source: 'cella', rule: 'TYPE_MISMATCH', params: { ...pinpoint(nodes.get(nodeId), input.codeOf), reason: e.reason } })
   }
   return { diagnostics, notes, assumes, unplaced }
