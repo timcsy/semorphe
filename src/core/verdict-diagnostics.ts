@@ -17,7 +17,7 @@
 import type { Diagnostic } from './diagnostics'
 import type { SemanticNode } from './types'
 import { findNearMiss } from './near-miss'
-import { diagnosticText, diagnosticParams } from './projection/diagnostic-projection'
+import { diagnosticText, diagnosticParams, diagnosticLayers } from './projection/diagnostic-projection'
 
 /** 判決的一個問題（Cella 判決 JSON 的 `problems[]`）。`at` 是 formalize 給的節點標籤。 */
 export interface VerdictProblem {
@@ -291,8 +291,11 @@ export function toDiagnostics(input: {
       unplaced[severity === 'error' ? 'error' : 'info']++
       // 🔴 這一句會出現在狀態列的說明裡（學生看得到）——用同一套中文文案，不給內部代號與 Cella 的原文（history/341）
       const rule = p.kind === 'undeclared' ? 'CELLA_UNDECLARED' : !classified ? 'CELLA_UNCLASSIFIED' : k?.rule ?? 'CELLA_OTHER'
-      const text = diagnosticText(rule, 'BLOCK', diagnosticParams({ ...stringParams(p.params), kind: p.kind, clause: p.clause ?? '' }))
-      notes.push(text ? `${text}（指不到是哪一塊）` : '有一則判決指不到是哪一塊')
+      const params = diagnosticParams({ ...stringParams(p.params), kind: p.kind, clause: p.clause ?? '' })
+      const text = diagnosticText(rule, 'BLOCK', params)
+      // 沒有積木可以點開——「試試看」直接跟在說明後面（步數用盡最需要它：去看迴圈）
+      const tryIt = diagnosticLayers(rule, params).slice(-1)
+      notes.push(text ? [`${text}（指不到是哪一塊）`, ...tryIt].join('\n') : '有一則判決指不到是哪一塊')
       continue
     }
     // spec 206：未宣告的名字——有一個長得很像的就說出來（原本住在 JS 直譯器，6c-4 刪掉它之前搬過來）；找不到就不提
