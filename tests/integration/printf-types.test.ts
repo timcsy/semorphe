@@ -4,7 +4,7 @@
  * 每一條都問兩件事：產出的寫法對不對（形式），以及 Cella 判切換前後的判決與輸出是否逐字相同（意思）。
  */
 import { describe, it, expect, afterEach } from 'vitest'
-import { runCella, cellaTypesOfTree, knownCellaGap } from '../helpers/cella-run'
+import { runCella, cellaTypesOfTree } from '../helpers/cella-run'
 import { generateCode, setExpressionTypes } from '../../src/core/projection/code-generator'
 import { KEEP_COUT_NOTE, KEEP_CIN_NOTE, KEEP_STATE_NOTE, KEEP_UNSYNC_NOTE } from '../../src/languages/cpp/printf-types'
 import competitive from '../../src/languages/cpp/styles/competitive.json'
@@ -60,20 +60,17 @@ describe('原本是 Cella 那側的缺口（0.1.202611042110 修好，釘子拔�
     expect(out).toContain('scanf(" %c", &c);')
     await sameRun(code, out, '  z\n')
   })
+  it('🔴 字串下標 s[0] → %c（Cella 0.1.202611050117 起給去掉參照之後的 char；之前是 char *／std::string *）', async () => {
+    const code = main('  string s = "ab";\n  cout << s[0] << endl;')
+    const { out } = await toPrintf(code)
+    expect(out).toContain('printf("%c\\n", s[0]);')
+    await sameRun(code, out)
+  })
   it('🔴 while (cin >> x) → while (scanf(…) == 1)：scanf 當運算式回傳讀到的個數', async () => {
     const code = main('  int x, sum = 0;\n  while (cin >> x) {\n    sum += x;\n  }\n  cout << sum << endl;')
     const { out } = await toPrintf(code)
     expect(out).toContain('while (scanf("%d", &x) == 1)')
     await sameRun(code, out, '1 2 3\n')
-  })
-})
-
-describe('Cella 那側的缺口（釘住：修好時會紅）', () => {
-  it('🟡 字串下標 s[0]：Cella 給的型別是 char *（應為 char；上一版是 std::string *、被保守退路蓋住）——表把 char * 當 C 字串，產出 %s', async () => {
-    const code = main('  string s = "ab";\n  cout << s[0] << endl;')
-    const { out } = await toPrintf(code)
-    // 2026-11-05 回報 cella；修好時 Cella 給 char ⟹ %c ⟹ 這層包裝會紅
-    await knownCellaGap(/to contain 'printf\("%c/, async () => { expect(out).toContain('printf("%c\\n", s[0]);') })
   })
 })
 
