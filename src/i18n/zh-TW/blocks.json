@@ -1005,5 +1005,17 @@
   "DIAG_BAD_NAME_BAD_CHAR_WHY": "C++ 的名字只能用英文字母、數字和底線。",
   "DIAG_BAD_NAME_BAD_CHAR_TRY": "把空白或符號換成底線，例如 my_score。",
   "DIAG_LAYER_WHY": "為什麼：{text}",
-  "DIAG_LAYER_TRY": "試試看：{text}"
+  "DIAG_LAYER_TRY": "試試看：{text}",
+  "DIAG_CELLA_UB_BOUNDS_BLOCK_AT_VAL": "「{subject}」的索引是 {index}，可是只有 {size} 格（0 到 {last}）",
+  "DIAG_CELLA_UB_BOUNDS_CODE_AT_VAL": "第 {line} 行：「{subject}」的索引 {index} 超出範圍——只有 {size} 格（0 到 {last}）",
+  "DIAG_CELLA_UB_BOUNDS_BLOCK_VAL": "索引是 {index}，可是只有 {size} 格（0 到 {last}）",
+  "DIAG_CELLA_UB_BOUNDS_CODE_VAL": "索引 {index} 超出範圍——只有 {size} 格（0 到 {last}）",
+  "DIAG_CELLA_UB_PAST_END_BLOCK_AT_VAL": "「{subject}」的索引是 {index}，最後一格是 {last}（只有 {size} 格）",
+  "DIAG_CELLA_UB_PAST_END_CODE_AT_VAL": "第 {line} 行：「{subject}」的索引 {index} 剛好在結尾之後——最後一格是 {last}",
+  "DIAG_CELLA_UB_PAST_END_BLOCK_VAL": "索引是 {index}，最後一格是 {last}（只有 {size} 格）",
+  "DIAG_CELLA_UB_PAST_END_CODE_VAL": "索引 {index} 剛好在結尾之後——最後一格是 {last}",
+  "DIAG_CELLA_UB_OVERFLOW_BLOCK_AT_VAL": "「{subject}」：{left} {op} {right} 超出 {type} 能放的範圍",
+  "DIAG_CELLA_UB_OVERFLOW_CODE_AT_VAL": "第 {line} 行：「{subject}」算的是 {left} {op} {right}，超出 {type} 能放的範圍",
+  "DIAG_CELLA_FUEL_BLOCK_VAL": "跑了 {steps} 步還沒結束（可能是無窮迴圈）",
+  "DIAG_CELLA_FUEL_CODE_VAL": "跑了 {steps} 步還沒結束，判不出結果"
 }

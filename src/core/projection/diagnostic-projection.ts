@@ -66,8 +66,11 @@ export function mappingFor(
  *    ——reason 只留在參數裡給開發者看，文案一律由種類與結構化的參數組。
  */
 export function diagnosticParams(params: Record<string, string | number>): Record<string, string | number> {
-  if (typeof params.kind !== 'string') return params
-  return { ...params, kindLabel: formatMessage(`DIAG_KIND_${params.kind}`) ?? formatMessage('DIAG_KIND_UNKNOWN') ?? params.kind }
+  // 有「大小」就算出最後一格的編號（差一錯最用得上：「最後一格是 2」）——呈現的換算，不是事實
+  const size = Number(params.size)
+  const out = params.size !== undefined && Number.isInteger(size) && size > 0 ? { ...params, last: String(size - 1) } : params
+  if (typeof out.kind !== 'string') return out
+  return { ...out, kindLabel: formatMessage(`DIAG_KIND_${out.kind}`) ?? formatMessage('DIAG_KIND_UNKNOWN') ?? out.kind }
 }
 
 /**
@@ -98,12 +101,12 @@ export function diagnosticText(rule: string, side: 'BLOCK' | 'CODE', params: Rec
   // 候選由細到粗：規則＋子類別（`what`，Cella 細分的那一層）→ 規則本身；每一層先試指名的（`_AT`）。
   // 🔴 有沒填上的格（`{line}`、`{expected}`…）就換下一個候選——學生不會看到 `{…}`。
   const what = typeof params.what === 'string' ? `_${params.what.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}` : ''
-  const keys = [
-    ...(what ? [`DIAG_${rule}${what}_${side}_AT`, `DIAG_${rule}${what}_${side}`] : []),
-    `DIAG_${rule}_${side}_AT`, `DIAG_${rule}_${side}`,
-  ]
+  // 每一層由細到粗：指名＋帶值（`_AT_VAL`）→ 指名 → 帶值（`_VAL`）→ 原句。帶值的那幾句用 Cella 執行期給的數字（索引、大小、步數……，
+  // cella 0.1.202611051127 起）；值不齊（指標、空容器照實不帶）就有沒填上的格，自動換下一個——不必另外判斷誰有值。
+  const level = (base: string): string[] => [`${base}_${side}_AT_VAL`, `${base}_${side}_AT`, `${base}_${side}_VAL`, `${base}_${side}`]
+  const keys = [...(what ? level(`DIAG_${rule}${what}`) : []), ...level(`DIAG_${rule}`)]
   for (const k of keys) {
-    if (k.endsWith('_AT') && params.subject === undefined) continue
+    if (/_AT(_VAL)?$/.test(k) && params.subject === undefined) continue
     const text = formatMessage(k, params)
     if (text !== null && !/\{\w+\}/.test(text)) return text
   }

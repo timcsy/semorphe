@@ -1005,5 +1005,17 @@
   "DIAG_BAD_NAME_BAD_CHAR_WHY": "C++ names can only use letters, digits, and underscores.",
   "DIAG_BAD_NAME_BAD_CHAR_TRY": "Replace spaces or symbols with an underscore, for example my_score.",
   "DIAG_LAYER_WHY": "Why: {text}",
-  "DIAG_LAYER_TRY": "Try: {text}"
+  "DIAG_LAYER_TRY": "Try: {text}",
+  "DIAG_CELLA_UB_BOUNDS_BLOCK_AT_VAL": "\"{subject}\" uses index {index}, but there are only {size} slots (0 to {last})",
+  "DIAG_CELLA_UB_BOUNDS_CODE_AT_VAL": "Line {line}: \"{subject}\" index {index} is out of range: only {size} slots (0 to {last})",
+  "DIAG_CELLA_UB_BOUNDS_BLOCK_VAL": "Index {index}, but there are only {size} slots (0 to {last})",
+  "DIAG_CELLA_UB_BOUNDS_CODE_VAL": "Index {index} is out of range: only {size} slots (0 to {last})",
+  "DIAG_CELLA_UB_PAST_END_BLOCK_AT_VAL": "\"{subject}\" uses index {index}; the last slot is {last} ({size} slots)",
+  "DIAG_CELLA_UB_PAST_END_CODE_AT_VAL": "Line {line}: \"{subject}\" index {index} is just past the end; the last slot is {last}",
+  "DIAG_CELLA_UB_PAST_END_BLOCK_VAL": "Index {index}; the last slot is {last} ({size} slots)",
+  "DIAG_CELLA_UB_PAST_END_CODE_VAL": "Index {index} is just past the end; the last slot is {last}",
+  "DIAG_CELLA_UB_OVERFLOW_BLOCK_AT_VAL": "\"{subject}\": {left} {op} {right} does not fit in {type}",
+  "DIAG_CELLA_UB_OVERFLOW_CODE_AT_VAL": "Line {line}: \"{subject}\" computes {left} {op} {right}, which does not fit in {type}",
+  "DIAG_CELLA_FUEL_BLOCK_VAL": "Ran {steps} steps without finishing (maybe an infinite loop)",
+  "DIAG_CELLA_FUEL_CODE_VAL": "Ran {steps} steps without finishing; no result"
 }
