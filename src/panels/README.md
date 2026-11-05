@@ -37,7 +37,7 @@ src/panels/
   code/panel.ts       程式碼（element）
   flow/panel.ts       流程（relation）＋ view.ts —— 自己 mount（spec 217 第二刀；登錄表由宿主經 ctx.blockSpecs 給）
   cell-head.ts        每一格的頭（名字＋動作）——面板與殼層共用，只依賴 DOM
-  blocks/panel.ts     積木（space）
+  blocks/panel.ts     積木（space）＋ view.ts（與拖曳輔助、深色主題）—— 自己 mount（spec 217 第三刀；登錄表、工具箱、語言的接線、通知由宿主經 ctx 給）
   console/panel.ts    主控台（state）
   variables/panel.ts  變數（state）← ⚠️ 同一層兩份宣告，是分頁不是兩格
   hardware/panel.ts   硬體（state）＋ view.ts —— 自己 mount（spec 184）

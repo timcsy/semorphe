@@ -43,7 +43,7 @@ import path from 'node:path'
 const MARK = 'markScaffoldBlocks'
 
 /** 只有它自己可以呼叫自己的私有方法。 */
-const OWNER = 'src/ui/panels/blockly-panel.ts'
+const OWNER = 'src/panels/blocks/view.ts'
 
 interface Hit { file: string; line: number; text: string }
 

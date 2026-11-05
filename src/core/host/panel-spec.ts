@@ -41,6 +41,18 @@ export interface PanelContext {
    *    顏色與形狀留在 `@semorphe/<領域>`；今天這一份是組裝點載好的登錄表。省略 ＝ 宿主沒有給（那兩格照它們自己的退路）。
    */
   readonly blockSpecs?: BlockSpecRegistry
+  /**
+   * 積木那一格才要的宿主設定（spec 217 第三刀）——工具箱、語言的接線（建程式的根、抽取策略）、Blockly 的媒體路徑。
+   * ⚠️ 型別刻意寬鬆：核心不認得 Blockly 與語言套件的型別，面板拿到之後自己知道它們是什麼。
+   */
+  readonly blocks?: {
+    readonly toolbox: unknown
+    readonly buildProgramRoot?: unknown
+    readonly installExtractStrategies?: unknown
+    readonly media?: string
+  }
+  /** 讓使用者看得到的通知（toast 是宿主的東西）——省略時面板退回 `console.error`。 */
+  readonly notify?: (message: string, level: 'error' | 'info') => void
 }
 
 /**

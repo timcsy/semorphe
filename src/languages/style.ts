@@ -138,41 +138,6 @@ export class StyleManagerImpl implements StyleManager {
 }
 
 // ─── Block Style Preset ───
-
-export type BlockStylePresetId = 'scratch' | 'classic' | 'teaching'
-
-export interface BlockStylePreset {
-  id: BlockStylePresetId
-  nameKey: string
-  renderer: 'zelos' | 'geras'
-  density: 'compact' | 'normal' | 'spacious'
-  colourScheme: 'scratch' | 'classic' | 'high_contrast'
-  inputsInline: boolean
-}
-
-export const BLOCK_STYLE_PRESETS: Record<BlockStylePresetId, BlockStylePreset> = {
-  scratch: {
-    id: 'scratch',
-    nameKey: 'BLOCK_STYLE_SCRATCH',
-    renderer: 'zelos',
-    density: 'compact',
-    colourScheme: 'scratch',
-    inputsInline: true,
-  },
-  classic: {
-    id: 'classic',
-    nameKey: 'BLOCK_STYLE_CLASSIC',
-    renderer: 'geras',
-    density: 'normal',
-    colourScheme: 'classic',
-    inputsInline: false,
-  },
-  teaching: {
-    id: 'teaching',
-    nameKey: 'BLOCK_STYLE_TEACHING',
-    renderer: 'zelos',
-    density: 'spacious',
-    colourScheme: 'high_contrast',
-    inputsInline: true,
-  },
-}
+// 🔴 搬到核心（spec 217 第三刀）：積木的外觀與語言無關，而積木面板（`src/panels/blocks/`）只准依賴核心。這裡轉出口，既有的引用不必改。
+export type { BlockStylePresetId, BlockStylePreset } from '../core/blocks/block-style'
+export { BLOCK_STYLE_PRESETS } from '../core/blocks/block-style'
