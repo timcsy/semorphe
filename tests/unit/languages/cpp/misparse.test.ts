@@ -25,7 +25,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../helpers/setup-lifter'
 import { registerCppLanguage } from '../../../../src/languages/cpp/generators'
 import { generateCode } from '../../../../src/core/projection/code-generator'
-import { postfixUnderUnary, suspectTemplate } from '../../../../src/languages/cpp/lang/misparse'
+import { postfixUnderUnary, suspectTemplate, assignmentUnderBinary } from '../../../../src/languages/cpp/lang/misparse'
 import apcs from '../../../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../../src/core/types'
 import type { AstNode } from '../../../../src/core/lift/types'
@@ -178,5 +178,68 @@ describe('解析器解錯的形狀②：小於號被當成樣板的角括號', (
   it('🔴 負向：解對了的 `a < b && c > d` 不得被動', () => {
     expect(roundTrip('int a=1,b=2,c=3,d=4; if(a < b && c > d) cout<<"y";'))
       .toContain('if (a < b && c > d)')
+  })
+})
+
+describe('解析器解錯的形狀④：指定被解成二元運算的右運算元', () => {
+  /** 語意樹裡最外層那一句的形狀：`=(+(a,b),3)` 這種寫法，看得出誰包誰 */
+  const shape = (body: string, glob = ''): string => {
+    const src = `${H}${glob}\nint main(){ ${body} return 0; }\n`
+    const tree = lifter.lift(parser.parse(src).rootNode as never) as SemanticNode
+    const main = (tree.slots.body ?? []).find((n) => n.properties?.name === 'main')
+    const stmt = (main?.slots.body ?? []).find((n) => n.componentId !== 'cpp:var_declare' && n.componentId !== 'cpp:return')
+    const f = (n: SemanticNode): string => {
+      const kids = Object.values(n.slots ?? {}).flat()
+      const tag = n.componentId === 'cpp:var_assign' ? '=' : n.componentId === 'cpp:compound_assign' ? String(n.properties.operator ?? '?=') : n.componentId === 'cpp:var_ref' ? String(n.properties.name) : n.componentId === 'cpp:literal_number' ? String(n.properties.value) : String(n.properties.operator ?? n.componentId)
+      return kids.length ? `${tag}(${kids.map(f).join(',')})` : tag
+    }
+    return stmt ? f(stmt) : '（沒有）'
+  }
+
+  it('★ 正向錨點：`a + b = 3` 的語法樹真的是解錯的（否則下面在驗空氣）', () => {
+    const node = astFind(`${H}int main(){ int a=1,b=2; a + b = 3; return 0; }`, 'binary_expression')
+    expect(node, '🔴 連 binary_expression 都找不到').not.toBeNull()
+    expect(assignmentUnderBinary(node!), '🔴 判準認不出來了——tree-sitter 換版修好了嗎？那就該拆掉這條規則').not.toBeNull()
+  })
+
+  it.each([
+    ['a + b = 3;', '=(+(a,b),3)'],
+    ['x == y = 1;', '=(==(x,y),1)'],
+    ['a + b * c = 3;', '=(+(a,*(b,c)),3)'],
+  ])('★ `%s` 讀成指定在最外層（C++ 唯一合法的讀法）', (body, want) => {
+    expect(shape(`int a=1,b=2,c=3,x=1,y=2; ${body}`)).toBe(want)
+  })
+
+  it.each(['a + b = 3;', 'a + b * c = 3;', 'x = a + b = 3;'])('★ `%s` 產回去一字不差——那對括號是我插的', (body) => {
+    expect(roundTrip(`int a=1,b=2,c=3,x=0; ${body}`)).toContain(body)
+  })
+
+  it.each([
+    ['a + (b = 3);', '+(a,=(b,3))'],
+    ['a = b = 3;', '=(a,=(b,3))'],
+  ])('🔴 負向：使用者寫了括號、或本來就合法的連續指定，不得被動——`%s`', (body, want) => {
+    expect(shape(`int a=1,b=2; ${body}`)).toBe(want)
+  })
+})
+
+describe('修過的節點，座標是原始程式的，不是重解那個殼的（2026-11-05）', () => {
+  /** 找到第一顆身分符合的節點，回它的起點（行、欄，0-based） */
+  const at = (src: string, componentId: string): [number, number] | null => {
+    const tree = lifter.lift(parser.parse(src).rootNode as never) as SemanticNode
+    const dig = (n: SemanticNode): SemanticNode | null => {
+      if (n.componentId === componentId) return n
+      for (const kids of Object.values(n.slots ?? {})) for (const k of kids) { const r = dig(k); if (r) return r }
+      return null
+    }
+    const r = dig(tree)?.metadata?.sourceRange
+    return r ? [r.startLine, r.startColumn] : null
+  }
+
+  it.each([
+    ['④ a + b = 3', `${H}int main(){\n    int a=1,b=2;\n    a + b = 3;\n    return 0;\n}\n`, 'cpp:var_assign', [4, 4]],
+    ['① !K--', `${H}int main(){\n    int K=3;\n    if (!K--) cout << 1;\n    return 0;\n}\n`, 'cpp:logic_not', [4, 8]],
+    ['② a < b && c > -d', `${H}int main(){\n    int a=1,b=2,c=3,d=4;\n    if (a < b && c > -d) cout << 1;\n    return 0;\n}\n`, 'cpp:logic', [4, 8]],
+  ])('★ %s：起點在原始程式的那一行那一欄', (_n, src, id, want) => {
+    expect(at(src as string, id as string)).toEqual(want)
   })
 })

@@ -46,7 +46,7 @@ describe('判決 → 診斷', () => {
     expect(b).toEqual([])   // 洞＝還沒寫完，不顯示
     const c = run(v('reject', [{ kind: 'ubUninit', at: 'node_does_not_exist' }]))
     expect(c.diagnostics).toEqual([])
-    expect(c.notes.join()).toMatch(/對不到/)
+    expect(c.notes.join()).toMatch(/指不到/)
     expect(c.unplaced).toEqual({ error: 1, info: 0 })
   })
 
@@ -264,7 +264,9 @@ describe('近似名的建議（Python 的 NameError）', () => {
     const r = go(nameError('cuont'), ['print'])
     expect(r.diagnostics).toEqual([])
     expect(r.unplaced.info).toBe(1)
-    expect(r.notes.join('\n')).toMatch(/undeclared/)
+    // 說明在狀態列上學生看得到：說名字、用中文，不說內部代號（undeclared）也不給原文
+    expect(r.notes.join('\n')).not.toMatch(/undeclared|name '/)
+    expect(r.notes.join('\n')).toMatch(/指不到/)
   })
 })
 

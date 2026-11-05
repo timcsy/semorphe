@@ -188,10 +188,93 @@ export function reparseExpression(node: AstNode, text: string): AstNode | null {
   return found
 }
 
+// ── ④ 指定被解成「二元運算的右運算元」 ──
+
+/**
+ * **`a + b = 3` 被解成 `a + (b = 3)`**（2026-11-05，錯誤訊息的例句頁量到）。
+ *
+ * ```
+ * 寫的          tree-sitter 給的                  C++ 說的
+ * a + b = 3     binary(a, assignment(b, 3))       (a + b) = 3   ——編不過：等號左邊不是變數
+ * x == y = 1    binary(x, assignment(y, 1))       (x == y) = 1
+ * ```
+ *
+ * 🔴 **而這個錯是有後果的**：`a + (b = 3)` 是合法的 C++，於是 Cella 判「沒問題」——
+ * 一支編不過的程式被說成對的（P6：說一支有錯的程式沒錯，比說不出來更糟）。
+ *
+ * ## 它憑什麼是「唯一合法的讀法」
+ *
+ * C++ 的文法裡，二元運算子的右運算元是比指定**更緊**的那一層（`+` 的右邊是 multiplicative-expression……），
+ * **一個沒有括號的指定不可能站在那裡**。指定運算式的左邊是 logical-or-expression——所以那個 `=` 的左邊
+ * 是從整串的開頭到 `b` 為止。使用者真的寫了 `a + (b = 3)` 的話，tree-sitter 給的是 `parenthesized_expression`，
+ * 不會走到這條。三元運算（`c ? a : b = 1`）與逗號是別的節點型別，也不會走到這條。
+ *
+ * @returns 那個解錯的二元運算與它右邊的指定；沒有就 `null`。只沿著**右側**往下找（解錯的形狀只會長在右側）。
+ */
+export function assignmentUnderBinary(node: AstNode): { binary: AstNode; assign: AstNode } | null {
+  /**
+   * ⚠️ 回傳的是**這一串連續二元運算最上面的那一顆**，不是緊貼著指定的那一顆：`a + b * c = 3` 是
+   * `binary(a, binary(b, assignment(c, 3)))`——只包 `b * c` 的話，重解出來還是 `a + ((b * c) = 3)`。
+   * 指定的左邊是從這一串的開頭算起（遇到外層的指定，例如 `x = a + b = 3`，就從它的右邊重新算）。
+   */
+  let run: AstNode | null = null
+  let cur: AstNode | null = node
+  while (cur) {
+    const right: AstNode | null = cur.childForFieldName('right')
+    if (cur.type === 'binary_expression') {
+      run ??= cur
+      if (right?.type === 'assignment_expression') return { binary: run, assign: right }
+    } else if (cur.type === 'assignment_expression') {
+      run = null
+    } else {
+      return null
+    }
+    cur = right
+  }
+  return null
+}
+
+/**
+ * **把重解出來那棵子樹的座標換回原始程式**（2026-11-05，錯誤訊息的例句頁量到）。
+ *
+ * 重解是在一個殼裡解的（`auto __semorphe_reparse(){ return …; }`），於是 lift 出來的每一顆都帶著**殼的座標**
+ * ——第 0 行、欄位多了殼的前綴。症狀：`a + b = 3` 寫在第 3 行，錯誤訊息說「第 1 行」；
+ * 修過的節點，程式碼那一側的定位全部指到第一行。①～④ 四條規則都有這個問題，只是先前沒有東西讀它的行號。
+ *
+ * 換算：殼的（行, 欄）→ 重解那段文字的位移 → 扣掉我插進去的字元 → 原文的位移 → 原始程式的（行, 欄）。
+ * ⚠️ 要在 `stripParenHintAt` **之後**做——擦括號靠的是殼的座標。
+ *
+ * @param inserted 我在重解文字裡插進去的字元，各自的位移（重解文字的座標）
+ */
+function remapFromShell(root: SemanticNode, orig: AstNode, prefixLen: number, patched: string, inserted: readonly number[]): void {
+  const lines = patched.split('\n')
+  const lineStart: number[] = []
+  let acc = 0
+  for (const l of lines) { lineStart.push(acc); acc += l.length + 1 }
+  const toOrig = (row: number, col: number): { line: number; column: number } => {
+    const inPatched = row === 0 ? col - prefixLen : (lineStart[row] ?? acc) + col
+    const o = Math.max(0, Math.min(orig.text.length, inPatched - inserted.filter((p) => p < inPatched).length))
+    const before = orig.text.slice(0, o)
+    const nl = before.lastIndexOf('\n')
+    const line = orig.startPosition.row + (before.match(/\n/g)?.length ?? 0)
+    return { line, column: nl < 0 ? orig.startPosition.column + o : o - nl - 1 }
+  }
+  const walk = (n: SemanticNode): void => {
+    const r = n.metadata?.sourceRange
+    if (r) {
+      const a = toOrig(r.startLine, r.startColumn)
+      const b = toOrig(r.endLine, r.endColumn)
+      n.metadata!.sourceRange = { startLine: a.line, startColumn: a.column, endLine: b.line, endColumn: b.column }
+    }
+    for (const kids of Object.values(n.slots ?? {})) for (const k of kids) walk(k)
+  }
+  walk(root)
+}
+
 // ── 登記 ──
 
 /**
- * **兩條規則的登記。**
+ * **規則的登記**（①～④）。
  *
  * ⚠️ 它們走的是「換一棵樹」的掛鉤（`core/lift/ast-repairs.ts`），
  * 而不是任何一顆元件的 lift——理由是**時機**：
@@ -224,10 +307,13 @@ export function reparseExpression(node: AstNode, text: string): AstNode | null {
  *
  * 所以要把它搬到**解得對的那個位置**去重解。
  */
+/** 包住「當語句重解」的殼——長度是常數，換回原始座標要用它。 */
+const STMT_PREFIX = 'void __semorphe_stmt(){ '
+
 function reparseAsStatement(node: AstNode, text: string): AstNode | null {
   const parser = parserFor(node)
   if (!parser) return null
-  const tree = parser.parse(`void __semorphe_stmt(){ ${text}; }`)
+  const tree = parser.parse(`${STMT_PREFIX}${text}; }`)
   if (!tree || tree.rootNode.hasError) return null
   let found: AstNode | null = null
   const walk = (n: AstNode): void => {
@@ -278,6 +364,8 @@ export function registerMisparseRepairs(): void {
      * C++ 的後置 `--` 本來就綁得比 `!` 緊，所以產生器照優先級也不會補。
      */
     if (lifted) stripParenHintAt(lifted, 0, WRAP_PREFIX.length + inserted.length)
+    const patched = `${inserted}${under.inner.text}${op})`
+    if (lifted) remapFromShell(lifted, node, WRAP_PREFIX.length, patched, [under.unaryOp.length, patched.length - 1])
     return lifted
   })
 
@@ -318,11 +406,36 @@ export function registerMisparseRepairs(): void {
     if (!reparsed || reparsed.type !== 'comma_expression') return null
     const lifted = ctx.lift(reparsed)
     if (!lifted || lifted.componentId === 'raw_code' || lifted.componentId === 'unresolved') return null
+    // 重解的文字是去掉外層括號的 inner；原文從 `(` 開始，所以前綴少算那一個字元
+    remapFromShell(lifted, node, STMT_PREFIX.length - 1, inner, [])
     // ⚠️ 括號是使用者寫的——這條路沒有經過 `cpp_unwrap_parens`，要自己記
     lifted.metadata = {
       ...(lifted.metadata ?? {}),
       layoutHints: { ...(lifted.metadata?.layoutHints ?? {}), parenthesized: true },
     }
+    return lifted
+  })
+
+  /** ④ `a + b = 3` → `(a + b) = 3`：重解成指定在最外層的那棵樹（見 `assignmentUnderBinary`）。 */
+  declareAstRepair((node: AstNode, ctx: LiftContext): SemanticNode | null => {
+    // 只在最外層的運算式上動手——裡面那一層先被修的話，外層的左運算元會被留在括號外面
+    if (!isExpression(node) || isExpression(node.parent)) return null
+    if (!node.text.includes('=')) return null
+    const hit = assignmentUnderBinary(node)
+    if (!hit) return null
+    const left = hit.assign.childForFieldName('left')
+    if (!left) return null
+    const at = hit.binary.startIndex - node.startIndex
+    const close = left.startIndex + left.text.length - node.startIndex
+    if (at < 0 || close <= at || close > node.text.length) return null
+    const patched = `${node.text.slice(0, at)}(${node.text.slice(at, close)})${node.text.slice(close)}`
+    const fixed = reparseExpression(node, patched)
+    // 重解出來還是同一個形狀 ⟹ 判斷錯了，不要回一棵「以為修好了」的樹（也是終止保證）
+    if (!fixed || assignmentUnderBinary(fixed)) return null
+    const lifted = ctx.lift(fixed)
+    // 🔴 擦掉我插進去的那對括號——使用者沒寫；產生器照優先級也不會補（二元運算綁得比指定緊）
+    if (lifted) stripParenHintAt(lifted, 0, WRAP_PREFIX.length + at + 1)
+    if (lifted) remapFromShell(lifted, node, WRAP_PREFIX.length, patched, [at, close + 1])
     return lifted
   })
 
@@ -353,6 +466,7 @@ export function registerMisparseRepairs(): void {
     if (suspectTemplate(fixed, (n) => n === name.text)) return null
     const lifted = ctx.lift(fixed)
     if (lifted) stripParenHintAt(lifted, 0, WRAP_PREFIX.length + at + 1)
+    if (lifted) remapFromShell(lifted, node, WRAP_PREFIX.length, patched, [at, at + name.text.length + 1])
     return lifted
   })
 }
