@@ -86,10 +86,17 @@ export function codeDiagnosticMessage(d: Diagnostic): string {
  * ⚠️ 兩側共用（積木側在 `panels/blocks/view.ts`）：判準只在這裡寫一次。
  */
 export function diagnosticText(rule: string, side: 'BLOCK' | 'CODE', params: Record<string, string | number>): string {
-  if (params.subject !== undefined) {
-    const named = formatMessage(`DIAG_${rule}_${side}_AT`, params)
-    // 還有沒填上的格（例如從積木抽回的節點沒有行號）⟹ 不用這一句，退回不指名的那一句——不讓學生看到 `{line}`
-    if (named !== null && !/\{\w+\}/.test(named)) return named
+  // 候選由細到粗：規則＋子類別（`what`，Cella 細分的那一層）→ 規則本身；每一層先試指名的（`_AT`）。
+  // 🔴 有沒填上的格（`{line}`、`{expected}`…）就換下一個候選——學生不會看到 `{…}`。
+  const what = typeof params.what === 'string' ? `_${params.what.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}` : ''
+  const keys = [
+    ...(what ? [`DIAG_${rule}${what}_${side}_AT`, `DIAG_${rule}${what}_${side}`] : []),
+    `DIAG_${rule}_${side}_AT`, `DIAG_${rule}_${side}`,
+  ]
+  for (const k of keys) {
+    if (k.endsWith('_AT') && params.subject === undefined) continue
+    const text = formatMessage(k, params)
+    if (text !== null && !/\{\w+\}/.test(text)) return text
   }
   return formatMessage(`DIAG_${rule}_${side}`, params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
 }

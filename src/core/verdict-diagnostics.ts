@@ -84,6 +84,13 @@ const KINDS: Record<string, { rule: string }> = {
   ubOrder: { rule: 'CELLA_UNSPECIFIED' },
   // 兩種求值順序判斷功能沒有比較（why：access＝呼叫之外的讀寫、budget＝比較超過預算）——判不出，不是學生的錯（cella 0.1.202611042110）
   orderUncompared: { rule: 'CELLA_ORDER_UNCOMPARED' },
+  // 編譯不過的細分（cella 0.1.202611050546 起；判決仍是 reject）——各帶 params，文案照 `what` 細分（`DIAG_<規則>_<WHAT>_<側>`），spec 218
+  notAssignable: { rule: 'CELLA_NOT_ASSIGNABLE' },
+  callArguments: { rule: 'CELLA_CALL_ARGUMENTS' },
+  redeclared: { rule: 'CELLA_REDECLARED' },
+  returnValue: { rule: 'CELLA_RETURN_VALUE' },
+  operandTypes: { rule: 'CELLA_OPERAND_TYPES' },
+  noConversion: { rule: 'CELLA_NO_CONVERSION' },
   abort: { rule: 'CELLA_TERMINATION' },
   uncaught: { rule: 'CELLA_TERMINATION' },
 }
