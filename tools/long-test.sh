@@ -56,7 +56,9 @@ if [ $BUILD = 1 ]; then
 fi
 
 if [ $E2E = 1 ]; then
-  CFG="$WT/pw-$PORT.tmp.config.ts"
+  # 🔴 暫存設定寫在【輸出目錄】，不寫進 worktree（2026-11-05）：上一輪被砍掉時它來不及刪，留在 worktree 裡，
+  #    下一輪開跑的指紋就把它算進去、跑完又被刪掉——乾淨的一輪被判成「跑的期間被改過」（exit 3）。
+  CFG="$(cd "$OUT" && pwd)/pw-$PORT.tmp.config.ts"
   cat > "$CFG" <<EOF
 import base from '$WT/playwright.config'
 export default {
