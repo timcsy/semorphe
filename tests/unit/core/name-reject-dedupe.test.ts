@@ -12,3 +12,12 @@ describe('名字不合法與 Cella 的 reject 去重（spec 216）', () => {
     expect(dropRejectsCoveredByNameChecks(all)).toEqual(all)
   })
 })
+
+describe('細分過的 reject 也算（錯誤訊息第四步量到）', () => {
+  it('★ 名字不合法的那一顆，Cella 說的是細分的種類（例如重複宣告）——也只留形態那一則', () => {
+    const d = (nodeId: string, source: Diagnostic['source'], rule: string): Diagnostic => ({ nodeId, source, rule, severity: 'error', params: {} })
+    for (const rule of ['CELLA_REDECLARED', 'CELLA_NOT_ASSIGNABLE', 'CELLA_OPERAND_TYPES']) {
+      expect(dropRejectsCoveredByNameChecks([d('n1', 'component', 'BAD_NAME_STARTS_WITH_DIGIT'), d('n1', 'cella', rule)]).map((x) => x.rule)).toEqual(['BAD_NAME_STARTS_WITH_DIGIT'])
+    }
+  })
+})

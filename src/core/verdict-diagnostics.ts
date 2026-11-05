@@ -99,7 +99,7 @@ const KINDS: Record<string, { rule: string }> = {
 }
 
 /** 「編譯不過」這一族（籠統的 reject ＋ 0546 起的細分）——更具體的說法（串流配錯運算子、型別不合）要取代它們時，一律看這一組。 */
-const REJECT_FAMILY = new Set(['CELLA_REJECT', 'CELLA_NOT_ASSIGNABLE', 'CELLA_CALL_ARGUMENTS', 'CELLA_REDECLARED', 'CELLA_RETURN_VALUE', 'CELLA_OPERAND_TYPES', 'CELLA_NO_CONVERSION'])
+export const REJECT_FAMILY = new Set(['CELLA_REJECT', 'CELLA_NOT_ASSIGNABLE', 'CELLA_CALL_ARGUMENTS', 'CELLA_REDECLARED', 'CELLA_RETURN_VALUE', 'CELLA_OPERAND_TYPES', 'CELLA_NO_CONVERSION'])
 
 /** 判決產出端的全部規則身分（護欄用）。 */
 export const VERDICT_RULES: readonly string[] = [...new Set(Object.values(KINDS).map((k) => k.rule))].concat('CELLA_UNDECLARED_HEADER', 'CELLA_OTHER', 'CELLA_UNCLASSIFIED', 'CELLA_INVALID', 'TYPE_MISMATCH')
