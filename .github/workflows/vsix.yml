@@ -80,6 +80,8 @@ jobs:
       #    於是那段自稱「開 .ino 面板」的檢查，測的是一個 `.cpp` 檔
       #    ——`.ino → arduino` 那條路一次都沒走過。兩件事同日修。
       - name: 安裝瀏覽器（預檢要用）
+        # 2026-11-06：這一步在 runner 上掛了 5 小時（平常幾分鐘）——沒有上限時要等到工作的 6 小時預設逾時才會被砍
+        timeout-minutes: 10
         run: npx playwright install --with-deps chromium
       - name: 預檢——面板起得來，而且不動使用者的檔案
         run: node tools/vscode-preflight/run.mjs
