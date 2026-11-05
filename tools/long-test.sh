@@ -42,6 +42,15 @@ status=0
 fingerprint() { local idx; idx=$(mktemp); cp "$(git rev-parse --git-path index)" "$idx" 2>/dev/null; GIT_INDEX_FILE="$idx" git add -A . >/dev/null 2>&1; GIT_INDEX_FILE="$idx" git write-tree; rm -f "$idx"; }
 FP_START=$(fingerprint)
 
+# 🟢 狀態檔（2026-11-05，窗口試點）：session 是快取、真相在檔案——「誰的長測試在跑、跑到哪、結果是什麼」
+#    原本只在對話與 ${CLAUDE_JOB_DIR}（工作結束就被清掉）裡。寫在 git 的共用目錄：每個 worktree 都看得到、不會被提交、
+#    worktree 刪了它還在。一輪一行，不用人寫。讀法：`tail "$(git rev-parse --git-common-dir)/long-test/runs.tsv"`
+STATE_DIR="$(cd "$(git rev-parse --git-common-dir)" && pwd)/long-test"
+mkdir -p "$STATE_DIR"
+RANGE="$([ $SUITE = 1 ] && printf 全套,)$([ $E2E = 1 ] && printf e2e,)$([ $BUILD = 1 ] && [ $E2E = 0 ] && printf 建置,)${ONLY[*]:-}"
+RUN_START="$(date '+%F %T')"
+printf '%s\t%s\t%s\t%s\t%s\t跑著\t%s\n' "$RUN_START" "$NAME" "$(git rev-parse --abbrev-ref HEAD)" "$(git rev-parse --short HEAD)" "$RANGE" "$OUT" > "$STATE_DIR/$NAME.now"
+
 if [ $SUITE = 1 ]; then
   wait_cella
   echo "suite 開始 $(date +%T)（${NAME}）"
@@ -86,4 +95,8 @@ if [ "$FP_END" != "$FP_START" ]; then
   status=3
 fi
 echo "結束 $(date +%T)"
+# 一輪一行：開始、worktree、分支、提交、範圍、結果、紅了哪幾支、輸出目錄（結果：0 綠／1 紅／3 跑的期間被改過）
+REDS=$(cat "$OUT"/*.log 2>/dev/null | strip | grep -aoE '^ FAIL  [^ ]+|✘ +[0-9]+ \[[a-z]+\] › [^ ]+' | sed 's/^ FAIL  //; s/.*› //' | sort -u | head -8 | paste -sd, -)
+printf '%s\t%s\t%s\t%s\t%s\texit=%s\t%s\t%s\n' "$RUN_START" "$NAME" "$(git rev-parse --abbrev-ref HEAD)" "$(git rev-parse --short HEAD)" "$RANGE" "$status" "${REDS:-—}" "$OUT" >> "$STATE_DIR/runs.tsv"
+rm -f "$STATE_DIR/$NAME.now"
 exit $status

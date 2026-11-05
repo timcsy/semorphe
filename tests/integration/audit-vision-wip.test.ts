@@ -133,6 +133,41 @@ export function yellowHeadings(md: string): string[] {
   return out
 }
 
+/**
+ * **一行式的路線圖項目**（2026-11-05 起試點）：`- [ ] **名稱**｜負責：…｜狀態：…｜結束：…｜卡在：…｜→ 連結`。
+ *
+ * 🔴 試點當天量到：上面兩支只認得「行首粗體＋破折號」與 `####` 標題，**一行式的項目一個都認不出來**
+ * ——轉換之後這條護欄會一聲不吭地永遠綠。那正是三方討論裡的判準：「欄位缺了有沒有東西會變紅？」
+ */
+export interface OneLine { section: string; done: boolean; name: string; fields: Record<string, string>; continued: boolean }
+export function oneLineItems(md: string): OneLine[] {
+  const i = md.indexOf('\n## 路線圖')
+  if (i < 0) return []
+  const j = md.indexOf('\n### ✅', i)
+  const lines = md.slice(i, j < 0 ? md.length : j).split('\n')
+  const out: OneLine[] = []
+  let section = ''
+  for (const line of lines) {
+    const h = /^### (.+)$/.exec(line)
+    if (h) { section = h[1].trim(); continue }
+    const m = /^- \[([ x])\] \*\*([^*]+)\*\*(.*)$/.exec(line)
+    if (m) {
+      const fields: Record<string, string> = {}
+      for (const part of m[3].split('｜').slice(1)) {
+        const f = /^(負責|狀態|結束|卡在)：(.*)$/.exec(part.trim())
+        if (f) fields[f[1]] = f[2].trim()
+      }
+      out.push({ section, done: m[1] === 'x', name: m[2], fields, continued: false })
+      continue
+    }
+    // 緊接在項目後面、縮排的那一行 ＝ 這一項超過一行
+    if (out.length > 0 && /^\s+\S/.test(line)) out[out.length - 1].continued = true
+  }
+  return out
+}
+
+export const ONE_LINE_FIELDS = ['負責', '狀態', '結束', '卡在'] as const
+
 /** 那個名字底下還有幾個沒打勾的框。 */
 export function openBoxesUnder(md: string, name: string): { found: boolean; open: number } {
   const key = name.slice(0, 8)
@@ -194,6 +229,27 @@ describe('★ 第八十九條：「進行中」裡的每一項都還有事沒做
         + '⚠️ 它不一定住在〈🟡 進行中〉那一節——**而 `🟡` 這個標記本身就是一句宣稱**。\n'
         + '🟢 修法同上：反流到 `history/`，收成一行 ＋ 指標，並把 🟡 換成 ✅。',
     ).toEqual([])
+  })
+
+  it('🔴 硬性零（一行化試點）：路線圖每一項一行、四個欄位都在、〈進行中〉沒有打勾的', () => {
+    const items = oneLineItems(md)
+    const empty = (v?: string): boolean => !v || v === '—' || v.startsWith('（原文沒寫')
+    printReport('路線圖一行化', [
+      `項目           ${items.length}`,
+      ...ONE_LINE_FIELDS.map((f) => `  ${f}填不出來   ${items.filter((x) => empty(x.fields[f])).length}`),
+    ])
+    const bad = [
+      ...items.filter((x) => x.continued).map((x) => `${x.name}：超過一行——細節移到 spec／draft／history`),
+      ...items.filter((x) => ONE_LINE_FIELDS.some((f) => !(f in x.fields))).map((x) => `${x.name}：缺欄位 ${ONE_LINE_FIELDS.filter((f) => !(f in x.fields)).join('、')}（填不出來就寫「—」，讓它看得見）`),
+      ...items.filter((x) => x.done && x.section.includes('進行中')).map((x) => `${x.name}：打勾了還在〈進行中〉——移到〈已完成的里程碑〉收成一行`),
+    ]
+    expect(bad, '🔴 路線圖的一行格式壞了').toEqual([])
+  })
+
+  it('★ 注入（一行化）：超過一行、缺欄位、進行中打勾——三種都抓得到', () => {
+    const md2 = ['', '## 路線圖', '### 🟡 進行中', '- [x] **甲**｜負責：a｜狀態：b｜結束：c｜卡在：d', '- [ ] **乙**｜負責：a｜狀態：b', '- [ ] **丙**｜負責：a｜狀態：b｜結束：c｜卡在：d', '      第二行', '### ✅ 已完成'].join('\n')
+    const xs = oneLineItems(md2)
+    expect(xs.map((x) => [x.name, x.done, Object.keys(x.fields).length, x.continued])).toEqual([['甲', true, 4, false], ['乙', false, 2, false], ['丙', false, 4, true]])
   })
 
   it('★ 注入：一個住在別節、而框全打勾的 🟡 標題 → 抓得到', () => {
