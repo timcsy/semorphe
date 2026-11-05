@@ -98,11 +98,15 @@ async function drain(): Promise<void> {
   while (pending) {
     const req = pending
     pending = null
+    const family = familyOf(branchOf(req.program as never))
     try {
-      const c = await load(familyOf(branchOf(req.program as never)))
+      const c = await load(family)
       if (pending) { post({ id: req.id, kind: 'skipped' }); continue }   // 等載入時來了更新的
       post({ id: req.id, kind: 'result', verdict: c.verdict(req.program, req.input, req.fuel), types: c.types(req.program, []) })
     } catch (e) {
+      // 🔴 判決途中丟錯（例如 wasm 中止：堆疊溢位）——那一份實例不能再用（cella 2026-11-05：之後的呼叫會丟「實例不能再用，
+      //    請建立新的」，之前會照樣回一個不可信的 accept）。從快取拿掉，下一次判決重建（從編好的位元組，很快）。
+      checkers.delete(family)
       post({ id: req.id, kind: 'error', reason: e instanceof Error ? e.message : String(e) })
     }
     await new Promise((r) => setTimeout(r, 0))   // 讓判決期間到的訊息先進來，再挑最新的
