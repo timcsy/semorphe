@@ -70,6 +70,9 @@ export interface TypeQuery {
  */
 const KINDS: Record<string, { rule: string }> = {
   ubUninit: { rule: 'CELLA_UB_UNINIT' },
+  // 越過結尾、板子上沒有的腳：執行停下一直有專屬的說法，寫程式時卻落到通用那一句——兩邊收成一套（錯誤訊息第三步）
+  ubPastEnd: { rule: 'CELLA_UB_PAST_END' },
+  ubPin: { rule: 'CELLA_UB_PIN' },
   ubBounds: { rule: 'CELLA_UB_BOUNDS' },
   ubOverflow: { rule: 'CELLA_UB_OVERFLOW' },
   ubDivZero: { rule: 'CELLA_UB_DIV_ZERO' },
@@ -115,8 +118,8 @@ export const GENERIC_KINDS: readonly string[] = [
   'assumed', 'hole', 'json', 'resource', 'stopped', 'undetermined',
   // 其餘的未定義行為（指標、對齊、浮點轉型、函式庫誤用……）——C 家族那一份清單的全部 ub*，除了 KINDS 裡有專屬文案的六種
   'ubAlias', 'ubAlign', 'ubAlignUnknown', 'ubConstWrite', 'ubDangling', 'ubDivOverflow', 'ubElide', 'ubFile', 'ubFileMode',
-  'ubFloatCast', 'ubFloatCastC', 'ubFloatDivZero', 'ubFree', 'ubIntegerAddress', 'ubLib', 'ubLitWrite', 'ubNull', 'ubPastEnd',
-  'ubPin', 'ubPointerAddress', 'ubPrintf', 'ubPtrCmp', 'ubPtrDiff', 'ubPtrOrder', 'ubPureCall', 'ubRealloc', 'ubReallocZero',
+  'ubFloatCast', 'ubFloatCastC', 'ubFloatDivZero', 'ubFree', 'ubIntegerAddress', 'ubLib', 'ubLitWrite', 'ubNull',
+  'ubPointerAddress', 'ubPrintf', 'ubPtrCmp', 'ubPtrDiff', 'ubPtrOrder', 'ubPureCall', 'ubRealloc', 'ubReallocZero',
   'ubRepresentation', 'ubScanf', 'ubShift', 'ubStdHeader', 'ubTypeName', 'ubUnseq', 'ubUnwind', 'ubVlaSize',
 ]
 

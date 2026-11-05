@@ -138,7 +138,7 @@
   "RUNTIME_ERR_UB_PIN": "停在這裡：這支腳不在這塊板子上（{pre}）",
   "RUNTIME_ERR_CELLA_TOO_DEEP": "輸出太長，判斷功能目前跑不完（大約印到六千多個字就停）——不是你的程式錯了",
   "RUNTIME_ERR_UNDEFINED_BEHAVIOR": "停在這裡：這一步的結果標準沒有定義（{clause}）：{pre}",
-  "RUNTIME_ERR_UNSPECIFIED_BEHAVIOR": "停在這裡：這一步的結果標準允許不只一種，判不出確定的值（{clause}）",
+  "RUNTIME_ERR_UNSPECIFIED_BEHAVIOR": "停在這裡：這一步的結果，標準允許不只一種（{clause}）",
   "RUNTIME_ERR_UNCAUGHT_EXCEPTION": "程式丟出了一個沒有接住的例外：{text}",
   "EXEC_NO_STEPPING": "這個執行器不能逐步執行——改成直接跑完",
   "EXEC_NO_INTERACTIVE_INPUT": "這個執行器不能邊跑邊等輸入——程式讀到的輸入只有事先給的（這一次沒有）",
@@ -298,7 +298,7 @@
   "DIAG_CELLA_UNSUPPORTED_CODE": "判斷功能還不支援這個寫法（不是程式寫錯）",
   "DIAG_CELLA_FUEL_BLOCK": "跑太久了，判不出來（可能是無窮迴圈）",
   "DIAG_CELLA_FUEL_CODE": "超過步數上限，判不出結果",
-  "DIAG_CELLA_UNSPECIFIED_BLOCK": "這裡的結果，標準允許不只一種",
+  "DIAG_CELLA_UNSPECIFIED_BLOCK": "這一步的結果，標準允許不只一種",
   "DIAG_CELLA_UNSPECIFIED_CODE": "未指定的行為（{clause}）",
   "DIAG_CELLA_OTHER_BLOCK": "判斷功能說這裡有狀況：{kindLabel}",
   "DIAG_CELLA_OTHER_CODE": "{kindLabel}（{clause}）",
@@ -947,5 +947,13 @@
   "DIAG_CELLA_NO_CONVERSION_BLOCK": "{from} 不能轉成 {to}",
   "DIAG_CELLA_NO_CONVERSION_CODE": "不能轉換：{from} → {to}（{clause}）",
   "DIAG_CELLA_NO_CONVERSION_CODE_AT": "第 {line} 行：「{subject}」是 {from}，這裡要的是 {to}，兩者不能互轉",
-  "DIAG_CELLA_NO_CONVERSION_DISCARDS_CONST_BLOCK": "這樣會拿掉 const，不能轉"
+  "DIAG_CELLA_NO_CONVERSION_DISCARDS_CONST_BLOCK": "這樣會拿掉 const，不能轉",
+  "DIAG_CELLA_UB_PAST_END_BLOCK": "讀寫到結尾之後了",
+  "DIAG_CELLA_UB_PAST_END_CODE": "存取超過結尾（{clause}）",
+  "DIAG_CELLA_UB_PAST_END_BLOCK_AT": "「{subject}」讀寫到結尾之後了",
+  "DIAG_CELLA_UB_PAST_END_CODE_AT": "第 {line} 行：「{subject}」讀寫到結尾之後了",
+  "DIAG_CELLA_UB_PIN_BLOCK": "這支腳不在這塊板子上",
+  "DIAG_CELLA_UB_PIN_CODE": "這支腳不在這塊板子上",
+  "DIAG_CELLA_UB_PIN_BLOCK_AT": "「{subject}」用的腳不在這塊板子上",
+  "DIAG_CELLA_UB_PIN_CODE_AT": "第 {line} 行：「{subject}」用的腳不在這塊板子上"
 }
