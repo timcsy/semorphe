@@ -78,7 +78,20 @@ export function diagnosticParams(params: Record<string, string | number>): Recor
  *    （判決來自 Cella，而 Cella 的原文本來就不是學生日後會在編譯器上看到的那一句）。
  */
 export function codeDiagnosticMessage(d: Diagnostic): string {
-  return formatMessage(`DIAG_${d.rule}_CODE`, diagnosticParams(d.params)) ?? formatMessage('DIAG_UNKNOWN') ?? ''
+  return diagnosticText(d.rule, 'CODE', diagnosticParams(d.params))
+}
+
+/**
+ * 一則診斷的文字：**指得出名的時候用指名的那一句**（`DIAG_<規則>_<側>_AT`，帶 `{subject}`——spec 218），否則用原本那一句。
+ * ⚠️ 兩側共用（積木側在 `panels/blocks/view.ts`）：判準只在這裡寫一次。
+ */
+export function diagnosticText(rule: string, side: 'BLOCK' | 'CODE', params: Record<string, string | number>): string {
+  if (params.subject !== undefined) {
+    const named = formatMessage(`DIAG_${rule}_${side}_AT`, params)
+    // 還有沒填上的格（例如從積木抽回的節點沒有行號）⟹ 不用這一句，退回不指名的那一句——不讓學生看到 `{line}`
+    if (named !== null && !/\{\w+\}/.test(named)) return named
+  }
+  return formatMessage(`DIAG_${rule}_${side}`, params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
 }
 
 /** 一則診斷投影到程式碼座標之後的樣子。⚠️ 行、欄都是 **0-based**。 */

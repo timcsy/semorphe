@@ -21,7 +21,7 @@ import type { SemanticNode } from '../core/types'
 import { createNode } from '../core/semantic-tree'
 import type { DiagnosticBlock } from '../core/diagnostics'
 import type { ProgramScaffold } from '../core/program-scaffold'
-import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases, setExpressionTypes } from '../core/projection/code-generator'
+import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases, setExpressionTypes, generateExpressionCode } from '../core/projection/code-generator'
 import { carryTypes } from '../core/projection/carry-types'
 // 🔴 **spec 153：五樣語言相關的東西在這裡接上。**
 //    它們原本散在 `blockly-panel`／`block-registrar`／`sync-controller` 裡
@@ -4556,7 +4556,9 @@ export class App {
     } else if (this.lastEditor === 'code') {
       this.typesPending = false
     }
-    const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: req.tree, readsInput: a.readsInput, hasStdin: stdin.length > 0, knownNames: languagePack(this.currentTopic.language)?.wellKnownNames, streamOperators: languagePack(this.currentTopic.language)?.streamOperators })
+    const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: req.tree, readsInput: a.readsInput, hasStdin: stdin.length > 0, knownNames: languagePack(this.currentTopic.language)?.wellKnownNames, streamOperators: languagePack(this.currentTopic.language)?.streamOperators,
+      // 指名（spec 218）：判決指到的那一顆的程式碼——核心不認得語言，由這裡產
+      codeOf: (n) => generateExpressionCode(n, this.currentTopic.language, this.currentStylePreset) })
     this.checkDiagnostics = r.diagnostics
     this.checkNotes = r.notes
     this.checkUnplaced = r.unplaced
