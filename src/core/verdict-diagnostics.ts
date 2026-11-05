@@ -17,6 +17,7 @@
 import type { Diagnostic } from './diagnostics'
 import type { SemanticNode } from './types'
 import { findNearMiss } from './near-miss'
+import { diagnosticText, diagnosticParams } from './projection/diagnostic-projection'
 
 /** 判決的一個問題（Cella 判決 JSON 的 `problems[]`）。`at` 是 formalize 給的節點標籤。 */
 export interface VerdictProblem {
@@ -100,6 +101,11 @@ const KINDS: Record<string, { rule: string }> = {
 
 /** 「編譯不過」這一族（籠統的 reject ＋ 0546 起的細分）——更具體的說法（串流配錯運算子、型別不合）要取代它們時，一律看這一組。 */
 export const REJECT_FAMILY = new Set(['CELLA_REJECT', 'CELLA_NOT_ASSIGNABLE', 'CELLA_CALL_ARGUMENTS', 'CELLA_REDECLARED', 'CELLA_RETURN_VALUE', 'CELLA_OPERAND_TYPES', 'CELLA_NO_CONVERSION'])
+
+/** Cella 的結構化參數（字串與布林）攤成文案用的字串表。 */
+function stringParams(params: Record<string, unknown> | undefined): Record<string, string> {
+  return Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => typeof v === 'string' || typeof v === 'boolean').map(([k, v]) => [k, String(v)]))
+}
 
 /** 判決產出端的全部規則身分（護欄用）。 */
 export const VERDICT_RULES: readonly string[] = [...new Set(Object.values(KINDS).map((k) => k.rule))].concat('CELLA_UNDECLARED_HEADER', 'CELLA_OTHER', 'CELLA_UNCLASSIFIED', 'CELLA_INVALID', 'TYPE_MISMATCH')
@@ -283,7 +289,10 @@ export function toDiagnostics(input: {
     const severity = classified ? CATEGORY_SEVERITY[p.category!]! : 'info'
     if (!known.has(nodeId)) {
       unplaced[severity === 'error' ? 'error' : 'info']++
-      notes.push(`有一則判決對不到積木：${p.kind}${p.reason ? `（${p.reason}）` : ''}`)
+      // 🔴 這一句會出現在狀態列的說明裡（學生看得到）——用同一套中文文案，不給內部代號與 Cella 的原文（history/341）
+      const rule = p.kind === 'undeclared' ? 'CELLA_UNDECLARED' : !classified ? 'CELLA_UNCLASSIFIED' : k?.rule ?? 'CELLA_OTHER'
+      const text = diagnosticText(rule, 'BLOCK', diagnosticParams({ ...stringParams(p.params), kind: p.kind, clause: p.clause ?? '' }))
+      notes.push(text ? `${text}（指不到是哪一塊）` : '有一則判決指不到是哪一塊')
       continue
     }
     // spec 206：未宣告的名字——有一個長得很像的就說出來（原本住在 JS 直譯器，6c-4 刪掉它之前搬過來）；找不到就不提
@@ -315,7 +324,7 @@ export function toDiagnostics(input: {
   // 型別不合：允許接上、標在那一句（第 16 題）。判決的 reject 也指到同一顆時只留一則
   for (const e of types?.errors ?? []) {
     const nodeId = ownerOf(e.at)
-    if (!known.has(nodeId)) { unplaced.error++; notes.push(`有一則型別錯誤對不到積木（${e.reason}）`); continue }
+    if (!known.has(nodeId)) { unplaced.error++; notes.push(diagnosticText('TYPE_MISMATCH', 'BLOCK', {}) ? `${diagnosticText('TYPE_MISMATCH', 'BLOCK', {})}（指不到是哪一塊）` : '有一則型別不合指不到是哪一塊'); continue }
     if (diagnostics.some((d) => d.nodeId === nodeId && REJECT_FAMILY.has(d.rule))) continue
     diagnostics.push({ nodeId, severity: 'error', source: 'cella', rule: 'TYPE_MISMATCH', params: { ...pinpoint(nodes.get(nodeId), input.codeOf), reason: e.reason } })
   }
