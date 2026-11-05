@@ -1,5 +1,5 @@
 /**
- * **棘輪：錯誤訊息的三層**（使用者 2026-11-05 定：第一層一句話，點開看「為什麼／試試看」）
+ * **棘輪：錯誤訊息的三層，與第一層的指名**（使用者 2026-11-05 定：第一層一句話，點開看「為什麼／試試看」）
  *
  * 每一條有第一層（`DIAG_<規則>_BLOCK`）的規則，最好也有 `_WHY` 與 `_TRY`。今天先補了學生最常碰到的 24 種；
  * 其餘的（多半是系統那一側的：invalid、unclassified……）還沒有。這支數「有第一層而沒有後兩層」的規則——**只准下降**；
@@ -16,6 +16,12 @@ import en from '../../src/i18n/en/blocks.json'
  */
 const MISSING_CEILING = 3
 
+/**
+ * 第一層要指名（名字、行號或值至少一樣）——錯誤訊息計畫驗收的那一條（draft §三）。2026-11-06：54 條裡 38 條有（`{…}` 參數、`_AT`、`_VAL`），
+ * 16 條還沒有——其中幾條本來就沒有東西可指（「缺少條件」指的就是那顆積木）。**只准下降**。
+ */
+const UNNAMED_CEILING = 16
+
 const zh = zhTW as Record<string, string>
 const enT = en as Record<string, string>
 const rules = [...new Set(Object.keys(zh).filter((k) => /^DIAG_.+_BLOCK$/.test(k)).map((k) => k.slice(5, -'_BLOCK'.length)))]
@@ -31,6 +37,13 @@ describe('棘輪：錯誤訊息的三層', () => {
       .filter((base, i, all) => all.indexOf(base) === i)
       .filter((base) => !zh[`${base}_WHY`] || !zh[`${base}_TRY`] || !enT[`${base}_WHY`] || !enT[`${base}_TRY`])
     expect(half).toEqual([])
+  })
+
+  it('📉 棘輪：第一層沒有指名也沒有帶值的規則，只准下降', () => {
+    const named = (r: string): boolean => /\{\w+\}/.test(zh[`DIAG_${r}_BLOCK`] ?? '')
+      || [`_BLOCK_AT`, `_BLOCK_VAL`, `_BLOCK_AT_VAL`].some((v) => Boolean(zh[`DIAG_${r}${v}`]))
+    const unnamed = rules.filter((r) => !named(r))
+    expect(unnamed.length, `第一層沒有指名的：${unnamed.join('、')}`).toBeLessThanOrEqual(UNNAMED_CEILING)
   })
 
   it('📉 棘輪：有第一層而沒有後兩層的規則，只准下降', () => {

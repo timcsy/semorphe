@@ -38,7 +38,17 @@ mkdir -p "$OUT"
 # 🔴 只看【執行檔】，不看整串指令文字（2026-11-05）：呼叫這支腳本的 shell 自己的指令列裡寫著「cargo test」時
 #    （例如同一行先 pgrep 一下），舊的寫法把那個 shell 算成「Cella 在跑」——等自己等了 74 分鐘。
 cella_running() { ps -axo stat=,comm= | awk '$1 !~ /^T/ && ($2 ~ /(^|\/)cargo$/ || $2 ~ /cella\/target\// || $2 ~ /(^|\/)cella$/)' | wc -l | tr -d ' '; }
-wait_cella() { [ "$WAIT_CELLA" = 1 ] || return 0; until [ "$(cella_running)" -eq 0 ]; do sleep 60; done; }
+# ⏱ 等有上限（2026-11-06）：Cella 的子代理整夜跑測試時，「等它跑完」等了兩個鐘頭還沒開始——一個等別人的閘沒有上限，就是一個安靜的停擺。
+#    最多等 WAIT_MAX 分鐘，等不到就說出來、照跑（負載造成的紅照舊單獨重跑來判）。
+WAIT_MAX=${WAIT_MAX:-20}
+wait_cella() {
+  [ "$WAIT_CELLA" = 1 ] || return 0
+  local waited=0
+  until [ "$(cella_running)" -eq 0 ]; do
+    if [ "$waited" -ge "$WAIT_MAX" ]; then echo "⏱ 等了 ${waited} 分鐘，Cella 仍在跑自己的測試——照跑（紅的那幾支單獨重跑再判）"; return 0; fi
+    sleep 60; waited=$((waited + 1))
+  done
+}
 strip() { LC_ALL=C sed 's/\x1b\[[0-9;]*m//g'; }
 
 cd "$WT" || exit 1
