@@ -1,6 +1,7 @@
 import { checkSlots } from './component/slot-check'
 import { checkParams } from './component/param-check'
 import type { SemanticNode } from './types'
+import { REJECT_FAMILY } from './verdict-diagnostics'
 
 /**
  * 一則診斷。
@@ -444,10 +445,11 @@ export function canExecute(
  * `int 123;` 這種名字，元件宣告（`kind: 'identifier'`）就檢查得出來（`BAD_NAME_*`，形態、措辭是教學的），
  * Cella 也會對同一顆 reject——兩則疊在同一行，學生看到兩個紅字說同一件事。
  * 與 `TYPE_MISMATCH` 對 `CELLA_REJECT` 的去重同一個做法（`verdict-diagnostics.ts`）。
- * ⚠️ 只去掉 **reject**：Cella 對那一顆說的若是別的（未定義行為、判不出），照留。
+ * ⚠️ 只去掉 **reject 族**：Cella 對那一顆說的若是別的（未定義行為、判不出），照留。
  */
 export function dropRejectsCoveredByNameChecks(diagnostics: Diagnostic[]): Diagnostic[] {
   const named = new Set(diagnostics.filter((d) => d.source === 'component' && d.rule.startsWith('BAD_NAME_')).map((d) => d.nodeId))
   if (named.size === 0) return diagnostics
-  return diagnostics.filter((d) => !(d.source === 'cella' && d.rule === 'CELLA_REJECT' && named.has(d.nodeId)))
+  // ⚠️ 看整個 reject 族（籠統的＋0546 起細分的六種）——只看 `CELLA_REJECT` 的話，細分之後同一行又是兩則紅字（與 `cin <` 那次同一個漏洞）
+  return diagnostics.filter((d) => !(d.source === 'cella' && REJECT_FAMILY.has(d.rule) && named.has(d.nodeId)))
 }

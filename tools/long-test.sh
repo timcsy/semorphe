@@ -50,6 +50,9 @@ mkdir -p "$STATE_DIR"
 RANGE="$([ $SUITE = 1 ] && printf 全套,)$([ $E2E = 1 ] && printf e2e,)$([ $BUILD = 1 ] && [ $E2E = 0 ] && printf 建置,)${ONLY[*]:-}"
 RUN_START="$(date '+%F %T')"
 printf '%s\t%s\t%s\t%s\t%s\t跑著\t%s\n' "$RUN_START" "$NAME" "$(git rev-parse --abbrev-ref HEAD)" "$(git rev-parse --short HEAD)" "$RANGE" "$OUT" > "$STATE_DIR/$NAME.now"
+# 被中斷（Ctrl-C、被停掉）時也要收：「跑著」留下來，窗口會以為它還在跑。記一筆「中斷」再清掉
+on_abort() { printf '%s\t%s\t%s\t%s\t%s\t中斷\t—\t%s\n' "$RUN_START" "$NAME" "$(git rev-parse --abbrev-ref HEAD)" "$(git rev-parse --short HEAD)" "$RANGE" "$OUT" >> "$STATE_DIR/runs.tsv"; rm -f "$STATE_DIR/$NAME.now"; exit 130; }
+trap on_abort INT TERM HUP
 
 if [ $SUITE = 1 ]; then
   wait_cella

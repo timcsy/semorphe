@@ -70,6 +70,9 @@ export interface TypeQuery {
  */
 const KINDS: Record<string, { rule: string }> = {
   ubUninit: { rule: 'CELLA_UB_UNINIT' },
+  // 越過結尾、板子上沒有的腳：執行停下一直有專屬的說法，寫程式時卻落到通用那一句——兩邊收成一套（錯誤訊息第三步）
+  ubPastEnd: { rule: 'CELLA_UB_PAST_END' },
+  ubPin: { rule: 'CELLA_UB_PIN' },
   ubBounds: { rule: 'CELLA_UB_BOUNDS' },
   ubOverflow: { rule: 'CELLA_UB_OVERFLOW' },
   ubDivZero: { rule: 'CELLA_UB_DIV_ZERO' },
@@ -96,7 +99,7 @@ const KINDS: Record<string, { rule: string }> = {
 }
 
 /** 「編譯不過」這一族（籠統的 reject ＋ 0546 起的細分）——更具體的說法（串流配錯運算子、型別不合）要取代它們時，一律看這一組。 */
-const REJECT_FAMILY = new Set(['CELLA_REJECT', 'CELLA_NOT_ASSIGNABLE', 'CELLA_CALL_ARGUMENTS', 'CELLA_REDECLARED', 'CELLA_RETURN_VALUE', 'CELLA_OPERAND_TYPES', 'CELLA_NO_CONVERSION'])
+export const REJECT_FAMILY = new Set(['CELLA_REJECT', 'CELLA_NOT_ASSIGNABLE', 'CELLA_CALL_ARGUMENTS', 'CELLA_REDECLARED', 'CELLA_RETURN_VALUE', 'CELLA_OPERAND_TYPES', 'CELLA_NO_CONVERSION'])
 
 /** 判決產出端的全部規則身分（護欄用）。 */
 export const VERDICT_RULES: readonly string[] = [...new Set(Object.values(KINDS).map((k) => k.rule))].concat('CELLA_UNDECLARED_HEADER', 'CELLA_OTHER', 'CELLA_UNCLASSIFIED', 'CELLA_INVALID', 'TYPE_MISMATCH')
@@ -115,8 +118,8 @@ export const GENERIC_KINDS: readonly string[] = [
   'assumed', 'hole', 'json', 'resource', 'stopped', 'undetermined',
   // 其餘的未定義行為（指標、對齊、浮點轉型、函式庫誤用……）——C 家族那一份清單的全部 ub*，除了 KINDS 裡有專屬文案的六種
   'ubAlias', 'ubAlign', 'ubAlignUnknown', 'ubConstWrite', 'ubDangling', 'ubDivOverflow', 'ubElide', 'ubFile', 'ubFileMode',
-  'ubFloatCast', 'ubFloatCastC', 'ubFloatDivZero', 'ubFree', 'ubIntegerAddress', 'ubLib', 'ubLitWrite', 'ubNull', 'ubPastEnd',
-  'ubPin', 'ubPointerAddress', 'ubPrintf', 'ubPtrCmp', 'ubPtrDiff', 'ubPtrOrder', 'ubPureCall', 'ubRealloc', 'ubReallocZero',
+  'ubFloatCast', 'ubFloatCastC', 'ubFloatDivZero', 'ubFree', 'ubIntegerAddress', 'ubLib', 'ubLitWrite', 'ubNull',
+  'ubPointerAddress', 'ubPrintf', 'ubPtrCmp', 'ubPtrDiff', 'ubPtrOrder', 'ubPureCall', 'ubRealloc', 'ubReallocZero',
   'ubRepresentation', 'ubScanf', 'ubShift', 'ubStdHeader', 'ubTypeName', 'ubUnseq', 'ubUnwind', 'ubVlaSize',
 ]
 
