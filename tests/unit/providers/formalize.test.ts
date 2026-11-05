@@ -120,7 +120,9 @@ describe('formalize：最小子集', () => {
     expect(s).toContain('"k":"sFor"')
     const loop = JSON.parse(s).items[0].f.body.body[0]
     expect(loop.init.x).toBe(loop.n)
-    expect(loop.body.body[0].items[0].x, '迴圈本體裡的 i 指到同一個宣告').toBe(loop.n)
+    // 名字交給 Cella 解析（eName，cella 0.1.202611052225）：本體裡送的是寫出來的名字，指到哪個宣告由 Cella 依作用域決定
+    expect(loop.body.body[0].items[0], '迴圈本體裡的 i 送名字').toMatchObject({ k: 'eName', name: 'i' })
+    expect(loop.init.name).toBe('i')
   })
 
   it('★ C++ 的 struct 一律是 tClass（cella 2026-10-31：tStruct 只給 C）；定義是 iClass', () => {
@@ -365,7 +367,7 @@ describe('第 217 刀：可變長度陣列送 sDeclV（Cella 0.1.202611012223）
     expect(r.unknown).toEqual([])
     const v = find(r.program, 'sDeclV')
     expect(v).toHaveLength(1)
-    expect(v[0]).toMatchObject({ name: 'd', elem: { k: 'tInt' }, len: { k: 'eVar' } })
+    expect(v[0]).toMatchObject({ name: 'd', elem: { k: 'tInt' }, len: { k: 'eName', name: 'n' } })
   })
 
   it('★ 二維：外層可變、內層固定 → elem 是內層的 tArr', () => {

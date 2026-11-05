@@ -18,8 +18,6 @@ import { resolveScopes } from './scope'
 import { FORMALIZE } from './registry'
 import { isFunctionDefinition } from '../../../core/component/traits'
 
-/** 標準串流物件 → Cella 的建構子（`cin.ignore()` 的接收者；spec 201：送成 eConst 會被判「use of undeclared identifier 'cin'」） */
-const STREAMS: Record<string, string> = { cin: 'eStdin', cout: 'eStdout', cerr: 'eStderr' }
 
 export type { CellaJson } from '../../../core/formalize-contract'
 
@@ -220,11 +218,11 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
    */
   const mcall = (n: SemanticNode, f: string, slots: string[]): CellaJson => {
     const name = String(n.properties?.obj ?? '')
-    const x = declOf.get(`${n.id}#obj`)
-    // 沒宣告的接收者（`Serial`、`Serial1`、`WiFi`）是標頭的全域物件：eConst（cella 2026-10-31 確認）
-    const stream = !x && !isC ? STREAMS[name.replace(/^std::/, '')] : undefined
-    const obj = x ? k('eVar', { n: `${n.id}/obj`, x }) : stream ? k(stream, { n: `${n.id}/obj` }) : options.board && /^[A-Za-z_]\w*$/.test(name) ? k('eConst', { n: `${n.id}/obj`, name }) : null
-    if (!obj) return miss(n, `接收者「${name}」指不到宣告`)
+    // 🟢 接收者的名字交給 Cella 依作用域解析（eName，cella 0.1.202611052225）：宣告過的 → eVar／eSelf；
+    //    沒宣告的串流（`cin`）→ eStdin…；板子與標頭的全域物件（`Serial`、`WiFi`）→ eConst，由檢查器找，找不到判 undeclared 指回這一格。
+    //    `std::cin` 這種帶限定的名字 Cella 也認得。不是名字的（運算式寫成文字）照實標 unknown
+    if (!/^(?:std::)?[A-Za-z_]\w*$/.test(name)) return miss(n, `接收者「${name}」不是單一名字`)
+    const obj = k('eName', { n: `${n.id}/obj`, name })
     return k('eMCall', { n: n.id, obj, arrow: false, f, args: slots.filter((sl) => one(n, sl)).map((sl) => expr(one(n, sl)!)) })
   }
 
