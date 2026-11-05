@@ -32,6 +32,7 @@ const EXAMPLES: [string, string][] = [
   ['用到還沒有值的變數', 'int main() {\n    int total;\n    cout << total;\n}'],
   ['除以零', 'int main() {\n    int a = 0;\n    cout << 10 / a;\n}'],
   ['陣列越界', 'int main() {\n    int a[3];\n    a[5] = 1;\n}'],
+  ['差一：用到最後一格的下一格', 'int main() {\n    int a[3];\n    a[3] = 1;\n}'],
   ['整數溢位', 'int main() {\n    int x = 2147483647;\n    x = x + 1;\n    cout << x;\n}'],
   ['找不到名字', 'int main() {\n    cout << score;\n}'],
   ['名字打錯（有長得很像的）', 'int main() {\n    int total = 1;\n    cout << totl;\n}'],

@@ -175,11 +175,17 @@ function byId(tree: SemanticNode): Map<string, SemanticNode> {
  * **指名**（spec 218 第一步，vision〈錯誤訊息看得懂、改得動〉）：判決指到的那一顆的程式碼（`subject`，一行、最多 40 字）與行號（`line`）。
  * 程式碼由宿主給的 `codeOf` 產（核心不認得語言）；拿不到就不放，文案退回不指名的那一句。
  */
-function pinpoint(node: SemanticNode | undefined, codeOf?: (n: SemanticNode) => string): Record<string, string> {
+function pinpoint(node: SemanticNode | undefined, codeOf?: (n: SemanticNode) => string, at?: string): Record<string, string> {
   if (!node) return {}
   const out: Record<string, string> = {}
   try {
-    const code = codeOf?.(node)?.replace(/\s+/g, ' ').replace(/;\s*$/, '').trim()
+    let code = codeOf?.(node)?.replace(/\s+/g, ' ').replace(/;\s*$/, '').trim()
+    // 位置帶著角色 `/lhs`（Cella 指的是那一句的左手邊，例如 `a[3] = 1` 的 `a[3]`）：只指名等號左邊——
+    // 指整句的話，「「a[3] = 1」的索引是 3」讀起來像是那個 1 有問題
+    if (code && at?.endsWith('/lhs')) {
+      const eq = code.indexOf(' = ')
+      if (eq > 0) code = code.slice(0, eq)
+    }
     if (code) out.subject = code.length > 40 ? `${code.slice(0, 39)}…` : code
   } catch { /* 產不出程式碼就不指名 */ }
   const r = node.metadata?.sourceRange as { startLine?: number } | undefined
@@ -315,7 +321,7 @@ export function toDiagnostics(input: {
       rule: !classified ? 'CELLA_UNCLASSIFIED' : p.category === 'invalid' ? 'CELLA_INVALID' : k?.rule ?? 'CELLA_OTHER',
       severity,
       // 結構化的 params（字串與布林——cella 的值慣例）一併帶上，文案用得到（例如 orderUncompared 的 why）
-      params: { ...pinpoint(nodes.get(nodeId), input.codeOf), ...Object.fromEntries(Object.entries(p.params ?? {}).filter(([, v]) => typeof v === 'string' || typeof v === 'boolean').map(([k, v]) => [k, String(v)])), kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
+      params: { ...pinpoint(nodes.get(nodeId), input.codeOf, p.at), ...Object.fromEntries(Object.entries(p.params ?? {}).filter(([, v]) => typeof v === 'string' || typeof v === 'boolean').map(([k, v]) => [k, String(v)])), kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
     })
   }
   if (dropped > 0) notes.push('這支程式要讀輸入——給一份輸入，才判得出執行時的問題')
