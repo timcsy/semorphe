@@ -78,7 +78,7 @@ export function diagnosticParams(params: Record<string, string | number>): Recor
  *    （判決來自 Cella，而 Cella 的原文本來就不是學生日後會在編譯器上看到的那一句）。
  */
 export function codeDiagnosticMessage(d: Diagnostic): string {
-  return diagnosticText(d.rule, 'CODE', diagnosticParams(d.params))
+  return diagnosticWithLayers(d.rule, 'CODE', diagnosticParams(d.params))
 }
 
 /**
@@ -108,6 +108,29 @@ export function diagnosticText(rule: string, side: 'BLOCK' | 'CODE', params: Rec
     if (text !== null && !/\{\w+\}/.test(text)) return text
   }
   return formatMessage(`DIAG_${rule}_${side}`, params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
+}
+
+/**
+ * **第二、三層：為什麼／試試看**（錯誤訊息看得懂、改得動；使用者 2026-11-05 定 A：第一層一句話，點開看後兩層）。
+ *
+ * 候選與第一層同一條鏈：規則＋子類別（`what`）→ 規則本身；沒有就沒有（回空陣列，不湊一句）。
+ * 宿主把它接在第一層那一句後面：積木側是點開驚嘆號的那個框，程式碼側是滑鼠移到波浪上的那個框。
+ */
+export function diagnosticLayers(rule: string, params: Record<string, string | number>): string[] {
+  const what = typeof params.what === 'string' ? `_${params.what.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}` : ''
+  const pick = (layer: 'WHY' | 'TRY'): string | null => {
+    for (const k of [...(what ? [`DIAG_${rule}${what}_${layer}`] : []), `DIAG_${rule}_${layer}`]) {
+      const text = formatMessage(k, params)
+      if (text !== null && !/\{\w+\}/.test(text)) return formatMessage(`DIAG_LAYER_${layer}`, { text }) ?? text
+    }
+    return null
+  }
+  return [pick('WHY'), pick('TRY')].filter((x): x is string => x !== null)
+}
+
+/** 一則診斷，三層合成一段（第一層在第一行——列表只顯示第一行的宿主，看到的就是那一句）。 */
+export function diagnosticWithLayers(rule: string, side: 'BLOCK' | 'CODE', params: Record<string, string | number>): string {
+  return [diagnosticText(rule, side, params), ...diagnosticLayers(rule, params)].join('\n')
 }
 
 /** 一則診斷投影到程式碼座標之後的樣子。⚠️ 行、欄都是 **0-based**。 */

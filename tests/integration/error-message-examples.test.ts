@@ -3,7 +3,7 @@
  *
  * 護欄量得到「有沒有文案」「帶不帶原文」，量不到「看不看得懂」——那要**人看全貌**。
  * 這支拿一組最小的程式交給真的 Cella，走產品同一條 `toDiagnostics`，把學生看到的字產生成一頁：
- * `assets/error-messages/例句.md`（積木那一句、程式碼那一句、詳細資訊）。
+ * `assets/error-messages/例句.md`（積木那一句、程式碼那一句、詳細資訊，以及點開才看到的「為什麼／試試看」）。
  *
  * 🔴 平常是**比對**：文案或判決改了、那一頁沒跟著重產 → 紅。看過新的那一頁、確認是想要的，才重產：
  *
@@ -16,7 +16,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { runCella } from '../helpers/cella-run'
 import { toDiagnostics, type Verdict } from '../../src/core/verdict-diagnostics'
-import { diagnosticText, diagnosticParams, codeDiagnosticDetail } from '../../src/core/projection/diagnostic-projection'
+import { diagnosticText, diagnosticParams, codeDiagnosticDetail, diagnosticLayers } from '../../src/core/projection/diagnostic-projection'
 import { generateExpressionCode } from '../../src/core/projection/code-generator'
 import { setMessages, resetMessages } from '../../src/i18n/messages'
 import zhTW from '../../src/i18n/zh-TW/blocks.json'
@@ -68,6 +68,7 @@ async function render(): Promise<string> {
       const detail = codeDiagnosticDetail(d)
       rows.push(`- 積木：${diagnosticText(d.rule, 'BLOCK', p)}`)
       rows.push(`- 程式碼：${diagnosticText(d.rule, 'CODE', p)}${detail ? `｜詳細資訊：${detail}` : ''}`)
+      for (const l of diagnosticLayers(d.rule, p)) rows.push(`  - ${l}`)
     }
     rows.push('')
   }

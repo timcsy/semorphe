@@ -16,7 +16,7 @@ import { diagNote } from '../../core/diag-log'
 import type { BlockMapping } from '../../core/projection/code-generator'
 import { createDarkWorkspaceTheme } from './dark-workspace-theme'
 import { resolveCollapsed, collapsedToKeys, type CollapsedEntry } from '../../core/granularity'
-import { diagnosticParams, diagnosticText } from '../../core/projection/diagnostic-projection'
+import { diagnosticParams, diagnosticWithLayers } from '../../core/projection/diagnostic-projection'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
@@ -1240,7 +1240,8 @@ export class BlocklyPanel implements ViewHost {
     // **而換算屬於呈現，不屬於事實**。
     // 判決的種類 → 人看得懂的名稱：兩側共用 `diagnosticParams`（不顯示 Cella 的 reason 原文，使用者定）
     const params = diagnosticParams(d.at ? { ...d.params, humanLine: d.at.line + 1 } : d.params)
-    return diagnosticText(d.rule, 'BLOCK', params)
+    // 第一層是這一句；點開驚嘆號的那個框裡接著「為什麼／試試看」（錯誤訊息的三層）
+    return diagnosticWithLayers(d.rule, 'BLOCK', params)
   }
 
   /** nodeId → blockId。找不到回 `null`——**不猜**。 */
