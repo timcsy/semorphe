@@ -51,21 +51,21 @@ describe('不解析 Cella 的 reason', () => {
   })
 })
 
-describe('積木側不顯示 reason 原文——通用的那幾種用種類名稱（spec 216）', () => {
+describe('診斷文案不顯示 reason 原文——用種類名稱（spec 216；使用者 2026-11-05 擴大到兩側）', () => {
   const zh = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/i18n/zh-TW/blocks.json'), 'utf8')) as Record<string, string>
   const en = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/i18n/en/blocks.json'), 'utf8')) as Record<string, string>
 
-  it('🔴 通用那一句（CELLA_OTHER）的積木側不帶 {reason}，帶 {kindLabel}', () => {
-    for (const t of [zh, en]) {
-      expect(t.DIAG_CELLA_OTHER_BLOCK).not.toContain('{reason}')
-      expect(t.DIAG_CELLA_OTHER_BLOCK).toContain('{kindLabel}')
-    }
+  it('🔴 硬性零：任何一則診斷文案（積木側與程式碼側）都不帶 {reason}——使用者 2026-11-05 定：拼寫成好懂的中文', () => {
+    const withReason = [zh, en].flatMap((t) => Object.entries(t).filter(([k, v]) => k.startsWith('DIAG_') && v.includes('{reason}')).map(([k]) => k))
+    expect(withReason, 'Cella 的原文是開發者的紀錄，不是學生日後會在編譯器上看到的那一句').toEqual([])
+    for (const t of [zh, en]) expect(t.DIAG_CELLA_OTHER_BLOCK).toContain('{kindLabel}')
   })
 
   it('🔴 每一種走通用那一句的判決，都有中英文的名稱', async () => {
     const { GENERIC_KINDS } = await import('../../src/core/verdict-diagnostics')
     expect(GENERIC_KINDS.length, '入口：通用的種類不是空的').toBeGreaterThan(0)
-    const missing = GENERIC_KINDS.flatMap((k) => [zh, en].filter((t) => !t[`DIAG_KIND_${k}`]).map((t) => `${k}（${t === zh ? 'zh-TW' : 'en'}）`))
+    // 結束的那兩種也走種類名稱（CELLA_TERMINATION 的文案用 {kindLabel}）
+    const missing = [...GENERIC_KINDS, 'abort', 'uncaught'].flatMap((k) => [zh, en].filter((t) => !t[`DIAG_KIND_${k}`]).map((t) => `${k}（${t === zh ? 'zh-TW' : 'en'}）`))
     expect(missing, '缺名稱的種類會退成「一個還沒有中文說明的狀況」').toEqual([])
   })
 })
