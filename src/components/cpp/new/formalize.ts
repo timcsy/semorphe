@@ -8,6 +8,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     if (f.one(n, 'size')) return f.k('eNewArr', { n: n.id, t, len: f.exprOf(n, 'size'), zero: false })
     // 🔴 `new T(args)` 的引數今天是**文字屬性**（已知缺口：還沒升格成運算式槽）——不從文字猜結構
     if (String(n.properties?.args ?? '') !== '') return f.miss(n, '`new T(…)` 的引數是文字屬性，還沒升格成運算式槽')
-    return f.k('eNew', { n: n.id, t, args: null })
+    // `new T()`（空括號）＝值初始化：送空的引數串列；`new T`＝預設初始化：null（cpp_to_tree.py 同形）
+    return f.k('eNew', { n: n.id, t, args: n.properties?.valueInit === 'true' ? [] : null })
   })
 }

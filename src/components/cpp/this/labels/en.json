@@ -1,0 +1,5 @@
+{
+  "CPP_THIS_MSG0": "this object",
+  "CPP_THIS_TOOLTIP": "Inside a class method, a pointer to the object the method was called on (C++ this). Use \"field via pointer\" to reach its members, for example this->x.",
+  "FLOW_TITLE_CPP_THIS": "This object"
+}

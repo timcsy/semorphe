@@ -1,0 +1,9 @@
+{
+  "id": "cpp_this",
+  "grammar": "tree-sitter-cpp",
+  "astNodeType": "this",
+  "component": {
+    "componentId": "cpp:this"
+  },
+  "priority": 5
+}

@@ -297,7 +297,8 @@ export const ATOMIC_NAMES = [
   // ⚠️ `block` ＝ 一個獨立的 `{ … }`。它是**語言構造**（作用域），不是抄來的
   // 函式庫名——與 `program` 同一類：一個結構本身就是那個概念，沒有「主體＋操作」
   // 可以拆。加入日 2026-08-13（見 `src/components/cpp/block/execute.ts` 的檔頭）。
-  'program', 'block', 'if', 'if_else', 'break', 'continue', 'return', 'print', 'input',
+  // `this` ＝ 語言構造（「這個物件自己」），與 `break`／`return` 同一類：一個關鍵字本身就是那個概念。加入日 2026-11-06。
+  'program', 'block', 'if', 'if_else', 'break', 'continue', 'return', 'this', 'print', 'input',
   'endl', 'comment', 'doc_comment', 'block_comment', 'arithmetic', 'compare',
   'logic', 'logic_not', 'negate', 'bitwise_not', 'increment',
   // C／C++ 家族的**語言構造**

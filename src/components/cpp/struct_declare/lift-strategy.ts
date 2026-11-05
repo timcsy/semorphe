@@ -12,6 +12,18 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       const nameNode = node.childForFieldName('name')
       const structName = nameNode?.text ?? 'MyStruct'
       const bodyNode = node.childForFieldName('body')
+      // 🔴 沒有本體 ＝ 前置宣告（`class Account;`）——不是一個空的定義。原本照樣建出元件，產回去是 `class Account { };`，
+      //    後面真正的定義就成了重複定義（產碼編不過、Cella 判 redeclared；2026-11-06 元件管線 311 的盲測，三支）。
+      //    還沒有「只宣告、之後再定義」的元件 ⟹ 讓開，照實降級（原文照抄；Cella 那側標翻不出）。路線圖〈類別的前置宣告〉。
+      if (!bodyNode) {
+        // ⚠️ 分號在 class_specifier 外面（它是外層那一句的）——讓開的話照抄的原文是 `class Account`，產回去少了分號就編不過。
+        //    所以自己建降級節點：原文連同後面那個分號
+        const sibs = node.parent?.children ?? []
+        const semi = sibs[sibs.findIndex((c) => c.startIndex === node.startIndex) + 1]?.type === ';' ? ';' : ''
+        const raw = createNode('raw_code', {})
+        raw.metadata = { rawCode: `${node.text}${semi}`, confidence: 'raw_code', degradationCause: 'unsupported' }
+        return raw
+      }
       // 基底（spec 209）：多重／virtual 繼承這顆裝不下 ⟹ 讓開，照實降級（不留半套）
       const base = parseBaseClause(node)
       if (base === 'unsupported') return null

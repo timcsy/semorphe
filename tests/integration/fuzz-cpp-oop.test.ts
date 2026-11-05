@@ -757,10 +757,10 @@ describe('fuzz（第 218 刀）：類別裡的一般成員函式與尾端 const'
   }
   const shape = (n: any): unknown => ({ c: n.componentId, p: n.properties, s: Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, v]) => [k, (v as any[]).map(shape)])) })
 
-  it('★ 入口條件：fixture 有 10 支——pass 6、漂移 1（輸出相同、再 lift 的樹不同）、todo 3（fuzz_7 第 229 刀修好）', () => {
+  it('★ 入口條件：fixture 有 10 支——pass 8、todo 2（fuzz_7 第 229 刀修好；fuzz_6、fuzz_10 的建構子預設引數在元件管線 311 修好）', () => {
     expect(rows).toHaveLength(10)
-    expect(rows.filter((r) => r.status === 'pass')).toHaveLength(6)
-    expect(rows.filter((r) => r.status === 'drift')).toHaveLength(1)
+    expect(rows.filter((r) => r.status === 'pass')).toHaveLength(8)
+    expect(rows.filter((r) => r.status === 'drift')).toHaveLength(0)
   })
 
   for (const r of rows.filter((x) => x.status !== 'todo')) {
@@ -768,8 +768,8 @@ describe('fuzz（第 218 刀）：類別裡的一般成員函式與尾端 const'
       const t = lift(r.code)
       const ms = all(t, 'cpp:method_def')
       expect(ms.length).toBeGreaterThan(0)
-      // ⚠️ `this` 今天沒有元件認領它（降級成原文、照抄回去，輸出不受影響）——覆蓋缺口，不是這顆的錯；其餘的降級一律不准
-      expect(all(t, 'raw_code').filter((n) => n.metadata?.rawCode !== 'this').map((n) => n.metadata?.rawCode)).toEqual([])
+      // 🟢 `this` 原本沒有元件認領（降級成原文）——元件管線 311 補了 cpp:this 之後，一律不准降級
+      expect(all(t, 'raw_code').map((n) => n.metadata?.rawCode)).toEqual([])
       expect(all(t, 'unresolved')).toHaveLength(0)
       const out = generateCode(t, 'cpp', style)
       for (const m of ms.filter((x) => x.properties.is_const === 'true')) expect(out).toContain(`${m.properties.name}(`)

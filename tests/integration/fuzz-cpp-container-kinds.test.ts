@@ -288,9 +288,9 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
    * ⚠️ **機制早就齊了**——`cpp:compare` 與 `cpp:arithmetic` 都會問運算子多載。
    * > **一個機制的消費者少一個，那個機制就對那條路徑不存在。**
    */
-  // 歸類：我們這側缺——`T(3)` 這種「型別名(引數)」的暫時物件被翻成一個變數
-  it('🟡 已知缺陷（修好時這條會紅）：★ 自訂結構的排序、去重、查找、計數要用同一份規則', async () => {
-    await knownCellaGap(/use of undeclared identifier/, async () => {
+  // 🟢 原本是已知缺陷（我們這側：`T(3)` 這種「型別名(引數)」的暫時物件被翻成一個變數）——元件管線 311 改送 eTemp 之後修好
+  it('★ 自訂結構的排序、去重、查找、計數要用同一份規則', async () => {
+    {
       const src = `${H}struct T { int k; T(int a) : k(a) {}\n`
         + `  bool operator<(const T& o) const { return k < o.k; } };\n`
         + `int main(){ vector<T> v; v.push_back(T(3)); v.push_back(T(1)); sort(v.begin(), v.end());\n`
@@ -298,6 +298,6 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
         + `  cout << v[0].k << v[1].k << s.size() << s.begin()->k\n`
         + `       << (s.find(T(2)) == s.end() ? "no2" : "has2") << s.count(T(1)); return 0; }\n`
       expect(await run(src), '🔴 自訂比較沒有被問到').toBe("1321no21")
-    })
+    }
   }, 60_000)
 })

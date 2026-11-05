@@ -33,7 +33,11 @@ export const formatParams = (paramChildren: { properties: Record<string, unknown
     paramChildren.map(p => {
       const t = String(p.properties.type ?? 'int')
       const n = String(p.properties.name ?? '')
-      return n ? `${t} ${n}` : t
+      // 🔴 **預設值要跟著印**（2026-11-06，元件管線 311 的盲測抓到）：建構子與方法用這一支，而它漏了一般函式那份早就有的這一行——
+      //    `Fraction(long long num = 0, long long den = 1)` 產回去少了 `= 0`、`= 1`，`Fraction(5)` 那種合法的呼叫就變成「少了引數」。
+      const d = String(p.properties.default ?? '')
+      const decl = n ? `${t} ${n}` : t
+      return d ? `${decl} = ${d}` : decl
     }).join(', ')
 
 export function openBraceFor(style: StylePreset): (ctx: Parameters<NodeGenerator>[1]) => string {
