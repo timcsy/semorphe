@@ -158,6 +158,7 @@
     "cpp:delete",
     "cpp:template_function",
     "cpp:method_call",
+    "cpp:this",
     "cpp:vector_declare",
     "cpp:vector_size",
     "cpp:map_declare",

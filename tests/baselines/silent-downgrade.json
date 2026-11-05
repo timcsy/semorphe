@@ -4,7 +4,7 @@
     "ratchet": "數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "scanned": {
-    "components": 351,
+    "components": 352,
     "tracks": 5
   },
   "exposure": 27,
@@ -37,5 +37,5 @@
     "cpp:var_declare_sequence@c-beginner.json: binding,targets,value",
     "cpp:vector_declare@c-beginner.json: fill,size,source,values"
   ],
-  "note": "📈 **2026-11-01（第 395 刀：新增 `cpp:time`）：母體 +1，缺陷那幾格未動。** 395 自己那一輪全套被 cella 的長測試擋著沒跑成，在整合分支上才量到。\n\n\n📈 **2026-09-20（帶參數的巨集）：掃描的元件數 348 → 349。**\n  **母體變大，缺陷那幾格未動**——新增一顆身分（`cpp:define_func`）＋ 一支樹修復（`languages/cpp/lang/macro-expand.ts`）＋ 一支回歸網（`roundtrip-cpp-func-macro.test.ts`）。\n"
+  "note": "📈 **2026-11-06（新元件 `cpp:this`——「這個物件自己」；量到 `this->x` 整段降級，元件管線 311）**：掃描的元件數 351 → 352。\n\n📈 **2026-11-01（第 395 刀：新增 `cpp:time`）：母體 +1，缺陷那幾格未動。** 395 自己那一輪全套被 cella 的長測試擋著沒跑成，在整合分支上才量到。\n\n\n📈 **2026-09-20（帶參數的巨集）：掃描的元件數 348 → 349。**\n  **母體變大，缺陷那幾格未動**——新增一顆身分（`cpp:define_func`）＋ 一支樹修復（`languages/cpp/lang/macro-expand.ts`）＋ 一支回歸網（`roundtrip-cpp-func-macro.test.ts`）。\n"
 }

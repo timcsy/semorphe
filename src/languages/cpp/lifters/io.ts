@@ -365,7 +365,13 @@ export function registerIOLifters(lifter: Lifter): void {
           || typedMethodComponent(objType, m) !== undefined))
         || METHOD_TO_COMPONENT[m] !== undefined
         || containerMethodComponent(m) !== undefined)
-      const componentId =
+      /**
+       * 🔴 **`->` 不走容器方法的專屬身分**（2026-11-06，元件管線 311 的盲測）：容器那幾顆只記得 `.`——
+       * `this->push(v)`、`q->push(3)`（自己寫的類別裡的 push 方法）被認成「推入容器」，產回去是 `this.push(v)`：編不過，而且身分錯了。
+       * 經過指標的呼叫交給通用的方法呼叫（它記得箭頭）。代價：指向容器的指標（`vp->push_back(x)`）也留在通用版——意思不變，少了專屬積木。
+       */
+      const viaPointer = funcNode.children.some((c) => c.type === '->')
+      const componentId = viaPointer ? undefined :
         (objType ? TYPED_METHOD_TO_COMPONENT[objType]?.[lookupName] : undefined) ??
         (objType ? typedMethodComponent(objType, lookupName) : undefined) ??
         METHOD_TO_COMPONENT[lookupName] ??

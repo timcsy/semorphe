@@ -23,10 +23,15 @@ import { createNode } from '../../../core/semantic-tree'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('cpp:liftNewExpression', (node, ctx) => {
-    const typeNode = node.namedChildren.find(c =>
-      c.type === 'type_identifier' || c.type === 'primitive_type' || c.type === 'sized_type_specifier'
-    )
-    const type = typeNode?.text ?? 'int'
+    /**
+     * 🔴 **型別讀 `type` 欄位，讀不到就讓開，不猜 `int`**（2026-11-06，元件管線 311 量到）：原本只認三種節點型別，
+     * `new vector<int>()`（`template_type`）、`new std::string`（`qualified_identifier`）都找不到 ⟹ 安靜地變成 `int`，
+     * 於是 Cella 判「int * 不能轉成 vector<int> *」——一支合法的程式被說成錯的（P6）。
+     */
+    const typeNode = node.childForFieldName('type') ?? node.namedChildren.find(c =>
+      c.type === 'type_identifier' || c.type === 'primitive_type' || c.type === 'sized_type_specifier' || c.type === 'template_type' || c.type === 'qualified_identifier')
+    if (!typeNode) return null
+    const type = typeNode.text
     const argList = node.namedChildren.find(c => c.type === 'argument_list')
     const args = argList ? argList.namedChildren.map(a => a.text).join(', ') : ''
 
@@ -35,8 +40,12 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const sizeExpr = declarator?.namedChildren[0]
     const size = sizeExpr ? ctx.lift(sizeExpr) : null
 
-    return size
+    const made = size
       ? createNode('cpp:new', { type, args }, { size: [size] })
       : createNode('cpp:new', { type, args })
+    // 🔴 **一對空括號是意思，不是排版**（2026-11-06）：`new int()` 把值初始化成 0，`new int` 的值是未定的（[expr.new]p18）。
+    //    原本兩者都成了「沒有引數」→ 產回去少了括號、意思變了。記下來，產碼與 formalize 都讀它
+    if (argList && args === '') made.metadata = { ...(made.metadata ?? {}), layoutHints: { ...(made.metadata?.layoutHints ?? {}), valueInit: true } }
+    return made
   })
 }

@@ -1,0 +1,22 @@
+{
+  "componentId": "cpp:this",
+  "abstractComponent": null,
+  "properties": [],
+  "slots": {},
+  "role": "expression",
+  "owner": "(core)",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "_why": "**「這個物件自己」**——成員函式裡指向呼叫它的那個物件（2026-11-06 量到：`this->x` 整段降級成看不懂的程式碼，因為 `->` 的接收者 `this` 沒有任何元件認得）。\n一顆就夠：`this->x`、`this->f()`、`*this` 都由既有的「指標的欄位」「方法呼叫」「取值」組出來，它們翻給 Cella 時經由 `exprOf` 自動接上 `eThis`。\n⚠️ 明寫的 `this->x` 與隱含的 `x` 是兩種形狀（Cella 的參照翻譯：`eArrow(eThis)` vs `eSelf`）——各自保留，產碼一字不差。"
+}

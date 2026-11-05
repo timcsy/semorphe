@@ -1,0 +1,5 @@
+{
+  "CPP_THIS_MSG0": "這個物件",
+  "CPP_THIS_TOOLTIP": "在類別的方法裡，指向「呼叫這個方法的那個物件」的指標（C++ 的 this）。用「指標的欄位」取它的成員，例如 this->x。",
+  "FLOW_TITLE_CPP_THIS": "這個物件"
+}

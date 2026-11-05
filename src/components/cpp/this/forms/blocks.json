@@ -1,0 +1,16 @@
+[
+  {
+    "id": "cpp_this",
+    "componentId": "cpp:this",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_this",
+      "message0": "%{BKY_CPP_THIS_MSG0}",
+      "output": "Expression",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_CPP_THIS_TOOLTIP}"
+    }
+  }
+]
