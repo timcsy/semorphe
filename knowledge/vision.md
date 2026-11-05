@@ -503,6 +503,10 @@ UI 域與硬體域本身（它們是這一格的**消費者**）。
       Arduino 走六步（cos-mos 的草案）：① 對照表搬出契約到 `@semorphe/arduino` ＋ ③ 匯出工具改成核對工具（我們這側併成一刀）② 契約正本搬到 cos-mos（✅ 0.1.2）④ 兩個實作端各宣告 `implements` ⑤ 結構頻道樣本加上 Cella 判決成為契約的 examples ⑥ 第一次發布前由 cos-mos 主持人問使用者。
       契約修改：我們改元件宣告 → `audit-arduino-contract` 紅 → 跑提案工具（`propose-arduino-vocab`）交 cos-mos → 合併回版號 → 換 fixture 與 `implements`。
       🟢 **①＋③＋④（semorphe 側）完成**（2026-11-05，第 266 刀）→ [history/340](history/340-semorphe-arduino拆出與核對契約.md)。⑤ **完成**（2026-11-05，第 270 刀）：blink／serial／dht／uninit-read 四支收進契約的 `examples.json`，第 3 層全過（cos-mos 跑預期，Cella 0.1.202611042110）——⚠️ 預期裡的 `at` 是我們的節點 id，**改了 lift 的節點命名就要重產材料**（`tests/probes/export-contract-examples.test.ts`）交給 cos-mos。剩 ⑥（發布前由 cos-mos 主持人問使用者）。
+- [ ] 🆕 **錯誤訊息看得懂、改得動**（2026-11-05，使用者：「我覺得現在的錯誤訊息還做得不夠好」）——341 拿掉原文之後，最常見的編譯錯誤只剩「不合規則」；多數文案只說「是什麼」，沒說「為什麼」與「怎麼改」，也沒用上語意樹與執行狀態裡的名字、行號、數值。
+      做法（推薦，見 [draft](draft/2026-11-05-錯誤訊息還不夠好.md)）：① 每一則帶名字／行號／值（不等 Cella）② 三層：發生了什麼／為什麼／試試看 ③ 寫程式時與執行停下共用一套說法 ④ 照根因排序、收起連帶的 ⑤ 條號收進詳細資訊 ⑥ Cella 細分 `reject` 之後補各自的三層。
+      驗收：例句清單一頁（每種錯誤一支最小程式＋三層文字，人看得到全貌）；第一層沒有參數的文案只准下降（護欄）；兩組文案收成一組；名字打錯只見一則紅字＋「還有 N 處」。
+      🟡 **待使用者**：要不要分三層、積木上那一句多長（推薦：分，一行約 15 字帶名字或值）——不擋 ①③④⑤。
 - [ ] 🆕 **形態檢查與判決的界線盤點**——同一則後記：semorphe「不判斷對錯」；形態完整度的檢查（語法缺口、空的接點、名字合不合法、canExecute）一律標成形態／提示，不得標成判決。驗收：診斷的每一種來源都標得出是「形態」「提示」還是「判決（Cella）」，有護欄在數；「名字合不合法」的灰色地帶盤點結果告訴 cos-mos。
       ➕ **不解析 Cella 的 reason**（後記二，使用者定）：`verdict-diagnostics.ts` 的 `nearMissFor`／`unboundNameAt` 改讀 Cella 的結構化 params（已向 cella 要 `{ name }` 與 NameError 帶 `at`）；學生看到的文字不得直接是 reason 原文。驗收：產品程式碼裡零個對 `reason` 的正規表示式（護欄）。
       🟢 **形狀已定（cella 2026-11-03）**：每則 problem 帶 `params`（值只有字串與布林；整數一律十進位字串、負數帶 `-`；不知道的欄位不出現）與 `structured`；未宣告的名字統一成 kind `undeclared` ＋ `{ name, what: variable|function|name }`（⚠️ 不相容，發版說明會標）；Python 的 NameError 一律帶 `at`；cfamily／python 套件附 `verdict-kinds.json`（每個 kind 是否結構化、帶哪些 params）——semorphe 加護欄：每個結構化的 kind 都有中英文說明。排在 cella 的 2b-2 之後。
