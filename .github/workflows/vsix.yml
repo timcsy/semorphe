@@ -171,22 +171,36 @@ jobs:
       # ⚠️ **GitHub Release 一定發**（不需要任何祕密）。
       #    Marketplace／Open VSX 只有在祕密存在時才發——而**跳過要出聲**，
       #    不是靜靜地不做（那會讓「我發佈了」變成一句沒有人驗證過的話）。
+      # 🟢 **更版說明是寫給人讀的**（2026-11-05，使用者定）：有 `release-notes/<tag>.md` 就用它當內文（接上安裝說明），
+      #    不再附自動產生的提交清單（一版三百多筆，沒有人讀）；沒有那個檔就照舊自動產生。
+      - name: 組更版說明
+        id: notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          F="release-notes/${GITHUB_REF_NAME}.md"
+          {
+            if [ -f "$F" ]; then cat "$F"; echo; fi
+            cat <<'INSTALL'
+          ## 安裝
+
+          **VSCode**：擴充商店搜 **Semorphe**，或下載下面的 `.vsix` 後
+          `code --install-extension semorphe-vscode-<版本>.vsix`
+
+          **Arduino IDE**：把 `.vsix` 放進 `~/.arduinoIDE/plugins/` 再重開。
+          ⚠️ 不是官方通道，換一版可能失效。
+
+          完整步驟見 [README 的安裝章節](https://github.com/timcsy/semorphe#安裝)。
+          INSTALL
+          } | sed 's/^          //' > build/release-body.md
+          if [ -f "$F" ]; then echo "curated=true" >> "$GITHUB_OUTPUT"; else echo "curated=false" >> "$GITHUB_OUTPUT"; echo "::notice::沒有 ${F}，Release 內文用自動產生的提交清單"; fi
+
       - name: GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.pkg.outputs.path }}
-          generate_release_notes: true
-          body: |
-            ## 安裝
-
-            **VSCode**：擴充商店搜 **Semorphe**，或下載下面的 `.vsix` 後
-            `code --install-extension semorphe-vscode-<版本>.vsix`
-
-            **Arduino IDE**：把 `.vsix` 放進 `~/.arduinoIDE/plugins/` 再重開。
-            ⚠️ 不是官方通道，換一版可能失效。
-
-            完整步驟見 [README 的安裝章節](https://github.com/timcsy/semorphe#安裝)。
+          body_path: build/release-body.md
+          generate_release_notes: ${{ steps.notes.outputs.curated != 'true' }}
 
       - name: 發到 Marketplace（有祕密才發）
         if: startsWith(github.ref, 'refs/tags/v')
