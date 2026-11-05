@@ -901,6 +901,8 @@ class SemorpheSession {
       // 🔴 具名來源——Problems 上會顯示 `semorphe`，而**使用者要分得出
       //    這一條是誰報的**（同一個檔可能同時有 C/C++ 擴充的診斷）。
       diag.source = 'Semorphe'
+      // 錯誤訊息第五步：條號是詳細資訊，不在訊息本身——Problems 上跟在來源後面
+      if (d.detail) diag.code = d.detail
       return diag
     })
     DIAGNOSTICS.set(doc.uri, out)

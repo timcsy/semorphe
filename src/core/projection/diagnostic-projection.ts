@@ -82,6 +82,15 @@ export function codeDiagnosticMessage(d: Diagnostic): string {
 }
 
 /**
+ * **詳細資訊**（錯誤訊息第五步）：標準的條號（`C++17 [expr.add]p4`）——對學生是行話，不放進第一眼的那一句；
+ * 宿主把它放在標記的 `code`（Monaco 的 hover、VSCode 的 Problems 都要滑鼠移過去或展開才看到）。沒有就是 `undefined`。
+ */
+export function codeDiagnosticDetail(d: Diagnostic): string | undefined {
+  const clause = d.params?.clause
+  return typeof clause === 'string' && clause.trim() !== '' ? clause : undefined
+}
+
+/**
  * 一則診斷的文字：**指得出名的時候用指名的那一句**（`DIAG_<規則>_<側>_AT`，帶 `{subject}`——spec 218），否則用原本那一句。
  * ⚠️ 兩側共用（積木側在 `panels/blocks/view.ts`）：判準只在這裡寫一次。
  */
@@ -110,6 +119,8 @@ export interface CodeDiagnostic {
   endColumn: number | null
   severity: 'warning' | 'error' | 'info'
   message: string
+  /** 詳細資訊（標準的條號）——不在第一眼的那一句裡，見 `codeDiagnosticDetail`。 */
+  detail?: string
 }
 
 /**
@@ -127,12 +138,13 @@ export function projectDiagnostics(
     const m = mappingFor(mappings, tree, d.nodeId)
     if (!m) continue
     const message = codeDiagnosticMessage(d)
+    const detail = codeDiagnosticDetail(d)
     // 🔴 **缺口有確定的位置——波浪就該縮到那裡**（spec 143）。
     // ⚠️ 而寬度至少 1 欄：一個缺掉的 token 佔零個字元，
     //    `start === end` 的標記畫不出來——那會讓「修好了」與「畫不出來」長得一樣。
     out.push(d.at
-      ? { startLine: d.at.line, startColumn: d.at.column, endLine: d.at.line, endColumn: d.at.column + 1, severity: d.severity, message }
-      : { startLine: m.startLine, startColumn: 0, endLine: m.endLine, endColumn: null, severity: d.severity, message })
+      ? { startLine: d.at.line, startColumn: d.at.column, endLine: d.at.line, endColumn: d.at.column + 1, severity: d.severity, message, ...(detail ? { detail } : {}) }
+      : { startLine: m.startLine, startColumn: 0, endLine: m.endLine, endColumn: null, severity: d.severity, message, ...(detail ? { detail } : {}) })
   }
   return out
 }
