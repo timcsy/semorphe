@@ -18,6 +18,7 @@ import { diagNote } from '../../core/diag-log'
 import type { BlockMapping } from '../../core/projection/code-generator'
 import { createDarkWorkspaceTheme } from '../theme/dark-workspace-theme'
 import { resolveCollapsed, collapsedToKeys, type CollapsedEntry } from '../../core/granularity'
+import { diagnosticParams } from '../../core/projection/diagnostic-projection'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
@@ -1231,9 +1232,8 @@ export class BlocklyPanel implements ViewHost {
     //
     // `humanLine` 是 1-based：`at.line` 與 tree-sitter 一致是 0-based，
     // **而換算屬於呈現，不屬於事實**。
-    const params: Record<string, string | number> = d.at ? { ...d.params, humanLine: d.at.line + 1 } : { ...d.params }
-    // 判決的種類 → 人看得懂的名稱（spec 216）：積木側不顯示 Cella 的 reason 原文——那是開發者的紀錄（使用者定，三方會議後記二）
-    if (typeof params.kind === 'string') params.kindLabel = formatMessage(`DIAG_KIND_${params.kind}`) ?? formatMessage('DIAG_KIND_UNKNOWN') ?? params.kind
+    // 判決的種類 → 人看得懂的名稱：兩側共用 `diagnosticParams`（不顯示 Cella 的 reason 原文，使用者定）
+    const params = diagnosticParams(d.at ? { ...d.params, humanLine: d.at.line + 1 } : d.params)
     return formatMessage(`DIAG_${d.rule}_BLOCK`, params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
   }
 

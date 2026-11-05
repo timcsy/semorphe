@@ -61,14 +61,24 @@ export function mappingFor(
 }
 
 /**
+ * 組文案用的參數：判決的種類（`kind`）換成人看得懂的名稱（`kindLabel`，`DIAG_KIND_<種類>`）。
+ * 🔴 **兩側都不顯示 Cella 的 reason 原文**（使用者 2026-11-05：「Cella 和其他編譯器的錯誤訊息本身就不一樣，拼寫成好懂的中文」）
+ *    ——reason 只留在參數裡給開發者看，文案一律由種類與結構化的參數組。
+ */
+export function diagnosticParams(params: Record<string, string | number>): Record<string, string | number> {
+  if (typeof params.kind !== 'string') return params
+  return { ...params, kindLabel: formatMessage(`DIAG_KIND_${params.kind}`) ?? formatMessage('DIAG_KIND_UNKNOWN') ?? params.kind }
+}
+
+/**
  * **程式碼側**把一則診斷組成訊息。
  *
- * 這裡的收件人正在看原始碼，所以措辭偏編譯器——而積木側刻意不一樣
- * （使用者 2026-08-12 逐字：「越像實際編譯器吐出的訊息越好……
- * **不過積木側可以不一樣**」）。**那就是第二條軸，而它只有面板這一條。**
+ * 這裡的收件人正在看原始碼，所以措辭偏編譯器的簡潔（帶標準的條號）——而積木側刻意不一樣（教學的）。
+ * 🪦 2026-08-12 那句「越像實際編譯器吐出的訊息越好」：2026-11-05 使用者改定——兩側都說好懂的中文，不給原文
+ *    （判決來自 Cella，而 Cella 的原文本來就不是學生日後會在編譯器上看到的那一句）。
  */
 export function codeDiagnosticMessage(d: Diagnostic): string {
-  return formatMessage(`DIAG_${d.rule}_CODE`, d.params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
+  return formatMessage(`DIAG_${d.rule}_CODE`, diagnosticParams(d.params)) ?? formatMessage('DIAG_UNKNOWN') ?? ''
 }
 
 /** 一則診斷投影到程式碼座標之後的樣子。⚠️ 行、欄都是 **0-based**。 */
