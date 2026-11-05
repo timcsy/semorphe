@@ -6556,7 +6556,7 @@ spec `152` 刪掉一個「零消費者」的欄位。規格的 US1 先寫死判�
 ### 一個只服務單一語言的模組，住在 `core/` 只是位置，不是身分
 
 `src/core/block-input-names.ts` 匯出九個 `getInputs('cpp_*')` 常數，
-**而它們的唯一生產消費者是 `src/ui/block-registrar.ts`**。
+**而它們的唯一生產消費者是 `src/panels/blocks/block-registrar.ts`**。
 
 **要點**：一個模組屬於哪一層，看的是**它認得什麼**與**誰在用它**，
 不是它放在哪個資料夾。⚠️ 而資料夾會讓人以為問題已經解決了。

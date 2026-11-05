@@ -29,6 +29,6 @@
         }
       ]
     },
-    "_why": "🟢 **spec 162 換回可變參數**——`print(a, b)` 走得完了。\n\nspec 160 當時只能用固定單參數，因為**產生那些 input 的機制是命令式的、寫死在 `src/ui/block-registrar.ts` 裡**（`appendValueInput('EXPR' + idx)`）。\n那是 vision 記著的那 33 筆，而 160 刻意沒重寫它：\n> **「應該由 Python 逼出來，而不是憑空重寫」**——現在逼出來了，介面也不必猜（16 顆 cpp 膠囊早就宣告著同一個 `dynamicRules`）。"
+    "_why": "🟢 **spec 162 換回可變參數**——`print(a, b)` 走得完了。\n\nspec 160 當時只能用固定單參數，因為**產生那些 input 的機制是命令式的、寫死在 `src/panels/blocks/block-registrar.ts` 裡**（`appendValueInput('EXPR' + idx)`）。\n那是 vision 記著的那 33 筆，而 160 刻意沒重寫它：\n> **「應該由 Python 逼出來，而不是憑空重寫」**——現在逼出來了，介面也不必猜（16 顆 cpp 膠囊早就宣告著同一個 `dynamicRules`）。"
   }
 ]

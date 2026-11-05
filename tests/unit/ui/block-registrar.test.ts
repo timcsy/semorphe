@@ -13,14 +13,14 @@ describe('BlockRegistrar', () => {
   })
 
   it('block-registrar.ts should contain mutator definitions (saveExtraState)', () => {
-    const filePath = path.resolve(__dirname, '../../../src/ui/block-registrar.ts')
+    const filePath = path.resolve(__dirname, '../../../src/panels/blocks/block-registrar.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     expect(content).toContain('saveExtraState')
     expect(content).toContain('loadExtraState')
   })
 
   it('block-registrar.ts should contain all major dynamic block types', () => {
-    const filePath = path.resolve(__dirname, '../../../src/ui/block-registrar.ts')
+    const filePath = path.resolve(__dirname, '../../../src/panels/blocks/block-registrar.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     const expectedTypes = [
       'cpp_var_declare', 'cpp_func_def', 'cpp_loop_count',
@@ -39,7 +39,7 @@ describe('BlockRegistrar', () => {
     // ⚠️ 🪦 `cpp_print`（162）、`cpp_array_at`／`cpp_continue`／`cpp_endl`／
     //    `cpp_literal_string`（163）、cpp_break／cpp_return／cpp_var_ref（164）、
     //    cpp_loop_while 等七顆（165）從這份清單移除——它不再是命令式的，
-    //    改由 `ui/variadic-block.ts` 依膠囊的 `builder: "variadic"` 建。
+    //    改由 `panels/blocks/variadic-block.ts` 依膠囊的 `builder: "variadic"` 建。
     //    **一顆退場就要從這裡拿掉**，否則這條會在退場那天說「積木不見了」。
     // 🪦 **`cpp_raw_code` 於 2026-08-26 退場——而它是最後一顆**。
     //    它卡了三輪，理由寫在 `retire-imperative-block` §3：比對說「一模一樣」
@@ -58,7 +58,7 @@ describe('BlockRegistrar', () => {
   })
 
   it('block-registrar.ts should contain workspace option helpers', () => {
-    const filePath = path.resolve(__dirname, '../../../src/ui/block-registrar.ts')
+    const filePath = path.resolve(__dirname, '../../../src/panels/blocks/block-registrar.ts')
     const content = fs.readFileSync(filePath, 'utf-8')
     expect(content).toContain('getWorkspaceVarOptions')
     expect(content).toContain('getScanfVarOptions')

@@ -1,8 +1,8 @@
-import { allExpressionStatementBlocks } from '../core/blocks/degradation-blocks'
-import { allVariableDropdownBlocks } from '../core/blocks/variable-dropdown-blocks'
-import { allBoardConstantDropdowns, boardConstantOptions } from '../core/blocks/board-constant-dropdown-blocks'
-import type { BoardPinModel } from '../core/types'
-import { componentsDeclaringVariableType } from '../core/component-abstract'
+import { allExpressionStatementBlocks } from '../../core/blocks/degradation-blocks'
+import { allVariableDropdownBlocks } from '../../core/blocks/variable-dropdown-blocks'
+import { allBoardConstantDropdowns, boardConstantOptions } from '../../core/blocks/board-constant-dropdown-blocks'
+import type { BoardPinModel } from '../../core/types'
+import { componentsDeclaringVariableType } from '../../core/component-abstract'
 import * as Blockly from 'blockly'
 /**
  * 🔴 **這個 import 是一次【註冊】，不是一個用不到的符號。**
@@ -25,7 +25,7 @@ import * as Blockly from 'blockly'
  * 🟢 由 `tests/unit/ui/declared-field-types.test.ts` 釘住。
  */
 import { FieldMultilineInput } from '@blockly/field-multilineinput'
-import type { BlockSpecRegistry } from '../core/blocks/block-spec-registry'
+import type { BlockSpecRegistry } from '../../core/blocks/block-spec-registry'
 // 🪦 `CATEGORY_COLORS` 的匯入已於 2026-08-26 刪除——最後一顆命令式積木定義
 //    （`cpp_var_declare`）退場，顏色從此**只住在宣告裡**。
 import { attachBranchList } from './branch-list-block'
@@ -36,16 +36,16 @@ import { attachBranchList } from './branch-list-block'
 //    **自己會呼叫** `registerParamMutatorBlocks`，不靠這裡的 import。
 import { attachParamList } from './param-list-block'
 import { attachAltLayout } from './alt-layout-block'
-import { preserveForeignExtraState } from '../core/blocks/foreign-extra-state'
+import { preserveForeignExtraState } from '../../core/blocks/foreign-extra-state'
 import { defineVariadicBlock, attachVariadic } from './variadic-block'
 import { declareDropdownSource, registerDynamicDropdownField } from './dynamic-dropdown-field'
-import { componentsDeclaringVariables, componentTraits } from '../core/component/traits'
-import type { DropdownContext } from '../core/blocks/dropdown-sources'
-import { deriveBlockType } from '../core/component/derive-block-type'
-import { abstractComponentOf } from '../core/component-abstract'
+import { componentsDeclaringVariables, componentTraits } from '../../core/component/traits'
+import type { DropdownContext } from '../../core/blocks/dropdown-sources'
+import { deriveBlockType } from '../../core/component/derive-block-type'
+import { abstractComponentOf } from '../../core/component-abstract'
 // 🪦 `setFieldSafely` 的匯入已於 2026-08-26 刪除——它的最後幾個消費者
 //    （多模式插槽的 `SEL_i` 寫入）隨那套機制一起退場。
-import { isPlainDeclaration } from '../core/component/traits'
+import { isPlainDeclaration } from '../../core/component/traits'
 // 🪦 **語言插槽名的注入機制已於 2026-08-26 整套刪除**
 //    （`setLanguageInputNames`／`InputNames`／`inputNamesInjected` 的守衛）。
 //
@@ -792,7 +792,7 @@ export class BlockRegistrar {
     // > ——而它不會自己出聲，因為它還跑得動。**
 
     // 🪦 **`cpp_input` 與 `cpp_input_expression` 的命令式定義已於 2026-08-26 刪除**
-    //    ——它們改由 `ui/variadic-block.ts` 依膠囊的 `builder: "variadic"` 建，
+    //    ——它們改由 `panels/blocks/variadic-block.ts` 依膠囊的 `builder: "variadic"` 建，
     //    與 `cpp_print`（`cout << a << b`）**同一個建構子**。
     //
     // 🔴 **這一刀不是「宣告與命令式一模一樣了」，是【判哪一邊對】**
@@ -813,7 +813,7 @@ export class BlockRegistrar {
 
     // 🪦 **兩顆格式化 I/O 的命令式定義已於 2026-08-26 刪除**
     //    （`cpp_print_formatted` · `cpp_input_formatted` · `cpp_input_formatted_expression`）
-    //    ——它們改由 `ui/variadic-block.ts` 依膠囊的 `builder: "variadic"` 建。
+    //    ——它們改由 `panels/blocks/variadic-block.ts` 依膠囊的 `builder: "variadic"` 建。
     //
     // 🔴 **這一刀是【判哪一邊對】，不是「一模一樣了」**（`retire-imperative-block` 第 1 步）。
     //    宣告那份本來把參數**擠進一個文字欄位**（`ARGS: field_input`），
@@ -889,7 +889,7 @@ export class BlockRegistrar {
     //
     // > **一張「三個變異點」的表，會讓其中的缺陷看起來像一個選項。**
     //
-    //    宣告式的 `paramList`（`ui/param-list-block.ts`）取代了它，
+    //    宣告式的 `paramList`（`panels/blocks/param-list-block.ts`）取代了它，
     //    而那三個變異點全部變成宣告裡的資料。
 
 

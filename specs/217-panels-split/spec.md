@@ -18,7 +18,7 @@
 1. **護欄先行**（第 271 刀）：分層規則加 `panels`——只准依賴核心（不准 `ui`／`languages`／`components`／`vscode`／`interpreter`／`providers`）。今天的三格本來就乾淨。
 2. **流程圖**：`flow-panel.ts` → `src/panels/flow/view.ts`；`cell-head` 搬到核心的宿主介面或 `src/panels/` 共用處；`mount` 從 context 拿積木登錄表；拿掉 `mountedByShell`（棘輪 2 → 1）。
 3. **積木**：`blockly-panel.ts` 與兩個拖曳輔助、深色主題 → `src/panels/blocks/`；toast 與風格（`languages/style`）改由 context 注入；`mount` 從 context 拿登錄表、工具箱、語言的接線、媒體路徑（棘輪 1 → 0）。
-4. **驗收②**：一個不經 `app.ts` 的頁面只靠套件組得出積木＋程式碼互轉（vision 原文）。
+4. **驗收②**：一個不經 `app.ts` 的頁面只靠套件組得出積木＋程式碼互轉（vision 原文）。✅ 第 286 刀（見下「第四刀做了什麼」）
 
 ## 驗收（整項）
 - 第一百二十五條護欄（`panel-mount-migration`）的棘輪 2 → 0；
@@ -44,3 +44,11 @@
 3. 護欄（與第五十八條同形）：建它、用 happy-dom 或 Playwright 跑它、斷言兩個方向的互轉——**它壞掉＝「面板是可獨立掛載的套件」這句話壞掉**。
 
 風險：Blockly 在 node 裡跑需要 DOM（happy-dom 夠不夠要試）；面板的 `mount` 今天假設 `ctx.profile` 有 `createCodeView`——例子要提供一個最小的 profile。
+
+## 第四刀做了什麼（2026-11-05，第 286 刀）
+
+- `src/sdk/panels.ts`：面板那一面的公開入口（`dist-sdk/panels.mjs`，與核心共用一份 chunk——兩份核心的話渲染器設定點會設在一份、面板讀另一份）。
+- **前置量到的缺口**：`BlockRegistrar` 與五個輔助檔（分支清單、參數清單、替代排版、可變長度、動態下拉）還住在 `src/ui/`——搬進 `src/panels/blocks/`。
+- `examples/panels-only/`：積木那一格用 `panelById('blocks').mount`；程式碼那一格用 `<textarea>` 的 `ViewHost`（**偏離計畫**：`panelById('code')` 只是 `profile.createCodeView`，而 `CodeView` 有十二個必要方法——只要互轉的頁面用不到）。
+- 護欄 `audit-panels-only`：jsdom 裡跑出貨的例子，兩個方向各斷言一次；三種結局分得開。
+- 順手修的缺陷：只宣告了 `role:expression` 的元件在敘述位置被判成「形態降級」，每畫一顆敘述 warn 一次（`form-selection.ts`）。

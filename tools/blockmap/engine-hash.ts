@@ -49,7 +49,7 @@ import { join } from 'node:path'
  * > **判準是「這支改了，積木看起來會不會不一樣」。**
  */
 export const ENGINE_FILES = [
-  'src/ui/block-registrar.ts',
+  'src/panels/blocks/block-registrar.ts',
   'src/core/projection/pattern-renderer.ts',
   'src/core/projection/block-renderer.ts',
   'src/core/universal-blocks.json',

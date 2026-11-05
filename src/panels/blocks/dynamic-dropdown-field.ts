@@ -26,9 +26,9 @@
  * > **一個會把它不認得的值換掉的下拉，等於在使用者沒看的時候改掉他的程式。**
  */
 import * as Blockly from 'blockly'
-import { dropdownSource } from '../core/blocks/dropdown-sources'
-import type { DropdownContext } from '../core/blocks/dropdown-sources'
-import { msg } from '../core/messages'
+import { dropdownSource } from '../../core/blocks/dropdown-sources'
+import type { DropdownContext } from '../../core/blocks/dropdown-sources'
+import { msg } from '../../core/messages'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -40,7 +40,7 @@ import { msg } from '../core/messages'
 //
 // ⚠️ 這裡**轉出**它們，是因為既有呼叫端（積木宣告、比對器、護欄）都指著這個檔。
 // 一個檔案可以既是實作的家、又是別人的門面——但**登記處不該與它的欄位綁在一起**。
-export { declareDropdownSource, dropdownSourceNames } from '../core/blocks/dropdown-sources'
+export { declareDropdownSource, dropdownSourceNames } from '../../core/blocks/dropdown-sources'
 
 const FIELD_TYPE = 'field_dynamic_dropdown'
 

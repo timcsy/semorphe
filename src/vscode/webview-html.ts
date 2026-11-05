@@ -36,7 +36,7 @@
  *
  * ### ② `img-src data:`
  *
- * `ui/block-registrar.ts:291-305` 的 `+`／`-` 按鈕是
+ * `panels/blocks/block-registrar.ts:291-305` 的 `+`／`-` 按鈕是
  * `'data:image/svg+xml,' + encodeURIComponent(...)`，而
  * `cpp_var_declare`／`cpp_print`／`cpp_array_declare`／`cpp_vector_declare`／
  * `cpp_initializer_list` 都用它。漏掉的症狀是**按鈕破圖而功能還在**。

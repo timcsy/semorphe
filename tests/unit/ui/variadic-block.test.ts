@@ -17,7 +17,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import * as Blockly from 'blockly'
-import { defineVariadicBlock } from '../../../src/ui/variadic-block'
+import { defineVariadicBlock } from '../../../src/panels/blocks/variadic-block'
 
 const TYPE = '__variadic_probe__'
 

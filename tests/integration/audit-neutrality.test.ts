@@ -108,7 +108,7 @@ const key = (v: Violation): string => `${v.file}::${v.componentId}`
  */
 const falsePositiveList = [
   'src/core/types.ts::comment',            // Annotation 介面的聯集成員
-  'src/ui/block-registrar.ts::comment',    // Blockly 欄位的預設值（使用者看到的提示文字）
+  'src/panels/blocks/block-registrar.ts::comment',    // Blockly 欄位的預設值（使用者看到的提示文字）
 ] as const
 
 // ─────────────────────────────────────────────────────────────────────

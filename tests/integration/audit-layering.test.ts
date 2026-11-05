@@ -7,7 +7,7 @@
  *
  * > **擋住模組化的是相依的方向，不是資料夾的名字。**
  *
- * 那天真正擋路的是一條邊——`languages/<lang>/pack.ts` → `ui/dynamic-dropdown-field`
+ * 那天真正擋路的是一條邊——`languages/<lang>/pack.ts` → `panels/blocks/dynamic-dropdown-field`
  * → `blockly` → `jsdom`，於是**載入一個語言 ＝ 載入整個 Blockly**。
  * 而它是在一個 Node 專案跑起來才現形的，**花了一天**。
  *

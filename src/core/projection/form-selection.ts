@@ -193,6 +193,8 @@ export function selectForm(
 
   const ordered = [...axes].sort((a, b) => a.priority - b.priority)
   const missed: string[] = []
+  /** 位置軸在敘述位置、而沒有宣告敘述形態——**中性形態就是敘述形態**，不是落空（spec 217 第四刀量到）。 */
+  let neutralIsTheForm = 0
   for (const axis of ordered) {
     const value = axisValue(axis, node, ctx)
     // 軸值取不到——**合法狀態，不出聲**。
@@ -200,6 +202,10 @@ export function selectForm(
     if (value === undefined) continue
     const chosen = forms[formKey(axis.name, value)]
     if (chosen !== undefined) return { blockType: chosen }
+    // 🔴 只宣告了 `role:expression` 的元件，在敘述位置原本被判成「降級」——每畫一顆敘述 warn 一次，而選出來的積木是對的。
+    //    > 一個每次都響、而每次都不是問題的警告，會讓真的那一次也沒有人看。
+    //    ⚠️ 不 return：後面的軸（容器種類）仍要問——敘述位置的堆疊要選到堆疊那顆。
+    if (axis.name === 'role' && value === 'statement') { neutralIsTheForm++; continue }
     missed.push(`${axis.name} 的值「${value}」`)
   }
 
@@ -207,7 +213,7 @@ export function selectForm(
   // 新增一種容器卻忘了加形態宣告，就會走到這裡。
   //
   // ⚠️ 而**只要有一條軸取不到值就不算降級**：那是合法狀態（見上）。
-  if (missed.length > 0 && missed.length === ordered.length) {
+  if (missed.length > 0 && missed.length + neutralIsTheForm === ordered.length) {
     return {
       blockType: fallback,
       degraded: { reason: `形態軸 ${missed.join('、')}不在宣告的形態裡` },

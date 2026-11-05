@@ -1,7 +1,7 @@
 /**
  * **元件的語言中立父元件與變數型別**——從 `language-executors.ts` 拆出來（第 242 刀，6c-4 的前置）。
  *
- * 這兩張登記表**不屬於執行**：介面（`ui/block-registrar.ts`）與同步控制器（`core/sync/sync-controller.ts`）在用。
+ * 這兩張登記表**不屬於執行**：介面（`panels/blocks/block-registrar.ts`）與同步控制器（`core/sync/sync-controller.ts`）在用。
  * 它們原本與「直譯器的執行器登記處」住在同一個檔，而 6c-4 要刪掉直譯器——名字像執行的檔裡住著非執行的東西，刪的那天會一起被拉斷。
  */
 

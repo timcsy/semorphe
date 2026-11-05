@@ -107,6 +107,18 @@ const EXEMPT: Record<string, string> = {
   'src/panels/blocks/dark-workspace-theme.ts':
     '它建的是【Blockly 自己的主題物件】（`Blockly.Theme.defineTheme`）——與 `ghost-drag-strategy` 同一個理由：' +
     '把引擎拿掉，這個檔就沒有東西可以定義了。spec 217 第三刀從 `src/ui/theme/` 搬進積木那一格（唯一的消費者）。',
+  'src/panels/blocks/block-registrar.ts':
+    '它把積木定義【註冊進 Blockly】（Blockly.Blocks／Extensions／欄位型別）——與 `ghost-drag-strategy` 同一個理由：把引擎拿掉，這個檔就沒有東西可以註冊了。spec 217 第四刀從 `src/ui/` 搬進積木那一格。',
+  'src/panels/blocks/branch-list-block.ts':
+    '它把積木定義【註冊進 Blockly】（Blockly.Blocks／Extensions／欄位型別）——與 `ghost-drag-strategy` 同一個理由：把引擎拿掉，這個檔就沒有東西可以註冊了。spec 217 第四刀從 `src/ui/` 搬進積木那一格。',
+  'src/panels/blocks/param-list-block.ts':
+    '它把積木定義【註冊進 Blockly】（Blockly.Blocks／Extensions／欄位型別）——與 `ghost-drag-strategy` 同一個理由：把引擎拿掉，這個檔就沒有東西可以註冊了。spec 217 第四刀從 `src/ui/` 搬進積木那一格。',
+  'src/panels/blocks/alt-layout-block.ts':
+    '它把積木定義【註冊進 Blockly】（Blockly.Blocks／Extensions／欄位型別）——與 `ghost-drag-strategy` 同一個理由：把引擎拿掉，這個檔就沒有東西可以註冊了。spec 217 第四刀從 `src/ui/` 搬進積木那一格。',
+  'src/panels/blocks/variadic-block.ts':
+    '它把積木定義【註冊進 Blockly】（Blockly.Blocks／Extensions／欄位型別）——與 `ghost-drag-strategy` 同一個理由：把引擎拿掉，這個檔就沒有東西可以註冊了。spec 217 第四刀從 `src/ui/` 搬進積木那一格。',
+  'src/panels/blocks/dynamic-dropdown-field.ts':
+    '它把積木定義【註冊進 Blockly】（Blockly.Blocks／Extensions／欄位型別）——與 `ghost-drag-strategy` 同一個理由：把引擎拿掉，這個檔就沒有東西可以註冊了。spec 217 第四刀從 `src/ui/` 搬進積木那一格。',
 }
 
 /** 一行 import 拉進了引擎嗎。回傳被 import 的路徑，沒有就回 null。 */

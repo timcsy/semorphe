@@ -403,6 +403,6 @@ export function isStreamInput(componentId: string): boolean {
  * > 一個只有本語言會宣告的性狀，放在核心就是把耦合藏到更深一層——
  * > 而中立性護欄看不到它（它找身分字串，不找範疇名）。
  *
- * 唯一的消費者是 `ui/block-registrar.ts`，而 `ui` 本來就 import 語言套件
+ * 唯一的消費者是 `panels/blocks/block-registrar.ts`，而 `ui` 本來就 import 語言套件
  * （25 處），所以下沉沒有代價。
  */
