@@ -44,8 +44,9 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       ? createNode('cpp:new', { type, args }, { size: [size] })
       : createNode('cpp:new', { type, args })
     // 🔴 **一對空括號是意思，不是排版**（2026-11-06）：`new int()` 把值初始化成 0，`new int` 的值是未定的（[expr.new]p18）。
-    //    原本兩者都成了「沒有引數」→ 產回去少了括號、意思變了。記下來，產碼與 formalize 都讀它
-    if (argList && args === '') made.metadata = { ...(made.metadata ?? {}), layoutHints: { ...(made.metadata?.layoutHints ?? {}), valueInit: true } }
+    //    原本兩者都成了「沒有引數」→ 產回去少了括號、意思變了。記成屬性 `valueInit`，產碼與 formalize 都讀它
+    //    🔴 而它是【屬性】不是 layoutHints：layoutHints 走一趟積木就丟了（form-invariance (c)），積木上由 renderMapping.hints 帶著
+    if (argList && args === '') made.properties.valueInit = 'true'
     return made
   })
 }

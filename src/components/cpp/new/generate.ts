@@ -15,6 +15,6 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const args = node.properties.args ?? ''
       if (args) return `new ${type}(${args})`
       // 空括號＝值初始化（`new int()` 是 0）——見 lift 的註解
-      return node.metadata?.layoutHints?.valueInit === true ? `new ${type}()` : `new ${type}`
+      return node.properties.valueInit === 'true' ? `new ${type}()` : `new ${type}`
     })
 }

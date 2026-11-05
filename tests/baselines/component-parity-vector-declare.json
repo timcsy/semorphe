@@ -2,7 +2,7 @@
   "_meta": {
     "guard": "component-parity",
     "measuredAt": "2026-09-19",
-    "note": "🔄 **2026-11-02（spec 203，重構 6c-2e）：執行那一路的判準從 JS 直譯器換成 Cella，`execOutput` 逐筆重錄**（其餘欄位不動）：\n- 格式：`<直譯器狀態>|<輸出>` → `<Cella 判決>|<輸出>|<問題…>`。\n- 最小宣告／初始化列表／型別變化：`completed|` → `accept|`（輸出同為空，只換了判決的字）。\n- 兄弟元件同場：`completed|3 4\\n2\\n` → `accept|3 4\\n2\\n`（輸出逐字相同）。\n- 負向-stack／負向-map／負向-其餘容器：`completed|` → `reject||reject：a constructor's arguments for a type that is not a class（第 1 行）`。樣本是沒有 `#include`、沒有 `using namespace std` 的片段——C++ 本來就不收（clang：no template named 'stack'）；JS 直譯器照跑。Cella 認得 `vector`（語法裡的 tVector）而不認得沒有 std:: 的 `stack`／`map`／`queue`，補上 `using namespace std;` 就 accept（2026-11-02 實測）。這三支是 lift 側的負向樣本，執行那一欄不是它們的主張；照實錄下判決，理由文字變了也會紅。\n\n📈 **2026-11-02（第 218 刀）：身分集合多一個 `cpp:method_def`**（刻意新增，不是搬家沒刪乾淨；使用者 2026-11-02 定另立元件，history/326）。\n\n搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。"
+    "note": "🔄 **2026-11-02（spec 203，重構 6c-2e）：執行那一路的判準從 JS 直譯器換成 Cella，`execOutput` 逐筆重錄**（其餘欄位不動）：\n- 格式：`<直譯器狀態>|<輸出>` → `<Cella 判決>|<輸出>|<問題…>`。\n- 最小宣告／初始化列表／型別變化：`completed|` → `accept|`（輸出同為空，只換了判決的字）。\n- 兄弟元件同場：`completed|3 4\\n2\\n` → `accept|3 4\\n2\\n`（輸出逐字相同）。\n- 負向-stack／負向-map／負向-其餘容器：`completed|` → `reject||reject：a constructor's arguments for a type that is not a class（第 1 行）`。樣本是沒有 `#include`、沒有 `using namespace std` 的片段——C++ 本來就不收（clang：no template named 'stack'）；JS 直譯器照跑。Cella 認得 `vector`（語法裡的 tVector）而不認得沒有 std:: 的 `stack`／`map`／`queue`，補上 `using namespace std;` 就 accept（2026-11-02 實測）。這三支是 lift 側的負向樣本，執行那一欄不是它們的主張；照實錄下判決，理由文字變了也會紅。\n\n📈 **2026-11-02（第 218 刀）：身分集合多一個 `cpp:method_def`**（刻意新增，不是搬家沒刪乾淨；使用者 2026-11-02 定另立元件，history/326）。\n\n📈 **2026-11-06（元件管線 311）：身分集合多一個 `cpp:this`**（刻意新增的元件：`this->x` 原本整段降級，history/344）。\n\n搬家前的對照組。**這份基準不是棘輪**——它不准變，任何一筆差異都代表搬家改變了行為。要重產必須說明是哪一筆為什麼變，而「為什麼變」的合法答案只有「修了一個真的 bug」。"
   },
   "identitySet": [
     "cpp:address_of",
@@ -229,6 +229,7 @@
     "cpp:switch",
     "cpp:template_function",
     "cpp:ternary",
+    "cpp:this",
     "cpp:throw",
     "cpp:time",
     "cpp:tone",

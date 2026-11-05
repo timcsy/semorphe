@@ -11,6 +11,11 @@
       "name": "args",
       "kind": "literal",
       "default": ""
+    },
+    {
+      "name": "valueInit",
+      "kind": "literal",
+      "default": ""
     }
   ],
   "slots": {
@@ -37,5 +42,6 @@
       }
     },
     "formalize": "./formalize.ts"
-  }
+  },
+  "_valueInit_why": "`new T()`（空括號，值初始化：`new int()` 是 0）與 `new T`（預設初始化，值未定）是兩種意思（[expr.new]p18）。原本記在 layoutHints，而走一趟積木就丟了（form-invariance (c) 量到）⟹ 升成屬性，積木上由 renderMapping.hints 帶著（學生看不到、不會被悄悄改寫）。值是 \"true\" 或空。"
 }
