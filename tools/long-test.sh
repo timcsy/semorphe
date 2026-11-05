@@ -12,16 +12,18 @@
 #      ——處方寫了「不動」而 2026-11-04、05 又各犯一次，所以改成機器在擋：開跑與結束各取一次【檔案內容】的指紋，
 #      不一樣就大聲說、結束碼改成 3。指紋是內容的樹雜湊（暫時的 index ＋ write-tree），中途【提交】不算改（內容沒變）。
 set -u
-WT=${1:?用法：tools/long-test.sh <worktree> <輸出目錄> [--suite] [--build] [--e2e] [--port N] [--only 檔名…]}
+WT=${1:?用法：tools/long-test.sh <worktree> <輸出目錄> [--suite] [--build] [--e2e] [--port N] [--no-wait-cella] [--only 檔名…]}
 OUT=${2:?缺輸出目錄（放 scratchpad）}
 shift 2
-SUITE=0; BUILD=0; E2E=0; PORT=4199; ONLY=()
+SUITE=0; BUILD=0; E2E=0; PORT=4199; ONLY=(); WAIT_CELLA=1
 while [ $# -gt 0 ]; do
   case "$1" in
     --suite) SUITE=1 ;;
     --build) BUILD=1 ;;
     --e2e) E2E=1; BUILD=1 ;;
     --port) PORT=$2; shift ;;
+    # Cella 整夜都在跑自己的測試時（例如子代理在做一件大事），等它跑完會等到天亮——那時不等、負載造成的紅照舊單獨重跑來判
+    --no-wait-cella) WAIT_CELLA=0 ;;
     --only) shift; while [ $# -gt 0 ] && [[ "$1" != --* ]]; do ONLY+=("$1"); shift; done; continue ;;
     *) echo "不認得的參數：$1" >&2; exit 2 ;;
   esac
@@ -36,7 +38,7 @@ mkdir -p "$OUT"
 # 🔴 只看【執行檔】，不看整串指令文字（2026-11-05）：呼叫這支腳本的 shell 自己的指令列裡寫著「cargo test」時
 #    （例如同一行先 pgrep 一下），舊的寫法把那個 shell 算成「Cella 在跑」——等自己等了 74 分鐘。
 cella_running() { ps -axo stat=,comm= | awk '$1 !~ /^T/ && ($2 ~ /(^|\/)cargo$/ || $2 ~ /cella\/target\// || $2 ~ /(^|\/)cella$/)' | wc -l | tr -d ' '; }
-wait_cella() { until [ "$(cella_running)" -eq 0 ]; do sleep 60; done; }
+wait_cella() { [ "$WAIT_CELLA" = 1 ] || return 0; until [ "$(cella_running)" -eq 0 ]; do sleep 60; done; }
 strip() { LC_ALL=C sed 's/\x1b\[[0-9;]*m//g'; }
 
 cd "$WT" || exit 1
