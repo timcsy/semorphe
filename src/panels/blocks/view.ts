@@ -7,7 +7,6 @@ import { createNode } from '../../core/semantic-tree'
 import { companionFor } from '../../core/component/companion-blocks'
 import type { BlockSpecRegistry } from '../../core/blocks/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../../core/blocks/category-colors'
-import { formatMessage } from '../../i18n/messages'
 import type { BlockStylePreset } from '../../core/blocks/block-style'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent, EditableSource } from '../../core/sync/view-host'
 import type { SemanticBus } from '../../core/sync/semantic-bus'
@@ -17,7 +16,7 @@ import { diagNote } from '../../core/diag-log'
 import type { BlockMapping } from '../../core/projection/code-generator'
 import { createDarkWorkspaceTheme } from './dark-workspace-theme'
 import { resolveCollapsed, collapsedToKeys, type CollapsedEntry } from '../../core/granularity'
-import { diagnosticParams } from '../../core/projection/diagnostic-projection'
+import { diagnosticParams, diagnosticText } from '../../core/projection/diagnostic-projection'
 
 export interface BlocklyPanelOptions {
   container: HTMLElement
@@ -1241,7 +1240,7 @@ export class BlocklyPanel implements ViewHost {
     // **而換算屬於呈現，不屬於事實**。
     // 判決的種類 → 人看得懂的名稱：兩側共用 `diagnosticParams`（不顯示 Cella 的 reason 原文，使用者定）
     const params = diagnosticParams(d.at ? { ...d.params, humanLine: d.at.line + 1 } : d.params)
-    return formatMessage(`DIAG_${d.rule}_BLOCK`, params) ?? formatMessage('DIAG_UNKNOWN') ?? ''
+    return diagnosticText(d.rule, 'BLOCK', params)
   }
 
   /** nodeId → blockId。找不到回 `null`——**不猜**。 */

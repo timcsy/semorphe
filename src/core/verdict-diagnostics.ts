@@ -84,9 +84,19 @@ const KINDS: Record<string, { rule: string }> = {
   ubOrder: { rule: 'CELLA_UNSPECIFIED' },
   // 兩種求值順序判斷功能沒有比較（why：access＝呼叫之外的讀寫、budget＝比較超過預算）——判不出，不是學生的錯（cella 0.1.202611042110）
   orderUncompared: { rule: 'CELLA_ORDER_UNCOMPARED' },
+  // 編譯不過的細分（cella 0.1.202611050546 起；判決仍是 reject）——各帶 params，文案照 `what` 細分（`DIAG_<規則>_<WHAT>_<側>`），spec 218
+  notAssignable: { rule: 'CELLA_NOT_ASSIGNABLE' },
+  callArguments: { rule: 'CELLA_CALL_ARGUMENTS' },
+  redeclared: { rule: 'CELLA_REDECLARED' },
+  returnValue: { rule: 'CELLA_RETURN_VALUE' },
+  operandTypes: { rule: 'CELLA_OPERAND_TYPES' },
+  noConversion: { rule: 'CELLA_NO_CONVERSION' },
   abort: { rule: 'CELLA_TERMINATION' },
   uncaught: { rule: 'CELLA_TERMINATION' },
 }
+
+/** 「編譯不過」這一族（籠統的 reject ＋ 0546 起的細分）——更具體的說法（串流配錯運算子、型別不合）要取代它們時，一律看這一組。 */
+const REJECT_FAMILY = new Set(['CELLA_REJECT', 'CELLA_NOT_ASSIGNABLE', 'CELLA_CALL_ARGUMENTS', 'CELLA_REDECLARED', 'CELLA_RETURN_VALUE', 'CELLA_OPERAND_TYPES', 'CELLA_NO_CONVERSION'])
 
 /** 判決產出端的全部規則身分（護欄用）。 */
 export const VERDICT_RULES: readonly string[] = [...new Set(Object.values(KINDS).map((k) => k.rule))].concat('CELLA_UNDECLARED_HEADER', 'CELLA_OTHER', 'CELLA_UNCLASSIFIED', 'CELLA_INVALID', 'TYPE_MISMATCH')
@@ -141,6 +151,33 @@ const IMPLEMENTATIONS: Record<string, string> = { environment: '執行環境' }
  */
 export const ownerOf = (label: string): string => label.split(/[/#:]/)[0]
 
+/** id → 節點（判決指到的那一顆要拿它的程式碼與行號——spec 218 第一步） */
+function byId(tree: SemanticNode): Map<string, SemanticNode> {
+  const out = new Map<string, SemanticNode>()
+  const walk = (n: SemanticNode): void => {
+    out.set(n.id, n)
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(walk)
+  }
+  walk(tree)
+  return out
+}
+
+/**
+ * **指名**（spec 218 第一步，vision〈錯誤訊息看得懂、改得動〉）：判決指到的那一顆的程式碼（`subject`，一行、最多 40 字）與行號（`line`）。
+ * 程式碼由宿主給的 `codeOf` 產（核心不認得語言）；拿不到就不放，文案退回不指名的那一句。
+ */
+function pinpoint(node: SemanticNode | undefined, codeOf?: (n: SemanticNode) => string): Record<string, string> {
+  if (!node) return {}
+  const out: Record<string, string> = {}
+  try {
+    const code = codeOf?.(node)?.replace(/\s+/g, ' ').replace(/;\s*$/, '').trim()
+    if (code) out.subject = code.length > 40 ? `${code.slice(0, 39)}…` : code
+  } catch { /* 產不出程式碼就不指名 */ }
+  const r = node.metadata?.sourceRange as { startLine?: number } | undefined
+  if (typeof r?.startLine === 'number') out.line = String(r.startLine + 1)
+  return out
+}
+
 function ids(tree: SemanticNode): Set<string> {
   const out = new Set<string>()
   const walk = (n: SemanticNode): void => {
@@ -192,7 +229,7 @@ function streamHints(tree: SemanticNode, streams: Readonly<Record<string, string
     const inside = ids(h.node)
     for (let i = diagnostics.length - 1; i >= 0; i--) {
       const d = diagnostics[i]
-      if (d.source === 'cella' && (d.rule === 'CELLA_REJECT' || d.rule === 'CELLA_OTHER') && inside.has(d.nodeId)) diagnostics.splice(i, 1)
+      if (d.source === 'cella' && (REJECT_FAMILY.has(d.rule) || d.rule === 'CELLA_OTHER') && inside.has(d.nodeId)) diagnostics.splice(i, 1)
     }
     diagnostics.push({ nodeId: h.node.id, source: 'cella', rule: 'STREAM_OPERATOR_SUGGEST', severity: 'error', params: { stream: h.stream, op: h.op, want: h.want } })
   }
@@ -210,6 +247,8 @@ export function toDiagnostics(input: {
   knownNames?: Iterable<string>
   /** 串流名 → 它要配的運算子（`cout` → `<<`、`cin` → `>>`）——「串流配錯運算子」的提示（spec 207）；語言給 */
   streamOperators?: Readonly<Record<string, string>>
+  /** 一顆節點 → 它的程式碼（一行）——文案指名用（spec 218）；宿主給（核心不認得語言） */
+  codeOf?: (node: SemanticNode) => string
 }): {
   diagnostics: Diagnostic[]
   notes: string[]
@@ -226,6 +265,7 @@ export function toDiagnostics(input: {
   if (!verdict) return { diagnostics: [], notes: ['判斷功能需要 Cella（還沒載好，或這個語言還沒有）'], assumes: [], unplaced }
 
   const known = ids(tree)
+  const nodes = byId(tree)
   const diagnostics: Diagnostic[] = []
   let dropped = 0
   for (const p of verdict.problems) {
@@ -260,7 +300,7 @@ export function toDiagnostics(input: {
       rule: !classified ? 'CELLA_UNCLASSIFIED' : p.category === 'invalid' ? 'CELLA_INVALID' : k?.rule ?? 'CELLA_OTHER',
       severity,
       // 結構化的 params（字串與布林——cella 的值慣例）一併帶上，文案用得到（例如 orderUncompared 的 why）
-      params: { ...Object.fromEntries(Object.entries(p.params ?? {}).filter(([, v]) => typeof v === 'string' || typeof v === 'boolean').map(([k, v]) => [k, String(v)])), kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
+      params: { ...pinpoint(nodes.get(nodeId), input.codeOf), ...Object.fromEntries(Object.entries(p.params ?? {}).filter(([, v]) => typeof v === 'string' || typeof v === 'boolean').map(([k, v]) => [k, String(v)])), kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
     })
   }
   if (dropped > 0) notes.push('這支程式要讀輸入——給一份輸入，才判得出執行時的問題')
@@ -273,8 +313,8 @@ export function toDiagnostics(input: {
   for (const e of types?.errors ?? []) {
     const nodeId = ownerOf(e.at)
     if (!known.has(nodeId)) { unplaced.error++; notes.push(`有一則型別錯誤對不到積木（${e.reason}）`); continue }
-    if (diagnostics.some((d) => d.nodeId === nodeId && d.rule === 'CELLA_REJECT')) continue
-    diagnostics.push({ nodeId, severity: 'error', source: 'cella', rule: 'TYPE_MISMATCH', params: { reason: e.reason } })
+    if (diagnostics.some((d) => d.nodeId === nodeId && REJECT_FAMILY.has(d.rule))) continue
+    diagnostics.push({ nodeId, severity: 'error', source: 'cella', rule: 'TYPE_MISMATCH', params: { ...pinpoint(nodes.get(nodeId), input.codeOf), reason: e.reason } })
   }
   return { diagnostics, notes, assumes, unplaced }
 }
