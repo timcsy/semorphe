@@ -33,7 +33,9 @@ WT=$(cd "$WT" && pwd)
 NAME=$(basename "$WT")
 mkdir -p "$OUT"
 
-cella_running() { ps -axo stat,command | grep -E '[c]ella/target|[c]argo test|[c]ella check' | awk '$1 !~ /^T/' | wc -l | tr -d ' '; }
+# 🔴 只看【執行檔】，不看整串指令文字（2026-11-05）：呼叫這支腳本的 shell 自己的指令列裡寫著「cargo test」時
+#    （例如同一行先 pgrep 一下），舊的寫法把那個 shell 算成「Cella 在跑」——等自己等了 74 分鐘。
+cella_running() { ps -axo stat=,comm= | awk '$1 !~ /^T/ && ($2 ~ /(^|\/)cargo$/ || $2 ~ /cella\/target\// || $2 ~ /(^|\/)cella$/)' | wc -l | tr -d ' '; }
 wait_cella() { until [ "$(cella_running)" -eq 0 ]; do sleep 60; done; }
 strip() { LC_ALL=C sed 's/\x1b\[[0-9;]*m//g'; }
 
