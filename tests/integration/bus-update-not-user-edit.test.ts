@@ -44,7 +44,7 @@
  */
 import { describe, it, expect, beforeAll, afterEach } from 'vitest'
 import * as Blockly from 'blockly/core'
-import { BlocklyPanel } from '../../src/ui/panels/blockly-panel'
+import { BlocklyPanel } from '../../src/panels/blocks/view'
 import type { SemanticUpdateEvent } from '../../src/core/sync/view-host'
 import { createNode } from '../../src/core/semantic-tree'
 

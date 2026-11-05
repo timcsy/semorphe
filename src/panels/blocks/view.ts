@@ -8,15 +8,14 @@ import { companionFor } from '../../core/component/companion-blocks'
 import type { BlockSpecRegistry } from '../../core/blocks/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../../core/blocks/category-colors'
 import { formatMessage } from '../../i18n/messages'
-import type { BlockStylePreset } from '../../languages/style'
+import type { BlockStylePreset } from '../../core/blocks/block-style'
 import type { ViewHost, ViewCapabilities, ViewConfig, SemanticUpdateEvent, ExecutionStateEvent, ExecutionAtNodeEvent, DiagnosticsEvent, EditableSource } from '../../core/sync/view-host'
 import type { SemanticBus } from '../../core/sync/semantic-bus'
 import { PatternExtractor } from '../../core/projection/pattern-extractor'
 import type { BlockState as ExtractorBlockState } from '../../core/projection/pattern-extractor'
-import { showToast } from '../toolbar/toast'
 import { diagNote } from '../../core/diag-log'
 import type { BlockMapping } from '../../core/projection/code-generator'
-import { createDarkWorkspaceTheme } from '../theme/dark-workspace-theme'
+import { createDarkWorkspaceTheme } from './dark-workspace-theme'
 import { resolveCollapsed, collapsedToKeys, type CollapsedEntry } from '../../core/granularity'
 import { diagnosticParams } from '../../core/projection/diagnostic-projection'
 
@@ -26,6 +25,11 @@ export interface BlocklyPanelOptions {
   blockSpecRegistry?: BlockSpecRegistry
   bus?: SemanticBus
   media?: string
+  /**
+   * 讓使用者看得到的通知（例如積木載入失敗）——**由宿主給**（spec 217 第三刀：面板只依賴核心，toast 是宿主的東西）。
+   * 省略時退回 `console.error`：開發者看得到，而宿主若要讓使用者看到就要給這一格。
+   */
+  notify?: (message: string, level: 'error' | 'info') => void
   /**
    * 怎麼建「程式」這個根節點——🔴 **由組裝點提供**（spec 153）。
    *
@@ -165,6 +169,8 @@ export class BlocklyPanel implements ViewHost {
    * 不是視圖層的知識**（P9）。⚠️ 而時機從「面板建構時」變成
    * 「app 初始化時」，所以它必須在第一次 `extract` 之前被呼叫。
    */
+  private readonly notify: (message: string, level: 'error' | 'info') => void
+
   constructor(options: BlocklyPanelOptions) {
     this.container = options.container
     this.blockSpecRegistry = options.blockSpecRegistry ?? null
@@ -175,6 +181,7 @@ export class BlocklyPanel implements ViewHost {
     }
     options.installExtractStrategies?.(this.patternExtractor)
     this.media = options.media
+    this.notify = options.notify ?? ((m) => console.error(m))
     if (options.buildProgramRoot) this.buildProgramRoot = options.buildProgramRoot
   }
 
@@ -344,7 +351,7 @@ export class BlocklyPanel implements ViewHost {
         //
         // > **一則只有開發者看得到的錯誤訊息，
         // > 在使用者那裡等於沒有訊息——他只會說「卡住了」。**
-        showToast(`積木載入失敗：${this.lastStateError}`, 'error')
+        this.notify(`積木載入失敗：${this.lastStateError}`, 'error')
         // 還原到上一個好的狀態——⚠️ 還原本身也可能失敗，那就清空，
         //    因為**一片空白至少說得出「這裡沒有東西」，殘骸說不出任何事**。
         try {

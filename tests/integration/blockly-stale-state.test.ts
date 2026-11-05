@@ -42,10 +42,10 @@ function stripComments(src: string): string {
   return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
 }
 
-const PANEL = stripComments(readFileSync('src/ui/panels/blockly-panel.ts', 'utf8'))
+const PANEL = stripComments(readFileSync('src/panels/blocks/view.ts', 'utf8'))
 const APP = stripComments(readFileSync('src/ui/app.ts', 'utf8'))
 /** ⚠️ 有些斷言要看的是**有註解的**原文（例如「旗標有沒有對外的讀法」）。 */
-const PANEL_RAW = readFileSync('src/ui/panels/blockly-panel.ts', 'utf8')
+const PANEL_RAW = readFileSync('src/panels/blocks/view.ts', 'utf8')
 
 describe('殘的工作區不得覆蓋程式碼', () => {
   it('🔴 正向錨點：那段 try/catch 還在（不然下面兩條在測空氣）', () => {

@@ -15,7 +15,7 @@ import { MobileTabBar, type TabId } from './layout/mobile-tab-bar'
 import type { ConsolePanel } from '../panels/console/view'
 import type { VariablePanel } from '../panels/variables/view'
 import type { FlowPanel } from '../panels/flow/view'
-import { BlocklyPanel } from './panels/blockly-panel'
+import type { BlocklyPanel } from '../panels/blocks/view'
 import type { CodeView } from '../core/host/code-view'
 import type { HostProfile } from '../core/host/host-profile'
 import { CONTROLS, RUN_MODES, surfaceOf, panelControls, type ControlId } from '../core/host/controls'
@@ -551,18 +551,22 @@ export function createAppLayout(
   // ⚠️ 這個選項**本來就接好了**（`BlocklyPanel` 的 `media?`），只是從來沒有人傳。
   // 檔案由 `vite.config.ts` 從 `node_modules/blockly/media` 複製，
   // 由第四十五條護欄（`e2e/offline.spec.ts`）守著。
-  const blocklyPanel = new BlocklyPanel({
-    container: blocklyContainer,
-    blockSpecRegistry,
-    // 🔴 **透傳，不知道它是誰**（spec 153）——組裝點（`app.ts`）給的。
-    buildProgramRoot: languageWiring?.buildProgramRoot as never,
-    installExtractStrategies: languageWiring?.installExtractStrategies as never,
-    // ⚠️ **環境差異**：網頁版從 base URL 取，而把應用嵌進別的宿主時
-    //    檔案在別的地方。🔴 而它不是「要不要有」——兩邊都要有。
-    media: (window as unknown as { __SEMORPHE_BLOCKLY_MEDIA__?: string })
-      .__SEMORPHE_BLOCKLY_MEDIA__ ?? `${import.meta.env.BASE_URL}blockly-media/`,
-  })
-  blocklyPanel.init(toolbox)
+  // 🟢 這一格自己畫（spec 217 第三刀）——組裝點只給容器與宿主的東西：
+  //    登錄表、工具箱、語言的接線（🔴 透傳，不知道它是誰——spec 153）、媒體路徑、通知
+  const blocklyPanel = panelById('blocks')!.mount!(blocklyContainer, {
+    profile,
+    msg: (k: string, f?: string) => Blockly.Msg[k] || f || k,
+    blockSpecs: blockSpecRegistry,
+    blocks: {
+      toolbox,
+      buildProgramRoot: languageWiring?.buildProgramRoot,
+      installExtractStrategies: languageWiring?.installExtractStrategies,
+      // 🔴 **`media` 不傳的話，Blockly 會去 `blockly-demo.appspot.com` 抓圖示與音效**——離線時壞得很安靜（第四十五條護欄守著）
+      media: (window as unknown as { __SEMORPHE_BLOCKLY_MEDIA__?: string })
+        .__SEMORPHE_BLOCKLY_MEDIA__ ?? `${import.meta.env.BASE_URL}blockly-media/`,
+    },
+    notify: (m, level) => showToast(m, level === 'error' ? 'error' : undefined),
+  }).view as BlocklyPanel
 
   // Right panel: Monaco + BottomPanel
   // 🔴 沒有切的時候它是一個**沒掛進 DOM 的容器**——程式碼視圖的建構子

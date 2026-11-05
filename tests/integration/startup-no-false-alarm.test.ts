@@ -39,7 +39,7 @@ describe('開機時不得誤報「積木沒有完整載入」', () => {
     const app = strip(read('src/ui/app.ts'))
     expect(app, '訊息被改名了 → 這支測試要跟著改，而不是靜靜地不再守任何東西')
       .toContain('積木沒有完整載入')
-    expect(strip(read('src/ui/panels/blockly-panel.ts')), '判定改名了')
+    expect(strip(read('src/panels/blocks/view.ts')), '判定改名了')
       .toContain('staleReason')
   })
 
@@ -53,7 +53,7 @@ describe('開機時不得誤報「積木沒有完整載入」', () => {
   })
 
   it('🔴 而【擋住寫回】兩種殘都要擋——分開的是說什麼，不是擋不擋', () => {
-    const panel = strip(read('src/ui/panels/blockly-panel.ts'))
+    const panel = strip(read('src/panels/blocks/view.ts'))
     expect(panel, '`isStateStale` 必須仍然兩種都為真（安全網不可退讓）')
       .toMatch(/isStateStale[\s\S]{0,200}staleReason !== null/)
     expect(panel).toMatch(/staleReason[\s\S]{0,400}stateLoadFailed[\s\S]{0,200}hasRendered/)

@@ -38,7 +38,7 @@ import { REPO_ROOT } from '../../helpers/guardrail'
 
 const appSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/app.ts'), 'utf8')
 const shellSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/app-shell.ts'), 'utf8')
-const panelSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/panels/blockly-panel.ts'), 'utf8')
+const panelSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/panels/blocks/view.ts'), 'utf8')
 
 describe('第一百一十九條護欄：積木改不動程式碼要說出來', () => {
   it('★ 入口條件——三個檔都讀到了', () => {

@@ -78,7 +78,9 @@ import * as path from 'path'
 import { REPO_ROOT, printReport } from '../helpers/guardrail'
 
 /** 被掃的目錄——面板與版面兩處，都是「使用者看得到的殼」。 */
-const PANEL_DIRS = ['src/ui/panels', 'src/ui/layout']
+// 🔴 spec 217 起面板住在 `src/panels/<格>/`（自己 mount 的那些）——每一格的目錄都掃，新加一格也會掃到
+const PANEL_DIRS = ['src/ui/panels', 'src/ui/layout', 'src/panels',
+  ...fs.readdirSync(path.join(REPO_ROOT, 'src/panels'), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => `src/panels/${e.name}`)]
 
 /**
  * **積木引擎的套件名**。`blockly` 與它的任何子路徑（`blockly/core`、`blockly/msg/…`）。
@@ -94,14 +96,17 @@ const ENGINE = /^blockly(\/|$)/
  * 而它會過期，於是下面有一支孤兒檢查（第 11 步：判定過期不會被棘輪抓到）。
  */
 const EXEMPT: Record<string, string> = {
-  'src/ui/panels/blockly-panel.ts':
+  'src/panels/blocks/view.ts':
     '它【就是】積木投影本身——inject／serialization／WorkspaceSvg／Events 等 12 種 API。' +
     '把引擎從它身上拿掉等於刪掉這個面板。',
-  'src/ui/panels/ghost-drag-strategy.ts':
+  'src/panels/blocks/ghost-drag-strategy.ts':
     '它實作的是【Blockly 自己的介面】`IDragStrategy`——回傳值的型別由引擎定義，' +
     '不是「為了查一個字」而拉進來的。與 `blockly-panel` 同一個理由：' +
     '把引擎拿掉，這個檔就沒有東西可以實作了。' +
     '⚠️ 而它【不是面板】，只是住在面板旁邊（唯一的消費者是 `blockly-panel`）。',
+  'src/panels/blocks/dark-workspace-theme.ts':
+    '它建的是【Blockly 自己的主題物件】（`Blockly.Theme.defineTheme`）——與 `ghost-drag-strategy` 同一個理由：' +
+    '把引擎拿掉，這個檔就沒有東西可以定義了。spec 217 第三刀從 `src/ui/theme/` 搬進積木那一格（唯一的消費者）。',
 }
 
 /** 一行 import 拉進了引擎嗎。回傳被 import 的路徑，沒有就回 null。 */

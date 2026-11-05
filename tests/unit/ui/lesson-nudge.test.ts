@@ -33,7 +33,7 @@ import { suggestLessonFor, type LessonScope } from '../../../src/core/lesson/les
 
 const appSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/app.ts'), 'utf8')
 const barSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/lesson-nudge-bar.ts'), 'utf8')
-const panelSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/panels/blockly-panel.ts'), 'utf8')
+const panelSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/panels/blocks/view.ts'), 'utf8')
 const cssSrc = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/style.css'), 'utf8')
 
 /** 真的課程資料——⚠️ 不用假的，不然這條護欄驗的是我編的例子。 */

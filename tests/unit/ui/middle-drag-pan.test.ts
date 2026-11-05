@@ -26,7 +26,7 @@
  * @vitest-environment happy-dom
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { enableMiddleDragPan, PANNING_CLASS } from '../../../src/ui/panels/middle-drag-pan'
+import { enableMiddleDragPan, PANNING_CLASS } from '../../../src/panels/blocks/middle-drag-pan'
 
 /** 一個會記帳的假工作區——刻意不造 Blockly。 */
 function fakeViewport(): { scrollX: number; scrollY: number; scroll(x: number, y: number): void; calls: Array<[number, number]>; dragging: boolean; isDragging(): boolean } {

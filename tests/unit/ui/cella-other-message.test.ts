@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { resetMessages, setMessages } from '../../../src/i18n/messages'
 import zhTW from '../../../src/i18n/zh-TW/blocks.json'
-import { BlocklyPanel } from '../../../src/ui/panels/blockly-panel'
+import { BlocklyPanel } from '../../../src/panels/blocks/view'
 
 const say = (d: unknown): string => (BlocklyPanel.prototype.diagnosticMessage as (x: unknown) => string).call({}, d)
 

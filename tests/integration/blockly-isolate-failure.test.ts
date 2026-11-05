@@ -19,7 +19,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 
-const SRC = readFileSync('src/ui/panels/blockly-panel.ts', 'utf8')
+const SRC = readFileSync('src/panels/blocks/view.ts', 'utf8')
 const NO_COMMENTS = SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
 
 describe('載入失敗要指得出是哪一顆積木', () => {
