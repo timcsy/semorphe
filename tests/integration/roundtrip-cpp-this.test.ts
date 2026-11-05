@@ -11,6 +11,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { expectCellaOut } from '../helpers/cella-run'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
+import { KEEP_COUT_NOTE } from '../../src/languages/cpp/printf-types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 
 const S = apcs as unknown as StylePreset
@@ -31,6 +32,11 @@ function find(n: SemanticNode, id: string, out: SemanticNode[] = []): SemanticNo
 /** 結構指紋：身分、屬性、子節點——不含 id 與來源位置 */
 function shape(n: SemanticNode): unknown {
   return [n.componentId, n.properties, Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, v]) => [k, v.map(shape)]))]
+}
+
+function dropKeepNote(n: SemanticNode): SemanticNode {
+  const slots = Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, v]) => [k, v.filter((c) => !(c.componentId === 'cpp:comment' && c.properties.text === KEEP_COUT_NOTE)).map(dropKeepNote)]))
+  return { ...n, slots }
 }
 
 const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
@@ -55,5 +61,28 @@ describe('round-trip：cpp:this', () => {
 
   it.each(CASES)('★ %s：Cella 判 accept、輸出相同', async (_name, body, expected) => {
     await expectCellaOut(H + body, expected)
+  })
+})
+
+describe('跨概念與風格：this 換風格產碼不變', () => {
+  it.each(['google', 'competitive'])('★ 風格 %s：this->x、this->f()、*this 照樣產回去，再 lift 是同一棵樹', async (styleId) => {
+    const style = (await import(`../../src/languages/cpp/styles/${styleId}.json`)).default as unknown as StylePreset
+    for (const [, body] of CASES) {
+      const tree = lift(H + body)
+      const out = generateCode(tree, 'cpp', style)
+      expect(out).toMatch(/this->|\*this|this ==/)
+      // 競賽風格把 cout 換成 printf；成員的型別 printf 型別表本來就判不出來（隱含的 x 也一樣），於是誠實地保留 cout 並加一行註解。
+      // 那行註解是換風格的產物，比對時排除它——其餘要是同一棵樹
+      expect(shape(dropKeepNote(lift(out)))).toEqual(shape(tree))
+    }
+  })
+  it('★ 換成競賽風格時，this->x 與隱含的 x 得到同一種處置（兩個都保留 cout，不是只有一邊）', async () => {
+    const style = (await import('../../src/languages/cpp/styles/competitive.json')).default as unknown as StylePreset
+    const out = generateCode(lift(H + 'struct P {\n    int x;\n    void a() {\n        cout << x;\n    }\n    void b() {\n        cout << this->x;\n    }\n};\nint main() {\n}\n'), 'cpp', style)
+    expect(out).toContain('cout << x; // ' + KEEP_COUT_NOTE)
+    expect(out).toContain('cout << this->x; // ' + KEEP_COUT_NOTE)
+  })
+  it('★ 巢狀：迴圈與 if 裡的 this->x', async () => {
+    await expectCellaOut(H + 'struct C {\n    int n;\n    int sum() {\n        int s = 0;\n        for (int i = 1; i <= this->n; i++) {\n            if (i % 2 == 0) {\n                s += this->n * i;\n            }\n        }\n        return s;\n    }\n};\nint main() {\n    C c;\n    c.n = 4;\n    cout << c.sum();\n}\n', '24')
   })
 })
