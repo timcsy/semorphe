@@ -282,7 +282,7 @@ src/languages/<lang>/              文法、產生器、抽取器、骨架、診
 
 - [ ] **Provider 對接說明（給 cos-mos 階段 3）**｜負責：semorphe｜狀態：說明草稿已寫｜結束：說明列出方法與狀態回報；`tests/contract/session-contract.test.ts` 能對任一提供者跑｜卡在：cos-mos 的試接（`253-cosmos-trial`）｜→ [draft](draft/2026-11-03-Provider對接說明.md) · [334](history/334-三方會議第三輪符號學三面向與操作者介面.md)
 - [ ] **每個領域三方各一個套件**（契約／意思／形式）｜負責：semorphe ＋ cos-mos ＋ Cella｜狀態：Arduino ①③ 已做（[340](history/340-semorphe-arduino拆出與核對契約.md)）｜結束：Arduino 六步走完｜卡在：cos-mos（契約正本搬家、發布）｜→ [340](history/340-semorphe-arduino拆出與核對契約.md)
-- [ ] **意思歸 Cella、轉換與呈現歸 semorphe**｜負責：semorphe（＋Cella）｜狀態：方向已定（使用者回「好」）；第 1 項名字解析、第 2 項形狀看得出的編譯錯誤已問 Cella｜結束：第 1、2 項各有結論（Cella 接手或說明為何不），每一項附「Cella 不在時」的降級｜卡在：Cella 的回覆｜→ [draft](draft/2026-11-05-意思歸Cella-轉換與呈現歸semorphe.md)
+- [ ] **意思歸 Cella、轉換與呈現歸 semorphe**｜負責：semorphe（＋Cella）｜狀態：方向已定（使用者回「好」）；第 2 項已是現況；第 1 項名字解析 Cella 答做得到（約 11-06 下午開工、約 1 天）｜結束：Cella 自己解析的名字與我們填的逐一相同、`x` 變選填，我們拿掉作用域走訪｜卡在：Cella（排在 ESP32 速度之後）｜→ [draft](draft/2026-11-05-意思歸Cella-轉換與呈現歸semorphe.md)
 - [ ] **形態檢查與判決的界線盤點**｜負責：semorphe｜狀態：名字合不合法已盤點｜結束：每一種診斷來源標得出「形態／提示／判決」，有護欄在數；結果告訴 cos-mos｜卡在：—｜→ [draft](draft/2026-11-05-判決文案與形態檢查的界線.md)
 - [ ] **操作者介面：讓 AI 用和人一樣的操作改語意樹**｜負責：semorphe｜狀態：四個缺口已列，未動工｜結束：提議中的變更可看差異／接受／退回，四個缺口依序補完｜卡在：—｜→ [334](history/334-三方會議第三輪符號學三面向與操作者介面.md)
 - [ ] **分子：組合階層與粒度切換**｜負責：semorphe｜狀態：見原文｜結束：（原文沒寫）｜卡在：—｜→ [原文〈分子〉](draft/2026-11-05-路線圖一行化試點-轉換前的原文.md)
