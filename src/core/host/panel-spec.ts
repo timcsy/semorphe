@@ -18,6 +18,7 @@
  */
 import type { UnderstandingLayer } from '../sync/view-host'
 import type { HostProfile } from './host-profile'
+import type { BlockSpecRegistry } from '../blocks/block-spec-registry'
 
 /** 一個面板畫出來之後，外面拿得到的把手。 */
 export interface PanelInstance {
@@ -34,6 +35,12 @@ export interface PanelContext {
   readonly profile: HostProfile
   /** 翻譯。⚠️ 面板不自己 import i18n——那是組裝點的事。 */
   readonly msg: (key: string, fallback?: string) => string
+  /**
+   * 積木登錄表——**元件長什麼樣、有哪些接點**（spec 217）。流程圖與積木兩格要它。
+   * ⚠️ 由宿主給，面板不自己載入任何語言：使用者 2026-11-04 定 A'——接點與角色日後讀契約（`@cos-mos/<領域>`），
+   *    顏色與形狀留在 `@semorphe/<領域>`；今天這一份是組裝點載好的登錄表。省略 ＝ 宿主沒有給（那兩格照它們自己的退路）。
+   */
+  readonly blockSpecs?: BlockSpecRegistry
 }
 
 /**

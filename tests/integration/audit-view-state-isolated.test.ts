@@ -23,7 +23,7 @@ import { SemanticBus } from '../../src/core/sync/semantic-bus'
 import { registerView, connectViews, resetViews, registeredViews } from '../../src/core/sync/view-registry'
 import type { ViewHost, SemanticUpdateEvent } from '../../src/core/sync/view-host'
 import type { SemanticNode } from '../../src/core/types'
-import { FlowPanel } from '../../src/ui/panels/flow-panel'
+import { FlowPanel } from '../../src/panels/flow/view'
 
 /** 穩定序列化——鍵排序過，所以「改了順序」與「改了內容」一樣抓得到 */
 function hashTree(node: unknown): string {

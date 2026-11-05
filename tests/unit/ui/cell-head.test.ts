@@ -7,7 +7,7 @@
  * ——長得一樣不等於是同一種東西。
  */
 import { describe, it, expect } from 'vitest'
-import { createPanelHead } from '../../../src/ui/layout/cell-head'
+import { createPanelHead } from '../../../src/panels/cell-head'
 
 describe('createPanelHead', () => {
   it('框架住在 `.panel-head` 一個 class 上', () => {

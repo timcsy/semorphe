@@ -244,7 +244,7 @@ export class App {
 
   /** 這個宿主提供得出來的版面——由 shell 回答（只有它知道哪一層在不在）。 */
   private shellLayoutOptions?: () => readonly HostLayoutOption[]
-  private flowPanel?: import('./panels/flow-panel').FlowPanel
+  private flowPanel?: import('../panels/flow/view').FlowPanel
   /** 收合狀態的持有者（spec 187／188）——存檔存它的鑰匙 */
   private granularity: import('../core/granularity').GranularityState | null = null
   private codeDirty = false
