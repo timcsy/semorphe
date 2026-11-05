@@ -30,7 +30,7 @@ describe('CSP', () => {
   })
 
   it('🔴 `img-src` 必須允許 `data:`——+／- 按鈕是 data URI', () => {
-    // 出處：`ui/block-registrar.ts:291-305`
+    // 出處：`panels/blocks/block-registrar.ts:291-305`
     //   'data:image/svg+xml,' + encodeURIComponent('<svg …>')
     // 而 cpp_var_declare／cpp_print／cpp_array_declare／cpp_vector_declare／
     // cpp_initializer_list 都用它。

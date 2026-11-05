@@ -8,7 +8,7 @@
   "definite": 0,
   "ambiguous": 50,
   "files": {
-    "src/ui/block-registrar.ts": [
+    "src/panels/blocks/block-registrar.ts": [
       "std::"
     ]
   }

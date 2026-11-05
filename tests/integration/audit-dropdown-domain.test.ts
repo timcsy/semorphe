@@ -41,7 +41,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
 import { componentBlocks } from '../../src/core/component/registry'
-import { registerDynamicDropdownField, declareDropdownSource } from '../../src/ui/dynamic-dropdown-field'
+import { registerDynamicDropdownField, declareDropdownSource } from '../../src/panels/blocks/dynamic-dropdown-field'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
@@ -127,7 +127,7 @@ beforeAll(async () => {
   const reg = new BlockSpecRegistry()
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
   ws = new Blockly.Workspace()
-  const { BlockRegistrar } = await import('../../src/ui/block-registrar')
+  const { BlockRegistrar } = await import('../../src/panels/blocks/block-registrar')
   // 🪦 `setLanguageInputNames(...)` 於 2026-08-26 整套刪除——那份契約最後一個
   //    欄位的消費者（`cpp_var_declare_expression` 的命令式定義）退場了。
   new BlockRegistrar(reg).registerAll({ getWorkspace: () => ws })

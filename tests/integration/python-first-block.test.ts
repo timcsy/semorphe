@@ -40,7 +40,7 @@ describe('spec 160 · Python 的第一顆積木', () => {
   })
 
   it('🔴 P3 的直接檢驗：`block-registrar` 一行 Python 都不准出現', () => {
-    const src = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/block-registrar.ts'), 'utf8')
+    const src = fs.readFileSync(path.join(REPO_ROOT, 'src/panels/blocks/block-registrar.ts'), 'utf8')
     expect(/python/i.test(src),
       '⚠️ 加一顆 Python 積木若必須動 block-registrar，P3（不修改既有程式碼）當場被否證。'
       + '這正是 vision 那 33 筆要量的東西。').toBe(false)

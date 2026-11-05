@@ -325,3 +325,16 @@ describe('一個身分可以有兩條軸', () => {
     expect(r.degraded?.reason, '兩條軸都落空卻沒有出聲').toMatch(/deque/)
   })
 })
+
+describe('位置軸：中性形態就是敘述形態（spec 217 第四刀）', () => {
+  it('★ 只宣告了 role:expression 的元件，在敘述位置選中性形態而【不算降級】', () => {
+    const sets = buildFormSets([
+      { componentId: 'cpp:print', blockType: 'cpp_print' },
+      { componentId: 'cpp:print', blockType: 'cpp_print_expression', form: { axis: 'role', value: 'expression' } },
+    ])
+    const set = sets.get('cpp:print')!
+    const node = { id: 'n', componentId: 'cpp:print', properties: {}, slots: {} } as never
+    expect(selectForm(set, node, { position: 'statement' })).toEqual({ blockType: 'cpp_print' })
+    expect(selectForm(set, node, { position: 'expression' }).blockType).toBe('cpp_print_expression')
+  })
+})

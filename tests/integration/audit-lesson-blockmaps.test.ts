@@ -156,7 +156,7 @@ describe('第一百零二條護欄：課文的程式碼↔積木對照', () => {
     const f = path.join(ROOT, 'tools/blockmap/engine-hash.ts')
     const body = fs.readFileSync(f, 'utf8')
     // engine-hash.ts 自己不在 ENGINE_FILES 裡，所以拿 block-registrar 當白老鼠
-    const g = path.join(ROOT, 'src/ui/block-registrar.ts')
+    const g = path.join(ROOT, 'src/panels/blocks/block-registrar.ts')
     const orig = fs.readFileSync(g, 'utf8')
     try {
       fs.writeFileSync(g, orig + '\n// 注入\n')

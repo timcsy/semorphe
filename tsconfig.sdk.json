@@ -9,6 +9,6 @@
     "outDir": "dist-sdk/types",
     "rootDir": "src"
   },
-  "include": ["src/sdk/index.ts"],
+  "include": ["src/sdk/index.ts", "src/sdk/panels.ts"],
   "exclude": ["src/**/*.test.ts"]
 }

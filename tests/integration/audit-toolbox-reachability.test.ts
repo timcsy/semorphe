@@ -84,7 +84,7 @@ const declaredExcludes = new Set(cppCategoryDefs.flatMap((d) => d.excludeTypes ?
 const imperativelyRegistered = new Set(
   (
     fs
-      .readFileSync(path.join(REPO_ROOT, 'src/ui/block-registrar.ts'), 'utf8')
+      .readFileSync(path.join(REPO_ROOT, 'src/panels/blocks/block-registrar.ts'), 'utf8')
       .match(/Blockly\.Blocks\['([a-z0-9_]+)'\]/g) ?? []
   ).map((m) => m.replace(/^Blockly\.Blocks\['/, '').replace(/'\]$/, '')),
 )

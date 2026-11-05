@@ -19,6 +19,10 @@ writeFileSync(
   'dist-sdk/semorphe.d.mts',
   '// 由 tools/build-sdk.mjs 產生——型別的門面\nexport * from \'./types/sdk/index\'\n',
 )
+writeFileSync(
+  'dist-sdk/panels.d.mts',
+  '// 由 tools/build-sdk.mjs 產生——面板那一面的型別（spec 217 第四刀）\nexport * from \'./types/sdk/panels\'\n',
+)
 
 /**
  * 🔴 **出貨的東西要說得出自己是哪一版**（2026-09-06 補）。
@@ -67,9 +71,15 @@ writeFileSync('dist-sdk/package.json', JSON.stringify({
   main: './semorphe.mjs',
   module: './semorphe.mjs',
   types: './semorphe.d.mts',
-  exports: { '.': { types: './semorphe.d.mts', import: './semorphe.mjs' } },
+  exports: {
+    '.': { types: './semorphe.d.mts', import: './semorphe.mjs' },
+    // 面板那一面要 Blockly（peer）——核心那一面不要，所以分兩個入口
+    './panels': { types: './panels.d.mts', import: './panels.mjs' },
+  },
+  peerDependencies: { blockly: root.dependencies?.blockly ?? '*' },
+  peerDependenciesMeta: { blockly: { optional: true } },
   license: root.license ?? 'MIT',
   repository: root.repository,
 }, null, 2) + '\n')
 
-console.log(`dist-sdk/semorphe.mjs ＋ semorphe.d.mts ＋ package.json（v${root.version}）完成`)
+console.log(`dist-sdk/semorphe.mjs ＋ panels.mjs ＋ 型別 ＋ package.json（v${root.version}）完成`)

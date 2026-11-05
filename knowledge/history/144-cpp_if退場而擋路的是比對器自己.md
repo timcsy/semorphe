@@ -6,7 +6,7 @@
 
 ## 為什麼是這一顆
 
-證據在程式碼裡，逐字（`ui/branch-list-block.ts:22`）：
+證據在程式碼裡，逐字（`panels/blocks/branch-list-block.ts:22`）：
 
 > 「`{ elseifCount, hasElse }`——與 `block-registrar` 裡 `cpp_if` 的一字不差。
 > 🟢 **那是刻意的**：這個建構子的下一個消費者就是它，

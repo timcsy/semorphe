@@ -52,7 +52,7 @@ import cPreset from './styles/c.json'
 /**
  * **這個語言的型別清單**——參數型別與回傳型別各一份。
  *
- * 🔴 **它們原本住在 `ui/block-registrar.ts`**（核心 UI 檔）裡，而那是 P9 的債：
+ * 🔴 **它們原本住在 `panels/blocks/block-registrar.ts`**（核心 UI 檔）裡，而那是 P9 的債：
  * `int`／`char*`／`long long` 是**這個語言的東西**，核心不該認得它們。
  * 搬過來的同時，那顆函式定義積木從命令式換成宣告
  * ——**兩件事其實是同一件**：宣告式的下拉只能從「宣告過的來源」拿選項，
@@ -82,7 +82,7 @@ declareDropdownSource('cpp_param_types', () => withTypesInUse([
 /**
  * **變數的型別**——`int x;`／`vector<int> v;`／`MyStruct* p;`。
  *
- * 🔴 它 2026-08-26 才登記，而**在此之前那份清單住在 `ui/block-registrar.ts`**
+ * 🔴 它 2026-08-26 才登記，而**在此之前那份清單住在 `panels/blocks/block-registrar.ts`**
  * （`getTypeOptions`）——一份 C++ 的型別表寫在核心 UI 檔裡（P9 的債）。
  * 與參數／回傳那兩份是同一批，只是那兩份 2026-08-24 就回家了。
  *

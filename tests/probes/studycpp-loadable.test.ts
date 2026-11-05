@@ -22,7 +22,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
-import { registerDynamicDropdownField, declareDropdownSource } from '../../src/ui/dynamic-dropdown-field'
+import { registerDynamicDropdownField, declareDropdownSource } from '../../src/panels/blocks/dynamic-dropdown-field'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
@@ -52,7 +52,7 @@ beforeAll(async () => {
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
   const ws = new Blockly.Workspace()
   Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
-  const { BlockRegistrar } = await import('../../src/ui/block-registrar')
+  const { BlockRegistrar } = await import('../../src/panels/blocks/block-registrar')
   new BlockRegistrar(reg).registerAll({ getWorkspace: () => ws })
 
   registerCppLanguage()

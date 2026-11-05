@@ -27,16 +27,16 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import * as Blockly from 'blockly'
-import { attachBranchList } from '../../src/ui/branch-list-block'
-import { attachParamList } from '../../src/ui/param-list-block'
-import { attachAltLayout } from '../../src/ui/alt-layout-block'
-import { attachVariadic, defineVariadicBlock } from '../../src/ui/variadic-block'
+import { attachBranchList } from '../../src/panels/blocks/branch-list-block'
+import { attachParamList } from '../../src/panels/blocks/param-list-block'
+import { attachAltLayout } from '../../src/panels/blocks/alt-layout-block'
+import { attachVariadic, defineVariadicBlock } from '../../src/panels/blocks/variadic-block'
 // 🔴 **選用欄位要另外註冊**——`field_multilinetext` 不在 Blockly 主套件裡。
 // ⚠️ 少了它，`cpp_block_comment` 的欄位**整個建不出來**（`getField('TEXT')` 回 null），
 // 而比對報表印成「一邊有 comment，一邊沒有」——**看起來像宣告漏了預設值**。
 // > **一個沒有把「產品註冊過的欄位型別」註冊齊的比對，會把它建不出來的當成「宣告寫錯」。**
 import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
-import { registerDynamicDropdownField, declareDropdownSource, dropdownSourceNames } from '../../src/ui/dynamic-dropdown-field'
+import { registerDynamicDropdownField, declareDropdownSource, dropdownSourceNames } from '../../src/panels/blocks/dynamic-dropdown-field'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
@@ -416,7 +416,7 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
    * （在此之前所有 `block-registrar` 的測試都只掃檔案文字）。
    */
   it('🎯 報表：命令式定義的積木，宣告式建得出【一樣的形狀】嗎', async () => {
-    const { BlockRegistrar } = await import('../../src/ui/block-registrar')
+    const { BlockRegistrar } = await import('../../src/panels/blocks/block-registrar')
 
 
     // 🔴 **順序要對**：欄位在 `init` 的當下就抓住選項產生器，
@@ -443,7 +443,7 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
     // 判斷仍然是**真的建兩次積木逐項比**。
     const fs = await import('node:fs/promises')
     const pathMod = await import('node:path')
-    const regSrc = await fs.readFile(pathMod.resolve(process.cwd(), 'src/ui/block-registrar.ts'), 'utf8')
+    const regSrc = await fs.readFile(pathMod.resolve(process.cwd(), 'src/panels/blocks/block-registrar.ts'), 'utf8')
     const imperativeTypes = new Set([...regSrc.matchAll(/Blockly\.Blocks\['((?:cpp|u)_[a-z_0-9]+)'\] = \{/g)].map((m) => m[1]))
     // 🔴 **這個錨換過兩次，而前一次沒有救它**（2026-08-26）。
     //
@@ -600,7 +600,7 @@ describe('spec 163 · 宣告與命令式，逐項比對', () => {
    * 要嘛是宣告補上了（好事，改清單），要嘛是這一維瞎了（壞事）**。
    */
   it('🔴 「載入時的狀態」那一維要真的在報——指名它今天抓到誰', async () => {
-    const { BlockRegistrar } = await import('../../src/ui/block-registrar')
+    const { BlockRegistrar } = await import('../../src/panels/blocks/block-registrar')
     void BlockRegistrar
     const withLoad = [...declaredCache.keys()].filter((t) => {
       const impKeys = extraStateKeys(Blockly.Blocks[t] as Record<string, unknown>)

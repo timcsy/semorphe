@@ -94,7 +94,7 @@ export const pythonCategoryDefs: ToolboxCategoryDef[] = [
     //    ——而 C++ 那側**早就是這樣**（`cpp_if` 的三筆）。
     //
     // ⚠️ extraState 的鍵沿用命令式那份（`elseifCount`／`hasElse`），
-    //    見 `ui/branch-list-block.ts` 的檔頭。
+    //    見 `panels/blocks/branch-list-block.ts` 的檔頭。
     // ⚠️ **三筆都要列**——`sources` 收不到 `python_if`（它的來源分類與這裡對不上），
     //    所以純的那一顆也得自己列。
     //

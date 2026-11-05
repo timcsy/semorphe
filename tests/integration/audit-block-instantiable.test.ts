@@ -33,7 +33,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import * as Blockly from 'blockly'
 import fs from 'node:fs'
 import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
-import { registerDynamicDropdownField, declareDropdownSource } from '../../src/ui/dynamic-dropdown-field'
+import { registerDynamicDropdownField, declareDropdownSource } from '../../src/panels/blocks/dynamic-dropdown-field'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
@@ -81,7 +81,7 @@ beforeAll(() => {
 
 /** 用**產品那條路**註冊全部積木（paramList／branchList／variadic 都在裡面）。 */
 async function registerViaProduct(): Promise<void> {
-  const { BlockRegistrar } = await import('../../src/ui/block-registrar')
+  const { BlockRegistrar } = await import('../../src/panels/blocks/block-registrar')
   const n = await import('../../src/languages/cpp/block-input-names')
   new BlockRegistrar(reg).registerAll({ getWorkspace: () => ws })
 }

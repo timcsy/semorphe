@@ -76,7 +76,7 @@ function inputNamesFromJson(bd: Record<string, unknown>): Set<string> {
   return s
 }
 
-const registrar = fs.readFileSync(path.join(REPO_ROOT, 'src/ui/block-registrar.ts'), 'utf8')
+const registrar = fs.readFileSync(path.join(REPO_ROOT, 'src/panels/blocks/block-registrar.ts'), 'utf8')
 /**
  * 用「下一個定義的起點」當邊界，**不靠縮排**。
  *

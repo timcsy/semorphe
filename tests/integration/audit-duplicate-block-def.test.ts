@@ -49,7 +49,7 @@ import path from 'node:path'
 import { REPO_ROOT } from '../helpers/guardrail'
 
 /** 命令式註冊積木的檔案。今天只有一個——有第二個時這裡要加。 */
-const SOURCES = ['src/ui/block-registrar.ts']
+const SOURCES = ['src/panels/blocks/block-registrar.ts']
 
 /** `Blockly.Blocks['x'] = ` 的賦值 */
 const ASSIGN = /Blockly\.Blocks\['([a-z0-9_]+)'\]\s*=/g

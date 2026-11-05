@@ -29,7 +29,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import * as Blockly from 'blockly'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerFieldMultilineInput } from '@blockly/field-multilineinput'
-import { registerDynamicDropdownField, declareDropdownSource } from '../../src/ui/dynamic-dropdown-field'
+import { registerDynamicDropdownField, declareDropdownSource } from '../../src/panels/blocks/dynamic-dropdown-field'
 import { BlockSpecRegistry } from '../../src/core/blocks/block-spec-registry'
 import { allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { allComponentDefs } from '../helpers/component-scan'
@@ -79,7 +79,7 @@ beforeAll(async () => {
   reg = new BlockSpecRegistry()
   reg.loadFromSplit(allComponentDefs(), allCppProjections())
   ws = new Blockly.Workspace()
-  const { BlockRegistrar } = await import('../../src/ui/block-registrar')
+  const { BlockRegistrar } = await import('../../src/panels/blocks/block-registrar')
   new BlockRegistrar(reg).registerAll({ getWorkspace: () => ws })
 
   const rsr = new RenderStrategyRegistry()

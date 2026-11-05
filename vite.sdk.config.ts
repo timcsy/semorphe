@@ -15,11 +15,13 @@ export default defineConfig({
     outDir: 'dist-sdk',
     emptyOutDir: true,
     lib: {
-      entry: resolve(__dirname, 'src/sdk/index.ts'),
+      // 🔴 兩個入口共用一份核心 chunk（spec 217 第四刀）——面板與核心看到的是【同一個】登錄表、同一個渲染器設定點；
+      //    各打包一份的話，`setPatternRenderer` 設在一份、面板讀另一份，症狀是積木一顆都畫不出來而不報錯。
+      entry: { semorphe: resolve(__dirname, 'src/sdk/index.ts'), panels: resolve(__dirname, 'src/sdk/panels.ts') },
       formats: ['es'],
-      fileName: () => 'semorphe.mjs',
+      fileName: (_fmt, name) => `${name}.mjs`,
     },
-    rollupOptions: { external: ['web-tree-sitter', 'blockly', 'blockly/core'] },
+    rollupOptions: { external: ['web-tree-sitter', 'blockly', /^blockly\//, /^@blockly\//] },
     minify: false,
     target: 'node20',
   },
