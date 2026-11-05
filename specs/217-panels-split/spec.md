@@ -28,3 +28,19 @@
 ## 風險（experience）
 - 〈一次抽象如果同時搬走「容器」與「內容」，它壞掉時你分不出是哪一半〉——所以一刀只搬一格。
 - 改了使用者按得到的東西 ⟹ e2e；Blockly 在 `display:none` 量到 0×0（`relayout`）。
+
+## 第四刀的計畫（2026-11-05，第 277 刀之後）
+
+**驗收②**：一個不經 `app.ts` 的頁面只靠套件組得出積木＋程式碼互轉。
+
+量到的現況：
+- `examples/bring-your-own-view/` 已經證明**核心**可以單獨出貨（`dist-sdk/semorphe.mjs`，第五十八條護欄 `audit-portable-core` 每次 CI 建它、跑它）——但它不用任何面板（自己寫一個文字視圖）。
+- `src/sdk/index.ts` 匯出核心（匯流排、同步、lift、登錄表、產生器），**沒有匯出面板**（`src/panels/*`）。
+- 6 份面板今天都自己 `mount`（第 271、272、277 刀），宿主的東西經 `PanelContext` 注入——所以「只靠套件組」已經**可以**做，缺的是出貨與一個真的組起來的頁面。
+
+做法：
+1. SDK 多一個面板的入口（`src/sdk/panels.ts`）：匯出 `loadPanels`／`panelById` 與 `PanelContext` 型別；Blockly 是 peer（不打包進去）。
+2. `examples/panels-only/`：一個 HTML ＋ 一支 `main.ts`——建匯流排、`SyncController`、載語言套件，`panelById('blocks').mount(...)`、`panelById('code').mount(...)`（程式碼那一格用一個 `<textarea>` 實作 `createCodeView`，不用 Monaco），積木改 → 程式碼變、程式碼改 → 積木變。
+3. 護欄（與第五十八條同形）：建它、用 happy-dom 或 Playwright 跑它、斷言兩個方向的互轉——**它壞掉＝「面板是可獨立掛載的套件」這句話壞掉**。
+
+風險：Blockly 在 node 裡跑需要 DOM（happy-dom 夠不夠要試）；面板的 `mount` 今天假設 `ctx.profile` 有 `createCodeView`——例子要提供一個最小的 profile。
