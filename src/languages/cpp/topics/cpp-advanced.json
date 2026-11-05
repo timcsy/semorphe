@@ -115,6 +115,7 @@
     "cpp:cstring_find_char",
     "cpp:cstring_find",
     "cpp:method_call",
+    "cpp:this",
     "cpp:template_function",
     "cpp:math_binary",
     "cpp:range_reverse",

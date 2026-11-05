@@ -299,7 +299,8 @@
         "cpp_method_virtual",
         "cpp_method_virtual_pure",
         "cpp_new",
-        "cpp_operator_overload"
+        "cpp_operator_overload",
+        "cpp_this"
       ]
     },
     {

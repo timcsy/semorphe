@@ -21,6 +21,14 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // 成員函式裡用裸名字呼叫同一個類別的方法：隱含的 this（spec 208；原本送 eCall，被判「呼叫未宣告的函式」）
     //   ⚠️ 名字指到區域變數（lambda）的情況在下面先由 declOf 接住——那個比類別的方法更近
     if (!f.declOf(n.id) && f.isOwnMethod(n.id, name)) return f.k('eMCall', { n: n.id, obj: f.k('eThis', { n: `${n.id}/this` }), arrow: true, f: name, args })
+    // `Rect("A", 3, 4)`：名字是程式裡定義的類別／struct ⟹ 建一個暫時物件（[expr.type.conv]），不是呼叫一個叫 Rect 的函式。
+    //   照 eCall 送會被判「呼叫未宣告的函式」——一支合法的程式被說成錯的（P6；2026-11-06 元件管線 311 的盲測抓到）。形狀照 cpp_to_tree.py：eTemp
+    //   ⚠️ 要在「名字指到一個變數」之前：作用域走訪會把類別名解析到它自己的宣告（`P q = P(3)` 實測），那時會被誤送成呼叫一個值
+    if (f.isStructName(name)) {
+      const t = f.type(name, n)
+      if (!t) return f.miss(n, `「${name}(…)」是建一個暫時物件；這個型別還沒有對應`)
+      return f.k('eTemp', { n: n.id, t, args })
+    }
     // 名字指到一個變數（`auto add = [&](int x){…}; add(5)`）：呼叫的是那個值，不是一個叫 add 的函式——eCallE（cpp_to_tree.py 同形；第 206 刀）
     const x = f.declOf(n.id)
     if (x) return f.k('eCallE', { n: n.id, callee: f.k('eName', { n: `${n.id}/callee`, name }), args })

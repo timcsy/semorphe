@@ -93,5 +93,10 @@
     "key": "cpp:set_insert.method",
     "cause": "排版提示，不給學生編輯",
     "reason": "記的是**使用者寫的那個方法名**（`insert`／`emplace`，以及 `#define pb push_back` 取的小名）。C++ 的那幾個名字**做的是同一件事**，所以它們是一顆身分；而在此之前產生器寫死其中一個，於是 `v.emplace_back(3)` 產回 `v.push_back(3)`、`m.emplace(1,2)` 產回 `m.insert(1)`（**連引數都掉了**）。\\n> **一顆元件認了 N 個方法名而只記得其中一個，學生寫的另外 N−1 個會被悄悄改寫。**\\n⚠️ 給學生一格下拉會讓一個**拼法**看起來像一個語義選擇——與 `python:container_enumerate.start_style` 同一個理由。\\n⚠️ 積木上新拖出來的那一顆沒有原文，產生器退回 `insert`。\n🟢 **走一趟積木靠 `renderMapping.hints` 帶著**（2026-11-04，spec 214）：渲染時放進 `extraState.hints`、抽取時讀回——在此之前積木上沒有這一格，也就沒有任何地方記著它，走一趟積木就退成預設（`form-invariance`、`layout-hints-roundtrip` 量到）。"
+  },
+  {
+    "key": "cpp:new.valueInit",
+    "cause": "排版提示，不給學生編輯",
+    "reason": "記的是**原文有沒有那對空括號**（`new T()` 還是 `new T`）。⚠️ 而它不只是排版：空括號是值初始化（`new int()` 是 0），沒有是預設初始化（值未定）——所以它是屬性、formalize 照讀，不是 layoutHints。學生在積木上做的是「new 一個 T」，括號是從程式碼來的寫法 ⟹ 由 `renderMapping.hints` 帶著，走一趟積木不丟（2026-11-06，元件管線 311，form-invariance (c) 量到）。要不要讓學生在積木上切換值初始化是另一題 UX，沒排。"
   }
 ]

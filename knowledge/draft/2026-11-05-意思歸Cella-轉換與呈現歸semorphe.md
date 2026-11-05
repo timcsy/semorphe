@@ -30,4 +30,4 @@
 
 ## 順帶量到的缺口
 
-- `this->x` 今天 formalize 翻不出來（整段降級成 raw_code）——與第 1 項無關，是我們這邊的缺口（2026-11-05 量到，告訴了 Cella）。
+- ~~`this->x` 今天 formalize 翻不出來（整段降級成 raw_code）~~——🟢 **已收**（2026-11-06，元件 `cpp:this`，→ [history/344](../history/344-this從降級成原始碼到成為一顆元件.md)）。
