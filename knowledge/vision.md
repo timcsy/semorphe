@@ -559,7 +559,7 @@ UI 域與硬體域本身（它們是這一格的**消費者**）。
 
 ### 🧾 未清的債（跨階段，不屬於任何一刀）
 
-- [ ] 🆕 **有些網路連不上 semorphe.com**（2026-11-05，使用者回報）——量到是那些網路把 **GitHub Pages 整組**的 HTTPS 擋掉（Client Hello 後被 reset），不是 semorphe 的設定。🟡 待使用者：要不要換託管或加 CDN（推薦先請網管加白名單、說明頁寫上被擋時怎麼辦）——見 [draft](draft/2026-11-05-有些網路連不上semorphe-com.md)。臨時的路：`http://semorphe.com`（80 埠沒被擋）——⚠️ 解決前不要打開 Enforce HTTPS。
+- [ ] 🆕 **有些網路連不上 semorphe.com**（2026-11-05，使用者回報）——量到是那個網路把 **GitHub Pages 四個 IP 裡的三個**擋掉（108／109／110 reset、111 通；cella-lang.org 同樣），不是 semorphe 的設定。🟡 待使用者：推薦 DNS 的 A 記錄只留 `185.199.111.153`（立即見效、可改回）＋ 請網管解封——見 [draft](draft/2026-11-05-有些網路連不上semorphe-com.md)。臨時的路：`http://semorphe.com`（80 埠沒被擋）——⚠️ 解決前不要打開 Enforce HTTPS。
 
 🔴 **這些不會因為某一刀做完而消失——每一條都要有人領走。**
 
