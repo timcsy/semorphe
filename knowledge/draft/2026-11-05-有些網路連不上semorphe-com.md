@@ -15,9 +15,19 @@
 - DNS 正確（GitHub Pages 的 185.199.108～111.153 與 IPv6）；憑證有效（Let's Encrypt，到 2027-01-27）。
 - ⟹ **不是 semorphe 的設定壞了**；是某些網路（學校／公司的內容過濾、電信業者的過濾服務、路由器的家長控制、防毒的網頁防護）把 GitHub Pages 整組擋掉。
 
-## 順帶看到的
+## 新線索（2026-11-05 使用者補充）：同一間教室，約三分之一的電腦能開
 
-- `http://semorphe.com` 回 200 而不是轉到 https——GitHub Pages 的 **Enforce HTTPS** 似乎沒開。與這次無關，建議打開（repo → Settings → Pages）。這是使用者在 GitHub 上的設定，不經過 AI。
+整個網路擋的話應該全部不能開 ⟹ 過濾設備只擋**某一種連線方式**，能開的那些走了另一條路。最可能的兩個：
+1. **IPv6**（TANet 常見）——semorphe.com 有 AAAA；很多過濾設備只檢查 IPv4。有 IPv6 的電腦優先走 v6 → 繞過；只有 v4 的被依 SNI reset。
+2. **HTTP/3（UDP 443）**——GitHub Pages 支援 h3；過濾設備多半只看 TCP 的 TLS。曾經連成功過的 Chrome 記得 Alt-Svc、下次直接走 QUIC。
+
+分辨：能開與不能開各一台，開 test-ipv6.com；`curl -4 -I https://semorphe.com` 與 `curl -6 -I https://semorphe.com` 比。
+
+## 🟢 臨時的路：`http://semorphe.com`
+
+80 埠沒有被擋（量到 200）。頁面能開之後執行與判斷都在瀏覽器裡（Cella 的 wasm），用 http 不影響功能。
+⚠️ 所以**在這件事解決之前，不要打開 GitHub Pages 的 Enforce HTTPS**——打開之後 http 會被轉到 https，這條路就沒了。
+（2026-11-05 第一版這裡建議打開它——那是在知道「教室要靠 http 先用」之前寫的，已收回。）
 
 ## 🟡 要你決定：學生在會擋 GitHub Pages 的網路上怎麼辦
 
