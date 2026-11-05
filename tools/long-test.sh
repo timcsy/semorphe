@@ -74,8 +74,12 @@ EOF
   grep -E '✘|passed|failed|flaky' "$OUT/e2e-$NAME.log" | tail -12
 fi
 
-if [ "$(fingerprint)" != "$FP_START" ]; then
+FP_END=$(fingerprint)
+if [ "$FP_END" != "$FP_START" ]; then
   echo "🔴 跑的期間 $WT 的檔案被改過——這一輪量到的是混合狀態，結果不能當合併的依據；改好後重跑（長測試在跑的 worktree 不動，要做別的就開新的 worktree）"
+  # 🟢 說出是哪幾個路徑（2026-11-05 第 281 刀：一次「工作樹結束時是乾淨的」而指紋不同——開跑時有上一輪被砍掉留下的暫存檔，
+  #    跑完被測試自己清掉。沒有清單的話只能猜）。`+` 跑完才有、`-` 開跑時有而跑完沒了、`M` 內容變了。
+  git diff-tree -r --name-status "$FP_START" "$FP_END" | sed 's/^A/  +/; s/^D/  -/; s/^M/  M/' | head -20
   status=3
 fi
 echo "結束 $(date +%T)"
