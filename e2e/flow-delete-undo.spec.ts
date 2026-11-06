@@ -189,8 +189,7 @@ test('★ 語句線：點線選它，✕ 才刪——而刪掉的是【裡面】
 
   // ② 按 Delete 鍵刪掉選取的那一個
   await page.locator('.flow-canvas').press('Delete')
-  await page.waitForTimeout(1800)
-  expect(await codeNow(page), '🔴 Delete 鍵沒有刪掉選取的那一句').not.toContain('cout')
+  await expect.poll(() => codeNow(page), { message: '🔴 Delete 鍵沒有刪掉選取的那一句' }).not.toContain('cout')
 
   // ③ 還原
   await page.locator('#undo-btn').click()
