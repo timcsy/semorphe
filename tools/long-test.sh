@@ -12,6 +12,15 @@
 #      ——處方寫了「不動」而 2026-11-04、05 又各犯一次，所以改成機器在擋：開跑與結束各取一次【檔案內容】的指紋，
 #      不一樣就大聲說、結束碼改成 3。指紋是內容的樹雜湊（暫時的 index ＋ write-tree），中途【提交】不算改（內容沒變）。
 set -u
+# 🟢 共用排隊（2026-11-07，使用者決定「測試執行資源有限」）：三個專案的長測試都透過 cos-mos 的 `slot.mjs` 排隊——
+#    不在它底下時，透過它重新啟動自己（名額、負載准入都由它管；我們的負載閘門關掉，免得兩道疊起來）。
+#    契約（cos-mos 規格〈契約〉）：子命令與旗標、COSMOS_* 環境變數、結束碼照傳（128+訊號、2、127）、stderr 只承諾 `slot: ` 開頭的四種句子。
+#    找不到 slot.mjs（例如別台機器）就照舊直接跑，由我們自己的負載閘門頂著；`SEMORPHE_NO_SLOT=1` 可以強制不排隊。
+SLOT_TOOL=${COSMOS_SLOT_TOOL:-"$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd)/cos-mos/tools/slot.mjs"}
+if [ -z "${SEMORPHE_UNDER_SLOT:-}" ] && [ "${SEMORPHE_NO_SLOT:-0}" != 1 ] && [ -f "$SLOT_TOOL" ]; then
+  exec node "$SLOT_TOOL" run --project semorphe --label long-test -- env SEMORPHE_UNDER_SLOT=1 SEMORPHE_LOAD_GATE=0 bash "$0" "$@"
+fi
+
 WT=${1:?用法：tools/long-test.sh <worktree> <輸出目錄> [--suite] [--build] [--e2e] [--port N] [--no-wait-cella] [--only 檔名…]}
 OUT=${2:?缺輸出目錄（放 scratchpad）}
 shift 2
@@ -32,6 +41,8 @@ done
 [ $SUITE = 0 ] && [ $BUILD = 0 ] && [ $E2E = 0 ] && { SUITE=1; BUILD=1; E2E=1; }
 
 WT=$(cd "$WT" && pwd)
+# 🔴 worktree 不存在時上一行得到空字串，而 `cd ""` 等於不換目錄——原本會在呼叫者所在的目錄（通常是主樹）照跑（2026-11-07 煙霧測試量到）
+[ -n "$WT" ] || { echo "🔴 找不到 worktree（第一個參數）" >&2; exit 2; }
 NAME=$(basename "$WT")
 mkdir -p "$OUT"
 
