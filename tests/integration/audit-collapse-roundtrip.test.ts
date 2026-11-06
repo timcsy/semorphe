@@ -128,7 +128,9 @@ describe('護欄：階層下的來回一致（收合 → 展開，課文語料�
     const t = measure()
     expect(t.programs, '課文解答與 sketch 至少要有幾十支').toBeGreaterThan(50)
     expect(t.collapsible, '收得起來的節點要有上千顆，否則下面量的是空氣').toBeGreaterThan(1000)
-  })
+    // ⏱ 這一支跑整份課文語料（measure 第一次算、後面的測試共用快取）：單獨約 25 秒，全套並行 2 時逼近 60 秒的預設上限
+    //   ——2026-11-06 一天裡在長測試／護欄全跑時逾時三次，三次單獨重跑都綠。上限放寬到 120 秒，不是放寬判準
+  }, 120_000)
 
   it('★ 注入：pairUp 真的分得出「對到別顆」——同一棵樹錯位一格就不能全中', () => {
     const tree = lift('int main() {\n    int a = 1;\n    int b = 2;\n    return 0;\n}\n')

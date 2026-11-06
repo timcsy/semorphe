@@ -246,12 +246,17 @@ export function isTopLevelOnly(componentId: string): boolean {
  * 只問元件自己宣告的性狀（不認得任何身分）：函式定義、`topLevelOnly`（型別定義、樣板、命名空間）、
  * 引入指示詞與鷹架（`#include`、`using namespace`）；認不出來的 `raw_code` 看文字——第一個非空白字元是 `#`。
  */
-export function staysTopLevel(n: { componentId: string; metadata?: unknown }): boolean {
+export function staysTopLevel(n: { componentId: string; metadata?: unknown; properties?: Record<string, unknown> }): boolean {
   if (isFunctionDefinition(n.componentId) || isTopLevelOnly(n.componentId)) return true
   const t = componentTraits(n.componentId)
   if (t?.includeDirective === true || t?.scaffold === true) return true
   const raw = (n.metadata as { rawCode?: string } | undefined)?.rawCode
-  return typeof raw === 'string' && raw.trimStart().startsWith('#')
+  if (typeof raw === 'string' && raw.trimStart().startsWith('#')) return true
+  // 🔴 **類別外定義的成員函式**（`int Counter::get() const {…}`、`Counter::Counter() {…}`）照實降級成原文之後，
+  //    走一趟積木會被隱藏骨架包進 main——C++ 不准在函式裡定義函式，產回去編不過（2026-11-06 元件管線 313 的瀏覽器驗收量到）。
+  //    判準只看文字：名字帶 `X::` 限定、而且整段以 `}` 結尾（有本體）——呼叫（`std::sort(…);`）以 `;` 結尾，不會被認錯
+  const text = String(n.properties?.code ?? raw ?? '').trim()
+  return /^[^;{(]*\b[A-Za-z_]\w*::~?[A-Za-z_]\w*\s*\(/.test(text) && text.endsWith('}')
 }
 
 export function isFunctionDefinition(componentId: string): boolean {

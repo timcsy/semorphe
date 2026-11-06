@@ -500,6 +500,11 @@
       "decision": "open",
       "field": "field_dynamic_dropdown",
       "reason": "跟著工作區長的名字——本來就是開放的，而它已經保值（運算式形態，2026-09-21 第 217 刀——**與語句形態同一個欄位**，判定跟著它走）"
+    },
+    "cpp_class_declare.KEYWORD": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "前置宣告的關鍵字只有 `class` 與 `struct` 兩種（`union` 的前置宣告這一刀不收）——語言定義的封閉集合；而它送給 Cella（`iClassDecl.isClass`），是意思不是排版（元件管線 313）"
     }
   }
 }

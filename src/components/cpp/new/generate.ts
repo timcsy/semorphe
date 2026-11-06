@@ -13,6 +13,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const size = (node.slots.size ?? [])[0]
       if (size) return `new ${type}[${generateExpression(size, ctx)}]`
       const args = node.properties.args ?? ''
+      // `new T{…}`（大括號初始化）——括號的種類是屬性 `brace`（空的 `new T{}` 也是值初始化）
+      if (node.properties.brace === 'true') return `new ${type}{${args}}`
       if (args) return `new ${type}(${args})`
       // 空括號＝值初始化（`new int()` 是 0）——見 lift 的註解
       return node.properties.valueInit === 'true' ? `new ${type}()` : `new ${type}`

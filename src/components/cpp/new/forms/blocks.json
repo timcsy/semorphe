@@ -42,7 +42,8 @@
         "SIZE": "size"
       },
       "hints": [
-        "valueInit"
+        "valueInit",
+        "brace"
       ]
     }
   }

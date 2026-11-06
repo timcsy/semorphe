@@ -1,0 +1,8 @@
+{
+  "CPP_CLASS_DECLARE_MSG0": "declare %1 %2 ahead (defined later)",
+  "CPP_CLASS_DECLARE_CLASS": "class",
+  "CPP_CLASS_DECLARE_STRUCT": "struct",
+  "CPP_CLASS_DECLARE_TOOLTIP": "Tells the compiler this name exists (a forward declaration); the full definition can come later. Common when two classes point to each other. Until the definition appears, you can only declare pointers or references to it, not create objects.",
+  "FLOW_TITLE_CPP_CLASS_DECLARE": "Declare class ahead",
+  "FLOW_SLOT_CPP_CLASS_DECLARE_KEYWORD": "Kind"
+}
