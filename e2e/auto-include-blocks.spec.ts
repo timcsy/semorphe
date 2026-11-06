@@ -35,6 +35,7 @@
  * ⚠️ **綁深度不綁身分**：`editable`（深度 2+）下鷹架動得了，那時它該在工具箱裡。
  */
 import { test, expect, type Page } from '@playwright/test'
+import { blocksSettled } from './helpers'
 
 const LESSON = 'cpp-beginner/05-程式從哪開始'
 
@@ -116,7 +117,7 @@ async function dragOut(page: Page, category: string, label: string, at: [number,
   await page.mouse.down()
   await page.mouse.move(canvas.x + canvas.width * at[0], canvas.y + canvas.height * at[1], { steps: 20 })
   await page.mouse.up()
-  await page.waitForTimeout(4500)
+  await blocksSettled(page)
 }
 
 test('① 拉一顆「印出」出來，積木那側也要看得到那顆淡的 #include', async ({ page }) => {

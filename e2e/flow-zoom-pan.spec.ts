@@ -43,7 +43,7 @@
  * > **一個從容器的邊界框推算出來的座標，會落在容器裡而不在任何東西上。**
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, freshApp, appReady, treeReady, flowReady } from './helpers'
+import { useAsSource, freshApp, appReady, treeReady, flowReady, frames } from './helpers'
 
 const PROG =
   '#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1;\n    cout << x << endl;\n    return 0;\n}\n'
@@ -85,20 +85,22 @@ test('★ 縮放：三顆按鈕，而倍率真的變了', async ({ page }) => {
 
   expect(await zoomNow(page), '🔴 一開始不是原寸').toBeCloseTo(1, 2)
   await page.locator('.flow-zoom-btn').last().click()
-  await page.waitForTimeout(400)
+  await expect.poll(() => zoomNow(page), { message: '🔴 按了放大而沒有變大' }).toBeGreaterThan(1)
+  await frames(page)
   const bigger = await zoomNow(page)
-  expect(bigger, '🔴 按了放大而沒有變大').toBeGreaterThan(1)
   await expect(page.locator('.flow-zoom-label'), '🔴 倍率沒有跟著顯示').toHaveText(/%$/)
 
   await page.locator('.flow-zoom-btn').first().click()
   await page.locator('.flow-zoom-btn').first().click()
-  await page.waitForTimeout(400)
-  expect(await zoomNow(page), '🔴 按了縮小而沒有變小').toBeLessThan(bigger)
+  await expect.poll(() => zoomNow(page), { message: '🔴 按了縮小而沒有變小' }).toBeLessThan(bigger)
 
   // 🔴 **節點的座標不准動**——縮放只該動鏡頭。座標一變，存下來的佈局就歪了。
   const before = await page.locator('.fc-node').first().getAttribute('transform')
+  const zoomBefore = await zoomNow(page)
   await page.locator('.flow-zoom-btn').last().click()
-  await page.waitForTimeout(300)
+  // 等縮放真的生效（鏡頭動了），再驗節點自己的座標【沒有】動
+  await expect.poll(() => zoomNow(page)).not.toBe(zoomBefore)
+  await frames(page)
   expect(
     await page.locator('.fc-node').first().getAttribute('transform'),
     '🔴 縮放動到了節點自己的座標——那會把存下來的佈局弄歪',
@@ -127,20 +129,23 @@ test('★ 拖空白處＝推畫面，而且【不受內容大小限制】', asyn
   await page.mouse.down()
   await page.mouse.move(260, 420, { steps: 12 })
   await page.mouse.up()
-  await page.waitForTimeout(400)
+  // ★ 1:1——手指走多少，畫面就走多少（等鏡頭停下來：連兩次讀數相同）
+  await expect.poll(async () => { const a = await panNow(page); await frames(page); const b = await panNow(page); return a.x === b.x && a.y === b.y }).toBe(true)
   const to = await panNow(page)
-  // ★ 1:1——手指走多少，畫面就走多少
   expect(to.x - from.x, '🔴 橫的推不動').toBeCloseTo(140, 0)
   expect(to.y - from.y, '🔴 直的推不動——而那正是原生捲動做不到的那一半').toBeCloseTo(-180, 0)
 })
 
 test('★ 適配：整張圖塞得進畫面', async ({ page }) => {
   await openFlow(page)
+  const z0 = await zoomNow(page)
   await page.locator('.flow-zoom-btn').last().click()
   await page.locator('.flow-zoom-btn').last().click()
-  await page.waitForTimeout(400)
+  await expect.poll(() => zoomNow(page)).toBeGreaterThan(z0)
+  const z1 = await zoomNow(page)
   await page.locator('.flow-zoom-label').click()
-  await page.waitForTimeout(600)
+  await expect.poll(() => zoomNow(page), { message: '🔴 按了適配而倍率沒有動' }).not.toBe(z1)
+  await frames(page)
   const fit = await page.evaluate(() => {
     const c = (document.querySelector('.flow-canvas') as HTMLElement).getBoundingClientRect()
     const g = (document.querySelector('.fc-viewport') as SVGGElement).getBoundingClientRect()
@@ -178,9 +183,8 @@ test('★ `touch-action`：一根手指捲動、兩根捏合、按住節點是�
 test('★ 縮放之後拖曳：手指走多少，節點在畫面上就走多少', async ({ page }) => {
   await openFlow(page)
   await page.locator('.flow-zoom-btn').first().click()
-  await page.waitForTimeout(400)
+  await expect.poll(() => zoomNow(page), { message: '🔴 沒有縮小 → 這一支驗的是原寸，測不到那個 bug' }).toBeLessThan(1)
   const z = await zoomNow(page)
-  expect(z, '🔴 沒有縮小 → 這一支驗的是原寸，測不到那個 bug').toBeLessThan(1)
 
   // ⚠️ **抓標題列，不要拿 `<g>` 的邊界框加偏移**——見檔頭
   const head = page.locator('.fc-node .fc-node-header').first()
@@ -193,7 +197,8 @@ test('★ 縮放之後拖曳：手指走多少，節點在畫面上就走多少'
   await page.mouse.down()
   await page.mouse.move(px + 100, py, { steps: 12 })
   await page.mouse.up()
-  await page.waitForTimeout(600)
+  // 等節點停下來（連兩次讀數相同），再量它走了多少
+  await expect.poll(async () => { const a = (await page.locator('.fc-node').first().boundingBox())!.x; await frames(page); return a === (await page.locator('.fc-node').first().boundingBox())!.x }).toBe(true)
   const after = (await page.locator('.fc-node').first().boundingBox())!.x
 
   // 🔴 少了 `toSvgLen` 的除法，縮到 0.8 倍時它只會走 80px——

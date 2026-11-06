@@ -272,6 +272,30 @@ export async function useAsSource(page: Page, which: '程式碼' | '積木'): Pr
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/**
+ * **讓畫面再畫 n 幀**——驗「某件事【沒有】發生」時用（例：切分頁之後反白還在）。
+ *
+ * ⚠️ 「沒有發生」沒有一個會變成真的條件可等；固定秒數是照閒置機器校準的。
+ * 而要排除的那些動作（點外面就取消選取、重畫）都在事件當下或下一幀內發生——等兩幀就夠，而且不看機器有多忙。
+ */
+export async function frames(page: Page, n = 2): Promise<void> {
+  await page.evaluate((k) => new Promise<void>((resolve) => {
+    let left = k
+    const tick = (): void => { if (--left <= 0) resolve(); else requestAnimationFrame(tick) }
+    requestAnimationFrame(tick)
+  }), n)
+}
+
+/**
+ * **拖完積木、落定了**：Blockly 的變更事件走 `requestAnimationFrame → setTimeout(0)`，之後同步積木→程式碼——
+ * 畫三幀、等同步閒置、再畫兩幀。取代「拖完睡 1.5～2.8 秒」。
+ */
+export async function blocksSettled(page: Page): Promise<void> {
+  await frames(page, 3)
+  await editsSettled(page)
+  await frames(page, 2)
+}
+
 /** app 起來了：面板在、目標釘好了、樹存在。 */
 export async function appReady(page: Page): Promise<void> {
   await page.waitForFunction(() => {

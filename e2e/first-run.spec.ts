@@ -56,6 +56,7 @@
  *   而它們的最壞情況相反——把它們寫成同一條會製造一個真正的資料遺失。
  */
 import { test, expect } from '@playwright/test'
+import { blocksSettled } from './helpers'
 
 test('★ 第一次打開（沒有任何存檔）就拉得動積木', async ({ page }) => {
   // 🔴 **不呼叫任何 helper**——helpers 多半會先設好狀態，而那正是要避開的。
@@ -108,7 +109,7 @@ test('★ 第一次打開（沒有任何存檔）就拉得動積木', async ({ p
   await page.mouse.down()
   await page.mouse.move(box!.x + 400, box!.y + 160, { steps: 25 })
   await page.mouse.up()
-  await page.waitForTimeout(2500)
+  await blocksSettled(page)
 
   const after = await page.evaluate(() => {
     const app = (window as never as Record<string, any>).__app
