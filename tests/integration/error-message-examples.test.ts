@@ -44,6 +44,7 @@ const EXAMPLES: [string, string][] = [
   ['回傳值不合', 'void f() {\n    return 1;\n}\nint main() {\n    f();\n}'],
   ['運算元型別不合', 'int main() {\n    string s = "a";\n    int x = s * 2;\n}'],
   ['型別轉不過去', 'int main() {\n    int x = "abc";\n}'],
+  ['函式少了 return', 'int twice(int x) {\n    int y = x * 2;\n}\nint main() {\n    twice(3);\n}'],
   ['跑太久（可能是無窮迴圈）', 'int main() {\n    while (true) {\n    }\n}'],
 ]
 

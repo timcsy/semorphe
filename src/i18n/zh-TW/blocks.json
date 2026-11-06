@@ -1043,5 +1043,12 @@
   "DIAG_CELLA_TERMINATION_WHY": "程式在這裡結束了，後面的部分不會跑到。",
   "DIAG_CELLA_TERMINATION_TRY": "檢查這裡為什麼會結束，例如是不是丟出了沒有接住的例外。",
   "DIAG_CELLA_ORDER_UNCOMPARED_WHY": "同一句裡有兩件會互相影響的事，標準沒有規定先做哪一件。",
-  "DIAG_CELLA_ORDER_UNCOMPARED_TRY": "把它們拆成兩句，先後就固定了。"
+  "DIAG_CELLA_ORDER_UNCOMPARED_TRY": "把它們拆成兩句，先後就固定了。",
+  "RUNTIME_ERR_UB_FLOW_OFF_END": "停在這裡：函式有回傳型別，卻執行到結尾沒有 return（{clause}）",
+  "DIAG_CELLA_UB_FLOW_OFF_END_BLOCK": "函式有回傳型別，卻執行到結尾沒有 return",
+  "DIAG_CELLA_UB_FLOW_OFF_END_CODE": "有回傳型別的函式執行到結尾沒有 return",
+  "DIAG_CELLA_UB_FLOW_OFF_END_BLOCK_AT": "「{subject}」有回傳型別，卻執行到結尾沒有 return",
+  "DIAG_CELLA_UB_FLOW_OFF_END_CODE_AT": "第 {line} 行：「{subject}」有回傳型別，卻執行到結尾沒有 return",
+  "DIAG_CELLA_UB_FLOW_OFF_END_WHY": "函式宣告了回傳型別，就是答應會交回一個值；走到結尾還沒有 return，C++ 規定這是未定義行為——就算呼叫的地方沒有用那個值也一樣。",
+  "DIAG_CELLA_UB_FLOW_OFF_END_TRY": "檢查每一條路最後都有 return，例如在函式最後補上 return 0;；如果它本來就不需要交回值，把回傳型別改成 void。"
 }
