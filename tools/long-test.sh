@@ -152,6 +152,8 @@ echo "結束 $(date +%T)"
 REDS=$(cat "$OUT"/*.log 2>/dev/null | strip | grep -aoE '^ FAIL  [^ ]+|✘ +[0-9]+ \[[a-z]+\] › [^ ]+' | sed 's/^ FAIL  //; s/.*› //' | sort -u | head -8 | paste -sd, -)
 # 最後兩欄（2026-11-07）：開始時與結束時的一分鐘負載（核心數 ${NCPU}）——紅的時候先看這兩欄：超過 ${LOAD_LIMIT} 的逾時紅是「負載」，不是缺陷
 LOAD_END=$(load_now)
+# 每檔耗時 ＋「過了但變慢」（2026-11-07，測試執行資源有限②的後半）：寫 $STATE_DIR/timing/<這一輪>.tsv、和上一輪比——只報不擋
+node "$(dirname "$0")/long-test-timing.mjs" "$OUT" "$STATE_DIR" "$(echo "$RUN_START" | tr ' :' '_-')-$NAME" "$LOAD_END" || true
 printf '%s\t%s\t%s\t%s\t%s\texit=%s\t%s\t%s\t負載開始=%s\t負載結束=%s\n' "$RUN_START" "$NAME" "$(git rev-parse --abbrev-ref HEAD)" "$(git rev-parse --short HEAD)" "$RANGE" "$status" "${REDS:-—}" "$OUT" "${LOAD_START:-—}" "$LOAD_END" >> "$STATE_DIR/runs.tsv"
 rm -f "$STATE_DIR/$NAME.now"
 exit $status
