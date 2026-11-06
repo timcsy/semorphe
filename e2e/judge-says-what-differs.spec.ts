@@ -14,7 +14,7 @@
  * > **一個「你錯了」而看不出錯在哪的回饋，教的是「這個工具有脾氣」。**
  */
 import { test, expect } from '@playwright/test'
-import { runButton, editsSettled } from './helpers'
+import { runButton, editsSettled, appReady } from './helpers'
 
 test('★ 輸出只差一個空格 → 主控台要說出差在哪', async ({ page }) => {
   test.setTimeout(180_000)
@@ -28,7 +28,7 @@ test('★ 輸出只差一個空格 → 主控台要說出差在哪', async ({ pa
   await page.waitForFunction(
     () => Boolean((window as unknown as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 60_000 })
-  await page.waitForTimeout(3500)
+  await appReady(page)
 
   // 🔴 學生打的那一行**多了一個空格**——這一題要的是 `Hello!`
   await page.locator('.view-line', { hasText: 'int main()' }).first().click()
@@ -39,7 +39,8 @@ test('★ 輸出只差一個空格 → 主控台要說出差在哪', async ({ pa
 
   // ⚠️ 用 `#run-btn`，不要用 class——`.exec-btn.run` 同時匹配下拉箭頭（見 helpers）
   await runButton(page).click()
-  await page.waitForTimeout(1500)
+  // 等「先猜再跑」或裁判其中一個出現（取代固定睡 1.5 秒）
+  await expect(page.locator('.console-predict-skip, .console-verdict').first()).toBeVisible({ timeout: 20_000 })
   // 🔴 **「先猜再跑」會擋在中間**——不跳過的話程式根本沒跑，
   //    而症狀是「裁判沒有說話」，看起來像裁判壞了。
   const skip = page.locator('.console-predict-skip')
@@ -76,14 +77,14 @@ test('★ 「跳過」的對比度要看得出來是一顆按鈕', async ({ page
   await page.waitForFunction(
     () => Boolean((window as unknown as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 60_000 })
-  await page.waitForTimeout(3500)
+  await appReady(page)
   await page.locator('.view-line', { hasText: 'int main()' }).first().click()
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "Hello!" << endl;', { delay: 12 })
   await editsSettled(page)
   await runButton(page).click()
-  await page.waitForTimeout(2000)
+  // （下一行本來就等跳過鍵出現，最多 15 秒——原本先固定睡 2 秒）
 
   const skip = page.locator('.console-predict-skip').first()
   await expect(skip, '🔴 沒有跳過鍵 → 這一支測的不是那條路').toBeVisible({ timeout: 15_000 })

@@ -90,19 +90,17 @@ test('★ 在流程刪掉的，按【標頭】那一顆就退得回來', async (
   await page.mouse.click(at!.x, at!.y, { button: 'right' })
   await expect(page.locator('.flow-menu'), '🔴 右鍵沒有開出選單').toBeVisible({ timeout: 5000 })
   await page.locator('.flow-menu-item').first().click()
-  await page.waitForTimeout(1600)
-  expect(await codeNow(page), '🔴 沒有刪掉').not.toContain('cout')
+  // 輪詢到程式碼變了為止（取代固定睡 1.6 秒）
+  await expect.poll(() => codeNow(page), { message: '🔴 沒有刪掉', timeout: 15_000 }).not.toContain('cout')
 
   // 🔴 **按的是快速列那一顆**——流程視圖已經沒有自己的還原了
   await page.locator('#undo-btn').click()
-  await page.waitForTimeout(1600)
-  expect(
-    await codeNow(page),
-    '🔴 那一顆退不掉流程做的事——轉送沒有走到樹的歷史',
+  await expect.poll(
+    () => codeNow(page),
+    { message: '🔴 那一顆退不掉流程做的事——轉送沒有走到樹的歷史', timeout: 15_000 },
   ).toBe(base)
 
   // ★ 反方向：取消還原要再把它刪掉
   await page.locator('#redo-btn').click()
-  await page.waitForTimeout(1600)
-  expect(await codeNow(page), '🔴 取消還原沒有作用').not.toContain('cout')
+  await expect.poll(() => codeNow(page), { message: '🔴 取消還原沒有作用', timeout: 15_000 }).not.toContain('cout')
 })

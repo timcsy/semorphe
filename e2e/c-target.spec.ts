@@ -45,7 +45,7 @@
  * - **只走一個樣本**——它守的是「兩條路徑都改到了」，不是覆蓋率
  */
 import { test, expect, type Page } from '@playwright/test'
-import { useAsSource, treeHas, appReady } from './helpers'
+import { useAsSource, treeHas, appReady, frames, blocksSettled } from './helpers'
 
 /**
  * C++ 專屬、而 C 裡不存在的積木——選 C 之後這些都不該出現在工具箱裡。
@@ -111,7 +111,7 @@ async function toolboxText(page: Page): Promise<string> {
   let all = ''
   for (let i = 0; i < n; i++) {
     await cats.nth(i).click()
-    await page.waitForTimeout(150)
+    await frames(page, 2)
     all += ' ' + (await page.locator('.blocklyFlyout text, .blocklyToolboxFlyout text').allTextContents()).join(' ')
   }
   return all
@@ -179,7 +179,7 @@ test('★ 使用者自己寫的 #include，在 C 目標下也要換掉', async (
 
   expect(await pickTarget(page, /^C$/), '🔴 選單裡沒有「C」').toBe(true)
   await useAsSource(page, '積木')
-  await page.waitForTimeout(1200)
+  await blocksSettled(page)
 
   const code = await page.evaluate(() =>
     (window as never as { __app: { codeView: { getCode(): string } } }).__app.codeView.getCode())
@@ -291,14 +291,15 @@ test('★ 選擇器沒有變多——目標是把三次收成一次，不是多�
 test('★ 重新整理之後，選的目標還在', async ({ page }) => {
   await ready(page)
   expect(await pickTarget(page, /^C$/)).toBe(true)
-  await page.waitForTimeout(1200)
+  // 等存檔真的記下目標（取代固定睡 1.2 秒）——重新整理讀的是它
+  await page.waitForFunction(() => Object.keys(localStorage).some((k) => /"targetId":"c"/.test(localStorage.getItem(k) ?? '')), undefined, { timeout: 15_000 })
 
   await page.reload()
   await page.waitForFunction(
     () => Boolean((window as never as { __app?: { codeView?: { editor?: unknown } } }).__app?.codeView?.editor) && Boolean((window as never as { __appReady?: boolean }).__appReady),
     undefined, { timeout: 30_000 },
   )
-  await page.waitForTimeout(1500)
+  await appReady(page)
 
   // ⚠️ 2026-08-25：目標不再是一顆 `<select>`——它是**狀態列上的一個項目**，
   //    而項目的文字就是目前的值。要驗的那件事沒變：**重新整理之後它還在**。

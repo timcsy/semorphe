@@ -89,7 +89,7 @@ test('★ 手機：按住再拖是拖曳，純長按才是選單', async ({ page
   /** 按住 `hold` 毫秒後移動 `steps` 次；回傳選單開著沒、節點走了幾 px */
   const gesture = async (hold: number, steps: number): Promise<{ menu: number; moved: number; mid: number }> => {
     await page.reload()
-    await page.waitForTimeout(2500)
+    await appReady(page)
     await openFlow(page)
     const b = await target.boundingBox()
     const x0 = b!.x + b!.width / 2, y0 = b!.y + b!.height / 2
