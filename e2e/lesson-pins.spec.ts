@@ -32,7 +32,7 @@
  *   這裡只挑三堂**跨語言**的驗那條路真的通。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource, treeReady, skipPredictionIfAsked, openLessonLink, runSkippingPrediction, pickControl } from './helpers'
+import { freshApp, useAsSource, treeReady, skipPredictionIfAsked, openLessonLink, runSkippingPrediction, pickControl, appReady, editsSettled, consoleSettled, consoleFinished, treeHas } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -208,10 +208,7 @@ for (const c of CASES) {
   test(`★ ${c.id}：釘住的控制項消失、工具箱只剩宣告的那幾顆`, async ({ page }) => {
     await freshApp(page)
     await page.goto(`/?lesson=${encodeURIComponent(c.id)}`)
-    await page.waitForFunction(
-      () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
-      undefined, { timeout: 30_000 })
-    await page.waitForTimeout(2500)
+    await appReady(page)
     // 同上——控制項送出來之前，「它消失了」與「它還沒出現」分不開
     await expect(page.locator('#status-controls .status-item-btn').first()).toBeVisible({ timeout: 20_000 })
 
@@ -297,7 +294,7 @@ test('★ 存檔是別的目標時，課釘住的那個要贏', async ({ page })
   // ① 先在 Python 上留下一份存檔
   await page.addInitScript(() => window.localStorage.clear())
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(6000)
+  await appReady(page)
   await pickControl(page, 'target', 'python')
   expect(await page.evaluate(() =>
     (window as never as { __app: { currentTarget: { id: string } } }).__app.currentTarget.id)).toBe('python')
@@ -373,11 +370,11 @@ test('★ 跑完之後，裁判說得出差在哪一行', async ({ page }) => {
     await page.keyboard.press('End')
     await page.keyboard.press('Enter')
     await page.keyboard.type(body, { delay: 10 })
-    await page.waitForTimeout(2600)
+    await editsSettled(page)
     await page.locator('#run-btn').click()
     // ⚠️ 這一支驗的是**裁判**，不是預測——跳過那個問句
     await skipPredictionIfAsked(page)
-    await page.waitForTimeout(3000)
+    await consoleSettled(page)
   }
 
   await page.addInitScript(() => window.localStorage.clear())
@@ -413,7 +410,7 @@ test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句�
   test.setTimeout(120_000)
   await page.addInitScript(() => window.localStorage.clear())
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await appReady(page)
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -421,7 +418,7 @@ test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句�
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "A" << endl;\nif (1 > 2) {\ncout << "never" << endl;', { delay: 10 })
-  await page.waitForTimeout(3000)
+  await editsSettled(page)
   await runSkippingPrediction(page)
 
   // 🔴 **只標最外層那一塊**：`cout << "never" << endl;` 在樹裡是三顆節點，
@@ -436,8 +433,7 @@ test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句�
 
   // ⚠️ 而下一次開跑要先清掉——不然學生會對著上一次的結論改東西
   await runSkippingPrediction(page)
-  await page.waitForTimeout(3000)
-  expect(await page.locator('.never-ran').count(), '🔴 第二次跑完標記重複累加').toBe(1)
+  await expect(page.locator('.never-ran'), '🔴 第二次跑完標記重複累加').toHaveCount(1)
 })
 
 /**
@@ -464,7 +460,7 @@ test('★ 執行覆蓋：一支完全正確的程式，一塊都不准標', asyn
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('End')
   await page.keyboard.type('\ncout << sum << endl;', { delay: 10 })
-  await page.waitForTimeout(3000)
+  await editsSettled(page)
   await runSkippingPrediction(page)
 
   expect(
@@ -515,25 +511,21 @@ test('★ 清除學習進度：入口就在進度旁邊，而且要問一次', a
   expect(await cell.innerText(), '🔴 進度沒有讀回來 → 下面驗的是一個空狀態')
     .toContain(`1/${REPEAT_TASKS}`)
   await cell.click()
-  await page.waitForTimeout(300)
 
   const item = page.locator('.quick-pick-item[data-value="action:clear-progress"]')
   await expect(item, '🔴 找不到清除的入口——藏起來的清除鍵等於沒有').toBeVisible()
   await item.click()
-  await page.waitForTimeout(400)
 
   // 🔴 **要問一次**：那份紀錄是學生累積的，而這個動作救不回來
   await expect(page.locator('.quick-pick-item[data-value="yes"]'), '🔴 沒問就清了').toBeVisible()
   await page.locator('.quick-pick-item[data-value="yes"]').click()
-  await page.waitForTimeout(600)
 
-  expect(
-    await page.evaluate(() => window.localStorage.getItem('semorphe-progress')),
-    '🔴 按了清除而紀錄還在',
+  await expect.poll(
+    () => page.evaluate(() => window.localStorage.getItem('semorphe-progress')),
+    { message: '🔴 按了清除而紀錄還在' },
   ).toBeNull()
   // 🔴 那個「1/2」要**當場**歸零——顯示一份已經不存在的進度，比不清更糟
-  expect(await cell.innerText(), '🔴 畫面還顯示著已經不存在的進度')
-    .toContain(`0/${REPEAT_TASKS}`)
+  await expect(cell, '🔴 畫面還顯示著已經不存在的進度').toContainText(`0/${REPEAT_TASKS}`)
 })
 
 test('★ 題目：只有選了課程與章節才有那一格，而預設是「跟著做」', async ({ page }) => {
@@ -542,7 +534,7 @@ test('★ 題目：只有選了課程與章節才有那一格，而預設是「�
 
   // ① 沒有課 ⟹ **那一格不存在**（不是「有而空的」）
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await appReady(page)
   await expect(
     page.locator('#status-controls .status-item-btn[data-control-id="task"]'),
     '🔴 沒選課程就出現「題目」——那時「我在做哪一題」這個問題不存在',
@@ -572,9 +564,7 @@ test('★ 題目：純練習的時候裁判沉默，而執行覆蓋照樣標', a
   await openLessonLink(page, 'cpp-beginner/10-while迴圈')
 
   // 切到「純練習」
-  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
-  await page.locator('.quick-pick-item[data-value=""]').click()
-  await page.waitForTimeout(500)
+  await pickControl(page, 'task', '')
 
   // 寫一支【不是這一課答案】的程式——他在亂試
   await page.locator('.monaco-editor').first().click()
@@ -583,7 +573,7 @@ test('★ 題目：純練習的時候裁判沉默，而執行覆蓋照樣標', a
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "A" << endl;\nif (1 > 2) {\ncout << "never" << endl;', { delay: 10 })
-  await page.waitForTimeout(3000)
+  await editsSettled(page)
   await runSkippingPrediction(page)
 
   // 🔴 **裁判一個字都不說**——系統分不出「卡住」與「在玩」，那就閉嘴
@@ -609,9 +599,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   await openLessonLink(page, 'cpp-beginner/02-型別')
 
   // 選第二題（練習：把 height 的型別換成 int），然後寫出它的答案
-  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
-  await page.locator('.quick-pick-item[data-value="ex1"]').click()
-  await page.waitForTimeout(500)
+  await pickControl(page, 'task', 'ex1')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -622,10 +610,10 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
     'int age = 16;\nint height = 1.72;\nchar grade = \'A\';\nbool passed = true;\n' +
     'cout << age << endl;\ncout << height << endl;\ncout << grade << endl;\n' +
     'cout << passed << endl;', { delay: 10 })
-  await page.waitForTimeout(3000)
+  await editsSettled(page)
   await page.locator('#run-btn').click()
   await skipPredictionIfAsked(page)
-  await page.waitForTimeout(3500)
+  await consoleSettled(page)
 
   const verdict = page.locator('.console-verdict')
   await expect(verdict).toHaveClass(/passed/)
@@ -647,9 +635,8 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   expect(stillHere, `🔴 過了而進度沒動：${stillHere}`).toMatch(/1\/\d/)
 
   await next.locator('button').click()
-  await page.waitForTimeout(400)
-  expect(await page.locator('#status-controls .status-item-btn[data-control-id="task"]').innerText(),
-    '🔴 按了「切過去」而沒有切').toContain('跟著做')
+  await expect(page.locator('#status-controls .status-item-btn[data-control-id="task"]'),
+    '🔴 按了「切過去」而沒有切').toContainText('跟著做')
 })
 
 /**
@@ -664,7 +651,7 @@ test('★ 迴圈跑了幾次：巢狀是【倍數】不是總次數', async ({ p
   test.setTimeout(120_000)
   await page.addInitScript(() => window.localStorage.clear())
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await appReady(page)
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -674,7 +661,7 @@ test('★ 迴圈跑了幾次：巢狀是【倍數】不是總次數', async ({ p
   await page.keyboard.type(
     'for (int i = 0; i < 3; i = i + 1) {\nfor (int j = 0; j < 4; j = j + 1) {\ncout << i << j << endl;',
     { delay: 10 })
-  await page.waitForTimeout(3500)
+  await editsSettled(page)
   await runSkippingPrediction(page)
 
   // ⚠️ 入口條件：真的跑了 3×4 圈（沒跑的話下面驗的是一個空畫面）
@@ -710,7 +697,7 @@ test('★ 迴圈跑了幾次：巢狀是【倍數】不是總次數', async ({ p
   // ⚠️ 改了積木，上一次的數字就過期了
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.type(' ', { delay: 10 })
-  await page.waitForTimeout(2500)
+  await editsSettled(page)
   expect(await page.locator('.iteration-badge').count(), '🔴 改過之後數字還留著').toBe(0)
 })
 
@@ -733,7 +720,7 @@ test('★ 預測：猜跑幾次——而揭曉的徽章就在那顆迴圈旁邊'
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('int n = 1;\nwhile (n <= 5) {\ncout << n << endl;\nn = n + 1;', { delay: 10 })
-  await page.waitForTimeout(3500)
+  await editsSettled(page)
   // ⚠️ **這一支驗的就是那個問句**——不得跳過它
   await page.locator('#run-btn').click()
 
@@ -752,7 +739,7 @@ test('★ 預測：猜跑幾次——而揭曉的徽章就在那顆迴圈旁邊'
 
   await page.locator('.console-predict-input').fill('4')
   await page.locator('.console-predict-btn').click()
-  await page.waitForTimeout(4000)
+  await consoleFinished(page)
 
   const result = page.locator('.console-predict-result')
   await expect(result).toHaveClass(/differs/)
@@ -786,14 +773,14 @@ test('★ 預測：沒有迴圈、輸出短 → 猜輸出；猜對了要比程�
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "Hello!" << endl;', { delay: 10 })
-  await page.waitForTimeout(3000)
+  await editsSettled(page)
   // ⚠️ **這一支驗的就是那個問句**——不得跳過它
   await page.locator('#run-btn').click()
 
   expect(await page.locator('.console-predict-head').innerText()).toContain('印出什麼')
   await page.locator('.console-predict-input').fill('Hello!')
   await page.locator('.console-predict-btn').click()
-  await page.waitForTimeout(3500)
+  await consoleFinished(page)
 
   const result = page.locator('.console-predict-result')
   await expect(result).toHaveClass(/right/)
@@ -807,9 +794,7 @@ test('★ 預測：純練習不問——他【說了】他不在做題目', asyn
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
   await openLessonLink(page, 'cpp-beginner/10-while迴圈')
-  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
-  await page.locator('.quick-pick-item[data-value=""]').click()
-  await page.waitForTimeout(500)
+  await pickControl(page, 'task', '')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -817,7 +802,7 @@ test('★ 預測：純練習不問——他【說了】他不在做題目', asyn
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('int n = 1;\nwhile (n <= 3) {\ncout << n << endl;\nn = n + 1;', { delay: 10 })
-  await page.waitForTimeout(3500)
+  await editsSettled(page)
   // ⚠️ **這一支驗的就是那個問句**——不得跳過它
   await page.locator('#run-btn').click()
 
@@ -843,7 +828,7 @@ test('★ 預測：選擇題——選錯了要說出他剛才想的是什麼', a
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('int score = 75;\nif (score >= 60) {\ncout << "及格" << endl;', { delay: 12 })
-  await page.waitForTimeout(3500)
+  await editsSettled(page)
   // ⚠️ **這一支驗的就是那個問句**——不得跳過它
   await page.locator('#run-btn').click()
 
@@ -854,7 +839,8 @@ test('★ 預測：選擇題——選錯了要說出他剛才想的是什麼', a
 
   // 🔴 **一次點擊就送出**——它存在的理由就是最低的承諾成本
   await page.locator('.console-predict-choice', { hasText: '不及格' }).first().click()
-  await page.waitForTimeout(3500)
+  await consoleFinished(page)
+  await expect(page.locator('.console-predict-result')).toBeVisible()
 
   const text = await page.locator('.console-predict-result').innerText()
   expect(text, `🔴 沒有說出他剛才想的是什麼：${text}`).toContain('條件的方向反了')
@@ -887,7 +873,7 @@ test('★ 裁判：輸入【之前】印的東西不得被丟掉', async ({ page
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "先印這一行" << endl;\nint n;\ncin >> n;\ncout << "後印這一行" << endl;',
     { delay: 12 })
-  await page.waitForTimeout(3500)
+  await editsSettled(page)
   await page.locator('#run-btn').click()
   await skipPredictionIfAsked(page)
 
@@ -895,7 +881,8 @@ test('★ 裁判：輸入【之前】印的東西不得被丟掉', async ({ page
   await expect(box).toBeVisible({ timeout: 8000 })
   await box.fill('7')
   await box.press('Enter')
-  await page.waitForTimeout(3500)
+  await consoleFinished(page)
+  await expect(page.locator('.console-verdict')).toBeVisible()
 
   const verdict = await page.locator('.console-verdict').innerText()
   // 這一課要的是「你打的是 7」，所以一定是「還沒對」——重點是**你的輸出那一欄**
@@ -932,17 +919,18 @@ test('★ 數字字面：0x27／1000000LL／1.5f 走一趟積木都不得被改�
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.waitForTimeout(7000)
+  await appReady(page)
 
   await page.evaluate(() => (window as never as { __app: { codeView: { setCode(c: string): void } } })
     .__app.codeView.setCode(
       'int main() {\n    int a = 0x27;\n    long long b = 1000000LL;\n' +
       '    double c = 1.5f;\n    int d = 0b1010;\n    return 0;\n}'))
   await useAsSource(page, '程式碼')
-  await page.waitForTimeout(2500)
+  await treeHas(page, 'cpp:var_declare')
+  await editsSettled(page)
   // 🔴 **再從積木產回去**——損失發生在這一趟，不在前一趟
   await useAsSource(page, '積木')
-  await page.waitForTimeout(2500)
+  await editsSettled(page)
 
   const back = await page.evaluate(() =>
     (window as never as { __app: { codeView: { getCode?(): string } } }).__app.codeView.getCode?.() ?? '')
@@ -975,9 +963,7 @@ test('★ 排回去：選了那一題，解答的積木會被打散在畫布上'
       .__app.blocklyPanel.workspace.getTopBlocks(false).length)
   expect(await top(), '🔴 一開始畫布不是乾淨的 → 下面驗的是別的東西').toBeLessThanOrEqual(1)
 
-  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
-  await page.locator('.quick-pick-item[data-value="ex1"]').click()
-  await page.waitForTimeout(5000)
+  await pickControl(page, 'task', 'ex1')
 
   // 🔴 **打散了**——頂層從 1 變成好幾塊
   expect(await top(), '🔴 選了「排回去」那種題而畫布沒有被打散——那一題等於直接給答案')
@@ -1030,9 +1016,7 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   const layoutNow = () => page.locator('#status-controls .status-item-btn[data-control-id="layout"]').innerText()
 
   // ① 選一題宣告了 `view: 'blocks'` 的（「排回去」）→ 版面該跟著走
-  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
-  await page.locator('.quick-pick-item[data-value="rebuild"]').click()
-  await page.waitForTimeout(5000)
+  await pickControl(page, 'task', 'rebuild')
   const suggested = await layoutNow()
   expect(suggested, `🔴 課程宣告了看法而版面沒有跟著走：${suggested}`).toContain('專注')
 
@@ -1048,16 +1032,12 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   //    ⚠️ 這一條擋的是一個真的洞：`showProjection` 本來只認得積木與流程，
   //    於是「回到程式碼」沒有入口，`focusLayer` 停在上一次被切走的那一層。
   //    症狀是課程說 code 而學生看到積木——**而它不會報錯，它只是留在原地**。
-  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
-  await page.locator('.quick-pick-item[data-value="ex1"]').click()
-  await page.waitForTimeout(3000)
-  expect(await focusOn(), '🔴 宣告 code 而專注的那一格不是程式碼——沒有回頭路').toContain('element')
+  await pickControl(page, 'task', 'ex1')
+  await expect.poll(focusOn, { message: '🔴 宣告 code 而專注的那一格不是程式碼——沒有回頭路' }).toContain('element')
 
   // ③ 🔴 **他自己改成別的**
-  await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
-  await page.locator('.quick-pick-item[data-value="three-column"]').click()
-  await page.waitForTimeout(1200)
-  expect(await layoutNow(), '🔴 他改不動——那就不是建議，是閘門').toContain('三欄')
+  await pickControl(page, 'layout', 'three-column')
+  await expect.poll(layoutNow, { message: '🔴 他改不動——那就不是建議，是閘門' }).toContain('三欄')
 
   // ④ 🔴 **做一堆會重畫的事**——這才是「有沒有被搶回去」真正的考題
   await page.locator('.monaco-editor').first().click()
@@ -1066,10 +1046,10 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "Hi" << endl;', { delay: 12 })
-  await page.waitForTimeout(3000)          // 同步一輪
+  await editsSettled(page)
   await page.locator('#run-btn').click()   // 執行一輪（會發狀態、會重畫控制項）
   await skipPredictionIfAsked(page)
-  await page.waitForTimeout(3500)
+  await consoleSettled(page)
 
   expect(
     await layoutNow(),

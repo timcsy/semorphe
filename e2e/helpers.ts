@@ -295,6 +295,26 @@ export async function treeHas(page: Page, componentId: string): Promise<void> {
   }, componentId, { timeout: 30_000 })
 }
 
+/**
+ * **打完字之後，那份程式碼真的同步進樹了**——取代「打字 ＋ `waitForTimeout(2500～3000)`」（2026-11-07，測試執行資源有限③）。
+ *
+ * 打字的路徑（`src/ui/app.ts` 的 `codeView.onChange`）：Monaco 的變更事件是同步的 → 排一個 800ms 的去抖
+ * （`codeToBlocksTimer`）→ 到點才 `syncCodeToBlocks`（`syncController.syncing` 是它的互斥；同步中又打字會記在
+ * `_codeChangedWhileSyncing`、做完再補一輪）。所以「落地了」＝ 去抖沒在等、沒有正在轉、互斥放開、沒有待補的那一輪。
+ *
+ * ⚠️ 它問的是「沒有事情在排隊」，不是「有東西了」——打字之後立刻問也不會空過：
+ *    `keyboard.type` 回來時去抖已經排好了（變更事件同步觸發）。
+ * ⚠️ 自動同步被暫停時（`autoSync` 為 false）不會排去抖——那時這支立刻成立，因為本來就沒有東西要等。
+ * ⚠️ 不看 `checkTimer`（判決的去抖）：它觸發之後不會被設回 null，拿它當條件會永遠等不到。
+ */
+export async function editsSettled(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const a = (window as any).__app
+    return Boolean(a) && a.codeToBlocksTimer == null && !a._codeToBlocksInProgress && !a._codeChangedWhileSyncing
+      && !a.syncController?.syncing
+  }, undefined, { timeout: 30_000 })
+}
+
 /** 語義樹**真的有內容**了——`useAsSource` 回來時同步還在跑。 */
 export async function treeReady(page: Page): Promise<void> {
   await page.waitForFunction(() => {
@@ -450,6 +470,21 @@ export async function flowReady(page: Page): Promise<void> {
  */
 export async function runAndSettle(page: Page): Promise<void> {
   await page.locator('#run-btn').click()
+  await consoleSettled(page)
+}
+
+/**
+ * 主控台【跑完】了（完畢／錯誤）——餵完輸入之後用。
+ * ⚠️ 不能用 `consoleSettled`：餵輸入的當下狀態還是「等待輸入」，那一支會立刻成立而什麼都沒等到。
+ */
+export async function consoleFinished(page: Page): Promise<void> {
+  await expect
+    .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
+    .toMatch(/程式執行完畢|錯誤|Error|Completed/)
+}
+
+/** 主控台停下來了（完畢／錯誤／等待輸入）——按執行的那一步自己做時用（例如中間要先處理預測問句） */
+export async function consoleSettled(page: Page): Promise<void> {
   await expect
     .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
     .toMatch(/程式執行完畢|錯誤|Error|Completed|等待輸入|Waiting/)
