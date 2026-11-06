@@ -6,5 +6,6 @@
   "FLOW_TITLE_CPP_METHOD_DECLARE": "Declare method",
   "C_METHOD_DECLARE_VIRT_NONE": "(plain)",
   "C_METHOD_DECLARE_VIRT_VIRTUAL": "overridable (virtual)",
-  "C_METHOD_DECLARE_VIRT_OVERRIDE": "overrides the base (override)"
+  "C_METHOD_DECLARE_VIRT_OVERRIDE": "overrides the base (override)",
+  "FLOW_SLOT_CPP_METHOD_DECLARE_VIRT": "Override"
 }
