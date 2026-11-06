@@ -17,7 +17,8 @@ cella 說「新版發到 npm 了」——202、212、217、220 四次都是同�
 ① 查版本     npm view cella-lang version；@cella-lang/{c,cpp,arduino,python,machine} 各查一次
 ② 開 worktree 釘版、【自己】npm install（不要連主樹的 node_modules）
 ③ cella-pinned   跑護欄：semanticsHash 變了才是判決語義變了
-④ 課文判決比對   binding-verdict 在主樹（舊版）與 worktree（新版）各跑一次，diff
+④ 課文判決比對   binding-verdict 在主樹（舊版）與 worktree（新版）各跑一次，diff（約兩分鐘）
+          ⚠️ StudyCpp 那種會跑幾十分鐘的「舊版」不要在主樹跑——開一個釘在 main 的 worktree（主樹留給合併；experience〈拿主樹當「舊版」的量測，會把主樹鎖住〉）
 ⑤ 照發版說明實測  StudyCpp 裡受影響的那幾支 ＋ 看有沒有【新露出來的】reject
 ⑥ 基線          cella-pinned 更新 seenVersion、寫 note（判決差在哪）；test:guard
 ⑦ 長測試        tools/long-test.sh（建置會重編 Cella 模組、e2e 要跑）——合併前在【合併後的狀態】跑
