@@ -16,9 +16,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const x = f.declOf(n.id)
     const idx = /^[A-Za-z_]\w*\s*\[\s*(\d+)\s*\]$/.exec(tt)
     if (x && idx) {
-      return f.k('eSizeofE', { n: n.id, e: f.k('eIndex', { n: `${n.id}/e`, a: f.k('eVar', { n: `${n.id}/a`, x }), i: f.k('eNum', { n: `${n.id}/i`, v: Number(idx[1]) }) }) })
+      return f.k('eSizeofE', { n: n.id, e: f.k('eIndex', { n: `${n.id}/e`, a: f.k('eName', { n: `${n.id}/a`, name: /^[A-Za-z_]\w*/.exec(tt)![0] }), i: f.k('eNum', { n: `${n.id}/i`, v: Number(idx[1]) }) }) })
     }
-    if (x) return f.k('eSizeofE', { n: n.id, e: f.k('eVar', { n: `${n.id}/e`, x }) })
+    if (x) return f.k('eSizeofE', { n: n.id, e: f.k('eName', { n: `${n.id}/e`, name: tt }) })
     return f.miss(n, `\`sizeof(${tt})\` 的對象是文字屬性，而且不是型別名也不是一個變數（還沒升格成運算式槽）`)
   })
   // 作用域：對象是單一個名字時照常解析（型別名指不到宣告，不影響）

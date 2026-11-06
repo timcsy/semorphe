@@ -3,9 +3,10 @@ import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.expr('cpp:map_assign', (n, f) => {
-    const x = f.declOf(`${n.id}#obj`)
-    if (!x) return f.miss(n, `對應表「${String(n.properties?.obj)}」指不到宣告（或不是單一名字）`)
-    return f.k('eAssign', { n: n.id, lhs: f.k('eIndex', { n: `${n.id}/lhs`, a: f.k('eVar', { n: `${n.id}/obj`, x }), i: f.exprOf(n, 'key') }), op: null, e: f.exprOf(n, 'value') })
+    // 名字交給 Cella 依作用域解析（eName，cella 0.1.202611052225）；沒宣告過由 Cella 判 undeclared、指回這一格。不是單一名字的照實標 unknown
+    const name = String(n.properties?.obj ?? '')
+    if (!/^[A-Za-z_]\w*$/.test(name)) return f.miss(n, `對應表「${name}」不是單一名字`)
+    return f.k('eAssign', { n: n.id, lhs: f.k('eIndex', { n: `${n.id}/lhs`, a: f.k('eName', { n: `${n.id}/obj`, name }), i: f.exprOf(n, 'key') }), op: null, e: f.exprOf(n, 'value') })
   })
   r.stmt('cpp:map_assign', (n, f) => f.exprStmt(n))
 }

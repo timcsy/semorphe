@@ -31,7 +31,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     }
     // 名字指到一個變數（`auto add = [&](int x){…}; add(5)`）：呼叫的是那個值，不是一個叫 add 的函式——eCallE（cpp_to_tree.py 同形；第 206 刀）
     const x = f.declOf(n.id)
-    if (x) return f.k('eCallE', { n: n.id, callee: f.k('eVar', { n: `${n.id}/callee`, x }), args })
+    if (x) return f.k('eCallE', { n: n.id, callee: f.k('eName', { n: `${n.id}/callee`, name }), args })
     return f.k('eCall', { n: n.id, f: f.identMacro(name), args })
   })
   // 作用域：名字照常解析——指得到變數宣告的就是在呼叫那個值（函式定義不進作用域表，所以呼叫函式不會被誤認）

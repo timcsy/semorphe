@@ -5,7 +5,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   r.stmt('cpp:loop_count', (n, f) => {
     // 計數迴圈是比語法高一層的元件：展開成 for，迴圈變數以這顆節點為宣告（作用域走訪也是這樣認的）
     const name = String(n.properties?.var_name ?? 'i')
-    const v = (role: string): CellaJson => f.k('eVar', { n: `${n.id}/${role}`, x: n.id })
+    const v = (role: string): CellaJson => f.k('eName', { n: `${n.id}/${role}`, name })
     // `for (int i{}; …)`：起始值 lift 成大括號串列（eBraced）——迴圈變數是 int（純量），`{}` 是零、`{x}` 就是 x
     //（第 217 刀，StudyCpp 4 支：原本送空的 eBraced，Cella 判「a braced list where the type it initializes is not known」）
     let from = f.exprOf(n, 'from')
