@@ -93,9 +93,35 @@ export function splitTopLevel(text: string, sep: string): string[] {
 export function serializeChildren(slots: readonly SemanticNode[], spec: SlotAsField): string | null {
   if (!slots.length) return null
   return slots
-    .map((c) => spec.parts.map((p) => String(c.properties[p] ?? '')).filter((s) => s.length > 0).join(' '))
+    .map((c) => {
+      const text = spec.parts.map((p) => String(c.properties[p] ?? '')).filter((s) => s.length > 0).join(' ')
+      // 🔴 **預設值跟著寫**（`int b = 3`）——原本只寫 parts，走一趟積木預設值就不見（元件管線 322 的瀏覽器驗收抓到；
+      //    建構子、方法那幾顆從來都是這樣）。它是子節點的一個屬性，不在 parts 裡也要寫，不然解析回來就少了
+      const dflt = String(c.properties.default ?? '')
+      return dflt ? `${text} = ${dflt}` : text
+    })
     .join(spec.itemSeparator ?? defaultItemSep)
 }
+
+/** 最外層的 ` = `（括號裡的不算）——預設值從這裡切 */
+function splitDefault(item: string): [string, string] {
+  let depth = 0
+  for (let i = 0; i < item.length; i++) {
+    const ch = item[i]
+    if (ch === '<' || ch === '(' || ch === '[' || ch === '{') depth++
+    else if (ch === '>' || ch === ')' || ch === ']' || ch === '}') depth = Math.max(0, depth - 1)
+    else if (ch === '=' && depth === 0 && item[i + 1] !== '=' && item[i - 1] !== '=' && item[i - 1] !== '!' && item[i - 1] !== '<' && item[i - 1] !== '>') {
+      return [item.slice(0, i).trim(), item.slice(i + 1).trim()]
+    }
+  }
+  return [item, '']
+}
+
+/**
+ * 最後一個詞是不是**型別的一部分**（沒有名字的參數：`const string&`、`B*`、`unsigned int`）。
+ * 原本一律把最後一個詞當名字，於是 `const string&` 被拆成型別 `const`、名字 `string&`（元件管線 322 的盲測語料抓到）。
+ */
+const TYPE_TAIL = /[*&]$|^(int|long|short|char|bool|float|double|void|unsigned|signed|string|auto|size_t)$/
 
 /**
  * 文字 → 子節點。
@@ -109,12 +135,18 @@ export function serializeChildren(slots: readonly SemanticNode[], spec: SlotAsFi
  */
 export function parseToChildren(text: string, spec: SlotAsField): SemanticNode[] {
   const items = splitTopLevel(text ?? '', (spec.itemSeparator ?? defaultItemSep).trim() || ',')
-  return items.map((item) => {
+  return items.map((whole) => {
+    const [item, dflt] = splitDefault(whole)
     const words = item.split(/\s+/).filter(Boolean)
     const props: Record<string, string> = {}
     const n = spec.parts.length
+    if (dflt) props.default = dflt
     if (n === 1) {
       props[spec.parts[0]] = item
+    } else if (words.length >= n && TYPE_TAIL.test(words[words.length - 1])) {
+      // 沒有名字的參數：整段都是型別（`const string&`、`unsigned int`）——名字空著，不猜
+      props[spec.parts[0]] = item
+      for (let i = 1; i < n; i++) props[spec.parts[i]] = ''
     } else if (words.length >= n) {
       // 最後 n-1 個詞各對一個 part，剩下的全部給第一個。
       const tail = words.slice(words.length - (n - 1))

@@ -34,7 +34,8 @@
   "_why": "**類別的前置宣告**（`class C;`／`struct C;`）：只告訴編譯器有這個名字，定義在後面或在別處。原本 class_def／struct_declare 遇到沒有本體的就照實降級成原文（元件管線 311 修的那一刀）；這一顆讓它成為一個看得懂、拖得動的積木。交給 Cella 的形狀照 cella 參照翻譯 `tools/cfamily/cpp_to_tree.py`：之後有定義就不送（定義代表它），從未定義送 `iClassDecl`。",
   "traits": {
     "forLoopPart": true,
-    "topLevelOnly": true
+    "topLevelOnly": true,
+    "notExecuted": true
   },
-  "_traits_why": "`forLoopPart`：C++ 文法上前置宣告放得進 for 的第一格（`for (struct T; ;)`，clang 收）——判準是文法事實，與同族的結構定義同一條。`topLevelOnly`：隱藏骨架把最外層的積木包進 main 時，它要留在 main 外面（同族的類別／結構定義同一條，第 223 刀）——放進函式裡雖然合法，但之後的類別定義在檔案範圍，名字就對不上了。"
+  "_traits_why": "`forLoopPart`：C++ 文法上前置宣告放得進 for 的第一格（`for (struct T; ;)`，clang 收）——判準是文法事實，與同族的結構定義同一條。`topLevelOnly`：隱藏骨架把最外層的積木包進 main 時，它要留在 main 外面（同族的類別／結構定義同一條，第 223 刀）——放進函式裡雖然合法，但之後的類別定義在檔案範圍，名字就對不上了。 `notExecuted`：類別的前置宣告不是會被執行的語句，Cella 的執行紀錄裡不會有它——執行覆蓋不問它「是故意的嗎」（元件管線 322 的瀏覽器驗收：原本每一個類別定義都被標成沒跑到）。"
 }

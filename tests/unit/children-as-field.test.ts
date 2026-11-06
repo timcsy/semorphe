@@ -127,3 +127,35 @@ describe('★ 來回是不動點——這是唯一真正要緊的性質', () => 
     expect(parseToChildren(serializeChildren([], spec) ?? '', spec)).toEqual([])
   })
 })
+
+// 🔴 元件管線 322 的瀏覽器驗收與盲測抓到的兩件（建構子、方法這幾顆從來都是這樣）
+describe('預設值與沒有名字的參數', () => {
+  const p = (type: string, name: string, dflt?: string) => createNode('param_decl', dflt ? { type, name, default: dflt } : { type, name })
+  const props = (xs: ReturnType<typeof parseToChildren>) => xs.map((x) => x.properties)
+
+  it('★ 預設值寫進欄位、解析回來（`int b = 3`、`const string& name = "anon"`、`Node* l = nullptr`）', () => {
+    const kids = [p('int', 'a'), p('int', 'b', '3'), p('const string&', 'name', '"anon"'), p('Node*', 'l', 'nullptr')]
+    const text = serializeChildren(kids, spec)!
+    expect(text).toBe('int a, int b = 3, const string& name = "anon", Node* l = nullptr')
+    expect(props(parseToChildren(text, spec))).toEqual(kids.map((k) => k.properties))
+  })
+
+  it('★ 沒有名字的參數：整段是型別（`const string&`、`B*`、`unsigned int`），名字空著不猜', () => {
+    expect(props(parseToChildren('const string&, B*, unsigned int, int', spec))).toEqual([
+      { type: 'const string&', name: '' }, { type: 'B*', name: '' }, { type: 'unsigned int', name: '' }, { type: 'int', name: '' },
+    ])
+  })
+
+  it('★ 沒有名字而帶預設值（`const string& = "anon"`）也是不動點', () => {
+    const kids = [p('int', ''), p('const string&', '', '"anon"')]
+    const text = serializeChildren(kids, spec)!
+    expect(text).toBe('int, const string& = "anon"')
+    expect(props(parseToChildren(text, spec))).toEqual(kids.map((k) => k.properties))
+  })
+
+  it('負向：括號裡、比較運算子裡的 `=` 不是預設值的分隔', () => {
+    expect(props(parseToChildren('function<bool(int)> f, int k = (a == b)', spec))).toEqual([
+      { type: 'function<bool(int)>', name: 'f' }, { type: 'int', name: 'k', default: '(a == b)' },
+    ])
+  })
+})

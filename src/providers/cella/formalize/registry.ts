@@ -28,6 +28,7 @@ export interface FormalizeTables {
   constInt: Map<string, (n: SemanticNode, f: FormalizeContext) => number | null>
   definesType: Map<string, (n: SemanticNode) => string>
   declaresType: Map<string, (n: SemanticNode) => string>
+  memberKey: Map<string, (n: SemanticNode) => { className?: string; key: string }>
   definesEnum: Map<string, (n: SemanticNode) => string>
   definesMacro: Map<string, (n: SemanticNode) => { name: string; value: string; function?: boolean } | null>
   literal: Map<string, { test: (text: string) => boolean; value?: (text: string) => string }>
@@ -37,7 +38,7 @@ export interface FormalizeTables {
 function build(): FormalizeTables {
   const t: FormalizeTables = {
     expr: new Map(), stmt: new Map(), item: new Map(), member: new Map(), decl: new Map(),
-    init: new Map(), constInt: new Map(), definesType: new Map(), declaresType: new Map(), definesEnum: new Map(), scope: new Map(),
+    init: new Map(), constInt: new Map(), definesType: new Map(), declaresType: new Map(), memberKey: new Map(), definesEnum: new Map(), scope: new Map(),
     definesMacro: new Map(), literal: new Map(),
   }
   for (const [key, mod] of Object.entries(MODULES)) {
@@ -54,7 +55,7 @@ function build(): FormalizeTables {
     }
     const r: FormalizeRegistrar = {
       expr: put(t.expr, 'expr'), stmt: put(t.stmt, 'stmt'), item: put(t.item, 'item'), member: put(t.member, 'member'), decl: put(t.decl, 'decl'),
-      init: put(t.init, 'init'), constInt: put(t.constInt, 'constInt'), definesType: put(t.definesType, 'definesType'), declaresType: put(t.declaresType, 'declaresType'), definesEnum: put(t.definesEnum, 'definesEnum'),
+      init: put(t.init, 'init'), constInt: put(t.constInt, 'constInt'), definesType: put(t.definesType, 'definesType'), declaresType: put(t.declaresType, 'declaresType'), memberKey: put(t.memberKey, 'memberKey'), definesEnum: put(t.definesEnum, 'definesEnum'),
       scope: put(t.scope, 'scope'), definesMacro: put(t.definesMacro, 'definesMacro'),
       literal: (id, test, value) => put(t.literal, 'literal')(id, { test, value }),
     }

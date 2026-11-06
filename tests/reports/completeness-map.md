@@ -6,7 +6,7 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：353｜✅ 實作 1282｜📄 已宣告不提供 5｜❔ 判不出來 123｜🈳 殼 0｜❌ 缺 2（以路徑數計）
+元件：359｜✅ 實作 1303｜📄 已宣告不提供 5｜❔ 判不出來 126｜🈳 殼 0｜❌ 缺 2（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -49,6 +49,8 @@
 | `cpp:comment` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:compare` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:constructor` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:constructor_declare` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:constructor_def_outside` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:container_append` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:container_clear` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:container_count` | ✅ | ✅ | ✅ | ✅ |
@@ -79,6 +81,8 @@
 | `cpp:delete` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:deque_declare` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:destructor` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:destructor_declare` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:destructor_def_outside` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:dht_declare` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:dht_open` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:dht_read` | ✅ | ✅ | ✅ | ✅ |
@@ -146,7 +150,9 @@
 | `cpp:memory_copy` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:memory_fill` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:method_call` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:method_declare` | ✅ | ❔ | ✅ | ✅ |
 | `cpp:method_def` | ✅ | ❔ | ✅ | ✅ |
+| `cpp:method_def_outside` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:method_override` | ✅ | ❔ | ✅ | ✅ |
 | `cpp:method_virtual` | ✅ | ❔ | ✅ | ✅ |
 | `cpp:method_virtual_pure` | ✅ | ❔ | ✅ | ✅ |
