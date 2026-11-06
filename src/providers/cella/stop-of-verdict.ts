@@ -17,7 +17,7 @@ import type { CellaVerdict } from './verdict'
 
 /** 未定義行為的種類 → 執行期訊息的鍵（中文說法與判決的 `DIAG_CELLA_UB_*` 同一套）。`worker.ts` 的除錯工作階段也讀這一張。 */
 export const UB_KEY: Readonly<Record<string, string>> = {
-  ubUninit: 'RUNTIME_ERR_UB_UNINIT', ubBounds: 'RUNTIME_ERR_UB_BOUNDS', ubOverflow: 'RUNTIME_ERR_UB_OVERFLOW',
+  ubUninit: 'RUNTIME_ERR_UB_UNINIT', ubFlowOffEnd: 'RUNTIME_ERR_UB_FLOW_OFF_END', ubBounds: 'RUNTIME_ERR_UB_BOUNDS', ubOverflow: 'RUNTIME_ERR_UB_OVERFLOW',
   ubDivZero: 'RUNTIME_ERR_UB_DIV_ZERO', ubOverlap: 'RUNTIME_ERR_UB_OVERLAP',
   // spec 205：6c-2 量到的另外兩種（越過結尾、板子上沒有的腳）——原本落到通用的「標準沒有定義」那句
   ubPastEnd: 'RUNTIME_ERR_UB_PAST_END', ubPin: 'RUNTIME_ERR_UB_PIN',

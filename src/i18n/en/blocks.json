@@ -1047,5 +1047,12 @@
   "DIAG_CELLA_TERMINATION_WHY": "The program ends here, so the rest does not run.",
   "DIAG_CELLA_TERMINATION_TRY": "Check why it ends here, for example an exception nobody catches.",
   "DIAG_CELLA_ORDER_UNCOMPARED_WHY": "Two things in one statement affect each other, and the standard does not fix which goes first.",
-  "DIAG_CELLA_ORDER_UNCOMPARED_TRY": "Split them into two statements to fix the order."
+  "DIAG_CELLA_ORDER_UNCOMPARED_TRY": "Split them into two statements to fix the order.",
+  "RUNTIME_ERR_UB_FLOW_OFF_END": "Stopped here: function reaches its end without return ({clause})",
+  "DIAG_CELLA_UB_FLOW_OFF_END_BLOCK": "Function reaches its end without return",
+  "DIAG_CELLA_UB_FLOW_OFF_END_CODE": "Flowing off the end of a function that returns a value",
+  "DIAG_CELLA_UB_FLOW_OFF_END_BLOCK_AT": "'{subject}' has a return type but reaches its end without return",
+  "DIAG_CELLA_UB_FLOW_OFF_END_CODE_AT": "line {line}: '{subject}' has a return type but reaches its end without return",
+  "DIAG_CELLA_UB_FLOW_OFF_END_WHY": "A function with a return type promises to hand back a value. In C++, reaching the end without a return is undefined behavior, even if the caller ignores the value.",
+  "DIAG_CELLA_UB_FLOW_OFF_END_TRY": "Make sure every path ends with a return, for example add return 0; at the end, or change the return type to void if it does not need to return anything."
 }

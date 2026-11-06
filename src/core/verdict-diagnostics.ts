@@ -69,8 +69,11 @@ export interface TypeQuery {
  * 🔴 **嚴重度不在這裡**（2026-11-03，cella 0.1.202611021901）：它由 Cella 給的 `category` 決定（`CATEGORY_SEVERITY`）——
  * 原本這張表也定嚴重度、表外的照「reject → error」猜，那正是 Q15 要拿掉的「接收端自己歸類」（`ub…` 同時用在未定義與未指定行為）。
  */
-const KINDS: Record<string, { rule: string }> = {
+const KINDS: Record<string, { rule: string; subjectIsName?: boolean }> = {
   ubUninit: { rule: 'CELLA_UB_UNINIT' },
+  // 有回傳型別的函式執行到結尾沒有 return（C++ 才有；cella 0.1.202611060046，[stmt.return]p2）。at 是那個函式的【定義】——
+  //    指名用函式的名字（`f`），不用整段定義壓成的一行（「int f() { return …」）
+  ubFlowOffEnd: { rule: 'CELLA_UB_FLOW_OFF_END', subjectIsName: true },
   // 越過結尾、板子上沒有的腳：執行停下一直有專屬的說法，寫程式時卻落到通用那一句——兩邊收成一套（錯誤訊息第三步）
   ubPastEnd: { rule: 'CELLA_UB_PAST_END' },
   ubPin: { rule: 'CELLA_UB_PIN' },
@@ -175,6 +178,9 @@ function byId(tree: SemanticNode): Map<string, SemanticNode> {
  * **指名**（spec 218 第一步，vision〈錯誤訊息看得懂、改得動〉）：判決指到的那一顆的程式碼（`subject`，一行、最多 40 字）與行號（`line`）。
  * 程式碼由宿主給的 `codeOf` 產（核心不認得語言）；拿不到就不放，文案退回不指名的那一句。
  */
+/** 指名用節點自己的名字（函式定義那種：整段程式碼壓成一行沒有意思） */
+const nameOnly = (n: SemanticNode): string => String(n.properties?.name ?? '')
+
 function pinpoint(node: SemanticNode | undefined, codeOf?: (n: SemanticNode) => string, at?: string): Record<string, string> {
   if (!node) return {}
   const out: Record<string, string> = {}
@@ -321,7 +327,7 @@ export function toDiagnostics(input: {
       rule: !classified ? 'CELLA_UNCLASSIFIED' : p.category === 'invalid' ? 'CELLA_INVALID' : k?.rule ?? 'CELLA_OTHER',
       severity,
       // 結構化的 params（字串與布林——cella 的值慣例）一併帶上，文案用得到（例如 orderUncompared 的 why）
-      params: { ...pinpoint(nodes.get(nodeId), input.codeOf, p.at), ...Object.fromEntries(Object.entries(p.params ?? {}).filter(([, v]) => typeof v === 'string' || typeof v === 'boolean').map(([k, v]) => [k, String(v)])), kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
+      params: { ...pinpoint(nodes.get(nodeId), KINDS[p.kind]?.subjectIsName ? nameOnly : input.codeOf, p.at), ...Object.fromEntries(Object.entries(p.params ?? {}).filter(([, v]) => typeof v === 'string' || typeof v === 'boolean').map(([k, v]) => [k, String(v)])), kind: p.kind, reason: p.reason ?? '', clause: p.clause ?? '' },
     })
   }
   if (dropped > 0) notes.push('這支程式要讀輸入——給一份輸入，才判得出執行時的問題')
