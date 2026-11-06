@@ -28,11 +28,11 @@ import { buildMethodVirtual } from '../../../../components/cpp/method_virtual/li
 import { buildMethodOverride } from '../../../../components/cpp/method_override/lift'
 import { buildMethodDef } from '../../../../components/cpp/method_def/lift'
 import { buildMethodDeclare } from '../../../../components/cpp/method_declare/lift'
-import { buildMethodDefine } from '../../../../components/cpp/method_define/lift'
+import { buildMethodDefOutside } from '../../../../components/cpp/method_def_outside/lift'
 import { buildConstructorDeclare } from '../../../../components/cpp/constructor_declare/lift'
-import { buildConstructorDefine } from '../../../../components/cpp/constructor_define/lift'
+import { buildConstructorDefOutside } from '../../../../components/cpp/constructor_def_outside/lift'
 import { buildDestructorDeclare } from '../../../../components/cpp/destructor_declare/lift'
-import { buildDestructorDefine } from '../../../../components/cpp/destructor_define/lift'
+import { buildDestructorDefOutside } from '../../../../components/cpp/destructor_def_outside/lift'
 import { buildMethodVirtualPure } from '../../../../components/cpp/method_virtual_pure/lift'
 import { buildOperatorOverload } from '../../../../components/cpp/operator_overload/lift'
 import { buildCast } from '../../../../components/cpp/cast/lift'
@@ -1168,8 +1168,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
               const inits = isCtor ? liftFieldInitializers(node, ctx) : []
               const body = extractBody(bodyNode, ctx)
               return isCtor
-                ? buildConstructorDefine({ class_name: cls }, { params, inits, body })
-                : buildDestructorDefine({ class_name: cls }, { body })
+                ? buildConstructorDefOutside({ class_name: cls }, { params, inits, body })
+                : buildDestructorDefOutside({ class_name: cls }, { body })
             } finally {
               ctx.data.popScope()
             }
@@ -1224,7 +1224,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       }
       const body = extractBody(bodyNode, ctx)
       if (outsideOf) {
-        return buildMethodDefine({ class_name: outsideOf.cls, return_type: returnType, name: outsideOf.name, is_const: outsideOf.isConst ? 'true' : 'false' }, { params: paramChildren, body })
+        return buildMethodDefOutside({ class_name: outsideOf.cls, return_type: returnType, name: outsideOf.name, is_const: outsideOf.isConst ? 'true' : 'false' }, { params: paramChildren, body })
       }
       return buildFuncDef(name, returnType, { params: paramChildren, body })
     } finally {

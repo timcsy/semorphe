@@ -86,7 +86,7 @@ describe('模糊測試：類別的前置宣告', () => {
     const src = 'class A {\npublic:\n    int v;\n    A();\n    ~A();\n    int get() const;\n    void set(int x);\n    virtual const char* nm() const = 0;\n};\nA::A() {\n    v = 0;\n}\nA::~A() {\n}\nint A::get() const {\n    return v;\n}\nint main() {\n}\n'
     const t = lift(src)
     const ids = all(t).map((n) => n.componentId)
-    for (const id of ['cpp:constructor_declare', 'cpp:destructor_declare', 'cpp:method_declare', 'cpp:constructor_define', 'cpp:destructor_define', 'cpp:method_define']) expect(ids, id).toContain(id)
+    for (const id of ['cpp:constructor_declare', 'cpp:destructor_declare', 'cpp:method_declare', 'cpp:constructor_def_outside', 'cpp:destructor_def_outside', 'cpp:method_def_outside']) expect(ids, id).toContain(id)
     // 剩下的只有回傳指標的純虛擬函式（另一件事）
     const reasons = all(t).filter((n) => n.componentId.includes('raw_code')).map((n) => String(n.metadata?.rawCode ?? ''))
     expect(reasons).toHaveLength(1)

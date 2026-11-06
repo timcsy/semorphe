@@ -1,5 +1,5 @@
 /**
- * `cpp:method_declare` ＋ `cpp:method_define` 的**自證測**（第 322 刀，類別外定義成員函式）。
+ * `cpp:method_declare` ＋ `cpp:method_def_outside` 的**自證測**（第 322 刀，類別外定義成員函式）。
  *
  * 推導不出來的四件事：
  *
@@ -79,11 +79,11 @@ int main() {
 }
 `
 
-describe('cpp:method_declare ＋ cpp:method_define', () => {
-  it('★ lift：類別裡三行原型是 method_declare、類別外三個定義是 method_define；沒有原文降級', () => {
+describe('cpp:method_declare ＋ cpp:method_def_outside', () => {
+  it('★ lift：類別裡三行原型是 method_declare、類別外三個定義是 method_def_outside；沒有原文降級', () => {
     const t = lift(SRC)
     const decls = ofId(t, 'cpp:method_declare')
-    const defs = ofId(t, 'cpp:method_define')
+    const defs = ofId(t, 'cpp:method_def_outside')
     expect(decls.map((d) => [d.properties.return_type, d.properties.name, d.properties.is_const])).toEqual([
       ['void', 'link', 'false'], ['int', 'get', 'true'], ['int', 'twice', 'false'],
     ])
@@ -146,7 +146,7 @@ int main() {
     const st = renderToBlocklyState(t) as unknown as { blocks: { blocks: unknown[] } }
     const text = JSON.stringify(st)
     expect(text).toContain('"type":"cpp_method_declare"')
-    expect(text).toContain('"type":"cpp_method_define"')
+    expect(text).toContain('"type":"cpp_method_def_outside"')
     expect(text).toMatch(/"CLASS_NAME":"A"/)
     expect(text).toMatch(/"IS_CONST":"true"/)
   })
@@ -169,7 +169,7 @@ int main() {
     // 正向錨點：程式真的被讀進來了（main 在）
     expect(all(t, (x) => x === 'cpp:func_def').length).toBeGreaterThan(0)
     expect(ofId(t, 'cpp:method_declare')).toEqual([])
-    expect(ofId(t, 'cpp:method_define')).toEqual([])
+    expect(ofId(t, 'cpp:method_def_outside')).toEqual([])
     const out = generateCode(t, 'cpp', S)
     for (const s of ['virtual void f();', 'static int g();']) expect(out).toContain(s)
   })

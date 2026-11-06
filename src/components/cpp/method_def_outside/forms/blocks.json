@@ -1,13 +1,13 @@
 [
   {
-    "id": "cpp_method_define",
-    "componentId": "cpp:method_define",
+    "id": "cpp_method_def_outside",
+    "componentId": "cpp:method_def_outside",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_method_define",
-      "message0": "%{BKY_C_METHOD_DEFINE_MSG0}",
+      "type": "cpp_method_def_outside",
+      "message0": "%{BKY_C_METHOD_DEF_OUTSIDE_MSG0}",
       "args0": [
         {
           "type": "field_input",
@@ -34,11 +34,11 @@
           "name": "IS_CONST",
           "options": [
             [
-              "%{BKY_C_METHOD_DEFINE_CONST_NO}",
+              "%{BKY_C_METHOD_DEF_OUTSIDE_CONST_NO}",
               "false"
             ],
             [
-              "%{BKY_C_METHOD_DEFINE_CONST_YES}",
+              "%{BKY_C_METHOD_DEF_OUTSIDE_CONST_YES}",
               "true"
             ]
           ]
@@ -48,7 +48,7 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#CF63CF",
-      "tooltip": "%{BKY_C_METHOD_DEFINE_TOOLTIP}",
+      "tooltip": "%{BKY_C_METHOD_DEF_OUTSIDE_TOOLTIP}",
       "message1": "%1",
       "args1": [
         {

@@ -19,9 +19,10 @@
   "owner": "(core)",
   "_owner_why": "與同族（類別裡定義的建構子、解構子、方法）同一個章——課程清單與工具箱照同族的位置放。",
   "traits": {
-    "insideParentOnly": true
+    "insideParentOnly": true,
+    "forLoopPart": false
   },
-  "_traits_why": "**只出現在類別裡**——單獨合成一份樣本去量它，是在量一個不存在的位置（同類別裡定義建構子／解構子那兩顆）。",
+  "_traits_why": "**只出現在類別裡**——單獨合成一份樣本去量它，是在量一個不存在的位置（同類別裡定義建構子／解構子那兩顆）。`forLoopPart: false`：成員的原型只寫得在類別本體裡，C++ 文法上放不進 for 的第一格（那裡只收變數宣告）。",
   "paths": {
     "views": {
       "blocks": {

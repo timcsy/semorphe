@@ -1,13 +1,13 @@
 [
   {
-    "id": "cpp_constructor_define",
-    "componentId": "cpp:constructor_define",
+    "id": "cpp_constructor_def_outside",
+    "componentId": "cpp:constructor_def_outside",
     "language": "cpp",
     "category": "oop",
     "version": "1.0.0",
     "blockDef": {
-      "type": "cpp_constructor_define",
-      "message0": "%{BKY_C_CONSTRUCTOR_DEFINE_MSG0}",
+      "type": "cpp_constructor_def_outside",
+      "message0": "%{BKY_C_CONSTRUCTOR_DEF_OUTSIDE_MSG0}",
       "args0": [
         {
           "type": "field_input",
@@ -24,8 +24,8 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#CF63CF",
-      "tooltip": "%{BKY_C_CONSTRUCTOR_DEFINE_TOOLTIP}",
-      "message1": "%{BKY_C_CONSTRUCTOR_DEFINE_MSG1}",
+      "tooltip": "%{BKY_C_CONSTRUCTOR_DEF_OUTSIDE_TOOLTIP}",
+      "message1": "%{BKY_C_CONSTRUCTOR_DEF_OUTSIDE_MSG1}",
       "args1": [
         {
           "type": "input_statement",
@@ -33,7 +33,7 @@
           "check": "Statement"
         }
       ],
-      "message2": "%{BKY_C_CONSTRUCTOR_DEFINE_MSG2}",
+      "message2": "%{BKY_C_CONSTRUCTOR_DEF_OUTSIDE_MSG2}",
       "args2": [
         {
           "type": "input_statement",

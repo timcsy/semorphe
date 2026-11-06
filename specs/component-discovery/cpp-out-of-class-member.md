@@ -35,9 +35,9 @@
 | `cpp:method_declare` | `int get() const;`、`void link(B* b);` | 類別裡**宣告**一個成員函式（定義在類別外） | 回傳型別、名字、const、參數（同 `method_def` 的 params） | raw_code | 只出現在類別裡（`insideParentOnly`） |
 | `cpp:constructor_declare` | `A(int v);` | 類別裡宣告建構子 | 類別名（隨父節點）、參數 | raw_code | 同上 |
 | `cpp:destructor_declare` | `~A();`、`virtual ~A();` | 類別裡宣告解構子 | 類別名、virtual | raw_code | 同上 |
-| `cpp:method_define` | `int A::get() const { … }` | 在類別外**定義**類別 A 的成員函式 | 類別名、回傳型別、名字、const、參數、本體 | raw_code | 頂層（`topLevelOnly`） |
-| `cpp:constructor_define` | `A::A(int v) : x(v) { … }` | 在類別外定義建構子 | 類別名、參數、成員初始化串列、本體 | raw_code | 初始化串列同 `cpp:constructor` 的 `inits` |
-| `cpp:destructor_define` | `A::~A() { … }` | 在類別外定義解構子 | 類別名、本體 | raw_code | |
+| `cpp:method_def_outside` | `int A::get() const { … }` | 在類別外**定義**類別 A 的成員函式 | 類別名、回傳型別、名字、const、參數、本體 | raw_code | 頂層（`topLevelOnly`） |
+| `cpp:constructor_def_outside` | `A::A(int v) : x(v) { … }` | 在類別外定義建構子 | 類別名、參數、成員初始化串列、本體 | raw_code | 初始化串列同 `cpp:constructor` 的 `inits` |
+| `cpp:destructor_def_outside` | `A::~A() { … }` | 在類別外定義解構子 | 類別名、本體 | raw_code | |
 
 ⚠️ 命名：`declare`／`define` 與既有的 `class_declare`（前置宣告）、`forward_decl`（函式原型）同一組動詞——「宣告」只說有這個東西，「定義」給出本體。
 
@@ -46,14 +46,14 @@
 ```
 class_def ──包含──▶ method_declare / constructor_declare / destructor_declare
                          ▲ formalize 取本體（成員鍵）
-method_define / constructor_define / destructor_define（頂層）
+method_def_outside / constructor_def_outside / destructor_def_outside（頂層）
 ```
 
 ## 建議實作順序
 
-1. `method_declare` ＋ `method_define`（六支盲測裡五支只用到這一對；契約的 `outsideDefinition` 在這一步加）
-2. `constructor_declare` ＋ `constructor_define`
-3. `destructor_declare` ＋ `destructor_define`
+1. `method_declare` ＋ `method_def_outside`（六支盲測裡五支只用到這一對；契約的 `outsideDefinition` 在這一步加）
+2. `constructor_declare` ＋ `constructor_def_outside`
+3. `destructor_declare` ＋ `destructor_def_outside`
 
 一條分支做完三對，各對分開提交。
 

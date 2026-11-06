@@ -1,6 +1,0 @@
-{
-  "C_CONSTRUCTOR_DEFINE_MSG0": "在類別 %1 外定義建構子（%2）",
-  "C_CONSTRUCTOR_DEFINE_MSG1": "初始化成員 %1",
-  "C_CONSTRUCTOR_DEFINE_MSG2": "%1",
-  "C_CONSTRUCTOR_DEFINE_TOOLTIP": "給出類別裡已經宣告過的建構子的初始化與本體；參數型別要和類別裡那一行一致"
-}

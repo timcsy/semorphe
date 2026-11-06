@@ -1,5 +1,5 @@
 {
-  "componentId": "cpp:method_define",
+  "componentId": "cpp:method_def_outside",
   "abstractComponent": null,
   "properties": [
     { "name": "class_name", "kind": "literal", "default": "MyClass" },

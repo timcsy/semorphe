@@ -1,4 +1,0 @@
-{
-  "C_DESTRUCTOR_DEFINE_MSG0": "Define destructor of class %1 outside it",
-  "C_DESTRUCTOR_DEFINE_TOOLTIP": "Give the body of a destructor the class already declared—it runs when the object is destroyed"
-}

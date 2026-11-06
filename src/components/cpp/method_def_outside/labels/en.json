@@ -1,0 +1,7 @@
+{
+  "C_METHOD_DEF_OUTSIDE_MSG0": "Define method of class %1 outside it: %2 %3 (%4) %5",
+  "C_METHOD_DEF_OUTSIDE_TOOLTIP": "Give the body of a member function the class already declared; class name, name, parameter types and const must match that line in the class",
+  "C_METHOD_DEF_OUTSIDE_CONST_NO": "(may modify itself)",
+  "C_METHOD_DEF_OUTSIDE_CONST_YES": "const (does not modify itself)",
+  "FLOW_TITLE_CPP_METHOD_DEF_OUTSIDE": "Define method outside class"
+}

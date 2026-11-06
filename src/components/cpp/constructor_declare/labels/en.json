@@ -1,4 +1,5 @@
 {
   "C_CONSTRUCTOR_DECLARE_MSG0": "Declare constructor %1 (%2), defined outside the class",
-  "C_CONSTRUCTOR_DECLARE_TOOLTIP": "Inside the class, write only which parameters the constructor takes; its initializers and body go in a \"Define constructor outside the class\" block"
+  "C_CONSTRUCTOR_DECLARE_TOOLTIP": "Inside the class, write only which parameters the constructor takes; its initializers and body go in a \"Define constructor outside the class\" block",
+  "FLOW_TITLE_CPP_CONSTRUCTOR_DECLARE": "Declare constructor"
 }

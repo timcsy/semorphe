@@ -1,5 +1,5 @@
 /**
- * `cpp:constructor_declare`／`cpp:constructor_define`／`cpp:destructor_declare`／`cpp:destructor_define` 的**自證測**（第 322 刀）。
+ * `cpp:constructor_declare`／`cpp:constructor_def_outside`／`cpp:destructor_declare`／`cpp:destructor_def_outside` 的**自證測**（第 322 刀）。
  *
  * ```
  * ① 類別裡 `A(int v);`、`~A();` ＋ 類別外 `A::A(int v) : x(v) {…}`、`A::~A() {…}` → Cella 的 mbCtor／mbDtor（初始化列與本體取類別外那一顆）
@@ -70,9 +70,9 @@ describe('建構子／解構子：類別裡宣告、類別外定義', () => {
   it('★ lift：四顆元件各就各位，沒有原文降級', () => {
     const got = ids(lift(SRC))
     expect(got.filter((x) => x === 'cpp:constructor_declare')).toHaveLength(2)
-    expect(got.filter((x) => x === 'cpp:constructor_define')).toHaveLength(2)
+    expect(got.filter((x) => x === 'cpp:constructor_def_outside')).toHaveLength(2)
     expect(got.filter((x) => x === 'cpp:destructor_declare')).toHaveLength(1)
-    expect(got.filter((x) => x === 'cpp:destructor_define')).toHaveLength(1)
+    expect(got.filter((x) => x === 'cpp:destructor_def_outside')).toHaveLength(1)
     expect(got.filter((x) => /raw_code|unresolved/.test(x))).toEqual([])
   })
 
@@ -91,7 +91,7 @@ describe('建構子／解構子：類別裡宣告、類別外定義', () => {
 
   it('★ 積木：四顆都渲染成自己的積木', () => {
     const text = JSON.stringify(renderToBlocklyState(lift(SRC)))
-    for (const t of ['cpp_constructor_declare', 'cpp_constructor_define', 'cpp_destructor_declare', 'cpp_destructor_define']) expect(text).toContain(`"type":"${t}"`)
+    for (const t of ['cpp_constructor_declare', 'cpp_constructor_def_outside', 'cpp_destructor_declare', 'cpp_destructor_def_outside']) expect(text).toContain(`"type":"${t}"`)
     expect(text).toMatch(/"IS_VIRTUAL":"true"/)
   })
 
@@ -100,7 +100,7 @@ describe('建構子／解構子：類別裡宣告、類別外定義', () => {
     const src = `${head}class C {\npublic:\n    explicit C(int v);\n    ~C() = default;\n};\nC::C(int v) {\n}\nint main() {\n    return 0;\n}\n`
     const t = lift(src)
     // 正向錨點：類別外的定義有被認得
-    expect(ids(t)).toContain('cpp:constructor_define')
+    expect(ids(t)).toContain('cpp:constructor_def_outside')
     expect(ids(t)).not.toContain('cpp:constructor_declare')
     expect(ids(t)).not.toContain('cpp:destructor_declare')
     const out = generateCode(t, 'cpp', S)

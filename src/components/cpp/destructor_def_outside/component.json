@@ -1,5 +1,5 @@
 {
-  "componentId": "cpp:constructor_define",
+  "componentId": "cpp:destructor_def_outside",
   "abstractComponent": null,
   "properties": [
     {
@@ -9,8 +9,6 @@
     }
   ],
   "slots": {
-    "params": "statements",
-    "inits": "statements",
     "body": "statements"
   },
   "role": "statement",
@@ -29,7 +27,7 @@
       "code": {
         "render": "./generate.ts",
         "lift": "./lift.ts",
-        "_lift_why": "`lift.ts` 匯出建構子；判別（函式定義的名字是 `類別::類別`、沒有回傳型別）留在共用檔 `cpp:liftFunctionDef`。"
+        "_lift_why": "`lift.ts` 匯出建構子；判別（函式定義的名字是 `類別::~類別`）留在共用檔 `cpp:liftFunctionDef`。"
       }
     },
     "formalize": "./formalize.ts"
