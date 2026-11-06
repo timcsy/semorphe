@@ -1048,6 +1048,13 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   // ⚠️ 這一題是從「排回去」切過來的，積木那一側是來源——換了程式碼要明說以它為準，執行才跑得到它
   await useAsSource(page, '程式碼')
   await editsSettled(page)
+  // ⚠️ 等【樹】真的換成新程式（裡面有 "Hi" 那個字串）——整輪跑、機器忙時「以程式碼為準」的同步會晚一拍，
+  //    單獨跑會綠、整輪跑會紅（2026-11-07 量到：按下執行時樹還是打散的那一題）
+  await page.waitForFunction(() => {
+    const has = (n: { componentId?: string; properties?: Record<string, unknown>; slots?: Record<string, unknown[]> } | undefined): boolean =>
+      !!n && ((n.componentId === 'cpp:literal_string' && n.properties?.value === 'Hi') || Object.values(n.slots ?? {}).some((b) => (b ?? []).some((c) => has(c as never))))
+    return has((window as never as { __app: { syncController: { currentTree: never } } }).__app.syncController.currentTree)
+  }, undefined, { timeout: 30_000 })
   await page.locator('#run-btn').click()   // 執行一輪（會發狀態、會重畫控制項）
   await skipPredictionIfAsked(page)
   // ⚠️ 不用 consoleFinished：狀態列在按下去之前可能已經是上一輪的「錯誤」，那一支會立刻成立而什麼都沒等到——等的是【這一輪的輸出】
