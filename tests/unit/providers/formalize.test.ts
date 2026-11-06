@@ -14,6 +14,7 @@ import { createTestLifter } from '../../helpers/setup-lifter'
 import { formalize, cellaBoardOf, type CellaJson } from '../../../src/providers/cella/formalize'
 import type { SemanticNode } from '../../../src/core/types'
 import { createNode } from '../../../src/core/semantic-tree'
+import { expectCellaOut, runCella } from '../../helpers/cella-run'
 
 const SYNTAX = path.resolve(process.cwd(), '../cella/packages/cfamily/src/syntax.cella')
 const hasSyntax = fs.existsSync(SYNTAX)
@@ -352,7 +353,7 @@ describe('第 214 刀：函式形巨集（`#define rep(i,n) for(…)`）', () =>
   })
 })
 
-describe('第 217 刀：可變長度陣列送 sDeclV（Cella 0.1.202611012223）', () => {
+describe('可變長度陣列：長度運算式原樣交給 Cella（tArrE；第 217 刀的 sDeclV 在 316 換掉——「意思歸 Cella」）', () => {
   const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
   const find = (j: unknown, k: string): any[] => {
     const out: any[] = []
@@ -362,18 +363,24 @@ describe('第 217 刀：可變長度陣列送 sDeclV（Cella 0.1.202611012223）
   }
   const fz = (body: string) => formalize(lift(H + body), { lang: 'cpp' })
 
-  it('★ 區域的 int d[n]：sDeclV，elem 是元素型別、len 是長度運算式', () => {
+  // 316 之前：區域的送 sDeclV、全域或帶初值的我們自己標翻不出——那是在替 Cella 決定「這個長度是不是常數」。
+  // Cella 0.1.202611060800 起 tArrE 收任何長度運算式：常數的照定長陣列、不是常數的照 VLA 規則（區塊裡最外層、不帶初值 → 照 g++、帶 gcc:vla 假設）
+  it('★ 區域的 int d[n]：tArrE，t 是元素型別、len 是長度運算式；Cella 照 g++ 跑、判決帶 gcc:vla 假設', async () => {
     const r = fz('int main() { int n = 3; int d[n]; d[0] = 1; }')
     expect(r.unknown).toEqual([])
-    const v = find(r.program, 'sDeclV')
+    expect(find(r.program, 'sDeclV')).toEqual([])
+    const v = find(r.program, 'tArrE')
     expect(v).toHaveLength(1)
-    expect(v[0]).toMatchObject({ name: 'd', elem: { k: 'tInt' }, len: { k: 'eName', name: 'n' } })
+    expect(v[0]).toMatchObject({ t: { k: 'tInt' }, len: { k: 'eName', name: 'n' } })
+    const run = await expectCellaOut(H + 'int main() { int n = 3; int d[n]; d[0] = 1; cout << d[0]; }', '1')
+    expect(run.assumes).toContainEqual({ implementation: 'gcc', choice: 'vla' })
   })
 
-  it('★ 二維：外層可變、內層固定 → elem 是內層的 tArr', () => {
+  it('★ 二維：外層可變、內層固定 → tArrE 包著內層的 tArr', async () => {
     const r = fz('int main() { int n = 3; int g[n][5]; g[0][0] = 1; }')
     expect(r.unknown).toEqual([])
-    expect(find(r.program, 'sDeclV')[0].elem).toMatchObject({ k: 'tArr', n: 5 })
+    expect(find(r.program, 'tArrE')[0].t).toMatchObject({ k: 'tArr', n: 5 })
+    await expectCellaOut(H + 'int main() { int n = 3; int g[n][5]; g[0][0] = 1; cout << g[0][0]; }', '1')
   })
 
   it('🔴 for (int i{}; …) 的起始值：{} 送 0、{x} 送 x——不送空的大括號串列（Cella 推不出它的型別）', () => {
@@ -384,8 +391,20 @@ describe('第 217 刀：可變長度陣列送 sDeclV（Cella 0.1.202611012223）
     expect(inits).toEqual([expect.objectContaining({ k: 'eNum', v: 0 }), expect.objectContaining({ k: 'eNum', v: 2 })])
   })
 
-  it('🔴 內層也可變、或全域：照實標翻不出（Cella 的 VLA 只有外層可變；全域長度一定是常數）', () => {
-    expect(fz('int main() { int n = 3, m = 2; int g[n][m]; }').unknown.map((u) => u.construct)).toContain('cpp:array_2d_declare')
-    expect(fz('int n = 3;\nint d[n];\nint main() {}').unknown.map((u) => u.construct)).toContain('cpp:array_declare')
+  it('🔴 內層也可變、或帶初值：照送，由 Cella 照實說 unsupported（unknown）——不是我們標翻不出', async () => {
+    for (const body of ['int main() { int n = 3, m = 2; int g[n][m]; g[1][1] = 4; cout << g[1][1]; }', 'int main() { int n = 3; int d[n] = {1}; }']) {
+      expect(fz(body).unknown).toEqual([])
+      const r = await runCella(H + body)
+      expect(r.verdict, body).toBe('unknown')
+      expect(r.problems.map((p) => p.kind), body).toContain('unsupported')
+    }
+  })
+
+  it('🔴 全域的 int d[n]（n 不是常數）：照送，Cella 不收（全域的長度一定要是常數）', async () => {
+    const body = 'int n = 3;\nint d[n];\nint main() {}'
+    expect(fz(body).unknown).toEqual([])
+    const r = await runCella(H + body)
+    expect(r.verdict).toBe('reject')
+    expect(r.problems.map((p) => p.reason ?? '').join('；')).toMatch(/static storage duration/)
   })
 })
