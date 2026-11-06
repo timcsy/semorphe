@@ -1,0 +1,6 @@
+{
+  "C_CONSTRUCTOR_DEFINE_MSG0": "Define constructor of class %1 outside it (%2)",
+  "C_CONSTRUCTOR_DEFINE_MSG1": "Initialize members %1",
+  "C_CONSTRUCTOR_DEFINE_MSG2": "%1",
+  "C_CONSTRUCTOR_DEFINE_TOOLTIP": "Give the initializers and body of a constructor the class already declared; parameter types must match that line in the class"
+}

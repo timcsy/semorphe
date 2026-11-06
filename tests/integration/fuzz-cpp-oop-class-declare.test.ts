@@ -81,14 +81,22 @@ describe('模糊測試：類別的前置宣告', () => {
     expect(generateCode(t, 'cpp', S)).toContain('const char* nm() const override {')
   })
 
-  // ── 誠實降級（原本是安靜地換掉意思）：等〈類別外定義成員函式〉那顆元件；那一天這幾條會紅 → 換成正向測試 ──
-  it('🟡 誠實降級：類別裡的方法／建構子／解構子原型、類別外帶 const 或建構子／解構子的定義——原文一字不差（不再是 `int f();`、`void A::~A()`）', () => {
+  // ── 第 322 刀（類別外定義成員函式）：原本誠實降級的這一族轉正——原型與類別外的定義各是一顆元件，本體接回類別成員 ──
+  it('🟢 類別裡的方法／建構子／解構子原型、類別外的定義（含 const、建構子、解構子）——六顆元件、原文一字不差', () => {
     const src = 'class A {\npublic:\n    int v;\n    A();\n    ~A();\n    int get() const;\n    void set(int x);\n    virtual const char* nm() const = 0;\n};\nA::A() {\n    v = 0;\n}\nA::~A() {\n}\nint A::get() const {\n    return v;\n}\nint main() {\n}\n'
     const t = lift(src)
+    const ids = all(t).map((n) => n.componentId)
+    for (const id of ['cpp:constructor_declare', 'cpp:destructor_declare', 'cpp:method_declare', 'cpp:constructor_define', 'cpp:destructor_define', 'cpp:method_define']) expect(ids, id).toContain(id)
+    // 剩下的只有回傳指標的純虛擬函式（另一件事）
     const reasons = all(t).filter((n) => n.componentId.includes('raw_code')).map((n) => String(n.metadata?.rawCode ?? ''))
-    expect(reasons.filter((r) => ALLOWED.test(r)).length).toBeGreaterThanOrEqual(6)
+    expect(reasons).toHaveLength(1)
+    expect(reasons[0]).toMatch(/純虛擬函式的指標回傳/)
     const out = generateCode(t, 'cpp', S)
-    for (const s of ['    A();', '    ~A();', '    int get() const;', '    void set(int x);', 'A::~A() {', 'int A::get() const {']) expect(out).toContain(s)
+    for (const s of ['    A();', '    ~A();', '    int get() const;', '    void set(int x);', 'A::A() {', 'A::~A() {', 'int A::get() const {']) expect(out).toContain(s)
     expect(out).not.toMatch(/int f\(\);|void A::~A|int A\(\);/)
+  })
+
+  it('🟢 Cella：類別外定義成員函式的兩支（fuzz_1 互相指到的類別、fuzz_7 觀察者）判 accept、輸出與 clang 相同', async () => {
+    for (const id of ['fuzz_1', 'fuzz_7']) await expectCellaOut(prog(id).code, prog(id).expected)
   })
 })

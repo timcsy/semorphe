@@ -116,8 +116,19 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const functionNames = new Set<string>()
   // 類別成員裡的每一顆節點 → 那個類別的方法名（隱含 this 的呼叫要它；spec 208）
   const ownMethods = new Map<string, Set<string>>()
+  // 類別外定義成員函式（第 322 刀）：`類別::鍵` → 類別裡的原型／類別外的定義（鍵由元件的 memberKey 給）；類別的方法名表（類別外定義的本體也看得到它）
+  const inClassByKey = new Map<string, SemanticNode>()
+  const outsideByKey = new Map<string, SemanticNode>()
+  const keyOfInClass = new Map<string, string>()
+  const methodsOfClass = new Map<string, Set<string>>()
   const index = (n: SemanticNode, methods?: Set<string>): void => {
     byId.set(n.id, n)
+    // 類別外的定義：本體裡的裸名字呼叫要認得那個類別的方法（同寫在類別裡）
+    const outside = FORMALIZE.memberKey.get(n.componentId)?.(n)
+    if (outside?.className !== undefined) {
+      outsideByKey.set(`${outside.className}::${outside.key}`, n)
+      methods = methodsOfClass.get(outside.className) ?? methods
+    }
     if (methods) ownMethods.set(n.id, methods)
     // `int x, y;` 是一顆 `_multi_field` 包著平行的宣告——攤平（第 213 刀，同 struct_declare 的 formalize）
     // spec 203：class 的成員分在 public／protected／private 三個槽（struct 是 members 一個槽）；
@@ -131,6 +142,14 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     const own = isClass
       ? new Set(members.filter((m) => FORMALIZE.member.has(m.componentId) && m.properties?.name).map((m) => String(m.properties!.name)))
       : methods
+    if (isClass && typeof n.properties?.name === 'string') {
+      const cls = n.properties.name
+      methodsOfClass.set(cls, own!)
+      for (const m of members) {
+        const k = FORMALIZE.memberKey.get(m.componentId)?.(m)
+        if (k && k.className === undefined) { inClassByKey.set(`${cls}::${k.key}`, m); keyOfInClass.set(m.id, `${cls}::${k.key}`) }
+      }
+    }
     for (const [slot, kids] of Object.entries(n.slots ?? {})) {
       const inMembers = isClass && ['members', 'public', 'protected', 'private'].includes(slot)
       kids.forEach((c) => index(c, inMembers ? own : methods))
@@ -405,6 +424,11 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     isMemberField: (declId) => memberFields.has(declId),
     isFunctionName: (name) => functionNames.has(name),
     isOwnMethod: (nodeId, name) => ownMethods.get(nodeId)?.has(name) ?? false,
+    outsideDefinition: (declared) => { const k = keyOfInClass.get(declared.id); return k === undefined ? undefined : outsideByKey.get(k) },
+    hasInClassDeclaration: (defined) => {
+      const k = FORMALIZE.memberKey.get(defined.componentId)?.(defined)
+      return k?.className !== undefined && inClassByKey.has(`${k.className}::${k.key}`)
+    },
     asStatement: (c) => (FORMALIZE.stmt.has(c.componentId) || FORMALIZE.decl.has(c.componentId)
       ? stmt(c)
       : [k('sExpr', { n: `${c.id}/stmt`, e: expr(c) })]),

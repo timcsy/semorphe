@@ -1,0 +1,46 @@
+[
+  {
+    "id": "cpp_constructor_declare",
+    "componentId": "cpp:constructor_declare",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_constructor_declare",
+      "message0": "%{BKY_C_CONSTRUCTOR_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CLASS_NAME",
+          "text": "MyClass"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": ""
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_CONSTRUCTOR_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CLASS_NAME": "class_name"
+      },
+      "slotAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childComponent": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
+    }
+  }
+]

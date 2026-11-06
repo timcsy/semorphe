@@ -104,6 +104,10 @@ export interface FormalizeContext {
   asStatement(n: SemanticNode): CellaJson[]
   /** 照 id 找語義樹的節點（`declOf` 給的是宣告的 id；要看那個宣告的內容時用——spec 199：`const int N = 100; int a[N];`） */
   nodeById(id: string): SemanticNode | undefined
+  /** 類別裡的原型（註冊了 `memberKey`）在類別外的那一顆定義；沒有就是 undefined（第 322 刀） */
+  outsideDefinition(declared: SemanticNode): SemanticNode | undefined
+  /** 類別外的定義（註冊了 `memberKey`、帶類別名）對得上類別裡的原型嗎（第 322 刀） */
+  hasInClassDeclaration(defined: SemanticNode): boolean
   /** 當一個類別成員翻（成員函式 → `mbMethod`）；沒有註冊的記 unknown、回 null（spec 201） */
   member(n: SemanticNode): CellaJson | null
   /** 這個宣告是不是某個 struct／class 的欄位——成員函式裡的裸名字指到它時是 `eSelf`（隱含的 this，spec 201） */
@@ -178,6 +182,13 @@ export interface FormalizeRegistrar {
   declaresType(id: string, fn: (n: SemanticNode) => string): void
   /** 這顆定義了一個列舉型別名（`enum Color {…}` 之後 `Color c` 的 Color）——型別那一格送 `tEnum`（cella 2026-11-03；不是 tClass）。 */
   definesEnum(id: string, fn: (n: SemanticNode) => string): void
+  /**
+   * 這顆是**類別成員與它在類別外的定義配對時用的鍵**（第 322 刀，類別外定義成員函式）。
+   * 類別裡的原型回 `{ key }`（類別名由引擎從它所在的類別得到）；類別外的定義回 `{ className, key }`。
+   * 鍵由元件自己決定（名字 ＋ 參數型別 ＋ const——多載靠它分），兩邊用同一個寫法才配得上。
+   * Cella 的參照翻譯：類別外的定義在頂層不送，本體接回類別裡那個成員（cpp_to_tree.py：the class's member takes the definition）。
+   */
+  memberKey(id: string, fn: (n: SemanticNode) => { className?: string; key: string }): void
   /** 作用域走訪：這顆開不開作用域、宣告什麼、參照什麼（沒註冊的照通用規則）。 */
   scope(id: string, fn: (n: SemanticNode, w: ScopeWalker) => void): void
 }

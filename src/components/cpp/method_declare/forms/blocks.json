@@ -1,0 +1,67 @@
+[
+  {
+    "id": "cpp_method_declare",
+    "componentId": "cpp:method_declare",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_method_declare",
+      "message0": "%{BKY_C_METHOD_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "RETURN_TYPE",
+          "text": "void"
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "method"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": ""
+        },
+        {
+          "type": "field_dropdown",
+          "name": "IS_CONST",
+          "options": [
+            [
+              "%{BKY_C_METHOD_DECLARE_CONST_NO}",
+              "false"
+            ],
+            [
+              "%{BKY_C_METHOD_DECLARE_CONST_YES}",
+              "true"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_METHOD_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "RETURN_TYPE": "return_type",
+        "IS_CONST": "is_const"
+      },
+      "slotAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childComponent": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
+    }
+  }
+]

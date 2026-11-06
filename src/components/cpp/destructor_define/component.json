@@ -1,0 +1,38 @@
+{
+  "componentId": "cpp:destructor_define",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "class_name",
+      "kind": "literal",
+      "default": "MyClass"
+    }
+  ],
+  "slots": {
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "_owner_why": "與同族（類別裡定義的建構子、解構子、方法）同一個章——課程清單與工具箱照同族的位置放。",
+  "traits": {
+    "topLevelOnly": true
+  },
+  "_traits_why": "**類別外的定義只能寫在檔案範圍**——不能放進函式本體。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "`lift.ts` 匯出建構子；判別（函式定義的名字是 `類別::~類別`）留在共用檔 `cpp:liftFunctionDef`。"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "annotations": {
+    "control_flow": "sequence"
+  }
+}

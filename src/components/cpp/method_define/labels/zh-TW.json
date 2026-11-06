@@ -1,0 +1,6 @@
+{
+  "C_METHOD_DEFINE_MSG0": "在類別 %1 外定義方法 %2 %3（%4）%5",
+  "C_METHOD_DEFINE_TOOLTIP": "給出類別裡已經宣告過的成員函式的本體；類別名、名字、參數型別與 const 要和類別裡那一行一致",
+  "C_METHOD_DEFINE_CONST_NO": "（會改自己）",
+  "C_METHOD_DEFINE_CONST_YES": "const（不改自己）"
+}

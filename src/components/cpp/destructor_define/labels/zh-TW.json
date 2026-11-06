@@ -1,0 +1,4 @@
+{
+  "C_DESTRUCTOR_DEFINE_MSG0": "在類別 %1 外定義解構子",
+  "C_DESTRUCTOR_DEFINE_TOOLTIP": "給出類別裡已經宣告過的解構子的本體——物件銷毀時會跑到這裡"
+}

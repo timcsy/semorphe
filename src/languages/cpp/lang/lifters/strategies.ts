@@ -27,6 +27,12 @@ import { buildDestructor } from '../../../../components/cpp/destructor/lift'
 import { buildMethodVirtual } from '../../../../components/cpp/method_virtual/lift'
 import { buildMethodOverride } from '../../../../components/cpp/method_override/lift'
 import { buildMethodDef } from '../../../../components/cpp/method_def/lift'
+import { buildMethodDeclare } from '../../../../components/cpp/method_declare/lift'
+import { buildMethodDefine } from '../../../../components/cpp/method_define/lift'
+import { buildConstructorDeclare } from '../../../../components/cpp/constructor_declare/lift'
+import { buildConstructorDefine } from '../../../../components/cpp/constructor_define/lift'
+import { buildDestructorDeclare } from '../../../../components/cpp/destructor_declare/lift'
+import { buildDestructorDefine } from '../../../../components/cpp/destructor_define/lift'
 import { buildMethodVirtualPure } from '../../../../components/cpp/method_virtual_pure/lift'
 import { buildOperatorOverload } from '../../../../components/cpp/operator_overload/lift'
 import { buildCast } from '../../../../components/cpp/cast/lift'
@@ -739,13 +745,49 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
   return buildVarDeclare({ name, type })
 }
 
+/**
+ * 建構子的成員初始化列（`: v(x), w{y}`）→ 一串賦值（目標是欄位名、值是運算式）。類別裡定義的建構子與類別外定義的建構子（第 322 刀）共用。
+ */
+function liftFieldInitializers(node: AstNode, ctx: LiftContext): SemanticNode[] {
+  const initListNode = node.namedChildren.find(c => c.type === 'field_initializer_list')
+  const inits: SemanticNode[] = []
+  for (const fi of initListNode?.namedChildren ?? []) {
+    if (fi.type !== 'field_initializer') continue
+    const field = fi.namedChildren[0]?.text
+    // 值的形式是 `(x)` 或 `{x}`——兩種都取第一個實際的運算式
+    const valueHolder = fi.namedChildren[1]
+    const valueNode = valueHolder?.namedChildren[0] ?? valueHolder
+    const value = valueNode ? ctx.lift(valueNode) : null
+    if (!field || !value) continue
+    // 🟢 建構式的初始化列（`: x(1)`）——左值是那個欄位的名字，
+    //    而它現在也是一顆節點（2026-08-25，左值接點化）。
+    inits.push(buildVarAssign({ target: [buildVarRef(field)], value: [value] }))
+  }
+  return inits
+}
+
 /** Lift a class member (function_definition, field_declaration) into a semantic node */
 export function liftClassMember(node: AstNode, className: string, ctx: LiftContext): SemanticNode | null {
   // 🔴 類別裡的建構子／解構子【原型】（`BST();`、`~Folder();`——定義寫在類別外）是 declaration：原本交給一般的宣告那條路，
   //    建成名字掉成 `f` 的函式原型（`int f();`）或 `int BST();`——安靜地換掉了意思（2026-11-06 元件管線 313 的盲測）。
   //    在「宣告方法」那顆元件之前照實降級成原文（路線圖〈類別外定義成員函式〉）
   if (node.type === 'declaration' && node.namedChildren.some((c) => c.type === 'function_declarator')) {
-    return degrade(buildRawCode(node.text), '類別裡的建構子／解構子原型（定義在類別外）尚未支援')
+    // 🟢 第 322 刀：`A(int v);`、`~A();`、`virtual ~A();` → 類別裡宣告建構子／解構子那兩顆（本體在類別外）。
+    //    ⚠️ 只接形狀單純的：宣告子是 `類別名(參數)` 或 `~類別名()`，前面最多一個 virtual（只給解構子）。
+    //       explicit、`= default`／`= delete`、noexcept 照舊降級——那兩顆沒有地方放它們。
+    const fd = node.namedChildren.find((c) => c.type === 'function_declarator')!
+    const nm = fd.childForFieldName('declarator')
+    const onlyDecl = node.namedChildren.length === 1 && fd.namedChildren.every((c) => c.type === 'parameter_list' || c.startIndex === nm?.startIndex)
+    const virt = node.children.some((c) => !c.isNamed && c.text === 'virtual')
+    const otherTokens = node.children.some((c) => !c.isNamed && c.text !== 'virtual' && c.text !== ';')
+    if (onlyDecl && !otherTokens && nm?.type === 'identifier' && nm.text === className && !virt) {
+      return buildConstructorDeclare({ class_name: className }, { params: liftParamList(fd.childForFieldName('parameters') ?? null, ctx) })
+    }
+    if (onlyDecl && !otherTokens && nm?.type === 'destructor_name' && nm.text.replace(/\s+/g, '') === `~${className}`
+        && (fd.childForFieldName('parameters')?.namedChildren.length ?? 0) === 0) {
+      return buildDestructorDeclare({ class_name: className, is_virtual: virt ? 'true' : 'false' })
+    }
+    return degrade(buildRawCode(node.text), '類別裡的建構子／解構子原型（explicit、= default 或其他修飾，定義在類別外）尚未支援')
   }
   if (node.type === 'function_definition') {
     const declNode = node.childForFieldName('declarator')
@@ -754,6 +796,11 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     const nameNode = declNode?.childForFieldName('declarator')
     const isVirtual = node.children.some(c => !c.isNamed && c.text === 'virtual')
 
+    // 🔴 `= default`／`= delete`（`~C() = default;`、`C(const C&) = delete;`）：沒有一顆元件記得住它——原樣保留、照實降級。
+    //    第 322 刀的負向測試抓到：原本落到下面的建構子／解構子那條路，被建成一個空本體（`~C() {}`）——`= delete` 的意思整個反過來。
+    if (node.namedChildren.some((c) => c.type === 'default_method_clause' || c.type === 'delete_method_clause')) {
+      return degrade(buildRawCode(node.text), '`= default`／`= delete` 的成員尚未支援')
+    }
     // 🔴 `final`（spec 209）：Cella 還沒有它的形狀（cella 2026-11-03），沒有任何一顆元件記得住它——原樣保留、照實降級。
     //    原本安靜地丟掉：`void f() final` 來回一趟變 `void f()`，覆寫 final 方法的錯程式會被接受。
     if (declNode?.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'final')) {
@@ -771,20 +818,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       // 🔴 它原本被記成一個字串屬性，而**執行那一路從未讀它**：
       // `Node(int x) : v(x) {}` 建出來的物件 `v` 是 0，而產生的程式碼完全正確。
       // **投影對、執行錯**——一個要 parse 回結構才能用的字串，就不該是字串。
-      const initListNode = node.namedChildren.find(c => c.type === 'field_initializer_list')
-      const inits: SemanticNode[] = []
-      for (const fi of initListNode?.namedChildren ?? []) {
-        if (fi.type !== 'field_initializer') continue
-        const field = fi.namedChildren[0]?.text
-        // 值的形式是 `(x)` 或 `{x}`——兩種都取第一個實際的運算式
-        const valueHolder = fi.namedChildren[1]
-        const valueNode = valueHolder?.namedChildren[0] ?? valueHolder
-        const value = valueNode ? ctx.lift(valueNode) : null
-        if (!field || !value) continue
-        // 🟢 建構式的初始化列（`: x(1)`）——左值是那個欄位的名字，
-        //    而它現在也是一顆節點（2026-08-25，左值接點化）。
-        inits.push(buildVarAssign({ target: [buildVarRef(field)], value: [value] }))
-      }
+      const inits = liftFieldInitializers(node, ctx)
       const body = extractBody(bodyNode, ctx)
       return buildConstructor({ class_name: className }, { params, inits, body })
     }
@@ -903,7 +937,29 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       let d: AstNode | null = node.childForFieldName('declarator')
       while (d && (d.type === 'pointer_declarator' || d.type === 'reference_declarator')) d = (d.childForFieldName('declarator') as AstNode | null) ?? d.namedChildren[0] ?? null
       if (d?.type === 'function_declarator' && !(isVirtual && node.childForFieldName('default_value')?.text === '0')) {
-        return degrade(buildRawCode(node.text), '類別裡的方法原型（定義在類別外）尚未支援')
+        // 🟢 第 322 刀：形狀單純的原型 → 類別裡宣告方法那顆（本體在類別外那一顆）。
+        //    ⚠️ 只接：回傳型別（可帶開頭的 const、外包一層 `*`／`&`）、名字、參數、尾端可有可無的 const。
+        //       virtual／static／override／`= default`／`= delete`／noexcept 照舊降級——這顆沒有地方放它們。
+        const declNode = node.childForFieldName('declarator')
+        const typeNode = node.childForFieldName('type')
+        // ⚠️ 比位置不比物件：tree-sitter 每次取節點都是新的物件，`===` 永遠不成立
+        const sameAt = (a: AstNode | null | undefined, b: AstNode | null | undefined): boolean => !!a && !!b && a.type === b.type && a.startIndex === b.startIndex
+        const wrap = declNode && !sameAt(declNode, d) ? declNode : null
+        const fnName = d.childForFieldName('declarator')
+        const plain = !isVirtual && typeNode && (fnName?.type === 'field_identifier' || fnName?.type === 'identifier')
+          && (!wrap || ((wrap.type === 'pointer_declarator' || wrap.type === 'reference_declarator') && sameAt(wrap.namedChildren[0], d)))
+          && node.namedChildren.every((c) => sameAt(c, typeNode) || sameAt(c, declNode) || (c.type === 'type_qualifier' && c.text === 'const'))
+          && d.namedChildren.every((c) => sameAt(c, fnName) || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const'))
+          && !node.childForFieldName('default_value')
+        if (plain) {
+          const lead = node.namedChildren.some((c) => c.type === 'type_qualifier') ? 'const ' : ''
+          const suffix = wrap ? (wrap.type === 'pointer_declarator' ? '*' : (wrap.children.find((c) => !c.isNamed)?.text ?? '&')) : ''
+          const isConst = d.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
+          ctx.data.declareFunction(fnName!.text)
+          return buildMethodDeclare({ return_type: `${lead}${typeNode!.text}${suffix}`, name: fnName!.text, is_const: isConst ? 'true' : 'false' },
+            { params: liftParamList(d.childForFieldName('parameters') ?? null, ctx) })
+        }
+        return degrade(buildRawCode(node.text), '類別裡的方法原型（virtual、static 或其他修飾，定義在類別外）尚未支援')
       }
     }
     const defaultVal = node.childForFieldName('default_value')
@@ -1050,6 +1106,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       : ''
     let returnType = typeNode && lead.includes(typeNode.text) ? lead : (typeNode?.text ?? 'void')
     let name = 'f'
+    /** 類別外定義的成員函式（第 322 刀）：有值就建類別外定義方法那顆 */
+    let outsideOf: { cls: string; name: string; isConst: boolean } | null = null
     const paramChildren: SemanticNode[] = []
 
     // ⚠️ `int* f(…)` 的 declarator 是 **pointer_declarator**，函式宣告子包在
@@ -1080,9 +1138,47 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       if (nameNode?.type === 'qualified_identifier') {
         const trailingConst = fnDecl.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
         const ctorOrDtor = !node.childForFieldName('type') || nameNode.namedChildren.some((c) => c.type === 'destructor_name')
-        if (trailingConst || ctorOrDtor) return degrade(buildRawCode(node.text), '類別外定義的成員函式（帶 const、或建構子／解構子）尚未支援')
+        // 🟢 第 322 刀：`int A::get() const {…}`、`void A::link(B* b) {…}` → 類別外定義方法那顆（類別名、名字、const 各一格）。
+        //    ⚠️ 只接形狀單純的：`類別::名字`（類別是一個型別名、名字是一個識別字）、尾端只有 const。巢狀（`ns::A::f`）、樣板類別（`A<T>::f`）、
+        //       noexcept／`&` 限定、運算子多載（`A::operator+`）照舊——這顆沒有地方放它們。
+        const scope = nameNode.childForFieldName('scope')
+        const member = nameNode.childForFieldName('name')
+        const plainOutside = !ctorOrDtor && (scope?.type === 'namespace_identifier' || scope?.type === 'type_identifier')
+          && member?.type === 'identifier'
+          && fnDecl.namedChildren.every((c) => c.type === 'qualified_identifier' || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const'))
+        if (plainOutside) outsideOf = { cls: scope!.text, name: member!.text, isConst: trailingConst }
+        else if (ctorOrDtor && bodyNode && (scope?.type === 'namespace_identifier' || scope?.type === 'type_identifier')
+          && !node.childForFieldName('type') && !trailingConst
+          && fnDecl.namedChildren.every((c) => c.type === 'qualified_identifier' || c.type === 'parameter_list')
+          && node.namedChildren.every((c) => c.startIndex === fnDecl!.startIndex || c.type === 'field_initializer_list' || c.startIndex === bodyNode.startIndex)) {
+          // 🟢 第 322 刀：`A::A(int v) : x(v) {…}`、`A::~A() {…}` → 類別外定義建構子／解構子那兩顆
+          const cls = scope.text
+          const isCtor = member?.type === 'identifier' && member.text === cls
+          const isDtor = member?.type === 'destructor_name' && member.text.replace(/\s+/g, '') === `~${cls}`
+            && (fnDecl.childForFieldName('parameters')?.namedChildren.length ?? 0) === 0
+          if (isCtor || isDtor) {
+            const params = isCtor ? liftParamList(fnDecl.childForFieldName('parameters'), ctx) : []
+            ctx.data.pushScope()
+            try {
+              for (const p of params) {
+                const pname = p.properties?.name
+                const ptype = p.properties?.type
+                if (typeof pname === 'string' && pname !== '' && typeof ptype === 'string') ctx.data.declare(pname, normalizeParamType(ptype))
+              }
+              const inits = isCtor ? liftFieldInitializers(node, ctx) : []
+              const body = extractBody(bodyNode, ctx)
+              return isCtor
+                ? buildConstructorDefine({ class_name: cls }, { params, inits, body })
+                : buildDestructorDefine({ class_name: cls }, { body })
+            } finally {
+              ctx.data.popScope()
+            }
+          }
+          return degrade(buildRawCode(node.text), '類別外定義的建構子／解構子（名字與類別不一致或帶修飾）尚未支援')
+        }
+        else if (trailingConst || ctorOrDtor) return degrade(buildRawCode(node.text), '類別外定義的成員函式（建構子／解構子帶修飾、或樣板／巢狀類別）尚未支援')
       }
-      name = nameNode?.text ?? fnDecl.namedChildren[0]?.text ?? 'f'
+      name = outsideOf?.name ?? nameNode?.text ?? fnDecl.namedChildren[0]?.text ?? 'f'
 
       // 🔴 **這裡本來自己抄了一份「怎麼讀一串參數」**，而同一個檔裡就有
       //    `liftParamList`——於是帶預設值的參數在**這一條路**上被跳過
@@ -1127,6 +1223,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         ctx.data.declare(pname, normalizeParamType(ptype))
       }
       const body = extractBody(bodyNode, ctx)
+      if (outsideOf) {
+        return buildMethodDefine({ class_name: outsideOf.cls, return_type: returnType, name: outsideOf.name, is_const: outsideOf.isConst ? 'true' : 'false' }, { params: paramChildren, body })
+      }
       return buildFuncDef(name, returnType, { params: paramChildren, body })
     } finally {
       ctx.data.popScope()
@@ -2073,7 +2172,10 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
     //    產出變成 `void f(int)`：**`[10]` 整段消失，而沒有任何一顆節點說它降級了**。
     //
     // > **一個誠實的「我不會」，比一個安靜的「我改了你的程式」好。**
-    c.type === 'abstract_array_declarator'
+    c.type === 'abstract_array_declarator' ||
+    // 🔴 **沒有名字的指標／參照參數**（`void link(B*);`、`void f(const T&);`——類別裡的原型常這樣寫）：
+    //    原本不在清單裡，於是星號與 & 整個消失（`B*` 讀成 `B`）——第 322 刀（類別外定義成員函式）補
+    c.type === 'abstract_pointer_declarator' || c.type === 'abstract_reference_declarator'
   )
 
   // If we have structured slots, use them
@@ -2095,6 +2197,9 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
         type += '&'
         const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
         name = innerIdent?.text ?? ''
+      } else if (declNode.type === 'abstract_pointer_declarator' || declNode.type === 'abstract_reference_declarator') {
+        // 原樣接上去（`*`、`**`、`&`、`&&`）——沒有名字，整段就是型別的一部分
+        type += declNode.text.replace(/\s+/g, '')
       } else if (declNode.type === 'abstract_array_declarator') {
         // ⚠️ **原樣接上去**（`[10]`／`[]`）——它沒有名字，整段就是型別的一部分。
         //    🔴 而**大小要留著**：`int[10]` 與 `int[]` 在參數位置雖然等價，
