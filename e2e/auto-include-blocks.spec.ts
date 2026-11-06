@@ -51,6 +51,12 @@ async function boot(page: Page): Promise<void> {
     undefined, { timeout: 60_000 })
   // init 做完才算起來（後段會把編輯器寫回預設程式——第 392 刀）；取代固定睡幾秒
   await appReady(page)
+  // ⚠️ init 做完 ≠ 課文的程式投影成積木了（第三刀整輪抓到：骨架那一行查到空陣列）——等積木長出來、同步靜下來
+  await page.waitForFunction(
+    () => ((window as never as { __app?: { blocklyPanel?: { workspace?: { getAllBlocks(o: boolean): unknown[] } } } })
+      .__app?.blocklyPanel?.workspace?.getAllBlocks(false).length ?? 0) > 0,
+    undefined, { timeout: 30_000 })
+  await blocksSettled(page)
 }
 
 interface Shot {
