@@ -44,7 +44,7 @@ test('★ 輸出只差一個空格 → 主控台要說出差在哪', async ({ pa
   //    而症狀是「裁判沒有說話」，看起來像裁判壞了。
   const skip = page.locator('.console-predict-skip')
   if (await skip.count() > 0) { await skip.first().click() }
-  await page.waitForTimeout(6000)
+  // （原本這裡固定睡 6 秒——下一行本來就等裁判出現，最多 20 秒）
 
   const box = page.locator('.console-verdict')
   await expect(box.first(), '🔴 裁判沒有說話 → 這一支測的不是那條路').toBeVisible({ timeout: 20_000 })

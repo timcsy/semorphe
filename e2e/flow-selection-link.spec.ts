@@ -28,7 +28,7 @@
  * > **如果圖上一顆節點都沒有，這份報表不算數——不是「選取好了」。**
  */
 import { test, expect } from '@playwright/test'
-import { showFlowSlot, showBlocksSlot, useAsSource, freshApp, appReady, treeReady, flowReady } from './helpers'
+import { showFlowSlot, showBlocksSlot, useAsSource, freshApp, appReady, treeReady, flowReady, editsSettled, frames } from './helpers'
 
 const PROG = 'int main() {\n    int a = 1;\n    cout << a << endl;\n    return 0;\n}\n'
 const flat = (s: string): string => s.replace(/#include[^\n]*\n/g, '').replace(/\s+/g, ' ').trim()
@@ -67,7 +67,6 @@ test('★ 點一顆節點：亮起來、Delete 刪得掉', async ({ page }) => {
   const at = await headOf(page, 'cpp:var_declare')
   expect(at, '🔴 找不到那顆節點').toBeTruthy()
   await page.mouse.click(at!.x, at!.y)
-  await page.waitForTimeout(600)
 
   await expect(
     page.locator('.fc-node.fc-sel'),
@@ -76,8 +75,7 @@ test('★ 點一顆節點：亮起來、Delete 刪得掉', async ({ page }) => {
   ).toHaveCount(1)
 
   await page.locator('.flow-canvas').press('Delete')
-  await page.waitForTimeout(1800)
-  expect(await codeNow(page), '🔴 Delete 沒有刪掉選取的那一顆').not.toContain('int a')
+  await expect.poll(() => codeNow(page), { message: '🔴 Delete 沒有刪掉選取的那一顆' }).not.toContain('int a')
 })
 
 test('★ 拖曳仍然是拖曳——移動過就不算「選」', async ({ page }) => {
@@ -87,7 +85,6 @@ test('★ 拖曳仍然是拖曳——移動過就不算「選」', async ({ page
   // ⚠️ **先清掉**——程式碼的游標本來就會驅動一次跨視圖反白（那是刻意的），
   //    所以進場時可能已經有一顆是亮的。不清的話這一支驗的是那一顆。
   await page.locator('.flow-canvas').press('Escape')
-  await page.waitForTimeout(400)
   await expect(page.locator('.fc-node.fc-sel'), '🔴 Escape 沒有清掉選取').toHaveCount(0)
   const at = await headOf(page, 'cpp:var_declare')
   const before = await codeNow(page)
@@ -95,7 +92,9 @@ test('★ 拖曳仍然是拖曳——移動過就不算「選」', async ({ page
   await page.mouse.down()
   await page.mouse.move(at!.x + 90, at!.y + 60, { steps: 12 })
   await page.mouse.up()
-  await page.waitForTimeout(600)
+  // 驗的是「沒有改到」——等同步閒置、再畫兩幀（改到的話那時已經進了程式碼），不睡固定秒數
+  await editsSettled(page)
+  await frames(page)
   expect(await codeNow(page), '🔴 拖曳改到了程式——位置在流程視圖上只是排版').toBe(before)
   await expect(
     page.locator('.fc-node.fc-sel'),
@@ -112,10 +111,8 @@ test('★ 三個視圖一起亮——兩個方向都要', async ({ page }) => {
 
   // ① 流程 → 其他
   await page.mouse.click((await headOf(page, 'cpp:print'))!.x, (await headOf(page, 'cpp:print'))!.y)
-  await page.waitForTimeout(800)
-  const a = await lit()
-  expect(a.flow, '🔴 流程自己沒亮').toBe(1)
-  expect(a.blocks, '🔴 在流程選了一顆，而積木那邊沒有跟著亮').toBeGreaterThan(0)
+  await expect.poll(async () => (await lit()).flow, { message: '🔴 流程自己沒亮' }).toBe(1)
+  await expect.poll(async () => (await lit()).blocks, { message: '🔴 在流程選了一顆，而積木那邊沒有跟著亮' }).toBeGreaterThan(0)
 
   // ② 積木 → 流程（**反方向不可省**：只做單向的實作也會通過上面那一段）
   await page.evaluate(() => {
@@ -123,16 +120,18 @@ test('★ 三個視圖一起亮——兩個方向都要', async ({ page }) => {
       getAllBlocks(b: boolean): { type: string; select(): void }[] } } } }).__app.blocklyPanel.workspace
     ws.getAllBlocks(false).find((x) => x.type === 'cpp_var_declare')?.select()
   })
-  await page.waitForTimeout(900)
-  expect((await lit()).flow, '🔴 在積木選了一塊，而流程那邊沒有跟著亮').toBe(1)
+  // ⚠️ 流程原本就亮著一顆（上一步選的 print）——等的是「亮的【換成】var_declare 那一顆」，不是「有一顆亮」（那會立刻成立）
+  const litComponent = () => page.evaluate(() => {
+    const g = (window as never as { __app: { flowPanel: { graph: { nodes: { id: string; componentId: string }[] } } } }).__app.flowPanel.graph
+    const id = document.querySelector('.fc-node.fc-sel')?.closest('[data-node]')?.getAttribute('data-node')
+    return g.nodes.find((x) => x.id === id)?.componentId ?? null
+  })
+  await expect.poll(litComponent, { message: '🔴 在積木選了一塊，而流程那邊沒有跟著亮（亮的還是上一顆）' }).toBe('cpp:var_declare')
+  expect((await lit()).flow).toBe(1)
 
   // ★ 而它真的是**同一顆**——按 Delete 刪掉的要是剛剛在積木上選的那一個
   await page.locator('.flow-canvas').press('Delete')
-  await page.waitForTimeout(1800)
-  expect(
-    await codeNow(page),
-    '🔴 流程亮的不是積木選的那一顆——兩邊的反白對不起來',
-  ).not.toContain('int a')
+  await expect.poll(() => codeNow(page), { message: '🔴 流程亮的不是積木選的那一顆——兩邊的反白對不起來' }).not.toContain('int a')
 })
 
 test('★ 切分頁不得把反白清掉', async ({ page }) => {
@@ -170,14 +169,14 @@ test('★ 切分頁不得把反白清掉', async ({ page }) => {
   })
   expect(at, '🔴 積木上找不到那一塊 → 這一支驗不出東西').toBeTruthy()
   await page.mouse.click(at!.x, at!.y)
-  await page.waitForTimeout(1000)
 
   // ★ 入口條件：切之前流程那邊真的有一顆是亮的
-  const before = await page.locator('.fc-node.fc-sel').count()
-  expect(before, '🔴 切之前流程就沒有亮 → 下面那條驗的不是「切分頁弄丟了」').toBe(1)
+  await expect(page.locator('.fc-node.fc-sel'), '🔴 切之前流程就沒有亮 → 下面那條驗的不是「切分頁弄丟了」').toHaveCount(1)
 
   await showFlowSlot(page)
-  await page.waitForTimeout(1500)
+  // 驗的是「反白【沒有】被清掉」——清掉的話發生在點分頁的當下或下一幀；畫完流程再等兩幀
+  await flowReady(page)
+  await frames(page)
 
   await expect(
     page.locator('.fc-node.fc-sel'),
@@ -193,7 +192,7 @@ test('★ 切分頁不得把反白清掉', async ({ page }) => {
   // > **一個「離開時順手收拾自己」的動作，在你回來的時候看起來像遺失。**
   // 🔴 **切法換了**（spec 169）：回到積木也走那一格的下拉
   await showBlocksSlot(page)
-  await page.waitForTimeout(1400)
+  await frames(page)
   await expect(
     page.locator('.blocklySvg [class*=highlight]'),
     '🔴 切回積木之後它自己的反白不見了',

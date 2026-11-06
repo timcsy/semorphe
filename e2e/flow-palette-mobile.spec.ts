@@ -40,7 +40,8 @@ test('★ 行動版：收合鈕站在目前展開到哪裡的最外緣', async (
   await freshApp(page)
   await appReady(page)
   await page.locator('[data-tab="flow"]').last().click()
-  await page.waitForTimeout(1500)
+  // ⚠️ 不用 flowReady：這一支是空程式，圖上本來就沒有節點——等的是流程分頁的工具列出現
+  await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 30_000 })
 
   const toggle = page.locator('.flow-palette-toggle')
   const palette = page.locator('.flow-palette')

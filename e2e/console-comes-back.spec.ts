@@ -23,7 +23,7 @@
  * 要有真的版面、真的執行器、真的 CSS——那三樣 happy-dom 都沒有。
  */
 import { test, expect, type Page } from '@playwright/test'
-import { useAsSource } from './helpers'
+import { useAsSource, frames } from './helpers'
 
 async function freshApp(page: Page): Promise<void> {
   await page.addInitScript(() => window.localStorage.clear())
@@ -42,7 +42,7 @@ const isOpen = (page: Page): Promise<boolean> => page.evaluate(() => {
 /** 點分頁列上那顆分頁 ＝ 開／關（與 VSCode 的 panel 一樣）。 */
 async function clickConsoleTab(page: Page): Promise<void> {
   await page.locator('#bottom-container .bottom-panel-tabs [data-tab-id="console"]').first().click()
-  await page.waitForTimeout(300)
+  await frames(page)
 }
 
 const helloProgram = 'int main() { cout << "叫得回來" << endl; return 0; }'
@@ -109,7 +109,7 @@ test('🔴 版面選單裡的「顯示／隱藏主控台面板」真的開得起
     await expect(page.locator('.quick-pick-overlay')).toHaveCount(1)
     await page.locator('.quick-pick-item[data-value="__toggle-console"]').click()
     await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
-    await page.waitForTimeout(300)
+    await frames(page)
   }
 
   await pickToggle()
@@ -126,7 +126,7 @@ test('⚠️ 而它不得被當成一張版面——按了之後版面的名字�
   await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
   await page.locator('.quick-pick-item[data-value="__toggle-console"]').click()
   await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
-  await page.waitForTimeout(300)
+  await frames(page)
   expect(await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').innerText(),
     '🔴 版面的名字被開關改掉了').toBe(before)
   expect(await page.evaluate(() => document.body.getAttribute('data-layout')),
@@ -155,7 +155,7 @@ test('🔴 標籤說的是【按下去會發生什麼】——開著寫「隱藏
   await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click()
   await page.locator('.quick-pick-item[data-value="__toggle-variables"]').click()
   await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
-  await page.waitForTimeout(300)
+  await frames(page)
   expect(await labelOf('__toggle-variables'), '🔴 切過去了而它還寫「顯示」').toContain('隱藏')
   expect(await labelOf('__toggle-console'), '🔴 主控台那一頁被蓋掉了而它還寫「隱藏」').toContain('顯示')
 })

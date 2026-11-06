@@ -58,7 +58,7 @@ async function saveThenReload(page: Page, mutate: (s: Record<string, unknown>) =
   }).__app.codeView.setCode(code), PROGRAM)
   await page.locator('#sync-menu-btn').click()
   await page.locator('.quick-pick-item').filter({ hasText: /以此為準：程式碼/ }).first().click()
-  await page.waitForTimeout(4000)
+  await expect.poll(() => blockCount(page), { timeout: 30_000 }).toBeGreaterThan(3)
 
   // ★ 入口條件——存之前畫布上真的有東西
   expect(await blockCount(page), '🔴 存之前畫布是空的 → 下面驗的是別的東西').toBeGreaterThan(3)

@@ -88,7 +88,7 @@ test('🔴 不能當名字的字，畫面上要說得出為什麼', async ({ pag
   // 🔴 **而它要擋下執行**（使用者 2026-09-14 拍板：「變數名稱不合格應該要不能執行才對」）
   await rename(page, '123')
   await page.locator('#run-btn').click()
-  await page.waitForTimeout(2500)
+  await expect(page.locator('.console-output')).toContainText('名字不能用', { timeout: 30_000 })
   const out = (await page.locator('.console-output').innerText())
   expect(out, '🔴 名字不合法卻照跑了——一個會執行的錯誤程式，教的是「這裡沒有錯」')
     .toContain('名字不能用')
