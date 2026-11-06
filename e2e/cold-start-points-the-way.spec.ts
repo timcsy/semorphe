@@ -22,7 +22,7 @@
  * > 等於不存在——而它不會報錯，它只是安靜。**
  */
 import { test, expect, type Page } from '@playwright/test'
-import { editsSettled } from './helpers'
+import { editsSettled, appReady } from './helpers'
 
 async function open_(page: Page, query: string): Promise<void> {
   await page.goto(query)
@@ -34,7 +34,8 @@ async function open_(page: Page, query: string): Promise<void> {
   await page.waitForFunction(
     () => Boolean((window as unknown as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 60_000 })
-  await page.waitForTimeout(4500)
+  // init 做完才算起來（後段會把編輯器寫回預設程式——第 392 刀）；取代固定睡幾秒
+  await appReady(page)
 }
 
 const bar = (page: Page): Promise<{ shown: boolean; text: string }> => page.evaluate(() => {

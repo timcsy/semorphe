@@ -45,7 +45,7 @@
  * - **只走一個樣本**——它守的是「兩條路徑都改到了」，不是覆蓋率
  */
 import { test, expect, type Page } from '@playwright/test'
-import { useAsSource, treeHas } from './helpers'
+import { useAsSource, treeHas, appReady } from './helpers'
 
 /**
  * C++ 專屬、而 C 裡不存在的積木——選 C 之後這些都不該出現在工具箱裡。
@@ -87,8 +87,12 @@ async function pickTarget(page: Page, label: RegExp): Promise<boolean> {
     await page.keyboard.press('Escape')
     return false
   }
+  const id = await row.first().getAttribute('data-value')
   await row.first().click()
-  await page.waitForTimeout(1500)
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  // 等目標真的換過去（取代固定睡 1.5 秒）
+  if (id) await page.waitForFunction((want) => (window as never as { __app?: { currentTarget?: { id?: string } } }).__app?.currentTarget?.id === want, id, { timeout: 30_000 })
+  await appReady(page)
   return true
 }
 

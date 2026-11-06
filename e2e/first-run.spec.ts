@@ -65,7 +65,8 @@ test('★ 第一次打開（沒有任何存檔）就拉得動積木', async ({ p
     () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 30_000 },
   )
-  await page.waitForTimeout(4000)
+  // 不用 helper（見上）——直接等 init 做完的那個旗標（第 392 刀），取代固定睡 4 秒
+  await page.waitForFunction(() => Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
 
   // ★ 入口條件——錨在合成量，見檔頭的自我否證
   const categories = await page.locator('.blocklyToolboxCategory').count()

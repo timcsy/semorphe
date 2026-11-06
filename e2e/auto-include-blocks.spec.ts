@@ -35,7 +35,7 @@
  * ⚠️ **綁深度不綁身分**：`editable`（深度 2+）下鷹架動得了，那時它該在工具箱裡。
  */
 import { test, expect, type Page } from '@playwright/test'
-import { blocksSettled } from './helpers'
+import { blocksSettled, appReady } from './helpers'
 
 const LESSON = 'cpp-beginner/05-程式從哪開始'
 
@@ -49,7 +49,8 @@ async function boot(page: Page): Promise<void> {
   await page.waitForFunction(
     () => Boolean((window as unknown as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 60_000 })
-  await page.waitForTimeout(3000)
+  // init 做完才算起來（後段會把編輯器寫回預設程式——第 392 刀）；取代固定睡幾秒
+  await appReady(page)
 }
 
 interface Shot {

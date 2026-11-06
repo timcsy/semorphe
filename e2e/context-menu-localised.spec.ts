@@ -18,7 +18,7 @@
  * ——它擋得住「漏翻一個」，擋不住「整條沒接上」。
  */
 import { test, expect } from '@playwright/test'
-import { editsSettled } from './helpers'
+import { editsSettled, appReady } from './helpers'
 
 test('★ 右鍵一顆積木，選單上的字是中文', async ({ page }) => {
   test.setTimeout(180_000)
@@ -31,7 +31,8 @@ test('★ 右鍵一顆積木，選單上的字是中文', async ({ page }) => {
   await page.waitForFunction(
     () => Boolean((window as unknown as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 60_000 })
-  await page.waitForTimeout(3000)
+  // init 做完才算起來（後段會把編輯器寫回預設程式——第 392 刀）；取代固定睡幾秒
+  await appReady(page)
 
   // 先弄一顆積木出來
   await page.locator('.view-line', { hasText: 'int main()' }).first().click()
