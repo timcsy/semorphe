@@ -1,0 +1,41 @@
+[
+  {
+    "id": "cpp_destructor_def_outside",
+    "componentId": "cpp:destructor_def_outside",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_destructor_def_outside",
+      "message0": "%{BKY_C_DESTRUCTOR_DEF_OUTSIDE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CLASS_NAME",
+          "text": "MyClass"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_DESTRUCTOR_DEF_OUTSIDE_TOOLTIP}",
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {
+        "CLASS_NAME": "class_name"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      }
+    }
+  }
+]

@@ -84,6 +84,9 @@ export const SUBJECTS = [
   // `tone` 也在 ATOMIC_NAMES（先例：`print` 同時是單字名與主體）；
   // `pulse` 只當主體（`pulse_read` ＝ 讀一段脈衝有多長）。
   'tone', 'pulse',
+  // ⚠️ `constructor`／`destructor` 加入日 2026-11-07（第 322 刀）——它們原本只是單字名（類別裡定義的那兩顆），
+  //    而「在類別裡宣告、在類別外定義」讓它們各有了兩個操作（`declare`、`def_outside`）：主體＋操作，同 `method`。
+  'constructor', 'destructor',
 ] as const
 
 /**
@@ -260,6 +263,9 @@ export const KINDS = [
   // 也就一目了然了**——那正是 C1 查證過的「修飾詞是參數不是身分」。
   'auto', 'const', 'constexpr', 'static', 'ref', 'compound', 'dynamic', 'reinterpret',
   'virtual', 'virtual_pure', 'override',
+  // ⚠️ `outside` 加入日 2026-11-07（第 322 刀）——定義的種差「寫在類別外」：`method_def` 寫在類別裡，`method_def_outside` 是同一個動作、位置在類別外。
+  //    不另立操作詞 `define`：它與 `def` 是同義詞（命名護欄擋的就是這個）。
+  'outside',
 ] as const
 
 /**

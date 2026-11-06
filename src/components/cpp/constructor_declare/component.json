@@ -1,0 +1,47 @@
+{
+  "componentId": "cpp:constructor_declare",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "class_name",
+      "kind": "literal",
+      "default": "MyClass"
+    },
+    {
+      "name": "is_explicit",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "`explicit A(int);`：只寫在類別裡這一行；有它就不能被當成隱含轉換（Cella 的 mbCtor.expl）。第 322 刀的盲測補。"
+    }
+  ],
+  "slots": {
+    "params": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "_owner_why": "與同族（類別裡定義的建構子、解構子、方法）同一個章——課程清單與工具箱照同族的位置放。",
+  "traits": {
+    "insideParentOnly": true,
+    "forLoopPart": false
+  },
+  "_traits_why": "**只出現在類別裡**——單獨合成一份樣本去量它，是在量一個不存在的位置（同類別裡定義建構子／解構子那兩顆）。`forLoopPart: false`：成員的原型只寫得在類別本體裡，C++ 文法上放不進 for 的第一格（那裡只收變數宣告）。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "`lift.ts` 匯出建構子；判別（類別裡的 declaration、宣告子是 `類別名(參數)`）留在共用檔 `liftClassMember`。"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "memberRole": "constructor",
+  "_memberRole_why": "它在類別裡扮演這個角色——本體由類別外那一顆定義給（formalize 時接回來，同 Cella 的參照翻譯：the class's member takes the definition）。",
+  "annotations": {
+    "control_flow": "sequence"
+  }
+}

@@ -455,7 +455,11 @@ export class Lifter {
           //
           // 而沒有 ERROR 節點的那兩種形狀本來就會落到 `node.text`
           // ——這裡是**把有 ERROR 節點的那種統一過去**，不是新規則。
-          r.metadata.rawCode = node.text
+          // 🔴 類別／結構這類「型別說明符」的結尾 `;` 是它的**下一個兄弟 token**，不在它的原文裡（元件管線 322 的盲測抓到：
+          //    `class Car { … };` 整段因語法錯誤降級之後產回去少了 `;`，再 lift 時跟下一段黏在一起——來回漂移）。補回來。
+          const next = (node as unknown as { nextSibling?: { type: string } | null }).nextSibling
+          const semi = /^(class|struct|union|enum)_specifier$/.test(node.type) && next?.type === ';' ? ';' : ''
+          r.metadata.rawCode = node.text + semi
           // 🔴 解析器指名的缺口——**有就帶，沒有就完全不提**（spec 143 FR-004）。
           const gaps = this.collectSyntaxGaps(node)
           if (gaps.length > 0) r.metadata.syntaxGaps = gaps

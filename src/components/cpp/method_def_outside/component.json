@@ -1,0 +1,36 @@
+{
+  "componentId": "cpp:method_def_outside",
+  "abstractComponent": null,
+  "properties": [
+    { "name": "class_name", "kind": "literal", "default": "MyClass" },
+    { "name": "return_type", "kind": "type_expr", "default": "void" },
+    { "name": "name", "kind": "literal", "default": "method" },
+    {
+      "name": "is_const",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "要與類別裡那一行原型的 const 一致——不一致在 C++ 是兩個不同的成員（找不到對應的宣告）。"
+    }
+  ],
+  "slots": {
+    "params": "statements",
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "_owner_why": "與同族（類別裡定義方法、建構子、解構子）同一個章。",
+  "traits": { "topLevelOnly": true },
+  "_traits_why": "**類別外的定義只能寫在檔案範圍**（或命名空間裡）——不能放進函式本體。",
+  "paths": {
+    "views": {
+      "blocks": { "render": "./forms/blocks.json", "lift": "./forms/blocks.json" },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "`lift.ts` 匯出建構子；判別（函式定義的名字是 `類別::名字`）留在共用檔 `cpp:liftFunctionDef`。"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "annotations": { "control_flow": "sequence" }
+}

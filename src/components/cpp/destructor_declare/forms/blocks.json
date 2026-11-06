@@ -1,0 +1,49 @@
+[
+  {
+    "id": "cpp_destructor_declare",
+    "componentId": "cpp:destructor_declare",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_destructor_declare",
+      "message0": "%{BKY_C_DESTRUCTOR_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "CLASS_NAME",
+          "text": "MyClass"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "IS_VIRTUAL",
+          "options": [
+            [
+              "%{BKY_C_DESTRUCTOR_DECLARE_VIRTUAL_NO}",
+              "false"
+            ],
+            [
+              "%{BKY_C_DESTRUCTOR_DECLARE_VIRTUAL_YES}",
+              "true"
+            ],
+            [
+              "%{BKY_C_DESTRUCTOR_DECLARE_VIRTUAL_OVERRIDE}",
+              "override"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_DESTRUCTOR_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "CLASS_NAME": "class_name",
+        "IS_VIRTUAL": "is_virtual"
+      }
+    }
+  }
+]

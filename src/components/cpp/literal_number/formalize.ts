@@ -61,11 +61,13 @@ function literal(v: string, id: string, f: FormalizeContext): CellaJson | null {
     const num = f.k('eNum', { n: t === byValue ? id : `${id}/value`, v: Number(suf[1]) })
     return t === byValue ? num : f.k('eCast', { n: id, t: f.k(t), a: num })
   }
+  // long double 的 L 留在 text 裡（Cella 認它）；float 的 f 照舊拿掉、改成 single
   if (FLOAT.test(v)) return f.k('eFloat', { n: id, text: v.replace(/[fF]$/, ''), single: /[fF]$/.test(v) })
   return null
 }
 
-const FLOAT = /^[0-9]*\.[0-9]*([eE][-+]?[0-9]+)?[fF]?$|^[0-9]+[eE][-+]?[0-9]+[fF]?$/
+// 後綴 f／F（float）與 l／L（long double，cella 0.1.202611061710：text 照寫、帶著 L 就是 long double，不加欄位）
+const FLOAT = /^[0-9]*\.[0-9]*([eE][-+]?[0-9]+)?[fFlL]?$|^[0-9]+[eE][-+]?[0-9]+[fFlL]?$/
 
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.expr('cpp:literal_number', (n, f) => {

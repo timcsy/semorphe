@@ -10,4 +10,6 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     if (v === 'NULL') return f.k('eNull', { n: n.id })
     return f.k('eConst', { n: n.id, name: v })
   })
+  // 參數預設值、巨集值裡的 `nullptr`／`true`／`false`／`NULL` 也是字面（`Node(int v, Node* l = nullptr);`——元件管線 322 的盲測：原本照實標翻不出）
+  r.literal('cpp:builtin_constant', (text) => ['nullptr', 'true', 'false', 'NULL'].includes(text.trim()))
 }

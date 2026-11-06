@@ -21,6 +21,7 @@ import { formalize, type FormalizeResult } from '../../src/providers/cella/forma
 import { formalizePython } from '../../src/providers/cella/formalize/python'
 import { checkerFromBytes, checkerSource, compileCellaChecker, type CellaChecker, type CellaProblem } from '../../src/providers/cella/verdict'
 import { cachedCellaModule } from '../../tools/cella-module-cache'
+import { cachedVerdictAsync, moduleHashOf } from './verdict-cache'
 import type { SemanticNode } from '../../src/core/types'
 
 const ROOT = path.resolve(__dirname, '../..')
@@ -57,10 +58,17 @@ export interface CellaRunOptions {
   inputs?: { t: number; key: string; value: number }[]
 }
 
-let ready: Promise<{ parser: Parser; checker: CellaChecker }> | null = null
+/** 判決器晚建（`checker()` 第一次呼叫才實例化 wasm）：判決全部命中快取的測試檔不必付這筆 */
+type LazyChecker = { checker: () => Promise<CellaChecker>; moduleHash: string }
+const lazy = (bytes: Uint8Array): LazyChecker => {
+  let c: Promise<CellaChecker> | null = null
+  return { checker: () => (c ??= checkerFromBytes(bytes)), moduleHash: moduleHashOf(bytes) }
+}
+
+let ready: Promise<{ parser: Parser } & LazyChecker> | null = null
 
 /** 懶建：解析器與判決器在每個測試檔裡只準備一次 */
-function prepare(): Promise<{ parser: Parser; checker: CellaChecker }> {
+function prepare(): Promise<{ parser: Parser } & LazyChecker> {
   ready ??= (async () => {
     await Parser.init({ locateFile: (s: string) => path.join(ROOT, 'public', s) })
     const parser = new Parser()
@@ -69,19 +77,19 @@ function prepare(): Promise<{ parser: Parser; checker: CellaChecker }> {
     const read = (pkg: string | null, file: string): Uint8Array =>
       fs.readFileSync(path.join(ROOT, 'node_modules', pkg === null ? 'cella-lang' : `@cella-lang/${pkg}`, file))
     const { bytes } = await cachedCellaModule('verdict-cfamily', checkerSource('cfamily'), () => compileCellaChecker(read, 'cfamily'), { root: ROOT })
-    return { parser, checker: await checkerFromBytes(bytes) }
+    return { parser, ...lazy(bytes) }
   })()
   return ready
 }
 
-let readyPython: Promise<CellaChecker> | null = null
+let readyPython: Promise<LazyChecker> | null = null
 /** python 家族的判決器：懶建，只有用到 Python 的測試檔才付這筆（讀建置時編好的那一份，鍵同 `tools/precompile-cella.ts`） */
-function preparePython(): Promise<CellaChecker> {
+function preparePython(): Promise<LazyChecker> {
   readyPython ??= (async () => {
     const read = (pkg: string | null, file: string): Uint8Array =>
       fs.readFileSync(path.join(ROOT, 'node_modules', pkg === null ? 'cella-lang' : `@cella-lang/${pkg}`, file))
     const { bytes } = await cachedCellaModule('verdict-python', checkerSource('python'), () => compileCellaChecker(read, 'python'), { root: ROOT })
-    return checkerFromBytes(bytes)
+    return lazy(bytes)
   })()
   return readyPython
 }
@@ -121,7 +129,8 @@ function locate(tree: SemanticNode, code: string, at: string | undefined): Probl
 export async function runCella(code: string, opts: CellaRunOptions = {}): Promise<CellaRunResult> {
   let tree: SemanticNode
   let fz: FormalizeResult
-  let checker: CellaChecker
+  let checker: () => Promise<CellaChecker>
+  let moduleHash: string
   if (opts.lang === 'python') {
     if (opts.board || opts.inputs) throw new Error('runCella：Python 沒有板子（board／inputs 只給 C 家族）')
     // ⚠️ 動態載入：python-lift 會載全部語言套件，C 家族的測試檔不必付這筆
@@ -130,13 +139,14 @@ export async function runCella(code: string, opts: CellaRunOptions = {}): Promis
     if (!lifted) throw new Error('runCella：Python 的 lift 失敗（回 null）')
     tree = lifted
     fz = formalizePython(tree)
-    checker = await preparePython()
+    ;({ checker, moduleHash } = await preparePython())
   } else {
     const p = await prepare()
     tree = createTestLifter().lift(p.parser.parse(code)!.rootNode as never) as SemanticNode
     if (opts.style) tree = await withAutoIncludes(tree, opts.style)
     fz = formalize(tree, { lang: opts.lang ?? 'cpp', board: opts.board })
     checker = p.checker
+    moduleHash = p.moduleHash
   }
   if (!fz.program) {
     return {
@@ -145,7 +155,10 @@ export async function runCella(code: string, opts: CellaRunOptions = {}): Promis
     }
   }
   const program = opts.inputs ? { ...(fz.program as Record<string, unknown>), inputs: opts.inputs } : fz.program
-  const v = checker.verdict(program, opts.stdin ?? '', opts.steps ?? (opts.board ? 50_000_000 : 1_000_000))
+  const stdin = opts.stdin ?? ''
+  const steps = opts.steps ?? (opts.board ? 50_000_000 : 1_000_000)
+  // 同一份程式（只差節點編號）、同一個判決器、同樣的輸入與步數 ⟹ 同一個判決：讀快取（`verdict-cache.ts`；SEMORPHE_VERDICT_CACHE=0 關掉）
+  const v = await cachedVerdictAsync(async () => (await checker()).verdict(program, stdin, steps), { moduleHash, program, stdin, steps })
   // 🔴 類別由 Cella 給（history/330）：真的判決裡有一則沒帶 `category`，就是協定沒守住——紅，不讓診斷層替它猜
   const unclassified = v.problems.filter((p) => !p.category)
   if (unclassified.length > 0) throw new Error(`判決沒有說明類別（Cella 0.1.202611030113 起每一則都要有 category）：${unclassified.map((p) => p.kind).join('、')}`)
@@ -168,7 +181,7 @@ export async function cellaTypesOfTree(tree: SemanticNode, opts: { lang?: 'cpp' 
   const p = await prepare()
   const fz = formalize(tree, { lang: opts.lang ?? 'cpp', board: opts.board })
   if (!fz.program) return {}
-  return p.checker.types(fz.program, []).nodes ?? {}
+  return (await p.checker()).types(fz.program, []).nodes ?? {}
 }
 
 /** 一段說得出「為什麼不是 accept」的訊息 */

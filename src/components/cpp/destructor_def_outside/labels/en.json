@@ -1,0 +1,5 @@
+{
+  "C_DESTRUCTOR_DEF_OUTSIDE_MSG0": "Define destructor of class %1 outside it",
+  "C_DESTRUCTOR_DEF_OUTSIDE_TOOLTIP": "Give the body of a destructor the class already declared—it runs when the object is destroyed",
+  "FLOW_TITLE_CPP_DESTRUCTOR_DEF_OUTSIDE": "Define destructor outside class"
+}

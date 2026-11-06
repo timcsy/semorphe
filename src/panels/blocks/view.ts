@@ -5,6 +5,7 @@ import { enableMiddleDragPan } from './middle-drag-pan'
 import type { SemanticNode, DegradationCause, ConfidenceLevel, Annotation } from '../../core/types'
 import { createNode } from '../../core/semantic-tree'
 import { companionFor } from '../../core/component/companion-blocks'
+import { componentTraits } from '../../core/component/traits'
 import type { BlockSpecRegistry } from '../../core/blocks/block-spec-registry'
 import { DEGRADATION_VISUALS, CONFIDENCE_VISUALS } from '../../core/blocks/category-colors'
 import type { BlockStylePreset } from '../../core/blocks/block-style'
@@ -1632,6 +1633,18 @@ export class BlocklyPanel implements ViewHost {
    *
    * @returns 被標起來的積木數。
    */
+  /** 這一塊是不是「不會被執行的宣告」（見 `markNeverRan`）：自己宣告了 `notExecuted`，或是那種容器的、沒有本體的直接成員 */
+  private notExecuted(block: Blockly.Block): boolean {
+    const idOf = (b: Blockly.Block): string | undefined =>
+      this.blockSpecRegistry?.getAll().find((s) => s.blockDef?.type === b.type)?.componentMapping?.componentId
+    const own = idOf(block)
+    if (own && componentTraits(own)?.notExecuted === true) return true
+    const parent = block.getSurroundParent()
+    const parentId = parent ? idOf(parent) : undefined
+    const hasBody = block.inputList.some((i) => i.type === Blockly.inputs.inputTypes.STATEMENT)
+    return !!parentId && componentTraits(parentId)?.notExecuted === true && !hasBody
+  }
+
   markNeverRan(visited: ReadonlySet<string>): number {
     if (!this.workspace) return 0
     const blocks = this.workspace.getAllBlocks(false)
@@ -1656,6 +1669,11 @@ export class BlocklyPanel implements ViewHost {
       //
       // ⚠️ Blockly 的判準：有 `outputConnection` ＝ 它是一個值（運算式）。
       if (block.outputConnection) continue
+      // 🔴 **不會被「執行」的宣告**（元件管線 322 的瀏覽器驗收抓到：每一個類別定義都被標成「沒跑到」）：
+      //    類別／結構的定義、前置宣告、函式原型——Cella 的執行紀錄裡永遠不會有它們（它們不是語句）。
+      //    由元件自己宣告性狀 `notExecuted`；而它們的**直接成員裡沒有本體的那些**（欄位、成員原型）同樣不會被執行。
+      //    ⚠️ 有本體的成員（方法、建構子）不跳過：從沒被呼叫的方法照樣該問「是故意的嗎」。
+      if (this.notExecuted(block)) continue
       if (!visited.has(nodeId) && !this.lastScaffoldIds.has(nodeId)) never.add(block.id)
     }
     // 🔴 **只標最外層的那一塊**（2026-09-04 實測）：一句
