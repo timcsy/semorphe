@@ -174,3 +174,28 @@ describe('漏分號：12 種寫法，學生在兩側看到的字', () => {
     }
   })
 })
+
+// 2026-11-07：敘述寫在函式外面——tree-sitter 的錯誤恢復會補一個 `...`，學生看到「這裡少了一個 `...`」（e2e 換條件那一刀撞到）
+describe('寫在函式外面：說出放錯了地方，不說解析器隨手補的符號', () => {
+  beforeAll(() => { setMessages(zhTW as never) })
+  const CASES: [string, string, number[]][] = [
+    ['cout 在 using 之後、main 之前', '#include <iostream>\nusing namespace std;\ncout << "Hi" << endl;\nint main() {\n    return 0;\n}\n', [3]],
+    ['cin 在全域變數之後', '#include <iostream>\nusing namespace std;\nint x;\ncin >> x;\nint main() {\n    return 0;\n}\n', [4]],
+    ['兩行 cout 寫在 main 之後', '#include <iostream>\nusing namespace std;\nint main() {\n    return 0;\n}\ncout << 1;\ncout << 2;\n', [6, 7]],
+    // ⚠️ 檔案範圍的 `x = 3;`、`if (…) {…}` tree-sitter 不報語法錯誤（它的文法收頂層敘述）——不走這條路，另記
+  ]
+  it.each(CASES)('★ %s：規則 SYNTAX_OUTSIDE_FUNCTION，一行一則（第 %s 行），不另外報', (_n, src, lines) => {
+    const ds = diagnose(src).filter((d) => d.source === 'parser')
+    expect(ds.map((d) => [d.rule, d.at ? d.at.line + 1 : null])).toEqual(lines.map((l) => ['SYNTAX_OUTSIDE_FUNCTION', l]))
+    expect(diagnosticText(ds[0].rule, 'CODE', ds[0].params)).toBe('這一行寫在函式外面')
+    expect(diagnosticLayers(ds[0].rule, ds[0].params).join('')).toContain('main')
+    expect(JSON.stringify(ds)).not.toContain('...')
+  })
+  it('負向：函式裡的錯誤、少分號——不說「寫在函式外面」', () => {
+    for (const src of ['int main() {\n    int x = 1\n    cout << x;\n}\n', 'void f() { @@@ ### }', 'int main() {\n    return 0;\n}\nint y = \n']) {
+      const ds = diagnose(src).filter((d) => d.source === 'parser')
+      expect(ds.length, src).toBeGreaterThan(0)
+      expect(ds.filter((d) => d.rule === 'SYNTAX_OUTSIDE_FUNCTION'), src).toEqual([])
+    }
+  })
+})

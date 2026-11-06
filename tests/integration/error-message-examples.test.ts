@@ -51,12 +51,13 @@ const EXAMPLES: [string, string][] = [
 
 /**
  * **語法錯誤**（2026-11-06 加；漏分號提示那一刀）：寫不完整的程式不交給 Cella——診斷來自語義樹（`diagnosticsFromTree`）。
- * 三種各一則：解析器指名的缺口、推論出來的「可能」、認不得的。
+ * 四種各一則：解析器指名的缺口、推論出來的「可能」、認不得的、寫在函式外面（量得到的確定說法，排在解析器的缺口之前）。
  */
 const SYNTAX_EXAMPLES: [string, string][] = [
   ['少了分號（下一行是宣告）', 'int main() {\n    int x = 1\n    int y = 2;\n}'],
   ['少了分號（下一行是輸出）', 'int main() {\n    int x = 1\n    cout << x;\n}'],
   ['認不得的寫法', 'int main() {\n    int x = 1;\n    @@@\n}'],
+  ['寫在函式外面（2026-11-07）', 'cout << "Hi" << endl;\nint main() {\n    return 0;\n}'],
 ]
 
 const S = apcs as unknown as StylePreset

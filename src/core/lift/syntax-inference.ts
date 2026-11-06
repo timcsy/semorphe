@@ -26,3 +26,22 @@ export function inferSyntaxGaps(node: AstNode): SyntaxGap[] {
   }
   return []
 }
+
+/**
+ * **確定的推論**（量得到、不是猜）——排在解析器指名的缺口**之前**（2026-11-07）。
+ * 解析器的錯誤恢復會隨手補一個 token（`...`），那時它「指名」的缺口反而誤導；一個量得到的更好的說法要先說。
+ * 例：「這一行寫在函式外面」（`languages/cpp/lang/statement-outside-function.ts`）。
+ */
+const PRECISE: Inferer[] = []
+
+export function registerPreciseSyntaxGapInference(fn: Inferer): void {
+  if (!PRECISE.includes(fn)) PRECISE.push(fn)
+}
+
+export function inferPreciseSyntaxGaps(node: AstNode): SyntaxGap[] {
+  for (const f of PRECISE) {
+    const g = f(node)
+    if (g.length > 0) return g
+  }
+  return []
+}
