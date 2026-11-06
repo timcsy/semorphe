@@ -1,0 +1,8 @@
+{
+  "C_DESTRUCTOR_DECLARE_MSG0": "Declare destructor %1 %2, defined outside the class",
+  "C_DESTRUCTOR_DECLARE_TOOLTIP": "Inside the class, say only that the class has a destructor; its body goes in a \"Define destructor outside the class\" block",
+  "C_DESTRUCTOR_DECLARE_VIRTUAL_NO": "(plain)",
+  "C_DESTRUCTOR_DECLARE_VIRTUAL_YES": "virtual (also runs when deleted through a base pointer)",
+  "FLOW_TITLE_CPP_DESTRUCTOR_DECLARE": "Declare destructor",
+  "C_DESTRUCTOR_DECLARE_VIRTUAL_OVERRIDE": "override (overrides the base's virtual destructor)"
+}

@@ -1,0 +1,58 @@
+{
+  "componentId": "cpp:method_declare",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "return_type",
+      "kind": "type_expr",
+      "default": "void"
+    },
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "method"
+    },
+    {
+      "name": "is_const",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "尾端的 const 寫在原型上（`int get() const;`），類別外的定義也要寫同一個——兩邊各記各的，多載靠它分（`get()` 與 `get() const` 是兩個成員）。慣例同類別裡定義方法那顆。"
+    },
+    {
+      "name": "virt",
+      "kind": "enum",
+      "default": "none",
+      "_kind_why": "`virtual void f();`／`void f() override;`：virtual 與 override 只寫在類別裡這一行，類別外的定義不寫（Cella 的 mbMethod.virt：vVirtual／vOverride）。第 322 刀的盲測補；兩個都寫的照舊降級。"
+    }
+  ],
+  "slots": {
+    "params": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "_owner_why": "與同族（類別裡定義方法、建構子、解構子）同一個章——課程清單與工具箱照同族的位置放。",
+  "traits": {
+    "insideParentOnly": true,
+    "forLoopPart": false
+  },
+  "_traits_why": "**只出現在類別裡**——單獨合成一份樣本去量它，是在量一個不存在的位置（同類別裡定義方法那顆）。`forLoopPart: false`：成員的原型只寫得在類別本體裡，C++ 文法上放不進 for 的第一格（那裡只收變數宣告）。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "`lift.ts` 匯出建構子；判別（類別裡的 field_declaration、宣告子是函式）是 C++ 語法的知識，留在共用檔 `liftClassMember`。"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "memberRole": "method",
+  "_memberRole_why": "它在類別裡扮演成員函式——本體由類別外那一顆定義給（formalize 時接回來，同 Cella 的參照翻譯：the class's member takes the definition）。",
+  "annotations": {
+    "control_flow": "sequence"
+  }
+}

@@ -65,10 +65,13 @@ function isDeclaration(dir: string, m: Manifest): boolean {
 }
 
 /**
- * **刻意不宣告的**——今天是空的。
- * 一顆進這張表要在自己的 `_traits_why` 裡寫出「為什麼 C++ 的文法在這裡不成立」。
+ * **刻意不宣告的**——一顆進這張表要在自己的 `_traits_why` 裡寫出「為什麼 C++ 的文法在這裡不成立」。
+ *
+ * 刻意豁免（理由寫在各自的 `_traits_why`）：
+ * - 第 322 刀的三顆**成員原型**（類別裡宣告方法／建構子／解構子）：它們只寫得在類別本體裡，C++ 文法上放不進 for 的第一格
+ *   ——名字像宣告，但不是變數宣告（`for (void f(); …)` 不合法）。宣告 `forLoopPart: false` 是照實，不是漏寫。
  */
-const EXEMPT = new Set<string>()
+const EXEMPT = new Set<string>(['cpp:method_declare', 'cpp:constructor_declare', 'cpp:destructor_declare'])
 
 function scan(): { all: Manifest[]; decls: { id: string; dir: string; ok: boolean }[] } {
   const roots = ['src/components/cpp', 'src/components/python', 'src/components/hw']

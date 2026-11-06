@@ -1,0 +1,8 @@
+{
+  "C_DESTRUCTOR_DECLARE_MSG0": "宣告解構子 %1 %2，定義寫在類別外",
+  "C_DESTRUCTOR_DECLARE_TOOLTIP": "在類別裡只說這個類別有解構子；它的本體寫在類別外面的「在類別外定義解構子」積木裡",
+  "C_DESTRUCTOR_DECLARE_VIRTUAL_NO": "（一般）",
+  "C_DESTRUCTOR_DECLARE_VIRTUAL_YES": "virtual（經基底的指標刪除也會跑到）",
+  "FLOW_TITLE_CPP_DESTRUCTOR_DECLARE": "宣告解構子",
+  "C_DESTRUCTOR_DECLARE_VIRTUAL_OVERRIDE": "override（覆寫基底的虛擬解構子）"
+}
