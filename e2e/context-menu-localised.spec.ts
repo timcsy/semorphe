@@ -18,6 +18,7 @@
  * ——它擋得住「漏翻一個」，擋不住「整條沒接上」。
  */
 import { test, expect } from '@playwright/test'
+import { editsSettled } from './helpers'
 
 test('★ 右鍵一顆積木，選單上的字是中文', async ({ page }) => {
   test.setTimeout(180_000)
@@ -37,7 +38,7 @@ test('★ 右鍵一顆積木，選單上的字是中文', async ({ page }) => {
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "hi";', { delay: 12 })
-  await page.waitForTimeout(4000)
+  await editsSettled(page)
 
   const box = await page.locator('.blocklyDraggable').filter({ hasText: '印出' }).first().boundingBox()
   expect(box, '🔴 畫布上沒有積木 → 這一支測的不是那條路').toBeTruthy()
