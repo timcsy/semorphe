@@ -8,8 +8,8 @@
  * `new_declarator`**，不在那個分支裡。於是：
  *
  * ```
- * new int[n]   → cpp:new { type: 'int', args: '' }   ← [n] 不見了
- * new int      → cpp:new { type: 'int', args: '' }   ← 與上面完全相同
+ * new int[n]   → cpp:new { type: 'int' }   ← [n] 不見了
+ * new int      → cpp:new { type: 'int' }   ← 與上面完全相同
  * ```
  *
  * 🔴 **兩個不同的東西產出同一棵樹**，而產生器也只寫得出 `new int`
@@ -36,20 +36,25 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     //    值從「指定好的」變成「未初始化」（2026-11-06，元件管線 313 的盲測）。記成屬性 `brace`，產回去照原本的括號
     const braceList = node.namedChildren.find(c => c.type === 'initializer_list')
     const argList = node.namedChildren.find(c => c.type === 'argument_list') ?? braceList
-    const args = argList ? argList.namedChildren.map(a => a.text).join(', ') : ''
+    // 🔴 引數是**運算式**，逐一 lift 成槽（2026-11-07，328）——原本是一串文字屬性，formalize 只能照實回 unknown
+    const argNodes = argList ? argList.namedChildren.filter(a => a.type !== 'comment') : []
+    const args = argNodes.map(a => ctx.lift(a)).filter((x): x is NonNullable<typeof x> => x != null)
+    // 有一個引數 lift 不出來 → 讓開（誠實降級成原文），不送少一個引數的樹
+    if (args.length !== argNodes.length) return null
 
     // `new int[n]` —— 大小住在 `new_declarator` 裡（`[` 運算式 `]`）。
     const declarator = node.namedChildren.find(c => c.type === 'new_declarator')
     const sizeExpr = declarator?.namedChildren[0]
     const size = sizeExpr ? ctx.lift(sizeExpr) : null
 
-    const made = size
-      ? createNode('cpp:new', { type, args }, { size: [size] })
-      : createNode('cpp:new', { type, args })
+    const slots: Record<string, ReturnType<typeof createNode>[]> = {}
+    if (args.length > 0) slots.args = args
+    if (size) slots.size = [size]
+    const made = createNode('cpp:new', { type }, slots)
     // 🔴 **一對空括號是意思，不是排版**（2026-11-06）：`new int()` 把值初始化成 0，`new int` 的值是未定的（[expr.new]p18）。
     //    原本兩者都成了「沒有引數」→ 產回去少了括號、意思變了。記成屬性 `valueInit`，產碼與 formalize 都讀它
     //    🔴 而它是【屬性】不是 layoutHints：layoutHints 走一趟積木就丟了（form-invariance (c)），積木上由 renderMapping.hints 帶著
-    if (argList && args === '' && !braceList) made.properties.valueInit = 'true'
+    if (argList && args.length === 0 && !braceList) made.properties.valueInit = 'true'
     if (braceList) made.properties.brace = 'true'
     return made
   })

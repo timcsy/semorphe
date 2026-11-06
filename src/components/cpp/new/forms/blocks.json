@@ -15,9 +15,8 @@
           "text": "MyClass"
         },
         {
-          "type": "field_input",
-          "name": "ARGS",
-          "text": ""
+          "type": "input_dummy",
+          "name": "HEAD"
         }
       ],
       "inputsInline": true,
@@ -31,11 +30,17 @@
           "name": "SIZE",
           "check": "Expression"
         }
-      ]
+      ],
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "minCount": 0,
+      "countKey": "argCount",
+      "openLabelKey": "CPP_NEW_ARGS",
+      "openLabelFallback": "引數",
+      "openLabelOnFirstSlot": true
     },
     "renderMapping": {
       "fields": {
-        "ARGS": "args",
         "TYPE": "type"
       },
       "inputs": {
@@ -44,6 +49,13 @@
       "hints": [
         "valueInit",
         "brace"
+      ],
+      "dynamicRules": [
+        {
+          "countSource": "argCount",
+          "childSlot": "args",
+          "inputPattern": "ARG_{i}"
+        }
       ]
     }
   }

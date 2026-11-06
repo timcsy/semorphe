@@ -13,11 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../../migrations/block-type-migrations'
 import { mergedIdentities } from '../../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20, SHAPE_CHANGES_V21, SHAPE_CHANGES_V22, SHAPE_CHANGES_V23 } from '../../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20, SHAPE_CHANGES_V21, SHAPE_CHANGES_V22, SHAPE_CHANGES_V23, SHAPE_CHANGES_V26 } from '../../migrations/block-shape-changes'
 import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 25
+export const CURRENT_VERSION = 26
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -475,6 +475,12 @@ export const UPGRADES: Record<number, Upgrade> = {
    * 🟢 冪等：只改版號。
    */
   24: (raw) => ({ ...raw, version: 25 }),
+  /**
+   * 25 → 26：**`new T(…)` 的引數升格成運算式接點**（328）——`cpp_new` 的 `ARGS` 欄位退場，
+   * 帶著它的積木快取作廢、從程式碼重 lift（`block-shape-changes.ts` 的 V26）。
+   * 🟢 冪等：新形狀裡沒有 `ARGS`，再跑一次什麼都不丟。⚠️ 只動積木快取，不碰程式碼。
+   */
+  25: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V26, 26),
 }
 
 /**

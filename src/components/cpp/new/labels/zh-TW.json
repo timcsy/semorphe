@@ -1,4 +1,5 @@
 {
-  "CPP_NEW_MSG0": "建立 %1 物件（%2）(new)",
-  "CPP_NEW_TOOLTIP": "建立一個新的物件，並配置記憶體空間"
+  "CPP_NEW_MSG0": "建立 %1 物件 %2(new)",
+  "CPP_NEW_TOOLTIP": "建立一個新的物件並配置記憶體；按 ＋ 加建構子的引數（new T(a, b)），大括號寫法 new T{a, b} 也是同一顆",
+  "CPP_NEW_ARGS": "引數"
 }
