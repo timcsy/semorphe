@@ -22,6 +22,7 @@
  * > 等於不存在——而它不會報錯，它只是安靜。**
  */
 import { test, expect, type Page } from '@playwright/test'
+import { editsSettled } from './helpers'
 
 async function open_(page: Page, query: string): Promise<void> {
   await page.goto(query)
@@ -71,7 +72,7 @@ test('★ 他已經動手做東西了 → 不要插嘴', async ({ page }) => {
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "hi";', { delay: 12 })
-  await page.waitForTimeout(5000)
+  await editsSettled(page)
   await page.evaluate(() => {
     const app = (window as unknown as { __app: { markOutOfScopeBlocks?: () => void } }).__app
     app.markOutOfScopeBlocks?.()

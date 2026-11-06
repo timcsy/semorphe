@@ -14,7 +14,7 @@
  * > **一個「你錯了」而看不出錯在哪的回饋，教的是「這個工具有脾氣」。**
  */
 import { test, expect } from '@playwright/test'
-import { runButton } from './helpers'
+import { runButton, editsSettled } from './helpers'
 
 test('★ 輸出只差一個空格 → 主控台要說出差在哪', async ({ page }) => {
   test.setTimeout(180_000)
@@ -35,7 +35,7 @@ test('★ 輸出只差一個空格 → 主控台要說出差在哪', async ({ pa
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "Hello !" << endl;', { delay: 12 })
-  await page.waitForTimeout(4000)
+  await editsSettled(page)
 
   // ⚠️ 用 `#run-btn`，不要用 class——`.exec-btn.run` 同時匹配下拉箭頭（見 helpers）
   await runButton(page).click()
@@ -81,7 +81,7 @@ test('★ 「跳過」的對比度要看得出來是一顆按鈕', async ({ page
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "Hello!" << endl;', { delay: 12 })
-  await page.waitForTimeout(4000)
+  await editsSettled(page)
   await runButton(page).click()
   await page.waitForTimeout(2000)
 
