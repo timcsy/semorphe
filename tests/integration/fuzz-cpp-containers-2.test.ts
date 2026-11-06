@@ -272,14 +272,9 @@ describe('模糊測試的回歸：容器第二輪', () => {
     })
   }, 60_000)
 
-  // 歸類：Cella 未支援——std::make_tuple
-  it('🟡 已知缺陷（修好時這條會紅）：🟠 三個值的一組', async () => {
-    await knownCellaGap(/std::make_tuple is not supported yet/, async () => {
-      // 🟠 **為什麼不現在修**：`tuple` 在執行期是一串格子（只有「一對」登記過欄位名），
-      //    而 `make_tuple` 要的是「造一個那樣的東西」——它是一顆新元件。
-      // 🔴 何時該修：與 `make_pair` 同一顆元件收下它時（同族，同一個形狀）。
-      await same(`auto t = make_tuple(1, 2, 3); auto [a, b, c] = t; cout << a << b << c;`, "123", '')
-    })
+  // 🟢 316（Cella 0.1.202611061710 收 tuple）之後轉正——原本 Cella 說 std::make_tuple is not supported yet
+  it('🟠 三個值的一組', async () => {
+    await same(`auto t = make_tuple(1, 2, 3); auto [a, b, c] = t; cout << a << b << c;`, "123", '')
   }, 60_000)
 
   // 歸類：我們這側（lift）——`deque<int>{4, 5}` 這種暫時物件 lift 成 unresolved
