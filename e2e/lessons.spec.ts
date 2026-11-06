@@ -291,6 +291,32 @@ function collect(): LessonCase[] {
 const CASES = collect()
 
 /**
+ * 🔴 **參考解答那一類：本機跑代表樣本、CI 全跑**（使用者 2026-11-07「照推薦」，選窗口提的 A 方案；
+ * 調查見 `knowledge/draft/2026-11-07-課文-e2e-瘦身調查.md`）。
+ *
+ * 每一題的輸出在 `npm test` 裡已經斷言兩次（`binding-verdict`：C++／C；`lesson-solutions-run`：四種語言），
+ * 走的是同一條 lift → formalize → Cella。瀏覽器多驗的是每一題都一樣的那段 UI（輸入框停下來等輸入、預測題略過、主控台），
+ * 所以本機的長測試只跑樣本：**每條軌道 × {有 stdin、沒 stdin} 各一題**（課與題的原順序裡第一個），131 → 約 12 支、省約 11 分。
+ *
+ * ⚠️ 代價：「只在某一題才觸發」的瀏覽器差異，本機看不到——**CI 照全跑**（`process.env.CI`，與 playwright 設定同一個開關）就是為了它。
+ * 本機要全跑：`SEMORPHE_LESSON_E2E_FULL=1`。
+ */
+const ALL_SOLUTIONS = !!process.env.CI || process.env.SEMORPHE_LESSON_E2E_FULL === '1'
+const trackOf = (c: LessonCase): string => c.name.split('/')[0]
+const sampleKey = (c: LessonCase, ex: Exercise): string => `${trackOf(c)}｜${ex.stdin.length > 0 ? '有 stdin' : '沒 stdin'}`
+/** 每個（軌道 × 有沒有 stdin）挑第一題 */
+const SAMPLE = new Set<Exercise>()
+const SAMPLE_KEYS = new Set<string>()
+for (const c of CASES) {
+  for (const ex of c.exercises) {
+    const k = sampleKey(c, ex)
+    if (SAMPLE_KEYS.has(k)) continue
+    SAMPLE_KEYS.add(k)
+    SAMPLE.add(ex)
+  }
+}
+
+/**
  * 開一堂課——**走 `?lesson=`，不走目標選單**。
  *
  * 🔴 2026-08-28 之前這裡是 `freshApp` ＋ `selectTarget(c.target)`，
@@ -351,6 +377,16 @@ async function openLesson(page: import('@playwright/test').Page, c: LessonCase):
 test('★ 入口條件——真的掃到課了', () => {
   // ⚠️ 錨在課的數量（合成量）。0 堂 ＝ 這支什麼都沒驗，不是「都對」。
   expect(CASES.length, '🔴 一堂課都沒掃到 → 下面每一支都是空過的').toBeGreaterThanOrEqual(1)
+})
+
+test('★ 入口條件——參考解答的樣本涵蓋每條軌道 × 有沒有 stdin', () => {
+  // 組合是從題目【量】出來的：哪個組合有題目、樣本裡就一定有它——少了一個組合，就是挑樣本的規則壞了
+  const exist = new Set(CASES.flatMap((c) => c.exercises.map((ex) => sampleKey(c, ex))))
+  const sampled = new Set(CASES.flatMap((c) => c.exercises.filter((ex) => SAMPLE.has(ex)).map((ex) => sampleKey(c, ex))))
+  expect([...exist].sort(), '🔴 樣本漏了某條軌道或某一種輸入').toEqual([...sampled].sort())
+  // 錨：至少要有「有 stdin」與「沒 stdin」兩種，且不只一條軌道——否則上面那條等式空過也是綠的
+  expect([...exist].some((k) => k.endsWith('有 stdin')) && [...exist].some((k) => k.endsWith('沒 stdin')), '🔴 量不到兩種輸入').toBe(true)
+  expect(new Set([...exist].map((k) => k.split('｜')[0])).size, '🔴 只量到一條軌道').toBeGreaterThanOrEqual(2)
 })
 
 for (const c of CASES) {
@@ -522,7 +558,7 @@ for (const c of CASES) {
   //
   //    一份手打的 `check.stdout` 錯一個空格，那一題的裁判就會對每一個
   //    做對的學生說他錯——而畫面上完全看不出來。
-  for (const ex of c.exercises) {
+  for (const ex of c.exercises.filter((x) => ALL_SOLUTIONS || SAMPLE.has(x))) {
     test(`★ ${c.name}〈${ex.title}〉：參考解答真的跑得出宣告的答案`, async ({ page }) => {
       await openLesson(page, c)
       await page.evaluate((code) =>
