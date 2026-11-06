@@ -74,7 +74,7 @@ const CPP_ONLY_LANGUAGE = new Set([
   // 第 218 刀：類別裡的一般成員函式另立元件——同族，C 沒有
   'cpp:method_def',
   // 2026-11-06（元件管線 311）：「這個物件自己」——C 沒有 this
-  'cpp:this',
+  'cpp:this', 'cpp:class_declare',
   // 例外與轉型
   'cpp:try_catch', 'cpp:throw',
   'cpp:cast_static', 'cpp:cast_dynamic', 'cpp:cast_reinterpret', 'cpp:cast_const',

@@ -98,5 +98,10 @@
     "key": "cpp:new.valueInit",
     "cause": "排版提示，不給學生編輯",
     "reason": "記的是**原文有沒有那對空括號**（`new T()` 還是 `new T`）。⚠️ 而它不只是排版：空括號是值初始化（`new int()` 是 0），沒有是預設初始化（值未定）——所以它是屬性、formalize 照讀，不是 layoutHints。學生在積木上做的是「new 一個 T」，括號是從程式碼來的寫法 ⟹ 由 `renderMapping.hints` 帶著，走一趟積木不丟（2026-11-06，元件管線 311，form-invariance (c) 量到）。要不要讓學生在積木上切換值初始化是另一題 UX，沒排。"
+  },
+  {
+    "key": "cpp:new.brace",
+    "cause": "排版提示，不給學生編輯",
+    "reason": "記的是**原文用大括號還是小括號**（`new Node{v, head}` vs `new T(a)`）。同 `cpp:new.valueInit`：它不只是排版（聚合體只能用大括號），所以是屬性；而學生在積木上做的是「new 一個 T、給這些引數」，括號的種類是從程式碼來的寫法 ⟹ 由 `renderMapping.hints` 帶著（2026-11-06，元件管線 313 的盲測量到大括號整段丟掉）。"
   }
 ]

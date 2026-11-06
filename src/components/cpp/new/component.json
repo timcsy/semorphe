@@ -16,6 +16,11 @@
       "name": "valueInit",
       "kind": "literal",
       "default": ""
+    },
+    {
+      "name": "brace",
+      "kind": "literal",
+      "default": ""
     }
   ],
   "slots": {
@@ -43,5 +48,6 @@
     },
     "formalize": "./formalize.ts"
   },
-  "_valueInit_why": "`new T()`（空括號，值初始化：`new int()` 是 0）與 `new T`（預設初始化，值未定）是兩種意思（[expr.new]p18）。原本記在 layoutHints，而走一趟積木就丟了（form-invariance (c) 量到）⟹ 升成屬性，積木上由 renderMapping.hints 帶著（學生看不到、不會被悄悄改寫）。值是 \"true\" 或空。"
+  "_valueInit_why": "`new T()`（空括號，值初始化：`new int()` 是 0）與 `new T`（預設初始化，值未定）是兩種意思（[expr.new]p18）。原本記在 layoutHints，而走一趟積木就丟了（form-invariance (c) 量到）⟹ 升成屬性，積木上由 renderMapping.hints 帶著（學生看不到、不會被悄悄改寫）。值是 \"true\" 或空。",
+  "_brace_why": "`new T{…}` 用大括號還是小括號：大括號是串列初始化（聚合體 `new Node{v, head}` 只能這樣寫），換成小括號會變成呼叫建構子而編不過。原本只認小括號，大括號整段丟掉（元件管線 313 的盲測）。積木上由 renderMapping.hints 帶著，同 valueInit。值是 \"true\" 或空。"
 }
