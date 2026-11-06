@@ -162,7 +162,14 @@ jobs:
       # ⚠️ 只裝 chromium。裝全部瀏覽器要多幾分鐘，而這批測試量的是
       # 「渲染出來對不對」，不是跨瀏覽器相容性——那是另一個問題，
       # 要問的時候再加，不要因為「順便」而讓每次 CI 都變慢。
-      - run: npx playwright install --with-deps chromium
+      # 同 vsix.yml 那一步（2026-11-07）：沒有上限會掛到工作的 6 小時逾時；只設一個短上限又會被慢的 apt 鏡像誤殺——單次 9 分、重試一次、整步 20 分
+      - timeout-minutes: 20
+        run: |
+          for i in 1 2; do
+            timeout 540 npx playwright install --with-deps chromium && exit 0
+            echo "::warning::安裝瀏覽器第 $i 次沒完成（多半是 apt 鏡像慢），重試"
+          done
+          exit 1
       - run: npx playwright test --shard=${{ matrix.shard }}/4
       - uses: actions/upload-artifact@v4
         if: failure()
