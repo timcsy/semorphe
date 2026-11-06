@@ -1,5 +1,6 @@
 import { degradeWhatCannotStand } from './honest-degradation'
 import type { SyntaxGap } from '../diagnostics'
+import { inferSyntaxGaps } from './syntax-inference'
 import type { SemanticNode, DegradationCause } from '../types'
 import type { AstNode, NodeLifter, LiftContext } from './types'
 import { createNode } from '../semantic-tree'
@@ -579,9 +580,11 @@ export class Lifter {
       degradationCause: this.determineDegradationCause(node),
       // 🔴 同上：有缺口才帶。⚠️ 這裡的節點**本身**就是降級的那一顆，
       //    所以缺口一定屬於它，不會像上面那樣要先判斷「誰認領」。
-      ...(this.collectSyntaxGaps(node).length > 0
-        ? { syntaxGaps: this.collectSyntaxGaps(node) }
-        : {}),
+      ...((): { syntaxGaps?: SyntaxGap[] } => {
+        // 只算一次：缺口的推論可能要重新剖析（syntax-inference.ts）
+        const gaps = this.collectSyntaxGaps(node)
+        return gaps.length > 0 ? { syntaxGaps: gaps } : {}
+      })(),
       sourceRange: {
         startLine: node.startPosition.row,
         startColumn: node.startPosition.column,
@@ -1025,7 +1028,8 @@ export class Lifter {
       for (const c of n.children) walk(c)
     }
     walk(node)
-    return out
+    // 解析器沒有指名任何缺口時，才問語言那側推不推得出來（推出來的標 likely；見 syntax-inference.ts）
+    return out.length > 0 ? out : inferSyntaxGaps(node)
   }
 
   /**

@@ -11,6 +11,8 @@ import { registerCppRenderStrategies } from '../renderers/strategies'
 import { registerIOLifters } from './io'
 import { declareLiftPostProcessor } from '../../../core/lift/post-processors'
 import { registerMisparseRepairs } from '../lang/misparse'
+import { registerSyntaxGapInference } from '../../../core/lift/syntax-inference'
+import { inferMissingSemicolon } from '../lang/missing-semicolon'
 import { registerMacroExpansion } from '../lang/macro-expand'
 import { componentLiftRegistrars } from '../../../core/component/paths'
 import type { TransformRegistry } from '../../../core/registry/transform-registry'
@@ -75,6 +77,8 @@ function registerCppLiftersInner(lifter: Lifter, registries?: CppRegistries): vo
    * 解錯了，而「C++ 的優先級是什麼」是 C++ 的知識。見 `../lang/misparse.ts`。
    */
   registerMisparseRepairs()
+  // 解析器沒指名缺口時的推論：「上一行的結尾可能少了 `;`」（2026-11-06）
+  registerSyntaxGapInference(inferMissingSemicolon)
 
   /**
    * 🔴 **帶參數的巨集**——tree-sitter 對 `rep(i,m) s += i;` 不給 ERROR，
