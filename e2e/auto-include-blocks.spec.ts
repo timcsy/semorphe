@@ -35,7 +35,7 @@
  * ⚠️ **綁深度不綁身分**：`editable`（深度 2+）下鷹架動得了，那時它該在工具箱裡。
  */
 import { test, expect, type Page } from '@playwright/test'
-import { blocksSettled, appReady } from './helpers'
+import { blocksSettled, appReady, frames } from './helpers'
 
 const LESSON = 'cpp-beginner/05-程式從哪開始'
 
@@ -97,7 +97,7 @@ async function toolboxContents(page: Page): Promise<string[]> {
   const out: string[] = []
   for (let i = 0; i < n; i++) {
     await cats.nth(i).click()
-    await page.waitForTimeout(500)
+    await frames(page, 3)
     const items = page.locator('.blocklyFlyout .blocklyDraggable, .blocklyToolboxFlyout .blocklyDraggable')
     const k = await items.count()
     for (let j = 0; j < k; j++) out.push((await items.nth(j).textContent() ?? '').replace(/\s+/g, ' ').trim())
@@ -108,9 +108,10 @@ async function toolboxContents(page: Page): Promise<string[]> {
 /** 從工具箱的某一類，把某一顆拖到畫布上。 */
 async function dragOut(page: Page, category: string, label: string, at: [number, number]): Promise<void> {
   await page.locator('.blocklyToolboxCategory', { hasText: category }).click()
-  await page.waitForTimeout(700)
   const item = page.locator('.blocklyFlyout .blocklyDraggable, .blocklyToolboxFlyout .blocklyDraggable')
     .filter({ hasText: label }).first()
+  // 等那一顆在 flyout 裡出現（取代固定睡 0.7 秒）
+  await item.waitFor({ state: 'visible', timeout: 10_000 })
   const from = await item.boundingBox()
   const canvas = await page.locator('.blocklySvg').first().boundingBox()
   if (!from || !canvas) throw new Error(`🔴 抓不到座標（${category}／${label}）`)

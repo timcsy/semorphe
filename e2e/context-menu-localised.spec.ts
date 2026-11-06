@@ -44,7 +44,8 @@ test('★ 右鍵一顆積木，選單上的字是中文', async ({ page }) => {
   const box = await page.locator('.blocklyDraggable').filter({ hasText: '印出' }).first().boundingBox()
   expect(box, '🔴 畫布上沒有積木 → 這一支測的不是那條路').toBeTruthy()
   await page.mouse.click(box!.x + 18, box!.y + box!.height / 2, { button: 'right' })
-  await page.waitForTimeout(1200)
+  // 等選單開出來（取代固定睡 1.2 秒）；開不出來的話下面的斷言照樣紅
+  await page.locator('.blocklyMenuItem').first().waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {})
 
   const items = await page.evaluate(() =>
     [...document.querySelectorAll('.blocklyMenuItemContent, .blocklyMenuItem')]

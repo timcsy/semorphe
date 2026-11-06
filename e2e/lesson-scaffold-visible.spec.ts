@@ -35,6 +35,7 @@
  * 🔴 而 `npm test` 那 6764 條**一條都沒紅**——這個症狀從頭到尾是使用者發現的。
  */
 import { test, expect } from '@playwright/test'
+import { appReady, blocksSettled } from './helpers'
 
 interface Snap { depth: number; all: number; ghost: number }
 
@@ -54,7 +55,10 @@ async function openLesson(page: import('@playwright/test').Page, id: string): Pr
   await page.waitForFunction(
     () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 30_000 })
-  await page.waitForTimeout(3500)
+  // 等那一題種好、同步靜下來（取代固定睡 3.5 秒）
+  await appReady(page)
+  await page.waitForFunction(() => Boolean((window as never as { __app?: { currentTaskId?: string } }).__app?.currentTaskId), undefined, { timeout: 30_000 })
+  await blocksSettled(page)
   return snap(page)
 }
 

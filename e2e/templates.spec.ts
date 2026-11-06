@@ -20,7 +20,7 @@
  * 錨在**範例數**（合成量），不是「壞掉的份數」。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource, appReady, treeReady, pickTarget, runAndSettle } from './helpers'
+import { freshApp, useAsSource, appReady, treeReady, pickTarget, runAndSettle, editsSettled } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -76,7 +76,8 @@ for (const c of CASES) {
     const confirmApply = page.locator('.quick-pick-item').filter({ hasText: /^套用/ })
     if (await confirmApply.count() > 0) await confirmApply.first().click()
     await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
-    await page.waitForTimeout(2500)
+    await appReady(page)
+    await editsSettled(page)
 
     // ① 目標真的切過去了
     expect(

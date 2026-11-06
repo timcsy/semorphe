@@ -100,8 +100,9 @@ test('★ 第一次打開（沒有任何存檔）就拉得動積木', async ({ p
 
   // ── 真的拉一顆下來 ────────────────────────────────────────
   await page.locator('.blocklyToolboxCategory').first().click()
-  await page.waitForTimeout(900)
   const flyout = page.locator('.blocklyFlyout .blocklyDraggable')
+  // 等 flyout 長出積木（取代固定睡 0.9 秒）；長不出來的話下一行照樣紅
+  await flyout.first().waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {})
   expect(await flyout.count(), '🔴 flyout 裡沒有積木').toBeGreaterThan(0)
 
   const box = await flyout.first().boundingBox()
