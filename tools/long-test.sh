@@ -60,6 +60,9 @@ LOAD_LIMIT=$((NCPU * 2))
 LOAD_WAIT_MAX=${LOAD_WAIT_MAX:-60}
 load_now() { sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}' || awk '{print int($1)}' /proc/loadavg; }
 wait_load() {
+  # 經 cos-mos 的共用排隊（`slot.mjs run …`）啟動時，負載閘門由它管（三個專案同一條規則）——這裡關掉，免得兩道疊起來
+  #（它最多等 30 分、這裡最多 60 分）。開始／結束負載兩欄照記。
+  [ "${SEMORPHE_LOAD_GATE:-1}" = 0 ] && return 0
   local waited=0 l
   l=$(load_now)
   while [ "$l" -gt "$LOAD_LIMIT" ]; do
