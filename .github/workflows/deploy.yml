@@ -44,6 +44,9 @@ jobs:
   # 的**第七個實例**，也是最大的一個：前六個各漏掉一個機制，這個漏掉的是全部。
   test:
     runs-on: ubuntu-latest
+    # 🔴 job 層的上限（2026-11-07）：42adf741 那一輪的 e2e (2) 卡在 in_progress 十一小時以上，佔著 concurrency group pages，
+    #    之後九輪全部 pending → cancelled（GitHub 沒替它逾時）。step 層的 timeout-minutes 管不到整個 job。
+    timeout-minutes: 40
     steps:
       # ⚠️ **要完整歷史**（`fetch-depth: 0`）。
       #
@@ -138,6 +141,8 @@ jobs:
   # ——那是另一刀，而在拿到這一刀的實測數字之前不要先做。
   e2e:
     runs-on: ubuntu-latest
+    # 🔴 job 層的上限：見上面 test 那一格（卡住的正是這一個 job 的第 2 片）
+    timeout-minutes: 45
     strategy:
       # ⚠️ **不要 fail-fast**：一片紅就砍掉其他三片的話，你只會看到第一個
       #    失敗，而修完它才知道還有第二個——那把一輪 15 分鐘變成三輪。

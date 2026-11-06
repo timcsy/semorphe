@@ -37,7 +37,7 @@ const BIN: Record<string, string> = {
 const SCALAR: Record<string, string> = {
   int: 'tInt', long: 'tLong', 'long long': 'tLongLong', unsigned: 'tUnsigned', 'unsigned int': 'tUnsigned',
   short: 'tShort', 'unsigned short': 'tUShort', 'unsigned long': 'tULong', 'unsigned long long': 'tULongLong',
-  double: 'tDouble', float: 'tFloat', char: 'tChar', 'signed char': 'tSChar', 'unsigned char': 'tUChar',
+  double: 'tDouble', 'long double': 'tLongDouble', float: 'tFloat', char: 'tChar', 'signed char': 'tSChar', 'unsigned char': 'tUChar',
   bool: 'tBool', string: 'tString', 'std::string': 'tString',
 }
 
@@ -204,7 +204,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       miss(at, `bitset 的大小「${bits[1]}」不是整數字面`)
       return null
     }
-    const tpl = /^(?:std::)?(pair|queue|stack|priority_queue|set|multiset|map|unordered_map|deque|greater|less)\s*<(.+)>$/.exec(s)
+    const tpl = /^(?:std::)?(pair|tuple|queue|stack|priority_queue|set|multiset|map|unordered_map|deque|greater|less)\s*<(.+)>$/.exec(s)
     if (tpl && !isC) {
       const args = splitTypeArgs(tpl[2]).map((x) => type(x, at))
       return args.every(Boolean) ? k('tTemplate', { name: tpl[1], args }) : null

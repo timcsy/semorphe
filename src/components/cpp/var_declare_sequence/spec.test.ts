@@ -91,12 +91,11 @@ describe('cpp:var_declare_sequence 自證測', () => {
       + ` auto[a,b] = v[0]; cout << a << b; }`, '34')
   })
 
-  // 🟡 不是 Cella 判錯，是 semorphe 這一側缺一段：formalize 回「cpp:vector_declare：型別「tuple<int,int,int>」還沒有對應」
-  // （判決走不到 Cella）。期望值 123 是對的（g++ 實測印 123）。formalize 補上 tuple 之後拿掉 skip。
-  it('🟡 已知缺陷（修好時這條會紅）：★ 語義：一串值按位置拆', () => knownCellaGap(/tuple/, async () => {
+  // 🟢 316 接上 tuple（Cella 0.1.202611061710）之後轉正：原本 formalize 回「型別 tuple<int,int,int> 還沒有對應」
+  it('★ 語義：一串值按位置拆', async () => {
     await run(`${H}int main(){ vector<tuple<int,int,int>> v; v.push_back({1,2,3});`
       + ` auto[a,b,c] = v[0]; cout << a << b << c; }`, '123')
-  }))
+  })
 
   it('★ 語義：使用者自己的結構按【宣告順序】拆（語料 2 支）', async () => {
     await run(`${H}struct side{ int u; int v; int w; };`
