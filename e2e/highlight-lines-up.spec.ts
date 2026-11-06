@@ -27,6 +27,7 @@
  * 我拿 1-based 去讀它。基準寫在消費端（`m.startLine + 1`），不在產生端。
  */
 import { test, expect, type Page } from '@playwright/test'
+import { editsSettled } from './helpers'
 
 interface AppWindow {
   __app: {
@@ -58,7 +59,7 @@ async function typeInMain(page: Page, body: string): Promise<void> {
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type(body, { delay: 12 })
-  await page.waitForTimeout(4000)
+  await editsSettled(page)
 }
 
 /** 每一顆有對照的積木：它指到的那一行，內容是什麼。 */
