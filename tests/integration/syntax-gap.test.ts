@@ -25,6 +25,9 @@ import type { Lifter } from '../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { diagnosticsFromTree } from '../../src/core/diagnostics'
 import type { SemanticNode } from '../../src/core/types'
+import { diagnosticText, diagnosticLayers } from '../../src/core/projection/diagnostic-projection'
+import { setMessages } from '../../src/i18n/messages'
+import zhTW from '../../src/i18n/zh-TW/blocks.json'
 
 let tsParser: Parser
 let lifter: Lifter
@@ -118,5 +121,56 @@ describe('spec 143 · US1：說得出少了什麼、在哪裡', () => {
     const all = gaps('void f() {\n  int x = 1\n}').map((g) => g.missing)
     expect(all.every((m) => typeof m === 'string' && m.length > 0),
       '缺口沒有說出缺的是什麼').toBe(true)
+  })
+})
+
+/**
+ * 🔴 **漏分號的 12 種寫法——學生看到的字**（2026-11-06；使用者同意窗口的提議：「學生常看不出是少了分號」）。
+ *
+ * 解析器補得出 MISSING「;」的（下一行是宣告、return、`}`、第一行 using）照舊說「這裡少了一個 `;`」；
+ * 只有 ERROR 的（下一行是 cout、cin、賦值、呼叫函式、x++ 後接 cout）原本說「這一行的語法不完整」——
+ * 現在由 C++ 那側在行尾補 `;` 重新剖析、錯誤消失了才說「這一行的結尾可能少了一個 `;`」，標在**少了分號的那一行**
+ * （x++ 那種原本指到下一行）。判準與「不亂猜」見 `languages/cpp/lang/missing-semicolon.ts`。
+ */
+describe('漏分號：12 種寫法，學生在兩側看到的字', () => {
+  const H = '#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n'
+  // [寫法, 程式, 規則, 第幾行（1 起算）]
+  const CASES: [string, string, 'SYNTAX_GAP' | 'SYNTAX_GAP_LIKELY', number][] = [
+    ['下一行是宣告', H + '    int y = 2;\n    return 0;\n}\n', 'SYNTAX_GAP', 4],
+    ['下一行是 return', H + '    return 0;\n}\n', 'SYNTAX_GAP', 4],
+    ['下一行是 }', '#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1\n}\n', 'SYNTAX_GAP', 4],
+    ['第一行 using 少分號', '#include <iostream>\nusing namespace std\nint main() {\n    return 0;\n}\n', 'SYNTAX_GAP', 2],
+    ['下一行是 cout', H + '    cout << x << endl;\n    return 0;\n}\n', 'SYNTAX_GAP_LIKELY', 4],
+    ['下一行是 cin', H + '    cin >> x;\n    return 0;\n}\n', 'SYNTAX_GAP_LIKELY', 4],
+    ['下一行是賦值', H + '    x = 2;\n    return 0;\n}\n', 'SYNTAX_GAP_LIKELY', 4],
+    ['下一行是呼叫函式', '#include <iostream>\nusing namespace std;\nvoid f(int a) {\n}\nint main() {\n    int x = 1\n    f(x);\n    return 0;\n}\n', 'SYNTAX_GAP_LIKELY', 6],
+    ['x++ 後接 cout', '#include <iostream>\nusing namespace std;\nint main() {\n    int x = 1;\n    x++\n    cout << x << endl;\n    return 0;\n}\n', 'SYNTAX_GAP_LIKELY', 5],
+    ['cout 少分號、下一行 cout', '#include <iostream>\nusing namespace std;\nint main() {\n    cout << 1 << endl\n    cout << 2 << endl;\n    return 0;\n}\n', 'SYNTAX_GAP_LIKELY', 4],
+    ['賦值少分號、下一行宣告', '#include <iostream>\nusing namespace std;\nint main() {\n    int x;\n    x = 3\n    int y = 4;\n    return 0;\n}\n', 'SYNTAX_GAP', 5],
+    ['cin 少分號、下一行 cout', '#include <iostream>\nusing namespace std;\nint main() {\n    int x;\n    cin >> x\n    cout << x;\n    return 0;\n}\n', 'SYNTAX_GAP_LIKELY', 5],
+  ]
+  const TEXT = {
+    SYNTAX_GAP: { code: '這裡少了一個 `;`', block: (l: number) => `少了一個 \`;\`（第 ${l} 行）` },
+    SYNTAX_GAP_LIKELY: { code: '這一行的結尾可能少了一個 `;`', block: (l: number) => `第 ${l} 行的結尾可能少了一個 \`;\`` },
+  }
+  beforeAll(() => { setMessages(zhTW as never) })
+
+  it.each(CASES)('★ %s：%s 指在第 %s 行之外不另外報', (_name, src, rule, line) => {
+    const ds = diagnose(src).filter((d) => d.source === 'parser')
+    expect(ds.map((d) => [d.rule, d.at ? d.at.line + 1 : null])).toEqual([[rule, line]])
+    const d = ds[0]
+    expect(diagnosticText(d.rule, 'CODE', d.params)).toBe(TEXT[rule].code)
+    expect(diagnosticText(d.rule, 'BLOCK', { ...d.params, humanLine: line })).toBe(TEXT[rule].block(line))
+    // 點開看得到兩層（為什麼／試試看），而且都提到分號
+    expect(diagnosticLayers(d.rule, d.params).join('')).toContain('`;`')
+  })
+
+  it('🔴 「可能」只在量得到時才說：補了分號也不會好的錯誤，照舊說「語法不完整」', () => {
+    // 與上面「不亂猜」同兩支輸入：認不得的符號、打錯的關鍵字——補了分號也不會好
+    for (const src of ['void f() { @@@ ### }', 'void f() { whlie (x < 10) { x++; } }']) {
+      const ds = diagnose(src).filter((d) => d.source === 'parser')
+      expect(ds.length).toBeGreaterThan(0)
+      expect(ds.filter((d) => d.rule === 'SYNTAX_GAP_LIKELY'), src).toEqual([])
+    }
   })
 })

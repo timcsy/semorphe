@@ -27,6 +27,12 @@ export interface SyntaxGap {
   missing: string
   line: number
   column: number
+  /**
+   * **推論出來的，不是解析器指名的**（2026-11-06，漏分號提示；使用者同意窗口的提議）：
+   * 解析器沒有補出 MISSING、只有 ERROR 時，語言那側在可疑的那一行行尾補上缺的符號、重新剖析，
+   * 那一段的錯誤消失了才回報——而它仍然是「可能」，文案照實這麼說（規則 `SYNTAX_GAP_LIKELY`）。
+   */
+  likely?: boolean
 }
 
 export interface Diagnostic {
@@ -296,7 +302,7 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
           out.push({
             nodeId: n.id,
             severity: 'error',
-            rule: 'SYNTAX_GAP',
+            rule: g.likely ? 'SYNTAX_GAP_LIKELY' : 'SYNTAX_GAP',
             params: { snippet, missing: g.missing },
             at: { line: g.line, column: g.column },
             source: 'parser',

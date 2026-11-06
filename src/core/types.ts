@@ -85,7 +85,7 @@ export interface NodeMetadata {
    *
    * 型別住在 `core/diagnostics.ts`（`SyntaxGap`），而這裡用結構型別避免循環相依。
    */
-  syntaxGaps?: { missing: string; line: number; column: number }[]
+  syntaxGaps?: { missing: string; line: number; column: number; likely?: boolean }[]
   rawCode?: string
   sourceRange?: SourceRange
   /** Block ID from which this node was extracted (for block↔code highlight mapping) */
