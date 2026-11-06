@@ -31,5 +31,9 @@
       }
     },
     "formalize": "./formalize.ts"
-  }
+  },
+  "traits": {
+    "notExecuted": true
+  },
+  "_traits_why": "`notExecuted`：函式原型不是會被執行的語句，Cella 的執行紀錄裡不會有它——執行覆蓋不問它「是故意的嗎」（元件管線 322 的瀏覽器驗收：原本每一個類別定義都被標成沒跑到）。"
 }
