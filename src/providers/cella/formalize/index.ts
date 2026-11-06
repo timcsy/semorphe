@@ -185,7 +185,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       miss(at, `bitset 的大小「${bits[1]}」不是整數字面`)
       return null
     }
-    const tpl = /^(?:std::)?(pair|queue|stack|priority_queue|set|multiset|map|unordered_map|deque|greater|less)\s*<(.+)>$/.exec(s)
+    const tpl = /^(?:std::)?(pair|tuple|queue|stack|priority_queue|set|multiset|map|unordered_map|deque|greater|less)\s*<(.+)>$/.exec(s)
     if (tpl && !isC) {
       const args = splitTypeArgs(tpl[2]).map((x) => type(x, at))
       return args.every(Boolean) ? k('tTemplate', { name: tpl[1], args }) : null
