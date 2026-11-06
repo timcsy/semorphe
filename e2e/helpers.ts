@@ -476,6 +476,7 @@ export async function runAndSettle(page: Page): Promise<void> {
 /**
  * 主控台【跑完】了（完畢／錯誤）——餵完輸入之後用。
  * ⚠️ 不能用 `consoleSettled`：餵輸入的當下狀態還是「等待輸入」，那一支會立刻成立而什麼都沒等到。
+ * ⚠️ 狀態列在按下執行**之前**就可能是上一輪的「錯誤」——那時這一支也會立刻成立。要等的若是「這一輪印出了某個字」，直接等那個字（lesson-pins 的版面那支踩到）。
  */
 export async function consoleFinished(page: Page): Promise<void> {
   await expect
@@ -561,6 +562,19 @@ export async function pickControl(page: Page, controlId: string, value: string):
   await page.locator(`.quick-pick-item[data-value="${value}"]`).first().click()
   await expect(page.locator('.quick-pick-overlay')).toHaveCount(0, { timeout: 15_000 })
   await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+}
+
+/**
+ * **切題目，並等 app 真的換到那一題**（`__app.currentTaskId`；空字串＝純練習）。
+ *
+ * ⚠️ 不能用 `pickControl`：它等「畫布可見」，而題目宣告 `view: 'code'` 時專注會切到程式碼、積木畫布本來就收起來
+ * ——那個條件永遠等不到（2026-11-07，固定等待換成等條件的第一刀當場紅了兩支）。
+ */
+export async function pickTask(page: Page, id: string): Promise<void> {
+  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
+  await page.locator(`.quick-pick-item[data-value="${id}"]`).first().click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0, { timeout: 15_000 })
+  await page.waitForFunction((want) => ((window as any).__app?.currentTaskId ?? '') === want, id, { timeout: 30_000 })
 }
 
 /**

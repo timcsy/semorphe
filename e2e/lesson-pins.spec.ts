@@ -32,7 +32,7 @@
  *   這裡只挑三堂**跨語言**的驗那條路真的通。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource, treeReady, skipPredictionIfAsked, openLessonLink, runSkippingPrediction, pickControl, appReady, editsSettled, consoleSettled, consoleFinished, treeHas } from './helpers'
+import { freshApp, useAsSource, treeReady, skipPredictionIfAsked, openLessonLink, runSkippingPrediction, pickControl, appReady, editsSettled, consoleSettled, consoleFinished, treeHas, pickTask } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -564,7 +564,7 @@ test('★ 題目：純練習的時候裁判沉默，而執行覆蓋照樣標', a
   await openLessonLink(page, 'cpp-beginner/10-while迴圈')
 
   // 切到「純練習」
-  await pickControl(page, 'task', '')
+  await pickTask(page, '')
 
   // 寫一支【不是這一課答案】的程式——他在亂試
   await page.locator('.monaco-editor').first().click()
@@ -599,7 +599,7 @@ test('★ 題目：做對練習題 → 說出是哪一題，而下一題【問�
   await openLessonLink(page, 'cpp-beginner/02-型別')
 
   // 選第二題（練習：把 height 的型別換成 int），然後寫出它的答案
-  await pickControl(page, 'task', 'ex1')
+  await pickTask(page, 'ex1')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -794,7 +794,7 @@ test('★ 預測：純練習不問——他【說了】他不在做題目', asyn
   test.setTimeout(150_000)
   await page.addInitScript(() => window.localStorage.clear())
   await openLessonLink(page, 'cpp-beginner/10-while迴圈')
-  await pickControl(page, 'task', '')
+  await pickTask(page, '')
 
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
@@ -963,10 +963,10 @@ test('★ 排回去：選了那一題，解答的積木會被打散在畫布上'
       .__app.blocklyPanel.workspace.getTopBlocks(false).length)
   expect(await top(), '🔴 一開始畫布不是乾淨的 → 下面驗的是別的東西').toBeLessThanOrEqual(1)
 
-  await pickControl(page, 'task', 'ex1')
+  await pickTask(page, 'ex1')
 
   // 🔴 **打散了**——頂層從 1 變成好幾塊
-  expect(await top(), '🔴 選了「排回去」那種題而畫布沒有被打散——那一題等於直接給答案')
+  await expect.poll(top, { message: '🔴 選了「排回去」那種題而畫布沒有被打散——那一題等於直接給答案' })
     .toBeGreaterThan(2)
 
   // ⚠️ 而**骨架不動**：`return 0;` 是他不該搬的
@@ -1016,7 +1016,7 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   const layoutNow = () => page.locator('#status-controls .status-item-btn[data-control-id="layout"]').innerText()
 
   // ① 選一題宣告了 `view: 'blocks'` 的（「排回去」）→ 版面該跟著走
-  await pickControl(page, 'task', 'rebuild')
+  await pickTask(page, 'rebuild')
   const suggested = await layoutNow()
   expect(suggested, `🔴 課程宣告了看法而版面沒有跟著走：${suggested}`).toContain('專注')
 
@@ -1032,7 +1032,7 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   //    ⚠️ 這一條擋的是一個真的洞：`showProjection` 本來只認得積木與流程，
   //    於是「回到程式碼」沒有入口，`focusLayer` 停在上一次被切走的那一層。
   //    症狀是課程說 code 而學生看到積木——**而它不會報錯，它只是留在原地**。
-  await pickControl(page, 'task', 'ex1')
+  await pickTask(page, 'ex1')
   await expect.poll(focusOn, { message: '🔴 宣告 code 而專注的那一格不是程式碼——沒有回頭路' }).toContain('element')
 
   // ③ 🔴 **他自己改成別的**
@@ -1040,16 +1040,18 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   await expect.poll(layoutNow, { message: '🔴 他改不動——那就不是建議，是閘門' }).toContain('三欄')
 
   // ④ 🔴 **做一堆會重畫的事**——這才是「有沒有被搶回去」真正的考題
-  await page.locator('.monaco-editor').first().click()
-  await page.keyboard.press('Control+Home')
-  await page.keyboard.press('ArrowDown')
-  await page.keyboard.press('End')
-  await page.keyboard.press('Enter')
-  await page.keyboard.type('cout << "Hi" << endl;', { delay: 12 })
+  // ⚠️ 2026-11-07（固定等待換成等條件那一刀）才發現：原本用「Ctrl+Home、下一行、行尾、換行」打一句 `cout`，
+  //    而這一題的骨架是**顯示**的，那一句落在 `main` 外面——程式被拒絕執行，「執行一輪」從來沒有發生；
+  //    舊寫法固定等 3.5 秒、不看結果，所以一直是綠的。改成換一支合法的程式，並斷言它真的跑完。
+  await page.evaluate((c) => (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c),
+    '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "Hi" << endl;\n    return 0;\n}\n')
+  // ⚠️ 這一題是從「排回去」切過來的，積木那一側是來源——換了程式碼要明說以它為準，執行才跑得到它
+  await useAsSource(page, '程式碼')
   await editsSettled(page)
   await page.locator('#run-btn').click()   // 執行一輪（會發狀態、會重畫控制項）
   await skipPredictionIfAsked(page)
-  await consoleSettled(page)
+  // ⚠️ 不用 consoleFinished：狀態列在按下去之前可能已經是上一輪的「錯誤」，那一支會立刻成立而什麼都沒等到——等的是【這一輪的輸出】
+  await expect(page.locator('.console-output')).toContainText('Hi', { timeout: 30_000 })
 
   expect(
     await layoutNow(),
