@@ -16,7 +16,9 @@ import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { buildBindingCorpus, type BindingRow } from '../helpers/binding-corpus'
-import { createCellaChecker, type CellaChecker, type CellaVerdict } from '../../src/providers/cella/verdict'
+import { checkerFromBytes, checkerSource, compileCellaChecker, type CellaChecker, type CellaVerdict } from '../../src/providers/cella/verdict'
+import { cachedCellaModule } from '../../tools/cella-module-cache'
+import { cachedVerdict, moduleHashOf } from '../helpers/verdict-cache'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { formalize } from '../../src/providers/cella/formalize'
 import type { SemanticNode } from '../../src/core/types'
@@ -38,13 +40,17 @@ beforeAll(async () => {
   rows = buildBindingCorpus(parser)
   // 只挑幾筆（修單筆時用）：BINDING_ONLY='04-set與map|12-猜數字'
   if (process.env.BINDING_ONLY) rows = rows.filter((r) => new RegExp(process.env.BINDING_ONLY!).test(r.id))
-  checker = await createCellaChecker(read)
+  // 判決器：讀建置時編好的那一份（鍵與 `tools/precompile-cella.ts` 同一份；沒有就當場編）——判決入口 `checkerFromBytes` 與產品同一支
+  const { bytes } = await cachedCellaModule('verdict-cfamily', checkerSource('cfamily'), () => compileCellaChecker(read, 'cfamily'))
+  checker = await checkerFromBytes(bytes)
   verdict = checker.verdict
+  const moduleHash = moduleHashOf(bytes)
   results = rows.filter((r) => r.program).map((row) => {
     const c = checkOf(row.id)
     // Arduino 的 sketch 要模擬到 5 秒（setup 一次、loop 重複）——步數要給夠，否則是 `fuel` 的 unknown
     const fuel = row.id.startsWith('arduino/') ? 50_000_000 : undefined
-    return { row, v: verdict(row.program, c.stdin, fuel), expected: c.stdout }
+    // 語料的判決讀快取（`verdict-cache.ts`）：送出的程式沒變就不再判；下面的注入測試照樣當場判
+    return { row, v: cachedVerdict(() => verdict(row.program, c.stdin, fuel), { moduleHash, program: row.program, stdin: c.stdin, steps: fuel ?? -1 }), expected: c.stdout }
   })
 }, 600_000)
 
