@@ -81,8 +81,15 @@ jobs:
       #    ——`.ino → arduino` 那條路一次都沒走過。兩件事同日修。
       - name: 安裝瀏覽器（預檢要用）
         # 2026-11-06：這一步在 runner 上掛了 5 小時（平常幾分鐘）——沒有上限時要等到工作的 6 小時預設逾時才會被砍
-        timeout-minutes: 10
-        run: npx playwright install --with-deps chromium
+        # 2026-11-07：而只設 10 分鐘上限，GitHub 的 apt 鏡像慢的時候（一個字型包下載好幾分鐘）就被誤殺，連紅兩次。
+        #   ⟹ 單次 9 分鐘、失敗重試一次，整步 20 分鐘——掛住的照樣砍得掉，慢一次的鏡像也容得下
+        timeout-minutes: 20
+        run: |
+          for i in 1 2; do
+            timeout 540 npx playwright install --with-deps chromium && exit 0
+            echo "::warning::安裝瀏覽器第 $i 次沒完成（多半是 apt 鏡像慢），重試"
+          done
+          exit 1
       - name: 預檢——面板起得來，而且不動使用者的檔案
         run: node tools/vscode-preflight/run.mjs
 

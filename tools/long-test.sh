@@ -12,6 +12,15 @@
 #      ——處方寫了「不動」而 2026-11-04、05 又各犯一次，所以改成機器在擋：開跑與結束各取一次【檔案內容】的指紋，
 #      不一樣就大聲說、結束碼改成 3。指紋是內容的樹雜湊（暫時的 index ＋ write-tree），中途【提交】不算改（內容沒變）。
 set -u
+# 🟢 共用排隊（2026-11-07，使用者決定「測試執行資源有限」）：三個專案的長測試都透過 cos-mos 的 `slot.mjs` 排隊——
+#    不在它底下時，透過它重新啟動自己（名額、負載准入都由它管；我們的負載閘門關掉，免得兩道疊起來）。
+#    契約（cos-mos 規格〈契約〉）：子命令與旗標、COSMOS_* 環境變數、結束碼照傳（128+訊號、2、127）、stderr 只承諾 `slot: ` 開頭的四種句子。
+#    找不到 slot.mjs（例如別台機器）就照舊直接跑，由我們自己的負載閘門頂著；`SEMORPHE_NO_SLOT=1` 可以強制不排隊。
+SLOT_TOOL=${COSMOS_SLOT_TOOL:-"$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd)/cos-mos/tools/slot.mjs"}
+if [ -z "${SEMORPHE_UNDER_SLOT:-}" ] && [ "${SEMORPHE_NO_SLOT:-0}" != 1 ] && [ -f "$SLOT_TOOL" ]; then
+  exec node "$SLOT_TOOL" run --project semorphe --label long-test -- env SEMORPHE_UNDER_SLOT=1 SEMORPHE_LOAD_GATE=0 bash "$0" "$@"
+fi
+
 WT=${1:?用法：tools/long-test.sh <worktree> <輸出目錄> [--suite] [--build] [--e2e] [--port N] [--no-wait-cella] [--only 檔名…]}
 OUT=${2:?缺輸出目錄（放 scratchpad）}
 shift 2
@@ -32,6 +41,8 @@ done
 [ $SUITE = 0 ] && [ $BUILD = 0 ] && [ $E2E = 0 ] && { SUITE=1; BUILD=1; E2E=1; }
 
 WT=$(cd "$WT" && pwd)
+# 🔴 worktree 不存在時上一行得到空字串，而 `cd ""` 等於不換目錄——原本會在呼叫者所在的目錄（通常是主樹）照跑（2026-11-07 煙霧測試量到）
+[ -n "$WT" ] || { echo "🔴 找不到 worktree（第一個參數）" >&2; exit 2; }
 NAME=$(basename "$WT")
 mkdir -p "$OUT"
 
@@ -50,6 +61,27 @@ wait_cella() {
   done
 }
 strip() { LC_ALL=C sed 's/\x1b\[[0-9;]*m//g'; }
+
+# 🔴 負載閘門（2026-11-07，使用者決定「測試執行資源有限」——經 cos-mos-main → semorphe-main 轉達）：
+#    一分鐘負載超過核心數 2 倍就先延後、每 10 分鐘說一次為什麼；最多等 LOAD_WAIT_MAX 分鐘，等不到就照跑並註明。
+#    起因（2026-11-06）：Cella 的建置把負載推到 150～285（8 核），長測試全套 44 分鐘才跑到 1000／8000——
+#    跑下去只會得到一堆「逾時」的紅、還拖慢對方。之後由 cos-mos 的共用排隊（`~/.cos-mos/slots/`）接手，這裡是最小的第一步。
+NCPU=$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 8)
+LOAD_LIMIT=$((NCPU * 2))
+LOAD_WAIT_MAX=${LOAD_WAIT_MAX:-60}
+load_now() { sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}' || awk '{print int($1)}' /proc/loadavg; }
+wait_load() {
+  # 經 cos-mos 的共用排隊（`slot.mjs run …`）啟動時，負載閘門由它管（三個專案同一條規則）——這裡關掉，免得兩道疊起來
+  #（它最多等 30 分、這裡最多 60 分）。開始／結束負載兩欄照記。
+  [ "${SEMORPHE_LOAD_GATE:-1}" = 0 ] && return 0
+  local waited=0 l
+  l=$(load_now)
+  while [ "$l" -gt "$LOAD_LIMIT" ]; do
+    if [ "$waited" -ge "$LOAD_WAIT_MAX" ]; then echo "⏱ 負載 ${l} 仍超過 ${LOAD_LIMIT}（核心數 ${NCPU} 的 2 倍）——等了 ${waited} 分鐘，照跑；逾時的紅標「負載」，單獨重跑或交 CI 再判"; return 0; fi
+    [ $((waited % 10)) -eq 0 ] && echo "⏸ 負載 ${l} 超過 ${LOAD_LIMIT}（核心數 ${NCPU} 的 2 倍），先延後（$(date +%T)）——機器上最吃 CPU 的：$(ps -axo %cpu=,comm= -r | head -2 | awk '{print $2}' | xargs -n1 basename | paste -sd, -)"
+    sleep 60; waited=$((waited + 1)); l=$(load_now)
+  done
+}
 
 cd "$WT" || exit 1
 status=0
@@ -70,6 +102,8 @@ trap on_abort INT TERM HUP
 
 if [ $SUITE = 1 ]; then
   wait_cella
+  wait_load
+  LOAD_START=${LOAD_START:-$(load_now)}
   echo "suite 開始 $(date +%T)（${NAME}）"
   npm test > "$OUT/test-$NAME.log" 2>&1
   strip < "$OUT/test-$NAME.log" | grep -aE '^ FAIL|Test Files|Tests ' | sort -u | head -30
@@ -97,7 +131,9 @@ export default {
 }
 EOF
   wait_cella
-  echo "e2e 開始 $(date +%T)（埠 ${PORT}）"
+  wait_load
+  LOAD_START=${LOAD_START:-$(load_now)}
+  echo "e2e 開始 $(date +%T)（埠 ${PORT}，負載 $(load_now)）"
   npx playwright test --config="$CFG" ${ONLY[@]+"${ONLY[@]}"} > "$OUT/e2e-$NAME.log" 2>&1 || status=1
   rm -f "$CFG"
   grep -E '✘|passed|failed|flaky' "$OUT/e2e-$NAME.log" | tail -12
@@ -114,6 +150,8 @@ fi
 echo "結束 $(date +%T)"
 # 一輪一行：開始、worktree、分支、提交、範圍、結果、紅了哪幾支、輸出目錄（結果：0 綠／1 紅／3 跑的期間被改過）
 REDS=$(cat "$OUT"/*.log 2>/dev/null | strip | grep -aoE '^ FAIL  [^ ]+|✘ +[0-9]+ \[[a-z]+\] › [^ ]+' | sed 's/^ FAIL  //; s/.*› //' | sort -u | head -8 | paste -sd, -)
-printf '%s\t%s\t%s\t%s\t%s\texit=%s\t%s\t%s\n' "$RUN_START" "$NAME" "$(git rev-parse --abbrev-ref HEAD)" "$(git rev-parse --short HEAD)" "$RANGE" "$status" "${REDS:-—}" "$OUT" >> "$STATE_DIR/runs.tsv"
+# 最後兩欄（2026-11-07）：開始時與結束時的一分鐘負載（核心數 ${NCPU}）——紅的時候先看這兩欄：超過 ${LOAD_LIMIT} 的逾時紅是「負載」，不是缺陷
+LOAD_END=$(load_now)
+printf '%s\t%s\t%s\t%s\t%s\texit=%s\t%s\t%s\t負載開始=%s\t負載結束=%s\n' "$RUN_START" "$NAME" "$(git rev-parse --abbrev-ref HEAD)" "$(git rev-parse --short HEAD)" "$RANGE" "$status" "${REDS:-—}" "$OUT" "${LOAD_START:-—}" "$LOAD_END" >> "$STATE_DIR/runs.tsv"
 rm -f "$STATE_DIR/$NAME.now"
 exit $status
