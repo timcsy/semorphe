@@ -171,6 +171,11 @@ export interface FormalizeRegistrar {
   literal(id: string, test: (text: string) => boolean, value?: (text: string) => string): void
   /** 這顆定義了一個型別名（不帶關鍵字的 `Node*` 要先認得 `Node`）。 */
   definesType(id: string, fn: (n: SemanticNode) => string): void
+  /**
+   * 這顆**宣告**了一個型別名、但不是定義（前置宣告 `class Helper;`）：型別那一格認得它（`Helper*` 送 tClass），
+   * 而 `isStructName` 仍只回答「有定義的」——前置宣告要靠那個問題決定「之後有沒有定義」（cpp_to_tree.py：有定義就不送）。
+   */
+  declaresType(id: string, fn: (n: SemanticNode) => string): void
   /** 這顆定義了一個列舉型別名（`enum Color {…}` 之後 `Color c` 的 Color）——型別那一格送 `tEnum`（cella 2026-11-03；不是 tClass）。 */
   definesEnum(id: string, fn: (n: SemanticNode) => string): void
   /** 作用域走訪：這顆開不開作用域、宣告什麼、參照什麼（沒註冊的照通用規則）。 */
