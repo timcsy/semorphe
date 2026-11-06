@@ -1009,6 +1009,15 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       return createNode('_multi_field', {}, { fields: nodes })
     }
     const declNode = node.childForFieldName('declarator')
+    // 🔴 **陣列欄位**（`int a[5];`）：原本落到下面，名字成了 `a[5]`——類別裡的方法讀 `a[i]` 時 Cella 說 `a` 未宣告
+    //    （元件管線 322 的 round-trip 抓到；主線上寫在類別裡的方法一樣壞）。一維的交給陣列宣告那顆（同區域變數那條路）；
+    //    二維以上照實降級——不再把維度塞進名字。
+    if (declNode?.type === 'array_declarator') {
+      if (declNode.namedChildren[0]?.type === 'array_declarator' || node.childForFieldName('default_value')) {
+        return degrade(buildRawCode(node.text), '類別裡的多維陣列欄位（或帶初值的陣列欄位）尚未支援')
+      }
+      return buildArrayDeclare(type, declNode, ctx)
+    }
     // 🔴 **星號屬於型別，不屬於名字。**
     //    `Node* next;` 的 declarator 是 `pointer_declarator`，而它的 `.text`
     //    是逐字的 `"* next"`。直接拿來當名字的話，積木上會出現一個
