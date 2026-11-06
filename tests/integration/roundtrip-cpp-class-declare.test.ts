@@ -11,7 +11,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { expectCellaOut, runCella, knownCellaGap } from '../helpers/cella-run'
+import { expectCellaOut, runCella } from '../helpers/cella-run'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 
@@ -72,23 +72,23 @@ describe('不完整型別（只有前置宣告、沒有定義）：Cella 的規�
 })
 
 describe('不完整型別：Cella 該拒絕而放過的', () => {
-  // 🟡 Cella 的已知缺陷（2026-11-06 量到、已回報）：函式【定義】的參數以值用不完整型別——clang：variable has incomplete type。
-  //    Cella 判 accept（Cella 說「以值宣告參數」會拒絕，而函式定義這一種沒拒絕）。修好時這條會紅 ⟹ 拿掉 knownCellaGap
-  it('🟡 已知缺陷（修好時這條會紅）：void take(Helper h) {} 應判 reject', () => knownCellaGap(/expected 'accept' to be 'reject'/, async () => {
+  // 🟢 原本是 Cella 的已知缺陷（2026-11-06 量到、回報）：函式【定義】的參數以值用不完整型別，Cella 判 accept。
+  //    cella 0.1.202611060800 修好（reason 用 clang 的說法：variable has incomplete type）
+  it('★ void take(Helper h) {} 判 reject', async () => {
     const r = await runCella(H + 'class Helper;\nvoid take(Helper h) {\n}\nint main() {\n    return 0;\n}\n')
     expect(r.untranslated).toEqual([])
     expect(r.verdict).toBe('reject')
-  }))
+  })
 })
 
 describe('不完整型別：照標準【合法】的那一邊（clang 也收）', () => {
   // `*p` 只產生一個左值——對不完整型別合法；要把值讀出來（左值轉右值）才不合法（[conv.lval]）。
   // 函式沒被呼叫，所以也沒有執行期的問題。Cella 2026-11-06 說「解參照」要拒絕——這一支量的是它有沒有把合法的那一半也拒絕掉
-  // 🟡 Cella 的已知缺陷（2026-11-06 量到、已回報）：判 reject「dereferencing a pointer to an incomplete type」——說一支合法的程式有錯（P6）。
-  //    修好時這條會紅 ⟹ 拿掉 knownCellaGap，變回一般的正向測試
-  it('🟡 已知缺陷（修好時這條會紅）：沒被呼叫的函式裡 *p; 應判 accept', () => knownCellaGap(/dereferencing a pointer to an incomplete type/, async () => {
+  // 🟢 原本是 Cella 的已知缺陷（2026-11-06 量到、回報）：判 reject「dereferencing a pointer to an incomplete type」——說一支合法的程式有錯。
+  //    cella 0.1.202611060800 修好（*p 只是左值，讀值才要完整型別）
+  it('★ 沒被呼叫的函式裡 *p; 判 accept', async () => {
     const r = await runCella(H + 'class Helper;\nvoid touch(Helper* p) {\n    *p;\n}\nint main() {\n    cout << 1 << endl;\n    return 0;\n}\n')
     expect(r.untranslated).toEqual([])
     expect(r.verdict, JSON.stringify(r.problems.map((p) => p.kind + '｜' + (p.reason ?? '')))).toBe('accept')
-  }))
+  })
 })

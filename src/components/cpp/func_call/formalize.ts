@@ -18,6 +18,10 @@ export function registerFormalize(r: FormalizeRegistrar): void {
       return f.k('eTemp', { n: n.id, t: full, args: (n.slots?.args ?? []).map((c) => f.expr(c)) })
     }
     const args = (n.slots?.args ?? []).map((c) => f.expr(c))
+    // `get<1>(t)`（tuple／pair 取第 N 個；可以當左值寫入）：樣板引數是一個整數——送 eCallT（cella 0.1.202611060800 給的形狀：
+    //    f 是 get、targs 是 [tVal N]）。名字是 `get<N>` 的一般呼叫照 eCall 送的話，Cella 找不到一個叫 `get<1>` 的函式
+    const getN = /^(?:std::)?get\s*<\s*(\d+)\s*>$/.exec(name)
+    if (getN) return f.k('eCallT', { n: n.id, f: 'get', targs: [f.k('tVal', { v: Number(getN[1]) })], args })
     // 成員函式裡用裸名字呼叫同一個類別的方法：隱含的 this（spec 208；原本送 eCall，被判「呼叫未宣告的函式」）
     //   ⚠️ 名字指到區域變數（lambda）的情況在下面先由 declOf 接住——那個比類別的方法更近
     if (!f.declOf(n.id) && f.isOwnMethod(n.id, name)) return f.k('eMCall', { n: n.id, obj: f.k('eThis', { n: `${n.id}/this` }), arrow: true, f: name, args })
