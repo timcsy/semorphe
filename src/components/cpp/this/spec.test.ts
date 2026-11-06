@@ -67,12 +67,13 @@ describe('cpp:this 自證測', () => {
     expect(implicit).not.toContain('this')
   })
 
-  it('交給 Cella：明寫的是 eArrow(eThis)，隱含的仍是 eSelf（Cella 參照翻譯的兩種形狀）', () => {
+  it('交給 Cella：明寫的是 eArrow(eThis)，隱含的送名字（eName——由 Cella 依作用域解析成 eSelf，cella 0.1.202611052225）', () => {
     const explicit = JSON.stringify(formalize(lift(H + GET + 'int main() { P p; cout << p.get(); }')!, {}).program)
     expect(explicit).toContain('"k":"eThis"')
     expect(explicit).toMatch(/"k":"eArrow"[^}]*"a":\{"k":"eThis"/)
     const implicit = JSON.stringify(formalize(lift(H + 'struct P { int x; int get() { return x; } };\nint main() { P p; cout << p.get(); }')!, {}).program)
-    expect(implicit).toContain('"k":"eSelf"')
+    // 名字交給 Cella 解析（「意思歸 Cella」）：我們送寫出來的名字，它在方法裡查到類別的欄位就換成 eSelf
+    expect(implicit).toMatch(/"k":"eName","n":"[^"]+","name":"x"/)
     expect(implicit).not.toContain('eThis')
   })
 
