@@ -28,7 +28,7 @@
  * 判斷對了而警告沒畫出來，症狀與完全沒做一模一樣。
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, treeReady } from './helpers'
+import { useAsSource, treeReady, blocksSettled } from './helpers'
 
 const PROGRAM = '#include <iostream>\nusing namespace std;\n'
   + 'int main() {\n    int age = 16;\n    cout << age << endl;\n    return 0;\n}'
@@ -40,7 +40,8 @@ async function rename(page: import('@playwright/test').Page, to: string): Promis
     const f = b?.inputList?.flatMap((i: any) => i.fieldRow).find((x: any) => /NAME/.test(x?.name ?? ''))
     f?.setValue(v)
   }, to)
-  await page.waitForTimeout(1800)
+  // 改名走積木→程式碼→診斷；等那一輪做完（取代固定睡 1.8 秒）
+  await blocksSettled(page)
 }
 
 /** 畫面上的警告：幾顆、寫什麼 */
@@ -69,7 +70,7 @@ test('🔴 不能當名字的字，畫面上要說得出為什麼', async ({ pag
   await page.evaluate((c) => (window as never as Record<string, any>).__app.codeView.setCode(c), PROGRAM)
   await useAsSource(page, '程式碼')
   await treeReady(page)
-  await page.waitForTimeout(1200)
+  await blocksSettled(page)
 
   // ★ 對照組——合法的名字**一句話都不該說**
   await rename(page, 'age')

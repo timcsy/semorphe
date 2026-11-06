@@ -61,8 +61,9 @@ for (const c of CASES) {
 
     await freshApp(page)
     await selectTarget(page, c.target)
-    // ⚠️ 解析器是懶載入的——等不夠的話樹是空的，而**空樹與這支要抓的缺陷長得一模一樣**
-    await page.waitForTimeout(3000)
+    // ⚠️ 解析器是懶載入的——而管線還沒接上時餵的程式碼會被記下、接上再做（第 392 刀），空樹則會讓下面的 treeReady 逾時紅掉；
+    //    所以這裡只等「語言真的切過去」，不睡固定秒數
+    await page.waitForFunction((lang) => (window as never as { __app?: { currentTopic?: { language?: string } } }).__app?.currentTopic?.language === lang, c.language, { timeout: 30_000 })
 
     expect(
       await page.evaluate(() =>

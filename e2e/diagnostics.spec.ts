@@ -20,7 +20,7 @@
  * 那是另一條線，今天沒有防線。**寫在這裡，不讓它假裝做了。**
  */
 import { test, expect, type Page } from '@playwright/test'
-import { useAsSource, treeReady } from './helpers'
+import { useAsSource, treeReady, consoleFinished } from './helpers'
 
 async function freshApp(page: Page): Promise<void> {
   await page.goto('/')
@@ -171,7 +171,8 @@ test('少一個分號 → 程式碼面板出現【錯誤級】波浪', async ({ 
     () => ((window as never as { __app: any }).__app?.blocklyPanel?.workspace?.getAllBlocks(false)?.length ?? 0) > 0,
     undefined, { timeout: 30_000 },
   )
-  await page.waitForTimeout(800)
+  // 等波浪畫出來（取代固定睡 0.8 秒）——等不到的話下面的入口條件照樣會紅，訊息不變
+  await expect.poll(() => page.locator('[class*=squiggly]').count(), { timeout: 15_000 }).toBeGreaterThan(0)
 
   const seen = await page.evaluate(() => ({
     any: document.querySelectorAll('[class*=squiggly]').length,
@@ -226,7 +227,7 @@ test('少分號的程式：按執行 → 不執行', async ({ page }) => {
   await useAsSource(page, '程式碼')
   await treeReady(page)
   await page.getByText('執行').first().click()
-  await page.waitForTimeout(1500)
+  await consoleFinished(page)
   const cleanOut = await page.evaluate(() => document.body.innerText)
   expect(cleanOut, '★ 入口條件：乾淨的程式按執行沒有輸出 → 這支測不到任何東西').toContain('1')
 
@@ -254,7 +255,8 @@ test('少分號的程式：按執行 → 不執行', async ({ page }) => {
   expect(r.marked, '這段程式沒有被標成語法錯誤 → 閘門測不到，見 history/063').toBeGreaterThan(0)
 
   await page.getByText('執行').first().click()
-  await page.waitForTimeout(1500)
+  // 等閘門把話說出來（取代固定睡 1.5 秒）；說不出來的話逾時之後下面的斷言照樣紅、訊息不變
+  await expect.poll(() => page.evaluate(() => document.body.innerText), { timeout: 15_000 }).toContain('還不能執行').catch(() => {})
   const text = await page.evaluate(() => document.body.innerText)
 
   expect(
@@ -340,7 +342,7 @@ for (const [name, code] of Object.entries({
       .toBeGreaterThan(0)
 
     await page.getByText('執行').first().click()
-    await page.waitForTimeout(1500)
+    await expect.poll(() => page.evaluate(() => document.body.innerText), { timeout: 15_000 }).toContain('還不能執行').catch(() => {})
     const text = await page.evaluate(() => document.body.innerText)
     expect(
       text,

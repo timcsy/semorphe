@@ -30,11 +30,12 @@
  * - **不管它裡面有幾類**（那是工具箱內容的護欄在管）
  */
 import { test, expect, type Page } from '@playwright/test'
+import { appReady, frames } from './helpers'
 
 async function ready(page: Page): Promise<void> {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.blocklyWorkspace, .injectionDiv').first()).toBeVisible({ timeout: 30_000 })
-  await page.waitForTimeout(3000)
+  await appReady(page)
 }
 
 /** 這個元素的祖先鏈上，有沒有那個選擇器指的容器。 */
@@ -67,7 +68,9 @@ test('★ 流程的 palette 住在流程面板裡', async ({ page }) => {
   // 切到流程那一層，palette 才建得出來
   await page.locator('#status-controls .status-item-btn[data-control-id="layout"]').click().catch(() => {})
   await page.locator('.quick-pick-item[data-value="three-column"]').click().catch(() => {})
-  await page.waitForTimeout(3000)
+  // 等流程面板的積木盤長出來（取代固定睡 3 秒）；長不出來的話下面的入口條件照樣紅
+  await page.locator('.flow-palette').first().waitFor({ state: 'attached', timeout: 15_000 }).catch(() => {})
+  await frames(page, 3)
 
   // ★ 入口條件——⚠️ **找不到就說出來，而不是靜靜通過**。
   //    這一支的價值在「它在對的地方」；而它一顆都不在的時候，

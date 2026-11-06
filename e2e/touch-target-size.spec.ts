@@ -53,6 +53,7 @@
  *   ⚠️ 那個例外是真的，而實作它要算每一顆的鄰居距離。今天取**嚴格的那一邊**。
  */
 import { test, expect } from '@playwright/test'
+import { appReady, blocksSettled } from './helpers'
 
 /** WCAG 2.2 AA · 2.5.8 目標大小（最小）。**不是我挑的數字。** */
 const MIN = 24
@@ -69,7 +70,8 @@ test('🔴 按得到的東西都要有 24×24（WCAG 2.2 AA · 2.5.8）', async 
   await page.waitForFunction(
     () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 60_000 })
-  await page.waitForTimeout(2500)
+  await appReady(page)
+  await blocksSettled(page)
 
   const got = await page.evaluate((min) => {
     const vis = (e: Element): boolean => {

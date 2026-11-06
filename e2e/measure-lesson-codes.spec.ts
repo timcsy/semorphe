@@ -19,7 +19,7 @@
  * > 產出的是一份看起來像發現的東西。**
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, selectTarget } from './helpers'
+import { freshApp, selectTarget, editsSettled, appReady, consoleSettled } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -67,7 +67,7 @@ test('🔧 量測：把每一段課文程式碼用到的元件與輸出量出來
       app.__app.codeView.setCode(c)
       await app.__app.syncController.syncCodeToBlocks(c)
     }, code)
-    await page.waitForTimeout(700)
+    await editsSettled(page)
   }
 
   let first = true
@@ -78,7 +78,7 @@ test('🔧 量測：把每一段課文程式碼用到的元件與輸出量出來
     first = false
     if (spec.target && spec.target !== current) {
       await selectTarget(page, spec.target)
-      await page.waitForTimeout(2500)
+      await appReady(page)
       current = spec.target
     }
     const blank = spec.target === 'python' ? 'pass' : 'int main() { return 0; }'
@@ -98,7 +98,7 @@ test('🔧 量測：把每一段課文程式碼用到的元件與輸出量出來
     let stdout = ''
     try {
       await page.locator('#run-btn').click()
-      await page.waitForTimeout(2200)
+      await consoleSettled(page).catch(() => {})
       const rawOut = await page.locator('.console-output').innerText()
       stdout = rawOut.trim()
       if (stdout === '' && rawOut.length > 0) stdout = `(只有 ${rawOut.length} 個空白字元)`

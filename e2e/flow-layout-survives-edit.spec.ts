@@ -24,7 +24,7 @@
  * - **不檢測配對是不是配對到【對的那一顆】**——那由單元測試釘
  */
 import { test, expect } from '@playwright/test'
-import { showFlowSlot, freshApp, typeAndFormat } from './helpers'
+import { showFlowSlot, freshApp, typeAndFormat, editsSettled, frames } from './helpers'
 
 type Pos = { id: string; x: number; y: number }
 
@@ -53,6 +53,12 @@ const setCode = (page: import('@playwright/test').Page, code: string): Promise<v
     await a.syncController.syncCodeToBlocks(a.codeView.getCode())
   }, code)
 
+/** 同步做完、流程圖重畫過（取代固定睡 0.6／0.8 秒） */
+const flowSettled = async (page: import('@playwright/test').Page): Promise<void> => {
+  await editsSettled(page)
+  await frames(page, 4)
+}
+
 const BASE = 'int main() {\n  int x = 1;\n  int y = 2;\n  int z = 3;\n  return 0;\n}'
 
 test('★ 手拖之後在程式碼裡加一行——每一顆都留在原地', async ({ page }) => {
@@ -62,7 +68,7 @@ test('★ 手拖之後在程式碼裡加一行——每一顆都留在原地', a
   await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
 
   await setCode(page, BASE)
-  await page.waitForTimeout(600)
+  await flowSettled(page)
 
   // ★ 入口條件——錨在**節點數**（合成量：這段程式有幾顆），
   //   它不會因為佈局保得住而變小。量不到的話下面在比空陣列。
@@ -78,7 +84,7 @@ test('★ 手拖之後在程式碼裡加一行——每一顆都留在原地', a
   ).not.toEqual(coords(before).sort())
 
   await setCode(page, BASE.replace('  return 0;', '  int w = 4;\n  return 0;'))
-  await page.waitForTimeout(800)
+  await flowSettled(page)
 
   const after = await positions(page)
   const kept = coords(dragged).filter((c) => coords(after).includes(c)).length
@@ -101,13 +107,13 @@ test('★ 刪掉一行——其餘的不動，而【不得】誤報「對不回�
   await expect(page.locator('.flow-toolbox')).toBeVisible({ timeout: 10_000 })
 
   await setCode(page, BASE)
-  await page.waitForTimeout(600)
+  await flowSettled(page)
   await dragAll(page)
   const dragged = await positions(page)
   expect(dragged.length, '入口條件').toBeGreaterThan(5)
 
   await setCode(page, BASE.replace('  int y = 2;\n', ''))
-  await page.waitForTimeout(800)
+  await flowSettled(page)
 
   const after = await positions(page)
   expect(after.length, '刪了一行而節點沒變少').toBeLessThan(dragged.length)
