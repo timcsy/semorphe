@@ -1,6 +1,6 @@
 import { degradeWhatCannotStand } from './honest-degradation'
 import type { SyntaxGap } from '../diagnostics'
-import { inferSyntaxGaps } from './syntax-inference'
+import { inferSyntaxGaps, inferPreciseSyntaxGaps } from './syntax-inference'
 import type { SemanticNode, DegradationCause } from '../types'
 import type { AstNode, NodeLifter, LiftContext } from './types'
 import { createNode } from '../semantic-tree'
@@ -1024,6 +1024,9 @@ export class Lifter {
    * ——而「哪裡」正是這一刀加的全部。
    */
   private collectSyntaxGaps(node: AstNode): SyntaxGap[] {
+    // 量得到的更好說法先說（例：這一行寫在函式外面——解析器那時補的 `...` 只會誤導；見 syntax-inference.ts）
+    const precise = inferPreciseSyntaxGaps(node)
+    if (precise.length > 0) return precise
     const out: SyntaxGap[] = []
     const walk = (n: AstNode): void => {
       if (n.isMissing === true) {

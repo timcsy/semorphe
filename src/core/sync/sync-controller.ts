@@ -659,6 +659,11 @@ export class SyncController {
     }
   }
 
+  /** 等手上這一次同步做完（沒在同步就立刻回）——開跑之前用：不然按下執行時拿到的是同步前的那一棵（2026-11-07） */
+  async whenIdle(): Promise<void> {
+    while (this.syncing) await new Promise<void>((r) => this.idleWaiters.push(r))
+  }
+
   /** Handle edit:code event — sync code → semantic tree → blocks */
   private async handleEditCode(data: { code: string }): Promise<void> {
     // 管線還沒接上：記下最後一份，接上時補做（見 `pendingCode`）
