@@ -777,17 +777,21 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     //       explicit、`= default`／`= delete`、noexcept 照舊降級——那兩顆沒有地方放它們。
     const fd = node.namedChildren.find((c) => c.type === 'function_declarator')!
     const nm = fd.childForFieldName('declarator')
-    const onlyDecl = node.namedChildren.length === 1 && fd.namedChildren.every((c) => c.type === 'parameter_list' || c.startIndex === nm?.startIndex)
+    // `explicit A(int);`（建構子）、`~A() override;`（解構子）——第 322 刀的盲測補：各一格屬性
+    const explicit = node.namedChildren.some((c) => c.type === 'explicit_function_specifier' && c.text === 'explicit')
+    const override = fd.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'override')
+    const onlyDecl = node.namedChildren.every((c) => c.startIndex === fd.startIndex || (c.type === 'explicit_function_specifier' && c.text === 'explicit'))
+      && fd.namedChildren.every((c) => c.type === 'parameter_list' || c.startIndex === nm?.startIndex || (c.type === 'virtual_specifier' && c.text === 'override'))
     const virt = node.children.some((c) => !c.isNamed && c.text === 'virtual')
     const otherTokens = node.children.some((c) => !c.isNamed && c.text !== 'virtual' && c.text !== ';')
-    if (onlyDecl && !otherTokens && nm?.type === 'identifier' && nm.text === className && !virt) {
-      return buildConstructorDeclare({ class_name: className }, { params: liftParamList(fd.childForFieldName('parameters') ?? null, ctx) })
+    if (onlyDecl && !otherTokens && nm?.type === 'identifier' && nm.text === className && !virt && !override) {
+      return buildConstructorDeclare({ class_name: className, is_explicit: explicit ? 'true' : 'false' }, { params: liftParamList(fd.childForFieldName('parameters') ?? null, ctx) })
     }
-    if (onlyDecl && !otherTokens && nm?.type === 'destructor_name' && nm.text.replace(/\s+/g, '') === `~${className}`
+    if (onlyDecl && !otherTokens && !explicit && !(virt && override) && nm?.type === 'destructor_name' && nm.text.replace(/\s+/g, '') === `~${className}`
         && (fd.childForFieldName('parameters')?.namedChildren.length ?? 0) === 0) {
-      return buildDestructorDeclare({ class_name: className, is_virtual: virt ? 'true' : 'false' })
+      return buildDestructorDeclare({ class_name: className, is_virtual: override ? 'override' : virt ? 'true' : 'false' })
     }
-    return degrade(buildRawCode(node.text), '類別裡的建構子／解構子原型（explicit、= default 或其他修飾，定義在類別外）尚未支援')
+    return degrade(buildRawCode(node.text), '類別裡的建構子／解構子原型（= default、noexcept 或其他修飾，定義在類別外）尚未支援')
   }
   if (node.type === 'function_definition') {
     const declNode = node.childForFieldName('declarator')
@@ -946,20 +950,22 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
         const sameAt = (a: AstNode | null | undefined, b: AstNode | null | undefined): boolean => !!a && !!b && a.type === b.type && a.startIndex === b.startIndex
         const wrap = declNode && !sameAt(declNode, d) ? declNode : null
         const fnName = d.childForFieldName('declarator')
-        const plain = !isVirtual && typeNode && (fnName?.type === 'field_identifier' || fnName?.type === 'identifier')
+        // `virtual void f();`、`void f() override;`——第 322 刀的盲測補：一格屬性（兩個都寫的照舊降級）
+        const override = d.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'override')
+        const plain = !(isVirtual && override) && typeNode && (fnName?.type === 'field_identifier' || fnName?.type === 'identifier')
           && (!wrap || ((wrap.type === 'pointer_declarator' || wrap.type === 'reference_declarator') && sameAt(wrap.namedChildren[0], d)))
           && node.namedChildren.every((c) => sameAt(c, typeNode) || sameAt(c, declNode) || (c.type === 'type_qualifier' && c.text === 'const'))
-          && d.namedChildren.every((c) => sameAt(c, fnName) || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const'))
+          && d.namedChildren.every((c) => sameAt(c, fnName) || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const') || (c.type === 'virtual_specifier' && c.text === 'override'))
           && !node.childForFieldName('default_value')
         if (plain) {
           const lead = node.namedChildren.some((c) => c.type === 'type_qualifier') ? 'const ' : ''
           const suffix = wrap ? (wrap.type === 'pointer_declarator' ? '*' : (wrap.children.find((c) => !c.isNamed)?.text ?? '&')) : ''
           const isConst = d.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
           ctx.data.declareFunction(fnName!.text)
-          return buildMethodDeclare({ return_type: `${lead}${typeNode!.text}${suffix}`, name: fnName!.text, is_const: isConst ? 'true' : 'false' },
+          return buildMethodDeclare({ return_type: `${lead}${typeNode!.text}${suffix}`, name: fnName!.text, is_const: isConst ? 'true' : 'false', virt: isVirtual ? 'virtual' : override ? 'override' : 'none' },
             { params: liftParamList(d.childForFieldName('parameters') ?? null, ctx) })
         }
-        return degrade(buildRawCode(node.text), '類別裡的方法原型（virtual、static 或其他修飾，定義在類別外）尚未支援')
+        return degrade(buildRawCode(node.text), '類別裡的方法原型（static、運算子、virtual 與 override 並寫或其他修飾，定義在類別外）尚未支援')
       }
     }
     const defaultVal = node.childForFieldName('default_value')

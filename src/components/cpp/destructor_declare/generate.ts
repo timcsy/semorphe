@@ -4,8 +4,8 @@ import { indent, trackOwnText } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:destructor_declare', (node, ctx) => {
-    const virt = String(node.properties.is_virtual ?? 'false') === 'true' ? 'virtual ' : ''
-    const line = `${indent(ctx)}${virt}~${node.properties.class_name ?? 'MyClass'}();\n`
+    const v = String(node.properties.is_virtual ?? 'false')
+    const line = `${indent(ctx)}${v === 'true' ? 'virtual ' : ''}~${node.properties.class_name ?? 'MyClass'}()${v === 'override' ? ' override' : ''};\n`
     trackOwnText(ctx, line)
     return line
   })

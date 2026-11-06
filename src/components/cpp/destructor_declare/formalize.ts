@@ -10,6 +10,6 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   r.member('cpp:destructor_declare', (n, f) => {
     const def = f.outsideDefinition(n)
     if (!def) return f.miss(n, `類別裡宣告了解構子，而類別外找不到它的定義（只宣告不定義）——還沒有對應`)
-    return f.k('mbDtor', { virt: String(n.properties?.is_virtual ?? 'false') === 'true', n: def.id, body: f.block(def, 'body') })
+    return f.k('mbDtor', { virt: String(n.properties?.is_virtual ?? 'false') !== 'false', n: def.id, body: f.block(def, 'body') })
   })
 }

@@ -1,5 +1,7 @@
 {
-  "C_CONSTRUCTOR_DECLARE_MSG0": "宣告建構子 %1（%2），定義寫在類別外",
+  "C_CONSTRUCTOR_DECLARE_MSG0": "宣告建構子 %1（%2）%3，定義寫在類別外",
   "C_CONSTRUCTOR_DECLARE_TOOLTIP": "在類別裡只寫建構子要哪些參數；它的初始化與本體寫在類別外面的「在類別外定義建構子」積木裡",
-  "FLOW_TITLE_CPP_CONSTRUCTOR_DECLARE": "宣告建構子"
+  "FLOW_TITLE_CPP_CONSTRUCTOR_DECLARE": "宣告建構子",
+  "C_CONSTRUCTOR_DECLARE_EXPLICIT_NO": "（可以自動轉換）",
+  "C_CONSTRUCTOR_DECLARE_EXPLICIT_YES": "explicit（不做自動轉換）"
 }

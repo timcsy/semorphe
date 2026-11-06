@@ -18,6 +18,20 @@
           "type": "field_input",
           "name": "PARAMS",
           "text": ""
+        },
+        {
+          "type": "field_dropdown",
+          "name": "IS_EXPLICIT",
+          "options": [
+            [
+              "%{BKY_C_CONSTRUCTOR_DECLARE_EXPLICIT_NO}",
+              "false"
+            ],
+            [
+              "%{BKY_C_CONSTRUCTOR_DECLARE_EXPLICIT_YES}",
+              "true"
+            ]
+          ]
         }
       ],
       "inputsInline": true,
@@ -28,7 +42,8 @@
     },
     "renderMapping": {
       "fields": {
-        "CLASS_NAME": "class_name"
+        "CLASS_NAME": "class_name",
+        "IS_EXPLICIT": "is_explicit"
       },
       "slotAsField": [
         {

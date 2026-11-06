@@ -37,6 +37,24 @@
               "true"
             ]
           ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "VIRT",
+          "options": [
+            [
+              "%{BKY_C_METHOD_DECLARE_VIRT_NONE}",
+              "none"
+            ],
+            [
+              "%{BKY_C_METHOD_DECLARE_VIRT_VIRTUAL}",
+              "virtual"
+            ],
+            [
+              "%{BKY_C_METHOD_DECLARE_VIRT_OVERRIDE}",
+              "override"
+            ]
+          ]
         }
       ],
       "inputsInline": true,
@@ -49,7 +67,8 @@
       "fields": {
         "NAME": "name",
         "RETURN_TYPE": "return_type",
-        "IS_CONST": "is_const"
+        "IS_CONST": "is_const",
+        "VIRT": "virt"
       },
       "slotAsField": [
         {

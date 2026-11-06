@@ -28,6 +28,6 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const params = (def.slots?.params ?? []).map((q, i) =>
       f.k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: f.type(q.properties?.type, q), dflt: defaultOf(protoParams[i], f) }))
     const fdef = f.k('fdef', { n: def.id, noexc: false, name: String(p.name ?? ''), ret, params, body: f.block(def, 'body') })
-    return f.k('mbMethod', { acc: f.k('acPublic'), isConst: String(p.is_const ?? 'false') === 'true', expl: false, virt: f.k('vNone'), f: fdef })
+    return f.k('mbMethod', { acc: f.k('acPublic'), isConst: String(p.is_const ?? 'false') === 'true', expl: false, virt: f.k(({ virtual: 'vVirtual', override: 'vOverride' } as Record<string, string>)[String(p.virt ?? 'none')] ?? 'vNone'), f: fdef })
   })
 }

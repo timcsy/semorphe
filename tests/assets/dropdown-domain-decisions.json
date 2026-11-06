@@ -271,10 +271,20 @@
       "field": "field_dropdown",
       "reason": "類別外定義的方法有沒有尾端的 const 只有兩種，而且要與類別裡那一行一致（第 322 刀）"
     },
+    "cpp_method_declare.VIRT": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "類別裡宣告的方法：一般／virtual／override 三種（兩個都寫的照舊降級，第 322 刀）"
+    },
+    "cpp_constructor_declare.IS_EXPLICIT": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "建構子有沒有 explicit 只有兩種（第 322 刀）"
+    },
     "cpp_destructor_declare.IS_VIRTUAL": {
       "decision": "closed",
       "field": "field_dropdown",
-      "reason": "類別裡宣告的解構子是不是虛擬的只有兩種（第 322 刀，同類別裡定義解構子那顆）"
+      "reason": "類別裡宣告的解構子：一般／virtual／override 三種（第 322 刀；override 本身也是虛擬的）"
     },
     "cpp_operator_overload.IS_CONST": {
       "decision": "closed",

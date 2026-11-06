@@ -5,7 +5,8 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   r.expr('cpp:new', (n, f) => {
     const t = f.type(n.properties?.type, n)
     if (!t) return f.k('eHole', { n: n.id })
-    if (f.one(n, 'size')) return f.k('eNewArr', { n: n.id, t, len: f.exprOf(n, 'size'), zero: false })
+    // `new int[n]()`／`new int[n]{}`＝每格值初始化（歸零）——zero 照實送（元件管線 322；原本一律 false，讀到未初始化的值）
+    if (f.one(n, 'size')) return f.k('eNewArr', { n: n.id, t, len: f.exprOf(n, 'size'), zero: n.properties?.valueInit === 'true' || n.properties?.brace === 'true' })
     // 🔴 `new T(args)` 的引數今天是**文字屬性**（已知缺口：還沒升格成運算式槽）——不從文字猜結構
     if (String(n.properties?.args ?? '') !== '') return f.miss(n, '`new T(…)` 的引數是文字屬性，還沒升格成運算式槽')
     // `new T{}`（空的大括號）＝值初始化，同 `new T()`

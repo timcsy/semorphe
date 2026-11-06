@@ -23,6 +23,6 @@ export function registerFormalize(r: FormalizeRegistrar): void {
       f.k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: f.type(q.properties?.type, q), dflt: defaultOf(proto[i], f) }))
     const inits = (def.slots?.inits ?? []).map((a) =>
       f.k('minit', { n: a.id, field: String(f.one(a, 'target')?.properties?.name ?? ''), args: [f.exprOf(a, 'value')] }))
-    return f.k('mbCtor', { acc: f.k('acPublic'), n: def.id, expl: false, noexc: false, params, inits, body: f.block(def, 'body') })
+    return f.k('mbCtor', { acc: f.k('acPublic'), n: def.id, expl: String(n.properties?.is_explicit ?? 'false') === 'true', noexc: false, params, inits, body: f.block(def, 'body') })
   })
 }

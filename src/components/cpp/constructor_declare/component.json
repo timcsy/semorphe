@@ -6,6 +6,12 @@
       "name": "class_name",
       "kind": "literal",
       "default": "MyClass"
+    },
+    {
+      "name": "is_explicit",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "`explicit A(int);`：只寫在類別裡這一行；有它就不能被當成隱含轉換（Cella 的 mbCtor.expl）。第 322 刀的盲測補。"
     }
   ],
   "slots": {

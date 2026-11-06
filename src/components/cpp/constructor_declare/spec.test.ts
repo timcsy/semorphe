@@ -5,7 +5,7 @@
  * ① 類別裡 `A(int v);`、`~A();` ＋ 類別外 `A::A(int v) : x(v) {…}`、`A::~A() {…}` → Cella 的 mbCtor／mbDtor（初始化列與本體取類別外那一顆）
  * ② 建構子靠參數型別配對（多載）；解構子一個類別只有一個
  * ③ virtual 寫在類別裡那一行，類別外的定義不寫
- * ④ explicit、= default 這類修飾不被吃掉——照舊降級
+ * ④ explicit 是一格屬性（Cella 的 mbCtor.expl）；= default 這類修飾不被吃掉——照舊降級
  * ```
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -96,12 +96,12 @@ describe('建構子／解構子：類別裡宣告、類別外定義', () => {
   })
 
   // 🔴 `= default` 原本被建成空本體的解構子（`~C() {}`）——`= delete` 的話意思整個反過來；這一刀順手修成照實降級
-  it('負向：explicit、= default 的原型不被吃掉——照舊降級、原文一字不差', () => {
+  it('負向：= default 的原型不被吃掉——照舊降級、原文一字不差；explicit 是一格屬性', () => {
     const src = `${head}class C {\npublic:\n    explicit C(int v);\n    ~C() = default;\n};\nC::C(int v) {\n}\nint main() {\n    return 0;\n}\n`
     const t = lift(src)
-    // 正向錨點：類別外的定義有被認得
+    // 正向錨點：類別外的定義有被認得；explicit 的原型收成建構子宣告（is_explicit）
     expect(ids(t)).toContain('cpp:constructor_def_outside')
-    expect(ids(t)).not.toContain('cpp:constructor_declare')
+    expect(ids(t)).toContain('cpp:constructor_declare')
     expect(ids(t)).not.toContain('cpp:destructor_declare')
     const out = generateCode(t, 'cpp', S)
     for (const s of ['explicit C(int v);', '~C() = default;']) expect(out).toContain(s)

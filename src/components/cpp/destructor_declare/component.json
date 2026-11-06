@@ -11,7 +11,7 @@
       "name": "is_virtual",
       "kind": "enum",
       "default": "false",
-      "_kind_why": "`virtual ~A();`：virtual 只寫在類別裡這一行（類別外的定義不寫）——同類別裡定義解構子那顆的那一格。"
+      "_kind_why": "`virtual ~A();`：virtual 只寫在類別裡這一行（類別外的定義不寫）——同類別裡定義解構子那顆的那一格。三個值：`false`／`true`（`virtual ~A();`）／`override`（`~A() override;`——覆寫基底的虛擬解構子，本身也是虛擬的；第 322 刀的盲測補）。"
     }
   ],
   "slots": {},

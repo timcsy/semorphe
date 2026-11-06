@@ -17,6 +17,12 @@
       "kind": "enum",
       "default": "false",
       "_kind_why": "尾端的 const 寫在原型上（`int get() const;`），類別外的定義也要寫同一個——兩邊各記各的，多載靠它分（`get()` 與 `get() const` 是兩個成員）。慣例同類別裡定義方法那顆。"
+    },
+    {
+      "name": "virt",
+      "kind": "enum",
+      "default": "none",
+      "_kind_why": "`virtual void f();`／`void f() override;`：virtual 與 override 只寫在類別裡這一行，類別外的定義不寫（Cella 的 mbMethod.virt：vVirtual／vOverride）。第 322 刀的盲測補；兩個都寫的照舊降級。"
     }
   ],
   "slots": {

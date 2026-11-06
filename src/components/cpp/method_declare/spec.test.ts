@@ -7,7 +7,7 @@
  * ① 兩顆一起才是一個成員：類別裡的原型 ＋ 類別外的定義 → Cella 的一個 mbMethod（本體與參數名取定義，預設引數取原型）
  * ② 多載靠鍵分：名字 ＋ 參數型別 ＋ const——`get()` 與 `get() const` 是兩個成員
  * ③ 對不上的照實標翻不出：只宣告不定義、定義了而類別裡沒有那個成員——不猜
- * ④ 形狀不單純的（virtual、static、巢狀命名空間）不准被吃掉——照舊降級成原文
+ * ④ 形狀不單純的（virtual 與 override 並寫、static、巢狀命名空間）不准被吃掉——照舊降級（只寫 virtual 或只寫 override 是一格屬性）成原文
  * ```
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -163,14 +163,14 @@ int main() {
     expect(r.untranslated.map((u) => u.reason).join('；')).toMatch(/找不到 f 這個成員的宣告/)
   })
 
-  it('負向：virtual／static 的原型、巢狀命名空間的定義不被吃掉——照舊降級、原文一字不差', () => {
-    const src = `${head}namespace ns {\nclass A {\npublic:\n    virtual void f();\n    static int g();\n};\n}\nvoid ns::A::f() {\n}\nint main() {\n    return 0;\n}\n`
+  it('負向：virtual 與 override 並寫、static 的原型、巢狀命名空間的定義不被吃掉——照舊降級、原文一字不差', () => {
+    const src = `${head}namespace ns {\nclass A {\npublic:\n    virtual void f() override;\n    static int g();\n};\n}\nvoid ns::A::f() {\n}\nint main() {\n    return 0;\n}\n`
     const t = lift(src)
     // 正向錨點：程式真的被讀進來了（main 在）
     expect(all(t, (x) => x === 'cpp:func_def').length).toBeGreaterThan(0)
     expect(ofId(t, 'cpp:method_declare')).toEqual([])
     expect(ofId(t, 'cpp:method_def_outside')).toEqual([])
     const out = generateCode(t, 'cpp', S)
-    for (const s of ['virtual void f();', 'static int g();']) expect(out).toContain(s)
+    for (const s of ['virtual void f() override;', 'static int g();']) expect(out).toContain(s)
   })
 })

@@ -1,7 +1,10 @@
 {
-  "C_METHOD_DECLARE_MSG0": "Declare method %1 %2 (%3) %4, defined outside the class",
+  "C_METHOD_DECLARE_MSG0": "Declare method %1 %2 (%3) %4 %5, defined outside the class",
   "C_METHOD_DECLARE_TOOLTIP": "Inside the class, write only what this member function looks like (return type, name, parameters); its body goes in a \"Define method outside the class\" block",
   "C_METHOD_DECLARE_CONST_NO": "(may modify itself)",
   "C_METHOD_DECLARE_CONST_YES": "const (does not modify itself)",
-  "FLOW_TITLE_CPP_METHOD_DECLARE": "Declare method"
+  "FLOW_TITLE_CPP_METHOD_DECLARE": "Declare method",
+  "C_METHOD_DECLARE_VIRT_NONE": "(plain)",
+  "C_METHOD_DECLARE_VIRT_VIRTUAL": "overridable (virtual)",
+  "C_METHOD_DECLARE_VIRT_OVERRIDE": "overrides the base (override)"
 }

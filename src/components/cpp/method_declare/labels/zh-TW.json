@@ -1,7 +1,10 @@
 {
-  "C_METHOD_DECLARE_MSG0": "宣告方法 %1 %2（%3）%4，定義寫在類別外",
+  "C_METHOD_DECLARE_MSG0": "宣告方法 %1 %2（%3）%4 %5，定義寫在類別外",
   "C_METHOD_DECLARE_TOOLTIP": "在類別裡只寫這個成員函式的樣子（回傳型別、名字、參數）；它的本體寫在類別外面的「在類別外定義方法」積木裡",
   "C_METHOD_DECLARE_CONST_NO": "（會改自己）",
   "C_METHOD_DECLARE_CONST_YES": "const（不改自己）",
-  "FLOW_TITLE_CPP_METHOD_DECLARE": "宣告方法"
+  "FLOW_TITLE_CPP_METHOD_DECLARE": "宣告方法",
+  "C_METHOD_DECLARE_VIRT_NONE": "（一般）",
+  "C_METHOD_DECLARE_VIRT_VIRTUAL": "可被覆寫（virtual）",
+  "C_METHOD_DECLARE_VIRT_OVERRIDE": "覆寫基底的（override）"
 }

@@ -25,6 +25,10 @@
             [
               "%{BKY_C_DESTRUCTOR_DECLARE_VIRTUAL_YES}",
               "true"
+            ],
+            [
+              "%{BKY_C_DESTRUCTOR_DECLARE_VIRTUAL_OVERRIDE}",
+              "override"
             ]
           ]
         }
