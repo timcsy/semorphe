@@ -16,6 +16,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { runCella } from '../helpers/cella-run'
 import { toDiagnostics, type Verdict } from '../../src/core/verdict-diagnostics'
+import { diagnosticsFromTree } from '../../src/core/diagnostics'
 import { diagnosticText, diagnosticParams, codeDiagnosticDetail, diagnosticLayers } from '../../src/core/projection/diagnostic-projection'
 import { generateExpressionCode } from '../../src/core/projection/code-generator'
 import { setMessages, resetMessages } from '../../src/i18n/messages'
@@ -48,6 +49,16 @@ const EXAMPLES: [string, string][] = [
   ['跑太久（可能是無窮迴圈）', 'int main() {\n    while (true) {\n    }\n}'],
 ]
 
+/**
+ * **語法錯誤**（2026-11-06 加；漏分號提示那一刀）：寫不完整的程式不交給 Cella——診斷來自語義樹（`diagnosticsFromTree`）。
+ * 三種各一則：解析器指名的缺口、推論出來的「可能」、認不得的。
+ */
+const SYNTAX_EXAMPLES: [string, string][] = [
+  ['少了分號（下一行是宣告）', 'int main() {\n    int x = 1\n    int y = 2;\n}'],
+  ['少了分號（下一行是輸出）', 'int main() {\n    int x = 1\n    cout << x;\n}'],
+  ['認不得的寫法', 'int main() {\n    int x = 1;\n    @@@\n}'],
+]
+
 const S = apcs as unknown as StylePreset
 let page = ''
 
@@ -70,6 +81,20 @@ async function render(): Promise<string> {
       const detail = codeDiagnosticDetail(d)
       rows.push(`- 積木：${diagnosticText(d.rule, 'BLOCK', p)}`)
       rows.push(`- 程式碼：${diagnosticText(d.rule, 'CODE', p)}${detail ? `｜詳細資訊：${detail}` : ''}`)
+      for (const l of diagnosticLayers(d.rule, p)) rows.push(`  - ${l}`)
+    }
+    rows.push('')
+  }
+  rows.push('## 語法錯誤（寫不完整，沒有交給 Cella）', '')
+  for (const [name, code] of SYNTAX_EXAMPLES) {
+    const r = await runCella(code, { style: 'apcs' })
+    rows.push(`### ${name}`, '', '```cpp', code, '```', '')
+    const ds = diagnosticsFromTree(r.tree).filter((d) => d.source === 'parser')
+    if (ds.length === 0) rows.push('- （沒有標示）')
+    for (const d of ds) {
+      const p = diagnosticParams(d.at ? { ...d.params, humanLine: d.at.line + 1 } : d.params)
+      rows.push(`- 積木：${diagnosticText(d.rule, 'BLOCK', p)}`)
+      rows.push(`- 程式碼：${d.at ? `第 ${d.at.line + 1} 行：` : ''}${diagnosticText(d.rule, 'CODE', p)}`)
       for (const l of diagnosticLayers(d.rule, p)) rows.push(`  - ${l}`)
     }
     rows.push('')

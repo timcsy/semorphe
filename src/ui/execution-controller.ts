@@ -11,7 +11,8 @@ import { showToast } from './toolbar/toast'
 import type { BlocklyPanel } from '../panels/blocks/view'
 import type { CodeView } from '../core/host/code-view'
 import type { ConsolePanel } from '../panels/console/view'
-import { canExecute } from '../core/diagnostics'
+import { canExecute, diagnosticsFromTree } from '../core/diagnostics'
+import { diagnosticText, diagnosticParams } from '../core/projection/diagnostic-projection'
 import { describeExecutionRefusal, describeUnknownPause, describeUnknownContinued, describeSetVariableRefused, describeInterventions } from '../core/refusal-message'
 // 🔴 **不得直接推 `e.message`**——那是給開發者看的湊合字串（身分 ＋ JSON）。
 // 三個顯示點各查一次表就是三個會忘記的地方，所以收成一個具名函式，
@@ -804,7 +805,12 @@ export class ExecutionController {
     const verdict = canExecute(tree as SemanticNode)
     if (verdict.ok) return false
     // `history/017`：一道會拒絕的檢查必須同時回答「被拒絕的東西去哪了」。
-    const msg = describeExecutionRefusal(verdict.nodeIds.length, verdict.cause)
+    // 語法那一種：第一個說得出位置的缺口（「第 4 行：這一行的結尾可能少了一個 `;`」）接在拒絕的話後面
+    const first = verdict.cause === 'syntax'
+      ? diagnosticsFromTree(tree as SemanticNode).find((d) => d.source === 'parser' && d.at)
+      : undefined
+    const where = first?.at ? `第 ${first.at.line + 1} 行：${diagnosticText(first.rule, 'CODE', diagnosticParams(first.params))}` : undefined
+    const msg = describeExecutionRefusal(verdict.nodeIds.length, verdict.cause, where)
     this.broadcastOutput(msg + '\n', 'stderr')
     this.panels.bottomPanel?.showTab('console')
     showToast(msg, 'error')
