@@ -188,6 +188,7 @@
     "cpp:struct_at_member",
     "cpp:struct_at_ptr",
     "cpp:class_def",
+    "cpp:class_declare",
     "cpp:new",
     "cpp:delete",
     "cpp:template_function",

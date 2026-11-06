@@ -96,10 +96,14 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   // C++ 的 struct 就是 class：寫不寫 `struct` 都是 tClass（cella 2026-10-31；tStruct 只給 C 程式）。
   // 不帶關鍵字的型別名（`Node*`）要先知道它是程式裡定義過的 struct，才認得出來——哪一顆定義型別名由元件自己註冊（`definesType`）。
   const structNames = new Set<string>()
+  // 只宣告、不是定義的型別名（前置宣告）——型別翻得出來，但不算「有定義」（見契約的 declaresType）
+  const declaredTypes = new Set<string>()
   const enumNames = new Set<string>()
   const collect = (n: SemanticNode): void => {
     const named = FORMALIZE.definesType.get(n.componentId)
     if (named) structNames.add(named(n))
+    const declared = FORMALIZE.declaresType.get(n.componentId)
+    if (declared) declaredTypes.add(declared(n))
     const en = FORMALIZE.definesEnum.get(n.componentId)
     if (en) enumNames.add(en(n))
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
@@ -190,7 +194,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     const en = /^(?:enum\s+)?([A-Za-z_]\w*)$/.exec(s)
     if (en && enumNames.has(en[1])) return k('tEnum', { name: en[1] })
     const st = /^(?:struct\s+)?([A-Za-z_]\w*)$/.exec(s)
-    if (st && (s.startsWith('struct ') || structNames.has(st[1]))) return k(isC ? 'tStruct' : 'tClass', { name: st[1] })
+    if (st && (s.startsWith('struct ') || structNames.has(st[1]) || declaredTypes.has(st[1]))) return k(isC ? 'tStruct' : 'tClass', { name: st[1] })
     // 巢狀的型別名：`vector<int>::iterator`、`set<int>::const_iterator`、`string::iterator`——tMember（cella 2026-11-03 給的形狀；
     // 宣告、參數、typedef 三種位置都是它）。⚠️ vector／string 的 iterator 成員型別要等 Cella 補（之前判 reject「unknown type」）——照送，不自己展開成指標
     const mem = /^(.+)::(iterator|const_iterator|reverse_iterator|const_reverse_iterator)$/.exec(s)

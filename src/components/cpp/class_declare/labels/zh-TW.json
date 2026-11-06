@@ -1,0 +1,8 @@
+{
+  "CPP_CLASS_DECLARE_MSG0": "先宣告%1 %2（定義在後面）",
+  "CPP_CLASS_DECLARE_CLASS": "類別",
+  "CPP_CLASS_DECLARE_STRUCT": "結構",
+  "CPP_CLASS_DECLARE_TOOLTIP": "先讓編譯器知道有這個名字（前置宣告），完整的定義可以寫在後面。兩個類別互相用到對方的指標時常用；在定義出現之前，只能宣告它的指標或參照，不能建出物件。",
+  "FLOW_TITLE_CPP_CLASS_DECLARE": "先宣告類別",
+  "FLOW_SLOT_CPP_CLASS_DECLARE_KEYWORD": "種類"
+}
