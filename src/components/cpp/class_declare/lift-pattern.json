@@ -1,0 +1,22 @@
+[
+  {
+    "id": "cpp_class_declare_class",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "class_specifier",
+    "component": { "componentId": "cpp:class_declare" },
+    "liftStrategy": "cpp:liftClassDeclare",
+    "constraints": [{ "field": "body", "absent": true }],
+    "fieldMappings": [],
+    "priority": 20
+  },
+  {
+    "id": "cpp_class_declare_struct",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "struct_specifier",
+    "component": { "componentId": "cpp:class_declare" },
+    "liftStrategy": "cpp:liftClassDeclare",
+    "constraints": [{ "field": "body", "absent": true }],
+    "fieldMappings": [],
+    "priority": 20
+  }
+]

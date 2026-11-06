@@ -741,6 +741,12 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 
 /** Lift a class member (function_definition, field_declaration) into a semantic node */
 export function liftClassMember(node: AstNode, className: string, ctx: LiftContext): SemanticNode | null {
+  // 🔴 類別裡的建構子／解構子【原型】（`BST();`、`~Folder();`——定義寫在類別外）是 declaration：原本交給一般的宣告那條路，
+  //    建成名字掉成 `f` 的函式原型（`int f();`）或 `int BST();`——安靜地換掉了意思（2026-11-06 元件管線 313 的盲測）。
+  //    在「宣告方法」那顆元件之前照實降級成原文（路線圖〈類別外定義成員函式〉）
+  if (node.type === 'declaration' && node.namedChildren.some((c) => c.type === 'function_declarator')) {
+    return degrade(buildRawCode(node.text), '類別裡的建構子／解構子原型（定義在類別外）尚未支援')
+  }
   if (node.type === 'function_definition') {
     const declNode = node.childForFieldName('declarator')
     const typeNode = node.childForFieldName('type')
@@ -810,30 +816,42 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       return buildOperatorOverload({ return_type: returnType, operator: op, param_type: paramType, param_name: paramName, is_const: isConst ? 'true' : 'false' }, { body })
     }
 
+    // 🔴 回傳指標或參照的覆寫／虛擬方法（`const char* name() const override {…}`）：宣告子外面包一層 pointer_declarator，
+    //    override 與尾端 const 都在裡面那層——原本只看外層，於是兩個都丟了、走到一般函式那條路，覆寫不到純虛擬函式
+    //    （「Green 是抽象類別」，2026-11-06 元件管線 313 的盲測）。先剝開，符號與開頭的 const 併進回傳型別（同一般成員函式那條）
+    let vDecl = declNode
+    let vSuffix = ''
+    while (vDecl && (vDecl.type === 'pointer_declarator' || vDecl.type === 'reference_declarator')) {
+      vSuffix += vDecl.type === 'pointer_declarator' ? '*' : (vDecl.children.find((c) => !c.isNamed)?.text ?? '&')
+      vDecl = (vDecl.childForFieldName('declarator') as AstNode | null) ?? vDecl.namedChildren[vDecl.namedChildren.length - 1] ?? null
+    }
+    const vLead = node.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const') ? 'const ' : ''
+    const vReturn = (fallback: string): string => typeNode ? `${vLead}${typeNode.text}${vSuffix}` : fallback
+    const vName = vDecl?.childForFieldName('declarator')?.text ?? nameNode?.text ?? 'method'
     // Check for override keyword (via virtual_specifier node in declarator)
-    const hasOverride = declNode?.namedChildren.some(c => c.type === 'virtual_specifier' && c.text === 'override') ?? false
+    const hasOverride = vDecl?.namedChildren.some(c => c.type === 'virtual_specifier' && c.text === 'override') ?? false
 
     // Override method (with or without virtual keyword)
     if (hasOverride) {
-      const methodName = nameNode?.text ?? 'method'
-      const returnType = typeNode?.text ?? 'void'
-      const paramList = declNode?.childForFieldName('parameters') ?? null
+      const methodName = vName
+      const returnType = vReturn('void')
+      const paramList = vDecl?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
       // 尾端 const（spec 209）：與運算子多載那支同一個讀法
-      const isConst = (declNode?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
+      const isConst = (vDecl?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
       return buildMethodOverride({ return_type: returnType, name: methodName, is_const: isConst ? 'true' : 'false' }, { params, body })
     }
 
     // Virtual method with body
     if (isVirtual) {
-      const methodName = nameNode?.text ?? 'method'
-      const returnType = typeNode?.text ?? 'void'
-      const paramList = declNode?.childForFieldName('parameters') ?? null
+      const methodName = vName
+      const returnType = vReturn('void')
+      const paramList = vDecl?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
       const body = extractBody(bodyNode, ctx)
       // 尾端 const（spec 209）：與運算子多載那支同一個讀法
-      const isConst = (declNode?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
+      const isConst = (vDecl?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
       return buildMethodVirtual({ return_type: returnType, name: methodName, is_const: isConst ? 'true' : 'false' }, { params, body })
     }
 
@@ -878,10 +896,25 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     }
     // Pure virtual: virtual void method() = 0;
     const isVirtual = node.children.some(c => !c.isNamed && c.text === 'virtual')
+    // 🔴 **類別裡的方法原型**（`void link(B* b);`、`int total() const;`——定義寫在類別外）：原本落到下面「一般欄位」，
+    //    建成一個名字叫 `link(B* b)` 的變數（文字照抄所以產回去看起來對，而身分錯了、formalize 說「型別 void 還沒有對應」）。
+    //    在「宣告方法」那顆元件之前照實降級成原文（2026-11-06 元件管線 313 的盲測；路線圖〈類別外定義成員函式〉）。
+    {
+      let d: AstNode | null = node.childForFieldName('declarator')
+      while (d && (d.type === 'pointer_declarator' || d.type === 'reference_declarator')) d = (d.childForFieldName('declarator') as AstNode | null) ?? d.namedChildren[0] ?? null
+      if (d?.type === 'function_declarator' && !(isVirtual && node.childForFieldName('default_value')?.text === '0')) {
+        return degrade(buildRawCode(node.text), '類別裡的方法原型（定義在類別外）尚未支援')
+      }
+    }
     const defaultVal = node.childForFieldName('default_value')
     if (isVirtual && defaultVal?.text === '0') {
       const typeNode = node.childForFieldName('type')
       const declNode = node.childForFieldName('declarator')
+      // 🔴 回傳指標（`virtual const char* name() const = 0;`）或尾端 const：這顆記不住——原本產成 `virtual char name() const() = 0;`
+      //    （編不過；2026-11-06 元件管線 313 的盲測）。照實降級成原文
+      if (declNode?.type !== 'function_declarator' || declNode.namedChildren.some((c) => c.type === 'type_qualifier')) {
+        return degrade(buildRawCode(node.text), '純虛擬函式的指標回傳或尾端 const 尚未支援')
+      }
       const methodName = declNode?.childForFieldName('declarator')?.text ?? declNode?.namedChildren[0]?.text ?? 'method'
       const returnType = typeNode?.text ?? 'void'
       const paramList = declNode?.childForFieldName('parameters') ?? null
@@ -1040,6 +1073,15 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     if (fnDecl) {
       const nameNode = fnDecl.childForFieldName('declarator')
+      // 🔴 **類別外定義的成員函式**（`int A::get() const {…}`、`A::~A() {…}`、`A::A(int v) : … {…}`）——2026-11-06 元件管線 313 的盲測：
+      //    這顆元件記不住尾端的 const，也沒有「沒有回傳型別」的形狀，於是 const 安靜地丟掉、建構子／解構子被補上 `void`
+      //    ——產回去編不過（而且意思變了）。在「宣告方法、定義在類別外」那顆元件之前，照實降級成原文（路線圖〈類別外定義成員函式〉）。
+      //    課文與 StudyCpp 0 處（2026-11-06 量過），所以這一條只擋盲測量到的那幾種、不動任何現有的課。
+      if (nameNode?.type === 'qualified_identifier') {
+        const trailingConst = fnDecl.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
+        const ctorOrDtor = !node.childForFieldName('type') || nameNode.namedChildren.some((c) => c.type === 'destructor_name')
+        if (trailingConst || ctorOrDtor) return degrade(buildRawCode(node.text), '類別外定義的成員函式（帶 const、或建構子／解構子）尚未支援')
+      }
       name = nameNode?.text ?? fnDecl.namedChildren[0]?.text ?? 'f'
 
       // 🔴 **這裡本來自己抄了一份「怎麼讀一串參數」**，而同一個檔裡就有
@@ -1678,6 +1720,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       return false
     }
 
+    // 回傳指標的函式原型、回傳型別帶 const（`const Node* findTag(…);`）——在常數變數宣告那條路之前（見 liftPointerPrototype）
+    if (qualifier) { const pp = liftPointerPrototype(node, `${qualifier} ${type}`, ctx); if (pp) return pp }
     // const/constexpr declaration
     if (qualifier === 'const' || qualifier === 'constexpr') {
       /**
@@ -1785,6 +1829,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       return degrade(buildRawCode(node.text), 'extern 宣告尚未支援')
     }
 
+    { const pp = liftPointerPrototype(node, type, ctx); if (pp) return pp }
     // Forward function declarations: void listp(int *, int); → structured forward_decl
     const funcDeclarator = node.namedChildren.find(c => c.type === 'function_declarator')
     // 🔴 **函式指標不是函式宣告**（2026-09-06 補）——`void (*f)(int);`
@@ -2154,4 +2199,30 @@ function parseDocComment(text: string): Record<string, string> {
 
   props.brief = briefLines.join('\n')
   return props
+}
+
+/**
+ * 🔴 **回傳指標／參照的函式原型**（2026-11-06，元件管線 313 的盲測）：`Node* pushFront(Node* head, int v);`
+ * 的 function_declarator 外面包著 pointer_declarator，於是只找【直接】子節點的那條路找不到它，
+ * 落到指標變數宣告——名字找不到就用預設值，產回去變成 `Node* ptr;`（名字與參數全丟，而且安靜）。
+ * 拆開指標／參照那幾層，`*`／`&` 併進回傳型別（同函式定義那顆：回傳型別保留宣告子之前的整段，spec 204）。
+ * 函式指標（`void (*f)(int)`，括號形狀）不在這裡——那條路照實降級。
+ */
+function liftPointerPrototype(node: AstNode, retType: string, ctx: LiftContext): SemanticNode | null {
+  const decls = node.namedChildren.filter((c) => c.type === 'pointer_declarator' || c.type === 'reference_declarator')
+  if (decls.length !== 1) return null
+  if (node.namedChildren.some((c) => c.type === 'init_declarator' || c.type === 'identifier' || c.type === 'function_declarator')) return null
+  let inner: AstNode | null = decls[0]
+  let marks = ''
+  while (inner && (inner.type === 'pointer_declarator' || inner.type === 'reference_declarator')) {
+    marks += inner.type === 'pointer_declarator' ? '*' : '&'
+    const next: AstNode | null = (inner.childForFieldName('declarator') as AstNode | null) ?? inner.namedChildren[inner.namedChildren.length - 1] ?? null
+    if (!next || next === inner) return null
+    inner = next
+  }
+  if (inner?.type !== 'function_declarator' || inner.namedChildren.some((c) => c.type === 'parenthesized_declarator')) return null
+  const nm = inner.namedChildren.find((c) => c.type === 'identifier')
+  if (!nm) return null
+  const pl = inner.childForFieldName('parameters') ?? inner.namedChildren.find((c) => c.type === 'parameter_list')
+  return buildForwardDecl(`${retType}${marks}`, nm.text, liftParamList(pl ?? null, ctx))
 }

@@ -32,7 +32,10 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       c.type === 'type_identifier' || c.type === 'primitive_type' || c.type === 'sized_type_specifier' || c.type === 'template_type' || c.type === 'qualified_identifier')
     if (!typeNode) return null
     const type = typeNode.text
-    const argList = node.namedChildren.find(c => c.type === 'argument_list')
+    // `new Node{v, head}`（大括號初始化）：引數在 initializer_list 裡。🔴 原本只找 argument_list，大括號整段丟掉 → `new Node`，
+    //    值從「指定好的」變成「未初始化」（2026-11-06，元件管線 313 的盲測）。記成屬性 `brace`，產回去照原本的括號
+    const braceList = node.namedChildren.find(c => c.type === 'initializer_list')
+    const argList = node.namedChildren.find(c => c.type === 'argument_list') ?? braceList
     const args = argList ? argList.namedChildren.map(a => a.text).join(', ') : ''
 
     // `new int[n]` —— 大小住在 `new_declarator` 裡（`[` 運算式 `]`）。
@@ -46,7 +49,8 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     // 🔴 **一對空括號是意思，不是排版**（2026-11-06）：`new int()` 把值初始化成 0，`new int` 的值是未定的（[expr.new]p18）。
     //    原本兩者都成了「沒有引數」→ 產回去少了括號、意思變了。記成屬性 `valueInit`，產碼與 formalize 都讀它
     //    🔴 而它是【屬性】不是 layoutHints：layoutHints 走一趟積木就丟了（form-invariance (c)），積木上由 renderMapping.hints 帶著
-    if (argList && args === '') made.properties.valueInit = 'true'
+    if (argList && args === '' && !braceList) made.properties.valueInit = 'true'
+    if (braceList) made.properties.brace = 'true'
     return made
   })
 }
