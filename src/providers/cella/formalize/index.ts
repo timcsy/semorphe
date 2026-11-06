@@ -37,7 +37,7 @@ const BIN: Record<string, string> = {
 const SCALAR: Record<string, string> = {
   int: 'tInt', long: 'tLong', 'long long': 'tLongLong', unsigned: 'tUnsigned', 'unsigned int': 'tUnsigned',
   short: 'tShort', 'unsigned short': 'tUShort', 'unsigned long': 'tULong', 'unsigned long long': 'tULongLong',
-  double: 'tDouble', float: 'tFloat', char: 'tChar', 'signed char': 'tSChar', 'unsigned char': 'tUChar',
+  double: 'tDouble', 'long double': 'tLongDouble', float: 'tFloat', char: 'tChar', 'signed char': 'tSChar', 'unsigned char': 'tUChar',
   bool: 'tBool', string: 'tString', 'std::string': 'tString',
 }
 
