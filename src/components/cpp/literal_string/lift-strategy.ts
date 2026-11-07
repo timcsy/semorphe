@@ -12,6 +12,7 @@
  */
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import { createNode } from '../../../core/semantic-tree'
+import type { SemanticNode } from '../../../core/types'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('cpp:lift_concatenated_string', (node) => {
@@ -29,4 +30,13 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     }
     return made
   })
+}
+
+/**
+ * 建構子——**讓別人不必寫下這顆的身分**（同 `python/literal_string/build.ts`；放在這裡而不另開檔：就近性的上限是 4 檔）。
+ * C → C++ 把 `printf("%d + %d", a, b)` 換成 `cout << a << " + " << b` 時，格式字串裡的文字做成這顆
+ * （`src/languages/cpp/c-to-cpp.ts`）。`value` 是原始碼裡引號內的寫法（跳脫照原樣）。
+ */
+export function buildLiteralString(value: string): SemanticNode {
+  return createNode('cpp:literal_string', { value }, {})
 }

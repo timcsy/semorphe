@@ -23,7 +23,7 @@
  *
  * 見 `knowledge/concepts/宣告登記處.md`、`specs/161-manifest-language-loading/`
  */
-import type { Topic, Target, StylePreset, ToolboxCategoryDef } from './types'
+import type { Topic, Target, StylePreset, ToolboxCategoryDef, SemanticNode } from './types'
 
 /**
  * **一個套件**——三個域（軟體／硬體／UI）都填得出來的那一半。
@@ -223,6 +223,16 @@ export interface LanguagePack extends Pack {
     convert: (...a: never[]) => unknown
     analyzeIo: (code: string, pref: string) => unknown
   }
+  /**
+   * **換風格時，整支程式要不要跟著換寫法**（跨語言互轉的第一對 C → C++，2026-11-07）。
+   *
+   * 從 `from` 換到 `to` 時，回傳換過寫法的新樹與「換了幾行、保留幾行」；`null` ＝ 這一對沒有要換的。
+   * `types` 是判決給的運算式型別（鍵是節點 id）——換不換由它判斷意思會不會變，推不出就保留（P6）。
+   * ⚠️ 選填：沒有方言之分的語言不宣告。
+   */
+  convertBetweenStyles?: (
+    tree: SemanticNode, from: StylePreset, to: StylePreset, types: Readonly<Record<string, string>>,
+  ) => { tree: SemanticNode; converted: number; kept: number } | null
   /**
    * **這個語言在使用者的碼【外面】加的那一層**——模組登記表、程式外殼（鷹架）、
    * 鷹架節點過濾、程式碼修補、自動引入。

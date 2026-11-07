@@ -63,21 +63,62 @@ describe('Style Exception Detection', () => {
   })
 
   describe('I/O block exceptions (from toolbox blocks)', () => {
+    // 🔴 2026-11-07（C → C++ 第一刀）：只在換了之後印出來一字不差時才提——型別由判決給（`types`）。
+    //    原本這一條用「`%d\\n` 而沒有引數」的節點，而舊的轉換只搬引數、丟掉格式字串（見 `c-to-cpp.ts` 檔頭）。
     it('should detect cpp_printf in APCS (iostream) mode', () => {
+      const x = createNode('cpp:var_ref', { name: 'x' })
       const tree = makeProgram([
-        createNode('cpp:print_formatted', { format: '%d\\n', args: '' }),
+        createNode('cpp:print_formatted', { format: '%d\\n' }, { args: [x] }),
       ])
-      const exceptions = detectStyleExceptions(tree, apcs)
+      const exceptions = detectStyleExceptions(tree, apcs, undefined, { [x.id]: 'int' })
       expect(exceptions).toHaveLength(1)
       expect(exceptions[0].label).toContain('printf')
       expect(exceptions[0].suggestion).toContain('cout')
     })
 
-    it('should detect cpp_scanf in APCS mode', () => {
+    it('🔴 型別不知道 → 不提（換了可能印出不一樣的東西）', () => {
+      const x = createNode('cpp:var_ref', { name: 'x' })
+      const tree = makeProgram([createNode('cpp:print_formatted', { format: '%d\\n' }, { args: [x] })])
+      expect(detectStyleExceptions(tree, apcs)).toHaveLength(0)
+      // 型別對不上（%d 配 char：printf 印數字、cout 印字元）也不提
+      expect(detectStyleExceptions(tree, apcs, undefined, { [x.id]: 'char' })).toHaveLength(0)
+    })
+
+    it('🔴 運算式位置的 scanf 不換（`if (scanf(...) == 1)` 用到回傳值，cin >> 是語句）', () => {
+      const n = createNode('cpp:var_ref', { name: 'n' })
+      const scan = createNode('cpp:input_formatted', { format: '%d' }, { args: [n] })
       const tree = makeProgram([
-        createNode('cpp:input_formatted', { format: '%d', args: '' }),
+        createNode('cpp:if', {}, { condition: [scan], then_body: [], else_body: [] }),
+        createNode('cpp:input_formatted', { format: '%d' }, { args: [n] }),
       ])
-      const exceptions = detectStyleExceptions(tree, apcs)
+      const ex = detectStyleExceptions(tree, apcs, undefined, { [n.id]: 'int' })
+      // 正向錨點：語句位置那一顆照換
+      expect(ex.map((e) => e.suggestion)).toEqual(['cin >> ...'])
+      expect(ex[0].node).not.toBe(scan)
+    })
+
+    it('🔴 還有換不了的 printf 時，不提「cstdio → iostream」（照做會拿掉它要的標頭）', () => {
+      const x = createNode('cpp:var_ref', { name: 'x' })
+      const kept = createNode('cpp:print_formatted', { format: '%5.2f\\n' }, { args: [x] })
+      const tree = makeProgram([createNode('cpp:include', { header: 'cstdio', local: false }), kept])
+      expect(detectStyleExceptions(tree, apcs, undefined, { [x.id]: 'double' }).map((e) => e.label)).toEqual([])
+      // 正向錨點：換得掉的那種，cstdio 那條照提
+      const plain = makeProgram([createNode('cpp:include', { header: 'cstdio', local: false }),
+        createNode('cpp:print_formatted', { format: 'hi\\n' }, { args: [] })])
+      expect(detectStyleExceptions(plain, apcs).map((e) => e.label)).toEqual(['#include <cstdio>', 'printf(...)'])
+    })
+
+    it('純文字的 printf 不需要型別', () => {
+      const tree = makeProgram([createNode('cpp:print_formatted', { format: 'hello\\n' }, { args: [] })])
+      expect(detectStyleExceptions(tree, apcs)).toHaveLength(1)
+    })
+
+    it('should detect cpp_scanf in APCS mode', () => {
+      const n = createNode('cpp:var_ref', { name: 'n' })
+      const tree = makeProgram([
+        createNode('cpp:input_formatted', { format: '%d' }, { args: [n] }),
+      ])
+      const exceptions = detectStyleExceptions(tree, apcs, undefined, { [n.id]: 'int' })
       expect(exceptions).toHaveLength(1)
       expect(exceptions[0].label).toContain('scanf')
       expect(exceptions[0].suggestion).toContain('cin')
@@ -94,16 +135,17 @@ describe('Style Exception Detection', () => {
 
   describe('Multiple exceptions', () => {
     it('should detect all exceptions in a mixed tree', () => {
+      const n = createNode('cpp:var_ref', { name: 'n' })
       const tree = makeProgram([
         createNode('cpp:include', { header: 'bits/stdc++.h', local: false }),
         createNode('cpp:func_def', { name: 'main', return_type: 'int', params: [] }, {
           body: [
             createNode('cpp:print_formatted', { format: 'hello\\n' }),
-            createNode('cpp:input_formatted', { format: '%d' }),
+            createNode('cpp:input_formatted', { format: '%d' }, { args: [n] }),
           ],
         }),
       ])
-      const exceptions = detectStyleExceptions(tree, apcs)
+      const exceptions = detectStyleExceptions(tree, apcs, undefined, { [n.id]: 'int' })
       expect(exceptions).toHaveLength(3)
     })
   })
@@ -207,13 +249,13 @@ describe('Style Exception Conversion', () => {
     const tree = makeProgram([
       createNode('cpp:print_formatted', { format: '%d\\n' }, { args: [varRef] }),
     ])
-    const exceptions = detectStyleExceptions(tree, apcs)
+    const exceptions = detectStyleExceptions(tree, apcs, undefined, { [varRef.id]: 'int' })
     const converted = applyStyleConversions(tree, exceptions)
 
     const prints = converted.slots.body.filter(n => n.componentId === 'cpp:print')
     expect(prints).toHaveLength(1)
-    expect(prints[0].slots.values).toHaveLength(1)
-    expect(prints[0].slots.values[0].componentId).toBe('cpp:var_ref')
+    // 格式字串的結尾換行也在（原本丟掉了）：x << endl
+    expect(prints[0].slots.values.map((v) => v.componentId)).toEqual(['cpp:var_ref', 'cpp:endl'])
   })
 
   it('should convert cpp_scanf to input in APCS mode', () => {
@@ -221,7 +263,7 @@ describe('Style Exception Conversion', () => {
     const tree = makeProgram([
       createNode('cpp:input_formatted', { format: '%d' }, { args: [varRef] }),
     ])
-    const exceptions = detectStyleExceptions(tree, apcs)
+    const exceptions = detectStyleExceptions(tree, apcs, undefined, { [varRef.id]: 'int' })
     const converted = applyStyleConversions(tree, exceptions)
 
     const inputs = converted.slots.body.filter(n => n.componentId === 'cpp:input')
