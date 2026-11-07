@@ -47,6 +47,11 @@ jobs:
     # 🔴 job 層的上限（2026-11-07）：42adf741 那一輪的 e2e (2) 卡在 in_progress 十一小時以上，佔著 concurrency group pages，
     #    之後九輪全部 pending → cancelled（GitHub 沒替它逾時）。step 層的 timeout-minutes 管不到整個 job。
     timeout-minutes: 40
+    # 🔴 CI 是從頭算的裁判（2026-11-07，329 接上 cos-mos 的判決共享快取之後，與 cos-mos 約定）：判決快取一律不讀不寫——
+    #    明確關掉，不靠「CI 上剛好沒有存放」（日後有人加 actions/cache 涵蓋家目錄或 node_modules/.cache 也不會悄悄變成讀快取）
+    env:
+      COSMOS_RESULTS: 'off'
+      SEMORPHE_VERDICT_CACHE: '0'
     steps:
       # ⚠️ **要完整歷史**（`fetch-depth: 0`）。
       #
@@ -143,6 +148,11 @@ jobs:
     runs-on: ubuntu-latest
     # 🔴 job 層的上限：見上面 test 那一格（卡住的正是這一個 job 的第 2 片）
     timeout-minutes: 45
+    # 🔴 CI 是從頭算的裁判（2026-11-07，329 接上 cos-mos 的判決共享快取之後，與 cos-mos 約定）：判決快取一律不讀不寫——
+    #    明確關掉，不靠「CI 上剛好沒有存放」（日後有人加 actions/cache 涵蓋家目錄或 node_modules/.cache 也不會悄悄變成讀快取）
+    env:
+      COSMOS_RESULTS: 'off'
+      SEMORPHE_VERDICT_CACHE: '0'
     strategy:
       # ⚠️ **不要 fail-fast**：一片紅就砍掉其他三片的話，你只會看到第一個
       #    失敗，而修完它才知道還有第二個——那把一輪 15 分鐘變成三輪。
