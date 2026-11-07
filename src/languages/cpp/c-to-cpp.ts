@@ -24,6 +24,7 @@ import type { SemanticNode } from '../../core/types'
 import { bodySlotsOf, ioTraitOf, isAddressable, componentTraits } from '../../core/component/traits'
 import { printfOf, scanfOf } from './printf-types'
 import { normalizeHeader } from './header-aliases'
+import { collectStructNames } from './target-dialect'
 import { isIncludeDirective } from './lang/node-traits'
 import { buildPrint } from '../../components/cpp/print/lift'
 import { buildInput } from '../../components/cpp/input/lift'
@@ -133,6 +134,9 @@ export interface CToCppResult {
  * `malloc` 沒有轉型（`int *a = malloc(n);`）：C 會把 `void*` 隱含轉成 `int*`，C++ 不會 ⟹ 補上轉型 `(int*)`。
  *   要轉成什麼由**接收它的那一邊**說：宣告的型別（`type` ＋ 元件宣告的 `typeSuffix`），或指定的左邊（Cella 給的型別）。
  *   問不出來的照原樣留著（C++ 判決會說不收——那是誠實的）。
+ * `struct Point p;` → `Point p;`：C++ 裡宣告過的 struct 名字本身就是型別（C 才要寫標籤）。只動**型別那幾格**
+ *   （屬性名是 `type`／`return_type`／`target_type`…）、只動**這支程式自己宣告的** struct 名字——字串字面不碰。
+ *   純形式：Cella 的判決不受影響（兩邊判決相同的護欄照樣量）。不計入「換了幾行」（那是 I/O 與意思的事）。
  * 標頭：原文寫的 C 標頭換成 C++ 的名字（`<stdio.h>` → `<cstdio>`）；新用到的（`<iostream>`）由自動補標頭照元件補（`auto-include.ts`）。
  */
 export function convertCToCpp(root: SemanticNode, types: ExpressionTypes): CToCppResult {
@@ -167,7 +171,37 @@ export function convertCToCpp(root: SemanticNode, types: ExpressionTypes): CToCp
     }
     return null
   }
-  const visit = (n: SemanticNode): SemanticNode => {
+  const structs = collectStructNames(root)
+  const tagRe = structs.size > 0 ? new RegExp(`\\bstruct\\s+(${[...structs].map((x) => x.replace(/\W/g, '')).join('|')})\\b`, 'g') : null
+  const untag = (n: SemanticNode): SemanticNode => {
+    if (!tagRe) return n
+    let props: Record<string, unknown> | null = null
+    const isTypeKey = (k: string): boolean => /(^|_)type\d?$/.test(k)
+    for (const [k, v] of Object.entries(n.properties ?? {})) {
+      if (typeof v === 'string' && isTypeKey(k)) {
+        const t = v.replace(tagRe, '$1')
+        if (t !== v) (props ??= { ...n.properties })[k] = t
+      } else if (Array.isArray(v) && v.some((e) => e && typeof e === 'object')) {
+        // 參數表（`params: [{ type, name }]`）——同一條規則套到每一格的型別欄
+        let changed = false
+        const arr = v.map((e) => {
+          if (!e || typeof e !== 'object') return e
+          const o = e as Record<string, unknown>
+          let out: Record<string, unknown> | null = null
+          for (const [ek, ev] of Object.entries(o)) {
+            if (typeof ev !== 'string' || !isTypeKey(ek)) continue
+            const t = ev.replace(tagRe, '$1')
+            if (t !== ev) { (out ??= { ...o })[ek] = t; changed = true }
+          }
+          return out ?? e
+        })
+        if (changed) (props ??= { ...n.properties })[k] = arr
+      }
+    }
+    return props ? { ...n, properties: props as SemanticNode['properties'] } : n
+  }
+  const visit = (raw: SemanticNode): SemanticNode => {
+    const n = untag(raw)
     if (isIncludeDirective(n.componentId) && typeof n.properties.header === 'string') {
       const header = normalizeHeader(n.properties.header).replace(/^<|>$/g, '')
       if (header !== n.properties.header) return { ...n, properties: { ...n.properties, header } }

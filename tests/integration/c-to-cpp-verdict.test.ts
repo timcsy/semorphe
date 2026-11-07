@@ -25,6 +25,7 @@ import { createCppCodePatcher } from '../../src/languages/cpp/auto-include'
 import { convertCToCpp } from '../../src/languages/cpp/c-to-cpp'
 import { runCella, cellaTypesOfTree } from '../helpers/cella-run'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
+import cStyle from '../../src/languages/cpp/styles/c.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
 let parser: Parser
@@ -141,6 +142,20 @@ describe('C → C++：換了會變意思的，保留', () => {
     await sameVerdict(src, cpp)
   })
 
+  it('struct 標籤：`struct Point p;` → `Point p;`（型別那幾格；字串字面不碰）', async () => {
+    const src = '#include <stdio.h>\nstruct Point {\n    int x;\n    int y;\n};\nint dist2(struct Point p) {\n    return p.x * p.x + p.y * p.y;\n}\nint main() {\n    struct Point ps[2];\n    ps[0].x = 3;\n    ps[0].y = 4;\n    struct Point *q = &ps[0];\n    printf("struct Point %d\\n", dist2(*q));\n    return 0;\n}\n'
+    const { cpp } = await toCpp(src)
+    expect(cpp).toContain('Point ps[2];')
+    expect(cpp).toMatch(/int dist2\(Point p\)/)
+    expect(cpp).toMatch(/Point\s*\* ?q = &ps\[0\];/)
+    expect(cpp).not.toMatch(/struct Point (ps|p\)|\*)/)
+    // 字串字面裡的那兩個字照原樣
+    expect(cpp).toContain('"struct Point "')
+    // 正向錨點：struct 的定義本身還在
+    expect(cpp).toContain('struct Point {')
+    await sameVerdict(src, cpp)
+  })
+
   it('原文寫的 C 標頭換成 C++ 的名字', async () => {
     const src = '#include <stdio.h>\n#include <string.h>\nint main() {\n    char s[10] = "abc";\n    printf("%d\\n", (int)strlen(s));\n    printf("%.1f\\n", 2.5);\n    return 0;\n}\n'
     const { cpp } = await toCpp(src)
@@ -150,3 +165,20 @@ describe('C → C++：換了會變意思的，保留', () => {
     await sameVerdict(src, cpp)
   })
 })
+
+describe('C 原文自己來回一趟（C 目標）——轉換的前提', () => {
+  it('🔴 帶標籤的參數型別不得掉（`int f(struct Point p)` 曾經變成 `int f(int p)`）', async () => {
+    const src = '#include <stdio.h>\nstruct Point {\n    int x;\n};\nenum Color { RED, GREEN };\nint f(struct Point p) {\n    return p.x;\n}\nint g(const struct Point* p) {\n    return p->x;\n}\nint c(enum Color k) {\n    return k;\n}\nint main() {\n    struct Point q;\n    q.x = 4;\n    printf("%d %d %d\\n", f(q), g(&q), c(GREEN));\n    return 0;\n}\n'
+    const tree = lifter.lift(parser.parse(src)!.rootNode as never) as SemanticNode
+    const back = generateCode(tree, 'cpp', cStyle as StylePreset)
+    for (const sig of ['int f(struct Point p)', 'int g(const struct Point* p)', 'int c(enum Color k)']) expect(back).toContain(sig)
+    await expectSame(src, back)
+  })
+})
+
+async function expectSame(a: string, b: string): Promise<void> {
+  const x = await runCella(a, { lang: 'c' })
+  const y = await runCella(b, { lang: 'c' })
+  expect(x.verdict, JSON.stringify(x.problems?.slice(0, 2))).toBe('accept')
+  expect([y.verdict, y.out]).toEqual([x.verdict, x.out])
+}
