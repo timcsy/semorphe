@@ -18,7 +18,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { buildBindingCorpus, type BindingRow } from '../helpers/binding-corpus'
 import { checkerFromBytes, checkerSource, compileCellaChecker, type CellaChecker, type CellaVerdict } from '../../src/providers/cella/verdict'
 import { cachedCellaModule } from '../../tools/cella-module-cache'
-import { cachedVerdict, moduleHashOf } from '../helpers/verdict-cache'
+import { cachedVerdictAsync, moduleHashOf } from '../helpers/verdict-cache'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { formalize } from '../../src/providers/cella/formalize'
 import type { SemanticNode } from '../../src/core/types'
@@ -45,13 +45,13 @@ beforeAll(async () => {
   checker = await checkerFromBytes(bytes)
   verdict = checker.verdict
   const moduleHash = moduleHashOf(bytes)
-  results = rows.filter((r) => r.program).map((row) => {
+  results = await Promise.all(rows.filter((r) => r.program).map(async (row) => {
     const c = checkOf(row.id)
     // Arduino 的 sketch 要模擬到 5 秒（setup 一次、loop 重複）——步數要給夠，否則是 `fuel` 的 unknown
     const fuel = row.id.startsWith('arduino/') ? 50_000_000 : undefined
     // 語料的判決讀快取（`verdict-cache.ts`）：送出的程式沒變就不再判；下面的注入測試照樣當場判
-    return { row, v: cachedVerdict(() => verdict(row.program, c.stdin, fuel), { moduleHash, program: row.program, stdin: c.stdin, steps: fuel ?? -1 }), expected: c.stdout }
-  })
+    return { row, v: await cachedVerdictAsync(async () => verdict(row.program, c.stdin, fuel), { moduleHash, program: row.program, stdin: c.stdin, steps: fuel ?? -1 }), expected: c.stdout }
+  }))
 }, 600_000)
 
 /**
