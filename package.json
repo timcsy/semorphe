@@ -22,10 +22,10 @@
     "demo:gif": "bash tools/demo/to-gif.sh"
   },
   "devDependencies": {
-    "@cella-lang/arduino": "0.1.202611070006",
-    "@cella-lang/c": "0.1.202611070006",
-    "@cella-lang/cpp": "0.1.202611070006",
-    "@cella-lang/python": "0.1.202611070007",
+    "@cella-lang/arduino": "0.1.202611070816",
+    "@cella-lang/c": "0.1.202611070816",
+    "@cella-lang/cpp": "0.1.202611070815",
+    "@cella-lang/python": "0.1.202611070816",
     "@playwright/test": "^1.62.1",
     "@types/markdown-it": "^14.2.0",
     "@types/vscode": "^1.125.0",
