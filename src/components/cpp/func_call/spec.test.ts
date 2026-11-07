@@ -4,7 +4,7 @@
  * 名字不是一個函式時照 eCall 送，Cella 判「未宣告的名字」——一支合法的程式被說成錯的（P6）：
  * ```
  * string("ab").size()            名字是型別：建暫時物件（eTemp）        ← 改成判得出
- * max<long long>(3, 5)           明確指定樣板引數的函式樣板呼叫           ← 照實翻不出
+ * max<long long>(3, 5)           明確指定樣板引數的函式樣板呼叫           ← 送 eCallT（2026-11-08 cella 給的形狀），判得出
  * numeric_limits<int>::min()     樣板類別的靜態成員                       ← 照實翻不出
  * ostream_iterator<int>(cout,"") 還不認得的樣板型別                       ← 照實翻不出
  * ```
@@ -21,13 +21,19 @@ describe('cpp:func_call 的 formalize：名字不是函式的那幾種', () => {
     await expectCellaOut(prog('string("ab").size()'), '2\n')
   })
 
-  for (const e of ['max<long long>(3, 5)', 'min<int>(3, 5)', 'numeric_limits<int>::min()']) {
+  for (const [e, out] of [['max<long long>(3, 5)', '5\n'], ['min<int>(3, 5)', '3\n'], ['make_pair<int, int>(1, 2).first', '1\n'], ['max<double>(1, 2.5)', '2.5\n'], ['get<1>(make_tuple<int, int>(1, 2))', '2\n']]) {
+    it(`🔴 明確指定樣板引數：${e} 送 eCallT、判得出`, async () => {
+      await expectCellaOut(prog(e), out)
+    })
+  }
+
+  for (const e of ['numeric_limits<int>::min()']) {
     it(`🔴 ${e}：照實翻不出，不得被判成錯的`, async () => {
       const r = await runCella(prog(e))
       expect(r.verdict, JSON.stringify(r.problems?.slice(0, 1))).not.toBe('reject')
       // 正向錨點：它確實是被我們照實標下來的那一種，不是剛好別的原因翻不出
       expect(r.verdict).toBe('untranslated')
-      expect(r.untranslated.map((u) => u.reason).join(' ')).toMatch(/帶樣板引數的呼叫|樣板類別的靜態成員/)
+      expect(r.untranslated.map((u) => u.reason).join(' ')).toMatch(/樣板類別的靜態成員/)
     })
   }
 

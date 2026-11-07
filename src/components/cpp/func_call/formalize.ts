@@ -4,6 +4,26 @@ import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 /** `<functional>` 的函式物件類別（帶範本引數）：`greater<int>`、`std::less<>`… */
 const FUNCTOR = /^(?:std::)?(?:greater|less|greater_equal|less_equal|equal_to|not_equal_to|plus|minus|multiplies|divides|modulus|negate|logical_and|logical_or|logical_not|bit_and|bit_or|bit_xor|hash)\s*<.*>$/
 
+/**
+ * 學生程式會明確指定樣板引數來呼叫的函式庫**函式**樣板（`max<long long>(a, b)`）——明列，不從名字的形狀猜（型別也長這樣）。
+ * 加一個名字之前先在 Cella 上量過它判得出（`func_call/spec.test.ts`）。
+ */
+const LIBRARY_FUNCTION_TEMPLATES = new Set(['max', 'min', 'make_pair', 'make_tuple'])  // ⚠️ swap<int>(a, b) 量過判 reject「not part of C++」，已回報 cella（2026-11-08）
+
+/** 樣板引數串依頂層逗號切開（`pair<int, int>, long long` → 兩段）。 */
+function splitTopLevel(text: string): string[] {
+  const out: string[] = []
+  let depth = 0, cur = ''
+  for (const ch of text) {
+    if (ch === '<' || ch === '(') depth++
+    else if (ch === '>' || ch === ')') depth--
+    if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue }
+    cur += ch
+  }
+  if (cur.trim()) out.push(cur.trim())
+  return out
+}
+
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.expr('cpp:func_call', (n, f) => {
     const name = String(n.properties?.name ?? '')
@@ -49,6 +69,20 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     }
     // 其餘帶樣板引數的（`max<long long>(a, b)` 明確指定樣板引數的函式樣板呼叫）：照 eCall 送等於呼叫一個叫 `max<long long>` 的函式
     //    ——主樹上判「未宣告」reject（假的錯）。照實標翻不出
+    // 明確指定樣板引數的函式樣板呼叫（`max<long long>(a, b)`、`make_pair<int, int>(…)`、自己的 `twice<int>(3)`）：
+    //    送 eCallT（cella 2026-11-08 給的形狀，同 get<N>）——照 [temp.arg.explicit]，指定的先填、其餘再推導。
+    //    函式庫的名字寫完整的 `std::max`；程式自己定義的照名字。樣板引數有一個翻不出就照實標翻不出
+    //    ⚠️ 只認【函式】：名字的形狀分不出函式樣板與樣板型別——`ostream_iterator<int>(cout, "")` 照 eCallT 送，Cella 判
+    //       「不是 C++」（這一刀第一版就撞到）。所以只收程式自己定義的函式，與下面明列的函式庫函式樣板
+    const explicitT = /^((?:std::)?[A-Za-z_]\w*)\s*<(.*)>$/.exec(name)
+    if (explicitT && (f.isFunctionName(explicitT[1]) || LIBRARY_FUNCTION_TEMPLATES.has(explicitT[1].replace(/^std::/, '')))) {
+      const base = explicitT[1]
+      const targs = splitTopLevel(explicitT[2]).map((a) => (/^\d+$/.test(a) ? f.k('tVal', { v: Number(a) }) : f.type(a, n)))
+      if (targs.every((t) => t !== null)) {
+        const fn = f.isFunctionName(base) || base.startsWith('std::') ? base : `std::${base}`
+        return f.k('eCallT', { n: n.id, f: fn, targs, args })
+      }
+    }
     if (name.includes('<')) return f.miss(n, `「${name}(…)」是帶樣板引數的呼叫（明確指定樣板引數的函式樣板，或還不認得的樣板型別）；還沒有對應`)
     return f.k('eCall', { n: n.id, f: f.identMacro(name), args })
   })
