@@ -757,9 +757,9 @@ describe('fuzz（第 218 刀）：類別裡的一般成員函式與尾端 const'
   }
   const shape = (n: any): unknown => ({ c: n.componentId, p: n.properties, s: Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, v]) => [k, (v as any[]).map(shape)])) })
 
-  it('★ 入口條件：fixture 有 10 支——pass 8、todo 2（fuzz_7 第 229 刀修好；fuzz_6、fuzz_10 的建構子預設引數在元件管線 311 修好）', () => {
+  it('★ 入口條件：fixture 有 10 支——pass 9、todo 1（fuzz_7 第 229 刀修好；fuzz_6、fuzz_10 的建構子預設引數在元件管線 311 修好；fuzz_1 的 const 物件建構引數在 331 修好）', () => {
     expect(rows).toHaveLength(10)
-    expect(rows.filter((r) => r.status === 'pass')).toHaveLength(8)
+    expect(rows.filter((r) => r.status === 'pass')).toHaveLength(9)
     expect(rows.filter((r) => r.status === 'drift')).toHaveLength(0)
   })
 

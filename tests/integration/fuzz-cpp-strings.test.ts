@@ -364,11 +364,8 @@ int main() {
     const gen1 = generateCode(tree!, 'cpp', style)
     const gen2 = generateCode(liftCode(gen1)!, 'cpp', style)
     expect(gen1).toBe(gen2)
-    // 歸類：我們這側缺——`string(n, c)`（cpp:string_make）沒有 formalize（2026-11-04，spec 212 量到）。
-    //   來回一趟的形狀照舊驗（上面兩行）；行為那一半等 string_make 有了 formalize 再變回一般的測試。
-    await knownCellaGap(/cpp:string_make：這顆元件還沒有對應到 Cella 的建構子/, async () => {
-      await expectSameOnCella(code, gen1)
-    })
+    // 🟢 cpp:string_make（`to_string`）在 331 補了 formalize（2026-11-04 spec 212 量到的缺口）——行為那一半變回一般的測試
+    await expectSameOnCella(code, gen1)
   })
 })
 
