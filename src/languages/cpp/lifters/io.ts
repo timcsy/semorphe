@@ -8,7 +8,7 @@ import { methodComponentFor, containerMethodComponent, typedMethodComponent } fr
 import { componentComponents } from '../../../core/component/registry'
 import { tryCallBranches, tryMethodBranches } from '../../../core/component/lift-branches'
 import { namedCastComponent } from '../../../core/component/named-cast-components'
-import { buildMalloc } from '../../../components/cpp/malloc/lift'
+import { buildMalloc, liftMallocArg } from '../../../components/cpp/malloc/lift'
 import { buildMethodCall } from '../../../components/cpp/method_call/lift'
 import { buildFuncCall } from '../../../components/cpp/func_call/lift'
 import { buildCast } from '../../../components/cpp/cast/lift'
@@ -526,8 +526,10 @@ export function registerIOLifters(lifter: Lifter): void {
 
     // malloc(size) → cpp_malloc (without cast; cast is handled in lift-patterns via cast_expression)
     if (funcName === 'malloc' && argChildren.length === 1) {
-      const size = argChildren[0] ? ctx.lift(argChildren[0]) : null
-      return buildMalloc('void', size)
+      const { size, sizeofType } = liftMallocArg(argChildren[0], (n) => ctx.lift(n))
+      // 沒有轉型 ＝ `void*`（malloc 本來就回傳它）。🔴 這裡原本是 `'void'`，產生器照寫成 `(void)malloc(n)`
+      //    ——`int *a = malloc(n);` 來回一趟就編不過（2026-11-07 C → C++ 第二刀前量到）
+      return buildMalloc('void*', size, sizeofType)
     }
 
     // General function call
