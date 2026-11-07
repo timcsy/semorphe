@@ -38,7 +38,7 @@ const OURS = /^cpp:(method|constructor|destructor)_(declare|def_outside)$/
 
 /** 這一族之外、已知的缺口（降級原因的開頭或原文）——每一條都是另一刀 */
 const ALLOWED_DEGRADE = [
-  /類別裡的方法原型（static、運算子/,           // 靜態成員函式、運算子多載的原型——另一刀
+  /類別裡的方法原型（static、/,                 // 靜態成員函式的原型——另一刀（運算子的原型第 331 刀起收）
   /類別外定義的成員函式（建構子／解構子帶修飾、或樣板／巢狀類別）/, // 運算子多載的類別外定義（`Fraction::operator+`）
   /純虛擬函式的指標回傳或尾端 const/,             // 313 就登記過
   /^\w+::\w+$|^\w+$/,                             // `Node::created`：靜態成員的限定名（既有缺口）
@@ -76,6 +76,13 @@ describe('模糊測試：類別外定義成員函式', () => {
     const r = await runCella((p as { code: string }).code)
     if (r.verdict === 'accept') {
       expect(r.out, '判得出了——拿掉這一支的釘子、改成對 clang 輸出的斷言').toBe((p as { expected: string }).expected)
+      return
+    }
+    // 第 331 刀之後 fuzz_2 判得出了，而 Cella 照實說「具名回傳值的複製省略可做可不做、輸出取決於它」（ubElide）——
+    //    那是誠實的 unknown，不是我們翻錯：印出來的要與 clang 相同
+    if (r.verdict === 'unknown') {
+      expect(r.problems.map((x) => x.kind), '判 unknown 的原因只准是實作相依的那一種').toEqual(['ubElide'])
+      expect(r.out).toBe((p as { expected: string }).expected)
       return
     }
     expect(r.verdict).toBe('untranslated')

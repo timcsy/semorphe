@@ -1,6 +1,6 @@
 /** `cpp:func_def` 的 **generate** 路——從共用檔原封剪過來（批次第四十二批：樹根與進入點）。 */
 import type { StylePreset } from '../../../core/types'
-import { openBraceFor } from '../../../languages/cpp/lang/generators/statements'
+import { openBraceFor, formatParams } from '../../../languages/cpp/lang/generators/statements'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, indented, generateBody, trackOwnText } from '../../../core/projection/code-generator'
 
@@ -10,18 +10,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       const name = node.properties.name ?? 'f'
       const returnType = node.properties.return_type ?? 'void'
       const paramChildren = node.slots.params ?? []
-      const paramStr = paramChildren.map(p => {
-        const t = String(p.properties.type ?? 'int')
-        const n = String(p.properties.name ?? '')
-        // ⚠️ **預設值要跟著印**——少了它，`f(1)` 這個合法的呼叫會變成「少了引數」
-        const d = String(p.properties.default ?? '')
-        const tail = d ? ` = ${d}` : ''
-        if (t.endsWith('[]')) {
-          const baseType = t.slice(0, -2)
-          return n ? `${baseType} ${n}[]${tail}` : `${baseType}[]`
-        }
-        return n ? `${t} ${n}${tail}` : t
-      }).join(', ')
+      // 參數串（預設值、陣列參數的 `[]` 寫在名字後面）與建構子、方法共用同一支（第 331 刀併成一份）
+      const paramStr = formatParams(paramChildren)
       const body = node.slots.body ?? []
       const header = `${indent(ctx)}${returnType} ${name}(${paramStr})${openBrace(ctx)}\n`
       trackOwnText(ctx, header)

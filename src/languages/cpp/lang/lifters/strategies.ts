@@ -2219,6 +2219,9 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
         name = inner.type === 'identifier'
           ? inner.text
           : inner.namedChildren.find((c) => c.type === 'identifier')?.text ?? ''
+        // 🔴 指標的陣列（`const char* tokens[]`）：剝完星號是 array_declarator——原本只取名字、`[]` 丟了，型別變成 `const char*`，
+        //    `tokens[i][0]` 被 Cella 判「不是陣列或指標」，產回去也少了 `[]`（第 331 刀的往返測試撞到，盲測 fuzz_6）
+        if (inner.type === 'array_declarator') type += '[]'
       } else if (declNode.type === 'reference_declarator') {
         type += '&'
         const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
