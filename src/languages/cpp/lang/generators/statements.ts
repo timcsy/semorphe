@@ -38,7 +38,9 @@ export const formatParams = (paramChildren: { properties: Record<string, unknown
       const d = String(p.properties.default ?? '')
       // 陣列參數（`int a[]`、`const char* t[]`）：型別記成 `int[]`／`const char*[]`，`[]` 要寫在名字後面
       //（第 331 刀：一般函式那條原本自己有一份這條規則、這一支沒有——併成一份，兩條路都走這裡）
-      const decl = t.endsWith('[]') ? (n ? `${t.slice(0, -2)} ${n}[]` : t) : (n ? `${t} ${n}` : t)
+      // 多維（`int[][COLS]`）：整段後綴都寫在名字後面（2026-11-07 C 盲測）
+      const suffix = /(\[[^\]]*\])+$/.exec(t)?.[0] ?? ''
+      const decl = suffix ? (n ? `${t.slice(0, -suffix.length)} ${n}${suffix}` : t) : (n ? `${t} ${n}` : t)
       return d ? `${decl} = ${d}` : decl
     }).join(', ')
 
