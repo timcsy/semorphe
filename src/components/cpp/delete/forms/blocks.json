@@ -10,6 +10,20 @@
       "message0": "%{BKY_CPP_DELETE_MSG0}",
       "args0": [
         {
+          "type": "field_dropdown",
+          "name": "IS_ARRAY",
+          "options": [
+            [
+              "%{BKY_CPP_DELETE_ONE}",
+              "false"
+            ],
+            [
+              "%{BKY_CPP_DELETE_ARRAY}",
+              "true"
+            ]
+          ]
+        },
+        {
           "type": "input_value",
           "name": "PTR",
           "check": "Expression"
@@ -24,6 +38,9 @@
     "renderMapping": {
       "inputs": {
         "PTR": "ptr"
+      },
+      "fields": {
+        "IS_ARRAY": "is_array"
       }
     }
   }

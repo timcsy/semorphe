@@ -1,7 +1,14 @@
 {
   "componentId": "cpp:delete",
   "abstractComponent": null,
-  "properties": [],
+  "properties": [
+    {
+      "name": "is_array",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "`delete[] p`（釋放 `new T[n]` 配的陣列）與 `delete p`（釋放單一物件）是兩件事——用錯一個是未定義行為（Cella 判 ubFree）。原本 lift 不記、產碼不寫、formalize 一律送 `arr: false`：**對稱的資料遺失**，來回比對一直綠，`delete[] data` 走一趟變成 `delete data`（第 331 刀的往返測試撞到）。預設 `'false'` 是存檔相容（既有存檔沒有這一格）。"
+    }
+  ],
   "slots": {
     "ptr": "expression"
   },

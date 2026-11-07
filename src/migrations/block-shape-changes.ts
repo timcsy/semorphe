@@ -53,6 +53,14 @@ export interface ShapeChange {
    */
   retiredExtraState?: string[]
   /**
+   * **新加的欄位**（2026-11-07，第 331 刀）——同型別的積木身上**沒有**這一格，就是舊形狀。
+   *
+   * 🔴 退場的那三格（欄位／extraState／接點）問的都是「舊的東西還在嗎」；而一顆積木**多了**一格欄位時，
+   *    舊快取身上沒有任何退場的東西，判定永遠說「新形狀」——`cpp_delete` 多了 `IS_ARRAY` 之後，
+   *    從 `delete[] p` 建出來的舊快取載進來會被當成「物件」，下一次一動積木，`[]` 就悄悄不見了。
+   */
+  addedFields?: string[]
+  /**
    * 已經退場的**接點名**（2026-09-19 加）。
    *
    * 🔴 **在此之前這個機制看不見接點改名，而那是一整類的缺口。**
@@ -111,6 +119,7 @@ export function staleShapeIn(
       //    少了後半，一顆已經是新形狀的積木也會讓整份快取被丟掉。
       const fields = (n.fields && typeof n.fields === 'object') ? n.fields as Record<string, unknown> : {}
       if (change.retiredFields.some((f) => f in fields)) { hit = change; return }
+      if ((change.addedFields ?? []).some((f) => !(f in fields))) { hit = change; return }
       const extra = (n.extraState && typeof n.extraState === 'object')
         ? n.extraState as Record<string, unknown> : {}
       if ((change.retiredExtraState ?? []).some((k) => k in extra)) { hit = change; return }
@@ -370,6 +379,21 @@ export const SHAPE_CHANGES_V21: ShapeChange[] = [
     why: '範圍的兩端從欄位換成接點——一個欄位只裝得下一串文字。' },
   { blockType: 'cpp_range_find_upper', retiredFields: ['BEGIN', 'END'],
     why: '範圍的兩端從欄位換成接點——一個欄位只裝得下一串文字。' },
+]
+
+/**
+ * ## V27：`delete` 多了「物件／陣列」那一格（2026-11-07，第 331 刀）
+ *
+ * `delete[] p` 的 `[]` 原本 lift 不記、產碼不寫、formalize 一律當單一物件——對稱的資料遺失。
+ * 加了 `IS_ARRAY` 欄位之後，舊快取身上沒有這一格（不是多了什麼，是少了什麼）⟹ 用 `addedFields` 判定，丟掉快取、從程式碼重 lift。
+ */
+export const SHAPE_CHANGES_V27: ShapeChange[] = [
+  {
+    blockType: 'cpp_delete',
+    retiredFields: [],
+    addedFields: ['IS_ARRAY'],
+    why: '`delete[] p` 與 `delete p` 從此是一格欄位（IS_ARRAY）——沒有這一格的舊快取是從不記括號的時代建的',
+  },
 ]
 
 /**

@@ -1,6 +1,9 @@
 import type { TransformRegistry } from '../../../../core/registry/transform-registry'
 
 export function registerCppTransforms(registry: TransformRegistry): void {
+  // `delete[] p` 與 `delete p`：括號是意思（陣列與單一物件），不是排版——第 331 刀：原本 lift 不記，`[]` 走一趟就不見了
+  registry.register('cpp:deleteIsArray', (text) => (/^(?:::\s*)?delete\s*\[\s*\]/.test(text.trim()) ? 'true' : 'false'))
+
   registry.register('cpp:stripComment', (text) => {
     if (text.startsWith('//')) return text.slice(2).trim()
     if (text.startsWith('/*') && text.endsWith('*/')) return text.slice(2, -2).trim()

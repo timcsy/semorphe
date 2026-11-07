@@ -13,11 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../../migrations/block-type-migrations'
 import { mergedIdentities } from '../../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20, SHAPE_CHANGES_V21, SHAPE_CHANGES_V22, SHAPE_CHANGES_V23, SHAPE_CHANGES_V26 } from '../../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20, SHAPE_CHANGES_V21, SHAPE_CHANGES_V22, SHAPE_CHANGES_V23, SHAPE_CHANGES_V26, SHAPE_CHANGES_V27 } from '../../migrations/block-shape-changes'
 import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 26
+export const CURRENT_VERSION = 27
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -481,6 +481,11 @@ export const UPGRADES: Record<number, Upgrade> = {
    * 🟢 冪等：新形狀裡沒有 `ARGS`，再跑一次什麼都不丟。⚠️ 只動積木快取，不碰程式碼。
    */
   25: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V26, 26),
+  /**
+   * 26 → 27：**`delete` 多了「物件／陣列」那一格**（第 331 刀）——沒有 `IS_ARRAY` 的 `cpp_delete` 是舊快取，作廢、從程式碼重 lift。
+   * 🟢 冪等：新形狀都有那一格，再跑一次什麼都不丟。⚠️ 只動積木快取，不碰程式碼。
+   */
+  26: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V27, 27),
 }
 
 /**

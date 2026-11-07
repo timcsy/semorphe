@@ -1,4 +1,6 @@
 {
-  "CPP_DELETE_MSG0": "刪除物件 %1 (delete)",
-  "CPP_DELETE_TOOLTIP": "刪除用 new 建立的物件，歸還記憶體空間"
+  "CPP_DELETE_MSG0": "刪除 %1 %2 (delete)",
+  "CPP_DELETE_TOOLTIP": "歸還用 new 建立的東西所占的記憶體：new 建的單一物件選「物件」（delete p），new T[n] 建的陣列選「陣列」（delete[] p）——選錯是未定義行為",
+  "CPP_DELETE_ONE": "物件",
+  "CPP_DELETE_ARRAY": "陣列"
 }

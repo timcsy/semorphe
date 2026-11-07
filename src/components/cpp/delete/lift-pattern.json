@@ -10,6 +10,12 @@
       "semantic": "ptr",
       "ast": "$namedChildren[0]",
       "extract": "lift"
+    },
+    {
+      "semantic": "is_array",
+      "ast": "$text",
+      "extract": "text",
+      "transform": "cpp:deleteIsArray"
     }
   ]
 }
