@@ -748,14 +748,17 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
 /**
  * 建構子的成員初始化列（`: v(x), w{y}`）→ 一串賦值（目標是欄位名、值是運算式）。類別裡定義的建構子與類別外定義的建構子（第 322 刀）共用。
  */
-function liftFieldInitializers(node: AstNode, ctx: LiftContext): SemanticNode[] {
+function liftFieldInitializers(node: AstNode, ctx: LiftContext): SemanticNode[] | null {
   const initListNode = node.namedChildren.find(c => c.type === 'field_initializer_list')
   const inits: SemanticNode[] = []
   for (const fi of initListNode?.namedChildren ?? []) {
     if (fi.type !== 'field_initializer') continue
     const field = fi.namedChildren[0]?.text
-    // 值的形式是 `(x)` 或 `{x}`——兩種都取第一個實際的運算式
+    // 值的形式是 `(x)` 或 `{x}`
     const valueHolder = fi.namedChildren[1]
+    // 🔴 引數不是剛好一個（`m(a, b)`、`c{1, 2, 3}`、`v{}`）：原本「取第一個」——其餘的安靜蒸發（`c{1, 2, 3}` 走一趟變 `c(1)`，
+    //    Cella 判「不能指派」）。一串賦值記不住多個引數 ⟹ 回 null，呼叫者把整個建構子照實降級（第 331 刀的盲測 fuzz_4）
+    if (valueHolder && (valueHolder.type === 'argument_list' || valueHolder.type === 'initializer_list') && valueHolder.namedChildren.length !== 1) return null
     const valueNode = valueHolder?.namedChildren[0] ?? valueHolder
     const value = valueNode ? ctx.lift(valueNode) : null
     if (!field || !value) continue
@@ -832,6 +835,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       // `Node(int x) : v(x) {}` 建出來的物件 `v` 是 0，而產生的程式碼完全正確。
       // **投影對、執行錯**——一個要 parse 回結構才能用的字串，就不該是字串。
       const inits = liftFieldInitializers(node, ctx)
+      if (!inits) return degrade(buildRawCode(node.text), '成員初始化列裡有多個引數或大括號串列（`m(a, b)`、`c{1, 2, 3}`）尚未支援')
       const body = extractBody(bodyNode, ctx)
       return buildConstructor({ class_name: className }, { params, inits, body })
     }
@@ -1192,6 +1196,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
                 if (typeof pname === 'string' && pname !== '' && typeof ptype === 'string') ctx.data.declare(pname, normalizeParamType(ptype))
               }
               const inits = isCtor ? liftFieldInitializers(node, ctx) : []
+              if (!inits) return degrade(buildRawCode(node.text), '成員初始化列裡有多個引數或大括號串列（`m(a, b)`、`c{1, 2, 3}`）尚未支援')
               const body = extractBody(bodyNode, ctx)
               return isCtor
                 ? buildConstructorDefOutside({ class_name: cls }, { params, inits, body })
@@ -1906,6 +1911,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           return createNode(componentId, {
             type: liftedType,
             name: lifted.properties.name as string ?? 'x',
+            // 🔴 `const Vec k(5, 6);`：建構子形式要跟著搬（第 331 刀的盲測 fuzz_1、8）——原本丟掉 `init_style`，
+            //    產碼寫成 `const Vec k = 5;`、formalize 只送第一個引數 ⟹ 預設參數補上第二個，印出別的值（SEMANTIC_DIFF）
+            ...(lifted.properties.init_style === 'constructor' ? { init_style: 'constructor' } : {}),
           }, {
             initializer: lifted.slots.initializer ?? [],
           })
