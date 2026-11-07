@@ -373,6 +373,21 @@ export const SHAPE_CHANGES_V21: ShapeChange[] = [
 ]
 
 /**
+ * ## V26：`new T(…)` 的引數從欄位換成可變的接點（2026-11-07，328）
+ *
+ * `cpp_new` 的 `ARGS` 是一串文字（`v, head`），而 formalize 不從文字猜結構 ⟹ 照實回 unknown，
+ * 兩輪盲測七支卡在這裡。升格成 `ARG_{i}`（extraState `argCount`）之後，舊快取裡那一格不存在了
+ * ——同 V19～V22 的病（**需要 parse 回結構才能用的字串，就不該是字串**），同一個處方：丟掉快取、從程式碼重 lift。
+ */
+export const SHAPE_CHANGES_V26: ShapeChange[] = [
+  {
+    blockType: 'cpp_new',
+    retiredFields: ['ARGS'],
+    why: '`new T(a, b)` 的引數從文字欄位 `ARGS` 升格成運算式接點 `ARG_{i}`（extraState `argCount`）——舊快取載進去引數會不見',
+  },
+]
+
+/**
  * ## V22：二維陣列的維度從欄位換成接點（2026-09-19）
  *
  * `ROWS`／`COLS` 兩格。一個欄位只裝得下一串文字，而執行期 `Number(那串文字)`

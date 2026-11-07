@@ -8,11 +8,6 @@
       "default": "int"
     },
     {
-      "name": "args",
-      "kind": "literal",
-      "default": ""
-    },
-    {
       "name": "valueInit",
       "kind": "literal",
       "default": ""
@@ -24,6 +19,7 @@
     }
   ],
   "slots": {
+    "args": "expressions",
     "size": {
       "allowed": [
         "expression"
@@ -49,5 +45,6 @@
     "formalize": "./formalize.ts"
   },
   "_valueInit_why": "`new T()`（空括號，值初始化：`new int()` 是 0）與 `new T`（預設初始化，值未定）是兩種意思（[expr.new]p18）。原本記在 layoutHints，而走一趟積木就丟了（form-invariance (c) 量到）⟹ 升成屬性，積木上由 renderMapping.hints 帶著（學生看不到、不會被悄悄改寫）。值是 \"true\" 或空。",
-  "_brace_why": "`new T{…}` 用大括號還是小括號：大括號是串列初始化（聚合體 `new Node{v, head}` 只能這樣寫），換成小括號會變成呼叫建構子而編不過。原本只認小括號，大括號整段丟掉（元件管線 313 的盲測）。積木上由 renderMapping.hints 帶著，同 valueInit。值是 \"true\" 或空。"
+  "_brace_why": "`new T{…}` 用大括號還是小括號：大括號是串列初始化（聚合體 `new Node{v, head}` 只能這樣寫），換成小括號會變成呼叫建構子而編不過。原本只認小括號，大括號整段丟掉（元件管線 313 的盲測）。積木上由 renderMapping.hints 帶著，同 valueInit。值是 \"true\" 或空。",
+  "_args_why": "`new T(a, b)`／`new Node{v, head}` 的引數是**運算式**，原本存成一串文字屬性 `args` ⟹ formalize 不從文字猜結構、只能照實回 unknown，兩輪盲測七支卡在這裡（knowledge/draft/2026-11-07-類別外定義之後的缺口.md）。2026-11-07 升格成可變的運算式槽（同 func_call 的引數；積木上 ARG_{i}、extraState argCount）；舊存檔的 ARGS 欄位走 block-shape-changes 的快取失效（v26），從程式碼重 lift。"
 }
