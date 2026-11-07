@@ -544,7 +544,8 @@ describe('SyncController (bus-based)', () => {
       controller.onStyleExceptions(exceptionsCallback)
 
       const tree = createNode('cpp:program', {}, {
-        body: [createNode('cpp:print_formatted', { format: '%d\\n' })],
+        // ⚠️ 純文字：`%d` 而沒有引數的 printf 換不成一字不差的 cout，2026-11-07 起不再被提（見 `c-to-cpp.ts`）
+        body: [createNode('cpp:print_formatted', { format: 'hi\\n' })],
       })
 
       const rootNode = {
