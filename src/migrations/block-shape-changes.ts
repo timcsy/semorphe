@@ -382,6 +382,22 @@ export const SHAPE_CHANGES_V21: ShapeChange[] = [
 ]
 
 /**
+ * ## V28：建構子形式的宣告換了一個形態（2026-11-07，第 332 刀）
+ *
+ * `P p(3, 4)` 原本畫在 `cpp_var_declare` 上（`extraState.initStyle: 'constructor'`、只有 `INIT_0`）——第二個引數以後在渲染那一步就掉了。
+ * 332 起畫成 `cpp_var_declare_constructor`（可變的 ARG_{i}）。舊快取裡帶 `initStyle` 的 `cpp_var_declare` 都是舊形狀 ⟹ 作廢、從程式碼重 lift。
+ * ⚠️ 範圍略寬：大括號形式（`int a{1}`）也帶 `initStyle`——作廢只是多重 lift 一次，安全。
+ */
+export const SHAPE_CHANGES_V28: ShapeChange[] = [
+  {
+    blockType: 'cpp_var_declare',
+    retiredFields: [],
+    retiredExtraState: ['initStyle'],
+    why: '建構子形式從這顆積木搬到 `cpp_var_declare_constructor`（引數裝得下）——帶 `initStyle` 的舊快取只裝得下第一個引數',
+  },
+]
+
+/**
  * ## V27：`delete` 多了「物件／陣列」那一格（2026-11-07，第 331 刀）
  *
  * `delete[] p` 的 `[]` 原本 lift 不記、產碼不寫、formalize 一律當單一物件——對稱的資料遺失。

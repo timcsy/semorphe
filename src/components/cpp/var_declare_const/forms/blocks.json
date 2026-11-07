@@ -69,5 +69,65 @@
         "VALUE": "initializer"
       }
     }
+  },
+  {
+    "id": "cpp:var_declare_const.constructor",
+    "componentId": "cpp:var_declare_const",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "form": {
+      "axis": "init_style",
+      "value": "constructor"
+    },
+    "blockDef": {
+      "type": "cpp_var_declare_const_constructor",
+      "message0": "%{BKY_CPP_VAR_DECLARE_CONST_CTOR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TYPE",
+          "text": "MyClass"
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "obj"
+        },
+        {
+          "type": "input_dummy",
+          "name": "HEAD"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#A855F7",
+      "tooltip": "%{BKY_CPP_VAR_DECLARE_CONST_CTOR_TOOLTIP}",
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "minCount": 0,
+      "countKey": "argCount",
+      "openLabelKey": "CPP_VAR_DECLARE_CONST_CTOR_ARGS",
+      "openLabelFallback": "引數",
+      "openLabelOnFirstSlot": true
+    },
+    "renderMapping": {
+      "fields": {
+        "TYPE": "type",
+        "NAME": "name"
+      },
+      "inputs": {},
+      "fixed": {
+        "init_style": "constructor"
+      },
+      "dynamicRules": [
+        {
+          "countSource": "argCount",
+          "childSlot": "initializer",
+          "inputPattern": "ARG_{i}"
+        }
+      ]
+    }
   }
 ]

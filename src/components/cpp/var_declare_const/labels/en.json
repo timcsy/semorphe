@@ -1,5 +1,8 @@
 {
   "U_VAR_DECLARE_TYPE_LONG_LONG": "long long (large integer)",
   "C_CONST_DECLARE_MSG0": "Declare constant %1 %2 = %3",
-  "C_CONST_DECLARE_TOOLTIP": "Declare a constant variable whose value cannot be changed after initialization"
+  "C_CONST_DECLARE_TOOLTIP": "Declare a constant variable whose value cannot be changed after initialization",
+  "CPP_VAR_DECLARE_CONST_CTOR_MSG0": "Declare constant %1 object %2 %3",
+  "CPP_VAR_DECLARE_CONST_CTOR_ARGS": "with",
+  "CPP_VAR_DECLARE_CONST_CTOR_TOOLTIP": "Declare an object that cannot change, passing these arguments to its constructor (const P p(3, 4)); press + to add arguments"
 }

@@ -2,5 +2,8 @@
   "U_VAR_DECLARE_MSG0": "create %1 variable %2 = %3",
   "U_VAR_DECLARE_TOOLTIP": "Create a new variable with a chosen type and initial value. A variable is like a named box that stores data",
   "U_VAR_DECLARE_EXPR_MSG0": "%1 %2 = %3",
-  "U_VAR_DECLARE_INIT_LABEL": "initial value"
+  "U_VAR_DECLARE_INIT_LABEL": "initial value",
+  "CPP_VAR_DECLARE_CTOR_MSG0": "Declare %1 object %2 %3",
+  "CPP_VAR_DECLARE_CTOR_ARGS": "with",
+  "CPP_VAR_DECLARE_CTOR_TOOLTIP": "Declare an object and pass these arguments to its constructor (P p(3, 4)); press + to add arguments"
 }

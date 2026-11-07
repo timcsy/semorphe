@@ -2,5 +2,8 @@
   "U_VAR_DECLARE_MSG0": "建立 %1 變數 %2 = %3",
   "U_VAR_DECLARE_TOOLTIP": "建立一個新的變數，可以選擇型別和初始值。變數就像一個有名字的盒子，用來存放資料",
   "U_VAR_DECLARE_EXPR_MSG0": "%1 %2 = %3",
-  "U_VAR_DECLARE_INIT_LABEL": "初始值"
+  "U_VAR_DECLARE_INIT_LABEL": "初始值",
+  "CPP_VAR_DECLARE_CTOR_MSG0": "宣告 %1 物件 %2 %3",
+  "CPP_VAR_DECLARE_CTOR_ARGS": "引數",
+  "CPP_VAR_DECLARE_CTOR_TOOLTIP": "宣告一個物件並交給建構子這些引數（P p(3, 4)）——按 ＋ 加引數"
 }

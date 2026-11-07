@@ -155,5 +155,65 @@
       "strategy": "cpp:renderVarDeclare"
     },
     "_why": "🟢 **2026-08-26：形狀補上，命令式定義退場**——命令式積木退場計畫的**最後一顆**。\n🔴 它用 `paramList`，而 `optionalGroups` 這一輪補了兩格才表達得完：\n  ① `valueInput`——那一段的結尾是**接點**（`= ⟨運算式⟩`）而不是欄位群。\n     ⚠️ `optionalGroups` 的 doc 本來就拿這顆積木當齒輪設計的例子\n     （「齒輪選『變數』還是『變數 = 值』」），而它一直只建得出啞輸入。\n  ② `itemsAs`——存檔照舊寫成 `{ items: ['var_init','var'] }`。\n     🟢 **那是既有的存檔契約，而用它原本的形狀寫就不必遷移**\n     （渲染那一路 `cpp:renderVarDeclare` 吐的也是這個鍵與 `INIT_{i}` 這個插槽名）。"
+  },
+  {
+    "id": "cpp:var_declare.constructor",
+    "componentId": "cpp:var_declare",
+    "language": "cpp",
+    "category": "data",
+    "version": "1.0.0",
+    "form": {
+      "axis": "init_style",
+      "value": "constructor"
+    },
+    "blockDef": {
+      "type": "cpp_var_declare_constructor",
+      "message0": "%{BKY_CPP_VAR_DECLARE_CTOR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "TYPE",
+          "text": "MyClass"
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "obj"
+        },
+        {
+          "type": "input_dummy",
+          "name": "HEAD"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_CPP_VAR_DECLARE_CTOR_TOOLTIP}",
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "minCount": 0,
+      "countKey": "argCount",
+      "openLabelKey": "CPP_VAR_DECLARE_CTOR_ARGS",
+      "openLabelFallback": "引數",
+      "openLabelOnFirstSlot": true
+    },
+    "renderMapping": {
+      "fields": {
+        "TYPE": "type",
+        "NAME": "name"
+      },
+      "inputs": {},
+      "fixed": {
+        "init_style": "constructor"
+      },
+      "dynamicRules": [
+        {
+          "countSource": "argCount",
+          "childSlot": "initializer",
+          "inputPattern": "ARG_{i}"
+        }
+      ]
+    }
   }
 ]
