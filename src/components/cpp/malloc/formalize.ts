@@ -9,7 +9,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const t = uncast ? null : f.type(p.type ?? 'int*', n)
     if (!uncast && !t) return f.k('eHole', { n: n.id })
     const size = f.exprOf(n, 'size')
-    const bytes = p.sizeof_type
+    const bytes = p.sizeof_type && p.sizeof_type !== 'none'
       ? (() => { const st = f.type(p.sizeof_type, n); return st ? f.k('eBin', { n: `${n.id}/bytes`, op: f.k('opMul'), a: size, b: f.k('eSizeof', { n: `${n.id}/sizeof`, t: st }) }) : size })()
       : size
     if (uncast) return f.k('eCall', { n: n.id, f: 'malloc', args: [bytes] })

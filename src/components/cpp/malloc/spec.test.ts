@@ -43,8 +43,19 @@ describe('cpp:malloc 自證測', () => {
   it('lift：不轉型 → type void*；轉型 → 那個指標型別', () => {
     const ms = find(lift(UNCAST), 'cpp:malloc')
     expect(ms.map((m) => m.properties.type)).toEqual(['void*'])
+    expect(ms.map((m) => m.properties.sizeof_type)).toEqual(['int'])
     const cast = find(lift('int main() { double *d = (double*)malloc(8); return 0; }'), 'cpp:malloc')
     expect(cast.map((m) => m.properties.type)).toEqual(['double*'])
+  })
+
+  it('🔴 引數拆成「個數 × sizeof(型別)」——積木上兩格的形狀（否則走一趟積木大小會變）', () => {
+    const t = lift('int main() { int *a = (int*)malloc(3 * sizeof(int)); char *s = (char*)malloc(10); long *l = (long*)malloc(sizeof(long) * 2); return 0; }')
+    const ms = find(t, 'cpp:malloc')
+    expect(ms.map((m) => m.properties.sizeof_type)).toEqual(['int', 'none', 'none'])
+    const out = generateCode(t, 'cpp', cStyle as StylePreset)
+    expect(out).toContain('(int*)malloc(3 * sizeof(int))')
+    expect(out).toContain('(char*)malloc(10)')
+    expect(out).toContain('(long*)malloc(sizeof(long) * 2)')
   })
 
   it('🔴 產碼：不轉型的照寫 malloc(…)，不寫成 (void)malloc(…)', () => {

@@ -59,6 +59,10 @@
             [
               "%{BKY_C_MALLOC_SIZEOF_TYPE_CHAR}",
               "char"
+            ],
+            [
+              "%{BKY_C_MALLOC_SIZEOF_TYPE_NONE}",
+              "none"
             ]
           ]
         }

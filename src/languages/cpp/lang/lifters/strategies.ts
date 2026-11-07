@@ -42,7 +42,7 @@ import { buildMemberStatic } from '../../../../components/cpp/member_static/lift
 import { typeSuffixOf } from '../node-traits'
 import { buildIncludeLocal } from '../../../../components/cpp/include_local/lift'
 import { buildDocComment } from '../../../../components/cpp/doc_comment/lift'
-import { buildMalloc } from '../../../../components/cpp/malloc/lift'
+import { buildMalloc, liftMallocArg } from '../../../../components/cpp/malloc/lift'
 import { buildLoopCount } from '../../../../components/cpp/loop_count/lift'
 import { buildInclude } from '../../../../components/cpp/include/lift'
 import { buildVarDeclare } from '../../../../components/cpp/var_declare/lift'
@@ -2115,8 +2115,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       if (funcNode?.text === 'malloc') {
         const argsNode = valueNode.childForFieldName('arguments')
         const argChildren = argsNode?.namedChildren ?? []
-        const size = argChildren[0] ? ctx.lift(argChildren[0]) : null
-        return buildMalloc(targetType, size)
+        const { size, sizeofType } = liftMallocArg(argChildren[0], (n) => ctx.lift(n))
+        return buildMalloc(targetType, size, sizeofType)
       }
     }
 

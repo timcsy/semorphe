@@ -9,5 +9,6 @@
   "C_MALLOC_SIZEOF_TYPE_INT": "int（整數）",
   "C_MALLOC_SIZEOF_TYPE_FLOAT": "float（小數）",
   "C_MALLOC_SIZEOF_TYPE_DOUBLE": "double（精確小數）",
-  "C_MALLOC_SIZEOF_TYPE_CHAR": "char（字元）"
+  "C_MALLOC_SIZEOF_TYPE_CHAR": "char（字元）",
+  "C_MALLOC_SIZEOF_TYPE_NONE": "位元組（不乘 sizeof）"
 }
