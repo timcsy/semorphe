@@ -767,6 +767,15 @@ function liftFieldInitializers(node: AstNode, ctx: LiftContext): SemanticNode[] 
 }
 
 /** Lift a class member (function_definition, field_declaration) into a semantic node */
+/**
+ * 成員的名字：一般識別字原樣；運算子（`operator +`、`operator<<`）去掉中間的空白記成 `operator+`——
+ * 第 331 刀：運算子的原型與類別外定義走「宣告方法／類別外定義方法」那兩顆（在 Cella 那一側它就是名字叫 `operator+` 的成員函式），
+ * 原型與定義兩邊寫法不同（`operator +` 與 `operator+`）也要配得上，所以正規化。
+ */
+function operatorMemberName(n: AstNode): string {
+  return n.type === 'operator_name' ? n.text.replace(/\s+/g, '') : n.text
+}
+
 export function liftClassMember(node: AstNode, className: string, ctx: LiftContext): SemanticNode | null {
   // 🔴 類別裡的建構子／解構子【原型】（`BST();`、`~Folder();`——定義寫在類別外）是 declaration：原本交給一般的宣告那條路，
   //    建成名字掉成 `f` 的函式原型（`int f();`）或 `int BST();`——安靜地換掉了意思（2026-11-06 元件管線 313 的盲測）。
@@ -952,7 +961,8 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
         const fnName = d.childForFieldName('declarator')
         // `virtual void f();`、`void f() override;`——第 322 刀的盲測補：一格屬性（兩個都寫的照舊降級）
         const override = d.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'override')
-        const plain = !(isVirtual && override) && typeNode && (fnName?.type === 'field_identifier' || fnName?.type === 'identifier')
+        // 第 331 刀：運算子的原型（`Fraction operator+(const Fraction&) const;`）也收——在 Cella 那一側它就是名字叫 `operator+` 的成員函式
+        const plain = !(isVirtual && override) && typeNode && (fnName?.type === 'field_identifier' || fnName?.type === 'identifier' || fnName?.type === 'operator_name')
           && (!wrap || ((wrap.type === 'pointer_declarator' || wrap.type === 'reference_declarator') && sameAt(wrap.namedChildren[0], d)))
           && node.namedChildren.every((c) => sameAt(c, typeNode) || sameAt(c, declNode) || (c.type === 'type_qualifier' && c.text === 'const'))
           && d.namedChildren.every((c) => sameAt(c, fnName) || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const') || (c.type === 'virtual_specifier' && c.text === 'override'))
@@ -961,11 +971,12 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
           const lead = node.namedChildren.some((c) => c.type === 'type_qualifier') ? 'const ' : ''
           const suffix = wrap ? (wrap.type === 'pointer_declarator' ? '*' : (wrap.children.find((c) => !c.isNamed)?.text ?? '&')) : ''
           const isConst = d.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
-          ctx.data.declareFunction(fnName!.text)
-          return buildMethodDeclare({ return_type: `${lead}${typeNode!.text}${suffix}`, name: fnName!.text, is_const: isConst ? 'true' : 'false', virt: isVirtual ? 'virtual' : override ? 'override' : 'none' },
+          const memberName = operatorMemberName(fnName!)
+          ctx.data.declareFunction(memberName)
+          return buildMethodDeclare({ return_type: `${lead}${typeNode!.text}${suffix}`, name: memberName, is_const: isConst ? 'true' : 'false', virt: isVirtual ? 'virtual' : override ? 'override' : 'none' },
             { params: liftParamList(d.childForFieldName('parameters') ?? null, ctx) })
         }
-        return degrade(buildRawCode(node.text), '類別裡的方法原型（static、運算子、virtual 與 override 並寫或其他修飾，定義在類別外）尚未支援')
+        return degrade(buildRawCode(node.text), '類別裡的方法原型（static、virtual 與 override 並寫或其他修飾，定義在類別外）尚未支援')
       }
     }
     const defaultVal = node.childForFieldName('default_value')
@@ -1155,13 +1166,13 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         const ctorOrDtor = !node.childForFieldName('type') || nameNode.namedChildren.some((c) => c.type === 'destructor_name')
         // 🟢 第 322 刀：`int A::get() const {…}`、`void A::link(B* b) {…}` → 類別外定義方法那顆（類別名、名字、const 各一格）。
         //    ⚠️ 只接形狀單純的：`類別::名字`（類別是一個型別名、名字是一個識別字）、尾端只有 const。巢狀（`ns::A::f`）、樣板類別（`A<T>::f`）、
-        //       noexcept／`&` 限定、運算子多載（`A::operator+`）照舊——這顆沒有地方放它們。
+        //       noexcept／`&` 限定照舊——這顆沒有地方放它們。運算子（`A::operator+`）第 331 刀起收：名字記成 `operator+`。
         const scope = nameNode.childForFieldName('scope')
         const member = nameNode.childForFieldName('name')
         const plainOutside = !ctorOrDtor && (scope?.type === 'namespace_identifier' || scope?.type === 'type_identifier')
-          && member?.type === 'identifier'
+          && (member?.type === 'identifier' || member?.type === 'operator_name')
           && fnDecl.namedChildren.every((c) => c.type === 'qualified_identifier' || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const'))
-        if (plainOutside) outsideOf = { cls: scope!.text, name: member!.text, isConst: trailingConst }
+        if (plainOutside) outsideOf = { cls: scope!.text, name: operatorMemberName(member!), isConst: trailingConst }
         else if (ctorOrDtor && bodyNode && (scope?.type === 'namespace_identifier' || scope?.type === 'type_identifier')
           && !node.childForFieldName('type') && !trailingConst
           && fnDecl.namedChildren.every((c) => c.type === 'qualified_identifier' || c.type === 'parameter_list')
