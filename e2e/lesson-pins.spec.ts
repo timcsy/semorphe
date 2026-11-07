@@ -1050,11 +1050,32 @@ test('★ 版面：課程給預設，而學生改了之後【不得被搶回去�
   await editsSettled(page)
   // ⚠️ 等【樹】真的換成新程式（裡面有 "Hi" 那個字串）——整輪跑、機器忙時「以程式碼為準」的同步會晚一拍，
   //    單獨跑會綠、整輪跑會紅（2026-11-07 量到：按下執行時樹還是打散的那一題）
+  // 🔴 陷阱（2026-11-07）：CI 上 1ec81256／81282e2d 兩輪都在這裡逾時，本機照同一片（--shard=1/4、課文全量）跑 129 支全綠——
+  //    重現不了，所以等不到的時候把現場印進 CI 的日誌（程式碼、樹的頭幾顆、題目、狀態列），照樣紅
   await page.waitForFunction(() => {
     const has = (n: { componentId?: string; properties?: Record<string, unknown>; slots?: Record<string, unknown[]> } | undefined): boolean =>
       !!n && ((n.componentId === 'cpp:literal_string' && n.properties?.value === 'Hi') || Object.values(n.slots ?? {}).some((b) => (b ?? []).some((c) => has(c as never))))
     return has((window as never as { __app: { syncController: { currentTree: never } } }).__app.syncController.currentTree)
-  }, undefined, { timeout: 30_000 })
+  }, undefined, { timeout: 30_000 }).catch(async (e) => {
+    const scene = await page.evaluate(() => {
+      const a = (window as never as { __app: Record<string, any> }).__app
+      const ids: string[] = []
+      const walk = (n: any): void => { if (!n || ids.length > 40) return; ids.push(n.componentId + (n.properties?.value != null ? `=${String(n.properties.value).slice(0, 20)}` : '')); for (const k of Object.values(n.slots ?? {})) for (const c of (k as any[]) ?? []) walk(c) }
+      walk(a.syncController?.currentTree)
+      return {
+        code: String(a.codeView?.getCode?.() ?? '?').slice(0, 300),
+        tree: ids.join(' '),
+        task: String(a.currentTaskId ?? '?'),
+        syncing: JSON.stringify({ timer: a.codeToBlocksTimer != null, inProgress: !!a._codeToBlocksInProgress, changed: !!a._codeChangedWhileSyncing, sc: !!a.syncController?.syncing }),
+        status: document.querySelector('.console-status')?.textContent ?? '',
+        source: document.querySelector('#sync-menu-btn')?.textContent ?? '',
+        diag: [...document.querySelectorAll('.diagnostic-item, .status-diagnostic, [class*=diagnostic]')].map((x) => x.textContent?.trim()).filter(Boolean).slice(0, 5).join(' | '),
+      }
+    })
+    console.log('\n🔴 等不到樹裡的 "Hi"——現場：')
+    for (const [k, v] of Object.entries(scene)) console.log(`  ${k.padEnd(8)} ${v}`)
+    throw e
+  })
   await page.locator('#run-btn').click()   // 執行一輪（會發狀態、會重畫控制項）
   await skipPredictionIfAsked(page)
   // ⚠️ 不用 consoleFinished：狀態列在按下去之前可能已經是上一輪的「錯誤」，那一支會立刻成立而什麼都沒等到——等的是【這一輪的輸出】
