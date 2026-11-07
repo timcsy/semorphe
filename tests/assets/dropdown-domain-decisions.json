@@ -530,6 +530,11 @@
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "前置宣告的關鍵字只有 `class` 與 `struct` 兩種（`union` 的前置宣告這一刀不收）——語言定義的封閉集合；而它送給 Cella（`iClassDecl.isClass`），是意思不是排版（元件管線 313）"
+    },
+    "cpp_delete.IS_ARRAY": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "`delete p` 與 `delete[] p` 只有兩種（第 331 刀：原本 `[]` 被丟掉）"
     }
   }
 }

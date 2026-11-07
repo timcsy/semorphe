@@ -676,6 +676,7 @@
   "FLOW_SLOT_INITS": "初始設定",
   "FLOW_SLOT_ARROW": "經過指標（->）",
   "FLOW_SLOT_IS_VIRTUAL": "虛擬（virtual）",
+  "FLOW_SLOT_IS_ARRAY": "釋放的是陣列（delete[]）",
   "FLOW_SLOT_IS_CONST": "不改自己（const）",
   "FLOW_SLOT_ITERABLE": "走訪的對象",
   "FLOW_SLOT_KEY": "要找的",
