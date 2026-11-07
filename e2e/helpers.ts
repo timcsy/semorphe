@@ -599,6 +599,9 @@ export async function pickTask(page: Page, id: string): Promise<void> {
   await page.locator(`.quick-pick-item[data-value="${id}"]`).first().click()
   await expect(page.locator('.quick-pick-overlay')).toHaveCount(0, { timeout: 15_000 })
   await page.waitForFunction((want) => ((window as any).__app?.currentTaskId ?? '') === want, id, { timeout: 30_000 })
+  // 🔴 題號換過去 ≠ 題目的程式種好了（2026-11-07，CI 上 lesson-pins 版面那支被晚到的種題目蓋掉）——等那一趟落地、再等同步靜下來
+  await page.evaluate(() => (window as any).__app?.whenTaskSeeded?.())
+  await editsSettled(page)
 }
 
 /**
