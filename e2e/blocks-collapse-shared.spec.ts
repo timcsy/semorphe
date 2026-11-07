@@ -10,6 +10,7 @@
  * ```
  */
 import { test, expect, type Page } from '@playwright/test'
+import { CURRENT_VERSION } from '../src/core/storage/storage-version'
 import { showFlowSlot, appKeepingStorage, flowReady, editsSettled, frames } from './helpers'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -70,7 +71,8 @@ test('★ 積木 ↔ 流程共用一份收合；打字、重新整理都還在',
   await page.evaluate(() => (window as any).__app.autoSave())
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('semorphe-state') ?? '{}'))
   expect(saved.collapsed?.length, '存檔裡要有那一筆鑰匙').toBe(1)
-  expect(saved.version).toBe(25)
+  // 存的是目前的版號（原本寫死 25，328 升到 26 時紅——跟著那一份常數走）
+  expect(saved.version).toBe(CURRENT_VERSION)
 
   // ④ 重新整理
   await page.reload()

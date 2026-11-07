@@ -644,7 +644,7 @@ describe('L2 Block Roundtrip', () => {
 
   describe('cpp:new', () => {
     it('should render and extract new expression', () => {
-      const sem = createNode('cpp:new', { type: 'Node', args: '' })
+      const sem = createNode('cpp:new', { type: 'Node' })
       const block = renderer.render(sem)
       expect(block).not.toBeNull()
       expect(block!.type).toBe('cpp_new')
@@ -654,8 +654,18 @@ describe('L2 Block Roundtrip', () => {
       expect(sem2!.properties.type).toBe('Node')
     })
 
+    // 328：引數是運算式槽（ARG_{i}／argCount），不再是文字屬性
+    it('should render and extract constructor arguments as slots', () => {
+      const sem = createNode('cpp:new', { type: 'P' }, { args: [createNode('cpp:literal_number', { value: '1' }), createNode('cpp:var_ref', { name: 'k' })] })
+      const block = renderer.render(sem)
+      expect(block!.extraState?.argCount).toBe(2)
+      const sem2 = extractor.extract(block!)
+      expect((sem2!.slots.args ?? []).map((a) => a.componentId)).toEqual(['cpp:literal_number', 'cpp:var_ref'])
+      expect(productCode(sem2!)).toBe('new P(1, k)')
+    })
+
     it('should generate code', () => {
-      const sem = createNode('cpp:new', { type: 'int', args: '5' })
+      const sem = createNode('cpp:new', { type: 'int' }, { args: [createNode('cpp:literal_number', { value: '5' })] })
       const code = productCode(sem)
       expect(code).toBe('new int(5)')
     })

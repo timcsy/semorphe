@@ -304,15 +304,14 @@ describe('round-trip：類別外定義成員函式', () => {
       expect(shape(lift(out))).toEqual(shape(t))
     })
 
-    // 🟡 rt_2 的 `new Node{v, head}`：`new T(…)`／`new T{…}` 的引數今天是**文字屬性**（`cpp:new` 的 formalize 照實標翻不出）——
-    //    是 semorphe 這一側的缺口，不是 Cella 的。為什麼不現在修：引數要從屬性升格成運算式槽，判準在〈元件代數〉「屬性的結構化邊界」，
-    //    積木形狀跟著變，是另一刀（路線圖〈類別外定義成員函式〉的後續；313 的盲測 fuzz_2、3、5、6 也卡在這裡）。修好的那天這一支會紅 → 拿掉包裝。
+    // 🟡 rt_2 的 `new Node{v, head}`：引數已在 328 升格成運算式槽；剩下的是**大括號初始化的形狀**——Cella 的 eNew 對聚合體判 ubUninit，
+    //    與 Cella 談定新增 `eNewList { n, t, xs }`（2026-11-07），那一版之前 formalize 照實回 unknown。Cella 發布、接上之後這一支會紅 → 拿掉包裝。
     const run = async (): Promise<void> => {
       await expectCellaOut(p.code, p.expected)
       await expectCellaOut(generateCode(lift(p.code), 'cpp', competitive as unknown as StylePreset), p.expected)
     }
     it(`★ ${p.id}：Cella 跑出 clang++ 的輸出——原樣與 competitive 風格各一次`, async () => {
-      if (p.id === 'rt_2') await knownCellaGap(/new T\(…\)` 的引數是文字屬性/, run)
+      if (p.id === 'rt_2') await knownCellaGap(/大括號初始化：聚合體/, run)
       else await run()
     })
   }
