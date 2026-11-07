@@ -13,11 +13,11 @@
 import type { SavedState } from './storage'
 import { BLOCK_TYPE_MIGRATIONS_V9_TO_V10 } from '../../migrations/block-type-migrations'
 import { mergedIdentities } from '../../migrations/merged-identities'
-import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20, SHAPE_CHANGES_V21, SHAPE_CHANGES_V22, SHAPE_CHANGES_V23, SHAPE_CHANGES_V26, SHAPE_CHANGES_V27 } from '../../migrations/block-shape-changes'
+import { staleShapeIn, SHAPE_CHANGES_V12, SHAPE_CHANGES_V13, SHAPE_CHANGES_V14, SHAPE_CHANGES_V15, SHAPE_CHANGES_V16, SHAPE_CHANGES_V19, SHAPE_CHANGES_V20, SHAPE_CHANGES_V21, SHAPE_CHANGES_V22, SHAPE_CHANGES_V23, SHAPE_CHANGES_V26, SHAPE_CHANGES_V27, SHAPE_CHANGES_V28 } from '../../migrations/block-shape-changes'
 import type { ShapeChange } from '../../migrations/block-shape-changes'
 
 /** 目前的存檔格式世代 */
-export const CURRENT_VERSION = 27
+export const CURRENT_VERSION = 28
 
 /** 取出型別中「必填」的鍵 */
 type RequiredKeys<T> = {
@@ -486,6 +486,11 @@ export const UPGRADES: Record<number, Upgrade> = {
    * 🟢 冪等：新形狀都有那一格，再跑一次什麼都不丟。⚠️ 只動積木快取，不碰程式碼。
    */
   26: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V27, 27),
+  /**
+   * 27 → 28：**建構子形式的宣告換了形態**（第 332 刀）——帶 `initStyle` 的 `cpp_var_declare` 舊快取作廢、從程式碼重 lift。
+   * 🟢 冪等：新形狀的建構子形式不再帶 `initStyle`。⚠️ 只動積木快取，不碰程式碼。
+   */
+  27: (raw) => dropStaleCache(raw, SHAPE_CHANGES_V28, 28),
 }
 
 /**

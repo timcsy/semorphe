@@ -30,7 +30,8 @@ export function isTypeLookupFallback(registry: BlockSpecRegistry, spec: BlockSpe
   if (!cid) return false
   const siblings = registry.getFormsByComponentId(cid).filter(s => s.form)
   if (siblings.length === 0) return false
-  return siblings.some(s => KNOWN_AXES[s.form!.axis]?.from === 'property')
+  // ⚠️ 中性形態是常態的軸（`init_style`：沒有建構子形式的一般宣告）不算——見 `FormAxis.neutralIsOrdinary`
+  return siblings.some(s => KNOWN_AXES[s.form!.axis]?.from === 'property' && !KNOWN_AXES[s.form!.axis]?.neutralIsOrdinary)
 }
 
 /**

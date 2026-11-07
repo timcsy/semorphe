@@ -57,6 +57,26 @@ export function registerCppRenderStrategies(registry: RenderStrategyRegistry): v
       return ctx.renderStatementChain(withType) ?? block
     }
 
+    // 🔴 **建構子形式畫成另一個形態**（第 332 刀）：`P p(3, 4)` 要的是「名字 ＋ 好幾個引數」，而這顆積木每個宣告子只有
+    //    「名字 ＋ 一個初值」——第二個引數以後原本在這一步就掉了（`Fraction a(1, 2)` 切到積木就變 `Fraction a(1)`）。
+    //    形態 `init_style: constructor`（`cpp_var_declare_constructor`）：TYPE、NAME、可變的 ARG_{i}（extraState argCount）；
+    //    抽取走宣告式（`renderMapping.fixed` 把 init_style 補回來）。多宣告子裡的建構子形式上面已經拆成一串，逐一走到這裡。
+    if (declarators.length === 0 && node.properties.init_style === 'constructor') {
+      const args = node.slots.initializer ?? []
+      const ctorBlock: BlockState = {
+        type: 'cpp_var_declare_constructor',
+        id: block.id,
+        fields: { TYPE: node.properties.type ?? 'int', NAME: node.properties.name ?? 'x' },
+        inputs: {},
+        extraState: { argCount: args.length },
+      }
+      args.forEach((a, i) => {
+        const ab = ctx.renderExpression(a)
+        if (ab) ctorBlock.inputs[`ARG_${i}`] = { block: ab }
+      })
+      return ctorBlock
+    }
+
     if (declarators.length > 0) {
       const items: string[] = []
       for (let i = 0; i < declarators.length; i++) {

@@ -308,7 +308,14 @@ export const KNOWN_AXES: Record<string, FormAxis> = {
   //    這條軸決定的是「放不放得進那個插槽」，而另一條只換標籤。
   role: { name: 'role', from: 'position', priority: 1 },
   /** 依容器種類：堆疊／佇列／…。**只換標籤，所以後問。** */
-  container_kind: { name: 'container_kind', from: 'property', property: 'container_kind', priority: 2 },
+  container_kind: { name: 'container_kind', from: 'property', property: 'container_kind', priority: 3 },
+  /**
+   * 依初始化寫法：`P p(3, 4)`（建構子形式，值 `constructor`）換一顆裝得下好幾個引數的積木（第 332 刀）。
+   * 🔴 在此之前宣告積木每個宣告子只有「名字 ＋ 一個初值」兩格，建構子的第二個引數以後**在渲染那一步就掉了**
+   * ——學生一切到積木，`Fraction a(1, 2)` 就變成 `Fraction a(1)`（331 的瀏覽器驗收抓到；測試全綠，因為沒有一支走積木那一趟）。
+   * 換插槽形狀，所以排在只換標籤的 container_kind 之前。
+   */
+  init_style: { name: 'init_style', from: 'property', property: 'init_style', priority: 2, neutralIsOrdinary: true },
 }
 
 /** 建形態集合所需要的最小資訊——刻意不吃整個 BlockSpec，讓它好測 */
