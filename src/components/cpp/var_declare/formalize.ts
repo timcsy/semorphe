@@ -27,10 +27,21 @@ function qualifiedDefinition(n: SemanticNode, f: FormalizeContext): CellaJson[] 
   return []
 }
 
+/**
+ * 一行宣告好幾個（`F a(1, 2), b(1, 3);`）：外層那顆沒有 `init_style`，引擎的通用形狀逐一翻宣告子時**不經過上面的 `classCtor`**
+ * ——於是兩個建構子引數被當成一般初值送出，Cella 判「找不到相符的建構子」（第 331 刀的往返測試撞到；分成兩行就判得出）。
+ * 這裡先逐一試 `classCtor`，其餘照引擎的通用形狀。
+ */
+function eachDeclarator(n: SemanticNode, f: FormalizeContext, global: boolean): CellaJson[] | null {
+  const kids = n.slots?.declarators
+  if (!kids || kids.length === 0 || !kids.some((d) => d.properties?.init_style === 'constructor')) return null
+  return kids.flatMap((d) => classCtor(d, f, global) ?? f.decl(d, global))
+}
+
 export function registerFormalize(r: FormalizeRegistrar): void {
   // 通用的宣告子形狀（型別 名字 = 初值；多個宣告子逐一遞迴）在引擎——它也是別顆宣告子沒註冊時的形狀
-  r.stmt('cpp:var_declare', (n, f) => classCtor(n, f, false) ?? f.decl(n, false))
-  r.item('cpp:var_declare', (n, f) => qualifiedDefinition(n, f) ?? classCtor(n, f, true) ?? f.decl(n, true))
+  r.stmt('cpp:var_declare', (n, f) => classCtor(n, f, false) ?? eachDeclarator(n, f, false) ?? f.decl(n, false))
+  r.item('cpp:var_declare', (n, f) => qualifiedDefinition(n, f) ?? classCtor(n, f, true) ?? eachDeclarator(n, f, true) ?? f.decl(n, true))
   // 編譯期的整數值：型別是 const、初值是整數字面（`const int N = 100;`）——`int a[N]` 的長度問這一條（spec 199）；可變的變數不是
   r.constInt('cpp:var_declare', (n, f) => (/^\s*const\s/.test(String(n.properties?.type ?? '')) ? f.constInt(f.one(n, 'initializer')) : null))
 }

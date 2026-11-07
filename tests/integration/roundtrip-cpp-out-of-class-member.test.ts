@@ -371,3 +371,179 @@ public:
     expect(generateCode(t, 'cpp', S)).toContain('    int g[2][3];')
   })
 })
+
+// ── 第 331 刀：運算子的原型與類別外定義（走同兩顆，名字記成 `operator⊕`）──────────────────────────
+// 期望輸出是 clang++ 跑出來的（2026-11-07）。
+const OP_PROGS: { id: string; what: string; counts: Record<string, number>; expected: string; code: string }[] = [
+  {
+    id: 'op_1',
+    what: "矩陣乘法、指派、相等：三個運算子都在類別外定義（回傳值、回傳參照、bool）",
+    counts: {"cpp:method_declare": 3, "cpp:method_def_outside": 3, "cpp:constructor_declare": 1, "cpp:constructor_def_outside": 1},
+    expected: "89 55\n1\n",
+    code: `#include <iostream>
+using namespace std;
+class Mat {
+public:
+    int a, b, c, d;
+    Mat(int p, int q, int r, int s);
+    Mat operator*(const Mat&) const;
+    Mat& operator=(const Mat& o);
+    bool operator==(const Mat& o) const;
+};
+Mat::Mat(int p, int q, int r, int s) : a(p), b(q), c(r), d(s) {
+}
+Mat Mat::operator*(const Mat& o) const {
+    return Mat(a * o.a + b * o.c, a * o.b + b * o.d, c * o.a + d * o.c, c * o.b + d * o.d);
+}
+Mat& Mat::operator=(const Mat& o) {
+    a = o.a;
+    b = o.b;
+    c = o.c;
+    d = o.d;
+    return *this;
+}
+bool Mat::operator==(const Mat& o) const {
+    return a == o.a && b == o.b && c == o.c && d == o.d;
+}
+int main() {
+    Mat f(1, 1, 1, 0);
+    Mat r(1, 0, 0, 1);
+    for (int i = 0; i < 10; i++) {
+        r = r * f;
+    }
+    cout << r.a << " " << r.b << endl;
+    cout << (r == r * Mat(1, 0, 0, 1)) << endl;
+    return 0;
+}
+`,
+  },
+  {
+    id: 'op_2',
+    what: "串流式的 << 串接（回傳 *this 的參照）與 const 的 []",
+    counts: {"cpp:method_declare": 2, "cpp:method_def_outside": 2, "cpp:constructor_declare": 1, "cpp:constructor_def_outside": 1},
+    expected: "5 14\n",
+    code: `#include <iostream>
+using namespace std;
+class Bag {
+public:
+    int items[8];
+    int n;
+    Bag();
+    Bag& operator<<(int x);
+    int operator[](int i) const;
+};
+Bag::Bag() : n(0) {
+}
+Bag& Bag::operator<<(int x) {
+    items[n] = x;
+    n++;
+    return *this;
+}
+int Bag::operator[](int i) const {
+    return items[i];
+}
+int main() {
+    Bag b;
+    b << 3 << 1 << 4 << 1 << 5;
+    int s = 0;
+    for (int i = 0; i < b.n; i++) {
+        s += b[i];
+    }
+    cout << b.n << " " << s << endl;
+    return 0;
+}
+`,
+  },
+  {
+    id: 'op_3',
+    what: "給 sort 用的 <：struct 裡只宣告、定義在外面",
+    counts: {"cpp:method_declare": 1, "cpp:method_def_outside": 1},
+    expected: "1,9 1,2 3,5 3,1 \n",
+    code: `#include <bits/stdc++.h>
+using namespace std;
+struct P {
+    int x, y;
+    bool operator<(const P& o) const;
+};
+bool P::operator<(const P& o) const {
+    if (x != o.x) {
+        return x < o.x;
+    }
+    return y > o.y;
+}
+int main() {
+    vector<P> v = {{3, 1}, {1, 2}, {3, 5}, {1, 9}};
+    sort(v.begin(), v.end());
+    for (P p : v) {
+        cout << p.x << "," << p.y << " ";
+    }
+    cout << endl;
+    return 0;
+}
+`,
+  },
+]
+
+describe('round-trip：運算子的類別外定義（第 331 刀）', () => {
+  it('入口條件：三支都在', () => { expect(OP_PROGS).toHaveLength(3) })
+  for (const p of OP_PROGS) {
+    it(`★ ${p.id}（${p.what}）：元件身分、名字是 operator⊕、一字不差、不漂移`, () => {
+      const t = lift(p.code)
+      const nodes = all(t)
+      for (const [id, n] of Object.entries(p.counts)) expect(nodes.filter((x) => x.componentId === id).length, `${p.id} 的 ${id}`).toBe(n)
+      expect(nodes.filter((x) => x.componentId === 'cpp:method_declare').every((x) => String(x.properties.name).startsWith('operator'))).toBe(true)
+      expect(nodes.filter((x) => /raw_code|unresolved/.test(x.componentId)).map((x) => String(x.metadata?.rawCode ?? ''))).toEqual([])
+      const out = generateCode(t, 'cpp', S)
+      expect(out).toBe(p.code.trimEnd())
+      expect(shape(lift(out))).toEqual(shape(t))
+    })
+    it(`★ ${p.id}：Cella 跑出 clang++ 的輸出——原樣與 competitive 風格各一次`, async () => {
+      await expectCellaOut(p.code, p.expected)
+      await expectCellaOut(generateCode(lift(p.code), 'cpp', competitive as unknown as StylePreset), p.expected)
+    })
+  }
+
+  // 🔴 round-trip 順手抓到的兩個既有缺陷（盲測 fuzz_2、fuzz_6 卡在這裡）——都是對稱的資料遺失：lift 丟、產碼也丟，來回比對一直綠
+  it('🔴 delete[] 的 [] 走一趟不見、Cella 照實判 ubFree（現在記成 is_array）', async () => {
+    const code = `#include <iostream>
+using namespace std;
+class Buf {
+public:
+    int* d;
+    Buf();
+    ~Buf();
+};
+Buf::Buf() : d(new int[4]) {
+    d[0] = 9;
+}
+Buf::~Buf() {
+    delete[] d;
+}
+int main() {
+    Buf b;
+    cout << b.d[0] << endl;
+    return 0;
+}`
+    expect(generateCode(lift(code), 'cpp', S)).toBe(code)
+    await expectCellaOut(code, '9\n')
+  })
+
+  it('🔴 指標的陣列當參數（const char* t[]）：[] 原本丟了，t[i][0] 被判「不是陣列或指標」', async () => {
+    const code = `#include <iostream>
+using namespace std;
+int firsts(const char* t[], int n) {
+    int s = 0;
+    for (int i = 0; i < n; i++) {
+        s += t[i][0] - 'a';
+    }
+    return s;
+}
+int main() {
+    const char* w[3] = {"cat", "dog", "bee"};
+    cout << firsts(w, 3) << endl;
+    return 0;
+}`
+    expect(generateCode(lift(code), 'cpp', S)).toBe(code)
+    await expectCellaOut(code, '6\n')
+  })
+})

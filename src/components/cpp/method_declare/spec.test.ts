@@ -174,3 +174,81 @@ int main() {
     for (const s of ['virtual void f() override;', 'static int g();']) expect(out).toContain(s)
   })
 })
+
+// ── 第 331 刀：運算子的原型與類別外定義走同兩顆（名字記成 `operator+`）────────────
+describe('運算子：類別裡只宣告、定義寫在類別外', () => {
+  const OPS = `${head}class Fraction {
+public:
+    int n, d;
+    Fraction(int a, int b) : n(a), d(b) {
+    }
+    Fraction operator+(const Fraction&) const;
+    Fraction& operator+=(const Fraction& o);
+    bool operator<(const Fraction&) const;
+    bool operator==(const Fraction& rhs) const;
+};
+Fraction Fraction::operator+(const Fraction& o) const {
+    return Fraction(n * o.d + o.n * d, d * o.d);
+}
+Fraction& Fraction::operator+=(const Fraction& o) {
+    n = n * o.d + o.n * d;
+    d = d * o.d;
+    return *this;
+}
+bool Fraction::operator<(const Fraction& o) const {
+    return n * o.d < o.n * d;
+}
+bool Fraction::operator==(const Fraction& o) const {
+    return n == o.n && d == o.d;
+}
+int main() {
+    Fraction a(1, 2), b(1, 3);
+    Fraction c = a + b;
+    cout << c.n << "/" << c.d << endl;
+    a += b;
+    cout << a.n << "/" << a.d << endl;
+    cout << (b < a) << " " << (a == a) << endl;
+    return 0;
+}
+`
+  it('lift：四個原型是宣告方法、四個定義是類別外定義方法，名字是 operator⊕', () => {
+    const t = lift(OPS)
+    const decls = ofId(t, 'cpp:method_declare')
+    const defs = ofId(t, 'cpp:method_def_outside')
+    expect(decls.map((d) => d.properties.name)).toEqual(['operator+', 'operator+=', 'operator<', 'operator=='])
+    expect(defs.map((d) => d.properties.name)).toEqual(['operator+', 'operator+=', 'operator<', 'operator=='])
+    expect(decls[1].properties.return_type, '回傳參照').toBe('Fraction&')
+    expect(ofId(t, 'cpp:raw_code'), '不再降級').toHaveLength(0)
+  })
+
+  it('產碼一字不差、來回不漂移', () => {
+    expect(gen(OPS)).toBe(OPS.trimEnd())
+    expect(shape(lift(gen(OPS)))).toEqual(shape(lift(OPS)))
+  })
+
+  it('執行：Cella 判得出，輸出同 clang', async () => {
+    await expectCellaOut(OPS, '5/6\n5/6\n1 1\n')
+  })
+
+  it('原型與定義的運算子寫法不同（`operator +` 與 `operator+`）也配得上', async () => {
+    const code = `${head}struct S {
+    int v;
+    S operator -() const;
+};
+S S::operator-() const {
+    S r;
+    r.v = -v;
+    return r;
+}
+int main() {
+    S s{3};
+    cout << (-s).v << endl;
+    return 0;
+}
+`
+    const t = lift(code)
+    expect(ofId(t, 'cpp:method_declare')[0].properties.name).toBe('operator-')
+    expect(ofId(t, 'cpp:method_def_outside')[0].properties.name).toBe('operator-')
+    await expectCellaOut(code, '-3\n')
+  })
+})

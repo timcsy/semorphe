@@ -1,4 +1,6 @@
 {
-  "CPP_DELETE_MSG0": "Delete object %1 (delete)",
-  "CPP_DELETE_TOOLTIP": "Delete an object created with new and free the memory"
+  "CPP_DELETE_MSG0": "Delete %1 %2 (delete)",
+  "CPP_DELETE_TOOLTIP": "Free memory created with new: choose \"object\" for a single object (delete p) and \"array\" for new T[n] (delete[] p) — mixing them up is undefined behavior",
+  "CPP_DELETE_ONE": "object",
+  "CPP_DELETE_ARRAY": "array"
 }

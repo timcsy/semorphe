@@ -36,7 +36,9 @@ export const formatParams = (paramChildren: { properties: Record<string, unknown
       // 🔴 **預設值要跟著印**（2026-11-06，元件管線 311 的盲測抓到）：建構子與方法用這一支，而它漏了一般函式那份早就有的這一行——
       //    `Fraction(long long num = 0, long long den = 1)` 產回去少了 `= 0`、`= 1`，`Fraction(5)` 那種合法的呼叫就變成「少了引數」。
       const d = String(p.properties.default ?? '')
-      const decl = n ? `${t} ${n}` : t
+      // 陣列參數（`int a[]`、`const char* t[]`）：型別記成 `int[]`／`const char*[]`，`[]` 要寫在名字後面
+      //（第 331 刀：一般函式那條原本自己有一份這條規則、這一支沒有——併成一份，兩條路都走這裡）
+      const decl = t.endsWith('[]') ? (n ? `${t.slice(0, -2)} ${n}[]` : t) : (n ? `${t} ${n}` : t)
       return d ? `${decl} = ${d}` : decl
     }).join(', ')
 

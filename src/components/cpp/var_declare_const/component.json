@@ -13,6 +13,12 @@
       "kind": "identifier",
       "required": true,
       "default": "MAX"
+    },
+    {
+      "name": "init_style",
+      "kind": "enum",
+      "default": "",
+      "_kind_why": "`const Vec k(5, 6);`（建構子形式，值是 \"constructor\"）與 `const int n = 5;`（空）——第 331 刀的盲測：原本丟掉這一格，產碼寫成 `= 5`、formalize 只送第一個引數。同可變的那顆宣告。"
     }
   ],
   "slots": {

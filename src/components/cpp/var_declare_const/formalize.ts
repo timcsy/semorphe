@@ -6,6 +6,10 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // `const` 交給 type() 一起剝：`const int&` 是「參照到 const int」＝ tRef(tConst(int))，不是 tConst(tRef(int))（第 238 刀）
     const t = f.type(`const ${n.properties?.type ?? 'int'}`, n)
     if (!t) return []
+    // 類別物件的直接初始化（`const Vec k(5, 6);`）：每一個引數都送（同可變的那顆；第 331 刀——原本只送第一個）
+    if (n.properties?.init_style === 'constructor' && f.isStructName(String(n.properties?.type ?? '').trim())) {
+      return f.declCtor(n, t, (n.slots?.initializer ?? []).map((c) => f.expr(c)), global)
+    }
     const init = f.one(n, 'initializer')
     if (!init) return [f.miss(n, 'const 沒有初值')]
     return f.declInit(n, t, f.initOf(init), global)

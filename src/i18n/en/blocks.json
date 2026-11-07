@@ -676,6 +676,7 @@
   "FLOW_SLOT_INITS": "Initializers",
   "FLOW_SLOT_ARROW": "Through a pointer (->)",
   "FLOW_SLOT_IS_VIRTUAL": "Virtual",
+  "FLOW_SLOT_IS_ARRAY": "Frees an array (delete[])",
   "FLOW_SLOT_IS_CONST": "Does not modify itself (const)",
   "FLOW_SLOT_ITERABLE": "iterated over",
   "FLOW_SLOT_KEY": "Key",
