@@ -2105,6 +2105,14 @@ export class App {
     return this.codeView?.getCode?.() ?? ''
   }
 
+  /** 最近一次換題時種題目的那一趟（見 `case 'task'`）；沒有在種就是已完成的 promise */
+  private taskSeeding: Promise<unknown> = Promise.resolve()
+
+  /** 換題之後，題目的程式真的種好（e2e 與「選完題才動手」的呼叫者等它） */
+  whenTaskSeeded(): Promise<void> {
+    return this.taskSeeding.then(() => undefined, () => undefined)
+  }
+
   private async seedCurrentTask(): Promise<boolean> {
     const lesson = this.currentLesson
     if (!lesson) return false
@@ -3782,7 +3790,10 @@ export class App {
               this.applySuggestedView(picked.view)
               // 🟢 **與 `?task=` 那條路共用同一支**——兩份判定會分岔，
               //    而分岔的症狀是「從選單進去有東西、從課文頁進去沒有」。
-              void this.seedCurrentTask()
+              // 🔴 記下這一次種題目的 promise（2026-11-07）：它原本是射後不理，`currentTaskId` 換過去的當下程式還沒種好——
+              //    CI 上 e2e 換題之後馬上 setCode，結果被晚到的種題目蓋掉（lesson-pins 的版面那支，四紅一綠、本機從沒紅過）。
+              //    學生選完題立刻打字也會被蓋掉；`whenTaskSeeded()` 讓等的人等得到它落地
+              this.taskSeeding = this.seedCurrentTask()
             }
             // 🔴 **問語義樹，不問面板**（同 `applyTemplate`）——「有沒有東西」
             //    是那份唯一真實的性質，不是某一個投影的性質。
