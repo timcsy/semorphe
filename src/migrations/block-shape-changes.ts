@@ -382,6 +382,21 @@ export const SHAPE_CHANGES_V21: ShapeChange[] = [
 ]
 
 /**
+ * ## V29：`struct` 多了「另名」那一格（2026-11-08，C 盲測的下一刀）
+ *
+ * C 的 `typedef struct [Tag] { … } Alias;` 原本整句照原文降級；接上之後 `cpp_struct_declare` 多一格 `TYPEDEF_ALIAS`。
+ * 舊快取身上沒有這一格（同 V27 的形狀：少了什麼，不是多了什麼）⟹ 用 `addedFields` 判定，丟掉快取、從程式碼重 lift。
+ */
+export const SHAPE_CHANGES_V29: ShapeChange[] = [
+  {
+    blockType: 'cpp_struct_declare',
+    retiredFields: [],
+    addedFields: ['TYPEDEF_ALIAS'],
+    why: '`typedef struct … Alias;` 的別名從此是一格欄位——沒有這一格的舊快取是別名裝不下的時代建的',
+  },
+]
+
+/**
  * ## V28：建構子形式的宣告換了一個形態（2026-11-07，第 332 刀）
  *
  * `P p(3, 4)` 原本畫在 `cpp_var_declare` 上（`extraState.initStyle: 'constructor'`、只有 `INIT_0`）——第二個引數以後在渲染那一步就掉了。

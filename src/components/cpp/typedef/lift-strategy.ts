@@ -20,12 +20,13 @@
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { AstNode } from '../../../core/lift/types'
 import { createNode } from '../../../core/semantic-tree'
+import { asTypedefStruct } from '../struct_declare/lift-strategy'
 
 const TAGGED = new Set(['struct_specifier', 'enum_specifier', 'union_specifier'])
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   // type_definition: typedef int myint; → cpp_typedef
-    registry.register('cpp:liftTypedef', (node) => {
+    registry.register('cpp:liftTypedef', (node, ctx) => {
       const typeNode = node.childForFieldName('type') ?? node.namedChildren.find(c =>
         c.type === 'primitive_type' || c.type === 'type_identifier' ||
         c.type === 'qualified_identifier' || c.type === 'sized_type_specifier' ||
@@ -34,7 +35,14 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
         c.type === 'template_type' || TAGGED.has(c.type)
       )
       if (!typeNode) return null
-      // 帶本體的 struct／enum／union：還裝不下（見檔頭）——照原文降級
+      // 🟢 帶本體的 struct（`typedef struct [Tag] { … } Alias;`，2026-11-08）：交給 struct 的 lift，再記別名——
+      //    一句裡就是一個 struct 的定義加上它的另一個名字。只收「一個不帶星號的別名」；其餘照原文降級
+      if (typeNode.type === 'struct_specifier' && typeNode.childForFieldName('body')) {
+        const decls = node.namedChildren.filter((c) => c.startIndex !== typeNode.startIndex && c.type !== 'comment')
+        if (decls.length !== 1 || decls[0].type !== 'type_identifier') return null
+        return asTypedefStruct(ctx.lift(typeNode), decls[0].text, !typeNode.childForFieldName('name'))
+      }
+      // 帶本體的 enum／union：還裝不下——照原文降級
       if (TAGGED.has(typeNode.type) && typeNode.childForFieldName('body')) return null
       // ⚠️ 比位置不比物件：web-tree-sitter 每次取節點都是新物件，`c !== typeNode` 永遠成立
       const declarators = node.namedChildren.filter((c) => c.startIndex !== typeNode.startIndex && c.type !== 'type_qualifier' && c.type !== 'comment')
