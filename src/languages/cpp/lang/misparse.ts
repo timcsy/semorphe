@@ -74,6 +74,7 @@
  * `ans < eps && ans > -eps` 裡那個名字出現兩次。
  */
 import { Parser } from 'web-tree-sitter'
+import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import type { AstNode, LiftContext } from '../../../core/lift/types'
 import { declareAstRepair } from '../../../core/lift/ast-repairs'
@@ -414,6 +415,38 @@ export function registerMisparseRepairs(): void {
       layoutHints: { ...(lifted.metadata?.layoutHints ?? {}), parenthesized: true },
     }
     return lifted
+  })
+
+  /**
+   * ⑤ `int (*row)[COLS] = m;`：**宣告被剖成運算式**（2026-11-07，C 盲測抓到）。
+   *
+   * ```
+   * 寫的                       tree-sitter 給的                              C++ 說的
+   * int (*row)[COLS] = m;      (int(*row))[COLS] = m   函式式轉型再取下標      宣告：row 是指向 int[COLS] 的指標
+   * ```
+   *
+   * 我們照 tree-sitter 的樹 lift，產回去變成 `(int)*row[COLS] = m;`——**另一句話**，而且沒有任何一顆節點說它降級了。
+   *
+   * ## 它憑什麼
+   * [stmt.ambig]：最左子運算式是函式式轉型（`T(…)`）的運算式敘述，能讀成宣告的話**就是宣告**。
+   * 「基本型別 `(` `*`／`&`」開頭的敘述正是這一族（指向陣列的指標、函式指標）。
+   * 🟢 而處置是**照原文降級**，不是重組：就算極少數它真的是運算式（`int(*p) + 1;`），原文照樣印回去——
+   *    降級不會改變任何意思，只是少了結構（P6）。
+   */
+  declareAstRepair((node: AstNode, ctx: LiftContext): SemanticNode | null => {
+    if (node.type !== 'expression_statement') return null
+    if (!/^(?:(?:unsigned|signed|long|short|const|volatile)\s+)*(?:int|char|short|long|float|double|bool|void|size_t)\s*\(\s*[*&]/.test(node.text)) return null
+    void ctx
+    const raw = createNode('raw_code', {})
+    raw.metadata = {
+      rawCode: node.text,
+      confidence: 'raw_code',
+      sourceRange: {
+        startLine: node.startPosition.row, startColumn: node.startPosition.column,
+        endLine: node.endPosition.row, endColumn: node.endPosition.column,
+      },
+    }
+    return raw
   })
 
   /** ④ `a + b = 3` → `(a + b) = 3`：重解成指定在最外層的那棵樹（見 `assignmentUnderBinary`）。 */

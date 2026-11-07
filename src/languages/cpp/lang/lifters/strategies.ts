@@ -1275,6 +1275,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
   // declaration: multi-variable + array declarations
   registry.register('cpp:liftDeclaration', (node, ctx) => {
+    // 🔴 **帶括號的宣告子**（`int (*row)[COLS] = m;` 指向陣列的指標、`int (*tbl[3])(int, int)` 函式指標陣列）——還裝不下，
+    //    整句照原文降級。2026-11-07 C 盲測：原本被拆成 `(int)*row[COLS] = m;`——**另一句話**，而且沒有任何一顆節點說它降級了。
+    if (hasParenthesizedDeclarator(node)) return null
     // Detect type qualifiers: const, constexpr
     const qualifierNode = node.namedChildren.find(c => c.type === 'type_qualifier')
     const qualifier = qualifierNode?.text
@@ -2190,8 +2193,28 @@ const COMPOUND_TYPE_PREFIXES = [
   'unsigned short', 'unsigned char', 'long double', 'signed char',
 ]
 
+/**
+ * 宣告子（不含初值）裡有沒有 `parenthesized_declarator`——指向陣列的指標、函式指標這一族。
+ * ⚠️ 只看宣告子那一側：`int x = (a + b);` 的括號在初值裡，不算。
+ */
+export function hasParenthesizedDeclarator(node: AstNode): boolean {
+  const within = (n: AstNode): boolean =>
+    n.type === 'parenthesized_declarator' || n.namedChildren.some((c) => c.type !== 'parameter_list' && within(c))
+  return node.namedChildren.some((c) => {
+    if (c.type === 'init_declarator') { const d = c.childForFieldName('declarator'); return !!d && within(d) }
+    return /declarator$/.test(c.type) && within(c)
+  })
+}
+
 /** Parse a parameter_declaration AST node into { type, name } */
 export function parseParamDeclaration(param: AstNode): { type: string; name: string } {
+  // 🔴 **函式指標與帶括號的宣告子參數**（`int (*f)(int)`、`int (*row)[COLS]`）——2026-11-07 C 盲測：原本名字與形狀都掉了
+  //    （`void map(Node* h, int)`、`int row_sum(int[], int n)`），呼叫端還被補出空引數。還裝不下 ⟹ 整段照原文當型別、不給名字
+  //    （產碼照原樣印回去；formalize 認不得那個型別就照實標 unknown）。
+  if (param.namedChildren.some((c) => c.type === 'function_declarator' || c.type === 'parenthesized_declarator' ||
+    (/declarator$/.test(c.type) && c.namedChildren.some((g) => g.type === 'parenthesized_declarator')))) {
+    return { type: param.text.replace(/\s+/g, ' ').trim(), name: '' }
+  }
   const qualifierNode = param.namedChildren.find(c => c.type === 'type_qualifier')
   const typeNode = param.namedChildren.find(c =>
     c.type === 'primitive_type' || c.type === 'type_identifier' ||
@@ -2248,9 +2271,17 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
         type += declNode.text
       } else if (declNode.type === 'array_declarator') {
         // int arr[] → type stays, name is the identifier inside
-        const innerIdent = declNode.namedChildren.find(c => c.type === 'identifier')
-        name = innerIdent?.text ?? declNode.namedChildren[0]?.text ?? ''
-        type += '[]'
+        // 🔴 **多維陣列參數**（`void fill(int m[ROWS][COLS])`）——2026-11-07 C 盲測抓到：巢狀的 array_declarator 外層的直接子
+        //    identifier 是**最後一維的大小**（`COLS`），於是產出 `int COLS[]`：名字與維度一起靜靜地換掉。
+        //    一層層剝開：名字取最內層，第一維照舊寫 `[]`（參數位置等價），**第二維以後的大小必須留著**（型別的一部分）。
+        const dims: string[] = []
+        let d: AstNode | null = declNode
+        while (d && d.type === 'array_declarator') {
+          dims.unshift(d.childForFieldName('size')?.text ?? '')
+          d = d.childForFieldName('declarator')
+        }
+        name = d?.type === 'identifier' ? d.text : (d?.namedChildren.find(c => c.type === 'identifier')?.text ?? '')
+        type += '[]' + dims.slice(1).map((x) => `[${x}]`).join('')
       } else {
         name = declNode.text
       }

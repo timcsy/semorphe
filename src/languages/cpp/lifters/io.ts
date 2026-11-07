@@ -451,7 +451,10 @@ export function registerIOLifters(lifter: Lifter): void {
     // 拆開看只是三筆「名字 → 身分 ＋ 引數槽名」的資料配上共用判別。
     // 資料回膠囊，判別留這裡。
     {
-      const shape = callComponentFor(funcName)
+      // 🔴 **使用者自己定義了同名函式，就是呼叫它**（2026-11-07 C 盲測：學生的 `void map(Node *h, int (*f)(int))`
+      //    被認成 Arduino 的 `map(value, fromLow, fromHigh, toLow, toHigh)`，產回去補出三個空引數 `map(head, twice, , , )`）。
+      //    同一個病修過一次（`swap` → `cpp:var_swap`，擋在 `lift-branches.ts` 的路由器）——而這張呼叫元件表是**另一條路**，沒被擋到。
+      const shape = ctx.data.hasFunction(funcName) ? undefined : callComponentFor(funcName)
       // 🔴 **不要加回 `argSlots.length > 0` 這個條件。**
       //
       // 它原本在這裡，而它是一個**沒有說出口的假設**：「登錄的概念都至少有一個引數」。
