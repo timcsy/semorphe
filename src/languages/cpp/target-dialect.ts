@@ -76,7 +76,10 @@ export function cTypeName(type: string, structNames: ReadonlySet<string>): strin
  * 而不是在這裡寫死 `cpp:struct_declare`。
  */
 export function collectStructNames(root: SemanticNode, acc = new Set<string>()): Set<string> {
-  if (root.componentId.endsWith(':struct_declare') && typeof root.properties?.name === 'string') {
+  // ⚠️ 空名不收：匿名的 `typedef struct { … } Point;` 只靠別名稱呼——收了空名，C 目標會在型別前面補出 `struct `（2026-11-08）
+  //    Tag 與別名相同（`typedef struct Node { … } Node;`）時 `Node` 本身就是型別名，也不收——收了會把 `Node b;` 補成 `struct Node b;`（來回走樣）
+  if (root.componentId.endsWith(':struct_declare') && typeof root.properties?.name === 'string' && root.properties.name !== ''
+    && root.properties.typedef_alias !== root.properties.name) {
     acc.add(root.properties.name)
   }
   for (const bucket of Object.values(root.slots ?? {})) {

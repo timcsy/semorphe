@@ -40,6 +40,11 @@
           "type": "field_input",
           "name": "BASE_CLASS",
           "text": ""
+        },
+        {
+          "type": "field_input",
+          "name": "TYPEDEF_ALIAS",
+          "text": ""
         }
       ],
       "message1": "%1",
@@ -66,7 +71,8 @@
       "fields": {
         "NAME": "name",
         "BASE_CLASS": "base_class",
-        "BASE_ACCESS": "base_access"
+        "BASE_ACCESS": "base_access",
+        "TYPEDEF_ALIAS": "typedef_alias"
       },
       "statementInputs": {
         "MEMBERS": "members"

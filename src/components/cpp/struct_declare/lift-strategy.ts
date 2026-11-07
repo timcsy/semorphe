@@ -45,3 +45,14 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       return createNode('cpp:struct_declare', props, { members })
     })
 }
+
+/**
+ * C 的 `typedef struct [Tag] { … } Alias;`——typedef 那顆的 lift 把帶本體的 struct 交給上面的策略，再呼叫這個記別名
+ * （2026-11-08，C 盲測：原本這一句整個照原文降級，C 最常見的寫法判不出來）。
+ * 身分只寫在這顆膠囊裡：別的膠囊問「這是不是一顆 struct」用這個，不寫 `cpp:struct_declare`。
+ * 匿名（`typedef struct { … } Point;`）的 name 留空——不再編 `MyStruct`。不是 struct 的回 null。
+ */
+export function asTypedefStruct(lifted: SemanticNode | null, alias: string, anonymous: boolean): SemanticNode | null {
+  if (!lifted || lifted.componentId !== 'cpp:struct_declare') return null
+  return { ...lifted, properties: { ...lifted.properties, name: anonymous ? '' : lifted.properties.name, typedef_alias: alias } }
+}

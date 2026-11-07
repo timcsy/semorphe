@@ -10,6 +10,11 @@ function basesOf(n: Parameters<Parameters<FormalizeRegistrar['item']>[1]>[0], f:
   return [f.k('base', { acc: f.k(acc), virt: false, name })]
 }
 
+/** struct 在 Cella 那邊的名字：有 Tag 用 Tag，匿名的 `typedef struct { … } Point;` 用別名（2026-11-08） */
+function structName(n: Parameters<Parameters<FormalizeRegistrar['item']>[1]>[0]): string {
+  return String(n.properties?.name ?? '') || String(n.properties?.typedef_alias ?? '')
+}
+
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:struct_declare', (n, f) => {
     const fields: CellaJson[] = []
@@ -30,10 +35,16 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     if (f.options.isC && methods.length > 0) return [f.miss(n, 'C 的 struct 沒有成員函式')]
     if (f.options.isC) {
       const cFields = fields.map((x) => f.k('fld', { name: x.name, t: x.t }))
-      return [f.k('iStruct', { d: f.k('sdef', { n: n.id, name: String(n.properties?.name ?? ''), fields: cFields }) })]
+      return [f.k('iStruct', { d: f.k('sdef', { n: n.id, name: structName(n), fields: cFields }) })]
     }
-    return [f.k('iClass', { d: f.k('cdef', { n: n.id, name: String(n.properties?.name ?? ''), isClass: false, bases: basesOf(n, f, false), members: [...fields, ...methods] }) })]
+    return [f.k('iClass', { d: f.k('cdef', { n: n.id, name: structName(n), isClass: false, bases: basesOf(n, f, false), members: [...fields, ...methods] }) })]
   })
   // 定義了一個型別名：不帶關鍵字的 `Node*` 要先認得 `Node`
-  r.definesType('cpp:struct_declare', (n) => String(n.properties?.name ?? ''))
+  r.definesType('cpp:struct_declare', (n) => structName(n))
+  // `typedef struct node_s { … } Node;`：Tag 與別名不同 ⟹ 別名照 typedef 那一族記（`Node` 展開成 `node_s`）
+  r.definesMacro('cpp:struct_declare', (n) => {
+    const alias = String(n.properties?.typedef_alias ?? '')
+    const tag = String(n.properties?.name ?? '')
+    return alias && tag && alias !== tag ? { name: alias, value: tag } : null
+  })
 }

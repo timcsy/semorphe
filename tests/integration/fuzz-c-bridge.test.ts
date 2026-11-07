@@ -66,7 +66,10 @@ describe('C 盲測抓到的靜默改寫——每個一條', () => {
     const src = 'typedef int *IntPtr;\ntypedef const char *CStr;\ntypedef struct Node Node;\ntypedef struct { int x, y; } Point;\ntypedef int (*binop)(int, int);\ntypedef int Arr[10];\nint main() {\n    return 0;\n}\n'
     const out = gen(lift(src))
     for (const line of ['typedef int* IntPtr;', 'typedef const char* CStr;', 'typedef struct Node Node;',
-      'typedef struct { int x, y; } Point;', 'typedef int (*binop)(int, int);', 'typedef int Arr[10];']) expect(out).toContain(line)
+      'typedef int (*binop)(int, int);', 'typedef int Arr[10];']) expect(out).toContain(line)
+    // 🟢 2026-11-08（341）帶本體的 typedef struct 接上了：不再照原文降級，而是一顆 struct 帶別名、照風格分行產出
+    expect(out).toContain('typedef struct {')
+    expect(out).toContain('} Point;')
     expect(out).not.toContain('mytype')
   })
 
