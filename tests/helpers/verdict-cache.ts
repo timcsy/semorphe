@@ -11,15 +11,28 @@
  * 判決裡指回節點的字串（`problems[].at` 之類）存的是正規化後的標籤，讀回來時用這一次的對照表換回這一次的 id。
  * 換不回來（標籤不在這一次的表裡）就當作沒命中——不猜。
  *
- * 位置與格式可換（等 cos-mos 的共享存放與 Cella 的條目格式）：
- *   SEMORPHE_VERDICT_CACHE=0        關掉
- *   SEMORPHE_VERDICT_CACHE=<目錄>   換位置（預設 ~/.cache/semorphe/verdicts）
- * 存放只要實作 `VerdictStore` 的 get／put。
+ * ## 共享存放（2026-11-07，329）：cos-mos 的 `tools/results.mjs`
+ *
+ * 找得到 cos-mos 的 `results.mjs`（`SEMORPHE_COSMOS_RESULTS` 指定，預設是 repo 旁邊的 `../cos-mos/tools/results.mjs`）時，
+ * 非同步那一路（`cachedVerdictAsync`）改走它的 `cachedVerdict`：條目是 Cella 定的 cella-verdict-entry-v1，
+ * 鍵 ＝ 程式的 sha256 ＋ Cella 指紋 ＋ { language, fuel, input }，存在 `~/.cos-mos/results/`，與 cos-mos 共享。
+ * - 程式送**正規化後的**那一份（節點編號 `#1`…），判決存標籤、讀回換成這一次的 id——同本地版
+ * - 指紋**由我們算好傳進去**（`cella-lang/host` 的 `verdictFingerprint`，從 semorphe 自己裝的套件讀）——
+ *   讓 `results.mjs` 自己 import 的話，解析到的是 cos-mos 那邊裝的版本
+ * - 判決是**報告版**（`<語言>.verdictReport`，多一個 `steps`）——共享條目的格式要求
+ * - 找不到 `results.mjs`（CI、別人的機器）就照舊用本地目錄
+ *
+ * 開關：
+ *   SEMORPHE_VERDICT_CACHE=0        關掉（共享與本地都不讀不寫）
+ *   SEMORPHE_VERDICT_CACHE=<目錄>   只用本地目錄（預設 ~/.cache/semorphe/verdicts），不走共享
+ *   COSMOS_RESULTS=off              發布前／合併前的完整驗收：不讀快取、從頭算當裁判（cos-mos 的約定；本地目錄也一併不讀）
+ *   SEMORPHE_COSMOS_RESULTS=<路徑>  cos-mos 的 results.mjs 在哪
  */
 import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
 import { join, dirname } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 export interface VerdictStore {
   get(key: string): string | undefined
@@ -47,7 +60,7 @@ export function directoryStore(dir: string): VerdictStore {
 /** 環境變數決定的存放；`0` ＝ 不快取 */
 export function storeFromEnv(env: NodeJS.ProcessEnv = process.env): VerdictStore | null {
   const v = env.SEMORPHE_VERDICT_CACHE
-  if (v === '0') return null
+  if (v === '0' || env.COSMOS_RESULTS === 'off') return null
   return directoryStore(v && v.length > 0 ? v : join(homedir(), '.cache', 'semorphe', 'verdicts'))
 }
 
@@ -150,12 +163,14 @@ export function cachedVerdict<V>(
   return v
 }
 
-/** 同上，判決器可以晚建：全部命中的測試檔就不必付建判決器（wasm 實例化）的那一筆 */
+/** 同上，判決器可以晚建：全部命中的測試檔就不必付建判決器（wasm 實例化）的那一筆。找得到 cos-mos 的共享存放就走它（見檔頭） */
 export async function cachedVerdictAsync<V>(
   judge: () => Promise<V>,
   key: { moduleHash: string; program: unknown; stdin: string; steps: number },
   store: VerdictStore | null = storeFromEnv(),
 ): Promise<V> {
+  const shared = store && !process.env.SEMORPHE_VERDICT_CACHE ? await sharedFromEnv() : null
+  if (shared) return viaShared(judge, key, shared)
   const c = lookup<V>(key, store)
   if (c.hit) return c.value
   const v = await judge()
@@ -192,3 +207,89 @@ function hasLabelLike(v: unknown): boolean {
 }
 
 export const moduleHashOf = (bytes: Uint8Array): string => sha256(bytes)
+
+// ── 共享存放（cos-mos 的 results.mjs）──────────────────────────────────────────────
+
+/** cos-mos `results.mjs` 的 `cachedVerdict`（契約：只做加法；見 cos-mos 的 tools/results.mjs） */
+export type SharedCachedVerdict = (a: {
+  program: unknown
+  language: string
+  options: { fuel: number; input?: string }
+  compute: () => Promise<unknown>
+  fingerprint: string
+}) => Promise<{ verdict: unknown; hit: boolean; key: string }>
+
+export interface SharedVerdictCacheStats { hits: number; misses: number }
+export const sharedVerdictCacheStats: SharedVerdictCacheStats = { hits: 0, misses: 0 }
+
+let sharedLoaded: Promise<SharedCachedVerdict | null> | null = null
+
+/** 找得到 cos-mos 的 results.mjs 就載入它的 cachedVerdict；找不到回 null（照舊用本地目錄） */
+export function sharedFromEnv(env: NodeJS.ProcessEnv = process.env): Promise<SharedCachedVerdict | null> {
+  if (env.SEMORPHE_VERDICT_CACHE === '0' || env.COSMOS_RESULTS === 'off') return Promise.resolve(null)
+  sharedLoaded ??= (async () => {
+    const at = env.SEMORPHE_COSMOS_RESULTS || join(process.cwd(), '..', 'cos-mos', 'tools', 'results.mjs')
+    if (!existsSync(at)) return null
+    const mod = await import(/* @vite-ignore */ pathToFileURL(at).href) as { cachedVerdict?: SharedCachedVerdict }
+    return typeof mod.cachedVerdict === 'function' ? mod.cachedVerdict : null
+  })()
+  return sharedLoaded
+}
+
+/** Cella 的語言（指紋與鍵用）——與 `branchOf` 同一條規則 */
+export function languageOf(program: unknown): 'c' | 'cpp' | 'arduino' | 'python' {
+  const p = program as { k?: string; lang?: { k?: string }; board?: unknown }
+  if (p?.k === 'program') return 'python'
+  if (p?.board != null) return 'arduino'
+  return p?.lang?.k === 'langC' ? 'c' : 'cpp'
+}
+
+const fingerprints = new Map<string, Promise<string>>()
+/** 指紋從 semorphe 自己裝的 `cella-lang/host` 讀（見檔頭：不讓 results.mjs 自己解析） */
+function fingerprintOf(language: string): Promise<string> {
+  let f = fingerprints.get(language)
+  if (!f) {
+    f = import('cella-lang/host').then((h) => (h as unknown as { verdictFingerprint(l: string): Promise<string> }).verdictFingerprint(language))
+    fingerprints.set(language, f)
+  }
+  return f
+}
+
+/** 判決裡已經有長得像標籤的字串（程式印出 `#1`）——存了讀回會被誤換，所以這一筆不存：用這個例外跳出 compute */
+class Unstorable extends Error { constructor(readonly value: unknown) { super('unstorable') } }
+
+async function viaShared<V>(
+  judge: () => Promise<V>,
+  key: { program: unknown; stdin: string; steps: number },
+  shared: SharedCachedVerdict,
+): Promise<V> {
+  const { normalized, ids } = normalizeWithIds(key.program)
+  const language = languageOf(key.program)
+  // binding-verdict 用 -1 表示「判決器的預設步數」（1,000,000，見 `checkerFromBytes`）——鍵裡寫實際的數字
+  const options: { fuel: number; input?: string } = { fuel: key.steps < 0 ? 1_000_000 : key.steps }
+  if (key.stdin !== '') options.input = key.stdin
+  try {
+    const { verdict, hit } = await shared({
+      program: normalized, language, options, fingerprint: await fingerprintOf(language),
+      compute: async () => {
+        const v = await judge()
+        if (hasLabelLike(v)) throw new Unstorable(v)
+        const labelled = toLabels(v, ids)
+        if (labelled === null) throw new Unstorable(v)
+        return labelled
+      },
+    })
+    const back = fromLabels(verdict, ids)
+    if (back === null) {
+      // 條目指到一顆這一次的程式裡沒有的節點——不猜，當場判
+      sharedVerdictCacheStats.misses++
+      return judge()
+    }
+    if (hit) sharedVerdictCacheStats.hits++
+    else sharedVerdictCacheStats.misses++
+    return back as V
+  } catch (e) {
+    if (e instanceof Unstorable) { sharedVerdictCacheStats.misses++; return e.value as V }
+    throw e
+  }
+}

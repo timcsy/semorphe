@@ -41,6 +41,8 @@ export interface CellaVerdict {
   out: string
   problems: CellaProblem[]
   assumes?: { implementation: string; choice: string }[]
+  /** 這次執行用掉的模型步數（報告版判決的最後一個鍵；單位同 fuel，fuel 用完時等於 fuel，沒跑到執行是 0） */
+  steps?: number
   [extra: string]: unknown
 }
 
@@ -69,7 +71,9 @@ export const familyOf = (b: CellaBranch): CellaFamily => (b === 'python' ? 'pyth
 const libraryOf = (family: CellaFamily): string => {
   const bs = FAMILY_BRANCHES[family]
   return [...bs.map((b) => `import ${b}`), ...bs.flatMap((b) => [
-    `def verdict_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.verdict src input fuel`,
+    // 報告版（2026-11-07，329）：判決的 JSON 原封不動，最後多一個 `steps`（用掉的模型步數，各宿主相同）——
+    //    判決共享快取（cos-mos 存放、Cella 定格式 cella-verdict-entry-v1）存的是報告版，產品也多一個可以顯示的數字
+    `def verdict_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.verdictReport src input fuel`,
     `def types_${b} (src : String) (candidates : String) : String := ${b}.types src candidates`,
   ])].join('\n') + '\n'
 }
