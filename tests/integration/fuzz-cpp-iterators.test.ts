@@ -1100,8 +1100,9 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    */
   // 歸類：Cella 那側缺（2026-11-06 換形狀）——tuple 在 cella 0.1.202611060800 補上之後，下一個卡點露出來：
   //   `buf.insert(buf.end(), a, mid)`（用指標當範圍的 vector::insert）模型沒有這個多載。已回報
-  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_08 卡在 vector 用指標範圍的 insert', async () => {
-    await knownCellaGap(/has no overload of 'insert' for these arguments/, async () => {
+  //   2026-11-07（cella 0.1.202611070815）再換形狀：指標範圍的 insert 補上了，下一個卡點是 `std::copy` 還不支援（誠實的 unknown）
+  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_08 卡在 std::copy（指標範圍的 insert 已在 0815 補上）', async () => {
+    await knownCellaGap(/std::copy is not supported yet/, async () => {
       await whole(P04_NAIL, "inversions = 31\n0 1 2 3 4 5 6 7 8 9 \n0: at 0 before 1\n5: at 5 after 4 before 6\n9: at 9 after 8\n11: not found\n9 8 7 6 5 4 3 2 1 0 \n9 8 4 5 6 7 3 2 1 0 \nbest slice sum = 12 from 2 to 10: 5 -1 6 -8 2 7 -3 4\ncheck = 12\noriginal untouched: 9 4 7 1 8 2 6 3 5 0 \n", '')
     })
   }, 180_000)

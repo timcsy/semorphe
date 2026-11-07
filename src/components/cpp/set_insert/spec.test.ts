@@ -77,6 +77,7 @@ describe('膠囊自證：集合的插入', () => {
   it('🔴 接收者不是集合時要【出聲】，不得安靜地去重排序', async () => {
     const r = await run(`${H}int main(){ vector<int> v; v.insert(3); cout << v.size(); }`)
     expect(r.verdict, '不得判 accept——那就是安靜地照集合的語義跑了').not.toBe('accept')
-    await knownCellaGap(/has no overload of 'insert'/, async () => { expect(r.verdict, r.err).toBe('reject') })
+    // 🟢 cella 0.1.202611070815 起判得出 reject（原本是 knownCellaGap）
+    expect(r.verdict, r.err).toBe('reject')
   })
 })
