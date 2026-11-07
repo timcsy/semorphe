@@ -15,14 +15,15 @@ import { SyncController } from '../core/sync/sync-controller'
 import type { SyncError } from '../core/sync/sync-controller'
 import { SemanticBus } from '../core/sync/semantic-bus'
 import { showToast } from './toolbar/toast'
-import { showStyleActionBar } from './toolbar/style-action-bar'
+import { showStyleActionBar, dismissStyleActionBar } from './toolbar/style-action-bar'
 import { runDiagnostics, diagnosticsFromTree, dropRejectsCoveredByNameChecks } from '../core/diagnostics'
 import type { SemanticNode } from '../core/types'
 import { createNode } from '../core/semantic-tree'
 import type { DiagnosticBlock } from '../core/diagnostics'
 import type { ProgramScaffold } from '../core/program-scaffold'
-import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases, setExpressionTypes, generateExpressionCode } from '../core/projection/code-generator'
+import { setDependencyResolver, setProgramScaffold, setScaffoldConfig, setHeaderAliases, setExpressionTypes, generateExpressionCode, generateCode } from '../core/projection/code-generator'
 import { carryTypes } from '../core/projection/carry-types'
+import { withRanByParts } from '../core/coverage'
 // 🔴 **spec 153：五樣語言相關的東西在這裡接上。**
 //    它們原本散在 `blockly-panel`／`block-registrar`／`sync-controller` 裡
 //    ——而那三個檔是**視圖與 UI**，不該認得語言套件（P9 第一項）。
@@ -550,7 +551,8 @@ export class App {
       // ⚠️ 留一份給揭曉用——`execution:coverage` 在 `completed` **之前**送達
       this.lastCounts = new Map(Object.entries(e.counts))
       this.lastLoopCounts = e.loopCounts ?? 'entries'
-      const n = this.blocklyPanel?.markNeverRan(new Set(e.visited)) ?? 0
+      // 宣告子跑過 ⟹ 那一句宣告跑過（`int a = 7, b = 3;` 在判決那邊是兩句，見 `core/coverage.ts`）
+      const n = this.blocklyPanel?.markNeverRan(withRanByParts(this.currentTree, e.visited)) ?? 0
       if (n > 0) consolePanel.log(msg('COVERAGE_NEVER_RAN', `⚠️ 有 ${n} 塊積木這一次沒有被跑到——是故意的嗎？`)
         .replace('{n}', String(n)))
       // 🔴 **迴圈跑了幾次**——同一份資料的第二個問題（2026-09-04 第三刀）。
@@ -1862,7 +1864,22 @@ export class App {
       // ⚠️ 而它**不新寫第三條路**——底下走的仍然是既有的兩條
       //（課程清單那條在這裡、風格那條是 `applyStyle`），
       // 新寫一條會讓「切換之後畫面長什麼樣」有兩個真相來源。
-      onTargetChange: (target, topic) => this.handleTargetChange(target, topic),
+      onTargetChange: (target, topic) => {
+        // 換方言時要不要換寫法（C → C++）——**只在使用者自己在選單上換的時候**：
+        // 課文釘目標那條路（`handleTargetChange` 的另外兩個呼叫端）接著會放進那一課自己的程式碼，轉了會蓋掉它。
+        // 換之前先記下舊風格與舊樹；判決的請求也要用舊目標組（型別是舊程式的）。
+        const fromStyle = this.currentStylePreset
+        const fromLanguage = this.currentTopic?.language
+        // ⚠️ 舊樹用 `currentTree`（判決用的就是這一棵 ⟹ 上一次判決的型別原樣對得上）；
+        //    從積木重抽的樹形狀可能不同（`carryTypes` 對不上 ⟹ 一行都換不了，2026-11-07 瀏覽器驗收抓到）
+        const before = this.currentTree ?? this.blocklyPanel?.extractSemanticTree()
+        const check = before ? this.checkRequest(before).req : null
+        const known = this.lastTypes
+        this.handleTargetChange(target, topic)
+        if (before && fromLanguage === topic.language && fromStyle.id !== this.currentStylePreset.id) {
+          void this.convertAfterStyleChange(before, check, fromStyle, known)
+        }
+      },
       // 🪦 **`onBranchesChange` 於 2026-09-20 退場**——「選擇範圍」那個下拉
       //    與它背後的 `enabledBranches` 一起拿掉了。見 `core/types.ts`
       //    的 `Topic.components`：漸進揭露整個交給課程。
@@ -2885,6 +2902,50 @@ export class App {
         // 所以在空白工作區換目標，重新整理之後就跑掉了。
         // 🔴 那是既有的缺口（`topicId`／`styleId` 也一樣），而 e2e 才問得出來。
         if (!this._restoringState) this.autoSave()
+  }
+
+  /**
+   * **換了方言之後，程式換成新方言的寫法**（跨語言互轉第一對 C → C++，2026-11-07）。
+   *
+   * 換不換、換哪幾行是語言套件的事（`convertBetweenStyles`）；這裡只做三件：
+   * 向判決要**舊程式**的型別（換不換由它判斷意思會不會變）、把換好的樹寫回兩個投影、說出換了幾行保留幾行。
+   * ⚠️ 判決還沒暖好、拿不到型別時，只換得動純文字那幾行——其餘保留，照實說（P6）。
+   */
+  private async convertAfterStyleChange(
+    before: SemanticNode, check: Parameters<NonNullable<Provider['check']>>[0] | null, from: StylePreset,
+    known: { tree: SemanticNode; nodes: Readonly<Record<string, string>> } | null,
+  ): Promise<void> {
+    const pack = languagePack(this.currentTopic.language)
+    if (!pack?.convertBetweenStyles) return
+    const to = this.currentStylePreset
+    const codeAtSwitch = this.codeView?.getCode() ?? ''
+    // 型別：先用切換前那一次判決的（照形狀對到舊樹，同 spec 215）；對不上（還沒判過、或判完又改了）才另外問。
+    // ⚠️ 另外問的那一次可能被切換後的新一輪判決標成過期（`stale`、沒有型別）——那時只換得動純文字（2026-11-07 瀏覽器驗收抓到：
+    //    同一個操作一次換 1 行、一次換 0 行）
+    let types: Readonly<Record<string, string>> = (known && carryTypes(known.tree, known.nodes, before)) ?? {}
+    const p = provide('verdict').provider
+    if (Object.keys(types).length === 0 && check && p?.check && p.readiness?.().state === 'ready') {
+      try { const a = await p.check(check); if (!a.stale) types = a.types?.nodes ?? {} } catch { types = {} }
+    }
+    // 等判決的時候使用者又換了風格、或改了程式 ⟹ 這一次作廢（換上去會蓋掉他剛做的事）
+    if (this.currentStylePreset !== to || (this.codeView?.getCode() ?? '') !== codeAtSwitch) return
+    const r = pack.convertBetweenStyles(before, from, to, types)
+    if (!r || r.converted + r.kept === 0) return
+    if (r.converted > 0) {
+      // 與套用範例同一條路（`applyTemplate`）：先放進編輯器、再以程式碼為準重畫積木——
+      // ⚠️ 不走 `syncBlocksToCode(r.tree)`：積木還是舊的，下一次「積木 → 程式碼」會把它蓋回去（2026-11-07 瀏覽器驗收抓到）
+      const code = generateCode(r.tree, this.currentTopic.language, to)
+      this.codeView?.setCode(code)
+      await this.syncController?.syncCodeToBlocks(code)
+      // 標頭與 `using namespace std;` 由補丁器照用到的元件補（同一般的產碼）
+      const patched = this.syncController?.patchMissingDependencies(code)
+      if (patched) this.codeView?.setCode(patched)
+      // 重畫時「偵測到少數 printf／scanf」的橫幅會跳出來——而留著的那幾行正是刻意留的（提示裡說了），
+      // 那顆「統一為 cout/cin」也換不動它們 ⟹ 收掉，不重複、不給一顆沒作用的按鈕
+      if (r.kept > 0) dismissStyleActionBar()
+    }
+    const kept = r.kept > 0 ? `；${r.kept} 行保留原本的寫法（換了會變意思）` : ''
+    showToast(`換成 ${this.currentTarget.name} 的寫法：${r.converted} 行${kept}`, 'success')
   }
 
   /**

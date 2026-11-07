@@ -11,11 +11,11 @@ import type { ModuleRegistry } from './std/module-registry'
 import { isStringLiteral } from './lang/node-traits'
 import { isLineBreak } from './lang/node-traits'
 import { ioTraitOf } from './lang/node-traits'
+import { bodySlotsOf } from '../../core/component/traits'
 import { buildPrintFormatted } from '../../components/cpp/print_formatted/lift'
 import { buildInputFormatted } from '../../components/cpp/input_formatted/lift'
-import { buildPrint } from '../../components/cpp/print/lift'
-import { buildInput } from '../../components/cpp/input/lift'
 import { buildInclude } from '../../components/cpp/include/lift'
+import { printfAsCout, scanfAsCin, type ExpressionTypes } from './c-to-cpp'
 import { isIncludeDirective } from './lang/node-traits'
 
 /** A single style exception found in the semantic tree */
@@ -27,13 +27,13 @@ import type { StyleException } from '../../core/types'
 /** Rule definition for matching style exceptions */
 interface StyleExceptionRule {
   /** Check if a semantic node is a style exception */
-  match: (node: SemanticNode, style: CodingStyle) => boolean
+  match: (node: SemanticNode, style: CodingStyle, types: ExpressionTypes) => boolean
   /** Label for dialog display */
   label: (node: SemanticNode) => string
   /** Suggested replacement description */
   suggestion: (node: SemanticNode, style: CodingStyle) => string
   /** Convert the node — returns replacement nodes, or null to remove */
-  convert: (node: SemanticNode, style: CodingStyle) => SemanticNode[] | null
+  convert: (node: SemanticNode, style: CodingStyle, types: ExpressionTypes) => SemanticNode[] | null
 }
 
 /**
@@ -97,29 +97,23 @@ const iostreamHeaderRule: StyleExceptionRule = {
 
 /** cpp_printf block (from toolbox, not from code) in iostream styles */
 const cppPrintfRule: StyleExceptionRule = {
-  match: (node, style) =>
-    matchesRoleAndStyle(node, 'print', 'cstdio') && style.ioPreference === 'iostream',
+  // 🔴 只在換了之後印出來一字不差時才提（2026-11-07，C → C++ 第一刀）：原本只搬引數、丟掉格式字串的文字與換行
+  //    （`printf("%d + %d\n", a, b)` → `cout << a << b`）。型別由判決給，沒有型別時只換得動純文字那幾行。
+  match: (node, style, types) =>
+    matchesRoleAndStyle(node, 'print', 'cstdio') && style.ioPreference === 'iostream' && printfAsCout(node, types) !== null,
   label: () => 'printf(...)',
   suggestion: () => 'cout << ...',
-  convert: (node) => {
-    // Convert cpp_printf to universal print
-    const args = node.slots.args ?? []
-    const values = args.length > 0 ? args : []
-    return [buildPrint(values)]
-  },
+  convert: (node, _style, types) => [printfAsCout(node, types)!],
 }
 
 /** cpp_scanf block (from toolbox, not from code) in iostream styles */
 const cppScanfRule: StyleExceptionRule = {
-  match: (node, style) =>
-    matchesRoleAndStyle(node, 'input', 'cstdio') && style.ioPreference === 'iostream',
+  // 同上：格式裡有逗號、%c 前沒有空白、型別對不上——換了會讀成不一樣，不提
+  match: (node, style, types) =>
+    matchesRoleAndStyle(node, 'input', 'cstdio') && style.ioPreference === 'iostream' && scanfAsCin(node, types) !== null,
   label: () => 'scanf(...)',
   suggestion: () => 'cin >> ...',
-  convert: (node) => {
-    const args = node.slots.args ?? []
-    const values = args.length > 0 ? args : []
-    return [buildInput(values)]
-  },
+  convert: (node, _style, types) => [scanfAsCin(node, types)!],
 }
 
 /** print block (cout-origin) in cstdio-preferred styles */
@@ -249,6 +243,8 @@ export function detectStyleExceptionsForPreset(
   root: SemanticNode,
   preset: StylePreset,
   registry?: ModuleRegistry,
+  /** 運算式的型別（判決給的；printf／scanf 換成串流時照它判斷會不會變意思）。沒有 ＝ 只換得動純文字那幾行 */
+  types: ExpressionTypes = {},
 ): StyleException[] {
   return detectStyleExceptions(root, {
     id: preset.id,
@@ -259,16 +255,25 @@ export function detectStyleExceptionsForPreset(
     indent: preset.indent_size,
     useNamespaceStd: preset.namespace_style === 'using',
     headerStyle: preset.header_style === 'bits' ? 'bits' : 'iostream',
-  }, registry)
+  }, registry, types)
 }
 
 export function detectStyleExceptions(
   root: SemanticNode,
   style: CodingStyle,
   registry?: ModuleRegistry,
+  types: ExpressionTypes = {},
 ): StyleException[] {
   const exceptions: StyleException[] = []
-  walkTree(root, style, exceptions, registry)
+  walkTree(root, style, exceptions, registry, types)
+  // 🔴 程式裡還有留著的 printf／scanf（換了會變意思、或在運算式位置）時，不提「cstdio → iostream」：
+  //    照做會拿掉它們需要的標頭（2026-11-07 瀏覽器驗收：C → C++ 留一行 `printf("%5.2f")`，橫幅仍提議換掉 cstdio）
+  const stillCstdio = (n: SemanticNode): boolean =>
+    (ioTraitOf(n.componentId)?.style === 'cstdio' && !exceptions.some((e) => e.node === n))
+    || Object.values(n.slots ?? {}).some((kids) => kids.some(stillCstdio))
+  if (stillCstdio(root)) {
+    return exceptions.filter((e) => !(isIncludeDirective(e.node.componentId) && e.node.properties.header === 'cstdio'))
+  }
   return exceptions
 }
 
@@ -295,18 +300,23 @@ function walkTree(
   node: SemanticNode,
   style: CodingStyle,
   exceptions: StyleException[],
-  registry?: ModuleRegistry,
+  registry: ModuleRegistry | undefined,
+  types: ExpressionTypes,
+  /** 這一顆在語句位置嗎（父元件宣告的語句槽）。I/O 的轉換只換語句：`while (scanf(...) == 1)` 用到回傳值，
+   *  換成 `cin >> x;` 這個語句會產出編不過的程式（2026-11-07，C → C++ 第一刀順手補） */
+  inStatement = true,
 ): void {
   let matched = false
+  const ioOnlyAsStatement = !inStatement && ioTraitOf(node.componentId) !== undefined
 
   // First try hardcoded rules (header rules, known conversions)
-  for (const rule of RULES) {
-    if (rule.match(node, style)) {
+  for (const rule of ioOnlyAsStatement ? [] : RULES) {
+    if (rule.match(node, style, types)) {
       exceptions.push({
         node,
         label: rule.label(node),
         suggestion: rule.suggestion(node, style),
-        convert: () => rule.convert(node, style),
+        convert: () => rule.convert(node, style, types),
       })
       matched = true
       break // One exception per node
@@ -333,9 +343,10 @@ function walkTree(
   }
 
   // Recurse into slots
-  for (const slots of Object.values(node.slots)) {
-    for (const child of slots) {
-      walkTree(child, style, exceptions, registry)
+  const bodies = new Set(bodySlotsOf(node.componentId))
+  for (const [slot, kids] of Object.entries(node.slots)) {
+    for (const child of kids) {
+      walkTree(child, style, exceptions, registry, types, bodies.has(slot))
     }
   }
 }
