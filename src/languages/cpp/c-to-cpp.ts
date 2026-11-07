@@ -21,7 +21,7 @@
  * （`printf("%d + %d\n", a, b)` 變成 `cout << a << b`）——那條也改走這裡。
  */
 import type { SemanticNode } from '../../core/types'
-import { bodySlotsOf, ioTraitOf, isAddressable } from '../../core/component/traits'
+import { bodySlotsOf, ioTraitOf, isAddressable, componentTraits } from '../../core/component/traits'
 import { printfOf, scanfOf } from './printf-types'
 import { normalizeHeader } from './header-aliases'
 import { isIncludeDirective } from './lang/node-traits'
@@ -29,6 +29,7 @@ import { buildPrint } from '../../components/cpp/print/lift'
 import { buildInput } from '../../components/cpp/input/lift'
 import { buildEndl } from '../../components/cpp/endl/lift'
 import { buildLiteralString } from '../../components/cpp/literal_string/lift-strategy'
+import { isUncastMalloc, castMallocTo } from '../../components/cpp/malloc/lift'
 
 /** 每個運算式的型別（Cella `types().nodes`，鍵是語意樹節點 id） */
 export type ExpressionTypes = Readonly<Record<string, string>>
@@ -129,11 +130,43 @@ export interface CToCppResult {
 
 /**
  * 整棵樹：語句位置的 printf／scanf 能換就換。**不改原樹**（回傳新樹）。
+ * `malloc` 沒有轉型（`int *a = malloc(n);`）：C 會把 `void*` 隱含轉成 `int*`，C++ 不會 ⟹ 補上轉型 `(int*)`。
+ *   要轉成什麼由**接收它的那一邊**說：宣告的型別（`type` ＋ 元件宣告的 `typeSuffix`），或指定的左邊（Cella 給的型別）。
+ *   問不出來的照原樣留著（C++ 判決會說不收——那是誠實的）。
  * 標頭：原文寫的 C 標頭換成 C++ 的名字（`<stdio.h>` → `<cstdio>`）；新用到的（`<iostream>`）由自動補標頭照元件補（`auto-include.ts`）。
  */
 export function convertCToCpp(root: SemanticNode, types: ExpressionTypes): CToCppResult {
   let converted = 0
   let kept = 0
+  const pointerType = (t: string | undefined): string | null => {
+    const c = t?.replace(/\s+/g, '').trim()
+    return c && c.endsWith('*') && c !== 'void*' ? c : null
+  }
+  const declaredType = (d: SemanticNode): string | undefined => {
+    if (typeof d.properties.type !== 'string') return undefined
+    const suffix = componentTraits(d.componentId)?.typeSuffix
+    return `${d.properties.type}${typeof suffix === 'string' ? suffix : ''}`
+  }
+  // 名字 → 宣告的型別：指定的左邊是一個左值，Cella 的型別表不一定有它（實測 `s = malloc(4)` 的 `s` 沒有）。
+  // ⚠️ 不分作用域（同名的遮蔽取第一個）——問錯的代價是補錯轉型，而兩邊判決的護欄會抓到
+  const declared = new Map<string, string>()
+  const collect = (n: SemanticNode): void => {
+    const t = declaredType(n)
+    if (t && typeof n.properties.name === 'string' && !declared.has(n.properties.name)) declared.set(n.properties.name, t)
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
+  }
+  collect(root)
+  /** 接收 `n` 的槽要的型別：宣告的初值 → 宣告的型別；指定的值 → 左邊的型別（判決給的，沒有就查宣告） */
+  const receiverType = (parent: SemanticNode, slot: string): string | null => {
+    if (slot === 'initializer') return pointerType(declaredType(parent))
+    if (slot === 'value') {
+      const target = parent.slots.target?.[0]
+      if (!target) return null
+      const byName = typeof target.properties.name === 'string' ? declared.get(target.properties.name) : undefined
+      return pointerType(types[target.id]) ?? pointerType(byName)
+    }
+    return null
+  }
   const visit = (n: SemanticNode): SemanticNode => {
     if (isIncludeDirective(n.componentId) && typeof n.properties.header === 'string') {
       const header = normalizeHeader(n.properties.header).replace(/^<|>$/g, '')
@@ -149,6 +182,11 @@ export function convertCToCpp(root: SemanticNode, types: ExpressionTypes): CToCp
           if (made) { converted++; return made }
           kept++
           return kid
+        }
+        if (isUncastMalloc(kid)) {
+          const t = receiverType(n, slot)
+          if (t) { converted++; return visit(castMallocTo(kid, t)) }
+          kept++
         }
         return visit(kid)
       })

@@ -132,6 +132,15 @@ describe('C → C++：換了會變意思的，保留', () => {
     await sameVerdict(src, cpp)
   })
 
+  it('🔴 不轉型的 malloc：C 合法、C++ 不收 ⟹ 換成 C++ 時補上轉型（宣告與指定兩種）', async () => {
+    const src = '#include <stdio.h>\n#include <stdlib.h>\nint main() {\n    int n = 3;\n    int *a = malloc(n * sizeof(int));\n    char *s;\n    s = malloc(4);\n    for (int i = 0; i < n; i++) {\n        a[i] = i * i;\n    }\n    s[0] = \'o\';\n    s[1] = \'k\';\n    s[2] = 0;\n    printf("%d %s\\n", a[2], s);\n    free(a);\n    free(s);\n    return 0;\n}\n'
+    const { cpp, converted } = await toCpp(src)
+    expect(cpp).toContain('int* a = (int*)malloc(n * sizeof(int));')
+    expect(cpp).toContain('s = (char*)malloc(4);')
+    expect(converted).toBe(3)
+    await sameVerdict(src, cpp)
+  })
+
   it('原文寫的 C 標頭換成 C++ 的名字', async () => {
     const src = '#include <stdio.h>\n#include <string.h>\nint main() {\n    char s[10] = "abc";\n    printf("%d\\n", (int)strlen(s));\n    printf("%.1f\\n", 2.5);\n    return 0;\n}\n'
     const { cpp } = await toCpp(src)

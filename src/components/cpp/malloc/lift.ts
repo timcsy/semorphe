@@ -41,3 +41,13 @@ export function liftMallocArg(
 
 /** 這顆由共用檔**呼叫**建構子，不是被問判別。 */
 export function registerLift(): void {}
+
+/** 沒有轉型的 malloc 嗎（`void*`；舊的樹寫 `void`）——C → C++ 要替它補轉型（`src/languages/cpp/c-to-cpp.ts`）。 */
+export function isUncastMalloc(n: SemanticNode): boolean {
+  return n.componentId === 'cpp:malloc' && (n.properties.type === 'void*' || n.properties.type === 'void')
+}
+
+/** 同一顆 malloc，轉型成 `type`（不改原節點） */
+export function castMallocTo(n: SemanticNode, type: string): SemanticNode {
+  return { ...n, properties: { ...n.properties, type } }
+}
