@@ -7,11 +7,13 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const type = node.properties.type ?? 'int*'
       const sizeNodes = node.slots.size ?? []
       const size = sizeNodes.length > 0 ? generateExpression(sizeNodes[0], ctx) : '1'
+      // 沒有轉型（`void*`；舊的樹寫 `void`）：照寫 `malloc(…)`——C 會隱含轉成目標指標，C++ 不會（那由判決說）
+      const cast = type === 'void*' || type === 'void' ? '' : `(${type})`
       // If sizeof_type is explicitly set (from block), use structured formula
       if (node.properties.sizeof_type) {
-        return `(${type})malloc(${size} * sizeof(${node.properties.sizeof_type}))`
+        return `${cast}malloc(${size} * sizeof(${node.properties.sizeof_type}))`
       }
       // From lifter: size child is the full malloc argument expression
-      return `(${type})malloc(${size})`
+      return `${cast}malloc(${size})`
     })
 }

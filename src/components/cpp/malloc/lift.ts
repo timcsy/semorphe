@@ -5,6 +5,7 @@
  * **節點的形狀**是這顆元件的知識，在這裡。
  *
  * ⚠️ `type` 是**轉型型別**（指標），不是元素型別——產生器寫的是 `(${type})malloc(…)`。
+ * `void*` ＝ **沒有轉型**（`int *a = malloc(n);`，C 的慣用寫法；malloc 本來就回傳 `void*`）——產生器不寫轉型。
  */
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'

@@ -5,6 +5,7 @@
   "C_MALLOC_TYPE_FLOAT": "float* (decimal)",
   "C_MALLOC_TYPE_DOUBLE": "double* (precise decimal)",
   "C_MALLOC_TYPE_CHAR": "char* (character)",
+  "C_MALLOC_TYPE_NONE": "no cast (void*)",
   "C_MALLOC_SIZEOF_TYPE_INT": "int (integer)",
   "C_MALLOC_SIZEOF_TYPE_FLOAT": "float (decimal)",
   "C_MALLOC_SIZEOF_TYPE_DOUBLE": "double (precise decimal)",
