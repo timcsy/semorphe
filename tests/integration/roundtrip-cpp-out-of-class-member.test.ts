@@ -10,7 +10,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { expectCellaOut, knownCellaGap } from '../helpers/cella-run'
+import { expectCellaOut } from '../helpers/cella-run'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import competitive from '../../src/languages/cpp/styles/competitive.json'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -304,15 +304,13 @@ describe('round-trip：類別外定義成員函式', () => {
       expect(shape(lift(out))).toEqual(shape(t))
     })
 
-    // 🟡 rt_2 的 `new Node{v, head}`：引數已在 328 升格成運算式槽；剩下的是**大括號初始化的形狀**——Cella 的 eNew 對聚合體判 ubUninit，
-    //    與 Cella 談定新增 `eNewList { n, t, xs }`（2026-11-07），那一版之前 formalize 照實回 unknown。Cella 發布、接上之後這一支會紅 → 拿掉包裝。
+    // 🟢 rt_2 的 `new Node{v, head}`：第 333 刀接上 Cella 的 eNewList（2026-11-07），原本照實回 unknown
     const run = async (): Promise<void> => {
       await expectCellaOut(p.code, p.expected)
       await expectCellaOut(generateCode(lift(p.code), 'cpp', competitive as unknown as StylePreset), p.expected)
     }
     it(`★ ${p.id}：Cella 跑出 clang++ 的輸出——原樣與 competitive 風格各一次`, async () => {
-      if (p.id === 'rt_2') await knownCellaGap(/大括號初始化：聚合體/, run)
-      else await run()
+      await run()
     })
   }
 

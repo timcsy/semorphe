@@ -9,14 +9,11 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     if (f.one(n, 'size')) return f.k('eNewArr', { n: n.id, t, len: f.exprOf(n, 'size'), zero: n.properties?.valueInit === 'true' || n.properties?.brace === 'true' })
     // `new T(a, b)`／`new T{a, b}`：引數是運算式槽（328，原本是文字屬性、只能回 unknown）
     const args = (n.slots?.args ?? []).map(a => f.expr(a))
-    // 🔴 大括號＋引數（`new Node{v, head}`）先照實回 unknown（2026-11-07，328 量到）：eNew 送給沒有自訂建構子的類別（聚合體）時
-    //    Cella 判 ubUninit——`new Node{1, h}`、`new Node()`、`new Node(n)` 三種都是；有建構子的 `new P{5}` 是 accept。
-    //    從 unknown 變成誤判 reject 比不送更糟（P6），所以這一種等 Cella 回覆聚合體怎麼送；已附最小重現回報
-    if (args.length > 0 && n.properties?.brace === 'true') return f.miss(n, '`new T{…}` 的大括號初始化：聚合體的形狀還沒與 Cella 對好（eNew 對聚合體判 ubUninit）')
+    // 大括號（`new Node{v, head}`、`new T{}`）：Cella 0.1.202611070815 起的 `eNewList { n, t, xs }`——xs 是宣告用的大括號初始化（iE、巢狀的 iL），
+    //    照 [dcl.init.list] 判（聚合體逐成員、有建構子的找建構子、空的值初始化）。第 333 刀：在此之前大括號帶引數照實回 unknown（eNew 對聚合體判 ubUninit）
+    if (n.properties?.brace === 'true') return f.k('eNewList', { n: n.id, t, xs: (n.slots?.args ?? []).map((c) => f.initOf(c)) })
     // 小括號：同 cpp_to_tree.py 的 eNew（n／t／args，引數由 construct_arguments 攤平）
     if (args.length > 0) return f.k('eNew', { n: n.id, t, args })
-    // `new T{}`（空的大括號）＝值初始化，同 `new T()`
-    if (n.properties?.brace === 'true') return f.k('eNew', { n: n.id, t, args: [] })
     // `new T()`（空括號）＝值初始化：送空的引數串列；`new T`＝預設初始化：null（cpp_to_tree.py 同形）
     return f.k('eNew', { n: n.id, t, args: n.properties?.valueInit === 'true' ? [] : null })
   })

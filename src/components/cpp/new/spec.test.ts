@@ -13,7 +13,7 @@ import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { generateCode } from '../../../core/projection/code-generator'
-import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode, StylePreset } from '../../../core/types'
 import apcs from '../../../languages/cpp/styles/apcs.json'
@@ -88,14 +88,17 @@ describe('cpp:new 自證測', () => {
     await run('struct P { int x, y; P(int a, int b) : x(a), y(b) {} };\nint main() { int k = 2; P* p = new P(k + 1, k * 5); cout << p->x << " " << p->y; delete p; return 0; }', '3 10')
   })
 
-  // 🟡 聚合體的 `new Node{…}`：Cella 的 eNew 對沒有自訂建構子的類別判 ubUninit（`new Node()`、`new Node(n)` 也是），
-  //    所以 formalize 先照實回 unknown、已附最小重現回報 Cella；修好那天這支會紅——拿掉 knownCellaGap
-  it('執行：聚合體的大括號初始化（鏈結串列）——等 Cella', async () => {
-    await knownCellaGap(/聚合體/, () => run('struct Node { int v; Node* next; };\nint main() { Node* h = nullptr; for (int i = 1; i <= 3; i++) h = new Node{i, h}; for (Node* p = h; p; p = p->next) cout << p->v; return 0; }', '321'))
+  // 🟢 聚合體的 `new Node{…}`：Cella 0.1.202611070815 的 eNewList（第 333 刀轉正）
+  it('執行：聚合體的大括號初始化（鏈結串列）', async () => {
+    await run('struct Node { int v; Node* next; };\nint main() { Node* h = nullptr; for (int i = 1; i <= 3; i++) h = new Node{i, h}; for (Node* p = h; p; p = p->next) cout << p->v; return 0; }', '321')
   })
 
-  it('執行：有建構子的類別用大括號帶引數（new P{5}）——同樣先回 unknown（formalize 分不出聚合體）', async () => {
-    await knownCellaGap(/聚合體/, () => run('struct P { int v; P(int a) : v(a) {} };\nint main() { P* h = new P{5}; cout << h->v; delete h; return 0; }', '5'))
+  it('執行：有建構子的類別用大括號帶引數（new P{5}）——eNewList 照 [dcl.init.list] 找建構子', async () => {
+    await run('struct P { int v; P(int a) : v(a) {} };\nint main() { P* h = new P{5}; cout << h->v; delete h; return 0; }', '5')
+  })
+
+  it('執行：`new Node()` 值初始化（成員歸零）——Cella 0.1.202611070815 修好的誤判（原本判 ubUninit）', async () => {
+    await run('struct Node { int v; Node* next; };\nint main() { Node* h = new Node(); cout << h->v << (h->next == nullptr); delete h; return 0; }', '01')
   })
 
   it('執行：純量的建構引數（new int(7)）', async () => {
