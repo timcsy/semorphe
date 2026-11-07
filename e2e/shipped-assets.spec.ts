@@ -61,7 +61,7 @@
  *   **那時要擴充這支的操作，不是放寬判準。**
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, treeReady } from './helpers'
+import { useAsSource, treeReady, appReady } from './helpers'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -122,7 +122,7 @@ test('★ 出貨的每一個 wasm，都要有人真的去要它', async ({ page 
     await page.evaluate(() => (window as never as { __app: { currentTopic: { language: string } } }).__app.currentTopic.language),
     '🔴 按了選單而語言沒變 → 操作到錯的控制項了（第一版就是這樣）',
   ).toBe('python')
-  await page.waitForTimeout(1500)
+  await appReady(page)
   await page.evaluate(() =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } })
       .__app.codeView.setCode('print("hi")'))

@@ -33,6 +33,11 @@ export interface SyntaxGap {
    * 那一段的錯誤消失了才回報——而它仍然是「可能」，文案照實這麼說（規則 `SYNTAX_GAP_LIKELY`）。
    */
   likely?: boolean
+  /**
+   * **一串放錯地方的敘述**（2026-11-07）：寫在檔案範圍、而包進函式本體就合法——規則 `SYNTAX_OUTSIDE_FUNCTION`，`missing` 是空字串。
+   * 這是量出來的（重新剖析沒有錯誤），不是猜，所以不標 likely。
+   */
+  outsideFunction?: boolean
 }
 
 export interface Diagnostic {
@@ -302,7 +307,7 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
           out.push({
             nodeId: n.id,
             severity: 'error',
-            rule: g.likely ? 'SYNTAX_GAP_LIKELY' : 'SYNTAX_GAP',
+            rule: g.outsideFunction ? 'SYNTAX_OUTSIDE_FUNCTION' : g.likely ? 'SYNTAX_GAP_LIKELY' : 'SYNTAX_GAP',
             params: { snippet, missing: g.missing },
             at: { line: g.line, column: g.column },
             source: 'parser',

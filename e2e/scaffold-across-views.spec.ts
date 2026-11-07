@@ -62,7 +62,7 @@
  * - **不檢測主控台／變數面板**——它們投影的是**執行**，不是程式的結構。
  */
 import { test, expect } from '@playwright/test'
-import { useAsSource, freshApp, appReady, treeReady, openFlowTab, setScaffoldMode as pickScaffold } from './helpers'
+import { useAsSource, freshApp, appReady, treeReady, openFlowTab, setScaffoldMode as pickScaffold, blocksSettled } from './helpers'
 
 const PROGRAM =
   '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "Hi" << endl;\n    return 0;\n}\n'
@@ -203,7 +203,7 @@ test('★ `ghost` 的骨架**拖得動**，而它的接法鎖著', async ({ page
   await page.mouse.down()
   await page.mouse.move(p0!.x + 160, p0!.y + 120, { steps: 15 })
   await page.mouse.up()
-  await page.waitForTimeout(1500)
+  await blocksSettled(page)
   const p1 = await nodeAt('cpp:func_def')
   expect(p1!.tf, '🔴 淡的節點拖不動了——而使用者要的是「能移動，只是關係不能變」').not.toBe(p0!.tf)
   // ★ 而**程式一個字都沒變**（位置在流程視圖上只是排版）
@@ -218,7 +218,7 @@ test('★ `ghost` 的骨架**拖得動**，而它的接法鎖著', async ({ page
   await page.mouse.down()
   await page.mouse.move(to!.x, to!.y, { steps: 20 })
   await page.mouse.up()
-  await page.waitForTimeout(1500)
+  await blocksSettled(page)
 
   expect(await codeNow(), '🔴 骨架被搬走了——`ghost` 鎖的就是這件事').toBe(before)
   // ★ 而且**它要說出理由**——默默不動與壞掉長得一樣

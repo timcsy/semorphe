@@ -54,7 +54,7 @@
  * > ——不是「刪除與還原都對」。**
  */
 import { test, expect } from '@playwright/test'
-import { showFlowSlot, useAsSource, freshApp, appReady, treeReady, flowReady } from './helpers'
+import { showFlowSlot, useAsSource, freshApp, appReady, treeReady, flowReady, editsSettled, frames } from './helpers'
 
 const PROG = 'int main() {\n    int total = 1;\n    cout << total << endl;\n    return 0;\n}\n'
 
@@ -177,7 +177,9 @@ test('★ 語句線：點線選它，✕ 才刪——而刪掉的是【裡面】
 
   // ① 點線＝**選取**，程式不得改動
   await page.mouse.click(at!.x, at!.y)
-  await page.waitForTimeout(800)
+  // 負向（程式不得改動）：等同步靜下來、再給幾個畫格（取代固定睡 0.8 秒）
+  await editsSettled(page)
+  await frames(page, 4)
   expect(
     await codeNow(page),
     '🔴 點一下線就把程式改掉了——那在觸控上會誤刪',
@@ -189,8 +191,7 @@ test('★ 語句線：點線選它，✕ 才刪——而刪掉的是【裡面】
 
   // ② 按 Delete 鍵刪掉選取的那一個
   await page.locator('.flow-canvas').press('Delete')
-  await page.waitForTimeout(1800)
-  expect(await codeNow(page), '🔴 Delete 鍵沒有刪掉選取的那一句').not.toContain('cout')
+  await expect.poll(() => codeNow(page), { message: '🔴 Delete 鍵沒有刪掉選取的那一句' }).not.toContain('cout')
 
   // ③ 還原
   await page.locator('#undo-btn').click()

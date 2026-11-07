@@ -9,7 +9,7 @@
  * ```
  */
 import { test, expect, type Page } from '@playwright/test'
-import { showFlowSlot, freshApp, appReady, useAsSource, treeReady, flowReady } from './helpers'
+import { showFlowSlot, freshApp, appReady, useAsSource, treeReady, flowReady, editsSettled, frames } from './helpers'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const PROG = 'int main() {\n    int total = 1;\n    for (int i = 0; i < 3; i++) {\n        total = total * 2;\n        cout << total << endl;\n    }\n    return 0;\n}\n'
@@ -33,7 +33,8 @@ async function setCode(page: Page, code: string): Promise<void> {
     a.codeView.setCode(c)
     await a.syncController.syncCodeToBlocks(a.codeView.getCode())
   }, code)
-  await page.waitForTimeout(400)
+  await editsSettled(page)
+  await frames(page, 2)
 }
 
 async function flowMenu(page: Page, label: RegExp, collapsed: boolean): Promise<void> {

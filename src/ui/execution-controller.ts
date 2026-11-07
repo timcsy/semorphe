@@ -67,6 +67,7 @@ export class ExecutionController {
   private getBlocksDirty: () => boolean
   /** 見建構參數的 `beforeRun`。⚠️ 可省略——沒有它時行為與從前逐字相同。 */
   private beforeRun?: (tree: SemanticNode) => Promise<void>
+  private flushPendingEdits?: () => Promise<void>
   private syncBeforeRun: () => void
 
   private static readonly ANIMATE_DELAY: Record<string, number> = {
@@ -134,12 +135,19 @@ export class ExecutionController {
        * 🟢 沒注入的話什麼都不會發生——與加入這個機制之前逐字相同。
        */
       beforeRun?: (tree: SemanticNode) => Promise<void>
+      /**
+       * **開跑之前，把還沒落地的程式碼編輯做完**（2026-11-07，e2e 換成等條件之後量到的競態）：
+       * 程式碼改了而去抖（800ms）或同步還沒做完時按下執行，拿到的是**舊的那一棵**——學生跑到的不是他看到的程式。
+       * 沒注入的話照舊（測試裡建構時不一定有）。
+       */
+      flushPendingEdits?: () => Promise<void>
     },
   ) {
     this.panels = panels
     this.currentBoard = opts.currentBoard
     this.formalContext = opts.formalContext
     this.beforeRun = opts.beforeRun
+    this.flushPendingEdits = opts.flushPendingEdits
     this.getBlocksDirty = opts.getBlocksDirty
     this.syncBeforeRun = opts.syncBeforeRun
     this.bus = opts.bus
@@ -340,6 +348,7 @@ export class ExecutionController {
   }
 
   private async start(mode: 'run' | 'debug' | 'step' | 'animate', speed: ExecutionSpeed = 'medium', replay: readonly string[] = []): Promise<void> {
+    await this.flushPendingEdits?.()
     if (this.getBlocksDirty() && (await this.askSyncBeforeRun())) this.syncBeforeRun()
     const tree = this.panels.syncController?.getCurrentTree()
     if (!tree) return

@@ -22,6 +22,7 @@
  * > 等於不存在——而它不會報錯，它只是安靜。**
  */
 import { test, expect, type Page } from '@playwright/test'
+import { editsSettled, appReady, frames } from './helpers'
 
 async function open_(page: Page, query: string): Promise<void> {
   await page.goto(query)
@@ -33,7 +34,8 @@ async function open_(page: Page, query: string): Promise<void> {
   await page.waitForFunction(
     () => Boolean((window as unknown as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 60_000 })
-  await page.waitForTimeout(4500)
+  // init 做完才算起來（後段會把編輯器寫回預設程式——第 392 刀）；取代固定睡幾秒
+  await appReady(page)
 }
 
 const bar = (page: Page): Promise<{ shown: boolean; text: string }> => page.evaluate(() => {
@@ -71,12 +73,13 @@ test('★ 他已經動手做東西了 → 不要插嘴', async ({ page }) => {
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('cout << "hi";', { delay: 12 })
-  await page.waitForTimeout(5000)
+  await editsSettled(page)
   await page.evaluate(() => {
     const app = (window as unknown as { __app: { markOutOfScopeBlocks?: () => void } }).__app
     app.markOutOfScopeBlocks?.()
   })
-  await page.waitForTimeout(1200)
+  // 「沒有跳出來」是負向的——給它幾個畫格的機會，而不是固定睡 1.2 秒
+  await frames(page, 6)
   const b = await bar(page)
   expect(b.text, '🔴 他正在寫東西而它跳出來喊「第一次來？」').not.toContain('第一次來')
 })
@@ -105,7 +108,9 @@ test('★ 「打開課程」開的是課文那一頁，不是在編輯器裡換�
     page.waitForEvent('popup', { timeout: 15_000 }).catch(() => null),
     page.locator('.lesson-nudge-btn.primary').click(),
   ])
-  await page.waitForTimeout(1500)
+  // 下面驗的是「編輯器【沒有】被切成那一課」（負向）——等新分頁載完、再給幾個畫格（取代固定睡 1.5 秒）
+  await popup?.waitForLoadState('domcontentloaded').catch(() => {})
+  await frames(page, 6)
 
   // 🔴 它該把人帶到【課文】，而不是把編輯器切成那一課
   const after = await page.evaluate(() => (window as unknown as {

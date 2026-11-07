@@ -51,14 +51,13 @@ async function saveThenReload(page: Page, mutate: (s: Record<string, unknown>) =
   await expect(page.locator('.blocklyWorkspace, .injectionDiv').first()).toBeVisible({ timeout: 30_000 })
   // 🔴 init 做完才餵程式碼（第 392 刀，見 `src/main.ts` 的 `__appReady`）
   await page.waitForFunction(() => Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
-  await page.waitForTimeout(3000)
 
   await page.evaluate((code) => (window as never as {
     __app: { codeView: { setCode(c: string): void } }
   }).__app.codeView.setCode(code), PROGRAM)
   await page.locator('#sync-menu-btn').click()
   await page.locator('.quick-pick-item').filter({ hasText: /以此為準：程式碼/ }).first().click()
-  await page.waitForTimeout(4000)
+  await expect.poll(() => blockCount(page), { timeout: 30_000 }).toBeGreaterThan(3)
 
   // ★ 入口條件——存之前畫布上真的有東西
   expect(await blockCount(page), '🔴 存之前畫布是空的 → 下面驗的是別的東西').toBeGreaterThan(3)
@@ -70,7 +69,7 @@ async function saveThenReload(page: Page, mutate: (s: Record<string, unknown>) =
     const app = (window as never as { __app: Record<string, unknown> }).__app
     ;(app.autoSave as () => void).call(app)
   })
-  await page.waitForTimeout(1000)
+  // （`autoSave` 是同步寫 localStorage 的——原本這裡多睡 1 秒）
   const changed = await page.evaluate((fn) => {
     const raw = localStorage.getItem('semorphe-state')
     if (raw === null) return false

@@ -9,7 +9,7 @@
  * ⚠️ 自動化瀏覽器不自動暖機——這裡自己呼叫 `warmUpChecker()`。
  */
 import { test, expect } from '@playwright/test'
-import { openLessonLink, skipPredictionIfAsked } from './helpers'
+import { openLessonLink, skipPredictionIfAsked, editsSettled } from './helpers'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 test('判決載好時，判題用題目的測資——學生打了別的輸入也判得對，並說出依據', async ({ page }) => {
@@ -25,7 +25,7 @@ test('判決載好時，判題用題目的測資——學生打了別的輸入�
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type('int x;\ncin >> x;\ncout << "你打的是 " << x << endl;', { delay: 10 })
-  await page.waitForTimeout(3000)
+  await editsSettled(page)
   await page.locator('#run-btn').click()
   await skipPredictionIfAsked(page)
   const box = page.locator('.console-inline-input')

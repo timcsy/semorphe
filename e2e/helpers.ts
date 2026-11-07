@@ -272,6 +272,30 @@ export async function useAsSource(page: Page, which: '程式碼' | '積木'): Pr
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/**
+ * **讓畫面再畫 n 幀**——驗「某件事【沒有】發生」時用（例：切分頁之後反白還在）。
+ *
+ * ⚠️ 「沒有發生」沒有一個會變成真的條件可等；固定秒數是照閒置機器校準的。
+ * 而要排除的那些動作（點外面就取消選取、重畫）都在事件當下或下一幀內發生——等兩幀就夠，而且不看機器有多忙。
+ */
+export async function frames(page: Page, n = 2): Promise<void> {
+  await page.evaluate((k) => new Promise<void>((resolve) => {
+    let left = k
+    const tick = (): void => { if (--left <= 0) resolve(); else requestAnimationFrame(tick) }
+    requestAnimationFrame(tick)
+  }), n)
+}
+
+/**
+ * **拖完積木、落定了**：Blockly 的變更事件走 `requestAnimationFrame → setTimeout(0)`，之後同步積木→程式碼——
+ * 畫三幀、等同步閒置、再畫兩幀。取代「拖完睡 1.5～2.8 秒」。
+ */
+export async function blocksSettled(page: Page): Promise<void> {
+  await frames(page, 3)
+  await editsSettled(page)
+  await frames(page, 2)
+}
+
 /** app 起來了：面板在、目標釘好了、樹存在。 */
 export async function appReady(page: Page): Promise<void> {
   await page.waitForFunction(() => {
@@ -293,6 +317,26 @@ export async function treeHas(page: Page, componentId: string): Promise<void> {
       !!n && (n.componentId === id || Object.values(n.slots ?? {}).some((b) => (b ?? []).some((c) => walk(c as never))))
     return walk((window as any).__app?.syncController?.currentTree)
   }, componentId, { timeout: 30_000 })
+}
+
+/**
+ * **打完字之後，那份程式碼真的同步進樹了**——取代「打字 ＋ `waitForTimeout(2500～3000)`」（2026-11-07，測試執行資源有限③）。
+ *
+ * 打字的路徑（`src/ui/app.ts` 的 `codeView.onChange`）：Monaco 的變更事件是同步的 → 排一個 800ms 的去抖
+ * （`codeToBlocksTimer`）→ 到點才 `syncCodeToBlocks`（`syncController.syncing` 是它的互斥；同步中又打字會記在
+ * `_codeChangedWhileSyncing`、做完再補一輪）。所以「落地了」＝ 去抖沒在等、沒有正在轉、互斥放開、沒有待補的那一輪。
+ *
+ * ⚠️ 它問的是「沒有事情在排隊」，不是「有東西了」——打字之後立刻問也不會空過：
+ *    `keyboard.type` 回來時去抖已經排好了（變更事件同步觸發）。
+ * ⚠️ 自動同步被暫停時（`autoSync` 為 false）不會排去抖——那時這支立刻成立，因為本來就沒有東西要等。
+ * ⚠️ 不看 `checkTimer`（判決的去抖）：它觸發之後不會被設回 null，拿它當條件會永遠等不到。
+ */
+export async function editsSettled(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const a = (window as any).__app
+    return Boolean(a) && a.codeToBlocksTimer == null && !a._codeToBlocksInProgress && !a._codeChangedWhileSyncing
+      && !a.syncController?.syncing
+  }, undefined, { timeout: 30_000 })
 }
 
 /** 語義樹**真的有內容**了——`useAsSource` 回來時同步還在跑。 */
@@ -450,6 +494,22 @@ export async function flowReady(page: Page): Promise<void> {
  */
 export async function runAndSettle(page: Page): Promise<void> {
   await page.locator('#run-btn').click()
+  await consoleSettled(page)
+}
+
+/**
+ * 主控台【跑完】了（完畢／錯誤）——餵完輸入之後用。
+ * ⚠️ 不能用 `consoleSettled`：餵輸入的當下狀態還是「等待輸入」，那一支會立刻成立而什麼都沒等到。
+ * ⚠️ 狀態列在按下執行**之前**就可能是上一輪的「錯誤」——那時這一支也會立刻成立。要等的若是「這一輪印出了某個字」，直接等那個字（lesson-pins 的版面那支踩到）。
+ */
+export async function consoleFinished(page: Page): Promise<void> {
+  await expect
+    .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
+    .toMatch(/程式執行完畢|錯誤|Error|Completed/)
+}
+
+/** 主控台停下來了（完畢／錯誤／等待輸入）——按執行的那一步自己做時用（例如中間要先處理預測問句） */
+export async function consoleSettled(page: Page): Promise<void> {
   await expect
     .poll(() => page.locator('.console-status').innerText(), { timeout: 20_000 })
     .toMatch(/程式執行完畢|錯誤|Error|Completed|等待輸入|Waiting/)
@@ -526,6 +586,19 @@ export async function pickControl(page: Page, controlId: string, value: string):
   await page.locator(`.quick-pick-item[data-value="${value}"]`).first().click()
   await expect(page.locator('.quick-pick-overlay')).toHaveCount(0, { timeout: 15_000 })
   await expect(page.locator('.injectionDiv').first()).toBeVisible({ timeout: 30_000 })
+}
+
+/**
+ * **切題目，並等 app 真的換到那一題**（`__app.currentTaskId`；空字串＝純練習）。
+ *
+ * ⚠️ 不能用 `pickControl`：它等「畫布可見」，而題目宣告 `view: 'code'` 時專注會切到程式碼、積木畫布本來就收起來
+ * ——那個條件永遠等不到（2026-11-07，固定等待換成等條件的第一刀當場紅了兩支）。
+ */
+export async function pickTask(page: Page, id: string): Promise<void> {
+  await page.locator('#status-controls .status-item-btn[data-control-id="task"]').click()
+  await page.locator(`.quick-pick-item[data-value="${id}"]`).first().click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0, { timeout: 15_000 })
+  await page.waitForFunction((want) => ((window as any).__app?.currentTaskId ?? '') === want, id, { timeout: 30_000 })
 }
 
 /**

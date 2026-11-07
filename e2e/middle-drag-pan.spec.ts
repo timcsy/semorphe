@@ -13,7 +13,7 @@
  * > **一個手勢的測試如果自己造事件，它驗的是接線，不是那個手勢。**
  */
 import { test, expect, type Page } from '@playwright/test'
-import { freshApp, typeAndFormat } from './helpers'
+import { freshApp, typeAndFormat, blocksSettled, frames } from './helpers'
 
 const CODE = 'int main() { int x = 1; int y = 2; int z = 3; return 0; }'
 
@@ -62,7 +62,7 @@ test('★ 中鍵壓在積木上拖 → 畫面跟著走，而每一顆積木都�
   await page.mouse.down({ button: 'middle' })
   await page.mouse.move(from.x + 120, from.y + 50, { steps: 20 })
   await page.mouse.up({ button: 'middle' })
-  await page.waitForTimeout(300)
+  await frames(page, 3)
 
   // 🔴 位移要**逐字等於**手走的距離——不然是別的東西在動（縮放、捲軸、慣性）。
   const [bx, by] = delta(beforeCanvas)
@@ -91,7 +91,7 @@ test('★ 左鍵拖積木照樣拖得動——接管左鍵等於把積木變成�
   await page.mouse.down()
   await page.mouse.move(from.x + 140, from.y + 260, { steps: 20 })
   await page.mouse.up()
-  await page.waitForTimeout(1500)
+  await blocksSettled(page)
 
   expect(await allBlockTransforms(page)).not.toBe(beforeBlocks)
   // ⚠️ 而畫面**不該**跟著走：那會是「一次動作被算了兩次」。

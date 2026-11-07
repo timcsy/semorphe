@@ -34,7 +34,7 @@
  *   而那是一個還沒設計的格子（使用者：「可能要做更多的設計」）。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource, appReady, treeReady, setScaffoldMode as pickScaffold } from './helpers'
+import { freshApp, useAsSource, appReady, treeReady, setScaffoldMode as pickScaffold, blocksSettled, frames } from './helpers'
 
 const PROGRAM =
   '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "hi" << endl;\n    return 0;\n}\n'
@@ -283,7 +283,7 @@ test('★ `ghost`：拖走學生的積木，鷹架黏在原地（而學生的整
   await page.mouse.down()
   await page.mouse.move(from!.x + 140, from!.y + 340, { steps: 20 })
   await page.mouse.up()
-  await page.waitForTimeout(2800)
+  await blocksSettled(page)
 
   const after = await codeOf(page)
   // 🔴 兩塊 cout 都出去了
@@ -326,7 +326,7 @@ test('★ `ghost`：積木插得進 `main` 與 `return` 之間', async ({ page }
   const dropY = Math.min(from!.y + 340, (canvas!.y + canvas!.height) - 60)
   await page.mouse.move(from!.x + 140, dropY, { steps: 20 })
   await page.mouse.up()
-  await page.waitForTimeout(2800)
+  await blocksSettled(page)
 
   const back = await topOf(page, 'cpp_print')
   const ret = await topOf(page, 'cpp_return')
@@ -335,7 +335,7 @@ test('★ `ghost`：積木插得進 `main` 與 `return` 之間', async ({ page }
   await page.mouse.down()
   await page.mouse.move(ret!.x, ret!.y - 2, { steps: 25 })
   await page.mouse.up()
-  await page.waitForTimeout(2800)
+  await blocksSettled(page)
 
   expect(
     (await codeOf(page)).replace(/\s+/g, ' '),
@@ -353,7 +353,7 @@ test('★ `ghost`：直接拖鷹架，什麼都不會發生', async ({ page }) =
     await page.mouse.down()
     await page.mouse.move(p.x + 200, p.y + 250, { steps: 15 })
     await page.mouse.up()
-    await page.waitForTimeout(1500)
+    await blocksSettled(page)
     expect(
       await codeOf(page),
       `🔴 拖了 ${type} 之後程式碼變了——鷹架該是拖不動的`,
@@ -391,7 +391,7 @@ test('★ `ghost`：鷹架在【最外層】也黏得住（不只在容器裡）
   await page.mouse.down()
   await page.mouse.move(x!.x + 120, x!.y + 300, { steps: 20 })
   await page.mouse.up()
-  await page.waitForTimeout(2800)
+  await blocksSettled(page)
 
   // ★ `using` 與 `main` 併回同一條，而 `int x` 自己出去
   expect(
@@ -406,7 +406,7 @@ test('★ `ghost`：鷹架在【最外層】也黏得住（不只在容器裡）
   await page.mouse.down()
   await page.mouse.move(fd!.x, fd!.y - 2, { steps: 25 })
   await page.mouse.up()
-  await page.waitForTimeout(2800)
+  await blocksSettled(page)
   expect(await chains(), '🔴 插不回 `using` 與 `main` 之間')
     .toEqual(['cpp_using_namespace → cpp_var_declare → cpp_func_def'])
 })
@@ -424,7 +424,8 @@ test('★ Arduino 也有鷹架——`setup`／`loop` 是淡的，而「隱藏」
   await appReady(page)
   await page.locator('.status-item-btn[data-control-id="target"]').click()
   await page.locator('.quick-pick-item').filter({ hasText: /Arduino Uno/ }).first().click()
-  await page.waitForTimeout(2500)
+  await page.waitForFunction(() => /arduino/.test((window as never as { __app?: { currentTarget?: { id?: string } } }).__app?.currentTarget?.id ?? ''), undefined, { timeout: 30_000 })
+  await appReady(page)
   await page.evaluate((c) =>
     (window as never as { __app: { codeView: { setCode(c: string): void } } }).__app.codeView.setCode(c),
     'void setup() {\n    pinMode(13, OUTPUT);\n}\n\nvoid loop() {\n    digitalWrite(13, HIGH);\n    delay(1000);\n}\n')
@@ -448,7 +449,9 @@ test('★ Arduino 也有鷹架——`setup`／`loop` 是淡的，而「隱藏」
   ).toEqual([])
 
   await page.locator('.quick-pick-item[data-value="mode:ghost"]').click()
-  await page.waitForTimeout(3200)
+  // 淡化是產品裡一個 setTimeout(…, 900) 的視覺層——等它真的畫上去（兩顆函式定義都淡了），不睡固定秒數
+  await expect.poll(() => page.evaluate(() => document.querySelectorAll('.ghost-block').length), { timeout: 30_000 }).toBeGreaterThanOrEqual(2)
+  await frames(page)
 
   const ghosts = await page.evaluate(() => {
     const ws = (window as never as { __app: { blocklyPanel: { workspace: { getAllBlocks(b: boolean): unknown[] } } } })

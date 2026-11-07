@@ -27,6 +27,7 @@
  * 我拿 1-based 去讀它。基準寫在消費端（`m.startLine + 1`），不在產生端。
  */
 import { test, expect, type Page } from '@playwright/test'
+import { editsSettled, appReady } from './helpers'
 
 interface AppWindow {
   __app: {
@@ -48,7 +49,7 @@ async function typeInMain(page: Page, body: string): Promise<void> {
   await page.waitForFunction(
     () => Boolean((window as unknown as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 60_000 })
-  await page.waitForTimeout(2500)
+  await appReady(page)
   await page.locator('.monaco-editor').first().click()
   await page.keyboard.press('Control+Home')
   const code0 = await page.evaluate(() => (window as unknown as AppWindow).__app.codeView.getCode?.() ?? '')
@@ -58,7 +59,7 @@ async function typeInMain(page: Page, body: string): Promise<void> {
   await page.keyboard.press('End')
   await page.keyboard.press('Enter')
   await page.keyboard.type(body, { delay: 12 })
-  await page.waitForTimeout(4000)
+  await editsSettled(page)
 }
 
 /** 每一顆有對照的積木：它指到的那一行，內容是什麼。 */
@@ -128,7 +129,8 @@ test('自由練習：同一件事，而且它是【點下去真的會亮】那�
     el?.dispatchEvent(new MouseEvent('pointerup', { bubbles: true }))
     el?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
   }, printId!)
-  await page.waitForTimeout(1200)
+  // 等亮起來的那一條出現（取代固定睡 1.2 秒）；沒亮的話下面本來就容許 null
+  await page.waitForSelector('.monaco-line-highlight', { timeout: 5000 }).catch(() => {})
 
   const lit = await page.evaluate(() => {
     const lines = [...document.querySelectorAll('.view-line')] as HTMLElement[]

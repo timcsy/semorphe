@@ -56,6 +56,7 @@
  *   而它們的最壞情況相反——把它們寫成同一條會製造一個真正的資料遺失。
  */
 import { test, expect } from '@playwright/test'
+import { blocksSettled } from './helpers'
 
 test('★ 第一次打開（沒有任何存檔）就拉得動積木', async ({ page }) => {
   // 🔴 **不呼叫任何 helper**——helpers 多半會先設好狀態，而那正是要避開的。
@@ -64,7 +65,8 @@ test('★ 第一次打開（沒有任何存檔）就拉得動積木', async ({ p
     () => Boolean((window as never as { __app?: { blocklyPanel?: unknown } }).__app?.blocklyPanel),
     undefined, { timeout: 30_000 },
   )
-  await page.waitForTimeout(4000)
+  // 不用 helper（見上）——直接等 init 做完的那個旗標（第 392 刀），取代固定睡 4 秒
+  await page.waitForFunction(() => Boolean((window as never as { __appReady?: boolean }).__appReady), undefined, { timeout: 30_000 })
 
   // ★ 入口條件——錨在合成量，見檔頭的自我否證
   const categories = await page.locator('.blocklyToolboxCategory').count()
@@ -98,8 +100,9 @@ test('★ 第一次打開（沒有任何存檔）就拉得動積木', async ({ p
 
   // ── 真的拉一顆下來 ────────────────────────────────────────
   await page.locator('.blocklyToolboxCategory').first().click()
-  await page.waitForTimeout(900)
   const flyout = page.locator('.blocklyFlyout .blocklyDraggable')
+  // 等 flyout 長出積木（取代固定睡 0.9 秒）；長不出來的話下一行照樣紅
+  await flyout.first().waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {})
   expect(await flyout.count(), '🔴 flyout 裡沒有積木').toBeGreaterThan(0)
 
   const box = await flyout.first().boundingBox()
@@ -108,7 +111,7 @@ test('★ 第一次打開（沒有任何存檔）就拉得動積木', async ({ p
   await page.mouse.down()
   await page.mouse.move(box!.x + 400, box!.y + 160, { steps: 25 })
   await page.mouse.up()
-  await page.waitForTimeout(2500)
+  await blocksSettled(page)
 
   const after = await page.evaluate(() => {
     const app = (window as never as Record<string, any>).__app

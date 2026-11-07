@@ -50,7 +50,7 @@
  * - ⚠️ **不檢測「選單裡的項目按了會怎樣」**——`flow-delete-undo.spec.ts` 管
  */
 import { test, expect } from '@playwright/test'
-import { freshApp, useAsSource, appReady, treeReady } from './helpers'
+import { freshApp, useAsSource, appReady, treeReady, flowReady } from './helpers'
 
 test.use({ hasTouch: true, isMobile: true, viewport: { width: 500, height: 900 } })
 
@@ -63,7 +63,7 @@ async function openFlow(page: import('@playwright/test').Page): Promise<void> {
   await useAsSource(page, '程式碼')
   await treeReady(page)
   await page.locator('[data-tab="flow"]').last().click()
-  await page.waitForTimeout(2000)
+  await flowReady(page)
 }
 
 test('★ 手機：按住再拖是拖曳，純長按才是選單', async ({ page }) => {
@@ -89,7 +89,7 @@ test('★ 手機：按住再拖是拖曳，純長按才是選單', async ({ page
   /** 按住 `hold` 毫秒後移動 `steps` 次；回傳選單開著沒、節點走了幾 px */
   const gesture = async (hold: number, steps: number): Promise<{ menu: number; moved: number; mid: number }> => {
     await page.reload()
-    await page.waitForTimeout(2500)
+    await appReady(page)
     await openFlow(page)
     const b = await target.boundingBox()
     const x0 = b!.x + b!.width / 2, y0 = b!.y + b!.height / 2

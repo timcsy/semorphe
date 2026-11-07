@@ -1807,6 +1807,15 @@ export class App {
         // 🔴 **跑之前先猜一下**（2026-09-04 第四刀）——見 `askPrediction`。
         beforeRun: (tree) => this.askPrediction(elements.consolePanel, tree),
         getBlocksDirty: () => this.blocksDirty,
+        // 🔴 開跑之前把還沒落地的程式碼編輯做完——去抖還在等就立刻做，然後等同步閒置（見執行器的 flushPendingEdits）
+        flushPendingEdits: async () => {
+          if (this.codeToBlocksTimer) {
+            clearTimeout(this.codeToBlocksTimer)
+            this.codeToBlocksTimer = null
+            await this.syncController?.syncCodeToBlocks(this.codeView?.getCode())
+          }
+          await this.syncController?.whenIdle()
+        },
         syncBeforeRun: () => {
           this.syncBlocksToCodeWithMappings()
         },

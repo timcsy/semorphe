@@ -12,7 +12,7 @@
  * 而 happy-dom 沒有版面引擎。
  */
 import { test, expect } from '@playwright/test'
-import { freshApp } from './helpers'
+import { freshApp, frames } from './helpers'
 
 type P = import('@playwright/test').Page
 
@@ -100,7 +100,7 @@ test('🔴 換一個槽的視圖，其餘格子的位置與大小【位移為 0�
   await page.locator('.slot-picker[data-layer="space"]').first().click()
   await page.locator('.quick-pick-item[data-value="relation"]').click()
   await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
-  await page.waitForTimeout(800)
+  await page.locator('.slot-picker[data-layer="relation"]').first().waitFor({ state: 'attached', timeout: 10_000 }).catch(() => {})
   expect(
     await page.evaluate(() => document.querySelector('.slot-picker[data-layer="relation"]') !== null),
     '🔴 換完之後沒有任何一格顯示流程',
@@ -117,7 +117,8 @@ test('🔴 切走版面再切回來，指派不變（SC-005）', async ({ page }
   await page.locator('.slot-picker[data-layer="space"]').first().click()
   await page.locator('.quick-pick-item[data-value="relation"]').click()
   await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
-  await page.waitForTimeout(600)
+  await page.locator('.slot-picker[data-layer="relation"]').first().waitFor({ state: 'attached', timeout: 10_000 }).catch(() => {})
+  await frames(page, 2)
 
   const shownIn = (): Promise<string[]> => page.evaluate(() =>
     [...document.querySelectorAll('.slot-picker')]
