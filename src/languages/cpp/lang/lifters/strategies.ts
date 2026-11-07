@@ -2196,7 +2196,10 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
   const typeNode = param.namedChildren.find(c =>
     c.type === 'primitive_type' || c.type === 'type_identifier' ||
     c.type === 'qualified_identifier' || c.type === 'sized_type_specifier' ||
-    c.type === 'template_type'
+    c.type === 'template_type' ||
+    // 🔴 **C 的帶標籤型別**（`int f(struct Point p)`）——2026-11-07 補（C → C++ 第三刀前量到，main 上就有）。
+    //    原本不在清單裡，於是型別落到下面的預設 `'int'`：產出 `int f(int p)`，**靜靜地換了參數型別**
+    c.type === 'struct_specifier' || c.type === 'enum_specifier' || c.type === 'union_specifier'
   )
   const declNode = param.namedChildren.find(c =>
     c.type === 'identifier' || c.type === 'pointer_declarator' ||
