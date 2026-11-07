@@ -36,6 +36,20 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // 名字指到一個變數（`auto add = [&](int x){…}; add(5)`）：呼叫的是那個值，不是一個叫 add 的函式——eCallE（cpp_to_tree.py 同形；第 206 刀）
     const x = f.declOf(n.id)
     if (x) return f.k('eCallE', { n: n.id, callee: f.k('eName', { n: `${n.id}/callee`, name }), args })
+    // 🔴 名字帶樣板引數、上面每一種形狀都不是（`numeric_limits<int>::min()`）：照 eCall 送等於呼叫一個叫
+    //    `numeric_limits<int>::min` 的函式，Cella 判「未宣告的名字」reject——**一支合法的程式被說成錯的**（P6）。
+    //    2026-11-07 升 Cella 1526 時露出來（盲測 iterators fuzz_08：之前被 std::copy 的 unsupported 蓋住）。照實標翻不出。
+    if (/>\s*::/.test(name)) return f.miss(n, `「${name}(…)」是樣板類別的靜態成員；還沒有對應`)
+    // 🔴 名字是一個**型別**（`string("ab")`、`ostream_iterator<int>(cout, "")`）：是建一個暫時物件（[expr.type.conv]），同上面的 FUNCTOR
+    //    與程式自己的 struct——不是呼叫一個叫 `string` 的函式。照 eCall 送，Cella 判「未宣告」reject（主樹上就有：`string("ab").size()`；
+    //    ranges fuzz_7 在 1526 補上 std::copy 之後露出 `ostream_iterator<int>`）。`isTypeText` 不記 unknown，所以先問再翻
+    if (!f.isFunctionName(name) && f.isTypeText(name)) {
+      const t = f.type(name, n)
+      if (t) return f.k('eTemp', { n: n.id, t, args })
+    }
+    // 其餘帶樣板引數的（`max<long long>(a, b)` 明確指定樣板引數的函式樣板呼叫）：照 eCall 送等於呼叫一個叫 `max<long long>` 的函式
+    //    ——主樹上判「未宣告」reject（假的錯）。照實標翻不出
+    if (name.includes('<')) return f.miss(n, `「${name}(…)」是帶樣板引數的呼叫（明確指定樣板引數的函式樣板，或還不認得的樣板型別）；還沒有對應`)
     return f.k('eCall', { n: n.id, f: f.identMacro(name), args })
   })
   // 作用域：名字照常解析——指得到變數宣告的就是在呼叫那個值（函式定義不進作用域表，所以呼叫函式不會被誤認）
