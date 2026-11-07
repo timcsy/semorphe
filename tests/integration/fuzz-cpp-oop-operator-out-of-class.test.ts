@@ -48,18 +48,19 @@ const ALLOWED_DEGRADE = [
  * 判決那一側的狀態——逐支釘住（原因變了或修好了都會紅）：
  * - accept：輸出要等於 g++
  * - unknown：只准是「實作相依」那幾種，而印出來的仍要等於 g++
- * - reject：都是 Cella 的誤判，已附最小重現回報（2026-11-07）
+ * - reject：都是 Cella 的誤判，已附最小重現回報（2026-11-07）——1526 修好之後已經沒有 reject
  * - untranslated：原因只准是登記過的缺口
  */
 const VERDICT: Record<string, { verdict: 'accept' | 'unknown' | 'reject' | 'untranslated'; why?: RegExp }> = {
   fuzz_1: { verdict: 'accept' },
-  fuzz_2: { verdict: 'reject', why: /no matching member function for call to 'operator-='/ }, // Cella ④：轉換建構子的隱式轉換（h -= 3）
+  // Cella ④ 轉換建構子的隱式轉換（h -= 3）在 1526 修好（原本誤判 reject）；剩下的是引數之間的求值次序——標準未指定，誠實的 unknown，印出來仍等於 g++
+  fuzz_2: { verdict: 'unknown', why: /^orderUncompared$/ },
   // 上面的降級（多維陣列欄位、`: a{{…}}`／`: c{0, 0, 0, 0, 0}`）——連帶：被降級的建構子定義讓類別裡那一行原型「找不到定義」
   fuzz_3: { verdict: 'untranslated', why: /這顆(類別成員|頂層元件)還沒有對應到 Cella 的建構子|類別裡宣告了建構子，而類別外找不到它的定義/ },
   fuzz_4: { verdict: 'untranslated', why: /這顆(類別成員|頂層元件)還沒有對應到 Cella 的建構子|類別裡宣告了建構子，而類別外找不到它的定義/ },
   fuzz_5: { verdict: 'unknown', why: /^ubElide$/ },                                        // 具名回傳值的複製省略——實作相依
-  fuzz_6: { verdict: 'unknown', why: /^orderUncompared$/ },                                // Cella ②：多載 `<<` 串接的定序（C++17 起是定的）
-  fuzz_7: { verdict: 'reject', why: /no matching constructor for initialization of 'std::vector<Time>'/ }, // Cella ①：vector 的迭代器區間建構子
+  fuzz_6: { verdict: 'accept' },                                                           // Cella ② 多載 `<<` 串接的定序：1526 修好（C++17 起是定的）
+  fuzz_7: { verdict: 'accept' },                                                           // Cella ① vector 的迭代器區間建構子：1526 修好（原本誤判 reject）
   fuzz_8: { verdict: 'unknown', why: /^orderUncompared$/ },                                // Cella ②
 }
 

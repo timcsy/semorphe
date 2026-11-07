@@ -206,10 +206,9 @@ describe('模糊測試：insert 只有一個主人，而每一種容器要做自
 
   // 歸類：Cella 判錯——string::insert（formalize 已補，spec 203）。2026-11-07（cella 0.1.202611070815）換形狀：
   //   範圍版的 insert 補上之後 string 有了 insert，而 `insert(位置, const char*)` 這個多載判「樣板引數推導失敗」（誤判 reject）——已回報
-  it('🟡 已知缺陷（修好時這條會紅）：★ 正向錨點：字串的 insert 仍然是字串的（它也收兩個引數）', async () => {
-    await knownCellaGap(/template argument deduction failed/, async () => {
-      await sameAsCompiler(`string s = "helo"; s.insert(3, "l"); cout << s;`, "hello", '')
-    })
+  //   🟢 2026-11-07 cella 0.1.202611071526 修好（string 的位置版 insert／replace）——釘子轉正
+  it('★ 正向錨點：字串的 insert 仍然是字串的（它也收兩個引數）', async () => {
+    await sameAsCompiler(`string s = "helo"; s.insert(3, "l"); cout << s;`, "hello", '')
   }, 60_000)
 
   /**
