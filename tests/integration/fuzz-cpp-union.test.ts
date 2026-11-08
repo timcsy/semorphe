@@ -69,6 +69,10 @@ describe('union 盲測：每一支來回不走樣、走積木不走樣、交給 
       const a = await runCella(p.code, { lang: p.lang })
       const b = await runCella(out, { lang: p.lang })
       expect([b.verdict, b.out], `原文 ${a.verdict}／產出 ${b.verdict}\n${out}`).toEqual([a.verdict, a.out])
+      // 🔴 兩邊判得一樣還不夠——兩邊一樣錯也是一樣（2026-11-09：fuzz_7 兩邊都誤判 reject「未宣告的 Num」，這一條才抓得到）。
+      //    判 accept 就要與 clang 的輸出相同；這幾支都是合法的程式，判 reject 就是我們或 Cella 的錯
+      expect(a.verdict, `合法的程式被判 ${a.verdict}`).not.toBe('reject')
+      if (a.verdict === 'accept') expect(a.out).toBe((p as { out: string }).out)
     }, 120_000)
   }
 })
