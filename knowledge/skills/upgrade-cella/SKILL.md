@@ -56,6 +56,14 @@ diff <(grep -vE "Start|Duration|RUN|[0-9]+ms" old.log) <(grep -vE "Start|Duratio
 > 220 補了 multiset 的 `lower_bound`／`erase`——學生的 4_15 從 unknown 變成 **reject**（迭代器的 `->` 被說「需要指標」）。
 > 那是一個早就在的誤判，只是被 unsupported 蓋住了。**誤判 reject 比 unknown 嚴重**（P6：說一支合法的程式有錯）。
 
+**發版說明說「某某修好了」時，先跑全部的已知缺口釘子**——修好的那根會轉紅（「不在了」），那正是要轉成一般測試的：
+
+```bash
+npx vitest run $(grep -rl "knownCellaGap(" tests src | grep "\.ts$" | grep -v helpers | tr '\n' ' ')
+```
+
+⚠️ 不要寫成 `grep -rl … --include=*.ts`：zsh 會把 `*.ts` 當 glob 展開而報錯，`$(…)` 變成空的——**`vitest run` 沒有參數就是整套**（2026-11-08 踩到：意外跑了全套，又跟另一支長測試搶機器）。
+
 判斷誰的錯：先看**我們送了什麼**（形狀忠實於原始碼嗎），再在**舊版**上跑同一支（是不是這次升級帶來的）。
 我們送錯 → 修 formalize；形狀對而 Cella 判錯 → 附最小重現回報 cella。
 
