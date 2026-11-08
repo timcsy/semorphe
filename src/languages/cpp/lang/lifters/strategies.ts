@@ -1277,6 +1277,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
   registry.register('cpp:liftDeclaration', (node, ctx) => {
     // 🔴 **帶括號的宣告子**（`int (*row)[COLS] = m;` 指向陣列的指標、`int (*tbl[3])(int, int)` 函式指標陣列）——還裝不下，
     //    整句照原文降級。2026-11-07 C 盲測：原本被拆成 `(int)*row[COLS] = m;`——**另一句話**，而且沒有任何一顆節點說它降級了。
+    // 🟢 一層的函式指標變數（`int (*f)(int, int) = add;`、`void (*h)(void);`）裝得下了（344）：
+    //    名字 f、型別寫成抽象宣告子 `int (*)(int, int)`，初值照常 lift。多個宣告子或更複雜的照舊整句降級（下一行）。
+    { const fpDecl = liftFunctionPointerDeclaration(node, ctx); if (fpDecl) return fpDecl }
     if (hasParenthesizedDeclarator(node)) return null
     // Detect type qualifiers: const, constexpr
     const qualifierNode = node.namedChildren.find(c => c.type === 'type_qualifier')
@@ -2193,6 +2196,43 @@ const COMPOUND_TYPE_PREFIXES = [
   'unsigned short', 'unsigned char', 'long double', 'signed char',
 ]
 
+/** `int (*f)(int, int) = add;` → var_declare{type: `int (*)(int, int)`, name: f}；認不得回 null（見 `simpleFunctionPointer`）。 */
+function liftFunctionPointerDeclaration(node: AstNode, ctx: LiftContext): SemanticNode | null {
+  const decls = node.namedChildren.filter((c) => c.type === 'init_declarator' || /declarator$/.test(c.type))
+  if (decls.length !== 1) return null
+  const top = decls[0]
+  const d = top.type === 'init_declarator' ? top.childForFieldName('declarator') : top
+  const fp = simpleFunctionPointer(d)
+  if (!d || !fp) return null
+  const type = `${node.text.slice(0, top.startIndex - node.startIndex).replace(/\s+/g, ' ').trim()} ${fp.abstract}`
+  ctx.data.declare(fp.name, type)
+  const valueNode = top.type === 'init_declarator' ? top.childForFieldName('value') : null
+  if (!valueNode) return buildVarDeclare({ name: fp.name, type })
+  const value = ctx.lift(valueNode)
+  return value ? buildVarDeclare({ name: fp.name, type }, { initializer: [value] }) : null
+}
+
+/**
+ * **一層的函式指標宣告子**（`(*f)(int, int)`）→ 名字 ＋ 抽象宣告子 `(*)(int, int)`（2026-11-08，344）。
+ *
+ * 型別寫成 C 的抽象宣告子 `int (*)(int, int)`（[dcl.name]／C11 6.7.7——`sizeof(int (*)(int))` 裡的那個寫法），
+ * 名字另放：積木上型別與名字是兩格，產碼時名字放回 `(*` 之後（產生器的 `placeDeclaratorName`）。
+ * ⚠️ 只認最簡單的一層：`function_declarator ← parenthesized_declarator ← pointer_declarator ← identifier`，
+ *    而且括號裡只有 `*名字`（沒有 const、沒有再一層）。函式指標陣列、回傳函式指標、指向陣列的指標回 null——照舊原文降級。
+ */
+export function simpleFunctionPointer(declarator: AstNode | null | undefined): { name: string; abstract: string } | null {
+  if (declarator?.type !== 'function_declarator') return null
+  const inner = declarator.childForFieldName('declarator')
+  const params = declarator.childForFieldName('parameters')
+  if (inner?.type !== 'parenthesized_declarator' || !params) return null
+  const ptr = inner.namedChildren[0]
+  if (inner.namedChildren.length !== 1 || ptr?.type !== 'pointer_declarator') return null
+  const id = ptr.childForFieldName('declarator')
+  if (id?.type !== 'identifier' || ptr.text.replace(/\s+/g, '') !== `*${id.text}`) return null
+  if (params.namedChildren.some((c) => c.type !== 'parameter_declaration')) return null
+  return { name: id.text, abstract: `(*)${params.text.replace(/\s+/g, ' ').replace(/\(\s+/g, '(').replace(/\s+\)/g, ')')}` }
+}
+
 /**
  * 宣告子（不含初值）裡有沒有 `parenthesized_declarator`——指向陣列的指標、函式指標這一族。
  * ⚠️ 只看宣告子那一側：`int x = (a + b);` 的括號在初值裡，不算。
@@ -2211,6 +2251,9 @@ export function parseParamDeclaration(param: AstNode): { type: string; name: str
   // 🔴 **函式指標與帶括號的宣告子參數**（`int (*f)(int)`、`int (*row)[COLS]`）——2026-11-07 C 盲測：原本名字與形狀都掉了
   //    （`void map(Node* h, int)`、`int row_sum(int[], int n)`），呼叫端還被補出空引數。還裝不下 ⟹ 整段照原文當型別、不給名字
   //    （產碼照原樣印回去；formalize 認不得那個型別就照實標 unknown）。
+  // 🟢 一層的函式指標（`int (*f)(int, int)`）裝得下了（344）：名字 f、型別 `int (*)(int, int)`
+  { const d = param.childForFieldName('declarator'); const fp = simpleFunctionPointer(d)
+    if (d && fp) return { type: `${param.text.slice(0, d.startIndex - param.startIndex).replace(/\s+/g, ' ').trim()} ${fp.abstract}`, name: fp.name } }
   if (param.namedChildren.some((c) => c.type === 'function_declarator' || c.type === 'parenthesized_declarator' ||
     (/declarator$/.test(c.type) && c.namedChildren.some((g) => g.type === 'parenthesized_declarator')))) {
     return { type: param.text.replace(/\s+/g, ' ').trim(), name: '' }

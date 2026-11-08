@@ -2,6 +2,7 @@
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
 import { cTypeName } from '../../../languages/cpp/target-dialect'
+import { placeDeclaratorName } from '../../../languages/cpp/lang/generators/statements'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:var_declare', (node, ctx) => {
@@ -79,8 +80,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
           return finish(`${type} ${name}(${args.join(', ')})`)
         }
         const val = generateExpression(inits[0], ctx)
-        return finish(`${type} ${name} = ${val}`)
+        return finish(`${placeDeclaratorName(type, String(name))} = ${val}`)
       }
-      return finish(`${type} ${name}`)
+      // 函式指標（`int (*)(int, int)`）的名字放回 `(*` 之後（344）
+      return finish(placeDeclaratorName(type, String(name)))
     })
 }

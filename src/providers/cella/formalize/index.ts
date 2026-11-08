@@ -173,6 +173,19 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       expanding.add(s)
       try { return type(mv, at) } finally { expanding.delete(s) }
     }
+    // 函式指標：lift 把宣告子拆成名字 ＋ 抽象宣告子 `int (*)(int, int)`（344）→ tPtr(tFunc{ret, params})（cella 2026-11-08 給的形狀；
+    // ret 是 Option，void 寫 null；`(void)` 是沒有參數）。參數裡帶了名字（`int (*)(int a)`）時那一格認不得 → 照實標 unknown
+    {
+      const fp = /^(.+?)\s*\(\*\)\s*\((.*)\)$/.exec(s)
+      if (fp) {
+        const retText = fp[1].trim()
+        const ret = retText === 'void' ? null : type(retText, at)
+        if (retText !== 'void' && !ret) return null
+        const ps = fp[2].trim() === '' || fp[2].trim() === 'void' ? [] : splitTypeArgs(fp[2]).map((x) => type(x, at))
+        if (!ps.every(Boolean)) return null
+        return k('tPtr', { t: k('tFunc', { ret, params: ps }) })
+      }
+    }
     // ⚠️ 先剝參照與指標，再剝 const：`const Node&` 是「參照到 const Node」＝ tRef(tConst(Node))，不是 tConst(tRef(Node))
     //    （spec 201：Cella 判 reject「member reference base type is not a structure or union」抓到的；`const int*` 同理是 tPtr(tConst(int))）
     if (s.endsWith('&')) { const inner = type(s.slice(0, -1), at); return inner && k('tRef', { t: inner }) }
