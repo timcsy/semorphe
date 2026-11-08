@@ -68,8 +68,8 @@ describe('typedef enum 與匿名列舉', () => {
     registerCppExtractStrategies(ex)
     const enums = (t: any): any[] => t.slots.body.filter((n: any) => n.componentId === 'cpp:enum').map((n: any) => n.properties)
     const lift = (src: string): any => createTestLifter().lift(p.parse(src)!.rootNode as never)
-    expect(enums(lift(ANON))).toEqual([{ name: '', values: 'SHAPE_SQUARE, SHAPE_CIRCLE', typedef_alias: 'ShapeKind' }])
-    expect(enums(lift(TAG))).toEqual([{ name: 'Color', values: 'RED = 2, GREEN', typedef_alias: 'Color_t' }])
+    expect(enums(lift(ANON))).toEqual([{ name: '', values: 'SHAPE_SQUARE, SHAPE_CIRCLE', scoped: 'none', base: '', typedef_alias: 'ShapeKind' }])
+    expect(enums(lift(TAG))).toEqual([{ name: 'Color', values: 'RED = 2, GREEN', scoped: 'none', base: '', typedef_alias: 'Color_t' }])
     expect(enums(lift(PLAIN)).map((e) => e.name)).toEqual(['', ''])
     for (const src of [ANON, TAG, PLAIN]) {
       const t = lift(src)
@@ -85,4 +85,52 @@ describe('typedef enum 與匿名列舉', () => {
     await expectCellaOut(TAG, '3 2\n', { lang: 'c' })
     await expectCellaOut(PLAIN, '5 7\n', { lang: 'c' })
   }, 120_000)
+})
+
+// ── 360：enum class——原本來回變成一般的 enum、底層型別蒸發（靜默改寫）──
+describe('enum class（360）', () => {
+  const SRC = '#include <iostream>\nusing namespace std;\nenum class Color { Red, Green = 5, Blue };\nenum class Dir : unsigned char { N, S };\nenum struct Mode : long long { On };\nint main() {\n    Color c = Color::Green;\n    Dir d = Dir::S;\n    if (c == Color::Green) {\n        cout << static_cast<int>(c) << " " << static_cast<int>(d) << endl;\n    }\n    return 0;\n}\n'
+  it('lift 記下關鍵字與底層型別、`Color::Green` 是帶限定的參照；產碼與積木來回一字不差；formalize 送 iEnumClass', async () => {
+    const { Parser, Language } = await import('web-tree-sitter')
+    const { createTestLifter } = await import('../../../../tests/helpers/setup-lifter')
+    const { setupTestRenderer } = await import('../../../../tests/helpers/setup-renderer')
+    const { registerCppLanguage } = await import('../../../languages/cpp/generators')
+    const { generateCode } = await import('../../../core/projection/code-generator')
+    const { renderToBlocklyState } = await import('../../../core/projection/block-renderer')
+    const { PatternExtractor } = await import('../../../core/projection/pattern-extractor')
+    const { BlockSpecRegistry } = await import('../../../core/blocks/block-spec-registry')
+    const { allCppComponents, allCppProjections } = await import('../../../languages/cpp/all-declarations')
+    const { registerCppExtractStrategies } = await import('../../../languages/cpp/extractors/extract-strategies')
+    const { formalize } = await import('../../../providers/cella/formalize')
+    const apcs = (await import('../../../languages/cpp/styles/apcs.json')).default
+    await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
+    const p = new Parser()
+    p.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
+    registerCppLanguage()
+    setupTestRenderer()
+    const reg = new BlockSpecRegistry()
+    reg.loadFromSplit(allCppComponents(), allCppProjections())
+    const ex = new PatternExtractor()
+    ex.loadBlockSpecs(reg.getAll())
+    registerCppExtractStrategies(ex)
+    const t = createTestLifter().lift(p.parse(SRC)!.rootNode as never) as any
+    const enums = t.slots.body.filter((n: any) => n.componentId === 'cpp:enum').map((n: any) => [n.properties.name, n.properties.scoped, n.properties.base])
+    expect(enums).toEqual([['Color', 'class', ''], ['Dir', 'class', 'unsigned char'], ['Mode', 'struct', 'long long']])
+    expect(JSON.stringify(t)).not.toContain('unresolved')
+    expect(JSON.stringify(t)).toContain('"name":"Color::Green"')
+    expect(generateCode(t, 'cpp', apcs as never).trimEnd()).toBe(SRC.trimEnd())
+    const state = renderToBlocklyState(t) as { blocks: { blocks: unknown[] } }
+    const back = state.blocks.blocks.flatMap((b) => ex.extractStatementChain(b as never))
+    expect(generateCode({ id: 'r', componentId: 'cpp:program', properties: {}, slots: { body: back } } as never, 'cpp', apcs as never).trimEnd()).toBe(SRC.trimEnd())
+    const fz = formalize(t, { lang: 'cpp' }) as any
+    expect(fz.unknown).toEqual([])
+    const items = fz.program.items.filter((i: any) => i.k === 'iEnumClass').map((i: any) => [i.name, i.base])
+    expect(items).toEqual([['Color', null], ['Dir', { k: 'tUChar' }], ['Mode', { k: 'tLongLong' }]])
+    expect(JSON.stringify(fz.program)).toMatch(/"k":"eName"[^}]*"name":"Color::Green"/)
+  })
+  it('區塊裡的 enum class：照實翻不出（Cella 還沒有那個敘述形狀），不送成一般的 enum', async () => {
+    const { runCella } = await import('../../../../tests/helpers/cella-run')
+    const r = await runCella('int main() {\n    enum class E { A };\n    return 0;\n}\n', { lang: 'cpp' })
+    expect(r.verdict).toBe('untranslated')   // 翻不出給 Cella 的那一類（不是送成一般的 enum 讓它判 accept）
+  }, 60_000)
 })

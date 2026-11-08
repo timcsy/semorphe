@@ -1,4 +1,9 @@
 {
-  "C_ENUM_MSG0": "Define enumeration %1 with values %2 (enum) alias %3",
-  "C_ENUM_TOOLTIP": "Define an enumeration: a set of named integer constants"
+  "C_ENUM_MSG0": "Define enum %1 scope %2 underlying type %3 values %4 alias %5",
+  "C_ENUM_TOOLTIP": "Define an enumeration: a set of named integer constants. Scoped enum constants are written Name::Constant and do not convert to int implicitly",
+  "C_ENUM_SCOPED_NONE": "plain (constants in outer scope)",
+  "C_ENUM_SCOPED_CLASS": "scoped (class)",
+  "C_ENUM_SCOPED_STRUCT": "scoped (struct)",
+  "FLOW_SLOT_CPP_ENUM_SCOPED": "Scope",
+  "FLOW_SLOT_CPP_ENUM_BASE": "Underlying type"
 }

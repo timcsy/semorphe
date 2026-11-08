@@ -21,7 +21,10 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
             })
             .join(', ')
         : ''
-      return createNode('cpp:enum', { name, values })
+      // `enum class`／`enum struct` 與底層型別（360）——以前不記，來回變成一般的 enum、底層型別蒸發
+      const scoped = node.children.find((c) => !c.isNamed && (c.text === 'class' || c.text === 'struct'))?.text ?? 'none'
+      const base = node.childForFieldName('base')?.text ?? ''
+      return createNode('cpp:enum', { name, values, scoped, base })
     })
 }
 

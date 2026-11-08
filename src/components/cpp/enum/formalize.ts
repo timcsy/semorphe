@@ -32,6 +32,9 @@ const enumeratorId = (n: SemanticNode, name: string): string => `${n.id}/${name}
 /** 列舉在 Cella 那邊的名字：有 Tag 用 Tag，`typedef enum { … } Kind;` 用別名（2026-11-08，同結構那顆） */
 const enumName = (n: SemanticNode): string => String(n.properties?.name ?? '') || String(n.properties?.typedef_alias ?? '')
 
+/** `enum class`／`enum struct`（360；舊的樹沒有這一格 ⟹ 一般的 enum） */
+const isScoped = (n: SemanticNode): boolean => n.properties?.scoped === 'class' || n.properties?.scoped === 'struct'
+
 function valueOf(e: Enumerator, n: SemanticNode, f: FormalizeContext): CellaJson | null | undefined {
   if (e.value === null) return null
   const m = /^(-)?\s*(\d+)$/.exec(e.value)
@@ -45,7 +48,6 @@ function valueOf(e: Enumerator, n: SemanticNode, f: FormalizeContext): CellaJson
 export function registerFormalize(r: FormalizeRegistrar): void {
   /** 成員；翻不了時回一個 miss（呼叫端原樣交出去） */
   const members = (n: SemanticNode, f: FormalizeContext): CellaJson[] | { miss: CellaJson } => {
-    if (/^\s*(class|struct)\b/.test(String(n.properties?.name ?? ''))) return { miss: f.miss(n, '`enum class` 還沒有對應') }
     const es = enumerators(n)
     if (!es) return { miss: f.miss(n, '列舉的成員認不出來') }
     const cs: CellaJson[] = []
@@ -58,10 +60,18 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   }
   r.item('cpp:enum', (n, f) => {
     const cs = members(n, f)
-    return 'miss' in cs ? [cs.miss] : [f.k('iEnum', { n: n.id, name: enumName(n), cs })]
+    if ('miss' in cs) return [cs.miss]
+    // 有作用域的列舉（360）：iEnumClass {n, name, base: 型別 | null, cs}（Cella 0.1.202611082230 起；cella 談定的形狀）
+    if (isScoped(n)) {
+      const base = String(n.properties?.base ?? '').trim()
+      return [f.k('iEnumClass', { n: n.id, name: enumName(n), base: base ? f.type(base, n) : null, cs })]
+    }
+    return [f.k('iEnum', { n: n.id, name: enumName(n), cs })]
   })
   // 區塊裡的列舉（`int main(){ enum Level {…}; }`）：敘述 sType 包 tdEnum（cella 2026-11-03；區域的 struct／union／typedef 也是同一個 sType）
   r.stmt('cpp:enum', (n, f) => {
+    // 區塊裡的 enum class：Cella 還沒有對應的敘述形狀（cella 列的還沒做：命名空間裡、類別裡的）⟹ 照實 unknown，不送成一般的 enum
+    if (isScoped(n)) return [f.miss(n, '區塊裡的 `enum class` 還沒有對應')]
     const cs = members(n, f)
     return 'miss' in cs ? [cs.miss] : [f.k('sType', { n: `${n.id}/stmt`, d: f.k('tdEnum', { n: n.id, name: enumName(n), cs }) })]
   })
@@ -73,7 +83,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     return alias && tag && alias !== tag ? { name: alias, value: `enum ${tag}` } : null
   })
   // 作用域：每個列舉常數是一個宣告（`int c = GREEN;` 的 GREEN 指到它）
+  // `enum class` 的常數不洩漏到外層：登記成帶限定的名字（`Color::Red`）——參照送 eName "Color::Red"；裸寫 `Red` 指不到，由 Cella 判 undeclared（360）
   r.scope('cpp:enum', (n, w) => {
-    for (const e of enumerators(n) ?? []) w.declare(e.name, enumeratorId(n, e.name))
+    const prefix = isScoped(n) ? `${enumName(n)}::` : ''
+    for (const e of enumerators(n) ?? []) w.declare(`${prefix}${e.name}`, enumeratorId(n, e.name))
   })
 }
