@@ -64,7 +64,7 @@ import { buildInitializerList } from '../../../../components/cpp/initializer_lis
  * ⚠️ **認不得時回傳原文，不猜**：這張表的消費者問的是「它是不是 map」，
  *    而一個回答「我不知道」的值與一個猜錯的值，後者才會讓 `a[i]` 被判成對照表。
  */
-function normalizeParamType(raw: string): string {
+export function normalizeParamType(raw: string): string {
   const bare = raw.replace(/\bconst\b/g, '').replace(/[&*\s]/g, '')
   const base = bare.includes('<') ? bare.slice(0, bare.indexOf('<')) : bare
   if (base === '') return raw

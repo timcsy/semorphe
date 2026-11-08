@@ -2,7 +2,7 @@
  * ⚠️ 這顆是**閉包提升之後才搬得動的**。 */
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import { createNode } from '../../../core/semantic-tree'
-import { liftParamList, extractBody } from '../../../languages/cpp/lang/lifters/strategies'
+import { liftParamList, extractBody, normalizeParamType } from '../../../languages/cpp/lang/lifters/strategies'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   // lambda_expression: [capture](params) -> ret { body }
@@ -19,7 +19,20 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       const trailingReturn = declNode?.namedChildren.find(c => c.type === 'trailing_return_type')
       const returnType = trailingReturn ? trailingReturn.text.replace(/^->\s*/, '') : ''
       const bodyNode = node.namedChildren.find(c => c.type === 'compound_statement') ?? null
-      const body = extractBody(bodyNode, ctx)
-      return createNode('cpp:lambda', { capture, return_type: returnType }, { params, body })
+      // 🔴 參數要進作用域（同函式定義那一條）——2026-11-08 學生語料 w/APCS/o713 抓到：本體裡的 `r < M && c > -1`
+      //    被 tree-sitter 剖成樣板，而 misparse 的修補 ②（「宣告過的變數不可能是樣板」）問作用域時不知道 `r` 是 lambda 的參數
+      //    ⟹ 整段降級，程式翻不出。推進一層，免得參數名洩漏到外面
+      ctx.data.pushScope()
+      try {
+        for (const p of params) {
+          const pname = p.properties?.name
+          const ptype = p.properties?.type
+          if (typeof pname === 'string' && pname !== '' && typeof ptype === 'string') ctx.data.declare(pname, normalizeParamType(ptype))
+        }
+        const body = extractBody(bodyNode, ctx)
+        return createNode('cpp:lambda', { capture, return_type: returnType }, { params, body })
+      } finally {
+        ctx.data.popScope()
+      }
     })
 }
