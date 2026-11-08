@@ -1086,5 +1086,9 @@
   "PROPOSAL_NO_CHANGE": "（程式碼沒有變化）",
   "PROPOSAL_ACCEPT": "接受",
   "PROPOSAL_REJECT": "退回",
-  "PROPOSAL_BUSY": "正在同步，請稍後再按一次接受"
+  "PROPOSAL_BUSY": "正在同步，請稍後再按一次接受",
+  "PROPOSAL_REPLACED_TEMPLATE": "套用了範例",
+  "PROPOSAL_REPLACED_TARGET": "換了目標",
+  "PROPOSAL_REPLACED_LESSON": "課文換上了起始程式",
+  "PROPOSAL_REPLACED_IMPORT": "匯入了檔案"
 }

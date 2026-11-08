@@ -67,19 +67,50 @@ test('退回 → 程式不變', async ({ page }) => {
   expect(await code(page)).toBe(before)
 })
 
-test('送出之後人改了程式碼 → 提議過期、接受停用、只能退回', async ({ page }) => {
+test('送出之後人改了程式碼的別處 → 提議仍可接受，接受後保留人的修改（spec 221：身分沿用）', async ({ page }) => {
   await freshApp(page)
   await setCpp(page, SRC)
   await submit(page, { ops: [{ op: 'remove', node: await idOf(page, 'cpp:if') }] })
   const bar = page.locator('.proposal-bar')
   await expect(bar.locator('.proposal-accept')).toBeEnabled()
-  // 改程式碼 → 重新 lift，節點全部換號
+  // 改程式碼 → 重新解析；沒動到的節點保住身分
   await setCpp(page, SRC.replace('int n = 5;', 'int n = 6;'))
+  await page.waitForTimeout(300)
+  await expect(bar).toHaveAttribute('data-status', 'pending')
+  await expect(bar.locator('.proposal-diff-same').filter({ hasText: 'int n = 6;' })).toHaveCount(1)
+  await bar.locator('.proposal-accept').click()
+  // ⚠️ 等的是【接受造成的改變】（if 不見了）——`int n = 6;` 在接受之前就在了，等它會立刻通過、搶在接受生效之前斷言（長測試在忙碌的機器上撞到）
+  await expect.poll(() => code(page)).not.toContain('if (')
+  expect(await code(page)).toContain('int n = 6;')
+})
+
+test('送出之後人刪掉了它指的那個節點 → 過期、接受停用、只能退回', async ({ page }) => {
+  await freshApp(page)
+  await setCpp(page, SRC)
+  await submit(page, { ops: [{ op: 'remove', node: await idOf(page, 'cpp:if') }] })
+  const bar = page.locator('.proposal-bar')
+  await setCpp(page, SRC.replace('    if (n > 3) {\n        n = 1;\n    }\n', ''))
   await expect(bar).toHaveAttribute('data-status', 'stale', { timeout: 10_000 })
   await expect(bar.locator('.proposal-accept')).toBeDisabled()
   await expect(bar.locator('.proposal-bar-stale')).toBeVisible()
   await bar.locator('.proposal-reject').click()
   await expect(bar).toHaveCount(0)
+})
+
+test('套用範例 → 程式被換掉，提議過期（即使新程式也有 main）', async ({ page }) => {
+  await freshApp(page)
+  await setCpp(page, SRC)
+  await submit(page, { ops: [{ op: 'insert', parent: await idOf(page, 'cpp:func_def'), slot: 'body', index: 0, node: PRINT_N }] })
+  const bar = page.locator('.proposal-bar')
+  await expect(bar).toHaveAttribute('data-status', 'pending')
+  await page.locator('.status-item-btn[data-control-id="template"]').click()
+  await page.locator('.quick-pick-item[data-value="01-空白程式"]').click()
+  const confirmApply = page.locator('.quick-pick-item').filter({ hasText: /^套用/ })
+  if (await confirmApply.count() > 0) await confirmApply.first().click()
+  await expect(page.locator('.quick-pick-overlay')).toHaveCount(0)
+  await expect(bar).toHaveAttribute('data-status', 'stale', { timeout: 10_000 })
+  await expect(bar.locator('.proposal-bar-stale')).toContainText('套用了範例')
+  await expect(bar.locator('.proposal-accept')).toBeDisabled()
 })
 
 test('連送三個 → 依序；說得出還有幾個', async ({ page }) => {

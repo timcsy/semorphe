@@ -1208,6 +1208,7 @@ export class App {
     // > ——而那看起來像「只有那幾課壞了」。**
     //
     // 🟢 判準寫在 `applyTemplate` 裡：`setCode` 之後才 `syncCodeToBlocks`。
+    this.programReplaced(msg('PROPOSAL_REPLACED_LESSON', '課文換上了起始程式'))
     this.codeView?.setCode(code)
     await this.syncController?.syncCodeToBlocks(code)
     // 🔴 **等鷹架標記填好，而不是等一個猜出來的毫秒數。**
@@ -1275,6 +1276,7 @@ export class App {
       return
     }
     // 🔴 **同上**：不先 `setCode` 的話，編輯器停在骨架而積木上是起點。
+    this.programReplaced(msg('PROPOSAL_REPLACED_LESSON', '課文換上了起始程式'))
     this.codeView?.setCode(code)
     await this.syncController?.syncCodeToBlocks(code)
   }
@@ -1295,6 +1297,7 @@ export class App {
     const go = (): void => {
       // 進行中的換語言寫法作廢（它若晚一步寫回，會蓋掉這份範例——e2e templates 量到）
       this.languageConversionEpoch++
+      this.programReplaced(msg('PROPOSAL_REPLACED_TEMPLATE', '套用了範例'))
       // 換目標（範例釘住它），再把程式碼放進去
       const target = this.targetRegistry.all().find((x) => x.id === t.target)
       if (target && target.id !== this.currentTarget.id) {
@@ -1890,6 +1893,7 @@ export class App {
         if (this.sideCarUsable(state)) this.blocklyPanel?.setState(state.blocklyState)
         // 收合（spec 188）：與自動載入那條同一個做法
         this.granularity?.load(state.collapsed ?? [])
+        this.programReplaced(msg('PROPOSAL_REPLACED_IMPORT', '匯入了檔案'))
         if (state.code) this.codeView?.setCode(state.code)
       },
       onUploadCustomBlocks: (blocks: object[]) => {
@@ -2900,6 +2904,7 @@ export class App {
   private handleTargetChange(target: Target, topic: Topic): void {
     // 任何一次換目標（課文、範例、選單）都讓進行中的換語言寫法作廢——選單那條路的新一輪在這之後才開始（spec 219）
     this.languageConversionEpoch++
+    this.programReplaced(msg('PROPOSAL_REPLACED_TARGET', '換了目標'))
     // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
     this.adoptSkeleton(target.skeleton ?? 'main')
         const prevDepth = this.getScaffoldDepth()
@@ -3455,6 +3460,14 @@ export class App {
     this.bus.on('semantic:update', () => {
       this.proposalQueue?.revalidate(this.syncController?.getCurrentTree() ?? null)
     })
+  }
+
+  /**
+   * **程式被換掉了，不是被改了**（spec 221）——待處理的提議全部過期、而且黏住。
+   * 節點身分在重新解析時會沿用，新程式若恰好有形狀相同的部分，提議不得因此套到新程式上。
+   */
+  private programReplaced(detail: string): void {
+    this.proposalQueue?.staleAll(detail)
   }
 
   private acceptProposal(id: string): void {
