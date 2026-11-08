@@ -33,6 +33,8 @@ export type TreeOp =
 export type ReasonCode =
   | 'empty' | 'node-missing' | 'node-changed' | 'unknown-component' | 'unknown-slot' | 'slot-mismatch'
   | 'slot-full' | 'unknown-property' | 'bad-value' | 'index-out-of-range' | 'root' | 'cycle'
+  /** 程式被換掉了（套用範例、換目標、課文起始程式、匯入）——spec 221 */
+  | 'replaced'
 
 export interface OpReason {
   /** 第幾步（0 起算）；不屬於任何一步時是 null */

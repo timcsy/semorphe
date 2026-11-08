@@ -1086,5 +1086,9 @@
   "PROPOSAL_NO_CHANGE": "(no change to the code)",
   "PROPOSAL_ACCEPT": "Accept",
   "PROPOSAL_REJECT": "Reject",
-  "PROPOSAL_BUSY": "Syncing — press Accept again in a moment"
+  "PROPOSAL_BUSY": "Syncing — press Accept again in a moment",
+  "PROPOSAL_REPLACED_TEMPLATE": "a template was applied",
+  "PROPOSAL_REPLACED_TARGET": "the target changed",
+  "PROPOSAL_REPLACED_LESSON": "the lesson loaded its starting program",
+  "PROPOSAL_REPLACED_IMPORT": "a file was imported"
 }

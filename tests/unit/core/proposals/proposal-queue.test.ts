@@ -151,3 +151,18 @@ describe('排隊', () => {
     expect(n).toBe(3)
   })
 })
+
+describe('程式被換掉（spec 221）', () => {
+  it('staleAll → 全部過期、原因是 replaced；之後的檢查不會變回 pending', () => {
+    const s = setup()
+    const orig = s.tree
+    const r = s.q.submit({ ops: [{ op: 'remove', node: byComp(s.tree, 'cpp:if').id }] })
+    s.q.staleAll('套用了範例')
+    expect(s.q.get(r.id)).toMatchObject({ status: 'stale', reason: { code: 'replaced' } })
+    s.set(orig)
+    expect(s.q.get(r.id)?.status).toBe('stale')
+    expect(s.q.accept(r.id).ok).toBe(false)
+    expect(s.q.reject(r.id)).toBe(true)
+  })
+})
+

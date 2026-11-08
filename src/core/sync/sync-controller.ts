@@ -1,3 +1,4 @@
+import { carryIds } from './carry-ids'
 import type { SemanticNode, StylePreset, Topic } from '../types'
 import type { ProgramScaffold, ScaffoldResult } from '../program-scaffold'
 // 🔴 **不再 import 語言套件**（spec 153）——風格分析由組裝點推進來。
@@ -711,6 +712,9 @@ export class SyncController {
 
       let tree = this.lifter.lift(rootNode)
       if (!tree) return
+      // 🟢 **沒動到的節點保住身分**（spec 221）：lift 每次發新 id，改一個字就讓每一個指著節點的東西斷掉。
+      //    對得出唯一對應的沿用前一棵的身分，對不上的保留新的——不猜。
+      if (this.currentTree) carryIds(this.currentTree, tree)
 
       // Semantic-level style exception check (after lift — toolbox block mismatches)
       let semanticExceptions: StyleException[] = []

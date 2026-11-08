@@ -30,6 +30,8 @@ export interface Proposal {
   reason?: OpReason
   /** pending 時：以目前的程式套用之後的樹 */
   preview?: SemanticNode
+  /** 程式被換掉而過期——之後的檢查不會讓它變回可接受（spec 221） */
+  sticky?: boolean
   submittedAt: number
 }
 
@@ -111,7 +113,23 @@ export class ProposalQueue {
     this.emit()
   }
 
+  /**
+   * **程式被換掉了**（不是被改了）：所有待處理的提議過期，而且黏住——
+   * 節點身分會沿用（spec 221），新程式若恰好有形狀相同的部分，提議不得因此套到新程式上。
+   */
+  staleAll(detail: string): void {
+    if (this.queue.length === 0) return
+    for (const p of this.queue) {
+      p.sticky = true
+      p.status = 'stale'
+      p.preview = undefined
+      p.reason = { step: null, code: 'replaced', detail }
+    }
+    this.emit()
+  }
+
   private check(p: Proposal, tree: SemanticNode | null): void {
+    if (p.sticky) return
     p.preview = undefined
     if (!tree) { p.status = 'stale'; p.reason = { step: null, code: 'node-missing', detail: '目前沒有程式' }; return }
     const now = refsOf(tree, p.ops)
