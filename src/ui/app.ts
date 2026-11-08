@@ -206,6 +206,8 @@ export class App {
   /** 最近一次判決——`input` 是送出時那一題的測資（題目換了，同一棵樹的判決就不能再用）。 */
   private lastCheck: { tree: SemanticNode; input: string; answer: Promise<CheckAnswer> } | null = null
   /** 最近一次判決帶回的運算式型別與那一棵樹（spec 215：換成 printf 風格時照型別產格式）。 */
+  /** 換語言的寫法換到一半時，套用範例會把它作廢（spec 219） */
+  private languageConversionEpoch = 0
   private lastTypes: { tree: SemanticNode; nodes: Readonly<Record<string, string>>; problems?: readonly { kind: string; at?: string }[] } | null = null
   /** 上一次從積木產碼時型別對不上（保留了 cout）——下一份型別到了要補產一次。 */
   private typesPending = false
@@ -1276,6 +1278,8 @@ export class App {
     //    而不是某一個投影的性質（根公理）。⚠️ 也不用戳面板的私有欄位。
     const hasWork = this.hasStudentWork()
     const go = (): void => {
+      // 進行中的換語言寫法作廢（它若晚一步寫回，會蓋掉這份範例——e2e templates 量到）
+      this.languageConversionEpoch++
       // 換目標（範例釘住它），再把程式碼放進去
       const target = this.targetRegistry.all().find((x) => x.id === t.target)
       if (target && target.id !== this.currentTarget.id) {
@@ -2878,6 +2882,8 @@ export class App {
   }
 
   private handleTargetChange(target: Target, topic: Topic): void {
+    // 任何一次換目標（課文、範例、選單）都讓進行中的換語言寫法作廢——選單那條路的新一輪在這之後才開始（spec 219）
+    this.languageConversionEpoch++
     // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
     this.adoptSkeleton(target.skeleton ?? 'main')
         const prevDepth = this.getScaffoldDepth()
@@ -2961,6 +2967,9 @@ export class App {
     if (!pack?.convertToLanguage) return
     const toLanguage = this.currentTopic.language
     const targetAtSwitch = this.currentTarget
+    // 作廢記號（同第一對的精神：等判決時套用了範例 ⟹ 這一次作廢，不蓋掉它）。
+    // ⚠️ 不比對編輯器內容：換目標之後編輯器會非同步重產，比內容會讓每一次都誤判成「被改過」（e2e 量到）
+    const epoch = ++this.languageConversionEpoch
     let types: Readonly<Record<string, string>> = (known && carryTypes(known.tree, known.nodes, before)) ?? {}
     // 判決的問題（溢位的那一類要換法知道，T017）：上一次判決的節點 id 對到這棵樹才用；另外問的那一次直接用
     let problems: readonly { kind: string; at?: string }[] = Object.keys(types).length > 0 && known?.tree === before ? (known.problems ?? []) : []
@@ -2973,7 +2982,7 @@ export class App {
         if (a && !a.stale) { types = a.types?.nodes ?? {}; problems = (a.verdict?.problems ?? []).map((x) => ({ kind: x.kind, at: x.at })) }
       } catch { types = {} }
     }
-    if (this.currentTarget !== targetAtSwitch) return
+    if (this.currentTarget !== targetAtSwitch || epoch !== this.languageConversionEpoch) return
     const r = pack.convertToLanguage(before, toLanguage, types, problems)
     if (!r) return
     if (r.code !== null) {
