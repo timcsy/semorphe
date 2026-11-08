@@ -209,7 +209,8 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
   //   原本被當成呼叫一個叫 ostream_iterator<int> 的函式，Cella 判「未宣告」reject（假的錯）；型別認得的改送 eTemp（`string("ab")` 因此從誤判變成判對），
   //   `ostream_iterator` 我們還不認得 ⟹ 照實翻不出。已問 Cella 這個型別的形狀
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_7｜A next_permutation do-while loop over three elements, ending with the wrap-around, then equal/binary_search including empty ranges.', async () => {
-    await knownCellaGap(/ostream_iterator<int>\(…\)」是帶樣板引數的呼叫/, async () => {
+    // 2026-11-08（cella 0.1.202611080524）ostream_iterator 接上（eTemp、cout 送 eConst）之後換形狀：下一個卡點是 `next_permutation`（Cella 誠實的 unsupported）
+    await knownCellaGap(/next_permutation is not supported yet/, async () => {
       // 🟠 **為什麼不現在修**：缺的是 `copy / is_sorted / equal / binary_search / next_permutation / prev_permutation`——**新元件，不是做不到**。
       //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
       //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。

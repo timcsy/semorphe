@@ -1104,8 +1104,9 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
   //   2026-11-07（cella 0.1.202611071526）std::copy 補上之後，下一個卡點在**我們這側**：`numeric_limits<int>::min()` 被當成一個叫
   //   `numeric_limits<int>::min` 的函式送出，Cella 判「未宣告」reject（假的錯）——改成照實標翻不出（`func_call/formalize.ts`），
   //   釘在那一句；numeric_limits 要等它有對應（semorphe 這側＋問 Cella 的形狀）。Cella 說之後還有 reserve 與 mergeSort 的定序
-  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_08 卡在 `numeric_limits<int>::min()`（樣板類別的靜態成員還沒有對應；std::copy 已在 1526 補上）', async () => {
-    await knownCellaGap(/numeric_limits<int>::min\(…\)」是樣板類別的靜態成員/, async () => {
+  //   2026-11-08（cella 0.1.202611080524）numeric_limits 有了 eStaticCall，我們送它之後換形狀：下一個卡點是 `vector::reserve`（Cella 誠實的 unsupported，cella 之前就預告過）
+  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_08 卡在 `vector::reserve`（Cella 還沒有；numeric_limits 在 0524 接上）', async () => {
+    await knownCellaGap(/has no member 'reserve'/, async () => {
       await whole(P04_NAIL, "inversions = 31\n0 1 2 3 4 5 6 7 8 9 \n0: at 0 before 1\n5: at 5 after 4 before 6\n9: at 9 after 8\n11: not found\n9 8 7 6 5 4 3 2 1 0 \n9 8 4 5 6 7 3 2 1 0 \nbest slice sum = 12 from 2 to 10: 5 -1 6 -8 2 7 -3 4\ncheck = 12\noriginal untouched: 9 4 7 1 8 2 6 3 5 0 \n", '')
     })
   }, 180_000)

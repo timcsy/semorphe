@@ -8,7 +8,7 @@ const FUNCTOR = /^(?:std::)?(?:greater|less|greater_equal|less_equal|equal_to|no
  * 學生程式會明確指定樣板引數來呼叫的函式庫**函式**樣板（`max<long long>(a, b)`）——明列，不從名字的形狀猜（型別也長這樣）。
  * 加一個名字之前先在 Cella 上量過它判得出（`func_call/spec.test.ts`）。
  */
-const LIBRARY_FUNCTION_TEMPLATES = new Set(['max', 'min', 'make_pair', 'make_tuple'])  // ⚠️ swap<int>(a, b) 量過判 reject「not part of C++」，已回報 cella（2026-11-08）
+const LIBRARY_FUNCTION_TEMPLATES = new Set(['max', 'min', 'make_pair', 'make_tuple', 'swap'])  // swap<int>(a, b)：Cella 0.1.202611080524 起照型別檢查（之前判 reject「not part of C++」——swap 在模型裡是特別處理的敘述，不是函式樣板）
 
 /** 樣板引數串依頂層逗號切開（`pair<int, int>, long long` → 兩段）。 */
 function splitTopLevel(text: string): string[] {
@@ -59,13 +59,25 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // 🔴 名字帶樣板引數、上面每一種形狀都不是（`numeric_limits<int>::min()`）：照 eCall 送等於呼叫一個叫
     //    `numeric_limits<int>::min` 的函式，Cella 判「未宣告的名字」reject——**一支合法的程式被說成錯的**（P6）。
     //    2026-11-07 升 Cella 1526 時露出來（盲測 iterators fuzz_08：之前被 std::copy 的 unsupported 蓋住）。照實標翻不出。
+    //    🟢 Cella 0.1.202611080524 起有 eStaticCall（owner 是指到類別的型別、f 是名字；cella 2026-11-08 給的形狀）：
+    //    在最後一個 `::` 切開，前段照型別翻（樣板類別名寫完整的 `std::`，同上面 FUNCTOR 那條）；翻不出就照實標翻不出
+    const sc = /^(.+>)\s*::\s*([A-Za-z_]\w*)$/.exec(name)
+    if (sc) {
+      const t = f.type(sc[1], n) as { k: string; name?: string } | null
+      if (!t) return f.miss(n, `「${name}(…)」是樣板類別的靜態成員；「${sc[1]}」這個型別還沒有對應`)
+      const owner = t.k === 'tTemplate' && t.name && !t.name.startsWith('std::') ? { ...t, name: `std::${t.name}` } : t
+      return f.k('eStaticCall', { n: n.id, owner, f: sc[2], args })
+    }
     if (/>\s*::/.test(name)) return f.miss(n, `「${name}(…)」是樣板類別的靜態成員；還沒有對應`)
     // 🔴 名字是一個**型別**（`string("ab")`、`ostream_iterator<int>(cout, "")`）：是建一個暫時物件（[expr.type.conv]），同上面的 FUNCTOR
     //    與程式自己的 struct——不是呼叫一個叫 `string` 的函式。照 eCall 送，Cella 判「未宣告」reject（主樹上就有：`string("ab").size()`；
     //    ranges fuzz_7 在 1526 補上 std::copy 之後露出 `ostream_iterator<int>`）。`isTypeText` 不記 unknown，所以先問再翻
     if (!f.isFunctionName(name) && f.isTypeText(name)) {
-      const t = f.type(name, n)
-      if (t) return f.k('eTemp', { n: n.id, t, args })
+      const t = f.type(name, n) as { k: string; name?: string } | null
+      // 標準函式庫的類別樣板寫完整的 `std::`（同 FUNCTOR；`ostream_iterator<int>(cout, " ")` 不寫就判 callArguments——2026-11-08 量到）
+      // 標準串流當建構引數（`ostream_iterator<int>(cout, " ")`）：cella 2026-11-08 說送 eConst——eName 在這個位置會被解析成串流敘述的那種 cout、判 callArguments
+      const streamArgs = args.map((a) => (a.k === 'eName' && /^(?:std::)?(cout|cerr|clog)$/.test(String(a.name)) ? f.k('eConst', { n: a.n, name: String(a.name).replace(/^std::/, '') }) : a))
+      if (t) return f.k('eTemp', { n: n.id, t: t.k === 'tTemplate' && t.name && !t.name.startsWith('std::') ? { ...t, name: `std::${t.name}` } : t, args: streamArgs })
     }
     // 其餘帶樣板引數的（`max<long long>(a, b)` 明確指定樣板引數的函式樣板呼叫）：照 eCall 送等於呼叫一個叫 `max<long long>` 的函式
     //    ——主樹上判「未宣告」reject（假的錯）。照實標翻不出
