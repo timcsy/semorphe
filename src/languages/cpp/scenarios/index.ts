@@ -4,10 +4,12 @@
  */
 import { registerScenarioKind } from '../../../core/disambiguation/scenario-registry'
 import { STDIN_KIND, stdinScenarios } from './stdin'
+import { BOARD_INPUTS_KIND, boardInputScenarios } from './board-inputs'
 
 let done = false
 export function registerCppScenarioKinds(): void {
   if (done) return
   done = true
   registerScenarioKind(STDIN_KIND, stdinScenarios)
+  registerScenarioKind(BOARD_INPUTS_KIND, boardInputScenarios)
 }

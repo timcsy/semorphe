@@ -164,6 +164,11 @@ export interface CheckRequest {
   /** 骨架隱藏時樹裡沒有進入點（`main`）——提供者照骨架宣告補上。 */
   skeletonId: string
   input: string
+  /**
+   * 板子的環境輸入（時間序列：`{ t: 毫秒, key: 'digital:2' | 'analog:A0' | …, value }`）——規格消歧的 Arduino 情境用（spec 218）。
+   * 省略 ＝ 沒有外部輸入（今天的每一次判決）。
+   */
+  boardInputs?: readonly { t: number; key: string; value: number }[]
 }
 
 /** 判決與型別查詢的答案。`stale`：送出之後又有更新的請求——這一筆的節點可能已經不在，丟掉。 */

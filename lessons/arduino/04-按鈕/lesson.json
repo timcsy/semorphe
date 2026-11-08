@@ -32,6 +32,20 @@
     {
       "id": "make",
       "title": "做一個：按幾下，閃幾下"
+    },
+    {
+      "id": "lit",
+      "title": "練習：按著按鈕時燈要亮（題目沒說按鈕怎麼接）",
+      "interpretations": [
+        {
+          "id": "pulldown",
+          "label": "按下時讀到 HIGH（外接下拉電阻）"
+        },
+        {
+          "id": "pullup",
+          "label": "按下時讀到 LOW（用內建上拉 INPUT_PULLUP）"
+        }
+      ]
     }
   ]
 }

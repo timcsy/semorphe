@@ -34,10 +34,10 @@
 **Goal**: Arduino 按鈕題兩種讀法用時間序列情境分得出。
 **Independent Test**: `tests/integration/disambiguation-arduino.test.ts` 全綠。
 
-- [ ] T014 [P] [US2] 判決請求多一格選用的 `boardInputs` 於 `src/core/capabilities.ts`（`CheckRequest`），Cella 提供者把它放進程式 JSON 的 `inputs`，於 `src/providers/cella/provider.ts`
-- [ ] T015 [US2] Arduino 的 `board-inputs` 情境產生器：找讀取的輸入腳（digitalRead／analogRead），產生一直低／一直高／某刻按下／按下又放開／類比階梯，於 `src/languages/cpp/scenarios/board-inputs.ts`（登記 kind）
-- [ ] T016 [P] [US2] 示範題：`lessons/arduino/04-按鈕` 加一題（按一下切換 vs. 按住才亮），兩個解讀與解答
-- [ ] T017 [US2] 先寫紅的整合測試：Arduino 示範題比對結果、第一個不一致附時間點與兩邊腳位，於 `tests/integration/disambiguation-arduino.test.ts`；再讓它轉綠
+- [X] T014 [P] [US2] 判決請求多一格選用的 `boardInputs` 於 `src/core/capabilities.ts`（`CheckRequest`），Cella 提供者把它放進程式 JSON 的 `inputs`，於 `src/providers/cella/provider.ts`
+- [X] T015 [US2] Arduino 的 `board-inputs` 情境產生器：找讀取的輸入腳（digitalRead／analogRead），產生一直低／一直高／某刻按下／按下又放開／類比階梯，於 `src/languages/cpp/scenarios/board-inputs.ts`（登記 kind）
+- [X] T016 [P] [US2] 示範題：`lessons/arduino/04-按鈕` 加一題（按一下切換 vs. 按住才亮），兩個解讀與解答
+- [X] T017 [US2] 先寫紅的整合測試：Arduino 示範題比對結果、第一個不一致附時間點與兩邊腳位，於 `tests/integration/disambiguation-arduino.test.ts`；再讓它轉綠
 
 ## Phase 5: User Story 3 — 老師看並排畫面並點選（P3）
 
