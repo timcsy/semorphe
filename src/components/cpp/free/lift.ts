@@ -25,3 +25,8 @@ export function registerLift(): void {
 export function freedPointer(n: SemanticNode): SemanticNode | null {
   return n.componentId === 'cpp:free' ? n.slots.ptr?.[0] ?? null : null
 }
+
+/** `free(p)`——C++ → C 把 `delete`／`delete[]` 換成它時用（357；身分只寫在這顆膠囊裡）。 */
+export function buildFree(ptr: SemanticNode): SemanticNode {
+  return createNode('cpp:free', {}, { ptr: [ptr] })
+}

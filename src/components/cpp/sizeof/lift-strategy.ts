@@ -25,3 +25,8 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
 export function sizeofTypeTarget(n: SemanticNode | undefined): string | null {
   return n?.componentId === 'cpp:sizeof' && typeof n.properties.target === 'string' ? n.properties.target.trim() : null
 }
+
+/** `sizeof(T)`（T 是型別）——C++ → C 把單一的 `new T` 換成 `malloc(sizeof(T))` 時用（357）。 */
+export function buildSizeofType(t: string): SemanticNode {
+  return createNode('cpp:sizeof', { target: t })
+}

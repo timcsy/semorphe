@@ -65,3 +65,20 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
 export function buildNew(type: string, count: SemanticNode | null): SemanticNode {
   return createNode('cpp:new', { type }, count ? { size: [count] } : {})
 }
+
+/**
+ * 這顆 `new` 是 malloc 換得回去的形狀嗎（C++ → C，357）：`new T` 或 `new T[count]`，沒有建構引數、沒有 `()`／`{}` 初始化。
+ * 其餘回 null（`new T(3)`、`new T{}` 在 C 裡沒有對應——malloc 不初始化）。
+ */
+export function newAllocShape(n: SemanticNode): { elem: string; count: SemanticNode | null } | null {
+  if (n.componentId !== 'cpp:new') return null
+  if ((n.slots.args?.length ?? 0) > 0 || n.properties.valueInit || n.properties.brace) return null
+  const elem = String(n.properties.type ?? '').trim()
+  if (!elem) return null
+  return { elem, count: n.slots.size?.[0] ?? null }
+}
+
+/** 是一顆 `new` 嗎（不論形狀）——C++ → C 數「整支程式的 new 是不是都換得了」時用（357） */
+export function isNew(n: SemanticNode): boolean {
+  return n.componentId === 'cpp:new'
+}
