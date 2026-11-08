@@ -221,6 +221,8 @@ const LOADABLE_SHAPES: readonly string[] = [
   '    map<int, int> cc;\n    cc[1];',
   // 🔴 `return` 之後還有一行註解——學生真的這樣寫
   '    return 0;\n    // 保底',
+  // 結構裡的匿名 union／struct 成員（358：name 為空的一顆，不再照原文）
+  '    struct S {\n        char k;\n        union {\n            int i;\n            float f;\n        };\n    };',
   '    for (int i = 0; i < 3; i++) {\n      break;\n      // 說明\n    }',
   // 逗號那一族
   '    ios::sync_with_stdio(0), cin.tie(0);',
@@ -349,6 +351,7 @@ describe('第一百一十八條護欄：走一趟積木回來', () => {
     ['string s, t, u;', 'string s; string t; string u;'],
     ['string A[100], ans;', 'string A[100]; string ans;'],
     ['deque<int> d(n);', 'deque<int> d(n);'],
+    ['struct S { char k; union { int i; float f; }; };', 'struct S { char k; union { int i; float f;'], // 開頭是 `}` 的行被 viaBlocks 濾掉
     ['ios::sync_with_stdio(0), cin.tie(0);', 'ios::sync_with_stdio(0), cin.tie(0);'],
     ['int x = 1; for (; x != 0; scanf("%d", &x)) { }', 'int x = 1; for (; x != 0; scanf("%d", &x)) {'], // 單獨一行的 `}` 被 viaBlocks 濾掉
   ])('🔴 走一趟積木：%s', (body, expected) => {

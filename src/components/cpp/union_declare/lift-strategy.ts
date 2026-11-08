@@ -11,8 +11,9 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('cpp:liftUnionDef', (node, ctx) => {
     const name = node.childForFieldName('name')?.text ?? ''
     const body = node.childForFieldName('body')
-    // 匿名的只在 typedef 裡收（`typedef union { … } Num;`）；結構裡的匿名 union 成員直接掛在外層——還裝不下
-    if (!body || (!name && node.parent?.type !== 'type_definition')) return null
+    // 匿名的收兩處：typedef 裡（`typedef union { … } Num;`）、結構裡沒有宣告子的匿名成員（`union { … };`，358）
+    const anonymousMember = node.parent?.type === 'field_declaration' && !node.parent.childForFieldName('declarator')
+    if (!body || (!name && node.parent?.type !== 'type_definition' && !anonymousMember)) return null
     const members: SemanticNode[] = []
     for (const child of body.namedChildren) {
       if (child.type === 'comment') { const c = ctx.lift(child); if (c) members.push(c); continue }
