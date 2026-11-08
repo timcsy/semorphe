@@ -100,7 +100,20 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const declaredTypes = new Set<string>()
   const enumNames = new Set<string>()
   const unionNames = new Set<string>()
+  // 類別外的靜態成員定義（361；cella 2026-11-08 的送法）：成員 id → 所屬（有名字的外層）、`類別::成員` → 類別外那份定義。
+  //    只問形狀：有名字的節點底下的節點、名字帶 `::` 又有初值槽的宣告——核心不認識任何一顆元件
+  const ownerOf = new Map<string, string>()
+  const classMembers = new Set<string>()
+  const outsideDefs = new Map<string, SemanticNode>()
   const collect = (n: SemanticNode): void => {
+    const ownName = typeof n.properties?.name === 'string' ? n.properties.name : ''
+    if (ownName && !ownName.includes('::')) {
+      for (const kids of Object.values(n.slots ?? {})) for (const c of kids) {
+        ownerOf.set(c.id, ownName)
+        if (typeof c.properties?.name === 'string' && c.properties.name) classMembers.add(`${ownName}::${c.properties.name}`)
+      }
+    }
+    if (ownName.includes('::') && n.slots?.initializer !== undefined) outsideDefs.set(ownName, n)
     const named = FORMALIZE.definesType.get(n.componentId)
     if (named) structNames.add(named(n))
     const declared = FORMALIZE.declaresType.get(n.componentId)
@@ -469,6 +482,12 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     binOp: (op) => BIN[op],
     scalar: (name) => SCALAR[name],
     isStructName: (name) => structNames.has(name),
+    staticInitOf: (member) => {
+      const owner = ownerOf.get(member.id)
+      const def = owner ? outsideDefs.get(`${owner}::${String(member.properties?.name ?? '')}`) : undefined
+      return def?.slots?.initializer?.[0]
+    },
+    isClassMember: (qualifiedName) => classMembers.has(qualifiedName),
     options: { board: options.board, lang: options.lang, isC },
   }
 

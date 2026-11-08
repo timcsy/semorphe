@@ -127,6 +127,13 @@ export interface FormalizeContext {
   scalar(name: string): string | undefined
   /** 這個名字是程式裡定義過的型別（struct）嗎。 */
   isStructName(name: string): boolean
+  /**
+   * 類別外的靜態成員定義（`int C::n = 3;`、`L* L::current = nullptr;`）的初值節點——給類別裡的那顆靜態成員用（cella 2026-11-08：
+   * 初值併進類別的 mbStatic，類別外的定義本身不另外送）。`member` 是類別裡那顆成員；沒有外面的定義或定義沒有初值 → undefined。
+   */
+  staticInitOf(member: SemanticNode): SemanticNode | undefined
+  /** `C::n` 是程式裡某個類別的成員嗎（類別外的定義要併進去、不另外送時用） */
+  isClassMember(qualifiedName: string): boolean
   /** 這次 formalize 的目標。 */
   options: { board?: string; lang?: 'c' | 'cpp'; isC: boolean }
 }

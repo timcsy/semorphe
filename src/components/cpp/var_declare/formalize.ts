@@ -19,11 +19,14 @@ function classCtor(n: SemanticNode, f: FormalizeContext, global: boolean): Cella
 /**
  * 類別外的靜態成員定義（`int Counter::total = 0;`）：lift 成一顆名字是 `Counter::total` 的頂層宣告。
  * 照通用宣告子送的話它是**另一個**叫 `Counter::total` 的全域變數，而類別裡的那個靜態成員拿不到它的初值——
- * 實測（spec 203）`= 5` 時 Cella 印 2、g++ 印 7。初值要併進類別的 `mbStatic`，那一步還沒做 ⟹ 照實標翻不出。
+ * 實測（spec 203）`= 5` 時 Cella 印 2、g++ 印 7。初值併進類別的 `mbStatic`（361，cella 的送法）；這一份不另外送。找不到對應成員才照實標翻不出。
  */
 function qualifiedDefinition(n: SemanticNode, f: FormalizeContext): CellaJson[] | null {
-  if (!String(n.properties?.name ?? '').includes('::')) return null
-  f.miss(n, '類別外的靜態成員定義（初值要併進類別的靜態成員）還沒有對應')
+  const name = String(n.properties?.name ?? '')
+  if (!name.includes('::')) return null
+  // 361：初值已併進類別的 mbStatic（member_static 用 staticInitOf 找回來）——這一份不另外送
+  if (f.isClassMember(name)) return []
+  f.miss(n, '類別外的靜態成員定義找不到對應的類別成員')
   return []
 }
 
