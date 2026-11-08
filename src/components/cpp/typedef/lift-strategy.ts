@@ -13,7 +13,7 @@
  *
  * 修法照 P6：
  * - 認得的照實記：原型別多認 `struct／enum／union Tag`（**沒有本體**的那種）；宣告子是 `*…*名字` 的把星號接到原型別。
- * - 認不得的**回 null**（整句照原文降級）：帶本體的 enum（帶本體的 struct／union 已接上）、函式指標、陣列 typedef、一句多個別名。
+ * - 認不得的**回 null**（整句照原文降級）：帶本體的 struct／union／enum 已接上（其餘照原文）、函式指標、陣列 typedef、一句多個別名。
  *   ⚠️ 帶本體的 `typedef struct` 在 C 太常見——完整支援（積木上要有別名那一格）排成下一刀，見 tests/reports/fuzz-c-bridge-20261107.md。
  * - **再也不編名字**：找不到別名就回 null。
  */
@@ -22,6 +22,7 @@ import type { AstNode } from '../../../core/lift/types'
 import { createNode } from '../../../core/semantic-tree'
 import { asTypedefStruct } from '../struct_declare/lift-strategy'
 import { asTypedefUnion } from '../union_declare/lift-strategy'
+import { asTypedefEnum } from '../enum/lift-strategy'
 
 const TAGGED = new Set(['struct_specifier', 'enum_specifier', 'union_specifier'])
 
@@ -49,7 +50,12 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
         if (decls.length !== 1 || decls[0].type !== 'type_identifier') return null
         return asTypedefUnion(ctx.lift(typeNode), decls[0].text, !typeNode.childForFieldName('name'))
       }
-      // 帶本體的 enum：還裝不下——照原文降級
+      // 帶本體的 enum（同上，2026-11-08）：交給列舉的 lift，再記別名
+      if (typeNode.type === 'enum_specifier' && typeNode.childForFieldName('body')) {
+        const decls = node.namedChildren.filter((c) => c.startIndex !== typeNode.startIndex && c.type !== 'comment')
+        if (decls.length !== 1 || decls[0].type !== 'type_identifier') return null
+        return asTypedefEnum(ctx.lift(typeNode), decls[0].text)
+      }
       if (TAGGED.has(typeNode.type) && typeNode.childForFieldName('body')) return null
       // ⚠️ 比位置不比物件：web-tree-sitter 每次取節點都是新物件，`c !== typeNode` 永遠成立
       const declarators = node.namedChildren.filter((c) => c.startIndex !== typeNode.startIndex && c.type !== 'type_qualifier' && c.type !== 'comment')

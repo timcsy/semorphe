@@ -481,3 +481,17 @@ export const SHAPE_CHANGES_V22: ShapeChange[] = [
       + '而一個欄位只裝得下一串文字。',
   },
 ]
+
+/**
+ * ## V30：列舉多了「另名」那一格（2026-11-08，union 盲測的覆蓋缺口）
+ *
+ * C 的 `typedef enum [Tag] { … } Kind;` 原本整句照原文降級；接上之後 `cpp_enum` 多一格 `TYPEDEF_ALIAS`（同 V29 的結構）。
+ */
+export const SHAPE_CHANGES_V30: ShapeChange[] = [
+  {
+    blockType: 'cpp_enum',
+    retiredFields: [],
+    addedFields: ['TYPEDEF_ALIAS'],
+    why: '`typedef enum … Kind;` 的別名從此是一格欄位——沒有這一格的舊快取是別名裝不下的時代建的',
+  },
+]

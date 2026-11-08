@@ -11,6 +11,11 @@
       "name": "values",
       "kind": "literal",
       "default": ""
+    },
+    {
+      "name": "typedef_alias",
+      "kind": "identifier",
+      "default": ""
     }
   ],
   "slots": {},
@@ -33,5 +38,6 @@
   "traits": {
     "topLevelOnly": true
   },
-  "_traits_why": "**這顆只能待在最外層**（第 223 刀）：隱藏骨架把工作區最外層的積木包進 main 時，它要留在 main 外面——C++ 不准把它放進函式（樣板、命名空間），或放進去之後 main 外面的函式就看不到它（型別定義）。在此之前產生器只認函式定義與前處理指示詞，於是 struct 被搬進 main。"
+  "_traits_why": "**這顆只能待在最外層**（第 223 刀）：隱藏骨架把工作區最外層的積木包進 main 時，它要留在 main 外面——C++ 不准把它放進函式（樣板、命名空間），或放進去之後 main 外面的函式就看不到它（型別定義）。在此之前產生器只認函式定義與前處理指示詞，於是 struct 被搬進 main。",
+  "_typedef_alias_why": "C 的 `typedef enum [Tag] { … } Alias;`（同結構與聯合那兩顆的另名，2026-11-08 union 盲測的覆蓋缺口）。空 ＝ 不是 typedef；匿名的列舉 name 為空、只靠別名稱呼——不再編 `MyEnum`"
 }

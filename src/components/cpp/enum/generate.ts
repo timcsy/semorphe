@@ -4,8 +4,10 @@ import { indent } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:enum', (node, ctx) => {
-      const name = node.properties.name ?? 'MyEnum'
+      const name = String(node.properties.name ?? 'MyEnum')
       const values = node.properties.values ?? ''
-      return `${indent(ctx)}enum ${name} { ${values} };\n`
+      const alias = String(node.properties.typedef_alias ?? '')
+      const head = `enum ${name ? `${name} ` : ''}{ ${values} }`
+      return alias ? `${indent(ctx)}typedef ${head} ${alias};\n` : `${indent(ctx)}${head};\n`
     })
 }
