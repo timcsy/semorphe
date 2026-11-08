@@ -28,3 +28,8 @@ export function registerLift(): void {
     return createNode('cpp:io_mode', { setting }, { value: [value] })
   })
 }
+
+/** `setw(v)`／`setprecision(v)`／`setfill(v)` 的建構子——C → C++ 換 printf 的精度時用（2026-11-08）。 */
+export function buildIoMode(setting: 'width' | 'precision' | 'fill', value: SemanticNode): SemanticNode {
+  return createNode('cpp:io_mode', { setting }, { value: [value] })
+}

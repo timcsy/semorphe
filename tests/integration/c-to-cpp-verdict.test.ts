@@ -103,9 +103,9 @@ describe('C → C++：換了會變意思的，保留', () => {
       kept: 1, still: /printf\("%c\\n"/,
     },
     {
-      name: '%f（printf 印 6 位小數、cout 印 %g）',
-      src: 'int main() {\n    double x = 1.5;\n    printf("%f\\n", x);\n    return 0;\n}\n',
-      kept: 1, still: /printf\("%f\\n", x\)/,
+      name: '%g 遇上同一支程式裡換成 fixed 的輸出：cout 的狀態會改它的印法 ⟹ %g 那一行保留（第五刀）',
+      src: 'int main() {\n    double x = 1.5, y = 2.25;\n    printf("%.1f\\n", x);\n    printf("%g\\n", y);\n    return 0;\n}\n',
+      kept: 1, still: /printf\("%g\\n", y\)/,
     },
     {
       name: 'scanf 的格式裡有逗號（cin 不會跳過它）',
@@ -127,12 +127,25 @@ describe('C → C++：換了會變意思的，保留', () => {
     })
   }
 
-  it('同一支程式裡換得動的照換：printf("%d\\n") 換、printf("%.1f") 留', async () => {
-    const src = 'int main() {\n    int n = 3;\n    double avg = 2.5;\n    printf("n = %d\\n", n);\n    printf("%.1f\\n", avg);\n    return 0;\n}\n'
+  it('同一支程式裡換得動的照換：printf("%d\\n") 換、printf("%5.2f") 留（寬度還沒換）', async () => {
+    const src = 'int main() {\n    int n = 3;\n    double avg = 2.5;\n    printf("n = %d\\n", n);\n    printf("%5.2f\\n", avg);\n    return 0;\n}\n'
     const { cpp, converted, kept } = await toCpp(src)
     expect([converted, kept]).toEqual([1, 1])
     expect(cpp).toContain('cout << "n = " << n << endl;')
     expect(cpp).toContain('#include <cstdio>')
+    await sameVerdict(src, cpp)
+  })
+
+  // ── 第五刀（2026-11-08）：%f／%.Nf → fixed << setprecision(N)，每一次都明寫（不靠前一行留下的狀態）──
+  it('🟢 %.2f、%f、%lf、%.0f → fixed << setprecision(N)；之後的整數不受影響', async () => {
+    const src = 'int main() {\n    double avg = 2.5, pi = 3.14159;\n    float r = 0.5;\n    int n = 7;\n    printf("avg = %.2f\\n", avg);\n    printf("%f %lf\\n", pi, r);\n    printf("%.0f\\n", pi);\n    printf("%d\\n", n);\n    return 0;\n}\n'
+    const { cpp, converted, kept } = await toCpp(src)
+    expect([converted, kept]).toEqual([4, 0])
+    expect(cpp).toContain('cout << "avg = " << fixed << setprecision(2) << avg << endl;')
+    expect(cpp).toContain('cout << fixed << setprecision(6) << pi << " " << fixed << setprecision(6) << r << endl;')
+    expect(cpp).toContain('cout << fixed << setprecision(0) << pi << endl;')
+    expect(cpp).toContain('#include <iomanip>')
+    expect(cpp).not.toMatch(/\bprintf\s*\(/)
     await sameVerdict(src, cpp)
   })
 
