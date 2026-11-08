@@ -17,6 +17,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
+import { formalize } from '../../src/providers/cella/formalize'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -71,6 +72,8 @@ describe.skipIf(!process.env.STUDYCPP_DIR)('探針：StudyCpp 語料', () => {
     const raws: string[] = []
     const perFile: { rel: string; nodes: number; raw: number }[] = []
     let liftFail = 0, parseFail = 0, genFail = 0
+    const untranslated: { rel: string; reasons: string[] }[] = []
+    let formalizeThrew = 0
 
     for (const f of fs_) {
       let root: SemanticNode | null = null
@@ -90,6 +93,14 @@ describe.skipIf(!process.env.STUDYCPP_DIR)('探針：StudyCpp 語料', () => {
       perFile.push({ rel: f.rel, nodes: n, raw: fRaws.length })
 
       try { generateCode(root, 'cpp', S) } catch { genFail++ }
+
+      // 翻給 Cella 翻得出來嗎——翻不出的，照實說哪一顆、為什麼（P6）
+      try {
+        const r = formalize(root, { lang: 'cpp' })
+        if (r.program === null) {
+          untranslated.push({ rel: f.rel, reasons: r.unknown.map((u) => `${u.construct}：${u.reason}`) })
+        }
+      } catch { formalizeThrew++ }
     }
 
     const totalNodes = perFile.reduce((a, b) => a + b.nodes, 0)
@@ -116,6 +127,18 @@ describe.skipIf(!process.env.STUDYCPP_DIR)('探針：StudyCpp 語料', () => {
       if (++shown >= 40) break
     }
     console.log(`  （不同的殘差片段共 ${seen.size} 種）`)
+
+    // ─── 翻不出給 Cella 的那幾支 ───
+    //
+    // 這一段原本每次都手寫一支臨時探針（2026-11-08 已經第三次），收成常駐的。
+    // 數字的歷次讀數見 tests/reports/studycpp-untranslated-*.md。
+    console.log(`\n── 翻不出給 Cella 的（${untranslated.length} 支｜formalize 丟例外 ${formalizeThrew}）──`)
+    if (untranslated.length === 0) console.log('  （沒有）')
+    for (const u of untranslated) {
+      console.log(`  ${u.rel}`)
+      for (const r of [...new Set(u.reasons)].slice(0, 3)) console.log(`      ${r.replace(/\s+/g, ' ').slice(0, 110)}`)
+    }
+    expect(formalizeThrew, 'formalize 不該丟例外——翻不了要回 unknown').toBe(0)
 
     // ─── 使用者問的另一半：「用到的東西，在 semorphe 拿得到嗎」 ───
     //
