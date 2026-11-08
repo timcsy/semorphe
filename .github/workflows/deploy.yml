@@ -90,10 +90,18 @@ jobs:
       #
       #    ⚠️ 而它**只在片數變多之後才變得明顯**：四片各裝一次，
       #    撞到的機率是原本的四倍。
+      #
+      # 🔴 **`--ignore-scripts` ＋ 只重建 esbuild**（2026-11-08，356）。
+      #    重試擋不住第二種抖動：`tree-sitter-cli` 的安裝腳本要從 **GitHub releases** 下載執行檔，
+      #    77dfdfe2 那一輪 e2e (4) 拿到 504、連三次都一樣（npm 登錄庫是好的）。
+      #    而這條流程**根本不需要**那些安裝腳本：tree-sitter 文法用的是 `public/` 裡收好的 wasm
+      #    （`tree-sitter-cli` 只在本機 `build:wasm:python` 用；tree-sitter-cpp／python 的腳本是編原生綁定），
+      #    真正要跑腳本的只有 esbuild（vite 的建置）。vsix.yml 不改——打包要 vsce-sign／keytar。
+      #    驗證：乾淨的 node_modules 用這一行裝，tsc、測試、`npm run build` 都過（worktree semorphe-356）。
       - name: npm ci（抖了就重試）
         run: |
           for i in 1 2 3; do
-            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            npm ci --ignore-scripts --fetch-retries 5 --fetch-retry-maxtimeout 120000 && npm rebuild esbuild && exit 0
             echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
             sleep 20
           done
@@ -168,7 +176,7 @@ jobs:
       - name: npm ci（抖了就重試——理由見上面第一處）
         run: |
           for i in 1 2 3; do
-            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            npm ci --ignore-scripts --fetch-retries 5 --fetch-retry-maxtimeout 120000 && npm rebuild esbuild && exit 0
             echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
             sleep 20
           done
@@ -239,7 +247,7 @@ jobs:
       - name: npm ci（抖了就重試——理由見上面第一處）
         run: |
           for i in 1 2 3; do
-            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            npm ci --ignore-scripts --fetch-retries 5 --fetch-retry-maxtimeout 120000 && npm rebuild esbuild && exit 0
             echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
             sleep 20
           done
@@ -329,7 +337,7 @@ jobs:
         if: env.NPM_TOKEN != ''
         run: |
           for i in 1 2 3; do
-            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            npm ci --ignore-scripts --fetch-retries 5 --fetch-retry-maxtimeout 120000 && npm rebuild esbuild && exit 0
             echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
             sleep 20
           done
@@ -359,7 +367,7 @@ jobs:
       - name: npm ci（抖了就重試——理由見上面第一處）
         run: |
           for i in 1 2 3; do
-            npm ci --fetch-retries 5 --fetch-retry-maxtimeout 120000 && exit 0
+            npm ci --ignore-scripts --fetch-retries 5 --fetch-retry-maxtimeout 120000 && npm rebuild esbuild && exit 0
             echo "::warning::npm ci 第 ${i} 次失敗，20 秒後重試"
             sleep 20
           done
