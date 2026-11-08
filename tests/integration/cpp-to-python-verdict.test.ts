@@ -106,8 +106,8 @@ describe('C++ → Python：意思會變的反例', () => {
   }, 60_000)
   for (const [name, body, kind] of [
     ['取餘數的一般用法（負數的正負號規則不同）', '    int a = -7, b = 2;\n    cout << a % b << endl;\n', 'modulo'],
-    // `s[0] = 'z'` 由專門的「改字串裡的字元」那顆元件接，它沒有 Python 的寫法 ⟹ 子集以外（結果一樣是不換）
-    ['改字串裡的一個字元（Python 的字串不能改）', '    string s = "abc";\n    s[0] = \'z\';\n    cout << s << endl;\n', 'outside-subset'],
+    // `s[0] = 'z'` 由「陣列元素指定」那顆接——365 接上它的 Python 寫法時差點把這一支換過去（這支反例抓到）
+    ['改字串裡的一個字元（Python 的字串不能改）', '    string s = "abc";\n    s[0] = \'z\';\n    cout << s << endl;\n', 'char'],
     ['char 的 ++（Python 的字串不能加 1）', '    char c = \'a\';\n    c++;\n    cout << c << endl;\n', 'char'],
     ['指標', '    int x = 3;\n    int* p = &x;\n    cout << *p << endl;\n', 'outside-subset'],
     ['無號整數的除法（`sum / v.size()`，負數時 C++ 會繞回）', '    vector<int> v;\n    v.push_back(-4);\n    int s = -4;\n    cout << s / v.size() << endl;\n', 'division'],
