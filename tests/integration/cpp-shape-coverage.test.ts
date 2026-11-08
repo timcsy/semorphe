@@ -229,10 +229,13 @@ describe('C++ 形狀補課：還沒收的那幾個要【誠實降級】', () => 
     expect(rt(PREPROC_ELIFDEF)).toContain('#elifdef SLOW')
   })
 
-  it('⚠️ `union`：認不出來 → 灰色方塊，而原文留著', () => {
+  // 🟢 345 做了 union（cpp:union_declare）、357 讓 `std::endl` 認得——這一段已經沒有照原文的地方
+  //    （這支原本「綠」的理由其實是 `std::endl` 降級，不是 union：一個借來的 raw_code）
+  it('🟢 `union`：是一顆 union，整段沒有照原文；來回保留 `union Value`', () => {
     const ids = idsOf(lift(UNION))
     expect(ids, '整段真的抬升到東西了').toContain('cpp:func_def')  // ← 正向錨點
-    expect(ids).toContain('raw_code')
+    expect(ids).toContain('cpp:union_declare')
+    expect(ids).not.toContain('raw_code')
     expect(rt(UNION)).toContain('union Value')
   })
 })

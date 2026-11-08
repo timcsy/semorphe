@@ -16,7 +16,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         code += `${indent(ctx)}} ${alias};\n`
         return code
       }
-      let code = `${indent(ctx)}struct ${name}${inherit} {\n`
+      // 空名字＝結構裡的匿名成員（`struct { … };`，358）——不補預設名字
+      let code = `${indent(ctx)}struct ${name ? `${name}${inherit} ` : ''}{\n`
       code += generateBody(members, indented(ctx))
       code += `${indent(ctx)}};\n`
       return code

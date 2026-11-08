@@ -91,6 +91,14 @@ describe('模糊測試：類別外定義成員函式', () => {
   })
 
   // ── 盲測掀出、這一刀修好的（各一支） ──
+  it('🔴 修好：類別外的靜態指標成員——名字不再變成 `ptr`、`static L* current;` 的星號不再黏到名字（fuzz_9；360 讓 `L::current` 翻得出之後 Cella 露出的誤判 reject）', () => {
+    const code = 'class L {\npublic:\n    static L* current;\n};\nL* L::current = nullptr;\nint main() {\n}\n'
+    const t = lift(code)
+    expect(generateCode(t, 'cpp', S)).toContain('L* L::current = nullptr;')
+    expect(generateCode(t, 'cpp', S)).toContain('static L* current;')
+    expect(JSON.stringify(t)).not.toContain('"name":"ptr"')
+    expect(JSON.stringify(t)).not.toContain('"name":"* current"')
+  })
   it('🔴 修好：`new int[n]()` 的值初始化不再丟掉（fuzz_9 原本來回漂移）', () => {
     const t = lift('int main() {\n    int n = 3;\n    int* a = new int[n]();\n    int* b = new int[n]{};\n    int* c = new int[n];\n}\n')
     const out = generateCode(t, 'cpp', S)

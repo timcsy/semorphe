@@ -45,9 +45,19 @@ describe('cpp:union_declare', () => {
     for (const src of [BASIC, TYPEDEF_ANON, TYPEDEF_TAG]) expect(generateCode(lift(src), 'cpp', cStyle as StylePreset).trimEnd()).toBe(src.trimEnd())
     expect(generateCode(lift(CPP), 'cpp', apcs as StylePreset).trimEnd()).toBe(CPP.trimEnd())
   })
-  it('匿名 union 當結構成員、帶成員函式的 union：照原文降級', () => {
-    const a = 'struct S {\n    union {\n        int i;\n        float f;\n    };\n};\n'
-    expect(generateCode(lift(a), 'cpp', cStyle as StylePreset)).toContain('union {')
+  // 358（Cella 0959）：結構裡的匿名 union／struct 成員——積木是 name 為空的一顆，formalize 送合成名字 ＋ 空名的 fld
+  const ANON = C + 'struct P {\n    char k;\n    union {\n        int code;\n        char flag;\n    };\n    struct {\n        int x;\n        int y;\n    };\n};\nint main(void) {\n    struct P p;\n    p.k = \'a\';\n    p.code = 65;\n    p.x = 3;\n    p.y = 4;\n    printf("%c %d %d\\n", p.k, p.code, p.x + p.y);\n    return 0;\n}\n'
+  it('🟢 匿名成員：lift 成名字為空的 union／struct（不是原文、不編名字）、產碼一字不差', () => {
+    const p = lift(ANON).slots!.body!.find((n) => n.componentId === 'cpp:struct_declare')!
+    const inner = p.slots!.members!.filter((m) => m.slots?.members !== undefined)
+    expect(inner.map((m) => [m.componentId, m.properties.name])).toEqual([['cpp:union_declare', ''], ['cpp:struct_declare', '']])
+    expect(ids(lift(ANON)).filter((i) => i.includes('raw'))).toEqual([])
+    expect(generateCode(lift(ANON), 'cpp', cStyle as StylePreset).trimEnd()).toBe(ANON.trimEnd())
+  })
+  it('★ 匿名成員：Cella（C）判得出 `p.code`、`p.x`——之前整句照原文、成員不存在', async () => {
+    await expectCellaOut(ANON, 'a 65 7\n', { lang: 'c' })
+  }, 120_000)
+  it('帶成員函式的 union：照原文降級', () => {
     const b = 'union W {\n    int i;\n    int get() { return i; }\n};\n'
     expect(ids(lift(b))).not.toContain('cpp:union_declare')
     expect(generateCode(lift(b), 'cpp', apcs as StylePreset)).toContain('int get()')

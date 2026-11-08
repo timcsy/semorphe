@@ -619,7 +619,9 @@ function unwrapPointers(decl: AstNode): { stars: number; inner: AstNode } {
         //    下游 `instantiate` 看到「`Node` 有一個 `Node` 成員」，丟出
         //    「結構 Node 直接或間接包含自己——那在 C++ 不合法（**要用指標**）」
         //    ——**而它已經是指標了**（2026-08-27 生 Linked List 課時撞到）。
-        c.type === 'field_identifier',
+        c.type === 'field_identifier' ||
+        // 類別外的靜態成員定義（`L* L::current = nullptr;`）：宣告子是限定名——少了這一行名字落到預設 `'ptr'`（360 的盲測露出來）
+        c.type === 'qualified_identifier',
     )
     if (!next) break
     inner = next
@@ -650,7 +652,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
       return buildArrayDeclare(`${type}${'*'.repeat(stars)}`, inner, ctx)
     }
-    const name = inner.type === 'identifier' ? inner.text : 'ptr'
+    const name = inner.type === 'identifier' || inner.type === 'qualified_identifier' ? inner.text : 'ptr'
     // 🔴 這顆元件的產生器**自己會補一顆星**（`${type}* ${name}`），所以少算一顆
     return buildPointerDeclare(name, type + '*'.repeat(stars - 1))
   }
@@ -692,7 +694,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
         ctx,
       )
     }
-    name = inner.type === 'identifier' ? inner.text : 'ptr'
+    name = inner.type === 'identifier' || inner.type === 'qualified_identifier' ? inner.text : 'ptr'
     const ptrType = type + '*'.repeat(stars - 1)
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
@@ -947,8 +949,17 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     }
     // 🔴 **匿名的 union／struct 成員**（`struct P { char k; union { int code; char flag; }; };`）：成員直接掛在外層、沒有名字。
     //    2026-11-08 union 盲測：原本落到下面的一般欄位、名字缺了就編一個 `x`——`union {…} x;`，`p.code` 從此不存在。照實降級，原文保留。
-    if (!node.childForFieldName('declarator') && node.namedChildren.some((c) => (c.type === 'union_specifier' || c.type === 'struct_specifier') && c.childForFieldName('body'))) {
-      return degrade(buildRawCode(node.text), '匿名的 union／struct 成員尚未支援')
+    //    🟢 358（Cella 0959 給了形狀）：交給 union／struct 那兩顆，名字留空；那兩顆收不下的（成員函式之類）照舊降級。
+    if (!node.childForFieldName('declarator')) {
+      const spec = node.namedChildren.find((c) => (c.type === 'union_specifier' || c.type === 'struct_specifier') && c.childForFieldName('body'))
+      if (spec) {
+        // 問形狀不問身分：lift 出來的是一個帶成員槽的定義（union／struct 那兩顆）⟹ 名字留空（策略在沒名字時會編 MyStruct）
+        const lifted = ctx.lift(spec)
+        if (lifted && lifted.slots?.members !== undefined && typeof lifted.properties?.name === 'string') {
+          return { ...lifted, properties: { ...lifted.properties, name: '' } }
+        }
+        return degrade(buildRawCode(node.text), '這個匿名的 union／struct 成員裝不下（有成員函式之類）')
+      }
     }
     // Pure virtual: virtual void method() = 0;
     const isVirtual = node.children.some(c => !c.isNamed && c.text === 'virtual')
@@ -1010,6 +1021,11 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const typeNode = node.childForFieldName('type')
       const type = typeNode?.text ?? 'int'
       const declNode = node.childForFieldName('declarator')
+      // `static L* current;`：星號屬於型別——原本直接拿宣告子的原文，名字變成 `* current`（360 的盲測露出來）
+      if (declNode?.type === 'pointer_declarator') {
+        const { stars, inner } = unwrapPointers(declNode)
+        if (inner.type === 'field_identifier' || inner.type === 'identifier') return buildMemberStatic(`${type}${'*'.repeat(stars)}`, inner.text)
+      }
       const name = declNode?.text ?? 'member'
       return buildMemberStatic(type, name)
     }

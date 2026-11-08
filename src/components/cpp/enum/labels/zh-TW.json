@@ -1,4 +1,9 @@
 {
-  "C_ENUM_MSG0": "定義列舉 %1 值為 %2 另名 %3",
-  "C_ENUM_TOOLTIP": "定義列舉：一組有名字的整數常數"
+  "C_ENUM_MSG0": "定義列舉 %1 作用域 %2 底層型別 %3 值為 %4 另名 %5",
+  "C_ENUM_TOOLTIP": "定義列舉：一組有名字的整數常數。有作用域的列舉要寫成「名字::常數」，也不能直接當整數用",
+  "C_ENUM_SCOPED_NONE": "一般（常數在外層）",
+  "C_ENUM_SCOPED_CLASS": "有作用域（class）",
+  "C_ENUM_SCOPED_STRUCT": "有作用域（struct）",
+  "FLOW_SLOT_CPP_ENUM_SCOPED": "作用域",
+  "FLOW_SLOT_CPP_ENUM_BASE": "底層型別"
 }

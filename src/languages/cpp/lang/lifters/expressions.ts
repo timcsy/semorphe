@@ -328,6 +328,20 @@ export function registerExpressionLifters(lifter: Lifter): void {
     tryAstBranches('field_expression', node, ctx),
   )
 
+  // `std::endl`、`std::fixed` 當成一個值（357）：在 cout 鏈裡各自 lift，原本沒有人接 → `unresolved`，
+  // 而我們自己的 explicit 風格（google、c）就會寫出 `std::endl`。限定的是 `std` 而名字是單一識別字 ⟹ 照那個名字 lift，
+  // 與 `std::cout` 在鏈的根上被認成 cout 是同一個正規化（產碼時 explicit 風格由 `qualifyStd` 補回 `std::`）。
+  // 多層的限定名（`A::B::x`）不在這裡處理，照舊。
+  lifter.register('qualified_identifier', (node, ctx) => {
+    const scope = node.childForFieldName('scope')
+    const name = node.childForFieldName('name')
+    if (name?.type !== 'identifier' || scope?.type !== 'namespace_identifier') return null
+    if (scope.text === 'std') return ctx.lift(name)
+    // 其餘一層的限定名（`Color::Red`——enum class 的常數、`Ns::x`）：一個名字，帶著限定（360）。
+    // 名字指到什麼由 Cella 解析（eName "Color::Red"，cella 談定的形狀；history/345 名字交給 Cella）——以前整顆 unresolved
+    return buildVarRef(`${scope.text}::${name.text}`)
+  })
+
 
 }
 

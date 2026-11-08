@@ -76,3 +76,8 @@ export function mallocNewShape(
 export function isMalloc(n: SemanticNode): boolean {
   return n.componentId === 'cpp:malloc'
 }
+
+/** 積木上「乘以 sizeof」下拉選得到這個型別嗎——C++ → C 把 `new T[n]` 換成 `malloc(n * sizeof(T))` 時用（357） */
+export function isSizeofChoice(t: string): boolean {
+  return SIZEOF_CHOICES.has(t.trim())
+}

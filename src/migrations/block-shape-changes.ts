@@ -495,3 +495,18 @@ export const SHAPE_CHANGES_V30: ShapeChange[] = [
     why: '`typedef enum … Kind;` 的別名從此是一格欄位——沒有這一格的舊快取是別名裝不下的時代建的',
   },
 ]
+
+/**
+ * **V31（2026-11-08，360）：列舉多了「作用域」與「底層型別」兩格**。
+ *
+ * `enum class Color { … };` 原本來回變成 `enum Color { … };`、`: unsigned char` 蒸發（lift 不記）；
+ * 接上之後 `cpp_enum` 多兩格 `SCOPED`（none／class／struct）與 `BASE`。沒有這兩格的舊快取是裝不下它們的時代建的。
+ */
+export const SHAPE_CHANGES_V31: ShapeChange[] = [
+  {
+    blockType: 'cpp_enum',
+    retiredFields: [],
+    addedFields: ['SCOPED', 'BASE'],
+    why: '`enum class`／底層型別從此有自己的欄位——沒有這兩格的舊快取是它們被靜默丟掉的時代建的',
+  },
+]

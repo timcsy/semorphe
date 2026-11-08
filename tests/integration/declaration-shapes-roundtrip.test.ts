@@ -216,11 +216,15 @@ import { registerCppExtractStrategies } from '../../src/languages/cpp/extractors
 /** 從那份語料抽出來的、**曾經讓整個工作區載不進去**的形狀。 */
 const LOADABLE_SHAPES: readonly string[] = [
   ...SHAPES,
+  // sizeof 的對象是運算式（355：升格成接點，積木是運算式形態）
+  '    int v[3];\n    int k = sizeof(v[0]) + sizeof(v[1] + 1);',
   // 🔴 `cc[A[i]];` 是離散化的慣用寫法——一個沒有敘述形態的運算式當語句用
   '    int idx[3];\n    idx[0];',
   '    map<int, int> cc;\n    cc[1];',
   // 🔴 `return` 之後還有一行註解——學生真的這樣寫
   '    return 0;\n    // 保底',
+  // 結構裡的匿名 union／struct 成員（358：name 為空的一顆，不再照原文）
+  '    struct S {\n        char k;\n        union {\n            int i;\n            float f;\n        };\n    };',
   '    for (int i = 0; i < 3; i++) {\n      break;\n      // 說明\n    }',
   // 逗號那一族
   '    ios::sync_with_stdio(0), cin.tie(0);',
@@ -339,6 +343,7 @@ describe('第一百一十八條護欄：走一趟積木回來', () => {
    */
   it.each([
     ['int a[10], b[20];', 'int a[10]; int b[20];'],
+    ['int v[3]; int k = sizeof(v[0]) + sizeof(int);', 'int v[3]; int k = sizeof(v[0]) + sizeof(int);'],
     ['int* p, * q;', 'int* p; int* q;'],
     ['vector<int> C(n), V(n);', 'vector<int> C(n); vector<int> V(n);'],
     ['vector<int> C(n + 1), V(n + 1);', 'vector<int> C(n + 1); vector<int> V(n + 1);'],
@@ -349,6 +354,7 @@ describe('第一百一十八條護欄：走一趟積木回來', () => {
     ['string s, t, u;', 'string s; string t; string u;'],
     ['string A[100], ans;', 'string A[100]; string ans;'],
     ['deque<int> d(n);', 'deque<int> d(n);'],
+    ['struct S { char k; union { int i; float f; }; };', 'struct S { char k; union { int i; float f;'], // 開頭是 `}` 的行被 viaBlocks 濾掉
     ['ios::sync_with_stdio(0), cin.tie(0);', 'ios::sync_with_stdio(0), cin.tie(0);'],
     ['int x = 1; for (; x != 0; scanf("%d", &x)) { }', 'int x = 1; for (; x != 0; scanf("%d", &x)) {'], // 單獨一行的 `}` 被 viaBlocks 濾掉
   ])('🔴 走一趟積木：%s', (body, expected) => {

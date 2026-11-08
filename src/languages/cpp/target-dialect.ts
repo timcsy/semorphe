@@ -70,6 +70,16 @@ export function cTypeName(type: string, structNames: ReadonlySet<string>): strin
 }
 
 /**
+ * 同 `cTypeName`，而型別文字可以帶指標或 const（`P*`、`P *`、`const P*`）——C 目標的指標宣告、malloc 的轉型、`sizeof(P)` 用（357）。
+ * 只動開頭那個名字；已經寫了 `struct` 的不再補。
+ */
+export function cTypeText(type: string, structNames: ReadonlySet<string>): string {
+  const m = /^(\s*(?:const\s+)?)([A-Za-z_]\w*)\b(.*)$/s.exec(type)
+  if (!m || m[2] === 'struct' || !structNames.has(m[2])) return type
+  return `${m[1]}struct ${m[2]}${m[3]}`
+}
+
+/**
  * 這棵樹裡宣告了哪些 struct 名字。
  *
  * ⚠️ **問性狀不問身分**——用 `structNameOf` 讓元件自己說它宣告了什麼，
