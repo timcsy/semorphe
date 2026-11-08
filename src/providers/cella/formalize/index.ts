@@ -173,6 +173,19 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       expanding.add(s)
       try { return type(mv, at) } finally { expanding.delete(s) }
     }
+    // 函式指標：lift 把宣告子拆成名字 ＋ 抽象宣告子 `int (*)(int, int)`（344）→ tPtr(tFunc{ret, params})（cella 2026-11-08 給的形狀；
+    // ret 是 Option，void 寫 null；`(void)` 是沒有參數）。參數裡帶了名字（`int (*)(int a)`）時那一格認不得 → 照實標 unknown
+    {
+      const fp = /^(.+?)\s*\(\*\)\s*\((.*)\)$/.exec(s)
+      if (fp) {
+        const retText = fp[1].trim()
+        const ret = retText === 'void' ? null : type(retText, at)
+        if (retText !== 'void' && !ret) return null
+        const ps = fp[2].trim() === '' || fp[2].trim() === 'void' ? [] : splitTypeArgs(fp[2]).map((x) => type(x, at))
+        if (!ps.every(Boolean)) return null
+        return k('tPtr', { t: k('tFunc', { ret, params: ps }) })
+      }
+    }
     // ⚠️ 先剝參照與指標，再剝 const：`const Node&` 是「參照到 const Node」＝ tRef(tConst(Node))，不是 tConst(tRef(Node))
     //    （spec 201：Cella 判 reject「member reference base type is not a structure or union」抓到的；`const int*` 同理是 tPtr(tConst(int))）
     if (s.endsWith('&')) { const inner = type(s.slice(0, -1), at); return inner && k('tRef', { t: inner }) }
@@ -182,6 +195,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (s.endsWith('[]')) { const inner = type(s.slice(0, -2), at); return inner && k('tPtr', { t: inner }) }
     const sc = SCALAR[s]
     if (sc) return k(sc)
+    // `void*`／`const void*`（qsort 的比較函式）：tPtr(tVoid)／tPtr(tConst(tVoid))（cella 2026-11-08）。
+    // 單獨的 `void` 只會出現在這裡的遞迴底下——回傳型別與 `f(void)` 由呼叫端先接走；寫成變數型別的交給 Cella 判
+    if (s === 'void') return k('tVoid')
     // 固定寬度與平台相依的整數型別名（int64_t、size_t…）：照名字送 tName——對到哪個整數型別依平台的 ABI 決定（glibc 的 int64_t 是 long、
     // avr-libc 的 int32_t 是 long），由 Cella 依目標解（cella 2026-11-01；第 208 刀，學生的程式 6 支）
     {

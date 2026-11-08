@@ -5,11 +5,12 @@
  * （用到它的 `eVar` 指向同一個 `x`），`v` 只在原文寫了值時有（沒寫的由 Cella 照 [dcl.enum]p2 從前一個 +1）。
  *
  * ⚠️ 語義樹把成員存成一段原文（`values`）。這裡只認 `名字` 與 `名字 = 整數字面`（可帶負號）；
- * 值是其他運算式（`B = A + 1`）照實標 unknown，不猜。`enum class`／底層型別還沒有對應（unknown）。
+ * 值是其他運算式（`B = A + 1`）拆成運算式交給 Cella 算（`const-expr.ts`，344）；拆不了的照實標 unknown。`enum class`／底層型別還沒有對應（unknown）。
  * 🟢 第 238 刀：區塊裡的列舉送 `sType{d: tdEnum{…}}`、列舉名當型別送 `tEnum`（cella 2026-11-03 給的形狀）。
  */
 import type { FormalizeRegistrar, FormalizeContext, CellaJson } from '../../../core/formalize-contract'
 import type { SemanticNode } from '../../../core/types'
+import { constExpr } from './const-expr'
 
 interface Enumerator { name: string; value: string | null }
 
@@ -31,8 +32,9 @@ const enumeratorId = (n: SemanticNode, name: string): string => `${n.id}/${name}
 function valueOf(e: Enumerator, n: SemanticNode, f: FormalizeContext): CellaJson | null | undefined {
   if (e.value === null) return null
   const m = /^(-)?\s*(\d+)$/.exec(e.value)
-  if (!m) return undefined
   const id = `${enumeratorId(n, e.name)}/v`
+  // 不是整數字面（`1 << 2`、`A + 1`、`'a'`）：拆成運算式交給 Cella 算（344；cella 2026-11-08——enumC.v 本來就是運算式）
+  if (!m) return constExpr(e.value, id, f)
   const num = f.k('eNum', { n: m[1] ? `${id}/abs` : id, v: Number(m[2]) })
   return m[1] ? f.k('eUn', { n: id, op: f.k('opNeg'), a: num }) : num
 }
@@ -46,7 +48,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const cs: CellaJson[] = []
     for (const e of es) {
       const v = valueOf(e, n, f)
-      if (v === undefined) return { miss: f.miss(n, `列舉常數 ${e.name} 的值不是整數字面（運算式還沒有對應）`) }
+      if (v === undefined) return { miss: f.miss(n, `列舉常數 ${e.name} 的值「${e.value}」拆不成認得的常數運算式（三元、sizeof、轉型、呼叫還沒有對應）`) }
       cs.push(f.k('enumC', { x: enumeratorId(n, e.name), name: e.name, v }))
     }
     return cs

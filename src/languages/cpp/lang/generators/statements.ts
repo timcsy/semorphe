@@ -21,6 +21,14 @@ import { isElseIfChainable } from '../../../../core/component/traits'
  * @param style 風格預設——`brace_style === 'Allman'` 時大括號換行
  */
 /**
+ * 型別文字裡有抽象的函式指標宣告子（`int (*)(int, int)`）時，把名字放回 `(*` 之後；沒有就是一般的 `型別 名字`。
+ * 產碼（變數宣告、參數）共用——lift 拆開的，產碼要原樣合回去。
+ */
+export function placeDeclaratorName(type: string, name: string): string {
+  return type.includes('(*)') ? type.replace('(*)', `(*${name})`) : `${type} ${name}`
+}
+
+/**
  * 參數列格式化——**風格無關的排版原子**。
  *
  * ⚠️ 它原本是 `registerStatementGenerators` 內部的閉包。與 `openBrace` 同一個病：
@@ -40,7 +48,7 @@ export const formatParams = (paramChildren: { properties: Record<string, unknown
       //（第 331 刀：一般函式那條原本自己有一份這條規則、這一支沒有——併成一份，兩條路都走這裡）
       // 多維（`int[][COLS]`）：整段後綴都寫在名字後面（2026-11-07 C 盲測）
       const suffix = /(\[[^\]]*\])+$/.exec(t)?.[0] ?? ''
-      const decl = suffix ? (n ? `${t.slice(0, -suffix.length)} ${n}${suffix}` : t) : (n ? `${t} ${n}` : t)
+      const decl = suffix ? (n ? `${t.slice(0, -suffix.length)} ${n}${suffix}` : t) : (n ? placeDeclaratorName(t, n) : t)
       return d ? `${decl} = ${d}` : decl
     }).join(', ')
 
