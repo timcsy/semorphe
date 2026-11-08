@@ -36,11 +36,15 @@ import { buildNew } from '../../components/cpp/new/lift-strategy'
 import { buildDelete } from '../../components/cpp/delete/build'
 import { sizeofTypeTarget } from '../../components/cpp/sizeof/lift-strategy'
 import { varRefName } from '../../components/cpp/var_ref/lift'
+import { buildIoMode } from '../../components/cpp/io_mode/lift'
+import { buildIoModeNumber } from '../../components/cpp/io_mode_number/build'
+import { buildLiteralNumber } from '../../components/cpp/literal_number/build'
 
 /** 每個運算式的型別（Cella `types().nodes`，鍵是語意樹節點 id） */
 export type ExpressionTypes = Readonly<Record<string, string>>
 
-type Piece = { text: string } | { conv: string }
+/** `prec`：只有 `%f`／`%.Nf`（`%f` 是 `%.6f`）——第五刀換成 `fixed << setprecision(N)` */
+type Piece = { text: string } | { conv: string; prec?: number }
 
 /** 格式字串（原始碼的寫法，跳脫照原樣）切成文字與轉換；有旗標／寬度／精度的轉換回 null。 */
 function splitFormat(fmt: string): Piece[] | null {
@@ -51,7 +55,15 @@ function splitFormat(fmt: string): Piece[] | null {
     if (ch === '\\') { text += fmt.slice(i, i + 2); i++; continue }
     if (ch !== '%') { text += ch; continue }
     if (fmt[i + 1] === '%') { text += '%'; i++; continue }
-    const m = /^%(hh|h|ll|l|z|L)?([diucsgf])/.exec(fmt.slice(i))
+    // 第五刀（2026-11-08）：`%f`、`%.Nf`、`%lf`（printf 的 %lf 與 %f 相同）——精度記下來，換成 `fixed << setprecision(N)`
+    const f = /^%l?(?:\.(\d+))?f/.exec(fmt.slice(i))
+    if (f) {
+      if (text) out.push({ text }); text = ''
+      out.push({ conv: '%f', prec: f[1] === undefined ? 6 : Number(f[1]) })
+      i += f[0].length - 1
+      continue
+    }
+    const m = /^%(hh|h|ll|l|z|L)?([diucsg])/.exec(fmt.slice(i))
     if (!m) return null
     if (text) out.push({ text }); text = ''
     out.push({ conv: `%${m[1] ?? ''}${m[2] === 'i' ? 'd' : m[2]}` })
@@ -62,9 +74,11 @@ function splitFormat(fmt: string): Piece[] | null {
 }
 
 /** `printf(fmt, args…)` 的 cout 寫法；`null` ＝ 換了會印出不一樣的東西（保留 printf）。 */
-export function printfAsCout(node: SemanticNode, types: ExpressionTypes): SemanticNode | null {
+export function printfAsCout(node: SemanticNode, types: ExpressionTypes, fixedInProgram = false): SemanticNode | null {
   const pieces = splitFormat(String(node.properties.format ?? ''))
   if (!pieces) return null
+  // 這支程式有換成 `fixed` 的輸出 ⟹ 換成預設 cout 的 `%g` 會被那個狀態影響（印成 fixed）——保留 printf（printf 不受 cout 的狀態影響）
+  if (fixedInProgram && pieces.some((p) => 'conv' in p && /g$/.test(p.conv))) return null
   const args = node.slots.args ?? []
   if (pieces.filter((p) => 'conv' in p).length !== args.length) return null
   const values: SemanticNode[] = []
@@ -72,6 +86,12 @@ export function printfAsCout(node: SemanticNode, types: ExpressionTypes): Semant
   for (const [i, p] of pieces.entries()) {
     if ('conv' in p) {
       const a = args[k++]
+      // `%.Nf`：引數是 float／double（Cella 的型別）→ `fixed << setprecision(N) << a`——每一次都明寫，不靠前一行留下的狀態
+      if (p.prec !== undefined) {
+        if (printfOf(types[a.id])?.conv !== '%g') return null
+        values.push(buildIoModeNumber('fixed'), buildIoMode('precision', buildLiteralNumber(String(p.prec))), a)
+        continue
+      }
       const want = printfOf(types[a.id])
       // `.c_str()` 那種要改寫引數的（std::string）不會出現在 C 程式裡；保守起見也不收
       if (!want || want.conv !== p.conv || want.arg('x') !== 'x') return null
@@ -182,6 +202,14 @@ export function convertCToCpp(root: SemanticNode, types: ExpressionTypes): CToCp
     }
     return null
   }
+  // 第五刀：整支程式有沒有 `%f`／`%.Nf` 的 printf（有的話 `%g` 那幾行保留——見 printfAsCout）。保守：不管它最後換不換，有就算
+  let fixedInProgram = false
+  const scanFixed = (n: SemanticNode): void => {
+    const io = ioTraitOf(n.componentId)
+    if (io?.style === 'cstdio' && io.role === 'print' && splitFormat(String(n.properties.format ?? ''))?.some((p) => 'prec' in p && p.prec !== undefined)) fixedInProgram = true
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(scanFixed)
+  }
+  scanFixed(root)
   const structs = collectStructNames(root)
   const tagRe = structs.size > 0 ? new RegExp(`\\bstruct\\s+(${[...structs].map((x) => x.replace(/\W/g, '')).join('|')})\\b`, 'g') : null
   const untag = (n: SemanticNode): SemanticNode => {
@@ -223,7 +251,7 @@ export function convertCToCpp(root: SemanticNode, types: ExpressionTypes): CToCp
       slots[slot] = kids.map((kid) => {
         const io = ioTraitOf(kid.componentId)
         if (bodies.has(slot) && io?.style === 'cstdio' && (io.role === 'print' || io.role === 'input')) {
-          const made = io.role === 'print' ? printfAsCout(kid, types) : scanfAsCin(kid, types)
+          const made = io.role === 'print' ? printfAsCout(kid, types, fixedInProgram) : scanfAsCin(kid, types)
           if (made) { converted++; return made }
           kept++
           return kid
