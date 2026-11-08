@@ -182,6 +182,8 @@ export interface FormalizeRegistrar {
   declaresType(id: string, fn: (n: SemanticNode) => string): void
   /** 這顆定義了一個列舉型別名（`enum Color {…}` 之後 `Color c` 的 Color）——型別那一格送 `tEnum`（cella 2026-11-03；不是 tClass）。 */
   definesEnum(id: string, fn: (n: SemanticNode) => string): void
+  /** 這顆定義了一個 union 型別名（`union U {…}` 之後 `union U u`／C++ 的 `U u`）——型別那一格送 `tUnion`（cella 2026-11-08）。 */
+  definesUnion(id: string, fn: (n: SemanticNode) => string): void
   /**
    * 這顆是**類別成員與它在類別外的定義配對時用的鍵**（第 322 刀，類別外定義成員函式）。
    * 類別裡的原型回 `{ key }`（類別名由引擎從它所在的類別得到）；類別外的定義回 `{ className, key }`。

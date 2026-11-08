@@ -1,0 +1,36 @@
+[
+  {
+    "id": "cpp_union_declare",
+    "componentId": "cpp:union_declare",
+    "language": "cpp",
+    "category": "structures",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_union_declare",
+      "message0": "%{BKY_C_UNION_DECLARE_MSG0}",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "MyUnion" },
+        { "type": "field_input", "name": "TYPEDEF_ALIAS", "text": "" }
+      ],
+      "message1": "%1",
+      "args1": [
+        { "type": "input_statement", "name": "MEMBERS", "check": "Statement" }
+      ],
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_UNION_DECLARE_TOOLTIP}",
+      "previousStatement": "Statement",
+      "nextStatement": "Statement"
+    },
+    "astPattern": {
+      "grammar": "tree-sitter-cpp",
+      "nodeType": "union_specifier",
+      "constraints": [],
+      "liftStrategy": "cpp:liftUnionDef",
+      "fieldMappings": []
+    },
+    "renderMapping": {
+      "fields": { "NAME": "name", "TYPEDEF_ALIAS": "typedef_alias" },
+      "statementInputs": { "MEMBERS": "members" }
+    }
+  }
+]

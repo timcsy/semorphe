@@ -99,6 +99,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   // 只宣告、不是定義的型別名（前置宣告）——型別翻得出來，但不算「有定義」（見契約的 declaresType）
   const declaredTypes = new Set<string>()
   const enumNames = new Set<string>()
+  const unionNames = new Set<string>()
   const collect = (n: SemanticNode): void => {
     const named = FORMALIZE.definesType.get(n.componentId)
     if (named) structNames.add(named(n))
@@ -106,6 +107,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (declared) declaredTypes.add(declared(n))
     const en = FORMALIZE.definesEnum.get(n.componentId)
     if (en) enumNames.add(en(n))
+    const un = FORMALIZE.definesUnion.get(n.componentId)
+    if (un) unionNames.add(un(n))
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
   }
   collect(tree)
@@ -228,6 +231,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     // 列舉型別名（`Color c`、C 的 `enum Color c`）：tEnum（cella 2026-11-03；檔案範圍與區域的列舉同一個型別形狀）
     const en = /^(?:enum\s+)?([A-Za-z_]\w*)$/.exec(s)
     if (en && enumNames.has(en[1])) return k('tEnum', { name: en[1] })
+    // union 型別名（C 的 `union U u`、C++ 的 `U u`）：tUnion（cella 2026-11-08；與 struct 對稱）
+    const un = /^(?:union\s+)?([A-Za-z_]\w*)$/.exec(s)
+    if (un && (s.startsWith('union ') || unionNames.has(un[1]))) return k('tUnion', { name: un[1] })
     const st = /^(?:struct\s+)?([A-Za-z_]\w*)$/.exec(s)
     if (st && (s.startsWith('struct ') || structNames.has(st[1]) || declaredTypes.has(st[1]))) return k(isC ? 'tStruct' : 'tClass', { name: st[1] })
     // 巢狀的型別名：`vector<int>::iterator`、`set<int>::const_iterator`、`string::iterator`——tMember（cella 2026-11-03 給的形狀；
