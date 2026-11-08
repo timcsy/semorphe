@@ -709,7 +709,8 @@ export class Lifter {
       if (lifted.componentId === '_compound') {
         // 🔴 `case X: { int b = …; }` 的大括號也是作用域：case 沒有自己的本體區塊，它底下的 compound 是學生寫的那一層
         //    （2026-11-08 union 盲測：展平之後兩個 case 各宣告一次 `int b`，產出的程式編不過——C 的標籤後面不能直接接宣告）
-        const standalone = node.type === 'compound_statement' && (node.parent?.type === 'compound_statement' || node.parent?.type === 'case_statement')
+        // 頂層的 `{ … }`（父節點是 translation_unit）也照實是一顆區塊——C++ 不准，而展平會把裡面的東西變成檔案範圍的敘述（形狀說謊；2026-11-08 查 block 縮排時量到）
+        const standalone = node.type === 'compound_statement' && (node.parent?.type === 'compound_statement' || node.parent?.type === 'case_statement' || node.parent?.type === 'translation_unit')
         if (standalone) results.push(buildStandaloneBlock(lifted.slots.body ?? []))
         else results.push(...(lifted.slots.body ?? []))
       } else {
