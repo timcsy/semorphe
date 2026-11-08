@@ -223,7 +223,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       miss(at, `bitset 的大小「${bits[1]}」不是整數字面`)
       return null
     }
-    const tpl = /^(?:std::)?(pair|tuple|queue|stack|priority_queue|set|multiset|map|unordered_map|deque|greater|less)\s*<(.+)>$/.exec(s)
+    // numeric_limits（eStaticCall 的 owner）、ostream_iterator（eTemp）：Cella 0.1.202611080524 起有（2026-11-08）
+    const tpl = /^(?:std::)?(pair|tuple|queue|stack|priority_queue|set|multiset|map|unordered_map|deque|greater|less|numeric_limits|ostream_iterator)\s*<(.+)>$/.exec(s)
     if (tpl && !isC) {
       const args = splitTypeArgs(tpl[2]).map((x) => type(x, at))
       return args.every(Boolean) ? k('tTemplate', { name: tpl[1], args }) : null
