@@ -36,6 +36,10 @@ describe('C++ → Python 的最小例', () => {
     expect(await py(main('    int a = 7, b = 2;\n    double x = 7.0 / 2;\n    cout << a / b << " " << x << endl;\n')))
       .toBe('a = 7\nb = 2\nx = 7.0 / 2\nprint(int(a / b), " ", format(x, "g"), sep="")\n')
   }, 60_000)
+  it('取餘數 → a - int(a / b) * b（照 C++ 的定義：向零截斷）；與 0 比較的照舊用 %（spec 224）', async () => {
+    expect(await py(main('    int a = -7, b = 2;\n    a %= 3;\n    cout << a % b << endl;\n    if (b % 2 == 0) {\n        cout << 1 << endl;\n    }\n')))
+      .toBe('a = -7\nb = 2\na = a - int(a / 3) * 3\nprint(a - int(a / b) * b)\nif b % 2 == 0:\n    print(1)\n')
+  }, 60_000)
   it('if／else if／else → if／elif／else；比較的 bool 印 int(…)', async () => {
     expect(await py(main('    int n = 5;\n    if (n > 3) {\n        cout << 1 << endl;\n    } else if (n > 1) {\n        cout << 2 << endl;\n    } else {\n        cout << (n == 0) << endl;\n    }\n')))
       .toBe('n = 5\nif n > 3:\n    print(1)\nelif n > 1:\n    print(2)\nelse:\n    print(int(n == 0))\n')
