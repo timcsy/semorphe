@@ -344,6 +344,11 @@ export const TASK_KINDS: readonly TaskKind[] = ['follow', 'arrange', 'debug']
 export interface LessonTask {
   /** 這一課裡唯一。⚠️ 它會被存進通過紀錄，所以**改了它等於把紀錄清掉**。 */
   readonly id: string
+  /**
+   * **這一題的候選解讀**（spec 218，規格消歧）——題目不只一種合理讀法時，各列一個；每個解讀一份參考解答
+   * `solutions/<題目>~<解讀>.<副檔名>`。省略 ＝ 只有一種讀法（今天的每一題），行為與今天相同。
+   */
+  readonly interpretations?: readonly { readonly id: string; readonly label: string }[]
   /** 選單上那一行，例如「跟著做」「練習 1：印 1 到 5」。 */
   readonly title: string
   /** 這一題的裁判。⚠️ 省略 ＝ 這一題判不了（見上）。 */
@@ -611,7 +616,24 @@ function parseTasks(id: string, raw: unknown, legacy: LessonCheck | undefined): 
       check: parseCheck(`${id}#${t.id}`, t.check),
       predict: pr as 'output' | 'iterations' | 'none' | 'choice' | undefined,
       choices: parseChoices(`${id}#${t.id}`, pr, t.choices),
+      interpretations: parseInterpretations(`${id}#${t.id}`, t.interpretations),
     }
+  })
+}
+
+/** 候選解讀（spec 218）：每一個要有 id（`[a-z0-9-]`，這一題裡唯一）與 label；少於兩個沒有意義（一個就是今天的單一解答） */
+function parseInterpretations(id: string, raw: unknown): { id: string; label: string }[] | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (!Array.isArray(raw)) throw new Error(`教案 ${id}：interpretations 不是陣列`)
+  if (raw.length < 2) throw new Error(`教案 ${id}：interpretations 至少要兩個（一個就是今天的單一解答，不用宣告）`)
+  const seen = new Set<string>()
+  return raw.map((x, i) => {
+    const o = (x ?? {}) as Record<string, unknown>
+    if (typeof o.id !== 'string' || !/^[a-z0-9-]+$/.test(o.id)) throw new Error(`教案 ${id}：interpretations[${i}] 的 id 只准小寫英數與連字號`)
+    if (typeof o.label !== 'string' || o.label === '') throw new Error(`教案 ${id}：interpretations[${i}] 缺 label`)
+    if (seen.has(o.id)) throw new Error(`教案 ${id}：interpretations 的 id「${o.id}」重複`)
+    seen.add(o.id)
+    return { id: o.id, label: o.label }
   })
 }
 

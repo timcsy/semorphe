@@ -81,7 +81,7 @@ import { scatterOrder } from '../core/arrange'
 import { skeletonById, skeletonsOfLanguage, canHideScaffold } from '../core/skeleton'
 // 🔴 「哪幾顆是骨架」的判定**住在 core**——流程視圖也問同一支（`history/188`）
 import { unwrapSkeletonFrame, scaffoldComponentIds as coreScaffoldComponentIds } from '../core/scaffold-nodes'
-import { lessonById, allTracks, lessonsOfTrack, solutionFor, starterFor, viewForLesson, componentsForLesson } from '../core/lesson/load-lessons'
+import { lessonById, allTracks, lessonsOfTrack, solutionFor, starterFor, viewForLesson, componentsForLesson, interpretationSolutionFor } from '../core/lesson/load-lessons'
 import { chapterLabel } from '../core/lesson/chapter-label'
 import { suggestLessonFor } from '../core/lesson/lesson-suggest'
 import type { LessonNudgeBar } from './lesson-nudge-bar'
@@ -104,6 +104,11 @@ import { ExecutionController } from './execution-controller'
 import { provide, type Provider, type Readiness } from '../core/capabilities'
 import { toDiagnostics } from '../core/verdict-diagnostics'
 import { judgeOutput } from '../core/lesson/judge'
+import { compareInterpretations } from '../core/disambiguation/compare'
+import { scenariosFor } from '../core/disambiguation/scenario-registry'
+import type { ComparisonResult } from '../core/disambiguation/types'
+import { makeCheckJudge } from '../core/disambiguation/check-judge'
+import { renderDisambiguation, chosenInterpretation, chooseInterpretation } from './lesson-disambiguation'
 import { hardwareOf, matchPinEvents, DEFAULT_PIN_TOLERANCE_MS, type HardwareRecord, type PinEvent } from '../core/hardware'
 import type { HardwarePanel, HardwareView } from '../panels/hardware/view'
 import type { CheckAnswer } from '../core/capabilities'
@@ -626,7 +631,29 @@ export class App {
   private async judgeCurrentTask(consolePanel: ConsolePanel): Promise<void> {
     const lesson = this.currentLesson
     const task = taskById(lesson, this.currentTaskId)
-    if (!lesson || !task?.check) return
+    if (!lesson || !task) return
+    // 🟢 規格消歧（spec 218）：題目宣告了不只一種讀法 → 並排比對；老師選過的話，這一題只照被選的那一種判
+    if (task.interpretations && task.interpretations.length > 1) {
+      const compared = await this.compareInterpretationsForTask(lesson.id, task.id, task.interpretations)
+      if (this.currentLesson !== lesson || this.currentTaskId !== task.id) return
+      if (compared) {
+        const chosen = chosenInterpretation(lesson.id, task.id)
+        consolePanel.showDisambiguation(renderDisambiguation(compared, chosen, (id) => {
+          chooseInterpretation(lesson.id, task.id, id)
+          consolePanel.log(msg('DISAMBIG_SAVED', '記下來了：這一題照「{label}」判。再按一次執行就會照它判。')
+            .replace('{label}', task.interpretations!.find((x) => x.id === id)?.label ?? id))
+        }))
+        const picked = chosen ? compared.results.find((r) => r.id === chosen) : undefined
+        if (picked) {
+          const passed = picked.status === 'consistent'
+          consolePanel.showVerdict({ passed, lines: [] } as never, task.title, undefined,
+            msg('DISAMBIG_JUDGED_BY', '依老師選的讀法「{label}」判').replace('{label}', picked.label))
+          if (passed) markTaskPassed(lesson.id, task.id)
+          return
+        }
+      }
+    }
+    if (!task.check) return
     const transcript = this.runTranscript
     // 板子上的題目：腳位事件與輸出都要對（spec 184）
     const pins = task.check.pins ? await this.judgePins(task.check.pins) : null
@@ -4682,6 +4709,27 @@ export class App {
    * 判題用的判決：**目前這棵樹 ＋ 目前這一題的測資**（spec 200）。判決不在（沒有提供者、還沒載好）回 `null`。
    * 背景判斷剛判過同一組就直接用，不再跑一次。
    */
+  /** 規格消歧（spec 218）：學生的程式與每個解讀的參考解答，在同一批情境下交給判決提供者比對。判不了（提供者沒好、解答缺、解析不了）回 null */
+  private async compareInterpretationsForTask(
+    lessonId: string, taskId: string, interpretations: readonly { id: string; label: string }[],
+  ): Promise<ComparisonResult | null> {
+    const tree = this.currentTree
+    const p = provide('verdict').provider
+    if (!tree || !p?.check || p.readiness?.().state !== 'ready' || !this.syncController) return null
+    const refs: { id: string; label: string; tree: SemanticNode }[] = []
+    for (const it of interpretations) {
+      const code = interpretationSolutionFor(lessonId, taskId, it.id)
+      const t = code ? await this.syncController.liftText(code) : null
+      if (!t) return null
+      refs.push({ id: it.id, label: it.label, tree: t })
+    }
+    const { req } = this.checkRequest(tree)
+    const student = req.tree
+    const { tree: _t, input: _i, ...base } = req
+    const check = p.check.bind(p)
+    return compareInterpretations(student, refs, scenariosFor(student), makeCheckJudge(check, base))
+  }
+
   private async answerForJudging(): Promise<CheckAnswer | null> {
     const tree = this.currentTree
     const p = provide('verdict').provider

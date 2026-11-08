@@ -15,6 +15,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import fs from 'node:fs'
+import path from 'node:path'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
@@ -75,12 +76,20 @@ describe('C → C++：c-bridge 課文的解答', () => {
     it(f.replace('lessons/c-bridge/', ''), async () => {
       const src = fs.readFileSync(f, 'utf8')
       const lesson = JSON.parse(fs.readFileSync(f.replace(/solutions\/.*/, 'lesson.json'), 'utf8'))
-      const task = lesson.tasks.find((t: { id: string }) => f.endsWith(`/${t.id}.c`))
+      // 解讀的解答（`<題目>~<解讀>.c`，spec 218）用的是同一題的測資：題目 id 是 `~` 前面那段
+      const stem = path.basename(f, '.c').split('~')[0]
+      const task = lesson.tasks.find((t: { id: string }) => t.id === stem)
       const stdin = ((task?.check?.stdin ?? []) as string[]).map((l) => `${l}\n`).join('')
       const { cpp, converted, kept } = await toCpp(src)
       expect(converted, `一行都沒換：\n${cpp}`).toBeGreaterThan(0)
-      expect(kept, `有保留的行：\n${cpp}`).toBe(0)
-      expect(cpp).not.toMatch(/\b(printf|scanf)\s*\(/)
+      // 用到 scanf 回傳值的（`while (scanf(…) == 1)`，讀到結尾的寫法）照第一刀的規則保留——cin >> 沒有那個值；其餘一行都不留
+      const usesScanfResult = /scanf\([^;]*\)\s*(==|!=|<|>)/.test(src)
+      if (!usesScanfResult) {
+        expect(kept, `有保留的行：\n${cpp}`).toBe(0)
+        expect(cpp).not.toMatch(/\b(printf|scanf)\s*\(/)
+      } else {
+        expect(cpp, cpp).toMatch(/scanf\([^;]*\)\s*(==|!=|<|>)/)
+      }
       // 第四刀：課文的 malloc／free 換成 new[]／delete[]（c-bridge 第 4 課）
       if (/\bmalloc\s*\(/.test(src)) expect(cpp, cpp).toMatch(/\bnew\b[\s\S]*\bdelete\b/)
       expect(cpp).not.toMatch(/\b(malloc|free)\s*\(/)

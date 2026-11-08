@@ -283,7 +283,9 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
         waiting.set(id, resolve)
         reads.set(id, readsInput(f.program))
         try {
-          send({ id, kind: 'check', program: f.program, input: req.input, fuel: fuelOf(board) })
+          // 板子的環境輸入放在程式 JSON 的 inputs（同 tests/helpers/cella-run 的 runCella；spec 218）
+          const program = req.boardInputs ? { ...(f.program as Record<string, unknown>), inputs: req.boardInputs } : f.program
+          send({ id, kind: 'check', program, input: req.input, fuel: fuelOf(board) })
         } catch {
           answer(id, { verdict: null, types: null })
         }

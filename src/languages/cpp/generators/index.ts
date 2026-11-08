@@ -25,6 +25,7 @@ import { declareSkips, declareAnnotations } from '../../../core/skip-declaration
 import { declareAbstract, declareVariableType } from '../../../core/component-abstract'
 import { coreComponents } from '../lang'
 import type { PathName, SkipReason } from '../../../core/types'
+import { registerCppScenarioKinds } from '../scenarios'
 
 /**
  * 生產路徑的產生器組裝。
@@ -83,6 +84,7 @@ function cppReproducer(): Reproducer {
 
 export function registerCppLanguage(): void {
   registerLanguage('cpp', createCppGenerators)
+  registerCppScenarioKinds()   // 規格消歧的情境種類（spec 218）
   provideReproducer(cppReproducer())
   registerCppSkipDeclarations()
   // 註解的**語法**（`//`、`/** *​/`、`/* *​/`，以及從原始碼剝掉它們的規則）

@@ -1052,6 +1052,25 @@ export class SyncController {
    * 七個呼叫點都是 fire-and-forget（回傳值沒有人接），而**組裝點要接**：
    * 它在同步完成之後才補相依、清旗標。
    */
+  /**
+   * 一段程式碼 → 語義樹，**沒有任何副作用**（不動工作區、不報錯誤、不改風格）——規格消歧把參考解答變成樹用（spec 218）。
+   * 解析不了回 null。
+   */
+  async liftText(code: string): Promise<import('../types').SemanticNode | null> {
+    if (!this.parser || !this.lifter) return null
+    const parser = this.parser, lifter = this.lifter
+    let parsed: { delete?: () => void } | null = null
+    try {
+      const r = await parser.parse(code)
+      parsed = r as unknown as { delete?: () => void }
+      return lifter.lift(r.rootNode as import('../lift/types').AstNode) as import('../types').SemanticNode | null
+    } catch {
+      return null
+    } finally {
+      parsed?.delete?.()
+    }
+  }
+
   async syncCodeToBlocks(code?: string): Promise<boolean> {
     // 管線還沒接上就**等它**，不是回 false——呼叫端 await 回來時以為樹已經是這份程式碼了
     if (!this.lifter || !this.parser) await this.pipelineReady
