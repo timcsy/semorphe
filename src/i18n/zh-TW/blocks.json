@@ -1077,5 +1077,14 @@
   "DIAG_CELLA_UB_FLOW_OFF_END_BLOCK_AT": "「{subject}」有回傳型別，卻執行到結尾沒有 return",
   "DIAG_CELLA_UB_FLOW_OFF_END_CODE_AT": "第 {line} 行：「{subject}」有回傳型別，卻執行到結尾沒有 return",
   "DIAG_CELLA_UB_FLOW_OFF_END_WHY": "函式宣告了回傳型別，就是答應會交回一個值；走到結尾還沒有 return，C++ 規定這是未定義行為——就算呼叫的地方沒有用那個值也一樣。",
-  "DIAG_CELLA_UB_FLOW_OFF_END_TRY": "檢查每一條路最後都有 return，例如在函式最後補上 return 0;；如果它本來就不需要交回值，把回傳型別改成 void。"
+  "DIAG_CELLA_UB_FLOW_OFF_END_TRY": "檢查每一條路最後都有 return，例如在函式最後補上 return 0;；如果它本來就不需要交回值，把回傳型別改成 void。",
+  "PROPOSAL_REGION": "提議中的變更",
+  "PROPOSAL_FROM": "{author} 提議",
+  "PROPOSAL_UNNAMED": "未具名",
+  "PROPOSAL_WAITING": "共 {n} 個待處理",
+  "PROPOSAL_STALE": "程式在這個提議送出之後改過了，它指的地方已經不在或不一樣——只能退回。",
+  "PROPOSAL_NO_CHANGE": "（程式碼沒有變化）",
+  "PROPOSAL_ACCEPT": "接受",
+  "PROPOSAL_REJECT": "退回",
+  "PROPOSAL_BUSY": "正在同步，請稍後再按一次接受"
 }

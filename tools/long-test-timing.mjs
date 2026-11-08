@@ -33,6 +33,8 @@ const add = (file, t, kind) => {
 }
 
 for (const f of readdirSync(outDir)) {
+  // ⚠️ 輸出目錄常是 scratchpad，裡面有別的子目錄——讀到目錄會 EISDIR 整支掛掉、這一輪的計時就沒了（2026-11-09 撞到）
+  if (!statSync(join(outDir, f)).isFile()) continue
   const text = strip(readFileSync(join(outDir, f), 'utf8'))
   if (f.startsWith('test-') && f.endsWith('.log')) {
     for (const line of text.split('\n')) {

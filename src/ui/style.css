@@ -3488,3 +3488,44 @@ html, body {
 /* 停下的原因與還開著的輸出腳（使用者 11-07 的決定） */
 .hardware-stop { color: #bbb; font-size: 12px; margin: 2px 0 6px; }
 .hardware-still-on { color: #e3b341; font-size: 12px; margin-top: 6px; }
+
+/* ─── 提議列（spec 220）─── */
+
+.proposal-bar {
+  position: fixed;
+  right: 16px;
+  bottom: 40px;   /* 狀態列之上 */
+  width: min(520px, calc(100vw - 32px));
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: rgba(30, 30, 30, 0.97);
+  border: 1px solid #007acc;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 13px;
+  z-index: 10001;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+.proposal-bar-head { display: flex; justify-content: space-between; gap: 12px; font-weight: 600; }
+.proposal-bar-count { font-weight: normal; color: #999; }
+.proposal-bar-rationale { color: #ddd; }
+.proposal-bar-stale { color: #f0b429; }
+.proposal-bar-diff {
+  margin: 0;
+  padding: 6px 8px;
+  overflow: auto;
+  background: #1e1e1e;
+  border-radius: 4px;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.proposal-diff-add { color: #89d185; background: rgba(137, 209, 133, 0.12); white-space: pre; }
+.proposal-diff-del { color: #f48771; background: rgba(244, 135, 113, 0.12); white-space: pre; }
+.proposal-diff-same { color: #999; white-space: pre; }
+.proposal-diff-gap { color: #666; }
+.proposal-bar-btns { display: flex; gap: 6px; justify-content: flex-end; }
+.proposal-bar-btns button:disabled { opacity: 0.45; cursor: not-allowed; }

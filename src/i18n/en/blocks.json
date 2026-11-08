@@ -1077,5 +1077,14 @@
   "DIAG_CELLA_UB_FLOW_OFF_END_BLOCK_AT": "'{subject}' has a return type but reaches its end without return",
   "DIAG_CELLA_UB_FLOW_OFF_END_CODE_AT": "line {line}: '{subject}' has a return type but reaches its end without return",
   "DIAG_CELLA_UB_FLOW_OFF_END_WHY": "A function with a return type promises to hand back a value. In C++, reaching the end without a return is undefined behavior, even if the caller ignores the value.",
-  "DIAG_CELLA_UB_FLOW_OFF_END_TRY": "Make sure every path ends with a return, for example add return 0; at the end, or change the return type to void if it does not need to return anything."
+  "DIAG_CELLA_UB_FLOW_OFF_END_TRY": "Make sure every path ends with a return, for example add return 0; at the end, or change the return type to void if it does not need to return anything.",
+  "PROPOSAL_REGION": "Proposed change",
+  "PROPOSAL_FROM": "Proposed by {author}",
+  "PROPOSAL_UNNAMED": "unnamed",
+  "PROPOSAL_WAITING": "{n} pending",
+  "PROPOSAL_STALE": "The program changed after this proposal was sent; the place it points to is gone or different — it can only be rejected.",
+  "PROPOSAL_NO_CHANGE": "(no change to the code)",
+  "PROPOSAL_ACCEPT": "Accept",
+  "PROPOSAL_REJECT": "Reject",
+  "PROPOSAL_BUSY": "Syncing — press Accept again in a moment"
 }
