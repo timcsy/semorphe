@@ -947,8 +947,17 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     }
     // 🔴 **匿名的 union／struct 成員**（`struct P { char k; union { int code; char flag; }; };`）：成員直接掛在外層、沒有名字。
     //    2026-11-08 union 盲測：原本落到下面的一般欄位、名字缺了就編一個 `x`——`union {…} x;`，`p.code` 從此不存在。照實降級，原文保留。
-    if (!node.childForFieldName('declarator') && node.namedChildren.some((c) => (c.type === 'union_specifier' || c.type === 'struct_specifier') && c.childForFieldName('body'))) {
-      return degrade(buildRawCode(node.text), '匿名的 union／struct 成員尚未支援')
+    //    🟢 358（Cella 0959 給了形狀）：交給 union／struct 那兩顆，名字留空；那兩顆收不下的（成員函式之類）照舊降級。
+    if (!node.childForFieldName('declarator')) {
+      const spec = node.namedChildren.find((c) => (c.type === 'union_specifier' || c.type === 'struct_specifier') && c.childForFieldName('body'))
+      if (spec) {
+        // 問形狀不問身分：lift 出來的是一個帶成員槽的定義（union／struct 那兩顆）⟹ 名字留空（策略在沒名字時會編 MyStruct）
+        const lifted = ctx.lift(spec)
+        if (lifted && lifted.slots?.members !== undefined && typeof lifted.properties?.name === 'string') {
+          return { ...lifted, properties: { ...lifted.properties, name: '' } }
+        }
+        return degrade(buildRawCode(node.text), '這個匿名的 union／struct 成員裝不下（有成員函式之類）')
+      }
     }
     // Pure virtual: virtual void method() = 0;
     const isVirtual = node.children.some(c => !c.isNamed && c.text === 'virtual')
