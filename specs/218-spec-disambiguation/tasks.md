@@ -53,10 +53,10 @@
 
 ## Phase 6: Polish & 護欄
 
-- [ ] T024 [P] 護欄 `tests/integration/audit-disambiguation.test.ts`：宣告了的解讀都有解答檔；核心（`src/core/disambiguation/`）不出現任何登記過的 kind 名字；比對器不 import DOM／`node:fs`／提供者（量 import）
-- [ ] T025 [P] 兩個宿主同結果：同一份比對分別經 Node 的判決與瀏覽器 worker 協定（`tests/helpers/cella-run` 的 worker 路徑），結果相同，於 `tests/integration/disambiguation-hosts.test.ts`
-- [ ] T026 量 SC-005：示範題完整比對的時間，記在 quickstart.md
-- [ ] T027 基線與護欄調整（新檔、新匯出、課程快照若變）；`npx tsc --noEmit`、`npm run test:guard`、`npm run test:unit`
+- [X] T024 [P] 護欄 `tests/integration/audit-disambiguation.test.ts`：宣告了的解讀都有解答檔；核心（`src/core/disambiguation/`）不出現任何登記過的 kind 名字；比對器不 import DOM／`node:fs`／提供者（量 import）
+- [X] T025 [P] 兩個宿主同結果：同一份比對分別經 Node 的判決與瀏覽器 worker 協定（`tests/helpers/cella-run` 的 worker 路徑），結果相同，於 `tests/integration/disambiguation-hosts.test.ts`
+- [X] T026 量 SC-005：示範題完整比對的時間，記在 quickstart.md
+- [X] T027 基線與護欄調整（新檔、新匯出、課程快照若變）；`npx tsc --noEmit`、`npm run test:guard`、`npm run test:unit`
 - [ ] T028 知識庫：vision〈規格消歧試驗〉狀態、draft 標記；完成時 reflow（history）
 
 ## Dependencies & Execution Order
