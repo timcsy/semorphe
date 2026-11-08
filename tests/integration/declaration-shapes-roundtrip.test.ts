@@ -97,6 +97,9 @@ const SHAPES: readonly string[] = [
   'string A[100];',
   'string A[100], ans;',
   'string* p;',
+  // 🔴 指標的參照（2026-11-09，盲測 fuzz_4）：宣告子是 pointer → reference → identifier——原本名字落到 'ptr'、參照掉了
+  'int*& slot = pa;',
+  'Node*& slot = (v < val) ? left : right;',
   'string g[3] = {"a"};',
   'stringstream ss;',
   'stack<int> inbox, outbox;',
