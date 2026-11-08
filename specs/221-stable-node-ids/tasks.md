@@ -6,4 +6,4 @@
 - [x] T004 `SyncController.handleEditCode` 接 `carryIds`；`tests/unit/core/sync/` 或整合測試：改一行之後未動的節點身分不變
 - [x] T005 App：`programReplaced()` 接進套範例、換目標、課文起始程式（arrange／debug）、匯入
 - [x] T006 e2e：`e2e/proposals.spec.ts` 把「改程式碼 → 過期」改成「改別處 → 仍可接受」＋「刪掉它指的節點 → 過期」＋「套範例 → 過期」
-- [ ] T007 型別、`test:unit`、`test:guard`（基線手改附 note）、長測試（全套＋建置＋e2e）
+- [x] T007 型別、`test:unit`、`test:guard`（基線手改附 note）、長測試（全套＋建置＋e2e）

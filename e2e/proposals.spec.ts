@@ -79,8 +79,9 @@ test('送出之後人改了程式碼的別處 → 提議仍可接受，接受後
   await expect(bar).toHaveAttribute('data-status', 'pending')
   await expect(bar.locator('.proposal-diff-same').filter({ hasText: 'int n = 6;' })).toHaveCount(1)
   await bar.locator('.proposal-accept').click()
-  await expect.poll(() => code(page)).toContain('int n = 6;')
-  expect(await code(page)).not.toContain('if (')
+  // ⚠️ 等的是【接受造成的改變】（if 不見了）——`int n = 6;` 在接受之前就在了，等它會立刻通過、搶在接受生效之前斷言（長測試在忙碌的機器上撞到）
+  await expect.poll(() => code(page)).not.toContain('if (')
+  expect(await code(page)).toContain('int n = 6;')
 })
 
 test('送出之後人刪掉了它指的那個節點 → 過期、接受停用、只能退回', async ({ page }) => {
