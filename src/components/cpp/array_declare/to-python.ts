@@ -4,7 +4,7 @@ import { paren } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
-    const name = String(n.properties.name ?? '')
+    const name = py.name(String(n.properties.name ?? ''))
     const t = String(n.properties.type ?? '')
     const zero = /^(int|long|long long|short)$/.test(t) ? '0' : t === 'double' ? '0.0' : null
     if (zero === null) return [py.keep(n, 'outside-subset', `${t} 陣列還沒有對應`)]

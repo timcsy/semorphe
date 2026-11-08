@@ -31,7 +31,8 @@ function shown(v: import('../../../core/types').SemanticNode, py: import('../../
   const t = (py.typeOf(v) ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '')
   if (t === 'double' || t === 'float' || t === 'long double') return `format(${e}, "g")`
   if (t === 'bool') return `int(${e})`
-  if (t === 'char') return py.keep(v, 'char', '印出 char 變數：C++ 的 char 是整數，Python 沒有對應的型別')
+  // char：cout 印出字元——Python 那邊是長度 1 的字串，直接印（364）
+  if (t === 'char') return e
   if (/^(int|long|long long|short|unsigned( int| long| long long)?|size_t)$/.test(t) || /string|char\s*\[|const char \*/.test(t)) return e
   if (t === '') return py.keep(v, 'needs-types', '這個值的型別判斷不出來（印法要看型別：整數、浮點、布林印的樣子不同）')
   return py.keep(v, 'outside-subset', `型別「${t}」的印法還沒有對應`)

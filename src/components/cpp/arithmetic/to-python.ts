@@ -1,12 +1,19 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { paren } from '../../../languages/cpp/to-python/contract'
+import { paren, isChar } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.expr((n, py) => {
     const op = String(n.properties.operator ?? '')
     const l = n.slots.left?.[0], rr = n.slots.right?.[0]
-    if ([py.typeOf(l), py.typeOf(rr)].some((t) => (t ?? '').replace(/^const\s+/, '') === 'char')) return py.keep(n, 'char', 'char 參與運算：C++ 的 char 是整數，Python 的是字串')
+    // char 參與運算：C++ 的 char 是整數、Python 用長度 1 的字串 ⟹ 那一邊取字碼 ord()，結果是整數（364）
+    const side = (x: typeof l): string => (isChar(py.typeOf(x)) ? `ord(${py.expr(x)})` : paren(x, py))
+    if (isChar(py.typeOf(l)) || isChar(py.typeOf(rr))) {
+      if (op === '%') return py.keep(n, 'modulo', '取餘數：負數時兩個語言的正負號規則不同')
+      if (op === '/') return py.keep(n, 'division', 'char 參與的除法')
+      if (!['+', '-', '*'].includes(op)) return py.keep(n, 'outside-subset', `運算子 ${op} 還沒有對應`)
+      return `${side(l)} ${op} ${side(rr)}`
+    }
     if (op === '%') return py.keep(n, 'modulo', '取餘數：負數時兩個語言的正負號規則不同')
     if (op === '/') {
       const t = py.typeOf(n) ?? ''

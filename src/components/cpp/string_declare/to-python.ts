@@ -4,6 +4,6 @@ import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contrac
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
     const init = n.slots.initializer?.[0]
-    return [`${py.indent(depth)}${String(n.properties.name ?? '')} = ${init ? py.expr(init) : '""'}`]
+    return [`${py.indent(depth)}${py.name(String(n.properties.name ?? ''))} = ${init ? py.expr(init) : '""'}`]
   })
 }
