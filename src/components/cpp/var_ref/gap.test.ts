@@ -61,6 +61,8 @@ import { languagePack } from '../../../core/language-packs'
 
 /** 產品的跑法：照風格補上自動引入（`withScaffold`）再判——第一課的學生不寫 #include */
 const run = (src: string) => runCella(src, { style: 'apcs' })
+/** cella 2213 倒退的兩列（見下面的釘子） */
+const STREAM_AS_OPERAND_GAP = new Set(['cout <', 'cin <'])
 
 /** 期望的終點：Cella 判 reject（學生的錯），而原因說得出 `want`——今天在 formalize 就被擋下，丟出的訊息帶「翻不出」 */
 async function expectRejectSaying(src: string, want: RegExp): Promise<void> {
@@ -87,10 +89,17 @@ describe('串流名字不是變數（Cella）', () => {
     ['cout <', 'int main(){ cout < "Hello!" << endl; }'],
     ['cin <', 'int main(){ int x; cin < x; }'],
     ['Cout <<', 'int main(){ Cout << "Hello!" << endl; }'],
-  ])('★ `%s` 歸類成學生的錯：判 reject（不是「還不支援」），而且指到那一行', async (_name, body) => {
-    const r = await run(body)
-    expect(r.verdict, describeCellaResult(r)).toBe('reject')
-    expect(r.problems[0]?.source?.line, '要指得到是哪一行').toBeGreaterThan(0)
+  ])('★ `%s` 歸類成學生的錯：判 reject（不是「還不支援」），而且指到那一行', async (name, body) => {
+    const check = async (): Promise<void> => {
+      const r = await run(body)
+      expect(r.verdict, describeCellaResult(r)).toBe('reject')
+      expect(r.problems[0]?.source?.line, '要指得到是哪一行').toBeGreaterThan(0)
+    }
+    // 🟠 cella 0.1.202611082213 倒退：eName "cout"／"cin" 在運算元位置解析成串流物件之後，`cout < x` 判 unknown（unsupported：
+    //    「the model's std::cout is not an object this program can use as an operand」）——學生打錯字被說成「還不支援」（系統的錯）。
+    //    上一版判 reject（operandTypes）。已附最小重現回報 cella（2026-11-09）
+    if (STREAM_AS_OPERAND_GAP.has(name)) await knownCellaGap(/is not an object this program can use as an operand/, check)
+    else await check()
   })
 
 
@@ -100,11 +109,14 @@ describe('串流名字不是變數（Cella）', () => {
     ['cout <', 'int main(){ cout < "Hello!" << endl; }', 'cout', '<<'],
     ['cin <', 'int main(){ int x; cin < x; }', 'cin', '>>'],
   ])('★ `%s`：判決診斷說得出「%s 要配」哪個運算子（產品同一支 toDiagnostics）', async (_n, body, stream, want) => {
-    const r = await run(body)
-    expect(r.verdict, describeCellaResult(r)).toBe('reject')
-    const pack = languagePack('cpp')
-    const { diagnostics } = toDiagnostics({ verdict: r.raw as unknown as Verdict, types: null, tree: r.tree, readsInput: false, hasStdin: false, knownNames: pack?.wellKnownNames, streamOperators: pack?.streamOperators })
-    expect(diagnostics.map((d) => [d.rule, d.params?.stream, d.params?.want])).toEqual([['STREAM_OPERATOR_SUGGEST', stream, want]])
+    // 🟠 同上（cella 2213 倒退）：判決變成 unknown，診斷就沒有 reject 可以改寫成「要配 <<」
+    await knownCellaGap(/is not an object this program can use as an operand/, async () => {
+      const r = await run(body)
+      expect(r.verdict, describeCellaResult(r)).toBe('reject')
+      const pack = languagePack('cpp')
+      const { diagnostics } = toDiagnostics({ verdict: r.raw as unknown as Verdict, types: null, tree: r.tree, readsInput: false, hasStdin: false, knownNames: pack?.wellKnownNames, streamOperators: pack?.streamOperators })
+      expect(diagnostics.map((d) => [d.rule, d.params?.stream, d.params?.want])).toEqual([['STREAM_OPERATOR_SUGGEST', stream, want]])
+    })
   })
 
   // 🟢 spec 206 修好（原本是釘子）：近似名的建議從 JS 直譯器搬到判決診斷——Cella 判「未宣告的 Cout」，產品的 toDiagnostics 說「是不是要寫 cout」
