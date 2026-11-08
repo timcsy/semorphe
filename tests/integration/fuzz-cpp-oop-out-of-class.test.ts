@@ -49,6 +49,7 @@ const ALLOWED_DEGRADE = [
 const KNOWN_UNTRANSLATED = [
   /這顆(類別成員|頂層元件|元件)還沒有對應到 Cella 的建構子/, // 上面那些降級
   /類別外的靜態成員定義/,
+  /經類別名取靜態成員/, // 361：`Logger::current` 當值——cella 談定送 eName，Cella 那側預估 11-09 上午補上（fuzz_9 到時整支轉過）
   /`new T{…}` 的大括號初始化：聚合體/, // 328 之後小括號的已判得出；大括號等 Cella 的 eNewList
   /型別「(Car|ostream)」還沒有對應/,
   /找不到 \w+ 這個成員的宣告|找不到這個(建構子|解構子)的宣告|類別外找不到它的定義/, // 它的另一半落在上面的降級裡
