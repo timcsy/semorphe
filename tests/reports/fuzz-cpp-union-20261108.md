@@ -12,7 +12,8 @@
 ### 1. `case X: { … }` 的大括號被展平（fuzz_6）——既有缺陷，與 union 無關
 `case OP_ADD: { int b = stack[--sp]; … break; }` 的大括號是一層作用域。核心展平 compound 時只把「父節點也是 compound」的當獨立區塊，
 case 底下的不算 ⟹ 兩個 case 各宣告一次 `int b`，C 的標籤後面也不能直接接宣告 ⟹ 編不過。
-修：`core/lift/lifter.ts` 的判準多認 `case_statement`。順手修 `cpp:block` 產碼本體沒縮排（獨立區塊也一樣，既有）。
+修：`core/lift/lifter.ts` 的判準多認 `case_statement`。
+⚠️ 產出的 `{` 自成一行、本體沒有多縮一層（`cpp:block` 的產碼，獨立區塊也一樣，既有）——試過一起修，牽動完備性護欄的合成樣本量測，退回、另排一刀。
 
 ### 2. 結構裡的匿名 union 成員被編上名字 `x`（fuzz_8）
 `struct Packet { char kind; union { int code; char flag; }; };` → `union {…} x;`，`p.code` 從此不存在。

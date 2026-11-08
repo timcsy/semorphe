@@ -4,7 +4,7 @@ import { indent, generateBody, indented } from '../../../core/projection/code-ge
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:union_declare', (node, ctx) => {
-    const name = String(node.properties.name ?? '')
+    const name = String(node.properties.name ?? 'MyUnion')
     const members = node.slots.members ?? []
     const alias = String(node.properties.typedef_alias ?? '')
     const head = alias ? `typedef union ${name ? `${name} ` : ''}{` : `union ${name || 'MyUnion'} {`

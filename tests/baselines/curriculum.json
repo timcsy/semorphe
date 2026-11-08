@@ -148,6 +148,7 @@
       "cpp:ifndef",
       "cpp:forward_decl",
       "cpp:struct_declare",
+      "cpp:union_declare",
       "cpp:struct_at_member",
       "cpp:struct_at_ptr",
       "cpp:class_def",
