@@ -87,6 +87,8 @@ export const SUBJECTS = [
   // ⚠️ `constructor`／`destructor` 加入日 2026-11-07（第 322 刀）——它們原本只是單字名（類別裡定義的那兩顆），
   //    而「在類別裡宣告、在類別外定義」讓它們各有了兩個操作（`declare`、`def_outside`）：主體＋操作，同 `method`。
   'constructor', 'destructor',
+  // ⚠️ `union` 加入日 2026-11-08——`cpp:union_declare`（C 盲測第二輪）。與 `struct` 同一列：一種型別定義當主體，操作沿用既有的 `declare`。
+  'union',
 ] as const
 
 /**

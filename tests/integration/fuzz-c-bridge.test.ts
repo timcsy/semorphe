@@ -18,7 +18,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode, setDependencyResolver } from '../../src/core/projection/code-generator'
 import { createPopulatedRegistry } from '../../src/languages/cpp/std'
 import { createCppCodePatcher } from '../../src/languages/cpp/auto-include'
-import { runCella, knownCellaGap } from '../helpers/cella-run'
+import { runCella } from '../helpers/cella-run'
 import cStyle from '../../src/languages/cpp/styles/c.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
@@ -53,7 +53,6 @@ describe('C 盲測：每一支來回不走樣、交給 Cella 的結果相同', (
       expect(ids(t1)).toContain('cpp:func_def')
       const out = gen(t1)
       expect(JSON.stringify(shape(lift(out))), `走樣：\n${out}`).toBe(JSON.stringify(shape(t1)))
-      if (p.id === 'fuzz_1') return // 4[arr]：Cella 誤判，見下面那條釘子
       const a = await runCella(p.code, { lang: 'c' })
       const b = await runCella(out, { lang: 'c' })
       expect([b.verdict, b.out], `原文 ${a.verdict}／產出 ${b.verdict}\n${out}`).toEqual([a.verdict, a.out])
@@ -101,11 +100,9 @@ describe('C 盲測抓到的靜默改寫——每個一條', () => {
   })
 })
 
-describe('Cella 那一側的已知缺口', () => {
-  it('`4[arr]`（C 允許下標的兩邊對調，[expr.sub]／C11 6.5.2.1）被判 reject——已回報', async () => {
-    await knownCellaGap(/subscripted value is not an array or pointer/, async () => {
-      const r = await runCella('#include <stdio.h>\nint main() {\n    int arr[] = {1, 2, 3, 4, 5};\n    printf("%d\\n", 4[arr]);\n    return 0;\n}\n', { lang: 'c' })
-      expect(r.verdict, JSON.stringify(r.problems?.slice(0, 1))).toBe('accept')
-    })
+describe('Cella 那一側曾經的缺口', () => {
+  it('`4[arr]`（C 允許下標的兩邊對調，[expr.sub]／C11 6.5.2.1）判 accept、印 5——Cella 0.1.202611080137 修好（之前判 reject，是一根 knownCellaGap）', async () => {
+    const r = await runCella('#include <stdio.h>\nint main() {\n    int arr[] = {1, 2, 3, 4, 5};\n    printf("%d\\n", 4[arr]);\n    return 0;\n}\n', { lang: 'c' })
+    expect([r.verdict, r.out], JSON.stringify(r.problems?.slice(0, 1))).toEqual(['accept', '5\n'])
   })
 })

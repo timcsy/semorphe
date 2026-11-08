@@ -1,0 +1,5 @@
+{
+  "C_UNION_DECLARE_MSG0": "define union %1 alias %2",
+  "C_UNION_DECLARE_TOOLTIP": "Define a union: its members share the same memory, so it holds only one of them at a time (reading a different member than the one last stored may not be meaningful)",
+  "FLOW_TITLE_CPP_UNION_DECLARE": "Union"
+}

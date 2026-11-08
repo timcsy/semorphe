@@ -707,7 +707,9 @@ export class Lifter {
       }
 
       if (lifted.componentId === '_compound') {
-        const standalone = node.type === 'compound_statement' && node.parent?.type === 'compound_statement'
+        // 🔴 `case X: { int b = …; }` 的大括號也是作用域：case 沒有自己的本體區塊，它底下的 compound 是學生寫的那一層
+        //    （2026-11-08 union 盲測：展平之後兩個 case 各宣告一次 `int b`，產出的程式編不過——C 的標籤後面不能直接接宣告）
+        const standalone = node.type === 'compound_statement' && (node.parent?.type === 'compound_statement' || node.parent?.type === 'case_statement')
         if (standalone) results.push(buildStandaloneBlock(lifted.slots.body ?? []))
         else results.push(...(lifted.slots.body ?? []))
       } else {

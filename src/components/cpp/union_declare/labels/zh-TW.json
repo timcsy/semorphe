@@ -1,0 +1,5 @@
+{
+  "C_UNION_DECLARE_MSG0": "定義聯合 %1 另名 %2",
+  "C_UNION_DECLARE_TOOLTIP": "定義一個聯合：成員共用同一塊記憶體，一次只存其中一個（存了一個再讀另一個，結果不一定有意義）",
+  "FLOW_TITLE_CPP_UNION_DECLARE": "定義聯合"
+}

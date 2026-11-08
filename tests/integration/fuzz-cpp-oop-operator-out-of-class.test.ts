@@ -54,14 +54,15 @@ const ALLOWED_DEGRADE = [
 const VERDICT: Record<string, { verdict: 'accept' | 'unknown' | 'reject' | 'untranslated'; why?: RegExp }> = {
   fuzz_1: { verdict: 'accept' },
   // Cella ④ 轉換建構子的隱式轉換（h -= 3）在 1526 修好（原本誤判 reject）；剩下的是引數之間的求值次序——標準未指定，誠實的 unknown，印出來仍等於 g++
-  fuzz_2: { verdict: 'unknown', why: /^orderUncompared$/ },
+  // Cella 0.1.202611080134 轉 accept：函式庫呼叫的副作用改看引數實際寫到哪裡——原本的 orderUncompared 是把沒有衝突的兩個呼叫當成有衝突（輸出照樣等於 g++）
+  fuzz_2: { verdict: 'accept' },
   // 上面的降級（多維陣列欄位、`: a{{…}}`／`: c{0, 0, 0, 0, 0}`）——連帶：被降級的建構子定義讓類別裡那一行原型「找不到定義」
   fuzz_3: { verdict: 'untranslated', why: /這顆(類別成員|頂層元件)還沒有對應到 Cella 的建構子|類別裡宣告了建構子，而類別外找不到它的定義/ },
   fuzz_4: { verdict: 'untranslated', why: /這顆(類別成員|頂層元件)還沒有對應到 Cella 的建構子|類別裡宣告了建構子，而類別外找不到它的定義/ },
   fuzz_5: { verdict: 'unknown', why: /^ubElide$/ },                                        // 具名回傳值的複製省略——實作相依
   fuzz_6: { verdict: 'accept' },                                                           // Cella ② 多載 `<<` 串接的定序：1526 修好（C++17 起是定的）
   fuzz_7: { verdict: 'accept' },                                                           // Cella ① vector 的迭代器區間建構子：1526 修好（原本誤判 reject）
-  fuzz_8: { verdict: 'unknown', why: /^orderUncompared$/ },                                // Cella ②
+  fuzz_8: { verdict: 'accept' },                                                           // 同 fuzz_2：Cella 0134 轉 accept
 }
 
 describe('模糊測試：運算子的類別外定義（第 331 刀）', () => {
