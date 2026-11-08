@@ -1,6 +1,6 @@
 /**
  * `cpp:member_static` 的自證測（361）：類別外的靜態成員定義（`int C::n = 3;`）——初值併進類別的 mbStatic，定義本身不另外送
- * （cella 2026-11-08 的送法，同 cpp_to_tree.py）。經類別名取靜態成員（`C::n` 當值）Cella 還解析不了 ⟹ 照實翻不出，不送成一個會被判 undeclared 的名字。
+ * （cella 2026-11-08 的送法，同 cpp_to_tree.py）。經類別名取靜態成員（`C::n` 當值）送 eName 交給 Cella 解析（cella 0.1.202611082213 起；361 時照實翻不出）。
  */
 import { describe, it, expect } from 'vitest'
 import { expectCellaOut, runCella } from '../../../../tests/helpers/cella-run'
@@ -14,9 +14,11 @@ describe('膠囊自證：類別的靜態成員', () => {
   it('★ 指標型別的靜態成員（`static L* current;` ＋ `L* L::current = nullptr;`）', async () => {
     await expectCellaOut(H + 'class L {\npublic:\n    static L* current;\n    int v;\n    L(int x) : v(x) { current = this; }\n    int peek() { return current->v; }\n};\nL* L::current = nullptr;\nint main() {\n    L a(7);\n    cout << a.peek() << endl;\n}\n', '7\n')
   }, 120_000)
-  it('🔴 經類別名取靜態成員（`C::n` 當值）：照實翻不出——不是錯的 reject（360 之後倒退過：送 eName 被判 undeclared）', async () => {
-    const r = await runCella(H + 'class C {\npublic:\n    static int n;\n};\nint C::n = 3;\nint main() {\n    cout << C::n << endl;\n}\n')
-    expect(r.verdict).toBe('untranslated')
-    expect(r.untranslated.map((u) => u.reason).join(' ')).toContain('經類別名取靜態成員')
+  it('🟢 經類別名取靜態成員（`C::n` 當值）：送 eName、Cella 解析（cella 0.1.202611082213；361 時照實翻不出）', async () => {
+    await expectCellaOut(H + 'class C {\npublic:\n    static int n;\n};\nint C::n = 3;\nint main() {\n    cout << C::n << endl;\n    C::n = 8;\n    cout << C::n << endl;\n}\n', '3\n8\n')
+  }, 60_000)
+  it('🔴 指到不存在的成員：Cella 照 clang 判（不是我們這側翻不出、也不是 accept）', async () => {
+    const r = await runCella(H + 'class C {\npublic:\n    static int n;\n};\nint C::n = 3;\nint main() {\n    cout << C::m << endl;\n}\n')
+    expect(r.verdict).toBe('reject')
   }, 60_000)
 })
