@@ -11,6 +11,11 @@
     "args": "expressions"
   },
   "role": "statement",
+  "positions": [
+    "statement",
+    "expression"
+  ],
+  "_positions_why": "scanf(\"%d\", &x) —— 回傳讀到的個數（int），所以 while (scanf(...) == 1)、for (; x != 0; scanf(\"%d\", &x)) 成立。⚠️ `role` 是 `statement` 是產生器契約（「我自己印分號」），不是文法。見 `core/component/traits.ts` 的 `positionsOf`。",
   "paths": {
     "views": {
       "blocks": {

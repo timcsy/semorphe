@@ -227,6 +227,8 @@ const LOADABLE_SHAPES: readonly string[] = [
   '    for (int a = 0, b = n; a < b; a++, b--) {\n    }',
   '    vector<int> C(n), V(n);',
   '    vector<int> C(n + 1), V(n + 1);',
+  // scanf 放在運算式位置（for 的第三格）——原本整格照原文
+  '    int x = 1;\n    for (; x != 0; scanf("%d", &x)) {\n    }',
 ]
 
 let blockExtractor: PatternExtractor
@@ -348,6 +350,7 @@ describe('第一百一十八條護欄：走一趟積木回來', () => {
     ['string A[100], ans;', 'string A[100]; string ans;'],
     ['deque<int> d(n);', 'deque<int> d(n);'],
     ['ios::sync_with_stdio(0), cin.tie(0);', 'ios::sync_with_stdio(0), cin.tie(0);'],
+    ['int x = 1; for (; x != 0; scanf("%d", &x)) { }', 'int x = 1; for (; x != 0; scanf("%d", &x)) {'], // 單獨一行的 `}` 被 viaBlocks 濾掉
   ])('🔴 走一趟積木：%s', (body, expected) => {
     expect(
       squash(viaBlocks(body)),

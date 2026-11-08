@@ -16,6 +16,7 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import type { StylePreset } from '../../src/core/types'
 import type { SemanticNode } from '../../src/core/semantic-tree'
+import { expectCellaOut } from '../helpers/cella-run'
 
 const style: StylePreset = {
   id: 'apcs',
@@ -254,6 +255,40 @@ describe('C++ cstdio Roundtrip', () => {
       const tree2 = liftCode(output)
       expect(tree2).not.toBeNull()
       expect(findComponent(tree2, 'cpp:print_formatted')).not.toBeNull()
+    })
+  })
+
+  // 🔴 scanf 回傳讀到的個數，放得進運算式位置（for 的第三格、while 的條件）——
+  //    原本只宣告了敘述形態，for 的第三格把它包成一串原文（spec 218 寫 c-bridge/01 的解答時撞到）
+  describe('cpp_scanf in expression positions', () => {
+    const forCode = '#include <cstdio>\nint main() {\n    int x = 1, s = 0;\n    for (scanf("%d", &x); x != 0; scanf("%d", &x)) {\n        s += x;\n    }\n    printf("%d\\n", s);\n    return 0;\n}'
+    const whileCode = '#include <cstdio>\nint main() {\n    int x, s = 0;\n    while (scanf("%d", &x) == 1) {\n        s += x;\n    }\n    printf("%d\\n", s);\n    return 0;\n}'
+
+    it('for 的第一、三格是 scanf 元件，不是原文', () => {
+      const tree = liftCode(forCode)
+      expect(findComponent(tree, 'cpp:raw_expression')).toBeNull()
+      const loop = findComponent(tree, 'cpp:loop_for')!
+      expect(loop.slots.init?.[0]?.componentId).toBe('cpp:input_formatted')
+      expect(loop.slots.update?.[0]?.componentId).toBe('cpp:input_formatted')
+    })
+
+    it('while 的條件裡是 scanf 元件', () => {
+      const tree = liftCode(whileCode)
+      expect(findComponent(tree, 'cpp:raw_expression')).toBeNull()
+      expect(findComponent(tree, 'cpp:input_formatted')).not.toBeNull()
+    })
+
+    it('產碼一字不差、來回是不動點', () => {
+      for (const code of [forCode, whileCode]) {
+        const out = roundTripCode(code)
+        expect(out).toContain(code.includes('for (') ? 'for (scanf("%d", &x); x != 0; scanf("%d", &x))' : 'while (scanf("%d", &x) == 1)')
+        expect(roundTripCode(out)).toBe(out)
+      }
+    })
+
+    it('Cella 判出同樣的輸出', async () => {
+      await expectCellaOut(roundTripCode(forCode), '6\n', { stdin: '1 2 3 0\n' })
+      await expectCellaOut(roundTripCode(whileCode), '6\n', { stdin: '1 2 3\n' })
     })
   })
 })
