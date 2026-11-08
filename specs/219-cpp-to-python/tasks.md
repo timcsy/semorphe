@@ -36,7 +36,7 @@
 
 - [X] T015 [US2] 反例測試（先紅）：負數整數除法（換成 `int(a/b)` 而判決相同，**不是** `//`）、`a % b` 一般用法（保留 `modulo`）、`n % 2 == 0`（換）、溢位（C++ 判 reject／assumes ⟹ 保留 `overflow`）、`c - 'a'`（保留 `char`）、指標（`pointer`）、類別（`class`）in `tests/integration/cpp-to-python-verdict.test.ts`
 - [X] T016 [US2] 實作保留判斷：取餘數只在與 0 比較時換；char 參與運算、指標、類別、樣板、表外身分 ⟹ 記原因 in `src/languages/cpp/cpp-to-python.ts`
-- [ ] T017 ⚠️ **未做**：換法拿不到判決（只拿到型別）——會溢位的程式今天仍會被換；要把 C++ 那側的判決（問題種類）一起交給換法。護欄目前只證明「溢位的程式 C++ 那側不是 accept」。[US2] 溢位：C++ 那側判決帶溢位類的問題或 assumes ⟹ 整支保留 `overflow`（換法拿得到判決時才判；拿不到記 `needs-types`）in `src/languages/cpp/cpp-to-python.ts`
+- [X] T017 溢位：換法多一個可選參數帶入來源程式的判決問題（種類與節點）；有 `ubOverflow` ⟹ 保留 `overflow`、指回溢位那一顆（只認這一種：沒有輸入時讀輸入的程式也判 reject，`ubUninit`，不能用「不是 accept 就不換」）
 - [X] T018 [US2] app：整支不換 ⟹ 程式不動、目標退回 C++、提示列出原因（哪幾行、哪一類）in `src/ui/app.ts`
 - [X] T019 [P] [US2] 提示文字（換了幾行、保留原因的各類說法）zh-TW／en in `src/i18n/zh-TW/` 與 `src/i18n/en/`
 

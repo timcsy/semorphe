@@ -26,7 +26,9 @@ const tables = (): ToPythonTables => (TABLES ??= collectToPython())
 const lineOf = (n: SemanticNode): number | undefined =>
   (n.metadata as { sourceRange?: { startLine?: number } } | undefined)?.sourceRange?.startLine
 
-export function convertCppToPython(tree: SemanticNode, types: Readonly<Record<string, string>> = {}): LanguageConversion {
+export function convertCppToPython(
+  tree: SemanticNode, types: Readonly<Record<string, string>> = {}, problems: readonly { kind: string; at?: string }[] = [],
+): LanguageConversion {
   const reasons: LanguageConversion['reasons'] = []
   let converted = 0
   const t = tables()
@@ -76,6 +78,13 @@ export function convertCppToPython(tree: SemanticNode, types: Readonly<Record<st
     return []
   }
   const lines = stmt(tree, 0)
+  // 整數溢位（spec 219 T017）：C++ 是未定義行為、Python 的整數不會溢位——結果不同，不換。判決指回溢位的那一顆
+  const byId = new Map<string, SemanticNode>()
+  const index = (n: SemanticNode): void => { byId.set(n.id, n); for (const kids of Object.values(n.slots ?? {})) kids.forEach(index) }
+  index(tree)
+  for (const p of problems) {
+    if (p.kind === 'ubOverflow') py.keep(byId.get(p.at ?? '') ?? tree, 'overflow', '這裡在 C++ 會整數溢位（未定義行為）——Python 的整數不會溢位，結果會不同')
+  }
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   // 跨行讀一個詞——同 cin（空白與換行都是分隔；research R4 的修正：課文的輸入一個數一行，「一句讀一行」對不上）
   const head = needTokens ? [...TOKEN_READER] : []

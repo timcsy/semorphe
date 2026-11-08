@@ -33,9 +33,11 @@ beforeAll(async () => {
   registerCppLanguage()
 })
 
-async function toPython(src: string): Promise<ReturnType<typeof convertCppToPython>> {
+async function toPython(src: string, stdin = ''): Promise<ReturnType<typeof convertCppToPython>> {
   const tree = lifter.lift(parser.parse(src)!.rootNode as never) as SemanticNode
-  return convertCppToPython(tree, await cellaTypesOfTree(tree, { lang: 'cpp' }))
+  // 同產品：型別與判決的問題都來自同一次判決（溢位那一類要換法知道，T017）
+  const v = await runCella(src, { lang: 'cpp', stdin })
+  return convertCppToPython(tree, await cellaTypesOfTree(tree, { lang: 'cpp' }), (v.problems ?? []).map((p) => ({ kind: p.kind, at: p.at })))
 }
 
 async function sameVerdict(src: string, py: string, stdin: string): Promise<void> {
@@ -67,7 +69,7 @@ describe('C++ → Python：cpp-beginner 課文的解答', () => {
   for (const f of files) {
     it(f.replace('lessons/cpp-beginner/', ''), async () => {
       const src = fs.readFileSync(f, 'utf8')
-      const r = await toPython(src)
+      const r = await toPython(src, stdinOf(f))
       if (r.code === null) {
         // 保留：每一筆都要有原因類別與說明（不是無原因的失敗）
         expect(r.reasons.length).toBeGreaterThan(0)
@@ -125,9 +127,9 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code).toBeNull()
     expect(r.reasons.length).toBeGreaterThan(0)
   }, 60_000)
-  it('🔴 溢位：C++ 那側判決不是乾淨的 accept ⟹ 不會被當成「判決相同」（整數在 Python 不溢位）', async () => {
-    const src = H + 'int main() {\n    int a = 2147483647;\n    a = a + 1;\n    cout << a << endl;\n    return 0;\n}\n'
-    const c = await runCella(src, { lang: 'cpp' })
-    expect(c.verdict, '溢位在 C++ 是未定義行為——Cella 不會判 accept').not.toBe('accept')
+  it('🔴 保留：整數溢位（C++ 未定義行為、Python 不溢位）——換法從判決知道（T017）', async () => {
+    const r = await toPython(H + 'int main() {\n    int a = 2147483647;\n    a = a + 1;\n    cout << a << endl;\n    return 0;\n}\n')
+    expect(r.code, '換了——意思會變').toBeNull()
+    expect(r.reasons.map((x) => x.kind)).toContain('overflow')
   }, 60_000)
 })

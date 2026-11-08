@@ -206,7 +206,7 @@ export class App {
   /** 最近一次判決——`input` 是送出時那一題的測資（題目換了，同一棵樹的判決就不能再用）。 */
   private lastCheck: { tree: SemanticNode; input: string; answer: Promise<CheckAnswer> } | null = null
   /** 最近一次判決帶回的運算式型別與那一棵樹（spec 215：換成 printf 風格時照型別產格式）。 */
-  private lastTypes: { tree: SemanticNode; nodes: Readonly<Record<string, string>> } | null = null
+  private lastTypes: { tree: SemanticNode; nodes: Readonly<Record<string, string>>; problems?: readonly { kind: string; at?: string }[] } | null = null
   /** 上一次從積木產碼時型別對不上（保留了 cout）——下一份型別到了要補產一次。 */
   private typesPending = false
   private hardwarePanel: HardwarePanel | null = null
@@ -2954,7 +2954,7 @@ export class App {
    */
   private async convertAfterLanguageChange(
     before: SemanticNode, check: Parameters<NonNullable<Provider['check']>>[0] | null, fromLanguage: string,
-    known: { tree: SemanticNode; nodes: Readonly<Record<string, string>> } | null,
+    known: { tree: SemanticNode; nodes: Readonly<Record<string, string>>; problems?: readonly { kind: string; at?: string }[] } | null,
     back: { target: Target; topic: Topic; code: string },
   ): Promise<void> {
     const pack = languagePack(fromLanguage)
@@ -2962,14 +2962,19 @@ export class App {
     const toLanguage = this.currentTopic.language
     const targetAtSwitch = this.currentTarget
     let types: Readonly<Record<string, string>> = (known && carryTypes(known.tree, known.nodes, before)) ?? {}
+    // 判決的問題（溢位的那一類要換法知道，T017）：上一次判決的節點 id 對到這棵樹才用；另外問的那一次直接用
+    let problems: readonly { kind: string; at?: string }[] = Object.keys(types).length > 0 && known?.tree === before ? (known.problems ?? []) : []
     const p = provide('verdict').provider
     // 判決還沒暖好也等它（`check` 會自己載入；換語言的每一處都要型別——不等的話剛開頁面就換，整支都會因「需要型別」退回）。最多等 15 秒
     if (Object.keys(types).length === 0 && check && p?.check) {
       const timeout = new Promise<null>((res) => setTimeout(() => res(null), 15_000))
-      try { const a = await Promise.race([p.check(check), timeout]); if (a && !a.stale) types = a.types?.nodes ?? {} } catch { types = {} }
+      try {
+        const a = await Promise.race([p.check(check), timeout])
+        if (a && !a.stale) { types = a.types?.nodes ?? {}; problems = (a.verdict?.problems ?? []).map((x) => ({ kind: x.kind, at: x.at })) }
+      } catch { types = {} }
     }
     if (this.currentTarget !== targetAtSwitch) return
-    const r = pack.convertToLanguage(before, toLanguage, types)
+    const r = pack.convertToLanguage(before, toLanguage, types, problems)
     if (!r) return
     if (r.code !== null) {
       this.codeView?.setCode(r.code)
@@ -4707,7 +4712,7 @@ export class App {
     if (a.stale || tree !== this.currentTree) return
     // 運算式的型別（spec 215）：換成 printf 風格時照型別產格式。產碼時從積木抽回的樹沒有判決的那份 id
     //   ⟹ 記下這棵樹，產碼時照形狀對過去（`carryTypes`）；上一次產碼時型別對不上的話，現在補產一次
-    this.lastTypes = { tree, nodes: a.types?.nodes ?? {} }
+    this.lastTypes = { tree, nodes: a.types?.nodes ?? {}, problems: (a.verdict?.problems ?? []).map((x) => ({ kind: x.kind, at: x.at })) }
     // ⚠️ 上一步是在程式碼那側打的字：不補產（那會用積木蓋掉他剛打的字）——程式碼是他寫的，照原樣
     if (this.typesPending && this.currentStylePreset.io_style === 'printf' && this.lastEditor !== 'code') {
       this.typesPending = false

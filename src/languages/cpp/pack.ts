@@ -165,7 +165,7 @@ declareLanguagePack({
     (isCDialect(from) && !isCDialect(to) ? convertCToCpp(tree, types)
       : !isCDialect(from) && isCDialect(to) ? convertCppToC(tree, types) : null),
   // 跨語言互轉第二對（spec 219）：C++ → Python——來源語言懂自己的元件；回傳 Python 原始碼，由 Python 的 lift 畫積木
-  convertToLanguage: (tree, toLanguage, types) => (toLanguage === 'python' ? convertCppToPython(tree, types) : null),
+  convertToLanguage: (tree, toLanguage, types, problems) => (toLanguage === 'python' ? convertCppToPython(tree, types, problems) : null),
   styleExceptions: {
     detect: detectStyleExceptionsForPreset as never,
     convert: applyStyleConversions as never,
