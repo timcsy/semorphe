@@ -134,3 +134,9 @@ describe('函式指標（344）', () => {
     expect(out).toContain('    int (*tbl[3])(int, int);\n    int (*row)[4] = 0;\n')
   })
 })
+
+describe('void*（344）', () => {
+  it('★ qsort 的比較函式（const void* 參數、函式名當引數）判得出', async () => {
+    await expectCellaOut('#include <stdio.h>\n#include <stdlib.h>\nint cmp(const void *a, const void *b) {\n    return *(const int *)a - *(const int *)b;\n}\nint main(void) {\n    int v[4] = {3, 1, 4, 2};\n    qsort(v, 4, sizeof(int), cmp);\n    printf("%d %d %d %d\\n", v[0], v[1], v[2], v[3]);\n    return 0;\n}\n', '1 2 3 4\n', { lang: 'c' })
+  }, 120_000)
+})

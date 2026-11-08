@@ -195,6 +195,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (s.endsWith('[]')) { const inner = type(s.slice(0, -2), at); return inner && k('tPtr', { t: inner }) }
     const sc = SCALAR[s]
     if (sc) return k(sc)
+    // `void*`／`const void*`（qsort 的比較函式）：tPtr(tVoid)／tPtr(tConst(tVoid))（cella 2026-11-08）。
+    // 單獨的 `void` 只會出現在這裡的遞迴底下——回傳型別與 `f(void)` 由呼叫端先接走；寫成變數型別的交給 Cella 判
+    if (s === 'void') return k('tVoid')
     // 固定寬度與平台相依的整數型別名（int64_t、size_t…）：照名字送 tName——對到哪個整數型別依平台的 ABI 決定（glibc 的 int64_t 是 long、
     // avr-libc 的 int32_t 是 long），由 Cella 依目標解（cella 2026-11-01；第 208 刀，學生的程式 6 支）
     {
