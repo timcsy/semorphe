@@ -3451,3 +3451,36 @@ html, body {
 .hardware-live-head { font-weight: 600; margin-bottom: 4px; color: #e5a50a; }
 .hardware-set-input { display: flex; gap: 6px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
 .hardware-set-input input { width: 90px; font-size: 12px; }
+
+/* 規格消歧的並排（spec 218）：每個解讀一欄；窄的時候疊起來 */
+.console-disambiguation {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #3a3a3a;
+  background: #232323;
+  font-size: 13px;
+}
+.console-disambiguation-head {
+  font-weight: 600;
+  color: #ddd;
+  margin-bottom: 6px;
+}
+.console-disambiguation-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+.console-disambiguation-col {
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #444;
+}
+.console-disambiguation-col.consistent { border-color: #2ea043; background: #12261a; }
+.console-disambiguation-col.inconsistent { border-color: #9e6a03; background: #241f12; }
+.console-disambiguation-col.chosen { outline: 2px solid #4a90d9; }
+.console-disambiguation-title { font-weight: 600; color: #ddd; }
+.console-disambiguation-status { margin: 2px 0 4px; }
+.console-disambiguation-mismatch { font-size: 0.9em; color: #bbb; margin-bottom: 6px; word-break: break-word; }
+.console-disambiguation-choose { min-height: 24px; }
+.console-disambiguation-note { margin-top: 6px; font-size: 0.9em; color: #bbb; }

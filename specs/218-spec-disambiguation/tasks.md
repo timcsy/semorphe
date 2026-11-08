@@ -44,12 +44,12 @@
 **Goal**: 課文頁並排每個解讀、能點選、選擇被記住、之後只照被選的判。
 **Independent Test**: `e2e/disambiguation.spec.ts` 全綠。
 
-- [ ] T018 [P] [US3] 產品的 Judge：把一個情境變成判決請求（stdin／boardInputs），於 `src/providers/cella/judge.ts`
-- [ ] T019 [US3] 老師的選擇：讀寫 localStorage（`semorphe-disambiguation`），於 `src/ui/lesson-disambiguation.ts`
-- [ ] T020 [US3] 並排畫面：題目有兩個以上解讀時，判題後顯示每個解讀一欄（名稱、一致／不一致／不可比、第一個不一致的情境與兩邊輸出）與「題目指的是這一種」按鈕，於 `src/ui/lesson-disambiguation.ts`，掛進判題結果的呈現處
-- [ ] T021 [US3] 判題只照被選的解讀（沒選時照今天：預設解答），於判題流程（課文 check 的位置）
-- [ ] T022 [US3] 先寫紅的 e2e：打開示範課文、交一支程式、看到兩欄並排、點選、重新整理後選擇還在、再判只照被選的，於 `e2e/disambiguation.spec.ts`；再讓它轉綠
-- [ ] T023 [P] [US3] 介面文字中英兩份（i18n）
+- [X] T018 [P] [US3] 產品的 Judge：把一個情境變成判決請求（stdin／boardInputs），於 `src/core/disambiguation/check-judge.ts`（只依賴核心的 CheckRequest——UI 不准直接 import 提供者）
+- [X] T019 [US3] 老師的選擇：讀寫 localStorage（`semorphe-disambiguation`），於 `src/ui/lesson-disambiguation.ts`
+- [X] T020 [US3] 並排畫面：題目有兩個以上解讀時，判題後顯示每個解讀一欄（名稱、一致／不一致／不可比、第一個不一致的情境與兩邊輸出）與「題目指的是這一種」按鈕，於 `src/ui/lesson-disambiguation.ts`，掛進判題結果的呈現處
+- [X] T021 [US3] 判題只照被選的解讀（沒選時照今天：預設解答），於判題流程（課文 check 的位置）
+- [X] T022 [US3] 先寫紅的 e2e：打開示範課文、交一支程式、看到兩欄並排、點選、重新整理後選擇還在、再判只照被選的，於 `e2e/disambiguation.spec.ts`；再讓它轉綠
+- [X] T023 [P] [US3] 介面文字中英兩份（i18n）
 
 ## Phase 6: Polish & 護欄
 

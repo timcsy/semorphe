@@ -388,6 +388,13 @@ export class ConsolePanel implements ViewHost {
    * > **一個會自己改變「我現在在做什麼」的系統，
    * > 會讓使用者失去對回饋的信任——因為他不知道那句話在對誰說。**
    */
+  /** 規格消歧的並排畫面（spec 218）——元素由 `ui/lesson-disambiguation` 組好，這裡只負責接上去 */
+  showDisambiguation(el: HTMLElement): void {
+    this.currentLineEl = null
+    this.outputEl.appendChild(el)
+    this.scrollToBottom()
+  }
+
   offerNextTask(title: string, onSwitch: () => void): void {
     this.currentLineEl = null
     const row = document.createElement('div')
