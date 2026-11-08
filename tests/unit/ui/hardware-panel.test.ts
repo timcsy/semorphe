@@ -66,3 +66,36 @@ describe('硬體分頁', () => {
     expect(root.querySelector('form'), '提供者不能改輸入 ⟹ 不畫那一列').toBeNull()
   })
 })
+
+// ── 停下時說出原因、標出還開著的輸出腳（使用者 11-07 的決定：「結束時沒說停的原因、沒提醒腳還開著」）──
+describe('硬體分頁：停下的原因與還開著的腳', () => {
+  const ON = { verdict: 'accept', problems: [], pins: [{ t: 1, pin: 13, value: 1 }], pinsTruncated: false,
+    env: '{"clockUs":5050000,"loops":50,"pins":[{"pin":13,"mode":"OUTPUT","level":1,"pwm":null,"toneHz":null},{"pin":9,"mode":"OUTPUT","level":0,"pwm":128,"toneHz":null},{"pin":2,"mode":"INPUT","level":1,"pwm":null,"toneHz":null},{"pin":7,"mode":"OUTPUT","level":0,"pwm":null,"toneHz":null}],"servos":[],"lcds":[],"eeprom":[]}' }
+  it('★ 正常跑完的模擬：說出「模擬到第 50 次 loop、5050 毫秒就停了，真的板子會一直跑下去」', () => {
+    const root = document.createElement('div')
+    new HardwarePanel(root).show({ kind: 'record', record: hardwareOf(ON)! })
+    expect(root.querySelector('.hardware-stop')!.textContent).toMatch(/50.*loop.*5050.*一直跑/)
+  })
+  it('★ 還開著的輸出腳：13（HIGH）與 9（PWM 128）被點名；輸入腳與已經 LOW 的不算', () => {
+    const root = document.createElement('div')
+    new HardwarePanel(root).show({ kind: 'record', record: hardwareOf(ON)! })
+    const still = root.querySelector('.hardware-still-on')!.textContent!
+    expect(still).toMatch(/13.*HIGH/)
+    expect(still).toMatch(/9.*PWM 128/)
+    expect(still).not.toMatch(/腳 2|腳 7/)
+  })
+  it('★ 沒有還開著的腳：那一行不出現', () => {
+    const root = document.createElement('div')
+    new HardwarePanel(root).show({ kind: 'record', record: hardwareOf(BLINK)! })
+    expect(root.querySelector('.hardware-still-on')).toBeNull()
+  })
+  it('🔴 步數用完、執行期出錯：原因各說各的', () => {
+    const fuel = hardwareOf({ ...ON, verdict: 'unknown', problems: [{ kind: 'fuel' }] })!
+    const ub = hardwareOf({ ...ON, verdict: 'reject', problems: [{ kind: 'ubBounds', reason: 'index 5 out of range' }] })!
+    expect(fuel.stop.kind).toBe('fuel')
+    expect(ub.stop).toEqual({ kind: 'error', detail: 'ubBounds' })
+    const r1 = document.createElement('div'); new HardwarePanel(r1).show({ kind: 'record', record: fuel })
+    const r2 = document.createElement('div'); new HardwarePanel(r2).show({ kind: 'record', record: ub })
+    expect(r1.querySelector('.hardware-stop')!.textContent).not.toBe(r2.querySelector('.hardware-stop')!.textContent)
+  })
+})

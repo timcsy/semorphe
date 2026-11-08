@@ -3484,3 +3484,7 @@ html, body {
 .console-disambiguation-mismatch { font-size: 0.9em; color: #bbb; margin-bottom: 6px; word-break: break-word; }
 .console-disambiguation-choose { min-height: 24px; }
 .console-disambiguation-note { margin-top: 6px; font-size: 0.9em; color: #bbb; }
+
+/* 停下的原因與還開著的輸出腳（使用者 11-07 的決定） */
+.hardware-stop { color: #bbb; font-size: 12px; margin: 2px 0 6px; }
+.hardware-still-on { color: #e3b341; font-size: 12px; margin-top: 6px; }
