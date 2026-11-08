@@ -13,6 +13,9 @@ import { collectToPython, type ToPythonTables } from './to-python/registry'
 
 let TABLES: ToPythonTables | null = null
 
+/** Python 的保留字與內建常數——C++ 的名字撞到就加底線 */
+const PY_KEYWORDS = new Set(['False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'class', 'def', 'del', 'elif', 'except', 'finally', 'from', 'global', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'with', 'yield', 'print', 'input', 'len', 'range', 'int', 'float', 'str', 'list', 'chr', 'ord', 'format', 'next_token', '_tokens'])
+
 /** 同 `cin >>` 的讀法：一次讀一個以空白分開的詞，這一行讀完才讀下一行 */
 const TOKEN_READER = [
   '_tokens = []',
@@ -48,6 +51,7 @@ export function convertCppToPython(
       try { return (nodes ?? []).flatMap((c) => stmt(c, 0)) } finally { inMain = was }
     },
     isUserFunction: (name) => userFunctions.has(name),
+    name: (s) => (PY_KEYWORDS.has(s) ? `${s}_` : s),
     // 只有一個進入點的 C++ 骨架（`main`）——Arduino 的 setup／loop 兩個進入點攤不平，不在這裡
     isEntryFunction: (name) => skeletonsOfLanguage('cpp').some((sk) => sk.entryFunctions.length === 1 && !!entryFunctionOf(sk, name)),
     yieldsBool: (n) => !!n && t.bool.has(n.componentId),

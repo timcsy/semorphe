@@ -18,8 +18,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
       const t = String(p.properties.type ?? '')
       // 參考與容器的傳遞語意兩邊不同（C++ 傳值會複製 vector、Python 傳的是同一個 list）——第一版不換
       if (/[&*]|vector|\[|string/.test(t)) return [py.keep(p, 'outside-subset', `參數「${t} ${String(p.properties.name ?? '')}」的傳遞方式兩個語言不同`)]
-      params.push(String(p.properties.name ?? ''))
+      params.push(py.name(String(p.properties.name ?? '')))
     }
-    return [`${py.indent(depth)}def ${name}(${params.join(', ')}):`, ...py.block(n.slots.body, depth + 1)]
+    return [`${py.indent(depth)}def ${py.name(name)}(${params.join(', ')}):`, ...py.block(n.slots.body, depth + 1)]
   })
 }

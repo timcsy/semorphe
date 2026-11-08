@@ -14,6 +14,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const inclusive = String(n.properties.inclusive ?? '').toUpperCase() === 'TRUE'
     const end = inclusive ? `${paren(to, py)} + 1` : py.expr(to)
     const head = from?.properties?.value === '0' && !from.slots?.left ? `range(${end})` : `range(${py.expr(from)}, ${end})`
-    return [`${py.indent(depth)}for ${v} in ${head}:`, ...py.block(n.slots.body, depth + 1)]
+    return [`${py.indent(depth)}for ${py.name(v)} in ${head}:`, ...py.block(n.slots.body, depth + 1)]
   })
 }

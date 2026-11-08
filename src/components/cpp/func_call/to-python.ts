@@ -5,6 +5,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
   r.expr((n, py) => {
     const name = String(n.properties.name ?? '')
     if (!py.isUserFunction(name)) return py.keep(n, 'outside-subset', `標準函式庫的 ${name}(…) 還沒有對應`)
-    return `${name}(${(n.slots.args ?? []).map((a) => py.expr(a)).join(', ')})`
+    return `${py.name(name)}(${(n.slots.args ?? []).map((a) => py.expr(a)).join(', ')})`
   })
 }

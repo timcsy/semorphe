@@ -22,6 +22,8 @@ export interface ToPythonContext {
   blockAsMain(nodes: readonly SemanticNode[] | undefined): string[]
   /** 這顆函式是骨架宣告的進入點嗎（問骨架宣告，不寫死 `main`——第八十六條之二） */
   isEntryFunction(name: string): boolean
+  /** C++ 的名字在 Python 裡的寫法：撞到 Python 的保留字（`from`、`in`、`is`…）就加底線（364：河內塔的參數叫 from，換出來的程式不合法） */
+  name(s: string): string
   /** 這個名字是程式自己定義的函式嗎（標準函式庫的呼叫第一版不換） */
   isUserFunction(name: string): boolean
   /** 這顆節點產生 bool 嗎（元件自己宣告的，`r.yieldsBool`）——印的時候 C++ 印 0／1、Python 印 True／False */
@@ -34,6 +36,18 @@ export interface ToPythonContext {
 export function paren(n: SemanticNode | undefined, py: ToPythonContext): string {
   const e = py.expr(n)
   return n?.slots?.left && n?.slots?.right ? `(${e})` : e
+}
+
+/** 這個值是 C++ 的 char 嗎（Cella 的型別表；`const char`、`char &` 也算）——Python 用長度 1 的字串表示它（364） */
+export function isChar(t: string | undefined): boolean {
+  return (t ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '').trim() === 'char'
+}
+
+/** 放進整數變數的值：C++ 會把浮點隱含截斷成整數、Python 不會 ⟹ 值是浮點時包 int()（向零截斷，同 C++；364） */
+export function intValue(target: string | undefined, valueType: string | undefined, e: string): string {
+  const t = (target ?? '').replace(/^const\s+/, '').trim()
+  const v = (valueType ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '').trim()
+  return /^(int|long|long long|short)$/.test(t) && /^(double|float|long double)$/.test(v) ? `int(${e})` : e
 }
 
 /** Python 字串字面量（JSON 的雙引號跳脫在 Python 裡同樣成立） */

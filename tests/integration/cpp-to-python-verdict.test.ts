@@ -106,7 +106,9 @@ describe('C++ → Python：意思會變的反例', () => {
   }, 60_000)
   for (const [name, body, kind] of [
     ['取餘數的一般用法（負數的正負號規則不同）', '    int a = -7, b = 2;\n    cout << a % b << endl;\n', 'modulo'],
-    ['char 參與運算（C++ 的 char 是整數）', '    string s = "b";\n    cout << s[0] - \'a\' << endl;\n', 'char'],
+    // `s[0] = 'z'` 由專門的「改字串裡的字元」那顆元件接，它沒有 Python 的寫法 ⟹ 子集以外（結果一樣是不換）
+    ['改字串裡的一個字元（Python 的字串不能改）', '    string s = "abc";\n    s[0] = \'z\';\n    cout << s << endl;\n', 'outside-subset'],
+    ['char 的 ++（Python 的字串不能加 1）', '    char c = \'a\';\n    c++;\n    cout << c << endl;\n', 'char'],
     ['指標', '    int x = 3;\n    int* p = &x;\n    cout << *p << endl;\n', 'outside-subset'],
     ['無號整數的除法（`sum / v.size()`，負數時 C++ 會繞回）', '    vector<int> v;\n    v.push_back(-4);\n    int s = -4;\n    cout << s / v.size() << endl;\n', 'division'],
   ] as const) {
@@ -116,6 +118,14 @@ describe('C++ → Python：意思會變的反例', () => {
       expect(r.reasons.map((x) => x.kind)).toContain(kind)
     }, 60_000)
   }
+  it('🟢 char 參與運算 → ord()；整數放進 char 變數 → chr()；char 照印（364）；判決相同', async () => {
+    const src = H + 'int main() {\n    string s = "b";\n    char c = \'a\';\n    char d = c + 2;\n    cout << s[0] - \'a\' << " " << c << d << endl;\n    if (d > \'b\') {\n        cout << "late" << endl;\n    }\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code).toContain('ord(s[0]) - ord("a")')
+    expect(r.code).toContain('d = chr(ord(c) + 2)')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
   it('🟢 `n % 2 == 0`：與 0 比較時正負號不影響 ⟹ 換；判決相同', async () => {
     const src = H + 'int main() {\n    int n = -4;\n    if (n % 2 == 0) {\n        cout << "even" << endl;\n    }\n    return 0;\n}\n'
     const r = await toPython(src)

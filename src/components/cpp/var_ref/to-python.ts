@@ -5,6 +5,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
   r.expr((n, py) => {
     const name = String(n.properties.name ?? '')
     if (name.includes('::')) return py.keep(n, 'outside-subset', `限定名 ${name} 還沒有對應`)
-    return name
+    return py.name(name)
   })
 }
