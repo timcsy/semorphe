@@ -53,7 +53,9 @@ export class ProposalQueue {
   private seq = 0
   private listeners = new Set<() => void>()
 
-  constructor(private readonly deps: ProposalQueueDeps) {}
+  private readonly deps: ProposalQueueDeps
+
+  constructor(deps: ProposalQueueDeps) { this.deps = deps }
 
   onChange(cb: () => void): () => void {
     this.listeners.add(cb)

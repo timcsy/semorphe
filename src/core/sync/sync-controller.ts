@@ -1101,6 +1101,21 @@ export class SyncController {
     return this.currentTree
   }
 
+  /** 正在同步中嗎——此時送進來的 `edit:tree` 會被丟掉（`handleEditTree` 開頭），呼叫端要先問。 */
+  isBusy(): boolean {
+    return this.syncing
+  }
+
+  /**
+   * 這棵樹會產出什麼程式碼——**與程式碼面板同一套**（產碼＋補相依），而**沒有副作用**
+   * （不換目前的樹、不動對照表、不發事件）。給「提議中的變更」算改前改後的差異（spec 220）。
+   */
+  previewCode(tree: SemanticNode): string {
+    const t = this.dropDerived(tree)
+    const code = generateCodeWithMapping(t, this.language, this.style).code
+    return this.codePatcherFn?.(code, t) ?? code
+  }
+
   getBus(): SemanticBus {
     return this.bus
   }

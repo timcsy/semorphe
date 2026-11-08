@@ -17,7 +17,11 @@ import { SemanticBus } from '../core/sync/semantic-bus'
 import { showToast } from './toolbar/toast'
 import { showStyleActionBar, dismissStyleActionBar } from './toolbar/style-action-bar'
 import { runDiagnostics, diagnosticsFromTree, dropRejectsCoveredByNameChecks } from '../core/diagnostics'
-import type { SemanticNode } from '../core/types'
+import type { SemanticNode, ComponentDefJSON } from '../core/types'
+import { ProposalQueue, type ProposalInput, type ProposalStatus } from '../core/proposals/proposal-queue'
+import { schemaFrom, type OpReason, type OpSchema } from '../core/proposals/tree-ops'
+import { lineDiff, type DiffLine } from '../core/proposals/line-diff'
+import { ProposalBar } from './proposal-bar'
 import { createNode } from '../core/semantic-tree'
 import type { DiagnosticBlock } from '../core/diagnostics'
 import type { ProgramScaffold } from '../core/program-scaffold'
@@ -164,6 +168,17 @@ function isScaffoldComponent(componentId: string): boolean {
 
 
 
+
+/** 一個提議給外部與提議列看的樣子（spec 220 contracts/proposals-api.md）。 */
+export interface ProposalView {
+  id: string
+  author: string
+  rationale: string
+  status: ProposalStatus
+  reason?: OpReason
+  /** pending 時：以目前的程式算的改前改後差異 */
+  diff?: DiffLine[]
+}
 
 export class App {
   private bus: SemanticBus
@@ -1604,6 +1619,7 @@ export class App {
 
     // 6. Create sync controller + wire scaffold + connect panels to bus
     this.syncController = new SyncController(this.bus, this.currentTopic.language, DEFAULT_STYLE)
+    this.wireProposals()
     // 🔴 **把建構子裡那個決定【再交一次】**（2026-09-03）。
     //
     //    `?lesson=arduino/…` 在**建構子**裡就走了 `applyLesson` → `adoptSkeleton`，
@@ -3391,20 +3407,95 @@ export class App {
    * ⚠️ 而這個轉送是**近似的**：連按兩次可能跨到另一份堆疊。
    * 代價換到的是「畫面上只有一對按鈕」，而那比三對一致得多。
    */
-  private lastEditor: 'code' | 'blocks' | 'flow' | null = null
+  private lastEditor: 'code' | 'blocks' | 'flow' | 'proposal' | null = null
 
   /** 積木那側改過了。 */
   private markBlocksEdited(): void { this.lastEditor = 'blocks' }
 
+  // ─── 提議中的變更（spec 220；history/334：AI 的變更預設待人確認）───
+
+  private proposalQueue: ProposalQueue | null = null
+  private proposalBar: ProposalBar | null = null
+  private proposalSchema: { language: string; schema: OpSchema } | null = null
+
+  /**
+   * **外部操作者（AI、測試）的入口**：只能送出與查詢——接受與退回只在提議列上由人按（FR-013）。
+   * 網頁版與 IDE 的 webview 都經 `window.__app.proposals` 拿得到。
+   */
+  readonly proposals = {
+    submit: (input: ProposalInput): { id: string; status: 'pending' | 'refused'; reason?: OpReason } => {
+      if (!this.proposalQueue) return { id: '', status: 'refused', reason: { step: null, code: 'node-missing', detail: '編輯器還沒準備好' } }
+      return this.proposalQueue.submit(input)
+    },
+    list: (): ProposalView[] => (this.proposalQueue?.list() ?? []).map((p) => this.proposalView(p.id)!).filter(Boolean),
+    get: (id: string): ProposalView | null => this.proposalView(id),
+  }
+
+  /** 元件宣告依目前的語言組出操作要問的形狀；換語言才重組。 */
+  private opSchema(): OpSchema {
+    const language = this.currentTopic.language
+    if (this.proposalSchema?.language !== language) {
+      const components = (languagePack(language)?.declarations?.().components ?? []) as ComponentDefJSON[]
+      this.proposalSchema = { language, schema: schemaFrom(components) }
+    }
+    return this.proposalSchema.schema
+  }
+
+  private wireProposals(): void {
+    this.proposalQueue = new ProposalQueue({
+      schema: () => this.opSchema(),
+      currentTree: () => this.syncController?.getCurrentTree() ?? null,
+    })
+    this.proposalBar = new ProposalBar({
+      accept: (id) => this.acceptProposal(id),
+      reject: (id) => { this.proposalQueue?.reject(id) },
+    })
+    this.proposalQueue.onChange(() => this.renderProposals())
+    // 每一條改目前這棵樹的路都以 `semantic:update` 收尾 ⟹ 待處理的提議在這裡重新檢查（過期照實標）
+    this.bus.on('semantic:update', () => {
+      this.proposalQueue?.revalidate(this.syncController?.getCurrentTree() ?? null)
+    })
+  }
+
+  private acceptProposal(id: string): void {
+    if (!this.proposalQueue || !this.syncController) return
+    // `handleEditTree` 在同步中會直接丟掉送進來的樹——先問，別讓接受無聲地失效
+    if (this.syncController.isBusy()) { showToast(msg('PROPOSAL_BUSY', '正在同步，請稍後再按一次接受'), 'warning'); return }
+    const r = this.proposalQueue.accept(id)
+    if (!r.ok) return
+    this.lastEditor = 'proposal'
+    this.bus.emit('edit:tree', { viewId: 'proposal', tree: r.tree })
+  }
+
+  private proposalView(id: string): ProposalView | null {
+    const p = this.proposalQueue?.get(id)
+    if (!p) return null
+    let diff: DiffLine[] | undefined
+    const cur = this.syncController?.getCurrentTree()
+    if (p.status === 'pending' && p.preview && cur && this.syncController) {
+      diff = lineDiff(this.syncController.previewCode(cur), this.syncController.previewCode(p.preview))
+    }
+    return { id: p.id, author: p.author, rationale: p.rationale, status: p.status, reason: p.reason, diff }
+  }
+
+  private renderProposals(): void {
+    const queue = this.proposalQueue?.list() ?? []
+    const first = queue[0] ? this.proposalView(queue[0].id) : null
+    this.proposalBar?.render(first && (first.status === 'pending' || first.status === 'stale')
+      ? { id: first.id, author: first.author, rationale: first.rationale, status: first.status, reason: first.reason, diff: first.diff ?? null }
+      : null, queue.length)
+  }
+
   private doUndo(): void {
     if (this.lastEditor === 'code' && this.codeView?.undo) { this.codeView.undo(); return }
-    if (this.lastEditor === 'flow' && this.syncController?.undoTree()) return
+    // 接受一個提議也是整棵樹換進去（`edit:tree`）——退的是同一份樹的歷史
+    if ((this.lastEditor === 'flow' || this.lastEditor === 'proposal') && this.syncController?.undoTree()) return
     this.blocklyPanel?.undo()
   }
 
   private doRedo(): void {
     if (this.lastEditor === 'code' && this.codeView?.redo) { this.codeView.redo(); return }
-    if (this.lastEditor === 'flow' && this.syncController?.redoTree()) return
+    if ((this.lastEditor === 'flow' || this.lastEditor === 'proposal') && this.syncController?.redoTree()) return
     this.blocklyPanel?.redo()
   }
   private doClear(): void { this.blocklyPanel?.clear() }

@@ -172,3 +172,12 @@ describe('不合法 → 整個被拒，說出第幾步與原因', () => {
     expect(refused(lift(), [{ op: 'remove', node: 'node_nope' }]).detail).toMatch(/node_nope/)
   })
 })
+
+describe('元件宣告的來源', () => {
+  it('語言套件沒交宣告（Python）時，膠囊登錄表認得它的元件', () => {
+    const py = schemaFrom([])
+    expect(py.shape('python:var_assign')?.props?.map((p) => p.name)).toContain('obj')
+    expect(py.shape('python:if')?.slots.map((s) => s.slot)).toEqual(expect.arrayContaining(['condition', 'body']))
+    expect(py.shape('python:nope')).toBeNull()
+  })
+})

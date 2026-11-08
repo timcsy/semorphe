@@ -14,6 +14,7 @@ import { generateId } from '../semantic-tree'
 import { paramSpecs } from '../param-spec'
 import { fitsSlot, isDynamic, slotDeclsOf } from '../component/slot-check'
 import { isProgramRoot } from '../component/traits'
+import { registeredComponents } from '../component/registry'
 
 /** 插入時給的新節點——id 由系統發，操作者不給。 */
 export interface NodeSpec {
@@ -56,9 +57,18 @@ export interface OpSchema {
   fits(childComponentId: string, allowed: string[]): boolean
 }
 
-/** 由一份元件宣告組出操作要問的形狀。接點優先用膠囊的宣告（含 `max`），否則用宣告檔的 `slots`。 */
-export function schemaFrom(components: readonly ComponentDefJSON[]): OpSchema {
-  const byId = new Map(components.map((c) => [c.componentId, c]))
+/**
+ * 由元件宣告組出操作要問的形狀。接點優先用膠囊的宣告（含 `max`），否則用宣告檔的 `slots`。
+ *
+ * ⚠️ **語言套件交的那份不一定齊**：C++ 的 `declarations()` 含標準函式庫模組，
+ * 而 Python 的套件**沒有** `declarations()`（2026-11-09 量到）——只靠它的話 Python 裡每一個提議都會被拒成「不認得的元件」。
+ * ⟹ 交進來的找不到時，回頭問膠囊登錄表（每一顆膠囊都在那裡）。
+ */
+export function schemaFrom(components: readonly ComponentDefJSON[] = []): OpSchema {
+  const byId = new Map<string, ComponentDefJSON>(components.map((c) => [c.componentId, c]))
+  for (const c of registeredComponents()) {
+    if (!byId.has(c.componentId)) byId.set(c.componentId, c.manifest as unknown as ComponentDefJSON)
+  }
   return {
     shape(id) {
       const def = byId.get(id)
@@ -91,7 +101,15 @@ const isPropertyValue = (v: unknown): v is PropertyValue =>
   || (Array.isArray(v) && v.every((x) => typeof x === 'string'))
 
 class Refuse extends Error {
-  constructor(readonly code: ReasonCode, readonly detail: string, readonly nodeId?: string) { super(detail) }
+  readonly code: ReasonCode
+  readonly detail: string
+  readonly nodeId?: string
+  constructor(code: ReasonCode, detail: string, nodeId?: string) {
+    super(detail)
+    this.code = code
+    this.detail = detail
+    this.nodeId = nodeId
+  }
 }
 
 function checkProperty(schema: OpSchema, componentId: string, name: string, value: unknown, nodeId?: string): void {
