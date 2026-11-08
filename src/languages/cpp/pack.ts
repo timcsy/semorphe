@@ -50,6 +50,7 @@ import googlePreset from './styles/google.json'
 import cPreset from './styles/c.json'
 import { isCDialect } from './target-dialect'
 import { convertCToCpp } from './c-to-cpp'
+import { convertCppToC } from './cpp-to-c'
 
 /**
  * **這個語言的型別清單**——參數型別與回傳型別各一份。
@@ -158,8 +159,10 @@ declareLanguagePack({
     }
   },
   // C → C++（跨語言互轉第一對）：printf／scanf 換成 cout／cin，只在意思不變時（`c-to-cpp.ts`）
+  // C++ → C（反方向，357）：new／delete 換成 malloc／free；cout→printf、標頭、using 由 C 方言的產生器負責（`cpp-to-c.ts`）
   convertBetweenStyles: (tree, from, to, types) =>
-    (isCDialect(from) && !isCDialect(to) ? convertCToCpp(tree, types) : null),
+    (isCDialect(from) && !isCDialect(to) ? convertCToCpp(tree, types)
+      : !isCDialect(from) && isCDialect(to) ? convertCppToC(tree, types) : null),
   styleExceptions: {
     detect: detectStyleExceptionsForPreset as never,
     convert: applyStyleConversions as never,
