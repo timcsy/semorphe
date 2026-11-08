@@ -8,6 +8,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // 🟢 名字交給 Cella 依作用域解析（eName，cella 0.1.202611052225——「意思歸 Cella」）：區域／參數／檔案範圍 → eVar，
     //    方法裡的欄位 → eSelf（隱含的 this），都查不到 → 串流／程式的函式名／eConst。Cella 用我們的語料比過：7797 個 eVar、
     //    38 個 eSelf、66 個 eConst、1 個 eFunc 與我們原本填的逐一相同。
+    // 🔴 限定名指到類別的成員（`C::n`、`L::current`）：Cella 今天還解析不了經類別名取靜態成員（類別外那份定義在作用域裡查得到，
+    //    而它已經併進類別的 mbStatic、不另外送）⟹ 送 eName 會被判 undeclared——錯的 reject。照實翻不出，等 cella 的送法（361）
+    if (name.includes('::') && f.isClassMember(name)) return f.miss(n, `經類別名取靜態成員 \`${name}\` 還沒有對應`)
     if (x) return f.k('eName', { n: n.id, name })
     // 板子與函式庫的名字（LED_BUILTIN、DHT11、A0、WL_CONNECTED）今天被 lift 成一般的參照、指不到宣告。
     // cella 2026-10-31 定的分工：**程式自己沒宣告、來自標頭的名字**一律送 eConst（同 cpp_to_tree.py）；
@@ -18,6 +21,10 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // 物件巨集（spec 197）：前端展開——值代進使用處，標籤用使用處的 id（判決指回這一格）
     const m = f.macro(name)
     if (m) return m.expr(n.id)
+    // 🔴 限定名（`C::n`、`Ns::x`）而指不到我們登記的宣告（enum class 的常數登記成 `Color::Red`，那條在上面就 eName 了）：
+    //    Cella 今天還解析不了類別的靜態成員／命名空間的名字，送 eName 會被判 undeclared——**一個錯的 reject**（P6）。
+    //    360 把限定名 lift 成參照之後就這樣倒退了（361 量到：`C::n` 判 reject）；照實翻不出，等 cella 的送法。
+    if (name.includes('::')) return f.miss(n, `限定名 \`${name}\`（類別的靜態成員或命名空間的名字）還沒有對應`)
     // 其餘（串流物件、函式名當值、標頭的常數與板子的物件）也交給 Cella：查不到宣告時它依序判 eStdin／eStdout／eStderr、
     // eFunc、eConst（找不到就是 undeclared，指回這一格）。⚠️ 巨集要在這之前展開——那是前端的事，Cella 看不到 #define 的值
     return f.k('eName', { n: n.id, name })

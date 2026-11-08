@@ -13,7 +13,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import { setupTestRenderer } from '../helpers/setup-renderer'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { expectCellaOut, knownCellaGap } from '../helpers/cella-run'
+import { expectCellaOut } from '../helpers/cella-run'
 import type { StylePreset } from '../../src/core/types'
 
 const style: StylePreset = {
@@ -684,10 +684,10 @@ int main() {
   // spec 203：期望值的依據換了。上面那段程式**沒有**類別外的定義（`int Counter::total = 0;`）——odr-use 的靜態成員必須有定義
   // （C++17 [basic.def.odr]p4，不需診斷），本機 clang 連結失敗（Undefined symbols: Counter::total）；原本「印出含 2」是 JS 直譯器的寬鬆。
   // ⟹ 執行的這一條改用補上定義的版本（g++ 實測印 `2\n`）；來回轉換那一條照舊用原程式。
-  // 🟡 我們缺：類別外的靜態成員定義翻不出（lift 成一顆名字是 `Counter::total` 的頂層宣告，初值要併進類別的 mbStatic——還沒做，照實標翻不出）
-  it('🟡 已知缺陷（修好時這條會紅）：靜態成員由所有實例共用——執行結果證明它不是每個實例各一份', () => knownCellaGap(/類別外的靜態成員定義/, async () => {
+  // 🟢 361：類別外的靜態成員定義的初值併進類別的 mbStatic（cella 的送法）——這根釘子轉紅「不在了」，轉成一般的測試
+  it('★ 靜態成員由所有實例共用——執行結果證明它不是每個實例各一份', async () => {
     await expectCellaOut(code.replace('};\nint main', '};\nint Counter::total = 0;\nint main'), '2\n')
-  }))
+  })
 })
 
 // --- oop_010: two classes with constructors/destructors, destruction order ---
