@@ -53,6 +53,16 @@ describe('Cella 0759／1710 接上的構造：陣列長度運算式、tuple、lo
     expect(r.untranslated).toEqual([])
     expect(r.verdict).toBe('reject')
   }, 120_000)
+  it('★ 沒寫長度、用字串初始化（`char w[] = "…"`）：送 tArrU，長度由 Cella 照 C11 6.7.9p14 定（跳脫照實算、含結尾 NUL）——以前是我們這側標翻不出', async () => {
+    const C = '#include <stdio.h>\n'
+    await expectCellaOut(C + 'int main(void) {\n    char word[] = "hello";\n    char w[] = "a\\tb\\n";\n    printf("%d %s %d\\n", (int)sizeof(word), word, (int)sizeof(w));\n    return 0;\n}\n', '6 hello 5\n', { lang: 'c' })
+    await expectCellaOut(H + 'int main() {\n    char w[] = "abc";\n    cout << sizeof(w) << endl;\n}\n', '4\n')
+  }, 120_000)
+  it('★ 沒長度也沒初值（`int a[];`）：照樣送出、由 Cella 判 reject（不完整型別）', async () => {
+    const r = await runCella('int main(void) {\n    int a[];\n    return 0;\n}\n', { lang: 'c' })
+    expect(r.untranslated).toEqual([])
+    expect(r.verdict).toBe('reject')
+  }, 120_000)
   it('★ long double：型別與 L 後綴的字面量（tLongDouble；判決帶 x86-64-sysv／longDouble.x87Extended 的假設——cella 0.1.202611061710）', async () => {
     const r = await expectCellaOut(H + 'int main() {\n    long double x = 1.0L / 3;\n    cout << sizeof(long double) << endl;\n    cout << fixed << setprecision(10) << x << endl;\n}\n', '16\n0.3333333333\n')
     expect(r.assumes).toContainEqual({ implementation: 'x86-64-sysv', choice: 'longDouble.x87Extended' })
