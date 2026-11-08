@@ -400,9 +400,15 @@ export interface FormAxis {
   /** 軸名。⚠️ **不只用於診斷**——它是 `FormSet.forms` 的鍵的一半（`<軸名>:<軸值>`）。 */
   name: string
   /** 值從哪來 */
-  from: 'position' | 'property'
+  from: 'position' | 'property' | 'slot'
   /** `from: 'property'` 時讀哪個屬性 */
   property?: string
+  /**
+   * `from: 'slot'` 時看哪個接點：**有東西 ＝ `slotValue`，空的 ＝ 中性**（355）。
+   * 為什麼不用屬性：「對象住在接點裡」本身就是那個事實，另外記一個屬性是第二份真相（會和接點不一致）。
+   */
+  slot?: string
+  slotValue?: string
   /**
    * **中性形態是常態，不是退路**（第 332 刀）。
    * `container_kind` 的中性形態只在型別查不到時才用（不進工具箱，TB-3）；而 `init_style` 的中性形態是

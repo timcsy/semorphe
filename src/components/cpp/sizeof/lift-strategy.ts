@@ -13,10 +13,10 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const inner = child.type === 'parenthesized_expression' ? (child.namedChildren[0] ?? child) : child
     // 單一個名字：語法分不出是型別（typedef、struct 名）還是變數 ⟹ 留在文字，formalize 查宣告
     if (inner.type === 'identifier' || inner.type === 'type_identifier') return createNode('cpp:sizeof', { target: inner.text })
-    // 運算式（成員、下標、算式、解參照）：升格成接點，不壓成一串文字（355）
+    // 運算式（成員、下標、算式、解參照）：升格成接點，不壓成一串文字（355）；積木形態由接點有沒有東西挑
     const expr = ctx.lift(inner)
     if (!expr) return createNode('cpp:sizeof', { target: inner.text })
-    return createNode('cpp:sizeof', { operand_kind: 'expression' }, { expr: [expr] })
+    return createNode('cpp:sizeof', {}, { expr: [expr] })
   })
 }
 

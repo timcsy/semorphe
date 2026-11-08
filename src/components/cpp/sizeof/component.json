@@ -7,15 +7,6 @@
       "kind": "literal",
       "default": "int",
       "_kind_why": "⚠️ `sizeof` 的 `target` **可以是型別也可以是運算式**：`sizeof(int)`、`sizeof(long long)`、`sizeof(number[0])` 都合法。實測學生語料 14 筆全是這一類——**宣告成識別字是錯的**。"
-    },
-    {
-      "name": "operand_kind",
-      "kind": "enum",
-      "values": [
-        "expression"
-      ],
-      "required": false,
-      "_kind_why": "值 `expression`：對象是一個運算式（成員、下標、算式），住在接點 `expr`、沒有 `target`。沒有這個屬性：對象是型別或單一名字，住在 `target`（語法分不出兩者）。"
     }
   ],
   "slots": {
@@ -36,5 +27,6 @@
       }
     },
     "formalize": "./formalize.ts"
-  }
+  },
+  "_slots_why": "`expr`：對象是一個運算式（成員、下標、算式）時住在這裡，沒有 `target`；積木形態由「這個接點有沒有東西」挑（形態軸 `operand_kind`，`from: slot`，355）。"
 }

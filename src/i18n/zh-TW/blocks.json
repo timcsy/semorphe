@@ -676,7 +676,6 @@
   "FLOW_SLOT_INDEX": "第幾格",
   "FLOW_SLOT_INIT": "初始",
   "FLOW_SLOT_INIT_STYLE": "初始化寫法",
-  "FLOW_SLOT_OPERAND_KIND": "運算元的種類",
   "FLOW_SLOT_INITIALIZER": "初始值",
   "FLOW_SLOT_INITS": "初始設定",
   "FLOW_SLOT_ARROW": "經過指標（->）",

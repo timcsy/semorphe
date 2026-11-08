@@ -30,7 +30,7 @@ describe('cpp:sizeof', () => {
     const got = sizeofs(PROG).map((n) => n.slots?.expr?.length ? `expr:${n.slots.expr[0].componentId}` : `target:${n.properties.target}`)
     expect(got).toEqual(['expr:cpp:struct_at_member', 'expr:cpp:array_at', 'target:v', 'target:int', 'expr:cpp:pointer_deref', 'expr:cpp:arithmetic'])
     for (const n of sizeofs(PROG).filter((x) => x.slots?.expr?.length)) {
-      expect(n.properties).toEqual({ operand_kind: 'expression' })   // 不留一份文字（雙重真相）
+      expect(n.properties).toEqual({})   // 不留一份文字、也不另記一個「我是運算式」的屬性（兩份紀錄會不一致）
     }
   })
   it('產碼來回一字不差；沒括號的寫法正規化成 sizeof(…)', () => {
