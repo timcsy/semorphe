@@ -5,12 +5,12 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 量 Python 這側入門子集需要的建構子是否都有 build 函式（print／input／var_assign／if／loop_while／loop_for＋range_make／func_def／return／func_call／arithmetic／compare／logic／literal_*／var_ref／container_append／container_at／container_size），缺的列進 T010 in `specs/219-cpp-to-python/research.md`（附錄）
+- [X] T001 量 Python 這側入門子集需要的建構子是否都有 build 函式（print／input／var_assign／if／loop_while／loop_for＋range_make／func_def／return／func_call／arithmetic／compare／logic／literal_*／var_ref／container_append／container_at／container_size），缺的列進 T010 in `specs/219-cpp-to-python/research.md`（附錄）
 
 ## Phase 2: Foundational
 
-- [ ] T002 `LanguagePack` 多一個可選的 `convertToLanguage(tree, toLanguage, types)`（形狀照 contracts/convert-to-language.md）in `src/core/language-packs.ts`
-- [ ] T003 護欄骨架（先紅）：讀 cpp-beginner 66 支解答與課文 `check.stdin`，C++ 那側 Cella 判一次、換寫法、Python 那側 Cella 判、比判決／輸出／assumes；保留的要有原因；「兩份加起來 = 66」與「至少一半換得過去」兩條入口條件 in `tests/integration/cpp-to-python-verdict.test.ts`
+- [X] T002 `LanguagePack` 多一個可選的 `convertToLanguage(tree, toLanguage, types)`（形狀照 contracts/convert-to-language.md）in `src/core/language-packs.ts`
+- [X] T003 護欄骨架（先紅）：讀 cpp-beginner 66 支解答與課文 `check.stdin`，C++ 那側 Cella 判一次、換寫法、Python 那側 Cella 判、比判決／輸出／assumes；保留的要有原因；「兩份加起來 = 66」與「至少一半換得過去」兩條入口條件 in `tests/integration/cpp-to-python-verdict.test.ts`
 
 ## Phase 3: User Story 1 — 入門程式換成同樣意思的 Python（P1）🎯 MVP
 
@@ -18,16 +18,16 @@
 **Independent Test**: T003 的護欄裡「換過去」那一份全部判決相同。
 
 - [ ] T004 [US1] 單元測試（先紅）：最小程式逐類——印字串與整數（含 endl／無 endl）、宣告與指定、四則（含整數除法 → `int(a / b)`）、if／else、while、計數 for → `for i in range(…)`、函式定義與呼叫、讀整數（一句 cin → 一行拆開）、vector／陣列 → list in `src/languages/cpp/cpp-to-python.test.ts`
-- [ ] T005 [US1] 改寫的骨架：走樹、每顆 C++ 節點查表換成 Python 節點、遇到表外的身分記 `outside-subset`；整支換或不換（契約 C1）in `src/languages/cpp/cpp-to-python.ts`
-- [ ] T006 [US1] 結構：program／func_def(main) 的本體攤平成頂層、`return 0` 拿掉、include／using 拿掉；其他函式 → def in `src/languages/cpp/cpp-to-python.ts`
-- [ ] T007 [US1] 輸出：cout 鏈 → print（endl 結尾 ⟹ 預設換行；否則 `end=""`；多個值之間 `sep=""`）；double 值 → `f"{x:g}"`（需要型別，拿不到記 `needs-types`）in `src/languages/cpp/cpp-to-python.ts`
-- [ ] T008 [US1] 輸入：一句 `cin >> a >> b` → `a, b = map(T, input().split())`（T 依宣告型別：int／float／str）；讀進陣列的計數迴圈 → 整行拆成 list in `src/languages/cpp/cpp-to-python.ts`
-- [ ] T009 [US1] 運算與控制：arithmetic（整數 `/` → `int(a / b)`）、compare、logic、var_assign、var_assign_compound、if、loop_while、loop_count → for range、break、continue、func_call、return in `src/languages/cpp/cpp-to-python.ts`
+- [X] T005 [US1] 改寫的骨架：走樹、每顆 C++ 節點查表換成 Python 節點、遇到表外的身分記 `outside-subset`；整支換或不換（契約 C1）in `src/languages/cpp/cpp-to-python.ts`
+- [X] T006 [US1] 結構：program／func_def(main) 的本體攤平成頂層、`return 0` 拿掉、include／using 拿掉；其他函式 → def in `src/languages/cpp/cpp-to-python.ts`
+- [X] T007 [US1] 輸出：cout 鏈 → print（endl 結尾 ⟹ 預設換行；否則 `end=""`；多個值之間 `sep=""`）；double 值 → `f"{x:g}"`（需要型別，拿不到記 `needs-types`）in `src/languages/cpp/cpp-to-python.ts`
+- [X] T008 [US1] 輸入：一句 `cin >> a >> b` → `a, b = map(T, input().split())`（T 依宣告型別：int／float／str）；讀進陣列的計數迴圈 → 整行拆成 list in `src/languages/cpp/cpp-to-python.ts`
+- [X] T009 [US1] 運算與控制：arithmetic（整數 `/` → `int(a / b)`）、compare、logic、var_assign、var_assign_compound、if、loop_while、loop_count → for range、break、continue、func_call、return in `src/languages/cpp/cpp-to-python.ts`
 - [ ] T010 [P] [US1] 缺的 Python 建構子（T001 列出的）補在各自膠囊的 `lift.ts`（身分只寫在膠囊裡，契約 C2）in `src/components/python/*/lift.ts`
-- [ ] T011 [US1] 容器與字串：vector／陣列宣告 → list、`v.push_back(x)` → `v.append(x)`、`v.size()` → `len(v)`、`a[i]`、string 宣告與 `s[i]`、`s.size()` in `src/languages/cpp/cpp-to-python.ts`
-- [ ] T012 [US1] 掛上：cpp 套件 `convertToLanguage: (tree, 'python', types) → convertCppToPython` in `src/languages/cpp/pack.ts`
+- [X] T011 [US1] 容器與字串：vector／陣列宣告 → list、`v.push_back(x)` → `v.append(x)`、`v.size()` → `len(v)`、`a[i]`、string 宣告與 `s[i]`、`s.size()` in `src/languages/cpp/cpp-to-python.ts`
+- [X] T012 [US1] 掛上：cpp 套件 `convertToLanguage: (tree, 'python', types) → convertCppToPython` in `src/languages/cpp/pack.ts`
 - [ ] T013 [US1] app：換目標時語言變了 ⟹ 問**來源語言**的套件（型別照第一對：沿用切換前的判決、對不上才另外問）；換成 ⟹ 寫進編輯器、以程式碼為準重畫積木、提示「換成 Python：N 行」；等待中使用者改了程式或又換目標 ⟹ 作廢 in `src/ui/app.ts`
-- [ ] T014 [US1] 讓 T003 的護欄裡「換過去」那一份全綠（逐支修，每支的差異先查我們送了什麼）in `tests/integration/cpp-to-python-verdict.test.ts`
+- [X] T014 [US1] 讓 T003 的護欄裡「換過去」那一份全綠（逐支修，每支的差異先查我們送了什麼）in `tests/integration/cpp-to-python-verdict.test.ts`
 
 ## Phase 4: User Story 2 — 意思會變的地方照實保留、說出原因（P1）
 

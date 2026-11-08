@@ -234,6 +234,14 @@ export interface LanguagePack extends Pack {
     tree: SemanticNode, from: StylePreset, to: StylePreset, types: Readonly<Record<string, string>>,
   ) => { tree: SemanticNode; converted: number; kept: number } | null
   /**
+   * **換到另一個語言**（跨語言互轉第二對，spec 219）：由**來源語言**的套件提供——懂自己元件的是它。
+   * 回傳目標語言的**原始碼**（由目標語言自己的 lift 畫積木，research R7）；整支換或不換：有保留原因 ⟹ `code` 是 null。
+   * `null` ＝ 這一對不歸這個套件管。契約見 `specs/219-cpp-to-python/contracts/convert-to-language.md`。
+   */
+  convertToLanguage?: (
+    tree: SemanticNode, toLanguage: string, types: Readonly<Record<string, string>>,
+  ) => LanguageConversion | null
+  /**
    * **這個語言在使用者的碼【外面】加的那一層**——模組登記表、程式外殼（鷹架）、
    * 鷹架節點過濾、程式碼修補、自動引入。
    *
@@ -339,3 +347,14 @@ export function fileExtensionOf(languageId: string | undefined): string {
   const ext = languageId ? languagePack(languageId)?.fileExtension : undefined
   return ext && ext.startsWith('.') ? ext : '.txt'
 }
+
+/** 換到另一個語言的結果（spec 219）。 */
+export interface LanguageConversion {
+  code: string | null
+  converted: number
+  kept: number
+  reasons: { nodeId: string; line?: number; kind: KeepKind; detail: string }[]
+}
+
+/** 保留的原因類別（spec 219 contracts）。 */
+export type KeepKind = 'overflow' | 'division' | 'modulo' | 'char' | 'pointer' | 'class' | 'template' | 'outside-subset' | 'needs-types'

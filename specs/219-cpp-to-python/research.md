@@ -55,3 +55,20 @@ random_next 1 · array_assign 1 · string_size 1 · loop_range 1
 - Cella 的 Python 家族（`runCella(code, { lang: 'python' })`，python-beginner 課文在用）是唯一的判準。
 - 護欄 `cpp-to-python-verdict`：cpp-beginner 66 支解答 → 換或保留；換了的兩邊判決、輸出、assumes 相同（同一份課文 `check.stdin`）；保留的每一支有原因。
 - experience〈翻不出是一層遮罩〉：每讓一類構造換得過去，重判之前保留的那幾支，看新出現的不同。
+
+## R7 · （實作時改）換法產出 Python **原始碼**，由 Python 自己的 lift 畫積木；每顆 C++ 元件的印法住在它的膠囊
+
+- **量到（T001）**：Python 的元件幾乎都是 JSON 宣告的 lift，TS 建構子只有 `literal_string` 一顆——直接組 Python 語意樹要先補二十幾個建構子。
+- **Decision**：`convertToLanguage` 回傳 `{ code, converted, kept, reasons }`；app 照第一對的寫回法（放進編輯器、以程式碼為準重畫積木）。
+  每顆 C++ 元件「怎麼寫成 Python」放在它自己的膠囊 `src/components/cpp/<名>/to-python.ts`，由 `src/languages/cpp/to-python/registry.ts` 用 `import.meta.glob` 收（同 formalize 的收法）。
+- **Rationale**：① Python 的 lift 是現成的、而且是第二道檢查——換出來的碼 lift 不回乾淨的 Python 樹，就是換法錯了；
+  ② 印法依身分分派，放在膠囊裡才不會讓共用檔寫滿 `cpp:*`（就近性護欄）；③ 判決比對本來就是兩份原始碼交給 Cella。
+- **Alternatives**：直接組 Python 樹（要先補建構子、而且是第二份「Python 長什麼樣」的知識）；在共用檔用一張大表分派（身分擴散）。
+
+## R8 · （實作時量到）兩個修正
+
+1. **輸入：「一句讀一行」對不上課文**——課文的 `check.stdin` 一個數一行，`cin >> a >> b >> c` 跨行讀；換成 `map(int, input().split())` 的兩支 ValueError。
+   改成同 cin 的讀法：檔頭補一個 `next_token()`（跨行讀一個以空白分開的詞），每個讀入的變數 `x = int(next_token())`。不道地，但意思相同；R4 的假設撤回。
+2. **Cella 的型別表對 C++ 的比較與邏輯運算式回報 `int`**（C++ 標準是 `bool`，`int` 是 C 的規則）——`cout << (a > 5)` 照型別表會被當成整數照印，Python 印出 `True`。
+   比較、邏輯、`not` 三顆元件自己宣告 `yieldsBool`，印的時候包 `int(…)`，不靠型別表；同時回報 cella。
+3. `sum / v.size()` 的型別是 `unsigned long`（int 被轉成無號）——負數時 C++ 繞回（有定義的行為）、Python 不會 ⟹ 保留（`division`）。
