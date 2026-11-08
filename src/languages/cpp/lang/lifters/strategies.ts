@@ -619,7 +619,9 @@ function unwrapPointers(decl: AstNode): { stars: number; inner: AstNode } {
         //    下游 `instantiate` 看到「`Node` 有一個 `Node` 成員」，丟出
         //    「結構 Node 直接或間接包含自己——那在 C++ 不合法（**要用指標**）」
         //    ——**而它已經是指標了**（2026-08-27 生 Linked List 課時撞到）。
-        c.type === 'field_identifier',
+        c.type === 'field_identifier' ||
+        // 類別外的靜態成員定義（`L* L::current = nullptr;`）：宣告子是限定名——少了這一行名字落到預設 `'ptr'`（360 的盲測露出來）
+        c.type === 'qualified_identifier',
     )
     if (!next) break
     inner = next
@@ -650,7 +652,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
       return buildArrayDeclare(`${type}${'*'.repeat(stars)}`, inner, ctx)
     }
-    const name = inner.type === 'identifier' ? inner.text : 'ptr'
+    const name = inner.type === 'identifier' || inner.type === 'qualified_identifier' ? inner.text : 'ptr'
     // 🔴 這顆元件的產生器**自己會補一顆星**（`${type}* ${name}`），所以少算一顆
     return buildPointerDeclare(name, type + '*'.repeat(stars - 1))
   }
@@ -692,7 +694,7 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
         ctx,
       )
     }
-    name = inner.type === 'identifier' ? inner.text : 'ptr'
+    name = inner.type === 'identifier' || inner.type === 'qualified_identifier' ? inner.text : 'ptr'
     const ptrType = type + '*'.repeat(stars - 1)
     const valueNode = decl.childForFieldName('value')
     if (valueNode) {
@@ -1019,6 +1021,11 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const typeNode = node.childForFieldName('type')
       const type = typeNode?.text ?? 'int'
       const declNode = node.childForFieldName('declarator')
+      // `static L* current;`：星號屬於型別——原本直接拿宣告子的原文，名字變成 `* current`（360 的盲測露出來）
+      if (declNode?.type === 'pointer_declarator') {
+        const { stars, inner } = unwrapPointers(declNode)
+        if (inner.type === 'field_identifier' || inner.type === 'identifier') return buildMemberStatic(`${type}${'*'.repeat(stars)}`, inner.text)
+      }
       const name = declNode?.text ?? 'member'
       return buildMemberStatic(type, name)
     }

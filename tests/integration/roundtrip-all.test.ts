@@ -11,6 +11,7 @@
  *    `codeTemplate` 已整批刪除。產品那一路的逐元件檢查在 `audit-completeness` 的 generate 欄
  *    （合成最小節點 → `generateCode`），而 `judges.ts` 的 generate 判定者改成只算膠囊自己的測試。
  */
+import { KNOWN_AXES } from '../../src/core/projection/form-selection'
 import { describe, it, expect, beforeAll } from 'vitest'
 import { PatternRenderer } from '../../src/core/projection/pattern-renderer'
 import { PatternExtractor } from '../../src/core/projection/pattern-extractor'
@@ -125,7 +126,17 @@ describe('Full Roundtrip — All 68 Blocks', () => {
         //    的排序、以及這裡。
         const axisPairs = form ? [form] : ((spec as { forms?: { axis: string; value: string }[] }).forms ?? [])
         const hasRoleAxis = axisPairs.some((a) => a.axis === 'role')
-        for (const a of axisPairs) if (a.axis !== 'role') sem.properties[a.axis] = a.value
+        for (const a of axisPairs) if (a.axis !== 'role' && KNOWN_AXES[a.axis]?.from !== 'slot') sem.properties[a.axis] = a.value
+        // 🔴 **第四種：看接點的軸**（355：sizeof 的對象是運算式時住在 `expr`）——軸值來自「那個接點有沒有東西」，不是屬性。
+        //    合成節點把宣告過的接點都填上 ⟹ 中性形態的樣本也會選到變體。照軸表問：這個形態沒有這條軸 ⟹ 清空那個接點。
+        //    兄弟形態用到的看接點軸都要問（中性形態自己沒有 form，看不到它們）。
+        const siblingAxes = new Set(allSpecs
+          .filter((s) => s.componentMapping?.componentId === componentId)
+          .flatMap((s) => { const x = s as { form?: { axis: string }; forms?: { axis: string }[] }; return x.form ? [x.form.axis] : (x.forms ?? []).map((f) => f.axis) }))
+        for (const ax of siblingAxes) {
+          const def = KNOWN_AXES[ax]
+          if (def?.from === 'slot' && def.slot && !axisPairs.some((a) => a.axis === ax)) delete sem.slots[def.slot]
+        }
         const block = renderer.render(sem)
         expect(block, `Failed to render component '${componentId}'`).not.toBeNull()
         if (hasRoleAxis) {
