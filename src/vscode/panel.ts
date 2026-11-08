@@ -622,6 +622,7 @@ class SemorpheSession {
       await this.applyEdit(m.span, m.baseVersion); return
     }
     if (m.type === 'revealNode') { this.revealNode(m.range); return }
+    if (m.type === 'fold') { await this.applyFolds(m.fold, m.unfold); return }
     if (m.type === 'diagnostics') {
       // 🔴 診斷去**輸出頻道**，不去面板（FR-009）。
       // > 一個儀器如果佔著產品的版面，它就不只是儀器了。
@@ -719,6 +720,19 @@ class SemorpheSession {
     )
     editor.setDecorations(EXECUTING, [r])
     editor.revealRange(r, vscode.TextEditorRevealType.InCenterIfOutsideViewport)
+  }
+
+  /**
+   * **收合狀態 → 宿主編輯器的摺疊**（spec 223）。
+   *
+   * `editor.fold`／`editor.unfold` 只作用在**使用中的編輯器**——別的檔案在前面時摺下去會摺錯檔。
+   * ⟹ 這份文件不是使用中的編輯器就不摺（下一次狀態或語義更新再送）；不猜、不搶焦點。
+   */
+  private async applyFolds(fold: number[], unfold: number[]): Promise<void> {
+    const active = vscode.window.activeTextEditor
+    if (!active || active.document.uri.toString() !== this.doc?.uri.toString()) return
+    if (unfold.length > 0) await vscode.commands.executeCommand('editor.unfold', { levels: 1, selectionLines: unfold })
+    if (fold.length > 0) await vscode.commands.executeCommand('editor.fold', { levels: 1, selectionLines: fold })
   }
 
   private editorForDoc(): vscode.TextEditor | undefined {
