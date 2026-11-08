@@ -1081,7 +1081,7 @@
   "PROPOSAL_REGION": "Proposed change",
   "PROPOSAL_FROM": "Proposed by {author}",
   "PROPOSAL_UNNAMED": "unnamed",
-  "PROPOSAL_WAITING": "{n} waiting",
+  "PROPOSAL_WAITING": "{n} pending",
   "PROPOSAL_STALE": "The program changed after this proposal was sent; the place it points to is gone or different — it can only be rejected.",
   "PROPOSAL_NO_CHANGE": "(no change to the code)",
   "PROPOSAL_ACCEPT": "Accept",

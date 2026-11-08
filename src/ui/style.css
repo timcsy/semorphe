@@ -3494,7 +3494,7 @@ html, body {
 .proposal-bar {
   position: fixed;
   right: 16px;
-  bottom: 16px;
+  bottom: 40px;   /* 狀態列之上 */
   width: min(520px, calc(100vw - 32px));
   max-height: 60vh;
   display: flex;

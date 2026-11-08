@@ -72,7 +72,7 @@ export class ProposalBar {
     head.appendChild(who)
     const count = document.createElement('span')
     count.className = 'proposal-bar-count'
-    count.textContent = msg('PROPOSAL_WAITING', '還有 {n} 個在等').replace('{n}', String(waiting))
+    count.textContent = msg('PROPOSAL_WAITING', '共 {n} 個待處理').replace('{n}', String(waiting))
     head.appendChild(count)
     el.appendChild(head)
 
