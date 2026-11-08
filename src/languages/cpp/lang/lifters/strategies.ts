@@ -50,8 +50,6 @@ import { buildVarRef } from '../../../../components/cpp/var_ref/lift'
 import { buildFuncDef } from '../../../../components/cpp/func_def/lift'
 import { buildVarAssign } from '../../../../components/cpp/var_assign/lift'
 import { buildInitializerList } from '../../../../components/cpp/initializer_list/lift'
-import { asAnonymousStructMember } from '../../../../components/cpp/struct_declare/anonymous'
-import { asAnonymousUnionMember } from '../../../../components/cpp/union_declare/anonymous'
 
 /**
  * **把參數的型別文字，正規化成宣告那一側用的同一個詞彙。**
@@ -953,9 +951,12 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     if (!node.childForFieldName('declarator')) {
       const spec = node.namedChildren.find((c) => (c.type === 'union_specifier' || c.type === 'struct_specifier') && c.childForFieldName('body'))
       if (spec) {
+        // 問形狀不問身分：lift 出來的是一個帶成員槽的定義（union／struct 那兩顆）⟹ 名字留空（策略在沒名字時會編 MyStruct）
         const lifted = ctx.lift(spec)
-        const anon = asAnonymousUnionMember(lifted) ?? asAnonymousStructMember(lifted)
-        return anon ?? degrade(buildRawCode(node.text), '這個匿名的 union／struct 成員裝不下（有成員函式之類）')
+        if (lifted && lifted.slots?.members !== undefined && typeof lifted.properties?.name === 'string') {
+          return { ...lifted, properties: { ...lifted.properties, name: '' } }
+        }
+        return degrade(buildRawCode(node.text), '這個匿名的 union／struct 成員裝不下（有成員函式之類）')
       }
     }
     // Pure virtual: virtual void method() = 0;
