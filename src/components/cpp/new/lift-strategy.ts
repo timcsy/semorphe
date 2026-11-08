@@ -20,6 +20,7 @@
  */
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import { createNode } from '../../../core/semantic-tree'
+import type { SemanticNode } from '../../../core/types'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('cpp:liftNewExpression', (node, ctx) => {
@@ -58,4 +59,9 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     if (braceList) made.properties.brace = 'true'
     return made
   })
+}
+
+/** `new T` 或 `new T[count]`——C → C++ 把 `malloc` 換成它時用（`src/languages/cpp/c-to-cpp.ts`；身分只寫在這顆膠囊裡）。 */
+export function buildNew(type: string, count: SemanticNode | null): SemanticNode {
+  return createNode('cpp:new', { type }, count ? { size: [count] } : {})
 }
