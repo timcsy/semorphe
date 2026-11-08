@@ -30,7 +30,12 @@ import { buildPrint } from '../../components/cpp/print/lift'
 import { buildInput } from '../../components/cpp/input/lift'
 import { buildEndl } from '../../components/cpp/endl/lift'
 import { buildLiteralString } from '../../components/cpp/literal_string/lift-strategy'
-import { isUncastMalloc, castMallocTo } from '../../components/cpp/malloc/lift'
+import { isUncastMalloc, castMallocTo, isMalloc, mallocNewShape } from '../../components/cpp/malloc/lift'
+import { freedPointer } from '../../components/cpp/free/lift'
+import { buildNew } from '../../components/cpp/new/lift-strategy'
+import { buildDelete } from '../../components/cpp/delete/build'
+import { sizeofTypeTarget } from '../../components/cpp/sizeof/lift-strategy'
+import { varRefName } from '../../components/cpp/var_ref/lift'
 
 /** 每個運算式的型別（Cella `types().nodes`，鍵是語意樹節點 id） */
 export type ExpressionTypes = Readonly<Record<string, string>>
@@ -160,6 +165,12 @@ export function convertCToCpp(root: SemanticNode, types: ExpressionTypes): CToCp
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
   }
   collect(root)
+  // 🟢 第四刀：malloc／free → new[]／delete[]（2026-11-08）——整支程式全有或全無（見 `mallocAsNew`）
+  // 指到的型別取宣告原本的寫法（`struct P`，不去空白）——`pointerType` 會把空白拿掉，那是給比對用的
+  const mn = mallocAsNew(root, (d) => (pointerType(declaredType(d)) ? declaredType(d)!.trim().replace(/\s*\*$/, '') : null))
+  root = mn.tree
+  converted += mn.converted
+  kept += mn.kept
   /** 接收 `n` 的槽要的型別：宣告的初值 → 宣告的型別；指定的值 → 左邊的型別（判決給的，沒有就查宣告） */
   const receiverType = (parent: SemanticNode, slot: string): string | null => {
     if (slot === 'initializer') return pointerType(declaredType(parent))
@@ -228,4 +239,71 @@ export function convertCToCpp(root: SemanticNode, types: ExpressionTypes): CToCp
     return { ...n, slots }
   }
   return { tree: visit(root), converted, kept }
+}
+
+/**
+ * **C → C++ 第四刀：`malloc`／`free` → `new`／`delete`**（2026-11-08；c-bridge 第 4 課整課在講它）。
+ *
+ * 換錯的代價是未定義行為（`free` 一塊 `new` 出來的記憶體、`delete` 用錯形式），所以**整支程式全有或全無**，三個條件都成立才換：
+ * 1. 每一個 malloc 都是某個指標宣告的初值，而且換得成 `new T[n]`／`new T`（元素型別對得上，見 `mallocNewShape`）；
+ * 2. 每一個 free 的對象都是那些指標之一（`q = p; free(q)`、在函式裡 free 參數 ⟹ 不換）；
+ * 3. 那些指標的每一次出現都只是 `free(p)` 的對象，或透過它取一個位置（`p[i]`、`*p`、`p->x`——元件宣告了 `addressable`；p 本身不變）；
+ *    比較、傳給函式、`p++`、`&p` 都不換（保守：寧可留 C 寫法）。
+ * 名字宣告了不只一次（遮蔽）也不換。不換的時候 malloc 照舊由後面那一步補轉型。
+ */
+function mallocAsNew(root: SemanticNode, pointeeOf: (decl: SemanticNode) => string | null): { tree: SemanticNode; converted: number; kept: number } {
+  const decls = new Map<string, { count: SemanticNode | null } | null>()
+  const declCount = new Map<string, number>()
+  let mallocs = 0, frees = 0, ok = true
+  const uses: { name: string; parent: SemanticNode }[] = []
+  const walk = (n: SemanticNode, parent: SemanticNode | null): void => {
+    if (typeof n.properties?.name === 'string' && n.slots?.initializer) declCount.set(n.properties.name, (declCount.get(n.properties.name) ?? 0) + 1)
+    const init = n.slots?.initializer?.[0]
+    if (init && isMalloc(init) && typeof n.properties.name === 'string') {
+      const elem = pointeeOf(n)
+      const shape = elem ? mallocNewShape(init, elem, sizeofTypeTarget) : null
+      decls.set(n.properties.name, shape)
+      if (!shape) ok = false
+    }
+    if (isMalloc(n)) { mallocs++; if (!parent || parent.slots?.initializer?.[0] !== n) ok = false }
+    const freed = freedPointer(n)
+    if (freed) { frees++; if (!varRefName(freed)) ok = false }
+    const ref = varRefName(n)
+    if (ref && parent) uses.push({ name: ref, parent })
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach((k) => walk(k, n))
+  }
+  walk(root, null)
+  if (mallocs === 0 && frees === 0) return { tree: root, converted: 0, kept: 0 }
+  const names = new Set([...decls].filter(([, s]) => s).map(([k]) => k))
+  if (ok) {
+    for (const [name] of decls) if ((declCount.get(name) ?? 0) !== 1) ok = false
+    for (const u of uses) {
+      if (!names.has(u.name)) continue
+      if (!(freedPointer(u.parent) || isAddressable(u.parent.componentId))) ok = false
+    }
+    // 每一個 free 的對象都要在名單裡
+    const checkFrees = (n: SemanticNode): void => {
+      const f = freedPointer(n)
+      if (f && !names.has(varRefName(f) ?? '')) ok = false
+      for (const kids of Object.values(n.slots ?? {})) kids.forEach(checkFrees)
+    }
+    checkFrees(root)
+  }
+  if (!ok || names.size === 0) return { tree: root, converted: 0, kept: mallocs + frees }
+  const rewrite = (n: SemanticNode): SemanticNode => {
+    const f = freedPointer(n)
+    if (f) return buildDelete(f, decls.get(varRefName(f)!)!.count !== null)
+    const slots: Record<string, SemanticNode[]> = {}
+    for (const [slot, kids] of Object.entries(n.slots ?? {})) {
+      slots[slot] = kids.map((k) => {
+        if (slot === 'initializer' && isMalloc(k) && typeof n.properties.name === 'string') {
+          const shape = decls.get(n.properties.name)!
+          return buildNew(pointeeOf(n)!, shape.count)
+        }
+        return rewrite(k)
+      })
+    }
+    return { ...n, slots }
+  }
+  return { tree: rewrite(root), converted: mallocs + frees, kept: 0 }
 }

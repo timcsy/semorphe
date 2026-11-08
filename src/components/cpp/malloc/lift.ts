@@ -51,3 +51,28 @@ export function isUncastMalloc(n: SemanticNode): boolean {
 export function castMallocTo(n: SemanticNode, type: string): SemanticNode {
   return { ...n, properties: { ...n.properties, type } }
 }
+
+/**
+ * 這顆 malloc 換成 `new` 會是什麼樣子（C → C++，2026-11-08）：
+ * - `malloc(n * sizeof(T))`（積木的「乘以 sizeof」選了 T）→ 陣列 `new T[n]`
+ * - `malloc(sizeof(T))` → 單一 `new T`
+ * T 要等於接收那一邊的元素型別（`elem`）；轉型若有寫，也要是 `T*`。其餘回 null（照舊補轉型、不換）。
+ * `sizeofTarget` 由呼叫端給（sizeof 是另一顆膠囊的身分）。
+ */
+export function mallocNewShape(
+  n: SemanticNode, elem: string, sizeofTarget: (n: SemanticNode | undefined) => string | null,
+): { count: SemanticNode | null } | null {
+  if (n.componentId !== 'cpp:malloc') return null
+  const norm = (t: string | null | undefined): string => String(t ?? '').replace(/\s+/g, '')
+  const cast = norm(n.properties.type as string)
+  if (!(cast === 'void*' || cast === 'void' || cast === `${norm(elem)}*`)) return null
+  const size = n.slots.size?.[0]
+  const st = String(n.properties.sizeof_type ?? 'none')
+  if (st !== 'none') return norm(st) === norm(elem) && size ? { count: size } : null
+  return norm(sizeofTarget(size)) === norm(elem) ? { count: null } : null
+}
+
+/** 是一顆 malloc 嗎（不論有沒有轉型）——C → C++ 數「整支程式的 malloc 是不是都換得了」時用 */
+export function isMalloc(n: SemanticNode): boolean {
+  return n.componentId === 'cpp:malloc'
+}

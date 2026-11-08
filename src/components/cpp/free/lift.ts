@@ -20,3 +20,8 @@ export function registerLift(): void {
     return createNode('cpp:free', {}, { ptr: ptr ? [ptr] : [] })
   })
 }
+
+/** `free(p)` 的 p（不是 free 就回 null）——C → C++ 配對 malloc／free 時用。 */
+export function freedPointer(n: SemanticNode): SemanticNode | null {
+  return n.componentId === 'cpp:free' ? n.slots.ptr?.[0] ?? null : null
+}

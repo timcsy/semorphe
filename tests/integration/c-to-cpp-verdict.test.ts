@@ -81,6 +81,9 @@ describe('C → C++：c-bridge 課文的解答', () => {
       expect(converted, `一行都沒換：\n${cpp}`).toBeGreaterThan(0)
       expect(kept, `有保留的行：\n${cpp}`).toBe(0)
       expect(cpp).not.toMatch(/\b(printf|scanf)\s*\(/)
+      // 第四刀：課文的 malloc／free 換成 new[]／delete[]（c-bridge 第 4 課）
+      if (/\bmalloc\s*\(/.test(src)) expect(cpp, cpp).toMatch(/\bnew\b[\s\S]*\bdelete\b/)
+      expect(cpp).not.toMatch(/\b(malloc|free)\s*\(/)
       expect(cpp).toContain('using namespace std;')
       await sameVerdict(src, cpp, stdin)
     })
@@ -141,6 +144,35 @@ describe('C → C++：換了會變意思的，保留', () => {
     expect(converted).toBe(3)
     await sameVerdict(src, cpp)
   })
+
+  // ── 第四刀（2026-11-08）：malloc／free → new／delete，整支程式全有或全無 ──
+  it('🟢 malloc／free → new[]／delete[]（陣列）與 new／delete（單一，透過 -> 取成員）', async () => {
+    const src = '#include <stdio.h>\n#include <stdlib.h>\nstruct P {\n    int x;\n};\nint main() {\n    int n = 4;\n    int *a = (int*)malloc(n * sizeof(int));\n    struct P *p = malloc(sizeof(struct P));\n    for (int i = 0; i < n; i++) {\n        a[i] = i * 10;\n    }\n    p->x = a[3];\n    *a = 7;\n    printf("%d %d\\n", p->x, a[0]);\n    free(a);\n    free(p);\n    return 0;\n}\n'
+    const { cpp, converted, kept } = await toCpp(src)
+    expect(cpp).toContain('int* a = new int[n];')
+    expect(cpp).toContain('P* p = new P;')
+    expect(cpp).toContain('delete[] a;')
+    expect(cpp).toContain('delete p;')
+    expect(cpp).not.toMatch(/\b(malloc|free)\s*\(/)
+    expect([converted, kept]).toEqual([5, 0]) // 兩個 malloc、兩個 free、一個 printf
+    await sameVerdict(src, cpp)
+  })
+
+  for (const c of [
+    { name: '別名（`int *q = a; free(q);`）：free 的對象不在名單上 ⟹ 整支不換', body: '    int *a = (int*)malloc(3 * sizeof(int));\n    int *q = a;\n    a[0] = 5;\n    printf("%d\\n", q[0]);\n    free(q);\n' },
+    { name: '指標本身被改（`p++`）：delete 會拿到另一個位址 ⟹ 不換', body: '    int *a = (int*)malloc(3 * sizeof(int));\n    a[0] = 1;\n    a[1] = 2;\n    int *p = a;\n    p++;\n    printf("%d\\n", *p);\n    free(a);\n' },
+    { name: 'sizeof 的型別與指標的元素對不上（`int *` 配 `sizeof(char)`）⟹ 不換', body: '    int *a = (int*)malloc(16 * sizeof(char));\n    a[0] = 9;\n    printf("%d\\n", a[0]);\n    free(a);\n' },
+  ]) {
+    it(c.name, async () => {
+      const src = `#include <stdio.h>\n#include <stdlib.h>\nint main() {\n${c.body}    return 0;\n}\n`
+      const { cpp, kept } = await toCpp(src)
+      expect(cpp).toMatch(/\bmalloc\s*\(/)
+      expect(cpp).toMatch(/\bfree\s*\(/)
+      expect(cpp).not.toMatch(/\bnew\b|\bdelete\b/)
+      expect(kept).toBeGreaterThan(0)
+      await sameVerdict(src, cpp)
+    })
+  }
 
   it('struct 標籤：`struct Point p;` → `Point p;`（型別那幾格；字串字面不碰）', async () => {
     const src = '#include <stdio.h>\nstruct Point {\n    int x;\n    int y;\n};\nint dist2(struct Point p) {\n    return p.x * p.x + p.y * p.y;\n}\nint main() {\n    struct Point ps[2];\n    ps[0].x = 3;\n    ps[0].y = 4;\n    struct Point *q = &ps[0];\n    printf("struct Point %d\\n", dist2(*q));\n    return 0;\n}\n'
