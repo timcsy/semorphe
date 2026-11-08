@@ -945,6 +945,11 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     if (node.namedChildren.some((c) => c.type === 'bitfield_clause')) {
       return degrade(buildRawCode(node.text), '位元欄位尚未支援')
     }
+    // 🔴 **匿名的 union／struct 成員**（`struct P { char k; union { int code; char flag; }; };`）：成員直接掛在外層、沒有名字。
+    //    2026-11-08 union 盲測：原本落到下面的一般欄位、名字缺了就編一個 `x`——`union {…} x;`，`p.code` 從此不存在。照實降級，原文保留。
+    if (!node.childForFieldName('declarator') && node.namedChildren.some((c) => (c.type === 'union_specifier' || c.type === 'struct_specifier') && c.childForFieldName('body'))) {
+      return degrade(buildRawCode(node.text), '匿名的 union／struct 成員尚未支援')
+    }
     // Pure virtual: virtual void method() = 0;
     const isVirtual = node.children.some(c => !c.isNamed && c.text === 'virtual')
     // 🔴 **類別裡的方法原型**（`void link(B* b);`、`int total() const;`——定義寫在類別外）：原本落到下面「一般欄位」，
