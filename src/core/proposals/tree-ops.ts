@@ -54,6 +54,8 @@ export interface ComponentShape {
 }
 
 export interface OpSchema {
+  /** 認得的元件身分（交進來的宣告 ∪ 膠囊登錄表） */
+  ids(): string[]
   shape(componentId: string): ComponentShape | null
   isRoot(componentId: string): boolean
   fits(childComponentId: string, allowed: string[]): boolean
@@ -72,6 +74,7 @@ export function schemaFrom(components: readonly ComponentDefJSON[] = []): OpSche
     if (!byId.has(c.componentId)) byId.set(c.componentId, c.manifest as unknown as ComponentDefJSON)
   }
   return {
+    ids: () => [...byId.keys()],
     shape(id) {
       const def = byId.get(id)
       if (!def) return isDynamic(id) ? { slots: [], props: null } : null

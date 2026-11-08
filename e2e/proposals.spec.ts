@@ -140,3 +140,16 @@ test('不合法的提議 → refused、畫面上沒有提議列', async ({ page 
   // 外部只能送與查，不能替人接受
   expect(await page.evaluate(() => typeof (window as any).__app.proposals.accept)).toBe('undefined')
 })
+
+test('詞彙：拿得到目前語言的元件，照它組的提議通過（spec 222）', async ({ page }) => {
+  await freshApp(page)
+  await setCpp(page, SRC)
+  const vocab = await page.evaluate(() => (window as any).__app.proposals.vocabulary())
+  expect(vocab.length).toBeGreaterThan(100)
+  expect(vocab.every((e: { componentId: string }) => e.componentId.startsWith('cpp:'))).toBe(true)
+  const print = vocab.find((e: { componentId: string }) => e.componentId === 'cpp:print')
+  expect(print.slots.find((s: { slot: string }) => s.slot === 'values').accepts).toEqual(['expression'])
+  const r = await submit(page, { author: 'AI', ops: [{ op: 'insert', parent: await idOf(page, 'cpp:func_def'), slot: 'body', index: 0, node: { componentId: print.componentId, slots: { values: [{ componentId: 'cpp:var_ref', properties: { name: 'n' } }] } } }] })
+  expect(r.status).toBe('pending')
+})
+
