@@ -206,7 +206,9 @@ export class App {
   /** 最近一次判決——`input` 是送出時那一題的測資（題目換了，同一棵樹的判決就不能再用）。 */
   private lastCheck: { tree: SemanticNode; input: string; answer: Promise<CheckAnswer> } | null = null
   /** 最近一次判決帶回的運算式型別與那一棵樹（spec 215：換成 printf 風格時照型別產格式）。 */
-  private lastTypes: { tree: SemanticNode; nodes: Readonly<Record<string, string>> } | null = null
+  /** 換語言的寫法換到一半時，套用範例會把它作廢（spec 219） */
+  private languageConversionEpoch = 0
+  private lastTypes: { tree: SemanticNode; nodes: Readonly<Record<string, string>>; problems?: readonly { kind: string; at?: string }[] } | null = null
   /** 上一次從積木產碼時型別對不上（保留了 cout）——下一份型別到了要補產一次。 */
   private typesPending = false
   private hardwarePanel: HardwarePanel | null = null
@@ -1276,6 +1278,8 @@ export class App {
     //    而不是某一個投影的性質（根公理）。⚠️ 也不用戳面板的私有欄位。
     const hasWork = this.hasStudentWork()
     const go = (): void => {
+      // 進行中的換語言寫法作廢（它若晚一步寫回，會蓋掉這份範例——e2e templates 量到）
+      this.languageConversionEpoch++
       // 換目標（範例釘住它），再把程式碼放進去
       const target = this.targetRegistry.all().find((x) => x.id === t.target)
       if (target && target.id !== this.currentTarget.id) {
@@ -1902,9 +1906,16 @@ export class App {
         const before = this.currentTree ?? this.blocklyPanel?.extractSemanticTree()
         const check = before ? this.checkRequest(before).req : null
         const known = this.lastTypes
+        const fromTarget = this.currentTarget
+        const fromTopic = this.currentTopic
+        const codeBefore = this.codeView?.getCode() ?? ''
         this.handleTargetChange(target, topic)
         if (before && fromLanguage === topic.language && fromStyle.id !== this.currentStylePreset.id) {
           void this.convertAfterStyleChange(before, check, fromStyle, known)
+        }
+        // 換了語言（C++ → Python，spec 219）：問【來源語言】的套件
+        if (before && fromLanguage && fromTopic && fromLanguage !== topic.language) {
+          void this.convertAfterLanguageChange(before, check, fromLanguage, known, { target: fromTarget, topic: fromTopic, code: codeBefore })
         }
       },
       // 🪦 **`onBranchesChange` 於 2026-09-20 退場**——「選擇範圍」那個下拉
@@ -2871,6 +2882,8 @@ export class App {
   }
 
   private handleTargetChange(target: Target, topic: Topic): void {
+    // 任何一次換目標（課文、範例、選單）都讓進行中的換語言寫法作廢——選單那條路的新一輪在這之後才開始（spec 219）
+    this.languageConversionEpoch++
     // 🔴 **目標自己說它要不要程式外殼**——這一層不認識任何具體的目標。
     this.adoptSkeleton(target.skeleton ?? 'main')
         const prevDepth = this.getScaffoldDepth()
@@ -2938,6 +2951,54 @@ export class App {
    * 向判決要**舊程式**的型別（換不換由它判斷意思會不會變）、把換好的樹寫回兩個投影、說出換了幾行保留幾行。
    * ⚠️ 判決還沒暖好、拿不到型別時，只換得動純文字那幾行——其餘保留，照實說（P6）。
    */
+  /**
+   * **換了語言之後，程式換成新語言的寫法**（跨語言互轉第二對 C++ → Python，spec 219）。
+   *
+   * 換法由**來源語言**的套件提供（`convertToLanguage`，它懂自己的元件）；回傳的是目標語言的原始碼，以程式碼為準重畫積木（research R7）。
+   * 整支換或不換：有保留原因 ⟹ 回到原本的目標、程式原樣放回，說出原因（Python 程式裡不能留一行 C++）。
+   * 型別照第一對：先用切換前那一次判決的，對不上才另外問；等待時使用者又換了目標或改了程式 ⟹ 這一次作廢。
+   */
+  private async convertAfterLanguageChange(
+    before: SemanticNode, check: Parameters<NonNullable<Provider['check']>>[0] | null, fromLanguage: string,
+    known: { tree: SemanticNode; nodes: Readonly<Record<string, string>>; problems?: readonly { kind: string; at?: string }[] } | null,
+    back: { target: Target; topic: Topic; code: string },
+  ): Promise<void> {
+    const pack = languagePack(fromLanguage)
+    if (!pack?.convertToLanguage) return
+    const toLanguage = this.currentTopic.language
+    const targetAtSwitch = this.currentTarget
+    // 作廢記號（同第一對的精神：等判決時套用了範例 ⟹ 這一次作廢，不蓋掉它）。
+    // ⚠️ 不比對編輯器內容：換目標之後編輯器會非同步重產，比內容會讓每一次都誤判成「被改過」（e2e 量到）
+    const epoch = ++this.languageConversionEpoch
+    let types: Readonly<Record<string, string>> = (known && carryTypes(known.tree, known.nodes, before)) ?? {}
+    // 判決的問題（溢位的那一類要換法知道，T017）：上一次判決的節點 id 對到這棵樹才用；另外問的那一次直接用
+    let problems: readonly { kind: string; at?: string }[] = Object.keys(types).length > 0 && known?.tree === before ? (known.problems ?? []) : []
+    const p = provide('verdict').provider
+    // 判決還沒暖好也等它（`check` 會自己載入；換語言的每一處都要型別——不等的話剛開頁面就換，整支都會因「需要型別」退回）。最多等 15 秒
+    if (Object.keys(types).length === 0 && check && p?.check) {
+      const timeout = new Promise<null>((res) => setTimeout(() => res(null), 15_000))
+      try {
+        const a = await Promise.race([p.check(check), timeout])
+        if (a && !a.stale) { types = a.types?.nodes ?? {}; problems = (a.verdict?.problems ?? []).map((x) => ({ kind: x.kind, at: x.at })) }
+      } catch { types = {} }
+    }
+    if (this.currentTarget !== targetAtSwitch || epoch !== this.languageConversionEpoch) return
+    const r = pack.convertToLanguage(before, toLanguage, types, problems)
+    if (!r) return
+    if (r.code !== null) {
+      this.codeView?.setCode(r.code)
+      await this.syncController?.syncCodeToBlocks(r.code)
+      showToast(msg('LANG_CONVERTED', '換成 {target} 的寫法：{n} 句').replace('{target}', this.currentTarget.name).replace('{n}', String(r.converted)), 'success')
+      return
+    }
+    // 整支不換：回到原本的目標、程式原樣放回，說出卡在哪裡
+    this.handleTargetChange(back.target, back.topic)
+    this.codeView?.setCode(back.code)
+    await this.syncController?.syncCodeToBlocks(back.code)
+    const lines = [...new Set(r.reasons.map((x) => `${x.line ? msg('LANG_KEPT_LINE', '第 {line} 行：').replace('{line}', String(x.line)) : ''}${x.detail}`))].slice(0, 4)
+    showToast(`${msg('LANG_KEPT', '這支程式還不能換成 {target}，維持原本的寫法').replace('{target}', targetAtSwitch.name)}——${lines.join('；')}`, 'warning')
+  }
+
   private async convertAfterStyleChange(
     before: SemanticNode, check: Parameters<NonNullable<Provider['check']>>[0] | null, from: StylePreset,
     known: { tree: SemanticNode; nodes: Readonly<Record<string, string>> } | null,
@@ -4660,7 +4721,7 @@ export class App {
     if (a.stale || tree !== this.currentTree) return
     // 運算式的型別（spec 215）：換成 printf 風格時照型別產格式。產碼時從積木抽回的樹沒有判決的那份 id
     //   ⟹ 記下這棵樹，產碼時照形狀對過去（`carryTypes`）；上一次產碼時型別對不上的話，現在補產一次
-    this.lastTypes = { tree, nodes: a.types?.nodes ?? {} }
+    this.lastTypes = { tree, nodes: a.types?.nodes ?? {}, problems: (a.verdict?.problems ?? []).map((x) => ({ kind: x.kind, at: x.at })) }
     // ⚠️ 上一步是在程式碼那側打的字：不補產（那會用積木蓋掉他剛打的字）——程式碼是他寫的，照原樣
     if (this.typesPending && this.currentStylePreset.io_style === 'printf' && this.lastEditor !== 'code') {
       this.typesPending = false

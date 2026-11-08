@@ -51,6 +51,7 @@ import cPreset from './styles/c.json'
 import { isCDialect } from './target-dialect'
 import { convertCToCpp } from './c-to-cpp'
 import { convertCppToC } from './cpp-to-c'
+import { convertCppToPython } from './cpp-to-python'
 
 /**
  * **這個語言的型別清單**——參數型別與回傳型別各一份。
@@ -163,6 +164,8 @@ declareLanguagePack({
   convertBetweenStyles: (tree, from, to, types) =>
     (isCDialect(from) && !isCDialect(to) ? convertCToCpp(tree, types)
       : !isCDialect(from) && isCDialect(to) ? convertCppToC(tree, types) : null),
+  // 跨語言互轉第二對（spec 219）：C++ → Python——來源語言懂自己的元件；回傳 Python 原始碼，由 Python 的 lift 畫積木
+  convertToLanguage: (tree, toLanguage, types, problems) => (toLanguage === 'python' ? convertCppToPython(tree, types, problems) : null),
   styleExceptions: {
     detect: detectStyleExceptionsForPreset as never,
     convert: applyStyleConversions as never,

@@ -1,0 +1,22 @@
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
+import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
+import { paren } from '../../../languages/cpp/to-python/contract'
+
+export function registerToPython(r: ToPythonRegistrar): void {
+  r.expr((n, py) => {
+    const op = String(n.properties.operator ?? '')
+    const l = n.slots.left?.[0], rr = n.slots.right?.[0]
+    if ([py.typeOf(l), py.typeOf(rr)].some((t) => (t ?? '').replace(/^const\s+/, '') === 'char')) return py.keep(n, 'char', 'char 參與運算：C++ 的 char 是整數，Python 的是字串')
+    if (op === '%') return py.keep(n, 'modulo', '取餘數：負數時兩個語言的正負號規則不同')
+    if (op === '/') {
+      const t = py.typeOf(n) ?? ''
+      // 整數除法：C++ 向零截斷 ⟹ int(a / b)——32 位元的整數，浮點商在 2^53 以內精確（research R4）；不是 //（向下取整，負數時不同）
+      if (/^(int|long|long long|short)$/.test(t)) return `int(${paren(l, py)} / ${paren(rr, py)})`
+      // 無號整數（`sum / v.size()`：int 被轉成 unsigned long）：負數時 C++ 繞回成很大的數（有定義的行為），Python 不會——意思不同，保留
+      if (/unsigned|size_t/.test(t)) return py.keep(n, 'division', `無號整數的除法（型別 ${t}）：負數時 C++ 會繞回、Python 不會`)
+      if (!t) return py.keep(n, 'needs-types', '除法要看型別（整數除法與浮點除法不同）')
+    }
+    if (!['+', '-', '*', '/'].includes(op)) return py.keep(n, 'outside-subset', `運算子 ${op} 還沒有對應`)
+    return `${paren(l, py)} ${op} ${paren(rr, py)}`
+  })
+}
