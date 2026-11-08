@@ -36,3 +36,53 @@ describe('列舉常數的運算式值（344）', () => {
     expect(t.untranslated?.[0]?.reason).toMatch(/拆不成認得的常數運算式/)
   }, 120_000)
 })
+
+// ── 2026-11-08：typedef enum 與匿名列舉（union 盲測的覆蓋缺口：fuzz_3／4／6）──
+describe('typedef enum 與匿名列舉', () => {
+  const C = '#include <stdio.h>\n'
+  const ANON = C + 'typedef enum { SHAPE_SQUARE, SHAPE_CIRCLE } ShapeKind;\nint main(void) {\n    ShapeKind k = SHAPE_CIRCLE;\n    printf("%d\\n", k);\n    return 0;\n}\n'
+  const TAG = C + 'typedef enum Color { RED = 2, GREEN } Color_t;\nint main(void) {\n    Color_t a = GREEN;\n    enum Color b = RED;\n    printf("%d %d\\n", a, b);\n    return 0;\n}\n'
+  const PLAIN = C + 'enum { A = 1 << 2, B };\nenum { C = 7 };\nint main(void) {\n    printf("%d %d\\n", B, C);\n    return 0;\n}\n'
+
+  it('lift：是一顆列舉、別名在 typedef_alias、匿名的 name 為空（不再編 MyEnum）；產碼與積木來回一字不差', async () => {
+    const { Parser, Language } = await import('web-tree-sitter')
+    const { createTestLifter } = await import('../../../../tests/helpers/setup-lifter')
+    const { setupTestRenderer } = await import('../../../../tests/helpers/setup-renderer')
+    const { registerCppLanguage } = await import('../../../languages/cpp/generators')
+    const { generateCode } = await import('../../../core/projection/code-generator')
+    const { renderToBlocklyState } = await import('../../../core/projection/block-renderer')
+    const { PatternExtractor } = await import('../../../core/projection/pattern-extractor')
+    const { BlockSpecRegistry } = await import('../../../core/blocks/block-spec-registry')
+    const { allCppComponents, allCppProjections } = await import('../../../languages/cpp/all-declarations')
+    const { registerCppExtractStrategies } = await import('../../../languages/cpp/extractors/extract-strategies')
+    const cStyle = (await import('../../../languages/cpp/styles/c.json')).default
+    await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
+    const p = new Parser()
+    p.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
+    registerCppLanguage()
+    setupTestRenderer()
+    const reg = new BlockSpecRegistry()
+    reg.loadFromSplit(allCppComponents(), allCppProjections())
+    const ex = new PatternExtractor()
+    ex.loadBlockSpecs(reg.getAll())
+    registerCppExtractStrategies(ex)
+    const enums = (t: any): any[] => t.slots.body.filter((n: any) => n.componentId === 'cpp:enum').map((n: any) => n.properties)
+    const lift = (src: string): any => createTestLifter().lift(p.parse(src)!.rootNode as never)
+    expect(enums(lift(ANON))).toEqual([{ name: '', values: 'SHAPE_SQUARE, SHAPE_CIRCLE', typedef_alias: 'ShapeKind' }])
+    expect(enums(lift(TAG))).toEqual([{ name: 'Color', values: 'RED = 2, GREEN', typedef_alias: 'Color_t' }])
+    expect(enums(lift(PLAIN)).map((e) => e.name)).toEqual(['', ''])
+    for (const src of [ANON, TAG, PLAIN]) {
+      const t = lift(src)
+      expect(generateCode(t, 'cpp', cStyle as never).trimEnd()).toBe(src.trimEnd())
+      const state = renderToBlocklyState(t) as { blocks: { blocks: unknown[] } }
+      const back = state.blocks.blocks.flatMap((b) => ex.extractStatementChain(b as never))
+      expect(generateCode({ id: 'r', componentId: 'cpp:program', properties: {}, slots: { body: back } } as never, 'cpp', cStyle as never).trimEnd()).toBe(src.trimEnd())
+    }
+  })
+
+  it('★ Cella 判得出：匿名 typedef、帶標籤的 typedef（兩個名字都能當型別）、兩個匿名列舉', async () => {
+    await expectCellaOut(ANON, '1\n', { lang: 'c' })
+    await expectCellaOut(TAG, '3 2\n', { lang: 'c' })
+    await expectCellaOut(PLAIN, '5 7\n', { lang: 'c' })
+  }, 120_000)
+})

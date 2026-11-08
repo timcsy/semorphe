@@ -18,6 +18,11 @@
           "type": "field_input",
           "name": "VALUES",
           "text": "RED, GREEN, BLUE"
+        },
+        {
+          "type": "field_input",
+          "name": "TYPEDEF_ALIAS",
+          "text": ""
         }
       ],
       "inputsInline": true,
@@ -29,7 +34,8 @@
     "renderMapping": {
       "fields": {
         "NAME": "name",
-        "VALUES": "values"
+        "VALUES": "values",
+        "TYPEDEF_ALIAS": "typedef_alias"
       }
     }
   }

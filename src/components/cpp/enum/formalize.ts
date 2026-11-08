@@ -29,6 +29,9 @@ function enumerators(n: SemanticNode): Enumerator[] | null {
 
 const enumeratorId = (n: SemanticNode, name: string): string => `${n.id}/${name}`
 
+/** 列舉在 Cella 那邊的名字：有 Tag 用 Tag，`typedef enum { … } Kind;` 用別名（2026-11-08，同結構那顆） */
+const enumName = (n: SemanticNode): string => String(n.properties?.name ?? '') || String(n.properties?.typedef_alias ?? '')
+
 function valueOf(e: Enumerator, n: SemanticNode, f: FormalizeContext): CellaJson | null | undefined {
   if (e.value === null) return null
   const m = /^(-)?\s*(\d+)$/.exec(e.value)
@@ -55,14 +58,20 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   }
   r.item('cpp:enum', (n, f) => {
     const cs = members(n, f)
-    return 'miss' in cs ? [cs.miss] : [f.k('iEnum', { n: n.id, name: String(n.properties?.name ?? ''), cs })]
+    return 'miss' in cs ? [cs.miss] : [f.k('iEnum', { n: n.id, name: enumName(n), cs })]
   })
   // 區塊裡的列舉（`int main(){ enum Level {…}; }`）：敘述 sType 包 tdEnum（cella 2026-11-03；區域的 struct／union／typedef 也是同一個 sType）
   r.stmt('cpp:enum', (n, f) => {
     const cs = members(n, f)
-    return 'miss' in cs ? [cs.miss] : [f.k('sType', { n: `${n.id}/stmt`, d: f.k('tdEnum', { n: n.id, name: String(n.properties?.name ?? ''), cs }) })]
+    return 'miss' in cs ? [cs.miss] : [f.k('sType', { n: `${n.id}/stmt`, d: f.k('tdEnum', { n: n.id, name: enumName(n), cs }) })]
   })
-  r.definesEnum('cpp:enum', (n) => String(n.properties?.name ?? ''))
+  r.definesEnum('cpp:enum', (n) => enumName(n))
+  // `typedef enum Tag { … } Kind;`：兩個名字都能當型別——別名當型別巨集展開成 `enum Tag`（同結構那顆）
+  r.definesMacro('cpp:enum', (n) => {
+    const alias = String(n.properties?.typedef_alias ?? '')
+    const tag = String(n.properties?.name ?? '')
+    return alias && tag && alias !== tag ? { name: alias, value: `enum ${tag}` } : null
+  })
   // 作用域：每個列舉常數是一個宣告（`int c = GREEN;` 的 GREEN 指到它）
   r.scope('cpp:enum', (n, w) => {
     for (const e of enumerators(n) ?? []) w.declare(e.name, enumeratorId(n, e.name))
