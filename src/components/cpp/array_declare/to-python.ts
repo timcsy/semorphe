@@ -1,9 +1,9 @@
-/** `cpp:array_declare` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { paren } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
-  r.stmt('cpp:array_declare', (n, py, depth) => {
+  r.stmt((n, py, depth) => {
     const name = String(n.properties.name ?? '')
     const t = String(n.properties.type ?? '')
     const zero = /^(int|long|long long|short)$/.test(t) ? '0' : t === 'double' ? '0.0' : null

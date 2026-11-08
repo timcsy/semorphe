@@ -3,7 +3,7 @@
  * 引擎（`../cpp-to-python.ts`）依身分查表；表外的身分記成「子集以外」。
  */
 import type { SemanticNode } from '../../../core/types'
-import type { KeepKind } from '../../../core/language-packs'
+import type { KeepKind } from '../../../core/language-conversion'
 
 export interface ToPythonContext {
   /** 一顆運算式節點寫成 Python 運算式文字（表外的身分會記保留、回傳佔位） */
@@ -20,6 +20,8 @@ export interface ToPythonContext {
   readonly inMain: boolean
   /** 把 `main` 的本體寫在頂層（depth 0），期間 `inMain` 為真 */
   blockAsMain(nodes: readonly SemanticNode[] | undefined): string[]
+  /** 這顆函式是骨架宣告的進入點嗎（問骨架宣告，不寫死 `main`——第八十六條之二） */
+  isEntryFunction(name: string): boolean
   /** 這個名字是程式自己定義的函式嗎（標準函式庫的呼叫第一版不換） */
   isUserFunction(name: string): boolean
   /** 這顆節點產生 bool 嗎（元件自己宣告的，`r.yieldsBool`）——印的時候 C++ 印 0／1、Python 印 True／False */
@@ -40,11 +42,14 @@ export const pyStr = (s: string): string => JSON.stringify(s)
 export type ExprFn = (n: SemanticNode, py: ToPythonContext) => string
 export type StmtFn = (n: SemanticNode, py: ToPythonContext, depth: number) => string[]
 
+/**
+ * 膠囊登記**自己**的印法——不寫自己的身分（收集器依膠囊所在的目錄對回 component.json 的身分；就近性護欄：身分不多擴散一個檔）
+ */
 export interface ToPythonRegistrar {
-  expr(componentId: string, fn: ExprFn): void
-  stmt(componentId: string, fn: StmtFn): void
+  expr(fn: ExprFn): void
+  stmt(fn: StmtFn): void
   /** 這顆元件產生 bool（比較、邏輯）——不靠 Cella 的型別表（它對 C++ 的比較回報 int，見 research R8） */
-  yieldsBool(componentId: string): void
+  yieldsBool(): void
 }
 
 export type RegisterToPython = (r: ToPythonRegistrar) => void

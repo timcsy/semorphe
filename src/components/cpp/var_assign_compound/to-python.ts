@@ -1,9 +1,9 @@
-/** `cpp:var_assign_compound` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { paren } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
-  r.stmt('cpp:var_assign_compound', (n, py, depth) => {
+  r.stmt((n, py, depth) => {
     const op = String(n.properties.operator ?? '')
     const target = n.slots.target?.[0]
     const value = n.slots.value?.[0]

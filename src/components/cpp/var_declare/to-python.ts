@@ -1,8 +1,8 @@
-/** `cpp:var_declare` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
-  r.stmt('cpp:var_declare', (n, py, depth) => {
+  r.stmt((n, py, depth) => {
     // 一行好幾個（`int a = 7, b = 3;`）：宣告子各自是一顆 var_declare
     if (n.slots.declarators?.length) return n.slots.declarators.flatMap((d) => py.block([d], depth))
     const type = String(n.properties.type ?? '')

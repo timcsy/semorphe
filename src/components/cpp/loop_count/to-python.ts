@@ -1,10 +1,10 @@
-/** `cpp:loop_count` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { paren } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   // `for (int i = a; i < b; i++)` → for i in range(a, b)；`<=` → range(a, b + 1)
-  r.stmt('cpp:loop_count', (n, py, depth) => {
+  r.stmt((n, py, depth) => {
     const v = String(n.properties.var_name ?? 'i')
     // 本體改了迴圈變數：C++ 的下一圈看得到、Python 的 range 看不到——第一版不換（問形狀：有 target 槽、指到同名變數）
     const writes = (x: import('../../../core/types').SemanticNode): boolean =>

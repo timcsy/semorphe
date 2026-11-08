@@ -1,8 +1,8 @@
-/** `cpp:if` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
-  r.stmt('cpp:if', (n, py, depth) => {
+  r.stmt((n, py, depth) => {
     const out = [`${py.indent(depth)}if ${py.expr(n.slots.condition?.[0])}:`, ...py.block(n.slots.then_body, depth + 1)]
     let els = n.slots.else_body ?? []
     // else if 鏈 → elif（問形狀：else 本體只有一顆、而它有 condition 與 then_body）

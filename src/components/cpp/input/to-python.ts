@@ -1,9 +1,9 @@
-/** `cpp:input` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   // `cin >> a >> b;` → 一個一個讀詞（同 cin；research R4 的修正）；型別照宣告：int／float／str
-  r.stmt('cpp:input', (n, py, depth) => {
+  r.stmt((n, py, depth) => {
     const targets = n.slots.values ?? []
     if (targets.length === 0) return []
     const conv = targets.map((t) => {

@@ -23,6 +23,7 @@
  *
  * 見 `knowledge/concepts/宣告登記處.md`、`specs/161-manifest-language-loading/`
  */
+import type { LanguageConversion } from './language-conversion'
 import type { Topic, Target, StylePreset, ToolboxCategoryDef, SemanticNode } from './types'
 
 /**
@@ -348,13 +349,3 @@ export function fileExtensionOf(languageId: string | undefined): string {
   return ext && ext.startsWith('.') ? ext : '.txt'
 }
 
-/** 換到另一個語言的結果（spec 219）。 */
-export interface LanguageConversion {
-  code: string | null
-  converted: number
-  kept: number
-  reasons: { nodeId: string; line?: number; kind: KeepKind; detail: string }[]
-}
-
-/** 保留的原因類別（spec 219 contracts）。 */
-export type KeepKind = 'overflow' | 'division' | 'modulo' | 'char' | 'pointer' | 'class' | 'template' | 'outside-subset' | 'needs-types'

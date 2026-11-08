@@ -1,10 +1,10 @@
-/** `cpp:compare` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { paren } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
-  r.yieldsBool('cpp:compare')
-  r.expr('cpp:compare', (n, py) => {
+  r.yieldsBool()
+  r.expr((n, py) => {
     const op = String(n.properties.operator ?? '')
     const l = n.slots.left?.[0], rr = n.slots.right?.[0]
     // `a % b == 0`／`!= 0`：正負號不影響「是不是 0」⟹ 取餘數在這裡可以換（research R4）

@@ -1,8 +1,8 @@
-/** `cpp:builtin_constant` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
-  r.expr('cpp:builtin_constant', (n, py) => {
+  r.expr((n, py) => {
     const v = String(n.properties.value ?? '')
     if (v === 'true') return 'True'
     if (v === 'false') return 'False'

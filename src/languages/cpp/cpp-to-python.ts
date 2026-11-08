@@ -6,7 +6,8 @@
  * - 換得對不對由 Cella 判：護欄 `tests/integration/cpp-to-python-verdict.test.ts` 對兩邊的判決、輸出、assumes（契約 C3）。
  */
 import type { SemanticNode } from '../../core/types'
-import type { KeepKind, LanguageConversion } from '../../core/language-packs'
+import type { KeepKind, LanguageConversion } from '../../core/language-conversion'
+import { skeletonsOfLanguage, entryFunctionOf } from '../../core/skeleton'
 import type { ToPythonContext } from './to-python/contract'
 import { collectToPython, type ToPythonTables } from './to-python/registry'
 
@@ -45,6 +46,8 @@ export function convertCppToPython(tree: SemanticNode, types: Readonly<Record<st
       try { return (nodes ?? []).flatMap((c) => stmt(c, 0)) } finally { inMain = was }
     },
     isUserFunction: (name) => userFunctions.has(name),
+    // 只有一個進入點的 C++ 骨架（`main`）——Arduino 的 setup／loop 兩個進入點攤不平，不在這裡
+    isEntryFunction: (name) => skeletonsOfLanguage('cpp').some((sk) => sk.entryFunctions.length === 1 && !!entryFunctionOf(sk, name)),
     yieldsBool: (n) => !!n && t.bool.has(n.componentId),
     useTokenReader() { needTokens = true; return 'next_token()' },
     indent: (d) => '    '.repeat(d),
@@ -75,6 +78,6 @@ export function convertCppToPython(tree: SemanticNode, types: Readonly<Record<st
   const lines = stmt(tree, 0)
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   // 跨行讀一個詞——同 cin（空白與換行都是分隔；research R4 的修正：課文的輸入一個數一行，「一句讀一行」對不上）
-  const head = needTokens ? [...TOKEN_READER, ''] : []
+  const head = needTokens ? [...TOKEN_READER] : []
   return { code: `${[...head, ...lines].join('\n')}\n`, converted, kept: 0, reasons }
 }

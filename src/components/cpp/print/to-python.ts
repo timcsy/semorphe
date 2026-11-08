@@ -1,15 +1,16 @@
-/** `cpp:print` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { isLineBreak } from '../../../languages/cpp/lang/node-traits'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   // `cout << a << b << endl` → print(a, b, sep="")；沒有 endl 結尾 → end=""。值照型別：double 用 :g（同 cout 預設）、bool 印 0／1
-  r.stmt('cpp:print', (n, py, depth) => {
+  r.stmt((n, py, depth) => {
     const values = n.slots.values ?? []
     const lines: string[] = []
     let seg: string[] = []
     const flush = (newline: boolean): void => {
-      const args = [...seg, 'sep=""', ...(newline ? [] : ['end=""'])]
+      // 只有一個值時不寫 sep（道地的寫法）；好幾個值時 sep="" 讓它們接在一起（同 cout）
+      const args = [...seg, ...(seg.length > 1 ? ['sep=""'] : []), ...(newline ? [] : ['end=""'])]
       lines.push(`${py.indent(depth)}print(${args.join(', ')})`)
       seg = []
     }

@@ -1,11 +1,11 @@
-/** `cpp:func_def` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
-  r.stmt('cpp:func_def', (n, py, depth) => {
+  r.stmt((n, py, depth) => {
     const name = String(n.properties.name ?? '')
-    // main 的本體攤平到頂層（Python 的程式從頂層開始跑）
-    if (name === 'main' && depth === 0) {
+    // 骨架的進入點（C++ 的 main）本體攤平到頂層（Python 的程式從頂層開始跑）
+    if (py.isEntryFunction(name) && depth === 0) {
       // 最後一句 `return 0;` 拿掉（問形狀：只有 value 槽、值是字面 0）；中途的 return 由 return 那顆保留（後面的程式不會跑）
       const body = [...(n.slots.body ?? [])]
       const last = body[body.length - 1]

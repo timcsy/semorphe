@@ -1902,9 +1902,16 @@ export class App {
         const before = this.currentTree ?? this.blocklyPanel?.extractSemanticTree()
         const check = before ? this.checkRequest(before).req : null
         const known = this.lastTypes
+        const fromTarget = this.currentTarget
+        const fromTopic = this.currentTopic
+        const codeBefore = this.codeView?.getCode() ?? ''
         this.handleTargetChange(target, topic)
         if (before && fromLanguage === topic.language && fromStyle.id !== this.currentStylePreset.id) {
           void this.convertAfterStyleChange(before, check, fromStyle, known)
+        }
+        // 換了語言（C++ → Python，spec 219）：問【來源語言】的套件
+        if (before && fromLanguage && fromTopic && fromLanguage !== topic.language) {
+          void this.convertAfterLanguageChange(before, check, fromLanguage, known, { target: fromTarget, topic: fromTopic, code: codeBefore })
         }
       },
       // 🪦 **`onBranchesChange` 於 2026-09-20 退場**——「選擇範圍」那個下拉
@@ -2938,6 +2945,46 @@ export class App {
    * 向判決要**舊程式**的型別（換不換由它判斷意思會不會變）、把換好的樹寫回兩個投影、說出換了幾行保留幾行。
    * ⚠️ 判決還沒暖好、拿不到型別時，只換得動純文字那幾行——其餘保留，照實說（P6）。
    */
+  /**
+   * **換了語言之後，程式換成新語言的寫法**（跨語言互轉第二對 C++ → Python，spec 219）。
+   *
+   * 換法由**來源語言**的套件提供（`convertToLanguage`，它懂自己的元件）；回傳的是目標語言的原始碼，以程式碼為準重畫積木（research R7）。
+   * 整支換或不換：有保留原因 ⟹ 回到原本的目標、程式原樣放回，說出原因（Python 程式裡不能留一行 C++）。
+   * 型別照第一對：先用切換前那一次判決的，對不上才另外問；等待時使用者又換了目標或改了程式 ⟹ 這一次作廢。
+   */
+  private async convertAfterLanguageChange(
+    before: SemanticNode, check: Parameters<NonNullable<Provider['check']>>[0] | null, fromLanguage: string,
+    known: { tree: SemanticNode; nodes: Readonly<Record<string, string>> } | null,
+    back: { target: Target; topic: Topic; code: string },
+  ): Promise<void> {
+    const pack = languagePack(fromLanguage)
+    if (!pack?.convertToLanguage) return
+    const toLanguage = this.currentTopic.language
+    const targetAtSwitch = this.currentTarget
+    let types: Readonly<Record<string, string>> = (known && carryTypes(known.tree, known.nodes, before)) ?? {}
+    const p = provide('verdict').provider
+    // 判決還沒暖好也等它（`check` 會自己載入；換語言的每一處都要型別——不等的話剛開頁面就換，整支都會因「需要型別」退回）。最多等 15 秒
+    if (Object.keys(types).length === 0 && check && p?.check) {
+      const timeout = new Promise<null>((res) => setTimeout(() => res(null), 15_000))
+      try { const a = await Promise.race([p.check(check), timeout]); if (a && !a.stale) types = a.types?.nodes ?? {} } catch { types = {} }
+    }
+    if (this.currentTarget !== targetAtSwitch) return
+    const r = pack.convertToLanguage(before, toLanguage, types)
+    if (!r) return
+    if (r.code !== null) {
+      this.codeView?.setCode(r.code)
+      await this.syncController?.syncCodeToBlocks(r.code)
+      showToast(msg('LANG_CONVERTED', '換成 {target} 的寫法：{n} 句').replace('{target}', this.currentTarget.name).replace('{n}', String(r.converted)), 'success')
+      return
+    }
+    // 整支不換：回到原本的目標、程式原樣放回，說出卡在哪裡
+    this.handleTargetChange(back.target, back.topic)
+    this.codeView?.setCode(back.code)
+    await this.syncController?.syncCodeToBlocks(back.code)
+    const lines = [...new Set(r.reasons.map((x) => `${x.line ? msg('LANG_KEPT_LINE', '第 {line} 行：').replace('{line}', String(x.line)) : ''}${x.detail}`))].slice(0, 4)
+    showToast(`${msg('LANG_KEPT', '這支程式還不能換成 {target}，維持原本的寫法').replace('{target}', targetAtSwitch.name)}——${lines.join('；')}`, 'warning')
+  }
+
   private async convertAfterStyleChange(
     before: SemanticNode, check: Parameters<NonNullable<Provider['check']>>[0] | null, from: StylePreset,
     known: { tree: SemanticNode; nodes: Readonly<Record<string, string>> } | null,

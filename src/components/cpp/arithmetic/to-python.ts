@@ -1,9 +1,9 @@
-/** `cpp:arithmetic` 寫成 Python（spec 219，research R7）。 */
+/** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { paren } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
-  r.expr('cpp:arithmetic', (n, py) => {
+  r.expr((n, py) => {
     const op = String(n.properties.operator ?? '')
     const l = n.slots.left?.[0], rr = n.slots.right?.[0]
     if ([py.typeOf(l), py.typeOf(rr)].some((t) => (t ?? '').replace(/^const\s+/, '') === 'char')) return py.keep(n, 'char', 'char 參與運算：C++ 的 char 是整數，Python 的是字串')
