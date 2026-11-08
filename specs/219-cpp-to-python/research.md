@@ -72,3 +72,14 @@ random_next 1 · array_assign 1 · string_size 1 · loop_range 1
 2. **Cella 的型別表對 C++ 的比較與邏輯運算式回報 `int`**（C++ 標準是 `bool`，`int` 是 C 的規則）——`cout << (a > 5)` 照型別表會被當成整數照印，Python 印出 `True`。
    比較、邏輯、`not` 三顆元件自己宣告 `yieldsBool`，印的時候包 `int(…)`，不靠型別表；同時回報 cella。
 3. `sum / v.size()` 的型別是 `unsigned long`（int 被轉成無號）——負數時 C++ 繞回（有定義的行為）、Python 不會 ⟹ 保留（`division`）。
+
+## R9 · （365）第三刀：二維陣列、sqrt／abs、pow、範圍 for、陣列元素指定、string 參數
+
+- 二維陣列 → `[[0] * C for _ in range(R)]`（每一列各自一個 list；`[[0] * C] * R` 會讓每一列是同一個 list）。
+- `sqrt` → `math.sqrt`、`abs`／`fabs` → `abs`、`pow(a, b)` → `a ** b`（印法照 Cella 的型別：double ⟹ `format(…, "g")`）。
+  ⚠️ **已知差異**：`sqrt` 的負數——C++ 得 nan、Python 丟例外。判決只在給定的輸入上證明相同；第一版接受（課文的程式沒有開負數的平方根）。
+  `floor`／`ceil` 不換：C++ 回傳浮點、Python 回傳整數，後續運算會不同。
+- 範圍 for 以值走訪 → `for x in v`；以參考走訪（`int& x`）照舊保留。
+- string 以值或 const 參考傳 → 照傳（Python 的字串不能改，兩邊意思相同）。
+- 🔴 `s[0] = 'z'` 也是「陣列元素指定」那一顆——接上它時差點把改字串字元的程式換過去（Python 的字串不能改）；反例抓到，元素是 char 時保留。
+- 量到：cpp-beginner 64 支換過去 52／保留 12（取餘數 11 筆、子集以外 6 筆、除法 1 筆）。

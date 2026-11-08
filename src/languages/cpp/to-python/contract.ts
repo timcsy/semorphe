@@ -28,6 +28,8 @@ export interface ToPythonContext {
   isUserFunction(name: string): boolean
   /** 這顆節點產生 bool 嗎（元件自己宣告的，`r.yieldsBool`）——印的時候 C++ 印 0／1、Python 印 True／False */
   yieldsBool(n: SemanticNode | undefined): boolean
+  /** 程式需要引入某個 Python 模組（`math`）——引擎在檔頭補上 `import …`，回傳模組名 */
+  useImport(module: string): string
   /** 程式需要「跨行讀一個詞」的小工具（同 cin 的讀法）——引擎在檔頭補上 */
   useTokenReader(): string
 }
