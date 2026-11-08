@@ -676,6 +676,7 @@
   "FLOW_SLOT_INDEX": "Index",
   "FLOW_SLOT_INIT": "Init",
   "FLOW_SLOT_INIT_STYLE": "Init style",
+  "FLOW_SLOT_OPERAND_KIND": "Operand kind",
   "FLOW_SLOT_INITIALIZER": "Initial value",
   "FLOW_SLOT_INITS": "Initializers",
   "FLOW_SLOT_ARROW": "Through a pointer (->)",

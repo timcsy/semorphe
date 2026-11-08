@@ -316,6 +316,12 @@ export const KNOWN_AXES: Record<string, FormAxis> = {
    * 換插槽形狀，所以排在只換標籤的 container_kind 之前。
    */
   init_style: { name: 'init_style', from: 'property', property: 'init_style', priority: 2, neutralIsOrdinary: true },
+  /**
+   * 依運算元是什麼：型別或單一名字（中性，一格文字）／一個運算式（值 `expression`，一格輸入槽）。
+   * `sizeof a.bytes`、`sizeof(a[0])` 的對象是運算式——以前壓成一串文字，formalize 要用正規式拆回結構（355，元件代數〈屬性的結構化邊界〉）。
+   * 單一名字留在中性：語法分不出 `sizeof(T)` 的 T 是型別還是變數，查宣告是 formalize 的事。換插槽形狀，所以與 init_style 同一級。
+   */
+  operand_kind: { name: 'operand_kind', from: 'property', property: 'operand_kind', priority: 2, neutralIsOrdinary: true },
 }
 
 /** 建形態集合所需要的最小資訊——刻意不吃整個 BlockSpec，讓它好測 */
