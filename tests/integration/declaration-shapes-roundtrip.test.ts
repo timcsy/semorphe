@@ -216,6 +216,8 @@ import { registerCppExtractStrategies } from '../../src/languages/cpp/extractors
 /** 從那份語料抽出來的、**曾經讓整個工作區載不進去**的形狀。 */
 const LOADABLE_SHAPES: readonly string[] = [
   ...SHAPES,
+  // sizeof 的對象是運算式（355：升格成接點，積木是運算式形態）
+  '    int v[3];\n    int k = sizeof(v[0]) + sizeof(v[1] + 1);',
   // 🔴 `cc[A[i]];` 是離散化的慣用寫法——一個沒有敘述形態的運算式當語句用
   '    int idx[3];\n    idx[0];',
   '    map<int, int> cc;\n    cc[1];',
@@ -341,6 +343,7 @@ describe('第一百一十八條護欄：走一趟積木回來', () => {
    */
   it.each([
     ['int a[10], b[20];', 'int a[10]; int b[20];'],
+    ['int v[3]; int k = sizeof(v[0]) + sizeof(int);', 'int v[3]; int k = sizeof(v[0]) + sizeof(int);'],
     ['int* p, * q;', 'int* p; int* q;'],
     ['vector<int> C(n), V(n);', 'vector<int> C(n); vector<int> V(n);'],
     ['vector<int> C(n + 1), V(n + 1);', 'vector<int> C(n + 1); vector<int> V(n + 1);'],

@@ -307,11 +307,12 @@ describe('第 213 刀：學生語料剩下的形狀（Cella 0.1.202611011759）'
     expect(blk.body[2].init).toBeNull()
   })
 
-  it('🔴 sizeof 的字面量送型別（sizeof(1) 是 int 的大小）；sizeof(a[0]) 是一個元素', () => {
-    const r = fz('int main() { int a[10]; cout << sizeof(1) << sizeof(1.0) << sizeof(true) << sizeof(a[0]); }')
+  // 355：對象是運算式（含字面量）時住在接點，照原樣送 eSizeofE——型別由 Cella 算（以前送型別是我們替它推、`a[0]` 靠正規式）
+  it('🔴 sizeof 的字面量與 a[0] 都送運算式（eSizeofE），型別名送 eSizeof', () => {
+    const r = fz('int main() { int a[10]; cout << sizeof(1) << sizeof(1.0) << sizeof(true) << sizeof(a[0]) << sizeof(int); }')
     expect(r.unknown).toEqual([])
-    expect(find(r.program, 'eSizeof').map((s) => s.t.k)).toEqual(['tInt', 'tDouble', 'tBool'])
-    expect(find(r.program, 'eSizeofE')[0].e.k).toBe('eIndex')
+    expect(find(r.program, 'eSizeofE').map((s) => s.e.k)).toEqual(['eNum', 'eFloat', 'eBool', 'eIndex'])
+    expect(find(r.program, 'eSizeof').map((s) => s.t.k)).toEqual(['tInt'])
   })
 
   it('★ 純量的 T() 是零：(T)0；類別的照實標 unknown', () => {
