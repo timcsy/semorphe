@@ -21,13 +21,13 @@
 **Goal**: C 題目兩個解讀，三支示範程式的比對結果 {A}／{B}／{}，不一致附情境與兩邊輸出。
 **Independent Test**: `tests/integration/disambiguation-c.test.ts` 全綠。
 
-- [ ] T007 [P] [US1] 先寫紅的單元測試：比對器的四種狀態（一致、不一致附第一個、不可比、分不出的解讀群）用假的 Judge，於 `tests/unit/core/disambiguation/compare.test.ts`
-- [ ] T008 [US1] 實作 `compareInterpretations` 於 `src/core/disambiguation/compare.ts`（不 import DOM／fs／提供者；判決不是 accept 的情境標不可比；單一解讀退化成對錯）
-- [ ] T009 [P] [US1] 把 `tests/helpers/stdin-from-tree.ts` 的邏輯搬到 `src/languages/cpp/scenarios/stdin.ts`，測試輔助改成 re-export（既有測試不動）
-- [ ] T010 [US1] C 的 `stdin` 情境產生器：依讀取的型別與順序產生多組（一般、空輸入、提前結尾、0、負數、大數），登記 kind，於 `src/languages/cpp/scenarios/stdin.ts`；在語言套件的組裝點登記（`src/languages/cpp/pack.ts` 或同層的註冊點）
-- [ ] T011 [P] [US1] 示範題：在 `lessons/c-bridge/` 挑一課加一題（讀一串數字印最大值：讀到 0 停 vs. 讀到檔尾停），`lesson.json` 宣告兩個解讀、`solutions/<task>~zero.c`、`solutions/<task>~eof.c`，同時保留 `solutions/<task>.c`（= 其中一個，給今天的對錯與 Parsons）
-- [ ] T012 [US1] 先寫紅的整合測試：三支示範程式（符合 zero、符合 eof、都不符）的比對結果與第一個不一致情境，Judge 包 `runCella`，於 `tests/integration/disambiguation-c.test.ts`；再讓它轉綠
-- [ ] T013 [US1] 退化測試：既有課文（沒宣告解讀）的對錯不變，於 `tests/integration/disambiguation-c.test.ts`
+- [X] T007 [P] [US1] 先寫紅的單元測試：比對器的四種狀態（一致、不一致附第一個、不可比、分不出的解讀群）用假的 Judge，於 `tests/unit/core/disambiguation/compare.test.ts`
+- [X] T008 [US1] 實作 `compareInterpretations` 於 `src/core/disambiguation/compare.ts`（不 import DOM／fs／提供者；判決不是 accept 的情境標不可比；單一解讀退化成對錯）
+- [X] T009 [P] [US1] 把 `tests/helpers/stdin-from-tree.ts` 的邏輯搬到 `src/languages/cpp/scenarios/stdin.ts`，測試輔助改成 re-export（既有測試不動）
+- [X] T010 [US1] C 的 `stdin` 情境產生器：依讀取的型別與順序產生多組（一般、空輸入、提前結尾、0、負數、大數），登記 kind，於 `src/languages/cpp/scenarios/stdin.ts`；在語言套件的組裝點登記（`src/languages/cpp/pack.ts` 或同層的註冊點）
+- [X] T011 [P] [US1] 示範題：在 `lessons/c-bridge/` 挑一課加一題（讀一串數字印最大值：讀到 0 停 vs. 讀到檔尾停），`lesson.json` 宣告兩個解讀、`solutions/<task>~zero.c`、`solutions/<task>~eof.c`，同時保留 `solutions/<task>.c`（= 其中一個，給今天的對錯與 Parsons）
+- [X] T012 [US1] 先寫紅的整合測試：三支示範程式（符合 zero、符合 eof、都不符）的比對結果與第一個不一致情境，Judge 包 `runCella`，於 `tests/integration/disambiguation-c.test.ts`；再讓它轉綠
+- [X] T013 [US1] 退化測試：既有課文（沒宣告解讀）的對錯不變，於 `tests/integration/disambiguation-c.test.ts`
 
 ## Phase 4: User Story 2 — Arduino 題目也能比（P2）
 
