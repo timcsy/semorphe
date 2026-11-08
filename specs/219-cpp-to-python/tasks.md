@@ -17,7 +17,7 @@
 **Goal**: 只用入門子集的 C++ 程式換成道地 Python，兩邊判決相同。
 **Independent Test**: T003 的護欄裡「換過去」那一份全部判決相同。
 
-- [ ] T004 （護欄已逐類涵蓋，最小例的單元測試待補）[US1] 單元測試（先紅）：最小程式逐類——印字串與整數（含 endl／無 endl）、宣告與指定、四則（含整數除法 → `int(a / b)`）、if／else、while、計數 for → `for i in range(…)`、函式定義與呼叫、讀整數（一句 cin → 一行拆開）、vector／陣列 → list in `src/languages/cpp/cpp-to-python.test.ts`
+- [X] T004 （366：搬到專案慣例的位置 `tests/unit/languages/cpp/cpp-to-python.test.ts`，8 類逐字斷言）[US1] 單元測試（先紅）：最小程式逐類——印字串與整數（含 endl／無 endl）、宣告與指定、四則（含整數除法 → `int(a / b)`）、if／else、while、計數 for → `for i in range(…)`、函式定義與呼叫、讀整數（一句 cin → 一行拆開）、vector／陣列 → list in `src/languages/cpp/cpp-to-python.test.ts`
 - [X] T005 [US1] 改寫的骨架：走樹、每顆 C++ 節點查表換成 Python 節點、遇到表外的身分記 `outside-subset`；整支換或不換（契約 C1）in `src/languages/cpp/cpp-to-python.ts`
 - [X] T006 [US1] 結構：program／func_def(main) 的本體攤平成頂層、`return 0` 拿掉、include／using 拿掉；其他函式 → def in `src/languages/cpp/cpp-to-python.ts`
 - [X] T007 [US1] 輸出：cout 鏈 → print（endl 結尾 ⟹ 預設換行；否則 `end=""`；多個值之間 `sep=""`）；double 值 → `f"{x:g}"`（需要型別，拿不到記 `needs-types`）in `src/languages/cpp/cpp-to-python.ts`
@@ -51,8 +51,8 @@
 ## Phase 6: Polish
 
 - [X] T022 e2e：C++ 目標寫兩數相加 → 換到 Python → 編輯器裡是 Python、提示換了幾行；寫一支用指標的 → 換 → 程式不變、目標回 C++ in `e2e/cpp-to-python.spec.ts`
-- [ ] T023 test:guard（新檔、新匯出、語料會動的基線照實手調並寫 note）
-- [ ] T024 長測試（全套＋建置＋e2e）在合併後的狀態；合併；history ＋ vision 互轉那一行（第二對第一版）
+- [X] T023 test:guard（新檔、新匯出、語料會動的基線照實手調並寫 note）
+- [X] T024 （363 合併 55498a49、history/353） 長測試（全套＋建置＋e2e）在合併後的狀態；合併；history ＋ vision 互轉那一行（第二對第一版）
 
 ## Dependencies
 
@@ -66,3 +66,11 @@
 ## Implementation Strategy
 
 MVP = Phase 1～3（US1）：護欄裡至少一半換得過去且判決相同、app 換目標時接得上。US2 緊接著做（同為 P1，保證「換錯 = 0」）。
+
+## 成功條件的量測（366）
+
+- **SC-001**：cpp-beginner 64 支換過去 52（≥ 一半）——護欄 `cpp-to-python-verdict` 的報表。
+- **SC-002**：換過去的判決與輸出逐字相同 100%——同一支護欄逐支比。
+- **SC-003**：反例 8 種各自保留、原因類別正確（或換成意思相同的寫法並由判決證明）——同一支護欄。
+- **SC-004**：換目標到看到 Python 程式 **340 ms**（門檻 3 秒；e2e `cpp-to-python.spec.ts` 的 SC-004 那一支量）。
+- **SC-005**：換好的程式由 Python 自己的 lift 認得乾淨、產碼回來同一支——T021，護欄對換過去的每一支都驗。
