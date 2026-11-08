@@ -4,4 +4,4 @@
 - [x] T002 實作 `src/core/proposals/vocabulary.ts` 的 `vocabularyOf(schema, componentIds)`：屬性與接點從 `OpSchema` 取（與形態檢查同一份），位置從 `positionsOf`
 - [x] T003 `OpSchema` 加 `ids()`（它認得的元件身分）；App 的 `proposals.vocabulary()` 依目前語言的前綴過濾
 - [x] T004 e2e：`__app.proposals.vocabulary()` 回 C++ 的詞彙、用其中一筆組的提議通過
-- [ ] T005 型別、unit、guard（基線手改附 note）、長測試
+- [x] T005 型別、unit、guard（基線手改附 note）、長測試
