@@ -416,6 +416,11 @@ export type WebviewMessage =
    * ——🔴 而那要**說得出來**，不是靜默什麼都不做（FR-007）。
    */
   | { type: 'revealNode'; nodeId: string | null; range: { startLine: number; endLine: number } | null }
+  /**
+   * **收合狀態在程式碼那一側的投影**（spec 223）：摺這幾行、展開那幾行（0 起算的起始行）。
+   * ⚠️ 單向——使用者在 IDE 裡自己摺，宿主的 API 沒有事件告訴我們，所以不會回推成收合狀態。
+   */
+  | { type: 'fold'; fold: number[]; unfold: number[] }
   | { type: 'viewStateChanged'; state: ViewState }
   /** 面板上的選單被改了。⚠️ 主行程寫進 **workspace** 層級（使用者拍板）。 */
   | { type: 'configChanged'; key: string; value: string }
