@@ -34,3 +34,16 @@ test('換不了的程式（用了指標）：程式不動、目標回到 C++、�
   await expect.poll(async () => (await codeLines(page)).join('\n'), { timeout: 10_000 }).toContain('int* p = &x;')
   await expect(page.locator('.toast').filter({ hasText: /還不能換成/ })).toBeVisible({ timeout: 10_000 })
 })
+
+// SC-004：換目標後 3 秒內在編輯器看到換好的 Python 程式（從點下那一項開始量；判決要暖機，第一次最慢——量的就是第一次）
+test('SC-004：換目標到看到 Python 程式，3 秒內', async ({ page }) => {
+  await freshApp(page)
+  await setCpp(page, '#include <iostream>\nusing namespace std;\nint main() {\n    int n;\n    cin >> n;\n    cout << n * 2 << endl;\n    return 0;\n}\n')
+  await page.locator('.status-item-btn[data-control-id="target"]').click()
+  const t0 = Date.now()
+  await page.locator('.quick-pick-item[data-value="python"]').click()
+  await expect.poll(async () => (await codeLines(page)).join('\n'), { timeout: 15_000, intervals: [50] }).toContain('print(n * 2)')
+  const ms = Date.now() - t0
+  console.log(`SC-004：換目標到看到 Python 程式 ${ms} ms`)
+  expect(ms, `${ms} ms`).toBeLessThan(3000)
+})
