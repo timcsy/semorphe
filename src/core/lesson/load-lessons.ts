@@ -72,13 +72,30 @@ export function starterFor(lessonId: string, taskId: string): string | undefined
   return undefined
 }
 
-/** `<課程 id>` ＋ `<題目 id>` → 那份參考解答。⚠️ 沒有就是 `undefined`。 */
-export function solutionFor(lessonId: string, taskId: string): string | undefined {
-  const prefix = `/lessons/${lessonId}/solutions/${taskId}.`
-  for (const [path, code] of Object.entries(SOLUTION_FILES)) {
-    if (path.startsWith(prefix)) return code
+/**
+ * 從一張「路徑 → 內容」的表挑出一份解答（純函式，spec 218 R3）：
+ * - 沒有解讀：只認 `<題目>.<副檔名>`（副檔名裡不准再有點或 `~`）
+ * - 有解讀：`<題目>~<解讀>.<副檔名>`
+ */
+export function pickSolution(files: Readonly<Record<string, string>>, lessonId: string, taskId: string, interpretation?: string): string | undefined {
+  const dir = `/lessons/${lessonId}/solutions/`
+  const stem = interpretation ? `${taskId}~${interpretation}` : taskId
+  for (const [path, code] of Object.entries(files)) {
+    if (!path.startsWith(dir)) continue
+    const name = path.slice(dir.length)
+    if (name.startsWith(`${stem}.`) && /^[^.~]+$/.test(name.slice(stem.length + 1))) return code
   }
   return undefined
+}
+
+/** `<課程 id>` ＋ `<題目 id>` → 那份參考解答。⚠️ 沒有就是 `undefined`。 */
+export function solutionFor(lessonId: string, taskId: string): string | undefined {
+  return pickSolution(SOLUTION_FILES, lessonId, taskId)
+}
+
+/** 某一題某一個解讀的參考解答（spec 218）。⚠️ 沒有就是 `undefined`。 */
+export function interpretationSolutionFor(lessonId: string, taskId: string, interpretation: string): string | undefined {
+  return pickSolution(SOLUTION_FILES, lessonId, taskId, interpretation)
 }
 
 const TRACK_FILES = import.meta.glob('/lessons/*/track.json', { eager: true }) as Record<

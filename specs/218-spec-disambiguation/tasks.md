@@ -6,15 +6,15 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 建資料夾 `src/core/disambiguation/` 與 `src/languages/cpp/scenarios/`（各放一行說明它住誰的檔頭註解於第一個檔案裡，不另建 README）
+- [X] T001 建資料夾 `src/core/disambiguation/` 與 `src/languages/cpp/scenarios/`（各放一行說明它住誰的檔頭註解於第一個檔案裡，不另建 README）
 
 ## Phase 2: Foundational（阻擋所有 US）
 
-- [ ] T002 [P] 寫型別 `Scenario`、`Interpretation`、`RunOutcome`、`ComparisonResult`、`Judge` 於 `src/core/disambiguation/types.ts`（照 data-model.md）
-- [ ] T003 [P] 先寫紅的測試：登記處兩次登記同一個 kind 會 throw、產生器決定性、每種上限 20，於 `tests/unit/core/disambiguation/scenario-registry.test.ts`
-- [ ] T004 實作 `registerScenarioKind`／`scenariosFor` 於 `src/core/disambiguation/scenario-registry.ts`（核心不寫出任何 kind 名字）
-- [ ] T005 [P] 先寫紅的測試：`solutionFor('ex1')` 不得撈到 `ex1~a.c`；`interpretationSolutionFor(lesson, task, id)` 讀得到 `<task>~<id>.<ext>`，於 `tests/unit/core/lesson/interpretation-solutions.test.ts`
-- [ ] T006 `load-lessons.ts`：任務型別多 `interpretations?: {id,label}[]`；`solutionFor` 只比對 `<task>.<ext>`；新增 `interpretationSolutionFor`，於 `src/core/lesson/load-lessons.ts`
+- [X] T002 [P] 寫型別 `Scenario`、`Interpretation`、`RunOutcome`、`ComparisonResult`、`Judge` 於 `src/core/disambiguation/types.ts`（照 data-model.md）
+- [X] T003 [P] 先寫紅的測試：登記處兩次登記同一個 kind 會 throw、產生器決定性、每種上限 20，於 `tests/unit/core/disambiguation/scenario-registry.test.ts`
+- [X] T004 實作 `registerScenarioKind`／`scenariosFor` 於 `src/core/disambiguation/scenario-registry.ts`（核心不寫出任何 kind 名字）
+- [X] T005 [P] 先寫紅的測試：`solutionFor('ex1')` 不得撈到 `ex1~a.c`；`interpretationSolutionFor(lesson, task, id)` 讀得到 `<task>~<id>.<ext>`，於 `tests/unit/core/lesson/interpretation-solutions.test.ts`
+- [X] T006 `load-lessons.ts`：任務型別多 `interpretations?: {id,label}[]`；`solutionFor` 只比對 `<task>.<ext>`；新增 `interpretationSolutionFor`，於 `src/core/lesson/load-lessons.ts`
 
 ## Phase 3: User Story 1 — 學生的程式和哪幾種讀法一致（P1）🎯 MVP
 
