@@ -49,11 +49,8 @@ export interface ToCppRegistrar {
 }
 export type RegisterToCpp = (r: ToCppRegistrar) => void
 
-/** 子運算式是二元運算（有 left／right 槽）時加括號——不追優先序，寧可多一層括號 */
-export function paren(n: SemanticNode | undefined, cpp: ToCppContext): string {
-  const e = cpp.expr(n)
-  return n?.slots?.left && n?.slots?.right ? `(${e})` : e
-}
+/** 加括號的判準兩個方向共用（住在核心）——膠囊照舊從這裡拿 */
+export { paren } from '../../../core/language-conversion'
 
 /** C++ 的字串字面量（JSON 的跳脫與 C++ 相容：\"、\\、\n、\t） */
 export const cppString = (s: string): string => JSON.stringify(s)

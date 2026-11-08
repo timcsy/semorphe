@@ -34,11 +34,8 @@ export interface ToPythonContext {
   useTokenReader(): string
 }
 
-/** 子運算式是二元運算（有 left／right 槽）時加括號——不追優先序，寧可多一層括號 */
-export function paren(n: SemanticNode | undefined, py: ToPythonContext): string {
-  const e = py.expr(n)
-  return n?.slots?.left && n?.slots?.right ? `(${e})` : e
-}
+/** 加括號的判準兩個方向共用（住在核心）——膠囊照舊從這裡拿 */
+export { paren } from '../../../core/language-conversion'
 
 /** 這個值是 C++ 的 char 嗎（Cella 的型別表；`const char`、`char &` 也算）——Python 用長度 1 的字串表示它（364） */
 export function isChar(t: string | undefined): boolean {
