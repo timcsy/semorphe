@@ -23,17 +23,22 @@ export interface HardwareRecord {
   truncated: boolean
   /** 結束時的硬體；判決沒給（或給的讀不懂）時是 null。 */
   end: HardwareState | null
+  /**
+   * **為什麼停下**（使用者 11-07 的決定：結束時要說停的原因）——板子上的程式本來就不會自己結束：
+   * `simulated` 模擬跑到上限就停（真的板子會一直跑）；`fuel` 步數用完；`error` 執行期出錯（`detail` 是問題種類）。
+   */
+  stop: { kind: 'simulated' | 'fuel' | 'error'; detail?: string }
 }
 
 /** 判決 JSON → 硬體紀錄。不是板子上的程式（沒有 `pins`）回 null。 */
-export function hardwareOf(verdict: { pins?: unknown; pinsTruncated?: unknown; env?: unknown } | null): HardwareRecord | null {
+export function hardwareOf(verdict: { pins?: unknown; pinsTruncated?: unknown; env?: unknown; verdict?: unknown; problems?: unknown } | null): HardwareRecord | null {
   if (!verdict || !Array.isArray(verdict.pins)) return null
   let end: HardwareState | null = null
   try {
     const e = typeof verdict.env === 'string' ? JSON.parse(verdict.env) : verdict.env
     if (e && typeof e === 'object') end = e as HardwareState
   } catch { /* 讀不懂就當沒有 */ }
-  return { changes: verdict.pins as PinChange[], truncated: verdict.pinsTruncated === true, end }
+  return { changes: verdict.pins as PinChange[], truncated: verdict.pinsTruncated === true, end, stop: stopOf(verdict) }
 }
 
 /**
@@ -63,4 +68,18 @@ export function matchPinEvents(expected: readonly PinEvent[], changes: readonly 
     from = k + 1
   }
   return { ok: true }
+}
+
+/** 判決 → 停下的原因（見 `HardwareRecord.stop`） */
+function stopOf(verdict: { verdict?: unknown; problems?: unknown }): HardwareRecord['stop'] {
+  const problems = Array.isArray(verdict.problems) ? (verdict.problems as { kind?: unknown }[]) : []
+  if (problems.some((p) => p.kind === 'fuel')) return { kind: 'fuel' }
+  const bad = problems.find((p) => typeof p.kind === 'string' && (p.kind.startsWith('ub') || verdict.verdict === 'reject'))
+  if (verdict.verdict === 'reject' || bad) return { kind: 'error', detail: String(bad?.kind ?? 'reject') }
+  return { kind: 'simulated' }
+}
+
+/** 停下時還開著的輸出腳：OUTPUT 而且 HIGH、PWM 大於 0、或正在發聲——真的板子上它們會一直維持那個狀態 */
+export function outputsStillOn(state: HardwareState): HardwareState['pins'] {
+  return (state.pins ?? []).filter((p) => p.mode === 'OUTPUT' && (p.level !== 0 || (p.pwm ?? 0) > 0 || (p.toneHz ?? 0) > 0))
 }

@@ -10,6 +10,7 @@
  * ⚠️ 「沒有資料」有三種，畫面要分得開（P6）：不是板子的目標、判斷功能還沒好、這次沒有腳位變化。
  */
 import type { HardwareRecord, HardwareState, PinChange } from '../../core/hardware'
+import { outputsStillOn } from '../../core/hardware'
 import { msg } from '../../core/messages'
 
 const ROW_H = 28
@@ -151,7 +152,24 @@ export class HardwarePanel {
     head.className = 'hardware-end-head'
     head.textContent = `${msg('HARDWARE_END', '結束時')}（${(end.clockUs / 1000).toFixed(0)} ms，loop ${end.loops} ${msg('HARDWARE_LOOPS', '次')}）`
     box.appendChild(head)
+    // 停下的原因（使用者 11-07 的決定）：板子上的程式不會自己結束——說出是模擬到上限、步數用完、還是出錯
+    const stop = document.createElement('div')
+    stop.className = 'hardware-stop'
+    stop.textContent = record.stop.kind === 'fuel' ? msg('HARDWARE_STOP_FUEL', '步數用完了才停——程式可能卡在某個迴圈裡出不來')
+      : record.stop.kind === 'error' ? msg('HARDWARE_STOP_ERROR', '執行到一半出錯就停了（{kind}）——看程式碼那一邊標出來的那一行').replace('{kind}', record.stop.detail ?? '')
+        : msg('HARDWARE_STOP_SIMULATED', '模擬到第 {loops} 次 loop、{ms} 毫秒就停了——真的板子會一直跑下去')
+          .replace('{loops}', String(end.loops)).replace('{ms}', (end.clockUs / 1000).toFixed(0))
+    box.appendChild(stop)
     box.appendChild(this.stateRows(end))
+    // 還開著的輸出腳：真的板子上它們會一直維持那個狀態，直到斷電或換程式
+    const on = outputsStillOn(end)
+    if (on.length > 0) {
+      const still = document.createElement('div')
+      still.className = 'hardware-still-on'
+      const names = on.map((p) => `${msg('HARDWARE_PIN', '腳')} ${p.pin}（${p.toneHz ? `tone ${p.toneHz} Hz` : (p.pwm ?? 0) > 0 ? `PWM ${p.pwm}` : 'HIGH'}）`).join('、')
+      still.textContent = msg('HARDWARE_STILL_ON', '⚠️ 停下時還開著：{pins}——真的板子上它們會一直這樣，直到斷電或換程式').replace('{pins}', names)
+      box.appendChild(still)
+    }
     return box
   }
 
