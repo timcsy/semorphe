@@ -16,6 +16,18 @@
       "name": "typedef_alias",
       "kind": "identifier",
       "default": ""
+    },
+    {
+      "name": "scoped",
+      "kind": "enum",
+      "default": "none",
+      "_kind_why": "`enum class`／`enum struct`（有作用域的列舉，C++11）是 `class`／`struct`；一般的 `enum` 是 `none`（下拉不收空字串，同 struct 的 `implicit`）。🔴 360 之前 lift 不記它：`enum class Color` 來回變成 `enum Color`——常數從此洩漏到外層、可以隱式轉成整數，**意思換了而來回比對看不出來**。"
+    },
+    {
+      "name": "base",
+      "kind": "type_expr",
+      "default": "",
+      "_kind_why": "底層型別（`enum class Dir : unsigned char`）；沒寫是空字串。360 之前同樣靜默蒸發。"
     }
   ],
   "slots": {},

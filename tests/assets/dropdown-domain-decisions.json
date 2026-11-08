@@ -535,6 +535,11 @@
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "`delete p` 與 `delete[] p` 只有兩種（第 331 刀：原本 `[]` 被丟掉）"
+    },
+    "cpp_enum.SCOPED": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "列舉的寫法只有 `enum`／`enum class`／`enum struct` 三種——語言定義的封閉集合（C++11 [dcl.enum]；360）"
     }
   }
 }

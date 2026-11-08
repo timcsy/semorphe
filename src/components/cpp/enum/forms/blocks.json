@@ -15,6 +15,29 @@
           "text": "Color"
         },
         {
+          "type": "field_dropdown",
+          "name": "SCOPED",
+          "options": [
+            [
+              "%{BKY_C_ENUM_SCOPED_NONE}",
+              "none"
+            ],
+            [
+              "%{BKY_C_ENUM_SCOPED_CLASS}",
+              "class"
+            ],
+            [
+              "%{BKY_C_ENUM_SCOPED_STRUCT}",
+              "struct"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "BASE",
+          "text": ""
+        },
+        {
           "type": "field_input",
           "name": "VALUES",
           "text": "RED, GREEN, BLUE"
@@ -34,6 +57,8 @@
     "renderMapping": {
       "fields": {
         "NAME": "name",
+        "SCOPED": "scoped",
+        "BASE": "base",
         "VALUES": "values",
         "TYPEDEF_ALIAS": "typedef_alias"
       }
