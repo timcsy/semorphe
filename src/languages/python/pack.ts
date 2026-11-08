@@ -8,6 +8,7 @@ import type { Topic, Target, StylePreset } from '../../core/types'
 //    少了它，`skeletonsOfLanguage('python')` 是空的，而狀態列會撿到 C++ 的 `none`。
 import './skeletons'
 import { declareLanguagePack } from '../../core/language-packs'
+import { convertPythonToCpp } from './python-to-cpp'
 import { pythonCategoryDefs } from './toolbox-categories'
 import { PythonParser } from './parser'
 import pythonLiftPatterns from './lift-patterns.json'
@@ -108,6 +109,12 @@ declareLanguagePack({
   grammar: 'tree-sitter-python',
   programRoot: 'python:program',
   fileExtension: '.py',
+  /**
+   * **換到 C++**（跨語言互轉第二對的反方向，spec 225）：型別來自 Cella 在一份輸入上觀察到的型別表（`basis` 說哪一格是觀察到的）。
+   * 沒有 `basis`（型別表還沒接上、或沒有輸入）⟹ 引擎照實保留，說「需要型別」——不是把 Python 的樹留在 C++ 的目標底下。
+   */
+  convertToLanguage: (tree, toLanguage, types, _problems, basis) =>
+    toLanguage === 'cpp' ? convertPythonToCpp(tree, basis ? { nodes: types, basis } : null) : null,
   install: registerPythonLanguage,
   liftPatterns: pythonLiftPatterns,
   liftTransforms: registerPythonTransforms,

@@ -11,3 +11,9 @@ export interface LanguageConversion {
 
 /** 保留的原因類別（spec 219 contracts）。 */
 export type KeepKind = 'overflow' | 'division' | 'modulo' | 'char' | 'pointer' | 'class' | 'template' | 'outside-subset' | 'needs-types'
+  /** Python → C++（spec 225）：型別說不準（聯集、空容器看不出元素、這份輸入下沒跑到） */
+  | 'type-uncertain'
+  /** Python → C++：印浮點數（Python 的 repr 與 cout 的預設寫法不同） */
+  | 'float-print'
+  /** Python → C++：程式讀輸入而沒有輸入可用（型別要在一份輸入上觀察） */
+  | 'needs-input'
