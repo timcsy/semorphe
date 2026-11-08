@@ -32,3 +32,8 @@ export function scenariosFor(tree: SemanticNode): Scenario[] {
 export function resetScenarioKindsForTest(): void {
   kinds.clear()
 }
+
+/** 已登記的種類名字（護欄用：核心裡不准出現它們） */
+export function registeredScenarioKinds(): string[] {
+  return [...kinds.keys()]
+}
