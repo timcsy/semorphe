@@ -19,7 +19,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
       const t = py.typeOf(n) ?? ''
       const rem = isNarrowInt(t) ? truncatedRemainder(l, rr, py) : null
       if (rem) return rem  // 外層是運算時由 paren() 加括號（這顆有 left／right 槽）
-      return py.keep(n, 'modulo', !t ? '取餘數要看型別' : isNarrowInt(t) ? '取餘數的兩邊有運算式（照定義改寫會算兩次）' : `取餘數（型別 ${t}）：64 位元的值超過浮點能精確表示的範圍`)
+      // 兩邊有運算式：照定義展開會算兩次 ⟹ 交給一支小函式，每邊只算一次
+      if (isNarrowInt(t)) return `${py.useTruncMod()}(${py.expr(l)}, ${py.expr(rr)})`
+      return py.keep(n, 'modulo', !t ? '取餘數要看型別' : `取餘數（型別 ${t}）：64 位元的值超過浮點能精確表示的範圍`)
     }
     if (op === '/') {
       const t = py.typeOf(n) ?? ''

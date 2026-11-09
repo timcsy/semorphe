@@ -22,6 +22,7 @@ export function registerToCpp(r: ToCppRegistrar): void {
       const t = cpp.pyType(v)
       // 浮點：Python 印 repr（2.0）、cout 預設印 2——寫法不同就保留（research R5）
       if (t === 'float') { cpp.keep(v, 'float-print', '印浮點數：Python 印 2.0、C++ 的 cout 預設印 2'); continue }
+      if (t === 'list[int]' || t === 'list[str]') { parts.push(`${cpp.useHelper(t === 'list[int]' ? 'list_text_int' : 'list_text_str')}(${cpp.expr(v)})`); continue }
       if (t && /^(list|dict|set|tuple)/.test(t)) { cpp.keep(v, 'outside-subset', `印 ${t}：Python 會印出整個容器的樣子`); continue }
       if (t === 'bool') { parts.push(`(${cpp.expr(v)} ? "True" : "False")`); continue }
       if (!t && !v.componentId.endsWith(':literal_string')) { cpp.keep(v, 'type-uncertain', '印出的值型別說不準'); continue }

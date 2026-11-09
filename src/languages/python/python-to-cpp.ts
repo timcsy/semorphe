@@ -10,7 +10,7 @@
  */
 import type { SemanticNode } from '../../core/types'
 import type { KeepKind, LanguageConversion } from '../../core/language-conversion'
-import type { ObservedTypes, ToCppContext } from './to-cpp/contract'
+import type { HelperName, ObservedTypes, ToCppContext } from './to-cpp/contract'
 import { collectToCpp, type ToCppTables } from './to-cpp/registry'
 
 let TABLES: ToCppTables | null = null
@@ -19,13 +19,30 @@ const tables = (): ToCppTables => (TABLES ??= collectToCpp())
 /** C++ 的保留字與這支程式會用到的標準名字——Python 的名字撞到就加底線 */
 const CPP_RESERVED = new Set(['auto', 'bool', 'break', 'case', 'char', 'class', 'const', 'continue', 'default', 'delete', 'do', 'double', 'else', 'enum', 'explicit', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'return', 'short', 'signed', 'sizeof', 'static', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try', 'typedef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'while', 'main', 'string', 'vector', 'cin', 'cout', 'endl', 'getline', 'stoll', 'stod', 'to_string', 'max', 'min', 'accumulate', 'read_line', 'floor_div', 'floor_mod', 'std'])
 
-const HELPERS: Record<'read_line' | 'floor_div' | 'floor_mod', string[]> = {
+const HELPERS: Record<HelperName, string[]> = {
   // input() 讀一整行（cin >> 讀一個詞——行的語意不同，research R6）
   read_line: ['string read_line() {', '    string s;', '    getline(cin, s);', '    return s;', '}'],
   // Python 的 // 向下取整（C++ 的 / 向零截斷，負數時不同）
   floor_div: ['long long floor_div(long long a, long long b) {', '    long long q = a / b;', '    if (a % b != 0 && (a < 0) != (b < 0)) {', '        q--;', '    }', '    return q;', '}'],
   // Python 的 % 的正負號跟除數（C++ 跟被除數）
   floor_mod: ['long long floor_mod(long long a, long long b) {', '    long long r = a % b;', '    if (r != 0 && (r < 0) != (b < 0)) {', '        r += b;', '    }', '    return r;', '}'],
+  // Python 的 ** 兩邊是整數、指數不是負的（pow 走浮點，大數不精確）
+  int_pow: ['long long int_pow(long long a, long long b) {', '    long long r = 1;', '    for (long long i = 0; i < b; i++) {', '        r *= a;', '    }', '    return r;', '}'],
+  // s.split()：以空白分開、連續空白算一個；索引用 int（size_t 要靠標頭遞移帶進來，Cella 不接受那個假設）
+  split_words: ['vector<string> split_words(string s) {', '    vector<string> words;', '    string word;', '    for (char c : s) {', '        if (isspace(c)) {', '            if (word != "") {', '                words.push_back(word);', '                word = "";', '            }', '        } else {', '            word += c;', '        }', '    }', '    if (word != "") {', '        words.push_back(word);', '    }', '    return words;', '}'],
+  // 分隔與替換的文字收 const char*：引數若是兩個 string 建構，C++ 的求值順序沒有規定，Cella 判 unknown
+  split_on: ['vector<string> split_on(const string& s, const char* sep_text) {', '    string sep = sep_text;', '    vector<string> parts;', '    string part;', '    int i = 0;', '    while (i < s.size()) {', '        if (s.substr(i, sep.size()) == sep) {', '            parts.push_back(part);', '            part = "";', '            i += sep.size();', '        } else {', '            part += s[i];', '            i++;', '        }', '    }', '    parts.push_back(part);', '    return parts;', '}'],
+  to_upper: ['string to_upper(string s) {', '    for (int i = 0; i < s.size(); i++) {', '        s[i] = toupper(s[i]);', '    }', '    return s;', '}'],
+  to_lower: ['string to_lower(string s) {', '    for (int i = 0; i < s.size(); i++) {', '        s[i] = tolower(s[i]);', '    }', '    return s;', '}'],
+  replace_all: ['string replace_all(const string& s, const char* from_text, const char* to_text) {', '    string from = from_text;', '    string to = to_text;', '    string out;', '    int i = 0;', '    while (i < s.size()) {', '        if (s.substr(i, from.size()) == from) {', '            out += to;', '            i += from.size();', '        } else {', '            out += s[i];', '            i++;', '        }', '    }', '    return out;', '}'],
+  // print(list)：Python 印出容器的樣子（[1, 2]、['a', 'b']）
+  list_text_int: ['string list_text(const vector<long long>& v) {', '    string out = "[";', '    for (int i = 0; i < v.size(); i++) {', '        if (i > 0) {', '            out += ", ";', '        }', '        out += to_string(v[i]);', '    }', '    return out + "]";', '}'],
+  list_text_str: ['string list_text(const vector<string>& v) {', '    string out = "[";', '    for (int i = 0; i < v.size(); i++) {', '        if (i > 0) {', '            out += ", ";', '        }', `        out += "'" + v[i] + "'";`, '    }', '    return out + "]";', '}'],
+}
+
+/** 小函式需要的標頭 */
+const HELPER_INCLUDES: Partial<Record<HelperName, string[]>> = {
+  split_words: ['vector', 'cctype'], split_on: ['vector'], to_upper: ['cctype'], to_lower: ['cctype'], list_text_int: ['vector'], list_text_str: ['vector'],
 }
 
 const lineOf = (n: SemanticNode): number | undefined =>
@@ -73,7 +90,7 @@ export function typesNote(input: string | undefined, readsInput: boolean): strin
 export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes | null, opts: { input?: string } = {}): LanguageConversion {
   const reasons: LanguageConversion['reasons'] = []
   const t = tables()
-  const helpers = new Set<'read_line' | 'floor_div' | 'floor_mod'>()
+  const helpers = new Set<HelperName>()
   const includes = new Set<string>(['iostream', 'string'])
   let converted = 0
 
@@ -133,7 +150,7 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
     keep,
     pyType: (n) => { const r = rawType(n); return r ? unifyTypes([r]) : undefined },
     cppType,
-    useHelper(name) { helpers.add(name); if (name === 'read_line') includes.add('string'); return name },
+    useHelper(name) { helpers.add(name); (HELPER_INCLUDES[name] ?? []).forEach((h) => includes.add(h)); return name.startsWith('list_text') ? 'list_text' : name },
     useInclude(h) { includes.add(h); return h },
     isUserFunction: (name) => userFunctions.has(name),
     plainLoopVar(loop, name) {
@@ -225,7 +242,7 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
   const mainBody = cpp.block(top, 1)
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   const head = [...[...includes].sort().map((h) => `#include <${h}>`), 'using namespace std;', '']
-  const helperLines = (['read_line', 'floor_div', 'floor_mod'] as const).filter((h) => helpers.has(h)).flatMap((h) => [...HELPERS[h], ''])
+  const helperLines = (Object.keys(HELPERS) as HelperName[]).filter((h) => helpers.has(h)).flatMap((h) => [...HELPERS[h], ''])
   const lines = [typesNote(opts.input, readsInput), ...head, ...helperLines, ...funcLines, 'int main() {', ...mainDecls.map((d) => `    ${d}`), ...mainBody, '    return 0;', '}']
   return { code: `${lines.join('\n')}\n`, converted, kept: 0, reasons }
 }

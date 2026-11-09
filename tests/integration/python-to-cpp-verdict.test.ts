@@ -72,7 +72,47 @@ function stdinOf(f: string): string {
 }
 
 /** Cella 把 vector 的大括號指定當成建構引數——修好時這幾支會紅 */
-const KNOWN_BRACE_ASSIGN_GAP = new Set(['08-清單/solutions/make.py'])
+const KNOWN_BRACE_ASSIGN_GAP = new Set(['08-清單/solutions/make.py', '08-清單/solutions/rebuild.py'])
+
+// ── 381：字串方法、印 list、切片、整數的 **（型別用 Cella 觀察到的）──
+describe('Python → C++：換成補在開頭的小函式，判決相同', () => {
+  for (const [name, src, stdin] of [
+    ['split（空白）', 'words = input().split()\nprint(len(words))\nprint(words[1])\n', 'a  bb\tc\n'],
+    ['split（分隔字面量，空段要留著）', 's = "a,,b"\nparts = s.split(",")\nprint(len(parts))\nprint(parts[2])\n', ''],
+    ['upper／lower', 's = "Hello, World"\nprint(s.upper())\nprint(s.lower())\n', ''],
+    ['replace（全部換掉）', 's = "aXbXc"\nprint(s.replace("X", "--"))\n', ''],
+    ['切片：字串', 's = "abcdef"\nprint(s[1:3])\n', ''],
+    ['印 list[int]／list[str]', 'xs = []\nxs.append(int(input()))\nxs.append(2)\nprint(xs)\nts = input().split()\nprint(ts)\n', '1\na b\n'],
+    ['切片：list', 'xs = []\nxs.append(int(input()))\nxs.append(2)\nxs.append(3)\nprint(xs[1:3])\n', '1\n'],
+    ['整數的 **', 'n = 3\nprint(n ** 2)\nprint(2 ** 0)\n', ''],
+  ] as const) {
+    it(name, async () => {
+      const t = (await liftPython(src))!
+      const r = convertPythonToCpp(t, await cellaObservedOfTree(t, stdin), { input: stdin })
+      expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+      const a = await runCella(src, { lang: 'python', stdin })
+      const b = await runCella(r.code!, { lang: 'cpp', stdin })
+      const show = `\n--- C++ ---\n${r.code}--- Python: ${a.verdict} ${JSON.stringify(a.out)} / C++: ${b.verdict} ${JSON.stringify(b.out)} ${JSON.stringify(b.problems?.map((p) => p.reason ?? p.kind))}`
+      expect(a.verdict, show).toBe('accept')
+      expect(b.verdict, show).toBe('accept')
+      expect(b.out, show).toBe(a.out)
+      expect(b.assumes ?? [], show).toEqual(a.assumes ?? [])
+    }, 120_000)
+  }
+  for (const [name, src, stdin] of [
+    ['split 的分隔是變數', 'd = input()\nprint(len("a b".split(d)))\n', ' \n'],
+    ['replace 要換掉的是變數', 'd = input()\nprint("a b".replace(d, "x"))\n', ' \n'],
+    ['負的切片', 's = "abc"\nprint(s[-2:3])\n', ''],
+    ['負的指數（Python 是浮點）', 'n = 2\nprint(n ** -1)\n', ''],
+  ] as const) {
+    it(`🔴 保留：${name}`, async () => {
+      const t = (await liftPython(src))!
+      const r = convertPythonToCpp(t, await cellaObservedOfTree(t, stdin), { input: stdin })
+      expect(r.code, r.code ?? '').toBeNull()
+      expect(r.reasons.length).toBeGreaterThan(0)
+    }, 120_000)
+  }
+})
 
 describe('Python → C++：python-beginner 課文的解答（Cella 觀察到的型別）', () => {
   const tally = { converted: [] as string[], kept: new Map<string, string[]>() }

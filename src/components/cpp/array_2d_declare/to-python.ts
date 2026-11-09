@@ -9,7 +9,14 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const t = String(n.properties.type ?? '')
     const zero = /^(int|long|long long|short)$/.test(t) ? '0' : t === 'double' ? '0.0' : null
     if (zero === null) return [py.keep(n, 'outside-subset', `${t} 二維陣列還沒有對應`)]
-    if ((n.slots.values?.length ?? 0) > 0) return [py.keep(n, 'outside-subset', '二維陣列的初值還沒有對應')]
+    const init = n.slots.values ?? []
+    if (init.length > 0) {
+      // `{{1, 2}, {3, 4}}` → 每一列寫出來。只收寫滿的整數初值：沒寫滿要補 0，double 的整數字面量到 Python 會印成整數
+      const rows = Number(n.slots.rows?.[0]?.properties?.value), cols = Number(n.slots.cols?.[0]?.properties?.value)
+      const full = zero === '0' && init.length === rows && init.every((row) => row.slots.values?.length === cols)
+      if (!full) return [py.keep(n, 'outside-subset', '二維陣列的初值沒有逐列寫滿（或不是整數）')]
+      return [`${py.indent(depth)}${name} = [${init.map((row) => `[${row.slots.values.map((v) => py.expr(v)).join(', ')}]`).join(', ')}]`]
+    }
     return [`${py.indent(depth)}${name} = [[${zero}] * ${paren(n.slots.cols?.[0], py)} for _ in range(${py.expr(n.slots.rows?.[0])})]`]
   })
 }
