@@ -99,9 +99,12 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
   if (!observed) keep(tree, 'needs-types', '要換成 C++ 得先知道每個變數的型別——需要 Cella 在一份輸入上跑過一次')
   const unreached = observed ? Object.entries(observed.basis).filter(([, b]) => b === 'unreached').map(([id]) => id) : []
   const byId = new Map<string, SemanticNode>()
-  const index = (n: SemanticNode): void => { byId.set(n.id, n); kids(n).forEach(index) }
+  const parent = new Map<string, SemanticNode>()
+  const index = (n: SemanticNode): void => { byId.set(n.id, n); kids(n).forEach((c) => { parent.set(c.id, n); index(c) }) }
   index(tree)
-  const firstUnreached = unreached.map((id) => byId.get(id)).find(Boolean)
+  // 印一段字串字面量：寫法由字面量自己決定，不必看型別——沒跑到也換得過去（其餘照舊保留：型別不自己推）
+  const printsLiteral = (n: SemanticNode): boolean => n.componentId.endsWith(':literal_string') && parent.get(n.id)?.componentId.endsWith(':print') === true
+  const firstUnreached = unreached.map((id) => byId.get(id)).find((n) => n !== undefined && !printsLiteral(n))
   if (firstUnreached) keep(firstUnreached, 'type-uncertain', '這一段在這份輸入下沒有跑到——看不到它的型別（換一份會走到這裡的輸入再試）')
 
   const rawType = (n: SemanticNode | undefined): string | undefined => {

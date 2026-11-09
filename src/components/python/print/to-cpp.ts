@@ -17,6 +17,8 @@ export function registerToCpp(r: ToCppRegistrar): void {
     if (sep === null || end === null) return [cpp.keep(n, 'outside-subset', 'print 的 sep／end 不是字串字面量')]
     const parts: string[] = []
     for (const v of values.filter((x) => !x.componentId.endsWith(':func_call_named'))) {
+      // 印字串字面量：直接寫字面量（string("…") 是給 + 串接用的）
+      if (v.componentId.endsWith(':literal_string')) { parts.push(cppString(String(v.properties?.value ?? ''))); continue }
       const t = cpp.pyType(v)
       // 浮點：Python 印 repr（2.0）、cout 預設印 2——寫法不同就保留（research R5）
       if (t === 'float') { cpp.keep(v, 'float-print', '印浮點數：Python 印 2.0、C++ 的 cout 預設印 2'); continue }
