@@ -4,11 +4,25 @@
  * ⚠️ Phase 1：型別表是**手寫的**（`tests/helpers/fake-observed-types.ts`）——Cella 的 `python.observedTypes` 發布之後換成真的，
  *    並加上 python-beginner 課文逐支的護欄（tasks T007）。這裡先釘住「換出來的 C++ 是合法的、意思相同」。
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { Parser, Language } from 'web-tree-sitter'
+import { createTestLifter } from '../helpers/setup-lifter'
+import { registerCppLanguage } from '../../src/languages/cpp/generators'
+import { generateCode } from '../../src/core/projection/code-generator'
+import apcs from '../../src/languages/cpp/styles/apcs.json'
+import type { SemanticNode, StylePreset } from '../../src/core/types'
 import { liftPython } from '../helpers/python-lift'
 import { runCella } from '../helpers/cella-run'
 import { fakeObserved } from '../helpers/fake-observed-types'
 import { convertPythonToCpp } from '../../src/languages/python/python-to-cpp'
+
+let parser: Parser
+beforeAll(async () => {
+  await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })
+  parser = new Parser()
+  parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
+  registerCppLanguage()
+})
 
 const CASES: [string, string, Record<string, string>, string][] = [
   ['印出、end、sep', 'n = 3\nprint("hi", n)\nprint(n, end="")\nprint(1, 2, sep=",")\n', { n: 'int' }, ''],
@@ -25,7 +39,7 @@ describe('Python → C++：換出來的 C++ 與原本的 Python 判得一樣（�
   for (const [name, src, vars, stdin] of CASES) {
     it(name, async () => {
       const t = (await liftPython(src))!
-      const r = convertPythonToCpp(t, fakeObserved(t, vars))
+      const r = convertPythonToCpp(t, fakeObserved(t, vars), { input: stdin })
       expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
       const a = await runCella(src, { lang: 'python', stdin })
       const b = await runCella(r.code!, { lang: 'cpp', stdin })
@@ -34,6 +48,11 @@ describe('Python → C++：換出來的 C++ 與原本的 Python 判得一樣（�
       expect(b.verdict, show).toBe(a.verdict)
       expect(b.out, show).toBe(a.out)
       expect(b.assumes ?? [], show).toEqual(a.assumes ?? [])
+      // SC-003／SC-005：換出來的 C++ 走一趟 C++ 的 lift 與產碼回來一字不差（第一行的說明不掉、不重複）
+      const back = generateCode(createTestLifter().lift(parser.parse(r.code!)!.rootNode as never) as SemanticNode, 'cpp', apcs as unknown as StylePreset)
+      //    空行不算（產生器不印空行，程式碼面板由 preserveBlankLines 照原文保留）
+      const noBlank = (c: string) => c.split('\n').filter((l) => l.trim() !== '').join('\n')
+      expect(noBlank(back), `走一趟 C++ 的樹回來不一樣`).toBe(noBlank(r.code!))
     }, 120_000)
   }
 })

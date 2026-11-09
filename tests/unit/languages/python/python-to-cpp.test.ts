@@ -7,13 +7,14 @@ import { liftPython } from '../../../helpers/python-lift'
 import { convertPythonToCpp, unifyTypes } from '../../../../src/languages/python/python-to-cpp'
 import { fakeObserved } from '../../../helpers/fake-observed-types'
 
-async function cpp(src: string, vars: Record<string, string>, opts?: Parameters<typeof fakeObserved>[2]) {
+async function cpp(src: string, vars: Record<string, string>, opts?: Parameters<typeof fakeObserved>[2], input?: string) {
   const t = (await liftPython(src))!
-  return convertPythonToCpp(t, fakeObserved(t, vars, opts))
+  return convertPythonToCpp(t, fakeObserved(t, vars, opts), { input })
 }
-const MAIN = (body: string, extra = '') => `#include <iostream>\n#include <string>\n${extra}using namespace std;\n\n`
-const okCode = async (src: string, vars: Record<string, string>) => {
-  const r = await cpp(src, vars)
+const NOTE_RUN = '// 變數的型別是照這次執行看到的；換一組輸入，型別可能不同\n'
+const MAIN = (body: string, extra = '') => `${NOTE_RUN}#include <iostream>\n#include <string>\n${extra}using namespace std;\n\n`
+const okCode = async (src: string, vars: Record<string, string>, input?: string) => {
+  const r = await cpp(src, vars, undefined, input)
   if (r.code === null) throw new Error(JSON.stringify(r.reasons))
   return r.code
 }
@@ -24,7 +25,7 @@ describe('Python → C++ 的寫法', () => {
     expect(code).toBe(`${MAIN('')}int main() {\n    long long n;\n    n = 3;\n    cout << string("hi") << " " << n << "\\n";\n    cout << n;\n    cout << 1 << "," << 2 << "\\n";\n    return 0;\n}\n`)
   })
   it('宣告提到最前面：if 裡第一次指定、外面用到的照樣看得到；bool 印 True／False', async () => {
-    const code = await okCode('x = int(input())\nif x > 0:\n    y = x * 2\nelse:\n    y = 0\nprint(y, x > 1)\n', { x: 'int', y: 'int' })
+    const code = await okCode('x = int(input())\nif x > 0:\n    y = x * 2\nelse:\n    y = 0\nprint(y, x > 1)\n', { x: 'int', y: 'int' }, '5\n')
     expect(code).toContain('    long long x;\n    long long y;\n')
     expect(code).toContain('x = stoi(read_line());')
     expect(code).toContain('string read_line() {')
@@ -92,4 +93,25 @@ describe('Python → C++ 照實保留', () => {
     expect(unifyTypes(['list[?]'])).toBeUndefined()
     expect(unifyTypes(['list[int|str]'])).toBe('list[int|str]')
   })
+  it('沒有輸入而程式讀輸入 → 不換、說需要一份輸入（FR-008）', async () => {
+    const r = await cpp('x = int(input())\nprint(x)\n', { x: 'int' })
+    expect(r.code).toBeNull()
+    expect(r.reasons.map((x) => x.kind)).toEqual(['needs-input'])
+  })
 })
+
+describe('型別是照這組輸入推的——寫在第一行（FR-009，使用者 11-09 定）', () => {
+  it('讀輸入的程式：列出這組輸入', async () => {
+    const code = await okCode('x = int(input())\ny = int(input())\nprint(x + y)\n', { x: 'int', y: 'int' }, '5\n3\n')
+    expect(code.split('\n')[0]).toBe('// 變數的型別是照這組輸入跑一次看到的（輸入：5、3）；換一組輸入，型別可能不同')
+  })
+  it('輸入太長就截短', async () => {
+    const code = await okCode('x = input()\nprint(x)\n', { x: 'str' }, `${'a'.repeat(60)}\n`)
+    expect(code.split('\n')[0]).toMatch(/（輸入：a{20}…）/)
+  })
+  it('不讀輸入的程式：照這次執行看到的', async () => {
+    const code = await okCode('n = 3\nprint(n)\n', { n: 'int' })
+    expect(code.split('\n')[0]).toBe('// 變數的型別是照這次執行看到的；換一組輸入，型別可能不同')
+  })
+})
+

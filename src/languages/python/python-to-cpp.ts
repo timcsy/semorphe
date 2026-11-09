@@ -59,7 +59,18 @@ export function unifyTypes(types: readonly string[]): string | undefined {
   return kept.length === 1 && !kept[0].includes('?') ? kept[0] : undefined
 }
 
-export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes | null): LanguageConversion {
+/**
+ * 第一行的說明（FR-009，使用者 2026-11-09 定）：型別是照這組輸入觀察到的——跟著程式走，學生換一組輸入時看得到這個限制。
+ * 輸入照詞列出、超過 20 字截短；程式不讀輸入時說「照這次執行看到的」。
+ */
+export function typesNote(input: string | undefined, readsInput: boolean): string {
+  if (!readsInput) return '// 變數的型別是照這次執行看到的；換一組輸入，型別可能不同'
+  const words = (input ?? '').split(/\s+/).filter(Boolean).join('、')
+  const shown = words.length > 20 ? `${words.slice(0, 20)}…` : words
+  return `// 變數的型別是照這組輸入跑一次看到的（輸入：${shown}）；換一組輸入，型別可能不同`
+}
+
+export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes | null, opts: { input?: string } = {}): LanguageConversion {
   const reasons: LanguageConversion['reasons'] = []
   const t = tables()
   const helpers = new Set<'read_line' | 'floor_div' | 'floor_mod'>()
@@ -79,6 +90,12 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
   }
 
   // 型別表：沒有表就是「需要型別」；有一個節點這份輸入下沒跑到 ⟹ 那一段的型別看不到（research R1）——整支保留
+  // 讀輸入的程式而沒有輸入：型別要在一份輸入上觀察，空輸入會把 input() 之後全標成沒跑到——假的資訊（FR-008；cella 談定時的理由）
+  const readsInput = (() => { let r = false; const w = (n: SemanticNode): void => { if (n.componentId.endsWith(':input')) r = true; Object.values(n.slots ?? {}).flat().forEach(w) }; w(tree); return r })()
+  if (readsInput && !(opts.input ?? '').trim()) {
+    keep(tree, 'needs-input', '這支程式會讀輸入——要先有一份輸入（題目的輸入或上一次執行的輸入），才看得到每個變數的型別')
+    return { code: null, converted: 0, kept: reasons.length, reasons }
+  }
   if (!observed) keep(tree, 'needs-types', '要換成 C++ 得先知道每個變數的型別——需要 Cella 在一份輸入上跑過一次')
   const unreached = observed ? Object.entries(observed.basis).filter(([, b]) => b === 'unreached').map(([id]) => id) : []
   const byId = new Map<string, SemanticNode>()
@@ -204,6 +221,6 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   const head = [...[...includes].sort().map((h) => `#include <${h}>`), 'using namespace std;', '']
   const helperLines = (['read_line', 'floor_div', 'floor_mod'] as const).filter((h) => helpers.has(h)).flatMap((h) => [...HELPERS[h], ''])
-  const lines = [...head, ...helperLines, ...funcLines, 'int main() {', ...mainDecls.map((d) => `    ${d}`), ...mainBody, '    return 0;', '}']
+  const lines = [typesNote(opts.input, readsInput), ...head, ...helperLines, ...funcLines, 'int main() {', ...mainDecls.map((d) => `    ${d}`), ...mainBody, '    return 0;', '}']
   return { code: `${lines.join('\n')}\n`, converted, kept: 0, reasons }
 }
