@@ -52,16 +52,18 @@ const ALLOWED_DEGRADE = [
  * - untranslated：原因只准是登記過的缺口
  */
 const VERDICT: Record<string, { verdict: 'accept' | 'unknown' | 'reject' | 'untranslated'; why?: RegExp }> = {
-  fuzz_1: { verdict: 'accept' },
+  // 🔴 2026-11-09：`for (size_t i = 0; …)` 原本被計數迴圈那顆接走、型別被我們改成 int——Cella 看到的是一支學生沒寫的程式（判 accept）。
+  //    修好之後照實送 size_t：只引入 <iostream> 時「標頭有沒有宣告 size_t 取決於函式庫」——Cella 誠實的 unsupported（不是我們翻錯）
+  fuzz_1: { verdict: 'unknown', why: /^unsupported$/ },
   // Cella ④ 轉換建構子的隱式轉換（h -= 3）在 1526 修好（原本誤判 reject）；剩下的是引數之間的求值次序——標準未指定，誠實的 unknown，印出來仍等於 g++
   // Cella 0.1.202611080134 轉 accept：函式庫呼叫的副作用改看引數實際寫到哪裡——原本的 orderUncompared 是把沒有衝突的兩個呼叫當成有衝突（輸出照樣等於 g++）
-  fuzz_2: { verdict: 'accept' },
+  fuzz_2: { verdict: 'unknown', why: /^unsupported$/ },   // 同 fuzz_1：size_t 的迴圈變數
   // 上面的降級（多維陣列欄位、`: a{{…}}`／`: c{0, 0, 0, 0, 0}`）——連帶：被降級的建構子定義讓類別裡那一行原型「找不到定義」
   fuzz_3: { verdict: 'untranslated', why: /這顆(類別成員|頂層元件)還沒有對應到 Cella 的建構子|類別裡宣告了建構子，而類別外找不到它的定義/ },
   fuzz_4: { verdict: 'untranslated', why: /這顆(類別成員|頂層元件)還沒有對應到 Cella 的建構子|類別裡宣告了建構子，而類別外找不到它的定義/ },
   fuzz_5: { verdict: 'unknown', why: /^ubElide$/ },                                        // 具名回傳值的複製省略——實作相依
   fuzz_6: { verdict: 'accept' },                                                           // Cella ② 多載 `<<` 串接的定序：1526 修好（C++17 起是定的）
-  fuzz_7: { verdict: 'accept' },                                                           // Cella ① vector 的迭代器區間建構子：1526 修好（原本誤判 reject）
+  fuzz_7: { verdict: 'unknown', why: /^unsupported$/ },                                    // 同 fuzz_1：size_t 的迴圈變數（迭代器區間建構子 1526 修好那一項仍在）
   fuzz_8: { verdict: 'accept' },                                                           // 同 fuzz_2：Cella 0134 轉 accept
 }
 
@@ -90,7 +92,8 @@ describe('模糊測試：運算子的類別外定義（第 331 刀）', () => {
     const want = VERDICT[p.id]
     const r = await runCella(p.code)
     expect(r.verdict, `${p.id} 的判決變了——看是修好了（轉正）還是換了一個問題`).toBe(want.verdict)
-    if (r.verdict === 'accept' || r.verdict === 'unknown') expect(r.out, '印出來的要等於 g++').toBe(p.expected)
+    // unsupported 停在半路，沒有完整的輸出可比；其餘的 unknown（實作相依、未指定的次序）跑完了，印出來的要等於 g++
+    if (r.verdict === 'accept' || (r.verdict === 'unknown' && !r.problems.some((x) => x.kind === 'unsupported'))) expect(r.out, '印出來的要等於 g++').toBe(p.expected)
     if (r.verdict === 'unknown') expect(r.problems.map((x) => x.kind).every((k) => want.why!.test(k))).toBe(true)
     if (r.verdict === 'reject') expect(r.problems.map((x) => x.reason).join(' | ')).toMatch(want.why!)
     if (r.verdict === 'untranslated') expect(r.untranslated.every((u) => want.why!.test(u.reason))).toBe(true)
