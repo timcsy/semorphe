@@ -20,7 +20,7 @@ tools/long-test.sh <worktree> <scratchpad 目錄> --e2e --only flow-collapse blo
 tools/long-test.sh <worktree> <scratchpad 目錄> --suite        # 只跑全套
 ```
 
-log 寫在 `<scratchpad>/test-<worktree 名>.log`、`e2e-<worktree 名>.log`；腳本最後印出紅的那幾支。
+log 寫在 `<scratchpad>/test-<worktree 名>.log`、`e2e-<worktree 名>.log`；腳本最後印出紅的那幾支，**最後一行就是結果**（`🟢 結果：…` / `🔴 結果：exit=…，紅了：…——不能合併`）。⚠️ 判定只看最後一行，不要只看 e2e 的尾巴（2026-11-09：e2e 綠、全套 4 支紅，差點合併）。
 兩個 worktree 同時跑 e2e 時給不同的 `--port`（4199、4198）——**不要用 4173**（使用者的 preview）。
 
 ## 🔴 腳本替你擋掉的六個坑（①～③ 是 2026-11-01 一天內撞到的，④ 是 2026-11-05、⑤⑥ 是 2026-11-07 加的）
