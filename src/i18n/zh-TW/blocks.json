@@ -1090,5 +1090,6 @@
   "PROPOSAL_REPLACED_TEMPLATE": "套用了範例",
   "PROPOSAL_REPLACED_TARGET": "換了目標",
   "PROPOSAL_REPLACED_LESSON": "課文換上了起始程式",
-  "PROPOSAL_REPLACED_IMPORT": "匯入了檔案"
+  "PROPOSAL_REPLACED_IMPORT": "匯入了檔案",
+  "LANG_DIFFERS": "換過去之後在這份輸入上的結果不一樣"
 }

@@ -192,7 +192,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
   let latest = 0
   const waiting = new Map<number, (a: CheckAnswer) => void>()
   const reads = new Map<number, boolean>()
-  const answer = (id: number, a: Pick<CheckAnswer, 'verdict' | 'types'>): void => {
+  const answer = (id: number, a: Pick<CheckAnswer, 'verdict' | 'types' | 'observed'>): void => {
     waiting.get(id)?.({ ...a, stale: id !== latest, readsInput: reads.get(id) ?? false })
     waiting.delete(id)
     reads.delete(id)
@@ -213,7 +213,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
       if (r.kind === 'status') {
         setState(r.status === 'unavailable' ? { state: 'unavailable', reason: r.reason ?? '' } : { state: r.status })
       } else if (r.kind === 'result') {
-        answer(r.id, { verdict: r.verdict as Verdict, types: r.types })
+        answer(r.id, { verdict: r.verdict as Verdict, types: r.types, observed: r.observed ?? null })
       } else {
         answer(r.id, { verdict: null, types: null })
       }
@@ -285,7 +285,7 @@ export function createCellaProvider(makeWorker: () => Worker): Provider {
         try {
           // 板子的環境輸入放在程式 JSON 的 inputs（同 tests/helpers/cella-run 的 runCella；spec 218）
           const program = req.boardInputs ? { ...(f.program as Record<string, unknown>), inputs: req.boardInputs } : f.program
-          send({ id, kind: 'check', program, input: req.input, fuel: fuelOf(board) })
+          send({ id, kind: 'check', program, input: req.input, fuel: fuelOf(board), wantObserved: req.wantObserved === true })
         } catch {
           answer(id, { verdict: null, types: null })
         }

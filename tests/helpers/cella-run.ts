@@ -184,6 +184,17 @@ export async function cellaTypesOfTree(tree: SemanticNode, opts: { lang?: 'cpp' 
   return (await p.checker()).types(fz.program, []).nodes ?? {}
 }
 
+/**
+ * 一棵 Python 樹在一份輸入上**觀察到的型別**（Cella 的 `python.observedTypes`，spec 225）。鍵是語意樹節點 id；不是 accept 或翻不出時回 null。
+ */
+export async function cellaObservedOfTree(tree: SemanticNode, stdin = ''): Promise<{ nodes: Record<string, string>; basis: Record<string, 'observed' | 'unreached'> } | null> {
+  const fz = formalizePython(tree)
+  if (!fz.program) return null
+  const { checker } = await preparePython()
+  const o = (await checker()).observed(fz.program, stdin, 1_000_000)
+  return o?.nodes && o.basis ? { nodes: o.nodes, basis: o.basis } : null
+}
+
 /** 一段說得出「為什麼不是 accept」的訊息 */
 export function describeCellaResult(r: CellaRunResult): string {
   if (r.verdict === 'untranslated') {

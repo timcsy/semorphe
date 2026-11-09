@@ -1,0 +1,23 @@
+/** 這顆元件寫成 C++（spec 225）。 */
+import type { ToCppRegistrar } from '../../../languages/python/to-cpp/contract'
+
+export function registerToCpp(r: ToCppRegistrar): void {
+  r.expr((n, cpp) => {
+    const to = String(n.properties.target_type ?? '')
+    const v = n.slots.value?.[0]
+    const from = cpp.pyType(v)
+    if (to === 'int') {
+      // stoi（Cella 認得；stoll 還沒有）——32 位元以內；更大的值由換完之後那一次 C++ 判決抓（research R3）
+      if (from === 'str') return `stoi(${cpp.expr(v)})`
+      // int(浮點)：Python 與 C++ 都向零截斷
+      if (from === 'float' || from === 'int' || from === 'bool') return `(long long)(${cpp.expr(v)})`
+    }
+    if (to === 'float') {
+      if (from === 'str') return `stod(${cpp.expr(v)})`
+      if (from === 'int' || from === 'float') return `(double)(${cpp.expr(v)})`
+    }
+    if (to === 'str' && (from === 'int')) return `to_string(${cpp.expr(v)})`
+    if (to === 'str' && from === 'str') return cpp.expr(v)
+    return cpp.keep(n, 'type-uncertain', `${to}(…) 的對象型別（${from ?? '?'}）`)
+  })
+}

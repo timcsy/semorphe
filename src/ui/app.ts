@@ -2995,21 +2995,49 @@ export class App {
     let types: Readonly<Record<string, string>> = (known && carryTypes(known.tree, known.nodes, before)) ?? {}
     // 判決的問題（溢位的那一類要換法知道，T017）：上一次判決的節點 id 對到這棵樹才用；另外問的那一次直接用
     let problems: readonly { kind: string; at?: string }[] = Object.keys(types).length > 0 && known?.tree === before ? (known.problems ?? []) : []
+    // 觀察型別用的輸入（spec 225 R7）：題目的輸入 → 學生上一次執行的輸入；型別只對這一份成立（換出來的程式第一行會說）
+    const input = check?.input || this.executionController?.lastStdinLines().map((l) => `${l}\n`).join('') || ''
+    let observed: CheckAnswer['observed'] = null
+    let source: CheckAnswer['verdict'] = null
     const p = provide('verdict').provider
     // 判決還沒暖好也等它（`check` 會自己載入；換語言的每一處都要型別——不等的話剛開頁面就換，整支都會因「需要型別」退回）。最多等 15 秒
-    if (Object.keys(types).length === 0 && check && p?.check) {
+    if (check && p?.check) {
       const timeout = new Promise<null>((res) => setTimeout(() => res(null), 15_000))
       try {
-        const a = await Promise.race([p.check(check), timeout])
-        if (a && !a.stale) { types = a.types?.nodes ?? {}; problems = (a.verdict?.problems ?? []).map((x) => ({ kind: x.kind, at: x.at })) }
-      } catch { types = {} }
+        const a = await Promise.race([p.check({ ...check, input, wantObserved: true }), timeout])
+        if (a && !a.stale) {
+          if (Object.keys(types).length === 0) { types = a.types?.nodes ?? {}; problems = (a.verdict?.problems ?? []).map((x) => ({ kind: x.kind, at: x.at })) }
+          observed = a.observed ?? null
+          source = a.verdict
+        }
+      } catch { /* 判不了：照沒有型別處理（換法會照實保留） */ }
     }
     if (this.currentTarget !== targetAtSwitch || epoch !== this.languageConversionEpoch) return
-    const r = pack.convertToLanguage(before, toLanguage, types, problems)
+    // 要寫型別的目標語言（Python → C++）用觀察到的型別與它的 basis；其餘照判決的型別
+    const r = pack.convertToLanguage(before, toLanguage, observed?.nodes ?? types, problems, observed?.basis, input)
     if (!r) return
     if (r.code !== null) {
       this.codeView?.setCode(r.code)
       await this.syncController?.syncCodeToBlocks(r.code)
+      // 🔴 **換完再判一次**（spec 225 R3）：有些意思的差只在換出來的程式才看得到（Python 的整數沒有上限 → C++ 溢位）。
+      //    在同一份輸入上，判決、輸出、assumes 要與原本那一支相同才留下；不同就退回、說出差在哪——判準是 Cella，不是我們宣稱
+      //    ⚠️ 只在原本那一支在這份輸入上判 accept 時比：沒有輸入的讀輸入程式，兩邊都判不出（空輸入讀到結尾），比了只會誤退
+      //       （e2e cpp-to-python 抓到：`cin >> a >> b` 沒有輸入，換成 Python 之後被退回）
+      const after = this.currentTree
+      const settled = this.codeView?.getCode()
+      if (source?.verdict === 'accept' && after && p?.check && epoch === this.languageConversionEpoch) {
+        const b = await p.check({ ...this.checkRequest(after).req, input }).catch(() => null)
+        const differs = b?.verdict && !b.stale && (b.verdict.verdict !== source.verdict || b.verdict.out !== source.out
+          || JSON.stringify(b.verdict.assumes ?? []) !== JSON.stringify(source.assumes ?? []))
+        // ⚠️ 判決的這幾百毫秒裡學生可能已經開始改了——改過就不退回（退回會蓋掉他剛打的字）
+        if (differs && epoch === this.languageConversionEpoch && this.codeView?.getCode() === settled) {
+          this.handleTargetChange(back.target, back.topic)
+          this.codeView?.setCode(back.code)
+          await this.syncController?.syncCodeToBlocks(back.code)
+          showToast(`${msg('LANG_KEPT', '這支程式還不能換成 {target}，維持原本的寫法').replace('{target}', targetAtSwitch.name)}——${msg('LANG_DIFFERS', '換過去之後在這份輸入上的結果不一樣')}（${b!.verdict!.verdict} ${JSON.stringify(b!.verdict!.out).slice(0, 40)} ≠ ${source.verdict} ${JSON.stringify(source.out).slice(0, 40)}）`, 'warning')
+          return
+        }
+      }
       showToast(msg('LANG_CONVERTED', '換成 {target} 的寫法：{n} 句').replace('{target}', this.currentTarget.name).replace('{n}', String(r.converted)), 'success')
       return
     }

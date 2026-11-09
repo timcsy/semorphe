@@ -243,6 +243,13 @@ export interface LanguagePack extends Pack {
     tree: SemanticNode, toLanguage: string, types: Readonly<Record<string, string>>,
     /** 來源程式的判決問題（種類與指到的節點）——例：整數溢位（`ubOverflow`）在目標語言意思不同 ⟹ 不換（spec 219 T017） */
     problems?: readonly { kind: string; at?: string }[],
+    /**
+     * `types` 每一格是在一份輸入上**觀察到**的、還是那份輸入下**沒跑到**（Cella 的 Python 型別表，spec 225）。
+     * 沒給 ＝ 不知道——要宣告型別的目標語言（C++）就照實保留。
+     */
+    basis?: Readonly<Record<string, 'observed' | 'unreached'>>,
+    /** 觀察型別時用的那份輸入（換出來的程式要說「型別是照這組輸入推的」，spec 225 FR-009） */
+    input?: string,
   ) => LanguageConversion | null
   /**
    * **這個語言在使用者的碼【外面】加的那一層**——模組登記表、程式外殼（鷹架）、

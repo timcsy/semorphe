@@ -40,13 +40,13 @@ export type Variable = { name: string; type: string; value: string }
 
 export type WorkerRequest =
   | { id: number; kind: 'load' }
-  | { id: number; kind: 'check'; program: unknown; input: string; fuel?: number }
+  | { id: number; kind: 'check'; program: unknown; input: string; fuel?: number; wantObserved?: boolean }
   | { kind: 'dap-prepare'; branch: CellaBranch }
   | { kind: 'dap-open'; sid: number; branch: CellaBranch; program: unknown; maxSteps?: number }
   | { kind: 'dap-op'; sid: number; seq: number; body: DapOp }
 export type WorkerReply =
   | { kind: 'status'; status: 'loading' | 'ready' | 'unavailable'; reason?: string; cached?: boolean }
-  | { id: number; kind: 'result'; verdict: CellaVerdict; types: CellaTypes }
+  | { id: number; kind: 'result'; verdict: CellaVerdict; types: CellaTypes; observed?: { nodes: Record<string, string>; basis: Record<string, 'observed' | 'unreached'> } | null }
   | { id: number; kind: 'skipped' }
   | { id: number; kind: 'error'; reason: string }
   | { kind: 'dap-status'; branch: CellaBranch; status: 'loading' | 'ready' | 'unavailable'; reason?: string }
@@ -102,7 +102,10 @@ async function drain(): Promise<void> {
     try {
       const c = await load(family)
       if (pending) { post({ id: req.id, kind: 'skipped' }); continue }   // 等載入時來了更新的
-      post({ id: req.id, kind: 'result', verdict: c.verdict(req.program, req.input, req.fuel), types: c.types(req.program, []) })
+      const verdict = c.verdict(req.program, req.input, req.fuel)
+      // 觀察型別要再跑一次程式——只有換語言那一條路要（`wantObserved`），平常的判決不付這個代價；只有 accept 才有表
+      const o = req.wantObserved && verdict.verdict === 'accept' ? c.observed(req.program, req.input, req.fuel) : null
+      post({ id: req.id, kind: 'result', verdict, types: c.types(req.program, []), observed: o?.nodes && o.basis ? { nodes: o.nodes, basis: o.basis } : null })
     } catch (e) {
       // 🔴 判決途中丟錯（例如 wasm 中止：堆疊溢位）——那一份實例不能再用（cella 2026-11-05：之後的呼叫會丟「實例不能再用，
       //    請建立新的」，之前會照樣回一個不可信的 accept）。從快取拿掉，下一次判決重建（從編好的位元組，很快）。
