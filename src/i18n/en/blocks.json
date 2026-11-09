@@ -1090,5 +1090,6 @@
   "PROPOSAL_REPLACED_TEMPLATE": "a template was applied",
   "PROPOSAL_REPLACED_TARGET": "the target changed",
   "PROPOSAL_REPLACED_LESSON": "the lesson loaded its starting program",
-  "PROPOSAL_REPLACED_IMPORT": "a file was imported"
+  "PROPOSAL_REPLACED_IMPORT": "a file was imported",
+  "LANG_DIFFERS": "the rewritten program gives a different result on this input"
 }

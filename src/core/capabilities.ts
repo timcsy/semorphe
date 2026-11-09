@@ -178,6 +178,11 @@ export interface CheckAnswer {
   stale: boolean
   /** 這支程式會讀標準輸入——沒有測資時，執行期的問題可能是空輸入的假象（由提供者看它自己的程式形式判斷）。 */
   readsInput: boolean
+  /**
+   * **在這份輸入上觀察到的型別**（spec 225）——不寫型別的語言（Python）要換成要寫型別的語言時用；鍵是節點 id。
+   * `basis`：每一格是觀察到的、還是這份輸入下沒跑到。提供者給不出（語言不是這一類、或版本還沒有）就沒有這一格。
+   */
+  observed?: { nodes: Readonly<Record<string, string>>; basis: Readonly<Record<string, 'observed' | 'unreached'>> } | null
 }
 
 /** 提供者的就緒狀態（昂貴的提供者要先載入；狀態列照這個顯示）。 */

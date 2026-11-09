@@ -335,6 +335,11 @@ export class ExecutionController {
    * **重播上一次**（vision〈執行的誠實〉的 🆕 那一格）——用上一次打過的那幾行輸入再跑一次。
    * ⚠️ 手動改過的變數、板子的輸入不重播（它們綁在「第幾次停下」上，跑法一變就對不上）——照實說有幾筆沒重播。
    */
+  /** 上一次執行從外面拿到的輸入（標準輸入那幾行）——換語言時拿來觀察型別（spec 225）；沒有就是空陣列。 */
+  lastStdinLines(): string[] {
+    return this.lastInputs.filter((i): i is Extract<SessionInput, { kind: 'stdin' }> => i.kind === 'stdin').map((i) => i.value)
+  }
+
   replayLast(): void {
     const lines = this.lastInputs.filter((i): i is Extract<SessionInput, { kind: 'stdin' }> => i.kind === 'stdin').map((i) => i.value)
     const skipped = this.lastInputs.filter((i) => i.kind === 'set-variable' || i.kind === 'set-input').length
