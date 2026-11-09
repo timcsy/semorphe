@@ -13,6 +13,9 @@ export interface ObservedTypes {
   basis: Readonly<Record<string, 'observed' | 'unreached'>>
 }
 
+/** 補在 C++ 程式開頭的小函式（內容在引擎的 HELPERS）；`list_text_*` 是同名 `list_text` 的多載 */
+export type HelperName = 'read_line' | 'floor_div' | 'floor_mod' | 'int_pow' | 'split_words' | 'split_on' | 'to_upper' | 'to_lower' | 'replace_all' | 'list_text_int' | 'list_text_str'
+
 export interface ToCppContext {
   /** 一顆運算式節點寫成 C++ 運算式文字 */
   expr(n: SemanticNode | undefined): string
@@ -24,8 +27,8 @@ export interface ToCppContext {
   pyType(n: SemanticNode | undefined): string | undefined
   /** Python 型別 → C++ 型別文字（`int` → `long long`、`list[int]` → `vector<long long>`）；對不上 → undefined */
   cppType(pyType: string | undefined): string | undefined
-  /** 程式需要一支補在開頭的小函式（`read_line`、`floor_div`、`floor_mod`）——回傳它的名字 */
-  useHelper(name: 'read_line' | 'floor_div' | 'floor_mod'): string
+  /** 程式需要一支補在開頭的小函式——回傳呼叫時要寫的名字 */
+  useHelper(name: HelperName): string
   /** 程式需要一個標頭（`vector`、`algorithm`、`numeric`）——回傳標頭名 */
   useInclude(header: string): string
   /** 這個名字是程式自己定義的函式嗎 */

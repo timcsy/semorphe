@@ -120,11 +120,26 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code).not.toMatch(/[^"]%[^"]/)
     await sameVerdict(src, r.code!, '')
   }, 60_000)
+  it('🟢 取餘數的兩邊有運算式：小函式 trunc_mod，每邊只算一次；判決相同（381）', async () => {
+    const src = H + 'int bump(int& x) {\n    x = x + 1;\n    return x;\n}\nint main() {\n    int a = -7;\n    int n = 0;\n    cout << (a + 1) % 4 << " " << bump(n) % 5 << " " << n << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    if (r.code === null) { expect(r.reasons.length).toBeGreaterThan(0); return }  // 參考參數換不過去時照實保留
+    expect(r.code).toContain('trunc_mod(a + 1, 4)')
+    await sameVerdict(src, r.code, '')
+  }, 60_000)
+  it('🟢 main 中途結束：raise SystemExit，後面的不跑；判決相同（381）', async () => {
+    const src = H + 'int main() {\n    int a = 1;\n    if (a > 0) {\n        cout << "x" << endl;\n        return 0;\n    }\n    cout << "y" << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).toContain('raise SystemExit')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
   for (const [name, body, kind] of [
     // 64 位元的整數：值可以超過 2^53，浮點不再精確 ⟹ int(a / b)、math.fmod 都不保證相同（spec 224 順手修：除法原本也收 long long）
     ['64 位元整數的取餘數', '    long long a = -7, b = 2;\n    cout << a % b << endl;\n', 'modulo'],
-    // 照定義改寫時兩邊各出現兩次——有副作用的運算式會被算兩次
-    ['取餘數的一邊有副作用（照定義改寫會算兩次）', '    int i = 7;\n    cout << i++ % 3 << " " << i << endl;\n', 'modulo'],
+    // `i++` 這個運算式在 Python 沒有對應——不因為取餘數改用小函式就放行
+    ['取餘數的一邊是 i++', '    int i = 7;\n    cout << i++ % 3 << " " << i << endl;\n', 'outside-subset'],
+    ['main 中途 return 非零', '    int a = 1;\n    if (a > 0) {\n        return 1;\n    }\n    cout << a << endl;\n', 'outside-subset'],
+    ['二維陣列的初值沒寫滿', '    int g[2][2] = {{1}, {2, 3}};\n    cout << g[0][1] << endl;\n', 'outside-subset'],
     ['64 位元整數的除法', '    long long a = 9007199254740993LL, b = 1;\n    cout << a / b << endl;\n', 'division'],
     // `s[0] = 'z'` 由「陣列元素指定」那顆接——365 接上它的 Python 寫法時差點把這一支換過去（這支反例抓到）
     ['改字串裡的一個字元（Python 的字串不能改）', '    string s = "abc";\n    s[0] = \'z\';\n    cout << s << endl;\n', 'char'],

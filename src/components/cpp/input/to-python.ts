@@ -11,6 +11,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
       if (/^(int|long|long long|short)$/.test(ty)) return 'int'
       if (ty === 'double' || ty === 'float') return 'float'
       if (/string/.test(ty)) return 'str'
+      // `cin >> s`（s 是 string）走的是函式庫的 operator>>：Cella 在這格報的是那次呼叫的型別（std::istream），不是 s 的型別
+      if (ty === 'std::istream' && py.isDeclaredString(String(t.properties?.name ?? ''))) return 'str'
       return ty === '' ? null : undefined
     })
     if (conv.some((c) => c === null)) return [py.keep(n, 'needs-types', '讀入的變數型別判斷不出來')]

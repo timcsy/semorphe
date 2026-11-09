@@ -24,6 +24,8 @@ const TOKEN_READER = [
   '        _tokens.extend(input().split())',
   '    return _tokens.pop(0)',
 ]
+/** C++ 的 %：商向零截斷（[expr.mul]p4）。寫成函式，兩邊的運算式各只算一次 */
+const TRUNC_MOD = ['def trunc_mod(a, b):', '    return a - int(a / b) * b']
 const tables = (): ToPythonTables => (TABLES ??= collectToPython())
 
 const lineOf = (n: SemanticNode): number | undefined =>
@@ -37,6 +39,7 @@ export function convertCppToPython(
   const t = tables()
   // 程式自己定義的函式名（問形狀：有 params 槽、有名字的節點）——呼叫它們才換，標準函式庫的第一版不換
   const userFunctions = new Set<string>()
+  const declaredStrings = new Set<string>()
   const scan = (n: SemanticNode): void => {
     if (n.slots?.params !== undefined && typeof n.properties?.name === 'string') userFunctions.add(n.properties.name)
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(scan)
@@ -44,6 +47,7 @@ export function convertCppToPython(
   scan(tree)
   let inMain = false
   let needTokens = false
+  let needTruncMod = false
   const imports = new Set<string>()
   const py: ToPythonContext = {
     get inMain() { return inMain },
@@ -57,6 +61,9 @@ export function convertCppToPython(
     isEntryFunction: (name) => skeletonsOfLanguage('cpp').some((sk) => sk.entryFunctions.length === 1 && !!entryFunctionOf(sk, name)),
     yieldsBool: (n) => !!n && t.bool.has(n.componentId),
     useTokenReader() { needTokens = true; return 'next_token()' },
+    useTruncMod() { needTruncMod = true; return 'trunc_mod' },
+    noteDeclaredString: (name) => { declaredStrings.add(name) },
+    isDeclaredString: (name) => declaredStrings.has(name),
     useImport(m) { imports.add(m); return m },
     indent: (d) => '    '.repeat(d),
     typeOf: (n) => (n ? types[n.id] : undefined),
@@ -93,6 +100,6 @@ export function convertCppToPython(
   }
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   // 跨行讀一個詞——同 cin（空白與換行都是分隔；research R4 的修正：課文的輸入一個數一行，「一句讀一行」對不上）
-  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needTokens ? TOKEN_READER : [])]
+  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needTokens ? TOKEN_READER : []), ...(needTruncMod ? TRUNC_MOD : [])]
   return { code: `${[...head, ...lines].join('\n')}\n`, converted, kept: 0, reasons }
 }

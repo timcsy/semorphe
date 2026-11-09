@@ -32,6 +32,12 @@ export interface ToPythonContext {
   useImport(module: string): string
   /** 程式需要「跨行讀一個詞」的小工具（同 cin 的讀法）——引擎在檔頭補上 */
   useTokenReader(): string
+  /** 程式需要 C++ 的取餘數（向零截斷）：回傳補在開頭的小函式名——兩邊有運算式時用它，才不會算兩次 */
+  useTruncMod(): string
+  /** 宣告 string 的那顆元件記下名字（身分留在膠囊裡，引擎不必認得它） */
+  noteDeclaredString(name: string): void
+  /** 這個名字在前面宣告成 string 嗎 */
+  isDeclaredString(name: string): boolean
 }
 
 /** 加括號的判準兩個方向共用（住在核心）——膠囊照舊從這裡拿 */
