@@ -8,7 +8,7 @@ import { nodesAtBreakpoints } from '../../core/projection/code-mapping'
 import { isResidualCause } from '../../core/diagnostics'
 import type { SemanticBus } from '../../core/sync/semantic-bus'
 import type { SemanticNode } from '../../core/types'
-import { resolveCollapsed, type CollapsedEntry } from '../../core/granularity'
+import { resolveCollapsed, nodeAtStartLine, type CollapsedEntry } from '../../core/granularity'
 
 import type { ScaffoldResult, ScaffoldItem } from '../../core/program-scaffold'
 import type { CodeView } from '../../core/host/code-view'
@@ -126,14 +126,9 @@ export class MonacoPanel implements ViewHost, CodeView {
     this.collapseCb = cb
   }
 
-  /** 從某一行（1 起算）開始的那個節點——同一行有好幾個時取跨最多行的（`for` 的條件也從那一行開始） */
+  /** 從某一行（1 起算）開始的那個節點——同一行有好幾個時取跨最多行的（判準在核心，IDE 宿主共用） */
   private nodeStartingAt(line: number): string | null {
-    let best: CodeMapping | null = null
-    for (const m of this.codeMappings) {
-      if (m.startLine + 1 !== line || m.endLine <= m.startLine) continue
-      if (!best || m.endLine - m.startLine > best.endLine - best.startLine) best = m
-    }
-    return best?.nodeId ?? null
+    return nodeAtStartLine(this.codeMappings).get(line - 1) ?? null
   }
 
   private async foldingModel(): Promise<FoldingModelLike | null> {

@@ -18,7 +18,7 @@ import { createTestLifter } from '../helpers/setup-lifter'
 import type { Lifter } from '../../src/core/lift/lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { convertCppToPython } from '../../src/languages/cpp/cpp-to-python'
-import { runCella, cellaTypesOfTree } from '../helpers/cella-run'
+import { runCella, cellaTypesOfTree, knownCellaGap } from '../helpers/cella-run'
 import type { SemanticNode } from '../../src/core/types'
 import { liftPython, componentIdsOf, generatePython } from '../helpers/python-lift'
 
@@ -47,7 +47,7 @@ async function sameVerdict(src: string, py: string, stdin: string): Promise<void
   expect(a.verdict, `C++ 那一側本身就不是 accept${show}`).toBe('accept')
   expect(b.verdict, show).toBe(a.verdict)
   expect(b.out, show).toBe(a.out)
-  expect(b.assumes ?? [], show).toEqual(a.assumes ?? [])
+  expect(b.assumes ?? [], `${show}\nassumes：C++ ${JSON.stringify(a.assumes ?? [])} / Python ${JSON.stringify(b.assumes ?? [])}`).toEqual(a.assumes ?? [])
 }
 
 const files = fs.readdirSync('lessons/cpp-beginner', { recursive: true }).map(String)
@@ -58,6 +58,9 @@ const stdinOf = (f: string): string => {
   const task = lesson.tasks.find((t: { id: string }) => t.id === path.basename(f, '.cpp').split('~')[0])
   return ((task?.check?.stdin ?? []) as string[]).map((l) => `${l}\n`).join('')
 }
+
+/** Cella 的 Python 家族少帶 libm 的假設（sqrt）——修好時這幾支會紅 */
+const KNOWN_ASSUMES_GAP = new Set(['06-算一算/solutions/rebuild.cpp'])
 
 describe('C++ → Python：cpp-beginner 課文的解答', () => {
   const tally = { converted: [] as string[], kept: new Map<string, string[]>() }
@@ -78,7 +81,10 @@ describe('C++ → Python：cpp-beginner 課文的解答', () => {
         return
       }
       tally.converted.push(f)
-      await sameVerdict(src, r.code, stdinOf(f))
+      // 🟠 Cella 那側的不一致（2026-11-09 回報）：C++ 的 sqrt 判決帶 assumes math.correctlyRounded（libm）、Python 的 math.sqrt 沒帶——
+      //    CPython 的 math.sqrt 同樣是 C 函式庫的薄包裝，兩邊應該帶同一個假設。這一支之前因為 % 被保留，沒走到這裡（spec 224 換過去之後露出來）
+      if (KNOWN_ASSUMES_GAP.has(f.replace('lessons/cpp-beginner/', ''))) await knownCellaGap(/correctlyRounded/, () => sameVerdict(src, r.code!, stdinOf(f)))
+      else await sameVerdict(src, r.code, stdinOf(f))
       // SC-005／research R7 的第二道檢查：換出來的碼由 Python 自己的 lift 認得乾淨（沒有照原文），產碼回來同一支程式
       const back = await liftPython(r.code)
       expect(componentIdsOf(back).filter((c) => /raw|unresolved/.test(c)), `Python 的 lift 認不出來：\n${r.code}`).toEqual([])
@@ -104,8 +110,22 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code).not.toContain('//')
     await sameVerdict(src, r.code!, '')
   }, 60_000)
+  it('🟢 取餘數的一般用法：照 C++ 的定義換成 a - int(a / b) * b（向零截斷、正負號跟被除數）、不是 %；判決相同（spec 224）', async () => {
+    // 巢狀在別的運算裡（`a % b * 3`）要有括號——由外層的 paren() 加
+    const src = H + 'int main() {\n    int a = -7, b = 2;\n    int c = 17;\n    c %= -5;\n    cout << a % b << " " << 7 % -2 << " " << c << " " << a % b * 3 << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code).toContain('a - int(a / b) * b')
+    expect(r.code).toContain('c = c - int(c / -5) * -5')
+    expect(r.code).not.toMatch(/[^"]%[^"]/)
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
   for (const [name, body, kind] of [
-    ['取餘數的一般用法（負數的正負號規則不同）', '    int a = -7, b = 2;\n    cout << a % b << endl;\n', 'modulo'],
+    // 64 位元的整數：值可以超過 2^53，浮點不再精確 ⟹ int(a / b)、math.fmod 都不保證相同（spec 224 順手修：除法原本也收 long long）
+    ['64 位元整數的取餘數', '    long long a = -7, b = 2;\n    cout << a % b << endl;\n', 'modulo'],
+    // 照定義改寫時兩邊各出現兩次——有副作用的運算式會被算兩次
+    ['取餘數的一邊有副作用（照定義改寫會算兩次）', '    int i = 7;\n    cout << i++ % 3 << " " << i << endl;\n', 'modulo'],
+    ['64 位元整數的除法', '    long long a = 9007199254740993LL, b = 1;\n    cout << a / b << endl;\n', 'division'],
     // `s[0] = 'z'` 由「陣列元素指定」那顆接——365 接上它的 Python 寫法時差點把這一支換過去（這支反例抓到）
     ['改字串裡的一個字元（Python 的字串不能改）', '    string s = "abc";\n    s[0] = \'z\';\n    cout << s << endl;\n', 'char'],
     ['char 的 ++（Python 的字串不能加 1）', '    char c = \'a\';\n    c++;\n    cout << c << endl;\n', 'char'],

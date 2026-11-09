@@ -46,6 +46,7 @@ import { textFingerprint } from '../sync/fingerprint'
 import type { CodeView, HighlightVariant } from '../../core/host/code-view'
 import type { ControlState, ControlInvoke } from '../../core/host/controls'
 import type { CodeMapping } from '../../core/projection/code-generator'
+import { foldLinesFor, resolveCollapsed, type CollapsedEntry } from '../../core/granularity'
 import type { SemanticNode } from '../../core/types'
 import type { DiagnosticsEvent } from '../../core/sync/view-host'
 import { projectDiagnostics } from '../../core/projection/diagnostic-projection' 
@@ -558,11 +559,37 @@ export class VscodeCodeView implements CodeView, ViewHost {
     //    而**投影的實作在核心**（`core/projection/diagnostic-projection.ts`）。
     if (event.mappings) this.codeMappings = event.mappings
     if (event.tree) this.currentTree = event.tree
+    // 對映變了，要摺的行可能跟著挪（同一顆節點換了起始行）
+    this.sendFolds()
     // 應用透過匯流排說「樹變了，程式碼是這個」——而寫回走 `setCode`。
     // ⚠️ `source === 'code'` 代表這一輪【是程式碼那側發動的】，寫回去就是迴圈。
     if (event.source === 'code') return
     const code = (event as { code?: unknown }).code
     if (typeof code === 'string') this.setCode(code)
+  }
+
+  // ─── 粒度（spec 223）：收合狀態的第四個投影——IDE 宿主的程式碼 ───────────────
+  //
+  // 網頁版的 Monaco 摺疊在 `monaco-panel.ts`（spec 189）；這裡的程式碼在宿主的編輯器裡，
+  // 摺疊要宿主去做（`editor.fold`）。判準與網頁版同一支（`core/granularity.ts` 的 `foldLinesFor`）。
+  // ⚠️ 只送「變了的」：沒變就不送（每次語義更新都會走到這裡）；展開只展開**我們摺過的**——
+  //    使用者自己摺的我們看不見，也不去動它。
+  private collapsedEntries: CollapsedEntry[] = []
+  private sentFolded = new Set<number>()
+
+  onGranularity(event: { entries: CollapsedEntry[] }): void {
+    this.collapsedEntries = event.entries
+    this.sendFolds()
+  }
+
+  private sendFolds(): void {
+    if (!this.currentTree) return
+    const want = new Set(foldLinesFor(resolveCollapsed(this.collapsedEntries, this.currentTree), this.codeMappings))
+    const fold = [...want].filter((l) => !this.sentFolded.has(l))
+    const unfold = [...this.sentFolded].filter((l) => !want.has(l))
+    if (fold.length === 0 && unfold.length === 0) return
+    this.sentFolded = want
+    this.post({ type: 'fold', fold, unfold })
   }
 
   async initialize(): Promise<void> {

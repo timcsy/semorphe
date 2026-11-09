@@ -46,6 +46,7 @@
 - [x] T015 [P] 寫 `tests/integration/proposals-roundtrip.test.ts`（SC-005）：C、C++、Python、Arduino 各一支課文程式，套四種操作後產碼再 lift，樹形狀一致
 - [x] T016 `npx tsc --noEmit`、`npm run test:unit`、`npm run test:guard`（layering、portable-core、tests-import-reachable、four-independences、neutrality、no-native-dialog）；基線上升時手改並附 note
 - [x] T017 瀏覽器實測（skill verify-in-browser）：主控台送提議 → 列、差異、接受、復原、退回、過期
+  - 2026-11-09：**使用者實測**（照白話說明在網站主控台試）：「測了一下，感覺不錯」，沒有回報問題。
   - 2026-11-09：Chrome 擴充回「Debugger 沒接上」（同 union 那次），改用 Playwright 開同一份建置截圖、用眼睛看：送出前後、接受後程式碼與積木一起更新。抓到兩處小問題並修：卡片下緣壓到狀態列、「還有 1 個在等」把畫面上那個也算進去（改「共 N 個待處理」）
 - [ ] T018 `npm run build:vscode`（改了 `app.ts`）；長測試 `tools/long-test.sh`（全套＋建置＋e2e）
 

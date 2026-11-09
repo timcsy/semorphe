@@ -66,3 +66,25 @@ export interface ToPythonRegistrar {
 }
 
 export type RegisterToPython = (r: ToPythonRegistrar) => void
+
+/**
+ * 32 位元以內的有號整數——浮點的商與 `math.fmod` 在 2^53 以內精確，所以 `int(a / b)`、`int(math.fmod(a, b))` 與 C++ 逐位相同。
+ * ⚠️ `long`（LP64 是 64 位元）與 `long long` 不算：值可以超過 2^53（spec 224：除法原本也收 long long，9007199254740993 / 1 換出來會錯）
+ */
+export function isNarrowInt(t: string | undefined): boolean {
+  return /^(?:int|short|signed|signed int|short int)$/.test(t ?? '')
+}
+
+/**
+ * C++ 的取餘數照它自己的定義寫成 Python（[expr.mul]p4：`a == (a / b) * b + a % b`，商向零截斷）：`a - int(a / b) * b`。
+ * ⚠️ 兩邊各出現兩次——有副作用的運算式（呼叫、`i++`）會被算兩次、意思就變了 ⟹ 只收變數與字面量，其餘回 null（呼叫端保留）。
+ * （`math.fmod` 更短，而 Cella 的 Python 家族還不支援它——判決證明不了的寫法不用。2026-11-09 已請 cella 補）
+ */
+export function truncatedRemainder(l: SemanticNode | undefined, r: SemanticNode | undefined, py: ToPythonContext): string | null {
+  const simple = (x: SemanticNode | undefined): boolean => !!x && Object.values(x.slots ?? {}).every((k) => k.length === 0)
+    && (typeof x.properties?.name === 'string' || typeof x.properties?.value === 'string')
+  if (!simple(l) || !simple(r)) return null
+  const a = py.expr(l), b = py.expr(r)
+  return `${a} - int(${a} / ${b}) * ${b}`
+}
+
