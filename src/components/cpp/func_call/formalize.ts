@@ -75,9 +75,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     if (!f.isFunctionName(name) && f.isTypeText(name)) {
       const t = f.type(name, n) as { k: string; name?: string } | null
       // 標準函式庫的類別樣板寫完整的 `std::`（同 FUNCTOR；`ostream_iterator<int>(cout, " ")` 不寫就判 callArguments——2026-11-08 量到）
-      // 標準串流當建構引數（`ostream_iterator<int>(cout, " ")`）：cella 2026-11-08 說送 eConst——eName 在這個位置會被解析成串流敘述的那種 cout、判 callArguments
-      const streamArgs = args.map((a) => (a.k === 'eName' && /^(?:std::)?(cout|cerr|clog)$/.test(String(a.name)) ? f.k('eConst', { n: a.n, name: String(a.name).replace(/^std::/, '') }) : a))
-      if (t) return f.k('eTemp', { n: n.id, t: t.k === 'tTemplate' && t.name && !t.name.startsWith('std::') ? { ...t, name: `std::${t.name}` } : t, args: streamArgs })
+      // 標準串流當建構引數（`ostream_iterator<int>(cout, " ")`）照一般的名字送 eName：cella 0.1.202611082213 起在運算元位置解析成串流物件
+      //    （0524 那一版要送 eConst 的特判已拿掉）
+      if (t) return f.k('eTemp', { n: n.id, t: t.k === 'tTemplate' && t.name && !t.name.startsWith('std::') ? { ...t, name: `std::${t.name}` } : t, args })
     }
     // 其餘帶樣板引數的（`max<long long>(a, b)` 明確指定樣板引數的函式樣板呼叫）：照 eCall 送等於呼叫一個叫 `max<long long>` 的函式
     //    ——主樹上判「未宣告」reject（假的錯）。照實標翻不出

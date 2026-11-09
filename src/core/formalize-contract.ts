@@ -128,6 +128,11 @@ export interface FormalizeContext {
   /** 這個名字是程式裡定義過的型別（struct）嗎。 */
   isStructName(name: string): boolean
   /**
+   * 這個名字是程式裡的**任何一種型別名**嗎——struct／class、union、enum（含 enum class）、前置宣告過的。
+   * `isStructName` 只回答 struct；`sizeof(Num)` 這種要問的是「它是不是型別」（2026-11-09：C++ 的 union 名字被當成變數，判錯 reject）。
+   */
+  isTypeName(name: string): boolean
+  /**
    * 類別外的靜態成員定義（`int C::n = 3;`、`L* L::current = nullptr;`）的初值節點——給類別裡的那顆靜態成員用（cella 2026-11-08：
    * 初值併進類別的 mbStatic，類別外的定義本身不另外送）。`member` 是類別裡那顆成員；沒有外面的定義或定義沒有初值 → undefined。
    */

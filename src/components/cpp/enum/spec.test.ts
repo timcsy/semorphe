@@ -128,6 +128,11 @@ describe('enum class（360）', () => {
     expect(items).toEqual([['Color', null], ['Dir', { k: 'tUChar' }], ['Mode', { k: 'tLongLong' }]])
     expect(JSON.stringify(fz.program)).toMatch(/"k":"eName"[^}]*"name":"Color::Green"/)
   })
+  it('★ Cella 判得出（cella 0.1.202611082213 起認得 iEnumClass 與限定名）：值、比較、底層型別的 sizeof', async () => {
+    const { expectCellaOut } = await import('../../../../tests/helpers/cella-run')
+    await expectCellaOut(SRC, '5 1\n', { lang: 'cpp' })
+    await expectCellaOut('#include <iostream>\nusing namespace std;\nenum class Dir : unsigned char { N, S };\nenum class Color { Red, Green };\nint main() {\n    cout << sizeof(Dir) << " " << sizeof(Color) << " " << (Color::Red == Color::Green) << endl;\n    return 0;\n}\n', '1 4 0\n', { lang: 'cpp' })
+  }, 120_000)
   it('區塊裡的 enum class：照實翻不出（Cella 還沒有那個敘述形狀），不送成一般的 enum', async () => {
     const { runCella } = await import('../../../../tests/helpers/cella-run')
     const r = await runCella('int main() {\n    enum class E { A };\n    return 0;\n}\n', { lang: 'cpp' })
