@@ -149,6 +149,8 @@ test('詞彙：拿得到目前語言的元件，照它組的提議通過（spec 
   expect(vocab.every((e: { componentId: string }) => e.componentId.startsWith('cpp:'))).toBe(true)
   const print = vocab.find((e: { componentId: string }) => e.componentId === 'cpp:print')
   expect(print.slots.find((s: { slot: string }) => s.slot === 'values').accepts).toEqual(['expression'])
+  // 說明文字照畫面的語系（spec 226）
+  expect(print.description).toBe('印出一個或多個值到螢幕上')
   const r = await submit(page, { author: 'AI', ops: [{ op: 'insert', parent: await idOf(page, 'cpp:func_def'), slot: 'body', index: 0, node: { componentId: print.componentId, slots: { values: [{ componentId: 'cpp:var_ref', properties: { name: 'n' } }] } } }] })
   expect(r.status).toBe('pending')
 })

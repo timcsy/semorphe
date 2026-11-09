@@ -6,7 +6,8 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../helpers/setup-lifter'
 import { allCppComponents } from '../../../../src/languages/cpp/all-declarations'
 import { applyOps, schemaFrom, type NodeSpec, type OpSchema } from '../../../../src/core/proposals/tree-ops'
-import { vocabularyOf, type VocabularyEntry } from '../../../../src/core/proposals/vocabulary'
+import { vocabularyOf, tooltipKeyOf, type VocabularyEntry } from '../../../../src/core/proposals/vocabulary'
+import { componentLabels } from '../../../../src/core/component/labels'
 import type { SemanticNode } from '../../../../src/core/types'
 
 let parser: Parser
@@ -70,5 +71,20 @@ describe('元件詞彙', () => {
       }
     }
     expect(bad).toEqual([])
+  })
+  it('說明文字（spec 226）：來自膠囊自己的積木提示（照語系）；沒有提示的不編一句', () => {
+    const zh = componentLabels('zh-TW')
+    const en = componentLabels('en')
+    const withZh = vocabularyOf(schema, 'cpp', (id) => { const k = tooltipKeyOf(id); return k ? zh[k] : undefined })
+    expect(withZh.find((e) => e.componentId === 'cpp:print')?.description).toBe(zh.U_PRINT_TOOLTIP)
+    expect(vocabularyOf(schema, 'cpp', (id) => { const k = tooltipKeyOf(id); return k ? en[k] : undefined }).find((e) => e.componentId === 'cpp:print')?.description).toBe('Print one or more values to the screen')
+    // 中性形態優先：var_declare 說的是「建立一個新的變數」，不是運算式版本的那一句
+    expect(withZh.find((e) => e.componentId === 'cpp:var_declare')?.description).toBe(zh.U_VAR_DECLARE_TOOLTIP)
+    // 沒給 describe 就沒有這一格（不是空字串）
+    expect('description' in vocab.find((e) => e.componentId === 'cpp:print')!).toBe(false)
+    // 說得出的要佔大多數——量出來寫在這裡，往下掉就是有膠囊的提示斷了
+    const described = withZh.filter((e) => e.description).length
+    process.stdout.write(`詞彙說明：${described}／${withZh.length}\n`)
+    expect(described / withZh.length).toBeGreaterThan(0.8)
   })
 })

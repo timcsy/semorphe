@@ -21,7 +21,7 @@ import type { SemanticNode, ComponentDefJSON } from '../core/types'
 import { ProposalQueue, type ProposalInput, type ProposalStatus } from '../core/proposals/proposal-queue'
 import { schemaFrom, type OpReason, type OpSchema } from '../core/proposals/tree-ops'
 import { lineDiff, type DiffLine } from '../core/proposals/line-diff'
-import { vocabularyOf, type VocabularyEntry } from '../core/proposals/vocabulary'
+import { vocabularyOf, tooltipKeyOf, type VocabularyEntry } from '../core/proposals/vocabulary'
 import { ProposalBar } from './proposal-bar'
 import { createNode } from '../core/semantic-tree'
 import type { DiagnosticBlock } from '../core/diagnostics'
@@ -3436,7 +3436,11 @@ export class App {
     list: (): ProposalView[] => (this.proposalQueue?.list() ?? []).map((p) => this.proposalView(p.id)!).filter(Boolean),
     get: (id: string): ProposalView | null => this.proposalView(id),
     /** 目前語言的元件詞彙——組提議之前先問有哪些元件、各收什麼（spec 222）。與形態檢查同一份宣告。 */
-    vocabulary: (): VocabularyEntry[] => vocabularyOf(this.opSchema(), this.currentTopic.language),
+    vocabulary: (): VocabularyEntry[] => vocabularyOf(this.opSchema(), this.currentTopic.language, (id) => {
+      // 說明文字照目前的語系（宿主的訊息埠）；鍵查不到就不帶
+      const k = tooltipKeyOf(id)
+      return k ? msg(k, '') || undefined : undefined
+    }),
   }
 
   /** 元件宣告依目前的語言組出操作要問的形狀；換語言才重組。 */
