@@ -15,7 +15,7 @@ import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
-import { expectCellaOut } from '../helpers/cella-run'
+import { expectCellaOut, runCella } from '../helpers/cella-run'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 
@@ -96,7 +96,14 @@ describe('模糊測試：類別的前置宣告', () => {
     expect(out).not.toMatch(/int f\(\);|void A::~A|int A\(\);/)
   })
 
-  it('🟢 Cella：類別外定義成員函式的兩支（fuzz_1 互相指到的類別、fuzz_7 觀察者）判 accept、輸出與 clang 相同', async () => {
-    for (const id of ['fuzz_1', 'fuzz_7']) await expectCellaOut(prog(id).code, prog(id).expected)
+  it('🟢 Cella：類別外定義成員函式（fuzz_1 互相指到的類別）判 accept、輸出與 clang 相同', async () => {
+    await expectCellaOut(prog('fuzz_1').code, prog('fuzz_1').expected)
+  })
+  // 🔴 2026-11-09：fuzz_7 的 `for (size_t i = 0; …)` 原本被我們改成 int 才判 accept（計數迴圈那顆吃掉型別）。照實送 size_t 之後，
+  //    只引入 <iostream> 時「標頭有沒有宣告 size_t 取決於函式庫」——Cella 誠實的 unsupported
+  it('🟡 Cella：fuzz_7（觀察者）的 size_t 迴圈變數照實送——判 unknown（標頭是否宣告 size_t 取決於函式庫）', async () => {
+    const r = await runCella(prog('fuzz_7').code)
+    expect(r.verdict).toBe('unknown')
+    expect(r.problems.map((x) => x.reason ?? '').join(' ')).toMatch(/size_t/)
   })
 })

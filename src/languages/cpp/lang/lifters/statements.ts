@@ -128,6 +128,8 @@ function isCountingFor(
   if (!init || !cond || !update) return false
   // init should be a declaration like "int i = 0"
   if (init.type !== 'declaration') return false
+  // 🔴 計數迴圈那顆沒有型別這一格、產碼一律寫 int——別的型別（long long、unsigned）不是它（同 strategies.ts 的 liftCountFor，2026-11-09）
+  if ((init.childForFieldName('type')?.text ?? 'int') !== 'int') return false
   // cond should be "i < N"
   if (cond.type !== 'binary_expression') return false
   const condOp = cond.children.find(c => !c.isNamed)?.text

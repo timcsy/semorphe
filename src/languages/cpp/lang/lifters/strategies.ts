@@ -2181,6 +2181,10 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     if (!initNode || initNode.type !== 'declaration') return null
     if (!condNode || condNode.type !== 'binary_expression') return null
     if (!updateNode) return null
+    // 🔴 這顆元件沒有「型別」這一格、產碼一律寫 `int`——迴圈變數是別的型別（`long long`、`unsigned`、`size_t`）時不是它，
+    //    讓給一般的 for（它保留宣告的型別）。少了這一行，`for (long long i = …)` 走一趟就變成 `for (int i = …)`
+    //    （2026-11-09，spec 225 的 C++ 來回斷言撞到；靜默改寫——值超過 int 時結果不同）
+    if ((initNode.childForFieldName('type')?.text ?? 'int') !== 'int') return null
 
     // Only match ascending count loops: condition must be < or <=
     const condOp = condNode.children.find(c => !c.isNamed)?.text

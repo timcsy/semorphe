@@ -234,6 +234,9 @@ const LOADABLE_SHAPES: readonly string[] = [
   '    for (int a = 0, b = n; a < b; a++, b--) {\n    }',
   '    vector<int> C(n), V(n);',
   '    vector<int> C(n + 1), V(n + 1);',
+  // 🔴 計數 for 的迴圈變數不是 int（2026-11-09）：原本被計數迴圈那顆接走、型別丟掉——`long long` 變成 `int`
+  '    for (long long i = 0; i < n; i++) {\n    }',
+  '    for (unsigned j = 0; j < 3; j++) {\n    }',
   // scanf 放在運算式位置（for 的第三格）——原本整格照原文
   '    int x = 1;\n    for (; x != 0; scanf("%d", &x)) {\n    }',
 ]
