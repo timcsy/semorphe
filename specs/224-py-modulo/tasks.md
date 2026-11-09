@@ -4,4 +4,4 @@
 - [x] T002 `contract.ts` 的 `isNarrowInt`、`truncatedRemainder`；`arithmetic`／`var_assign_compound` 的 to-python
 - [x] T003 逐字輸出的最小例（`tests/unit/languages/cpp/cpp-to-python.test.ts`）
 - [x] T004 換過去之後露出的 Cella 不一致（sqrt 的 assumes 只在 C++ 那側）以 knownCellaGap 釘住並回報
-- [ ] T005 guard、長測試、合併
+- [x] T005 guard、長測試、合併
