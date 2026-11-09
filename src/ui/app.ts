@@ -3021,8 +3021,10 @@ export class App {
       await this.syncController?.syncCodeToBlocks(r.code)
       // 🔴 **換完再判一次**（spec 225 R3）：有些意思的差只在換出來的程式才看得到（Python 的整數沒有上限 → C++ 溢位）。
       //    在同一份輸入上，判決、輸出、assumes 要與原本那一支相同才留下；不同就退回、說出差在哪——判準是 Cella，不是我們宣稱
+      //    ⚠️ 只在原本那一支在這份輸入上判 accept 時比：沒有輸入的讀輸入程式，兩邊都判不出（空輸入讀到結尾），比了只會誤退
+      //       （e2e cpp-to-python 抓到：`cin >> a >> b` 沒有輸入，換成 Python 之後被退回）
       const after = this.currentTree
-      if (source && after && p?.check && epoch === this.languageConversionEpoch) {
+      if (source?.verdict === 'accept' && after && p?.check && epoch === this.languageConversionEpoch) {
         const b = await p.check({ ...this.checkRequest(after).req, input }).catch(() => null)
         const differs = b?.verdict && !b.stale && (b.verdict.verdict !== source.verdict || b.verdict.out !== source.out
           || JSON.stringify(b.verdict.assumes ?? []) !== JSON.stringify(source.assumes ?? []))
