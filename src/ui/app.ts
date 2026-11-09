@@ -3024,11 +3024,13 @@ export class App {
       //    ⚠️ 只在原本那一支在這份輸入上判 accept 時比：沒有輸入的讀輸入程式，兩邊都判不出（空輸入讀到結尾），比了只會誤退
       //       （e2e cpp-to-python 抓到：`cin >> a >> b` 沒有輸入，換成 Python 之後被退回）
       const after = this.currentTree
+      const settled = this.codeView?.getCode()
       if (source?.verdict === 'accept' && after && p?.check && epoch === this.languageConversionEpoch) {
         const b = await p.check({ ...this.checkRequest(after).req, input }).catch(() => null)
         const differs = b?.verdict && !b.stale && (b.verdict.verdict !== source.verdict || b.verdict.out !== source.out
           || JSON.stringify(b.verdict.assumes ?? []) !== JSON.stringify(source.assumes ?? []))
-        if (differs && epoch === this.languageConversionEpoch) {
+        // ⚠️ 判決的這幾百毫秒裡學生可能已經開始改了——改過就不退回（退回會蓋掉他剛打的字）
+        if (differs && epoch === this.languageConversionEpoch && this.codeView?.getCode() === settled) {
           this.handleTargetChange(back.target, back.topic)
           this.codeView?.setCode(back.code)
           await this.syncController?.syncCodeToBlocks(back.code)

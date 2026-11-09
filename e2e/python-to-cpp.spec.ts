@@ -9,6 +9,9 @@ import { freshApp, useAsSource, pickTarget, selectTarget, codeLines } from './he
 
 const setPython = async (page: Page, code: string): Promise<void> => {
   await pickTarget(page, 'python')
+  // ⚠️ 換到 Python 時預設程式會非同步換寫法——等它做完（程式碼裡沒有 main 了），否則晚到的換寫法會蓋掉下面放進去的程式
+  await expect.poll(async () => (await codeLines(page)).join('\n'), { timeout: 30_000 }).not.toContain('main')
+  await expect(page.locator('.toast').filter({ hasText: /換成 .* 的寫法/ })).toBeVisible({ timeout: 15_000 })
   await page.evaluate((c) => (window as any).__app.codeView.setCode(c), code)
   await useAsSource(page, '程式碼')
   await expect(page.locator('.blocklyDraggable').first()).toBeVisible({ timeout: 15_000 })
@@ -41,3 +44,17 @@ test('型別說不準（這份輸入下沒跑到的一段）：程式不動、�
   await expect.poll(async () => (await codeLines(page)).join('\n'), { timeout: 20_000 }).toContain('if n > 5:')
   await expect(page.locator('.toast').filter({ hasText: /沒有跑到/ })).toBeVisible({ timeout: 10_000 })
 })
+
+// SC-004：換目標後 3 秒內看到換好的 C++ 程式（含拿型別表、換完再判一次）
+test('SC-004：換目標到看到 C++ 程式，3 秒內', async ({ page }) => {
+  await freshApp(page)
+  await setPython(page, 'n = 3\nprint(n + 1)\n')
+  await page.locator('.status-item-btn[data-control-id="target"]').click()
+  const t0 = Date.now()
+  await page.locator('.quick-pick-item[data-value="cpp"]').click()
+  await expect.poll(async () => (await codeLines(page)).join('\n'), { timeout: 10_000, intervals: [50] }).toContain('long long n;')
+  const ms = Date.now() - t0
+  console.log(`SC-004（Python → C++）：${ms} ms`)
+  expect(ms).toBeLessThan(3000)
+})
+
