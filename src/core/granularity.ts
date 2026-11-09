@@ -45,6 +45,7 @@
  * - **不碰 DOM、不碰 Blockly、不碰 Monaco。**
  */
 import type { SemanticNode } from './types'
+import type { CodeMapping } from './projection/code-generator'
 import type { SemanticBus } from './sync/semantic-bus'
 import { contextKey, keysOfNodes, keyByPath, matchByKeys, subtreeKey, walkWithPath, type KeyedNode } from './flow/layout-key'
 
@@ -220,3 +221,25 @@ export function connectGranularity(bus: SemanticBus, state = new GranularityStat
 }
 
 export type { KeyedNode }
+
+// ─── 程式碼按行摺（spec 189 網頁版、spec 223 IDE 宿主共用）────────────────────────
+
+/**
+ * 每一行（0 起算）→ 從那一行開始、**跨最多行**的節點（`for (...) {` 那一行上也有條件、初值那幾顆）。
+ * 單行的節點不算——它沒有東西可摺。
+ */
+export function nodeAtStartLine(mappings: readonly CodeMapping[]): Map<number, string> {
+  const best = new Map<number, CodeMapping>()
+  for (const m of mappings) {
+    if (m.endLine <= m.startLine) continue
+    const b = best.get(m.startLine)
+    if (!b || m.endLine - m.startLine > b.endLine - b.startLine) best.set(m.startLine, m)
+  }
+  return new Map([...best].map(([line, m]) => [line, m.nodeId]))
+}
+
+/** 要收起來的節點 → 要摺的起始行（0 起算、排序）。**對不到就不摺**：單行的、或那一行上不是最長的那顆。 */
+export function foldLinesFor(want: ReadonlySet<string>, mappings: readonly CodeMapping[]): number[] {
+  return [...nodeAtStartLine(mappings)].filter(([, id]) => want.has(id)).map(([line]) => line).sort((a, b) => a - b)
+}
+
