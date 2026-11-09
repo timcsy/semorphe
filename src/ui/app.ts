@@ -3004,7 +3004,7 @@ export class App {
     if (check && p?.check) {
       const timeout = new Promise<null>((res) => setTimeout(() => res(null), 15_000))
       try {
-        const a = await Promise.race([p.check({ ...check, input }), timeout])
+        const a = await Promise.race([p.check({ ...check, input, wantObserved: true }), timeout])
         if (a && !a.stale) {
           if (Object.keys(types).length === 0) { types = a.types?.nodes ?? {}; problems = (a.verdict?.problems ?? []).map((x) => ({ kind: x.kind, at: x.at })) }
           observed = a.observed ?? null

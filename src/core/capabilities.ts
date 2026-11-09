@@ -169,6 +169,8 @@ export interface CheckRequest {
    * 省略 ＝ 沒有外部輸入（今天的每一次判決）。
    */
   boardInputs?: readonly { t: number; key: string; value: number }[]
+  /** 也要在這份輸入上觀察到的型別（`CheckAnswer.observed`）——要再跑一次程式，只有換語言那條路要（spec 225） */
+  wantObserved?: boolean
 }
 
 /** 判決與型別查詢的答案。`stale`：送出之後又有更新的請求——這一筆的節點可能已經不在，丟掉。 */

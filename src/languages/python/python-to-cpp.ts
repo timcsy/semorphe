@@ -201,7 +201,9 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
     }
     const ps = params.map((p) => {
       const pn = String(p.properties?.name ?? '')
-      const ty = cppType(unifyTypes(readsOf(pn)))
+      // 參數自己就有一筆（呼叫時綁定的值）；再加上本體裡的讀取
+      const own = rawType(p)
+      const ty = cppType(unifyTypes([...(own ? [own] : []), ...readsOf(pn)]))
       if (!ty) keep(p, 'type-uncertain', `函式 ${name} 的參數 ${pn} 的型別說不準（沒有被呼叫，或傳過不同型別）`)
       return `${ty ?? '…'} ${cpp.name(pn)}`
     })

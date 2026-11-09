@@ -75,9 +75,11 @@ const libraryOf = (family: CellaFamily): string => {
     //    判決共享快取（cos-mos 存放、Cella 定格式 cella-verdict-entry-v1）存的是報告版，產品也多一個可以顯示的數字
     `def verdict_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.verdictReport src input fuel`,
     `def types_${b} (src : String) (candidates : String) : String := ${b}.types src candidates`,
+    // 在一份輸入上觀察到的型別（spec 225；cella 0.1.202611091000 起）：只有 Python 有——C 家族的程式自己寫了型別
+    ...(b === 'python' ? [`def observed_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.observedTypes src input fuel`] : []),
   ])].join('\n') + '\n'
 }
-const exportsOf = (family: CellaFamily): string => FAMILY_BRANCHES[family].flatMap((b) => [`verdict_${b}`, `types_${b}`]).join(',')
+const exportsOf = (family: CellaFamily): string => FAMILY_BRANCHES[family].flatMap((b) => [`verdict_${b}`, `types_${b}`, ...(b === 'python' ? [`observed_${b}`] : [])]).join(',')
 
 /** 型別查詢（`@cella-lang/cfamily` README〈Type query〉）。 */
 export interface CellaTypes {
@@ -87,10 +89,19 @@ export interface CellaTypes {
   [extra: string]: unknown
 }
 
+/** 一次執行觀察到的型別（`python.observedTypes`，spec 225）：只有 verdict 是 accept 才有 nodes／basis；鍵是我們程式 JSON 的節點 id。 */
+export interface CellaObserved {
+  verdict: string
+  nodes?: Record<string, string>
+  basis?: Record<string, 'observed' | 'unreached'>
+}
+
 /** 一個編好的判決器：判決與型別查詢共用同一次載入。 */
 export interface CellaChecker {
   verdict(program: unknown, input?: string, fuel?: number): CellaVerdict
   types(program: unknown, candidates?: string[]): CellaTypes
+  /** 只有 Python 家族的程式有——其餘回 null */
+  observed(program: unknown, input?: string, fuel?: number): CellaObserved | null
 }
 
 /** 判決模組的原始碼——它與套件版本一起決定快取鍵（`cache.ts`）。 */
@@ -110,7 +121,7 @@ export async function createCellaChecker(read: CellaRead, families: readonly Cel
     if (!c) throw new Error(`判決器沒有編 ${f} 這一族（createCellaChecker 的 families）`)
     return c
   }
-  return { verdict: (p, input, fuel) => pick(p).verdict(p, input, fuel), types: (p, cands) => pick(p).types(p, cands) }
+  return { verdict: (p, input, fuel) => pick(p).verdict(p, input, fuel), types: (p, cands) => pick(p).types(p, cands), observed: (p, input, fuel) => pick(p).observed(p, input, fuel) }
 }
 
 /**
@@ -181,5 +192,9 @@ export async function checkerFromBytes(bytes: Uint8Array): Promise<CellaChecker>
       call(`verdict_${branchOf(program as never)}`, lib.str(JSON.stringify(program)), lib.str(input), lib.nat(fuel)) as CellaVerdict,
     types: (program, candidates = []) =>
       call(`types_${branchOf(program as never)}`, lib.str(JSON.stringify(program)), lib.str(JSON.stringify(candidates))) as CellaTypes,
+    observed: (program, input = '', fuel = 1_000_000) => {
+      const b = branchOf(program as never)
+      return b === 'python' ? call(`observed_${b}`, lib.str(JSON.stringify(program)), lib.str(input), lib.nat(fuel)) as CellaObserved : null
+    },
   }
 }
