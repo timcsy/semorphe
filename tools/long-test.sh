@@ -158,5 +158,5 @@ printf '%s\t%s\t%s\t%s\t%s\texit=%s\t%s\t%s\t負載開始=%s\t負載結束=%s\n'
 rm -f "$STATE_DIR/$NAME.now"
 # 🔴 **最後一行說結果**（2026-11-09）：全套的紅在日誌中段、e2e 的「passed」在尾巴——只看 `tail` 會看到 e2e 綠就以為整輪綠
 #    （那一天真的這樣合併了一次：全套紅 4 支，合併還沒推就撤回）。結果與紅了哪幾支放在最後一行，看尾巴就看得到
-if [ "$status" = 0 ]; then echo "🟢 結果：全綠（${RANGE}）"; else echo "🔴 結果：exit=$status，紅了：${REDS:-（見 $OUT 的日誌）}——不能合併"; fi
+if [ "$status" = 0 ]; then echo "🟢 結果：全綠（${RANGE}）"; else echo "🔴 結果：exit=${status}，紅了：${REDS:-（見 $OUT 的日誌）}——不能合併"; fi
 exit $status
