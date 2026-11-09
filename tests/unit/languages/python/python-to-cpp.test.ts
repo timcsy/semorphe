@@ -20,9 +20,9 @@ const okCode = async (src: string, vars: Record<string, string>, input?: string)
 }
 
 describe('Python → C++ 的寫法', () => {
-  it('印出：預設以空白分開、換行結尾；end／sep；字串字面量包成 string（讓 + 走 std::string）', async () => {
+  it('印出：預設以空白分開、換行結尾；end／sep；字串字面量直接寫（+ 串接才包 string）', async () => {
     const code = await okCode('n = 3\nprint("hi", n)\nprint(n, end="")\nprint(1, 2, sep=",")\n', { n: 'int' })
-    expect(code).toBe(`${MAIN('')}int main() {\n    long long n;\n    n = 3;\n    cout << string("hi") << " " << n << "\\n";\n    cout << n;\n    cout << 1 << "," << 2 << "\\n";\n    return 0;\n}\n`)
+    expect(code).toBe(`${MAIN('')}int main() {\n    long long n;\n    n = 3;\n    cout << "hi" << " " << n << "\\n";\n    cout << n;\n    cout << 1 << "," << 2 << "\\n";\n    return 0;\n}\n`)
   })
   it('宣告提到最前面：if 裡第一次指定、外面用到的照樣看得到；bool 印 True／False', async () => {
     const code = await okCode('x = int(input())\nif x > 0:\n    y = x * 2\nelse:\n    y = 0\nprint(y, x > 1)\n', { x: 'int', y: 'int' }, '5\n')
@@ -73,6 +73,22 @@ describe('Python → C++ 照實保留', () => {
     const r = await cpp('x = 1\nif x > 5:\n    print("big")\n', { x: 'int' }, { unreached: (n) => n.componentId === 'python:print' })
     expect(r.code).toBeNull()
     expect(r.reasons.map((x) => x.detail).join()).toContain('沒有跑到')
+  })
+
+  it('elif：換成 else if，多段主體攤開、else 接在最後', async () => {
+    const r = await cpp('x = 1\nif x > 5:\n    print("a")\nelif x > 2:\n    print("b")\n    print("c")\nelif x > 0:\n    print("d")\nelse:\n    print("e")\n', { x: 'int' })
+    expect(r.reasons).toEqual([])
+    expect(r.code).toMatch(/\} else if \(x > 2\) \{\n\s+cout << "b" << "\\n";\n\s+cout << "c" << "\\n";\n\s+\} else if \(x > 0\) \{/)
+    expect(r.code).toMatch(/\} else \{\n\s+cout << "e"/)
+  })
+
+  it('沒跑到的分支：只印字串字面量 ⟹ 換得過去；其餘照舊保留（型別不自己推）', async () => {
+    const lit = await cpp('x = 1\nif x > 5:\n    print("big")\n', { x: 'int' }, { unreached: (n) => n.componentId === 'python:literal_string' })
+    expect(lit.reasons).toEqual([])
+    expect(lit.code).toContain('cout << "big"')
+    const assign = await cpp('x = 1\ny = "s"\nif x > 5:\n    y = "t"\n', { x: 'int', y: 'str' }, { unreached: (n) => n.componentId === 'python:literal_string' && n.properties.value === 't' })
+    expect(assign.code).toBeNull()
+    expect(assign.reasons.map((x) => x.kind)).toContain('type-uncertain')
   })
   it('沒有型別表 → 不換（需要型別）', async () => {
     const t = (await liftPython('x = 1\nprint(x)\n'))!

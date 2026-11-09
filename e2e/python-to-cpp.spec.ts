@@ -39,7 +39,7 @@ test('讀輸入而沒有輸入：程式不動、目標回到 Python、說需要�
 
 test('型別說不準（這份輸入下沒跑到的一段）：程式不動、說出原因', async ({ page }) => {
   await freshApp(page)
-  await setPython(page, 'n = 3\nif n > 5:\n    print("big")\n')
+  await setPython(page, 'n = 3\nif n > 5:\n    print(n + 1)\n')   // 只印字串字面量的分支換得過去；要看型別的（n + 1）才保留
   await toCpp(page, 'python')
   await expect.poll(async () => (await codeLines(page)).join('\n'), { timeout: 20_000 }).toContain('if n > 5:')
   await expect(page.locator('.toast').filter({ hasText: /沒有跑到/ })).toBeVisible({ timeout: 10_000 })
