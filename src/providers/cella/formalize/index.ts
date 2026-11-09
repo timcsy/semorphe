@@ -482,6 +482,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     binOp: (op) => BIN[op],
     scalar: (name) => SCALAR[name],
     isStructName: (name) => structNames.has(name),
+    isTypeName: (name) => structNames.has(name) || declaredTypes.has(name) || unionNames.has(name) || enumNames.has(name),
     staticInitOf: (member) => {
       const owner = ownerOf.get(member.id)
       const def = owner ? outsideDefs.get(`${owner}::${String(member.properties?.name ?? '')}`) : undefined

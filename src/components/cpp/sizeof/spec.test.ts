@@ -40,4 +40,9 @@ describe('cpp:sizeof', () => {
   it('★ Cella 判得出（以前三個運算式是 unknown）', async () => {
     await expectCellaOut(gen(PROG), '12 4 20 4 4 4\n', { lang: 'c' })
   }, 120_000)
+  // 🔴 2026-11-09（cella 2213 升級時 union 盲測 fuzz_7 露出來）：C++ 不帶關鍵字的 union／enum 名字（`sizeof(Num)`）被當成變數送 eName，
+  //    Cella 判「未宣告的 Num」——一個錯的 reject。之前被 enum class 翻不出擋住
+  it('★ C++ 的 sizeof(型別名)：union、enum class、struct 不帶關鍵字也是型別', async () => {
+    await expectCellaOut('#include <iostream>\nusing namespace std;\nunion Num { int i; double d; };\nenum class Tag : unsigned char { A, B };\nenum Plain { X };\nstruct P { int a; int b; };\nint main() {\n    cout << sizeof(Num) << " " << sizeof(Tag) << " " << sizeof(Plain) << " " << sizeof(P) << endl;\n    return 0;\n}\n', '8 1 4 8\n', { lang: 'cpp' })
+  }, 120_000)
 })

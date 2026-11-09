@@ -629,6 +629,19 @@ function unwrapPointers(decl: AstNode): { stars: number; inner: AstNode } {
   return { stars, inner }
 }
 
+/**
+ * **指標的參照**（`int*& slot`）：宣告子是 pointer → reference → identifier。剝完指標停在參照那一層——
+ * 少了這一支，名字落到預設 `'ptr'`、參照也掉了：`Node*& slot = …` 變成 `Node* ptr = …`（2026-11-09，cella 2213 升級時盲測 fuzz_4 露出來）。
+ * 型別帶上星號（`int*`），交給參照宣告那一顆（它印成 `int*& slot`）。
+ */
+function refToPointer(inner: AstNode, type: string, stars: number, valueNode: AstNode | null, ctx: LiftContext): SemanticNode | null {
+  if (inner.type !== 'reference_declarator') return null
+  const id = inner.namedChildren.find((c) => c.type === 'identifier')
+  if (!id) return null
+  const refType = `${type}${'*'.repeat(stars)}`
+  return valueNode ? buildVarDeclareRef(id.text, refType, ctx.lift(valueNode)) : buildVarDeclareRef(id.text, refType)
+}
+
 function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): SemanticNode {
   // **膠囊自己的判別先問**——「宣告子長成這樣時是我」是元件的知識。
   const claim = tryDeclaratorBranches(decl, type, ctx)
@@ -652,6 +665,8 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
       // 指標陣列：元素型別帶星號，其餘與一般陣列相同
       return buildArrayDeclare(`${type}${'*'.repeat(stars)}`, inner, ctx)
     }
+    const ref = refToPointer(inner, type, stars, null, ctx)
+    if (ref) return ref
     const name = inner.type === 'identifier' || inner.type === 'qualified_identifier' ? inner.text : 'ptr'
     // 🔴 這顆元件的產生器**自己會補一顆星**（`${type}* ${name}`），所以少算一顆
     return buildPointerDeclare(name, type + '*'.repeat(stars - 1))
@@ -694,6 +709,8 @@ function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): Se
         ctx,
       )
     }
+    const ref = refToPointer(inner, type, stars, decl.childForFieldName('value'), ctx)
+    if (ref) return ref
     name = inner.type === 'identifier' || inner.type === 'qualified_identifier' ? inner.text : 'ptr'
     const ptrType = type + '*'.repeat(stars - 1)
     const valueNode = decl.childForFieldName('value')

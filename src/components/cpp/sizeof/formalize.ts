@@ -8,7 +8,8 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // `target` 是文字屬性：是型別名就翻；是變數或運算式就照實標 unknown（不從文字猜結構）
     const tt = String(n.properties?.target ?? '').trim()
     // 其餘的型別（`union U`、typedef 的名字、`int*`）：不是宣告過的變數、而型別那一格認得它（只問、不記 unknown）——2026-11-08，C 盲測第二輪
-    const isType = f.scalar(tt) !== undefined || /^(?:struct\s+)?[A-Za-z_]\w*$/.test(tt) && (tt.startsWith('struct ') || f.isStructName(tt))
+    // 程式裡定義過的型別名（struct／class、union、enum——C++ 不必寫關鍵字）：作用域會把名字解析到那個定義，所以先問「它是不是型別」
+    const isType = f.scalar(tt) !== undefined || /^(?:struct\s+)?[A-Za-z_]\w*$/.test(tt) && (tt.startsWith('struct ') || f.isTypeName(tt))
       || (!f.declOf(n.id) && f.isTypeText(tt))
     if (isType) return f.k('eSizeof', { n: n.id, t: f.type(tt, n) })
     // 字面量（`sizeof(1)`、`sizeof(1.0)`、`sizeof(true)`，學生在量型別大小）：值就是那個字面量型別的大小 ⟹ 送型別（第 213 刀）

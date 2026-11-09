@@ -96,7 +96,7 @@ jobs:
       #    77dfdfe2 那一輪 e2e (4) 拿到 504、連三次都一樣（npm 登錄庫是好的）。
       #    而這條流程**根本不需要**那些安裝腳本：tree-sitter 文法用的是 `public/` 裡收好的 wasm
       #    （`tree-sitter-cli` 只在本機 `build:wasm:python` 用；tree-sitter-cpp／python 的腳本是編原生綁定），
-      #    真正要跑腳本的只有 esbuild（vite 的建置）。vsix.yml 不改——打包要 vsce-sign／keytar。
+      #    真正要跑腳本的只有 esbuild（vite 的建置）。vsix.yml 同一招，多重建 @vscode/vsce-sign（2026-11-09）。
       #    驗證：乾淨的 node_modules 用這一行裝，tsc、測試、`npm run build` 都過（worktree semorphe-356）。
       - name: npm ci（抖了就重試）
         run: |

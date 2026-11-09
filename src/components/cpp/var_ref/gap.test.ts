@@ -54,7 +54,7 @@
  * ② 診斷層把 reject 翻成「`cout` 是輸出的起點、要配 `<<`」這種友善的話——**委派解決的是判斷，不是說法**（上面那一節）。
  */
 import { describe, it, expect } from 'vitest'
-import { runCella, expectCellaOut, knownCellaGap, describeCellaResult } from '../../../../tests/helpers/cella-run'
+import { runCella, expectCellaOut, describeCellaResult } from '../../../../tests/helpers/cella-run'
 import { toDiagnostics, type Verdict } from '../../../core/verdict-diagnostics'
 import '../../../languages/cpp/pack'
 import { languagePack } from '../../../core/language-packs'
