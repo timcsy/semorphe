@@ -94,7 +94,7 @@ describe('第一百一十九條護欄：積木改不動程式碼要說出來', (
       .toMatch(/onStaleChanged\(\(\) => this\.refreshStatusBar\(\)\)/)
     // ⚠️ **要在 setState 之前記**——旗標在成功那一行就被清了
     const i = panelSrc.indexOf('const wasLoadFailed')
-    const j = panelSrc.indexOf('this.setState(event.blockState')
+    const j = panelSrc.indexOf('this.setState(kept ?? (event.blockState')
     expect(i, '🔴 沒有先記下「剛才是不是 load-failed」').toBeGreaterThan(0)
     // 🔴 **不得把開機的正常過渡也算成一次恢復**——那會每次開機放一次假警報解除
     expect(panelSrc, '🔴 用了 staleReason !== null → 每次開機都會送通知')

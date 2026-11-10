@@ -568,6 +568,21 @@ export class SyncController {
     return { ...tree, slots: { ...tree.slots, body: kept } }
   }
 
+  /**
+   * 把前一棵的身分沿用到剛 lift 出來的樹上（spec 221）。
+   *
+   * ⚠️ **動過積木之後，前一棵是「只有學生語句」的形狀**（抽取不帶骨架：沒有 `#include`、沒有 `main` 那一層），
+   * 而 lift 出來的永遠是完整形狀——直接比的話最上層對不起來，一個身分都沿用不到。
+   * 這時把新樹過濾成同一個形狀再比；過濾器共用節點物件，改到的就是新樹上真正的節點。
+   */
+  private carryIdentity(prev: SemanticNode, next: SemanticNode): void {
+    const framed = skeletonPresent(skeletonById(this.skeletonId), (name) =>
+      (prev.slots.body ?? []).some((n) => isFunctionDefinition(n.componentId) && n.properties.name === name))
+    if (framed) { carryIds(prev, next); return }
+    carryIds(prev, this.scaffoldNodeFilter(next))
+    if (prev.componentId === next.componentId) next.id = prev.id
+  }
+
   private applyTree(data: { viewId?: string; tree: SemanticNode; blockMappings?: BlockMapping[] }): void {
     if (this.syncing) return
     this.syncing = true
@@ -714,7 +729,7 @@ export class SyncController {
       if (!tree) return
       // 🟢 **沒動到的節點保住身分**（spec 221）：lift 每次發新 id，改一個字就讓每一個指著節點的東西斷掉。
       //    對得出唯一對應的沿用前一棵的身分，對不上的保留新的——不猜。
-      if (this.currentTree) carryIds(this.currentTree, tree)
+      if (this.currentTree) this.carryIdentity(this.currentTree, tree)
 
       // Semantic-level style exception check (after lift — toolbox block mismatches)
       let semanticExceptions: StyleException[] = []
