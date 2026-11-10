@@ -558,9 +558,10 @@ int main() {
     const gen1 = generateCode(tree!, 'cpp', style)
     const gen2 = generateCode(liftCode(gen1)!, 'cpp', style)
     expect(gen1).toBe(gen2)
-    // 歸類：我們這側缺——`s.replace(pos, len, to)`（cpp:string_replace）沒有 formalize（2026-11-04，spec 212 量到）。
-    //   ⚠️ 補上之後這支還會撞到 fuzz_7 那個 `string::npos`。
-    await knownCellaGap(/cpp:string_replace：這顆敘述元件還沒有對應到 Cella 的建構子/, async () => {
+    // 歸類：原本是我們這側缺——`s.replace(pos, len, to)`（cpp:string_replace）沒有 formalize（2026-11-04，spec 212 量到）；
+    //   398（2026-11-11）補上之後，下一個露出來的是 Cella 的誠實 unknown：只 include <iostream>／<string> 時
+    //   `size_t` 有沒有被宣告看函式庫（Cella 判 unsupported，同 fuzz-cpp-ostream-operator 的 fuzz_1）。程式是盲測寫的，不改它。
+    await knownCellaGap(/whether the headers included declare size_t depends on the library/, async () => {
       await expectSameOnCella(code, gen1)
     })
   })

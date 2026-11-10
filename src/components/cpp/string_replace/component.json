@@ -36,7 +36,8 @@
         "render": "./generate.ts",
         "lift": "./lift.ts"
       }
-    }
+    },
+    "formalize": "./formalize.ts"
   },
   "requires": [
     "<string>"
