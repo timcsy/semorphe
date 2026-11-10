@@ -56,8 +56,12 @@ describe('模糊測試：自訂 operator<<', () => {
     await knownCellaGap(/明確指定類別的成員呼叫|more than one namespace/, () => expectCellaOut(prog('fuzz_2').code.replace(/size_t i/g, 'int i'), prog('fuzz_2').expected))
   })
 
+  // 396 接上類別裡帶本體的 static。size_t 換成 int：只含 iostream／vector／string 時 size_t 是否宣告取決於函式庫，Cella 照實判 unknown，與 fuzz_2 同
+  it('fuzz_1：類別裡帶本體的 static 成員函式', async () => {
+    await expectCellaOut(prog('fuzz_1').code.replace(/size_t i/g, 'int i'), prog('fuzz_1').expected)
+  })
+
   it.each([
-    ['fuzz_1', /這顆類別成員還沒有對應/, '類別裡帶本體的 static 成員函式'],
     ['fuzz_3', /這顆類別成員還沒有對應/, '帶本體的 friend'],
     ['fuzz_4', /ostringstream|函式呼叫/, 'ostringstream、左端是函式呼叫的串流寫入'],
   ])('🟡 %s 照實翻不出（%s）：%s', async (id, why) => {
