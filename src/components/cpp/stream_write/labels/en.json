@@ -1,0 +1,5 @@
+{
+  "C_STREAM_WRITE_MSG0": "Write to stream %1",
+  "C_STREAM_WRITE_TOOLTIP": "Write one or more values in order to this output stream. Common when defining a custom output format: the stream received as a parameter may be the screen or a file",
+  "FLOW_TITLE_CPP_STREAM_WRITE": "Write to stream"
+}

@@ -20,7 +20,8 @@ import { buildVarRef } from '../../../../components/cpp/var_ref/lift'
 import { isVariableRef } from '../node-traits'
 import { buildPrint } from '../../../../components/cpp/print/lift'
 import { buildInput } from '../../../../components/cpp/input/lift'
-import { isStreamInput } from '../node-traits'
+import { isNamedCall, isStreamInput, isStreamWrite } from '../node-traits'
+import { buildStreamWrite } from '../../../../components/cpp/stream_write/lift'
 import { declareAggregateShape } from '../../../../core/component/aggregate-nodes'
 import { buildInitializerList } from '../../../../components/cpp/initializer_list/lift'
 
@@ -470,4 +471,32 @@ export const cppStreamRead: LiftPostProcessor = (node, ctx) => {
   // 目標節點可能同時掛在原本那棵樹上——複製一份，避免兩棵樹共用物件。
   const cloned = targets.map((v) => buildVarRef(String(v.properties.name ?? '')))
   return buildInput(cloned, { from: rootName })
+}
+
+/** 哪些型別的 `<<` 是「寫到串流」而不是「位移」。參考與 `std::` 前綴在查表前拿掉 */
+const WRITE_STREAM_TYPES = new Set(['ostream'])
+
+/**
+ * `os << a << b`，`os` 宣告成 `ostream`／`ostream&`：寫到串流，不是位移。
+ *
+ * 判準是根變數的宣告型別，查不到就不改判，自訂類別的 `Log& operator<<` 因此不受影響。
+ * 與讀取那一半相同，巢狀由內往外改判，外層的左子節點已經是這顆。
+ */
+export const cppStreamWrite: LiftPostProcessor = (node, ctx) => {
+  if (!isBinaryOperator(node.componentId) || node.properties?.operator !== '<<') return null
+  const left: SemanticNode | undefined = (node.slots?.left ?? [])[0]
+  const right: SemanticNode | undefined = (node.slots?.right ?? [])[0]
+  if (!left || !right) return null
+  const value = isVariableRef(right.componentId) && right.properties?.name === 'endl' ? buildEndl() : right
+  if (isStreamWrite(left.componentId)) {
+    return buildStreamWrite((left.slots?.stream ?? [])[0], [...(left.slots?.values ?? []), value])
+  }
+  // `indent(out, 2) << x`：左端是回傳 ostream 的使用者函式，查的是它宣告的回傳型別
+  const isCall = isNamedCall(left.componentId)
+  if (!isVariableRef(left.componentId) && !isCall) return null
+  const leftName = String(left.properties?.name ?? '')
+  const declared = isCall ? ctx.data.getFunctionReturnType(leftName) : ctx.data.getType(leftName)
+  if (declared === null) return null
+  const bare = declared.replace(/^const\s+/, '').replace(/\s*&+$/, '').replace(/^std::/, '')
+  return WRITE_STREAM_TYPES.has(bare) ? buildStreamWrite(left, [value]) : null
 }

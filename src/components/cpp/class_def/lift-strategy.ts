@@ -3,7 +3,7 @@
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
-import { liftClassMember } from '../../../languages/cpp/lang/lifters/strategies'
+import { liftClassMember, withStreamFields } from '../../../languages/cpp/lang/lifters/strategies'
 import { parseBaseClause } from '../../../languages/cpp/base-clause'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
@@ -37,7 +37,7 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       const protectedMembers: SemanticNode[] = []
       let currentAccess = 'private' // default access in class
 
-      if (bodyNode) {
+      if (bodyNode) withStreamFields(bodyNode, ctx, () => {
         for (const child of bodyNode.namedChildren) {
           if (child.type === 'access_specifier') {
             const accessText = child.text.replace(/:$/, '').trim()
@@ -51,7 +51,7 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
             else privateMembers.push(lifted)
           }
         }
-      }
+      })
 
       const props: Record<string, string> = { name: className }
       if (base) {

@@ -42,6 +42,16 @@ describe('cpp:func_call 的 formalize：名字不是函式的那幾種', () => {
     await expectCellaOut('#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    vector<int> v = {3, 1, 2};\n    copy(v.begin(), v.end(), ostream_iterator<int>(cout, " "));\n    cout << endl;\n}\n', '3 1 2 \n')
   })
 
+  it('🔴 明確指定類別的成員呼叫 `B::d(y)`：照實翻不出，不送成自由函式（那會判假的 reject）', async () => {
+    const r = await runCella('#include <iostream>\nusing namespace std;\nclass B { public: void d(int x) const; };\nclass C : public B { public: void e(int y) const; };\nvoid B::d(int x) const { cout << x; }\nvoid C::e(int y) const { B::d(y); }\nint main() { C c; c.e(3); return 0; }\n')
+    expect(r.verdict).toBe('untranslated')
+    expect(r.untranslated.some((u) => /明確指定類別的成員呼叫/.test(u.reason))).toBe(true)
+  })
+
+  it('靜態方法的限定名照舊：`A::two()`', async () => {
+    await expectCellaOut('#include <iostream>\nusing namespace std;\nclass A { public: static int two(); };\nint A::two() { return 2; }\nint main() { cout << A::two() << endl; return 0; }\n', '2\n')
+  })
+
   it('一般的函式呼叫照舊：`abs(-3)`', async () => {
     await expectCellaOut(prog('abs(-3)'), '3\n')
   })

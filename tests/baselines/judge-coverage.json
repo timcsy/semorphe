@@ -4,8 +4,8 @@
     "ratchet": "naked 只准下降。分母（元件 × 路）走 assertCorpus，變大變小都要出聲。"
   },
   "scanned": {
-    "components": 362,
-    "cells": 1663
+    "components": 363,
+    "cells": 1668
   },
   "naked": 0,
   "unmeasuredPaths": 1,
@@ -17,5 +17,5 @@
     "execute": 327,
     "formalize": 105
   },
-  "note": "📈 **元件管線 389（2026-11-10）：新元件 cpp:friend_class、cpp:friend_function（類別裡的 friend 宣告，Cella 的 mbFriendClass／mbFriend）**：360 → 362、1653 → 1663；沒有人量過的路仍是 1。"
+  "note": "📈 **元件管線 392（2026-11-10）：新元件 cpp:stream_write（寫到 ostream，Cella 的 sOut）**：元件 362 → 363、格子 1663 → 1668；沒有人量過的路仍是 1。\n\n📈 **元件管線 389（2026-11-10）：新元件 cpp:friend_class、cpp:friend_function（類別裡的 friend 宣告，Cella 的 mbFriendClass／mbFriend）**：360 → 362、1653 → 1663；沒有人量過的路仍是 1。"
 }

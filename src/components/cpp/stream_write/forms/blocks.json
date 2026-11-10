@@ -1,0 +1,87 @@
+[
+  {
+    "id": "cpp_stream_write",
+    "componentId": "cpp:stream_write",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stream_write",
+      "message0": "%{BKY_C_STREAM_WRITE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STREAM",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_C_STREAM_WRITE_TOOLTIP}",
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "countKey": "itemCount",
+      "minCount": 1,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "STREAM": "stream"
+      },
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cpp_stream_write_expression",
+    "componentId": "cpp:stream_write",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_stream_write_expression",
+      "message0": "%{BKY_C_STREAM_WRITE_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "STREAM",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#5CB1D6",
+      "tooltip": "%{BKY_C_STREAM_WRITE_TOOLTIP}",
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "countKey": "itemCount",
+      "minCount": 1,
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "STREAM": "stream"
+      },
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "values",
+          "inputPattern": "EXPR{i}"
+        }
+      ]
+    },
+    "form": {
+      "axis": "role",
+      "value": "expression"
+    }
+  }
+]

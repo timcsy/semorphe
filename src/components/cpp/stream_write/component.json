@@ -1,0 +1,42 @@
+{
+  "componentId": "cpp:stream_write",
+  "abstractComponent": null,
+  "properties": [],
+  "slots": {
+    "stream": "expression",
+    "values": "expression"
+  },
+  "role": "statement",
+  "positions": [
+    "statement",
+    "expression"
+  ],
+  "_positions_why": "`os << x` 的值是 `os` 自己，所以 `return os << x;` 文法上成立。`role` 是產生器契約（我自己印分號），與 `cout` 那顆相同。",
+  "owner": "(universal)",
+  "_owner_why": "`owner` 是工具箱段落的鍵，io 分類的來源是 `(universal)`，與印到螢幕的那顆放在一起。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "`lift.ts` 匯出建構子。判別要問根變數的宣告型別（辨識脈絡），留在 `cppStreamRead` 旁邊的後處理，與讀取的那一半同一處。"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "traits": {
+    "streamWrite": true,
+    "forLoopPart": false
+  },
+  "_traits_why": "`streamWrite`：鏈式 `os << a << b` 由內往外改判，外層要認得內層已經是我。不宣告 `ioRole`：它不是標準輸出，寫到哪裡由呼叫端決定，跟印到螢幕不是同一個等價類。",
+  "requires": [
+    "<iostream>"
+  ],
+  "annotations": {
+    "control_flow": "sequence"
+  }
+}

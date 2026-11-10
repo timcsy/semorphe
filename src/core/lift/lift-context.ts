@@ -32,6 +32,7 @@ export class LiftContextData {
    * ——所以擋在 `tryCallBranches`，不是在每一個分支裡各寫一次。
    */
   private functionNames = new Set<string>()
+  private functionReturns = new Map<string, string>()
 
   /** Push a new scope frame (entering a block, function, etc.) */
   pushScope(): void {
@@ -52,8 +53,15 @@ export class LiftContextData {
   }
 
   /** 這支程式定義了一個叫這個名字的函式。⚠️ 原型與定義都算。 */
-  declareFunction(name: string): void {
-    if (name !== '') this.functionNames.add(name)
+  declareFunction(name: string, returnType?: string): void {
+    if (name === '') return
+    this.functionNames.add(name)
+    if (returnType !== undefined) this.functionReturns.set(name, returnType)
+  }
+
+  /** 這個名字的函式宣告的回傳型別；沒有登記過是 null。 */
+  getFunctionReturnType(name: string): string | null {
+    return this.functionReturns.get(name) ?? null
   }
 
   /** 使用者自己定義過這個名字嗎。 */

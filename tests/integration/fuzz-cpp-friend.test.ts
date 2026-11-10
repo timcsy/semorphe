@@ -59,8 +59,11 @@ describe('模糊測試：friend', () => {
     await expectCellaOut(prog('fuzz_1').code.replace('size_t i', 'int i'), prog('fuzz_1').expected)
   })
 
+  it('★ Cella：朋友函式 operator<< 寫到 ostream（fuzz_2）判 accept、輸出與 g++ 相同', async () => {
+    await expectCellaOut(prog('fuzz_2').code.replace('size_t i', 'int i'), prog('fuzz_2').expected)
+  })
+
   it.each([
-    ['fuzz_2', '朋友函式 operator<< 的參數型別 ostream 還沒有對應'],
     ['fuzz_3', '成員函式當朋友、帶本體的朋友函式都還是原文'],
     ['fuzz_4', '限定名的朋友與成員初始化列的多引數都還是原文'],
   ])('🟡 %s 照實翻不出：%s', async (id) => {
