@@ -33,6 +33,7 @@
         "lift": "./lift-pattern.json",
         "liftStrategy": "./lift-strategy.ts"
       }
-    }
+    },
+    "formalize": "./formalize.ts"
   }
 }

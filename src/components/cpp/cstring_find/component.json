@@ -18,7 +18,8 @@
         "lift": "./lift.ts",
         "_lift_why": "**顯式的空，不是遺漏。**"
       }
-    }
+    },
+    "formalize": "./formalize.ts"
   },
   "requires": [
     "<cstring>"

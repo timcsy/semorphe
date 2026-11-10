@@ -258,6 +258,10 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       const args = splitTypeArgs(tpl[2]).map((x) => type(x, at))
       return args.every(Boolean) ? k('tTemplate', { name: tpl[1], args }) : null
     }
+    // 標準例外（`runtime_error`、`const exception&` 的 exception…）：tStdExc，名字不帶 `std::`（cpp_to_tree.py 的 STANDARD_EXCEPTIONS；399）。
+    //   程式自己定義了同名的類別時是那個類別，不是標準例外
+    const exc = /^(?:std::)?(exception|logic_error|runtime_error|out_of_range|invalid_argument|length_error|domain_error|range_error|overflow_error|underflow_error|bad_alloc|bad_array_new_length|bad_cast|bad_typeid)$/.exec(s)
+    if (exc && !isC && !structNames.has(exc[1]) && !declaredTypes.has(exc[1])) return k('tStdExc', { name: exc[1] })
     // 列舉型別名（`Color c`、C 的 `enum Color c`）：tEnum（cella 2026-11-03；檔案範圍與區域的列舉同一個型別形狀）
     const en = /^(?:enum\s+)?([A-Za-z_]\w*)$/.exec(s)
     if (en && enumNames.has(en[1])) return k('tEnum', { name: en[1] })
