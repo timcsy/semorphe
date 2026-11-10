@@ -13,10 +13,8 @@
         "lift": "./forms/blocks.json"
       },
       "code": {
-        "render": null,
-        "_render_why": "**顯式的空，不是遺漏。**",
-        "lift": "./lift.ts",
-        "_lift_why": "**顯式的空，不是遺漏。**"
+        "render": "./generate.ts",
+        "lift": "./lift.ts"
       }
     },
     "formalize": "./formalize.ts"

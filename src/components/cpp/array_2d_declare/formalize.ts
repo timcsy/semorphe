@@ -12,7 +12,10 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const dim = (slot: 'rows' | 'cols', inner: unknown, len: number | null) =>
       len !== null ? f.k('tArr', { t: inner, n: len }) : f.k('tArrE', { t: inner, len: f.exprOf(n, slot) })
     void global
-    const t = dim('rows', dim('cols', elem, cols), rows)
+    // 🟢 外層沒寫長度（`int qs[][2] = {{0, 2}, {1, 6}};`）：送 `tArrU`，長度由初值的項數定——與一維那顆同一個形狀（tArrU）。
+    //    第 402 刀之前這裡把「沒有的長度」當成運算式送 tArrE，Cella 照實說「帶初值的 VLA」→ unknown（盲測 fuzz-cpp-student-mixed 的兩支）
+    const inner = dim('cols', elem, cols)
+    const t = f.one(n, 'rows') === undefined ? f.k('tArrU', { t: inner }) : dim('rows', inner, rows)
     const init = hasInit ? f.braceList(n, 'values') : null
     return f.declInit(n, t, init, global)
   })
