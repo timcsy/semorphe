@@ -39,6 +39,7 @@ const SCALAR: Record<string, string> = {
   short: 'tShort', 'unsigned short': 'tUShort', 'unsigned long': 'tULong', 'unsigned long long': 'tULongLong',
   double: 'tDouble', 'long double': 'tLongDouble', float: 'tFloat', char: 'tChar', 'signed char': 'tSChar', 'unsigned char': 'tUChar',
   bool: 'tBool', string: 'tString', 'std::string': 'tString',
+  ostream: 'tOstream', 'std::ostream': 'tOstream',
 }
 
 /** 範本引數依最外層的逗號切開（`int, vector<int>, greater<int>` → 三個） */
@@ -139,6 +140,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const methodsOfClass = new Map<string, Set<string>>()
   // 靜態成員函式（383）：那組方法名 → `類別::名字`（[class.static.mfct] 沒有 this；裸名字呼叫是 `C::f`，cpp_to_tree.py 同形）
   const staticMethodsOf = new Map<Set<string>, Map<string, string>>()
+  const staticMethodNames = new Set<string>()
   const index = (n: SemanticNode, methods?: Set<string>): void => {
     byId.set(n.id, n)
     // 類別外的定義：本體裡的裸名字呼叫要認得那個類別的方法（同寫在類別裡）
@@ -170,6 +172,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
           const statics = staticMethodsOf.get(own!) ?? new Map<string, string>()
           statics.set(String(m.properties.name), `${cls}::${String(m.properties.name)}`)
           staticMethodsOf.set(own!, statics)
+          staticMethodNames.add(String(m.properties.name))
         }
       }
     }
@@ -495,6 +498,10 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     binOp: (op) => BIN[op],
     scalar: (name) => SCALAR[name],
     isStructName: (name) => structNames.has(name),
+    isQualifiedInstanceCall: (name) => {
+      const m = /^(\w+)::(\w+)$/.exec(name)
+      return !!m && structNames.has(m[1]) && !structNames.has(m[2]) && !staticMethodNames.has(m[2])
+    },
     isTypeName: (name) => structNames.has(name) || declaredTypes.has(name) || unionNames.has(name) || enumNames.has(name),
     staticInitOf: (member) => {
       const owner = ownerOf.get(member.id)

@@ -129,6 +129,8 @@ export interface FormalizeContext {
   scalar(name: string): string | undefined
   /** 這個名字是程式裡定義過的型別（struct）嗎。 */
   isStructName(name: string): boolean
+  /** `X::m`，X 是程式定義的類別、m 不是靜態方法也不是型別——明確指定類別的成員呼叫（`Base::f(x)`，不走虛擬分派）。 */
+  isQualifiedInstanceCall(name: string): boolean
   /**
    * 這個名字是程式裡的**任何一種型別名**嗎——struct／class、union、enum（含 enum class）、前置宣告過的。
    * `isStructName` 只回答 struct；`sizeof(Num)` 這種要問的是「它是不是型別」（2026-11-09：C++ 的 union 名字被當成變數，判錯 reject）。

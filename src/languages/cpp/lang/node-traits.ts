@@ -206,6 +206,7 @@ export interface NodeTraits {
    * 原本寫死 `cur.componentId === 'cpp:input'`。
    */
   streamInput?: boolean
+  streamWrite?: boolean
   /** 是最單純的變數宣告嗎（`int x;`）——動態積木蒐集變數名時要分辨它。 */
   plainDeclaration?: boolean
   /**
@@ -384,6 +385,11 @@ export { ioTraitOf, isPlainDeclaration } from '../../../core/component/traits'
 export { isIndexedAccess } from '../../../core/component/traits'
 // 🟢 `&` 取得到位址的那些（2026-08-26）——見核心那一份的說明。
 export { isAddressable } from '../../../core/component/traits' 
+
+/** 這顆是寫到具名串流嗎（`os << a << b`）。沒宣告＝不是。 */
+export function isStreamWrite(componentId: string): boolean {
+  return traits(componentId)?.streamWrite === true
+}
 
 /** 這顆是串流輸入嗎（`cin >> a >> b` 那種）。沒宣告＝不是。 */
 export function isStreamInput(componentId: string): boolean {

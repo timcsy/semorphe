@@ -247,7 +247,8 @@ function looksLikeCtorCall(fnDecl: AstNode, ctx: LiftContext): boolean {
     const inner = pd.namedChildren[0]
     if (!inner || pd.namedChildren.length !== 1) return false
     if (inner.type !== 'type_identifier') return false
-    return ctx.data.lookup(inner.text) !== null
+    // `Logger log(cout);`：cout 不是這支程式宣告的名字，但它絕不是型別（原本整句被當成函式原型，之後的 `log.w()` 判「未宣告」）
+    return ctx.data.lookup(inner.text) !== null || /^(cout|cerr|clog)$/.test(inner.text)
   })
 }
 
@@ -790,6 +791,35 @@ function liftFieldInitializers(node: AstNode, ctx: LiftContext): SemanticNode[] 
   return inits
 }
 
+/** 欄位的宣告子：星號與參照符號都屬於型別，名字只留識別字。 */
+function unwrapFieldDeclarator(d: AstNode): { typeSuffix: string; inner: AstNode } {
+  if (d.type === 'reference_declarator' && d.namedChildren.length === 1) {
+    return { typeSuffix: d.children.find((c) => !c.isNamed)?.text ?? '&', inner: d.namedChildren[0] }
+  }
+  const { stars, inner } = unwrapPointers(d)
+  return { typeSuffix: '*'.repeat(stars), inner }
+}
+
+/**
+ * 讀類別本體時，先把宣告成 ostream 的欄位登記起來：成員函式裡的 `out << x` 才認得出是串流寫入。
+ * ⚠️ 要先掃一遍——`public:` 的方法通常寫在 `private:` 的欄位前面。只登記 ostream，其他欄位的型別不在這一刀改變判讀。
+ */
+export function withStreamFields<T>(bodyNode: AstNode | null, ctx: LiftContext, fn: () => T): T {
+  ctx.data.pushScope()
+  try {
+    for (const m of bodyNode?.namedChildren ?? []) {
+      if (m.type !== 'field_declaration') continue
+      const t = (m.childForFieldName('type')?.text ?? '').replace(/^std::/, '')
+      if (t !== 'ostream') continue
+      const d = m.childForFieldName('declarator')
+      if (d) ctx.data.declare(unwrapFieldDeclarator(d).inner.text, t)
+    }
+    return fn()
+  } finally {
+    ctx.data.popScope()
+  }
+}
+
 /** Lift a class member (function_definition, field_declaration) into a semantic node */
 /**
  * 成員的名字：一般識別字原樣；運算子（`operator +`、`operator<<`）去掉中間的空白記成 `operator+`——
@@ -890,7 +920,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       // **投影對、執行錯**——一個要 parse 回結構才能用的字串，就不該是字串。
       const inits = liftFieldInitializers(node, ctx)
       if (!inits) return degrade(buildRawCode(node.text), '成員初始化列裡有多個引數或大括號串列（`m(a, b)`、`c{1, 2, 3}`）尚未支援')
-      const body = extractBody(bodyNode, ctx)
+      const body = extractBodyWithParams(bodyNode, params, ctx)
       return buildConstructor({ class_name: className }, { params, inits, body })
     }
 
@@ -900,24 +930,36 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       return buildDestructor({ class_name: className, is_virtual: isVirtual ? 'true' : 'false' }, { body })   // virtual（spec 209）
     }
 
+    // ⚠️ 比位置不比物件：tree-sitter 每次取節點都是新的物件，`===` 永遠不成立
+    const same = (a: AstNode | null | undefined, b: AstNode | null | undefined): boolean =>
+      !!a && !!b && a.type === b.type && a.startIndex === b.startIndex
     // Operator overload: function_definition where declarator is operator_name
-    if (nameNode?.type === 'operator_name') {
-      const op = nameNode.text.replace(/^operator/, '').trim()
-      const returnType = typeNode?.text ?? 'void'
-      const paramList = declNode?.childForFieldName('parameters')
+    // 🔴 回傳參照或指標的運算子（`Point& operator[](int i)`、`Log& operator<<(int x)`）：宣告子外面多包一層，
+    //    原本走不進這條路、落到一般函式——尾端 const 安靜丟掉，`const Point& operator[](int) const` 與非 const 版本產回去變成編不過的兩個同名函式（盲測 392 fuzz_4）。
+    const opWrapped = (declNode?.type === 'reference_declarator' || declNode?.type === 'pointer_declarator') && declNode.namedChildren.length === 1
+      && declNode.namedChildren[0].type === 'function_declarator' && declNode.namedChildren[0].childForFieldName('declarator')?.type === 'operator_name'
+    const opDecl = opWrapped ? declNode!.namedChildren[0] : declNode
+    const opName = opWrapped ? opDecl!.childForFieldName('declarator') : nameNode
+    const opParams = opDecl?.childForFieldName('parameters')?.namedChildren.filter((c) => c.type === 'parameter_declaration' || c.type === 'optional_parameter_declaration') ?? []
+    // ⚠️ 這顆元件只有一個參數、尾端只記得 const：`operator()(int a, int b)`、`noexcept` 放不下——不收，下面照實降級
+    const opPlain = opName?.type === 'operator_name' && opParams.length <= 1
+      && (opDecl?.namedChildren ?? []).every((c) => same(c, opName) || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const'))
+    if (opPlain) {
+      const op = opName!.text.replace(/^operator/, '').trim()
+      const suffix = opWrapped ? (declNode!.type === 'pointer_declarator' ? '*' : (declNode!.children.find((c) => !c.isNamed)?.text ?? '&')) : ''
+      const lead = node.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const') ? 'const ' : ''
+      const returnType = typeNode ? `${lead}${typeNode.text}${suffix}` : 'void'
       let paramType = ''
       let paramName = ''
-      if (paramList) {
-        const firstParam = paramList.namedChildren.find(c => c.type === 'parameter_declaration')
-        if (firstParam) {
-          const parsed = parseParamDeclaration(firstParam)
-          paramType = parsed.type
-          paramName = parsed.name
-        }
+      const firstParam = opParams.find((c) => c.type === 'parameter_declaration')
+      if (firstParam) {
+        const parsed = parseParamDeclaration(firstParam)
+        paramType = parsed.type
+        paramName = parsed.name
       }
-      const body = extractBody(bodyNode, ctx)
+      const body = extractBodyDeclaring(bodyNode, paramName ? [[paramName, paramType]] : [], ctx)
       // 尾端的 `const`（`bool operator<(const Node& o) const`）是 function_declarator 底下的 type_qualifier（spec 201：原本丟掉）
-      const isConst = (declNode?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
+      const isConst = (opDecl?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
       return buildOperatorOverload({ return_type: returnType, operator: op, param_type: paramType, param_name: paramName, is_const: isConst ? 'true' : 'false' }, { body })
     }
 
@@ -942,7 +984,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const returnType = vReturn('void')
       const paramList = vDecl?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
-      const body = extractBody(bodyNode, ctx)
+      const body = extractBodyWithParams(bodyNode, params, ctx)
       // 尾端 const（spec 209）：與運算子多載那支同一個讀法
       const isConst = (vDecl?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
       return buildMethodOverride({ return_type: returnType, name: methodName, is_const: isConst ? 'true' : 'false' }, { params, body })
@@ -954,7 +996,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const returnType = vReturn('void')
       const paramList = vDecl?.childForFieldName('parameters') ?? null
       const params = liftParamList(paramList, ctx)
-      const body = extractBody(bodyNode, ctx)
+      const body = extractBodyWithParams(bodyNode, params, ctx)
       // 尾端 const（spec 209）：與運算子多載那支同一個讀法
       const isConst = (vDecl?.children ?? []).some((c) => c?.type === 'type_qualifier' && c.text === 'const')
       return buildMethodVirtual({ return_type: returnType, name: methodName, is_const: isConst ? 'true' : 'false' }, { params, body })
@@ -965,9 +1007,6 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     //    在 `const P&` 上呼叫就編不過。
     // ⚠️ 只接【形狀單純】的：回傳型別、名字、參數、可有可無的尾端 const。static、noexcept、`&`／`&&` 限定、
     //    回傳指標或參考（宣告子外面多包一層）都照舊走原路——新元件沒有地方放它們，接了就是靜默丟資訊。
-    // ⚠️ 比位置不比物件：tree-sitter 每次取節點都是新的物件，`===` 永遠不成立
-    const same = (a: AstNode | null | undefined, b: AstNode | null | undefined): boolean =>
-      !!a && !!b && a.type === b.type && a.startIndex === b.startIndex
     // 🔴 回傳參考或指標（`Counter& tick()`、`const Time& getStart() const`、`int* raw()`）：宣告子外面包一層
     //    reference_declarator／pointer_declarator——剝一層，符號併進回傳型別。回傳型別前的 `const` 是 function_definition 底下的 type_qualifier。
     //    （第 218 刀模糊測試抓到：原路把它們產成 `Counter tick()() {`——參考符號不見、宣告子文字跑進名字，編不過；main 上就是這樣）
@@ -987,7 +1026,11 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const isConst = fnDecl.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
       const returnType = `${leadQuals.length > 0 ? 'const ' : ''}${typeNode.text}${retSuffix}`
       const params = liftParamList(fnDecl.childForFieldName('parameters') ?? null, ctx)
-      return buildMethodDef({ return_type: returnType, name: fnName.text, is_const: isConst ? 'true' : 'false' }, { params, body: extractBody(bodyNode, ctx) })
+      return buildMethodDef({ return_type: returnType, name: fnName.text, is_const: isConst ? 'true' : 'false' }, { params, body: extractBodyWithParams(bodyNode, params, ctx) })
+    }
+    // 🔴 下面一般函式那條路只認名字與參數：尾端的 const／noexcept／ref 限定會被安靜丟掉（`int f() const noexcept {…}` 來回一趟就不是 const 成員）——照實降級
+    if (fnDecl?.type === 'function_declarator' && fnDecl.namedChildren.some((c) => !same(c, fnDecl!.childForFieldName('declarator')) && c.type !== 'parameter_list')) {
+      return degrade(buildRawCode(node.text), '尾端帶修飾（noexcept、ref 限定等）或形狀不單純的成員函式尚未支援')
     }
     return ctx.lift(node)
   }
@@ -1102,8 +1145,8 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       // Multi-variable: create individual var_declare nodes wrapped in a container
       // ⚠️ 星號要搬進型別——與下面單一宣告子那條同一個理由
       const nodes = declarators.map((d) => {
-        const { stars, inner } = unwrapPointers(d)
-        return buildVarDeclare({ type: type + '*'.repeat(stars), name: inner.text })
+        const { typeSuffix, inner } = unwrapFieldDeclarator(d)
+        return buildVarDeclare({ type: type + typeSuffix, name: inner.text })
       })
       // Return first and add rest — use a wrapper approach
       // Actually, we need to return multiple nodes. Use the fact that struct/class member lifting
@@ -1124,8 +1167,9 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     //    `Node* next;` 的 declarator 是 `pointer_declarator`，而它的 `.text`
     //    是逐字的 `"* next"`。直接拿來當名字的話，積木上會出現一個
     //    叫 `* next` 的變數，而型別是 `"Node"`——**指標性整個消失了**。
-    const { stars, inner } = declNode ? unwrapPointers(declNode) : { stars: 0, inner: null }
-    const type2 = type + '*'.repeat(stars)
+    //    參照欄位（`ostream& out;`）同一件事：原本名字成了 `& out`，建構子初始化 `out` 時 Cella 說沒有這個成員——合法的程式被判 reject（盲測 392 fuzz_4）。
+    const { typeSuffix, inner } = declNode ? unwrapFieldDeclarator(declNode) : { typeSuffix: '', inner: null }
+    const type2 = type + typeSuffix
     const name = inner?.text ?? declNode?.text ?? 'x'
     // 成員預設值：class A { int v = 7; };
     // ⚠️ `= 0` 的純虛擬已在上面被攔截，走到這裡的 default_value 一律是初始值
@@ -1301,7 +1345,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
     // 🔴 **登記這個名字**——之後 `swap(…)` 那種呼叫才不會被內建樣式攔走。
     //    ⚠️ 要在 `extractBody` **之前**：一個遞迴函式在自己的主體裡呼叫自己。
-    ctx.data.declareFunction(name)
+    ctx.data.declareFunction(name, returnType)
     /**
      * 🔴 **參數也是「宣告過的名字」**（2026-09-17，模糊測試抓到的）。
      *
@@ -2456,6 +2500,27 @@ function extractDeclVarName(init: AstNode): string {
   return ident?.text ?? 'i'
 }
 
+/**
+ * 把參數當成「宣告過的名字」再讀本體。
+ * 🔴 類別成員函式原本少了這一步（盲測 392 fuzz_2）：`void print(ostream& os) const { os << name << endl; }` 的 `os` 查不到型別，
+ *    於是不是串流寫入、而是位元左移——Cella 把一支合法的程式判 reject。一般函式那條路早就有（下面 liftFunctionDef 的長註解）。
+ */
+function extractBodyDeclaring(bodyNode: AstNode | null, names: [string, string][], ctx: LiftContext): SemanticNode[] {
+  ctx.data.pushScope()
+  try {
+    for (const [name, type] of names) ctx.data.declare(name, normalizeParamType(type))
+    return extractBody(bodyNode, ctx)
+  } finally {
+    ctx.data.popScope()
+  }
+}
+function extractBodyWithParams(bodyNode: AstNode | null, params: SemanticNode[], ctx: LiftContext): SemanticNode[] {
+  return extractBodyDeclaring(bodyNode, params.flatMap((p): [string, string][] => {
+    const { name, type } = p.properties ?? {}
+    return typeof name === 'string' && name !== '' && typeof type === 'string' ? [[name, type]] : []
+  }), ctx)
+}
+
 export function extractBody(node: AstNode | null, ctx: LiftContext): SemanticNode[] {
   if (!node) return []
   const lifted = ctx.lift(node)
@@ -2528,5 +2593,6 @@ function liftPointerPrototype(node: AstNode, retType: string, ctx: LiftContext):
   const nm = inner.namedChildren.find((c) => c.type === 'identifier')
   if (!nm) return null
   const pl = inner.childForFieldName('parameters') ?? inner.namedChildren.find((c) => c.type === 'parameter_list')
+  ctx.data.declareFunction(nm.text, `${retType}${marks}`)
   return buildForwardDecl(`${retType}${marks}`, nm.text, liftParamList(pl ?? null, ctx))
 }

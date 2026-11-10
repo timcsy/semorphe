@@ -1,0 +1,5 @@
+{
+  "C_STREAM_WRITE_MSG0": "寫到串流 %1",
+  "C_STREAM_WRITE_TOOLTIP": "把一個或多個值依序寫到這個輸出串流。自訂輸出格式時常用：參數收到的串流可能是螢幕，也可能是檔案",
+  "FLOW_TITLE_CPP_STREAM_WRITE": "寫到串流"
+}

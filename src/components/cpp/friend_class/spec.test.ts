@@ -79,14 +79,13 @@ describe('friend 宣告', () => {
     await expectCellaOut(src, out)
   })
 
-  it('friend 運算子：是元件、來回一字不差；ostream 這個型別還沒有對應，照實翻不出（不送去被判錯）', async () => {
+  it('friend 運算子：是元件、來回一字不差，Cella 判得出（ostream 在第 392 刀接上）', async () => {
     const t = lift(OP)
     expect(ofId(t, 'cpp:friend_function')).toHaveLength(1)
     expect(generateCode(t, 'cpp', S).trimEnd()).toBe(OP.trimEnd())
     expect(viaBlocks(OP).trimEnd()).toBe(OP.trimEnd())
     const r = await runCella(OP)
-    expect(r.verdict).toBe('untranslated')
-    expect(r.untranslated.map((u) => u.reason).join('；')).toMatch(/ostream/)
+    expect(r.verdict).toBe('accept')
   })
 
   it('屬性記得住 class／struct、回傳型別與參數', () => {

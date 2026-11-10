@@ -31,6 +31,8 @@ import type { NamingVocabulary } from '../../core/naming'
  */
 export const SUBJECTS = [
   'array', 'array_2d', 'cast', 'char', 'class', 'container', 'cstring', 'enum',
+  // `stream` 加入日 2026-11-10——`cpp:stream_write`：寫到一個當參數傳來傳去的輸出串流；操作詞用既有的 write。
+  'stream',
   // ⚠️ `pwm`／`touch` 加入日 2026-08-18——ESP32 的 LEDC 與觸摸感應。
   //    🔴 而**操作詞一個都沒新增**：`attach`／`open`／`tie`／`write`／`read`
   //    全都已經在表裡。**能用既有詞就不要新增。**

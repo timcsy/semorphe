@@ -4,7 +4,7 @@ import { buildBlock } from '../../../components/cpp/block/lift'
 import { createNode } from '../../../core/semantic-tree'
 import { registerStatementLifters } from '../lang/lifters/statements'
 import { registerDeclarationLifters } from '../lang/lifters/declarations'
-import { registerExpressionLifters, cppStreamRead } from '../lang/lifters/expressions'
+import { registerExpressionLifters, cppStreamRead, cppStreamWrite } from '../lang/lifters/expressions'
 import { registerCppTransforms } from '../lang/lifters/transforms'
 import { registerCppLiftStrategies } from '../lang/lifters/strategies'
 import { registerCppRenderStrategies } from '../renderers/strategies'
@@ -72,6 +72,7 @@ function registerCppLiftersInner(lifter: Lifter, registries?: CppRegistries): vo
 
   // 推給核心的辨識後處理——判準寫著 C++ 的型別名，核心不該認得它們
   declareLiftPostProcessor(cppStreamRead)
+  declareLiftPostProcessor(cppStreamWrite)
 
   /**
    * 推給核心的**樹修復**——tree-sitter-cpp 把 `!K--` 與 `a < b && c > -d`

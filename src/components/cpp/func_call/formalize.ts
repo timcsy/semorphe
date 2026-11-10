@@ -99,6 +99,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
       }
     }
     if (name.includes('<')) return f.miss(n, `「${name}(…)」是帶樣板引數的呼叫（明確指定樣板引數的函式樣板，或還不認得的樣板型別）；還沒有對應`)
+    // `Base::f(x)`：明確指定類別呼叫成員，不走虛擬分派。照 eCall 送是呼叫一個自由函式，Cella 判 no matching（假的 reject，P6；392 露出來的）。
+    //   Cella 給形狀之前照實標翻不出
+    if (f.isQualifiedInstanceCall(name)) return f.miss(n, `「${name}(…)」是明確指定類別的成員呼叫；還沒有對應`)
     return f.k('eCall', { n: n.id, f: f.identMacro(name), args })
   })
   // 作用域：名字照常解析——指得到變數宣告的就是在呼叫那個值（函式定義不進作用域表，所以呼叫函式不會被誤認）
