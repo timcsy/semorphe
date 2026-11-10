@@ -50,9 +50,10 @@ describe('模糊測試：自訂 operator<<', () => {
     expect(shape(lift(generateCode(t, 'cpp', S)))).toEqual(shape(t))
   })
 
-  // Cella 那一側的缺口（已回報）：翻得過去，它說 operator<< 的候選跨命名空間還不支援。修好時這條會紅，拿掉 knownCellaGap
+  // Cella 那一側的兩個缺口（都已回報），這支程式一前一後撞到：Shape::print(os) 還沒有可送的形狀（等下一版），我們照實翻不出；
+  // 那一條接上之後，後面是 operator<< 的候選跨命名空間還不支援。兩條都修好時這條會紅，拿掉 knownCellaGap
   it('🟡 Cella：虛擬函式裡寫 ostream、基底的 operator<<（fuzz_2）', async () => {
-    await knownCellaGap(/more than one namespace/, () => expectCellaOut(prog('fuzz_2').code.replace(/size_t i/g, 'int i'), prog('fuzz_2').expected))
+    await knownCellaGap(/明確指定類別的成員呼叫|more than one namespace/, () => expectCellaOut(prog('fuzz_2').code.replace(/size_t i/g, 'int i'), prog('fuzz_2').expected))
   })
 
   it.each([
