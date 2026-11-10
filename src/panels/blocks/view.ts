@@ -16,6 +16,7 @@ import type { BlockState as ExtractorBlockState } from '../../core/projection/pa
 import { diagNote } from '../../core/diag-log'
 import type { BlockMapping } from '../../core/projection/code-generator'
 import { createDarkWorkspaceTheme } from './dark-workspace-theme'
+import { keepLayoutByIdentity } from './keep-layout'
 import { resolveCollapsed, collapsedToKeys, type CollapsedEntry } from '../../core/granularity'
 import { diagnosticParams, diagnosticWithLayers } from '../../core/projection/diagnostic-projection'
 
@@ -320,8 +321,12 @@ export class BlocklyPanel implements ViewHost {
       // > **一個「從壞狀態恢復了」的通知，如果它把【正常的開機過渡】
       // > 也算成一次恢復，那它每一次開機都在放一次假警報的解除。**
       const wasLoadFailed = this.staleReason === 'load-failed'
+      let layoutKept = false
       try {
-        this.setState(event.blockState as object)
+        // 改程式碼的重畫：手排的那幾疊用節點身分放回原位（`keep-layout.ts`）；其他來源（換語言、匯入…）照舊
+        const kept = event.source === 'code' ? this.keepLayoutFor(event.blockState as object) : null
+        layoutKept = kept !== null
+        this.setState(kept ?? (event.blockState as object))
         this.stateLoadFailed = false
         this.lastStateError = null
         this.lastStateStack = null
@@ -397,6 +402,7 @@ export class BlocklyPanel implements ViewHost {
         // ⚠️ **這一行必須在群組【裡面】**：它會 `initSvg`／`render` 每一顆積木，
         //    而那些也會發事件。舊寫法把它放在 `finally` 之後，等於明著漏在守衛外。
         this.forceRenderAllBlocks()
+        if (layoutKept && !this.stateLoadFailed) this.pushApartOverlaps()  // 要在畫完之後：量高度
         // ─────────────────────────────────────────────────────────────
         // 🔴 **重畫之後，積木那側的復原歷史指向的是一個不存在的世界。**
         //
@@ -1417,6 +1423,33 @@ export class BlocklyPanel implements ViewHost {
     }
     // 🔴 每一顆單獨都載得起來 —— 那代表問題在【組合】，不在單顆。
     return '（逐顆都載得起來——問題在積木的組合，不在單一積木）'
+  }
+
+  /** 重畫前每一疊開頭的節點與位置 → 新狀態（不必套用時 null） */
+  private keepLayoutFor(state: object): object | null {
+    const ws = this.workspace
+    const mappings = (state as { blockMappings?: BlockMapping[] }).blockMappings
+    if (!ws || !mappings) return null
+    const nodeOf = new Map(this._blockMappings.map((m) => [m.blockId, m.nodeId]))
+    const heads = ws.getTopBlocks(true).flatMap((b) => {
+      const nodeId = nodeOf.get(b.id)
+      if (!nodeId) return []
+      const { x, y } = b.getRelativeToSurfaceXY()
+      return [{ nodeId, x, y }]
+    })
+    return keepLayoutByIdentity(state, mappings, heads)
+  }
+
+  /** 放回原位之後，程式碼變長的那一疊可能蓋到下一疊——往下推開（先後不變） */
+  private pushApartOverlaps(): void {
+    const ws = this.workspace
+    if (!ws) return
+    let bottom = -Infinity
+    for (const b of ws.getTopBlocks(true) as Blockly.BlockSvg[]) {
+      const xy = b.getRelativeToSurfaceXY()
+      if (xy.y < bottom) b.moveBy(0, bottom - xy.y)
+      bottom = Math.max(bottom, b.getRelativeToSurfaceXY().y + b.getHeightWidth().height + 16)
+    }
   }
 
   setState(state: object): void {

@@ -49,7 +49,7 @@ const PANEL_RAW = readFileSync('src/panels/blocks/view.ts', 'utf8')
 
 describe('殘的工作區不得覆蓋程式碼', () => {
   it('🔴 正向錨點：那段 try/catch 還在（不然下面兩條在測空氣）', () => {
-    expect(PANEL).toContain('this.setState(event.blockState as object)')
+    expect(PANEL).toContain('this.setState(kept ?? (event.blockState as object))')
   })
 
   it('🔴 `catch` 不得是空的——被吞掉的例外會變成「內容比較少的成功」', () => {

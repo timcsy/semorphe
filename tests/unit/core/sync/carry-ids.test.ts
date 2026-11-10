@@ -5,6 +5,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../helpers/setup-lifter'
 import { carryIds } from '../../../../src/core/sync/carry-ids'
+import { cppStripScaffoldNodes } from '../../../../src/languages/cpp/cpp-scaffold-filter'
 import type { SemanticNode } from '../../../../src/core/types'
 
 let parser: Parser
@@ -28,6 +29,12 @@ const B = '    cout << n << endl;\n'
 const C = '    n = n + 1;\n'
 
 describe('carryIds', () => {
+  it('前一棵是積木抽回來的形狀（沒有骨架）→ 新樹過濾成同形狀再對，身分寫回新樹真正的節點', () => {
+    const prev = cppStripScaffoldNodes(lift(main(A + B)))
+    const next = lift(main('    int n = 6;\n' + B))
+    carryIds(prev, cppStripScaffoldNodes(next))
+    expect(body(next).slice(0, 2).map((n) => n.id)).toEqual(prev.slots.body.map((n) => n.id))
+  })
   it('完全相同 → 每一個節點都沿用', () => {
     const prev = lift(main(A + B))
     const next = lift(main(A + B))
