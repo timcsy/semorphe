@@ -59,9 +59,9 @@ async function same(body: string, expected: string, hint: string): Promise<void>
 }
 
 describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
-  // 歸類：我們這側缺——partial_sum 沒有 formalize（spec 202 量過 Cella 也還沒有 partial_sum）
+  // 歸類：原本是我們這側缺 partial_sum 的 formalize；399（2026-11-11）補上之後，下一個是 Cella 還沒有 adjacent_difference（照送，判 unknown）
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_1｜Pointer ranges over a raw array with an in-place partial_sum and adjacent_difference that undoes it, plus an empty accumulate range.', async () => {
-    await knownCellaGap(/cpp:range_sum_partial：這顆敘述元件還沒有對應到 Cella 的建構子/, async () => {
+    await knownCellaGap(/std::adjacent_difference is not supported/, async () => {
       // 🟠 **為什麼不現在修**：缺的是 `adjacent_difference`——**新元件，不是做不到**。
       //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
       //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。
@@ -98,9 +98,9 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
     cout << w.size() << ' ' << *max_element(w.begin(), w.end()) << '\\n';`, "8 123\nkept=3 isend=0\n3 6\n2 9\n", '🔴 盲測的回歸')
   }, 60_000)
 
-  // 歸類：我們這側缺——iota 沒有 formalize（spec 202 量過 Cella 也還沒有 iota）
+  // 歸類：原本是我們這側缺 iota 的 formalize；399（2026-11-11）補上之後，下一個是 Cella 還沒有 rotate（照送，判 unknown）
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_3｜rotate’s returned iterator is stored and later reused as the middle of a second rotate that undoes the first.', async () => {
-    await knownCellaGap(/cpp:range_fill_sequence：這顆敘述元件還沒有對應到 Cella 的建構子/, async () => {
+    await knownCellaGap(/std::rotate is not supported/, async () => {
       // 🟠 **為什麼不現在修**：缺的是 `rotate / count_if`——**新元件，不是做不到**。
       //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
       //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。

@@ -18,7 +18,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
-import { expectCellaOut, runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
+import { expectCellaOut, runCella, describeCellaResult } from '../helpers/cella-run'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import type { Lifter } from '../../src/core/lift/lifter'
 import type { SemanticNode } from '../../src/core/types'
@@ -78,15 +78,15 @@ describe('標準演算法不再是空操作', () => {
     await run(`int a[3]; fill(a,a+3,5); cout << a[0] << a[2];`, '55')
   })
 
-  // 🟡 Cella 未支援（0.1.202611020258 判 unknown「std::iota is not supported yet」）；我們這側也還沒有 formalize（模型沒有就不送）。期望值 g++ 實測 13
-  it('🟡 已知缺陷（修好時這條會紅）：iota 真的遞增填值', () => knownCellaGap(/翻不出（formalize 不收）[\s\S]*cpp:range_/, async () => {
+  // 期望值 g++ 實測 13。399（2026-11-11）補上 range_fill_sequence 的 formalize 之後 Cella 判 accept（原本是已知缺口的釘子）
+  it('iota 真的遞增填值', async () => {
     await run(`int a[3]; iota(a,a+3,1); cout << a[0] << a[2];`, '13')
-  }))
+  })
 
-  // 🟡 Cella 未支援（0.1.202611020258 判 unknown「std::partial_sum is not supported yet」）；我們這側也還沒有 formalize（模型沒有就不送）。期望值 g++ 實測 16
-  it('🟡 已知缺陷（修好時這條會紅）：partial_sum 真的累加', () => knownCellaGap(/翻不出（formalize 不收）[\s\S]*cpp:range_/, async () => {
+  // 期望值 g++ 實測 16。399 補上 range_sum_partial 的 formalize 之後 Cella 判 accept（原本是已知缺口的釘子）
+  it('partial_sum 真的累加', async () => {
     await run(`int a[3]={1,2,3}; int b[3]; partial_sum(a,a+3,b); cout << b[0] << b[2];`, '16')
-  }))
+  })
 
   it('★ 範圍只排一部分時，其餘不動', async () => {
     await run(`int a[4]={4,3,2,1}; sort(a,a+2); cout << a[0] << a[1] << a[2] << a[3];`, '3421')
