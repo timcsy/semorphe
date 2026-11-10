@@ -26,7 +26,7 @@ function qualifiedDefinition(n: SemanticNode, f: FormalizeContext): CellaJson[] 
   const name = String(n.properties?.name ?? '')
   if (!name.includes('::')) return null
   // 361：初值已併進類別的 mbStatic（member_static 用 staticInitOf 找回來）——這一份不另外送
-  if (f.isClassMember(name)) return []
+  if (f.isClassMember(name)) return [f.staticMemberAt(n)!]
   f.miss(n, '類別外的靜態成員定義找不到對應的類別成員')
   return []
 }

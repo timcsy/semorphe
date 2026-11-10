@@ -105,13 +105,14 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   //    只問形狀：有名字的節點底下的節點、名字帶 `::` 又有初值槽的宣告——核心不認識任何一顆元件
   const ownerOf = new Map<string, string>()
   const classMembers = new Set<string>()
+  const memberIdOf = new Map<string, string>()
   const outsideDefs = new Map<string, SemanticNode>()
   const collect = (n: SemanticNode): void => {
     const ownName = typeof n.properties?.name === 'string' ? n.properties.name : ''
     if (ownName && !ownName.includes('::')) {
       for (const kids of Object.values(n.slots ?? {})) for (const c of kids) {
         ownerOf.set(c.id, ownName)
-        if (typeof c.properties?.name === 'string' && c.properties.name) classMembers.add(`${ownName}::${c.properties.name}`)
+        if (typeof c.properties?.name === 'string' && c.properties.name) { classMembers.add(`${ownName}::${c.properties.name}`); memberIdOf.set(`${ownName}::${c.properties.name}`, c.id) }
       }
     }
     if (ownName.includes('::') && n.slots?.initializer !== undefined) outsideDefs.set(ownName, n)
@@ -480,6 +481,24 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     hasInClassDeclaration: (defined) => {
       const k = FORMALIZE.memberKey.get(defined.componentId)?.(defined)
       return k?.className !== undefined && inClassByKey.has(`${k.className}::${k.key}`)
+    },
+    defaultArgument: (q) => {
+      const text = String(q?.properties?.default ?? '').trim()
+      if (!q || text === '') return null
+      // 🔴 Cella 0.1.202611101335 的誤判：`const string& n = "anon"` 省略引數時判找不到相符的函式（395 實測，已回報，修好會通知）。
+      //    形狀忠實於原始碼，而合法的程式被說成錯的（P6）比翻不出嚴重——修好之前照實標翻不出
+      if (text.startsWith('"') && !/\bchar\b/.test(String(q.properties?.type ?? ''))) return miss(q, `參數的預設值是字串字面「${text}」而參數不是 char 指標：Cella 目前判找不到相符的函式（已回報）——還沒有對應`)
+      return ctx.literalExpr(text, `${q.id}/default`) ?? miss(q, `參數預設值「${text}」不是字面，還沒有對應`)
+    },
+    memberAt: (defined) => {
+      const key = FORMALIZE.memberKey.get(defined.componentId)?.(defined)
+      const declared = key?.className !== undefined ? inClassByKey.get(`${key.className}::${key.key}`) : undefined
+      return declared ? k('iMemberAt', { n: `${defined.id}/at`, cls: key!.className, x: declared.id }) : null
+    },
+    staticMemberAt: (defined) => {
+      const qualified = String(defined.properties?.name ?? '')
+      const x = memberIdOf.get(qualified)
+      return x === undefined ? null : k('iMemberAt', { n: `${defined.id}/at`, cls: qualified.slice(0, qualified.lastIndexOf('::')), x })
     },
     asStatement: (c) => (FORMALIZE.stmt.has(c.componentId) || FORMALIZE.decl.has(c.componentId)
       ? stmt(c)

@@ -10,7 +10,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:destructor_def_outside', (n, f) => {
     if (f.options.isC) return [f.miss(n, 'C 沒有類別')]
     if (!f.hasInClassDeclaration(n)) return [f.miss(n, `類別 ${String(n.properties?.class_name ?? '')} 裡找不到這個解構子的宣告（參數型別要一致）`)]
-    return []
+    return [f.memberAt(n)!] // 本體由類別裡那一行帶進成員，這裡只標「定義寫在這個位置」（395）
   })
   r.scope('cpp:destructor_def_outside', (n, w) => w.inScope(() => {
     w.walkSlot(n, 'body')

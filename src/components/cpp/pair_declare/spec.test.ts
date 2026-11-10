@@ -96,8 +96,9 @@ describe('cpp:pair_declare', () => {
   })
 
   // Cella 0.1.202611020258 判錯：判 reject「no matching constructor for initialization of 'std::pair<int, std::string>'」，
+  // 0.1.202611101335 起改判 unknown（標準庫建構子的多載沒對上不再說成錯，395）；模型還沒有這個轉換建構子。
   // 而真的 C++ 合法（pair<int,const char*> → pair<int,string> 的轉換建構子），g++ 實測印 `42 hello`。已回報。
-  it('🟡 已知缺陷（修好時這條會紅）：make_pair 初始化——初始值不再被對稱地丟掉', () => knownCellaGap(/no matching constructor/, async () => {
+  it('🟡 已知缺陷（修好時這條會紅）：make_pair 初始化——初始值不再被對稱地丟掉', () => knownCellaGap(/has no constructor for these arguments/, async () => {
     await run(
       `${H}int main(){ pair<int,string> p = make_pair(42,"hello"); cout << p.first << " " << p.second << endl; return 0; }`,
       '42 hello\n',

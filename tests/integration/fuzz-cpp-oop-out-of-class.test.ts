@@ -44,7 +44,7 @@ const ALLOWED_DEGRADE = [
 ]
 /** 交給 Cella 翻不出的已知原因——各自是另一刀 */
 const KNOWN_UNTRANSLATED = [
-  /靜態成員函式 \w+ 的本體讀了類別的成員/, // Cella 0954 的誤判，已回報（383）；修好就拿掉
+  /參數的預設值是字串字面/, // `const string& = "anon"`：Cella 判 no matching（395 回報）；修好就拿掉
   /這顆(類別成員|頂層元件|元件)還沒有對應到 Cella 的建構子/, // 上面那些降級
   /`new T{…}` 的大括號初始化：聚合體/, // 328 之後小括號的已判得出；大括號等 Cella 的 eNewList
   /型別「Car」還沒有對應/,

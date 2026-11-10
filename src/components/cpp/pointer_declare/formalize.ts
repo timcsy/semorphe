@@ -8,7 +8,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const qn = String(n.properties?.name ?? '')
     if (qn.includes('::')) {
       // 361：初值已併進類別的 mbStatic——這一份不另外送；找不到對應成員才照實標翻不出
-      if (f.isClassMember(qn)) return []
+      if (f.isClassMember(qn)) return global ? [f.staticMemberAt(n)!] : []
       f.miss(n, '類別外的靜態成員定義找不到對應的類別成員'); return []
     }
     const base = f.type(n.properties?.type, n)

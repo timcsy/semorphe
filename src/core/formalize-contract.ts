@@ -108,6 +108,15 @@ export interface FormalizeContext {
   outsideDefinition(declared: SemanticNode): SemanticNode | undefined
   /** 類別外的定義（註冊了 `memberKey`、帶類別名）對得上類別裡的原型嗎（第 322 刀） */
   hasInClassDeclaration(defined: SemanticNode): boolean
+  /**
+   * 類別外定義「寫在這裡」的標記 `iMemberAt { n, cls, x }`（395，cella 2026-11-10 談定）：本體與初值仍掛在類別的成員上，標記只說位置——
+   * 本體看得到的全域名字、靜態初值的順序都看定義的位置。`x` 是類別裡那顆宣告的 id；類別裡對不上就是 null。
+   */
+  memberAt(defined: SemanticNode): CellaJson | null
+  /** 同上，給類別外的靜態成員定義（`int A::a = 7;`，名字帶類別） */
+  staticMemberAt(defined: SemanticNode): CellaJson | null
+  /** 參數預設值（`param_decl.properties.default`，lift 留成原文）的形狀：字面量照登記翻，其餘照實標翻不出；沒有預設值 ⟹ null（395 收成一份，原本五顆各抄一次） */
+  defaultArgument(param: SemanticNode | undefined): unknown
   /** 當一個類別成員翻（成員函式 → `mbMethod`）；沒有註冊的記 unknown、回 null（spec 201） */
   member(n: SemanticNode): CellaJson | null
   /** 這個宣告是不是某個 struct／class 的欄位——成員函式裡的裸名字指到它時是 `eSelf`（隱含的 this，spec 201） */

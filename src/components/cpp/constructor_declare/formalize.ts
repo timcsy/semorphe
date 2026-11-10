@@ -3,15 +3,9 @@
  *（形狀同類別裡定義建構子那顆）。初始化列、本體、參數名取類別外那一顆；預設引數取這一行（Cella 參照翻譯的 `member`）。
  * 沒有定義：照實標翻不出（不補空本體）。
  */
-import type { FormalizeRegistrar, FormalizeContext } from '../../../core/formalize-contract'
-import type { SemanticNode } from '../../../core/types'
+import type { FormalizeRegistrar } from '../../../core/formalize-contract'
 import { constructorKeyOf } from '../../../languages/cpp/member-key'
 
-function defaultOf(q: SemanticNode | undefined, f: FormalizeContext): unknown {
-  const text = String(q?.properties?.default ?? '').trim()
-  if (!q || text === '') return null
-  return f.literalExpr(text, `${q.id}/default`) ?? f.miss(q, `參數預設值「${text}」不是字面，還沒有對應`)
-}
 
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.memberKey('cpp:constructor_declare', (n) => ({ key: constructorKeyOf(n) }))
@@ -20,9 +14,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     if (!def) return f.miss(n, `類別裡宣告了建構子，而類別外找不到它的定義（只宣告不定義）——還沒有對應`)
     const proto = n.slots?.params ?? []
     const params = (def.slots?.params ?? []).map((q, i) =>
-      f.k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: f.type(q.properties?.type, q), dflt: defaultOf(proto[i], f) }))
+      f.k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: f.type(q.properties?.type, q), dflt: f.defaultArgument(proto[i]) }))
     const inits = (def.slots?.inits ?? []).map((a) =>
       f.k('minit', { n: a.id, field: String(f.one(a, 'target')?.properties?.name ?? ''), args: [f.exprOf(a, 'value')] }))
-    return f.k('mbCtor', { acc: f.k('acPublic'), n: def.id, expl: String(n.properties?.is_explicit ?? 'false') === 'true', noexc: false, params, inits, body: f.block(def, 'body') })
+    return f.k('mbCtor', { x: n.id, acc: f.k('acPublic'), n: def.id, expl: String(n.properties?.is_explicit ?? 'false') === 'true', noexc: false, params, inits, body: f.block(def, 'body') })
   })
 }

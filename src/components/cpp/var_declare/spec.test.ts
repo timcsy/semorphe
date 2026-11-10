@@ -5,7 +5,7 @@
  * 引擎的通用形狀逐一翻宣告子時不經過「類別的直接初始化」那條 ⟹ Cella 判「找不到相符的建構子」（分成兩行就判得出）。
  */
 import { describe, it, expect } from 'vitest'
-import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 
 const H = '#include <iostream>\nusing namespace std;\nstruct F { int n, d; F(int a, int b) : n(a), d(b) {} };\n'
 
@@ -30,10 +30,9 @@ describe('標準庫類別的建構引數要全部送出（學生語料 AP325 7_7
   }, 120_000)
 })
 
-describe('Cella 還不認得 string 的填滿建構子', () => {
-  // 🟠 cella 0.1.202611100308：`string s(3, 'a')` 判 reject「no matching constructor」（g++ 正常，已回報）
-  it('🟡 已知缺陷（修好時這條會紅）：★ string 的 (個數, 字元)', async () => {
-    await knownCellaGap(/no matching constructor/, () => expectCellaOut("#include <bits/stdc++.h>\nusing namespace std;\nint main() { string s(3, 'a'), t[2]; cout << s; return 0; }", 'aaa'))
+describe('string 的填滿建構子', () => {
+  it("★ string 的 (個數, 字元)（Cella 0.1.202611101335 起判得出）", async () => {
+    await expectCellaOut("#include <bits/stdc++.h>\nusing namespace std;\nint main() { string s(3, 'a'), t[2]; cout << s; return 0; }", 'aaa')
   }, 120_000)
 })
 

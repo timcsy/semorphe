@@ -180,10 +180,8 @@ int main() {
     await expectCellaOut(src, '24 4\n')
   })
 
-  it('🔴 靜態成員函式讀靜態資料成員：Cella 目前誤判，照實翻不出（不送去被說成錯的）', async () => {
-    const r = await runCella(`${head}class A {\npublic:\n    static int f();\n    static int a;\n};\nint A::a = 7;\nint A::f() {\n    return a;\n}\nint main() {\n    cout << A::f() << endl;\n    return 0;\n}\n`)
-    expect(r.verdict).toBe('untranslated')
-    expect(r.untranslated.map((u) => u.reason).join('；')).toMatch(/靜態成員函式 f 的本體讀了類別的成員/)
+  it('靜態成員函式讀靜態資料成員：Cella 判得出（383 的翻不出在 395 升版後拿掉）', async () => {
+    await expectCellaOut(`${head}class A {\npublic:\n    static int f();\n    static int a;\n};\nint A::a = 7;\nint A::f() {\n    return a;\n}\nint main() {\n    cout << A::f() << endl;\n    return 0;\n}\n`, '7\n')
   })
 
   it('負向：virtual 與 override 並寫、static 帶尾端 const、巢狀命名空間的定義不被吃掉——照舊降級、原文一字不差', () => {
