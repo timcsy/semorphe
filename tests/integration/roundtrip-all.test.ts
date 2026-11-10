@@ -126,7 +126,18 @@ describe('Full Roundtrip — All 68 Blocks', () => {
         //    的排序、以及這裡。
         const axisPairs = form ? [form] : ((spec as { forms?: { axis: string; value: string }[] }).forms ?? [])
         const hasRoleAxis = axisPairs.some((a) => a.axis === 'role')
-        for (const a of axisPairs) if (a.axis !== 'role' && KNOWN_AXES[a.axis]?.from !== 'slot') sem.properties[a.axis] = a.value
+        for (const a of axisPairs) {
+          const def = KNOWN_AXES[a.axis]
+          if (a.axis === 'role' || def?.from === 'slot') continue
+          // 看名字形狀的軸（372）：軸值由那個屬性的內容決定，所以要放一個對得上的值，取形態自己下拉裡的第一個。
+          if (def?.from === 'pattern' && def.property && def.pattern) {
+            const re = new RegExp(def.pattern)
+            const values = ((spec.blockDef as any).args0 ?? []).flatMap((x: any) => x.type === 'field_dropdown' ? x.options.map((o: string[]) => o[1]) : [])
+            sem.properties[def.property] = values.find((v: string) => re.test(v))
+            continue
+          }
+          sem.properties[a.axis] = a.value
+        }
         // 🔴 **第四種：看接點的軸**（355：sizeof 的對象是運算式時住在 `expr`）——軸值來自「那個接點有沒有東西」，不是屬性。
         //    合成節點把宣告過的接點都填上 ⟹ 中性形態的樣本也會選到變體。照軸表問：這個形態沒有這條軸 ⟹ 清空那個接點。
         //    兄弟形態用到的看接點軸都要問（中性形態自己沒有 form，看不到它們）。

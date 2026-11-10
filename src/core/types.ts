@@ -400,7 +400,7 @@ export interface FormAxis {
   /** 軸名。⚠️ **不只用於診斷**——它是 `FormSet.forms` 的鍵的一半（`<軸名>:<軸值>`）。 */
   name: string
   /** 值從哪來 */
-  from: 'position' | 'property' | 'slot'
+  from: 'position' | 'property' | 'slot' | 'pattern'
   /** `from: 'property'` 時讀哪個屬性 */
   property?: string
   /**
@@ -409,6 +409,13 @@ export interface FormAxis {
    */
   slot?: string
   slotValue?: string
+  /**
+   * `from: 'pattern'` 時：`property` 的值整段符合 `pattern` ＝ `patternValue`，不符合 ＝ 中性。
+   * 為什麼不另記一個屬性：「它是運算子」已經寫在名字裡（`operator+`），另外記一份是第二份真相；
+   * 舊存檔也不用遷移，讀回來就畫成對的形態。理由與 `slot` 那一條相同。
+   */
+  pattern?: string
+  patternValue?: string
   /**
    * **中性形態是常態，不是退路**（第 332 刀）。
    * `container_kind` 的中性形態只在型別查不到時才用（不進工具箱，TB-3）；而 `init_style` 的中性形態是

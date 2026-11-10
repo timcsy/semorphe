@@ -1,11 +1,11 @@
 /** `cpp:container_iter` 的 **generate** 路 */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { generateExpression } from '../../../core/projection/code-generator'
+import { genReceiver } from '../../../core/projection/precedence'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:container_iter', (node, ctx) => {
     // 🔴 接收者是接點——`m[k].f()` 的 `m[k]` 是一棵樹，不是一串文字
-    const obj = generateExpression((node.slots.obj ?? [])[0], ctx)
+    const obj = genReceiver((node.slots.obj ?? [])[0], ctx)
     const which = node.properties.which ?? 'begin'
     /**
      * 🔴 **自由函式那一形要產回自由函式**（2026-09-18）。

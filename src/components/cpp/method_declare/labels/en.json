@@ -8,5 +8,7 @@
   "C_METHOD_DECLARE_VIRT_VIRTUAL": "overridable (virtual)",
   "C_METHOD_DECLARE_VIRT_OVERRIDE": "overrides the base (override)",
   "C_METHOD_DECLARE_VIRT_STATIC": "belongs to the class (static)",
-  "FLOW_SLOT_CPP_METHOD_DECLARE_VIRT": "Modifier"
+  "FLOW_SLOT_CPP_METHOD_DECLARE_VIRT": "Modifier",
+  "C_METHOD_DECLARE_OPERATOR_MSG0": "Declare operator %2 returning %1 (%3) %4 %5, defined outside the class",
+  "C_METHOD_DECLARE_OPERATOR_TOOLTIP": "Only states the shape of this operator in the class (return type, operator, parameters); its body goes in the \"Define operator outside class\" block"
 }

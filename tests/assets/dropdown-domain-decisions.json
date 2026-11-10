@@ -550,6 +550,31 @@
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "列舉的寫法只有 `enum`／`enum class`／`enum struct` 三種——語言定義的封閉集合（C++11 [dcl.enum]；360）"
+    },
+    "cpp_method_declare_operator.NAME": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "類別裡與類別外的運算子形態：清單外的名字（`operator new`、轉型運算子）由形態規則留在文字欄，所以這裡是封閉集合（第 390 刀）"
+    },
+    "cpp_method_def_outside_operator.NAME": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "類別裡與類別外的運算子形態：清單外的名字（`operator new`、轉型運算子）由形態規則留在文字欄，所以這裡是封閉集合（第 390 刀）"
+    },
+    "cpp_method_declare_operator.IS_CONST": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "有沒有尾端的 const 只有兩種（同一般方法那顆，第 390 刀）"
+    },
+    "cpp_method_def_outside_operator.IS_CONST": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "有沒有尾端的 const 只有兩種（同一般方法那顆，第 390 刀）"
+    },
+    "cpp_method_declare_operator.VIRT": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "一般／virtual／override／static 四種（同一般方法那顆，第 390 刀）"
     }
   }
 }
