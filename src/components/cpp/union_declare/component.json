@@ -39,9 +39,10 @@
   "traits": {
     "forLoopPart": true,
     "topLevelOnly": true,
-    "notExecuted": true
+    "notExecuted": true,
+    "declaresTypeName": true
   },
-  "_traits_why": "與同族的結構定義相同：`forLoopPart`（一個宣告放得進 for 的第一格，C++ 的文法事實，同族整族一起宣告）；型別定義只待在最外層（隱藏骨架包 main 時留在外面），也不是會被執行的語句（執行覆蓋不問它）。區塊內的 union（`sType`＋`tdUnion`）與結構一樣還沒接——寫在函式裡的照實降級。",
+  "_traits_why": "與同族的結構定義相同：`forLoopPart`（一個宣告放得進 for 的第一格，C++ 的文法事實，同族整族一起宣告）；型別定義只待在最外層（隱藏骨架包 main 時留在外面），也不是會被執行的語句（執行覆蓋不問它）。區塊內的 union（`sType`＋`tdUnion`）與結構一樣還沒接——寫在函式裡的照實降級。 這顆宣告一個型別名字：類別的產碼要讓它排在用它的成員簽名前面（class_def 的 generate 讀）。",
   "_why": "**不併進結構那顆當一個選項**：union 的成員共用同一塊儲存、一次只有一個作用中（讀非作用中的成員 Cella 判 unknown），與結構是不同的語義——一個積木一個語義概念（Sc3）。2026-11-08，C 盲測第二輪。",
   "_typedef_alias_why": "C 的 `typedef union [Tag] { … } Alias;`（同結構那顆的另名）。空 ＝ 不是 typedef；匿名 union 的 name 為空、只靠別名稱呼"
 }

@@ -1,0 +1,5 @@
+{
+  "C_FRIEND_DEF_MSG0": "定義朋友函式 %1 %2（%3）",
+  "C_FRIEND_DEF_TOOLTIP": "在類別裡直接寫完一個朋友函式（friend）：它不是這個類別的方法，卻可以讀寫 private 成員。呼叫時要傳這個類別的物件當引數",
+  "FLOW_TITLE_CPP_FRIEND_DEF": "定義朋友函式"
+}

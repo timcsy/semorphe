@@ -34,6 +34,7 @@ import { buildConstructorDefOutside } from '../../../../components/cpp/construct
 import { buildDestructorDeclare } from '../../../../components/cpp/destructor_declare/lift'
 import { buildFriendClass } from '../../../../components/cpp/friend_class/lift'
 import { buildFriendFunction } from '../../../../components/cpp/friend_function/lift'
+import { buildFriendDef } from '../../../../components/cpp/friend_def/lift'
 import { buildDestructorDefOutside } from '../../../../components/cpp/destructor_def_outside/lift'
 import { buildMethodVirtualPure } from '../../../../components/cpp/method_virtual_pure/lift'
 import { buildOperatorOverload } from '../../../../components/cpp/operator_overload/lift'
@@ -831,8 +832,8 @@ function operatorMemberName(n: AstNode): string {
 }
 
 /**
- * 類別本體裡的 friend 宣告（第 389 刀）：`friend class X;`、`friend struct X;`、`friend R f(params);` → 那兩顆元件。
- * ⚠️ 只接形狀單純的。帶本體的、限定名的、沒寫 class 的（`friend X;`）、帶預設值的參數，這兩顆放不下，照實降級原文。
+ * 類別本體裡的 friend 宣告（第 389、394 刀）：`friend class X;`、`friend struct X;`、`friend R f(params);`、`friend R f(params) { … }` → 那三顆元件。
+ * ⚠️ 只接形狀單純的。限定名的、沒寫 class 的（`friend X;`）、帶預設值的參數，這三顆放不下，照實降級原文。
  */
 function liftFriend(node: AstNode, ctx: LiftContext): SemanticNode {
   const named = node.namedChildren
@@ -840,7 +841,8 @@ function liftFriend(node: AstNode, ctx: LiftContext): SemanticNode {
     const tag = node.children.find((c) => !c.isNamed && (c.text === 'class' || c.text === 'struct'))?.text
     if (tag) return buildFriendClass({ tag, name: named[0].text })
   }
-  const decl = named.length === 1 && named[0].type === 'declaration' ? named[0] : null
+  const decl = named.length === 1 && (named[0].type === 'declaration' || named[0].type === 'function_definition') ? named[0] : null
+  const bodyNode = decl?.type === 'function_definition' ? decl.childForFieldName('body') : null
   const typeNode = decl?.childForFieldName('type') ?? null
   const declNode = decl?.childForFieldName('declarator') ?? null
   const wrapped = declNode?.type === 'pointer_declarator' || declNode?.type === 'reference_declarator'
@@ -848,18 +850,22 @@ function liftFriend(node: AstNode, ctx: LiftContext): SemanticNode {
   const fnName = fn?.childForFieldName('declarator') ?? null
   const paramList = fn?.childForFieldName('parameters') ?? null
   const sameAt = (a: AstNode | null, b: AstNode | null): boolean => !!a && !!b && a.type === b.type && a.startIndex === b.startIndex
-  const plain = !!decl && !!typeNode && fn?.type === 'function_declarator' && !!paramList
+  const bodyOk = decl?.type !== 'function_definition' || bodyNode?.type === 'compound_statement'
+  const plain = !!decl && bodyOk && !!typeNode && fn?.type === 'function_declarator' && !!paramList
     && (fnName?.type === 'identifier' || fnName?.type === 'operator_name')
     && (!wrapped || declNode!.namedChildren.length === 1)
-    && decl.namedChildren.every((c) => sameAt(c, typeNode) || sameAt(c, declNode) || (c.type === 'type_qualifier' && c.text === 'const'))
+    && decl.namedChildren.every((c) => sameAt(c, typeNode) || sameAt(c, declNode) || sameAt(c, bodyNode) || (c.type === 'type_qualifier' && c.text === 'const'))
     && fn.namedChildren.every((c) => sameAt(c, fnName) || sameAt(c, paramList))
     && paramList.namedChildren.every((c) => c.type === 'parameter_declaration')
-  if (!plain) return degrade(buildRawCode(node.text), '帶本體、限定名或其他修飾的 friend 宣告尚未支援')
+  if (!plain) return degrade(buildRawCode(node.text), '限定名或其他修飾的 friend 宣告尚未支援')
   const name = operatorMemberName(fnName!)
   ctx.data.declareFunction(name)
   const lead = decl.namedChildren.some((c) => c.type === 'type_qualifier') ? 'const ' : ''
   const suffix = wrapped ? (declNode!.type === 'pointer_declarator' ? '*' : (declNode!.children.find((c) => !c.isNamed)?.text ?? '&')) : ''
-  return buildFriendFunction({ return_type: `${lead}${typeNode!.text}${suffix}`, name }, { params: liftParamList(paramList, ctx) })
+  const props = { return_type: `${lead}${typeNode!.text}${suffix}`, name }
+  const params = liftParamList(paramList, ctx)
+  if (bodyNode) return buildFriendDef(props, { params, body: extractBodyWithParams(bodyNode, params, ctx) })
+  return buildFriendFunction(props, { params })
 }
 
 export function liftClassMember(node: AstNode, className: string, ctx: LiftContext): SemanticNode | null {
@@ -1051,9 +1057,17 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
         // 問形狀不問身分：lift 出來的是一個帶成員槽的定義（union／struct 那兩顆）⟹ 名字留空（策略在沒名字時會編 MyStruct）
         const lifted = ctx.lift(spec)
         if (lifted && lifted.slots?.members !== undefined && typeof lifted.properties?.name === 'string') {
-          return { ...lifted, properties: { ...lifted.properties, name: '' } }
+          // 🔴 帶名字的巢狀型別（`struct Node { … };`）也走到這裡（沒有宣告子）：原本連它的名字一起清掉，`Node` 從此不存在、產回去編不過（394 盲測）
+          return spec.childForFieldName('name') ? lifted : { ...lifted, properties: { ...lifted.properties, name: '' } }
         }
         return degrade(buildRawCode(node.text), '這個匿名的 union／struct 成員裝不下（有成員函式之類）')
+      }
+      // 🔴 類別裡的 `enum Color { RED };`、`class B { … };`：原本落到下面的一般欄位、名字缺了就編一個 `x`（`enum Color { RED } x;`）——多了一個欄位（394 盲測延伸）
+      const tagged = node.namedChildren.find((c) => (c.type === 'enum_specifier' || c.type === 'class_specifier') && c.childForFieldName('body'))
+      if (tagged) {
+        const lifted = tagged.childForFieldName('name') ? ctx.lift(tagged) : null
+        if (lifted && !/raw_code|unresolved/.test(lifted.componentId)) return lifted
+        return degrade(buildRawCode(node.text), '類別裡這個 enum／class 宣告尚未支援（匿名或形狀裝不下）')
       }
     }
     // Pure virtual: virtual void method() = 0;

@@ -32,8 +32,8 @@ const shape = (n: SemanticNode): unknown => [n.componentId, n.properties, Object
 const prog = (id: string) => PROGS.find((p) => p.id === id)!
 
 /** [朋友類別數, 朋友函式數, 降級成原文的段數] */
-const COUNT: Record<string, [number, number, number]> = { fuzz_1: [1, 4, 0], fuzz_2: [0, 4, 0], fuzz_3: [0, 0, 2], fuzz_4: [1, 0, 2] }
-const ALLOWED = /帶本體、限定名或其他修飾的 friend|成員初始化列裡有多個引數/
+const COUNT: Record<string, [number, number, number]> = { fuzz_1: [1, 4, 0], fuzz_2: [0, 4, 0], fuzz_3: [0, 0, 1], fuzz_4: [1, 0, 2] }
+const ALLOWED = /限定名或其他修飾的 friend|成員初始化列裡有多個引數/
 
 describe('模糊測試：friend', () => {
   it('入口條件：四支都在、每一支都有預期輸出', () => {
@@ -48,6 +48,7 @@ describe('模糊測試：friend', () => {
     expect(nodes.filter((n) => n.componentId === 'cpp:friend_function')).toHaveLength(ff)
     const degraded = nodes.filter((n) => /raw_code|unresolved|raw_expression/.test(n.componentId))
     expect(degraded).toHaveLength(raw)
+    if (id === 'fuzz_3') expect(nodes.filter((n) => n.componentId === 'cpp:friend_def')).toHaveLength(1)
     expect(degraded.map((n) => String(n.metadata?.rawCode ?? n.properties?.code ?? '')).filter((w) => !ALLOWED.test(w))).toEqual([])
     const t = lift(p.code)
     expect(shape(lift(generateCode(t, 'cpp', S)))).toEqual(shape(t))

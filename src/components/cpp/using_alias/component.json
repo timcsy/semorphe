@@ -15,6 +15,10 @@
   ],
   "slots": {},
   "role": "statement",
+  "traits": {
+    "declaresTypeName": true
+  },
+  "_traits_why": "這顆宣告一個型別名字：類別的產碼要讓它排在用它的成員簽名前面（class_def 的 generate 讀）。",
   "owner": "(core)",
   "paths": {
     "views": {

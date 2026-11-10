@@ -7,7 +7,7 @@
  * ① 兩顆都是元件（不是原文）：產回去、走一趟積木回來都一字不差，class／struct 不互換
  * ② 存取控制真的被量到：有 friend 判 accept，同一支拿掉 friend 判 reject
  * ③ friend 不是成員：寫在哪一節都一樣，Cella 收到的 mbFriend／mbFriendClass 沒有存取權
- * ④ 形狀不單純的（帶本體、限定名、沒寫 class、帶預設值）不准被吃掉——照實降級成原文
+ * ④ 形狀不單純的（限定名、沒寫 class、帶預設值）不准被吃掉——照實降級成原文
  * ```
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -104,7 +104,6 @@ describe('friend 宣告', () => {
   })
 
   it.each([
-    ['帶本體', 'friend int get(A a) { return a.x; }'],
     ['限定名', 'friend void N::h();'],
     ['沒寫 class', 'friend B;'],
     ['帶預設值', 'friend void h(int a = 1);'],
