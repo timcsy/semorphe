@@ -1172,8 +1172,15 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     //    （元件管線 322 的 round-trip 抓到；主線上寫在類別裡的方法一樣壞）。一維的交給陣列宣告那顆（同區域變數那條路）；
     //    二維以上照實降級——不再把維度塞進名字。
     if (declNode?.type === 'array_declarator') {
+      // 🟢 二維、沒有初值（`int g[2][3];`）：交給二維陣列那顆（同區域變數的宣告子分支）——第 400 刀。
+      //    三維以上（內層的名字還是一個陣列宣告子）與帶初值的照舊降級
+      const inner2 = declNode.namedChildren[0]
+      if (inner2?.type === 'array_declarator' && inner2.namedChildren[0]?.type === 'field_identifier' && !node.childForFieldName('default_value')) {
+        const claim2d = tryDeclaratorBranches(declNode, type, ctx)
+        if (claim2d) return claim2d
+      }
       if (declNode.namedChildren[0]?.type === 'array_declarator' || node.childForFieldName('default_value')) {
-        return degrade(buildRawCode(node.text), '類別裡的多維陣列欄位（或帶初值的陣列欄位）尚未支援')
+        return degrade(buildRawCode(node.text), '類別裡的三維以上陣列欄位（或帶初值的陣列欄位）尚未支援')
       }
       return buildArrayDeclare(type, declNode, ctx)
     }
