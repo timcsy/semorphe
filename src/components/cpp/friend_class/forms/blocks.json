@@ -1,0 +1,45 @@
+[
+  {
+    "id": "cpp_friend_class",
+    "componentId": "cpp:friend_class",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_friend_class",
+      "message0": "%{BKY_C_FRIEND_CLASS_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TAG",
+          "options": [
+            [
+              "%{BKY_C_FRIEND_CLASS_TAG_CLASS}",
+              "class"
+            ],
+            [
+              "%{BKY_C_FRIEND_CLASS_TAG_STRUCT}",
+              "struct"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "Other"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_FRIEND_CLASS_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "TAG": "tag",
+        "NAME": "name"
+      }
+    }
+  }
+]

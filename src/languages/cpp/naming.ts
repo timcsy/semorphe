@@ -71,6 +71,8 @@ export const SUBJECTS = [
   // 主體是**輸入輸出流本身**，不是流上的一次讀寫：`print`／`input` 作用在
   // 「一筆資料」上，而這兩顆作用在「這條流怎麼運作」上。
   'io',
+  // ⚠️ `friend` 加入日 2026-11-10——`cpp:friend_class`／`cpp:friend_function`：主體是「朋友這層關係」，後面那個字說朋友是哪一種。
+  'friend',
   'member',
   'input', 'memory', 'print', 'program', 'random', 'range',
   'istringstream', 'literal', 'loop', 'map', 'math', 'method', 'namespace',
@@ -242,6 +244,8 @@ export const KINDS = [
   'bool',
   // 種差可以再細分：`find_first_not_of` 是 `find` 這個操作的一個種類
   'first_not_of', 'last_not_of', 'unary', 'binary', 'pow', 'function',
+  // ⚠️ `class` 當種類加入日 2026-11-10——`cpp:friend_class`：朋友的一種，與旁邊的 `function` 成對。
+  'class',
   'member', 'ptr', 'cstring',
   // 第 5 步（裸的函式庫名）帶進來的種差
   'alpha', 'digit', 'lower', 'upper', 'int', 'double',

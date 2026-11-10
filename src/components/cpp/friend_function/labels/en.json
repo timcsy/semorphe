@@ -1,0 +1,5 @@
+{
+  "C_FRIEND_FUNCTION_MSG0": "Let function %1 %2 (%3) access my private members",
+  "C_FRIEND_FUNCTION_TOOLTIP": "Declares a function outside the class as a friend: it is not a method, yet it can read and write private members. Its body goes outside the class",
+  "FLOW_TITLE_CPP_FRIEND_FUNCTION": "Declare friend function"
+}

@@ -208,6 +208,8 @@
     "cpp:destructor_def_outside",
     "cpp:method_def",
     "cpp:method_declare",
+    "cpp:friend_class",
+    "cpp:friend_function",
     "cpp:method_def_outside",
     "cpp:method_virtual",
     "cpp:method_virtual_pure",
