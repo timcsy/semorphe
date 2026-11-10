@@ -30,6 +30,7 @@ export interface FormalizeTables {
   declaresType: Map<string, (n: SemanticNode) => string>
   memberKey: Map<string, (n: SemanticNode) => { className?: string; key: string; isStatic?: boolean }>
   definesEnum: Map<string, (n: SemanticNode) => string>
+  definesFunction: Map<string, (n: SemanticNode) => string>
   definesUnion: Map<string, (n: SemanticNode) => string>
   definesMacro: Map<string, (n: SemanticNode) => { name: string; value: string; function?: boolean } | null>
   literal: Map<string, { test: (text: string) => boolean; value?: (text: string) => string }>
@@ -40,7 +41,7 @@ function build(): FormalizeTables {
   const t: FormalizeTables = {
     expr: new Map(), stmt: new Map(), item: new Map(), member: new Map(), decl: new Map(),
     init: new Map(), constInt: new Map(), definesType: new Map(), declaresType: new Map(), memberKey: new Map(), definesEnum: new Map(), definesUnion: new Map(), scope: new Map(),
-    definesMacro: new Map(), literal: new Map(),
+    definesMacro: new Map(), literal: new Map(), definesFunction: new Map(),
   }
   for (const [key, mod] of Object.entries(MODULES)) {
     // 用 split 不用正則（同 `core/component/registry.ts` 的 pathToDir）
@@ -57,7 +58,7 @@ function build(): FormalizeTables {
     const r: FormalizeRegistrar = {
       expr: put(t.expr, 'expr'), stmt: put(t.stmt, 'stmt'), item: put(t.item, 'item'), member: put(t.member, 'member'), decl: put(t.decl, 'decl'),
       init: put(t.init, 'init'), constInt: put(t.constInt, 'constInt'), definesType: put(t.definesType, 'definesType'), declaresType: put(t.declaresType, 'declaresType'), memberKey: put(t.memberKey, 'memberKey'), definesEnum: put(t.definesEnum, 'definesEnum'), definesUnion: put(t.definesUnion, 'definesUnion'),
-      scope: put(t.scope, 'scope'), definesMacro: put(t.definesMacro, 'definesMacro'),
+      scope: put(t.scope, 'scope'), definesMacro: put(t.definesMacro, 'definesMacro'), definesFunction: put(t.definesFunction, 'definesFunction'),
       literal: (id, test, value) => put(t.literal, 'literal')(id, { test, value }),
     }
     mod.registerFormalize(r)
