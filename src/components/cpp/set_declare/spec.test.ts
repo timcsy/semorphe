@@ -72,4 +72,17 @@ describe('膠囊自證：集合的宣告與重複性', () => {
     // spec 198（重構 6c-1）：執行的判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）
     await expectCellaOut(`${H}int main(){ set<int> s; s.insert(3); s.insert(3); cout << s.size(); }`, '1')
   })
+
+  // 第 401 刀：`set<ll> st({0});`（唯一的建構引數是大括號清單）原本整句降級成原文（學生語料 2_11_AC）。
+  // 它是 initializer_list 建構子，與 `st{0}` 同一件事 ⟹ 收成元素；產回去是 `= {0}`（同 `int a{5}` → `int a = {5}` 的正規化）
+  it('建構引數是大括號清單：收成元素、不降級、Cella 判得出', async () => {
+    const src = `${H}int main() {\n    multiset<long long> st({0, 5, 5});\n    cout << st.size() << endl;\n    return 0;\n}\n`
+    const t = lift(src)
+    expect(ids(t)).toContain('cpp:set_declare')
+    expect(ids(t)).not.toContain('cpp:raw_code')
+    const back = generateCode(t, 'cpp', S)
+    expect(back).toContain('multiset<long long> st = {0, 5, 5};')
+    expect(ids(lift(back)).filter((x) => x === 'cpp:set_declare')).toHaveLength(1)
+    await expectCellaOut(src, '3\n')
+  })
 })
