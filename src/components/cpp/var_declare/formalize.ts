@@ -6,11 +6,12 @@ import type { SemanticNode } from '../../../core/types'
  * 類別物件的直接初始化（`P p(3, 4);`，lift 記成 `init_style: constructor`、引數全在 `initializer` 槽）→ `sDeclC`／`iVarC`，**每一個引數都送**。
  * spec 203：在此之前走通用宣告子，只取 initializer 的第一顆當 `= 值`——兩個引數的建構子被靜靜丟掉第二個。
  * 純量的 `int x(5)` 不走這裡（Cella：「a constructor's arguments for a type that is not a class」），照舊是 `= 值`。
+ * 標準庫的類別（`vector<int> a(4, 0), b[4];` 混著陣列宣告時不會變成 `vector_declare`）也走這裡：原本只送第一個引數，等於 `a = 4`（AP325 7_7 被誤判）。
  */
 function classCtor(n: SemanticNode, f: FormalizeContext, global: boolean): CellaJson[] | null {
   if (n.properties?.init_style !== 'constructor') return null
   const text = String(n.properties?.type ?? '').trim()
-  if (!f.isStructName(text)) return null
+  if (!f.isStructName(text) && !/^(std::)?(string$|\w+\s*<)/.test(text)) return null
   const t = f.type(text, n)
   if (!t) return []
   return f.declCtor(n, t, (n.slots?.initializer ?? []).map((c) => f.expr(c)), global)

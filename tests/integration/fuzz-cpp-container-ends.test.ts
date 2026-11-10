@@ -114,9 +114,9 @@ describe('模糊測試的回歸：容器兩端', () => {
   }, 60_000)
 
   /** 🟢 **2026-09-18：同一根，同一天拔的**——接收者本來就是一棵樹。 */
-  // 歸類：Cella 判錯——安靜的錯答：`rows.push_back({1,2})`（大括號當引數，eBraced）放進去的那一格，之後 push_back 不生效；先存成變數再 push_back 就對（見回報的重現程式）
+  // 歸類：Cella 不支援（0.1.202611100308 起照實 unknown，之前是安靜的錯答）：`push_back({1,2})` 的大括號不知道要初始化什麼型別
   it('🟡 已知缺陷（修好時這條會紅）：★ 接收者是一個運算式（`rows.front().push_back(9)`）', async () => {
-    await knownCellaGap(/expected '2' to be '3'/, async () => {
+    await knownCellaGap(/a braced list where the type it initializes is not known/, async () => {
       const { ref, got } = await both('',
         `deque<vector<int>> rows; rows.push_back({1,2}); rows.front().push_back(9);`
         + ` cout << rows.front().size();`, "3")

@@ -97,8 +97,7 @@ describe('模糊測試：運算子的類別外定義（第 331 刀）', () => {
     if (r.verdict === 'unknown') expect(r.problems.map((x) => x.kind).every((k) => want.why!.test(k))).toBe(true)
     if (r.verdict === 'reject') expect(r.problems.map((x) => x.reason).join(' | ')).toMatch(want.why!)
     if (r.verdict === 'untranslated') expect(r.untranslated.every((u) => want.why!.test(u.reason))).toBe(true)
-    // 🟠 逾時放寬是暫時的（2026-11-09）：cella 0954 起 fuzz_8 的判決從 10 秒變 100 秒（多載很多的類別＋sort；已回報）；修好之後拿掉這個數字
-  }, 240_000)
+  })
 
   // ── 盲測掀出、這一刀修好的（各一支） ──
   it('🔴 修好：`const Vec k(5, 6);` 原本走一趟變 `const Vec k = 5;`，Cella 用預設參數補上第二個、印出別的值（fuzz_1、8）', async () => {

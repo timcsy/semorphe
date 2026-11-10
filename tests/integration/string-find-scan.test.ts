@@ -30,7 +30,7 @@
  * （g++ -std=c++17，64 位元：`18446744073709551615`）；`!= -1` 那條仍然成立（`-1` 轉成 size_t 就是 npos），由掃描迴圈守。
  */
 import { describe, it, expect } from 'vitest'
-import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 
 // 🔴 spec 202（重構 6c-2d）：執行判準從 JS 直譯器換成 Cella（`tests/helpers/cella-run.ts`）——判不出、翻不出、判定有錯都丟出說得出原因的錯。
 async function run(body: string): Promise<string> {
@@ -71,13 +71,8 @@ describe('npos 這個名字本身（cella 0.1.202611041233 起認得）', () => 
     const code = `#include <iostream>\n#include <string>\nusing namespace std;\nint main() {\n  string s = "ab";\n  cout << (s.find("z") == ${name}) << "\\n";\n  return 0;\n}\n`
     const r = await runCella(code)
     expect(JSON.stringify(r.tree), '認成 builtin_constant').toContain(`"value":"${name}"`)
-    const judged = async (): Promise<void> => {
-      expect(r.verdict, describeCellaResult(r)).toBe('accept')
-      expect(r.out).toBe('1\n')
-    }
-    // 🟠 cella 0954 的誤判（2026-11-09 回報）：`std::string::npos` 判 reject「no member named 'npos'」（clang 正常；不帶 std:: 的照舊 accept；語料 0 處）
-    if (name === 'std::string::npos') await knownCellaGap(/no member named 'npos'/, judged)
-    else await judged()
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    expect(r.out).toBe('1\n')
   })
 })
 
