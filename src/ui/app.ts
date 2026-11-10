@@ -568,16 +568,20 @@ export class App {
     //    初學者的 bug 有壓倒性的比例是「**這一段從來沒跑到**」：`return` 後面的
     //    程式碼、永遠不成立的 `if`、根本沒進去的迴圈。
     //
-    // ⚠️ 而它是**問句不是判決**：一個 `if` 的另一支本來就可能不該跑。
-    //    所以文案是「是故意的嗎」，而視覺是琥珀色虛線，不是紅色（見 CSS）。
+    // ⚠️ 而它不是判決：一個 `if` 的另一支本來就可能不該跑，所以視覺是琥珀色虛線，不是紅色（見 CSS）。
+    // 🔴 2026-11-10 使用者決定（方案 A，「學生看了也會嚇到，而且是純練習」）：純練習不在主控台說，只留虛線；
+    //    有選題目才說一句，而且只描述、不問「是故意的嗎」。滑鼠移到虛線上說這是什麼。
     this.bus.on('execution:coverage', (e) => {
       // ⚠️ 留一份給揭曉用——`execution:coverage` 在 `completed` **之前**送達
       this.lastCounts = new Map(Object.entries(e.counts))
       this.lastLoopCounts = e.loopCounts ?? 'entries'
       // 宣告子跑過 ⟹ 那一句宣告跑過（`int a = 7, b = 3;` 在判決那邊是兩句，見 `core/coverage.ts`）
-      const n = this.blocklyPanel?.markNeverRan(withRanByParts(this.currentTree, e.visited)) ?? 0
-      if (n > 0) consolePanel.log(msg('COVERAGE_NEVER_RAN', `⚠️ 有 ${n} 塊積木這一次沒有被跑到——是故意的嗎？`)
-        .replace('{n}', String(n)))
+      const n = this.blocklyPanel?.markNeverRan(
+        withRanByParts(this.currentTree, e.visited), msg('COVERAGE_NEVER_RAN_TIP', '這次沒有執行到')) ?? 0
+      if (n > 0 && this.currentTaskId !== FREE_PRACTICE) {
+        consolePanel.log(msg('COVERAGE_NEVER_RAN', `這次有 ${n} 段程式沒有執行到（虛線標出的地方），換個輸入可能就會走到。`)
+          .replace('{n}', String(n)))
+      }
       // 🔴 **迴圈跑了幾次**——同一份資料的第二個問題（2026-09-04 第三刀）。
       //
       //    初學者的另一種 bug 是「跑的次數不對」（差一錯誤），而那是

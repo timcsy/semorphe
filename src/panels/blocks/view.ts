@@ -1678,8 +1678,10 @@ export class BlocklyPanel implements ViewHost {
     return !!parentId && componentTraits(parentId)?.notExecuted === true && !hasBody
   }
 
-  markNeverRan(visited: ReadonlySet<string>): number {
+  /** @param tip 滑鼠移到虛線上要說的話（文字由呼叫端翻譯） */
+  markNeverRan(visited: ReadonlySet<string>, tip: string): number {
     if (!this.workspace) return 0
+    this.restoreNeverRanTips()
     const blocks = this.workspace.getAllBlocks(false)
     const never = new Set<string>()
     for (const block of blocks) {
@@ -1722,7 +1724,14 @@ export class BlocklyPanel implements ViewHost {
       const outermost = never.has(block.id)
         && !(block.getParent() !== null && never.has(block.getParent()!.id))
       svgRoot.classList.toggle('never-ran', outermost)
-      if (outermost) n++
+      if (outermost) {
+        n++
+        // 積木原本的說明接在後面，不蓋掉；下一次標記或清除時放回去
+        const svg = block as Blockly.BlockSvg
+        this.neverRanTips.set(svg, svg.tooltip)
+        const own = Blockly.Tooltip.getTooltipOfObject(svg)
+        svg.setTooltip(own ? `${tip}\n\n${own}` : tip)
+      }
     }
     return n
   }
@@ -1957,7 +1966,14 @@ export class BlocklyPanel implements ViewHost {
   }
 
   /** 把上一次的標記清掉——⚠️ 改積木之後那個標記就過期了。 */
+  private readonly neverRanTips = new Map<Blockly.BlockSvg, Blockly.Tooltip.TipInfo>()
+  private restoreNeverRanTips(): void {
+    for (const [block, tip] of this.neverRanTips) if (!block.isDisposed()) block.setTooltip(tip)
+    this.neverRanTips.clear()
+  }
+
   clearNeverRan(): void {
+    this.restoreNeverRanTips()
     if (!this.workspace) return
     for (const block of this.workspace.getAllBlocks(false)) {
       (block as Blockly.BlockSvg).getSvgRoot?.()?.classList.remove('never-ran')
