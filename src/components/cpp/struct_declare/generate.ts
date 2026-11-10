@@ -1,7 +1,7 @@
 /** `cpp:struct_declare` 的 **generate** 路——從共用檔原封剪過來（批次第四批：閉包提升之後才搬得動的三顆）。 */
 import { baseClauseCode } from '../../../languages/cpp/base-clause'
 import type { NodeGenerator } from '../../../core/projection/code-generator'
-import { indent, generateBody, indented } from '../../../core/projection/code-generator'
+import { indent, generateBody, indented, trackOwnText } from '../../../core/projection/code-generator'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:struct_declare', (node, ctx) => {
@@ -12,12 +12,14 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const alias = String(node.properties.typedef_alias ?? '')
       if (alias) {
         let code = `${indent(ctx)}typedef struct ${node.properties.name ? `${node.properties.name}${inherit} ` : ''}{\n`
+        trackOwnText(ctx, code)
         code += generateBody(members, indented(ctx))
         code += `${indent(ctx)}} ${alias};\n`
         return code
       }
       // 空名字＝結構裡的匿名成員（`struct { … };`，358）——不補預設名字
       let code = `${indent(ctx)}struct ${name ? `${name}${inherit} ` : ''}{\n`
+      trackOwnText(ctx, code)
       code += generateBody(members, indented(ctx))
       code += `${indent(ctx)}};\n`
       return code

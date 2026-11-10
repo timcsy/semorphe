@@ -1,0 +1,5 @@
+{
+  "C_FRIEND_FUNCTION_MSG0": "讓函式 %1 %2（%3）讀得到我的私有成員",
+  "C_FRIEND_FUNCTION_TOOLTIP": "把一個類別外面的函式宣告成朋友（friend）：它不是這個類別的方法，卻可以讀寫 private 成員。函式本體寫在類別外面",
+  "FLOW_TITLE_CPP_FRIEND_FUNCTION": "宣告朋友函式"
+}

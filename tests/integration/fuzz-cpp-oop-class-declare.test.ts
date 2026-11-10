@@ -34,7 +34,7 @@ const shape = (n: SemanticNode): unknown => [n.componentId, n.properties, Object
 const prog = (id: string) => PROGS.find((p) => p.id === id)!
 const gen = (code: string) => generateCode(lift(code), 'cpp', S)
 
-/** 刻意的誠實降級（類別外定義成員函式那一族＋friend）——其餘的降級一律不准 */
+/** 刻意的誠實降級（類別外定義成員函式那一族）——其餘的降級一律不准 */
 const ALLOWED = /類別裡的方法原型|類別裡的建構子／解構子原型|類別外定義的成員函式/
 const COUNT: Record<string, number> = { fuzz_1: 1, fuzz_2: 2, fuzz_3: 1, fuzz_4: 2, fuzz_5: 1, fuzz_6: 1, fuzz_7: 1, fuzz_8: 1, fuzz_9: 1, fuzz_10: 4 }
 
@@ -50,7 +50,7 @@ describe('模糊測試：類別的前置宣告', () => {
     expect(nodes.filter((n) => n.componentId === 'cpp:class_declare')).toHaveLength(COUNT[id as string])
     const bad = nodes.filter((n) => /raw_code|unresolved|raw_expression/.test(n.componentId))
       .map((n) => String(n.metadata?.degradationReason ?? n.metadata?.rawCode ?? ''))
-      .filter((why) => !ALLOWED.test(why) && !/^friend class \w+;$/.test(why.trim()))
+      .filter((why) => !ALLOWED.test(why))
     expect(bad).toEqual([])
     const out = generateCode(t, 'cpp', S)
     expect(shape(lift(out))).toEqual(shape(t))

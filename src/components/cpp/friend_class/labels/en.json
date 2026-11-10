@@ -1,0 +1,8 @@
+{
+  "C_FRIEND_CLASS_MSG0": "Let %1 %2 access my private members",
+  "C_FRIEND_CLASS_TOOLTIP": "Declares another class as a friend: its methods can read and write this class's private members. Friendship goes one way only",
+  "C_FRIEND_CLASS_TAG_CLASS": "class",
+  "C_FRIEND_CLASS_TAG_STRUCT": "struct",
+  "FLOW_TITLE_CPP_FRIEND_CLASS": "Declare friend class",
+  "FLOW_SLOT_CPP_FRIEND_CLASS_TAG": "Kind"
+}

@@ -1,0 +1,8 @@
+{
+  "C_FRIEND_CLASS_MSG0": "讓 %1 %2 讀得到我的私有成員",
+  "C_FRIEND_CLASS_TOOLTIP": "把另一個類別宣告成朋友（friend）：它的方法可以讀寫這個類別的 private 成員。友誼是單向的，對方不會因此開放給你",
+  "C_FRIEND_CLASS_TAG_CLASS": "類別",
+  "C_FRIEND_CLASS_TAG_STRUCT": "結構",
+  "FLOW_TITLE_CPP_FRIEND_CLASS": "宣告朋友類別",
+  "FLOW_SLOT_CPP_FRIEND_CLASS_TAG": "種類"
+}

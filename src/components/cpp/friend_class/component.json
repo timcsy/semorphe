@@ -1,0 +1,43 @@
+{
+  "componentId": "cpp:friend_class",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "tag",
+      "kind": "enum",
+      "default": "class",
+      "_kind_why": "`friend class X;` 與 `friend struct X;` 在 Cella 那一側都只取名字，而程式碼要照學生寫的字回去——一格下拉記住，不然來回一趟 struct 會變 class。"
+    },
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "Other"
+    }
+  ],
+  "slots": {},
+  "role": "statement",
+  "owner": "(core)",
+  "_owner_why": "與同族（類別裡宣告方法）同一個章，課程清單與工具箱照同族的位置放。",
+  "traits": {
+    "insideParentOnly": true,
+    "forLoopPart": false
+  },
+  "_traits_why": "**只出現在類別裡**，單獨合成一份樣本去量它是在量一個不存在的位置（同類別裡宣告方法那顆）。`forLoopPart: false`：C++ 文法上放不進 for 的第一格。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "`lift.ts` 匯出建構子；判別（類別本體裡的 friend_declaration、形狀單純）是 C++ 語法的知識，留在共用檔 `liftClassMember`。"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "annotations": {
+    "control_flow": "sequence"
+  }
+}

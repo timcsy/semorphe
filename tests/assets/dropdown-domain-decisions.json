@@ -101,6 +101,11 @@
       "field": "field_dynamic_dropdown",
       "reason": "參數型別同上。⚠️ 這一格 2026-08-26 之前根本沒有名字欄位可談——命令式那份用 `withNameField: false`，於是渲染器吐出的參數名在積木上沒有落點"
     },
+    "cpp_friend_class.TAG": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "`friend` 後面的類別關鍵字：`class`／`struct` 由文法列舉；`union` 不收，lift 照實降級"
+    },
     "cpp_func_call.NAME": {
       "decision": "open",
       "field": "field_dynamic_dropdown",

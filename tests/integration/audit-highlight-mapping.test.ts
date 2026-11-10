@@ -77,6 +77,58 @@ const CPP_PROBES: readonly (readonly [string, string])[] = [
   ['函式與兩個語句', 'int add(int a, int b) {\n    int s = a + b;\n    return s;\n}\n'],
 ]
 
+const MAIN = 'int main() {\n    return 0;\n}\n'
+
+/**
+ * 🔴 2026-11-10：**標頭或標籤自己佔一行、主體接在後面的結構**，每一種都要有一段。
+ *
+ * 瀏覽器裡看到的：走一趟積木之後，對 `b.v` 的診斷紅線畫在 `public:` 那一行。
+ * 這些產生器沒有替 public:、struct S、case 1: 這些行報數，於是後面每一顆都往上偏。
+ * ⚠️ 上面那條 `<` 的不變式抓不到它（整段一起偏的時候，標頭仍然排在主體前面），
+ * 所以這批探針裡的 `m1`、`m2`… 要比到「它自己的那一行」（見 `offLine`）。
+ */
+const MARKER_PROBES: readonly (readonly [string, string])[] = [
+  ['類別的存取標籤', 'class A {\npublic:\n    int m1;\nprivate:\n    int m2;\n};\nint m3 = 3;\n' + MAIN],
+  ['結構', 'struct S {\n    int m1;\n    int m2;\n};\nint m3 = 3;\n' + MAIN],
+  ['聯合', 'union U {\n    int m1;\n    char m2;\n};\nint m3 = 3;\n' + MAIN],
+  ['獨立區塊', 'int main() {\n    {\n        int m1 = 1;\n    }\n    int m2 = 2;\n    return 0;\n}\n'],
+  ['switch 的 case／default', 'int main() {\n    int x = 1;\n    switch (x) {\n        case 1:\n            int m1;\n            break;\n        default:\n            int m2;\n    }\n    int m3 = 3;\n    return 0;\n}\n'],
+  ['#ifdef', '#ifdef A\nint m1 = 1;\n#endif\nint m2 = 2;\n' + MAIN],
+  ['#ifndef', '#ifndef A\nint m1 = 1;\n#endif\nint m2 = 2;\n' + MAIN],
+  ['範圍 for', 'int main() {\n    int xs[2] = {1, 2};\n    for (int v : xs) {\n        int m1 = v;\n    }\n    int m2 = 2;\n    return 0;\n}\n'],
+  ['樣板函式', 'template <typename T>\nT f(T a) {\n    T m1 = a;\n    return a;\n}\nint m2 = 2;\n' + MAIN],
+  ['lambda', 'int main() {\n    auto f = [](int a) {\n        int m1 = a;\n        return a;\n    };\n    int m2 = 2;\n    return 0;\n}\n'],
+]
+
+/**
+ * 判定：名字是 `m<數字>` 的節點，對應表要指到**寫著那個名字的那一行**。
+ * 回傳 seen 與 bad：seen 是實際比到的標記，呼叫端要拿它對原始碼（少比一顆不能算過）。
+ */
+export function offLine(
+  tree: SemanticNode,
+  mappings: readonly CodeMapping[],
+  code: string,
+): { seen: string[]; bad: string[] } {
+  const lines = code.split('\n')
+  const range = new Map(mappings.map((m) => [m.nodeId, m]))
+  const seen: string[] = []
+  const bad: string[] = []
+  const walk = (n: SemanticNode): void => {
+    const name = n.properties?.name
+    if (typeof name === 'string' && /^m\d+$/.test(name)) {
+      seen.push(name)
+      const m = range.get(n.id)
+      if (!m) bad.push(`${name}（${n.componentId}）沒有對應`)
+      else if (!new RegExp(`\\b${name}\\b`).test(lines[m.startLine] ?? '')) {
+        bad.push(`${name}（${n.componentId}）指到第 ${m.startLine} 行 ${JSON.stringify(lines[m.startLine])}`)
+      }
+    }
+    for (const ks of Object.values(n.slots ?? {})) ks.forEach(walk)
+  }
+  walk(tree)
+  return { seen, bad }
+}
+
 /**
  * 判定：**有主體的節點，主體第一顆必須排在它的標頭之後**。
  *
@@ -188,6 +240,30 @@ describe('第五十六條護欄：積木↔程式碼的對應表指得準嗎', (
     } finally {
       setScaffoldConfig({ scaffoldDepth: 0 })
     }
+  })
+
+  it('★ 注入：整段一起偏一行的對應表，offLine 要抓得到', () => {
+    const decl = createNode('cpp:var_declare', { name: 'm1', type: 'int' })
+    const code = 'public:\n    int m1;\n'
+    const shifted = [{ nodeId: decl.id, startLine: 0, startColumn: 0, endLine: 0, endColumn: 0 }] as CodeMapping[]
+    const right = [{ nodeId: decl.id, startLine: 1, startColumn: 0, endLine: 1, endColumn: 0 }] as CodeMapping[]
+    expect(offLine(decl, right, code)).toEqual({ seen: ['m1'], bad: [] })
+    expect(offLine(decl, shifted, code).bad).toHaveLength(1)
+  })
+
+  it('硬性零：有標頭或標籤的結構，主體每一顆都指到自己那一行', () => {
+    const bad: string[] = []
+    for (const [name, src] of MARKER_PROBES) {
+      const tree = cppLifter.lift(tp.parse(src)!.rootNode as never) as SemanticNode
+      const { code, mappings } = generateCodeWithMapping(tree, 'cpp', apcs as unknown as StylePreset)
+      const r = offLine(tree, mappings, code)
+      // ★ 入口條件：原始碼裡每個標記都真的比到了——樹裡少一顆（降級、改名）不能算過
+      const declared = [...new Set(src.match(/\bm\d+\b/g))].sort()
+      expect([...new Set(r.seen)].sort(), `${name}：有標記沒比到（是不是降級了）`).toEqual(declared)
+      for (const b of r.bad) bad.push(`${name}｜${b}`)
+      for (const m of misaligned(tree, mappings, tree.id)) bad.push(`${name}｜${m}`)
+    }
+    expect(bad, '主體的對應往上偏：診斷紅線與反白會落在別行').toEqual([])
   })
 
   it('★ 入口條件：語料與探針真的餵進來了', () => {

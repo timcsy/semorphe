@@ -32,6 +32,8 @@ import { buildMethodDefOutside } from '../../../../components/cpp/method_def_out
 import { buildConstructorDeclare } from '../../../../components/cpp/constructor_declare/lift'
 import { buildConstructorDefOutside } from '../../../../components/cpp/constructor_def_outside/lift'
 import { buildDestructorDeclare } from '../../../../components/cpp/destructor_declare/lift'
+import { buildFriendClass } from '../../../../components/cpp/friend_class/lift'
+import { buildFriendFunction } from '../../../../components/cpp/friend_function/lift'
 import { buildDestructorDefOutside } from '../../../../components/cpp/destructor_def_outside/lift'
 import { buildMethodVirtualPure } from '../../../../components/cpp/method_virtual_pure/lift'
 import { buildOperatorOverload } from '../../../../components/cpp/operator_overload/lift'
@@ -798,7 +800,40 @@ function operatorMemberName(n: AstNode): string {
   return n.type === 'operator_name' ? n.text.replace(/\s+/g, '') : n.text
 }
 
+/**
+ * 類別本體裡的 friend 宣告（第 389 刀）：`friend class X;`、`friend struct X;`、`friend R f(params);` → 那兩顆元件。
+ * ⚠️ 只接形狀單純的。帶本體的、限定名的、沒寫 class 的（`friend X;`）、帶預設值的參數，這兩顆放不下，照實降級原文。
+ */
+function liftFriend(node: AstNode, ctx: LiftContext): SemanticNode {
+  const named = node.namedChildren
+  if (named.length === 1 && named[0].type === 'type_identifier') {
+    const tag = node.children.find((c) => !c.isNamed && (c.text === 'class' || c.text === 'struct'))?.text
+    if (tag) return buildFriendClass({ tag, name: named[0].text })
+  }
+  const decl = named.length === 1 && named[0].type === 'declaration' ? named[0] : null
+  const typeNode = decl?.childForFieldName('type') ?? null
+  const declNode = decl?.childForFieldName('declarator') ?? null
+  const wrapped = declNode?.type === 'pointer_declarator' || declNode?.type === 'reference_declarator'
+  const fn = wrapped ? ((declNode!.childForFieldName('declarator') as AstNode | null) ?? declNode!.namedChildren[0] ?? null) : declNode
+  const fnName = fn?.childForFieldName('declarator') ?? null
+  const paramList = fn?.childForFieldName('parameters') ?? null
+  const sameAt = (a: AstNode | null, b: AstNode | null): boolean => !!a && !!b && a.type === b.type && a.startIndex === b.startIndex
+  const plain = !!decl && !!typeNode && fn?.type === 'function_declarator' && !!paramList
+    && (fnName?.type === 'identifier' || fnName?.type === 'operator_name')
+    && (!wrapped || declNode!.namedChildren.length === 1)
+    && decl.namedChildren.every((c) => sameAt(c, typeNode) || sameAt(c, declNode) || (c.type === 'type_qualifier' && c.text === 'const'))
+    && fn.namedChildren.every((c) => sameAt(c, fnName) || sameAt(c, paramList))
+    && paramList.namedChildren.every((c) => c.type === 'parameter_declaration')
+  if (!plain) return degrade(buildRawCode(node.text), '帶本體、限定名或其他修飾的 friend 宣告尚未支援')
+  const name = operatorMemberName(fnName!)
+  ctx.data.declareFunction(name)
+  const lead = decl.namedChildren.some((c) => c.type === 'type_qualifier') ? 'const ' : ''
+  const suffix = wrapped ? (declNode!.type === 'pointer_declarator' ? '*' : (declNode!.children.find((c) => !c.isNamed)?.text ?? '&')) : ''
+  return buildFriendFunction({ return_type: `${lead}${typeNode!.text}${suffix}`, name }, { params: liftParamList(paramList, ctx) })
+}
+
 export function liftClassMember(node: AstNode, className: string, ctx: LiftContext): SemanticNode | null {
+  if (node.type === 'friend_declaration') return liftFriend(node, ctx)
   // 🔴 類別裡的建構子／解構子【原型】（`BST();`、`~Folder();`——定義寫在類別外）是 declaration：原本交給一般的宣告那條路，
   //    建成名字掉成 `f` 的函式原型（`int f();`）或 `int BST();`——安靜地換掉了意思（2026-11-06 元件管線 313 的盲測）。
   //    在「宣告方法」那顆元件之前照實降級成原文（路線圖〈類別外定義成員函式〉）
