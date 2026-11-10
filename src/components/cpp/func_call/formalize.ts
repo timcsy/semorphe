@@ -44,6 +44,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     if (getN) return f.k('eCallT', { n: n.id, f: 'get', targs: [f.k('tVal', { v: Number(getN[1]) })], args })
     // 成員函式裡用裸名字呼叫同一個類別的方法：隱含的 this（spec 208；原本送 eCall，被判「呼叫未宣告的函式」）
     //   ⚠️ 名字指到區域變數（lambda）的情況在下面先由 declOf 接住——那個比類別的方法更近
+    // 靜態成員函式沒有 this：裸名字呼叫送全名（383；盲測 fuzz_8 的遞迴 `gcd(b, a % b)` 原本送 eThis，判「undeclared this」）
+    const ownStatic = f.declOf(n.id) ? undefined : f.ownStaticMethod(n.id, name)
+    if (ownStatic) return f.k('eCall', { n: n.id, f: ownStatic, args })
     if (!f.declOf(n.id) && f.isOwnMethod(n.id, name)) return f.k('eMCall', { n: n.id, obj: f.k('eThis', { n: `${n.id}/this` }), arrow: true, f: name, args })
     // `Rect("A", 3, 4)`：名字是程式裡定義的類別／struct ⟹ 建一個暫時物件（[expr.type.conv]），不是呼叫一個叫 Rect 的函式。
     //   照 eCall 送會被判「呼叫未宣告的函式」——一支合法的程式被說成錯的（P6；2026-11-06 元件管線 311 的盲測抓到）。形狀照 cpp_to_tree.py：eTemp

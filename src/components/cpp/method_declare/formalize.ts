@@ -18,7 +18,7 @@ function defaultOf(q: SemanticNode | undefined, f: FormalizeContext): unknown {
 }
 
 export function registerFormalize(r: FormalizeRegistrar): void {
-  r.memberKey('cpp:method_declare', (n) => ({ key: memberKeyOf(n) }))
+  r.memberKey('cpp:method_declare', (n) => ({ key: memberKeyOf(n), isStatic: String(n.properties?.virt ?? 'none') === 'static' }))
   r.member('cpp:method_declare', (n, f) => {
     const def = f.outsideDefinition(n)
     if (!def) return f.miss(n, `類別裡宣告了方法 ${String(n.properties?.name ?? '')}，而類別外找不到它的定義（只宣告不定義）——還沒有對應`)
@@ -28,6 +28,20 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const params = (def.slots?.params ?? []).map((q, i) =>
       f.k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: f.type(q.properties?.type, q), dflt: defaultOf(protoParams[i], f) }))
     const fdef = f.k('fdef', { n: def.id, noexc: false, name: String(p.name ?? ''), ret, params, body: f.block(def, 'body') })
+    // `static int count();`（383）：[class.static.mfct] 沒有 this，Cella 的 mbStaticMethod 只收存取權與函式（參照翻譯 cpp_to_tree.py 的 member 同形）
+    if (String(p.virt ?? 'none') === 'static') {
+      // 🔴 Cella 0954 的誤判：靜態成員函式的本體讀靜態資料成員判 undeclared（與參照翻譯完全同形的 eVar 也一樣，383 實測）——
+      //    一支合法的程式被說成錯的（P6）比翻不出嚴重，修好之前照實標翻不出（已附最小重現回報 cella）
+      const cls = String(def.properties?.class_name ?? '')
+      const readsStaticData = (x: SemanticNode): boolean => {
+        const name = String(x.properties?.name ?? '')
+        const leaf = Object.keys(x.slots ?? {}).length === 0
+        if (leaf && name && (f.isClassMember(name) || f.isClassMember(`${cls}::${name}`))) return true
+        return Object.values(x.slots ?? {}).some((kids) => kids.some(readsStaticData))
+      }
+      if ((def.slots?.body ?? []).some(readsStaticData)) return f.miss(n, `靜態成員函式 ${String(p.name ?? '')} 的本體讀了類別的成員：Cella 目前判 undeclared（已回報）——還沒有對應`)
+      return f.k('mbStaticMethod', { acc: f.k('acPublic'), f: fdef })
+    }
     return f.k('mbMethod', { acc: f.k('acPublic'), isConst: String(p.is_const ?? 'false') === 'true', expl: false, virt: f.k(({ virtual: 'vVirtual', override: 'vOverride' } as Record<string, string>)[String(p.virt ?? 'none')] ?? 'vNone'), f: fdef })
   })
 }

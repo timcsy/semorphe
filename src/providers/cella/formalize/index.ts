@@ -137,6 +137,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
   const outsideByKey = new Map<string, SemanticNode>()
   const keyOfInClass = new Map<string, string>()
   const methodsOfClass = new Map<string, Set<string>>()
+  // 靜態成員函式（383）：那組方法名 → `類別::名字`（[class.static.mfct] 沒有 this；裸名字呼叫是 `C::f`，cpp_to_tree.py 同形）
+  const staticMethodsOf = new Map<Set<string>, Map<string, string>>()
   const index = (n: SemanticNode, methods?: Set<string>): void => {
     byId.set(n.id, n)
     // 類別外的定義：本體裡的裸名字呼叫要認得那個類別的方法（同寫在類別裡）
@@ -164,6 +166,11 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       for (const m of members) {
         const k = FORMALIZE.memberKey.get(m.componentId)?.(m)
         if (k && k.className === undefined) { inClassByKey.set(`${cls}::${k.key}`, m); keyOfInClass.set(m.id, `${cls}::${k.key}`) }
+        if (k?.isStatic && m.properties?.name) {
+          const statics = staticMethodsOf.get(own!) ?? new Map<string, string>()
+          statics.set(String(m.properties.name), `${cls}::${String(m.properties.name)}`)
+          staticMethodsOf.set(own!, statics)
+        }
       }
     }
     for (const [slot, kids] of Object.entries(n.slots ?? {})) {
@@ -460,6 +467,7 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     isMemberField: (declId) => memberFields.has(declId),
     isFunctionName: (name) => functionNames.has(name),
     isOwnMethod: (nodeId, name) => ownMethods.get(nodeId)?.has(name) ?? false,
+    ownStaticMethod: (nodeId, name) => { const own = ownMethods.get(nodeId); return own ? staticMethodsOf.get(own)?.get(name) : undefined },
     outsideDefinition: (declared) => { const k = keyOfInClass.get(declared.id); return k === undefined ? undefined : outsideByKey.get(k) },
     hasInClassDeclaration: (defined) => {
       const k = FORMALIZE.memberKey.get(defined.componentId)?.(defined)

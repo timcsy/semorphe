@@ -28,7 +28,7 @@ export interface FormalizeTables {
   constInt: Map<string, (n: SemanticNode, f: FormalizeContext) => number | null>
   definesType: Map<string, (n: SemanticNode) => string>
   declaresType: Map<string, (n: SemanticNode) => string>
-  memberKey: Map<string, (n: SemanticNode) => { className?: string; key: string }>
+  memberKey: Map<string, (n: SemanticNode) => { className?: string; key: string; isStatic?: boolean }>
   definesEnum: Map<string, (n: SemanticNode) => string>
   definesUnion: Map<string, (n: SemanticNode) => string>
   definesMacro: Map<string, (n: SemanticNode) => { name: string; value: string; function?: boolean } | null>

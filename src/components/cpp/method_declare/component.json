@@ -22,7 +22,7 @@
       "name": "virt",
       "kind": "enum",
       "default": "none",
-      "_kind_why": "`virtual void f();`／`void f() override;`：virtual 與 override 只寫在類別裡這一行，類別外的定義不寫（Cella 的 mbMethod.virt：vVirtual／vOverride）。第 322 刀的盲測補；兩個都寫的照舊降級。"
+      "_kind_why": "`virtual void f();`／`void f() override;`：virtual 與 override 只寫在類別裡這一行，類別外的定義不寫（Cella 的 mbMethod.virt：vVirtual／vOverride）。第 322 刀的盲測補；兩個都寫的照舊降級。第四個值 `static`（383）：`static int count();` 也只寫在類別裡這一行，而它與 virtual／override 互斥（[class.static.mfct]），一格下拉剛好裝得下，不必多一個欄位與存檔遷移。"
     }
   ],
   "slots": {
