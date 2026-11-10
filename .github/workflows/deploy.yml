@@ -437,6 +437,11 @@ jobs:
       #    五秒就回報 success，而 `/` 還是第一次部署放上去的上一版——394（11-10 23:46）與 401（11-11 05:04）都是，
       #    兩次都是手動重跑這個 job 才換上。原因在 GitHub 那側、沒有證實；這一步讓它【紅】，而不是綠著停在舊版。
       #    ⚠️ 期間若又推了一次，`/` 可能已是更新的那一版——紅了先看印出來的兩個檔名，再決定要不要重跑這個 job。
+      # ⚠️ 這個 job 原本沒有 checkout——驗線上的腳本住在 repo 裡（2026-11-11 第一次跑就紅在「找不到腳本」）
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/wait-live-entry.sh
+          sparse-checkout-cone-mode: false
       - id: live1
         name: 驗線上的主線真的換成這一版
         continue-on-error: true
