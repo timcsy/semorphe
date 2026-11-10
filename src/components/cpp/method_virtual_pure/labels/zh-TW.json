@@ -1,4 +1,6 @@
 {
-  "C_PURE_VIRTUAL_MSG0": "純虛擬方法 %1 %2（%3）",
-  "C_PURE_VIRTUAL_TOOLTIP": "宣告純虛擬方法（抽象），衍生類別必須實作"
+  "C_PURE_VIRTUAL_MSG0": "純虛擬方法 %1 %2（%3）%4",
+  "C_PURE_VIRTUAL_TOOLTIP": "宣告純虛擬方法（抽象），衍生類別必須實作",
+  "C_PURE_VIRTUAL_CONST_NO": "（會改自己）",
+  "C_PURE_VIRTUAL_CONST_YES": "const（不改自己）"
 }

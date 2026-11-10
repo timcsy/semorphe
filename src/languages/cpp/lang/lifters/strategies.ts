@@ -1023,16 +1023,21 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
     if (isVirtual && defaultVal?.text === '0') {
       const typeNode = node.childForFieldName('type')
       const declNode = node.childForFieldName('declarator')
-      // 🔴 回傳指標（`virtual const char* name() const = 0;`）或尾端 const：這顆記不住——原本產成 `virtual char name() const() = 0;`
-      //    （編不過；2026-11-06 元件管線 313 的盲測）。照實降級成原文
-      if (declNode?.type !== 'function_declarator' || declNode.namedChildren.some((c) => c.type === 'type_qualifier')) {
-        return degrade(buildRawCode(node.text), '純虛擬函式的指標回傳或尾端 const 尚未支援')
-      }
-      const methodName = declNode?.childForFieldName('declarator')?.text ?? declNode?.namedChildren[0]?.text ?? 'method'
-      const returnType = typeNode?.text ?? 'void'
-      const paramList = declNode?.childForFieldName('parameters') ?? null
-      const params = liftParamList(paramList, ctx)
-      return buildMethodVirtualPure({ return_type: returnType, name: methodName }, { params })
+      // 回傳指標或參照、尾端 const（`virtual const char* name() const = 0;`，第 386 刀）：回傳型別連星號一起記、const 一格屬性。
+      // ⚠️ 只收一層 `*`／`&`，函式宣告子上只准尾端 const——其他寫法（`T**`、`* const`、noexcept）這顆放不下，照實降級原文
+      const wrapped = declNode?.type === 'pointer_declarator' || declNode?.type === 'reference_declarator'
+      const fn = wrapped ? ((declNode!.childForFieldName('declarator') as AstNode | null) ?? declNode!.namedChildren[0]) : declNode
+      const fnName = fn?.childForFieldName('declarator') ?? fn?.namedChildren[0] ?? null
+      const shapeOk = fn?.type === 'function_declarator' && (!wrapped || declNode!.namedChildren.length === 1)
+        && fn.namedChildren.every((c) => (c.type === 'type_qualifier' && c.text === 'const') || c.type === 'parameter_list' || (!!fnName && c.type === fnName.type && c.startIndex === fnName.startIndex))
+      if (!shapeOk) return degrade(buildRawCode(node.text), '純虛擬函式的多層指標或其他修飾尚未支援')
+      const methodName = fnName?.text ?? 'method'
+      const lead = node.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const') ? 'const ' : ''
+      const suffix = wrapped ? (declNode!.type === 'pointer_declarator' ? '*' : (declNode!.children.find((c) => !c.isNamed)?.text ?? '&')) : ''
+      const returnType = `${lead}${typeNode?.text ?? 'void'}${suffix}`
+      const isConst = fn!.namedChildren.some((c) => c.type === 'type_qualifier')
+      const params = liftParamList(fn!.childForFieldName('parameters') ?? null, ctx)
+      return buildMethodVirtualPure({ return_type: returnType, name: methodName, is_const: isConst ? 'true' : 'false' }, { params })
     }
 
     // Static member: static int count;

@@ -1,4 +1,6 @@
 {
-  "C_PURE_VIRTUAL_MSG0": "Must-override method %1 %2 (%3) (pure virtual)",
-  "C_PURE_VIRTUAL_TOOLTIP": "Declare a pure virtual method (abstract) that must be overridden by derived classes"
+  "C_PURE_VIRTUAL_MSG0": "Must-override method %1 %2 (%3) %4 (pure virtual)",
+  "C_PURE_VIRTUAL_TOOLTIP": "Declare a pure virtual method (abstract) that must be overridden by derived classes",
+  "C_PURE_VIRTUAL_CONST_NO": "(may modify itself)",
+  "C_PURE_VIRTUAL_CONST_YES": "const (does not modify itself)"
 }
