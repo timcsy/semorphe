@@ -211,6 +211,7 @@
     "cpp:method_declare",
     "cpp:friend_class",
     "cpp:friend_function",
+    "cpp:friend_def",
     "cpp:stream_write",
     "cpp:method_def_outside",
     "cpp:method_virtual",

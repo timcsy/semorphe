@@ -35,8 +35,8 @@ const prog = (id: string) => PROGS.find((p) => p.id === id)!
 const H = '#include <iostream>\n#include <string>\nusing namespace std;\n'
 const count = (t: SemanticNode, id: string) => all(t).filter((n) => n.componentId === id).length
 
-/** 每一支裡串流寫入至少幾句；fuzz_3 的 operator<< 全是帶本體的 friend，照實是原文 */
-const WRITES: Record<string, number> = { fuzz_1: 6, fuzz_2: 6, fuzz_3: 0, fuzz_4: 7 }
+/** 每一支裡串流寫入至少幾句；fuzz_3 的 operator<< 全是帶本體的 friend（第 394 刀起是元件），串流寫入在本體裡 */
+const WRITES: Record<string, number> = { fuzz_1: 6, fuzz_2: 6, fuzz_3: 4, fuzz_4: 7 }
 
 describe('模糊測試：自訂 operator<<', () => {
   it('入口條件：四支都在、每一支都有預期輸出', () => {

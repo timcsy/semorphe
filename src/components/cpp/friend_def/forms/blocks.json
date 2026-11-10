@@ -1,0 +1,63 @@
+[
+  {
+    "id": "cpp_friend_def",
+    "componentId": "cpp:friend_def",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_friend_def",
+      "message0": "%{BKY_C_FRIEND_DEF_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "RETURN_TYPE",
+          "text": "void"
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "helper"
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": ""
+        }
+      ],
+      "message1": "%1",
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "BODY",
+          "check": "Statement"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_FRIEND_DEF_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "RETURN_TYPE": "return_type"
+      },
+      "statementInputs": {
+        "BODY": "body"
+      },
+      "slotAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childComponent": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
+    }
+  }
+]

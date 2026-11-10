@@ -1,0 +1,46 @@
+{
+  "componentId": "cpp:friend_def",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "return_type",
+      "kind": "type_expr",
+      "default": "void"
+    },
+    {
+      "name": "name",
+      "kind": "literal",
+      "default": "helper"
+    }
+  ],
+  "slots": {
+    "params": "statements",
+    "body": "statements"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "_owner_why": "與同族（類別裡宣告方法）同一個章，課程清單與工具箱照同族的位置放。",
+  "traits": {
+    "insideParentOnly": true,
+    "forLoopPart": false
+  },
+  "_traits_why": "**只出現在類別裡**，單獨合成一份樣本去量它是在量一個不存在的位置（同類別裡宣告方法那顆）。`forLoopPart: false`：C++ 文法上放不進 for 的第一格。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "`lift.ts` 匯出建構子；判別（類別本體裡的 friend_declaration、形狀單純、帶本體）是 C++ 語法的知識，留在共用檔 `liftClassMember`。"
+      }
+    },
+    "_formalize_why": "Cella 新建構子 mbFriendDef 談定中（2026-11-10，下一版）：不能攤平成類別後的頂層函式，那會丟掉類別的語彙範圍。發布前照實翻不出。"
+  },
+  "annotations": {
+    "control_flow": "sequence"
+  },
+  "_slots_why": "與只有原型的那顆是兩個身分：差的是「有沒有本體」這個接點（同類別裡宣告方法與定義方法的分法）。"
+}
