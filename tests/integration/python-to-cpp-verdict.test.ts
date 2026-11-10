@@ -12,7 +12,7 @@ import { generateCode } from '../../src/core/projection/code-generator'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 import { liftPython } from '../helpers/python-lift'
-import { runCella, cellaObservedOfTree, knownCellaGap } from '../helpers/cella-run'
+import { runCella, cellaObservedOfTree } from '../helpers/cella-run'
 import { fakeObserved } from '../helpers/fake-observed-types'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -70,9 +70,6 @@ function stdinOf(f: string): string {
   const task = lesson.tasks.find((t) => t.id === id)
   return (task?.check?.stdin ?? []).map((l) => `${l}\n`).join('')
 }
-
-/** Cella 把 vector 的大括號指定當成建構引數——修好時這幾支會紅 */
-const KNOWN_BRACE_ASSIGN_GAP = new Set(['08-清單/solutions/make.py', '08-清單/solutions/rebuild.py'])
 
 // ── 381：字串方法、印 list、切片、整數的 **（型別用 Cella 觀察到的）──
 describe('Python → C++：換成補在開頭的小函式，判決相同', () => {
@@ -138,8 +135,7 @@ describe('Python → C++：python-beginner 課文的解答（Cella 觀察到的�
         expect(b.assumes ?? [], `${show}\nassumes：Python ${JSON.stringify(a.assumes ?? [])} / C++ ${JSON.stringify(b.assumes ?? [])}`).toEqual(a.assumes ?? [])
       }
       // 🟠 Cella 的誤判（2026-11-09 回報）：`v = {…}` 被當成建構引數（clang 正常）——我們送的形狀是對的（eAssign ＋ eBraced）
-      if (KNOWN_BRACE_ASSIGN_GAP.has(f.replace('lessons/python-beginner/', ''))) await knownCellaGap(/no matching constructor|pointer out of bounds/, same)
-      else await same()
+      await same()
       expect(r.code.split('\n')[0], 'FR-009：第一行要說型別是照這組輸入推的').toMatch(/^\/\/ 變數的型別是照這/)
     }, 120_000)
   }
