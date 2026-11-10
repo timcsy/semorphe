@@ -77,8 +77,6 @@ describe('cpp:string_at', () => {
     await run(`${H}int main(){ string s="ab"; cout << (s[0]>='a') << (s[0]=='a') << (s[0]<'b'); return 0; }`, '111')
   })
 
-  // ⏸ 不是 Cella 判錯，是 semorphe 這一側缺一段：formalize 回「cpp:char_is_alpha：這顆元件還沒有對應到 Cella 的建構子」
-  // （這顆膠囊沒有 `formalize.ts`，判決走不到 Cella）。期望值照 C++ 的答案寫好了，補上 formalize 之後拿掉 skip。
   // ⚠️ `isalpha`／`isdigit` 只保證回【非零】（Apple clang 印 1、glibc 印 1024／2048）——原本的 '11' 綁在 JS 直譯器上，
   // 所以改成比 `!= 0`，兩台機器都印 11。
   it('★ cctype 認得它', async () => {

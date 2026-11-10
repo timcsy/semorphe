@@ -363,6 +363,8 @@ jobs:
   redeploy:
     needs: promote
     runs-on: ubuntu-latest
+    outputs:
+      entry: ${{ steps.entry.outputs.entry }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -404,6 +406,9 @@ jobs:
       #
       # > **一條分成兩次部署的路，它的第二次會踩到第一次留下的東西
       # > ——而那個東西有一個寫死的預設名字。**
+      # 這一份的主線入口檔名（`assets/index-<hash>.js`）——redeploy-pages 拿它驗線上真的換了（見那個 job）
+      - id: entry
+        run: echo "entry=$(grep -o 'assets/index-[A-Za-z0-9_-]*\.js' dist/index.html | head -1)" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v3
         with:
           name: github-pages-promoted
@@ -428,3 +433,23 @@ jobs:
         uses: actions/deploy-pages@v4
         with:
           artifact_name: github-pages-promoted
+      # 🔴 **部署回報成功 ≠ 網站換了**（2026-11-11，第二次）：同一個 commit 的第二次部署（部署 ID 就是 commit）
+      #    五秒就回報 success，而 `/` 還是第一次部署放上去的上一版——394（11-10 23:46）與 401（11-11 05:04）都是，
+      #    兩次都是手動重跑這個 job 才換上。原因在 GitHub 那側、沒有證實；這一步讓它【紅】，而不是綠著停在舊版。
+      #    ⚠️ 期間若又推了一次，`/` 可能已是更新的那一版——紅了先看印出來的兩個檔名，再決定要不要重跑這個 job。
+      - id: live1
+        name: 驗線上的主線真的換成這一版
+        continue-on-error: true
+        env:
+          ENTRY: ${{ needs.redeploy.outputs.entry }}
+        run: bash tools/wait-live-entry.sh "$ENTRY"
+      # 驗不到就再部署一次（手動重跑這個 job 兩次都換上了），再驗；仍不對才紅
+      - if: steps.live1.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-promoted
+      - if: steps.live1.outcome == 'failure'
+        name: 再驗一次
+        env:
+          ENTRY: ${{ needs.redeploy.outputs.entry }}
+        run: bash tools/wait-live-entry.sh "$ENTRY"

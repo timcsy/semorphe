@@ -48,8 +48,6 @@ describe('膠囊自證：cpp:char_is_alpha', () => {
     expect(code).toContain('isalpha(c)')
   })
 
-  // ⏸ 不是 Cella 判錯，是 semorphe 這一側缺一段：formalize 回「cpp:char_is_alpha：這顆元件還沒有對應到 Cella 的建構子」
-  // （這顆膠囊沒有 `formalize.ts`，判決走不到 Cella）。期望值照 C++ 的答案寫好了，補上 formalize 之後拿掉 skip。
   // ⚠️ `isalpha` 只保證字母回【非零】（g++ 實測：Apple clang 印 1，glibc 印 1024）——原本直接印 `isalpha('a')` 期望 1
   // 綁在 JS 直譯器上，所以改成比 `!= 0`。
   it('★ execute：字母回非零、非字母回 0', async () => {
@@ -58,8 +56,6 @@ describe('膠囊自證：cpp:char_is_alpha', () => {
     await expectCellaOut(H + `int main(){ cout << isalpha('1'); }`, '0')
   })
 
-  // ⏸ 不是 Cella 判錯，是 semorphe 這一側缺一段：formalize 回「cpp:char_is_alpha：這顆元件還沒有對應到 Cella 的建構子」
-  // （這顆膠囊沒有 `formalize.ts`，判決走不到 Cella）。期望值照 C++ 的答案寫好了，補上 formalize 之後拿掉 skip。
   it('★ execute：字元以數字碼存放時也要對（核心的轉型踩過這個坑）', async () => {
     // 97 是 'a'——取成 '9' 的話會回 0（`!= 0` 的理由同上）
     await expectCellaOut(H + `int main(){ char c = 97; cout << (isalpha(c) != 0); }`, '1')
