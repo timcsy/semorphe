@@ -18,7 +18,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { runCella, describeCellaResult } from '../../../../tests/helpers/cella-run'
+import { runCella, describeCellaResult, expectCellaOut } from '../../../../tests/helpers/cella-run'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode } from '../../../core/types'
 
@@ -94,4 +94,27 @@ describe('cpp:namespace_def', () => {
       await run(`${head}int square(int x){ return x + 100; }\nnamespace Math {\n  int helper(int x){ return x * x; }\n}\nint main(){ cout << Math::helper(5) << endl; cout << square(5) << endl; return 0; }`),
     ).toBe('25\n105\n')
   })
+})
+
+describe('命名空間裡的類別當型別（盲測 fuzz_9：ds::Item）', () => {
+  const H = '#include <bits/stdc++.h>\nusing namespace std;\n'
+  const NS = 'namespace ds { struct Item { int w; }; }\n'
+  it.each([
+    ['區域變數', 'ds::Item it; it.w = 3; cout << it.w;', '3'],
+    ['new 與指標', 'ds::Item* p = new ds::Item; p->w = 1; cout << p->w; delete p;', '1'],
+    ['容器的元素型別', 'vector<ds::Item> v(2); v[0].w = 7; cout << v[0].w;', '7'],
+  ])('★ %s', async (_n, body, want) => {
+    await expectCellaOut(`${H}${NS}int main() { ${body} return 0; }`, want)
+  }, 120_000)
+
+  it('★ 參數與兩層命名空間', async () => {
+    await expectCellaOut(`${H}${NS}int get(const ds::Item& i) { return i.w; }\nint main() { ds::Item x; x.w = 5; cout << get(x); return 0; }`, '5')
+    await expectCellaOut(`${H}namespace a { namespace b { struct T { int w; }; } }\nint main() { a::b::T x; x.w = 3; cout << x.w; return 0; }`, '3')
+  }, 120_000)
+
+  it('★ 沒有定義的限定名照實標翻不出，不猜', async () => {
+    const r = await runCella(`${H}${NS}int main() { ds::Nope x; return 0; }`)
+    expect(r.verdict).toBe('untranslated')
+    expect(r.untranslated.map((u) => u.reason).join()).toContain('ds::Nope')
+  }, 120_000)
 })
