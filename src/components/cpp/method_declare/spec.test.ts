@@ -29,6 +29,8 @@ import apcs from '../../../languages/cpp/styles/apcs.json'
 import competitive from '../../../languages/cpp/styles/competitive.json'
 import type { Lifter } from '../../../core/lift/lifter'
 import type { SemanticNode, StylePreset } from '../../../core/types'
+import methodForms from './forms/blocks.json'
+import overloadForms from '../operator_overload/forms/blocks.json'
 
 let tsParser: Parser
 let lifter: Lifter
@@ -327,5 +329,14 @@ int main() {
       expect(wrap(node('operator-'))).toContain('"type":"cpp_method_declare_operator"')
       expect(wrap(node('operator new'))).not.toContain('cpp_method_declare_operator')
     })
+  })
+  it('運算子多載積木的下拉與原型形態是同一份運算子', () => {
+    const opsOf = (file: Record<string, unknown>[], type: string, field: string): string[] => {
+      const spec = file.find((b) => (b.blockDef as { type: string }).type === type) as { blockDef: { args0: { name?: string; options?: string[][] }[] } }
+      return spec.blockDef.args0.find((a) => a.name === field)!.options!.map((o) => o[0])
+    }
+    const declared = opsOf(methodForms as never, 'cpp_method_declare_operator', 'NAME')
+    expect(declared).toHaveLength(22)
+    expect(opsOf(overloadForms as never, 'cpp_operator_overload', 'OP')).toEqual(declared)
   })
 })

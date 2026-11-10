@@ -304,7 +304,7 @@
     "cpp_operator_overload.OP": {
       "decision": "closed",
       "field": "field_dropdown",
-      "reason": "運算子是封閉集合，⚠️ 而這份清單不全——該補齊，不是開放自訂"
+      "reason": "運算子是封閉集合（22 個，與 cpp_method_declare_operator 同一份，2026-11-10 補齊）"
     },
     "cpp_pair_declare.TYPE1": {
       "decision": "open",

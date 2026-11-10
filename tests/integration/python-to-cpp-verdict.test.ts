@@ -34,6 +34,7 @@ const CASES: [string, string, Record<string, string>, string][] = [
   // Python：本體改迴圈變數不影響下一圈（C++ 的 for 會）
   ['計數 for 的本體改迴圈變數', 't = 0\nfor i in range(3):\n    i = i * 10\n    t += i\nprint(t)\n', { t: 'int', i: 'int' }, ''],
   ['函式', 'def add(a, b):\n    return a + b\nprint(add(1, 2))\n', { a: 'int', b: 'int', 'add()': 'int' }, ''],
+  ['相加的結果取長度：接收者的括號不能掉（372 同類）', 's = "ab"\nt = "cd"\nprint(len(s + t))\n', { s: 'str', t: 'str' }, ''],
   ['字串相加', 's = input()\nt = s + "!"\nprint(t)\n', { s: 'str', t: 'str' }, 'hey\n'],
 ]
 

@@ -102,6 +102,13 @@ describe('C++ → Python：cpp-beginner 課文的解答', () => {
 // ── US2／SC-003：意思會變的地方照實保留（或換成意思相同的寫法，由判決證明）──
 describe('C++ → Python：意思會變的反例', () => {
   const H = '#include <iostream>\nusing namespace std;\n'
+  it('🟢 接收者的括號：相加的結果再取字元，括號不能掉；判決相同（372 同類）', async () => {
+    const src = H + '#include <string>\nint main() {\n    string s = "ab";\n    string t = "cd";\n    cout << (s + t)[2] << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code).not.toBeNull()
+    expect(r.code).toContain('(s + t)[2]')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
   it('🟢 負數的整數除法：換成 int(a / b)（向零截斷，同 C++）、不是 //；判決相同', async () => {
     const src = H + 'int main() {\n    int a = -7, b = 2;\n    cout << a / b << endl;\n    return 0;\n}\n'
     const r = await toPython(src)
