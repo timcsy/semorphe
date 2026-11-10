@@ -86,5 +86,186 @@
         }
       ]
     }
+  },
+  {
+    "id": "cpp:method_declare.operator",
+    "componentId": "cpp:method_declare",
+    "language": "cpp",
+    "category": "oop",
+    "version": "1.0.0",
+    "form": {
+      "axis": "name_kind",
+      "value": "operator"
+    },
+    "blockDef": {
+      "type": "cpp_method_declare_operator",
+      "message0": "%{BKY_C_METHOD_DECLARE_OPERATOR_MSG0}",
+      "args0": [
+        {
+          "type": "field_input",
+          "name": "RETURN_TYPE",
+          "text": "void"
+        },
+        {
+          "type": "field_dropdown",
+          "name": "NAME",
+          "options": [
+            [
+              "+",
+              "operator+"
+            ],
+            [
+              "-",
+              "operator-"
+            ],
+            [
+              "*",
+              "operator*"
+            ],
+            [
+              "/",
+              "operator/"
+            ],
+            [
+              "%",
+              "operator%"
+            ],
+            [
+              "==",
+              "operator=="
+            ],
+            [
+              "!=",
+              "operator!="
+            ],
+            [
+              "<",
+              "operator<"
+            ],
+            [
+              "<=",
+              "operator<="
+            ],
+            [
+              ">",
+              "operator>"
+            ],
+            [
+              ">=",
+              "operator>="
+            ],
+            [
+              "<<",
+              "operator<<"
+            ],
+            [
+              ">>",
+              "operator>>"
+            ],
+            [
+              "+=",
+              "operator+="
+            ],
+            [
+              "-=",
+              "operator-="
+            ],
+            [
+              "*=",
+              "operator*="
+            ],
+            [
+              "/=",
+              "operator/="
+            ],
+            [
+              "[]",
+              "operator[]"
+            ],
+            [
+              "()",
+              "operator()"
+            ],
+            [
+              "++",
+              "operator++"
+            ],
+            [
+              "--",
+              "operator--"
+            ],
+            [
+              "!",
+              "operator!"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "PARAMS",
+          "text": ""
+        },
+        {
+          "type": "field_dropdown",
+          "name": "IS_CONST",
+          "options": [
+            [
+              "%{BKY_C_METHOD_DECLARE_CONST_NO}",
+              "false"
+            ],
+            [
+              "%{BKY_C_METHOD_DECLARE_CONST_YES}",
+              "true"
+            ]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "VIRT",
+          "options": [
+            [
+              "%{BKY_C_METHOD_DECLARE_VIRT_NONE}",
+              "none"
+            ],
+            [
+              "%{BKY_C_METHOD_DECLARE_VIRT_VIRTUAL}",
+              "virtual"
+            ],
+            [
+              "%{BKY_C_METHOD_DECLARE_VIRT_OVERRIDE}",
+              "override"
+            ],
+            [
+              "%{BKY_C_METHOD_DECLARE_VIRT_STATIC}",
+              "static"
+            ]
+          ]
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#CF63CF",
+      "tooltip": "%{BKY_C_METHOD_DECLARE_OPERATOR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "RETURN_TYPE": "return_type",
+        "IS_CONST": "is_const",
+        "VIRT": "virt"
+      },
+      "slotAsField": [
+        {
+          "field": "PARAMS",
+          "childSlot": "params",
+          "childComponent": "param_decl",
+          "parts": [
+            "type",
+            "name"
+          ]
+        }
+      ]
+    }
   }
 ]

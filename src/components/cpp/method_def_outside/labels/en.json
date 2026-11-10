@@ -3,5 +3,7 @@
   "C_METHOD_DEF_OUTSIDE_TOOLTIP": "Give the body of a member function the class already declared; class name, name, parameter types and const must match that line in the class",
   "C_METHOD_DEF_OUTSIDE_CONST_NO": "(may modify itself)",
   "C_METHOD_DEF_OUTSIDE_CONST_YES": "const (does not modify itself)",
-  "FLOW_TITLE_CPP_METHOD_DEF_OUTSIDE": "Define method outside class"
+  "FLOW_TITLE_CPP_METHOD_DEF_OUTSIDE": "Define method outside class",
+  "C_METHOD_DEF_OUTSIDE_OPERATOR_MSG0": "Define operator %3 of class %1 outside, returning %2 (%4) %5",
+  "C_METHOD_DEF_OUTSIDE_OPERATOR_TOOLTIP": "Gives the body of an operator already declared in the class; the class name, operator, parameter types and const must match that line"
 }

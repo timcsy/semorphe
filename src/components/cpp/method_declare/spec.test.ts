@@ -18,6 +18,13 @@ import { generateCode } from '../../../core/projection/code-generator'
 import { expectCellaOut, runCella } from '../../../../tests/helpers/cella-run'
 import { renderToBlocklyState } from '../../../core/projection/block-renderer'
 import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
+import { PatternExtractor } from '../../../core/projection/pattern-extractor'
+import { BlockSpecRegistry } from '../../../core/blocks/block-spec-registry'
+import { allCppComponents, allCppProjections } from '../../../languages/cpp/all-declarations'
+import { registerCppExtractStrategies } from '../../../languages/cpp/extractors/extract-strategies'
+import { KNOWN_AXES } from '../../../core/projection/form-selection'
+import declareForms from './forms/blocks.json'
+import outsideForms from '../method_def_outside/forms/blocks.json'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import competitive from '../../../languages/cpp/styles/competitive.json'
 import type { Lifter } from '../../../core/lift/lifter'
@@ -264,5 +271,61 @@ int main() {
     expect(ofId(t, 'cpp:method_declare')[0].properties.name).toBe('operator-')
     expect(ofId(t, 'cpp:method_def_outside')[0].properties.name).toBe('operator-')
     await expectCellaOut(code, '-3\n')
+  })
+
+  describe('運算子形態（積木上不寫 operator）', () => {
+    const SRC = head + 'class V {\npublic:\n    int x;\n    V operator+(const V& o) const;\n    int get() const;\n};\nV V::operator+(const V& o) const {\n    V r;\n    r.x = x + o.x;\n    return r;\n}\nint V::get() const {\n    return x;\n}\n'
+    type Arg = { name: string; type: string; options?: string[][] }
+    const opt = (forms: unknown): string[][] => (forms as { blockDef: { args0: Arg[] } }[])[1].blockDef.args0.find((a) => a.name === 'NAME')!.options!
+
+    it('★ 運算子畫成運算子形態，一般方法不變', () => {
+      const text = JSON.stringify(renderToBlocklyState(lift(SRC)))
+      expect(text).toContain('"type":"cpp_method_declare_operator"')
+      expect(text).toContain('"type":"cpp_method_def_outside_operator"')
+      expect(text).toContain('"NAME":"operator+"')
+      // 一般方法 get 還是原本那顆
+      expect(text).toContain('"type":"cpp_method_declare"')
+      expect(text).toContain('"type":"cpp_method_def_outside"')
+    })
+
+    it('★ 走一趟積木回來，程式碼一字不差', () => {
+      const reg = new BlockSpecRegistry()
+      reg.loadFromSplit(allCppComponents(), allCppProjections())
+      const ex = new PatternExtractor()
+      ex.loadBlockSpecs(reg.getAll())
+      registerCppExtractStrategies(ex)
+      const state = renderToBlocklyState(lift(SRC)) as unknown as { blocks: { blocks: { next?: { block: unknown } }[] } }
+      const back: SemanticNode[] = []
+      for (const b0 of state.blocks.blocks) {
+        let cur: { next?: { block: unknown } } | undefined = b0
+        while (cur) {
+          const n = ex.extract(cur as never)
+          if (n) back.push(n)
+          cur = cur.next?.block as typeof cur
+        }
+      }
+      const out = generateCode({ id: 'r', componentId: 'cpp:program', properties: {}, slots: { body: back } } as SemanticNode, 'cpp', S)
+      expect(out).toBe(gen(SRC))
+      expect(out).toContain('V operator+(const V& o) const;')
+    })
+
+    it('🔴 下拉選項與形態規則的清單一字不差', () => {
+      const rule = new RegExp(`^(?:${KNOWN_AXES.name_kind.pattern})$`)
+      for (const forms of [declareForms, outsideForms]) {
+        const values = opt(forms).map((o) => o[1])
+        expect(values.length).toBeGreaterThan(10)
+        for (const v of values) expect(rule.test(v), v).toBe(true)
+        // 規則的選項數要等於下拉的選項數，否則有名字選得到形態、下拉卻沒有它
+        expect(KNOWN_AXES.name_kind.pattern!.replace(/^operator\(\?:|\)$/g, '').split('|')).toHaveLength(values.length)
+      }
+      for (const v of ['operator new', 'operator int', 'method', 'operators', 'operator+x']) expect(rule.test(v), v).toBe(false)
+    })
+
+    it('🔴 舊存檔（沒有任何新屬性）照名字畫成運算子形態；清單外的名字留在文字欄', () => {
+      const node = (name: string): SemanticNode => ({ id: 'x', componentId: 'cpp:method_declare', properties: { name, return_type: 'V', is_const: 'false', virt: 'none' }, slots: { params: [] } } as SemanticNode)
+      const wrap = (n: SemanticNode): string => JSON.stringify(renderToBlocklyState({ id: 'r', componentId: 'cpp:program', properties: {}, slots: { body: [n] } } as SemanticNode))
+      expect(wrap(node('operator-'))).toContain('"type":"cpp_method_declare_operator"')
+      expect(wrap(node('operator new'))).not.toContain('cpp_method_declare_operator')
+    })
   })
 })

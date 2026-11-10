@@ -297,12 +297,15 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # 🔴 2026-11-10：同樣 55 MB 的產物，這一步量到 6 秒到 526 秒都有，偶爾卡住而 10 分鐘逾時，測試全綠而網站沒換版。
+      #    `timeout` 的上限就是 10 分鐘（寫 1800000 也一樣，6610fcd64 量到），所以改成失敗就再部署一次。
+      # ⚠️ 兩個部署 job 都紅時不要用 `gh run rerun --failed`：它們會同時跑、用同一個部署 ID，而這一份的 `/` 是上一版，
+      #    可能蓋掉主線那份。要只重跑 redeploy-pages（`gh run rerun <id> --job <job id>`）。
       - id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
-        with:
-          # 🔴 2026-11-10：同樣 55 MB 的產物，這一步量到 6 秒到 526 秒都有，預設 10 分鐘逾時（600000）
-          #    讓 0d2fcded3 兩次都紅在 syncing_files，測試全綠而網站沒換版。放寬到 30 分鐘。
-          timeout: 1800000
+      - if: steps.deployment.outcome == 'failure'
+        uses: actions/deploy-pages@v4
 
   # ## 主線的第二次部署——`verified` 往前推了之後
   #
@@ -414,9 +417,14 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
         with:
-          timeout: 1800000
           # ⚠️ 要與上面那個 `name` 逐字相同——寫錯的症狀是「找不到產物」，
           #    而它同樣紅在最後一步。
+          artifact_name: github-pages-promoted
+      # 逾時就再部署一次，理由見 deploy 那個 job。
+      - if: steps.deployment.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
           artifact_name: github-pages-promoted

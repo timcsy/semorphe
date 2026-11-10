@@ -38,8 +38,10 @@
   },
   "traits": {
     "forLoopPart": true,
-    "writesTo": "target"
+    "writesTo": "target",
+    "precedenceByPosition": { "prefix": 14 }
   },
+  "_precedenceByPosition_why": "前置的 ++ 是前綴運算子，綁得比箭頭鬆：(++it)->x 的括號不能掉。後置的與箭頭同級，不必括號。",
   "_traits_why": "**優先級、能不能放進 for 的三格、放進 cout 要不要括號——都是我自己的性質**，不是共用表該列的身分。",
   "_writesTo_why": "🟢 **已還**——運算元是 `target` 接點。判準見 `knowledge/concepts/左值.md`。",
   "_children_why": "🟢 **運算元是一個接點**（2026-08-25，路線圖「左值是接點，不是字串」）。\n🪦 在此之前是 `name: literal` ＋ 一個可有可無的 `index` 接點——**那是形狀的列舉，而它列了兩種**。`++` 的運算元是一個**左值**：`o.x++`／`p->x++`／`(*q)++`／`a[i][j]++`／`s[i]++` 全部合法。\n⚠️ `index` 那一格是 `altLayout` 在服務的東西——**那是這個病的症狀**，隨這一刀一起退場。",

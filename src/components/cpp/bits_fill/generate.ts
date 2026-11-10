@@ -1,11 +1,12 @@
 /** `cpp:bits_fill` 的 **generate** 路。 */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, generateExpression } from '../../../core/projection/code-generator'
+import { genReceiver } from '../../../core/projection/precedence'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:bits_fill', (node, ctx) => {
     // 🔴 接收者是接點——`d[i].reset()` 的 `d[i]` 是一棵樹，不是一串文字
-    const obj = generateExpression((node.slots.obj ?? [])[0], ctx)
+    const obj = genReceiver((node.slots.obj ?? [])[0], ctx)
     /**
      * 🔴 **產回使用者寫的那個方法名**——那一格裝的**就是**他寫的字
      *（共用的方法路由填的，見 `component.json` 的 `_properties_why`）。

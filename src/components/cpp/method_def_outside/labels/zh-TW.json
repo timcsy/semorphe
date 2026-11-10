@@ -3,5 +3,7 @@
   "C_METHOD_DEF_OUTSIDE_TOOLTIP": "給出類別裡已經宣告過的成員函式的本體；類別名、名字、參數型別與 const 要和類別裡那一行一致",
   "C_METHOD_DEF_OUTSIDE_CONST_NO": "（會改自己）",
   "C_METHOD_DEF_OUTSIDE_CONST_YES": "const（不改自己）",
-  "FLOW_TITLE_CPP_METHOD_DEF_OUTSIDE": "在類別外定義方法"
+  "FLOW_TITLE_CPP_METHOD_DEF_OUTSIDE": "在類別外定義方法",
+  "C_METHOD_DEF_OUTSIDE_OPERATOR_MSG0": "在類別 %1 外定義運算子 %3 回傳 %2（%4）%5",
+  "C_METHOD_DEF_OUTSIDE_OPERATOR_TOOLTIP": "給出類別裡已經宣告過的運算子的本體；類別名、運算子、參數型別與 const 要和類別裡那一行一致"
 }

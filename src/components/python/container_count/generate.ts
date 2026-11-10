@@ -1,10 +1,11 @@
 /** `python:container_count` 的 **generate** 路——`x.count(…)`。 */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { generateExpression } from '../../../core/projection/code-generator'
+import { genReceiver } from '../../../core/projection/precedence'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:container_count', (node, ctx) => {
-    const o = generateExpression((node.slots.obj ?? [])[0], ctx)
+    const o = genReceiver((node.slots.obj ?? [])[0], ctx)
     const parts = ["value"]
       .map((k) => (node.slots as Record<string, unknown[]>)[k]?.[0])
       .filter(Boolean)

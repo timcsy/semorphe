@@ -93,6 +93,8 @@ function axisValue(
     ? ctx.position
     : axis.from === 'slot'
       ? (axis.slot !== undefined && (node.slots?.[axis.slot]?.length ?? 0) > 0 ? axis.slotValue : undefined)
+    : axis.from === 'pattern'
+      ? (new RegExp(`^(?:${axis.pattern})$`).test(String(node.properties?.[axis.property ?? ''] ?? '')) ? axis.patternValue : undefined)
     : axis.property !== undefined
       ? node.properties?.[axis.property]
       : undefined
@@ -318,6 +320,8 @@ export const KNOWN_AXES: Record<string, FormAxis> = {
    * 換插槽形狀，所以排在只換標籤的 container_kind 之前。
    */
   init_style: { name: 'init_style', from: 'property', property: 'init_style', priority: 2, neutralIsOrdinary: true },
+  // 🔴 這張清單要與運算子形態的下拉選項一字不差（膠囊的 spec.test 在比）：清單外的名字（`operator new`、轉型運算子）留在文字欄，畫進下拉會選不到自己。
+  name_kind: { name: 'name_kind', from: 'pattern', property: 'name', pattern: 'operator(?:\\+|\\-|\\*|/|%|==|!=|<|<=|>|>=|<<|>>|\\+=|\\-=|\\*=|/=|\\[\\]|\\(\\)|\\+\\+|\\-\\-|!)', patternValue: 'operator', priority: 2, neutralIsOrdinary: true },
   /**
    * 依運算元是什麼：型別或單一名字（中性，一格文字）／一個運算式（接點 `expr` 有東西 ⟹ 值 `expression`，一格輸入槽）。
    * ⚠️ 看接點不看屬性：第一版記了一個屬性 `operand_kind`，而那和「接點有沒有東西」是同一件事的兩份紀錄（還得在 component.json 寫 `values`，那是被禁的寫法）。

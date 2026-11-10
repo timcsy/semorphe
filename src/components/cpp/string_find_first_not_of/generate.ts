@@ -23,11 +23,12 @@
  */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { generateExpression } from '../../../core/projection/code-generator'
+import { genReceiver } from '../../../core/projection/precedence'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('cpp:string_find_first_not_of', (node, ctx) => {
     // 🔴 接收者是接點——`m[k].f()` 的 `m[k]` 是一棵樹，不是一串文字
-    const obj = generateExpression((node.slots.obj ?? [])[0], ctx)
+    const obj = genReceiver((node.slots.obj ?? [])[0], ctx)
     const argNodes = node.slots.arg ?? []
     const arg = argNodes.length > 0 ? generateExpression(argNodes[0], ctx) : '""'
     return `${obj}.find_first_not_of(${arg})`

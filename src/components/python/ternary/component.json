@@ -5,6 +5,8 @@
   "properties": [],
   "slots": { "condition": "expression", "then_value": "expression", "else_value": "expression" },
   "role": "expression",
+  "traits": { "precedence": 3 },
+  "_traits_why": "條件運算式綁得比 or 還鬆，當運算元或接收者都要括號。",
   "owner": "(python)",
   "paths": {
     "views": {

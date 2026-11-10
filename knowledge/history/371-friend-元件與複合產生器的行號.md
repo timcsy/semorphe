@@ -20,4 +20,4 @@ friend 是盲測 fuzz_8 登記的缺口，照 next 的推薦做。
 
 ## 基線
 
-`要看` 從 26 升到 27（`cpp:friend_function.return_type` 存 `int*` 這種字串，與 `cpp:func_def.return_type` 同一筆債）。其餘都是加兩顆元件帶來的計數，逐筆寫在各基線的 note。
+`要看` 從 26 升到 27（`cpp:friend_function.return_type` 存 `int*` 這種字串，與 `cpp:func_def.return_type` 同一筆債）。其餘都是加兩顆元件帶來的計數，逐筆寫在各基線的 note；`curriculum.json` 是清單沒有 note 欄位，記在這裡。

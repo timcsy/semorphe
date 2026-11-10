@@ -36,6 +36,9 @@ export function precedence(node: SemanticNode | undefined): number {
   if (!node) return 100
   const t = componentTraits(node.componentId)
   if (t?.precedence !== undefined) return t.precedence as number
+  const byPosition = t?.precedenceByPosition as Record<string, number> | undefined
+  const atPosition = byPosition?.[String(node.properties?.position ?? '')]
+  if (atPosition !== undefined) return atPosition
   const byOperator = t?.precedenceByOperator as PrecedenceByOperator | undefined
   if (!byOperator) return 100
   const op = String(node.properties?.operator ?? '')
@@ -54,4 +57,19 @@ export function genChild(
   // ⚠️ 使用者自己寫了括號時 `generateExpression` 已經補上了——再括一次會是 `((…))`
   if (child.metadata?.layoutHints?.parenthesized === true) return expr
   return precedence(child) < parentPrec ? `(${expr})` : expr
+}
+
+/**
+ * 點號、箭頭、下標綁得比所有前綴與中綴都緊。
+ * 接收者的優先級低於它就要括號，否則 `(a + b).get()` 會變成 `a + b.get()`。
+ * 使用者寫的括號只活在程式碼那一路，走過積木就沒了，所以這裡要自己補。
+ */
+const POSTFIX_PRECEDENCE = 16
+
+/** `obj.f()`／`obj->x` 的接收者。 */
+export function genReceiver(
+  child: SemanticNode | undefined,
+  ctx: Parameters<NodeGenerator>[1],
+): string {
+  return genChild(child, POSTFIX_PRECEDENCE, ctx)
 }

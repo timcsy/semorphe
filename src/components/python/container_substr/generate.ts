@@ -6,6 +6,7 @@
  */
 import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { generateExpression } from '../../../core/projection/code-generator'
+import { genReceiver } from '../../../core/projection/precedence'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:container_substr', (node, ctx) => {
@@ -15,6 +16,6 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     }
     // ⚠️ **沒有步長就不寫第二個冒號**——`s[::1]` 與 `s[:]` 在使用者眼裡不是同一段碼
     const step = one('step')
-    return `${one('obj')}[${one('from')}:${one('to')}${step ? `:${step}` : ''}]`
+    return `${genReceiver((node.slots.obj ?? [])[0], ctx)}[${one('from')}:${one('to')}${step ? `:${step}` : ''}]`
   })
 }
