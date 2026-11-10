@@ -11,7 +11,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:method_def_outside', (n, f) => {
     if (f.options.isC) return [f.miss(n, 'C 沒有類別')]
     if (!f.hasInClassDeclaration(n)) return [f.miss(n, `類別 ${String(n.properties?.class_name ?? '')} 裡找不到 ${String(n.properties?.name ?? '')} 這個成員的宣告（名字、參數型別、const 要一致）`)]
-    return []
+    return [f.memberAt(n)!] // 本體由類別裡那一行帶進成員，這裡只標「定義寫在這個位置」（395）
   })
   // 作用域：參數與本體同一層（同類別裡定義方法那顆）
   r.scope('cpp:method_def_outside', (n, w) => w.inScope(() => {
