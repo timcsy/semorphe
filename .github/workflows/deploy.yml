@@ -299,6 +299,10 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # 🔴 2026-11-10：同樣 55 MB 的產物，這一步量到 6 秒到 526 秒都有，預設 10 分鐘逾時（600000）
+          #    讓 0d2fcded3 兩次都紅在 syncing_files，測試全綠而網站沒換版。放寬到 30 分鐘。
+          timeout: 1800000
 
   # ## 主線的第二次部署——`verified` 往前推了之後
   #
@@ -412,6 +416,7 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
         with:
+          timeout: 1800000
           # ⚠️ 要與上面那個 `name` 逐字相同——寫錯的症狀是「找不到產物」，
           #    而它同樣紅在最後一步。
           artifact_name: github-pages-promoted
