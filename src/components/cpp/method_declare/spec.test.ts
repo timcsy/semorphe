@@ -7,7 +7,7 @@
  * ① 兩顆一起才是一個成員：類別裡的原型 ＋ 類別外的定義 → Cella 的一個 mbMethod（本體與參數名取定義，預設引數取原型）
  * ② 多載靠鍵分：名字 ＋ 參數型別 ＋ const——`get()` 與 `get() const` 是兩個成員
  * ③ 對不上的照實標翻不出：只宣告不定義、定義了而類別裡沒有那個成員——不猜
- * ④ 形狀不單純的（virtual 與 override 並寫、static、巢狀命名空間）不准被吃掉——照舊降級（只寫 virtual 或只寫 override 是一格屬性）成原文
+ * ④ 形狀不單純的（virtual 與 override 並寫、static 帶尾端 const、巢狀命名空間）不准被吃掉——照舊降級（只寫 virtual 或只寫 override 是一格屬性）成原文
  * ```
  */
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -163,15 +163,29 @@ int main() {
     expect(r.untranslated.map((u) => u.reason).join('；')).toMatch(/找不到 f 這個成員的宣告/)
   })
 
-  it('負向：virtual 與 override 並寫、static 的原型、巢狀命名空間的定義不被吃掉——照舊降級、原文一字不差', () => {
-    const src = `${head}namespace ns {\nclass A {\npublic:\n    virtual void f() override;\n    static int g();\n};\n}\nvoid ns::A::f() {\n}\nint main() {\n    return 0;\n}\n`
+  it('靜態成員函式（383）：lift 成同一顆、virt 是 static；產回去一字不差；Cella 判得出（經類別呼叫、類別裡呼叫、遞迴）', async () => {
+    const src = `${head}class A {\npublic:\n    static int fact(int n);\n    int twice() {\n        return fact(2) * 2;\n    }\n};\nint A::fact(int n) {\n    return n <= 1 ? 1 : n * fact(n - 1);\n}\nint main() {\n    A a;\n    cout << A::fact(4) << " " << a.twice() << endl;\n    return 0;\n}\n`
+    const t = lift(src)
+    expect(ofId(t, 'cpp:method_declare')[0].properties.virt).toBe('static')
+    expect(generateCode(t, 'cpp', S)).toContain('static int fact(int n);')
+    await expectCellaOut(src, '24 4\n')
+  })
+
+  it('🔴 靜態成員函式讀靜態資料成員：Cella 目前誤判，照實翻不出（不送去被說成錯的）', async () => {
+    const r = await runCella(`${head}class A {\npublic:\n    static int f();\n    static int a;\n};\nint A::a = 7;\nint A::f() {\n    return a;\n}\nint main() {\n    cout << A::f() << endl;\n    return 0;\n}\n`)
+    expect(r.verdict).toBe('untranslated')
+    expect(r.untranslated.map((u) => u.reason).join('；')).toMatch(/靜態成員函式 f 的本體讀了類別的成員/)
+  })
+
+  it('負向：virtual 與 override 並寫、static 帶尾端 const、巢狀命名空間的定義不被吃掉——照舊降級、原文一字不差', () => {
+    const src = `${head}namespace ns {\nclass A {\npublic:\n    virtual void f() override;\n    static int g() const;\n};\n}\nvoid ns::A::f() {\n}\nint main() {\n    return 0;\n}\n`
     const t = lift(src)
     // 正向錨點：程式真的被讀進來了（main 在）
     expect(all(t, (x) => x === 'cpp:func_def').length).toBeGreaterThan(0)
     expect(ofId(t, 'cpp:method_declare')).toEqual([])
     expect(ofId(t, 'cpp:method_def_outside')).toEqual([])
     const out = generateCode(t, 'cpp', S)
-    for (const s of ['virtual void f() override;', 'static int g();']) expect(out).toContain(s)
+    for (const s of ['virtual void f() override;', 'static int g() const;']) expect(out).toContain(s)
   })
 })
 

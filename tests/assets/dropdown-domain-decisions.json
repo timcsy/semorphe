@@ -274,7 +274,7 @@
     "cpp_method_declare.VIRT": {
       "decision": "closed",
       "field": "field_dropdown",
-      "reason": "類別裡宣告的方法：一般／virtual／override 三種（兩個都寫的照舊降級，第 322 刀）"
+      "reason": "類別裡宣告的方法：一般／virtual／override／static 四種（兩個都寫的照舊降級，第 322 刀；static 第 383 刀）"
     },
     "cpp_constructor_declare.IS_EXPLICIT": {
       "decision": "closed",

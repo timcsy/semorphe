@@ -989,7 +989,7 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       if (d?.type === 'function_declarator' && !(isVirtual && node.childForFieldName('default_value')?.text === '0')) {
         // 🟢 第 322 刀：形狀單純的原型 → 類別裡宣告方法那顆（本體在類別外那一顆）。
         //    ⚠️ 只接：回傳型別（可帶開頭的 const、外包一層 `*`／`&`）、名字、參數、尾端可有可無的 const。
-        //       virtual／static／override／`= default`／`= delete`／noexcept 照舊降級——這顆沒有地方放它們。
+        //       `= default`／`= delete`／noexcept 照舊降級——這顆沒有地方放它們（static 第 383 刀收：virt 那一格的第四個值）。
         const declNode = node.childForFieldName('declarator')
         const typeNode = node.childForFieldName('type')
         // ⚠️ 比位置不比物件：tree-sitter 每次取節點都是新的物件，`===` 永遠不成立
@@ -999,9 +999,12 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
         // `virtual void f();`、`void f() override;`——第 322 刀的盲測補：一格屬性（兩個都寫的照舊降級）
         const override = d.namedChildren.some((c) => c.type === 'virtual_specifier' && c.text === 'override')
         // 第 331 刀：運算子的原型（`Fraction operator+(const Fraction&) const;`）也收——在 Cella 那一側它就是名字叫 `operator+` 的成員函式
-        const plain = !(isVirtual && override) && typeNode && (fnName?.type === 'field_identifier' || fnName?.type === 'identifier' || fnName?.type === 'operator_name')
+        const isStaticProto = node.namedChildren.some((c) => c.type === 'storage_class_specifier' && c.text === 'static')
+        // static 成員函式沒有 this：不能是 virtual／override，也不能帶尾端 const（[class.static.mfct]）——那幾種寫法不收，照舊降級原文
+        const staticOk = !isStaticProto || (!isVirtual && !override && !d.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const'))
+        const plain = !(isVirtual && override) && staticOk && typeNode && (fnName?.type === 'field_identifier' || fnName?.type === 'identifier' || fnName?.type === 'operator_name')
           && (!wrap || ((wrap.type === 'pointer_declarator' || wrap.type === 'reference_declarator') && sameAt(wrap.namedChildren[0], d)))
-          && node.namedChildren.every((c) => sameAt(c, typeNode) || sameAt(c, declNode) || (c.type === 'type_qualifier' && c.text === 'const'))
+          && node.namedChildren.every((c) => sameAt(c, typeNode) || sameAt(c, declNode) || (c.type === 'type_qualifier' && c.text === 'const') || (c.type === 'storage_class_specifier' && c.text === 'static'))
           && d.namedChildren.every((c) => sameAt(c, fnName) || c.type === 'parameter_list' || (c.type === 'type_qualifier' && c.text === 'const') || (c.type === 'virtual_specifier' && c.text === 'override'))
           && !node.childForFieldName('default_value')
         if (plain) {
@@ -1010,10 +1013,10 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
           const isConst = d.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
           const memberName = operatorMemberName(fnName!)
           ctx.data.declareFunction(memberName)
-          return buildMethodDeclare({ return_type: `${lead}${typeNode!.text}${suffix}`, name: memberName, is_const: isConst ? 'true' : 'false', virt: isVirtual ? 'virtual' : override ? 'override' : 'none' },
+          return buildMethodDeclare({ return_type: `${lead}${typeNode!.text}${suffix}`, name: memberName, is_const: isConst ? 'true' : 'false', virt: isStaticProto ? 'static' : isVirtual ? 'virtual' : override ? 'override' : 'none' },
             { params: liftParamList(d.childForFieldName('parameters') ?? null, ctx) })
         }
-        return degrade(buildRawCode(node.text), '類別裡的方法原型（static、virtual 與 override 並寫或其他修飾，定義在類別外）尚未支援')
+        return degrade(buildRawCode(node.text), '類別裡的方法原型（virtual 與 override 並寫或其他修飾，定義在類別外）尚未支援')
       }
     }
     const defaultVal = node.childForFieldName('default_value')

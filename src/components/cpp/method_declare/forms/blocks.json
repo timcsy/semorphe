@@ -53,6 +53,10 @@
             [
               "%{BKY_C_METHOD_DECLARE_VIRT_OVERRIDE}",
               "override"
+            ],
+            [
+              "%{BKY_C_METHOD_DECLARE_VIRT_STATIC}",
+              "static"
             ]
           ]
         }

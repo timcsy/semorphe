@@ -38,17 +38,15 @@ const OURS = /^cpp:(method|constructor|destructor)_(declare|def_outside)$/
 
 /** 這一族之外、已知的缺口（降級原因的開頭或原文）——每一條都是另一刀 */
 const ALLOWED_DEGRADE = [
-  /類別裡的方法原型（static、/,                 // 靜態成員函式的原型——另一刀（運算子的原型第 331 刀起收）
   /類別外定義的成員函式（建構子／解構子帶修飾、或樣板／巢狀類別）/, // 運算子多載的類別外定義（`Fraction::operator+`）
   /純虛擬函式的指標回傳或尾端 const/,             // 313 就登記過
-  /^\w+::\w+$|^\w+$/,                             // `Node::created`：靜態成員的限定名（既有缺口）
   /^class Car \{/,                                // tree-sitter 不認得沒有名字的指標參數帶預設值（`Engine* = nullptr`）
   /^(Course|Grid)::\1\(/,                         // 初始化列裡的 `new X*[n]`：tree-sitter 的容錯解析（既有缺口）
 ]
 /** 交給 Cella 翻不出的已知原因——各自是另一刀 */
 const KNOWN_UNTRANSLATED = [
+  /靜態成員函式 \w+ 的本體讀了類別的成員/, // Cella 0954 的誤判，已回報（383）；修好就拿掉
   /這顆(類別成員|頂層元件|元件)還沒有對應到 Cella 的建構子/, // 上面那些降級
-  /類別外的靜態成員定義/,
   /`new T{…}` 的大括號初始化：聚合體/, // 328 之後小括號的已判得出；大括號等 Cella 的 eNewList
   /型別「(Car|ostream)」還沒有對應/,
   /找不到 \w+ 這個成員的宣告|找不到這個(建構子|解構子)的宣告|類別外找不到它的定義/, // 它的另一半落在上面的降級裡
@@ -71,7 +69,7 @@ describe('模糊測試：類別外定義成員函式', () => {
     expect(shape(lift(generateCode(t, 'cpp', S)))).toEqual(shape(t))
   })
 
-  // 🟡 十支今天都還翻不出——原因全在這一族之外（見 KNOWN_UNTRANSLATED）。哪一天某一支判得出，就換成 expectCellaOut 對 clang 的輸出
+  // 🟡 判得出的已照 clang 比輸出；其餘翻不出的原因全在這一族之外（見 KNOWN_UNTRANSLATED）。哪一天某一支判得出，就換成 expectCellaOut 對 clang 的輸出
   it.each(PROGS.map((p) => [p.id, p]))('🟡 %s：翻不出的原因都是已知缺口（不是這一族的）', async (_id, p) => {
     const r = await runCella((p as { code: string }).code)
     if (r.verdict === 'accept') {

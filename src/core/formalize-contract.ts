@@ -119,6 +119,8 @@ export interface FormalizeContext {
    *（cella 2026-11-03 給的形狀；spec 208）。C++ 先在類別的範圍找名字，所以同名的頂層函式讓位。
    */
   isOwnMethod(nodeId: string, name: string): boolean
+  /** 同上，而那個方法是靜態成員函式：回傳它的全名 `C::f`（沒有 this，要送 `eCall`；383）；不是就 undefined */
+  ownStaticMethod(nodeId: string, name: string): string | undefined
   /** C 的跳脫序列 → 真正的字元（語義樹存的是寫法，Cella 要的是值）。 */
   unescapeC(s: string): string
   /** C 的二元運算子符號 → Cella 的運算子建構子。 */
@@ -202,7 +204,7 @@ export interface FormalizeRegistrar {
    * 鍵由元件自己決定（名字 ＋ 參數型別 ＋ const——多載靠它分），兩邊用同一個寫法才配得上。
    * Cella 的參照翻譯：類別外的定義在頂層不送，本體接回類別裡那個成員（cpp_to_tree.py：the class's member takes the definition）。
    */
-  memberKey(id: string, fn: (n: SemanticNode) => { className?: string; key: string }): void
+  memberKey(id: string, fn: (n: SemanticNode) => { className?: string; key: string; isStatic?: boolean }): void
   /** 作用域走訪：這顆開不開作用域、宣告什麼、參照什麼（沒註冊的照通用規則）。 */
   scope(id: string, fn: (n: SemanticNode, w: ScopeWalker) => void): void
 }
