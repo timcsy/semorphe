@@ -407,6 +407,13 @@ function ctorSlots(decl: AstNode, ctx: LiftContext): CtorSlots {
       const lifted = ctx.lift(item)
       if (lifted) out.values.push(lifted)
     }
+  } else if (v?.type === 'argument_list' && v.namedChildren.length === 1 && v.namedChildren[0].type === 'initializer_list') {
+    // 🟢 `set<ll> st({0});`——唯一的引數是一個大括號清單：那是 initializer_list 建構子，與 `st{0}` 同一件事，是元素不是「幾個」。
+    //    原本被收成 size，set 沒有那一格 ⟹ 整句降級原文（第 401 刀，學生語料 2_11_AC）。產回去是 `= {0}`（同 `int a{5}` 的正規化）
+    for (const item of v.namedChildren[0].namedChildren) {
+      const lifted = ctx.lift(item)
+      if (lifted) out.values.push(lifted)
+    }
   } else if (v?.type === 'argument_list') {
     // 單一引數是「幾個元素」（`vector<int> v(5)`）；
     // 兩個引數是「幾個、每個是什麼」（`vector<int> v(5, 7)`）。
