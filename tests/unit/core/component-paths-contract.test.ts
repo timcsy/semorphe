@@ -73,3 +73,21 @@ describe('paths 契約：每個視圖一對 render／lift', () => {
     expect(cellPath({ views: { blocks: { render: './a', lift: './a' } } }, 'code.render')).toBeNull()
   })
 })
+
+// 🔴 第 402 刀（盲測 fuzz-cpp-student-mixed）：積木抽得回來、而程式碼產不出來的元件——
+//    從程式碼 lift 進來的節點帶著 rawCode，產碼退回原文，所以「程式碼 → 程式碼」永遠是對的；
+//    而從積木抽回來的節點沒有原文 ⟹ 學生一動積木，`toupper(c)` 變成 `⟨cpp:char_to_upper⟩`。
+//    當時三顆（char_to_upper／char_to_lower／char_is_digit）都寫著「顯式的空，不是遺漏」——而它是遺漏。
+describe('積木抽得回來的元件，程式碼那一路不得是空的', () => {
+  it('★ 掃全部膠囊：blocks.lift 有 ⟹ code.render 有', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { globSync } = await import('node:fs')
+    const files = globSync('src/components/*/*/component.json')
+    expect(files.length).toBeGreaterThan(100)
+    const bad = files.filter((f) => {
+      const p = JSON.parse(readFileSync(f, 'utf8')).paths ?? {}
+      return cellPath(p, 'blocks.lift') && !cellPath(p, 'code.render')
+    })
+    expect(bad).toEqual([])
+  })
+})
