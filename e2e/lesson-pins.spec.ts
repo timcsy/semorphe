@@ -404,9 +404,9 @@ test('★ 跑完之後，裁判說得出差在哪一行', async ({ page }) => {
  * 初學者的 bug 有壓倒性的比例是這兩種：`return` 後面的程式碼、永遠不成立的 `if`、
  * 根本沒進去的迴圈。而執行器本來就知道它到過誰——缺的只是把它畫出來。
  *
- * ⚠️ 而它是**問句不是判決**：一個 `if` 的另一支本來就可能不該跑。
+ * ⚠️ 而它不是判決：一個 `if` 的另一支本來就可能不該跑。
  */
-test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句不是判決', async ({ page }) => {
+test('★ 跑完之後，沒被跑到的積木標得出來——純練習只留虛線，有題目才說一句', async ({ page }) => {
   test.setTimeout(120_000)
   await page.addInitScript(() => window.localStorage.clear())
   await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -426,10 +426,20 @@ test('★ 跑完之後，沒被跑到的積木標得出來——而且是問句�
   expect(await page.locator('.never-ran').count(),
     '🔴 沒跑到的那一句沒有被標出來（或標成了三塊——計數單位要跟知覺一致）').toBe(1)
 
+  // 🔴 純練習不在主控台說（使用者 2026-11-10：學生看了會嚇到），只留虛線；滑鼠移上去說這是什麼
+  expect(await page.locator('#bottom-container').innerText(), '🔴 純練習不該在主控台說').not.toContain('沒有執行到')
+  const tip = await page.evaluate(() => {
+    const ws = (window as never as { __app: { blocklyPanel: { workspace: { getAllBlocks(o: boolean): { tooltip: unknown; getSvgRoot(): Element }[] } } } }).__app.blocklyPanel.workspace
+    return String(ws.getAllBlocks(false).find((b) => b.getSvgRoot().classList.contains('never-ran'))?.tooltip)
+  })
+  expect(tip, '🔴 虛線上沒有說明').toContain('這次沒有執行到')
+
+  // 有選題目才說一句，只描述、不問也不評價
+  await page.evaluate(() => { (window as never as { __app: { currentTaskId: string } }).__app.currentTaskId = 'e2e-task' })
+  await runSkippingPrediction(page)
+  await expect(page.locator('#bottom-container')).toContainText('這次有 1 段程式沒有執行到')
   const console_ = await page.locator('#bottom-container').innerText()
-  expect(console_, '🔴 主控台沒說').toContain('沒有被跑到')
-  // ⚠️ 是問句不是判決——「沒跑到」不等於錯
-  expect(console_, '🔴 對學生說了「錯」').not.toMatch(/錯誤|失敗|不對/)
+  expect(console_, '🔴 對學生說了「錯」').not.toMatch(/錯誤|失敗|不對|故意/)
 
   // ⚠️ 而下一次開跑要先清掉——不然學生會對著上一次的結論改東西
   await runSkippingPrediction(page)
@@ -467,10 +477,6 @@ test('★ 執行覆蓋：一支完全正確的程式，一塊都不准標', asyn
     await page.locator('.never-ran').count(),
     '🔴 正確的程式被標了——多半又是某個【不走 executeNode】的節點（lvalue／宣告初值／預設參數）',
   ).toBe(0)
-  expect(
-    await page.locator('#bottom-container').innerText(),
-    '🔴 正確的程式而主控台在問「是故意的嗎」',
-  ).not.toContain('沒有被跑到')
 })
 
 /**

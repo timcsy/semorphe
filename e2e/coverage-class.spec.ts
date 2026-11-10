@@ -46,7 +46,9 @@ int main() {
   await expect(page.locator('.console-output')).toContainText('8')
   // 正向錨點：從沒被呼叫的那一個方法被標出來（只有它）
   await expect.poll(() => neverRan(page)).toEqual(['cpp_method_def_outside'])
-  await expect(page.locator('.console-output')).toContainText('有 1 塊積木')
+  // 純練習（沒選題目）不印那一句，只留虛線；有題目時的句子由 lesson-pins 驗（384，使用者選方案 A）
+  await expect(page.locator('.console-output')).not.toContainText('沒有執行到')
+  await expect(page.locator('.console-output')).not.toContainText('塊積木')
 })
 
 test('★ 方法寫在類別裡的寫法：類別定義與欄位不標', async ({ page }) => {
