@@ -11,6 +11,12 @@
       "name": "name",
       "kind": "literal",
       "default": "method"
+    },
+    {
+      "name": "is_const",
+      "kind": "enum",
+      "default": "false",
+      "_kind_why": "尾端的 const（`virtual int area() const = 0;`）：覆寫要寫同一個才算覆寫到。慣例同類別裡定義方法那顆。"
     }
   ],
   "slots": {
@@ -18,7 +24,9 @@
   },
   "role": "statement",
   "owner": "(core)",
-  "traits": { "insideParentOnly": true },
+  "traits": {
+    "insideParentOnly": true
+  },
   "_traits_why": "**只出現在父節點裡**（類別成員、switch 的分支、例外的 except 分支、迴圈的走訪項）——單獨合成一份樣本去量它，是在量一個不存在的位置。原本借放在 `skipReasons.execute: consumed-by-parent`；spec 208 隨 JS 直譯器拿掉 execute 那一格，搬到性狀（完備性護欄讀它）。",
   "paths": {
     "formalize": "./formalize.ts",

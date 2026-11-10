@@ -257,6 +257,11 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (un && (s.startsWith('union ') || unionNames.has(un[1]))) return k('tUnion', { name: un[1] })
     const st = /^(?:struct\s+)?([A-Za-z_]\w*)$/.exec(s)
     if (st && (s.startsWith('struct ') || structNames.has(st[1]) || declaredTypes.has(st[1]))) return k(isC ? 'tStruct' : 'tClass', { name: st[1] })
+    // 限定名的類別（`ds::Item`、`Outer::Inner`）：tClass 的 name 照原文帶限定（與 eCall 的 "Math::square" 同一種送法）；裡面定義過才算
+    if (!isC && /^[A-Za-z_]\w*(?:::[A-Za-z_]\w*)+$/.test(s)) {
+      const parts = s.split('::')
+      if (structNames.has(parts[parts.length - 1]) && classMembers.has(parts.slice(-2).join('::'))) return k('tClass', { name: s })
+    }
     // 巢狀的型別名：`vector<int>::iterator`、`set<int>::const_iterator`、`string::iterator`——tMember（cella 2026-11-03 給的形狀；
     // 宣告、參數、typedef 三種位置都是它）。⚠️ vector／string 的 iterator 成員型別要等 Cella 補（之前判 reject「unknown type」）——照送，不自己展開成指標
     const mem = /^(.+)::(iterator|const_iterator|reverse_iterator|const_reverse_iterator)$/.exec(s)

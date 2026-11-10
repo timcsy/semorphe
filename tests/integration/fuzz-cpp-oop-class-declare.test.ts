@@ -35,7 +35,7 @@ const prog = (id: string) => PROGS.find((p) => p.id === id)!
 const gen = (code: string) => generateCode(lift(code), 'cpp', S)
 
 /** 刻意的誠實降級（類別外定義成員函式那一族＋friend）——其餘的降級一律不准 */
-const ALLOWED = /類別裡的方法原型|類別裡的建構子／解構子原型|類別外定義的成員函式|純虛擬函式的指標回傳/
+const ALLOWED = /類別裡的方法原型|類別裡的建構子／解構子原型|類別外定義的成員函式/
 const COUNT: Record<string, number> = { fuzz_1: 1, fuzz_2: 2, fuzz_3: 1, fuzz_4: 2, fuzz_5: 1, fuzz_6: 1, fuzz_7: 1, fuzz_8: 1, fuzz_9: 1, fuzz_10: 4 }
 
 describe('模糊測試：類別的前置宣告', () => {
@@ -87,10 +87,8 @@ describe('模糊測試：類別的前置宣告', () => {
     const t = lift(src)
     const ids = all(t).map((n) => n.componentId)
     for (const id of ['cpp:constructor_declare', 'cpp:destructor_declare', 'cpp:method_declare', 'cpp:constructor_def_outside', 'cpp:destructor_def_outside', 'cpp:method_def_outside']) expect(ids, id).toContain(id)
-    // 剩下的只有回傳指標的純虛擬函式（另一件事）
-    const reasons = all(t).filter((n) => n.componentId.includes('raw_code')).map((n) => String(n.metadata?.rawCode ?? ''))
-    expect(reasons).toHaveLength(1)
-    expect(reasons[0]).toMatch(/純虛擬函式的指標回傳/)
+    // 回傳指標的純虛擬函式第 386 刀轉正——這一段不再有降級
+    expect(all(t).filter((n) => n.componentId.includes('raw_code'))).toHaveLength(0)
     const out = generateCode(t, 'cpp', S)
     for (const s of ['    A();', '    ~A();', '    int get() const;', '    void set(int x);', 'A::A() {', 'A::~A() {', 'int A::get() const {']) expect(out).toContain(s)
     expect(out).not.toMatch(/int f\(\);|void A::~A|int A\(\);/)

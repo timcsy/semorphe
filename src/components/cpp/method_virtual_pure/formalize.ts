@@ -11,7 +11,7 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const params = (n.slots?.params ?? []).map((q) =>
       f.k('param', { x: q.id, name: String(q.properties?.name ?? ''), t: f.type(q.properties?.type, q), dflt: null }))
     const fdef = f.k('fdef', { n: n.id, noexc: false, name: String(p.name ?? ''), ret, params, body: f.k('sBlock', { n: n.id, body: [] }) })
-    return f.k('mbMethod', { acc: f.k('acPublic'), isConst: false, expl: false, virt: f.k('vPure'), f: fdef })
+    return f.k('mbMethod', { acc: f.k('acPublic'), isConst: String(p.is_const ?? 'false') === 'true', expl: false, virt: f.k('vPure'), f: fdef })
   })
   r.scope('cpp:method_virtual_pure', (n, w) => w.inScope(() => { w.walkSlot(n, 'params') }))
 }

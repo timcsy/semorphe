@@ -39,7 +39,6 @@ const OURS = /^cpp:(method|constructor|destructor)_(declare|def_outside)$/
 /** 這一族之外、已知的缺口（降級原因的開頭或原文）——每一條都是另一刀 */
 const ALLOWED_DEGRADE = [
   /類別外定義的成員函式（建構子／解構子帶修飾、或樣板／巢狀類別）/, // 運算子多載的類別外定義（`Fraction::operator+`）
-  /純虛擬函式的指標回傳或尾端 const/,             // 313 就登記過
   /^class Car \{/,                                // tree-sitter 不認得沒有名字的指標參數帶預設值（`Engine* = nullptr`）
   /^(Course|Grid)::\1\(/,                         // 初始化列裡的 `new X*[n]`：tree-sitter 的容錯解析（既有缺口）
 ]

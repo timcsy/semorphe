@@ -9,6 +9,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       const name = node.properties.name ?? 'method'
       const paramChildren = node.slots.params ?? []
       const paramStr = formatParams(paramChildren)
-      return `${indent(ctx)}virtual ${returnType} ${name}(${paramStr}) = 0;\n`
+      const trailing = String(node.properties.is_const ?? 'false') === 'true' ? ' const' : ''
+      return `${indent(ctx)}virtual ${returnType} ${name}(${paramStr})${trailing} = 0;\n`
     })
 }
