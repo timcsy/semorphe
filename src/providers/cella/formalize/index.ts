@@ -158,6 +158,8 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       .flatMap((m) => (m.componentId === '_multi_field' ? m.slots?.fields ?? [] : [m]))
     for (const m of members) if (m.properties?.type !== undefined && !FORMALIZE.member.has(m.componentId)) memberFields.add(m.id)
     if (isFunctionDefinition(n.componentId) && n.properties?.name) functionNames.add(String(n.properties.name))
+    const definedFunction = FORMALIZE.definesFunction.get(n.componentId)?.(n)
+    if (definedFunction) functionNames.add(definedFunction)
     // 這一顆是類別：成員槽裡註冊成成員、有名字的那幾顆就是它的方法；成員槽底下的節點都看得到這組名字（巢狀類別換成自己的）
     const isClass = members.length > 0
     const own = isClass
@@ -191,9 +193,12 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
 
   /** 型別巨集展開中的名字（`#define ll long long`；防 `#define T T` 這種自我參照） */
   const expanding = new Set<string>()
+  /** 目前所在的函式樣板的型別參數（397） */
+  let typeParams: ReadonlySet<string> = new Set()
   function type(t: unknown, at: SemanticNode): CellaJson | null {
     const s = String(t ?? '').trim()
     if (s === '' ) { miss(at, '沒有型別'); return null }
+    if (typeParams.has(s)) return k('tParam', { name: s })
     // 型別巨集（spec 199：學生的程式 45 支有 `#define ll long long`）——前端展開，同物件巨集（spec 197）
     const mv = macros.get(s)
     if (mv !== undefined && !expanding.has(s)) {
@@ -464,6 +469,11 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     functionMacro: (name) => functionMacros.has(name),
     macroDefined: (name) => macros.has(name) || functionMacros.has(name),
     literalExpr: (text, id) => { const probe = literalNode(text.trim(), id); return probe ? expr(probe) : undefined },
+    withTypeParams: (names, body) => {
+      const outer = typeParams
+      typeParams = new Set([...outer, ...names])
+      try { return body() } finally { typeParams = outer }
+    },
     ownsMember: (n) => FORMALIZE.member.has(n.componentId),
     item: (n) => item(n),
     nodeById: (id) => byId.get(id),

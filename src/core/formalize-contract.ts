@@ -117,6 +117,8 @@ export interface FormalizeContext {
   staticMemberAt(defined: SemanticNode): CellaJson | null
   /** 參數預設值（`param_decl.properties.default`，lift 留成原文）的形狀：字面量照登記翻，其餘照實標翻不出；沒有預設值 ⟹ null（395 收成一份，原本五顆各抄一次） */
   defaultArgument(param: SemanticNode | undefined): unknown
+  /** 在函式樣板裡翻（397）：這幾個名字是樣板的型別參數，型別位置寫到它們時送 `tParam` */
+  withTypeParams<R>(names: string[], body: () => R): R
   /** 當一個類別成員翻（成員函式 → `mbMethod`）；沒有註冊的記 unknown、回 null（spec 201） */
   member(n: SemanticNode): CellaJson | null
   /** 這個宣告是不是某個 struct／class 的欄位——成員函式裡的裸名字指到它時是 `eSelf`（隱含的 this，spec 201） */
@@ -207,6 +209,8 @@ export interface FormalizeRegistrar {
   declaresType(id: string, fn: (n: SemanticNode) => string): void
   /** 這顆定義了一個列舉型別名（`enum Color {…}` 之後 `Color c` 的 Color）——型別那一格送 `tEnum`（cella 2026-11-03；不是 tClass）。 */
   definesEnum(id: string, fn: (n: SemanticNode) => string): void
+  /** 名字不叫 `name` 而定義了一個可呼叫的函式（397，函式樣板的 `func_name`）：`f<int>(1)` 要認得它是函式 */
+  definesFunction(id: string, fn: (n: SemanticNode) => string): void
   /** 這顆定義了一個 union 型別名（`union U {…}` 之後 `union U u`／C++ 的 `U u`）——型別那一格送 `tUnion`（cella 2026-11-08）。 */
   definesUnion(id: string, fn: (n: SemanticNode) => string): void
   /**

@@ -2199,12 +2199,6 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
 
   // template_declaration: template <typename T> T func(T a) { ... }
   registry.register('cpp:liftTemplateFunction', (node, ctx) => {
-    const templateParams = node.namedChildren.find(c => c.type === 'template_parameter_list')
-    const typeParam = templateParams?.namedChildren.find(c =>
-      c.type === 'type_parameter_declaration'
-    )
-    const t = typeParam?.namedChildren.find(c => c.type === 'type_identifier')?.text ?? 'T'
-
     // `template<typename T> class C { … };` —— **樣板類別**。
     //
     // 🔴 這裡原本 `return null`，於是整段降級成 `unresolved`
@@ -2223,27 +2217,48 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const funcDef = node.namedChildren.find(c => c.type === 'function_definition')
     if (!funcDef) return null
 
+    // 🔴 這顆只裝得下【形狀單純】的函式樣板：一個型別參數、回傳型別、名字、參數（397，接 Cella 時露出來的）。
+    //    原本其餘的形狀都被安靜弄壞：第二個型別參數與 `template <int N>` 被換成 `typename T`、回傳參考時名字變 `myFunc`、
+    //    回傳指標時產出 `T self(T* p)()`、預設值與 static／inline 蒸發。裝不下的照實降級，原文保留。
+    const unsupported = (why: string) => degrade(buildRawCode(node.text), `函式樣板的這個形狀尚未支援：${why}`)
+    const same = (x: AstNode | null | undefined, y: AstNode | null | undefined): boolean => !!x && !!y && x.type === y.type && x.startIndex === y.startIndex
+    const templateParams = node.namedChildren.find(c => c.type === 'template_parameter_list')
+    const typeParams = templateParams?.namedChildren ?? []
+    if (typeParams.length !== 1 || typeParams[0].type !== 'type_parameter_declaration') return unsupported('只支援一個型別參數')
+    const t = typeParams[0].namedChildren.find(c => c.type === 'type_identifier')?.text
+    if (!t) return unsupported('型別參數沒有名字')
+
     const returnTypeNode = funcDef.childForFieldName('type')
-    const returnType = returnTypeNode?.text ?? 'T'
+    const bodyNode = funcDef.childForFieldName('body')
+    const outerDeclarator = funcDef.childForFieldName('declarator')
+    if (!returnTypeNode || bodyNode?.type !== 'compound_statement' || !outerDeclarator) return unsupported('不是一般的函式定義')
+    if (!funcDef.namedChildren.every((c) => same(c, returnTypeNode) || same(c, outerDeclarator) || same(c, bodyNode) || (c.type === 'type_qualifier' && c.text === 'const'))) {
+      return unsupported('回傳型別前有其他修飾字')
+    }
+    // 回傳參考或指標：宣告子外面包的那幾層併進回傳型別（同類別成員函式那條路）
+    let declarator: AstNode | null = outerDeclarator
+    let retSuffix = ''
+    while (declarator && (declarator.type === 'reference_declarator' || declarator.type === 'pointer_declarator') && declarator.namedChildren.length === 1) {
+      retSuffix += declarator.type === 'pointer_declarator' ? '*' : (declarator.children.find((c) => !c.isNamed)?.text ?? '&')
+      declarator = declarator.namedChildren[0]
+    }
+    const nameNode = declarator?.type === 'function_declarator' ? declarator.childForFieldName('declarator') : null
+    const paramList = declarator?.childForFieldName('parameters') ?? null
+    if (!declarator || nameNode?.type !== 'identifier' || !paramList || declarator.namedChildren.some((c) => !same(c, nameNode) && !same(c, paramList))) {
+      return unsupported('函式的宣告子不單純')
+    }
+    if (paramList.namedChildren.some((p) => p.type !== 'parameter_declaration')) return unsupported('參數有預設值或可變參數')
+    const lead = funcDef.namedChildren.some((c) => c.type === 'type_qualifier') ? 'const ' : ''
+    const returnType = `${lead}${returnTypeNode.text}${retSuffix}`
+    const funcName = nameNode.text
 
-    const declarator = funcDef.childForFieldName('declarator')
-    const funcName = declarator?.childForFieldName('declarator')?.text
-      ?? declarator?.namedChildren.find(c => c.type === 'identifier')?.text
-      ?? 'myFunc'
-
-    const paramList = declarator?.namedChildren.find(c => c.type === 'parameter_list')
     const params: SemanticNode[] = []
-    if (paramList) {
-      for (const p of paramList.namedChildren) {
-        if (p.type === 'parameter_declaration') {
-          const { type, name } = parseParamDeclaration(p)
-          params.push(buildVarDeclare({ type, name }))
-        }
-      }
+    for (const p of paramList.namedChildren) {
+      const { type, name } = parseParamDeclaration(p)
+      params.push(buildVarDeclare({ type, name }))
     }
 
-    const bodyNode = funcDef.childForFieldName('body')
-    const body = extractBody(bodyNode ?? null, ctx)
+    const body = extractBody(bodyNode, ctx)
 
     return buildTemplateFunc(t, returnType, funcName, params, body)
   })
