@@ -24,8 +24,8 @@ function member(m: SemanticNode, f: FormalizeContext, acc: string): CellaJson | 
     const x = f.member(m)
     return x && 'acc' in x ? { ...x, acc: f.k(acc) } : x
   }
-  // 陣列欄位（`int a[5];`——有長度槽）：型別取它自己的宣告翻出來的那一個（tArr／tArrE），不是元素型別（元件管線 322）
-  const t = m.slots?.size !== undefined ? ((f.decl(m, false)[0]?.t as CellaJson | undefined) ?? null) : f.type(m.properties?.type, m)
+  // 陣列欄位（`int a[5];`——有長度槽；`int g[2][3];` 有 rows 槽，第 400 刀）：型別取它自己的宣告翻出來的那一個（tArr／tArrE），不是元素型別（元件管線 322）
+  const t = m.slots?.size !== undefined || m.slots?.rows !== undefined ? ((f.decl(m, false)[0]?.t as CellaJson | undefined) ?? null) : f.type(m.properties?.type, m)
   if (!t) return null
   const initNode = f.one(m, 'initializer')
   return f.k('mbField', { acc: f.k(acc), name: String(m.properties?.name ?? ''), t, init: initNode ? f.expr(initNode) : null })

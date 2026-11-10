@@ -37,8 +37,8 @@ export function registerFormalize(r: FormalizeRegistrar): void {
       }
       // 沒有型別的是成員函式（含運算子多載）：由那顆元件自己翻成 mbMethod（spec 201）；靜態成員有型別但不是欄位，同樣自己翻（spec 203）
       if (m.properties?.type === undefined || f.ownsMember(m)) { const x = f.member(m); if (x) methods.push(x); continue }
-      // 陣列欄位（有長度槽）：型別取它自己的宣告翻出來的那一個（tArr），不是元素型別（元件管線 322，同類別那顆）
-      const t = m.slots?.size !== undefined ? ((f.decl(m, false)[0]?.t as CellaJson | undefined) ?? null) : f.type(m.properties?.type, m)
+      // 陣列欄位（有長度槽；二維的有 rows 槽，第 400 刀）：型別取它自己的宣告翻出來的那一個（tArr），不是元素型別（元件管線 322，同類別那顆）
+      const t = m.slots?.size !== undefined || m.slots?.rows !== undefined ? ((f.decl(m, false)[0]?.t as CellaJson | undefined) ?? null) : f.type(m.properties?.type, m)
       // 預設成員初值（`struct P { int x = 3; };`，C++11 [class.mem]p10）放 init（spec 203：在此之前一律送 null，Cella 判讀到未初始化的值）
       const initNode = f.options.isC ? undefined : f.one(m, 'initializer')
       if (t) fields.push(f.k('mbField', { acc: f.k('acPublic'), name: String(m.properties?.name ?? ''), t, init: initNode ? f.expr(initNode) : null }))

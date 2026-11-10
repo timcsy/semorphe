@@ -51,10 +51,12 @@ describe('模糊測試：帶本體的 friend', () => {
     expect(shape(lift(generateCode(t, 'cpp', S)))).toEqual(shape(t))
   })
 
-  it('只有 fuzz_2 有降級，而且是已知的陣列欄位', () => {
-    const raws = (id: string) => all(lift(PROGS.find((p) => p.id === id)!.code)).filter((n) => n.componentId.endsWith('raw_code'))
-    expect(raws('fuzz_1').length + raws('fuzz_3').length + raws('fuzz_4').length).toBe(0)
-    expect(raws('fuzz_2').length).toBe(1)
+  // 400 之前 fuzz_2 的二維陣列欄位降級成原文（唯一的一筆）；400 起它是二維陣列那顆
+  it('沒有降級；fuzz_2 的二維陣列欄位是二維陣列那顆（400）', () => {
+    const tree = (id: string) => all(lift(PROGS.find((p) => p.id === id)!.code))
+    const raws = (id: string) => tree(id).filter((n) => n.componentId.endsWith('raw_code'))
+    expect(tree('fuzz_2').filter((n) => n.componentId === 'cpp:array_2d_declare').length).toBeGreaterThan(0)
+    expect(raws('fuzz_1').length + raws('fuzz_2').length + raws('fuzz_3').length + raws('fuzz_4').length).toBe(0)
   })
 
   it.each(PROGS.map((p) => [p.id, p] as const))('%s：Cella 那側照實說翻不出（等 mbFriendDef）', async (_id, p) => {

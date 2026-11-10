@@ -357,7 +357,8 @@ int main() {
 }`, '8\n')
   })
 
-  it('負向：二維陣列欄位照實降級——原文一字不差（不把維度塞進名字）', () => {
+  // 400 之前這一支斷言「照實降級」；400 起二維陣列欄位走二維陣列那顆（三維以上與帶初值的照舊降級，見 class-2d-array-field）
+  it('二維陣列欄位是二維陣列那顆——原文一字不差（不把維度塞進名字）', () => {
     const code = `class G {
 public:
     int g[2][3];
@@ -365,7 +366,8 @@ public:
     const t = lift(code)
     // 正向錨點：類別有被認得
     expect(all(t).map((x) => x.componentId)).toContain('cpp:class_def')
-    expect(all(t).some((x) => x.componentId === 'cpp:raw_code' && String(x.metadata?.rawCode ?? '').includes('多維陣列欄位'))).toBe(true)
+    expect(all(t).filter((x) => x.componentId === 'cpp:array_2d_declare').map((x) => x.properties.name)).toEqual(['g'])
+    expect(all(t).map((x) => x.componentId)).not.toContain('cpp:raw_code')
     expect(generateCode(t, 'cpp', S)).toContain('    int g[2][3];')
   })
 })
