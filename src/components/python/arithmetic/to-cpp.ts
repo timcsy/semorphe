@@ -18,9 +18,10 @@ export function registerToCpp(r: ToCppRegistrar): void {
       if (ints) return `${cpp.useHelper(op === '//' ? 'floor_div' : 'floor_mod')}(${cpp.expr(l)}, ${cpp.expr(rr)})`
       return cpp.keep(n, op === '//' ? 'division' : 'modulo', `${op} 的兩邊不是整數（${tl ?? '?'}、${tr ?? '?'}）`)
     }
-    // 整數的 **：指數是非負的字面量才換（負指數在 Python 是浮點）
+    // 整數的 **：指數是非負的字面量才換（負指數在 Python 是浮點）；只被指定過一次非負字面量的變數也算（406：任何輸入下都是那個值）
     if (op === '**') {
-      if (ints && rr?.componentId.endsWith(':literal_number') && /^\d+$/.test(String(rr.properties?.value))) return `${cpp.useHelper('int_pow')}(${cpp.expr(l)}, ${cpp.expr(rr)})`
+      const constExp = rr?.componentId.endsWith(':var_ref') ? cpp.constNonNegInt(String(rr.properties?.name ?? '')) : undefined
+      if (ints && (constExp !== undefined || (rr?.componentId.endsWith(':literal_number') && /^\d+$/.test(String(rr.properties?.value))))) return `${cpp.useHelper('int_pow')}(${cpp.expr(l)}, ${cpp.expr(rr)})`
       return cpp.keep(n, 'outside-subset', `** 的兩邊（${tl ?? '?'}、${tr ?? '?'}）還沒有對應`)
     }
     if (op === '+' && tl === 'str' && tr === 'str') return `${paren(l, cpp)} + ${paren(rr, cpp)}`

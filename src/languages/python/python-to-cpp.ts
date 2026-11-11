@@ -197,6 +197,22 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       scope.forEach(walk)
       return !readOutside
     },
+    constNonNegInt(name) {
+      const binds: SemanticNode[] = []
+      let other = false
+      const walk = (n: SemanticNode): void => {
+        const id = n.componentId
+        if (n.properties?.obj === name && n.slots?.value && !n.slots?.iterable) binds.push(n)
+        else if (n.properties?.obj === name) other = true // for 的迴圈變數
+        if (id.endsWith(':var_assign_compound') && n.slots?.target?.[0]?.properties?.name === name) other = true
+        if ((id.endsWith(':global') || isFunc(n)) && JSON.stringify(n).includes(`"${name}"`)) other = true
+        kids(n).forEach(walk)
+      }
+      body.forEach(walk)
+      if (other || binds.length !== 1 || !top.includes(binds[0])) return undefined
+      const v = binds[0].slots.value?.[0]
+      return v?.componentId.endsWith(':literal_number') && /^\d+$/.test(String(v.properties?.value)) ? String(v.properties.value) : undefined
+    },
     name: (s) => (CPP_RESERVED.has(s) ? `${s}_` : s),
     indent: (d) => '    '.repeat(d),
   }

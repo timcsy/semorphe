@@ -45,6 +45,11 @@ export interface ToCppContext {
    * 否則意思不同：Python 迴圈結束時它是**最後一個值**、本體改它不影響下一圈；C++ 的 for 結束時多走了一步、本體改它會改到迭代。
    */
   plainLoopVar(loop: SemanticNode, name: string): boolean
+  /**
+   * 這個名字在整支程式裡是不是只被指定過一次、而且是非負整數字面量——是就回傳那個值（任何輸入下都一樣）。
+   * 迴圈變數、參數、複合指定、在函式裡被指定、`global` 都不算
+   */
+  constNonNegInt(name: string): string | undefined
   /** C++ 的保留字與標準名字撞到就加底線 */
   name(s: string): string
   indent(depth: number): string
