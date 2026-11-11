@@ -154,11 +154,13 @@ describe('spec 170 · Python 的執行期（Cella 工作階段：互動與訊息
   })
 
   it('🔴 認不出來的語法【出聲】，不得靜默跳過', async () => {
-    const tree = (await liftPython('class Foo:\n    pass\n'))!
+    // ⚠️ 416（2026-11-12）之前這裡用 `class Foo: pass`——空類別從那一刀起認得了，換成仍然認不出來的 match…case
+    const CODE = 'x = 1\nmatch x:\n    case 1:\n        print(1)\n'
+    const tree = (await liftPython(CODE))!
     const s = p.createSession!({ maxSteps: 1000, formal: pyFormal(tree) as never }, tree)
     expect('declined' in s, '一段執行不了的程式碼靜默結束 → 使用者以為它跑成功了').toBe(true)
     if ('declined' in s) expect(s.declined).toMatch(/還不支援/)
-    const r = await runCella('class Foo:\n    pass\n', { lang: 'python' })
+    const r = await runCella(CODE, { lang: 'python' })
     expect(r.verdict, '判決那條路：翻不出，不是 accept').toBe('untranslated')
   })
 })

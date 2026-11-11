@@ -15,8 +15,9 @@ const gen = (t: SemanticNode | null) =>
 
 describe('python:raw_code — 降級的落點', () => {
   it('★ 認不出來的語句走誠實降級，而【不是】被套上 C++ 的身分', async () => {
-    // `class` 還沒有元件 —— 這正是要驗的情況
-    const ids = componentIdsOf(await liftPython('class Foo:\n    pass\n'))
+    // match…case 還沒有元件 —— 這正是要驗的情況（416 之前用 `class Foo: pass`，空類別從那一刀起認得了）
+    const ids = componentIdsOf(await liftPython('x = 1\nmatch x:\n    case 1:\n        print(1)\n'))
+    expect(ids, '★ 錨點：真的降級了').toContain('unresolved')
     expect(ids.length, '★ 錨點：先要 lift 得出東西').toBeGreaterThan(0)
     expect(ids.filter((i) => i.startsWith('cpp:')),
       '🔴 Python 的節點被套上了 C++ 的身分').toEqual([])
