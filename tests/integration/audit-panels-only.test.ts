@@ -16,6 +16,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { withSdkBuildLock } from '../helpers/sdk-build-lock'
 
 const ROOT = path.resolve(__dirname, '../..')
 const SOURCE = '#include <iostream>\nusing namespace std;\nint main() {\n    int x = 5;\n    if (x > 3) {\n        cout << x;\n    }\n    return 0;\n}\n'
@@ -36,8 +37,13 @@ let result: Run
 
 async function run(): Promise<Run> {
   const sh = (args: string[]): void => { execFileSync('node', args, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] }) }
-  try { sh(['tools/build-sdk.mjs']) } catch (e) { return { ok: false, stage: '出貨產物建不起來', detail: String(e) } }
-  try { sh(['examples/panels-only/build.mjs']) } catch (e) { return { ok: false, stage: '例子在 esbuild 下建不起來', detail: String(e) } }
+  // dist-sdk 與 audit-portable-core 共用，建＋打包這一段要排隊（見 helper 的檔頭）
+  const built = withSdkBuildLock(ROOT, (): Run | null => {
+    try { sh(['tools/build-sdk.mjs']) } catch (e) { return { ok: false, stage: '出貨產物建不起來', detail: String(e) } }
+    try { sh(['examples/panels-only/build.mjs']) } catch (e) { return { ok: false, stage: '例子在 esbuild 下建不起來', detail: String(e) } }
+    return null
+  })
+  if (built) return built
   try {
     const mod = await import(pathToFileURL(path.join(ROOT, 'examples/panels-only/dist/assemble.mjs')).href)
     const blocksEl = document.createElement('div')

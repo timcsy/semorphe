@@ -144,3 +144,25 @@ describe('Round-trip: enum, range-for, 2D array', () => {
     expect(init?.componentId).toBe('cpp:array_at')
   })
 })
+
+// 407：迴圈變數的型別是兩個字以上（`long long`、`std::string`）——原本找不到型別節點而退成 `auto`，意思跟著變
+describe('Round-trip: range-for 的迴圈變數型別不能退成 auto', () => {
+  for (const decl of ['long long x', 'const long long x', 'unsigned int x', 'std::string x']) {
+    it(decl, () => {
+      const cont = decl.includes('string') ? 'vector<std::string> v' : 'vector<int> v'
+      const code = `#include <vector>\n#include <string>\nusing namespace std;\nint main() {\n    ${cont};\n    for (${decl} : v) {\n    }\n    return 0;\n}\n`
+      const tree = liftCode(code)!
+      const loops: any[] = []
+      const w = (n: any) => { if (n.componentId === 'cpp:loop_range') loops.push(n); Object.values(n.children ?? n.slots ?? {}).flat().forEach(w) }
+      w(tree)
+      expect(loops.length).toBe(1)
+      expect(generateCode(tree, 'cpp', style)).toContain(`for (${decl} : v)`)
+    })
+  }
+  it('執行：long long 走訪 vector<int>，乘出來不溢位（auto 會）', async () => {
+    const { expectCellaOut } = await import('../helpers/cella-run')
+    const code = '#include <iostream>\n#include <vector>\nusing namespace std;\nint main() {\n    vector<int> v = {100000};\n    for (long long x : v) {\n        cout << x * x << "\\n";\n    }\n    return 0;\n}\n'
+    const back = generateCode(liftCode(code)!, 'cpp', style)
+    await expectCellaOut(back, '10000000000\n')
+  }, 60_000)
+})

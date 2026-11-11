@@ -109,6 +109,9 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
   const t = tables()
   const helpers = new Set<HelperName>()
   const mapAts = new Map<string, string[]>()
+  const hoisted: string[][] = []
+  let hoistCount = 0
+  const hoistNames = new Map<string, string>()
   const includes = new Set<string>(['iostream', 'string'])
   let converted = 0
 
@@ -197,6 +200,38 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       scope.forEach(walk)
       return !readOutside
     },
+    canHoist(n) {
+      const effect = /:(func_call|func_call_named|input|method_call|var_assign_expr|container_(append|pop|insert|erase|erase_value|sort_self)|set_append)$/
+      let cur = n
+      for (;;) {
+        const p = parent.get(cur.id)
+        if (!p) return false
+        const slot = Object.entries(p.slots ?? {}).find(([, cs]) => cs.includes(cur))?.[0]
+        if (/:(logic|ternary|compare_chain|array_make_for|lambda)$/.test(p.componentId)) return false
+        const stmtOk = /:(print|var_assign|return)$/.test(p.componentId) || (p.componentId.endsWith(':container_append') && slot !== 'obj') || (p.componentId.endsWith(':loop_for') && slot === 'iterable')
+        if (stmtOk) {
+          // 同一句裡其他部分有副作用 ⟹ 先算生成式會改變先後
+          let bad = false
+          const walk = (x: SemanticNode): void => {
+            if (x === n) return
+            if (x !== p && effect.test(x.componentId)) bad = true
+            ;(x === p && p.componentId.endsWith(':loop_for') ? p.slots.iterable ?? [] : kids(x)).forEach(walk)
+          }
+          walk(p)
+          return !bad
+        }
+        if (/:(program|if|loop_while|loop_for|func_def)$/.test(p.componentId) || t.stmt.has(p.componentId)) return false
+        cur = p
+      }
+    },
+    hoist(n, base, lines) {
+      const had = hoistNames.get(n.id)
+      if (had) return had
+      const name = `${base}__${++hoistCount}`
+      hoistNames.set(n.id, name)
+      hoisted[hoisted.length - 1]?.push(...lines(name))
+      return name
+    },
     constNonNegInt(name) {
       const binds: SemanticNode[] = []
       let other = false
@@ -217,9 +252,12 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
     indent: (d) => '    '.repeat(d),
   }
   const stmt = (n: SemanticNode, depth: number): string[] => {
+    hoisted.push([])
+    const before = (lines: string[]): string[] => [...(hoisted.pop() ?? []).map((l) => `${cpp.indent(depth)}${l}`), ...lines]
     const s = t.stmt.get(n.componentId)
-    if (s) { const lines = s(n, cpp, depth); converted += lines.length > 0 ? 1 : 0; return lines }
-    if (t.expr.has(n.componentId)) { converted++; return [`${cpp.indent(depth)}${cpp.expr(n)};`] }
+    if (s) { const lines = s(n, cpp, depth); converted += lines.length > 0 ? 1 : 0; return before(lines) }
+    if (t.expr.has(n.componentId)) { converted++; const line = `${cpp.indent(depth)}${cpp.expr(n)};`; return before([line]) }
+    hoisted.pop()
     keep(n, 'outside-subset', `「${n.componentId}」還沒有 C++ 的寫法`)
     return []
   }
@@ -235,16 +273,23 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       const r = rawType(n)
       if (r) seen.set(name, [...(seen.get(name) ?? []), r])
     }
-    const walk = (n: SemanticNode): void => {
+    const walk = (n: SemanticNode, bound: ReadonlySet<string> = new Set()): void => {
       if (isFunc(n)) return
       const own = typeof n.properties?.obj === 'string' ? n.properties.obj : undefined
       if (n.slots?.value && own && !n.slots?.iterable && !n.slots?.target && !n.slots?.obj) { assigned.set(own, assigned.get(own) ?? n); note(own, n.slots.value[0]) }
       // 計數 for 的迴圈變數：range 的值是整數
-      if (own && n.slots?.iterable?.[0]?.componentId.endsWith(':range_make')) { assigned.set(own, assigned.get(own) ?? n); seen.set(own, [...(seen.get(own) ?? []), 'int']) }
-      if (typeof n.properties?.name === 'string' && !n.slots?.args && Object.keys(n.slots ?? {}).every((k) => (n.slots[k] ?? []).length === 0)) note(n.properties.name, n)
-      kids(n).forEach(walk)
+      // 生成式的迴圈變數只活在生成式裡（Python 3），由生成式那幾行自己宣告
+      if (own && n.slots?.iterable?.[0]?.componentId.endsWith(':range_make') && !n.componentId.endsWith(':array_make_for')) { assigned.set(own, assigned.get(own) ?? n); seen.set(own, [...(seen.get(own) ?? []), 'int']) }
+      if (typeof n.properties?.name === 'string' && !bound.has(n.properties.name) && !n.slots?.args && Object.keys(n.slots ?? {}).every((k) => (n.slots[k] ?? []).length === 0)) note(n.properties.name, n)
+      // 生成式裡讀到它自己的迴圈變數，不是外面那個同名的變數（走訪對象除外：它在外面求值）
+      if (n.componentId.endsWith(':array_make_for') && own) {
+        const inner = new Set([...bound, own])
+        for (const [k, cs] of Object.entries(n.slots ?? {})) cs.forEach((c) => walk(c, k === 'iterable' ? bound : inner))
+        return
+      }
+      kids(n).forEach((c) => walk(c, bound))
     }
-    scope.forEach(walk)
+    scope.forEach((n) => walk(n))
     const out: string[] = []
     for (const [name, at] of assigned) {
       if (exclude.has(name)) continue

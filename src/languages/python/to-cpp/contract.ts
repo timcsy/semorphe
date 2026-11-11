@@ -46,6 +46,13 @@ export interface ToCppContext {
    */
   plainLoopVar(loop: SemanticNode, name: string): boolean
   /**
+   * 這顆運算式能不能先在它所在的敘述前面算好（串列生成式寫成前面幾行的迴圈）——只有「整句只算一次、
+   * 其餘部分沒有副作用」的敘述可以：print、指定、append、return、for 的走訪對象；條件、短路、三元裡面不行（求值次數或順序會變）
+   */
+  canHoist(n: SemanticNode): boolean
+  /** 在目前這一句前面插入幾行（縮排相對於這一句），回傳暫存名字；同一顆節點被寫兩次（`accumulate(x.begin(), x.end())`）只插入一次 */
+  hoist(n: SemanticNode, base: string, lines: (name: string) => string[]): string
+  /**
    * 這個名字在整支程式裡是不是只被指定過一次、而且是非負整數字面量——是就回傳那個值（任何輸入下都一樣）。
    * 迴圈變數、參數、複合指定、在函式裡被指定、`global` 都不算
    */
