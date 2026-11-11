@@ -17,7 +17,7 @@ let TABLES: ToCppTables | null = null
 const tables = (): ToCppTables => (TABLES ??= collectToCpp())
 
 /** C++ 的保留字與這支程式會用到的標準名字——Python 的名字撞到就加底線 */
-const CPP_RESERVED = new Set(['auto', 'bool', 'break', 'case', 'char', 'class', 'const', 'continue', 'default', 'delete', 'do', 'double', 'else', 'enum', 'explicit', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'return', 'short', 'signed', 'sizeof', 'static', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try', 'typedef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'while', 'main', 'string', 'vector', 'cin', 'cout', 'endl', 'getline', 'stoll', 'stod', 'to_string', 'max', 'min', 'accumulate', 'read_line', 'floor_div', 'floor_mod', 'std'])
+const CPP_RESERVED = new Set(['auto', 'bool', 'break', 'case', 'char', 'class', 'const', 'continue', 'default', 'delete', 'do', 'double', 'else', 'enum', 'explicit', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'return', 'short', 'signed', 'sizeof', 'static', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try', 'typedef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'while', 'main', 'string', 'vector', 'cin', 'cout', 'endl', 'getline', 'stoll', 'stod', 'to_string', 'max', 'min', 'accumulate', 'read_line', 'floor_div', 'floor_mod', 'float_text', 'std'])
 
 const HELPERS: Record<HelperName, string[]> = {
   // input() 讀一整行（cin >> 讀一個詞——行的語意不同，research R6）
@@ -38,11 +38,14 @@ const HELPERS: Record<HelperName, string[]> = {
   // print(list)：Python 印出容器的樣子（[1, 2]、['a', 'b']）
   list_text_int: ['string list_text(const vector<long long>& v) {', '    string out = "[";', '    for (int i = 0; i < v.size(); i++) {', '        if (i > 0) {', '            out += ", ";', '        }', '        out += to_string(v[i]);', '    }', '    return out + "]";', '}'],
   list_text_str: ['string list_text(const vector<string>& v) {', '    string out = "[";', '    for (int i = 0; i < v.size(); i++) {', '        if (i > 0) {', '            out += ", ";', '        }', `        out += "'" + v[i] + "'";`, '    }', '    return out + "]";', '}'],
+  // print(浮點)／str(浮點)：Python 印 repr——能來回的最短位數、整數值補 .0、指數在 [-4, 16) 之外改科學記號。
+  // 位數用 snprintf 逐一試、atof 讀回比對（strtod／stod Cella 還不支援；atof 判 accept、沒有假設）
+  float_text: ['string float_text(double x) {', '    if (x != x) {', '        return "nan";', '    }', '    if (x > 1.7976931348623157e308) {', '        return "inf";', '    }', '    if (x < -1.7976931348623157e308) {', '        return "-inf";', '    }', '    char buf[64];', '    int p = 1;', '    while (p < 17) {', '        snprintf(buf, sizeof(buf), "%.*e", p - 1, x);', '        if (atof(buf) == x) {', '            break;', '        }', '        p++;', '    }', '    snprintf(buf, sizeof(buf), "%.*e", p - 1, x);', '    string s = buf;', '    int e = atoi(buf + s.find(\'e\') + 1);', '    if (e < -4 || e >= 16) {', '        return s;', '    }', '    int d = p - 1 - e;', '    if (d < 0) {', '        d = 0;', '    }', '    snprintf(buf, sizeof(buf), "%.*f", d, x);', '    s = buf;', '    if (s.find(\'.\') == string::npos) {', '        s += ".0";', '    }', '    return s;', '}'],
 }
 
 /** 小函式需要的標頭 */
 const HELPER_INCLUDES: Partial<Record<HelperName, string[]>> = {
-  split_words: ['vector', 'cctype'], split_on: ['vector'], to_upper: ['cctype'], to_lower: ['cctype'], list_text_int: ['vector'], list_text_str: ['vector'],
+  split_words: ['vector', 'cctype'], split_on: ['vector'], to_upper: ['cctype'], to_lower: ['cctype'], list_text_int: ['vector'], list_text_str: ['vector'], float_text: ['cstdio', 'cstdlib'],
 }
 
 const lineOf = (n: SemanticNode): number | undefined =>

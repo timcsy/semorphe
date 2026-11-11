@@ -83,6 +83,8 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     ['印 list[int]／list[str]', 'xs = []\nxs.append(int(input()))\nxs.append(2)\nprint(xs)\nts = input().split()\nprint(ts)\n', '1\na b\n'],
     ['切片：list', 'xs = []\nxs.append(int(input()))\nxs.append(2)\nxs.append(3)\nprint(xs[1:3])\n', '1\n'],
     ['整數的 **', 'n = 3\nprint(n ** 2)\nprint(2 ** 0)\n', ''],
+    // 404：Python 印 repr——整數值補 .0、最短來回位數、指數在 [-4, 16) 之外改科學記號
+    ['印浮點數（repr 的規則）', 'a = 2.0\nprint(a, a / 3, a + 0.1, a * 10000000000.0 * 10000000000.0, a / 100000, -a * 10000000)\nprint(str(a / 4) + "!")\n', ''],
   ] as const) {
     it(name, async () => {
       const t = (await liftPython(src))!
