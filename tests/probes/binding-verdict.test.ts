@@ -38,7 +38,7 @@ beforeAll(async () => {
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
   rows = buildBindingCorpus(parser)
-  // 只挑幾筆（修單筆時用）：BINDING_ONLY='04-set與map|12-猜數字'
+  // 只挑幾筆（修單筆時用）：BINDING_ONLY='04-set 與 map|12-猜數字'
   if (process.env.BINDING_ONLY) rows = rows.filter((r) => new RegExp(process.env.BINDING_ONLY!).test(r.id))
   // 判決器：讀建置時編好的那一份（鍵與 `tools/precompile-cella.ts` 同一份；沒有就當場編）——判決入口 `checkerFromBytes` 與產品同一支
   const { bytes } = await cachedCellaModule('verdict-cfamily', checkerSource('cfamily'), () => compileCellaChecker(read, 'cfamily'))

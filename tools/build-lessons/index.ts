@@ -39,8 +39,8 @@ import { mkdirSync, writeFileSync, cpSync, existsSync, createReadStream } from '
 import { join, resolve } from 'node:path'
 import type { Plugin } from 'vite'
 import { readTracks, readLessonsOf, lastmodFromGit, readTargets } from './read-lessons'
-import { lessonDocHref } from '../../src/core/lesson/lesson'
-import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots, renderSpecs } from './render'
+import { lessonDocHref, LESSON_RENAMES } from '../../src/core/lesson/lesson'
+import { renderIndex, renderTrack, renderLesson, renderSitemap, renderRobots, renderSpecs, renderRedirect } from './render'
 
 const write = (outDir: string, rel: string, html: string): void => {
   const dir = join(outDir, rel)
@@ -87,6 +87,9 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
     if (!track) return null
     const pages = readLessonsOf(lessonsRoot, track)
     if (parts.length === 1) return renderTrack(track, pages)
+    // 🔴 改過名的課：舊網址回轉址頁（414）——與 build 那一側同一張表
+    const renamedTo = LESSON_RENAMES[`${parts[0]}/${parts[1]}`]
+    if (renamedTo !== undefined) return renderRedirect(renamedTo)
     const i = pages.findIndex((p) => p.lesson.id === `${parts[0]}/${parts[1]}`)
     return i < 0 ? null : renderLesson(pages[i], { prev: pages[i - 1], next: pages[i + 1] })
   }
@@ -161,6 +164,11 @@ export function lessonPages(opts: { root?: string } = {}): Plugin {
         counts.push({ track, count: pages.length })
       }
       write(outDir, 'lessons', renderIndex(counts))
+      // 🔴 **改過名的課，舊路徑留一頁轉址頁**（414，`lessons/renamed.json`）
+      //    ——老師貼出去的舊連結不變成 404。⚠️ 不進 sitemap：那是舊網址。
+      for (const [oldId, newId] of Object.entries(LESSON_RENAMES)) {
+        write(outDir, `lessons/${oldId}`, renderRedirect(newId))
+      }
       // 🟢 **規格頁**——`targets/*.json` 的投影（2026-09-07）。
       //    ⚠️ 它也要進 sitemap：一頁沒有人連得到的規格，
       //    與一頁不存在的規格在使用者眼裡是同一件事。

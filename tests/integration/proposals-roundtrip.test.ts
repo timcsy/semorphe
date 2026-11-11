@@ -85,7 +85,7 @@ function applied(tree: SemanticNode, schema: OpSchema): SemanticNode {
 describe('套用四種操作之後，產碼再 lift 回同一棵', () => {
   const cases: [string, string][] = [
     ['C++', 'cpp-beginner/05-程式從哪開始/solutions/make.cpp'],
-    ['C', 'c-bridge/01-同一份程式兩種說法/solutions/max.c'],
+    ['C', 'c-bridge/01-同一份程式，兩種說法/solutions/max.c'],
     ['Arduino', 'arduino/04-按鈕/solutions/lit~pullup.cpp'],
   ]
   for (const [name, file] of cases) {

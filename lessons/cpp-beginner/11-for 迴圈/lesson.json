@@ -1,0 +1,69 @@
+{
+  "title": "for 迴圈",
+  "estimate": "25 分鐘",
+  "pins": {
+    "target": "cpp"
+  },
+  "components": [
+    "cpp:arithmetic",
+    "cpp:break",
+    "cpp:compare",
+    "cpp:continue",
+    "cpp:endl",
+    "cpp:if",
+    "cpp:increment",
+    "cpp:literal_number",
+    "cpp:loop_count",
+    "cpp:loop_while",
+    "cpp:print",
+    "cpp:var_assign",
+    "cpp:var_declare",
+    "cpp:var_ref"
+  ],
+  "tasks": [
+    {
+      "id": "follow",
+      "kind": "follow",
+      "title": "跟著做",
+      "check": {
+        "stdout": "1\n2\n4\n5\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "rebuild",
+      "title": "排回去：把剛才那支程式的積木排好",
+      "kind": "arrange",
+      "view": "blocks",
+      "check": {
+        "stdout": "1\n2\n4\n5\n",
+        "stdin": []
+      },
+      "_why": "**Parsons 題**（`認知鷹架.md` ④）：Ericson 等人量到「把打散的程式碼排回去，學習成效與自己寫程式相同，而只花 70% 的時間」。⚠️ 而在這個專案裡它幾乎是免費的——積木本來就會卡榫、會拒絕接錯，而那些研究全部在用文字行卡片。🔴 2026-09-14 補齊：在此之前只有 4 課有，而那不是設計，是停在那裡了。"
+    },
+    {
+      "id": "ex1",
+      "title": "練習：把 continue 換成 break",
+      "check": {
+        "stdout": "1\n2\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "ex2",
+      "title": "練習：把上一課的 while 改寫成 for",
+      "check": {
+        "stdout": "1\n3\n5\n7\n9\n",
+        "stdin": []
+      }
+    },
+    {
+      "id": "make",
+      "title": "做一個：3 的倍數，但不是 5 的倍數",
+      "check": {
+        "stdout": "27\n",
+        "stdin": []
+      }
+    }
+  ]
+}

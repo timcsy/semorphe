@@ -7,7 +7,7 @@ import { test, expect, type Page } from '@playwright/test'
 import { skipPredictionIfAsked, editsSettled, useAsSource } from './helpers'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const LESSON = 'c-bridge/01-同一份程式兩種說法'
+const LESSON = 'c-bridge/01-同一份程式，兩種說法'
 const STUDENT = '#include <stdio.h>\nint main() {\n    int x, m = 0, first = 1;\n    while (1) {\n        scanf("%d", &x);\n        if (x == 0) {\n            break;\n        }\n        if (first || x > m) {\n            m = x;\n            first = 0;\n        }\n    }\n    printf("%d\\n", m);\n    return 0;\n}\n'
 
 async function openTask(page: Page): Promise<void> {

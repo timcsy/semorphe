@@ -476,7 +476,7 @@ describe('第一百零一條護欄：每一堂課都要有一頁讀得到的課�
   })
 
   it('★ 網址的形狀：中文課名要 encode，而斜線不能被 encode', () => {
-    expect(lessonDocHref('cpp-beginner/11-for迴圈'))
-      .toBe('/lessons/cpp-beginner/11-for%E8%BF%B4%E5%9C%88/')
+    expect(lessonDocHref('cpp-beginner/11-for 迴圈'))
+      .toBe('/lessons/cpp-beginner/11-for%20%E8%BF%B4%E5%9C%88/')
   })
 })
