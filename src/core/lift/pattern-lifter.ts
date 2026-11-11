@@ -614,6 +614,7 @@ export class PatternLifter {
         if (c.absent) { if (child) return false; continue }
         if (!child) return false
         if (c.nodeType && child.type !== c.nodeType) return false
+        if (c.notNodeType && child.type === c.notNodeType) return false
         value = child.text
       }
       if (c.text) {

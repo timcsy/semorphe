@@ -10,6 +10,11 @@
       {
         "field": "left",
         "nodeType": "attribute"
+      },
+      {
+        "field": "right",
+        "notNodeType": "assignment",
+        "_why": "連鎖指定 `a = b = 0`（右邊又是一個 assignment）不收：右邊那個敘述會被當成運算式塞進 value，產回去變成 `a = `、送 Cella 是運算式位置的 sAssign。積木的值插槽也放不下一顆敘述，所以整句誠實降級（第 410 刀，盲測抓到）。"
       }
     ],
     "fieldMappings": [
