@@ -45,6 +45,13 @@ export interface ToCppContext {
    * 否則意思不同：Python 迴圈結束時它是**最後一個值**、本體改它不影響下一圈；C++ 的 for 結束時多走了一步、本體改它會改到迭代。
    */
   plainLoopVar(loop: SemanticNode, name: string): boolean
+  /**
+   * 這顆運算式能不能先在它所在的敘述前面算好（串列生成式寫成前面幾行的迴圈）——只有「整句只算一次、
+   * 其餘部分沒有副作用」的敘述可以：print、指定、append、return、for 的走訪對象；條件、短路、三元裡面不行（求值次數或順序會變）
+   */
+  canHoist(n: SemanticNode): boolean
+  /** 在目前這一句前面插入幾行（縮排相對於這一句），回傳暫存名字；同一顆節點被寫兩次（`accumulate(x.begin(), x.end())`）只插入一次 */
+  hoist(n: SemanticNode, base: string, lines: (name: string) => string[]): string
   /** C++ 的保留字與標準名字撞到就加底線 */
   name(s: string): string
   indent(depth: number): string

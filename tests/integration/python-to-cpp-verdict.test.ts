@@ -87,6 +87,8 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     // 405：字典 → map。讀經過 map_at（缺鍵丟例外）、寫用 []、get 帶預設值、sorted(字典) 走訪照鍵排序
     ['字典：數次數、照鍵排序印出', 'words = input().split()\nseen = {}\nfor w in words:\n    seen[w] = seen.get(w, 0) + 1\nfor w in sorted(seen):\n    print(w, seen[w])\n', 'b a b c\n'],
     ['字典：整數鍵、d[k] op= v、len、get 缺鍵', 'd = {}\nd[3] = "x"\nd[1] = "y"\nd[3] += "z"\nc = {}\nc["a"] = 1\nc["a"] *= 5\nc["a"] //= 2\nfor k in sorted(d):\n    print(k, d[k], len(d), c.get("b", 7), c["a"])\n', ''],
+    // 407：串列生成式 → 在那一句前面先建 vector（list、range、if 條件；同一顆被寫兩次只建一次）
+    ['串列生成式：印出、當 sum 的引數、當 for 的走訪對象', 'words = ["a", "bb", "ccc"]\nprint([len(w) for w in words])\nxs = [i * i for i in range(5) if i % 2 == 0]\nprint(xs, sum([x + 1 for x in xs]))\nfor y in [x * 2 for x in xs]:\n    print(y)\nx = "s"\nprint(x)\n', ''],
     ['印浮點數（repr 的規則）', 'a = 2.0\nprint(a, a / 3, a + 0.1, a * 10000000000.0 * 10000000000.0, a / 100000, -a * 10000000)\nprint(str(a / 4) + "!")\n', ''],
   ] as const) {
     it(name, async () => {
@@ -100,6 +102,10 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
       expect(b.verdict, show).toBe('accept')
       expect(b.out, show).toBe(a.out)
       expect(b.assumes ?? [], show).toEqual(a.assumes ?? [])
+      // 換出來的 C++ 走一趟 C++ 的 lift 與產碼回來一字不差（407：`for (long long x : xs)` 曾經回來變成 auto）
+      const back = generateCode(createTestLifter().lift(parser.parse(r.code!)!.rootNode as never) as SemanticNode, 'cpp', apcs as unknown as StylePreset)
+      const noBlank = (c: string) => c.split('\n').filter((l) => l.trim() !== '').join('\n')
+      expect(noBlank(back), '走一趟 C++ 的樹回來不一樣').toBe(noBlank(r.code!))
     }, 120_000)
   }
   for (const [name, src, stdin] of [
@@ -107,6 +113,9 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     ['replace 要換掉的是變數', 'd = input()\nprint("a b".replace(d, "x"))\n', ' \n'],
     ['負的切片', 's = "abc"\nprint(s[-2:3])\n', ''],
     ['負的指數（Python 是浮點）', 'n = 2\nprint(n ** -1)\n', ''],
+    ['生成式在 if 的條件裡', 'xs = [1, 2]\nif len([x for x in xs]) > 1:\n    print("y")\n', ''],
+    ['生成式所在的那一句有別的副作用（先算會改變先後）', 'xs = []\ndef f():\n    xs.append(1)\n    return 0\nprint(f(), [x for x in xs])\n', ''],
+    ['兩層的生成式', 'print([a + b for a in [1, 2] for b in [3]])\n', ''],
     ['直接走訪字典（Python 照放入的順序，map 照鍵排序）', 'c = {}\nc["b"] = 1\nc["a"] = 2\nfor k in c:\n    print(k)\n', ''],
     ['走訪 sorted(字典) 時本體改了那個字典', 'c = {}\nc["a"] = 1\nfor k in sorted(c):\n    c["z"] = 2\nprint(len(c))\n', ''],
     ['有內容的字典字面量（重複的鍵兩邊取的不同）', 'c = {"a": 1, "a": 2}\nprint(c["a"])\n', ''],

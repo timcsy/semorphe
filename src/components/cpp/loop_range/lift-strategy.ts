@@ -9,7 +9,9 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   // for_range_loop: for (auto x : vec) { body }
     registry.register('cpp:liftRangeFor', (node, ctx) => {
       const qualifierNode = node.namedChildren.find(c => c.type === 'type_qualifier')
-      const typeNode = node.namedChildren.find(c =>
+      // 🔴 型別從 `type` 欄位拿（407）：原本只認四種節點，`long long`（sized_type_specifier）、`std::string`（qualified_identifier）
+      //    都找不到而退成 `auto`——`for (long long x : vector<int>)` 被換成 `auto`，元素型別從 long long 變回 int
+      const typeNode = node.childForFieldName('type') ?? node.namedChildren.find(c =>
         c.type === 'primitive_type' || c.type === 'type_identifier' ||
         c.type === 'placeholder_type_specifier' || c.type === 'template_type'
       )
