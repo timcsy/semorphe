@@ -66,6 +66,20 @@ describe('Round-trip: C++ exception handling (cpp_try_catch, cpp_throw)', () => 
       expect(result).toContain('int y = 0;')
     })
 
+    // 408：沒有例外變數名的 catch——產生器原本印成 `catch (const invalid_argument& )`（多一個空白，走一趟就變）
+    it('沒有名字的 catch：一字不差回來，身分是 cpp:try_catch', () => {
+      const code = `try {
+    int x = 10;
+} catch (const invalid_argument&) {
+    int y = 0;
+}`
+      const tree = liftCode(code)
+      expect(JSON.stringify(tree)).toContain('"cpp:try_catch"')
+      const result = roundTripCode(code)
+      expect(result).toContain('} catch (const invalid_argument&) {')
+      expect(result).not.toContain('& )')
+    })
+
     it('try-catch with print statements', () => {
       const code = `#include <iostream>
 using namespace std;

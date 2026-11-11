@@ -14,7 +14,7 @@ export interface ObservedTypes {
 }
 
 /** 補在 C++ 程式開頭的小函式（內容在引擎的 HELPERS）；`list_text_*` 是同名 `list_text` 的多載 */
-export type HelperName = 'read_line' | 'floor_div' | 'floor_mod' | 'int_pow' | 'split_words' | 'split_on' | 'to_upper' | 'to_lower' | 'replace_all' | 'list_text_int' | 'list_text_str' | 'float_text'
+export type HelperName = 'read_line' | 'floor_div' | 'floor_mod' | 'int_pow' | 'split_words' | 'split_on' | 'to_upper' | 'to_lower' | 'replace_all' | 'list_text_int' | 'list_text_str' | 'float_text' | 'py_int'
 
 export interface ToCppContext {
   /** 一顆運算式節點寫成 C++ 運算式文字 */
@@ -50,6 +50,13 @@ export interface ToCppContext {
    * 迴圈變數、參數、複合指定、在函式裡被指定、`global` 都不算
    */
   constNonNegInt(name: string): string | undefined
+  /**
+   * 現在寫的這一段在一個抓 `ValueError` 的 try 裡面嗎——是的話，會丟 ValueError 的寫法要換成在 C++ 也丟同一種例外的寫法
+   * （`int(字串)`：`stoi` 吃得下 `"12abc"`、Python 不行 → `py_int`）
+   */
+  catchingValueError(): boolean
+  /** 在一個抓 `ValueError` 的 try 的本體裡寫 C++（`catchingValueError()` 在 fn 裡面是 true） */
+  inValueErrorTry<T>(fn: () => T): T
   /** C++ 的保留字與標準名字撞到就加底線 */
   name(s: string): string
   indent(depth: number): string
