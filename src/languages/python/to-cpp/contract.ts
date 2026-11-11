@@ -25,10 +25,17 @@ export interface ToCppContext {
   keep(n: SemanticNode, kind: KeepKind, detail: string): string
   /** 這顆節點觀察到的**單一** Python 型別（`int`、`str`、`list[int]`…）；沒觀察到、聯集、空容器 → undefined */
   pyType(n: SemanticNode | undefined): string | undefined
+  /** 這顆節點觀察到的容器種類（`dict`、`list`…）——元素型別看不到（空的那一刻）也算，聯集的每一員都要同一種 */
+  pyKind(n: SemanticNode | undefined): string | undefined
   /** Python 型別 → C++ 型別文字（`int` → `long long`、`list[int]` → `vector<long long>`）；對不上 → undefined */
   cppType(pyType: string | undefined): string | undefined
   /** 程式需要一支補在開頭的小函式——回傳呼叫時要寫的名字 */
   useHelper(name: HelperName): string
+  /**
+   * 讀字典 `d[k]`：缺鍵時 Python 拋 KeyError、C++ 的 `[]` 會默默插入一筆——換成補在開頭的 `map_at`（缺鍵丟 out_of_range）。
+   * 每一種 map 型別一份多載（Cella 還沒有 `map::at`；兩個型別參數的函式樣板 lift 不進來）。回傳呼叫時要寫的名字
+   */
+  useMapAt(mapType: string, keyType: string, valueType: string): string
   /** 程式需要一個標頭（`vector`、`algorithm`、`numeric`）——回傳標頭名 */
   useInclude(header: string): string
   /** 這個名字是程式自己定義的函式嗎 */

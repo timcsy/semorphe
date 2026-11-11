@@ -17,7 +17,7 @@ let TABLES: ToCppTables | null = null
 const tables = (): ToCppTables => (TABLES ??= collectToCpp())
 
 /** C++ 的保留字與這支程式會用到的標準名字——Python 的名字撞到就加底線 */
-const CPP_RESERVED = new Set(['auto', 'bool', 'break', 'case', 'char', 'class', 'const', 'continue', 'default', 'delete', 'do', 'double', 'else', 'enum', 'explicit', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'return', 'short', 'signed', 'sizeof', 'static', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try', 'typedef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'while', 'main', 'string', 'vector', 'cin', 'cout', 'endl', 'getline', 'stoll', 'stod', 'to_string', 'max', 'min', 'accumulate', 'read_line', 'floor_div', 'floor_mod', 'float_text', 'std'])
+const CPP_RESERVED = new Set(['auto', 'bool', 'break', 'case', 'char', 'class', 'const', 'continue', 'default', 'delete', 'do', 'double', 'else', 'enum', 'explicit', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'return', 'short', 'signed', 'sizeof', 'static', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try', 'typedef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'while', 'main', 'string', 'vector', 'cin', 'cout', 'endl', 'getline', 'stoll', 'stod', 'to_string', 'max', 'min', 'accumulate', 'read_line', 'floor_div', 'floor_mod', 'float_text', 'map', 'map_at', 'out_of_range', 'std'])
 
 const HELPERS: Record<HelperName, string[]> = {
   // input() 讀一整行（cin >> 讀一個詞——行的語意不同，research R6）
@@ -68,6 +68,20 @@ function splitUnion(t: string): string[] {
   return out
 }
 
+/** `str, int` 拆成最外層的逗號兩邊 */
+function splitTop(t: string): string[] {
+  const out: string[] = []
+  let depth = 0, cur = ''
+  for (const ch of t) {
+    if (ch === '[') depth++
+    if (ch === ']') depth--
+    if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue }
+    cur += ch
+  }
+  out.push(cur.trim())
+  return out
+}
+
 /**
  * 幾個觀察到的型別併成一個：`list[?]` 在有 `list[int]` 時讓位（容器的型別是那一刻的值——空的那一刻看不出元素）。
  * 併不成單一型別 → undefined（聯集、或只有 `list[?]`）。
@@ -94,6 +108,7 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
   const reasons: LanguageConversion['reasons'] = []
   const t = tables()
   const helpers = new Set<HelperName>()
+  const mapAts = new Map<string, string[]>()
   const includes = new Set<string>(['iostream', 'string'])
   let converted = 0
 
@@ -140,6 +155,13 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
     if (py === 'bool') return 'bool'
     const m = /^list\[(.+)\]$/.exec(py)
     if (m) { const e = cppType(m[1]); if (e) { includes.add('vector'); return `vector<${e}>` } }
+    // dict[K, V] → map<K, V>：走訪照鍵排序（Python 照插入順序——只有排序過的走訪換得過去，見 loop_for）
+    const d = /^dict\[(.+)\]$/.exec(py)
+    if (d) {
+      const kv = splitTop(d[1])
+      const k = kv.length === 2 ? cppType(kv[0]) : undefined, v = kv.length === 2 ? cppType(kv[1]) : undefined
+      if (k && v) { includes.add('map'); return `map<${k}, ${v}>` }
+    }
     return undefined
   }
 
@@ -152,8 +174,14 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
     block(nodes, depth) { return (nodes ?? []).flatMap((c) => stmt(c, depth)) },
     keep,
     pyType: (n) => { const r = rawType(n); return r ? unifyTypes([r]) : undefined },
+    pyKind: (n) => { const r = rawType(n); const ks = [...new Set(r ? splitUnion(r).map((x) => x.split('[')[0]) : [])]; return ks.length === 1 ? ks[0] : undefined },
     cppType,
     useHelper(name) { helpers.add(name); (HELPER_INCLUDES[name] ?? []).forEach((h) => includes.add(h)); return name.startsWith('list_text') ? 'list_text' : name },
+    useMapAt(mt, kt, vt) {
+      includes.add('map'); includes.add('stdexcept')
+      mapAts.set(mt, [`${vt} map_at(const ${mt}& m, const ${kt}& k) {`, '    if (m.count(k) == 0) {', '        throw out_of_range("KeyError");', '    }', '    return m.find(k)->second;', '}'])
+      return 'map_at'
+    },
     useInclude(h) { includes.add(h); return h },
     isUserFunction: (name) => userFunctions.has(name),
     plainLoopVar(loop, name) {
@@ -245,7 +273,7 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
   const mainBody = cpp.block(top, 1)
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   const head = [...[...includes].sort().map((h) => `#include <${h}>`), 'using namespace std;', '']
-  const helperLines = (Object.keys(HELPERS) as HelperName[]).filter((h) => helpers.has(h)).flatMap((h) => [...HELPERS[h], ''])
+  const helperLines = [...(Object.keys(HELPERS) as HelperName[]).filter((h) => helpers.has(h)).flatMap((h) => [...HELPERS[h], '']), ...[...mapAts.values()].flatMap((l) => [...l, ''])]
   const lines = [typesNote(opts.input, readsInput), ...head, ...helperLines, ...funcLines, 'int main() {', ...mainDecls.map((d) => `    ${d}`), ...mainBody, '    return 0;', '}']
   return { code: `${lines.join('\n')}\n`, converted, kept: 0, reasons }
 }

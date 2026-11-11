@@ -84,6 +84,9 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     ['切片：list', 'xs = []\nxs.append(int(input()))\nxs.append(2)\nxs.append(3)\nprint(xs[1:3])\n', '1\n'],
     ['整數的 **', 'n = 3\nprint(n ** 2)\nprint(2 ** 0)\n', ''],
     // 404：Python 印 repr——整數值補 .0、最短來回位數、指數在 [-4, 16) 之外改科學記號
+    // 405：字典 → map。讀經過 map_at（缺鍵丟例外）、寫用 []、get 帶預設值、sorted(字典) 走訪照鍵排序
+    ['字典：數次數、照鍵排序印出', 'words = input().split()\nseen = {}\nfor w in words:\n    seen[w] = seen.get(w, 0) + 1\nfor w in sorted(seen):\n    print(w, seen[w])\n', 'b a b c\n'],
+    ['字典：整數鍵、d[k] op= v、len、get 缺鍵', 'd = {}\nd[3] = "x"\nd[1] = "y"\nd[3] += "z"\nc = {}\nc["a"] = 1\nc["a"] *= 5\nc["a"] //= 2\nfor k in sorted(d):\n    print(k, d[k], len(d), c.get("b", 7), c["a"])\n', ''],
     ['印浮點數（repr 的規則）', 'a = 2.0\nprint(a, a / 3, a + 0.1, a * 10000000000.0 * 10000000000.0, a / 100000, -a * 10000000)\nprint(str(a / 4) + "!")\n', ''],
   ] as const) {
     it(name, async () => {
@@ -104,6 +107,9 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     ['replace 要換掉的是變數', 'd = input()\nprint("a b".replace(d, "x"))\n', ' \n'],
     ['負的切片', 's = "abc"\nprint(s[-2:3])\n', ''],
     ['負的指數（Python 是浮點）', 'n = 2\nprint(n ** -1)\n', ''],
+    ['直接走訪字典（Python 照放入的順序，map 照鍵排序）', 'c = {}\nc["b"] = 1\nc["a"] = 2\nfor k in c:\n    print(k)\n', ''],
+    ['走訪 sorted(字典) 時本體改了那個字典', 'c = {}\nc["a"] = 1\nfor k in sorted(c):\n    c["z"] = 2\nprint(len(c))\n', ''],
+    ['有內容的字典字面量（重複的鍵兩邊取的不同）', 'c = {"a": 1, "a": 2}\nprint(c["a"])\n', ''],
   ] as const) {
     it(`🔴 保留：${name}`, async () => {
       const t = (await liftPython(src))!
