@@ -75,6 +75,8 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'a = b = 0',
     'is_prime[0] = is_prime[1] = False',
     'o.x = y = 1',
+    // 第 412 刀：f-string 的轉換是插值那一格的下拉——走一趟積木要回得來（空字串那個選項＝沒有轉換）
+    'p = f"{s!r:<16}-> {t!s}|{u!a}|{v}|{w:.2f}"',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)

@@ -595,6 +595,11 @@
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "一般／virtual／override／static 四種（同一般方法那顆，第 390 刀）"
+    },
+    "python_string_insert.CONVERSION": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "f-string 的轉換只有 Python 定的三種（`!r`／`!s`／`!a`）加上「不轉換」，清單外沒有第五種——與 `format_spec` 不同，它不是開放的字串"
     }
   }
 }

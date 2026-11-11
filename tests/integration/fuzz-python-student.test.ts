@@ -8,7 +8,7 @@
  * | 症狀 | 處置 |
  * |---|---|
  * | `for i, (w, c) in enumerate(d)` 產回去是 `for i in enumerate(d)`，Cella 對合法程式報 NameError | 巢狀目標整句誠實降級 |
- * | `f'{s!r:<6}'` 產回去是 `f"{s:<6}"`，印出來少了引號 | 帶轉換（`!r`／`!s`／`!a`）或 `{x=}` 的 f-string 誠實降級 |
+ * | `f'{s!r:<6}'` 產回去是 `f"{s:<6}"`，印出來少了引號 | 410 先整句降級；412 起轉換是插值那一格的屬性（`{x=}` 仍降級） |
  * | `a = b = 0` 產回去是 `a = `（壞掉的程式），送 Cella 是不合法的 JSON | 連鎖指定誠實降級（樣式新增 `notNodeType`） |
  * | `x[0], x[1] = 1, 2` 只留下名字目標 | 非名字的序列目標誠實降級 |
  *
@@ -92,11 +92,11 @@ describe('模糊測試：學生的 Python 解題程式（410）', () => {
     expect(ids.filter((i) => /raw|unresolved/.test(i)), '整段都認得').toEqual([])
     expect(await runPython(P.fuzz_5.code)).toBe('completed|' + P.fuzz_5.expected)
   })
-  // f-string 的 `!r`——以前悄悄丟掉，印出來的引號不見；推導式的多目標另一刀（411）
+  // f-string 的 `!r`——以前悄悄丟掉、印出來的引號不見；410 起整句降級，412 收下（插值那一格多一個轉換）；推導式 `for ch, n in runs` 由 411 收下
   it('fuzz_6：Run-length encodes strings and verifies decoding.', async () => {
     const ids = await roundTrip('fuzz_6', ["{s!r:<16}"])
-    expect(ids, '翻不出的那一段照實保留').toContain('unresolved')
-    expect(await runPython(P.fuzz_6.code), '判不出就說判不出，不得跑出別的結果').toMatch(/翻不出/)
+    expect(ids.filter((i) => /raw|unresolved/.test(i)), '整段都認得').toEqual([])
+    expect(await runPython(P.fuzz_6.code)).toBe('completed|' + P.fuzz_6.expected)
   })
   // 連鎖指定 `is_prime[0] = is_prime[1] = False`——以前產回去是 `is_prime[0] = `（壞掉的程式）；410 照實降級，413 有了自己的元件
   it('fuzz_7：Sieve up to 60, twin primes, largest gap, filtered sum.', async () => {
