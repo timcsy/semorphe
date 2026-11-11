@@ -28,7 +28,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     const initChildren = declarators.length === 1
       ? declarators[0].slots.initializer ?? []
       : (() => {
-          const initInput = block.inputs.INIT ?? block.inputs.INIT_0
+          const initInput = block.inputs?.INIT ?? block.inputs?.INIT_0
           const initNode = initInput?.block ? ctx.extract(initInput.block) : null
           return initNode ? [initNode] : []
         })()
@@ -40,9 +40,9 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
 
   // ── Control flow (if-elseif chain flattening) ──
   const extractIf = (block: BlockState, ctx: ExtractContext): SemanticNode | null => {
-    const condInput = block.inputs.CONDITION
+    const condInput = block.inputs?.CONDITION
     const cond = condInput?.block ? ctx.extract(condInput.block) : buildVarRef('true')
-    const thenInput = block.inputs.THEN
+    const thenInput = block.inputs?.THEN
     const thenBody = thenInput?.block ? ctx.extractStatementChain(thenInput.block) : []
 
     let elseBody: SemanticNode[] = []
@@ -50,7 +50,7 @@ export function registerCppExtractStrategies(extractor: PatternExtractor): void 
     if (elseIfCount > 0) {
       elseBody = buildElseIfChain(block, 0, ctx)
     } else {
-      const elseInput = block.inputs.ELSE
+      const elseInput = block.inputs?.ELSE
       elseBody = elseInput?.block ? ctx.extractStatementChain(elseInput.block) : []
     }
 
@@ -155,7 +155,7 @@ function readDeclarators(block: BlockState, type: string, ctx: ExtractContext): 
   for (let i = 0; ; i++) {
     const name = block.fields[`NAME_${i}`] as string | undefined
     if (name === null || name === undefined) break
-    const initInput = block.inputs[`INIT_${i}`]
+    const initInput = block.inputs?.[`INIT_${i}`]
     const initNode = initInput?.block ? ctx.extract(initInput.block) : null
     out.push(buildVarDeclare({ name, type }, { initializer: initNode ? [initNode] : [] }))
   }
@@ -166,20 +166,20 @@ function readDeclarators(block: BlockState, type: string, ctx: ExtractContext): 
 
 function countElseIfs(block: BlockState): number {
   let count = 0
-  while (block.inputs[`ELSEIF_CONDITION_${count}`] !== undefined) count++
+  while (block.inputs?.[`ELSEIF_CONDITION_${count}`] !== undefined) count++
   return count
 }
 
 function buildElseIfChain(block: BlockState, index: number, ctx: ExtractContext): SemanticNode[] {
   const total = countElseIfs(block)
   if (index >= total) {
-    const elseInput = block.inputs.ELSE
+    const elseInput = block.inputs?.ELSE
     return elseInput?.block ? ctx.extractStatementChain(elseInput.block) : []
   }
 
-  const condInput = block.inputs[`ELSEIF_CONDITION_${index}`]
+  const condInput = block.inputs?.[`ELSEIF_CONDITION_${index}`]
   const cond = condInput?.block ? ctx.extract(condInput.block) : buildVarRef('true')
-  const thenInput = block.inputs[`ELSEIF_THEN_${index}`]
+  const thenInput = block.inputs?.[`ELSEIF_THEN_${index}`]
   const thenBody = thenInput?.block ? ctx.extractStatementChain(thenInput.block) : []
   const elseBody = buildElseIfChain(block, index + 1, ctx)
 

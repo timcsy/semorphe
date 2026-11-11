@@ -34,7 +34,11 @@ describe('python:class_def', () => {
    * 與**裝飾器**：`class` 的身體裡出現方法與指派以外的東西。
    */
   it('🔴 lift：類別身體裡的其他東西仍然整顆降級', async () => {
-    expect(await ids('class C:\n    class Inner:\n        pass\n')).not.toContain('python:class_def')
+    // ⚠️ 416（2026-11-12）改了量法：原本斷言「整棵樹裡沒有 class_def」，而裡面那一層 `class Inner: pass`
+    //    在 416 之後自己收得下（它在降級的外層裡面，照樣被認得）——要量的是【外面那一顆】降級。
+    const got = await ids('class C:\n    class Inner:\n        pass\n')
+    expect(got[0], '錨點：根是程式').toBe('python:program')
+    expect(got[1], '外面那顆類別整顆降級').toBe('unresolved')
   })
 
   it('來回：一字不差', async () => {
@@ -114,5 +118,36 @@ describe('super 與類別層級的屬性', () => {
     const code = 'class C:\n    n = 0\n\n    def m(self):\n        pass\n'
     expect(gen(await liftPython(code)).replace(/\n+/g, '\n').trimEnd())
       .toBe(code.replace(/\n+/g, '\n').trimEnd())
+  })
+})
+
+/**
+ * 416（2026-11-12）：**主體只有 `pass` 的類別**——學生先開一個空類別、之後再往實例上掛欄位，
+ * 是常見的起手式。410 那批盲測量到它整顆降級。
+ */
+describe('空類別（416）', () => {
+  const EMPTY = 'class P:\n    pass\n\np = P()\np.x = 1\nprint(p.x)\n'
+
+  it('★ lift：收成 class_def，主體是空的', async () => {
+    const tree = await liftPython(EMPTY)
+    const got = componentIdsOf(tree)
+    expect(got, '正向錨點').toContain('python:class_def')
+    expect(got).not.toContain('unresolved')
+  })
+
+  it('★ 來回：產回 `pass`，一字不差；再 lift 是不動點', async () => {
+    const once = gen(await liftPython(EMPTY))
+    expect(once.replace(/\n+/g, '\n').trimEnd()).toBe(EMPTY.replace(/\n+/g, '\n').trimEnd())
+    expect(gen(await liftPython(once))).toBe(once)
+  })
+
+  it('🔴 執行：Cella 跑得出來，與 CPython 一樣印 1', async () => {
+    const out = await runPython(EMPTY)
+    expect(out).toMatch(/^completed\|/)
+    expect(out).toContain('1')
+  })
+
+  it('🔴 `pass` 夾在其他成員之間仍整顆降級——收下就得丟掉使用者寫的一行', async () => {
+    expect(await ids('class Q:\n    n = 0\n    pass\n')).not.toContain('python:class_def')
   })
 })

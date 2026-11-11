@@ -77,6 +77,8 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'o.x = y = 1',
     // 第 412 刀：f-string 的轉換是插值那一格的下拉——走一趟積木要回得來（空字串那個選項＝沒有轉換）
     'p = f"{s!r:<16}-> {t!s}|{u!a}|{v}|{w:.2f}"',
+    // 第 416 刀：主體只有 pass 的空類別——積木上方法與欄位兩格都是空的，回來要寫回 pass
+    'class P:\n    pass',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)
