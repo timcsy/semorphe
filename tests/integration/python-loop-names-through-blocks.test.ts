@@ -81,6 +81,8 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'for i in xs:\n    if i > 2:\n        break\nelse:\n    print("none")',
     'for k, v in d.items():\n    print(k)\nelse:\n    print(v)',
     'while n > 0:\n    n = n - 1\nelse:\n    print(n)',
+    // 第 416 刀：主體只有 pass 的空類別——積木上方法與欄位兩格都是空的，回來要寫回 pass
+    'class P:\n    pass',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)
