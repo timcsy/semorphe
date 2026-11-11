@@ -11,7 +11,7 @@
  * ② `int qs[][2] = {{0, 2}, …}`（外層沒寫長度）被當成運算式長度送 tArrE，Cella 照實說「帶初值的 VLA」→ unknown（fuzz_3、fuzz_4）。
  *
  * 照實記下、這一刀不做的：
- * - `multiset<int> ms(arr, arr + 10)`（迭代器範圍建構）整句降級原文（fuzz_8）——set 那顆沒有範圍建構的槽，學生語料 0 筆。
+ * - （第 403 刀已做）`multiset<int> ms(arr, arr + 10)`（迭代器範圍建構，fuzz_8）原本整句降級原文，現在收進 set 那顆的範圍形態；Cella 的範圍建構子排在下一版。
  * - 走一趟積木：多宣告子拆成多行、`rep(i, 0, n)` 寫回成 `for`、多餘的括號拿掉——意思相同，下面比的是 Cella 的輸出。
  * - fuzz_5 判 unknown：只含 <string>／<map> 時未限定的 `size_t` 有沒有被宣告，看標準庫實作（Cella 照實說）。
  *
@@ -79,7 +79,7 @@ describe('模糊測試：學生解題風格', () => {
   it.each(PROGS.map((p) => [p.id, p] as const))('★ %s：再 lift 不漂移、走一趟積木沒有產不出來的節點', (id, p) => {
     const t = lift(p.code)
     expect(all(t).length).toBeGreaterThan(50)
-    expect(count(t, 'cpp:raw_code')).toBe(id === 'fuzz_8' ? 1 : 0)
+    expect(count(t, 'cpp:raw_code')).toBe(0)
     expect(shape(lift(generateCode(t, 'cpp', S)))).toEqual(shape(t))
     expect(viaBlocks(t)).not.toContain('⟨')
   })
@@ -117,10 +117,18 @@ describe('模糊測試：學生解題風格', () => {
     expect(r.problems.map((q) => q.reason).join('；')).toMatch(/size_t/)
   })
 
-  it('fuzz_8：multiset 的迭代器範圍建構照實降級、Cella 照實說翻不出', async () => {
-    const raws = all(lift(P('fuzz_8').code)).filter((n) => n.componentId === 'cpp:raw_code')
-    expect(raws.map((n) => n.metadata?.rawCode ?? n.properties?.code)).toEqual(['multiset<int> ms(arr, arr + 10);'])
-    expect((await runCella(P('fuzz_8').code)).verdict).toBe('untranslated')
+  // 第 403 刀：範圍建構收進 set 那顆（source／source_end）。Cella 的 multiset 還沒有範圍建構子（下一版）——發版後轉成 accept＋輸出相同
+  it('fuzz_8：multiset 的迭代器範圍建構收成範圍、走一趟積木一字不差；Cella 等下一版', async () => {
+    const t = lift(P('fuzz_8').code)
+    const d = all(t).find((n) => n.componentId === 'cpp:set_declare' && (n.slots?.source_end?.length ?? 0) > 0)
+    expect(d?.properties?.unique).toBe('false')
+    expect(viaBlocks(t)).toContain('multiset<int> ms(arr, arr + 10);')
+    // 第一個露出來的原因看 Cella 的回報順序：範圍建構子，或 vector 的 rbegin（11-11 回報，兩個都排在下一版）
+    await knownCellaGap(/has no constructor for these arguments|has no member 'rbegin'/, async () => {
+      const r = await runCella(P('fuzz_8').code)
+      expect(r.verdict, describeCellaResult(r)).toBe('accept')
+      expect(r.out).toBe(P('fuzz_8').expected)
+    })
   })
 
   it('等 Cella：fuzz_1 含 string 成員的聚合初始化被判 reject（11-11 回報）', async () => {

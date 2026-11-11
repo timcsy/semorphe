@@ -329,6 +329,11 @@ export const KNOWN_AXES: Record<string, FormAxis> = {
    * 單一名字留在中性：語法分不出 `sizeof(T)` 的 T 是型別還是變數，查宣告是 formalize 的事。換插槽形狀，所以與 init_style 同一級。
    */
   operand_kind: { name: 'operand_kind', from: 'slot', slot: 'expr', slotValue: 'expression', priority: 2, neutralIsOrdinary: true },
+  /**
+   * 依初值是不是一段範圍：接點 `source_end` 有東西 ⟹ 值 `range`，換一顆有起點、終點兩格的積木（第 403 刀，`set<int> s(v.begin(), v.end())`）。
+   * 與 operand_kind 同理看接點不看屬性：「終點住在接點裡」就是那個事實。換插槽形狀，所以與 init_style 同一級。
+   */
+  range_init: { name: 'range_init', from: 'slot', slot: 'source_end', slotValue: 'range', priority: 2, neutralIsOrdinary: true },
 }
 
 /** 建形態集合所需要的最小資訊——刻意不吃整個 BlockSpec，讓它好測 */

@@ -7,5 +7,7 @@
   "CPP_SET_DECLARE_TYPE_CHAR": "char (character)",
   "CPP_SET_DECLARE_UNIQUE_YES": "set",
   "CPP_SET_DECLARE_UNIQUE_NO": "multiset",
-  "CPP_SET_DECLARE_SOURCE": "copied from"
+  "CPP_SET_DECLARE_SOURCE": "copied from",
+  "CPP_SET_DECLARE_RANGE": "with the elements from",
+  "CPP_SET_DECLARE_RANGE_TO": "to"
 }

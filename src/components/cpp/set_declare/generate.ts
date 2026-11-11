@@ -27,6 +27,11 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     //    （lift 沒有這一格、產生也沒有），所以來回轉換一直是綠的。
     //    見 `component.json` 的 `_slots_why`。
     const source = (node.slots.source ?? [])[0]
+    // 一段範圍（第 403 刀）：起點在 source、終點在 source_end——建構子形式，沒有 `=` 的寫法
+    const end = (node.slots.source_end ?? [])[0]
+    if (source && end) {
+      return `${indent(ctx)}${kind}<${type}> ${name}(${generateExpression(source, ctx)}, ${generateExpression(end, ctx)});\n`
+    }
     if (source) {
       return `${indent(ctx)}${kind}<${type}> ${name} = ${generateExpression(source, ctx)};\n`
     }
