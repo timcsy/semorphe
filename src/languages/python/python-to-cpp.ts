@@ -17,11 +17,12 @@ let TABLES: ToCppTables | null = null
 const tables = (): ToCppTables => (TABLES ??= collectToCpp())
 
 /** C++ 的保留字與這支程式會用到的標準名字——Python 的名字撞到就加底線 */
-const CPP_RESERVED = new Set(['auto', 'bool', 'break', 'case', 'char', 'class', 'const', 'continue', 'default', 'delete', 'do', 'double', 'else', 'enum', 'explicit', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'return', 'short', 'signed', 'sizeof', 'static', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try', 'typedef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'while', 'main', 'string', 'vector', 'cin', 'cout', 'endl', 'getline', 'stoll', 'stod', 'to_string', 'max', 'min', 'accumulate', 'read_line', 'floor_div', 'floor_mod', 'float_text', 'map', 'map_at', 'out_of_range', 'std'])
+const CPP_RESERVED = new Set(['auto', 'bool', 'break', 'case', 'char', 'class', 'const', 'continue', 'default', 'delete', 'do', 'double', 'else', 'enum', 'explicit', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'return', 'short', 'signed', 'sizeof', 'static', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try', 'typedef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'while', 'main', 'string', 'vector', 'cin', 'cout', 'endl', 'getline', 'stoll', 'stod', 'to_string', 'max', 'min', 'accumulate', 'read_line', 'floor_div', 'floor_mod', 'float_text', 'map', 'map_at', 'out_of_range', 'py_int', 'invalid_argument', 'runtime_error', 'std'])
 
 const HELPERS: Record<HelperName, string[]> = {
   // input() 讀一整行（cin >> 讀一個詞——行的語意不同，research R6）
-  read_line: ['string read_line() {', '    string s;', '    getline(cin, s);', '    return s;', '}'],
+  // 讀到檔尾：Python 的 input() 丟 EOFError——C++ 也丟（回空字串的話，讀一個數字的迴圈會變成無窮迴圈）
+  read_line: ['string read_line() {', '    string s;', '    if (!getline(cin, s)) {', '        throw runtime_error("EOFError");', '    }', '    return s;', '}'],
   // Python 的 // 向下取整（C++ 的 / 向零截斷，負數時不同）
   floor_div: ['long long floor_div(long long a, long long b) {', '    long long q = a / b;', '    if (a % b != 0 && (a < 0) != (b < 0)) {', '        q--;', '    }', '    return q;', '}'],
   // Python 的 % 的正負號跟除數（C++ 跟被除數）
@@ -41,11 +42,14 @@ const HELPERS: Record<HelperName, string[]> = {
   // print(浮點)／str(浮點)：Python 印 repr——能來回的最短位數、整數值補 .0、指數在 [-4, 16) 之外改科學記號。
   // 位數用 snprintf 逐一試、atof 讀回比對（strtod／stod Cella 還不支援；atof 判 accept、沒有假設）
   float_text: ['string float_text(double x) {', '    if (x != x) {', '        return "nan";', '    }', '    if (x > 1.7976931348623157e308) {', '        return "inf";', '    }', '    if (x < -1.7976931348623157e308) {', '        return "-inf";', '    }', '    char buf[64];', '    int p = 1;', '    while (p < 17) {', '        snprintf(buf, sizeof(buf), "%.*e", p - 1, x);', '        if (atof(buf) == x) {', '            break;', '        }', '        p++;', '    }', '    snprintf(buf, sizeof(buf), "%.*e", p - 1, x);', '    string s = buf;', '    int e = atoi(buf + s.find(\'e\') + 1);', '    if (e < -4 || e >= 16) {', '        return s;', '    }', '    int d = p - 1 - e;', '    if (d < 0) {', '        d = 0;', '    }', '    snprintf(buf, sizeof(buf), "%.*f", d, x);', '    s = buf;', '    if (s.find(\'.\') == string::npos) {', '        s += ".0";', '    }', '    return s;', '}'],
+  // int(字串)（在抓 ValueError 的 try 裡）：照 Python 的規則——去掉前後空白、可帶正負號、數字之間可以有一個底線，其餘丟 invalid_argument。
+  // stoi 吃得下 "12abc"（讀到 12）與 "1_0" 之外的東西，Python 會丟 ValueError
+  py_int: ['long long py_int(const string& s) {', '    int a = 0;', '    int b = s.size();', '    while (a < b && isspace(s[a])) {', '        a++;', '    }', '    while (b > a && isspace(s[b - 1])) {', '        b--;', '    }', '    bool neg = false;', "    if (a < b && (s[a] == '+' || s[a] == '-')) {", "        neg = s[a] == '-';", '        a++;', '    }', '    if (a == b) {', '        throw invalid_argument("ValueError");', '    }', '    long long v = 0;', '    for (int i = a; i < b; i++) {', "        if (s[i] == '_' && i > a && i + 1 < b && isdigit(s[i - 1]) && isdigit(s[i + 1])) {", '            continue;', '        }', '        if (!isdigit(s[i])) {', '            throw invalid_argument("ValueError");', '        }', "        v = v * 10 + (s[i] - '0');", '    }', '    return neg ? -v : v;', '}'],
 }
 
 /** 小函式需要的標頭 */
 const HELPER_INCLUDES: Partial<Record<HelperName, string[]>> = {
-  split_words: ['vector', 'cctype'], split_on: ['vector'], to_upper: ['cctype'], to_lower: ['cctype'], list_text_int: ['vector'], list_text_str: ['vector'], float_text: ['cstdio', 'cstdlib'],
+  split_words: ['vector', 'cctype'], split_on: ['vector'], to_upper: ['cctype'], to_lower: ['cctype'], list_text_int: ['vector'], list_text_str: ['vector'], float_text: ['cstdio', 'cstdlib'], read_line: ['stdexcept'], py_int: ['stdexcept', 'cctype'],
 }
 
 const lineOf = (n: SemanticNode): number | undefined =>
@@ -114,6 +118,7 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
   const hoistNames = new Map<string, string>()
   const includes = new Set<string>(['iostream', 'string'])
   let converted = 0
+  let valueErrorTry = 0
 
   const body = tree.slots?.body ?? []
   const isFunc = (n: SemanticNode): boolean => n.slots?.params !== undefined && typeof n.properties?.name === 'string'
@@ -248,6 +253,8 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       const v = binds[0].slots.value?.[0]
       return v?.componentId.endsWith(':literal_number') && /^\d+$/.test(String(v.properties?.value)) ? String(v.properties.value) : undefined
     },
+    catchingValueError: () => valueErrorTry > 0,
+    inValueErrorTry(fn) { valueErrorTry++; try { return fn() } finally { valueErrorTry-- } },
     name: (s) => (CPP_RESERVED.has(s) ? `${s}_` : s),
     indent: (d) => '    '.repeat(d),
   }
