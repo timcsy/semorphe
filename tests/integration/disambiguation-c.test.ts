@@ -16,7 +16,7 @@ import type { Judge } from '../../src/core/disambiguation/types'
 import cStyle from '../../src/languages/cpp/styles/c.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
 
-const LESSON = 'c-bridge/01-同一份程式兩種說法'
+const LESSON = 'c-bridge/01-同一份程式，兩種說法'
 let parser: Parser
 beforeAll(async () => {
   await Parser.init({ locateFile: (s: string) => `${process.cwd()}/public/${s}` })

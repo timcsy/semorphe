@@ -1,0 +1,13 @@
+{
+  "_why": "課的 id 就是資料夾名，而它出現在三個學生手上留得住的地方：課文頁的網址（/lessons/<軌道>/<課>/）、編輯器的深連結（/?lesson=<id>）、瀏覽器裡的進度（以課的 id 為鍵）。改名之後舊名字要三處都接得住，所以只留這一張表：建置在舊路徑產一頁轉址頁、編輯器讀網址時查表、讀進度時把舊鍵搬到新鍵。護欄 tests/integration/audit-lesson-renames.test.ts 量「每一個新名字都是真的課、每一個舊名字都不再是課」。只准加，不准刪：刪一筆就是讓那一批舊連結重新變成 404。",
+  "_history": "2026-11-12（414）：使用者 11-11 23:43 在工人看板選「資料夾名也一起改」（經 cos-mos-main → semorphe-main 轉達）——資料夾名與課名一字不差，空白與逗號照標題。",
+  "renames": {
+    "arduino/10-不要用delay": "arduino/10-不要用 delay",
+    "c-bridge/01-同一份程式兩種說法": "c-bridge/01-同一份程式，兩種說法",
+    "cpp-advanced/04-set與map": "cpp-advanced/04-set 與 map",
+    "cpp-advanced/11-圖與BFS": "cpp-advanced/11-圖與 BFS",
+    "cpp-beginner/11-for迴圈": "cpp-beginner/11-for 迴圈",
+    "python-beginner/07-for與range": "python-beginner/07-for 與 range",
+    "python-bridge/01-沒有型別也沒有main": "python-bridge/01-沒有型別，也沒有 main"
+  }
+}

@@ -25,8 +25,8 @@
  */
 import { test, expect, type Page } from '@playwright/test'
 
-const LESSON = 'cpp-beginner/11-for迴圈'
-const LESSON_URL = '/lessons/cpp-beginner/11-for%E8%BF%B4%E5%9C%88/'
+const LESSON = 'cpp-beginner/11-for 迴圈'
+const LESSON_URL = '/lessons/cpp-beginner/11-for%20%E8%BF%B4%E5%9C%88/'
 
 const settle = (page: Page, ms: number): Promise<void> => page.waitForTimeout(ms)
 

@@ -47,7 +47,7 @@ const BASE = { targetId: 'x', styleId: 'x', skeletonId: 'x' }
 
 describe('兩個宿主同結果（spec 218）', () => {
   it('★ C 示範題：測試的 Judge 與產品的 makeCheckJudge 比出一模一樣的結果', async () => {
-    const L = 'c-bridge/01-同一份程式兩種說法'
+    const L = 'c-bridge/01-同一份程式，兩種說法'
     const refs = ['zero', 'eof'].map((id) => ({ id, label: id, tree: lift(interpretationSolutionFor(L, 'max', id)!) }))
     const student = lift(interpretationSolutionFor(L, 'max', 'eof')!.replace('int best = 0;', 'int best = 0; '))
     const sc = scenariosFor(student)

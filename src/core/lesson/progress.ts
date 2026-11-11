@@ -30,6 +30,7 @@
  */
 
 import { MemoryKeyValueStore, type KeyValueStore } from '../host/key-value-store'
+import { canonicalLessonId } from './lesson'
 
 const KEY = 'semorphe-progress'
 
@@ -66,7 +67,12 @@ function read(): Passed {
     if (o === null || typeof o !== 'object') return {}
     const out: Passed = {}
     for (const [k, v] of Object.entries(o as Record<string, unknown>)) {
-      if (Array.isArray(v)) out[k] = v.filter((x): x is string => typeof x === 'string')
+      if (!Array.isArray(v)) continue
+      // 🔴 **課改過名的話，舊鍵併進新鍵**（414：`lessons/renamed.json`）——學生打過的勾不掉。
+      //    下一次寫入時存成新鍵，舊鍵自然消失。
+      const id = canonicalLessonId(k)
+      const tasks = v.filter((x): x is string => typeof x === 'string')
+      out[id] = [...new Set([...(out[id] ?? []), ...tasks])]
     }
     return out
   } catch {

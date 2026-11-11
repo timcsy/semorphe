@@ -40,6 +40,7 @@ import { BASE } from '../base-path'
 import { interactionById } from './interactions'
 import { LESSON_VIEWS, type LessonView } from './semantic-wave'
 import type { ControlId } from '../host/controls'
+import renamedLessons from '../../../lessons/renamed.json'
 
 /**
  * 一條**軌道**——`lessons/<軌道>/track.json`。
@@ -956,11 +957,25 @@ export function controlsPinnedBy(_lesson: Lesson): readonly ControlId[] {
 export function lessonIdFromQuery(search: string): string | null {
   const q = new URLSearchParams(search)
   const v = q.get('lesson')
-  return v !== null && v.trim() !== '' ? v.trim() : null
+  return v !== null && v.trim() !== '' ? canonicalLessonId(v.trim()) : null
 }
 
 /**
- * 課文靜態頁的網址。`cpp-beginner/11-for迴圈` → `/lessons/cpp-beginner/11-for%E8%BF%B4%E5%9C%88/`
+ * **課改過名的話，舊名字換成新名字**；沒改過名的原樣回傳。
+ *
+ * 表在 `lessons/renamed.json`（414，2026-11-12：資料夾名改成與課名一字不差）。
+ * 🔴 三個讀者共用這一支：編輯器深連結（上面那支）、進度的舊鍵（`progress.ts`）、
+ * 課文靜態頁的轉址頁（`tools/build-lessons/`）——老師貼出去的舊連結與學生打過的勾都不掉。
+ */
+export function canonicalLessonId(id: string): string {
+  return LESSON_RENAMES[id] ?? id
+}
+
+/** 舊名 → 新名（唯讀）。 */
+export const LESSON_RENAMES: Readonly<Record<string, string>> = renamedLessons.renames
+
+/**
+ * 課文靜態頁的網址。`cpp-beginner/11-for 迴圈` → `/lessons/cpp-beginner/11-for%20%E8%BF%B4%E5%9C%88/`
  *
  * 🔴 **它與上面那支是一對**：一個把網址讀成 id，一個把 id 寫成網址。
  * 兩邊分開住的話，中文課名的 encode 遲早會不一樣——而症狀是一個 404。

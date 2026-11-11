@@ -782,6 +782,28 @@ ${rows}`,
  *
  * > **一個每次都變的「上次修改時間」，說的是建置的時間，不是內容的時間。**
  */
+/**
+ * **舊網址的轉址頁**（414，2026-11-12）——課改過名之後，舊路徑留一頁只做一件事：送到新網址。
+ *
+ * 表在 `lessons/renamed.json`。⚠️ GitHub Pages 沒有伺服器端的 301，所以三層一起上：
+ * `location.replace`（帶著原本的 `?…#…`，不留在上一頁的歷史裡）、`meta refresh`（關了 JS 也走得到）、
+ * `canonical`（搜尋引擎把權重併給新網址）；最後一層是一個人點得到的連結。
+ */
+export function renderRedirect(newId: string): string {
+  const href = lessonDocHref(newId)
+  return `<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>這一課搬家了</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="${SITE}${href}">
+<meta http-equiv="refresh" content="0; url=${esc(href)}">
+<script>location.replace(${JSON.stringify(href)} + location.search + location.hash)</script>
+<p>這一課換了網址：<a href="${esc(href)}">${esc(newId)}</a></p>
+`
+}
+
 export function renderSitemap(
   entries: ReadonlyArray<{ readonly path: string; readonly lastmod?: Date }>,
 ): string {
