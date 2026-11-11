@@ -34,9 +34,14 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const body = node.childForFieldName('body')
     // 🔴 **最裡面那一段留在這一顆**，其餘由外而內串成 `outer` 鏈
     const inner = fors[fors.length - 1]
-    const name = inner.childForFieldName('left')
-    // 解構的目標（`for k, v in …`）還沒有地方放 → 誠實降級
-    if (!body || name?.type !== 'identifier') return null
+    const left = inner.childForFieldName('left')
+    // 🟢 **解構的目標收得下了**（第 411 刀）：`for a, b in zip(xs, ys)` 的 `left` 是 `pattern_list`，
+    //    每個名字一顆 `param_decl`（與同族 `for`／字典推導式同一個做法）。
+    //    ⚠️ 巢狀（`for i, (a, b) in …`）、下標、只有一個名字的解包（`for x, in …`）仍整顆降級。
+    const names = left?.type === 'identifier' ? [left]
+      : left?.type === 'pattern_list' ? left.namedChildren : []
+    if (!body || names.length === 0 || names.some((c) => c.type !== 'identifier')) return null
+    if (left?.type === 'pattern_list' && names.length < 2) return null
 
     // 外面那幾層：由最外開始，一層包一層
     let outer: SemanticNode | null = null
@@ -61,11 +66,12 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       'python:array_make_for',
       // ⚠️ **記著它原本是哪一種括號**——見那幾筆樣式的 `_why`
       {
-        obj: name.text,
+        obj: names[0].text,
         wrap: node.type === 'generator_expression' ? 'generator'
           : node.type === 'set_comprehension' ? 'set' : '',
       },
       {
+        targets: names.map((c) => createNode('param_decl', { type: '', name: c.text })),
         expression: [expr],
         iterable: [iter],
         condition: cond ? [cond] : [],

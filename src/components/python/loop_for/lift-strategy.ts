@@ -36,17 +36,19 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const slots: Record<string, SemanticNode[]> = {}
     const properties: Record<string, string> = {}
 
-    if (left?.type === 'pattern_list') {
-      // 🔴 **巢狀的目標整顆降級**（第 410 刀，盲測抓到）：`for i, (w, c) in enumerate(d)` 以前只挑出名字 `i`、
-      //    把 `(w, c)` 安靜丟掉——產回去是 `for i in enumerate(d)`，Cella 對一支合法的程式報 `w` 沒定義。
-      if (left.namedChildren.some((c) => c.type !== 'identifier')) return null
-      slots.targets = left.namedChildren
-        .map((c) => createNode('param_decl', { type: '', name: c.text }))
-      // ⚠️ `obj` 仍然填第一個名字——存檔格式與積木的那個欄位都還在用它。
-      properties.obj = String(slots.targets[0]?.properties.name ?? 'i')
-    } else {
-      properties.obj = left?.text ?? 'i'
-    }
+    // 🔴 **單一名字也進 `targets`**（第 411 刀）：積木只認 `targets`（paramList 的 `PARAM_{i}`），
+    //    以前單一名字只寫在 `obj`，於是積木上那一格是預設的 `i`
+    //    ——`for c in s:` 走一趟積木回來變成 `for i in s:`，而迴圈體還在讀 `c`。從 2026-08-21 起就是這樣。
+    const names = left?.type === 'identifier' ? [left]
+      : left?.type === 'pattern_list' ? left.namedChildren : []
+    // 🔴 **收不下的目標整顆降級**：巢狀（`for i, (w, c) in …`，第 410 刀，盲測抓到——以前把 `(w, c)` 安靜丟掉，
+    //    Cella 對一支合法的程式報 `w` 沒定義）、下標或屬性（`for x[0] in …`）、括號包起來的、
+    //    以及只有一個名字的解包（`for x, in …`——丟掉逗號就是另一支程式）。
+    if (names.length === 0 || names.some((c) => c.type !== 'identifier')) return null
+    if (left?.type === 'pattern_list' && names.length < 2) return null
+    slots.targets = names.map((c) => createNode('param_decl', { type: '', name: c.text }))
+    // ⚠️ `obj` 仍然填第一個名字——轉 C++ 那一路還讀它。
+    properties.obj = names[0].text
 
     const it = right ? ctx.lift(right) : null
     slots.iterable = it ? [it] : []
