@@ -14,7 +14,7 @@ export interface ObservedTypes {
 }
 
 /** 補在 C++ 程式開頭的小函式（內容在引擎的 HELPERS）；`list_text_*` 是同名 `list_text` 的多載 */
-export type HelperName = 'read_line' | 'floor_div' | 'floor_mod' | 'int_pow' | 'split_words' | 'split_on' | 'to_upper' | 'to_lower' | 'replace_all' | 'list_text_int' | 'list_text_str' | 'float_text'
+export type HelperName = 'read_line' | 'floor_div' | 'floor_mod' | 'int_pow' | 'split_words' | 'split_on' | 'to_upper' | 'to_lower' | 'replace_all' | 'list_text_int' | 'list_text_str' | 'float_text' | 'py_int'
 
 export interface ToCppContext {
   /** 一顆運算式節點寫成 C++ 運算式文字 */
@@ -46,10 +46,24 @@ export interface ToCppContext {
    */
   plainLoopVar(loop: SemanticNode, name: string): boolean
   /**
+   * 這顆運算式能不能先在它所在的敘述前面算好（串列生成式寫成前面幾行的迴圈）——只有「整句只算一次、
+   * 其餘部分沒有副作用」的敘述可以：print、指定、append、return、for 的走訪對象；條件、短路、三元裡面不行（求值次數或順序會變）
+   */
+  canHoist(n: SemanticNode): boolean
+  /** 在目前這一句前面插入幾行（縮排相對於這一句），回傳暫存名字；同一顆節點被寫兩次（`accumulate(x.begin(), x.end())`）只插入一次 */
+  hoist(n: SemanticNode, base: string, lines: (name: string) => string[]): string
+  /**
    * 這個名字在整支程式裡是不是只被指定過一次、而且是非負整數字面量——是就回傳那個值（任何輸入下都一樣）。
    * 迴圈變數、參數、複合指定、在函式裡被指定、`global` 都不算
    */
   constNonNegInt(name: string): string | undefined
+  /**
+   * 現在寫的這一段在一個抓 `ValueError` 的 try 裡面嗎——是的話，會丟 ValueError 的寫法要換成在 C++ 也丟同一種例外的寫法
+   * （`int(字串)`：`stoi` 吃得下 `"12abc"`、Python 不行 → `py_int`）
+   */
+  catchingValueError(): boolean
+  /** 在一個抓 `ValueError` 的 try 的本體裡寫 C++（`catchingValueError()` 在 fn 裡面是 true） */
+  inValueErrorTry<T>(fn: () => T): T
   /** C++ 的保留字與標準名字撞到就加底線 */
   name(s: string): string
   indent(depth: number): string

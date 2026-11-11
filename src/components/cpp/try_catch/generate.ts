@@ -15,7 +15,7 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       trackOwnText(ctx, header)
       let code = header
       code += generateBody(tryBody, indented(ctx))
-      const catchHeader = `${indent(ctx)}}${style.brace_style === 'Allman' ? '\n' + indent(ctx) : ' '}catch (${catchType} ${catchName})${openBrace(ctx)}\n`
+      const catchHeader = `${indent(ctx)}}${style.brace_style === 'Allman' ? '\n' + indent(ctx) : ' '}catch (${catchType}${catchName ? ` ${catchName}` : ''})${openBrace(ctx)}\n`
       trackOwnText(ctx, catchHeader)
       code += catchHeader
       code += generateBody(catchBody, indented(ctx))

@@ -89,6 +89,11 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     // 405：字典 → map。讀經過 map_at（缺鍵丟例外）、寫用 []、get 帶預設值、sorted(字典) 走訪照鍵排序
     ['字典：數次數、照鍵排序印出', 'words = input().split()\nseen = {}\nfor w in words:\n    seen[w] = seen.get(w, 0) + 1\nfor w in sorted(seen):\n    print(w, seen[w])\n', 'b a b c\n'],
     ['字典：整數鍵、d[k] op= v、len、get 缺鍵', 'd = {}\nd[3] = "x"\nd[1] = "y"\nd[3] += "z"\nc = {}\nc["a"] = 1\nc["a"] *= 5\nc["a"] //= 2\nfor k in sorted(d):\n    print(k, d[k], len(d), c.get("b", 7), c["a"])\n', ''],
+    // 408：try … except ValueError ⟹ try … catch (const invalid_argument&)，裡面的 int(字串) 照 Python 的規則（py_int）
+    ['try／except ValueError：讀到整數為止', 'while True:\n    try:\n        n = int(input())\n        break\n    except ValueError:\n        print("bad")\nprint(n * 2)\n', 'abc\n 1_0 \n'],
+    ['try／except ValueError：stoi 吃得下的 "12abc" 照 Python 也算錯', 'while True:\n    try:\n        n = int(input())\n        break\n    except ValueError:\n        print("bad")\nprint(n * 2)\n', '12abc\n+7\n'],
+    // 407：串列生成式 → 在那一句前面先建 vector（list、range、if 條件；同一顆被寫兩次只建一次）
+    ['串列生成式：印出、當 sum 的引數、當 for 的走訪對象', 'words = ["a", "bb", "ccc"]\nprint([len(w) for w in words])\nxs = [i * i for i in range(5) if i % 2 == 0]\nprint(xs, sum([x + 1 for x in xs]))\nfor y in [x * 2 for x in xs]:\n    print(y)\nx = "s"\nprint(x)\n', ''],
     ['印浮點數（repr 的規則）', 'a = 2.0\nprint(a, a / 3, a + 0.1, a * 10000000000.0 * 10000000000.0, a / 100000, -a * 10000000)\nprint(str(a / 4) + "!")\n', ''],
   ] as const) {
     it(name, async () => {
@@ -102,16 +107,42 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
       expect(b.verdict, show).toBe('accept')
       expect(b.out, show).toBe(a.out)
       expect(b.assumes ?? [], show).toEqual(a.assumes ?? [])
+      // 換出來的 C++ 走一趟 C++ 的 lift 與產碼回來一字不差（407：`for (long long x : xs)` 曾經回來變成 auto）
+      const back = generateCode(createTestLifter().lift(parser.parse(r.code!)!.rootNode as never) as SemanticNode, 'cpp', apcs as unknown as StylePreset)
+      const noBlank = (c: string) => c.split('\n').filter((l) => l.trim() !== '').join('\n')
+      expect(noBlank(back), '走一趟 C++ 的樹回來不一樣').toBe(noBlank(r.code!))
     }, 120_000)
   }
+  // 型別是照一組輸入看到的，換出來的程式卻要在別的輸入下也一樣——讀到檔尾那一組正是 read_line 要擋的（回空字串會變成無窮迴圈）
+  it('換一組會讀到檔尾的輸入：Python 丟 EOFError，C++ 也丟', async () => {
+    const src = 'while True:\n    try:\n        n = int(input())\n        break\n    except ValueError:\n        print("bad")\nprint(n)\n'
+    const t = (await liftPython(src))!
+    const r = convertPythonToCpp(t, await cellaObservedOfTree(t, 'x\n5\n'), { input: 'x\n5\n' })
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    const a = await runCella(src, { lang: 'python', stdin: 'x\n' })
+    const b = await runCella(r.code!, { lang: 'cpp', stdin: 'x\n' })
+    const show = `\n--- C++ ---\n${r.code}--- Python: ${a.verdict} ${JSON.stringify(a.out)} ${JSON.stringify(a.problems)} / C++: ${b.verdict} ${JSON.stringify(b.out)} ${JSON.stringify(b.problems)}`
+    expect(a.out, show).toBe('bad\n')
+    expect(b.verdict, show).toBe(a.verdict)
+    expect(b.out, show).toBe(a.out)
+    expect((b.problems ?? []).length, `C++ 那邊要因為沒抓到的例外停下來${show}`).toBeGreaterThan(0)
+  }, 120_000)
   for (const [name, src, stdin] of [
     ['split 的分隔是變數', 'd = input()\nprint(len("a b".split(d)))\n', ' \n'],
     ['replace 要換掉的是變數', 'd = input()\nprint("a b".replace(d, "x"))\n', ' \n'],
     ['負的切片', 's = "abc"\nprint(s[-2:3])\n', ''],
     ['負的指數（Python 是浮點）', 'n = 2\nprint(n ** -1)\n', ''],
+    ['生成式在 if 的條件裡', 'xs = [1, 2]\nif len([x for x in xs]) > 1:\n    print("y")\n', ''],
+    ['生成式所在的那一句有別的副作用（先算會改變先後）', 'xs = []\ndef f():\n    xs.append(1)\n    return 0\nprint(f(), [x for x in xs])\n', ''],
+    ['兩層的生成式', 'print([a + b for a in [1, 2] for b in [3]])\n', ''],
     ['直接走訪字典（Python 照放入的順序，map 照鍵排序）', 'c = {}\nc["b"] = 1\nc["a"] = 2\nfor k in c:\n    print(k)\n', ''],
     ['走訪 sorted(字典) 時本體改了那個字典', 'c = {}\nc["a"] = 1\nfor k in sorted(c):\n    c["z"] = 2\nprint(len(c))\n', ''],
     ['有內容的字典字面量（重複的鍵兩邊取的不同）', 'c = {"a": 1, "a": 2}\nprint(c["a"])\n', ''],
+    ['抓 ZeroDivisionError（C++ 的除以零不是例外）', 'try:\n    print(1 // int(input()))\nexcept ZeroDivisionError:\n    print("zero")\n', '0\n'],
+    ['except ValueError as e（例外訊息兩邊不同）', 'try:\n    n = int(input())\nexcept ValueError as e:\n    print(e)\n', 'x\n'],
+    ['try 帶 finally', 'try:\n    n = int(input())\n    print(n)\nexcept ValueError:\n    print("bad")\nfinally:\n    print("done")\n', '3\n'],
+    ['try 裡的 float(字串)（規則與 stod 不同）', 'try:\n    x = float(input())\n    print(x)\nexcept ValueError:\n    print("bad")\n', '1.5\n'],
+    ['try 裡呼叫自己的函式（裡面可能丟 ValueError）', 'def f(s):\n    return int(s)\ntry:\n    print(f(input()))\nexcept ValueError:\n    print("bad")\n', '3\n'],
     ['** 的指數是被改過的變數', 'b = 2\nb += 1\nprint(3 ** b)\n', ''],
     ['** 的指數是讀進來的', 'b = int(input())\nprint(3 ** b)\n', '2\n'],
     ['** 的指數在函式裡被 global 改掉', 'b = 2\ndef f():\n    global b\n    b = 5\nf()\nprint(3 ** b)\n', ''],

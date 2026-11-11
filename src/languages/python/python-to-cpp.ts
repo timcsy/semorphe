@@ -17,11 +17,12 @@ let TABLES: ToCppTables | null = null
 const tables = (): ToCppTables => (TABLES ??= collectToCpp())
 
 /** C++ 的保留字與這支程式會用到的標準名字——Python 的名字撞到就加底線 */
-const CPP_RESERVED = new Set(['auto', 'bool', 'break', 'case', 'char', 'class', 'const', 'continue', 'default', 'delete', 'do', 'double', 'else', 'enum', 'explicit', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'return', 'short', 'signed', 'sizeof', 'static', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try', 'typedef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'while', 'main', 'string', 'vector', 'cin', 'cout', 'endl', 'getline', 'stoll', 'stod', 'to_string', 'max', 'min', 'accumulate', 'read_line', 'floor_div', 'floor_mod', 'float_text', 'map', 'map_at', 'out_of_range', 'std'])
+const CPP_RESERVED = new Set(['auto', 'bool', 'break', 'case', 'char', 'class', 'const', 'continue', 'default', 'delete', 'do', 'double', 'else', 'enum', 'explicit', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if', 'inline', 'int', 'long', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'return', 'short', 'signed', 'sizeof', 'static', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try', 'typedef', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'while', 'main', 'string', 'vector', 'cin', 'cout', 'endl', 'getline', 'stoll', 'stod', 'to_string', 'max', 'min', 'accumulate', 'read_line', 'floor_div', 'floor_mod', 'float_text', 'map', 'map_at', 'out_of_range', 'py_int', 'invalid_argument', 'runtime_error', 'std'])
 
 const HELPERS: Record<HelperName, string[]> = {
   // input() 讀一整行（cin >> 讀一個詞——行的語意不同，research R6）
-  read_line: ['string read_line() {', '    string s;', '    getline(cin, s);', '    return s;', '}'],
+  // 讀到檔尾：Python 的 input() 丟 EOFError——C++ 也丟（回空字串的話，讀一個數字的迴圈會變成無窮迴圈）
+  read_line: ['string read_line() {', '    string s;', '    if (!getline(cin, s)) {', '        throw runtime_error("EOFError");', '    }', '    return s;', '}'],
   // Python 的 // 向下取整（C++ 的 / 向零截斷，負數時不同）
   floor_div: ['long long floor_div(long long a, long long b) {', '    long long q = a / b;', '    if (a % b != 0 && (a < 0) != (b < 0)) {', '        q--;', '    }', '    return q;', '}'],
   // Python 的 % 的正負號跟除數（C++ 跟被除數）
@@ -41,11 +42,14 @@ const HELPERS: Record<HelperName, string[]> = {
   // print(浮點)／str(浮點)：Python 印 repr——能來回的最短位數、整數值補 .0、指數在 [-4, 16) 之外改科學記號。
   // 位數用 snprintf 逐一試、atof 讀回比對（strtod／stod Cella 還不支援；atof 判 accept、沒有假設）
   float_text: ['string float_text(double x) {', '    if (x != x) {', '        return "nan";', '    }', '    if (x > 1.7976931348623157e308) {', '        return "inf";', '    }', '    if (x < -1.7976931348623157e308) {', '        return "-inf";', '    }', '    char buf[64];', '    int p = 1;', '    while (p < 17) {', '        snprintf(buf, sizeof(buf), "%.*e", p - 1, x);', '        if (atof(buf) == x) {', '            break;', '        }', '        p++;', '    }', '    snprintf(buf, sizeof(buf), "%.*e", p - 1, x);', '    string s = buf;', '    int e = atoi(buf + s.find(\'e\') + 1);', '    if (e < -4 || e >= 16) {', '        return s;', '    }', '    int d = p - 1 - e;', '    if (d < 0) {', '        d = 0;', '    }', '    snprintf(buf, sizeof(buf), "%.*f", d, x);', '    s = buf;', '    if (s.find(\'.\') == string::npos) {', '        s += ".0";', '    }', '    return s;', '}'],
+  // int(字串)（在抓 ValueError 的 try 裡）：照 Python 的規則——去掉前後空白、可帶正負號、數字之間可以有一個底線，其餘丟 invalid_argument。
+  // stoi 吃得下 "12abc"（讀到 12）與 "1_0" 之外的東西，Python 會丟 ValueError
+  py_int: ['long long py_int(const string& s) {', '    int a = 0;', '    int b = s.size();', '    while (a < b && isspace(s[a])) {', '        a++;', '    }', '    while (b > a && isspace(s[b - 1])) {', '        b--;', '    }', '    bool neg = false;', "    if (a < b && (s[a] == '+' || s[a] == '-')) {", "        neg = s[a] == '-';", '        a++;', '    }', '    if (a == b) {', '        throw invalid_argument("ValueError");', '    }', '    long long v = 0;', '    for (int i = a; i < b; i++) {', "        if (s[i] == '_' && i > a && i + 1 < b && isdigit(s[i - 1]) && isdigit(s[i + 1])) {", '            continue;', '        }', '        if (!isdigit(s[i])) {', '            throw invalid_argument("ValueError");', '        }', "        v = v * 10 + (s[i] - '0');", '    }', '    return neg ? -v : v;', '}'],
 }
 
 /** 小函式需要的標頭 */
 const HELPER_INCLUDES: Partial<Record<HelperName, string[]>> = {
-  split_words: ['vector', 'cctype'], split_on: ['vector'], to_upper: ['cctype'], to_lower: ['cctype'], list_text_int: ['vector'], list_text_str: ['vector'], float_text: ['cstdio', 'cstdlib'],
+  split_words: ['vector', 'cctype'], split_on: ['vector'], to_upper: ['cctype'], to_lower: ['cctype'], list_text_int: ['vector'], list_text_str: ['vector'], float_text: ['cstdio', 'cstdlib'], read_line: ['stdexcept'], py_int: ['stdexcept', 'cctype'],
 }
 
 const lineOf = (n: SemanticNode): number | undefined =>
@@ -109,8 +113,12 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
   const t = tables()
   const helpers = new Set<HelperName>()
   const mapAts = new Map<string, string[]>()
+  const hoisted: string[][] = []
+  let hoistCount = 0
+  const hoistNames = new Map<string, string>()
   const includes = new Set<string>(['iostream', 'string'])
   let converted = 0
+  let valueErrorTry = 0
 
   const body = tree.slots?.body ?? []
   const isFunc = (n: SemanticNode): boolean => n.slots?.params !== undefined && typeof n.properties?.name === 'string'
@@ -197,6 +205,38 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       scope.forEach(walk)
       return !readOutside
     },
+    canHoist(n) {
+      const effect = /:(func_call|func_call_named|input|method_call|var_assign_expr|container_(append|pop|insert|erase|erase_value|sort_self)|set_append)$/
+      let cur = n
+      for (;;) {
+        const p = parent.get(cur.id)
+        if (!p) return false
+        const slot = Object.entries(p.slots ?? {}).find(([, cs]) => cs.includes(cur))?.[0]
+        if (/:(logic|ternary|compare_chain|array_make_for|lambda)$/.test(p.componentId)) return false
+        const stmtOk = /:(print|var_assign|return)$/.test(p.componentId) || (p.componentId.endsWith(':container_append') && slot !== 'obj') || (p.componentId.endsWith(':loop_for') && slot === 'iterable')
+        if (stmtOk) {
+          // 同一句裡其他部分有副作用 ⟹ 先算生成式會改變先後
+          let bad = false
+          const walk = (x: SemanticNode): void => {
+            if (x === n) return
+            if (x !== p && effect.test(x.componentId)) bad = true
+            ;(x === p && p.componentId.endsWith(':loop_for') ? p.slots.iterable ?? [] : kids(x)).forEach(walk)
+          }
+          walk(p)
+          return !bad
+        }
+        if (/:(program|if|loop_while|loop_for|func_def)$/.test(p.componentId) || t.stmt.has(p.componentId)) return false
+        cur = p
+      }
+    },
+    hoist(n, base, lines) {
+      const had = hoistNames.get(n.id)
+      if (had) return had
+      const name = `${base}__${++hoistCount}`
+      hoistNames.set(n.id, name)
+      hoisted[hoisted.length - 1]?.push(...lines(name))
+      return name
+    },
     constNonNegInt(name) {
       const binds: SemanticNode[] = []
       let other = false
@@ -213,13 +253,18 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       const v = binds[0].slots.value?.[0]
       return v?.componentId.endsWith(':literal_number') && /^\d+$/.test(String(v.properties?.value)) ? String(v.properties.value) : undefined
     },
+    catchingValueError: () => valueErrorTry > 0,
+    inValueErrorTry(fn) { valueErrorTry++; try { return fn() } finally { valueErrorTry-- } },
     name: (s) => (CPP_RESERVED.has(s) ? `${s}_` : s),
     indent: (d) => '    '.repeat(d),
   }
   const stmt = (n: SemanticNode, depth: number): string[] => {
+    hoisted.push([])
+    const before = (lines: string[]): string[] => [...(hoisted.pop() ?? []).map((l) => `${cpp.indent(depth)}${l}`), ...lines]
     const s = t.stmt.get(n.componentId)
-    if (s) { const lines = s(n, cpp, depth); converted += lines.length > 0 ? 1 : 0; return lines }
-    if (t.expr.has(n.componentId)) { converted++; return [`${cpp.indent(depth)}${cpp.expr(n)};`] }
+    if (s) { const lines = s(n, cpp, depth); converted += lines.length > 0 ? 1 : 0; return before(lines) }
+    if (t.expr.has(n.componentId)) { converted++; const line = `${cpp.indent(depth)}${cpp.expr(n)};`; return before([line]) }
+    hoisted.pop()
     keep(n, 'outside-subset', `「${n.componentId}」還沒有 C++ 的寫法`)
     return []
   }
@@ -235,16 +280,23 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       const r = rawType(n)
       if (r) seen.set(name, [...(seen.get(name) ?? []), r])
     }
-    const walk = (n: SemanticNode): void => {
+    const walk = (n: SemanticNode, bound: ReadonlySet<string> = new Set()): void => {
       if (isFunc(n)) return
       const own = typeof n.properties?.obj === 'string' ? n.properties.obj : undefined
       if (n.slots?.value && own && !n.slots?.iterable && !n.slots?.target && !n.slots?.obj) { assigned.set(own, assigned.get(own) ?? n); note(own, n.slots.value[0]) }
       // 計數 for 的迴圈變數：range 的值是整數
-      if (own && n.slots?.iterable?.[0]?.componentId.endsWith(':range_make')) { assigned.set(own, assigned.get(own) ?? n); seen.set(own, [...(seen.get(own) ?? []), 'int']) }
-      if (typeof n.properties?.name === 'string' && !n.slots?.args && Object.keys(n.slots ?? {}).every((k) => (n.slots[k] ?? []).length === 0)) note(n.properties.name, n)
-      kids(n).forEach(walk)
+      // 生成式的迴圈變數只活在生成式裡（Python 3），由生成式那幾行自己宣告
+      if (own && n.slots?.iterable?.[0]?.componentId.endsWith(':range_make') && !n.componentId.endsWith(':array_make_for')) { assigned.set(own, assigned.get(own) ?? n); seen.set(own, [...(seen.get(own) ?? []), 'int']) }
+      if (typeof n.properties?.name === 'string' && !bound.has(n.properties.name) && !n.slots?.args && Object.keys(n.slots ?? {}).every((k) => (n.slots[k] ?? []).length === 0)) note(n.properties.name, n)
+      // 生成式裡讀到它自己的迴圈變數，不是外面那個同名的變數（走訪對象除外：它在外面求值）
+      if (n.componentId.endsWith(':array_make_for') && own) {
+        const inner = new Set([...bound, own])
+        for (const [k, cs] of Object.entries(n.slots ?? {})) cs.forEach((c) => walk(c, k === 'iterable' ? bound : inner))
+        return
+      }
+      kids(n).forEach((c) => walk(c, bound))
     }
-    scope.forEach(walk)
+    scope.forEach((n) => walk(n))
     const out: string[] = []
     for (const [name, at] of assigned) {
       if (exclude.has(name)) continue
