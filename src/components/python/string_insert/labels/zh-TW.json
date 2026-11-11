@@ -1,4 +1,8 @@
 {
-  "PY_STRING_INSERT_MSG0": "插入 %1 小數位數 %2",
-  "PY_STRING_INSERT_TOOLTIP": "把一個值插進格式化文字裡。小數位數留空就照原樣顯示；填 .2f 表示保留兩位小數。"
+  "PY_STRING_INSERT_MSG0": "插入 %1 %2 小數位數 %3",
+  "PY_STRING_INSERT_TOOLTIP": "把一個值插進格式化文字裡。「寫成程式碼的樣子」就是 !r：字串會加上引號。小數位數留空就照原樣顯示；填 .2f 表示保留兩位小數。",
+  "PY_STRING_INSERT_CONV_NONE": "照原樣",
+  "PY_STRING_INSERT_CONV_R": "寫成程式碼的樣子（加引號）",
+  "PY_STRING_INSERT_CONV_S": "轉成文字",
+  "PY_STRING_INSERT_CONV_A": "寫成程式碼的樣子（只用 ASCII）"
 }

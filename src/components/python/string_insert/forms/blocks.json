@@ -16,6 +16,28 @@
           "check": "Expression"
         },
         {
+          "type": "field_dropdown",
+          "name": "CONVERSION",
+          "options": [
+            [
+              "%{BKY_PY_STRING_INSERT_CONV_NONE}",
+              ""
+            ],
+            [
+              "%{BKY_PY_STRING_INSERT_CONV_R}",
+              "r"
+            ],
+            [
+              "%{BKY_PY_STRING_INSERT_CONV_S}",
+              "s"
+            ],
+            [
+              "%{BKY_PY_STRING_INSERT_CONV_A}",
+              "a"
+            ]
+          ]
+        },
+        {
           "type": "field_input",
           "name": "FORMAT",
           "text": ""
@@ -27,6 +49,7 @@
     },
     "renderMapping": {
       "fields": {
+        "CONVERSION": "conversion",
         "FORMAT": "format"
       },
       "inputs": {

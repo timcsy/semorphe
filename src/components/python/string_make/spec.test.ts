@@ -57,4 +57,25 @@ describe('python:string_make', () => {
     const out = await runPython('x = 1\nprint(f"{x:>10}")\n')
     expect(out, `靜默印出來了：${JSON.stringify(out)}——那與「格式本來就這樣」看起來一樣`).not.toMatch(/^\s*1\s*$/)
   })
+
+  // 🔴 第 412 刀：轉換（`!r`／`!s`／`!a`）有了自己的一格。410 之前它被安靜丟掉（`f'{s!r:<6}'` → `f"{s:<6}"`，引號不見），410 起整句降級
+  it('轉換：lift 成結構化的一格，來回一字不差', async () => {
+    const f = await ids("x = f'{s!r:<6}|{t!s}|{u!a}'")
+    expect(f, '正向錨點').toContain('python:string_insert')
+    expect(f).not.toContain('unresolved')
+    expect(await roundTrip("x = f'{s!r:<6}|{t!s}|{u!a}'")).toBe('x = f"{s!r:<6}|{t!s}|{u!a}"')
+    expect(await roundTrip('x = f"{s!r}"')).toBe('x = f"{s!r}"')
+  })
+
+  it('轉換：執行時真的有作用（字串加引號、格式套在轉換之後）', async () => {
+    expect(await runPython("s = 'q'\nprint(f'{s!r:<6}|{s}|{s!s}')\n")).toBe("completed|'q'   |q|q\n")
+    expect(await runPython("print(f'{[1, \"a\"]!r}')\n")).toBe("completed|[1, 'a']\n")
+  })
+
+  it('自我說明 `{x=}` 仍整句降級（還沒有位置放「把原文也印出來」）', async () => {
+    const f = await ids('x = 1\nprint(f"{x=}")')
+    expect(f, '正向錨點').toContain('python:program')
+    expect(f).not.toContain('python:string_make')
+    expect(await roundTrip('print(f"{x=}")')).toBe('print(f"{x=}")')
+  })
 })
