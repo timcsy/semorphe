@@ -117,3 +117,61 @@ describe('cpp:vector_declare 自證測', () => {
     expect(got).not.toContain('cpp:vector_declare')
   })
 })
+
+// 第 409 刀：`vector<int> v(a, a + 4)` 是一段範圍，不是「a 個 a+4」。兩種讀法形狀相同，lift 看引數是不是位置才分。
+describe('用一段範圍建立列表（409）', () => {
+  const body = (line: string) => `int main() {\n    int a[5] = {5, 1, 5, 2, 1};\n    int* p = a;\n    vector<int> u = {3, 1, 4};\n    int n = 3;\n    ${line}\n    return 0;\n}\n`
+  const all = (t: SemanticNode | null, out: SemanticNode[] = []): SemanticNode[] => {
+    if (!t) return out
+    out.push(t)
+    for (const kids of Object.values(t.slots ?? {})) for (const k of kids as SemanticNode[]) all(k, out)
+    return out
+  }
+  const decl = (t: SemanticNode | null, name: string) => all(t).find((n) => n.componentId === 'cpp:vector_declare' && n.properties.name === name)!
+  const RANGES = [
+    'vector<int> v(a, a + 4);',
+    'vector<int> v(u.begin(), u.end());',
+    'vector<int> v(u.begin() + 1, u.end());',
+    'vector<int> v(begin(a), end(a));',
+    'vector<int> v(p, p + 2);',
+    'vector<int> v(u.rbegin(), u.rend());',
+  ]
+
+  it('★ lift：兩個位置 ⟹ source／source_end，不是 size／fill', () => {
+    for (const line of RANGES) {
+      const d = decl(lift(body(line)), 'v')
+      expect(d, line).toBeDefined()
+      expect(d.slots.source_end, line).toHaveLength(1)
+      expect(d.slots.size ?? [], line).toHaveLength(0)
+    }
+  })
+
+  it('負向：數字、宣告成整數的名字仍是「幾個、每個是什麼」', () => {
+    for (const line of ['vector<int> v(n, 0);', 'vector<int> v(5, 7);', 'vector<int> v(n, n + 1);', 'vector<int> v(a[0], a[1]);']) {
+      const d = decl(lift(body(line)), 'v')
+      expect(d.slots.size, line).toHaveLength(1)
+      expect(d.slots.fill, line).toHaveLength(1)
+      expect(d.slots.source_end ?? [], line).toHaveLength(0)
+    }
+  })
+
+  it('★ generate 一字不差，再 lift 是同一棵', () => {
+    for (const line of RANGES) {
+      const back = generateCode(lift(body(line))!, 'cpp', style)
+      expect(back).toContain(line)
+      expect(generateCode(lift(back)!, 'cpp', style)).toBe(back)
+    }
+  })
+
+  it('★ 積木：挑到範圍形態', async () => {
+    const { renderToBlocklyState } = await import('../../../core/projection/block-renderer')
+    const s = JSON.stringify(renderToBlocklyState(lift(body('vector<int> v(a, a + 4);'))!))
+    expect(s).toContain('"cpp_vector_declare_range"')
+    expect(JSON.stringify(renderToBlocklyState(lift(body('vector<int> v(n, 0);'))!))).not.toContain('cpp_vector_declare_range')
+  })
+
+  it('★ 執行：放進去的是那一段', async () => {
+    await run(body('vector<int> v(a + 1, a + 4);\n    for (int x : v) cout << x << " ";').replace('return 0;', 'cout << v.size();\n    return 0;'), '1 5 2 3')
+    await run(body('vector<int> v(u.begin() + 1, u.end());\n    for (int x : v) cout << x << " ";'), '1 4 ')
+  })
+})

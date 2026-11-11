@@ -124,9 +124,12 @@ describe('用一段範圍建立集合（403）', () => {
     expect(generateCode(t, 'cpp', S)).toContain('set<int> s(v.begin(), v.end(), less<int>());')
   })
 
-  it('vector 的 (a, b) 不受影響（它要看型別才分得出範圍或個數，不宣告 source_end）', () => {
+  // 第 409 刀起 vector 也有 source_end，但要兩個引數都是位置才算（這裡 a 是陣列 ⟹ 範圍；v.size() 是數 ⟹ 照舊）
+  it('vector 的 (a, b) 要看引數是不是位置', () => {
     const t = lift(body('vector<int> w(a, a + 5);'))
-    expect(collect(t).some((n) => (n.slots?.source_end?.length ?? 0) > 0)).toBe(false)
+    expect(collect(t).some((n) => (n.slots?.source_end?.length ?? 0) > 0)).toBe(true)
+    const u = lift(body('vector<int> w(v.size(), 0);'))
+    expect(collect(u).some((n) => (n.slots?.source_end?.length ?? 0) > 0)).toBe(false)
   })
 
   it('★ 積木：挑到範圍形態，走一趟積木回來一字不差', () => {

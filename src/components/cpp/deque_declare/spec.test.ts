@@ -119,3 +119,23 @@ describe('cpp:deque_declare 自證測', () => {
     expect(got).toContain('cpp:container_pop_front')
   })
 })
+
+// 第 409 刀：與 vector 同一條判準——兩個引數都是位置才是範圍
+describe('用一段範圍建立雙端佇列（409）', () => {
+  const src = (line: string) => `int main() {\n    vector<int> u = {3, 1, 4};\n    int n = 2;\n    ${line}\n    for (int x : d) cout << x << " ";\n    return 0;\n}\n`
+  it('★ 範圍：lift → 產碼一字不差、積木挑範圍形態、執行放進那一段', async () => {
+    const line = 'deque<int> d(u.begin(), u.end());'
+    const t = lift(src(line))!
+    expect(ids(t)).toContain('cpp:deque_declare')
+    const back = generateCode(t, 'cpp', style)
+    expect(back).toContain(line)
+    const { renderToBlocklyState } = await import('../../../core/projection/block-renderer')
+    expect(JSON.stringify(renderToBlocklyState(t))).toContain('"cpp_deque_declare_range"')
+    await run(src(line), '3 1 4 ')
+  })
+  it('負向：(n, 7) 仍是 n 個 7', async () => {
+    const t = lift(src('deque<int> d(n, 7);'))!
+    expect(JSON.stringify(t)).not.toContain('source_end')
+    await run(src('deque<int> d(n, 7);'), '7 7 ')
+  })
+})

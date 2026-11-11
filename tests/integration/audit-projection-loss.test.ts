@@ -59,6 +59,7 @@ import { synthMinimalNode } from '../helpers/synth-node'
 import { loadBaseline, writeBaseline, printReport, RATCHET_NOTE } from '../helpers/guardrail'
 import type { SemanticNode } from '../../src/core/types'
 import { cellPath } from '../../src/core/component/views'
+import { KNOWN_AXES } from '../../src/core/projection/form-selection'
 
 beforeAll(() => {
   registerCppLanguage()
@@ -160,6 +161,67 @@ function scan(def: {
   const declared = Object.entries(def.slots ?? {})
   if (declared.length === 0) return null                       // 沒有接點，無從丟失
 
+  // 🔴 **由接點觸發的形態要分開量**（第 409 刀）。
+  //
+  // `range_init` 這種軸是「接點 X 有東西 ⟹ 換一顆積木」，而那顆積木只裝它自己的接點
+  // （`vector<int> v(a, a + 4)` 的範圍積木只有起點、終點兩格）。把**所有**接點同時填滿，
+  // 等於合成「既是一段範圍、又有大小與填值」——一個 lift 永遠產不出來的節點，
+  // 護欄就會把那顆積木裝不下的大小、填值報成遺失。
+  //
+  // 所以每個觸發接點量兩次：
+  //   ① 觸發接點空著、其餘全填 ⟹ 普通形態要裝得下全部（這一條守住「普通形態掉了 size」）
+  //   ② 觸發接點有東西 ⟹ 那個形態要裝得下【它自己的 renderMapping 宣告的】每一個接點
+  // ⚠️ 判準是機械可查的（軸表 ＋ 積木宣告的 form），不是手寫白名單。
+  const triggered = slotTriggeredForms(def.componentId, declared.map(([k]) => k))
+  if (triggered.length === 0) return measureOnce(def, declared)
+  const losses: Loss[] = []
+  let markersPut = 0
+  const seen = new Set<string>()
+  const add = (r: { losses: Loss[]; markersPut: number } | null): void => {
+    if (!r) return
+    markersPut += r.markersPut
+    for (const l of r.losses) {
+      if (seen.has(l.slot)) continue
+      seen.add(l.slot)
+      losses.push(l)
+    }
+  }
+  const triggers = new Set(triggered.map((t) => t.slot))
+  add(measureOnce(def, declared.filter(([k]) => !triggers.has(k))))
+  for (const t of triggered) {
+    add(measureOnce(def, declared.filter(([k]) => k === t.slot || t.mapped.has(k))))
+  }
+  return { losses, markersPut }
+}
+
+/**
+ * 這顆元件有哪些「接點觸發」的形態：軸表裡 `from: 'slot'` 的軸，觸發接點是它宣告的接點，
+ * 而且它真的有一顆積木宣告了那個形態。回傳觸發接點與那顆積木對應到的接點。
+ */
+function slotTriggeredForms(componentId: string, slotNames: string[]): { slot: string; mapped: Set<string> }[] {
+  const out: { slot: string; mapped: Set<string> }[] = []
+  for (const axis of Object.values(KNOWN_AXES) as { name: string; from: string; slot?: string; slotValue?: string }[]) {
+    if (axis.from !== 'slot' || !axis.slot || !slotNames.includes(axis.slot)) continue
+    for (const b of componentBlocks() as {
+      componentId?: string
+      form?: { axis: string; value: string }
+      renderMapping?: { inputs?: Record<string, string>; dynamicRules?: { childSlot?: string }[] }
+    }[]) {
+      if (b.componentId !== componentId || b.form?.axis !== axis.name || b.form.value !== axis.slotValue) continue
+      const mapped = new Set<string>(Object.values(b.renderMapping?.inputs ?? {}))
+      for (const r of b.renderMapping?.dynamicRules ?? []) if (r.childSlot) mapped.add(r.childSlot)
+      out.push({ slot: axis.slot, mapped })
+    }
+  }
+  return out
+}
+
+/** 填滿指定的接點、渲染、數標記。 */
+function measureOnce(
+  def: { componentId: string },
+  declared: [string, unknown][],
+): { losses: Loss[]; markersPut: number } | null {
+  if (declared.length === 0) return { losses: [], markersPut: 0 }
   const losses: Loss[] = []
   let markersPut = 0
   let seq = 0

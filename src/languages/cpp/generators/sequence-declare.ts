@@ -1,5 +1,5 @@
 /**
- * **`vector` 與 `deque` 共用的宣告產碼**——五種形式：`T<…> name;`／`= {…}`／`= e`／`(n)`／`(n, x)`。
+ * **`vector` 與 `deque` 共用的宣告產碼**——六種形式：`T<…> name;`／`= {…}`／`= e`／`(n)`／`(n, x)`／`(first, last)`。
  *
  * 從 `lang/runtime/sequence-declare.ts` 搬過來（第 242 刀，6c-4 的前置）：產碼那一半原本和執行的 `declareSequence` 住在同一個檔，
  * 而 runtime 那個資料夾要隨直譯器刪掉——不搬的話，刪的那天 vector／deque 會產不出程式碼。共用的理由見原檔檔頭（兩份逐字相同的實作會漂移）。
@@ -24,6 +24,11 @@ export function generateSequenceDeclare(
     }
     // 初始值是一整個運算式（`= f()`）——與上面同一個病，同一個處方
     const source = (node.slots.source ?? [])[0]
+    // 一段範圍（第 409 刀）：`v(a, a + 4)`——起點在 source、終點在 source_end，建構子形式
+    const end = (node.slots.source_end ?? [])[0]
+    if (source && end) {
+      return `${indent(ctx)}${template}<${type}> ${name}(${generateExpression(source, ctx)}, ${generateExpression(end, ctx)});\n`
+    }
     if (source) {
       return `${indent(ctx)}${template}<${type}> ${name} = ${generateExpression(source, ctx)};\n`
     }

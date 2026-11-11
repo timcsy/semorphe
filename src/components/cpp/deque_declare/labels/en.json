@@ -5,5 +5,7 @@
   "CPP_DEQUE_DECLARE_INIT": "initial values",
   "CPP_DEQUE_DECLARE_SIZE": "size",
   "CPP_DEQUE_DECLARE_FILL": "filled with",
-  "CPP_DEQUE_DECLARE_SOURCE": "copied from"
+  "CPP_DEQUE_DECLARE_SOURCE": "copied from",
+  "CPP_DEQUE_DECLARE_RANGE": "with the elements from",
+  "CPP_DEQUE_DECLARE_RANGE_TO": "to"
 }
