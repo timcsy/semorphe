@@ -40,7 +40,8 @@ describe('JSON-only extension (US6)', () => {
     // ⚠️ 這個數字會隨 `<vector>` 家族長大——2026-08-13 加入 `cpp:vector_make`
     // （`vector<int>(n, x)` 當運算式，二維向量的內層）時 4 → 5。
     // **不改成「>= 4」**：那會讓「少了一顆」也通過，而少一顆正是它要擋的。
-    expect(all.length).toBe(5)
+    // 第 409 刀 5 → 6：`cpp:vector_declare` 多一個範圍形態（`vector<int> v(a, a + 4)`），同一個身分的第二顆積木。
+    expect(all.length).toBe(6)
     expect(all.map(s => s.id)).toContain('cpp:vector_declare')
     expect(all.map(s => s.id)).toContain('cpp:vector_make')
     expect(all.map(s => s.id)).toContain('cpp:vector_size')
