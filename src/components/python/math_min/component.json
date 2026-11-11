@@ -8,6 +8,8 @@
   },
   "role": "expression",
   "owner": "(python)",
+  "traits": { "callArguments": ["values"] },
+  "_traits_why": "**哪幾格是呼叫的引數**（第 419 刀）：產生器運算式只有在它是呼叫【唯一的】引數時才能不帶自己的括號（`sum(x for x in r)`），其他位置不帶就是不合法的 Python。它產碼時找到自己的父節點，數這幾格合起來是不是只有它一個（`python/array_make_for/generate.ts`）。沒宣告的父元件一律帶括號——多一對但仍合法。",
   "paths": {
     "views": {
       "blocks": {

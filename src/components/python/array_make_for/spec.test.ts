@@ -119,3 +119,31 @@ describe('產生器運算式', () => {
     expect(gen(await liftPython('print(a, b)\nf(1)\n')).trimEnd()).toBe('print(a, b)\nf(1)')
   })
 })
+
+describe('🔴 產生器運算式的括號（第 419 刀，盲測抓到）', () => {
+  // 以前一律不帶自己的括號：只有「呼叫唯一的引數」那個位置合法，其他位置產回去都是不合法的 Python
+  const roundTrip = async (code: string) => {
+    const t = await liftPython(code)
+    expect(componentIdsOf(t), '正向錨點：收成推導式這顆').toContain('python:array_make_for')
+    return gen(t)
+  }
+  for (const c of [
+    'print(sum(x for x in r))',
+    'print(", ".join(str(x) for x in r))',
+    'print(*(x for x in r))',
+    'f(a, (x for x in r))',
+    'g = (x for x in r)',
+    'm = max((x for x in r), default=0)',
+    't = sorted((x for x in r), reverse=True)',
+    'print(any(x for x in r), all((y for y in r)))',
+  ]) {
+    it(`來回一字不差：${c}`, async () => {
+      expect(await roundTrip(`r = [1]\n${c}`)).toBe(`r = [1]\n${c.replace('all((y for y in r))', 'all(y for y in r)')}`)
+    })
+  }
+  it('執行：不是唯一引數的那幾個位置，產回去的程式照樣跑得出原本的結果', async () => {
+    const code = 'r = [3, 1, 2]\nprint(*(x * 2 for x in r))\nprint(max((x for x in r if x > 5), default=0), sorted((x for x in r), reverse=True))\ng = (x + 1 for x in r)\nprint(list(g))\n'
+    const back = gen(await liftPython(code))
+    expect(await runPython(back)).toBe('completed|6 2 4\n0 [3, 2, 1]\n[4, 2, 3]\n')
+  })
+})
