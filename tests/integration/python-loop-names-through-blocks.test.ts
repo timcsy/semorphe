@@ -72,6 +72,9 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'z = "".join(ch * n for ch, n in runs)',
     'd = {k: v for k, v in xs}',
     'q = [x for row in g for x in row]',
+    'a = b = 0',
+    'is_prime[0] = is_prime[1] = False',
+    'o.x = y = 1',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)

@@ -35,6 +35,7 @@
     "python:var_assign_compound",
     "python:tuple_make",
     "python:var_assign_sequence",
+    "python:assign_chain",
     "python:container_size",
     "python:range_make",
     "python:container_append",

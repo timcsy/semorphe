@@ -98,11 +98,17 @@ describe('模糊測試：學生的 Python 解題程式（410）', () => {
     expect(ids, '翻不出的那一段照實保留').toContain('unresolved')
     expect(await runPython(P.fuzz_6.code), '判不出就說判不出，不得跑出別的結果').toMatch(/翻不出/)
   })
-  // 連鎖指定 `is_prime[0] = is_prime[1] = False`——以前產回去是 `is_prime[0] = `（壞掉的程式）；推導式的多目標另一刀（411）
+  // 連鎖指定 `is_prime[0] = is_prime[1] = False`——以前產回去是 `is_prime[0] = `（壞掉的程式）；410 照實降級，413 有了自己的元件
   it('fuzz_7：Sieve up to 60, twin primes, largest gap, filtered sum.', async () => {
     const ids = await roundTrip('fuzz_7', ["is_prime[0] = is_prime[1] = False"])
-    expect(ids, '翻不出的那一段照實保留').toContain('unresolved')
-    expect(await runPython(P.fuzz_7.code), '判不出就說判不出，不得跑出別的結果').toMatch(/翻不出/)
+    expect(ids, '連鎖指定有自己的元件').toContain('python:assign_chain')
+    expect(ids.filter((i) => /raw|unresolved/.test(i)), '整段都認得').toEqual([])
+    // 切片指定 `is_prime[i * i::i] = …`：Cella 的指定目標把下標當一般運算式降（lowering.cella 的 sAssign → eSubscript），
+    // 切片落到「a slice outside a subscript」——我們送的是忠實的 eSubscript(eSlice)，已回報 cella（2026-11-11）
+    await knownCellaGap(/slice outside a subscript/, async () => {
+      const r = await runPython(P.fuzz_7.code)
+      if (r !== 'completed|' + P.fuzz_7.expected) throw new Error(r)
+    })
   })
   it('fuzz_8：Transposes and multiplies a matrix, prints trace, isqrt and norm.（math.isqrt Cella 判 unknown，已回報）', async () => {
     const ids = await roundTrip('fuzz_8')

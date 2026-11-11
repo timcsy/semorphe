@@ -480,6 +480,11 @@ x = 5
 print(1 < x < 10)
 print(x != 5, not x == 5)
 print(a > b and x > 0, a > b or x > 0)`],
+  ['連鎖指定', `a = b = 0
+flags = [True] * 4
+flags[0] = flags[1] = False
+a += 1
+print(a, b, flags)`],
   ['質數與巢狀迴圈', `def is_prime(n):
     if n < 2:
         return False
