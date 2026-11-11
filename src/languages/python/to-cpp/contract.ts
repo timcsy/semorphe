@@ -52,6 +52,11 @@ export interface ToCppContext {
   canHoist(n: SemanticNode): boolean
   /** 在目前這一句前面插入幾行（縮排相對於這一句），回傳暫存名字；同一顆節點被寫兩次（`accumulate(x.begin(), x.end())`）只插入一次 */
   hoist(n: SemanticNode, base: string, lines: (name: string) => string[]): string
+  /**
+   * 這個名字在整支程式裡是不是只被指定過一次、而且是非負整數字面量——是就回傳那個值（任何輸入下都一樣）。
+   * 迴圈變數、參數、複合指定、在函式裡被指定、`global` 都不算
+   */
+  constNonNegInt(name: string): string | undefined
   /** C++ 的保留字與標準名字撞到就加底線 */
   name(s: string): string
   indent(depth: number): string
