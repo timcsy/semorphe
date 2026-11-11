@@ -46,6 +46,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
+import { withSdkBuildLock } from '../helpers/sdk-build-lock'
 
 const ROOT = path.resolve(__dirname, '../..')
 
@@ -78,16 +79,21 @@ export function judge(s: Summary): string[] {
 function runExample(): { ok: true; summary: Summary } | { ok: false; stage: string; detail: string } {
   const sh = (cmd: string, args: string[]): string =>
     execFileSync(cmd, args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
-  try {
-    sh('node', ['tools/build-sdk.mjs'])
-  } catch (e) {
-    return { ok: false, stage: '出貨產物建不起來', detail: String(e) }
-  }
-  try {
-    sh('node', ['examples/bring-your-own-view/build.mjs'])
-  } catch (e) {
-    return { ok: false, stage: '例子在 esbuild 下建不起來', detail: String(e) }
-  }
+  // dist-sdk 與 audit-panels-only 共用，建＋打包這一段要排隊（見 helper 的檔頭）
+  const built = withSdkBuildLock(ROOT, (): { ok: false; stage: string; detail: string } | null => {
+    try {
+      sh('node', ['tools/build-sdk.mjs'])
+    } catch (e) {
+      return { ok: false, stage: '出貨產物建不起來', detail: String(e) }
+    }
+    try {
+      sh('node', ['examples/bring-your-own-view/build.mjs'])
+    } catch (e) {
+      return { ok: false, stage: '例子在 esbuild 下建不起來', detail: String(e) }
+    }
+    return null
+  })
+  if (built) return built
   let out: string
   try {
     out = sh('node', ['examples/bring-your-own-view/dist/main.mjs'])
