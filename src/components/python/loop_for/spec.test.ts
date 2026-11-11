@@ -93,3 +93,27 @@ describe('for 走訪四種來源', () => {
     expect(out, `靜靜跑完了：${JSON.stringify(out)}——那與「序列是空的」長得一樣`).toMatch(/例外|錯誤|Error/)
   })
 })
+
+describe('python:loop_for — else（第 417 刀）', () => {
+  const code = 'for i in range(2, 9):\n    if 9 % i == 0:\n        print("found", i)\n        break\nelse:\n    print("prime")\n'
+
+  it('★ lift：else 那一段進 else_body，不再整顆降級', async () => {
+    const ids = componentIdsOf(await liftPython(code))
+    expect(ids, '正向錨點').toContain('python:loop_for')
+    expect(ids.filter((i) => /raw|unresolved/.test(i))).toEqual([])
+  })
+
+  it('★ generate ＋ round-trip：一字不差', async () => {
+    expect(gen(await liftPython(code))).toBe(code.trim())
+  })
+
+  it('★ 執行：break 了就不做 else；沒 break 才做（Cella）', async () => {
+    expect(await runPython(code)).toBe('completed|found 3\n')
+    expect(await runPython(code.replace('range(2, 9)', 'range(2, 7)').replace('9 %', '7 %'))).toBe('completed|prime\n')
+  })
+
+  it('★ 多個名字 ＋ else：兩個都留著', async () => {
+    const src = 'for k, v in d.items():\n    print(k)\nelse:\n    print(v)\n'
+    expect(gen(await liftPython(src))).toBe(src.trim())
+  })
+})

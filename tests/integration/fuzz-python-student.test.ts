@@ -81,11 +81,12 @@ describe('模糊測試：學生的 Python 解題程式（410）', () => {
     expect(ids.filter((i) => /raw|unresolved/.test(i)), '整段都認得').toEqual([])
     expect(await runPython(P.fuzz_3.code)).toBe('completed|' + P.fuzz_3.expected)
   })
-  // for … else 照實保留（既有）；推導式本身認得
+  // 🟢 第 417 刀起 for … else 認得了（之前照實保留成 unresolved）
   it('fuzz_4：Generates all permutations recursively with backtracking, searches for one with an early break, and filters permutations of numbers.', async () => {
-    const ids = await roundTrip('fuzz_4', ["for idx, p in enumerate(result):"])
-    expect(ids, '翻不出的那一段照實保留').toContain('unresolved')
-    expect(await runPython(P.fuzz_4.code), '判不出就說判不出，不得跑出別的結果').toMatch(/翻不出/)
+    const ids = await roundTrip('fuzz_4')
+    expect(ids, '正向錨點：for 迴圈認得').toContain('python:loop_for')
+    expect(ids.filter((i) => /raw|unresolved/.test(i)), '整段都認得').toEqual([])
+    expect(await runPython(P.fuzz_4.code)).toBe('completed|' + P.fuzz_4.expected)
   })
   it('fuzz_5：Encrypts and decrypts with several shifts, then shows floor-division semantics.', async () => {
     const ids = await roundTrip('fuzz_5')

@@ -26,15 +26,28 @@
       "previousStatement": "Statement",
       "nextStatement": "Statement",
       "colour": "#FFAB19",
-      "tooltip": "%{BKY_PYTHON_WHILE_TOOLTIP}"
+      "tooltip": "%{BKY_PYTHON_WHILE_TOOLTIP}",
+      "elseTail": {
+        "elseInput": "ELSE_BODY",
+        "elseLabelKey": "PYTHON_WHILE_ELSE",
+        "elseLabelFallback": "沒被中斷就",
+        "containerLabelKey": "PYTHON_WHILE_MUTATOR_TITLE",
+        "containerLabelFallback": "重複",
+        "colour": "#FFAB19"
+      }
     },
     "renderMapping": {
       "inputs": {
         "CONDITION": "condition"
       },
       "statementInputs": {
-        "BODY": "body"
+        "BODY": "body",
+        "ELSE_BODY": "else_body"
+      },
+      "extraStateFlags": {
+        "hasElse": "else_body"
       }
-    }
+    },
+    "_elseTail_why": "🟢 **`else:` 走齒輪**（第 417 刀）：齒輪裡只有一顆「沒被中斷就」，拖進去積木下面就多一段，與 `if` 的 else 同一種手勢。⚠️ 標籤不寫「否則」：迴圈的 `else` 不是條件不成立，是**迴圈跑完而沒有遇到 `break`**——寫成「否則」學生會讀成「條件一開始就不成立才做」。"
   }
 ]

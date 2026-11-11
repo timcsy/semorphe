@@ -79,6 +79,12 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'p = f"{s!r:<16}-> {t!s}|{u!a}|{v}|{w:.2f}"',
     // 第 418 刀：自我說明 `{x=}` 是插值那一格的另一個下拉（空字串那個選項＝沒有）
     'p = f"{x=}|{s = }|{v=:.2f}|{s=!s}|{o.n=}"',
+    // 第 417 刀：迴圈的 `else:` 走齒輪——`for` 的參數列 ＋ 尾巴兩個機制存在同一份 extraState 裡
+    'for i in xs:\n    if i > 2:\n        break\nelse:\n    print("none")',
+    'for k, v in d.items():\n    print(k)\nelse:\n    print(v)',
+    'while n > 0:\n    n = n - 1\nelse:\n    print(n)',
+    // 第 416 刀：主體只有 pass 的空類別——積木上方法與欄位兩格都是空的，回來要寫回 pass
+    'class P:\n    pass',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)

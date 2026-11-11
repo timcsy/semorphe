@@ -23,12 +23,6 @@ import { createNode } from '../../../core/semantic-tree'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftLoopFor', (node, ctx) => {
-    // 🔴 **`for … else:` 整顆走誠實降級**（2026-08-23）——這一段以前是
-    //    **安靜地丟掉**：`else` 那一段程式碼在來回一趟之後消失，而產出的碼合法。
-    //    ⚠️ 那不是註解掉了，那是**整段程式碼掉了**（與 `class` 的規矩同一條：
-    //    收一半會產出一個合法而行為不同的程式）。
-    if (node.childForFieldName('alternative')) return null
-
     const left = node.childForFieldName('left')
     const right = node.childForFieldName('right')
     const body = node.childForFieldName('body')
@@ -57,6 +51,25 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     slots.body = liftedBody
       ? (liftedBody.componentId === '_compound' ? (liftedBody.slots.body ?? []) : [liftedBody])
       : []
+
+    // 🟢 **`for … else:` 收進 `else_body`**（第 417 刀）。
+    //    🪦 2026-08-23 起整顆誠實降級；再之前那一段是**安靜地丟掉**（來回一趟之後消失，產出的碼合法）。
+    //    `else:` 底下第一行的註解掛在 `else_clause` 上、排在 `block` 之前——收成那一段的第一顆。
+    const alt = node.childForFieldName('alternative')
+    if (alt) {
+      const elseBody: SemanticNode[] = []
+      for (const kid of alt.namedChildren) {
+        if (kid.type !== 'comment') continue
+        const made = ctx.lift(kid)
+        if (made) elseBody.push(made)
+      }
+      const blk = alt.childForFieldName('body')
+      const lifted = blk ? ctx.lift(blk) : null
+      if (lifted) elseBody.push(...(lifted.componentId === '_compound' ? (lifted.slots.body ?? []) : [lifted]))
+      // ⚠️ 空的 `else`（只有 `pass`）產回去就沒有 `else:`——那是另一支程式的文字，照舊整顆降級。
+      if (elseBody.length === 0) return null
+      slots.else_body = elseBody
+    }
 
     return createNode('python:loop_for', properties, slots)
   })

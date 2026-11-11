@@ -18,6 +18,11 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
     const head = `${indent(ctx)}for ${name} in ${it}:\n`
     trackOwnText(ctx, head)
     const bodyCode = body.length > 0 ? generateBody(body, inner) : `${indent(inner)}pass\n`
-    return head + bodyCode
+    // 🟢 `else:`（第 417 刀）——迴圈跑完而沒有遇到 `break` 時做的那一段
+    const elseBody = node.slots.else_body ?? []
+    if (elseBody.length === 0) return head + bodyCode
+    const elseHead = `${indent(ctx)}else:\n`
+    trackOwnText(ctx, elseHead)
+    return head + bodyCode + elseHead + generateBody(elseBody, inner)
   })
 }

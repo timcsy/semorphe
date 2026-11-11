@@ -10,7 +10,11 @@ export interface BlockState {
   type: string
   id: string
   fields: Record<string, unknown>
-  inputs: Record<string, { block: BlockState }>
+  /**
+   * ⚠️ **可以不存在**：Blockly 存檔時，每一個輸入都是空的積木【整格省略】`inputs`
+   * （416 撞到：`class P: pass` 的方法與欄位兩格都空，萃取時讀 `block.inputs?.[…]` 就丟例外）。
+   */
+  inputs?: Record<string, { block: BlockState }>
   next?: { block: BlockState }
   /**
    * **積木上的註解泡泡**——Blockly 自己的欄位（`icons.comment`）。
@@ -141,7 +145,7 @@ export class PatternExtractor {
 
     // Reverse inputs mapping: semanticChild ← blockInput (expression)
     for (const [blockInput, semChild] of Object.entries(spec.mapping.inputs)) {
-      const inputData = block.inputs[blockInput]
+      const inputData = block.inputs?.[blockInput]
       if (inputData?.block) {
         const childNode = this.extract(inputData.block)
         if (childNode) {
@@ -152,7 +156,7 @@ export class PatternExtractor {
 
     // Reverse statementInputs mapping: semanticChild ← blockInput (statement chain)
     for (const [blockInput, semChild] of Object.entries(spec.mapping.statementInputs)) {
-      const inputData = block.inputs[blockInput]
+      const inputData = block.inputs?.[blockInput]
       if (inputData?.block) {
         slots[semChild] = this.extractStatementChain(inputData.block)
       }
@@ -222,7 +226,7 @@ export class PatternExtractor {
             } else if (modeRule.input) {
               // Compose mode: read from block input
               const inputName = resolvePattern(modeRule.input, i)
-              const inputData = block.inputs[inputName]
+              const inputData = block.inputs?.[inputName]
               if (inputData?.block) {
                 const childNode = this.extract(inputData.block)
                 if (childNode) childNodes.push(childNode)
@@ -249,7 +253,7 @@ export class PatternExtractor {
         // Repeat input pattern (expression or statement)
         if (rule.inputPattern) {
           const inputName = resolvePattern(rule.inputPattern, i)
-          const inputData = block.inputs[inputName]
+          const inputData = block.inputs?.[inputName]
           if (inputData?.block) {
             if (rule.isStatementInput) {
               // 🔴 **一個 input ⇄ 一個孩子**（2026-08-23 修）：這一串是**那一支**的整段。

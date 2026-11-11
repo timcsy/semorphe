@@ -23,7 +23,11 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     }
 
     const body = node.childForFieldName('body')
-    const members = body?.namedChildren ?? []
+    let members = body?.namedChildren ?? []
+    // 🟢 **主體只有一個 `pass` ＝ 空類別**（416，2026-11-12）——產碼那一路本來就把空類別寫成 `pass`、
+    //    formalize 也送 `sPass`，所以一字不差。⚠️ `pass` 夾在其他成員之間仍整顆降級：
+    //    收下就得丟掉它，而丟掉一行使用者寫的字不是「認得」。
+    if (members.length === 1 && members[0].type === 'pass_statement') members = []
     // 🟢 **方法與類別層級的屬性都收**（2026-08-22）。其餘（巢狀類別、
     //    裝飾器…）→ 整顆降級：收一半會產出一個**合法而行為不同**的類別。
     const methods: SemanticNode[] = []

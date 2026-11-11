@@ -28,7 +28,7 @@ import { FieldMultilineInput } from '@blockly/field-multilineinput'
 import type { BlockSpecRegistry } from '../../core/blocks/block-spec-registry'
 // 🪦 `CATEGORY_COLORS` 的匯入已於 2026-08-26 刪除——最後一顆命令式積木定義
 //    （`cpp_var_declare`）退場，顏色從此**只住在宣告裡**。
-import { attachBranchList } from './branch-list-block'
+import { attachBranchList, attachElseTail } from './branch-list-block'
 // 🪦 `registerParamMutatorBlocks`／`MUTATOR_CONTAINER` 於 2026-08-26 從這裡的 import
 //    移除——它們的呼叫點在 `defParamList` 工廠裡，而那個工廠隨 `cpp_forward_decl` 退場。
 //    ⚠️ **查過了才刪**（`cpp_doc_comment` 那次的教訓：刪掉一個「沒被使用」的 import
@@ -586,6 +586,13 @@ export class BlockRegistrar {
       // > 唯一的出路是把靜態的部分也吞進去——而那正是它會弄丟欄位的原因。**
       // 🔴 **第三種形狀：可增減的【成對插槽】＋ 一個可有可無的尾巴**（spec 169）
       //    —— `if / elif… / else`。使用者：「if-else 還沒有 mutation」。
+      // 🟢 **只有尾巴的那一種**（第 417 刀）：`while … else:`／`for … else:`。
+      //    它是「接上去」的——`for` 的參數列先建好，再接這一段，所以要在
+      //    **每一條會用到它的路**的 `continue` 之前呼叫（見上面 `jsonInitFor` 的教訓）。
+      const attachElseTailIfDeclared = (): void => {
+        const tail = (blockDef as { elseTail?: Record<string, unknown> }).elseTail
+        if (tail) attachElseTail(blockType, tail as unknown as Parameters<typeof attachElseTail>[1])
+      }
       const branchSpec = (blockDef as { branchList?: Record<string, unknown> }).branchList
       if (branchSpec) {
         Blockly.Blocks[blockType] = { init: jsonInitFor(blockDef) }
@@ -611,6 +618,7 @@ export class BlockRegistrar {
       if (paramSpec) {
         Blockly.Blocks[blockType] = { init: jsonInitFor(blockDef) }
         attachParamList(blockType, paramSpec as unknown as Parameters<typeof attachParamList>[1])
+        attachElseTailIfDeclared()
         continue
       }
       if (soleRule?.inputPattern && (blockDef as { builder?: string }).builder === 'variadic') {
@@ -669,6 +677,7 @@ export class BlockRegistrar {
       }
 
       Blockly.Blocks[blockType] = { init: jsonInitFor(blockDef) }
+      attachElseTailIfDeclared()
     }
 
     this.registerDynamicBlocks()
