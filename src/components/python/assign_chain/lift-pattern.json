@@ -1,0 +1,10 @@
+{
+  "id": "python_chained_assignment",
+  "grammar": "tree-sitter-python",
+  "astNodeType": "assignment",
+  "component": { "componentId": "python:assign_chain" },
+  "liftStrategy": "python:liftAssignChain",
+  "fieldMappings": [],
+  "priority": 25,
+  "_why": "priority 高於同族的序列指派（20）與單一指派——四筆對到同一個節點型別，策略回 `null`（右邊不是 `assignment`）時比對迴圈落到下一筆。"
+}

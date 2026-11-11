@@ -1,0 +1,4 @@
+{
+  "PY_ASSIGN_CHAIN_MSG0": "Store %1 into each of",
+  "PY_ASSIGN_CHAIN_TOOLTIP": "The value is computed once, then stored into each target from left to right. a = b = 0 makes both 0; it is the same object, so a list stored into two names changes through either."
+}

@@ -1,0 +1,31 @@
+{
+  "componentId": "python:assign_chain",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 的 `a = b = 0` 是運算式（`b = 0` 回傳 `b` 的參照），形狀不同；Python 這一個是敘述，右邊只算一次、再由左到右存進每一個目標。",
+  "properties": [],
+  "slots": {
+    "targets": "expression",
+    "value": "expression"
+  },
+  "role": "statement",
+  "traits": {
+    "writesTo": "targets"
+  },
+  "owner": "(python)",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    }
+  },
+  "_children_why": "🔴 **目標是一串接點**，與同族索引指派的 `target` 同一個理由：`is_prime[0]`、`o.x` 是整個運算式，壓成字串就要再解析一次。順序就是原始碼的順序（由左到右），Python 也照這個順序存。",
+  "_writesTo_why": "🔴 **這幾格是【左值】**——賦值寫進去的地方。見 `knowledge/concepts/左值.md` 與第七十三條護欄。",
+  "_lift_why": "同一個 `assignment` 節點型別既是單一指派也是連鎖指派，差別在右邊是不是又一個 `assignment`——**判別要跑真邏輯**（沿著右邊一路往下收目標），所以走具名策略；不是連鎖的話回 `null`，讓同族的指派接手。"
+}
