@@ -9,6 +9,8 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     const t = f.k('tTemplate', { name: 'deque', args })
     // `deque<int> b = a;`：複製初始化（spec 199 補上，照 vector 的送法）
     const source = f.one(n, 'source')
+    // 一段範圍（第 409 刀）：`deque<int> d(v.begin(), v.end())`
+    if (source && f.one(n, 'source_end')) return f.declCtor(n, t, [f.exprOf(n, 'source'), f.exprOf(n, 'source_end')], global)
     if (source) return f.declInit(n, t, f.k('iE', { e: f.expr(source) }), global)
     const values = n.slots?.values ?? []
     if (values.length > 0) return f.declInit(n, t, f.braceList(n, 'values'), global)

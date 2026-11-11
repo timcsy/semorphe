@@ -496,11 +496,6 @@ const hasSizeDecl = new Set(
     .map((c) => (c as { componentId: string }).componentId),
 )
 
-/**
- * 哪些容器宣告了**範圍的終點**接點 `source_end`（第 403 刀）——`set<int> s(v.begin(), v.end())`、`multiset<int> ms(a, a + 5)`。
- * ⚠️ 只給「兩個建構引數只可能是一段範圍」的容器：set／multiset 沒有「幾個、每個是什麼」的建構子。
- * vector／string 的 `(a, b)` 要看型別才分得出是範圍還是個數與填充值，lift 分不出，所以它們不宣告這一格。
- */
 /** 建構引數剛好幾個——`ctorSlots` 只收前兩個，第三個（比較函式）不得被安靜丟掉。 */
 function ctorArgCount(decl: AstNode): number {
   if (decl.type === 'function_declarator') return decl.namedChildren.find((c) => c.type === 'parameter_list')?.namedChildren.length ?? 0
@@ -508,11 +503,60 @@ function ctorArgCount(decl: AstNode): number {
   return v?.type === 'argument_list' ? v.namedChildren.length : 0
 }
 
+/**
+ * 哪些容器宣告了**範圍的終點**接點 `source_end`——`set<int> s(v.begin(), v.end())`、`vector<int> v(a, a + 4)`。
+ * set／multiset（第 403 刀）沒有「幾個、每個是什麼」的建構子，兩個建構引數只可能是範圍。
+ * vector／deque（第 409 刀）兩種都有，所以還要 `looksLikeRange` 說兩個引數都像迭代器才算範圍。
+ */
 const hasRangeDecl = new Set(
   [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
     .filter((c) => (c as { slots?: Record<string, unknown> }).slots?.source_end !== undefined)
     .map((c) => (c as { componentId: string }).componentId),
 )
+
+const ITERATOR_CALLS = /^(?:std::)?(?:begin|end|cbegin|cend|rbegin|rend|crbegin|crend)$/
+
+/**
+ * **這個引數看起來是一個位置（迭代器或指標），不是一個數**（第 409 刀）。
+ *
+ * `vector<int> v(a, a + 4)` 與 `vector<int> v(n, 0)` 的形狀一模一樣，而前者是「放入 a[0..3]」、後者是「n 個 0」。
+ * 原本一律讀成後者，積木就寫著「大小 a、每格填 a+4」——Cella 判得對（它看型別），只有畫面錯。
+ * 判準只收**確定是位置**的：`.begin()` 一族的呼叫、宣告成陣列／指標／迭代器的名字、它們加減一個數、加括號。
+ * 認不出來的照舊當成「幾個、每個是什麼」——那是原本的讀法，不會比今天更錯。
+ */
+function looksLikePosition(n: AstNode | null | undefined, ctx: LiftContext): boolean {
+  if (!n) return false
+  switch (n.type) {
+    case 'parenthesized_expression':
+      return looksLikePosition(n.namedChildren[0], ctx)
+    case 'call_expression': {
+      const fn = n.childForFieldName('function')
+      if (fn?.type === 'field_expression') return ITERATOR_CALLS.test(fn.childForFieldName('field')?.text ?? '')
+      return ITERATOR_CALLS.test(fn?.text ?? '')
+    }
+    case 'binary_expression': {
+      const op = n.childForFieldName('operator')?.text
+      if (op !== '+' && op !== '-') return false
+      const l = n.childForFieldName('left'), r = n.childForFieldName('right')
+      return looksLikePosition(l, ctx) || (op === '+' && looksLikePosition(r, ctx))
+    }
+    case 'identifier':
+    case 'type_identifier': {
+      const t = ctx.data.lookup(n.text)?.type ?? ''
+      return t === 'array' || t === 'pointer' || /[*[]|iterator/.test(t)
+    }
+    default:
+      return false
+  }
+}
+
+/** 兩個建構引數都是位置 ⟹ 一段範圍。`function_declarator` 那一種（`vector<int> v(a, b)`、`v(begin(a), end(a))`）引數包在 parameter_declaration 裡，照 `ctorSlots` 的讀法重解。 */
+function looksLikeRange(decl: AstNode, ctx: LiftContext): boolean {
+  const args = decl.type === 'function_declarator'
+    ? (decl.namedChildren.find((c) => c.type === 'parameter_list')?.namedChildren ?? []).map((pd) => (pd.namedChildren.length === 1 ? pd.namedChildren[0] : nestedCtorArg(pd, ctx)))
+    : (decl.childForFieldName('value')?.namedChildren ?? [])
+  return args.length === 2 && args.every((a) => looksLikePosition(a, ctx))
+}
 
 /**
  * **樣板引數是一個「大小」，不是一個型別**——`bitset<26> bs;`（2026-09-19）。
@@ -1697,7 +1741,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
               source: [createNode(listId, {}, { values: s.values })],
             })
           }
-          if (s.size && s.fill && ctorArgCount(d) === 2 && hasRangeDecl.has(componentId)) {
+          if (s.size && s.fill && ctorArgCount(d) === 2 && hasRangeDecl.has(componentId)
+            && (!hasSizeDecl.has(componentId) || looksLikeRange(d, ctx))) {
             return createNode(componentId, props, { source: [s.size], source_end: [s.fill] })
           }
           if (s.size && hasSizeDecl.has(componentId)) {

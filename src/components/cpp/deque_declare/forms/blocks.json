@@ -80,5 +80,62 @@
       }
     },
     "_why": "🟢 **形狀照抄同族的列表宣告**（`variadic` ＋ `openLabelOnFirstSlot` ＋ 大小／每格填／複製自三格）——`deque` 的每一個建構形式都與它相同，而**學生靠形狀認「這是同一種東西」**。\n⚠️ 顏色與 category 也是抄的（`containers` / `#4C97FF`）：自己挑一個「看起來合理」的顏色等於在同一族裡製造一條假的分界。"
+  },
+  {
+    "id": "cpp:deque_declare.range",
+    "componentId": "cpp:deque_declare",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_deque_declare_range",
+      "message0": "%{BKY_CPP_DEQUE_DECLARE_CREATE} %1 %{BKY_CPP_DEQUE_DECLARE_KIND} %2",
+      "args0": [
+        {
+          "type": "field_dynamic_dropdown",
+          "name": "TYPE",
+          "source": "cpp_var_types",
+          "allowCustom": true
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "dq"
+        }
+      ],
+      "message1": "%{BKY_CPP_DEQUE_DECLARE_RANGE} %1 %{BKY_CPP_DEQUE_DECLARE_RANGE_TO} %2",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "SOURCE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SOURCE_END",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_DEQUE_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type"
+      },
+      "inputs": {
+        "SOURCE": "source",
+        "SOURCE_END": "source_end"
+      }
+    },
+    "form": {
+      "axis": "range_init",
+      "value": "range"
+    },
+    "_why": "**範圍形態**（第 409 刀）：`deque<int> v(a, a + 4)`——接點 `source_end` 有東西時用這一顆（軸 `range_init`，同 set_declare）。原本兩個引數一律讀成「大小、每格填」，積木就寫著「大小 a、每格填 a+4」。起點沿用 `SOURCE` 那一格；同元件同色、同一組標籤。"
   }
 ]
