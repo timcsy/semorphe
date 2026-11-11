@@ -25,10 +25,12 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     if (body?.type !== 'pair') return null
 
     const left = fors[0].childForFieldName('left')
-    const names = left?.type === 'pattern_list'
-      ? left.namedChildren.filter((c) => c.type === 'identifier').map((c) => c.text)
-      : left?.type === 'identifier' ? [left.text] : []
-    if (names.length === 0) return null
+    // 🔴 **收不下的目標整顆降級**（第 411 刀）：以前只挑出名字、其餘安靜丟掉——
+    //    `{k: a for k, (a, b) in …}` 產回去少了 `(a, b)`。巢狀、下標、`for x, in …` 都不收。
+    const parts = left?.type === 'pattern_list' ? left.namedChildren : left ? [left] : []
+    if (parts.length === 0 || parts.some((c) => c.type !== 'identifier')) return null
+    if (left?.type === 'pattern_list' && parts.length < 2) return null
+    const names = parts.map((c) => c.text)
 
     const key = ctx.lift(body.childForFieldName('key')!)
     const value = ctx.lift(body.childForFieldName('value')!)

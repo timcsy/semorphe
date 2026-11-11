@@ -16,13 +16,31 @@ describe('python:array_make_for', () => {
    * ⚠️ **這條原本釘的是「巢狀整顆走誠實降級」，而那個邊界在 2026-08-22 移動了**
    * ——巢狀今天收得下（見下面的「巢狀」那一組）。
    *
-   * 邊界移動時要**改成釘新的邊界，不是刪掉它**：今天走誠實降級的是
-   * **解構的目標**（`for k, v in d.items()`），而語義樹裡沒有地方放兩個名字。
+   * 邊界移動時要**改成釘新的邊界，不是刪掉它**。第二次移動（第 411 刀）：
+   * 解構的目標（`for k, v in d.items()`）今天收得下，名字放在 `targets`；
+   * 今天走誠實降級的是**巢狀的解構**（`for i, (a, b) in …`）與**只有一個名字的解包**（`for x, in …`）。
    */
-  it('🔴 lift：解構的目標整顆走誠實降級——收一半會弄丟一個名字', async () => {
-    const destructuring = 'a = [k for k, v in d.items()]\n'
-    expect(await ids(destructuring)).not.toContain('python:array_make_for')
-    expect(await ids(destructuring), '而它必須看得見').toContain('unresolved')
+  it('🔴 lift：巢狀的解構與單名解包整顆走誠實降級——收一半會弄丟名字或逗號', async () => {
+    expect(await ids('a = [k for k, v in d.items()]\n'), '正向錨點：一般的解構收得下').toContain('python:array_make_for')
+    for (const c of ['a = [w for i, (w, c) in enumerate(r)]\n', 'a = [x for x, in ps]\n']) {
+      expect(await ids(c), c).not.toContain('python:array_make_for')
+      expect(await ids(c), `${c} 而它必須看得見`).toContain('unresolved')
+    }
+  })
+
+  it('🟢 多個名字（第 411 刀，盲測 8 支裡 3 支）：來回一字不差，名字都在 targets', async () => {
+    for (const c of ['t = [(a, b) for a, b in zip(xs, ys) if b - a == 2]', 's = [w for w, c in r if c == 1]', 'z = "".join(ch * n for ch, n in runs)', 'u = {k for k, v in d.items()}']) {
+      expect(await rt(c + '\n'), c).toBe(c)
+    }
+    const t = await liftPython('a = [k for k, v in d.items()]\n')
+    const find = (n: any): any => n?.componentId === 'python:array_make_for' ? n
+      : Object.values(n?.slots ?? {}).flat().map(find).find(Boolean)
+    expect(find(t)?.slots.targets?.map((p: any) => p.properties.name)).toEqual(['k', 'v'])
+  })
+
+  it('🟢 執行：多個名字照 Python 的規則解開', async () => {
+    expect(await runPython('ps = [(1, 3), (5, 7), (11, 12)]\nprint([b - a for a, b in ps])\nprint("".join(c * n for c, n in [("a", 2), ("b", 1)]))\n'))
+      .toBe('completed|[2, 2, 1]\naab\n')
   })
 
   it('來回：一字不差', async () => {

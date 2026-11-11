@@ -7,10 +7,12 @@ export function registerToCpp(r: ToCppRegistrar): void {
   r.expr((n, cpp) => {
     if (String(n.properties.wrap ?? '') !== '') return cpp.keep(n, 'outside-subset', '產生器運算式與集合生成式還沒有對應')
     if ((n.slots.outer ?? []).length) return cpp.keep(n, 'outside-subset', '兩層的生成式還沒有對應')
+    if ((n.slots.targets ?? []).length > 1) return cpp.keep(n, 'outside-subset', '生成式拆開多個變數還沒有對應')
     if (!cpp.canHoist(n)) return cpp.keep(n, 'outside-subset', '生成式在條件、短路或有副作用的敘述裡（先算好會改變求值的次數或先後）')
     const et = cpp.cppType(/^list\[(.+)\]$/.exec(cpp.pyType(n) ?? '')?.[1])
     if (!et) return cpp.keep(n, 'type-uncertain', `生成式結果的型別（${cpp.pyType(n) ?? '?'}）`)
-    const v = cpp.name(String(n.properties.obj ?? 'x'))
+    // 名字以 `targets` 為準（積木抽回來的樹只有它），沒有時才讀 `obj`
+    const v = cpp.name(String(n.slots.targets?.[0]?.properties.name ?? n.properties.obj ?? 'x'))
     const it = n.slots.iterable?.[0]
     let head: string
     if (it?.componentId.endsWith(':range_make')) {

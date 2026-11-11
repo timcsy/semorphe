@@ -35,6 +35,11 @@
     "reason": "🔴 **`targets` 才是唯一的真實**（見那顆的 `_children_why`）：`obj` 是它的第一格，留著是為了舊存檔打得開。積木上那個名字欄位走的是 `targets` 的第一格。"
   },
   {
+    "key": "python:array_make_for.obj",
+    "cause": "同一件事已經由接點裝著",
+    "reason": "🔴 **與 `python:loop_for.obj` 同一個形狀**（第 411 刀）：推導式綁定的名字改走 `targets`（積木上是可增減的名字列 `PARAM_{i}`），`obj` 只是第一個名字的副本、給轉 C++ 那一路讀。以前積木上那個 `NAME` 欄位裝的是 `obj`，而多個名字裝不下——那正是這一刀拿掉它的理由。"
+  },
+  {
     "key": "cpp:serial_count.obj",
     "cause": "值由積木型別本身固定",
     "reason": "接收者永遠是 `Serial`——它是 Arduino 的**執行期表面**（一個全域物件），不是使用者的變數。給一格讓人改它，改出來的是一段編不過的碼。"

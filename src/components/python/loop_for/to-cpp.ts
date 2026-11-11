@@ -5,8 +5,11 @@ import type { SemanticNode } from '../../../core/types'
 export function registerToCpp(r: ToCppRegistrar): void {
   r.stmt((n, cpp, depth) => {
     const i = cpp.indent(depth)
-    const v = cpp.name(String(n.properties.obj ?? ''))
-    if ((n.slots.targets ?? []).length > 0) return [cpp.keep(n, 'outside-subset', 'for 拆開多個變數還沒有對應')]
+    // 名字以 `targets` 為準（積木抽回來的樹只有它），沒有時才讀 `obj`
+    const loopName = String(n.slots.targets?.[0]?.properties.name ?? n.properties.obj ?? '')
+    const v = cpp.name(loopName)
+    // 第 411 刀起單一名字也在 `targets` 裡——多於一個才是「拆開多個變數」
+    if ((n.slots.targets ?? []).length > 1) return [cpp.keep(n, 'outside-subset', 'for 拆開多個變數還沒有對應')]
     const it = n.slots.iterable?.[0]
     if (it?.componentId.endsWith(':range_make')) {
       // for i in range(a, b, s)：迴圈變數已由引擎提前宣告（Python 的迴圈變數在迴圈之後還在）
@@ -21,7 +24,7 @@ export function registerToCpp(r: ToCppRegistrar): void {
         if (neg) { step = neg; down = true } else if (lit(s)) { step = lit(s)! } else { return [cpp.keep(n, 'outside-subset', 'range 的步長不是字面量（看不出往上還是往下）')] }
       }
       // 迴圈之後讀它、或本體改它 → 用一個看不見的計數器帶迭代，每一圈把值給它（Python：結束時是最後一個值、改它不影響下一圈）
-      const plain = cpp.plainLoopVar(n, String(n.properties.obj ?? ''))
+      const plain = cpp.plainLoopVar(n, loopName)
       const c = plain ? v : `${v}__`
       const inc = step === '1' ? (down ? `${c}--` : `${c}++`) : `${c} ${down ? '-' : '+'}= ${step}`
       const head = plain ? `${i}for (${c} = ${a}; ${c} ${down ? '>' : '<'} ${b}; ${inc}) {` : `${i}for (long long ${c} = ${a}; ${c} ${down ? '>' : '<'} ${b}; ${inc}) {`
