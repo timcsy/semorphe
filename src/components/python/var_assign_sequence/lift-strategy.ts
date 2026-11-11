@@ -17,13 +17,16 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftSequenceAssign', (node, ctx) => {
     const left = node.childForFieldName('left')
     if (!left || left.type !== 'pattern_list') return null // 單一指派 → 讓下一筆樣式接手
+    const right = node.childForFieldName('right')
+    // 🔴 連鎖指定（`a, b = c, d = …`）與巢狀／非名字的目標（`a, (b, c) = …`、`x[0], x[1] = …`）都不收（第 410 刀）：
+    //    以前只挑出名字、其餘安靜丟掉，產回去是一個少了目標的合法程式。收不下就整句降級。
+    if (right?.type === 'assignment') return null
+    if (left.namedChildren.some((c) => c.type !== 'identifier')) return null
 
     const targets: SemanticNode[] = left.namedChildren
-      .filter((c) => c.type === 'identifier')
       .map((c) => createNode('param_decl', { type: '', name: c.text }))
     if (targets.length === 0) return null
 
-    const right = node.childForFieldName('right')
     const value = right ? ctx.lift(right) : null
     return createNode('python:var_assign_sequence', {}, { targets, value: value ? [value] : [] })
   })

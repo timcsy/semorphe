@@ -53,6 +53,11 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       }
       if (child.type !== 'interpolation') continue // string_start／string_end 是引號，不是內容
 
+      // 🔴 **帶轉換（`{s!r}`／`!s`／`!a`）或自我說明（`{x=}`）的插值，整個 f-string 降級**（第 410 刀，盲測抓到）：
+      //    以前那一段被安靜丟掉，`f'{s!r:<6}'` 產回去是 `f"{s:<6}"`——印出來從 `'q'   ` 變成 `q     `。
+      //    這一格還沒有位置放轉換，收一半會產出一個合法而行為不同的程式。
+      if (child.namedChildren.some((c) => c.type === 'type_conversion')
+        || child.children.some((c) => !c.isNamed && c.type === '=')) return null
       const expr = child.childForFieldName('expression')
       const fmt = child.childForFieldName('format_specifier')
       // ⚠️ `format_specifier` 的原文含前導冒號（`:.1f`），而冒號是**語法**不是格式。

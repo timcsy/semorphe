@@ -37,8 +37,10 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const properties: Record<string, string> = {}
 
     if (left?.type === 'pattern_list') {
+      // 🔴 **巢狀的目標整顆降級**（第 410 刀，盲測抓到）：`for i, (w, c) in enumerate(d)` 以前只挑出名字 `i`、
+      //    把 `(w, c)` 安靜丟掉——產回去是 `for i in enumerate(d)`，Cella 對一支合法的程式報 `w` 沒定義。
+      if (left.namedChildren.some((c) => c.type !== 'identifier')) return null
       slots.targets = left.namedChildren
-        .filter((c) => c.type === 'identifier')
         .map((c) => createNode('param_decl', { type: '', name: c.text }))
       // ⚠️ `obj` 仍然填第一個名字——存檔格式與積木的那個欄位都還在用它。
       properties.obj = String(slots.targets[0]?.properties.name ?? 'i')

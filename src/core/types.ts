@@ -329,6 +329,15 @@ export interface AstConstraint {
    * > ——而那與「全部知道」之間有一條線，那條線要被寫下來。**
    */
   notDeclared?: boolean
+  /**
+   * 🔴 **要求這個欄位【不是】某種節點**（第 410 刀）。
+   *
+   * Python 的 `a = b = 0` 剖成 `assignment(right: assignment)`，而三顆指定元件的樣式
+   * 只問左邊，於是右邊那個**敘述**被當成運算式收進 value——產回去是 `a = `（壞掉的程式），
+   * 送給 Cella 的是運算式位置上的 `sAssign`（不合法的 JSON）。
+   * 與 `absent` 同一個道理：表達不出「必須不是」，就只能用「沒有限制」代替。
+   */
+  notNodeType?: string
 }
 
 export interface FieldMapping {

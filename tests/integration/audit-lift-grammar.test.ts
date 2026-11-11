@@ -166,7 +166,7 @@ describe('spec 167 · lift pattern 的文法歸屬', () => {
     //    `notDeclared` 加進型別而沒加這裡 → 它當場報「不存在的鍵」）。
     //
     // 🟢 那正是它該做的：**JSON 沒有型別檢查，拼錯了沒有人會說**。
-    const CONSTRAINT_KEYS = new Set(['field', 'text', 'nodeType', 'match', 'absent', 'notDeclared'])
+    const CONSTRAINT_KEYS = new Set(['field', 'text', 'nodeType', 'match', 'absent', 'notDeclared', 'notNodeType'])
     const MAPPING_KEYS = new Set(['semantic', 'ast', 'extract', 'transform'])
     const bad: string[] = []
     const check = (obj: Record<string, unknown>, allowed: Set<string>, where: string) => {
