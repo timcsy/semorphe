@@ -596,6 +596,11 @@
       "field": "field_dropdown",
       "reason": "一般／virtual／override／static 四種（同一般方法那顆，第 390 刀）"
     },
+    "python_string_insert.SELF_DOC": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "f-string 的自我說明（`{x=}`）只收 `=` 與 ` = ` 兩種寫法加上「沒有」；其他空白的寫法 lift 時整段降級，不會進到這一格（第 418 刀）"
+    },
     "python_string_insert.CONVERSION": {
       "decision": "closed",
       "field": "field_dropdown",

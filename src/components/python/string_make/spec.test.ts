@@ -72,10 +72,28 @@ describe('python:string_make', () => {
     expect(await runPython("print(f'{[1, \"a\"]!r}')\n")).toBe("completed|[1, 'a']\n")
   })
 
-  it('自我說明 `{x=}` 仍整句降級（還沒有位置放「把原文也印出來」）', async () => {
-    const f = await ids('x = 1\nprint(f"{x=}")')
-    expect(f, '正向錨點').toContain('python:program')
-    expect(f).not.toContain('python:string_make')
-    expect(await roundTrip('print(f"{x=}")')).toBe('print(f"{x=}")')
+  // 🔴 第 418 刀：自我說明 `{x=}` 收成插值那一格的 `selfDoc`。410 起它整句降級（盲測抓到），再之前不存在
+  it('自我說明：名字與屬性鏈收得下，來回一字不差', async () => {
+    const code = 'x = f"{x=}|{s = }|{v=:.2f}|{s=!s}|{p.n=}"'
+    const f = await ids(code)
+    expect(f, '正向錨點').toContain('python:string_insert')
+    expect(f).not.toContain('unresolved')
+    expect(f).not.toContain('python:raw_code')
+    expect(await roundTrip(code)).toBe(code)
+  })
+
+  it('自我說明：執行時印出原文與等號，沒寫轉換也沒寫格式時是程式碼的樣子', async () => {
+    const prog = "class P:\n    def __init__(self):\n        self.n = 5\np = P()\ns = 'q'\nx = 1\nv = 3.14159\nprint(f'{x=}|{s=}|{s = }|{v=:.2f}|{s=!s}|{p.n=}|{s=:>4}')\n"
+    expect(await runPython(prog)).toBe("completed|x=1|s='q'|s = 'q'|v=3.14|s=q|p.n=5|s=   q\n")
+  })
+
+  it('自我說明：原文產不回一字不差的寫法仍整句降級', async () => {
+    // Python 印的是原文：`{x+1=}` 印 `x+1=`，而產碼會寫成 `x + 1`；`{ x=}` 會連前面的空白一起印
+    for (const code of ['print(f"{x+1=}")', 'print(f"{ x=}")', 'print(f"{x =}")', 'print(f"{d[0]=}")']) {
+      const f = await ids('x = 1\n' + code)
+      expect(f, `${code}：正向錨點`).toContain('python:program')
+      expect(f, code).not.toContain('python:string_make')
+      expect(await roundTrip(code), code).toBe(code)
+    }
   })
 })
