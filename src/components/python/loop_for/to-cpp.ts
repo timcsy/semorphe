@@ -5,6 +5,8 @@ import type { SemanticNode } from '../../../core/types'
 export function registerToCpp(r: ToCppRegistrar): void {
   r.stmt((n, cpp, depth) => {
     const i = cpp.indent(depth)
+    // 迴圈的 `else:`（沒遇到 break 才做）在 C++ 沒有一對一的寫法——照實留著，不猜（第 417 刀）
+    if ((n.slots.else_body ?? []).length > 0) return [cpp.keep(n, 'outside-subset', '迴圈的 else（沒被 break 才做）還沒有對應')]
     // 名字以 `targets` 為準（積木抽回來的樹只有它），沒有時才讀 `obj`
     const loopName = String(n.slots.targets?.[0]?.properties.name ?? n.properties.obj ?? '')
     const v = cpp.name(loopName)

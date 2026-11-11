@@ -2,5 +2,7 @@
   "PYTHON_FOR_MSG0": "Loop over %1",
   "PYTHON_FOR_TOOLTIP": "Walk a sequence in order, binding each value to the name. range(3) gives 0, 1, 2",
   "PYTHON_FOR_TARGETS_OPEN": "taking each",
-  "PYTHON_FOR_TARGETS_CLOSE": ""
+  "PYTHON_FOR_TARGETS_CLOSE": "",
+  "PYTHON_FOR_ELSE": "if no break",
+  "PYTHON_FOR_MUTATOR_TITLE": "for each"
 }
