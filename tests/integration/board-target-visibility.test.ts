@@ -89,3 +89,20 @@ describe('spec 142 · US1：板子決定工具箱裡有什麼', () => {
     }
   })
 })
+
+describe('415 · 伺服馬達只在核心附 Servo.h 的板子上出現（2026-11-12）', () => {
+  const SERVO = ['cpp_servo_declare', 'cpp_servo_attach', 'cpp_servo_write', 'cpp_servo_read']
+
+  it('★ 錨點：Uno 與 Nano 拿得到四顆伺服馬達積木', () => {
+    for (const t of [unoTarget, nanoTarget]) {
+      const types = typesFor(t as Target)
+      expect(SERVO.filter((b) => !types.has(b)), `${(t as Target).id} 少了伺服馬達積木`).toEqual([])
+    }
+  })
+
+  it('🔴 ESP32 拿不到——它的核心不附 Servo.h，產出的程式會編不過（Cella 有 ESP32Servo、換了標頭之後才打開）', () => {
+    const types = typesFor(esp32Target as Target)
+    expect(types.has('cpp_digital_write'), '錨點：ESP32 的工具箱有組起來').toBe(true)
+    expect(SERVO.filter((b) => types.has(b))).toEqual([])
+  })
+})

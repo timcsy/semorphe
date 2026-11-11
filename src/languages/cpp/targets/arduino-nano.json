@@ -6,7 +6,9 @@
   "topic": "arduino",
   "style": "google",
   "skeleton": "arduino",
-  "provides": [],
+  "provides": [
+    "servo"
+  ],
   "board": {
     "name": "Arduino Nano",
     "source": "arduino/ArduinoCore-avr variants/eightanaloginputs/pins_arduino.h（boards.txt: nano.build.variant）",

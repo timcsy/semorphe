@@ -147,6 +147,22 @@ describe('spec 147 · US3：能力逐塊查證', () => {
     // ★ 反向錨點：而它們【有】自己的能力——否則上面可能只是整個空的
     expect(byId('wemos-d1-mini').provides, 'ESP8266 板子少了它的賣點 WiFi').toContain('wifi')
   })
+
+  it('🔴 伺服馬達：核心附 `Servo.h` 的板子才提供；ESP32 系列要等 headerAliases 換成 ESP32Servo（415，2026-11-12）', () => {
+    // arduino-esp32 不附 `Servo.h`（要另裝 ESP32Servo），Cella 對 esp32 判
+    // 「<Servo.h> is not a library of the board esp32」。使用者 2026-11-11 決定
+    // ESP32 共用同一套積木、換標頭 ⟹ 打開 `servo` 的那一天，標頭必須同時換掉。
+    const header = (id: string): string | undefined =>
+      (targets.find((t) => t.id === id) as { headerAliases?: Record<string, string> } | undefined)?.headerAliases?.['<Servo.h>']
+    for (const id of ['arduino-uno', 'arduino-nano', 'wemos-d1-mini', 'nodemcu-esp8266'] as const) {
+      expect(byId(id).provides, `${id} 的核心附 Servo.h，卻沒宣告 servo`).toContain('servo')
+    }
+    for (const id of ['esp32', 'esp32c3', 'esp32s3', 'esp32s3-cam'] as const) {
+      if (byId(id).provides?.includes('servo')) {
+        expect(header(id), `${id} 提供了 servo，而 <Servo.h> 沒有換成 <ESP32Servo.h>——產出的程式在這塊板子上編不過`).toBe('<ESP32Servo.h>')
+      }
+    }
+  })
 })
 
 describe('spec 147 · 🔴 加了板子而忘了讓它出現在選單裡', () => {

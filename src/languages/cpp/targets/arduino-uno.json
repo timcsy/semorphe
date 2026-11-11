@@ -6,7 +6,9 @@
   "topic": "arduino",
   "style": "google",
   "skeleton": "arduino",
-  "provides": [],
+  "provides": [
+    "servo"
+  ],
   "board": {
     "name": "Arduino Uno",
     "source": "arduino/ArduinoCore-avr variants/standard/pins_arduino.h",

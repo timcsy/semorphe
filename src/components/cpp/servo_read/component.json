@@ -26,5 +26,9 @@
       }
     },
     "formalize": "./formalize.ts"
-  }
+  },
+  "traits": {
+    "needsCapability": "servo"
+  },
+  "_needsCapability_why": "同 `cpp:servo_declare` 的 `_needsCapability_why`：ESP32 核心不附 `Servo.h`，伺服馬達一族只在提供 `servo` 的板子上出現。"
 }
