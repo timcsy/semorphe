@@ -665,6 +665,11 @@
     "reason": "2026-08-22。理由同上。⚠️ 接點（`value`）由 Python 語料的「海象運算子」那一段釘住（`if (n := len(xs)) > 3`）。"
   },
   {
+    "componentId": "python:assign_chain",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "與序列指派同一個理由：目標名單是策略沿著右邊巢狀的 `assignment` 一路收出來的。由 `spec.test.ts` 的來回與 Cella 執行釘住。"
+  },
+  {
     "componentId": "python:var_assign_sequence",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "與同族固定組合同一個理由：目標名單是策略從 `pattern_list` 拆出來的。由 `spec.test.ts` 的來回與「格數對不上要出聲」釘住。"

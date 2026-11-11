@@ -1,0 +1,42 @@
+[
+  {
+    "id": "python_assign_chain",
+    "componentId": "python:assign_chain",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_assign_chain",
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_ASSIGN_CHAIN_TOOLTIP}",
+      "message0": "%{BKY_PY_ASSIGN_CHAIN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "builder": "variadic",
+      "slotCheck": "Expression",
+      "minCount": 2
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value"
+      },
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "targets",
+          "inputPattern": "TARGET{i}"
+        }
+      ]
+    },
+    "_why": "值在前、目標在後（`把 0 存進 a、b`）：讀起來是「一個值、好幾個地方」，與原始碼由左到右的目標順序一致。`minCount: 2`——只有一個目標的是同族的一般指派。"
+  }
+]
