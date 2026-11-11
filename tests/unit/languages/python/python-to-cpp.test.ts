@@ -94,9 +94,11 @@ describe('Python → C++ 照實保留', () => {
     const t = (await liftPython('x = 1\nprint(x)\n'))!
     expect(convertPythonToCpp(t, null).reasons.map((x) => x.kind)).toContain('needs-types')
   })
-  it('印浮點數 → 不換（Python 印 2.0、cout 印 2）', async () => {
+  it('印浮點數 → 換成 float_text（照 Python 的 repr 印；404 之前整支保留）', async () => {
     const r = await cpp('x = 2.0\nprint(x)\n', { x: 'float' })
-    expect(r.reasons.map((x) => x.kind)).toEqual(['float-print'])
+    expect(r.code, JSON.stringify(r.reasons)).toContain('cout << float_text(x)')
+    expect(r.code).toContain('string float_text(double x) {')
+    expect(r.code).toContain('#include <cstdio>')
   })
   it('負的下標、子集以外的構造 → 不換', async () => {
     expect((await cpp('xs = [1, 2]\nprint(xs[-1])\n', { xs: 'list[int]' })).code).toBeNull()

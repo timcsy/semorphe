@@ -17,6 +17,8 @@ export function registerToCpp(r: ToCppRegistrar): void {
       if (from === 'int' || from === 'float') return `(double)(${cpp.expr(v)})`
     }
     if (to === 'str' && (from === 'int')) return `to_string(${cpp.expr(v)})`
+    // str(浮點)：與 print 同一個 repr（to_string 印 6 位小數，404）
+    if (to === 'str' && from === 'float') return `${cpp.useHelper('float_text')}(${cpp.expr(v)})`
     if (to === 'str' && from === 'str') return cpp.expr(v)
     return cpp.keep(n, 'type-uncertain', `${to}(…) 的對象型別（${from ?? '?'}）`)
   })
