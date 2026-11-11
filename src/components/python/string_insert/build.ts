@@ -2,6 +2,7 @@
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-export function buildStringInsert(format: string, value: SemanticNode | null): SemanticNode {
-  return createNode('python:string_insert', { format }, value ? { value: [value] } : {})
+/** `conversion`：`''`（沒有）／`'r'`／`'s'`／`'a'`——`{x!r}` 的那個字母。 */
+export function buildStringInsert(format: string, value: SemanticNode | null, conversion = ''): SemanticNode {
+  return createNode('python:string_insert', { format, conversion }, value ? { value: [value] } : {})
 }

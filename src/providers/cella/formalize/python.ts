@@ -270,7 +270,9 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
         } else {
           const fmt = prop(p, 'format')
           const spec = fmt ? { k: 'eJoinedStr', n: `${p.id}/spec`, values: [{ k: 'eConstant', n: `${p.id}/spec/0`, value: { k: 'cStr', s: fmt } }] } : null
-          vals.push({ k: 'eFormattedValue', n: p.id, value: slot(p, 'value'), conversion: -1, formatSpec: spec })
+          // 轉換照 CPython AST 的寫法：沒有是 -1，其餘是那個字母的字元碼（`!r` → 114）
+          const conv = prop(p, 'conversion')
+          vals.push({ k: 'eFormattedValue', n: p.id, value: slot(p, 'value'), conversion: conv ? conv.charCodeAt(0) : -1, formatSpec: spec })
         }
       }
       return { k: 'eJoinedStr', n: x.id, values: vals }

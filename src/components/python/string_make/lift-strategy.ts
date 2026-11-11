@@ -53,17 +53,20 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       }
       if (child.type !== 'interpolation') continue // string_start／string_end 是引號，不是內容
 
-      // 🔴 **帶轉換（`{s!r}`／`!s`／`!a`）或自我說明（`{x=}`）的插值，整個 f-string 降級**（第 410 刀，盲測抓到）：
-      //    以前那一段被安靜丟掉，`f'{s!r:<6}'` 產回去是 `f"{s:<6}"`——印出來從 `'q'   ` 變成 `q     `。
-      //    這一格還沒有位置放轉換，收一半會產出一個合法而行為不同的程式。
-      if (child.namedChildren.some((c) => c.type === 'type_conversion')
-        || child.children.some((c) => !c.isNamed && c.type === '=')) return null
+      // 🔴 **自我說明（`{x=}`）的插值，整個 f-string 降級**（第 410 刀，盲測抓到）：
+      //    那一格還沒有位置放「把運算式原文也印出來」，收一半會產出一個合法而行為不同的程式。
+      //    轉換（`!r`／`!s`／`!a`）在第 412 刀有了自己的一格——以前它也在這裡降級，
+      //    再更早是被安靜丟掉（`f'{s!r:<6}'` 產回去是 `f"{s:<6}"`，印出來少了引號）。
+      if (child.children.some((c) => !c.isNamed && c.type === '=')) return null
+      const convNode = child.namedChildren.find((c) => c.type === 'type_conversion')
+      const conversion = convNode ? convNode.text.replace(/^!/, '') : ''
+      if (conversion && !/^[rsa]$/.test(conversion)) return null // 文法收得下、Python 不收的字母——不猜
       const expr = child.childForFieldName('expression')
       const fmt = child.childForFieldName('format_specifier')
       // ⚠️ `format_specifier` 的原文含前導冒號（`:.1f`），而冒號是**語法**不是格式。
       const format = fmt ? fmt.text.replace(/^:/, '') : ''
       const lifted = expr ? ctx.lift(expr) : null
-      parts.push(buildStringInsert(format, lifted))
+      parts.push(buildStringInsert(format, lifted, conversion))
     }
     return createNode('python:string_make', {}, { parts })
   })
