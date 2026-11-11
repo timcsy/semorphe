@@ -8,6 +8,8 @@
     "body": {
       "$body": "body"
     },
-    "orelse": []
+    "orelse": {
+      "$stmts": "else_body"
+    }
   }
 }

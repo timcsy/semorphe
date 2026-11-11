@@ -233,3 +233,107 @@ export function attachBranchList(type: string, spec: BranchListSpec): void {
     if (wantElse !== this.hasElse_) this.toggleElse_()
   }
 }
+
+/**
+ * **只有尾巴、沒有分支**的那一種——Python 的 `while … else:`／`for … else:`（第 417 刀）。
+ *
+ * 齒輪裡只有兩顆小積木（容器 ＋「沒被中斷時」），手勢與 `if` 的 else 同一種：
+ * 把那顆小積木拖進容器，積木下面就多一段語句插槽。
+ *
+ * 🔴 **它是「接上去」的，不是「整顆接管」**：`for` 已經有參數列的 `＋`／`−`
+ * （`attachParamList`），而兩者都要寫 `saveExtraState`。這裡包住既有的
+ * `init`／`saveExtraState`／`loadExtraState`，只多管 `hasElse` 一個鍵
+ * ——另一個機制存的東西一個字都不碰。
+ *
+ * ⚠️ 前提是那個既有的機制**沒有真的掛上齒輪**（一顆積木只能有一個 mutator）。
+ *    掛了就在建積木的當下丟例外，不要安靜地蓋掉。
+ */
+export interface ElseTailSpec {
+  elseInput: string
+  elseLabelKey?: string
+  elseLabelFallback?: string
+  containerLabelKey?: string
+  containerLabelFallback?: string
+  colour: string | number
+}
+
+export function attachElseTail(type: string, spec: ElseTailSpec): void {
+  const proto = Blockly.Blocks[type] as any
+  if (!proto) throw new Error(`attachElseTail：積木型別 ${type} 還沒被定義——順序反了`)
+  const msg = Blockly.Msg as Record<string, string>
+  const text = (k: string | undefined, f: string | undefined): string =>
+    ((k ? msg[k] || f : f) ?? '').replace(/\s*%\d+/g, '')
+  const mini = (suffix: string, label: string, stack: boolean): void => {
+    Blockly.Blocks[`${type}_${suffix}`] = {
+      init: function (this: Blockly.Block) {
+        this.appendDummyInput().appendField(label)
+        if (stack) this.appendStatementInput('STACK')
+        else this.setPreviousStatement(true)
+        this.setColour(spec.colour)
+        ;(this as unknown as { contextMenu: boolean }).contextMenu = false
+      },
+    }
+  }
+  mini('container', text(spec.containerLabelKey, spec.containerLabelFallback), true)
+  mini('else_input', text(spec.elseLabelKey, spec.elseLabelFallback), false)
+
+  const baseInit = proto.init
+  const baseSave = proto.saveExtraState
+  const baseLoad = proto.loadExtraState
+
+  proto.init = function (this: any): void {
+    baseInit.call(this)
+    // ⚠️ 量的是【這一顆真的長了齒輪沒有】，不是原型上有沒有 `decompose`
+    //    ——`attachParamList` 一律定義它，而只在有可選段落時才真的掛齒輪。
+    if (this.hasIcon?.(Blockly.icons.MutatorIcon.TYPE)) {
+      throw new Error(`attachElseTail：${type} 已經有自己的齒輪——一顆積木只能有一個 mutator`)
+    }
+    this.hasElse_ = false
+    this.setMutator(new Blockly.icons.MutatorIcon([`${type}_else_input`], this as unknown as Blockly.BlockSvg))
+  }
+
+  proto.decompose = function (this: any, workspace: Blockly.WorkspaceSvg): Blockly.Block {
+    const container = workspace.newBlock(`${type}_container`)
+    container.initSvg()
+    if (this.hasElse_) {
+      const b = workspace.newBlock(`${type}_else_input`)
+      b.initSvg()
+      container.getInput('STACK')!.connection!.connect(b.previousConnection!)
+    }
+    return container
+  }
+
+  proto.compose = function (this: any, container: Blockly.Block): void {
+    const want = container.getInputTargetBlock('STACK')?.type === `${type}_else_input`
+    if (want !== this.hasElse_) this.toggleElse_()
+  }
+
+  proto.toggleElse_ = function (this: any): void {
+    if (this.hasElse_) {
+      this.removeInput(spec.elseInput)
+      this.hasElse_ = false
+    } else {
+      // 接在最後：主體之後才是「沒被中斷時」那一段，與程式碼的順序相同。
+      this.appendStatementInput(spec.elseInput)
+        .setCheck('Statement')
+        .appendField(text(spec.elseLabelKey, spec.elseLabelFallback))
+      this.hasElse_ = true
+    }
+  }
+
+  proto.saveExtraState = function (this: any): Record<string, unknown> | null {
+    const base = baseSave ? baseSave.call(this) : null
+    if (!this.hasElse_) return base
+    return { ...(base ?? {}), hasElse: true }
+  }
+
+  proto.loadExtraState = function (this: any, state: Record<string, unknown> | null): void {
+    if (baseLoad) {
+      // ⚠️ 交給既有機制的是**拿掉 `hasElse` 的那一份**——它不認得這個鍵，也不該看到它。
+      const rest = state ? Object.fromEntries(Object.entries(state).filter(([k]) => k !== 'hasElse')) : state
+      baseLoad.call(this, rest && Object.keys(rest).length > 0 ? rest : null)
+    }
+    const want = state?.hasElse === true
+    if (want !== this.hasElse_) this.toggleElse_()
+  }
+}

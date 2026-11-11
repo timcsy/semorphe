@@ -13,7 +13,8 @@
   "slots": {
     "iterable": "expression",
     "body": "statements",
-    "targets": "param_decl"
+    "targets": "param_decl",
+    "else_body": "statements"
   },
   "role": "statement",
   "owner": "(python)",

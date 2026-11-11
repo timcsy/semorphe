@@ -82,13 +82,18 @@ describe('Python 的註解在來回一趟之後還在', () => {
   })
 
   it('🔴 `for … else:` 與 `while … else:` 整段【不准】安靜消失', async () => {
-    for (const code of [
-      'for i in xs:  # 走\n    pass\nelse:  # 沒斷\n    pass\n',
-      'while a:  # 迴圈\n    a = 0\nelse:  # 正常結束\n    pass\n',
+    for (const [code, normalized] of [
+      ['for i in xs:  # 走\n    pass\nelse:  # 沒斷\n    pass\n',
+        'for i in xs:\n    # 走\n    pass\nelse:\n    # 沒斷\n    pass\n'],
+      ['while a:  # 迴圈\n    a = 0\nelse:  # 正常結束\n    pass\n',
+        'while a:\n    # 迴圈\n    a = 0\nelse:\n    # 正常結束\n    pass\n'],
     ]) {
-      // ⚠️ 這一條釘的是【程式碼】不是註解：那兩顆元件沒有地方放 `else`，
+      // ⚠️ 這一條釘的是【程式碼】不是註解：那兩顆元件以前沒有地方放 `else`，
       //    而在此之前它們**安靜地丟掉它**——產出的碼合法、少了一段。
-      expect((await roundTrip(code)).trim(), code).toBe(code.trim())
+      // 🟢 第 417 刀起 `else` 收進 `else_body`；行末註解照核心的正規化搬到下一行
+      //    （與 `if` 同一條規則），而且再轉一次不動。
+      expect((await roundTrip(code)).trim(), code).toBe(normalized.trim())
+      expect((await roundTrip(normalized)).trim(), '不動點').toBe(normalized.trim())
     }
   })
 

@@ -5,7 +5,8 @@
   "properties": [],
   "slots": {
     "condition": "expression",
-    "body": "statements"
+    "body": "statements",
+    "else_body": "statements"
   },
   "role": "statement",
   "owner": "(python)",
@@ -20,7 +21,8 @@
       },
       "code": {
         "render": "./generate.ts",
-        "lift": "./lift-pattern.json"
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
       }
     }
   },

@@ -27,7 +27,7 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import * as Blockly from 'blockly'
-import { attachBranchList } from '../../src/panels/blocks/branch-list-block'
+import { attachBranchList, attachElseTail } from '../../src/panels/blocks/branch-list-block'
 import { attachParamList } from '../../src/panels/blocks/param-list-block'
 import { attachAltLayout } from '../../src/panels/blocks/alt-layout-block'
 import { attachVariadic, defineVariadicBlock } from '../../src/panels/blocks/variadic-block'
@@ -94,6 +94,8 @@ function declarableKeys(spec: unknown): string[] {
   //    會永遠掛在「宣告表達不出」那一欄——**而那是比對器在說謊**。
   const def = sp?.blockDef
   if (def?.branchList) { keys.add('elseifCount'); keys.add('hasElse') }
+  // 只有尾巴的那一種（第 417 刀，`while`／`for … else`）存的也是 `hasElse`
+  if (def?.elseTail) keys.add('hasElse')
   // ⚠️ **同一條規則**（用它實際會用的那個鍵）：`paramList` 宣告了 `itemsAs` 時
   //    存的是那份具名的形態清單（`{ items: [...] }`），不是 `paramCount`。
   if (def?.paramList) {
@@ -277,7 +279,10 @@ function fromDeclaration(type: string): Shape | null {
     })
   }
   if (def.branchList) attachBranchList(probe, def.branchList as never)
-  else if (def.paramList) attachParamList(probe, def.paramList as never)
+  else if (def.paramList) {
+    attachParamList(probe, def.paramList as never)
+    if (def.elseTail) attachElseTail(probe, def.elseTail as never)
+  }
   else if (def.builder === 'variadic') {
     const rules = (spec?.renderMapping as { dynamicRules?: { inputPattern?: string }[] } | undefined)?.dynamicRules
     const sole = rules?.length === 1 ? rules[0] : undefined
@@ -323,6 +328,8 @@ function fromDeclaration(type: string): Shape | null {
       }
     }
   }
+  // 只有尾巴的那一種（`while … else`）：沒有別的建構子時接在 jsonInit 之後，與產品同順序
+  if (def.elseTail && !def.paramList) attachElseTail(probe, def.elseTail as never)
   const b = ws.newBlock(probe)
   const s = shapeOf(b)
   b.dispose(false)
