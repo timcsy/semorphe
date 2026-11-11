@@ -191,7 +191,9 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
     const outer = kids(x, 'outer')
     if (outer.length > 0) out.push(...clauses(outer[0]))
     const cond = kids(x, 'condition')
-    out.push({ k: 'comprehension', target: textTarget(x, 'obj'), iter: slot(x, 'iterable'), ifs: cond.length > 0 ? [node(cond[0])] : [] })
+    // 名字以 `targets` 為準（推導式最裡面那一段，第 411 刀）；外層 `loop_iter` 仍只有 `obj`
+    const target = kids(x, 'targets').length > 0 ? targetOf(x, 'targets', 'obj') : textTarget(x, 'obj')
+    out.push({ k: 'comprehension', target, iter: slot(x, 'iterable'), ifs: cond.length > 0 ? [node(cond[0])] : [] })
     return out
   }
   const literalOf = (text: string, at: SemanticNode, n: string): CellaJson => {

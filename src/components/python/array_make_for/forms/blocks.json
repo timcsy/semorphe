@@ -16,11 +16,6 @@
           "check": "Expression"
         },
         {
-          "type": "field_input",
-          "name": "NAME",
-          "text": "x"
-        },
-        {
           "type": "input_value",
           "name": "ITERABLE",
           "check": "Expression"
@@ -38,12 +33,27 @@
       ],
       "output": "Expression",
       "colour": "#FF661A",
-      "tooltip": "%{BKY_PY_ARRAY_MAP_TOOLTIP}"
+      "tooltip": "%{BKY_PY_ARRAY_MAP_TOOLTIP}",
+      "paramList": {
+        "itemPattern": "PARAM_{i}",
+        "fields": [
+          {
+            "type": "field_input",
+            "name": "PARAM_{i}",
+            "text": "x"
+          }
+        ],
+        "separator": "，",
+        "openLabelKey": "PY_ARRAY_MAP_OPEN",
+        "openLabelFallback": "對每一個",
+        "closeLabelKey": "PY_ARRAY_MAP_CLOSE",
+        "closeLabelFallback": "",
+        "moveTailTo": "ITERABLE",
+        "minCount": 1
+      }
     },
     "renderMapping": {
-      "fields": {
-        "NAME": "obj"
-      },
+      "fields": {},
       "inputs": {
         "EXPRESSION": "expression",
         "ITERABLE": "iterable",
@@ -52,7 +62,18 @@
       },
       "hints": [
         "wrap"
+      ],
+      "dynamicRules": [
+        {
+          "countSource": "paramCount",
+          "childSlot": "targets",
+          "childComponent": "param_decl",
+          "childFields": {
+            "PARAM_{i}": "name"
+          }
+        }
       ]
-    }
+    },
+    "_why": "🔴 **被綁定的名字用 paramList，不是一個文字欄位**（第 411 刀）：`[(a, b) for a, b in zip(xs, ys)]` 有兩個名字，一個欄位只裝得下一個——在那之前它整顆降級（盲測 8 支裡 3 支踩到）。與同族的 `for` 迴圈、字典推導式同一個形狀，`countSource` 用 `paramCount`（存檔契約）。\n⚠️ `minCount: 1`：零個名字的推導式不是合法的 Python。`moveTailTo: ITERABLE` 讓名字列留在「取自」前面，讀起來仍是「收集 … 對每一個 x 取自 …」。"
   }
 ]

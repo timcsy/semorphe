@@ -4,7 +4,7 @@ import { indent, indented, generateExpression, generateBody, trackOwnText} from 
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:loop_for', (node, ctx) => {
-    // 多目標時 `targets` 是唯一的真實；單一目標仍走 `obj`（見 component.json 的說明）
+    // `targets` 是唯一的真實（第 411 刀起單一名字也在裡面）；沒有時才退回 `obj`（只剩手組的樹）
     const targets = node.slots.targets ?? []
     const name = targets.length > 0
       ? targets.map((t) => String(t.properties.name ?? '')).join(', ')

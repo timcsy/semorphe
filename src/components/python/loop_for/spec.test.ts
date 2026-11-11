@@ -33,6 +33,22 @@ describe('python:loop_for', () => {
     expect(loop.properties.count, '不得有一個「跑幾次」的欄位').toBeUndefined()
   })
 
+  /**
+   * 🔴 第 411 刀：**單一名字也進 `targets`**——積木只認它。以前只寫在 `obj`，
+   * `for c in s:` 走一趟積木回來變成 `for i in s:`（走真積木的那一支在 `python-loop-names-through-blocks`）。
+   */
+  it('🔴 單一名字也在 targets 裡；收不下的目標整顆降級', async () => {
+    const t = await liftPython('for c in s:\n    print(c)\n')
+    const find = (n: any): any => n?.componentId === 'python:loop_for' ? n
+      : Object.values(n?.slots ?? {}).flat().map(find).find(Boolean)
+    expect(find(t)?.slots.targets?.map((p: any) => p.properties.name), '名字不在 targets → 積木上會是預設的 i').toEqual(['c'])
+    for (const c of ['for x[0] in xs:\n    pass\n', 'for x, in ps:\n    pass\n', 'for (a, b) in ps:\n    pass\n']) {
+      const ids = componentIdsOf(await liftPython(c))
+      expect(ids, c).not.toContain('python:loop_for')
+      expect(ids, `${c} 而它必須看得見`).toContain('unresolved')
+    }
+  })
+
   it('★ generate ＋ round-trip', async () => {
     expect(gen(await liftPython('for i in range(3):\n    print(i)\n')))
       .toBe('for i in range(3):\n    print(i)')
