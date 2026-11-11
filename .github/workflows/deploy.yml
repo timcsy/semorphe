@@ -192,6 +192,11 @@ jobs:
             timeout 540 npx playwright install --with-deps chromium && exit 0
             echo "::warning::安裝瀏覽器第 $i 次沒完成（多半是 apt 鏡像慢），重試"
           done
+          # 2026-11-12：apt 鏡像的 DNS 掛了一個多小時（Temporary failure resolving 'azure.archive.ubuntu.com'），連三輪紅、部署卡住。
+          #   ⟹ 系統套件裝不了時，只裝瀏覽器本體（不碰 apt）：託管 runner 的映像本來就帶大部分函式庫；
+          #   真的缺的話，下一步的測試會自己紅——不是把問題藏起來。
+          echo "::warning::系統套件裝不了，改成只裝 chromium 本體（不經 apt）"
+          timeout 300 npx playwright install chromium && exit 0
           exit 1
       - run: npx playwright test --shard=${{ matrix.shard }}/4
       - uses: actions/upload-artifact@v4
