@@ -497,6 +497,24 @@ const hasSizeDecl = new Set(
 )
 
 /**
+ * 哪些容器宣告了**範圍的終點**接點 `source_end`（第 403 刀）——`set<int> s(v.begin(), v.end())`、`multiset<int> ms(a, a + 5)`。
+ * ⚠️ 只給「兩個建構引數只可能是一段範圍」的容器：set／multiset 沒有「幾個、每個是什麼」的建構子。
+ * vector／string 的 `(a, b)` 要看型別才分得出是範圍還是個數與填充值，lift 分不出，所以它們不宣告這一格。
+ */
+/** 建構引數剛好幾個——`ctorSlots` 只收前兩個，第三個（比較函式）不得被安靜丟掉。 */
+function ctorArgCount(decl: AstNode): number {
+  if (decl.type === 'function_declarator') return decl.namedChildren.find((c) => c.type === 'parameter_list')?.namedChildren.length ?? 0
+  const v = decl.childForFieldName('value')
+  return v?.type === 'argument_list' ? v.namedChildren.length : 0
+}
+
+const hasRangeDecl = new Set(
+  [...allStdModules.flatMap((m) => m.components), ...(componentComponents() as never[])]
+    .filter((c) => (c as { slots?: Record<string, unknown> }).slots?.source_end !== undefined)
+    .map((c) => (c as { componentId: string }).componentId),
+)
+
+/**
  * **樣板引數是一個「大小」，不是一個型別**——`bitset<26> bs;`（2026-09-19）。
  *
  * 上面那條容器宣告的路，樣板引數是這樣讀的：
@@ -1679,6 +1697,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
               source: [createNode(listId, {}, { values: s.values })],
             })
           }
+          if (s.size && s.fill && ctorArgCount(d) === 2 && hasRangeDecl.has(componentId)) {
+            return createNode(componentId, props, { source: [s.size], source_end: [s.fill] })
+          }
           if (s.size && hasSizeDecl.has(componentId)) {
             return s.fill
               ? createNode(componentId, props, { size: [s.size], fill: [s.fill] })
@@ -1703,6 +1724,8 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
          */
         const dropsCtorArgs = declList.some((d) => {
           const s = ctorSlots(d, ctx)
+          // 兩個建構引數、而這顆宣告了範圍的終點 ⟹ 那是一段範圍，收得下（第 403 刀）
+          if (!argIsSize && s.size !== null && s.fill !== null && ctorArgCount(d) === 2 && hasRangeDecl.has(componentId)) return false
           return s.size !== null && (argIsSize || !hasSizeDecl.has(componentId))
         })
         if (dropsCtorArgs) return buildRawCode(node.text)

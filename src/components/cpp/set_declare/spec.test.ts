@@ -11,7 +11,13 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { expectCellaOut } from '../../../../tests/helpers/cella-run'
+import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
+import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
+import { renderToBlocklyState } from '../../../core/projection/block-renderer'
+import { PatternExtractor } from '../../../core/projection/pattern-extractor'
+import { BlockSpecRegistry } from '../../../core/blocks/block-spec-registry'
+import { allCppComponents, allCppProjections } from '../../../languages/cpp/all-declarations'
+import { registerCppExtractStrategies } from '../../../languages/cpp/extractors/extract-strategies'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -22,6 +28,7 @@ beforeAll(async () => {
   parser = new Parser()
   parser.setLanguage(await Language.load(`${process.cwd()}/public/tree-sitter-cpp.wasm`))
   registerCppLanguage()
+  setupTestRenderer()
 })
 
 const lift = (c: string): SemanticNode =>
@@ -84,5 +91,68 @@ describe('膠囊自證：集合的宣告與重複性', () => {
     expect(back).toContain('multiset<long long> st = {0, 5, 5};')
     expect(ids(lift(back)).filter((x) => x === 'cpp:set_declare')).toHaveLength(1)
     await expectCellaOut(src, '3\n')
+  })
+})
+
+// 第 403 刀：一段範圍建起來的集合。set／multiset 沒有「幾個、每個是什麼」的建構子，兩個建構引數只可能是範圍。
+describe('用一段範圍建立集合（403）', () => {
+  const body = (line: string) => `${H}#include <vector>\nint main() {\n    vector<int> v = {3, 1, 3, 2};\n    int a[5] = {5, 1, 5, 2, 1};\n    ${line}\n    return 0;\n}\n`
+  const decl = (t: SemanticNode) => collect(t).find((n) => n.componentId === 'cpp:set_declare')!
+
+  it('★ lift：起點進 source、終點進 source_end，不降級', () => {
+    const t = lift(body('set<int> s(v.begin(), v.end());'))
+    expect(ids(t)).toContain('cpp:set_declare')
+    expect(ids(t)).not.toContain('cpp:raw_code')
+    expect(decl(t).slots.source).toHaveLength(1)
+    expect(decl(t).slots.source_end).toHaveLength(1)
+    const m = decl(lift(body('multiset<int> ms(a, a + 5);')))
+    expect(m.properties.unique).toBe('false')
+    expect(m.slots.source_end).toHaveLength(1)
+  })
+
+  it('★ generate 一字不差，再 lift 是同一棵', () => {
+    for (const line of ['set<int> s(v.begin(), v.end());', 'multiset<int> ms(a, a + 5);']) {
+      const back = generateCode(lift(body(line)), 'cpp', S)
+      expect(back).toContain(line)
+      expect(generateCode(lift(back), 'cpp', S)).toBe(back)
+    }
+  })
+
+  it('三個引數（帶比較器）照舊整句降級：不得安靜丟掉第三個', () => {
+    const t = lift(body('set<int> s(v.begin(), v.end(), less<int>());'))
+    expect(ids(t)).toContain('cpp:raw_code')
+    expect(generateCode(t, 'cpp', S)).toContain('set<int> s(v.begin(), v.end(), less<int>());')
+  })
+
+  it('vector 的 (a, b) 不受影響（它要看型別才分得出範圍或個數，不宣告 source_end）', () => {
+    const t = lift(body('vector<int> w(a, a + 5);'))
+    expect(collect(t).some((n) => (n.slots?.source_end?.length ?? 0) > 0)).toBe(false)
+  })
+
+  it('★ 積木：挑到範圍形態，走一趟積木回來一字不差', () => {
+    const reg = new BlockSpecRegistry(); reg.loadFromSplit(allCppComponents(), allCppProjections())
+    const ex = new PatternExtractor(); ex.loadBlockSpecs(reg.getAll()); registerCppExtractStrategies(ex)
+    const t = lift(body('multiset<int> ms(a, a + 5);'))
+    const state = renderToBlocklyState(t) as unknown as { blocks: { blocks: { next?: { block: unknown } }[] } }
+    expect(JSON.stringify(state)).toContain('"cpp_set_declare_range"')
+    const back: SemanticNode[] = []
+    for (const b0 of state.blocks.blocks) {
+      let cur: { next?: { block: unknown } } | undefined = b0
+      while (cur) { const n = ex.extract(cur as never); if (n) back.push(n); cur = cur.next?.block as typeof cur }
+    }
+    const viaBlocks = generateCode({ id: 'r', componentId: 'cpp:program', properties: {}, slots: { body: back } } as SemanticNode, 'cpp', S)
+    expect(viaBlocks).toBe(generateCode(t, 'cpp', S))
+  })
+
+  it('沒有終點的 set 仍是原本那顆積木', () => {
+    const state = renderToBlocklyState(lift(`${H}int main(){ set<int> s; }`))
+    expect(JSON.stringify(state)).toContain('"cpp_set_declare"')
+    expect(JSON.stringify(state)).not.toContain('cpp_set_declare_range')
+  })
+
+  // Cella 的 set／multiset 模型還沒有範圍建構子（cella 2026-11-11 07:3x 收下，排在中午前後那一版）。發版後這一根會轉紅 → 改成一般的 expectCellaOut
+  it('Cella：範圍建構子（等 Cella 下一版）', async () => {
+    await knownCellaGap(/has no constructor for these arguments/, () =>
+      expectCellaOut(body('multiset<int> ms(a, a + 5);\n    for (int x : ms) cout << x << " ";'), '1 1 2 5 5 '))
   })
 })

@@ -371,6 +371,16 @@
       "field": "field_dropdown",
       "reason": "「留不留重複」只有兩個值，而它們對應 C++ 的兩個型別名（set／multiset）——清單外的第三個值沒有對應的容器"
     },
+    "cpp_set_declare_range.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_set_declare_range.UNIQUE": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "「留不留重複」只有兩個值，而它們對應 C++ 的兩個型別名（set／multiset）——清單外的第三個值沒有對應的容器"
+    },
     "cpp_stack_declare.TYPE": {
       "decision": "open",
       "field": "field_dropdown",

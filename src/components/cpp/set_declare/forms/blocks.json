@@ -76,5 +76,93 @@
       }
     },
     "_codeTemplate_why": "🪦 `codeTemplate` 整批刪除（2026-10-31，第 384 刀）：產碼只有膠囊的 `generate.ts` 這一條；這一欄原本記的是「這顆刻意沒有樣板」（`std::set` 與 `set` 兩份說法），而樣板那一套已經不存在了。"
+  },
+  {
+    "id": "cpp:set_declare.range",
+    "componentId": "cpp:set_declare",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_set_declare_range",
+      "message0": "%{BKY_CPP_SET_DECLARE_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            [
+              "%{BKY_CPP_SET_DECLARE_TYPE_INT}",
+              "int"
+            ],
+            [
+              "%{BKY_CPP_SET_DECLARE_TYPE_FLOAT}",
+              "float"
+            ],
+            [
+              "%{BKY_CPP_SET_DECLARE_TYPE_STRING}",
+              "std::string"
+            ],
+            [
+              "%{BKY_CPP_SET_DECLARE_TYPE_CHAR}",
+              "char"
+            ]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "UNIQUE",
+          "options": [
+            [
+              "%{BKY_CPP_SET_DECLARE_UNIQUE_YES}",
+              "true"
+            ],
+            [
+              "%{BKY_CPP_SET_DECLARE_UNIQUE_NO}",
+              "false"
+            ]
+          ]
+        },
+        {
+          "type": "field_input",
+          "name": "NAME",
+          "text": "s"
+        }
+      ],
+      "message1": "%{BKY_CPP_SET_DECLARE_RANGE} %1 %{BKY_CPP_SET_DECLARE_RANGE_TO} %2",
+      "args1": [
+        {
+          "type": "input_value",
+          "name": "SOURCE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "SOURCE_END",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_SET_DECLARE_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "NAME": "name",
+        "TYPE": "type",
+        "UNIQUE": "unique"
+      },
+      "inputs": {
+        "SOURCE": "source",
+        "SOURCE_END": "source_end"
+      }
+    },
+    "form": {
+      "axis": "range_init",
+      "value": "range"
+    },
+    "_why": "**範圍形態**（第 403 刀）：`set<int> s(v.begin(), v.end())`、`multiset<int> ms(a, a + 5)`——接點 `source_end` 有東西時用這一顆（軸 `range_init`）。起點沿用 `SOURCE` 那一格，兩顆積木之間切換時起點不掉。⚠️ 沿用同一組標籤與顏色（同元件同色）。"
   }
 ]
