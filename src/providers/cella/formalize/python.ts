@@ -238,6 +238,16 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
     return name(`${x.id}/type`, names[0])
   }
 
+  /**
+   * 自我說明（`{x=}`）要印的運算式原文。只認名字與屬性鏈——lift 只收這兩種（見 `string_make/lift-strategy.ts`），
+   * 而積木上換成別的運算式時，Python 會印它的原文、我們算不出一字不差的那一份 ⟹ 照實標 unknown，不猜。
+   */
+  function sourceTextOf(v: SemanticNode | undefined, owner: SemanticNode): string {
+    if (v && short(v.componentId) === 'var_ref') return prop(v, 'name')
+    if (v && short(v.componentId) === 'member_at') return `${sourceTextOf(kids(v, 'obj')[0], owner)}.${prop(v, 'member')}`
+    throw new Miss((v ?? owner).id, (v ?? owner).componentId, '自我說明（{x=}）只認名字與屬性鏈：其他運算式的原文算不出一字不差的那一份')
+  }
+
   const TRANSFORMS: Record<string, (x: SemanticNode, t: Record<string, unknown>) => unknown> = {
     literalString: (x) => pyUnescape(prop(x, 'value'), x),
     number: (x) => numberNode(prop(x, 'value'), x.id, x),
@@ -274,7 +284,17 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
           const spec = fmt ? { k: 'eJoinedStr', n: `${p.id}/spec`, values: [{ k: 'eConstant', n: `${p.id}/spec/0`, value: { k: 'cStr', s: fmt } }] } : null
           // 轉換照 CPython AST 的寫法：沒有是 -1，其餘是那個字母的字元碼（`!r` → 114）
           const conv = prop(p, 'conversion')
-          vals.push({ k: 'eFormattedValue', n: p.id, value: slot(p, 'value'), conversion: conv ? conv.charCodeAt(0) : -1, formatSpec: spec })
+          // 自我說明 `{x=}`：CPython 的 AST 本來就把它拆成「原文＋等號」一段字面、接一個插值，
+          // 而沒寫轉換也沒寫格式時，那個插值預設是 `!r`（有格式時預設不轉換）
+          const selfDoc = prop(p, 'selfDoc')
+          if (selfDoc) {
+            const text = sourceTextOf(kids(p, 'value')[0], p) + selfDoc
+            const last = vals[vals.length - 1]
+            if (last && last.k === 'eConstant') last.value.s += text
+            else vals.push({ k: 'eConstant', n: `${p.id}/doc`, value: { k: 'cStr', s: text } })
+          }
+          const code = conv ? conv.charCodeAt(0) : selfDoc && !fmt ? 114 : -1
+          vals.push({ k: 'eFormattedValue', n: p.id, value: slot(p, 'value'), conversion: code, formatSpec: spec })
         }
       }
       return { k: 'eJoinedStr', n: x.id, values: vals }
