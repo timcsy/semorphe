@@ -1,8 +1,11 @@
 {
-  "PY_STRING_INSERT_MSG0": "Insert %1 %2 decimals %3",
-  "PY_STRING_INSERT_TOOLTIP": "Insert a value into formatted text. \"As code\" is !r: strings get quotes. Leave decimals blank to show it as-is; .2f keeps two decimal places.",
+  "PY_STRING_INSERT_MSG0": "Insert %1 %2 %3 decimals %4",
+  "PY_STRING_INSERT_TOOLTIP": "Insert a value into formatted text. \"As code\" is !r: strings get quotes. Leave decimals blank to show it as-is; .2f keeps two decimal places. \"With the name and =\" is {x=}: prints the expression text and = first, then the value (as code unless another conversion is chosen).",
   "PY_STRING_INSERT_CONV_NONE": "as-is",
   "PY_STRING_INSERT_CONV_R": "as code (with quotes)",
   "PY_STRING_INSERT_CONV_S": "as text",
-  "PY_STRING_INSERT_CONV_A": "as code (ASCII only)"
+  "PY_STRING_INSERT_CONV_A": "as code (ASCII only)",
+  "PY_STRING_INSERT_ECHO_NONE": "value only",
+  "PY_STRING_INSERT_ECHO": "with the name and =",
+  "PY_STRING_INSERT_ECHO_SPACED": "with the name and = (spaced)"
 }

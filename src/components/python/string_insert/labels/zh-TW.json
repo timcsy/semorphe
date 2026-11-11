@@ -1,8 +1,11 @@
 {
-  "PY_STRING_INSERT_MSG0": "插入 %1 %2 小數位數 %3",
-  "PY_STRING_INSERT_TOOLTIP": "把一個值插進格式化文字裡。「寫成程式碼的樣子」就是 !r：字串會加上引號。小數位數留空就照原樣顯示；填 .2f 表示保留兩位小數。",
+  "PY_STRING_INSERT_MSG0": "插入 %1 %2 %3 小數位數 %4",
+  "PY_STRING_INSERT_TOOLTIP": "把一個值插進格式化文字裡。「寫成程式碼的樣子」就是 !r：字串會加上引號。小數位數留空就照原樣顯示；填 .2f 表示保留兩位小數。「前面加上名字和等號」就是 {x=}：先印出運算式的原文和等號，再印值（沒選其他轉換時是程式碼的樣子）。",
   "PY_STRING_INSERT_CONV_NONE": "照原樣",
   "PY_STRING_INSERT_CONV_R": "寫成程式碼的樣子（加引號）",
   "PY_STRING_INSERT_CONV_S": "轉成文字",
-  "PY_STRING_INSERT_CONV_A": "寫成程式碼的樣子（只用 ASCII）"
+  "PY_STRING_INSERT_CONV_A": "寫成程式碼的樣子（只用 ASCII）",
+  "PY_STRING_INSERT_ECHO_NONE": "只印值",
+  "PY_STRING_INSERT_ECHO": "前面加上名字和等號",
+  "PY_STRING_INSERT_ECHO_SPACED": "前面加上名字和等號（等號兩邊空一格）"
 }
