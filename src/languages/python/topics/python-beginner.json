@@ -74,6 +74,7 @@
     "python:try_catch",
     "python:array_make_for",
     "python:class_def",
+    "python:decorated",
     "python:exception_case",
     "python:method_call",
     "python:math_abs",

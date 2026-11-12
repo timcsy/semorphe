@@ -124,6 +124,11 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'del a, xs[0], o.y',
     // ⚠️ 這支只載第一顆頂層積木，所以 del 一個名字單獨寫
     'del x',
+    // 第 424 刀：裝飾器——可增減的裝飾器插槽（名字、屬性、呼叫）＋ 下面一格定義（trailingInputs）
+    '@staticmethod\ndef fmt(x):\n    return x',
+    '@a\n@b.c\n@lru_cache(maxsize=None)\ndef f(n):\n    return n',
+    '@dataclass\nclass P:\n    x = 0',
+    'class A:\n    @staticmethod\n    def f(x):\n        return x\n    @property\n    def g(self):\n        return 1',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)

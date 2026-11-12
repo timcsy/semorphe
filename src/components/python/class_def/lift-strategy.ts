@@ -28,15 +28,20 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     //    formalize 也送 `sPass`，所以一字不差。⚠️ `pass` 夾在其他成員之間仍整顆降級：
     //    收下就得丟掉它，而丟掉一行使用者寫的字不是「認得」。
     if (members.length === 1 && members[0].type === 'pass_statement') members = []
-    // 🟢 **方法與類別層級的屬性都收**（2026-08-22）。其餘（巢狀類別、
-    //    裝飾器…）→ 整顆降級：收一半會產出一個**合法而行為不同**的類別。
+    // 🟢 **方法與類別層級的屬性都收**（2026-08-22）；**帶裝飾器的方法**（`@staticmethod`，第 424 刀）也是方法。
+    //    其餘（巢狀類別…）→ 整顆降級：收一半會產出一個**合法而行為不同**的類別。
     const methods: SemanticNode[] = []
     const fields: SemanticNode[] = []
+    const isMethod = (t: string) => t === 'function_definition' || t === 'decorated_definition'
     for (const m of members) {
-      if (m.type !== 'function_definition' && m.type !== 'expression_statement') return null
+      if (!isMethod(m.type) && m.type !== 'expression_statement') return null
+      // 裝飾的不是函式（類別裡的巢狀類別）→ 整顆降級
+      if (m.type === 'decorated_definition' && m.childForFieldName('definition')?.type !== 'function_definition') return null
       const lifted = ctx.lift(m)
       if (!lifted) return null // 有一個認不出來 → 整顆降級，不產出少了東西的類別
-      if (m.type === 'function_definition') methods.push(lifted)
+      // 帶裝飾器的方法收不下時，lift 出來的是照實保留的那一段——那不是一個方法，整顆降級
+      if (m.type === 'decorated_definition' && !lifted.componentId.endsWith(':decorated')) return null
+      if (isMethod(m.type)) methods.push(lifted)
       else fields.push(lifted)
     }
     return createNode('python:class_def', { name: node.childForFieldName('name')?.text ?? 'MyClass', base }, { methods, fields })

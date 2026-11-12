@@ -138,6 +138,14 @@ export interface VariadicSpec {
    */
   leadingField?: { type: string; name: string; source?: string; options?: unknown }
   /**
+   * 宣告裡的這幾格**排在可變插槽與 ± 那一列之後**（第 424 刀）。
+   *
+   * 🔴 為什麼要有：`attachVariadic` 把 ± 那一列（`TAIL`）接在靜態部分的**後面**，
+   * 而「套用裝飾器 ⟨d0⟩ ⟨d1⟩ ± ／ 下面一格放定義」的定義那一格要在裝飾器**下面**。
+   * 不給這個選項的話，定義那一格會夾在標籤與裝飾器之間——讀起來是「先定義、再套用」，順序反了。
+   */
+  trailingInputs?: string[]
+  /**
    * 最少幾格（預設 1）。
    *
    * 🔴 **第二個語言的呼叫積木要 0**（使用者 2026-08-21：「初始參數量應該是零才對」）
@@ -295,6 +303,7 @@ export function attachVariadic(type: string, spec: VariadicSpec): void {
     this.appendDummyInput('TAIL')
       .appendField(new Blockly.FieldImage(PLUS_IMG, 20, 20, '+', () => this.plus_()))
       .appendField(new Blockly.FieldImage(MINUS_DISABLED_IMG, 20, 20, '-', () => this.minus_()), 'MINUS_BTN')
+    for (const name of spec.trailingInputs ?? []) if (this.getInput(name)) this.moveInputBefore(name, null)
     for (let i = 0; i < min; i++) this.plus_()
     setMinusState(this, this.itemCount_ <= min)
     syncParens(this)

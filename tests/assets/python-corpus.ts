@@ -504,6 +504,28 @@ xs = [1, 2, 3]
 tmp = 9
 del b.size, xs[0], tmp
 print(xs)`],
+  ['裝飾器', `def shout(f):
+    def g(x):
+        return f(x).upper()
+    return g
+
+@shout
+def greet(name):
+    return "hi " + name
+
+class Temp:
+    def __init__(self, c):
+        self.c = c
+
+    @staticmethod
+    def to_f(c):
+        return c * 9 / 5 + 32
+
+    @property
+    def f(self):
+        return Temp.to_f(self.c)
+
+print(greet("amy"), Temp(100).f)`],
   ['質數與巢狀迴圈', `def is_prime(n):
     if n < 2:
         return False

@@ -663,6 +663,7 @@ export class BlockRegistrar {
           // ⚠️ 存檔契約：接手既有積木時要沿用它原本的計數鍵
           countKey: bd.countKey as string | undefined,
           openLabelOnFirstSlot: bd.openLabelOnFirstSlot as boolean | undefined,
+          trailingInputs: bd.trailingInputs as string[] | undefined,
         }
         if (Array.isArray(bd.args0) && bd.args0.length > 0) {
           Blockly.Blocks[blockType] = { init: jsonInitFor(blockDef) }

@@ -1,0 +1,28 @@
+{
+  "componentId": "python:decorated",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 沒有裝飾器；Java 的註記（annotation）只是附在宣告上的資料，不會把定義換成另一個東西——指過去會是一個假的等價。",
+  "_componentId_why": "`decorated` 照 tree-sitter 的 `decorated_definition`：它是一個**包住定義的外層**，不是定義本身的一種。裝飾器可以是名字、屬性或一次呼叫，沒有固定的主體可以拆，所以是一個宣告過的單字名。",
+  "properties": [],
+  "slots": {
+    "decorators": "expression",
+    "definition": "statements"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    }
+  },
+  "_children_why": "🔴 **裝飾器是一串接點**：`@staticmethod`、`@x.setter`、`@lru_cache(maxsize=None)` 每一個都是完整的運算式，壓成字串就要再解析一次。順序是原始碼的順序（Python 由下往上套用，而 AST 與產碼都照原順序）。`definition` 恰好放一個函式定義或類別定義。 ⚠️ 不在函式定義／類別定義上加一個裝飾器接點：那會改這兩顆既有積木的存檔格式與所有對照圖，而大部分學生程式用不到裝飾器；包一層與 AST 的形狀一致。",
+  "_lift_why": "🔴 **不可以收一半**：任何一個裝飾器認不出來、或定義不是函式／類別定義，整個 `decorated_definition` 照實保留——收一半會產出一個少了裝飾器、行為不同的定義（`@staticmethod` 不見了，呼叫就多傳一個 self）。"
+}
