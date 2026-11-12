@@ -9,8 +9,8 @@
  * - 十支轉一圈再轉一圈**都是不動點**，沒有 SEMANTIC_DIFF／COMPILE_FAIL／ROUNDTRIP_DRIFT。
  * - 🟢 423 收下：fuzz_7 的 `nonlocal count`（`python:nonlocal`）；fuzz_3 的 `del b.rate`（`python:delete`）。
  * - 🟢 424 收下：`@staticmethod`、`@lru_cache(maxsize=None)`（`python:decorated`）——fuzz_3 整個類別收下。
- * - 照實保留、下一刀處理的：`def total(*args, scale=1, **kw)`、
- *   `match`、三段以上的比較鏈 `0 < x < 20 != 21`。
+ * - 🟢 425 收下：`def total(*args, scale=1, **kw)`（`**kw` 是 `param_decl` 的 `variadic: 'dict'`）——fuzz_7 整支收下。
+ * - 照實保留、下一刀處理的：`match`、三段以上的比較鏈 `0 < x < 20 != 21`。
  * - Cella 那一側不支援的標準模組（Counter、deque、heapq、bisect、string）與內建的 `vars` 用 `knownCellaGap` 釘著——支援之後會轉紅，提醒轉成一般測試。
  *
  * ⚠️ 下面「照實保留」的清單是**精確的**：哪天少一筆（例如裝飾器有了元件），這裡會紅——那是要更新這份清單的訊號，不是壞掉。
@@ -121,9 +121,9 @@ describe('模糊測試：學生的 Python 程式，盲測第二批', () => {
       if (r !== want('fuzz_6')) throw new Error(r)
     })
   })
-  // 🟢 424：@lru_cache 收成 python:decorated（functools 是 Cella 的缺口）；*args／**kw 參數還沒收
+  // 🟢 424：@lru_cache 收成 python:decorated（functools 是 Cella 的缺口）；🟢 425：*args／**kw 參數收下，整支零降級
   it('fuzz_7：', async () => {
-    await roundTrip('fuzz_7', ["function_definition"], ["python:nonlocal", "python:decorated"])
+    await roundTrip('fuzz_7', [], ["python:nonlocal", "python:decorated", "python:func_def"])
   })
   it('fuzz_8：', async () => {
     await roundTrip('fuzz_8', [], [])

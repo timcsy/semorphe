@@ -223,14 +223,16 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
     const ko: CellaJson[] = []
     const kd: (CellaJson | null)[] = []
     let va: CellaJson | null = null
+    let kw: CellaJson | null = null
     for (const p of ps) {
       const a = { k: 'arg', n: p.id, name: prop(p, 'name') }
       const d = prop(p, 'default')
       const dflt = d ? literalOf(d, p, `${p.id}/default`) : null
       if (prop(p, 'variadic') === 'list') va = a
+      else if (prop(p, 'variadic') === 'dict') kw = a
       else if (va !== null) { ko.push(a); kd.push(dflt) } else { args.push(a); if (dflt !== null) defaults.push(dflt) }
     }
-    return { k: 'arguments', posonlyargs: [], args, vararg: va, kwonlyargs: ko, kwDefaults: kd, kwarg: null, defaults }
+    return { k: 'arguments', posonlyargs: [], args, vararg: va, kwonlyargs: ko, kwDefaults: kd, kwarg: kw, defaults }
   }
   const excType = (x: SemanticNode, text: string): CellaJson | null => {
     const t = text.trim()

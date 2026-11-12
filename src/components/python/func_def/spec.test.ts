@@ -38,16 +38,19 @@ describe('python:func_def', () => {
   })
 
   /**
-   * ⚠️ **這條原本釘的是「`*args` 與 `**kwargs` 都整顆降級」，而邊界在
-   * 2026-08-22 移動了一半**——`*args` 收得下（星號是一個標記），
-   * 而 `**kwargs` 仍然降級：它要的是「把剩下的具名引數收成一個字典」，
-   * 那是另一件事。
+   * ⚠️ **這條原本釘的是「`*args` 與 `**kwargs` 都整顆降級」，而邊界移動了兩次**
+   * ——`*args` 2026-08-22 收下（星號是一個標記），`**kwargs` 2026-11-12 第 425 刀收下（`variadic: 'dict'`）。
+   * 今天的邊界是**單獨一顆星號／斜線**（`def f(a, *, k=1)`、`def f(a, /, b)`）：它不是一個參數，
+   * 是「之後的參數只能具名／之前的只能照位置」的分隔，而 `param_decl` 沒有地方放它。
    *
    * 邊界移動時要**改成釘新的邊界，不是刪掉它**。
    */
-  it('🔴 `**kwargs` 仍然整顆走誠實降級——它要的是另一件事', async () => {
-    const ids = componentIdsOf(await liftPython('def f(**kw):\n    pass\n'))
-    expect(ids, '收一半會讓使用者的東西不見').not.toContain('python:func_def')
+  it('🔴 單獨的 `*`／`/` 分隔仍然整顆走誠實降級——收一半會讓呼叫規則變掉', async () => {
+    for (const c of ['def f(a, *, k=1):\n    pass\n', 'def f(a, /, b):\n    pass\n']) {
+      const ids = componentIdsOf(await liftPython(c))
+      expect(ids.length, '量到了東西').toBeGreaterThan(0)
+      expect(ids, '收一半會讓使用者的東西不見').not.toContain('python:func_def')
+    }
   })
 
   it('執行：沒給的引數用預設值，給了就用給的', async () => {
@@ -98,7 +101,17 @@ describe('可變引數', () => {
     expect(gen(await liftPython(code)).trimEnd()).toBe(code.trimEnd())
   })
 
-  it('🔴 `**kwargs` 仍然走誠實降級——它要的是另一件事', async () => {
-    expect(componentIdsOf(await liftPython('def f(**kw):\n    pass\n'))).not.toContain('python:func_def')
+  // 🟢 第 425 刀：`**kw` 收成 `variadic: 'dict'`（Cella 的 `arguments.kwarg`）。盲測第二批 fuzz_7 原本整顆降級。
+  it('★ `**kw`：剩下的具名引數收成一個字典，來回一字不差', async () => {
+    const code = 'def total(*args, scale=1, **kw):\n    return sum(args) * scale + len(kw)\n'
+    const t = await liftPython(code)
+    expect(componentIdsOf(t)).toContain('python:func_def')
+    expect(componentIdsOf(t).filter((x) => /raw|unresolved/.test(x))).toEqual([])
+    expect(gen(t).trimEnd()).toBe(code.trimEnd())
+  })
+
+  it('🔴 execute：`**kw` 收的是名字對值，`scale` 在 `*args` 之後只能具名給', async () => {
+    const out = await runPython('def total(*args, scale=1, **kw):\n    print(sorted(kw.items()))\n    return sum(args) * scale\n\nprint(total(1, 2, 3))\nprint(total(1, 2, scale=10, tag="x", n=2))\n')
+    expect(out).toBe("completed|[]\n6\n[('n', 2), ('tag', 'x')]\n30\n")
   })
 })

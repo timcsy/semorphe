@@ -2,11 +2,16 @@
   "PYTHON_FUNC_DEF_MSG0": "define %1",
   "PYTHON_FUNC_DEF_PARAMS_OPEN": "( params",
   "PYTHON_FUNC_DEF_PARAMS_CLOSE": ")",
-  "PYTHON_FUNC_DEF_TOOLTIP": "Names a sequence of steps so you can call it again. Press + to add a parameter. Type annotations may be left blank — they are for the reader; this tool does not check them.",
+  "PYTHON_FUNC_DEF_TOOLTIP": "Names a sequence of steps so you can call it again. Press + to add a parameter. Type annotations may be left blank — they are for the reader; this tool does not check them. \"Collect the rest\" (gear) is Python's one-star parameter (remaining positional, e.g. args) and two-star parameter (remaining keyword, e.g. kwargs).",
   "PY_TYPE_NONE_GIVEN": "(none)",
   "PY_FUNC_DEF_OPT_TYPE": "type",
   "PY_FUNC_DEF_OPT_DEFAULT": "default",
   "PL_MUTATOR_TITLE": "parameters",
   "PYTHON_FUNC_DEF_RETURNS_MSG": "returns %1 %2",
-  "PY_FUNC_DEF_OPT_RETURNS": "return type"
+  "PY_FUNC_DEF_OPT_RETURNS": "return type",
+  "PY_FUNC_DEF_GATHER": "collects",
+  "PY_FUNC_DEF_GATHER_NONE": "(nothing)",
+  "PY_FUNC_DEF_GATHER_LIST": "remaining positional args",
+  "PY_FUNC_DEF_GATHER_DICT": "remaining keyword args",
+  "PY_FUNC_DEF_OPT_VARIADIC": "collect the rest"
 }
