@@ -1835,6 +1835,11 @@ export class App {
     this.codeView.onChange(() => {
       // 🔴 記住**上一步在哪裡做的**——那一對按鈕靠它轉送（見 `lastEditor`）
       this.lastEditor = 'code'
+      // 🔴 **學生動手了，進行中的換寫法就作廢**（第 430 刀）：切目標之後「換成 X 的寫法」要等一次判決（最多 15 秒）
+      //    才落地，而這段時間學生打的字會被它的 `setCode` 蓋掉（429 的 e2e 量到：切到 Python、立刻貼上，程式變成空的）。
+      //    這個事件只在使用者編輯時觸發（`setCode` 會壓掉它），所以不會被換目標自己的重產誤觸——那正是
+      //    `convertAfterLanguageChange` 不比對編輯器內容的理由。⚠️ 放在下面的提早 return 之前：同步中打的字也算。
+      this.languageConversionEpoch++
       // ⚠️ **記下來再回頭做**——見 `_codeChangedWhileSyncing`。
       if (this._codeToBlocksInProgress) { this._codeChangedWhileSyncing = true; return }
       this.codeDirty = true
