@@ -24,6 +24,7 @@ test('Python：只在程式碼那側打字，重新整理之後程式與骨架�
 
   // ⚠️ 換到 Python 時預設程式會非同步換寫法——等它做完，否則晚到的換寫法會蓋掉下面貼的（同 `python-to-cpp.spec.ts`）
   await expect.poll(async () => (await codeLines(page)).join('\n'), { timeout: 30_000 }).not.toContain('main')
+  await expect(page.locator('.toast').filter({ hasText: /換成 .* 的寫法/ })).toBeVisible({ timeout: 15_000 })
   await editsSettled(page)
 
   // 走編輯器自己的貼上（Monaco 的變更事件 → 去抖 → 同步），不是 `setCode`、也不呼叫 `autoSave`
