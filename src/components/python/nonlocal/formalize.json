@@ -1,0 +1,9 @@
+{
+  "template": {
+    "k": "sNonlocal",
+    "n": "$id",
+    "names": {
+      "$propList": "name"
+    }
+  }
+}

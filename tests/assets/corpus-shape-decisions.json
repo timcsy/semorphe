@@ -120,11 +120,6 @@
     "reason": "`a.B` 當型別用。"
   },
   {
-    "type": "nonlocal_statement",
-    "cause": "語言有而這個工具不做",
-    "reason": "`nonlocal` 要的是「往上一層而不是最外層」，而 `global` 已經涵蓋教學上的那個用途。"
-  },
-  {
     "type": "parenthesized_list_splat",
     "cause": "語言有而這個工具不做",
     "reason": "`(*a,)` 這種寫法。"

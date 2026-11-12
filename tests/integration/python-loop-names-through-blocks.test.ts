@@ -46,7 +46,9 @@ beforeAll(async () => {
   // 積木那一路：與 form-invariance 同一套（產品宣告哪些，這裡就宣告哪些）
   registerFieldMultilineInput()
   registerDynamicDropdownField()
-  for (const k of ['names', 'vars', 'funcs', 'arrays', 'cpp_var_types', 'cpp_param_types', 'cpp_return_types', 'python_types']) declareDropdownSource(k, () => [])
+  for (const k of ['names', 'vars', 'funcs', 'arrays', 'cpp_var_types', 'cpp_param_types', 'cpp_return_types']) declareDropdownSource(k, () => [])
+  // ⚠️ 型別註記的下拉用產品那一份（第 423 刀：空的清單讓 `def f():` 回來多一個 `-> __custom__`——那是這支測試的假象，不是產品的）
+  await import('../../src/languages/python/pack')
   ws = new Blockly.Workspace()
   Object.assign(Blockly.Msg as Record<string, string>, i18nBlocks, componentLabels('zh-TW'))
   const { BlockRegistrar } = await import('../../src/panels/blocks/block-registrar')
@@ -116,6 +118,12 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'm = max((x for x in r), default=0)',
     't = sorted((x for x in r), reverse=True)',
     'f(a, (x for x in r))',
+    // 第 423 刀：nonlocal（與 global 同形）與 del 的可增減目標（名字、屬性、某一格）
+    'def f():\n    c = 0\n    def g():\n        nonlocal c\n        c += 1\n    g()\n    return c',
+    'del b.rate',
+    'del a, xs[0], o.y',
+    // ⚠️ 這支只載第一顆頂層積木，所以 del 一個名字單獨寫
+    'del x',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)

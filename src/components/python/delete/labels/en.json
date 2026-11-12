@@ -1,0 +1,4 @@
+{
+  "PY_DELETE_MSG": "Delete",
+  "PY_DELETE_TOOLTIP": "Deletes a name (using it afterwards is an error), an attribute of an object (reading it afterwards gives the class's one, or an error if there is none), or one item of a container. Several at once are deleted from left to right."
+}

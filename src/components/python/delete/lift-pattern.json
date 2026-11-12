@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_delete",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "delete_statement",
+    "component": {
+      "componentId": "python:delete"
+    },
+    "liftStrategy": "python:lift_delete",
+    "fieldMappings": [],
+    "priority": 11,
+    "_why": "比同族「刪掉容器的一格」低一級：那一顆只收單一的某一格，它回 `null` 才輪到這裡。"
+  }
+]

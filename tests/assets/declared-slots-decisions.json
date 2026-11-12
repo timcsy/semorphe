@@ -277,7 +277,7 @@
   {
     "componentId": "python:container_erase",
     "cause": "lift 走具名策略，靜態掃不到",
-    "reason": "`delete_statement` 底下有好幾種形狀（刪一格／刪變數／刪多個），判別要跑真邏輯。⚠️ 接點（`target`）由這顆自己的 `spec.test.ts` 釘住，含「`del x` 走誠實降級」。"
+    "reason": "`delete_statement` 底下有好幾種形狀（刪一格／刪變數／刪多個），判別要跑真邏輯。⚠️ 接點（`target`）由這顆自己的 `spec.test.ts` 釘住，含「`del x` 不是這一顆」（423 起歸 `python:delete`）。"
   },
   {
     "componentId": "python:container_erase_value",
@@ -668,6 +668,16 @@
     "componentId": "python:assign_chain",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "與序列指派同一個理由：目標名單是策略沿著右邊巢狀的 `assignment` 一路收出來的。由 `spec.test.ts` 的來回與 Cella 執行釘住。"
+  },
+  {
+    "componentId": "python:delete",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "目標名單是策略從 `delete_statement` 的 `expression_list`（或單一目標）收出來的，並在單一下標時讓位給 `container_erase`。由 `spec.test.ts` 的來回與 Cella 執行（含刪掉的名字再讀是 NameError）釘住。"
+  },
+  {
+    "componentId": "python:nonlocal",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "與 `python:global` 同形：策略只收單一名字、多名字回 null 走降級。由 `spec.test.ts` 的來回與 Cella 執行釘住。"
   },
   {
     "componentId": "python:var_assign_sequence",

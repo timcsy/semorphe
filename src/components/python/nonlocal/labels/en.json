@@ -1,0 +1,4 @@
+{
+  "PY_NONLOCAL_MSG0": "%1 refers to the enclosing function's one",
+  "PY_NONLOCAL_TOOLTIP": "In a function defined inside another function, assigning normally creates a new variable of its own. With this line, it changes the variable of the same name in the enclosing function (not the outermost one — that is \"refers to the outermost one\")."
+}

@@ -6,7 +6,7 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：365｜✅ 實作 1325｜📄 已宣告不提供 5｜❔ 判不出來 127｜🈳 殼 1｜❌ 缺 2（以路徑數計）
+元件：367｜✅ 實作 1331｜📄 已宣告不提供 5｜❔ 判不出來 129｜🈳 殼 1｜❌ 缺 2（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -311,6 +311,7 @@
 | `python:container_sum` | ✅ | ❔ | ✅ | ✅ |
 | `python:container_zip` | ✅ | ❔ | ✅ | ✅ |
 | `python:continue` | ✅ | ❔ | ✅ | ✅ |
+| `python:delete` | ✅ | ❔ | ✅ | ✅ |
 | `python:exception_case` | ✅ | ❔ | ✅ | ✅ |
 | `python:func_call` | ✅ | ❔ | ✅ | ✅ |
 | `python:func_call_named` | ✅ | ❔ | ✅ | ✅ |
@@ -342,6 +343,7 @@
 | `python:member_at` | ✅ | ❔ | ✅ | ✅ |
 | `python:method_call` | ✅ | ❔ | ✅ | ✅ |
 | `python:negate` | ✅ | ❔ | ✅ | ✅ |
+| `python:nonlocal` | ✅ | ❔ | ✅ | ✅ |
 | `python:pair_make` | ✅ | ❔ | ✅ | ✅ |
 | `python:pass` | ✅ | ❔ | ✅ | ✅ |
 | `python:print` | ✅ | ❔ | ✅ | ✅ |
