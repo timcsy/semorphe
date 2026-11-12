@@ -109,7 +109,9 @@
             "key": "variadic",
             "fromField": "PARAM_GATHER_{i}",
             "labelKey": "PY_FUNC_DEF_OPT_VARIADIC",
-            "labelFallback": "收集其餘引數"
+            "labelFallback": "收集其餘引數",
+            "excludes": ["default"],
+            "_excludes_why": "Python 的 `*args`／`**kw` 不能有預設值（`*scale=1` 是語法錯誤）——兩個都勾時剛勾的贏（第 427 刀）"
           }
         ],
         "blockOptions": [

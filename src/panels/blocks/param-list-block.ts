@@ -206,6 +206,14 @@ export interface ParamListSpec {
      */
     defaultOpen?: boolean
     /**
+     * **與這一段不能同時開著的那幾段**（2026-11-12，第 427 刀）。
+     *
+     * 🔴 Python 的 `*args` 不能有預設值——齒輪讓學生兩個都勾，產出的是 `*scale=1`（語法錯誤）。
+     * 兩段都想開時，**剛勾的那一段贏**，另一段收起來，齒輪裡的勾也跟著拿掉（不是悄悄不理）。
+     * 宣告在任一側就夠（互斥是對稱的）。
+     */
+    excludes?: string[]
+    /**
      * **這一段的結尾是一個接點，不是一個欄位**（2026-08-26）。
      *
      * 🔴 為什麼要能是接點：`cpp_var_declare` 的齒輪選的正是
@@ -694,10 +702,22 @@ export function attachParamList(type: string, spec: ParamListSpec): void {
       this.setBlockOption_(o.key, container.getFieldValue(`BLK_${o.key}`) === 'TRUE')
     }
     const wants: Record<string, boolean>[] = []
+    // 互斥的兩段（`excludes`，對稱）：兩個都想開時剛勾的贏，齒輪裡另一個勾拿掉
+    const pairs: [string, string][] = []
+    for (const g of spec.optionalGroups ?? []) for (const x of g.excludes ?? []) pairs.push([g.key, x])
     let item = container.getInputTargetBlock('STACK')
     while (item) {
       const opts: Record<string, boolean> = {}
       for (const g of groups) opts[g.key] = item.getFieldValue(`OPT_${g.key}`) === 'TRUE'
+      const i = wants.length
+      for (const [a, b] of pairs) {
+        if (!opts[a] || !opts[b]) continue
+        // 原本就開著的那一段讓位；兩段都是新的（單次點擊不會發生）時保留宣告 `excludes` 的那一段
+        const had: Record<string, boolean> = i < this.paramCount_ ? optsOf(this, i) : {}
+        const loser = had[a] === true && had[b] !== true ? a : b
+        opts[loser] = false
+        item.setFieldValue('FALSE', `OPT_${loser}`)
+      }
       wants.push(opts)
       item = item.getNextBlock()
     }
