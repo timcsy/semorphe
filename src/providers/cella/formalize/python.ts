@@ -259,7 +259,8 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
       }
       return { k: 'eDict', n: x.id, keys, values }
     },
-    targets: (x, t) => targetOf(x, String(t.slot)),
+    // 目標是樣式時（`a[i], a[j] = a[j], a[i]`、`first, *mid, last = r`，第 421 刀）它本來就是一個運算式
+    targets: (x, t) => (kids(x, 'pattern').length > 0 ? node(kids(x, 'pattern')[0]) : targetOf(x, String(t.slot))),
     // 目標是樣式時（`for i, (a, b) in …`，第 420 刀）它本來就是一個運算式：元組 → eTuple、變數 → eName、展開 → eStarred
     forTarget: (x) => (kids(x, 'pattern').length > 0 ? node(kids(x, 'pattern')[0])
       : kids(x, 'targets').length > 0 ? targetOf(x, 'targets', 'obj') : textTarget(x, 'obj')),

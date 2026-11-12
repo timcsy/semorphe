@@ -97,6 +97,12 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'for x, in ps:\n    print(x)',
     'for a, *rest in rows:\n    print(a, rest)',
     'for (dr, dc), name in moves.items():\n    print(name)\nelse:\n    print(0)',
+    // 第 421 刀：序列指派的目標是一個樣式——左值（名字、索引、屬性）組成的元組與展開，接在 PATTERN 那一格
+    'a[i], a[j] = a[j], a[i]',
+    'first, *mid, last = r',
+    'a, (b, c) = 1, (2, 3)',
+    'o.x, o.y = o.y, o.x',
+    'x, = t',
     // 第 419 刀：產生器運算式只在它是呼叫唯一的引數時不帶自己的括號——判準是語義樹的結構，走過積木還在
     'print(sum(x for x in r), any(x > 1 for x in r))',
     'g = (x for x in r)',
