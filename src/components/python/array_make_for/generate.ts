@@ -3,6 +3,7 @@ import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { generateExpression } from '../../../core/projection/code-generator'
 import { componentTraits } from '../../../core/component/traits'
 import type { SemanticNode } from '../../../core/types'
+import { targetPatternText } from '../tuple_make/target-pattern'
 
 /**
  * 🔴 **這顆產生器運算式是不是某個呼叫【唯一的】引數**（第 419 刀，盲測抓到）。
@@ -41,8 +42,10 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
       return n ? generateExpression(n, ctx) : ''
     }
     // 名字以 `targets` 為準（第 411 刀起單一名字也在裡面）；沒有時才退回 `obj`（只剩手組的樹）
+    // 目標是樣式時（第 422 刀，`[x for i, (x, y) in …]`）住在 `pattern`，最外層的元組不帶括號
+    const pattern = (node.slots.pattern ?? [])[0]
     const targets = node.slots.targets ?? []
-    const names = targets.length > 0
+    const names = pattern ? targetPatternText(pattern, ctx) : targets.length > 0
       ? targets.map((t) => String(t.properties.name ?? '')).join(', ')
       : String(node.properties.obj ?? 'x')
     const cond = one('condition')

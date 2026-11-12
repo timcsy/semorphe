@@ -2,5 +2,7 @@
   "PY_MAP_MAKE_FOR_MSG0": "Collect key %1 to %2 from %3 keeping %4",
   "PY_MAP_MAKE_FOR_OPEN": "for each",
   "PY_MAP_MAKE_FOR_CLOSE": "",
-  "PY_MAP_MAKE_FOR_TOOLTIP": "Walk a sequence, compute a key and value for each item, and collect them into a dictionary. The last slot may be empty."
+  "PY_MAP_MAKE_FOR_TOOLTIP": "Walk a sequence, compute a key and value for each item, and collect them into a dictionary. The last slot may be empty.",
+  "PY_MAP_MAKE_FOR_PATTERN_MSG0": "Collect key %1 to %2 for each %3 from %4 keeping %5",
+  "PY_MAP_MAKE_FOR_PATTERN_TOOLTIP": "Walk a sequence, unpack each item into names (like k, (a, b)), compute a key and value, and collect them into a dictionary. The last slot may be empty."
 }

@@ -8,7 +8,8 @@
     "key": "expression",
     "value": "expression",
     "iterable": "expression",
-    "condition": "expression"
+    "condition": "expression",
+    "pattern": "expression"
   },
   "role": "expression",
   "owner": "(python)",
@@ -25,7 +26,14 @@
       }
     }
   },
-  "traits": { "mappingLiteral": true, "declaresVariable": ["PARAM_{i}"] },
+  "traits": {
+    "mappingLiteral": true,
+    "declaresVariable": [
+      "PARAM_{i}",
+      "PATTERN>NAME"
+    ]
+  },
   "_traits_why": "**它算出來的是一個鍵值對應**（與字典字面同一個性狀），而**它也生出變數**——那些名字只在這個運算式裡活著，而變數下拉仍然要看得到。",
-  "_children_why": "🔴 **走訪的目標用 `targets` 子節點**（與同族的迴圈同一個做法）——`{k: v for k, v in d.items()}` 有兩個名字，而字典生成式**幾乎都是這個形狀**。"
+  "_children_why": "🔴 **走訪的目標用 `targets` 子節點**（與同族的迴圈同一個做法）——`{k: v for k, v in d.items()}` 有兩個名字，而字典生成式**幾乎都是這個形狀**。",
+  "_pattern_why": "🟢 **目標是一個樣式時住在 `pattern`**（第 422 刀，與 420 的 `for`、同族串列推導式同一個做法）：`{k: a for k, (a, b) in …}`——與 `targets` 互斥。"
 }

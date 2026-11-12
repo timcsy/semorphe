@@ -21,20 +21,8 @@ import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-/** 樣式裡只有名字、元組、展開（`*rest`）——每一個葉子都綁一個新名字。 */
-function isNamePattern(n: SemanticNode): boolean {
-  const id = n.componentId.split(':')[1]
-  if (id === 'var_ref') return true
-  if (id === 'splat') return n.properties.kind === 'list' && (n.slots.value ?? []).length === 1 && isNamePattern(n.slots.value[0])
-  if (id === 'tuple_make') return (n.slots.items ?? []).length > 0 && (n.slots.items ?? []).every(isNamePattern)
-  return false
-}
-
-function firstName(n: SemanticNode): string | undefined {
-  if (n.componentId.endsWith(':var_ref')) return String(n.properties.name ?? '')
-  for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) { const f = firstName(k); if (f) return f }
-  return undefined
-}
+// 樣式裡只有名字、元組、展開——每一個葉子都綁一個新名字（`tuple_make/target-pattern.ts`，三處共用）
+import { isNamePattern, firstName } from '../tuple_make/target-pattern'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftLoopFor', (node, ctx) => {

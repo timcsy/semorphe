@@ -23,6 +23,7 @@ import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 // ⚠️ **呼叫它的建構子，不要寫下它的身分**——就近性護欄兩個方向都在看。
 import { buildLoopIter } from '../loop_iter/build'
+import { isNamePattern, firstName } from '../tuple_make/target-pattern'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftArrayMakeFor', (node, ctx) => {
@@ -37,11 +38,15 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     const left = inner.childForFieldName('left')
     // 🟢 **解構的目標收得下了**（第 411 刀）：`for a, b in zip(xs, ys)` 的 `left` 是 `pattern_list`，
     //    每個名字一顆 `param_decl`（與同族 `for`／字典推導式同一個做法）。
-    //    ⚠️ 巢狀（`for i, (a, b) in …`）、下標、只有一個名字的解包（`for x, in …`）仍整顆降級。
+    //    ⚠️ 巢狀、展開、括號、`for x, in …` 從第 422 刀起走 `pattern`（見下）；下標與屬性目標仍整顆降級。
     const names = left?.type === 'identifier' ? [left]
       : left?.type === 'pattern_list' ? left.namedChildren : []
-    if (!body || names.length === 0 || names.some((c) => c.type !== 'identifier')) return null
-    if (left?.type === 'pattern_list' && names.length < 2) return null
+    if (!body || !left) return null
+    const flat = names.length > 0 && names.every((c) => c.type === 'identifier') && !(left.type === 'pattern_list' && names.length < 2)
+    // 🟢 **目標是一個樣式**（第 422 刀，與 420 的 `for` 同一個做法）：`[n for n, *_ in g]`、`[a + b for (a, b) in ps]`、
+    //    `[x for i, (x, y) in enumerate(ps)]`、`for x, in …`。🪦 411–421 整顆誠實降級。下標與屬性目標仍降級（不綁新名字）。
+    const pattern = flat ? null : ctx.lift(left)
+    if (!flat && (!pattern || !isNamePattern(pattern))) return null
 
     // 外面那幾層：由最外開始，一層包一層
     let outer: SemanticNode | null = null
@@ -66,12 +71,13 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       'python:array_make_for',
       // ⚠️ **記著它原本是哪一種括號**——見那幾筆樣式的 `_why`
       {
-        obj: names[0].text,
+        obj: pattern ? firstName(pattern) ?? '' : names[0].text,
         wrap: node.type === 'generator_expression' ? 'generator'
           : node.type === 'set_comprehension' ? 'set' : '',
       },
       {
-        targets: names.map((c) => createNode('param_decl', { type: '', name: c.text })),
+        targets: pattern ? [] : names.map((c) => createNode('param_decl', { type: '', name: c.text })),
+        ...(pattern ? { pattern: [pattern] } : {}),
         expression: [expr],
         iterable: [iter],
         condition: cond ? [cond] : [],

@@ -1,14 +1,9 @@
 /** `python:var_assign_sequence` 的 **generate** 路——`x, y = p`。 */
-import type { NodeGenerator, GeneratorContext } from '../../../core/projection/code-generator'
-import type { SemanticNode } from '../../../core/types'
-import { indent, generateExpression } from '../../../core/projection/code-generator'
+import type { NodeGenerator } from '../../../core/projection/code-generator'
+import { indent } from '../../../core/projection/code-generator'
 
-/** 最外層的元組預設不帶括號，原文寫了（`bareTuple === false`）才帶；一格的要留逗號。 */
-function patternText(p: SemanticNode, ctx: GeneratorContext): string {
-  if (!p.componentId.endsWith(':tuple_make') || p.metadata?.layoutHints?.bareTuple === false) return generateExpression(p, ctx)
-  const items = (p.slots.items ?? []).map((x) => generateExpression(x, ctx))
-  return items.length === 1 ? `${items[0]},` : items.join(', ')
-}
+// 最外層的元組預設不帶括號，原文寫了才帶；一格的要留逗號——與 `for` 的目標同一條（`tuple_make/target-pattern.ts`）
+import { targetPatternText as patternText } from '../tuple_make/target-pattern'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:var_assign_sequence', (node, ctx) => {

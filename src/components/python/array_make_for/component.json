@@ -20,7 +20,8 @@
     "iterable": "expression",
     "condition": "expression",
     "outer": "expression",
-    "targets": "param_decl"
+    "targets": "param_decl",
+    "pattern": "expression"
   },
   "role": "expression",
   "owner": "(python)",
@@ -40,10 +41,12 @@
   "traits": {
     "sequenceLiteral": true,
     "declaresVariable": [
-      "PARAM_{i}"
+      "PARAM_{i}",
+      "PATTERN>NAME"
     ]
   },
   "_traits_why": "**它算出來的是一個串列**（與串列字面同一個性狀），而**它也生出一個變數**——那個名字只在這個運算式裡活著，而變數下拉仍然要看得到它。",
   "_children_why": "🔴 **只有一個 `for` 與一個可選的 `if`**——巢狀生成式（`[x for a in b for x in a]`）整顆走誠實降級。\n收一半會產出一個少了一層迴圈的合法運算式，而它算出來的東西完全不同。\n🔴 **`outer` 加入日 2026-08-22**：巢狀推導式（`[x for row in g for x in row]`，攤平二維表的慣用寫法）之前整顆降級。外層是一顆同族的「一段走訪來源」積木，而它自己也有一個 `outer` ——**於是層數不受限**。\n🔴 **名字走 `targets`**（第 411 刀，與同族 `for`／字典推導式同一個做法，單一名字也是）：`for a, b in …` 有兩個名字。`obj` 仍填第一個名字，轉 C++ 那一路還讀它。⚠️ 外層那幾段（`outer` 鏈）仍只收單一名字，多名字的外層整顆降級。",
-  "_properties_why": "🔴 **`wrap` 記的是「原文是哪一種括號」**：`''` 中括號（串列）、`'generator'` 沒有括號、`'set'` 大括號（集合）。\n⚠️ 2026-08-22 由 `generator` 改名而來——加進集合推導式之後，`generator: 'set'` 會是一個自相矛盾的值。舊名沒有進過任何 renderMapping 或存檔欄位（已查證），所以這次改名沒有轉換成本。"
+  "_properties_why": "🔴 **`wrap` 記的是「原文是哪一種括號」**：`''` 中括號（串列）、`'generator'` 沒有括號、`'set'` 大括號（集合）。\n⚠️ 2026-08-22 由 `generator` 改名而來——加進集合推導式之後，`generator: 'set'` 會是一個自相矛盾的值。舊名沒有進過任何 renderMapping 或存檔欄位（已查證），所以這次改名沒有轉換成本。",
+  "_pattern_why": "🟢 **目標是一個樣式時住在 `pattern`**（第 422 刀，與 420 的 `for` 同一個做法）：`[n for n, *_ in g]`、`[a + b for (a, b) in ps]`、`[x for i, (x, y) in enumerate(ps)]`——元組／變數／展開組成的運算式，與 `targets` 互斥。`PATTERN>NAME` 讓樣式裡每一顆變數積木的名字都進下拉。⚠️ 只管最裡面那一段；外層（`outer` 鏈）仍只收單一名字。"
 }
