@@ -19,5 +19,27 @@
     "fieldMappings": [],
     "_why": "🔴 **裸的 `1, 2`（沒有括號）在 Python 就是一個 tuple**——`a, b = 1, 2` 的右邊、`return x, y` 的回傳值都是它，而 tree-sitter 給它另一個節點型別（`expression_list`）。\n**同一個概念、兩個節點型別**，所以是兩筆樣式指向同一顆元件。\n⚠️ 而產回去會**加上括號**（`a, b = (1, 2)`）——語義相同，來回轉換的比對因此不是逐字相同。那是刻意的：**括號不是語義**。",
     "liftStrategy": "python:liftTuple"
+  },
+  {
+    "id": "python_pattern_list",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "pattern_list",
+    "component": {
+      "componentId": "python:tuple_make"
+    },
+    "fieldMappings": [],
+    "_why": "🟢 **指定與迴圈的目標樣式也是元組**（第 420 刀）：`for i, (a, b) in …` 的 `i, (a, b)` 是 `pattern_list`（沒有括號，同 `expression_list`），裡面的 `(a, b)` 是 `tuple_pattern`（有括號，同 `tuple`）。Python 的文法本來就說目標是運算式（target list）——同一個概念、多兩個節點型別。",
+    "liftStrategy": "python:liftTuple"
+  },
+  {
+    "id": "python_tuple_pattern",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "tuple_pattern",
+    "component": {
+      "componentId": "python:tuple_make"
+    },
+    "fieldMappings": [],
+    "_why": "有括號的目標樣式 `(a, b)`——見 `python_pattern_list` 的 `_why`。",
+    "liftStrategy": "python:liftTuple"
   }
 ]

@@ -65,11 +65,13 @@ async function roundTrip(id: string, mustKeep: string[] = []): Promise<string[]>
 }
 
 describe('模糊測試：學生的 Python 解題程式（410）', () => {
-  // for 的巢狀解包 `for i, (word, c) in …`——以前悄悄丟掉 `(word, c)`，Cella 對合法程式報 NameError；推導式 `for w, c in ranked` 的多目標另一刀（411）
+  // for 的巢狀解包 `for i, (word, c) in …`——410 之前悄悄丟掉 `(word, c)`（Cella 對合法程式報 NameError），410–419 整段誠實降級，
+  // 第 420 刀起目標收成樣式（`for` 的 `pattern` 接點）；推導式 `for w, c in ranked` 的多目標是 411
   it('fuzz_1：Counts word frequencies in a sentence and prints a ranked table sorted by descending count then alphabetically.', async () => {
     const ids = await roundTrip('fuzz_1', ["for i, (word, c) in enumerate(ranked, 1):"])
-    expect(ids, '翻不出的那一段照實保留').toContain('unresolved')
-    expect(await runPython(P.fuzz_1.code), '判不出就說判不出，不得跑出別的結果').toMatch(/翻不出/)
+    expect(ids, '正向錨點：樣式收成元組').toContain('python:tuple_make')
+    expect(ids.filter((i) => /raw|unresolved/.test(i)), '整段都認得').toEqual([])
+    expect(await runPython(P.fuzz_1.code)).toBe('completed|' + P.fuzz_1.expected)
   })
   it('fuzz_2：Counts monotone right/down paths through a grid with obstacles using a DP table.', async () => {
     const ids = await roundTrip('fuzz_2')

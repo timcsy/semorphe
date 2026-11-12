@@ -250,7 +250,9 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
       return { k: 'eDict', n: x.id, keys, values }
     },
     targets: (x, t) => targetOf(x, String(t.slot)),
-    forTarget: (x) => (kids(x, 'targets').length > 0 ? targetOf(x, 'targets', 'obj') : textTarget(x, 'obj')),
+    // 目標是樣式時（`for i, (a, b) in …`，第 420 刀）它本來就是一個運算式：元組 → eTuple、變數 → eName、展開 → eStarred
+    forTarget: (x) => (kids(x, 'pattern').length > 0 ? node(kids(x, 'pattern')[0])
+      : kids(x, 'targets').length > 0 ? targetOf(x, 'targets', 'obj') : textTarget(x, 'obj')),
     comprehension: (x) => {
       const kind = ({ '': 'eListComp', set: 'eSetComp', generator: 'eGeneratorExp' } as Record<string, string>)[prop(x, 'wrap')]
       if (!kind) throw new Miss(x.id, x.componentId, `推導式的包法「${prop(x, 'wrap')}」還沒有對應`)

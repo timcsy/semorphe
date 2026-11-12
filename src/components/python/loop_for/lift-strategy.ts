@@ -21,6 +21,21 @@ import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
+/** 樣式裡只有名字、元組、展開（`*rest`）——每一個葉子都綁一個新名字。 */
+function isNamePattern(n: SemanticNode): boolean {
+  const id = n.componentId.split(':')[1]
+  if (id === 'var_ref') return true
+  if (id === 'splat') return n.properties.kind === 'list' && (n.slots.value ?? []).length === 1 && isNamePattern(n.slots.value[0])
+  if (id === 'tuple_make') return (n.slots.items ?? []).length > 0 && (n.slots.items ?? []).every(isNamePattern)
+  return false
+}
+
+function firstName(n: SemanticNode): string | undefined {
+  if (n.componentId.endsWith(':var_ref')) return String(n.properties.name ?? '')
+  for (const kids of Object.values(n.slots ?? {})) for (const k of kids ?? []) { const f = firstName(k); if (f) return f }
+  return undefined
+}
+
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftLoopFor', (node, ctx) => {
     const left = node.childForFieldName('left')
@@ -35,14 +50,21 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     //    ——`for c in s:` 走一趟積木回來變成 `for i in s:`，而迴圈體還在讀 `c`。從 2026-08-21 起就是這樣。
     const names = left?.type === 'identifier' ? [left]
       : left?.type === 'pattern_list' ? left.namedChildren : []
-    // 🔴 **收不下的目標整顆降級**：巢狀（`for i, (w, c) in …`，第 410 刀，盲測抓到——以前把 `(w, c)` 安靜丟掉，
-    //    Cella 對一支合法的程式報 `w` 沒定義）、下標或屬性（`for x[0] in …`）、括號包起來的、
-    //    以及只有一個名字的解包（`for x, in …`——丟掉逗號就是另一支程式）。
-    if (names.length === 0 || names.some((c) => c.type !== 'identifier')) return null
-    if (left?.type === 'pattern_list' && names.length < 2) return null
-    slots.targets = names.map((c) => createNode('param_decl', { type: '', name: c.text }))
-    // ⚠️ `obj` 仍然填第一個名字——轉 C++ 那一路還讀它。
-    properties.obj = names[0].text
+    const flat = names.length > 0 && names.every((c) => c.type === 'identifier') && !(left?.type === 'pattern_list' && names.length < 2)
+    if (flat) {
+      slots.targets = names.map((c) => createNode('param_decl', { type: '', name: c.text }))
+      // ⚠️ `obj` 仍然填第一個名字——轉 C++ 那一路還讀它。
+      properties.obj = names[0].text
+    } else {
+      // 🟢 **目標是一個樣式**（第 420 刀，盲測第二批 4/10 支）：`for i, (w, c) in …`、`for a, *b in …`、`for (x, y) in …`、`for x, in …`。
+      //    🪦 410–419 整顆誠實降級；再之前把 `(w, c)` 安靜丟掉，Cella 對一支合法的程式報 `w` 沒定義。
+      //    樣式收成運算式（元組／展開／變數——Python 的文法本來就說目標是 target list），住在 `pattern` 接點，積木換一個形態。
+      //    ⚠️ 只收「名字組成的樣式」：下標與屬性目標（`for x[0] in …`）仍整顆降級——它們不綁新名字，積木的變數下拉沒有地方放。
+      const pattern = left ? ctx.lift(left) : null
+      if (!pattern || !isNamePattern(pattern)) return null
+      slots.pattern = [pattern]
+      properties.obj = firstName(pattern) ?? ''
+    }
 
     const it = right ? ctx.lift(right) : null
     slots.iterable = it ? [it] : []

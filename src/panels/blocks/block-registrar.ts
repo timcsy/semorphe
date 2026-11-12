@@ -189,14 +189,29 @@ export class BlockRegistrar {
       //
       // ⚠️ 而下面那一段**沒有動**——它是 vision 記著的那批命令式定義的一部分，
       // 改它要走比對護欄。這裡加的是**第二條路**，兩條並存到那批退場為止。
-      const declared = new Map(
-        componentsDeclaringVariables().map((c) => [deriveBlockType(c.componentId), c.fields]),
-      )
+      // ⚠️ 以元件身分為鍵、再由積木型別查回身分：一顆元件的【每一個形態】都算（第 420 刀：迴圈的樣式形態
+      //    是一個非中性形態，它的積木型別不是 `deriveBlockType` 導得出的那一個）。
+      const declaredById = new Map(componentsDeclaringVariables().map((c) => [c.componentId, c.fields]))
+      const declared = new Map<string, string[]>()
+      for (const c of componentsDeclaringVariables()) declared.set(deriveBlockType(c.componentId), c.fields)
+      for (const spec of this.blockSpecRegistry.getAll()) {
+        const type = (spec.blockDef as { type?: string } | undefined)?.type
+        const fields = declaredById.get(spec.componentMapping?.componentId)
+        if (type && fields) declared.set(type, fields)
+      }
       for (const block of blocks) {
         const fields = declared.get(block.type)
         if (!fields) continue
         for (const pattern of fields) {
-          if (pattern.includes('{i}')) {
+          // `PATTERN>NAME`：插槽 PATTERN 底下每一顆積木的 NAME 欄位（`for i, (a, b) in …` 的樣式裡那幾顆變數積木）
+          if (pattern.includes('>')) {
+            const [input, field] = pattern.split('>')
+            const root = block.getInputTargetBlock(input)
+            for (const d of root?.getDescendants(true) ?? []) {
+              const v = d.getField(field) ? d.getFieldValue(field) : null
+              if (typeof v === 'string') addOption(v)
+            }
+          } else if (pattern.includes('{i}')) {
             for (let i = 0; ; i++) {
               const v = block.getFieldValue(pattern.replace('{i}', String(i)))
               if (v === null || v === undefined) break

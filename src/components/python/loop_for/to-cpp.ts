@@ -12,6 +12,8 @@ export function registerToCpp(r: ToCppRegistrar): void {
     const v = cpp.name(loopName)
     // 第 411 刀起單一名字也在 `targets` 裡——多於一個才是「拆開多個變數」
     if ((n.slots.targets ?? []).length > 1) return [cpp.keep(n, 'outside-subset', 'for 拆開多個變數還沒有對應')]
+    // 目標是一個樣式（`for i, (a, b) in …`，第 420 刀）——同一件事，更深一層
+    if ((n.slots.pattern ?? []).length > 0) return [cpp.keep(n, 'outside-subset', 'for 拆開多個變數還沒有對應')]
     const it = n.slots.iterable?.[0]
     if (it?.componentId.endsWith(':range_make')) {
       // for i in range(a, b, s)：迴圈變數已由引擎提前宣告（Python 的迴圈變數在迴圈之後還在）

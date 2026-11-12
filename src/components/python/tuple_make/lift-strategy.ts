@@ -31,8 +31,8 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       .map((c) => ctx.lift(c))
       .filter((n): n is SemanticNode => n !== null)
     const made = createNode('python:tuple_make', {}, { items })
-    // `tuple` 節點自帶括號；`expression_list` 沒有。
-    made.metadata = { ...(made.metadata ?? {}), layoutHints: { bareTuple: node.type === 'expression_list' } }
+    // `tuple`／`tuple_pattern` 自帶括號；`expression_list`／`pattern_list`（目標樣式，第 420 刀）沒有。
+    made.metadata = { ...(made.metadata ?? {}), layoutHints: { bareTuple: node.type === 'expression_list' || node.type === 'pattern_list' } }
     return made
   })
 }

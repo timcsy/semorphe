@@ -62,6 +62,13 @@ const throughBlocks = async (code: string): Promise<string> => {
   return generatePython(extractor.extract(Blockly.serialization.blocks.save(blk) as never)).trim()
 }
 
+describe('已知的正規化：同一支程式，文字不同', () => {
+  // 第 420 刀：`for (a, b) in …` 的括號是排版註記，積木那一趟不存它——回來是 `for a, b in …`（Python 的同一支程式）
+  it('for (a, b) in ps → for a, b in ps', async () => {
+    expect(await throughBlocks('for (a, b) in ps:\n    print(a + b)\n')).toBe('for a, b in ps:\n    print(a + b)')
+  })
+})
+
 describe('綁定的名字走一趟真的積木回來', () => {
   for (const c of [
     'for c in xs:\n    print(c)',
@@ -83,6 +90,11 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'while n > 0:\n    n = n - 1\nelse:\n    print(n)',
     // 第 416 刀：主體只有 pass 的空類別——積木上方法與欄位兩格都是空的，回來要寫回 pass
     'class P:\n    pass',
+    // 第 420 刀：目標是一個樣式——接在 PATTERN 那一格的元組／變數／展開積木
+    'for i, (w, c) in enumerate(r, 1):\n    print(i, w, c)',
+    'for x, in ps:\n    print(x)',
+    'for a, *rest in rows:\n    print(a, rest)',
+    'for (dr, dc), name in moves.items():\n    print(name)\nelse:\n    print(0)',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)

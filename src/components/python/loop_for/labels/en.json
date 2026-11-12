@@ -4,5 +4,6 @@
   "PYTHON_FOR_TARGETS_OPEN": "taking each",
   "PYTHON_FOR_TARGETS_CLOSE": "",
   "PYTHON_FOR_ELSE": "if no break",
-  "PYTHON_FOR_MUTATOR_TITLE": "for each"
+  "PYTHON_FOR_MUTATOR_TITLE": "for each",
+  "PYTHON_FOR_PATTERN_TOOLTIP": "Walk a sequence, unpacking each value into the names of the pattern. e.g. enumerate gives (index, value), and the value can be unpacked again"
 }
