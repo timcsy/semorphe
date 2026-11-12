@@ -192,7 +192,9 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
     if (outer.length > 0) out.push(...clauses(outer[0]))
     const cond = kids(x, 'condition')
     // 名字以 `targets` 為準（推導式最裡面那一段，第 411 刀）；外層 `loop_iter` 仍只有 `obj`
-    const target = kids(x, 'targets').length > 0 ? targetOf(x, 'targets', 'obj') : textTarget(x, 'obj')
+    // 目標是樣式時（`[x for i, (x, y) in …]`，第 422 刀）它本來就是一個運算式
+    const target = kids(x, 'pattern').length > 0 ? node(kids(x, 'pattern')[0])
+      : kids(x, 'targets').length > 0 ? targetOf(x, 'targets', 'obj') : textTarget(x, 'obj')
     out.push({ k: 'comprehension', target, iter: slot(x, 'iterable'), ifs: cond.length > 0 ? [node(cond[0])] : [] })
     return out
   }
@@ -271,7 +273,8 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
     },
     dictComprehension: (x) => {
       const cond = kids(x, 'condition')
-      const g = { k: 'comprehension', target: targetOf(x, 'targets'), iter: slot(x, 'iterable'), ifs: cond.length > 0 ? [node(cond[0])] : [] }
+      const target = kids(x, 'pattern').length > 0 ? node(kids(x, 'pattern')[0]) : targetOf(x, 'targets')
+      const g = { k: 'comprehension', target, iter: slot(x, 'iterable'), ifs: cond.length > 0 ? [node(cond[0])] : [] }
       return { k: 'eDictComp', n: x.id, key: slot(x, 'key'), value: slot(x, 'value'), generators: [g] }
     },
     fstring: (x) => {

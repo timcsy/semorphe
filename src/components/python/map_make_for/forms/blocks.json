@@ -69,5 +69,62 @@
         }
       ]
     }
+  },
+  {
+    "id": "python:map_make_for.pattern",
+    "componentId": "python:map_make_for",
+    "language": "python",
+    "category": "maps",
+    "version": "1.0.0",
+    "form": {
+      "axis": "target_kind",
+      "value": "pattern"
+    },
+    "blockDef": {
+      "type": "python_map_make_for_pattern",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_MAP_MAKE_FOR_PATTERN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "KEY",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "PATTERN",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "ITERABLE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "CONDITION",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#9966FF",
+      "tooltip": "%{BKY_PY_MAP_MAKE_FOR_PATTERN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "KEY": "key",
+        "VALUE": "value",
+        "PATTERN": "pattern",
+        "ITERABLE": "iterable",
+        "CONDITION": "condition"
+      }
+    },
+    "_why": "🟢 **目標是一個樣式時換這個形態**（第 422 刀，與同族串列推導式同一個做法）：`{k: a for k, (a, b) in …}`。平的名字照舊是 paramList 形態。"
   }
 ]

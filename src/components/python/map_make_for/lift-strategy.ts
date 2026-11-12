@@ -13,6 +13,7 @@
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
+import { isNamePattern } from '../tuple_make/target-pattern'
 
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftMapMakeFor', (node, ctx) => {
@@ -26,11 +27,15 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
 
     const left = fors[0].childForFieldName('left')
     // 🔴 **收不下的目標整顆降級**（第 411 刀）：以前只挑出名字、其餘安靜丟掉——
-    //    `{k: a for k, (a, b) in …}` 產回去少了 `(a, b)`。巢狀、下標、`for x, in …` 都不收。
+    //    `{k: a for k, (a, b) in …}` 產回去少了 `(a, b)`。
     const parts = left?.type === 'pattern_list' ? left.namedChildren : left ? [left] : []
-    if (parts.length === 0 || parts.some((c) => c.type !== 'identifier')) return null
-    if (left?.type === 'pattern_list' && parts.length < 2) return null
-    const names = parts.map((c) => c.text)
+    if (!left) return null
+    const flat = parts.length > 0 && parts.every((c) => c.type === 'identifier') && !(left.type === 'pattern_list' && parts.length < 2)
+    // 🟢 **目標是一個樣式**（第 422 刀，與 420 的 `for`、同族串列推導式同一個做法）：`{k: a for k, (a, b) in …}`。
+    //    下標與屬性目標仍整顆降級。
+    const pattern = flat ? null : ctx.lift(left)
+    if (!flat && (!pattern || !isNamePattern(pattern))) return null
+    const names = flat ? parts.map((c) => c.text) : []
 
     const key = ctx.lift(body.childForFieldName('key')!)
     const value = ctx.lift(body.childForFieldName('value')!)
@@ -42,6 +47,7 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
 
     const slots: Record<string, SemanticNode[]> = {
       targets: names.map((n) => createNode('param_decl', { type: '', name: n })),
+      ...(pattern ? { pattern: [pattern] } : {}),
       key: [key], value: [value], iterable: [iter],
     }
     if (cond) slots.condition = [cond]

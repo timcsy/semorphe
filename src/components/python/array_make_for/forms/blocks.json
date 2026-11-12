@@ -75,5 +75,66 @@
       ]
     },
     "_why": "🔴 **被綁定的名字用 paramList，不是一個文字欄位**（第 411 刀）：`[(a, b) for a, b in zip(xs, ys)]` 有兩個名字，一個欄位只裝得下一個——在那之前它整顆降級（盲測 8 支裡 3 支踩到）。與同族的 `for` 迴圈、字典推導式同一個形狀，`countSource` 用 `paramCount`（存檔契約）。\n⚠️ `minCount: 1`：零個名字的推導式不是合法的 Python。`moveTailTo: ITERABLE` 讓名字列留在「取自」前面，讀起來仍是「收集 … 對每一個 x 取自 …」。"
+  },
+  {
+    "id": "python:array_make_for.pattern",
+    "componentId": "python:array_make_for",
+    "language": "python",
+    "category": "arrays",
+    "version": "1.0.0",
+    "form": {
+      "axis": "target_kind",
+      "value": "pattern"
+    },
+    "blockDef": {
+      "type": "python_array_make_for_pattern",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_ARRAY_MAP_PATTERN_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "EXPRESSION",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "PATTERN",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "ITERABLE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "CONDITION",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "OUTER",
+          "check": "Expression"
+        }
+      ],
+      "output": "Expression",
+      "colour": "#FF661A",
+      "tooltip": "%{BKY_PY_ARRAY_MAP_PATTERN_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "EXPRESSION": "expression",
+        "PATTERN": "pattern",
+        "ITERABLE": "iterable",
+        "CONDITION": "condition",
+        "OUTER": "outer"
+      },
+      "hints": [
+        "wrap"
+      ]
+    },
+    "_why": "🟢 **目標是一個樣式時換這個形態**（第 422 刀，與 420 的 `for` 同一個做法）：`[x for i, (x, y) in enumerate(ps)]` 的 `i, (x, y)` 接在 PATTERN 那一格，是既有的元組、變數、展開積木組起來的。平的名字（`[x for x in r]`、`for a, b in …`，佔絕大多數）照舊是上面那個 paramList 形態——形態由程式碼決定。",
+    "_message0_why": "與平的那個形態同一句話（「收集 … 對每一個 … 取自 … 只留 … 再外面一層 …」），只是名字那一格換成插槽；paramList 的開頭標籤在這裡寫進句子裡。"
   }
 ]

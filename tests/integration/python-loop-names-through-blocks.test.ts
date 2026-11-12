@@ -103,6 +103,12 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'a, (b, c) = 1, (2, 3)',
     'o.x, o.y = o.y, o.x',
     'x, = t',
+    // 第 422 刀：推導式的目標是一個樣式——同一個 PATTERN 插槽，串列／產生器／集合／字典四種推導式
+    'r = [n for n, *_ in g]',
+    'r = [x for i, (x, y) in enumerate(ps) if i > 0]',
+    'r = sum(a * b for (a, b), c in zip(u, v))',
+    'r = {x for x, in ps}',
+    'r = {k: a for k, (a, b) in d.items()}',
     // 第 419 刀：產生器運算式只在它是呼叫唯一的引數時不帶自己的括號——判準是語義樹的結構，走過積木還在
     'print(sum(x for x in r), any(x > 1 for x in r))',
     'g = (x for x in r)',

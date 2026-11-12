@@ -1,18 +1,9 @@
 /** `python:loop_for` 的 **generate** 路——for-each，縮排不是大括號。 */
-import type { NodeGenerator, GeneratorContext } from '../../../core/projection/code-generator'
-import type { SemanticNode } from '../../../core/types'
+import type { NodeGenerator } from '../../../core/projection/code-generator'
 import { indent, indented, generateExpression, generateBody, trackOwnText} from '../../../core/projection/code-generator'
 
-/**
- * 目標樣式（第 420 刀）：最外層的元組【預設不帶括號】（`for i, (a, b) in …`）——只有原文寫了括號（`for (a, b) in …`）才帶。
- * ⚠️ 與運算式位置的元組相反：那邊預設帶括號、原文沒有才省（`tuple_make` 的 `bareTuple`）。這裡反過來，
- * 是因為積木那一路不存排版註記，而 `for i, (a, b) in` 才是學生寫的樣子；`for (i, (a, b)) in` 也合法，但不是他寫的。
- */
-function patternText(p: SemanticNode, ctx: GeneratorContext): string {
-  if (!p.componentId.endsWith(':tuple_make') || p.metadata?.layoutHints?.bareTuple === false) return generateExpression(p, ctx)
-  const items = (p.slots.items ?? []).map((x) => generateExpression(x, ctx))
-  return items.length === 1 ? `${items[0]},` : items.join(', ')
-}
+// 目標樣式（第 420 刀）：最外層的元組預設不帶括號——規則與理由見 `tuple_make/target-pattern.ts`
+import { targetPatternText as patternText } from '../tuple_make/target-pattern'
 
 export function registerGenerate(g: Map<string, NodeGenerator>): void {
   g.set('python:loop_for', (node, ctx) => {

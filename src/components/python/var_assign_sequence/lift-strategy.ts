@@ -10,17 +10,8 @@ import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-
 import type { SemanticNode } from '../../../core/types'
 import { createNode } from '../../../core/semantic-tree'
 
-/**
- * 樣式裡的每一個葉子都是【左值】（第 421 刀）：名字、索引（`a[i]`）、屬性（`o.x`），
- * 以及由它們組成的元組與展開（`*mid`）。切片（`a[1:3]`）不收——Cella 的切片指定還在路上，收了也只會是 unknown。
- */
-function isLvaluePattern(n: SemanticNode): boolean {
-  const id = n.componentId.split(':')[1]
-  if (id === 'var_ref' || id === 'container_at' || id === 'member_at') return true
-  if (id === 'splat') return n.properties.kind === 'list' && (n.slots.value ?? []).length === 1 && isLvaluePattern(n.slots.value[0])
-  if (id === 'tuple_make') return (n.slots.items ?? []).length > 0 && (n.slots.items ?? []).every(isLvaluePattern)
-  return false
-}
+// 樣式裡的每一個葉子都是【左值】（第 421 刀）：名字、索引、屬性，以及由它們組成的元組與展開——見 `tuple_make/target-pattern.ts`。
+import { isLvaluePattern } from '../tuple_make/target-pattern'
 
 // ⚠️ `param_decl` 是**核心的共用結構節點**（同族函式定義的參數也用它），
 //    不是某一顆膠囊的身分——所以這裡直接建，沒有跨膠囊的外洩。

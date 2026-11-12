@@ -20,9 +20,9 @@ describe('python:array_make_for', () => {
    * 解構的目標（`for k, v in d.items()`）今天收得下，名字放在 `targets`；
    * 今天走誠實降級的是**巢狀的解構**（`for i, (a, b) in …`）與**只有一個名字的解包**（`for x, in …`）。
    */
-  it('🔴 lift：巢狀的解構與單名解包整顆走誠實降級——收一半會弄丟名字或逗號', async () => {
+  it('🔴 下標目標整顆走誠實降級——收一半會弄丟目標（巢狀與單名解包從第 422 刀起走 pattern，見檔尾）', async () => {
     expect(await ids('a = [k for k, v in d.items()]\n'), '正向錨點：一般的解構收得下').toContain('python:array_make_for')
-    for (const c of ['a = [w for i, (w, c) in enumerate(r)]\n', 'a = [x for x, in ps]\n']) {
+    for (const c of ['a = [1 for a[0], b in ps]\n']) {
       expect(await ids(c), c).not.toContain('python:array_make_for')
       expect(await ids(c), `${c} 而它必須看得見`).toContain('unresolved')
     }
@@ -145,5 +145,67 @@ describe('🔴 產生器運算式的括號（第 419 刀，盲測抓到）', () 
     const code = 'r = [3, 1, 2]\nprint(*(x * 2 for x in r))\nprint(max((x for x in r if x > 5), default=0), sorted((x for x in r), reverse=True))\ng = (x + 1 for x in r)\nprint(list(g))\n'
     const back = gen(await liftPython(code))
     expect(await runPython(back)).toBe('completed|6 2 4\n0 [3, 2, 1]\n[4, 2, 3]\n')
+  })
+})
+
+describe('🟢 推導式的目標是一個樣式（第 422 刀）', () => {
+  const find = (n: any, id: string): any => n?.componentId === id ? n
+    : Object.values(n?.slots ?? {}).flat().map((k) => find(k, id)).find(Boolean)
+  const cases = [
+    'r = [n for n, *_ in g]',
+    'r = [a + b for (a, b) in ps]',
+    'r = [x for i, (x, y) in enumerate(ps) if i > 0]',
+    'r = sum(a * b for (a, b), c in zip(u, v))',
+    'r = {x for x, in ps}',
+    'r = {k: a for k, (a, b) in d.items()}',
+    'r = [x for row in g for x, y in row]',
+  ]
+
+  it('★ lift：樣式進 pattern，裡面是元組／變數／展開，沒有降級', async () => {
+    const t = await liftPython(cases[2] + '\n')
+    const c = find(t, 'python:array_make_for')
+    expect(c, '正向錨點：認得這個推導式').toBeTruthy()
+    expect(c.slots.pattern?.[0]?.componentId).toBe('python:tuple_make')
+    expect(c.slots.targets ?? []).toEqual([])
+    expect(c.properties.obj, '轉 C++ 那一路讀的第一個名字').toBe('i')
+    const all = componentIdsOf(await liftPython(cases.join('\n') + '\n'))
+    expect(all).toContain('python:map_make_for')
+    expect(all).toContain('python:splat')
+    expect(all.filter((i) => /raw|unresolved/.test(i))).toEqual([])
+  })
+
+  for (const c of cases) {
+    it(`★ 來回一字不差：${c}`, async () => {
+      expect(await rt(c + '\n')).toBe(c)
+    })
+  }
+
+  it('平的名字仍走 targets（形態不變）', async () => {
+    const c = find(await liftPython('r = [a for a, b in ps]\n'), 'python:array_make_for')
+    expect(c, '正向錨點').toBeTruthy()
+    expect(c.slots.targets?.map((p: any) => p.properties.name)).toEqual(['a', 'b'])
+    expect(c.slots.pattern ?? []).toEqual([])
+  })
+
+  it('🔴 下標與屬性目標、外層的樣式仍整顆降級，而且不改動原文', async () => {
+    expect(await ids('r = [x for x in xs]\n'), '正向錨點').toContain('python:array_make_for')
+    for (const c of ['r = [1 for a[0] in xs]\n', 'r = [1 for o.x in xs]\n', 'r = [x for (a, b) in g for x in a]\n']) {
+      expect(await ids(c), c).not.toContain('python:array_make_for')
+      expect(await rt(c), '降級也不得改動原文').toBe(c.trim())
+    }
+  })
+
+  it('★ 執行：巢狀解包、展開、單元素解包、字典（Cella）', async () => {
+    const src = [
+      'g = [(1, 2, 3), (4, 5)]',
+      'print([n for n, *_ in g])',
+      'ps = [(1, 2), (3, 4), (5, 6)]',
+      'print([x for i, (x, y) in enumerate(ps) if i > 0])',
+      'print(sum(a * b for (a, b) in ps))',
+      'print(sorted({x for x, in [(7,), (8,), (7,)]}))',
+      'd = {"p": (1, 2), "q": (3, 4)}',
+      'print({k: a + b for k, (a, b) in d.items()})',
+    ].join('\n') + '\n'
+    expect(await runPython(src)).toBe("completed|[1, 4]\n[3, 5]\n44\n[7, 8]\n{'p': 3, 'q': 7}\n")
   })
 })
