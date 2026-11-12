@@ -97,6 +97,13 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'for x, in ps:\n    print(x)',
     'for a, *rest in rows:\n    print(a, rest)',
     'for (dr, dc), name in moves.items():\n    print(name)\nelse:\n    print(0)',
+    // 第 419 刀：產生器運算式只在它是呼叫唯一的引數時不帶自己的括號——判準是語義樹的結構，走過積木還在
+    'print(sum(x for x in r), any(x > 1 for x in r))',
+    'g = (x for x in r)',
+    'print(*(f"{x:3}" for x in r))',
+    'm = max((x for x in r), default=0)',
+    't = sorted((x for x in r), reverse=True)',
+    'f(a, (x for x in r))',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)

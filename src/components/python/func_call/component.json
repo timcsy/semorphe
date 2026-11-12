@@ -28,9 +28,10 @@
     }
   },
   "traits": {
-    "namedCall": true,
+    "callArguments": ["args"],
+"namedCall": true,
     "builder": "variadic"
   },
-  "_traits_why": "**`namedCall`**：`properties.name` 是被呼叫的名字（別的機制靠它，而不必知道我是誰）。**`builder: variadic`**：引數個數不定，積木由 `panels/blocks/variadic-block.ts` 依 `dynamicRules` 建（spec 162 的機制）。",
+  "_traits_why": "**`namedCall`**：`properties.name` 是被呼叫的名字（別的機制靠它，而不必知道我是誰）。**`builder: variadic`**：引數個數不定，積木由 `panels/blocks/variadic-block.ts` 依 `dynamicRules` 建（spec 162 的機制）。\n\n**哪幾格是呼叫的引數**（第 419 刀）：產生器運算式只有在它是呼叫【唯一的】引數時才能不帶自己的括號（`sum(x for x in r)`），其他位置不帶就是不合法的 Python。它產碼時找到自己的父節點，數這幾格合起來是不是只有它一個（`python/array_make_for/generate.ts`）。沒宣告的父元件一律帶括號——多一對但仍合法。",
   "_owner_why": "⚠️ **章要蓋 `(python)` 不是 `(core)`。** 工具箱的來源段落寫著 `{ from: '(python)' }`，查無此章就整批回傳空——**症狀不是報錯，是工具箱裡找不到這顆積木**（使用者 2026-08-21 回報）。"
 }
