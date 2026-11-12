@@ -22,6 +22,7 @@
  */
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import type { SemanticNode } from '../../../core/types'
+import type { AstNode } from '../../../core/lift/types'
 import { createNode } from '../../../core/semantic-tree'
 // 🔴 **呼叫兄弟膠囊匯出的建構子，不要自己寫下它們的身分**——
 //    身分字串留在別人的資料夾裡，那顆改名時這裡不會有人發現。
@@ -39,6 +40,27 @@ import { bodyOf, parseStart } from '../literal_string/body'
 const isFormatted = (prefix: string): boolean => /^[a-zA-Z]*$/.test(prefix.replace(/['"].*$/s, ''))
   && /f/i.test(prefix.replace(/['"].*$/s, ''))
 
+/**
+ * 自我說明（`{x=}`）那一段：`''`＝沒有；`null`＝有而收不下（整個 f-string 降級）。
+ *
+ * 🔴 **Python 印的是運算式的【原文】**（`{x+1=}` 印 `x+1=`），而我們產回去的是**重新產生**的文字。
+ * 兩者一字不差才收，所以只收：
+ * - 運算式是名字或屬性鏈（`x`、`self.n`）——產碼對它們不做任何正規化
+ * - `{` 與運算式之間沒有空白（`{ x=}` 會把那個空白也印出來）
+ * - `=` 兩側是 `=` 或 ` = `——積木上的下拉只有這兩種
+ *
+ * 第 410 刀（盲測抓到）起整段降級；第 418 刀起名字與屬性鏈收成插值那一格的 `selfDoc`。
+ */
+function selfDocOf(interp: AstNode, expr: AstNode | null): string | null {
+  const eq = interp.children.find((c) => !c.isNamed && c.type === '=')
+  if (!eq) return ''
+  if (!expr || !/^[A-Za-z_]\w*(\.[A-Za-z_]\w*)*$/.test(expr.text)) return null
+  // 用文字比，不用位移：插值的原文以 `{` 開頭、緊接運算式（中間有空白就收不下）
+  if (!interp.text.startsWith('{' + expr.text)) return null
+  const m = /^\s*=\s*/.exec(interp.text.slice(1 + expr.text.length))
+  return m && (m[0] === '=' || m[0] === ' = ') ? m[0] : null
+}
+
 export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   registry.register('python:liftStringMake', (node, ctx) => {
     const start = node.namedChildren.find((c) => c.type === 'string_start')
@@ -53,20 +75,19 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
       }
       if (child.type !== 'interpolation') continue // string_start／string_end 是引號，不是內容
 
-      // 🔴 **自我說明（`{x=}`）的插值，整個 f-string 降級**（第 410 刀，盲測抓到）：
-      //    那一格還沒有位置放「把運算式原文也印出來」，收一半會產出一個合法而行為不同的程式。
-      //    轉換（`!r`／`!s`／`!a`）在第 412 刀有了自己的一格——以前它也在這裡降級，
-      //    再更早是被安靜丟掉（`f'{s!r:<6}'` 產回去是 `f"{s:<6}"`，印出來少了引號）。
-      if (child.children.some((c) => !c.isNamed && c.type === '=')) return null
+      // 轉換（`!r`／`!s`／`!a`）在第 412 刀有了自己的一格——410 時它在這裡降級，
+      // 再更早是被安靜丟掉（`f'{s!r:<6}'` 產回去是 `f"{s:<6}"`，印出來少了引號）。
       const convNode = child.namedChildren.find((c) => c.type === 'type_conversion')
       const conversion = convNode ? convNode.text.replace(/^!/, '') : ''
       if (conversion && !/^[rsa]$/.test(conversion)) return null // 文法收得下、Python 不收的字母——不猜
       const expr = child.childForFieldName('expression')
+      const selfDoc = selfDocOf(child, expr)
+      if (selfDoc === null) return null
       const fmt = child.childForFieldName('format_specifier')
       // ⚠️ `format_specifier` 的原文含前導冒號（`:.1f`），而冒號是**語法**不是格式。
       const format = fmt ? fmt.text.replace(/^:/, '') : ''
       const lifted = expr ? ctx.lift(expr) : null
-      parts.push(buildStringInsert(format, lifted, conversion))
+      parts.push(buildStringInsert(format, lifted, conversion, selfDoc))
     }
     return createNode('python:string_make', {}, { parts })
   })
