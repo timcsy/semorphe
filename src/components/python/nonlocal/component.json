@@ -1,0 +1,31 @@
+{
+  "componentId": "python:nonlocal",
+  "abstractComponent": null,
+  "_abstractComponent_why": "🔴 **C++ 沒有這件事**：C++ 沒有巢狀函式（lambda 的擷取是另一件事），內層也不會因為指派就多出一個新變數。",
+  "_componentId_why": "`nonlocal` 是一個**語言構造**（與同族的 `global` 同一類）——沒有「主體＋操作」可以拆，所以它是一個宣告過的單字名。",
+  "properties": [
+    {
+      "name": "name",
+      "kind": "identifier",
+      "default": "",
+      "_why": "與同族 `global` 同一個理由：沒有名字的 `nonlocal` 沒有意義，退路是空字串（產出 `nonlocal ` 一眼看得出不對）；積木上的 `count` 是給學生的起始範例。"
+    }
+  ],
+  "slots": {},
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    }
+  },
+  "_lift_why": "`nonlocal_statement` 底下可以有**好幾個名字**（`nonlocal a, b`），而積木上只有一格——多個名字回 `null` 走誠實降級（與同族 `global` 同一個邊界）。"
+}

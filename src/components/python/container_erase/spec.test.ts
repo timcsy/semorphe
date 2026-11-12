@@ -10,9 +10,11 @@ describe('python:container_erase', () => {
     }
   })
 
-  it('🔴 `del x`（刪掉一個變數）走誠實降級——這個直譯器沒有那件事', async () => {
-    expect(componentIdsOf(await liftPython('del x\n')), '假裝刪掉了比看得見的灰色方塊糟')
-      .not.toContain('python:container_erase')
+  // 423 之前 `del x` 走誠實降級；423 起它歸 `python:delete`（刪掉一個名字），這一顆只收「刪容器的一格」
+  it('`del x`（刪掉一個變數）不是這一顆，是 python:delete', async () => {
+    const ids = componentIdsOf(await liftPython('del x\n'))
+    expect(ids).toContain('python:delete')
+    expect(ids).not.toContain('python:container_erase')
   })
 
   it('🔴 execute：字典少一個鍵、串列少一格而後面往前遞補', async () => {

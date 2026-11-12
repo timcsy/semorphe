@@ -37,8 +37,8 @@ const ROOT = [...TEMPLATES].find(([, t]) => isObj(t) && t.k === 'program')?.[0]
 
 /** 敘述角色的元件（其餘的放在敘述位置時包一層 `sExpr <id>/stmt`）——照參考實作的 `STATEMENT_ROLE`。 */
 const STATEMENT_ROLE = new Set(['assert', 'assign_chain', 'break', 'class_def', 'comment', 'container_append', 'container_assign', 'container_erase',
-  'container_erase_value', 'container_insert', 'container_sort_self', 'continue', 'exception_case', 'func_def', 'global', 'if', 'import',
-  'import_from', 'loop_for', 'loop_while', 'member_assign', 'pass', 'print', 'program', 'raw_code', 'return', 'set_append', 'throw',
+  'container_erase_value', 'container_insert', 'container_sort_self', 'continue', 'delete', 'exception_case', 'func_def', 'global', 'if', 'import',
+  'import_from', 'loop_for', 'loop_while', 'member_assign', 'nonlocal', 'pass', 'print', 'program', 'raw_code', 'return', 'set_append', 'throw',
   'try_catch', 'var_assign', 'var_assign_compound', 'var_assign_sequence', 'with'])
 
 const tables = TABLES as unknown as Record<string, Record<string, string>>

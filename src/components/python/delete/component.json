@@ -1,0 +1,27 @@
+{
+  "componentId": "python:delete",
+  "abstractComponent": null,
+  "_abstractComponent_why": "C++ 的 `delete p` 是釋放一塊動態配置的記憶體，與這一個（讓名字消失、拿掉物件的屬性）不是同一件事——指向它會是一個假的等價。",
+  "_componentId_why": "`delete` 是一個**語言構造**（與 `global` 同一類）——它刪的可以是名字、屬性或某一格，沒有固定的主體可以拆，所以它是一個宣告過的單字名。",
+  "properties": [],
+  "slots": {
+    "targets": "expression"
+  },
+  "role": "statement",
+  "owner": "(python)",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "liftStrategy": "./lift-strategy.ts"
+      }
+    }
+  },
+  "_children_why": "🔴 **目標是一串接點**：`del b.rate`、`del a, xs[0]` 的每一格都是一個完整的運算式（名字、屬性、某一格），壓成字串就要再解析一次。順序就是原始碼的順序，Python 也照這個順序刪。",
+  "_lift_why": "與同族的「刪掉容器的一格」共用 `delete_statement`：**只有一個目標、而且是某一格**的歸那一顆（它的 priority 較高、我這裡回 `null`）；其餘——刪名字、刪屬性、一次刪好幾個——歸這一顆。目標裡有任何一格不是名字／屬性／某一格（`del (a), [b]`）就整句誠實降級。"
+}

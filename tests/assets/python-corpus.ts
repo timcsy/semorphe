@@ -485,6 +485,25 @@ flags = [True] * 4
 flags[0] = flags[1] = False
 a += 1
 print(a, b, flags)`],
+  ['nonlocal 與 del', `def make_counter(start):
+    count = start
+    def inc():
+        nonlocal count
+        count += 1
+        return count
+    return inc
+
+class Box:
+    pass
+
+c = make_counter(10)
+print(c(), c())
+b = Box()
+b.size = 3
+xs = [1, 2, 3]
+tmp = 9
+del b.size, xs[0], tmp
+print(xs)`],
   ['質數與巢狀迴圈', `def is_prime(n):
     if n < 2:
         return False

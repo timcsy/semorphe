@@ -1,0 +1,34 @@
+[
+  {
+    "id": "python_delete",
+    "componentId": "python:delete",
+    "language": "python",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_delete",
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_PY_DELETE_TOOLTIP}",
+      "labelKey": "PY_DELETE_MSG",
+      "labelFallback": "刪掉",
+      "slotCheck": "Expression",
+      "builder": "variadic"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {},
+      "statementInputs": {},
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "targets",
+          "inputPattern": "TARGET{i}"
+        }
+      ]
+    },
+    "_why": "與同族「刪掉容器的一格」同色同類、同一個動詞：學生看到的都是「刪掉」，差別只在刪的是什麼。可增減的目標照 `print` 的做法（`builder: variadic`）。"
+  }
+]

@@ -66,6 +66,9 @@ export const PYTHON_ATOMIC_NAMES = [
   //    🔴 **C++ 沒有這件事**（那邊的內層看得見也改得動外層），
   //    而它是一個語言構造，沒有「主體＋操作」可以拆。
   'global',
+  // ⚠️ `nonlocal` 加入日 2026-11-12（第 423 刀）——`nonlocal count`。與 `global` 同一類的語言構造：
+  //    改的是外面那層函式的同名變數（不是最外層），C++ 也沒有這件事，沒有「主體＋操作」可以拆。
+  'nonlocal',
   // ⚠️ `assert` 加入日 2026-08-22。與 `import`／`global` 同一類的語言構造。
   'assert',
   // ⚠️ `import_from` 加入日 2026-08-22。與 `import` 同一類的語言構造，

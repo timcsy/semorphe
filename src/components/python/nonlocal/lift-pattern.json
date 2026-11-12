@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python_nonlocal",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "nonlocal_statement",
+    "component": {
+      "componentId": "python:nonlocal"
+    },
+    "liftStrategy": "python:lift_nonlocal",
+    "fieldMappings": [],
+    "priority": 12,
+    "_why": "`nonlocal_statement` 沒有別的競爭者，而走策略是因為它底下可以有多個名字。"
+  }
+]

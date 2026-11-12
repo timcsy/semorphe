@@ -91,6 +91,8 @@
     "python:container_zip",
     "python:throw",
     "python:global",
+    "python:nonlocal",
+    "python:delete",
     "python:loop_iter",
     "python:assert",
     "python:import_from",
