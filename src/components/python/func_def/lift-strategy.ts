@@ -30,8 +30,8 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
     // 🟢 **`*args` 收得下**（2026-08-22）：`list_splat_pattern`。
     //    它在 `param_decl` 上多一個 `variadic` 標記——**不是把星號寫進名字裡**：
     //    名字裡的星號會讓每一個讀名字的人各自再解析一次。
-    // ⚠️ `**kwargs`（`dictionary_splat_pattern`）**仍然沒有被收**
-    //    ——它要的是「把剩下的具名引數收成一個字典」，而那是另一件事。
+    // 🟢 **`**kwargs` 也收得下**（2026-11-12，第 425 刀）：`dictionary_splat_pattern` → `variadic: 'dict'`。
+    //    Cella 的 `arguments.kwarg` 就是它；盲測第二批 fuzz_7 的 `def total(*args, scale=1, **kw)` 原本整顆降級。
     const paramsNode = node.childForFieldName('parameters')
     const params: SemanticNode[] = []
     let unsupported = false
@@ -69,6 +69,10 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
         const n = p.namedChildren[0]
         if (n?.type !== 'identifier') { unsupported = true; continue }
         params.push(createNode('param_decl', { type: '', name: n.text, variadic: 'list' }))
+      } else if (p.type === 'dictionary_splat_pattern') {
+        const n = p.namedChildren[0]
+        if (n?.type !== 'identifier') { unsupported = true; continue }
+        params.push(createNode('param_decl', { type: '', name: n.text, variadic: 'dict' }))
       } else {
         unsupported = true
       }

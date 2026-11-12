@@ -605,6 +605,11 @@
       "decision": "closed",
       "field": "field_dropdown",
       "reason": "f-string 的轉換只有 Python 定的三種（`!r`／`!s`／`!a`）加上「不轉換」，清單外沒有第五種——與 `format_spec` 不同，它不是開放的字串"
+    },
+    "python_func_def.PARAM_VARIADIC_{i}": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "Python 參數的收集方式只有三種：不收集、`*` 收其餘的位置引數、`**` 收其餘的具名引數（param_decl 的 variadic：''／list／dict），清單外沒有第四種（第 425 刀）"
     }
   }
 }

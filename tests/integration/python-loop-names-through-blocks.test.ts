@@ -129,6 +129,10 @@ describe('綁定的名字走一趟真的積木回來', () => {
     '@a\n@b.c\n@lru_cache(maxsize=None)\ndef f(n):\n    return n',
     '@dataclass\nclass P:\n    x = 0',
     'class A:\n    @staticmethod\n    def f(x):\n        return x\n    @property\n    def g(self):\n        return 1',
+    // 第 425 刀：參數的星號是 param_decl 的 variadic 標記（list＝*args、dict＝**kw）——積木上要有一格裝它，走一趟回來還在
+    'def f(*args):\n    return args',
+    'def total(*args, scale=1, **kw):\n    return sum(args) * scale',
+    'def g(a, b: int = 2, *rest, **opts):\n    return a',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)
