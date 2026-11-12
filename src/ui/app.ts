@@ -2400,6 +2400,14 @@ export class App {
         this.codeDirty = false
         this.blocksDirty = false
         this.updateSyncHints()
+        // 🔴 **程式碼那側的編輯也要存**（第 429 刀，2026-11-13）。
+        //
+        //    `autoSave` 原本只掛在積木變動上，而程式碼→積木這一輪重建的積木事件
+        //    在 `_codeToBlocksInProgress` 那裡提早 return——於是只在程式碼那側打字的學生，
+        //    重新整理之後程式不見（瀏覽器實測：貼上、等 9 秒，存檔的 code 仍是空的、時間戳不動）。
+        //    這裡是程式碼→積木唯一的匯流點，存在這裡就涵蓋打字、貼上、範例、課文。
+        //    ⚠️ 解析失敗（`synced === false`）也存——寫到一半的程式碼正是最不能丟的。
+        if (!this._restoringState) this.autoSave()
         // 🔴 **重畫過的積木沒有那兩層視覺**（2026-09-02）。
         //
         //    使用者：「怎麼我選淡的，前面還好好的，後面就不是淡的了？」
@@ -4569,7 +4577,11 @@ export class App {
     const pinnedTarget = this.currentLesson?.pins.target
     if (savedTarget && pinnedTarget === undefined) this.currentTarget = savedTarget
     // ⚠️ 還原也要跟著換外殼——否則存檔存的是 Arduino，開起來卻套 `main()`。
-    this.scaffold?.setSkeleton?.(this.currentTarget.skeleton ?? 'main')
+    // 🔴 **走 `adoptSkeleton`，不是只換外殼**（第 429 刀）：這裡原本只呼叫 `scaffold.setSkeleton`，
+    //    `currentSkeletonId` 與同步引擎停在 `main` ⟹ 存的是 Python，重開之後狀態列寫「標準骨架」，
+    //    下一次同步把 `int main() {…}` 接在 Python 程式後面。三個持有者見 `adoptSkeleton` 的檔頭。
+    //    ⚠️ 課釘住目標時骨架已由 `applyLesson` 定好（可能是軌道給的），這裡不蓋掉它。
+    this.adoptSkeleton(pinnedTarget === undefined ? (this.currentTarget.skeleton ?? 'main') : this.currentSkeletonId)
     // ⚠️ 課程主題也跟著——`savedTarget` 被擋掉時，別再從它推主題。
     const topicId = pinnedTarget !== undefined
       ? this.currentTopic.id
