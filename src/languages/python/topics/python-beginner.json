@@ -51,6 +51,7 @@
     "python:container_assign",
     "python:member_assign",
     "python:compare_chain",
+    "python:compare_step",
     "python:container_erase",
     "python:set_make",
     "python:string_format",

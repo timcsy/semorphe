@@ -1,0 +1,4 @@
+{
+  "PY_COMPARE_STEP_MSG": "then",
+  "PY_COMPARE_STEP_TOOLTIP": "Next step of a comparison chain: compare the previous value once more (e.g. the \"!= 21\" in 0 < x < 20 != 21). Fits only at the tail of a comparison chain; evaluation stops at the first step that fails."
+}

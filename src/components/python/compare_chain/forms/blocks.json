@@ -88,7 +88,10 @@
       ],
       "output": "Expression",
       "colour": "#59C059",
-      "tooltip": "%{BKY_PY_COMPARE_CHAIN_TOOLTIP}"
+      "tooltip": "%{BKY_PY_COMPARE_CHAIN_TOOLTIP}",
+      "builder": "variadic",
+      "slotCheck": "CompareStep",
+      "minCount": 0
     },
     "renderMapping": {
       "fields": {
@@ -99,7 +102,15 @@
         "A": "left",
         "B": "middle",
         "C": "right"
-      }
-    }
+      },
+      "dynamicRules": [
+        {
+          "countSource": "itemCount",
+          "childSlot": "more",
+          "inputPattern": "STEP{i}"
+        }
+      ]
+    },
+    "_why": "三段以上（第 426 刀）：尾巴可增減（`builder: variadic`、`minCount: 0`），每一格插一顆「再比」（`CompareStep`）。兩個下拉與 A／B／C 三格不動——**存檔格式不變**，沒有 extraState 的舊檔載入時尾巴是 0 格。"
   }
 ]

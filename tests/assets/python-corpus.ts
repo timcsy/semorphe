@@ -526,6 +526,10 @@ class Temp:
         return Temp.to_f(self.c)
 
 print(greet("amy"), Temp(100).f)`],
+  ['三段以上的比較鏈', `for x in [5, 17, 21, 25]:
+    if 0 < x < 25 != x + 4:
+        print(x, "in range")
+print(1 <= 2 <= 3 <= 3 > 0)`],
   ['質數與巢狀迴圈', `def is_prime(n):
     if n < 2:
         return False

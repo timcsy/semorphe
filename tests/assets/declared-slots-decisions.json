@@ -698,5 +698,10 @@
     "componentId": "python:decorated",
     "cause": "lift 走具名策略，靜態掃不到",
     "reason": "裝飾器列（`decorators`）與定義那一格（`definition`）是策略從 `decorated_definition` 收出來的；任何一格收不下就回 null 整段照舊降級，類別裡的方法另由 `class_def` 的策略收。由 `spec.test.ts` 的來回與 Cella 執行（staticmethod／classmethod／property、疊兩個自訂裝飾器）釘住。"
+  },
+  {
+    "componentId": "python:compare_step",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "它由比較鏈的具名策略產出（第三段起每一段一顆，接點 `value`）；自己沒有 lift。由比較鏈與這顆的 `spec.test.ts`（來回、括號、Cella 執行的求值次數與短路）和 `python-loop-names-through-blocks` 釘住。"
   }
 ]

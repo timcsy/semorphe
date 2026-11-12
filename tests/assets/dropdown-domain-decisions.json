@@ -606,6 +606,11 @@
       "field": "field_dropdown",
       "reason": "f-string 的轉換只有 Python 定的三種（`!r`／`!s`／`!a`）加上「不轉換」，清單外沒有第五種——與 `format_spec` 不同，它不是開放的字串"
     },
+    "python_compare_step.OP": {
+      "decision": "closed",
+      "field": "field_dropdown",
+      "reason": "比較鏈裡的一段只收六個比較運算子（與比較鏈的兩個下拉同一份）；`in`／`is` 的鏈整條照實降級，不進這顆（第 426 刀）"
+    },
     "python_func_def.PARAM_VARIADIC_{i}": {
       "decision": "closed",
       "field": "field_dropdown",

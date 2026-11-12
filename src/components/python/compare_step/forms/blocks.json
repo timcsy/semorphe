@@ -1,0 +1,63 @@
+[
+  {
+    "id": "python_compare_step",
+    "componentId": "python:compare_step",
+    "language": "python",
+    "category": "operators",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "python_compare_step",
+      "inputsInline": true,
+      "message0": "%{BKY_PY_COMPARE_STEP_MSG} %1 %2",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "OP",
+          "options": [
+            [
+              "<",
+              "<"
+            ],
+            [
+              "≤",
+              "<="
+            ],
+            [
+              ">",
+              ">"
+            ],
+            [
+              "≥",
+              ">="
+            ],
+            [
+              "=",
+              "=="
+            ],
+            [
+              "≠",
+              "!="
+            ]
+          ]
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        }
+      ],
+      "output": "CompareStep",
+      "colour": "#59C059",
+      "tooltip": "%{BKY_PY_COMPARE_STEP_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "OP": "operator"
+      },
+      "inputs": {
+        "VALUE": "value"
+      }
+    },
+    "_why": "顏色與分類抄比較鏈（`#59C059`／operators）。輸出型別是 `CompareStep` 不是 `Expression`：它只插得進比較鏈尾巴那幾格，插不進一般的運算式位置——`< d` 單獨不是一個值。"
+  }
+]
