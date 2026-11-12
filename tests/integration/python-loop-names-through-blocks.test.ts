@@ -150,3 +150,65 @@ describe('綁定的名字走一趟真的積木回來', () => {
     })
   }
 })
+
+/**
+ * 第 427 刀：函式參數的齒輪——「收集其餘引數」與「預設值」不能同時開（`*scale=1` 是語法錯誤）。
+ * 兩個都勾時**剛勾的贏**，齒輪裡另一個勾也拿掉。另：有型別註記時星號要留著（原本產回 `args: int`）。
+ * ⚠️ 這裡用 headless 工作區替齒輪建子積木（`initSvg` 換成空的）——走的是產品的 `decompose`／`compose`。
+ */
+describe('齒輪：收集其餘引數與預設值互斥', () => {
+  const funcBlock = async (code: string): Promise<Blockly.Block> => {
+    const sem = await liftPython(code)
+    setPatternRenderer(renderer)
+    const st = renderToBlocklyState(sem!)
+    ws.clear()
+    const top = Blockly.serialization.blocks.append(st.blocks.blocks[0], ws)
+    const fd = top.type === 'python_func_def' ? top : top.getDescendants(false).find((b) => b.type === 'python_func_def')
+    expect(fd, '正向錨點：要是一顆函式定義').toBeTruthy()
+    return fd!
+  }
+  const gear = (blk: Blockly.Block): Blockly.Block[] => {
+    const fake = { newBlock: (t: string) => { const b = ws.newBlock(t); (b as unknown as { initSvg: () => void }).initSvg = () => {}; return b } }
+    const container = (blk as unknown as { decompose: (w: unknown) => Blockly.Block }).decompose(fake)
+    const items: Blockly.Block[] = []
+    let it = container.getInputTargetBlock('STACK')
+    while (it) { items.push(it); it = it.getNextBlock() }
+    ;(blk as unknown as { __container: Blockly.Block }).__container = container
+    return items
+  }
+  const compose = (blk: Blockly.Block): void =>
+    (blk as unknown as { compose: (c: Blockly.Block) => void }).compose((blk as unknown as { __container: Blockly.Block }).__container)
+  const code = (blk: Blockly.Block): string =>
+    generatePython(extractor.extract(Blockly.serialization.blocks.save(blk) as never)).trim()
+
+  it('已經是 *args 的那格，勾預設值 → 預設值贏，星號收起來', async () => {
+    const blk = await funcBlock('def f(*args, scale=1):\n    pass\n')
+    expect(code(blk)).toBe('def f(*args, scale=1):\n    pass')
+    const items = gear(blk)
+    items[0].setFieldValue('TRUE', 'OPT_default')
+    compose(blk)
+    expect(items[0].getFieldValue('OPT_variadic'), '齒輪裡的勾也要拿掉，不是悄悄不理').toBe('FALSE')
+    expect(code(blk)).toBe('def f(args, scale=1):\n    pass')
+  })
+
+  it('已經有預設值的那格，勾收集其餘引數 → 收集贏，預設值收起來', async () => {
+    const blk = await funcBlock('def f(*args, scale=1):\n    pass\n')
+    const items = gear(blk)
+    items[1].setFieldValue('TRUE', 'OPT_variadic')
+    compose(blk)
+    expect(items[1].getFieldValue('OPT_default')).toBe('FALSE')
+    blk.setFieldValue('list', 'PARAM_VARIADIC_1')
+    const out = code(blk)
+    expect(out, '🔴 不得產出 `*scale=1`').not.toContain('=')
+    expect(out).toBe('def f(*args, *scale):\n    pass')
+  })
+
+  it('*args 加上型別註記，星號要留著', async () => {
+    const blk = await funcBlock('def f(*args):\n    pass\n')
+    const items = gear(blk)
+    items[0].setFieldValue('TRUE', 'OPT_type')
+    compose(blk)
+    blk.setFieldValue('int', 'PARAM_TYPE_0')
+    expect(code(blk)).toBe('def f(*args: int):\n    pass')
+  })
+})

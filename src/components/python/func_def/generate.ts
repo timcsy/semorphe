@@ -17,7 +17,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         if (!n) return ''
         // ⚠️ 帶型別註記時預設值兩邊有空格（`b: str = "x"`），沒有型別時沒有（`b="x"`）
         //    ——那是 PEP 8，而使用者寫的就是那樣。
-        const head = t ? `${n}: ${t}` : `${star}${n}`
+        // 🔴 星號在型別註記之前也要留著（`*args: int`）——原本有型別時星號被吃掉，產回 `args: int`（第 427 刀）
+        const head = t ? `${star}${n}: ${t}` : `${star}${n}`
         return d ? (t ? `${head} = ${d}` : `${head}=${d}`) : head
       })
       .filter(Boolean)
