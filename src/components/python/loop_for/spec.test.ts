@@ -42,7 +42,8 @@ describe('python:loop_for', () => {
     const find = (n: any): any => n?.componentId === 'python:loop_for' ? n
       : Object.values(n?.slots ?? {}).flat().map(find).find(Boolean)
     expect(find(t)?.slots.targets?.map((p: any) => p.properties.name), '名字不在 targets → 積木上會是預設的 i').toEqual(['c'])
-    for (const c of ['for x[0] in xs:\n    pass\n', 'for x, in ps:\n    pass\n', 'for (a, b) in ps:\n    pass\n']) {
+    // ⚠️ `for x, in …`、`for (a, b) in …` 從第 420 刀起收成樣式（見下面那一組）；下標與屬性目標不綁新名字，仍整顆降級
+    for (const c of ['for x[0] in xs:\n    pass\n', 'for o.x in xs:\n    pass\n', 'for i, x[0] in ps:\n    pass\n']) {
       const ids = componentIdsOf(await liftPython(c))
       expect(ids, c).not.toContain('python:loop_for')
       expect(ids, `${c} 而它必須看得見`).toContain('unresolved')
@@ -115,5 +116,54 @@ describe('python:loop_for — else（第 417 刀）', () => {
   it('★ 多個名字 ＋ else：兩個都留著', async () => {
     const src = 'for k, v in d.items():\n    print(k)\nelse:\n    print(v)\n'
     expect(gen(await liftPython(src))).toBe(src.trim())
+  })
+})
+
+describe('python:loop_for — 目標是一個樣式（第 420 刀，盲測第二批 4/10 支）', () => {
+  const cases = [
+    'for i, (w, c) in enumerate(r, 1):\n    print(i, w, c)',
+    'for (a, b) in ps:\n    print(a + b)',
+    'for x, in ps:\n    print(x)',
+    'for a, *rest in rows:\n    print(a, rest)',
+    'for (dr, dc), name in moves.items():\n    print(name, dr, dc)',
+    'for i, (n, (lo, hi)) in enumerate(spans):\n    print(i, n, lo, hi)\nelse:\n    print("done")',
+  ]
+  const find = (n: any): any => n?.componentId === 'python:loop_for' ? n
+    : Object.values(n?.slots ?? {}).flat().map(find).find(Boolean)
+
+  it('★ lift：樣式進 pattern，裡面是元組／變數／展開', async () => {
+    const loop = find(await liftPython(cases[0] + '\n'))
+    expect(loop, '正向錨點：認得這個 for').toBeTruthy()
+    expect(loop.slots.pattern?.[0]?.componentId).toBe('python:tuple_make')
+    const ids = componentIdsOf(await liftPython(cases.join('\n') + '\n'))
+    expect(ids).toContain('python:splat')
+    expect(ids.filter((i) => /raw|unresolved/.test(i))).toEqual([])
+  })
+
+  for (const c of cases) {
+    it(`★ 來回一字不差：${c.split('\n')[0]}`, async () => {
+      expect(gen(await liftPython(c + '\n'))).toBe(c)
+    })
+  }
+
+  it('★ 平的名字仍是 targets（形態不變）', async () => {
+    const loop = find(await liftPython('for k, v in d.items():\n    print(k)\n'))
+    expect(loop.slots.targets?.map((p: any) => p.properties.name)).toEqual(['k', 'v'])
+    expect(loop.slots.pattern ?? []).toEqual([])
+  })
+
+  it('★ 執行：巢狀解包、展開、單元素元組（Cella）', async () => {
+    const src = [
+      'r = [("a", 3), ("b", 1)]',
+      'for i, (w, c) in enumerate(r, 1):',
+      '    print(i, w, c)',
+      'for a, *rest in [[1, 2, 3], [4]]:',
+      '    print(a, rest)',
+      'for x, in [(7,), (8,)]:',
+      '    print(x)',
+      'for (dr, dc), name in {(0, 1): "E", (1, 0): "S"}.items():',
+      '    print(name, dr + dc)',
+    ].join('\n') + '\n'
+    expect(await runPython(src)).toBe('completed|1 a 3\n2 b 1\n1 [2, 3]\n4 []\n7\n8\nE 1\nS 1\n')
   })
 })

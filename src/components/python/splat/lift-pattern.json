@@ -20,5 +20,16 @@
     "_why": "`**d` 與 `*xs` 同一顆元件，差在 `kind`——見膠囊的 `_properties_why`。",
     "fieldMappings": [],
     "liftStrategy": "python:liftSplat"
+  },
+  {
+    "id": "python_list_splat_pattern",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "list_splat_pattern",
+    "component": {
+      "componentId": "python:splat"
+    },
+    "_why": "目標樣式裡的 `*rest`（`first, *rest = xs`、`for a, *b in …`）——與運算式裡的 `*xs` 同一顆，`kind` 是 `list`（第 420 刀）。",
+    "fieldMappings": [],
+    "liftStrategy": "python:liftSplat"
   }
 ]

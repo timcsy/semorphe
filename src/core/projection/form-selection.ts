@@ -334,6 +334,12 @@ export const KNOWN_AXES: Record<string, FormAxis> = {
    * 與 operand_kind 同理看接點不看屬性：「終點住在接點裡」就是那個事實。換插槽形狀，所以與 init_style 同一級。
    */
   range_init: { name: 'range_init', from: 'slot', slot: 'source_end', slotValue: 'range', priority: 2, neutralIsOrdinary: true },
+  /**
+   * 依迴圈的目標是不是一個樣式：接點 `pattern` 有東西 ⟹ 值 `pattern`，換一顆目標是運算式插槽的積木（第 420 刀，`for i, (a, b) in …`）。
+   * 平的名字（`for k, v in …`）留在中性的 paramList 形態——文字欄位裝不下巢狀，而把 `(a, b)` 寫進一格文字就是要 parse 回結構的字串。
+   * 換插槽形狀，所以與 init_style 同一級。
+   */
+  target_kind: { name: 'target_kind', from: 'slot', slot: 'pattern', slotValue: 'pattern', priority: 2, neutralIsOrdinary: true },
 }
 
 /** 建形態集合所需要的最小資訊——刻意不吃整個 BlockSpec，讓它好測 */

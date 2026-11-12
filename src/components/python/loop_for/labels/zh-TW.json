@@ -4,5 +4,6 @@
   "PYTHON_FOR_TARGETS_OPEN": "裡的每一個",
   "PYTHON_FOR_TARGETS_CLOSE": "",
   "PYTHON_FOR_ELSE": "沒被中斷就",
-  "PYTHON_FOR_MUTATOR_TITLE": "對每一個"
+  "PYTHON_FOR_MUTATOR_TITLE": "對每一個",
+  "PYTHON_FOR_PATTERN_TOOLTIP": "依序走訪一個序列，每一輪把當前的值拆開放進那個樣式裡的名字。例如 enumerate 給出（編號，值），而值本身也可以再拆"
 }

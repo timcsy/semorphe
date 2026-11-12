@@ -133,7 +133,15 @@ describe('spec 172 · 變數下拉要問宣告', () => {
       const form = forms.find((f) => (f.blockDef as { type?: string })?.type === bt)
       if (!form) { bad.push(`${c.componentId}：找不到積木 ${bt}`); continue }
       const json = JSON.stringify(form.blockDef)
+      // 所有形態的積木（`INPUT>FIELD` 宣告的插槽可能只在某個非中性形態上，第 420 刀）
+      const allJson = JSON.stringify(forms.filter((f) => f.componentId === c.componentId).map((f) => f.blockDef))
       for (const pattern of c.fields) {
+        if (pattern.includes('>')) {
+          // `INPUT>FIELD`：插槽 INPUT 底下每一顆積木的 FIELD——驗插槽真的在某個形態上
+          const input = pattern.split('>')[0]
+          if (!allJson.includes(`"name":"${input}"`)) bad.push(`${c.componentId}：宣告的插槽 ${input} 不在任何形態上`)
+          continue
+        }
         // `{i}` 那種由建構子動態長出來，只驗它的樣板出現在宣告裡
         const probe = pattern.includes('{i}') ? pattern.replace('{i}', '') : pattern
         if (!json.includes(probe)) bad.push(`${c.componentId}：宣告的欄位 ${pattern} 不在積木上`)

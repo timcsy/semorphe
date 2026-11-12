@@ -1,4 +1,4 @@
-/** `python:splat` 的 **lift** 路——`*nums` / `**d`。`kind` 來自節點型別。 */
+/** `python:splat` 的 **lift** 路——`*nums` / `**d`，以及目標樣式裡的 `*rest`（`list_splat_pattern`）。`kind` 來自節點型別。 */
 import type { LiftStrategyRegistry } from '../../../core/registry/lift-strategy-registry'
 import { createNode } from '../../../core/semantic-tree'
 
