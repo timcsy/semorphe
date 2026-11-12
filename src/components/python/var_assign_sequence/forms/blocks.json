@@ -53,5 +53,46 @@
       ]
     },
     "_why": "⚠️ `countSource` 用 `paramCount`——與同族函式定義的參數列**一字不差**，那是存檔契約。"
+  },
+  {
+    "id": "python:var_assign_sequence.pattern",
+    "componentId": "python:var_assign_sequence",
+    "language": "python",
+    "category": "data",
+    "version": "1.0.0",
+    "form": {
+      "axis": "target_kind",
+      "value": "pattern"
+    },
+    "blockDef": {
+      "type": "python_var_assign_sequence_pattern",
+      "inputsInline": true,
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#FF8C1A",
+      "tooltip": "%{BKY_PY_ASSIGN_SEQ_PATTERN_TOOLTIP}",
+      "message0": "%{BKY_PY_ASSIGN_SEQ_MSG0} %{BKY_PY_ASSIGN_SEQ_OPEN} %2",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VALUE",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "PATTERN",
+          "check": "Expression"
+        }
+      ]
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "VALUE": "value",
+        "PATTERN": "pattern"
+      }
+    },
+    "_why": "🟢 **目標是一個樣式時換這個形態**（第 421 刀，與 420 的 `for` 同一個做法）：`a[i], a[j] = a[j], a[i]`、`first, *mid, last = r`、`a, (b, c) = …` 的左邊接在 PATTERN 那一格，是既有的元組、變數、索引、屬性、展開積木組起來的。全是名字的（`x, y = p`）照舊是上面那個 paramList 形態。",
+    "_message0_why": "標籤用平的那個形態的兩個鍵組成，不另立一份：兩個形態在畫面上是同一句話，只是名字那一格換成插槽。"
   }
 ]

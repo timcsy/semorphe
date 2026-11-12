@@ -5,5 +5,6 @@
   "PY_ASSIGN_SEQ_TOOLTIP": "把一組值拆開，一次設定好幾個變數。格數要對得上，對不上會停下來說明。",
   "PY_ASSIGN_SEQ_MSG0": "分別設定 %1",
   "PY_ASSIGN_SEQ_OPEN": "← 從",
-  "PY_ASSIGN_SEQ_CLOSE": ""
+  "PY_ASSIGN_SEQ_CLOSE": "",
+  "PY_ASSIGN_SEQ_PATTERN_TOOLTIP": "把一組值拆開，照左邊的樣子一格一格放回去——可以是變數、清單的某一格、物件的屬性，也可以再包一層。格數要對得上，對不上會停下來說明。"
 }
