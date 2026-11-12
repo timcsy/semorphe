@@ -35,19 +35,9 @@
     "reason": "`T: int`。"
   },
   {
-    "type": "decorated_definition",
-    "cause": "語言有而這個工具不做",
-    "reason": "同上。"
-  },
-  {
-    "type": "decorator",
-    "cause": "語言有而這個工具不做",
-    "reason": "裝飾器要「函式是值 ＋ 包裝」，前者有了而後者的教學價值在初學課之後。"
-  },
-  {
     "type": "dict_pattern",
     "cause": "語言有而這個工具不做",
-    "reason": "同上。"
+    "reason": "`match` 的字典樣式，與 `case_pattern` 同一族（424 拿掉了它前面的裝飾器兩筆，原本的「同上」會指錯）。"
   },
   {
     "type": "dictionary_splat_pattern",

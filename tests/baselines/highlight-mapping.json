@@ -3,9 +3,9 @@
     "guard": "highlight-mapping",
     "measuredAt": "2026-08-24",
     "rule": "有主體的節點，主體第一顆的行號必須大於標頭的行號（根節點除外——它沒有標頭）",
-    "note": "📈 **元件管線 423（2026-11-12）：新元件 python:nonlocal、python:delete**：Python 語料多一段「nonlocal 與 del」：110 → 111。\n\n📈 **元件管線 413（2026-11-11）：新元件 python:assign_chain（連鎖指定 `a = b = 0`）**：Python 語料多一段「連鎖指定」：109 → 110。\n\n數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
+    "note": "📈 **元件管線 424（2026-11-12）：新元件 python:decorated（裝飾器 `@staticmethod`、`@property`、`@shout`）**：Python 語料多一段「裝飾器」：111 → 112。\n\n📈 **元件管線 423（2026-11-12）：新元件 python:nonlocal、python:delete**：Python 語料多一段「nonlocal 與 del」：110 → 111。\n\n📈 **元件管線 413（2026-11-11）：新元件 python:assign_chain（連鎖指定 `a = b = 0`）**：Python 語料多一段「連鎖指定」：109 → 110。\n\n數字只准下降。調整此檔即為顯式下調，須在 commit 訊息說明原因。"
   },
   "偏了": 0,
-  "語料段數": 111,
+  "語料段數": 112,
   "C++ 探針": 3
 }

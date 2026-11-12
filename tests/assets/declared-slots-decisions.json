@@ -693,5 +693,10 @@
     "componentId": "python:with",
     "cause": "語料沒覆蓋",
     "reason": "2026-08-23（通用桶那一批）。與其餘 Python 元件同一條理由：**這條護欄的語料是 C++ 的**（它掃 `tests/integration/*.test.ts` 裡的 C++ 片段），碰不到 Python。⚠️ 接點的正確性由這顆自己的 `spec.test.ts`（lift／generate／round-trip／執行都有實際斷言）與 Python 語料的五軸全零一起釘住。"
+  },
+  {
+    "componentId": "python:decorated",
+    "cause": "lift 走具名策略，靜態掃不到",
+    "reason": "裝飾器列（`decorators`）與定義那一格（`definition`）是策略從 `decorated_definition` 收出來的；任何一格收不下就回 null 整段照舊降級，類別裡的方法另由 `class_def` 的策略收。由 `spec.test.ts` 的來回與 Cella 執行（staticmethod／classmethod／property、疊兩個自訂裝飾器）釘住。"
   }
 ]

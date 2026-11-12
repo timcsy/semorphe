@@ -1,0 +1,4 @@
+{
+  "PY_DECORATED_MSG": "Apply decorators",
+  "PY_DECORATED_TOOLTIP": "Passes the function or class definition below through these decorators and binds the result to the same name. With several, they apply bottom-up (the one closest to the definition first). Common ones: staticmethod, classmethod, property."
+}

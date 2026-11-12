@@ -1,0 +1,4 @@
+{
+  "PY_DECORATED_MSG": "套用裝飾器",
+  "PY_DECORATED_TOOLTIP": "把下面的函式或類別定義交給這些裝飾器包裝，再存回同一個名字。有好幾個時由下往上套用（離定義最近的先）。常見的有：靜態方法（staticmethod）、類別方法（classmethod）、唯讀屬性（property）。"
+}

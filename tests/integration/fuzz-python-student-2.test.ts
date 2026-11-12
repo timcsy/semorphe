@@ -8,9 +8,10 @@
  *
  * - 十支轉一圈再轉一圈**都是不動點**，沒有 SEMANTIC_DIFF／COMPILE_FAIL／ROUNDTRIP_DRIFT。
  * - 🟢 423 收下：fuzz_7 的 `nonlocal count`（`python:nonlocal`）；fuzz_3 的 `del b.rate`（`python:delete`）。
- * - 照實保留、下一刀處理的：`@staticmethod`／`@lru_cache`（裝飾器）、`def total(*args, scale=1, **kw)`、
+ * - 🟢 424 收下：`@staticmethod`、`@lru_cache(maxsize=None)`（`python:decorated`）——fuzz_3 整個類別收下。
+ * - 照實保留、下一刀處理的：`def total(*args, scale=1, **kw)`、
  *   `match`、三段以上的比較鏈 `0 < x < 20 != 21`。
- * - Cella 那一側不支援的標準模組（Counter、deque、heapq、bisect、string）用 `knownCellaGap` 釘著——支援之後會轉紅，提醒轉成一般測試。
+ * - Cella 那一側不支援的標準模組（Counter、deque、heapq、bisect、string）與內建的 `vars` 用 `knownCellaGap` 釘著——支援之後會轉紅，提醒轉成一般測試。
  *
  * ⚠️ 下面「照實保留」的清單是**精確的**：哪天少一筆（例如裝飾器有了元件），這裡會紅——那是要更新這份清單的訊號，不是壞掉。
  */
@@ -94,9 +95,16 @@ describe('模糊測試：學生的 Python 程式，盲測第二批', () => {
     await roundTrip('fuzz_2', [], [])
     expect(await runPython(P.fuzz_2.code)).toBe(want('fuzz_2'))
   })
-  // class 因 @staticmethod 整段照實保留（下一刀：裝飾器）
+  // 🟢 424：@staticmethod 有了元件（python:decorated），整個類別收下
   it('fuzz_3：', async () => {
-    await roundTrip('fuzz_3', ["class_definition"], [])
+    await roundTrip('fuzz_3', [], ["python:class_def", "python:decorated"])
+    await knownCellaGap(/the built-in vars/, async () => {
+      const r = await runPython(P.fuzz_3.code)
+      if (r !== want('fuzz_3')) throw new Error(r)
+    })
+    // 拿掉 Cella 不支援的 vars() 那兩項，其餘照 python3 的輸出
+    const noVars = P.fuzz_3.code.replace(', "rate" in vars(a), "owner" in vars(a))', ')')
+    expect(await runPython(noVars)).toBe(want('fuzz_3').replace('0.02 False True\n', '0.02\n'))
   })
   // match 還沒有元件
   it('fuzz_4：', async () => {
@@ -113,9 +121,9 @@ describe('模糊測試：學生的 Python 程式，盲測第二批', () => {
       if (r !== want('fuzz_6')) throw new Error(r)
     })
   })
-  // @lru_cache 與 *args／**kw 參數還沒收
+  // 🟢 424：@lru_cache 收成 python:decorated（functools 是 Cella 的缺口）；*args／**kw 參數還沒收
   it('fuzz_7：', async () => {
-    await roundTrip('fuzz_7', ["decorated_definition", "function_definition"], ["python:nonlocal"])
+    await roundTrip('fuzz_7', ["function_definition"], ["python:nonlocal", "python:decorated"])
   })
   it('fuzz_8：', async () => {
     await roundTrip('fuzz_8', [], [])

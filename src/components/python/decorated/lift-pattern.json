@@ -1,0 +1,13 @@
+[
+  {
+    "id": "python_decorated",
+    "grammar": "tree-sitter-python",
+    "astNodeType": "decorated_definition",
+    "component": {
+      "componentId": "python:decorated"
+    },
+    "liftStrategy": "python:lift_decorated",
+    "fieldMappings": [],
+    "priority": 10
+  }
+]

@@ -36,7 +36,7 @@ for (const [key, mod] of Object.entries(MODULES)) {
 const ROOT = [...TEMPLATES].find(([, t]) => isObj(t) && t.k === 'program')?.[0]
 
 /** 敘述角色的元件（其餘的放在敘述位置時包一層 `sExpr <id>/stmt`）——照參考實作的 `STATEMENT_ROLE`。 */
-const STATEMENT_ROLE = new Set(['assert', 'assign_chain', 'break', 'class_def', 'comment', 'container_append', 'container_assign', 'container_erase',
+const STATEMENT_ROLE = new Set(['assert', 'assign_chain', 'break', 'class_def', 'comment', 'container_append', 'container_assign', 'container_erase', 'decorated',
   'container_erase_value', 'container_insert', 'container_sort_self', 'continue', 'delete', 'exception_case', 'func_def', 'global', 'if', 'import',
   'import_from', 'loop_for', 'loop_while', 'member_assign', 'nonlocal', 'pass', 'print', 'program', 'raw_code', 'return', 'set_append', 'throw',
   'try_catch', 'var_assign', 'var_assign_compound', 'var_assign_sequence', 'with'])
@@ -342,6 +342,14 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
       const bits = part.split(' as ')
       return { k: 'alias', name: bits[0].trim(), asname: bits.length > 1 ? bits[1].trim() : null }
     }),
+    // 裝飾器（第 424 刀）：Cella 的 AST 沒有「被裝飾的定義」這個節點，裝飾器是定義自己的 `decoratorList`
+    //   ⟹ 翻譯子節點，再把裝飾器塞進去。子節點翻出來不是函式／類別定義時照實標 unknown，不猜。
+    decorated: (x) => {
+      const defs = kids(x, 'definition')
+      const d = defs.length === 1 ? node(defs[0], true) : null
+      if (!isObj(d) || (d.k !== 'sFunctionDef' && d.k !== 'sClassDef')) throw new Miss(x.id, x.componentId, '裝飾器底下要恰好一個函式或類別定義')
+      return { ...d, decoratorList: kids(x, 'decorators').map((c) => node(c)) }
+    },
     classDef: (x) => {
       const base = prop(x, 'base').trim()
       const body = stmts([...kids(x, 'fields'), ...kids(x, 'methods')])
