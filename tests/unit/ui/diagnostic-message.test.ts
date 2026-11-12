@@ -90,3 +90,20 @@ describe('診斷訊息：兩個面板各自組裝', () => {
     }
   })
 })
+
+/**
+ * **診斷文案是純文字，不是 Markdown**（第 431 刀）。
+ *
+ * 428 的瀏覽器實測：名字錯誤的積木泡泡把 `**名字不可以用數字開頭**` 原樣印出來——積木的警告、
+ * 程式碼的標記、狀態列都不轉 Markdown。反引號照舊可以用（當成程式碼的引號讀得懂），粗體記號不行。
+ */
+describe('診斷文案不帶 Markdown 粗體', () => {
+  it('★ 兩種語言的每一則 DIAG_* 都沒有 `**`', () => {
+    for (const [loc, table] of [['zh-TW', zhTW], ['en', en]] as const) {
+      const keys = Object.keys(table).filter((k) => k.startsWith('DIAG_'))
+      expect(keys.length, `${loc}：入口條件——讀得到診斷文案`).toBeGreaterThan(50)
+      const bold = keys.filter((k) => (table as Record<string, string>)[k].includes('**'))
+      expect(bold, `${loc}：泡泡會把 ** 原樣印出來`).toEqual([])
+    }
+  })
+})
