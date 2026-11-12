@@ -16,7 +16,8 @@ import type { SyncError } from '../core/sync/sync-controller'
 import { SemanticBus } from '../core/sync/semantic-bus'
 import { showToast } from './toolbar/toast'
 import { showStyleActionBar, dismissStyleActionBar } from './toolbar/style-action-bar'
-import { runDiagnostics, diagnosticsFromTree, dropRejectsCoveredByNameChecks } from '../core/diagnostics'
+import { runDiagnostics, diagnosticsFromTree, dropRejectsCoveredByNameChecks, dropUnsupportedCoveredByParamLists } from '../core/diagnostics'
+import { checkParamLists } from '../core/component/param-list-check'
 import type { SemanticNode, ComponentDefJSON } from '../core/types'
 import { ProposalQueue, type ProposalInput, type ProposalStatus } from '../core/proposals/proposal-queue'
 import { schemaFrom, type OpReason, type OpSchema } from '../core/proposals/tree-ops'
@@ -4875,7 +4876,8 @@ export class App {
     const r = toDiagnostics({ verdict: a.verdict, types: a.types, tree: req.tree, readsInput: a.readsInput, hasStdin: stdin.length > 0, knownNames: languagePack(this.currentTopic.language)?.wellKnownNames, streamOperators: languagePack(this.currentTopic.language)?.streamOperators,
       // 指名（spec 218）：判決指到的那一顆的程式碼——核心不認得語言，由這裡產
       codeOf: (n) => generateExpressionCode(n, this.currentTopic.language, this.currentStylePreset) })
-    this.checkDiagnostics = r.diagnostics
+    // 參數列不合法（第 428 刀）：形態那則說「你寫錯了」，判決對同一顆的「判不出來（不是你的錯）」不留——也不算進狀態列
+    this.checkDiagnostics = dropUnsupportedCoveredByParamLists(r.diagnostics, tree)
     this.checkNotes = r.notes
     this.checkUnplaced = r.unplaced
     this.checkAssumes = r.assumes
@@ -4966,7 +4968,10 @@ export class App {
   /** 狀態列左邊那一格：載入中／幾個問題／無法使用；說明（需要輸入、依 libc++）放在 title。 */
   private renderCheckStatus(r: Readiness): void {
     const placedErrors = this.checkDiagnostics.filter((d) => d.severity === 'error').length
-    const errors = placedErrors + this.checkUnplaced.error
+    // 參數列不合法（第 428 刀）：判決那邊對它說不出話（我們照實不送），它的「判不出來」也濾掉了
+    //   ⟹ 不把形態那一則算進來，狀態列會說「沒有發現問題」（瀏覽器實測）
+    const formBlocking = this.currentTree ? checkParamLists(this.currentTree).length : 0
+    const errors = placedErrors + this.checkUnplaced.error + formBlocking
     const infos = this.checkDiagnostics.length - placedErrors + this.checkUnplaced.info
     const text =
       r.state === 'idle' ? '' :

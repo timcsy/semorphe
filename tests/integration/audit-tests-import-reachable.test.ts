@@ -27,10 +27,10 @@ const ALLOWED: Record<string, string> = {
   'src/core/naming.ts': '護欄專用的命名詞彙表（審 component.json 的資料，產品不需要）',
   'src/languages/cpp/naming.ts': '同上，C++ 的詞彙',
   'src/languages/python/naming.ts': '同上，Python 的詞彙',
-  'src/core/diagnostic-nature.ts': '診斷規則的性質表（形態／提示／判決，vision〈形態檢查與判決的界線盤點〉2026-11-09）——護欄數它、給 cos-mos 讀；嚴重度已由各產出端決定（Cella 那側照 category），產品不需要再查一次',
   'src/core/component/judges.ts': '「哪條測試判哪一路」的 metadata，本來就是測試的資料',
   'src/core/component/path-syntax.ts': '階層身分的語法（vision〈分子與粒度切換〉的前置）；投影函式呼叫產品的 idToDir／deriveBlockType，只剩分類這一層是它自己的',
   'src/core/molecule.ts': 'vision〈分子與粒度切換〉的切口計算——流程的框只收整棵子樹（埠由節點自己的接點給），多選接上時才走到它（spec 187）',
+  // 🟢 2026-11-13（428）：`src/core/diagnostic-nature.ts` 拿掉——`diagnostics.ts` 用它濾掉判決那邊對不合法參數列的提示族，產品走得到了
   // 🟢 2026-10-31（spec 182）：`providers/cella/formalize`、`verdict.ts` 三筆拿掉——Cella 提供者接上了，它們在產品路徑上
   // ⏳ 2026-11-03（spec 205 T008）：JS 直譯器的登記拿掉了，它與它的提供者從產品走不到——**期限是 6c-4**：直譯器連同 import 它的測試一起刪，這兩筆也跟著拿掉
 }

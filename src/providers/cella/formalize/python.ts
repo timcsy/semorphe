@@ -217,20 +217,37 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
     }
     throw new Miss(at.id, at.componentId, `預設值「${s}」是一段運算式，還不能翻（只認字面量、名字，以及由它們組成的串列／元組）`)
   }
-  const argumentsOf = (ps: SemanticNode[]): CellaJson => {
+  const argumentsOf = (ps: SemanticNode[], owner: SemanticNode): CellaJson => {
     const args: CellaJson[] = []
     const defaults: CellaJson[] = []
     const ko: CellaJson[] = []
     const kd: (CellaJson | null)[] = []
     let va: CellaJson | null = null
     let kw: CellaJson | null = null
+    // 🔴 **Python 不收的參數列不送**（第 428 刀）：tree-sitter 收得下 `def f(*a, *b)`，而原本這裡
+    //    第二顆星號直接蓋掉第一顆——`*a` 不見了，Cella 拿到一個合法的函式、判決「沒有問題」、照跑。
+    //    Cella 收的是語法樹，看不到語法錯誤 ⟹ 這一層要照實說「這不是合法的 Python」（unknown，附理由）。
+    //    錨在【函式那一顆】：參數是它積木上的欄位，自己沒有積木——與形態檢查（`param-list-check.ts`）同一個錨，畫面才去得了重
+    const bad = (_p: SemanticNode, why: string): never => { throw new Miss(owner.id, owner.componentId, `這不是合法的 Python 參數列：${why}`) }
+    const seen = new Set<string>()
+    let sawDefault = false
     for (const p of ps) {
-      const a = { k: 'arg', n: p.id, name: prop(p, 'name') }
+      const nm = prop(p, 'name')
+      if (seen.has(nm)) bad(p, `參數名「${nm}」重複了`)
+      seen.add(nm)
+      if (kw !== null) bad(p, '「其餘的具名引數」（**）之後不能再有參數')
+      const a = { k: 'arg', n: p.id, name: nm }
       const d = prop(p, 'default')
+      const v = prop(p, 'variadic')
+      if (v && d) bad(p, '收集其餘引數的參數（* 或 **）不能有預設值')
       const dflt = d ? literalOf(d, p, `${p.id}/default`) : null
-      if (prop(p, 'variadic') === 'list') va = a
-      else if (prop(p, 'variadic') === 'dict') kw = a
-      else if (va !== null) { ko.push(a); kd.push(dflt) } else { args.push(a); if (dflt !== null) defaults.push(dflt) }
+      if (v === 'list') { if (va !== null) bad(p, '「其餘的位置引數」（*）只能有一個'); va = a }
+      else if (v === 'dict') kw = a
+      else if (va !== null) { ko.push(a); kd.push(dflt) } else {
+        if (dflt === null && sawDefault) bad(p, `「${nm}」沒有預設值，卻排在有預設值的參數後面`)
+        if (dflt !== null) sawDefault = true
+        args.push(a); if (dflt !== null) defaults.push(dflt)
+      }
     }
     return { k: 'arguments', posonlyargs: [], args, vararg: va, kwonlyargs: ko, kwDefaults: kd, kwarg: kw, defaults }
   }
@@ -314,7 +331,7 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
       const [args, keywords] = callArgs(kids(x, 'args'))
       return { k: 'eCall', n: x.id, func: f, args, keywords }
     },
-    params: (x, t) => argumentsOf(kids(x, String(t.slot))),
+    params: (x, t) => argumentsOf(kids(x, String(t.slot)), x),
     // 比較鏈（第 426 刀）：前兩段在固定的兩格，第三段起每一段是一顆「再比」——全部接進同一個 eCompare
     // ⚠️ 對照表（Cella 的 components.json）只有固定兩段的模板；同步會把這一格蓋回去 → 三段以上的執行測試會紅
     compareChain: (x) => {
@@ -326,7 +343,7 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
         comparators: [slot(x, 'middle'), slot(x, 'right'), ...steps.map((s) => slot(s, 'value'))],
       }
     },
-    lambda: (x) => ({ k: 'eLambda', n: x.id, args: argumentsOf(kids(x, 'params')), body: slot(x, 'body') }),
+    lambda: (x) => ({ k: 'eLambda', n: x.id, args: argumentsOf(kids(x, 'params'), x), body: slot(x, 'body') }),
     ifChain: (x) => {
       const section = (xs: SemanticNode[]): CellaJson[] => { const b = stmts(xs); return b.length > 0 ? b : [{ k: 'sPass', n: `${x.id}/pass` }] }
       let orelse = stmts(kids(x, 'else_body'))

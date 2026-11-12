@@ -1,6 +1,7 @@
 /** `python:func_def` 的自證測（spec 168）。每條負向前先釘正向錨點。 */
 import { describe, it, expect } from 'vitest'
 import { liftPython, componentIdsOf, generatePython as gen, runPython } from '../../../../tests/helpers/python-lift'
+import { runCella } from '../../../../tests/helpers/cella-run'
 
 describe('python:func_def', () => {
   it('★ lift：認得出來，body 也接得進來', async () => {
@@ -113,5 +114,28 @@ describe('可變引數', () => {
   it('🔴 execute：`**kw` 收的是名字對值，`scale` 在 `*args` 之後只能具名給', async () => {
     const out = await runPython('def total(*args, scale=1, **kw):\n    print(sorted(kw.items()))\n    return sum(args) * scale\n\nprint(total(1, 2, 3))\nprint(total(1, 2, scale=10, tag="x", n=2))\n')
     expect(out).toBe("completed|[]\n6\n[('n', 2), ('tag', 'x')]\n30\n")
+  })
+
+  /**
+   * 🔴 第 428 刀：tree-sitter 收得下 Python 不收的參數列，而原本 formalize 第二顆星號直接蓋掉第一顆
+   * ——`def f(*a, *b)` 判決「沒有發現問題」、照跑、印 1（CPython 是 SyntaxError）。
+   * 現在這幾種照實不送（untranslated，附理由）；合法的那幾種照跑（正向錨點）。
+   * 判準是 CPython：`ast.parse` 擋前三種，`def f(a, a)` 在編譯時擋（duplicate argument）。
+   */
+  it('🔴 Python 不收的參數列不送給 Cella——照實說不是合法的 Python', async () => {
+    const legal = await runCella('def f(a, b=1, *r, k, **kw):\n    return b\n\nprint(f(0, k=2))\n', { lang: 'python' })
+    expect(legal.verdict, '正向錨點：合法的混合參數列照跑').toBe('accept')
+    expect(legal.out).toBe('1\n')
+    for (const [c, why] of [
+      ['def f(*a, *b):\n    return 1\n\nprint(f(1, 2))\n', /只能有一個/],
+      ['def f(**a, b):\n    return 1\n\nprint(f(b=1))\n', /之後不能再有參數/],
+      ['def f(a=1, b):\n    return 1\n\nprint(f(1, 2))\n', /排在有預設值的參數後面/],
+      ['def f(a, a):\n    return 1\n\nprint(f(1, 2))\n', /重複/],
+    ] as const) {
+      expect(componentIdsOf(await liftPython(c)), `${c}：lift 收得下（形狀一字不差地回得去）`).toContain('python:func_def')
+      const r = await runCella(c, { lang: 'python' })
+      expect(r.verdict, `${c}：不得判 accept 而照跑`).toBe('untranslated')
+      expect(r.untranslated.map((u) => u.reason).join('；')).toMatch(why)
+    }
   })
 })

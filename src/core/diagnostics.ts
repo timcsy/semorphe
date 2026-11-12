@@ -1,5 +1,7 @@
 import { checkSlots } from './component/slot-check'
 import { checkParams } from './component/param-check'
+import { checkParamLists } from './component/param-list-check'
+import { natureOf } from './diagnostic-nature'
 import type { SemanticNode } from './types'
 import { REJECT_FAMILY } from './verdict-diagnostics'
 
@@ -353,6 +355,16 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
       source: 'component',
     })
   }
+  // 🔴 **參數列排得不合法**（第 428 刀）：`def f(*a, *b)` 在此之前判斷說「沒有問題」、照跑。見 `param-list-check.ts`
+  for (const f of checkParamLists(tree)) {
+    out.push({
+      nodeId: f.nodeId,
+      severity: 'error',
+      rule: `BAD_PARAMS_${f.reason.toUpperCase()}`,
+      params: f.params,
+      source: 'component',
+    })
+  }
   for (const f of checkSlots(tree)) {
     out.push({
       nodeId: f.nodeId ?? '',
@@ -408,7 +420,7 @@ export function diagnosticsFromTree(tree: SemanticNode): Diagnostic[] {
  * 這個判定回答的是「**使用者現在要求執行**」，而直譯器不知道時機
  * ——它只知道有人給了它一棵樹。而既有測試直接呼叫 `execute(tree)`。
  */
-export type RefusalCause = 'syntax' | 'bad_name'
+export type RefusalCause = 'syntax' | 'bad_name' | 'bad_params'
 
 export function canExecute(
   tree: SemanticNode,
@@ -447,6 +459,10 @@ export function canExecute(
    */
   const names = checkParams(tree).map((f) => f.nodeId ?? '').filter((x) => x !== '')
   if (names.length > 0) return { ok: false, nodeIds: names, cause: 'bad_name' }
+  // 🔴 參數列不合法也擋（第 428 刀）：`def f(*a, *b)` 是 SyntaxError，而它跑得動的話教的是「這樣可以」。
+  //    量過再上閘門：課文與學生語料的誤報數見 `tests/unit/core/param-list-check.test.ts`
+  const lists = checkParamLists(tree).map((f) => f.nodeId)
+  if (lists.length > 0) return { ok: false, nodeIds: lists, cause: 'bad_params' }
   return { ok: true }
 }
 
@@ -463,4 +479,19 @@ export function dropRejectsCoveredByNameChecks(diagnostics: Diagnostic[]): Diagn
   if (named.size === 0) return diagnostics
   // ⚠️ 看整個 reject 族（籠統的＋0546 起細分的六種）——只看 `CELLA_REJECT` 的話，細分之後同一行又是兩則紅字（與 `cin <` 那次同一個漏洞）
   return diagnostics.filter((d) => !(d.source === 'cella' && REJECT_FAMILY.has(d.rule) && named.has(d.nodeId)))
+}
+
+/**
+ * **參數列不合法：形態那一則已經說了，判決對同一顆的「判不出來」不再疊一次**（第 428 刀）。
+ *
+ * Cella 收的是語法樹：一份 Python 不收的參數列我們照實不送（formalize 標 unknown、錨在函式那一顆），
+ * 於是判決那邊回來的是「判不出來」（提示）——而那一句說的是「不是你的錯」，正好與形態那則相反。
+ * ⚠️ 只去掉 Cella 給的【提示】族（`CELLA_UNSUPPORTED`／`CELLA_UNCLASSIFIED`…——瀏覽器實測回來的是後者，種類 unsupported 而沒有分類）；
+ * 同一顆上真正的判決照留。
+ */
+export function dropUnsupportedCoveredByParamLists(diagnostics: Diagnostic[], tree: SemanticNode | null | undefined): Diagnostic[] {
+  if (!tree) return diagnostics
+  const covered = new Set(checkParamLists(tree).map((f) => f.nodeId))
+  if (covered.size === 0) return diagnostics
+  return diagnostics.filter((d) => !(d.source === 'cella' && natureOf(d.rule) === 'hint' && covered.has(d.nodeId)))
 }
