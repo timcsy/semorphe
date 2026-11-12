@@ -369,6 +369,15 @@ export class App {
    */
   private _codeChangedWhileSyncing = false
   private _restoringState = false
+  /**
+   * **一題「排回去」正在鋪：答案已經放上去、還沒打散**（第 432 刀，2026-11-13）。
+   *
+   * 🔴 第 429 刀讓每一次程式碼→積木都存檔，於是「答案種好、還沒打散」那一刻
+   * 也被存下來。那一刻重新整理，還原的是**排好的答案**，而 `hasStudentWork()`
+   * 讓那一題不再重鋪——學生看到的就是答案（CI e2e `arrange-scatters` 量到）。
+   * 這段期間不存；打散完再存一次。
+   */
+  private _seedingArrange = false
   private currentStylePreset: StylePreset = DEFAULT_STYLE
   private currentBlockStyleId: string = 'scratch'
   private currentLocale: string = 'zh-TW'
@@ -1214,6 +1223,16 @@ export class App {
     // > ——而那看起來像「只有那幾課壞了」。**
     //
     // 🟢 判準寫在 `applyTemplate` 裡：`setCode` 之後才 `syncCodeToBlocks`。
+    this._seedingArrange = true
+    try {
+      await this.seedArrangeUnsaved(lesson, task, code)
+    } finally {
+      this._seedingArrange = false
+    }
+    this.autoSave()
+  }
+
+  private async seedArrangeUnsaved(lesson: Lesson, task: LessonTask, code: string): Promise<void> {
     this.programReplaced(msg('PROPOSAL_REPLACED_LESSON', '課文換上了起始程式'))
     this.codeView?.setCode(code)
     await this.syncController?.syncCodeToBlocks(code)
@@ -4442,6 +4461,7 @@ export class App {
    * 而「什麼時候存」與「存了之後怎麼載」是兩件事——那一支驗後者。
    */
   autoSave(): void {
+    if (this._seedingArrange) return
     this.storageService.save(this.buildSaveState())
   }
 

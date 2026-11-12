@@ -151,3 +151,42 @@ test('★ 每一題「排回去」都要真的打散得出東西', async ({ page
     '🔴 這幾題「排回去」一塊都沒打散——學生打開它看到的就是答案：',
   ).toEqual([])
 })
+
+/**
+ * 🔴 **鋪題的半路不准存檔**（第 432 刀，2026-11-13）。
+ *
+ * 第 429 刀讓每一次程式碼→積木都存檔，於是「答案種好、還沒打散」那一刻也被存下來。
+ * 那一刻重新整理，還原的是**排好的答案**，而 `hasStudentWork()` 讓題目不再重鋪
+ * ——學生看到的就是答案。上面那支在 CI 上偶爾紅（goto → 清存檔 → goto 撞上舊頁晚到的存檔），
+ * 這一支不靠時序：記下每一次存檔當下的程式與頂層積木數，問有沒有一次存的是「沒打散的答案」。
+ */
+test('★ 排回去的題目在打散之前不存檔（重新整理不會看到答案）', async ({ page }) => {
+  test.setTimeout(120_000)
+  const lesson = 'cpp-beginner/06-算一算'
+  const solution = fs.readFileSync(path.join('lessons', lesson, 'solutions', 'rebuild.cpp'), 'utf8')
+  await page.addInitScript(() => {
+    const w = window as unknown as {
+      __saves: { code: string; tops: number }[]
+      __app?: { blocklyPanel?: { workspace?: { getTopBlocks(o: boolean): unknown[] } } }
+    }
+    w.__saves = []
+    const orig = Storage.prototype.setItem
+    Storage.prototype.setItem = function (k: string, v: string) {
+      if (k === 'semorphe-state') {
+        try {
+          const code = (JSON.parse(v) as { code?: string }).code ?? ''
+          const tops = w.__app?.blocklyPanel?.workspace?.getTopBlocks(false).length ?? -1
+          w.__saves.push({ code, tops })
+        } catch { /* 不是 JSON 就不記 */ }
+      }
+      return orig.call(this, k, v)
+    }
+  })
+  await openTask(page, lesson, 'rebuild')
+  const saves = await page.evaluate(() =>
+    (window as unknown as { __saves: { code: string; tops: number }[] }).__saves)
+  // 正向錨點：打散之後確實存過一次（否則下面的負向斷言是空過）
+  expect(saves.some((s) => s.tops > 1), '🔴 打散之後一次都沒存——量不到東西').toBe(true)
+  const leaked = saves.filter((s) => s.code.trim() === solution.trim() && s.tops <= 1)
+  expect(leaked, '🔴 存下了「還沒打散的答案」——那一刻重新整理，學生看到的就是答案').toEqual([])
+})
