@@ -1,0 +1,33 @@
+{
+  "componentId": "python:compare_step",
+  "abstractComponent": null,
+  "_abstractComponent_why": "它是比較鏈上的一段，沒有跨語言的獨立對應物（C++ 沒有比較鏈）。",
+  "_componentId_why": "`step`（一段）：比較鏈第三段起的每一段——「然後再比：運算子 值」。",
+  "properties": [
+    {
+      "name": "operator",
+      "kind": "enum",
+      "default": "<"
+    }
+  ],
+  "slots": {
+    "value": "expression"
+  },
+  "role": "expression",
+  "owner": "(python)",
+  "traits": { "precedence": 8, "insideParentOnly": true },
+  "_traits_why": "**只出現在比較鏈裡**（`a < b < c < d` 的 `< d`）——單獨合成一份樣本去量它，是在量一個不存在的位置。優先級與比較鏈相同：值那一格照鏈上其他運算元的規則加括號。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": null,
+        "_lift_why": "**顯式的空。** 這一段只在比較鏈的策略裡被拆出來——`< d` 單獨不是一段 Python。"
+      }
+    }
+  }
+}

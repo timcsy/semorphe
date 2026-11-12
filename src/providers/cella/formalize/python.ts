@@ -315,6 +315,17 @@ function run(tree: SemanticNode, bare: boolean): FormalizeResult {
       return { k: 'eCall', n: x.id, func: f, args, keywords }
     },
     params: (x, t) => argumentsOf(kids(x, String(t.slot))),
+    // 比較鏈（第 426 刀）：前兩段在固定的兩格，第三段起每一段是一顆「再比」——全部接進同一個 eCompare
+    // ⚠️ 對照表（Cella 的 components.json）只有固定兩段的模板；同步會把這一格蓋回去 → 三段以上的執行測試會紅
+    compareChain: (x) => {
+      const steps = kids(x, 'more')
+      for (const s of steps) if (short(s.componentId) !== 'compare_step') throw new Miss(s.id, s.componentId, '比較鏈尾巴只收「再比」')
+      return {
+        k: 'eCompare', n: x.id, left: slot(x, 'left'),
+        ops: [op('cmpop', x, 'operator'), op('cmpop', x, 'operator2'), ...steps.map((s) => op('cmpop', s, 'operator'))],
+        comparators: [slot(x, 'middle'), slot(x, 'right'), ...steps.map((s) => slot(s, 'value'))],
+      }
+    },
     lambda: (x) => ({ k: 'eLambda', n: x.id, args: argumentsOf(kids(x, 'params')), body: slot(x, 'body') }),
     ifChain: (x) => {
       const section = (xs: SemanticNode[]): CellaJson[] => { const b = stmts(xs); return b.length > 0 ? b : [{ k: 'sPass', n: `${x.id}/pass` }] }

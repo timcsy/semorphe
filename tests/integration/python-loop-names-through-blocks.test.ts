@@ -69,6 +69,10 @@ describe('已知的正規化：同一支程式，文字不同', () => {
   it('for (a, b) in ps → for a, b in ps', async () => {
     expect(await throughBlocks('for (a, b) in ps:\n    print(a + b)\n')).toBe('for a, b in ps:\n    print(a + b)')
   })
+  // 多餘的括號（優先級本來就比 and 高）走積木不留——兩元比較也一樣；鏈的每一段都還在（第 426 刀）
+  it('(0 < x < 20 != 21) and ok → 0 < x < 20 != 21 and ok', async () => {
+    expect(await throughBlocks('y = (0 < x < 20 != 21) and ok\n')).toBe('y = 0 < x < 20 != 21 and ok')
+  })
 })
 
 describe('綁定的名字走一趟真的積木回來', () => {
@@ -133,6 +137,13 @@ describe('綁定的名字走一趟真的積木回來', () => {
     'def f(*args):\n    return args',
     'def total(*args, scale=1, **kw):\n    return sum(args) * scale',
     'def g(a, b: int = 2, *rest, **opts):\n    return a',
+    'y = 0 < x < 20 != 21',
+    'y = a <= b <= c <= d >= e',
+    'y = 0 < x < 20',
+    'if 0 < x < 20 != 21:\n    print(x)',
+    'while 0 <= i < n <= m:\n    i += 1',
+    'y = 0 < x < 20 != (a < b < c < d)',
+    'y = 1 < x in z',
   ]) {
     it(c.split('\n')[0], async () => {
       expect(await throughBlocks(c + '\n')).toBe(c)

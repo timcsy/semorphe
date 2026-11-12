@@ -10,7 +10,8 @@
  * - 🟢 423 收下：fuzz_7 的 `nonlocal count`（`python:nonlocal`）；fuzz_3 的 `del b.rate`（`python:delete`）。
  * - 🟢 424 收下：`@staticmethod`、`@lru_cache(maxsize=None)`（`python:decorated`）——fuzz_3 整個類別收下。
  * - 🟢 425 收下：`def total(*args, scale=1, **kw)`（`**kw` 是 `param_decl` 的 `variadic: 'dict'`）——fuzz_7 整支收下。
- * - 照實保留、下一刀處理的：`match`、三段以上的比較鏈 `0 < x < 20 != 21`。
+ * - 🟢 426 收下：三段以上的比較鏈 `0 < x < 20 != 21`（`python:compare_step`）——fuzz_5 整支收下。
+ * - 照實保留、下一刀處理的：`match`（等 Cella 有 match 的建構子）。
  * - Cella 那一側不支援的標準模組（Counter、deque、heapq、bisect、string）與內建的 `vars` 用 `knownCellaGap` 釘著——支援之後會轉紅，提醒轉成一般測試。
  *
  * ⚠️ 下面「照實保留」的清單是**精確的**：哪天少一筆（例如裝飾器有了元件），這裡會紅——那是要更新這份清單的訊號，不是壞掉。
@@ -110,9 +111,16 @@ describe('模糊測試：學生的 Python 程式，盲測第二批', () => {
   it('fuzz_4：', async () => {
     await roundTrip('fuzz_4', ["match_statement", "match_statement"], [])
   })
-  // 三段以上的比較鏈還沒收（compare_chain 只收兩段）
+  // 🟢 426：三段以上的比較鏈收下（第三段起是 python:compare_step）
   it('fuzz_5：', async () => {
-    await roundTrip('fuzz_5', ["raw_expression"], [])
+    await roundTrip('fuzz_5', [], ["python:compare_chain", "python:compare_step"])
+    await knownCellaGap(/the built-in pow/, async () => {
+      const r = await runPython(P.fuzz_5.code)
+      if (r !== want('fuzz_5')) throw new Error(r)
+    })
+    // 拿掉 Cella 不支援的 pow() 那一行，其餘（含比較鏈那一行）照 python3 的輸出
+    const noPow = P.fuzz_5.code.replace('print(abs(-7) % 3, pow(3, 200, 1000), pow(-3, 3))\n', '')
+    expect(await runPython(noPow)).toBe(want('fuzz_5').replace(/1 1 -27\n$/, ''))
   })
   it('fuzz_6：', async () => {
     await roundTrip('fuzz_6', [], [])
