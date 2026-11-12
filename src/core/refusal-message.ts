@@ -41,7 +41,7 @@ export function describeRefusal(outcome: Extract<LoadOutcome, { kind: 'refused' 
  * ⚠️ **不可以只說「執行失敗」**——那是無法行動的訊息，
  * 使用者不知道發生什麼事，也不知道他打的東西還在不在。
  */
-export function describeExecutionRefusal(count: number, cause: 'syntax' | 'bad_name' = 'syntax', where?: string): string {
+export function describeExecutionRefusal(count: number, cause: 'syntax' | 'bad_name' | 'bad_params' = 'syntax', where?: string): string {
   // 🔴 **兩種拒絕要說不一樣的話**（2026-09-14）。
   //    「語法還不完整」對一個把變數取名叫 `123` 的學生是**指不到地方的**
   //    ——他的語法完整得很，是那個名字不能用。
@@ -52,6 +52,12 @@ export function describeExecutionRefusal(count: number, cause: 'syntax' | 'bad_n
     const what = count > 1 ? `這段程式有 ${count} 個名字不能用` : '這段程式有一個名字不能用'
     return `${what}，所以還不能執行。積木上的紅色驚嘆號會說是哪一個、為什麼——`
       + '改好名字再按一次執行就可以了。'
+  }
+  // 🟢 第 428 刀：參數列排錯（`def f(*a, *b)`）——語法讀得懂、名字也合法，錯的是順序與個數
+  if (cause === 'bad_params') {
+    const what = count > 1 ? `這段程式有 ${count} 個函式的參數列寫法不合規則` : '這段程式有一個函式的參數列寫法不合規則'
+    return `${what}，所以還不能執行。函式積木上的紅色驚嘆號會說是哪一個參數、為什麼——`
+      + '改好參數再按一次執行就可以了。'
   }
   const what = count > 1 ? `這段程式有 ${count} 處語法還不完整` : '這段程式有一處語法還不完整'
   // 🟢 說得出在哪、是什麼時接在後面（2026-11-06，漏分號提示）：按了執行之後學生看的是主控台，
