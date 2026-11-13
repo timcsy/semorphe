@@ -6,7 +6,7 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：369｜✅ 實作 1337｜📄 已宣告不提供 5｜❔ 判不出來 131｜🈳 殼 1｜❌ 缺 2（以路徑數計）
+元件：375｜✅ 實作 1361｜📄 已宣告不提供 5｜❔ 判不出來 131｜🈳 殼 1｜❌ 缺 2（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -16,6 +16,10 @@
 | `cpp:analog_read` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:analog_resolution` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:analog_write` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:arduino_string_as_int` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:arduino_string_find` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:arduino_string_substr` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:arduino_string_trim` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:arithmetic` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:array_2d_assign` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:array_2d_at` | ✅ | ✅ | ✅ | ✅ |
@@ -212,6 +216,8 @@
 | `cpp:serial_open` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:serial_print` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:serial_read` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_read_number` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:serial_read_string` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:servo_attach` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:servo_declare` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:servo_read` | ✅ | ✅ | ✅ | ✅ |

@@ -1,0 +1,5 @@
+{
+  "CPP_ARDUINO_STRING_FIND_MSG0": "在 %1 裡找 %2 的位置（從 %3 開始）",
+  "CPP_ARDUINO_STRING_FIND_TOOLTIP": "String 的 indexOf()——回傳第一次出現的位置（從 0 數起）；🔴 找不到回 -1（不是 std::string 的 npos）。第二個引數可以指定從哪裡開始找（積木上第三格可留空）",
+  "FLOW_TITLE_CPP_ARDUINO_STRING_FIND": "找文字的位置"
+}

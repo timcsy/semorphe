@@ -1,0 +1,5 @@
+{
+  "CPP_ARDUINO_STRING_TRIM_MSG0": "去掉 %1 頭尾的空白",
+  "CPP_ARDUINO_STRING_TRIM_TOOLTIP": "String 的 trim()——直接改掉這個字串（不回傳新的），空格、換行、tab 都算空白。讀進來的一行常帶著 \\r，比對前先去掉",
+  "FLOW_TITLE_CPP_ARDUINO_STRING_TRIM": "去掉頭尾空白"
+}

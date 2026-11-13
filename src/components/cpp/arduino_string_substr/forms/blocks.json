@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cpp:arduino_string_substr",
+    "componentId": "cpp:arduino_string_substr",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_arduino_string_substr",
+      "message0": "%{BKY_CPP_ARDUINO_STRING_SUBSTR_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "TO",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_ARDUINO_STRING_SUBSTR_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj",
+        "FROM": "from",
+        "TO": "to"
+      }
+    }
+  }
+]

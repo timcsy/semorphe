@@ -1,0 +1,5 @@
+{
+  "CPP_ARDUINO_STRING_SUBSTR_MSG0": "取 %1 從 %2 到 %3 的那一段",
+  "CPP_ARDUINO_STRING_SUBSTR_TOOLTIP": "String 的 substring()——取 [起點, 終點) 那一段，不含終點那一格；🔴 第二個數字是【終點位置】，不是 std::string substr 的【長度】。終點留空就取到最後",
+  "FLOW_TITLE_CPP_ARDUINO_STRING_SUBSTR": "取一段文字"
+}

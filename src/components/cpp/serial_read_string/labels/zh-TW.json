@@ -1,0 +1,6 @@
+{
+  "CPP_SERIAL_READ_STRING_MSG0": "從序列埠讀一段文字，讀到 %1 為止",
+  "CPP_SERIAL_READ_STRING_TOOLTIP": "Serial.readStringUntil()——一直讀到指定的字元（通常是 '\\n'）為止，回傳一個 String，不含那個字元。🔴 等不到那個字元時，過了逾時（預設 1 秒）就回傳目前讀到的部分，可能是空字串",
+  "FLOW_TITLE_CPP_SERIAL_READ_STRING": "序列埠讀一段文字",
+  "FLOW_SLOT_CPP_SERIAL_READ_STRING_UNTIL": "讀到"
+}

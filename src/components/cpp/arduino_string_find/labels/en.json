@@ -1,0 +1,5 @@
+{
+  "CPP_ARDUINO_STRING_FIND_MSG0": "Position of %2 in %1 (from %3)",
+  "CPP_ARDUINO_STRING_FIND_TOOLTIP": "String indexOf() — the first position (counting from 0); returns -1 when not found (not npos like std::string). An optional start position can go in the last slot",
+  "FLOW_TITLE_CPP_ARDUINO_STRING_FIND": "Find position"
+}

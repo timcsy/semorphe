@@ -1,0 +1,5 @@
+{
+  "CPP_SERIAL_READ_NUMBER_MSG0": "從序列埠讀一個整數",
+  "CPP_SERIAL_READ_NUMBER_TOOLTIP": "Serial.parseInt()——跳過前面不是數字的字元，讀進一個整數（long）。🔴 逾時（預設 1 秒）還沒讀到數字就回 0，分不出「真的是 0」與「沒有資料」",
+  "FLOW_TITLE_CPP_SERIAL_READ_NUMBER": "序列埠讀整數"
+}

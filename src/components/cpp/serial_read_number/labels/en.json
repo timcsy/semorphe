@@ -1,0 +1,5 @@
+{
+  "CPP_SERIAL_READ_NUMBER_MSG0": "Read an integer from serial",
+  "CPP_SERIAL_READ_NUMBER_TOOLTIP": "Serial.parseInt() — skips non-digit characters and reads an integer (long). Returns 0 if no number arrives before the timeout (1 second by default)",
+  "FLOW_TITLE_CPP_SERIAL_READ_NUMBER": "Serial read integer"
+}

@@ -1,0 +1,6 @@
+{
+  "CPP_SERIAL_READ_STRING_MSG0": "Read text from serial until %1",
+  "CPP_SERIAL_READ_STRING_TOOLTIP": "Serial.readStringUntil() — reads until the given character (usually '\\n') and returns a String without it. If the character never arrives, it returns what it has after the timeout (1 second by default), possibly empty",
+  "FLOW_TITLE_CPP_SERIAL_READ_STRING": "Serial read text",
+  "FLOW_SLOT_CPP_SERIAL_READ_STRING_UNTIL": "Until"
+}

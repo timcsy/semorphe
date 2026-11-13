@@ -177,6 +177,11 @@ const SAMPLE_CONTEXT: Record<string, Prelude> = {}
 for (const id of ['cpp:string_clear', 'cpp:string_append_char', 'cpp:string_at', 'cpp:string_size', 'cpp:string_substr', 'cpp:string_find', 'cpp:string_erase', 'cpp:string_insert']) {
   SAMPLE_CONTEXT[id] = (v) => [createNode('cpp:string_declare', { name: v, type: 'string' }, {})]
 }
+// **第八個實例**（2026-11-13，435）：Arduino `String` 的方法（trim／indexOf／substring／toInt）——判別問接收者的宣告型別
+//    （`trim`／`indexOf` 使用者自己的類別也可能有），孤立樣本裡沒有 `String s;`，於是辨識器正確地不認。
+for (const id of ['cpp:arduino_string_trim', 'cpp:arduino_string_find', 'cpp:arduino_string_substr', 'cpp:arduino_string_as_int']) {
+  SAMPLE_CONTEXT[id] = (v) => [createNode('cpp:var_declare', { name: v, type: 'String' }, {})]
+}
 // **第三個實例**（2026-08-07）：`mp[k]` 沒有 map 宣告時，辨識器查不到型別，
 // **正確地**退回 `array_assign`／`array_access`——同一個保守設計。
 // ⚠️ 脈絡宣告的變數名**必須與合成節點用的那個一致**。第一版用了 `mp`

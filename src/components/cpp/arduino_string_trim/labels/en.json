@@ -1,0 +1,5 @@
+{
+  "CPP_ARDUINO_STRING_TRIM_MSG0": "Trim spaces around %1",
+  "CPP_ARDUINO_STRING_TRIM_TOOLTIP": "String trim() — changes this string in place (returns nothing); spaces, newlines and tabs all count. A line read from serial often ends with \\r, so trim it before comparing",
+  "FLOW_TITLE_CPP_ARDUINO_STRING_TRIM": "Trim spaces"
+}

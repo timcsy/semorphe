@@ -1,0 +1,30 @@
+{
+  "componentId": "cpp:serial_read_number",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "obj",
+      "kind": "literal",
+      "default": "Serial",
+      "_kind_why": "今天只認 `Serial`（積木上固定，見 renderMapping 的 fixed）——與「從序列埠讀一個位元組」那一顆同一個作法。"
+    }
+  ],
+  "slots": {},
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "屬於 Arduino 這個執行環境（`Stream` 的方法），不屬於任何 C++ 標頭。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "_lift_why": "走 `registerMethodBranch`，判別看 `obj`（與「從序列埠讀一個位元組」那一顆同一條）：`parseInt` 這個方法名在別的物件上也有。引數數量對不上就不認。"
+}

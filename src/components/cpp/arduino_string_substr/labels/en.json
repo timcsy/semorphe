@@ -1,0 +1,5 @@
+{
+  "CPP_ARDUINO_STRING_SUBSTR_MSG0": "Part of %1 from %2 to %3",
+  "CPP_ARDUINO_STRING_SUBSTR_TOOLTIP": "String substring() — the part [from, to), excluding position to; the second number is an end position, not a length like std::string substr. Leave the end empty to take the rest",
+  "FLOW_TITLE_CPP_ARDUINO_STRING_SUBSTR": "Part of text"
+}
