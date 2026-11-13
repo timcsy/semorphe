@@ -20,7 +20,7 @@
  * `tests/integration/audit-naming.test.ts`（第二十七條護欄）。沒有執行期讀者是
  * 刻意的——它描述「名字該長什麼樣」，那是規範不是行為，而規範沒有機械檢查就是殼。
  */
-import type { NamingVocabulary } from '../../core/naming'
+import type { NamingVocabulary } from './core'
 
 /**
  * 主體詞彙——「這個操作作用在什麼上」。

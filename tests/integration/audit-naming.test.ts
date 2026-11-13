@@ -27,9 +27,9 @@ import { describe, it, expect } from 'vitest'
 import { printReport, loadBaseline, writeBaseline, newItems, assertRatchet } from '../helpers/guardrail'
 import { allCppComponents, allCppProjections } from '../../src/languages/cpp/all-declarations'
 import { paramSpecs } from '../../src/core/param-spec'
-import { parseName, SEPARATOR } from '../../src/core/naming'
-import { OPERATIONS as CPP_OPERATIONS, KINDS as CPP_KINDS, MODIFIERS, ATOMIC_NAMES as CPP_ATOMIC_NAMES, SUBJECTS as CPP_SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../../src/languages/cpp/naming'
-import { PYTHON_SUBJECTS, PYTHON_ATOMIC_NAMES, PYTHON_KINDS, PYTHON_OPERATIONS } from '../../src/languages/python/naming'
+import { parseName, SEPARATOR } from '../helpers/naming/core'
+import { OPERATIONS as CPP_OPERATIONS, KINDS as CPP_KINDS, MODIFIERS, ATOMIC_NAMES as CPP_ATOMIC_NAMES, SUBJECTS as CPP_SUBJECTS, RECEIVER_PARAM, SELF_NAMING_OPERATIONS } from '../helpers/naming/cpp'
+import { PYTHON_SUBJECTS, PYTHON_ATOMIC_NAMES, PYTHON_KINDS, PYTHON_OPERATIONS } from '../helpers/naming/python'
 
 /**
  * 🔴 **詞彙是各語言【補】出來的，不是 C++ 那份套用到所有語言**（2026-08-21）。

@@ -24,12 +24,9 @@ const ENTRIES = ['src/main.ts', 'src/vscode/extension.ts', 'src/vscode/webview/m
 const ALLOWED: Record<string, string> = {
   'src/languages/cpp/vocab/arduino.ts': '`@cos-mos/arduino` 詞彙套件（2026-11-04）：匯出探針、單元測試與結構頻道用；**宿主的嵌入介面**做好時產品才走到它——那是 vision〈面板拆成可獨立掛載的視圖套件〉，卡在「面板該不該知道本體插槽」待使用者決定；不在 app 上先開一個沒有消費者的方法（簡約優先）',
   'src/languages/cpp/vocab/structure-channel.ts': '同上——結構頻道（createStructureChannel）已就緒，等宿主的嵌入介面把它接到 cos-mos 的 `createStructureReceiver`',
-  'src/core/naming.ts': '護欄專用的命名詞彙表（審 component.json 的資料，產品不需要）',
-  'src/languages/cpp/naming.ts': '同上，C++ 的詞彙',
-  'src/languages/python/naming.ts': '同上，Python 的詞彙',
-  'src/core/component/judges.ts': '「哪條測試判哪一路」的 metadata，本來就是測試的資料',
   'src/core/component/path-syntax.ts': '階層身分的語法（vision〈分子與粒度切換〉的前置）；投影函式呼叫產品的 idToDir／deriveBlockType，只剩分類這一層是它自己的',
   'src/core/molecule.ts': 'vision〈分子與粒度切換〉的切口計算——流程的框只收整棵子樹（埠由節點自己的接點給），多選接上時才走到它（spec 187）',
+  // 🟢 2026-11-13（443）：core/naming、languages/{cpp,python}/naming、core/component/judges 四筆拿掉——搬到 tests/helpers（naming 目錄、judges），位置說真話
   // 🟢 2026-11-13（428）：`src/core/diagnostic-nature.ts` 拿掉——`diagnostics.ts` 用它濾掉判決那邊對不合法參數列的提示族，產品走得到了
   // 🟢 2026-10-31（spec 182）：`providers/cella/formalize`、`verdict.ts` 三筆拿掉——Cella 提供者接上了，它們在產品路徑上
   // ⏳ 2026-11-03（spec 205 T008）：JS 直譯器的登記拿掉了，它與它的提供者從產品走不到——**期限是 6c-4**：直譯器連同 import 它的測試一起刪，這兩筆也跟著拿掉
