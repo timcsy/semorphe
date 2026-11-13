@@ -59,6 +59,9 @@ volatile 只收「單一宣告子、`volatile` 寫在最前面、簡單型別」
 
 → 最值得做的下一步是 **volatile 陣列**（環形緩衝區是中斷程式最常見的形狀），已列進進行中檔的候選。
 
+🟢 **439 已做**：`volatile T a[N]`（含初值列表、指標陣列）走陣列宣告那顆，`volatile` 住進元素型別（與 `const` 同一條路），送 Cella 時在型別那一層去掉。fuzz_7 整支 accept；fuzz_2 剩 `uint8_t` 的已知缺口。
+順手修掉同一區的一個靜默缺陷：`static int a[3];` 原本 lift 成 `static int x;`（名字換成 x、陣列不見、high 信心），`static int *q = 0;` 的名字記成 `*q`——兩者改成照原文誠實降級。
+
 ## 產生的回歸測試
 
 - `tests/integration/fuzz-cpp-arduino-interrupt.test.ts`（16 支）：8 支程式各兩條——①lift 不丟字、產碼是不動點、`volatile`／`IRAM_ATTR` 的次數與原文相同、降級的就是那幾段；②交給 Cella（accept／已知缺口釘子＋換型別驗行為／照實 untranslated）

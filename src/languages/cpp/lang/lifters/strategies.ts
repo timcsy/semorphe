@@ -716,6 +716,14 @@ function refToPointer(inner: AstNode, type: string, stars: number, valueNode: As
   return valueNode ? buildVarDeclareRef(id.text, refType, ctx.lift(valueNode)) : buildVarDeclareRef(id.text, refType)
 }
 
+/** 宣告子一路往內（`declarator` 欄位）有沒有陣列——`*buf[3]`、`buf[3] = {…}` 都算（見 const 那段的註解）。 */
+function hasArrayDeclarator(d: AstNode): boolean {
+  for (let cur: AstNode | null = d; cur; cur = cur.childForFieldName('declarator') as AstNode | null) {
+    if (cur.type === 'array_declarator') return true
+  }
+  return false
+}
+
 function liftSingleDeclarator(decl: AstNode, type: string, ctx: LiftContext): SemanticNode {
   // **膠囊自己的判別先問**——「宣告子長成這樣時是我」是元件的知識。
   const claim = tryDeclaratorBranches(decl, type, ctx)
@@ -2091,12 +2099,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
      * > **一道只看最外層形狀的閘，會在「同一個形狀多包了一層」時失效
      * > ——而這個檔上面兩百行處已經記過同一件事一次。**
      */
-    const arrayDeclarator = (d: AstNode): boolean => {
-      for (let cur: AstNode | null = d; cur; cur = cur.childForFieldName('declarator') as AstNode | null) {
-        if (cur.type === 'array_declarator') return true
-      }
-      return false
-    }
+    const arrayDeclarator = hasArrayDeclarator
 
     // 回傳指標的函式原型、回傳型別帶 const（`const Node* findTag(…);`）——在常數變數宣告那條路之前（見 liftPointerPrototype）
     if (qualifier) { const pp = liftPointerPrototype(node, `${qualifier} ${type}`, ctx); if (pp) return pp }
@@ -2192,7 +2195,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
           return buildStaticVar(type, decl.text, null)
         }
         const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
-        const name = nameNode?.text ?? 'x'
+        // 🔴 439：`static int *q = 0;` 的宣告子是指標，原本整段 `*q` 被當成名字（積木的名字欄寫著 `*q`）——照原文降級
+        if (nameNode?.type !== 'identifier') return degrade(buildRawCode(node.text), 'static 的指標／參照宣告尚未支援')
+        const name = nameNode.text
         const valueNode = decl.childForFieldName('value')
         if (valueNode) {
           const value = ctx.lift(valueNode)
@@ -2200,7 +2205,10 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
         }
         return buildStaticVar(type, name, null)
       }
-      return buildMemberStatic(type, 'x')
+      // 🔴 439：宣告子是【陣列／指標】（`static int a[3];`、`static int *p;`）時上面找不到它，
+      //    這裡原本回 `buildMemberStatic(type, 'x')`——產回去是 `static int x;`：名字被換成 x、陣列不見了，
+      //    而且是 high 信心（積木上看不出有事）。照原文誠實降級。
+      return degrade(buildRawCode(node.text), 'static 的陣列／指標宣告尚未支援')
     }
 
     // 🔴 **`extern` 的變數宣告：誠實降級**（spec 197）。在此之前它落到下面的一般宣告，`extern` 被悄悄丟掉
@@ -2743,6 +2751,9 @@ function liftVolatileDeclaration(node: AstNode, qual: AstNode, ctx: LiftContext)
   if (kids.length !== 3 || decls.length !== 1) return null
   const d = decls[0]
   if (d.type === 'identifier') return buildVolatileVar(typeNode.text, d.text, null)
+  // 🟢 439：**易變陣列**（中斷用的環形緩衝區 `volatile int buf[8];`）——`volatile` 與 `const` 一樣是【型別修飾詞】，
+  //    住進元素型別（`volatile int`），走陣列宣告那顆元件；送 Cella 時在型別那一層去掉（formalize 的 `type()`）。
+  if (hasArrayDeclarator(d)) return liftSingleDeclarator(d, `volatile ${typeNode.text}`, ctx)
   if (d.type !== 'init_declarator') return null
   const nameNode = d.childForFieldName('declarator')
   const valueNode = d.childForFieldName('value')

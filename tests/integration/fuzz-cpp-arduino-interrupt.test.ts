@@ -52,7 +52,7 @@ const PROGRAMS: Fuzz[] = [
 ]
 
 /**
- * 每一支的處置（2026-11-13 量）：
+ * 每一支的處置（2026-11-13 量；439 起 volatile 陣列走陣列宣告那顆——fuzz_2 改歸 uint8、fuzz_7 整支 accept）：
  *   accept      整支翻得過去，Cella 判的輸出與期望相同
  *   untranslated 有一段照原文降級（volatile 的陣列／多宣告子／修飾詞在型別後／static volatile／const volatile／volatile 指標、函式指標陣列）
  *                ——降級的那段原文一字不丟，Cella 照實收不到（不是 reject）
@@ -60,16 +60,14 @@ const PROGRAMS: Fuzz[] = [
  *               ——原文用 knownCellaGap 釘住；把 uint8_t／int8_t 換成 unsigned char／signed char 驗其餘行為
  */
 const OUTCOME: Record<string, 'accept' | 'untranslated' | 'uint8'> = {
-  fuzz_1: 'untranslated', fuzz_2: 'untranslated', fuzz_3: 'accept', fuzz_4: 'untranslated',
-  fuzz_5: 'untranslated', fuzz_6: 'uint8', fuzz_7: 'untranslated', fuzz_8: 'uint8',
+  fuzz_1: 'untranslated', fuzz_2: 'uint8', fuzz_3: 'accept', fuzz_4: 'untranslated',
+  fuzz_5: 'untranslated', fuzz_6: 'uint8', fuzz_7: 'accept', fuzz_8: 'uint8',
 }
 /** 降級的那幾段（原文）：每一段都要原封不動出現在產出裡 */
 const DEGRADED: Record<string, string[]> = {
   fuzz_1: ['volatile int a = 0, b = 0;', 'int volatile x;'],
-  fuzz_2: ['volatile int buf[BUF_SIZE];'],
   fuzz_4: ['static volatile long counts[3] = {0, 0, 0};', 'void (*handlers[3])() = {isrA, isrB, isrC};'],
   fuzz_5: ['volatile int * volatile active = &sensorA;', 'const volatile int LIMIT = 25;'],
-  fuzz_7: ['volatile bool pending[4] = {false, false, false, false};', 'volatile byte order[8];'],
 }
 /** 有 IRAM_ATTR 的：名字 → 哪一顆 */
 const IRAM: Record<string, [string, string][]> = {

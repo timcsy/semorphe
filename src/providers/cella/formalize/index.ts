@@ -223,6 +223,9 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     if (s.endsWith('&')) { const inner = type(s.slice(0, -1), at); return inner && k('tRef', { t: inner }) }
     if (s.endsWith('*')) { const inner = type(s.slice(0, -1), at); return inner && k('tPtr', { t: inner }) }
     if (s.startsWith('const ')) { const inner = type(s.slice(6), at); return inner && k('tConst', { t: inner }) }
+    // 439：`volatile int buf[8]` 的元素型別帶著 `volatile`——送出時去掉（2026-11-13 與 cella 談定：機器單執行緒、
+    //    中斷只在等待點觸發，`volatile` 不改變任何判決；日後換 tVolatile 包住型別）。與 var_declare_volatile 同一條約定。
+    if (s.startsWith('volatile ')) return type(s.slice(9), at)
     // `int a[]` 只會出現在參數：C++ 把它調成指標（[dcl.fct]p5）——spec 199 量到 4 支
     if (s.endsWith('[]')) { const inner = type(s.slice(0, -2), at); return inner && k('tPtr', { t: inner }) }
     const sc = SCALAR[s]
