@@ -498,7 +498,7 @@ void loop() {
    *
    * `0UL - 4294967290UL` 在 C 裡是 `6`（32 位環繞），而這個直譯器沒有無號型別。🔴 那是**數值模型**的問題，改它要動整個算術層。
    */
-  it.todo('[UNSUPPORTED:無號整數的環繞算術] 🔴 fuzz_4：無號整數的環繞算術')
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（fuzz_4）
 
   /**
    * **`const` ＋ 二維陣列**——🟢 同 fuzz_3，2026-09-17 一起解開。
@@ -529,7 +529,7 @@ void loop() {
    *
    * `char buf[12]` ＋ 手寫 long→字串。🔴 `UNDEFINED_FUNC: char` ——`char` 被當成函式呼叫，那是 lift 的問題。
    */
-  it.todo('[UNSUPPORTED:char 陣列與 String 混用] 🔴 fuzz_9：C 風格字元陣列與 String 混用')
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（fuzz_9）
 
   /**
    * 🔴 **`static` ＋ 陣列：維持誠實降級——而在今天以前，這件事沒有任何測試在釘。**
@@ -582,7 +582,7 @@ void loop() {
    *
    * 🔴 `UNDEFINED_FUNC: (byte)` ——`byte` 不是 C++ 的內建型別，所以 `(byte)x` 被讀成函式呼叫。⚠️ 而 Arduino 的 `byte` 是 `uint8_t` 的別名，這需要**型別別名**機制。
    */
-  it.todo('[UNSUPPORTED:byte 型別別名與轉型] 🔴 fuzz_11：C 風格轉型 `(byte)x`')
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（fuzz_11）
 
   // 🟢 **fuzz_12（const ＋ 陣列宣告）：2026-09-17 解開**，與 fuzz_3 是同一個缺口。
   //    ⚠️ 這裡不留第二支測試——那一輪只留了 `it.todo` 的標題，原始程式沒有留下來，
@@ -665,7 +665,7 @@ void loop() {
    *
    * `Serial.print(v, 3)` 的第二引數本輪已接上，⚠️ **而這一段仍然差**：`float` 的精度（我們用 double）與 `(int)` 截斷的組合。
    */
-  it.todo('[UNSUPPORTED:float 精度與位數格式] 🔴 fuzz_19：浮點的位數格式與精度')
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（fuzz_19）
 
   // 🟢 **fuzz_20（const ＋ 陣列宣告）：2026-09-17 解開**，與 fuzz_3 是同一個缺口。
   //    ⚠️ 這裡不留第二支測試——那一輪只留了 `it.todo` 的標題，原始程式沒有留下來，

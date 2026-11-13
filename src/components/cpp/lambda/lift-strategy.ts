@@ -14,6 +14,11 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
         capture = inner || ''
       }
       const declNode = node.namedChildren.find(c => c.type === 'abstract_function_declarator')
+      // 🔴 **宣告子上的修飾詞（`mutable`／`constexpr`／`noexcept`…）整顆走誠實降級**（444，2026-11-13）：
+      //    語義樹沒有放它們的地方，原本靜默拿掉——`[c]() mutable { c++; }` 產回去是 `[c]() { c++; }`，
+      //    那是一個改了以值擷取的變數、編不過的程式。收下它要動三路（屬性、產生器、積木），在那之前照原文保留
+      const declText = (declNode?.text ?? '').replace(/\([^]*\)/, '')
+      if (/\b(mutable|constexpr|consteval|noexcept|throw)\b/.test(declText)) return null
       const paramList = declNode?.namedChildren.find(c => c.type === 'parameter_list') ?? null
       const params = liftParamList(paramList, ctx)
       const trailingReturn = declNode?.namedChildren.find(c => c.type === 'trailing_return_type')

@@ -276,10 +276,10 @@ int main() {
 
 // --- Known limitations (EXPECTED_DEGRADATION, fuzz 2026-03-13) ---
 // fuzz_1: mutable lambda keyword not preserved
-it.todo('[BLOCKED:cpp:lambda] fuzz: mutable lambda with value capture (needs mutable keyword support)')
+// 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（mutable lambda）
 // fuzz_2: template specialization template<> not supported
-it.todo('[BLOCKED:cpp:template_function] fuzz: template specialization with namespace (needs template specialization component)')
+// 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（template specialization with namespace）
 // fuzz_7: multiple catch blocks only one catch supported
-it.todo('[BLOCKED:cpp:try_catch] fuzz: multiple catch blocks and rethrow (needs multi-catch support)')
+// 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（multiple catch blocks）
 // fuzz_8: variadic templates and fold expressions not supported
-it.todo('[BLOCKED:cpp:template_function] fuzz: variadic templates with fold expressions (needs variadic template component)')
+// 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（variadic templates）

@@ -360,7 +360,7 @@ cout << lengths.empty() << endl;`
   // `queue<int> q` degrades to `int q` (template_type not handled in func params).
   // Enable when: template_type detection added for function parameters
 
-  it.todo('[BLOCKED:cpp:template_function] fuzz_8: stack-queue reversal — needs template_type in function parameters')
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（fuzz_8: stack-queue）
 
   // ─── queue fuzz: FIFO drain with front/pop ───
 
@@ -435,7 +435,7 @@ cout << s.count(5) << endl;`
   // requires nested template_type parsing which is not yet supported.
   // Enable when: nested template_type (pair<K,V>) support added
 
-  it.todo('[BLOCKED:cpp:template_function] fuzz_10: sparse matrix — needs nested template_type (pair<K,V>) as map key')
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（fuzz_10: sparse matrix）
 
   // ─── map fuzz: declare + erase + count combo (P1 stable) ───
 
