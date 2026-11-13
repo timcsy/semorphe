@@ -65,7 +65,7 @@ const OUTCOME: Record<string, 'accept' | 'untranslated' | 'uint8'> = {
 }
 /** 降級的那幾段（原文）：每一段都要原封不動出現在產出裡 */
 const DEGRADED: Record<string, string[]> = {
-  fuzz_1: ['volatile int a = 0, b = 0;', 'int volatile x;'],
+  fuzz_1: ['int volatile x;'],   // 440 起 `volatile int a = 0, b = 0;` 有積木
   fuzz_4: ['static volatile long counts[3] = {0, 0, 0};', 'void (*handlers[3])() = {isrA, isrB, isrC};'],
   fuzz_5: ['volatile int * volatile active = &sensorA;', 'const volatile int LIMIT = 25;'],
 }
