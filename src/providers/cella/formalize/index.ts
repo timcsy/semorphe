@@ -240,6 +240,12 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
     //   「Library objects are ordinary objects: declare them with tClass」；433，學生序列埠指令解析的語料 4 支整支翻不出）。
     //   程式自己定義了同名類別時是那個類別，交給下面的 tClass 那一條
     if (s === 'String' && options.board && !isC) return k('tClass', { name: 'String' })
+    // Arduino.h 的兩個型別別名（434；AVR 與 arduino-esp32 都是 `typedef uint8_t byte;`、`typedef bool boolean;`）：Cella 的模型還不認得這兩個名字
+    //   （送 tName 判「unknown type」），前端照那兩行 typedef 展開——同型別巨集的作法。已請 Cella 補名字，補了就改回照名字送。
+    //   ⚠️ `word` 不在這裡：AVR 是 unsigned int、各核心不全一樣，不替它猜
+    //   byte 送 tUChar（兩個核心的 uint8_t 都是 unsigned char）——不經過 `uint8_t` 這個名字：Cella 的 sketch 今天沒有隱含引入 <stdint.h>（11-13 已回報）
+    if (s === 'byte' && options.board && !isC) return k('tUChar')
+    if (s === 'boolean' && options.board && !isC) return k('tBool')
     const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
     if (vec) { const inner = type(vec[1], at); return inner && k('tVector', { t: inner }) }
     // C++ 的 `auto`（cella 0.1.202610312349 起有 `tAuto`）
