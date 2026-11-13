@@ -4,7 +4,7 @@
  * 每一支先斷言 lift 出那顆身分，再斷言 Cella 的判決。
  */
 import { describe, it, expect } from 'vitest'
-import { expectCellaOut, runCella, knownCellaGap } from '../helpers/cella-run'
+import { expectCellaOut, runCella } from '../helpers/cella-run'
 import { formalize } from '../../src/providers/cella/formalize'
 import type { SemanticNode } from '../../src/core/types'
 
@@ -37,8 +37,8 @@ describe('十二顆元件接上 Cella（399）', () => {
     console.log('reinterpret:', r.verdict, r.problems.map((p) => p.reason).join('；'))
   })
 
-  it('exit：Cella 還沒有（照送，判 unknown）', async () => {
-    await knownCellaGap(/exit is not supported/, () => expectCellaOut(main('    cout << "a" << endl;\n    exit(0);\n    cout << "b" << endl;\n'), 'a\n'))
+  it('exit：印到 exit 為止（Cella 1931 起接上）', async () => {
+    await expectCellaOut(main('    cout << "a" << endl;\n    exit(0);\n    cout << "b" << endl;\n'), 'a\n')
   })
 
   it('queue_back（只從積木來：q.back() 從程式碼 lift 成中性的容器方法）：翻成 eMCall back', () => {

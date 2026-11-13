@@ -21,21 +21,21 @@ const read = (pkg: string | null, file: string): Uint8Array =>
 
 const DEBUGGER = `import cfamily.syntax
 import cpp
-def load (source : String) : cpp.Session := cpp.load source
-def run (kind : Nat) (breakpoints : String) (closed : Nat) (fuel : Nat) (x : cpp.Session) : cpp.Stopping := cpp.run kind breakpoints closed fuel x
-def stopConf (x : cpp.Session) (s : cpp.Stopping) : cpp.Session := cpp.stopConf x s
-def stopKind (s : cpp.Stopping) : Nat := cpp.stopKind s
-def stopNode (s : cpp.Stopping) : String := cpp.stopNode s
-def stopOut (s : cpp.Stopping) : String := cpp.stopOut s
-def stopErr (s : cpp.Stopping) : String := cpp.stopErr s
-def stopDetail (s : cpp.Stopping) : String := cpp.stopDetail s
-def divergences (s : cpp.Stopping) : String := cpp.divergences s
-def feed (text : String) (x : cpp.Session) : cpp.Session := cpp.feed text x
-def globals (x : cpp.Session) : String := cpp.globals x
-def frames (at : String) (x : cpp.Session) : String := cpp.frames at x
-def setVarErr (n : Nat) (x : cfamily.DeclId) (text : String) (s : cpp.Session) : String := cpp.setVarErr n x text s
-def setVarConf (n : Nat) (x : cfamily.DeclId) (text : String) (s : cpp.Session) : cpp.Session := cpp.setVarConf n x text s
-def env (x : cpp.Session) : String := cpp.env x
+def load(source: String) -> cpp.Session { cpp.load(source) }
+def run(kind: Nat, breakpoints: String, closed: Nat, fuel: Nat, x: cpp.Session) -> cpp.Stopping { cpp.run(kind, breakpoints, closed, fuel, x) }
+def stopConf(x: cpp.Session, s: cpp.Stopping) -> cpp.Session { cpp.stopConf(x, s) }
+def stopKind(s: cpp.Stopping) -> Nat { cpp.stopKind(s) }
+def stopNode(s: cpp.Stopping) -> String { cpp.stopNode(s) }
+def stopOut(s: cpp.Stopping) -> String { cpp.stopOut(s) }
+def stopErr(s: cpp.Stopping) -> String { cpp.stopErr(s) }
+def stopDetail(s: cpp.Stopping) -> String { cpp.stopDetail(s) }
+def divergences(s: cpp.Stopping) -> String { cpp.divergences(s) }
+def feed(text: String, x: cpp.Session) -> cpp.Session { cpp.feed(text, x) }
+def globals(x: cpp.Session) -> String { cpp.globals(x) }
+def frames(at: String, x: cpp.Session) -> String { cpp.frames(at, x) }
+def setVarErr(n: Nat, x: cfamily.DeclId, text: String, s: cpp.Session) -> String { cpp.setVarErr(n, x, text, s) }
+def setVarConf(n: Nat, x: cfamily.DeclId, text: String, s: cpp.Session) -> cpp.Session { cpp.setVarConf(n, x, text, s) }
+def env(x: cpp.Session) -> String { cpp.env(x) }
 `
 
 let bytes: Uint8Array

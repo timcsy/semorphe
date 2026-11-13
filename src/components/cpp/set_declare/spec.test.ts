@@ -11,7 +11,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
 import { renderToBlocklyState } from '../../../core/projection/block-renderer'
 import { PatternExtractor } from '../../../core/projection/pattern-extractor'
@@ -153,9 +153,8 @@ describe('用一段範圍建立集合（403）', () => {
     expect(JSON.stringify(state)).not.toContain('cpp_set_declare_range')
   })
 
-  // Cella 的 set／multiset 模型還沒有範圍建構子（cella 2026-11-11 07:3x 收下，排在中午前後那一版）。發版後這一根會轉紅 → 改成一般的 expectCellaOut
-  it('Cella：範圍建構子（等 Cella 下一版）', async () => {
-    await knownCellaGap(/has no constructor for these arguments/, () =>
-      expectCellaOut(body('multiset<int> ms(a, a + 5);\n    for (int x : ms) cout << x << " ";'), '1 1 2 5 5 '))
+  // Cella 1931 起 set／multiset 有範圍建構子（11-11 回報）
+  it('Cella：範圍建構子', async () => {
+    await expectCellaOut(body('multiset<int> ms(a, a + 5);\n    for (int x : ms) cout << x << " ";'), '1 1 2 5 5 ')
   })
 })

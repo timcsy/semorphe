@@ -14,7 +14,7 @@ import { registerCppLanguage } from '../../src/languages/cpp/generators'
 import { generateCode } from '../../src/core/projection/code-generator'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
-import { runCella, expectCellaOut, knownCellaGap } from '../helpers/cella-run'
+import { runCella, expectCellaOut } from '../helpers/cella-run'
 
 let parser: Parser
 beforeAll(async () => {
@@ -56,12 +56,11 @@ const PROGRAMS: Fuzz[] = [
  *   accept      整支翻得過去，Cella 判的輸出與期望相同
  *   untranslated 有一段照原文降級（volatile 的陣列／多宣告子／修飾詞在型別後／static volatile／const volatile／volatile 指標、函式指標陣列）
  *                ——降級的那段原文一字不丟，Cella 照實收不到（不是 reject）
- *   uint8       整支翻得過去，而 Cella 今天把沒有 `#include <Arduino.h>` 的 `uint8_t` 判成未宣告（已回報，等 cella 11-13 那一版）
- *               ——原文用 knownCellaGap 釘住；把 uint8_t／int8_t 換成 unsigned char／signed char 驗其餘行為
+ *   （fuzz_2／6／8 原本是 `uint8`：Cella 把沒有 `#include <Arduino.h>` 的 `uint8_t` 判成未宣告；1931 起 Arduino.h 隱含的標準標頭照板子列，三支整支 accept）
  */
-const OUTCOME: Record<string, 'accept' | 'untranslated' | 'uint8'> = {
-  fuzz_1: 'untranslated', fuzz_2: 'uint8', fuzz_3: 'accept', fuzz_4: 'untranslated',
-  fuzz_5: 'untranslated', fuzz_6: 'uint8', fuzz_7: 'accept', fuzz_8: 'uint8',
+const OUTCOME: Record<string, 'accept' | 'untranslated'> = {
+  fuzz_1: 'untranslated', fuzz_2: 'accept', fuzz_3: 'accept', fuzz_4: 'untranslated',
+  fuzz_5: 'untranslated', fuzz_6: 'accept', fuzz_7: 'accept', fuzz_8: 'accept',
 }
 /** 降級的那幾段（原文）：每一段都要原封不動出現在產出裡 */
 const DEGRADED: Record<string, string[]> = {
@@ -100,12 +99,6 @@ describe('模糊測試：Arduino 中斷旗標與中斷函式（438，隔離出�
   it.each(PROGRAMS)('$id：交給 Cella（板子）', async ({ id, board, code, serial }) => {
     const outcome = OUTCOME[id]
     if (outcome === 'accept') { await expectCellaOut(code, serial, { board }); return }
-    if (outcome === 'uint8') {
-      await knownCellaGap(/undeclared identifier 'uint8_t'/, () => expectCellaOut(code, serial, { board }))
-      const plain = code.replace(/\buint8_t\b/g, 'unsigned char').replace(/\bint8_t\b/g, 'signed char')
-      await expectCellaOut(plain, serial, { board })
-      return
-    }
     const r = await runCella(code, { board })
     expect(r.verdict).toBe('untranslated')                                       // 照實收不到，不是 reject
     expect(r.untranslated.length).toBeGreaterThan(0)
