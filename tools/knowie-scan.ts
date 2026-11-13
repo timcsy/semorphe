@@ -78,6 +78,8 @@ function walkMd(base: string): string[] {
   const out: string[] = []
   for (const e of readdirSync(base, { withFileTypes: true })) {
     if (e.name.startsWith('.') || e.name === 'node_modules') continue
+    // workspace/local 不進版控（窗口的流水帳）——本機有、CI 沒有，掃它會讓兩邊讀數不同
+    if (e.isDirectory() && e.name === 'local' && base.endsWith('workspace')) continue
     const p = join(base, e.name)
     if (e.isDirectory()) out.push(...walkMd(p))
     else if (e.name.endsWith('.md')) out.push(p)
