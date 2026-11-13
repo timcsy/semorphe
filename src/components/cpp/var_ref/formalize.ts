@@ -20,6 +20,17 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // 物件巨集（spec 197）：前端展開——值代進使用處，標籤用使用處的 id（判決指回這一格）
     const m = f.macro(name)
     if (m) return m.expr(n.id)
+    // 值是一個識別字的巨集（`#define DHTTYPE DHT11`、`#define TOUCH_PIN T0`——值是函式庫或板子的常數名）：換成那個名字再解析一次
+    //   （它自己也可能是巨集：`#define A B`／`#define B 2`）。433 之前照原名送 `DHTTYPE`，Cella 判 undeclared——合法的 sketch 被說有錯（語料 6 支）
+    {
+      let to = name
+      for (let i = 0; i < 8 && f.identMacro(to) !== to; i++) {
+        to = f.identMacro(to)
+        const mm = f.macro(to)
+        if (mm) return mm.expr(n.id)
+      }
+      if (to !== name) return f.k('eName', { n: n.id, name: to })
+    }
     // 其餘（串流物件、函式名當值、標頭的常數與板子的物件）也交給 Cella：查不到宣告時它依序判 eStdin／eStdout／eStderr、
     // eFunc、eConst（找不到就是 undeclared，指回這一格）。⚠️ 巨集要在這之前展開——那是前端的事，Cella 看不到 #define 的值
     return f.k('eName', { n: n.id, name })
