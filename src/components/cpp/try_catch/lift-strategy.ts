@@ -9,6 +9,11 @@ export function registerLiftStrategy(registry: LiftStrategyRegistry): void {
   // try_statement: try { } catch (type name) { }
     registry.register('cpp:liftTryCatch', (node, ctx) => {
       const tryBody = extractBody(node.childForFieldName('body') ?? null, ctx)
+      // 🔴 **多個 catch 整顆走誠實降級**（444，2026-11-13，重建過期的 it.todo 量到的）：語義樹只有一個 catch，
+      //    原本只取第一個——第二個以後連同裡面的 `throw;` **靜默消失**，丟到第二種例外的程式意思就變了
+      //    （`catch (logic_error&) {…} catch (runtime_error&) { cout << "R"; throw; }` 印 `Ra` → `a`）。
+      //    收下它要動三路（這裡、產生器、積木的 catch 列表），那是另一刀；在那之前照原文保留。
+      if (node.namedChildren.filter(c => c.type === 'catch_clause').length > 1) return null
       const catchClause = node.namedChildren.find(c => c.type === 'catch_clause') ?? null
       let catchType = 'exception&'
       let catchName = 'e'

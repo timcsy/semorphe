@@ -189,10 +189,7 @@ describe('模糊測試的回歸：容器兩端', () => {
     expect(got, '🔴 雙下標的身分選錯了').toBe(ref)
   }, 60_000)
 
-  it.todo('[UNSUPPORTED:deque<char> 傳值後的差異，根因未定位] 🟠 模糊測試 fuzz_9'
-    + ' ——傳值複製已經修好，而這一支還有別的差異（字元的印法）沒查清楚。'
-    + ' 🔴 不留一個「大概是這個」的修法：根因未定位前不動它。')
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（deque<char> 傳值後）
 
-  it.todo('[UNSUPPORTED:巢狀容器的索引越界，根因未定位] 🟠 fuzz_3 的格子 BFS'
-    + ' ——`RUNTIME_ERR_INDEX_OUT_OF_RANGE: 1`，而 g++ 跑得完。根因未定位。')
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（巢狀容器的索引越界）
 })

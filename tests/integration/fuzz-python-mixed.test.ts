@@ -114,5 +114,5 @@ describe('spec 170 · Python 盲測回歸（第一輪，12 題）', () => {
   //    ⚠️ 而它【不是靜默的】——直譯器丟 `UNDEFINED_FUNC`，使用者看得到。
   //    何時修：Python 的內建函式那一刀（len / int / str / abs / max / min…）。
   //    在那之前這一支保持 `todo`，而**它的存在就是那一刀的入口**。
-  it.todo("[UNSUPPORTED:Python 的內建函式（len／int／str／abs／max／min…）] fuzz_10：字串相加與重複")
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（fuzz_10：字串相加）
 })

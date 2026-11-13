@@ -345,9 +345,8 @@ int main() {
     })
   })
 
-  describe('known lifter limitations (not numeric-specific)', () => {
-    it.todo('[BLOCKED:cpp:struct_declare] fuzz_10: struct + iota + accumulate — struct type handling in function params incomplete (pre-existing lifter limitation)')
-  })
+  // known lifter limitations (not numeric-specific)：
+  // 🟢 444（2026-11-13）：這支 todo 的原始程式沒留下，照標題重建的最小形狀今天量過 → fuzz-rebuilt-from-todos.test.ts（fuzz_10: struct + iota）
 })
 
 // ─────────────────────────────────────────────────────────────
