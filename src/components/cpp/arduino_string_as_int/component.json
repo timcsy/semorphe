@@ -1,0 +1,35 @@
+{
+  "componentId": "cpp:arduino_string_as_int",
+  "abstractComponent": null,
+  "properties": [],
+  "slots": {
+    "obj": "expression"
+  },
+  "slotTypes": {
+    "obj": {
+      "type": "expr"
+    }
+  },
+  "_slots_why": "接收者是一個接點，不是一串文字——與 std::string 那幾顆方法同一個作法。",
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "`String` 是 Arduino 核心的類別（`WString.h`，sketch 不必 include），不是 std::string。",
+  "traits": {
+    "arduinoStringMethod": "toInt"
+  },
+  "_traits_why": "lift 的分支問性狀而不是比對身分字串（見 `languages/cpp/arduino-string.ts`）。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "_lift_why": "走分支而不是純方法名表：`toInt` 這個名字使用者自己的類別也可能有。接收者要是宣告出來的 `String` 或回傳 String 的那幾顆；查不到、或引數數量對不上，就不認（留在通用的方法呼叫，不安靜地丟引數）。"
+}

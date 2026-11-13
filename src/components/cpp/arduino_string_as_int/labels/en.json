@@ -1,0 +1,5 @@
+{
+  "CPP_ARDUINO_STRING_AS_INT_MSG0": "Convert %1 to an integer",
+  "CPP_ARDUINO_STRING_AS_INT_TOOLTIP": "String toInt() — converts the leading digits to an integer (long); returns 0 when it does not start with a number, without any error",
+  "FLOW_TITLE_CPP_ARDUINO_STRING_AS_INT": "Text to integer"
+}

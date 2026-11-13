@@ -1,0 +1,36 @@
+{
+  "componentId": "cpp:arduino_string_trim",
+  "abstractComponent": null,
+  "properties": [],
+  "slots": {
+    "obj": "expression"
+  },
+  "slotTypes": {
+    "obj": {
+      "type": "expr"
+    }
+  },
+  "_slots_why": "接收者是一個接點，不是一串文字——與 std::string 那幾顆方法同一個作法（`m[k].f()` 的 `m[k]` 是一棵樹）。",
+  "role": "statement",
+  "_role_why": "Arduino 的 `String::trim()` 回傳 void、**就地**改掉那個字串（WString.h），所以只有敘述形態——與 Python 的 strip（回傳新字串）不同。",
+  "owner": "(arduino)",
+  "_owner_why": "`String` 是 Arduino 核心的類別（`WString.h`，sketch 不必 include），不是 std::string。",
+  "traits": {
+    "arduinoStringMethod": "trim"
+  },
+  "_traits_why": "lift 的分支問這個性狀（「我是 Arduino String 的哪個方法」）而不是比對身分字串——見 lift.ts。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "_lift_why": "走分支而不是純方法名表：`trim` 這個名字使用者自己的類別也可能有。接收者的型別要是宣告出來的 `String`，或本身就是回傳 String 的那幾顆（性狀 `returnsArduinoString`）；查不到就不認，留在通用的方法呼叫。"
+}

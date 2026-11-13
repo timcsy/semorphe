@@ -1,0 +1,5 @@
+{
+  "CPP_ARDUINO_STRING_AS_INT_MSG0": "把 %1 轉成整數",
+  "CPP_ARDUINO_STRING_AS_INT_TOOLTIP": "String 的 toInt()——開頭的數字轉成整數（long）；🔴 開頭不是數字時回 0，不會報錯，所以分不出「真的是 0」與「轉不出來」",
+  "FLOW_TITLE_CPP_ARDUINO_STRING_AS_INT": "文字轉整數"
+}

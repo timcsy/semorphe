@@ -1,0 +1,22 @@
+[
+  {
+    "id": "cpp:arduino_string_trim",
+    "componentId": "cpp:arduino_string_trim",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_arduino_string_trim",
+      "message0": "%{BKY_CPP_ARDUINO_STRING_TRIM_MSG0}",
+      "args0": [
+        { "type": "input_value", "name": "OBJ", "check": "Expression" }
+      ],
+      "previousStatement": "Statement",
+      "nextStatement": "Statement",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_ARDUINO_STRING_TRIM_TOOLTIP}",
+      "inputsInline": true
+    },
+    "renderMapping": { "fields": {}, "inputs": { "OBJ": "obj" } }
+  }
+]

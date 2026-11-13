@@ -2,7 +2,7 @@
   "_why": "契約 @cos-mos/arduino 的正本在 cos-mos（history/015：每個領域三方各一，契約歸 cos-mos）。這裡是原樣固定的副本，`audit-arduino-contract` 拿它核對我們從元件宣告推出的那一份；cos-mos 合併新版之後照新版換這兩個檔。",
   "repo": "cos-mos",
   "path": "vocab/arduino/vocab.json",
-  "commit": "ae1908a",
-  "version": "0.1.2",
-  "sha256": "ed5ff7bd851a55d3cebe06305f0cb830ff3e16301e3c2165e64d68ad7db7d14e"
+  "commit": "95faa57",
+  "version": "0.1.3",
+  "sha256": "cf179e168626f32ea7eef9840fcfcfd10cba90a2ce877cb2f5c39067e1d5fef2"
 }

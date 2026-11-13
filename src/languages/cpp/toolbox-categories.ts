@@ -145,6 +145,8 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
       { from: '<cstdlib>', category: 'stdlib' },
       // `map()` 是數值換算，歸運算而不是硬體——⚠️ 它的擁有者是 (arduino) 而分類是 math
       { from: '(arduino)', category: 'math' },
+      // Arduino 核心的 `String` 方法（trim／indexOf／substring／toInt，435）——與 std::string 那幾顆同一格
+      { from: '(arduino)', category: 'containers' },
     ],
   },
   {

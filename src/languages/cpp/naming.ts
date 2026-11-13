@@ -69,6 +69,9 @@ export const SUBJECTS = [
   // `serial`  ——序列埠。⚠️ 它與 `io` 並存：`io_sync`／`io_tie` 講的是
   //   **標準輸入輸出的加速**，而 `serial` 是**另一個裝置**。
   'pin', 'digital', 'analog', 'serial',
+  // ⚠️ `arduino_string` 加入日 2026-11-13（435）——Arduino 核心的 `String` 類別（`WString.h`），**不是** std::string。
+  //   不與 `string` 合併：同名方法語義不同（`substring(from, to)` 的第二個數是終點，`substr` 的是長度；`indexOf` 找不到回 -1 不是 npos）。
+  'arduino_string',
   // ⚠️ `io` 加入日 2026-08-13——`cpp:io_sync`／`cpp:io_tie`（競賽的加速框架）。
   // 主體是**輸入輸出流本身**，不是流上的一次讀寫：`print`／`input` 作用在
   // 「一筆資料」上，而這兩顆作用在「這條流怎麼運作」上。
@@ -122,6 +125,8 @@ export const OPERATIONS = [
   //    它送的不是一個值，是一個【有時序的訊號】（拉低 2 µs、拉高 10 µs、再拉低），
   //    而那個時序就是它的全部語義。
   'trigger',
+  // ⚠️ `trim` 加入日 2026-11-13（435）——「就地去掉頭尾的空白」（Arduino `String::trim()`）。沒有同義的既有操作：`erase` 是刪指定的一段，`clear` 是全清。
+  'trim',
   'abs', 'append', 'as', 'back', 'compare', 'copy', 'deref', 'exit', 'fill',
   'front', 'gcd', 'is', 'lcm', 'max', 'min', 'next', 'replace', 'reverse',
   'seed', 'sort', 'substr', 'sum', 'to',

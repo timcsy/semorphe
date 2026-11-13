@@ -1,0 +1,34 @@
+[
+  {
+    "id": "cpp:serial_read_string",
+    "componentId": "cpp:serial_read_string",
+    "language": "cpp",
+    "category": "io",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_serial_read_string",
+      "message0": "%{BKY_CPP_SERIAL_READ_STRING_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "UNTIL",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_CPP_SERIAL_READ_STRING_TOOLTIP}",
+      "output": "Expression"
+    },
+    "renderMapping": {
+      "fixed": {
+        "obj": "Serial"
+      },
+      "fields": {},
+      "inputs": {
+        "UNTIL": "until"
+      },
+      "statementInputs": {}
+    }
+  }
+]

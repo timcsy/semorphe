@@ -1,7 +1,6 @@
 {
   "name": "@cos-mos/arduino",
-  "version": "0.1.2",
-  "contentHash": "sha256:a9c293cdd3d073624efaed6cfadfad3c1fddf90465d7ba038d1d1e8dd907d577",
+  "version": "0.1.3",
   "components": {
     "arduino:analog_read": {
       "kind": "expression",
@@ -32,6 +31,60 @@
         },
         "value": {
           "type": "int",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:arduino_string_as_int": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "expr",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:arduino_string_find": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "expr",
+          "required": true
+        },
+        "arg": {
+          "type": "expr",
+          "required": true
+        },
+        "from": {
+          "type": "expr"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:arduino_string_substr": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "expr",
+          "required": true
+        },
+        "from": {
+          "type": "expr",
+          "required": true
+        },
+        "to": {
+          "type": "expr"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:arduino_string_trim": {
+      "kind": "statement",
+      "params": {
+        "obj": {
+          "type": "expr",
           "required": true
         }
       },
@@ -516,6 +569,30 @@
       },
       "pins": "未定"
     },
+    "arduino:serial_read_number": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "Serial"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:serial_read_string": {
+      "kind": "expression",
+      "params": {
+        "obj": {
+          "type": "string",
+          "default": "Serial"
+        },
+        "until": {
+          "type": "expr",
+          "required": true
+        }
+      },
+      "pins": "未定"
+    },
     "arduino:servo_attach": {
       "kind": "statement",
       "params": {
@@ -651,5 +728,6 @@
       },
       "pins": "未定"
     }
-  }
+  },
+  "contentHash": "sha256:a0dce420323863a1702f8068efea28680c278f496487b98a236269339ec538da"
 }

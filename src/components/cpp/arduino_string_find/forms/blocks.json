@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cpp:arduino_string_find",
+    "componentId": "cpp:arduino_string_find",
+    "language": "cpp",
+    "category": "containers",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_arduino_string_find",
+      "message0": "%{BKY_CPP_ARDUINO_STRING_FIND_MSG0}",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OBJ",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "ARG",
+          "check": "Expression"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM",
+          "check": "Expression"
+        }
+      ],
+      "inputsInline": true,
+      "output": "Expression",
+      "colour": "#4C97FF",
+      "tooltip": "%{BKY_CPP_ARDUINO_STRING_FIND_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {},
+      "inputs": {
+        "OBJ": "obj",
+        "ARG": "arg",
+        "FROM": "from"
+      }
+    }
+  }
+]
