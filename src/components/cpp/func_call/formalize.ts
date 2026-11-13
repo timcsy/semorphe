@@ -10,6 +10,9 @@ const FUNCTOR = /^(?:std::)?(?:greater|less|greater_equal|less_equal|equal_to|no
  */
 const LIBRARY_FUNCTION_TEMPLATES = new Set(['max', 'min', 'make_pair', 'make_tuple', 'swap'])  // swap<int>(a, b)：Cella 0.1.202611080524 起照型別檢查（之前判 reject「not part of C++」——swap 在模型裡是特別處理的敘述，不是函式樣板）
 
+/** Arduino 的中斷函式：Cella 會一起建模（attachInterrupt 的腳位邊緣來自 inputs，在等待點觸發 ISR）；在那之前照實翻不出 */
+const ARDUINO_INTERRUPT_FUNCS = new Set(['attachInterrupt', 'detachInterrupt', 'digitalPinToInterrupt', 'noInterrupts', 'interrupts'])
+
 /** 樣板引數串依頂層逗號切開（`pair<int, int>, long long` → 兩段）。 */
 function splitTopLevel(text: string): string[] {
   const out: string[] = []
@@ -102,6 +105,9 @@ export function registerFormalize(r: FormalizeRegistrar): void {
     // `Base::f(x)`：明確指定類別呼叫成員，不走虛擬分派。照 eCall 送是呼叫一個自由函式，Cella 判 no matching（假的 reject，P6；392 露出來的）。
     //   Cella 給形狀之前照實標翻不出
     if (f.isQualifiedInstanceCall(name)) return f.miss(n, `「${name}(…)」是明確指定類別的成員呼叫；還沒有對應`)
+    // 🔴 437：板子上的中斷函式——Cella 還沒有中斷的模型（11-13 cella：會建模，排在之後），照送會被判「未宣告」：
+    //    一支合法的中斷 sketch 被說有錯（P6）。模型出來之前照實標翻不出；之後改送 eCall
+    if (f.options.board && ARDUINO_INTERRUPT_FUNCS.has(name)) return f.miss(n, `「${name}(…)」是中斷相關的函式；Cella 還沒有中斷的模型`)
     return f.k('eCall', { n: n.id, f: f.identMacro(name), args })
   })
   // 作用域：名字照常解析——指得到變數宣告的就是在呼叫那個值（函式定義不進作用域表，所以呼叫函式不會被誤認）

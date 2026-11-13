@@ -223,3 +223,19 @@ void loop() {}
     expect(r.verdict).toBe('untranslated')
   })
 })
+
+describe('437：中斷函式在 Cella 有模型之前照實翻不出，不被判「未宣告」', () => {
+  // 🔴 一支合法的中斷 sketch，原本被 Cella 說「use of undeclared identifier 'attachInterrupt'」（P6：說合法的程式有錯）
+  const INT = '#include <Arduino.h>\nint n = 0;\nvoid onPress() {\n  n++;\n}\nvoid setup() {\n  Serial.begin(9600);\n  attachInterrupt(digitalPinToInterrupt(2), onPress, FALLING);\n}\nvoid loop() {\n  noInterrupts();\n  int c = n;\n  interrupts();\n  Serial.println(c);\n  delay(1000);\n}\n'
+  for (const board of ['uno', 'esp32']) {
+    it(`${board}：翻不出，原因指名中斷`, async () => {
+      // 正向錨點：同一支去掉中斷呼叫就判得出
+      const plain = await runCella(INT.replace('  attachInterrupt(digitalPinToInterrupt(2), onPress, FALLING);\n', '').replace('  noInterrupts();\n', '').replace('  interrupts();\n', ''), { board })
+      expect(plain.verdict).not.toBe('untranslated')
+      const r = await runCella(INT, { board })
+      expect(r.verdict).toBe('untranslated')
+      expect(r.untranslated.map((u) => u.reason).join('\n')).toMatch(/中斷/)
+      expect(r.problems.some((p) => p.kind === 'undeclared')).toBe(false)
+    }, 120_000)
+  }
+})

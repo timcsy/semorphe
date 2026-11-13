@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:capsule": "vitest run src/components",
-    "test:guard": "vitest run tests/integration/audit-",
+    "test:guard": "vitest run tests/integration/audit- tests/integration/component-move-parity tests/integration/component-vocabulary tests/integration/declaration-change-parity tests/integration/toolbox-snapshot",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "build:vscode": "npx tsx tools/build-vscode.ts",
