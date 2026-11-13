@@ -9,6 +9,7 @@ This project maintains structured knowledge in `knowledge/`:
 
 Read these files at the start of any task to understand the project's *why* and constraints.
 Additional context may be found in `knowledge/concepts/`, `knowledge/history/`, and `knowledge/draft/`.
+What is in progress right now (who is doing what, what it waits on) lives in `knowledge/workspace/` — read `進行中.md` first when taking over.
 
 Learned procedures live in `knowledge/skills/` (agentskills.io SKILL.md format). If your tool auto-loads skills, they may be projected into your skill directory; otherwise read the relevant `SKILL.md` there and follow it.
 <!-- /Knowie -->
