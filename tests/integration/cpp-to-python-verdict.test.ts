@@ -50,8 +50,8 @@ async function sameVerdict(src: string, py: string, stdin: string): Promise<void
   expect(b.assumes ?? [], `${show}\nassumes：C++ ${JSON.stringify(a.assumes ?? [])} / Python ${JSON.stringify(b.assumes ?? [])}`).toEqual(a.assumes ?? [])
 }
 
-const files = fs.readdirSync('lessons/cpp-beginner', { recursive: true }).map(String)
-  .filter((f) => f.endsWith('.cpp') && f.includes('/solutions/')).sort().map((f) => `lessons/cpp-beginner/${f}`)
+const filesOf = (track: string): string[] => fs.readdirSync(`lessons/${track}`, { recursive: true }).map(String)
+  .filter((f) => f.endsWith('.cpp') && f.includes('/solutions/')).sort().map((f) => `lessons/${track}/${f}`)
 
 const stdinOf = (f: string): string => {
   const lesson = JSON.parse(fs.readFileSync(f.replace(/solutions\/.*/, 'lesson.json'), 'utf8'))
@@ -59,45 +59,62 @@ const stdinOf = (f: string): string => {
   return ((task?.check?.stdin ?? []) as string[]).map((l) => `${l}\n`).join('')
 }
 
+/**
+ * cpp-advanced 的解答不寫標頭（產品替學生補）——這裡補上它用到的那幾個（不用 `<bits/stdc++.h>`：Cella 會多帶 header.contents 的假設）
+ */
+const withHeaders = (src: string): string => src.includes('#include') ? src
+  : '#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\n' + src
+
 /** Cella 的 Python 家族少帶 libm 的假設（sqrt）——修好時這幾支會紅 */
 const KNOWN_ASSUMES_GAP = new Set(['06-算一算/solutions/rebuild.cpp'])
 
-describe('C++ → Python：cpp-beginner 課文的解答', () => {
-  const tally = { converted: [] as string[], kept: new Map<string, string[]>() }
+/**
+ * 一門課一組（447 加 cpp-advanced）。`minConverted`：換過去的下限——cpp-beginner 是 SC-001 的「至少一半」，
+ * cpp-advanced 是棘輪（容器、指標、struct 還沒有 Python 的寫法，只准上升）
+ */
+function lessonSuite(track: string, minFiles: number, minConverted: (total: number) => number): void {
+  const files = filesOf(track)
+  describe(`C++ → Python：${track} 課文的解答`, () => {
+    const tally = { converted: [] as string[], kept: new Map<string, string[]>() }
 
-  it('入口：讀到了課文的 C++ 解答', () => {
-    expect(files.length).toBeGreaterThanOrEqual(60)
+    it('入口：讀到了課文的 C++ 解答', () => {
+      expect(files.length).toBeGreaterThanOrEqual(minFiles)
+    })
+
+    for (const f of files) {
+      const rel = f.replace(`lessons/${track}/`, '')
+      it(rel, async () => {
+        const src = withHeaders(fs.readFileSync(f, 'utf8'))
+        const r = await toPython(src, stdinOf(f))
+        if (r.code === null) {
+          // 保留：每一筆都要有原因類別與說明（不是無原因的失敗）
+          expect(r.reasons.length).toBeGreaterThan(0)
+          for (const x of r.reasons) expect(x.detail.length, JSON.stringify(x)).toBeGreaterThan(0)
+          for (const x of r.reasons) tally.kept.set(x.kind, [...(tally.kept.get(x.kind) ?? []), path.basename(path.dirname(path.dirname(f)))])
+          return
+        }
+        tally.converted.push(f)
+        // 🟠 Cella 那側的不一致（2026-11-09 回報）：C++ 的 sqrt 判決帶 assumes math.correctlyRounded（libm）、Python 的 math.sqrt 沒帶——
+        //    CPython 的 math.sqrt 同樣是 C 函式庫的薄包裝，兩邊應該帶同一個假設。這一支之前因為 % 被保留，沒走到這裡（spec 224 換過去之後露出來）
+        if (track === 'cpp-beginner' && KNOWN_ASSUMES_GAP.has(rel)) await knownCellaGap(/correctlyRounded/, () => sameVerdict(src, r.code!, stdinOf(f)))
+        else await sameVerdict(src, r.code, stdinOf(f))
+        // SC-005／research R7 的第二道檢查：換出來的碼由 Python 自己的 lift 認得乾淨（沒有照原文），產碼回來同一支程式
+        const back = await liftPython(r.code)
+        expect(componentIdsOf(back).filter((c) => /raw|unresolved/.test(c)), `Python 的 lift 認不出來：\n${r.code}`).toEqual([])
+        expect(generatePython(back).trimEnd(), `走一趟 Python 積木回來不一樣：\n${r.code}`).toBe(r.code.trimEnd())
+      }, 60_000)
+    }
+
+    it('★ 報表與門檻：換過去的不少於下限；兩份加起來等於解答總數', () => {
+      const kept = files.length - tally.converted.length
+      console.log(`C++ → Python（${track}）：換過去 ${tally.converted.length} 支／保留 ${kept} 支｜原因分佈 ${[...tally.kept].map(([k, v]) => `${k}:${v.length}`).join(' ')}`)
+      expect(tally.converted.length, '換過去的少於下限').toBeGreaterThanOrEqual(minConverted(files.length))
+    })
   })
+}
 
-  for (const f of files) {
-    it(f.replace('lessons/cpp-beginner/', ''), async () => {
-      const src = fs.readFileSync(f, 'utf8')
-      const r = await toPython(src, stdinOf(f))
-      if (r.code === null) {
-        // 保留：每一筆都要有原因類別與說明（不是無原因的失敗）
-        expect(r.reasons.length).toBeGreaterThan(0)
-        for (const x of r.reasons) expect(x.detail.length, JSON.stringify(x)).toBeGreaterThan(0)
-        for (const x of r.reasons) tally.kept.set(x.kind, [...(tally.kept.get(x.kind) ?? []), path.basename(path.dirname(path.dirname(f)))])
-        return
-      }
-      tally.converted.push(f)
-      // 🟠 Cella 那側的不一致（2026-11-09 回報）：C++ 的 sqrt 判決帶 assumes math.correctlyRounded（libm）、Python 的 math.sqrt 沒帶——
-      //    CPython 的 math.sqrt 同樣是 C 函式庫的薄包裝，兩邊應該帶同一個假設。這一支之前因為 % 被保留，沒走到這裡（spec 224 換過去之後露出來）
-      if (KNOWN_ASSUMES_GAP.has(f.replace('lessons/cpp-beginner/', ''))) await knownCellaGap(/correctlyRounded/, () => sameVerdict(src, r.code!, stdinOf(f)))
-      else await sameVerdict(src, r.code, stdinOf(f))
-      // SC-005／research R7 的第二道檢查：換出來的碼由 Python 自己的 lift 認得乾淨（沒有照原文），產碼回來同一支程式
-      const back = await liftPython(r.code)
-      expect(componentIdsOf(back).filter((c) => /raw|unresolved/.test(c)), `Python 的 lift 認不出來：\n${r.code}`).toEqual([])
-      expect(generatePython(back).trimEnd(), `走一趟 Python 積木回來不一樣：\n${r.code}`).toBe(r.code.trimEnd())
-    }, 60_000)
-  }
-
-  it('★ 報表與門檻：換過去的至少一半（SC-001）；兩份加起來等於解答總數', () => {
-    const kept = files.length - tally.converted.length
-    console.log(`C++ → Python：換過去 ${tally.converted.length} 支／保留 ${kept} 支｜原因分佈 ${[...tally.kept].map(([k, v]) => `${k}:${v.length}`).join(' ')}`)
-    expect(tally.converted.length, '換過去的不到一半').toBeGreaterThanOrEqual(Math.ceil(files.length / 2))
-  })
-})
+lessonSuite('cpp-beginner', 60, (n) => Math.ceil(n / 2))
+lessonSuite('cpp-advanced', 20, () => 7)
 
 // ── US2／SC-003：意思會變的地方照實保留（或換成意思相同的寫法，由判決證明）──
 describe('C++ → Python：意思會變的反例', () => {
@@ -174,6 +191,40 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
     await sameVerdict(src, r.code!, '')
   }, 60_000)
+  // ── 447：vector 的複製與共用 ──
+  const V = '#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n'
+  for (const [name, code, must] of [
+    // 之前換出來是 `b = a`：Python 的 b 與 a 是同一個 list，改 b 會改到 a（C++ 印 1、Python 印 5）——靜默失真
+    ['vector 的指定是複製：`b = a` 之後改 b 不影響 a', 'int main() {\n    vector<int> a = {1, 2};\n    vector<int> b;\n    b = a;\n    b[0] = 5;\n    cout << a[0] << endl;\n    return 0;\n}\n', 'b = list(a)'],
+    ['用另一個 vector 初始化也是複製', 'int main() {\n    vector<int> a = {1, 2};\n    vector<int> b = a;\n    b[0] = 5;\n    cout << a[0] << b[0] << endl;\n    return 0;\n}\n', 'b = list(a)'],
+    ['參照參數：改元素、push_back 都改到呼叫端那一個（Python 的 list 本來就是同一個）', 'void f(vector<int>& a) {\n    a[0] = 9;\n    a.push_back(3);\n}\n\nint main() {\n    vector<int> a = {1, 2};\n    f(a);\n    cout << a[0] << a.size() << endl;\n    return 0;\n}\n', 'def f(a):'],
+    ['const 參照參數', 'int g(const vector<int>& a) {\n    return a[1];\n}\n\nint main() {\n    vector<int> a = {1, 2};\n    cout << g(a) << endl;\n    return 0;\n}\n', 'def g(a):'],
+    ['二維：推進去的是複製的一份，之後改來源不影響', 'int main() {\n    vector<int> r = {1};\n    vector<vector<int>> g;\n    g.push_back(r);\n    r[0] = 7;\n    cout << g[0][0] << endl;\n    return 0;\n}\n', 'g.append(list(r))'],
+    ['二維：給個數時每一格是各自的 list', 'int main() {\n    vector<vector<int>> g(3);\n    g[0].push_back(4);\n    cout << g[1].size() << g[0].size() << endl;\n    return 0;\n}\n', 'for _ in range(3)'],
+    ['以值走訪二維：每一圈拿到的是複製的一份', 'int main() {\n    vector<vector<int>> g(2);\n    g[0].push_back(1);\n    for (vector<int> row : g) {\n        row.push_back(9);\n    }\n    cout << g[0].size() << endl;\n    return 0;\n}\n', 'row = list(row)'],
+    // 相等、-0.0、NaN：兩邊都回傳第一個（只在後者嚴格較大／較小時換）
+    ['max／min（相等、-0.0 時回傳同一個）', 'int main() {\n    double z = -0.0;\n    cout << max(z, 0.0) << " " << min(0.0, z) << " " << max(3, 7) << min(3, 7) << endl;\n    return 0;\n}\n', 'max(z, 0.0)'],
+  ] as const) {
+    it(`🟢 ${name}；判決相同（447）`, async () => {
+      const src = V + code
+      const r = await toPython(src)
+      expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+      expect(r.code).toContain(must)
+      await sameVerdict(src, r.code!, '')
+    }, 60_000)
+  }
+  for (const [name, code] of [
+    // C++ 的 `a = c` 把 c 複製進呼叫端那一個；Python 的 `a = …` 只換掉函式裡的名字
+    ['參照參數在函式裡被整個重新指定', 'void f(vector<int>& a) {\n    vector<int> c = {7};\n    a = c;\n}\n\nint main() {\n    vector<int> a = {1, 2};\n    f(a);\n    cout << a[0] << endl;\n    return 0;\n}\n'],
+    // 傳值會複製一份：函式裡改它不影響呼叫端
+    ['vector 傳值（不是 const）', 'void f(vector<int> a) {\n    a[0] = 9;\n}\n\nint main() {\n    vector<int> a = {1, 2};\n    f(a);\n    cout << a[0] << endl;\n    return 0;\n}\n'],
+  ] as const) {
+    it(`🔴 保留：${name}（447）`, async () => {
+      const r = await toPython(V + code)
+      expect(r.code, '換了——意思會變').toBeNull()
+      expect(r.reasons.map((x) => x.detail).join()).toContain('傳遞方式')
+    }, 60_000)
+  }
   it('🔴 保留：類別', async () => {
     const r = await toPython(H + 'class P {\npublic:\n    int x;\n};\nint main() {\n    P p;\n    p.x = 1;\n    cout << p.x << endl;\n    return 0;\n}\n')
     expect(r.code).toBeNull()
