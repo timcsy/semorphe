@@ -45,9 +45,10 @@ export function registerToPython(r: ToPythonRegistrar): void {
     for (const p of n.slots.params ?? []) {
       const t = String(p.properties.type ?? '')
       // 參考與容器的傳遞語意兩邊不同（C++ 傳值會複製 vector、Python 傳的是同一個 list）——第一版不換
+      // 樣板型別（`<`：stack／queue／map…）以值傳也是複製一份 ⟹ 一律保留（448：stack 換得過去之後，傳值的 stack 參數不能漏掉）
       // string 以值或 const 參考傳：Python 的字串不能改 ⟹ 兩邊意思相同；其餘參考、指標、容器照舊保留
       const okString = /^(const\s+)?(std::)?string(\s*&)?$/.test(t.trim()) && (!t.includes('&') || /^const/.test(t.trim()))
-      if (!okString && !sharedListParam(t, String(p.properties.name ?? ''), n) && /[&*]|vector|\[|string/.test(t)) return [py.keep(p, 'outside-subset', `參數「${t} ${String(p.properties.name ?? '')}」的傳遞方式兩個語言不同`)]
+      if (!okString && !sharedListParam(t, String(p.properties.name ?? ''), n) && /[&*<]|vector|\[|string/.test(t)) return [py.keep(p, 'outside-subset', `參數「${t} ${String(p.properties.name ?? '')}」的傳遞方式兩個語言不同`)]
       params.push(py.name(String(p.properties.name ?? '')))
     }
     return [`${py.indent(depth)}def ${py.name(name)}(${params.join(', ')}):`, ...py.block(n.slots.body, depth + 1)]

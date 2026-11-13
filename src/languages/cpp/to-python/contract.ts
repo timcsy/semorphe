@@ -94,3 +94,28 @@ export function truncatedRemainder(l: SemanticNode | undefined, r: SemanticNode 
   return `${a} - int(${a} / ${b}) * ${b}`
 }
 
+
+/**
+ * 一個容器型別（Cella 的型別字串，例如 `std::priority_queue<int, std::vector<int>, std::greater<int>>`）在 Python 用哪一種寫（448）：
+ * stack → list（尾端進出）、queue → collections.deque（前端出）、priority_queue → heapq 的 list（max 版本存負數）。
+ * 元素只收「放進去就不會被改」的純量（數字、字元、字串）；priority_queue 只收整數（存負數要精確，浮點的 -0.0／NaN 會亂序）。對不上 → undefined
+ */
+export type AdapterKind = 'stack' | 'queue' | 'minheap' | 'maxheap'
+export function adapterKind(t: string | undefined): AdapterKind | undefined {
+  const s = (t ?? '').replace(/^const\s+/, '').replace(/\s*[&*]$/, '').replace(/std::/g, '').replace(/\s+/g, ' ').trim()
+  const scalar = '(?:int|long|long long|short|double|char|string|bool)'
+  const integer = '(?:int|long|long long|short)'
+  if (new RegExp(`^stack ?< ?${scalar} ?>$`).test(s)) return 'stack'
+  if (new RegExp(`^queue ?< ?${scalar} ?>$`).test(s)) return 'queue'
+  if (new RegExp(`^priority_queue ?< ?${integer} ?>$`).test(s)) return 'maxheap'
+  if (new RegExp(`^priority_queue ?< ?${integer} ?, ?vector ?< ?${integer} ?> ?, ?less ?< ?${integer} ?> ?>$`).test(s)) return 'maxheap'
+  if (new RegExp(`^priority_queue ?< ?(${integer}) ?, ?vector ?< ?\\1 ?> ?, ?greater ?< ?\\1 ?> ?>$`).test(s)) return 'minheap'
+  return undefined
+}
+
+/**
+ * 一段 Python 運算式文字是不是「原子」（名字、屬性、下標、單層呼叫、非負數字）——不是就加括號（448）。
+ * 用在一元負號與 `**` 的旁邊：`-` 接在 `-3` 前面寫成 `--3`、`**` 比一元負號綁得緊（`-2 ** 2` 是 -4）
+ */
+const ATOM = /^(?:[A-Za-z_][\w.]*(?:\[[^\]]*\]|\([^()]*\))*|\d+(?:\.\d+)?)$/
+export const atom = (e: string): string => ATOM.test(e) ? e : `(${e})`
