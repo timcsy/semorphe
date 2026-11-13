@@ -190,6 +190,60 @@ void loop() {}
     })
   }
 
+  // 🟢 439：**易變陣列**（中斷用的環形緩衝區）——`volatile` 與 `const` 一樣是型別修飾詞，住進元素型別、走陣列宣告那顆元件
+  const RING = `volatile int buf[4];
+volatile int head = 0;
+volatile bool seen[3] = {false, true, false};
+void IRAM_ATTR push(int v) {
+  buf[head] = v;
+  head = (head + 1) % 4;
+}
+void setup() {
+  Serial.begin(9600);
+  for (int i = 1; i <= 5; i++) {
+    push(i * 10);
+  }
+  Serial.println(buf[0]);
+  Serial.println(head);
+  Serial.println(seen[1]);
+}
+void loop() {}
+`
+  it('439 ① ② 易變陣列：陣列宣告那顆、元素型別帶著 volatile，產回去一字不差、轉第二圈不變', () => {
+    const t = lift(RING)
+    expect(findAll(t, 'cpp:array_declare').map((n) => `${n.properties.type} ${n.properties.name}`))
+      .toEqual(['volatile int buf', 'volatile bool seen'])        // 正向錨點
+    expect(ids(t)).not.toContain('cpp:raw_code')
+    const out = gen(t)
+    expect(out).toContain('volatile int buf[4];')
+    expect(out).toContain('volatile bool seen[3] = {false, true, false};')
+    expect(gen(lift(out))).toBe(out)
+  })
+
+  it('439 ③ ④ 易變陣列走一趟積木：陣列宣告那顆，回來一字不差', () => {
+    const { types, out } = viaBlocks(RING)
+    expect(types).toContain('cpp_array_declare')
+    expect(out).toBe(gen(lift(RING)))
+  })
+
+  for (const board of ['uno', 'esp32']) {
+    it(`439 ⑤ 易變陣列翻給 Cella（${board}）：volatile 在型別那一層去掉`, async () => {
+      // 五筆寫進四格的環：第五筆蓋掉 buf[0]（50）、head 繞回 1
+      await expectCellaOut(board === 'uno' ? RING.replace('void IRAM_ATTR push', 'void push') : RING, '50\r\n1\r\n1\r\n', { board })
+    })
+  }
+
+  it.each([
+    ['static int a[3];\n'],
+    ['static int *p;\n'],
+    ['static int *q = 0;\n'],
+    ['static volatile long counts[3];\n'],
+  ])('439：static 的陣列／指標照原文誠實降級（原本 `static int a[3];` 產回 `static int x;`）：%s', (code) => {
+    const t = lift(code)
+    expect(ids(t)).toContain('cpp:raw_code')                     // 正向錨點：降級了
+    expect(gen(t).trim()).toBe(code.trim())
+  })
+
   /** 目標性來回（component-roundtrip，438）：語料原文 ＋ 四支邊界——身分、不動點、走一趟積木、Cella 判決 */
   const CORPUS_ESP32_COUNTER = "// ESP32: counting button presses with a hardware interrupt.\n// The ISR must be short, so it only touches a volatile variable.\n\nconst int BUTTON_PIN = 15;\nconst int LED_PIN = 2;\n\nvolatile unsigned long pressCounter = 0;\nvolatile unsigned long lastInterruptTime = 0;\n\nvoid IRAM_ATTR handleButton() {\n  unsigned long now = millis();\n  // ignore anything within 200 ms, that is just switch bounce\n  if (now - lastInterruptTime > 200) {\n    pressCounter++;\n    lastInterruptTime = now;\n  }\n}\n\nvoid setup() {\n  Serial.begin(115200);\n  pinMode(BUTTON_PIN, INPUT_PULLUP);\n  pinMode(LED_PIN, OUTPUT);\n\n  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), handleButton, FALLING);\n  Serial.println(\"Interrupt counter ready\");\n}\n\nvoid loop() {\n  static unsigned long shown = 0;\n\n  if (pressCounter != shown) {\n    shown = pressCounter;\n    Serial.print(\"Presses: \");\n    Serial.println(shown);\n\n    // blink to confirm\n    digitalWrite(LED_PIN, HIGH);\n    delay(80);\n    digitalWrite(LED_PIN, LOW);\n  }\n}\n"
   const RT: { name: string; code: string; vol: number; iram: number; out?: string }[] = [

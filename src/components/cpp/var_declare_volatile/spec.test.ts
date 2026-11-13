@@ -53,8 +53,15 @@ describe('cpp:var_declare_volatile', () => {
     }
   })
 
+  it('439：易變陣列不是這顆——走陣列宣告那顆，volatile 住在元素型別', () => {
+    const t = lift('volatile int arr[3];\n')
+    expect(ids(t)).toContain('cpp:array_declare')             // 正向錨點
+    expect(ids(t)).not.toContain('cpp:var_declare_volatile')
+    expect(gen(t).trim()).toBe('volatile int arr[3];')
+  })
+
   it('其餘形狀照舊整句降級（不猜、不丟字）', () => {
-    for (const code of ['bool volatile f = false;\n', 'volatile int a = 0, b = 0;\n', 'volatile const int k = 1;\n', 'static volatile int s = 0;\n', 'volatile int *p;\n', 'volatile int arr[3];\n']) {
+    for (const code of ['bool volatile f = false;\n', 'volatile int a = 0, b = 0;\n', 'volatile const int k = 1;\n', 'static volatile int s = 0;\n', 'volatile int *p;\n']) {
       const t = lift(code)
       expect(ids(t), code).toContain('cpp:raw_code')       // 正向錨點：降級了
       expect(ids(t), code).not.toContain('cpp:var_declare_volatile')
