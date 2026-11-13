@@ -15,7 +15,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { expectCellaOut, runCella, knownCellaGap } from '../../../../tests/helpers/cella-run'
+import { expectCellaOut, runCella } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -91,9 +91,9 @@ describe('膠囊自證：位置的相鄰一格', () => {
    * 這顆不得再翻一次。翻兩次的症狀是**順序安靜地反過來**，不是報錯。
    */
   // 🟡 Cella 0.1.202611020258 判 unknown：the model's 'std::vector<int>' has no member 'rbegin'，已回報；期望值 g++ 實測 2
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：反向的位置上方向不得被翻兩次', () => knownCellaGap(/no member 'rbegin'/, async () => {
+  it('🔴 execute：反向的位置上方向不得被翻兩次', async () => {
     await run('vector<int> v{1,2,3}; auto it = v.rbegin(); cout << *next(it);', '2')
-  }))
+  })
 
   it('★ round-trip：產回去再 lift，身分不變', () => {
     const once = gen('set<int> s{1,2}; auto a = prev(s.end());')

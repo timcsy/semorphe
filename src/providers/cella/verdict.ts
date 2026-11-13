@@ -73,10 +73,10 @@ const libraryOf = (family: CellaFamily): string => {
   return [...bs.map((b) => `import ${b}`), ...bs.flatMap((b) => [
     // 報告版（2026-11-07，329）：判決的 JSON 原封不動，最後多一個 `steps`（用掉的模型步數，各宿主相同）——
     //    判決共享快取（cos-mos 存放、Cella 定格式 cella-verdict-entry-v1）存的是報告版，產品也多一個可以顯示的數字
-    `def verdict_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.verdictReport src input fuel`,
-    `def types_${b} (src : String) (candidates : String) : String := ${b}.types src candidates`,
+    `def verdict_${b}(src: String, input: String, fuel: Nat) -> String { ${b}.verdictReport(src, input, fuel) }`,
+    `def types_${b}(src: String, candidates: String) -> String { ${b}.types(src, candidates) }`,
     // 在一份輸入上觀察到的型別（spec 225；cella 0.1.202611091000 起）：只有 Python 有——C 家族的程式自己寫了型別
-    ...(b === 'python' ? [`def observed_${b} (src : String) (input : String) (fuel : Nat) : String := ${b}.observedTypes src input fuel`] : []),
+    ...(b === 'python' ? [`def observed_${b}(src: String, input: String, fuel: Nat) -> String { ${b}.observedTypes(src, input, fuel) }`] : []),
   ])].join('\n') + '\n'
 }
 const exportsOf = (family: CellaFamily): string => FAMILY_BRANCHES[family].flatMap((b) => [`verdict_${b}`, `types_${b}`, ...(b === 'python' ? [`observed_${b}`] : [])]).join(',')

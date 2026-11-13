@@ -211,7 +211,8 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
   it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_7｜A next_permutation do-while loop over three elements, ending with the wrap-around, then equal/binary_search including empty ranges.', async () => {
     // 2026-11-08（cella 0.1.202611080524）ostream_iterator 接上（eTemp、cout 送 eConst）之後換形狀：下一個卡點是 `next_permutation`（Cella 誠實的 unsupported）
     // 2026-11-09（cella 0.1.202611082213）next_permutation 補上之後換形狀：下一個卡點是 `std::is_sorted`（Cella 誠實的 unsupported）
-    await knownCellaGap(/std::is_sorted is not supported yet/, async () => {
+    // 2026-11-14（cella 0.1.202611131931）is_sorted 補上之後換形狀：下一個卡點是 `std::equal`（Cella 誠實的 unsupported）
+    await knownCellaGap(/std::equal is not supported yet/, async () => {
       // 🟠 **為什麼不現在修**：缺的是 `copy / is_sorted / equal / binary_search / next_permutation / prev_permutation`——**新元件，不是做不到**。
       //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
       //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。
