@@ -93,4 +93,20 @@ describe('C++ String Fuzz Tests (hard)', () => {
   // ROUNDTRIP_DRIFT — s.clear() after cout << becomes chained
   // COMPILE_FAIL — vector initializer_list syntax not supported
   // COMPILE_FAIL — find_first_not_of/find_last_not_of not supported as components
+
+  // 檔頭那句「它認得出來」釘成一支真的測試（444：這個檔最後一支 todo 搬走之後，它不能是空的）
+  it('cout << s.substr(0, 3) << endl 認得出來：print 裡是 cpp:string_substr，來回一字不差', () => {
+    const code = '#include <iostream>\n#include <string>\nusing namespace std;\nint main() {\n    string s = "hello";\n    cout << s.substr(0, 3) << endl;\n    return 0;\n}'
+    const tree = liftCode(code)
+    expect(tree).not.toBeNull()
+    const ids: string[] = []
+    const walk = (n: SemanticNode): void => {
+      ids.push(n.componentId)
+      for (const c of Object.values(n.slots ?? {})) for (const k of c as SemanticNode[]) walk(k)
+    }
+    walk(tree!)
+    expect(ids).toContain('cpp:string_substr')
+    expect(ids).not.toContain('cpp:raw_code')
+    expect(roundTripCode(code)).toBe(code)
+  })
 })
