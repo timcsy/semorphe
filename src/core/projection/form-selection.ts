@@ -339,6 +339,11 @@ export const KNOWN_AXES: Record<string, FormAxis> = {
    * 平的名字（`for k, v in …`）留在中性的 paramList 形態——文字欄位裝不下巢狀，而把 `(a, b)` 寫進一格文字就是要 parse 回結構的字串。
    * 換插槽形狀，所以與 init_style 同一級。
    */
+  /**
+   * 依函式定義上的屬性巨集：屬性 `attribute` 是 `IRAM_ATTR` ⟹ 換成「定義中斷函式」那顆（第 438 刀，ESP32 的 `void IRAM_ATTR onPress()`）。
+   * 只換標籤（插槽形狀與一般函式定義相同，extraState 相同），所以後問；沒有屬性就是一般的函式定義（中性是常態）。
+   */
+  attribute: { name: 'attribute', from: 'property', property: 'attribute', priority: 3, neutralIsOrdinary: true },
   target_kind: { name: 'target_kind', from: 'slot', slot: 'pattern', slotValue: 'pattern', priority: 2, neutralIsOrdinary: true },
 }
 

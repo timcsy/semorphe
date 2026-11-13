@@ -101,7 +101,17 @@
       "field": "field_dynamic_dropdown",
       "reason": "回傳型別的值域在現實中開放（`int**`／自訂類別）——與函式定義那顆同一條，而它 2026-08-26 隨命令式定義退場改成 `allowCustom`，已經保值"
     },
+    "cpp_forward_decl_IRAM_ATTR.RETURN_TYPE": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "回傳型別的值域在現實中開放（`int**`／自訂類別）——與函式定義那顆同一條，而它 2026-08-26 隨命令式定義退場改成 `allowCustom`，已經保值"
+    },
     "cpp_forward_decl.TYPE_{i}": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "參數型別同上。⚠️ 這一格 2026-08-26 之前根本沒有名字欄位可談——命令式那份用 `withNameField: false`，於是渲染器吐出的參數名在積木上沒有落點"
+    },
+    "cpp_forward_decl_IRAM_ATTR.TYPE_{i}": {
       "decision": "open",
       "field": "field_dynamic_dropdown",
       "reason": "參數型別同上。⚠️ 這一格 2026-08-26 之前根本沒有名字欄位可談——命令式那份用 `withNameField: false`，於是渲染器吐出的參數名在積木上沒有落點"
@@ -126,7 +136,17 @@
       "field": "field_dynamic_dropdown",
       "reason": "回傳型別的值域在現實中開放（`int**`／自訂類別）——來源是 `cpp_return_types`，而它已經 `allowCustom`。🪦 2026-08-26 更正：這一筆原本寫「跟著工作區長的名字」，而那描述的是**變數**下拉——這幾顆是**型別**下拉，理由是貼上去的"
     },
+    "cpp_func_def_IRAM_ATTR.RETURN_TYPE": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "回傳型別的值域在現實中開放（`int**`／自訂類別）——來源是 `cpp_return_types`，而它已經 `allowCustom`。🪦 2026-08-26 更正：這一筆原本寫「跟著工作區長的名字」，而那描述的是**變數**下拉——這幾顆是**型別**下拉，理由是貼上去的"
+    },
     "cpp_func_def.TYPE_{i}": {
+      "decision": "open",
+      "field": "field_dynamic_dropdown",
+      "reason": "參數型別的值域在現實中開放——來源是 `cpp_param_types`，而它已經 `allowCustom`。🪦 2026-08-26 更正：這一筆原本寫「跟著工作區長的名字」，而那描述的是**變數**下拉——這幾顆是**型別**下拉，理由是貼上去的"
+    },
+    "cpp_func_def_IRAM_ATTR.TYPE_{i}": {
       "decision": "open",
       "field": "field_dynamic_dropdown",
       "reason": "參數型別的值域在現實中開放——來源是 `cpp_param_types`，而它已經 `allowCustom`。🪦 2026-08-26 更正：這一筆原本寫「跟著工作區長的名字」，而那描述的是**變數**下拉——這幾顆是**型別**下拉，理由是貼上去的"
@@ -437,6 +457,11 @@
       "reason": "C++ 的結構化繫結只有兩種：複製一份（`auto`）與就地修改（`auto&`）。**這是語言的封閉集合，不是我們挑的**——多一個值不會對應到任何合法的 C++。"
     },
     "cpp_var_declare_static.TYPE": {
+      "decision": "open",
+      "field": "field_dropdown",
+      "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"
+    },
+    "cpp_var_declare_volatile.TYPE": {
       "decision": "open",
       "field": "field_dropdown",
       "reason": "型別在現實中是無窮的（unsigned／int**／vector<T>／自訂類別）"

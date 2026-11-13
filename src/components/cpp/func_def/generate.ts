@@ -13,7 +13,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
       // 參數串（預設值、陣列參數的 `[]` 寫在名字後面）與建構子、方法共用同一支（第 331 刀併成一份）
       const paramStr = formatParams(paramChildren)
       const body = node.slots.body ?? []
-      const header = `${indent(ctx)}${returnType} ${name}(${paramStr})${openBrace(ctx)}\n`
+      // 438：屬性巨集寫在回傳型別與名字之間（`void IRAM_ATTR onPress()`）
+      const attr = node.properties.attribute ? `${node.properties.attribute} ` : ''
+      const header = `${indent(ctx)}${returnType} ${attr}${name}(${paramStr})${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header
       code += generateBody(body, indented(ctx))

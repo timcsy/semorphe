@@ -3,5 +3,7 @@
   "C_FORWARD_DECL_TOOLTIP": "預先宣告函式，讓編譯器知道這個函式的存在（稍後再定義實作）",
   "C_FORWARD_DECL_PARAMS_OPEN": "（參數",
   "C_FORWARD_DECL_PARAMS_CLOSE": "）",
-  "C_FORWARD_DECL_PARAM_DEFAULT_LABEL": "預設值"
+  "C_FORWARD_DECL_PARAM_DEFAULT_LABEL": "預設值",
+  "CPP_FORWARD_DECL_IRAM_MSG0": "宣告中斷函式（放進 IRAM）%1 %2 %3",
+  "CPP_FORWARD_DECL_IRAM_TOOLTIP": "預先宣告一個給中斷呼叫的函式（IRAM_ATTR），稍後再定義實作：ESP32／ESP8266 把它放進內部記憶體 IRAM。"
 }

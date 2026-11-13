@@ -3,5 +3,7 @@
   "C_FORWARD_DECL_TOOLTIP": "Forward declare a function so the compiler knows it exists (define it later)",
   "C_FORWARD_DECL_PARAMS_OPEN": "( params",
   "C_FORWARD_DECL_PARAMS_CLOSE": ")",
-  "C_FORWARD_DECL_PARAM_DEFAULT_LABEL": "default"
+  "C_FORWARD_DECL_PARAM_DEFAULT_LABEL": "default",
+  "CPP_FORWARD_DECL_IRAM_MSG0": "Declare interrupt handler (in IRAM) %1 %2 %3",
+  "CPP_FORWARD_DECL_IRAM_TOOLTIP": "Declare ahead a function that an interrupt calls (IRAM_ATTR), defined later: ESP32/ESP8266 place it in internal IRAM."
 }

@@ -502,6 +502,38 @@ export function registerMisparseRepairs(): void {
     if (lifted) remapFromShell(lifted, node, WRAP_PREFIX.length, patched, [at, at + name.text.length + 1])
     return lifted
   })
+
+  /**
+   * ⑤ **ESP32 的屬性巨集 `IRAM_ATTR`**（438）：`void IRAM_ATTR f() {…}`、`IRAM_ATTR void f(…);`。
+   *
+   * 解析器不認得這個巨集，於是把它讀成型別、補一個不存在的 `::`、或把回傳型別丟進 ERROR——
+   * 一開始是在 lift 裡逐一認那幾種歪掉的形狀，而那條路**認得出意思、擦不掉 ERROR**：
+   * 瀏覽器實測，一支合法的中斷 sketch 兩顆積木都掛著「程式碼含語法錯誤」、編輯器也畫紅線（P6：說一支合法的程式有錯）。
+   *
+   * ## 它憑什麼是「唯一合法的讀法」
+   * `IRAM_ATTR` 在 ESP32／ESP8266 核心裡展開成一個**只管放哪段記憶體**的屬性（`__attribute__((section(…)))`），
+   * 不改型別、不改名字——拿掉它之後的那段文字就是同一個函式。把它換成**等長的空白**再重解（位移不變，座標不必換算），
+   * lift 出來之後把屬性記回 `attribute`。重解還有錯、不是同一種節點、或出現不只一次——一律讓開，走原本那一路（降級會出聲）。
+   */
+  declareAstRepair((node: AstNode, ctx: LiftContext): SemanticNode | null => {
+    if (node.type !== 'function_definition' && node.type !== 'declaration') return null
+    if (!node.hasError || node.parent?.type !== 'translation_unit') return null
+    const hits = node.text.match(/\bIRAM_ATTR\b/g)
+    if (hits?.length !== 1) return null
+    const at = node.text.search(/\bIRAM_ATTR\b/)
+    if (at > node.text.indexOf('(')) return null   // 只認寫在函式名字之前的
+    const patched = node.text.slice(0, at) + ' '.repeat('IRAM_ATTR'.length) + node.text.slice(at + 'IRAM_ATTR'.length)
+    const parser = parserFor(node)
+    const tree = parser?.parse(patched)
+    const top = tree?.rootNode.namedChildren ?? []
+    // 重解出來還有錯／不是同一種節點 ⟹ 判斷錯了，不要回一棵「以為修好了」的樹（也是終止保證：重解的那段已經沒有 IRAM_ATTR）
+    if (!tree || tree.rootNode.hasError || top.length !== 1 || top[0].type !== node.type) return null
+    const lifted = ctx.lift(top[0] as never)
+    if (!lifted || (lifted.componentId !== 'cpp:func_def' && lifted.componentId !== 'cpp:forward_decl')) return null
+    lifted.properties = { ...lifted.properties, attribute: 'IRAM_ATTR' }
+    remapFromShell(lifted, node, 0, patched, [])
+    return lifted
+  })
 }
 
 /**

@@ -279,6 +279,8 @@ export const KINDS = [
   // ⚠️ `outside` 加入日 2026-11-07（第 322 刀）——定義的種差「寫在類別外」：`method_def` 寫在類別裡，`method_def_outside` 是同一個動作、位置在類別外。
   //    不另立操作詞 `define`：它與 `def` 是同義詞（命名護欄擋的就是這個）。
   'outside',
+  // ⚠️ `volatile` 加入日 2026-11-13（第 438 刀）——`cpp:var_declare_volatile`，與 `var_declare_static` 同一形狀：修飾詞站種差位置。
+  'volatile',
 ] as const
 
 /**
@@ -294,7 +296,7 @@ export const KINDS = [
  */
 export const MODIFIERS = [
   'const', 'constexpr', 'static', 'virtual', 'pure', 'override', 'auto',
-  'dynamic', 'reinterpret', 'ref', 'compound',
+  'dynamic', 'reinterpret', 'ref', 'compound', 'volatile',
 ] as const
 
 /**

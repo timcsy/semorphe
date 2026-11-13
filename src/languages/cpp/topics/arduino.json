@@ -183,6 +183,7 @@
     "cpp:free",
     "cpp:var_declare_ref",
     "cpp:var_declare_static",
+    "cpp:var_declare_volatile",
     "cpp:memory_fill",
     "cpp:memory_copy",
     "cpp:include_local",

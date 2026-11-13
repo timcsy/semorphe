@@ -1,0 +1,5 @@
+{
+  "C_VOLATILE_DECLARE_MSG0": "宣告易變 %1 變數 %2 = %3",
+  "C_VOLATILE_DECLARE_TOOLTIP": "宣告一個會被中斷函式改動的變數（volatile）：每次讀寫都直接到記憶體拿，loop() 才看得到中斷改過的值。",
+  "FLOW_TITLE_CPP_VAR_DECLARE_VOLATILE": "宣告易變變數"
+}

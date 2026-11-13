@@ -13,5 +13,7 @@
   "U_FUNC_DEF_LABEL": "定義函式",
   "U_FUNC_DEF_RETURN_LABEL": "回傳型別",
   "U_FUNC_DEF_PARAMS_OPEN": "（參數",
-  "U_FUNC_DEF_PARAMS_CLOSE": "）"
+  "U_FUNC_DEF_PARAMS_CLOSE": "）",
+  "CPP_FUNC_DEF_IRAM_LABEL": "定義中斷函式（放進 IRAM）",
+  "CPP_FUNC_DEF_IRAM_TOOLTIP": "定義一個給中斷呼叫的函式（IRAM_ATTR）：ESP32／ESP8266 把它放進內部記憶體 IRAM，中斷發生時才叫得動它。用 attachInterrupt 把它接到腳位上。"
 }

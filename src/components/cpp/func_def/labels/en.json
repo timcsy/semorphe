@@ -13,5 +13,7 @@
   "U_FUNC_DEF_LABEL": "define function",
   "U_FUNC_DEF_RETURN_LABEL": "returns",
   "U_FUNC_DEF_PARAMS_OPEN": "( params",
-  "U_FUNC_DEF_PARAMS_CLOSE": ")"
+  "U_FUNC_DEF_PARAMS_CLOSE": ")",
+  "CPP_FUNC_DEF_IRAM_LABEL": "Define interrupt handler (in IRAM)",
+  "CPP_FUNC_DEF_IRAM_TOOLTIP": "Define a function that an interrupt calls (IRAM_ATTR): ESP32/ESP8266 place it in internal IRAM so it can run when the interrupt fires. Attach it to a pin with attachInterrupt."
 }

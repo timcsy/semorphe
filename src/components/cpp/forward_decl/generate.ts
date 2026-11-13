@@ -23,6 +23,8 @@ export function registerGenerate(g: Map<string, NodeGenerator>): void {
         }
         return n ? `${t} ${n}${tail}` : t
       }).join(', ')
-      return `${indent(ctx)}${returnType} ${name}(${paramStr});\n`
+      // 438：屬性巨集寫在回傳型別與名字之間（同函式定義那顆）
+      const attr = node.properties.attribute ? `${node.properties.attribute} ` : ''
+      return `${indent(ctx)}${returnType} ${attr}${name}(${paramStr});\n`
     })
 }

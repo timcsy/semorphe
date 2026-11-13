@@ -14,6 +14,9 @@ const LEAD = /^(?:(?:static|inline|extern|constexpr)\s+)+/
 export function registerFormalize(r: FormalizeRegistrar): void {
   r.item('cpp:func_def', (n, f) => {
     const p = n.properties ?? {}
+    // 438：`IRAM_ATTR` 只決定函式放進哪段記憶體（ESP32／ESP8266 的中斷函式要在 IRAM），不改變執行結果——在板子上送出時去掉（cella 11-13 談定）。
+    //    不在板子上它不是標準 C++ 的東西（未宣告的巨集），照實翻不出
+    if (p.attribute && !f.options.board) return [f.miss(n, `「${String(p.attribute)}」是板子核心的巨集，不是標準 C++`)]
     // 回傳型別保留了學生寫的 `static`／`inline`／`extern`／`constexpr`（spec 204：產碼要一字不少）——它們是連結性與求值時機的事，
     // 在單一翻譯單元裡不改變執行結果，送給 Cella 的型別剝掉
     const retText = String(p.return_type ?? '').replace(LEAD, '')

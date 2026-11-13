@@ -11,6 +11,10 @@
       "name": "name",
       "kind": "literal",
       "default": ""
+    },
+    {
+      "name": "attribute",
+      "kind": "literal"
     }
   ],
   "slots": {
@@ -35,5 +39,6 @@
   "traits": {
     "notExecuted": true
   },
-  "_traits_why": "`notExecuted`：函式原型不是會被執行的語句，Cella 的執行紀錄裡不會有它——執行覆蓋不問它「是故意的嗎」（元件管線 322 的瀏覽器驗收：原本每一個類別定義都被標成沒跑到）。"
+  "_traits_why": "`notExecuted`：函式原型不是會被執行的語句，Cella 的執行紀錄裡不會有它——執行覆蓋不問它「是故意的嗎」（元件管線 322 的瀏覽器驗收：原本每一個類別定義都被標成沒跑到）。",
+  "_properties_why": "`attribute`（438）：回傳型別與名字之間的屬性巨集，今天只收 `IRAM_ATTR`（`void IRAM_ATTR encoderISR(uint8_t a, uint8_t b);`——中斷函式的原型）。照函式定義那顆：沒有就不設；有的話換成「宣告中斷函式」那個形態（軸 `attribute`）。"
 }

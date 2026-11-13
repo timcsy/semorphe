@@ -1,0 +1,5 @@
+{
+  "C_VOLATILE_DECLARE_MSG0": "Declare interrupt-shared %1 variable %2 = %3 (volatile)",
+  "C_VOLATILE_DECLARE_TOOLTIP": "Declare a variable that an interrupt handler may change (volatile): every read and write goes to memory, so loop() sees the value the interrupt wrote.",
+  "FLOW_TITLE_CPP_VAR_DECLARE_VOLATILE": "Interrupt-shared variable"
+}
