@@ -108,17 +108,17 @@ describe('模糊測試：學生的 Python 解題程式（410）', () => {
     expect(ids.filter((i) => /raw|unresolved/.test(i)), '整段都認得').toEqual([])
     // 切片指定 `is_prime[i * i::i] = …`：Cella 的指定目標把下標當一般運算式降（lowering.cella 的 sAssign → eSubscript），
     // 切片落到「a slice outside a subscript」——我們送的是忠實的 eSubscript(eSlice)，已回報 cella（2026-11-11）
-    await knownCellaGap(/slice outside a subscript/, async () => {
+    {
       const r = await runPython(P.fuzz_7.code)
       if (r !== 'completed|' + P.fuzz_7.expected) throw new Error(r)
-    })
+    }
   })
-  it('fuzz_8：Transposes and multiplies a matrix, prints trace, isqrt and norm.（math.isqrt Cella 判 unknown，已回報）', async () => {
+  it('fuzz_8：Transposes and multiplies a matrix, prints trace, isqrt and norm.', async () => {
     const ids = await roundTrip('fuzz_8')
     expect(ids.filter((i) => /raw|unresolved/.test(i)), '整段都認得').toEqual([])
-    await knownCellaGap(/math\.isqrt/, async () => {
+    {
       const r = await runPython(P.fuzz_8.code)
       if (r !== 'completed|' + P.fuzz_8.expected) throw new Error(r)
-    })
+    }
   })
 })

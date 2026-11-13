@@ -15,7 +15,7 @@
  * 而這五支說得出——一支紅，就知道是哪一個機制壞了。
  */
 import { describe, it, expect } from 'vitest'
-import { runCella, describeCellaResult, expectCellaOut, knownCellaGap } from '../helpers/cella-run'
+import { runCella, describeCellaResult, expectCellaOut } from '../helpers/cella-run'
 
 // spec 203（重構 6c-2e）：執行的判準從 JS 直譯器換成 Cella（走產品同一條 lift → formalize → 判決）。
 // 這支的五個根因都是「直譯器印出來的值」；換成 Cella 之後它們守的是**同一段程式經 lift ＋ formalize 之後，C++ 的答案還是那個值**
@@ -136,13 +136,13 @@ describe('值忠實度：直譯器印出來的，要與參照編譯器一致', (
   // `evalInitializer`（當時在直譯器的聚合初始化模組裡；spec 203 起這裡守的是 lift ＋ formalize 之後 Cella 的答案）。
   // 🟡 Cella 0.1.202611020258 判錯（reject「no matching constructor for initialization of 'S'」）：成員有 std::string 的聚合初始化。
   //    g++／clang 印 a80（本機實測）；只有整數成員的同形狀（下一條）Cella 判對。formalize 送的是 `iL [iE eStr, iE eNum]`，已回報。
-  it('🟡 已知缺陷（修好時這條會紅）：★ 結構體陣列的聚合初始化', () => knownCellaGap(/no matching constructor for initialization of 'S'/, async () => {
+  it('★ 結構體陣列的聚合初始化', async () => {
     await expectCellaOut(
       `#include <iostream>\n#include <string>\nusing namespace std;\n` +
         `struct S { string n; int s; }; int main(){ S arr[2] = {{"a",90},{"b",80}}; cout << arr[0].n << arr[1].s; }`,
       'a80',
     )
-  }))
+  })
 
   it('★ 聚合初始化按成員宣告順序填，不是按名字', async () => {
     expect(
