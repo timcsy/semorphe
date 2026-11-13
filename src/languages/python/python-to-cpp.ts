@@ -253,6 +253,8 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       const v = binds[0].slots.value?.[0]
       return v?.componentId.endsWith(':literal_number') && /^\d+$/.test(String(v.properties?.value)) ? String(v.properties.value) : undefined
     },
+    dictKeys: (name) => orderedDicts.get(name),
+    assignedValue: (n) => { const p = parent.get(n.id); return p !== undefined && p.componentId.endsWith(':var_assign') && (p.slots?.value ?? []).includes(n) },
     catchingValueError: () => valueErrorTry > 0,
     inValueErrorTry(fn) { valueErrorTry++; try { return fn() } finally { valueErrorTry-- } },
     name: (s) => (CPP_RESERVED.has(s) ? `${s}_` : s),
@@ -303,8 +305,50 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       const ty = cppType(unifyTypes(seen.get(name) ?? []))
       if (!ty) { keep(at, 'type-uncertain', `變數 ${name} 的型別說不準（觀察到 ${[...new Set(seen.get(name) ?? [])].join('、') || '沒有'}）`); continue }
       out.push(`${ty} ${cpp.name(name)};`)
+      const keys = orderedDicts.get(name)
+      if (keys) {
+        const kt = cppType(splitTop(/^dict\[(.+)\]$/.exec(unifyTypes(seen.get(name) ?? []) ?? '')?.[1] ?? '')[0])
+        includes.add('vector')
+        out.push(`vector<${kt}> ${cpp.name(keys)};`)
+      }
     }
     return out
+  }
+
+  // 照放入的順序走訪的字典（441）：`for k in d` 在 Python 照放入的順序、C++ 的 map 照鍵排序——
+  // 旁邊多帶一串鍵（`d__keys`），新的鍵寫進去時接在後面，走訪改走那一串。
+  // 只收最外層的名字、而且它只被讀、寫、問大小、走訪、整個指定成字典字面量；其餘用法（pop、del、傳給函式…）照舊保留
+  const orderedDicts = new Map<string, string>()
+  {
+    const iterated = new Set<string>()
+    const findLoops = (n: SemanticNode): void => {
+      const it = n.slots?.iterable?.[0]
+      if (n.componentId.endsWith(':loop_for') && it?.componentId.endsWith(':var_ref') && cpp.pyKind(it) === 'dict') iterated.add(String(it.properties?.name ?? ''))
+      kids(n).forEach(findLoops)
+    }
+    top.forEach(findLoops)
+    const allowed = (ref: SemanticNode): boolean => {
+      const p = parent.get(ref.id)
+      if (!p) return false
+      const slot = Object.entries(p.slots ?? {}).find(([, cs]) => cs.includes(ref))?.[0]
+      const id = p.componentId
+      return (id.endsWith(':container_at') && slot === 'target') || (id.endsWith(':map_at_default') && slot === 'obj') ||
+        (id.endsWith(':container_size') && slot === 'obj') || (id.endsWith(':loop_for') && slot === 'iterable')
+    }
+    for (const name of iterated) {
+      let ok = true
+      const walk = (n: SemanticNode, inFunc: boolean): void => {
+        if (n.componentId.endsWith(':var_ref') && n.properties?.name === name && (inFunc || !allowed(n))) ok = false
+        if (n.properties?.obj === name && n.slots?.value) {
+          const v = n.slots.value[0]
+          if (inFunc || !n.componentId.endsWith(':var_assign') || !v?.componentId.endsWith(':map_make')) ok = false
+        }
+        if (n.componentId.endsWith(':global') && JSON.stringify(n).includes(`"${name}"`)) ok = false
+        kids(n).forEach((c) => walk(c, inFunc || isFunc(n)))
+      }
+      body.forEach((n) => walk(n, isFunc(n)))
+      if (ok) orderedDicts.set(name, `${name}__keys`)
+    }
   }
 
   const funcLines: string[] = []
