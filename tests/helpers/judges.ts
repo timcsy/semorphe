@@ -97,7 +97,7 @@
  * - **不回答 `preconditions` 與 `invariants` 的判定者**。那兩格的判定者
  *   **要宣告**（draft §十一之四），而宣告出來的欄位會說謊——第一刀刻意不碰。
  */
-import type { Cell } from './views'
+import type { Cell } from '../../src/core/component/views'
 
 /**
  * 判定者的**種類**。閉集——加值是顯式動作。

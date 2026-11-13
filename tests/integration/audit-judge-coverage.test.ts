@@ -67,7 +67,7 @@ import {
   loadBaseline, writeBaseline, printReport, assertRatchet, assertCorpus, REPO_ROOT,
 } from '../helpers/guardrail'
 import { allComponentDefs } from '../helpers/component-scan'
-import { JUDGE_KINDS, PATH_JUDGE, JUDGED_CELLS, isJudgeKind, judgeOf } from '../../src/core/component/judges'
+import { JUDGE_KINDS, PATH_JUDGE, JUDGED_CELLS, isJudgeKind, judgeOf } from '../helpers/judges'
 import { cellPath } from '../../src/core/component/views'
 
 const GUARD = 'judge-coverage'

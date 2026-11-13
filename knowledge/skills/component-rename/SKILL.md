@@ -149,7 +149,7 @@ grep -rnE "/\^?[a-z_]*(cpp_|_declare|_expr)" src/
 ### 7. 有詞彙表的話，詞彙表與護欄是**同一份交付**
 
 沒有明列的詞彙，「名字一致嗎」問不出答案。所以
-`src/languages/<lang>/naming.ts`（詞彙）與 `audit-naming.test.ts`（護欄）一起交。
+`tests/helpers/naming/<lang>.ts`（詞彙；443 從 `src/languages/<lang>/naming.ts` 搬來）與 `audit-naming.test.ts`（護欄）一起交。
 
 **表是目標不是快照**——同義詞各留一個，其餘故意不列，於是它們會被指名。
 而「加一個新字是顯式動作」是防腐的關鍵：免費加字的話詞彙表會爆炸，
