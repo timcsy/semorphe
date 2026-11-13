@@ -21,7 +21,8 @@
         "render": "./generate.ts",
         "lift": "./lift.ts"
       }
-    }
+    },
+    "formalize": "./formalize.ts"
   },
   "_lift_why": "身分進 `math_` 家族（與 `math_min`／`math_max`／`math_abs` 同族）而不叫 `cpp:constrain`——**同一種東西用同一種形狀**。"
 }

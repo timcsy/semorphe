@@ -236,6 +236,10 @@ export function formalize(tree: SemanticNode, options: { board?: string; lang?: 
       const fixed = /^(?:std::)?((?:u?int(?:_least|_fast)?(?:8|16|32|64)_t)|u?intmax_t|u?intptr_t|size_t|ssize_t|ptrdiff_t)$/.exec(s)
       if (fixed) return k('tName', { name: fixed[1] })
     }
+    // Arduino 的 `String`（核心的類別，不是 std::string）：板子上照函式庫物件送 tClass、方法走 eMCall（`@cella-lang/arduino` README：
+    //   「Library objects are ordinary objects: declare them with tClass」；433，學生序列埠指令解析的語料 4 支整支翻不出）。
+    //   程式自己定義了同名類別時是那個類別，交給下面的 tClass 那一條
+    if (s === 'String' && options.board && !isC) return k('tClass', { name: 'String' })
     const vec = /^(?:std::)?vector\s*<\s*(.+)\s*>$/.exec(s)
     if (vec) { const inner = type(vec[1], at); return inner && k('tVector', { t: inner }) }
     // C++ 的 `auto`（cella 0.1.202610312349 起有 `tAuto`）
