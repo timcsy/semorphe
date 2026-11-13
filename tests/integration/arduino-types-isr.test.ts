@@ -233,6 +233,71 @@ void loop() {}
     })
   }
 
+  // 🟢 440：多宣告子（照 const 那一族：外層一般宣告帶修飾詞、每一個宣告子是易變變數）與 `static volatile`（靜態變數那顆，volatile 住進型別）
+  const MORE = `volatile int a = 0, b = 0;
+volatile int c, d = 3;
+int bump() {
+  static volatile int k = 0;
+  k++;
+  return k;
+}
+void setup() {
+  Serial.begin(9600);
+  a = 2;
+  b = a + d;
+  bump();
+  Serial.println(b);
+  Serial.println(bump());
+}
+void loop() {}
+`
+  it('440 ① ② 多宣告子與 static volatile：各是自己的形狀，產回去一字不差、轉第二圈不變', () => {
+    const t = lift(MORE)
+    expect(findAll(t, 'cpp:var_declare_volatile').map((n) => n.properties.name)).toEqual(['a', 'b', 'c', 'd'])  // 正向錨點
+    expect(findAll(t, 'cpp:var_declare_static').map((n) => `${n.properties.type} ${n.properties.name}`)).toEqual(['volatile int k'])
+    expect(ids(t)).not.toContain('cpp:raw_code')
+    const out = gen(t)
+    expect(out).toContain('volatile int a = 0, b = 0;')
+    expect(out).toContain('volatile int c, d = 3;')
+    expect(out).toContain('static volatile int k = 0;')
+    expect(gen(lift(out))).toBe(out)
+  })
+
+  it('440 ③ ④ 走一趟積木：多宣告子拆成一行一個（與 const 那一族同一個既有行為），其餘一字不差、意思不變', () => {
+    const { types, out } = viaBlocks(MORE)
+    expect(types.filter((t) => t === 'cpp_var_declare_volatile')).toHaveLength(4)   // 正向錨點：四個宣告子各是一顆
+    const split = MORE.replace('volatile int a = 0, b = 0;', 'volatile int a = 0;\nvolatile int b = 0;')
+      .replace('volatile int c, d = 3;', 'volatile int c;\nvolatile int d = 3;')
+    expect(out).toBe(gen(lift(split)))
+    const k = viaBlocks('const int M = 1, N = 2;\n')                               // 同族的對照：const 也是這樣拆
+    expect(k.out.trim()).toBe('const int M = 1;\nconst int N = 2;')
+  })
+
+  it('440：`static int s1 = 1, s2 = 2;` 每一個宣告子都在（原本 s2 在 lift 就蒸發）', async () => {
+    const code = 'static int s1 = 1, s2 = 2;\nstatic int s3;\nvoid setup() {\n  Serial.begin(9600);\n  Serial.println(s1 + s2 + s3);\n}\nvoid loop() {}\n'
+    const t = lift(code)
+    expect(findAll(t, 'cpp:var_declare_static').map((n) => n.properties.name)).toEqual(['s1', 's2', 's3'])  // 正向錨點
+    expect(ids(t)).not.toContain('cpp:raw_code')
+    const out = gen(t)
+    expect(out).toContain('static int s1 = 1, s2 = 2;')
+    expect(gen(lift(out))).toBe(out)
+    await expectCellaOut(code, '3\r\n', { board: 'uno' })
+    const back = viaBlocks(code)
+    expect(back.out).toContain('static int s2 = 2;')
+  })
+
+  for (const board of ['uno', 'esp32']) {
+    it(`440 ⑤ 翻給 Cella（${board}）：volatile 去掉、static 照舊`, async () => {
+      await expectCellaOut(MORE, '5\r\n2\r\n', { board })
+    })
+  }
+
+  it('440：修飾詞寫在 static 前面（`volatile static`）照原文降級——產回去不換順序', () => {
+    const t = lift('volatile static int z = 1;\n')
+    expect(ids(t)).toContain('cpp:raw_code')
+    expect(gen(t).trim()).toBe('volatile static int z = 1;')
+  })
+
   it.each([
     ['static int a[3];\n'],
     ['static int *p;\n'],

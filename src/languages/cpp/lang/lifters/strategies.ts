@@ -2186,29 +2186,25 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     // Static declarations: static int count = 0;
     const storageSpec = node.namedChildren.find(c => c.type === 'storage_class_specifier')
     if (storageSpec?.text === 'static') {
-      const decl = node.namedChildren.find(c => c.type === 'init_declarator' || c.type === 'identifier')
-      if (decl) {
-        if (arrayDeclarator(decl)) {
-          return degrade(buildRawCode(node.text), 'static ＋ 陣列宣告尚未支援')
-        }
-        if (decl.type === 'identifier') {
-          return buildStaticVar(type, decl.text, null)
-        }
-        const nameNode = decl.childForFieldName('declarator') ?? decl.namedChildren[0]
-        // 🔴 439：`static int *q = 0;` 的宣告子是指標，原本整段 `*q` 被當成名字（積木的名字欄寫著 `*q`）——照原文降級
-        if (nameNode?.type !== 'identifier') return degrade(buildRawCode(node.text), 'static 的指標／參照宣告尚未支援')
-        const name = nameNode.text
+      // 🔴 440：原本只取【第一個】宣告子——`static int s1 = 1, s2 = 2;` 的 `s2` 在 lift 就蒸發（high 信心，積木上看不出來）。
+      //    這個檔記過同一個病三次（見 const 那段的「一個只寫得出『一個』的讀取器」）。現在每一個都讀；
+      //    多個時照 const 那一族：外層一般宣告帶著 `static T`（產生器靠它脫掉前綴），每一個宣告子是靜態變數那顆。
+      const decls = node.namedChildren.filter(c => ['init_declarator', 'identifier', 'array_declarator', 'pointer_declarator', 'reference_declarator'].includes(c.type))
+      const one = (decl: AstNode): SemanticNode | string => {
+        // 🔴 439：`static int a[3];` 原本 lift 成 `static int x;`（名字換成 x、陣列不見、high 信心）；`static int *q = 0;` 名字記成 `*q`
+        if (arrayDeclarator(decl)) return 'static ＋ 陣列宣告尚未支援'
+        if (decl.type === 'identifier') return buildStaticVar(type, decl.text, null)
+        if (decl.type !== 'init_declarator') return 'static 的陣列／指標宣告尚未支援'
+        const nameNode = decl.childForFieldName('declarator')
+        if (nameNode?.type !== 'identifier') return 'static 的指標／參照宣告尚未支援'
         const valueNode = decl.childForFieldName('value')
-        if (valueNode) {
-          const value = ctx.lift(valueNode)
-          return buildStaticVar(type, name, value)
-        }
-        return buildStaticVar(type, name, null)
+        return buildStaticVar(type, nameNode.text, valueNode ? ctx.lift(valueNode) : null)
       }
-      // 🔴 439：宣告子是【陣列／指標】（`static int a[3];`、`static int *p;`）時上面找不到它，
-      //    這裡原本回 `buildMemberStatic(type, 'x')`——產回去是 `static int x;`：名字被換成 x、陣列不見了，
-      //    而且是 high 信心（積木上看不出有事）。照原文誠實降級。
-      return degrade(buildRawCode(node.text), 'static 的陣列／指標宣告尚未支援')
+      const built = decls.map(one)
+      const why = built.find((b): b is string => typeof b === 'string')
+      if (decls.length === 0 || why) return degrade(buildRawCode(node.text), why ?? 'static 宣告的形狀認不出來')
+      const nodes = built as SemanticNode[]
+      return nodes.length === 1 ? nodes[0] : buildVarDeclare({ type: `static ${type}` }, { declarators: nodes })
     }
 
     // 🔴 **`extern` 的變數宣告：誠實降級**（spec 197）。在此之前它落到下面的一般宣告，`extern` 被悄悄丟掉
@@ -2747,17 +2743,31 @@ function liftVolatileDeclaration(node: AstNode, qual: AstNode, ctx: LiftContext)
   const kids = node.namedChildren
   const typeNode = kids.find((c) => c.type === 'primitive_type' || c.type === 'sized_type_specifier' || c.type === 'type_identifier')
   if (!typeNode || qual.startIndex > typeNode.startIndex) return null
-  const decls = kids.filter((c) => c !== qual && c.startIndex !== qual.startIndex && c.startIndex !== typeNode.startIndex)
-  if (kids.length !== 3 || decls.length !== 1) return null
-  const d = decls[0]
-  if (d.type === 'identifier') return buildVolatileVar(typeNode.text, d.text, null)
+  // 🟢 440：`static volatile T x = v;`——儲存類別寫在最前面時，走靜態變數那顆、`volatile` 住進型別（與 const 同一條路）
+  const storage = kids.find((c) => c.type === 'storage_class_specifier')
+  if (storage && (storage.text !== 'static' || storage.startIndex > qual.startIndex)) return null
+  const head = new Set([qual.startIndex, typeNode.startIndex, ...(storage ? [storage.startIndex] : [])])
+  if (kids.some((c) => c.type === 'type_qualifier' && c.startIndex !== qual.startIndex)) return null
+  const decls = kids.filter((c) => !head.has(c.startIndex))
+  if (decls.length === 0) return null
   // 🟢 439：**易變陣列**（中斷用的環形緩衝區 `volatile int buf[8];`）——`volatile` 與 `const` 一樣是【型別修飾詞】，
   //    住進元素型別（`volatile int`），走陣列宣告那顆元件；送 Cella 時在型別那一層去掉（formalize 的 `type()`）。
-  if (hasArrayDeclarator(d)) return liftSingleDeclarator(d, `volatile ${typeNode.text}`, ctx)
-  if (d.type !== 'init_declarator') return null
-  const nameNode = d.childForFieldName('declarator')
-  const valueNode = d.childForFieldName('value')
-  if (nameNode?.type !== 'identifier' || !valueNode || valueNode.type === 'initializer_list' || valueNode.type === 'argument_list') return null
-  const value = ctx.lift(valueNode)
-  return value ? buildVolatileVar(typeNode.text, nameNode.text, value) : null
+  if (!storage && decls.length === 1 && hasArrayDeclarator(decls[0])) return liftSingleDeclarator(decls[0], `volatile ${typeNode.text}`, ctx)
+  /** 一個純量宣告子：名字 ＋（可有可無的）一般初值；別的形狀回 null */
+  const one = (d: AstNode): { name: string; value: SemanticNode | null } | null => {
+    if (d.type === 'identifier') return { name: d.text, value: null }
+    if (d.type !== 'init_declarator') return null
+    const nameNode = d.childForFieldName('declarator')
+    const valueNode = d.childForFieldName('value')
+    if (nameNode?.type !== 'identifier' || !valueNode || valueNode.type === 'initializer_list' || valueNode.type === 'argument_list') return null
+    const value = ctx.lift(valueNode)
+    return value ? { name: nameNode.text, value } : null
+  }
+  const parts = decls.map(one)
+  if (parts.some((p) => p === null)) return null
+  const ps = parts as { name: string; value: SemanticNode | null }[]
+  if (storage) return ps.length === 1 ? buildStaticVar(`volatile ${typeNode.text}`, ps[0].name, ps[0].value) : null
+  if (ps.length === 1) return buildVolatileVar(typeNode.text, ps[0].name, ps[0].value)
+  // 🟢 440：`volatile int a = 0, b = 0;`——多宣告子照 const 那一族：外層一般宣告帶著修飾詞（產生器靠它脫掉前綴），每一個宣告子是易變變數那顆
+  return buildVarDeclare({ type: `volatile ${typeNode.text}` }, { declarators: ps.map((p) => buildVolatileVar(typeNode.text, p.name, p.value)) })
 }
