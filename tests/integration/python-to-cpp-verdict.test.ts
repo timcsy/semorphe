@@ -98,6 +98,8 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     ['直接走訪字典：照放入的順序', 'c = {}\nc["b"] = 1\nc["a"] = 2\nc["b"] = 3\nfor k in c:\n    print(k, c[k])\nprint(len(c))\n', ''],
     ['有內容的字典字面量（鍵不重複）＋走訪', 'ages = {"ming": 16, "hua": 17}\nages["new"] = 18\nfor k in ages:\n    print(k, ages[k])\nages = {"x": 1}\nfor name in ages:\n    print(name)\n', ''],
     ['逐字走訪字串、數次數、照第一次出現的順序印', 's = input()\ncounts = {}\nfor c in s:\n    counts[c] = counts.get(c, 0) + 1\nfor k in counts:\n    print(k, counts[k])\n', 'banana\n'],
+    // 442：max／min(字典, key=lambda k: …)——照放入的順序找，平手取先放進去的
+    ['max(字典, key=…)：平手取先放進去的', 'counts = {}\nfor w in input().split():\n    counts[w] = counts.get(w, 0) + 1\nbest = max(counts, key=lambda w: counts[w])\nprint(best, counts[best])\nprint(min(counts, key=lambda w: counts[w]))\n', 'b a b a c\n'],
     ['印浮點數（repr 的規則）', 'a = 2.0\nprint(a, a / 3, a + 0.1, a * 10000000000.0 * 10000000000.0, a / 100000, -a * 10000000)\nprint(str(a / 4) + "!")\n', ''],
   ] as const) {
     it(name, async () => {
@@ -140,6 +142,7 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     ['生成式所在的那一句有別的副作用（先算會改變先後）', 'xs = []\ndef f():\n    xs.append(1)\n    return 0\nprint(f(), [x for x in xs])\n', ''],
     ['兩層的生成式', 'print([a + b for a in [1, 2] for b in [3]])\n', ''],
     // 441：直接走訪字典——引擎旁邊帶一串鍵；以下是那串鍵帶不了的用法
+    ['max(字典, key=…) 在條件裡（要先算好，條件裡不行）', 'c = {}\nc["a"] = 1\nif max(c, key=lambda k: c[k]) == "a":\n    print("yes")\n', ''],
     ['照放入順序走訪的字典被 pop', 'c = {}\nc["b"] = 1\nc["a"] = 2\nc.pop("b")\nfor k in c:\n    print(k)\n', ''],
     ['照放入順序走訪的字典被傳給函式', 'def f(d):\n    return len(d)\nc = {}\nc["b"] = 1\nfor k in c:\n    print(k, f(c))\n', ''],
     ['照放入順序走訪的字典寫入的鍵是運算式', 'c = {}\nc["b" + "c"] = 1\nfor k in c:\n    print(k)\n', ''],

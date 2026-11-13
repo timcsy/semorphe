@@ -52,6 +52,14 @@ const HELPER_INCLUDES: Partial<Record<HelperName, string[]>> = {
   split_words: ['vector', 'cctype'], split_on: ['vector'], to_upper: ['cctype'], to_lower: ['cctype'], list_text_int: ['vector'], list_text_str: ['vector'], float_text: ['cstdio', 'cstdlib'], read_line: ['stdexcept'], py_int: ['stdexcept', 'cctype'],
 }
 
+/** `max(xs, key=lambda p: …)` 的那個 lambda（只收一個參數、而且 key= 是唯一的具名引數）；沒有 → undefined */
+export function keyLambda(n: SemanticNode): SemanticNode | undefined {
+  const named = (n.slots?.values ?? []).filter((v) => v.componentId.endsWith(':func_call_named'))
+  if (named.length !== 1 || named[0].properties?.name !== 'key' || (n.slots?.values ?? []).length !== 2) return undefined
+  const lam = named[0].slots?.value?.[0]
+  return lam?.componentId.endsWith(':lambda') && (lam.slots?.params ?? []).length === 1 && (lam.slots?.body ?? []).length === 1 ? lam : undefined
+}
+
 const lineOf = (n: SemanticNode): number | undefined =>
   (n.metadata as { sourceRange?: { startLine?: number } } | undefined)?.sourceRange?.startLine
 
@@ -324,6 +332,9 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
     const findLoops = (n: SemanticNode): void => {
       const it = n.slots?.iterable?.[0]
       if (n.componentId.endsWith(':loop_for') && it?.componentId.endsWith(':var_ref') && cpp.pyKind(it) === 'dict') iterated.add(String(it.properties?.name ?? ''))
+      // max(d, key=…)／min(d, key=…)（442）：也是照放入的順序走一遍（平手取先放進去的那個）
+      const first = n.slots?.values?.[0]
+      if (/:math_(max|min)$/.test(n.componentId) && first?.componentId.endsWith(':var_ref') && cpp.pyKind(first) === 'dict' && keyLambda(n)) iterated.add(String(first.properties?.name ?? ''))
       kids(n).forEach(findLoops)
     }
     top.forEach(findLoops)
@@ -333,7 +344,8 @@ export function convertPythonToCpp(tree: SemanticNode, observed: ObservedTypes |
       const slot = Object.entries(p.slots ?? {}).find(([, cs]) => cs.includes(ref))?.[0]
       const id = p.componentId
       return (id.endsWith(':container_at') && slot === 'target') || (id.endsWith(':map_at_default') && slot === 'obj') ||
-        (id.endsWith(':container_size') && slot === 'obj') || (id.endsWith(':loop_for') && slot === 'iterable')
+        (id.endsWith(':container_size') && slot === 'obj') || (id.endsWith(':loop_for') && slot === 'iterable') ||
+        (/:math_(max|min)$/.test(id) && p.slots.values?.[0] === ref && keyLambda(p) !== undefined)
     }
     for (const name of iterated) {
       let ok = true
