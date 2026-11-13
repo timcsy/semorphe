@@ -61,6 +61,13 @@ export interface ToCppContext {
    * 現在寫的這一段在一個抓 `ValueError` 的 try 裡面嗎——是的話，會丟 ValueError 的寫法要換成在 C++ 也丟同一種例外的寫法
    * （`int(字串)`：`stoi` 吃得下 `"12abc"`、Python 不行 → `py_int`）
    */
+  /**
+   * 這個字典照放入的順序被走訪（`for k in d`）——是的話回傳旁邊那一串鍵的名字（`d__keys`）：寫入新鍵時接在後面、走訪改走它（441）。
+   * 只有最外層、只被讀／寫／問大小／走訪／整個指定成字典字面量的名字才有；其餘 undefined（走訪那顆照舊保留）
+   */
+  dictKeys(name: string): string | undefined
+  /** 這顆運算式是一句 `x = …` 的右邊嗎（字面量 `{…}` 只在指定的右邊寫得成 C++ 的大括號） */
+  assignedValue(n: SemanticNode): boolean
   catchingValueError(): boolean
   /** 在一個抓 `ValueError` 的 try 的本體裡寫 C++（`catchingValueError()` 在 fn 裡面是 true） */
   inValueErrorTry<T>(fn: () => T): T

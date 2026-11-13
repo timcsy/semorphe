@@ -94,6 +94,10 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     ['try／except ValueError：stoi 吃得下的 "12abc" 照 Python 也算錯', 'while True:\n    try:\n        n = int(input())\n        break\n    except ValueError:\n        print("bad")\nprint(n * 2)\n', '12abc\n+7\n'],
     // 407：串列生成式 → 在那一句前面先建 vector（list、range、if 條件；同一顆被寫兩次只建一次）
     ['串列生成式：印出、當 sum 的引數、當 for 的走訪對象', 'words = ["a", "bb", "ccc"]\nprint([len(w) for w in words])\nxs = [i * i for i in range(5) if i % 2 == 0]\nprint(xs, sum([x + 1 for x in xs]))\nfor y in [x * 2 for x in xs]:\n    print(y)\nx = "s"\nprint(x)\n', ''],
+    // 441：直接走訪字典——Python 照放入的順序、C++ 的 map 照鍵排序；旁邊帶一串鍵（新的鍵接在後面），走訪走那一串
+    ['直接走訪字典：照放入的順序', 'c = {}\nc["b"] = 1\nc["a"] = 2\nc["b"] = 3\nfor k in c:\n    print(k, c[k])\nprint(len(c))\n', ''],
+    ['有內容的字典字面量（鍵不重複）＋走訪', 'ages = {"ming": 16, "hua": 17}\nages["new"] = 18\nfor k in ages:\n    print(k, ages[k])\nages = {"x": 1}\nfor name in ages:\n    print(name)\n', ''],
+    ['逐字走訪字串、數次數、照第一次出現的順序印', 's = input()\ncounts = {}\nfor c in s:\n    counts[c] = counts.get(c, 0) + 1\nfor k in counts:\n    print(k, counts[k])\n', 'banana\n'],
     ['印浮點數（repr 的規則）', 'a = 2.0\nprint(a, a / 3, a + 0.1, a * 10000000000.0 * 10000000000.0, a / 100000, -a * 10000000)\nprint(str(a / 4) + "!")\n', ''],
   ] as const) {
     it(name, async () => {
@@ -135,7 +139,13 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
     ['生成式在 if 的條件裡', 'xs = [1, 2]\nif len([x for x in xs]) > 1:\n    print("y")\n', ''],
     ['生成式所在的那一句有別的副作用（先算會改變先後）', 'xs = []\ndef f():\n    xs.append(1)\n    return 0\nprint(f(), [x for x in xs])\n', ''],
     ['兩層的生成式', 'print([a + b for a in [1, 2] for b in [3]])\n', ''],
-    ['直接走訪字典（Python 照放入的順序，map 照鍵排序）', 'c = {}\nc["b"] = 1\nc["a"] = 2\nfor k in c:\n    print(k)\n', ''],
+    // 441：直接走訪字典——引擎旁邊帶一串鍵；以下是那串鍵帶不了的用法
+    ['照放入順序走訪的字典被 pop', 'c = {}\nc["b"] = 1\nc["a"] = 2\nc.pop("b")\nfor k in c:\n    print(k)\n', ''],
+    ['照放入順序走訪的字典被傳給函式', 'def f(d):\n    return len(d)\nc = {}\nc["b"] = 1\nfor k in c:\n    print(k, f(c))\n', ''],
+    ['照放入順序走訪的字典寫入的鍵是運算式', 'c = {}\nc["b" + "c"] = 1\nfor k in c:\n    print(k)\n', ''],
+    ['走訪字典時本體改了那個字典', 'c = {}\nc["a"] = 1\nfor k in c:\n    c[k] = 2\nprint(c["a"])\n', ''],
+    ['在函式裡走訪字典', 'def f():\n    c = {}\n    c["b"] = 1\n    for k in c:\n        print(k)\nf()\n', ''],
+    ['集合字面量（Cella 判 Python 那邊帶 str.hash 的假設，C++ 沒有）', 'tags = {"a", "b", "a"}\nprint(len(tags))\n', ''],
     ['走訪 sorted(字典) 時本體改了那個字典', 'c = {}\nc["a"] = 1\nfor k in sorted(c):\n    c["z"] = 2\nprint(len(c))\n', ''],
     ['有內容的字典字面量（重複的鍵兩邊取的不同）', 'c = {"a": 1, "a": 2}\nprint(c["a"])\n', ''],
     ['抓 ZeroDivisionError（C++ 的除以零不是例外）', 'try:\n    print(1 // int(input()))\nexcept ZeroDivisionError:\n    print("zero")\n', '0\n'],

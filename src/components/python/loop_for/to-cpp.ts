@@ -47,8 +47,19 @@ export function registerToCpp(r: ToCppRegistrar): void {
     }
     // for x in xs：元素型別從容器觀察到的型別來
     const t = cpp.pyType(it)
-    // for k in d：Python 照插入順序、C++ 的 map 照鍵排序——順序不同
-    if (t && /^dict\[/.test(t)) return [cpp.keep(n, 'outside-subset', '直接走訪字典（Python 照放入的順序，C++ 的 map 照鍵排序）')]
+    // for k in d：Python 照插入順序、C++ 的 map 照鍵排序——順序不同。
+    // 441：引擎替只被讀寫走訪的字典多帶一串鍵（照放入的順序）——走那一串。本體改那個字典就不換（Python 長度變了會丟 RuntimeError）
+    if (t && /^dict\[/.test(t)) {
+      const dn = it?.componentId.endsWith(':var_ref') ? String(it.properties?.name ?? '') : ''
+      const keys = dn ? cpp.dictKeys(dn) : undefined
+      const kt = cpp.cppType(/^dict\[(.+?), /.exec(t)?.[1])
+      if (!keys || !kt || changesDict(n.slots.body ?? [], dn) || !cpp.plainLoopVar(n, loopName)) return [cpp.keep(n, 'outside-subset', '直接走訪字典（Python 照放入的順序，C++ 的 map 照鍵排序）')]
+      return [`${i}for (${kt} ${v} : ${cpp.name(keys)}) {`, ...cpp.block(n.slots.body, depth + 1), `${i}}`]
+    }
+    // for c in s（441）：Python 的 c 是長度 1 的字串（拿去當字典的鍵、相加都是字串）——每一圈從 char 做一個 string（`string(1, c)` 會帶 string.max_size 的假設，接在空字串後面不會）
+    if (t === 'str' && cpp.plainLoopVar(n, loopName)) {
+      return [`${i}for (char ${v}__ : ${cpp.expr(it)}) {`, `${cpp.indent(depth + 1)}string ${v} = "";`, `${cpp.indent(depth + 1)}${v} += ${v}__;`, ...cpp.block(n.slots.body, depth + 1), `${i}}`]
+    }
     const m = t ? /^list\[(.+)\]$/.exec(t) : null
     const et = m ? cpp.cppType(m[1]) : t === 'str' ? 'char' : undefined
     if (!et || t === 'str') return [cpp.keep(n, 'type-uncertain', `for 走訪的對象型別（${t ?? '?'}）`)]
