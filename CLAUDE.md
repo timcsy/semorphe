@@ -50,7 +50,7 @@ tests/
 |---|---|---|
 | 改一顆元件、改一段邏輯 | `npx vitest run <那個檔或目錄>` | **秒** |
 | 改核心／投影／解譯器 | `npm run test:unit` ＋ `npm run test:capsule` | 十幾秒 |
-| 🔴 **改宣告、身分、基線、工具箱、課程清單** | `npm run test:guard`（`audit-*` 共 138 個檔） | 分鐘 |
+| 🔴 **改宣告、身分、基線、工具箱、課程清單** | `npm run test:guard`（`audit-*` ＋ 四支讀基線的快照，見下） | 分鐘 |
 | 🔴 **改了「使用者按得到的東西」**（按鈕、選單、面板結構） | **`npm run test:e2e`** | 十分鐘 |
 | 🔴 **改了「一段程式碼會被 lift 成哪些元件」** | **`npm run test:e2e`** | 十分鐘 |
 | 🔴 **改了「輸出的文字表示」**（`nan`／`inf`／數字格式／跳脫字元） | **`npm run test:e2e`** | 十分鐘 |
@@ -62,6 +62,10 @@ tests/
 | commit 前 | `npm test`（全套）——用 `tools/long-test.sh`（skill `long-test-run`） | 約 15 分鐘（放背景跑） |
 | 🔴 **push 之後** | **`gh run list --limit 3`** | 十秒 |
 | PR | CI 跑全套 ＋ `npm run test:e2e` | — |
+
+🔴 **`test:guard` 不只是 `audit-*`**（2026-11-13，436）：讀 `tests/baselines/` 的四支快照（工具箱、搬家護欄、元件詞彙、宣告變動）
+也在裡面——它們不叫 `audit-`，以前只有長測試抓得到（355、403、435 三次）。新加一支讀基線的整合測試，
+`audit-guard-covers-baselines` 會叫你把它加進 `package.json` 的 `test:guard`。
 
 🔴 **「改了 vite 設定／worker／`app.ts` → 建 vsix」那一列是 2026-11-01 加的**（使用者照推薦定）：spec 182 在 `vite.config.ts` 加了 worker 格式，網頁版建置與 e2e 全綠，
 **CI 的 Extension (vsix) 紅**——`vite.vscode.config.ts` 是另一份設定，而本機從來沒建過 vsix。見 `knowledge/draft/2026-11-01-兩個宿主的建置與長測試的排程.md`。
