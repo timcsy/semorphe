@@ -127,7 +127,10 @@ describe('模糊測試：學生解題風格', () => {
     const r = await runCella(P('fuzz_8').code)
     expect(r.verdict, describeCellaResult(r)).toBe('accept')
     expect(r.out).toBe(P('fuzz_8').expected)
-  })
+  }, 300_000)
+  // ⚠️ 300 秒（2026-11-14）：這一支的判決冷算要 106 秒（CI）／220 秒（本機、負載 40）——本機有判決快取
+  //    （`tests/helpers/verdict-cache.ts`）所以單獨跑是 0.4 秒、長測試也綠，CI 是冷的而 60 秒逾時（449 的 CI 紅）。
+  //    已附這支程式回報 cella 查效能；快了就拿掉這個數字。
 
   // 11-11 回報的誤判 reject（含 string 成員的聚合初始化）在 Cella 1931 修好了；那之後露出下一個：
   // `tie(a, b) > tie(c, d)` 的 tuple 比較 Cella 還沒建模（判 unknown，11-14 回報）

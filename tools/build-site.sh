@@ -73,7 +73,15 @@ build_ref() {
   #    （CI 那兩個 job 的 `fetch-depth: 0` 就是為了這個。）
   local wt=".wt-${out}"
   git worktree add -f "${wt}" "${ref}"
-  ln -s "$PWD/node_modules" "${wt}/node_modules"
+  # 🔴 **依賴不同就不能共用 node_modules**（2026-11-14，449 的部署紅）：449 把 Cella 升到 1931，
+  #    判決模組換了表面語法；主線仍是 448 的 `verified`，它的舊語法模組在新 Cella 底下 `precompile-cella` 編不過
+  #    ——測試與 e2e 全綠，而網站兩邊都沒換版。lock 檔一樣才連結，不一樣就在那份 worktree 裝它自己的。
+  if git diff --quiet "${ref}" HEAD -- package-lock.json; then
+    ln -s "$PWD/node_modules" "${wt}/node_modules"
+  else
+    echo "::notice::${ref} 的 package-lock.json 與 HEAD 不同——在它自己的 worktree 裝依賴"
+    ( cd "${wt}" && npm ci --ignore-scripts --fetch-retries 5 --fetch-retry-maxtimeout 120000 && npm rebuild esbuild )
+  fi
   ( cd "${wt}" && SITE_BASE="${base}" npm run build -- --base="${base}" --outDir "${out}" )
   mv "${wt}/${out}" "${out}"
   git worktree remove --force "${wt}"
