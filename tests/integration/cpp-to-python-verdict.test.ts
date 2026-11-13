@@ -114,7 +114,7 @@ function lessonSuite(track: string, minFiles: number, minConverted: (total: numb
 }
 
 lessonSuite('cpp-beginner', 60, (n) => Math.ceil(n / 2))
-lessonSuite('cpp-advanced', 20, () => 7)
+lessonSuite('cpp-advanced', 20, () => 8)
 
 // ── US2／SC-003：意思會變的地方照實保留（或換成意思相同的寫法，由判決證明）──
 describe('C++ → Python：意思會變的反例', () => {
@@ -223,6 +223,39 @@ describe('C++ → Python：意思會變的反例', () => {
       const r = await toPython(V + code)
       expect(r.code, '換了——意思會變').toBeNull()
       expect(r.reasons.map((x) => x.detail).join()).toContain('傳遞方式')
+    }, 60_000)
+  }
+  // ── 448：stack、empty、`**` 的括號 ──
+  const S = '#include <iostream>\n#include <cmath>\n#include <vector>\n#include <stack>\n#include <queue>\nusing namespace std;\n'
+  for (const [name, code, must] of [
+    ['stack → list：push／pop／top／size／empty', 'int main() {\n    stack<int> s;\n    s.push(1);\n    s.push(-2);\n    cout << s.top() << s.size() << s.empty() << endl;\n    s.pop();\n    if (!s.empty()) cout << s.top() << endl;\n    return 0;\n}\n', 's[-1]'],
+    ['empty 也收 string 與 vector', 'int main() {\n    string t = "";\n    vector<int> v;\n    v.push_back(3);\n    cout << t.empty() << v.empty() << endl;\n    return 0;\n}\n', 'len(t) == 0'],
+    ['stack 的指定是複製', 'int main() {\n    stack<int> s;\n    s.push(1);\n    stack<int> t;\n    t = s;\n    t.push(5);\n    cout << s.size() << t.size() << endl;\n    return 0;\n}\n', 't = list(s)'],
+    // 之前 `pow(-2, 2)` 換成 `-2 ** 2`：`**` 比一元負號綁得緊，C++ 印 4、Python 印 -4——靜默失真
+    ['pow 的底數是負數或運算式時加括號', 'int main() {\n    int a = -2;\n    cout << pow(-2, 2) << " " << pow(a, 2) << " " << pow(a + 1, 2) << endl;\n    return 0;\n}\n', '(-2) ** 2'],
+  ] as const) {
+    it(`🟢 ${name}；判決相同（448）`, async () => {
+      const src = S + code
+      const r = await toPython(src)
+      expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+      expect(r.code).toContain(must)
+      // pow 那一條：C++ 的 pow 帶 libm 的 correctlyRounded、Python 的 ** 不帶（同 KNOWN_ASSUMES_GAP，已回報 cella）——只比判決與輸出
+      if (code.includes('pow(')) {
+        const a = await runCella(src, { lang: 'cpp' }), b = await runCella(r.code!, { lang: 'python' })
+        expect([b.verdict, b.out]).toEqual([a.verdict, a.out])
+      } else await sameVerdict(src, r.code!, '')
+    }, 60_000)
+  }
+  for (const [name, code, detail] of [
+    ['stack 傳值（複製一份）', 'void f(stack<int> s) {\n    s.push(9);\n}\n\nint main() {\n    stack<int> s;\n    f(s);\n    cout << s.size() << endl;\n    return 0;\n}\n', '傳遞方式'],
+    // ⏳ 寫法已經寫好（collections.deque／heapq，最大堆存負數）；Cella 的 Python 支援這兩個模組之前照實保留——發版後這兩條改成換過去
+    ['queue（等 Cella 支援 collections.deque）', 'int main() {\n    queue<int> q;\n    q.push(3);\n    cout << q.front() << endl;\n    return 0;\n}\n', 'collections.deque'],
+    ['priority_queue（等 Cella 支援 heapq）', 'int main() {\n    priority_queue<int> q;\n    q.push(-3);\n    cout << q.top() << endl;\n    return 0;\n}\n', 'heapq'],
+  ] as const) {
+    it(`🔴 保留：${name}（448）`, async () => {
+      const r = await toPython(S + code)
+      expect(r.code, '換了').toBeNull()
+      expect(r.reasons.map((x) => x.detail).join()).toContain(detail)
     }, 60_000)
   }
   it('🔴 保留：類別', async () => {
