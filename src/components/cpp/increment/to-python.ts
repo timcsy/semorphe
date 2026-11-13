@@ -7,6 +7,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
     // char 的 ++（下一個字元）：Python 的字串不能加 1——保留（364）
     if (isChar(py.typeOf(n.slots.target?.[0]))) return [py.keep(n, 'char', 'char 的 ++／--')]
-    return [`${py.indent(depth)}${py.expr(n.slots.target?.[0])} ${n.properties.operator === '--' ? '-=' : '+='} 1`]
+    const tg = py.target(n.slots.target?.[0], true)
+    return [...(tg.before ? [`${py.indent(depth)}${tg.before}`] : []), `${py.indent(depth)}${tg.text} ${n.properties.operator === '--' ? '-=' : '+='} 1`]
   })
 }

@@ -1,6 +1,6 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { isChar, intValue } from '../../../languages/cpp/to-python/contract'
+import { isChar, intValue, keyedKind } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
@@ -14,7 +14,11 @@ export function registerToPython(r: ToPythonRegistrar): void {
       return [`${py.indent(depth)}${py.expr(target)} = ${v}`]
     }
     // vector／stack（448）的指定是複製（C++ 的 `b = a` 之後兩個各自獨立）；Python 的 `b = a` 是同一個 list ⟹ 寫成 `list(a)`（447：之前換出來改 b 會改到 a）
-    if (/^(const\s+)?(std::)?(vector|stack)</.test(py.typeOf(target) ?? '')) return [`${py.indent(depth)}${py.expr(target)} = list(${py.expr(value)})`]
-    return [`${py.indent(depth)}${py.expr(target)} = ${intValue(py.typeOf(target), py.typeOf(value), py.expr(value))}`]
+    const tgt = py.target(target, false).text
+    if (/^(const\s+)?(std::)?(vector|stack)</.test(py.typeOf(target) ?? '')) return [`${py.indent(depth)}${tgt} = list(${py.expr(value)})`]
+    // map／set 同理（450）⟹ dict(…)／set(…)
+    const keyed = keyedKind(py.typeOf(target))
+    if (keyed) return [`${py.indent(depth)}${tgt} = ${keyed.kind === 'map' ? 'dict' : 'set'}(${py.expr(value)})`]
+    return [`${py.indent(depth)}${tgt} = ${intValue(py.typeOf(target), py.typeOf(value), py.expr(value))}`]
   })
 }

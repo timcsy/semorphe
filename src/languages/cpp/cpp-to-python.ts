@@ -14,7 +14,7 @@ import { collectToPython, type ToPythonTables } from './to-python/registry'
 let TABLES: ToPythonTables | null = null
 
 /** Python 的保留字與內建常數——C++ 的名字撞到就加底線 */
-const PY_KEYWORDS = new Set(['math', 'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'class', 'def', 'del', 'elif', 'except', 'finally', 'from', 'global', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'with', 'yield', 'print', 'input', 'len', 'range', 'int', 'float', 'str', 'list', 'chr', 'ord', 'format', 'next_token', '_tokens'])
+const PY_KEYWORDS = new Set(['math', 'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'class', 'def', 'del', 'elif', 'except', 'finally', 'from', 'global', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'with', 'yield', 'print', 'input', 'len', 'range', 'int', 'float', 'str', 'list', 'chr', 'ord', 'format', 'next_token', '_tokens', 'sorted', 'dict', 'set'])
 
 /** 同 `cin >>` 的讀法：一次讀一個以空白分開的詞，這一行讀完才讀下一行 */
 const TOKEN_READER = [
@@ -40,6 +40,7 @@ export function convertCppToPython(
   // 程式自己定義的函式名（問形狀：有 params 槽、有名字的節點）——呼叫它們才換，標準函式庫的第一版不換
   const userFunctions = new Set<string>()
   const declaredStrings = new Set<string>()
+  const elementTypes = new Map<string, string | null>()
   const scan = (n: SemanticNode): void => {
     if (n.slots?.params !== undefined && typeof n.properties?.name === 'string') userFunctions.add(n.properties.name)
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(scan)
@@ -64,6 +65,8 @@ export function convertCppToPython(
     useTruncMod() { needTruncMod = true; return 'trunc_mod' },
     noteDeclaredString: (name) => { declaredStrings.add(name) },
     isDeclaredString: (name) => declaredStrings.has(name),
+    noteElementType: (name, type) => { elementTypes.set(name, elementTypes.has(name) && elementTypes.get(name) !== type ? null : type) },
+    elementTypeOf: (name) => elementTypes.get(name) ?? undefined,
     useImport(m) { imports.add(m); return m },
     indent: (d) => '    '.repeat(d),
     typeOf: (n) => (n ? types[n.id] : undefined),
@@ -76,6 +79,11 @@ export function convertCppToPython(
       if (!n) return '…'
       const fn = t.expr.get(n.componentId)
       return fn ? fn(n, py) : py.keep(n, 'outside-subset', `「${n.componentId}」還沒有 Python 的寫法`)
+    },
+    target(n, readsFirst) {
+      if (!n) return { text: '…' }
+      const fn = t.target.get(n.componentId)
+      return fn ? fn(n, py, readsFirst) : { text: py.expr(n) }
     },
     block(nodes, depth) {
       const lines = (nodes ?? []).flatMap((c) => stmt(c, depth))
