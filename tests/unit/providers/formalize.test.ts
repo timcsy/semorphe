@@ -49,6 +49,38 @@ function constructorFields(src: string): Map<string, string[]> {
       out.set(name, [...s.matchAll(/\((\w+)\s*:/g)].map((g) => g[1]))
     }
   }
+  // 🆕 Cella 的新語法（2026-11-14，cella 70aff8aeb「切換第 3 步」）：`@derive(Json)` ＋ `type 名 { 建構子(欄位: 型別, …) … }`，
+  //    建構子以換行或逗號分開；欄位是第一層括號裡「名字:」的那些。舊語法抽不到東西時才走這裡——兩種都認，抽到零才是錯
+  if (out.size === 0) {
+    for (const m of src.matchAll(/@derive\(Json\)[^\n]*\n(?:\s*(?:\/\/[^\n]*|@[^\n]*)\n)*\s*type\s+[\w.]+\s*\{/g)) {
+      let i = m.index! + m[0].length, depth = 1, paren = 0, cur = ''
+      const parts: string[] = []
+      for (; i < src.length && depth > 0; i++) {
+        const ch = src[i]
+        if (ch === '{') depth++
+        if (ch === '}') { depth--; if (depth === 0) break }
+        if (ch === '(') paren++
+        if (ch === ')') paren--
+        if ((ch === '\n' || ch === ',') && paren === 0 && depth === 1) { parts.push(cur); cur = '' } else cur += ch
+      }
+      parts.push(cur)
+      for (const p of parts) {
+        const t = p.replace(/\/\/[^\n]*/g, '').trim()
+        const name = /^(\w+)/.exec(t)?.[1]
+        if (!name) continue
+        const fields: string[] = []
+        let d = 0, tok = ''
+        for (const ch of t.slice(name.length)) {
+          if (ch === '(') { d++; if (d === 1) { tok = ''; continue } }
+          if (ch === ')') d--
+          if (d === 1 && ch === ':') { const f = /(\w+)\s*$/.exec(tok)?.[1]; if (f) fields.push(f); tok = ''; continue }
+          if (d === 1 && ch === ',') { tok = ''; continue }
+          tok += ch
+        }
+        out.set(name, fields)
+      }
+    }
+  }
   return out
 }
 
