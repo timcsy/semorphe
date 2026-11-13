@@ -106,3 +106,27 @@ describe('415 · 伺服馬達只在核心附 Servo.h 的板子上出現（2026-1
     expect(SERVO.filter((b) => types.has(b))).toEqual([])
   })
 })
+
+describe('438 · IRAM_ATTR 的形態只在 ESP32／ESP8266 上出現（2026-11-13）', () => {
+  // ⚠️ 這是**形態**層級的能力：`cpp:func_def` 人人都有，挑板子的是 `IRAM_ATTR` 那一個形態
+  //    （`BlockSpec.needsCapability` ＋ `targetProvidesForm`：目標沒寫 provides 就不給）。
+  const IRAM = ['cpp_func_def_IRAM_ATTR', 'cpp_forward_decl_IRAM_ATTR']
+  const esp8266 = import.meta.glob('../../src/languages/cpp/targets/nodemcu-esp8266.json', { eager: true }) as
+    Record<string, { default: Target }>
+
+  it('★ 錨點：ESP32 與 ESP8266 拿得到兩顆 IRAM 形態，也拿得到一般的函式定義', () => {
+    for (const t of [esp32Target as Target, ...Object.values(esp8266).map((m) => m.default)]) {
+      const types = typesFor(t)
+      expect(types.has('cpp_func_def'), `${t.id} 連一般函式定義都沒有 → 工具箱沒組起來`).toBe(true)
+      expect(IRAM.filter((b) => !types.has(b)), `${t.id} 少了 IRAM 形態`).toEqual([])
+    }
+  })
+
+  it('🔴 Uno、Nano 與桌面 C++／C 拿不到——IRAM_ATTR 在那裡編不過', () => {
+    for (const t of [unoTarget, nanoTarget, cppTarget, cTarget, cppAdvancedTarget] as Target[]) {
+      const types = typesFor(t)
+      expect(types.size, `${t.id} 的工具箱是空的 → 負向斷言空過`).toBeGreaterThan(20)
+      expect(IRAM.filter((b) => types.has(b)), `${t.id} 拉得出 IRAM_ATTR`).toEqual([])
+    }
+  })
+})

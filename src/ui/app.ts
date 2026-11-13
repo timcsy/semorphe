@@ -2870,6 +2870,7 @@ export class App {
       // 🔴 **課的收窄在這裡再切一刀**——`getVisibleComponents()` 為了畫布
       //    留著鷹架，而工具箱不該讓學生拖得到 `#include`（見那個函式的註解）。
       visibleComponents: filterByTarget(this.toolboxComponents(), this.currentTarget),
+      target: this.currentTarget,
       ioPreference: this.currentIoPreference,
       msgs: Blockly.Msg as Record<string, string>,
       categoryColors: CATEGORY_COLORS,

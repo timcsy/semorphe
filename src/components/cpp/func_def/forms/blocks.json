@@ -115,6 +115,8 @@
       "axis": "attribute",
       "value": "IRAM_ATTR"
     },
+    "needsCapability": "iram",
+    "_needsCapability_why": "IRAM_ATTR 只有 ESP32／ESP8266 的核心定義得出來；桌面 g++ 與 AVR 編不過。元件人人都有，挑板子的是這個形態——所以宣告在形態上，目標要【明確】提供 iram 才進工具箱（`targetProvidesForm`）。lift 不看目標：貼進來的 IRAM_ATTR 在任何目標都認得。",
     "blockDef": {
       "type": "cpp_func_def_IRAM_ATTR",
       "message0": "%{BKY_CPP_FUNC_DEF_IRAM_LABEL} %{BKY_U_FUNC_DEF_RETURN_LABEL} %1 %2 %3",

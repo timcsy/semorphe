@@ -62,6 +62,9 @@ import { toolboxCategoriesOf, declaredToolboxLanguages } from '../../src/core/bl
 import '../../src/languages/python/toolbox-categories'
 import type { ComponentDefJSON, BlockProjectionJSON } from '../../src/core/types'
 
+const TARGET_FILES = import.meta.glob('../../src/languages/cpp/targets/*.json', { eager: true }) as
+  Record<string, { default: { provides?: readonly string[] } }>
+
 type Bucket = '缺陷' | '中性形態' | '分類排除'
 interface Finding {
   type: string
@@ -106,6 +109,15 @@ function measure(
   for (const lang of declaredToolboxLanguages()) {
     if (lang === 'cpp') continue
     const other = loadToolbox(extraComponents, extraProjections, undefined, toolboxCategoriesOf(lang))
+    for (const [type, cats] of other.categoriesOf) {
+      if (!categoriesOf.has(type)) categoriesOf.set(type, cats)
+    }
+  }
+  // 🔴 **逐目標也聯集**（438）：形態層級的能力（`BlockSpec.needsCapability`）要目標【明確】提供，
+  //    不帶目標的工具箱給不出 `IRAM_ATTR` 的形態——而 ESP32 的給得出。問的仍是「有沒有某個工具箱」。
+  for (const t of Object.values(TARGET_FILES).map((m) => m.default)) {
+    if (t.provides === undefined) continue
+    const other = loadToolbox(extraComponents, extraProjections, t)
     for (const [type, cats] of other.categoriesOf) {
       if (!categoriesOf.has(type)) categoriesOf.set(type, cats)
     }

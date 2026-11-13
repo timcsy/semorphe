@@ -9,7 +9,8 @@
   "provides": [
     "touch",
     "ledc-pwm",
-    "wifi"
+    "wifi",
+    "iram"
   ],
   "board": {
     "name": "ESP32-S3 WROOM CAM",

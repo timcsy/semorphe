@@ -8,7 +8,8 @@
   "skeleton": "arduino",
   "provides": [
     "wifi",
-    "servo"
+    "servo",
+    "iram"
   ],
   "board": {
     "name": "NodeMCU (ESP8266)",

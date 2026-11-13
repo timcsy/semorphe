@@ -171,4 +171,19 @@ describe('護欄：能力供給完備性', () => {
     const restricting = allTargets().filter((t) => t.provides !== undefined).length
     console.log(`能力宣告：${needs.length} 筆，孤兒 ${orphans.length} 筆｜有限縮的目標：${restricting}/${allTargets().length}`)
   })
+
+  // ── 形態層級（438）────────────────────────────────────────
+  // ⚠️ 判準與元件層級**不同**：形態的能力要目標【明確】提供（`targetProvidesForm`），
+  //    省略 `provides` 的目標**不算**提供——否則桌面 C++ 會拉得出 `IRAM_ATTR`。
+  it('🔴 每一個形態宣告的能力，至少要有一個目標【明確】提供它', () => {
+    const FORMS = import.meta.glob('../../src/components/*/*/forms/blocks.json', { eager: true }) as
+      Record<string, { default: { id: string; needsCapability?: string }[] }>
+    const formNeeds = Object.values(FORMS).flatMap((m) => m.default)
+      .filter((f) => typeof f.needsCapability === 'string')
+    expect(Object.keys(FORMS).length, '一個形態檔都沒掃到 → glob 路徑壞了').toBeGreaterThan(100)
+    expect(formNeeds.map((f) => f.id), '正向錨點：IRAM_ATTR 的兩個形態宣告了能力').toEqual(
+      expect.arrayContaining(['cpp:func_def.iram', 'cpp:forward_decl.iram']))
+    const orphans = formNeeds.filter((f) => !allTargets().some((t) => t.provides?.includes(f.needsCapability!)))
+    expect(orphans.map((f) => `${f.id} 需要「${f.needsCapability}」`)).toEqual([])
+  })
 })

@@ -132,6 +132,7 @@ export function loadToolbox(
     msgs: {},
     categoryColors: CATEGORY_COLORS,
     categoryDefs,
+    target,
   }) as { contents: { name: string; contents: { type: string }[] }[] }
 
   const snapshot: ToolboxSnapshot = {

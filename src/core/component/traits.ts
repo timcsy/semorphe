@@ -344,6 +344,27 @@ export function targetProvides(
 }
 
 /**
+ * 一個**形態**要的能力，這個目標【明確】提供了嗎。
+ *
+ * 🔴 **與 `targetProvides` 刻意不同：`provides` 沒寫 ⟹ 否**。
+ *
+ * 元件層級的能力掛在「只有某些板子才有的元件」上（觸摸、ledc），
+ * 那些元件本來就只出現在那幾個目標的課程清單裡，所以「目標不限縮 ⟹ 一律給」不會漏東西。
+ * 形態層級的能力掛在**人人都有的元件**上（`cpp:func_def` 的 `IRAM_ATTR` 形態）：
+ * 桌面 C++ 的 `provides` 沒寫，照寬鬆的預設，桌面工具箱就會出現一顆
+ * g++ 編不過的積木（438 實測：桌面、Uno 的「函式」分類都多了兩顆）。
+ *
+ * ⚠️ 它同樣只給工具箱用——lift／generate 不看目標（見 `filterByTarget`）。
+ */
+export function targetProvidesForm(
+  target: { provides?: readonly string[] } | undefined,
+  capability: string | undefined,
+): boolean {
+  if (capability === undefined) return true
+  return target?.provides?.includes(capability) ?? false
+}
+
+/**
  * 從一組可見概念中，濾掉這個目標**提供不了**的。
  *
  * 🔴 **這是能力過濾的唯一入口**——工具箱組裝與測試都走它，

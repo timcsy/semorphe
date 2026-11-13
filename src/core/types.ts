@@ -206,6 +206,8 @@ export interface BlockSpec {
    * （這個身分有多個形態，而這一顆沒有 `form`），不是靠漏掉它。
    */
   toolboxCategory?: string | string[]
+  /** 這個形態只在【明確】提供這個能力的目標上進工具箱——見 `BlockProjectionJSON.needsCapability`、`targetProvidesForm` */
+  needsCapability?: string
 
   id: string
   language: string
@@ -774,6 +776,15 @@ export interface BlockProjectionJSON {
    * （這個身分有多個形態，而這一顆沒有 `form`），不是靠漏掉它。
    */
   toolboxCategory?: string | string[]
+
+  /**
+   * 這個**形態**只在提供某個能力的目標上進工具箱（例：`IRAM_ATTR` 形態要 `iram`）。
+   *
+   * 元件層級的能力寫在 `component.json` 的 `traits.needsCapability`；
+   * 這一欄是給「元件人人都有、只有這個形態挑板子」的情況。
+   * 判準走 `targetProvidesForm`——**目標沒寫 `provides` 就不給**（理由見那個函式）。
+   */
+  needsCapability?: string
 
   id: string
   componentId: string

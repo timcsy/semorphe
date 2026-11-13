@@ -78,6 +78,7 @@ import { createNode } from '../../../core/semantic-tree'
 import type { SemanticNode } from '../../../core/types'
 import type { AstNode, LiftContext } from '../../../core/lift/types'
 import { declareAstRepair } from '../../../core/lift/ast-repairs'
+import { componentManifests } from '../../../core/component/registry'
 
 // ── ① 後置遞增／遞減被解成「套在一元運算外面」 ──
 
@@ -529,7 +530,11 @@ export function registerMisparseRepairs(): void {
     // 重解出來還有錯／不是同一種節點 ⟹ 判斷錯了，不要回一棵「以為修好了」的樹（也是終止保證：重解的那段已經沒有 IRAM_ATTR）
     if (!tree || tree.rootNode.hasError || top.length !== 1 || top[0].type !== node.type) return null
     const lifted = ctx.lift(top[0] as never)
-    if (!lifted || (lifted.componentId !== 'cpp:func_def' && lifted.componentId !== 'cpp:forward_decl')) return null
+    // 🔴 收得下屬性的，只有【宣告了 `attribute` 這個屬性】的元件（函式定義與原型）——不認名字，問宣告（膠囊就近性）。
+    //    `IRAM_ATTR int x = f();` 這種重解成變數宣告的，讓開。
+    const declaresAttribute = componentManifests().find((m) => m.componentId === lifted?.componentId)
+      ?.properties?.some((p) => (p as { name?: string }).name === 'attribute')
+    if (!lifted || !declaresAttribute) return null
     lifted.properties = { ...lifted.properties, attribute: 'IRAM_ATTR' }
     remapFromShell(lifted, node, 0, patched, [])
     return lifted
