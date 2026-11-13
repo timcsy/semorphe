@@ -15,7 +15,7 @@ export function fakeObserved(tree: SemanticNode, vars: Record<string, string>, o
       case 'var_ref': return vars[String(n.properties.name)]
       case 'literal_number': return String(n.properties.value).includes('.') ? 'float' : 'int'
       case 'literal_string': return 'str'
-      case 'literal_bool': case 'compare': case 'logic': case 'logic_not': return 'bool'
+      case 'literal_bool': case 'compare': case 'compare_chain': case 'logic': case 'logic_not': return 'bool'
       case 'input': return 'str'
       case 'cast': return ({ int: 'int', float: 'float', str: 'str' } as Record<string, string>)[String(n.properties.target_type)]
       case 'arithmetic': { const l = ty(kid('left')!), r = ty(kid('right')!); const op = String(n.properties.operator); if (op === '/') return 'float'; if (l === 'str' && r === 'str') return 'str'; return l === 'float' || r === 'float' ? 'float' : 'int' }

@@ -11,7 +11,24 @@ export function registerToCpp(r: ToCppRegistrar): void {
     const loopName = String(n.slots.targets?.[0]?.properties.name ?? n.properties.obj ?? '')
     const v = cpp.name(loopName)
     // 第 411 刀起單一名字也在 `targets` 裡——多於一個才是「拆開多個變數」
-    if ((n.slots.targets ?? []).length > 1) return [cpp.keep(n, 'outside-subset', 'for 拆開多個變數還沒有對應')]
+    if ((n.slots.targets ?? []).length > 1) {
+      // for i, x in enumerate(xs[, s])（446）：拆成一個計數的 for。兩個名字都只活在迴圈裡（之後沒讀、本體沒改）才換——
+      // Python 的迴圈變數在迴圈之後還在、改它不影響下一圈，C++ 的計數變數不是
+      const ts = n.slots.targets ?? []
+      const en = n.slots.iterable?.[0]
+      const names = ts.map((t) => (t.componentId === 'param_decl' || t.componentId.endsWith(':var_ref') ? String(t.properties?.name ?? '') : ''))
+      const xs = en?.slots?.value?.[0], start = en?.slots?.start?.[0]
+      const lt = cpp.pyType(xs), et = lt ? cpp.cppType(/^list\[(.+)\]$/.exec(lt)?.[1]) : undefined
+      if (!en?.componentId.endsWith(':container_enumerate') || ts.length !== 2 || names.some((x) => !x) || (en.slots.value ?? []).length !== 1
+        || !xs?.componentId.endsWith(':var_ref') || (start && !start.componentId.endsWith(':literal_number'))) return [cpp.keep(n, 'outside-subset', 'for 拆開多個變數還沒有對應（只收 for i, x in enumerate(清單)）')]
+      if (!et) return [cpp.keep(n, 'type-uncertain', `enumerate 走訪的對象型別（${lt ?? '?'}）`)]
+      if (!names.every((x) => cpp.plainLoopVar(n, x))) return [cpp.keep(n, 'outside-subset', 'enumerate 的迴圈變數在迴圈之後被讀、或本體改了它')]
+      const [iv, xv] = names.map((x) => cpp.name(x)), xsName = cpp.expr(xs)
+      const s0 = start ? String(start.properties?.value ?? '0') : '0'
+      const idx = s0 === '0' ? iv : `${iv} - ${s0}`
+      const bound = s0 === '0' ? `(long long)${xsName}.size()` : `${s0} + (long long)${xsName}.size()`
+      return [`${i}for (long long ${iv} = ${s0}; ${iv} < ${bound}; ${iv}++) {`, `${cpp.indent(depth + 1)}${et} ${xv} = ${xsName}[${idx}];`, ...cpp.block(n.slots.body, depth + 1), `${i}}`]
+    }
     // 目標是一個樣式（`for i, (a, b) in …`，第 420 刀）——同一件事，更深一層
     if ((n.slots.pattern ?? []).length > 0) return [cpp.keep(n, 'outside-subset', 'for 拆開多個變數還沒有對應')]
     const it = n.slots.iterable?.[0]

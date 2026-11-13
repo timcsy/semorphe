@@ -36,6 +36,10 @@ const CASES: [string, string, Record<string, string>, string][] = [
   ['函式', 'def add(a, b):\n    return a + b\nprint(add(1, 2))\n', { a: 'int', b: 'int', 'add()': 'int' }, ''],
   ['相加的結果取長度：接收者的括號不能掉（372 同類）', 's = "ab"\nt = "cd"\nprint(len(s + t))\n', { s: 'str', t: 'str' }, ''],
   ['字串相加', 's = input()\nt = s + "!"\nprint(t)\n', { s: 'str', t: 'str' }, 'hey\n'],
+  // 446：連續比較拆成 &&（C++ 的 a < b < c 是先比出真假再比）；中間那一項是名字才拆
+  ['連續比較', 'x = int(input())\nprint(0 <= x < 10, 10 < x <= 20)\n', { x: 'int' }, '15\n'],
+  // 446：for i, x in enumerate(xs[, 1])
+  ['enumerate 走訪', 'xs = [5, 7, 9]\nfor i, v in enumerate(xs):\n    print(i, v)\nfor k, w in enumerate(xs, 1):\n    print(k, w)\n', { xs: 'list[int]', i: 'int', v: 'int', k: 'int', w: 'int' }, ''],
 ]
 
 describe('Python → C++：換出來的 C++ 與原本的 Python 判得一樣（手寫型別表）', () => {
@@ -61,8 +65,6 @@ describe('Python → C++：換出來的 C++ 與原本的 Python 判得一樣（�
 })
 
 // ── 真的型別表（Cella 的 python.observedTypes）：python-beginner 課文的每一支解答 ──
-const files = (fs.readdirSync('lessons/python-beginner', { recursive: true }) as string[]).map(String)
-  .filter((f) => f.endsWith('.py') && f.includes('/solutions/')).sort().map((f) => `lessons/python-beginner/${f}`)
 
 /** 這支解答對應的題目的輸入（檔名是題目 id；`rebuild` 用 follow 之後的那一題） */
 function stdinOf(f: string): string {
@@ -169,11 +171,15 @@ describe('Python → C++：換成補在開頭的小函式，判決相同', () =>
   }
 })
 
-describe('Python → C++：python-beginner 課文的解答（Cella 觀察到的型別）', () => {
+/** 一套課文的每一支 Python 解答換成 C++、交給 Cella 判得一樣（446 起兩套：python-beginner、python-bridge） */
+function lessonSuite(dir: string, minFiles: number): void {
+const files = (fs.readdirSync(dir, { recursive: true }) as string[]).map(String)
+  .filter((f) => f.endsWith('.py') && f.includes('/solutions/')).sort().map((f) => `${dir}/${f}`)
+describe(`Python → C++：${dir.replace('lessons/', '')} 課文的解答（Cella 觀察到的型別）`, () => {
   const tally = { converted: [] as string[], kept: new Map<string, string[]>() }
-  it('入口：讀到了課文的 Python 解答', () => expect(files.length).toBeGreaterThanOrEqual(30))
+  it('入口：讀到了課文的 Python 解答', () => expect(files.length).toBeGreaterThanOrEqual(minFiles))
   for (const f of files) {
-    it(f.replace('lessons/python-beginner/', ''), async () => {
+    it(f.replace(`${dir}/`, ''), async () => {
       const src = fs.readFileSync(f, 'utf8')
       const stdin = stdinOf(f)
       const t = (await liftPython(src))!
@@ -199,8 +205,12 @@ describe('Python → C++：python-beginner 課文的解答（Cella 觀察到的�
   }
   it('★ 報表：兩份加起來等於解答總數', () => {
     const kept = new Set([...tally.kept.values()].flat()).size
-    process.stdout.write(`Python → C++：換過去 ${tally.converted.length} 支／保留 ${kept} 支｜原因分佈 ${[...tally.kept].map(([k, v]) => `${k}:${new Set(v).size}`).join(' ')}\n`)
+    process.stdout.write(`Python → C++（${dir}）：換過去 ${tally.converted.length} 支／保留 ${kept} 支｜原因分佈 ${[...tally.kept].map(([k, v]) => `${k}:${new Set(v).size}`).join(' ')}\n`)
     expect(tally.converted.length + kept).toBe(files.length)
   })
 })
+}
+lessonSuite('lessons/python-beginner', 30)
+// python-bridge：給從 C++ 轉來的學生——「這段 Python 對應的 C++」最該看得到的一套（446）
+lessonSuite('lessons/python-bridge', 10)
 
