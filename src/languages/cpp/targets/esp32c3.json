@@ -8,7 +8,8 @@
   "skeleton": "arduino",
   "provides": [
     "ledc-pwm",
-    "wifi"
+    "wifi",
+    "iram"
   ],
   "board": {
     "name": "ESP32-C3 Supermini",

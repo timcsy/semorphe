@@ -6,7 +6,7 @@
 
 判定規則：從 ComponentDef 合成最小節點跑一圈五路。missing = 路徑不存在；shell = 路徑存在但輸出退化（空／佔位／身分不符／未宣告的空操作）。
 
-元件：375｜✅ 實作 1361｜📄 已宣告不提供 5｜❔ 判不出來 131｜🈳 殼 1｜❌ 缺 2（以路徑數計）
+元件：376｜✅ 實作 1364｜📄 已宣告不提供 5｜❔ 判不出來 132｜🈳 殼 1｜❌ 缺 2（以路徑數計）
 
 > **「已宣告不提供」與「實作」是兩件事。** 前者代表系統沒有變，只是我們終於說清楚它本來就不做；後者代表系統多會做一件事。混在同一個數字裡的話，用宣告刷數字看起來會像進步。棘輪只看 🈳 與 ❌。
 
@@ -98,7 +98,7 @@
 | `cpp:endl` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:enum` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:exception_make` | ✅ | ✅ | ✅ | ✅ |
-| `cpp:forward_decl` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:forward_decl` | ✅ | ❔ | ✅ | ✅ |
 | `cpp:free` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:friend_class` | ✅ | ❔ | ✅ | ✅ |
 | `cpp:friend_def` | ✅ | ❔ | ✅ | ✅ |
@@ -274,6 +274,7 @@
 | `cpp:var_declare_ref` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:var_declare_sequence` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:var_declare_static` | ✅ | ✅ | ✅ | ✅ |
+| `cpp:var_declare_volatile` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:var_ref` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:var_swap` | ✅ | ✅ | ✅ | ✅ |
 | `cpp:vector_back` | ✅ | ✅ | ✅ | ✅ |

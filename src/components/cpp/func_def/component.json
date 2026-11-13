@@ -11,6 +11,10 @@
       "name": "return_type",
       "kind": "enum",
       "default": "void"
+    },
+    {
+      "name": "attribute",
+      "kind": "literal"
     }
   ],
   "slots": {
@@ -40,5 +44,6 @@
   },
   "_traits_why": "**「我是樹根」「我是函式定義」是我自己的宣告。**\n⚠️ 而「哪一個函式是進入點」**不在這裡**——`main` 這個名字是消費者的知識（介面層要找進入點、鷹架過濾器要拆 main 的外殼）。同一條性狀只講一半，另一半留在消費者手上。",
   "memberRole": "method",
-  "_memberRole_why": "**這顆在類別裡扮演什麼角色，由它自己宣告。**（見 registry.ts 的 `memberRoleOf`）"
+  "_memberRole_why": "**這顆在類別裡扮演什麼角色，由它自己宣告。**（見 registry.ts 的 `memberRoleOf`）",
+  "_properties_why": "`attribute`（438）：回傳型別與名字之間的屬性巨集，今天只收 `IRAM_ATTR`（ESP32／ESP8266 的中斷函式放進 IRAM）。沒有就不設；有的話換成「定義中斷函式」那個形態（軸 `attribute`），它不是另一個身分——呼叫它、把它交給 attachInterrupt 都照一般函式。"
 }

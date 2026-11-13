@@ -677,6 +677,7 @@
   "FLOW_SLOT_INIT": "初始",
   "FLOW_SLOT_INIT_STYLE": "初始化寫法",
   "FLOW_SLOT_INITIALIZER": "初始值",
+  "FLOW_SLOT_ATTRIBUTE": "擺放位置（中斷函式放進 IRAM）",
   "FLOW_SLOT_INITS": "初始設定",
   "FLOW_SLOT_ARROW": "經過指標（->）",
   "FLOW_SLOT_IS_VIRTUAL": "虛擬（virtual）",

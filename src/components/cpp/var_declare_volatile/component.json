@@ -1,0 +1,41 @@
+{
+  "componentId": "cpp:var_declare_volatile",
+  "abstractComponent": "cpp:var_declare",
+  "properties": [
+    {
+      "name": "type",
+      "kind": "type_expr",
+      "required": true,
+      "default": "bool"
+    },
+    {
+      "name": "name",
+      "kind": "identifier",
+      "required": true,
+      "default": "pressed"
+    }
+  ],
+  "slots": {
+    "initializer": "expression"
+  },
+  "role": "statement",
+  "owner": "(core)",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift.ts",
+        "_lift_why": "⚠️ `lift.ts` 匯出的是**建構子**——判別（修飾詞是不是只有一個 `volatile`、寫在型別前面、只有一個宣告子）是 C++ 語法的知識，留在共用檔的宣告策略裡（照同族那顆靜態變數）。"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "traits": {
+    "forLoopPart": true
+  },
+  "_traits_why": "同族的宣告整族都宣告了「我可以當 for 的初始化子」（C++ 的文法事實：`for (volatile int i = 0; …)` 合法），漏一顆的病已經修過三次。"
+}

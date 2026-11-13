@@ -123,5 +123,15 @@
     "key": "cpp:var_declare_const.init_style",
     "cause": "排版提示，不給學生編輯",
     "reason": "記的是**原文是不是建構子形式**（`const Vec k(5, 6);` 還是 `const int n = 5;`）——第 331 刀的盲測：原本丟掉，產碼寫成 `= 5`、formalize 只送第一個引數（Cella 用預設參數補第二個、印出別的值）。程式碼這一路（lift／產碼／formalize）今天是對的；🟡 **積木這一路是已知缺口**：這顆積木只有一個值插槽（VALUE），多個建構子引數本來就裝不下，走一趟積木會掉第二個以後的引數——與這一刀之前相同（沒有更差）。要讓積木裝得下是另一刀（可變插槽 ＋ hints），記在 `knowledge/draft/2026-11-07-類別外定義之後的缺口.md`。"
+  },
+  {
+    "key": "cpp:func_def.attribute",
+    "cause": "值由積木型別本身固定",
+    "reason": "438：`IRAM_ATTR` 由形態軸 `attribute` 選積木——有屬性就是「定義中斷函式」那顆（`cpp_func_def_IRAM_ATTR`，`renderMapping.fixed.attribute`），沒有就是一般那顆。積木本身就是那一格；換屬性＝換一顆積木，不是改一個欄位（同 `cpp:include.local`）。"
+  },
+  {
+    "key": "cpp:forward_decl.attribute",
+    "cause": "值由積木型別本身固定",
+    "reason": "438：同 `cpp:func_def.attribute`——中斷函式的原型是 `cpp_forward_decl_IRAM_ATTR` 那顆（`renderMapping.fixed.attribute`）。"
   }
 ]

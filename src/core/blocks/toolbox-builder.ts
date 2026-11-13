@@ -1,7 +1,7 @@
 import type { BlockSpecRegistry } from './block-spec-registry'
 import type { BlockSpec, ToolboxCategoryDef } from '../types'
 import { KNOWN_AXES } from '../projection/form-selection'
-import { ioTraitOf } from '../component/traits'
+import { ioTraitOf, targetProvidesForm } from '../component/traits'
 
 export type { ToolboxCategoryDef }
 
@@ -13,6 +13,8 @@ export interface ToolboxBuildConfig {
   categoryColors: Record<string, string>
   /** External category definitions (from language module). If not provided, uses empty array. */
   categoryDefs?: ToolboxCategoryDef[]
+  /** 目前的目標——只用來判形態層級的能力（`BlockSpec.needsCapability`）。沒給 ⟹ 那種形態一律不進。 */
+  target?: { provides?: readonly string[] }
 }
 
 type ToolboxEntry = { kind: string; type: string; extraState?: Record<string, unknown> }
@@ -44,7 +46,7 @@ export function isTypeLookupFallback(registry: BlockSpecRegistry, spec: BlockSpe
  * 現在一顆積木出現在工具箱裡，只因為它被宣告在某個模組的 `blocks.json` 裡。
  */
 export function buildToolbox(config: ToolboxBuildConfig): object {
-  const { blockSpecRegistry, visibleComponents, ioPreference: ioPref, msgs, categoryColors, categoryDefs = [] } = config
+  const { blockSpecRegistry, visibleComponents, ioPreference: ioPref, msgs, categoryColors, categoryDefs = [], target } = config
 
   const isVisible = (blockType: string): boolean =>
     blockSpecRegistry.isBlockVisible(blockType, visibleComponents)
@@ -78,6 +80,7 @@ export function buildToolbox(config: ToolboxBuildConfig): object {
       .listBySource(from, category, visibleComponents)
       .filter(s => {
         if (isTypeLookupFallback(blockSpecRegistry, s)) return false
+        if (!targetProvidesForm(target, s.needsCapability)) return false
         const declared = s.toolboxCategory
         if (declared === undefined) return true
         return Array.isArray(declared) ? declared.includes(targetKey) : declared === targetKey

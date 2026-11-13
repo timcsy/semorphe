@@ -128,6 +128,9 @@ const SHAPES: readonly string[] = [
   'int x = max({1, 2, 3});',
   'int x = min({1, 2});',
   'int x = max(1, 2);',
+  // ─── 438：中斷旗標（Arduino）——`volatile` 原本被丟掉、434 起整句照原文，現在有自己的元件 ───
+  'volatile int count = 0;',
+  'volatile unsigned long last;',
 ]
 
 describe('第一百一十五條護欄：宣告的形狀轉一圈回來還是它自己', () => {
@@ -362,6 +365,7 @@ describe('第一百一十八條護欄：走一趟積木回來', () => {
     ['deque<int> d(n);', 'deque<int> d(n);'],
     ['struct S { char k; union { int i; float f; }; };', 'struct S { char k; union { int i; float f;'], // 開頭是 `}` 的行被 viaBlocks 濾掉
     ['ios::sync_with_stdio(0), cin.tie(0);', 'ios::sync_with_stdio(0), cin.tie(0);'],
+    ['volatile unsigned long last = 0;', 'volatile unsigned long last = 0;'],
     ['int x = 1; for (; x != 0; scanf("%d", &x)) { }', 'int x = 1; for (; x != 0; scanf("%d", &x)) {'], // 單獨一行的 `}` 被 viaBlocks 濾掉
   ])('🔴 走一趟積木：%s', (body, expected) => {
     expect(

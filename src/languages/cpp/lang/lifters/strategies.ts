@@ -17,6 +17,7 @@ import { buildForwardDecl } from '../../../../components/cpp/forward_decl/lift'
 import { buildAutoDeclare } from '../../../../components/cpp/var_declare_auto/lift'
 import { buildDeclareSequence } from '../../../../components/cpp/var_declare_sequence/lift'
 import { buildStaticVar } from '../../../../components/cpp/var_declare_static/lift'
+import { buildVolatileVar } from '../../../../components/cpp/var_declare_volatile/lift'
 import { buildRawCode } from '../../../../components/cpp/raw_code/lift'
 import { reparseExpression } from '../misparse'
 import { qualifierComponent } from '../../../../core/component/qualifier-components'
@@ -1353,6 +1354,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     let name = 'f'
     /** 類別外定義的成員函式（第 322 刀）：有值就建類別外定義方法那顆 */
     let outsideOf: { cls: string; name: string; isConst: boolean } | null = null
+    // 438：函式定義上的屬性巨集（`IRAM_ATTR`）由樹修復 ⑤（`misparse.ts`）擦掉重解之後記回 `attribute`，這條路不會看到它
     const paramChildren: SemanticNode[] = []
 
     // ⚠️ `int* f(…)` 的 declarator 是 **pointer_declarator**，函式宣告子包在
@@ -1383,8 +1385,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       // 🔴 434：`void IRAM_ATTR onPress() {…}`（ESP32 的中斷函式）——解析器不認得屬性巨集，補了一個不存在的 `::`（MISSING），
       //    於是被當成「類別 IRAM_ATTR 的方法定義在類別外」，產回去是 `void IRAM_ATTR::onPress()`：**另一支編不過的程式**。
       //    在函式能帶屬性之前整段照原文誠實降級（名字裡有解析器補的東西，就不是真的限定名）
+      //    🟢 438：`IRAM_ATTR` 本身由樹修復 ⑤（`misparse.ts`）在這之前就擦掉重解了；走到這裡的是別的巨集名，照舊整段降級。
       if (nameNode?.type === 'qualified_identifier' && nameNode.children.some((c) => c?.isMissing === true)) {
-        return degrade(buildRawCode(node.text), '回傳型別與名字之間的屬性巨集（IRAM_ATTR 一類）還裝不下')
+        return degrade(buildRawCode(node.text), '回傳型別與名字之間的屬性巨集（IRAM_ATTR 以外的）還裝不下')
       }
       if (nameNode?.type === 'qualified_identifier') {
         const trailingConst = fnDecl.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
@@ -1507,9 +1510,15 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     const qualifier = qualifierNode?.text
     // 🔴 434：`volatile bool pressed = false;`（中斷旗標）——下面只認 const／constexpr，其餘修飾字原本【安靜地丟掉】，產回去是 `bool pressed`
     //    （另一支程式：中斷改的值可能讀不到）。在宣告裝得下它之前整句照原文誠實降級
+    //    🟢 438：最常見的那一種（`volatile T x = v;`／`volatile T x;`：修飾詞只有一個、寫在型別前面、一個宣告子）有自己的元件；
+    //    其餘組合（`bool volatile f`、`volatile const`、`static volatile`、多宣告子、指標／陣列）照舊整句降級。
     {
       const other = node.namedChildren.find(c => c.type === 'type_qualifier' && c.text !== 'const' && c.text !== 'constexpr')
-      if (other) return degrade(buildRawCode(node.text), `修飾詞 ${other.text} 還裝不下（不安靜地丟掉）`)
+      if (other) {
+        const vol = other.text === 'volatile' ? liftVolatileDeclaration(node, other, ctx) : null
+        if (vol) return vol
+        return degrade(buildRawCode(node.text), `修飾詞 ${other.text} 還裝不下（不安靜地丟掉）`)
+      }
     }
 
     // Detect auto (placeholder_type_specifier)
@@ -2270,6 +2279,7 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       // > ——而它壞掉的樣子與原本那份當初一模一樣。**
       //
       // → 改成呼叫那一份，缺陷與重複一起消失。
+      // 🟢 438：中斷函式的原型（`void IRAM_ATTR f(…);`）由樹修復 ⑤（`misparse.ts`）擦掉巨集重解、屬性記回 `attribute`——不會走到這裡
       return buildForwardDecl(type, nameNode?.text ?? 'f', liftParamList(paramList ?? null, ctx))
     }
 
@@ -2718,4 +2728,25 @@ function liftPointerPrototype(node: AstNode, retType: string, ctx: LiftContext):
   const pl = inner.childForFieldName('parameters') ?? inner.namedChildren.find((c) => c.type === 'parameter_list')
   ctx.data.declareFunction(nm.text, `${retType}${marks}`)
   return buildForwardDecl(`${retType}${marks}`, nm.text, liftParamList(pl ?? null, ctx))
+}
+
+/**
+ * 438：`volatile T x = v;`／`volatile T x;` → 易變變數那顆元件；**形狀不是這一種就回 null**（呼叫端照舊整句降級）。
+ * 只收：修飾詞恰好一個 `volatile` 而且寫在型別前面、沒有儲存類別（static／extern）、型別是一個簡單型別名、
+ * 恰好一個宣告子而它的名字是識別字（不是指標、陣列、參照）。
+ */
+function liftVolatileDeclaration(node: AstNode, qual: AstNode, ctx: LiftContext): SemanticNode | null {
+  const kids = node.namedChildren
+  const typeNode = kids.find((c) => c.type === 'primitive_type' || c.type === 'sized_type_specifier' || c.type === 'type_identifier')
+  if (!typeNode || qual.startIndex > typeNode.startIndex) return null
+  const decls = kids.filter((c) => c !== qual && c.startIndex !== qual.startIndex && c.startIndex !== typeNode.startIndex)
+  if (kids.length !== 3 || decls.length !== 1) return null
+  const d = decls[0]
+  if (d.type === 'identifier') return buildVolatileVar(typeNode.text, d.text, null)
+  if (d.type !== 'init_declarator') return null
+  const nameNode = d.childForFieldName('declarator')
+  const valueNode = d.childForFieldName('value')
+  if (nameNode?.type !== 'identifier' || !valueNode || valueNode.type === 'initializer_list' || valueNode.type === 'argument_list') return null
+  const value = ctx.lift(valueNode)
+  return value ? buildVolatileVar(typeNode.text, nameNode.text, value) : null
 }

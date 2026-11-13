@@ -677,6 +677,7 @@
   "FLOW_SLOT_INIT": "Init",
   "FLOW_SLOT_INIT_STYLE": "Init style",
   "FLOW_SLOT_INITIALIZER": "Initial value",
+  "FLOW_SLOT_ATTRIBUTE": "Placement (IRAM for interrupt handlers)",
   "FLOW_SLOT_INITS": "Initializers",
   "FLOW_SLOT_ARROW": "Through a pointer (->)",
   "FLOW_SLOT_IS_VIRTUAL": "Virtual",
