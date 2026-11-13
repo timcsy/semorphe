@@ -31,7 +31,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../helpers/setup-lifter'
 import { registerCppLanguage } from '../../src/languages/cpp/generators'
-import { runCella, describeCellaResult, knownCellaGap } from '../helpers/cella-run'
+import { runCella, describeCellaResult } from '../helpers/cella-run'
 import { generateCode } from '../../src/core/projection/code-generator'
 import apcs from '../../src/languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../src/core/types'
@@ -104,9 +104,8 @@ void loop() {
   }, 60000)
 
   /** 遞迴二分法依序點亮六顆 LED，遞迴函式裡直接呼叫 digitalWrite 和 delay　⚠️ 棘手處：遞迴呼叫夾在 digitalWrite(HIGH) 和 digitalWrite(LOW) 中間，所以腳位的開關順序是前序進後序出，而 mid 用整數除法讓左右子區間不對稱 */
-  // 歸類：我們這側（formalize 核心的型別表沒有 Arduino 的 `byte`）＋ Cella 那側（sketch 沒有 Arduino.h 隱含帶進的 typedef：
-  //   `uint8_t` 不 include 判 reject「use of undeclared identifier 'uint8_t'」，`tName byte` 判 reject「unknown type」）
-  it('🟡 已知缺陷（修好時這條會紅）：★ fuzz_5：遞迴二分法依序點亮六顆 LED，遞迴函式裡直接呼叫 ', async () => {
+  // 🟢 434（2026-11-13）解開：板子上 `byte` 照 Arduino.h 的 typedef 送 tUChar（Cella 認得這個名字之後改回照名送）
+  it('★ fuzz_5：遞迴二分法依序點亮六顆 LED，遞迴函式裡直接呼叫 ', async () => {
     const src = `byte pattern[6] = {2, 3, 4, 5, 6, 7};
 
 void ripple(int lo, int hi, int depth) {
@@ -142,7 +141,7 @@ void loop() {
     const once = generateCode(lift(src), 'cpp', S)
     expect(generateCode(lift(once), 'cpp', S)).toBe(once)
     // 輸出比對**前綴**——見檔頭
-    await knownCellaGap(/型別「byte」還沒有對應/, async () => { expect(await run(src)).toContain(`0/2`) })
+    expect(await run(src)).toContain(`0/2`)
   }, 60000)
 
   /** enum 四狀態的防盜警報狀態機，用 switch 轉移並跑一段寫死的觸發腳本　⚠️ 棘手處：轉移條件混用了狀態、輸入和「第幾拍」三個東西，ARMED 用 ticks > 2 而不是自己的計時器，換個起始拍數整條路徑就變了 */
@@ -505,8 +504,8 @@ void loop() {
    * **`const` ＋ 二維陣列**——🟢 同 fuzz_3，2026-09-17 一起解開。
    * ⚠️ 同樣是重建的一支（原始程式沒有留下來）。
    */
-  // 歸類：同 fuzz_5——`byte` 型別（formalize 核心的型別表 ＋ Cella 的 sketch 沒有 Arduino.h 的 typedef）
-  it('🟡 已知缺陷（修好時這條會紅）：★ fuzz_6：const ＋ 陣列宣告（二維）', async () => {
+  // 🟢 434 解開：同 fuzz_5（`byte`）
+  it('★ fuzz_6：const ＋ 陣列宣告（二維）', async () => {
     const src = `const byte GRID[2][3] = {{2, 3, 4}, {5, 6, 7}};
 
 void setup() {
@@ -522,7 +521,7 @@ void loop() {
     expect(ids, '🔴 落進殘差了').not.toContain('cpp:raw_code')
     const once = generateCode(lift(src), 'cpp', S)
     expect(generateCode(lift(once), 'cpp', S)).toBe(once)
-    await knownCellaGap(/型別「byte」還沒有對應/, async () => { expect(await run(src)).toContain('7') })
+    expect(await run(src)).toContain('7')
   }, 60000)
 
   /**

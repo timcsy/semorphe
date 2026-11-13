@@ -1380,6 +1380,12 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       //    這顆元件記不住尾端的 const，也沒有「沒有回傳型別」的形狀，於是 const 安靜地丟掉、建構子／解構子被補上 `void`
       //    ——產回去編不過（而且意思變了）。在「宣告方法、定義在類別外」那顆元件之前，照實降級成原文（路線圖〈類別外定義成員函式〉）。
       //    課文與 StudyCpp 0 處（2026-11-06 量過），所以這一條只擋盲測量到的那幾種、不動任何現有的課。
+      // 🔴 434：`void IRAM_ATTR onPress() {…}`（ESP32 的中斷函式）——解析器不認得屬性巨集，補了一個不存在的 `::`（MISSING），
+      //    於是被當成「類別 IRAM_ATTR 的方法定義在類別外」，產回去是 `void IRAM_ATTR::onPress()`：**另一支編不過的程式**。
+      //    在函式能帶屬性之前整段照原文誠實降級（名字裡有解析器補的東西，就不是真的限定名）
+      if (nameNode?.type === 'qualified_identifier' && nameNode.children.some((c) => c?.isMissing === true)) {
+        return degrade(buildRawCode(node.text), '回傳型別與名字之間的屬性巨集（IRAM_ATTR 一類）還裝不下')
+      }
       if (nameNode?.type === 'qualified_identifier') {
         const trailingConst = fnDecl.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
         const ctorOrDtor = !node.childForFieldName('type') || nameNode.namedChildren.some((c) => c.type === 'destructor_name')
@@ -1499,6 +1505,12 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
     // Detect type qualifiers: const, constexpr
     const qualifierNode = node.namedChildren.find(c => c.type === 'type_qualifier')
     const qualifier = qualifierNode?.text
+    // 🔴 434：`volatile bool pressed = false;`（中斷旗標）——下面只認 const／constexpr，其餘修飾字原本【安靜地丟掉】，產回去是 `bool pressed`
+    //    （另一支程式：中斷改的值可能讀不到）。在宣告裝得下它之前整句照原文誠實降級
+    {
+      const other = node.namedChildren.find(c => c.type === 'type_qualifier' && c.text !== 'const' && c.text !== 'constexpr')
+      if (other) return degrade(buildRawCode(node.text), `修飾詞 ${other.text} 還裝不下（不安靜地丟掉）`)
+    }
 
     // Detect auto (placeholder_type_specifier)
     const autoNode = node.namedChildren.find(c => c.type === 'placeholder_type_specifier')

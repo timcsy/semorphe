@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
+import { expectCellaOut, runCella, describeCellaResult } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -42,29 +42,22 @@ describe('cpp:math_constrain', () => {
     expect(generateCode(lift(once), 'cpp', apcs as StylePreset)).toBe(once)
   })
 
-  // 🟡 釘子：`constrain` 是 Arduino 的巨集，Cella 的套件裡沒有它（arduino 也沒有）——所以這顆刻意【不補】formalize：補了的話 Arduino 程式會從「判不出」變成假的 reject「呼叫未宣告的函式」。等 Cella 的 Arduino 模型有 constrain 再接（已回報）
-  it('🟡 已知缺陷（修好時這條會紅）：執行 —— 三種情形（低於、範圍內、高於）', () => knownCellaGap(/math_constrain/, async () => {
-    await expectCellaOut(`
-      #include <iostream>
-      using namespace std;
-      int main() {
-        cout << constrain(-5, 0, 10) << " " << constrain(5, 0, 10) << " " << constrain(50, 0, 10) << endl;
-        return 0;
-      }
-    `, '0 5 10\n')
-  }))
+  // 433：Cella 的 Arduino 核心有 constrain（`@cella-lang/arduino` README 的 core）——在板子上接上；標準 C++ 沒有它，照實翻不出
+  const sketch = (body: string) => `void setup() {\n  Serial.begin(9600);\n${body}\n}\nvoid loop() {}\n`
+  it('執行（Uno）—— 三種情形（低於、範圍內、高於）', async () => {
+    await expectCellaOut(sketch(`  Serial.println(constrain(-5, 0, 10));\n  Serial.println(constrain(5, 0, 10));\n  Serial.println(constrain(50, 0, 10));`),
+      '0\r\n5\r\n10\r\n', { board: 'uno' })
+  })
 
-  // 🟡 釘子：同上（Cella 沒有 constrain，formalize 刻意不補）
-  it('🟡 已知缺陷（修好時這條會紅）：⚠️ 型別跟著走——小數不得被夾成整數', () => knownCellaGap(/math_constrain/, async () => {
+  it('執行（Uno）—— ⚠️ 型別跟著走：小數不得被夾成整數', async () => {
     // 🔴 回傳的是【原本那個值】，不是重新包一個 int
-    await expectCellaOut(`
-      #include <iostream>
-      using namespace std;
-      int main() {
-        double d = constrain(2.5, 0.0, 10.0);
-        cout << d << endl;
-        return 0;
-      }
-    `, '2.5\n')
-  }))
+    await expectCellaOut(sketch(`  double d = constrain(2.5, 0.0, 10.0);\n  Serial.println(d);`), '2.50\r\n', { board: 'uno' })
+  })
+
+  it('不在板子上：照實翻不出，不送一個會被判「呼叫未宣告的函式」的呼叫', async () => {
+    const r = await runCella('#include <iostream>\nusing namespace std;\nint main() { cout << constrain(5, 0, 10); }\n')
+    const text = describeCellaResult(r)
+    expect(text).toContain('翻不出')
+    expect(text).toContain('constrain 是 Arduino 的巨集')
+  })
 })
