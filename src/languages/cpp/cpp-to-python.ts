@@ -26,6 +26,9 @@ const TOKEN_READER = [
 ]
 /** C++ 的 %：商向零截斷（[expr.mul]p4）。寫成函式，兩邊的運算式各只算一次 */
 const TRUNC_MOD = ['def trunc_mod(a, b):', '    return a - int(a / b) * b']
+/** 64 位元整數的除法與取餘數（456）：只用整數運算——商向零截斷（C++ 的 [expr.mul]p4），餘數照 a == (a / b) * b + a % b */
+const TRUNC_DIV = ['def trunc_div(a, b):', '    q = abs(a) // abs(b)', '    return q if (a < 0) == (b < 0) else -q']
+const TRUNC_MOD64 = ['def trunc_mod64(a, b):', '    return a - trunc_div(a, b) * b']
 const tables = (): ToPythonTables => (TABLES ??= collectToPython())
 
 const lineOf = (n: SemanticNode): number | undefined =>
@@ -87,6 +90,7 @@ export function convertCppToPython(
   let inMain = false
   let needTokens = false
   let needTruncMod = false
+  let needTruncDiv = false, needTruncMod64 = false
   const imports = new Set<string>()
   const py: ToPythonContext = {
     get inMain() { return inMain },
@@ -103,6 +107,7 @@ export function convertCppToPython(
     yieldsBool: (n) => !!n && t.bool.has(n.componentId),
     useTokenReader() { needTokens = true; return 'next_token()' },
     useTruncMod() { needTruncMod = true; return 'trunc_mod' },
+    useTruncDiv(kind) { needTruncDiv = true; if (kind === 'mod') { needTruncMod64 = true; return 'trunc_mod64' } return 'trunc_div' },
     noteDeclaredString: (name) => { declaredStrings.add(name) },
     isDeclaredString: (name) => declaredStrings.has(name),
     noteElementType: (name, type) => { elementTypes.set(name, elementTypes.has(name) && elementTypes.get(name) !== type ? null : type) },
@@ -149,6 +154,6 @@ export function convertCppToPython(
   }
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   // 跨行讀一個詞——同 cin（空白與換行都是分隔；research R4 的修正：課文的輸入一個數一行，「一句讀一行」對不上）
-  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needTokens ? TOKEN_READER : []), ...(needTruncMod ? TRUNC_MOD : [])]
+  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needTokens ? TOKEN_READER : []), ...(needTruncMod ? TRUNC_MOD : []), ...(needTruncDiv ? TRUNC_DIV : []), ...(needTruncMod64 ? TRUNC_MOD64 : [])]
   return { code: `${[...head, ...lines].join('\n')}\n`, converted, kept: 0, reasons }
 }
