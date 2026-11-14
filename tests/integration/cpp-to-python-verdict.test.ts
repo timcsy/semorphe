@@ -661,6 +661,32 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
   }, 60_000)
+  // ── 467：switch（含掉下去的 fallthrough）、~x、{ … } 區塊 ──
+  it('🟢 switch 每段都 break：寫成 if／elif／else；case 2: { … } 區塊；~x；判決相同（467）', async () => {
+    const src = H + 'int main() {\n    int m;\n    cin >> m;\n    int d = ~m;\n    switch (m % 4) {\n        case 0:\n        case 1:\n            cout << "a";\n            break;\n        case 2: {\n            int k = ~(m + 1);\n            cout << k;\n            break;\n        }\n        default:\n            cout << "z";\n    }\n    cout << " " << d << " " << ~0 << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '6\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toMatch(/elif /)
+    for (const stdin of ['6\n', '5\n', '7\n', '-3\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🟢 switch 有掉下去的段落、段落中間的 break、default 不在最後：照 C++ 的跳法寫；判決相同（467）', async () => {
+    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    for (int i = 0; i < n; i++) {\n        int m;\n        cin >> m;\n        switch (m) {\n            case 1:\n            case 3:\n                cout << m << "odd";\n                break;\n            default:\n                cout << "d";\n            case 2:\n                cout << "two";\n                if (m > 5) break;\n                cout << "!";\n            case 4:\n                cout << "four";\n        }\n        cout << endl;\n    }\n    char c = \'b\';\n    switch (c) { case \'a\': cout << "A"; case \'b\': cout << "B"; case \'c\': cout << "C"; }\n    cout << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '6\n1 2 3 4 5 9\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('while True:')
+    await sameVerdict(src, r.code!, '6\n1 2 3 4 5 9\n')
+  }, 60_000)
+  it('🔴 保留：掉下去的 switch 裡有屬於外層迴圈的 continue；無號整數的 ~（467）', async () => {
+    for (const body of ['    for (int i = 0; i < 3; i++) {\n        switch (i) {\n            case 0: cout << "a";\n            case 1: continue;\n        }\n        cout << i;\n    }\n',
+      '    unsigned int u = 0;\n    cout << ~u << endl;\n']) {
+      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
+    }
+  }, 60_000)
+  it('🔴 保留：for 的本體在 { … } 裡有 continue（467 之前沒看進區塊）', async () => {
+    const r = await toPython(H + 'int main() {\n    for (int i = 1; i < 40; i *= 2) {\n        {\n            if (i == 2) continue;\n        }\n        cout << i;\n    }\n    return 0;\n}\n')
+    expect(r.code, r.code ?? '').toBeNull()
+  }, 60_000)
   // ── 466：成員巨集（#define F first）與 pair 的型別巨集（#define pii pair<int,int>）──
   it('🟢 #define F first／S second、#define pii pair<int,int>：pii 變數、pii 陣列、vector<pii>、p.F 讀寫、cin >> p.F；判決相同（466）', async () => {
     const src = H + '#define F first\n#define S second\n#define pii pair<int,int>\n#define ll long long\npii a[3];\nint main() {\n    pii p;\n    pii q = {4, 5};\n    pii r = make_pair(7, 8);\n    vector<pii> v(2);\n    pair<ll, ll> w = {1, 2};\n    cin >> p.F >> a[1].S;\n    p.S = p.F * 2;\n    a[0].F++;\n    v[1].S += 3;\n    q.F = 2.9;\n    w.S *= 3;\n    cout << p.F << " " << p.S << " " << a[0].F << a[1].S << " " << v[1].F << v[1].S << " " << q.F << q.S << " " << r.F + r.S << " " << w.F << w.S << endl;\n    return 0;\n}\n'

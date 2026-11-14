@@ -3,6 +3,7 @@
  * 引擎（`../cpp-to-python.ts`）依身分查表；表外的身分記成「子集以外」。
  */
 import type { SemanticNode } from '../../../core/types'
+import { isLoop } from '../../../core/iterations'
 import type { KeepKind } from '../../../core/language-conversion'
 
 export interface ToPythonContext {
@@ -282,13 +283,19 @@ export function castToPython(n: SemanticNode, py: ToPythonContext): string {
 
 /** 本體裡有屬於這一圈的 continue 嗎（不往內層迴圈的 body 走——那裡的 continue 屬於內層；if 的分支槽叫 then_body／else_body）——寫成 while 的迴圈共用（453、456） */
 export function hasOwnContinue(nodes: readonly SemanticNode[]): boolean {
-  return nodes.some((x) => x.componentId.endsWith(':continue') || Object.entries(x.slots ?? {}).some(([k, kids]) => k !== 'body' && hasOwnContinue(kids)))
+  // 只有【內層迴圈】的本體不算（那裡的 continue 屬於它）——迴圈是元件宣告的 `control_flow: loop`，不看槽名：
+  // 467 之前跳過的是每一個叫 body 的槽，於是 `{ continue; }`（區塊）、switch 的 case 本體裡的 continue 都看不到
+  return nodes.some((x) => x.componentId.endsWith(':continue') || Object.entries(x.slots ?? {}).some(([k, kids]) => !(k === 'body' && isLoop(x)) && hasOwnContinue(kids)))
 }
 
 /** 本體裡有屬於這一圈的 break 嗎（457：`while (n--)` 正常結束時多減的那一次，break 出去的不會減）——寧可多報：switch 裡的 break 也算 */
 export function hasOwnBreak(nodes: readonly SemanticNode[]): boolean {
-  return nodes.some((x) => x.componentId.endsWith(':break') || Object.entries(x.slots ?? {}).some(([k, kids]) => k !== 'body' && hasOwnBreak(kids)))
+  return nodes.some((x) => x.componentId.endsWith(':break') || Object.entries(x.slots ?? {}).some(([k, kids]) => !(k === 'body' && isLoop(x)) && hasOwnBreak(kids)))
 }
+
+/** 這一顆是不是跳出去的敘述（467：switch 的一段結尾）——問身分的字尾，同上面兩支 */
+export const isBreakNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':break')
+export const isReturnNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':return')
 
 /** 一個左值的底名（`a`、`a[i]`、`v.at(i)`、`p.x` → a／v／p） */
 function baseName(x: SemanticNode | undefined): string | undefined {

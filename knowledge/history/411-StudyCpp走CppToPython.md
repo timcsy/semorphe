@@ -119,3 +119,13 @@ pair 換成 **tuple**，不是 list：C++ 的 pair 是值（`q = p` 複製一份
 453 那支「`#define F first` 要保留」的判決例轉成換得過去、判決相同。
 
 **結果**：StudyCpp 換得過去 86 → 86，沒有掉支、輸出沒變。用到成員／pair 巨集的 18 支裡，巨集不再是擋路的那一項；**9 支現在只剩 `range_sort`**（等 Cella 的 sort 變快），4_15 系列另有 multiset 與它的迭代器。
+
+## 後續：467（11-15）
+
+switch：每段都以 break／return 結尾、default 在最後、中間沒有別的 break ⟹ `if x in (1, 3): … elif …: … else: …`。其餘（掉下去的 fallthrough、段落中間的 break、default 不在最後）照 C++ 的跳法寫：`while True:` 只跑一次、裡面的 break 跳出它（同 C++ 跳出 switch），每段的條件是 `hit or x in (…)`、default 那段是 `hit or x not in (所有 case 的值)`——default 在哪裡都對。被比的值是名字或字面量就直接用（段落裡改了它也沒關係：後面的條件被 hit 短路），否則先算一次存起來。掉下去的 switch 裡有屬於外層迴圈的 continue 就保留（它會跳到 while True 的下一圈）。
+
+`~x` 只收有號整數（C++20 定死了二補數，~x ＝ -x - 1，同 Python）；無號的 C++ 繞回成很大的數，保留。`{ … }` 區塊攤平在同一層。
+
+**順手補到一個藏著的漏洞**：「本體有屬於這一圈的 continue」（for 寫成 while 時 continue 會跳過更新）原本跳過每一個叫 body 的槽——用意是跳過內層迴圈，而區塊、case 的本體也叫 body，於是 `for (…; i *= 2) { { if (…) continue; } }` 看不到那個 continue。區塊之前換不過去所以沒有露出來；這一刀讓區塊換得過去，**同一刀改成只跳過宣告了 `control_flow: loop` 的本體**，並釘一支保留的判決例。
+
+**結果**：StudyCpp 換得過去 86 → 88 支（basic 11_switch_case_2——case 2 掉進 default；8_logic_2——`~0`、`~0b00000100`），兩支判決、輸出都相同；沒有掉支、沒有一支的輸出變了。
