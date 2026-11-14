@@ -38,6 +38,16 @@ export interface ToPythonContext {
   noteDeclaredString(name: string): void
   /** 這個名字在前面宣告成 string 嗎 */
   isDeclaredString(name: string): boolean
+  /** 宣告容器的那顆元件記下名字的元素型別（450：map 的值型別——\`m[k] = 2.7\` 放進整數的 map 要截斷，而 Cella 不給那一句型別） */
+  noteElementType(name: string, type: string): void
+  /** 這個名字宣告時的元素型別；同一個名字宣告過兩種（不同函式裡的同名區域變數）就不知道——undefined */
+  elementTypeOf(name: string): string | undefined
+  /**
+   * 一顆節點寫成**指定的目標**（`=`、`+=`、`++`、`cin >>` 的左邊；450）。`readsFirst`：先讀再改（`+=`、`++`）。
+   * 回傳的 `before` 是要先跑的一句（不含縮排）——map 的元素先讀再改，C++ 會先補上預設值、Python 的 dict 會丟 KeyError。
+   * 膠囊沒登記目標寫法的，照運算式寫
+   */
+  target(n: SemanticNode | undefined, readsFirst: boolean): { before?: string; text: string }
 }
 
 /** 加括號的判準兩個方向共用（住在核心）——膠囊照舊從這裡拿 */
@@ -60,6 +70,7 @@ export const pyStr = (s: string): string => JSON.stringify(s)
 
 export type ExprFn = (n: SemanticNode, py: ToPythonContext) => string
 export type StmtFn = (n: SemanticNode, py: ToPythonContext, depth: number) => string[]
+export type TargetFn = (n: SemanticNode, py: ToPythonContext, readsFirst: boolean) => { before?: string; text: string }
 
 /**
  * 膠囊登記**自己**的印法——不寫自己的身分（收集器依膠囊所在的目錄對回 component.json 的身分；就近性護欄：身分不多擴散一個檔）
@@ -67,6 +78,8 @@ export type StmtFn = (n: SemanticNode, py: ToPythonContext, depth: number) => st
 export interface ToPythonRegistrar {
   expr(fn: ExprFn): void
   stmt(fn: StmtFn): void
+  /** 這顆元件當指定目標時的寫法（450：map 的元素、pair 的成員）——沒登記的照運算式寫 */
+  target(fn: TargetFn): void
   /** 這顆元件產生 bool（比較、邏輯）——不靠 Cella 的型別表（它對 C++ 的比較回報 int，見 research R8） */
   yieldsBool(): void
 }
@@ -87,9 +100,7 @@ export function isNarrowInt(t: string | undefined): boolean {
  * （`math.fmod` 更短，而 Cella 的 Python 家族還不支援它——判決證明不了的寫法不用。2026-11-09 已請 cella 補）
  */
 export function truncatedRemainder(l: SemanticNode | undefined, r: SemanticNode | undefined, py: ToPythonContext): string | null {
-  const simple = (x: SemanticNode | undefined): boolean => !!x && Object.values(x.slots ?? {}).every((k) => k.length === 0)
-    && (typeof x.properties?.name === 'string' || typeof x.properties?.value === 'string')
-  if (!simple(l) || !simple(r)) return null
+  if (!isSimple(l) || !isSimple(r)) return null
   const a = py.expr(l), b = py.expr(r)
   return `${a} - int(${a} / ${b}) * ${b}`
 }
@@ -119,3 +130,36 @@ export function adapterKind(t: string | undefined): AdapterKind | undefined {
  */
 const ATOM = /^(?:[A-Za-z_][\w.]*(?:\[[^\]]*\]|\([^()]*\))*|\d+(?:\.\d+)?)$/
 export const atom = (e: string): string => ATOM.test(e) ? e : `(${e})`
+
+/**
+ * 一個有序的關聯容器（Cella 的型別字串）在 Python 用哪一種寫（450）：`map<K, V>` → dict、`set<K>` → set，走訪時包 `sorted(…)`
+ * （C++ 照鍵由小到大走；Python 的 dict 照放進去的順序、set 沒有順序）。
+ * - 鍵只收整數與字串：std::string 的比較是 unsigned char 逐位元組＝UTF-8 的碼位順序，與 Python 的字串比較相同；
+ *   char 有正負號（大於 127 的字元兩邊順序不同）、浮點有 NaN（sorted 會亂序）——都不收。
+ * - 值只收放進去就不會被改的純量（數字、字串）；bool 不收（C++ 印 0／1、Python 印 True／False，而讀 map 的那顆不知道自己是 bool）。
+ * - unordered_*、multi* 不收（走訪順序與重複鍵兩邊不同）。對不上 → undefined
+ */
+export type KeyedKind = { kind: 'map'; key: string; value: string } | { kind: 'set'; key: string }
+const KEY = '(int|long|long long|short|string)'
+const MAP_VALUE = '(int|long|long long|short|double|string)'
+const bare = (t: string | undefined): string =>
+  (t ?? '').replace(/^const\s+/, '').replace(/\s*[&*]$/, '').replace(/std::/g, '').replace(/\s+/g, ' ').trim()
+export function keyedKind(t: string | undefined): KeyedKind | undefined {
+  const s = bare(t)
+  const m = s.match(new RegExp(`^map ?< ?${KEY} ?, ?${MAP_VALUE} ?>$`))
+  if (m) return { kind: 'map', key: m[1], value: m[2] }
+  const e = s.match(new RegExp(`^set ?< ?${KEY} ?>$`))
+  return e ? { kind: 'set', key: e[1] } : undefined
+}
+
+/** map 的值型別在 Python 的預設值（C++ 的 `m[k]` 讀一個沒有的鍵，補上值初始化的那一個） */
+export function zeroOf(t: string | undefined): string | undefined {
+  const s = bare(t)
+  return /^(int|long|long long|short)$/.test(s) ? '0' : s === 'double' ? '0.0' : s === 'string' ? '""' : undefined
+}
+
+/** 一顆運算式節點沒有副作用、算兩次也一樣嗎（變數、字面量）——同 truncatedRemainder 的判準 */
+export function isSimple(x: SemanticNode | undefined): boolean {
+  return !!x && Object.values(x.slots ?? {}).every((k) => k.length === 0)
+    && (typeof x.properties?.name === 'string' || typeof x.properties?.value === 'string')
+}

@@ -63,7 +63,7 @@ const stdinOf = (f: string): string => {
  * cpp-advanced 的解答不寫標頭（產品替學生補）——這裡補上它用到的那幾個（不用 `<bits/stdc++.h>`：Cella 會多帶 header.contents 的假設）
  */
 const withHeaders = (src: string): string => src.includes('#include') ? src
-  : '#include <iostream>\n#include <vector>\n#include <algorithm>\nusing namespace std;\n\n' + src
+  : '#include <iostream>\n#include <vector>\n#include <algorithm>\n#include <map>\n#include <set>\nusing namespace std;\n\n' + src
 
 /** Cella 的 Python 家族少帶 libm 的假設（sqrt）——修好時這幾支會紅 */
 const KNOWN_ASSUMES_GAP = new Set(['06-算一算/solutions/rebuild.cpp'])
@@ -114,7 +114,7 @@ function lessonSuite(track: string, minFiles: number, minConverted: (total: numb
 }
 
 lessonSuite('cpp-beginner', 60, (n) => Math.ceil(n / 2))
-lessonSuite('cpp-advanced', 20, () => 8)
+lessonSuite('cpp-advanced', 20, () => 9)
 
 // ── US2／SC-003：意思會變的地方照實保留（或換成意思相同的寫法，由判決證明）──
 describe('C++ → Python：意思會變的反例', () => {
@@ -254,6 +254,40 @@ describe('C++ → Python：意思會變的反例', () => {
   ] as const) {
     it(`🔴 保留：${name}（448）`, async () => {
       const r = await toPython(S + code)
+      expect(r.code, '換了').toBeNull()
+      expect(r.reasons.map((x) => x.detail).join()).toContain(detail)
+    }, 60_000)
+  }
+  // ── 450：有序的 map／set、pair 的成員、浮點加進整數的截斷 ──
+  const K = '#include <iostream>\n#include <map>\n#include <set>\n#include <string>\nusing namespace std;\n'
+  for (const [name, code, must] of [
+    // m[k] 讀一個沒有的鍵：C++ 先補上預設值（之後走訪看得到）⟹ setdefault；先讀再改（++、+=）先補一句 setdefault；走訪照鍵排序 ⟹ sorted
+    ['map → dict：++／+=／讀沒有的鍵／複製／指定／count／size／結構化繫結／const 參考走訪', 'int main() {\n    map<string, int> m;\n    m["a"]++;\n    m["b"] += 2;\n    ++m["c"];\n    m["a"] -= 5;\n    int z = m["zz"];\n    map<string, int> m2 = m;\n    m2["a"] = 100;\n    map<string, int> m3;\n    m3 = m;\n    m3["q"] = 1;\n    set<int> s;\n    s.insert(3); s.insert(1); s.insert(3);\n    cout << m.size() << " " << s.size() << " " << m.count("a") << s.count(3) << s.count(7) << z << endl;\n    for (auto [k, v] : m) cout << k << "=" << v << ";";\n    cout << endl;\n    for (const auto& p : m2) cout << p.first << p.second << " ";\n    cout << m3.size() << endl;\n    for (int x : s) cout << x;\n    cout << endl;\n    return 0;\n}\n', 'for k, v in sorted(m.items()):'],
+    ['set → set：insert／count／複製／走訪照大小', 'int main() {\n    set<int> a;\n    a.insert(7);\n    a.insert(2);\n    a.insert(7);\n    set<int> b = a;\n    b.insert(5);\n    for (int x : a) cout << x << b.count(x);\n    cout << a.size() << b.size() << endl;\n    set<int> s;\n    s.insert(-3);\n    s.insert(10);\n    for (int x : s) cout << x << " ";\n    cout << endl;\n    return 0;\n}\n', 'for x in sorted(s):'],
+    // ⚠️ 原本是一例，冷算判決（C++ 與 Python 各一次）在負載 35 下要 77–87 秒 ⟹ 拆成兩例（2026-11-14，450 長測試逾時）
+    ['全域的 map 在函式裡改；值是 double', 'map<int, int> g;\nvoid add(int k) { g[k]++; }\nint main() {\n    add(5); add(2); add(5);\n    for (auto e : g) cout << e.first << ":" << e.second << endl;\n    map<int, double> d;\n    d[1] += 2.5;\n    d[0] = 1.5;\n    for (auto e : d) cout << e.first << " " << e.second << endl;\n    return 0;\n}\n', 'def add(k):'],
+    ['值是 string；浮點放進整數的 map 要截斷', 'int main() {\n    map<int, string> t;\n    t[3] = "x";\n    cout << t[4].size() << t.size() << endl;\n    map<string, int> ii;\n    ii["a"] = 2.7;\n    cout << ii["a"] << endl;\n    return 0;\n}\n', 'ii["a"] = int(2.7)'],
+    // 之前（450 量到）：`x += 2.5` 照寫，x 變成浮點——C++ 算完截斷回整數（C++ 印 4、Python 印 5.25）
+    ['浮點加進整數（x += 2.5）：算完截斷', 'int main() {\n    int x = 1;\n    x += 2.5;\n    x *= 1.5;\n    map<string, int> m;\n    m["a"] += 2.7;\n    cout << x << " " << m["a"] << endl;\n    return 0;\n}\n', 'x = int(x + 2.5)'],
+  ] as const) {
+    it(`🟢 ${name}；判決相同（450）`, async () => {
+      const src = K + code
+      const r = await toPython(src)
+      expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+      expect(r.code).toContain(must)
+      await sameVerdict(src, r.code!, '')
+    }, 180_000) // 兩次冷算判決：本機負載 35 下最重的一例 39 秒（判決快取熱的時候是幾秒——CI 是冷的）
+  }
+  for (const [name, code, detail] of [
+    ['map 的元素先讀再改、鍵有副作用（m[f(1)]++：補預設值與改要寫兩次鍵）', 'int f(int x) { return x; }\nint main() {\n    map<int, int> m;\n    m[f(1)]++;\n    cout << m.size() << endl;\n    return 0;\n}\n', '有副作用'],
+    ['以參考走訪 map 而改值（tuple 改不了）', 'int main() {\n    map<int, int> m;\n    m[1] = 2;\n    for (auto& p : m) p.second = 5;\n    cout << m[1] << endl;\n    return 0;\n}\n', '以參考走訪'],
+    ['char 當鍵（大於 127 的字元兩邊順序不同）', 'int main() {\n    map<char, int> m;\n    m[\'a\'] = 1;\n    cout << m.size() << endl;\n    return 0;\n}\n', 'map<char, int>'],
+    // ⏳ 等 Cella：走訪時包了 sorted，而 Cella 對裝字串的 set 仍帶 str.hash 的假設（450 回報）——收斂後改成換過去、cpp-advanced 下限 9 → 10
+    ['set<string>（等 Cella 收斂 str.hash 假設）', 'int main() {\n    set<string> a;\n    a.insert("b");\n    for (string x : a) cout << x;\n    return 0;\n}\n', 'str.hash'],
+    ['unordered_map、multiset（走訪順序、重複鍵）', 'int main() {\n    unordered_map<int, int> m;\n    m[1] = 2;\n    multiset<int> ms;\n    cout << m.size() << endl;\n    return 0;\n}\n', 'unordered_map'],
+  ] as const) {
+    it(`🔴 保留：${name}（450）`, async () => {
+      const r = await toPython(K + code)
       expect(r.code, '換了').toBeNull()
       expect(r.reasons.map((x) => x.detail).join()).toContain(detail)
     }, 60_000)

@@ -19,6 +19,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (conv.some((c) => c === undefined)) return [py.keep(n, 'outside-subset', '讀入這種型別的寫法還沒有對應')]
     // 一個一個讀（同 cin：空白、換行都是分隔）——不假設一句讀一行
     const tok = py.useTokenReader()
-    return targets.map((t, k) => `${py.indent(depth)}${py.expr(t)} = ${conv[k] === 'str' ? tok : `${conv[k]}(${tok})`}`)
+    return targets.map((t, k) => `${py.indent(depth)}${py.target(t, false).text} = ${conv[k] === 'str' ? tok : `${conv[k]}(${tok})`}`)
   })
 }

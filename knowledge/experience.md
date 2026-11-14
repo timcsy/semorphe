@@ -14481,3 +14481,23 @@ python-bridge/05 #3      「dict 也可以」—— 它在教一個新形式,不
 - **處方**：監看分兩段、各有上限——先等它**開始**（pending 超過一般排隊時間就說出來，並查 `gh run list` 裡有沒有同一個 concurrency group 的 in_progress 卡著），再等它**結束**。
   workflow 的每個 job 都寫 job 層的 `timeout-minutes`（step 層的管不到整個 job）。取消別人的 run 是使用者的事（`gh run cancel`）。
 - **相關**：[一個等別人做完的閘，要有上限](#一個等別人做完的閘要有上限)
+
+### 本機的快取是熱的，CI 是冷的——慢只在 CI 看得見
+
+- **實際發生（2026-11-14，449）**：升 Cella 1931 之後，一根釘子（`fuzz-cpp-student-mixed` fuzz_8）從「已知缺口」轉成「判 accept」。
+  本機長測試全綠、單獨跑 0.4 秒；CI 上同一支跑了 106 秒，60 秒逾時而紅。關掉判決快取（`SEMORPHE_VERDICT_CACHE=0`）本機量是 220 秒。
+  本機那 0.4 秒讀的是先前算好的判決（`tests/helpers/verdict-cache.ts`），CI 每次都從零算。
+  同一天 450 又一次：新加的一例單獨跑是綠的（快取熱），長測試裡冷算 77–87 秒、60 秒逾時——拆成兩例才各降到 20 秒左右。
+- **教訓**：快取讓本機量到的是「查表」，不是「計算」。一個判決從 unknown 變成真的去算，耗時可能跳兩個數量級，
+  而有快取的那台機器永遠看不到這一跳。
+- **處方**：升級 Cella、或把釘子轉成一般測試時，對**轉正的那幾支**用 `SEMORPHE_VERDICT_CACHE=0` 單獨重跑一次，看秒數；
+  超過一般逾時的，逾時寫明理由並逐段量給 cella（這一次熱點是 `sort(rbegin, rend)`，5 個元素 18.7 秒）。
+
+### 換了依賴的語法，舊版就不能再借新的 node_modules 建置
+
+- **實際發生（2026-11-14，449）**：網站的 `/` 用 `verified` 分支（上一次 e2e 全綠的那一版）建置，`/next/` 用 HEAD。
+  `build-site.sh` 讓舊版的 worktree 連到 HEAD 的 `node_modules`。449 把 Cella 的表面語法換掉之後，448 的舊語法判決模組在新 Cella 底下編不過
+  ——測試與 e2e 全綠，網站兩邊都沒換版。
+- **教訓**：「舊版共用新的依賴」只在依賴向下相容時成立。一次不相容的升級，壞的是**還沒升級的那一份**，而那一份不在任何測試裡。
+- **處方**：`build-site.sh` 現在比對兩個 ref 的 `package-lock.json`，不同就在舊版的 worktree 自己 `npm ci`。
+  升級任何會改語法或格式的依賴之後，本機跑一次 `bash tools/build-site.sh verified HEAD` 再推。
