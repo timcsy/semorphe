@@ -458,6 +458,41 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code, '換了').toBeNull()
     expect(r.reasons.map((x) => x.detail).join()).toContain('位元組')
   }, 60_000)
+  // ── 455：三元運算子、abs、swap（StudyCpp 擋最多、又不等 Cella 的三顆：16、9、9 支）──
+  it('🟢 c ? a : b → (a if c else b)；整數分支放進浮點的結果補 float()；判決相同（455）', async () => {
+    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    int m = n > 3 ? n * 2 : n - 1;\n    double d = n > 3 ? 1 : 2.5;\n    cout << m << " " << d / 4 << " " << (n % 2 == 0 ? "even" : "odd") << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '5\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('(n * 2 if n > 3 else n - 1)')
+    expect(r.code, r.code!).toContain('float(1)')
+    await sameVerdict(src, r.code!, '5\n')
+    await sameVerdict(src, r.code!, '2\n')
+  }, 60_000)
+  it('🟢 abs(x)、swap(a, b) → abs(x)、a, b = b, a（含陣列元素、全域變數）；判決相同（455）', async () => {
+    const src = H + 'int g = 1, h = 2;\nvoid flip() {\n    swap(g, h);\n}\nint main() {\n    int a[3] = {3, -7, 5};\n    swap(a[0], a[2]);\n    flip();\n    int x = -4, y = 9;\n    swap(x, y);\n    cout << a[0] << a[2] << " " << abs(a[1]) << " " << x << y << " " << g << h << " " << abs(-2.5) << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('a[0], a[2] = a[2], a[0]')
+    expect(r.code, r.code!).toMatch(/global g/)
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🟢 計次迴圈本體 swap 了上界 → while（swap 宣告它寫哪兩個）；判決相同（455）', async () => {
+    const src = H + 'int main() {\n    int n = 5, k = 2;\n    for (int i = 0; i < n; i++) {\n        if (i == 1) swap(n, k);\n        cout << i;\n    }\n    cout << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).not.toContain('range(')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it("🔴 保留：分支型別不同而 C++ 會轉型的條件運算式（c ? 'a' : 66 的結果是 int）（455）", async () => {
+    const r = await toPython(H + "int main() {\n    int n = 1;\n    cout << (n > 0 ? 'a' : 66) << endl;\n    return 0;\n}\n")
+    expect(r.code, '換了').toBeNull()
+    expect(r.reasons.map((x) => x.detail).join()).toContain('條件運算式')
+  }, 60_000)
+  it('🔴 保留：交換字串裡的字元（455）', async () => {
+    const r = await toPython(H + '#include <string>\nint main() {\n    string s = "ab";\n    swap(s[0], s[1]);\n    cout << s << endl;\n    return 0;\n}\n')
+    expect(r.code, '換了').toBeNull()
+    expect(r.reasons.map((x) => x.detail).join()).toContain('字串')
+  }, 60_000)
   it('🔴 保留：類別', async () => {
     const r = await toPython(H + 'class P {\npublic:\n    int x;\n};\nint main() {\n    P p;\n    p.x = 1;\n    cout << p.x << endl;\n    return 0;\n}\n')
     expect(r.code).toBeNull()
