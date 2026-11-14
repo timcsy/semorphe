@@ -68,7 +68,7 @@ export interface ToPythonContext {
    * 回傳的 `before` 是要先跑的一句（不含縮排）——map 的元素先讀再改，C++ 會先補上預設值、Python 的 dict 會丟 KeyError。
    * 膠囊沒登記目標寫法的，照運算式寫
    */
-  target(n: SemanticNode | undefined, readsFirst: boolean): { before?: string; text: string }
+  target(n: SemanticNode | undefined, readsFirst: boolean): Target
   /** 這個名字是頂層宣告的全域變數嗎（451：函式裡重新指定它，Python 要先寫 `global`） */
   isGlobal(name: string): boolean
   /** 這顆節點宣告了它會寫的子節點（`r.writes`）——沒宣告的回空 */
@@ -121,7 +121,17 @@ export function cEscapedValue(src: string): string | undefined {
 
 export type ExprFn = (n: SemanticNode, py: ToPythonContext) => string
 export type StmtFn = (n: SemanticNode, py: ToPythonContext, depth: number) => string[]
-export type TargetFn = (n: SemanticNode, py: ToPythonContext, readsFirst: boolean) => { before?: string; text: string }
+/**
+ * 指定目標的寫法。`text` 是讀它的寫法；`assign` 有給的話，**寫它不能原地寫**（465：pair 換成 tuple，`p[0] = 7` 不合法）
+ * ⟹ 寫進 v 的那一句是 `assign(v)`（`p = (7, p[1])`）。`type` 是目標的 C++ 型別（Cella 不給指定目標的型別時用得上）
+ */
+export interface Target { before?: string; text: string; assign?: (v: string) => string; type?: string }
+export type TargetFn = (n: SemanticNode, py: ToPythonContext, readsFirst: boolean) => Target
+
+/** 把 v 寫進目標的那一句（不含縮排）：能原地寫的 `t = v`，不能的照目標自己說的（465） */
+export const writeTo = (tg: Target, v: string): string => (tg.assign ? tg.assign(v) : `${tg.text} = ${v}`)
+/** `t op= v` 的那一句：不能原地寫的目標展開成 `t = t op v`（op 是 `+`、`-`…；v 已經加過括號） */
+export const updateTo = (tg: Target, op: string, v: string): string => (tg.assign ? tg.assign(`${tg.text} ${op} ${v}`) : `${tg.text} ${op}= ${v}`)
 
 /**
  * 膠囊登記**自己**的印法——不寫自己的身分（收集器依膠囊所在的目錄對回 component.json 的身分；就近性護欄：身分不多擴散一個檔）
@@ -303,3 +313,24 @@ export function mayWrite(nodes: readonly SemanticNode[], names: ReadonlySet<stri
   }
   return nodes.some((x) => walk(x, true))
 }
+
+/** `pair<A, B>` 的兩個元素型別（465：pair 換成 tuple，宣告、成員、陣列都要問）（樣板引數的頂層逗號切開；拿掉 std::） */
+export function pairElements(t: string | undefined): [string, string] | undefined {
+  const m = (t ?? '').trim().match(/^(?:const\s+)?(?:std::)?pair\s*<(.*)>$/)
+  if (!m) return undefined
+  let depth = 0
+  for (let i = 0; i < m[1].length; i++) {
+    const c = m[1][i]
+    if (c === '<') depth++
+    else if (c === '>') depth--
+    else if (c === ',' && depth === 0) return [m[1].slice(0, i).trim().replace(/^std::/, ''), m[1].slice(i + 1).trim().replace(/^std::/, '')]
+  }
+  return undefined
+}
+
+/**
+ * 這一顆宣告了一個名字嗎（問形狀：有名字、有型別）——pair 的宣告把型別分成 type1／type2（465），也算。
+ * 函式（有 params 槽）由呼叫端自己排除
+ */
+export const declaresTyped = (n: SemanticNode): boolean =>
+  typeof n.properties?.name === 'string' && (n.properties?.type !== undefined || n.properties?.type1 !== undefined)

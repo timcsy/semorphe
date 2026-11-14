@@ -9,6 +9,7 @@ import type { SemanticNode } from '../../core/types'
 import type { KeepKind, LanguageConversion } from '../../core/language-conversion'
 import { skeletonsOfLanguage, entryFunctionOf } from '../../core/skeleton'
 import type { ToPythonContext } from './to-python/contract'
+import { declaresTyped } from './to-python/contract'
 import { collectToPython, type ToPythonTables } from './to-python/registry'
 
 let TABLES: ToPythonTables | null = null
@@ -154,10 +155,12 @@ export function convertCppToPython(
     if (n.slots?.params !== undefined && typeof n.properties?.name === 'string') userFunctions.add(n.properties.name)
     // 每一個宣告的名字與型別（462）——問形狀：有名字、有型別、不是函式（沒有 params 槽）；計次迴圈的變數在 var_name。
     // 同一個名字宣告過兩種（不同函式裡的同名變數、參數）就不知道（null）——寧可不知道，不可拿錯的型別去截斷
-    const decl = n.slots?.params === undefined && typeof n.properties?.name === 'string' && n.properties?.type !== undefined ? n.properties.name
+    // pair 的宣告把兩個元素型別分成 type1／type2 兩個屬性（465）——問形狀：兩個都在就是 `pair<type1, type2>`
+    const pairTy = typeof n.properties?.type1 === 'string' && typeof n.properties?.type2 === 'string' ? `pair<${n.properties.type1}, ${n.properties.type2}>` : undefined
+    const decl = n.slots?.params === undefined && typeof n.properties?.name === 'string' && (n.properties?.type !== undefined || pairTy) ? n.properties.name
       : typeof n.properties?.var_name === 'string' ? n.properties.var_name : undefined
     if (decl !== undefined) {
-      const ty = typeof n.properties?.type === 'string' ? n.properties.type : null
+      const ty = typeof n.properties?.type === 'string' ? n.properties.type : pairTy ?? null
       varTypes.set(decl, varTypes.has(decl) && varTypes.get(decl) !== ty ? null : ty)
     }
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(scan)
@@ -167,7 +170,7 @@ export function convertCppToPython(
   const globals = new Set<string>()
   const noteGlobal = (n: SemanticNode): void => {
     if (n.slots?.params !== undefined) return
-    if (typeof n.properties?.name === 'string' && n.properties?.type !== undefined) globals.add(n.properties.name)
+    if (declaresTyped(n)) globals.add(String(n.properties.name))
     for (const d of n.slots?.declarators ?? []) noteGlobal(d)
   }
   for (const n of tree.slots?.body ?? []) noteGlobal(n)

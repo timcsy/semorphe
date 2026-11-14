@@ -1,5 +1,6 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
+import { writeTo } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   // `cin >> a` 寫進 values（`cout << a` 的 values 是讀——形狀一樣，所以自己說；453 計次迴圈問上界會不會被改）
@@ -10,8 +11,10 @@ export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
     const targets = n.slots.values ?? []
     if (targets.length === 0) return []
-    const conv = targets.map((t) => {
-      const ty = (py.typeOf(t) ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '')
+    // 目標的寫法先問（465：pair 的成員要重建整個 tuple；目標自己知道成員的型別）
+    const tgs = targets.map((t) => py.target(t, false))
+    const conv = targets.map((t, k) => {
+      const ty = (py.typeOf(t) ?? tgs[k].type ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '')
       if (/^(int|long|long long|short)$/.test(ty)) return 'int'
       if (ty === 'double' || ty === 'float') return 'float'
       if (/string/.test(ty)) return 'str'
@@ -23,6 +26,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (conv.some((c) => c === undefined)) return [py.keep(n, 'outside-subset', '讀入這種型別的寫法還沒有對應')]
     // 一個一個讀（同 cin：空白、換行都是分隔）——不假設一句讀一行
     const tok = py.useTokenReader()
-    return targets.map((t, k) => `${py.indent(depth)}${py.target(t, false).text} = ${conv[k] === 'str' ? tok : `${conv[k]}(${tok})`}`)
+    return tgs.map((tg, k) => `${py.indent(depth)}${writeTo(tg, conv[k] === 'str' ? tok : `${conv[k]}(${tok})`)}`)
   })
 }

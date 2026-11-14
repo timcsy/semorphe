@@ -14,6 +14,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
     }
     const ta = py.target(a, true)
     const tb = py.target(b, true)
+    // 不能原地寫的目標（465：pair 的成員）：`a, b = b, a` 寫不出來——保留
+    if (ta.assign || tb.assign) return [py.keep(n, 'outside-subset', '交換 pair 的成員還沒有對應')]
     const before = [ta.before, tb.before].filter((s): s is string => !!s).map((s) => `${py.indent(depth)}${s}`)
     return [...before, `${py.indent(depth)}${ta.text}, ${tb.text} = ${py.expr(b)}, ${py.expr(a)}`]
   })
