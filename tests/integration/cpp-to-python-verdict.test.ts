@@ -609,6 +609,20 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r1.code, JSON.stringify(r1.reasons)).not.toBeNull()
     await sameVerdict(one, r1.code!, '')
   }, 60_000)
+  // ── 460：getline——讀這一行還沒讀的部分（cin >> n 之後是那一行剩下的字）、cin.ignore() 丟一個字元 ──
+  it('🟢 getline：cin >> n 之後讀到那一行剩下的、cin.ignore() 之後讀下一行、while (getline(…)) 讀到檔尾；與 cin >> 混用；判決相同（460）', async () => {
+    const src = H + 'int main() {\n    int n;\n    string a, b, w;\n    cin >> n;\n    getline(cin, a);\n    cout << "[" << a << "]" << endl;\n    cin >> w;\n    cin.ignore();\n    getline(cin, b);\n    cout << n << " " << w << " [" << b << "]" << endl;\n    int k = 0;\n    while (getline(cin, a)) {\n        k++;\n        cout << k << ":" << a << "|" << endl;\n    }\n    return 0;\n}\n'
+    const r = await toPython(src, '3 tail here\nword\nthe line  x\n\n  last one\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('while has_line():')
+    for (const stdin of ['3 tail here\nword\nthe line  x\n\n  last one\n', '7\nw\nb\n', '1 x\ny z\nq', '5\nw\n\n\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：cin 以外的方法呼叫、帶引數的 ignore（460）', async () => {
+    for (const body of ['    cin.ignore(100, \'\\n\');\n', '    string s = "ab";\n    s.push_back(\'c\');\n    cout << s << endl;\n']) {
+      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
+    }
+  }, 60_000)
   it('🔴 保留：類別', async () => {
     const r = await toPython(H + 'class P {\npublic:\n    int x;\n};\nint main() {\n    P p;\n    p.x = 1;\n    cout << p.x << endl;\n    return 0;\n}\n')
     expect(r.code).toBeNull()
