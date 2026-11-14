@@ -19,3 +19,11 @@
 **結果**：StudyCpp 換得過去的從 2 支到 34 支；其中 C++ 側 accept 的 28 支，24 支判決、輸出相同，另外 4 支（AP325 3_5、3_5_better、3_9、7_5_TLE）是 Cella 的 Python 判決在 `[0] * N`（N 到 20 萬、100 萬）丟出堆疊溢位——cella 確認是他們的缺陷，排在 11-15 的 Python 輪第一項（改回 unknown 附原因、不再遞迴 N 層）。assumes 不同只因為 `bits/stdc++.h` 在 C++ 那側帶 libstdc++ 的假設——那是標頭本身的性質，不是換錯。手寫進 `cpp-to-python-verdict` 的 453 段 22 例（`-t 453` 數的），冷算每例 < 1 秒。
 
 **仍擋住最多的**：pair（成員、陣列、`push({u, v})`）、`range_sort`（等 Cella 今晚的 sort 效能）、deque、`while (t--)` 這種運算式位置的 `++`／`--`、`getline` 與 `cin >>` 混用。
+
+## 後續：455（同一天）
+
+453 留下的阻擋原因裡，不等 Cella、擋得多的三顆：三元運算子（16 支）、`abs`（9）、`swap`（9）。
+- `c ? a : b` → `(a if c else b)`。⚠️ C++ 的兩個分支會先轉成共同型別（`c ? 1 : 2.5` 的 1 是 1.0），Python 不會 ⟹ 整數分支放進浮點的結果補 `float()`；字串字面量（`char[5]` 退化成 `char *`）兩邊都是 str；其餘型別不同的照實保留（`c ? 'a' : 66` 的結果是 int）。
+- `swap(a, b)` → `a, b = b, a`，並用 `r.writes` 宣告它寫兩個——不宣告的話，計次迴圈判不出上界被 swap 改了（453 的 `mayWrite`）。字串裡的字元保留（Python 的 str 不能改）。
+
+StudyCpp 換得過去 34 → 40 支；C++ accept 的 33 支裡 28 支判決、輸出相同；4 支是同一個 Cella 溢位，1 支（AP325 6_4）是 Python 那側建 `[[0] * 2 for _ in range(100007)]` 跑到步數上限（unknown，不是輸出不同）。
