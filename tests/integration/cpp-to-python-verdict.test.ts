@@ -597,6 +597,18 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code!.indexOf('def add'), r.code!).toBeLessThan(r.code!.indexOf('n = int(next_token())'))
     await sameVerdict(src, r.code!, '4\n')
   }, 60_000)
+  it('🟢 二維陣列的元素指定 a[i][j] = v（整數元素收到浮點值照 C++ 截斷）；判決相同（459）', async () => {
+    const src = H + 'int g[3][4];\nint main() {\n    int n;\n    cin >> n;\n    for (int i = 0; i < 3; i++)\n        for (int j = 0; j < 4; j++)\n            g[i][j] = i * n + j;\n    g[2][3] = 7.9;\n    g[1][1] += g[2][3];\n    long long s = 0;\n    for (int i = 0; i < 3; i++)\n        for (int j = 0; j < 4; j++) s += g[i][j];\n    cout << s << " " << g[1][1] << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '5\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('g[2][3] = int(7.9)')
+    await sameVerdict(src, r.code!, '5\n')
+    // 一維同一個洞（原本只問 Cella 那一句的型別，沒給 ⟹ 7.9 原樣放進整數陣列：C++ 印 7、Python 印 7.9）
+    const one = H + 'int main() {\n    int a[3] = {0};\n    double d = 2.5;\n    a[1] = 7.9;\n    a[2] = d * 3;\n    cout << a[1] << " " << a[2] << endl;\n    return 0;\n}\n'
+    const r1 = await toPython(one)
+    expect(r1.code, JSON.stringify(r1.reasons)).not.toBeNull()
+    await sameVerdict(one, r1.code!, '')
+  }, 60_000)
   it('🔴 保留：類別', async () => {
     const r = await toPython(H + 'class P {\npublic:\n    int x;\n};\nint main() {\n    P p;\n    p.x = 1;\n    cout << p.x << endl;\n    return 0;\n}\n')
     expect(r.code).toBeNull()
