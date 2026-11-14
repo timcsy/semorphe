@@ -29,7 +29,10 @@ export function registerToPython(r: ToPythonRegistrar): void {
     // 本體可能改上界或迴圈變數（mayWrite：寧可多報）、或上界本身是函式呼叫 ⟹ 不能用 range
     // 上界是浮點（`i < 1e5`，457：StudyCpp 的 fake_random）：range 只收整數、Python 判 reject ⟹ 寫成 while（整數與浮點的比較兩邊相同）
     const floatBound = /^(?:const\s+)?(?:double|float|long double)$/.test(py.typeOf(to) ?? '')
-    const unsafe = floatBound || mayWrite(body, new Set([v, ...namesIn(to)]), py) || [...namesIn(to)].some((x) => py.isUserFunction(x))
+    // 迴圈變數一定是整數；上界是一個整數型別的名字時也是純量 ⟹ 當引數傳給自訂函式改不到它（461：回溯的 `nq(a, b + 1, p)`）
+    const scalarBound = to && Object.keys(to.slots ?? {}).length === 0 && typeof to.properties?.name === 'string' && /^(?:const\s+)?(?:int|long|long long|short|unsigned|unsigned int|size_t)$/.test(py.typeOf(to) ?? '')
+    const byValue = new Set([v, ...(scalarBound ? [String(to.properties.name)] : [])])
+    const unsafe = floatBound || mayWrite(body, new Set([v, ...namesIn(to)]), py, byValue) || [...namesIn(to)].some((x) => py.isUserFunction(x))
     if (!unsafe) {
       const end = inclusive ? `${paren(to, py)} + 1` : py.expr(to)
       const head = zeroStart || (from?.properties?.value === '0' && !from.slots?.left) ? `range(${end})` : `range(${fromText}, ${end})`
