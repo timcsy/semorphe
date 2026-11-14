@@ -152,3 +152,13 @@ switch：每段都以 break／return 結尾、default 在最後、中間沒有�
 - `cout << flush`：只送出、不印字 ⟹ 拿掉。印出來的內容兩邊相同，而 Python 的 `input()` 讀之前本來就會先送出 stdout；更貼字面的 `print(…, flush=True)` 是第一版，Cella 的 Python 判不出那個參數（unknown「the built-in print」）。只有 flush 的一句沒有任何一行，本體空了由 `py.block` 補 `pass`。
 - `(int)v.size()`：無號的長度轉成 int 或更寬 → `len(v)` 照原樣。超過 2^31−1 要那個容器先裝得下二十億個元素——當作不會發生；short 不收（三萬多個就繞回），寫出來不是一個 `len(…)` 的無號值照實保留。
 - 發現、沒在這一刀做：C++ 的替代拼法 `or`／`and` lift 成 arithmetic（身分錯）——要動 lift 與積木，另開一刀（471）。
+
+## 後續：471（11-15）——C++ 的替代拼法 lift 錯元件
+
+470 量到的：basic/11_switch_case_1 寫 `if (x > 100 or x < 0)`，而 `or` 不在任何一顆元件認領的符號裡 ⟹ 落到算術那一顆的兜底。**身分錯**（積木是算術、下拉沒有 `or` 這個值），而 C++ 這一側的來回轉換一字不差、Cella 判 accept——三個讀數都綠，只有 C++ → Python 這條投影看得見（logic 的換法只認 `&&`／`||`，算術的換法說「運算子 or 還沒有對應」）。
+
+**決定**：替代記號（[lex.digraph]：`and`／`or`／`not`／`not_eq`／`bitand`／`bitor`／`xor`／`compl`）在語法上與主拼法**完全相同**——那是詞法層的事 ⟹ 在共用的 C++ 運算式 lifter 比對「哪個符號屬於哪顆元件」之前換成主拼法，語義樹只記主拼法。代價：轉一圈回來是 `||`，學生寫的 `or` 不會留著——拼法是表面形態，不是語義（同空白、同大括號的位置）。
+
+沒有選的：①在 logic 那顆加認領 `or`、`and` 並保留原拼法——積木下拉要多兩個值（`or` 與 `||` 對學生是兩個選項、同一件事），precedence、formalize、Python 的換法各要多認一次；②保留拼法當一個形態屬性——為一個語料裡出現一次的寫法造一條軸，賺不回來。
+
+釘子：logic 膠囊的 `spec.test.ts`（身分、主拼法、再 lift 是同一棵樹、Cella 執行）與 C++ → Python 的判決例。

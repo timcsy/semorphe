@@ -661,6 +661,13 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
   }, 60_000)
+  // ── 471：C++ 的替代拼法 or／and／not（lift 成主拼法）──
+  it('🟢 if (x > 100 or x < 0)、and、not：替代拼法換得過去；判決相同（471）', async () => {
+    const src = H + 'int main() {\n    int x;\n    cin >> x;\n    bool neg = x < 0;\n    if (x > 100 or x < 0) cout << "?";\n    else if (x >= 60 and not neg) cout << "pass";\n    else cout << "F";\n    cout << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '150\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    for (const stdin of ['150\n', '75\n', '-1\n', '30\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
   // ── 470：cout << flush（只送出、不印字）、(int)v.size() ──
   it('🟢 cout << x << flush、單獨一句 cout << flush：flush 拿掉（印的內容相同）；判決相同（470）', async () => {
     const src = H + 'int main() {\n    int n;\n    while (cin >> n) {\n        unordered_map<string, int> mp;\n        string s;\n        int j{};\n        for (int i = 0; i < n; i++) {\n            cin >> s;\n            if (mp[s] == 0) {\n                j++;\n                mp[s] = j;\n                cout << "New! " << j << \'\\n\';\n            } else {\n                cout << "Old! " << mp[s] << \'\\n\' << flush;\n            }\n        }\n        cout << flush;\n    }\n    return 0;\n}\n'
