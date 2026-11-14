@@ -12,6 +12,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const et = py.typeOf(n) ?? py.elementTypeOf(o)
     if (et === undefined && /^(const\s+)?(double|float|long double)/.test(py.typeOf(value) ?? '')) return [py.keep(n, 'needs-types', `放進 ${o} 的值是浮點，而不知道 ${o} 的元素型別`)]
     const target = `${o}[${py.expr(n.slots.index?.[0])}]`
+    // vector 陣列的一格整個指定（463）：C++ 複製一份，Python 的 `g[i] = v` 是同一個 list ⟹ `list(…)`（同 var_assign，447）
+    if (/^(const\s+)?(std::)?vector</.test(et ?? '')) return [`${py.indent(depth)}${target} = list(${py.expr(value)})`]
     return [`${py.indent(depth)}${target} = ${intValue(et, py.typeOf(value), py.expr(value))}`]
   })
 }

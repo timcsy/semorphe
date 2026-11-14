@@ -644,6 +644,21 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(rk2.code, rk2.code!).toContain('k = int(2.5 * n)')
     await sameVerdict(k2, rk2.code!, '3\n')
   }, 60_000)
+  // ── 463：vector 的陣列（鄰接串列）——每一格各自一個 list ──
+  it('🟢 vector<int> g[N]：push_back、範圍 for、size、g[u][k]；一格整個指定是複製；判決相同（463）', async () => {
+    const src = H + 'int V[8];\nvector<int> g[8];\nbool vis[8];\nint dfs(int u) {\n    if (vis[u]) return 0;\n    vis[u] = true;\n    int s = V[u];\n    for (int x : g[u]) s += dfs(x);\n    return s;\n}\nint main() {\n    int n, m;\n    cin >> n >> m;\n    for (int i = 0; i < n; i++) cin >> V[i];\n    for (int i = 0; i < m; i++) {\n        int a, b;\n        cin >> a >> b;\n        g[a].push_back(b);\n        g[b].push_back(a);\n    }\n    int best = -1;\n    for (int i = 0; i < n; i++) if (!vis[i]) best = max(best, dfs(i));\n    g[7] = g[0];\n    g[7].push_back(99);\n    cout << best << " " << g[0].size() << " " << g[7].size() << " " << g[0][0] << endl;\n    return 0;\n}\n'
+    const stdin = '5 3\n1 2 3 4 5\n0 1\n1 2\n3 4\n'
+    const r = await toPython(src, stdin)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('g = [[] for _ in range(8)]')
+    expect(r.code, r.code!).toContain('g[7] = list(g[0])')
+    await sameVerdict(src, r.code!, stdin)
+    // 一格裡的元素收到浮點值：照 vector<int> 截斷
+    const t = H + 'vector<int> g[3];\nint main() {\n    g[1].push_back(0);\n    g[1][0] = 7.9;\n    cout << g[1][0] << endl;\n    return 0;\n}\n'
+    const rt = await toPython(t)
+    expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
+    await sameVerdict(t, rt.code!, '')
+  }, 60_000)
   // ── 460：getline——讀這一行還沒讀的部分（cin >> n 之後是那一行剩下的字）、cin.ignore() 丟一個字元 ──
   it('🟢 getline：cin >> n 之後讀到那一行剩下的、cin.ignore() 之後讀下一行、while (getline(…)) 讀到檔尾；與 cin >> 混用；判決相同（460）', async () => {
     const src = H + 'int main() {\n    int n;\n    string a, b, w;\n    cin >> n;\n    getline(cin, a);\n    cout << "[" << a << "]" << endl;\n    cin >> w;\n    cin.ignore();\n    getline(cin, b);\n    cout << n << " " << w << " [" << b << "]" << endl;\n    int k = 0;\n    while (getline(cin, a)) {\n        k++;\n        cout << k << ":" << a << "|" << endl;\n    }\n    return 0;\n}\n'
