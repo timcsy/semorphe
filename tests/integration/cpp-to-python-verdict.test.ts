@@ -102,7 +102,7 @@ function lessonSuite(track: string, minFiles: number, minConverted: (total: numb
         const back = await liftPython(r.code)
         expect(componentIdsOf(back).filter((c) => /raw|unresolved/.test(c)), `Python 的 lift 認不出來：\n${r.code}`).toEqual([])
         expect(generatePython(back).trimEnd(), `走一趟 Python 積木回來不一樣：\n${r.code}`).toBe(r.code.trimEnd())
-      }, 60_000)
+      }, 180_000) // 冷算判決：cpp-advanced 02-排序 ex1 的 C++ 那一側在負載 37–52 下 72–80 秒（Cella 的 sort 慢，cella 排在 11-14 晚那輪修；修好後收回 60 秒）
     }
 
     it('★ 報表與門檻：換過去的不少於下限；兩份加起來等於解答總數', () => {
