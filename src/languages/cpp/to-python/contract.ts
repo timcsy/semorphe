@@ -32,6 +32,13 @@ export interface ToPythonContext {
   useImport(module: string): string
   /** 程式需要「跨行讀一個詞」的小工具（同 cin 的讀法）——引擎在檔頭補上 */
   useTokenReader(): string
+  /**
+   * `while (cin >> x)` 的那一問（459）：「還有沒有下一個詞」——讀到檔尾回 False（同 cin：EOF 時 x 不動、迴圈結束）。
+   * 回傳那個呼叫（`has_token()`）；引擎在檔頭補上小工具（連同 useTokenReader 的那一支）
+   */
+  useTokenProbe(): string
+  /** 這一顆是不是串流讀入（登記了 streamRead 的元件） */
+  isStreamRead(n: SemanticNode | undefined): boolean
   /** 程式需要 C++ 的取餘數（向零截斷）：回傳補在開頭的小函式名——兩邊有運算式時用它，才不會算兩次 */
   useTruncMod(): string
   /** 程式需要 64 位元整數的除法或取餘數（456）：回傳補在開頭的小函式名——只用整數運算，商向零截斷，任何大小都與 C++ 逐位相同 */
@@ -119,6 +126,8 @@ export interface ToPythonRegistrar {
   typeAlias(fn: TypeAliasFn): void
   /** 這顆元件的子節點不一定都會算（457：`&&`、`||`、`?:`）——裡面的 `i++` 不能拆到敘述的前後 */
   conditional(): void
+  /** 這顆元件是「從輸入串流讀進 values」（459：`cin >> a >> b`）——當條件時（`while (cin >> x)`）迴圈那顆照「讀到檔尾就離開」換 */
+  streamRead(): void
   /** 這顆元件會寫哪幾個子節點（453：`cin >> a` 的 values 是寫、`cout << a` 的 values 是讀——形狀一樣，只有元件自己知道） */
   writes(fn: (n: SemanticNode) => readonly SemanticNode[]): void
 }

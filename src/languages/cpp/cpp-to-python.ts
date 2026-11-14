@@ -14,7 +14,7 @@ import { collectToPython, type ToPythonTables } from './to-python/registry'
 let TABLES: ToPythonTables | null = null
 
 /** Python 的保留字與內建常數——C++ 的名字撞到就加底線 */
-const PY_KEYWORDS = new Set(['math', 'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'class', 'def', 'del', 'elif', 'except', 'finally', 'from', 'global', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'with', 'yield', 'print', 'input', 'len', 'range', 'int', 'float', 'str', 'list', 'chr', 'ord', 'format', 'next_token', '_tokens', 'sorted', 'dict', 'set'])
+const PY_KEYWORDS = new Set(['math', 'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'class', 'def', 'del', 'elif', 'except', 'finally', 'from', 'global', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'with', 'yield', 'print', 'input', 'len', 'range', 'int', 'float', 'str', 'list', 'chr', 'ord', 'format', 'next_token', 'has_token', '_tokens', 'sorted', 'dict', 'set'])
 
 /** 同 `cin >>` 的讀法：一次讀一個以空白分開的詞，這一行讀完才讀下一行 */
 const TOKEN_READER = [
@@ -23,6 +23,20 @@ const TOKEN_READER = [
   '    while len(_tokens) == 0:',
   '        _tokens.extend(input().split())',
   '    return _tokens.pop(0)',
+]
+/**
+ * 「還有沒有下一個詞」（459，`while (cin >> x)`）：讀到檔尾（input() 丟 EOFError）回 False，不吞掉別的例外。
+ * ⚠️ 詞不是那個型別（int 讀到 `abc`）時 C++ 存 0 並結束迴圈，Python 的 int(…) 丟 ValueError——同 `cin >> x` 那一句的既有限制（照輸入判，不是靜默）
+ */
+const TOKEN_PROBE = [
+  'def has_token():',
+  '    while len(_tokens) == 0:',
+  '        try:',
+  '            line = input()',
+  '        except EOFError:',
+  '            return False',
+  '        _tokens.extend(line.split())',
+  '    return True',
 ]
 /** C++ 的 %：商向零截斷（[expr.mul]p4）。寫成函式，兩邊的運算式各只算一次 */
 const TRUNC_MOD = ['def trunc_mod(a, b):', '    return a - int(a / b) * b']
@@ -88,7 +102,7 @@ export function convertCppToPython(
   }
   for (const n of tree.slots?.body ?? []) noteGlobal(n)
   let inMain = false
-  let needTokens = false
+  let needTokens = false, needProbe = false
   let needTruncMod = false
   let needTruncDiv = false, needTruncMod64 = false
   const imports = new Set<string>()
@@ -115,6 +129,8 @@ export function convertCppToPython(
     isEntryFunction: (name) => skeletonsOfLanguage('cpp').some((sk) => sk.entryFunctions.length === 1 && !!entryFunctionOf(sk, name)),
     yieldsBool: (n) => !!n && t.bool.has(n.componentId),
     useTokenReader() { needTokens = true; return 'next_token()' },
+    isStreamRead: (n) => !!n && t.streamRead.has(n.componentId),
+    useTokenProbe() { needTokens = true; needProbe = true; return 'has_token()' },
     useTruncMod() { needTruncMod = true; return 'trunc_mod' },
     useTruncDiv(kind) { needTruncDiv = true; if (kind === 'mod') { needTruncMod64 = true; return 'trunc_mod64' } return 'trunc_div' },
     noteDeclaredString: (name) => { declaredStrings.add(name) },
@@ -191,6 +207,6 @@ export function convertCppToPython(
   }
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   // 跨行讀一個詞——同 cin（空白與換行都是分隔；research R4 的修正：課文的輸入一個數一行，「一句讀一行」對不上）
-  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needTokens ? TOKEN_READER : []), ...(needTruncMod ? TRUNC_MOD : []), ...(needTruncDiv ? TRUNC_DIV : []), ...(needTruncMod64 ? TRUNC_MOD64 : [])]
+  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needTokens ? TOKEN_READER : []), ...(needProbe ? TOKEN_PROBE : []), ...(needTruncMod ? TRUNC_MOD : []), ...(needTruncDiv ? TRUNC_DIV : []), ...(needTruncMod64 ? TRUNC_MOD64 : [])]
   return { code: `${[...head, ...lines].join('\n')}\n`, converted, kept: 0, reasons }
 }

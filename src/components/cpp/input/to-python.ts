@@ -4,6 +4,8 @@ import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contrac
 export function registerToPython(r: ToPythonRegistrar): void {
   // `cin >> a` 寫進 values（`cout << a` 的 values 是讀——形狀一樣，所以自己說；453 計次迴圈問上界會不會被改）
   r.writes((n) => n.slots.values ?? [])
+  // 當條件（`while (cin >> x)`，459）時由迴圈那顆換：它問的是「這一顆是不是串流讀入」
+  r.streamRead()
   // `cin >> a >> b;` → 一個一個讀詞（同 cin；research R4 的修正）；型別照宣告：int／float／str
   r.stmt((n, py, depth) => {
     const targets = n.slots.values ?? []
