@@ -33,6 +33,8 @@ export interface ToPythonContext {
   useImport(module: string): string
   /** 程式需要「跨行讀一個詞」的小工具（同 cin 的讀法）——引擎在檔頭補上 */
   useTokenReader(): string
+  /** `cin >>` 讀進 char（一個非空白字元）或 bool（0／1）的小工具（468）——引擎在檔頭補上，回傳那個呼叫 */
+  useValueReader(kind: 'char' | 'bool'): string
   /**
    * `while (cin >> x)` 的那一問（459）：「還有沒有下一個詞」——讀到檔尾回 False（同 cin：EOF 時 x 不動、迴圈結束）。
    * 回傳那個呼叫（`has_token()`）；引擎在檔頭補上小工具（連同 useTokenReader 的那一支）

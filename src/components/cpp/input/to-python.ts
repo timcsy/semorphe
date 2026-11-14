@@ -18,6 +18,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
       if (/^(int|long|long long|short)$/.test(ty)) return 'int'
       if (ty === 'double' || ty === 'float') return 'float'
       if (/string/.test(ty)) return 'str'
+      // char 讀一個非空白字元、bool 讀 0／1（468）——各自一支小工具
+      if (ty === 'char') return 'char'
+      if (ty === 'bool') return 'bool'
       // `cin >> s`（s 是 string）走的是函式庫的 operator>>：Cella 在這格報的是那次呼叫的型別（std::istream），不是 s 的型別
       if (ty === 'std::istream' && py.isDeclaredString(String(t.properties?.name ?? ''))) return 'str'
       return ty === '' ? null : undefined
@@ -26,6 +29,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (conv.some((c) => c === undefined)) return [py.keep(n, 'outside-subset', '讀入這種型別的寫法還沒有對應')]
     // 一個一個讀（同 cin：空白、換行都是分隔）——不假設一句讀一行
     const tok = py.useTokenReader()
-    return tgs.map((tg, k) => `${py.indent(depth)}${writeTo(tg, conv[k] === 'str' ? tok : `${conv[k]}(${tok})`)}`)
+    const read = (c: string | null | undefined): string => c === 'str' ? tok : c === 'char' || c === 'bool' ? py.useValueReader(c) : `${c}(${tok})`
+    return tgs.map((tg, k) => `${py.indent(depth)}${writeTo(tg, read(conv[k]))}`)
   })
 }

@@ -15,7 +15,7 @@ import { collectToPython, type ToPythonTables } from './to-python/registry'
 let TABLES: ToPythonTables | null = null
 
 /** Python 的保留字與內建常數——C++ 的名字撞到就加底線 */
-const PY_KEYWORDS = new Set(['math', 'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'class', 'def', 'del', 'elif', 'except', 'finally', 'from', 'global', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'with', 'yield', 'print', 'input', 'len', 'range', 'int', 'float', 'str', 'list', 'chr', 'ord', 'format', 'next_token', 'has_token', '_tokens', 'read_line', 'has_line', 'ignore_char', '_rest', 'sorted', 'dict', 'set'])
+const PY_KEYWORDS = new Set(['math', 'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'class', 'def', 'del', 'elif', 'except', 'finally', 'from', 'global', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'with', 'yield', 'print', 'input', 'len', 'range', 'int', 'float', 'str', 'list', 'chr', 'ord', 'format', 'next_token', 'has_token', '_tokens', 'read_line', 'has_line', 'ignore_char', '_rest', 'next_char', 'next_bool', 'sorted', 'dict', 'set'])
 
 /** 同 `cin >>` 的讀法：一次讀一個以空白分開的詞，這一行讀完才讀下一行 */
 const TOKEN_READER = [
@@ -39,6 +39,17 @@ const TOKEN_PROBE = [
   '        _tokens.extend(line.split())',
   '    return True',
 ]
+/**
+ * `cin >> c`（c 是 char，468）：跳過空白、讀**一個**字元——詞的其餘部分留給下一次讀（`A3` 讀進 char 再讀 int 是 'A' 與 3）。
+ * 兩份底下的存法不同（詞的 list／這一行還沒讀的字），各一份。⚠️ C++ 的 char 是一個位元組、Python 是一個字元——非 ASCII 的輸入兩邊不同（同 string 的既有限制）
+ */
+const CHAR_READER_TOKENS = ['def next_char():', '    t = next_token()', '    if len(t) > 1:', '        _tokens.insert(0, t[1:])', '    return t[0]']
+const CHAR_READER_LINES = ['def next_char():', '    t = next_token()', '    _rest[0] = t[1:] + _rest[0]', '    return t[0]']
+/**
+ * `cin >> b`（b 是 bool，468）：讀一個整數，0 是 false、1 是 true。其餘的值 C++ 設 failbit（之後的讀都失敗）、b 變成 true——
+ * Python 寫不出「之後都讀不到」⟹ 丟例外（照輸入判、看得見，不是靜默）
+ */
+const BOOL_READER = ['def next_bool():', '    v = int(next_token())', '    if v != 0 and v != 1:', '        raise ValueError("bool 只讀得進 0 或 1")', '    return v == 1']
 /**
  * 程式用到 getline（460）時換這一份：同 cin 的串流，一行讀進來之後**還沒讀的那一段留著**——
  * `cin >> n` 之後的 getline 讀到的是那一行剩下的字（常是空字串），不是下一行；`cin.ignore()` 丟掉一個字元（行尾就是換行）。
@@ -192,7 +203,7 @@ export function convertCppToPython(
   }
   for (const n of tree.slots?.body ?? []) noteGlobal(n)
   let inMain = false
-  let needTokens = false, needProbe = false, needLines = false
+  let needTokens = false, needProbe = false, needLines = false, needChar = false, needBool = false
   let needTruncMod = false
   let needTruncDiv = false, needTruncMod64 = false
   const imports = new Set<string>()
@@ -223,6 +234,7 @@ export function convertCppToPython(
     isStreamRead: (n) => !!n && t.streamRead.has(n.componentId),
     useLineReader(what) { needTokens = true; needLines = true; return what === 'line' ? 'read_line()' : what === 'probe' ? 'has_line()' : 'ignore_char()' },
     useTokenProbe() { needTokens = true; needProbe = true; return 'has_token()' },
+    useValueReader(kind) { needTokens = true; if (kind === 'char') { needChar = true; return 'next_char()' } needBool = true; return 'next_bool()' },
     useTruncMod() { needTruncMod = true; return 'trunc_mod' },
     useTruncDiv(kind) { needTruncDiv = true; if (kind === 'mod') { needTruncMod64 = true; return 'trunc_mod64' } return 'trunc_div' },
     noteDeclaredString: (name) => { declaredStrings.add(name) },
@@ -301,6 +313,6 @@ export function convertCppToPython(
   }
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   // 跨行讀一個詞——同 cin（空白與換行都是分隔；research R4 的修正：課文的輸入一個數一行，「一句讀一行」對不上）
-  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needLines ? LINE_READER : [...(needTokens ? TOKEN_READER : []), ...(needProbe ? TOKEN_PROBE : [])]), ...(needTruncMod ? TRUNC_MOD : []), ...(needTruncDiv ? TRUNC_DIV : []), ...(needTruncMod64 ? TRUNC_MOD64 : [])]
+  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needLines ? LINE_READER : [...(needTokens ? TOKEN_READER : []), ...(needProbe ? TOKEN_PROBE : [])]), ...(needChar ? (needLines ? CHAR_READER_LINES : CHAR_READER_TOKENS) : []), ...(needBool ? BOOL_READER : []), ...(needTruncMod ? TRUNC_MOD : []), ...(needTruncDiv ? TRUNC_DIV : []), ...(needTruncMod64 ? TRUNC_MOD64 : [])]
   return { code: `${[...head, ...lines].join('\n')}\n`, converted, kept: 0, reasons }
 }

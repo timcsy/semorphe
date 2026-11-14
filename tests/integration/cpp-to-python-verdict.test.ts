@@ -661,6 +661,20 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
   }, 60_000)
+  // ── 468：cin >> 讀進 char（一個非空白字元）與 bool（0／1）──
+  it('🟢 cin >> char：跳過空白讀一個字元、黏在一起的 A3 拆成 \'A\' 與 3；cin >> bool 讀 0／1；判決相同（468）', async () => {
+    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    int total = 0;\n    for (int i = 0; i < n; i++) {\n        char a;\n        int h;\n        cin >> a >> h;\n        if (a == \'U\') total += h;\n        else total -= h;\n        cout << a << h << " ";\n    }\n    bool b, c;\n    cin >> b >> c;\n    int g[2];\n    g[0] = b;\n    g[1] = c;\n    cout << total << " " << b << c << " " << g[0] + g[1] << " " << (b && !c) << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '3\nU5 D 2\n  U10\n1 0\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('next_char()')
+    for (const stdin of ['3\nU5 D 2\n  U10\n1 0\n', '1\nX7\n0 1\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🟢 cin >> char 與 getline 混用：讀一個字元之後，那一行剩下的字留給 getline；判決相同（468）', async () => {
+    const src = H + 'int main() {\n    char c;\n    string rest;\n    cin >> c;\n    getline(cin, rest);\n    cout << c << "[" << rest << "]" << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '  xyz abc\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    for (const stdin of ['  xyz abc\n', 'q\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
   // ── 467：switch（含掉下去的 fallthrough）、~x、{ … } 區塊 ──
   it('🟢 switch 每段都 break：寫成 if／elif／else；case 2: { … } 區塊；~x；判決相同（467）', async () => {
     const src = H + 'int main() {\n    int m;\n    cin >> m;\n    int d = ~m;\n    switch (m % 4) {\n        case 0:\n        case 1:\n            cout << "a";\n            break;\n        case 2: {\n            int k = ~(m + 1);\n            cout << k;\n            break;\n        }\n        default:\n            cout << "z";\n    }\n    cout << " " << d << " " << ~0 << endl;\n    return 0;\n}\n'
