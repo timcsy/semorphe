@@ -292,6 +292,34 @@ describe('C++ → Python：意思會變的反例', () => {
       expect(r.reasons.map((x) => x.detail).join()).toContain(detail)
     }, 60_000)
   }
+  // ── 451：函式裡重新指定全域變數 ──
+  // 之前：`int g = 0; void f() { g = 5; }` 換成 `def f():\n    g = 5`——Python 把 g 當成新的區域變數，C++ 印 5、Python 印 0，
+  // **兩邊都 accept**（靜默失真）；`g++`、`total += x` 則是 UnboundLocalError。Python 的作用域看 Python 的文字定 ⟹ 問印出來的行
+  for (const [name, code, stdin, must, mustNot] of [
+    ['函式裡 =、++、+= 全域變數', 'int g = 0;\nint total = 0;\nvoid f() { g = 5; }\nvoid add(int x) { total += x; g++; }\nint main() {\n    f();\n    add(3);\n    add(4);\n    cout << g << " " << total << endl;\n    return 0;\n}\n', '', '    global total\n    global g', ''],
+    ['cin 讀進全域變數', 'int n, best = -1;\nvoid read() { cin >> n; if (n > best) best = n; }\nint main() {\n    read();\n    read();\n    cout << n << " " << best << endl;\n    return 0;\n}\n', '3\n7\n', '    global n', ''],
+    ['只讀全域變數、參數與全域同名：不寫 global', 'int g = 2;\nint x = 1;\nint f(int k) { return k * 3 + g; }\nvoid h(int x) { x = 9; }\nint main() {\n    h(2);\n    cout << f(1) << x << endl;\n    return 0;\n}\n', '', 'def h(x):', 'global'],
+  ] as const) {
+    it(`🟢 ${name}；判決相同（451）`, async () => {
+      const src = H + code
+      const r = await toPython(src, stdin)
+      expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+      expect(r.code).toContain(must)
+      if (mustNot) expect(r.code).not.toContain(mustNot)
+      await sameVerdict(src, r.code!, stdin)
+    }, 60_000)
+  }
+  for (const [name, code] of [
+    ['函式裡宣告了與全域同名的變數', 'int g = 1;\nvoid f() { int g = 2; g++; cout << g; }\nint main() {\n    f();\n    cout << g << endl;\n    return 0;\n}\n'],
+    // 攤平到頂層之後 main 的 n 就是全域的 n：f 讀到 3（C++ 讀到 5）
+    ['main 裡宣告了與全域同名的變數', 'int n = 5;\nvoid f() { cout << n << endl; }\nint main() {\n    int n = 3;\n    f();\n    cout << n << endl;\n    return 0;\n}\n'],
+  ] as const) {
+    it(`🔴 保留：${name}（451）`, async () => {
+      const r = await toPython(H + code)
+      expect(r.code, '換了').toBeNull()
+      expect(r.reasons.map((x) => x.detail).join()).toContain('同名')
+    }, 60_000)
+  }
   it('🔴 保留：類別', async () => {
     const r = await toPython(H + 'class P {\npublic:\n    int x;\n};\nint main() {\n    P p;\n    p.x = 1;\n    cout << p.x << endl;\n    return 0;\n}\n')
     expect(r.code).toBeNull()
