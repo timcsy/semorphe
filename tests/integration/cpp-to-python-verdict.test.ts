@@ -659,6 +659,14 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
   }, 60_000)
+  // ── 464：二維 vector——每一列各自一個新的 list ──
+  it('🟢 vector<vector<int>> g(R, vector<int>(C, x))、CTAD 的 vector dp(R, vector<int>(C))；改一格不影響別列；元素收到浮點值截斷；判決相同（464）', async () => {
+    const src = H + 'int main() {\n    int n, m;\n    cin >> n >> m;\n    vector dp(n + 1, vector<int>(m + 1));\n    vector<vector<int>> g(2, vector<int>(3, -1));\n    vector<int> row(m + 1, 7);\n    vector<vector<int>> h(2, row);\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]) + i * j;\n    g[0][1] = 2.9;\n    h[1][0] = 0;\n    cout << dp[n][m] << " " << dp[0][m] << " " << g[0][1] << g[1][1] << " " << h[0][0] << h[1][0] << row[0] << " " << dp.size() << " " << dp[0].size() << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '3 4\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('for _ in range(')
+    await sameVerdict(src, r.code!, '3 4\n')
+  }, 60_000)
   // ── 460：getline——讀這一行還沒讀的部分（cin >> n 之後是那一行剩下的字）、cin.ignore() 丟一個字元 ──
   it('🟢 getline：cin >> n 之後讀到那一行剩下的、cin.ignore() 之後讀下一行、while (getline(…)) 讀到檔尾；與 cin >> 混用；判決相同（460）', async () => {
     const src = H + 'int main() {\n    int n;\n    string a, b, w;\n    cin >> n;\n    getline(cin, a);\n    cout << "[" << a << "]" << endl;\n    cin >> w;\n    cin.ignore();\n    getline(cin, b);\n    cout << n << " " << w << " [" << b << "]" << endl;\n    int k = 0;\n    while (getline(cin, a)) {\n        k++;\n        cout << k << ":" << a << "|" << endl;\n    }\n    return 0;\n}\n'

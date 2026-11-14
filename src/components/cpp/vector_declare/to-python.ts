@@ -9,6 +9,13 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const zero = /^(int|long|long long|short)$/.test(t) ? '0' : t === 'double' ? '0.0' : /string/.test(t) ? '""' : null
     // vector<vector<T>>（447）：空的 → `[]`；給個數 → 每一格各自一個新的 list（`[[]] * n` 會讓 n 格是同一個 list）
     const inner = t.match(/^(?:std::)?vector\s*<\s*(int|long|long long|short|double|(?:std::)?string)\s*>$/)
+    // `vector<vector<T>> g(R, vector<T>(C, x))`（464）：每一列各自一個新的 list——列的初值是建構式（有 size 槽，每次求值都是新的）就逐列求值，
+    // 是一個現成的 vector（`g(R, row)`）就逐列複製 `list(row)`
+    const rowFill = n.slots.fill?.[0]
+    if (inner && rowFill && n.slots.size?.length && Object.keys(n.slots).every((k) => k === 'size' || k === 'fill' || !(n.slots[k]?.length))) {
+      const row = rowFill.slots?.size !== undefined ? py.expr(rowFill) : `list(${py.expr(rowFill)})`
+      return [`${py.indent(depth)}${name} = [${row} for _ in range(${py.expr(n.slots.size[0])})]`]
+    }
     if (inner && Object.keys(n.slots).every((k) => k === 'size' || !(n.slots[k]?.length))) {
       return [n.slots.size?.length ? `${py.indent(depth)}${name} = [[] for _ in range(${py.expr(n.slots.size[0])})]` : `${py.indent(depth)}${name} = []`]
     }
