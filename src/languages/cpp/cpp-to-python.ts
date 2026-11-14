@@ -92,6 +92,15 @@ export function convertCppToPython(
   let needTruncMod = false
   let needTruncDiv = false, needTruncMod64 = false
   const imports = new Set<string>()
+  // 運算式裡的 ++／--（457）：每一句敘述一個框，拆出來的前後句先放這裡，敘述寫完再決定收不收
+  interface Frame { owner: SemanticNode; before: string[]; after: string[]; nested: boolean }
+  const frames: Frame[] = []
+  let conditionalDepth = 0
+  const occurrences = (x: SemanticNode, name: string): number =>
+    (x.properties?.name === name || x.properties?.obj === name ? 1 : 0) + Object.values(x.slots ?? {}).reduce((a, kids) => a + kids.reduce((b, c) => b + occurrences(c, name), 0), 0)
+  const callsUserFunction = (x: SemanticNode): boolean =>
+    (typeof x.properties?.name === 'string' && userFunctions.has(x.properties.name) && Object.keys(x.slots ?? {}).length > 0) ||
+    Object.values(x.slots ?? {}).some((kids) => kids.some(callsUserFunction))
   const py: ToPythonContext = {
     get inMain() { return inMain },
     blockAsMain(nodes) {
@@ -123,7 +132,20 @@ export function convertCppToPython(
     expr(n) {
       if (!n) return '…'
       const fn = t.expr.get(n.componentId)
-      return fn ? fn(n, py) : py.keep(n, 'outside-subset', `「${n.componentId}」還沒有 Python 的寫法`)
+      if (!fn) return py.keep(n, 'outside-subset', `「${n.componentId}」還沒有 Python 的寫法`)
+      if (!t.conditional.has(n.componentId)) return fn(n, py)
+      conditionalDepth++
+      try { return fn(n, py) } finally { conditionalDepth-- }
+    },
+    hoist(n, name, line, when) {
+      const f = frames[frames.length - 1]
+      const no = (why: string): boolean => { py.keep(n, 'outside-subset', why); return false }
+      if (!f) return no('運算式裡的 ++／-- 不在任何一句敘述裡')
+      if (conditionalDepth > 0) return no('寫在 &&、||、?: 裡的 ++／--：不一定會算，拆不到敘述的前後')
+      if (occurrences(f.owner, name) !== 1) return no(`同一句裡又用到「${name}」——把 ++／-- 拆到前後之後，讀到的值會不同`)
+      if (globals.has(name) && callsUserFunction(f.owner)) return no(`「${name}」是全域變數，這一句呼叫的函式可能讀到它——拆到前後之後讀到的值會不同`)
+      ;(when === 'before' ? f.before : f.after).push(line)
+      return true
     },
     target(n, readsFirst) {
       if (!n) return { text: '…' }
@@ -131,12 +153,27 @@ export function convertCppToPython(
       return fn ? fn(n, py, readsFirst) : { text: py.expr(n) }
     },
     block(nodes, depth) {
+      if (frames.length > 0) frames[frames.length - 1].nested = true
       const lines = (nodes ?? []).flatMap((c) => stmt(c, depth))
       // 只有註解的本體也要一個 pass（453：註解換過去之後，`if (x) { // 空 }` 不能只剩一行 #）
       return lines.some((l) => !/^\s*#/.test(l)) ? lines : [...lines, `${py.indent(depth)}pass`]
     },
   }
   const stmt = (n: SemanticNode, depth: number): string[] => {
+    const frame: Frame = { owner: n, before: [], after: [], nested: false }
+    frames.push(frame)
+    let lines: string[]
+    try { lines = stmtOnly(n, depth) } finally { frames.pop() }
+    if (frame.before.length === 0 && frame.after.length === 0) return lines
+    // 有本體的敘述（if、while…）：拆到整句的前後會跑錯——條件每圈都算、拆出來的只跑一次
+    if (frame.nested) { py.keep(n, 'outside-subset', '條件或迴圈裡的 ++／--：拆到整句的前後之後，每一圈不會再算一次'); return lines }
+    if (frame.after.length > 0 && /^\s*(return|break|continue)\b/.test(lines[lines.length - 1] ?? '')) {
+      py.keep(n, 'outside-subset', '這一句之後就離開了——拆到後面的 ++／-- 不會執行'); return lines
+    }
+    const ind = py.indent(depth)
+    return [...frame.before.map((l) => ind + l), ...lines, ...frame.after.map((l) => ind + l)]
+  }
+  const stmtOnly = (n: SemanticNode, depth: number): string[] => {
     const s = t.stmt.get(n.componentId)
     if (s) { const lines = s(n, py, depth); converted += lines.length > 0 ? 1 : 0; return lines }
     // 運算式當敘述（`f(x);`、`i++;`）：有運算式印法就照印一行

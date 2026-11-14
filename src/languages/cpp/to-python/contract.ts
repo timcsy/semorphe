@@ -54,6 +54,13 @@ export interface ToPythonContext {
   isGlobal(name: string): boolean
   /** 這顆節點宣告了它會寫的子節點（`r.writes`）——沒宣告的回空 */
   writtenBy(n: SemanticNode): readonly SemanticNode[]
+  /**
+   * 運算式裡的 `++`／`--`（457：`a[idx++] = b[j++]`、`j = i++`）——Python 沒有，拆成這一句前面（`++i`）或後面（`i++`）的一句 `line`。
+   * 引擎只在拆開之後意思不變時收：這一句是簡單敘述（沒有本體——拆到 if／while 的條件外面會跑錯圈數）、
+   * 不在 `&&`／`||`／`?:` 裡（不一定會算）、同一句裡 `name` 只出現這一次（先後次序會變）、
+   * 後面那一句不會被 `return`／`break` 跳過、全域變數沒有被這一句呼叫的自訂函式讀到的可能。不收就記保留、回 false
+   */
+  hoist(n: SemanticNode, name: string, line: string, when: 'before' | 'after'): boolean
 }
 
 /** 加括號的判準兩個方向共用（住在核心）——膠囊照舊從這裡拿 */
@@ -110,6 +117,8 @@ export interface ToPythonRegistrar {
    * 引擎換之前先把每一顆節點的型別文字展開（`ll` → `long long`），於是讀型別的膠囊（整數截斷、起始值）照原本的判準走
    */
   typeAlias(fn: TypeAliasFn): void
+  /** 這顆元件的子節點不一定都會算（457：`&&`、`||`、`?:`）——裡面的 `i++` 不能拆到敘述的前後 */
+  conditional(): void
   /** 這顆元件會寫哪幾個子節點（453：`cin >> a` 的 values 是寫、`cout << a` 的 values 是讀——形狀一樣，只有元件自己知道） */
   writes(fn: (n: SemanticNode) => readonly SemanticNode[]): void
 }
@@ -232,6 +241,11 @@ export function castToPython(n: SemanticNode, py: ToPythonContext): string {
 /** 本體裡有屬於這一圈的 continue 嗎（不往內層迴圈的 body 走——那裡的 continue 屬於內層；if 的分支槽叫 then_body／else_body）——寫成 while 的迴圈共用（453、456） */
 export function hasOwnContinue(nodes: readonly SemanticNode[]): boolean {
   return nodes.some((x) => x.componentId.endsWith(':continue') || Object.entries(x.slots ?? {}).some(([k, kids]) => k !== 'body' && hasOwnContinue(kids)))
+}
+
+/** 本體裡有屬於這一圈的 break 嗎（457：`while (n--)` 正常結束時多減的那一次，break 出去的不會減）——寧可多報：switch 裡的 break 也算 */
+export function hasOwnBreak(nodes: readonly SemanticNode[]): boolean {
+  return nodes.some((x) => x.componentId.endsWith(':break') || Object.entries(x.slots ?? {}).some(([k, kids]) => k !== 'body' && hasOwnBreak(kids)))
 }
 
 /** 一個左值的底名（`a`、`a[i]`、`v.at(i)`、`p.x` → a／v／p） */

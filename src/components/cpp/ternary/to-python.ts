@@ -6,6 +6,7 @@ const INT = /^(int|long|long long|short|unsigned( int| long| long long)?|size_t)
 const FLOAT = /^(double|float|long double)$/
 
 export function registerToPython(r: ToPythonRegistrar): void {
+  r.conditional()
   // `c ? a : b` → `(a if c else b)`：Python 的條件運算式優先級最低，一律加括號
   // ⚠️ C++ 兩個分支會先轉成共同型別（`c ? 1 : 2.5` 的 1 是 1.0），Python 不會——
   //    整數分支放進浮點的結果補 float()；其餘型別不同的照實保留

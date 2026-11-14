@@ -540,6 +540,44 @@ describe('C++ → Python：意思會變的反例', () => {
     const v = await runCella(src, { lang: 'cpp' })
     expect(v.verdict).toBe('untranslated')
   }, 60_000)
+  // ── 457：運算式裡的 ++／--（拆到這一句的前後）、while (n--) ──
+  it('🟢 運算式裡的 ++／--：a[k++] = b[j++]、j = i++、j = ++i、宣告的初值、函式引數；判決相同（457）', async () => {
+    const src = H + 'int f(int x) { return x * 10; }\nint main() {\n    int a[5] = {0}, b[5] = {1, 2, 3, 4, 5};\n    int k = 0, j = 1, i = 3;\n    a[k++] = b[j++];\n    a[k++] = b[j++];\n    int p = i++;\n    int q = ++i;\n    int r = f(j--);\n    cout << a[0] << a[1] << " " << k << j << " " << p << q << i << " " << r << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('a[k] = b[j]\nk += 1\nj += 1')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🟢 while (n--)：先判舊值、再減、離開時 n 停在 -1；本體有 continue 也對；判決相同（457）', async () => {
+    const src = H + 'int main() {\n    int n, s = 0, t = 4;\n    cin >> n;\n    while (n--) {\n        if (n == 2) continue;\n        s += n;\n    }\n    while (t--) s++;\n    cout << s << " " << n << " " << t << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '5\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('while n != 0:')
+    await sameVerdict(src, r.code!, '5\n')
+  }, 60_000)
+  it('🟢 計次迴圈的大括號起始值 for (int i{}; …)、for (int i{1}; …)；上界是浮點（i < 1e1）寫成 while（range 只收整數）；判決相同（457）', async () => {
+    const src = H + 'int main() {\n    long long s{};\n    for (int i{}; i < 3; i++) cout << i;\n    for (int i{1}; i <= 4; i++) s += i;\n    for (int i{}; i < 1e1; i++) s += i;\n    cout << " " << s << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('for i in range(3):')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🔴 保留：拆開之後意思會變的 ++／--（同一句又用到、條件裡、&& 裡、return 之後、while (n--) 裡有 break）（457）', async () => {
+    const cases: [string, string, string][] = [
+      ['同一句又用到', '    int i = 1, a[3] = {0};\n    a[i] = i++;\n    cout << a[1] << i << endl;\n', '又用到「i」'],
+      ['if 的條件', '    int i = 0;\n    if (i++ == 0) cout << 1 << endl;\n', '條件或迴圈'],
+      ['&& 裡', '    int i = 0, c = 0;\n    bool b = c > 0 && i++ > 0;\n    cout << b << i << endl;\n', '&&'],
+      ['while (n--) 有 break', '    int n = 5;\n    while (n--) {\n        if (n == 2) break;\n    }\n    cout << n << endl;\n', 'break'],
+    ]
+    for (const [what, body, why] of cases) {
+      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, `換了：${what}\n${r.code}`).toBeNull()
+      expect(r.reasons.map((x) => x.detail).join(), what).toContain(why)
+    }
+    const g = await toPython(H + 'int c = 0;\nint g() { return c; }\nint h() {\n    return c++;\n}\nint main() {\n    int x = h();\n    cout << x << c << endl;\n    return 0;\n}\n')
+    expect(g.code, `換了：return 之後\n${g.code}`).toBeNull()
+    expect(g.reasons.map((x) => x.detail).join()).toContain('離開')
+  }, 60_000)
   it('🔴 保留：類別', async () => {
     const r = await toPython(H + 'class P {\npublic:\n    int x;\n};\nint main() {\n    P p;\n    p.x = 1;\n    cout << p.x << endl;\n    return 0;\n}\n')
     expect(r.code).toBeNull()
