@@ -609,6 +609,21 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r1.code, JSON.stringify(r1.reasons)).not.toBeNull()
     await sameVerdict(one, r1.code!, '')
   }, 60_000)
+  // ── 461：一維陣列參數 int p[]——兩邊都是呼叫端那一個陣列 ──
+  it('🟢 陣列參數 int p[]：遞迴裡改元素、呼叫端看得到；double 陣列；整數元素收到浮點值照 C++ 截斷；判決相同（461）', async () => {
+    const src = H + 'int fill(int n, int k, int p[]) {\n    if (k > n) return 1;\n    int ans = 0;\n    for (int i = 1; i <= n; i++) {\n        bool ok = true;\n        for (int j = 1; j < k; j++)\n            if (p[j] == i) { ok = false; break; }\n        if (!ok) continue;\n        p[k] = i;\n        ans += fill(n, k + 1, p);\n    }\n    return ans;\n}\nvoid half(int a[], double w[], int n) {\n    for (int i = 0; i < n; i++) { a[i] = w[i] / 2; w[i] = w[i] * 1.5; }\n}\nint main() {\n    int n;\n    cin >> n;\n    int p[10] = {0};\n    cout << fill(n, 1, p) << " " << p[n] << endl;\n    int a[3] = {0};\n    double w[3] = {3, 5, 7.5};\n    half(a, w, 3);\n    cout << a[0] << " " << a[1] << " " << a[2] << " " << w[2] << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '4\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('def half(a, w, n):')
+    expect(r.code, r.code!).toContain('a[i] = int(')
+    await sameVerdict(src, r.code!, '4\n')
+  }, 60_000)
+  it('🔴 保留：陣列參數本身被換掉（p = q）（461）', async () => {
+    const src = H + 'int g[3] = {1, 2, 3};\nint first(int p[]) {\n    p = g;\n    return p[0];\n}\nint main() {\n    int a[2] = {9, 8};\n    cout << first(a) << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code).toBeNull()
+    expect(JSON.stringify(r.reasons)).toContain('int[] p')
+  }, 30_000)
   // ── 460：getline——讀這一行還沒讀的部分（cin >> n 之後是那一行剩下的字）、cin.ignore() 丟一個字元 ──
   it('🟢 getline：cin >> n 之後讀到那一行剩下的、cin.ignore() 之後讀下一行、while (getline(…)) 讀到檔尾；與 cin >> 混用；判決相同（460）', async () => {
     const src = H + 'int main() {\n    int n;\n    string a, b, w;\n    cin >> n;\n    getline(cin, a);\n    cout << "[" << a << "]" << endl;\n    cin >> w;\n    cin.ignore();\n    getline(cin, b);\n    cout << n << " " << w << " [" << b << "]" << endl;\n    int k = 0;\n    while (getline(cin, a)) {\n        k++;\n        cout << k << ":" << a << "|" << endl;\n    }\n    return 0;\n}\n'

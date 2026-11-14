@@ -15,6 +15,16 @@ function sharedListParam(t: string, name: string, fn: SemanticNode): boolean {
 }
 
 /**
+ * `int p[]` 這種一維陣列參數（461）：C++ 傳的是指向呼叫端那個陣列的指標，Python 傳的是同一個 list ⟹ 讀、改元素兩邊都是呼叫端那一個。
+ * 兩邊不同的只有把參數本身換掉（`p = q`、指標運算之後再指定）——本體裡有就保留。元素型別限陣列那顆換得過去的幾種，
+ * 並記下來給元素指定截斷用（`p[i] = 7.9` 放進整數陣列）
+ */
+function arrayParamElement(t: string, name: string, fn: SemanticNode): string | null {
+  const m = t.trim().match(/^(int|long|long long|short|double)\s*\[\s*\]$/)
+  return m && !rebinds(fn.slots.body ?? [], name) ? m[1] : null
+}
+
+/**
  * 本體裡有沒有一句把這個名字整個重新指定（`a = …`）或在裡面另外宣告同名的變數——**問形狀，不點名別顆元件**（就近性護欄）：
  * 指定 ＝ 只有 target／value 兩個槽；目標是「同名、沒有子節點」的葉子；宣告 ＝ 同名而且帶型別。寧可多保留，不可漏掉
  */
@@ -123,6 +133,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
       // 樣板型別（`<`：stack／queue／map…）以值傳也是複製一份 ⟹ 一律保留（448：stack 換得過去之後，傳值的 stack 參數不能漏掉）
       // string 以值或 const 參考傳：Python 的字串不能改 ⟹ 兩邊意思相同；其餘參考、指標、容器照舊保留
       const okString = /^(const\s+)?(std::)?string(\s*&)?$/.test(t.trim()) && (!t.includes('&') || /^const/.test(t.trim()))
+      const pname = String(p.properties.name ?? '')
+      const arrElem = arrayParamElement(t, pname, n)
+      if (arrElem !== null) { py.noteElementType(py.name(pname), arrElem); params.push(py.name(pname)); continue }
       if (!okString && !sharedListParam(t, String(p.properties.name ?? ''), n) && /[&*<]|vector|\[|string/.test(t)) return [py.keep(p, 'outside-subset', `參數「${t} ${String(p.properties.name ?? '')}」的傳遞方式兩個語言不同`)]
       params.push(py.name(String(p.properties.name ?? '')))
     }

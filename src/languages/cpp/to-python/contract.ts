@@ -277,9 +277,11 @@ function baseName(x: SemanticNode | undefined): string | undefined {
 /**
  * 這幾句敘述可能改到 `names` 裡的哪一個嗎（453：計次迴圈換成 range 之前要問上界與迴圈變數會不會被改）——寧可多報：
  * 指定的目標（target 槽）、元件宣告的寫入（`cin >>`）、元素指定（`a[i] = …`）、敘述位置的方法呼叫（`v.push_back(x)`）、
- * 當引數傳給自訂函式（可能是參考參數）、名字是全域而本體呼叫了自訂函式
+ * 當引數傳給自訂函式（可能是參考參數）、名字是全域而本體呼叫了自訂函式。
+ * `byValue`（461）：已知是純量的名字——當引數傳出去不算寫入：換得過去的程式裡沒有參考參數（`int& x` 那顆整支保留，func_def 的
+ * 「傳遞方式兩個語言不同」），純量只能以值傳，呼叫端那一個改不到。⚠️ 哪天參考參數換得過去了，這一條要跟著改
  */
-export function mayWrite(nodes: readonly SemanticNode[], names: ReadonlySet<string>, py: ToPythonContext): boolean {
+export function mayWrite(nodes: readonly SemanticNode[], names: ReadonlySet<string>, py: ToPythonContext, byValue: ReadonlySet<string> = new Set()): boolean {
   const hit = (x: SemanticNode | undefined): boolean => { const b = baseName(x); return b !== undefined && names.has(b) }
   const walk = (x: SemanticNode, isStmt: boolean): boolean => {
     if (hit(x.slots?.target?.[0])) return true
@@ -288,7 +290,7 @@ export function mayWrite(nodes: readonly SemanticNode[], names: ReadonlySet<stri
     if (isStmt && hit(x.slots?.obj?.[0])) return true
     if (typeof x.properties?.name === 'string' && py.isUserFunction(x.properties.name)) {
       if ([...names].some((v) => py.isGlobal(v))) return true
-      if (Object.values(x.slots ?? {}).some((kids) => kids.some(hit))) return true
+      if (Object.values(x.slots ?? {}).some((kids) => kids.some((c) => hit(c) && !byValue.has(baseName(c)!)))) return true
     }
     return Object.entries(x.slots ?? {}).some(([k, kids]) => kids.some((c) => walk(c, /body$/.test(k))))
   }
