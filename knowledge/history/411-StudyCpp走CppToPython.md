@@ -99,3 +99,13 @@ vector 的陣列（鄰接串列 `vector<int> g[N]`）：每一格各自一個空
 二維 vector：`vector<T>(n)` → `[0] * n`、`vector<T>(n, x)` → `[x] * n`（x 照 T 換，`vector<int>(3, 2.5)` 是 2）；元素是數字或字串，Python 裡改不動，`[x] * n` 每格同一個值沒有差別。`vector<vector<T>> g(R, vector<T>(C, x))` → `[row for _ in range(R)]`——**不是 `[row] * R`**（那會讓每一列是同一個 list，改一格整欄跟著變）；fill 不是建構子形狀（是一個已有的 vector）時每一列 `list(…)` 複製一份。判決例冷算 6.0 秒。
 
 **結果**：StudyCpp 換得過去 84 → 86 支（AP325 6_10、6_14），沒有掉支。6_14 兩邊判決相同；6_10 的 C++ 那一側 Cella 本來就判 reject（464 之前就是），換得過去但比不了。兩邊都 accept 而輸出不同的仍是那五支（6_4、fake_random ×2、a104_1、a565——讀到檔尾與亂數，464 之前就在）。
+
+## 後續：465（11-15）
+
+pair 換成 **tuple**，不是 list：C++ 的 pair 是值（`q = p` 複製一份），tuple 不能改 ⟹ 指定、傳值、範圍 for 的 `auto x` 都不必另外複製。代價是改成員要**重建整個 tuple**（`p.first = 7` → `p = (7, p[1])`），於是指定目標多了兩樣：`assign`（不能原地寫的目標說出整句怎麼寫）與 `type`（成員的型別——Cella 不給指定目標的型別）；`=`、`+=`、`++`、`cin >>`、getline 都改走 writeTo／updateTo，swap 遇到就保留。
+
+**參考改成員保留**（`for (auto& x : a) x.first = 1`、`pair<int,int>& p` 參數）：重建的是本地那一個，改不到原本的——所以目標的型別只問宣告那一顆記下的，不問 Cella（Cella 的型別不分參考）。宣告的形狀檢查（全域、遮蔽、重新指定）原本只認 `type` 屬性，pair 的宣告是 `type1`／`type2`——補上（`declaresTyped`），否則函式裡改全域的 pair 不會寫 `global`。
+
+**順手修到一個早就在的靜默失真**：放進容器的值沒照元素型別換——`vector<int>` 的 `push_back(2.5)`、`stack<int>` 的 `push(4.5)`、`set<int>` 的 `insert(6.2)`、`vector<int> v(n, 2.5)`，C++ 放進去的是截斷後的整數，Python 原樣放浮點（印 `2.5 3.95 1000.0`，C++ 印 `2 3 1000`）。寫 vector<pair> 的 push_back 時看到它原樣 append，先寫一支判決例證實再修（`elementValue`）。
+
+**結果**：StudyCpp 換得過去 86 → 86，沒有掉支、沒有一支的輸出變了。pair 那一族擋在後面的是成員巨集（`#define F first`，6 支）、`sort`（等 Cella）、multiset、heapq——這一刀是它們的地基。
