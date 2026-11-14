@@ -265,6 +265,8 @@ const CAST_RANK: Record<string, number> = { short: 1, 'short int': 1, int: 2, si
  * - 整數 → 同寬或更寬的整數：照原樣（值不變）
  * - char → 整數：`ord(x)`（Python 的 char 是長度 1 的字串）
  * - 整數、double → double：`float(x)`（2^53 以內精確；long long 照實保留）
+ * - 容器／字串的長度（無號）→ int 或更寬（short 不收：三萬多個就繞回）：`len(x)` 照原樣（470：`(int)v.size()`）。長度超過 2^31−1 要那個容器先裝得下二十億個元素——
+ *   這裡當作不會發生（C++ 那邊繞回、Python 不會）；只收寫出來就是一個 `len(…)` 的，別的無號值照實保留
  * 其餘（窄化成 int 會繞回、轉成 float 會降精度、轉成 char／bool）照實保留——不猜。
  */
 export function castToPython(n: SemanticNode, py: ToPythonContext): string {
@@ -276,6 +278,10 @@ export function castToPython(n: SemanticNode, py: ToPythonContext): string {
     if (from === 'double' || from === 'float') return `int(${py.expr(v)})`
     if (from === 'char') return `ord(${py.expr(v)})`
     if (CAST_RANK[from] !== undefined && CAST_RANK[from] <= CAST_RANK[to]) return `(${py.expr(v)})`
+    if (CAST_RANK[to] >= 2 && /^(unsigned long|unsigned long long|size_t)$/.test(from)) {
+      const e = py.expr(v)
+      if (/^len\([^()]*\)$/.test(e)) return e
+    }
     return keep()
   }
   if (to === 'double') {
@@ -300,6 +306,8 @@ export function hasOwnBreak(nodes: readonly SemanticNode[]): boolean {
 /** 這一顆是不是跳出去的敘述（467：switch 的一段結尾）——問身分的字尾，同上面兩支 */
 export const isBreakNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':break')
 export const isReturnNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':return')
+/** `cout << flush` 的那一顆（470）：只送出、不印字——印的那一顆把它寫成 print 的 `flush=True` */
+export const isFlushNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':io_flush')
 
 /** 一個左值的底名（`a`、`a[i]`、`v.at(i)`、`p.x` → a／v／p） */
 function baseName(x: SemanticNode | undefined): string | undefined {

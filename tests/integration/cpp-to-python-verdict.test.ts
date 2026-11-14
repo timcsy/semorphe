@@ -661,6 +661,25 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
   }, 60_000)
+  // ── 470：cout << flush（只送出、不印字）、(int)v.size() ──
+  it('🟢 cout << x << flush、單獨一句 cout << flush：flush 拿掉（印的內容相同）；判決相同（470）', async () => {
+    const src = H + 'int main() {\n    int n;\n    while (cin >> n) {\n        unordered_map<string, int> mp;\n        string s;\n        int j{};\n        for (int i = 0; i < n; i++) {\n            cin >> s;\n            if (mp[s] == 0) {\n                j++;\n                mp[s] = j;\n                cout << "New! " << j << \'\\n\';\n            } else {\n                cout << "Old! " << mp[s] << \'\\n\' << flush;\n            }\n        }\n        cout << flush;\n    }\n    return 0;\n}\n'
+    const r = await toPython(src, '3\nab cd ab\n2\nx x\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).not.toContain('flush')
+    await sameVerdict(src, r.code!, '3\nab cd ab\n2\nx x\n')
+  }, 60_000)
+  it('🟢 (int)s.size()、(int)v.size() 寫成 len(…)；判決相同（470）', async () => {
+    const src = H + 'int main() {\n    int x;\n    string s;\n    cin >> x >> s;\n    vector<int> v(3, 1);\n    if (x > 100 || x < 0) cout << "?";\n    for (int i = 1; i <= (int)s.size(); i++) cout << s[i - 1];\n    cout << " " << (int)v.size() - 4 << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '7 abc\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('len(s)')
+    for (const stdin of ['7 abc\n', '-3 q\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：(short)v.size()（三萬多個就繞回）（470）', async () => {
+    const r = await toPython(H + 'int main() {\n    vector<int> v(3, 1);\n    cout << (short)v.size();\n    return 0;\n}\n')
+    expect(r.code, r.code ?? '').toBeNull()
+  }, 60_000)
   // ── 469：unordered_map → dict（查、改、count、clear 相同；走訪照實保留）、clear()、map 的鍵是陣列的一格 ──
   it('🟢 unordered_map 計數、cc[A[i]]++（鍵是陣列的一格）、clear() 之後重來；判決相同（469）', async () => {
     const src = H + 'int A[20];\nint main() {\n    int n;\n    cin >> n;\n    unordered_map<int, int> cc;\n    for (int i = 1; i <= n; i++) {\n        cin >> A[i];\n        cc[A[i]]++;\n    }\n    cout << cc.size() << " " << cc[A[1]] << " " << cc.count(99) << endl;\n    cc.clear();\n    vector<int> v;\n    v.push_back(3);\n    v.clear();\n    for (int i = 1; i <= n; i++) {\n        if (cc[A[i]] == 0) cout << "N";\n        cc[A[i]] += 2;\n    }\n    cout << " " << cc[A[n]] << " " << v.size() << endl;\n    return 0;\n}\n'

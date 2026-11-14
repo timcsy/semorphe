@@ -1,6 +1,7 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { isLineBreak } from '../../../languages/cpp/lang/node-traits'
+import { isFlushNode } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   // `cout << a << b << endl` → print(a, b, sep="")；沒有 endl 結尾 → end=""。值照型別：double 用 :g（同 cout 預設）、bool 印 0／1
@@ -8,6 +9,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const values = n.slots.values ?? []
     const lines: string[] = []
     let seg: string[] = []
+    // `<< flush`（470）：只送出、不印字——印出來的內容兩邊相同；而 Python 的 input() 讀之前本來就會先送出 stdout
+    // ⟹ 拿掉（`flush=True` 是更貼字面的寫法，而 Cella 的 Python 還判不出那個參數）。只有 flush 的一句沒有任何一行（py.block 會補 pass）
     const flush = (newline: boolean): void => {
       // 只有一個值時不寫 sep（道地的寫法）；好幾個值時 sep="" 讓它們接在一起（同 cout）
       const args = [...seg, ...(seg.length > 1 ? ['sep=""'] : []), ...(newline ? [] : ['end=""'])]
@@ -16,6 +19,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
     }
     for (const v of values) {
       if (isLineBreak(v.componentId)) { flush(true); continue }
+      if (isFlushNode(v)) continue
       seg.push(shown(v, py))
     }
     if (seg.length > 0) flush(false)

@@ -146,3 +146,9 @@ switch：每段都以 break／return 結尾、default 在最後、中間沒有�
 - tioj 21_toj55_2：判決、輸出相同。
 - AP325 3_10：換出來的 Python 裡有 `A = [0] * 200007`，Cella 的 Python 判決**丟例外**（Maximum call stack size exceeded）——cella 已認的 `[0] * N` 缺陷、在它的下一批；把長度改成 20 判得出 accept。
 - tioj 21_d518_AC：探針問程式自己生的測資在一筆的中間就沒了；C++ 讀失敗照樣印、Python 丟 EOFError——看得見的那一種，同 1_11，不是失真。
+
+## 後續：470（11-15）
+
+- `cout << flush`：只送出、不印字 ⟹ 拿掉。印出來的內容兩邊相同，而 Python 的 `input()` 讀之前本來就會先送出 stdout；更貼字面的 `print(…, flush=True)` 是第一版，Cella 的 Python 判不出那個參數（unknown「the built-in print」）。只有 flush 的一句沒有任何一行，本體空了由 `py.block` 補 `pass`。
+- `(int)v.size()`：無號的長度轉成 int 或更寬 → `len(v)` 照原樣。超過 2^31−1 要那個容器先裝得下二十億個元素——當作不會發生；short 不收（三萬多個就繞回），寫出來不是一個 `len(…)` 的無號值照實保留。
+- 發現、沒在這一刀做：C++ 的替代拼法 `or`／`and` lift 成 arithmetic（身分錯）——要動 lift 與積木，另開一刀（471）。
