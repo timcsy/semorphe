@@ -7,7 +7,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
     const name = py.name(String(n.properties.name ?? ''))
     const t = String(n.properties.type ?? '')
-    const zero = /^(int|long|long long|short)$/.test(t) ? '0' : t === 'double' ? '0.0' : null
+    const zero = /^(int|long|long long|short)$/.test(t) ? '0' : t === 'double' ? '0.0' : t === 'bool' ? 'False' : null
     // 元素型別記下來（459）：`a[i] = 7.9` 放進整數陣列要截斷，而 Cella 不給那一句型別
     if (zero !== null) py.noteElementType(name, t)
     if (zero === null) return [py.keep(n, 'outside-subset', `${t} 二維陣列還沒有對應`)]

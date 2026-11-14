@@ -19,6 +19,11 @@ export function registerToPython(r: ToPythonRegistrar): void {
     // map／set 同理（450）⟹ dict(…)／set(…)
     const keyed = keyedKind(py.typeOf(target))
     if (keyed) return [`${py.indent(depth)}${tgt} = ${keyed.kind === 'map' ? 'dict' : 'set'}(${py.expr(value)})`]
-    return [`${py.indent(depth)}${tgt} = ${intValue(py.typeOf(target), py.typeOf(value), py.expr(value))}`]
+    // 目標的型別先問 Cella，沒給就問宣告那一顆記下的（462：Cella 不給指定目標的型別 ⟹ `b = n - 4` 放進 bool 原樣存 2）
+    const bare = target && Object.keys(target.slots ?? {}).length === 0 && typeof target.properties?.name === 'string'
+    const tt = py.typeOf(target) ?? (bare ? py.varTypeOf(String(target.properties.name)) : undefined)
+    // 都不知道而值是浮點：可能要截斷（同 array_assign，459）——保留，不猜（462 量到：兩個函式各有一個 k、一個 int 一個 double）
+    if (tt === undefined && /^(const\s+)?(double|float|long double)/.test(py.typeOf(value) ?? '')) return [py.keep(n, 'needs-types', `放進 ${py.expr(target)} 的值是浮點，而不知道 ${py.expr(target)} 的型別`)]
+    return [`${py.indent(depth)}${tgt} = ${intValue(tt, py.typeOf(value), py.expr(value))}`]
   })
 }

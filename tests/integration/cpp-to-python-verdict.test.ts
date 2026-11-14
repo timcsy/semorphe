@@ -624,6 +624,26 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code).toBeNull()
     expect(JSON.stringify(r.reasons)).toContain('int[] p')
   }, 30_000)
+  // ── 462：bool 陣列；放進 bool 的值照 C++ 變成 true／false ──
+  it('🟢 bool 陣列（一維、二維）：預設 false、印 0／1、放進非零整數是 true；bool 變數放進 5 也是 1；判決相同（462）', async () => {
+    const src = H + 'bool seen[10];\nbool g[3][4];\nint main() {\n    int n;\n    cin >> n;\n    bool flags[4] = {1, 0, 1};\n    for (int i = 0; i < n; i++) seen[i * 2 % 10] = true;\n    seen[9] = n;\n    g[1][2] = 3;\n    int cnt = 0;\n    for (int i = 0; i < 10; i++) if (!seen[i]) cnt++;\n    bool b = 5;\n    b = n - 4;\n    cout << cnt << " " << seen[0] << seen[1] << seen[9] << " " << g[1][2] << g[0][0] << " " << flags[2] << flags[3] << " " << b << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '4\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('[False] * 10')
+    await sameVerdict(src, r.code!, '4\n')
+    await sameVerdict(src, (await toPython(src, '6\n')).code!, '6\n')
+    // 同一個洞的整數版：指定的目標是整數、值是浮點（Cella 不給目標的型別 ⟹ 原本 2.5 * n 原樣存進去）
+    const k = H + 'double half(double x) {\n    double k = x;\n    k = x / 4;\n    return k;\n}\nint main() {\n    int n;\n    cin >> n;\n    int k = 0;\n    k = 2.5 * n;\n    cout << k << " " << half(n) << endl;\n    return 0;\n}\n'
+    // 兩個 k 一個 double 一個 int：不知道這一句的 k 是哪一個 ⟹ 保留（原本照原樣寫，C++ 印 7、Python 印 7.5）
+    const rk = await toPython(k, '3\n')
+    expect(rk.code).toBeNull()
+    expect(JSON.stringify(rk.reasons)).toContain('不知道 k 的型別')
+    const k2 = k.replace(/double k = x;\n    k = x \/ 4;\n    return k;/, 'double y = x;\n    y = x / 4;\n    return y;')
+    const rk2 = await toPython(k2, '3\n')
+    expect(rk2.code, JSON.stringify(rk2.reasons)).not.toBeNull()
+    expect(rk2.code, rk2.code!).toContain('k = int(2.5 * n)')
+    await sameVerdict(k2, rk2.code!, '3\n')
+  }, 60_000)
   // ── 460：getline——讀這一行還沒讀的部分（cin >> n 之後是那一行剩下的字）、cin.ignore() 丟一個字元 ──
   it('🟢 getline：cin >> n 之後讀到那一行剩下的、cin.ignore() 之後讀下一行、while (getline(…)) 讀到檔尾；與 cin >> 混用；判決相同（460）', async () => {
     const src = H + 'int main() {\n    int n;\n    string a, b, w;\n    cin >> n;\n    getline(cin, a);\n    cout << "[" << a << "]" << endl;\n    cin >> w;\n    cin.ignore();\n    getline(cin, b);\n    cout << n << " " << w << " [" << b << "]" << endl;\n    int k = 0;\n    while (getline(cin, a)) {\n        k++;\n        cout << k << ":" << a << "|" << endl;\n    }\n    return 0;\n}\n'
