@@ -9,6 +9,13 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const zero = /^(int|long|long long|short)$/.test(t) ? '0' : t === 'double' ? '0.0' : t === 'bool' ? 'False' : null
     // 元素型別記下來（459）：`a[i] = 7.9` 放進整數陣列要截斷，而 Cella 不給那一句型別
     if (zero !== null) py.noteElementType(name, t)
+    // vector 的陣列（鄰接串列 `vector<int> g[N]`，463）：每一格各自一個空 list（不是 [[]] * N——那會讓每一格是同一個 list）。
+    // 元素型別限 vector 那顆換得過去的幾種；有初值的保留
+    const vecElem = t.match(/^(?:std::)?vector\s*<\s*(int|long|long long|short|double|(?:std::)?string)\s*>$/)
+    if (vecElem && n.slots.size?.[0] && !(n.slots.values ?? []).length) {
+      py.noteElementType(name, t)
+      return [`${py.indent(depth)}${name} = [[] for _ in range(${py.expr(n.slots.size[0])})]`]
+    }
     if (zero === null) return [py.keep(n, 'outside-subset', `${t} 陣列還沒有對應`)]
     const size = n.slots.size?.[0]
     const vals = (n.slots.values ?? []).map((v) => intValue(t, py.typeOf(v), py.expr(v)))

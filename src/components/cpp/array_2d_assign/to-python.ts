@@ -11,7 +11,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (!/^[A-Za-z_]\w*$/.test(obj)) return [py.keep(n, 'outside-subset', `改「${obj}」裡的元素還沒有對應`)]
     const o = py.name(obj)
     // 浮點放進整數陣列：C++ 隱含截斷——元素型別先問 Cella，沒給就問宣告那一顆記下的（Cella 不給這一句型別）；都不知道而值是浮點 ⟹ 保留
-    const et = py.typeOf(n) ?? py.elementTypeOf(o)
+    // vector 陣列（463）記的是一格的型別 vector<T>，這一句改的是裡面的 T
+    const et = py.typeOf(n) ?? py.elementTypeOf(o)?.replace(/^(?:std::)?vector\s*<\s*(.*?)\s*>$/, '$1')
     if (et === undefined && /^(const\s+)?(double|float|long double)/.test(py.typeOf(value) ?? '')) return [py.keep(n, 'needs-types', `放進 ${o} 的值是浮點，而不知道 ${o} 的元素型別`)]
     const target = `${o}[${py.expr(n.slots.row?.[0])}][${py.expr(n.slots.col?.[0])}]`
     return [`${py.indent(depth)}${target} = ${intValue(et, py.typeOf(value), py.expr(value))}`]
