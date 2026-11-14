@@ -661,6 +661,25 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
   }, 60_000)
+  // ── 469：unordered_map → dict（查、改、count、clear 相同；走訪照實保留）、clear()、map 的鍵是陣列的一格 ──
+  it('🟢 unordered_map 計數、cc[A[i]]++（鍵是陣列的一格）、clear() 之後重來；判決相同（469）', async () => {
+    const src = H + 'int A[20];\nint main() {\n    int n;\n    cin >> n;\n    unordered_map<int, int> cc;\n    for (int i = 1; i <= n; i++) {\n        cin >> A[i];\n        cc[A[i]]++;\n    }\n    cout << cc.size() << " " << cc[A[1]] << " " << cc.count(99) << endl;\n    cc.clear();\n    vector<int> v;\n    v.push_back(3);\n    v.clear();\n    for (int i = 1; i <= n; i++) {\n        if (cc[A[i]] == 0) cout << "N";\n        cc[A[i]] += 2;\n    }\n    cout << " " << cc[A[n]] << " " << v.size() << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '5\n4 1 4 7 1\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('cc.clear()')
+    await sameVerdict(src, r.code!, '5\n4 1 4 7 1\n')
+  }, 60_000)
+  it('🟢 unordered_map<string, int>：沒有的鍵讀到 0、++ 補上；判決相同（469）', async () => {
+    const src = H + 'int main() {\n    unordered_map<string, int> names;\n    string s;\n    cin >> s;\n    names["ab"] = 1;\n    names[s]++;\n    cout << names[s] << names["zz"] << names.size() << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, 'ab\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    for (const stdin of ['ab\n', 'cd\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：走訪 unordered_map（C++ 沒有規定順序）（469）', async () => {
+    const r = await toPython(H + 'int main() {\n    unordered_map<int, int> m;\n    m[3] = 1;\n    m[1] = 2;\n    for (auto p : m) cout << p.first;\n    return 0;\n}\n')
+    expect(r.code, r.code ?? '').toBeNull()
+    expect(JSON.stringify(r.reasons)).toContain('沒有規定順序')
+  }, 60_000)
   // ── 468：cin >> 讀進 char（一個非空白字元）與 bool（0／1）──
   it('🟢 cin >> char：跳過空白讀一個字元、黏在一起的 A3 拆成 \'A\' 與 3；cin >> bool 讀 0／1；判決相同（468）', async () => {
     const src = H + 'int main() {\n    int n;\n    cin >> n;\n    int total = 0;\n    for (int i = 0; i < n; i++) {\n        char a;\n        int h;\n        cin >> a >> h;\n        if (a == \'U\') total += h;\n        else total -= h;\n        cout << a << h << " ";\n    }\n    bool b, c;\n    cin >> b >> c;\n    int g[2];\n    g[0] = b;\n    g[1] = c;\n    cout << total << " " << b << c << " " << g[0] + g[1] << " " << (b && !c) << endl;\n    return 0;\n}\n'

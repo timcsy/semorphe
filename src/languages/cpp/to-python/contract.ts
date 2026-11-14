@@ -223,9 +223,11 @@ export const atom = (e: string): string => ATOM.test(e) ? e : `(${e})`
  * - 鍵只收整數與字串：std::string 的比較是 unsigned char 逐位元組＝UTF-8 的碼位順序，與 Python 的字串比較相同；
  *   char 有正負號（大於 127 的字元兩邊順序不同）、浮點有 NaN（sorted 會亂序）——都不收。
  * - 值只收放進去就不會被改的純量（數字、字串）；bool 不收（C++ 印 0／1、Python 印 True／False，而讀 map 的那顆不知道自己是 bool）。
- * - unordered_*、multi* 不收（走訪順序與重複鍵兩邊不同）。對不上 → undefined
+ * - multi* 不收（重複鍵兩邊不同）。對不上 → undefined
+ * - unordered_map／unordered_set（469）：一樣換成 dict／set，`ordered: false`——查、改、count 兩邊相同；
+ *   **走訪**的順序 C++ 沒有規定（看雜湊與桶數），換成 sorted 會變成另一支程式、照 dict 放進去的順序也不是 C++ 的 ⟹ 走訪的那一顆照實保留
  */
-export type KeyedKind = { kind: 'map'; key: string; value: string } | { kind: 'set'; key: string }
+export type KeyedKind = { kind: 'map'; key: string; value: string; ordered: boolean } | { kind: 'set'; key: string; ordered: boolean }
 const KEY = '(int|long|long long|short|string)'
 const MAP_VALUE = '(int|long|long long|short|double|string)'
 const bare = (t: string | undefined): string =>
@@ -236,10 +238,10 @@ export function isSignedInt(t: string | undefined): boolean {
 }
 export function keyedKind(t: string | undefined): KeyedKind | undefined {
   const s = bare(t)
-  const m = s.match(new RegExp(`^map ?< ?${KEY} ?, ?${MAP_VALUE} ?>$`))
-  if (m) return { kind: 'map', key: m[1], value: m[2] }
-  const e = s.match(new RegExp(`^set ?< ?${KEY} ?>$`))
-  return e ? { kind: 'set', key: e[1] } : undefined
+  const m = s.match(new RegExp(`^(unordered_)?map ?< ?${KEY} ?, ?${MAP_VALUE} ?>$`))
+  if (m) return { kind: 'map', key: m[2], value: m[3], ordered: !m[1] }
+  const e = s.match(new RegExp(`^(unordered_)?set ?< ?${KEY} ?>$`))
+  return e ? { kind: 'set', key: e[2], ordered: !e[1] } : undefined
 }
 
 /** map 的值型別在 Python 的預設值（C++ 的 `m[k]` 讀一個沒有的鍵，補上值初始化的那一個） */

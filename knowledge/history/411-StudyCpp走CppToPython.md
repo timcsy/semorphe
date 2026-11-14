@@ -137,3 +137,12 @@ switch：每段都以 break／return 結尾、default 在最後、中間沒有�
 ⚠️ 一個已知的差：C++ 的 char 是一個位元組、Python 是一個字元，非 ASCII 的輸入兩邊讀到的不同（string 的長度早就有同一個限制）。
 
 **結果**：StudyCpp 換得過去 88 → 90 支（AP325 1_11、tioj 9_toj170），沒有掉支、沒有一支的輸出變了。9_toj170 判決、輸出相同；1_11 的探針測資是**問程式自己生的**（只知道「讀一個 bool」，不知道題目只給 0／1），於是 Python 那邊丟「bool 只讀得進 0 或 1」——那正是設計上該看得見的那一條，不是失真。
+
+## 後續：469（11-15）
+
+`unordered_map` 換成 dict。查、改、`count`、`clear()` 兩邊相同；**走訪**的順序 C++ 沒有規定（看雜湊與桶數）——包 `sorted` 是另一支程式、照 dict 放進去的順序也不是 C++ 的 ⟹ 走訪 unordered 容器的那一顆照實保留（`KeyedKind` 多一個 `ordered`）。同一刀：`x.clear()`（vector、map／set、stack／queue 都有同名、同樣原地清空的方法；字串不收），以及 map 先讀再改時鍵可以是「陣列的一格、索引也是名字或字面量」（`cc[A[i]]++`，問形狀：obj ＋ index 兩個槽）。
+
+**結果**：StudyCpp 換得過去 90 → 93 支，沒有掉支、沒有一支的輸出變了。
+- tioj 21_toj55_2：判決、輸出相同。
+- AP325 3_10：換出來的 Python 裡有 `A = [0] * 200007`，Cella 的 Python 判決**丟例外**（Maximum call stack size exceeded）——cella 已認的 `[0] * N` 缺陷、在它的下一批；把長度改成 20 判得出 accept。
+- tioj 21_d518_AC：探針問程式自己生的測資在一筆的中間就沒了；C++ 讀失敗照樣印、Python 丟 EOFError——看得見的那一種，同 1_11，不是失真。

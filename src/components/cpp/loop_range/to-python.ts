@@ -11,6 +11,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const it = n.slots.iterable?.[0]
     const keyed = keyedKind(py.typeOf(it))
     if (keyed) {
+      // unordered_*（469）：C++ 走訪的順序沒有規定 ⟹ 換不出同一支程式
+      if (!keyed.ordered) return [py.keep(n, 'outside-subset', `走訪 ${py.typeOf(it)}：C++ 沒有規定順序（看雜湊），換成 Python 之後順序不會相同`)]
       if (t.includes('&') && !/^const\b/.test(t.trim())) return [py.keep(n, 'outside-subset', `以參考走訪 ${keyed.kind}（${t}）還沒有對應`)]
       const src = keyed.kind === 'map' ? `sorted(${py.expr(it)}.items())` : `sorted(${py.expr(it)})`
       const names = (n.slots.targets ?? []).map((p) => py.name(String(p.properties.name ?? '')))
