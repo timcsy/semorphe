@@ -48,6 +48,8 @@ export interface ToPythonContext {
    * 膠囊沒登記目標寫法的，照運算式寫
    */
   target(n: SemanticNode | undefined, readsFirst: boolean): { before?: string; text: string }
+  /** 這個名字是頂層宣告的全域變數嗎（451：函式裡重新指定它，Python 要先寫 `global`） */
+  isGlobal(name: string): boolean
 }
 
 /** 加括號的判準兩個方向共用（住在核心）——膠囊照舊從這裡拿 */

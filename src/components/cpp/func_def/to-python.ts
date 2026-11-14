@@ -1,5 +1,5 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
-import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
+import type { ToPythonRegistrar, ToPythonContext } from '../../../languages/cpp/to-python/contract'
 import type { SemanticNode } from '../../../core/types'
 
 /**
@@ -29,6 +29,47 @@ function rebinds(nodes: readonly SemanticNode[], name: string): boolean {
   return false
 }
 
+/** 本體裡宣告過的名字（同名而且帶型別——問形狀） */
+function declaredNames(nodes: readonly SemanticNode[], acc = new Set<string>()): Set<string> {
+  for (const n of nodes) {
+    if (typeof n.properties?.name === 'string' && n.properties?.type !== undefined && n.slots?.params === undefined) acc.add(n.properties.name)
+    for (const k of Object.keys(n.slots ?? {})) declaredNames(n.slots[k], acc)
+  }
+  return acc
+}
+
+/** 本體裡提到的全域名字（任何帶 name 的節點——寧多不少，後面還要問 Python 的文字裡有沒有指定它） */
+function mentionedGlobals(nodes: readonly SemanticNode[], py: ToPythonContext, acc = new Set<string>()): Set<string> {
+  for (const n of nodes) {
+    for (const v of Object.values(n.properties ?? {})) if (typeof v === 'string' && py.isGlobal(v)) acc.add(v)
+    for (const k of Object.keys(n.slots ?? {})) mentionedGlobals(n.slots[k], py, acc)
+  }
+  return acc
+}
+
+/** 本體裡全域變數與區域變數同名的那一個（Python 一個函式／頂層裡同一個名字只能是其中一種——451） */
+function shadowedGlobal(nodes: readonly SemanticNode[], py: ToPythonContext): string | undefined {
+  return [...declaredNames(nodes)].find((x) => py.isGlobal(x))
+}
+
+/**
+ * **寫成 Python 之後**，本體裡哪幾個全域名字被重新指定（`g = …`、`g += …`、`a, g = …`、`for g in …`）——
+ * Python 的作用域是看 Python 的文字定的（有指定就是區域變數），所以問印出來的那幾行，不猜哪顆元件會寫成指定（451）。
+ * `g[k] = …`、`g.x = …` 是改物件裡面，不算。
+ */
+function assignedGlobals(lines: readonly string[], globalsPy: Map<string, string>): string[] {
+  const out = new Set<string>()
+  const ID = '[A-Za-z_]\\w*'
+  const assign = new RegExp(`^(${ID}(?:\\s*,\\s*${ID})*)\\s*(?:[-+*/%&|^]|//|\\*\\*|<<|>>)?=(?!=)`)
+  const loop = new RegExp(`^for\\s+(${ID}(?:\\s*,\\s*${ID})*)\\s+in\\b`)
+  for (const l of lines) {
+    const t = l.trim()
+    const m = t.match(assign) ?? t.match(loop)
+    for (const x of m ? m[1].split(',').map((s) => s.trim()) : []) if (globalsPy.has(x)) out.add(x)
+  }
+  return [...out]
+}
+
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
     const name = String(n.properties.name ?? '')
@@ -39,6 +80,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
       const last = body[body.length - 1]
       const lastV = last?.slots?.value?.[0]
       if (last && Object.keys(last.slots ?? {}).join() === 'value' && lastV?.properties?.value === '0' && !lastV.slots?.left) body.pop()
+      // 攤平到頂層之後 main 的區域變數就是全域變數：與全域同名的話，別的函式讀到的會是 main 那一個（C++ 讀到的是全域那一個）
+      const sh = shadowedGlobal(body, py)
+      if (sh !== undefined) return [py.keep(n, 'outside-subset', `「${name}」裡宣告了與全域變數「${sh}」同名的變數——攤平到 Python 的頂層之後兩個會變成同一個`)]
       return py.blockAsMain(body)
     }
     const params: string[] = []
@@ -51,6 +95,16 @@ export function registerToPython(r: ToPythonRegistrar): void {
       if (!okString && !sharedListParam(t, String(p.properties.name ?? ''), n) && /[&*<]|vector|\[|string/.test(t)) return [py.keep(p, 'outside-subset', `參數「${t} ${String(p.properties.name ?? '')}」的傳遞方式兩個語言不同`)]
       params.push(py.name(String(p.properties.name ?? '')))
     }
-    return [`${py.indent(depth)}def ${py.name(name)}(${params.join(', ')}):`, ...py.block(n.slots.body, depth + 1)]
+    const sh = shadowedGlobal(n.slots.body ?? [], py)
+    if (sh !== undefined) return [py.keep(n, 'outside-subset', `函式「${name}」裡宣告了與全域變數「${sh}」同名的變數——Python 一個函式裡同一個名字只能是全域或區域其中一種`)]
+    const body = py.block(n.slots.body, depth + 1)
+    // 451：函式裡重新指定全域變數（`g = 5`、`g++`、`total += x`）——不寫 `global`，Python 把它當成新的區域變數
+    // （C++ 印 5、Python 印 0；先讀再改的直接 UnboundLocalError）。參數與全域同名時參數本來就是區域的
+    const paramNames = new Set(params)
+    const globalsPy = new Map([...mentionedGlobals(n.slots.body ?? [], py)].filter((g) => !paramNames.has(py.name(g))).map((g) => [py.name(g), g]))
+    const written = assignedGlobals(body, globalsPy)
+    // 一個名字一行：`global a, b` 是合法的 Python，而 Cella（1931）只判得出一行一個名字的
+    const head = written.map((g) => `${py.indent(depth + 1)}global ${g}`)
+    return [`${py.indent(depth)}def ${py.name(name)}(${params.join(', ')}):`, ...head, ...body]
   })
 }
