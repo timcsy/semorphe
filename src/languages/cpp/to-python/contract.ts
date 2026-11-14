@@ -59,6 +59,11 @@ export interface ToPythonContext {
   /** 這個名字宣告時的元素型別；同一個名字宣告過兩種（不同函式裡的同名區域變數）就不知道——undefined */
   elementTypeOf(name: string): string | undefined
   /**
+   * 這個名字（C++ 的原名）在整支程式裡宣告時的型別（462：`b = n - 4` 放進 bool 要變成 true／false，而 Cella 不給指定目標的型別）。
+   * 引擎開頭掃一次整棵樹（有名字有型別的節點、計次迴圈的變數）；同一個名字宣告過兩種、或有一處說不出型別 ⟹ undefined
+   */
+  varTypeOf(name: string): string | undefined
+  /**
    * 一顆節點寫成**指定的目標**（`=`、`+=`、`++`、`cin >>` 的左邊；450）。`readsFirst`：先讀再改（`+=`、`++`）。
    * 回傳的 `before` 是要先跑的一句（不含縮排）——map 的元素先讀再改，C++ 會先補上預設值、Python 的 dict 會丟 KeyError。
    * 膠囊沒登記目標寫法的，照運算式寫
@@ -89,6 +94,8 @@ export function isChar(t: string | undefined): boolean {
 export function intValue(target: string | undefined, valueType: string | undefined, e: string): string {
   const t = (target ?? '').replace(/^const\s+/, '').trim()
   const v = (valueType ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '').trim()
+  // 放進 bool：C++ 非零就是 true（`bool b = 5;` 印 1），Python 原樣存 5、印的時候 int(b) 是 5（462 量到）⟹ 值不是 bool 就包 bool(…)
+  if (t === 'bool') return v === 'bool' || /^(True|False)$/.test(e) ? e : `bool(${e})`
   return /^(int|long|long long|short)$/.test(t) && /^(double|float|long double)$/.test(v) ? `int(${e})` : e
 }
 

@@ -149,8 +149,17 @@ export function convertCppToPython(
   const userFunctions = new Set<string>()
   const declaredStrings = new Set<string>()
   const elementTypes = new Map<string, string | null>()
+  const varTypes = new Map<string, string | null>()
   const scan = (n: SemanticNode): void => {
     if (n.slots?.params !== undefined && typeof n.properties?.name === 'string') userFunctions.add(n.properties.name)
+    // 每一個宣告的名字與型別（462）——問形狀：有名字、有型別、不是函式（沒有 params 槽）；計次迴圈的變數在 var_name。
+    // 同一個名字宣告過兩種（不同函式裡的同名變數、參數）就不知道（null）——寧可不知道，不可拿錯的型別去截斷
+    const decl = n.slots?.params === undefined && typeof n.properties?.name === 'string' && n.properties?.type !== undefined ? n.properties.name
+      : typeof n.properties?.var_name === 'string' ? n.properties.var_name : undefined
+    if (decl !== undefined) {
+      const ty = typeof n.properties?.type === 'string' ? n.properties.type : null
+      varTypes.set(decl, varTypes.has(decl) && varTypes.get(decl) !== ty ? null : ty)
+    }
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(scan)
   }
   scan(tree)
@@ -200,6 +209,7 @@ export function convertCppToPython(
     isDeclaredString: (name) => declaredStrings.has(name),
     noteElementType: (name, type) => { elementTypes.set(name, elementTypes.has(name) && elementTypes.get(name) !== type ? null : type) },
     elementTypeOf: (name) => elementTypes.get(name) ?? undefined,
+    varTypeOf: (name) => varTypes.get(name) ?? undefined,
     useImport(m) { imports.add(m); return m },
     indent: (d) => '    '.repeat(d),
     typeOf: (n) => (n ? types[n.id] : undefined),
