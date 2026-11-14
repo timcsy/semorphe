@@ -264,7 +264,9 @@ describe('C++ → Python：意思會變的反例', () => {
     // m[k] 讀一個沒有的鍵：C++ 先補上預設值（之後走訪看得到）⟹ setdefault；先讀再改（++、+=）先補一句 setdefault；走訪照鍵排序 ⟹ sorted
     ['map → dict：++／+=／讀沒有的鍵／複製／指定／count／size／結構化繫結／const 參考走訪', 'int main() {\n    map<string, int> m;\n    m["a"]++;\n    m["b"] += 2;\n    ++m["c"];\n    m["a"] -= 5;\n    int z = m["zz"];\n    map<string, int> m2 = m;\n    m2["a"] = 100;\n    map<string, int> m3;\n    m3 = m;\n    m3["q"] = 1;\n    set<int> s;\n    s.insert(3); s.insert(1); s.insert(3);\n    cout << m.size() << " " << s.size() << " " << m.count("a") << s.count(3) << s.count(7) << z << endl;\n    for (auto [k, v] : m) cout << k << "=" << v << ";";\n    cout << endl;\n    for (const auto& p : m2) cout << p.first << p.second << " ";\n    cout << m3.size() << endl;\n    for (int x : s) cout << x;\n    cout << endl;\n    return 0;\n}\n', 'for k, v in sorted(m.items()):'],
     ['set → set：insert／count／複製／走訪照大小', 'int main() {\n    set<int> a;\n    a.insert(7);\n    a.insert(2);\n    a.insert(7);\n    set<int> b = a;\n    b.insert(5);\n    for (int x : a) cout << x << b.count(x);\n    cout << a.size() << b.size() << endl;\n    set<int> s;\n    s.insert(-3);\n    s.insert(10);\n    for (int x : s) cout << x << " ";\n    cout << endl;\n    return 0;\n}\n', 'for x in sorted(s):'],
-    ['全域的 map 在函式裡改；值是 double／string；浮點放進整數的 map 要截斷', 'map<int, int> g;\nvoid add(int k) { g[k]++; }\nint main() {\n    add(5); add(2); add(5);\n    for (auto e : g) cout << e.first << ":" << e.second << endl;\n    map<int, double> d;\n    d[1] += 2.5;\n    d[0] = 1.5;\n    for (auto e : d) cout << e.first << " " << e.second << endl;\n    map<int, string> t;\n    t[3] = "x";\n    cout << t[4].size() << t.size() << endl;\n    map<string, int> ii;\n    ii["a"] = 2.7;\n    cout << ii["a"] << endl;\n    return 0;\n}\n', 'ii["a"] = int(2.7)'],
+    // ⚠️ 原本是一例，冷算判決（C++ 與 Python 各一次）在負載 35 下要 77–87 秒 ⟹ 拆成兩例（2026-11-14，450 長測試逾時）
+    ['全域的 map 在函式裡改；值是 double', 'map<int, int> g;\nvoid add(int k) { g[k]++; }\nint main() {\n    add(5); add(2); add(5);\n    for (auto e : g) cout << e.first << ":" << e.second << endl;\n    map<int, double> d;\n    d[1] += 2.5;\n    d[0] = 1.5;\n    for (auto e : d) cout << e.first << " " << e.second << endl;\n    return 0;\n}\n', 'def add(k):'],
+    ['值是 string；浮點放進整數的 map 要截斷', 'int main() {\n    map<int, string> t;\n    t[3] = "x";\n    cout << t[4].size() << t.size() << endl;\n    map<string, int> ii;\n    ii["a"] = 2.7;\n    cout << ii["a"] << endl;\n    return 0;\n}\n', 'ii["a"] = int(2.7)'],
     // 之前（450 量到）：`x += 2.5` 照寫，x 變成浮點——C++ 算完截斷回整數（C++ 印 4、Python 印 5.25）
     ['浮點加進整數（x += 2.5）：算完截斷', 'int main() {\n    int x = 1;\n    x += 2.5;\n    x *= 1.5;\n    map<string, int> m;\n    m["a"] += 2.7;\n    cout << x << " " << m["a"] << endl;\n    return 0;\n}\n', 'x = int(x + 2.5)'],
   ] as const) {
@@ -274,7 +276,7 @@ describe('C++ → Python：意思會變的反例', () => {
       expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
       expect(r.code).toContain(must)
       await sameVerdict(src, r.code!, '')
-    }, 60_000)
+    }, 180_000) // 兩次冷算判決：本機負載 35 下最重的一例 39 秒（判決快取熱的時候是幾秒——CI 是冷的）
   }
   for (const [name, code, detail] of [
     ['map 的元素先讀再改、鍵有副作用（m[f(1)]++：補預設值與改要寫兩次鍵）', 'int f(int x) { return x; }\nint main() {\n    map<int, int> m;\n    m[f(1)]++;\n    cout << m.size() << endl;\n    return 0;\n}\n', '有副作用'],
