@@ -34,6 +34,8 @@ export interface ToPythonContext {
   useTokenReader(): string
   /** 程式需要 C++ 的取餘數（向零截斷）：回傳補在開頭的小函式名——兩邊有運算式時用它，才不會算兩次 */
   useTruncMod(): string
+  /** 程式需要 64 位元整數的除法或取餘數（456）：回傳補在開頭的小函式名——只用整數運算，商向零截斷，任何大小都與 C++ 逐位相同 */
+  useTruncDiv(kind: 'div' | 'mod'): string
   /** 宣告 string 的那顆元件記下名字（身分留在膠囊裡，引擎不必認得它） */
   noteDeclaredString(name: string): void
   /** 這個名字在前面宣告成 string 嗎 */
@@ -174,6 +176,10 @@ const KEY = '(int|long|long long|short|string)'
 const MAP_VALUE = '(int|long|long long|short|double|string)'
 const bare = (t: string | undefined): string =>
   (t ?? '').replace(/^const\s+/, '').replace(/\s*[&*]$/, '').replace(/std::/g, '').replace(/\s+/g, ' ').trim()
+/** 有號整數（int、long、long long、short，含 `const`／參考）——位元運算、64 位元的除法用（456）；char、bool、無號的不算 */
+export function isSignedInt(t: string | undefined): boolean {
+  return /^(?:short|short int|int|signed|signed int|long|long int|long long|long long int)$/.test(bare(t))
+}
 export function keyedKind(t: string | undefined): KeyedKind | undefined {
   const s = bare(t)
   const m = s.match(new RegExp(`^map ?< ?${KEY} ?, ?${MAP_VALUE} ?>$`))
@@ -221,6 +227,11 @@ export function castToPython(n: SemanticNode, py: ToPythonContext): string {
     return keep()
   }
   return keep()
+}
+
+/** 本體裡有屬於這一圈的 continue 嗎（不往內層迴圈的 body 走——那裡的 continue 屬於內層；if 的分支槽叫 then_body／else_body）——寫成 while 的迴圈共用（453、456） */
+export function hasOwnContinue(nodes: readonly SemanticNode[]): boolean {
+  return nodes.some((x) => x.componentId.endsWith(':continue') || Object.entries(x.slots ?? {}).some(([k, kids]) => k !== 'body' && hasOwnContinue(kids)))
 }
 
 /** 一個左值的底名（`a`、`a[i]`、`v.at(i)`、`p.x` → a／v／p） */

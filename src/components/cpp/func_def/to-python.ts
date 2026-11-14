@@ -47,6 +47,35 @@ function mentionedGlobals(nodes: readonly SemanticNode[], py: ToPythonContext, a
   return acc
 }
 
+/**
+ * 內層的作用域宣告了與外層（同一個函式裡還看得見的那一個，含參數）同名的變數——C++ 是兩個變數，Python 一個函式只有一層作用域，
+ * 兩個會變成同一個（456 量到：`int i = 100; for (int i = 0; i < 3; i++) {}` 之後 C++ 印 100、Python 印 2）。
+ * 問形狀：宣告 ＝ 帶 name 與 type（或計次迴圈的 var_name）；每一個子槽是一層新的作用域，`declarators` 與宣告本身同一層。
+ * 並排的兩個 `for (int i…)` 不算（前一個的作用域已經結束）
+ */
+function shadowedLocal(nodes: readonly SemanticNode[], outer: ReadonlySet<string>): string | undefined {
+  const declOf = (x: SemanticNode): string[] => x.slots?.declarators?.length ? x.slots.declarators.map((d) => String(d.properties?.name ?? ''))
+    : typeof x.properties?.name === 'string' && x.properties?.type !== undefined && x.slots?.params === undefined ? [x.properties.name] : []
+  const here = new Set<string>()
+  for (const n of nodes) {
+    for (const x of declOf(n)) { if (outer.has(x) || here.has(x)) return x; here.add(x) }
+    // 迴圈自己那一層：計次／範圍迴圈的迴圈變數、for 的 init 宣告的——條件、更新、本體都看得見
+    // 範圍迴圈的結構化繫結（`for (auto [k, v] : m)`）宣告在 targets 槽，也是這一層的
+    const own = [...new Set([...(typeof n.properties?.var_name === 'string' ? [n.properties.var_name] : []), ...[...(n.slots?.init ?? []), ...(n.slots?.targets ?? [])].flatMap(declOf),
+      ...(n.slots?.targets ?? []).flatMap((x) => typeof x.properties?.name === 'string' ? [x.properties.name] : [])])]
+    const enclosing = new Set([...outer, ...here])
+    const hit = own.find((x) => enclosing.has(x))
+    if (hit !== undefined) return hit
+    const inner = new Set([...enclosing, ...own])
+    for (const [k, kids] of Object.entries(n.slots ?? {})) {
+      if (k === 'declarators' || k === 'init' || k === 'targets') continue
+      const h = shadowedLocal(kids, inner)
+      if (h !== undefined) return h
+    }
+  }
+  return undefined
+}
+
 /** 本體裡全域變數與區域變數同名的那一個（Python 一個函式／頂層裡同一個名字只能是其中一種——451） */
 function shadowedGlobal(nodes: readonly SemanticNode[], py: ToPythonContext): string | undefined {
   return [...declaredNames(nodes)].find((x) => py.isGlobal(x))
@@ -83,6 +112,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
       // 攤平到頂層之後 main 的區域變數就是全域變數：與全域同名的話，別的函式讀到的會是 main 那一個（C++ 讀到的是全域那一個）
       const sh = shadowedGlobal(body, py)
       if (sh !== undefined) return [py.keep(n, 'outside-subset', `「${name}」裡宣告了與全域變數「${sh}」同名的變數——攤平到 Python 的頂層之後兩個會變成同一個`)]
+      const sl = shadowedLocal(body, new Set())
+      if (sl !== undefined) return [py.keep(n, 'outside-subset', `「${name}」的內層宣告了與外層同名的變數「${sl}」——Python 一個函式只有一層作用域，兩個會變成同一個`)]
       return py.blockAsMain(body)
     }
     const params: string[] = []
@@ -95,6 +126,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
       if (!okString && !sharedListParam(t, String(p.properties.name ?? ''), n) && /[&*<]|vector|\[|string/.test(t)) return [py.keep(p, 'outside-subset', `參數「${t} ${String(p.properties.name ?? '')}」的傳遞方式兩個語言不同`)]
       params.push(py.name(String(p.properties.name ?? '')))
     }
+    const sl = shadowedLocal(n.slots.body ?? [], new Set((n.slots.params ?? []).map((p) => String(p.properties.name ?? ''))))
+    if (sl !== undefined) return [py.keep(n, 'outside-subset', `函式「${name}」的內層宣告了與外層同名的變數「${sl}」——Python 一個函式只有一層作用域，兩個會變成同一個`)]
     const sh = shadowedGlobal(n.slots.body ?? [], py)
     if (sh !== undefined) return [py.keep(n, 'outside-subset', `函式「${name}」裡宣告了與全域變數「${sh}」同名的變數——Python 一個函式裡同一個名字只能是全域或區域其中一種`)]
     const body = py.block(n.slots.body, depth + 1)

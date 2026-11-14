@@ -1,7 +1,7 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { SemanticNode } from '../../../core/types'
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { paren, mayWrite } from '../../../languages/cpp/to-python/contract'
+import { paren, mayWrite, hasOwnContinue } from '../../../languages/cpp/to-python/contract'
 
 /** 子樹裡出現的名字（變數、陣列／字串的 obj 屬性） */
 const namesIn = (x: SemanticNode | undefined, acc = new Set<string>()): Set<string> => {
@@ -10,9 +10,6 @@ const namesIn = (x: SemanticNode | undefined, acc = new Set<string>()): Set<stri
   for (const kids of Object.values(x.slots ?? {})) kids.forEach((c) => namesIn(c, acc))
   return acc
 }
-/** 本體裡有屬於這一圈的 continue 嗎（不往內層迴圈的 body 走——那裡的 continue 屬於內層；if 的分支槽叫 then_body／else_body） */
-const hasOwnContinue = (nodes: readonly SemanticNode[]): boolean => nodes.some((x) =>
-  x.componentId.endsWith(':continue') || Object.entries(x.slots ?? {}).some(([k, kids]) => k !== 'body' && hasOwnContinue(kids)))
 
 export function registerToPython(r: ToPythonRegistrar): void {
   // `for (int i = a; i < b; i++)` → for i in range(a, b)；`<=` → range(a, b + 1)

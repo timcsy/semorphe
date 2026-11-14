@@ -158,13 +158,15 @@ describe('C++ → Python：意思會變的反例', () => {
     await sameVerdict(src, r.code!, '')
   }, 60_000)
   for (const [name, body, kind] of [
-    // 64 位元的整數：值可以超過 2^53，浮點不再精確 ⟹ int(a / b)、math.fmod 都不保證相同（spec 224 順手修：除法原本也收 long long）
-    ['64 位元整數的取餘數', '    long long a = -7, b = 2;\n    cout << a % b << endl;\n', 'modulo'],
+    // 64 位元的整數：456 起改用整數運算的小函式 trunc_div／trunc_mod64（見下面 456 那一段）；無號的照舊保留
+    ['無號整數的取餘數', '    unsigned long long a = 7, b = 2;\n    cout << a % b << endl;\n', 'modulo'],
+    // `<<`：C++ 溢位會繞回（C++20）或未定義，Python 的整數不會溢位（456）
+    ['左移', '    int a = 3;\n    cout << (a << 2) << endl;\n', 'outside-subset'],
+    ['無號整數的位元運算（與負數混用時 C++ 先轉成無號）', '    unsigned int a = 6;\n    int b = -1;\n    cout << (a & b) << endl;\n', 'outside-subset'],
     // `i++` 這個運算式在 Python 沒有對應——不因為取餘數改用小函式就放行
     ['取餘數的一邊是 i++', '    int i = 7;\n    cout << i++ % 3 << " " << i << endl;\n', 'outside-subset'],
     ['main 中途 return 非零', '    int a = 1;\n    if (a > 0) {\n        return 1;\n    }\n    cout << a << endl;\n', 'outside-subset'],
     ['二維陣列的初值沒寫滿', '    int g[2][2] = {{1}, {2, 3}};\n    cout << g[0][1] << endl;\n', 'outside-subset'],
-    ['64 位元整數的除法', '    long long a = 9007199254740993LL, b = 1;\n    cout << a / b << endl;\n', 'division'],
     // `s[0] = 'z'` 由「陣列元素指定」那顆接——365 接上它的 Python 寫法時差點把這一支換過去（這支反例抓到）
     ['改字串裡的一個字元（Python 的字串不能改）', '    string s = "abc";\n    s[0] = \'z\';\n    cout << s << endl;\n', 'char'],
     ['char 的 ++（Python 的字串不能加 1）', '    char c = \'a\';\n    c++;\n    cout << c << endl;\n', 'char'],
@@ -492,6 +494,51 @@ describe('C++ → Python：意思會變的反例', () => {
     const r = await toPython(H + '#include <string>\nint main() {\n    string s = "ab";\n    swap(s[0], s[1]);\n    cout << s << endl;\n    return 0;\n}\n')
     expect(r.code, '換了').toBeNull()
     expect(r.reasons.map((x) => x.detail).join()).toContain('字串')
+  }, 60_000)
+  // ── 456：64 位元的除法與取餘數、位元運算、取負號、max／min 的大括號串列、一般的 for、內層與外層同名 ──
+  it('🟢 64 位元整數的 / 與 %（含 /=、%=）→ trunc_div／trunc_mod64，超過 2^53 也精確；判決相同（456）', async () => {
+    const src = H + 'int main() {\n    long long a = 9000000000000003LL, b = -7;\n    long long x = -17, y = -17;\n    x /= 5;\n    y %= 5;\n    cout << a / b << " " << a % b << " " << (-a) / 3 << " " << (-a) % 3 << " " << x << " " << y << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('trunc_div(a, b)')
+    expect(r.code, r.code!).toContain('y = trunc_mod64(y, 5)')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🟢 有號整數的 &、|、^、>>（含 &= 一類）、取負號、max／min({…})；判決相同（456）', async () => {
+    const src = H + 'int main() {\n    int a = -12, b = 10, c = 6;\n    c &= 3;\n    c |= 8;\n    c >>= 1;\n    double d = 2.5;\n    int m = max({a, b, c});\n    int k = min({b, -a, c});\n    cout << (a & b) << " " << (a | b) << " " << (a ^ b) << " " << (a >> 2) << " " << c << " " << -d << " " << -(a + 1) << " " << m << k << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('max(a, b, c)')
+    expect(r.code, r.code!).toContain('min(b, -a, c)')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🟢 一般的 for → while（兩個迴圈變數、逗號更新、沿用外面的變數、位移的更新）；判決相同（456）', async () => {
+    const src = H + 'int main() {\n    int s = 0, i;\n    for (int l = 0, r = 9; l < r; l++, r--) s += r - l;\n    for (i = 0; i < 3; i++) {\n        if (s > 100) break;\n    }\n    long long t = 0;\n    for (long long jp = 1e12; jp > 0; jp >>= 1) t++;\n    cout << s << " " << i << " " << t << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('while l < r:')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🔴 保留：一般的 for 本體有 continue（寫成 while 會跳過更新）（456）', async () => {
+    const r = await toPython(H + 'int main() {\n    int s = 0;\n    for (int i = 1; i < 20; i = i + 2) {\n        if (i == 5) continue;\n        s += i;\n    }\n    cout << s << endl;\n    return 0;\n}\n')
+    expect(r.code, '換了').toBeNull()
+    expect(r.reasons.map((x) => x.detail).join()).toContain('continue')
+  }, 60_000)
+  // 之前換得過去而兩邊印的不同（C++ 100、Python 2）——計次迴圈 `for i in range` 改到外層的 i：靜默失真
+  it('🔴 保留：內層宣告了與外層同名的變數（Python 一個函式只有一層作用域）（456）', async () => {
+    for (const body of ['    int i = 100;\n    for (int i = 0; i < 3; i++) {\n    }\n    cout << i << endl;\n', '    int i = 100;\n    if (i > 0) {\n        int i = 5;\n        cout << i;\n    }\n    cout << i << endl;\n']) {
+      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, `換了：${body}`).toBeNull()
+      expect(r.reasons.map((x) => x.detail).join()).toContain('同名的變數「i」')
+    }
+    // 正向錨點：並排的兩個 for (int i…) 不算（前一個的作用域已經結束）
+    const ok = await toPython(H + 'int main() {\n    int s = 0;\n    for (int i = 0; i < 3; i++) s += i;\n    for (int i = 0; i < 2; i++) s += i;\n    cout << s << endl;\n    return 0;\n}\n')
+    expect(ok.code, JSON.stringify(ok.reasons)).not.toBeNull()
+  }, 60_000)
+  it('🔴 保留：放不進 JSON 數字的十進位字面量（9000000000000000001）——Cella 那一側照實翻不出，不送一個被捨入的值（456）', async () => {
+    const src = H + 'int main() {\n    long long a = 9000000000000000001LL;\n    cout << a % 7 << endl;\n    return 0;\n}\n'
+    const v = await runCella(src, { lang: 'cpp' })
+    expect(v.verdict).toBe('untranslated')
   }, 60_000)
   it('🔴 保留：類別', async () => {
     const r = await toPython(H + 'class P {\npublic:\n    int x;\n};\nint main() {\n    P p;\n    p.x = 1;\n    cout << p.x << endl;\n    return 0;\n}\n')

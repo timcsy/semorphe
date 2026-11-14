@@ -11,9 +11,19 @@ function intValue(raw: string): number | null {
   let big: bigint
   if (/^0[xX][0-9a-fA-F]+$/.test(v) || /^0[bB][01]+$/.test(v)) big = BigInt(v)
   else if (/^0[0-7]+$/.test(v)) big = BigInt('0o' + v.slice(1))
-  else if (/^[0-9]+$/.test(v)) return Number(v)
+  else if (/^[0-9]+$/.test(v)) return exact(v)
   else return null
   return big < 2n ** 31n ? Number(big) : null
+}
+
+/**
+ * 十進位的整數放進 JSON 的數字放得精確嗎（456）：超過 2^53 而放不下的（`9000000000000000001` 會變成 `9000000000000000000`）回 null
+ * ⟹ 誠實 unknown（同 nonDecimal）。之前直接 `Number(v)`，Cella 判的是另一個值——C++ → Python 的探針才看出來（兩邊印的餘數不同）。
+ * 放得下的照送（`1000000000000000000` 是 2^18·5^18，剛好精確）
+ */
+function exact(digits: string): number | null {
+  const n = Number(digits)
+  return BigInt(n) === BigInt(digits) ? n : null
 }
 
 /**
@@ -58,7 +68,9 @@ function literal(v: string, id: string, f: FormalizeContext): CellaJson | null {
     // cella 的規則：字面的型別和「靠值本身決定的型別」（< 2^31 是 int、< 2^63 是 long）不同時才包 eCast
     const val = BigInt(suf[1])
     const byValue = val < 2n ** 31n ? 'tInt' : val < 2n ** 63n ? 'tLong' : null
-    const num = f.k('eNum', { n: t === byValue ? id : `${id}/value`, v: Number(suf[1]) })
+    const v = exact(suf[1])
+    if (v === null) return null
+    const num = f.k('eNum', { n: t === byValue ? id : `${id}/value`, v })
     return t === byValue ? num : f.k('eCast', { n: id, t: f.k(t), a: num })
   }
   // long double 的 L 留在 text 裡（Cella 認它）；float 的 f 照舊拿掉、改成 single
