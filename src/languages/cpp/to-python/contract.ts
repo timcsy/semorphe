@@ -314,19 +314,6 @@ export function mayWrite(nodes: readonly SemanticNode[], names: ReadonlySet<stri
   return nodes.some((x) => walk(x, true))
 }
 
-/** `pair<A, B>` 的兩個元素型別（465：pair 換成 tuple，宣告、成員、陣列都要問）（樣板引數的頂層逗號切開；拿掉 std::） */
-export function pairElements(t: string | undefined): [string, string] | undefined {
-  const m = (t ?? '').trim().match(/^(?:const\s+)?(?:std::)?pair\s*<(.*)>$/)
-  if (!m) return undefined
-  let depth = 0
-  for (let i = 0; i < m[1].length; i++) {
-    const c = m[1][i]
-    if (c === '<') depth++
-    else if (c === '>') depth--
-    else if (c === ',' && depth === 0) return [m[1].slice(0, i).trim().replace(/^std::/, ''), m[1].slice(i + 1).trim().replace(/^std::/, '')]
-  }
-  return undefined
-}
 
 /**
  * 這一顆宣告了一個名字嗎（問形狀：有名字、有型別）——pair 的宣告把型別分成 type1／type2（465），也算。
@@ -334,3 +321,49 @@ export function pairElements(t: string | undefined): [string, string] | undefine
  */
 export const declaresTyped = (n: SemanticNode): boolean =>
   typeof n.properties?.name === 'string' && (n.properties?.type !== undefined || n.properties?.type1 !== undefined)
+
+/** 樣板型別的名字與頂層引數（`std::pair<int, vector<int>>` → `['pair', ['int', 'vector<int>']]`；拿掉 std::、const、&） */
+export function templateArgs(t: string | undefined): [string, string[]] | undefined {
+  const m = bare(t).match(/^([A-Za-z_][\w ]*?) ?<(.*)>$/)
+  if (!m) return undefined
+  const args: string[] = []
+  let depth = 0, from = 0
+  for (let i = 0; i < m[2].length; i++) {
+    const c = m[2][i]
+    if (c === '<') depth++
+    else if (c === '>') depth--
+    else if (c === ',' && depth === 0) { args.push(m[2].slice(from, i).trim()); from = i + 1 }
+  }
+  args.push(m[2].slice(from).trim())
+  return [m[1].trim(), args]
+}
+
+/** `pair<A, B>` 的兩個元素型別（465：pair 換成 tuple，宣告、成員、陣列都要問） */
+export function pairElements(t: string | undefined): [string, string] | undefined {
+  const a = templateArgs(t)
+  return a && a[0] === 'pair' && a[1].length === 2 ? [a[1][0], a[1][1]] : undefined
+}
+
+/** 兩個型別寫法相同嗎（拿掉 std::、const、&、空白）——pair 整個指定只收一模一樣的（465） */
+export const sameType = (a: string | undefined, b: string | undefined): boolean =>
+  a !== undefined && b !== undefined && a.replace(/std::|const\s+|&|\s+/g, '') === b.replace(/std::|const\s+|&|\s+/g, '')
+
+/**
+ * 放進容器的一個元素（465）：C++ 照元素型別轉換（`vector<int>` 的 `push_back(2.5)` 放進去的是 2），Python 原樣放
+ * ⟹ 照元素型別換：整數截斷、bool 包 bool(…)、vector 複製一份（447）、pair 是 tuple（兩個值的 `{a, b}`／`make_pair` 逐格換，
+ * 另一個 pair 只收型別一模一樣的）。換不了回 undefined（呼叫端保留）
+ */
+export function elementValue(elem: string | undefined, v: SemanticNode | undefined, py: ToPythonContext): string | undefined {
+  if (!v) return undefined
+  if (/^vector ?</.test(bare(elem))) return `list(${py.expr(v)})`
+  const el = pairElements(elem)
+  if (el) {
+    const parts = v.slots?.values?.length === 2 ? v.slots.values : v.slots?.first?.length && v.slots?.second?.length ? [v.slots.first[0], v.slots.second[0]] : undefined
+    if (parts) return `(${parts.map((x, k) => intValue(el[k], py.typeOf(x), py.expr(x))).join(', ')})`
+    return sameType(py.typeOf(v), `pair<${el.join(',')}>`) ? py.expr(v) : undefined
+  }
+  return intValue(bare(elem), py.typeOf(v), py.expr(v))
+}
+
+/** 容器型別的元素型別（第一個樣板引數；`vector<int>`、`stack<int>`、`set<int>`…） */
+export const elementOf = (t: string | undefined): string | undefined => templateArgs(t)?.[1][0]

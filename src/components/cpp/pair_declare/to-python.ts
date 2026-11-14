@@ -6,9 +6,7 @@
  * 來源是另一個 pair 的（`= q`、`= f()`）只收型別一模一樣的——不同的要逐格轉換，不猜
  */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { intValue, zeroOf } from '../../../languages/cpp/to-python/contract'
-
-const key = (t: string | undefined): string => (t ?? '?').replace(/std::|const\s+|&|\s+/g, '')
+import { intValue, zeroOf, sameType } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
@@ -23,7 +21,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const parts = src.slots?.values?.length === 2 ? src.slots.values
       : src.slots?.first?.length && src.slots?.second?.length ? [src.slots.first[0], src.slots.second[0]] : undefined
     if (parts) return line(`(${parts.map((v, k) => intValue(types[k], py.typeOf(v), py.expr(v))).join(', ')})`)
-    if (key(py.typeOf(src)) !== key(`pair<${types.join(',')}>`)) return [py.keep(n, 'needs-types', `放進 pair<${types.join(', ')}> 的值型別是 ${py.typeOf(src) ?? '不知道'}`)]
+    if (!sameType(py.typeOf(src), `pair<${types.join(',')}>`)) return [py.keep(n, 'needs-types', `放進 pair<${types.join(', ')}> 的值型別是 ${py.typeOf(src) ?? '不知道'}`)]
     return line(py.expr(src))
   })
 }

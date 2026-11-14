@@ -683,6 +683,18 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code, r.code!).toContain('global g')
     await sameVerdict(src, r.code!, '')
   }, 60_000)
+  it('🟢 放進容器的值照元素型別換（push_back、push、insert、vector(n, x)；vector<int> 收 2.5 是 2）；判決相同（465）', async () => {
+    const src = H + 'int main() {\n    vector<int> v;\n    v.push_back(2.5);\n    double h = 7.9;\n    v.push_back(h / 2);\n    vector<long long> w;\n    w.push_back(1e3);\n    vector<int> f(2, 3.7);\n    stack<int> st;\n    st.push(4.5);\n    set<int> se;\n    se.insert(6.2);\n    cout << v[0] << " " << v[1] << " " << w[0] << " " << v.size() << " " << f[1] << " " << st.top() << " " << se.count(6) << se.count(7) << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🟢 vector<pair<int, int>>：給個數、push_back({a, b})／make_pair、cin 讀進 v[i].first、改成員；判決相同（465）', async () => {
+    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    vector<pair<int, int>> v(n);\n    for (int i = 0; i < n; i++) cin >> v[i].first >> v[i].second;\n    vector<pair<int, int>> w;\n    w.push_back({1, 2.9});\n    w.push_back(make_pair(3, 4));\n    w.push_back(v[0]);\n    v[1].second += 10;\n    int s = 0;\n    for (auto p : w) s += p.first * p.second;\n    cout << v[1].second << " " << w[0].second << " " << w.size() << " " << s << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '2\n5 6\n7 8\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    await sameVerdict(src, r.code!, '2\n5 6\n7 8\n')
+  }, 60_000)
   // ── 464：二維 vector——每一列各自一個新的 list ──
   it('🟢 vector<vector<int>> g(R, vector<int>(C, x))、CTAD 的 vector dp(R, vector<int>(C))；改一格不影響別列；元素收到浮點值截斷；判決相同（464）', async () => {
     const src = H + 'int main() {\n    int n, m;\n    cin >> n >> m;\n    vector dp(n + 1, vector<int>(m + 1));\n    vector<vector<int>> g(2, vector<int>(3, -1));\n    vector<int> row(m + 1, 7);\n    vector<vector<int>> h(2, row);\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]) + i * j;\n    g[0][1] = 2.9;\n    h[1][0] = 0;\n    cout << dp[n][m] << " " << dp[0][m] << " " << g[0][1] << g[1][1] << " " << h[0][0] << h[1][0] << row[0] << " " << dp.size() << " " << dp[0].size() << endl;\n    return 0;\n}\n'
