@@ -578,6 +578,25 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(g.code, `換了：return 之後\n${g.code}`).toBeNull()
     expect(g.reasons.map((x) => x.detail).join()).toContain('離開')
   }, 60_000)
+  // ── 459：while (cin >> x)——讀到檔尾就離開（同 cin：EOF 時 x 不動；讀到一半沒了，前面讀到的留著）──
+  it('🟢 while (cin >> n >> m)：讀到檔尾離開、讀到一半沒了前面那個留著；本體的 continue／break；字串；判決相同（459）', async () => {
+    const src = H + 'int main() {\n    int n = 7, m = 9, s = 0;\n    while (cin >> n >> m) {\n        if (n == 3) continue;\n        if (n == 100) break;\n        s += n * m;\n    }\n    cout << s << " " << n << " " << m << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '1 2\n3 4\n5\n6\n7')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('if not has_token():')
+    for (const stdin of ['1 2\n3 4\n5\n6\n7', '1 2\n100 1\n4 4\n', '', '8 9\n']) await sameVerdict(src, r.code!, stdin)
+    const w = H + 'int main() {\n    string s;\n    int c = 0;\n    while (cin >> s) c += s.size();\n    cout << c << endl;\n    return 0;\n}\n'
+    const rw = await toPython(w, 'ab cde\nf\n')
+    expect(rw.code, JSON.stringify(rw.reasons)).not.toBeNull()
+    await sameVerdict(w, rw.code!, 'ab cde\nf\n')
+  }, 60_000)
+  it('🟢 前置宣告：不寫；main 在定義之前時移到最後（攤平的 main 不然會在 def 之前就呼叫）；判決相同（459）', async () => {
+    const src = H + 'int g = 5;\nint twice(int x);\nint add(int a, int b);\nint main() {\n    int n;\n    cin >> n;\n    cout << twice(n) + add(n, g) << endl;\n    return 0;\n}\nint twice(int x) {\n    return add(x, x);\n}\nint add(int a, int b) {\n    return a + b;\n}\n'
+    const r = await toPython(src, '4\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code!.indexOf('def add'), r.code!).toBeLessThan(r.code!.indexOf('n = int(next_token())'))
+    await sameVerdict(src, r.code!, '4\n')
+  }, 60_000)
   it('🔴 保留：類別', async () => {
     const r = await toPython(H + 'class P {\npublic:\n    int x;\n};\nint main() {\n    P p;\n    p.x = 1;\n    cout << p.x << endl;\n    return 0;\n}\n')
     expect(r.code).toBeNull()
