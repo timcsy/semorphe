@@ -320,6 +320,144 @@ describe('C++ → Python：意思會變的反例', () => {
       expect(r.reasons.map((x) => x.detail).join()).toContain('同名')
     }, 60_000)
   }
+  // ── 453：字面量裡的跳脫序列 ──
+  // 之前：語義樹存的是寫法（`'\n'` 的 char 是兩個字），直接 JSON.stringify ⟹ Python 寫成 "\\n"、印出字面的 \n——
+  // **兩邊都 accept**（靜默失真）。學生語料 StudyCpp 跑 C++ → Python 時看到的
+  for (const [name, code, must] of [
+    ["字元 '\\n'、'\\t'", "int main() {\n    cout << 4 << '\\n' << 5 << '\\t' << 'x' << '\\n';\n    return 0;\n}\n", '"\\t"'],
+    ['字串 "\\n"、"\\\\"、"\\""', 'int main() {\n    cout << "a\\nb\\\\c\\"d\\n";\n    cout << "\\x41\\101\\n";\n    return 0;\n}\n', '"a\\nb\\\\c\\"d\\n"'],
+  ] as const) {
+    it(`🟢 ${name}；判決相同（453）`, async () => {
+      const src = H + code
+      const r = await toPython(src)
+      expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+      expect(r.code).toContain(must)
+      expect(r.code).not.toMatch(/\\\\[nt]/)
+      await sameVerdict(src, r.code!, '')
+    }, 60_000)
+  }
+  // 數字字面量（453）：`10'0000'0000` 原樣搬過去是不合法的 Python（StudyCpp 7_5_TLE 判 untranslated）；`017` 是八進位
+  it("🟢 數字分隔符號 10'0000'0000 → 10_0000_0000、八進位 017 → 0o17；判決相同（453）", async () => {
+    const src = H + "int main() {\n    const int oo = 10'0000'0000;\n    int m = 017;\n    cout << oo << \" \" << m << endl;\n    return 0;\n}\n"
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('10_0000_0000')
+    expect(r.code, r.code!).toContain('0o17')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  // 註解（453）：StudyCpp 218 支裡 120 支被「cpp:comment 還沒有 Python 的寫法」擋住；只剩註解的本體要補 pass
+  it('🟢 單行、區塊註解 → #；只有註解的本體補 pass；判決相同（453）', async () => {
+    const src = H + '// 頂層\n/* 兩行\n   第二行 */\nint main() {\n    int n = 3; // 行尾\n    if (n > 5) {\n        // 什麼都不做\n    }\n    cout << n << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code).toContain('# 頂層')
+    expect(r.code, r.code!).toMatch(/# 什麼都不做\n\s+pass/)
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🟢 空的 if／while 本體寫成 pass（頂層原本把縮排的 pass 一起濾掉）；判決相同（453）', async () => {
+    const src = H + 'int main() {\n    int n = 3;\n    if (n > 5) {}\n    while (n > 9) {}\n    cout << n << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toMatch(/if n > 5:\n {4}pass/)
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🟢 ios::sync_with_stdio(0),cin.tie(0) 不寫（只影響速度）、逗號敘述逐個寫；判決相同（453）', async () => {
+    const src = H + 'int main() {\n    ios::sync_with_stdio(0),cin.tie(0);\n    int a, b;\n    cin >> a >> b;\n    a++, b--;\n    cout << a << " " << b << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '3 9\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).not.toMatch(/sync|tie/)
+    await sameVerdict(src, r.code!, '3 9\n')
+  }, 60_000)
+  // 型別別名（453）：StudyCpp 55 支有 #define，43 支是 `#define ll long long`——展開之後 `ll x = 3.7` 照 long long 截斷
+  for (const [name, head] of [
+    ['#define ll long long', '#define ll long long\n#define MAXN 5\n'],
+    ['typedef long long ll', 'typedef long long ll;\nconst int MAXN = 5;\n'],
+    ['using ll = long long', 'using ll = long long;\nconst int MAXN = 5;\n'],
+  ] as const) {
+    it(`🟢 ${name}：展開成型別、整數照截斷；判決相同（453）`, async () => {
+      const src = H + head + 'int main() {\n    ll x = 3.7;\n    ll a[MAXN] = {0};\n    a[2] = x * 1000000000LL;\n    cout << x << " " << a[2] << " " << a[0] << endl;\n    return 0;\n}\n'
+      const r = await toPython(src)
+      expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+      expect(r.code, r.code!).toContain('x = int(3.7)')
+      await sameVerdict(src, r.code!, '')
+    }, 60_000)
+  }
+  it('🔴 保留：記號替換巨集 #define F first（453）', async () => {
+    const r = await toPython(H + '#define F first\nint main() {\n    pair<int, int> p = {1, 2};\n    cout << p.F << endl;\n    return 0;\n}\n')
+    expect(r.code, '換了').toBeNull()
+    expect(r.reasons.map((x) => x.detail).join()).toContain('巨集「F」')
+  }, 60_000)
+  it('🟢 v.back()、v.pop_back() → v[-1]、v.pop()；判決相同（453）', async () => {
+    const src = H + 'int main() {\n    vector<int> v;\n    v.push_back(3);\n    v.push_back(8);\n    cout << v.back() << endl;\n    v.back() = 5;\n    v.pop_back();\n    cout << v.back() << " " << v.size() << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('v.pop()')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🔴 保留：字串的 pop_back、元素是 vector 的 back（453）', async () => {
+    for (const body of ['string s = "ab";\n    s.pop_back();\n    cout << s;', 'vector<vector<int>> g(2);\n    vector<int> b = g.back();\n    cout << b.size();']) {
+      const r = await toPython(H + `int main() {\n    ${body}\n    return 0;\n}\n`)
+      expect(r.code, body).toBeNull()
+    }
+  }, 60_000)
+  it('🟢 (int)、(double)、(long long) 轉型；判決相同（453）', async () => {
+    const src = H + 'int main() {\n    double d = -3.7;\n    int a = 7, b = 2;\n    char c = \'A\';\n    cout << (int)d << " " << (double)a / b << " " << (int)c << " " << (long long)a * 1000000000 << " " << static_cast<double>(b) / a << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('int(d)')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🔴 保留：窄化轉型 (int) long long、(float)（453）', async () => {
+    for (const body of ['long long x = 5000000000LL;\n    cout << (int)x;', 'double d = 0.1;\n    cout << (float)d;']) {
+      const r = await toPython(H + `int main() {\n    ${body}\n    return 0;\n}\n`)
+      expect(r.code, body).toBeNull()
+    }
+  }, 60_000)
+  it('🟢 auto 的初值是純量；容器照實保留；判決相同（453）', async () => {
+    const src = H + 'int main() {\n    int a = 7;\n    auto b = a * 2;\n    auto d = a / 2.0;\n    cout << b << " " << d << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    await sameVerdict(src, r.code!, '')
+    const kept = await toPython(H + 'int main() {\n    vector<int> v(3);\n    auto w = v;\n    w[0] = 1;\n    cout << v[0] << endl;\n    return 0;\n}\n')
+    expect(kept.code, '換了——w 會變成 v 的別名').toBeNull()
+  }, 60_000)
+  it('🟢 大括號初始化 int x{}、long long s{5}；判決相同（453）', async () => {
+    const src = H + 'int main() {\n    int n, c{}, m{};\n    long long s{5};\n    cin >> n;\n    c += n;\n    cout << c << " " << m << " " << s << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '4\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('c = 0')
+    await sameVerdict(src, r.code!, '4\n')
+  }, 60_000)
+  // 計次迴圈（453）：之前一律 range(n)——上界只算一次、迴圈變數每圈重設；C++ 每圈重算上界。
+  // `if (i == 1) n = 3` C++ 印 012、Python 印 01234，**兩邊都 accept**（靜默失真）。本體提到上界或迴圈變數 ⟹ 寫成 while
+  for (const [name, body] of [
+    ['上界在本體裡被改', 'int n = 5;\n    for (int i = 0; i < n; i++) {\n        if (i == 1) n = 3;\n        cout << i;\n    }'],
+    ['上界是 v.size()，本體 push_back', 'vector<int> v(2);\n    for (int i = 0; i < v.size(); i++) {\n        if (i < 3) v.push_back(i);\n        cout << i;\n    }'],
+    ['本體改迴圈變數', 'for (int i = 0; i <= 9; i++) {\n        cout << i;\n        i += 2;\n    }'],
+  ] as const) {
+    it(`🟢 計次迴圈：${name} ⟹ while；判決相同（453）`, async () => {
+      const src = H + `int main() {\n    ${body}\n    cout << endl;\n    return 0;\n}\n`
+      const r = await toPython(src)
+      expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+      expect(r.code, r.code!).toContain('while i <')
+      await sameVerdict(src, r.code!, '')
+    }, 60_000)
+  }
+  it('🟢 計次迴圈：本體沒提到上界 ⟹ 照舊 range（453）', async () => {
+    const src = H + 'int main() {\n    int n = 4, s = 0;\n    for (int i = 0; i < n; i++) s += i;\n    cout << s << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, r.code ?? '').toContain('for i in range(n):')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
+  it('🔴 保留：上界可能被改而本體有 continue（453）', async () => {
+    const r = await toPython(H + 'int main() {\n    int n = 5;\n    for (int i = 0; i < n; i++) {\n        if (i == 1) { n = 3; continue; }\n        cout << i;\n    }\n    return 0;\n}\n')
+    expect(r.code, r.code ?? '').toBeNull()
+  }, 60_000)
+  it('🔴 保留：\\xff（位元組，不是碼點）（453）', async () => {
+    const r = await toPython(H + 'int main() {\n    cout << "\\xff" << endl;\n    return 0;\n}\n')
+    expect(r.code, '換了').toBeNull()
+    expect(r.reasons.map((x) => x.detail).join()).toContain('位元組')
+  }, 60_000)
   it('🔴 保留：類別', async () => {
     const r = await toPython(H + 'class P {\npublic:\n    int x;\n};\nint main() {\n    P p;\n    p.x = 1;\n    cout << p.x << endl;\n    return 0;\n}\n')
     expect(r.code).toBeNull()

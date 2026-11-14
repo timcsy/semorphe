@@ -50,6 +50,8 @@ export interface ToPythonContext {
   target(n: SemanticNode | undefined, readsFirst: boolean): { before?: string; text: string }
   /** 這個名字是頂層宣告的全域變數嗎（451：函式裡重新指定它，Python 要先寫 `global`） */
   isGlobal(name: string): boolean
+  /** 這顆節點宣告了它會寫的子節點（`r.writes`）——沒宣告的回空 */
+  writtenBy(n: SemanticNode): readonly SemanticNode[]
 }
 
 /** 加括號的判準兩個方向共用（住在核心）——膠囊照舊從這裡拿 */
@@ -70,6 +72,23 @@ export function intValue(target: string | undefined, valueType: string | undefin
 /** Python 字串字面量（JSON 的雙引號跳脫在 Python 裡同樣成立） */
 export const pyStr = (s: string): string => JSON.stringify(s)
 
+/**
+ * C++ 字面量的寫法（語義樹存的是原始碼的寫法，含跳脫序列）→ 它的值（453：`'\n'` 原本被跳脫兩次，Python 印出字面的 `\n`）。
+ * 拿不準的（`\x`／八進位 ≥ 0x80 是位元組、Python 的 str 是碼點；`\u` 一類）回 undefined，呼叫端照實保留。
+ */
+export function cEscapedValue(src: string): string | undefined {
+  const map: Record<string, string> = { n: '\n', t: '\t', r: '\r', '\\': '\\', '"': '"', "'": "'", '?': '?', a: '\x07', b: '\b', f: '\f', v: '\v' }
+  let bad = false
+  const out = src.replace(/\\(x[0-9a-fA-F]+|[0-7]{1,3}|.)/g, (_m, e: string) => {
+    const code = e[0] === 'x' ? parseInt(e.slice(1), 16) : /^[0-7]+$/.test(e) ? parseInt(e, 8) : undefined
+    if (code !== undefined) { if (code >= 0x80) bad = true; return String.fromCharCode(code) }
+    if (e in map) return map[e]
+    bad = true
+    return e
+  })
+  return bad ? undefined : out
+}
+
 export type ExprFn = (n: SemanticNode, py: ToPythonContext) => string
 export type StmtFn = (n: SemanticNode, py: ToPythonContext, depth: number) => string[]
 export type TargetFn = (n: SemanticNode, py: ToPythonContext, readsFirst: boolean) => { before?: string; text: string }
@@ -84,7 +103,16 @@ export interface ToPythonRegistrar {
   target(fn: TargetFn): void
   /** 這顆元件產生 bool（比較、邏輯）——不靠 Cella 的型別表（它對 C++ 的比較回報 int，見 research R8） */
   yieldsBool(): void
+  /**
+   * 這顆元件定義一個型別別名（453：`#define ll long long`）——回 `{ name, type }`，不是別名就回 undefined。
+   * 引擎換之前先把每一顆節點的型別文字展開（`ll` → `long long`），於是讀型別的膠囊（整數截斷、起始值）照原本的判準走
+   */
+  typeAlias(fn: TypeAliasFn): void
+  /** 這顆元件會寫哪幾個子節點（453：`cin >> a` 的 values 是寫、`cout << a` 的 values 是讀——形狀一樣，只有元件自己知道） */
+  writes(fn: (n: SemanticNode) => readonly SemanticNode[]): void
 }
+
+export type TypeAliasFn = (n: SemanticNode) => { name: string; type: string } | undefined
 
 export type RegisterToPython = (r: ToPythonRegistrar) => void
 
@@ -164,4 +192,62 @@ export function zeroOf(t: string | undefined): string | undefined {
 export function isSimple(x: SemanticNode | undefined): boolean {
   return !!x && Object.values(x.slots ?? {}).every((k) => k.length === 0)
     && (typeof x.properties?.name === 'string' || typeof x.properties?.value === 'string')
+}
+
+/** 整數型別的寬度等級（LP64：long 與 long long 同寬） */
+const CAST_RANK: Record<string, number> = { short: 1, 'short int': 1, int: 2, signed: 2, 'signed int': 2, long: 3, 'long int': 3, 'long long': 3, 'long long int': 3 }
+
+/**
+ * C 風格轉型與 `static_cast` 寫成 Python（453）——只收兩邊意思確定相同的：
+ * - 浮點 → 整數：`int(x)`（都向零截斷；超出範圍在 C++ 是未定義行為，Cella 先判出來）
+ * - 整數 → 同寬或更寬的整數：照原樣（值不變）
+ * - char → 整數：`ord(x)`（Python 的 char 是長度 1 的字串）
+ * - 整數、double → double：`float(x)`（2^53 以內精確；long long 照實保留）
+ * 其餘（窄化成 int 會繞回、轉成 float 會降精度、轉成 char／bool）照實保留——不猜。
+ */
+export function castToPython(n: SemanticNode, py: ToPythonContext): string {
+  const to = bare(String(n.properties.target_type ?? ''))
+  const v = n.slots.value?.[0]
+  const from = bare(py.typeOf(v))
+  const keep = (): string => py.keep(n, 'outside-subset', `(${to}) 轉型（來源型別 ${from || '不明'}）還沒有對應`)
+  if (CAST_RANK[to] !== undefined) {
+    if (from === 'double' || from === 'float') return `int(${py.expr(v)})`
+    if (from === 'char') return `ord(${py.expr(v)})`
+    if (CAST_RANK[from] !== undefined && CAST_RANK[from] <= CAST_RANK[to]) return `(${py.expr(v)})`
+    return keep()
+  }
+  if (to === 'double') {
+    if (from === 'double' || from === 'float' || isNarrowInt(from)) return `float(${py.expr(v)})`
+    return keep()
+  }
+  return keep()
+}
+
+/** 一個左值的底名（`a`、`a[i]`、`v.at(i)`、`p.x` → a／v／p） */
+function baseName(x: SemanticNode | undefined): string | undefined {
+  if (!x) return undefined
+  if (typeof x.properties?.name === 'string' && Object.keys(x.slots ?? {}).length === 0) return x.properties.name
+  if (typeof x.properties?.obj === 'string') return x.properties.obj
+  return baseName(x.slots?.obj?.[0] ?? x.slots?.target?.[0])
+}
+
+/**
+ * 這幾句敘述可能改到 `names` 裡的哪一個嗎（453：計次迴圈換成 range 之前要問上界與迴圈變數會不會被改）——寧可多報：
+ * 指定的目標（target 槽）、元件宣告的寫入（`cin >>`）、元素指定（`a[i] = …`）、敘述位置的方法呼叫（`v.push_back(x)`）、
+ * 當引數傳給自訂函式（可能是參考參數）、名字是全域而本體呼叫了自訂函式
+ */
+export function mayWrite(nodes: readonly SemanticNode[], names: ReadonlySet<string>, py: ToPythonContext): boolean {
+  const hit = (x: SemanticNode | undefined): boolean => { const b = baseName(x); return b !== undefined && names.has(b) }
+  const walk = (x: SemanticNode, isStmt: boolean): boolean => {
+    if (hit(x.slots?.target?.[0])) return true
+    if (py.writtenBy(x).some(hit)) return true
+    if (typeof x.properties?.obj === 'string' && names.has(x.properties.obj) && x.slots?.value !== undefined) return true
+    if (isStmt && hit(x.slots?.obj?.[0])) return true
+    if (typeof x.properties?.name === 'string' && py.isUserFunction(x.properties.name)) {
+      if ([...names].some((v) => py.isGlobal(v))) return true
+      if (Object.values(x.slots ?? {}).some((kids) => kids.some(hit))) return true
+    }
+    return Object.entries(x.slots ?? {}).some(([k, kids]) => kids.some((c) => walk(c, /body$/.test(k))))
+  }
+  return nodes.some((x) => walk(x, true))
 }
