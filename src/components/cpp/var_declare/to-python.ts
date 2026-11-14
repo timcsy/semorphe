@@ -8,7 +8,12 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (n.slots.declarators?.length) return n.slots.declarators.flatMap((d) => py.block([d], depth))
     const type = String(n.properties.type ?? '')
     const name = py.name(String(n.properties.name ?? ''))
-    const init = n.slots.initializer?.[0]
+    let init = n.slots.initializer?.[0]
+    // 大括號初始化（`int x{}`、`int x{5}`，453：StudyCpp 13 支只差這一項）——問形狀：沒有屬性、只有 values 槽的初值。
+    // 空的是值初始化（0），一個元素就是那個值（大括號不准窄化，值不變）；多個元素不是純量的初值，保留
+    const braces = init && init.slots?.values !== undefined && Object.keys(init.properties ?? {}).length === 0 ? init.slots.values : undefined
+    if (braces && braces.length > 1) return [py.keep(n, 'outside-subset', `「${type} ${String(n.properties.name ?? '')}」的大括號初值有 ${braces.length} 個`)]
+    if (braces) init = braces[0]
     // char 變數：Python 用長度 1 的字串；初值是整數 ⟹ chr()（364）
     if (type === 'char') {
       if (!init) return [`${py.indent(depth)}${name} = chr(0)`]

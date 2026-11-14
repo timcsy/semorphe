@@ -31,12 +31,42 @@ const tables = (): ToPythonTables => (TABLES ??= collectToPython())
 const lineOf = (n: SemanticNode): number | undefined =>
   (n.metadata as { sourceRange?: { startLine?: number } } | undefined)?.sourceRange?.startLine
 
+/**
+ * 型別別名（`#define ll long long`，膠囊以 `r.typeAlias` 宣告）在每一顆節點的型別文字上展開（453）——
+ * 讀型別的膠囊（整數截斷、起始值、參數的傳遞方式）於是照展開後的型別判；節點的 id 不變（Cella 的型別表以 id 查）
+ */
+function expandTypeAliases(tree: SemanticNode, t: ToPythonTables): SemanticNode {
+  const aliases = new Map<string, string>()
+  const collect = (n: SemanticNode): void => {
+    const a = t.typeAlias.get(n.componentId)?.(n)
+    if (a) aliases.set(a.name, a.type)
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
+  }
+  collect(tree)
+  if (aliases.size === 0) return tree
+  const expand = (s: string): string => {
+    for (let i = 0; i < 8; i++) {
+      const next = s.replace(/[A-Za-z_]\w*/g, (w) => aliases.get(w) ?? w)
+      if (next === s) return s
+      s = next
+    }
+    return s
+  }
+  const clone = (n: SemanticNode): SemanticNode => ({
+    ...n,
+    properties: Object.fromEntries(Object.entries(n.properties ?? {}).map(([k, v]) => [k, /type/i.test(k) && typeof v === 'string' ? expand(v) : v])),
+    slots: Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, kids]) => [k, kids.map(clone)])),
+  })
+  return clone(tree)
+}
+
 export function convertCppToPython(
-  tree: SemanticNode, types: Readonly<Record<string, string>> = {}, problems: readonly { kind: string; at?: string }[] = [],
+  input: SemanticNode, types: Readonly<Record<string, string>> = {}, problems: readonly { kind: string; at?: string }[] = [],
 ): LanguageConversion {
   const reasons: LanguageConversion['reasons'] = []
   let converted = 0
   const t = tables()
+  const tree = expandTypeAliases(input, t)
   // 程式自己定義的函式名（問形狀：有 params 槽、有名字的節點）——呼叫它們才換，標準函式庫的第一版不換
   const userFunctions = new Set<string>()
   const declaredStrings = new Set<string>()
@@ -66,6 +96,7 @@ export function convertCppToPython(
     },
     isUserFunction: (name) => userFunctions.has(name),
     isGlobal: (name) => globals.has(name),
+    writtenBy: (n) => t.writes.get(n.componentId)?.(n) ?? [],
     name: (s) => (PY_KEYWORDS.has(s) ? `${s}_` : s),
     // 只有一個進入點的 C++ 骨架（`main`）——Arduino 的 setup／loop 兩個進入點攤不平，不在這裡
     isEntryFunction: (name) => skeletonsOfLanguage('cpp').some((sk) => sk.entryFunctions.length === 1 && !!entryFunctionOf(sk, name)),
@@ -96,7 +127,8 @@ export function convertCppToPython(
     },
     block(nodes, depth) {
       const lines = (nodes ?? []).flatMap((c) => stmt(c, depth))
-      return lines.length > 0 ? lines : [`${py.indent(depth)}pass`]
+      // 只有註解的本體也要一個 pass（453：註解換過去之後，`if (x) { // 空 }` 不能只剩一行 #）
+      return lines.some((l) => !/^\s*#/.test(l)) ? lines : [...lines, `${py.indent(depth)}pass`]
     },
   }
   const stmt = (n: SemanticNode, depth: number): string[] => {
