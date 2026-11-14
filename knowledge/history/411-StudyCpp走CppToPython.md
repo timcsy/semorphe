@@ -93,3 +93,9 @@ bool 陣列（一維、二維）：預設 `False`、初值與元素指定包 `bo
 vector 的陣列（鄰接串列 `vector<int> g[N]`）：每一格各自一個空 list（`[[] for _ in range(N)]`，不是 `[[]] * N`——那會讓每一格是同一個 list）；一格整個指定（`g[7] = g[0]`）是複製 ⟹ `list(…)`；格裡的元素收到浮點值照 T 截斷。`push_back`、範圍 for、`size()`、`g[u][k]` 原本就換得過去（obj 是 array_at）。
 
 **結果**：StudyCpp 換得過去 83 → 84 支（AP325 7_2），沒有掉支。另外三支（7_1_another、7_7、toj575）現在只剩 deque 與 sort 擋著——都在等 Cella（deque 排在 11-15 的 Python 輪、sort 已有判決但慢）。
+
+## 後續：464（11-15）
+
+二維 vector：`vector<T>(n)` → `[0] * n`、`vector<T>(n, x)` → `[x] * n`（x 照 T 換，`vector<int>(3, 2.5)` 是 2）；元素是數字或字串，Python 裡改不動，`[x] * n` 每格同一個值沒有差別。`vector<vector<T>> g(R, vector<T>(C, x))` → `[row for _ in range(R)]`——**不是 `[row] * R`**（那會讓每一列是同一個 list，改一格整欄跟著變）；fill 不是建構子形狀（是一個已有的 vector）時每一列 `list(…)` 複製一份。判決例冷算 6.0 秒。
+
+**結果**：StudyCpp 換得過去 84 → 86 支（AP325 6_10、6_14），沒有掉支。6_14 兩邊判決相同；6_10 的 C++ 那一側 Cella 本來就判 reject（464 之前就是），換得過去但比不了。兩邊都 accept 而輸出不同的仍是那五支（6_4、fake_random ×2、a104_1、a565——讀到檔尾與亂數，464 之前就在）。
