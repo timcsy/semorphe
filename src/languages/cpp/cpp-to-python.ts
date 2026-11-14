@@ -46,6 +46,14 @@ export function convertCppToPython(
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(scan)
   }
   scan(tree)
+  // 頂層宣告的全域變數（451）——問形狀：頂層、有名字有型別、不是函式（沒有 params 槽）；一句宣告多個名字的在 declarators 裡
+  const globals = new Set<string>()
+  const noteGlobal = (n: SemanticNode): void => {
+    if (n.slots?.params !== undefined) return
+    if (typeof n.properties?.name === 'string' && n.properties?.type !== undefined) globals.add(n.properties.name)
+    for (const d of n.slots?.declarators ?? []) noteGlobal(d)
+  }
+  for (const n of tree.slots?.body ?? []) noteGlobal(n)
   let inMain = false
   let needTokens = false
   let needTruncMod = false
@@ -57,6 +65,7 @@ export function convertCppToPython(
       try { return (nodes ?? []).flatMap((c) => stmt(c, 0)) } finally { inMain = was }
     },
     isUserFunction: (name) => userFunctions.has(name),
+    isGlobal: (name) => globals.has(name),
     name: (s) => (PY_KEYWORDS.has(s) ? `${s}_` : s),
     // 只有一個進入點的 C++ 骨架（`main`）——Arduino 的 setup／loop 兩個進入點攤不平，不在這裡
     isEntryFunction: (name) => skeletonsOfLanguage('cpp').some((sk) => sk.entryFunctions.length === 1 && !!entryFunctionOf(sk, name)),
