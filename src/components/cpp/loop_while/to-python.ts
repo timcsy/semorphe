@@ -29,6 +29,12 @@ export function registerToPython(r: ToPythonRegistrar): void {
       const inner = py.block(body, depth + 1).filter((l) => l.trim() !== 'pass')
       return [`${py.indent(depth)}while True:`, ...reads, ...inner]
     }
+    // `while (getline(cin, s))`（460）：先問還有沒有下一行（沒有就離開，s 不動），再讀那一行
+    if (cond && py.isLineRead(cond)) {
+      const probe = py.useLineReader('probe')
+      const inner = py.block(body, depth + 1).filter((l) => l.trim() !== 'pass')
+      return [`${py.indent(depth)}while ${probe}:`, ...py.block([cond], depth + 1), ...inner]
+    }
     return [`${py.indent(depth)}while ${py.expr(cond)}:`, ...py.block(body, depth + 1)]
   })
 }
