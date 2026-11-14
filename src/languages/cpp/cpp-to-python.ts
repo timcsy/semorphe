@@ -114,15 +114,30 @@ const lineOf = (n: SemanticNode): number | undefined =>
  * 型別別名（`#define ll long long`，膠囊以 `r.typeAlias` 宣告）在每一顆節點的型別文字上展開（453）——
  * 讀型別的膠囊（整數截斷、起始值、參數的傳遞方式）於是照展開後的型別判；節點的 id 不變（Cella 的型別表以 id 查）
  */
-function expandTypeAliases(tree: SemanticNode, t: ToPythonTables): SemanticNode {
+function expandTypeAliases(tree: SemanticNode, t: ToPythonTables): { tree: SemanticNode; members: ReadonlySet<string> } {
   const aliases = new Map<string, string>()
+  const memberAliases = new Map<string, string>()
+  const aliasNodes = new Set<SemanticNode>()
   const collect = (n: SemanticNode): void => {
     const a = t.typeAlias.get(n.componentId)?.(n)
-    if (a) aliases.set(a.name, a.type)
+    if (a && 'type' in a) aliases.set(a.name, a.type)
+    if (a && 'member' in a) { memberAliases.set(a.name, a.member); aliasNodes.add(n) }
     for (const kids of Object.values(n.slots ?? {})) kids.forEach(collect)
   }
   collect(tree)
-  if (aliases.size === 0) return tree
+  // 成員別名（466）：那個名字在別的屬性裡出現過（變數名、函式名、型別文字裡的一個詞）就不展開——C++ 的巨集到處都換，不只換成員
+  const usedElsewhere = (n: SemanticNode, acc: Set<string>): Set<string> => {
+    if (!aliasNodes.has(n)) {
+      for (const [k, v] of Object.entries(n.properties ?? {})) {
+        if (k === 'member' || typeof v !== 'string') continue
+        for (const w of v.match(/[A-Za-z_]\w*/g) ?? []) if (memberAliases.has(w)) acc.add(w)
+      }
+    }
+    for (const kids of Object.values(n.slots ?? {})) kids.forEach((c) => usedElsewhere(c, acc))
+    return acc
+  }
+  for (const w of usedElsewhere(tree, new Set())) memberAliases.delete(w)
+  if (aliases.size === 0 && memberAliases.size === 0) return { tree, members: new Set() }
   const expand = (s: string): string => {
     for (let i = 0; i < 8; i++) {
       const next = s.replace(/[A-Za-z_]\w*/g, (w) => aliases.get(w) ?? w)
@@ -131,12 +146,14 @@ function expandTypeAliases(tree: SemanticNode, t: ToPythonTables): SemanticNode 
     }
     return s
   }
+  const prop = (k: string, v: SemanticNode['properties'][string]): SemanticNode['properties'][string] =>
+    typeof v !== 'string' ? v : /type/i.test(k) ? expand(v) : k === 'member' ? memberAliases.get(v) ?? v : v
   const clone = (n: SemanticNode): SemanticNode => ({
     ...n,
-    properties: Object.fromEntries(Object.entries(n.properties ?? {}).map(([k, v]) => [k, /type/i.test(k) && typeof v === 'string' ? expand(v) : v])),
+    properties: Object.fromEntries(Object.entries(n.properties ?? {}).map(([k, v]) => [k, prop(k, v)])),
     slots: Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, kids]) => [k, kids.map(clone)])),
   })
-  return clone(tree)
+  return { tree: clone(tree), members: new Set(memberAliases.keys()) }
 }
 
 export function convertCppToPython(
@@ -145,7 +162,7 @@ export function convertCppToPython(
   const reasons: LanguageConversion['reasons'] = []
   let converted = 0
   const t = tables()
-  const tree = expandTypeAliases(input, t)
+  const { tree, members: expandedMembers } = expandTypeAliases(input, t)
   // 程式自己定義的函式名（問形狀：有 params 槽、有名字的節點）——呼叫它們才換，標準函式庫的第一版不換
   const userFunctions = new Set<string>()
   const declaredStrings = new Set<string>()
@@ -213,6 +230,7 @@ export function convertCppToPython(
     noteElementType: (name, type) => { elementTypes.set(name, elementTypes.has(name) && elementTypes.get(name) !== type ? null : type) },
     elementTypeOf: (name) => elementTypes.get(name) ?? undefined,
     varTypeOf: (name) => varTypes.get(name) ?? undefined,
+    isExpandedAlias: (name) => expandedMembers.has(name),
     useImport(m) { imports.add(m); return m },
     indent: (d) => '    '.repeat(d),
     typeOf: (n) => (n ? types[n.id] : undefined),

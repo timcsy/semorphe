@@ -384,10 +384,12 @@ describe('C++ → Python：意思會變的反例', () => {
       await sameVerdict(src, r.code!, '')
     }, 60_000)
   }
-  it('🔴 保留：記號替換巨集 #define F first（453）', async () => {
-    const r = await toPython(H + '#define F first\nint main() {\n    pair<int, int> p = {1, 2};\n    cout << p.F << endl;\n    return 0;\n}\n')
-    expect(r.code, '換了').toBeNull()
-    expect(r.reasons.map((x) => x.detail).join()).toContain('巨集「F」')
+  it('🟢 記號替換巨集 #define F first（453 保留；466 起換——名字只當成員名用就展開成 p[0]）；判決相同', async () => {
+    const src = H + '#define F first\nint main() {\n    pair<int, int> p = {1, 2};\n    cout << p.F << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('p[0]')
+    await sameVerdict(src, r.code!, '')
   }, 60_000)
   it('🟢 v.back()、v.pop_back() → v[-1]、v.pop()；判決相同（453）', async () => {
     const src = H + 'int main() {\n    vector<int> v;\n    v.push_back(3);\n    v.push_back(8);\n    cout << v.back() << endl;\n    v.back() = 5;\n    v.pop_back();\n    cout << v.back() << " " << v.size() << endl;\n    return 0;\n}\n'
@@ -658,6 +660,21 @@ describe('C++ → Python：意思會變的反例', () => {
     const rt = await toPython(t)
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
+  }, 60_000)
+  // ── 466：成員巨集（#define F first）與 pair 的型別巨集（#define pii pair<int,int>）──
+  it('🟢 #define F first／S second、#define pii pair<int,int>：pii 變數、pii 陣列、vector<pii>、p.F 讀寫、cin >> p.F；判決相同（466）', async () => {
+    const src = H + '#define F first\n#define S second\n#define pii pair<int,int>\n#define ll long long\npii a[3];\nint main() {\n    pii p;\n    pii q = {4, 5};\n    pii r = make_pair(7, 8);\n    vector<pii> v(2);\n    pair<ll, ll> w = {1, 2};\n    cin >> p.F >> a[1].S;\n    p.S = p.F * 2;\n    a[0].F++;\n    v[1].S += 3;\n    q.F = 2.9;\n    w.S *= 3;\n    cout << p.F << " " << p.S << " " << a[0].F << a[1].S << " " << v[1].F << v[1].S << " " << q.F << q.S << " " << r.F + r.S << " " << w.F << w.S << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '6 9\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('p = (0, 0)')
+    await sameVerdict(src, r.code!, '6 9\n')
+  }, 60_000)
+  it('🔴 保留：成員巨集的名字在別處也當名字用（C++ 會連那裡一起換掉）、#define pb push_back（466）', async () => {
+    for (const body of ['#define x first\nint main() {\n    pair<int, int> p = {1, 2};\n    int x = 3;\n    cout << p.x << x << endl;\n    return 0;\n}\n',
+      '#define pb push_back\nint main() {\n    vector<int> v;\n    v.pb(3);\n    cout << v[0] << endl;\n    return 0;\n}\n']) {
+      const r = await toPython(H + body)
+      expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
+    }
   }, 60_000)
   // ── 465：pair 換成 tuple——改成員重建整個 tuple；pair 陣列；pair 傳值 ──
   it('🟢 pair 宣告（無初值、{a, b}、make_pair）、改成員（=、+=、++、cin >>）、pair 陣列、傳值的 pair 參數、比較；複製之後各自獨立；判決相同（465）', async () => {

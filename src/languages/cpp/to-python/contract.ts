@@ -63,6 +63,8 @@ export interface ToPythonContext {
    * 引擎開頭掃一次整棵樹（有名字有型別的節點、計次迴圈的變數）；同一個名字宣告過兩種、或有一處說不出型別 ⟹ undefined
    */
   varTypeOf(name: string): string | undefined
+  /** 這個成員別名（466：`#define F first`）引擎展開了嗎——名字別處也用到就沒有展開 */
+  isExpandedAlias(name: string): boolean
   /**
    * 一顆節點寫成**指定的目標**（`=`、`+=`、`++`、`cin >>` 的左邊；450）。`readsFirst`：先讀再改（`+=`、`++`）。
    * 回傳的 `before` 是要先跑的一句（不含縮排）——map 的元素先讀再改，C++ 會先補上預設值、Python 的 dict 會丟 KeyError。
@@ -158,7 +160,12 @@ export interface ToPythonRegistrar {
   writes(fn: (n: SemanticNode) => readonly SemanticNode[]): void
 }
 
-export type TypeAliasFn = (n: SemanticNode) => { name: string; type: string } | undefined
+/**
+ * 別名有兩種：型別（`#define ll long long`、`#define pii pair<int,int>`）在型別文字上展開；
+ * 成員（466：`#define F first`）在成員名上展開——**只在那個名字整支程式都只當成員名用時**（`p.F`），
+ * 別處也出現（`int F`、`F(x)`）就整個不展開，留給 `isExpandedAlias` 回 false、讓那顆元件照實保留
+ */
+export type TypeAliasFn = (n: SemanticNode) => { name: string; type: string } | { name: string; member: string } | undefined
 
 export type RegisterToPython = (r: ToPythonRegistrar) => void
 
@@ -342,6 +349,22 @@ export function templateArgs(t: string | undefined): [string, string[]] | undefi
 export function pairElements(t: string | undefined): [string, string] | undefined {
   const a = templateArgs(t)
   return a && a[0] === 'pair' && a[1].length === 2 ? [a[1][0], a[1][1]] : undefined
+}
+
+/**
+ * 宣告一個 pair（465；466 起 `pii p` 這種型別巨集展開出來的一般宣告也走這裡）：寫成 tuple——沒有初值是兩格的起始值，
+ * `{a, b}`／`make_pair(a, b)` 每一格照自己的型別換，來源是另一個 pair 的只收型別一模一樣的。回傳那一行（不含縮排）
+ */
+export function pairDeclLine(n: SemanticNode, name: string, types: readonly [string, string], src: SemanticNode | undefined, py: ToPythonContext): string {
+  const zeros = types.map(zeroOf)
+  if (zeros.some((z) => z === undefined)) return py.keep(n, 'outside-subset', `pair<${types.join(', ')}> 還沒有對應`)
+  if (!src) return `${name} = (${zeros.join(', ')})`
+  // 兩個值：問形狀——values 槽恰好兩個（大括號），或 first／second 兩個槽（make_pair）
+  const parts = src.slots?.values?.length === 2 ? src.slots.values
+    : src.slots?.first?.length && src.slots?.second?.length ? [src.slots.first[0], src.slots.second[0]] : undefined
+  if (parts) return `${name} = (${parts.map((v, k) => intValue(types[k], py.typeOf(v), py.expr(v))).join(', ')})`
+  if (!sameType(py.typeOf(src), `pair<${types.join(',')}>`)) return py.keep(n, 'needs-types', `放進 pair<${types.join(', ')}> 的值型別是 ${py.typeOf(src) ?? '不知道'}`)
+  return `${name} = ${py.expr(src)}`
 }
 
 /** 兩個型別寫法相同嗎（拿掉 std::、const、&、空白）——pair 整個指定只收一模一樣的（465） */

@@ -109,3 +109,13 @@ pair 換成 **tuple**，不是 list：C++ 的 pair 是值（`q = p` 複製一份
 **順手修到一個早就在的靜默失真**：放進容器的值沒照元素型別換——`vector<int>` 的 `push_back(2.5)`、`stack<int>` 的 `push(4.5)`、`set<int>` 的 `insert(6.2)`、`vector<int> v(n, 2.5)`，C++ 放進去的是截斷後的整數，Python 原樣放浮點（印 `2.5 3.95 1000.0`，C++ 印 `2 3 1000`）。寫 vector<pair> 的 push_back 時看到它原樣 append，先寫一支判決例證實再修（`elementValue`）。
 
 **結果**：StudyCpp 換得過去 86 → 86，沒有掉支、沒有一支的輸出變了。pair 那一族擋在後面的是成員巨集（`#define F first`，6 支）、`sort`（等 Cella）、multiset、heapq——這一刀是它們的地基。
+
+## 後續：466（11-15）
+
+成員巨集（`#define F first`／`#define y second`，StudyCpp 17 支）與 pair 的型別巨集（`#define pii pair<int,int>`，6 支）。lift 看到的是 `p.F`（成員名 F）與 `pii p`（一般的宣告、型別文字 pii）——巨集在 lift 之前沒有展開。
+
+型別巨集沿用 453 的別名：值是 `pair<…>` 也收，引擎在型別文字上展開；一般宣告的型別展開成 pair 之後走 pair 那顆同一套寫法（`pairDeclLine`，從 pair_declare 抽出來共用）。成員巨集是新的一種別名：引擎把成員名換掉——**只在那個名字整支程式都只當成員名用時**。C++ 的巨集到處都換（`#define x first` 之後 `int x` 是 `int first`），別處也出現就整個不展開、`#define` 那一句照實保留（`isExpandedAlias`）。`#define pb push_back` 不在這裡：`v.pb(x)` lift 成一個叫 pb 的方法呼叫，要換得在 lift 之前展開。
+
+453 那支「`#define F first` 要保留」的判決例轉成換得過去、判決相同。
+
+**結果**：StudyCpp 換得過去 86 → 86，沒有掉支、輸出沒變。用到成員／pair 巨集的 18 支裡，巨集不再是擋路的那一項；**9 支現在只剩 `range_sort`**（等 Cella 的 sort 變快），4_15 系列另有 multiset 與它的迭代器。

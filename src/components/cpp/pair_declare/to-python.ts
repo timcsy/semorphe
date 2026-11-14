@@ -6,22 +6,8 @@
  * 來源是另一個 pair 的（`= q`、`= f()`）只收型別一模一樣的——不同的要逐格轉換，不猜
  */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { intValue, zeroOf, sameType } from '../../../languages/cpp/to-python/contract'
+import { pairDeclLine } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
-  r.stmt((n, py, depth) => {
-    const name = py.name(String(n.properties.name ?? ''))
-    const types = [String(n.properties.type1 ?? ''), String(n.properties.type2 ?? '')]
-    const zeros = types.map(zeroOf)
-    if (zeros.some((z) => z === undefined)) return [py.keep(n, 'outside-subset', `pair<${types.join(', ')}> 還沒有對應`)]
-    const src = n.slots.source?.[0]
-    const line = (v: string): string[] => [`${py.indent(depth)}${name} = ${v}`]
-    if (!src) return line(`(${zeros.join(', ')})`)
-    // 兩個值（`{a, b}`、`make_pair(a, b)`）：問形狀——values 槽恰好兩個，或 first／second 兩個槽
-    const parts = src.slots?.values?.length === 2 ? src.slots.values
-      : src.slots?.first?.length && src.slots?.second?.length ? [src.slots.first[0], src.slots.second[0]] : undefined
-    if (parts) return line(`(${parts.map((v, k) => intValue(types[k], py.typeOf(v), py.expr(v))).join(', ')})`)
-    if (!sameType(py.typeOf(src), `pair<${types.join(',')}>`)) return [py.keep(n, 'needs-types', `放進 pair<${types.join(', ')}> 的值型別是 ${py.typeOf(src) ?? '不知道'}`)]
-    return line(py.expr(src))
-  })
+  r.stmt((n, py, depth) => [`${py.indent(depth)}${pairDeclLine(n, py.name(String(n.properties.name ?? '')), [String(n.properties.type1 ?? ''), String(n.properties.type2 ?? '')], n.slots.source?.[0], py)}`])
 }
