@@ -1404,6 +1404,18 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       if (nameNode?.type === 'qualified_identifier' && nameNode.children.some((c) => c?.isMissing === true)) {
         return degrade(buildRawCode(node.text), '回傳型別與名字之間的屬性巨集（IRAM_ATTR 以外的）還裝不下')
       }
+      // 🔴 477（2026-11-15）：`int sq(int x) noexcept {…}` 的 noexcept 原本被安靜地丟掉——產回去是 `int sq(int x)`，
+      //    「丟出例外就 terminate」變成「例外往外傳」。一般函式這顆沒有地方放它（StudyCpp、課文 0 處，不值得在最常用的積木上多一個下拉）
+      //    ——照實降級，與類別裡的方法同一個處置。類別裡的建構子有那一格（476）。
+      //    同一個洞還有兩個形狀（一起量到的）：`auto f() -> long` 的尾置回傳型別被丟掉（回傳型別變成從 return 推導）、
+      //    自由函式的 `int f() const`（編不過）被產成一支編得過的程式。⟹ 名字與參數串以外的任何東西都照實降級。
+      const extraDecl = fnDecl.namedChildren.find((c) => c.startIndex !== nameNode?.startIndex && c.type !== 'parameter_list')
+      if (extraDecl && nameNode?.type !== 'qualified_identifier') {
+        return degrade(buildRawCode(node.text), `函式宣告子上的「${extraDecl.text}」尚未支援（一般函式沒有地方放它）`)
+      }
+      if (extraDecl?.type === 'noexcept' || extraDecl?.type === 'trailing_return_type') {
+        return degrade(buildRawCode(node.text), `類別外定義的成員函式上的「${extraDecl.text}」尚未支援`)
+      }
       if (nameNode?.type === 'qualified_identifier') {
         const trailingConst = fnDecl.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'const')
         const ctorOrDtor = !node.childForFieldName('type') || nameNode.namedChildren.some((c) => c.type === 'destructor_name')
@@ -2291,6 +2303,9 @@ export function registerCppLiftStrategies(registry: LiftStrategyRegistry): void 
       //
       // → 改成呼叫那一份，缺陷與重複一起消失。
       // 🟢 438：中斷函式的原型（`void IRAM_ATTR f(…);`）由樹修復 ⑤（`misparse.ts`）擦掉巨集重解、屬性記回 `attribute`——不會走到這裡
+      // 🔴 477：原型上名字與參數串以外的東西（`int f() noexcept;`、`auto f() -> long;`）原本被安靜地丟掉——與定義那條路同一個處置：照實降級
+      const extraProto = funcDeclarator.namedChildren.find((c) => c.startIndex !== nameNode?.startIndex && c.startIndex !== paramList?.startIndex)
+      if (extraProto) return degrade(buildRawCode(node.text), `函式原型上的「${extraProto.text}」尚未支援（沒有地方放它）`)
       return buildForwardDecl(type, nameNode?.text ?? 'f', liftParamList(paramList ?? null, ctx))
     }
 
