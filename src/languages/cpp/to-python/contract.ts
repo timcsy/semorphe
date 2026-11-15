@@ -203,13 +203,15 @@ export function truncatedRemainder(l: SemanticNode | undefined, r: SemanticNode 
  * stack → list（尾端進出）、queue → collections.deque（前端出）、priority_queue → heapq 的 list（max 版本存負數）。
  * 元素只收「放進去就不會被改」的純量（數字、字元、字串）；priority_queue 只收整數（存負數要精確，浮點的 -0.0／NaN 會亂序）。對不上 → undefined
  */
-export type AdapterKind = 'stack' | 'queue' | 'minheap' | 'maxheap'
+export type AdapterKind = 'stack' | 'queue' | 'deque' | 'minheap' | 'maxheap'
 export function adapterKind(t: string | undefined): AdapterKind | undefined {
   const s = (t ?? '').replace(/^const\s+/, '').replace(/\s*[&*]$/, '').replace(/std::/g, '').replace(/\s+/g, ' ').trim()
   const scalar = '(?:int|long|long long|short|double|char|string|bool)'
   const integer = '(?:int|long|long long|short)'
   if (new RegExp(`^stack ?< ?${scalar} ?>$`).test(s)) return 'stack'
   if (new RegExp(`^queue ?< ?${scalar} ?>$`).test(s)) return 'queue'
+  // std::deque（475）→ collections.deque：兩端進出、[i]、len、clear、走訪都同名同義
+  if (new RegExp(`^deque ?< ?${scalar} ?>$`).test(s)) return 'deque'
   if (new RegExp(`^priority_queue ?< ?${integer} ?>$`).test(s)) return 'maxheap'
   if (new RegExp(`^priority_queue ?< ?${integer} ?, ?vector ?< ?${integer} ?> ?, ?less ?< ?${integer} ?> ?>$`).test(s)) return 'maxheap'
   if (new RegExp(`^priority_queue ?< ?(${integer}) ?, ?vector ?< ?\\1 ?> ?, ?greater ?< ?\\1 ?> ?>$`).test(s)) return 'minheap'
@@ -404,6 +406,8 @@ export const sameType = (a: string | undefined, b: string | undefined): boolean 
 export function elementValue(elem: string | undefined, v: SemanticNode | undefined, py: ToPythonContext): string | undefined {
   if (!v) return undefined
   if (/^vector ?</.test(bare(elem))) return `list(${py.expr(v)})`
+  // 元素是 queue／deque（475）：C++ 放進去的是複製的一份——第一版不換
+  if (/^(queue|deque) ?</.test(bare(elem))) return undefined
   const el = pairElements(elem)
   if (el) {
     const parts = v.slots?.values?.length === 2 ? v.slots.values : v.slots?.first?.length && v.slots?.second?.length ? [v.slots.first[0], v.slots.second[0]] : undefined
