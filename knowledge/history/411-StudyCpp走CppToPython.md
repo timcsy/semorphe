@@ -184,3 +184,13 @@ Cella 升到 0249 之後，`[0] * N` 不再讓 Python 那一側當掉，蓋在�
 - 呼叫自己定義的函式：照那個函式每個參數的型別轉換引數（`int g(int x)` 收到 `2.5` 是 `2`）。同名的函式有兩種參數型別（多載）就認不出是哪一個，整支保留。
 
 窗口要求一起查同一類的寫法：`x += 2.5`（462 已經換成 `int(x + 2.5)`）與 `(int)d`（換成 `int(d)`）兩處本來就對，沒有改。
+
+## 後續：475——queue 與 std::deque 換成 collections.deque
+
+448 寫好了 queue 的寫法，卻因為 Cella 的 Python 判不出 `collections` 而先保留。Cella 0249 起判得出 `collections.deque`，這一刀把保留拿掉，並接上 std::deque（StudyCpp 有 12 支卡在它）。
+
+**決定**：`deque<純量>` 和 queue 一樣換成 `collections.deque`。兩端進出換成 `append`／`appendleft`／`pop`／`popleft`，`front`／`back` 換成 `[0]`／`[-1]`；`[i]`、`len`、`clear`、走訪都同名同義。
+
+⚠️ **複製的地方**：C++ 的 `b = a`、`deque<int> b = a;` 是複製一份，Python 的 `b = a` 是同一個物件。所以寫成 `collections.deque(a)`，queue 的指定同樣處理；448 只處理了 vector 與 stack，queue 當時是保留的，所以沒有出事。放進 vector 的 deque、用一段範圍建構 deque，第一版照實保留。
+
+Cella 0249 的 C++ 那側 std::deque 沒有 `clear`，整支判成 unknown，已回報 cella。
