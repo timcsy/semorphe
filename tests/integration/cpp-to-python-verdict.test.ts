@@ -286,7 +286,8 @@ describe('C++ → Python：意思會變的反例', () => {
     ['char 當鍵（大於 127 的字元兩邊順序不同）', 'int main() {\n    map<char, int> m;\n    m[\'a\'] = 1;\n    cout << m.size() << endl;\n    return 0;\n}\n', 'map<char, int>'],
     // ⏳ 等 Cella：走訪時包了 sorted，而 Cella 對裝字串的 set 仍帶 str.hash 的假設（450 回報）——收斂後改成換過去、cpp-advanced 下限 9 → 10
     ['set<string>（等 Cella 收斂 str.hash 假設）', 'int main() {\n    set<string> a;\n    a.insert("b");\n    for (string x : a) cout << x;\n    return 0;\n}\n', 'str.hash'],
-    ['unordered_map、multiset（走訪順序、重複鍵）', 'int main() {\n    unordered_map<int, int> m;\n    m[1] = 2;\n    multiset<int> ms;\n    cout << m.size() << endl;\n    return 0;\n}\n', 'unordered_map'],
+    // 469 起 unordered_map 換得過去（走訪照實保留並提示順序未定），這一例只剩 multiset 擋著
+    ['multiset（重複鍵）', 'int main() {\n    unordered_map<int, int> m;\n    m[1] = 2;\n    multiset<int> ms;\n    cout << m.size() << endl;\n    return 0;\n}\n', 'multiset'],
   ] as const) {
     it(`🔴 保留：${name}（450）`, async () => {
       const r = await toPython(K + code)
