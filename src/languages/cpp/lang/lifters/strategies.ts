@@ -1005,7 +1005,14 @@ export function liftClassMember(node: AstNode, className: string, ctx: LiftConte
       const inits = liftFieldInitializers(node, ctx)
       if (!inits) return degrade(buildRawCode(node.text), '成員初始化列裡有多個引數或大括號串列（`m(a, b)`、`c{1, 2, 3}`）尚未支援')
       const body = extractBodyWithParams(bodyNode, params, ctx)
-      return buildConstructor({ class_name: className }, { params, inits, body })
+      // 🔴 476（2026-11-15，cella 問 constexpr 建構子的介面時實測到）：`explicit`／`constexpr` 原本被安靜地丟掉——
+      //    來回一趟 `explicit P(int)` 變成 `P(int)`（多了隱含轉換），Cella 也收不到。各記一格屬性。
+      const ctorExplicit = node.namedChildren.some((c) => c.type === 'explicit_function_specifier' && c.text === 'explicit')
+      const ctorConstexpr = node.namedChildren.some((c) => c.type === 'type_qualifier' && c.text === 'constexpr')
+      //    `noexcept` 也一樣（送 Cella 的 mbCtor.noexc）；`noexcept(條件)` 沒有地方放那個條件——原樣保留、照實降級
+      const ctorNoexcept = declNode?.namedChildren.find((c) => c.type === 'noexcept')
+      if (ctorNoexcept && ctorNoexcept.namedChildren.length > 0) return degrade(buildRawCode(node.text), '`noexcept(條件)` 的建構子尚未支援')
+      return buildConstructor({ class_name: className, is_explicit: ctorExplicit ? 'true' : 'false', is_constexpr: ctorConstexpr ? 'true' : 'false', is_noexcept: ctorNoexcept ? 'true' : 'false' }, { params, inits, body })
     }
 
     // Destructor: function_definition where declarator is destructor_name

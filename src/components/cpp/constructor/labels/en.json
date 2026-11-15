@@ -1,6 +1,15 @@
 {
-  "C_CONSTRUCTOR_MSG0": "Initialize %1 (%2) (constructor)",
+  "C_CONSTRUCTOR_MSG0": "Initialize %1 (%2) (constructor) %3 %4 %5",
   "C_CONSTRUCTOR_MSG1": "initialize members %1",
   "C_CONSTRUCTOR_MSG2": "%1",
-  "C_CONSTRUCTOR_TOOLTIP": "Define a constructor that initializes the object when created"
+  "C_CONSTRUCTOR_TOOLTIP": "Define a constructor that initializes the object when created",
+  "C_CONSTRUCTOR_EXPLICIT_NO": "(allows implicit conversion)",
+  "C_CONSTRUCTOR_EXPLICIT_YES": "explicit (no implicit conversion)",
+  "C_CONSTRUCTOR_CONSTEXPR_NO": "(built at run time)",
+  "C_CONSTRUCTOR_CONSTEXPR_YES": "constexpr (can be built at compile time)",
+  "FLOW_SLOT_CPP_CONSTRUCTOR_IS_EXPLICIT": "Implicit conversion",
+  "FLOW_SLOT_CPP_CONSTRUCTOR_IS_CONSTEXPR": "Compile-time construction",
+  "C_CONSTRUCTOR_NOEXCEPT_NO": "(may throw)",
+  "C_CONSTRUCTOR_NOEXCEPT_YES": "noexcept (never throws)",
+  "FLOW_SLOT_CPP_CONSTRUCTOR_IS_NOEXCEPT": "Throws exceptions"
 }

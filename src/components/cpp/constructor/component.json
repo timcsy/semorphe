@@ -6,8 +6,12 @@
       "name": "class_name",
       "kind": "literal",
       "default": "MyClass"
-    }
+    },
+    { "name": "is_explicit", "kind": "enum", "default": "false" },
+    { "name": "is_constexpr", "kind": "enum", "default": "false" },
+    { "name": "is_noexcept", "kind": "enum", "default": "false" }
   ],
+  "_properties_why": "`is_explicit`／`is_constexpr`／`is_noexcept` 是 476（2026-11-15）補的：原本 lift 把這兩個修飾安靜地丟掉（`explicit P(int)` 來回一趟多了隱含轉換）。explicit 送 Cella 的 `mbCtor.expl`；noexcept 送 `mbCtor.noexc`（`noexcept(條件)` 照實降級）；constexpr 等 Cella 的 `mbCtor.constexpr`（選填布林，cella 11-15 談定、第五輪發）。",
   "slots": {
     "params": "statements",
     "inits": "statements",
