@@ -14501,3 +14501,14 @@ python-bridge/05 #3      「dict 也可以」—— 它在教一個新形式,不
 - **教訓**：「舊版共用新的依賴」只在依賴向下相容時成立。一次不相容的升級，壞的是**還沒升級的那一份**，而那一份不在任何測試裡。
 - **處方**：`build-site.sh` 現在比對兩個 ref 的 `package-lock.json`，不同就在舊版的 worktree 自己 `npm ci`。
   升級任何會改語法或格式的依賴之後，本機跑一次 `bash tools/build-site.sh verified HEAD` 再推。
+
+### 一個判決有四格，只讀兩格就會把「當掉」讀成「沒印東西」
+
+- **實際發生（2026-11-15，480）**：實測 C++→Python 的疑似失真，探針對每一支只比 `verdict` 和 `out`。
+  `s = s + 'c'` 被換成 `s + ord("c")`，Python 那邊讀到「accept、輸出空字串」，我當成 Cella 判錯回報了 cella。
+  cella 查過，完整的判決是 `accept`、`exit: 1`、`problems` 裡有 `uncaught` 的 `TypeError`，訊息和 CPython 一字不差。
+  Cella 照它的 README 定義，把未接住的例外判成 accept，例外記在 `problems`（semorphe 自己的 `stop-of-verdict.ts` 也這樣對應）。
+- **教訓**：`verdict` 回答的是「這支程式合不合法」，**不是**「它有沒有跑完」。只讀 `verdict` 和 `out`，一支在中途丟例外的程式，和一支正常跑完、什麼都沒印的程式長得一模一樣。
+  而這次把自己的量測錯誤說成別人的判錯，回報出去了。
+- **處方**：比兩邊判決時，四格都比：`verdict`、`out`、`exit`、`problems`（至少看種類）。回報「Cella 判錯」之前，先把完整的判決 JSON 印出來看一次。
+  與〈一個量測工具，在它自己被量過之前〉同一族：探針自己的讀法也要先被量過。
