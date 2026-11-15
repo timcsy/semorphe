@@ -1,6 +1,6 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { paren, isChar, isNarrowInt, isSignedInt, truncatedRemainder, intValue, writeTo, updateTo } from '../../../languages/cpp/to-python/contract'
+import { paren, isChar, isNarrowInt, isSignedInt, truncatedRemainder, intValue, isUnsignedInt, writeTo, updateTo } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
@@ -44,7 +44,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
     }
     if (!['+=', '-=', '*='].includes(op)) return [py.keep(n, 'outside-subset', `運算子 ${op} 還沒有對應`)]
     // 浮點加進整數（`x += 2.5`）：C++ 算完再截斷回整數（[expr.ass]p7：E1 op= E2 ＝ E1 = E1 op E2）⟹ int(…)；之前寫成 `x += 2.5`、x 變成浮點（450 量到）
-    const whole = intValue(t, py.typeOf(value), `${tg.text} ${op[0]} ${paren(value, py)}`)
+    // 無號整數的 -=（480）：同 arithmetic 的無號相減
+    if (op === '-=' && isUnsignedInt(t)) return [py.keep(n, 'overflow', `無號整數的 -=（型別 ${t}）：小減大時 C++ 會繞回、Python 會變成負數`)]
+    const whole = intValue(py, t, value, `${tg.text} ${op[0]} ${paren(value, py)}`)
     if (whole.startsWith('int(')) return ind(`${py.indent(depth)}${writeTo(tg, whole)}`)
     return ind(`${py.indent(depth)}${tg.assign ? updateTo(tg, op[0], paren(value, py)) : `${tg.text} ${op} ${py.expr(value)}`}`)
   })

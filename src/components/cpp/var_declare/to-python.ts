@@ -1,6 +1,6 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { isChar, intValue, pairElements, pairDeclLine } from '../../../languages/cpp/to-python/contract'
+import { isChar, intValue, chrValue, pairElements, pairDeclLine } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
@@ -20,9 +20,11 @@ export function registerToPython(r: ToPythonRegistrar): void {
     // char 變數：Python 用長度 1 的字串；初值是整數 ⟹ chr()（364）
     if (type === 'char') {
       if (!init) return [`${py.indent(depth)}${name} = chr(0)`]
-      return [`${py.indent(depth)}${name} = ${isChar(py.typeOf(init)) || init.properties?.char !== undefined ? py.expr(init) : `chr(${py.expr(init)})`}`]
+      return [`${py.indent(depth)}${name} = ${isChar(py.typeOf(init)) || init.properties?.char !== undefined ? py.expr(init) : chrValue(py, init)}`]
     }
-    if (init) return [`${py.indent(depth)}${name} = ${intValue(type, py.typeOf(init), py.expr(init))}`]
+    // float（480）：C++ 是單精度（`float f = 16777217` 存成 16777216），Python 的 float 是雙精度 ⟹ 照實保留
+    if (/^(const\s+)?float$/.test(type)) return [py.keep(n, 'outside-subset', 'float 是單精度，Python 的 float 是雙精度')]
+    if (init) return [`${py.indent(depth)}${name} = ${intValue(py, type, init)}`]
     // 沒有初值：照型別給一個起始值（讀到沒初始化的值在 C++ 是未定義行為，Cella 會先判出來）
     const zero = /^(int|long|long long|short|unsigned.*)$/.test(type) ? '0' : type === 'double' || type === 'float' ? '0.0' : type === 'bool' ? 'False' : null
     if (zero === null) return [py.keep(n, 'outside-subset', `型別「${type}」的宣告還沒有對應`)]

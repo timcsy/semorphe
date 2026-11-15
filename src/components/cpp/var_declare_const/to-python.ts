@@ -14,6 +14,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (!ARITH.test(type) || n.properties.init_style === 'constructor' || init.length !== 1) {
       return [py.keep(n, 'outside-subset', `常數「${type} ${String(n.properties.name ?? '')}」的宣告還沒有對應`)]
     }
-    return [`${py.indent(depth)}${py.name(String(n.properties.name ?? ''))} = ${intValue(type, py.typeOf(init[0]), py.expr(init[0]))}`]
+    return [`${py.indent(depth)}${py.name(String(n.properties.name ?? ''))} = ${intValue(py, type, init[0])}`]
   })
 }

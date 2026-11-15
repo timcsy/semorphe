@@ -1,7 +1,7 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { isLineBreak } from '../../../languages/cpp/lang/node-traits'
-import { isFlushNode, setWidthOf, isIoManipNode } from '../../../languages/cpp/to-python/contract'
+import { isFlushNode, setWidthOf, isIoManipNode, logicLeaksOperand } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   // `cout << a << b << endl` → print(a, b, sep="")；沒有 endl 結尾 → end=""。值照型別：double 用 :g（同 cout 預設）、bool 印 0／1
@@ -48,6 +48,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
 function shown(v: import('../../../core/types').SemanticNode, py: import('../../../languages/cpp/to-python/contract').ToPythonContext): string {
   const e = py.expr(v)
   if (v.properties?.value !== undefined && !v.slots?.left && Object.keys(v.slots ?? {}).length === 0 && typeof v.properties.value === 'string' && /^"/.test(e)) return e
+  // `cout << (a && b)`（a、b 是整數；480）：Python 的 `a and b` 回傳運算元本身，int(3 and 5) 是 5、C++ 印 1 ⟹ 照實保留
+  if (logicLeaksOperand(v, py)) return py.keep(v, 'outside-subset', '把 && 或 || 的結果印出來，而運算元不是 bool：Python 的 and／or 回傳運算元本身')
   if (py.yieldsBool(v)) return `int(${e})`
   const t = (py.typeOf(v) ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '')
   if (t === 'double' || t === 'float' || t === 'long double') return `format(${e}, "g")`

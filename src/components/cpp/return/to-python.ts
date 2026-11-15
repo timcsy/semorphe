@@ -13,6 +13,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     }
     const v = n.slots.value?.[0]
     // 473：C++ 照函式的回傳型別轉換（`long long f() { return 1e9; }` 回傳的是整數）——整數截斷、bool 包 bool(…)，同指定那一路
-    return [`${py.indent(depth)}return${v ? ` ${intValue(py.returnType, py.typeOf(v), py.expr(v))}` : ''}`]
+    return [`${py.indent(depth)}return${v ? ` ${intValue(py, py.returnType, v)}` : ''}`]
   })
 }

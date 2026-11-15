@@ -15,6 +15,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const et = py.typeOf(n) ?? py.elementTypeOf(o)?.replace(/^(?:std::)?vector\s*<\s*(.*?)\s*>$/, '$1')
     if (et === undefined && /^(const\s+)?(double|float|long double)/.test(py.typeOf(value) ?? '')) return [py.keep(n, 'needs-types', `放進 ${o} 的值是浮點，而不知道 ${o} 的元素型別`)]
     const target = `${o}[${py.expr(n.slots.row?.[0])}][${py.expr(n.slots.col?.[0])}]`
-    return [`${py.indent(depth)}${target} = ${intValue(et, py.typeOf(value), py.expr(value))}`]
+    return [`${py.indent(depth)}${target} = ${intValue(py, et, value)}`]
   })
 }
