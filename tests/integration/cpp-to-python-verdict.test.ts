@@ -317,10 +317,12 @@ describe('C++ → Python：意思會變的反例', () => {
     // 攤平到頂層之後 main 的 n 就是全域的 n：f 讀到 3（C++ 讀到 5）
     ['main 裡宣告了與全域同名的變數', 'int n = 5;\nvoid f() { cout << n << endl; }\nint main() {\n    int n = 3;\n    f();\n    cout << n << endl;\n    return 0;\n}\n'],
   ] as const) {
-    it(`🔴 保留：${name}（451）`, async () => {
+    // 451 保留；473 起區域那一個換名（g_2／n_2），全域照舊
+    it(`🟢 ${name}：區域那一個換名；判決相同（451 → 473）`, async () => {
       const r = await toPython(H + code)
-      expect(r.code, '換了').toBeNull()
-      expect(r.reasons.map((x) => x.detail).join()).toContain('同名')
+      expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+      expect(r.code!).toMatch(/\b[gn]_2\b/)
+      await sameVerdict(H + code, r.code!, '')
     }, 60_000)
   }
   // ── 453：字面量裡的跳脫序列 ──
@@ -527,16 +529,28 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code, '換了').toBeNull()
     expect(r.reasons.map((x) => x.detail).join()).toContain('continue')
   }, 60_000)
-  // 之前換得過去而兩邊印的不同（C++ 100、Python 2）——計次迴圈 `for i in range` 改到外層的 i：靜默失真
-  it('🔴 保留：內層宣告了與外層同名的變數（Python 一個函式只有一層作用域）（456）', async () => {
-    for (const body of ['    int i = 100;\n    for (int i = 0; i < 3; i++) {\n    }\n    cout << i << endl;\n', '    int i = 100;\n    if (i > 0) {\n        int i = 5;\n        cout << i;\n    }\n    cout << i << endl;\n']) {
-      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
-      expect(r.code, `換了：${body}`).toBeNull()
-      expect(r.reasons.map((x) => x.detail).join()).toContain('同名的變數「i」')
+  // 之前換得過去而兩邊印的不同（C++ 100、Python 2）——計次迴圈 `for i in range` 改到外層的 i：靜默失真。456 保留；473 起內層那一個換名
+  it('🟢 內層宣告了與外層同名的變數：內層換名（i_2），外層的不受影響；判決相同（456 → 473）', async () => {
+    for (const body of ['    int i = 100;\n    for (int i = 0; i < 3; i++) {\n    }\n    cout << i << endl;\n', '    int i = 100;\n    if (i > 0) {\n        int i = 5;\n        cout << i;\n    }\n    cout << i << endl;\n',
+      // 巢狀的同名迴圈（StudyCpp 22_tioj1161_2t 的形狀）：內層的 i 當陣列索引、讀進陣列；外層的 i 在內層之後還用
+      '    int a[3];\n    int s = 0;\n    for (int i = 0; i < 2; i++) {\n        for (int i = 0; i < 3; i++) {\n            a[i] = i * 10;\n            s += a[i];\n        }\n        s += i;\n    }\n    cout << s << " " << a[2] << endl;\n']) {
+      const src = `${H}int main() {\n${body}    return 0;\n}\n`
+      const r = await toPython(src)
+      expect(r.code, `沒換：${body}${JSON.stringify(r.reasons)}`).not.toBeNull()
+      expect(r.code!).toContain('i_2')
+      await sameVerdict(src, r.code!, '')
     }
-    // 正向錨點：並排的兩個 for (int i…) 不算（前一個的作用域已經結束）
+    // 正向錨點：並排的兩個 for (int i…) 不算（前一個的作用域已經結束）——不換名
     const ok = await toPython(H + 'int main() {\n    int s = 0;\n    for (int i = 0; i < 3; i++) s += i;\n    for (int i = 0; i < 2; i++) s += i;\n    cout << s << endl;\n    return 0;\n}\n')
     expect(ok.code, JSON.stringify(ok.reasons)).not.toBeNull()
+    expect(ok.code!).not.toContain('i_2')
+  }, 60_000)
+  it('🟢 函式裡參數與內層同名、內層宣告了與外層同名而換名的名字已被用過（473）', async () => {
+    const src = H + 'int f(int i) {\n    int s = 0;\n    for (int i = 0; i < 3; i++) s += i;\n    int i_2 = 7;\n    return s * 100 + i + i_2;\n}\nint main() {\n    cout << f(4) << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code!).toContain('i_3')
+    await sameVerdict(src, r.code!, '')
   }, 60_000)
   it('🔴 保留：放不進 JSON 數字的十進位字面量（9000000000000000001）——Cella 那一側照實翻不出，不送一個被捨入的值（456）', async () => {
     const src = H + 'int main() {\n    long long a = 9000000000000000001LL;\n    cout << a % 7 << endl;\n    return 0;\n}\n'
@@ -661,6 +675,24 @@ describe('C++ → Python：意思會變的反例', () => {
     const rt = await toPython(t)
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
+  }, 60_000)
+  // ── 473：回傳值與引數照宣告的型別轉換（StudyCpp 7_5_TLE：`ll DFS(…) { … return 1e9; }`，C++ 印 1000000000、Python 印 1000000000.0）──
+  it('🟢 long long f() { return 1e9; }、int 回傳 2.7、bool 回傳 x * 5：照回傳型別轉換；判決相同（473）', async () => {
+    const src = H + '#define ll long long\nll f(int x) {\n    if (x > 0) return 1e9;\n    return 2.7;\n}\nbool b(int x) {\n    return x * 5;\n}\nint main() {\n    int k;\n    cin >> k;\n    cout << f(k) << " " << f(-k) << " " << b(k) << b(0) << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '3\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('return int(1e9)')
+    for (const stdin of ['3\n', '-2\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🟢 int g(int x) 收到 2.5、bool 參數收到 3：進函式時照參數型別轉換；判決相同（473）', async () => {
+    const src = H + 'int g(int x, bool on) {\n    if (on) return x + 1;\n    return x;\n}\nint main() {\n    double d;\n    cin >> d;\n    cout << g(d, 3) << " " << g(3.9, 0) << " " << g(7, d > 1) << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '2.5\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    for (const stdin of ['2.5\n', '0.5\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：同名函式有兩種參數型別（多載）（473）', async () => {
+    const r = await toPython(H + 'int g(int x) {\n    return x;\n}\ndouble g(double x) {\n    return x / 2;\n}\nint main() {\n    cout << g(3) << " " << g(3.0) << endl;\n    return 0;\n}\n')
+    expect(r.code, r.code ?? '').toBeNull()
   }, 60_000)
   // ── 471：C++ 的替代拼法 or／and／not（lift 成主拼法）──
   it('🟢 if (x > 100 or x < 0)、and、not：替代拼法換得過去；判決相同（471）', async () => {

@@ -1,5 +1,6 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
+import { intValue } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
@@ -11,6 +12,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
       return [`${py.indent(depth)}raise SystemExit`]
     }
     const v = n.slots.value?.[0]
-    return [`${py.indent(depth)}return${v ? ` ${py.expr(v)}` : ''}`]
+    // 473：C++ 照函式的回傳型別轉換（`long long f() { return 1e9; }` 回傳的是整數）——整數截斷、bool 包 bool(…)，同指定那一路
+    return [`${py.indent(depth)}return${v ? ` ${intValue(py.returnType, py.typeOf(v), py.expr(v))}` : ''}`]
   })
 }
