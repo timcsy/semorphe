@@ -19,6 +19,10 @@ export interface ToPythonContext {
   indent(depth: number): string
   /** 正在寫 `main` 的本體嗎（攤平到頂層：`return 0` 不寫、其他 return 保留） */
   readonly inMain: boolean
+  /** 正在寫的函式的回傳型別（473：`long long f() { return 1e9; }` C++ 照回傳型別轉成整數、Python 原樣回傳浮點）；不在函式裡是 undefined */
+  readonly returnType: string | undefined
+  /** 在 f 裡把 `returnType` 設成 t（func_def 寫本體時用） */
+  withReturnType<T>(t: string | undefined, f: () => T): T
   /** 把 `main` 的本體寫在頂層（depth 0），期間 `inMain` 為真 */
   blockAsMain(nodes: readonly SemanticNode[] | undefined): string[]
   /** 這顆函式是骨架宣告的進入點嗎（問骨架宣告，不寫死 `main`——第八十六條之二） */
@@ -27,6 +31,8 @@ export interface ToPythonContext {
   name(s: string): string
   /** 這個名字是程式自己定義的函式嗎（標準函式庫的呼叫第一版不換） */
   isUserFunction(name: string): boolean
+  /** 程式自己定義的函式每個參數的型別（473：引數照參數型別轉換）；不是自己的函式、或同名而參數型別不同（多載）是 undefined */
+  paramTypesOf(name: string): readonly string[] | undefined
   /** 這顆節點產生 bool 嗎（元件自己宣告的，`r.yieldsBool`）——印的時候 C++ 印 0／1、Python 印 True／False */
   yieldsBool(n: SemanticNode | undefined): boolean
   /** 程式需要引入某個 Python 模組（`math`）——引擎在檔頭補上 `import …`，回傳模組名 */

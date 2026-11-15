@@ -204,7 +204,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
       if (sl !== undefined) return [py.keep(n, 'outside-subset', `函式「${name}」的內層宣告了與外層同名的變數「${sl}」——Python 一個函式只有一層作用域，換名的範圍裡有認不出是不是這個變數的地方`)]
       return [py.keep(n, 'outside-subset', `函式「${name}」裡宣告了與全域變數「${shadowedGlobal(n.slots.body ?? [], py) ?? ''}」同名的變數——換名的範圍裡有認不出是不是這個變數的地方`)]
     }
-    const body = py.block(src, depth + 1)
+    const body = py.withReturnType(String(n.properties.return_type ?? ''), () => py.block(src, depth + 1))
     // 451：函式裡重新指定全域變數（`g = 5`、`g++`、`total += x`）——不寫 `global`，Python 把它當成新的區域變數
     // （C++ 印 5、Python 印 0；先讀再改的直接 UnboundLocalError）。參數與全域同名時參數本來就是區域的
     const paramNames = new Set(params)

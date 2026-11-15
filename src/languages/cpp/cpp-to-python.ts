@@ -176,11 +176,18 @@ export function convertCppToPython(
   const { tree, members: expandedMembers } = expandTypeAliases(input, t)
   // 程式自己定義的函式名（問形狀：有 params 槽、有名字的節點）——呼叫它們才換，標準函式庫的第一版不換
   const userFunctions = new Set<string>()
+  const paramTypes = new Map<string, string[] | null>()
   const declaredStrings = new Set<string>()
   const elementTypes = new Map<string, string | null>()
   const varTypes = new Map<string, string | null>()
   const scan = (n: SemanticNode): void => {
-    if (n.slots?.params !== undefined && typeof n.properties?.name === 'string') userFunctions.add(n.properties.name)
+    if (n.slots?.params !== undefined && typeof n.properties?.name === 'string') {
+      userFunctions.add(n.properties.name)
+      // 每個參數的型別（473：`int g(int x)` 收到 2.5，C++ 進函式時就截成 2、Python 原樣傳 2.5）——同名而參數型別不同（多載）就不知道（null）
+      const ts = n.slots.params.map((p) => String(p.properties?.type ?? ''))
+      const had = paramTypes.get(n.properties.name)
+      paramTypes.set(n.properties.name, had === undefined || (had !== null && had.join('|') === ts.join('|')) ? ts : null)
+    }
     // 每一個宣告的名字與型別（462）——問形狀：有名字、有型別、不是函式（沒有 params 槽）；計次迴圈的變數在 var_name。
     // 同一個名字宣告過兩種（不同函式裡的同名變數、參數）就不知道（null）——寧可不知道，不可拿錯的型別去截斷
     // pair 的宣告把兩個元素型別分成 type1／type2 兩個屬性（465）——問形狀：兩個都在就是 `pair<type1, type2>`
@@ -203,6 +210,7 @@ export function convertCppToPython(
   }
   for (const n of tree.slots?.body ?? []) noteGlobal(n)
   let inMain = false
+  let returnType: string | undefined
   let needTokens = false, needProbe = false, needLines = false, needChar = false, needBool = false
   let needTruncMod = false
   let needTruncDiv = false, needTruncMod64 = false
@@ -218,11 +226,17 @@ export function convertCppToPython(
     Object.values(x.slots ?? {}).some((kids) => kids.some(callsUserFunction))
   const py: ToPythonContext = {
     get inMain() { return inMain },
+    get returnType() { return returnType },
+    withReturnType(rt, f) {
+      const was = returnType; returnType = rt
+      try { return f() } finally { returnType = was }
+    },
     blockAsMain(nodes) {
       const was = inMain; inMain = true
       try { return (nodes ?? []).flatMap((c) => stmt(c, 0)) } finally { inMain = was }
     },
     isUserFunction: (name) => userFunctions.has(name),
+    paramTypesOf: (name) => paramTypes.get(name) ?? undefined,
     isGlobal: (name) => globals.has(name),
     writtenBy: (n) => t.writes.get(n.componentId)?.(n) ?? [],
     name: (s) => (PY_KEYWORDS.has(s) ? `${s}_` : s),
