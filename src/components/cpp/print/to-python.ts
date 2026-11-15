@@ -17,10 +17,27 @@ export function registerToPython(r: ToPythonRegistrar): void {
       lines.push(`${py.indent(depth)}print(${args.join(', ')})`)
       seg = []
     }
-    for (const v of values) {
+    // `setw(n)`（479）：只影響下一個印出的值，靠右、補空白 ⟹ `str(值).rjust(n)`，逐字相同。
+    // fill／precision 會一直生效、不在這裡收（照實保留——程式裡有它們時整支本來就保留，所以 rjust 不會遇到 setfill／left）。
+    // 後面沒有值（接 endl 或句尾）：寬度留給下一句的第一個值（endl 不是格式化輸出、不用掉寬度）⟹ 保留
+    let width: string | undefined
+    for (let i = 0; i < values.length; i++) {
+      const v = values[i]
+      if (v.componentId === 'cpp:io_mode' && String(v.properties.setting ?? 'width') === 'width') {
+        const next = values[i + 1]
+        const w = v.slots.value?.[0]
+        if (width !== undefined || !next || !w || isLineBreak(next.componentId) || isFlushNode(next) || next.componentId === 'cpp:io_mode' || !/^(int|short|long|long long)$/.test(py.typeOf(w) ?? '')) {
+          lines.push(py.keep(v, 'outside-subset', 'setw 後面沒有緊接著一個要印的值（寬度會留到下一次輸出）'))
+          continue
+        }
+        width = py.expr(w)
+        continue
+      }
       if (isLineBreak(v.componentId)) { flush(true); continue }
       if (isFlushNode(v)) continue
-      seg.push(shown(v, py))
+      const s = shown(v, py)
+      seg.push(width !== undefined ? `str(${s}).rjust(${width})` : s)
+      width = undefined
     }
     if (seg.length > 0) flush(false)
     return lines

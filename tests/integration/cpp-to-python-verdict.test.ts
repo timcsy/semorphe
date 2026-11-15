@@ -711,6 +711,20 @@ describe('C++ → Python：意思會變的反例', () => {
       expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
     }
   }, 60_000)
+  // ── 479：setw(n) 只影響下一個印出的值 ⟹ str(值).rjust(n)（StudyCpp basic/12_for_2、15_nD_array_2）──
+  it('🟢 setw：整數、字串、char、浮點、寬度比值短、寬度是變數；判決相同（479）', async () => {
+    const src = H + 'int main() {\n    int w;\n    cin >> w;\n    for (int x = 2; x < 4; x++) {\n        for (int y = 1; y < 4; y++) cout << x << \'*\' << y << \'=\' << setw(2) << x * y << \' \';\n        cout << \'\\n\';\n    }\n    cout << setw(w) << "ab" << "|" << setw(3) << \'c\' << setw(1) << 12345 << setw(6) << 2.5 << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '5\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('.rjust(2)')
+    for (const stdin of ['5\n', '0\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：setw 後面接 endl（寬度留到下一句）、setfill、setprecision（479）', async () => {
+    for (const body of ['    cout << 1 << setw(4) << endl;\n    cout << 2 << endl;\n', '    cout << setfill(\'0\') << setw(3) << 7 << endl;\n', '    cout << setprecision(3) << 3.14159 << endl;\n']) {
+      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
+    }
+  }, 60_000)
   // ── 473：回傳值與引數照宣告的型別轉換（StudyCpp 7_5_TLE：`ll DFS(…) { … return 1e9; }`，C++ 印 1000000000、Python 印 1000000000.0）──
   it('🟢 long long f() { return 1e9; }、int 回傳 2.7、bool 回傳 x * 5：照回傳型別轉換；判決相同（473）', async () => {
     const src = H + '#define ll long long\nll f(int x) {\n    if (x > 0) return 1e9;\n    return 2.7;\n}\nbool b(int x) {\n    return x * 5;\n}\nint main() {\n    int k;\n    cin >> k;\n    cout << f(k) << " " << f(-k) << " " << b(k) << b(0) << endl;\n    return 0;\n}\n'
