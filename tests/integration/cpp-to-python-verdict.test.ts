@@ -799,12 +799,20 @@ describe('C++ → Python：意思會變的反例', () => {
     await sameVerdict(src, r.code!, '2\n5 6\n7 8\n')
   }, 60_000)
   // ── 464：二維 vector——每一列各自一個新的 list ──
-  it('🟢 vector<vector<int>> g(R, vector<int>(C, x))、CTAD 的 vector dp(R, vector<int>(C))；改一格不影響別列；元素收到浮點值截斷；判決相同（464）', async () => {
-    const src = H + 'int main() {\n    int n, m;\n    cin >> n >> m;\n    vector dp(n + 1, vector<int>(m + 1));\n    vector<vector<int>> g(2, vector<int>(3, -1));\n    vector<int> row(m + 1, 7);\n    vector<vector<int>> h(2, row);\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]) + i * j;\n    g[0][1] = 2.9;\n    h[1][0] = 0;\n    cout << dp[n][m] << " " << dp[0][m] << " " << g[0][1] << g[1][1] << " " << h[0][0] << h[1][0] << row[0] << " " << dp.size() << " " << dp[0].size() << endl;\n    return 0;\n}\n'
+  // ⚠️ 原本一例，整支檔裡要 21 秒、長測試負載下逾時（11-15 lt471）→ 拆成兩例、填表那例加長
+  it('🟢 CTAD 的 vector dp(R, vector<int>(C))；雙層迴圈填表；判決相同（464）', async () => {
+    const src = H + 'int main() {\n    int n, m;\n    cin >> n >> m;\n    vector dp(n + 1, vector<int>(m + 1));\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]) + i * j;\n    cout << dp[n][m] << " " << dp[0][m] << " " << dp.size() << " " << dp[0].size() << endl;\n    return 0;\n}\n'
     const r = await toPython(src, '3 4\n')
     expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
     expect(r.code, r.code!).toContain('for _ in range(')
     await sameVerdict(src, r.code!, '3 4\n')
+  }, 120_000)   // ⚠️ 單獨冷算 1 秒，排在整支檔裡 20 秒（它是第一例走到二維 list 與 max 的 Python 判決，Cella 冷檢那段算在它頭上）；長測試負載下過了 60 秒
+  it('🟢 vector<vector<int>> g(R, vector<int>(C, x))、h(R, row)；改一格不影響別列；元素收到浮點值截斷；判決相同（464）', async () => {
+    const src = H + 'int main() {\n    int m;\n    cin >> m;\n    vector<vector<int>> g(2, vector<int>(3, -1));\n    vector<int> row(m + 1, 7);\n    vector<vector<int>> h(2, row);\n    g[0][1] = 2.9;\n    h[1][0] = 0;\n    cout << g[0][1] << g[1][1] << " " << h[0][0] << h[1][0] << row[0] << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '4\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('for _ in range(')
+    await sameVerdict(src, r.code!, '4\n')
   }, 60_000)
   // ── 460：getline——讀這一行還沒讀的部分（cin >> n 之後是那一行剩下的字）、cin.ignore() 丟一個字元 ──
   it('🟢 getline：cin >> n 之後讀到那一行剩下的、cin.ignore() 之後讀下一行、while (getline(…)) 讀到檔尾；與 cin >> 混用；判決相同（460）', async () => {
