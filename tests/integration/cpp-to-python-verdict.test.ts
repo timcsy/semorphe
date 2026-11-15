@@ -705,6 +705,14 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code, r.code!).toContain('def shl64(a, n):')
     for (const stdin of ['5 3\n', '30 20\n', '0 0\n']) await sameVerdict(src, r.code!, stdin)
   }, 60_000)
+  // 🔴 219（11-09）起到 478 的靜默失真：char 變數的指定只問 Cella 目標的型別，而 Cella 不給 ⟹ `c = c + 1` 換成 `c = ord(c) + 1`，Python 印 66、C++ 印 B，兩邊都 accept
+  it('🟢 char 變數收整數運算的值：c = c + 1、c = (c + k) 換回 chr()；判決相同（478 修的那個漏洞的回歸）', async () => {
+    const src = H + 'int main() {\n    char c = \'A\';\n    int k = 2;\n    c = c + 1;\n    cout << c;\n    c = (c + k);\n    cout << c << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('chr(')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
   it('🔴 保留：無號整數的左移（與負數混用時 C++ 先轉成無號）、char 的複合指定（478）', async () => {
     for (const body of ['    unsigned int u = 3;\n    u = u << 2;\n    cout << u << endl;\n', '    char c = \'A\';\n    c += 1;\n    c ^= 2;\n    cout << c << endl;\n']) {
       const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
