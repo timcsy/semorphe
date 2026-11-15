@@ -16,7 +16,7 @@
  * - fuzz_5 判 unknown：只含 <string>／<map> 時未限定的 `size_t` 有沒有被宣告，看標準庫實作（Cella 照實說）。
  *
  * 11-11 回報的兩個誤判 reject（fuzz_1 含 string 成員的聚合初始化、fuzz_6 memset 整個二維陣列）在 Cella 1931 修好；
- * fuzz_1 接著露出 `tie(…) > tie(…)` 判 unknown（11-14 回報，knownCellaGap 釘著）。
+ * fuzz_1 接著露出 `tie(…) > tie(…)` 判 unknown（11-14 回報），0249（11-15）補上。
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { readFileSync } from 'node:fs'
@@ -133,15 +133,15 @@ describe('模糊測試：學生解題風格', () => {
   //    已附這支程式回報 cella 查效能；快了就拿掉這個數字。
   // ⚠️ 600 秒（2026-11-15，升 0249）：換版之後判決快取是冷的，負載 40 下 301 秒逾時；cella 的 sort 效能那批（15:00–16:00）之後重量
 
-  // 11-11 回報的誤判 reject（含 string 成員的聚合初始化）在 Cella 1931 修好了；那之後露出下一個：
-  // `tie(a, b) > tie(c, d)` 的 tuple 比較 Cella 還沒建模（判 unknown，11-14 回報）
-  it('等 Cella：fuzz_1 的 tie(…) > tie(…) 判 unknown（11-14 回報）', async () => {
-    {   // 0249（11-15）修好之後轉成一般的測試
-      const r = await runCella(P('fuzz_1').code)
-      expect(r.verdict, describeCellaResult(r)).toBe('accept')
-      expect(r.out).toBe(P('fuzz_1').expected)
-    }
-  })
+  // 11-11 回報的誤判 reject（含 string 成員的聚合初始化）在 Cella 1931 修好了；那之後露出 `tie(a, b) > tie(c, d)` 判 unknown（11-14 回報），
+  // 0249（11-15）補上之後轉成一般的測試
+  it('fuzz_1：tie(…) > tie(…) 的 tuple 比較，Cella 判 accept、輸出相同（0249 補上 11-14 回報的 unknown）', async () => {
+    const r = await runCella(P('fuzz_1').code)
+    expect(r.verdict, describeCellaResult(r)).toBe('accept')
+    expect(r.out).toBe(P('fuzz_1').expected)
+  }, 300_000)
+  // ⚠️ 300 秒（2026-11-15）：判決冷算本機 47 秒（負載 7）、CI 超過 60 秒——474 轉正時沒加逾時，b8cf44c4c 的 CI 紅在這裡。
+  //    本機有判決快取所以單獨跑、長測試都綠（experience〈本機的快取是熱的，CI 是冷的〉，第三次）
 
   it('fuzz_6：memset 整個二維陣列，Cella 判 accept、輸出相同（1931 修好 11-11 回報的誤判 reject）', async () => {
     const r = await runCella(P('fuzz_6').code)
