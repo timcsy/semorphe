@@ -705,8 +705,30 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(r.code, r.code!).toContain('def shl64(a, n):')
     for (const stdin of ['5 3\n', '30 20\n', '0 0\n']) await sameVerdict(src, r.code!, stdin)
   }, 60_000)
+  // 🔴 219（11-09）起到 478 的靜默失真：char 變數的指定只問 Cella 目標的型別，而 Cella 不給 ⟹ `c = c + 1` 換成 `c = ord(c) + 1`，Python 印 66、C++ 印 B，兩邊都 accept
+  it('🟢 char 變數收整數運算的值：c = c + 1、c = (c + k) 換回 chr()；判決相同（478 修的那個漏洞的回歸）', async () => {
+    const src = H + 'int main() {\n    char c = \'A\';\n    int k = 2;\n    c = c + 1;\n    cout << c;\n    c = (c + k);\n    cout << c << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('chr(')
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
   it('🔴 保留：無號整數的左移（與負數混用時 C++ 先轉成無號）、char 的複合指定（478）', async () => {
     for (const body of ['    unsigned int u = 3;\n    u = u << 2;\n    cout << u << endl;\n', '    char c = \'A\';\n    c += 1;\n    c ^= 2;\n    cout << c << endl;\n']) {
+      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
+    }
+  }, 60_000)
+  // ── 479：setw(n) 只影響下一個印出的值 ⟹ str(值).rjust(n)（StudyCpp basic/12_for_2、15_nD_array_2）──
+  it('🟢 setw：整數、字串、char、浮點、寬度比值短、寬度是變數；判決相同（479）', async () => {
+    const src = H + 'int main() {\n    int w;\n    cin >> w;\n    for (int x = 2; x < 4; x++) {\n        for (int y = 1; y < 4; y++) cout << x << \'*\' << y << \'=\' << setw(2) << x * y << \' \';\n        cout << \'\\n\';\n    }\n    cout << setw(w) << "ab" << "|" << setw(3) << \'c\' << setw(1) << 12345 << setw(6) << 2.5 << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '5\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('.rjust(2)')
+    for (const stdin of ['5\n', '0\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：setw 後面接 endl（寬度留到下一句）、setfill、setprecision（479）', async () => {
+    for (const body of ['    cout << 1 << setw(4) << endl;\n    cout << 2 << endl;\n', '    cout << setfill(\'0\') << setw(3) << 7 << endl;\n', '    cout << setprecision(3) << 3.14159 << endl;\n']) {
       const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
       expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
     }

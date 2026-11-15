@@ -321,6 +321,11 @@ export const isBreakNode = (x: SemanticNode | undefined): boolean => !!x && x.co
 export const isReturnNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':return')
 /** `cout << flush` 的那一顆（470）：只送出、不印字——印的那一顆把它寫成 print 的 `flush=True` */
 export const isFlushNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':io_flush')
+/** `setw(n)` 的那一顆（479）：回傳寬度那個運算式（setprecision／setfill 回傳 undefined）——印的那一顆寫成 `str(值).rjust(n)` */
+export const setWidthOf = (x: SemanticNode | undefined): SemanticNode | undefined =>
+  x && x.componentId.endsWith(':io_mode') && String(x.properties?.setting ?? 'width') === 'width' ? x.slots?.value?.[0] : undefined
+/** iomanip 那一族的設定（setw／setprecision／setfill）——問身分的字尾，同上 */
+export const isIoManipNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':io_mode')
 
 /** 一個左值的底名（`a`、`a[i]`、`v.at(i)`、`p.x` → a／v／p） */
 function baseName(x: SemanticNode | undefined): string | undefined {

@@ -1,7 +1,7 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { isLineBreak } from '../../../languages/cpp/lang/node-traits'
-import { isFlushNode } from '../../../languages/cpp/to-python/contract'
+import { isFlushNode, setWidthOf, isIoManipNode } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   // `cout << a << b << endl` → print(a, b, sep="")；沒有 endl 結尾 → end=""。值照型別：double 用 :g（同 cout 預設）、bool 印 0／1
@@ -17,10 +17,27 @@ export function registerToPython(r: ToPythonRegistrar): void {
       lines.push(`${py.indent(depth)}print(${args.join(', ')})`)
       seg = []
     }
-    for (const v of values) {
+    // `setw(n)`（479）：只影響下一個印出的值，靠右、補空白 ⟹ `str(值).rjust(n)`，逐字相同。
+    // fill／precision 會一直生效、不在這裡收（照實保留——程式裡有它們時整支本來就保留，所以 rjust 不會遇到 setfill／left）。
+    // 後面沒有值（接 endl 或句尾）：寬度留給下一句的第一個值（endl 不是格式化輸出、不用掉寬度）⟹ 保留
+    let width: string | undefined
+    for (let i = 0; i < values.length; i++) {
+      const v = values[i]
+      const w = setWidthOf(v)
+      if (w) {
+        const next = values[i + 1]
+        if (width !== undefined || !next || isLineBreak(next.componentId) || isFlushNode(next) || isIoManipNode(next) || !/^(int|short|long|long long)$/.test(py.typeOf(w) ?? '')) {
+          lines.push(py.keep(v, 'outside-subset', 'setw 後面沒有緊接著一個要印的值（寬度會留到下一次輸出）'))
+          continue
+        }
+        width = py.expr(w)
+        continue
+      }
       if (isLineBreak(v.componentId)) { flush(true); continue }
       if (isFlushNode(v)) continue
-      seg.push(shown(v, py))
+      const s = shown(v, py)
+      seg.push(width !== undefined ? `str(${s}).rjust(${width})` : s)
+      width = undefined
     }
     if (seg.length > 0) flush(false)
     return lines
