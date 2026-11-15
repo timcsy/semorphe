@@ -116,6 +116,8 @@ const TRUNC_MOD = ['def trunc_mod(a, b):', '    return a - int(a / b) * b']
 /** 64 位元整數的除法與取餘數（456）：只用整數運算——商向零截斷（C++ 的 [expr.mul]p4），餘數照 a == (a / b) * b + a % b */
 const TRUNC_DIV = ['def trunc_div(a, b):', '    q = abs(a) // abs(b)', '    return q if (a < 0) == (b < 0) else -q']
 const TRUNC_MOD64 = ['def trunc_mod64(a, b):', '    return a - trunc_div(a, b) * b']
+/** 有號整數的左移（478）：照寬度繞回成二補數（C++20 [expr.shift]p2）——Python 的整數不會溢位，`1 << 31` 在 C++ 是負數 */
+const shiftLeft = (b: 32 | 64): string[] => [`def shl${b}(a, n):`, `    return ((a << n) + ${2n ** BigInt(b - 1)}) % ${2n ** BigInt(b)} - ${2n ** BigInt(b - 1)}`]
 const tables = (): ToPythonTables => (TABLES ??= collectToPython())
 
 const lineOf = (n: SemanticNode): number | undefined =>
@@ -214,6 +216,7 @@ export function convertCppToPython(
   let needTokens = false, needProbe = false, needLines = false, needChar = false, needBool = false
   let needTruncMod = false
   let needTruncDiv = false, needTruncMod64 = false
+  const needShl = new Set<32 | 64>()
   const imports = new Set<string>()
   // 運算式裡的 ++／--（457）：每一句敘述一個框，拆出來的前後句先放這裡，敘述寫完再決定收不收
   interface Frame { owner: SemanticNode; before: string[]; after: string[]; nested: boolean }
@@ -251,6 +254,7 @@ export function convertCppToPython(
     useValueReader(kind) { needTokens = true; if (kind === 'char') { needChar = true; return 'next_char()' } needBool = true; return 'next_bool()' },
     useTruncMod() { needTruncMod = true; return 'trunc_mod' },
     useTruncDiv(kind) { needTruncDiv = true; if (kind === 'mod') { needTruncMod64 = true; return 'trunc_mod64' } return 'trunc_div' },
+    useShiftLeft(bits) { needShl.add(bits); return `shl${bits}` },
     noteDeclaredString: (name) => { declaredStrings.add(name) },
     isDeclaredString: (name) => declaredStrings.has(name),
     noteElementType: (name, type) => { elementTypes.set(name, elementTypes.has(name) && elementTypes.get(name) !== type ? null : type) },
@@ -327,6 +331,6 @@ export function convertCppToPython(
   }
   if (reasons.length > 0) return { code: null, converted: 0, kept: reasons.length, reasons }
   // 跨行讀一個詞——同 cin（空白與換行都是分隔；research R4 的修正：課文的輸入一個數一行，「一句讀一行」對不上）
-  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needLines ? LINE_READER : [...(needTokens ? TOKEN_READER : []), ...(needProbe ? TOKEN_PROBE : [])]), ...(needChar ? (needLines ? CHAR_READER_LINES : CHAR_READER_TOKENS) : []), ...(needBool ? BOOL_READER : []), ...(needTruncMod ? TRUNC_MOD : []), ...(needTruncDiv ? TRUNC_DIV : []), ...(needTruncMod64 ? TRUNC_MOD64 : [])]
+  const head = [...[...imports].sort().map((m) => `import ${m}`), ...(needLines ? LINE_READER : [...(needTokens ? TOKEN_READER : []), ...(needProbe ? TOKEN_PROBE : [])]), ...(needChar ? (needLines ? CHAR_READER_LINES : CHAR_READER_TOKENS) : []), ...(needBool ? BOOL_READER : []), ...(needTruncMod ? TRUNC_MOD : []), ...(needTruncDiv ? TRUNC_DIV : []), ...(needTruncMod64 ? TRUNC_MOD64 : []), ...[...needShl].sort().flatMap((b) => shiftLeft(b))]
   return { code: `${[...head, ...lines].join('\n')}\n`, converted, kept: 0, reasons }
 }

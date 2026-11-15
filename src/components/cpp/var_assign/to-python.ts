@@ -6,7 +6,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
     const target = n.slots.target?.[0]
     const value = n.slots.value?.[0]
-    if (isChar(py.typeOf(target))) {
+    // 目標的型別 Cella 不給時問宣告那一顆記下的（478：`c = (c ^ 22)` 的 c 沒有型別 ⟹ 少了 chr()，c 變成整數）
+    const bareName = target && Object.keys(target.slots ?? {}).length === 0 && typeof target.properties?.name === 'string' ? String(target.properties.name) : undefined
+    if (isChar(py.typeOf(target) ?? (bareName ? py.varTypeOf(bareName) : undefined))) {
       // 字串裡的一個字元（`s[i] = …`）：Python 的字串不能改——保留（問形狀：目標有 index 槽）
       if (target?.slots?.index) return [py.keep(n, 'char', '改字串裡的一個字元：C++ 的字串可以改、Python 的字串不能')]
       // char 變數：值是整數 ⟹ chr()（364）
@@ -23,8 +25,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const keyed = keyedKind(py.typeOf(target))
     if (keyed) return [`${py.indent(depth)}${writeTo(tg, `${keyed.kind === 'map' ? 'dict' : 'set'}(${py.expr(value)})`)}`]
     // 目標的型別先問 Cella，沒給就問宣告那一顆記下的（462：Cella 不給指定目標的型別 ⟹ `b = n - 4` 放進 bool 原樣存 2）
-    const bare = target && Object.keys(target.slots ?? {}).length === 0 && typeof target.properties?.name === 'string'
-    const tt = py.typeOf(target) ?? tg.type ?? (bare ? py.varTypeOf(String(target.properties.name)) : undefined)
+    const tt = py.typeOf(target) ?? tg.type ?? (bareName ? py.varTypeOf(bareName) : undefined)
     // pair（465，換成 tuple）：整個指定只收型別一模一樣的值——`p = make_pair(1, 2.5)` 放進 pair<int,int> 要逐格截斷，不猜
     if (/^(std::)?pair\s*</.test(tt ?? '') && !sameType(tt, py.typeOf(value))) return [py.keep(n, 'needs-types', `放進 ${tt} 的值型別是 ${py.typeOf(value) ?? '不知道'}`)]
     // 都不知道而值是浮點：可能要截斷（同 array_assign，459）——保留，不猜（462 量到：兩個函式各有一個 k、一個 int 一個 double）

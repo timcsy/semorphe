@@ -7,7 +7,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const op = String(n.properties.operator ?? '')
     const target = n.slots.target?.[0]
     const value = n.slots.value?.[0]
-    if (isChar(py.typeOf(target))) return [py.keep(n, 'char', `char 的 ${op}`)]
+    // 目標的型別 Cella 不給時問宣告記下的（478，同 var_assign）——否則 `c += 1` 會寫成 Python 字串加整數
+    const bareName = target && Object.keys(target.slots ?? {}).length === 0 && typeof target.properties?.name === 'string' ? String(target.properties.name) : undefined
+    if (isChar(py.typeOf(target) ?? (bareName ? py.varTypeOf(bareName) : undefined))) return [py.keep(n, 'char', `char 的 ${op}`)]
     // 目標先讀再改（450：map 的元素要先補上預設值）——之後各分支用 tg 寫目標、ind 接在 before 後面
     // 寫法用 writeTo／updateTo（465：pair 的成員不能原地寫，展開成重建整個 tuple）；型別 Cella 沒給就問目標自己
     const tg = py.target(target, true)
@@ -34,6 +36,11 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (['&=', '|=', '^=', '>>='].includes(op)) {
       if (isSignedInt(t) && isSignedInt(py.typeOf(value))) return ind(`${py.indent(depth)}${tg.assign ? updateTo(tg, op.slice(0, -1), paren(value, py)) : `${tg.text} ${op} ${py.expr(value)}`}`)
       return [py.keep(n, 'outside-subset', `運算子 ${op}（型別 ${t || '不明'}、${py.typeOf(value) ?? '不明'}）還沒有對應`)]
+    }
+    // `x <<= 1`（478）：同 arithmetic 的 <<——照寬度繞回的小函式
+    if (op === '<<=') {
+      if (isSignedInt(t) && isSignedInt(py.typeOf(value))) return ind(`${py.indent(depth)}${writeTo(tg, `${py.useShiftLeft(isNarrowInt(t) ? 32 : 64)}(${tg.text}, ${py.expr(value)})`)}`)
+      return [py.keep(n, 'outside-subset', `運算子 <<=（型別 ${t || '不明'}、${py.typeOf(value) ?? '不明'}）還沒有對應`)]
     }
     if (!['+=', '-=', '*='].includes(op)) return [py.keep(n, 'outside-subset', `運算子 ${op} 還沒有對應`)]
     // 浮點加進整數（`x += 2.5`）：C++ 算完再截斷回整數（[expr.ass]p7：E1 op= E2 ＝ E1 = E1 op E2）⟹ int(…)；之前寫成 `x += 2.5`、x 變成浮點（450 量到）
