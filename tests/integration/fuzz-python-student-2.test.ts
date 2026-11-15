@@ -149,10 +149,10 @@ describe('模糊測試：學生的 Python 程式，盲測第二批', () => {
   })
   it('fuzz_10：', async () => {
     await roundTrip('fuzz_10', [], [])
-    await knownCellaGap(/from collections import deque/, async () => {
+    {   // 0249（11-15）修好之後轉成一般的測試
       const r = await runPython(P.fuzz_10.code)
       if (r !== want('fuzz_10')) throw new Error(r)
-    })
+    }
   })
 
   // 423 的兩顆，單獨釘一次：產回去的那一句一字不差，而且走得到 Cella

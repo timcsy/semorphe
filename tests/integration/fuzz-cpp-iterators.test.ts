@@ -1127,8 +1127,9 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
    */
   // 歸類：我們這側缺——巢狀型別名的 formalize
   // 2026-11-14（cella 0.1.202611131931）string 的 rbegin 補上之後換形狀：下一個卡點是 `std::count`（Cella 誠實的 unsupported）
-  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_04 · 07 卡在 `std::count`', async () => {
-    await knownCellaGap(/std::count is not supported yet/, async () => {
+  // 2026-11-15（cella 0.1.202611150249）std::count 補上之後換形狀：下一個卡點是 `std::remove`（Cella 誠實的 unsupported）
+  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_04 · 07 卡在 `std::remove`（11-15 起；之前是 std::count）', async () => {
+    await knownCellaGap(/remove is not supported yet/, async () => {
       await whole(P05_NAIL, "find(9) = 4, find(42) = -1\ncount(3) = 3, std::count = 3\ndesserts\nlogical size after remove = 8, physical size = 11\n8 8 1 9 5 1 9 2 \n1 1 2 3 3 3 5 8 8 9 9 \n手寫去重: 1 2 3 5 8 9 (tail still holds 5 leftovers)\nunique agrees: yes\n1: lo@0 hi@1 next=2\n4: lo@3 hi@3 prev=3 next=5\n9: lo@5 hi@6 prev=8\nlast = 9 == 9 == 9\nsum = 28 max = 9\n", '')
     })
   }, 180_000)

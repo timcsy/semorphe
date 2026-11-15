@@ -87,6 +87,56 @@ function shadowedLocal(nodes: readonly SemanticNode[], outer: ReadonlySet<string
   return undefined
 }
 
+/**
+ * 473：內層宣告了與外層（或全域）同名的變數 ⟹ 內層那一個換一個沒人用的名字（`i` → `i_2`），它看得見的範圍裡每一次提到都跟著換
+ * （C++ 是兩個變數，換名之後 Python 也是兩個）。作用域照 `shadowedLocal`：清單裡宣告之後的那幾句、每一個子槽是一層新的、
+ * 迴圈變數只在那個迴圈裡。⚠️ 問形狀、寧可保留：會換的只有變數名的那幾個屬性（`name`——呼叫除外、`var_name`、`obj`）；
+ * 換名的範圍裡還有別的屬性的值剛好是那個名字（不認得的屬性、呼叫的函式名、字面值），就整支照舊保留（回 undefined），不猜。
+ */
+const RENAMED_KEYS = new Set(['name', 'var_name', 'obj'])
+const NOT_A_VARIABLE = new Set(['type', 'type1', 'type2', 'return_type', 'method', 'member', 'field', 'op', 'operator'])
+function renameShadows(nodes: readonly SemanticNode[], outer: ReadonlySet<string>, isGlobal: (x: string) => boolean): SemanticNode[] | undefined {
+  const used = new Set<string>()
+  const collect = (ns: readonly SemanticNode[]): void => { for (const n of ns) { for (const v of Object.values(n.properties ?? {})) if (typeof v === 'string') used.add(v); for (const k of Object.values(n.slots ?? {})) collect(k) } }
+  collect(nodes)
+  for (const x of outer) used.add(x)
+  const fresh = (x: string): string => { let k = 2; while (used.has(`${x}_${k}`) || isGlobal(`${x}_${k}`)) k++; used.add(`${x}_${k}`); return `${x}_${k}` }
+  let unsure = false
+  const isCall = (n: SemanticNode): boolean => n.slots?.args !== undefined || n.slots?.params !== undefined
+  const props = (n: SemanticNode, env: ReadonlyMap<string, string>): SemanticNode['properties'] => {
+    const out: SemanticNode['properties'] = { ...n.properties }
+    for (const [k, v] of Object.entries(n.properties ?? {})) {
+      if (typeof v !== 'string' || !env.has(v) || env.get(v) === v) continue
+      if (RENAMED_KEYS.has(k) && !(k === 'name' && isCall(n))) out[k] = env.get(v)!
+      else if (!NOT_A_VARIABLE.has(k)) unsure = true
+    }
+    return out
+  }
+  const declOf = (x: SemanticNode): string[] => x.slots?.declarators?.length ? x.slots.declarators.map((d) => String(d.properties?.name ?? ''))
+    : declaresTyped(x) && x.slots?.params === undefined ? [String(x.properties.name)] : []
+  const declare = (x: string, e: Map<string, string>, vis: ReadonlySet<string>): void => { e.set(x, vis.has(x) || isGlobal(x) ? fresh(x) : x) }
+  const list = (ns: readonly SemanticNode[], env0: ReadonlyMap<string, string>, enclosing: ReadonlySet<string>): SemanticNode[] => {
+    const env = new Map(env0)
+    const here = new Set<string>()
+    return ns.map((n) => {
+      for (const x of declOf(n)) { declare(x, env, new Set([...enclosing, ...here])); here.add(x) }
+      const own = [...new Set([...(typeof n.properties?.var_name === 'string' ? [n.properties.var_name] : []), ...[...(n.slots?.init ?? []), ...(n.slots?.targets ?? [])].flatMap(declOf),
+        ...(n.slots?.targets ?? []).flatMap((x) => typeof x.properties?.name === 'string' ? [x.properties.name] : [])])]
+      const vis = new Set([...enclosing, ...here])
+      const envOwn = new Map(env)
+      for (const x of own) declare(x, envOwn, vis)
+      const inner = new Set([...vis, ...own])
+      // 宣告子、for 的 init、結構化繫結的 targets 與宣告本身同一層：名字照這一層換，裡面的初值照常往下走
+      const flat = (k: SemanticNode): SemanticNode => ({ ...k, properties: props(k, envOwn), slots: Object.fromEntries(Object.entries(k.slots ?? {}).map(([s, kids]) => [s, s === 'declarators' ? kids.map(flat) : list(kids, envOwn, inner)])) })
+      const slots = Object.fromEntries(Object.entries(n.slots ?? {}).map(([k, kids]) =>
+        [k, k === 'declarators' || k === 'init' || k === 'targets' ? kids.map(flat) : list(kids, envOwn, inner)]))
+      return { ...n, properties: props(n, envOwn), slots }
+    })
+  }
+  const out = list(nodes, new Map(), outer)
+  return unsure ? undefined : out
+}
+
 /** 本體裡全域變數與區域變數同名的那一個（Python 一個函式／頂層裡同一個名字只能是其中一種——451） */
 function shadowedGlobal(nodes: readonly SemanticNode[], py: ToPythonContext): string | undefined {
   return [...declaredNames(nodes)].find((x) => py.isGlobal(x))
@@ -121,11 +171,14 @@ export function registerToPython(r: ToPythonRegistrar): void {
       const lastV = last?.slots?.value?.[0]
       if (last && Object.keys(last.slots ?? {}).join() === 'value' && lastV?.properties?.value === '0' && !lastV.slots?.left) body.pop()
       // 攤平到頂層之後 main 的區域變數就是全域變數：與全域同名的話，別的函式讀到的會是 main 那一個（C++ 讀到的是全域那一個）
-      const sh = shadowedGlobal(body, py)
-      if (sh !== undefined) return [py.keep(n, 'outside-subset', `「${name}」裡宣告了與全域變數「${sh}」同名的變數——攤平到 Python 的頂層之後兩個會變成同一個`)]
-      const sl = shadowedLocal(body, new Set())
-      if (sl !== undefined) return [py.keep(n, 'outside-subset', `「${name}」的內層宣告了與外層同名的變數「${sl}」——Python 一個函式只有一層作用域，兩個會變成同一個`)]
-      return py.blockAsMain(body)
+      // 473：同名的那一個換名（換不了才保留）
+      const renamed = renameShadows(body, new Set(), (x) => py.isGlobal(x))
+      if (renamed === undefined) {
+        const sh = shadowedGlobal(body, py)
+        if (sh !== undefined) return [py.keep(n, 'outside-subset', `「${name}」裡宣告了與全域變數「${sh}」同名的變數——攤平到 Python 的頂層之後兩個會變成同一個`)]
+        return [py.keep(n, 'outside-subset', `「${name}」的內層宣告了與外層同名的變數「${shadowedLocal(body, new Set()) ?? ''}」——Python 一個函式只有一層作用域，換名的範圍裡有認不出是不是這個變數的地方`)]
+      }
+      return py.blockAsMain(renamed)
     }
     const params: string[] = []
     for (const p of n.slots.params ?? []) {
@@ -143,15 +196,19 @@ export function registerToPython(r: ToPythonRegistrar): void {
       if (!okString && !sharedListParam(t, String(p.properties.name ?? ''), n) && /[&*<]|vector|\[|string/.test(t)) return [py.keep(p, 'outside-subset', `參數「${t} ${String(p.properties.name ?? '')}」的傳遞方式兩個語言不同`)]
       params.push(py.name(String(p.properties.name ?? '')))
     }
-    const sl = shadowedLocal(n.slots.body ?? [], new Set((n.slots.params ?? []).map((p) => String(p.properties.name ?? ''))))
-    if (sl !== undefined) return [py.keep(n, 'outside-subset', `函式「${name}」的內層宣告了與外層同名的變數「${sl}」——Python 一個函式只有一層作用域，兩個會變成同一個`)]
-    const sh = shadowedGlobal(n.slots.body ?? [], py)
-    if (sh !== undefined) return [py.keep(n, 'outside-subset', `函式「${name}」裡宣告了與全域變數「${sh}」同名的變數——Python 一個函式裡同一個名字只能是全域或區域其中一種`)]
-    const body = py.block(n.slots.body, depth + 1)
+    // 473：內層與外層、區域與全域同名的那一個換名（換不了才保留）
+    const paramSet = new Set((n.slots.params ?? []).map((p) => String(p.properties.name ?? '')))
+    const src = renameShadows(n.slots.body ?? [], paramSet, (x) => py.isGlobal(x) && !paramSet.has(x))
+    if (src === undefined) {
+      const sl = shadowedLocal(n.slots.body ?? [], paramSet)
+      if (sl !== undefined) return [py.keep(n, 'outside-subset', `函式「${name}」的內層宣告了與外層同名的變數「${sl}」——Python 一個函式只有一層作用域，換名的範圍裡有認不出是不是這個變數的地方`)]
+      return [py.keep(n, 'outside-subset', `函式「${name}」裡宣告了與全域變數「${shadowedGlobal(n.slots.body ?? [], py) ?? ''}」同名的變數——換名的範圍裡有認不出是不是這個變數的地方`)]
+    }
+    const body = py.withReturnType(String(n.properties.return_type ?? ''), () => py.block(src, depth + 1))
     // 451：函式裡重新指定全域變數（`g = 5`、`g++`、`total += x`）——不寫 `global`，Python 把它當成新的區域變數
     // （C++ 印 5、Python 印 0；先讀再改的直接 UnboundLocalError）。參數與全域同名時參數本來就是區域的
     const paramNames = new Set(params)
-    const globalsPy = new Map([...mentionedGlobals(n.slots.body ?? [], py)].filter((g) => !paramNames.has(py.name(g))).map((g) => [py.name(g), g]))
+    const globalsPy = new Map([...mentionedGlobals(src, py)].filter((g) => !paramNames.has(py.name(g))).map((g) => [py.name(g), g]))
     const written = assignedGlobals(body, globalsPy)
     // 一個名字一行：`global a, b` 是合法的 Python，而 Cella（1931）只判得出一行一個名字的
     const head = written.map((g) => `${py.indent(depth + 1)}global ${g}`)
