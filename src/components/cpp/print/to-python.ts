@@ -1,7 +1,7 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { isLineBreak } from '../../../languages/cpp/lang/node-traits'
-import { isFlushNode } from '../../../languages/cpp/to-python/contract'
+import { isFlushNode, setWidthOf, isIoManipNode } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   // `cout << a << b << endl` → print(a, b, sep="")；沒有 endl 結尾 → end=""。值照型別：double 用 :g（同 cout 預設）、bool 印 0／1
@@ -23,10 +23,10 @@ export function registerToPython(r: ToPythonRegistrar): void {
     let width: string | undefined
     for (let i = 0; i < values.length; i++) {
       const v = values[i]
-      if (v.componentId === 'cpp:io_mode' && String(v.properties.setting ?? 'width') === 'width') {
+      const w = setWidthOf(v)
+      if (w) {
         const next = values[i + 1]
-        const w = v.slots.value?.[0]
-        if (width !== undefined || !next || !w || isLineBreak(next.componentId) || isFlushNode(next) || next.componentId === 'cpp:io_mode' || !/^(int|short|long|long long)$/.test(py.typeOf(w) ?? '')) {
+        if (width !== undefined || !next || isLineBreak(next.componentId) || isFlushNode(next) || isIoManipNode(next) || !/^(int|short|long|long long)$/.test(py.typeOf(w) ?? '')) {
           lines.push(py.keep(v, 'outside-subset', 'setw 後面沒有緊接著一個要印的值（寬度會留到下一次輸出）'))
           continue
         }
