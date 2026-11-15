@@ -162,6 +162,28 @@ describe('`final`：還不支援就照實說（spec 209 T005）', () => {
   })
 })
 
+describe('一般函式宣告子上的修飾：還不支援就照實說（477）', () => {
+  // 2026-11-15：名字與參數串以外的東西原本被安靜地丟掉——noexcept（terminate 變成往外傳）、
+  //    尾置回傳型別（`-> long` 變成從 return 推導）、自由函式的 const（編不過的程式產成編得過的）
+  it.each([
+    ['定義上的 noexcept', `${H}int sq(int x) noexcept { return x * x; }\nint main() { cout << sq(3) << endl; return 0; }\n`, 'int sq(int x) noexcept'],
+    ['原型上的 noexcept', `${H}int sq(int x) noexcept;\nint main() { cout << sq(3) << endl; return 0; }\nint sq(int x) noexcept { return x * x; }\n`, 'int sq(int x) noexcept;'],
+    ['類別外定義方法上的 noexcept', `${H}struct A { void f(); };\nvoid A::f() noexcept { cout << 1 << endl; }\nint main() { A a; a.f(); return 0; }\n`, 'void A::f() noexcept'],
+    ['尾置回傳型別', `${H}auto half(int x) -> double { return x / 2.0; }\nint main() { cout << half(3) << endl; return 0; }\n`, 'auto half(int x) -> double'],
+    ['自由函式的 const（編不過）', `${H}int sq(int x) const { return x * x; }\nint main() { cout << sq(3) << endl; return 0; }\n`, 'int sq(int x) const'],
+  ])('🔴 %s：原文保留，而且不被當成沒有那個修飾的程式判 accept', async (_name, code, kept) => {
+    expect(gen(code), '安靜地丟掉修飾 ＝ 改了程式的意思').toContain(kept)
+    const { runCella } = await import('../helpers/cella-run')
+    const r = await runCella(code)
+    expect(r.verdict, '不得被當成沒有那個修飾的程式判 accept').not.toBe('accept')
+  })
+  it('★ 正向錨點：沒有修飾的一般函式、運算子、指標回傳照舊是函式積木', () => {
+    for (const c of [`${H}int sq(int x) { return x * x; }\n`, `${H}int* id(int* p) { return p; }\n`]) {
+      expect(nodes(lift(c), 'cpp:func_def').length, c).toBe(1)
+    }
+  })
+})
+
 describe('舊存檔：沒有新屬性的節點照樣載入（spec 209 T006）', () => {
   // 舊存檔存的是語意樹；這四顆在 spec 209 之前沒有 arrow／base_class／is_virtual／is_const——由宣告的 default 補，不寫遷移
   it('★ 四種舊節點：產碼取預設值（點、沒有基底、非 virtual、非 const），積木渲染不丟節點', async () => {
