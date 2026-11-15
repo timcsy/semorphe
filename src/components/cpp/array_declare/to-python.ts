@@ -1,6 +1,6 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { paren, intValue } from '../../../languages/cpp/to-python/contract'
+import { paren, intValue, pairElements, zeroOf } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
@@ -15,6 +15,14 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (vecElem && n.slots.size?.[0] && !(n.slots.values ?? []).length) {
       py.noteElementType(name, t)
       return [`${py.indent(depth)}${name} = [[] for _ in range(${py.expr(n.slots.size[0])})]`]
+    }
+    // pair 的陣列（465）：pair 換成 tuple、tuple 不能改 ⟹ `[(0, 0)] * N` 每一格是同一個 tuple 也沒有差別（改一格的成員是換掉那一格）。
+    // 元素型別限有預設值的幾種（整數、double、string）；有初值的保留
+    const el = pairElements(t)
+    const z = el ? el.map(zeroOf) : undefined
+    if (z && z.every((x) => x !== undefined) && n.slots.size?.[0] && !(n.slots.values ?? []).length) {
+      py.noteElementType(name, t)
+      return [`${py.indent(depth)}${name} = [(${z.join(', ')})] * ${paren(n.slots.size[0], py)}`]
     }
     if (zero === null) return [py.keep(n, 'outside-subset', `${t} 陣列還沒有對應`)]
     const size = n.slots.size?.[0]

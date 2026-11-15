@@ -68,7 +68,7 @@ export interface ToPythonContext {
    * 回傳的 `before` 是要先跑的一句（不含縮排）——map 的元素先讀再改，C++ 會先補上預設值、Python 的 dict 會丟 KeyError。
    * 膠囊沒登記目標寫法的，照運算式寫
    */
-  target(n: SemanticNode | undefined, readsFirst: boolean): { before?: string; text: string }
+  target(n: SemanticNode | undefined, readsFirst: boolean): Target
   /** 這個名字是頂層宣告的全域變數嗎（451：函式裡重新指定它，Python 要先寫 `global`） */
   isGlobal(name: string): boolean
   /** 這顆節點宣告了它會寫的子節點（`r.writes`）——沒宣告的回空 */
@@ -121,7 +121,17 @@ export function cEscapedValue(src: string): string | undefined {
 
 export type ExprFn = (n: SemanticNode, py: ToPythonContext) => string
 export type StmtFn = (n: SemanticNode, py: ToPythonContext, depth: number) => string[]
-export type TargetFn = (n: SemanticNode, py: ToPythonContext, readsFirst: boolean) => { before?: string; text: string }
+/**
+ * 指定目標的寫法。`text` 是讀它的寫法；`assign` 有給的話，**寫它不能原地寫**（465：pair 換成 tuple，`p[0] = 7` 不合法）
+ * ⟹ 寫進 v 的那一句是 `assign(v)`（`p = (7, p[1])`）。`type` 是目標的 C++ 型別（Cella 不給指定目標的型別時用得上）
+ */
+export interface Target { before?: string; text: string; assign?: (v: string) => string; type?: string }
+export type TargetFn = (n: SemanticNode, py: ToPythonContext, readsFirst: boolean) => Target
+
+/** 把 v 寫進目標的那一句（不含縮排）：能原地寫的 `t = v`，不能的照目標自己說的（465） */
+export const writeTo = (tg: Target, v: string): string => (tg.assign ? tg.assign(v) : `${tg.text} = ${v}`)
+/** `t op= v` 的那一句：不能原地寫的目標展開成 `t = t op v`（op 是 `+`、`-`…；v 已經加過括號） */
+export const updateTo = (tg: Target, op: string, v: string): string => (tg.assign ? tg.assign(`${tg.text} ${op} ${v}`) : `${tg.text} ${op}= ${v}`)
 
 /**
  * 膠囊登記**自己**的印法——不寫自己的身分（收集器依膠囊所在的目錄對回 component.json 的身分；就近性護欄：身分不多擴散一個檔）
@@ -303,3 +313,57 @@ export function mayWrite(nodes: readonly SemanticNode[], names: ReadonlySet<stri
   }
   return nodes.some((x) => walk(x, true))
 }
+
+
+/**
+ * 這一顆宣告了一個名字嗎（問形狀：有名字、有型別）——pair 的宣告把型別分成 type1／type2（465），也算。
+ * 函式（有 params 槽）由呼叫端自己排除
+ */
+export const declaresTyped = (n: SemanticNode): boolean =>
+  typeof n.properties?.name === 'string' && (n.properties?.type !== undefined || n.properties?.type1 !== undefined)
+
+/** 樣板型別的名字與頂層引數（`std::pair<int, vector<int>>` → `['pair', ['int', 'vector<int>']]`；拿掉 std::、const、&） */
+export function templateArgs(t: string | undefined): [string, string[]] | undefined {
+  const m = bare(t).match(/^([A-Za-z_][\w ]*?) ?<(.*)>$/)
+  if (!m) return undefined
+  const args: string[] = []
+  let depth = 0, from = 0
+  for (let i = 0; i < m[2].length; i++) {
+    const c = m[2][i]
+    if (c === '<') depth++
+    else if (c === '>') depth--
+    else if (c === ',' && depth === 0) { args.push(m[2].slice(from, i).trim()); from = i + 1 }
+  }
+  args.push(m[2].slice(from).trim())
+  return [m[1].trim(), args]
+}
+
+/** `pair<A, B>` 的兩個元素型別（465：pair 換成 tuple，宣告、成員、陣列都要問） */
+export function pairElements(t: string | undefined): [string, string] | undefined {
+  const a = templateArgs(t)
+  return a && a[0] === 'pair' && a[1].length === 2 ? [a[1][0], a[1][1]] : undefined
+}
+
+/** 兩個型別寫法相同嗎（拿掉 std::、const、&、空白）——pair 整個指定只收一模一樣的（465） */
+export const sameType = (a: string | undefined, b: string | undefined): boolean =>
+  a !== undefined && b !== undefined && a.replace(/std::|const\s+|&|\s+/g, '') === b.replace(/std::|const\s+|&|\s+/g, '')
+
+/**
+ * 放進容器的一個元素（465）：C++ 照元素型別轉換（`vector<int>` 的 `push_back(2.5)` 放進去的是 2），Python 原樣放
+ * ⟹ 照元素型別換：整數截斷、bool 包 bool(…)、vector 複製一份（447）、pair 是 tuple（兩個值的 `{a, b}`／`make_pair` 逐格換，
+ * 另一個 pair 只收型別一模一樣的）。換不了回 undefined（呼叫端保留）
+ */
+export function elementValue(elem: string | undefined, v: SemanticNode | undefined, py: ToPythonContext): string | undefined {
+  if (!v) return undefined
+  if (/^vector ?</.test(bare(elem))) return `list(${py.expr(v)})`
+  const el = pairElements(elem)
+  if (el) {
+    const parts = v.slots?.values?.length === 2 ? v.slots.values : v.slots?.first?.length && v.slots?.second?.length ? [v.slots.first[0], v.slots.second[0]] : undefined
+    if (parts) return `(${parts.map((x, k) => intValue(el[k], py.typeOf(x), py.expr(x))).join(', ')})`
+    return sameType(py.typeOf(v), `pair<${el.join(',')}>`) ? py.expr(v) : undefined
+  }
+  return intValue(bare(elem), py.typeOf(v), py.expr(v))
+}
+
+/** 容器型別的元素型別（第一個樣板引數；`vector<int>`、`stack<int>`、`set<int>`…） */
+export const elementOf = (t: string | undefined): string | undefined => templateArgs(t)?.[1][0]

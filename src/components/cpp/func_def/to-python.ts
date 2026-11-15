@@ -1,6 +1,7 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar, ToPythonContext } from '../../../languages/cpp/to-python/contract'
 import type { SemanticNode } from '../../../core/types'
+import { declaresTyped } from '../../../languages/cpp/to-python/contract'
 
 /**
  * `vector<T>&`／`const vector<T>&`／`const vector<T>` 的參數（447）：Python 的 list 傳進函式本來就是同一個物件
@@ -33,7 +34,7 @@ function rebinds(nodes: readonly SemanticNode[], name: string): boolean {
   for (const n of nodes) {
     const keys = Object.keys(n.slots ?? {}).filter((k) => n.slots[k]?.length)
     if (keys.includes('target') && keys.every((k) => k === 'target' || k === 'value') && isName(n.slots.target[0])) return true
-    if (n.properties?.name === name && n.properties?.type !== undefined) return true
+    if (n.properties?.name === name && declaresTyped(n)) return true
     for (const k of Object.keys(n.slots ?? {})) if (rebinds(n.slots[k], name)) return true
   }
   return false
@@ -42,7 +43,7 @@ function rebinds(nodes: readonly SemanticNode[], name: string): boolean {
 /** 本體裡宣告過的名字（同名而且帶型別——問形狀） */
 function declaredNames(nodes: readonly SemanticNode[], acc = new Set<string>()): Set<string> {
   for (const n of nodes) {
-    if (typeof n.properties?.name === 'string' && n.properties?.type !== undefined && n.slots?.params === undefined) acc.add(n.properties.name)
+    if (declaresTyped(n) && n.slots?.params === undefined) acc.add(String(n.properties.name))
     for (const k of Object.keys(n.slots ?? {})) declaredNames(n.slots[k], acc)
   }
   return acc
@@ -65,7 +66,7 @@ function mentionedGlobals(nodes: readonly SemanticNode[], py: ToPythonContext, a
  */
 function shadowedLocal(nodes: readonly SemanticNode[], outer: ReadonlySet<string>): string | undefined {
   const declOf = (x: SemanticNode): string[] => x.slots?.declarators?.length ? x.slots.declarators.map((d) => String(d.properties?.name ?? ''))
-    : typeof x.properties?.name === 'string' && x.properties?.type !== undefined && x.slots?.params === undefined ? [x.properties.name] : []
+    : declaresTyped(x) && x.slots?.params === undefined ? [String(x.properties.name)] : []
   const here = new Set<string>()
   for (const n of nodes) {
     for (const x of declOf(n)) { if (outer.has(x) || here.has(x)) return x; here.add(x) }
@@ -134,6 +135,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
       // string 以值或 const 參考傳：Python 的字串不能改 ⟹ 兩邊意思相同；其餘參考、指標、容器照舊保留
       const okString = /^(const\s+)?(std::)?string(\s*&)?$/.test(t.trim()) && (!t.includes('&') || /^const/.test(t.trim()))
       const pname = String(p.properties.name ?? '')
+      // pair 以值或 const 參考傳（465）：pair 換成 tuple、tuple 不能改 ⟹ 兩邊意思相同（改成員是重建本地那一個，同 C++ 改的是複本）
+      const okPair = /^(const\s+)?(std::)?pair\s*<\s*(int|long|long long|short|double|(std::)?string)\s*,\s*(int|long|long long|short|double|(std::)?string)\s*>(\s*&)?$/.test(t.trim()) && (!t.includes('&') || /^const/.test(t.trim()))
+      if (okPair) { params.push(py.name(pname)); continue }
       const arrElem = arrayParamElement(t, pname, n)
       if (arrElem !== null) { py.noteElementType(py.name(pname), arrElem); params.push(py.name(pname)); continue }
       if (!okString && !sharedListParam(t, String(p.properties.name ?? ''), n) && /[&*<]|vector|\[|string/.test(t)) return [py.keep(p, 'outside-subset', `參數「${t} ${String(p.properties.name ?? '')}」的傳遞方式兩個語言不同`)]
