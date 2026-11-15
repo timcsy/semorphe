@@ -59,6 +59,11 @@ export interface ToPythonContext {
   useTruncMod(): string
   /** 程式需要 64 位元整數的除法或取餘數（456）：回傳補在開頭的小函式名——只用整數運算，商向零截斷，任何大小都與 C++ 逐位相同 */
   useTruncDiv(kind: 'div' | 'mod'): string
+  /**
+   * 程式需要有號整數的左移（478）：回傳補在開頭的小函式名——結果照寬度繞回（C++20 [expr.shift]p2：E1 × 2^E2 對 2^N 取模），
+   * 凡是 C++ 有定義的位移都與 C++ 逐位相同；位移量為負或超過寬度是未定義行為，Cella 先判出來
+   */
+  useShiftLeft(bits: 32 | 64): string
   /** 宣告 string 的那顆元件記下名字（身分留在膠囊裡，引擎不必認得它） */
   noteDeclaredString(name: string): void
   /** 這個名字在前面宣告成 string 嗎 */

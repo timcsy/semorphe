@@ -160,8 +160,7 @@ describe('C++ → Python：意思會變的反例', () => {
   for (const [name, body, kind] of [
     // 64 位元的整數：456 起改用整數運算的小函式 trunc_div／trunc_mod64（見下面 456 那一段）；無號的照舊保留
     ['無號整數的取餘數', '    unsigned long long a = 7, b = 2;\n    cout << a % b << endl;\n', 'modulo'],
-    // `<<`：C++ 溢位會繞回（C++20）或未定義，Python 的整數不會溢位（456）
-    ['左移', '    int a = 3;\n    cout << (a << 2) << endl;\n', 'outside-subset'],
+    // `<<`：456 起保留（Python 的整數不會溢位）；478 起有號整數換成照寬度繞回的小函式 shl32／shl64（見 478 那一段），無號的照舊保留
     ['無號整數的位元運算（與負數混用時 C++ 先轉成無號）', '    unsigned int a = 6;\n    int b = -1;\n    cout << (a & b) << endl;\n', 'outside-subset'],
     // `i++` 這個運算式在 Python 沒有對應——不因為取餘數改用小函式就放行
     ['取餘數的一邊是 i++', '    int i = 7;\n    cout << i++ % 3 << " " << i << endl;\n', 'outside-subset'],
@@ -693,6 +692,21 @@ describe('C++ → Python：意思會變的反例', () => {
   }, 60_000)
   it('🔴 保留：放進 vector 的 deque（C++ 放進去的是複製的一份）、範圍建構（475）', async () => {
     for (const body of ['    deque<int> d;\n    vector<deque<int>> v;\n    v.push_back(d);\n', '    vector<int> v = {1, 2};\n    deque<int> d(v.begin(), v.end());\n    cout << d.size();\n']) {
+      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
+    }
+  }, 60_000)
+  // ── 478：有號整數的左移（照寬度繞回的小函式）、char 的 &／|／^（StudyCpp basic/8_logic_4、8_logic_5、AP325/2/2_7）──
+  it('🟢 左移：1 << k、(1 << m) - 1、x <<= 1、mask |= 1 << j、1LL << 40；char 的 ^；判決相同（478）', async () => {
+    const src = H + 'int main() {\n    int m, k;\n    cin >> m >> k;\n    int full = (1 << m) - 1;\n    int team = 0;\n    for (int j = 0; j < m; j += 2) team |= 1 << j;\n    int two_n = 1;\n    for (int i = 0; i < k; i++) two_n <<= 1;\n    long long big = 1LL << 40;\n    long long b2 = 3;\n    b2 <<= k;\n    char c = \'A\';\n    c = (c ^ 22);\n    char d = c ^ 22;\n    cout << full << " " << team << " " << two_n << " " << big << " " << b2 << " " << c << d << " " << (c & 15) << " " << (d | 32) << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '5 3\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('def shl32(a, n):')
+    expect(r.code, r.code!).toContain('def shl64(a, n):')
+    for (const stdin of ['5 3\n', '30 20\n', '0 0\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：無號整數的左移（與負數混用時 C++ 先轉成無號）、char 的複合指定（478）', async () => {
+    for (const body of ['    unsigned int u = 3;\n    u = u << 2;\n    cout << u << endl;\n', '    char c = \'A\';\n    c += 1;\n    c ^= 2;\n    cout << c << endl;\n']) {
       const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
       expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
     }

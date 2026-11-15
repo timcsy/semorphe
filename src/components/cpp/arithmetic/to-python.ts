@@ -11,6 +11,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (isChar(py.typeOf(l)) || isChar(py.typeOf(rr))) {
       if (op === '%') return py.keep(n, 'modulo', '取餘數：負數時兩個語言的正負號規則不同')
       if (op === '/') return py.keep(n, 'division', 'char 參與的除法')
+      // `c ^ 22`（478，XOR 加密）：char 取字碼之後是整數，&、|、^ 與 C++ 逐位相同（另一邊要是有號整數或 char）
+      const intSide = (x: typeof l): boolean => isChar(py.typeOf(x)) || isSignedInt(py.typeOf(x))
+      if (['&', '|', '^'].includes(op) && intSide(l) && intSide(rr)) return `${side(l)} ${op} ${side(rr)}`
       if (!['+', '-', '*'].includes(op)) return py.keep(n, 'outside-subset', `運算子 ${op} 還沒有對應`)
       return `${side(l)} ${op} ${side(rr)}`
     }
@@ -38,7 +41,12 @@ export function registerToPython(r: ToPythonRegistrar): void {
     }
     // 位元運算（456）：兩邊都是有號整數時，Python 的整數是無限長的二補數 ⟹ &、|、^ 的結果與 C++ 逐位相同；
     // `>>` 在 C++20 是算術右移（向負無窮），與 Python 相同（位移量為負或超過寬度是未定義行為，Cella 先判出來）。
-    // `<<` 不收：C++ 溢位會繞回（C++20）或未定義，Python 不會；無號整數不收：與負數混用時 C++ 會先轉成無號
+    // `<<`（478）：C++ 照寬度繞回（C++20），Python 不會 ⟹ 交給照寬度繞回的小函式；無號整數不收：與負數混用時 C++ 會先轉成無號
+    if (op === '<<') {
+      const lt = py.typeOf(l)
+      if (isSignedInt(lt) && isSignedInt(py.typeOf(rr))) return `${py.useShiftLeft(isNarrowInt(lt) ? 32 : 64)}(${py.expr(l)}, ${py.expr(rr)})`
+      return py.keep(n, 'outside-subset', `運算子 <<（型別 ${lt ?? '不明'}、${py.typeOf(rr) ?? '不明'}）還沒有對應`)
+    }
     if (['&', '|', '^', '>>'].includes(op)) {
       if (isSignedInt(py.typeOf(l)) && isSignedInt(py.typeOf(rr))) return `${paren(l, py)} ${op} ${paren(rr, py)}`
       return py.keep(n, 'outside-subset', `運算子 ${op}（型別 ${py.typeOf(l) ?? '不明'}、${py.typeOf(rr) ?? '不明'}）還沒有對應`)
