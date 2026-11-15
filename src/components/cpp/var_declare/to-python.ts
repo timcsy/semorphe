@@ -1,6 +1,6 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { isChar, intValue } from '../../../languages/cpp/to-python/contract'
+import { isChar, intValue, pairElements, pairDeclLine } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
@@ -9,6 +9,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const type = String(n.properties.type ?? '')
     const name = py.name(String(n.properties.name ?? ''))
     let init = n.slots.initializer?.[0]
+    // pair 型別（466：`#define pii pair<int,int>` 之後的 `pii p;`——型別巨集展開了，元件仍是一般的宣告）：同 pair 那顆
+    const pe = pairElements(type)
+    if (pe) return [`${py.indent(depth)}${pairDeclLine(n, name, pe, init, py)}`]
     // 大括號初始化（`int x{}`、`int x{5}`，453：StudyCpp 13 支只差這一項）——問形狀：沒有屬性、只有 values 槽的初值。
     // 空的是值初始化（0），一個元素就是那個值（大括號不准窄化，值不變）；多個元素不是純量的初值，保留
     const braces = init && init.slots?.values !== undefined && Object.keys(init.properties ?? {}).length === 0 ? init.slots.values : undefined

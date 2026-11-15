@@ -3,6 +3,7 @@
  * 引擎（`../cpp-to-python.ts`）依身分查表；表外的身分記成「子集以外」。
  */
 import type { SemanticNode } from '../../../core/types'
+import { isLoop } from '../../../core/iterations'
 import type { KeepKind } from '../../../core/language-conversion'
 
 export interface ToPythonContext {
@@ -32,6 +33,8 @@ export interface ToPythonContext {
   useImport(module: string): string
   /** 程式需要「跨行讀一個詞」的小工具（同 cin 的讀法）——引擎在檔頭補上 */
   useTokenReader(): string
+  /** `cin >>` 讀進 char（一個非空白字元）或 bool（0／1）的小工具（468）——引擎在檔頭補上，回傳那個呼叫 */
+  useValueReader(kind: 'char' | 'bool'): string
   /**
    * `while (cin >> x)` 的那一問（459）：「還有沒有下一個詞」——讀到檔尾回 False（同 cin：EOF 時 x 不動、迴圈結束）。
    * 回傳那個呼叫（`has_token()`）；引擎在檔頭補上小工具（連同 useTokenReader 的那一支）
@@ -63,6 +66,8 @@ export interface ToPythonContext {
    * 引擎開頭掃一次整棵樹（有名字有型別的節點、計次迴圈的變數）；同一個名字宣告過兩種、或有一處說不出型別 ⟹ undefined
    */
   varTypeOf(name: string): string | undefined
+  /** 這個成員別名（466：`#define F first`）引擎展開了嗎——名字別處也用到就沒有展開 */
+  isExpandedAlias(name: string): boolean
   /**
    * 一顆節點寫成**指定的目標**（`=`、`+=`、`++`、`cin >>` 的左邊；450）。`readsFirst`：先讀再改（`+=`、`++`）。
    * 回傳的 `before` 是要先跑的一句（不含縮排）——map 的元素先讀再改，C++ 會先補上預設值、Python 的 dict 會丟 KeyError。
@@ -158,7 +163,12 @@ export interface ToPythonRegistrar {
   writes(fn: (n: SemanticNode) => readonly SemanticNode[]): void
 }
 
-export type TypeAliasFn = (n: SemanticNode) => { name: string; type: string } | undefined
+/**
+ * 別名有兩種：型別（`#define ll long long`、`#define pii pair<int,int>`）在型別文字上展開；
+ * 成員（466：`#define F first`）在成員名上展開——**只在那個名字整支程式都只當成員名用時**（`p.F`），
+ * 別處也出現（`int F`、`F(x)`）就整個不展開，留給 `isExpandedAlias` 回 false、讓那顆元件照實保留
+ */
+export type TypeAliasFn = (n: SemanticNode) => { name: string; type: string } | { name: string; member: string } | undefined
 
 export type RegisterToPython = (r: ToPythonRegistrar) => void
 
@@ -213,9 +223,11 @@ export const atom = (e: string): string => ATOM.test(e) ? e : `(${e})`
  * - 鍵只收整數與字串：std::string 的比較是 unsigned char 逐位元組＝UTF-8 的碼位順序，與 Python 的字串比較相同；
  *   char 有正負號（大於 127 的字元兩邊順序不同）、浮點有 NaN（sorted 會亂序）——都不收。
  * - 值只收放進去就不會被改的純量（數字、字串）；bool 不收（C++ 印 0／1、Python 印 True／False，而讀 map 的那顆不知道自己是 bool）。
- * - unordered_*、multi* 不收（走訪順序與重複鍵兩邊不同）。對不上 → undefined
+ * - multi* 不收（重複鍵兩邊不同）。對不上 → undefined
+ * - unordered_map／unordered_set（469）：一樣換成 dict／set，`ordered: false`——查、改、count 兩邊相同；
+ *   **走訪**的順序 C++ 沒有規定（看雜湊與桶數），換成 sorted 會變成另一支程式、照 dict 放進去的順序也不是 C++ 的 ⟹ 走訪的那一顆照實保留
  */
-export type KeyedKind = { kind: 'map'; key: string; value: string } | { kind: 'set'; key: string }
+export type KeyedKind = { kind: 'map'; key: string; value: string; ordered: boolean } | { kind: 'set'; key: string; ordered: boolean }
 const KEY = '(int|long|long long|short|string)'
 const MAP_VALUE = '(int|long|long long|short|double|string)'
 const bare = (t: string | undefined): string =>
@@ -226,10 +238,10 @@ export function isSignedInt(t: string | undefined): boolean {
 }
 export function keyedKind(t: string | undefined): KeyedKind | undefined {
   const s = bare(t)
-  const m = s.match(new RegExp(`^map ?< ?${KEY} ?, ?${MAP_VALUE} ?>$`))
-  if (m) return { kind: 'map', key: m[1], value: m[2] }
-  const e = s.match(new RegExp(`^set ?< ?${KEY} ?>$`))
-  return e ? { kind: 'set', key: e[1] } : undefined
+  const m = s.match(new RegExp(`^(unordered_)?map ?< ?${KEY} ?, ?${MAP_VALUE} ?>$`))
+  if (m) return { kind: 'map', key: m[2], value: m[3], ordered: !m[1] }
+  const e = s.match(new RegExp(`^(unordered_)?set ?< ?${KEY} ?>$`))
+  return e ? { kind: 'set', key: e[2], ordered: !e[1] } : undefined
 }
 
 /** map 的值型別在 Python 的預設值（C++ 的 `m[k]` 讀一個沒有的鍵，補上值初始化的那一個） */
@@ -253,6 +265,8 @@ const CAST_RANK: Record<string, number> = { short: 1, 'short int': 1, int: 2, si
  * - 整數 → 同寬或更寬的整數：照原樣（值不變）
  * - char → 整數：`ord(x)`（Python 的 char 是長度 1 的字串）
  * - 整數、double → double：`float(x)`（2^53 以內精確；long long 照實保留）
+ * - 容器／字串的長度（無號）→ int 或更寬（short 不收：三萬多個就繞回）：`len(x)` 照原樣（470：`(int)v.size()`）。長度超過 2^31−1 要那個容器先裝得下二十億個元素——
+ *   這裡當作不會發生（C++ 那邊繞回、Python 不會）；只收寫出來就是一個 `len(…)` 的，別的無號值照實保留
  * 其餘（窄化成 int 會繞回、轉成 float 會降精度、轉成 char／bool）照實保留——不猜。
  */
 export function castToPython(n: SemanticNode, py: ToPythonContext): string {
@@ -264,6 +278,10 @@ export function castToPython(n: SemanticNode, py: ToPythonContext): string {
     if (from === 'double' || from === 'float') return `int(${py.expr(v)})`
     if (from === 'char') return `ord(${py.expr(v)})`
     if (CAST_RANK[from] !== undefined && CAST_RANK[from] <= CAST_RANK[to]) return `(${py.expr(v)})`
+    if (CAST_RANK[to] >= 2 && /^(unsigned long|unsigned long long|size_t)$/.test(from)) {
+      const e = py.expr(v)
+      if (/^len\([^()]*\)$/.test(e)) return e
+    }
     return keep()
   }
   if (to === 'double') {
@@ -275,13 +293,21 @@ export function castToPython(n: SemanticNode, py: ToPythonContext): string {
 
 /** 本體裡有屬於這一圈的 continue 嗎（不往內層迴圈的 body 走——那裡的 continue 屬於內層；if 的分支槽叫 then_body／else_body）——寫成 while 的迴圈共用（453、456） */
 export function hasOwnContinue(nodes: readonly SemanticNode[]): boolean {
-  return nodes.some((x) => x.componentId.endsWith(':continue') || Object.entries(x.slots ?? {}).some(([k, kids]) => k !== 'body' && hasOwnContinue(kids)))
+  // 只有【內層迴圈】的本體不算（那裡的 continue 屬於它）——迴圈是元件宣告的 `control_flow: loop`，不看槽名：
+  // 467 之前跳過的是每一個叫 body 的槽，於是 `{ continue; }`（區塊）、switch 的 case 本體裡的 continue 都看不到
+  return nodes.some((x) => x.componentId.endsWith(':continue') || Object.entries(x.slots ?? {}).some(([k, kids]) => !(k === 'body' && isLoop(x)) && hasOwnContinue(kids)))
 }
 
 /** 本體裡有屬於這一圈的 break 嗎（457：`while (n--)` 正常結束時多減的那一次，break 出去的不會減）——寧可多報：switch 裡的 break 也算 */
 export function hasOwnBreak(nodes: readonly SemanticNode[]): boolean {
-  return nodes.some((x) => x.componentId.endsWith(':break') || Object.entries(x.slots ?? {}).some(([k, kids]) => k !== 'body' && hasOwnBreak(kids)))
+  return nodes.some((x) => x.componentId.endsWith(':break') || Object.entries(x.slots ?? {}).some(([k, kids]) => !(k === 'body' && isLoop(x)) && hasOwnBreak(kids)))
 }
+
+/** 這一顆是不是跳出去的敘述（467：switch 的一段結尾）——問身分的字尾，同上面兩支 */
+export const isBreakNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':break')
+export const isReturnNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':return')
+/** `cout << flush` 的那一顆（470）：只送出、不印字——印的那一顆把它寫成 print 的 `flush=True` */
+export const isFlushNode = (x: SemanticNode | undefined): boolean => !!x && x.componentId.endsWith(':io_flush')
 
 /** 一個左值的底名（`a`、`a[i]`、`v.at(i)`、`p.x` → a／v／p） */
 function baseName(x: SemanticNode | undefined): string | undefined {
@@ -342,6 +368,22 @@ export function templateArgs(t: string | undefined): [string, string[]] | undefi
 export function pairElements(t: string | undefined): [string, string] | undefined {
   const a = templateArgs(t)
   return a && a[0] === 'pair' && a[1].length === 2 ? [a[1][0], a[1][1]] : undefined
+}
+
+/**
+ * 宣告一個 pair（465；466 起 `pii p` 這種型別巨集展開出來的一般宣告也走這裡）：寫成 tuple——沒有初值是兩格的起始值，
+ * `{a, b}`／`make_pair(a, b)` 每一格照自己的型別換，來源是另一個 pair 的只收型別一模一樣的。回傳那一行（不含縮排）
+ */
+export function pairDeclLine(n: SemanticNode, name: string, types: readonly [string, string], src: SemanticNode | undefined, py: ToPythonContext): string {
+  const zeros = types.map(zeroOf)
+  if (zeros.some((z) => z === undefined)) return py.keep(n, 'outside-subset', `pair<${types.join(', ')}> 還沒有對應`)
+  if (!src) return `${name} = (${zeros.join(', ')})`
+  // 兩個值：問形狀——values 槽恰好兩個（大括號），或 first／second 兩個槽（make_pair）
+  const parts = src.slots?.values?.length === 2 ? src.slots.values
+    : src.slots?.first?.length && src.slots?.second?.length ? [src.slots.first[0], src.slots.second[0]] : undefined
+  if (parts) return `${name} = (${parts.map((v, k) => intValue(types[k], py.typeOf(v), py.expr(v))).join(', ')})`
+  if (!sameType(py.typeOf(src), `pair<${types.join(',')}>`)) return py.keep(n, 'needs-types', `放進 pair<${types.join(', ')}> 的值型別是 ${py.typeOf(src) ?? '不知道'}`)
+  return `${name} = ${py.expr(src)}`
 }
 
 /** 兩個型別寫法相同嗎（拿掉 std::、const、&、空白）——pair 整個指定只收一模一樣的（465） */

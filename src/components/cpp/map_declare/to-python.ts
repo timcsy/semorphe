@@ -1,4 +1,4 @@
-/** 這顆元件寫成 Python（450）：有序的 map → dict（走訪時由 loop_range 包 sorted） */
+/** 這顆元件寫成 Python（450）：有序的 map → dict（走訪時由 loop_range 包 sorted）；unordered_map 也是 dict（469，走訪的照實保留） */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
 import { keyedKind } from '../../../languages/cpp/to-python/contract'
 

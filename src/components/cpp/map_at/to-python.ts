@@ -7,6 +7,17 @@ import type { ToPythonRegistrar, ToPythonContext } from '../../../languages/cpp/
 import type { SemanticNode } from '../../../core/types'
 import { zeroOf, isSimple } from '../../../languages/cpp/to-python/contract'
 
+/**
+ * 鍵算兩次與一次相同嗎：變數、字面量，或「陣列的一格、索引也是這樣」（469：`cc[A[i]]++`）——問形狀（obj ＋ index 兩個槽），
+ * 不點名別顆元件。呼叫、運算都不收（寧可多保留）
+ */
+function pureKey(x: SemanticNode | undefined): boolean {
+  if (isSimple(x)) return true
+  const keys = Object.keys(x?.slots ?? {}).filter((k) => x!.slots[k]?.length)
+  return keys.length === 2 && keys.includes('obj') && keys.includes('index') && x!.slots.obj.length === 1 && x!.slots.index.length === 1
+    && isSimple(x!.slots.obj[0]) && pureKey(x!.slots.index[0])
+}
+
 export function registerToPython(r: ToPythonRegistrar): void {
   const parts = (n: SemanticNode, py: ToPythonContext) => ({
     o: py.name(String(n.properties.obj ?? '')), key: n.slots.key?.[0], zero: zeroOf(py.typeOf(n)),
@@ -21,7 +32,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (!readsFirst) return { text: `${o}[${py.expr(key)}]` }
     if (zero === undefined) return { text: py.keep(n, 'outside-subset', `值是 ${py.typeOf(n) ?? '不知道型別'} 的 map 還沒有對應`) }
     // 先讀再改（`m[k]++`、`m[k] += v`）：先補上預設值、再改 ⟹ 鍵寫兩次，只收算兩次也一樣的鍵
-    if (!isSimple(key)) return { text: py.keep(n, 'outside-subset', 'map 的元素先讀再改、而鍵是一段有副作用的運算式') }
+    if (!pureKey(key)) return { text: py.keep(n, 'outside-subset', 'map 的元素先讀再改、而鍵是一段有副作用的運算式') }
     const k = py.expr(key)
     return { before: `${o}.setdefault(${k}, ${zero})`, text: `${o}[${k}]` }
   })

@@ -109,3 +109,56 @@ pair 換成 **tuple**，不是 list：C++ 的 pair 是值（`q = p` 複製一份
 **順手修到一個早就在的靜默失真**：放進容器的值沒照元素型別換——`vector<int>` 的 `push_back(2.5)`、`stack<int>` 的 `push(4.5)`、`set<int>` 的 `insert(6.2)`、`vector<int> v(n, 2.5)`，C++ 放進去的是截斷後的整數，Python 原樣放浮點（印 `2.5 3.95 1000.0`，C++ 印 `2 3 1000`）。寫 vector<pair> 的 push_back 時看到它原樣 append，先寫一支判決例證實再修（`elementValue`）。
 
 **結果**：StudyCpp 換得過去 86 → 86，沒有掉支、沒有一支的輸出變了。pair 那一族擋在後面的是成員巨集（`#define F first`，6 支）、`sort`（等 Cella）、multiset、heapq——這一刀是它們的地基。
+
+## 後續：466（11-15）
+
+成員巨集（`#define F first`／`#define y second`，StudyCpp 17 支）與 pair 的型別巨集（`#define pii pair<int,int>`，6 支）。lift 看到的是 `p.F`（成員名 F）與 `pii p`（一般的宣告、型別文字 pii）——巨集在 lift 之前沒有展開。
+
+型別巨集沿用 453 的別名：值是 `pair<…>` 也收，引擎在型別文字上展開；一般宣告的型別展開成 pair 之後走 pair 那顆同一套寫法（`pairDeclLine`，從 pair_declare 抽出來共用）。成員巨集是新的一種別名：引擎把成員名換掉——**只在那個名字整支程式都只當成員名用時**。C++ 的巨集到處都換（`#define x first` 之後 `int x` 是 `int first`），別處也出現就整個不展開、`#define` 那一句照實保留（`isExpandedAlias`）。`#define pb push_back` 不在這裡：`v.pb(x)` lift 成一個叫 pb 的方法呼叫，要換得在 lift 之前展開。
+
+453 那支「`#define F first` 要保留」的判決例轉成換得過去、判決相同。
+
+**結果**：StudyCpp 換得過去 86 → 86，沒有掉支、輸出沒變。用到成員／pair 巨集的 18 支裡，巨集不再是擋路的那一項；**9 支現在只剩 `range_sort`**（等 Cella 的 sort 變快），4_15 系列另有 multiset 與它的迭代器。
+
+## 後續：467（11-15）
+
+switch：每段都以 break／return 結尾、default 在最後、中間沒有別的 break ⟹ `if x in (1, 3): … elif …: … else: …`。其餘（掉下去的 fallthrough、段落中間的 break、default 不在最後）照 C++ 的跳法寫：`while True:` 只跑一次、裡面的 break 跳出它（同 C++ 跳出 switch），每段的條件是 `hit or x in (…)`、default 那段是 `hit or x not in (所有 case 的值)`——default 在哪裡都對。被比的值是名字或字面量就直接用（段落裡改了它也沒關係：後面的條件被 hit 短路），否則先算一次存起來。掉下去的 switch 裡有屬於外層迴圈的 continue 就保留（它會跳到 while True 的下一圈）。
+
+`~x` 只收有號整數（C++20 定死了二補數，~x ＝ -x - 1，同 Python）；無號的 C++ 繞回成很大的數，保留。`{ … }` 區塊攤平在同一層。
+
+**順手補到一個藏著的漏洞**：「本體有屬於這一圈的 continue」（for 寫成 while 時 continue 會跳過更新）原本跳過每一個叫 body 的槽——用意是跳過內層迴圈，而區塊、case 的本體也叫 body，於是 `for (…; i *= 2) { { if (…) continue; } }` 看不到那個 continue。區塊之前換不過去所以沒有露出來；這一刀讓區塊換得過去，**同一刀改成只跳過宣告了 `control_flow: loop` 的本體**，並釘一支保留的判決例。
+
+**結果**：StudyCpp 換得過去 86 → 88 支（basic 11_switch_case_2——case 2 掉進 default；8_logic_2——`~0`、`~0b00000100`），兩支判決、輸出都相同；沒有掉支、沒有一支的輸出變了。
+
+## 後續：468（11-15）
+
+`cin >>` 讀進 char 與 bool。char 跳過空白、讀**一個**字元——詞的其餘部分留給下一次讀（`A3` 讀進 char 再讀 int 是 'A' 與 3）；讀詞的小工具有兩份存法（詞的 list／這一行還沒讀的字，後者給用了 getline 的程式），讀一個字元也各一份，讀完之後 getline 看得到那一行剩下的字。bool 讀一個整數：0 是 false、1 是 true；其他值 C++ 設 failbit（b 變成 true、之後的讀全部失敗），Python 寫不出「之後都讀不到」⟹ 丟例外——照輸入判、看得見，不是靜默。
+
+⚠️ 一個已知的差：C++ 的 char 是一個位元組、Python 是一個字元，非 ASCII 的輸入兩邊讀到的不同（string 的長度早就有同一個限制）。
+
+**結果**：StudyCpp 換得過去 88 → 90 支（AP325 1_11、tioj 9_toj170），沒有掉支、沒有一支的輸出變了。9_toj170 判決、輸出相同；1_11 的探針測資是**問程式自己生的**（只知道「讀一個 bool」，不知道題目只給 0／1），於是 Python 那邊丟「bool 只讀得進 0 或 1」——那正是設計上該看得見的那一條，不是失真。
+
+## 後續：469（11-15）
+
+`unordered_map` 換成 dict。查、改、`count`、`clear()` 兩邊相同；**走訪**的順序 C++ 沒有規定（看雜湊與桶數）——包 `sorted` 是另一支程式、照 dict 放進去的順序也不是 C++ 的 ⟹ 走訪 unordered 容器的那一顆照實保留（`KeyedKind` 多一個 `ordered`）。同一刀：`x.clear()`（vector、map／set、stack／queue 都有同名、同樣原地清空的方法；字串不收），以及 map 先讀再改時鍵可以是「陣列的一格、索引也是名字或字面量」（`cc[A[i]]++`，問形狀：obj ＋ index 兩個槽）。
+
+**結果**：StudyCpp 換得過去 90 → 93 支，沒有掉支、沒有一支的輸出變了。
+- tioj 21_toj55_2：判決、輸出相同。
+- AP325 3_10：換出來的 Python 裡有 `A = [0] * 200007`，Cella 的 Python 判決**丟例外**（Maximum call stack size exceeded）——cella 已認的 `[0] * N` 缺陷、在它的下一批；把長度改成 20 判得出 accept。
+- tioj 21_d518_AC：探針問程式自己生的測資在一筆的中間就沒了；C++ 讀失敗照樣印、Python 丟 EOFError——看得見的那一種，同 1_11，不是失真。
+
+## 後續：470（11-15）
+
+- `cout << flush`：只送出、不印字 ⟹ 拿掉。印出來的內容兩邊相同，而 Python 的 `input()` 讀之前本來就會先送出 stdout；更貼字面的 `print(…, flush=True)` 是第一版，Cella 的 Python 判不出那個參數（unknown「the built-in print」）。只有 flush 的一句沒有任何一行，本體空了由 `py.block` 補 `pass`。
+- `(int)v.size()`：無號的長度轉成 int 或更寬 → `len(v)` 照原樣。超過 2^31−1 要那個容器先裝得下二十億個元素——當作不會發生；short 不收（三萬多個就繞回），寫出來不是一個 `len(…)` 的無號值照實保留。
+- 發現、沒在這一刀做：C++ 的替代拼法 `or`／`and` lift 成 arithmetic（身分錯）——要動 lift 與積木，另開一刀（471）。
+
+## 後續：471（11-15）——C++ 的替代拼法 lift 錯元件
+
+470 量到的：basic/11_switch_case_1 寫 `if (x > 100 or x < 0)`，而 `or` 不在任何一顆元件認領的符號裡 ⟹ 落到算術那一顆的兜底。**身分錯**（積木是算術、下拉沒有 `or` 這個值），而 C++ 這一側的來回轉換一字不差、Cella 判 accept——三個讀數都綠，只有 C++ → Python 這條投影看得見（logic 的換法只認 `&&`／`||`，算術的換法說「運算子 or 還沒有對應」）。
+
+**決定**：替代記號（[lex.digraph]：`and`／`or`／`not`／`not_eq`／`bitand`／`bitor`／`xor`／`compl`）在語法上與主拼法**完全相同**——那是詞法層的事 ⟹ 在共用的 C++ 運算式 lifter 比對「哪個符號屬於哪顆元件」之前換成主拼法，語義樹只記主拼法。代價：轉一圈回來是 `||`，學生寫的 `or` 不會留著——拼法是表面形態，不是語義（同空白、同大括號的位置）。
+
+沒有選的：①在 logic 那顆加認領 `or`、`and` 並保留原拼法——積木下拉要多兩個值（`or` 與 `||` 對學生是兩個選項、同一件事），precedence、formalize、Python 的換法各要多認一次；②保留拼法當一個形態屬性——為一個語料裡出現一次的寫法造一條軸，賺不回來。
+
+釘子：logic 膠囊的 `spec.test.ts`（身分、主拼法、再 lift 是同一棵樹、Cella 執行）與 C++ → Python 的判決例。

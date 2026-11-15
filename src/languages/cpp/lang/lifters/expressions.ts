@@ -29,6 +29,15 @@ import { buildInitializerList } from '../../../../components/cpp/initializer_lis
 // `else component = 'cpp:arithmetic'` 的兜底。三顆元件搬進膠囊之後，
 // **每一個符號由它自己的元件認領**，兜底也變成一句顯式宣告。
 
+// ─── 替代拼法（471）──────────────────────────────────────────────────────────
+// `x > 100 or x < 0` 的 `or` 與 `||` 是**同一個記號**（[lex.digraph]：替代記號在語法上與主拼法完全相同），
+// 這是詞法層的事——比對「哪個符號屬於哪顆元件」之前先換成主拼法。之前 `or` 認不得，落到算術的兜底（身分錯、積木下拉沒有這個值）。
+// ⚠️ 語義樹只記主拼法 ⟹ 轉一圈回來是 `||`（拼法是表面形態，不是語義）
+const ALTERNATIVE_TOKENS: Record<string, string> = {
+  and: '&&', or: '||', not: '!', not_eq: '!=', bitand: '&', bitor: '|', xor: '^', compl: '~',
+}
+const primaryToken = (op: string): string => ALTERNATIVE_TOKENS[op] ?? op
+
 // ─── 字串型別推斷（供 subscript_expression lifter 使用） ──────────────────────
 
 function isStringTypeName(text: string): boolean {
@@ -169,7 +178,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
     let op = '+'
     for (const child of node.children) {
       if (!child.isNamed && child.text !== '(' && child.text !== ')') {
-        op = child.text
+        op = primaryToken(child.text)
         break
       }
     }
@@ -218,7 +227,7 @@ export function registerExpressionLifters(lifter: Lifter): void {
   })
 
   lifter.register('unary_expression', (node, ctx) => {
-    const op = node.children.find(c => !c.isNamed)?.text ?? ''
+    const op = primaryToken(node.children.find(c => !c.isNamed)?.text ?? '')
     const operandNode = node.childForFieldName('argument') ?? node.namedChildren[0]
     const operand = operandNode ? ctx.lift(operandNode) : null
     const built = buildUnaryOp(op, operand)

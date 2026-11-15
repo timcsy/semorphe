@@ -286,7 +286,8 @@ describe('C++ → Python：意思會變的反例', () => {
     ['char 當鍵（大於 127 的字元兩邊順序不同）', 'int main() {\n    map<char, int> m;\n    m[\'a\'] = 1;\n    cout << m.size() << endl;\n    return 0;\n}\n', 'map<char, int>'],
     // ⏳ 等 Cella：走訪時包了 sorted，而 Cella 對裝字串的 set 仍帶 str.hash 的假設（450 回報）——收斂後改成換過去、cpp-advanced 下限 9 → 10
     ['set<string>（等 Cella 收斂 str.hash 假設）', 'int main() {\n    set<string> a;\n    a.insert("b");\n    for (string x : a) cout << x;\n    return 0;\n}\n', 'str.hash'],
-    ['unordered_map、multiset（走訪順序、重複鍵）', 'int main() {\n    unordered_map<int, int> m;\n    m[1] = 2;\n    multiset<int> ms;\n    cout << m.size() << endl;\n    return 0;\n}\n', 'unordered_map'],
+    // 469 起 unordered_map 換得過去（走訪照實保留並提示順序未定），這一例只剩 multiset 擋著
+    ['multiset（重複鍵）', 'int main() {\n    unordered_map<int, int> m;\n    m[1] = 2;\n    multiset<int> ms;\n    cout << m.size() << endl;\n    return 0;\n}\n', 'multiset'],
   ] as const) {
     it(`🔴 保留：${name}（450）`, async () => {
       const r = await toPython(K + code)
@@ -384,10 +385,12 @@ describe('C++ → Python：意思會變的反例', () => {
       await sameVerdict(src, r.code!, '')
     }, 60_000)
   }
-  it('🔴 保留：記號替換巨集 #define F first（453）', async () => {
-    const r = await toPython(H + '#define F first\nint main() {\n    pair<int, int> p = {1, 2};\n    cout << p.F << endl;\n    return 0;\n}\n')
-    expect(r.code, '換了').toBeNull()
-    expect(r.reasons.map((x) => x.detail).join()).toContain('巨集「F」')
+  it('🟢 記號替換巨集 #define F first（453 保留；466 起換——名字只當成員名用就展開成 p[0]）；判決相同', async () => {
+    const src = H + '#define F first\nint main() {\n    pair<int, int> p = {1, 2};\n    cout << p.F << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('p[0]')
+    await sameVerdict(src, r.code!, '')
   }, 60_000)
   it('🟢 v.back()、v.pop_back() → v[-1]、v.pop()；判決相同（453）', async () => {
     const src = H + 'int main() {\n    vector<int> v;\n    v.push_back(3);\n    v.push_back(8);\n    cout << v.back() << endl;\n    v.back() = 5;\n    v.pop_back();\n    cout << v.back() << " " << v.size() << endl;\n    return 0;\n}\n'
@@ -659,6 +662,106 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
   }, 60_000)
+  // ── 471：C++ 的替代拼法 or／and／not（lift 成主拼法）──
+  it('🟢 if (x > 100 or x < 0)、and、not：替代拼法換得過去；判決相同（471）', async () => {
+    const src = H + 'int main() {\n    int x;\n    cin >> x;\n    bool neg = x < 0;\n    if (x > 100 or x < 0) cout << "?";\n    else if (x >= 60 and not neg) cout << "pass";\n    else cout << "F";\n    cout << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '150\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    for (const stdin of ['150\n', '75\n', '-1\n', '30\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  // ── 470：cout << flush（只送出、不印字）、(int)v.size() ──
+  it('🟢 cout << x << flush、單獨一句 cout << flush：flush 拿掉（印的內容相同）；判決相同（470）', async () => {
+    const src = H + 'int main() {\n    int n;\n    while (cin >> n) {\n        unordered_map<string, int> mp;\n        string s;\n        int j{};\n        for (int i = 0; i < n; i++) {\n            cin >> s;\n            if (mp[s] == 0) {\n                j++;\n                mp[s] = j;\n                cout << "New! " << j << \'\\n\';\n            } else {\n                cout << "Old! " << mp[s] << \'\\n\' << flush;\n            }\n        }\n        cout << flush;\n    }\n    return 0;\n}\n'
+    const r = await toPython(src, '3\nab cd ab\n2\nx x\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).not.toContain('flush')
+    await sameVerdict(src, r.code!, '3\nab cd ab\n2\nx x\n')
+  }, 60_000)
+  it('🟢 (int)s.size()、(int)v.size() 寫成 len(…)；判決相同（470）', async () => {
+    const src = H + 'int main() {\n    int x;\n    string s;\n    cin >> x >> s;\n    vector<int> v(3, 1);\n    if (x > 100 || x < 0) cout << "?";\n    for (int i = 1; i <= (int)s.size(); i++) cout << s[i - 1];\n    cout << " " << (int)v.size() - 4 << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '7 abc\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('len(s)')
+    for (const stdin of ['7 abc\n', '-3 q\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：(short)v.size()（三萬多個就繞回）（470）', async () => {
+    const r = await toPython(H + 'int main() {\n    vector<int> v(3, 1);\n    cout << (short)v.size();\n    return 0;\n}\n')
+    expect(r.code, r.code ?? '').toBeNull()
+  }, 60_000)
+  // ── 469：unordered_map → dict（查、改、count、clear 相同；走訪照實保留）、clear()、map 的鍵是陣列的一格 ──
+  it('🟢 unordered_map 計數、cc[A[i]]++（鍵是陣列的一格）、clear() 之後重來；判決相同（469）', async () => {
+    const src = H + 'int A[20];\nint main() {\n    int n;\n    cin >> n;\n    unordered_map<int, int> cc;\n    for (int i = 1; i <= n; i++) {\n        cin >> A[i];\n        cc[A[i]]++;\n    }\n    cout << cc.size() << " " << cc[A[1]] << " " << cc.count(99) << endl;\n    cc.clear();\n    vector<int> v;\n    v.push_back(3);\n    v.clear();\n    for (int i = 1; i <= n; i++) {\n        if (cc[A[i]] == 0) cout << "N";\n        cc[A[i]] += 2;\n    }\n    cout << " " << cc[A[n]] << " " << v.size() << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '5\n4 1 4 7 1\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('cc.clear()')
+    await sameVerdict(src, r.code!, '5\n4 1 4 7 1\n')
+  }, 60_000)
+  it('🟢 unordered_map<string, int>：沒有的鍵讀到 0、++ 補上；判決相同（469）', async () => {
+    const src = H + 'int main() {\n    unordered_map<string, int> names;\n    string s;\n    cin >> s;\n    names["ab"] = 1;\n    names[s]++;\n    cout << names[s] << names["zz"] << names.size() << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, 'ab\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    for (const stdin of ['ab\n', 'cd\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：走訪 unordered_map（C++ 沒有規定順序）（469）', async () => {
+    const r = await toPython(H + 'int main() {\n    unordered_map<int, int> m;\n    m[3] = 1;\n    m[1] = 2;\n    for (auto p : m) cout << p.first;\n    return 0;\n}\n')
+    expect(r.code, r.code ?? '').toBeNull()
+    expect(JSON.stringify(r.reasons)).toContain('沒有規定順序')
+  }, 60_000)
+  // ── 468：cin >> 讀進 char（一個非空白字元）與 bool（0／1）──
+  it('🟢 cin >> char：跳過空白讀一個字元、黏在一起的 A3 拆成 \'A\' 與 3；cin >> bool 讀 0／1；判決相同（468）', async () => {
+    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    int total = 0;\n    for (int i = 0; i < n; i++) {\n        char a;\n        int h;\n        cin >> a >> h;\n        if (a == \'U\') total += h;\n        else total -= h;\n        cout << a << h << " ";\n    }\n    bool b, c;\n    cin >> b >> c;\n    int g[2];\n    g[0] = b;\n    g[1] = c;\n    cout << total << " " << b << c << " " << g[0] + g[1] << " " << (b && !c) << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '3\nU5 D 2\n  U10\n1 0\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('next_char()')
+    for (const stdin of ['3\nU5 D 2\n  U10\n1 0\n', '1\nX7\n0 1\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🟢 cin >> char 與 getline 混用：讀一個字元之後，那一行剩下的字留給 getline；判決相同（468）', async () => {
+    const src = H + 'int main() {\n    char c;\n    string rest;\n    cin >> c;\n    getline(cin, rest);\n    cout << c << "[" << rest << "]" << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '  xyz abc\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    for (const stdin of ['  xyz abc\n', 'q\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  // ── 467：switch（含掉下去的 fallthrough）、~x、{ … } 區塊 ──
+  it('🟢 switch 每段都 break：寫成 if／elif／else；case 2: { … } 區塊；~x；判決相同（467）', async () => {
+    const src = H + 'int main() {\n    int m;\n    cin >> m;\n    int d = ~m;\n    switch (m % 4) {\n        case 0:\n        case 1:\n            cout << "a";\n            break;\n        case 2: {\n            int k = ~(m + 1);\n            cout << k;\n            break;\n        }\n        default:\n            cout << "z";\n    }\n    cout << " " << d << " " << ~0 << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '6\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toMatch(/elif /)
+    for (const stdin of ['6\n', '5\n', '7\n', '-3\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🟢 switch 有掉下去的段落、段落中間的 break、default 不在最後：照 C++ 的跳法寫；判決相同（467）', async () => {
+    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    for (int i = 0; i < n; i++) {\n        int m;\n        cin >> m;\n        switch (m) {\n            case 1:\n            case 3:\n                cout << m << "odd";\n                break;\n            default:\n                cout << "d";\n            case 2:\n                cout << "two";\n                if (m > 5) break;\n                cout << "!";\n            case 4:\n                cout << "four";\n        }\n        cout << endl;\n    }\n    char c = \'b\';\n    switch (c) { case \'a\': cout << "A"; case \'b\': cout << "B"; case \'c\': cout << "C"; }\n    cout << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '6\n1 2 3 4 5 9\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('while True:')
+    await sameVerdict(src, r.code!, '6\n1 2 3 4 5 9\n')
+  }, 60_000)
+  it('🔴 保留：掉下去的 switch 裡有屬於外層迴圈的 continue；無號整數的 ~（467）', async () => {
+    for (const body of ['    for (int i = 0; i < 3; i++) {\n        switch (i) {\n            case 0: cout << "a";\n            case 1: continue;\n        }\n        cout << i;\n    }\n',
+      '    unsigned int u = 0;\n    cout << ~u << endl;\n']) {
+      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
+    }
+  }, 60_000)
+  it('🔴 保留：for 的本體在 { … } 裡有 continue（467 之前沒看進區塊）', async () => {
+    const r = await toPython(H + 'int main() {\n    for (int i = 1; i < 40; i *= 2) {\n        {\n            if (i == 2) continue;\n        }\n        cout << i;\n    }\n    return 0;\n}\n')
+    expect(r.code, r.code ?? '').toBeNull()
+  }, 60_000)
+  // ── 466：成員巨集（#define F first）與 pair 的型別巨集（#define pii pair<int,int>）──
+  it('🟢 #define F first／S second、#define pii pair<int,int>：pii 變數、pii 陣列、vector<pii>、p.F 讀寫、cin >> p.F；判決相同（466）', async () => {
+    const src = H + '#define F first\n#define S second\n#define pii pair<int,int>\n#define ll long long\npii a[3];\nint main() {\n    pii p;\n    pii q = {4, 5};\n    pii r = make_pair(7, 8);\n    vector<pii> v(2);\n    pair<ll, ll> w = {1, 2};\n    cin >> p.F >> a[1].S;\n    p.S = p.F * 2;\n    a[0].F++;\n    v[1].S += 3;\n    q.F = 2.9;\n    w.S *= 3;\n    cout << p.F << " " << p.S << " " << a[0].F << a[1].S << " " << v[1].F << v[1].S << " " << q.F << q.S << " " << r.F + r.S << " " << w.F << w.S << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '6 9\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('p = (0, 0)')
+    await sameVerdict(src, r.code!, '6 9\n')
+  }, 60_000)
+  it('🔴 保留：成員巨集的名字在別處也當名字用（C++ 會連那裡一起換掉）、#define pb push_back（466）', async () => {
+    for (const body of ['#define x first\nint main() {\n    pair<int, int> p = {1, 2};\n    int x = 3;\n    cout << p.x << x << endl;\n    return 0;\n}\n',
+      '#define pb push_back\nint main() {\n    vector<int> v;\n    v.pb(3);\n    cout << v[0] << endl;\n    return 0;\n}\n']) {
+      const r = await toPython(H + body)
+      expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
+    }
+  }, 60_000)
   // ── 465：pair 換成 tuple——改成員重建整個 tuple；pair 陣列；pair 傳值 ──
   it('🟢 pair 宣告（無初值、{a, b}、make_pair）、改成員（=、+=、++、cin >>）、pair 陣列、傳值的 pair 參數、比較；複製之後各自獨立；判決相同（465）', async () => {
     const src = H + 'pair<int, int> best;\nint score(pair<int, int> q) {\n    q.first += 100;\n    return q.first + q.second;\n}\nint main() {\n    int n;\n    cin >> n;\n    pair<int, int> a[5];\n    for (int i = 0; i < n; i++) {\n        cin >> a[i].first >> a[i].second;\n    }\n    pair<int, int> p;\n    pair<int, double> d = {1, 2.5};\n    pair<int, int> r = {3, 4.9};\n    pair<int, int> s = make_pair(5, 6);\n    p.first = 7;\n    p.second += 2;\n    a[1].first = 9;\n    a[1].second++;\n    r = s;\n    s.first = 0;\n    best = a[0];\n    best.second = score(best);\n    cout << p.first << " " << p.second << " " << d.second << " " << r.first << r.second << " " << s.first << endl;\n    cout << a[0].first << " " << a[1].first << " " << a[1].second << " " << a[2].second << " " << best.second << " " << score(a[0]) << " " << a[0].first << endl;\n    if (r < s) cout << "lt" << endl;\n    if (s < r) cout << "gt" << endl;\n    if (a[3] == p) cout << "eq" << endl;\n    return 0;\n}\n'
@@ -696,12 +799,20 @@ describe('C++ → Python：意思會變的反例', () => {
     await sameVerdict(src, r.code!, '2\n5 6\n7 8\n')
   }, 60_000)
   // ── 464：二維 vector——每一列各自一個新的 list ──
-  it('🟢 vector<vector<int>> g(R, vector<int>(C, x))、CTAD 的 vector dp(R, vector<int>(C))；改一格不影響別列；元素收到浮點值截斷；判決相同（464）', async () => {
-    const src = H + 'int main() {\n    int n, m;\n    cin >> n >> m;\n    vector dp(n + 1, vector<int>(m + 1));\n    vector<vector<int>> g(2, vector<int>(3, -1));\n    vector<int> row(m + 1, 7);\n    vector<vector<int>> h(2, row);\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]) + i * j;\n    g[0][1] = 2.9;\n    h[1][0] = 0;\n    cout << dp[n][m] << " " << dp[0][m] << " " << g[0][1] << g[1][1] << " " << h[0][0] << h[1][0] << row[0] << " " << dp.size() << " " << dp[0].size() << endl;\n    return 0;\n}\n'
+  // ⚠️ 原本一例，整支檔裡要 21 秒、長測試負載下逾時（11-15 lt471）→ 拆成兩例、填表那例加長
+  it('🟢 CTAD 的 vector dp(R, vector<int>(C))；雙層迴圈填表；判決相同（464）', async () => {
+    const src = H + 'int main() {\n    int n, m;\n    cin >> n >> m;\n    vector dp(n + 1, vector<int>(m + 1));\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= m; j++)\n            dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]) + i * j;\n    cout << dp[n][m] << " " << dp[0][m] << " " << dp.size() << " " << dp[0].size() << endl;\n    return 0;\n}\n'
     const r = await toPython(src, '3 4\n')
     expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
     expect(r.code, r.code!).toContain('for _ in range(')
     await sameVerdict(src, r.code!, '3 4\n')
+  }, 120_000)   // ⚠️ 單獨冷算 1 秒，排在整支檔裡 20 秒（它是第一例走到二維 list 與 max 的 Python 判決，Cella 冷檢那段算在它頭上）；長測試負載下過了 60 秒
+  it('🟢 vector<vector<int>> g(R, vector<int>(C, x))、h(R, row)；改一格不影響別列；元素收到浮點值截斷；判決相同（464）', async () => {
+    const src = H + 'int main() {\n    int m;\n    cin >> m;\n    vector<vector<int>> g(2, vector<int>(3, -1));\n    vector<int> row(m + 1, 7);\n    vector<vector<int>> h(2, row);\n    g[0][1] = 2.9;\n    h[1][0] = 0;\n    cout << g[0][1] << g[1][1] << " " << h[0][0] << h[1][0] << row[0] << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '4\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('for _ in range(')
+    await sameVerdict(src, r.code!, '4\n')
   }, 60_000)
   // ── 460：getline——讀這一行還沒讀的部分（cin >> n 之後是那一行剩下的字）、cin.ignore() 丟一個字元 ──
   it('🟢 getline：cin >> n 之後讀到那一行剩下的、cin.ignore() 之後讀下一行、while (getline(…)) 讀到檔尾；與 cin >> 混用；判決相同（460）', async () => {
