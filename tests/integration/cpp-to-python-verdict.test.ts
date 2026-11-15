@@ -250,8 +250,7 @@ describe('C++ → Python：意思會變的反例', () => {
   }
   for (const [name, code, detail] of [
     ['stack 傳值（複製一份）', 'void f(stack<int> s) {\n    s.push(9);\n}\n\nint main() {\n    stack<int> s;\n    f(s);\n    cout << s.size() << endl;\n    return 0;\n}\n', '傳遞方式'],
-    // ⏳ 寫法已經寫好（collections.deque／heapq，最大堆存負數）；Cella 的 Python 支援這兩個模組之前照實保留——發版後這兩條改成換過去
-    ['queue（等 Cella 支援 collections.deque）', 'int main() {\n    queue<int> q;\n    q.push(3);\n    cout << q.front() << endl;\n    return 0;\n}\n', 'collections.deque'],
+    // ⏳ 寫法已經寫好（heapq，最大堆存負數）；Cella 的 Python 支援 heapq 之前照實保留——發版後改成換過去（queue 那一條 475 起換得過去）
     ['priority_queue（等 Cella 支援 heapq）', 'int main() {\n    priority_queue<int> q;\n    q.push(-3);\n    cout << q.top() << endl;\n    return 0;\n}\n', 'heapq'],
   ] as const) {
     it(`🔴 保留：${name}（448）`, async () => {
@@ -675,6 +674,28 @@ describe('C++ → Python：意思會變的反例', () => {
     const rt = await toPython(t)
     expect(rt.code, JSON.stringify(rt.reasons)).not.toBeNull()
     await sameVerdict(t, rt.code!, '')
+  }, 60_000)
+  // ── 475：queue 與 std::deque → collections.deque（Cella 0249 起判得出 collections）──
+  it('🟢 queue：push／front／back／pop／empty／size、複製一份（q2 = q）；判決相同（475）', async () => {
+    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    queue<int> q;\n    for (int i = 1; i <= n; i++) q.push(i * 2.5);\n    queue<int> q2;\n    q2 = q;\n    q2.push(99);\n    while (!q.empty()) {\n        cout << q.front() << "," << q.back() << " ";\n        q.pop();\n    }\n    cout << q.size() << " " << q2.size() << " " << q2.back() << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '4\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('collections.deque(')
+    for (const stdin of ['4\n', '0\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🟢 std::deque：兩端進出、[i] 讀寫、front／back、size、empty、走訪、給個數與初值、大括號、複製一份；判決相同（475）', async () => {
+    // ⚠️ 不放 d.clear()：Cella 0249 的 C++ 那側 std::deque 沒有 clear（整支 unknown，已回報 cella）
+    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    deque<int> d;\n    deque<long long> e(3, 7);\n    deque<int> f = {4, 5, 6};\n    for (int i = 0; i < n; i++) {\n        if (i % 2) d.push_back(i);\n        else d.push_front(i * 1.5);\n    }\n    deque<int> c = d;\n    c.push_back(100);\n    d[0] = 9;\n    cout << d.front() << " " << d.back() << " " << d.size() << " " << d.empty() << " " << d[1] << endl;\n    d.pop_back();\n    d.pop_front();\n    for (int x : d) cout << x << ",";\n    for (long long x : e) cout << x;\n    cout << " " << f[2] << " " << c.size() << " " << c.back() << endl;\n    while (!d.empty()) d.pop_back();\n    cout << d.empty() << endl;\n    return 0;\n}\n'
+    const r = await toPython(src, '5\n')
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    expect(r.code, r.code!).toContain('.appendleft(')
+    for (const stdin of ['5\n', '2\n']) await sameVerdict(src, r.code!, stdin)
+  }, 60_000)
+  it('🔴 保留：放進 vector 的 deque（C++ 放進去的是複製的一份）、範圍建構（475）', async () => {
+    for (const body of ['    deque<int> d;\n    vector<deque<int>> v;\n    v.push_back(d);\n', '    vector<int> v = {1, 2};\n    deque<int> d(v.begin(), v.end());\n    cout << d.size();\n']) {
+      const r = await toPython(`${H}int main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, `換了：${body}\n${r.code}`).toBeNull()
+    }
   }, 60_000)
   // ── 473：回傳值與引數照宣告的型別轉換（StudyCpp 7_5_TLE：`ll DFS(…) { … return 1e9; }`，C++ 印 1000000000、Python 印 1000000000.0）──
   it('🟢 long long f() { return 1e9; }、int 回傳 2.7、bool 回傳 x * 5：照回傳型別轉換；判決相同（473）', async () => {

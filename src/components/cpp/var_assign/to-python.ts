@@ -1,6 +1,6 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { isChar, intValue, keyedKind, writeTo, sameType } from '../../../languages/cpp/to-python/contract'
+import { isChar, intValue, keyedKind, writeTo, sameType, adapterKind } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.stmt((n, py, depth) => {
@@ -16,6 +16,9 @@ export function registerToPython(r: ToPythonRegistrar): void {
     // vector／stack（448）的指定是複製（C++ 的 `b = a` 之後兩個各自獨立）；Python 的 `b = a` 是同一個 list ⟹ 寫成 `list(a)`（447：之前換出來改 b 會改到 a）
     const tg = py.target(target, false)
     if (/^(const\s+)?(std::)?(vector|stack)</.test(py.typeOf(target) ?? '')) return [`${py.indent(depth)}${writeTo(tg, `list(${py.expr(value)})`)}`]
+    // queue／std::deque（475，collections.deque）同理 ⟹ collections.deque(…)
+    const ak = adapterKind(py.typeOf(target))
+    if (ak === 'queue' || ak === 'deque') return [`${py.indent(depth)}${writeTo(tg, `${py.useImport('collections')}.deque(${py.expr(value)})`)}`]
     // map／set 同理（450）⟹ dict(…)／set(…)
     const keyed = keyedKind(py.typeOf(target))
     if (keyed) return [`${py.indent(depth)}${writeTo(tg, `${keyed.kind === 'map' ? 'dict' : 'set'}(${py.expr(value)})`)}`]
