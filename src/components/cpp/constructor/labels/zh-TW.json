@@ -1,6 +1,15 @@
 {
-  "C_CONSTRUCTOR_MSG0": "建構子 %1（%2）",
+  "C_CONSTRUCTOR_MSG0": "建構子 %1（%2）%3 %4 %5",
   "C_CONSTRUCTOR_MSG1": "初始化成員 %1",
   "C_CONSTRUCTOR_MSG2": "%1",
-  "C_CONSTRUCTOR_TOOLTIP": "定義建構子，在物件建立時初始化"
+  "C_CONSTRUCTOR_TOOLTIP": "定義建構子，在物件建立時初始化",
+  "C_CONSTRUCTOR_EXPLICIT_NO": "（可以自動轉換）",
+  "C_CONSTRUCTOR_EXPLICIT_YES": "explicit（不做自動轉換）",
+  "C_CONSTRUCTOR_CONSTEXPR_NO": "（執行時建構）",
+  "C_CONSTRUCTOR_CONSTEXPR_YES": "constexpr（可在編譯期建構）",
+  "FLOW_SLOT_CPP_CONSTRUCTOR_IS_EXPLICIT": "自動轉換",
+  "FLOW_SLOT_CPP_CONSTRUCTOR_IS_CONSTEXPR": "編譯期建構",
+  "C_CONSTRUCTOR_NOEXCEPT_NO": "（可能丟出例外）",
+  "C_CONSTRUCTOR_NOEXCEPT_YES": "noexcept（保證不丟例外）",
+  "FLOW_SLOT_CPP_CONSTRUCTOR_IS_NOEXCEPT": "丟出例外"
 }

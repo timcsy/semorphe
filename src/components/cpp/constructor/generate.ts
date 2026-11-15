@@ -25,7 +25,9 @@ export function registerGenerate(g: Map<string, NodeGenerator>, style: StylePres
           return `${name}(${generateExpression((n.slots?.value ?? [])[0], ctx)})`
         }).join(', ')}`
         : ''
-      const header = `${indent(ctx)}${className}(${paramStr})${initStr}${openBrace(ctx)}\n`
+      const spec = `${String(node.properties.is_explicit ?? 'false') === 'true' ? 'explicit ' : ''}${String(node.properties.is_constexpr ?? 'false') === 'true' ? 'constexpr ' : ''}`
+      const noexc = String(node.properties.is_noexcept ?? 'false') === 'true' ? ' noexcept' : ''
+      const header = `${indent(ctx)}${spec}${className}(${paramStr})${noexc}${initStr}${openBrace(ctx)}\n`
       trackOwnText(ctx, header)
       let code = header
       code += generateBody(body, indented(ctx))
