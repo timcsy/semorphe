@@ -117,6 +117,11 @@ async function openTask(page: Page, lesson: string, taskId: string): Promise<num
     __app: { blocklyPanel: { workspace: { getAllBlocks(o: boolean): unknown[] } } }
   }).__app.blocklyPanel.workspace.getAllBlocks(false).length)
   for (let i = 0; i < 40 && (await loaded()) < 3; i++) await page.waitForTimeout(500)
+  // 🪦 **第三版也不夠**（478、479 兩次長測試都紅在同一題 `02-型別#rebuild`——排在最前面的那一題，冷頁 ＋ 機器忙）：
+  //    積木載進來了、打散還沒開始，而「連續三次不變」那 3 秒剛好落在這一段 ⟹ 量到 1。
+  //    單獨重跑都綠。
+  // 🟢 先等到【打散真的發生】（頂層多於一塊），最多 30 秒；真的打散不出來的題目，等到上限照實回 1，下面那條照樣紅。
+  for (let i = 0; i < 60 && (await tops()) <= 1; i++) await page.waitForTimeout(500)
   let last = -1
   let same = 0
   for (let i = 0; i < 40 && same < 4; i++) {
@@ -134,23 +139,21 @@ test('★ 入口條件：真的找到「排回去」那種題了', () => {
   expect(ALL.length, '🔴 一題都沒找到 → 下面在驗空集合').toBeGreaterThan(20)
 })
 
-test('★ 每一題「排回去」都要真的打散得出東西', async ({ page }) => {
-  test.setTimeout(ALL.length * 25_000 + 60_000)
-  const empty: string[] = []
-  const fixed: string[] = []
-  for (const { lesson, task } of ALL) {
+// 🔴 原本是一支跑完全部 31 題的測試（逾時＝題數 × 25 秒），在忙的機器上一跑三、四分鐘，紅了也只說「有幾題」。
+//    482（2026-11-16）拆成每題一例：各自的逾時、紅的那一例就是那一題。
+for (const { lesson, task } of ALL) {
+  test(`★ 「排回去」要真的打散得出東西：${lesson}#${task.id}`, async ({ page }) => {
+    test.setTimeout(90_000)
     const tops = await openTask(page, lesson, task.id)
+    // 🟠 名單上的那幾課修好了 → **也要紅**，這樣名單才會跟著變短
+    if (KNOWN_EMPTY.has(lesson)) {
+      expect(tops, '🟢 這一課已經排得出題目了——請把它從 KNOWN_EMPTY 拿掉').toBeLessThanOrEqual(1)
+      return
+    }
     // 頂層只有一塊 ＝ 骨架自己，什麼都沒被拆下來
-    if (tops <= 1) empty.push(`${lesson}#${task.id}`)
-    else if (KNOWN_EMPTY.has(lesson)) fixed.push(`${lesson}#${task.id}`)
-  }
-  // 🟠 名單上的那幾課修好了 → **也要紅**，這樣名單才會跟著變短
-  expect(fixed, '🟢 這幾課已經排得出題目了——請把它們從 KNOWN_EMPTY 拿掉').toEqual([])
-  expect(
-    empty.filter((e) => !KNOWN_EMPTY.has(e.split('#')[0])),
-    '🔴 這幾題「排回去」一塊都沒打散——學生打開它看到的就是答案：',
-  ).toEqual([])
-})
+    expect(tops, '🔴 這一題「排回去」一塊都沒打散——學生打開它看到的就是答案').toBeGreaterThan(1)
+  })
+}
 
 /**
  * 🔴 **鋪題的半路不准存檔**（第 432 刀，2026-11-13）。
