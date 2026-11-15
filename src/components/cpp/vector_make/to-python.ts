@@ -13,6 +13,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     if (zero === null) return py.keep(n, 'outside-subset', `vector<${t}>(…) 還沒有對應`)
     const size = n.slots.size?.[0], fill = n.slots.fill?.[0]
     if (!size) return '[]'
-    return `[${fill ? intValue(t, py.typeOf(fill), py.expr(fill)) : zero}] * ${paren(size, py)}`
+    return `[${fill ? intValue(py, t, fill) : zero}] * ${paren(size, py)}`
   })
 }

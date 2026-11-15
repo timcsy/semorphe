@@ -14,6 +14,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     const target = `${o}[${py.expr(n.slots.index?.[0])}]`
     // vector 陣列的一格整個指定（463）：C++ 複製一份，Python 的 `g[i] = v` 是同一個 list ⟹ `list(…)`（同 var_assign，447）
     if (/^(const\s+)?(std::)?vector</.test(et ?? '')) return [`${py.indent(depth)}${target} = list(${py.expr(value)})`]
-    return [`${py.indent(depth)}${target} = ${intValue(et, py.typeOf(value), py.expr(value))}`]
+    return [`${py.indent(depth)}${target} = ${intValue(py, et, value)}`]
   })
 }

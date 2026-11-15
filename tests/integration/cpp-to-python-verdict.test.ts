@@ -178,6 +178,34 @@ describe('C++ → Python：意思會變的反例', () => {
       expect(r.reasons.map((x) => x.kind)).toContain(kind)
     }, 60_000)
   }
+  // 480（2026-11-15）：四格探針（verdict／out／exit／problems）量到的靜默失真——兩邊都 exit 0 而印的不一樣，或 Python 那邊當掉而 C++ 印得出來。
+  // 使用者定：語意樞紐之前不實作這些寫法，一律照實翻不出。⚠️ 實作了寫法、判決相同時，改成 🟢 那一型
+  for (const [name, body, kind] of [
+    ['char 放進 int（C++ 存字元碼 97、Python 存 "a"）', '    int x = \'a\';\n    cout << x << endl;\n', 'char'],
+    ['印 && 的結果（C++ 印 1、Python 印運算元 5）', '    int a = 3, b = 5;\n    cout << (a && b) << endl;\n', 'outside-subset'],
+    ['印 || 的結果（C++ 印 1、Python 印運算元 3）', '    int a = 3, b = 5;\n    cout << (a || b) << endl;\n', 'outside-subset'],
+    ['比較的結果放進 int（C++ 存 1、Python 存 True）', '    int a = 3, b = 2;\n    int k = a > b;\n    cout << k << endl;\n', 'outside-subset'],
+    ['無號整數的 --（0 減 1 時 C++ 繞回）', '    unsigned int u = 0;\n    u--;\n    cout << u << endl;\n', 'overflow'],
+    ['無號整數相減（2u - 3u）', '    unsigned int a = 2, b = 3;\n    unsigned int c = a - b;\n    cout << c << endl;\n', 'overflow'],
+    ['無號整數的 -=', '    unsigned int a = 2;\n    a -= 3;\n    cout << a << endl;\n', 'overflow'],
+    ['long long 窄化成 int', '    long long big = 5000000000LL;\n    int n = big;\n    cout << n << endl;\n', 'overflow'],
+    ['超出範圍的整數放進 char（300 → 44）', '    char c = 300;\n    cout << (int)c << endl;\n', 'char'],
+    ['整數的 pow（C++ 算成 double）', '    long long p = (long long)pow(3, 39);\n    cout << p << endl;\n', 'overflow'],
+    ['float（單精度）', '    float f = 16777217;\n    cout << (long long)f << endl;\n', 'outside-subset'],
+    ['string 加 char（Python 是 TypeError）', '    string s = "ab";\n    s = s + \'c\';\n    cout << s << endl;\n', 'char'],
+  ] as const) {
+    it(`🔴 保留：${name}（480）`, async () => {
+      const r = await toPython(`${H}#include <string>\n#include <cmath>\nint main() {\n${body}    return 0;\n}\n`)
+      expect(r.code, '換了——意思會變').toBeNull()
+      expect(r.reasons.map((x) => x.kind)).toContain(kind)
+    }, 60_000)
+  }
+  it('🟢 對照：char 參與整數運算再放進 int（`int d = c + 1`）照換；判決相同（480 的正向錨點）', async () => {
+    const src = H + 'int main() {\n    char c = \'A\';\n    int d = c + 1;\n    cout << d << endl;\n    return 0;\n}\n'
+    const r = await toPython(src)
+    expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
+    await sameVerdict(src, r.code!, '')
+  }, 60_000)
   it('🟢 char 參與運算 → ord()；整數放進 char 變數 → chr()；char 照印（364）；判決相同', async () => {
     const src = H + 'int main() {\n    string s = "b";\n    char c = \'a\';\n    char d = c + 2;\n    cout << s[0] - \'a\' << " " << c << d << endl;\n    if (d > \'b\') {\n        cout << "late" << endl;\n    }\n    return 0;\n}\n'
     const r = await toPython(src)
@@ -233,7 +261,8 @@ describe('C++ → Python：意思會變的反例', () => {
     ['empty 也收 string 與 vector', 'int main() {\n    string t = "";\n    vector<int> v;\n    v.push_back(3);\n    cout << t.empty() << v.empty() << endl;\n    return 0;\n}\n', 'len(t) == 0'],
     ['stack 的指定是複製', 'int main() {\n    stack<int> s;\n    s.push(1);\n    stack<int> t;\n    t = s;\n    t.push(5);\n    cout << s.size() << t.size() << endl;\n    return 0;\n}\n', 't = list(s)'],
     // 之前 `pow(-2, 2)` 換成 `-2 ** 2`：`**` 比一元負號綁得緊，C++ 印 4、Python 印 -4——靜默失真
-    ['pow 的底數是負數或運算式時加括號', 'int main() {\n    int a = -2;\n    cout << pow(-2, 2) << " " << pow(a, 2) << " " << pow(a + 1, 2) << endl;\n    return 0;\n}\n', '(-2) ** 2'],
+    // 480 起整數的 pow 照實保留（見下面「🔴 保留：pow 的兩邊都是整數」）；括號這一條改由浮點的底數守著
+    ['pow 的底數是負數或運算式時加括號', 'int main() {\n    double a = -2;\n    cout << pow(-2.0, 2) << " " << pow(a, 2) << " " << pow(a + 1, 2) << endl;\n    return 0;\n}\n', '(-2.0) ** 2'],
   ] as const) {
     it(`🟢 ${name}；判決相同（448）`, async () => {
       const src = S + code
@@ -251,6 +280,8 @@ describe('C++ → Python：意思會變的反例', () => {
     ['stack 傳值（複製一份）', 'void f(stack<int> s) {\n    s.push(9);\n}\n\nint main() {\n    stack<int> s;\n    f(s);\n    cout << s.size() << endl;\n    return 0;\n}\n', '傳遞方式'],
     // ⏳ 寫法已經寫好（heapq，最大堆存負數）；Cella 的 Python 支援 heapq 之前照實保留——發版後改成換過去（queue 那一條 475 起換得過去）
     ['priority_queue（等 Cella 支援 heapq）', 'int main() {\n    priority_queue<int> q;\n    q.push(-3);\n    cout << q.top() << endl;\n    return 0;\n}\n', 'heapq'],
+    // 480：pow 的兩邊都是整數——C++ 算成 double（cout 印 6 位有效數字：pow(1000, 2) 印 1e+06，Python 的 ** 印 1000000）
+    ['pow 的兩邊都是整數（480）', 'int main() {\n    int a = 1000;\n    cout << pow(a, 2) << endl;\n    return 0;\n}\n', 'pow 的兩邊都是整數'],
   ] as const) {
     it(`🔴 保留：${name}（448）`, async () => {
       const r = await toPython(S + code)
@@ -797,8 +828,9 @@ describe('C++ → Python：意思會變的反例', () => {
     expect(JSON.stringify(r.reasons)).toContain('沒有規定順序')
   }, 60_000)
   // ── 468：cin >> 讀進 char（一個非空白字元）與 bool（0／1）──
+  // 480：原本還有 `int g[2]; g[0] = b;`（bool 放進 int）——480 起照實保留（C++ 存 0／1、Python 存 True／False），那兩行拿掉
   it('🟢 cin >> char：跳過空白讀一個字元、黏在一起的 A3 拆成 \'A\' 與 3；cin >> bool 讀 0／1；判決相同（468）', async () => {
-    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    int total = 0;\n    for (int i = 0; i < n; i++) {\n        char a;\n        int h;\n        cin >> a >> h;\n        if (a == \'U\') total += h;\n        else total -= h;\n        cout << a << h << " ";\n    }\n    bool b, c;\n    cin >> b >> c;\n    int g[2];\n    g[0] = b;\n    g[1] = c;\n    cout << total << " " << b << c << " " << g[0] + g[1] << " " << (b && !c) << endl;\n    return 0;\n}\n'
+    const src = H + 'int main() {\n    int n;\n    cin >> n;\n    int total = 0;\n    for (int i = 0; i < n; i++) {\n        char a;\n        int h;\n        cin >> a >> h;\n        if (a == \'U\') total += h;\n        else total -= h;\n        cout << a << h << " ";\n    }\n    bool b, c;\n    cin >> b >> c;\n    cout << total << " " << b << c << " " << (b && !c) << endl;\n    return 0;\n}\n'
     const r = await toPython(src, '3\nU5 D 2\n  U10\n1 0\n')
     expect(r.code, JSON.stringify(r.reasons)).not.toBeNull()
     expect(r.code, r.code!).toContain('next_char()')

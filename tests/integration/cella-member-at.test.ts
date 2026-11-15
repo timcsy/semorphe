@@ -2,13 +2,21 @@
  * 類別外定義的位置（395，`iMemberAt`，cella 2026-11-10 談定）。本體與初值掛在類別的成員上，
  * 而「看得到哪些全域名字」與「靜態初值的順序」看的是定義寫在哪裡。
  */
-import { describe, it } from 'vitest'
-import { expectCellaOut } from '../helpers/cella-run'
+import { describe, it, expect } from 'vitest'
+import { expectCellaOut, runCella } from '../helpers/cella-run'
 
 const HEAD = '#include <iostream>\nusing namespace std;\n'
 const run = (code: string, out: string) => expectCellaOut(HEAD + code, out)
 
 describe('類別外定義的位置', () => {
+  // 480：配對鍵不含回傳型別——對不上的不合法程式原本照類別裡那一行送、判 accept
+  it('類別外定義的回傳型別與宣告不同：照實翻不出，不判 accept；相同的照常', async () => {
+    const bad = await runCella(HEAD + 'struct A { int f(); };\nlong A::f() { return 1; }\nint main() { A a; cout << a.f(); return 0; }\n')
+    expect(bad.verdict).toBe('untranslated')
+    expect(bad.untranslated.map((u) => u.reason).join('；')).toMatch(/回傳型別「long」與類別裡的宣告「int」不同/)
+    await run('struct A { long long f(); };\nlong  long A::f() { return 1; }\nint main() { A a; cout << a.f(); return 0; }\n', '1')
+  }, 60_000)
+
   it('靜態初值照定義的順序，不是類別裡宣告的順序', async () => {
     await run([
       'int c = 0;',

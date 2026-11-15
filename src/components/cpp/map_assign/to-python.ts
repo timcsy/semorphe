@@ -9,6 +9,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     // 浮點放進整數的 map：C++ 隱含截斷（同 var_assign）——值型別問宣告那一顆記下的（Cella 不給這一句型別）；不知道而值是浮點 ⟹ 保留
     const vt = py.elementTypeOf(o)
     if (vt === undefined && /^(const\s+)?(double|float|long double)/.test(py.typeOf(v) ?? '')) return [py.keep(n, 'needs-types', `放進 ${o} 的值是浮點，而不知道 ${o} 的值型別`)]
-    return [`${py.indent(depth)}${o}[${py.expr(n.slots.key?.[0])}] = ${intValue(vt, py.typeOf(v), py.expr(v))}`]
+    return [`${py.indent(depth)}${o}[${py.expr(n.slots.key?.[0])}] = ${intValue(py, vt, v)}`]
   })
 }

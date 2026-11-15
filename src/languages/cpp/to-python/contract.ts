@@ -106,13 +106,54 @@ export function isChar(t: string | undefined): boolean {
   return (t ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '').trim() === 'char'
 }
 
-/** 放進整數變數的值：C++ 會把浮點隱含截斷成整數、Python 不會 ⟹ 值是浮點時包 int()（向零截斷，同 C++；364） */
-export function intValue(target: string | undefined, valueType: string | undefined, e: string): string {
+/**
+ * 放進整數變數的值：C++ 會把浮點隱含截斷成整數、Python 不會 ⟹ 值是浮點時包 int()（向零截斷，同 C++；364）。
+ * 🔴 480：下面三種 C++ 會隱含轉換、Python 不會，**照實保留**（不在這裡新造語意規則——等 Cella 的語意樞紐把轉換寫明；
+ * 實測都是兩邊 accept 而印的不同，見 draft〈C++ 隱式語意規則清單〉的實測表）：
+ * - char 放進整數：C++ 存字元碼（`int x = 'a'` 印 97），Python 這邊是長度 1 的字串（印 a）
+ * - 比較／邏輯的結果放進整數：C++ 存 0／1，Python 存 True／False（`int k = a > b` 印 True）——Cella 的型別表說比較是 int，所以問 yieldsBool
+ * - 窄化（`int x = 一個 long long`）：C++ 照寬度繞回（5000000000 印 705032704），Python 保留大值。
+ *   容器大小（size_t、unsigned long）不擋：判決有步數上限，容器放不到 2^31 個元素
+ */
+export function intValue(py: ToPythonContext, target: string | undefined, value: SemanticNode | undefined, e: string = py.expr(value)): string {
   const t = (target ?? '').replace(/^const\s+/, '').trim()
-  const v = (valueType ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '').trim()
+  const v = (py.typeOf(value) ?? '').replace(/^const\s+/, '').replace(/\s*&$/, '').trim()
   // 放進 bool：C++ 非零就是 true（`bool b = 5;` 印 1），Python 原樣存 5、印的時候 int(b) 是 5（462 量到）⟹ 值不是 bool 就包 bool(…)
-  if (t === 'bool') return v === 'bool' || /^(True|False)$/.test(e) ? e : `bool(${e})`
+  if (t === 'bool') return v === 'bool' || py.yieldsBool(value) || /^(True|False)$/.test(e) ? e : `bool(${e})`
+  if (!value || !/^(int|long|long long|short|unsigned.*|size_t)$/.test(t)) return e
+  if (isChar(v)) return py.keep(value, 'char', `char 放進整數（${t}）：C++ 存的是字元碼，Python 這邊是長度 1 的字串`)
+  if (py.yieldsBool(value) || v === 'bool') return py.keep(value, 'outside-subset', `比較或邏輯的結果放進整數（${t}）：C++ 存 0／1，Python 存 True／False`)
+  if (isNarrowInt(t) && /^(long|long long|long int|long long int)$|^unsigned( int| long long)?$/.test(v)) {
+    return py.keep(value, 'overflow', `${v} 放進 ${t}：值超出範圍時 C++ 照寬度繞回，Python 不會`)
+  }
   return /^(int|long|long long|short)$/.test(t) && /^(double|float|long double)$/.test(v) ? `int(${e})` : e
+}
+
+/**
+ * `&&`／`||` 的結果當成值用（印出來；480）：C++ 是 bool（印 0／1），Python 的 `a and b` 回傳運算元本身（`3 and 5` 是 5）。
+ * 兩邊都是 bool 時相同；有一邊不是 ⟹ 呼叫端照實保留。當條件用沒有差別，不必問這個
+ */
+export function logicLeaksOperand(v: SemanticNode | undefined, py: ToPythonContext): boolean {
+  const op = v?.properties?.operator
+  if (!v || (op !== '&&' && op !== '||') || !py.yieldsBool(v)) return false
+  return [v.slots?.left?.[0], v.slots?.right?.[0]].some((x) => !py.yieldsBool(x) && bare(py.typeOf(x)) !== 'bool')
+}
+
+/**
+ * 整數放進 char 變數 ⟹ `chr(…)`（364）。🔴 480：整數字面量不在 0..127（`char c = 300`）時 C++ 照寬度繞回（印 44），
+ * `chr(300)` 是另一個字元 ⟹ 照實保留。不是字面量的整數運算式照舊 chr（範圍看執行時的值，Cella 的語意樞紐之後由它寫明）
+ */
+export function chrValue(py: ToPythonContext, value: SemanticNode, e: string = py.expr(value)): string {
+  const raw = value.properties?.value
+  if (typeof raw === 'string' && Object.keys(value.slots ?? {}).length === 0 && /^-?\d+$/.test(raw.trim()) && (Number(raw) < 0 || Number(raw) > 127)) {
+    return py.keep(value, 'char', `整數 ${raw} 放進 char：超出 0..127 時 C++ 照寬度繞回，Python 的 chr 是另一個字元`)
+  }
+  return `chr(${e})`
+}
+
+/** 無號整數（480）：減法與 `--` 在 C++ 會繞回成很大的數（有定義的行為），Python 會變成負數 */
+export function isUnsignedInt(t: string | undefined): boolean {
+  return /^unsigned\b|^(std::)?size_t$/.test(bare(t))
 }
 
 /** Python 字串字面量（JSON 的雙引號跳脫在 Python 裡同樣成立） */
@@ -399,7 +440,7 @@ export function pairDeclLine(n: SemanticNode, name: string, types: readonly [str
   // 兩個值：問形狀——values 槽恰好兩個（大括號），或 first／second 兩個槽（make_pair）
   const parts = src.slots?.values?.length === 2 ? src.slots.values
     : src.slots?.first?.length && src.slots?.second?.length ? [src.slots.first[0], src.slots.second[0]] : undefined
-  if (parts) return `${name} = (${parts.map((v, k) => intValue(types[k], py.typeOf(v), py.expr(v))).join(', ')})`
+  if (parts) return `${name} = (${parts.map((v, k) => intValue(py, types[k], v)).join(', ')})`
   if (!sameType(py.typeOf(src), `pair<${types.join(',')}>`)) return py.keep(n, 'needs-types', `放進 pair<${types.join(', ')}> 的值型別是 ${py.typeOf(src) ?? '不知道'}`)
   return `${name} = ${py.expr(src)}`
 }
@@ -421,10 +462,10 @@ export function elementValue(elem: string | undefined, v: SemanticNode | undefin
   const el = pairElements(elem)
   if (el) {
     const parts = v.slots?.values?.length === 2 ? v.slots.values : v.slots?.first?.length && v.slots?.second?.length ? [v.slots.first[0], v.slots.second[0]] : undefined
-    if (parts) return `(${parts.map((x, k) => intValue(el[k], py.typeOf(x), py.expr(x))).join(', ')})`
+    if (parts) return `(${parts.map((x, k) => intValue(py, el[k], x)).join(', ')})`
     return sameType(py.typeOf(v), `pair<${el.join(',')}>`) ? py.expr(v) : undefined
   }
-  return intValue(bare(elem), py.typeOf(v), py.expr(v))
+  return intValue(py, bare(elem), v)
 }
 
 /** 容器型別的元素型別（第一個樣板引數；`vector<int>`、`stack<int>`、`set<int>`…） */

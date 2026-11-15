@@ -34,7 +34,7 @@ export function registerToPython(r: ToPythonRegistrar): void {
     // `vector<T> v(n, x);`：元素是數字或字串（Python 裡不能改）⟹ `[x] * n` 每格是同一個值也沒有差別
     const fill = n.slots.fill?.[0]
     // 值照元素型別換（465：`vector<int> v(3, 2.5)` 每一格是 2；之前原樣放 2.5）
-    if (fill && n.slots.size?.length) return [`${py.indent(depth)}${name} = [${intValue(t, py.typeOf(fill), py.expr(fill))}] * ${paren(n.slots.size[0], py)}`]
+    if (fill && n.slots.size?.length) return [`${py.indent(depth)}${name} = [${intValue(py, t, fill)}] * ${paren(n.slots.size[0], py)}`]
     if (n.slots.size?.length) return [`${py.indent(depth)}${name} = [${zero}] * ${paren(n.slots.size[0], py)}`]
     if (Object.keys(n.slots).some((k) => k !== 'values' && k !== 'size' && (n.slots[k]?.length ?? 0) > 0)) return [py.keep(n, 'outside-subset', '這種 vector 的建法還沒有對應')]
     return [`${py.indent(depth)}${name} = []`]

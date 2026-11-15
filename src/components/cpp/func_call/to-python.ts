@@ -10,6 +10,6 @@ export function registerToPython(r: ToPythonRegistrar): void {
     // 同名的函式有幾種參數型別（多載）就認不出是哪一個 ⟹ 保留
     const pts = py.paramTypesOf(name)
     if (pts === undefined) return py.keep(n, 'outside-subset', `函式「${name}」有幾種參數型別（多載）——Python 一個名字只有一個函式`)
-    return `${py.name(name)}(${(n.slots.args ?? []).map((a, i) => intValue(pts[i], py.typeOf(a), py.expr(a))).join(', ')})`
+    return `${py.name(name)}(${(n.slots.args ?? []).map((a, i) => intValue(py, pts[i], a)).join(', ')})`
   })
 }

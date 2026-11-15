@@ -1,6 +1,6 @@
 /** 這顆元件寫成 Python（spec 219，research R7）。 */
 import type { ToPythonRegistrar } from '../../../languages/cpp/to-python/contract'
-import { paren, isChar, isNarrowInt, isSignedInt, truncatedRemainder } from '../../../languages/cpp/to-python/contract'
+import { paren, isChar, isNarrowInt, isSignedInt, truncatedRemainder, isUnsignedInt } from '../../../languages/cpp/to-python/contract'
 
 export function registerToPython(r: ToPythonRegistrar): void {
   r.expr((n, py) => {
@@ -15,6 +15,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
       const intSide = (x: typeof l): boolean => isChar(py.typeOf(x)) || isSignedInt(py.typeOf(x))
       if (['&', '|', '^'].includes(op) && intSide(l) && intSide(rr)) return `${side(l)} ${op} ${side(rr)}`
       if (!['+', '-', '*'].includes(op)) return py.keep(n, 'outside-subset', `運算子 ${op} 還沒有對應`)
+      // 另一邊不是整數（`s + 'c'`，字串接字元；480）：取字碼會變成字串加整數，Python 執行時丟 TypeError ⟹ 照實保留
+      if (!intSide(l) || !intSide(rr)) return py.keep(n, 'char', `char 與 ${py.typeOf(isChar(py.typeOf(l)) ? rr : l) ?? '不明型別'} 的 ${op}`)
       return `${side(l)} ${op} ${side(rr)}`
     }
     if (op === '%') {
@@ -52,6 +54,8 @@ export function registerToPython(r: ToPythonRegistrar): void {
       return py.keep(n, 'outside-subset', `運算子 ${op}（型別 ${py.typeOf(l) ?? '不明'}、${py.typeOf(rr) ?? '不明'}）還沒有對應`)
     }
     if (!['+', '-', '*', '/'].includes(op)) return py.keep(n, 'outside-subset', `運算子 ${op} 還沒有對應`)
+    // 無號整數相減（`2u - 3u`；480）：C++ 繞回成 4294967295（有定義的行為），Python 是 -1 ⟹ 照實保留
+    if (op === '-' && isUnsignedInt(py.typeOf(n))) return py.keep(n, 'overflow', `無號整數相減（型別 ${py.typeOf(n)}）：小減大時 C++ 會繞回、Python 會變成負數`)
     return `${paren(l, py)} ${op} ${paren(rr, py)}`
   })
 }
