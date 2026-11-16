@@ -11,7 +11,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { setupTestRenderer } from '../../../../tests/helpers/setup-renderer'
-import { expectCellaOut, runCella, describeCellaResult, knownCellaGap } from '../../../../tests/helpers/cella-run'
+import { expectCellaOut, runCella, describeCellaResult } from '../../../../tests/helpers/cella-run'
+import { formalize } from '../../../providers/cella/formalize'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
 import { generateCode } from '../../../core/projection/code-generator'
 import { renderToBlocklyState } from '../../../core/projection/block-renderer'
@@ -104,6 +105,11 @@ describe('cpp:constructor', () => {
   it('★ 執行（Cella）：輸出相同', async () => {
     await expectCellaOut(SRC, '3 65 7 0\n')
   })
+  it('★ formalize：constexpr 送 mbCtor.constexpr（Cella 第五輪，484 接上）', () => {
+    const json = JSON.stringify(formalize(lift(SRC)))
+    const flags = [...json.matchAll(/"expl":(true|false),"constexpr":(true|false)/g)].map((m) => [m[1], m[2]])
+    expect(flags).toEqual([['false', 'true'], ['true', 'false'], ['true', 'true'], ['false', 'false']])
+  })
   it('★ 執行（Cella）：explicit 送出去了——複製初始化用不了 explicit 建構子，Cella 判 reject', async () => {
     const bad = `${head}struct Q {\n    int v;\n    explicit Q(int x) : v(x) {\n    }\n};\nint main() {\n    Q q = 5;\n    cout << q.v << endl;\n    return 0;\n}\n`
     expect(ctors(lift(bad))[0].properties.is_explicit).toBe('true')
@@ -118,13 +124,15 @@ describe('cpp:constructor', () => {
     expect(ctors(t).length).toBe(0)
     expect(gen(t)).toContain('R(int x) noexcept(true) : v(x)')
   })
-  // 🟡 已知缺陷（Cella，11-15 回報）：我們送了 mbCtor.noexc: true，而 Cella 讓例外穿過 noexcept 建構子被 catch 接到（g++ 會 terminate）
-  it('🟡 已知缺陷（修好時這條會紅）：noexcept 的建構子丟出例外就 terminate，catch 接不到', async () => {
+  // 🟢 原本是已知缺陷（Cella，11-15 回報：例外穿過 noexcept 建構子被 catch 接到，g++ 會 terminate）；Cella 0.1.202611152334 修好，484 拔釘子
+  it('🟢 Cella 2334 起修好：noexcept 的建構子丟出例外就 terminate，catch 接不到', async () => {
     const src = `${head}struct T {\n    int v;\n    T(int x) noexcept : v(x) {\n        if (x < 0) {\n            throw 1;\n        }\n    }\n};\nint main() {\n    try {\n        T t(-1);\n        cout << t.v << endl;\n    } catch (int e) {\n        cout << "caught" << endl;\n    }\n    return 0;\n}\n`
     expect(ctors(lift(src))[0].properties.is_noexcept).toBe('true')
-    await knownCellaGap(/已印出："caught/, async () => {
+    {
       const r = await runCella(src)
-      expect(r.out ?? '', describeCellaResult(r)).not.toContain('caught')
-    })
+      // 判 accept 而且什麼都沒印——terminate 發生在 cout 之前（unknown／reject 不算過）
+      expect(r.verdict, describeCellaResult(r)).toBe('accept')
+      expect(r.out ?? '', describeCellaResult(r)).toBe('')
+    }
   })
 })

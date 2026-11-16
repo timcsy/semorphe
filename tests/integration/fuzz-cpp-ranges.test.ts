@@ -179,8 +179,8 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
   }, 60_000)
 
   // 歸類：Cella 未支援——std::nth_element
-  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_6｜nth_element’s partial ordering guarantees combined with stable_sort under a modular comparator and min_element with a custom comparator.', async () => {
-    await knownCellaGap(/std::nth_element is not supported yet/, async () => {
+  it('🟢 Cella 2334 起修好：🟠 fuzz_6｜nth_element’s partial ordering guarantees combined with stable_sort under a modular comparator and min_element with a custom comparator.', async () => {
+    {
       // 🟠 **為什麼不現在修**：缺的是 `nth_element / stable_sort 的比較器 / min_element 的比較器`——**新元件，不是做不到**。
       //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
       //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。
@@ -201,19 +201,19 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
       cout << '\\n';
       auto m = min_element(v.begin(), v.end(), [](int a, int b) { return abs(a - 5) < abs(b - 5); });
       cout << *m << ' ' << count_if(v.begin(), v.end(), [](int x) { return x > 5; }) << '\\n';`, "median=5\nleftmax=4 rightmin=6\n000111222\n5 4\n", '🟠 這一支在等 189')
-    })
+    }
   }, 60_000)
 
   // 歸類：Cella 未支援——std::copy
   // 2026-11-07 cella 0.1.202611071526 補上 <algorithm> 的 copy 系列之後換形狀：下一個卡點是 `ostream_iterator<int>(cout, "")`——
   //   原本被當成呼叫一個叫 ostream_iterator<int> 的函式，Cella 判「未宣告」reject（假的錯）；型別認得的改送 eTemp（`string("ab")` 因此從誤判變成判對），
   //   `ostream_iterator` 我們還不認得 ⟹ 照實翻不出。已問 Cella 這個型別的形狀
-  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_7｜A next_permutation do-while loop over three elements, ending with the wrap-around, then equal/binary_search including empty ranges.', async () => {
+  it('🟢 Cella 2334 起修好：🟠 fuzz_7｜A next_permutation do-while loop over three elements, ending with the wrap-around, then equal/binary_search including empty ranges.', async () => {
     // 2026-11-08（cella 0.1.202611080524）ostream_iterator 接上（eTemp、cout 送 eConst）之後換形狀：下一個卡點是 `next_permutation`（Cella 誠實的 unsupported）
     // 2026-11-09（cella 0.1.202611082213）next_permutation 補上之後換形狀：下一個卡點是 `std::is_sorted`（Cella 誠實的 unsupported）
     // 2026-11-14（cella 0.1.202611131931）is_sorted 補上之後換形狀：下一個卡點是 `std::equal`（Cella 誠實的 unsupported）
     // 2026-11-15（cella 0.1.202611150249）std::equal 補上之後換形狀：下一個卡點是 `std::binary_search`（Cella 誠實的 unsupported）
-    await knownCellaGap(/std::binary_search is not supported yet/, async () => {
+    {
       // 🟠 **為什麼不現在修**：缺的是 `copy / is_sorted / equal / binary_search / next_permutation / prev_permutation`——**新元件，不是做不到**。
       //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
       //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。
@@ -235,7 +235,7 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
            << equal(p.begin(), p.begin(), q.begin()) << '\\n';
       prev_permutation(q.begin(), q.end());
       cout << q[0] << q[1] << q[2] << '\\n';`, "123 132 213\n231 312 321\ncnt=6 sorted=1\n1101\n321\n", '')
-    })
+    }
   }, 60_000)
 
   // 歸類：Cella 未支援——自由函式 std::begin／std::end（內層空的大括號在 0.1.202611022353 修好之後露出來）
@@ -258,8 +258,8 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
   }, 60_000)
 
   // 歸類：Cella 未支援——std::remove（0.1.202611021533 補了 accumulate 之後露出來）
-  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_9｜A vector sorted, grown with push_back, sorted again, then queried with lower_bound/upper_bound before an erase-remove shrinks it.', async () => {
-    await knownCellaGap(/remove is not supported yet/, async () => {
+  it('🟢 Cella 2334 起修好：🟠 fuzz_9｜A vector sorted, grown with push_back, sorted again, then queried with lower_bound/upper_bound before an erase-remove shrinks it.', async () => {
+    {
       // 🟠 **為什麼不現在修**：缺的是 `distance`——**新元件，不是做不到**。
       //    語料 **0 處**（218 支學生程式一次都沒用到），而盲測抓到它是因為
       //    出題者寫的是競賽風格的真實學生程式——**兩個母體不一樣**。
@@ -282,7 +282,7 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
            << v[distance(v.begin(), lower_bound(v.begin(), v.end(), 15))] << '\\n';
       cout << (int)(upper_bound(v.begin(), v.end(), 99) - v.begin()) << ' '
            << (lower_bound(v.begin(), v.end(), 5) == v.begin()) << '\\n';`, "10 15 20 25 30 40 \n2 5 75\n5 40 15\n5 1\n", '🟠 這一支在等 189')
-    })
+    }
   }, 60_000)
 
   // 歸類：Cella 未支援——std::all_of 一族

@@ -23,7 +23,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -98,12 +98,12 @@ describe('膠囊自證：擠掉不要的那兩顆', () => {
   })
 
   // 🟡 Cella 0.1.202611020258 判 unknown：vector 沒有 erase 成員（spec 199 補上 range_remove 的 formalize 之後量到），已回報；期望值 g++ 實測相同
-  it('🟡 已知缺陷（修好時這條會紅）：🔴 execute：擠掉 ＋ 刪掉尾巴 ＝ 真的變短', () => knownCellaGap(/remove is not supported yet/, async () => {
+  it('🟢 Cella 2334 起修好：🔴 execute：擠掉 ＋ 刪掉尾巴 ＝ 真的變短', async () => {
     await run(`${H}int main(){ vector<int> v{1,2,1,3};\n`
       + ` v.erase(remove(v.begin(), v.end(), 1), v.end());\n`
       + ` for (int x : v) cout << x;\n`
       + ` return 0; }`, '23')
-  }))
+  })
 
   /**
    * ⚠️ **只擠掉相鄰的**——沒排序過時結果「不完整」而**不是錯的**（C++ 也是這樣）。
