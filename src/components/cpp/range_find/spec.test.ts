@@ -21,7 +21,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { Parser, Language } from 'web-tree-sitter'
 import { createTestLifter } from '../../../../tests/helpers/setup-lifter'
 import { registerCppLanguage } from '../../../languages/cpp/generators'
-import { expectCellaOut, knownCellaGap } from '../../../../tests/helpers/cella-run'
+import { expectCellaOut } from '../../../../tests/helpers/cella-run'
 import { generateCode } from '../../../core/projection/code-generator'
 import apcs from '../../../languages/cpp/styles/apcs.json'
 import type { SemanticNode, StylePreset } from '../../../core/types'
@@ -84,12 +84,12 @@ describe('膠囊自證：範圍那一族的三顆新元件', () => {
   })
 
   // 🟡 Cella 0.1.202611020258 判 unknown：std::begin is not supported yet（`begin(a)`／`end(a)` 自由函式），已回報；期望值 g++ 實測 21
-  it('🟡 已知缺陷（修好時這條會紅）：★ execute：找得到就是那一格，找不到就是結尾之後', () => knownCellaGap(/std::begin is not supported/, async () => {
+  it('🟢 Cella 1931 起修好：★ execute：找得到就是那一格，找不到就是結尾之後', async () => {
     await run(`${H}int main(){ int a[4]={4,5,6,7};\n`
       + ` cout << (find(begin(a), end(a), 6) - begin(a));\n`
       + ` cout << (find(begin(a), end(a), 9) == end(a));\n`
       + ` return 0; }`, '21')
-  }))
+  })
 
   /**
    * 🔴 **不改變長度**——這是「刪除-移除」為什麼是兩步的原因，

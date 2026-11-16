@@ -239,8 +239,8 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
   }, 60_000)
 
   // 歸類：Cella 未支援——自由函式 std::begin／std::end（內層空的大括號在 0.1.202611022353 修好之後露出來）
-  it('🟡 已知缺陷（修好時這條會紅）：🟢 fuzz_8｜Nested ranges: begin(d2[i])/end(d2[i]) on rows of a 2D vector and m[k].begin() on the vectors stored inside a map.', async () => {
-    await knownCellaGap(/std::begin is not supported yet/, async () => {
+  it('🟢 Cella 1931 起修好：🟢 fuzz_8｜Nested ranges: begin(d2[i])/end(d2[i]) on rows of a 2D vector and m[k].begin() on the vectors stored inside a map.', async () => {
+    {
       // 🟢 **這一支一開始就綠**——An empty row makes end(row) - begin(row) zero, and map element access inside the range expression creates the vector the iterators come from.
       await same(`vector<vector<int>> d2 = {{4, 1, 3}, {9, 7}, {}, {5, 5, 2, 8}};
       for (auto &row : d2) sort(begin(row), end(row));
@@ -254,7 +254,7 @@ describe('模糊測試的回歸：範圍演算法（第一輪）', () => {
       cout << '\\n';
       cout << *min_element(m[7].begin(), m[7].end()) << ' ' << m[3].size() << ' '
            << accumulate(m[1].begin(), m[1].begin(), 42) << '\\n';`, "136\n1:1 3:18 7:147 \n49 2 42\n", '🔴 盲測的回歸')
-    })
+    }
   }, 60_000)
 
   // 歸類：Cella 未支援——std::remove（0.1.202611021533 補了 accumulate 之後露出來）
