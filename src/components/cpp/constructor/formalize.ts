@@ -19,8 +19,8 @@ export function registerFormalize(r: FormalizeRegistrar): void {
       const field = String(f.one(a, 'target')?.properties?.name ?? '')
       return f.k('minit', { n: a.id, field, args: [f.exprOf(a, 'value')] })
     })
-    // ⚠️ is_constexpr 還不送：Cella 的 mbCtor.constexpr（選填布林）在第五輪發，升級那一刀接上（476 記）
-    return f.k('mbCtor', { acc: f.k('acPublic'), n: n.id, expl: String(n.properties?.is_explicit ?? 'false') === 'true', noexc: String(n.properties?.is_noexcept ?? 'false') === 'true', params, inits, body: f.block(n, 'body') })
+    // constexpr：Cella 0.1.202611152334（第五輪）的 mbCtor.constexpr（選填布林，在 expl 之後）——常數引數建出的全域物件因此是靜態初始化（484 接上，476 記的）
+    return f.k('mbCtor', { acc: f.k('acPublic'), n: n.id, expl: String(n.properties?.is_explicit ?? 'false') === 'true', constexpr: String(n.properties?.is_constexpr ?? 'false') === 'true', noexc: String(n.properties?.is_noexcept ?? 'false') === 'true', params, inits, body: f.block(n, 'body') })
   })
   // 作用域：參數、初始化列、本體同一層（初始化列的值看得到參數：`: x(x)` 的右邊是參數）
   r.scope('cpp:constructor', (n, w) => w.inScope(() => {

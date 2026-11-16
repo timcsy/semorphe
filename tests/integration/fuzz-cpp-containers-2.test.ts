@@ -233,12 +233,12 @@ describe('模糊測試的回歸：容器第二輪', () => {
   }, 60_000)
 
   // 歸類：Cella 未支援——vector::erase
-  it('🟡 已知缺陷（修好時這條會紅）：🟢 刪除-移除：擠掉等於某個值的（同一族的另一半）', async () => {
-    await knownCellaGap(/remove is not supported yet/, async () => {
+  it('🟢 Cella 2334 起修好：🟢 刪除-移除：擠掉等於某個值的（同一族的另一半）', async () => {
+    {
       await same(
         `vector<int> v{1,2,1,3};
          v.erase(remove(v.begin(), v.end(), 1), v.end()); for (int x : v) cout << x;`, "23", '')
-    })
+    }
   }, 60_000)
 
   /**
