@@ -919,10 +919,10 @@ describe('盲測第二輪：位置的相鄰一格', () => {
    * `unique` 的邏輯尾端當後續每一段的界線。
    */
   // 歸類：Cella 未支援——自由函式 std::begin／std::end
-  it('🟡 已知缺陷（修好時這條會紅）：🟢 fuzz_03｜原始 C 陣列上的指標位置', async () => {
-    await knownCellaGap(/std::end is not supported yet/, async () => {
+  it('🟢 Cella 1931 起修好：🟢 fuzz_03｜原始 C 陣列上的指標位置', async () => {
+    {
       await whole(P03, "n = 10\nfirst run ends at index 0 value 37\nraw sum = 400\nmax = 90 at 4\n3 12 12 21 37 47 55 55 68 90 \nmid = 47, before = 37, after = 55\nfound 47 at 5, prev 37, next 55\nwindow [12,55] length 7\nwindow sum = 239\ndistinct = 8: 3 12 21 37 47 55 68 90\nshifted: 0 9 18 34 44 52 65 87\nreversed front part: 87 65 52 44 34 18 9 0\n", '')
-    })
+    }
   }, 180_000)
 
   /**
@@ -1129,9 +1129,10 @@ int main(){ cout << add(1) << " " << add(1, 2); return 0; }
   // 2026-11-14（cella 0.1.202611131931）string 的 rbegin 補上之後換形狀：下一個卡點是 `std::count`（Cella 誠實的 unsupported）
   // 2026-11-15（cella 0.1.202611150249）std::count 補上之後換形狀：下一個卡點是 `std::remove`（Cella 誠實的 unsupported）
   // 2026-11-16（cella 0.1.202611152334）std::remove 補上之後換形狀：下一個卡點是自由函式 `std::begin(v)`（Cella 誠實的 unsupported）
-  it('🟡 已知缺陷（修好時這條會紅）：🟠 fuzz_04 · 07 卡在 `std::begin`（11-16 起；之前是 std::remove、std::count）', async () => {
-    await knownCellaGap(/std::begin is not supported yet/, async () => {
+  // 2026-11-17（cella 0.1.202611161931）自由函式 std::begin／end 補上之後整段通過——轉回一般測試
+  it('🟢 Cella 1931 起修好：🟢 fuzz_04 · 07（一路卡過 std::count、std::remove、std::begin）', async () => {
+    {
       await whole(P05_NAIL, "find(9) = 4, find(42) = -1\ncount(3) = 3, std::count = 3\ndesserts\nlogical size after remove = 8, physical size = 11\n8 8 1 9 5 1 9 2 \n1 1 2 3 3 3 5 8 8 9 9 \n手寫去重: 1 2 3 5 8 9 (tail still holds 5 leftovers)\nunique agrees: yes\n1: lo@0 hi@1 next=2\n4: lo@3 hi@3 prev=3 next=5\n9: lo@5 hi@6 prev=8\nlast = 9 == 9 == 9\nsum = 28 max = 9\n", '')
-    })
+    }
   }, 180_000)
 })
