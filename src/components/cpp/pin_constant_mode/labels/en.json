@@ -1,0 +1,8 @@
+{
+  "C_PIN_CONSTANT_MODE_MSG0": "mode %1",
+  "C_PIN_CONSTANT_MODE_TOOLTIP": "Pin mode: OUTPUT drives the pin (LED, buzzer); INPUT reads it; INPUT_PULLUP reads with the internal pull-up (button released = HIGH, pressed = LOW)",
+  "C_PIN_CONSTANT_MODE_OUTPUT": "output OUTPUT",
+  "C_PIN_CONSTANT_MODE_INPUT": "input INPUT",
+  "C_PIN_CONSTANT_MODE_INPUT_PULLUP": "input with pull-up INPUT_PULLUP",
+  "FLOW_TITLE_CPP_PIN_CONSTANT_MODE": "Pin mode"
+}

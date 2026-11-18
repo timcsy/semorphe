@@ -1,4 +1,4 @@
 {
-  "C_DIGITAL_WRITE_MSG0": "把腳位 %1 設成 %2",
-  "C_DIGITAL_WRITE_TOOLTIP": "digitalWrite(腳位, HIGH／LOW)——把腳位拉到高電位或低電位"
+  "C_DIGITAL_WRITE_MSG0": "讓腳位 %1 輸出 %2",
+  "C_DIGITAL_WRITE_TOOLTIP": "digitalWrite(腳位, 電位)——HIGH 通電（LED 亮）、LOW 斷電（LED 滅）。第二格放「電位」積木；腳位要先設定成 OUTPUT 模式"
 }

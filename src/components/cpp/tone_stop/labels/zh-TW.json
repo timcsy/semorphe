@@ -1,4 +1,4 @@
 {
-  "C_TONE_STOP_MSG0": "停止腳位 %1 的聲音",
-  "C_TONE_STOP_TOOLTIP": "noTone(腳位)——讓蜂鳴器停下來。⚠️ 只有「發出赫茲」沒指定毫秒時才需要它"
+  "C_TONE_STOP_MSG0": "讓腳位 %1 停止發聲",
+  "C_TONE_STOP_TOOLTIP": "noTone(腳位)——讓蜂鳴器安靜下來。發聲時第三格留空（一直響）才需要它"
 }

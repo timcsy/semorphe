@@ -1,0 +1,39 @@
+[
+  {
+    "id": "cpp_pin_constant_level",
+    "componentId": "cpp:pin_constant_level",
+    "language": "cpp",
+    "category": "hardware",
+    "version": "1.0.0",
+    "blockDef": {
+      "type": "cpp_pin_constant_level",
+      "message0": "%{BKY_C_PIN_CONSTANT_LEVEL_MSG0}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "VALUE",
+          "options": [
+            [
+              "%{BKY_C_PIN_CONSTANT_LEVEL_HIGH}",
+              "HIGH"
+            ],
+            [
+              "%{BKY_C_PIN_CONSTANT_LEVEL_LOW}",
+              "LOW"
+            ]
+          ]
+        }
+      ],
+      "output": "Expression",
+      "colour": "#E67E22",
+      "tooltip": "%{BKY_C_PIN_CONSTANT_LEVEL_TOOLTIP}"
+    },
+    "renderMapping": {
+      "fields": {
+        "VALUE": "value"
+      },
+      "inputs": {},
+      "statementInputs": {}
+    }
+  }
+]

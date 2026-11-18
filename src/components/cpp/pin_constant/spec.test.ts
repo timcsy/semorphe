@@ -63,15 +63,13 @@ describe('膠囊自證：cpp:pin_constant', () => {
    * > **一個「因為沒有人會這樣做所以安全」的理由，
    * > 保護的是常見情況——而 bug 住在別的地方。**
    */
-  it('★ 沒有人宣告時，從程式碼進來的 `HIGH` 是腳位常數', () => {
-    const ids = collect(lift('void setup(){ digitalWrite(13, HIGH); }'))
-    expect(ids, '🔴 樣式沒有認領它——round-trip 會掉形狀').toContain('cpp:pin_constant')
-  })
-
-  it('★ 而使用者宣告了同名的，樣式不得認領', () => {
-    const ids = collect(lift('int main(){ int HIGH = 7; int x = HIGH; }'))
-    expect(ids, '🔴 名字又被樣式搶走了').not.toContain('cpp:pin_constant')
-    expect(ids).toContain('cpp:var_ref')
+  // 🔁 2026-11-18：五條樣式搬到 `pin_constant_level`（HIGH／LOW）與 `pin_constant_mode`（OUTPUT／INPUT／INPUT_PULLUP）。
+  //    「先問 notDeclared」那兩支跟著搬過去了（見那兩顆的 spec.test.ts）。這一顆只剩腳位名稱。
+  it('★ 從程式碼進來的 `HIGH`／`OUTPUT` 不再是這一顆——各自是電位與模式', () => {
+    const ids = collect(lift('void setup(){ pinMode(13, OUTPUT); digitalWrite(13, HIGH); }'))
+    expect(ids).toContain('cpp:pin_constant_level')
+    expect(ids).toContain('cpp:pin_constant_mode')
+    expect(ids).not.toContain('cpp:pin_constant')
   })
 
   // 區域的列舉（第 238 刀：sType 包 tdEnum）。期望值：g++ 印 -1

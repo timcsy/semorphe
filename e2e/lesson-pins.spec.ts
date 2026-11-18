@@ -49,7 +49,7 @@ const CASES = [
     probe: 'print("hi")',
   },
   {
-    id: 'arduino/01-閃一顆燈', target: 'arduino-uno', language: 'cpp', want: 6,
+    id: 'arduino/01-閃一顆燈', target: 'arduino-uno', language: 'cpp', want: 8, // 486：電位、模式拆成自己的積木，宣告多兩顆
     probe: 'void setup() {\n    pinMode(LED_BUILTIN, OUTPUT);\n}\n\nvoid loop() {\n    digitalWrite(LED_BUILTIN, HIGH);\n    delay(1000);\n}',
   },
 ]

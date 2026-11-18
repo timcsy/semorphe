@@ -20,6 +20,8 @@
     "cpp:loop_while",
     "cpp:builtin_constant",
     "cpp:pin_constant",
+    "cpp:pin_constant_level",
+    "cpp:pin_constant_mode",
     "cpp:pin_attach",
     "cpp:pin_mode",
     "cpp:digital_write",

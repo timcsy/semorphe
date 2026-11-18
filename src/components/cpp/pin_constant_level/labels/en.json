@@ -1,0 +1,7 @@
+{
+  "C_PIN_CONSTANT_LEVEL_MSG0": "level %1",
+  "C_PIN_CONSTANT_LEVEL_TOOLTIP": "Voltage level: HIGH (on, 3.3V/5V) or LOW (0V). Used with digital write, and returned by digital read",
+  "C_PIN_CONSTANT_LEVEL_HIGH": "HIGH",
+  "C_PIN_CONSTANT_LEVEL_LOW": "LOW",
+  "FLOW_TITLE_CPP_PIN_CONSTANT_LEVEL": "Level"
+}

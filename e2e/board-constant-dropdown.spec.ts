@@ -72,6 +72,27 @@ test.describe('spec 148 · 下拉跟著板子走', () => {
     expect(sigs.size, '四塊板子拿到同一份名單').toBe(4)
   })
 
+  test('🔴 腳位那一顆不列電位與模式——它們各有自己的積木（2026-11-18）', async ({ page }) => {
+    await freshApp(page)
+    await selectTarget(page, 'esp32c3')
+    const c3 = await pinConstantOptions(page)
+    // ★ 錨點：先證明拿得到這塊板子的名單
+    expect(c3, 'C3 少了 A0').toContain('A0')
+    for (const n of ['HIGH', 'LOW', 'OUTPUT', 'INPUT', 'INPUT_PULLUP']) expect(c3, `腳位的下拉還列著 ${n}`).not.toContain(n)
+    const fresh = await page.evaluate(() => {
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const ws = (window as any).__app.blocklyPanel.workspace
+      const out: Record<string, string> = {}
+      for (const t of ['cpp_pin_constant', 'cpp_pin_constant_level', 'cpp_pin_constant_mode']) {
+        const b = ws.newBlock(t)
+        out[t] = b.getFieldValue('VALUE') as string
+        b.dispose(false)
+      }
+      return out
+    })
+    expect(fresh, '剛建出來的三顆，預設值各是自己那一類的').toEqual({ cpp_pin_constant: 'A0', cpp_pin_constant_level: 'HIGH', cpp_pin_constant_mode: 'OUTPUT' })
+  })
+
   test('🔴 沒有板子的目標，選項與今天逐字相同', async ({ page }) => {
     await freshApp(page)
     await selectTarget(page, 'cpp')

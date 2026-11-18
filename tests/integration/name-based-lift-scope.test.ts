@@ -102,13 +102,13 @@ describe('靠名字認人的樣式：先問「被宣告過嗎」', () => {
     it('🔴 `HIGH` 是腳位常數——那是這一刀重開的那一顆', () => {
       expect(
         componentsOf('void setup() {\n    digitalWrite(13, HIGH);\n}\n', 'HIGH'),
-        '🔴 沒有人宣告 HIGH 而它不是腳位常數 → 樣式沒有重開，或它問錯了',
-      ).toContain('cpp:pin_constant')
+        '🔴 沒有人宣告 HIGH 而它不是電位常數 → 樣式沒有重開，或它問錯了（486 起電位是 pin_constant_level）',
+      ).toContain('cpp:pin_constant_level')
     })
 
     it('🔴 `OUTPUT` 是腳位常數', () => {
       expect(componentsOf('void setup() {\n    pinMode(13, OUTPUT);\n}\n', 'OUTPUT'))
-        .toContain('cpp:pin_constant')
+        .toContain('cpp:pin_constant_mode')
     })
   })
 
@@ -151,7 +151,8 @@ describe('靠名字認人的樣式：先問「被宣告過嗎」', () => {
 
     it('宣告了同名的變數：那個名字是他的', () => {
       const ids = componentsOf('int main() {\n    int HIGH = 7;\n    int x = HIGH;\n    return 0;\n}\n', 'HIGH')
-      expect(ids, '🔴 使用者的變數被認成腳位常數').not.toContain('cpp:pin_constant')
+      expect(ids, '🔴 使用者的變數被認成腳位常數').toContain('cpp:var_ref')
+      expect(ids, '🔴 使用者的變數被認成腳位常數').not.toContain('cpp:pin_constant_level')
     })
   })
 
@@ -172,6 +173,6 @@ describe('靠名字認人的樣式：先問「被宣告過嗎」', () => {
       ids,
       '（這一條記的是【今天的界線】，不是一個要求。它變了就更新這裡，\n'
       + ' 而**不要**在沒有兩趟掃描的情況下宣稱它解掉了。）',
-    ).toContain('cpp:pin_constant')
+    ).toContain('cpp:pin_constant_level')
   })
 })
