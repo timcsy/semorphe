@@ -14,6 +14,7 @@
     "cpp:loop_count",
     "cpp:loop_for",
     "cpp:pin_constant",
+    "cpp:pin_constant_mode",
     "cpp:pin_mode",
     "cpp:var_declare",
     "cpp:var_ref"

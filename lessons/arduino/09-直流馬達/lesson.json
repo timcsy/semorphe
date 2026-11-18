@@ -11,6 +11,8 @@
     "cpp:digital_write",
     "cpp:literal_number",
     "cpp:pin_constant",
+    "cpp:pin_constant_level",
+    "cpp:pin_constant_mode",
     "cpp:pin_mode"
   ],
   "tasks": [

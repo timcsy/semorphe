@@ -13,6 +13,8 @@
     "cpp:literal_number",
     "cpp:millis",
     "cpp:pin_constant",
+    "cpp:pin_constant_level",
+    "cpp:pin_constant_mode",
     "cpp:pin_mode",
     "cpp:var_assign",
     "cpp:var_declare",
