@@ -1,4 +1,7 @@
 {
+  "_meta": {
+    "note": "📉 **2026-11-04（第 251 刀：刪掉 JS 直譯器，spec 208 後半）**：讀了沒宣告 6 → 4、退路自相矛盾 3 → 0。\n  ① `cpp:class_def.base`、`cpp:input.type` 只有執行器在讀——執行器刪了，那兩筆隨之消失；其餘四筆的讀取點證據改指產生器（執行器那一處已不存在）。\n  ② `cpp:define.name`、`cpp:ifdef／ifndef.condition` 的「自相矛盾」是執行器 `?? \"\"`（守衛）對產生器 `?? \"MACRO\"`——守衛隨執行器刪掉之後只剩產生器那一個退路，於是宣告改成 `default: \"MACRO\"`（原本 `required: true`），讓規格說的就是產生器實際做的。\n\n\n\n【2026-08-10 / specs/112】讀了沒宣告下降一筆，**因為宣告了**（不是因為實作了）：第三十四條護欄逼出 cpp:include.local 的漏宣告，補在 components.json 的 properties。系統一行行為都沒變。\n🎯 2026-08-25：讀了沒宣告 10 → 7，三筆都是 `cpp:increment`。\n   · `NAME` —— 左值換成 `target` 接點，那個屬性不存在了。\n   · `OP`／`POSITION` —— **大寫的回退是遺留**：抽取器的 `renderMapping`\n     早就把欄位映成小寫的屬性名，那兩個回退**永遠不會命中**。\n   > 一個永遠不會命中的回退，是一份沒有人會發現已經過期的宣告。\n🎯 2026-08-25：7 → 6。`cpp:var_assign` 的 `member` 不再被讀——\n   那是舊執行器手拆帶點號字串時留下的第二條路（「兩種都認」），\n   而**沒有任何生產者會產出那個形狀**（它自己的註解就寫著）。左值接點化之後整段消失。"
+  },
   "guard": "param-spec",
   "readButUndeclared": [
     {
@@ -11,13 +14,13 @@
       "componentId": "cpp:input",
       "param": "from",
       "direction": "讀了沒宣告",
-      "where": "src/components/cpp/input/generate.ts:15"
+      "where": "src/components/cpp/input/generate.ts:27"
     },
     {
       "componentId": "cpp:input",
       "param": "variable",
       "direction": "讀了沒宣告",
-      "where": "src/components/cpp/input/generate.ts:11"
+      "where": "src/components/cpp/input/generate.ts:24"
     },
     {
       "componentId": "cpp:negate",
@@ -27,7 +30,5 @@
     }
   ],
   "fallbackContradicts": [],
-  "_meta": {
-    "note": "📉 **2026-11-04（第 251 刀：刪掉 JS 直譯器，spec 208 後半）**：讀了沒宣告 6 → 4、退路自相矛盾 3 → 0。\n  ① `cpp:class_def.base`、`cpp:input.type` 只有執行器在讀——執行器刪了，那兩筆隨之消失；其餘四筆的讀取點證據改指產生器（執行器那一處已不存在）。\n  ② `cpp:define.name`、`cpp:ifdef／ifndef.condition` 的「自相矛盾」是執行器 `?? \"\"`（守衛）對產生器 `?? \"MACRO\"`——守衛隨執行器刪掉之後只剩產生器那一個退路，於是宣告改成 `default: \"MACRO\"`（原本 `required: true`），讓規格說的就是產生器實際做的。\n\n\n\n【2026-08-10 / specs/112】讀了沒宣告下降一筆，**因為宣告了**（不是因為實作了）：第三十四條護欄逼出 cpp:include.local 的漏宣告，補在 components.json 的 properties。系統一行行為都沒變。\n🎯 2026-08-25：讀了沒宣告 10 → 7，三筆都是 `cpp:increment`。\n   · `NAME` —— 左值換成 `target` 接點，那個屬性不存在了。\n   · `OP`／`POSITION` —— **大寫的回退是遺留**：抽取器的 `renderMapping`\n     早就把欄位映成小寫的屬性名，那兩個回退**永遠不會命中**。\n   > 一個永遠不會命中的回退，是一份沒有人會發現已經過期的宣告。\n🎯 2026-08-25：7 → 6。`cpp:var_assign` 的 `member` 不再被讀——\n   那是舊執行器手拆帶點號字串時留下的第二條路（「兩種都認」），\n   而**沒有任何生產者會產出那個形狀**（它自己的註解就寫著）。左值接點化之後整段消失。"
-  }
+  "note": "📈 **486（2026-11-18）：Arduino 的值拆成三顆——新元件 `cpp:pin_constant_level`（電位 HIGH／LOW）、`cpp:pin_constant_mode`（腳位模式 OUTPUT／INPUT／INPUT_PULLUP）；`cpp:pin_constant` 只剩腳位名稱、搬到「腳位與時間」**（使用者 11-18 22:03 直接開口，明天 ESP32-C3 課）：兩顆新元件各一個 enum 參數 `value`。"
 }

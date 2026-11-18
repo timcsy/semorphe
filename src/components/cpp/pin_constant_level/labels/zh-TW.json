@@ -1,0 +1,7 @@
+{
+  "C_PIN_CONSTANT_LEVEL_MSG0": "電位 %1",
+  "C_PIN_CONSTANT_LEVEL_TOOLTIP": "電位：HIGH＝高電位（通電、約 3.3V／5V），LOW＝低電位（0V）。給「讓腳位輸出」用，也是「讀取腳位的電位」回傳的值",
+  "C_PIN_CONSTANT_LEVEL_HIGH": "高 HIGH",
+  "C_PIN_CONSTANT_LEVEL_LOW": "低 LOW",
+  "FLOW_TITLE_CPP_PIN_CONSTANT_LEVEL": "電位"
+}

@@ -10,6 +10,8 @@
     "cpp:digital_write",
     "cpp:literal_number",
     "cpp:pin_constant",
+    "cpp:pin_constant_level",
+    "cpp:pin_constant_mode",
     "cpp:pin_mode",
     "cpp:var_ref"
   ],
@@ -22,9 +24,21 @@
         "stdout": "",
         "stdin": [],
         "pins": [
-          { "pin": 13, "value": 1, "t": 0 },
-          { "pin": 13, "value": 0, "t": 1000 },
-          { "pin": 13, "value": 1, "t": 2000 }
+          {
+            "pin": 13,
+            "value": 1,
+            "t": 0
+          },
+          {
+            "pin": 13,
+            "value": 0,
+            "t": 1000
+          },
+          {
+            "pin": 13,
+            "value": 1,
+            "t": 2000
+          }
         ]
       }
     },

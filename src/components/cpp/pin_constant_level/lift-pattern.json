@@ -1,0 +1,46 @@
+[
+  {
+    "id": "cpp_pin_constant_level_high",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "cpp:pin_constant_level"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "HIGH",
+        "notDeclared": true
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ]
+  },
+  {
+    "id": "cpp_pin_constant_level_low",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "cpp:pin_constant_level"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "LOW",
+        "notDeclared": true
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ]
+  }
+]

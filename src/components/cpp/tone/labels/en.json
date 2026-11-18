@@ -1,4 +1,4 @@
 {
-  "C_TONE_MSG0": "Play %2 Hz on pin %1 for %3 ms",
+  "C_TONE_MSG0": "Make pin %1 play %2 Hz for %3 ms",
   "C_TONE_TOOLTIP": "tone(pin, frequency[, duration]) — drive a buzzer. Leave the third slot empty to keep playing until Stop. The simulator records the pin state; there is no sound"
 }

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "cpp_pin_constant_mode_output",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "cpp:pin_constant_mode"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "OUTPUT",
+        "notDeclared": true
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ]
+  },
+  {
+    "id": "cpp_pin_constant_mode_input",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "cpp:pin_constant_mode"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "INPUT",
+        "notDeclared": true
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ]
+  },
+  {
+    "id": "cpp_pin_constant_mode_input_pullup",
+    "grammar": "tree-sitter-cpp",
+    "astNodeType": "identifier",
+    "component": {
+      "componentId": "cpp:pin_constant_mode"
+    },
+    "constraints": [
+      {
+        "field": "$text",
+        "text": "INPUT_PULLUP",
+        "notDeclared": true
+      }
+    ],
+    "fieldMappings": [
+      {
+        "semantic": "value",
+        "ast": "$text",
+        "extract": "text"
+      }
+    ]
+  }
+]

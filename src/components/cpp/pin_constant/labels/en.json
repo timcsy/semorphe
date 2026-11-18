@@ -1,3 +1,4 @@
 {
-  "C_PIN_CONSTANT_TOOLTIP": "Arduino pin constants: HIGH/LOW are voltage levels, OUTPUT/INPUT/INPUT_PULLUP are pin modes, A0 is the first analog pin"
+  "C_PIN_CONSTANT_TOOLTIP": "A named pin on this board (A0 is the first analog pin, SDA/SCL are I2C…). The list follows the board; plain digital pins use a number block",
+  "C_PIN_CONSTANT_MSG0": "pin %1"
 }

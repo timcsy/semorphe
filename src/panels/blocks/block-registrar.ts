@@ -480,14 +480,14 @@ export class BlockRegistrar {
    *
    * ⚠️ 而選項是**惰性**的（開的時候才算），所以**換目標不必重註冊積木**。
    */
-  private bindBoardConstantDropdown(block: Blockly.Block, fieldName: string): void {
+  private bindBoardConstantDropdown(block: Blockly.Block, fieldName: string, exclude?: readonly string[]): void {
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const field = block.getField(fieldName) as any
     if (!field) return
     const declared = field.menuGenerator_
     const self = this
     field.menuGenerator_ = function () {
-      const names = boardConstantOptions(self.currentBoard?.())
+      const names = boardConstantOptions(self.currentBoard?.(), exclude)
       if (!names) return typeof declared === 'function' ? declared.call(this) : declared
       return names.map((n) => [n, n])
     }
@@ -499,6 +499,14 @@ export class BlockRegistrar {
       const options = this.getOptions(false)
       if (!options.some((o: string[]) => o[1] === newValue)) options.push([newValue, newValue])
       return newValue
+    }
+    // 🔴 **剛建出來的那顆不得停在被排除的值上**（2026-11-18）：靜態宣告的第一個選項是 `HIGH`
+    //    （沒有板子時那份、也是契約的值域），而腳位名稱那一顆在有板子時不再列它——
+    //    不改的話從工具箱拖出來寫著「腳位 HIGH」。⚠️ 只動建構當下的預設值：
+    //    存檔載入是 init 之後才設值，學生存過的 `HIGH` 照樣留著（上面那個驗證器）。
+    if (exclude?.length && exclude.includes(field.getValue())) {
+      const names = boardConstantOptions(self.currentBoard?.(), exclude)
+      if (names?.length) field.setValue(names[0])
     }
     /* eslint-enable @typescript-eslint/no-explicit-any */
   }
@@ -564,7 +572,7 @@ export class BlockRegistrar {
         // 🔴 **腳位常數的下拉列的是【目前這塊板子】的常數**（spec 148）
         //    ——名單由語言套件宣告，這一層不認識任何具體的目標名字。
         for (const d of allBoardConstantDropdowns()) {
-          if (d.blockType === blockType) self.bindBoardConstantDropdown(this, d.field)
+          if (d.blockType === blockType) self.bindBoardConstantDropdown(this, d.field, d.exclude)
         }
       }
 

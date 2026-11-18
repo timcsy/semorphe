@@ -1,3 +1,4 @@
 {
-  "C_PIN_CONSTANT_TOOLTIP": "Arduino 的腳位常數：HIGH／LOW 是電位，OUTPUT／INPUT／INPUT_PULLUP 是腳位模式，A0 是第一個類比腳"
+  "C_PIN_CONSTANT_TOOLTIP": "這塊板子上有名字的腳位（A0 是第一個類比腳、SDA／SCL 是 I2C 腳…）。選單隨板子變；一般的數字腳位直接用數字積木",
+  "C_PIN_CONSTANT_MSG0": "腳位 %1"
 }

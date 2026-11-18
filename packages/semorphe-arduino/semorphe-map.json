@@ -25,6 +25,8 @@
   "arduino:millis": "cpp:millis",
   "arduino:pin_attach": "cpp:pin_attach",
   "arduino:pin_constant": "cpp:pin_constant",
+  "arduino:pin_constant_level": "cpp:pin_constant_level",
+  "arduino:pin_constant_mode": "cpp:pin_constant_mode",
   "arduino:pin_mode": "cpp:pin_mode",
   "arduino:pulse_read": "cpp:pulse_read",
   "arduino:pwm_attach": "cpp:pwm_attach",

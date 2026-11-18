@@ -102,7 +102,11 @@ export function registerCppLanguage(): void {
 
   // 🔴 **腳位常數的下拉列的是【目前這塊板子】的具名常數**（spec 148）
   //    ——八塊板子的 `A0` 是五個不同的值，而 D1 mini 還多九個 `D` 系名字。
-  declareBoardConstantDropdown({ blockType: 'cpp_pin_constant', field: 'VALUE' })
+  declareBoardConstantDropdown({
+    blockType: 'cpp_pin_constant', field: 'VALUE',
+    // 2026-11-18：電位（`cpp_pin_constant_level`）與模式（`cpp_pin_constant_mode`）各自一顆之後，這一顆只列腳位名稱
+    exclude: ['HIGH', 'LOW', 'OUTPUT', 'INPUT', 'INPUT_PULLUP'],
+  })
 
 }
 

@@ -29,6 +29,11 @@ export interface BoardConstantDropdownBlock {
   blockType: string
   /** 下拉選單所在的欄位名 */
   field: string
+  /**
+   * 板子常數裡【不屬於這一顆】的名字（2026-11-18）——電位與模式各有自己的積木之後，
+   * 腳位名稱那一顆的下拉不該再列 `HIGH`／`OUTPUT`。由語言套件宣告，這一層不認識那些名字。
+   */
+  exclude?: readonly string[]
 }
 
 const declarations: BoardConstantDropdownBlock[] = []
@@ -62,6 +67,9 @@ export function allBoardConstantDropdowns(): readonly BoardConstantDropdownBlock
  */
 export function boardConstantOptions(
   board?: { constants: Readonly<Record<string, number>> },
+  exclude?: readonly string[],
 ): string[] | null {
-  return board ? Object.keys(board.constants) : null
+  if (!board) return null
+  const names = Object.keys(board.constants)
+  return exclude?.length ? names.filter((n) => !exclude.includes(n)) : names
 }

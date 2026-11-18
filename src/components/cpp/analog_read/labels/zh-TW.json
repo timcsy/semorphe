@@ -1,4 +1,4 @@
 {
-  "C_ANALOG_READ_MSG0": "讀取類比腳位 %1",
-  "C_ANALOG_READ_TOOLTIP": "analogRead(腳位)——回傳 0～1023 的類比值"
+  "C_ANALOG_READ_MSG0": "讀取腳位 %1 的類比值",
+  "C_ANALOG_READ_TOOLTIP": "analogRead(腳位)——讀電壓有多高：Uno 是 0～1023，ESP32 系列預設 0～4095"
 }

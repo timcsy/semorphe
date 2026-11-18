@@ -5,7 +5,7 @@
   "main": "semorphe-map.json",
   "files": ["semorphe-map.json"],
   "implements": {
-    "@cos-mos/arduino": "sha256:a0dce420323863a1702f8068efea28680c278f496487b98a236269339ec538da"
+    "@cos-mos/arduino": "sha256:5485e069c1821573da7ec6576d2754927eaa9c684615250a467852a7662c1941"
   },
   "license": "UNLICENSED"
 }

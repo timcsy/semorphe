@@ -1,4 +1,4 @@
 {
-  "C_ANALOG_WRITE_MSG0": "把類比腳位 %1 輸出成 %2",
-  "C_ANALOG_WRITE_TOOLTIP": "analogWrite(腳位, 0～255)——⚠️ 本模擬器只記住那個數值，不模擬 PWM 波形"
+  "C_ANALOG_WRITE_MSG0": "讓腳位 %1 輸出強度 %2（0～255）",
+  "C_ANALOG_WRITE_TOOLTIP": "analogWrite(腳位, 0～255)——用 PWM 快速開關，0 最暗、255 最亮（調 LED 亮度、馬達速度）。⚠️ 本模擬器只記住那個數值，不模擬 PWM 波形"
 }

@@ -95,4 +95,28 @@ describe('cpp:tone / cpp:tone_stop', () => {
     const zero = await pin8('void setup() { tone(8, 440, 0); }\nvoid loop() {}\n')
     expect(zero?.toneHz, '0 毫秒＝預設參數＝一直響（真板子分不出來）').toBe(440)
   })
+
+  /**
+   * 🔴 2026-11-18：明天 ESP32-C3 的蜂鳴器課——整條路照課堂寫法走一遍：
+   * pinMode(腳位, OUTPUT) → tone 第三格留空 → delay → noTone，在 C3 的板子上判。
+   */
+  // 冷算一支約 8 秒（本機判決快取關掉量的）——三種寫法拆成三支，不擠在同一個 60 秒裡
+  const c3pin4 = async (c: string) => {
+    const r = await runCella(c, { board: 'esp32c3' })
+    if (r.verdict !== 'accept') throw new Error(describeCellaResult(r))
+    return boardPin(r, 4)
+  }
+  it('🔴 ESP32-C3 蜂鳴器：設定輸出 → 一直響 → 等 → 停', async () => {
+    const p = await c3pin4('const int BUZZER = 4;\nvoid setup() {\n  pinMode(BUZZER, OUTPUT);\n  tone(BUZZER, 262);\n  delay(500);\n  noTone(BUZZER);\n}\nvoid loop() {}\n')
+    expect(p, '腳位 4 應該被碰過').toBeDefined()
+    expect(p?.toneHz).toBeNull()
+  })
+  it('🔴 ESP32-C3 蜂鳴器：第三格留空＝一直響', async () => {
+    expect((await c3pin4('void setup() {\n  pinMode(4, OUTPUT);\n  tone(4, 440);\n}\nvoid loop() {}\n'))?.toneHz).toBe(440)
+  })
+  it('🔴 ESP32-C3 蜂鳴器：一段旋律，每一聲給了毫秒，最後停下', async () => {
+    const p = await c3pin4('int notes[] = {262, 294, 330};\nvoid setup() {\n  pinMode(4, OUTPUT);\n  for (int i = 0; i < 3; i++) {\n    tone(4, notes[i], 200);\n    delay(250);\n  }\n}\nvoid loop() {}\n')
+    expect(p, '腳位 4 應該被碰過').toBeDefined()
+    expect(p?.toneHz).toBeNull()
+  })
 })

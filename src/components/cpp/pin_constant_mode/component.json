@@ -1,0 +1,33 @@
+{
+  "componentId": "cpp:pin_constant_mode",
+  "abstractComponent": null,
+  "properties": [
+    {
+      "name": "value",
+      "kind": "enum",
+      "default": "OUTPUT"
+    }
+  ],
+  "slots": {},
+  "traits": {
+    "literalValue": "value"
+  },
+  "role": "expression",
+  "owner": "(arduino)",
+  "_owner_why": "與 pin_constant 同一個理由：這些名字由 Arduino 的建置系統提供，不屬於任何 C++ 標頭。",
+  "paths": {
+    "views": {
+      "blocks": {
+        "render": "./forms/blocks.json",
+        "lift": "./forms/blocks.json"
+      },
+      "code": {
+        "render": "./generate.ts",
+        "lift": "./lift-pattern.json",
+        "_lift_why": "照 pin_constant 的 spec 174 做法：認名字之前先問 `notDeclared`——使用者自己宣告的同名東西不搶。"
+      }
+    },
+    "formalize": "./formalize.ts"
+  },
+  "_why": "🔴 **腳位模式與電位分成兩顆**（理由見 pin_constant_level 的 `_why`）。這一顆只給「設定腳位的模式」那一格用。"
+}

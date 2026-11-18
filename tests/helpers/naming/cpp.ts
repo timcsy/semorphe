@@ -242,6 +242,10 @@ export const KINDS = [
   //    **沒有檢查函式的話，那句話是空的**（程式會在檢查那一行中止）。
   'nan',
   'char', 'number', 'string', 'count', 'for', 'while', 'range', 'do_while',
+  // ⚠️ `level`／`mode` 加入日 2026-11-18——`cpp:pin_constant_level`（HIGH／LOW）與 `cpp:pin_constant_mode`（OUTPUT／INPUT…）。
+  //    使用者要電位、模式、腳位名稱是三顆不同的積木；三顆都是 `pin_constant`（板子提供的具名常數），差在【哪一種】常數——那正是種類。
+  //    `mode` 同時是操作（`pin_mode`＝設定模式）與種類（模式這種值），與 `print` 同時是單字名與操作同一個道理。
+  'level', 'mode',
   // ⚠️ `bool` 加入日 2026-08-21——`python:literal_bool`（`True`／`False`／`None`）。
   //    🔴 **這是第一個由非 C++ 元件帶進詞彙表的字**，而它值得留一句：
   //    C++ 的 `true`／`false` 收在 `cpp:builtin_constant` 裡（與 `nullptr`／`EOF` 同一顆），

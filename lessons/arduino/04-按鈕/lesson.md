@@ -27,7 +27,7 @@ int v = digitalRead(2);      // HIGH 或 LOW
 
 `digitalRead` 和 `digitalWrite` 是一對：一個寫、一個讀。
 
-> 積木盤上它寫著「**讀取腳位 …**」。
+> 積木盤上它寫著「**讀取腳位 … 的電位**」。
 
 ## 二、⚠️ 浮接：沒接東西的腳會亂跳
 

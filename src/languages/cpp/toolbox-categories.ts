@@ -32,11 +32,14 @@ export const cppCategoryDefs: ToolboxCategoryDef[] = [
     key: 'data', nameKey: 'CATEGORY_DATA', fallback: '資料', colorKey: 'data',
     sources: [
       { from: '(universal)', category: 'data' },
-      { from: '(core)', category: 'data' },
+      // 🔴 字元（`'a'`）緊跟在數字與文字後面（2026-11-18，使用者：「字元你也沒有提供」）——
+      //    它其實在，只是排在二十顆宣告積木後面，學生找不到
       { from: '(core)', category: 'values' },
+      { from: '(core)', category: 'data' },
       { from: '(core)', category: 'variables' },
-      // HIGH／OUTPUT／A0 是【值】，與 true／false／NULL 同一格——不是硬體操作
-      { from: '(arduino)', category: 'data' },
+      // 🪦 原本這裡有 `(arduino) data`：HIGH／OUTPUT／A0 當成【值】放在資料格。
+      //    2026-11-18 起電位、模式、腳位名稱是三顆積木，搬到「腳位與時間」——
+      //    學生在 pinMode／digitalWrite 旁邊就拿得到要插進去的那顆
     ],
   },
   {

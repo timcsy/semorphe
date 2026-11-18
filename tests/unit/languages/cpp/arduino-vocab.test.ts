@@ -8,12 +8,12 @@ import { createNode } from '../../../../src/core/semantic-tree'
 describe('套件：從 owner＝(arduino) 的元件宣告抽出', () => {
   const { vocab, map } = buildArduinoVocab()
 
-  it('★ 49 顆都在（0.1.3：435 加了 String 方法與序列埠讀文字六顆），名字是 arduino:<名字>，對照表一對一', () => {
+  it('★ 51 顆都在（0.1.3：435 加了 String 方法與序列埠讀文字六顆；0.1.4：486 加了電位、模式兩顆），名字是 arduino:<名字>，對照表一對一', () => {
     const names = Object.keys(vocab.components)
-    expect(names.length).toBe(49)
+    expect(names.length).toBe(51)
     expect(names.every((n) => /^arduino:[a-z_0-9]+$/.test(n))).toBe(true)
     expect(Object.keys(map).sort()).toEqual([...names].sort())
-    expect(new Set(Object.values(map)).size).toBe(49)
+    expect(new Set(Object.values(map)).size).toBe(51)
     expect(map['arduino:digital_write']).toBe('cpp:digital_write')
   })
 

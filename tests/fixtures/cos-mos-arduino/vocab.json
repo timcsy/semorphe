@@ -1,6 +1,6 @@
 {
   "name": "@cos-mos/arduino",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "components": {
     "arduino:analog_read": {
       "kind": "expression",
@@ -378,6 +378,35 @@
       },
       "pins": "未定"
     },
+    "arduino:pin_constant_level": {
+      "kind": "expression",
+      "params": {
+        "value": {
+          "type": "enum",
+          "values": [
+            "HIGH",
+            "LOW"
+          ],
+          "default": "HIGH"
+        }
+      },
+      "pins": "未定"
+    },
+    "arduino:pin_constant_mode": {
+      "kind": "expression",
+      "params": {
+        "value": {
+          "type": "enum",
+          "values": [
+            "OUTPUT",
+            "INPUT",
+            "INPUT_PULLUP"
+          ],
+          "default": "OUTPUT"
+        }
+      },
+      "pins": "未定"
+    },
     "arduino:pin_mode": {
       "kind": "statement",
       "params": {
@@ -729,5 +758,5 @@
       "pins": "未定"
     }
   },
-  "contentHash": "sha256:a0dce420323863a1702f8068efea28680c278f496487b98a236269339ec538da"
+  "contentHash": "sha256:5485e069c1821573da7ec6576d2754927eaa9c684615250a467852a7662c1941"
 }
